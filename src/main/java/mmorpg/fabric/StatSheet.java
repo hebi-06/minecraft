@@ -1,0 +1,222 @@
+package mmorpg.fabric;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringJoiner;
+import java.util.function.Predicate;
+import mmorpg.core.Hp;
+import mmorpg.core.Js;
+import mmorpg.core.Obj;
+import mmorpg.core.Rules;
+import mmorpg.core.Skills;
+import mmorpg.core.Stats;
+import mmorpg.core.Weapon;
+import mmorpg.core.Weapons;
+import net.minecraft.world.item.ItemStack;
+
+/**
+ * 스탯 창 글자 (statui.js statLine · vitBonusText · weaponLines). 서버 (채팅 스탯 창) 와 클라이언트 (스탯 창 화면) 가 같이 씀.
+ * 글자는 베드락 서식 (§) — 화면에 쓸 때 BedrockText.toJava. dark = 밝은 바탕용 색 (애드온 상자 창), false = 어두운 바탕 (자바 창).
+ *
+ * @param base 찍은 스탯 {str, dex, int, vit, point, lvmax} (요구 스탯 확인)
+ * @param eff  실제 스탯 (찍은 스탯 + 장비 보너스 · 룬 버프 — 피해 · 최대 체력 계산)
+ */
+public record StatSheet(Map<String, Double> base, Map<String, Double> eff, double reqLevel) {
+    private static final Obj CONFIG = Rules.get().obj("CONFIG");
+    private static final Obj TYPES = Rules.get().obj("TYPES");
+    private static final Obj SHIELD = Rules.get().obj("SHIELD");
+    private static final Obj SKILLS = Rules.get().obj("SKILLS");
+
+    /** 찍은 스탯 · 최고 레벨 · 지금 경험치 레벨로 (1단계는 장비 보너스 · 룬 버프 없음 → 실제 = 찍은 스탯) */
+    public static StatSheet of(int str, int dex, int intel, int vit, int point, int lvmax, int level) {
+        Map<String, Double> b = new LinkedHashMap<>();
+        b.put("str", (double) str);
+        b.put("dex", (double) dex);
+        b.put("int", (double) intel);
+        b.put("vit", (double) vit);
+        b.put("point", (double) point);
+        b.put("lvmax", (double) lvmax);
+        return new StatSheet(b, Stats.effectiveStats(b, Map.of(), 0), Stats.reqLevelOf(lvmax, level));
+    }
+
+    public static StatSheet of(RpgData d, int level) {
+        return of(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), level);
+    }
+
+    /** 소수 둘째 자리까지 (끝의 0은 뺌) */
+    static String num(double n) {
+        return Js.str(Js.round(n * 100) / 100);
+    }
+
+    /** 스탯 key 를 v 만큼 찍었을 때 무기 피해가 몇 % 오르는지 */
+    static String bonusPct(String key, double v) {
+        return num(v * Stats.damagePerPoint(key) * 100);
+    }
+
+    public int point() {
+        return (int) Stats.get(base, "point");
+    }
+
+    public double lvmax() {
+        return Stats.get(base, "lvmax");
+    }
+
+    public int stat(String key) {
+        return (int) Stats.get(base, key);
+    }
+
+    /** 최대 체력 (실제 체력 스탯) */
+    public double maxHp() {
+        return Hp.maxHpOf(lvmax(), Stats.get(eff, "vit"));
+    }
+
+    /** 갑옷 · 버프 보너스 글자 (없으면 "") */
+    String plusText(String key, boolean dark) {
+        double b = Stats.get(eff, key) - Stats.get(base, key);
+        return b > 0 ? (dark ? "§2" : "§a") + "+" + Js.str(b) : "";
+    }
+
+    /** 스탯 이름과 값 ("§c§l힘 §r§f12") */
+    public String title(String key) {
+        Obj info = Stats.info(key);
+        return info.str("color") + "§l" + info.str("name") + " §r§f" + stat(key) + plusText(key, false);
+    }
+
+    /** 효과 한 줄 ("칼·도끼·마검 피해 +24% (1당 2%)" · 체력은 최대 체력) */
+    public String effect(String key) {
+        Obj info = Stats.info(key);
+        if (key.equals("vit")) {
+            return "§7최대 체력 §f" + Js.str(maxHp()) + "§7 (1당 +" + CONFIG.text("HP_PER_VIT") + " · 레벨 보너스 +" + Js.str(Hp.levelHpOf(lvmax())) + ")";
+        }
+        return "§7" + info.str("weapons") + " 피해 §f+" + bonusPct(key, Stats.get(eff, key)) + "%§7 (1당 " + bonusPct(key, 1) + "%)";
+    }
+
+    /** statui.js statLine (한 줄 요약) */
+    public String statLine(String key, boolean dark) {
+        Obj info = Stats.info(key);
+        String L = dark ? "§8" : "§7";
+        String V = dark ? "§0" : "§f";
+        String head = (dark ? info.str("dark") : info.str("color")) + info.str("name") + " " + stat(key) + plusText(key, dark);
+        if (key.equals("vit")) return head + L + " · 최대 체력 " + V + Js.str(maxHp()) + L + " (1당 +" + CONFIG.text("HP_PER_VIT") + ")";
+        return head + L + " · " + info.str("weapons") + " " + V + "+" + bonusPct(key, Stats.get(eff, key)) + "%" + L + " (1당 " + bonusPct(key, 1) + "%)";
+    }
+
+    /** 스탯 칸 설명 (statui.js buildForm 의 lore) */
+    public List<String> tooltip(String key) {
+        Obj info = Stats.info(key);
+        List<String> lore = new ArrayList<>();
+        lore.add(statLine(key, false));
+        if (key.equals("vit")) {
+            String extra = vitBonusText();
+            lore.add("§71포인트: 최대 체력 +" + CONFIG.text("HP_PER_VIT") + (extra.isEmpty() ? "" : " · " + extra));
+            lore.add("§7레벨 보너스 +" + Js.str(Hp.levelHpOf(lvmax())) + " (레벨당 +" + CONFIG.text("HP_PER_LEVEL") + ")");
+            Obj tyrfing = SKILLS.objOrNull("tyrfing");
+            lore.add("§7티르빙 스킬 피해 × 최대 체력 ÷ " + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)));
+        } else {
+            lore.add("§71포인트: " + info.str("effect") + " +" + bonusPct(key, 1) + "%");
+        }
+        lore.add(point() > 0 ? "§a눌러서 +1 §7(Shift: +5)" : "§8포인트 없음");
+        return lore;
+    }
+
+    /** 체력 스탯이 피해를 올려 주는 무기 ("도끼·방패 피해 +0.5%") */
+    static String vitBonusText() {
+        Map<String, List<String>> by = new LinkedHashMap<>();
+        for (String k : TYPES.keys()) {
+            Obj t = TYPES.obj(k);
+            Obj bonus = t.objOrNull("bonus");
+            double per = (bonus == null ? 0 : bonus.numOr("vit", 0)) + ("vit".equals(t.strOr("stat", "")) ? t.numOr("perPoint", 0) : 0);
+            if (per <= 0) continue;
+            by.computeIfAbsent(num(per * 100), x -> new ArrayList<>()).add(t.str("name"));
+        }
+        StringJoiner j = new StringJoiner(", ");
+        by.forEach((pct, names) -> j.add(String.join("·", names) + " 피해 +" + pct + "%"));
+        return j.toString();
+    }
+
+    static double shieldCut(Weapon w, double vit) {
+        return Math.min(SHIELD.num("passiveCap"), w.passive() + vit * SHIELD.num("passivePerVit"));
+    }
+
+    /** 무기를 지금 쓸 수 있는지 (레벨 · 찍은 스탯) */
+    public boolean usable(Weapon w) {
+        return Weapons.weaponLack(w, reqLevel, base).isEmpty();
+    }
+
+    /**
+     * 스탯 창의 기준 무기 (weapons.js referenceWeapon): 손에 든 RPG 무기 → 가진 무기 중 쓸 수 있는 것 먼저, 같으면 공격력이 높은 것
+     * → 왼손.
+     */
+    public static Weapon referenceWeapon(ItemStack main, ItemStack off, Iterable<ItemStack> inventory, Predicate<Weapon> usable) {
+        Weapon m = RpgCombat.weaponOf(main);
+        if (m != null) return m;
+        Weapon best = null;
+        for (ItemStack s : inventory) {
+            Weapon w = RpgCombat.weaponOf(s);
+            if (w == null) continue;
+            if (best == null) {
+                best = w;
+                continue;
+            }
+            boolean a = usable.test(w);
+            boolean b = usable.test(best);
+            if (a != b ? a : w.damage() > best.damage()) best = w;
+        }
+        return best != null ? best : RpgCombat.weaponOf(off);
+    }
+
+    /** 가진 무기 기준 실제 수치 (statui.js weaponLines). 강화는 4단계 */
+    public List<String> weaponLines(Weapon w, boolean dark) {
+        String L = dark ? "§8" : "§7";
+        String V = dark ? "§0" : "§f";
+        String R = dark ? "§4" : "§c";
+        List<String> lines = new ArrayList<>();
+        if (w == null) {
+            lines.add(L + "RPG 무기를 가지고 있으면 실제 피해가 나옵니다.");
+            return lines;
+        }
+        double base0 = w.damage();
+        lines.add(L + "기준 무기: " + (dark ? w.darkName() : w.name()));
+        List<Weapons.Lack> lack = Weapons.weaponLack(w, reqLevel, base);
+        double critAvg = 1 + w.critChance() * (w.critMult() - 1);
+        double sum = 0;
+        for (Weapons.Scaling b : w.scaling()) sum += Stats.get(eff, b.stat()) * b.per();
+        double now = base0 * (1 + sum);
+        lines.add(L + "피해 " + V + num(now) + L + " · 치명타 " + V + num(w.critChance() * 100) + "%" + L + " ×" + num(w.critMult()));
+        Weapons.Scaling main = w.scaling().get(0);
+        lines.add(L + "평균 " + V + num(now * critAvg) + L + " · " + Stats.info(main.stat()).str("name") + " 1당 " + V + "+" + num(base0 * main.per() * critAvg));
+        for (int i = 1; i < w.scaling().size(); i++) {
+            Weapons.Scaling b = w.scaling().get(i);
+            String hp = b.stat().equals("vit") ? L + " · 최대 체력 " + V + "+" + CONFIG.text("HP_PER_VIT") : "";
+            lines.add(L + Stats.info(b.stat()).str("name") + " 1당 피해 " + V + "+" + num(base0 * b.per() * critAvg) + hp);
+        }
+        if (w.type().equals("shield")) {
+            double vit = Stats.get(eff, "vit");
+            double per = shieldCut(w, vit + 1) - shieldCut(w, vit);
+            lines.add(L + "피해 감소 " + V + num(shieldCut(w, vit) * 100) + "%" + L + " · 체력 1당 " + V + "+" + num(per * 100) + "%p");
+        }
+        if (w.skills() != null) {
+            double hpf = w.type().equals("greatsword") ? Skills.tyrfingHpFactor(maxHp()) : 1;
+            StringJoiner parts = new StringJoiner(L + " / " + V);
+            for (Obj k : w.skills()) parts.add(num(now * Skills.skillTotalMult(k) * hpf));
+            lines.add(L + "스킬 피해 " + V + parts + L + " (스탯 반영)");
+            if (w.type().equals("greatsword")) {
+                Obj tyrfing = SKILLS.objOrNull("tyrfing");
+                lines.add(L + "스킬 × 최대 체력 " + V + num(maxHp()) + L + " ÷ " + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)) + " = " + V + "×" + num(hpf));
+            }
+        }
+        if (!lack.isEmpty()) {
+            String zero = "지금은 " + (w.type().equals("shield") ? "피해·방어" : "피해") + " 0";
+            if (lack.stream().anyMatch(Weapons.Lack::isLevel)) {
+                lines.add(R + "레벨 " + w.level() + "부터 - " + zero);
+            } else {
+                StringJoiner req = new StringJoiner(" · ");
+                for (Weapons.Req r : w.reqs()) req.add(Stats.info(r.stat()).str("name") + " " + Js.str(r.value()));
+                lines.add(R + req + " 필요 - " + zero);
+            }
+        }
+        return lines;
+    }
+}

@@ -1,0 +1,14 @@
+# Gradle · Loom
+.gradle/
+build/
+run/
+out/
+*.class
+# 규칙 코어 대조 시험 (check-core.sh) 이 매번 다시 만드는 비교 케이스 (약 4 MB)
+core/src/test/resources/parity.json
+# CI 로그 (ci/publish_logs.sh 가 ci-logs 브랜치에 올림)
+ci-out/
+# IDE
+.idea/
+*.iml
+.vscode/

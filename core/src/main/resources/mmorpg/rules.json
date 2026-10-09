@@ -1,0 +1,6098 @@
+{
+  "CONFIG": {
+    "BASE_HP": 20,
+    "HP_PER_LEVEL": 2,
+    "HP_PER_VIT": 1,
+    "NO_HUNGER": true,
+    "DAMAGE_TAKEN_SCALE": 1,
+    "START_POINTS": 5,
+    "POINTS_PER_LEVEL": 3,
+    "REQUIREMENT_ENABLED": true,
+    "WEAPON_LEVEL_REQUIRED": true,
+    "DAMAGE_TEXT": true,
+    "NPC_EFFECTS": true,
+    "CURRENCY_ITEM": "minecraft:emerald",
+    "CURRENCY_NAME": "에메랄드",
+    "CURRENCY_ICON": "textures/items/emerald"
+  },
+  "STAT_KEYS": [
+    "str",
+    "dex",
+    "int",
+    "vit"
+  ],
+  "STAT_INFO": {
+    "str": {
+      "name": "힘",
+      "color": "§c",
+      "dark": "§4",
+      "icon": "textures/rpg_ui/icon_str",
+      "objective": "rpg_str",
+      "effect": "칼·도끼·마검 피해",
+      "weapons": "칼·도끼·마검",
+      "perPoint": 0.02
+    },
+    "dex": {
+      "name": "민첩",
+      "color": "§a",
+      "dark": "§2",
+      "icon": "textures/rpg_ui/icon_dex",
+      "objective": "rpg_dex",
+      "effect": "단검·활 피해",
+      "weapons": "단검·활",
+      "perPoint": 0.01
+    },
+    "int": {
+      "name": "마력",
+      "color": "§9",
+      "dark": "§1",
+      "icon": "textures/rpg_ui/icon_int",
+      "objective": "rpg_int",
+      "effect": "완드·마검 피해",
+      "weapons": "완드·마검",
+      "perPoint": 0.02
+    },
+    "vit": {
+      "name": "체력",
+      "color": "§d",
+      "dark": "§5",
+      "icon": "textures/rpg_ui/icon_vit",
+      "objective": "rpg_vit",
+      "effect": "최대 체력·방패·도끼",
+      "weapons": "방패·도끼",
+      "perPoint": 0
+    }
+  },
+  "OBJ_POINT": "rpg_point",
+  "OBJ_LVMAX": "rpg_lvmax",
+  "LEVELS": [
+    0,
+    5,
+    10,
+    15,
+    20,
+    30,
+    40
+  ],
+  "GRADE_LEVELS": {
+    "common": [
+      0,
+      5,
+      10,
+      15,
+      20,
+      30,
+      40
+    ],
+    "rare": [
+      0,
+      5,
+      10,
+      15,
+      20,
+      30,
+      40
+    ],
+    "noble": [
+      0,
+      5,
+      10,
+      15,
+      20,
+      30,
+      40
+    ],
+    "hero": [
+      30,
+      35,
+      40
+    ],
+    "transcend": [
+      40
+    ]
+  },
+  "ALL_LEVELS": [
+    0,
+    5,
+    10,
+    15,
+    20,
+    30,
+    35,
+    40
+  ],
+  "TYPE_ONLY": {
+    "greatsword": {
+      "transcend": [
+        40
+      ]
+    }
+  },
+  "GRADES": [
+    {
+      "id": "common",
+      "name": "일반",
+      "color": "§f",
+      "dark": "§0",
+      "mult": 1,
+      "icon": "textures/rpg_ui/grade_common"
+    },
+    {
+      "id": "rare",
+      "name": "희귀",
+      "color": "§9",
+      "dark": "§1",
+      "mult": 1.15,
+      "icon": "textures/rpg_ui/grade_rare"
+    },
+    {
+      "id": "noble",
+      "name": "고귀",
+      "color": "§u",
+      "dark": "§5",
+      "mult": 1.3,
+      "icon": "textures/rpg_ui/grade_noble"
+    },
+    {
+      "id": "hero",
+      "name": "영웅",
+      "color": "§v",
+      "dark": "§6",
+      "mult": 1.5,
+      "icon": "textures/rpg_ui/grade_hero"
+    },
+    {
+      "id": "transcend",
+      "name": "초월",
+      "color": "§c§l",
+      "dark": "§4§l",
+      "mult": 1.75,
+      "icon": "textures/rpg_ui/grade_transcend"
+    }
+  ],
+  "TYPE_ORDER": [
+    "sword",
+    "dagger",
+    "axe",
+    "shield",
+    "bow",
+    "wand"
+  ],
+  "WEAPON_NAMES": {
+    "sword": {
+      "common": "철검",
+      "rare": "푸른 강철검",
+      "noble": "황금 왕검",
+      "hero": "발뭉",
+      "transcend": "그람"
+    },
+    "dagger": {
+      "common": "철 단검",
+      "rare": "청강 단검",
+      "noble": "황금 의식단검",
+      "hero": "그림자 단검",
+      "transcend": "클라우 솔라스"
+    },
+    "axe": {
+      "common": "철 전투도끼",
+      "rare": "서리 전투도끼",
+      "noble": "황금 군주도끼",
+      "hero": "대지의 심판",
+      "transcend": "궁니르"
+    },
+    "shield": {
+      "common": "참나무 방패",
+      "rare": "푸른 강철 방패",
+      "noble": "황금 사자 방패",
+      "hero": "듀란드의 방패",
+      "transcend": "아이기스의 방패"
+    },
+    "bow": {
+      "common": "참나무 장궁",
+      "rare": "청월 장궁",
+      "noble": "태양 장궁",
+      "hero": "엘프의 활",
+      "transcend": "아르테미스의 은활"
+    },
+    "wand": {
+      "common": "견습 마법 지팡이",
+      "rare": "청수정 지팡이",
+      "noble": "태양 홍옥 지팡이",
+      "hero": "리치의 지팡이",
+      "transcend": "간반테인"
+    },
+    "greatsword": {
+      "transcend": "티르빙"
+    }
+  },
+  "LOOK": {
+    "axe_transcend": {
+      "label": "창",
+      "slash": "spear"
+    }
+  },
+  "TYPES": {
+    "sword": {
+      "name": "칼",
+      "stat": "str",
+      "damage": 1.25,
+      "req": 1,
+      "crit": 0.05,
+      "critPerLevel": 0.0005,
+      "critPerGrade": 0.01,
+      "critMult": 1.5,
+      "critMultPerLevel": 0,
+      "critMultPerGrade": 0.05
+    },
+    "dagger": {
+      "name": "단검",
+      "stat": "dex",
+      "damage": 1.125,
+      "req": 1,
+      "crit": 0.22,
+      "critPerLevel": 0.007,
+      "critPerGrade": 0.01,
+      "critMult": 2,
+      "critMultPerLevel": 0.0125,
+      "critMultPerGrade": 0
+    },
+    "axe": {
+      "name": "도끼",
+      "stat": "str",
+      "damage": 1.1875,
+      "req": 0.6666666666666666,
+      "reqExtra": {
+        "vit": 0.3333333333333333
+      },
+      "bonus": {
+        "vit": 0.005
+      },
+      "crit": 0.02,
+      "critPerLevel": 0.0005,
+      "critPerGrade": 0.005,
+      "critMult": 1.5,
+      "critMultPerLevel": 0,
+      "critMultPerGrade": 0.05
+    },
+    "shield": {
+      "name": "방패",
+      "stat": "vit",
+      "damage": 0.8,
+      "perPoint": 0.005,
+      "req": 1,
+      "crit": 0.02,
+      "critPerLevel": 0.0005,
+      "critPerGrade": 0.005,
+      "critMult": 1.5,
+      "critMultPerLevel": 0,
+      "critMultPerGrade": 0.05
+    },
+    "bow": {
+      "name": "활",
+      "stat": "dex",
+      "damage": 1.19,
+      "req": 1,
+      "crit": 0.15,
+      "critPerLevel": 0.007,
+      "critPerGrade": 0.01,
+      "critMult": 2,
+      "critMultPerLevel": 0.0125,
+      "critMultPerGrade": 0
+    },
+    "wand": {
+      "name": "완드",
+      "stat": "int",
+      "damage": 1.275,
+      "req": 1,
+      "crit": 0.03,
+      "critPerLevel": 0.0005,
+      "critPerGrade": 0.01,
+      "critMult": 1.5,
+      "critMultPerLevel": 0,
+      "critMultPerGrade": 0.05
+    },
+    "greatsword": {
+      "name": "마검",
+      "stat": "int",
+      "damage": 1.25,
+      "req": 0.6666666666666666,
+      "reqExtra": {
+        "str": 0.3333333333333333
+      },
+      "bonus": {
+        "str": 0.02
+      },
+      "crit": 0.05,
+      "critPerLevel": 0.0005,
+      "critPerGrade": 0.01,
+      "critMult": 1.5,
+      "critMultPerLevel": 0,
+      "critMultPerGrade": 0.05
+    }
+  },
+  "CRIT_CAP": 0.75,
+  "LEVEL_DAMAGE": {
+    "0": 4,
+    "5": 5,
+    "10": 6,
+    "15": 7,
+    "20": 8,
+    "30": 10,
+    "35": 11,
+    "40": 12
+  },
+  "REQ": {
+    "perLevel": 2.5,
+    "gradeStep": 1
+  },
+  "SHIELD": {
+    "passiveBase": 0.05,
+    "passivePerLevel": 0.0025,
+    "passivePerGrade": 0.02,
+    "passivePerVit": 0.001,
+    "passiveCap": 0.4,
+    "blockBase": 0.5,
+    "blockPerLevel": 0.005,
+    "blockPerGrade": 0.05,
+    "blockCap": 0.95,
+    "bashBlockLockTicks": 10
+  },
+  "BOW": {
+    "range": 24,
+    "cooldownTicks": 20,
+    "arrowSpeed": 60,
+    "aimAssist": 12,
+    "color": [
+      [
+        0.8,
+        1,
+        0.8
+      ],
+      [
+        0.45,
+        0.75,
+        1
+      ],
+      [
+        0.8,
+        0.55,
+        1
+      ],
+      [
+        1,
+        0.82,
+        0.3
+      ],
+      [
+        1,
+        0.35,
+        0.35
+      ]
+    ]
+  },
+  "WAND": {
+    "range": 20,
+    "aimAssist": 12,
+    "castTicks": 10,
+    "cooldownTicks": 20,
+    "circle": {
+      "dist": 1.1,
+      "side": 0.48,
+      "drop": 0.12,
+      "size": 0.36,
+      "spinPerTick": 9,
+      "alpha": 0.9,
+      "flashLife": 0.25
+    },
+    "color": [
+      [
+        0.75,
+        0.95,
+        1
+      ],
+      [
+        0.45,
+        0.7,
+        1
+      ],
+      [
+        0.8,
+        0.5,
+        1
+      ],
+      [
+        1,
+        0.75,
+        0.3
+      ],
+      [
+        1,
+        0.35,
+        0.35
+      ]
+    ],
+    "trail": [
+      "minecraft:endrod",
+      "minecraft:blue_flame_particle",
+      "minecraft:dragon_breath_trail",
+      "minecraft:basic_flame_particle",
+      "minecraft:redstone_wire_dust_particle"
+    ]
+  },
+  "SLASH": {
+    "enabled": true,
+    "cameraShake": true,
+    "drop": 0.1,
+    "offAxis": 12,
+    "sword": {
+      "shape": "arc",
+      "glow": [
+        0.47,
+        0.84,
+        1
+      ],
+      "size": 1.25,
+      "life": 0.22,
+      "speed": 4,
+      "dist": 1.5,
+      "jitter": 6
+    },
+    "dagger": {
+      "shape": "thin",
+      "glow": [
+        0.31,
+        1,
+        0.59
+      ],
+      "size": 1.2,
+      "life": 0.2,
+      "speed": 6,
+      "dist": 1.4,
+      "jitter": 5,
+      "second": 2
+    },
+    "axe": {
+      "shape": "heavy",
+      "glow": [
+        1,
+        0.51,
+        0.18
+      ],
+      "size": 1.05,
+      "life": 0.3,
+      "speed": 2,
+      "dist": 1.8,
+      "jitter": 4
+    },
+    "shield": {
+      "bash": true,
+      "glow": [
+        0.62,
+        0.8,
+        1
+      ],
+      "size": 0.36,
+      "life": 0.18,
+      "speed": 3,
+      "dist": 1.2,
+      "jitter": 25,
+      "hitSize": 0.62,
+      "hitLife": 0.24,
+      "critColor": [
+        1,
+        0.8,
+        0.3
+      ]
+    },
+    "spear": {
+      "thrust": true,
+      "glow": [
+        0.56,
+        0.83,
+        1
+      ],
+      "core": [
+        1,
+        0.92,
+        0.6
+      ],
+      "length": 1.4,
+      "thick": 0.16,
+      "dist": 0.9,
+      "life": 0.16,
+      "speed": 16,
+      "hitSize": 0.55
+    },
+    "greatsword": {
+      "shape": "heavy",
+      "glow": [
+        0.96,
+        0.52,
+        0.5
+      ],
+      "rune": [
+        0.53,
+        0.8,
+        1
+      ],
+      "size": 1.3,
+      "life": 0.26,
+      "speed": 3,
+      "dist": 1.7,
+      "jitter": 5
+    },
+    "gradeSize": [
+      1,
+      1.05,
+      1.1,
+      1.18,
+      1.25
+    ],
+    "gradeAura": [
+      null,
+      null,
+      null,
+      [
+        1,
+        0.8,
+        0.3
+      ],
+      [
+        1,
+        0.3,
+        0.35
+      ]
+    ]
+  },
+  "SHOP": {
+    "grades": [
+      "common",
+      "rare"
+    ],
+    "basePrice": {
+      "0": 2,
+      "5": 4,
+      "10": 8,
+      "15": 12,
+      "20": 16,
+      "30": 24,
+      "40": 32
+    },
+    "gradePriceMult": {
+      "common": 1,
+      "rare": 3,
+      "noble": 8,
+      "hero": 20,
+      "transcend": 50
+    },
+    "typePriceMult": {
+      "sword": 1,
+      "dagger": 1,
+      "axe": 1,
+      "shield": 1,
+      "bow": 1,
+      "wand": 1
+    }
+  },
+  "SMITH": {
+    "step": 5,
+    "cost": {
+      "30": {
+        "emerald": 64,
+        "ore": 4
+      },
+      "35": {
+        "emerald": 96,
+        "ore": 8
+      }
+    },
+    "oreItem": "rpg:star_ore",
+    "oreName": "별철 광석",
+    "oreIcon": "textures/items/rpg/star_ore",
+    "oreLore": [
+      "§r§7레이드 보스에게서 나오는 광석",
+      "§r§7영웅 무기의 레벨 제한을 올릴 때",
+      "§r§7대장장이에게 가져가세요"
+    ]
+  },
+  "NPC": {
+    "shopParticle": "minecraft:villager_happy",
+    "smithParticle": "minecraft:lava_particle",
+    "runesmithParticle": "minecraft:mob_portal",
+    "questParticle": "minecraft:totem_particle",
+    "readyParticle": "minecraft:endrod",
+    "repeatParticle": "minecraft:blue_flame_particle",
+    "particleRange": 24,
+    "promptRange": 5
+  },
+  "SKILLS": {
+    "holdTicks": 12,
+    "hitPlayers": false,
+    "hudEvery": 10,
+    "sword": [
+      {
+        "id": "gram_charge",
+        "name": "화룡 돌진",
+        "desc": "불꽃 길을 남기며 돌진해 벰",
+        "desc2": "0.5초 뒤 길과 앞쪽이 폭발",
+        "cd": 12,
+        "mult": 5,
+        "afterMult": 3.5,
+        "dash": 8,
+        "width": 1.4,
+        "stop": 1.2,
+        "range": 3.4,
+        "cone": 160,
+        "burst": 3.6,
+        "delay": 10,
+        "knock": 0.7
+      },
+      {
+        "id": "gram_descent",
+        "name": "용익 강하",
+        "desc": "불꽃 날개로 떠올라 내려찍기",
+        "desc2": "반지름 6칸 화염 폭발",
+        "cd": 30,
+        "mult": 9.5,
+        "afterMult": 4,
+        "rise": 0.85,
+        "apex": 9,
+        "hover": 18,
+        "dive": 3,
+        "reach": 6,
+        "radius": 6,
+        "delay": 10
+      }
+    ],
+    "dagger": [
+      {
+        "id": "solas_rush",
+        "name": "섬광 난무",
+        "desc": "빛이 되어 적 4명 사이를 벰",
+        "desc2": "돌아와 검을 거두면 자국이 폭발",
+        "cd": 12,
+        "mult": 3.5,
+        "afterMult": 5.2,
+        "range": 10,
+        "cone": 150,
+        "targets": 4,
+        "blinks": 4,
+        "gap": 3,
+        "delay": 10,
+        "side": 1.3
+      },
+      {
+        "id": "solas_halo",
+        "name": "광휘의 검진",
+        "desc": "빛의 검 8자루가 적에게 꽂힘",
+        "desc2": "꽂힌 검이 빛기둥 → 빛의 X 참격",
+        "cd": 30,
+        "mult": 4,
+        "pillarMult": 4,
+        "afterMult": 6,
+        "swords": 8,
+        "targets": 8,
+        "range": 24,
+        "radius": 6,
+        "form": 8,
+        "hold": 4,
+        "launchGap": 2,
+        "flight": 5,
+        "pillar": 10,
+        "cross": 10,
+        "half": 0.85,
+        "ring": 1.35
+      }
+    ],
+    "axe": [
+      {
+        "id": "gungnir_return",
+        "name": "신창 귀환",
+        "desc": "꿰뚫고 돌아오며 적을 끌어옴",
+        "desc2": "갈 때 · 올 때 두 번 벰",
+        "cd": 12,
+        "mult": 4.4,
+        "backMult": 5.5,
+        "range": 18,
+        "width": 1.4,
+        "speed": 2,
+        "hover": 6,
+        "hook": 4,
+        "half": 2.1
+      },
+      {
+        "id": "gungnir_fall",
+        "name": "신창 강림",
+        "desc": "하늘에서 거대한 궁니르가 꽂힘",
+        "desc2": "피해 15% 회복 (최대 체력 35%)",
+        "cd": 30,
+        "mult": 9.5,
+        "pulseMult": 3.2,
+        "pulses": 2,
+        "pulseGap": 14,
+        "heal": 0.15,
+        "healCap": 0.35,
+        "range": 24,
+        "min": 5,
+        "radius": 6,
+        "delay": 20,
+        "fall": 5,
+        "drop": 30,
+        "cloud": 16,
+        "stay": 40,
+        "fade": 12,
+        "length": 4.19,
+        "giant": 8,
+        "half": 2.1
+      }
+    ],
+    "shield": [
+      {
+        "id": "aegis_charge",
+        "name": "고르곤 돌진",
+        "desc": "방패를 앞세워 적을 밀며 돌진",
+        "desc2": "석화 1초 → 깨지며 피해 · 도발",
+        "cd": 12,
+        "mult": 9.5,
+        "afterMult": 20,
+        "dash": 6,
+        "speed": 1,
+        "front": 1,
+        "width": 1,
+        "carry": 6,
+        "gaze": 5,
+        "cone": 80,
+        "stone": 20,
+        "taunt": 60
+      },
+      {
+        "id": "aegis_dome",
+        "name": "신의 방벽",
+        "desc": "금빛 돔 4초: 받는 피해 -60%",
+        "desc2": "적 도발 → 접히며 번개 폭발",
+        "cd": 30,
+        "mult": 7,
+        "foldMult": 10,
+        "afterMult": 30,
+        "radius": 5,
+        "ticks": 80,
+        "reduce": 0.6,
+        "fold": 8,
+        "burst": 10,
+        "slow": 2,
+        "taunt": 30
+      }
+    ],
+    "bow": [
+      {
+        "id": "artemis_pierce",
+        "name": "은월 관통",
+        "desc": "달빛을 모아 거대한 화살로 관통",
+        "desc2": "0.5초 뒤 길이 초승달로 갈라짐",
+        "cd": 12,
+        "mult": 3.6,
+        "afterMult": 5.2,
+        "charge": 8,
+        "range": 24,
+        "width": 1.2,
+        "speed": 3,
+        "delay": 10,
+        "half": 1.7
+      },
+      {
+        "id": "artemis_moon",
+        "name": "만월의 사냥",
+        "desc": "만월의 은활이 화살비 3번",
+        "desc2": "거대한 화살 → 달빛 폭발",
+        "cd": 30,
+        "mult": 2,
+        "waves": 3,
+        "afterMult": 8,
+        "radius": 6,
+        "range": 24,
+        "min": 6,
+        "rise": 16,
+        "gap": 10,
+        "final": 56
+      }
+    ],
+    "wand": [
+      {
+        "id": "odin_ravens",
+        "name": "후긴과 무닌",
+        "desc": "빛의 까마귀 둘이 적을 6번 쪼음",
+        "desc2": "돌아오면 쪼인 적마다 룬 폭발",
+        "cd": 12,
+        "mult": 0.8,
+        "hits": 6,
+        "afterMult": 3.6,
+        "range": 20,
+        "jump": 8,
+        "targets": 4,
+        "launch": 6,
+        "speed": 1.2,
+        "gap": 5,
+        "back": 8
+      },
+      {
+        "id": "odin_eye",
+        "name": "오딘의 눈",
+        "desc": "하늘의 눈이 광선으로 적을 훑음",
+        "desc2": "눈이 감기며 범위 대폭발",
+        "cd": 30,
+        "mult": 1.5,
+        "waves": 4,
+        "afterMult": 7.5,
+        "radius": 6,
+        "range": 24,
+        "min": 6,
+        "open": 10,
+        "gap": 10,
+        "final": 56
+      }
+    ],
+    "greatsword": [
+      {
+        "id": "tyrfing_fire",
+        "name": "무덤불",
+        "desc": "무덤불 기둥이 차례로 솟음",
+        "desc2": "불 기둥이 한꺼번에 터짐",
+        "cd": 12,
+        "mult": 3.5,
+        "spellMult": 5,
+        "range": 12,
+        "start": 2,
+        "pillars": 8,
+        "zig": 0.3,
+        "width": 1.6,
+        "lead": 2,
+        "burst": 20
+      },
+      {
+        "id": "tyrfing_waking",
+        "name": "망자의 각성",
+        "desc": "열두 망령이 베고 무덤불 폭발",
+        "desc2": "체력 10% 대가 · 쓰러뜨리면 반환",
+        "cd": 30,
+        "mult": 3.5,
+        "hits": 2,
+        "spellMult": 11.9,
+        "cost": 0.1,
+        "radius": 5,
+        "warriors": 12,
+        "rise": 10,
+        "first": 18,
+        "step": 2,
+        "second": 50,
+        "final": 62,
+        "size": 1.6
+      }
+    ],
+    "tyrfing": {
+      "spell": [
+        0.53,
+        0.8,
+        1
+      ],
+      "rune": [
+        0.62,
+        0.36,
+        0.9
+      ],
+      "curse": [
+        0.8,
+        0.08,
+        0.2
+      ],
+      "dark": [
+        0.32,
+        0.05,
+        0.26
+      ],
+      "hpBase": 100
+    },
+    "color": {
+      "sword": [
+        [
+          1,
+          0.42,
+          0.16
+        ],
+        [
+          1,
+          0.9,
+          0.55
+        ]
+      ],
+      "dagger": [
+        [
+          1,
+          0.86,
+          0.35
+        ],
+        [
+          1,
+          1,
+          0.9
+        ]
+      ],
+      "axe": [
+        [
+          0.56,
+          0.83,
+          1
+        ],
+        [
+          1,
+          0.95,
+          0.7
+        ]
+      ],
+      "shield": [
+        [
+          1,
+          0.78,
+          0.3
+        ],
+        [
+          1,
+          0.97,
+          0.82
+        ]
+      ],
+      "bow": [
+        [
+          0.78,
+          0.9,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "wand": [
+        [
+          1,
+          0.84,
+          0.42
+        ],
+        [
+          1,
+          1,
+          0.85
+        ]
+      ],
+      "greatsword": [
+        [
+          0.96,
+          0.56,
+          0.52
+        ],
+        [
+          1,
+          0.9,
+          0.84
+        ]
+      ]
+    }
+  },
+  "RUNE_GRADES": {
+    "common": {
+      "cd": 8,
+      "weight": 50
+    },
+    "rare": {
+      "cd": 12,
+      "weight": 28
+    },
+    "noble": {
+      "cd": 18,
+      "weight": 14
+    },
+    "hero": {
+      "cd": 26,
+      "weight": 6.5
+    },
+    "transcend": {
+      "cd": 36,
+      "weight": 1.5
+    }
+  },
+  "RUNE_STAT_ORDER": [
+    "str",
+    "dex",
+    "vit",
+    "int"
+  ],
+  "RUNE_FAMILY_ORDER": [
+    "str",
+    "dex",
+    "vit",
+    "int",
+    "axe",
+    "bow",
+    "holy",
+    "storm",
+    "assassin",
+    "blade",
+    "spellblade",
+    "element",
+    "spirit",
+    "gravity",
+    "body",
+    "strike"
+  ],
+  "RUNE_FAMILIES": {
+    "str": {
+      "stat": "str",
+      "name": "힘",
+      "coef": {
+        "str": 1
+      }
+    },
+    "dex": {
+      "stat": "dex",
+      "name": "민첩",
+      "coef": {
+        "dex": 1
+      }
+    },
+    "vit": {
+      "stat": "vit",
+      "name": "체력",
+      "coef": {
+        "vit": 1
+      }
+    },
+    "int": {
+      "stat": "int",
+      "name": "마력",
+      "coef": {
+        "int": 1
+      }
+    },
+    "axe": {
+      "stat": "str",
+      "name": "도끼",
+      "coef": {
+        "str": 1,
+        "vit": 0.5
+      }
+    },
+    "bow": {
+      "stat": "dex",
+      "name": "궁수",
+      "coef": {
+        "dex": 1
+      }
+    },
+    "holy": {
+      "stat": "vit",
+      "name": "성기사",
+      "coef": {
+        "vit": 1
+      }
+    },
+    "storm": {
+      "stat": "int",
+      "name": "번개",
+      "coef": {
+        "int": 1
+      }
+    },
+    "assassin": {
+      "stat": "dex",
+      "name": "암살자",
+      "coef": {
+        "dex": 1
+      }
+    },
+    "blade": {
+      "stat": "str",
+      "name": "검사",
+      "coef": {
+        "str": 1,
+        "dex": 0.5
+      }
+    },
+    "spellblade": {
+      "stat": "int",
+      "name": "마검사",
+      "coef": {
+        "int": 1,
+        "str": 0.5,
+        "dex": 0.5
+      },
+      "mix": 0.2,
+      "ratio": 2
+    },
+    "element": {
+      "stat": "int",
+      "name": "원소 검사",
+      "coef": {
+        "int": 1,
+        "str": 0.5,
+        "dex": 0.5
+      },
+      "mix": 0.2,
+      "ratio": 2
+    },
+    "spirit": {
+      "stat": "int",
+      "name": "정령사",
+      "coef": {
+        "int": 1
+      }
+    },
+    "gravity": {
+      "stat": "int",
+      "name": "중력",
+      "coef": {
+        "int": 1
+      }
+    },
+    "body": {
+      "stat": "vit",
+      "name": "신체 강화",
+      "coef": {
+        "vit": 1
+      },
+      "best": true
+    },
+    "strike": {
+      "stat": "str",
+      "name": "평타 강화",
+      "coef": {
+        "str": 1
+      },
+      "best": true
+    }
+  },
+  "RUNE": {
+    "perPoint": 0.02,
+    "offStat": 0.85,
+    "ticketItem": "rpg:rune_ticket",
+    "ticketName": "룬 뽑기권",
+    "ticketIcon": "textures/items/rpg/rune_ticket",
+    "ticketLore": [
+      "§r§7보스·퀘스트·룬술사에게서 얻음",
+      "§r§7들고 누르면 룬 하나를 뽑습니다",
+      "§r§7일반 50% · 희귀 28% · 고귀 14%",
+      "§r§7영웅 6.5% · 초월 1.5%",
+      "§r§7계열 16개 중 하나 (같은 확률)"
+    ],
+    "advTicketItem": "rpg:high_rune_ticket",
+    "advTicketName": "고급 룬 뽑기권",
+    "advTicketIcon": "textures/items/rpg/high_rune_ticket",
+    "advTicketLore": [
+      "§r§7룬술사에게서 사는 고급 뽑기권",
+      "§r§7들고 누르면 룬 하나를 뽑습니다",
+      "§r§7희귀 50% · 고귀 30%",
+      "§r§7영웅 15% · 초월 5%",
+      "§r§7일반 룬은 나오지 않음"
+    ],
+    "advWeights": {
+      "common": 0,
+      "rare": 50,
+      "noble": 30,
+      "hero": 15,
+      "transcend": 5
+    },
+    "hitPlayers": false,
+    "hudEvery": 10,
+    "broadcastFrom": "hero",
+    "undeadBonus": 1.5,
+    "color": {
+      "str": [
+        [
+          1,
+          0.42,
+          0.18
+        ],
+        [
+          1,
+          0.86,
+          0.62
+        ]
+      ],
+      "dex": [
+        [
+          0.35,
+          1,
+          0.55
+        ],
+        [
+          0.9,
+          1,
+          0.92
+        ]
+      ],
+      "vit": [
+        [
+          1,
+          0.42,
+          0.68
+        ],
+        [
+          1,
+          0.9,
+          0.95
+        ]
+      ],
+      "int": [
+        [
+          0.45,
+          0.62,
+          1
+        ],
+        [
+          0.86,
+          0.92,
+          1
+        ]
+      ],
+      "axe": [
+        [
+          0.95,
+          0.2,
+          0.14
+        ],
+        [
+          1,
+          0.78,
+          0.62
+        ]
+      ],
+      "bow": [
+        [
+          0.66,
+          1,
+          0.28
+        ],
+        [
+          0.95,
+          1,
+          0.82
+        ]
+      ],
+      "holy": [
+        [
+          1,
+          0.82,
+          0.32
+        ],
+        [
+          1,
+          0.98,
+          0.86
+        ]
+      ],
+      "storm": [
+        [
+          0.62,
+          0.48,
+          1
+        ],
+        [
+          0.9,
+          0.92,
+          1
+        ]
+      ],
+      "assassin": [
+        [
+          0.84,
+          0.18,
+          0.96
+        ],
+        [
+          1,
+          0.84,
+          1
+        ]
+      ],
+      "blade": [
+        [
+          0.3,
+          0.92,
+          0.92
+        ],
+        [
+          0.9,
+          1,
+          1
+        ]
+      ],
+      "spellblade": [
+        [
+          0.5,
+          0.3,
+          1
+        ],
+        [
+          0.55,
+          1,
+          1
+        ]
+      ],
+      "element": [
+        [
+          1,
+          0.58,
+          0.22
+        ],
+        [
+          1,
+          0.95,
+          0.82
+        ]
+      ],
+      "spirit": [
+        [
+          0.42,
+          1,
+          0.76
+        ],
+        [
+          0.92,
+          1,
+          0.97
+        ]
+      ],
+      "gravity": [
+        [
+          0.6,
+          0.24,
+          0.9
+        ],
+        [
+          1,
+          0.86,
+          0.98
+        ]
+      ],
+      "body": [
+        [
+          1,
+          0.66,
+          0.2
+        ],
+        [
+          1,
+          0.96,
+          0.82
+        ]
+      ],
+      "strike": [
+        [
+          0.78,
+          0.86,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ]
+    }
+  },
+  "RUNES": {
+    "str": {
+      "common": {
+        "fn": "groundSlam",
+        "name": "대지 강타",
+        "desc": "앞쪽 땅을 내려쳐 충격파",
+        "use": "근접 광역·띄우기",
+        "mult": 4,
+        "dist": 2.2,
+        "radius": 2.8,
+        "lift": 0.35
+      },
+      "rare": {
+        "fn": "whirlwind",
+        "name": "회오리 베기",
+        "desc": "제자리에서 3번 휘몰아치기",
+        "use": "주위 광역·3타",
+        "mult": 2.35,
+        "hits": 3,
+        "gap": 10,
+        "radius": 3.5
+      },
+      "noble": {
+        "fn": "fissure",
+        "name": "대지 균열",
+        "desc": "앞으로 땅이 갈라지며 솟구침",
+        "use": "직선 광역",
+        "mult": 12,
+        "length": 9,
+        "width": 1.4,
+        "lift": 0.6
+      },
+      "hero": {
+        "fn": "titanSmash",
+        "name": "거인의 일격",
+        "desc": "거대한 망치로 내려찍기",
+        "use": "전방 대형 광역",
+        "mult": 20,
+        "dist": 3.5,
+        "radius": 5,
+        "delay": 8,
+        "lift": 0.8
+      },
+      "transcend": {
+        "fn": "heavenFall",
+        "name": "천붕",
+        "desc": "하늘에서 거대한 검이 떨어짐",
+        "use": "원거리 대형 광역·둔화",
+        "mult": 32,
+        "range": 22,
+        "radius": 6,
+        "delay": 24,
+        "lift": 1
+      }
+    },
+    "dex": {
+      "common": {
+        "fn": "galeSlash",
+        "name": "질풍 베기",
+        "desc": "앞으로 돌진하며 베기",
+        "use": "돌진·이동",
+        "mult": 4,
+        "dash": 5,
+        "width": 1.3
+      },
+      "rare": {
+        "fn": "bladeFan",
+        "name": "칼날 부채",
+        "desc": "칼날 7개를 부채꼴로 던짐",
+        "use": "부채꼴 원거리",
+        "mult": 7,
+        "blades": 7,
+        "spread": 50,
+        "range": 10
+      },
+      "noble": {
+        "fn": "shadowRaid",
+        "name": "그림자 습격",
+        "desc": "분신이 적 4명을 기습",
+        "use": "다수 추적",
+        "mult": 12,
+        "targets": 4,
+        "range": 9,
+        "cone": 70,
+        "gap": 4
+      },
+      "hero": {
+        "fn": "bladeStorm",
+        "name": "칼바람 폭풍",
+        "desc": "칼바람을 두르고 주위를 벰",
+        "use": "주위 5타·이동 속도",
+        "mult": 4,
+        "hits": 5,
+        "gap": 10,
+        "radius": 3.5,
+        "speedTicks": 50
+      },
+      "transcend": {
+        "fn": "shadowless",
+        "name": "무영검",
+        "desc": "적을 멈추고 칼자국 폭발",
+        "use": "다수 제압·폭발",
+        "mult": 32,
+        "range": 12,
+        "cone": 140,
+        "freeze": 30,
+        "cuts": 8,
+        "delay": 26,
+        "maxTargets": 8
+      }
+    },
+    "vit": {
+      "common": {
+        "fn": "guardShout",
+        "name": "수호의 외침",
+        "desc": "주위 적 도발, 받는 피해 -30%",
+        "use": "도발·피해 감소",
+        "mult": 2.5,
+        "radius": 6,
+        "reduce": 0.3,
+        "ticks": 80
+      },
+      "rare": {
+        "fn": "lifeSpring",
+        "name": "생명의 샘",
+        "desc": "체력 회복 (주위 아군 절반)",
+        "use": "회복·아군 회복",
+        "heal": 0.14,
+        "pulses": 4,
+        "gap": 10,
+        "radius": 6,
+        "share": 0.5
+      },
+      "noble": {
+        "fn": "ironSkin",
+        "name": "강철 피부",
+        "desc": "6초 받는 피해 -45%, 반사",
+        "use": "피해 감소·반사",
+        "mult": 3,
+        "radius": 3,
+        "reduce": 0.45,
+        "reflect": 1.5,
+        "ticks": 120
+      },
+      "hero": {
+        "fn": "bulwark",
+        "name": "불굴의 방벽",
+        "desc": "방벽 안 아군 보호, 적은 피해",
+        "use": "아군 보호 구역",
+        "mult": 2.2,
+        "radius": 4.5,
+        "reduce": 0.4,
+        "ticks": 120,
+        "pulse": 20
+      },
+      "transcend": {
+        "fn": "undyingPact",
+        "name": "불사의 맹약",
+        "desc": "8초 쓰러지지 않고 회복·반격",
+        "use": "생존·회복",
+        "mult": 2.5,
+        "radius": 4,
+        "heal": 0.05,
+        "ticks": 160,
+        "pulse": 20
+      }
+    },
+    "int": {
+      "common": {
+        "fn": "fireball",
+        "name": "화염구",
+        "desc": "불덩이를 날려 폭발",
+        "use": "원거리 폭발·불",
+        "mult": 4,
+        "range": 20,
+        "speed": 24,
+        "radius": 2.2,
+        "fire": 3
+      },
+      "rare": {
+        "fn": "frostNova",
+        "name": "서리 폭발",
+        "desc": "주위를 얼려 피해와 둔화",
+        "use": "주위 광역·둔화",
+        "mult": 7,
+        "radius": 4.2,
+        "slowTicks": 60,
+        "slowAmp": 1
+      },
+      "noble": {
+        "fn": "fireStorm",
+        "name": "화염 폭풍",
+        "desc": "조준한 곳에 불기둥 소용돌이",
+        "use": "지속 광역·끌어당김",
+        "mult": 2,
+        "hits": 6,
+        "gap": 10,
+        "range": 18,
+        "radius": 3.2,
+        "pull": 0.25
+      },
+      "hero": {
+        "fn": "blizzard",
+        "name": "블리자드",
+        "desc": "조준한 곳에 눈보라 4초",
+        "use": "지속 광역·둔화",
+        "mult": 2.5,
+        "hits": 8,
+        "gap": 10,
+        "range": 18,
+        "radius": 5,
+        "slowTicks": 40,
+        "slowAmp": 2
+      },
+      "transcend": {
+        "fn": "meteor",
+        "name": "메테오",
+        "desc": "조준한 곳에 운석 낙하",
+        "use": "원거리 대형 광역·불",
+        "mult": 32,
+        "range": 24,
+        "radius": 6,
+        "delay": 30,
+        "fire": 5,
+        "lift": 0.9
+      }
+    },
+    "axe": {
+      "common": {
+        "fn": "axeBoomerang",
+        "name": "회전 도끼",
+        "desc": "도끼를 던져 왕복하며 벰",
+        "use": "원거리·왕복 2타",
+        "mult": 2,
+        "hits": 2,
+        "range": 10,
+        "width": 1.5,
+        "speed": 28,
+        "hover": 10
+      },
+      "rare": {
+        "fn": "bloodCleave",
+        "name": "피의 도끼질",
+        "desc": "앞을 찍고 맞힌 적마다 체력 회복",
+        "use": "근접 광역·흡혈",
+        "mult": 7,
+        "radius": 3.5,
+        "cone": 110,
+        "heal": 0.04,
+        "healMax": 5
+      },
+      "noble": {
+        "fn": "leapSlam",
+        "name": "도약 찍기",
+        "desc": "조준한 곳으로 뛰어 내려찍기",
+        "use": "접근·광역·둔화",
+        "mult": 12,
+        "range": 9,
+        "radius": 3.5,
+        "lift": 0.5,
+        "slowTicks": 40
+      },
+      "hero": {
+        "fn": "execute",
+        "name": "처형",
+        "desc": "한 대상 강타, 약하면 1.5배",
+        "use": "단일 마무리",
+        "mult": 20,
+        "range": 5,
+        "cone": 30,
+        "below": 0.35,
+        "bonus": 1.5,
+        "delay": 8
+      },
+      "transcend": {
+        "fn": "berserker",
+        "name": "광전사의 혼",
+        "desc": "6초 광폭화, 주위 난타·흡혈",
+        "use": "난전·흡혈·피해 감소",
+        "mult": 5.33,
+        "hits": 6,
+        "gap": 20,
+        "radius": 4,
+        "reduce": 0.25,
+        "heal": 0.02,
+        "healMax": 5
+      }
+    },
+    "bow": {
+      "common": {
+        "fn": "pierceArrow",
+        "name": "관통 화살",
+        "desc": "일직선으로 꿰뚫는 화살",
+        "use": "직선 원거리 관통",
+        "mult": 4,
+        "range": 18,
+        "width": 1
+      },
+      "rare": {
+        "fn": "pinArrow",
+        "name": "속박 화살",
+        "desc": "대상을 땅에 묶어 3초 멈춤",
+        "use": "단일 속박",
+        "mult": 7,
+        "range": 18,
+        "cone": 20,
+        "root": 60
+      },
+      "noble": {
+        "fn": "backstep",
+        "name": "도약 사격",
+        "desc": "뒤로 뛰며 화살 3발",
+        "use": "후퇴·다수 사격",
+        "mult": 12,
+        "back": 5,
+        "arrows": 3,
+        "range": 16,
+        "cone": 80,
+        "gap": 3
+      },
+      "hero": {
+        "fn": "snipe",
+        "name": "저격",
+        "desc": "조준 후 40칸 강한 한 발",
+        "use": "초장거리 단일",
+        "mult": 20,
+        "range": 40,
+        "cone": 8,
+        "charge": 16,
+        "push": 1.2
+      },
+      "transcend": {
+        "fn": "skyBow",
+        "name": "천궁",
+        "desc": "하늘의 활이 화살 5발 낙하",
+        "use": "다수 추적·광역",
+        "mult": 32,
+        "range": 16,
+        "targets": 5,
+        "splash": 2,
+        "draw": 16,
+        "gap": 3
+      }
+    },
+    "holy": {
+      "common": {
+        "fn": "lightBarrier",
+        "name": "빛의 보호막",
+        "desc": "나와 아군에게 보호막",
+        "use": "보호막·아군 보호",
+        "mult": 2.5,
+        "radius": 5,
+        "hitRadius": 3,
+        "shield": 0.15,
+        "ticks": 160
+      },
+      "rare": {
+        "fn": "purify",
+        "name": "정화의 빛",
+        "desc": "회복하고 나쁜 효과 제거",
+        "use": "회복·정화",
+        "mult": 4,
+        "heal": 0.1,
+        "radius": 8,
+        "hitRadius": 4
+      },
+      "noble": {
+        "fn": "judgeHammer",
+        "name": "심판의 망치",
+        "desc": "망치가 3명을 튀며 기절",
+        "use": "기절·연쇄",
+        "mult": 5,
+        "range": 16,
+        "cone": 20,
+        "bounces": 2,
+        "bounceRange": 5,
+        "stun": 40,
+        "speed": 24
+      },
+      "hero": {
+        "fn": "divineSmite",
+        "name": "천벌",
+        "desc": "빛기둥: 적 피해, 아군 회복",
+        "use": "원거리 광역·아군 회복",
+        "mult": 13,
+        "range": 18,
+        "radius": 4,
+        "delay": 12,
+        "heal": 0.15
+      },
+      "transcend": {
+        "fn": "archangel",
+        "name": "대천사 강림",
+        "desc": "8초 날개: 아군 회복·보호막",
+        "use": "아군 회복·보호막·광역",
+        "mult": 2.5,
+        "hits": 8,
+        "gap": 20,
+        "radius": 6,
+        "allyRadius": 8,
+        "heal": 0.03,
+        "shield": 0.04,
+        "cap": 0.25
+      }
+    },
+    "storm": {
+      "common": {
+        "fn": "chainLightning",
+        "name": "연쇄 번개",
+        "desc": "번개가 적 4명에게 튐",
+        "use": "연쇄 다수",
+        "mult": 4,
+        "range": 18,
+        "cone": 20,
+        "chains": 3,
+        "chainRange": 6,
+        "gap": 3
+      },
+      "rare": {
+        "fn": "blink",
+        "name": "섬광 이동",
+        "desc": "8칸 순간이동, 지나간 적 감전",
+        "use": "이동·도주·직선",
+        "mult": 7,
+        "dist": 8,
+        "width": 1.6
+      },
+      "noble": {
+        "fn": "staticPrison",
+        "name": "뇌전 감옥",
+        "desc": "조준한 곳의 적 2.5초 기절",
+        "use": "광역 기절",
+        "mult": 12,
+        "range": 16,
+        "radius": 4,
+        "delay": 10,
+        "stun": 50
+      },
+      "hero": {
+        "fn": "thundercloud",
+        "name": "뇌운",
+        "desc": "4초간 번개가 적에게 떨어짐",
+        "use": "지속 광역·무작위",
+        "mult": 2.5,
+        "hits": 8,
+        "gap": 10,
+        "range": 18,
+        "radius": 6,
+        "splash": 2,
+        "height": 7
+      },
+      "transcend": {
+        "fn": "thunderSpear",
+        "name": "뇌신의 창",
+        "desc": "관통하는 번개 창, 연쇄 폭발",
+        "use": "직선 관통·연쇄·기절",
+        "mult": 32,
+        "chainMult": 16,
+        "range": 24,
+        "width": 1.6,
+        "charge": 20,
+        "chainRange": 6,
+        "stun": 20
+      }
+    },
+    "assassin": {
+      "common": {
+        "fn": "backstab",
+        "name": "배후 일격",
+        "desc": "대상 뒤로 순간이동해 찌름",
+        "use": "접근·단일",
+        "mult": 4,
+        "range": 8,
+        "cone": 25,
+        "span": 0
+      },
+      "rare": {
+        "fn": "poisonStars",
+        "name": "독 표창",
+        "desc": "표창 3개, 맞은 적은 1초 중독",
+        "use": "원거리·지속 피해",
+        "mult": 4,
+        "dot": 1.5,
+        "dots": 2,
+        "dotGap": 10,
+        "stars": 3,
+        "spread": 30,
+        "range": 14,
+        "speed": 30,
+        "span": 30
+      },
+      "noble": {
+        "fn": "smokeBomb",
+        "name": "연막",
+        "desc": "연막 속 적을 3번 베고 몸을 숨김",
+        "use": "주위 제압·은신",
+        "mult": 4,
+        "hits": 3,
+        "gap": 10,
+        "radius": 4,
+        "hide": 60,
+        "slowTicks": 60,
+        "span": 20
+      },
+      "hero": {
+        "fn": "shadowFlurry",
+        "name": "그림자 난도질",
+        "desc": "대상에 달라붙어 5번 난도질",
+        "use": "단일 연타",
+        "mult": 4,
+        "hits": 5,
+        "gap": 10,
+        "range": 7,
+        "cone": 30,
+        "span": 40
+      },
+      "transcend": {
+        "fn": "moonAssassin",
+        "name": "월광 암살",
+        "desc": "달빛 표식 뒤 등 뒤에서 X 베기",
+        "use": "원거리 단일·주위",
+        "mult": 32,
+        "range": 14,
+        "cone": 20,
+        "delay": 20,
+        "splash": 3,
+        "splashMult": 16,
+        "span": 20
+      }
+    },
+    "blade": {
+      "common": {
+        "fn": "quickDraw",
+        "name": "발도 일섬",
+        "desc": "칼을 뽑으며 앞을 한 번에 벰",
+        "use": "근접 전방 광역",
+        "mult": 4,
+        "range": 4.2,
+        "cone": 120
+      },
+      "rare": {
+        "fn": "swordWave",
+        "name": "검기 날리기",
+        "desc": "초승달 검기가 날아가며 관통",
+        "use": "직선 원거리 관통",
+        "mult": 7,
+        "range": 14,
+        "width": 1.6,
+        "speed": 26
+      },
+      "noble": {
+        "fn": "counterStance",
+        "name": "반격 자세",
+        "desc": "막는 자세, 때린 적을 바로 반격",
+        "use": "반격·피해 감소",
+        "mult": 12,
+        "ticks": 50,
+        "reduce": 0.5,
+        "range": 4.5,
+        "cone": 120
+      },
+      "hero": {
+        "fn": "tripleCut",
+        "name": "삼단베기",
+        "desc": "가로·세로 베기 뒤 찌르기",
+        "use": "전방 3연타",
+        "mult": 6.67,
+        "hits": 3,
+        "gap": 10,
+        "range": 4.2,
+        "cone": 110,
+        "thrust": 6.5
+      },
+      "transcend": {
+        "fn": "heavenSplit",
+        "name": "천지개벽",
+        "desc": "검기를 모아 거대한 검기 발사",
+        "use": "직선 대형 관통",
+        "mult": 32,
+        "charge": 20,
+        "range": 18,
+        "width": 2.6,
+        "speed": 30,
+        "knock": 1
+      }
+    },
+    "spellblade": {
+      "common": {
+        "fn": "arcaneCut",
+        "name": "마력 베기",
+        "desc": "앞을 베고 그 자리에 마력 폭발",
+        "use": "근접 전방·검+마력",
+        "mult": 2,
+        "hits": 2,
+        "gap": 10,
+        "range": 4.2,
+        "cone": 110,
+        "imbue": 0.35,
+        "span": 10
+      },
+      "rare": {
+        "fn": "manaBlaster",
+        "name": "마나 블라스터",
+        "desc": "조준점을 따라가는 마력 광선 3초",
+        "use": "지속 관통 광선 7타",
+        "kind": "magic",
+        "mult": 1,
+        "hits": 7,
+        "gap": 10,
+        "range": 16,
+        "width": 0.9,
+        "imbue": 0.6,
+        "span": 62
+      },
+      "noble": {
+        "fn": "riftSlash",
+        "name": "차원 베기",
+        "desc": "돌진해 베고 갈라진 자리가 폭발",
+        "use": "돌진·직선 2타",
+        "mult": 6,
+        "hits": 2,
+        "dist": 8,
+        "width": 1.6,
+        "delay": 12,
+        "imbue": 1,
+        "span": 12
+      },
+      "hero": {
+        "fn": "orbitBlades",
+        "name": "마검 결계",
+        "desc": "마력 검 넷이 4초 동안 주위를 벰",
+        "use": "주위 지속 8타",
+        "mult": 2.5,
+        "hits": 8,
+        "gap": 10,
+        "radius": 3.6,
+        "swords": 4,
+        "orbit": 2,
+        "imbue": 1.7,
+        "span": 70
+      },
+      "transcend": {
+        "fn": "spellbladeRelease",
+        "name": "마검 해방",
+        "desc": "거대한 마력 검으로 십자 베기",
+        "use": "전방 대형 십자 2타",
+        "mult": 16,
+        "hits": 2,
+        "charge": 16,
+        "gap": 10,
+        "range": 9,
+        "cone": 150,
+        "length": 12,
+        "width": 2.4,
+        "cross": 3,
+        "imbue": 2.7,
+        "span": 26
+      }
+    },
+    "element": {
+      "common": {
+        "fn": "flameSlash",
+        "name": "화염 베기",
+        "desc": "불꽃 검으로 앞을 베어 불태움",
+        "use": "근접 전방·불",
+        "kind": "sword",
+        "el": "fire",
+        "mult": 4,
+        "range": 4.2,
+        "cone": 120,
+        "fire": 4
+      },
+      "rare": {
+        "fn": "frostThrust",
+        "name": "서리 일섬",
+        "desc": "찌른 줄에 얼음 가시가 솟음",
+        "use": "직선 2타·얼음",
+        "el": "ice",
+        "mult": 3.5,
+        "hits": 2,
+        "gap": 10,
+        "range": 7,
+        "width": 1.3,
+        "slowTicks": 60,
+        "slowAmp": 1
+      },
+      "noble": {
+        "fn": "thunderSlash",
+        "name": "뇌광 베기",
+        "desc": "벤 적에게 번개가 떨어져 튐",
+        "use": "근접 전방·번개 연쇄",
+        "el": "thunder",
+        "mult": 6,
+        "hits": 2,
+        "gap": 10,
+        "range": 4.5,
+        "cone": 120,
+        "chain": 6,
+        "chainMult": 6
+      },
+      "hero": {
+        "fn": "triElement",
+        "name": "삼원소 연격",
+        "desc": "불·얼음·번개로 세 번 연속 공격",
+        "use": "전방 3연타·세 원소",
+        "el": "all",
+        "mult": 6.67,
+        "hits": 3,
+        "gap": 10,
+        "range": 4.2,
+        "cone": 110,
+        "thrust": 6.5,
+        "fire": 3,
+        "slowTicks": 40,
+        "slowAmp": 1,
+        "chain": 4,
+        "chainMult": 3.33
+      },
+      "transcend": {
+        "fn": "elementRelease",
+        "name": "원소 해방",
+        "desc": "세 원소 검기를 부채꼴로 날림",
+        "use": "부채꼴 관통·세 원소",
+        "kind": "magic",
+        "el": "all",
+        "mult": 32,
+        "charge": 16,
+        "range": 18,
+        "width": 2,
+        "spread": 22,
+        "speed": 30,
+        "fire": 5,
+        "slowTicks": 60,
+        "slowAmp": 2,
+        "chain": 6,
+        "chainMult": 16
+      }
+    },
+    "spirit": {
+      "common": {
+        "fn": "summonSpirits",
+        "name": "불의 정령",
+        "desc": "샐러맨더가 불덩이를 던짐",
+        "use": "소환 · 원거리 폭발 4번",
+        "spirits": [
+          "salamander"
+        ],
+        "mult": 1,
+        "hits": 4,
+        "gap": 12,
+        "first": 8,
+        "ticks": 60,
+        "range": 12
+      },
+      "rare": {
+        "fn": "summonSpirits",
+        "name": "물의 정령",
+        "desc": "운디네가 물줄기를 쏨",
+        "use": "소환 · 밀치는 물줄기 3번",
+        "spirits": [
+          "undine"
+        ],
+        "mult": 2.33,
+        "hits": 3,
+        "gap": 20,
+        "first": 8,
+        "ticks": 70,
+        "range": 11
+      },
+      "noble": {
+        "fn": "summonSpirits",
+        "name": "바람의 정령",
+        "desc": "실프가 적을 꿰뚫으며 돌진",
+        "use": "소환 · 관통 돌진 4번",
+        "spirits": [
+          "sylph"
+        ],
+        "mult": 3,
+        "hits": 4,
+        "gap": 18,
+        "first": 8,
+        "ticks": 80,
+        "range": 12
+      },
+      "hero": {
+        "fn": "summonSpirits",
+        "name": "땅의 정령",
+        "desc": "노움이 바위 가시를 솟게 함",
+        "use": "소환 · 범위 가시 4번",
+        "spirits": [
+          "gnome"
+        ],
+        "mult": 5,
+        "hits": 4,
+        "gap": 20,
+        "first": 10,
+        "ticks": 90,
+        "range": 12
+      },
+      "transcend": {
+        "fn": "summonSpirits",
+        "name": "정령왕의 부름",
+        "desc": "네 정령이 함께 싸움",
+        "use": "소환 넷 · 정령마다 2번",
+        "spirits": [
+          "salamander",
+          "undine",
+          "sylph",
+          "gnome"
+        ],
+        "mult": 4,
+        "hits": 8,
+        "gap": 36,
+        "first": 10,
+        "stagger": 10,
+        "ticks": 100,
+        "range": 14
+      }
+    },
+    "gravity": {
+      "common": {
+        "fn": "gravityOrb",
+        "name": "중력탄",
+        "desc": "끌어당긴 뒤 터지는 중력 구체",
+        "use": "원거리 · 끌어모아 폭발",
+        "mult": 4,
+        "range": 18,
+        "speed": 22,
+        "pull": 3.6,
+        "pullTicks": 10,
+        "radius": 2.6
+      },
+      "rare": {
+        "fn": "liftSlam",
+        "name": "공중 부양",
+        "desc": "앞의 적을 띄웠다가 내리꽂음",
+        "use": "전방 띄우기 · 내리꽂기",
+        "mult": 3.5,
+        "hits": 2,
+        "gap": 18,
+        "lift": 18,
+        "liftAmp": 2,
+        "range": 6.5,
+        "cone": 100
+      },
+      "noble": {
+        "fn": "gravityWell",
+        "name": "중력장",
+        "desc": "끌어모은 뒤 붕괴하는 중력장",
+        "use": "지속 끌어당김 · 붕괴",
+        "mult": 1.2,
+        "hits": 5,
+        "gap": 10,
+        "crush": 6,
+        "crushName": "붕괴",
+        "range": 18,
+        "minDist": 4,
+        "radius": 5,
+        "pull": 6,
+        "slowAmp": 1
+      },
+      "hero": {
+        "fn": "gravityReverse",
+        "name": "중력 역전",
+        "desc": "주위의 적을 띄웠다가 내리꽂음",
+        "use": "주위 띄우기 · 내리꽂기",
+        "mult": 4,
+        "crush": 16,
+        "crushName": "내리꽂기",
+        "gap": 24,
+        "lift": 22,
+        "liftAmp": 1,
+        "radius": 5.5,
+        "slowTicks": 40,
+        "slowAmp": 1
+      },
+      "transcend": {
+        "fn": "blackHole",
+        "name": "블랙홀",
+        "desc": "모든 것을 빨아들여 띄운 뒤 붕괴",
+        "use": "빨아들이기 · 붕괴",
+        "mult": 2,
+        "hits": 6,
+        "gap": 10,
+        "crush": 20,
+        "crushName": "붕괴",
+        "charge": 16,
+        "range": 22,
+        "minDist": 6,
+        "radius": 8,
+        "pull": 9,
+        "height": 2.6
+      }
+    },
+    "body": {
+      "common": {
+        "fn": "fightingSpirit",
+        "name": "투지",
+        "desc": "5초 동안 빨라지고 덜 다침",
+        "use": "이동 속도 · 피해 감소",
+        "ticks": 100,
+        "reduce": 0.15,
+        "speed": 1,
+        "accent": [
+          1,
+          0.56,
+          0.16
+        ]
+      },
+      "rare": {
+        "fn": "steelBody",
+        "name": "강철 근육",
+        "desc": "7초 동안 강철 같은 몸",
+        "use": "감소 · 밀려나지 않음",
+        "ticks": 140,
+        "reduce": 0.25,
+        "steadfast": true,
+        "accent": [
+          0.62,
+          0.78,
+          1
+        ]
+      },
+      "noble": {
+        "fn": "regenBody",
+        "name": "재생",
+        "desc": "9초 동안 매초 체력 회복",
+        "use": "회복 · 이동 속도",
+        "ticks": 180,
+        "heal": 0.02,
+        "pulse": 20,
+        "speed": 0,
+        "accent": [
+          0.42,
+          1,
+          0.5
+        ]
+      },
+      "hero": {
+        "fn": "warGod",
+        "name": "투신",
+        "desc": "12초 동안 모든 스탯 +15%",
+        "use": "모든 스탯 · 피해 감소",
+        "ticks": 240,
+        "statUp": 0.15,
+        "reduce": 0.2,
+        "accent": [
+          1,
+          0.3,
+          0.2
+        ]
+      },
+      "transcend": {
+        "fn": "awakening",
+        "name": "초인 각성",
+        "desc": "15초 각성: 스탯 +25% · 재생",
+        "use": "스탯 · 재생 · 충격파",
+        "ticks": 300,
+        "statUp": 0.25,
+        "reduce": 0.3,
+        "heal": 0.015,
+        "pulse": 20,
+        "mult": 8,
+        "radius": 5,
+        "accent": [
+          1,
+          0.86,
+          0.4
+        ]
+      }
+    },
+    "strike": {
+      "common": {
+        "fn": "edgeHone",
+        "name": "날 세우기",
+        "desc": "다음 평타 3번이 더 아픔",
+        "use": "평타 3번 강화",
+        "hits": 3,
+        "ticks": 120,
+        "bonus": 1.33,
+        "accent": [
+          0.86,
+          0.94,
+          1
+        ]
+      },
+      "rare": {
+        "fn": "flurry",
+        "name": "연타",
+        "desc": "활·완드 빠르게 · 근접 잔상",
+        "use": "평타 빠르게 · 잔상",
+        "ticks": 140,
+        "rangedCd": 0.6,
+        "echo": 0.5,
+        "echoRange": 3,
+        "accent": [
+          0.5,
+          0.95,
+          1
+        ]
+      },
+      "noble": {
+        "fn": "cleave",
+        "name": "가르기",
+        "desc": "평타가 앞 부채꼴의 적도 벰",
+        "use": "평타 9번 광역",
+        "hits": 9,
+        "ticks": 180,
+        "bonus": 1.33,
+        "cleave": 4,
+        "cone": 120,
+        "splash": 3.5,
+        "accent": [
+          0.72,
+          0.82,
+          1
+        ]
+      },
+      "hero": {
+        "fn": "bloodBlade",
+        "name": "피의 칼날",
+        "desc": "평타 추가 피해, 맞히면 회복",
+        "use": "평타 12번 강화 · 흡혈",
+        "hits": 12,
+        "ticks": 240,
+        "bonus": 1.67,
+        "heal": 0.015,
+        "accent": [
+          1,
+          0.16,
+          0.22
+        ]
+      },
+      "transcend": {
+        "fn": "swordGod",
+        "name": "검신 강림",
+        "desc": "평타마다 거대한 검기 · 치명타",
+        "use": "평타 16번 · 관통 검기",
+        "hits": 16,
+        "ticks": 300,
+        "bonus": 2,
+        "wave": 10,
+        "width": 2.2,
+        "speed": 30,
+        "crit": 0.2,
+        "accent": [
+          1,
+          0.84,
+          0.36
+        ]
+      }
+    }
+  },
+  "RUNE_STRIKE": {
+    "family": "strike",
+    "mark": "§6강화 ",
+    "echoHits": 14,
+    "critCap": 0.95
+  },
+  "RUNE_BODY": {
+    "family": "body"
+  },
+  "RUNE_ELEMENTS": {
+    "fire": {
+      "name": "불",
+      "text": "§6",
+      "color": [
+        [
+          1,
+          0.46,
+          0.12
+        ],
+        [
+          1,
+          0.9,
+          0.55
+        ]
+      ]
+    },
+    "ice": {
+      "name": "얼음",
+      "text": "§b",
+      "color": [
+        [
+          0.55,
+          0.86,
+          1
+        ],
+        [
+          0.93,
+          0.98,
+          1
+        ]
+      ]
+    },
+    "thunder": {
+      "name": "번개",
+      "text": "§e",
+      "color": [
+        [
+          1,
+          0.86,
+          0.25
+        ],
+        [
+          1,
+          1,
+          0.82
+        ]
+      ]
+    }
+  },
+  "RUNE_SPIRITS": {
+    "salamander": {
+      "name": "샐러맨더",
+      "text": "§6",
+      "color": [
+        [
+          1,
+          0.42,
+          0.1
+        ],
+        [
+          1,
+          0.88,
+          0.5
+        ]
+      ],
+      "radius": 1.6,
+      "fire": 2,
+      "speed": 18
+    },
+    "undine": {
+      "name": "운디네",
+      "text": "§9",
+      "color": [
+        [
+          0.25,
+          0.58,
+          1
+        ],
+        [
+          0.82,
+          0.94,
+          1
+        ]
+      ],
+      "radius": 1.8,
+      "knock": 0.9,
+      "slowTicks": 20,
+      "speed": 24
+    },
+    "sylph": {
+      "name": "실프",
+      "text": "§a",
+      "color": [
+        [
+          0.45,
+          1,
+          0.62
+        ],
+        [
+          0.92,
+          1,
+          0.94
+        ]
+      ],
+      "pierce": 3,
+      "width": 1.2,
+      "speed": 28
+    },
+    "gnome": {
+      "name": "노움",
+      "text": "§6",
+      "color": [
+        [
+          0.86,
+          0.6,
+          0.28
+        ],
+        [
+          1,
+          0.9,
+          0.66
+        ]
+      ],
+      "radius": 2.2,
+      "warn": 8,
+      "slowTicks": 30
+    }
+  },
+  "RUNE_GRAVITY": {
+    "void": [
+      0.1,
+      0.02,
+      0.16
+    ],
+    "pullEvery": 3,
+    "pullK": 0.13,
+    "pullMax": 0.75,
+    "pullStop": 0.9,
+    "slamPower": 1.6,
+    "landWait": 8,
+    "heavy": [
+      "minecraft:ender_dragon",
+      "minecraft:wither",
+      "minecraft:warden",
+      "minecraft:elder_guardian",
+      "minecraft:ghast",
+      "minecraft:happy_ghast"
+    ]
+  },
+  "RUNE_SPELLBLADE": {
+    "family": "spellblade",
+    "imbue": {
+      "hits": 3,
+      "ticks": 80,
+      "pierce": 4,
+      "width": 1.2,
+      "speed": 30,
+      "lead": 3
+    },
+    "mark": "§9마검 "
+  },
+  "RUNE_COMBO": {
+    "family": "assassin",
+    "minOwned": 2,
+    "window": 60,
+    "step": 0.1,
+    "gapAfter": 10,
+    "markTicks": 100,
+    "finisher": {
+      "name": "그림자 처형",
+      "mult": 20,
+      "range": 16,
+      "radius": 6,
+      "maxTargets": 6,
+      "gap": 4
+    }
+  },
+  "RUNE_QUICK": {
+    "prop": "rpg:rune_quick"
+  },
+  "RUNE_SMITH": {
+    "shardItem": "rpg:rune_shard",
+    "shardName": "룬 조각",
+    "shardIcon": "textures/items/rpg/rune_shard",
+    "shardLore": [
+      "§r§7룬을 갈면 나오는 조각",
+      "§r§7룬술사에게 모아 가면",
+      "§r§7룬 뽑기권으로 바꿔 줌"
+    ],
+    "grind": {
+      "common": 1,
+      "rare": 3,
+      "noble": 8,
+      "hero": 20,
+      "transcend": 50
+    },
+    "price": {
+      "ticket": 10,
+      "adv": 40
+    }
+  },
+  "MOUNT": {
+    "id": "rpg:dire_wolf_mount",
+    "name": "다이어울프",
+    "speed": 0.32,
+    "jump": 0.8,
+    "seat": [
+      0,
+      1.52,
+      -0.125
+    ],
+    "box": [
+      1.6,
+      2
+    ],
+    "step": 1.0625,
+    "icon": "textures/rpg_ui/icon_mount",
+    "color": [
+      0.37,
+      0.85,
+      1
+    ],
+    "cooldownTicks": 40,
+    "graceTicks": 10,
+    "warnEvery": 40,
+    "sweepEvery": 40
+  },
+  "ENDER": {
+    "name": "엔더 상자",
+    "icon": "textures/rpg_ui/ender_chest",
+    "marker": "§r§e§n§d§r",
+    "color": [
+      0.72,
+      0.38,
+      1
+    ],
+    "modes": [
+      "전부",
+      "절반",
+      "1개"
+    ],
+    "block": "minecraft:ender_chest",
+    "checkEvery": 4,
+    "retryEvery": 40
+  },
+  "RAID_MATERIALS": {
+    "ore": {
+      "item": "rpg:star_ore",
+      "name": "별철 광석",
+      "color": "§e",
+      "icon": "textures/items/rpg/star_ore",
+      "lore": [
+        "§r§7레이드 보스에게서 나오는 광석",
+        "§r§7영웅 무기의 레벨 제한을 올릴 때",
+        "§r§7대장장이에게 가져가세요"
+      ]
+    },
+    "stone": {
+      "item": "rpg:enhance_stone",
+      "name": "강화석",
+      "color": "§b",
+      "icon": "textures/items/rpg/enhance_stone",
+      "lore": [
+        "§r§7레이드 보스에게서 나오는 재료",
+        "§r§7무기를 강화할 때마다 씀 (+1~+10)",
+        "§r§7대장장이에게 가져가세요"
+      ]
+    },
+    "bright": {
+      "item": "rpg:bright_stone",
+      "name": "빛나는 강화석",
+      "color": "§d",
+      "icon": "textures/items/rpg/bright_stone",
+      "lore": [
+        "§r§7레이드 보스에게서 드물게 나옴",
+        "§r§7무기를 +6 이상으로 강화할 때 씀",
+        "§r§7대장장이에게 가져가세요"
+      ]
+    },
+    "scroll": {
+      "item": "rpg:guard_scroll",
+      "name": "수호 주문서",
+      "color": "§6",
+      "icon": "textures/items/rpg/guard_scroll",
+      "lore": [
+        "§r§7레이드 보스에게서 드물게 나옴",
+        "§r§7+6 이상 강화에 실패해도",
+        "§r§7단계가 떨어지지 않게 지켜 줌",
+        "§r§7(실패했을 때만 사라짐)"
+      ]
+    }
+  },
+  "RAID_MATERIAL_ORDER": [
+    "ore",
+    "stone",
+    "bright",
+    "scroll"
+  ],
+  "BOSS_MATERIALS": {
+    "kraken_ink": {
+      "item": "rpg:kraken_ink",
+      "name": "칠흑 먹물",
+      "color": "§5",
+      "boss": "kraken",
+      "icon": "textures/items/rpg/kraken_ink",
+      "lore": [
+        "§r§7크라켄에게서 나오는 보스 재료",
+        "§r§7빛을 삼키는 심해의 먹물",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f그림자 단검 §7영웅 8",
+        "§r§f대지의 심판 §7영웅 4",
+        "§r§f클라우 솔라스 §7초월 4"
+      ]
+    },
+    "kraken_eye": {
+      "item": "rpg:kraken_eye",
+      "name": "심해의 눈",
+      "color": "§3",
+      "boss": "kraken",
+      "icon": "textures/items/rpg/kraken_eye",
+      "lore": [
+        "§r§7크라켄에게서 나오는 보스 재료",
+        "§r§7아직도 무언가를 지켜보는 눈",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f리치의 지팡이 §7영웅 8",
+        "§r§f발뭉 §7영웅 4",
+        "§r§f간반테인 §7초월 4"
+      ]
+    },
+    "worm_fang": {
+      "item": "rpg:worm_fang",
+      "name": "파쇄의 송곳니",
+      "color": "§e",
+      "boss": "great_worm",
+      "icon": "textures/items/rpg/worm_fang",
+      "lore": [
+        "§r§7거대 웜에게서 나오는 보스 재료",
+        "§r§7바위도 씹어 부수는 송곳니",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f그림자 단검 §7영웅 4",
+        "§r§f발뭉 §7영웅 8",
+        "§r§f아르테미스의 은활 §7초월 4",
+        "§r§f티르빙 §7초월 4"
+      ]
+    },
+    "worm_heart": {
+      "item": "rpg:worm_heart",
+      "name": "대지의 심장석",
+      "color": "§6",
+      "boss": "great_worm",
+      "icon": "textures/items/rpg/worm_heart",
+      "lore": [
+        "§r§7거대 웜에게서 나오는 보스 재료",
+        "§r§7땅속 깊이 맥박치는 돌",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f리치의 지팡이 §7영웅 4",
+        "§r§f대지의 심판 §7영웅 8",
+        "§r§f궁니르 §7초월 4"
+      ]
+    },
+    "ygg_branch": {
+      "item": "rpg:ygg_branch",
+      "name": "세계수의 가지",
+      "color": "§a",
+      "boss": "nidhogg",
+      "icon": "textures/items/rpg/ygg_branch",
+      "lore": [
+        "§r§7니드호그가 주는 보스 재료",
+        "§r§7독에 물들지 않은 세계수의 가지",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f궁니르 §7초월 10",
+        "§r§f아르테미스의 은활 §7초월 5"
+      ]
+    },
+    "ygg_root": {
+      "item": "rpg:ygg_root",
+      "name": "타락한 세계수 뿌리",
+      "color": "§5",
+      "boss": "nidhogg",
+      "icon": "textures/items/rpg/ygg_root",
+      "lore": [
+        "§r§7니드호그가 주는 보스 재료",
+        "§r§7니드호그가 갉아 독이 스민 뿌리",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f간반테인 §7초월 10",
+        "§r§f티르빙 §7초월 5"
+      ]
+    },
+    "skoll_fang": {
+      "item": "rpg:skoll_fang",
+      "name": "스콜의 불꽃 송곳니",
+      "color": "§6",
+      "boss": "skoll_hati",
+      "icon": "textures/items/rpg/skoll_fang",
+      "lore": [
+        "§r§7스콜과 하티가 주는 보스 재료",
+        "§r§7해를 쫓는 검은 늑대의 송곳니",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f궁니르 §7초월 5",
+        "§r§f클라우 솔라스 §7초월 10"
+      ]
+    },
+    "hati_mane": {
+      "item": "rpg:hati_mane",
+      "name": "하티의 달빛 갈기",
+      "color": "§b",
+      "boss": "skoll_hati",
+      "icon": "textures/items/rpg/hati_mane",
+      "lore": [
+        "§r§7스콜과 하티가 주는 보스 재료",
+        "§r§7달을 쫓는 흰 늑대의 갈기",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f아르테미스의 은활 §7초월 10"
+      ]
+    },
+    "ymir_heart": {
+      "item": "rpg:ymir_heart",
+      "name": "이미르의 서리 심장",
+      "color": "§b",
+      "boss": "ymir",
+      "icon": "textures/items/rpg/ymir_heart",
+      "lore": [
+        "§r§7이미르가 주는 보스 재료",
+        "§r§7얼음처럼 뛰는 거인의 심장",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f간반테인 §7초월 5"
+      ]
+    },
+    "ymir_bone": {
+      "item": "rpg:ymir_bone",
+      "name": "태초의 거인 뼈",
+      "color": "§f",
+      "boss": "ymir",
+      "icon": "textures/items/rpg/ymir_bone",
+      "lore": [
+        "§r§7이미르가 주는 보스 재료",
+        "§r§7산맥이 된 거인의 뼈 조각",
+        "§r§7대장장이 보스 무기 제작:",
+        "§r§f클라우 솔라스 §7초월 5",
+        "§r§f티르빙 §7초월 10"
+      ]
+    },
+    "muspel_heart": {
+      "item": "rpg:muspel_heart",
+      "name": "무스펠의 불꽃 심장",
+      "color": "§c",
+      "boss": "surtr",
+      "tier": "transcend",
+      "future": true,
+      "icon": "textures/items/rpg/muspel_heart",
+      "lore": [
+        "§r§7수르트가 주는 초월 보스 재료",
+        "§r§7꺼지지 않는 거인의 불꽃 심장",
+        "§r§8초월 장비 재료 §7(준비 중)"
+      ]
+    },
+    "laevateinn_shard": {
+      "item": "rpg:laevateinn_shard",
+      "name": "레바테인 조각",
+      "color": "§6",
+      "boss": "surtr",
+      "tier": "transcend",
+      "future": true,
+      "icon": "textures/items/rpg/laevateinn_shard",
+      "lore": [
+        "§r§7수르트가 주는 초월 보스 재료",
+        "§r§7불꽃 검 레바테인의 부서진 조각",
+        "§r§8초월 장비 재료 §7(준비 중)"
+      ]
+    }
+  },
+  "BOSS_MATERIAL_ORDER": [
+    "kraken_ink",
+    "kraken_eye",
+    "worm_fang",
+    "worm_heart",
+    "ygg_branch",
+    "ygg_root",
+    "skoll_fang",
+    "hati_mane",
+    "ymir_heart",
+    "ymir_bone",
+    "muspel_heart",
+    "laevateinn_shard"
+  ],
+  "BOSS_CRAFT": [
+    {
+      "type": "dagger",
+      "grade": "hero",
+      "level": 30,
+      "mat": "kraken_ink",
+      "count": 8,
+      "also": [
+        [
+          "worm_fang",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "nix",
+          10
+        ],
+        [
+          "gulon",
+          6
+        ]
+      ],
+      "emerald": 64,
+      "ore": 2
+    },
+    {
+      "type": "wand",
+      "grade": "hero",
+      "level": 30,
+      "mat": "kraken_eye",
+      "count": 8,
+      "also": [
+        [
+          "worm_heart",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "nix",
+          10
+        ],
+        [
+          "skeljaskrimsli",
+          6
+        ]
+      ],
+      "emerald": 64,
+      "ore": 2
+    },
+    {
+      "type": "sword",
+      "grade": "hero",
+      "level": 30,
+      "mat": "worm_fang",
+      "count": 8,
+      "also": [
+        [
+          "kraken_eye",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "skeljaskrimsli",
+          10
+        ],
+        [
+          "gulon",
+          6
+        ]
+      ],
+      "emerald": 64,
+      "ore": 2
+    },
+    {
+      "type": "axe",
+      "grade": "hero",
+      "level": 30,
+      "mat": "worm_heart",
+      "count": 8,
+      "also": [
+        [
+          "kraken_ink",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "skeljaskrimsli",
+          10
+        ],
+        [
+          "gulon",
+          6
+        ]
+      ],
+      "emerald": 64,
+      "ore": 2
+    },
+    {
+      "type": "axe",
+      "grade": "transcend",
+      "level": 40,
+      "mat": "ygg_branch",
+      "count": 10,
+      "also": [
+        [
+          "skoll_fang",
+          5
+        ],
+        [
+          "worm_heart",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "troll",
+          12
+        ],
+        [
+          "draugr",
+          8
+        ]
+      ],
+      "emerald": 128,
+      "ore": 4
+    },
+    {
+      "type": "wand",
+      "grade": "transcend",
+      "level": 40,
+      "mat": "ygg_root",
+      "count": 10,
+      "also": [
+        [
+          "ymir_heart",
+          5
+        ],
+        [
+          "kraken_eye",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "draugr",
+          12
+        ],
+        [
+          "troll",
+          8
+        ]
+      ],
+      "emerald": 128,
+      "ore": 4
+    },
+    {
+      "type": "dagger",
+      "grade": "transcend",
+      "level": 40,
+      "mat": "skoll_fang",
+      "count": 10,
+      "also": [
+        [
+          "ymir_bone",
+          5
+        ],
+        [
+          "kraken_ink",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "troll",
+          12
+        ],
+        [
+          "draugr",
+          8
+        ]
+      ],
+      "emerald": 128,
+      "ore": 4
+    },
+    {
+      "type": "bow",
+      "grade": "transcend",
+      "level": 40,
+      "mat": "hati_mane",
+      "count": 10,
+      "also": [
+        [
+          "ygg_branch",
+          5
+        ],
+        [
+          "worm_fang",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "draugr",
+          12
+        ],
+        [
+          "troll",
+          8
+        ]
+      ],
+      "emerald": 128,
+      "ore": 4
+    },
+    {
+      "type": "greatsword",
+      "grade": "transcend",
+      "level": 40,
+      "mat": "ymir_bone",
+      "count": 10,
+      "also": [
+        [
+          "ygg_root",
+          5
+        ],
+        [
+          "worm_fang",
+          4
+        ]
+      ],
+      "drops": [
+        [
+          "draugr",
+          12
+        ],
+        [
+          "troll",
+          8
+        ]
+      ],
+      "emerald": 128,
+      "ore": 4
+    }
+  ],
+  "ENHANCE": {
+    "max": 10,
+    "steps": {
+      "1": {
+        "rate": 0.95,
+        "stone": 1,
+        "bright": 0
+      },
+      "2": {
+        "rate": 0.9,
+        "stone": 1,
+        "bright": 0
+      },
+      "3": {
+        "rate": 0.85,
+        "stone": 2,
+        "bright": 0
+      },
+      "4": {
+        "rate": 0.75,
+        "stone": 2,
+        "bright": 0
+      },
+      "5": {
+        "rate": 0.65,
+        "stone": 3,
+        "bright": 0
+      },
+      "6": {
+        "rate": 0.55,
+        "stone": 3,
+        "bright": 1
+      },
+      "7": {
+        "rate": 0.45,
+        "stone": 4,
+        "bright": 1
+      },
+      "8": {
+        "rate": 0.35,
+        "stone": 4,
+        "bright": 2
+      },
+      "9": {
+        "rate": 0.25,
+        "stone": 5,
+        "bright": 2
+      },
+      "10": {
+        "rate": 0.15,
+        "stone": 6,
+        "bright": 3
+      }
+    },
+    "downFrom": 6,
+    "bonus": [
+      0,
+      0.03,
+      0.06,
+      0.09,
+      0.13,
+      0.17,
+      0.22,
+      0.28,
+      0.35,
+      0.43,
+      0.52
+    ],
+    "gradeCost": {
+      "common": 1,
+      "rare": 1,
+      "noble": 1.5,
+      "hero": 2,
+      "transcend": 2.5
+    },
+    "announceFrom": 7,
+    "animTicks": 22
+  },
+  "ARMOR_TYPES": {
+    "str": {
+      "name": "힘",
+      "stats": {
+        "str": 1
+      },
+      "prot": 1,
+      "req": {
+        "str": 1
+      },
+      "color": "§c",
+      "badge": [
+        235,
+        64,
+        52
+      ]
+    },
+    "dex": {
+      "name": "민첩",
+      "stats": {
+        "dex": 1
+      },
+      "prot": 0.8,
+      "req": {
+        "dex": 1
+      },
+      "color": "§a",
+      "badge": [
+        72,
+        214,
+        96
+      ]
+    },
+    "vit": {
+      "name": "체력",
+      "stats": {
+        "vit": 1
+      },
+      "prot": 1.2,
+      "req": {
+        "vit": 1
+      },
+      "color": "§d",
+      "badge": [
+        255,
+        110,
+        190
+      ]
+    },
+    "strvit": {
+      "name": "힘+체력",
+      "stats": {
+        "str": 0.6,
+        "vit": 0.6
+      },
+      "prot": 1.1,
+      "req": {
+        "str": 0.6666666666666666,
+        "vit": 0.3333333333333333
+      },
+      "color": "§6",
+      "badge": [
+        235,
+        64,
+        52
+      ],
+      "badge2": [
+        255,
+        110,
+        190
+      ]
+    },
+    "int": {
+      "name": "마력",
+      "stats": {
+        "int": 1
+      },
+      "prot": 0.7,
+      "req": {
+        "int": 1
+      },
+      "color": "§9",
+      "badge": [
+        90,
+        130,
+        255
+      ]
+    }
+  },
+  "ARMOR_TYPE_ORDER": [
+    "str",
+    "dex",
+    "vit",
+    "strvit",
+    "int"
+  ],
+  "ARMOR_PIECES": {
+    "helmet": {
+      "name": "투구",
+      "slot": "Head",
+      "share": 0.2,
+      "price": 0.3
+    },
+    "chest": {
+      "name": "갑옷",
+      "slot": "Chest",
+      "share": 0.35,
+      "price": 0.45
+    },
+    "legs": {
+      "name": "바지",
+      "slot": "Legs",
+      "share": 0.3,
+      "price": 0.4
+    },
+    "boots": {
+      "name": "신발",
+      "slot": "Feet",
+      "share": 0.15,
+      "price": 0.25
+    }
+  },
+  "ARMOR_PIECE_ORDER": [
+    "helmet",
+    "chest",
+    "legs",
+    "boots"
+  ],
+  "ARMOR_LEVELS": [
+    0,
+    10,
+    20,
+    30,
+    40
+  ],
+  "ARMOR_GRADE_LEVELS": {
+    "common": [
+      0,
+      10,
+      20,
+      30,
+      40
+    ],
+    "transcend": [
+      40
+    ]
+  },
+  "ARMOR_TIERS": {
+    "common_0": {
+      "set": "ranger",
+      "name": "수련생",
+      "prot": [
+        1,
+        3,
+        2,
+        1
+      ],
+      "bonus": 3
+    },
+    "common_10": {
+      "set": "ranger",
+      "name": "순찰대",
+      "prot": [
+        2,
+        5,
+        4,
+        1
+      ],
+      "bonus": 6
+    },
+    "common_20": {
+      "set": "knight",
+      "name": "강철 기사",
+      "prot": [
+        2,
+        6,
+        5,
+        2
+      ],
+      "bonus": 10
+    },
+    "common_30": {
+      "set": "warden",
+      "name": "흑요석 수호자",
+      "prot": [
+        3,
+        7,
+        6,
+        3
+      ],
+      "bonus": 15
+    },
+    "common_40": {
+      "set": "dragon",
+      "name": "적룡",
+      "prot": [
+        3,
+        8,
+        6,
+        3
+      ],
+      "bonus": 20
+    },
+    "transcend_40": {
+      "set": "emperor",
+      "name": "황제",
+      "prot": [
+        4,
+        9,
+        7,
+        4
+      ],
+      "bonus": 32
+    }
+  },
+  "ARMOR_SHOP": {
+    "setDiscount": 0.9
+  },
+  "MONSTER_ORDER": [
+    "scarecrow",
+    "gulon",
+    "skeljaskrimsli",
+    "nix",
+    "draugr",
+    "troll"
+  ],
+  "MONSTERS": {
+    "scarecrow": {
+      "name": "허수아비",
+      "level": 1,
+      "hp": 30,
+      "attack": 3,
+      "every": 30,
+      "windup": 8,
+      "reach": 1.5,
+      "lungeEvery": 60,
+      "speed": 0.22,
+      "chase": 1.25,
+      "knockResist": 0.2,
+      "xp": 2,
+      "xpUntil": 8,
+      "emerald": [
+        0.2,
+        1,
+        1
+      ],
+      "scale": 0.8,
+      "box": [
+        0.875,
+        2.4
+      ],
+      "color": [
+        1,
+        0.82,
+        0.35
+      ],
+      "trait": "짚 팔 휘두르기",
+      "sounds": {
+        "windup": "mob.creaking.ambient",
+        "hit": "mob.creaking.attack"
+      }
+    },
+    "gulon": {
+      "name": "굴론",
+      "level": 8,
+      "hp": 48,
+      "attack": 5,
+      "every": 20,
+      "windup": 8,
+      "reach": 1.5,
+      "lungeEvery": 32,
+      "speed": 0.3,
+      "chase": 1.45,
+      "knockResist": 0.2,
+      "xp": 3,
+      "xpUntil": 15,
+      "emerald": [
+        0.35,
+        1,
+        1
+      ],
+      "scale": 1.3,
+      "box": [
+        0.9,
+        1.1
+      ],
+      "color": [
+        0.92,
+        0.42,
+        0.25
+      ],
+      "trait": "빠르고 자주 달려듦",
+      "sounds": {
+        "windup": "mob.hoglin.angry",
+        "hit": "mob.hoglin.attack"
+      }
+    },
+    "skeljaskrimsli": {
+      "name": "스켈야스크림슬리",
+      "level": 15,
+      "hp": 70,
+      "attack": 9,
+      "every": 28,
+      "windup": 9,
+      "reach": 2.4,
+      "lungeEvery": 50,
+      "speed": 0.25,
+      "chase": 1.3,
+      "knockResist": 0.6,
+      "xp": 5,
+      "xpUntil": 22,
+      "emerald": [
+        0.3,
+        1,
+        2
+      ],
+      "scale": 1.3,
+      "box": [
+        1,
+        1.4
+      ],
+      "color": [
+        0.93,
+        0.86,
+        0.7
+      ],
+      "shell": 0.2,
+      "trait": "단단한 껍질: 받는 피해 -20%, 긴 목",
+      "sounds": {
+        "windup": "mob.ravager.ambient",
+        "hit": "mob.ravager.bite"
+      }
+    },
+    "nix": {
+      "name": "닉스",
+      "level": 22,
+      "hp": 110,
+      "attack": 15,
+      "every": 24,
+      "windup": 9,
+      "reach": 1.8,
+      "lungeEvery": 44,
+      "speed": 0.26,
+      "chase": 1.35,
+      "knockResist": 0.3,
+      "xp": 9,
+      "xpUntil": 29,
+      "emerald": [
+        0.4,
+        1,
+        2
+      ],
+      "scale": 1.1,
+      "box": [
+        0.6,
+        2
+      ],
+      "color": [
+        0.35,
+        0.9,
+        0.8
+      ],
+      "amphibious": true,
+      "onHit": {
+        "effect": "slowness",
+        "seconds": 2,
+        "amplifier": 1
+      },
+      "trait": "물의 손아귀: 맞으면 구속 II 2초, 물속에서도 쫓아옴",
+      "sounds": {
+        "windup": "mob.drowned.say_water",
+        "hit": "random.splash"
+      }
+    },
+    "draugr": {
+      "name": "드라우그",
+      "level": 29,
+      "hp": 140,
+      "attack": 20,
+      "every": 26,
+      "windup": 9,
+      "reach": 2,
+      "lungeEvery": 48,
+      "speed": 0.25,
+      "chase": 1.35,
+      "knockResist": 0.5,
+      "xp": 13,
+      "xpUntil": 36,
+      "emerald": [
+        0.4,
+        2,
+        3
+      ],
+      "scale": 1.2,
+      "box": [
+        0.7,
+        2.1
+      ],
+      "color": [
+        0.45,
+        0.95,
+        1
+      ],
+      "undead": true,
+      "onHit": {
+        "effect": "slowness",
+        "seconds": 2,
+        "amplifier": 0
+      },
+      "trait": "언데드 (성기사 룬 1.5배, 햇빛에 타지 않음), 맞으면 구속 I 2초",
+      "sounds": {
+        "windup": "mob.stray.ambient",
+        "hit": "game.player.attack.strong"
+      }
+    },
+    "troll": {
+      "name": "트롤",
+      "level": 36,
+      "hp": 230,
+      "attack": 38,
+      "every": 36,
+      "windup": 10,
+      "reach": 2.6,
+      "lungeEvery": 70,
+      "speed": 0.24,
+      "chase": 1.35,
+      "knockResist": 0.9,
+      "xp": 21,
+      "xpUntil": 43,
+      "emerald": [
+        0.5,
+        2,
+        4
+      ],
+      "scale": 1.7,
+      "box": [
+        1,
+        2.1
+      ],
+      "color": [
+        0.55,
+        0.78,
+        0.3
+      ],
+      "regen": {
+        "after": 60,
+        "perSec": 0.03
+      },
+      "shock": {
+        "radius": 1.8,
+        "mult": 0.5
+      },
+      "trait": "재생: 3초 안 맞으면 1초마다 3%, 내려치면 둘레 1.8칸 충격파 (절반)",
+      "sounds": {
+        "windup": "mob.ravager.roar",
+        "hit": "mob.warden.attack"
+      }
+    }
+  },
+  "MONSTER_DROPS": {
+    "scarecrow": {
+      "item": "rpg:loot_scarecrow",
+      "icon": "textures/items/rpg/loot/scarecrow",
+      "name": "낡은 짚단",
+      "color": "§e",
+      "chance": 0.5,
+      "price": 1,
+      "desc": "움직이던 기운이 남은 질긴 짚",
+      "rgb": [
+        1,
+        0.84,
+        0.38
+      ]
+    },
+    "gulon": {
+      "item": "rpg:loot_gulon",
+      "icon": "textures/items/rpg/loot/gulon",
+      "name": "굴론 털가죽",
+      "color": "§6",
+      "chance": 0.5,
+      "price": 1,
+      "desc": "거칠고 뻣뻣한 짐승 털가죽",
+      "rgb": [
+        0.95,
+        0.55,
+        0.3
+      ]
+    },
+    "skeljaskrimsli": {
+      "item": "rpg:loot_skeljaskrimsli",
+      "icon": "textures/items/rpg/loot/skeljaskrimsli",
+      "name": "단단한 껍질",
+      "color": "§f",
+      "chance": 0.5,
+      "price": 2,
+      "desc": "쇠처럼 단단한 껍질 조각",
+      "rgb": [
+        0.96,
+        0.9,
+        0.76
+      ]
+    },
+    "nix": {
+      "item": "rpg:loot_nix",
+      "icon": "textures/items/rpg/loot/nix",
+      "name": "닉스 비늘",
+      "color": "§3",
+      "chance": 0.5,
+      "price": 3,
+      "desc": "물빛으로 일렁이는 비늘",
+      "rgb": [
+        0.35,
+        0.92,
+        0.85
+      ]
+    },
+    "draugr": {
+      "item": "rpg:loot_draugr",
+      "icon": "textures/items/rpg/loot/draugr",
+      "name": "서리 뼛조각",
+      "color": "§b",
+      "chance": 0.5,
+      "price": 4,
+      "desc": "서리가 녹지 않는 망자의 뼈",
+      "rgb": [
+        0.55,
+        0.92,
+        1
+      ]
+    },
+    "troll": {
+      "item": "rpg:loot_troll",
+      "icon": "textures/items/rpg/loot/troll",
+      "name": "트롤 엄니",
+      "color": "§2",
+      "chance": 0.5,
+      "price": 5,
+      "desc": "바위도 부수는 굵은 엄니",
+      "rgb": [
+        0.62,
+        0.85,
+        0.36
+      ]
+    }
+  },
+  "REPEAT_QUESTS": {
+    "scarecrow": {
+      "count": 8,
+      "emerald": 10,
+      "xp": 16
+    },
+    "gulon": {
+      "count": 8,
+      "emerald": 10,
+      "xp": 24
+    },
+    "skeljaskrimsli": {
+      "count": 10,
+      "emerald": 25,
+      "xp": 50
+    },
+    "nix": {
+      "count": 10,
+      "emerald": 38,
+      "xp": 90
+    },
+    "draugr": {
+      "count": 10,
+      "emerald": 50,
+      "xp": 130
+    },
+    "troll": {
+      "count": 10,
+      "emerald": 63,
+      "xp": 210
+    }
+  },
+  "MONSTER": {
+    "lungeRange": 6.5,
+    "lungeHeight": 3,
+    "lungePerBlock": 0.14,
+    "tolerance": 0.5,
+    "leash": 24,
+    "homeRadius": 10,
+    "regenDelay": 120,
+    "regenPerSec": 0.1,
+    "hpBar": 20,
+    "arc": 100,
+    "counterRadius": 1.3,
+    "counterExtra": 6,
+    "rootAmp": 6,
+    "weakPerLevel": 0.2,
+    "pauseLimit": 200,
+    "counterWindow": 60,
+    "hideMax": 100
+  },
+  "HUNT_ZONE": {
+    "radius": 6,
+    "active": 48,
+    "respawn": 200,
+    "maxCount": 8,
+    "defaultCount": 4,
+    "maxZones": 32
+  },
+  "NAV": {
+    "hudKey": "rpgnav:",
+    "hudGap": 6,
+    "sectorHold": 4,
+    "goalEvery": 10,
+    "waveEvery": 40,
+    "beamEvery": 20,
+    "beamRange": 96,
+    "pingRange": 32,
+    "arrive": 4,
+    "wave": {
+      "from": 2.6,
+      "step": 1.7,
+      "count": 5,
+      "delay": 0.12
+    },
+    "bossHide": 46,
+    "height": 6,
+    "colors": {
+      "m": [
+        1,
+        0.78,
+        0.28
+      ],
+      "c": [
+        0.45,
+        0.86,
+        1
+      ]
+    }
+  },
+  "BOSS_ORDER": [
+    "scarecrow_king",
+    "scorpions",
+    "kraken",
+    "great_worm",
+    "jormungandr",
+    "nidhogg",
+    "skoll_hati",
+    "ymir"
+  ],
+  "BOSSES": {
+    "scarecrow_king": {
+      "name": "허수아비 킹",
+      "title": "수확의 왕",
+      "level": 10,
+      "hp": 7500,
+      "scale": 2.6,
+      "box": [
+        1,
+        2.6
+      ],
+      "speed": 0.24,
+      "color": [
+        1,
+        0.62,
+        0.18
+      ],
+      "arena": {
+        "theme": "harvest",
+        "radius": 16,
+        "height": 14
+      },
+      "cooldown": 600,
+      "melee": {
+        "reach": 4.5,
+        "cone": 120,
+        "windup": 16,
+        "every": 44,
+        "damage": 14
+      },
+      "crows": {
+        "every": [
+          200,
+          260
+        ],
+        "targets": 3,
+        "windup": 26,
+        "width": 1.2,
+        "damage": 9,
+        "blind": 40
+      },
+      "bombs": {
+        "every": [
+          240,
+          300
+        ],
+        "count": 5,
+        "onPlayers": 2,
+        "radius": 2.6,
+        "fuse": 50,
+        "damage": 18
+      },
+      "prison": {
+        "every": [
+          400,
+          480
+        ],
+        "from": 0.8,
+        "hold": 120,
+        "hp": 60,
+        "damage": 28
+      },
+      "decoys": {
+        "at": [
+          0.6,
+          0.25
+        ],
+        "count": 4,
+        "time": 300,
+        "silence": 120,
+        "wrongDamage": 6,
+        "failDamage": 24,
+        "stagger": 100,
+        "staggerBonus": 0.5
+      },
+      "reaping": {
+        "from": 0.4,
+        "every": 900,
+        "count": 100,
+        "safe": 2.4,
+        "perTotem": 2
+      },
+      "far": {
+        "name": "불붙은 짚단",
+        "look": "fire",
+        "from": 10,
+        "every": [
+          240,
+          300
+        ],
+        "first": 200,
+        "count": 2,
+        "windup": 30,
+        "radius": 2.4,
+        "damage": 11,
+        "burn": 2
+      },
+      "loot": {
+        "emerald": [
+          8,
+          12
+        ],
+        "xp": 20,
+        "ticket": [
+          1,
+          1,
+          0.3
+        ],
+        "stone": [
+          3,
+          5
+        ],
+        "bright": [
+          0,
+          1,
+          0.2
+        ],
+        "scroll": [
+          0,
+          1,
+          0.1
+        ],
+        "ore": [
+          1,
+          2
+        ]
+      },
+      "sounds": {
+        "summon": "mob.evocation_illager.prepare_summon",
+        "roar": "mob.ravager.roar",
+        "hit": "mob.ravager.bite",
+        "swing": "item.trident.throw",
+        "death": "mob.wither.death"
+      }
+    },
+    "scorpions": {
+      "name": "사막 전갈 · 바위 전갈",
+      "title": "모래와 바위의 한 쌍",
+      "level": 18,
+      "color": [
+        0.93,
+        0.74,
+        0.38
+      ],
+      "arena": {
+        "theme": "desert",
+        "radius": 18,
+        "height": 12
+      },
+      "cooldown": 900,
+      "units": [
+        {
+          "key": "desert_scorpion",
+          "name": "거대 사막 전갈",
+          "title": "모래의 사냥꾼",
+          "short": "사막 전갈",
+          "hp": 5000,
+          "scale": 2.2,
+          "box": [
+            1.4,
+            0.8
+          ],
+          "speed": 0.3,
+          "spawn": [
+            -8,
+            0
+          ],
+          "textHeight": 1.8,
+          "color": [
+            0.96,
+            0.8,
+            0.42
+          ],
+          "melee": {
+            "reach": 3.4,
+            "cone": 90,
+            "windup": 12,
+            "every": 36,
+            "damage": 18,
+            "anim": "pinch"
+          },
+          "sting": {
+            "every": [
+              160,
+              200
+            ],
+            "range": 16,
+            "radius": 1.5,
+            "windup": 20,
+            "damage": 14,
+            "poison": 100
+          },
+          "burrow": {
+            "every": [
+              360,
+              440
+            ],
+            "sink": 16,
+            "trail": 40,
+            "speed": 8,
+            "radius": 3,
+            "windup": 24,
+            "damage": 22,
+            "lift": 0.8
+          },
+          "venom": {
+            "from": 0.7,
+            "every": 600,
+            "first": 200,
+            "time": 120,
+            "radius": 3,
+            "total": 60
+          },
+          "sounds": {
+            "swing": "mob.spider.say",
+            "hit": "mob.hoglin.attack",
+            "death": "mob.spider.death"
+          }
+        },
+        {
+          "key": "rock_scorpion",
+          "name": "초거대 바위 전갈",
+          "title": "바위의 파수꾼",
+          "short": "바위 전갈",
+          "hp": 7000,
+          "scale": 2.8,
+          "box": [
+            1.5,
+            0.9
+          ],
+          "speed": 0.2,
+          "spawn": [
+            8,
+            0
+          ],
+          "textHeight": 2.4,
+          "color": [
+            0.66,
+            0.58,
+            0.5
+          ],
+          "melee": {
+            "reach": 4.3,
+            "cone": 120,
+            "windup": 20,
+            "every": 50,
+            "damage": 24,
+            "anim": "slam"
+          },
+          "boulders": {
+            "every": [
+              240,
+              300
+            ],
+            "count": 3,
+            "radius": 2.2,
+            "windup": 32,
+            "damage": 20,
+            "slow": 40
+          },
+          "tremor": {
+            "every": [
+              400,
+              500
+            ],
+            "waves": 3,
+            "first": 24,
+            "gap": 24,
+            "speed": 7,
+            "damage": 16
+          },
+          "roar": {
+            "from": 0.7,
+            "every": 600,
+            "first": 300,
+            "windup": 50,
+            "range": 24,
+            "cone": 90,
+            "hold": 80
+          },
+          "far": {
+            "name": "바위 조각",
+            "look": "rock",
+            "from": 10,
+            "every": [
+              240,
+              300
+            ],
+            "first": 220,
+            "count": 2,
+            "windup": 30,
+            "radius": 2.2,
+            "damage": 16,
+            "effect": {
+              "id": "slowness",
+              "ticks": 30,
+              "amp": 0
+            }
+          },
+          "sounds": {
+            "swing": "mob.ravager.stun",
+            "hit": "random.anvil_land",
+            "death": "mob.spider.death"
+          }
+        }
+      ],
+      "symbiosis": {
+        "distance": 7,
+        "cut": 0.6
+      },
+      "enrage": {
+        "damage": 1.4,
+        "cd": 0.7,
+        "move": 1.25
+      },
+      "loot": {
+        "emerald": [
+          12,
+          18
+        ],
+        "xp": 35,
+        "ticket": [
+          1,
+          1,
+          0.5
+        ],
+        "stone": [
+          5,
+          8
+        ],
+        "bright": [
+          0,
+          1,
+          0.35
+        ],
+        "scroll": [
+          0,
+          1,
+          0.15
+        ],
+        "ore": [
+          2,
+          3
+        ]
+      },
+      "sounds": {
+        "summon": "mob.evocation_illager.prepare_summon",
+        "roar": "mob.ravager.roar",
+        "death": "mob.wither.death"
+      }
+    },
+    "kraken": {
+      "name": "크라켄",
+      "title": "심해의 군주",
+      "level": 25,
+      "hp": 15000,
+      "scale": 3,
+      "box": [
+        1.3,
+        1.6
+      ],
+      "speed": 0,
+      "color": [
+        0.3,
+        0.78,
+        0.9
+      ],
+      "textHeight": 3,
+      "arena": {
+        "theme": "sunken",
+        "radius": 20,
+        "height": 14
+      },
+      "cooldown": 900,
+      "stationary": {
+        "y": 0,
+        "turn": 16
+      },
+      "melee": {
+        "reach": 3.4,
+        "cone": 100,
+        "windup": 18,
+        "every": 40,
+        "damage": 34,
+        "anim": "bite"
+      },
+      "slam": {
+        "every": [
+          200,
+          260
+        ],
+        "first": 100,
+        "count": 2,
+        "countLow": 3,
+        "low": 0.5,
+        "windup": 36,
+        "gap": 30,
+        "radius": 12,
+        "cone": 56,
+        "damage": 50,
+        "root": 20
+      },
+      "ink": {
+        "every": [
+          280,
+          340
+        ],
+        "first": 180,
+        "range": 24,
+        "cone": 70,
+        "coneFar": 40,
+        "windup": 26,
+        "damage": 12,
+        "blind": 40,
+        "silence": 70,
+        "puddles": 3,
+        "puddleRadius": 2.2,
+        "puddleLife": 240,
+        "puddleDamage": 3
+      },
+      "whirl": {
+        "from": 0.85,
+        "every": [
+          520,
+          600
+        ],
+        "first": 300,
+        "time": 110,
+        "radius": 17,
+        "tug": 10,
+        "strength": 0.32,
+        "crush": 7,
+        "damage": 100
+      },
+      "tentacles": {
+        "at": [
+          0.8,
+          0.45
+        ],
+        "hp": 380,
+        "scale": 2.5,
+        "box": [
+          0.8,
+          2.4
+        ],
+        "life": 680,
+        "heal": 0.0015,
+        "every": 80,
+        "radius": 3.2,
+        "windup": 24,
+        "damage": 36,
+        "root": 20,
+        "stagger": 120,
+        "bonus": 0.4
+      },
+      "tide": {
+        "at": [
+          0.6,
+          0.25
+        ],
+        "windup": 130,
+        "speed": 12,
+        "depth": 5,
+        "pad": 0.35
+      },
+      "high": {
+        "above": 2.5,
+        "cd": 40,
+        "damage": 50
+      },
+      "far": {
+        "name": "먹물 포탄",
+        "look": "ink",
+        "from": 10,
+        "every": [
+          240,
+          300
+        ],
+        "first": 200,
+        "count": 2,
+        "windup": 30,
+        "radius": 2.4,
+        "damage": 26,
+        "effect": {
+          "id": "blindness",
+          "ticks": 30,
+          "amp": 0
+        }
+      },
+      "loot": {
+        "emerald": [
+          16,
+          24
+        ],
+        "xp": 50,
+        "ticket": [
+          1,
+          1,
+          0.6
+        ],
+        "stone": [
+          6,
+          9
+        ],
+        "bright": [
+          0,
+          1,
+          0.5
+        ],
+        "scroll": [
+          0,
+          1,
+          0.2
+        ],
+        "ore": [
+          2,
+          4
+        ],
+        "kraken_ink": [
+          2,
+          3,
+          0.25
+        ],
+        "kraken_eye": [
+          2,
+          3,
+          0.25
+        ]
+      },
+      "sounds": {
+        "summon": "mob.elderguardian.curse",
+        "roar": "mob.elderguardian.idle",
+        "swing": "mob.squid.ambient",
+        "hit": "mob.guardian.hit",
+        "death": "mob.elderguardian.death"
+      }
+    },
+    "great_worm": {
+      "name": "거대 웜",
+      "title": "대지의 포식자",
+      "level": 25,
+      "hp": 15000,
+      "scale": 3,
+      "box": [
+        1,
+        2.4
+      ],
+      "speed": 0,
+      "color": [
+        0.93,
+        0.55,
+        0.4
+      ],
+      "textHeight": 4,
+      "arena": {
+        "theme": "deep",
+        "radius": 19,
+        "height": 16
+      },
+      "cooldown": 900,
+      "stationary": {
+        "y": 0,
+        "turn": 14
+      },
+      "melee": {
+        "reach": 3.6,
+        "cone": 110,
+        "windup": 20,
+        "every": 44,
+        "damage": 36,
+        "anim": "slam"
+      },
+      "sweep": {
+        "every": [
+          240,
+          300
+        ],
+        "first": 160,
+        "radius": 8,
+        "angle": 270,
+        "windup": 30,
+        "time": 12,
+        "damage": 50
+      },
+      "tunnel": {
+        "every": [
+          320,
+          400
+        ],
+        "first": 300,
+        "sink": 20,
+        "windup": 34,
+        "radius": 4.5,
+        "damage": 44,
+        "near": 10
+      },
+      "quake": {
+        "from": 0.9,
+        "every": [
+          560,
+          660
+        ],
+        "first": 400,
+        "tile": 3,
+        "windup": 40,
+        "gap": 34,
+        "damage": 54,
+        "lift": 0.6
+      },
+      "devour": {
+        "from": 0.8,
+        "every": [
+          520,
+          620
+        ],
+        "first": 500,
+        "range": 10,
+        "reach": 9.2,
+        "windup": 40,
+        "lock": 18,
+        "radius": 2.2,
+        "hold": 160,
+        "perHelper": 110,
+        "dot": 4,
+        "fail": 20,
+        "gag": 40,
+        "splash": 30
+      },
+      "tremor": {
+        "at": [
+          0.7,
+          0.45,
+          0.2
+        ],
+        "warn": 60,
+        "listen": 80,
+        "grace": 1,
+        "strike": 12,
+        "gap": 12,
+        "rocks": 2,
+        "rockAt": [
+          10,
+          40
+        ],
+        "rockWindup": 36,
+        "rockRadius": 1.6,
+        "rockDamage": 40,
+        "calm": 16,
+        "emerge": 30,
+        "radius": 4.5,
+        "damage": 44
+      },
+      "rend": {
+        "every": [
+          220,
+          280
+        ],
+        "first": 260,
+        "far": 9,
+        "count": 2,
+        "windup": 30,
+        "width": 2.2,
+        "over": 3,
+        "speed": 1.5,
+        "damage": 44,
+        "lift": 0.5
+      },
+      "high": {
+        "above": 2.5,
+        "cd": 40,
+        "damage": 50
+      },
+      "far": {
+        "name": "바위 뱉기",
+        "look": "rock",
+        "from": 10,
+        "every": [
+          240,
+          300
+        ],
+        "first": 200,
+        "count": 2,
+        "windup": 30,
+        "radius": 2.4,
+        "damage": 26,
+        "effect": {
+          "id": "slowness",
+          "ticks": 40,
+          "amp": 0
+        }
+      },
+      "loot": {
+        "emerald": [
+          16,
+          24
+        ],
+        "xp": 50,
+        "ticket": [
+          1,
+          1,
+          0.6
+        ],
+        "stone": [
+          6,
+          9
+        ],
+        "bright": [
+          0,
+          1,
+          0.5
+        ],
+        "scroll": [
+          0,
+          1,
+          0.2
+        ],
+        "ore": [
+          2,
+          4
+        ],
+        "worm_fang": [
+          2,
+          3,
+          0.25
+        ],
+        "worm_heart": [
+          2,
+          3,
+          0.25
+        ]
+      },
+      "sounds": {
+        "summon": "mob.warden.emerge",
+        "roar": "mob.warden.roar",
+        "swing": "mob.warden.attack",
+        "hit": "mob.ravager.bite",
+        "death": "mob.warden.death"
+      }
+    },
+    "jormungandr": {
+      "name": "요르문간드",
+      "title": "세계를 휘감은 뱀",
+      "level": 32,
+      "hp": 22000,
+      "scale": 3,
+      "box": [
+        1.2,
+        1.8
+      ],
+      "speed": 0,
+      "color": [
+        0.3,
+        0.86,
+        0.62
+      ],
+      "textHeight": 4,
+      "arena": {
+        "theme": "isle",
+        "radius": 20,
+        "height": 14,
+        "island": 13,
+        "moat": 18.5,
+        "safe": 7
+      },
+      "cooldown": 900,
+      "stationary": {
+        "y": 0,
+        "turn": 12
+      },
+      "swim": {
+        "radius": 15.75,
+        "speed": 0.18,
+        "turn": 12,
+        "flip": 0.3,
+        "seg": 1.5,
+        "neck": 3.94,
+        "length": 16.4,
+        "sink": 0.9
+      },
+      "melee": {
+        "reach": 2.6,
+        "cone": 70,
+        "windup": 18,
+        "every": 40,
+        "damage": 64,
+        "anim": "bite"
+      },
+      "dash": {
+        "every": [
+          240,
+          300
+        ],
+        "first": 120,
+        "windup": 32,
+        "width": 3.2,
+        "speed": 1,
+        "near": 4,
+        "endIn": 1.5,
+        "damage": 96,
+        "silence": 60,
+        "knock": 1
+      },
+      "tail": {
+        "every": [
+          300,
+          360
+        ],
+        "first": 220,
+        "windup": 30,
+        "from": 0,
+        "to": 12,
+        "inner": 8,
+        "damage": 72,
+        "root": 50
+      },
+      "flood": {
+        "from": 0.85,
+        "every": [
+          640,
+          740
+        ],
+        "first": 260,
+        "windup": 70,
+        "hold": 60,
+        "damage": 100,
+        "poison": 100,
+        "tick": 5
+      },
+      "venom": {
+        "from": 0.7,
+        "every": [
+          720,
+          820
+        ],
+        "first": 200,
+        "time": 300,
+        "steps": 9,
+        "radius": 2.2,
+        "need": 30,
+        "helper": 8,
+        "calm": 16,
+        "grace": 10,
+        "leave": 12
+      },
+      "ring": {
+        "at": [
+          0.5,
+          0.2
+        ],
+        "windup": 60,
+        "start": 21.5,
+        "end": 1.5,
+        "speed": 2.2,
+        "gap": 60,
+        "thick": 1
+      },
+      "moat": {
+        "damage": 3
+      },
+      "high": {
+        "above": 2.5,
+        "cd": 40,
+        "damage": 60
+      },
+      "far": {
+        "name": "독 뱉기",
+        "look": "venom",
+        "from": 10,
+        "every": [
+          240,
+          300
+        ],
+        "first": 200,
+        "count": 2,
+        "windup": 30,
+        "radius": 2.4,
+        "damage": 52,
+        "effect": {
+          "id": "poison",
+          "ticks": 60,
+          "amp": 0
+        }
+      },
+      "loot": {
+        "emerald": [
+          22,
+          32
+        ],
+        "xp": 70,
+        "ticket": [
+          1,
+          1,
+          0.8
+        ],
+        "stone": [
+          8,
+          12
+        ],
+        "bright": [
+          1,
+          1,
+          0.4
+        ],
+        "scroll": [
+          0,
+          1,
+          0.3
+        ],
+        "ore": [
+          3,
+          5
+        ]
+      },
+      "sounds": {
+        "summon": "mob.elderguardian.curse",
+        "roar": "mob.enderdragon.growl",
+        "swing": "mob.cat.hiss",
+        "hit": "mob.ravager.bite",
+        "death": "mob.enderdragon.death"
+      }
+    },
+    "nidhogg": {
+      "name": "니드호그",
+      "title": "세계수를 갉는 흑룡",
+      "level": 38,
+      "hp": 25000,
+      "scale": 2.5,
+      "box": [
+        1.6,
+        1.7
+      ],
+      "speed": 0,
+      "color": [
+        0.82,
+        0.22,
+        0.42
+      ],
+      "textHeight": 4.6,
+      "arena": {
+        "theme": "roots",
+        "radius": 22,
+        "height": 20,
+        "arch": 8,
+        "ground": 12
+      },
+      "cooldown": 900,
+      "stationary": {
+        "y": 0
+      },
+      "drive": {
+        "walk": 0.13,
+        "turn": 8,
+        "near": 5.5,
+        "keep": 12,
+        "head": 6.6
+      },
+      "melee": {
+        "reach": 5.2,
+        "cone": 70,
+        "windup": 16,
+        "every": 44,
+        "damage": 75,
+        "anim": "bite"
+      },
+      "tail": {
+        "every": [
+          140,
+          180
+        ],
+        "first": 100,
+        "windup": 18,
+        "reach": 9.5,
+        "cone": 130,
+        "damage": 60,
+        "knock": 1.2
+      },
+      "breath": {
+        "every": [
+          280,
+          340
+        ],
+        "first": 160,
+        "windup": 24,
+        "sweep": 120,
+        "time": 40,
+        "range": 16,
+        "cone": 40,
+        "tick": 10,
+        "damage": 40,
+        "wither": 60
+      },
+      "gust": {
+        "every": [
+          440,
+          520
+        ],
+        "first": 280,
+        "windup": 36,
+        "inner": 4.5,
+        "outer": 16,
+        "damage": 40,
+        "silence": 60,
+        "knock": 1.4
+      },
+      "snare": {
+        "every": [
+          320,
+          400
+        ],
+        "first": 200,
+        "windup": 28,
+        "count": 2,
+        "far": 8,
+        "radius": 2.2,
+        "damage": 50,
+        "root": 50
+      },
+      "flight": {
+        "at": [
+          0.75,
+          0.4
+        ],
+        "rise": 30,
+        "height": 12,
+        "circle": 12,
+        "speed": 0.5,
+        "volleys": 3,
+        "gap": 40,
+        "first": 10,
+        "rain": {
+          "radius": 2.4,
+          "windup": 24,
+          "damage": 70,
+          "poison": 60
+        },
+        "dive": {
+          "windup": 32,
+          "radius": 6,
+          "damage": 150,
+          "lift": 0.9,
+          "time": 10
+        },
+        "land": 20
+      },
+      "brand": {
+        "from": 0.6,
+        "every": [
+          760,
+          880
+        ],
+        "first": 300,
+        "time": 120,
+        "radius": 5,
+        "damage": 24
+      },
+      "high": {
+        "above": 2.5,
+        "cd": 40,
+        "damage": 70,
+        "grace": 30
+      },
+      "far": {
+        "name": "독 가시",
+        "look": "spike",
+        "from": 10,
+        "every": [
+          240,
+          300
+        ],
+        "first": 200,
+        "count": 2,
+        "windup": 30,
+        "radius": 2.4,
+        "damage": 60,
+        "effect": {
+          "id": "wither",
+          "ticks": 40,
+          "amp": 0
+        }
+      },
+      "loot": {
+        "emerald": [
+          28,
+          40
+        ],
+        "xp": 90,
+        "ticket": [
+          2,
+          2,
+          0.3
+        ],
+        "stone": [
+          10,
+          14
+        ],
+        "bright": [
+          1,
+          1,
+          0.6
+        ],
+        "scroll": [
+          0,
+          1,
+          0.45
+        ],
+        "ore": [
+          4,
+          6
+        ],
+        "ygg_branch": [
+          2,
+          3,
+          0.25
+        ],
+        "ygg_root": [
+          2,
+          3,
+          0.25
+        ]
+      },
+      "sounds": {
+        "summon": "mob.enderdragon.growl",
+        "roar": "mob.enderdragon.growl",
+        "swing": "mob.enderdragon.flap",
+        "hit": "mob.ravager.bite",
+        "death": "mob.enderdragon.death"
+      }
+    },
+    "skoll_hati": {
+      "name": "스콜과 하티",
+      "title": "해와 달을 쫓는 늑대",
+      "level": 38,
+      "hp": 27000,
+      "scale": 2.6,
+      "box": [
+        1.4,
+        1.5
+      ],
+      "speed": 0,
+      "color": [
+        1,
+        0.72,
+        0.3
+      ],
+      "textHeight": 5.4,
+      "arena": {
+        "theme": "stones",
+        "radius": 22,
+        "height": 16,
+        "disc": 7,
+        "stones": 19.5
+      },
+      "cooldown": 900,
+      "stationary": {
+        "y": 0
+      },
+      "drive": {
+        "walk": 0.2,
+        "turn": 6,
+        "near": 5,
+        "keep": 12.5,
+        "leap": 17,
+        "head": 4.6,
+        "side": 1.4,
+        "paw": 2
+      },
+      "melee": {
+        "reach": 4.6,
+        "cone": 80,
+        "windup": 14,
+        "every": 44,
+        "damage": 75,
+        "burn": 2,
+        "slow": 40,
+        "anim": "bite_sun"
+      },
+      "pounce": {
+        "every": [
+          240,
+          300
+        ],
+        "first": 160,
+        "min": 8,
+        "range": 22,
+        "radius": 3.4,
+        "windup": 22,
+        "time": 12,
+        "height": 4,
+        "damage": 80,
+        "lift": 0.6,
+        "burn": 3,
+        "slow": 40
+      },
+      "stance": {
+        "every": 600,
+        "first": 600,
+        "howl": 24,
+        "weak": 0.3,
+        "flank": [
+          35,
+          145
+        ]
+      },
+      "wheel": {
+        "every": [
+          360,
+          420
+        ],
+        "first": 120,
+        "windup": 32,
+        "time": 44,
+        "beams": 4,
+        "sweep": 45,
+        "width": 2.4,
+        "inner": 2.2,
+        "range": 22,
+        "damage": 50,
+        "burn": 3,
+        "duskBeams": 6,
+        "duskSweep": 30
+      },
+      "hunt": {
+        "every": [
+          360,
+          420
+        ],
+        "first": 120,
+        "min": 6,
+        "pounces": 3,
+        "windup": 18,
+        "time": 10,
+        "height": 3,
+        "radius": 3,
+        "damage": 60,
+        "slow": 40,
+        "frost": {
+          "radius": 2.2,
+          "life": 120,
+          "slow": 30,
+          "dmg": 3
+        },
+        "winded": 40,
+        "bonus": 0.25
+      },
+      "judge": {
+        "at": [
+          0.7,
+          0.25
+        ],
+        "windup": 140,
+        "swapAt": 70,
+        "leap": 16
+      },
+      "dusk": {
+        "from": 0.45,
+        "howl": 40,
+        "cd": 0.85
+      },
+      "high": {
+        "above": 2.5,
+        "cd": 40,
+        "damage": 70,
+        "grace": 30
+      },
+      "far": {
+        "name": "태양 불씨",
+        "look": "fire",
+        "from": 10,
+        "every": [
+          240,
+          300
+        ],
+        "first": 200,
+        "count": 2,
+        "windup": 30,
+        "radius": 2.4,
+        "damage": 60,
+        "burn": 2,
+        "night": {
+          "name": "달 서리",
+          "look": "frost",
+          "effect": {
+            "id": "slowness",
+            "ticks": 40,
+            "amp": 1
+          }
+        }
+      },
+      "loot": {
+        "emerald": [
+          28,
+          40
+        ],
+        "xp": 90,
+        "ticket": [
+          2,
+          2,
+          0.3
+        ],
+        "stone": [
+          10,
+          14
+        ],
+        "bright": [
+          1,
+          1,
+          0.6
+        ],
+        "scroll": [
+          0,
+          1,
+          0.45
+        ],
+        "ore": [
+          4,
+          6
+        ],
+        "skoll_fang": [
+          2,
+          3,
+          0.25
+        ],
+        "hati_mane": [
+          2,
+          3,
+          0.25
+        ]
+      },
+      "sounds": {
+        "summon": "mob.wolf.big.growl",
+        "roar": "mob.wolf.big.growl",
+        "howl": "mob.wolf.big.whine",
+        "swing": "mob.wolf.big.bark",
+        "hit": "mob.ravager.bite",
+        "step": "mob.wolf.step",
+        "pant": "mob.wolf.big.panting",
+        "death": "mob.wolf.big.death"
+      }
+    },
+    "ymir": {
+      "name": "이미르",
+      "title": "태초의 서리 거인",
+      "level": 40,
+      "hp": 38000,
+      "scale": 4,
+      "box": [
+        0.9,
+        2.3
+      ],
+      "speed": 0,
+      "color": [
+        0.55,
+        0.86,
+        1
+      ],
+      "textHeight": 4.2,
+      "arena": {
+        "theme": "glacier",
+        "radius": 24,
+        "height": 20,
+        "lake": 6,
+        "fires": 14,
+        "warm": 3.5
+      },
+      "cooldown": 1200,
+      "stationary": {
+        "y": 0
+      },
+      "drive": {
+        "walk": 0.14,
+        "turn": 5,
+        "near": 6,
+        "keep": 10.5,
+        "arm": 2.25
+      },
+      "arrive": {
+        "depth": 10,
+        "rise": 60,
+        "roar": 24
+      },
+      "melee": {
+        "from": 0.5,
+        "reach": 10.5,
+        "width": 3.2,
+        "aim": 75,
+        "windup": 18,
+        "every": 48,
+        "damage": 94,
+        "slow": 30,
+        "anim": "slam"
+      },
+      "stomp": {
+        "every": [
+          180,
+          220
+        ],
+        "first": 100,
+        "radius": 6,
+        "front": 100,
+        "windup": 26,
+        "damage": 75,
+        "lift": 0.6
+      },
+      "spikes": {
+        "every": [
+          280,
+          340
+        ],
+        "first": 160,
+        "lines": 3,
+        "windup": 22,
+        "speed": 20,
+        "step": 1.5,
+        "width": 1.8,
+        "range": 22,
+        "damage": 62,
+        "root": 30
+      },
+      "icicles": {
+        "every": [
+          360,
+          420
+        ],
+        "first": 240,
+        "radius": 2.6,
+        "windup": 28,
+        "extra": 3,
+        "damage": 70,
+        "slow": 40
+      },
+      "crack": {
+        "need": 3000,
+        "far": 0.25,
+        "time": 100,
+        "lock": 200,
+        "bonus": 0.5
+      },
+      "breath": {
+        "at": [
+          0.65,
+          0.3
+        ],
+        "leap": 20,
+        "windup": 140,
+        "relight": 200
+      },
+      "winter": {
+        "from": 0.2,
+        "cd": 0.8,
+        "lines": 1,
+        "extra": 2
+      },
+      "warmth": {
+        "every": 20
+      },
+      "high": {
+        "above": 2.5,
+        "cd": 40,
+        "damage": 87,
+        "grace": 30
+      },
+      "far": {
+        "name": "얼음 창",
+        "look": "ice",
+        "from": 10,
+        "every": [
+          240,
+          300
+        ],
+        "first": 200,
+        "count": 2,
+        "windup": 30,
+        "radius": 2.4,
+        "damage": 75,
+        "effect": {
+          "id": "slowness",
+          "ticks": 30,
+          "amp": 1
+        }
+      },
+      "loot": {
+        "emerald": [
+          34,
+          48
+        ],
+        "xp": 120,
+        "ticket": [
+          2,
+          2,
+          0.6
+        ],
+        "stone": [
+          12,
+          16
+        ],
+        "bright": [
+          1,
+          1,
+          0.8
+        ],
+        "scroll": [
+          1,
+          1,
+          0.3
+        ],
+        "ore": [
+          5,
+          7
+        ],
+        "ymir_heart": [
+          2,
+          3,
+          0.25
+        ],
+        "ymir_bone": [
+          2,
+          3,
+          0.25
+        ]
+      },
+      "sounds": {
+        "summon": "mob.warden.roar",
+        "roar": "mob.warden.roar",
+        "swing": "mace.smash_air",
+        "hit": "mace.heavy_smash_ground",
+        "step": "mob.warden.step",
+        "ice": "random.glass",
+        "inhale": "mob.breeze.inhale",
+        "exhale": "mob.warden.sonic_boom",
+        "fire": "fire.ignite",
+        "snuff": "extinguish.candle",
+        "death": "mob.irongolem.death"
+      }
+    },
+    "surtr": {
+      "name": "수르트",
+      "title": "무스펠헤임의 불의 거인",
+      "level": 50,
+      "tier": "transcend",
+      "hp": 90000,
+      "scale": 10,
+      "box": [
+        1,
+        3.3
+      ],
+      "speed": 0,
+      "color": [
+        1,
+        0.42,
+        0.12
+      ],
+      "textHeight": 3,
+      "hudRange": 72,
+      "textNear": true,
+      "arena": {
+        "theme": "muspel",
+        "radius": 44,
+        "height": 40,
+        "pit": 7,
+        "chains": 16,
+        "crystals": 26,
+        "tick": true
+      },
+      "cooldown": 1800,
+      "stationary": {
+        "y": 0
+      },
+      "drive": {
+        "walk": 0.1,
+        "turn": 3.5,
+        "near": 9,
+        "keep": 8,
+        "arm": 6.5625
+      },
+      "arrive": {
+        "depth": 36,
+        "rise": 100,
+        "roar": 30
+      },
+      "melee": {
+        "from": 5,
+        "reach": 37,
+        "width": 6,
+        "aim": 70,
+        "band": [
+          10,
+          37
+        ],
+        "windup": 36,
+        "embed": 50,
+        "core": 33,
+        "every": 80,
+        "damage": 130,
+        "knock": 1,
+        "anim": "slam"
+      },
+      "trail": {
+        "time": 120,
+        "tick": 20,
+        "damage": 30,
+        "burn": 2
+      },
+      "bind": {
+        "time": 120,
+        "bonus": 0.3,
+        "min": 7
+      },
+      "sweep": {
+        "every": [
+          300,
+          360
+        ],
+        "first": 200,
+        "windup": 56,
+        "window": 20,
+        "inner": 20,
+        "outer": 38,
+        "angle": 150,
+        "offset": 10,
+        "damage": 120,
+        "burn": 3,
+        "knock": 1.2
+      },
+      "thrust": {
+        "every": [
+          320,
+          380
+        ],
+        "first": 360,
+        "windup": 32,
+        "window": 18,
+        "from": 5,
+        "reach": 40,
+        "width": 4,
+        "damage": 140,
+        "knock": 1.4
+      },
+      "counter": {
+        "stagger": 50,
+        "bonus": 0.25,
+        "time": 60
+      },
+      "fist": {
+        "every": [
+          260,
+          320
+        ],
+        "first": 140,
+        "windup": 46,
+        "at": [
+          13.4,
+          -7
+        ],
+        "radius": 7,
+        "rest": 60,
+        "damage": 125,
+        "lift": 0.7
+      },
+      "meteors": {
+        "every": [
+          380,
+          440
+        ],
+        "first": 260,
+        "windup": 40,
+        "radius": 3.5,
+        "extra": 4,
+        "extraBroken": 0,
+        "damage": 100,
+        "burn": 3,
+        "fall": 16
+      },
+      "rings": {
+        "every": [
+          440,
+          520
+        ],
+        "first": 480,
+        "plunge": 26,
+        "waves": 3,
+        "wavesBroken": 2,
+        "gap": 24,
+        "speed": 7,
+        "damage": 85,
+        "burn": 2
+      },
+      "stomp": {
+        "every": [
+          180,
+          220
+        ],
+        "first": 120,
+        "radius": 10.5,
+        "front": 110,
+        "windup": 40,
+        "damage": 100,
+        "lift": 0.7
+      },
+      "inferno": {
+        "at": [
+          0.8,
+          0.5,
+          0.2
+        ],
+        "time": 240,
+        "per": 900,
+        "min": 2,
+        "crownCut": 0.8,
+        "erupt": 40,
+        "eruptWindup": 30,
+        "eruptRadius": 3,
+        "eruptDamage": 70,
+        "groggy": 160,
+        "bonus": 0.5,
+        "failDamage": 60,
+        "failBurn": 4,
+        "heal": 0.02
+      },
+      "ragnarok": {
+        "at": [
+          0.65,
+          0.35
+        ],
+        "spot": 7,
+        "leap": 24,
+        "windup": 180,
+        "speed": 18,
+        "depth": 6,
+        "pad": 0.4,
+        "melt": 2,
+        "keepIntact": 2,
+        "safe": 32,
+        "brokenDamage": 75
+      },
+      "enrage": {
+        "from": 0.5,
+        "cd": 0.85,
+        "dmg": 1.1
+      },
+      "parts": {
+        "sword": 5000,
+        "fist": 3500,
+        "crown": 4000
+      },
+      "partLoot": {
+        "sword": {
+          "laevateinn_shard": 2
+        },
+        "fist": {
+          "laevateinn_shard": 1
+        },
+        "crown": {
+          "muspel_heart": 1
+        }
+      },
+      "high": {
+        "above": 2.5,
+        "cd": 40,
+        "damage": 120,
+        "grace": 30
+      },
+      "far": {
+        "name": "무스펠의 불덩이",
+        "look": "fire",
+        "from": 12,
+        "every": [
+          200,
+          260
+        ],
+        "first": 200,
+        "count": 2,
+        "windup": 30,
+        "radius": 3,
+        "damage": 95,
+        "burn": 3
+      },
+      "loot": {
+        "emerald": [
+          48,
+          64
+        ],
+        "xp": 200,
+        "ticket": [
+          2,
+          3,
+          0.5
+        ],
+        "ticketAdv": [
+          1,
+          1,
+          0.25
+        ],
+        "stone": [
+          16,
+          20
+        ],
+        "bright": [
+          2,
+          2,
+          0.5
+        ],
+        "scroll": [
+          1,
+          2,
+          0.5
+        ],
+        "ore": [
+          7,
+          9
+        ],
+        "muspel_heart": [
+          1,
+          2,
+          0.3
+        ],
+        "laevateinn_shard": [
+          2,
+          3,
+          0.3
+        ]
+      },
+      "notes": [
+        "§e반격: §f칼이 금빛으로 번쩍이면 스킬·룬으로 때리기",
+        "§6무력화: §f업화를 모을 때 업화 막대를 피해로 깎기",
+        "§b구조물: §f라그나로크는 얼음 결정 뒤 · 사슬 기둥으로 칼을 붙잡기",
+        "§c부위 파괴: §f레바테인 · 왼 건틀릿 · 불꽃 왕관"
+      ],
+      "sounds": {
+        "summon": "mob.wither.spawn",
+        "roar": "mob.enderdragon.growl",
+        "swing": "mace.smash_air",
+        "hit": "mace.heavy_smash_ground",
+        "step": "mob.ravager.step",
+        "fire": "mob.blaze.shoot",
+        "burn": "fire.fire",
+        "lava": "bucket.empty_lava",
+        "ignite": "fire.ignite",
+        "chain": "hit.chain",
+        "ice": "random.glass",
+        "melt": "random.fizz",
+        "counter": "random.anvil_land",
+        "parry": "block.bell.hit",
+        "shatter": "random.anvil_break",
+        "meteor": "mob.ghast.fireball",
+        "erupt": "random.explode",
+        "charge": "respawn_anchor.charge",
+        "thunder": "ambient.weather.thunder",
+        "death": "mob.wither.death"
+      }
+    }
+  },
+  "TRANSCEND_ORDER": [
+    "surtr"
+  ],
+  "ALL_BOSS_ORDER": [
+    "scarecrow_king",
+    "scorpions",
+    "kraken",
+    "great_worm",
+    "jormungandr",
+    "nidhogg",
+    "skoll_hati",
+    "ymir",
+    "surtr"
+  ],
+  "BOSS": {
+    "iframes": 10,
+    "resetAfter": 200,
+    "summonDelay": 60,
+    "hudRange": 40,
+    "buildPerTick": 1500,
+    "flashTicks": 3,
+    "participantGrace": 600,
+    "combatMargin": 2.5,
+    "nearAltars": 6,
+    "close": {
+      "range": 4,
+      "bonus": 0.1
+    }
+  },
+  "WORLD_TREE": {
+    "name": "세계수 이그드라실",
+    "height": 64,
+    "minHeight": 40,
+    "maxHeight": 96,
+    "lookRange": 96,
+    "clearance": 4,
+    "perTick": 400,
+    "msPerTick": 10,
+    "lagMs": 80,
+    "minPerTick": 50,
+    "loadWait": 200,
+    "saveEvery": 20,
+    "stagePause": 5,
+    "fruit": 0.022,
+    "berries": 0.035,
+    "maxBuilt": 12,
+    "maxBlocked": 0.35,
+    "skySamples": 300,
+    "keep": 5
+  },
+  "PVP": {
+    "mult": 0.1,
+    "capRatio": 0,
+    "requestTicks": 600,
+    "countdownTicks": 60,
+    "retryTicks": 300,
+    "askGapTicks": 60,
+    "quietIfHurtTicks": 100,
+    "lethal": false,
+    "graceTicks": 60,
+    "blameTicks": 100,
+    "protectOthers": true,
+    "markEvery": 20,
+    "color": [
+      1,
+      0.22,
+      0.16
+    ],
+    "core": [
+      1,
+      0.92,
+      0.7
+    ],
+    "win": [
+      1,
+      0.78,
+      0.25
+    ]
+  },
+  "ULT_FX": {
+    "fog": true,
+    "flash": true,
+    "audience": 32,
+    "flashRadius": 20,
+    "flashTime": {
+      "fadeInTime": 0.04,
+      "holdTime": 0.02,
+      "fadeOutTime": 0.42
+    },
+    "fogTag": "rpg_ult_fog",
+    "fogs": {
+      "rpg:ult_gold": [
+        10,
+        70,
+        "#D49A3A"
+      ],
+      "rpg:ult_still": [
+        6,
+        44,
+        "#7C8494"
+      ],
+      "rpg:ult_crimson": [
+        8,
+        56,
+        "#7A0C1C"
+      ],
+      "rpg:ult_meteor": [
+        8,
+        60,
+        "#B4401A"
+      ],
+      "rpg:ult_blood": [
+        6,
+        50,
+        "#640808"
+      ],
+      "rpg:ult_dawn": [
+        12,
+        80,
+        "#C2D27A"
+      ],
+      "rpg:ult_heaven": [
+        12,
+        88,
+        "#F0D48C"
+      ],
+      "rpg:ult_storm": [
+        6,
+        52,
+        "#30285A"
+      ],
+      "rpg:ult_night": [
+        6,
+        46,
+        "#161B3A"
+      ],
+      "rpg:ult_blade": [
+        10,
+        72,
+        "#86D6DA"
+      ],
+      "rpg:ult_arcane": [
+        8,
+        56,
+        "#2C1C6C"
+      ],
+      "rpg:ult_fire": [
+        10,
+        64,
+        "#C4561E"
+      ],
+      "rpg:ult_ice": [
+        10,
+        64,
+        "#86C2EA"
+      ],
+      "rpg:ult_thunder": [
+        10,
+        64,
+        "#4C3C9E"
+      ],
+      "rpg:ult_aurora": [
+        10,
+        72,
+        "#2E9E86"
+      ],
+      "rpg:ult_void": [
+        5,
+        40,
+        "#120820"
+      ],
+      "rpg:ult_awaken": [
+        10,
+        70,
+        "#D88A26"
+      ],
+      "rpg:ult_sword": [
+        12,
+        84,
+        "#E2D29C"
+      ]
+    },
+    "runes": {
+      "heavenFall": {
+        "fog": "rpg:ult_gold",
+        "flash": [
+          1,
+          0.8,
+          0.38
+        ]
+      },
+      "shadowless": {
+        "fog": "rpg:ult_still",
+        "flash": [
+          0.82,
+          1,
+          0.86
+        ],
+        "still": [
+          0.86,
+          0.9,
+          0.96
+        ]
+      },
+      "undyingPact": {
+        "fog": "rpg:ult_crimson",
+        "flash": [
+          0.85,
+          0.1,
+          0.18
+        ]
+      },
+      "meteor": {
+        "fog": "rpg:ult_meteor",
+        "flash": [
+          1,
+          0.56,
+          0.2
+        ]
+      },
+      "berserker": {
+        "fog": "rpg:ult_blood",
+        "flash": [
+          0.62,
+          0.02,
+          0.04
+        ]
+      },
+      "skyBow": {
+        "fog": "rpg:ult_dawn",
+        "flash": [
+          0.88,
+          1,
+          0.62
+        ]
+      },
+      "archangel": {
+        "fog": "rpg:ult_heaven",
+        "flash": [
+          1,
+          0.95,
+          0.76
+        ]
+      },
+      "thunderSpear": {
+        "fog": "rpg:ult_storm",
+        "flash": [
+          0.76,
+          0.66,
+          1
+        ]
+      },
+      "moonAssassin": {
+        "fog": "rpg:ult_night",
+        "flash": [
+          0.96,
+          0.76,
+          1
+        ]
+      },
+      "heavenSplit": {
+        "fog": "rpg:ult_blade",
+        "flash": [
+          0.72,
+          1,
+          1
+        ]
+      },
+      "spellbladeRelease": {
+        "fog": "rpg:ult_arcane",
+        "flash": [
+          0.62,
+          0.52,
+          1
+        ]
+      },
+      "elementRelease": {
+        "fogs": [
+          "rpg:ult_fire",
+          "rpg:ult_ice",
+          "rpg:ult_thunder"
+        ],
+        "flash": [
+          1,
+          0.95,
+          0.86
+        ]
+      },
+      "summonSpirits": {
+        "fog": "rpg:ult_aurora",
+        "flash": [
+          0.62,
+          1,
+          0.86
+        ]
+      },
+      "blackHole": {
+        "fog": "rpg:ult_void",
+        "flash": [
+          0.96,
+          0.86,
+          1
+        ],
+        "dark": [
+          0.16,
+          0.03,
+          0.24
+        ]
+      },
+      "awakening": {
+        "fog": "rpg:ult_awaken",
+        "flash": [
+          1,
+          0.72,
+          0.26
+        ]
+      },
+      "swordGod": {
+        "fog": "rpg:ult_sword",
+        "flash": [
+          1,
+          0.93,
+          0.62
+        ]
+      }
+    }
+  }
+}

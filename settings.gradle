@@ -1,0 +1,14 @@
+// MMO RPG — 자바 에디션 (Fabric) 모드. 루트 = 모드, core = 마인크래프트와 무관한 규칙 코어 (외부 라이브러리 없음)
+pluginManagement {
+    repositories {
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = 'mmorpg'
+include 'core'

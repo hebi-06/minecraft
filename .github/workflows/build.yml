@@ -1,0 +1,89 @@
+# 빌드 · 시험 · 배포 (main 에 올릴 때마다)
+# 1. Fabric 버전 확인 (gradle.properties 의 auto 를 채움)  2. 규칙 코어 대조 시험 (애드온 JS 와 같은 값)
+# 3. 모드 빌드 (컴파일)  4. 게임 시험 (서버를 띄워 @GameTest)  5. 로그를 ci-logs 브랜치에  6. 성공하면 "latest" 릴리스에 모드 jar
+name: build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Fabric versions
+        id: versions
+        run: |
+          mkdir -p ci-out
+          python3 ci/resolve_versions.py 2>&1 | tee ci-out/versions.txt
+
+      - name: Rules core parity
+        id: core
+        run: ./check-core.sh 2>&1 | tee ci-out/core.txt
+
+      - name: Build mod
+        id: build
+        run: ./gradlew build --stacktrace --console=plain 2>&1 | tee ci-out/build.txt
+
+      - name: Game tests
+        id: gametest
+        run: |
+          ./gradlew runGametest --stacktrace --console=plain 2>&1 | tee ci-out/gametest.txt
+          cp build/gametest/report.xml ci-out/gametest-report.xml 2>/dev/null || true
+
+      - name: Publish logs
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OUT_VERSIONS: ${{ steps.versions.outcome }}
+          OUT_CORE: ${{ steps.core.outcome }}
+          OUT_BUILD: ${{ steps.build.outcome }}
+          OUT_GAMETEST: ${{ steps.gametest.outcome }}
+        run: bash ci/publish_logs.sh
+
+      - name: Release jar
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          JAR=$(ls build/libs/*.jar | grep -v -- '-sources' | head -1)
+          SHORT=${GITHUB_SHA::7}
+          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
+          gh release create latest "$JAR" --prerelease --target "$GITHUB_SHA" \
+            --title "최신 빌드 ($SHORT)" \
+            --notes "main 의 $SHORT 에서 자동으로 만든 모드 jar. 마인크래프트 자바 $(grep '^minecraft_version=' gradle.properties | cut -d= -f2) · Fabric Loader · Fabric API 가 필요합니다 (ci-out/versions.txt)."
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mmorpg-build
+          path: |
+            build/libs/*.jar
+            ci-out/
+          if-no-files-found: warn

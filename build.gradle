@@ -1,0 +1,77 @@
+// MMO RPG — Fabric 모드 (마인크래프트 자바 ${minecraft_version}, 모장 공식 매핑)
+// 소스: src/main (공통 · 서버), src/client (화면 · HUD · 키), src/gametest (서버에서 도는 게임 시험 — 모드 jar 에는 들어가지 않음)
+// 규칙 코어 (:core — 밸런스 데이터 rules.json + 계산) 는 모드 jar 에 함께 넣음
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+sourceSets {
+    gametest {
+        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
+        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
+    }
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "mmorpg" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+        "mmorpg-gametest" {
+            sourceSet sourceSets.gametest
+        }
+    }
+
+    runs {
+        // ./gradlew runGametest — 서버를 띄워 src/gametest 의 @GameTest 를 모두 돌리고 끝냄 (하나라도 실패하면 실패)
+        gametest {
+            server()
+            name "Game Test"
+            vmArg "-Dfabric-api.gametest"
+            vmArg "-Dfabric-api.gametest.report-file=${project.layout.buildDirectory.get().asFile}/gametest/report.xml"
+            runDir "build/gametest"
+            source sourceSets.gametest
+        }
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    implementation project(':core')
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+    it.options.encoding = 'UTF-8'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    // 규칙 코어의 클래스 · rules.json 을 모드 jar 안에
+    from(project(':core').sourceSets.main.output)
+}

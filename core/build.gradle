@@ -1,0 +1,18 @@
+// 규칙 코어 (외부 라이브러리 없음). gradle --offline :core:jar · :core:parity
+// parity.json · rules.json 생성은 Node 가 필요하므로 ./check-core.sh 가 함 (이 파일은 컴파일 · 비교만)
+plugins {
+    id 'java-library'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}
+
+tasks.register('parity', JavaExec) {
+    description = 'parity.json (tools/parity_dump.mjs 가 만든 JS 결과) 과 Java 포트를 비교'
+    dependsOn 'testClasses'
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'mmorpg.core.ParityTest'
+    jvmArgs '-Dstdout.encoding=UTF-8'
+}

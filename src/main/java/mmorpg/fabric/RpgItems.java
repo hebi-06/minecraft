@@ -1,0 +1,68 @@
+package mmorpg.fabric;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import mmorpg.core.Grade;
+import mmorpg.core.Rules;
+import mmorpg.core.Weapons;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+
+/** 아이템 등록: 무기 (지금 규칙으로 얻을 수 있는 종류 × 등급 × 레벨 — 옛 버전 조합은 뺌) + 스탯 책, 크리에이티브 탭 하나 */
+public final class RpgItems {
+    private RpgItems() {}
+
+    /** 등록한 무기 (TYPE_ORDER → 등급 → 레벨 순, 마지막에 제작 전용 TYPE_ONLY) */
+    public static final List<RpgWeaponItem> WEAPONS = new ArrayList<>();
+    /** 무기 ID (rpg:sword_l10_rare) → 아이템 */
+    private static final Map<String, RpgWeaponItem> BY_ID = new HashMap<>();
+    public static Item STAT_BOOK;
+    public static final ResourceKey<CreativeModeTab> TAB = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Mmorpg.id("main"));
+
+    static void init() {
+        Rules r = Rules.get();
+        List<String> types = new ArrayList<>(r.strings("TYPE_ORDER"));
+        for (String t : r.obj("TYPE_ONLY").keys()) if (!types.contains(t)) types.add(t);
+        List<Double> levels = r.numbers("ALL_LEVELS");
+        for (String type : types) {
+            for (Grade g : r.grades()) {
+                for (double lv : levels) {
+                    if (!Weapons.isValidWeapon(lv, g.id(), type)) continue;
+                    RpgWeaponItem item = new RpgWeaponItem(Weapons.weaponFrom(type, lv, g.id()));
+                    String path = item.weapon().id().substring((Mmorpg.NS + ":").length());
+                    Registry.register(BuiltInRegistries.ITEM, Mmorpg.rpg(path), item);
+                    WEAPONS.add(item);
+                    BY_ID.put(item.weapon().id(), item);
+                }
+            }
+        }
+        STAT_BOOK = Registry.register(BuiltInRegistries.ITEM, Mmorpg.rpg("stat_book"), new StatBookItem(new Item.Properties().stacksTo(1)));
+        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB, FabricItemGroup.builder()
+                .title(Component.translatable("itemGroup.mmorpg.main"))
+                .icon(() -> new ItemStack(WEAPONS.isEmpty() ? STAT_BOOK : WEAPONS.get(WEAPONS.size() - 1)))
+                .displayItems((params, output) -> {
+                    output.accept(STAT_BOOK);
+                    for (RpgWeaponItem w : WEAPONS) output.accept(w);
+                })
+                .build());
+    }
+
+    public static List<RpgWeaponItem> weapons() {
+        return Collections.unmodifiableList(WEAPONS);
+    }
+
+    /** 무기 ID 의 아이템 (없는 조합이면 null) */
+    public static RpgWeaponItem byId(String id) {
+        return BY_ID.get(id);
+    }
+}
