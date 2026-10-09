@@ -1,5 +1,6 @@
 package mmorpg.fabric.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -141,7 +142,7 @@ public final class StatScreen extends Screen {
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-        if (event.button() == 0) {
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) { // 26.3 은 SDL 번호 (왼쪽 = 1)
             for (int i = 0; i < Stats.STAT_KEYS.size(); i++) {
                 if (!inRow(i, event.x(), event.y())) continue;
                 if (ClientRpgState.point() <= 0) return true;

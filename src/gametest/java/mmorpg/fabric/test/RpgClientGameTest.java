@@ -149,11 +149,11 @@ public final class RpgClientGameTest implements FabricClientGameTest {
 
     private void hurt(ClientGameTestContext ctx, TestServerContext server) {
         float max = server.computeOnServer(s -> player(s).getMaxHealth());
-        server.runCommand("damage @a 60 minecraft:generic");
+        server.runCommand("damage @p 60 minecraft:generic"); // damage 는 대상 하나만
         ctx.waitTicks(3);
         ctx.takeScreenshot("hp_hit");
         ctx.waitTicks(30);
-        server.runCommand("damage @a 100 minecraft:generic");
+        server.runCommand("damage @p 100 minecraft:generic");
         ctx.waitTicks(8);
         ctx.takeScreenshot("hp_low");
         float hp = server.computeOnServer(s -> player(s).getHealth());
@@ -210,9 +210,9 @@ public final class RpgClientGameTest implements FabricClientGameTest {
         look(ctx, BOW);
         ctx.waitTicks(15);
         use(ctx);
-        ctx.waitTicks(1);
+        ctx.waitTicks(2); // 쓰기 패킷 → 서버가 쏨 → 파티클이 클라이언트에 오기까지
         ctx.takeScreenshot("bow_flight");
-        ctx.waitTicks(5);
+        ctx.waitTicks(4);
         ctx.takeScreenshot("bow_hit");
         ctx.waitTicks(5);
         check(huskHealth(server, BOW) < HUSK_HP, "bow hit (husk " + huskHealth(server, BOW) + ")");

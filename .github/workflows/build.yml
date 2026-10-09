@@ -1,7 +1,7 @@
 # 빌드 · 시험 · 배포 (main · mc-* 에 올릴 때마다)
 # 1. Fabric 버전 확인  2. 규칙 코어 대조 시험 (애드온 JS 와 같은 값)  3. 모드 빌드 (컴파일, 시험 코드 포함)
-# 4. 게임 시험 (서버를 띄워 @GameTest)  5. 화면 시험 (클라이언트를 xvfb 로 띄워 실제 입력 · 장면 사진 — 실패해도 계속)
-# 6. 로그 · 사진을 ci-logs 브랜치에  7. 성공하면 릴리스에 모드 jar (main → latest, mc-* → release-<브랜치>)
+# 4. 게임 시험 (서버를 띄워 @GameTest)  5. 화면 시험 (클라이언트를 xvfb 로 띄워 실제 입력 · 확인 항목 · 장면 사진)
+# 6. 로그 · 사진을 ci-logs 브랜치에 (늘)  7. 모두 통과하면 릴리스에 모드 jar (main → latest, mc-* → release-<브랜치>)
 name: build
 
 on:
@@ -58,7 +58,6 @@ jobs:
 
       - name: Client screenshots
         id: client
-        continue-on-error: true
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
