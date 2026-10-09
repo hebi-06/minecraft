@@ -1,6 +1,7 @@
 # 빌드 · 시험 · 배포 (main 에 올릴 때마다)
 # 1. Fabric 버전 확인 (gradle.properties 의 auto 를 채움)  2. 규칙 코어 대조 시험 (애드온 JS 와 같은 값)
-# 3. 모드 빌드 (컴파일)  4. 게임 시험 (서버를 띄워 @GameTest)  5. 로그를 ci-logs 브랜치에  6. 성공하면 "latest" 릴리스에 모드 jar
+# 3. 모드 빌드 (컴파일)  4. 게임 시험 (서버를 띄워 @GameTest)  5. 화면 시험 (클라이언트를 xvfb 로 띄워 장면 사진 — 실패해도 계속)
+# 6. 로그 · 사진을 ci-logs 브랜치에  7. 성공하면 "latest" 릴리스에 모드 jar
 name: build
 
 on:
@@ -57,6 +58,22 @@ jobs:
           ./gradlew runGametest --stacktrace --console=plain 2>&1 | tee ci-out/gametest.txt
           cp build/gametest/report.xml ci-out/gametest-report.xml 2>/dev/null || true
 
+      - name: Client screenshots
+        id: smoke
+        continue-on-error: true
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1 libgl1-mesa-dri libglx-mesa0 > /dev/null
+          mkdir -p build/smoke ci-out/shots
+          cp ci/smoke-options.txt build/smoke/options.txt
+          timeout 1200 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runSmoke --stacktrace --console=plain 2>&1 | tee ci-out/smoke.txt || true
+          cp build/smoke/screenshots/*.png ci-out/shots/ 2>/dev/null || true
+          cp build/smoke/out/* ci-out/shots/ 2>/dev/null || true
+          ls -la ci-out/shots
+          test -f build/smoke/out/DONE
+
       - name: Publish logs
         if: always()
         env:
@@ -65,6 +82,7 @@ jobs:
           OUT_CORE: ${{ steps.core.outcome }}
           OUT_BUILD: ${{ steps.build.outcome }}
           OUT_GAMETEST: ${{ steps.gametest.outcome }}
+          OUT_SMOKE: ${{ steps.smoke.outcome }}
         run: bash ci/publish_logs.sh
 
       - name: Release jar

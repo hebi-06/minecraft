@@ -165,6 +165,7 @@ public final class DamageNumbers {
         tag.putString("id", "minecraft:text_display");
         tag.putString("text", Component.Serializer.toJson(Component.literal(text), level.registryAccess()));
         tag.putString("billboard", "center");
+        tag.putString("alignment", "center"); // 없으면 바닐라가 "Display entityNot a string" 오류를 남김
         tag.putInt("background", 0);
         tag.putBoolean("shadow", true);
         tag.putInt("teleport_duration", 1);

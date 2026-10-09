@@ -11,6 +11,7 @@ rm -rf "$OUT" && mkdir -p "$OUT"
   echo "core: ${OUT_CORE:-?}"
   echo "build: ${OUT_BUILD:-?}"
   echo "gametest: ${OUT_GAMETEST:-?}"
+  echo "smoke: ${OUT_SMOKE:-?}"
 } > "$OUT/SUMMARY.txt"
 for f in ci-out/*; do
   [ -f "$f" ] || continue
@@ -22,6 +23,11 @@ for f in ci-out/*; do
     cp "$f" "$OUT/$name"
   fi
 done
+# 화면 시험 사진 (shots/*.png) · 결과 (DONE 또는 FAILED)
+if [ -d ci-out/shots ]; then
+  mkdir -p "$OUT/shots"
+  cp ci-out/shots/* "$OUT/shots/" 2>/dev/null || true
+fi
 # 오류 줄만 모아서 (컴파일 오류 · 실패한 시험 · 예외)
 grep -h -n -E "error:|warning: \[|FAILED|Exception|Caused by|GameTest|failed|Failed|FAIL" ci-out/*.txt 2>/dev/null | head -n 600 > "$OUT/ERRORS.txt" || true
 cd "$OUT"
