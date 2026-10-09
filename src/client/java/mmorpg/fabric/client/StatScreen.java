@@ -74,16 +74,14 @@ public final class StatScreen extends Screen {
         LocalPlayer player = mc.player;
         if (player == null) return;
         StatSheet s = ClientRpgState.sheet();
-        RenderSystem.enableBlend(); // 단추 · 창 그림의 반투명 부분
-        RenderSystem.defaultBlendFunc();
-        g.blitSprite(BG, left, top, W, H);
+        RpgHud.sprite(g, BG, left, top, W, H);
 
         // 제목 · 남은 포인트
         g.drawString(font, "§6§l스탯", left + 12, top + 11, 0xFFFFFF, true);
         String pts = "남은 포인트 " + (s.point() > 0 ? "§e§l" : "§7§l") + s.point();
         int pw = font.width(pts);
         g.drawString(font, pts, left + W - 12 - pw, top + 11, 0xFFFFFF, true);
-        g.blitSprite(POINT, left + W - 12 - pw - 17, top + 7, 15, 15);
+        RpgHud.sprite(g, POINT, left + W - 12 - pw - 17, top + 7, 15, 15);
         g.fill(left + 10, top + 27, left + W - 10, top + 28, 0x90C8A050);
 
         // 스탯 줄
@@ -104,14 +102,14 @@ public final class StatScreen extends Screen {
                 int alpha = (int) (0x70 * (1 - (now - f) / 600.0));
                 g.fill(left + 10, y, left + W - 10, y + ROW_H - 2, (alpha << 24) | 0x7CFF8A);
             }
-            g.blitSprite(icon(key), left + 14, y + 5, 16, 16);
+            RpgHud.sprite(g, icon(key), left + 14, y + 5, 16, 16);
             g.drawString(font, BedrockText.toJava(s.title(key)), left + 36, y + 4, 0xFFFFFF, true);
             g.drawString(font, BedrockText.toJava(s.effect(key)), left + 36, y + 15, 0xFFFFFF, true);
             // +1 단추
             int bx = left + W - 40;
             int by = y + 5;
             boolean can = s.point() > 0;
-            g.blitSprite(over && can ? BTN_HOVER : BTN, bx, by, 26, 16);
+            RpgHud.sprite(g, over && can ? BTN_HOVER : BTN, bx, by, 26, 16);
             String plus = (can ? "§a§l" : "§8") + "+1";
             g.drawString(font, plus, bx + 13 - font.width(plus) / 2, by + 4, 0xFFFFFF, true);
         }

@@ -259,7 +259,8 @@ public final class RpgCombat {
         double prev = step == 0 ? 0 : Math.min(path.length(), 2 * shot.half() + shot.speed() * (step / 20.0));
         double next = Math.min(path.length(), 2 * shot.half() + shot.speed() * ((step + 1) / 20.0));
         if (step + 1 >= ticks) next = path.length();
-        Fx.arrowSegment(level, path.from().add(path.dir().scale(prev)), path.from().add(path.dir().scale(next)), gradeIndex, true);
+        // 앞끝 빛 (END_ROD) 은 손에서 조금 떨어진 뒤부터 (눈앞에서 크게 보이지 않게)
+        Fx.arrowSegment(level, path.from().add(path.dir().scale(prev)), path.from().add(path.dir().scale(next)), gradeIndex, next > 2.5);
         if (step + 1 < ticks) Tasks.later(1, () -> flyArrow(level, path, shot, gradeIndex, step + 1, ticks));
     }
 

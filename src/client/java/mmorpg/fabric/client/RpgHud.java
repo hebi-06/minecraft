@@ -64,13 +64,15 @@ public final class RpgHud {
      */
     public static void render(GuiGraphics g) {
         if (!active()) return;
+        draw(g);
+        RenderSystem.disableBlend();
+    }
+
+    /** 반투명 그림: 글자 · 사각형을 그리면 (바로 그려지며) 블렌딩이 꺼지므로 그림마다 다시 켬 */
+    static void sprite(GuiGraphics g, ResourceLocation id, int x, int y, int w, int h) {
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
-        try {
-            draw(g);
-        } finally {
-            RenderSystem.disableBlend();
-        }
+        g.blitSprite(id, x, y, w, h);
     }
 
     private static void draw(GuiGraphics g) {
@@ -83,10 +85,10 @@ public final class RpgHud {
         // ---------------------------------------------------------- 체력 (왼쪽, 하트 줄 자리)
         int px = cx - 124;
         int py = h - 48;
-        g.blitSprite(ICON, px + 1, py + 4, 11, 11);
+        sprite(g, ICON, px + 1, py + 4, 11, 11);
         int bx = px + 15;
         int by = py + 2;
-        g.blitSprite(FRAME, bx, by, 96, 14);
+        sprite(g, FRAME, bx, by, 96, 14);
         float hp = p.getHealth();
         float max = p.getMaxHealth();
         boolean dead = p.isDeadOrDying();
@@ -96,7 +98,10 @@ public final class RpgHud {
         int fill = Math.round(94 * pct / 100F);
         int trailW = trail > ratio ? Math.round(94 * trail) : 0;
         if (trailW > fill) g.fill(bx + 1 + fill, by + 1, bx + 1 + trailW, by + 13, 0xD0FFE6A8);
-        if (fill > 0) g.blitSprite(FILL, 94, 12, 0, 0, bx + 1, by + 1, fill, 12);
+        if (fill > 0) {
+            RenderSystem.enableBlend();
+            g.blitSprite(FILL, 94, 12, 0, 0, bx + 1, by + 1, fill, 12);
+        }
         float absorb = p.getAbsorptionAmount();
         if (absorb > 0 && max > 0) {
             int aw = Math.min(94, Math.round(94 * absorb / max));
@@ -105,7 +110,7 @@ public final class RpgHud {
         if (pct > 0 && pct < 26) {
             float a = (float) (0.575 + 0.425 * Math.cos(Util.getMillis() / 900.0 * 2 * Math.PI));
             g.setColor(1F, 1F, 1F, a);
-            g.blitSprite(WARN, bx - 2, by - 2, 100, 18);
+            sprite(g, WARN, bx - 2, by - 2, 100, 18);
             g.setColor(1F, 1F, 1F, 1F);
         }
         String text = "§l" + Hp.hpNumber(dead, hp) + "§r§7 / " + Js.str(Js.round(max * 10) / 10.0) + (absorb > 0 ? " §e+" + Js.str(Js.round(absorb * 10) / 10.0) : "");
@@ -114,20 +119,20 @@ public final class RpgHud {
         // ---------------------------------------------------------- 방어 · 레벨 · 포인트 (오른쪽, 배고픔 줄 자리)
         int ry = h - 45;
         int ax = cx + 12;
-        g.blitSprite(ARMOR_BADGE, ax, ry, 29, 13);
-        g.blitSprite(ARMOR_ICON, ax + 3, ry + 2, 9, 9);
+        sprite(g, ARMOR_BADGE, ax, ry, 29, 13);
+        sprite(g, ARMOR_ICON, ax + 3, ry + 2, 9, 9);
         g.drawString(font, String.valueOf(Math.min(99, p.getArmorValue())), ax + 14, ry + 3, 0xFFFFFF, true);
         int lx = ax + 32;
         int level = Math.max(ClientRpgState.lvmax(), p.experienceLevel);
         String lv = String.valueOf(Math.min(999, level));
         int lw = Math.max(34, 8 + font.width("Lv") + 2 + font.width(lv));
-        g.blitSprite(LV_BADGE, lx, ry, lw, 13);
+        sprite(g, LV_BADGE, lx, ry, lw, 13);
         g.drawString(font, "Lv", lx + 4, ry + 3, 0xFFCC52, true);
         g.drawString(font, lv, lx + 6 + font.width("Lv"), ry + 3, 0xFFFFFF, true);
         int points = ClientRpgState.point();
         if (points > 0) {
             int qx = lx + lw + 3;
-            g.blitSprite(POINT, qx, ry - 1, 14, 14);
+            sprite(g, POINT, qx, ry - 1, 14, 14);
             String pt = "+" + points;
             g.drawString(font, pt, qx + 16, ry + 3, 0xFFE066, true);
             // 깜박이는 "K" 안내 (포인트가 남아 있으면)
@@ -143,7 +148,7 @@ public final class RpgHud {
             int right = cx + 91;
             int y = ry - 11;
             for (int i = 0; i < full + popping; i++) {
-                g.blitSprite(i < full ? AIR : AIR_BURSTING, right - i * 8 - 9, y, 9, 9);
+                sprite(g, i < full ? AIR : AIR_BURSTING, right - i * 8 - 9, y, 9, 9);
             }
         }
     }

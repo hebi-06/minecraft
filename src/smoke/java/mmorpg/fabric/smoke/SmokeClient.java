@@ -179,6 +179,9 @@ public final class SmokeClient implements ClientModInitializer {
         step(15, "cast wand", mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
         step(5, "shot cast", mc -> shot(mc, "11_wand_cast"));
         step(7, "shot wand hit", mc -> shot(mc, "12_wand_hit"));
+        step(5, "third person", mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
+        step(25, "cast wand 3p", mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        step(6, "shot cast 3p", mc -> shot(mc, "13_wand_cast_3p"));
         step(40, "done", mc -> finish(mc, true));
     }
 

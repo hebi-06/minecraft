@@ -76,10 +76,10 @@ public final class Fx {
 
     /** 빛줄기 한 틱 몫: 지나간 자리 (from → to) 에 등급 색 선 + 앞끝 빛 */
     static void arrowSegment(ServerLevel level, Vec3 from, Vec3 to, int gradeIndex, boolean head) {
-        DustParticleOptions dust = new DustParticleOptions(gradeColor(BOW, gradeIndex), 0.9F);
+        DustParticleOptions dust = new DustParticleOptions(gradeColor(BOW, gradeIndex), 0.45F);
         Vec3 d = to.subtract(from);
         double len = d.length();
-        int n = Math.max(1, (int) Math.ceil(len / 0.25));
+        int n = Math.max(1, (int) Math.ceil(len / 0.15));
         for (int i = 0; i <= n; i++) {
             Vec3 p = from.add(d.scale(i / (double) n));
             level.sendParticles(dust, p.x, p.y, p.z, 1, 0, 0, 0, 0);
@@ -89,8 +89,8 @@ public final class Fx {
 
     /** 맞은 자리: 번쩍임 + 쏜 쪽으로 튀는 불꽃 */
     static void arrowImpact(ServerLevel level, Vec3 at, Vec3 dir, int gradeIndex) {
-        DustParticleOptions dust = new DustParticleOptions(gradeColor(BOW, gradeIndex), 1.6F);
-        level.sendParticles(dust, at.x, at.y, at.z, 6, 0.12, 0.12, 0.12, 0);
+        DustParticleOptions dust = new DustParticleOptions(gradeColor(BOW, gradeIndex), 0.8F);
+        level.sendParticles(dust, at.x, at.y, at.z, 8, 0.15, 0.15, 0.15, 0);
         for (int k = 0; k < 8; k++) {
             double a = k * Math.PI / 4;
             Vec3 side = new Vec3(Math.cos(a), Math.sin(a) * 0.7, Math.sin(a)).scale(0.6).subtract(dir.scale(0.7)).normalize();
@@ -102,10 +102,10 @@ public final class Fx {
 
     /** 마법진 한 틱: 바라보는 방향에 수직인 고리 (progress 만큼 그려짐) */
     static void magicCircle(ServerLevel level, Vec3 at, Vec3 dir, int gradeIndex, double spinDeg, double progress) {
-        DustParticleOptions dust = new DustParticleOptions(gradeColor(WAND, gradeIndex), 0.55F);
+        DustParticleOptions dust = new DustParticleOptions(gradeColor(WAND, gradeIndex), 0.28F);
         Vec3[] basis = basis(dir);
         double r = WAND.obj("circle").num("size") * gradeSize(gradeIndex);
-        int total = 16;
+        int total = 28;
         int n = Math.max(1, (int) Math.round(total * Math.min(1, progress)));
         for (int i = 0; i < n; i++) {
             double a = Math.toRadians(spinDeg) + i * 2 * Math.PI / total;
@@ -113,8 +113,8 @@ public final class Fx {
             level.sendParticles(dust, p.x, p.y, p.z, 1, 0, 0, 0, 0);
         }
         // 가운데 별 (안쪽 고리 절반 크기, 반대로 돎)
-        for (int i = 0; i < 5 && progress > 0.5; i++) {
-            double a = -Math.toRadians(spinDeg) + i * 2 * Math.PI / 5;
+        for (int i = 0; i < 8 && progress > 0.5; i++) {
+            double a = -Math.toRadians(spinDeg) + i * 2 * Math.PI / 8;
             Vec3 p = at.add(basis[0].scale(Math.cos(a) * r * 0.5)).add(basis[1].scale(Math.sin(a) * r * 0.5));
             level.sendParticles(dust, p.x, p.y, p.z, 1, 0, 0, 0, 0);
         }
@@ -122,15 +122,15 @@ public final class Fx {
 
     /** 다 그려진 마법진이 번쩍임 */
     static void circleFlash(ServerLevel level, Vec3 at, Vec3 dir, int gradeIndex) {
-        DustParticleOptions dust = new DustParticleOptions(gradeColor(WAND, gradeIndex), 1.1F);
+        DustParticleOptions dust = new DustParticleOptions(gradeColor(WAND, gradeIndex), 0.45F);
         Vec3[] basis = basis(dir);
         double r = WAND.obj("circle").num("size") * gradeSize(gradeIndex) * 1.3;
-        for (int i = 0; i < 20; i++) {
-            double a = i * 2 * Math.PI / 20;
+        for (int i = 0; i < 32; i++) {
+            double a = i * 2 * Math.PI / 32;
             Vec3 p = at.add(basis[0].scale(Math.cos(a) * r)).add(basis[1].scale(Math.sin(a) * r));
             level.sendParticles(dust, p.x, p.y, p.z, 1, 0, 0, 0, 0);
         }
-        level.sendParticles(ParticleTypes.END_ROD, at.x, at.y, at.z, 6, 0.05, 0.05, 0.05, 0.06);
+        level.sendParticles(ParticleTypes.ENCHANTED_HIT, at.x, at.y, at.z, 6, 0.08, 0.08, 0.08, 0.05);
     }
 
     /** 완드 궤적 파티클 (WAND.trail — 베드락 이름을 자바 파티클로) */
@@ -149,7 +149,7 @@ public final class Fx {
         Vec3 d = to.subtract(from);
         double len = d.length();
         Vec3 u = len > 1e-6 ? d.scale(1 / len) : Vec3.ZERO;
-        for (double s = 0.3; s <= len; s += 0.5) {
+        for (double s = 0.8; s <= len; s += 0.4) {
             Vec3 at = from.add(u.scale(s));
             level.sendParticles(p, at.x, at.y, at.z, 1, 0, 0, 0, 0);
         }
