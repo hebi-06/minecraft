@@ -6,15 +6,25 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions;
+import java.util.ArrayList;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.entity.player.ChatVisiblity;
+import net.minecraft.world.item.ItemStack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 무기 3D 모델 사진첩 (화면 시험): 디자인 31종을 하나씩 손에 들고 1인칭 · 3인칭 (앞에서) 사진, 밤에 빛나는 칸 사진.
- * 사진 이름 w_<디자인>_fp / _3p → ci-logs 의 shots/. 확인 항목은 없음 (사진으로 봄).
+ * 무기 3D 모델 사진첩 (화면 시험): 디자인 31종을 하나씩 손에 들고 1인칭 · 3인칭 (앞에서) 사진, 밤에 빛나는 칸 사진,
+ * 마네킹 둘 (옆 · 앞) 이 든 모습 (3인칭 자세를 옆에서 확인).
+ * 사진 이름 w_<디자인>_fp / _3p / m_<디자인> → ci-logs 의 shots/. 확인 항목은 없음 (사진으로 봄).
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgWeaponGallery implements FabricClientGameTest {
@@ -67,6 +77,7 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             ctx.runOnClient(mc -> mc.options.chatVisibility().set(ChatVisiblity.HIDDEN));
             ctx.waitTicks(20);
             for (String[] d : DESIGNS) shoot(ctx, server, d[0], d[1], "");
+            mannequins(ctx, server);
             // 밤: 빛나는 칸 (light_emission)
             server.runCommand("time set 18000");
             ctx.waitTicks(10);
@@ -76,6 +87,38 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             }
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         }
+    }
+
+    /** 마네킹 둘 (옆을 보임 · 앞을 보임) 에게 무기를 들려 3인칭 자세를 봄. 플레이어는 빈손으로 북쪽을 봄 */
+    private static void mannequins(ClientGameTestContext ctx, TestServerContext server) {
+        List<Mannequin> ms = server.computeOnServer(s -> {
+            ServerLevel level = s.getPlayerList().getPlayers().get(0).level();
+            List<Mannequin> list = new ArrayList<>();
+            float[][] at = {{-1.0F, -3.0F, -90F}, {1.6F, -3.0F, 0F}}; // 동쪽을 봄 (오른쪽이 플레이어 쪽) · 남쪽을 봄 (플레이어를 마주봄)
+            for (float[] a : at) {
+                Mannequin m = EntityTypes.MANNEQUIN.create(level, EntitySpawnReason.COMMAND);
+                m.snapTo(a[0], -60, a[1], a[2], 0F);
+                m.setYHeadRot(a[2]);
+                m.setYBodyRot(a[2]);
+                level.addFreshEntity(m);
+                list.add(m);
+            }
+            return list;
+        });
+        server.runCommand("item replace entity @a weapon.mainhand with minecraft:air");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.getInput().lookAt(180F, 12F);
+        for (String[] d : DESIGNS) {
+            if (!d[0].endsWith("_lv0") || d[0].contains("rare") || d[0].contains("noble")) continue;
+            server.runOnServer(s -> {
+                ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(d[1])));
+                for (Mannequin m : ms) m.setItemInHand(InteractionHand.MAIN_HAND, stack.copy());
+            });
+            ctx.waitTicks(4);
+            ctx.takeScreenshot(TestScreenshotOptions.of("m_" + d[0]).withSize(960, 540));
+        }
+        server.runOnServer(s -> ms.forEach(m -> m.discard()));
+        ctx.getInput().lookAt(0F, 0F);
     }
 
     private static void shoot(ClientGameTestContext ctx, TestServerContext server, String design, String id, String suffix) {
