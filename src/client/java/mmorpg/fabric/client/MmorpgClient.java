@@ -7,12 +7,11 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
-/** 클라이언트: 스탯 창 키 (K), 서버가 보낸 스탯 데이터, 체력 바 HUD */
+/** 클라이언트: 스탯 창 키 (K), 서버가 보낸 스탯 데이터, 체력 바 HUD (GuiMixin 이 하트 자리에 그림) */
 public final class MmorpgClient implements ClientModInitializer {
     public static KeyMapping statsKey;
 
@@ -32,6 +31,5 @@ public final class MmorpgClient implements ClientModInitializer {
             }
             RpgHud.tick(client);
         });
-        HudRenderCallback.EVENT.register(RpgHud::render);
     }
 }

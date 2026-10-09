@@ -1,5 +1,6 @@
 package mmorpg.fabric.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,6 +74,8 @@ public final class StatScreen extends Screen {
         LocalPlayer player = mc.player;
         if (player == null) return;
         StatSheet s = ClientRpgState.sheet();
+        RenderSystem.enableBlend(); // 단추 · 창 그림의 반투명 부분
+        RenderSystem.defaultBlendFunc();
         g.blitSprite(BG, left, top, W, H);
 
         // 제목 · 남은 포인트
@@ -122,6 +125,7 @@ public final class StatScreen extends Screen {
             g.drawString(font, BedrockText.toJava(lines.get(i)), left + 14, wy + 2 + i * 10, 0xFFFFFF, true);
         }
 
+        RenderSystem.disableBlend();
         if (hover >= 0) {
             List<Component> tip = new ArrayList<>();
             for (String l : s.tooltip(keys.get(hover))) tip.add(Component.literal(BedrockText.toJava(l)));

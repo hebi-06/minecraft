@@ -5,7 +5,6 @@ import mmorpg.core.Hp;
 import mmorpg.core.Js;
 import mmorpg.fabric.Mmorpg;
 import net.minecraft.Util;
-import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -59,8 +58,22 @@ public final class RpgHud {
         else if (trail > ratio) trail = Math.max(ratio, trail - 0.02F);
     }
 
-    static void render(GuiGraphics g, DeltaTracker delta) {
+    /**
+     * 그리기 (GuiMixin: 바닐라 renderPlayerHealth 자리에서 — 하트와 같은 층이라 채팅창 등은 그 위에 그려짐).
+     * 그림에 반투명 부분이 있어 블렌딩을 켬.
+     */
+    public static void render(GuiGraphics g) {
         if (!active()) return;
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        try {
+            draw(g);
+        } finally {
+            RenderSystem.disableBlend();
+        }
+    }
+
+    private static void draw(GuiGraphics g) {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer p = mc.player;
         Font font = mc.font;
@@ -91,11 +104,9 @@ public final class RpgHud {
         }
         if (pct > 0 && pct < 26) {
             float a = (float) (0.575 + 0.425 * Math.cos(Util.getMillis() / 900.0 * 2 * Math.PI));
-            RenderSystem.enableBlend();
             g.setColor(1F, 1F, 1F, a);
             g.blitSprite(WARN, bx - 2, by - 2, 100, 18);
             g.setColor(1F, 1F, 1F, 1F);
-            RenderSystem.disableBlend();
         }
         String text = "§l" + Hp.hpNumber(dead, hp) + "§r§7 / " + Js.str(Js.round(max * 10) / 10.0) + (absorb > 0 ? " §e+" + Js.str(Js.round(absorb * 10) / 10.0) : "");
         g.drawString(font, text, bx + 48 - font.width(text) / 2, by + 3, 0xFFFFFF, true);

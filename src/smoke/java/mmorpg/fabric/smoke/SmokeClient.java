@@ -24,6 +24,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.monster.Husk;
+import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
@@ -122,8 +123,9 @@ public final class SmokeClient implements ClientModInitializer {
     private void buildSteps() {
         step(0, "world rules", mc -> cmds(mc,
                 "gamerule doDaylightCycle false", "gamerule doWeatherCycle false", "gamerule doMobSpawning false",
-                "time set 6000", "weather clear", "tp @s 0.5 -60 0.5 0 0", "xp set @s 30 levels"));
-        step(10, "stats", mc -> cmds(mc, "rpg set str 60", "rpg set dex 60", "rpg set int 60", "rpg set vit 120"));
+                "time set 6000", "weather clear", "kill @e[type=slime]", "tp @s 0.5 -60 0.5 0 0", "xp set @s 30 levels"));
+        // 30렙 영웅 무기 요구 스탯 (83) 보다 넉넉히
+        step(10, "stats", mc -> cmds(mc, "rpg set str 120", "rpg set dex 120", "rpg set int 120", "rpg set vit 120"));
         step(10, "items", mc -> cmds(mc,
                 "item replace entity @s hotbar.0 with rpg:sword_l30_hero",
                 "item replace entity @s hotbar.1 with rpg:bow_l30_hero",
@@ -140,7 +142,8 @@ public final class SmokeClient implements ClientModInitializer {
             mc.player.getInventory().selected = 0;
             look(mc, 0);
         });
-        step(10, "shot hud", mc -> shot(mc, "01_hud"));
+        step(10, "shot hud", mc -> shot(mc, "01_hud")); // 채팅이 보이는 채로 (체력 바 글자가 채팅창과 겹쳐도 깨지지 않는지)
+        step(2, "hide chat", mc -> mc.options.chatVisibility().set(ChatVisiblity.HIDDEN));
         step(20, "attack", mc -> attack(mc, false));
         step(3, "shot melee", mc -> shot(mc, "02_melee_number"));
         step(20, "attack crit", mc -> attack(mc, true));
