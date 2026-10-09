@@ -22,6 +22,11 @@ net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGam
 net.minecraft.client.input.InputWithModifiers
 net.minecraft.client.input.KeyEvent
 net.minecraft.client.input.MouseButtonEvent
+net.minecraft.client.model.AnimationUtils
+net.minecraft.client.model.HumanoidModel
+net.minecraft.client.model.HumanoidModel$ArmPose
+net.minecraft.client.model.geom.ModelPart
+net.minecraft.client.model.player.PlayerModel
 net.minecraft.client.multiplayer.ClientLevel
 net.minecraft.client.multiplayer.ClientPacketListener
 net.minecraft.client.multiplayer.MultiPlayerGameMode
@@ -37,9 +42,15 @@ net.minecraft.client.particle.SingleQuadParticle$Layer
 net.minecraft.client.particle.SpriteSet
 net.minecraft.client.particle.TextureSheetParticle
 net.minecraft.client.player.LocalPlayer
+net.minecraft.client.renderer.GameRenderer
 net.minecraft.client.renderer.ItemInHandRenderer
 net.minecraft.client.renderer.RenderPipelines
+net.minecraft.client.renderer.entity.LivingEntityRenderer
 net.minecraft.client.renderer.entity.layers.ItemInHandLayer
+net.minecraft.client.renderer.entity.player.AvatarRenderer
+net.minecraft.client.renderer.entity.state.ArmedEntityRenderState
+net.minecraft.client.renderer.entity.state.AvatarRenderState
+net.minecraft.client.renderer.entity.state.HumanoidRenderState
 net.minecraft.client.renderer.item.ItemModel
 net.minecraft.client.renderer.item.SelectItemModel
 net.minecraft.client.renderer.item.properties.select.DisplayContext
@@ -121,6 +132,7 @@ net.minecraft.world.damagesource.DamageSources
 net.minecraft.world.damagesource.DamageTypes
 net.minecraft.world.effect.MobEffectInstance
 net.minecraft.world.effect.MobEffects
+net.minecraft.world.entity.Avatar
 net.minecraft.world.entity.Display
 net.minecraft.world.entity.Display$BillboardConstraints
 net.minecraft.world.entity.Display$TextDisplay
@@ -130,6 +142,7 @@ net.minecraft.world.entity.EntitySpawnReason
 net.minecraft.world.entity.EntityType
 net.minecraft.world.entity.EntityTypes
 net.minecraft.world.entity.EquipmentSlotGroup
+net.minecraft.world.entity.HumanoidArm
 net.minecraft.world.entity.LivingEntity
 net.minecraft.world.entity.LivingEntity$SwingDescription
 net.minecraft.world.entity.LivingEntity$SwingState
@@ -142,6 +155,7 @@ net.minecraft.world.entity.ai.attributes.Attributes
 net.minecraft.world.entity.animal.golem.IronGolem
 net.minecraft.world.entity.animal.golem.SnowGolem
 net.minecraft.world.entity.decoration.ArmorStand
+net.minecraft.world.entity.decoration.Mannequin
 net.minecraft.world.entity.monster.zombie.Husk
 net.minecraft.world.entity.monster.zombie.Zombie
 net.minecraft.world.entity.npc.villager.AbstractVillager
