@@ -55,7 +55,7 @@ public final class RpgHealth {
 
     /** 생존 · 모험 (크리에이티브 · 관전은 RPG 체력 규칙 없음 — hp.js isRpgMode) */
     public static boolean isRpgMode(ServerPlayer sp) {
-        return sp.gameMode().isSurvival();
+        return sp.gameMode.getGameModeForPlayer().isSurvival();
     }
 
     /** 최대 체력 (hp.js maxHpOf): 기본 + 최고 레벨 보너스 + 실제 체력 스탯 */

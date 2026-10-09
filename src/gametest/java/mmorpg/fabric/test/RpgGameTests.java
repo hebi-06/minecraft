@@ -1,5 +1,6 @@
 package mmorpg.fabric.test;
 
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.regex.Pattern;
 import mmorpg.core.Combat;
@@ -20,6 +21,7 @@ import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
@@ -46,9 +48,13 @@ public final class RpgGameTests {
 
     // ------------------------------------------------------------ 도움
 
-    /** 시험용 플레이어 (생존 모드, 시험 자리 (1.5, 2, 1.5) 에서 +z 를 봄) */
+    /**
+     * 시험용 플레이어 (생존 모드, 시험 자리 (1.5, 2, 1.5) 에서 +z 를 봄).
+     * 26.3 은 클라이언트가 "세계를 다 불러옴" 을 알리기 전 (또는 시간 초과 전) 의 플레이어는 피해를 받지 않음 → 가짜 플레이어는 바로 불러온 것으로.
+     */
     private static ServerPlayer player(GameTestHelper h) {
         ServerPlayer sp = h.makeMockServerPlayerInLevel();
+        markClientLoaded(sp);
         sp.setGameMode(GameType.SURVIVAL);
         Vec3 at = h.absoluteVec(new Vec3(1.5, 2, 1.5));
         sp.snapTo(at.x, at.y, at.z, 0F, 0F);
@@ -56,14 +62,25 @@ public final class RpgGameTests {
         return sp;
     }
 
+    private static void markClientLoaded(ServerPlayer sp) {
+        try {
+            Method m = ServerGamePacketListenerImpl.class.getDeclaredMethod("markClientLoaded");
+            m.setAccessible(true);
+            m.invoke(sp.connection);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("cannot mark mock player loaded", e);
+        }
+    }
+
     private static void done(GameTestHelper h, ServerPlayer sp) {
         h.getLevel().getServer().getPlayerList().remove(sp);
         h.succeed();
     }
 
-    /** 무적 시간 없이 피해 (바닐라 경로: hurtServer → actuallyHurt) */
+    /** 연속 피해 막기 (26.3: damageCooldownTime) 없이 피해 (바닐라 경로: hurtServer → actuallyHurt) */
     private static boolean hurt(GameTestHelper h, LivingEntity e, DamageSource src, float amount) {
         e.setInvulnerableTime(0);
+        e.damageCooldownTime = 0;
         return e.hurtServer(h.getLevel(), src, amount);
     }
 
@@ -191,8 +208,9 @@ public final class RpgGameTests {
         ServerPlayer sp = player(h);
         RpgPlayers.setStat(sp, "vit", 80);
         sp.setHealth(100F);
-        hurt(h, sp, sp.damageSources().fellOutOfWorld(), 10F);
-        near(h, sp.getHealth(), 90, EPS, "plain damage");
+        boolean took = hurt(h, sp, sp.damageSources().fellOutOfWorld(), 10F);
+        near(h, sp.getHealth(), 90, EPS, "plain damage (hurtServer=" + took + ", loaded=" + sp.connection.hasClientLoaded()
+                + ", invulnerableTo=" + sp.isInvulnerableTo(h.getLevel(), sp.damageSources().fellOutOfWorld()) + ")");
         Weapon shield = Weapons.weaponFrom("shield", 0, "common");
         meetReqs(sp, shield, 80);
         sp.setItemInHand(InteractionHand.MAIN_HAND, stackOf(shield));
@@ -279,15 +297,16 @@ public final class RpgGameTests {
         h.assertTrue(!nums.isEmpty(), "damage number shown");
         String want = DamageNumbers.number(expected);
         h.assertTrue(nums.stream().anyMatch(e -> textOf(e).contains(want)), "number text " + want + " in " + nums.stream().map(RpgGameTests::textOf).toList());
-        // 치명타: 배율 · 금색 "!"
+        // 치명타: 배율 · 금색 "!" (연속 피해 막기 시간을 없앰)
         z.setInvulnerableTime(0);
+        z.damageCooldownTime = 0;
         float hp0 = z.getHealth();
         float s2 = sp.getAttackStrengthScale(0.5F);
         RpgCombat.forceCrit = true;
         sp.attack(z);
         RpgCombat.forceCrit = null;
         double crit = w.damage() * Combat.powerMultiplier(RpgData.of(sp).effective(), w, 0) * (0.2 + s2 * s2 * 0.8) * w.critMult();
-        near(h, hp0 - z.getHealth(), crit, 1e-3, "crit damage");
+        near(h, hp0 - z.getHealth(), crit, 1e-3, "crit damage (numbers " + numbersNear(h, z.getEyePosition()).stream().map(RpgGameTests::textOf).toList() + ")");
         String wantCrit = DamageNumbers.number(crit) + "!";
         h.assertTrue(numbersNear(h, z.getEyePosition()).stream().anyMatch(e -> textOf(e).contains(wantCrit)), "crit number " + wantCrit);
         done(h, sp);
