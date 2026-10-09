@@ -38,11 +38,10 @@ public record RpgData(int str, int dex, int intel, int vit, int point, int lvmax
     public static AttachmentType<RpgData> TYPE;
 
     static void init() {
-        TYPE = AttachmentRegistry.<RpgData>builder()
+        TYPE = AttachmentRegistry.create(Mmorpg.id("player"), builder -> builder
                 .persistent(CODEC)
                 .copyOnDeath()
-                .initializer(() -> new RpgData(0, 0, 0, 0, 0, 0, 1.0, false))
-                .buildAndRegister(Mmorpg.id("player"));
+                .initializer(() -> new RpgData(0, 0, 0, 0, 0, 0, 1.0, false)));
     }
 
     public static RpgData of(ServerPlayer p) {

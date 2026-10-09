@@ -1,8 +1,8 @@
-// MMO RPG — Fabric 모드 (마인크래프트 자바 ${minecraft_version}, 모장 공식 매핑)
-// 소스: src/main (공통 · 서버), src/client (화면 · HUD · 키), src/gametest (서버에서 도는 게임 시험), src/smoke (클라이언트 화면 시험) — 시험 둘은 모드 jar 에 안 들어감
+// MMO RPG — Fabric 모드 (마인크래프트 자바 ${minecraft_version}, 난독화 없는 공식 이름)
+// 소스: src/main (공통 · 서버), src/client (HUD · 스탯 창 · 키), src/gametest (게임 시험: 서버 @GameTest + 클라이언트 화면 시험 — 모드 jar 에 안 들어감)
 // 규칙 코어 (:core — 밸런스 데이터 rules.json + 계산) 는 모드 jar 에 함께 넣음
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
 version = project.mod_version
@@ -14,81 +14,51 @@ base {
 
 loom {
     splitEnvironmentSourceSets()
-}
 
-sourceSets {
-    gametest {
-        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output
-        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output
-    }
-    // CI 화면 시험: 클라이언트를 띄워 장면을 찍음 (src/smoke — 모드 jar 에는 안 들어감)
-    smoke {
-        compileClasspath += sourceSets.main.compileClasspath + sourceSets.main.output + sourceSets.client.compileClasspath + sourceSets.client.output
-        runtimeClasspath += sourceSets.main.runtimeClasspath + sourceSets.main.output + sourceSets.client.runtimeClasspath + sourceSets.client.output
-    }
-}
-
-loom {
     mods {
         "mmorpg" {
             sourceSet sourceSets.main
             sourceSet sourceSets.client
         }
-        "mmorpg-gametest" {
-            sourceSet sourceSets.gametest
-        }
-        "mmorpg-smoke" {
-            sourceSet sourceSets.smoke
-        }
     }
+}
 
-    runs {
-        // ./gradlew runGametest — 서버를 띄워 src/gametest 의 @GameTest 를 모두 돌리고 끝냄 (하나라도 실패하면 실패)
-        gametest {
-            server()
-            name "Game Test"
-            vmArg "-Dfabric-api.gametest"
-            vmArg "-Dfabric-api.gametest.report-file=${project.layout.buildDirectory.get().asFile}/gametest/report.xml"
-            runDir "build/gametest"
-            source sourceSets.gametest
-        }
-        // ./gradlew runSmoke — 클라이언트 화면 시험 (CI 는 xvfb 로): 세계를 만들고 평타 · 스탯 창 · 활 · 완드 장면을 build/smoke/screenshots 에
-        smoke {
-            client()
-            name "Client Smoke"
-            source sourceSets.smoke
-            runDir "build/smoke"
-            programArgs "--width", "1280", "--height", "720"
-            vmArg "-Dmmorpg.smoke=${project.layout.buildDirectory.get().asFile}/smoke/out"
-            ideConfigGenerated false
-        }
+// 게임 시험: src/gametest (모드 id mmorpg-gametest) — 서버 시험은 runGameTest, 클라이언트 화면 시험은 runClientGameTest
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = "mmorpg-gametest"
+        enableGameTests = true
+        enableClientGameTests = true
+        eula = true
     }
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
     implementation project(':core')
 }
 
 processResources {
-    inputs.property "version", project.version
+    def version = project.version
+    inputs.property "version", version
     filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
+        expand "version": version
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
+    it.options.release = 25
     it.options.encoding = 'UTF-8'
+    it.options.compilerArgs += ['-Xmaxerrs', '1000']
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {

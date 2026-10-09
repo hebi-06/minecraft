@@ -2,6 +2,7 @@ package mmorpg.fabric.mixin;
 
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.RpgHealth;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,13 +31,13 @@ public abstract class LivingEntityMixin {
     }
 
     @Inject(method = "actuallyHurt", at = @At("HEAD"))
-    private void mmorpg$hurtStart(DamageSource source, float amount, CallbackInfo ci) {
+    private void mmorpg$hurtStart(ServerLevel level, DamageSource source, float amount, CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
         this.mmorpg$hpBefore = self.getHealth() + self.getAbsorptionAmount();
     }
 
     @Inject(method = "actuallyHurt", at = @At("RETURN"))
-    private void mmorpg$hurtEnd(DamageSource source, float amount, CallbackInfo ci) {
+    private void mmorpg$hurtEnd(ServerLevel level, DamageSource source, float amount, CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
         float before = this.mmorpg$hpBefore;
         this.mmorpg$hpBefore = -1F;

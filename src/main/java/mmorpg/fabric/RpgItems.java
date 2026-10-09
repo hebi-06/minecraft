@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.Map;
 import mmorpg.core.Grade;
 import mmorpg.core.Rules;
+import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -29,6 +30,10 @@ public final class RpgItems {
     public static Item STAT_BOOK;
     public static final ResourceKey<CreativeModeTab> TAB = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Mmorpg.id("main"));
 
+    private static ResourceKey<Item> key(String path) {
+        return ResourceKey.create(Registries.ITEM, Mmorpg.rpg(path));
+    }
+
     static void init() {
         Rules r = Rules.get();
         List<String> types = new ArrayList<>(r.strings("TYPE_ORDER"));
@@ -38,16 +43,17 @@ public final class RpgItems {
             for (Grade g : r.grades()) {
                 for (double lv : levels) {
                     if (!Weapons.isValidWeapon(lv, g.id(), type)) continue;
-                    RpgWeaponItem item = new RpgWeaponItem(Weapons.weaponFrom(type, lv, g.id()));
-                    String path = item.weapon().id().substring((Mmorpg.NS + ":").length());
-                    Registry.register(BuiltInRegistries.ITEM, Mmorpg.rpg(path), item);
+                    Weapon w = Weapons.weaponFrom(type, lv, g.id());
+                    ResourceKey<Item> key = key(w.id().substring((Mmorpg.NS + ":").length()));
+                    RpgWeaponItem item = Registry.register(BuiltInRegistries.ITEM, key, new RpgWeaponItem(w, RpgWeaponItem.properties(w).setId(key)));
                     WEAPONS.add(item);
-                    BY_ID.put(item.weapon().id(), item);
+                    BY_ID.put(w.id(), item);
                 }
             }
         }
-        STAT_BOOK = Registry.register(BuiltInRegistries.ITEM, Mmorpg.rpg("stat_book"), new StatBookItem(new Item.Properties().stacksTo(1)));
-        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB, FabricItemGroup.builder()
+        ResourceKey<Item> bookKey = key("stat_book");
+        STAT_BOOK = Registry.register(BuiltInRegistries.ITEM, bookKey, new StatBookItem(new Item.Properties().stacksTo(1).setId(bookKey)));
+        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB, FabricCreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.mmorpg.main"))
                 .icon(() -> new ItemStack(WEAPONS.isEmpty() ? STAT_BOOK : WEAPONS.get(WEAPONS.size() - 1)))
                 .displayItems((params, output) -> {

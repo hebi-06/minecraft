@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * 플레이어 공격 · 받는 피해.
  * - attack 처음: 공격 충전 정도와 대상을 기억, 활 · 완드는 쏘고 취소, 요구 조건이 모자란 근접 무기는 취소
- * - attack 의 대상.hurt(…, 피해): RPG 평타 공식으로 바꿈
+ * - attack 의 대상.hurtOrSimulate(…, 피해): RPG 평타 공식으로 바꿈
  * - actuallyHurt 의 setHealth: 방패 감소 · 죽지 않는 피해 (RPG 체력 규칙)
  */
 @Mixin(Player.class)
@@ -37,7 +37,7 @@ public abstract class PlayerMixin {
         if (RpgCombat.beforeAttack(self, target)) ci.cancel();
     }
 
-    @ModifyArg(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurt(Lnet/minecraft/world/damagesource/DamageSource;F)Z"), index = 1)
+    @ModifyArg(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurtOrSimulate(Lnet/minecraft/world/damagesource/DamageSource;F)Z"), index = 1)
     private float mmorpg$meleeDamage(float amount) {
         return RpgCombat.meleeDamage((Player) (Object) this, this.mmorpg$target, amount, this.mmorpg$strength);
     }

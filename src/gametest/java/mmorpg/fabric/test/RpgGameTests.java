@@ -16,29 +16,31 @@ import mmorpg.fabric.RpgItems;
 import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.RpgWeaponItem;
 import mmorpg.fabric.StatSheet;
-import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
-import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 게임 시험 (서버를 띄워 실제 플레이어 · 몹으로): ./gradlew runGametest. 하나라도 실패하면 빌드 실패.
+ * 게임 시험 (서버를 띄워 실제 플레이어 · 몹으로): ./gradlew build 가 함께 돌림 (runGameTest). 하나라도 실패하면 빌드 실패.
  * 수치는 규칙 코어 (애드온 JS 와 같은 값이 검증된 Java 포트) 로 계산한 기대값과 비교.
  */
-public final class RpgGameTests implements FabricGameTest {
+public final class RpgGameTests {
     private static final double EPS = 1e-3;
     private static final Pattern BEDROCK_ONLY_CODE = Pattern.compile("§[^0-9a-fk-or]");
 
@@ -49,7 +51,7 @@ public final class RpgGameTests implements FabricGameTest {
         ServerPlayer sp = h.makeMockServerPlayerInLevel();
         sp.setGameMode(GameType.SURVIVAL);
         Vec3 at = h.absoluteVec(new Vec3(1.5, 2, 1.5));
-        sp.moveTo(at.x, at.y, at.z, 0F, 0F);
+        sp.snapTo(at.x, at.y, at.z, 0F, 0F);
         RpgPlayers.onJoin(sp);
         return sp;
     }
@@ -59,9 +61,15 @@ public final class RpgGameTests implements FabricGameTest {
         h.succeed();
     }
 
+    /** 무적 시간 없이 피해 (바닐라 경로: hurtServer → actuallyHurt) */
+    private static boolean hurt(GameTestHelper h, LivingEntity e, DamageSource src, float amount) {
+        e.setInvulnerableTime(0);
+        return e.hurtServer(h.getLevel(), src, amount);
+    }
+
     /** 방어 0 · 체력 500 인 움직이지 않는 좀비 */
     private static Zombie dummy(GameTestHelper h, double x, double y, double z) {
-        Zombie zb = h.spawnWithNoFreeWill(EntityType.ZOMBIE, (float) x, (float) y, (float) z);
+        Zombie zb = h.spawnWithNoFreeWill(EntityTypes.ZOMBIE, (float) x, (float) y, (float) z);
         zb.getAttribute(Attributes.ARMOR).setBaseValue(0);
         zb.getAttribute(Attributes.MAX_HEALTH).setBaseValue(500);
         zb.setHealth(500);
@@ -84,12 +92,12 @@ public final class RpgGameTests implements FabricGameTest {
     }
 
     private static List<Display.TextDisplay> numbersNear(GameTestHelper h, Vec3 at) {
-        return h.getLevel().getEntitiesOfClass(Display.TextDisplay.class, new net.minecraft.world.phys.AABB(at, at).inflate(3),
-                e -> e.getTags().contains(DamageNumbers.TAG));
+        return h.getLevel().getEntitiesOfClass(Display.TextDisplay.class, new AABB(at, at).inflate(3),
+                e -> e.entityTags().contains(DamageNumbers.TAG));
     }
 
     private static String textOf(Display.TextDisplay e) {
-        return e.saveWithoutId(new CompoundTag()).getString("text");
+        return e.getText().getString();
     }
 
     private static void near(GameTestHelper h, double actual, double expected, double eps, String what) {
@@ -98,7 +106,7 @@ public final class RpgGameTests implements FabricGameTest {
 
     // ------------------------------------------------------------ 스탯 · 레벨
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void startPoints(GameTestHelper h) {
         ServerPlayer sp = player(h);
         RpgData d = RpgData.of(sp);
@@ -112,7 +120,7 @@ public final class RpgGameTests implements FabricGameTest {
         done(h, sp);
     }
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void levelUpPoints(GameTestHelper h) {
         ServerPlayer sp = player(h);
         int start = RpgData.of(sp).point();
@@ -134,7 +142,7 @@ public final class RpgGameTests implements FabricGameTest {
         done(h, sp);
     }
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void spendVitRaisesMaxHp(GameTestHelper h) {
         ServerPlayer sp = player(h);
         RpgPlayers.addPoints(sp, 10);
@@ -163,7 +171,7 @@ public final class RpgGameTests implements FabricGameTest {
 
     // ------------------------------------------------------------ 체력
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void healScalesWithMaxHp(GameTestHelper h) {
         ServerPlayer sp = player(h);
         RpgPlayers.setStat(sp, "vit", 80); // 최대 100
@@ -178,20 +186,18 @@ public final class RpgGameTests implements FabricGameTest {
         done(h, sp);
     }
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void damageAndShield(GameTestHelper h) {
         ServerPlayer sp = player(h);
         RpgPlayers.setStat(sp, "vit", 80);
         sp.setHealth(100F);
-        sp.invulnerableTime = 0;
-        sp.hurt(sp.damageSources().fellOutOfWorld(), 10F);
+        hurt(h, sp, sp.damageSources().fellOutOfWorld(), 10F);
         near(h, sp.getHealth(), 90, EPS, "plain damage");
         Weapon shield = Weapons.weaponFrom("shield", 0, "common");
         meetReqs(sp, shield, 80);
         sp.setItemInHand(InteractionHand.MAIN_HAND, stackOf(shield));
         double r = Math.min(Rules.get().obj("SHIELD").num("passiveCap"), shield.passive() + 80 * Rules.get().obj("SHIELD").num("passivePerVit"));
-        sp.invulnerableTime = 0;
-        sp.hurt(sp.damageSources().fellOutOfWorld(), 10F);
+        hurt(h, sp, sp.damageSources().fellOutOfWorld(), 10F);
         near(h, sp.getHealth(), 90 - 10 * (1 - r), EPS, "shield passive reduction");
         // 독 · 굶주림: 1 에서 멈춤
         sp.addEffect(new MobEffectInstance(MobEffects.POISON, 100));
@@ -200,34 +206,32 @@ public final class RpgGameTests implements FabricGameTest {
         done(h, sp);
     }
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void deathAndRespawnHealth(GameTestHelper h) {
         ServerPlayer sp = player(h);
         RpgPlayers.setStat(sp, "vit", 30);
-        sp.invulnerableTime = 0;
-        sp.hurt(sp.damageSources().fellOutOfWorld(), 1000F);
+        hurt(h, sp, sp.damageSources().fellOutOfWorld(), 1000F);
         h.assertTrue(sp.isDeadOrDying(), "dead");
         RpgHealth.onRespawn(sp, false, 0F);
         near(h, sp.getHealth(), Hp.maxHpOf(0, 30), EPS, "respawn full");
         done(h, sp);
     }
 
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 140)
+    @GameTest(maxTicks = 140)
     public void totemRevivesTenPercent(GameTestHelper h) {
         ServerPlayer sp = player(h);
         RpgPlayers.setStat(sp, "vit", 80); // 최대 100 → 10
         // 접속 직후 3초는 무적 (바닐라) → 지난 뒤
         h.runAfterDelay(70, () -> {
             sp.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.TOTEM_OF_UNDYING));
-            sp.invulnerableTime = 0;
-            sp.hurt(sp.damageSources().magic(), 1000F);
+            hurt(h, sp, sp.damageSources().magic(), 1000F);
             h.assertTrue(!sp.isDeadOrDying(), "totem saved");
             near(h, sp.getHealth(), Hp.reviveHp(100), EPS, "revive 10%");
             done(h, sp);
         });
     }
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void hpRatioSaved(GameTestHelper h) {
         ServerPlayer sp = player(h);
         RpgPlayers.setStat(sp, "vit", 30); // 50
@@ -242,7 +246,7 @@ public final class RpgGameTests implements FabricGameTest {
 
     // ------------------------------------------------------------ 무기
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void weaponsRegistered(GameTestHelper h) {
         h.assertTrue(RpgItems.WEAPONS.size() == 151, "151 weapons, got " + RpgItems.WEAPONS.size());
         for (RpgWeaponItem item : RpgItems.WEAPONS) {
@@ -258,7 +262,7 @@ public final class RpgGameTests implements FabricGameTest {
         h.succeed();
     }
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void meleeDamageFormula(GameTestHelper h) {
         ServerPlayer sp = player(h);
         Weapon w = Weapons.weaponFrom("sword", 0, "common");
@@ -276,7 +280,7 @@ public final class RpgGameTests implements FabricGameTest {
         String want = DamageNumbers.number(expected);
         h.assertTrue(nums.stream().anyMatch(e -> textOf(e).contains(want)), "number text " + want + " in " + nums.stream().map(RpgGameTests::textOf).toList());
         // 치명타: 배율 · 금색 "!"
-        z.invulnerableTime = 0;
+        z.setInvulnerableTime(0);
         float hp0 = z.getHealth();
         float s2 = sp.getAttackStrengthScale(0.5F);
         RpgCombat.forceCrit = true;
@@ -289,7 +293,7 @@ public final class RpgGameTests implements FabricGameTest {
         done(h, sp);
     }
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void requirementBlocksAttack(GameTestHelper h) {
         ServerPlayer sp = player(h);
         Weapon w = Weapons.weaponFrom("sword", 10, "rare"); // 레벨 10 · 힘 필요
@@ -300,7 +304,7 @@ public final class RpgGameTests implements FabricGameTest {
         done(h, sp);
     }
 
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 60)
+    @GameTest(maxTicks = 60)
     public void bowHitsTarget(GameTestHelper h) {
         ServerPlayer sp = player(h);
         Weapon w = Weapons.weaponFrom("bow", 0, "common");
@@ -319,7 +323,7 @@ public final class RpgGameTests implements FabricGameTest {
         });
     }
 
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 80)
+    @GameTest(maxTicks = 80)
     public void wandCastsAtClickedMob(GameTestHelper h) {
         ServerPlayer sp = player(h);
         Weapon w = Weapons.weaponFrom("wand", 0, "common");
@@ -337,7 +341,7 @@ public final class RpgGameTests implements FabricGameTest {
         });
     }
 
-    @GameTest(template = EMPTY_STRUCTURE, timeoutTicks = 60)
+    @GameTest(maxTicks = 60)
     public void damageNumberRisesAndVanishes(GameTestHelper h) {
         Zombie z = dummy(h, 3.5, 2, 3.5);
         DamageNumbers.show(z, 12.34, DamageNumbers.Style.NORMAL, "", 0);
@@ -355,7 +359,7 @@ public final class RpgGameTests implements FabricGameTest {
 
     // ------------------------------------------------------------ 스탯 창 · 명령어
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void statSheetText(GameTestHelper h) {
         StatSheet s = StatSheet.of(10, 0, 0, 5, 3, 10, 10);
         near(h, s.maxHp(), Hp.maxHpOf(10, 5), EPS, "sheet max hp");
@@ -367,16 +371,20 @@ public final class RpgGameTests implements FabricGameTest {
         h.succeed();
     }
 
-    @GameTest(template = EMPTY_STRUCTURE)
+    @GameTest
     public void weaponCommand(GameTestHelper h) {
         ServerPlayer sp = player(h);
-        h.getLevel().getServer().getCommands().performPrefixedCommand(sp.createCommandSourceStack().withPermission(4), "weapon sword 10 rare");
+        var commands = h.getLevel().getServer().getCommands();
+        commands.performPrefixedCommand(sp.createCommandSourceStack().withPermission(LevelBasedPermissionSet.OWNER), "weapon sword 10 rare");
         RpgWeaponItem item = RpgItems.byId("rpg:sword_l10_rare");
         h.assertTrue(sp.getInventory().contains(new ItemStack(item)), "weapon given");
-        h.getLevel().getServer().getCommands().performPrefixedCommand(sp.createCommandSourceStack().withPermission(4), "points 7");
-        h.getLevel().getServer().getCommands().performPrefixedCommand(sp.createCommandSourceStack(), "rpg spend str 3");
-        RpgData d = RpgData.of(sp);
-        near(h, d.str(), 3, 0, "spent by command");
+        commands.performPrefixedCommand(sp.createCommandSourceStack().withPermission(LevelBasedPermissionSet.OWNER), "points 7");
+        commands.performPrefixedCommand(sp.createCommandSourceStack(), "rpg spend str 3");
+        near(h, RpgData.of(sp).str(), 3, 0, "spent by command");
+        // 관리 명령은 권한이 없으면 안 됨
+        int before = RpgData.of(sp).point();
+        commands.performPrefixedCommand(sp.createCommandSourceStack().withPermission(LevelBasedPermissionSet.ALL), "points 50");
+        near(h, RpgData.of(sp).point(), before, 0, "points needs permission");
         done(h, sp);
     }
 }

@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -79,7 +78,7 @@ public final class RpgPlayers {
         int gained = (int) Stats.checkLevelUp(lv, d.lvmax());
         update(sp, d.withLvmax(lv).withPoint(d.point() + gained));
         Notify.notify(sp, "§e§l레벨 업! §r§f스탯 포인트 +" + gained + " §7(스탯 창: K · 스탯 책)");
-        sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1F, 1.2F);
+        Notify.sound(sp, SoundEvents.PLAYER_LEVELUP, 1F, 1.2F);
         return gained;
     }
 
@@ -96,12 +95,12 @@ public final class RpgPlayers {
         RpgData d = RpgData.of(sp);
         int n = Math.min(count, d.point());
         if (n <= 0) {
-            sp.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.8F, 0.7F);
+            Notify.sound(sp, SoundEvents.NOTE_BLOCK_BASS, 0.8F, 0.7F);
             RpgNet.sync(sp, false);
             return 0;
         }
         update(sp, d.withStat(key, d.stat(key) + n).withPoint(d.point() - n));
-        sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.6F, 1.6F);
+        Notify.sound(sp, SoundEvents.PLAYER_LEVELUP, 0.6F, 1.6F);
         Fx.statUp(sp);
         return n;
     }

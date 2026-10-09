@@ -2,7 +2,7 @@ package mmorpg.fabric;
 
 import mmorpg.core.Rules;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,11 +33,11 @@ public final class Mmorpg implements ModInitializer {
         LOG.info("MMO RPG: weapons {}, rules {}", RpgItems.WEAPONS.size(), Rules.RESOURCE);
     }
 
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
-    public static ResourceLocation rpg(String path) {
-        return ResourceLocation.fromNamespaceAndPath(NS, path);
+    public static Identifier rpg(String path) {
+        return Identifier.fromNamespaceAndPath(NS, path);
     }
 }

@@ -8,27 +8,27 @@ import mmorpg.core.Rules;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.FloatTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
+import com.mojang.math.Transformation;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.util.Brightness;
 import net.minecraft.world.entity.Display;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 /**
  * 피해 숫자 (fx.js showDamageText): 맞은 대상 머리 위에 숫자가 떠올라 0.9초 뒤 사라짐.
  * 자바는 글자 표시 엔티티 (text_display) — 늘 카메라를 보고 (billboard), 밤에도 밝게, 그림자 있는 글자.
  * 18틱 동안 처음 5틱은 빠르게 (0.09칸/틱), 그 뒤 천천히 (0.025) 오름. 한 번에 30개까지 (애드온과 같음).
- * 서버가 꺼질 때 남은 숫자는 다음에 그 청크가 불러와질 때 지움 (태그 mmorpg_dmg).
+ * 처음엔 크게 나와 3틱 동안 원래 크기로 줄어듦 (클라이언트 보간). 서버가 꺼질 때 남아 저장된 숫자는 다시 불러오지 않음 (태그 mmorpg_dmg).
  */
 public final class DamageNumbers {
     private DamageNumbers() {}
@@ -68,18 +68,23 @@ public final class DamageNumbers {
         }
     }
 
+    /** 처음 크기 배율 (톡 튀어나옴) */
+    private static final float POP = 1.45F;
+
     private static final class Text {
         final Display.TextDisplay e;
         final double x;
         double y;
         final double z;
+        final float scale;
         int t;
 
-        Text(Display.TextDisplay e, Vec3 p) {
+        Text(Display.TextDisplay e, Vec3 p, float scale) {
             this.e = e;
             this.x = p.x;
             this.y = p.y;
             this.z = p.z;
+            this.scale = scale;
         }
     }
 
@@ -91,20 +96,14 @@ public final class DamageNumbers {
             for (Text a : ACTIVE) if (!a.e.isRemoved()) a.e.discard();
             ACTIVE.clear();
         });
-        // 꺼지기 전에 남은 숫자 (저장된 것) 는 불러와질 때 지움
-        ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
-            if (entity instanceof Display.TextDisplay && entity.getTags().contains(TAG) && !isActive(entity)) Tasks.later(1, entity::discard);
-        });
+        // 꺼지기 전에 남아 저장된 숫자는 다시 불러오지 않음
+        ServerEntityEvents.ALLOW_LOAD.register((entity, level, reason, fromDisk) ->
+                !(fromDisk && entity instanceof Display.TextDisplay && entity.entityTags().contains(TAG)));
     }
 
     /** 지금 떠 있는 숫자 수 (시험용) */
     public static int activeCount() {
         return ACTIVE.size();
-    }
-
-    static boolean isActive(Entity e) {
-        for (Text a : ACTIVE) if (a.e == e) return true;
-        return false;
     }
 
     /** 100 미만은 소수 첫째 자리까지 (스탯 1포인트 차이도 보이게), 100 이상은 정수 */
@@ -161,34 +160,20 @@ public final class DamageNumbers {
     }
 
     static Display.TextDisplay spawn(ServerLevel level, Vec3 pos, String text, float scale) {
-        CompoundTag tag = new CompoundTag();
-        tag.putString("id", "minecraft:text_display");
-        tag.putString("text", Component.Serializer.toJson(Component.literal(text), level.registryAccess()));
-        tag.putString("billboard", "center");
-        tag.putString("alignment", "center"); // 없으면 바닐라가 "Display entityNot a string" 오류를 남김
-        tag.putInt("background", 0);
-        tag.putBoolean("shadow", true);
-        tag.putInt("teleport_duration", 1);
-        CompoundTag light = new CompoundTag();
-        light.putInt("sky", 15);
-        light.putInt("block", 15);
-        tag.put("brightness", light);
-        CompoundTag tf = new CompoundTag();
-        tf.put("translation", floats(0, 0, 0));
-        tf.put("left_rotation", floats(0, 0, 0, 1));
-        tf.put("scale", floats(scale, scale, scale));
-        tf.put("right_rotation", floats(0, 0, 0, 1));
-        tag.put("transformation", tf);
-        ListTag tags = new ListTag();
-        tags.add(StringTag.valueOf(TAG));
-        tag.put("Tags", tags);
-        Entity e = EntityType.loadEntityRecursive(tag, level, ent -> {
-            ent.moveTo(pos.x, pos.y, pos.z, 0F, 0F);
-            return ent;
-        });
-        if (!(e instanceof Display.TextDisplay td)) return null;
-        Text a = new Text(td, pos);
-        ACTIVE.add(a); // 불러오기 정리 (ENTITY_LOAD) 가 지우지 않게 먼저
+        Display.TextDisplay td = EntityTypes.TEXT_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+        if (td == null) return null;
+        td.setText(Component.literal(text));
+        td.setBillboardConstraints(Display.BillboardConstraints.CENTER);
+        td.setBackgroundColor(0);
+        td.setFlags(Display.TextDisplay.FLAG_SHADOW);
+        td.setBrightnessOverride(Brightness.FULL_BRIGHT); // 밤 · 동굴에서도 밝게
+        td.setPosRotInterpolationDuration(1); // 틱마다 옮기는 것을 부드럽게
+        // 처음엔 크게 → 3틱 동안 원래 크기로 (톡 튀어나오는 느낌)
+        td.setTransformation(scaled(scale * POP));
+        td.snapTo(pos.x, pos.y, pos.z, 0F, 0F);
+        td.addTag(TAG);
+        Text a = new Text(td, pos, scale);
+        ACTIVE.add(a);
         if (!level.addFreshEntity(td)) {
             ACTIVE.remove(a);
             return null;
@@ -196,10 +181,9 @@ public final class DamageNumbers {
         return td;
     }
 
-    private static ListTag floats(float... v) {
-        ListTag l = new ListTag();
-        for (float x : v) l.add(FloatTag.valueOf(x));
-        return l;
+    /** 크기만 바꾼 변환 */
+    static Transformation scaled(float s) {
+        return new Transformation(new Vector3f(), new Quaternionf(), new Vector3f(s, s, s), new Quaternionf());
     }
 
     private static void tick() {
@@ -210,6 +194,12 @@ public final class DamageNumbers {
                 if (!a.e.isRemoved()) a.e.discard();
                 it.remove();
                 continue;
+            }
+            if (a.t == 2) {
+                // 셋째 틱 (클라이언트가 처음 모양을 받은 뒤): 원래 크기로 줄어드는 보간
+                a.e.setTransformationInterpolationDelay(0);
+                a.e.setTransformationInterpolationDuration(3);
+                a.e.setTransformation(scaled(a.scale));
             }
             a.y += a.t < 6 ? 0.09 : 0.025;
             a.e.setPos(a.x, a.y, a.z);

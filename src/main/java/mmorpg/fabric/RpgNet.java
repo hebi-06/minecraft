@@ -68,8 +68,8 @@ public final class RpgNet {
     }
 
     static void init() {
-        PayloadTypeRegistry.playS2C().register(SyncPayload.TYPE, SyncPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(SpendPayload.TYPE, SpendPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(SyncPayload.TYPE, SyncPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(SpendPayload.TYPE, SpendPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SpendPayload.TYPE, (payload, context) -> RpgPlayers.spend(context.player(), payload.stat(), Math.min(100, payload.count())));
     }
 
@@ -92,12 +92,12 @@ public final class RpgNet {
             MutableComponent line = Component.literal(BedrockText.toJava(" " + s.statLine(key, false) + " "));
             if (s.point() > 0) {
                 line.append(Component.literal("[+1]").withStyle(st -> st.withColor(ChatFormatting.GREEN)
-                        .withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/rpg spend " + key + " 1"))
-                        .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Component.literal("1포인트 투자")))));
+                        .withClickEvent(new ClickEvent.RunCommand("/rpg spend " + key + " 1"))
+                        .withHoverEvent(new HoverEvent.ShowText(Component.literal("1포인트 투자")))));
             }
             sp.sendSystemMessage(line);
         }
-        Weapon w = StatSheet.referenceWeapon(sp.getMainHandItem(), sp.getOffhandItem(), sp.getInventory().items, s::usable);
+        Weapon w = StatSheet.referenceWeapon(sp.getMainHandItem(), sp.getOffhandItem(), sp.getInventory().getNonEquipmentItems(), s::usable);
         List<String> lines = s.weaponLines(w, false);
         for (String l : lines) sp.sendSystemMessage(Component.literal(BedrockText.toJava(" " + l)));
     }

@@ -20,10 +20,10 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
-import net.minecraft.world.entity.animal.IronGolem;
-import net.minecraft.world.entity.animal.SnowGolem;
+import net.minecraft.world.entity.animal.golem.IronGolem;
+import net.minecraft.world.entity.animal.golem.SnowGolem;
 import net.minecraft.world.entity.decoration.ArmorStand;
-import net.minecraft.world.entity.npc.AbstractVillager;
+import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.item.ItemStack;
@@ -220,12 +220,12 @@ public final class RpgCombat {
         }
         int cd = (int) Math.max(w.type().equals("wand") ? WAND.num("castTicks") + 1 : 2, Math.round(cfg.num("cooldownTicks")));
         RANGED_READY.put(k, now + cd);
-        sp.getCooldowns().addCooldown(stack.getItem(), cd);
+        sp.getCooldowns().addCooldown(stack, cd);
         if (w.type().equals("wand")) {
             if (!CASTING.containsKey(sp.getUUID())) startWandCast(sp, w, forced);
             return;
         }
-        ServerLevel level = sp.serverLevel();
+        ServerLevel level = sp.level();
         Vec3 head = sp.getEyePosition();
         Vec3 dir;
         LivingEntity target;
@@ -267,13 +267,13 @@ public final class RpgCombat {
     /** 원거리 명중 (combat.js rangedHit): 활 = 공격 피해 (방어구 적용), 완드 = 마법 피해 (방어 무시) */
     static void rangedHit(ServerPlayer sp, LivingEntity target, Weapon w, Path path) {
         if (sp.isRemoved() || target.isRemoved() || !target.isAlive()) return;
-        ServerLevel level = sp.serverLevel();
+        ServerLevel level = sp.level();
         double dmg = w.damage() * powerOf(sp, w);
         boolean crit = rollCrit(sp, w);
         if (crit) dmg *= w.critMult();
         mark(target, sp, crit);
         DamageSource src = w.type().equals("bow") ? sp.damageSources().playerAttack(sp) : sp.damageSources().indirectMagic(sp, sp);
-        boolean hurt = target.hurt(src, (float) dmg);
+        boolean hurt = target.level() instanceof ServerLevel tl && target.hurtServer(tl, src, (float) dmg);
         if (!hurt) {
             MARKS.remove(key(target, sp));
             return;
@@ -294,7 +294,7 @@ public final class RpgCombat {
     static void startWandCast(ServerPlayer sp, Weapon w, LivingEntity forced) {
         Cast cast = new Cast(w, Tasks.now(), forced, sp.getRandom().nextDouble() * 360);
         CASTING.put(sp.getUUID(), cast);
-        Fx.sound(sp.serverLevel(), sp.getEyePosition(), SoundEvents.ENCHANTMENT_TABLE_USE, 1.3, 0.8);
+        Fx.sound(sp.level(), sp.getEyePosition(), SoundEvents.ENCHANTMENT_TABLE_USE, 1.3, 0.8);
         castStep(sp, cast);
     }
 
@@ -313,13 +313,13 @@ public final class RpgCombat {
             return;
         }
         Vec3[] c = circleAt(sp);
-        Fx.magicCircle(sp.serverLevel(), c[0], c[1], cast.w().gradeIndex(), cast.spin() + t * WAND.obj("circle").num("spinPerTick"), (t + 1) / castTicks);
+        Fx.magicCircle(sp.level(), c[0], c[1], cast.w().gradeIndex(), cast.spin() + t * WAND.obj("circle").num("spinPerTick"), (t + 1) / castTicks);
         Tasks.later(1, () -> castStep(sp, cast));
     }
 
     /** 시전 완료: 마법진이 번쩍이고 가운데서 대상까지 궤적 + 마법 피해 */
     private static void fireWand(ServerPlayer sp, Cast cast) {
-        ServerLevel level = sp.serverLevel();
+        ServerLevel level = sp.level();
         Vec3[] c = circleAt(sp);
         Vec3 from = c[0];
         Vec3 view = c[1];
@@ -394,7 +394,7 @@ public final class RpgCombat {
     /** 조준 보정 대상: 주민 · 골렘 · 길들인 동물 · 플레이어 제외 */
     static boolean assistable(ServerPlayer sp, LivingEntity e) {
         if (!aimable(sp, e) || isTalkable(e) || e instanceof IronGolem || e instanceof SnowGolem) return false;
-        return !(e instanceof OwnableEntity o && o.getOwnerUUID() != null);
+        return !(e instanceof OwnableEntity o && o.getOwnerReference() != null);
     }
 
     private static Aim assistTarget(ServerPlayer sp, double range, double deg, Entity mount) {

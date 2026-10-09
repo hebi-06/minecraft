@@ -7,6 +7,9 @@
   "entrypoints": {
     "fabric-gametest": [
       "mmorpg.fabric.test.RpgGameTests"
+    ],
+    "fabric-client-gametest": [
+      "mmorpg.fabric.test.RpgClientGameTest"
     ]
   },
   "depends": {

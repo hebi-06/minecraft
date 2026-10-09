@@ -16,3 +16,8 @@ tasks.register('parity', JavaExec) {
     mainClass = 'mmorpg.core.ParityTest'
     jvmArgs '-Dstdout.encoding=UTF-8'
 }
+
+// ParityTest 는 JUnit 이 아니라 main 으로 도는 대조 시험 (./check-core.sh · :core:parity) — Gradle 9 는 시험이 없는 test 를 실패로 봄
+tasks.named('test') {
+    enabled = false
+}

@@ -13,7 +13,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
-import org.joml.Vector3f;
 
 /**
  * 연출 (fx.js · combat.js 의 파티클 · 소리). 1단계는 바닐라 파티클로 같은 자리 · 같은 색 · 같은 타이밍을 냄
@@ -34,12 +33,19 @@ public final class Fx {
         level.sendParticles(p, at.x, at.y, at.z, count, spread, spread, spread, speed);
     }
 
-    /** 등급 색 (config [[r,g,b], …], 없으면 첫 색) */
-    static Vector3f gradeColor(Obj cfg, int gradeIndex) {
+    /** 등급 색 (config [[r,g,b], …] 0~1, 없으면 첫 색) → 0xRRGGBB */
+    static int gradeColor(Obj cfg, int gradeIndex) {
         List<Object> colors = cfg.list("color");
         Object c = gradeIndex >= 0 && gradeIndex < colors.size() ? colors.get(gradeIndex) : colors.get(0);
         List<?> rgb = (List<?>) c;
-        return new Vector3f(((Number) rgb.get(0)).floatValue(), ((Number) rgb.get(1)).floatValue(), ((Number) rgb.get(2)).floatValue());
+        int r = channel(rgb.get(0));
+        int g = channel(rgb.get(1));
+        int b = channel(rgb.get(2));
+        return (r << 16) | (g << 8) | b;
+    }
+
+    private static int channel(Object v) {
+        return Math.max(0, Math.min(255, Math.round(((Number) v).floatValue() * 255)));
     }
 
     /** 등급 크기 배율 (SLASH.gradeSize) */
@@ -62,14 +68,14 @@ public final class Fx {
         Vec3 d = sp.getViewVector(1F);
         Vec3 h = sp.getEyePosition();
         Vec3 at = new Vec3(h.x + d.x * 0.8, h.y - 0.4, h.z + d.z * 0.8);
-        particle(sp.serverLevel(), ParticleTypes.CRIT, at, 10, 0.15, 0.3);
-        sound(sp.serverLevel(), at, SoundEvents.SHIELD_BLOCK, 1, 1);
+        particle(sp.level(), ParticleTypes.CRIT, at, 10, 0.15, 0.3);
+        sound(sp.level(), at, SoundEvents.SHIELD_BLOCK.value(), 1, 1);
     }
 
     /** 스탯을 찍었을 때 (statui.js): 토템 반짝이 */
     public static void statUp(ServerPlayer sp) {
         Vec3 h = sp.getEyePosition();
-        particle(sp.serverLevel(), ParticleTypes.TOTEM_OF_UNDYING, new Vec3(h.x, h.y - 0.6, h.z), 16, 0.3, 0.25);
+        particle(sp.level(), ParticleTypes.TOTEM_OF_UNDYING, new Vec3(h.x, h.y - 0.6, h.z), 16, 0.3, 0.25);
     }
 
     // ------------------------------------------------------------ 활 (combat.js arrowFx · arrowImpactFx)
@@ -137,7 +143,7 @@ public final class Fx {
     static ParticleOptions wandTrail(int gradeIndex) {
         return switch (gradeIndex) {
             case 1 -> ParticleTypes.SOUL_FIRE_FLAME; // blue_flame_particle
-            case 2 -> ParticleTypes.DRAGON_BREATH; // dragon_breath_trail
+            case 2 -> ParticleTypes.WITCH; // dragon_breath_trail (보라)
             case 3 -> ParticleTypes.FLAME; // basic_flame_particle
             case 4 -> DustParticleOptions.REDSTONE; // redstone_wire_dust_particle
             default -> ParticleTypes.END_ROD; // endrod

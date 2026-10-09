@@ -1,13 +1,13 @@
 package mmorpg.fabric;
 
-import java.util.List;
+import java.util.function.Consumer;
 import mmorpg.core.Combat;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -16,6 +16,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
 
 /**
@@ -26,18 +27,21 @@ import net.minecraft.world.level.Level;
 public final class RpgWeaponItem extends Item {
     private final Weapon weapon;
 
-    public RpgWeaponItem(Weapon weapon) {
-        super(properties(weapon));
+    public RpgWeaponItem(Weapon weapon, Item.Properties properties) {
+        super(properties);
         this.weapon = weapon;
     }
 
-    private static Item.Properties properties(Weapon w) {
+    /** 아이템 속성 (등록 키 setId 는 부르는 쪽이 붙임) */
+    static Item.Properties properties(Weapon w) {
         double damage = Combat.isMeleeWeapon(w) ? Math.max(0, w.damage() - 1) : 0;
+        // 바닐라 "공격 피해" 줄은 숨김 (실제 피해는 스탯 배율이 곱해지므로 애드온 설명으로)
         ItemAttributeModifiers mods = ItemAttributeModifiers.builder()
-                .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
-                .add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_ID, -2.0, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND)
-                .build()
-                .withTooltip(false); // 바닐라 "공격 피해" 줄 대신 애드온 설명 (실제 피해는 스탯 배율이 곱해짐)
+                .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.MAINHAND, ItemAttributeModifiers.Display.hidden())
+                .add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_ID, -2.0, AttributeModifier.Operation.ADD_VALUE),
+                        EquipmentSlotGroup.MAINHAND, ItemAttributeModifiers.Display.hidden())
+                .build();
         return new Item.Properties().stacksTo(1).attributes(mods);
     }
 
@@ -51,15 +55,14 @@ public final class RpgWeaponItem extends Item {
     }
 
     @Override
-    public void appendHoverText(ItemStack stack, Item.TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        for (String line : Weapons.weaponInfo(weapon, false, 0)) tooltip.add(Component.literal(BedrockText.toJava(line)));
+    public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
+        for (String line : Weapons.weaponInfo(weapon, false, 0)) tooltip.accept(Component.literal(BedrockText.toJava(line)));
     }
 
     @Override
-    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-        ItemStack stack = player.getItemInHand(hand);
-        if (!RpgCombat.isRanged(weapon) || hand != InteractionHand.MAIN_HAND) return InteractionResultHolder.pass(stack);
-        if (!level.isClientSide && player instanceof ServerPlayer sp) RpgCombat.fireRanged(sp, stack, weapon, null);
-        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+    public InteractionResult use(Level level, Player player, InteractionHand hand) {
+        if (!RpgCombat.isRanged(weapon) || hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
+        if (!level.isClientSide() && player instanceof ServerPlayer sp) RpgCombat.fireRanged(sp, player.getItemInHand(hand), weapon, null);
+        return InteractionResult.SUCCESS;
     }
 }

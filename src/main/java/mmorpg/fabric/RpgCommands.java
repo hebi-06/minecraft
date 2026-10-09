@@ -23,6 +23,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -83,7 +84,7 @@ public final class RpgCommands {
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> admin(String name) {
-        return Commands.literal(name).requires(s -> s.hasPermission(2));
+        return Commands.literal(name).requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER));
     }
 
     private static RequiredArgumentBuilder<CommandSourceStack, Integer> pointsArg() {
@@ -114,7 +115,7 @@ public final class RpgCommands {
         Notify.say(sp, "최고 레벨 " + d.lvmax() + " · 남은 포인트 " + d.point() + " · 체력 " + Hp.hpNumber(sp.isDeadOrDying(), sp.getHealth())
                 + " / " + Js.str(Js.round(sp.getMaxHealth() * 10) / 10.0));
         for (String key : Stats.STAT_KEYS) sp.sendSystemMessage(Component.literal(BedrockText.toJava(" " + s.statLine(key, false))));
-        Weapon w = StatSheet.referenceWeapon(sp.getMainHandItem(), sp.getOffhandItem(), sp.getInventory().items, s::usable);
+        Weapon w = StatSheet.referenceWeapon(sp.getMainHandItem(), sp.getOffhandItem(), sp.getInventory().getNonEquipmentItems(), s::usable);
         for (String l : s.weaponLines(w, false)) sp.sendSystemMessage(Component.literal(BedrockText.toJava(" " + l)));
         return 1;
     }
