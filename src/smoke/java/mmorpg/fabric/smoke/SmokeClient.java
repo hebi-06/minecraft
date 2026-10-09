@@ -44,7 +44,7 @@ public final class SmokeClient implements ClientModInitializer {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-smoke");
     private static final String OUT = System.getProperty("mmorpg.smoke");
 
-    private record Step(int wait, String name, Consumer<Minecraft> run) {}
+    private record Step(int delay, String name, Consumer<Minecraft> run) {}
 
     private final List<Step> steps = new ArrayList<>();
     private final List<String> shots = new ArrayList<>();
@@ -84,7 +84,7 @@ public final class SmokeClient implements ClientModInitializer {
                         LOG.info("[smoke] in world, running {} steps", steps.size());
                         stage = 2;
                         index = 0;
-                        waitLeft = steps.get(0).wait();
+                        waitLeft = steps.get(0).delay();
                     }
                 } else {
                     waitLeft = 0;
@@ -100,7 +100,7 @@ public final class SmokeClient implements ClientModInitializer {
                 } catch (RuntimeException e) {
                     LOG.error("[smoke] step {} failed", s.name(), e);
                 }
-                if (index < steps.size()) waitLeft = steps.get(index).wait();
+                if (index < steps.size()) waitLeft = steps.get(index).delay();
             }
             default -> {}
         }
