@@ -6,8 +6,7 @@ name: build
 
 on:
   push:
-    branches: [main]
-    tags: ['v*']
+    branches: [main, 'mc-*']
   workflow_dispatch:
 
 permissions:
@@ -86,28 +85,20 @@ jobs:
           OUT_SMOKE: ${{ steps.smoke.outcome }}
         run: bash ci/publish_logs.sh
 
-      - name: Release jar (tag)
-        if: success() && github.ref_type == 'tag'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          JAR=$(ls build/libs/*.jar | grep -v -- '-sources' | head -1)
-          MC=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)
-          gh release create "$GITHUB_REF_NAME" "$JAR" --target "$GITHUB_SHA" \
-            --title "$GITHUB_REF_NAME (마인크래프트 자바 $MC)" \
-            --notes "고정 판: 마인크래프트 자바 $MC · Fabric Loader · Fabric API 가 필요합니다."
-
       - name: Release jar
-        if: success() && github.ref_type != 'tag'
+        if: success()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           JAR=$(ls build/libs/*.jar | grep -v -- '-sources' | head -1)
           SHORT=${GITHUB_SHA::7}
-          gh release delete latest --yes --cleanup-tag 2>/dev/null || true
-          gh release create latest "$JAR" --prerelease --target "$GITHUB_SHA" \
-            --title "최신 빌드 ($SHORT)" \
-            --notes "main 의 $SHORT 에서 자동으로 만든 모드 jar. 마인크래프트 자바 $(grep '^minecraft_version=' gradle.properties | cut -d= -f2) · Fabric Loader · Fabric API 가 필요합니다 (ci-out/versions.txt)."
+          MC=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)
+          # main → "latest" (늘 새로), mc-* 브랜치 (옛 마인크래프트 버전 보관) → 브랜치 이름의 릴리스
+          if [ "$GITHUB_REF_NAME" = "main" ]; then TAG=latest; PRE=--prerelease; TITLE="최신 빌드 ($SHORT)"; else TAG="release-$GITHUB_REF_NAME"; PRE=; TITLE="$GITHUB_REF_NAME 판 ($SHORT)"; fi
+          gh release delete "$TAG" --yes --cleanup-tag 2>/dev/null || true
+          gh release create "$TAG" "$JAR" $PRE --target "$GITHUB_SHA" \
+            --title "$TITLE" \
+            --notes "$GITHUB_REF_NAME 의 $SHORT 에서 자동으로 만든 모드 jar. 마인크래프트 자바 $MC · Fabric Loader · Fabric API 가 필요합니다 (ci-out/versions.txt)."
 
       - uses: actions/upload-artifact@v4
         if: always()
