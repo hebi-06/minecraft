@@ -140,6 +140,8 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             h.setNoAi(true);
             h.setSilent(true);
             h.setPersistenceRequired();
+            h.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1024); // 한 방에 쓰러지지 않게 (치기 전마다 다시 채움)
+            h.setHealth(1024F);
             h.snapTo(0.5, -60, -2.2, 0F, 0F);
             h.setYHeadRot(0F);
             h.setYBodyRot(0F);
@@ -168,7 +170,9 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
                 });
                 ctx.runOnClient(mc -> {
                     mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(target.getX(), target.getEyeY() - 0.3, target.getZ()));
-                    mc.gameMode.attack(mc.player, mc.level.getEntity(target.getId()));
+                    var e = mc.level.getEntity(target.getId());
+                    if (e != null) mc.gameMode.attack(mc.player, e);
+                    else LOG.warn("[gallery] slash target missing on client");
                 });
                 ctx.waitTicks(1);
                 ctx.takeScreenshot(TestScreenshotOptions.of("s_" + w[1] + (crit ? "_crit" : "") + "_t1").withSize(960, 540));
