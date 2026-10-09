@@ -1,0 +1,9 @@
+// API 목록 뽑기 전용 (마인크래프트 26.3 + Fabric API 를 받아 javap 로 시그니처만 출력) — 모드 빌드와 무관
+pluginManagement {
+    repositories {
+        maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+rootProject.name = 'api-dump'

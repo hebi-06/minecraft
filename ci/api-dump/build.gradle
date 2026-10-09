@@ -1,0 +1,17 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version '1.18-SNAPSHOT'
+}
+loom {
+    splitEnvironmentSourceSets()
+}
+dependencies {
+    minecraft "com.mojang:minecraft:26.3"
+    implementation "net.fabricmc:fabric-loader:0.19.5"
+    implementation "net.fabricmc.fabric-api:fabric-api:0.162.0+26.3"
+}
+tasks.register('printClasspath') {
+    def cp = sourceSets.client.compileClasspath
+    doLast {
+XX
+    }
+}
