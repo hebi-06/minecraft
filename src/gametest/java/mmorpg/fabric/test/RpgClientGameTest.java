@@ -286,13 +286,10 @@ public final class RpgClientGameTest implements FabricClientGameTest {
         });
     }
 
-    /** 근접 과녁을 침 (마우스 왼쪽과 같은 경로: 공격 패킷 + 팔 휘두르기) */
+    /** 근접 과녁을 침 (마우스 왼쪽과 같은 공격 패킷) */
     private static void attack(ClientGameTestContext ctx, TestServerContext server, boolean crit) {
         server.runOnServer(s -> RpgCombat.forceCrit = crit);
-        ctx.runOnClient(mc -> {
-            mc.gameMode.attack(mc.player, clientHusk(mc, MELEE));
-            mc.player.swing(InteractionHand.MAIN_HAND);
-        });
+        ctx.runOnClient(mc -> mc.gameMode.attack(mc.player, clientHusk(mc, MELEE)));
     }
 
     /** 손에 든 무기 쓰기 (마우스 오른쪽과 같은 경로) */
