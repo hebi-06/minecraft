@@ -1,6 +1,6 @@
 # MMO RPG — 자바 에디션 (Fabric 모드)
 
-베드락 애드온 **MMO RPG 시스템** (v2.27.0) 을 마인크래프트 **자바 에디션 1.21.1 (Fabric)** 으로 옮기는 모드입니다.
+베드락 애드온 **MMO RPG 시스템** (v2.27.0) 을 마인크래프트 **자바 에디션 26.3 (Fabric)** 으로 옮기는 모드입니다 (1.21.1 판은 따로 보관 — 아래 설치).
 밸런스 수치와 공식은 애드온에서 그대로 가져온 규칙 코어 (`core/`) 를 씁니다 — 애드온 JS 와 같은 입력 28,530개에서 같은 값이 나오는 것을 매 빌드마다 확인합니다.
 
 ## 지금 들어 있는 것 (1단계)
@@ -16,13 +16,17 @@
 | 방패 | 오른손에 들면 피해 감소, 웅크리면 앞에서 오는 공격을 막음 |
 | 피해 숫자 | 맞은 대상 머리 위에 떠오르는 숫자 (평타 흰색 · 치명타 금색 ! · 플레이어가 받은 피해 빨강) |
 
-아직 없는 것: 초월 무기 스킬 · 룬 (3단계), 갑옷 · 강화 · 상점 · NPC · 퀘스트 (4단계), 몬스터 · 보스 (5단계), 결투 · 탈것 (6단계). 계획은 `PLAN.md`.
+1단계의 임시 표현 (2단계에서 바꿈): 활 빛줄기 · 마법진 · 맞힘 연출은 바닐라 파티클 (애드온과 같은 자리 · 색 · 타이밍), 손에 든 무기는 아이콘 그림 (평면). 2단계에서 애드온의 이펙트 그림 (마법진 10단계 · 빛줄기 · 참격) 과 무기 3D 모델 31종으로 바꿉니다.
+
+아직 없는 것: 근접 참격 · 무기 3D 모델 (2단계), 초월 무기 스킬 · 룬 (3단계), 갑옷 · 강화 · 상점 · NPC · 퀘스트 (4단계), 몬스터 · 보스 (5단계), 결투 · 탈것 (6단계). 계획은 `PLAN.md`.
 
 ## 설치
 
-1. [Fabric Loader](https://fabricmc.net/use/) 를 마인크래프트 **1.21.1** 에 설치
-2. [Fabric API](https://modrinth.com/mod/fabric-api) (1.21.1 용) 와 이 모드 jar 를 `mods` 폴더에
-3. 모드 jar: 이 저장소의 **Releases → latest** (main 에 올릴 때마다 자동으로 새로 만들어짐)
+1. [Fabric Loader](https://fabricmc.net/use/) (0.19.5 이상) 를 마인크래프트 **26.3** 에 설치
+2. [Fabric API](https://modrinth.com/mod/fabric-api) (26.3 용, 0.162.0 이상) 와 이 모드 jar 를 `mods` 폴더에
+3. 모드 jar: 이 저장소의 **Releases → latest** (main 에 올릴 때마다 모든 시험을 통과하면 자동으로 새로 만들어짐)
+
+마인크래프트 **1.21.1** 용 (1단계까지, 더 고치지 않음): **Releases → release-mc-1.21.1** (`mc-1.21.1` 브랜치, Fabric API 0.116.x+1.21.1).
 
 서버에 넣으면 서버 · 클라이언트 둘 다 필요합니다 (모드가 없는 클라이언트도 접속은 되며, 스탯 창이 채팅으로 나옵니다).
 
@@ -44,14 +48,14 @@
 core/                  규칙 코어 (마인크래프트와 무관, 외부 라이브러리 없음): rules.json + 계산 81개
 src/main/              모드 (서버 · 공통): 스탯 · 체력 · 전투 · 피해 숫자 · 명령어 · 믹스인
 src/client/            클라이언트: 체력 바 HUD · 스탯 창 · 키
-src/gametest/          게임 시험 (서버를 띄워 가짜 플레이어 · 몹으로 공식 · 연출 확인 — 모드 jar 에는 안 들어감)
+src/gametest/          게임 시험 — 서버 (@GameTest, 가짜 플레이어 · 몹으로 공식 · 연출) + 클라이언트 (실제 입력 · 장면 사진) — 모드 jar 에는 안 들어감
 tools/                 rules.json · 비교 케이스 생성 (tools/jsenv/scripts = 애드온 스크립트 사본)
 ci/                    GitHub Actions 보조 (Fabric 버전 확인 · 로그 올리기)
 ```
 
 ## 빌드 (GitHub Actions)
 
-`main` 에 올리면 자동으로: Fabric 버전 확인 → 규칙 코어 대조 시험 → 모드 빌드 → 게임 시험 → 성공하면 Releases 의 `latest` 에 jar.
-각 단계 로그는 `ci-logs` 브랜치에 올라갑니다 (`SUMMARY.txt` · `ERRORS.txt` · 단계별 로그).
+`main` 에 올리면 자동으로: Fabric 버전 확인 → 규칙 코어 대조 시험 → 모드 빌드 → 게임 시험 (서버) → 화면 시험 (클라이언트, xvfb) → 모두 통과하면 Releases 의 `latest` 에 jar.
+각 단계 로그와 화면 시험 사진은 `ci-logs` 브랜치에 올라갑니다 (`SUMMARY.txt` · `ERRORS.txt` · 단계별 로그 · `client-checks.txt` · `shots/`).
 
-직접 빌드: JDK 21 + Node 22 가 있는 PC 에서 `./check-core.sh && ./gradlew build runGametest` (gradle.properties 의 `auto` 는 숫자 버전으로 바꿔야 함).
+직접 빌드: JDK 25 + Node 22 가 있는 PC 에서 `./check-core.sh && ./gradlew build` (build 가 서버 게임 시험을 함께 돌림), 화면 시험은 `./gradlew runClientGameTest`.
