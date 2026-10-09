@@ -11,7 +11,10 @@ dependencies {
 }
 tasks.register('printClasspath') {
     def cp = sourceSets.client.compileClasspath
+    def out = layout.buildDirectory.file('classpath.txt')
     doLast {
-XX
+        def f = out.get().asFile
+        f.parentFile.mkdirs()
+        f.text = cp.files.join('\n')
     }
 }
