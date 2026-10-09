@@ -46,6 +46,7 @@ net.minecraft.client.renderer.item.properties.select.DisplayContext
 net.minecraft.client.renderer.special.SpecialModelRenderer
 net.minecraft.client.renderer.special.SpecialModelRenderers
 net.minecraft.client.renderer.state.level.QuadParticleRenderState
+net.minecraft.client.renderer.texture.SpriteContents
 net.minecraft.client.renderer.texture.TextureAtlasSprite
 net.minecraft.client.resources.model.cuboid.CuboidFace
 net.minecraft.client.resources.model.cuboid.CuboidFace$Deserializer
@@ -87,6 +88,9 @@ net.minecraft.network.codec.StreamCodec
 net.minecraft.network.protocol.common.custom.CustomPacketPayload
 net.minecraft.network.protocol.common.custom.CustomPacketPayload$Type
 net.minecraft.network.protocol.game.ClientboundSoundPacket
+net.minecraft.network.protocol.game.ServerboundAttackPacket
+net.minecraft.network.protocol.game.ServerboundInteractPacket
+net.minecraft.network.protocol.game.ServerboundPunchPacket
 net.minecraft.resources.Identifier
 net.minecraft.resources.ResourceKey
 net.minecraft.server.MinecraftServer
@@ -111,6 +115,7 @@ net.minecraft.world.Difficulty
 net.minecraft.world.DifficultyInstance
 net.minecraft.world.InteractionHand
 net.minecraft.world.InteractionResult
+net.minecraft.world.InteractionResult$SwingSource
 net.minecraft.world.damagesource.DamageSource
 net.minecraft.world.damagesource.DamageSources
 net.minecraft.world.damagesource.DamageTypes
@@ -126,6 +131,8 @@ net.minecraft.world.entity.EntityType
 net.minecraft.world.entity.EntityTypes
 net.minecraft.world.entity.EquipmentSlotGroup
 net.minecraft.world.entity.LivingEntity
+net.minecraft.world.entity.LivingEntity$SwingDescription
+net.minecraft.world.entity.LivingEntity$SwingState
 net.minecraft.world.entity.Mob
 net.minecraft.world.entity.OwnableEntity
 net.minecraft.world.entity.TamableAnimal

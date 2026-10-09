@@ -24,4 +24,7 @@ probe() {  # probe <class> <method-name-regex>
 probe net.minecraft.world.entity.player.Player 'attack|actuallyHurt|causeExtraKnockback|doSweepAttack|getAttackStrengthScale'
 probe net.minecraft.world.entity.LivingEntity 'heal|actuallyHurt|hurtServer|checkTotemDeathProtection'
 probe net.minecraft.world.food.FoodData 'tick'
+probe net.minecraft.server.network.ServerGamePacketListenerImpl 'handlePunch|handleAttack|handleInteract'
+probe net.minecraft.client.multiplayer.MultiPlayerGameMode 'attack|punch|startDestroyBlock'
+probe net.minecraft.client.Minecraft 'startAttack|continueAttack'
 ls -la "$OUT/calls"
