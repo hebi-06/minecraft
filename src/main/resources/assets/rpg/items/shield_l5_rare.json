@@ -1,6 +1,25 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "rpg:item/shield_l5_rare"
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [
+      {
+        "when": [
+          "gui",
+          "ground",
+          "fixed",
+          "head",
+          "on_shelf"
+        ],
+        "model": {
+          "type": "minecraft:model",
+          "model": "rpg:item/shield_l5_rare"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "rpg:item/model/shield_rare_lv0"
+    }
   }
 }

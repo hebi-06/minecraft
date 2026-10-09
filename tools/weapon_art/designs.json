@@ -1,0 +1,688 @@
+{
+ "source": "MMO RPG 애드온 RPG_RP (models/entity/rpg_weapons · textures/entity/rpg/weapons · attachables · animations/rpg_weapons)",
+ "designs": {
+  "axe_hero_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ]
+   }
+  },
+  "axe_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ]
+   }
+  },
+  "axe_noble_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ]
+   }
+  },
+  "axe_rare_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ]
+   }
+  },
+  "bow_hero_lv0": {
+   "fp": {
+    "rotation": [
+     80.7,
+     -0.4,
+     21.5
+    ],
+    "position": [
+     4.03,
+     -6.77,
+     2.95
+    ]
+   }
+  },
+  "bow_lv0": {
+   "fp": {
+    "rotation": [
+     80.7,
+     -0.4,
+     21.5
+    ],
+    "position": [
+     4.03,
+     -6.77,
+     2.95
+    ]
+   }
+  },
+  "bow_noble_lv0": {
+   "fp": {
+    "rotation": [
+     80.7,
+     -0.4,
+     21.5
+    ],
+    "position": [
+     4.03,
+     -6.77,
+     2.95
+    ]
+   }
+  },
+  "bow_rare_lv0": {
+   "fp": {
+    "rotation": [
+     80.7,
+     -0.4,
+     21.5
+    ],
+    "position": [
+     4.03,
+     -6.77,
+     2.95
+    ]
+   }
+  },
+  "bow_transcend_lv0": {
+   "fp": {
+    "rotation": [
+     80.7,
+     -0.4,
+     21.5
+    ],
+    "position": [
+     4.03,
+     -6.77,
+     2.95
+    ],
+    "scale": [
+     0.8,
+     0.8,
+     0.8
+    ]
+   }
+  },
+  "dagger_hero_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     -0.1,
+     6.49,
+     -1.32
+    ]
+   }
+  },
+  "dagger_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     -0.1,
+     6.49,
+     -1.32
+    ]
+   }
+  },
+  "dagger_noble_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     -0.1,
+     6.49,
+     -1.32
+    ]
+   }
+  },
+  "dagger_rare_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     -0.1,
+     6.49,
+     -1.32
+    ]
+   }
+  },
+  "dagger_transcend_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     -0.1,
+     6.49,
+     -1.32
+    ],
+    "scale": [
+     0.65,
+     0.65,
+     0.65
+    ]
+   }
+  },
+  "greatsword_transcend_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.7,
+     0.7,
+     0.7
+    ]
+   }
+  },
+  "shield_hero_lv0": {
+   "fp": {
+    "rotation": [
+     148.4,
+     0.6,
+     40.0
+    ],
+    "position": [
+     -0.51,
+     4.45,
+     1.09
+    ]
+   }
+  },
+  "shield_lv0": {
+   "fp": {
+    "rotation": [
+     148.4,
+     0.6,
+     40.0
+    ],
+    "position": [
+     -0.51,
+     4.45,
+     1.09
+    ]
+   }
+  },
+  "shield_noble_lv0": {
+   "fp": {
+    "rotation": [
+     148.4,
+     0.6,
+     40.0
+    ],
+    "position": [
+     -0.51,
+     4.45,
+     1.09
+    ]
+   }
+  },
+  "shield_rare_lv0": {
+   "fp": {
+    "rotation": [
+     148.4,
+     0.6,
+     40.0
+    ],
+    "position": [
+     -0.51,
+     4.45,
+     1.09
+    ]
+   }
+  },
+  "shield_transcend_lv0": {
+   "fp": {
+    "rotation": [
+     148.4,
+     0.6,
+     40.0
+    ],
+    "position": [
+     -0.51,
+     4.45,
+     1.09
+    ]
+   }
+  },
+  "spear_transcend_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.72,
+     0.72,
+     0.72
+    ]
+   }
+  },
+  "staff_hero_lv0": {
+   "fp": {
+    "rotation": [
+     98.7,
+     3.4,
+     3.7
+    ],
+    "position": [
+     5.35,
+     2.87,
+     5.32
+    ]
+   }
+  },
+  "staff_lv0": {
+   "fp": {
+    "rotation": [
+     98.7,
+     3.4,
+     3.7
+    ],
+    "position": [
+     5.35,
+     2.87,
+     5.32
+    ]
+   }
+  },
+  "staff_noble_lv0": {
+   "fp": {
+    "rotation": [
+     98.7,
+     3.4,
+     3.7
+    ],
+    "position": [
+     5.35,
+     2.87,
+     5.32
+    ]
+   }
+  },
+  "staff_rare_lv0": {
+   "fp": {
+    "rotation": [
+     98.7,
+     3.4,
+     3.7
+    ],
+    "position": [
+     5.35,
+     2.87,
+     5.32
+    ]
+   }
+  },
+  "staff_transcend_lv0": {
+   "fp": {
+    "rotation": [
+     98.7,
+     3.4,
+     3.7
+    ],
+    "position": [
+     5.35,
+     2.87,
+     5.32
+    ],
+    "scale": [
+     0.85,
+     0.85,
+     0.85
+    ]
+   }
+  },
+  "sword_hero_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ]
+   }
+  },
+  "sword_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ]
+   }
+  },
+  "sword_noble_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ]
+   }
+  },
+  "sword_rare_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ]
+   }
+  },
+  "sword_transcend_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.8,
+     0.8,
+     0.8
+    ]
+   }
+  }
+ },
+ "weapons": {
+  "rpg:axe_l0_common": "axe_lv0",
+  "rpg:axe_l0_hero": "axe_hero_lv0",
+  "rpg:axe_l0_noble": "axe_noble_lv0",
+  "rpg:axe_l0_rare": "axe_rare_lv0",
+  "rpg:axe_l0_transcend": "spear_transcend_lv0",
+  "rpg:axe_l10_common": "axe_lv0",
+  "rpg:axe_l10_hero": "axe_hero_lv0",
+  "rpg:axe_l10_noble": "axe_noble_lv0",
+  "rpg:axe_l10_rare": "axe_rare_lv0",
+  "rpg:axe_l10_transcend": "spear_transcend_lv0",
+  "rpg:axe_l15_common": "axe_lv0",
+  "rpg:axe_l15_hero": "axe_hero_lv0",
+  "rpg:axe_l15_noble": "axe_noble_lv0",
+  "rpg:axe_l15_rare": "axe_rare_lv0",
+  "rpg:axe_l15_transcend": "spear_transcend_lv0",
+  "rpg:axe_l20_common": "axe_lv0",
+  "rpg:axe_l20_hero": "axe_hero_lv0",
+  "rpg:axe_l20_noble": "axe_noble_lv0",
+  "rpg:axe_l20_rare": "axe_rare_lv0",
+  "rpg:axe_l20_transcend": "spear_transcend_lv0",
+  "rpg:axe_l30_common": "axe_lv0",
+  "rpg:axe_l30_hero": "axe_hero_lv0",
+  "rpg:axe_l30_noble": "axe_noble_lv0",
+  "rpg:axe_l30_rare": "axe_rare_lv0",
+  "rpg:axe_l30_transcend": "spear_transcend_lv0",
+  "rpg:axe_l35_hero": "axe_hero_lv0",
+  "rpg:axe_l40_common": "axe_lv0",
+  "rpg:axe_l40_hero": "axe_hero_lv0",
+  "rpg:axe_l40_noble": "axe_noble_lv0",
+  "rpg:axe_l40_rare": "axe_rare_lv0",
+  "rpg:axe_l40_transcend": "spear_transcend_lv0",
+  "rpg:axe_l5_common": "axe_lv0",
+  "rpg:axe_l5_hero": "axe_hero_lv0",
+  "rpg:axe_l5_noble": "axe_noble_lv0",
+  "rpg:axe_l5_rare": "axe_rare_lv0",
+  "rpg:axe_l5_transcend": "spear_transcend_lv0",
+  "rpg:bow_l0_common": "bow_lv0",
+  "rpg:bow_l0_hero": "bow_hero_lv0",
+  "rpg:bow_l0_noble": "bow_noble_lv0",
+  "rpg:bow_l0_rare": "bow_rare_lv0",
+  "rpg:bow_l0_transcend": "bow_transcend_lv0",
+  "rpg:bow_l10_common": "bow_lv0",
+  "rpg:bow_l10_hero": "bow_hero_lv0",
+  "rpg:bow_l10_noble": "bow_noble_lv0",
+  "rpg:bow_l10_rare": "bow_rare_lv0",
+  "rpg:bow_l10_transcend": "bow_transcend_lv0",
+  "rpg:bow_l15_common": "bow_lv0",
+  "rpg:bow_l15_hero": "bow_hero_lv0",
+  "rpg:bow_l15_noble": "bow_noble_lv0",
+  "rpg:bow_l15_rare": "bow_rare_lv0",
+  "rpg:bow_l15_transcend": "bow_transcend_lv0",
+  "rpg:bow_l20_common": "bow_lv0",
+  "rpg:bow_l20_hero": "bow_hero_lv0",
+  "rpg:bow_l20_noble": "bow_noble_lv0",
+  "rpg:bow_l20_rare": "bow_rare_lv0",
+  "rpg:bow_l20_transcend": "bow_transcend_lv0",
+  "rpg:bow_l30_common": "bow_lv0",
+  "rpg:bow_l30_hero": "bow_hero_lv0",
+  "rpg:bow_l30_noble": "bow_noble_lv0",
+  "rpg:bow_l30_rare": "bow_rare_lv0",
+  "rpg:bow_l30_transcend": "bow_transcend_lv0",
+  "rpg:bow_l35_hero": "bow_hero_lv0",
+  "rpg:bow_l40_common": "bow_lv0",
+  "rpg:bow_l40_hero": "bow_hero_lv0",
+  "rpg:bow_l40_noble": "bow_noble_lv0",
+  "rpg:bow_l40_rare": "bow_rare_lv0",
+  "rpg:bow_l40_transcend": "bow_transcend_lv0",
+  "rpg:bow_l5_common": "bow_lv0",
+  "rpg:bow_l5_hero": "bow_hero_lv0",
+  "rpg:bow_l5_noble": "bow_noble_lv0",
+  "rpg:bow_l5_rare": "bow_rare_lv0",
+  "rpg:bow_l5_transcend": "bow_transcend_lv0",
+  "rpg:dagger_l0_common": "dagger_lv0",
+  "rpg:dagger_l0_hero": "dagger_hero_lv0",
+  "rpg:dagger_l0_noble": "dagger_noble_lv0",
+  "rpg:dagger_l0_rare": "dagger_rare_lv0",
+  "rpg:dagger_l0_transcend": "dagger_transcend_lv0",
+  "rpg:dagger_l10_common": "dagger_lv0",
+  "rpg:dagger_l10_hero": "dagger_hero_lv0",
+  "rpg:dagger_l10_noble": "dagger_noble_lv0",
+  "rpg:dagger_l10_rare": "dagger_rare_lv0",
+  "rpg:dagger_l10_transcend": "dagger_transcend_lv0",
+  "rpg:dagger_l15_common": "dagger_lv0",
+  "rpg:dagger_l15_hero": "dagger_hero_lv0",
+  "rpg:dagger_l15_noble": "dagger_noble_lv0",
+  "rpg:dagger_l15_rare": "dagger_rare_lv0",
+  "rpg:dagger_l15_transcend": "dagger_transcend_lv0",
+  "rpg:dagger_l20_common": "dagger_lv0",
+  "rpg:dagger_l20_hero": "dagger_hero_lv0",
+  "rpg:dagger_l20_noble": "dagger_noble_lv0",
+  "rpg:dagger_l20_rare": "dagger_rare_lv0",
+  "rpg:dagger_l20_transcend": "dagger_transcend_lv0",
+  "rpg:dagger_l30_common": "dagger_lv0",
+  "rpg:dagger_l30_hero": "dagger_hero_lv0",
+  "rpg:dagger_l30_noble": "dagger_noble_lv0",
+  "rpg:dagger_l30_rare": "dagger_rare_lv0",
+  "rpg:dagger_l30_transcend": "dagger_transcend_lv0",
+  "rpg:dagger_l35_hero": "dagger_hero_lv0",
+  "rpg:dagger_l40_common": "dagger_lv0",
+  "rpg:dagger_l40_hero": "dagger_hero_lv0",
+  "rpg:dagger_l40_noble": "dagger_noble_lv0",
+  "rpg:dagger_l40_rare": "dagger_rare_lv0",
+  "rpg:dagger_l40_transcend": "dagger_transcend_lv0",
+  "rpg:dagger_l5_common": "dagger_lv0",
+  "rpg:dagger_l5_hero": "dagger_hero_lv0",
+  "rpg:dagger_l5_noble": "dagger_noble_lv0",
+  "rpg:dagger_l5_rare": "dagger_rare_lv0",
+  "rpg:dagger_l5_transcend": "dagger_transcend_lv0",
+  "rpg:greatsword_l40_transcend": "greatsword_transcend_lv0",
+  "rpg:shield_l0_common": "shield_lv0",
+  "rpg:shield_l0_hero": "shield_hero_lv0",
+  "rpg:shield_l0_noble": "shield_noble_lv0",
+  "rpg:shield_l0_rare": "shield_rare_lv0",
+  "rpg:shield_l0_transcend": "shield_transcend_lv0",
+  "rpg:shield_l10_common": "shield_lv0",
+  "rpg:shield_l10_hero": "shield_hero_lv0",
+  "rpg:shield_l10_noble": "shield_noble_lv0",
+  "rpg:shield_l10_rare": "shield_rare_lv0",
+  "rpg:shield_l10_transcend": "shield_transcend_lv0",
+  "rpg:shield_l15_common": "shield_lv0",
+  "rpg:shield_l15_hero": "shield_hero_lv0",
+  "rpg:shield_l15_noble": "shield_noble_lv0",
+  "rpg:shield_l15_rare": "shield_rare_lv0",
+  "rpg:shield_l15_transcend": "shield_transcend_lv0",
+  "rpg:shield_l20_common": "shield_lv0",
+  "rpg:shield_l20_hero": "shield_hero_lv0",
+  "rpg:shield_l20_noble": "shield_noble_lv0",
+  "rpg:shield_l20_rare": "shield_rare_lv0",
+  "rpg:shield_l20_transcend": "shield_transcend_lv0",
+  "rpg:shield_l30_common": "shield_lv0",
+  "rpg:shield_l30_hero": "shield_hero_lv0",
+  "rpg:shield_l30_noble": "shield_noble_lv0",
+  "rpg:shield_l30_rare": "shield_rare_lv0",
+  "rpg:shield_l30_transcend": "shield_transcend_lv0",
+  "rpg:shield_l35_hero": "shield_hero_lv0",
+  "rpg:shield_l40_common": "shield_lv0",
+  "rpg:shield_l40_hero": "shield_hero_lv0",
+  "rpg:shield_l40_noble": "shield_noble_lv0",
+  "rpg:shield_l40_rare": "shield_rare_lv0",
+  "rpg:shield_l40_transcend": "shield_transcend_lv0",
+  "rpg:shield_l5_common": "shield_lv0",
+  "rpg:shield_l5_hero": "shield_hero_lv0",
+  "rpg:shield_l5_noble": "shield_noble_lv0",
+  "rpg:shield_l5_rare": "shield_rare_lv0",
+  "rpg:shield_l5_transcend": "shield_transcend_lv0",
+  "rpg:sword_l0_common": "sword_lv0",
+  "rpg:sword_l0_hero": "sword_hero_lv0",
+  "rpg:sword_l0_noble": "sword_noble_lv0",
+  "rpg:sword_l0_rare": "sword_rare_lv0",
+  "rpg:sword_l0_transcend": "sword_transcend_lv0",
+  "rpg:sword_l10_common": "sword_lv0",
+  "rpg:sword_l10_hero": "sword_hero_lv0",
+  "rpg:sword_l10_noble": "sword_noble_lv0",
+  "rpg:sword_l10_rare": "sword_rare_lv0",
+  "rpg:sword_l10_transcend": "sword_transcend_lv0",
+  "rpg:sword_l15_common": "sword_lv0",
+  "rpg:sword_l15_hero": "sword_hero_lv0",
+  "rpg:sword_l15_noble": "sword_noble_lv0",
+  "rpg:sword_l15_rare": "sword_rare_lv0",
+  "rpg:sword_l15_transcend": "sword_transcend_lv0",
+  "rpg:sword_l20_common": "sword_lv0",
+  "rpg:sword_l20_hero": "sword_hero_lv0",
+  "rpg:sword_l20_noble": "sword_noble_lv0",
+  "rpg:sword_l20_rare": "sword_rare_lv0",
+  "rpg:sword_l20_transcend": "sword_transcend_lv0",
+  "rpg:sword_l30_common": "sword_lv0",
+  "rpg:sword_l30_hero": "sword_hero_lv0",
+  "rpg:sword_l30_noble": "sword_noble_lv0",
+  "rpg:sword_l30_rare": "sword_rare_lv0",
+  "rpg:sword_l30_transcend": "sword_transcend_lv0",
+  "rpg:sword_l35_hero": "sword_hero_lv0",
+  "rpg:sword_l40_common": "sword_lv0",
+  "rpg:sword_l40_hero": "sword_hero_lv0",
+  "rpg:sword_l40_noble": "sword_noble_lv0",
+  "rpg:sword_l40_rare": "sword_rare_lv0",
+  "rpg:sword_l40_transcend": "sword_transcend_lv0",
+  "rpg:sword_l5_common": "sword_lv0",
+  "rpg:sword_l5_hero": "sword_hero_lv0",
+  "rpg:sword_l5_noble": "sword_noble_lv0",
+  "rpg:sword_l5_rare": "sword_rare_lv0",
+  "rpg:sword_l5_transcend": "sword_transcend_lv0",
+  "rpg:wand_l0_common": "staff_lv0",
+  "rpg:wand_l0_hero": "staff_hero_lv0",
+  "rpg:wand_l0_noble": "staff_noble_lv0",
+  "rpg:wand_l0_rare": "staff_rare_lv0",
+  "rpg:wand_l0_transcend": "staff_transcend_lv0",
+  "rpg:wand_l10_common": "staff_lv0",
+  "rpg:wand_l10_hero": "staff_hero_lv0",
+  "rpg:wand_l10_noble": "staff_noble_lv0",
+  "rpg:wand_l10_rare": "staff_rare_lv0",
+  "rpg:wand_l10_transcend": "staff_transcend_lv0",
+  "rpg:wand_l15_common": "staff_lv0",
+  "rpg:wand_l15_hero": "staff_hero_lv0",
+  "rpg:wand_l15_noble": "staff_noble_lv0",
+  "rpg:wand_l15_rare": "staff_rare_lv0",
+  "rpg:wand_l15_transcend": "staff_transcend_lv0",
+  "rpg:wand_l20_common": "staff_lv0",
+  "rpg:wand_l20_hero": "staff_hero_lv0",
+  "rpg:wand_l20_noble": "staff_noble_lv0",
+  "rpg:wand_l20_rare": "staff_rare_lv0",
+  "rpg:wand_l20_transcend": "staff_transcend_lv0",
+  "rpg:wand_l30_common": "staff_lv0",
+  "rpg:wand_l30_hero": "staff_hero_lv0",
+  "rpg:wand_l30_noble": "staff_noble_lv0",
+  "rpg:wand_l30_rare": "staff_rare_lv0",
+  "rpg:wand_l30_transcend": "staff_transcend_lv0",
+  "rpg:wand_l35_hero": "staff_hero_lv0",
+  "rpg:wand_l40_common": "staff_lv0",
+  "rpg:wand_l40_hero": "staff_hero_lv0",
+  "rpg:wand_l40_noble": "staff_noble_lv0",
+  "rpg:wand_l40_rare": "staff_rare_lv0",
+  "rpg:wand_l40_transcend": "staff_transcend_lv0",
+  "rpg:wand_l5_common": "staff_lv0",
+  "rpg:wand_l5_hero": "staff_hero_lv0",
+  "rpg:wand_l5_noble": "staff_noble_lv0",
+  "rpg:wand_l5_rare": "staff_rare_lv0",
+  "rpg:wand_l5_transcend": "staff_transcend_lv0"
+ }
+}

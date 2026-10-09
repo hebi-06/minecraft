@@ -9,7 +9,8 @@
       "mmorpg.fabric.test.RpgGameTests"
     ],
     "fabric-client-gametest": [
-      "mmorpg.fabric.test.RpgClientGameTest"
+      "mmorpg.fabric.test.RpgClientGameTest",
+      "mmorpg.fabric.test.RpgWeaponGallery"
     ]
   },
   "depends": {

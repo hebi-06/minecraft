@@ -1,6 +1,25 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "rpg:item/sword_l30_rare"
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [
+      {
+        "when": [
+          "gui",
+          "ground",
+          "fixed",
+          "head",
+          "on_shelf"
+        ],
+        "model": {
+          "type": "minecraft:model",
+          "model": "rpg:item/sword_l30_rare"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "rpg:item/model/sword_rare_lv0"
+    }
   }
 }
