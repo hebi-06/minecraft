@@ -8,7 +8,7 @@ import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Stats;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
@@ -32,7 +32,7 @@ public final class RpgHealth {
     private RpgHealth() {}
 
     private static final Obj CONFIG = Rules.get().obj("CONFIG");
-    public static final ResourceLocation MAX_HP_ID = Mmorpg.id("rpg_max_hp");
+    public static final Identifier MAX_HP_ID = Mmorpg.id("rpg_max_hp");
     /** hp.js MIRROR_MAX: 바닐라 회복량의 기준 (회복 1 = 최대 체력의 1/20) */
     static final double MIRROR_MAX = 20;
 
