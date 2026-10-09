@@ -26,9 +26,11 @@ import net.minecraft.world.phys.Vec3;
  * @param spin     처음 돌린 각 (도)
  * @param progress 마법진 그려진 정도 (0~1 → 10단계)
  * @param color    ARGB (그림은 흰색, 이 색을 곱함)
+ * @param accel    위로 가속 (초당² 블록, 빛 알갱이)
+ * @param drag     끌림 (초당 감속 계수, 빛 알갱이 — 애드온 linear_drag_coefficient)
  */
 public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size, float thick, float life, float delay, float grow, float spin,
-        float progress, int color) implements ParticleOptions {
+        float progress, int color, float accel, float drag) implements ParticleOptions {
     public static final int ARROW_SHOT = 0;
     public static final int ARROW_TRAIL = 1;
     public static final int ARROW_SPARK = 2;
@@ -36,6 +38,18 @@ public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size,
     public static final int MAGIC_FLASH = 4;
     /** 일반 그림 (FxSprite: 참격 · X · 충격파 · 방패 고리 · 폭발) — 크기 · 움직임 · 사라짐은 FxSprite 에 */
     public static final int SPRITE = 5;
+    /**
+     * 무기 빛 알갱이 (애드온 영웅 · 초월 무기의 fx — 클라이언트가 직접 뿌림): 처음 속도 dir × speed, 위로 accel 가속 · drag 끌림,
+     * 반 크기 size 에서 수명 동안 줄어듦, 카메라를 향함. sprite = 그림 (GLINT_TEXTURES 순번 — 바닐라 파티클 그림)
+     */
+    public static final int GLINT = 6;
+    public static final String[] GLINT_TEXTURES = {"generic_0", "flame"};
+
+    /** 끌림 · 가속 없는 그림 (빛줄기 · 불꽃 · 마법진 · 일반 그림) */
+    public FxOptions(int kind, int sprite, Vec3 dir, float speed, float size, float thick, float life, float delay, float grow, float spin,
+            float progress, int color) {
+        this(kind, sprite, dir, speed, size, thick, life, delay, grow, spin, progress, color, 0F, 0F);
+    }
 
     public static final MapCodec<FxOptions> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
             Codec.INT.fieldOf("kind").forGetter(FxOptions::kind),
@@ -49,7 +63,9 @@ public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size,
             Codec.FLOAT.optionalFieldOf("grow", 0F).forGetter(FxOptions::grow),
             Codec.FLOAT.optionalFieldOf("spin", 0F).forGetter(FxOptions::spin),
             Codec.FLOAT.optionalFieldOf("progress", 1F).forGetter(FxOptions::progress),
-            Codec.INT.optionalFieldOf("color", -1).forGetter(FxOptions::color)).apply(i, FxOptions::new));
+            Codec.INT.optionalFieldOf("color", -1).forGetter(FxOptions::color),
+            Codec.FLOAT.optionalFieldOf("accel", 0F).forGetter(FxOptions::accel),
+            Codec.FLOAT.optionalFieldOf("drag", 0F).forGetter(FxOptions::drag)).apply(i, FxOptions::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, FxOptions> STREAM_CODEC = StreamCodec.ofMember(FxOptions::write, FxOptions::read);
 
@@ -68,6 +84,8 @@ public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size,
         buf.writeFloat(spin);
         buf.writeFloat(progress);
         buf.writeInt(color);
+        buf.writeFloat(accel);
+        buf.writeFloat(drag);
     }
 
     private static FxOptions read(RegistryFriendlyByteBuf buf) {
@@ -75,7 +93,7 @@ public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size,
         int sprite = buf.readByte();
         Vec3 dir = new Vec3(buf.readFloat(), buf.readFloat(), buf.readFloat());
         return new FxOptions(kind, sprite, dir, buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(),
-                buf.readFloat(), buf.readFloat(), buf.readInt());
+                buf.readFloat(), buf.readFloat(), buf.readInt(), buf.readFloat(), buf.readFloat());
     }
 
     /** 일반 그림 하나: 자리에서 dir 쪽으로 speed (초당 블록, 끌림으로 느려짐), 반 크기 size, 수명 life, 돌린 각 spin */
@@ -86,6 +104,11 @@ public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size,
     @Override
     public ParticleType<FxOptions> getType() {
         return RpgParticles.FX;
+    }
+
+    /** 빛 알갱이 하나: 처음 속도 dir × speed (초당 블록), 위로 accel · 끌림 drag, 반 크기 size → 0, 수명 life, 그림 GLINT_TEXTURES[texture] */
+    public static FxOptions glint(int texture, Vec3 dir, double speed, double accel, double drag, double size, double life, int color) {
+        return new FxOptions(GLINT, texture, dir, (float) speed, (float) size, 0F, (float) life, 0F, 0F, 0F, 1F, color, (float) accel, (float) drag);
     }
 
     /** 0~1 색 + 알파 → ARGB */

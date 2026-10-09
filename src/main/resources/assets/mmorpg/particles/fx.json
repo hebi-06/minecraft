@@ -105,6 +105,8 @@
     "mmorpg:fx/slash_heavy_l_aura_4",
     "mmorpg:fx/slash_x",
     "mmorpg:fx/shock_ring",
-    "mmorpg:fx/bash_burst"
+    "mmorpg:fx/bash_burst",
+    "minecraft:generic_0",
+    "minecraft:flame"
   ]
 }

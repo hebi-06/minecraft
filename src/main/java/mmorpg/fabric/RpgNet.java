@@ -16,7 +16,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * 서버 ↔ 클라이언트 패킷: 찍은 스탯 · 포인트 · 최고 레벨 (스탯 창 · HUD 레벨 칸), 스탯 찍기.
+ * 서버 ↔ 클라이언트 패킷: 찍은 스탯 · 포인트 · 최고 레벨 (스탯 창 · HUD 레벨 칸), 스탯 찍기, 화면 흔들림.
  * 체력 · 최대 체력은 바닐라가 보내므로 따로 없음. 모드가 없는 클라이언트는 채팅 스탯 창 (누르는 [+1]).
  */
 public final class RpgNet {
@@ -67,8 +67,29 @@ public final class RpgNet {
         }
     }
 
+    /** 서버 → 클라이언트: 화면 흔들림 (애드온 camerashake add @s 세기 초 rotational) */
+    public record ShakePayload(float intensity, float seconds) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<ShakePayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("shake"));
+        public static final StreamCodec<FriendlyByteBuf, ShakePayload> CODEC = CustomPacketPayload.codec(ShakePayload::write, ShakePayload::read);
+
+        private static ShakePayload read(FriendlyByteBuf buf) {
+            return new ShakePayload(buf.readFloat(), buf.readFloat());
+        }
+
+        private void write(FriendlyByteBuf buf) {
+            buf.writeFloat(intensity);
+            buf.writeFloat(seconds);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     static void init() {
         PayloadTypeRegistry.clientboundPlay().register(SyncPayload.TYPE, SyncPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ShakePayload.TYPE, ShakePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SpendPayload.TYPE, SpendPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SpendPayload.TYPE, (payload, context) -> RpgPlayers.spend(context.player(), payload.stat(), Math.min(100, payload.count())));
     }
@@ -78,6 +99,12 @@ public final class RpgNet {
         if (!ServerPlayNetworking.canSend(sp, SyncPayload.TYPE)) return;
         RpgData d = RpgData.of(sp);
         ServerPlayNetworking.send(sp, new SyncPayload(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), open));
+    }
+
+    /** 화면 흔들림 (모드가 있는 클라이언트만 — 없으면 아무 일 없음) */
+    public static void shake(ServerPlayer sp, double intensity, double seconds) {
+        if (!ServerPlayNetworking.canSend(sp, ShakePayload.TYPE)) return;
+        ServerPlayNetworking.send(sp, new ShakePayload((float) intensity, (float) seconds));
     }
 
     /** 스탯 창 열기: 모드가 있으면 화면, 없으면 채팅 스탯 창 */

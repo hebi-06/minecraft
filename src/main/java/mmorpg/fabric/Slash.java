@@ -24,7 +24,8 @@ import net.minecraft.world.phys.Vec3;
  * - 맞혔을 때: 도끼 발밑 충격파, 방패 · 창 대상 앞 폭발 + 고리, 치명타는 칼 금빛 초승달 · 단검 붉은 X · 마검 보랏빛 X + 장밋빛 초승달,
  *   화면 가운데에서 벗어난 대상을 맞혔으면 맞은 자리에도 작은 참격
  * - 영웅 · 초월은 참격 안쪽에 금빛 · 붉은빛 기운, 요구 조건이 모자라면 회색으로 작게 (피해 없음)
- * - 연출만 (피해는 평타 판정 그대로). 화면 흔들림 (애드온 camerashake) 은 자바에 같은 명령이 없어 뺌
+ * - 도끼 · 방패로 맞히면 화면이 살짝 흔들림 (애드온 camerashake — 모드가 있는 클라이언트에 RpgNet.shake)
+ * - 연출만 (피해는 평타 판정 그대로)
  */
 public final class Slash {
     private Slash() {}
@@ -288,6 +289,7 @@ public final class Slash {
             Obj axe = SLASH.obj("axe");
             emit(level, FxSprite.SHOCK_RING, new Vec3(feet.x, feet.y + 0.08, feet.z), Vec3.ZERO, 0, 0, crit ? 1.6 : 1.0, crit ? 0.5 : 0.35, rgb(axe, "glow"), 0.9);
             sound(level, feet, SoundEvents.MACE_SMASH_GROUND, crit ? 0.9 : 1.2, crit ? 0.9 : 0.5);
+            if (SLASH.truthy("cameraShake")) RpgNet.shake(attacker, crit ? 0.35 : 0.12, crit ? 0.2 : 0.1);
         }
         if (w.type().equals("greatsword") && style != null && style.has("rune")) {
             // 마검: 맞힌 자리에 칼날 룬의 하늘빛 불꽃
@@ -332,6 +334,7 @@ public final class Slash {
         emit(level, FxSprite.BASH_BURST, at, u, 0, jitter(style, rnd), size, life, crit ? rgb(style, "critColor") : whiten(rgb(style, "glow"), 0.35), 0.95);
         emit(level, FxSprite.BASH_RING, along(at, u, -LAYER_GAP), u, 0, 0, size * 0.55, life * 0.8, WHITE, 0.9);
         sound(level, at, SoundEvents.SHIELD_BLOCK.value(), crit ? 0.7 : 0.85, 0.9);
+        if (SLASH.truthy("cameraShake")) RpgNet.shake(attacker, crit ? 0.2 : 0.08, crit ? 0.15 : 0.08);
     }
 
     /** 창으로 맞혔을 때: 대상 앞에 얼음빛 섬광 + 흰 고리 (치명타는 금빛 · 크게) */

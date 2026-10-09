@@ -23,6 +23,7 @@ import org.joml.Vector3f;
  * - 빛줄기 · 지나간 자리 선 (lookat_direction): 길이 방향은 dir, 면은 카메라 쪽으로 (dir 축으로 돎). 정사각형 조각을 이어 길쭉한 그림
  * - 불꽃 · 마법진 · 번쩍임 (rotate_xyz): 카메라를 향한 사각형 + 돌린 각
  * - 일반 그림 (FxSprite — 참격 · X · 방패 고리 · 폭발: 카메라를 향함, 충격파: 땅에 눕힘): 여러 장이면 수명 동안 차례로, 끌림으로 느려짐
+ * - 무기 빛 알갱이 (GLINT — 애드온 weapon_fx): 바닐라 파티클 그림 (generic_0 · flame), 위로 가속 · 끌림, 줄어들며 사라짐
  * 모두 밝기 최대 (빛), 반투명 섞기. 그림은 이름으로 찾음 (assets/mmorpg/particles/fx.json).
  */
 public final class FxParticle extends SingleQuadParticle {
@@ -76,8 +77,26 @@ public final class FxParticle extends SingleQuadParticle {
             this.remove();
             return;
         }
-        Vec3 p = start.add(dir.scale(travelled(Math.min(this.age / 20.0, o.life()))));
+        Vec3 p = posAt(Math.min(this.age / 20.0, o.life()));
         this.setPos(p.x, p.y, p.z);
+    }
+
+    /** t 초 뒤 자리 */
+    private Vec3 posAt(double t) {
+        if (o.kind() != FxOptions.GLINT) return start.add(dir.scale(travelled(t)));
+        // 빛 알갱이: dv/dt = (0, accel, 0) - drag × v, 처음 v = dir × speed (애드온 particle_motion_dynamic)
+        double d = o.drag();
+        double along;
+        double up;
+        if (d > 1e-6) {
+            double e = 1 - Math.exp(-d * t);
+            along = o.speed() * e / d;
+            up = o.accel() * (t / d - e / (d * d));
+        } else {
+            along = o.speed() * t;
+            up = 0.5 * o.accel() * t * t;
+        }
+        return start.add(dir.scale(along)).add(0, up, 0);
     }
 
     /** t 초 동안 간 거리: 끌림이 있으면 처음 속도 / 끌림 × (1 - e^(-끌림 × t)) (애드온 linear_drag_coefficient) */
@@ -117,12 +136,12 @@ public final class FxParticle extends SingleQuadParticle {
         float sec = (this.age + partialTick) / 20F;
         if (sec > life) return;
         float tn = Mth.clamp(sec / life, 0F, 1F);
-        // 자리 (빛줄기는 시간으로 바로 — 틱 사이도 매끄럽게)
-        double moved = travelled(Math.min(sec, life));
+        // 자리 (시간으로 바로 — 틱 사이도 매끄럽게)
+        Vec3 at = posAt(Math.min(sec, life));
         Vec3 cam = camera.position();
-        float rx = (float) (start.x + dir.x * moved - cam.x);
-        float ry = (float) (start.y + dir.y * moved - cam.y);
-        float rz = (float) (start.z + dir.z * moved - cam.z);
+        float rx = (float) (at.x - cam.x);
+        float ry = (float) (at.y - cam.y);
+        float rz = (float) (at.z - cam.z);
         switch (o.kind()) {
             case FxOptions.ARROW_SHOT -> {
                 float alpha = a * (1 - tn * tn * tn);
@@ -153,6 +172,10 @@ public final class FxParticle extends SingleQuadParticle {
                 float alpha = kind.fade == FxSprite.Fade.SQUARE ? a * (1 - tn * tn) : a;
                 if (kind.facing == FxSprite.Facing.FLAT) flat(state, rx, ry, rz, size, o.spin(), s, alpha);
                 else billboard(state, camera, rx, ry, rz, size, o.spin(), s, alpha);
+            }
+            case FxOptions.GLINT -> {
+                int t = Mth.clamp(o.sprite(), 0, FxOptions.GLINT_TEXTURES.length - 1);
+                billboard(state, camera, rx, ry, rz, o.size() * (1 - tn), 0F, tex(FxOptions.GLINT_TEXTURES[t]), a);
             }
             default -> {}
         }

@@ -6,10 +6,12 @@ import java.util.Comparator;
 import java.util.List;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgData;
+import mmorpg.fabric.client.CameraShake;
 import mmorpg.fabric.client.ClientRpgState;
 import mmorpg.fabric.client.MmorpgClient;
 import mmorpg.fabric.client.RpgHud;
 import mmorpg.fabric.client.StatScreen;
+import mmorpg.fabric.client.WeaponAura;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
@@ -36,8 +38,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 화면 시험 (클라이언트를 띄워 실제 입력으로): ./gradlew runClientGameTest (CI 는 xvfb).
- * 평평한 세계에서 무기 · 스탯을 준비한 뒤 HUD · 평타 / 치명타 숫자 · 3인칭 · 피해 · 낮은 체력 · 스탯 창 (K 키 · 툴팁 · +1 클릭)
- * · 활 · 완드 장면을 찍음 (build/run/clientGameTest/screenshots). 확인 항목이 하나라도 틀리면 마지막에 실패.
+ * 평평한 세계에서 무기 · 스탯을 준비한 뒤 HUD · 평타 / 치명타 숫자 · 3인칭 · 무기 빛 알갱이 · 도끼 화면 흔들림 · 피해 · 낮은 체력
+ * · 스탯 창 (K 키 · 툴팁 · +1 클릭) · 활 · 완드 장면을 찍음 (build/run/clientGameTest/screenshots). 확인 항목이 하나라도 틀리면 마지막에 실패.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgClientGameTest implements FabricClientGameTest {
@@ -63,6 +65,7 @@ public final class RpgClientGameTest implements FabricClientGameTest {
             conn.waitForChunksRender();
             setup(ctx, server, conn);
             melee(ctx, server);
+            auraAndShake(ctx, server);
             hurt(ctx, server);
             statScreen(ctx, server, conn);
             ranged(ctx, server);
@@ -85,6 +88,7 @@ public final class RpgClientGameTest implements FabricClientGameTest {
         server.runCommand("item replace entity @a hotbar.1 with rpg:bow_l30_hero");
         server.runCommand("item replace entity @a hotbar.2 with rpg:wand_l30_hero");
         server.runCommand("item replace entity @a hotbar.3 with rpg:shield_l30_hero");
+        server.runCommand("item replace entity @a hotbar.4 with rpg:axe_l30_hero");
         server.runCommand("item replace entity @a hotbar.8 with rpg:stat_book");
         husks = server.computeOnServer(s -> {
             ServerLevel level = s.getPlayerList().getPlayers().get(0).level();
@@ -145,6 +149,52 @@ public final class RpgClientGameTest implements FabricClientGameTest {
         ctx.takeScreenshot("third_person");
         server.runOnServer(s -> RpgCombat.forceCrit = null);
         camera(ctx, CameraType.FIRST_PERSON);
+    }
+
+    /** 무기 빛 알갱이 (영웅 칼 — 1인칭 · 3인칭 자리) · 도끼 치명타로 맞히면 화면 흔들림 */
+    private void auraAndShake(ClientGameTestContext ctx, TestServerContext server) {
+        select(ctx, 0);
+        camera(ctx, CameraType.FIRST_PERSON);
+        look(ctx, MELEE);
+        ctx.waitTicks(4);
+        int n0 = ctx.computeOnClient(mc -> WeaponAura.spawned);
+        ctx.waitTicks(20);
+        int n1 = ctx.computeOnClient(mc -> WeaponAura.spawned);
+        check(n1 - n0 >= 8, "weapon glints: " + (n1 - n0) + " in 20 ticks (hero sword, 10/s)");
+        double[] fp = ctx.computeOnClient(mc -> {
+            Vec3 at = WeaponAura.lastFirstPerson;
+            if (at == null) return new double[] {-1, -1};
+            Vec3 d = at.subtract(mc.player.getEyePosition());
+            return new double[] {d.length(), d.normalize().dot(mc.player.getViewVector(1F))};
+        });
+        check(fp[0] > 0.8 && fp[0] < 3 && fp[1] > 0.6, String.format("first-person glint spot in front (%.2f blocks, cos %.2f)", fp[0], fp[1]));
+        ctx.takeScreenshot("aura_fp");
+        camera(ctx, CameraType.THIRD_PERSON_BACK);
+        ctx.waitTicks(20);
+        double[] tp = ctx.computeOnClient(mc -> {
+            Vec3 at = WeaponAura.lastThirdPerson;
+            if (at == null) return new double[] {-1, -1};
+            Vec3 d = at.subtract(mc.player.position());
+            return new double[] {Math.hypot(d.x, d.z), d.y};
+        });
+        check(tp[0] >= 0 && tp[0] < 2 && tp[1] > 0.6 && tp[1] < 2.6,
+                String.format("third-person glint spot at the held sword (%.2f out, %.2f up)", tp[0], tp[1]));
+        ctx.takeScreenshot("aura_3p");
+        camera(ctx, CameraType.FIRST_PERSON);
+
+        // 도끼 치명타 → 화면 흔들림 (애드온 camerashake 0.35 · 0.2초)
+        select(ctx, 4);
+        look(ctx, MELEE);
+        ctx.waitTicks(30);
+        int f0 = ctx.computeOnClient(mc -> CameraShake.frames);
+        attack(ctx, server, true);
+        ctx.waitTicks(8);
+        int f1 = ctx.computeOnClient(mc -> CameraShake.frames);
+        float deg = ctx.computeOnClient(mc -> CameraShake.maxDegrees);
+        check(f1 > f0 && deg > 0.3F, String.format("camera shake on axe crit (%d frames, max %.2f deg)", f1 - f0, deg));
+        server.runOnServer(s -> RpgCombat.forceCrit = null);
+        select(ctx, 0);
+        ctx.waitTicks(10);
     }
 
     private void hurt(ClientGameTestContext ctx, TestServerContext server) {

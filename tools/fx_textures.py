@@ -9,6 +9,7 @@
 - src/main/resources/assets/mmorpg/particles/fx.json                      (클라이언트가 이름으로 찾음)
 - src/main/java/mmorpg/fabric/FxSprite.java                               (일반 그림 파티클의 모양 · 움직임: 장 수 · 크기 배율 · 커짐 · 끌림 · 사라짐 · 방향)
 활 빛줄기 · 지나간 자리 · 불꽃 · 마법진은 FxParticle 이 따로 그림 (FxOptions.ARROW_* · MAGIC_*) — 그림만 여기서 만듦.
+무기 빛 알갱이 (FxOptions.GLINT) 는 바닐라 파티클 그림을 그대로 씀 (애드온도 바닐라 particles.png 의 칸) — 목록에 이름만 넣음.
 """
 import json
 import os
@@ -32,6 +33,8 @@ SPECIAL = {
 # 일반 그림 파티클 (FxSprite): 애드온 파티클 이름
 SPRITES = [f"slash/slash_{shape}_{side}_{layer}" for shape in ("arc", "thin", "heavy") for side in ("r", "l") for layer in ("glow", "core", "aura")]
 SPRITES += ["slash/slash_x", "slash/shock_ring", "slash/bash_ring", "slash/bash_burst"]
+# 무기 빛 알갱이: 바닐라 그림 (FxOptions.GLINT_TEXTURES 와 같은 순서 — tools/weapon_models.py 의 VANILLA_PARTICLE_CELL)
+VANILLA = ["minecraft:generic_0", "minecraft:flame"]
 
 
 def tex_name(path):
@@ -115,6 +118,7 @@ def main(addon):
         facing = "FLAT" if bb["facing_camera_mode"] == "emitter_transform_xz" else "CAMERA"
         assert bb["facing_camera_mode"] in ("rotate_xyz", "emitter_transform_xz"), pid
         entries.append((tex_name(pid).upper(), base, frames, scale, gx, drag, fade, facing))
+    textures += VANILLA
     with open(OUT_JSON, "w", encoding="utf-8") as fh:
         json.dump({"textures": textures}, fh, indent=2)
         fh.write("\n")

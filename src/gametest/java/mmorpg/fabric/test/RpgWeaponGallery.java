@@ -2,6 +2,7 @@ package mmorpg.fabric.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import mmorpg.fabric.client.WeaponFxData;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
@@ -27,8 +28,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 무기 3D 모델 사진첩 (화면 시험): 디자인 31종을 하나씩 손에 들고 1인칭 · 3인칭 (앞에서) 사진, 밤에 빛나는 칸 사진,
- * 마네킹 둘 (옆 · 앞) 이 든 모습 (3인칭 자세를 옆에서 확인).
- * 사진 이름 w_<디자인>_fp / _3p / m_<디자인> → ci-logs 의 shots/. 확인 항목은 없음 (사진으로 봄).
+ * 마네킹 둘 (옆 · 앞) 이 든 모습 (3인칭 자세를 옆에서 확인), 영웅 · 초월 13종의 빛 알갱이 (밤: 1인칭 · 3인칭 · 마네킹).
+ * 사진 이름 w_<디자인>_fp / _3p / m_<디자인> / g_<디자인>_fp / _3p / mg_<디자인> → ci-logs 의 shots/. 확인 항목은 없음 (사진으로 봄).
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgWeaponGallery implements FabricClientGameTest {
@@ -81,7 +82,7 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             ctx.runOnClient(mc -> mc.options.chatVisibility().set(ChatVisiblity.HIDDEN));
             ctx.waitTicks(20);
             for (String[] d : DESIGNS) shoot(ctx, server, d[0], d[1], "");
-            mannequins(ctx, server);
+            mannequins(ctx, server, false);
             effects(ctx, server);
             slashes(ctx, server);
             // 밤: 빛나는 칸 (light_emission)
@@ -91,6 +92,7 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
                 String[] d = id.split("\\|");
                 shoot(ctx, server, d[0], d[1], "_night");
             }
+            glints(ctx, server);
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         }
     }
@@ -220,8 +222,32 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
         LOG.info("[gallery] fx {}", name);
     }
 
-    /** 마네킹 둘 (옆을 보임 · 앞을 보임) 에게 무기를 들려 3인칭 자세를 봄. 플레이어는 빈손으로 북쪽을 봄 */
-    private static void mannequins(ClientGameTestContext ctx, TestServerContext server) {
+    /** 빛 알갱이가 있는 무기인지 (WeaponFxData) */
+    private static boolean hasGlints(String id) {
+        return WeaponFxData.BY_ITEM.containsKey(id.substring(id.indexOf(':') + 1));
+    }
+
+    /** 무기 빛 알갱이 (밤 — 지금 밤): 영웅 · 초월 13종을 들고 1인칭 · 3인칭 (앞) 각 20틱 뒤 (알갱이가 수명만큼 쌓인 뒤), 마네킹 */
+    private static void glints(ClientGameTestContext ctx, TestServerContext server) {
+        for (String[] d : DESIGNS) {
+            if (!hasGlints(d[1])) continue;
+            server.runCommand("item replace entity @a weapon.mainhand with " + d[1]);
+            ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+            ctx.waitTicks(20);
+            ctx.takeScreenshot(TestScreenshotOptions.of("g_" + d[0] + "_fp").withSize(640, 360));
+            ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+            ctx.waitTicks(20);
+            ctx.takeScreenshot(TestScreenshotOptions.of("g_" + d[0] + "_3p").withSize(640, 360));
+            LOG.info("[gallery] glints {}", d[0]);
+        }
+        mannequins(ctx, server, true);
+    }
+
+    /**
+     * 마네킹 둘 (옆을 보임 · 앞을 보임) 에게 무기를 들려 3인칭 자세를 봄. 플레이어는 빈손으로 북쪽을 봄.
+     * glints: 빛 알갱이가 있는 무기만, 알갱이가 쌓이도록 20틱 뒤 (mg_<디자인>)
+     */
+    private static void mannequins(ClientGameTestContext ctx, TestServerContext server, boolean glints) {
         List<Mannequin> ms = server.computeOnServer(s -> {
             ServerLevel level = s.getPlayerList().getPlayers().get(0).level();
             List<Mannequin> list = new ArrayList<>();
@@ -240,13 +266,13 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.getInput().lookAt(180F, 12F);
         for (String[] d : DESIGNS) {
-            if (!d[0].endsWith("_lv0") || d[0].contains("rare") || d[0].contains("noble")) continue;
+            if (glints ? !hasGlints(d[1]) : !d[0].endsWith("_lv0") || d[0].contains("rare") || d[0].contains("noble")) continue;
             server.runOnServer(s -> {
                 ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(d[1])));
                 for (Mannequin m : ms) m.setItemInHand(InteractionHand.MAIN_HAND, stack.copy());
             });
-            ctx.waitTicks(4);
-            ctx.takeScreenshot(TestScreenshotOptions.of("m_" + d[0]).withSize(960, 540));
+            ctx.waitTicks(glints ? 20 : 4);
+            ctx.takeScreenshot(TestScreenshotOptions.of((glints ? "mg_" : "m_") + d[0]).withSize(960, 540));
         }
         server.runOnServer(s -> ms.forEach(m -> m.discard()));
         ctx.getInput().lookAt(0F, 0F);

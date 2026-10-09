@@ -20,6 +20,7 @@ import glob
 import json
 import math
 import os
+import re
 import shutil
 import sys
 
@@ -253,6 +254,23 @@ def convert(design, meta, out_models, out_textures):
     s_3p = sig3 / k
     t_3p = Q.T @ T3J @ rel_t / 16 - JAVA_3P_OFFSET - R_3p @ (s_3p * (C0 / 16 - 0.5))
 
+    # 빛 알갱이 자리 (weapon 뼈의 fx 위치) — 상자와 같은 규칙으로 옮김
+    fx = None
+    loc = (wb.get("locators") or {}).get("fx")
+    if loc is not None:
+        assert isinstance(loc, list) and len(loc) == 3, design
+        local_l = to3(np.array(loc, float)) - to3(P)
+        # 1인칭: 자바 카메라 공간 (블록 — 오른쪽 +x · 위 +y · 앞 -z), 오른손 · 휘두르기 없음
+        fx_fp = D @ (Wt + sig * (R_w @ local_l) - BEDROCK_FP_CAMERA) / 16
+        # 3인칭: 오른팔 공간 (자바 모델 공간 블록 — 팔 축 기준, 팔 회전 전)
+        fx_arm = T3J @ (rel_t + sig3 * (R_rel @ local_l)) / 16
+        # 확인: 자바가 모델을 그리는 순서 (손 자리 → display → -0.5 → 모델 좌표 / 16) 로 계산해도 같은 자리
+        m_l = k * local_l + C0
+        via_fp = JAVA_FP_ARM + t_fp + R_fp @ (s_fp * (m_l / 16 - 0.5))
+        via_arm = Q @ (JAVA_3P_OFFSET + t_3p + R_3p @ (s_3p * (m_l / 16 - 0.5)))
+        assert np.allclose(via_fp, fx_fp, atol=1e-9) and np.allclose(via_arm, fx_arm, atol=1e-9), design
+        fx = {"fp": [round(float(x), 5) for x in fx_fp], "arm": [round(float(x), 5) for x in fx_arm]}
+
     model = {
         "credit": f"MMO RPG — 애드온 디자인 {design} (tools/weapon_models.py 가 만듦, 손으로 고치지 않음)",
         "texture_size": [16, 16],
@@ -266,7 +284,7 @@ def convert(design, meta, out_models, out_textures):
     with open(os.path.join(out_models, f"{design}.json"), "w", encoding="utf-8") as fh:
         json.dump(model, fh, ensure_ascii=False, indent=1)
     return {"cubes": len(elements), "glow": sum(1 for e in elements if "light_emission" in e), "k": round(k, 3),
-            "fp": model["display"]["firstperson_righthand"], "tp": model["display"]["thirdperson_righthand"]}
+            "fp": model["display"]["firstperson_righthand"], "tp": model["display"]["thirdperson_righthand"], "fx": fx}
 
 
 def item_definition(weapon_id, design):
@@ -284,20 +302,78 @@ def item_definition(weapon_id, design):
 
 # ------------------------------------------------------------ 가져오기 · 만들기
 
+# 빛 알갱이 (애드온 RPG_RP/particles/rpg/weapon_fx): 바닐라 particles.png 의 칸 → 자바 파티클 그림
+VANILLA_PARTICLE_CELL = {(0, 0): "minecraft:generic_0", (0, 24): "minecraft:flame"}
+RANDOM_COLOR = re.compile(r"^v\.particle_random_1 < ([\d.]+) \? ([\d.]+) : \(v\.particle_random_1 < ([\d.]+) \? ([\d.]+) : ([\d.]+)\)$")
+
+
+def read_fx(rp, identifier, anim):
+    """무기를 들고 있는 동안 fx 위치에서 계속 나오는 빛 알갱이 — 애드온 값 그대로 (움직임 · 크기 · 색 · 그림)"""
+    assert anim == {"loop": True, "animation_length": 1, "particle_effects": {"0.0": {"effect": "fx", "locator": "fx"}}}, (identifier, anim)
+    name = identifier.split(":", 1)[1].replace("_fx", "")
+    pe = json.load(open(os.path.join(rp, "particles", "rpg", "weapon_fx", f"{name}.particle.json"), encoding="utf-8"))["particle_effect"]
+    assert pe["description"]["identifier"] == identifier, identifier
+    assert pe["description"]["basic_render_parameters"]["material"] == "particles_add", identifier
+    assert pe["description"]["basic_render_parameters"]["texture"] == "textures/particle/particles", identifier
+    c = pe["components"]
+    # 1초짜리 발생기를 1초마다 다시 (애니메이션 loop 1초) = 들고 있는 동안 초당 spawn_rate 개
+    assert c["minecraft:emitter_lifetime_once"] == {"active_time": 1}, identifier
+    rate = c["minecraft:emitter_rate_steady"]
+    shape = c["minecraft:emitter_shape_sphere"]
+    assert shape.get("direction") == "outwards" and not shape.get("surface_only"), identifier
+    motion = c["minecraft:particle_motion_dynamic"]
+    acc = motion["linear_acceleration"]
+    assert acc[0] == 0 and acc[2] == 0, identifier
+    bb = c["minecraft:particle_appearance_billboard"]
+    assert bb["facing_camera_mode"] == "lookat_xyz", identifier
+    size_expr = "{} * (1 - v.particle_age / v.particle_lifetime)"
+    m = re.match(r"^([\d.]+) \* \(1 - v\.particle_age / v\.particle_lifetime\)$", bb["size"][0])
+    assert m and bb["size"][0] == bb["size"][1] == size_expr.format(m.group(1)), identifier
+    uv = bb["uv"]
+    assert (uv["texture_width"], uv["texture_height"], tuple(uv["uv_size"])) == (128, 128, (8, 8)), identifier
+    texture = VANILLA_PARTICLE_CELL[tuple(uv["uv"])]
+    color = c["minecraft:particle_appearance_tinting"]["color"]
+    assert color[3] == 1, identifier
+    if all(isinstance(v, (int, float)) for v in color[:3]):
+        cuts, colors = [], [[float(v) for v in color[:3]]]
+    else:  # 알갱이마다 무작위로 색 (v.particle_random_1 < a ? x : (… < b ? y : z))
+        parts = [RANDOM_COLOR.match(v) for v in color[:3]]
+        assert all(parts), identifier
+        cuts = [float(parts[0].group(1)), float(parts[0].group(3))]
+        assert all([float(p.group(1)), float(p.group(3))] == cuts for p in parts), identifier
+        colors = [[float(p.group(i)) for p in parts] for i in (2, 4, 5)]
+    return {
+        "rate": float(rate["spawn_rate"]), "max": int(rate["max_particles"]),
+        "radius": float(shape["radius"]), "speed": float(c["minecraft:particle_initial_speed"]),
+        "life": float(c["minecraft:particle_lifetime_expression"]["max_lifetime"]),
+        "accel": float(acc[1]), "drag": float(motion["linear_drag_coefficient"]),
+        "size": float(m.group(1)), "texture": texture, "cuts": cuts, "colors": colors,
+    }
+
+
 def do_import(addon):
     rp = os.path.join(addon, "RPG_RP")
     os.makedirs(ART, exist_ok=True)
     anims = json.load(open(os.path.join(rp, "animations", "rpg_weapons.animation.json"), encoding="utf-8"))["animations"]
     mapping = {}
+    fx_of = {}  # 디자인 → 빛 알갱이 파티클 이름 (영웅 · 초월 디자인의 attachable particle_effects.fx)
     for f in glob.glob(os.path.join(rp, "attachables", "rpg", "*", "*.json")):
         d = json.load(open(f, encoding="utf-8"))["minecraft:attachable"]["description"]
-        mapping[d["identifier"]] = d["geometry"]["default"].replace("geometry.rpg.art.", "")
+        design = d["geometry"]["default"].replace("geometry.rpg.art.", "")
+        mapping[d["identifier"]] = design
+        effects = d.get("particle_effects") or {}
+        if effects:
+            assert set(effects) == {"fx"} and "fx" in d["scripts"]["animate"], f
+            assert fx_of.get(design, effects["fx"]) == effects["fx"], f
+            fx_of[design] = effects["fx"]
     designs = {}
     for design in sorted(set(mapping.values())):
         shutil.copy(os.path.join(rp, "models", "entity", "rpg_weapons", f"{design}.geo.json"), os.path.join(ART, f"{design}.geo.json"))
         shutil.copy(os.path.join(rp, "textures", "entity", "rpg", "weapons", f"{design}.png"), os.path.join(ART, f"{design}.png"))
         fp = anims[f"animation.rpg.art.{design}.first_person"]["bones"]["weapon"]
         designs[design] = {"fp": fp}
+        if design in fx_of:
+            designs[design]["fx"] = read_fx(rp, fx_of[design], anims.get(f"animation.rpg.art.{design}.fx"))
     meta = {"source": "MMO RPG 애드온 RPG_RP (models/entity/rpg_weapons · textures/entity/rpg/weapons · attachables · animations/rpg_weapons)",
             "designs": designs, "weapons": dict(sorted(mapping.items()))}
     with open(os.path.join(ART, "designs.json"), "w", encoding="utf-8") as fh:
@@ -317,11 +393,13 @@ def do_build():
         report[design] = convert(design, m, out_models, out_textures)
     # 아이템 정의: 모드에 있는 무기만 (items/*.json 이 있는 것)
     n = 0
+    items = set()
     for f in sorted(glob.glob(os.path.join(ASSETS, "items", "*.json"))):
         wid = "rpg:" + os.path.basename(f)[:-5]
         design = meta["weapons"].get(wid)
         if design is None:
             continue
+        items.add(wid)
         with open(f, "w", encoding="utf-8") as fh:
             json.dump(item_definition(wid, design), fh, ensure_ascii=False, indent=2)
             fh.write("\n")
@@ -329,6 +407,67 @@ def do_build():
     for design, r in report.items():
         print(f"{design:28s} cubes {r['cubes']:3d} glow {r['glow']:2d} k {r['k']:.3f}  fp {r['fp']['rotation']} {r['fp']['translation']} {r['fp']['scale'][0]}  3p {r['tp']['rotation']} {r['tp']['translation']} {r['tp']['scale'][0]}")
     print(f"{len(report)} models, {n} item definitions")
+    write_fx_java(meta, report, items)
+
+
+def jf(v):
+    return f"{float(v)!r}F"
+
+
+def rgb(c):
+    return "0x" + "".join(f"{round(max(0.0, min(1.0, x)) * 255):02X}" for x in c)
+
+
+def write_fx_java(meta, report, items):
+    """영웅 · 초월 무기의 빛 알갱이 → WeaponFxData.java (클라이언트가 들고 있는 무기마다 fx 자리에서 뿌림)"""
+    specs = []
+    for design, r in sorted(report.items()):
+        fx = meta["designs"][design].get("fx")
+        if fx is None:
+            assert r["fx"] is None, design
+            continue
+        assert r["fx"] is not None, f"{design}: 파티클은 있는데 fx 위치가 없음"
+        fp, arm = r["fx"]["fp"], r["fx"]["arm"]
+        cuts = "new float[] {" + ", ".join(jf(c) for c in fx["cuts"]) + "}"
+        colors = "new int[] {" + ", ".join(rgb(c) for c in fx["colors"]) + "}"
+        tex = fx["texture"].split(":", 1)[1]
+        specs.append((design, f'    private static final Spec {design.upper()} = new Spec("{design}", {jf(fp[0])}, {jf(fp[1])}, {jf(fp[2])}, '
+                              f'{jf(arm[0])}, {jf(arm[1])}, {jf(arm[2])},\n            {jf(fx["rate"])}, {jf(fx["radius"])}, {jf(fx["speed"])}, '
+                              f'{jf(fx["accel"])}, {jf(fx["drag"])}, {jf(fx["life"])}, {jf(fx["size"])}, "{tex}", {cuts}, {colors});'))
+    with_fx = {d for d, _ in specs}
+    entries = [f'            Map.entry("{wid.split(":", 1)[1]}", {design.upper()})' for wid, design in sorted(meta["weapons"].items())
+               if design in with_fx and wid in items]
+    body = "\n".join(line for _, line in specs)
+    table = ",\n".join(entries)
+    java = f'''package mmorpg.fabric.client;
+
+import java.util.Map;
+
+/**
+ * 무기 빛 알갱이 (애드온 영웅 · 초월 무기 attachable 의 fx 파티클 — RPG_RP/particles/rpg/weapon_fx) — tools/weapon_models.py 가 만듦, 손으로 고치지 않음.
+ * 무기를 들고 있는 동안 무기의 fx 자리에서 초당 rate 개: 반지름 radius 공 안 아무 곳에서 바깥쪽으로 speed, 위로 accel 가속 · drag 끌림,
+ * 반 크기 size 에서 수명 life 동안 줄어들어 사라짐. 색은 무작위 r 이 cuts[i] 보다 작으면 colors[i] (없으면 마지막 색).
+ *
+ * @param fpX  1인칭 fx 자리: 카메라 공간 (블록 — 오른쪽 +x · 위 +y · 앞 -z), 오른손 · 휘두르기 없음 · 손 시야 70
+ * @param armX 3인칭 fx 자리: 오른팔 공간 (자바 모델 공간 블록 — 팔 축 기준 · 팔 회전 전, x 왼쪽 · y 아래 · z 뒤)
+ */
+public final class WeaponFxData {{
+    private WeaponFxData() {{}}
+
+    public record Spec(String design, float fpX, float fpY, float fpZ, float armX, float armY, float armZ, float rate, float radius, float speed,
+            float accel, float drag, float life, float size, String texture, float[] cuts, int[] colors) {{}}
+
+{body}
+
+    /** 무기 ID (rpg: 뒤) → 빛 알갱이 */
+    public static final Map<String, Spec> BY_ITEM = Map.ofEntries(
+{table});
+}}
+'''
+    out = os.path.join(ROOT, "src", "client", "java", "mmorpg", "fabric", "client", "WeaponFxData.java")
+    with open(out, "w", encoding="utf-8") as fh:
+        fh.write(java)
+    print(f"weapon fx: {len(specs)} designs, {len(entries)} weapons → {os.path.relpath(out, ROOT)}")
 
 
 if __name__ == "__main__":
