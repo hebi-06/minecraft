@@ -247,21 +247,11 @@ public final class RpgCombat {
         Shot shot = arrowShot(path.length());
         Fx.sound(level, head, SoundEvents.ARROW_SHOOT, 1.1, 0.8);
         int ticks = Math.max(1, (int) Math.round(shot.life() * 20));
-        flyArrow(level, path, shot, w.gradeIndex(), 0, ticks);
+        Fx.arrowFx(level, path, shot, w.gradeIndex());
         if (target != null) {
             LivingEntity t = target;
             Tasks.later(ticks, () -> rangedHit(sp, t, w, path));
         }
-    }
-
-    /** 빛줄기를 틱마다 앞으로 (지나간 자리에 등급 색 선) */
-    private static void flyArrow(ServerLevel level, Path path, Shot shot, int gradeIndex, int step, int ticks) {
-        double prev = step == 0 ? 0 : Math.min(path.length(), 2 * shot.half() + shot.speed() * (step / 20.0));
-        double next = Math.min(path.length(), 2 * shot.half() + shot.speed() * ((step + 1) / 20.0));
-        if (step + 1 >= ticks) next = path.length();
-        // 앞끝 빛 (END_ROD) 은 손에서 조금 떨어진 뒤부터 (눈앞에서 크게 보이지 않게)
-        Fx.arrowSegment(level, path.from().add(path.dir().scale(prev)), path.from().add(path.dir().scale(next)), gradeIndex, next > 2.5);
-        if (step + 1 < ticks) Tasks.later(1, () -> flyArrow(level, path, shot, gradeIndex, step + 1, ticks));
     }
 
     /** 원거리 명중 (combat.js rangedHit): 활 = 공격 피해 (방어구 적용), 완드 = 마법 피해 (방어 무시) */
@@ -313,7 +303,7 @@ public final class RpgCombat {
             return;
         }
         Vec3[] c = circleAt(sp);
-        Fx.magicCircle(sp.level(), c[0], c[1], cast.w().gradeIndex(), cast.spin() + t * WAND.obj("circle").num("spinPerTick"), (t + 1) / castTicks);
+        Fx.magicCircle(sp.level(), c[0], cast.w().gradeIndex(), cast.spin() + t * WAND.obj("circle").num("spinPerTick"), (t + 1) / castTicks);
         Tasks.later(1, () -> castStep(sp, cast));
     }
 
@@ -322,7 +312,6 @@ public final class RpgCombat {
         ServerLevel level = sp.level();
         Vec3[] c = circleAt(sp);
         Vec3 from = c[0];
-        Vec3 view = c[1];
         Vec3 head = c[2];
         LivingEntity target;
         Vec3 aim;
@@ -338,7 +327,7 @@ public final class RpgCombat {
             target = a.target();
             aim = head.add(a.dir().scale(a.dist()));
         }
-        Fx.circleFlash(level, from, view, cast.w().gradeIndex());
+        Fx.circleFlash(level, from, cast.w().gradeIndex(), cast.spin() + WAND.num("castTicks") * WAND.obj("circle").num("spinPerTick"));
         Fx.wandBeam(level, from, aim, cast.w().gradeIndex());
         Fx.sound(level, head, SoundEvents.EVOKER_CAST_SPELL, 1.5, 0.6);
         if (target != null) rangedHit(sp, target, cast.w(), null);

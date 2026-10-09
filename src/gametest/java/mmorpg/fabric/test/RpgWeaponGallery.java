@@ -1,23 +1,27 @@
 package mmorpg.fabric.test;
 
+import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions;
-import java.util.ArrayList;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.decoration.Mannequin;
+import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +82,7 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             ctx.waitTicks(20);
             for (String[] d : DESIGNS) shoot(ctx, server, d[0], d[1], "");
             mannequins(ctx, server);
+            effects(ctx, server);
             // 밤: 빛나는 칸 (light_emission)
             server.runCommand("time set 18000");
             ctx.waitTicks(10);
@@ -87,6 +92,57 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             }
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         }
+    }
+
+    /**
+     * 이펙트 그림 (애드온 그림 파티클): 북쪽 12칸 허스크에게 활 · 완드 (일반 · 초월 색) — 쏜 뒤 여러 틱의 사진 (fx_<무기>_t<틱>),
+     * 3인칭 (뒤) 한 번씩.
+     */
+    private static void effects(ClientGameTestContext ctx, TestServerContext server) {
+        server.runCommand("time set 6000");
+        server.runCommand("xp set @a 40 levels");
+        for (String st : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + st + " 200");
+        server.runOnServer(s -> {
+            ServerLevel level = s.getPlayerList().getPlayers().get(0).level();
+            Husk h = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
+            h.setNoAi(true);
+            h.setSilent(true);
+            h.setPersistenceRequired();
+            h.getAttribute(Attributes.MAX_HEALTH).setBaseValue(5000);
+            h.setHealth(5000F);
+            h.snapTo(0.5, -60, -11.5, 0F, 0F);
+            h.setYHeadRot(0F);
+            h.setYBodyRot(0F);
+            level.addFreshEntity(h);
+        });
+        ctx.waitTicks(10);
+        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(0.5, -60 + 1.5, -11.5)));
+        String[][] shots = {
+            {"rpg:bow_l40_common", "bow_common", "1,2,3,4,6,9"},
+            {"rpg:bow_l40_transcend", "bow_transcend", "1,2,3,4,6,9"},
+            {"rpg:wand_l40_common", "wand_common", "2,5,8,11,13,16"},
+            {"rpg:wand_l40_transcend", "wand_transcend", "2,5,8,11,13,16"},
+        };
+        for (String[] sh : shots) fire(ctx, server, sh[0], sh[1], sh[2], CameraType.FIRST_PERSON, "");
+        fire(ctx, server, "rpg:bow_l40_hero", "bow_hero", "2,4", CameraType.THIRD_PERSON_BACK, "_3p");
+        fire(ctx, server, "rpg:wand_l40_hero", "wand_hero", "5,11,13", CameraType.THIRD_PERSON_BACK, "_3p");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+    }
+
+    private static void fire(ClientGameTestContext ctx, TestServerContext server, String id, String name, String ticks, CameraType cam, String suffix) {
+        server.runCommand("item replace entity @a weapon.mainhand with " + id);
+        ctx.runOnClient(mc -> mc.options.setCameraType(cam));
+        ctx.waitTicks(12);
+        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        int done = 0;
+        for (String t : ticks.split(",")) {
+            int at = Integer.parseInt(t);
+            ctx.waitTicks(at - done);
+            done = at;
+            ctx.takeScreenshot(TestScreenshotOptions.of("fx_" + name + suffix + "_t" + at).withSize(960, 540));
+        }
+        ctx.waitTicks(Math.max(0, 26 - done)); // 재사용 대기 (20틱)
+        LOG.info("[gallery] fx {}", name);
     }
 
     /** 마네킹 둘 (옆을 보임 · 앞을 보임) 에게 무기를 들려 3인칭 자세를 봄. 플레이어는 빈손으로 북쪽을 봄 */

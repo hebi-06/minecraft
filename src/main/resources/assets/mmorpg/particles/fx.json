@@ -1,0 +1,17 @@
+{
+  "textures": [
+    "mmorpg:fx/arrow_streak",
+    "mmorpg:fx/arrow_trail",
+    "mmorpg:fx/arrow_spark",
+    "mmorpg:fx/magic_circle_0",
+    "mmorpg:fx/magic_circle_1",
+    "mmorpg:fx/magic_circle_2",
+    "mmorpg:fx/magic_circle_3",
+    "mmorpg:fx/magic_circle_4",
+    "mmorpg:fx/magic_circle_5",
+    "mmorpg:fx/magic_circle_6",
+    "mmorpg:fx/magic_circle_7",
+    "mmorpg:fx/magic_circle_8",
+    "mmorpg:fx/magic_circle_9"
+  ]
+}

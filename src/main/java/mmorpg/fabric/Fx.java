@@ -15,8 +15,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 연출 (fx.js · combat.js 의 파티클 · 소리). 1단계는 바닐라 파티클로 같은 자리 · 같은 색 · 같은 타이밍을 냄
- * (애드온의 전용 파티클 그림 — 화살 빛줄기 · 마법진 — 은 2단계에서 클라이언트 파티클로 옮김).
+ * 연출 (fx.js · combat.js 의 파티클 · 소리). 활 빛줄기 · 마법진 · 맞힘은 애드온 그림 그대로 (mmorpg:fx 파티클 — 클라이언트가 그림),
+ * 완드 궤적 · 치명타 불꽃 등 애드온도 바닐라 파티클을 쓰는 것은 자바의 같은 파티클.
  */
 public final class Fx {
     private Fx() {}
@@ -31,21 +31,6 @@ public final class Fx {
 
     public static void particle(ServerLevel level, ParticleOptions p, Vec3 at, int count, double spread, double speed) {
         level.sendParticles(p, at.x, at.y, at.z, count, spread, spread, spread, speed);
-    }
-
-    /** 등급 색 (config [[r,g,b], …] 0~1, 없으면 첫 색) → 0xRRGGBB */
-    static int gradeColor(Obj cfg, int gradeIndex) {
-        List<Object> colors = cfg.list("color");
-        Object c = gradeIndex >= 0 && gradeIndex < colors.size() ? colors.get(gradeIndex) : colors.get(0);
-        List<?> rgb = (List<?>) c;
-        int r = channel(rgb.get(0));
-        int g = channel(rgb.get(1));
-        int b = channel(rgb.get(2));
-        return (r << 16) | (g << 8) | b;
-    }
-
-    private static int channel(Object v) {
-        return Math.max(0, Math.min(255, Math.round(((Number) v).floatValue() * 255)));
     }
 
     /** 등급 크기 배율 (SLASH.gradeSize) */
@@ -78,65 +63,83 @@ public final class Fx {
         particle(sp.level(), ParticleTypes.TOTEM_OF_UNDYING, new Vec3(h.x, h.y - 0.6, h.z), 16, 0.3, 0.25);
     }
 
-    // ------------------------------------------------------------ 활 (combat.js arrowFx · arrowImpactFx)
+    // ------------------------------------------------------------ 이펙트 그림 (mmorpg:fx — 애드온 그림 그대로, 클라이언트가 그림)
 
-    /** 빛줄기 한 틱 몫: 지나간 자리 (from → to) 에 등급 색 선 + 앞끝 빛 */
-    static void arrowSegment(ServerLevel level, Vec3 from, Vec3 to, int gradeIndex, boolean head) {
-        DustParticleOptions dust = new DustParticleOptions(gradeColor(BOW, gradeIndex), 0.45F);
-        Vec3 d = to.subtract(from);
-        double len = d.length();
-        int n = Math.max(1, (int) Math.ceil(len / 0.15));
-        for (int i = 0; i <= n; i++) {
-            Vec3 p = from.add(d.scale(i / (double) n));
-            level.sendParticles(dust, p.x, p.y, p.z, 1, 0, 0, 0, 0);
-        }
-        if (head) level.sendParticles(ParticleTypes.END_ROD, to.x, to.y, to.z, 1, 0, 0, 0, 0);
+    /** 등급 색 (config [[r,g,b], …] 0~1) */
+    static double[] gradeRgb(Obj cfg, int gradeIndex) {
+        List<Object> colors = cfg.list("color");
+        Object c = gradeIndex >= 0 && gradeIndex < colors.size() ? colors.get(gradeIndex) : colors.get(0);
+        List<?> rgb = (List<?>) c;
+        return new double[] {((Number) rgb.get(0)).doubleValue(), ((Number) rgb.get(1)).doubleValue(), ((Number) rgb.get(2)).doubleValue()};
     }
 
-    /** 맞은 자리: 번쩍임 + 쏜 쪽으로 튀는 불꽃 */
+    static int argb(double[] rgb, double alpha) {
+        return FxOptions.argb(rgb[0], rgb[1], rgb[2], alpha);
+    }
+
+    /** 이펙트 하나를 그 자리 둘레 (늘 보이게) 에 보냄 */
+    public static void fx(ServerLevel level, Vec3 at, FxOptions o) {
+        level.sendParticles(o, true, true, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+    }
+
+    // ------------------------------------------------------------ 활 (combat.js arrowFx · arrowImpactFx)
+
+    /** 빛줄기 모양 (combat.js SHOT): 반 길이 · 반 두께 · 지나간 자리 선 조각 간격 · 반 길이 · 반 두께 · 사라지는 시간 */
+    static final double SHOT_HALF = 1.1;
+    static final double SHOT_THICK = 0.2;
+    static final double SEG_GAP = 0.5;
+    static final double SEG_HALF = 0.3;
+    static final double SEG_THICK = 0.08;
+    static final double SEG_FADE = 0.4;
+
+    /**
+     * 화살 연출 (쏘는 순간 한 번에): 날아가는 빛줄기 + 빛줄기 가운데가 지나가는 순간 켜져 가늘어지며 사라지는 선 조각.
+     * 빛줄기 앞끝이 수명이 끝날 때 조준점에 닿음 (RpgCombat.arrowShot).
+     */
+    static void arrowFx(ServerLevel level, RpgCombat.Path path, RpgCombat.Shot shot, int gradeIndex) {
+        double[] c = gradeRgb(BOW, gradeIndex);
+        Vec3 d = path.dir();
+        float thick = (float) (SHOT_THICK * (shot.half() / SHOT_HALF));
+        fx(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, d, (float) shot.speed(), (float) shot.half(), thick,
+                (float) shot.life(), 0F, 0F, 0F, 1F, argb(c, 1)));
+        for (double s = SEG_GAP / 2; s <= path.length() - 0.1; s += SEG_GAP) {
+            double delay = shot.speed() > 0 ? Math.max(0, (s - shot.half()) / shot.speed()) : 0;
+            fx(level, path.from().add(d.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, d, 0F, (float) SEG_HALF, (float) SEG_THICK,
+                    (float) (delay + SEG_FADE), (float) delay, 0F, 0F, 1F, argb(c, 0.9)));
+        }
+    }
+
+    /** 맞은 자리: 커지며 사라지는 번쩍임 + 쏜 쪽으로 튀는 불꽃 8개 */
     static void arrowImpact(ServerLevel level, Vec3 at, Vec3 dir, int gradeIndex) {
-        DustParticleOptions dust = new DustParticleOptions(gradeColor(BOW, gradeIndex), 0.8F);
-        level.sendParticles(dust, at.x, at.y, at.z, 8, 0.15, 0.15, 0.15, 0);
+        double[] c = gradeRgb(BOW, gradeIndex);
+        fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, dir, 0F, 0.45F, 0F, 0.15F, 0F, 1.6F, 0F, 1F, argb(c, 0.95)));
+        Vec3 u = dir.cross(Math.abs(dir.y) > 0.9 ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0)).normalize();
+        Vec3 v = u.cross(dir);
         for (int k = 0; k < 8; k++) {
             double a = k * Math.PI / 4;
-            Vec3 side = new Vec3(Math.cos(a), Math.sin(a) * 0.7, Math.sin(a)).scale(0.6).subtract(dir.scale(0.7)).normalize();
-            level.sendParticles(ParticleTypes.CRIT, at.x, at.y, at.z, 0, side.x, side.y, side.z, 0.5);
+            Vec3 sd = dir.scale(-0.7).add(u.scale(Math.cos(a))).add(v.scale(Math.sin(a))).normalize();
+            fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, sd, 5F, 0.1F, 0F, 0.25F, 0F, 0F, 0F, 1F, argb(c, 0.9)));
         }
     }
 
     // ------------------------------------------------------------ 완드 (combat.js startWandCast · fireWand)
 
-    /** 마법진 한 틱: 바라보는 방향에 수직인 고리 (progress 만큼 그려짐) */
-    static void magicCircle(ServerLevel level, Vec3 at, Vec3 dir, int gradeIndex, double spinDeg, double progress) {
-        DustParticleOptions dust = new DustParticleOptions(gradeColor(WAND, gradeIndex), 0.28F);
-        Vec3[] basis = basis(dir);
-        double r = WAND.obj("circle").num("size") * gradeSize(gradeIndex);
-        int total = 28;
-        int n = Math.max(1, (int) Math.round(total * Math.min(1, progress)));
-        for (int i = 0; i < n; i++) {
-            double a = Math.toRadians(spinDeg) + i * 2 * Math.PI / total;
-            Vec3 p = at.add(basis[0].scale(Math.cos(a) * r)).add(basis[1].scale(Math.sin(a) * r));
-            level.sendParticles(dust, p.x, p.y, p.z, 1, 0, 0, 0, 0);
-        }
-        // 가운데 별 (안쪽 고리 절반 크기, 반대로 돎)
-        for (int i = 0; i < 8 && progress > 0.5; i++) {
-            double a = -Math.toRadians(spinDeg) + i * 2 * Math.PI / 8;
-            Vec3 p = at.add(basis[0].scale(Math.cos(a) * r * 0.5)).add(basis[1].scale(Math.sin(a) * r * 0.5));
-            level.sendParticles(dust, p.x, p.y, p.z, 1, 0, 0, 0, 0);
-        }
+    static double circleSize(int gradeIndex) {
+        return WAND.obj("circle").num("size") * gradeSize(gradeIndex);
     }
 
-    /** 다 그려진 마법진이 번쩍임 */
-    static void circleFlash(ServerLevel level, Vec3 at, Vec3 dir, int gradeIndex) {
-        DustParticleOptions dust = new DustParticleOptions(gradeColor(WAND, gradeIndex), 0.45F);
-        Vec3[] basis = basis(dir);
-        double r = WAND.obj("circle").num("size") * gradeSize(gradeIndex) * 1.3;
-        for (int i = 0; i < 32; i++) {
-            double a = i * 2 * Math.PI / 32;
-            Vec3 p = at.add(basis[0].scale(Math.cos(a) * r)).add(basis[1].scale(Math.sin(a) * r));
-            level.sendParticles(dust, p.x, p.y, p.z, 1, 0, 0, 0, 0);
-        }
-        level.sendParticles(ParticleTypes.ENCHANTED_HIT, at.x, at.y, at.z, 6, 0.08, 0.08, 0.08, 0.05);
+    /** 마법진 한 틱 (0.1초짜리를 틱마다 새로 — 플레이어를 따라감): 보는 사람 쪽을 향하고, progress 만큼 그려진 그림 (10단계) */
+    static void magicCircle(ServerLevel level, Vec3 at, int gradeIndex, double spinDeg, double progress) {
+        Obj circle = WAND.obj("circle");
+        fx(level, at, new FxOptions(FxOptions.MAGIC_CIRCLE, Vec3.ZERO, 0F, (float) circleSize(gradeIndex), 0F, 0.1F, 0F, 0F, (float) spinDeg,
+                (float) progress, argb(gradeRgb(WAND, gradeIndex), circle.num("alpha"))));
+    }
+
+    /** 다 그려진 마법진이 1.35배로 커지며 사라짐 */
+    static void circleFlash(ServerLevel level, Vec3 at, int gradeIndex, double spinDeg) {
+        Obj circle = WAND.obj("circle");
+        fx(level, at, new FxOptions(FxOptions.MAGIC_FLASH, Vec3.ZERO, 0F, (float) circleSize(gradeIndex), 0F, (float) circle.num("flashLife"), 0F, 0F,
+                (float) spinDeg, 1F, argb(gradeRgb(WAND, gradeIndex), 1)));
     }
 
     /** 완드 궤적 파티클 (WAND.trail — 베드락 이름을 자바 파티클로) */
