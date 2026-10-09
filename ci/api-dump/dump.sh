@@ -10,7 +10,7 @@ for j in $(echo "$MC" | tr ':' ' '); do unzip -Z1 "$j" 2>/dev/null | grep '\.cla
 wc -l "$OUT/classes.txt"
 while read -r c; do
   [ -z "$c" ] && continue
-  javap -p -cp "$CP" "$c" > "$OUT/javap/$c.txt" 2>&1 || echo "javap failed: $c"
+  javap -p -constants -cp "$CP" "$c" > "$OUT/javap/$c.txt" 2>&1 || echo "javap failed: $c"
 done < ci/api-dump/classes.txt
 ls "$OUT/javap" | wc -l
 # 믹스인 대상 메서드 안에서 부르는 메서드 (호출 줄만 — 어느 메서드를 가로챌지 정하려고)
