@@ -15,6 +15,7 @@ import net.minecraft.world.phys.Vec3;
  * 시간 (life · delay) 은 초, 속도는 초당 블록, 크기는 반 크기 (블록) — 애드온 값 그대로.
  *
  * @param kind     그림 종류 (아래 상수)
+ * @param sprite   kind = SPRITE 일 때 FxSprite 순번 (참격 · 충격파 …)
  * @param dir      방향 (빛줄기의 길이 방향 · 움직이는 방향)
  * @param speed    dir 쪽으로 초당 블록
  * @param size     반 크기 (빛줄기는 반 길이)
@@ -26,16 +27,19 @@ import net.minecraft.world.phys.Vec3;
  * @param progress 마법진 그려진 정도 (0~1 → 10단계)
  * @param color    ARGB (그림은 흰색, 이 색을 곱함)
  */
-public record FxOptions(int kind, Vec3 dir, float speed, float size, float thick, float life, float delay, float grow, float spin,
+public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size, float thick, float life, float delay, float grow, float spin,
         float progress, int color) implements ParticleOptions {
     public static final int ARROW_SHOT = 0;
     public static final int ARROW_TRAIL = 1;
     public static final int ARROW_SPARK = 2;
     public static final int MAGIC_CIRCLE = 3;
     public static final int MAGIC_FLASH = 4;
+    /** 일반 그림 (FxSprite: 참격 · X · 충격파 · 방패 고리 · 폭발) — 크기 · 움직임 · 사라짐은 FxSprite 에 */
+    public static final int SPRITE = 5;
 
     public static final MapCodec<FxOptions> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
             Codec.INT.fieldOf("kind").forGetter(FxOptions::kind),
+            Codec.INT.optionalFieldOf("sprite", -1).forGetter(FxOptions::sprite),
             Vec3.CODEC.optionalFieldOf("dir", Vec3.ZERO).forGetter(FxOptions::dir),
             Codec.FLOAT.optionalFieldOf("speed", 0F).forGetter(FxOptions::speed),
             Codec.FLOAT.optionalFieldOf("size", 0.5F).forGetter(FxOptions::size),
@@ -51,6 +55,7 @@ public record FxOptions(int kind, Vec3 dir, float speed, float size, float thick
 
     private void write(RegistryFriendlyByteBuf buf) {
         buf.writeByte(kind);
+        buf.writeByte(sprite);
         buf.writeFloat((float) dir.x);
         buf.writeFloat((float) dir.y);
         buf.writeFloat((float) dir.z);
@@ -67,9 +72,15 @@ public record FxOptions(int kind, Vec3 dir, float speed, float size, float thick
 
     private static FxOptions read(RegistryFriendlyByteBuf buf) {
         int kind = buf.readByte();
+        int sprite = buf.readByte();
         Vec3 dir = new Vec3(buf.readFloat(), buf.readFloat(), buf.readFloat());
-        return new FxOptions(kind, dir, buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(),
+        return new FxOptions(kind, sprite, dir, buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(),
                 buf.readFloat(), buf.readFloat(), buf.readInt());
+    }
+
+    /** 일반 그림 하나: 자리에서 dir 쪽으로 speed (초당 블록, 끌림으로 느려짐), 반 크기 size, 수명 life, 돌린 각 spin */
+    public static FxOptions ofSprite(FxSprite s, Vec3 dir, double speed, double size, double life, double spin, int color) {
+        return new FxOptions(SPRITE, s.ordinal(), dir, (float) speed, (float) size, 0F, (float) life, 0F, 0F, (float) spin, 1F, color);
     }
 
     @Override

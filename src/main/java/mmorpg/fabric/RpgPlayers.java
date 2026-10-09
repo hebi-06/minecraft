@@ -56,6 +56,7 @@ public final class RpgPlayers {
         RpgHealth.saveRatio(sp, true);
         RpgHealth.forget(sp.getUUID());
         RpgCombat.forget(sp.getUUID());
+        Slash.forget(sp.getUUID());
         Notify.forget(sp.getUUID());
     }
 

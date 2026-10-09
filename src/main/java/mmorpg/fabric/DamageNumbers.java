@@ -125,6 +125,7 @@ public final class DamageNumbers {
             Fx.crit(victim);
         }
         show(victim, dealt, style, "", 0);
+        if (m != null && m.melee() != null) Slash.hit(attacker, victim, m.melee(), m.crit()); // 참격 맞힘 연출 (slash.js slashHit)
     }
 
     /**

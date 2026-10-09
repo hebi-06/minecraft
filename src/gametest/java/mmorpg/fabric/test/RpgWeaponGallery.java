@@ -83,6 +83,7 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             for (String[] d : DESIGNS) shoot(ctx, server, d[0], d[1], "");
             mannequins(ctx, server);
             effects(ctx, server);
+            slashes(ctx, server);
             // 밤: 빛나는 칸 (light_emission)
             server.runCommand("time set 18000");
             ctx.waitTicks(10);
@@ -127,6 +128,76 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
         fire(ctx, server, "rpg:bow_l40_hero", "bow_hero", "2,4", CameraType.THIRD_PERSON_BACK, "_3p");
         fire(ctx, server, "rpg:wand_l40_hero", "wand_hero", "5,11,13", CameraType.THIRD_PERSON_BACK, "_3p");
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+    }
+
+    /**
+     * 근접 참격 (애드온 그림): 가까운 허스크를 침 (보통 · 치명타), 허공 휘두르기 — 친 뒤 1 · 3틱 사진 (s_<무기>_<보통|치명>_t<틱>).
+     */
+    private static void slashes(ClientGameTestContext ctx, TestServerContext server) {
+        Husk target = server.computeOnServer(s -> {
+            ServerLevel level = s.getPlayerList().getPlayers().get(0).level();
+            Husk h = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
+            h.setNoAi(true);
+            h.setSilent(true);
+            h.setPersistenceRequired();
+            h.snapTo(0.5, -60, -2.2, 0F, 0F);
+            h.setYHeadRot(0F);
+            h.setYBodyRot(0F);
+            level.addFreshEntity(h);
+            return h;
+        });
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.waitTicks(5);
+        String[][] weapons = {
+            {"rpg:sword_l40_common", "sword_common"},
+            {"rpg:sword_l40_hero", "sword_hero"},
+            {"rpg:dagger_l40_hero", "dagger_hero"},
+            {"rpg:axe_l40_hero", "axe_hero"},
+            {"rpg:shield_l40_hero", "shield_hero"},
+            {"rpg:axe_l40_transcend", "spear_transcend"},
+            {"rpg:greatsword_l40_transcend", "greatsword_transcend"},
+        };
+        for (String[] w : weapons) {
+            server.runCommand("item replace entity @a weapon.mainhand with " + w[0]);
+            ctx.waitTicks(12);
+            for (boolean crit : new boolean[] {false, true}) {
+                server.runOnServer(s -> {
+                    target.setHealth(target.getMaxHealth());
+                    target.damageCooldownTime = 0;
+                    mmorpg.fabric.RpgCombat.forceCrit = crit;
+                });
+                ctx.runOnClient(mc -> {
+                    mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(target.getX(), target.getEyeY() - 0.3, target.getZ()));
+                    mc.gameMode.attack(mc.player, mc.level.getEntity(target.getId()));
+                });
+                ctx.waitTicks(1);
+                ctx.takeScreenshot(TestScreenshotOptions.of("s_" + w[1] + (crit ? "_crit" : "") + "_t1").withSize(960, 540));
+                ctx.waitTicks(2);
+                ctx.takeScreenshot(TestScreenshotOptions.of("s_" + w[1] + (crit ? "_crit" : "") + "_t3").withSize(960, 540));
+                server.runOnServer(s -> mmorpg.fabric.RpgCombat.forceCrit = null);
+                ctx.waitTicks(15);
+            }
+        }
+        // 허공 휘두르기 (실제 마우스 왼쪽 — 휘두르기 패킷): 하늘을 보고
+        server.runCommand("item replace entity @a weapon.mainhand with rpg:sword_l40_transcend");
+        ctx.waitTicks(12);
+        ctx.getInput().lookAt(180F, -35F);
+        ctx.waitTicks(2);
+        ctx.getInput().pressMouse(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
+        ctx.takeScreenshot(TestScreenshotOptions.of("s_air_sword_transcend_t1").withSize(960, 540));
+        ctx.waitTicks(2);
+        ctx.takeScreenshot(TestScreenshotOptions.of("s_air_sword_transcend_t3").withSize(960, 540));
+        ctx.waitTicks(10);
+        ctx.getInput().pressMouse(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
+        ctx.waitTicks(1);
+        ctx.takeScreenshot(TestScreenshotOptions.of("s_air_sword_transcend_2_t2").withSize(960, 540));
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
+        ctx.waitTicks(10);
+        ctx.getInput().pressMouse(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
+        ctx.waitTicks(1);
+        ctx.takeScreenshot(TestScreenshotOptions.of("s_air_sword_transcend_3p_t2").withSize(960, 540));
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        LOG.info("[gallery] slashes");
     }
 
     private static void fire(ClientGameTestContext ctx, TestServerContext server, String id, String name, String ticks, CameraType cam, String suffix) {

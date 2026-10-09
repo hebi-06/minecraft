@@ -5,6 +5,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
+import mmorpg.fabric.Slash;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -18,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
  * 플레이어 공격 · 받는 피해.
- * - attack 처음: 공격 충전 정도와 대상을 기억, 활 · 완드는 쏘고 취소, 요구 조건이 모자란 근접 무기는 취소
+ * - attack 처음: 공격 충전 정도와 대상을 기억, 참격 연출, 활 · 완드는 쏘고 취소, 요구 조건이 모자란 근접 무기는 취소
  * - attack 의 대상.hurtOrSimulate(…, 피해): RPG 평타 공식으로 바꿈
  * - actuallyHurt 의 setHealth: 방패 감소 · 죽지 않는 피해 (RPG 체력 규칙)
  */
@@ -34,6 +35,7 @@ public abstract class PlayerMixin {
         Player self = (Player) (Object) this;
         this.mmorpg$strength = self.getAttackStrengthScale(0.5F);
         this.mmorpg$target = target;
+        if (self instanceof ServerPlayer sp) Slash.onAttack(sp);
         if (RpgCombat.beforeAttack(self, target)) ci.cancel();
     }
 

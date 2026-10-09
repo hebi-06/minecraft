@@ -49,7 +49,8 @@ public final class RpgCombat {
     public static Boolean forceCrit = null;
 
     /** 맞힌 공격의 치명타 기억 (피해가 실제로 들어간 뒤 숫자 · 연출에 씀) */
-    public record Mark(boolean crit, long tick) {}
+    /** 맞히기 직전에 기억한 공격: 치명타였는지, 근접 무기 (원거리는 null — 참격 연출용) */
+    public record Mark(boolean crit, long tick, Weapon melee) {}
 
     private static final Map<String, Mark> MARKS = new HashMap<>();
     /** 활 · 완드 재사용 (플레이어|종류 → 다시 쏠 수 있는 틱) */
@@ -116,8 +117,8 @@ public final class RpgCombat {
         return victim.getUUID() + "|" + attacker.getUUID();
     }
 
-    static void mark(Entity victim, ServerPlayer attacker, boolean crit) {
-        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now()));
+    static void mark(Entity victim, ServerPlayer attacker, boolean crit, Weapon melee) {
+        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), melee));
     }
 
     /** 맞은 뒤 기억을 꺼냄 (2틱 안의 공격만) */
@@ -162,7 +163,7 @@ public final class RpgCombat {
         double dmg = w.damage() * powerOf(sp, w) * (0.2 + s * s * 0.8);
         boolean crit = rollCrit(sp, w);
         if (crit) dmg *= w.critMult();
-        mark(target, sp, crit);
+        mark(target, sp, crit, w);
         return (float) dmg;
     }
 
@@ -261,7 +262,7 @@ public final class RpgCombat {
         double dmg = w.damage() * powerOf(sp, w);
         boolean crit = rollCrit(sp, w);
         if (crit) dmg *= w.critMult();
-        mark(target, sp, crit);
+        mark(target, sp, crit, null);
         DamageSource src = w.type().equals("bow") ? sp.damageSources().playerAttack(sp) : sp.damageSources().indirectMagic(sp, sp);
         boolean hurt = target.level() instanceof ServerLevel tl && target.hurtServer(tl, src, (float) dmg);
         if (!hurt) {

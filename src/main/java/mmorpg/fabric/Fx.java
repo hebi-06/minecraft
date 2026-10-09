@@ -100,11 +100,11 @@ public final class Fx {
         double[] c = gradeRgb(BOW, gradeIndex);
         Vec3 d = path.dir();
         float thick = (float) (SHOT_THICK * (shot.half() / SHOT_HALF));
-        fx(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, d, (float) shot.speed(), (float) shot.half(), thick,
+        fx(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, -1, d, (float) shot.speed(), (float) shot.half(), thick,
                 (float) shot.life(), 0F, 0F, 0F, 1F, argb(c, 1)));
         for (double s = SEG_GAP / 2; s <= path.length() - 0.1; s += SEG_GAP) {
             double delay = shot.speed() > 0 ? Math.max(0, (s - shot.half()) / shot.speed()) : 0;
-            fx(level, path.from().add(d.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, d, 0F, (float) SEG_HALF, (float) SEG_THICK,
+            fx(level, path.from().add(d.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, d, 0F, (float) SEG_HALF, (float) SEG_THICK,
                     (float) (delay + SEG_FADE), (float) delay, 0F, 0F, 1F, argb(c, 0.9)));
         }
     }
@@ -112,13 +112,13 @@ public final class Fx {
     /** 맞은 자리: 커지며 사라지는 번쩍임 + 쏜 쪽으로 튀는 불꽃 8개 */
     static void arrowImpact(ServerLevel level, Vec3 at, Vec3 dir, int gradeIndex) {
         double[] c = gradeRgb(BOW, gradeIndex);
-        fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, dir, 0F, 0.45F, 0F, 0.15F, 0F, 1.6F, 0F, 1F, argb(c, 0.95)));
+        fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, dir, 0F, 0.45F, 0F, 0.15F, 0F, 1.6F, 0F, 1F, argb(c, 0.95)));
         Vec3 u = dir.cross(Math.abs(dir.y) > 0.9 ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0)).normalize();
         Vec3 v = u.cross(dir);
         for (int k = 0; k < 8; k++) {
             double a = k * Math.PI / 4;
             Vec3 sd = dir.scale(-0.7).add(u.scale(Math.cos(a))).add(v.scale(Math.sin(a))).normalize();
-            fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, sd, 5F, 0.1F, 0F, 0.25F, 0F, 0F, 0F, 1F, argb(c, 0.9)));
+            fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, sd, 5F, 0.1F, 0F, 0.25F, 0F, 0F, 0F, 1F, argb(c, 0.9)));
         }
     }
 
@@ -131,14 +131,14 @@ public final class Fx {
     /** 마법진 한 틱 (0.1초짜리를 틱마다 새로 — 플레이어를 따라감): 보는 사람 쪽을 향하고, progress 만큼 그려진 그림 (10단계) */
     static void magicCircle(ServerLevel level, Vec3 at, int gradeIndex, double spinDeg, double progress) {
         Obj circle = WAND.obj("circle");
-        fx(level, at, new FxOptions(FxOptions.MAGIC_CIRCLE, Vec3.ZERO, 0F, (float) circleSize(gradeIndex), 0F, 0.1F, 0F, 0F, (float) spinDeg,
+        fx(level, at, new FxOptions(FxOptions.MAGIC_CIRCLE, -1, Vec3.ZERO, 0F, (float) circleSize(gradeIndex), 0F, 0.1F, 0F, 0F, (float) spinDeg,
                 (float) progress, argb(gradeRgb(WAND, gradeIndex), circle.num("alpha"))));
     }
 
     /** 다 그려진 마법진이 1.35배로 커지며 사라짐 */
     static void circleFlash(ServerLevel level, Vec3 at, int gradeIndex, double spinDeg) {
         Obj circle = WAND.obj("circle");
-        fx(level, at, new FxOptions(FxOptions.MAGIC_FLASH, Vec3.ZERO, 0F, (float) circleSize(gradeIndex), 0F, (float) circle.num("flashLife"), 0F, 0F,
+        fx(level, at, new FxOptions(FxOptions.MAGIC_FLASH, -1, Vec3.ZERO, 0F, (float) circleSize(gradeIndex), 0F, (float) circle.num("flashLife"), 0F, 0F,
                 (float) spinDeg, 1F, argb(gradeRgb(WAND, gradeIndex), 1)));
     }
 

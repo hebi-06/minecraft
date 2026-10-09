@@ -1,7 +1,10 @@
 package mmorpg.fabric.client;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import mmorpg.fabric.FxOptions;
+import mmorpg.fabric.FxSprite;
 import net.fabricmc.fabric.api.client.particle.v1.FabricSpriteSet;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -19,17 +22,18 @@ import org.joml.Vector3f;
  * 이펙트 그림 하나 (애드온 파티클과 같은 모양 · 움직임 · 색 — RPG_RP/particles/rpg/fx · magic):
  * - 빛줄기 · 지나간 자리 선 (lookat_direction): 길이 방향은 dir, 면은 카메라 쪽으로 (dir 축으로 돎). 정사각형 조각을 이어 길쭉한 그림
  * - 불꽃 · 마법진 · 번쩍임 (rotate_xyz): 카메라를 향한 사각형 + 돌린 각
- * 모두 밝기 최대 (빛), 반투명 섞기.
+ * - 일반 그림 (FxSprite — 참격 · X · 방패 고리 · 폭발: 카메라를 향함, 충격파: 땅에 눕힘): 여러 장이면 수명 동안 차례로, 끌림으로 느려짐
+ * 모두 밝기 최대 (빛), 반투명 섞기. 그림은 이름으로 찾음 (assets/mmorpg/particles/fx.json).
  */
 public final class FxParticle extends SingleQuadParticle {
     private static final int FULL_BRIGHT = 0xF000F0;
-    private static final int TEX_STREAK = 0;
-    private static final int TEX_TRAIL = 1;
-    private static final int TEX_SPARK = 2;
-    private static final int TEX_CIRCLE = 3; // 3 ~ 12 = 마법진 10단계
+    private static List<TextureAtlasSprite> cachedList;
+    private static Map<String, TextureAtlasSprite> cachedMap = Map.of();
 
     private final FxOptions o;
-    private final List<TextureAtlasSprite> sprites;
+    private final FxSprite kind;
+    private final Map<String, TextureAtlasSprite> sprites;
+    private final TextureAtlasSprite fallback;
     private final Vec3 start;
     private final Vec3 dir;
     private final float r;
@@ -40,7 +44,9 @@ public final class FxParticle extends SingleQuadParticle {
     FxParticle(ClientLevel level, double x, double y, double z, FxOptions o, FabricSpriteSet set) {
         super(level, x, y, z, set.getSprites().get(0));
         this.o = o;
-        this.sprites = set.getSprites();
+        this.kind = o.kind() == FxOptions.SPRITE ? FxSprite.byId(o.sprite()) : null;
+        this.sprites = spriteMap(set);
+        this.fallback = set.getSprites().get(0);
         this.start = new Vec3(x, y, z);
         Vec3 d = o.dir();
         double len = d.length();
@@ -56,7 +62,7 @@ public final class FxParticle extends SingleQuadParticle {
         this.r = ((c >> 16) & 255) / 255F;
         this.g = ((c >> 8) & 255) / 255F;
         this.b = (c & 255) / 255F;
-        float reach = Math.max(o.size(), o.size() + o.speed() * o.life()) * 2 + 0.5F;
+        float reach = Math.max(o.size(), o.size() + o.speed() * o.life()) * 2 * (kind != null ? kind.scale * (1 + kind.grow) : 1) + 0.5F;
         this.setSize(reach, reach);
         this.setPos(x, y, z);
     }
@@ -70,9 +76,29 @@ public final class FxParticle extends SingleQuadParticle {
             this.remove();
             return;
         }
-        double t = Math.min(this.age / 20.0, o.life());
-        Vec3 p = start.add(dir.scale(o.speed() * t));
+        Vec3 p = start.add(dir.scale(travelled(Math.min(this.age / 20.0, o.life()))));
         this.setPos(p.x, p.y, p.z);
+    }
+
+    /** t 초 동안 간 거리: 끌림이 있으면 처음 속도 / 끌림 × (1 - e^(-끌림 × t)) (애드온 linear_drag_coefficient) */
+    private double travelled(double t) {
+        float drag = kind != null ? kind.drag : 0F;
+        return drag > 0 ? o.speed() / drag * (1 - Math.exp(-drag * t)) : o.speed() * t;
+    }
+
+    private static Map<String, TextureAtlasSprite> spriteMap(FabricSpriteSet set) {
+        List<TextureAtlasSprite> list = set.getSprites();
+        if (list != cachedList) {
+            Map<String, TextureAtlasSprite> m = new HashMap<>();
+            for (TextureAtlasSprite s : list) m.put(s.contents().name().getPath().replace("fx/", ""), s);
+            cachedMap = m;
+            cachedList = list;
+        }
+        return cachedMap;
+    }
+
+    private TextureAtlasSprite tex(String name) {
+        return sprites.getOrDefault(name, fallback);
     }
 
     @Override
@@ -92,7 +118,7 @@ public final class FxParticle extends SingleQuadParticle {
         if (sec > life) return;
         float tn = Mth.clamp(sec / life, 0F, 1F);
         // 자리 (빛줄기는 시간으로 바로 — 틱 사이도 매끄럽게)
-        double moved = o.speed() * Math.min(sec, life);
+        double moved = travelled(Math.min(sec, life));
         Vec3 cam = camera.position();
         float rx = (float) (start.x + dir.x * moved - cam.x);
         float ry = (float) (start.y + dir.y * moved - cam.y);
@@ -100,27 +126,43 @@ public final class FxParticle extends SingleQuadParticle {
         switch (o.kind()) {
             case FxOptions.ARROW_SHOT -> {
                 float alpha = a * (1 - tn * tn * tn);
-                directional(state, rx, ry, rz, o.size(), o.thick(), sprites.get(TEX_STREAK), alpha);
+                directional(state, rx, ry, rz, o.size(), o.thick(), tex("arrow_streak"), alpha);
             }
             case FxOptions.ARROW_TRAIL -> {
                 if (sec < o.delay()) return;
                 float k = Mth.clamp((sec - o.delay()) / Math.max(0.01F, life - o.delay()), 0F, 1F);
-                directional(state, rx, ry, rz, o.size(), o.thick() * (1 - 0.6F * k), sprites.get(TEX_TRAIL), a * (1 - k));
+                directional(state, rx, ry, rz, o.size(), o.thick() * (1 - 0.6F * k), tex("arrow_trail"), a * (1 - k));
             }
             case FxOptions.ARROW_SPARK -> {
                 float size = o.size() * (1 + (o.grow() - 1) * tn);
-                billboard(state, camera, rx, ry, rz, size, 0F, sprites.get(TEX_SPARK), a * (1 - tn));
+                billboard(state, camera, rx, ry, rz, size, 0F, tex("arrow_spark"), a * (1 - tn));
             }
             case FxOptions.MAGIC_CIRCLE -> {
                 int frame = Mth.clamp((int) Math.floor(o.progress() * 10 - 0.001), 0, 9);
-                billboard(state, camera, rx, ry, rz, o.size(), o.spin(), sprites.get(TEX_CIRCLE + frame), a);
+                billboard(state, camera, rx, ry, rz, o.size(), o.spin(), tex("magic_circle_" + frame), a);
             }
             case FxOptions.MAGIC_FLASH -> {
                 float size = o.size() * (1 + 0.35F * tn);
-                billboard(state, camera, rx, ry, rz, size, o.spin(), sprites.get(TEX_CIRCLE + 9), a * (1 - tn * tn));
+                billboard(state, camera, rx, ry, rz, size, o.spin(), tex("magic_circle_9"), a * (1 - tn * tn));
+            }
+            case FxOptions.SPRITE -> {
+                if (kind == null) return;
+                int frame = kind.frames > 1 ? Math.min(kind.frames - 1, (int) Math.floor(tn * kind.frames)) : 0;
+                TextureAtlasSprite s = tex(kind.frames > 1 ? kind.texture + "_" + frame : kind.texture);
+                float size = o.size() * kind.scale * (1 + kind.grow * tn);
+                float alpha = kind.fade == FxSprite.Fade.SQUARE ? a * (1 - tn * tn) : a;
+                if (kind.facing == FxSprite.Facing.FLAT) flat(state, rx, ry, rz, size, o.spin(), s, alpha);
+                else billboard(state, camera, rx, ry, rz, size, o.spin(), s, alpha);
             }
             default -> {}
         }
+    }
+
+    /** 땅에 눕힌 사각형 (emitter_transform_xz — 충격파 고리) + 세로축으로 돌린 각 */
+    private void flat(QuadParticleRenderState state, float x, float y, float z, float size, float spinDeg, TextureAtlasSprite s, float alpha) {
+        if (size <= 0 || alpha <= 0.003F) return;
+        Quaternionf q = new Quaternionf().rotationY(spinDeg * Mth.DEG_TO_RAD).rotateX(-Mth.HALF_PI);
+        state.add(getLayer(), x, y, z, q.x, q.y, q.z, q.w, size, s.getU0(), s.getU1(), s.getV0(), s.getV1(), ARGB.colorFromFloat(alpha, r, g, b), FULL_BRIGHT);
     }
 
     /** 카메라를 향한 사각형 (rotate_xyz) + 돌린 각 (도) */
