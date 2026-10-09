@@ -2,6 +2,7 @@ package mmorpg.fabric.test;
 
 import java.util.ArrayList;
 import java.util.List;
+import mmorpg.fabric.client.WeaponAura;
 import mmorpg.fabric.client.WeaponFxData;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -130,6 +131,11 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
         fire(ctx, server, "rpg:bow_l40_hero", "bow_hero", "2,4", CameraType.THIRD_PERSON_BACK, "_3p");
         fire(ctx, server, "rpg:wand_l40_hero", "wand_hero", "5,11,13", CameraType.THIRD_PERSON_BACK, "_3p");
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        // 과녁은 치움 (떨어뜨리는 것 없이)
+        server.runOnServer(s -> {
+            ServerLevel level = s.getPlayerList().getPlayers().get(0).level();
+            level.getEntities(EntityTypes.HUSK, h -> true).forEach(h -> h.discard());
+        });
     }
 
     /**
@@ -203,6 +209,9 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
         ctx.waitTicks(1);
         ctx.takeScreenshot(TestScreenshotOptions.of("s_air_sword_transcend_3p_t2").withSize(960, 540));
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        // 과녁은 치움 (다음 사진들에 가리지 않게)
+        server.runOnServer(s -> target.discard());
+        ctx.getInput().lookAt(0F, 0F);
         LOG.info("[gallery] slashes");
     }
 
@@ -227,7 +236,10 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
         return WeaponFxData.BY_ITEM.containsKey(id.substring(id.indexOf(':') + 1));
     }
 
-    /** 무기 빛 알갱이 (밤 — 지금 밤): 영웅 · 초월 13종을 들고 1인칭 · 3인칭 (앞) 각 20틱 뒤 (알갱이가 수명만큼 쌓인 뒤), 마네킹 */
+    /**
+     * 무기 빛 알갱이 (밤 — 지금 밤): 영웅 · 초월 13종을 들고 1인칭 · 3인칭 (앞) 각 20틱 뒤 (알갱이가 수명만큼 쌓인 뒤) — 실제 크기,
+     * 마네킹 (mg_) 은 알갱이를 4배로 키워 무기의 어느 자리에서 나오는지 봄
+     */
     private static void glints(ClientGameTestContext ctx, TestServerContext server) {
         for (String[] d : DESIGNS) {
             if (!hasGlints(d[1])) continue;
@@ -240,7 +252,9 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             ctx.takeScreenshot(TestScreenshotOptions.of("g_" + d[0] + "_3p").withSize(640, 360));
             LOG.info("[gallery] glints {}", d[0]);
         }
+        ctx.runOnClient(mc -> WeaponAura.testScale = 4F);
         mannequins(ctx, server, true);
+        ctx.runOnClient(mc -> WeaponAura.testScale = 1F);
     }
 
     /**

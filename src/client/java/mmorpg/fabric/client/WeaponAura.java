@@ -34,8 +34,9 @@ public final class WeaponAura {
     private static final float MODEL_SCALE = 0.9375F;
     private static final float MODEL_DROP = -1.501F;
 
-    /** 시험용: 지금까지 뿌린 수 · 마지막 자리 */
+    /** 시험용: 지금까지 뿌린 수 · 마지막 자리 · 크기 배율 (사진첩에서 자리를 잘 보이게 — 평소 1) */
     public static int spawned;
+    public static float testScale = 1F;
     public static Vec3 lastFirstPerson;
     public static Vec3 lastThirdPerson;
 
@@ -125,7 +126,7 @@ public final class WeaponAura {
         Vec3 off = new Vec3(x, y, z).scale(s.radius());
         Vec3 dir = off.lengthSqr() > 1e-8 ? off.normalize() : new Vec3(0, 1, 0);
         int texture = textureIndex(s.texture());
-        FxOptions o = FxOptions.glint(texture, dir, s.speed(), s.accel(), s.drag(), s.size(), s.life(), 0xFF000000 | color(s, r.nextFloat()));
+        FxOptions o = FxOptions.glint(texture, dir, s.speed(), s.accel(), s.drag(), s.size() * testScale, s.life(), 0xFF000000 | color(s, r.nextFloat()));
         level.addParticle(o, at.x + off.x, at.y + off.y, at.z + off.z, 0, 0, 0);
         spawned++;
     }
