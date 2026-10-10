@@ -38,4 +38,8 @@ probe net.minecraft.client.model.geom.ModelPart 'translateAndRotate'
 probe net.minecraft.client.model.AnimationUtils 'bobArms|bobModelPart'
 probe net.minecraft.client.renderer.fog.FogRenderer 'setupFog|computeFogColor|getFogColor|extract|updateBuffer|getBuffer|setupFogData'
 probe net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment 'setupFog|getBaseColor|isApplicable'
+probe net.minecraft.server.network.ServerCommonPacketListenerImpl 'handleCustomClickAction'
+probe net.minecraft.server.MinecraftServer 'handleCustomClickAction'
+probe net.minecraft.world.inventory.AbstractContainerMenu 'clicked|doClick|quickMoveStack|stillValid'
+probe net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer 'submit|renderArmorPiece|submitArmorPiece|getArmorModel'
 ls -la "$OUT/calls"
