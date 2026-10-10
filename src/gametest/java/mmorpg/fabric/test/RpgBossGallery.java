@@ -541,15 +541,18 @@ public final class RpgBossGallery implements FabricClientGameTest {
         });
         check(n == 3, "3 decoys + the real one (" + n + ")");
         shot(ctx, "bs_decoys");
-        // 진짜의 어깨 까마귀 날갯짓 (나타나고 1초 뒤부터 2초마다 — 까마귀 둘이 날아오름): 진짜 앞 (몸이 보는 쪽) 5.5칸, 어깨 높이를 봄
+        // 진짜의 어깨 까마귀 날갯짓 (나타나고 1초 뒤부터 2초마다 — 까마귀 둘이 어깨 높이 몸 가운데에서 날아오름): 오른쪽 앞 45° 5.5칸
+        // (까마귀는 낫을 든 오른쪽 어깨 — 앞에서는 낫 자루에 가림), 날아오른 까마귀가 머리 밖으로 나온 뒤 (10틱)
         server.runCommand("title @a clear");
         int id = server.computeOnServer(s -> enc().boss.getId());
         Vec3 real = server.computeOnServer(s -> enc().boss.position());
         float yaw = ctx.computeOnClient(mc -> mc.level != null && mc.level.getEntity(id) instanceof LivingEntity le ? le.yBodyRot : 0F);
-        double fx = -Math.sin(Math.toRadians(yaw));
-        double fz = Math.cos(Math.toRadians(yaw));
-        look(ctx, server, real.x + fx * 5.5, real.y + 3.0, real.z + fz * 5.5, real.x, real.y + 5.0, real.z);
-        waitUntil(ctx, server, t0 + 12 + 20 + 5);
+        double ya = Math.toRadians(yaw);
+        // 보는 쪽 (−sin, cos) + 오른쪽 (−cos, −sin)
+        double fx = (-Math.sin(ya) - Math.cos(ya)) / Math.sqrt(2);
+        double fz = (Math.cos(ya) - Math.sin(ya)) / Math.sqrt(2);
+        look(ctx, server, real.x + fx * 5.5, real.y + 3.6, real.z + fz * 5.5, real.x, real.y + 5.4, real.z);
+        waitUntil(ctx, server, t0 + 12 + 20 + 10);
         shot(ctx, "bs_decoys_tell");
         // 진짜를 때림 (진짜 클릭 — 가운데 쪽 3칸에서)
         Vec3 toC = new Vec3(cx - real.x, 0, cz - real.z).normalize();
@@ -599,6 +602,10 @@ public final class RpgBossGallery implements FabricClientGameTest {
         shot(ctx, "bs_reaping_top");
         server.runCommand("gamemode survival @a");
         chase(ctx, server, px, pz, cx, ALTAR_Y + 0.5, cz, 8);
+        // 카운트다운 (눈앞 글자 5 4 3 2 1): 큰 글자 (5초) 뒤에 가려지므로 지우고 "2" 가 뜬 뒤
+        server.runCommand("title @a clear");
+        waitUntil(ctx, server, t0 + count - 40 + 3);
+        shot(ctx, "bs_reaping_count");
         waitUntil(ctx, server, t0 + count + 2);
         shot(ctx, "bs_reaping_judge");
         boolean alive = server.computeOnServer(s -> player(s).isAlive() && !player(s).isDeadOrDying());
