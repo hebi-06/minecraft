@@ -849,10 +849,14 @@ public final class Monsters {
         }
         if (td == null) td = spawnLabel(level, m);
         if (td == null) return null;
+        if (td.getFlags() != LABEL_FLAGS) td.setFlags(LABEL_FLAGS);
         if (td.getVehicle() != m && !td.startRiding(m)) td.setPos(m.getX(), m.getY() + m.getBbHeight() + RpgMonster.LABEL_GAP, m.getZ());
         m.label = td;
         return td;
     }
+
+    /** 이름표 글자 모양: 그림자 · 앞에 그림 (베드락 이름표처럼 몸 (트롤 가시 · 허수아비 모자) · 벽에 가리지 않음) */
+    private static final byte LABEL_FLAGS = (byte) (Display.TextDisplay.FLAG_SHADOW | Display.TextDisplay.FLAG_SEE_THROUGH);
 
     /** 글자 표시 엔티티 (여러 줄 — 늘 카메라를 보고, 밤에도 밝게, 이름표처럼 반투명 검은 바탕) — 몬스터에 태워 같이 저장 · 옮겨짐 */
     private static Display.TextDisplay spawnLabel(ServerLevel level, RpgMonster m) {
@@ -860,7 +864,7 @@ public final class Monsters {
         if (td == null) return null;
         td.setText(Component.literal(BedrockText.toJava(m.labelText == null ? "" : m.labelText)));
         td.setBillboardConstraints(Display.BillboardConstraints.CENTER);
-        td.setFlags(Display.TextDisplay.FLAG_SHADOW);
+        td.setFlags(LABEL_FLAGS);
         td.setBrightnessOverride(Brightness.FULL_BRIGHT);
         td.addTag(LABEL_TAG);
         td.snapTo(m.getX(), m.getY() + m.getBbHeight() + RpgMonster.LABEL_GAP, m.getZ(), 0F, 0F);

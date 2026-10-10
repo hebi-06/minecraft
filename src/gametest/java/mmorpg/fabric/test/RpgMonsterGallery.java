@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * 먼저 때림 → 피해 숫자 (몸통에서 떠오름) · 이름표 체력 막대 · 공격 동작 + 붉은 고리 → 할퀴기 참격 (1인칭 화면 아래쪽) · 불꽃.
  * 달려들기 (굴론 — 움직이는 몬스터, 활로 쏨), 원거리 반격 (기둥 위에서 쏨 → 발밑 붉은 고리 → 날아오는 기운), 죽음 (+경험치 글자 · 전리품 빛기둥),
  * 사냥터 (/mobzone — 연기 · 초록 고리) · /mob. 확인 항목은 [monster-gallery] OK 줄, 실패가 있으면 끝에 AssertionError.
- * 사진 이름 mon_&lt;몬스터&gt;_1hit · _2windup · _3claw, mon_troll_3p, mon_lunge_*, mon_counter_*, mon_label, mon_death_*, mon_zone, mon_mobcmd.
+ * 사진 이름 mon_&lt;몬스터&gt;_1hit · _2windup · _3claw, mon_troll_3p, mon_label, mon_lunge_*, mon_counter_ring · _fp · _strike, mon_death_*, mon_zone, mon_mobcmd.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgMonsterGallery implements FabricClientGameTest {
@@ -190,14 +190,14 @@ public final class RpgMonsterGallery implements FabricClientGameTest {
 
     // ------------------------------------------------------------ 장면
 
-    /** 몬스터 하나: 플레이어 앞 1칸 (몸 가장자리 사이 0.8칸) → 칼로 때림 → 반격 동작 · 붉은 고리 → 할퀴기 */
+    /** 몬스터 하나: 사거리 바로 안 (몸 가장자리 사이 reach - 0.1칸 — 공격 동작이 카메라를 뚫지 않게) → 칼로 때림 → 반격 동작 · 붉은 고리 → 할퀴기 */
     private void melee(ClientGameTestContext ctx, TestServerContext server, String key) {
         Monsters.Kind k = Monsters.kind(key);
-        double dist = k.half() + 0.3 + 0.8;
+        double dist = k.half() + 0.3 + k.reach() - 0.1;
         teleport(ctx, server, PX, FLOOR, PZ, 180F, 0F);
         int id = spawn(server, key, PX, FLOOR, PZ - dist, 0F, false);
         ctx.waitTicks(6);
-        lookAt(ctx, id, k.height() * 0.5);
+        lookAt(ctx, id, Math.max(0.9, Math.min(1.7, k.height() * 0.55)));
         ctx.waitTicks(3);
         float hp0 = playerHp(server);
         attack(ctx, id);
@@ -236,8 +236,8 @@ public final class RpgMonsterGallery implements FabricClientGameTest {
             shot(ctx, "mon_troll_3p");
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
             // 이름표 · 체력 막대 가까이 (트롤 앞 3칸에서 올려다봄)
-            teleport(ctx, server, PX, FLOOR, PZ + 2.5, 180F, -18F);
-            ctx.getInput().lookAt(180F, -18F);
+            teleport(ctx, server, PX, FLOOR, PZ + 1.5, 180F, -20F);
+            ctx.getInput().lookAt(180F, -20F);
             ctx.waitTicks(4);
             shot(ctx, "mon_label");
         }
@@ -302,8 +302,13 @@ public final class RpgMonsterGallery implements FabricClientGameTest {
         });
         Vec3 feet = server.computeOnServer(s -> player(s).position());
         check(ring && spot != null && spot.distanceTo(feet) < 0.5, "counter ring under the player on the pillar " + spot);
-        ctx.waitTicks(5);
+        ctx.waitTicks(3);
         shot(ctx, "mon_counter_ring");
+        // 1인칭: 아래의 굴론 · 발밑 고리 · 날아오는 기운 (동작 시간 + 0.3초 — 마지막 0.2초에 날아옴)
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        lookAt(ctx, id, 0.7);
+        ctx.waitTicks(7);
+        shot(ctx, "mon_counter_fp");
         boolean hit = waitFor(ctx, server, 20, s -> {
             Monsters.Fight f = fight(s, id);
             return f != null && f.hits() >= 1;
@@ -324,14 +329,14 @@ public final class RpgMonsterGallery implements FabricClientGameTest {
         Monsters.Kind k = Monsters.kind("troll");
         ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
         teleport(ctx, server, PX, FLOOR, PZ, 180F, 0F);
-        double dist = k.half() + 0.3 + 1.0;
+        double dist = k.half() + 0.3 + 2.4;
         int id = spawn(server, "troll", PX, FLOOR, PZ - dist, 0F, false);
         ctx.waitTicks(6);
         server.runOnServer(s -> {
             monster(s, id).setHealth(1F);
             Loot.rand = () -> 0.0;
         });
-        lookAt(ctx, id, 1.9);
+        lookAt(ctx, id, 2.2);
         ctx.waitTicks(20);
         int xp0 = server.computeOnServer(s -> player(s).totalExperience);
         attack(ctx, id);
