@@ -3,9 +3,14 @@ package mmorpg.fabric.test;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import mmorpg.core.Combat;
 import mmorpg.core.Obj;
 import mmorpg.core.Runes;
+import mmorpg.core.Weapon;
+import mmorpg.core.Weapons;
+import mmorpg.fabric.RpgItems;
 import mmorpg.fabric.RpgPlayers;
+import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.rune.RuneCast;
 import mmorpg.fabric.rune.RuneData;
 import mmorpg.fabric.rune.RuneGacha;
@@ -16,13 +21,15 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 룬 틀 게임 시험 (서버): 룬 아이템 80 · 뽑기권 등록, 뽑기권 (바로 쓰고 연출 뒤 룬 지급 · 연출 중 다시 못 뽑음), 룬 쓰기 (위력 · 재사용 대기 ·
- * 핫바 쓸기 표시 · 대상이 없으면 재사용 대기 없음).
+ * 룬 게임 시험 (서버): 룬 아이템 80 · 뽑기권 등록, 룬 효과 80 등록, 칸을 고르면 바로 쓰기, 뽑기권 (바로 쓰고 연출 뒤 룬 지급 · 연출 중 다시 못 뽑음),
+ * 룬 쓰기 (위력 · 재사용 대기 · 핫바 쓸기 표시 · 대상이 없으면 재사용 대기 없음), 평타 강화 (평타에 더함).
  */
 public final class RpgRuneTests {
     private static ServerPlayer player(GameTestHelper h) {
@@ -127,6 +134,26 @@ public final class RpgRuneTests {
             h.assertTrue(RuneData.pending(sp).isEmpty(), "pending rolled back");
             done(h, sp);
         });
+    }
+
+    /** 평타 강화 (날 세우기): 다음 평타에 위력 × bonus 를 더함 (치명타 뒤에 더함 — 함께 도는 시험 때문에 치명타 여부는 둘 다 맞는 것으로) */
+    @GameTest(maxTicks = 40)
+    public void strikeRuneAddsToBasicAttack(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Weapon w = Weapons.weaponFrom("sword", 0, "common");
+        for (Weapons.Req q : w.reqs()) RpgPlayers.setStat(sp, q.stat(), (int) Math.ceil(q.value()) + 10);
+        sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(w.id())));
+        Husk z = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, 3.5F));
+        Runes.Rune r = Runes.parseRune("rpg:rune_strike_common");
+        h.assertTrue(RuneCast.castRune(sp, r, false), "cast");
+        double bonus = RuneCast.power(sp, "strike") * r.def().num("bonus");
+        float s = sp.getAttackStrengthScale(0.5F);
+        double base = w.damage() * Combat.powerMultiplier(RpgStats.effective(sp), w, 0) * (0.2 + s * s * 0.8);
+        sp.attack(z);
+        double dealt = TestDummies.dealt(z);
+        h.assertTrue(Math.abs(dealt - (base + bonus)) < 1e-3 || Math.abs(dealt - (base * w.critMult() + bonus)) < 1e-3,
+                "basic " + base + " + strike " + bonus + " vs dealt " + dealt);
+        done(h, sp);
     }
 
     @GameTest(maxTicks = 40)
