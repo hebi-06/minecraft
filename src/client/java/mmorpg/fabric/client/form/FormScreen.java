@@ -83,6 +83,31 @@ public abstract class FormScreen extends Screen {
         return false;
     }
 
+    /**
+     * 뒤의 세상: 흐리지 않고 살짝 어둡게만 (기본 화면 배경은 흐림 + 짙은 어둠 — 애드온 창처럼 NPC · 피해 숫자 · 파티클이 비쳐 보이게,
+     * 바닐라 상자 창도 흐리지 않음)
+     */
+    @Override
+    public void extractBackground(GuiGraphicsExtractor g, int mx, int my, float partialTick) {
+        g.fillGradient(0, 0, width, height, 0x58080A10, 0x88080A10);
+    }
+
+    /**
+     * 밝은 회색 바탕 (상자 창) 의 글자: 애드온이 덧붙임에 쓰는 §7 (밝은 회색 #AAAAAA) 은 바탕 (#C6C6C6) 과 거의 같아 읽히지 않으므로 §8 (짙은 회색) 로
+     */
+    static String onLight(String s) {
+        return s == null ? "" : s.replace("§7", "§8");
+    }
+
+    /** 세로 스크롤 막대 (오른쪽 가는 금색 줄) — 보이는 높이 view, 전체 view + max, 지금 scroll */
+    static void scrollbar(GuiGraphicsExtractor g, int x, int top, int view, int scroll, int max) {
+        if (max <= 0) return;
+        int barH = Math.max(10, view * view / (view + max));
+        int barY = top + (view - barH) * scroll / max;
+        g.fill(x, top, x + 2, top + view, 0x30E0C070);
+        g.fill(x, barY, x + 2, barY + barH, 0xC0E0C070);
+    }
+
     /** 글자를 폭에 맞춰 줄로 (줄바꿈 "\n" 은 그대로 · 긴 줄은 접음) */
     static List<FormattedCharSequence> wrap(Font font, String text, int width) {
         List<FormattedCharSequence> out = new ArrayList<>();
