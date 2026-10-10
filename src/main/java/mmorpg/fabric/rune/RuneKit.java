@@ -778,6 +778,16 @@ public final class RuneKit {
         crescent(level, at, dir, size, glow, core, -90, 0.16);
     }
 
+    /** 무기를 든 손 자리 (hand — 눈앞 오른쪽 아래, 1인칭에서도 보임) · 수평 보는 쪽 (f) */
+    public record Hand(Vec3 hand, Vec3 f) {}
+
+    /** 무기를 든 손 자리 (handOf — 마검사 · 중력 · 평타 강화) */
+    public static Hand handOf(ServerPlayer sp) {
+        Vec3 eye = sp.getEyePosition();
+        Vec3 f = V.flat(sp.getViewVector(1F));
+        return new Hand(V.up(V.add(V.add(eye, f, 0.9), V.rightOf(f), 0.42), -0.5), f);
+    }
+
     /** 검: 공격 피해 (노란 숫자 — 마검사 · 원소 검사) */
     public static double swordHit(ServerPlayer sp, LivingEntity e, double P, double mult) {
         return runeHit(sp, e, P, mult, "str", Kit.Cause.ATTACK, DamageNumbers.Style.RUNE);

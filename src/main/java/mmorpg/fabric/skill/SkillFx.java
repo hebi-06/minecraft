@@ -215,6 +215,9 @@ public final class SkillFx {
             {"portal.trigger", "block.portal.trigger"}, {"note.pling", "block.note_block.pling"}, {"note.bass", "block.note_block.bass"},
             {"random.pop", "entity.item.pickup"}, {"mob.zombie.woodbreak", "entity.zombie.break_wooden_door"}, {"random.door_open", "block.wooden_door.open"},
             {"block.enchanting_table.use", "block.enchantment_table.use"},
+            {"conduit.activate", "block.conduit.activate"}, {"crossbow.loading.end", "item.crossbow.loading_end"}, {"mob.allay.item_given", "entity.allay.item_given"},
+            {"mob.breeze.shoot", "entity.breeze.shoot"}, {"mob.irongolem.repair", "entity.iron_golem.repair"}, {"mob.ravager.stun", "entity.ravager.stunned"},
+            {"mob.shulker.shoot", "entity.shulker.shoot"}, {"item.trident.riptide_2", "item.trident.riptide_2"},
         };
         for (String[] m : map) SOUND.put(m[0], m[1]);
     }
