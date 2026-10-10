@@ -266,7 +266,6 @@ public final class BossKraken implements BossModule {
         Bosses.Api api = u.api;
         Vec3 c = u.center;
         double radius = d.num("radius");
-        double cone = d.num("cone");
         List<ServerPlayer> cand = new ArrayList<>();
         for (ServerPlayer p : list) if (hdist(p.position(), c) <= radius + 1) cand.add(p);
         List<ServerPlayer> near = shuffle(cand);
@@ -274,6 +273,18 @@ public final class BossKraken implements BossModule {
         int n = (int) (api.ratio(u) <= d.num("low") ? d.num("countLow") : d.num("count"));
         List<Vec3> dirs = new ArrayList<>();
         for (int i = 0; i < Math.min(n, near.size()); i++) dirs.add(dirTo(c, near.get(i).position()));
+        slamDirs(u, now, dirs);
+        return true;
+    }
+
+    /** 촉수 내려치기를 정한 방향 (가로 단위) 들로 차례로 — slam 이 대상 쪽으로 부름 (사진첩: 한 사람으로 부채꼴 둘을 보이려고) */
+    public static void slamDirs(Bosses.Unit u, long now, List<Vec3> dirs) {
+        Obj d = u.def.obj("slam");
+        Bosses.Api api = u.api;
+        Vec3 c = u.center;
+        double radius = d.num("radius");
+        double cone = d.num("cone");
+        if (dirs.isEmpty()) return;
         Vec3 apex = floorAt(u, c.x, c.z);
         int windup = (int) d.num("windup");
         int gap = (int) d.num("gap");
@@ -298,7 +309,6 @@ public final class BossKraken implements BossModule {
         // 끝나면 1초 동안 물어뜯기 없음 (휘감김이 풀린 뒤 피할 틈)
         steps.add(step(last + 12, (x, t) -> x.meleeAt = Math.max(x.meleeAt, Tasks.now() + 20)));
         api.cast(u, "slam", (int) (last + 14), steps);
-        return true;
     }
 
     static void slamHit(Bosses.Unit u, Vec3 apex, Vec3 dir, Set<UUID> struck) {

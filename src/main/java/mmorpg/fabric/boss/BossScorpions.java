@@ -453,11 +453,17 @@ public final class BossScorpions implements BossModule {
 
     public static void boulders(Bosses.Unit u, long now, List<ServerPlayer> list) {
         Obj d = u.def.obj("boulders");
-        Bosses.Api api = u.api;
-        M m = mem(u);
         List<Vec3> spots = new ArrayList<>();
         List<ServerPlayer> picked = shuffle(list);
         for (int i = 0; i < Math.min((int) d.num("count"), picked.size()); i++) spots.add(floorAt(u, picked.get(i).getX(), picked.get(i).getZ()));
+        bouldersAt(u, now, spots);
+    }
+
+    /** 바위 던지기를 정한 자리 (바닥) 로 — boulders 가 사람 발밑으로 부름 (사진첩: 한 사람으로 원 셋을 보이려고) */
+    public static void bouldersAt(Bosses.Unit u, long now, List<Vec3> spots) {
+        Obj d = u.def.obj("boulders");
+        Bosses.Api api = u.api;
+        M m = mem(u);
         int windup = (int) d.num("windup");
         double radius = d.num("radius");
         api.hold(u, true);
