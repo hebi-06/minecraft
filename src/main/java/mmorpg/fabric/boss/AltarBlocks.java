@@ -28,12 +28,11 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.MapColor;
-import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
  * 보스 제단 블록 9종 rpg:altar_&lt;보스 키&gt; (행동 팩 blocks/rpg_altars/*.json 그대로): 꽉 찬 블록 · 옆 · 위 · 아래 텍스처, 빛 10,
- * 서바이벌에서 부술 수 없음 (자바: 부수는 시간 -1 — 크리에이티브는 부숨), 폭발에 안 부서짐, 피스톤에 밀리지 않음 (제단 목록과 자리가 어긋나지 않게),
+ * 서바이벌에서 부술 수 없음 (자바: 부수는 시간 -1 — 크리에이티브는 부숨), 폭발에 안 부서짐, 피스톤에 밀리지 않음 (부술 수 없는 블록 — 제단 목록과 자리가 어긋나지 않게),
  * 이름 "&lt;보스 이름&gt; 제단" (lang block.rpg.altar_*), 크리에이티브 건축 탭 + RPG 장비 탭.
  * 누르면 (애드온 rpg:boss_altar 블록 부품의 onPlayerInteract) Arena.onAltarUse — 도전 창 · 체력 보기 · 웅크린 관리자의 관리 창은 보스 엔진이.
  * 놓으면 (playerPlaceBlock) 제단 목록에 넣고 놓은 관리자에게 "보스 필드 만들기" 창 ({@link ArenaGuard#onAltarPlaced}).
@@ -74,7 +73,10 @@ public final class AltarBlocks {
         }
     }
 
-    /** 블록 속성 (행동 팩: light_emission 10, destructible_by_mining false, destructible_by_explosion false) */
+    /**
+     * 블록 속성 (행동 팩: light_emission 10, destructible_by_mining false, destructible_by_explosion false).
+     * 부수는 시간 -1 (기반암처럼) 이라 피스톤도 밀지 못함 (자바 피스톤은 부술 수 없는 블록을 밀지 않음)
+     */
     private static BlockBehaviour.Properties props(ResourceKey<Block> id) {
         return BlockBehaviour.Properties.of()
                 .mapColor(MapColor.STONE)
@@ -82,7 +84,6 @@ public final class AltarBlocks {
                 .strength(Block.INDESTRUCTIBLE, 3600000.0F)
                 .lightLevel(s -> 10)
                 .noLootTable()
-                .pushReaction(PushReaction.BLOCK)
                 .setId(id);
     }
 
