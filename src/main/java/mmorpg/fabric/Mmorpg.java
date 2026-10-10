@@ -26,8 +26,10 @@ public final class Mmorpg implements ModInitializer {
         Rules.get(); // rules.json 을 처음에 읽음 (잘못되었으면 여기서 바로 실패)
         RpgData.init();
         RpgParticles.init();
+        mmorpg.fabric.gear.WeaponEnhance.init(); // 무기 강화 단계 (아이템 구성 요소 — 아이템보다 먼저)
         RpgItems.init();
         RpgNet.init();
+        mmorpg.fabric.ui.Forms.init(); // 서버 창 (상자 창 · 대화창 · 버튼 목록 · 입력창)
         Tasks.init();
         Notify.init();
         RpgStats.init();
@@ -37,6 +39,7 @@ public final class Mmorpg implements ModInitializer {
         Transcend.init();
         RuneSystem.init();
         mmorpg.fabric.gear.ArmorSystem.init();
+        mmorpg.fabric.shop.ShopCommands.init();
         RpgPlayers.init();
         RpgCommands.init();
         LOG.info("MMO RPG: weapons {}, rules {}", RpgItems.WEAPONS.size(), Rules.RESOURCE);

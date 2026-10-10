@@ -101,6 +101,13 @@ public final class Notify {
         sound(sp, BuiltInRegistries.SOUND_EVENT.wrapAsHolder(sound), volume, pitch);
     }
 
+    /** 큰 글자 (hp.js showRealTitle — 0.5초 차오름 · 3.5초 · 1초 걷힘). subtitle 은 null 이면 없음 */
+    public static void title(ServerPlayer sp, String title, String subtitle) {
+        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 70, 20));
+        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(Component.literal(subtitle == null ? "" : BedrockText.toJava(subtitle))));
+        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(Component.literal(BedrockText.toJava(title))));
+    }
+
     /** 아이템 주기 (가방이 가득이면 발밑에 떨굼 — 애드온 giveItem) */
     public static void give(ServerPlayer sp, ItemStack stack) {
         if (sp.getInventory().add(stack) || stack.isEmpty()) return;

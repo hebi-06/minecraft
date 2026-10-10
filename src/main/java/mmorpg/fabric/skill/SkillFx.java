@@ -184,6 +184,12 @@ public final class SkillFx {
 
     static {
         String[][] map = {
+            // 4단계 (상점 · 대장장이 · 룬술사 · NPC · 퀘스트)
+            {"mob.villager.yes", "entity.villager.yes"}, {"mob.villager.no", "entity.villager.no"}, {"mob.villager.idle", "entity.villager.ambient"},
+            {"random.anvil_break", "block.anvil.break"}, {"block.grindstone.use", "block.grindstone.use"}, {"vault.eject_item", "block.vault.eject_item"},
+            {"random.chestopen", "block.chest.open"}, {"random.chestclosed", "block.chest.close"}, {"item.book.page_turn", "item.book.page_turn"},
+            {"note.harp", "block.note_block.harp"}, {"note.chime", "block.note_block.chime"}, {"note.bell", "block.note_block.bell"},
+            {"random.toast", "ui.toast.in"}, {"ui.toast.challenge_complete", "ui.toast.challenge_complete"},
             {"item.trident.thunder", "item.trident.thunder"}, {"random.explode", "entity.generic.explode"},
             {"mace.heavy_smash_ground", "item.mace.smash_ground_heavy"}, {"mace.smash_ground", "item.mace.smash_ground"}, {"mace.smash_air", "item.mace.smash_air"},
             {"item.spear.attack_miss", "item.spear.attack"}, {"beacon.power", "block.beacon.power_select"}, {"beacon.activate", "block.beacon.activate"},
@@ -281,6 +287,15 @@ public final class SkillFx {
             case "minecraft:critical_hit_emitter" -> level.sendParticles(ParticleTypes.CRIT, at.x, at.y, at.z, 10, 0.25, 0.25, 0.25, 0.3);
             case "minecraft:basic_flame_particle" -> level.sendParticles(ParticleTypes.FLAME, at.x, at.y, at.z, 1, 0, 0, 0, 0.01);
             case "minecraft:basic_smoke_particle" -> level.sendParticles(ParticleTypes.SMOKE, at.x, at.y, at.z, 1, 0, 0, 0, 0.01);
+            case "minecraft:villager_happy" -> level.sendParticles(ParticleTypes.HAPPY_VILLAGER, at.x, at.y, at.z, 5, 0.3, 0.2, 0.3, 0);
+            case "minecraft:villager_angry" -> level.sendParticles(ParticleTypes.ANGRY_VILLAGER, at.x, at.y, at.z, 1, 0.1, 0.1, 0.1, 0);
+            case "minecraft:mob_portal" -> level.sendParticles(ParticleTypes.PORTAL, at.x, at.y, at.z, 6, 0.2, 0.2, 0.2, 0.4);
+            case "minecraft:endrod" -> level.sendParticles(ParticleTypes.END_ROD, at.x, at.y, at.z, 1, 0.05, 0.05, 0.05, 0.01);
+            case "minecraft:blue_flame_particle" -> level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, at.x, at.y, at.z, 1, 0.05, 0.05, 0.05, 0.01);
+            case "minecraft:death_explosion_emitter" -> level.sendParticles(ParticleTypes.POOF, at.x, at.y, at.z, 12, 0.3, 0.4, 0.3, 0.05);
+            case "minecraft:explosion_particle" -> level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            case "minecraft:note_particle" -> level.sendParticles(ParticleTypes.NOTE, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            case "minecraft:enchanting_table_particle" -> level.sendParticles(ParticleTypes.ENCHANT, at.x, at.y, at.z, 8, 0.3, 0.3, 0.3, 0.5);
             default -> {
                 if (WARNED.add(bedrock)) LOG.warn("[mmorpg] no Java particle for {}", bedrock);
             }

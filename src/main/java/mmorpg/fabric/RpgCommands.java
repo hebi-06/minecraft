@@ -116,7 +116,8 @@ public final class RpgCommands {
                 + " / " + Js.str(Js.round(sp.getMaxHealth() * 10) / 10.0));
         for (String key : Stats.STAT_KEYS) sp.sendSystemMessage(Component.literal(BedrockText.toJava(" " + s.statLine(key, false))));
         Weapon w = StatSheet.referenceWeapon(sp.getMainHandItem(), sp.getOffhandItem(), sp.getInventory().getNonEquipmentItems(), s::usable);
-        for (String l : s.weaponLines(w, false)) sp.sendSystemMessage(Component.literal(BedrockText.toJava(" " + l)));
+        int enh = mmorpg.fabric.gear.WeaponEnhance.reference(sp.getMainHandItem(), sp.getInventory().getNonEquipmentItems(), w);
+        for (String l : s.weaponLines(w, enh, false)) sp.sendSystemMessage(Component.literal(BedrockText.toJava(" " + l)));
         return 1;
     }
 

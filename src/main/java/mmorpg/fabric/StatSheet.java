@@ -178,8 +178,13 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         return best != null ? best : RpgCombat.weaponOf(off);
     }
 
-    /** 가진 무기 기준 실제 수치 (statui.js weaponLines). 강화는 4단계 */
+    /** 가진 무기 기준 실제 수치 (statui.js weaponLines) — 강화 없이 */
     public List<String> weaponLines(Weapon w, boolean dark) {
+        return weaponLines(w, 0, dark);
+    }
+
+    /** 가진 무기 기준 실제 수치 (statui.js weaponLines): 강화 enh 단계면 기본 공격력 × (1 + 강화 보너스) */
+    public List<String> weaponLines(Weapon w, int enh, boolean dark) {
         String L = dark ? "§8" : "§7";
         String V = dark ? "§0" : "§f";
         String R = dark ? "§4" : "§c";
@@ -188,8 +193,8 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             lines.add(L + "RPG 무기를 가지고 있으면 실제 피해가 나옵니다.");
             return lines;
         }
-        double base0 = w.damage();
-        lines.add(L + "기준 무기: " + (dark ? w.darkName() : w.name()));
+        double base0 = w.damage() * (1 + mmorpg.core.Enhance.enhanceBonus(enh));
+        lines.add(L + "기준 무기: " + (enh > 0 ? "§6+" + enh + " " : "") + (dark ? w.darkName() : w.name()));
         List<Weapons.Lack> lack = Weapons.weaponLack(w, reqLevel, base);
         double critAvg = 1 + w.critChance() * (w.critMult() - 1);
         double sum = 0;

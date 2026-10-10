@@ -35,6 +35,8 @@ public final class MmorpgClient implements ClientModInitializer {
                 sprites -> (options, level, x, y, z, xd, yd, zd, random) -> AddonParticles.create(level, x, y, z, options, sprites));
         // RPG 갑옷 120 의 입은 모습 (애드온 3D 모델 20)
         ArmorModels.init();
+        // 서버 창 (상자 창 · 대화창 · 버튼 목록 · 입력창)
+        mmorpg.fabric.client.form.FormClient.init();
         statsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.stats", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
             ClientRpgState.update(payload);

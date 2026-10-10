@@ -209,7 +209,7 @@ public final class RpgNet {
             sp.sendSystemMessage(line);
         }
         Weapon w = StatSheet.referenceWeapon(sp.getMainHandItem(), sp.getOffhandItem(), sp.getInventory().getNonEquipmentItems(), s::usable);
-        List<String> lines = s.weaponLines(w, false);
+        List<String> lines = s.weaponLines(w, mmorpg.fabric.gear.WeaponEnhance.reference(sp.getMainHandItem(), sp.getInventory().getNonEquipmentItems(), w), false);
         for (String l : lines) sp.sendSystemMessage(Component.literal(BedrockText.toJava(" " + l)));
     }
 }

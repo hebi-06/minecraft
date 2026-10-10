@@ -128,7 +128,7 @@ public final class StatScreen extends Screen {
         int wy = top + ROW_Y + keys.size() * ROW_H + 4;
         g.fill(left + 10, wy - 3, left + W - 10, wy - 2, 0x60C8A050);
         Weapon w = StatSheet.referenceWeapon(player.getMainHandItem(), player.getOffhandItem(), player.getInventory().getNonEquipmentItems(), s::usable);
-        List<String> lines = s.weaponLines(w, false);
+        List<String> lines = s.weaponLines(w, mmorpg.fabric.gear.WeaponEnhance.reference(player.getMainHandItem(), player.getInventory().getNonEquipmentItems(), w), false);
         for (int i = 0; i < Math.min(6, lines.size()); i++) {
             g.text(font, BedrockText.toJava(lines.get(i)), left + 14, wy + 2 + i * 10, 0xFFFFFFFF, true);
         }

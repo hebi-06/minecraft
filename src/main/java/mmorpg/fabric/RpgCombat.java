@@ -244,9 +244,9 @@ public final class RpgCombat {
         return Combat.reqText(w, reqLevelOf(sp), RpgData.of(sp).base());
     }
 
-    /** 무기 피해 배율 = 스탯 배율 × (1 + 강화 보너스 — 1단계는 강화 없음) */
+    /** 무기 피해 배율 = 스탯 배율 × (1 + 강화 보너스 — 손에 든 그 무기의 강화 단계, combat.js powerMultiplier) */
     public static double powerOf(ServerPlayer sp, Weapon w) {
-        return Combat.powerMultiplier(RpgStats.effective(sp), w, 0);
+        return Combat.powerMultiplier(RpgStats.effective(sp), w, mmorpg.fabric.gear.WeaponEnhance.held(sp, w));
     }
 
     public static boolean rollCrit(ServerPlayer sp, Weapon w) {

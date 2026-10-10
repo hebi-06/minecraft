@@ -53,14 +53,16 @@ public final class RpgWeaponItem extends Item {
         return weapon;
     }
 
+    /** 강화한 무기는 "+N 이름 [레벨렙]" (weapons.js enhancedName) */
     @Override
     public Component getName(ItemStack stack) {
-        return Component.literal(BedrockText.toJava(weapon.name()));
+        int n = mmorpg.fabric.gear.WeaponEnhance.of(stack);
+        return Component.literal(BedrockText.toJava(n > 0 ? Weapons.enhancedName(weapon, n, null) : weapon.name()));
     }
 
     @Override
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
-        for (String line : Weapons.weaponInfo(weapon, false, 0)) {
+        for (String line : Weapons.weaponInfo(weapon, false, mmorpg.fabric.gear.WeaponEnhance.of(stack))) {
             // 조작 줄: 애드온의 "버튼" (모바일) → 자바의 우클릭
             tooltip.accept(Component.literal(BedrockText.toJava(line.replace("버튼: 스킬1, 웅크리면: 스킬2", "우클릭: 스킬1, 웅크리고 우클릭: 스킬2")
                     .replace("웅크리면: 스킬1, 길게: 스킬2", "웅크리고 우클릭: 스킬1, 길게 우클릭: 스킬2"))));
