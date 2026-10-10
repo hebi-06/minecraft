@@ -378,7 +378,7 @@ public final class NpcData {
 
     /** NPC 몸 설정 (밀리지 않음 · 다치지 않음 · 설명 줄 숨김) */
     public static void setup(Mannequin m) {
-        m.setInvulnerable(true);
+        m.setPermanentlyInvulnerable(true);
         try {
             MannequinAccessor a = (MannequinAccessor) m;
             a.mmorpg$setImmovable(true);
