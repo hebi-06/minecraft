@@ -11,7 +11,10 @@
 
 손 자세 (display) 는 애드온 화면과 같은 자리가 되도록 계산한다 (Blockbench 베드락 미리보기 규칙 — 애드온 generator/tools/attachable_emu.py 와 같은 값):
 - 1인칭: 베드락 1인칭 (오른팔 회전 -95,45,115 · 위치 -13.5,-10,12 · 아이템 뼈 -7 · 카메라 (0, 27.41, 0) 에서 +z · 세로 시야 70)
-  에서 무기 상자가 카메라 앞 어디에 있는지 → 자바 1인칭 (손 자리 0.56, -0.52, -0.72 · 세로 시야 70) 에 같은 자리
+  에서 무기 상자가 카메라 앞 어디에 있는지 → 자바 1인칭 (손 자리 0.56, -0.52, -0.72 · 세로 시야 70) 에 같은 자리.
+  다만 칼 · 단검 · 도끼 · 창 · 마검 · 완드 (UPRIGHT) 는 손잡이 (weapon 뼈 축) 자리는 그대로 두고 날이 UPRIGHT_DIR 쪽 (거의 수직) 으로
+  서도록 돌림 (가장 작은 회전 — 날 둘레 돌림은 애드온 그대로). 애드온 자세는 날이 화면 가운데 쪽으로 약 35° 기울어 있었음 (2026-10-10 요청).
+  활 · 방패는 애드온 자세가 이미 서 있어 그대로.
 - 3인칭: 오른팔 기준 무기 자리 (베드락 rightItem → weapon 뼈 · 무기를 든 팔 18°) → 자바 ItemInHandLayer (팔 → X -90° · Y 180° · (1, 2, -10)/16)
 좌표: 베드락 → three.js (x 반전, 오른손 좌표계) 를 모델 좌표로 쓴다. 자바 모델 상자는 -16 ~ 32 안이어야 해서 큰 무기는 줄여 넣고 display 배율로 키운다.
 """
@@ -38,6 +41,9 @@ MAX_SCALE = 4.0
 
 # 자바 1인칭 손 자리 (ItemInHandRenderer.applyItemArmTransform, 오른손, 들기 · 휘두르기 없음)
 JAVA_FP_ARM = np.array([0.56, -0.52, -0.72])
+# 1인칭에서 세워 드는 무기 (디자인 이름 앞부분) 와 날 방향 (자바 카메라 공간: 오른쪽 +x · 위 +y · 앞 -z) — 왼쪽으로 약 6° · 끝이 앞으로 약 13°
+UPRIGHT = ("sword_", "dagger_", "axe_", "spear_", "greatsword_", "staff_")
+UPRIGHT_DIR = np.array([-0.10, 0.97, -0.22]) / np.linalg.norm([-0.10, 0.97, -0.22])
 # 자바 3인칭 (ItemInHandLayer): 팔 → X -90° → Y 180° → 이동 (1/16, 2/16, -10/16) (오른손)
 JAVA_3P_OFFSET = np.array([1 / 16, 2 / 16, -10 / 16])
 
@@ -156,6 +162,19 @@ def pose_third_person(bones):
 
 # ------------------------------------------------------------ 변환
 
+def min_rot(a, b):
+    """a 를 b 로 돌리는 가장 작은 회전 (로드리게스)"""
+    a = a / np.linalg.norm(a)
+    b = b / np.linalg.norm(b)
+    v = np.cross(a, b)
+    c = float(a @ b)
+    if np.linalg.norm(v) < 1e-12:
+        assert c > 0, "opposite directions"
+        return np.eye(3)
+    vx = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+    return np.eye(3) + vx + vx @ vx * (1 / (1 + c))
+
+
 def split_affine(W):
     """4×4 → (회전, 균일 배율, 이동)"""
     M = W[:3, :3]
@@ -240,6 +259,9 @@ def convert(design, meta, out_models, out_textures):
     R_fp = D @ R_w
     s_fp = sig / k
     J_P = D @ (Wt - BEDROCK_FP_CAMERA) / 16
+    if design.startswith(UPRIGHT):
+        # 세워 들기: 날 (모델 +y) 이 UPRIGHT_DIR 를 향하게, 손잡이 (J_P) 를 축으로
+        R_fp = min_rot(R_fp @ np.array([0.0, 1.0, 0.0]), UPRIGHT_DIR) @ R_fp
     t_fp = J_P - JAVA_FP_ARM - R_fp @ (s_fp * (C0 / 16 - 0.5))
 
     # 3인칭: 오른팔 기준 무기 자리
@@ -260,15 +282,17 @@ def convert(design, meta, out_models, out_textures):
     if loc is not None:
         assert isinstance(loc, list) and len(loc) == 3, design
         local_l = to3(np.array(loc, float)) - to3(P)
-        # 1인칭: 자바 카메라 공간 (블록 — 오른쪽 +x · 위 +y · 앞 -z), 오른손 · 휘두르기 없음
-        fx_fp = D @ (Wt + sig * (R_w @ local_l) - BEDROCK_FP_CAMERA) / 16
+        m_l = k * local_l + C0
+        # 1인칭: 자바 카메라 공간 (블록 — 오른쪽 +x · 위 +y · 앞 -z), 오른손 · 휘두르기 없음 — 자바가 그리는 순서 (손 자리 → display → -0.5 → 모델 / 16)
+        fx_fp = JAVA_FP_ARM + t_fp + R_fp @ (s_fp * (m_l / 16 - 0.5))
+        if not design.startswith(UPRIGHT):
+            # 세워 들기를 하지 않은 디자인은 베드락 화면 자리와 같아야 함
+            assert np.allclose(fx_fp, D @ (Wt + sig * (R_w @ local_l) - BEDROCK_FP_CAMERA) / 16, atol=1e-9), design
         # 3인칭: 오른팔 공간 (자바 모델 공간 블록 — 팔 축 기준, 팔 회전 전)
         fx_arm = T3J @ (rel_t + sig3 * (R_rel @ local_l)) / 16
-        # 확인: 자바가 모델을 그리는 순서 (손 자리 → display → -0.5 → 모델 좌표 / 16) 로 계산해도 같은 자리
-        m_l = k * local_l + C0
-        via_fp = JAVA_FP_ARM + t_fp + R_fp @ (s_fp * (m_l / 16 - 0.5))
+        # 확인: 자바가 모델을 그리는 순서로 계산해도 같은 자리
         via_arm = Q @ (JAVA_3P_OFFSET + t_3p + R_3p @ (s_3p * (m_l / 16 - 0.5)))
-        assert np.allclose(via_fp, fx_fp, atol=1e-9) and np.allclose(via_arm, fx_arm, atol=1e-9), design
+        assert np.allclose(via_arm, fx_arm, atol=1e-9), design
         fx = {"fp": [round(float(x), 5) for x in fx_fp], "arm": [round(float(x), 5) for x in fx_arm]}
 
     model = {
