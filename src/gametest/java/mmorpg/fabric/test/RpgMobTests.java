@@ -31,8 +31,10 @@ public final class RpgMobTests {
             h.assertTrue(Math.abs(e.getMaxHealth() - d.health()) < 1e-3, d.id() + " max hp " + e.getMaxHealth() + " != " + d.health());
             h.assertTrue(Math.abs(e.getHealth() - d.health()) < 1e-3, d.id() + " hp " + e.getHealth());
             h.assertTrue(Math.abs(e.getScale() - d.scale()) < 1e-3, d.id() + " scale " + e.getScale());
-            double w = d.width() * d.scale();
-            h.assertTrue(Math.abs(e.getBbWidth() - Math.max(0.01, d.width()) * d.scale()) < 1e-3, d.id() + " width " + e.getBbWidth() + " != " + w);
+            // 맞는 상자 (custom_hit_test) 가 있는 소품 (짚단 감옥 · 수르트 부위의 핵) 은 몸 = 맞는 상자 (RpgProp — 조준에 잡히게)
+            float[] hb = MobData.hitbox(d.id());
+            double w = (hb != null ? hb[0] : Math.max(0.01, d.width())) * d.scale();
+            h.assertTrue(Math.abs(e.getBbWidth() - w) < 1e-3, d.id() + " width " + e.getBbWidth() + " != " + w);
             h.assertTrue(e.isNoGravity() == !d.gravity(), d.id() + " gravity");
             e.discard();
         }
