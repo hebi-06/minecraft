@@ -221,7 +221,9 @@ public final class RpgMonsterGallery implements FabricClientGameTest {
         float hp1 = playerHp(server);
         check(hit && hp1 < hp0, key + ": claw hit the player (" + hp0 + " → " + hp1 + ")");
         if (key.equals("troll")) {
-            // 3인칭 (뒤): 플레이어 · 트롤 · 고리 · 참격을 한 장에
+            // 3인칭 (뒤): 플레이어 · 트롤 · 고리 · 참격을 한 장에 (첫 대에 밀려난 자리를 되돌림)
+            teleport(ctx, server, PX, FLOOR, PZ, 180F, 0F);
+            lookAt(ctx, id, 1.7);
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
             waitFor(ctx, server, 60, s -> {
                 Monsters.Fight f = fight(s, id);

@@ -817,18 +817,13 @@ public final class Monsters {
         return e instanceof RpgMonster m && m.label != null && !m.label.isRemoved() ? m.label : null;
     }
 
-    /** 이름표를 바꿈: 첫 줄은 이름 (숨김 — 사망 메시지에 첫 줄만), 전체는 머리 위 글자 표시 엔티티 */
+    /** 이름표를 바꿈: 첫 줄은 이름 (RpgMonster.getTypeName — 사망 메시지에 첫 줄만), 전체는 머리 위 글자 표시 엔티티 */
     static void setLabel(RpgMonster m, String text) {
         if (text == null || text.isEmpty()) {
             m.labelText = null;
-            m.setCustomName(null);
             dropLabel(m);
             return;
         }
-        int nl = text.indexOf('\n');
-        String first = nl < 0 ? text : text.substring(0, nl);
-        String prevFirst = m.labelText == null ? null : m.labelText.split("\n", 2)[0];
-        if (!first.equals(prevFirst) || m.getCustomName() == null) m.setCustomName(Component.literal(BedrockText.toJava(first)));
         if (m.isCustomNameVisible()) m.setCustomNameVisible(false);
         boolean same = text.equals(m.labelText);
         m.labelText = text;

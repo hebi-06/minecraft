@@ -115,12 +115,13 @@ public final class RpgMonsterTests {
         h.runAfterDelay(70, () -> {
             h.assertTrue(Monsters.fightOf(m) == null, "no fight before a hit");
             h.assertTrue(sp.getHealth() == hp0, "not attacked before a hit: " + sp.getHealth() + " / " + hp0);
-            // 이름표: 다치지 않으면 한 줄 "Lv.1 허수아비", 이름 (사망 메시지) 은 첫 줄 · 숨김, 글자 표시 엔티티가 몬스터에 탐
+            // 이름표: 다치지 않으면 한 줄 "Lv.1 허수아비", 이름 (사망 메시지) 은 첫 줄, 글자 표시 엔티티가 몬스터에 탐 (앞에 그림)
             h.assertTrue(Monsters.labelOf(m).equals("§eLv.1 §f허수아비"), "label " + Monsters.labelOf(m));
-            h.assertTrue(m.getCustomName() != null && m.getCustomName().getString().equals(BedrockText.toJava("§eLv.1 §f허수아비")) && !m.isCustomNameVisible(),
-                    "name = first line, hidden");
+            h.assertTrue(m.getDisplayName().getString().equals(BedrockText.toJava("§eLv.1 §f허수아비")) && !m.hasCustomName() && !m.isCustomNameVisible(),
+                    "name (death message) = first line " + m.getDisplayName().getString());
             Display.TextDisplay label = Monsters.labelEntity(m);
             h.assertTrue(label != null && label.getVehicle() == m && label.entityTags().contains(Monsters.LABEL_TAG), "label rides the monster");
+            h.assertTrue((label.getFlags() & Display.TextDisplay.FLAG_SEE_THROUGH) != 0, "label drawn on top (like a Bedrock name tag)");
             h.assertTrue(label.getText().getString().equals(BedrockText.toJava(Monsters.labelOf(m))), "label text " + label.getText().getString());
             fresh(sp);
             m.hurtServer(h.getLevel(), sp.damageSources().playerAttack(sp), 2F);
@@ -132,7 +133,7 @@ public final class RpgMonsterTests {
                 String want = "§eLv.1 §f허수아비\n§a" + "|".repeat(19) + "§8|";
                 h.assertTrue(want.equals(Monsters.labelOf(m)), "hurt label " + Monsters.labelOf(m));
                 h.assertTrue(label.getText().getString().equals(BedrockText.toJava(want)), "label entity updated " + label.getText().getString());
-                h.assertTrue(m.getCustomName().getString().equals(BedrockText.toJava("§eLv.1 §f허수아비")), "name stays the first line");
+                h.assertTrue(m.getDisplayName().getString().equals(BedrockText.toJava("§eLv.1 §f허수아비")), "name stays the first line " + m.getDisplayName().getString());
             });
             h.runAfterDelay(20, () -> {
                 h.assertTrue(f.hits() == 1 && "melee".equals(f.lastKind()), "melee hit " + f.hits() + " " + f.lastKind());

@@ -1,5 +1,7 @@
 package mmorpg.fabric.mob;
 
+import mmorpg.fabric.BedrockText;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Display;
@@ -15,7 +17,8 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  * <li>무리 (minecraft:type_family — rpg_monster · 키 · mob · undead) 를 엔티티 태그로 (Kit.hasFamily). 드라우그의 언데드는 자바 태그 #minecraft:undead 에도 넣음
  * (data/minecraft/tags/entity_type/undead.json — 성기사 룬 1.5배 · 강타 마법부여)</li>
- * <li>이름표 (애드온 nameTag "Lv.8 굴론\n체력 막대"): 이름 (사망 메시지) 은 첫 줄만 · 숨김, 머리 위 글은 몬스터에 태운 글자 표시 엔티티 ({@link #label}) —
+ * <li>이름표 (애드온 nameTag "Lv.8 굴론\n체력 막대"): 이름 (사망 메시지 · /kill) 은 첫 줄만 (getTypeName — 사용자 이름이 아니라서 죽을 때 서버 기록에 남지 않음),
+ * 머리 위 글은 몬스터에 태운 글자 표시 엔티티 ({@link #label}) —
  * 타고 있으니 클라이언트가 몬스터와 같이 옮겨 그림 (늦거나 앞서지 않음). 몸 위 {@link #LABEL_GAP} 칸에 앉음 (getPassengerAttachmentPoint — 서버 · 클라이언트 같은 식)</li>
  * <li>받는 피해 (combat.js 몬스터 훅 incoming): 플레이어가 준 피해는 껍질만큼 줄임 (스켈야스크림슬리 -20%, 평타 · 활 · 완드 · 스킬 · 룬 모두)</li>
  * <li>에메랄드 (행동 팩 loot_tables/entities/rpg_&lt;키&gt;.json — random_chance · set_count): 죽으면 (누가 잡든) MONSTERS.&lt;키&gt;.emerald [확률, 최소, 최대]</li>
@@ -51,10 +54,19 @@ public class RpgMonster extends BedrockMob {
         if (level() instanceof ServerLevel) Monsters.serverTick(this);
     }
 
-    /** 애드온의 nameTag (여러 줄): 첫 줄은 이름 (숨김 — 사망 메시지), 전체는 머리 위 이름표 */
+    /** 애드온의 nameTag (여러 줄): 첫 줄은 이름 (사망 메시지), 전체는 머리 위 이름표 */
     @Override
     public void setNameTag(String text) {
         Monsters.setLabel(this, text);
+    }
+
+    /** 이름 = 이름표 첫 줄 "Lv.8 굴론" (서버 — 사망 메시지에 첫 줄만, 애드온 hp.js 처럼). 클라이언트는 종류 이름 (번역) */
+    @Override
+    protected Component getTypeName() {
+        String t = labelText;
+        if (t == null || t.isEmpty()) return super.getTypeName();
+        int nl = t.indexOf('\n');
+        return Component.literal(BedrockText.toJava(nl < 0 ? t : t.substring(0, nl)));
     }
 
     /** 플레이어가 준 피해는 껍질만큼 줄여서 (combat.js 의 incoming 훅 — 무기 공식 뒤) */
