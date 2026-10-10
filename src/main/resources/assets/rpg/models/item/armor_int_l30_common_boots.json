@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rpg:item/armor/int_l30_common_boots"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "tw": 64,
+  "th": 64,
+  "parts": {
+    "head": {
+      "pivot": [
+        0,
+        0,
+        0
+      ],
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "cubes": [
+        {
+          "from": [
+            -4,
+            -8,
+            -4
+          ],
+          "size": [
+            8,
+            8,
+            8
+          ],
+          "uv": [
+            0,
+            0
+          ],
+          "inflate": 1,
+          "mirror": false
+        }
+      ],
+      "children": {}
+    }
+  },
+  "texture": "mmorpg:textures/entity/armor/ranger_1.png"
+}

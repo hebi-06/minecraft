@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 /**
  * MMO RPG (자바 에디션 · Fabric). 베드락 애드온 "MMO RPG 시스템" 의 이식 — 1단계: 스탯 · 레벨 포인트 · RPG 체력 ·
  * 무기 (요구 스탯 · 피해 공식 · 활 · 완드) · 피해 숫자, 2단계: 무기 3D 모델 · 이펙트 그림 (활 · 완드 · 참격),
- * 3단계: 초월 무기 스킬 (mmorpg.fabric.skill) · 룬 80종 (mmorpg.fabric.rune).
+ * 3단계: 초월 무기 스킬 (mmorpg.fabric.skill) · 룬 80종 (mmorpg.fabric.rune), 4단계: 갑옷 · 재료 (mmorpg.fabric.gear) …
  * 밸런스 수치와 공식은 규칙 코어 (mmorpg.core, rules.json) 를 그대로 씀.
  */
 public final class Mmorpg implements ModInitializer {
@@ -36,6 +36,7 @@ public final class Mmorpg implements ModInitializer {
         DamageNumbers.init();
         Transcend.init();
         RuneSystem.init();
+        mmorpg.fabric.gear.ArmorSystem.init();
         RpgPlayers.init();
         RpgCommands.init();
         LOG.info("MMO RPG: weapons {}, rules {}", RpgItems.WEAPONS.size(), Rules.RESOURCE);

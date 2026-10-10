@@ -29,8 +29,13 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
     private static final Obj SHIELD = Rules.get().obj("SHIELD");
     private static final Obj SKILLS = Rules.get().obj("SKILLS");
 
-    /** 찍은 스탯 · 최고 레벨 · 지금 경험치 레벨로 (1단계는 장비 보너스 · 룬 버프 없음 → 실제 = 찍은 스탯) */
+    /** 찍은 스탯 · 최고 레벨 · 지금 경험치 레벨로 (장비 보너스 · 룬 버프 없음 → 실제 = 찍은 스탯) */
     public static StatSheet of(int str, int dex, int intel, int vit, int point, int lvmax, int level) {
+        return of(str, dex, intel, vit, point, lvmax, level, Map.of(), 0);
+    }
+
+    /** 찍은 스탯 + 장비 보너스 {str, dex, int, vit} · 룬 버프 비율로 */
+    public static StatSheet of(int str, int dex, int intel, int vit, int point, int lvmax, int level, Map<String, Double> bonus, double buff) {
         Map<String, Double> b = new LinkedHashMap<>();
         b.put("str", (double) str);
         b.put("dex", (double) dex);
@@ -38,11 +43,17 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         b.put("vit", (double) vit);
         b.put("point", (double) point);
         b.put("lvmax", (double) lvmax);
-        return new StatSheet(b, Stats.effectiveStats(b, Map.of(), 0), Stats.reqLevelOf(lvmax, level));
+        return new StatSheet(b, Stats.effectiveStats(b, bonus, buff), Stats.reqLevelOf(lvmax, level));
     }
 
     public static StatSheet of(RpgData d, int level) {
         return of(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), level);
+    }
+
+    /** 서버: 이 플레이어의 지금 스탯 (장비 보너스 · 룬 버프 포함) */
+    public static StatSheet of(net.minecraft.server.level.ServerPlayer sp) {
+        RpgData d = RpgData.of(sp);
+        return of(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), sp.experienceLevel, RpgStats.bonusOf(sp), RpgStats.buffOf(sp));
     }
 
     /** 소수 둘째 자리까지 (끝의 0은 뺌) */

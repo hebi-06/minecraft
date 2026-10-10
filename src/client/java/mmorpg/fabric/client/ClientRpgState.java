@@ -37,6 +37,6 @@ public final class ClientRpgState {
         int level = mc.player == null ? 0 : mc.player.experienceLevel;
         RpgNet.SyncPayload p = last;
         if (p == null) return StatSheet.of(0, 0, 0, 0, 0, 0, level);
-        return StatSheet.of(p.str(), p.dex(), p.intel(), p.vit(), p.point(), p.lvmax(), level);
+        return StatSheet.of(p.str(), p.dex(), p.intel(), p.vit(), p.point(), p.lvmax(), level, p.bonus(), p.buff());
     }
 }

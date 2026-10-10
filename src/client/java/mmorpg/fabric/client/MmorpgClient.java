@@ -17,7 +17,7 @@ import net.minecraft.network.chat.Component;
 
 /**
  * 클라이언트: 스탯 창 키 (K), 서버가 보낸 스탯 데이터, 체력 바 HUD, 이펙트 그림 파티클, 무기 빛 알갱이, 화면 흔들림,
- * 초월 룬 하늘빛 · 화면 번쩍임 (UltFx).
+ * 초월 룬 하늘빛 · 화면 번쩍임 (UltFx), 갑옷 입은 모습 (ArmorModels).
  * HUD 는 Fabric HUD API 로 바닐라 하트 자리를 바꿈 (모드가 있는 서버의 생존 · 모험에서만 — 아니면 바닐라 그대로).
  */
 public final class MmorpgClient implements ClientModInitializer {
@@ -33,6 +33,8 @@ public final class MmorpgClient implements ClientModInitializer {
         AddonParticles.init();
         ParticleProviderRegistry.getInstance().register(RpgParticles.ADDON,
                 sprites -> (options, level, x, y, z, xd, yd, zd, random) -> AddonParticles.create(level, x, y, z, options, sprites));
+        // RPG 갑옷 120 의 입은 모습 (애드온 3D 모델 20)
+        ArmorModels.init();
         statsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.stats", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
             ClientRpgState.update(payload);

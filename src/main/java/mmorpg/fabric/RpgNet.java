@@ -23,12 +23,14 @@ public final class RpgNet {
     private RpgNet() {}
 
     /** 서버 → 클라이언트: 스탯 데이터 (open = 스탯 창 열기) */
-    public record SyncPayload(int str, int dex, int intel, int vit, int point, int lvmax, boolean open) implements CustomPacketPayload {
+    public record SyncPayload(int str, int dex, int intel, int vit, int point, int lvmax, boolean open, int bstr, int bdex, int bint, int bvit, float buff)
+            implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<SyncPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("sync"));
         public static final StreamCodec<FriendlyByteBuf, SyncPayload> CODEC = CustomPacketPayload.codec(SyncPayload::write, SyncPayload::read);
 
         private static SyncPayload read(FriendlyByteBuf buf) {
-            return new SyncPayload(buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readBoolean());
+            return new SyncPayload(buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readBoolean(),
+                    buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readVarInt(), buf.readFloat());
         }
 
         private void write(FriendlyByteBuf buf) {
@@ -39,6 +41,21 @@ public final class RpgNet {
             buf.writeVarInt(point);
             buf.writeVarInt(lvmax);
             buf.writeBoolean(open);
+            buf.writeVarInt(bstr);
+            buf.writeVarInt(bdex);
+            buf.writeVarInt(bint);
+            buf.writeVarInt(bvit);
+            buf.writeFloat(buff);
+        }
+
+        /** 장비 보너스 {str, dex, int, vit} (0 은 뺌) */
+        public java.util.Map<String, Double> bonus() {
+            java.util.Map<String, Double> m = new java.util.LinkedHashMap<>();
+            if (bstr > 0) m.put("str", (double) bstr);
+            if (bdex > 0) m.put("dex", (double) bdex);
+            if (bint > 0) m.put("int", (double) bint);
+            if (bvit > 0) m.put("vit", (double) bvit);
+            return m;
         }
 
         @Override
@@ -152,7 +169,10 @@ public final class RpgNet {
     public static void sync(ServerPlayer sp, boolean open) {
         if (!ServerPlayNetworking.canSend(sp, SyncPayload.TYPE)) return;
         RpgData d = RpgData.of(sp);
-        ServerPlayNetworking.send(sp, new SyncPayload(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), open));
+        java.util.Map<String, Double> b = RpgStats.bonusOf(sp);
+        ServerPlayNetworking.send(sp, new SyncPayload(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), open, (int) Math.round(b.getOrDefault("str", 0.0)),
+                (int) Math.round(b.getOrDefault("dex", 0.0)), (int) Math.round(b.getOrDefault("int", 0.0)), (int) Math.round(b.getOrDefault("vit", 0.0)),
+                (float) RpgStats.buffOf(sp)));
     }
 
     /** 화면 흔들림 (모드가 있는 클라이언트만 — 없으면 아무 일 없음) */
@@ -177,7 +197,7 @@ public final class RpgNet {
             sync(sp, true);
             return;
         }
-        StatSheet s = StatSheet.of(RpgData.of(sp), sp.experienceLevel);
+        StatSheet s = StatSheet.of(sp);
         sp.sendSystemMessage(Component.literal(BedrockText.toJava("§6[RPG] §e§l스탯 §r§7· 남은 포인트 §f" + s.point())));
         for (String key : Stats.STAT_KEYS) {
             MutableComponent line = Component.literal(BedrockText.toJava(" " + s.statLine(key, false) + " "));

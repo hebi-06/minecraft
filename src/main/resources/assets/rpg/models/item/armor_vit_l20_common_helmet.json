@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rpg:item/armor/vit_l20_common_helmet"
+  }
+}

@@ -111,7 +111,7 @@ public final class RpgCommands {
     private static int info(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
         ServerPlayer sp = c.getSource().getPlayerOrException();
         RpgData d = RpgData.of(sp);
-        StatSheet s = StatSheet.of(d, sp.experienceLevel);
+        StatSheet s = StatSheet.of(sp);
         Notify.say(sp, "최고 레벨 " + d.lvmax() + " · 남은 포인트 " + d.point() + " · 체력 " + Hp.hpNumber(sp.isDeadOrDying(), sp.getHealth())
                 + " / " + Js.str(Js.round(sp.getMaxHealth() * 10) / 10.0));
         for (String key : Stats.STAT_KEYS) sp.sendSystemMessage(Component.literal(BedrockText.toJava(" " + s.statLine(key, false))));
@@ -132,7 +132,7 @@ public final class RpgCommands {
             Notify.say(sp, "§c포인트가 없습니다.");
             return 0;
         }
-        StatSheet s = StatSheet.of(RpgData.of(sp), sp.experienceLevel);
+        StatSheet s = StatSheet.of(sp);
         Notify.say(sp, Stats.info(key).str("name") + " +" + n + "§7 → " + s.statLine(key, false));
         return n;
     }
@@ -173,7 +173,7 @@ public final class RpgCommands {
             return 0;
         }
         RpgPlayers.setStat(sp, key, IntegerArgumentType.getInteger(c, "value"));
-        Notify.say(sp, StatSheet.of(RpgData.of(sp), sp.experienceLevel).statLine(key, false));
+        Notify.say(sp, StatSheet.of(sp).statLine(key, false));
         return 1;
     }
 

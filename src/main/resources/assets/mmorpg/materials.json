@@ -1,0 +1,122 @@
+{
+  "rpg:star_ore": {
+    "name": "§e별철 광석§r§7 (레이드 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:enhance_stone": {
+    "name": "§b강화석§r§7 (레이드 재료)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:bright_stone": {
+    "name": "§d빛나는 강화석§r§7 (레이드 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:guard_scroll": {
+    "name": "§6수호 주문서§r§7 (레이드 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:kraken_ink": {
+    "name": "§5칠흑 먹물§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:kraken_eye": {
+    "name": "§3심해의 눈§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:worm_fang": {
+    "name": "§e파쇄의 송곳니§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:worm_heart": {
+    "name": "§6대지의 심장석§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:ygg_branch": {
+    "name": "§a세계수의 가지§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:ygg_root": {
+    "name": "§5타락한 세계수 뿌리§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:skoll_fang": {
+    "name": "§6스콜의 불꽃 송곳니§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:hati_mane": {
+    "name": "§b하티의 달빛 갈기§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:ymir_heart": {
+    "name": "§b이미르의 서리 심장§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:ymir_bone": {
+    "name": "§f태초의 거인 뼈§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:muspel_heart": {
+    "name": "§c무스펠의 불꽃 심장§r§7 (초월 보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:laevateinn_shard": {
+    "name": "§6레바테인 조각§r§7 (초월 보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:loot_scarecrow": {
+    "name": "§e낡은 짚단§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_gulon": {
+    "name": "§6굴론 털가죽§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_skeljaskrimsli": {
+    "name": "§f단단한 껍질§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_nix": {
+    "name": "§3닉스 비늘§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_draugr": {
+    "name": "§b서리 뼛조각§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_troll": {
+    "name": "§2트롤 엄니§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:rune_shard": {
+    "name": "§d룬 조각§r§7 (룬술사에게서 뽑기권으로)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:npc_tool": {
+    "name": "§b§lNPC 설정 도구§r§7 (NPC 터치 / 허공 누르기)",
+    "glint": true,
+    "stack": 1
+  }
+}

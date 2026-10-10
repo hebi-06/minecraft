@@ -1,0 +1,182 @@
+package mmorpg.fabric.gear;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import mmorpg.core.Armor;
+import mmorpg.core.Js;
+import mmorpg.core.Obj;
+import mmorpg.core.Rules;
+import mmorpg.fabric.Mmorpg;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.component.TooltipDisplay;
+
+/**
+ * 갑옷 120 (armor.js — 종류 5 × 레벨 · 등급 6 × 부위 4) · 재료 (레이드 재료 4 · 보스 재료 12 · 몬스터 전리품 6 · 룬 조각) · NPC 설정 도구 등록,
+ * 크리에이티브 탭 "RPG 장비 · 재료". 재료 이름 · 반짝임 · 쌓임은 애드온 아이템 정의 (assets/mmorpg/materials.json — tools/armor_items.py).
+ */
+public final class GearItems {
+    private GearItems() {}
+
+    private static final Rules R = Rules.get();
+    public static final ResourceKey<CreativeModeTab> TAB = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Mmorpg.id("gear"));
+    private static final List<RpgArmorItem> ARMOR = new ArrayList<>();
+    private static final Map<String, Item> BY_ID = new LinkedHashMap<>();
+    public static Item NPC_TOOL;
+
+    private static ResourceKey<Item> key(String id) {
+        return ResourceKey.create(Registries.ITEM, Mmorpg.rpg(id.substring((Mmorpg.NS + ":").length())));
+    }
+
+    private static EquipmentSlot slotOf(String slot) {
+        return switch (slot) {
+            case "Head" -> EquipmentSlot.HEAD;
+            case "Chest" -> EquipmentSlot.CHEST;
+            case "Legs" -> EquipmentSlot.LEGS;
+            default -> EquipmentSlot.FEET;
+        };
+    }
+
+    private static EquipmentSlotGroup groupOf(EquipmentSlot slot) {
+        return switch (slot) {
+            case HEAD -> EquipmentSlotGroup.HEAD;
+            case CHEST -> EquipmentSlotGroup.CHEST;
+            case LEGS -> EquipmentSlotGroup.LEGS;
+            default -> EquipmentSlotGroup.FEET;
+        };
+    }
+
+    /** 재료 이름 표 (애드온 아이템 정의) */
+    private static Map<String, JsonObject> materialTable() {
+        try (InputStream in = GearItems.class.getResourceAsStream("/assets/mmorpg/materials.json")) {
+            if (in == null) throw new IllegalStateException("materials.json missing");
+            JsonObject o = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
+            Map<String, JsonObject> out = new LinkedHashMap<>();
+            for (String k : o.keySet()) out.put(k, o.getAsJsonObject(k));
+            return out;
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** RpgItems.init 이 부름 (레지스트리가 얼기 전) */
+    public static void init() {
+        for (String type : R.strings("ARMOR_TYPE_ORDER")) {
+            Obj gradeLevels = R.obj("ARMOR_GRADE_LEVELS");
+            for (String grade : gradeLevels.keys()) {
+                for (double lv : gradeLevels.numbersOrNull(grade)) {
+                    for (String p : Armor.PIECE_ORDER) {
+                        Armor.Piece a = Armor.armorFrom(type, lv, grade, p);
+                        if (a == null) continue;
+                        ResourceKey<Item> k = key(a.id());
+                        EquipmentSlot slot = slotOf(a.slot());
+                        ItemAttributeModifiers attrs = ItemAttributeModifiers.EMPTY.withModifierAdded(Attributes.ARMOR,
+                                new AttributeModifier(Mmorpg.id("armor_" + p), a.prot(), AttributeModifier.Operation.ADD_VALUE), groupOf(slot));
+                        Item.Properties props = new Item.Properties().stacksTo(1).equippable(slot).attributes(attrs)
+                                .component(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true)).setId(k);
+                        RpgArmorItem item = Registry.register(BuiltInRegistries.ITEM, k, new RpgArmorItem(a, props));
+                        ARMOR.add(item);
+                        BY_ID.put(a.id(), item);
+                    }
+                }
+            }
+        }
+        Map<String, JsonObject> names = materialTable();
+        Obj raid = R.obj("RAID_MATERIALS");
+        for (String m : R.strings("RAID_MATERIAL_ORDER")) material(names, raid.obj(m).str("item"), () -> strings(raid.obj(m).list("lore")));
+        Obj boss = R.obj("BOSS_MATERIALS");
+        for (String m : boss.keys()) material(names, boss.obj(m).str("item"), () -> strings(boss.obj(m).list("lore")));
+        Obj drops = R.obj("MONSTER_DROPS");
+        for (String m : R.strings("MONSTER_ORDER")) {
+            if (drops.objOrNull(m) != null) material(names, drops.obj(m).str("item"), () -> dropLore(m));
+        }
+        Obj smith = R.obj("RUNE_SMITH");
+        material(names, smith.str("shardItem"), () -> strings(smith.list("shardLore")));
+        NPC_TOOL = material(names, "rpg:npc_tool", () -> List.of("§r§7NPC 를 누르면 그 NPC 설정 창", "§r§7허공을 누르면 NPC 관리 창 (운영자)"));
+        Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB, FabricCreativeModeTab.builder()
+                .title(Component.translatable("itemGroup.mmorpg.gear"))
+                .icon(() -> new ItemStack(BY_ID.getOrDefault("rpg:armor_str_l40_transcend_chest", ARMOR.isEmpty() ? NPC_TOOL : ARMOR.get(0))))
+                .displayItems((params, output) -> {
+                    for (Item it : BY_ID.values()) output.accept(it);
+                })
+                .build());
+    }
+
+    private static List<String> strings(List<Object> list) {
+        List<String> out = new ArrayList<>();
+        for (Object o : list) out.add(String.valueOf(o));
+        return out;
+    }
+
+    private static Item material(Map<String, JsonObject> names, String id, Supplier<List<String>> lore) {
+        JsonObject def = names.get(id);
+        if (def == null) throw new IllegalStateException("no material name for " + id);
+        ResourceKey<Item> k = key(id);
+        Item.Properties props = new Item.Properties().stacksTo(def.get("stack").getAsInt()).setId(k);
+        if (def.get("glint").getAsBoolean()) props.component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        Item item = Registry.register(BuiltInRegistries.ITEM, k, new MaterialItem(def.get("name").getAsString(), lore, props));
+        BY_ID.put(id, item);
+        return item;
+    }
+
+    /** 몬스터 전리품 설명 (loot.js dropLore): 몬스터 · 설명 · 상점 값 · 반복 의뢰 · 보스 무기 재료 수 */
+    static List<String> dropLore(String key) {
+        Obj d = R.obj("MONSTER_DROPS").obj(key);
+        Obj m = R.obj("MONSTERS").obj(key);
+        List<String> lines = new ArrayList<>(List.of("§r§7" + m.str("name") + " (Lv." + Js.str(m.num("level")) + ") 전리품", "§r§7" + d.str("desc"),
+                "§r§7상점: 1개 " + Js.str(d.num("price")) + " " + R.obj("CONFIG").str("CURRENCY_NAME"), "§r§7잉그리드의 반복 의뢰 재료"));
+        Map<String, Integer> uses = new HashMap<>();
+        for (Obj r : R.root().objsOrNull("BOSS_CRAFT")) {
+            List<Object> ds = r.listOrNull("drops");
+            if (ds == null) continue;
+            for (Object o : ds) {
+                if (o instanceof List<?> pair && !pair.isEmpty() && key.equals(pair.get(0))) {
+                    uses.merge(r.str("grade"), 1, Integer::sum);
+                    break;
+                }
+            }
+        }
+        List<String> parts = new ArrayList<>();
+        if (uses.getOrDefault("hero", 0) > 0) parts.add("영웅 " + uses.get("hero"));
+        if (uses.getOrDefault("transcend", 0) > 0) parts.add("초월 " + uses.get("transcend"));
+        if (!parts.isEmpty()) lines.add("§r§6보스 무기 재료: " + String.join(" · ", parts));
+        return lines;
+    }
+
+    public static List<RpgArmorItem> armor() {
+        return Collections.unmodifiableList(ARMOR);
+    }
+
+    /** 갑옷 · 재료 ID (rpg:armor_… · rpg:star_ore …) 의 아이템 (없으면 null) */
+    public static Item byId(String id) {
+        return BY_ID.get(id);
+    }
+
+    /** 이 칸의 아이템이 RPG 갑옷이면 그 부위 (아니면 null — parseArmor(typeId)) */
+    public static Armor.Piece armorOf(ItemStack stack) {
+        return stack != null && stack.getItem() instanceof RpgArmorItem a ? a.piece() : null;
+    }
+}

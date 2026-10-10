@@ -3,5 +3,6 @@
   "key.categories.mmorpg": "MMO RPG",
   "itemGroup.mmorpg.main": "MMO RPG",
   "key.category.mmorpg.main": "MMO RPG",
-  "itemGroup.mmorpg.runes": "Runes"
+  "itemGroup.mmorpg.runes": "Runes",
+  "itemGroup.mmorpg.gear": "RPG Gear"
 }
