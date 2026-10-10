@@ -8,7 +8,8 @@
     "fabric-gametest": [
       "mmorpg.fabric.test.RpgGameTests",
       "mmorpg.fabric.test.RpgSkillTests",
-      "mmorpg.fabric.test.RpgRuneTests"
+      "mmorpg.fabric.test.RpgRuneTests",
+      "mmorpg.fabric.test.RpgGearTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
@@ -16,6 +17,7 @@
       "mmorpg.fabric.test.RpgParticleGallery",
       "mmorpg.fabric.test.RpgSkillGallery",
       "mmorpg.fabric.test.RpgRuneGallery",
+      "mmorpg.fabric.test.RpgGearGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

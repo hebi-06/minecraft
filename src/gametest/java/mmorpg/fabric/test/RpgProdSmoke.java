@@ -27,6 +27,18 @@ public final class RpgProdSmoke implements FabricClientGameTest {
         return Boolean.getBoolean("mmorpg.prodSmoke");
     }
 
+    /**
+     * 이 화면 시험을 돌릴지: 환경 변수 MMORPG_ONLY (CI 수동 실행의 only 입력 — 쉼표로 client · weapon · particle · skill · rune · gear) 가
+     * 비었으면 모두, 아니면 적힌 것만
+     */
+    public static boolean only(String key) {
+        String v = System.getProperty("mmorpg.only", "");
+        if (v.isBlank()) v = System.getenv().getOrDefault("MMORPG_ONLY", "");
+        if (v.isBlank()) return true;
+        for (String s : v.split(",")) if (s.trim().equalsIgnoreCase(key)) return true;
+        return false;
+    }
+
     @Override
     public void runTest(ClientGameTestContext ctx) {
         if (!active()) return;

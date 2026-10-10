@@ -13,6 +13,10 @@ on:
         description: '게임 시험 · 화면 시험도 (끄면 컴파일만 — 작업 브랜치에서 빠르게 확인)'
         type: boolean
         default: true
+      only:
+        description: '화면 시험 중 이것만 (쉼표: client, weapon, particle, skill, rune, gear — 비우면 모두)'
+        type: string
+        default: ''
 
 permissions:
   contents: write
@@ -71,6 +75,7 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || inputs.tests
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
+          MMORPG_ONLY: ${{ inputs.only }}
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb libgl1 libgl1-mesa-dri libglx-mesa0 libegl1 mesa-vulkan-drivers libvulkan1 > /dev/null
