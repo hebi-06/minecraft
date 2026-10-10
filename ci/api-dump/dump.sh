@@ -36,4 +36,6 @@ probe net.minecraft.client.renderer.entity.LivingEntityRenderer 'submit|setupRot
 probe net.minecraft.client.renderer.entity.player.AvatarRenderer 'scale|setupRotations|extractRenderState|getArmPose'
 probe net.minecraft.client.model.geom.ModelPart 'translateAndRotate'
 probe net.minecraft.client.model.AnimationUtils 'bobArms|bobModelPart'
+probe net.minecraft.client.renderer.fog.FogRenderer 'setupFog|computeFogColor|getFogColor|extract|updateBuffer|getBuffer|setupFogData'
+probe net.minecraft.client.renderer.fog.environment.AtmosphericFogEnvironment 'setupFog|getBaseColor|isApplicable'
 ls -la "$OUT/calls"
