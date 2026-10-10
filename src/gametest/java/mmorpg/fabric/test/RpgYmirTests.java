@@ -528,7 +528,9 @@ public final class RpgYmirTests {
                                 h.assertTrue(count(p2, GearItems.byId(mats.obj(k).str("item"))) >= 2, "p2 gets " + k + " too");
                             }
                             h.assertTrue(p1.totalExperience - xp0 == (int) L.num("xp"), "xp " + (p1.totalExperience - xp0));
-                            h.assertTrue(killed.size() == 1 && KEY.equals(killed.get(0)[0]) && ((List<?>) killed.get(0)[1]).containsAll(List.of(p1, p2)), "kill hook (quests)");
+                            // 다른 시험 (허수아비 킹) 의 처치도 같은 훅으로 올 수 있어 이미르 것만 셈
+                            List<Object[]> ours = killed.stream().filter(k -> KEY.equals(k[0])).toList();
+                            h.assertTrue(ours.size() == 1 && ((List<?>) ours.get(0)[1]).containsAll(List.of(p1, p2)), "kill hook (quests) " + ours.size());
                             h.assertTrue(a.cooldownUntil > System.currentTimeMillis() + 1_190_000, "cooldown 20 min " + (a.cooldownUntil - System.currentTimeMillis()));
                             h.assertTrue(f1.lit && BossYmir.fireBlockLit(enc, f1), "every fire burns again after the fight");
                             h.assertTrue(m.fog.isEmpty() && !Bosses.hasBossFog(p1), "the fog is lifted");
