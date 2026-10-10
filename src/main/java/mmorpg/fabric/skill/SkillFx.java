@@ -15,6 +15,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -217,17 +218,37 @@ public final class SkillFx {
         for (String[] m : map) SOUND.put(m[0], m[1]);
     }
 
+    /** 이름이 크게 다른 소리는 자바 상수로 바로 (이름 짐작 없이) */
+    private static final Map<String, java.util.function.Supplier<SoundEvent>> CONST = new HashMap<>();
+
+    static {
+        CONST.put("item.enchant.lunge1", () -> SoundEvents.LUNGE_1.value());
+        CONST.put("item.enchant.lunge2", () -> SoundEvents.LUNGE_2.value());
+        CONST.put("item.enchant.lunge3", () -> SoundEvents.LUNGE_3.value());
+        CONST.put("item.spear.attack_miss", () -> SoundEvents.SPEAR_ATTACK.value());
+        CONST.put("hit.amethyst_cluster", () -> SoundEvents.AMETHYST_CLUSTER_HIT);
+        CONST.put("mob.irongolem.hit", () -> SoundEvents.IRON_GOLEM_HURT);
+        CONST.put("mob.irongolem.crack", () -> SoundEvents.IRON_GOLEM_DAMAGE);
+        CONST.put("mob.elderguardian.curse", () -> SoundEvents.ELDER_GUARDIAN_CURSE);
+        CONST.put("mob.warden.emerge", () -> SoundEvents.WARDEN_EMERGE);
+        CONST.put("mob.phantom.bite", () -> SoundEvents.PHANTOM_BITE);
+    }
+
     /** 베드락 소리 이름 → 자바 소리 (없으면 null — 한 번 로그) */
     public static SoundEvent sound(String bedrock) {
+        java.util.function.Supplier<SoundEvent> c = CONST.get(bedrock);
+        if (c != null) return c.get();
         String java = SOUND.getOrDefault(bedrock, bedrock);
         SoundEvent s = BuiltInRegistries.SOUND_EVENT.getValue(Identifier.withDefaultNamespace(java));
         if (s == null && WARNED.add(bedrock)) LOG.warn("[mmorpg] no Java sound for {} ({})", bedrock, java);
         return s;
     }
 
-    /** 대응표의 자바 소리 이름 (시험용) */
-    public static Map<String, String> soundTable() {
-        return Map.copyOf(SOUND);
+    /** 대응표의 베드락 이름 모두 (시험용 — 모두 자바 소리로 풀리는지) */
+    public static java.util.Set<String> soundNames() {
+        java.util.Set<String> all = new java.util.TreeSet<>(SOUND.keySet());
+        all.addAll(CONST.keySet());
+        return all;
     }
 
     /** 그 자리에서 소리 (fx.js play(dim, 이름, 자리, pitch, volume)) */

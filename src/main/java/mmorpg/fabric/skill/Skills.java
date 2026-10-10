@@ -6,5 +6,11 @@ final class Skills {
 
     static void registerAll() {
         Gram.register();
+        Solas.register();
+        Gungnir.register();
+        Aegis.register();
+        Artemis.register();
+        Odin.register();
+        Tyrfing.register();
     }
 }

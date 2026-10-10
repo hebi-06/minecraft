@@ -102,6 +102,7 @@ public final class Transcend {
         Kit.forget(id);
         Guards.clear(id);
         Status.forget(id);
+        Aegis.forget(id);
     }
 
     private static String key(ServerPlayer sp, Obj k) {
