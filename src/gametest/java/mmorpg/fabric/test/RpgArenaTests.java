@@ -216,9 +216,12 @@ public final class RpgArenaTests {
         String hold = loadArea(level, pos, 4);
         level.setBlock(pos.below(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
-        sp.setItemInHand(InteractionHand.MAIN_HAND, Arena.altarItem(KEY, 1));
-        h.placeAt(sp, sp.getItemInHand(InteractionHand.MAIN_HAND), h.relativePos(pos.below()), Direction.UP);
-        h.assertTrue(AltarBlocks.keyOf(level.getBlockState(pos)) != null, "altar block placed " + level.getBlockState(pos));
+        ItemStack altarItem = Arena.altarItem(KEY, 1);
+        sp.setItemInHand(InteractionHand.MAIN_HAND, altarItem);
+        // 플레이어가 돌 윗면을 누른 것처럼 (블록 누르기 이벤트 → 블록 아이템 놓기 → 놓음 처리)
+        BlockHitResult click = new BlockHitResult(Vec3.atCenterOf(pos.below()).add(0, 0.5, 0), Direction.UP, pos.below(), false);
+        InteractionResult placed = sp.gameMode.useItemOn(sp, level, altarItem, InteractionHand.MAIN_HAND, click);
+        h.assertTrue(AltarBlocks.keyOf(level.getBlockState(pos)) != null, "altar block placed " + level.getBlockState(pos) + " (" + placed + ")");
         Arena.Altar a = Arena.altarAt(NpcData.dimId(level), pos);
         h.assertTrue(a != null && a.key.equals(KEY) && !a.built, "added to the altar list " + a);
         h.runAfterDelay(3, () -> {

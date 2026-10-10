@@ -68,6 +68,14 @@ public final class ArenaBlocks {
         return state(c.block(), c.states());
     }
 
+    /** 설계의 한 칸을 그 자리에 놓음 (짓기와 같은 방식 — 이웃을 건드리지 않음). 불러오지 않은 칸이면 false */
+    public static boolean place(net.minecraft.server.level.ServerLevel level, Arena.Cell c) {
+        net.minecraft.core.BlockPos pos = new net.minecraft.core.BlockPos(c.x(), c.y(), c.z());
+        if (!level.isLoaded(pos)) return false;
+        level.setBlock(pos, state(c), ArenaBuild.FLAGS);
+        return true;
+    }
+
     /** 베드락 블록 이름 · 상태 (없으면 null) → 자바 블록 상태 (대응이 없으면 로그 한 번 + 돌) */
     public static BlockState state(String bedrock, Map<String, ?> states) {
         String key = bedrock + (states == null ? "" : states.toString());
