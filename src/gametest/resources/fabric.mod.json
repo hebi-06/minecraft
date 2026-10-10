@@ -9,7 +9,8 @@
       "mmorpg.fabric.test.RpgGameTests",
       "mmorpg.fabric.test.RpgSkillTests",
       "mmorpg.fabric.test.RpgRuneTests",
-      "mmorpg.fabric.test.RpgGearTests"
+      "mmorpg.fabric.test.RpgGearTests",
+      "mmorpg.fabric.test.RpgRuneSmithTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
