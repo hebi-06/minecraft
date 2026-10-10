@@ -123,8 +123,17 @@ public final class MenuFormScreen extends FormScreen {
         return super.mouseScrolled(mx, my, sx, sy);
     }
 
-    /** 시험용: 버튼 i 의 가운데 (화면 좌표, 스크롤 0 기준) */
+    /** 시험용: 버튼 i 의 가운데 (화면 좌표, 지금 스크롤 기준) */
     public int[] buttonCenter(int i) {
         return new int[] {left + w / 2, listTop + i * ROW - scroll + BTN_H / 2};
+    }
+
+    public FormNet.MenuPayload form() {
+        return form;
+    }
+
+    /** 시험용: 닫기 단추 가운데 */
+    public int[] closeCenter() {
+        return new int[] {closeX() + 5, closeY() + 5};
     }
 }

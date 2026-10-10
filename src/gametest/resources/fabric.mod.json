@@ -18,6 +18,7 @@
       "mmorpg.fabric.test.RpgSkillGallery",
       "mmorpg.fabric.test.RpgRuneGallery",
       "mmorpg.fabric.test.RpgGearGallery",
+      "mmorpg.fabric.test.RpgFormGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

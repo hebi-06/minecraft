@@ -162,4 +162,9 @@ public final class DialogFormScreen extends FormScreen {
     public FormNet.DialogPayload form() {
         return form;
     }
+
+    /** 시험용: 닫기 단추 가운데 */
+    public int[] closeCenter() {
+        return new int[] {closeX() + 5, closeY() + 5};
+    }
 }

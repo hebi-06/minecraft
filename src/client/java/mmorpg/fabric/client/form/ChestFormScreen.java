@@ -139,4 +139,9 @@ public final class ChestFormScreen extends FormScreen {
     public FormNet.ChestPayload form() {
         return form;
     }
+
+    /** 시험용: 닫기 단추 가운데 */
+    public int[] closeCenter() {
+        return new int[] {closeX() + 5, closeY() + 5};
+    }
 }

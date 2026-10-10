@@ -245,6 +245,27 @@ public final class ModalFormScreen extends FormScreen {
         return current();
     }
 
+    /** 시험용: i 번째 입력 칸 위젯 (글자 · 고르기 · 밀대 · 켜고 끄기 순서, 없으면 null) */
+    public AbstractWidget input(int i) {
+        int n = 0;
+        for (Row r : rows) {
+            if (r.widget() == null || r.widget() instanceof Button) continue;
+            if (n++ == i) return r.widget();
+        }
+        return null;
+    }
+
+    /** 시험용: 확인 단추 */
+    public AbstractWidget submitButton() {
+        for (Row r : rows) if (r.widget() instanceof Button b) return b;
+        return null;
+    }
+
+    /** 시험용: 닫기 단추 가운데 */
+    public int[] closeCenter() {
+        return new int[] {closeX() + 5, closeY() + 5};
+    }
+
     /** 시험용: 확인 */
     public void submit() {
         respond(0, current());
