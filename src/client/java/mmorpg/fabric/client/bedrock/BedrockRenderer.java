@@ -58,9 +58,9 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
     /** 그릴 때의 상태 */
     public static final class State extends LivingEntityRenderState {
         /** 뼈마다 더할 자세 (회전 도 · 위치 픽셀 (베드락 좌표) · 크기) */
-        public double[] rot;
-        public double[] pos;
-        public double[] scale;
+        public double[] boneRot;
+        public double[] bonePos;
+        public double[] boneScale;
         public boolean[] visible;
         public Identifier texture;
         public Identifier glow;
@@ -82,21 +82,21 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
         @Override
         public void setupAnim(State s) {
             resetPose();
-            if (s.rot == null) return;
+            if (s.boneRot == null) return;
             for (int i = 0; i < parts.length; i++) {
                 ModelPart p = parts[i];
                 PartPose b = base[i];
                 if (p == null || b == null) continue;
                 int k = i * 3;
-                p.x = b.x() + (float) s.pos[k];
-                p.y = b.y() - (float) s.pos[k + 1];
-                p.z = b.z() + (float) s.pos[k + 2];
-                p.xRot = b.xRot() + BedrockLooks.rad(s.rot[k]);
-                p.yRot = b.yRot() + BedrockLooks.rad(s.rot[k + 1]);
-                p.zRot = b.zRot() + BedrockLooks.rad(s.rot[k + 2]);
-                p.xScale = (float) s.scale[k];
-                p.yScale = (float) s.scale[k + 1];
-                p.zScale = (float) s.scale[k + 2];
+                p.x = b.x() + (float) s.bonePos[k];
+                p.y = b.y() - (float) s.bonePos[k + 1];
+                p.z = b.z() + (float) s.bonePos[k + 2];
+                p.xRot = b.xRot() + BedrockLooks.rad(s.boneRot[k]);
+                p.yRot = b.yRot() + BedrockLooks.rad(s.boneRot[k + 1]);
+                p.zRot = b.zRot() + BedrockLooks.rad(s.boneRot[k + 2]);
+                p.xScale = (float) s.boneScale[k];
+                p.yScale = (float) s.boneScale[k + 1];
+                p.zScale = (float) s.boneScale[k + 2];
                 p.visible = s.visible == null || s.visible[i];
             }
         }
@@ -144,9 +144,9 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
         }
         Animator.Pose pose = new Animator.Pose(look.geo.bones.size());
         look.animator.apply(v, playing, pose);
-        s.rot = pose.rot;
-        s.pos = pose.pos;
-        s.scale = pose.scale;
+        s.boneRot = pose.rot;
+        s.bonePos = pose.pos;
+        s.boneScale = pose.scale;
         if (look.ctl.hasVisibility()) {
             boolean[] vis = new boolean[look.geo.bones.size()];
             look.ctl.visibility(v, look.geo, vis);

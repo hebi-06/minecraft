@@ -46,6 +46,7 @@ public final class Mmorpg implements ModInitializer {
         mmorpg.fabric.gear.NpcToolItem.onUse = mmorpg.fabric.npc.Npcs::onToolUse;
         mmorpg.fabric.npc.Dummy.init();
         mmorpg.fabric.mob.RpgEntities.init(); // 몬스터 6 · 보스 10 · 소품 10 (애드온 엔티티 그대로)
+        mmorpg.fabric.boss.Arena.init(); // 보스 제단 목록 · 필드
         mmorpg.fabric.smith.Smith.init();
         mmorpg.fabric.rune.RuneSmith.init();
         mmorpg.fabric.quest.QuestSystem.init();
