@@ -57,8 +57,10 @@ import net.minecraft.world.phys.Vec3;
  * - 소환: /dummy (운영자, 눈앞 3칸에 나를 보게), 소환 알 "훈련용 허수아비 소환" (크리에이티브: RPG 장비 · 재료 탭 끝 · 생성 알 탭)
  * - 치우기: /dummy clear (주변 48칸), NPC 설정 도구를 들고 허수아비 누르기 (운영자 · 크리에이티브), /kill
  * - 5초 동안 안 맞으면 기록을 지움. 밀려나도 제자리 (anchor) 로 돌아옴
- * 자바에서 달라진 점: 머리 위 표시는 여러 줄 이름표 대신 글자 표시 엔티티 (저장하지 않고 허수아비가 다시 만듦), 제자리 돌아오기는 맞은 2틱 뒤
- * 대신 틱마다 (밀린 만큼 바로), 명령어 · 순간이동으로 8칸 넘게 옮기면 그곳을 새 제자리로. 엔티티 · 모델은 TrainingDummy · 클라이언트 DummyRenderer.
+ * - 피해 숫자는 몸통 높이에서 (머리 위에 기록이 떠 있어서 — fx.js showDamageText 의 허수아비 자리, DamageNumbers.anchor 훅)
+ * 자바에서 달라진 점: 머리 위 표시는 여러 줄 이름표 대신 글자 표시 엔티티 (저장하지 않고 허수아비가 다시 만듦), 체력은 깎지 않고 피해만 기록
+ * (TrainingDummy — 자바 체력 상한 1024 에 막히지 않게), 제자리 돌아오기는 맞은 2틱 뒤 대신 틱마다 (밀린 만큼 바로), 명령어 · 순간이동으로
+ * 8칸 넘게 옮기면 그곳을 새 제자리로, /kill 로도 치움. 엔티티 · 모델은 TrainingDummy · 클라이언트 DummyRenderer.
  */
 public final class Dummy {
     private Dummy() {}
@@ -426,10 +428,5 @@ public final class Dummy {
         int n = clearDummies(sp, 48);
         Notify.say(sp, "훈련용 허수아비 " + n + "개를 치웠습니다.");
         return n;
-    }
-
-    /** 시험용: 지금 기록 수 */
-    public static int sessionCount() {
-        return SESSIONS.size();
     }
 }
