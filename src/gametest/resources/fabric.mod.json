@@ -18,7 +18,6 @@
       "mmorpg.fabric.test.RpgMobTests",
       "mmorpg.fabric.test.RpgArenaTests",
       "mmorpg.fabric.test.RpgBossTests",
-      "mmorpg.fabric.test.RpgYmirTests",
       "mmorpg.fabric.test.RpgMonsterTests",
       "mmorpg.fabric.test.RpgTreeTests"
     ],
