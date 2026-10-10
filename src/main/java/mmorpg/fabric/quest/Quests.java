@@ -180,6 +180,12 @@ public final class Quests {
         sorted = null;
     }
 
+    /** 퀘스트 정의를 세계 속성에서 다시 읽음 (다음에 찾을 때 — 저장된 정의를 바깥에서 바꿨을 때 · 시험) */
+    public static void reload() {
+        quests = null;
+        invalidate();
+    }
+
     /** 메인 퀘스트가 먼저 (이야기 순서), 그다음 반복 의뢰 · 왕실 · 전설, 그다음 만든 퀘스트 (번호 순서) */
     public static int questOrder(Quest a, Quest b) {
         int ra = a.main ? 0 : !a.side.isEmpty() ? 1 : 2;
