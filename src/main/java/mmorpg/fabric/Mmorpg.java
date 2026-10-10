@@ -42,6 +42,7 @@ public final class Mmorpg implements ModInitializer {
         mmorpg.fabric.gear.ArmorSystem.init();
         mmorpg.fabric.shop.ShopCommands.init();
         mmorpg.fabric.npc.Npcs.init();
+        mmorpg.fabric.npc.NpcEditor.init(); // NPC · 퀘스트 설정 창 (Npcs 훅 · /npc)
         mmorpg.fabric.gear.NpcToolItem.onUse = mmorpg.fabric.npc.Npcs::onToolUse;
         mmorpg.fabric.npc.Dummy.init();
         mmorpg.fabric.smith.Smith.init();

@@ -42,6 +42,7 @@ import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.decoration.Mannequin;
@@ -57,7 +58,8 @@ import org.slf4j.LoggerFactory;
  * 상점 (무기 · 툴팁 · 구매 확인 → 사기 → 결과 문구 · 갑옷 · 부위 · 전리품 팔기 · ESC 로 닫으면 서버 흐름 끝), 상자 창 숫자 (큰 수) · 긴 본문 (휠),
  * NPC 마네킹 (이름표 · 머리 위 표시 · 화면 하단 안내 · 우클릭 → 대화 (다음 장 · 선택지) → 상점 · 닫기 단추 · 옆으로 걸을 때 고개 돌리기),
  * 긴 대화 (선택지 많음 · 휠 · 숫자 키), 버튼 목록 (많아서 휠 스크롤 · 닫기 단추),
- * 입력창 (글자 치기 · 고르기 목록 · 켜기 · 밀대 끌기 · 스크롤 → 확인 → 서버가 받은 값 · ESC 면 null).
+ * 입력창 (글자 치기 · 고르기 목록 · 켜기 · 밀대 끌기 · 스크롤 → 확인 → 서버가 받은 값 · ESC 면 null),
+ * NPC 설정 창 (설정 도구로 NPC 우클릭 → 설정 창 → 퀘스트 만들기 입력창 · ESC 면 설정 창으로).
  * 사진 이름 f_… → ci-logs 의 shots/. 확인 항목은 로그 [form-gallery] OK / FAIL (사진첩이라 시험을 실패시키지는 않음).
  */
 @SuppressWarnings("UnstableApiUsage")
@@ -92,6 +94,7 @@ public final class RpgFormGallery implements FabricClientGameTest {
             part(ctx, "dialog", () -> dialogExtras(ctx, server, conn));
             part(ctx, "menu", () -> menu(ctx, server, conn));
             part(ctx, "modal", () -> modal(ctx, server, conn));
+            part(ctx, "editor", () -> editor(ctx, server, conn));
             ctx.setScreen(() -> null);
         }
         LOG.info("[form-gallery] done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
@@ -565,6 +568,77 @@ public final class RpgFormGallery implements FabricClientGameTest {
         conn.waitForServerboundPackets();
         ctx.waitTicks(3);
         check(answers.get() == 2 && got.get() == null, "modal ESC → server got null (" + got.get() + ")");
+    }
+
+    // ------------------------------------------------------------ NPC 설정 창 (editor.js)
+
+    /**
+     * NPC 설정 도구를 들고 NPC 를 실제 우클릭 (크리에이티브) → 그 NPC 설정 창 → 퀘스트 추가 → 퀘스트 만들기 입력창 (위 · 휠로 가운데 · 아래),
+     * ESC → 입력창만 닫히고 설정 창으로 (저장 안 함), ESC → 흐름 끝
+     */
+    private void editor(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        server.runCommand("gamemode creative @a"); // 운영자가 아니어도 크리에이티브면 설정 가능
+        server.runCommand("tp @a 0.5 -60 0.5 0 0");
+        ctx.waitTicks(5);
+        Mannequin npc = server.computeOnServer(s -> {
+            ServerPlayer sp = player(s);
+            sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(GearItems.NPC_TOOL));
+            Mannequin m = NpcData.spawnAt(sp.level(), NPC_AT, new Vec3(NPC_AT.x, NPC_AT.y + 1.6, NPC_AT.z - 3));
+            NpcData.setName(m, "촌장 올라프");
+            NpcData.setGreeting(m, "어서 오게, 모험가여.||요즘 마을 밖이 흉흉하다네.|허수아비가 밭을 망치고 있어.");
+            NpcData.setShop(m, 10);
+            NpcData.refresh(m, 0);
+            return m;
+        });
+        conn.waitForClientboundEntityUpdates(EntityTypes.MANNEQUIN);
+        int id = npc.getId();
+        try {
+            ctx.waitTicks(5);
+            lookAtNpc(ctx, id);
+            ctx.waitTick();
+            ctx.getInput().pressMouse(InputConstants.MOUSE_BUTTON_RIGHT);
+            conn.waitForServerboundPackets();
+            ctx.waitTicks(3);
+            conn.waitForClientboundPackets();
+            if (!waitScreen(ctx, sc -> sc instanceof MenuFormScreen m && m.form().title().contains("NPC 설정"), "npc settings by the tool")) return;
+            away(ctx);
+            shot(ctx, "f_editor_settings");
+            hover(ctx, sc -> ((MenuFormScreen) sc).buttonCenter(3));
+            shot(ctx, "f_editor_settings_hover");
+            click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(3)); // 퀘스트 추가
+            if (!waitScreen(ctx, sc -> sc instanceof ModalFormScreen m && m.values().size() == 23, "quest editor")) return;
+            away(ctx);
+            shot(ctx, "f_editor_quest");
+            int[] steps = {-8, -40};
+            String[] names = {"f_editor_quest_middle", "f_editor_quest_bottom"};
+            for (int k = 0; k < steps.length; k++) {
+                double[] mid = ctx.computeOnClient(mc -> new double[] {mc.getWindow().getScreenWidth() / 2.0, mc.getWindow().getScreenHeight() / 2.0});
+                ctx.getInput().setCursorPos(mid[0], mid[1]);
+                ctx.getInput().scroll(steps[k]);
+                ctx.waitTicks(2);
+                away(ctx);
+                shot(ctx, names[k]);
+            }
+            ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
+            conn.waitForServerboundPackets();
+            ctx.waitTicks(3);
+            conn.waitForClientboundPackets();
+            check(waitScreen(ctx, sc -> sc instanceof MenuFormScreen m && m.form().title().contains("NPC 설정"), "settings after the quest editor"),
+                    "ESC on the quest editor → back to the npc settings window");
+            ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
+            check(waitClosed(ctx), "ESC closes the npc settings window");
+            conn.waitForServerboundPackets();
+            ctx.waitTicks(3);
+            check(!server.computeOnServer(s -> Forms.pending(player(s))), "editor flow ended on the server (Forms.pending false)");
+        } finally {
+            ctx.setScreen(() -> null);
+            server.runOnServer(s -> {
+                NpcData.forget(s, NpcData.key(npc));
+                npc.discard();
+                player(s).setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            });
+            server.runCommand("gamemode survival @a");
+        }
     }
 
     private void clickInput(ClientGameTestContext ctx, int i, double fx) {

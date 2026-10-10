@@ -13,7 +13,8 @@
       "mmorpg.fabric.test.RpgSmithTests",
       "mmorpg.fabric.test.RpgRuneSmithTests",
       "mmorpg.fabric.test.RpgQuestTests",
-      "mmorpg.fabric.test.RpgNavTests"
+      "mmorpg.fabric.test.RpgNavTests",
+      "mmorpg.fabric.test.RpgEditorTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
