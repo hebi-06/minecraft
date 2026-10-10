@@ -41,9 +41,18 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         new Vec3(0.5, -60, 7.5), new Vec3(-1.0, -60, 8.5), new Vec3(2.0, -60, 8.0), new Vec3(0.5, -60, 10.0), new Vec3(-3.5, -60, 4.5),
         new Vec3(4.0, -60, 5.0)
     };
+    /** 둘레 과녁 (둘레 안의 적에게만 써지는 스킬 — 망자의 각성: 5칸): 앞 · 양옆 · 뒤로 2.5~4칸 */
+    private static final Vec3[] RING = {
+        new Vec3(0.5, -60, 4.0), new Vec3(-2.3, -60, 3.0), new Vec3(3.3, -60, 3.0), new Vec3(-3.0, -60, 0.5), new Vec3(4.0, -60, 0.5),
+        new Vec3(0.5, -60, -3.0)
+    };
 
-    /** 스킬 하나: 무기 종류 · 스킬 번호 · 사진 찍을 틱 (쓴 뒤) · 끝까지 기다릴 틱 */
-    private record Case(String type, int index, int[] shots, int total) {}
+    /** 스킬 하나: 무기 종류 · 스킬 번호 · 사진 찍을 틱 (쓴 뒤) · 끝까지 기다릴 틱 · 둘레 과녁인지 */
+    private record Case(String type, int index, int[] shots, int total, boolean ring) {
+        Case(String type, int index, int[] shots, int total) {
+            this(type, index, shots, total, false);
+        }
+    }
 
     private static final Case[] CASES = {
         new Case("sword", 0, new int[] {2, 11, 16}, 30),
@@ -59,7 +68,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         new Case("wand", 0, new int[] {8, 22, 38}, 60),
         new Case("wand", 1, new int[] {14, 32, 52, 62}, 78),
         new Case("greatsword", 0, new int[] {6, 14, 24}, 40),
-        new Case("greatsword", 1, new int[] {12, 26, 54, 66}, 84),
+        new Case("greatsword", 1, new int[] {12, 26, 54, 66}, 84, true),
     };
 
     private final List<String> failures = new ArrayList<>();
@@ -115,7 +124,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
             Transcend.resetCooldowns(sp);
             RpgHealth.healFull(sp);
-            spawnHusks(sp.level());
+            spawnHusks(sp.level(), c.ring() ? RING : TARGETS);
         });
         ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
         ctx.waitTicks(12);
@@ -163,9 +172,9 @@ public final class RpgSkillGallery implements FabricClientGameTest {
     }
 
     /** 쓰러지지 않는 과녁 허스크 (받은 피해는 TestDummies.dealt) */
-    private static void spawnHusks(ServerLevel level) {
+    private static void spawnHusks(ServerLevel level, Vec3[] spots) {
         TestDummies.reset();
-        for (Vec3 at : TARGETS) {
+        for (Vec3 at : spots) {
             Husk h = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
             if (h == null) continue;
             TestDummies.make(h);
