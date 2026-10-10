@@ -1,0 +1,54 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+> Configure project :
+Fabric Loom: 1.18.3
+
+> Task :core:compileJava
+> Task :core:processResources
+> Task :core:classes
+> Task :core:jar
+> Task :core:assemble
+
+> Task :compileJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processClientResources
+> Task :processIncludeJars
+> Task :clientClasses
+> Task :jar
+
+> Task :compileGametestJava
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgRuneTests.java:36: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGearTests.java:47: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgSkillTests.java:42: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGameTests.java:56: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+4 warnings
+
+> Task :assemble
+> Task :processGametestResources
+> Task :gametestClasses
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/build-1791649725295.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/minecraft/minecraft/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 38s
+11 actionable tasks: 11 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.1/userguide/configuration_cache_enabling.html
