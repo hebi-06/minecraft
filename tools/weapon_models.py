@@ -13,8 +13,9 @@
 - 1인칭: 베드락 1인칭 (오른팔 회전 -95,45,115 · 위치 -13.5,-10,12 · 아이템 뼈 -7 · 카메라 (0, 27.41, 0) 에서 +z · 세로 시야 70)
   에서 무기 상자가 카메라 앞 어디에 있는지 → 자바 1인칭 (손 자리 0.56, -0.52, -0.72 · 세로 시야 70) 에 같은 자리.
   다만 칼 · 단검 · 도끼 · 창 · 마검 · 완드 (UPRIGHT) 는 손잡이 (weapon 뼈 축) 자리는 그대로 두고 날이 UPRIGHT_DIR 쪽 (거의 수직) 으로
-  서도록 돌림 (가장 작은 회전 — 날 둘레 돌림은 애드온 그대로). 애드온 자세는 날이 화면 가운데 쪽으로 약 35° 기울어 있었음 (2026-10-10 요청).
-  활 · 방패는 애드온 자세가 이미 서 있어 그대로.
+  서도록 돌림 (가장 작은 회전). 애드온 자세는 날이 화면 가운데 쪽으로 약 35° 기울어 있었음 (2026-10-10 요청).
+  날이 있는 무기 (EDGE_FORWARD — 완드 빼고) 는 세운 다음 날 축 둘레로 돌려 베는 날이 앞 (적 쪽) 을 향하게 함 (넓은 면은 옆, 같은 날 요청):
+  세운 자세에서 화면 오른쪽을 향하던 날 (모델 -z 쪽 — 외날 도끼 · 단검 모두) 을 앞으로. 활 · 방패는 애드온 자세가 이미 서 있어 그대로.
 - 3인칭: 오른팔 기준 무기 자리 (베드락 rightItem → weapon 뼈 · 무기를 든 팔 18°) → 자바 ItemInHandLayer (팔 → X -90° · Y 180° · (1, 2, -10)/16)
 좌표: 베드락 → three.js (x 반전, 오른손 좌표계) 를 모델 좌표로 쓴다. 자바 모델 상자는 -16 ~ 32 안이어야 해서 큰 무기는 줄여 넣고 display 배율로 키운다.
 """
@@ -44,6 +45,8 @@ JAVA_FP_ARM = np.array([0.56, -0.52, -0.72])
 # 1인칭에서 세워 드는 무기 (디자인 이름 앞부분) 와 날 방향 (자바 카메라 공간: 오른쪽 +x · 위 +y · 앞 -z) — 왼쪽으로 약 6° · 끝이 앞으로 약 13°
 UPRIGHT = ("sword_", "dagger_", "axe_", "spear_", "greatsword_", "staff_")
 UPRIGHT_DIR = np.array([-0.10, 0.97, -0.22]) / np.linalg.norm([-0.10, 0.97, -0.22])
+# 세운 뒤 날 축 둘레로 돌려 날이 앞을 향하게 하는 무기 (완드는 날이 없어 장식 면이 화면 쪽 그대로)
+EDGE_FORWARD = ("sword_", "dagger_", "axe_", "spear_", "greatsword_")
 # 자바 3인칭 (ItemInHandLayer): 팔 → X -90° → Y 180° → 이동 (1/16, 2/16, -10/16) (오른손)
 JAVA_3P_OFFSET = np.array([1 / 16, 2 / 16, -10 / 16])
 
@@ -175,6 +178,25 @@ def min_rot(a, b):
     return np.eye(3) + vx + vx @ vx * (1 / (1 + c))
 
 
+def axis_rot(axis, ang):
+    """axis 둘레로 ang 라디안 (오른손 규칙)"""
+    a = axis / np.linalg.norm(axis)
+    K = np.array([[0, -a[2], a[1]], [a[2], 0, -a[0]], [-a[1], a[0], 0]])
+    return np.eye(3) + math.sin(ang) * K + (1 - math.cos(ang)) * K @ K
+
+
+def edge_forward():
+    """UPRIGHT_DIR 둘레의 회전: 화면 오른쪽 (+x) 을 날 축에 수직인 면에 투영한 것 → 앞 (-z) 의 투영"""
+    d = UPRIGHT_DIR
+
+    def proj(v):
+        p = v - d * (v @ d)
+        return p / np.linalg.norm(p)
+
+    a, b = proj(np.array([1.0, 0, 0])), proj(np.array([0, 0, -1.0]))
+    return axis_rot(d, math.atan2(np.cross(a, b) @ d, a @ b))
+
+
 def split_affine(W):
     """4×4 → (회전, 균일 배율, 이동)"""
     M = W[:3, :3]
@@ -262,6 +284,10 @@ def convert(design, meta, out_models, out_textures):
     if design.startswith(UPRIGHT):
         # 세워 들기: 날 (모델 +y) 이 UPRIGHT_DIR 를 향하게, 손잡이 (J_P) 를 축으로
         R_fp = min_rot(R_fp @ np.array([0.0, 1.0, 0.0]), UPRIGHT_DIR) @ R_fp
+        if design.startswith(EDGE_FORWARD):
+            # 베는 날이 앞으로 (날 축 둘레 — 모델 -z 쪽 날이 화면 오른쪽에서 앞으로)
+            R_fp = edge_forward() @ R_fp
+            assert (R_fp @ np.array([0, 0, -1.0]))[2] < -0.9, design
     t_fp = J_P - JAVA_FP_ARM - R_fp @ (s_fp * (C0 / 16 - 0.5))
 
     # 3인칭: 오른팔 기준 무기 자리

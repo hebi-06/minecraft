@@ -22,9 +22,9 @@ public final class WeaponFxData {
             10.0F, 0.313F, 0.15F, -0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x6DFF8E});
     private static final Spec BOW_TRANSCEND_LV0 = new Spec("bow_transcend_lv0", 1.26384F, -0.33639F, -1.87979F, -0.06281F, 0.67853F, -0.01643F,
             10.0F, 0.45F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xC7E6FF});
-    private static final Spec DAGGER_HERO_LV0 = new Spec("dagger_hero_lv0", 0.68209F, -0.0368F, -1.24744F, -0.0625F, 0.33956F, -0.44864F,
+    private static final Spec DAGGER_HERO_LV0 = new Spec("dagger_hero_lv0", 0.64216F, -0.04453F, -1.26339F, -0.0625F, 0.33956F, -0.44864F,
             10.0F, 0.156F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x9B4DFF});
-    private static final Spec DAGGER_TRANSCEND_LV0 = new Spec("dagger_transcend_lv0", 0.53269F, 0.22621F, -1.25525F, -0.0625F, -0.16657F, -0.95028F,
+    private static final Spec DAGGER_TRANSCEND_LV0 = new Spec("dagger_transcend_lv0", 0.66247F, 0.25135F, -1.20341F, -0.0625F, -0.16657F, -0.95028F,
             10.0F, 0.375F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x8A4DD6});
     private static final Spec GREATSWORD_TRANSCEND_LV0 = new Spec("greatsword_transcend_lv0", 0.72059F, 0.39957F, -1.60626F, -0.0625F, -0.1875F, -1.29904F,
             10.0F, 0.42F, 0.15F, 0.7F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.4F, 0.6F}, new int[] {0x87CCFF, 0x9E5CE6, 0xF5948C});
