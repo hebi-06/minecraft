@@ -122,8 +122,8 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         ctx.takeScreenshot(TestScreenshotOptions.of(name).withSize(960, 540));
     }
 
-    /** 창 사진: 창은 화면 크기에 맞춰 놓이므로 줄이지 않고 화면 그대로 */
-    private static void formShot(ClientGameTestContext ctx, TestSingleplayerContext world, String name, int chunkWait) {
+    /** 창 · 큰 글자 사진: 화면 크기에 맞춰 놓이므로 줄이지 않고 화면 그대로 */
+    private static void fullShot(ClientGameTestContext ctx, TestSingleplayerContext world, String name, int chunkWait) {
         waitChunks(ctx, world, name, chunkWait);
         ctx.takeScreenshot(name);
     }
@@ -174,7 +174,7 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         String body = server.computeOnServer(s -> Forms.pending(player(s)) ? "pending" : "none");
         check("pending".equals(body), "server waits for the answer");
         ctx.waitTicks(10);
-        formShot(ctx, world, "t_ask", 60);
+        fullShot(ctx, world, "t_ask", 60);
         server.runOnServer(s -> Forms.answer(player(s), 0, null));
         // 자라는 중: 단계 앞에서 멈춤 → 사진
         String[] names = {"t_grow1_roots", "t_grow2_trunk", "t_grow3_branches", "t_grow4_leaves"};
@@ -188,7 +188,11 @@ public final class RpgTreeGallery implements FabricClientGameTest {
             }
             check(held, "growing: held before stage " + stage + " (" + plan.stages.get(stage).kind() + ")");
             if (!held) return;
-            if (k == 0) ctx.waitTicks(60); // 시작 큰 글자가 걷힌 뒤
+            if (k == 0) {
+                // 뿌리가 막 자란 순간 (심은 자리를 보던 그대로): 시작 큰 글자 · 흙먼지 · 빛 고리
+                fullShot(ctx, world, "t_grow0_start", 0);
+                ctx.waitTicks(60); // 시작 큰 글자가 걷힌 뒤
+            }
             double[] c = cams[k];
             lookRel(ctx, server, c[0], c[1], c[2], c[3], c[4], c[5]);
             shot(ctx, world, names[k], k == 0 ? 120 : 60);
@@ -227,7 +231,7 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         });
         check(client.startsWith("ok"), "client sees the tree (" + client + ")");
         // 다 자란 순간: 큰 글자 · 빛 고리 · 토템 빛 (같은 자리에서 — 청크는 이미 그려짐)
-        shot(ctx, world, "t_done", 10);
+        fullShot(ctx, world, "t_done", 10);
         ctx.waitTicks(80); // 끝 큰 글자가 걷힌 뒤
         lookRel(ctx, server, 48, 16, 40, 0, 30, 0);
         shot(ctx, world, "t_full", 60);
@@ -239,9 +243,20 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         // 잎 아래: 발광 열매 덩굴 · 포자 꽃 · 버섯불
         lookRel(ctx, server, 13, 12, 9, -4, 34, -3);
         shot(ctx, world, "t_under", 60);
+        // 뿌리 사이 반딧불이 덤불 · 꽃 핀 진달래 (뿌리 사이 틈 바깥에서)
+        TreePlan.Op fire = null;
+        TreePlan.Op azalea = null;
+        for (TreePlan.Op o : plan.stages.get(plan.stages.size() - 1).ops()) {
+            if (o.block().equals(TreePlan.FIREFLY) && fire == null) fire = o;
+            if (o.block().equals(TreePlan.AZALEA) && azalea == null) azalea = o;
+        }
+        check(fire != null && azalea != null, "firefly bushes and flowering azaleas in the plan");
+        if (fire != null) bushShot(ctx, server, world, fire, "t_firefly");
+        if (azalea != null) bushShot(ctx, server, world, azalea, "t_azalea");
         // 밤
         server.runCommand("time set 18000");
         ctx.waitTicks(20);
+        if (fire != null) bushShot(ctx, server, world, fire, "t_firefly_night");
         lookRel(ctx, server, 40, 12, 34, 0, 28, 0);
         shot(ctx, world, "t_night", 60);
         lookRel(ctx, server, 13, 12, 9, -4, 34, -3);
@@ -257,7 +272,7 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         check(askedUndo, "undo window on the client");
         if (!askedUndo) return;
         lookRel(ctx, server, 48, 16, 40, 0, 30, 0);
-        formShot(ctx, world, "t_undo_ask", 40);
+        fullShot(ctx, world, "t_undo_ask", 40);
         server.runOnServer(s -> Forms.answer(player(s), 0, null));
         boolean undone = false;
         for (int t = 0; t < 2400 && !undone; t += 5) {
@@ -298,6 +313,15 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         check(clientBack.equals("ok"), "client: no tree blocks left above ground (" + clientBack + ")");
         lookRel(ctx, server, 48, 16, 40, 0, 30, 0);
         shot(ctx, world, "t_undone", 200);
+    }
+
+    /** 덤불 하나를 뿌리 사이 틈 바깥 (밑동에서 덤불 쪽으로 6칸 더) 에서 봄 */
+    private static void bushShot(ClientGameTestContext ctx, TestServerContext server, TestSingleplayerContext world, TreePlan.Op o, String name) {
+        double len = Math.max(1, Math.hypot(o.dx(), o.dz()));
+        double ux = o.dx() / len;
+        double uz = o.dz() / len;
+        lookRel(ctx, server, o.dx() + ux * 6, 1.6, o.dz() + uz * 6, o.dx(), 0.4, o.dz());
+        shot(ctx, world, name, 40);
     }
 
     /** 나무 자리의 지금 블록 (설계 칸, 깔개 · 덤불은 그 둘레 기둥) */

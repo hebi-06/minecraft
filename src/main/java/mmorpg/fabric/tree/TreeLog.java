@@ -91,6 +91,8 @@ public final class TreeLog {
     /** 블록 → 팔레트 번호 (1 = 공기) */
     public int codeOf(BlockState b) {
         if (b == null || b.isAir()) return 1;
+        Integer known = byState.get(b);
+        if (known != null) return known;
         List<Object> e = TreeBlocks.entryOf(b);
         String k = Json.stringify(e);
         Integer c = pidx.get(k);
@@ -99,8 +101,12 @@ public final class TreeLog {
             c = palette.size();
             pidx.put(k, c);
         }
+        byState.put(b, c);
         return c;
     }
+
+    /** 블록 상태 → 팔레트 번호 (같은 상태를 다시 글로 바꾸지 않게) */
+    private final Map<BlockState, Integer> byState = new HashMap<>();
 
     /** 팔레트 번호 → 블록 상태 (알 수 없는 블록이면 null) */
     public BlockState stateOf(int code) {
