@@ -267,8 +267,9 @@ public final class Npcs {
     }
 
     /**
-     * 틱마다: RPG NPC 는 6칸 안의 가장 가까운 사람을 바라봄 (없으면 몸 방향으로). 남은 각도의 절반씩 (한 틱에 30° 까지) — 옆을 걸어 지나가는
-     * 사람을 늦지 않게 따라감 (화면 시험: 2틱마다 35% 로는 걷는 사람보다 30° 가량 늦었음)
+     * 틱마다: RPG NPC 는 6칸 안의 가장 가까운 사람을 바라봄 (없으면 몸 방향으로). 남은 각도의 절반씩 (한 틱에 30° 까지), 움직이는 사람은
+     * 3틱 앞 자리를 봄 (움직임 → 서버 → 머리 패킷 → 클라이언트 보간으로 늦는 만큼) — 옆을 걸어 지나가는 사람을 늦지 않게 따라감
+     * (화면 시험: 2틱마다 35% 로는 걷는 사람보다 32° · 틱마다 50% 만으로는 22° 늦었음)
      */
     private static void lookTick(MinecraftServer server) {
         Set<UUID> done = new HashSet<>();
@@ -290,7 +291,12 @@ public final class Npcs {
                 float wantYaw = body;
                 float wantPitch = 0;
                 if (near != null) {
-                    float[] r = Kit.lookRotation(npc.getEyePosition(), near.getEyePosition());
+                    // 클라이언트가 알려 준 한 틱 움직임 (순간이동 같은 큰 값은 0.5칸으로 줄임) × 3틱
+                    Vec3 move = near.getKnownMovement();
+                    double mh = Math.hypot(move.x, move.z);
+                    double k = mh > 0.5 ? 0.5 / mh : 1;
+                    Vec3 at = near.getEyePosition().add(move.x * k * 3, 0, move.z * k * 3);
+                    float[] r = Kit.lookRotation(npc.getEyePosition(), at);
                     // 몸 방향에서 75° 넘게는 돌리지 않음 (사람 고개처럼)
                     float diff = wrap(r[0] - body);
                     wantYaw = body + Math.max(-75, Math.min(75, diff));

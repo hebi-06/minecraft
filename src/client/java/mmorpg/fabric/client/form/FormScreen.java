@@ -100,8 +100,8 @@ public abstract class FormScreen extends Screen {
     }
 
     /**
-     * 가운데 금테 창 (버튼 목록 · 입력창): dialog_bg 의 안쪽은 91% 불투명이라 뒤의 HUD 글자가 비쳐 보이므로 같은 색을 먼저 깔아 불투명하게
-     * (대화창은 세상이 살짝 비쳐 보이는 애드온 모양 그대로)
+     * 금테 상자 (대화창 · 버튼 목록 · 입력창): dialog_bg 의 안쪽은 91% 불투명이라 뒤의 HUD · 채팅 글자가 비쳐 겹쳐 보이므로 같은 색을 먼저 깔아
+     * 불투명하게 (세상이 9% 비치던 것은 눈에 띄지 않음)
      */
     static void panel(GuiGraphicsExtractor g, int x, int y, int w, int h) {
         g.fill(x + 3, y + 3, x + w - 3, y + h - 3, 0xFF131522);

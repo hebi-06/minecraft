@@ -97,8 +97,8 @@ public final class DialogFormScreen extends FormScreen {
             g.text(font, clip(font, name, plateW - 10), plateX + (plateW - Math.min(font.width(name), plateW - 10)) / 2, plateY + 5, 0xFFFFD659, true);
         }
         closeButton(g, closeX(), closeY(), in(mx, my, closeX(), closeY(), 11, 11));
-        // 상자 · 대사
-        sprite(g, "dialog_bg", left, boxTop, w, boxH);
+        // 상자 (불투명 — 뒤의 채팅 글자가 비쳐 대사와 겹쳐 보이지 않게) · 대사
+        panel(g, left, boxTop, w, boxH);
         int ty = boxTop + 9;
         boolean textScrolls = text.size() > textLines;
         if (textScrolls) g.enableScissor(left + 4, ty, left + w - 4, ty + textLines * LINE);

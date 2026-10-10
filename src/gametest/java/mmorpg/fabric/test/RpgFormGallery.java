@@ -337,8 +337,8 @@ public final class RpgFormGallery implements FabricClientGameTest {
             if (t == 16) shot(ctx, "f_npc_head_walk");
         }
         ctx.getInput().releaseKey(o -> o.keyLeft);
-        // 서버가 돌린 머리 → 패킷 → 클라이언트 보간 (3틱) 이라 걷는 동안 20° 가량은 늦음 (예전 2틱마다 35%: 32°)
-        check(worst < 25, "head follows while walking (worst lag " + worst + "°)");
+        // 서버가 돌린 머리 → 패킷 → 클라이언트 보간이라 앞을 보지 않으면 걷는 동안 20° 넘게 늦음 (예전 2틱마다 35%: 32°, 틱마다 50%: 22°)
+        check(worst < 15, "head follows while walking (worst lag " + worst + "°)");
         lookAtNpc(ctx, id);
         ctx.waitTicks(20);
         float[] h1 = head(ctx, id);
@@ -377,9 +377,11 @@ public final class RpgFormGallery implements FabricClientGameTest {
         });
     }
 
-    /** 긴 대사 · 긴 이름 · 선택지 9개 (휠) · 숫자 키로 고르기 */
+    /** 긴 대사 · 긴 이름 · 선택지 9개 (휠) · 숫자 키로 고르기, 채팅이 보이는 채로 (대화 상자 뒤로 비치지 않는지) */
     private void dialogExtras(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         AtomicInteger picked = new AtomicInteger(-99);
+        ctx.runOnClient(mc -> mc.options.chatVisibility().set(ChatVisiblity.FULL));
+        for (int i = 1; i <= 6; i++) server.runCommand("tellraw @a \"채팅 " + i + ": 대화 상자 뒤로 채팅 글자가 비쳐 보이는지 확인하는 줄\"");
         server.runOnServer(s -> {
             DialogForm d = new DialogForm("§e여관 주인 잉그리드 §7(마을 광장)", "오늘도 일거리가 산더미예요. 몬스터 전리품을 가져다주면 에메랄드와 경험치를 넉넉히 드릴게요.\n"
                     + "§7(반복 의뢰는 하루에 세 번까지 받을 수 있습니다. 아주 긴 대사는 상자 폭에 맞춰 줄이 바뀝니다.)");
@@ -396,7 +398,9 @@ public final class RpgFormGallery implements FabricClientGameTest {
         });
         if (!waitDialog(ctx, d -> d.choices().size() == 9, "long dialog")) return;
         away(ctx);
-        shot(ctx, "f_dialog_long");
+        shot(ctx, "f_dialog_long_chat");
+        ctx.runOnClient(mc -> mc.options.chatVisibility().set(ChatVisiblity.HIDDEN));
+        ctx.waitTick();
         hover(ctx, dialogChoice(0));
         ctx.getInput().scroll(-10);
         ctx.waitTicks(2);
