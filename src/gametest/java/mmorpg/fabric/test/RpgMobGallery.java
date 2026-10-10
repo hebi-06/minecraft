@@ -136,7 +136,8 @@ public final class RpgMobGallery implements FabricClientGameTest {
         String r = ctx.computeOnClient(mc -> {
             Entity e = mc.level == null ? null : mc.level.getEntity(id);
             if (e == null) return "no entity";
-            return mc.getEntityRenderDispatcher().getRenderer(e) instanceof BedrockRenderer ? "ok" : "renderer " + mc.getEntityRenderDispatcher().getRenderer(e);
+            Object r0 = mc.getEntityRenderDispatcher().getRenderer(e);
+            return r0 instanceof BedrockRenderer ? "ok" : "renderer " + r0;
         });
         if (!"ok".equals(r)) failures.add(label + ": " + r);
         else LOG.info("[mob-gallery] OK   {} renderer", label);
