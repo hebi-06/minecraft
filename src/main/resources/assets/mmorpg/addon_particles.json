@@ -1,0 +1,6057 @@
+{
+ "source": "MMO RPG 애드온 RPG_RP/particles (tools/addon_particles.py 가 만듦, 손으로 고치지 않음)",
+ "builtin": [
+  "particle_age",
+  "particle_lifetime",
+  "particle_random_1",
+  "particle_random_2",
+  "particle_random_3",
+  "particle_random_4",
+  "emitter_age",
+  "emitter_lifetime",
+  "emitter_random_1",
+  "emitter_random_2",
+  "emitter_random_3",
+  "emitter_random_4"
+ ],
+ "vars": [
+  "cell",
+  "close",
+  "color.a",
+  "color.b",
+  "color.g",
+  "color.r",
+  "delay",
+  "dir.x",
+  "dir.y",
+  "dir.z",
+  "fade",
+  "fold",
+  "fps",
+  "frame",
+  "frames",
+  "grav",
+  "grow",
+  "kind",
+  "life",
+  "loop",
+  "move.x",
+  "move.y",
+  "move.z",
+  "phase",
+  "progress",
+  "rate",
+  "reach",
+  "rise",
+  "seg",
+  "sink",
+  "size",
+  "speed",
+  "spin",
+  "spin_rate",
+  "thick",
+  "vel.x",
+  "vel.y",
+  "vel.z",
+  "wax"
+ ],
+ "particles": {
+  "rpg:aegis_hex": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/aegis_hex",
+   "uv": {
+    "static": [
+     "variable.frame * 64",
+     0
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "tw": 128.0,
+    "th": 64.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "motion": {
+    "parametric": [
+     "variable.dir.x * variable.reach * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1) * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1)",
+     "variable.dir.y * variable.reach * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1) * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1)",
+     "variable.dir.z * variable.reach * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1) * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1)"
+    ]
+   },
+   "size": [
+    "variable.size * (1 - 0.7 * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1))",
+    "variable.size * (1 - 0.7 * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1))"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "math.min(1, variable.color.a * math.clamp(variable.particle_age / 0.15, 0, 1) * (1 + 0.8 * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1)))"
+   ]
+  },
+  "rpg:aegis_shield": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/aegis_shield",
+   "uv": {
+    "static": [
+     "math.mod((variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 12 + variable.spin), 4) : (variable.progress < 2 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : 8 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3))), 4) * 256",
+     "math.floor((variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 12 + variable.spin), 4) : (variable.progress < 2 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : 8 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3))) / 4) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 1024.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:aegis_stone": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/aegis_stone",
+   "uv": {
+    "static": [
+     "variable.kind * 32",
+     0
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "tw": 128.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.rate"
+   ],
+   "motion": {
+    "accel": [
+     0,
+     "-variable.grav",
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.75) / 0.25, 0, 1))"
+   ]
+  },
+  "rpg:arrow_shot": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/arrow_streak",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     64,
+     16
+    ],
+    "tw": 64.0,
+    "th": 16.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size",
+    "variable.thick"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime))"
+   ]
+  },
+  "rpg:arrow_spark": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/arrow_spark",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     16,
+     16
+    ],
+    "tw": 16.0,
+    "th": 16.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size * (1 + (variable.grow - 1) * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * (1 + (variable.grow - 1) * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - (variable.particle_age / variable.particle_lifetime))"
+   ]
+  },
+  "rpg:arrow_trail": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/arrow_trail",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     32,
+     16
+    ],
+    "tw": 32.0,
+    "th": 16.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size",
+    "variable.thick * (1 - 0.6 * math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.particle_age < variable.delay ? 0 : variable.color.a * (1 - math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1))"
+   ]
+  },
+  "rpg:artemis_arrow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/artemis_arrow",
+   "uv": {
+    "static": [
+     0,
+     "(variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 12), 4) : (variable.progress > 1 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : math.clamp(math.floor(variable.progress * 8), 0, 7))) * 96"
+    ],
+    "size": [
+     384,
+     96
+    ],
+    "tw": 384.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size * 1.1098",
+    "variable.size * 0.2775"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:artemis_bow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/artemis_bow",
+   "uv": {
+    "static": [
+     "math.mod(((variable.particle_age - (variable.particle_lifetime - variable.fade)) > 0 ? 4 + math.clamp(math.floor((variable.particle_age - (variable.particle_lifetime - variable.fade)) / math.max(0.01, variable.fade) * 4), 0, 3) : math.mod(math.floor(variable.particle_age * 10 + variable.spin), 4)), 4) * 320",
+     "math.floor(((variable.particle_age - (variable.particle_lifetime - variable.fade)) > 0 ? 4 + math.clamp(math.floor((variable.particle_age - (variable.particle_lifetime - variable.fade)) / math.max(0.01, variable.fade) * 4), 0, 3) : math.mod(math.floor(variable.particle_age * 10 + variable.spin), 4)) / 4) * 320"
+    ],
+    "size": [
+     320,
+     320
+    ],
+    "tw": 1280.0,
+    "th": 640.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.25, 0, 1)"
+   ]
+  },
+  "rpg:artemis_crescent": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/artemis_crescent",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.speed"
+   ],
+   "size": [
+    "variable.size * (1 + variable.grow * math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1))",
+    "variable.size * (1 + variable.grow * math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.particle_age < variable.delay ? 0 : variable.color.a * (1 - math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1) * math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1))"
+   ]
+  },
+  "rpg:artemis_moon": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/artemis_moon",
+   "uv": {
+    "static": [
+     "math.mod(((variable.particle_age - (variable.particle_lifetime - variable.fade)) > 0 ? 8 + math.clamp(math.floor((variable.particle_age - (variable.particle_lifetime - variable.fade)) / math.max(0.01, variable.fade) * 4), 0, 3) : (variable.particle_age < variable.wax ? math.clamp(math.floor(variable.particle_age / math.max(0.01, variable.wax) * 4), 0, 3) : 4 + math.mod(math.floor(variable.particle_age * 6), 4))), 4) * 256",
+     "math.floor(((variable.particle_age - (variable.particle_lifetime - variable.fade)) > 0 ? 8 + math.clamp(math.floor((variable.particle_age - (variable.particle_lifetime - variable.fade)) / math.max(0.01, variable.fade) * 4), 0, 3) : (variable.particle_age < variable.wax ? math.clamp(math.floor(variable.particle_age / math.max(0.01, variable.wax) * 4), 0, 3) : 4 + math.mod(math.floor(variable.particle_age * 6), 4))) / 4) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 1024.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.2, 0, 1)"
+   ]
+  },
+  "rpg:axe_hero_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.188,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     1.6,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    1,
+    0.541,
+    0.165,
+    1
+   ]
+  },
+  "rpg:bash_burst": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/bash_burst",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 8.0
+   },
+   "size": [
+    "variable.size * (1 + 0.5 * (variable.particle_age / variable.particle_lifetime)) * 1.0",
+    "variable.size * (1 + 0.5 * (variable.particle_age / variable.particle_lifetime)) * 1.0"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime))"
+   ]
+  },
+  "rpg:bash_ring": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/shock_ring",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 8.0
+   },
+   "size": [
+    "variable.size * (1 + 1.4 * (variable.particle_age / variable.particle_lifetime)) * 1.0",
+    "variable.size * (1 + 1.4 * (variable.particle_age / variable.particle_lifetime)) * 1.0"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime))"
+   ]
+  },
+  "rpg:boulder": {
+   "material": "alpha",
+   "sprite": "mmorpg:addon/rpg/boss/boulder",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "tw": 32.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    540
+   ],
+   "motion": {
+    "accel": [
+     0,
+     -20,
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:bow_hero_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.313,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     -0.8,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    0.427,
+    1,
+    0.557,
+    1
+   ]
+  },
+  "rpg:bow_transcend_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.45,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.8,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    0.78,
+    0.9,
+    1.0,
+    1
+   ]
+  },
+  "rpg:breath": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/dust",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      32,
+      32
+     ],
+     "step": [
+      32,
+      0
+     ],
+     "fps": 0,
+     "max": 4,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    90
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 1.1
+   },
+   "size": [
+    "variable.size * (0.45 + 1.15 * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * (0.45 + 1.15 * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.08, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.5) / 0.5, 0, 1))"
+   ]
+  },
+  "rpg:crow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/crow",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      16,
+      16
+     ],
+     "step": [
+      16,
+      0
+     ],
+     "fps": 12,
+     "max": 2,
+     "stretch": false,
+     "loop": true
+    },
+    "tw": 32.0,
+    "th": 16.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.particle_age < variable.delay ? 0 : variable.color.a"
+   ]
+  },
+  "rpg:dagger_hero_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.156,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.4,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    0.608,
+    0.302,
+    1,
+    1
+   ]
+  },
+  "rpg:dagger_transcend_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.375,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.4,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    0.541,
+    0.302,
+    0.839,
+    1
+   ]
+  },
+  "rpg:drop": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/dust",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "tw": 128.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     -30,
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:dust": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/dust",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      32,
+      32
+     ],
+     "step": [
+      32,
+      0
+     ],
+     "fps": 0,
+     "max": 4,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    30
+   ],
+   "size": [
+    "variable.size * (0.55 + 0.6 * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * (0.55 + 0.6 * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.35) / 0.65, 0, 1))"
+   ]
+  },
+  "rpg:ember": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/ember",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     16,
+     16
+    ],
+    "tw": 16.0,
+    "th": 16.0
+   },
+   "rate": {
+    "steady": "10 + variable.size * 4",
+    "max": 90
+   },
+   "active": "variable.life",
+   "shape": {
+    "type": "box",
+    "half": [
+     "variable.size * 0.5",
+     0.5,
+     "variable.size * 0.5"
+    ],
+    "surface": false,
+    "dir": [
+     "math.random(-0.35, 0.35)",
+     1,
+     "math.random(-0.35, 0.35)"
+    ]
+   },
+   "life": "1 + math.random(0, 0.6)",
+   "speed": "variable.speed * (0.6 + math.random(0, 0.6))",
+   "motion": {
+    "accel": [
+     0,
+     0.6,
+     0
+    ],
+    "drag": 0.9
+   },
+   "size": [
+    "(0.05 + variable.particle_random_1 * 0.05) * (1 + variable.size * 0.12)",
+    "(0.05 + variable.particle_random_1 * 0.05) * (1 + variable.size * 0.12)"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g * (1 - 0.5 * (variable.particle_age / variable.particle_lifetime))",
+    "variable.color.b * (1 - 0.7 * (variable.particle_age / variable.particle_lifetime))",
+    "variable.color.a * (0.65 + 0.35 * math.sin(variable.particle_age * 900 + variable.particle_random_2 * 360)) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.6) / 0.4, 0, 1))"
+   ]
+  },
+  "rpg:fire_wall": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/flame",
+   "uv": {
+    "flipbook": {
+     "base": [
+      "math.floor(variable.particle_random_1 * 3.99) * 32",
+      0
+     ],
+     "size": [
+      32,
+      64
+     ],
+     "step": [
+      32,
+      0
+     ],
+     "fps": 12,
+     "max": 4,
+     "stretch": false,
+     "loop": true
+    },
+    "tw": 256.0,
+    "th": 64.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "offset": [
+     0,
+     "variable.size * 0.45",
+     0
+    ],
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size * 0.25 * (0.7 + 0.3 * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.15, 0, 1))",
+    "variable.size * 0.5 * (0.7 + 0.3 * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.15, 0, 1))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "0.6 + 0.4 * variable.color.r",
+    "0.6 + 0.4 * variable.color.g",
+    "0.6 + 0.4 * variable.color.b",
+    "variable.color.a * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.1, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.6) / 0.4, 0, 1))"
+   ]
+  },
+  "rpg:fire_wave": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/flame",
+   "uv": {
+    "flipbook": {
+     "base": [
+      "math.floor(variable.particle_random_1 * 3.99) * 32",
+      0
+     ],
+     "size": [
+      32,
+      64
+     ],
+     "step": [
+      32,
+      0
+     ],
+     "fps": 12,
+     "max": 4,
+     "stretch": false,
+     "loop": true
+    },
+    "tw": 256.0,
+    "th": 64.0
+   },
+   "rate": {
+    "steady": "80 + variable.speed * 6",
+    "max": 400
+   },
+   "active": "variable.life",
+   "shape": {
+    "type": "disc",
+    "offset": [
+     0,
+     "variable.size * 0.45",
+     0
+    ],
+    "radius": "math.max(0.5, variable.speed * variable.emitter_age)",
+    "normal": [
+     0,
+     1,
+     0
+    ],
+    "surface": true,
+    "dir": "outwards"
+   },
+   "life": 0.35,
+   "speed": 0,
+   "size": [
+    "variable.size * 0.25 * (0.75 + 0.25 * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.2, 0, 1))",
+    "variable.size * 0.5 * (0.75 + 0.25 * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.2, 0, 1))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "0.6 + 0.4 * variable.color.r",
+    "0.6 + 0.4 * variable.color.g",
+    "0.6 + 0.4 * variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.5) / 0.5, 0, 1))"
+   ]
+  },
+  "rpg:fire_wing": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/fire_wing",
+   "uv": {
+    "static": [
+     0,
+     "math.clamp(math.floor(variable.progress * 8), 0, 7) * 128"
+    ],
+    "size": [
+     192,
+     128
+    ],
+    "tw": 192.0,
+    "th": 1024.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size",
+    "variable.size * 0.6667"
+   ],
+   "facing": "direction_z",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.65) / 0.35, 0, 1))"
+   ]
+  },
+  "rpg:glob": {
+   "material": "alpha",
+   "sprite": "mmorpg:addon/rpg/boss/glob",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "tw": 32.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    120
+   ],
+   "motion": {
+    "accel": [
+     0,
+     -20,
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:greatsword_transcend_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.42,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.7,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    "variable.particle_random_1 < 0.4 ? 0.53 : (variable.particle_random_1 < 0.6 ? 0.62 : 0.96)",
+    "variable.particle_random_1 < 0.4 ? 0.8 : (variable.particle_random_1 < 0.6 ? 0.36 : 0.58)",
+    "variable.particle_random_1 < 0.4 ? 1.0 : (variable.particle_random_1 < 0.6 ? 0.9 : 0.55)",
+    1
+   ]
+  },
+  "rpg:ground_crack": {
+   "material": "alpha",
+   "sprite": "mmorpg:addon/rpg/boss/ground_crack",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "size": [
+    "variable.size * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.3, 0.25, 1)",
+    "variable.size * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.3, 0.25, 1)"
+   ],
+   "facing": "emitter_transform_xz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.8) / 0.2, 0, 1))"
+   ]
+  },
+  "rpg:gungnir_spear": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/gungnir_spear",
+   "uv": {
+    "static": [
+     0,
+     "(variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 15), 4) : (variable.progress > 1 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : math.clamp(math.floor(variable.progress * 8), 0, 7))) * 96"
+    ],
+    "size": [
+     512,
+     96
+    ],
+    "tw": 512.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size * 1.0917",
+    "variable.size * 0.2047"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:gungnir_spear_part": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/gungnir_spear",
+   "uv": {
+    "static": [
+     "variable.seg * 128",
+     "(variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 15), 4) : (variable.progress > 1 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : math.clamp(math.floor(variable.progress * 8), 0, 7))) * 96"
+    ],
+    "size": [
+     128,
+     96
+    ],
+    "tw": 512.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size * 0.2729",
+    "variable.size * 0.2047"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:gungnir_spin": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/gungnir_spear",
+   "uv": {
+    "static": [
+     0,
+     "(variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 15), 4) : (variable.progress > 1 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : math.clamp(math.floor(variable.progress * 8), 0, 7))) * 96"
+    ],
+    "size": [
+     512,
+     96
+    ],
+    "tw": 512.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.speed"
+   ],
+   "size": [
+    "variable.size * 1.0917",
+    "variable.size * 0.2047"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:ice_lance": {
+   "material": "alpha",
+   "sprite": "mmorpg:addon/rpg/boss/ice_lance",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     64,
+     16
+    ],
+    "tw": 64.0,
+    "th": 16.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     -20,
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size * 0.5",
+    "variable.size * 0.125"
+   ],
+   "facing": "lookat_direction",
+   "min_speed": 0.01,
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:ice_spike": {
+   "material": "alpha",
+   "sprite": "mmorpg:addon/rpg/boss/ice_spike",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     32,
+     64
+    ],
+    "tw": 32.0,
+    "th": 64.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "offset": [
+     0,
+     "-variable.size * 0.5",
+     0
+    ],
+    "surface": false,
+    "dir": [
+     0,
+     1,
+     0
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.size * 25",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 25
+   },
+   "size": [
+    "variable.size * 0.25",
+    "variable.size * 0.5"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.75) / 0.25, 0, 1))"
+   ]
+  },
+  "rpg:icicle": {
+   "material": "alpha",
+   "sprite": "mmorpg:addon/rpg/boss/icicle",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     16,
+     48
+    ],
+    "tw": 16.0,
+    "th": 48.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     0,
+     -1,
+     0
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     -40.0,
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size * 0.25",
+    "variable.size * 0.75"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:light_cut": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/light_cut",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     32
+    ],
+    "tw": 128.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size * math.min(1, variable.particle_age / 0.06)",
+    "variable.thick * (1 + 0.6 * math.clamp((variable.particle_age - variable.delay) / 0.15, 0, 1))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp((variable.particle_age - variable.delay) / 0.15, 0, 1)) * (0.88 + 0.12 * math.cos(variable.particle_age * 1500))"
+   ]
+  },
+  "rpg:magic_circle": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/magic/magic_circle",
+   "uv": {
+    "static": [
+     0,
+     "math.clamp(math.floor(variable.progress * 10 - 0.001), 0, 9) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 1280.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:magic_circle_flash": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/magic/magic_circle",
+   "uv": {
+    "static": [
+     0,
+     1152
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 1280.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "size": [
+    "variable.size * (1 + 0.35 * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * (1 + 0.35 * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime))"
+   ]
+  },
+  "rpg:meteor": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/meteor",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     64,
+     32
+    ],
+    "tw": 64.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size * 0.5",
+    "variable.size * 0.25"
+   ],
+   "facing": "lookat_direction",
+   "min_speed": 0.01,
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.08, 0, 1)"
+   ]
+  },
+  "rpg:odin_eye": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/odin_eye",
+   "uv": {
+    "static": [
+     "math.mod(((variable.particle_age - variable.close - variable.fade) >= 0 ? 11 : ((variable.particle_age - variable.close) >= 0 ? 8 + math.clamp(math.floor((variable.particle_age - variable.close) / math.max(0.01, variable.fade) * 3), 0, 2) : (variable.particle_age < variable.wax ? math.clamp(math.floor(variable.particle_age / math.max(0.01, variable.wax) * 4), 0, 3) : 4 + math.mod(math.floor(variable.particle_age * 8), 4)))), 4) * 256",
+     "math.floor(((variable.particle_age - variable.close - variable.fade) >= 0 ? 11 : ((variable.particle_age - variable.close) >= 0 ? 8 + math.clamp(math.floor((variable.particle_age - variable.close) / math.max(0.01, variable.fade) * 3), 0, 2) : (variable.particle_age < variable.wax ? math.clamp(math.floor(variable.particle_age / math.max(0.01, variable.wax) * 4), 0, 3) : 4 + math.mod(math.floor(variable.particle_age * 8), 4)))) / 4) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 1024.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.15, 0, 1) * ((variable.particle_age - variable.close - variable.fade) > 0 ? math.clamp(1 - (variable.particle_age - variable.close - variable.fade) / math.max(0.01, variable.particle_lifetime - variable.close - variable.fade), 0, 1) : 1)"
+   ]
+  },
+  "rpg:odin_mark": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/odin_mark",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     96,
+     96
+    ],
+    "tw": 96.0,
+    "th": 96.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.08, 0, 1) * math.clamp((1 - (variable.particle_age / variable.particle_lifetime)) / 0.3, 0, 1)"
+   ]
+  },
+  "rpg:odin_raven": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/odin_raven",
+   "uv": {
+    "static": [
+     "math.mod(math.mod(math.floor(variable.particle_age * 16 + variable.spin), 8), 4) * 192",
+     "math.floor(math.mod(math.floor(variable.particle_age * 16 + variable.spin), 8) / 4) * 192"
+    ],
+    "size": [
+     192,
+     192
+    ],
+    "tw": 768.0,
+    "th": 384.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:rfx_arrow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_arrow",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 1) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 1) * 64"
+    ],
+    "size": [
+     256,
+     64
+    ],
+    "tw": 256.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.2500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_aura": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_aura",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 256"
+    ],
+    "size": [
+     128,
+     256
+    ],
+    "tw": 512.0,
+    "th": 512.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "motion": {
+    "parametric": [
+     "variable.vel.x * variable.particle_age",
+     "variable.size * 0.9062 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime)) + variable.vel.y * variable.particle_age",
+     "variable.vel.z * variable.particle_age"
+    ]
+   },
+   "size": [
+    "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_bolt": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_bolt",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 96",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 384"
+    ],
+    "size": [
+     96,
+     384
+    ],
+    "tw": 384.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 0.2500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_bomb": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_bomb",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 256.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_boom": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_boom",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_bow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_bow",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 192",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 192"
+    ],
+    "size": [
+     192,
+     192
+    ],
+    "tw": 768.0,
+    "th": 384.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_chain": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_chain",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 1) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 1) * 48"
+    ],
+    "size": [
+     256,
+     48
+    ],
+    "tw": 256.0,
+    "th": 96.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.1875 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_cloud": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_cloud",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 128"
+    ],
+    "size": [
+     256,
+     128
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_crack": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_crack",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 512.0,
+    "th": 512.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "direction_z",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_crystal": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_crystal",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 3) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 3) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 384.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "motion": {
+    "parametric": [
+     "variable.vel.x * variable.particle_age",
+     "variable.size * 0.8281 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime)) + variable.vel.y * variable.particle_age",
+     "variable.vel.z * variable.particle_age"
+    ]
+   },
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_duel": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_duel",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 256.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_emblem": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_emblem",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 1) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 1) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 256.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_fireball": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_fireball",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 512.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_flare": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_flare",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_fountain": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_fountain",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 256"
+    ],
+    "size": [
+     128,
+     256
+    ],
+    "tw": 512.0,
+    "th": 512.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "motion": {
+    "parametric": [
+     "variable.vel.x * variable.particle_age",
+     "variable.size * 0.8438 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime)) + variable.vel.y * variable.particle_age",
+     "variable.vel.z * variable.particle_age"
+    ]
+   },
+   "size": [
+    "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_hex": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_hex",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 256.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "direction_z",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_hole": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_hole",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_icicle": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_icicle",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 1) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 1) * 32"
+    ],
+    "size": [
+     128,
+     32
+    ],
+    "tw": 128.0,
+    "th": 64.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.2500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_king": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_king",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_meteor": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_meteor",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 128"
+    ],
+    "size": [
+     256,
+     128
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_moon": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_moon",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_nova": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_nova",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "direction_z",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_plasma": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_plasma",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_prop": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_prop",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 5) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 5) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 640.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_rays": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_rays",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 48",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 384"
+    ],
+    "size": [
+     48,
+     384
+    ],
+    "tw": 96.0,
+    "th": 384.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "motion": {
+    "parametric": [
+     "variable.vel.x * variable.particle_age",
+     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime)) + variable.vel.y * variable.particle_age",
+     "variable.vel.z * variable.particle_age"
+    ]
+   },
+   "size": [
+    "variable.size * 0.1250 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_rift": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_rift",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 1) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 1) * 80"
+    ],
+    "size": [
+     256,
+     80
+    ],
+    "tw": 256.0,
+    "th": 160.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.3125 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_rock": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_rock",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 3) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 3) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 384.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "motion": {
+    "parametric": [
+     "variable.vel.x * variable.particle_age",
+     "variable.size * 0.8281 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime)) + variable.vel.y * variable.particle_age",
+     "variable.vel.z * variable.particle_age"
+    ]
+   },
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_shade": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_shade",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 8) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 8) * 256"
+    ],
+    "size": [
+     128,
+     256
+    ],
+    "tw": 1024.0,
+    "th": 512.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "motion": {
+    "parametric": [
+     "variable.vel.x * variable.particle_age",
+     "variable.size * 0.9062 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime)) + variable.vel.y * variable.particle_age",
+     "variable.vel.z * variable.particle_age"
+    ]
+   },
+   "size": [
+    "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_shield": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_shield",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 256.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_sigil": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_sigil",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 1024.0,
+    "th": 512.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "direction_z",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_spear": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_spear",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 384",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 80"
+    ],
+    "size": [
+     384,
+     80
+    ],
+    "tw": 768.0,
+    "th": 320.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.2083 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_spirit": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_spirit",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 512.0,
+    "th": 512.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_sun": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_sun",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_sword": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_sword",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 1) * 512",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 1) * 128"
+    ],
+    "size": [
+     512,
+     128
+    ],
+    "tw": 512.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.2500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_vortex": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_vortex",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 128",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 256"
+    ],
+    "size": [
+     128,
+     256
+    ],
+    "tw": 512.0,
+    "th": 512.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "motion": {
+    "parametric": [
+     "variable.vel.x * variable.particle_age",
+     "variable.size * 0.8750 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime)) + variable.vel.y * variable.particle_age",
+     "variable.vel.z * variable.particle_age"
+    ]
+   },
+   "size": [
+    "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_wave": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_wave",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 1) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 1) * 128"
+    ],
+    "size": [
+     256,
+     128
+    ],
+    "tw": 256.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:rfx_wings": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_wings",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 160"
+    ],
+    "size": [
+     256,
+     160
+    ],
+    "tw": 512.0,
+    "th": 320.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 0.6250 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "direction_z",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
+  "rpg:shield_hero_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.188,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.8,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    1,
+    0.886,
+    0.478,
+    1
+   ]
+  },
+  "rpg:shield_transcend_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.297,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.2,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    0.498,
+    0.961,
+    0.878,
+    1
+   ]
+  },
+  "rpg:shock_ring": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/shock_ring",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 8.0
+   },
+   "size": [
+    "variable.size * (1 + 1.6 * (variable.particle_age / variable.particle_lifetime)) * 1.0",
+    "variable.size * (1 + 1.6 * (variable.particle_age / variable.particle_lifetime)) * 1.0"
+   ],
+   "facing": "emitter_transform_xz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime))"
+   ]
+  },
+  "rpg:skill_rune": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/magic/magic_circle",
+   "uv": {
+    "static": [
+     0,
+     "math.clamp(math.floor(variable.progress * 10 - 0.001), 0, 9) * 128"
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 1280.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.speed"
+   ],
+   "size": [
+    "variable.size * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "emitter_transform_xz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime))"
+   ]
+  },
+  "rpg:slash_arc_l_aura": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_arc_l_aura",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      128,
+      86
+     ],
+     "step": [
+      0,
+      86
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 430.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0616",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.7133"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_arc_l_core": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_arc_l_core",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      256,
+      172
+     ],
+     "step": [
+      0,
+      172
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 256.0,
+    "th": 860.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0616",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.7133"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_arc_l_glow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_arc_l_glow",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      128,
+      86
+     ],
+     "step": [
+      0,
+      86
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 430.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0616",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.7133"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_arc_r_aura": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_arc_r_aura",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      128,
+      86
+     ],
+     "step": [
+      0,
+      86
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 430.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0616",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.7133"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_arc_r_core": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_arc_r_core",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      256,
+      172
+     ],
+     "step": [
+      0,
+      172
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 256.0,
+    "th": 860.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0616",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.7133"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_arc_r_glow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_arc_r_glow",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      128,
+      86
+     ],
+     "step": [
+      0,
+      86
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 430.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0616",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.7133"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_heavy_l_aura": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_heavy_l_aura",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      112,
+      136
+     ],
+     "step": [
+      0,
+      136
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 112.0,
+    "th": 680.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0046",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.2198"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_heavy_l_core": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_heavy_l_core",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      224,
+      272
+     ],
+     "step": [
+      0,
+      272
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 224.0,
+    "th": 1360.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0046",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.2198"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_heavy_l_glow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_heavy_l_glow",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      112,
+      136
+     ],
+     "step": [
+      0,
+      136
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 112.0,
+    "th": 680.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0046",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.2198"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_heavy_r_aura": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_heavy_r_aura",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      112,
+      136
+     ],
+     "step": [
+      0,
+      136
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 112.0,
+    "th": 680.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0046",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.2198"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_heavy_r_core": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_heavy_r_core",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      224,
+      272
+     ],
+     "step": [
+      0,
+      272
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 224.0,
+    "th": 1360.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0046",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.2198"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_heavy_r_glow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_heavy_r_glow",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      112,
+      136
+     ],
+     "step": [
+      0,
+      136
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 112.0,
+    "th": 680.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.0046",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 1.2198"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_thin_l_aura": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_thin_l_aura",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      128,
+      128
+     ],
+     "step": [
+      0,
+      128
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 640.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_thin_l_core": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_thin_l_core",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      256,
+      256
+     ],
+     "step": [
+      0,
+      256
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 256.0,
+    "th": 1280.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_thin_l_glow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_thin_l_glow",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      128,
+      128
+     ],
+     "step": [
+      0,
+      128
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 640.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_thin_r_aura": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_thin_r_aura",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      128,
+      128
+     ],
+     "step": [
+      0,
+      128
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 640.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_thin_r_core": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_thin_r_core",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      256,
+      256
+     ],
+     "step": [
+      0,
+      256
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 256.0,
+    "th": 1280.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_thin_r_glow": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_thin_r_glow",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      128,
+      128
+     ],
+     "step": [
+      0,
+      128
+     ],
+     "fps": 0,
+     "max": 5,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 640.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 5.0
+   },
+   "size": [
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619",
+    "variable.size * (1 + 0.25 * (variable.particle_age / variable.particle_lifetime)) * 0.5619"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * 1"
+   ]
+  },
+  "rpg:slash_x": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/slash/slash_x",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    0
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 8.0
+   },
+   "size": [
+    "variable.size * (1 + 0.35 * (variable.particle_age / variable.particle_lifetime)) * 1.0",
+    "variable.size * (1 + 0.35 * (variable.particle_age / variable.particle_lifetime)) * 1.0"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - (variable.particle_age / variable.particle_lifetime) * (variable.particle_age / variable.particle_lifetime))"
+   ]
+  },
+  "rpg:snowfall": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/snowflake",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     16,
+     16
+    ],
+    "tw": 16.0,
+    "th": 16.0
+   },
+   "rate": {
+    "steady": 30,
+    "max": 50
+   },
+   "active": "variable.life",
+   "shape": {
+    "type": "box",
+    "half": [
+     "variable.size * 0.5",
+     1.5,
+     "variable.size * 0.5"
+    ],
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": 1.2,
+   "speed": "variable.speed * (0.7 + math.random(0, 0.6))",
+   "spin": [
+    "math.random(0, 360)",
+    90
+   ],
+   "motion": {
+    "accel": [
+     0,
+     -2,
+     0
+    ],
+    "drag": 0.4
+   },
+   "size": [
+    0.09,
+    0.09
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp((variable.particle_age / variable.particle_lifetime - 0.7) / 0.3, 0, 1))"
+   ]
+  },
+  "rpg:solas_sword": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/solas_sword",
+   "uv": {
+    "static": [
+     0,
+     "(variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 12), 4) : (variable.progress > 1 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : math.clamp(math.floor(variable.progress * 8), 0, 7))) * 128"
+    ],
+    "size": [
+     384,
+     128
+    ],
+    "tw": 384.0,
+    "th": 1024.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size * 1.1707",
+    "variable.size * 0.3902"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "variable.dir.x",
+    "variable.dir.y",
+    "variable.dir.z"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:solas_sword_arc": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/solas_sword",
+   "uv": {
+    "static": [
+     0,
+     "math.mod(math.floor(variable.particle_age * 12), 4) * 128"
+    ],
+    "size": [
+     384,
+     128
+    ],
+    "tw": 384.0,
+    "th": 1024.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     "-variable.grav",
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size * 1.1707",
+    "variable.size * 0.3902"
+   ],
+   "facing": "lookat_direction",
+   "min_speed": 0.01,
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a"
+   ]
+  },
+  "rpg:spear_transcend_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.156,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.8,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    0.561,
+    0.831,
+    1,
+    1
+   ]
+  },
+  "rpg:splash": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/splash",
+   "uv": {
+    "flipbook": {
+     "base": [
+      0,
+      0
+     ],
+     "size": [
+      32,
+      32
+     ],
+     "step": [
+      32,
+      0
+     ],
+     "fps": 0,
+     "max": 4,
+     "stretch": true,
+     "loop": false
+    },
+    "tw": 128.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.75) / 0.25, 0, 1))"
+   ]
+  },
+  "rpg:staff_hero_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.094,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.8,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    0.365,
+    1,
+    0.69,
+    1
+   ]
+  },
+  "rpg:staff_transcend_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.188,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     0.8,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    1,
+    0.839,
+    0.42,
+    1
+   ]
+  },
+  "rpg:sword_hero_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:generic_0",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.25,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     1.6,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    0.498,
+    0.831,
+    1,
+    1
+   ]
+  },
+  "rpg:sword_transcend_lv0_fx": {
+   "material": "add",
+   "sprite": "minecraft:flame",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     1,
+     1
+    ],
+    "tw": 1,
+    "th": 1
+   },
+   "rate": {
+    "steady": 10,
+    "max": 24
+   },
+   "active": 1,
+   "shape": {
+    "type": "sphere",
+    "radius": 0.344,
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": 0.9,
+   "speed": 0.15,
+   "motion": {
+    "accel": [
+     0,
+     2.4,
+     0
+    ],
+    "drag": 1
+   },
+   "size": [
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)",
+    "0.05 * (1 - variable.particle_age / variable.particle_lifetime)"
+   ],
+   "facing": "lookat_xyz",
+   "color": [
+    1,
+    0.353,
+    0.102,
+    1
+   ]
+  },
+  "rpg:tele_disc": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/tele_disc",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "tw": 64.0,
+    "th": 64.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "emitter_transform_xz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.85) / 0.15, 0, 1))"
+   ]
+  },
+  "rpg:tele_fill": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/tele_fill",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "tw": 64.0,
+    "th": 64.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size * (variable.grow > 0.5 ? 1.0 : math.clamp((variable.particle_age / variable.particle_lifetime), 0.02, 1))",
+    "variable.size * (variable.grow > 0.5 ? 1.0 : math.clamp((variable.particle_age / variable.particle_lifetime), 0.02, 1))"
+   ],
+   "facing": "emitter_transform_xz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.85) / 0.15, 0, 1))"
+   ]
+  },
+  "rpg:tele_square": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/tele_square",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     64,
+     64
+    ],
+    "tw": 64.0,
+    "th": 64.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "variable.size * (variable.grow > 0.5 ? 1.0 : math.clamp((variable.particle_age / variable.particle_lifetime), 0.02, 1))",
+    "variable.size * (variable.grow > 0.5 ? 1.0 : math.clamp((variable.particle_age / variable.particle_lifetime), 0.02, 1))"
+   ],
+   "facing": "emitter_transform_xz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.85) / 0.15, 0, 1))"
+   ]
+  },
+  "rpg:tele_wave": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/tele_wave",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "size": [
+    "math.max(0.3, variable.speed * variable.particle_age / 0.955)",
+    "math.max(0.3, variable.speed * variable.particle_age / 0.955)"
+   ],
+   "facing": "emitter_transform_xz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.85) / 0.15, 0, 1))"
+   ]
+  },
+  "rpg:tide_wave": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/tide_wave",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     64,
+     32
+    ],
+    "tw": 64.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "size": [
+    "variable.size",
+    "variable.thick"
+   ],
+   "facing": "lookat_direction",
+   "face_dir": [
+    "-variable.dir.z",
+    0,
+    "variable.dir.x"
+   ],
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.9) / 0.1, 0, 1))"
+   ]
+  },
+  "rpg:tyr_ghostfire": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/tyr_ghostfire",
+   "uv": {
+    "static": [
+     "math.mod(math.mod(math.floor(variable.particle_age * 12 + variable.particle_random_1 * 8), 8), 4) * 128",
+     "math.floor(math.mod(math.floor(variable.particle_age * 12 + variable.particle_random_1 * 8), 8) / 4) * 256"
+    ],
+    "size": [
+     128,
+     256
+    ],
+    "tw": 512.0,
+    "th": 512.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "motion": {
+    "parametric": [
+     0,
+     "variable.size * 0.4297 * (0.55 + 0.45 * math.clamp(variable.particle_age / 0.12, 0, 1))",
+     0
+    ]
+   },
+   "size": [
+    "variable.size * 0.25 * (0.55 + 0.45 * math.clamp(variable.particle_age / 0.12, 0, 1))",
+    "variable.size * 0.5 * (0.55 + 0.45 * math.clamp(variable.particle_age / 0.12, 0, 1))"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.06, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.65) / 0.35, 0, 1))"
+   ]
+  },
+  "rpg:tyr_warrior": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/tyr_warrior",
+   "uv": {
+    "static": [
+     "math.mod((variable.frame + (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps)))), 4) * 256",
+     "math.floor((variable.frame + (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps)))) / 4) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 1024.0,
+    "th": 768.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "motion": {
+    "parametric": [
+     0,
+     "variable.size * 0.9375 - (variable.sink * (1 - math.clamp(variable.particle_age / math.max(0.01, variable.rise), 0, 1)))",
+     0
+    ]
+   },
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "lookat_y",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.06, 0, 1) * (variable.fade > 0 ? math.clamp((variable.particle_lifetime - variable.particle_age) / variable.fade, 0, 1) : 1)"
+   ]
+  },
+  "rpg:whirlpool": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/boss/whirlpool",
+   "uv": {
+    "static": [
+     0,
+     0
+    ],
+    "size": [
+     128,
+     128
+    ],
+    "tw": 128.0,
+    "th": 128.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": "outwards"
+   },
+   "life": "variable.life",
+   "speed": 0,
+   "spin": [
+    "variable.spin",
+    "variable.speed"
+   ],
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "emitter_transform_xz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.15, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.75) / 0.25, 0, 1))"
+   ]
+  }
+ }
+}

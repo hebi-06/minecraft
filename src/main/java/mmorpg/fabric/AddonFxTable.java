@@ -1,0 +1,196 @@
+package mmorpg.fabric;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * 애드온 파티클 이름표 — tools/addon_particles.py 가 만듦, 손으로 고치지 않음.
+ * 서버는 파티클 ID · 변수 이름을 번호로 바꿔 보내고 (AddonParticleOptions), 클라이언트는 같은 번호로 정의 (assets/mmorpg/addon_particles.json) 를 찾음.
+ */
+public final class AddonFxTable {
+    private AddonFxTable() {}
+
+    /** 파티클 ID (번호 = 순서) */
+    public static final String[] PARTICLES = {
+        "rpg:aegis_hex",
+        "rpg:aegis_shield",
+        "rpg:aegis_stone",
+        "rpg:arrow_shot",
+        "rpg:arrow_spark",
+        "rpg:arrow_trail",
+        "rpg:artemis_arrow",
+        "rpg:artemis_bow",
+        "rpg:artemis_crescent",
+        "rpg:artemis_moon",
+        "rpg:axe_hero_lv0_fx",
+        "rpg:bash_burst",
+        "rpg:bash_ring",
+        "rpg:boulder",
+        "rpg:bow_hero_lv0_fx",
+        "rpg:bow_transcend_lv0_fx",
+        "rpg:breath",
+        "rpg:crow",
+        "rpg:dagger_hero_lv0_fx",
+        "rpg:dagger_transcend_lv0_fx",
+        "rpg:drop",
+        "rpg:dust",
+        "rpg:ember",
+        "rpg:fire_wall",
+        "rpg:fire_wave",
+        "rpg:fire_wing",
+        "rpg:glob",
+        "rpg:greatsword_transcend_lv0_fx",
+        "rpg:ground_crack",
+        "rpg:gungnir_spear",
+        "rpg:gungnir_spear_part",
+        "rpg:gungnir_spin",
+        "rpg:ice_lance",
+        "rpg:ice_spike",
+        "rpg:icicle",
+        "rpg:light_cut",
+        "rpg:magic_circle",
+        "rpg:magic_circle_flash",
+        "rpg:meteor",
+        "rpg:odin_eye",
+        "rpg:odin_mark",
+        "rpg:odin_raven",
+        "rpg:rfx_arrow",
+        "rpg:rfx_aura",
+        "rpg:rfx_bolt",
+        "rpg:rfx_bomb",
+        "rpg:rfx_boom",
+        "rpg:rfx_bow",
+        "rpg:rfx_chain",
+        "rpg:rfx_cloud",
+        "rpg:rfx_crack",
+        "rpg:rfx_crystal",
+        "rpg:rfx_duel",
+        "rpg:rfx_emblem",
+        "rpg:rfx_fireball",
+        "rpg:rfx_flare",
+        "rpg:rfx_fountain",
+        "rpg:rfx_hex",
+        "rpg:rfx_hole",
+        "rpg:rfx_icicle",
+        "rpg:rfx_king",
+        "rpg:rfx_meteor",
+        "rpg:rfx_moon",
+        "rpg:rfx_nova",
+        "rpg:rfx_plasma",
+        "rpg:rfx_prop",
+        "rpg:rfx_rays",
+        "rpg:rfx_rift",
+        "rpg:rfx_rock",
+        "rpg:rfx_shade",
+        "rpg:rfx_shield",
+        "rpg:rfx_sigil",
+        "rpg:rfx_spear",
+        "rpg:rfx_spirit",
+        "rpg:rfx_sun",
+        "rpg:rfx_sword",
+        "rpg:rfx_vortex",
+        "rpg:rfx_wave",
+        "rpg:rfx_wings",
+        "rpg:shield_hero_lv0_fx",
+        "rpg:shield_transcend_lv0_fx",
+        "rpg:shock_ring",
+        "rpg:skill_rune",
+        "rpg:slash_arc_l_aura",
+        "rpg:slash_arc_l_core",
+        "rpg:slash_arc_l_glow",
+        "rpg:slash_arc_r_aura",
+        "rpg:slash_arc_r_core",
+        "rpg:slash_arc_r_glow",
+        "rpg:slash_heavy_l_aura",
+        "rpg:slash_heavy_l_core",
+        "rpg:slash_heavy_l_glow",
+        "rpg:slash_heavy_r_aura",
+        "rpg:slash_heavy_r_core",
+        "rpg:slash_heavy_r_glow",
+        "rpg:slash_thin_l_aura",
+        "rpg:slash_thin_l_core",
+        "rpg:slash_thin_l_glow",
+        "rpg:slash_thin_r_aura",
+        "rpg:slash_thin_r_core",
+        "rpg:slash_thin_r_glow",
+        "rpg:slash_x",
+        "rpg:snowfall",
+        "rpg:solas_sword",
+        "rpg:solas_sword_arc",
+        "rpg:spear_transcend_lv0_fx",
+        "rpg:splash",
+        "rpg:staff_hero_lv0_fx",
+        "rpg:staff_transcend_lv0_fx",
+        "rpg:sword_hero_lv0_fx",
+        "rpg:sword_transcend_lv0_fx",
+        "rpg:tele_disc",
+        "rpg:tele_fill",
+        "rpg:tele_square",
+        "rpg:tele_wave",
+        "rpg:tide_wave",
+        "rpg:tyr_ghostfire",
+        "rpg:tyr_warrior",
+        "rpg:whirlpool"
+    };
+
+    /** 서버가 보내는 변수 이름 (variable. 뒤, 번호 = 순서) */
+    public static final String[] VARS = {
+        "cell",
+        "close",
+        "color.a",
+        "color.b",
+        "color.g",
+        "color.r",
+        "delay",
+        "dir.x",
+        "dir.y",
+        "dir.z",
+        "fade",
+        "fold",
+        "fps",
+        "frame",
+        "frames",
+        "grav",
+        "grow",
+        "kind",
+        "life",
+        "loop",
+        "move.x",
+        "move.y",
+        "move.z",
+        "phase",
+        "progress",
+        "rate",
+        "reach",
+        "rise",
+        "seg",
+        "sink",
+        "size",
+        "speed",
+        "spin",
+        "spin_rate",
+        "thick",
+        "vel.x",
+        "vel.y",
+        "vel.z",
+        "wax"
+    };
+
+    private static final Map<String, Integer> PARTICLE_INDEX = new HashMap<>();
+    private static final Map<String, Integer> VAR_INDEX = new HashMap<>();
+
+    static {
+        for (int i = 0; i < PARTICLES.length; i++) PARTICLE_INDEX.put(PARTICLES[i], i);
+        for (int i = 0; i < VARS.length; i++) VAR_INDEX.put(VARS[i], i);
+    }
+
+    /** 파티클 번호 (없으면 -1) */
+    public static int particle(String id) {
+        return PARTICLE_INDEX.getOrDefault(id, -1);
+    }
+
+    /** 변수 번호 (없으면 -1 — 어느 파티클 식에도 없는 변수) */
+    public static int var(String name) {
+        return VAR_INDEX.getOrDefault(name, -1);
+    }
+}

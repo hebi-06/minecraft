@@ -43,5 +43,7 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest"
+echo "[4/4] ParityTest · MolangTest"
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.ParityTest
+# 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.MolangTest

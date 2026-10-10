@@ -28,6 +28,10 @@ public final class MmorpgClient implements ClientModInitializer {
         // 이펙트 그림 (활 빛줄기 · 마법진 · 참격 …) — assets/mmorpg/particles/fx.json 의 그림 순서 = FxParticle 의 TEX_*
         ParticleProviderRegistry.getInstance().register(RpgParticles.FX,
                 sprites -> (options, level, x, y, z, xd, yd, zd, random) -> new FxParticle(level, x, y, z, options, sprites));
+        // 애드온 파티클 119종 (식 그대로 — assets/mmorpg/addon_particles.json)
+        AddonParticles.init();
+        ParticleProviderRegistry.getInstance().register(RpgParticles.ADDON,
+                sprites -> (options, level, x, y, z, xd, yd, zd, random) -> AddonParticles.create(level, x, y, z, options, sprites));
         statsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.stats", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
             ClientRpgState.update(payload);
