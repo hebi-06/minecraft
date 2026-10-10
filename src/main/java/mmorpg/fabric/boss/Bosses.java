@@ -108,7 +108,9 @@ public final class Bosses {
 
     /** 보스 모듈 — 새 보스는 여기에 한 줄 (애드온 bosses.js 의 MODS) */
     static final List<BossModule> MODULES = List.of(
-            new BossScarecrow());
+            new BossScarecrow(),
+            new BossNidhogg(),
+            new BossSkoll());
 
     /** 보스 키 → 모듈 */
     static final Map<String, BossModule> MODS = new LinkedHashMap<>();

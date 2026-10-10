@@ -36,4 +36,19 @@ public class RpgBoss extends BedrockMob {
         Boolean r = absorb.hurt(this, level, source, amount);
         return r != null ? r : super.hurtServer(level, source, amount);
     }
+
+    /**
+     * 스크립트가 옮기고 돌리는 보스 (중력 · 충돌 없음 — 움직이지 않는 · 헤엄치는 · 걷고 나는 보스): 몸 방향 = 보는 쪽 (yRot), 클라이언트 · 서버 모두.
+     * 베드락 teleport(facingLocation) 는 몸을 바로 돌림 — 자바 바닐라 몸 회전 (BodyRotationControl: 제자리에서는 머리가 75° 넘게 벌어지거나 0.5초 가만히 있어야
+     * 몸이 따라감) 이면 제자리에서 도는 보스 (니드호그의 숨결 · 물어뜯기 전 몸 돌리기) 의 그려지는 몸이 늦게 돎
+     */
+    @Override
+    protected void tickHeadTurn(float yBodyRot) {
+        if (def.gravity() || def.collision()) {
+            super.tickHeadTurn(yBodyRot);
+            return;
+        }
+        this.yBodyRot = getYRot();
+        this.yHeadRot = getYRot();
+    }
 }
