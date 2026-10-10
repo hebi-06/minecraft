@@ -44,4 +44,8 @@ probe net.minecraft.world.inventory.AbstractContainerMenu 'clicked|doClick|quick
 probe net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer 'submit|renderArmorPiece|submitArmorPiece|getArmorModel'
 probe net.minecraft.client.particle.QuadParticleGroup 'extractRenderState'
 probe net.minecraft.client.particle.ParticleEngine 'extract|tick|add|createParticle'
+probe net.minecraft.world.entity.LivingEntity 'tickDeath|die|getMaxHealth|setHealth|knockback|travel|aiStep|pushEntities|isPushable|canBeCollidedWith'
+probe net.minecraft.world.entity.Mob 'checkDespawn|removeWhenFarAway|requiresCustomPersistence|doHurtTarget|registerGoals|serverAiStep|isWithinHome|setHomeTo|getHomePosition|getHomeRadius'
+probe net.minecraft.world.entity.ai.attributes.RangedAttribute 'sanitizeValue|getMaxValue'
+probe net.minecraft.client.renderer.entity.EntityRenderer 'submit|shouldRender|extractRenderState|submitNameTag|getNameTag'
 ls -la "$OUT/calls"
