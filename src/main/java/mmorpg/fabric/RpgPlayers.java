@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import mmorpg.core.Stats;
+import mmorpg.fabric.skill.Transcend;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -58,6 +59,7 @@ public final class RpgPlayers {
         RpgCombat.forget(sp.getUUID());
         Slash.forget(sp.getUUID());
         Notify.forget(sp.getUUID());
+        Transcend.forget(sp.getUUID());
     }
 
     private static void tick(MinecraftServer server) {

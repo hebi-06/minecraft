@@ -119,6 +119,11 @@ public final class DamageNumbers {
     public static void onLivingHurt(LivingEntity victim, DamageSource source, double dealt) {
         if (!(source.getEntity() instanceof ServerPlayer attacker) || attacker == victim || !(dealt > 0)) return;
         RpgCombat.Mark m = RpgCombat.takeMark(victim, attacker);
+        if (m != null && m.style() != null) {
+            // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback)
+            show(victim, dealt, m.style(), "", 0);
+            return;
+        }
         Style style = Style.NORMAL;
         if (m != null && m.crit()) {
             style = Style.CRIT;
@@ -151,6 +156,22 @@ public final class DamageNumbers {
         RandomSource r = victim.getRandom();
         Vec3 pos = new Vec3(head.x + (r.nextDouble() - 0.5) * 0.7, head.y + 0.3 + lift, head.z + (r.nextDouble() - 0.5) * 0.7);
         spawn(level, pos, BedrockText.toJava(mark + style.format(number(amount))), style.scale);
+    }
+
+    /**
+     * 플레이어 눈앞에 떠오르는 글자 (fx.js showFaceText: "속박!" · "-3 피의 대가" 등). 보는 방향 수평으로 dist 칸 앞,
+     * 오른쪽으로 side 칸, 눈 높이에서 up 칸
+     */
+    public static void showFace(ServerPlayer sp, String text, double dist, double side, double up) {
+        if (!Rules.get().obj("CONFIG").truthy("DAMAGE_TEXT") || ACTIVE.size() >= MAX_TEXTS + SELF_EXTRA || sp.isRemoved()) return;
+        Vec3 h = sp.getEyePosition();
+        Vec3 v = sp.getViewVector(1F);
+        double hz = Math.hypot(v.x, v.z);
+        if (hz < 1e-6) hz = 1;
+        double fx = v.x / hz;
+        double fz = v.z / hz;
+        Vec3 pos = new Vec3(h.x + fx * dist - fz * side, h.y + up, h.z + fz * dist + fx * side);
+        spawn(sp.level(), pos, BedrockText.toJava(text), 1.25F);
     }
 
     /** 그 자리에서 떠오르는 글자 (fx.js showTextAt: "+3 경험치" 등) */

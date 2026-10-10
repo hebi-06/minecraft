@@ -7,6 +7,7 @@ import mmorpg.core.Hp;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Stats;
+import mmorpg.fabric.skill.Guards;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
@@ -22,7 +23,8 @@ import net.minecraft.world.food.FoodData;
 /**
  * RPG 체력 (hp.js 의 자바 판). 베드락은 바닐라 체력 20 을 "거울" 로 썼지만, 자바는 최대 체력 속성을 바로 바꿀 수 있어서
  * 최대 체력 = 기본 20 + 최고 레벨 × 2 + 체력 스탯 × 1 (규칙 코어 Hp.maxHpOf) 을 속성 수정자 (mmorpg:rpg_max_hp) 로 넣음.
- * - 받는 피해: 바닐라 그대로 (방어구 · 흡수 뒤) × DAMAGE_TAKEN_SCALE × (1 − 방패 감소). 독 · 배고픔 (어려움 제외) 은 1 에서 멈춤
+ * - 받는 피해: 바닐라 그대로 (방어구 · 흡수 뒤) × DAMAGE_TAKEN_SCALE × (1 − 감소). 감소 = 1 − (1 − 방패) × (1 − 스킬 · 룬 버프).
+ *   독 · 배고픔 (어려움 제외) 은 1 에서 멈춤
  * - 회복: 바닐라 회복 1 = 최대 체력의 1/20 (자연 회복 · 물약 모두 최대 체력 비율로 — hp.js onPlayerHealBefore)
  * - 배고픔 없음: 배고픔은 늘 가득 · 포화 0 (자연 회복 = 4초마다 1/20, 베드락과 같게)
  * - 남은 체력 비율을 저장 (나갔다 들어와도 이어짐), 불사의 토템은 최대 체력의 10% 로 살림
@@ -133,7 +135,11 @@ public final class RpgHealth {
         if (!isRpgMode(sp)) return newHealth;
         double raw = health - newHealth;
         if (!(raw > 0)) return newHealth;
-        double loss = raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - RpgCombat.shieldReduction(sp, source));
+        double shield = RpgCombat.shieldReduction(sp, source);
+        Guards.Guard g = Guards.of(sp);
+        double reduce = g != null ? 1 - (1 - shield) * (1 - g.reduce()) : shield;
+        double loss = raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce);
+        Guards.afterHurt(sp, source, g); // 반사 버프: 때린 것에게 (다음 틱)
         double next = health - loss;
         if (next < 1 && isNonLethal(sp, source, raw)) next = Math.min(health, 1);
         // 다른 플레이어가 준 피해: 맞은 사람 머리 위에 빨간 숫자 (fx.js player)
@@ -152,6 +158,24 @@ public final class RpgHealth {
     /** 불사의 토템이 막음: 최대 체력의 10% (hp.js revive) */
     public static void onTotem(ServerPlayer sp) {
         if (isRpgMode(sp)) sp.setHealth((float) Hp.reviveHp(maxOf(sp)));
+    }
+
+    /** 체력 회복 (hp.js healBy — 정한 양 그대로, 최대 체력까지). 실제로 오른 양 */
+    public static double healBy(ServerPlayer sp, double amount) {
+        if (sp.isDeadOrDying() || !(amount > 0)) return 0;
+        float before = sp.getHealth();
+        float next = (float) Math.min(sp.getMaxHealth(), before + amount);
+        if (next > before) sp.setHealth(next);
+        return Math.max(0, next - before);
+    }
+
+    /** 체력을 대가로 냄 (hp.js payHp): 1 아래로는 내지 못함 (0 = 못 냄). RPG 체력이 아니면 (크리에이티브) 0 */
+    public static double payHp(ServerPlayer sp, double amount) {
+        if (!isRpgMode(sp) || !(amount > 0) || sp.isDeadOrDying()) return 0;
+        float hp = sp.getHealth();
+        if (hp - amount < 1 - 1e-6) return 0;
+        sp.setHealth((float) Math.max(1, hp - amount));
+        return amount;
     }
 
     /** 체력 가득 (/rpg heal) */

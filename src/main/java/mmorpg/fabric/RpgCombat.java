@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Predicate;
 import mmorpg.core.Combat;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
@@ -48,9 +49,11 @@ public final class RpgCombat {
     /** 시험용: 치명타를 정함 (null = 확률대로) */
     public static Boolean forceCrit = null;
 
-    /** 맞힌 공격의 치명타 기억 (피해가 실제로 들어간 뒤 숫자 · 연출에 씀) */
-    /** 맞히기 직전에 기억한 공격: 치명타였는지, 근접 무기 (원거리는 null — 참격 연출용) */
-    public record Mark(boolean crit, long tick, Weapon melee) {}
+    /**
+     * 맞히기 직전에 기억한 공격 (피해가 실제로 들어간 뒤 숫자 · 연출에 씀): 치명타였는지, 근접 무기 (원거리 · 스킬은 null — 참격 연출용),
+     * 스킬 · 룬 피해면 숫자 모양 (평타는 null — combat.js skillMarks)
+     */
+    public record Mark(boolean crit, long tick, Weapon melee, DamageNumbers.Style style) {}
 
     private static final Map<String, Mark> MARKS = new HashMap<>();
     /** 활 · 완드 재사용 (플레이어|종류 → 다시 쏠 수 있는 틱) */
@@ -103,13 +106,13 @@ public final class RpgCombat {
         return Combat.powerMultiplier(RpgData.of(sp).effective(), w, 0);
     }
 
-    static boolean rollCrit(ServerPlayer sp, Weapon w) {
+    public static boolean rollCrit(ServerPlayer sp, Weapon w) {
         if (forceCrit != null) return forceCrit;
         return sp.getRandom().nextDouble() < Combat.critChanceOf(w, 0);
     }
 
     /** 주민 · 상인 (눌러서 거래 — 활 · 완드로 쏘지 않음) */
-    static boolean isTalkable(Entity e) {
+    public static boolean isTalkable(Entity e) {
         return e instanceof AbstractVillager;
     }
 
@@ -118,7 +121,17 @@ public final class RpgCombat {
     }
 
     static void mark(Entity victim, ServerPlayer attacker, boolean crit, Weapon melee) {
-        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), melee));
+        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), melee, null));
+    }
+
+    /** 스킬 · 룬 피해 표시 (숫자 모양 style — 평타 공식 · 참격 연출 없음) */
+    public static void skillMark(Entity victim, ServerPlayer attacker, boolean crit, DamageNumbers.Style style) {
+        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, style));
+    }
+
+    /** 들어가지 않은 공격의 기억을 지움 */
+    public static void dropMark(Entity victim, Entity attacker) {
+        MARKS.remove(key(victim, attacker));
     }
 
     /** 맞은 뒤 기억을 꺼냄 (2틱 안의 공격만) */
@@ -369,32 +382,36 @@ public final class RpgCombat {
             }
         }
         if (target == null && assistDeg > 0) {
-            Aim a = assistTarget(sp, range, assistDeg, mount);
+            Aim a = assist(sp, range, assistDeg, x -> x != mount && assistable(sp, x));
             if (a != null) return a;
         }
         return new Aim(target, dist, view);
     }
 
     /** 바로 겨눌 수 있는 것: 살아 있는 생명체 (다른 플레이어 · 갑옷 거치대 제외 — 결투는 6단계) */
-    static boolean aimable(ServerPlayer sp, Entity e) {
+    public static boolean aimable(ServerPlayer sp, Entity e) {
         if (!(e instanceof LivingEntity le) || e == sp || !le.isAlive() || e.isSpectator() || !e.isPickable()) return false;
         return !(e instanceof Player) && !(e instanceof ArmorStand);
     }
 
     /** 조준 보정 대상: 주민 · 골렘 · 길들인 동물 · 플레이어 제외 */
-    static boolean assistable(ServerPlayer sp, LivingEntity e) {
+    public static boolean assistable(ServerPlayer sp, LivingEntity e) {
         if (!aimable(sp, e) || isTalkable(e) || e instanceof IronGolem || e instanceof SnowGolem) return false;
         return !(e instanceof OwnableEntity o && o.getOwnerReference() != null);
     }
 
-    private static Aim assistTarget(ServerPlayer sp, double range, double deg, Entity mount) {
+    /**
+     * 조준 보정 (combat.js assistTarget): 시선에서 deg 도 안 (가까우면 옆으로 1칸 안) 의 대상 (ok) 중 가장 가운데에 가까운 것 (벽 뒤 제외).
+     * 없으면 null. 스킬은 ok 에 맞힐 수 있는 대상 (Kit.canHit) 을 줌
+     */
+    public static Aim assist(ServerPlayer sp, double range, double deg, Predicate<LivingEntity> ok) {
         Vec3 head = sp.getEyePosition();
         Vec3 view = sp.getViewVector(1F);
         double cosMax = Math.cos(Math.toRadians(deg));
         AABB box = new AABB(head, head).inflate(range + 1.5);
         record Cand(LivingEntity e, Vec3 p, double len, Vec3 d, double score) {}
         List<Cand> cands = new ArrayList<>();
-        for (LivingEntity e : sp.level().getEntitiesOfClass(LivingEntity.class, box, x -> x != mount && assistable(sp, x))) {
+        for (LivingEntity e : sp.level().getEntitiesOfClass(LivingEntity.class, box, ok)) {
             Vec3 p = bodyToward(e, head, view);
             Vec3 d = p.subtract(head);
             double len = d.length();
@@ -414,7 +431,7 @@ public final class RpgCombat {
     }
 
     /** from 에서 to 까지 막는 블록이 없는지 (풀 · 꽃 · 물은 통과) */
-    static boolean lineOfSight(ServerPlayer sp, Vec3 from, Vec3 to) {
+    public static boolean lineOfSight(ServerPlayer sp, Vec3 from, Vec3 to) {
         double len = to.distanceTo(from);
         if (len < 0.3) return true;
         BlockHitResult hit = sp.level().clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, sp));
@@ -426,21 +443,26 @@ public final class RpgCombat {
         return new Vec3(e.getX(), e.getY() + (e.getEyeY() - e.getY()) * 0.75, e.getZ());
     }
 
-    /** 보통 몹보다 넓은 만큼 (가로 반폭 − 0.4) */
-    static double bodyPad(Entity e) {
+    /** 보통 몹보다 넓은 만큼 (가로 반폭 − 0.4 — 큰 몸은 몸 가장자리가 범위에 걸쳐도 맞음) */
+    public static double bodyPad(Entity e) {
         return Math.max(0, e.getBbWidth() / 2 - 0.4);
     }
 
+    /**
+     * 스킬이 겨누는 몸의 세로 범위 {아래, 위} (combat.js bodySpan): 보통 몹은 몸 가운데 한 점,
+     * 키가 2칸 넘는 몸 (보스 · 엔더맨 등) 은 발 1.28칸 위부터 머리 0.72칸 아래까지 (세로 선분)
+     */
+    public static double[] bodySpan(Entity e) {
+        if (e.getBbHeight() > 2) return new double[] {e.getY() + 1.28, e.getY() + e.getBbHeight() - 0.72};
+        double y = bodyPoint(e).y;
+        return new double[] {y, y};
+    }
+
     /** 직선 (from → 단위 방향 d) 에 가장 가까운 몸 위의 점 (키 2칸 넘는 몸은 세로 선분) */
-    static Vec3 bodyToward(Entity e, Vec3 from, Vec3 d) {
-        double lo;
-        double hi;
-        if (e.getBbHeight() > 2) {
-            lo = e.getY() + 1.28;
-            hi = e.getY() + e.getBbHeight() - 0.72;
-        } else {
-            lo = hi = bodyPoint(e).y;
-        }
+    public static Vec3 bodyToward(Entity e, Vec3 from, Vec3 d) {
+        double[] span = bodySpan(e);
+        double lo = span[0];
+        double hi = span[1];
         if (hi - lo < 1e-6) return new Vec3(e.getX(), lo, e.getZ());
         double wx = from.x - e.getX();
         double wz = from.z - e.getZ();

@@ -1,0 +1,260 @@
+package mmorpg.fabric.skill;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
+import mmorpg.fabric.AddonFx;
+import mmorpg.fabric.Notify;
+import mmorpg.fabric.RpgNet;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 스킬 · 룬 연출 도구 (skills.js 의 fx · beam · bolt · arc · cutMark · rune · burst · ring · shock · sparks · shake, fx.js play):
+ * 애드온 파티클 (AddonFx — 애드온과 같은 변수), 베드락 소리 이름 → 자바 소리, 베드락 바닐라 파티클 이름 → 자바 파티클.
+ */
+public final class SkillFx {
+    private SkillFx() {}
+
+    private static final Logger LOG = LoggerFactory.getLogger("mmorpg-skill-fx");
+    private static final Set<String> WARNED = new HashSet<>();
+    public static final double[] WHITE = {1, 1, 1};
+
+    // ------------------------------------------------------------ 파티클 (skills.js fx — 변수 dir · speed · spin · size · life · thick · delay · grow · progress · color · alpha)
+
+    /** 애드온 파티클 하나: o 의 dir (기본 위) · speed · spin · size · life · thick · delay · grow · progress (기본 0) · color (기본 흰) · alpha (기본 1) */
+    public static void fx(ServerLevel level, String id, Vec3 at, Opt o) {
+        AddonFx.Vars v = AddonFx.vars().vec("dir", o.vec("dir", V.UP));
+        for (String k : new String[] {"speed", "spin", "size", "life", "thick", "delay", "grow", "progress"}) v.set(k, o.num(k, 0));
+        v.color("color", o.color("color", WHITE), o.num("alpha", 1));
+        // 파티클마다의 변수 (frame · kind · reach · fold · rise · sink · grav · wax · close · seg · rate · phase · fps · frames · loop · cell · fade · move · vel)
+        for (String k : new String[] {"frame", "kind", "reach", "fold", "rise", "sink", "grav", "wax", "close", "seg", "rate", "phase", "fps", "frames", "loop",
+            "cell", "fade", "spin_rate"}) {
+            if (o.has(k)) v.set(k, o.num(k, 0));
+        }
+        if (o.has("move")) v.vec("move", o.vec("move", V.UP));
+        if (o.has("vel")) v.vec("vel", o.vec("vel", V.ZERO));
+        AddonFx.spawn(level, id, at, v);
+    }
+
+    /** 그 플레이어에게만 보이는 파티클 (player.spawnParticle) */
+    public static void fxFor(ServerPlayer sp, String id, Vec3 at, Opt o) {
+        AddonFx.Vars v = AddonFx.vars().vec("dir", o.vec("dir", V.UP));
+        for (String k : new String[] {"speed", "spin", "size", "life", "thick", "delay", "grow", "progress"}) v.set(k, o.num(k, 0));
+        v.color("color", o.color("color", WHITE), o.num("alpha", 1));
+        AddonFx.spawnFor(sp, id, at, v);
+    }
+
+    static double[] whiten(double[] c, double t) {
+        return new double[] {c[0] + (1 - c[0]) * t, c[1] + (1 - c[1]) * t, c[2] + (1 - c[2]) * t};
+    }
+
+    /** a → b 빛줄기 (선 조각을 이어 붙임). delay 초 뒤에 켜지고 life 초 동안 가늘어지며 사라짐. o: gap · delay · sweep · half · thick · life · alpha */
+    public static void beam(ServerLevel level, Vec3 a, Vec3 b, double[] color, Opt o) {
+        Vec3 d = V.sub(b, a);
+        double len = V.len(d);
+        if (len < 0.05) return;
+        Vec3 u = V.scale(d, 1 / len);
+        double gap = o.num("gap", 0.5);
+        for (double s = gap / 2; s <= len; s += gap) {
+            double delay = o.num("delay", 0) + (o.has("sweep") ? (s / len) * o.num("sweep", 0) : 0);
+            fx(level, "rpg:arrow_trail", V.add(a, u, s), Opt.of("dir", u, "size", o.num("half", 0.32), "thick", o.num("thick", 0.08), "life",
+                    delay + o.num("life", 0.4), "delay", delay, "color", color, "alpha", o.num("alpha", 0.9)));
+        }
+    }
+
+    /** a → b 번개 (지그재그 선 조각). o: jag · thick · delay · life */
+    public static void bolt(ServerLevel level, Vec3 a, Vec3 b, double[] color, Opt o) {
+        Vec3 d = V.sub(b, a);
+        double len = V.len(d);
+        if (len < 0.1) return;
+        Vec3 u = V.unit(d);
+        Vec3 side = V.unit(Math.abs(u.y) > 0.9 ? new Vec3(1, 0, 0) : new Vec3(-u.z, 0, u.x));
+        int n = Math.max(3, (int) Math.ceil(len / 1.1));
+        ThreadLocalRandom r = ThreadLocalRandom.current();
+        double jag = o.num("jag", 0.45);
+        Vec3[] pts = new Vec3[n + 1];
+        pts[0] = a;
+        for (int i = 1; i < n; i++) {
+            double j = (r.nextDouble() * 2 - 1) * jag;
+            double k = (r.nextDouble() * 2 - 1) * jag * 0.6;
+            pts[i] = V.add(V.add(V.add(a, u, (len * i) / n), side, j), V.UP, k);
+        }
+        pts[n] = b;
+        double delay = o.num("delay", 0);
+        for (int i = 0; i < n; i++) {
+            Vec3 s = V.sub(pts[i + 1], pts[i]);
+            double sl = V.len(s);
+            Vec3 mid = V.add(pts[i], s, 0.5);
+            fx(level, "rpg:arrow_trail", mid, Opt.of("dir", V.unit(s), "size", sl / 2 + 0.08, "thick", o.num("thick", 0.1), "life", delay + o.num("life", 0.3),
+                    "delay", delay, "color", color, "alpha", 1.0));
+        }
+    }
+
+    /**
+     * 초승달 참격 한 개 (빛 + 흰 심지 + 초월 기운). o: shape (arc · thin · heavy) · flip · speed · spin · size · life · alpha · aura (색) · color · core (false 면 심지 없이)
+     */
+    public static void arc(ServerLevel level, Vec3 at, Vec3 dir, Opt o) {
+        String id = "rpg:slash_" + o.str("shape", "arc") + "_" + (o.truthy("flip") ? "l" : "r");
+        Opt base = Opt.of("dir", dir, "speed", o.num("speed", 0), "spin", o.num("spin", 0), "size", o.num("size", 0), "life", o.num("life", 0.3));
+        double a = o.num("alpha", 1);
+        double size = o.num("size", 0);
+        double[] color = o.color("color", WHITE);
+        if (o.has("aura")) fx(level, id + "_aura", V.add(at, dir, 0.04), base.with("size", size * 1.03, "color", o.color("aura", WHITE), "alpha", 0.8 * a));
+        fx(level, id + "_glow", at, base.with("color", color, "alpha", 0.95 * a));
+        if (!(o.get("core") instanceof Boolean b && !b)) fx(level, id + "_core", V.add(at, dir, -0.04), base.with("size", size * 0.99, "color", whiten(color, 0.8), "alpha", a));
+    }
+
+    /** 빛의 베인 자국 (rpg:light_cut): 몸에 그어진 뒤 hold 초 동안 떠 있다가 굵어지며 사라짐 */
+    public static void cutMark(ServerLevel level, Vec3 at, Vec3 view, double angle, double hold, double[] glow, double[] core, double scale) {
+        Vec3 dir = V.screenDir(view, angle);
+        fx(level, "rpg:light_cut", at, Opt.of("dir", dir, "size", 0.95 * scale, "thick", 0.36 * scale, "life", hold + 0.16, "delay", hold, "color", glow, "alpha", 0.85));
+        fx(level, "rpg:light_cut", V.add(at, view, -0.05), Opt.of("dir", dir, "size", 0.9 * scale, "thick", 0.13 * scale, "life", hold + 0.16, "delay", hold,
+                "color", core, "alpha", 1.0));
+    }
+
+    /** 바닥 룬 (progress 0~1 = 그려진 단계). o: size · life · spin · rate · grow · progress · color · alpha */
+    public static void rune(ServerLevel level, Vec3 at, Opt o) {
+        fx(level, "rpg:skill_rune", V.up(at, 0.06), Opt.of("size", o.num("size", 0), "life", o.num("life", 0), "spin",
+                o.has("spin") ? o.num("spin", 0) : ThreadLocalRandom.current().nextDouble() * 360, "speed", o.num("rate", 40), "grow", o.num("grow", 0), "progress",
+                o.num("progress", 1), "color", o.color("color", WHITE), "alpha", o.num("alpha", 0.9)));
+    }
+
+    public static void burst(ServerLevel level, Vec3 at, double[] color, double size, double life) {
+        fx(level, "rpg:bash_burst", at, Opt.of("dir", V.SOUTH, "spin", ThreadLocalRandom.current().nextDouble() * 360, "size", size, "life", life, "color", color,
+                "alpha", 0.95));
+    }
+
+    public static void ring(ServerLevel level, Vec3 at, Vec3 dir, double[] color, double size, double life, double speed) {
+        fx(level, "rpg:bash_ring", at, Opt.of("dir", dir, "speed", speed, "size", size, "life", life, "color", color, "alpha", 0.9));
+    }
+
+    public static void shock(ServerLevel level, Vec3 feet, double[] color, double size, double life) {
+        fx(level, "rpg:shock_ring", V.up(feet, 0.08), Opt.of("dir", V.ZERO, "size", size, "life", life, "color", color, "alpha", 0.9));
+    }
+
+    public static void sparks(ServerLevel level, Vec3 at, double[] color, int n, double speed) {
+        ThreadLocalRandom r = ThreadLocalRandom.current();
+        for (int i = 0; i < n; i++) {
+            double a = ((double) i / n) * Math.PI * 2;
+            Vec3 d = V.unit(new Vec3(Math.cos(a), 0.35 + r.nextDouble() * 0.5, Math.sin(a)));
+            fx(level, "rpg:arrow_spark", at, Opt.of("dir", d, "speed", speed, "size", 0.1, "life", 0.3, "color", color, "alpha", 0.9));
+        }
+    }
+
+    /** 화면 흔들림 (camerashake add @s 세기 초 rotational) */
+    public static void shake(ServerPlayer sp, double intensity, double seconds) {
+        RpgNet.shake(sp, intensity, seconds);
+    }
+
+    /** count 번을 gap 틱 간격으로 (0번째는 바로 — skills.js every) */
+    public static void every(int count, int gap, java.util.function.IntConsumer fn) {
+        for (int i = 0; i < count; i++) {
+            if (i == 0) fn.accept(0);
+            else {
+                int k = i;
+                mmorpg.fabric.Tasks.later(i * gap, () -> fn.accept(k));
+            }
+        }
+    }
+
+    // ------------------------------------------------------------ 소리 (베드락 이름 → 자바)
+
+    private static final Map<String, String> SOUND = new HashMap<>();
+
+    static {
+        String[][] map = {
+            {"item.trident.thunder", "item.trident.thunder"}, {"random.explode", "entity.generic.explode"},
+            {"mace.heavy_smash_ground", "item.mace.smash_ground_heavy"}, {"mace.smash_ground", "item.mace.smash_ground"}, {"mace.smash_air", "item.mace.smash_air"},
+            {"item.spear.attack_miss", "item.spear.attack"}, {"beacon.power", "block.beacon.power_select"}, {"beacon.activate", "block.beacon.activate"},
+            {"beacon.deactivate", "block.beacon.deactivate"}, {"beacon.ambient", "block.beacon.ambient"}, {"item.trident.throw", "item.trident.throw"},
+            {"item.trident.hit", "item.trident.hit"}, {"item.trident.return", "item.trident.return"}, {"item.trident.riptide_1", "item.trident.riptide_1"},
+            {"item.trident.riptide_3", "item.trident.riptide_3"}, {"chime.amethyst_block", "block.amethyst_block.chime"},
+            {"resonate.amethyst_block", "block.amethyst_block.resonate"}, {"break.amethyst_cluster", "block.amethyst_cluster.break"},
+            {"mob.endermen.portal", "entity.enderman.teleport"}, {"random.bow", "entity.arrow.shoot"}, {"random.bowhit", "entity.arrow.hit"},
+            {"mob.evocation_illager.prepare_attack", "entity.evoker.prepare_attack"}, {"mob.evocation_illager.cast_spell", "entity.evoker.cast_spell"},
+            {"mob.evocation_illager.prepare_summon", "entity.evoker.prepare_summon"}, {"firework.large_blast", "entity.firework_rocket.large_blast"},
+            {"firework.blast", "entity.firework_rocket.blast"}, {"firework.twinkle", "entity.firework_rocket.twinkle"}, {"random.anvil_land", "block.anvil.land"},
+            {"random.anvil_use", "block.anvil.use"}, {"mob.blaze.shoot", "entity.blaze.shoot"}, {"ambient.weather.lightning.impact", "entity.lightning_bolt.impact"},
+            {"ambient.weather.thunder", "entity.lightning_bolt.thunder"}, {"game.player.attack.critical", "entity.player.attack.crit"},
+            {"game.player.attack.strong", "entity.player.attack.strong"}, {"mob.ravager.roar", "entity.ravager.roar"}, {"mob.breeze.whirl", "entity.breeze.whirl"},
+            {"mob.breeze.charge", "entity.breeze.charge"}, {"mob.breeze.jump", "entity.breeze.jump"}, {"fire.ignite", "item.flintandsteel.use"},
+            {"fire.fire", "block.fire.ambient"}, {"random.fizz", "block.fire.extinguish"}, {"crossbow.shoot", "item.crossbow.shoot"},
+            {"crossbow.loading.start", "item.crossbow.loading_start"}, {"crossbow.loading.middle", "item.crossbow.loading_middle"}, {"block.bell.hit", "block.bell.use"},
+            {"random.totem", "item.totem.use"}, {"random.glass", "block.glass.break"}, {"particle.soul_escape", "particle.soul_escape"},
+            {"mob.vex.charge", "entity.vex.charge"}, {"mob.enderdragon.flap", "entity.ender_dragon.flap"}, {"mob.enderdragon.growl", "entity.ender_dragon.growl"},
+            {"item.shield.block", "item.shield.block"}, {"mob.warden.sonic_charge", "entity.warden.sonic_charge"}, {"mob.warden.sonic_boom", "entity.warden.sonic_boom"},
+            {"mob.warden.heartbeat", "entity.warden.heartbeat"}, {"mob.ghast.fireball", "entity.ghast.shoot"}, {"armor.equip_iron", "item.armor.equip_iron"},
+            {"armor.equip_gold", "item.armor.equip_gold"}, {"random.orb", "entity.experience_orb.pickup"}, {"mob.zombie.unfect", "entity.zombie_villager.cure"},
+            {"mob.player.hurt_freeze", "entity.player.hurt_freeze"}, {"dig.stone", "block.stone.break"}, {"wind_charge.burst", "entity.wind_charge.wind_burst"},
+            {"use.chain", "block.chain.place"}, {"place.chain", "block.chain.place"}, {"respawn_anchor.charge", "block.respawn_anchor.charge"},
+            {"respawn_anchor.deplete", "block.respawn_anchor.deplete"}, {"random.levelup", "entity.player.levelup"}, {"mob.wither.spawn", "entity.wither.spawn"},
+            {"mob.wither.shoot", "entity.wither.shoot"}, {"mob.shulker.bullet.hit", "entity.shulker_bullet.hit"}, {"mob.phantom.flap", "entity.phantom.flap"},
+            {"mob.allay.idle", "entity.allay.ambient_without_item"}, {"item.firecharge.use", "item.firecharge.use"}, {"bucket.empty_water", "item.bucket.empty"},
+            {"step.powder_snow", "block.powder_snow.step"}, {"random.splash", "entity.generic.splash"}, {"random.click", "ui.button.click"},
+            {"portal.trigger", "block.portal.trigger"}, {"note.pling", "block.note_block.pling"}, {"note.bass", "block.note_block.bass"},
+            {"random.pop", "entity.item.pickup"}, {"mob.zombie.woodbreak", "entity.zombie.break_wooden_door"}, {"random.door_open", "block.wooden_door.open"},
+        };
+        for (String[] m : map) SOUND.put(m[0], m[1]);
+    }
+
+    /** 베드락 소리 이름 → 자바 소리 (없으면 null — 한 번 로그) */
+    public static SoundEvent sound(String bedrock) {
+        String java = SOUND.getOrDefault(bedrock, bedrock);
+        SoundEvent s = BuiltInRegistries.SOUND_EVENT.getValue(Identifier.withDefaultNamespace(java));
+        if (s == null && WARNED.add(bedrock)) LOG.warn("[mmorpg] no Java sound for {} ({})", bedrock, java);
+        return s;
+    }
+
+    /** 대응표의 자바 소리 이름 (시험용) */
+    public static Map<String, String> soundTable() {
+        return Map.copyOf(SOUND);
+    }
+
+    /** 그 자리에서 소리 (fx.js play(dim, 이름, 자리, pitch, volume)) */
+    public static void play(ServerLevel level, String bedrock, Vec3 at, double pitch, double volume) {
+        SoundEvent s = sound(bedrock);
+        if (s == null) return;
+        level.playSound(null, at.x, at.y, at.z, s, SoundSource.PLAYERS, (float) volume, (float) pitch);
+    }
+
+    /** 그 사람에게만 들리는 소리 (player.playSound) */
+    public static void playFor(ServerPlayer sp, String bedrock, double pitch, double volume) {
+        SoundEvent s = sound(bedrock);
+        if (s != null) Notify.sound(sp, s, (float) volume, (float) pitch);
+    }
+
+    // ------------------------------------------------------------ 베드락 바닐라 파티클
+
+    /** 베드락 바닐라 파티클 (minecraft:heart_particle 등) → 자바 파티클 하나 (emitter 는 여러 개) */
+    public static void vanilla(ServerLevel level, String bedrock, Vec3 at) {
+        switch (bedrock) {
+            case "minecraft:heart_particle" -> level.sendParticles(ParticleTypes.HEART, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            case "minecraft:totem_particle" -> level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, at.x, at.y, at.z, 6, 0.2, 0.2, 0.2, 0.3);
+            case "minecraft:snowflake_particle" -> level.sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y, at.z, 1, 0.05, 0.05, 0.05, 0.02);
+            case "minecraft:huge_explosion_emitter" -> level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            case "minecraft:lava_particle" -> level.sendParticles(ParticleTypes.LAVA, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            case "minecraft:critical_hit_emitter" -> level.sendParticles(ParticleTypes.CRIT, at.x, at.y, at.z, 10, 0.25, 0.25, 0.25, 0.3);
+            case "minecraft:basic_flame_particle" -> level.sendParticles(ParticleTypes.FLAME, at.x, at.y, at.z, 1, 0, 0, 0, 0.01);
+            case "minecraft:basic_smoke_particle" -> level.sendParticles(ParticleTypes.SMOKE, at.x, at.y, at.z, 1, 0, 0, 0, 0.01);
+            default -> {
+                if (WARNED.add(bedrock)) LOG.warn("[mmorpg] no Java particle for {}", bedrock);
+            }
+        }
+    }
+
+    public static void particle(ServerLevel level, ParticleOptions p, Vec3 at, int count, double spread, double speed) {
+        level.sendParticles(p, at.x, at.y, at.z, count, spread, spread, spread, speed);
+    }
+}

@@ -2,6 +2,7 @@ package mmorpg.fabric.mixin;
 
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.RpgHealth;
+import mmorpg.fabric.skill.Kit;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -17,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 /**
  * 생명체 공통.
  * - heal: 플레이어 회복량을 최대 체력 비율로 (회복 1 = 최대 체력의 1/20)
- * - actuallyHurt (플레이어 외): 실제로 깎인 양 (방어구 · 흡수 뒤) 으로 피해 숫자
+ * - actuallyHurt: 실제로 깎인 양 (방어구 · 흡수 뒤) 으로 피해 숫자, 피해를 받은 틱 (스킬이 몹 무적 시간을 피하려고)
  * - 불사의 토템이 막으면 최대 체력의 10%
  */
 @Mixin(LivingEntity.class)
@@ -34,6 +35,7 @@ public abstract class LivingEntityMixin {
     private void mmorpg$hurtStart(ServerLevel level, DamageSource source, float amount, CallbackInfo ci) {
         LivingEntity self = (LivingEntity) (Object) this;
         this.mmorpg$hpBefore = self.getHealth() + self.getAbsorptionAmount();
+        if (!self.level().isClientSide()) Kit.noteHurt(self);
     }
 
     @Inject(method = "actuallyHurt", at = @At("RETURN"))
