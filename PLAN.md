@@ -1,6 +1,6 @@
 # 자바 에디션 (Fabric) 이식 계획
 
-작성: 2026-10-09 · 갱신: 2026-10-10 (3단계) · 기준 애드온: v2.27.0 (스크립트 약 44,700줄)
+작성: 2026-10-09 · 갱신: 2026-10-10 (4단계) · 기준 애드온: v2.27.0 (스크립트 약 44,700줄)
 저장소: https://github.com/hebi-06/minecraft (main 에 올리면 GitHub Actions 가 빌드 · 시험 · 릴리스)
 
 ## 1. 현재 상태
@@ -12,7 +12,8 @@
 | 1. 기본 | 완료 (26.3) | 스탯 · 레벨 포인트 · 스탯 창 · RPG 체력 · 체력 바 HUD · 무기 151종 (요구 조건 · 평타 공식 · 치명타 · 활 · 완드 · 방패) · 피해 숫자 |
 | 2. 무기 연출 · 3D 모델 | 완료 (26.3) | 무기 3D 모델 31종 · 활 / 완드 이펙트 그림 · 근접 참격 22종 그림 · 무기 빛 알갱이 13종 · 화면 흔들림 (아래 3절) |
 | 3. 초월 무기 스킬 · 룬 | 완료 (26.3) | 초월 무기 스킬 14종 · 룬 80종 · 룬 뽑기 · 초월 룬 하늘빛 / 번쩍임 (아래 3절) |
-| 4 ~ 6 | 다음 | 아래 4절 |
+| 4. 갑옷 · 상점 · NPC · 퀘스트 | 완료 (26.3) | 갑옷 120 (애드온 3D 모델) · 재료 · 서버 창 4종 · 상점 · 대장장이 (강화 · 레벨 올리기 · 보스 무기 제작) · 룬술사 · NPC · 퀘스트 (메인 31단계 · 반복 · 왕실 · 전설 · 직접 만든 것) · 길 안내 · 훈련용 허수아비 · NPC / 퀘스트 설정 창 (아래 3절) |
+| 5 · 6 | 다음 | 아래 4절 |
 
 대상: 마인크래프트 자바 **26.3** · Fabric Loader 0.19.5 · Fabric API 0.162.0+26.3 · Loom 1.18 · Java 25 (gradle.properties).
 1.21.1 판 (1단계까지): 브랜치 `mc-1.21.1` → 릴리스 `release-mc-1.21.1` (더 고치지 않음).
@@ -30,15 +31,22 @@
 - 파티클: `SingleQuadParticle.extract(QuadParticleRenderState, Camera, float)` 로 사각형을 직접 넣음 (회전 · UV · 색 · 밝기), 공급자는 Fabric `ParticleProviderRegistry` + `FabricSpriteSet`
 - 휘두르기: 공격 패킷 (`ServerboundAttackPacket` → `Player.attack`) 과 별도로 휘두르기 패킷 (`ServerboundPunchPacket` → `handlePunch`) — 허공 참격은 handlePunch 믹스인
 - 카메라: `Camera.update` → `alignWithEntity(partialTick)` 가 보는 방향을 정함 (화면 흔들림은 그 뒤에 더함)
+- 갑옷 그리기: Fabric `ArmorRenderer` + `submitTransformCopyingModel` (사람 모델의 head · body · right_arm … 움직임을 같은 이름의 부분에 복사). 갑옷 아이템은 `equippable` (자산 없이) — Fabric 이 렌더 상태에 넣어 줌
+- 마네킹 (`Mannequin`): 스킨 · 설명 줄 · 밀리지 않음의 설정 함수가 private → 접근 믹스인 (`MannequinAccessor`), 무적은 `setPermanentlyInvulnerable`
+- 창 위젯: `EditBox` · `CycleButton.builder` · `AbstractSliderButton` · `Button.builder` (그리기는 `extractWidgetRenderState`), 배경은 `Screen.extractBackground`
+- 파티클 화면 밖 자르기: `QuadParticleGroup.extractRenderState` 가 가운데 점 (`Frustum.pointInFrustum`) 으로만 봄 → 큰 애드온 파티클은 크기로 (`QuadParticleGroupMixin`)
+- 아이템 구성 요소: `DataComponentType.builder().persistent(codec).networkSynchronized(streamCodec)` (무기 강화 단계 `mmorpg:enhance`)
+- 세계 · 엔티티 저장: Fabric Data Attachment (엔티티 · 플레이어 (`copyOnDeath`) · 오버월드 `ServerLevel`) — 베드락 동적 속성 대신 `Props`
 
 ## 2. 시험
 
 | 시험 | 방법 | 내용 |
 |---|---|---|
 | 규칙 코어 대조 | `./check-core.sh` (Node + JDK) | 애드온 JS 함수와 Java 포트의 결과 28,530개 비교 |
-| 게임 시험 28개 | `./gradlew runGameTest` (`build` 가 함께 돌림 — 서버 + 가짜 플레이어 · 좀비 · 허스크 과녁) | 1단계 16개 (시작 포인트 · 레벨업 · 최대 체력 · 회복 환산 · 방패 · 독 · 토템 · 체력 비율 저장 · 평타 공식 · 치명타 · 요구 조건 · 활 · 완드 · 피해 숫자 · 무기 등록 · 명령어) + 스킬 7개 (재사용 대기 · 그람 피해 · 스킬 숫자 · 피해 감소 / 반사 · 속박 / 침묵 · 활 길게 누르기 입력 · 소리 대응표) + 룬 5개 (아이템 80 · 효과 80 등록 · 칸 고르면 바로 쓰기 · 뽑기권 · 위력 / 재사용 대기 / 핫바 표시) |
+| 게임 시험 70개 | `./gradlew runGameTest` (`build` 가 함께 돌림 — 서버 + 가짜 플레이어 · 좀비 · 허스크 과녁) | 1단계 16개 (시작 포인트 · 레벨업 · 최대 체력 · 회복 환산 · 방패 · 독 · 토템 · 체력 비율 저장 · 평타 공식 · 치명타 · 요구 조건 · 활 · 완드 · 피해 숫자 · 무기 등록 · 명령어) + 스킬 7개 (재사용 대기 · 그람 피해 · 스킬 숫자 · 피해 감소 / 반사 · 속박 / 침묵 · 활 길게 누르기 입력 · 소리 대응표) + 룬 6개 (아이템 80 · 효과 80 등록 · 칸 고르면 바로 쓰기 · 뽑기권 · 위력 / 재사용 대기 / 핫바 표시 · 평타 강화) + 4단계: 갑옷 · 상점 6개 (등록 · 방어 / 보너스 · 벗겨짐 · 강화 배율 · 무기 사기 · 전리품 팔기), 대장장이 6개, 룬술사 · 허수아비 4개, 퀘스트 11개 (만든 퀘스트 4종 · 대화 장 넘김 · 목록 · 메인 이야기 처음 · 반복 의뢰 · 저장 다시 읽기 · 보스 · 전설 · /mainnpc), 길 안내 7개, 설정 창 6개 — 창 흐름은 클라이언트 없이 (`Forms.HEADLESS`) |
 | 화면 시험 | `./gradlew runClientGameTest` (Fabric 클라이언트 게임 시험, CI 는 xvfb) | 평평한 세계에서 실제 입력으로: 확인 16항목 (스탯 동기화 · HUD · 평타 / 치명타 숫자 · 무기 빛 알갱이 수 · 1인칭 / 3인칭 자리 · 도끼 화면 흔들림 · 낮은 체력 · K 키 스탯 창 · 툴팁 · +1 클릭이 서버 스탯을 올림 · 활 · 완드 명중) + 장면 사진 → `ci-logs` 브랜치 `client-checks.txt` · `shots/` |
 | 무기 사진첩 | 같은 화면 시험 (`RpgWeaponGallery`) | 디자인 31종 1인칭 · 3인칭 · 마네킹 옆 / 앞 · 밤 빛나는 칸, 활 · 완드 이펙트 틱별, 참격 7종 (평타 · 치명타 · 허공), 빛 알갱이 13종 (밤 실제 크기 · 마네킹 4배) — 사진으로 확인 |
+| 갑옷 · 창 · 길 안내 사진첩 | 같은 화면 시험 (`RpgGearGallery` · `RpgFormGallery` · `RpgNavGallery`) | 갑옷 세트 5종 (3인칭 앞 · 뒤 · 마네킹 · 걸을 때 망토) · 가방 설명 · 허수아비, 상점 · NPC 대화 · 버튼 목록 · 입력창 · 설정 창을 실제 마우스 · 키로 (확인 항목 + 사진), 길 안내 화살표 방향 · 바닥 빛 · 도착 |
 | 스킬 · 룬 사진첩 | 같은 화면 시험 (`RpgSkillGallery` · `RpgRuneGallery`) | 쓰러지지 않는 과녁 허스크 여섯 앞에서 스킬 14종 · 룬 80종을 실제 입력으로 (스킬 2 · 초월 룬은 3인칭으로 한 번 더): 써졌는지 · 들어간 피해를 로그로 확인 (안 써지거나 피해 룬의 피해가 0 이면 실패) + 순간 사진 |
 | 배포 환경 | `ci/prod_smoke.sh` · `./gradlew prodClient` | 릴리스 jar 그대로 실제 Fabric 서버 · 클라이언트를 켜서 시작 · HUD · 스탯 창 확인 (개발 환경에서만 되는 문제를 막음) |
 
@@ -78,10 +86,24 @@
 
 달라지는 점: 자바는 죽었다 다시 태어나면 플레이어 객체가 바뀜 (베드락은 같음) — 오래 남는 룬 상태는 UUID 로 적고 그때의 플레이어를 찾음.
 
+### 4단계 (갑옷 · 창 · 상점 · NPC · 퀘스트)
+
+| 애드온 (베드락) | 자바 (Fabric) |
+|---|---|
+| 갑옷 아이템 · attachable 3D 모델 (geo.json · 황제 망토 애니메이션) | Item 120 (`equippable` · 방어 속성) + 클라이언트 `ArmorModels`: 애드온 모델을 자바 좌표로 바꿔 (`tools/armor_items.py`) 입은 사람의 움직임을 그대로 따라 그림, 망토는 걷는 빠르기만큼 |
+| 갑옷 스탯 보너스 (`setStatBonus`) · 요구 조건 (`armorTick`) | `ArmorSystem` (0.5초마다) → `RpgStats` 장비 보너스 (최대 체력은 남은 비율 그대로) |
+| 서버 폼 (ActionForm · ModalForm) + 리소스 팩 UI (상자 창 · 대화창) | 창 패킷 (`ui.FormNet`) + 클라이언트 화면 (`client/form/` — 애드온 그림 그대로). 애드온의 `await` 고리는 받을 일 (콜백) 되부름 (`ui.Forms`: 응답이 오면 다음 창으로 바로 바뀜, 흐름이 끝나면 닫힘) |
+| 아이템 동적 속성 (`rpg:enhance`) | 아이템 구성 요소 `mmorpg:enhance` (`gear.WeaponEnhance` — 이름 +N · 설명 · 피해) |
+| 엔티티 · 플레이어 · 세계 동적 속성 (NPC 번호 · 퀘스트 정의 · 진행 · 길 안내) | `Props` (Fabric Data Attachment — JSON 글자 그대로라 애드온과 같은 모양) |
+| `minecraft:npc` (NPC 엔티티 · 스킨 고르기 · 고개 돌리기) | 마네킹 (`Mannequin`): 밀리지 않음 · 무적 · 가까운 사람을 바라봄 (`Npcs`), 스킨은 설정 창 (플레이어 이름) |
+| 길 안내 (제목 채널에 숨긴 글자 → hud_screen.json 화살표 칸) | `nav.NavNet` 패킷 + 클라이언트 `NavHud` (방향 · 거리는 클라이언트가 매 프레임 — 서버 왕복 없음), 바닥 빛 · 빛기둥은 그 사람에게만 보내는 파티클 |
+| `rpg:training_dummy` (엔티티 · geo · wobble 애니메이션 · 이름표 여러 줄) | 자바 엔티티 `TrainingDummy` + `DummyRenderer` (`tools/dummy_model.py`), 머리 위 기록은 글자 표시 엔티티 (체력 상한 1024 없이 원래 피해 그대로 기록) |
+
+달라지는 점: 몬스터 (`rpg:*`) 처치 · 보스 단계 퀘스트와 사냥터 · 제단 길 안내는 5단계 몬스터 · 보스가 생기면 진행됨 (훅: `quest.Loot` · `QuestSystem.onBossKilled` · `nav.Nav.zones / altars / bossFights`).
+
 ## 4. 다음 단계 (각 단계 = 빌드 · 게임 시험 · 화면 시험 통과 후 전달)
 
-4. 갑옷 · 강화 · 대장장이 · 상점 · NPC · 퀘스트 · 룬술사 (룬 갈기 · 뽑기권 사기)
-5. 몬스터 · 보스 9종 · 제단 · 세계수
+5. 몬스터 · 보스 9종 · 제단 · 세계수 (4단계 퀘스트의 처치 · 보스 단계, 길 안내의 사냥터 · 제단이 이어짐)
 6. 결투 (PvP) · 탈것 · 엔더 상자 · 나머지
 
 ## 5. 참고

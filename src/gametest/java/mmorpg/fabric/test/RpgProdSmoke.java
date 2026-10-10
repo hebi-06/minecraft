@@ -28,7 +28,7 @@ public final class RpgProdSmoke implements FabricClientGameTest {
     }
 
     /**
-     * 이 화면 시험을 돌릴지: 환경 변수 MMORPG_ONLY (CI 수동 실행의 only 입력 — 쉼표로 client · weapon · particle · skill · rune · gear) 가
+     * 이 화면 시험을 돌릴지: 환경 변수 MMORPG_ONLY (CI 수동 실행의 only 입력 — 쉼표로 client · weapon · particle · skill · rune · gear · form · nav) 가
      * 비었으면 모두, 아니면 적힌 것만
      */
     public static boolean only(String key) {

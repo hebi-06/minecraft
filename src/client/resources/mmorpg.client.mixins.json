@@ -6,7 +6,8 @@
   "client": [
     "CameraMixin",
     "ClientTitleMixin",
-    "FogRendererMixin"
+    "FogRendererMixin",
+    "QuadParticleGroupMixin"
   ],
   "injectors": {
     "defaultRequire": 1
