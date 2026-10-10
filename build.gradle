@@ -76,6 +76,9 @@ configurations {
 
 dependencies {
     prodMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+    // 시험 모듈은 Fabric API 묶음 jar 에 들어 있지 않음 (배포 설치에는 필요 없음 — 이 시험에만)
+    prodMods fabricApi.module("fabric-gametest-api-v1", project.fabric_version)
+    prodMods fabricApi.module("fabric-client-gametest-api-v1", project.fabric_version)
 }
 
 tasks.register('gametestJar', Jar) {
