@@ -176,5 +176,14 @@
   "entity.rpg.prop_straw_cage": "짚단 감옥",
   "entity.rpg.prop_surtr_core": "수르트의 핵",
   "entity.rpg.prop_surtr_gauge": "업화",
-  "entity.rpg.prop_ymir_ice": "이미르의 얼음"
+  "entity.rpg.prop_ymir_ice": "이미르의 얼음",
+  "block.rpg.altar_scarecrow_king": "허수아비 킹 제단",
+  "block.rpg.altar_scorpions": "사막 전갈 · 바위 전갈 제단",
+  "block.rpg.altar_kraken": "크라켄 제단",
+  "block.rpg.altar_great_worm": "거대 웜 제단",
+  "block.rpg.altar_jormungandr": "요르문간드 제단",
+  "block.rpg.altar_nidhogg": "니드호그 제단",
+  "block.rpg.altar_skoll_hati": "스콜과 하티 제단",
+  "block.rpg.altar_ymir": "이미르 제단",
+  "block.rpg.altar_surtr": "수르트 제단"
 }

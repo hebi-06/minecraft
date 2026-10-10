@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "rpg:block/altar/ymir_top",
+    "bottom": "rpg:block/altar/ymir_bottom",
+    "side": "rpg:block/altar/ymir_side"
+  }
+}

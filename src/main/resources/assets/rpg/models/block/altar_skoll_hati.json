@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "rpg:block/altar/skoll_hati_top",
+    "bottom": "rpg:block/altar/skoll_hati_bottom",
+    "side": "rpg:block/altar/skoll_hati_side"
+  }
+}

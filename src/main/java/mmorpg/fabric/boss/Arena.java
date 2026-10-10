@@ -24,8 +24,9 @@ import net.minecraft.world.phys.Vec3;
  * 보스 제단과 보스 필드 (arena.js) — 제단 목록 (세계 동적 속성 rpg:altars, 애드온과 같은 JSON) · 필드 크기 · 안에 있는지 · 관리 권한.
  * 좌표: 제단 블록 자리 (x, y, z) = 필드 가운데. 바닥은 y - 1 층, 플레이어는 y 층에 섬.
  * <p>
- * 신전 짓기 (테마 9종 · 단계별 짓기 · 확인 창) · 필드 보호 · 제단 블록은 arena 작업 (ArenaThemes · ArenaBuild · ArenaGuard · AltarBlocks) 이 채움 —
- * 아래 "짓기" 절의 함수 몸통을 그쪽이 바꿈 (이름 · 인자는 그대로). 보스 엔진 (Bosses) 은 이 클래스의 함수만 부름.
+ * 신전 설계 9종 = {@link ArenaThemes} (마인크래프트 없이 — 애드온과 같은 칸 · 같은 블록 · 같은 씨앗, 테마 도우미 deepTile · isleSize · rootAt · discSide …),
+ * 베드락 블록 → 자바 = {@link ArenaBlocks}, 단계별 짓기 · 확인 창 = {@link ArenaBuild}, 제단 블록 9종 = {@link AltarBlocks},
+ * 필드 보호 · 제단 놓기 · 누르기 · 초기화 = {@link ArenaGuard}. 보스 엔진 (Bosses) 은 이 클래스의 함수를 부름 (테마 도우미는 ArenaThemes 를 바로).
  */
 public final class Arena {
     private Arena() {}
@@ -252,7 +253,7 @@ public final class Arena {
         return server == null ? null : NpcData.levelOf(server, a.dim);
     }
 
-    // ------------------------------------------------------------ 짓기 · 설계 (arena 작업이 채움)
+    // ------------------------------------------------------------ 짓기 · 설계
 
     /**
      * 필드의 특징 자리 (arena.js arenaFeatures — 월드 좌표, 칸 가운데): 토템 · 분신 자리 · 성문 · 기둥, 해일 그림자 기둥 (half) · 촉수 물구덩이,
@@ -279,24 +280,102 @@ public final class Arena {
     /** 사슬 기둥 · 얼음 결정 (가운데 3×3 반폭 half, 높이 h, 블록 cells, 결정 둘레 서리 바닥 frost) */
     public record Column(Vec3 at, double half, int h, List<Cell> cells, List<Cell> frost) {}
 
-    /** 필드 설계의 특징 자리 (테마가 없으면 EMPTY) — TODO(arena): ArenaThemes 의 설계로 */
+    /** 필드 설계의 특징 자리 (월드 좌표, 칸 가운데 — 테마가 없으면 EMPTY). 설계는 {@link ArenaThemes} (애드온과 같은 칸 · 같은 블록) */
     public static Features arenaFeatures(Altar a) {
-        return Features.EMPTY;
+        ArenaThemes.Plan plan = arenaPlan(a);
+        if (plan == null) return Features.EMPTY;
+        ArenaThemes.Feat f = plan.features();
+        Vec3 c = arenaCenter(a);
+        java.util.function.BiFunction<Integer, Integer, Vec3> to = (dx, dz) -> new Vec3(c.x + dx, a.y, c.z + dz);
+        List<Vec3> totems = new ArrayList<>();
+        for (ArenaThemes.Spot p : f.totems()) totems.add(to.apply(p.dx(), p.dz()));
+        List<Vec3> decoys = new ArrayList<>();
+        for (ArenaThemes.Spot p : f.decoys()) decoys.add(to.apply(p.dx(), p.dz()));
+        List<Vec3> gates = new ArrayList<>();
+        for (ArenaThemes.Spot p : f.gates()) gates.add(to.apply(p.dx(), p.dz()));
+        List<Vec3> posts = new ArrayList<>();
+        for (ArenaThemes.Spot p : f.posts()) posts.add(to.apply(p.dx(), p.dz()));
+        List<Pillar> pillars = new ArrayList<>();
+        for (ArenaThemes.PillarAt p : f.pillars()) pillars.add(new Pillar(to.apply(p.dx(), p.dz()), p.half()));
+        List<Vec3> holes = new ArrayList<>();
+        for (ArenaThemes.Spot p : f.holes()) holes.add(to.apply(p.dx(), p.dz()));
+        List<Stone> stones = new ArrayList<>();
+        for (ArenaThemes.StoneAt p : f.stones()) stones.add(new Stone(to.apply(p.dx(), p.dz()), p.sun()));
+        List<Vec3> fires = new ArrayList<>();
+        for (ArenaThemes.Spot p : f.fires()) fires.add(to.apply(p.dx(), p.dz()));
+        List<Spire> spires = new ArrayList<>();
+        for (ArenaThemes.SpireAt p : f.spires()) spires.add(new Spire(to.apply(p.dx(), p.dz()), p.h()));
+        List<Column> chains = new ArrayList<>();
+        for (ArenaThemes.ColumnAt p : f.chains()) chains.add(new Column(to.apply(p.dx(), p.dz()), p.half(), p.h(), cellsOf(a, p.cells()), cellsOf(a, p.frost())));
+        List<Column> crystals = new ArrayList<>();
+        for (ArenaThemes.ColumnAt p : f.crystals()) crystals.add(new Column(to.apply(p.dx(), p.dz()), p.half(), p.h(), cellsOf(a, p.cells()), cellsOf(a, p.frost())));
+        List<Spire> towers = new ArrayList<>();
+        for (ArenaThemes.SpireAt p : f.towers()) towers.add(new Spire(to.apply(p.dx(), p.dz()), p.h()));
+        return new Features(List.copyOf(totems), List.copyOf(decoys), List.copyOf(gates), List.copyOf(posts), List.copyOf(pillars), List.copyOf(holes),
+                f.tile() == null ? 0 : f.tile(), List.copyOf(stones), List.copyOf(fires), List.copyOf(spires), List.copyOf(chains), List.copyOf(crystals), List.copyOf(towers));
     }
 
-    /** 짓는 중인지 — TODO(arena): 짓기 작업 */
+    /** 설계의 놓을 블록 (제단 기준 dx, dy, dz) → 월드 칸 좌표 (블록 · 상태는 애드온의 베드락 이름 그대로 — 자바 블록은 ArenaBlocks.state(cell)) */
+    private static List<Cell> cellsOf(Altar a, List<ArenaThemes.Put> list) {
+        List<Cell> out = new ArrayList<>(list.size());
+        for (ArenaThemes.Put q : list) {
+            java.util.Map<String, String> st = null;
+            if (q.states() != null) {
+                st = new java.util.LinkedHashMap<>();
+                for (java.util.Map.Entry<String, Object> e : q.states().entrySet()) st.put(e.getKey(), String.valueOf(e.getValue()));
+                st = Collections.unmodifiableMap(st);
+            }
+            out.add(new Cell(a.x + q.dx(), a.y + q.dy(), a.z + q.dz(), q.block(), st));
+        }
+        return List.copyOf(out);
+    }
+
+    /** 제단의 필드 설계 (테마가 없으면 null — arena.js arenaPlan) */
+    public static ArenaThemes.Plan arenaPlan(Altar a) {
+        return ArenaThemes.arenaPlan(a.key, a.x, a.y, a.z);
+    }
+
+    /**
+     * 원판의 어느 쪽인지 (스콜과 하티 — arena.js discSide): at = 서 있는 자리, center = 필드 가운데 (제단 칸 가운데), disc = 원판 반지름 →
+     * "sun" (해, 동쪽 dx ≥ 1) · "moon" (달, 서쪽 dx ≤ -1) · "line" (제단 줄) · null (원판 밖)
+     */
+    public static String discSide(Vec3 at, Vec3 center, double disc) {
+        return ArenaThemes.discSide(at.x, at.z, center.x, center.z, disc);
+    }
+
+    /** 짓는 중인지 */
     public static boolean isBuilding(Altar a) {
-        return false;
+        return ArenaBuild.isBuilding(a);
     }
 
-    /** "보스 필드 만들기" 확인 창 (arena.js askBuild) — TODO(arena): 창 · 짓기 */
+    /** "보스 필드 만들기" 확인 창 (arena.js askBuild — 운영자 · 크리에이티브만, 지을 수 없으면 까닭을 채팅으로) */
     public static void askBuild(ServerPlayer p, Altar a) {
-        p.sendSystemMessage(net.minecraft.network.chat.Component.literal("§c[보스 필드] 아직 지을 수 없습니다"));
+        ArenaBuild.askBuild(p, a);
     }
 
-    /** 제단 블록 아이템 (/boss altar) — TODO(arena): 제단 블록 */
+    /** 필드 짓기 시작 (arena.js buildArena — /boss build · 관리 창 "다시 짓기"). 시작했으면 true */
+    public static boolean buildArena(Altar a, ServerPlayer player) {
+        return ArenaBuild.buildArena(a, player);
+    }
+
+    /** 지을 수 없는 까닭 (없으면 null — arena.js buildProblem) */
+    public static String buildProblem(Altar a) {
+        return ArenaBuild.buildProblem(a);
+    }
+
+    /** 목록의 제단 자리에 제단 블록이 없으면 목록에서 뺌 (arena.js checkAltarBlocks — 200틱마다 저절로) */
+    public static void checkAltarBlocks() {
+        ArenaBuild.checkAltarBlocks();
+    }
+
+    /** 제단 블록 아이템 (/boss altar — 없는 키면 빈 것) */
     public static net.minecraft.world.item.ItemStack altarItem(String key, int amount) {
-        return net.minecraft.world.item.ItemStack.EMPTY;
+        return AltarBlocks.item(key, amount);
+    }
+
+    /** 지금의 제단 없어짐 훅 (시험이 잠시 바꿨다가 되돌릴 때) */
+    public static Consumer<Altar> altarRemovedHook() {
+        return onRemoved;
     }
 
     /** 제단 블록을 누름 (arena.js 의 ALTAR_COMPONENT — 보스 엔진이 정함: 도전 창 · 싸우는 중 체력 · 웅크린 관리자는 짓기 창) */
