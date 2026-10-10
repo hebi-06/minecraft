@@ -8,6 +8,7 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.MoveTowardsRestrictionGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.RandomSwimmingGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
@@ -15,7 +16,7 @@ import net.minecraft.world.entity.player.Player;
 /**
  * 베드락 행동 (minecraft:behavior.*) → 자바 목표 (goal). 우선순위 · 빠르기 배수 · 거리는 행동 팩 그대로:
  * float · hurt_by_target (플레이어만) · nearest_attackable_target (플레이어) · melee_attack (쫓아가기 — 피해는 스크립트, 바닐라 근접은 BedrockMob 이 막음) ·
- * move_towards_home_restriction · random_stroll (interval 틱마다 1/interval 확률) · look_at_player · random_look_around.
+ * move_towards_home_restriction · random_stroll (interval 틱마다 1/interval 확률) · random_swim · look_at_player · random_look_around.
  * 엔티티 생성자 안 (registerGoals) 에서 부르므로 def 대신 종류로 수치를 찾음.
  */
 public final class BedrockGoals {
@@ -39,6 +40,7 @@ public final class BedrockGoals {
                 case "random_stroll" -> mob.goals().addGoal(pr, new RandomStrollGoal(mob, speed, (int) MobData.num(b.get("interval"), 120)));
                 case "look_at_player" -> mob.goals().addGoal(pr, new LookAtPlayerGoal(mob, Player.class, (float) MobData.num(b.get("look_distance"), 8)));
                 case "random_look_around" -> mob.goals().addGoal(pr, new RandomLookAroundGoal(mob));
+                case "random_swim" -> mob.goals().addGoal(pr, new RandomSwimmingGoal(mob, speed, (int) MobData.num(b.get("interval"), 120)));
                 default -> {
                 }
             }

@@ -168,10 +168,11 @@ public final class RpgMobGallery implements FabricClientGameTest {
         ctx.waitTicks(8);
         checkRenderer(ctx, e, key);
         shot(ctx, "m_" + key + "_front");
-        turn(server, e, 90F);
+        // 옆: 카메라를 몬스터의 동쪽 (몬스터 오른쪽) 으로 옮겨 서쪽을 봄 (목표 없는 몸은 돌려도 클라이언트에서 천천히 따라감)
+        camera(ctx, server, 0.5 + dist, FLOOR + h * 0.45, 0.5 - dist, 90F, 4F);
         ctx.waitTicks(4);
         shot(ctx, "m_" + key + "_side");
-        turn(server, e, 0F);
+        camera(ctx, server, 0.5, FLOOR + h * 0.45, 0.5, 180F, 4F);
         String full = "animation.rpg.monster." + key + ".attack";
         anim(server, e, full);
         ctx.waitTicks(2);

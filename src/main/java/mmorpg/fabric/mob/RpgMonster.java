@@ -8,6 +8,9 @@ import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.control.SmoothSwimmingMoveControl;
+import net.minecraft.world.entity.ai.navigation.AmphibiousPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
@@ -41,6 +44,21 @@ public class RpgMonster extends BedrockMob {
     public RpgMonster(EntityType<? extends RpgMonster> type, Level level) {
         super(type, level);
         for (String f : def.families()) addTag(f);
+        // 물뭍 (닉스 — navigation.generic can_swim · movement.amphibious · underwater_movement): 물속에서도 쫓아오고 헤엄침
+        if (MobData.swims(def.id())) this.moveControl = new SmoothSwimmingMoveControl(this, 85, 10, 0.1F, 0.5F, false);
+    }
+
+    /** 물뭍 길 찾기 (닉스) — 생성자 안에서 불려서 def 대신 종류로 */
+    @Override
+    protected PathNavigation createNavigation(Level level) {
+        if (MobData.swims(EntityType.getKey(getType()).toString())) return new AmphibiousPathNavigation(this, level);
+        return super.createNavigation(level);
+    }
+
+    /** 물뭍 몬스터는 물살에 밀리지 않음 (베드락 navigation.generic) */
+    @Override
+    public boolean isPushedByFluid() {
+        return !MobData.swims(def.id()) && super.isPushedByFluid();
     }
 
     @Override

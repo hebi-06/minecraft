@@ -60,6 +60,8 @@ public final class MobData {
     private static Map<String, Def> defs;
     /** 맞는 상자 (minecraft:custom_hit_test — 충돌 상자보다 큰 것: 짚단 감옥 · 수르트 부위의 핵): ID → {폭, 높이} */
     private static Map<String, float[]> hitboxes = Map.of();
+    /** 물속에서도 다니는 종류 (minecraft:navigation.generic 의 can_swim — 닉스: 물속에서도 쫓아옴) */
+    private static Set<String> swimmers = Set.of();
 
     /** 모든 종류 (ID 순서는 파일 그대로 — 몬스터 다음 보스) */
     public static synchronized Map<String, Def> all() {
@@ -74,6 +76,12 @@ public final class MobData {
     public static float[] hitbox(String id) {
         all();
         return hitboxes.get(id);
+    }
+
+    /** 물속에서도 다니는지 (navigation.generic can_swim + movement.amphibious — 자바는 물뭍 길 찾기 · 헤엄 움직임) */
+    public static boolean swims(String id) {
+        all();
+        return swimmers.contains(id);
     }
 
     /** ID (rpg:troll) → 종류 (없으면 null) */
@@ -92,9 +100,11 @@ public final class MobData {
         }
         Map<String, Def> out = new LinkedHashMap<>();
         Map<String, float[]> hits = new LinkedHashMap<>();
+        Set<String> swim = new LinkedHashSet<>();
         for (Map.Entry<String, Object> e : root.entrySet()) {
             Map<String, Object> d = (Map<String, Object>) e.getValue();
             Map<String, Object> c = map(d.get("components"));
+            if (Boolean.TRUE.equals(map(c.get("minecraft:navigation.generic")).get("can_swim"))) swim.add(e.getKey());
             List<Object> hb = list(map(c.get("minecraft:custom_hit_test")).get("hitboxes"));
             if (!hb.isEmpty()) {
                 Map<String, Object> h = map(hb.get(0));
@@ -167,6 +177,7 @@ public final class MobData {
                     Collections.unmodifiableMap(events), Collections.unmodifiableMap(behaviors)));
         }
         hitboxes = Collections.unmodifiableMap(hits);
+        swimmers = Collections.unmodifiableSet(swim);
         return Collections.unmodifiableMap(out);
     }
 
