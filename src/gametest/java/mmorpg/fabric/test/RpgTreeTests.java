@@ -24,6 +24,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
@@ -535,6 +536,30 @@ public final class RpgTreeTests {
                 h.assertTrue(rec == null || !rec.id().equals(id[0]), "record dropped");
                 h.assertTrue(mmorpg.fabric.Props.world(server, "rpg:wt_" + id[0]) == null, "block log dropped");
                 LOG.info("[tree-test] OK grown ({} blocks, cow moved) and undone after a reload — every cell back", plan.total);
+                // 한글 명령 (/세계수 plant 40): 가까운 땅을 보면 뿌리 끝 밖 (뿌리 어림 + clearance) 으로 밀어낸 자리에 심을지 물음 → 그만두기 = 아무것도 하지 않음
+                sp.snapTo(base.getX() + 0.5, base.getY(), base.getZ() - 19.5, 0F, 10F);
+                int minD = TreePlan.rootReachOf(H) + (int) Rules.get().obj("WORLD_TREE").num("clearance");
+                h.assertTrue(minD == 20, "pushed-out distance " + minD);
+                WorldTree.Spot spot = WorldTree.treeSpot(sp, minD);
+                h.assertTrue(base.equals(spot.base()), "looking at the ground close by: pushed out to the tree's spot " + spot);
+                server.getCommands().performPrefixedCommand(sp.createCommandSourceStack().withPermission(LevelBasedPermissionSet.OWNER), "세계수 plant " + H);
+                phase[0] = 5;
+                throw h.assertionException("command");
+            }
+            if (phase[0] == 5) {
+                if (!(Forms.last(sp) instanceof FormNet.MenuPayload m)) throw h.assertionException("waiting for the command's window (busy " + WorldTree.treeBusy() + ")");
+                String body = plain(m.text());
+                h.assertTrue(body.contains(base.getX() + " " + base.getY() + " " + base.getZ()) && body.contains("높이 " + H + "칸"), "command window: " + body);
+                Forms.answer(sp, 1, null); // 그만두기
+                phase[0] = 6;
+                throw h.assertionException("cancelled");
+            }
+            if (phase[0] == 6) {
+                h.assertTrue(WorldTree.treeJob() == null && Forms.last(sp) == null, "cancel: nothing grows");
+                TreeLog.Rec rec = TreeLog.last(server);
+                h.assertTrue(rec == null || !rec.base().equals(base), "cancel: nothing written down");
+                h.assertTrue(level.getBlockState(base.above(3)).isAir(), "cancel: no tree");
+                LOG.info("[tree-test] OK /세계수 plant {} → window at the pushed-out spot → cancel", H);
                 Forms.HEADLESS.remove(sp.getUUID());
                 server.getPlayerList().remove(sp);
                 cow.discard();

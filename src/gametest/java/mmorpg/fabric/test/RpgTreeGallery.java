@@ -130,12 +130,14 @@ public final class RpgTreeGallery implements FabricClientGameTest {
 
     /** 둘레 청크가 다 그려질 때까지 (CI 는 소프트웨어 그리기라 다 그려지지 않을 때가 많음 — 시간이 다 되면 그대로 찍음) */
     private static void waitChunks(ClientGameTestContext ctx, TestSingleplayerContext world, String name, int chunkWait) {
-        try {
-            world.getConnection().waitForChunksRender(true, chunkWait);
-        } catch (AssertionError e) {
-            LOG.info("[tree-gallery] chunks not all rendered in {} ticks — taking {} anyway", chunkWait, name);
+        if (chunkWait > 0) {
+            try {
+                world.getConnection().waitForChunksRender(true, chunkWait);
+            } catch (AssertionError e) {
+                LOG.info("[tree-gallery] chunks not all rendered in {} ticks — taking {} anyway", chunkWait, name);
+            }
         }
-        ctx.waitTicks(4);
+        ctx.waitTicks(chunkWait > 0 ? 4 : 1);
     }
 
     // ------------------------------------------------------------ 세계수
