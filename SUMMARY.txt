@@ -1,0 +1,9 @@
+run: 38073593367  attempt: 1
+commit: 60679842d3f960ee07e3cac07ca31e9292bc6c3d
+versions: success
+core: success
+build: success
+prod: success
+gametest: failure
+client: skipped
+prod-client: skipped
