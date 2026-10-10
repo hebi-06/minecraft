@@ -55,7 +55,8 @@ public abstract class LivingEntityMixin {
     @Inject(method = "getDamageAfterArmorAbsorb", at = @At("HEAD"), cancellable = true)
     private void mmorpg$bedrockArmor(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
         if (!((Object) this instanceof ServerPlayer sp) || source.is(DamageTypeTags.BYPASSES_ARMOR)) return;
-        sp.hurtArmor(source, amount);
+        LivingEntity self = (LivingEntity) (Object) this;
+        self.hurtArmor(source, amount); // LivingEntity 의 공개 함수로 (Player 는 protected 로 덮음)
         cir.setReturnValue(amount * (1F - Math.min(20, sp.getArmorValue()) * 0.04F));
     }
 
