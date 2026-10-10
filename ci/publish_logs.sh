@@ -13,6 +13,7 @@ rm -rf "$OUT" && mkdir -p "$OUT"
   echo "prod: ${OUT_PROD:-?}"
   echo "gametest: ${OUT_GAMETEST:-?}"
   echo "client: ${OUT_CLIENT:-?}"
+  echo "prod-client: ${OUT_PRODCLIENT:-?}"
 } > "$OUT/SUMMARY.txt"
 for f in ci-out/*; do
   [ -d "$f" ] && continue

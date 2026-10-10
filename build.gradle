@@ -67,3 +67,27 @@ java {
     targetCompatibility = JavaVersion.VERSION_25
 }
 
+// 배포 환경 화면 시험 (CI): 실제 설치와 같게 배포 jar + Fabric API jar (+ 시험 모드 jar) 로 클라이언트를 띄워 RpgProdSmoke 만 (-Dmmorpg.prodSmoke=true)
+configurations {
+    prodMods {
+        transitive = false
+    }
+}
+
+dependencies {
+    prodMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+tasks.register('gametestJar', Jar) {
+    archiveClassifier = 'gametest'
+    destinationDirectory = layout.buildDirectory.dir('gametest-libs')
+    from sourceSets.gametest.output
+}
+
+tasks.register('prodClient', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+    mods.from(configurations.prodMods)
+    mods.from(tasks.named('gametestJar'))
+    jvmArgs.add('-Dfabric.client.gametest')
+    jvmArgs.add('-Dmmorpg.prodSmoke=true')
+}
+

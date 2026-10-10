@@ -11,7 +11,8 @@
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
       "mmorpg.fabric.test.RpgWeaponGallery",
-      "mmorpg.fabric.test.RpgParticleGallery"
+      "mmorpg.fabric.test.RpgParticleGallery",
+      "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },
   "depends": {

@@ -85,6 +85,25 @@ jobs:
           grep -E "\[client-test\]" ci-out/client.txt ci-out/client-latest.log 2>/dev/null | sort -u > ci-out/client-checks.txt || true
           exit $code
 
+      - name: Production client
+        id: prodclient
+        # 배포 jar 로 진짜 클라이언트 (Fabric 설치와 같게) — 처음 넣은 단계라 실패해도 배포는 막지 않음 (로그 · 사진으로 확인)
+        if: github.event_name != 'workflow_dispatch' || inputs.tests
+        continue-on-error: true
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          set +e
+          timeout 1500 ./gradlew prodClient --stacktrace --console=plain 2>&1 | tee ci-out/prod-client.txt
+          code=${PIPESTATUS[0]}
+          set -e
+          mkdir -p ci-out/shots
+          find build -name 'prod_*.png' -exec cp {} ci-out/shots/ \; 2>/dev/null || true
+          for f in $(find build/run -path '*prod*' -name latest.log 2>/dev/null); do cp "$f" ci-out/prod-client-latest.log; done
+          grep -h -E "\[prod-client\]" ci-out/prod-client.txt ci-out/prod-client-latest.log 2>/dev/null | sort -u || true
+          grep -h -q "\[prod-client\] done, 0 failed" ci-out/prod-client.txt ci-out/prod-client-latest.log 2>/dev/null || code=1
+          exit $code
+
       - name: Publish logs
         if: always()
         env:
@@ -95,6 +114,7 @@ jobs:
           OUT_PROD: ${{ steps.prod.outcome }}
           OUT_GAMETEST: ${{ steps.gametest.outcome }}
           OUT_CLIENT: ${{ steps.client.outcome }}
+          OUT_PRODCLIENT: ${{ steps.prodclient.outcome }}
         run: bash ci/publish_logs.sh
 
       - name: Release jar
