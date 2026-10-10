@@ -103,7 +103,7 @@ public record RpgData(int str, int dex, int intel, int vit, int point, int lvmax
         return m;
     }
 
-    /** 실제 스탯 (장비 보너스 · 룬 버프 — 1단계에는 없음, stats.js getStatsCached) */
+    /** 찍은 스탯만으로 본 실제 스탯 (장비 보너스 · 룬 버프 없이 — 플레이어의 실제 스탯은 RpgStats.effective) */
     public Map<String, Double> effective() {
         return Stats.effectiveStats(base(), Map.of(), 0);
     }

@@ -3,6 +3,9 @@ package mmorpg.fabric;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import mmorpg.core.Hp;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
@@ -43,16 +46,73 @@ public final class RpgHealth {
     /** 마지막으로 저장한 체력 비율 */
     private static final Map<UUID, Double> SAVED = new HashMap<>();
 
+    /** 보호막 (hp.js shields — 성기사 룬 등): 남은 양 · 끝나는 틱. 받는 피해를 체력보다 먼저 흡수 (죽지 않는 피해는 흡수하지 않음) */
+    private record Shield(double amount, long until) {}
+
+    private static final Map<UUID, Shield> SHIELDS = new HashMap<>();
+    /** 보호막이 깨짐 · 피해를 흡수함 (룬이 연출을 넣음 — 다음 틱에) */
+    public static Consumer<ServerPlayer> shieldBroken = p -> {};
+    public static BiConsumer<ServerPlayer, Double> shieldAbsorbed = (p, a) -> {};
+    /** 쓰러지지 않는 상태인지 (불사의 맹약 룬) · 그것으로 버텼을 때 (다음 틱에) */
+    public static Predicate<ServerPlayer> undying = p -> false;
+    public static Consumer<ServerPlayer> undyingSaved = p -> {};
+
     static void init() {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             MAXES.clear();
             SAVED.clear();
+            SHIELDS.clear();
+        });
+        net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            if (entity instanceof ServerPlayer sp) SHIELDS.remove(sp.getUUID());
         });
     }
 
     static void forget(UUID id) {
         MAXES.remove(id);
         SAVED.remove(id);
+        SHIELDS.remove(id);
+    }
+
+    /** 보호막 더하기 (hp.js addShield): 양은 cap 까지, 지속은 새 ticks 와 남은 시간 중 긴 쪽. 실제로 늘어난 양 */
+    public static double addShield(ServerPlayer sp, double amount, int ticks, double cap) {
+        long now = Tasks.now();
+        Shield cur = SHIELDS.get(sp.getUUID());
+        Shield live = cur != null && cur.until() > now ? cur : null;
+        double have = live != null ? live.amount() : 0;
+        double next = Math.max(have, Math.min(cap, have + Math.max(0, amount)));
+        SHIELDS.put(sp.getUUID(), new Shield(next, Math.max(live != null ? live.until() : 0, now + ticks)));
+        return next - have;
+    }
+
+    /** 남은 보호막 (없으면 0) */
+    public static double shieldOf(ServerPlayer sp) {
+        Shield sh = SHIELDS.get(sp.getUUID());
+        return sh != null && sh.until() > Tasks.now() ? sh.amount() : 0;
+    }
+
+    /** 보호막이 흡수하고 남은 피해 (hp.js absorbShield) */
+    private static double absorbShield(ServerPlayer sp, double loss) {
+        Shield sh = SHIELDS.get(sp.getUUID());
+        if (sh == null) return loss;
+        if (sh.until() <= Tasks.now()) {
+            SHIELDS.remove(sp.getUUID());
+            return loss;
+        }
+        double used = Math.min(sh.amount(), loss);
+        double left = sh.amount() - used;
+        if (left <= 1e-6) {
+            SHIELDS.remove(sp.getUUID());
+            Tasks.later(1, () -> {
+                if (!sp.isRemoved()) shieldBroken.accept(sp);
+            });
+        } else {
+            SHIELDS.put(sp.getUUID(), new Shield(left, sh.until()));
+            if (used > 0) Tasks.later(1, () -> {
+                if (!sp.isRemoved()) shieldAbsorbed.accept(sp, used);
+            });
+        }
+        return loss - used;
     }
 
     /** 생존 · 모험 (크리에이티브 · 관전은 RPG 체력 규칙 없음 — hp.js isRpgMode) */
@@ -63,7 +123,7 @@ public final class RpgHealth {
     /** 최대 체력 (hp.js maxHpOf): 기본 + 최고 레벨 보너스 + 실제 체력 스탯 */
     public static double maxHpOf(ServerPlayer sp) {
         RpgData d = RpgData.of(sp);
-        return Hp.maxHpOf(d.lvmax(), Stats.get(d.effective(), "vit"));
+        return Hp.maxHpOf(d.lvmax(), Stats.get(RpgStats.effective(sp), "vit"));
     }
 
     /** 지금 넣어 둔 RPG 최대 체력 (없으면 계산) */
@@ -140,8 +200,16 @@ public final class RpgHealth {
         double reduce = g != null ? 1 - (1 - shield) * (1 - g.reduce()) : shield;
         double loss = raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce);
         Guards.afterHurt(sp, source, g); // 반사 버프: 때린 것에게 (다음 틱)
+        boolean safe = isNonLethal(sp, source, raw);
+        if (loss > 0 && !safe) loss = absorbShield(sp, loss); // 보호막 먼저
         double next = health - loss;
-        if (next < 1 && isNonLethal(sp, source, raw)) next = Math.min(health, 1);
+        if (next < 1 && safe) next = Math.min(health, 1);
+        else if (next < 1 && undying.test(sp)) {
+            next = Math.min(health, 1); // 불사의 맹약: 체력 1 에서 버팀
+            Tasks.later(1, () -> {
+                if (!sp.isRemoved()) undyingSaved.accept(sp);
+            });
+        }
         // 다른 플레이어가 준 피해: 맞은 사람 머리 위에 빨간 숫자 (fx.js player)
         if (loss > 0 && source.getEntity() instanceof ServerPlayer attacker && attacker != sp) {
             DamageNumbers.show(sp, Math.min(loss, health), DamageNumbers.Style.PLAYER, "", 0);

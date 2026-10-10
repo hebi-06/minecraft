@@ -4,7 +4,8 @@
   "package": "mmorpg.fabric.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
-    "CameraMixin"
+    "CameraMixin",
+    "FogRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

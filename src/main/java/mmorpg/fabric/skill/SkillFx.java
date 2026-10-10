@@ -214,6 +214,7 @@ public final class SkillFx {
             {"step.powder_snow", "block.powder_snow.step"}, {"random.splash", "entity.generic.splash"}, {"random.click", "ui.button.click"},
             {"portal.trigger", "block.portal.trigger"}, {"note.pling", "block.note_block.pling"}, {"note.bass", "block.note_block.bass"},
             {"random.pop", "entity.item.pickup"}, {"mob.zombie.woodbreak", "entity.zombie.break_wooden_door"}, {"random.door_open", "block.wooden_door.open"},
+            {"block.enchanting_table.use", "block.enchantment_table.use"},
         };
         for (String[] m : map) SOUND.put(m[0], m[1]);
     }

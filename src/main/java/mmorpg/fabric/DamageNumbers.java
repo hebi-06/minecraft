@@ -125,12 +125,50 @@ public final class DamageNumbers {
             return;
         }
         Style style = Style.NORMAL;
-        if (m != null && m.crit()) {
-            style = Style.CRIT;
-            Fx.crit(victim);
+        double shown = dealt;
+        double extra = 0;
+        if (m != null) {
+            RpgCombat.WeaponBonus b = m.bonus();
+            // 평타에 더한 피해 (마검 부여 · 평타 강화 룬): 숫자를 평타 몫과 더한 몫으로 나눔 (방어로 줄어든 것은 같은 비율로)
+            if (b != null && b.total() > 0) {
+                extra = shown * Math.min(1, b.add() / b.total());
+                shown -= extra;
+            }
+            if (b != null) RpgCombat.bonusLanded(victim, attacker, m.tick());
+            if (m.w() != null) RpgCombat.weaponHit(attacker, victim, m.w(), b);
+            if (m.crit()) {
+                style = Style.CRIT;
+                Fx.crit(victim);
+            }
         }
-        show(victim, dealt, style, "", 0);
-        if (m != null && m.melee() != null) Slash.hit(attacker, victim, m.melee(), m.crit()); // 참격 맞힘 연출 (slash.js slashHit)
+        if (shown > 0) show(victim, shown, style, "", 0);
+        if (extra > 0) showBonus(victim, extra, m.bonus());
+        if (m != null && m.melee() && m.w() != null) Slash.hit(attacker, victim, m.w(), m.crit()); // 참격 맞힘 연출 (slash.js slashHit)
+    }
+
+    /** 평타 숫자 위에 더한 몫 (숫자 모양이 같은 것끼리 합쳐 — 마검 부여 = 보라 SPELL, 평타 강화 = 노랑 RUNE) */
+    private static void showBonus(LivingEntity victim, double extra, RpgCombat.WeaponBonus b) {
+        java.util.Map<Style, double[]> by = new java.util.LinkedHashMap<>();
+        java.util.Map<Style, String> marks = new java.util.LinkedHashMap<>();
+        for (RpgCombat.Bonus p : b.parts()) {
+            Style st = p.style() != null ? p.style() : Style.SPELL;
+            by.computeIfAbsent(st, k -> new double[1])[0] += p.add();
+            String mk = p.mark() == null ? "" : p.mark();
+            String cur = marks.getOrDefault(st, "");
+            if (!cur.contains(mk)) marks.put(st, cur + mk);
+        }
+        double total = 0;
+        for (double[] g : by.values()) total += g[0];
+        if (by.size() <= 1 || !(total > 0)) {
+            Style st = by.isEmpty() ? Style.SPELL : by.keySet().iterator().next();
+            show(victim, extra, st, b.mark() == null ? "" : b.mark(), 0.45);
+            return;
+        }
+        double lift = 0.45;
+        for (var e : by.entrySet()) {
+            show(victim, extra * e.getValue()[0] / total, e.getKey(), marks.getOrDefault(e.getKey(), ""), lift);
+            lift += 0.4;
+        }
     }
 
     /**

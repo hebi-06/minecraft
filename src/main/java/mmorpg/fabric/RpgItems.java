@@ -19,7 +19,7 @@ import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-/** 아이템 등록: 무기 (지금 규칙으로 얻을 수 있는 종류 × 등급 × 레벨 — 옛 버전 조합은 뺌) + 스탯 책, 크리에이티브 탭 하나 */
+/** 아이템 등록: 무기 (지금 규칙으로 얻을 수 있는 종류 × 등급 × 레벨 — 옛 버전 조합은 뺌) + 스탯 책 (크리에이티브 탭 하나), 룬 (RuneItems — 탭 "룬") */
 public final class RpgItems {
     private RpgItems() {}
 
@@ -61,6 +61,7 @@ public final class RpgItems {
                     for (RpgWeaponItem w : WEAPONS) output.accept(w);
                 })
                 .build());
+        mmorpg.fabric.rune.RuneItems.init(); // 룬 80 · 뽑기권 (탭 "룬")
     }
 
     public static List<RpgWeaponItem> weapons() {

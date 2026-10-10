@@ -2,5 +2,6 @@
   "key.mmorpg.stats": "Stats window",
   "key.categories.mmorpg": "MMO RPG",
   "itemGroup.mmorpg.main": "MMO RPG",
-  "key.category.mmorpg.main": "MMO RPG"
+  "key.category.mmorpg.main": "MMO RPG",
+  "itemGroup.mmorpg.runes": "Runes"
 }

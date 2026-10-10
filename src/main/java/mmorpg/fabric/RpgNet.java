@@ -87,9 +87,63 @@ public final class RpgNet {
         }
     }
 
+    /**
+     * 초월 룬 하늘빛 (ultfx.js — 베드락 /fog): ticks 틱 동안 안개 start ~ end 칸 · 색 rgb (0 ~ 1) 로 하늘과 먼 곳을 물들임. ticks 0 = 걷음.
+     * token: 같은 하늘빛을 일찍 걷을 때 (다른 하늘빛으로 바뀌었으면 걷지 않음)
+     */
+    public record SkyPayload(int token, int ticks, float start, float end, float r, float g, float b) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<SkyPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("sky"));
+        public static final StreamCodec<FriendlyByteBuf, SkyPayload> CODEC = CustomPacketPayload.codec(SkyPayload::write, SkyPayload::read);
+
+        private static SkyPayload read(FriendlyByteBuf buf) {
+            return new SkyPayload(buf.readVarInt(), buf.readVarInt(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat());
+        }
+
+        private void write(FriendlyByteBuf buf) {
+            buf.writeVarInt(token);
+            buf.writeVarInt(ticks);
+            buf.writeFloat(start);
+            buf.writeFloat(end);
+            buf.writeFloat(r);
+            buf.writeFloat(g);
+            buf.writeFloat(b);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** 화면 번쩍임 (ultfx.js — 베드락 camera fade): 색 rgb 로 fadeIn 초 동안 차오르고 hold 초 머문 뒤 fadeOut 초 동안 걷힘 */
+    public record FlashPayload(float r, float g, float b, float fadeIn, float hold, float fadeOut) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<FlashPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("flash"));
+        public static final StreamCodec<FriendlyByteBuf, FlashPayload> CODEC = CustomPacketPayload.codec(FlashPayload::write, FlashPayload::read);
+
+        private static FlashPayload read(FriendlyByteBuf buf) {
+            return new FlashPayload(buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat());
+        }
+
+        private void write(FriendlyByteBuf buf) {
+            buf.writeFloat(r);
+            buf.writeFloat(g);
+            buf.writeFloat(b);
+            buf.writeFloat(fadeIn);
+            buf.writeFloat(hold);
+            buf.writeFloat(fadeOut);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     static void init() {
         PayloadTypeRegistry.clientboundPlay().register(SyncPayload.TYPE, SyncPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ShakePayload.TYPE, ShakePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(SkyPayload.TYPE, SkyPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(FlashPayload.TYPE, FlashPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SpendPayload.TYPE, SpendPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SpendPayload.TYPE, (payload, context) -> RpgPlayers.spend(context.player(), payload.stat(), Math.min(100, payload.count())));
     }
@@ -105,6 +159,16 @@ public final class RpgNet {
     public static void shake(ServerPlayer sp, double intensity, double seconds) {
         if (!ServerPlayNetworking.canSend(sp, ShakePayload.TYPE)) return;
         ServerPlayNetworking.send(sp, new ShakePayload((float) intensity, (float) seconds));
+    }
+
+    /** 하늘빛 보내기 (모드가 있는 클라이언트만) */
+    public static void sky(ServerPlayer sp, SkyPayload p) {
+        if (ServerPlayNetworking.canSend(sp, SkyPayload.TYPE)) ServerPlayNetworking.send(sp, p);
+    }
+
+    /** 화면 번쩍임 보내기 (모드가 있는 클라이언트만) */
+    public static void flash(ServerPlayer sp, FlashPayload p) {
+        if (ServerPlayNetworking.canSend(sp, FlashPayload.TYPE)) ServerPlayNetworking.send(sp, p);
     }
 
     /** 스탯 창 열기: 모드가 있으면 화면, 없으면 채팅 스탯 창 */

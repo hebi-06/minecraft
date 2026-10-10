@@ -50,10 +50,152 @@ public final class RpgCombat {
     public static Boolean forceCrit = null;
 
     /**
-     * 맞히기 직전에 기억한 공격 (피해가 실제로 들어간 뒤 숫자 · 연출에 씀): 치명타였는지, 근접 무기 (원거리 · 스킬은 null — 참격 연출용),
-     * 스킬 · 룬 피해면 숫자 모양 (평타는 null — combat.js skillMarks)
+     * 맞히기 직전에 기억한 공격 (피해가 실제로 들어간 뒤 숫자 · 연출에 씀): 치명타였는지, 무기 (평타 · 활 · 완드 — 스킬은 null),
+     * 근접 평타인지 (참격 연출), 스킬 · 룬 피해면 숫자 모양 (평타는 null — combat.js skillMarks), 평타에 더한 피해 (없으면 null)
      */
-    public record Mark(boolean crit, long tick, Weapon melee, DamageNumbers.Style style) {}
+    public record Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus) {}
+
+    /**
+     * 평타에 더하는 피해 하나 (룬 훅이 줌 — combat.js bonusHooks): add = 더할 양, mark = 숫자 앞 표시, key = 훅 구분,
+     * style = 더한 몫의 숫자 모양 (null = 마검 부여의 보라 SPELL), grades = 평타 강화가 더한 등급들
+     */
+    public record Bonus(double add, String mark, String key, DamageNumbers.Style style, List<String> grades) {}
+
+    /** 평타 한 번에 더한 피해 모두: add = 합, total = 평타 + 더한 것, mark = 표시들, parts = 훅마다 */
+    public record WeaponBonus(double add, double total, String mark, List<Bonus> parts) {}
+
+    /** 평타에 더할 것 (combat.js addWeaponBonusHook): 피해를 넣기 직전 (치명타 뒤) — 없으면 null */
+    @FunctionalInterface
+    public interface BonusHook {
+        Bonus bonus(ServerPlayer attacker, LivingEntity victim, Weapon w);
+    }
+
+    /** 무기로 맞힘 (평타 · 활 · 완드 피해가 실제로 들어간 뒤 — combat.js addWeaponHitHook) */
+    @FunctionalInterface
+    public interface HitHook {
+        void hit(ServerPlayer attacker, LivingEntity victim, Weapon w, WeaponBonus bonus);
+    }
+
+    /** 평타 치명타 확률에 더할 것 (combat.js addCritBonusHook — victim 은 null 일 수 있음: 표시용) */
+    @FunctionalInterface
+    public interface CritHook {
+        double add(ServerPlayer attacker, Weapon w, LivingEntity victim);
+    }
+
+    /** 활 · 완드 재사용 대기 배율 (combat.js addRangedCooldownHook — 가장 작은 것, 1 = 그대로) */
+    @FunctionalInterface
+    public interface RangedCdHook {
+        double scale(ServerPlayer sp, Weapon w);
+    }
+
+    private static final List<BonusHook> BONUS_HOOKS = new ArrayList<>();
+    private static final List<HitHook> HIT_HOOKS = new ArrayList<>();
+    private static final List<CritHook> CRIT_HOOKS = new ArrayList<>();
+    private static final List<RangedCdHook> RANGED_CD_HOOKS = new ArrayList<>();
+    /** 평타에 더한 피해가 들어간 틱 (대상|공격자): 그 뒤 BONUS_GAP 틱 (무적 시간) 안의 평타에는 더하지 않음 */
+    private static final Map<String, Long> BONUS_LANDED = new HashMap<>();
+    private static final int BONUS_GAP = 10;
+    /** 밀려나지 않음 (신체 강화 룬 강철 근육): 플레이어 → 끝나는 틱 */
+    private static final Map<UUID, Long> STEADFAST = new HashMap<>();
+    private static final double CRIT_CAP = Rules.get().obj("RUNE_STRIKE").num("critCap");
+
+    public static void addWeaponBonusHook(BonusHook h) {
+        BONUS_HOOKS.add(h);
+    }
+
+    public static void addWeaponHitHook(HitHook h) {
+        HIT_HOOKS.add(h);
+    }
+
+    public static void addCritBonusHook(CritHook h) {
+        CRIT_HOOKS.add(h);
+    }
+
+    public static void addRangedCooldownHook(RangedCdHook h) {
+        RANGED_CD_HOOKS.add(h);
+    }
+
+    public static void setSteadfast(ServerPlayer sp, int ticks) {
+        STEADFAST.merge(sp.getUUID(), Tasks.now() + ticks, Math::max);
+    }
+
+    /** 보스 · 몬스터 기술의 밀치기 · 끌어당김을 받지 않는지 */
+    public static boolean isSteadfast(Entity e) {
+        Long t = e == null ? null : STEADFAST.get(e.getUUID());
+        return t != null && t > Tasks.now();
+    }
+
+    public static void clearSteadfast(UUID id) {
+        STEADFAST.remove(id);
+    }
+
+    /**
+     * 평타 치명타 확률 (combat.js critChanceOf): 무기 확률 + 훅들 (더한 것이 있으면 RUNE_STRIKE.critCap 까지 — 무기 확률이 더 높으면 그대로)
+     */
+    public static double critChanceOf(ServerPlayer sp, Weapon w, LivingEntity victim) {
+        double add = 0;
+        for (CritHook h : CRIT_HOOKS) {
+            try {
+                add += Math.max(0, h.add(sp, w, victim));
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] crit bonus", e);
+            }
+        }
+        return Combat.critChanceOf(w, add, CRIT_CAP);
+    }
+
+    static double rangedCdScale(ServerPlayer sp, Weapon w) {
+        double k = 1;
+        for (RangedCdHook h : RANGED_CD_HOOKS) {
+            try {
+                double v = h.scale(sp, w);
+                if (v > 0 && v < k) k = v;
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] ranged cooldown", e);
+            }
+        }
+        return k;
+    }
+
+    /** 평타 피해 dmg 에 더할 것 (combat.js weaponBonus — 없으면 null) */
+    static WeaponBonus weaponBonus(ServerPlayer attacker, LivingEntity victim, Weapon w, double dmg) {
+        if (BONUS_HOOKS.isEmpty()) return null;
+        Long landed = BONUS_LANDED.get(key(victim, attacker));
+        if (landed != null && Tasks.now() - landed < BONUS_GAP) return null; // 무적 시간 안의 평타에는 더하지 않음
+        double add = 0;
+        StringBuilder mk = new StringBuilder();
+        List<Bonus> parts = new ArrayList<>();
+        for (BonusHook h : BONUS_HOOKS) {
+            try {
+                Bonus b = h.bonus(attacker, victim, w);
+                if (b != null && b.add() > 0) {
+                    add += b.add();
+                    if (b.mark() != null) mk.append(b.mark());
+                    parts.add(b);
+                }
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] weapon bonus", e);
+            }
+        }
+        return add > 0 ? new WeaponBonus(add, dmg + add, mk.toString(), parts) : null;
+    }
+
+    /** 평타에 더한 피해가 들어감 (DamageNumbers — 그 뒤 무적 시간 동안은 더하지 않음) */
+    public static void bonusLanded(Entity victim, Entity attacker, long tick) {
+        BONUS_LANDED.put(key(victim, attacker), tick);
+        if (BONUS_LANDED.size() > 512) BONUS_LANDED.values().removeIf(t -> Tasks.now() - t > 40);
+    }
+
+    /** 무기로 맞힘 훅들 (DamageNumbers 가 피해가 들어간 뒤 부름) */
+    public static void weaponHit(ServerPlayer attacker, LivingEntity victim, Weapon w, WeaponBonus bonus) {
+        for (HitHook h : HIT_HOOKS) {
+            try {
+                h.hit(attacker, victim, w, bonus);
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] weapon hit hook", e);
+            }
+        }
+    }
 
     private static final Map<String, Mark> MARKS = new HashMap<>();
     /** 활 · 완드 재사용 (플레이어|종류 → 다시 쏠 수 있는 틱) */
@@ -75,6 +217,7 @@ public final class RpgCombat {
         RANGED_READY.keySet().removeIf(k -> k.startsWith(id + "|"));
         LAST_BASH.remove(id);
         CASTING.remove(id);
+        STEADFAST.remove(id);
     }
 
     // ------------------------------------------------------------ 무기 · 요구 조건
@@ -103,12 +246,17 @@ public final class RpgCombat {
 
     /** 무기 피해 배율 = 스탯 배율 × (1 + 강화 보너스 — 1단계는 강화 없음) */
     public static double powerOf(ServerPlayer sp, Weapon w) {
-        return Combat.powerMultiplier(RpgData.of(sp).effective(), w, 0);
+        return Combat.powerMultiplier(RpgStats.effective(sp), w, 0);
     }
 
     public static boolean rollCrit(ServerPlayer sp, Weapon w) {
+        return rollCrit(sp, w, null);
+    }
+
+    /** 평타 치명타 (룬 훅으로 더한 확률 포함 — victim 은 null 일 수 있음) */
+    public static boolean rollCrit(ServerPlayer sp, Weapon w, LivingEntity victim) {
         if (forceCrit != null) return forceCrit;
-        return sp.getRandom().nextDouble() < Combat.critChanceOf(w, 0);
+        return sp.getRandom().nextDouble() < critChanceOf(sp, w, victim);
     }
 
     /** 주민 · 상인 (눌러서 거래 — 활 · 완드로 쏘지 않음) */
@@ -120,13 +268,13 @@ public final class RpgCombat {
         return victim.getUUID() + "|" + attacker.getUUID();
     }
 
-    static void mark(Entity victim, ServerPlayer attacker, boolean crit, Weapon melee) {
-        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), melee, null));
+    static void mark(Entity victim, ServerPlayer attacker, boolean crit, Weapon w, boolean melee, WeaponBonus bonus) {
+        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), w, melee, null, bonus));
     }
 
     /** 스킬 · 룬 피해 표시 (숫자 모양 style — 평타 공식 · 참격 연출 없음) */
     public static void skillMark(Entity victim, ServerPlayer attacker, boolean crit, DamageNumbers.Style style) {
-        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, style));
+        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, false, style, null));
     }
 
     /** 들어가지 않은 공격의 기억을 지움 */
@@ -174,9 +322,12 @@ public final class RpgCombat {
         if (w == null || !Combat.isMeleeWeapon(w)) return vanilla;
         double s = Math.max(0, Math.min(1, strength));
         double dmg = w.damage() * powerOf(sp, w) * (0.2 + s * s * 0.8);
-        boolean crit = rollCrit(sp, w);
+        LivingEntity victim = target instanceof LivingEntity le ? le : null;
+        boolean crit = rollCrit(sp, w, victim);
         if (crit) dmg *= w.critMult();
-        mark(target, sp, crit, w);
+        WeaponBonus bonus = victim != null ? weaponBonus(sp, victim, w, dmg) : null; // 마검 부여 · 평타 강화 룬
+        if (bonus != null) dmg += bonus.add();
+        mark(target, sp, crit, w, true, bonus);
         return (float) dmg;
     }
 
@@ -193,7 +344,7 @@ public final class RpgCombat {
             if (sp.isShiftKeyDown()) Notify.warn(sp, reqText(sp, w));
             return 0;
         }
-        double vit = Stats.get(RpgData.of(sp).effective(), "vit");
+        double vit = Stats.get(RpgStats.effective(sp), "vit");
         double r = Math.min(SHIELD.num("passiveCap"), w.passive() + vit * SHIELD.num("passivePerVit"));
         Entity from = src.getDirectEntity() != null ? src.getDirectEntity() : src.getEntity();
         if (sp.isShiftKeyDown() && from != null && !from.isRemoved() && !bashLocked(sp)) {
@@ -232,7 +383,8 @@ public final class RpgCombat {
             Notify.warn(sp, reqText(sp, w));
             return;
         }
-        int cd = (int) Math.max(w.type().equals("wand") ? WAND.num("castTicks") + 1 : 2, Math.round(cfg.num("cooldownTicks")));
+        // 연타 (평타 강화 룬): 재사용 대기 × 배율 (완드는 시전 시간보다 짧아지지 않게)
+        int cd = (int) Math.max(w.type().equals("wand") ? WAND.num("castTicks") + 1 : 2, Math.round(cfg.num("cooldownTicks") * rangedCdScale(sp, w)));
         RANGED_READY.put(k, now + cd);
         sp.getCooldowns().addCooldown(stack, cd);
         if (w.type().equals("wand")) {
@@ -273,9 +425,11 @@ public final class RpgCombat {
         if (sp.isRemoved() || target.isRemoved() || !target.isAlive()) return;
         ServerLevel level = sp.level();
         double dmg = w.damage() * powerOf(sp, w);
-        boolean crit = rollCrit(sp, w);
+        boolean crit = rollCrit(sp, w, target);
         if (crit) dmg *= w.critMult();
-        mark(target, sp, crit, null);
+        WeaponBonus bonus = weaponBonus(sp, target, w, dmg);
+        if (bonus != null) dmg += bonus.add();
+        mark(target, sp, crit, w, false, bonus);
         DamageSource src = w.type().equals("bow") ? sp.damageSources().playerAttack(sp) : sp.damageSources().indirectMagic(sp, sp);
         boolean hurt = target.level() instanceof ServerLevel tl && target.hurtServer(tl, src, (float) dmg);
         if (!hurt) {

@@ -7,7 +7,8 @@
   "entrypoints": {
     "fabric-gametest": [
       "mmorpg.fabric.test.RpgGameTests",
-      "mmorpg.fabric.test.RpgSkillTests"
+      "mmorpg.fabric.test.RpgSkillTests",
+      "mmorpg.fabric.test.RpgRuneTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",

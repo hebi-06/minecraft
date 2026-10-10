@@ -16,7 +16,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.network.chat.Component;
 
 /**
- * 클라이언트: 스탯 창 키 (K), 서버가 보낸 스탯 데이터, 체력 바 HUD, 이펙트 그림 파티클, 무기 빛 알갱이, 화면 흔들림.
+ * 클라이언트: 스탯 창 키 (K), 서버가 보낸 스탯 데이터, 체력 바 HUD, 이펙트 그림 파티클, 무기 빛 알갱이, 화면 흔들림,
+ * 초월 룬 하늘빛 · 화면 번쩍임 (UltFx).
  * HUD 는 Fabric HUD API 로 바닐라 하트 자리를 바꿈 (모드가 있는 서버의 생존 · 모험에서만 — 아니면 바닐라 그대로).
  */
 public final class MmorpgClient implements ClientModInitializer {
@@ -38,9 +39,13 @@ public final class MmorpgClient implements ClientModInitializer {
             if (payload.open()) context.client().gui.setScreen(new StatScreen());
         });
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.ShakePayload.TYPE, (payload, context) -> CameraShake.add(payload.intensity(), payload.seconds()));
+        // 초월 룬 하늘빛 · 화면 번쩍임
+        ClientPlayNetworking.registerGlobalReceiver(RpgNet.SkyPayload.TYPE, (payload, context) -> UltFx.sky(payload));
+        ClientPlayNetworking.registerGlobalReceiver(RpgNet.FlashPayload.TYPE, (payload, context) -> UltFx.flash(payload));
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             ClientRpgState.clear();
             CameraShake.clear();
+            UltFx.clear();
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (statsKey.consumeClick()) {
@@ -66,5 +71,7 @@ public final class MmorpgClient implements ClientModInitializer {
         HudElementRegistry.replaceElement(VanillaHudElements.AIR_BAR, old -> (graphics, delta) -> {
             if (!RpgHud.active()) old.extractRenderState(graphics, delta);
         });
+        // 화면 번쩍임 (초월 룬): HUD 맨 위
+        HudElementRegistry.addLast(Mmorpg.id("ult_flash"), (graphics, delta) -> UltFx.renderFlash(graphics));
     }
 }

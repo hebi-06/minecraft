@@ -56,10 +56,12 @@ public final class RpgPlayers {
         JOINED.remove(sp.getUUID());
         RpgHealth.saveRatio(sp, true);
         RpgHealth.forget(sp.getUUID());
+        RpgStats.forget(sp.getUUID());
         RpgCombat.forget(sp.getUUID());
         Slash.forget(sp.getUUID());
         Notify.forget(sp.getUUID());
         Transcend.forget(sp.getUUID());
+        mmorpg.fabric.rune.RuneSystem.forget(sp.getUUID());
     }
 
     private static void tick(MinecraftServer server) {
