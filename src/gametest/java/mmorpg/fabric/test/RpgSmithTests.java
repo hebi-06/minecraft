@@ -139,6 +139,14 @@ public final class RpgSmithTests {
         });
     }
 
+    /** 명령어 /smith · /enhance 등록 (Smith.init) */
+    @GameTest(maxTicks = 20)
+    public void smithCommandsRegistered(GameTestHelper h) {
+        var root = h.getLevel().getServer().getCommands().getDispatcher().getRoot();
+        h.assertTrue(root.getChild("smith") != null && root.getChild("enhance") != null, "commands /smith · /enhance");
+        h.succeed();
+    }
+
     /** 재료가 모자라면 망치질 없이 바로 창으로 (아무것도 쓰지 않음) · 창이 열려 있으면 명령어 창은 열리지 않음 */
     @GameTest(maxTicks = 40)
     public void enhanceNeedsMaterials(GameTestHelper h) {

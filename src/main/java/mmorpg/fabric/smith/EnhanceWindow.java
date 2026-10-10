@@ -329,7 +329,7 @@ public final class EnhanceWindow {
      * 강화 한 번 (확인 창에서 누른 뒤 — enhanceOnce). 결과 문구 (창 본문용) 를 done 으로.
      * 재료 확인 → 망치질 연출 (ANIM_TICKS 동안 창 없이 — Forms.busy 로 묶음) → 무기 · 재료가 그대로면 그 틱에 재료를 받고 판정
      * (옮겼으면 아무것도 쓰지 않고 취소). 수호 주문서 (useScroll — 실패하면 떨어지는 단계에서만) 는 실패했을 때만 씀.
-     * 망치질 도중 나가면 done 을 부르지 않음 (흐름 끝 — 재료는 쓰지 않음).
+     * 망치질 도중 나가거나 죽으면 done 을 부르지 않음 (흐름 끝 — 재료는 쓰지 않고, 죽음 화면 위에 창을 열지 않음).
      */
     public static void enhanceOnce(ServerPlayer sp, Entry e, boolean useScroll, Consumer<String> done) {
         if (!same(Inv.get(sp, e.slot()), e)) {
@@ -350,7 +350,7 @@ public final class EnhanceWindow {
         hammerFx(sp, e);
         Forms.busy(sp, ANIM_TICKS + 2);
         Tasks.later(ANIM_TICKS, () -> {
-            if (sp.isRemoved()) return;
+            if (sp.isRemoved() || sp.isDeadOrDying()) return;
             done.accept(judge(sp, e, c, guard));
         });
     }
