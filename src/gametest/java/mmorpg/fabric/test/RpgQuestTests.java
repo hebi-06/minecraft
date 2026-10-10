@@ -22,6 +22,7 @@ import mmorpg.fabric.quest.Quest;
 import mmorpg.fabric.quest.QuestRewards;
 import mmorpg.fabric.quest.QuestSystem;
 import mmorpg.fabric.quest.QuestTalk;
+import mmorpg.fabric.quest.QuestText;
 import mmorpg.fabric.quest.Quests;
 import mmorpg.fabric.quest.SideQuests;
 import mmorpg.fabric.ui.FormNet;
@@ -497,6 +498,75 @@ public final class RpgQuestTests {
         } finally {
             Forms.HEADLESS.remove(sp.getUUID());
             ingrid.discard();
+        }
+        done(h, sp);
+    }
+
+    /**
+     * 큰 보상 · 연출: 전설 퀘스트 (듀란드의 방패 — 전설 무기 · 렙제 알림), 왕실 마지막 (길에 맞는 초월 갑옷 한 벌 · 고급 뽑기권), 초월 보스 전설 (칭호 · 보스 재료),
+     * 메인 이야기의 끝 (영웅의 귀환 — 할아버지에게 전달)
+     */
+    @GameTest(maxTicks = 40)
+    public void finaleRewardsAndFx(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Mannequin hakon = mainNpc(h, "main_6", new Vec3(3.5, 2, 3.5));
+        Mannequin sigrid = mainNpc(h, SideQuests.ROYAL_GIVER, new Vec3(5.5, 2, 3.5));
+        Mannequin harald = mainNpc(h, "main_1", new Vec3(5.5, 2, 5.5));
+        Forms.HEADLESS.add(sp.getUUID());
+        try {
+            String legend = MainQuests.legendId("shield", "hero");
+            String royal = SideQuests.royalId(SideQuests.ROYAL_STEPS);
+            String surtr = SideQuests.transcendLegendId("surtr");
+            String outro = MainQuests.mainId("shield", MainQuests.PATH_STEPS);
+            Props.set(sp, "rpg:main_path", "shield");
+            Props.set(sp, "rpg:qs", "{\"" + legend + "\":{\"s\":\"a\",\"n\":43,\"c\":0,\"o\":[40,3]},\"" + royal + "\":{\"s\":\"a\",\"n\":1,\"c\":0},\"" + surtr
+                    + "\":{\"s\":\"a\",\"n\":1,\"c\":0},\"" + outro + "\":{\"s\":\"a\",\"n\":0,\"c\":0}}");
+            Quests.forgetQuestPlayer(sp.getUUID());
+            h.assertTrue(status(sp, legend).equals("ready") && status(sp, royal).equals("ready") && status(sp, surtr).equals("ready"), "ready");
+            // 1. 듀란드의 방패 (수호 기사 하콘)
+            QuestTalk.talkLoop(sp, hakon, null);
+            h.assertTrue(dialogText(sp).contains("뒤에 선 이들을 위한 것"), "mentor greeting " + dialogText(sp));
+            pick(h, sp, "듀란드의 방패");
+            nextPages(sp);
+            h.assertTrue(dialogText(sp).contains("레벨 30부터 쓸 수 있음"), "level note " + dialogText(sp));
+            pick(h, sp, "확인");
+            h.assertFalse(Forms.pending(sp), "legend done");
+            h.assertTrue(RpgGearTests.countIn(sp, RpgItems.byId("rpg:shield_l30_hero")) == 1 && status(sp, legend).equals("done"), "legend weapon");
+            // 2. 왕실 마지막 → 이어서 초월 보스 전설 (왕녀 시그리드)
+            int money = Inv.money(sp);
+            QuestTalk.talkLoop(sp, sigrid, null);
+            pick(h, sp, "서리 거인의 왕관");
+            nextPages(sp);
+            h.assertTrue(dialogText(sp).contains("황제 갑옷 세트") && dialogText(sp).contains("체력"), "royal reward " + dialogText(sp));
+            pick(h, sp, "확인");
+            pick(h, sp, "무스펠의 불꽃 거인");
+            nextPages(sp);
+            h.assertTrue(dialogText(sp).contains("레바테인") || dialogText(sp).contains("퀘스트 완료"), "surtr done " + dialogText(sp));
+            pick(h, sp, "확인");
+            h.assertFalse(Forms.pending(sp), "royal flow ended " + choices(sp));
+            for (String piece : mmorpg.core.Armor.PIECE_ORDER) {
+                ItemStack a = mmorpg.fabric.shop.ArmorShop.armorItem(mmorpg.core.Armor.armorFrom("vit", 40, "transcend", piece));
+                h.assertTrue(RpgGearTests.countIn(sp, a.getItem()) == 1, "emperor vit " + piece);
+            }
+            h.assertTrue(Inv.money(sp) == money + 64 + 128, "emerald " + Inv.money(sp));
+            h.assertTrue(RpgGearTests.countIn(sp, GearItems.byId("rpg:laevateinn_shard")) == 2 && RpgGearTests.countIn(sp, GearItems.byId("rpg:muspel_heart")) == 1,
+                    "surtr materials");
+            h.assertTrue(status(sp, royal).equals("done") && status(sp, surtr).equals("done"), "royal · surtr done");
+            // 3. 영웅의 귀환 (할아버지에게 전달) → 메인 이야기 끝
+            QuestTalk.talkLoop(sp, harald, null);
+            h.assertTrue(dialogText(sp).contains("방패의 길 수련은 잘 되어 가니"), "harald greeting " + dialogText(sp));
+            pick(h, sp, "전달");
+            nextPages(sp);
+            pick(h, sp, "확인");
+            if (Forms.pending(sp)) pick(h, sp, "대화 끝내기");
+            h.assertTrue(status(sp, outro).equals("done") && Quests.mainFinished(sp), "main finished");
+            h.assertTrue(RpgGearTests.countIn(sp, mmorpg.fabric.rune.RuneItems.ADV_TICKET) == 4, "advanced tickets " + RpgGearTests.countIn(sp, mmorpg.fabric.rune.RuneItems.ADV_TICKET));
+            h.assertTrue(QuestText.lastPage(Quests.getQuest(outro).done, "").contains("네 모험은 이제부터 시작이란다"), "outro text");
+        } finally {
+            Forms.HEADLESS.remove(sp.getUUID());
+            hakon.discard();
+            sigrid.discard();
+            harald.discard();
         }
         done(h, sp);
     }
