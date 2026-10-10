@@ -337,7 +337,8 @@ public final class RpgBossGallery implements FabricClientGameTest {
         String rend = ctx.computeOnClient(mc -> {
             Entity e = mc.level == null ? null : mc.level.getEntity(id);
             if (e == null) return "no entity";
-            return mc.getEntityRenderDispatcher().getRenderer(e) instanceof BedrockRenderer ? "ok" : "renderer " + mc.getEntityRenderDispatcher().getRenderer(e);
+            Object r0 = mc.getEntityRenderDispatcher().getRenderer(e);
+            return r0 instanceof BedrockRenderer ? "ok" : "renderer " + r0;
         });
         check("ok".equals(rend), "boss drawn by BedrockRenderer (" + rend + ")");
         shot(ctx, "bs_appear");
