@@ -9,6 +9,7 @@ import mmorpg.core.Runes;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.rune.RuneCast;
+import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.RuneSystem;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.skill.Status;
@@ -40,11 +41,13 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgRuneGallery implements FabricClientGameTest {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-rune-gallery");
-    /** 과녁: 앞쪽 무리 넷 (5~8칸) + 옆 둘 (3.5칸) — 평평한 세계 땅 y = -60 */
+    /** 과녁: 앞쪽 무리 넷 (5~8칸) + 앞 양옆 둘 (2.9칸 — 둘레 3.5칸 룬도 닿게) — 평평한 세계 땅 y = -60 */
     private static final Vec3[] TARGETS = {
-        new Vec3(0.5, -60, 5.5), new Vec3(-1.0, -60, 6.5), new Vec3(2.0, -60, 6.0), new Vec3(0.5, -60, 8.0), new Vec3(-3.0, -60, 3.0),
-        new Vec3(4.0, -60, 3.0)
+        new Vec3(0.5, -60, 5.5), new Vec3(-1.0, -60, 6.5), new Vec3(2.0, -60, 6.0), new Vec3(0.5, -60, 8.0), new Vec3(-1.8, -60, 2.2),
+        new Vec3(2.8, -60, 2.2)
     };
+    /** 룬 사이에 삶 표시를 넘긴 횟수 (앞 룬의 남은 연출 · 타격이 다음 룬에 섞이지 않게 — 늘 새 표시) */
+    private int lives;
     /** 쓰면 피해가 바로 들지 않는 룬 (버프 · 회복 · 보호막 · 정령 — 피해 0 이어도 됨) */
     private static final Set<String> SUPPORT = Set.of("guardShout", "lifeSpring", "ironSkin", "lightBarrier", "purify", "fightingSpirit", "steelBody",
             "regenBody", "warGod", "awakening", "edgeHone", "flurry", "cleave", "bloodBlade", "swordGod", "summonSpirits", "counterStance", "backstep",
@@ -114,9 +117,12 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
-            // 앞 룬의 기록 · 버프 · 보호막 · 막기 · 상태 · 재사용 대기를 지움
-            RuneSystem.forget(sp.getUUID());
+            // 앞 룬의 재사용 대기 (핫바 쓸기 — 남아 있으면 우클릭이 막힘) · 기록 · 버프 · 보호막 · 막기 · 상태를 지우고,
+            // 삶 표시를 앞 룬들이 본 적 없는 값으로 (forget 이 0 으로 되돌리므로 그 뒤에 지금까지 넘긴 횟수 + 1 만큼)
             RuneCast.resetCooldowns(sp);
+            RuneSystem.forget(sp.getUUID());
+            lives++;
+            for (int i = 0; i < lives; i++) RuneKit.lifeEnded(sp.getUUID());
             RpgStats.setBuff(sp, 0);
             Guards.clear(sp.getUUID());
             Status.clear(sp);
