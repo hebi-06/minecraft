@@ -582,6 +582,11 @@ public final class Quests {
         return QuestText.conditionText(q);
     }
 
+    /** NPC 대화 (창 흐름 — QuestTalk.talkLoop: 편집 창의 "대화 미리보기" 등). 끝나면 done (null 이면 없음) */
+    public static void talkLoop(ServerPlayer sp, Entity npc, Runnable done) {
+        QuestTalk.talkLoop(sp, npc, done);
+    }
+
     /** 진행을 붙인 목표 글자 (말 걸기는 진행 없음) */
     public static String objectiveOf(ServerPlayer sp, Quest q) {
         if (q.type.equals("trial")) return QuestText.trialText(q, trialCounts(sp, q));
