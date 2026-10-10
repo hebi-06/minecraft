@@ -1,5 +1,7 @@
 package mmorpg.fabric.npc;
 
+import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.skill.Kit;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
@@ -19,8 +21,8 @@ import net.minecraft.world.level.Level;
 /**
  * 훈련용 허수아비 엔티티 (rpg:training_dummy — RPG_BP/entities/rpg_training_dummy.json): 크기 0.8 × 2.3, 밀리지 않음 (밀치기 저항 1),
  * 떨어짐 · 숨막힘 · 물 · 불 · 용암 · 얼음 · 마그마 · 가시 피해 없음, 사라지지 않음, 무리 rpg_dummy · mob (엔티티 태그 — Kit.hasFamily).
- * 죽지 않음: 받은 피해를 기록하고 (Dummy.onHurt) 체력을 다시 채움 — 애드온은 쓰러질 피해를 체력 - 1 로 줄였지만 자바는 피해를 그대로 받은 뒤
- * 채워서 피해 숫자 · 기록이 원래 피해 그대로. 체력은 20000 (애드온) 대신 자바 상한 1024 (한 방이 1024 를 넘으면 숫자는 1024, 기록은 원래 피해).
+ * 죽지 않음: 받은 피해를 기록하고 (Dummy.onHurt) 체력은 깎지 않음 — 애드온은 쓰러질 피해를 체력 - 1 로 줄이고 다시 채웠지만 자바는 체력을
+ * 그대로 두어 피해 숫자 · 기록이 원래 피해 그대로 (체력은 애드온 20000 대신 자바 상한 1024 — 깎이지 않으니 상관없음).
  * 움직임 · 머리 위 표시 · 제자리 돌아오기는 Dummy (서버) · 모델 · 흔들림은 클라이언트 DummyRenderer.
  */
 public class TrainingDummy extends LivingEntity {
@@ -64,18 +66,18 @@ public class TrainingDummy extends LivingEntity {
         this.yBodyRot = this.getYRot();
     }
 
-    /** 피해를 받은 뒤: 기록하고 체력을 채움 (같은 hurtServer 안 — 이어지는 죽음 확인 전에) */
+    /**
+     * 피해 (hurtServer 가 무적 시간 · 막기를 거쳐 부름): 체력은 깎지 않고 (죽지 않음) 방어 · 저항 뒤 피해를 그대로 기록 · 피해 숫자 — 체력 상한
+     * (1024) 에 막히지 않아 큰 한 방도 원래 피해로 보임 (애드온 20000 체력처럼). 바닐라 actuallyHurt 를 부르지 않으므로 그 끝의
+     * LivingEntityMixin 이 하던 피해 숫자 · 맞은 틱 기억을 여기서 함. 그 밖 (소리 · 흔들림 신호 · 밀침 · AFTER_DAMAGE) 은 hurtServer 그대로
+     */
     @Override
     protected void actuallyHurt(ServerLevel level, DamageSource source, float amount) {
-        float before = getHealth() + getAbsorptionAmount();
-        super.actuallyHurt(level, source, amount);
-        float after = getHealth() + getAbsorptionAmount();
-        float lost = before - after;
-        boolean emptied = getHealth() <= 0;
-        if (!(lost > 0) && !emptied) return; // 면역 · 다 막힘
-        // 체력이 바닥났으면 깎인 양은 남은 체력까지라서 원래 피해 (허수아비는 방어 0 — 받은 그대로)
-        double dealt = emptied ? Math.max(lost, amount) : lost;
-        setHealth(getMaxHealth());
+        if (isInvulnerableTo(level, source)) return;
+        float dealt = getDamageAfterMagicAbsorb(source, getDamageAfterArmorAbsorb(source, amount));
+        if (!(dealt > 0)) return; // 다 막힘
+        Kit.noteHurt(this);
+        DamageNumbers.onLivingHurt(this, source, dealt);
         Dummy.onHurt(this, dealt);
     }
 

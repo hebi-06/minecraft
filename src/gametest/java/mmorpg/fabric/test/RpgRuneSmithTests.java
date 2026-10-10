@@ -183,8 +183,16 @@ public final class RpgRuneSmithTests {
         h.assertTrue(labelText(d).contains("훈련용 허수아비") && labelText(d).contains("때리면"), "intro label: " + labelText(d));
         h.assertTrue(Kit.canHit(sp, d), "skills can hit it");
         float max = d.getMaxHealth();
+        boolean numbers = mmorpg.fabric.DamageNumbers.activeCount() < 28; // 한 번에 30개까지 (다른 시험의 숫자가 많으면 숫자 확인은 건너뜀)
         h.assertTrue(hit(h, d, sp, 5000F), "big hit lands");
-        h.assertTrue(d.isAlive() && !d.isRemoved() && d.getHealth() == max, "never dies, refilled " + d.getHealth());
+        h.assertTrue(d.isAlive() && !d.isRemoved() && d.getHealth() == max, "never dies, health kept " + d.getHealth());
+        if (numbers) {
+            java.util.List<Display.TextDisplay> nums = h.getLevel().getEntitiesOfClass(Display.TextDisplay.class, d.getBoundingBox().inflate(2),
+                    e -> e.entityTags().contains(mmorpg.fabric.DamageNumbers.TAG));
+            h.assertTrue(nums.stream().anyMatch(e -> e.getText().getString().contains("5000")), "true damage number (not the 1024 cap): "
+                    + nums.stream().map(e -> e.getText().getString()).toList());
+            h.assertTrue(nums.stream().allMatch(e -> e.getY() < d.getY() + 2.0), "numbers at body height, under the label");
+        }
         Dummy.Session s = Dummy.dummySession(d);
         h.assertTrue(s != null && s.hits() == 1 && s.total() == 5000 && s.max() == 5000, "recorded original damage " + (s == null ? null : s.total()));
         h.assertTrue(hit(h, d, sp, 12.5F), "small hit lands");

@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 import mmorpg.core.Js;
 import mmorpg.fabric.BedrockText;
+import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.Props;
@@ -74,6 +75,8 @@ public final class Dummy {
     private static final String ANCHOR = "rpg:anchor";
     /** 허수아비 키 (2.3) 위 표시 자리 */
     private static final double LABEL_Y = 2.65;
+    /** 피해 숫자를 띄울 높이 (발에서 — 몸통) */
+    private static final double NUMBER_Y = 1.25;
     /** 이보다 멀리 옮겨졌으면 밀린 것이 아니라 옮긴 것 (새 제자리) */
     private static final double MOVED_FAR = 8;
 
@@ -138,6 +141,9 @@ public final class Dummy {
         CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.SPAWN_EGGS).register(output -> output.accept(EGG));
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
         UseEntityCallback.EVENT.register(Dummy::onUse);
+        // 피해 숫자는 몸통 높이에서 (머리 위에 기록이 떠 있어서 — fx.js showDamageText)
+        java.util.function.Function<net.minecraft.world.entity.LivingEntity, Vec3> prev = DamageNumbers.anchor;
+        DamageNumbers.anchor = e -> e instanceof TrainingDummy ? new Vec3(e.getX(), e.getY() + NUMBER_Y, e.getZ()) : prev.apply(e);
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 10 == 0) idleTick();
         });
@@ -277,7 +283,7 @@ public final class Dummy {
 
     // ------------------------------------------------------------ 맞음 · 틱
 
-    /** 맞은 뒤 (TrainingDummy.actuallyHurt — 체력은 이미 채움): 기록 · 머리 위 표시 (onHurtAfter) */
+    /** 맞음 (TrainingDummy.actuallyHurt — 방어 · 저항 뒤 피해, 체력은 깎지 않음): 기록 · 머리 위 표시 (onHurtAfter) */
     static void onHurt(TrainingDummy e, double damage) {
         double d = Math.max(0, damage);
         long now = Tasks.now();
@@ -295,9 +301,10 @@ public final class Dummy {
         if (anchorOf(e) == null) setAnchor(e, e.position());
     }
 
-    /** 허수아비의 서버 틱: 제자리 · 머리 위 표시 (알 · /summon 으로 세운 것도 처음 틱에 제자리 · 안내 표시) */
+    /** 허수아비의 서버 틱: 체력 · 제자리 · 머리 위 표시 (알 · /summon 으로 세운 것도 처음 틱에 제자리 · 안내 표시) */
     static void serverTick(TrainingDummy e) {
         if (e.isRemoved()) return;
+        if (e.getHealth() < e.getMaxHealth() && !e.isDeadOrDying()) e.setHealth(e.getMaxHealth()); // 명령어로 줄인 체력 등
         if (anchorOf(e) == null) setAnchor(e, e.position());
         snapBack(e);
         if (e.label == null || e.label.isRemoved()) setLabel(e, e.labelText != null ? e.labelText : dummyLabel(SESSIONS.get(e.getUUID())));

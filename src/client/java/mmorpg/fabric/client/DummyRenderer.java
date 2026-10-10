@@ -105,6 +105,12 @@ public final class DummyRenderer extends LivingEntityRenderer<TrainingDummy, Dum
         return TEXTURE;
     }
 
+    /** 바닐라 이름표는 그리지 않음 (머리 위 기록은 서버의 글자 표시 — 애드온의 여러 줄 이름표) */
+    @Override
+    protected boolean shouldShowName(TrainingDummy entity, double distanceToCameraSq) {
+        return false;
+    }
+
     // ------------------------------------------------------------ 모델 읽기
 
     private static JsonObject read() {
