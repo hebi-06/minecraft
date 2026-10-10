@@ -30,6 +30,7 @@
       "mmorpg.fabric.test.RpgNavGallery",
       "mmorpg.fabric.test.RpgMobGallery",
       "mmorpg.fabric.test.RpgArenaGallery",
+      "mmorpg.fabric.test.RpgTreeGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

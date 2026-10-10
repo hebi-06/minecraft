@@ -192,7 +192,7 @@ public final class RpgTreeTests {
         for (Block b : nat) h.assertTrue(TreeBlocks.isNatural(st(b)), "natural " + b);
         List<Block> kept = List.of(Blocks.COAL_ORE, Blocks.DEEPSLATE_DIAMOND_ORE, Blocks.COBBLESTONE, Blocks.MOSSY_COBBLESTONE, Blocks.OAK_PLANKS, Blocks.GLASS,
                 Blocks.STRIPPED_OAK_LOG, Blocks.BIRCH_WOOD, Blocks.FARMLAND, Blocks.DIRT_PATH, Blocks.WHEAT, Blocks.CHEST, Blocks.BEDROCK, Blocks.LAVA, Blocks.OBSIDIAN,
-                Blocks.WHITE_TERRACOTTA, Blocks.TORCH, Blocks.RAIL, AltarBlocks.block("ymir"));
+                Blocks.TERRACOTTA, Blocks.TORCH, Blocks.RAIL, AltarBlocks.block("ymir"));
         for (Block b : kept) h.assertTrue(!TreeBlocks.isNatural(st(b)), "left alone " + b);
         for (Block b : List.of(Blocks.AIR, Blocks.SHORT_GRASS, Blocks.POPPY, Blocks.OAK_LEAVES, Blocks.CHERRY_LEAVES, Blocks.OAK_SAPLING, Blocks.SNOW)) {
             h.assertTrue(TreeBlocks.isSoft(st(b)), "soft " + b);
@@ -225,9 +225,9 @@ public final class RpgTreeTests {
     public void logSavesAndLoads(GameTestHelper h) {
         MinecraftServer server = h.getLevel().getServer();
         List<BlockState> states = new ArrayList<>();
-        for (Block b : List.of(Blocks.WHITE_WOOL, Blocks.ORANGE_WOOL, Blocks.MAGENTA_WOOL, Blocks.LIGHT_BLUE_WOOL, Blocks.YELLOW_WOOL, Blocks.LIME_WOOL, Blocks.PINK_WOOL,
-                Blocks.GRAY_WOOL, Blocks.LIGHT_GRAY_WOOL, Blocks.CYAN_WOOL, Blocks.PURPLE_WOOL, Blocks.BLUE_WOOL, Blocks.BROWN_WOOL, Blocks.GREEN_WOOL, Blocks.RED_WOOL,
-                Blocks.BLACK_WOOL, Blocks.STONE, Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.SAND)) states.add(st(b));
+        for (Block b : List.of(Blocks.OAK_PLANKS, Blocks.SPRUCE_PLANKS, Blocks.BIRCH_PLANKS, Blocks.JUNGLE_PLANKS, Blocks.ACACIA_PLANKS, Blocks.DARK_OAK_PLANKS,
+                Blocks.MANGROVE_PLANKS, Blocks.CHERRY_PLANKS, Blocks.BAMBOO_PLANKS, Blocks.CRIMSON_PLANKS, Blocks.WARPED_PLANKS, Blocks.PALE_OAK_PLANKS, Blocks.STONE_BRICKS,
+                Blocks.MOSSY_STONE_BRICKS, Blocks.BRICKS, Blocks.GLASS, Blocks.STONE, Blocks.DIRT, Blocks.GRASS_BLOCK, Blocks.SAND)) states.add(st(b));
         for (int layers = 1; layers <= 8; layers++) states.add(Blocks.SNOW.defaultBlockState().setValue(BlockStateProperties.LAYERS, layers));
         states.add(Blocks.OAK_LOG.defaultBlockState().setValue(BlockStateProperties.AXIS, net.minecraft.core.Direction.Axis.X));
         states.add(Blocks.OAK_LOG.defaultBlockState().setValue(BlockStateProperties.AXIS, net.minecraft.core.Direction.Axis.Z));
