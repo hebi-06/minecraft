@@ -33,27 +33,35 @@ public final class SkillFx {
 
     // ------------------------------------------------------------ 파티클 (skills.js fx — 변수 dir · speed · spin · size · life · thick · delay · grow · progress · color · alpha)
 
-    /** 애드온 파티클 하나: o 의 dir (기본 위) · speed · spin · size · life · thick · delay · grow · progress (기본 0) · color (기본 흰) · alpha (기본 1) */
-    public static void fx(ServerLevel level, String id, Vec3 at, Opt o) {
+    /** 늘 넣는 변수 (skills.js vars — 없으면 0) */
+    private static final String[] STD = {"speed", "spin", "size", "life", "thick", "delay", "grow", "progress"};
+    private static final Set<String> SKIP = Set.of("dir", "color", "alpha", "speed", "spin", "size", "life", "thick", "delay", "grow", "progress");
+
+    /**
+     * 파티클 변수 (skills.js vars): dir (기본 위) · speed · spin · size · life · thick · delay · grow · progress (기본 0) · color (기본 흰) · alpha (기본 1),
+     * 그 밖의 숫자 · 방향 (move · vel · seg · fade · wax · close · frame · phase …) 도 그 이름의 변수로 (어느 파티클 식에도 없는 이름은 버림)
+     */
+    public static AddonFx.Vars vars(Opt o) {
         AddonFx.Vars v = AddonFx.vars().vec("dir", o.vec("dir", V.UP));
-        for (String k : new String[] {"speed", "spin", "size", "life", "thick", "delay", "grow", "progress"}) v.set(k, o.num(k, 0));
+        for (String k : STD) v.set(k, o.num(k, 0));
         v.color("color", o.color("color", WHITE), o.num("alpha", 1));
-        // 파티클마다의 변수 (frame · kind · reach · fold · rise · sink · grav · wax · close · seg · rate · phase · fps · frames · loop · cell · fade · move · vel)
-        for (String k : new String[] {"frame", "kind", "reach", "fold", "rise", "sink", "grav", "wax", "close", "seg", "rate", "phase", "fps", "frames", "loop",
-            "cell", "fade", "spin_rate"}) {
-            if (o.has(k)) v.set(k, o.num(k, 0));
+        for (String k : o.keys()) {
+            if (SKIP.contains(k)) continue;
+            Object val = o.get(k);
+            if (val instanceof Number n) v.set(k, n.doubleValue());
+            else if (val instanceof Vec3 vec) v.vec(k, vec);
         }
-        if (o.has("move")) v.vec("move", o.vec("move", V.UP));
-        if (o.has("vel")) v.vec("vel", o.vec("vel", V.ZERO));
-        AddonFx.spawn(level, id, at, v);
+        return v;
+    }
+
+    /** 애드온 파티클 하나 (모두에게) */
+    public static void fx(ServerLevel level, String id, Vec3 at, Opt o) {
+        AddonFx.spawn(level, id, at, vars(o));
     }
 
     /** 그 플레이어에게만 보이는 파티클 (player.spawnParticle) */
     public static void fxFor(ServerPlayer sp, String id, Vec3 at, Opt o) {
-        AddonFx.Vars v = AddonFx.vars().vec("dir", o.vec("dir", V.UP));
-        for (String k : new String[] {"speed", "spin", "size", "life", "thick", "delay", "grow", "progress"}) v.set(k, o.num(k, 0));
-        v.color("color", o.color("color", WHITE), o.num("alpha", 1));
-        AddonFx.spawnFor(sp, id, at, v);
+        AddonFx.spawnFor(sp, id, at, vars(o));
     }
 
     static double[] whiten(double[] c, double t) {

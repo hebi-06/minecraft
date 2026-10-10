@@ -40,6 +40,11 @@ public final class Opt {
         return m.containsKey(k);
     }
 
+    /** 들어 있는 이름들 */
+    public java.util.Set<String> keys() {
+        return m.keySet();
+    }
+
     public Object get(String k) {
         return m.get(k);
     }

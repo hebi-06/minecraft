@@ -27,15 +27,19 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.golem.IronGolem;
 import net.minecraft.world.entity.animal.golem.SnowGolem;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.decoration.Mannequin;
+import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.npc.villager.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ClipContext;
@@ -169,6 +173,44 @@ public final class Kit {
     /** 쓰러졌는지 (체력 0 · 사라짐 · 보스 소품의 쓰러짐 표시) */
     public static boolean fallen(Entity e) {
         return e == null || e.isRemoved() || hasNoHealth(e) || e.entityTags().contains("rpg_gone");
+    }
+
+    /** 엔티티 종류 이름 (minecraft:zombie) */
+    public static String typeId(Entity e) {
+        return EntityType.getKey(e.getType()).toString();
+    }
+
+    /** 베드락 이름이 자바와 다른 몹 (애드온 목록의 이름 → 자바 이름) */
+    private static final Map<String, String> BEDROCK_TYPES = Map.of(
+            "minecraft:zombie_pigman", "minecraft:zombified_piglin",
+            "minecraft:evocation_illager", "minecraft:evoker",
+            "minecraft:villager_v2", "minecraft:villager",
+            "minecraft:zombie_villager_v2", "minecraft:zombie_villager",
+            "minecraft:ender_crystal", "minecraft:end_crystal",
+            "minecraft:xp_orb", "minecraft:experience_orb");
+
+    /** 애드온의 엔티티 이름 (베드락) 을 자바 이름으로 */
+    public static String javaType(String bedrockId) {
+        return BEDROCK_TYPES.getOrDefault(bedrockId, bedrockId);
+    }
+
+    /** 이 엔티티가 애드온 이름 (베드락) 의 종류인지 */
+    public static boolean isType(Entity e, String bedrockId) {
+        return typeId(e).equals(javaType(bedrockId));
+    }
+
+    /**
+     * 베드락 무리 (type_family): monster = 적대 몹 (Enemy), dragon = 엔더 드래곤, undead = 언데드,
+     * rpg_monster · rpg_boss · rpg_boss_prop · rpg_dummy 등 RPG 몹은 엔티티 태그 (5단계 몬스터 · 보스가 붙임)
+     */
+    public static boolean hasFamily(Entity e, String family) {
+        return switch (family) {
+            case "monster" -> e instanceof Enemy || e.entityTags().contains("monster");
+            case "dragon" -> e instanceof EnderDragon;
+            case "undead" -> e.getType().builtInRegistryHolder().is(EntityTypeTags.UNDEAD);
+            case "player" -> e instanceof Player;
+            default -> e.entityTags().contains(family);
+        };
     }
 
     /** 무엇이든 타고 있는지 (말 · 배 · 탈것) */
@@ -410,6 +452,28 @@ public final class Kit {
         return true;
     }
 
+    /** 옮기면서 보는 방향도 정함 (yRot · xRot 도 — 베드락 teleport 의 rotation / facingLocation). 막혔으면 false */
+    public static boolean moveTo(Entity e, Vec3 loc, float yRot, float xRot) {
+        if (e.isRemoved() || !(e.level() instanceof ServerLevel level)) return false;
+        AABB box = e.getBoundingBox().move(loc.x - e.getX(), loc.y - e.getY(), loc.z - e.getZ());
+        if (!level.noCollision(e, box)) return false;
+        boolean ok = e.teleportTo(level, loc.x, loc.y, loc.z, java.util.Set.of(), yRot, xRot, false);
+        e.setYHeadRot(yRot);
+        if (!(e instanceof ServerPlayer)) e.setDeltaMovement(Vec3.ZERO);
+        return ok;
+    }
+
+    /** from 에서 to 를 보는 회전 {yRot, xRot} (자바: yRot 0 = 남쪽 +z, xRot + = 아래) */
+    public static float[] lookRotation(Vec3 from, Vec3 to) {
+        double dx = to.x - from.x;
+        double dy = to.y - from.y;
+        double dz = to.z - from.z;
+        double h = Math.hypot(dx, dz);
+        float yRot = (float) Math.toDegrees(Math.atan2(-dx, dz));
+        float xRot = (float) -Math.toDegrees(Math.atan2(dy, h));
+        return new float[] {yRot, xRot};
+    }
+
     /**
      * 밀기 (베드락 applyKnockback({x, z}, 세로)): 속도를 (hx, vy, hz) 로 — 밀치기 저항만큼 줄임. 플레이어도 (속도를 그 사람에게 보냄)
      */
@@ -545,7 +609,8 @@ public final class Kit {
         Runnable run = () -> {
             if (!ok.getAsBoolean() || !canHit(sp, e)) return;
             long now = Tasks.now();
-            long wait = lastHurtTick(e, sp) + IFRAMES - now;
+            // 기억한 피해 틱 + 10 과 지금 남은 무적 시간 (자바: damageCooldownTime 이 10 넘으면 무적) 중 늦은 것
+            long wait = Math.max(lastHurtTick(e, sp) + IFRAMES - now, e.damageCooldownTime - 10);
             if (wait > 0 && retry > 0) {
                 NEXT_FREE.merge(key(sp, e), now + wait + IFRAMES, Math::max);
                 hitAt(sp, e, now + wait, ok, fn, retry - 1);
@@ -556,6 +621,19 @@ public final class Kit {
         long d = at - Tasks.now();
         if (d <= 0) run.run();
         else Tasks.later((int) d, run);
+    }
+
+    // ------------------------------------------------------------ 매 틱 되풀이 (skills.js 의 step(0) + system.runInterval(() => step(++t), 1))
+
+    /** 매 틱 step(t) (t = 0, 1, 2, …): 첫 번은 바로, step 이 false 를 돌려주면 멈춤 */
+    public static void ticks(java.util.function.IntPredicate step) {
+        if (step.test(0)) ticksFrom(step, 1);
+    }
+
+    private static void ticksFrom(java.util.function.IntPredicate step, int t) {
+        Tasks.later(1, () -> {
+            if (step.test(t)) ticksFrom(step, t + 1);
+        });
     }
 
     // ------------------------------------------------------------ 삶 (죽거나 차원을 옮기면 바뀜 — 나중에 나가는 타격을 멈춤)

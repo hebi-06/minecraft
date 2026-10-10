@@ -348,7 +348,7 @@ public final class RpgCombat {
     }
 
     /** 마법진 자리: 눈앞 · 완드를 든 오른손 쪽 · 조금 아래 → {자리, 바라보는 방향, 머리} */
-    static Vec3[] circleAt(ServerPlayer sp) {
+    public static Vec3[] circleAt(ServerPlayer sp) {
         Vec3 head = sp.getEyePosition();
         Vec3 dir = sp.getViewVector(1F);
         Vec3 right = Fx.basis(dir)[0];
