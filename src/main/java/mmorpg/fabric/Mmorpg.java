@@ -47,6 +47,7 @@ public final class Mmorpg implements ModInitializer {
         mmorpg.fabric.smith.Smith.init();
         mmorpg.fabric.rune.RuneSmith.init();
         mmorpg.fabric.quest.QuestSystem.init();
+        mmorpg.fabric.nav.Nav.init(); // 길 안내 (퀘스트의 다음 갈 곳 — 화면 화살표 · 바닥 빛)
         RpgPlayers.init();
         RpgCommands.init();
         LOG.info("MMO RPG: weapons {}, rules {}", RpgItems.WEAPONS.size(), Rules.RESOURCE);
