@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # 배포 jar 로 진짜 Fabric 서버를 띄워 봄 (개발 환경의 게임 시험과 달리 실제 설치와 같게: mods 폴더에 모드 jar + Fabric API jar).
 # 서버가 "Done" 까지 켜지는지 (모드 시작 (main entrypoint) · 믹스인 · 첫 틱들), 켜지는 동안 우리 모드 쪽 예외가 없는지 확인.
-# Fabric API 는 둘: gradle.properties 의 버전 (실패하면 이 단계 실패 → 배포 안 함) 과 그 마인크래프트 버전용 가장 오래된 것 (참고 — 결과만 남김).
+# Fabric API 는 gradle.properties 의 버전 (실패하면 이 단계 실패 → 배포 안 함). 26.3 용 옛 Fabric API (0.153 등) 는 26.3 정식판에서 그 자체가 켜지지 않아
+# fabric.mod.json 에서 0.162.0 이상을 요구함.
 set -u
 MC=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)
 LOADER=$(grep '^loader_version=' gradle.properties | cut -d= -f2)
@@ -12,14 +13,7 @@ echo "mod jar: $JAR  minecraft $MC  loader $LOADER  fabric-api $FAPI"
 unzip -l "$JAR" | grep -E "mmorpg/rules.json|mmorpg/core/Rules.class|fabric.mod.json|mixins.json" || true
 
 INSTALLER=$(curl -sf https://meta.fabricmc.net/v2/versions/installer | python3 -c 'import json,sys; print(json.load(sys.stdin)[0]["version"])')
-OLDEST=$(curl -sf https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml | python3 -c '
-import re, sys
-mc = sys.argv[1]
-vs = [v for v in re.findall(r"<version>([^<]+)</version>", sys.stdin.read()) if v.endswith("+" + mc)]
-key = lambda v: tuple(int(x) if x.isdigit() else -1 for x in re.split(r"[.\-]", v.split("+")[0]))
-print(sorted(vs, key=key)[0] if vs else "")
-' "$MC")
-echo "fabric installer $INSTALLER, oldest fabric-api for $MC: ${OLDEST:-none}"
+echo "fabric installer $INSTALLER"
 
 # run_one <fabric-api 버전> → 0 = Done 까지 켜지고 우리 모드 예외 없음
 run_one() {
@@ -65,9 +59,3 @@ run_one() {
 }
 
 run_one "$FAPI"
-main=$?
-if [ -n "$OLDEST" ] && [ "$OLDEST" != "$FAPI" ]; then
-  run_one "$OLDEST"
-  echo "[prod] oldest fabric-api $OLDEST exit $? (참고)"
-fi
-exit $main
