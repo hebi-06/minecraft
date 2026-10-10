@@ -642,7 +642,7 @@ public final class RpgSurtrTests {
         Bosses.addBossKillHook(hook);
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.runAfterDelay(62, () -> {
-            try {
+            {
                 BossSurtr.skipArrive(enc);
                 freeze(enc, 1000);
                 BossSurtr.M m = BossSurtr.mem(enc);
@@ -659,6 +659,7 @@ public final class RpgSurtrTests {
                 int xp0 = p1.totalExperience;
                 b.setHealth(50F);
                 h.runAfterDelay(11, () -> {
+                  try {
                     h.assertTrue(hit(p1, b, 100F), "killing blow");
                     h.assertTrue(Bosses.encounterAt(a) == null && "dead".equals(enc.state) && !b.isAlive(), "surtr down");
                     List<String> board = Bosses.damageBoard(enc);
@@ -684,11 +685,12 @@ public final class RpgSurtrTests {
                     h.assertTrue("ready".equals(Quests.statusOf(p1, Quests.getQuest(legend))), "legend quest ready " + Quests.statusOf(p1, Quests.getQuest(legend)));
                     h.assertTrue(a.cooldownUntil > System.currentTimeMillis() + 1_790_000, "cooldown 30 min " + (a.cooldownUntil - System.currentTimeMillis()));
                     LOG.info("[surtr-test] OK kill: board {} · note {} · emerald {} · adv ticket {} · heart {} · shard {} · hook · legend ready · 30 min", board, note, em, adv, heart, shard);
-                } finally {
+                  } finally {
                     Bosses.removeBossKillHook(hook);
-                }
-                finish(h, level, a, hold, p1, p2);
-            });
+                  }
+                  finish(h, level, a, hold, p1, p2);
+                });
+            }
         });
     }
 }
