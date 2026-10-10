@@ -8,6 +8,11 @@ on:
   push:
     branches: [main, 'mc-*']
   workflow_dispatch:
+    inputs:
+      tests:
+        description: '게임 시험 · 화면 시험도 (끄면 컴파일만 — 작업 브랜치에서 빠르게 확인)'
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -54,10 +59,12 @@ jobs:
 
       - name: Game tests
         id: gametest
+        if: github.event_name != 'workflow_dispatch' || inputs.tests
         run: ./gradlew runGameTest --stacktrace --console=plain 2>&1 | tee ci-out/gametest.txt
 
       - name: Client screenshots
         id: client
+        if: github.event_name != 'workflow_dispatch' || inputs.tests
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
@@ -86,7 +93,8 @@ jobs:
         run: bash ci/publish_logs.sh
 
       - name: Release jar
-        if: success()
+        # 배포는 main · mc-* 에서 시험까지 다 돈 것만 (작업 브랜치 · 컴파일만 한 것은 배포하지 않음)
+        if: success() && (github.ref_name == 'main' || startsWith(github.ref_name, 'mc-')) && (github.event_name != 'workflow_dispatch' || inputs.tests)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
