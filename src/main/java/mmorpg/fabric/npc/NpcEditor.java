@@ -53,6 +53,7 @@ import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ResolvableProfile;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.portal.TeleportTransition;
 import net.minecraft.world.phys.Vec3;
 
@@ -95,10 +96,10 @@ public final class NpcEditor {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
     }
 
-    /** 운영자이거나 크리에이티브 모드면 편집 가능 (editor.js canEdit) */
+    /** 운영자이거나 크리에이티브 모드면 편집 가능 (editor.js canEdit — 게임 모드는 실제 모드로: 시험용 가짜 플레이어는 isCreative 가 늘 참) */
     public static boolean canEdit(ServerPlayer sp) {
         try {
-            return sp.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || sp.isCreative();
+            return sp.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER) || sp.gameMode.getGameModeForPlayer() == GameType.CREATIVE;
         } catch (RuntimeException e) {
             return false;
         }
