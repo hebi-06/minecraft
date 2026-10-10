@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
  * 클라우 솔라스 (단검) — 섬광 난무 · 광휘의 검진 (skills.js v2.19.0 "빛 · 섬광": 빛이 되어 적 사이를 순간이동하며 벰 · 머리 위 빛의 검이 내리꽂힘). 수치는 SKILLS.dagger.
  * 사용자가 고른 컨셉 "섬광 난무 / 광휘의 검진" · 세기 "영웅 룬~초월 룬" (Lv.40 민첩 125 의 민첩 룬 위력 기준) · 빛의 검 그림은 모델 옆모습 (rpg:solas_sword)
  */
-final class Solas {
+public final class Solas {
     private Solas() {}
 
     /** 흰 금빛 기운 */

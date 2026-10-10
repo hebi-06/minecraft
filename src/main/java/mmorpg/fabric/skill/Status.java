@@ -117,6 +117,39 @@ public final class Status {
         return true;
     }
 
+    /**
+     * 즉사 (보스 기믹 — status.js kill · hp.js instantKill): RPG 체력을 0 으로 (보호막 · 불사의 맹약 무시, 불사의 토템은 바닐라처럼 막음).
+     * 크리에이티브 · 관전 · 이미 쓰러지는 사람은 무시 (false).
+     * 자바: 때린 것 (attacker) 의 마법 피해 100000 (그동안 이 사람의 불사의 맹약만 끔) → 그래도 살아 있고 토템을 쓰지 않았으면 (저항 등) /kill 과 같은 피해
+     */
+    public static boolean kill(ServerPlayer sp, net.minecraft.world.entity.Entity attacker) {
+        if (sp == null || sp.isRemoved() || !sp.isAlive() || sp.isDeadOrDying()) return false;
+        net.minecraft.world.level.GameType gm = sp.gameMode.getGameModeForPlayer();
+        if (gm == net.minecraft.world.level.GameType.CREATIVE || gm == net.minecraft.world.level.GameType.SPECTATOR) return false;
+        int totems = totems(sp);
+        java.util.function.Predicate<ServerPlayer> undying = mmorpg.fabric.RpgHealth.undying;
+        mmorpg.fabric.RpgHealth.undying = p -> p != sp && undying.test(p);
+        try {
+            net.minecraft.server.level.ServerLevel level = sp.level();
+            net.minecraft.world.damagesource.DamageSource src = attacker != null && !attacker.isRemoved()
+                    ? level.damageSources().indirectMagic(attacker, attacker) : level.damageSources().magic();
+            sp.hurtServer(level, src, 100000F);
+            if (!sp.isRemoved() && sp.isAlive() && !sp.isDeadOrDying() && totems(sp) >= totems) sp.kill(level);
+        } finally {
+            mmorpg.fabric.RpgHealth.undying = undying;
+        }
+        return true;
+    }
+
+    /** 두 손의 불사의 토템 수 (토템이 막았는지 보려고) */
+    private static int totems(ServerPlayer sp) {
+        int n = 0;
+        for (net.minecraft.world.item.ItemStack s : new net.minecraft.world.item.ItemStack[] {sp.getMainHandItem(), sp.getOffhandItem()}) {
+            if (s.is(net.minecraft.world.item.Items.TOTEM_OF_UNDYING)) n += s.getCount();
+        }
+        return n;
+    }
+
     /** 상태를 모두 풂 (죽음 · 나감 · 다시 태어남) */
     public static void clear(ServerPlayer sp) {
         ROOTS.remove(sp.getUUID());

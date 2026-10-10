@@ -34,7 +34,7 @@ import net.minecraft.world.phys.Vec3;
  * 아이기스의 방패 (탱커) — 고르곤 돌진 · 신의 방벽 (skills.js v2.20.0 "고르곤 · 신의 방벽"). 수치는 SKILLS.shield.
  * 세기 "영웅 룬~초월 룬" (Lv.40 체력 125 의 체력 룬 위력 기준) · 빛의 방패 그림은 모델 앞모습 (rpg:aegis_shield)
  */
-final class Aegis {
+public final class Aegis {
     private Aegis() {}
 
     static final double[] AE_EYE = {0.55, 1.0, 0.9}; // 메두사의 눈 (청록빛)

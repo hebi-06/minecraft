@@ -209,6 +209,7 @@ public final class RpgCombat {
             MARKS.clear();
             RANGED_READY.clear();
             LAST_BASH.clear();
+            NO_BLOCK.clear();
             CASTING.clear();
         });
     }
@@ -347,7 +348,7 @@ public final class RpgCombat {
         double vit = Stats.get(RpgStats.effective(sp), "vit");
         double r = Math.min(SHIELD.num("passiveCap"), w.passive() + vit * SHIELD.num("passivePerVit"));
         Entity from = src.getDirectEntity() != null ? src.getDirectEntity() : src.getEntity();
-        if (sp.isShiftKeyDown() && from != null && !from.isRemoved() && !bashLocked(sp)) {
+        if (sp.isShiftKeyDown() && from != null && !from.isRemoved() && !bashLocked(sp) && !noBlockNow(sp)) {
             Vec3 dir = sp.getViewVector(1F);
             double dx = from.getX() - sp.getX();
             double dz = from.getZ() - sp.getZ();
@@ -365,6 +366,25 @@ public final class RpgCombat {
     static boolean bashLocked(ServerPlayer sp) {
         Long t = LAST_BASH.get(sp.getUUID());
         return t != null && Tasks.now() - t < SHIELD.numOr("bashBlockLockTicks", 0);
+    }
+
+    /** v1.8.0 방향이 없는 공격 (보스의 발밑 폭발 · 까마귀 · 기믹 벌 — combat.js markNoBlock): 플레이어 → 틱 */
+    private static final Map<UUID, Long> NO_BLOCK = new HashMap<>();
+
+    /** 이번 (과 다음) 틱의 피해는 웅크려 막기 (방향 막기) 가 되지 않음 — 방패의 기본 감소 · 보호 룬은 그대로 (보스 bossHit 이 부름) */
+    public static void markNoBlock(ServerPlayer sp) {
+        NO_BLOCK.put(sp.getUUID(), Tasks.now());
+        if (NO_BLOCK.size() > 256) NO_BLOCK.values().removeIf(t -> Tasks.now() - t > 1);
+    }
+
+    static boolean noBlockNow(ServerPlayer sp) {
+        Long t = NO_BLOCK.get(sp.getUUID());
+        if (t == null) return false;
+        if (Tasks.now() - t > 1) {
+            NO_BLOCK.remove(sp.getUUID());
+            return false;
+        }
+        return true;
     }
 
     // ------------------------------------------------------------ 활 · 완드 (combat.js castRanged)

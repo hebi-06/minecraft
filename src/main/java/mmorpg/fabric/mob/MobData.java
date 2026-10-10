@@ -58,11 +58,22 @@ public final class MobData {
     }
 
     private static Map<String, Def> defs;
+    /** 맞는 상자 (minecraft:custom_hit_test — 충돌 상자보다 큰 것: 짚단 감옥 · 수르트 부위의 핵): ID → {폭, 높이} */
+    private static Map<String, float[]> hitboxes = Map.of();
 
     /** 모든 종류 (ID 순서는 파일 그대로 — 몬스터 다음 보스) */
     public static synchronized Map<String, Def> all() {
         if (defs == null) defs = load();
         return defs;
+    }
+
+    /**
+     * 맞는 상자 (베드락 custom_hit_test 의 첫 상자 — 발에서 위로 놓인 것만: pivot y = 높이 / 2): {폭, 높이}, 없으면 null.
+     * 베드락은 몸 (충돌) 은 작게 두고 맞는 곳만 크게 함 (감옥은 갇힌 사람을 밀지 않게) — 자바는 RpgProp 이 몸 크기를 이것으로 두고 밀지 않음
+     */
+    public static float[] hitbox(String id) {
+        all();
+        return hitboxes.get(id);
     }
 
     /** ID (rpg:troll) → 종류 (없으면 null) */
@@ -80,9 +91,19 @@ public final class MobData {
             throw new UncheckedIOException(e);
         }
         Map<String, Def> out = new LinkedHashMap<>();
+        Map<String, float[]> hits = new LinkedHashMap<>();
         for (Map.Entry<String, Object> e : root.entrySet()) {
             Map<String, Object> d = (Map<String, Object>) e.getValue();
             Map<String, Object> c = map(d.get("components"));
+            List<Object> hb = list(map(c.get("minecraft:custom_hit_test")).get("hitboxes"));
+            if (!hb.isEmpty()) {
+                Map<String, Object> h = map(hb.get(0));
+                double hw = num(h.get("width"), 0);
+                double hh = num(h.get("height"), 0);
+                List<Object> pv = list(h.get("pivot"));
+                double py = pv.size() > 1 ? num(pv.get(1), 0) : 0;
+                if (hw > 0 && hh > 0 && Math.abs(py - hh / 2) < 0.01) hits.put(e.getKey(), new float[] {(float) hw, (float) hh});
+            }
             Map<String, Object> phys = map(c.get("minecraft:physics"));
             Map<String, Object> box = map(c.get("minecraft:collision_box"));
             Map<String, Object> home = map(c.get("minecraft:home"));
@@ -145,6 +166,7 @@ public final class MobData {
                     Boolean.TRUE.equals(map(c.get("minecraft:nameable")).get("always_show")), Collections.unmodifiableMap(groupMove),
                     Collections.unmodifiableMap(events), Collections.unmodifiableMap(behaviors)));
         }
+        hitboxes = Collections.unmodifiableMap(hits);
         return Collections.unmodifiableMap(out);
     }
 

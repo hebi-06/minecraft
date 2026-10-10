@@ -124,10 +124,21 @@ public final class DamageNumbers {
      */
     public static void onLivingHurt(LivingEntity victim, DamageSource source, double dealt) {
         if (!(source.getEntity() instanceof ServerPlayer attacker) || attacker == victim || !(dealt > 0)) return;
-        RpgCombat.Mark m = RpgCombat.takeMark(victim, attacker);
+        feedback(victim, attacker, dealt, RpgCombat.takeMark(victim, attacker), "");
+    }
+
+    /**
+     * 맞힘 연출 (combat.js hitFeedback): 숫자 (평타 · 치명타 · 스킬 모양) · 치명타 연출 · 무기 맞힘 훅 · 평타에 더한 몫 · 참격.
+     * 바닐라 피해 (onLivingHurt) 와 보스 엔진 (바닐라 피해 없이 스크립트가 체력을 줄임 — Bosses) 이 같이 씀.
+     * @param m 맞히기 직전에 기억한 공격 (RpgCombat.takeMark — 없으면 null)
+     * @param mark 숫자 앞 표시 (보스의 근접 보너스 » · 약점 · 빈틈 …, 없으면 "")
+     */
+    public static void feedback(LivingEntity victim, ServerPlayer attacker, double dealt, RpgCombat.Mark m, String mark) {
+        if (victim == null || attacker == null || attacker == victim || !(dealt > 0)) return;
+        if (mark == null) mark = "";
         if (m != null && m.style() != null) {
             // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback)
-            show(victim, dealt, m.style(), "", 0);
+            show(victim, dealt, m.style(), mark, 0);
             return;
         }
         Style style = Style.NORMAL;
@@ -147,7 +158,7 @@ public final class DamageNumbers {
                 Fx.crit(victim);
             }
         }
-        if (shown > 0) show(victim, shown, style, "", 0);
+        if (shown > 0) show(victim, shown, style, mark, 0);
         if (extra > 0) showBonus(victim, extra, m.bonus());
         if (m != null && m.melee() && m.w() != null) Slash.hit(attacker, victim, m.w(), m.crit()); // 참격 맞힘 연출 (slash.js slashHit)
     }
