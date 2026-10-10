@@ -216,7 +216,7 @@ public final class RuneCast {
             startCooldown(sp, r);
             Object st = cb.commit(sp, r, plan);
             String life = RuneKit.lifeToken(sp);
-            Tasks.later(plan.start() - now, () -> {
+            Tasks.later((int) (plan.start() - now), () -> {
                 boolean alive = RuneKit.sameLife(sp, life);
                 if (!alive) cb.drop(sp, st); // 죽거나 차원이 바뀌면 콤보도 끝
                 if (alive && run.getAsBoolean()) cb.landed(sp, r, st);
