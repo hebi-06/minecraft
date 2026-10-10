@@ -7,7 +7,6 @@ import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.DamageNumbers;
-import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgData;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgItems;
@@ -56,9 +55,21 @@ public final class RpgSkillTests {
     }
 
     private static void done(GameTestHelper h, ServerPlayer sp) {
-        RpgCombat.forceCrit = null;
         h.getLevel().getServer().getPlayerList().remove(sp);
         h.succeed();
+    }
+
+    /**
+     * 피해 합이 타격들 (배율 mults × 기본 b) 의 어떤 치명타 조합 (각각 × c 또는 그대로) 과 같은지.
+     * 시험들이 한 세계에서 함께 돌아 RpgCombat.forceCrit (공용) 를 믿을 수 없어서 치명타도 맞는 것으로 봄
+     */
+    private static boolean hitsMatch(double dealt, double b, double c, double... mults) {
+        for (int mask = 0; mask < (1 << mults.length); mask++) {
+            double sum = 0;
+            for (int i = 0; i < mults.length; i++) sum += mults[i] * b * ((mask >> i & 1) == 1 ? c : 1);
+            if (Math.abs(dealt - sum) < 1e-3) return true;
+        }
+        return false;
     }
 
     /** 돌 바닥 (시험 자리 y = 1, 8 × 8) */
@@ -119,15 +130,16 @@ public final class RpgSkillTests {
         hold(sp, w);
         Obj k = w.skills().get(0);
         Zombie z = dummy(h, 1.5, 2, 4.5);
-        RpgCombat.forceCrit = false;
         double z0 = sp.getZ();
         h.assertTrue(Transcend.castSkill(sp, w, 0), "cast");
         h.assertTrue(sp.getZ() > z0 + 0.9, "dashed forward: " + z0 + " → " + sp.getZ());
-        double first = k.num("mult") * base(sp, w);
-        h.runAfterDelay(2, () -> h.assertTrue(Math.abs(TestDummies.dealt(z) - first) < 1e-3, "first hit " + TestDummies.dealt(z) + " vs " + first));
-        double total = (k.num("mult") + k.num("afterMult")) * base(sp, w);
+        double b = base(sp, w);
+        double c = w.critMult();
+        h.runAfterDelay(2, () -> h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult")),
+                "first hit " + TestDummies.dealt(z) + " vs " + k.num("mult") * b));
         h.runAfterDelay((int) k.num("delay") + 4, () -> {
-            h.assertTrue(Math.abs(TestDummies.dealt(z) - total) < 1e-3, "both hits " + TestDummies.dealt(z) + " vs " + total);
+            h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("afterMult")),
+                    "both hits " + TestDummies.dealt(z) + " vs " + (k.num("mult") + k.num("afterMult")) * b);
             done(h, sp);
         });
     }
@@ -194,7 +206,6 @@ public final class RpgSkillTests {
         hold(sp, w);
         Zombie z = dummy(h, 1.5, 2, 6.5);
         sp.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
-        RpgCombat.forceCrit = false;
         ItemStack bow = sp.getMainHandItem();
         bow.use(h.getLevel(), sp, InteractionHand.MAIN_HAND);
         h.assertTrue(sp.isUsingItem(), "holding the bow");
@@ -204,7 +215,7 @@ public final class RpgSkillTests {
         });
         double shot = base(sp, w);
         h.runAfterDelay(20, () -> {
-            h.assertTrue(Math.abs(TestDummies.dealt(z) - shot) < 1e-3, "basic shot " + TestDummies.dealt(z) + " vs " + shot);
+            h.assertTrue(hitsMatch(TestDummies.dealt(z), shot, w.critMult(), 1), "basic shot " + TestDummies.dealt(z) + " vs " + shot);
             // 웅크리고 누르면 스킬 1 (은월 관통) — 재사용 대기 시작
             sp.setShiftKeyDown(true);
             bow.use(h.getLevel(), sp, InteractionHand.MAIN_HAND);
