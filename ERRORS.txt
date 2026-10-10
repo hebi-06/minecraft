@@ -1,0 +1,24 @@
+ci-out/build.txt:29:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgRuneTests.java:36: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:32:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGearTests.java:47: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:35:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgSkillTests.java:42: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:38:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGameTests.java:56: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/gametest.txt:12:> Task :deleteGameTestRunDir UP-TO-DATE
+ci-out/gametest.txt:13:> Task :acceptGameTestEula
+ci-out/gametest.txt:20:> Task :runGameTest
+ci-out/gametest.txt:73:[18:00:53] [main/ERROR] (Minecraft) Failed to load properties from file: server.properties
+ci-out/gametest.txt:75:java.nio.file.NoSuchFileException: server.properties
+ci-out/gametest.txt:76:	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+ci-out/gametest.txt:77:	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)
+ci-out/gametest.txt:78:	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+ci-out/gametest.txt:93:[18:00:53] [main/WARN] (Minecraft) Failed to load eula.txt
+ci-out/gametest.txt:95:[18:00:53] [main/INFO] (FabricGameTestRunner) Starting test server
+ci-out/gametest.txt:4463:[18:01:36] [Server thread/ERROR] (Minecraft) mmorpg-gametest:rpg_tree_tests_grows_and_undoes failed at -12500752, 4, -4844953! looking at the ground close by: pushed out to the tree's spot Spot[base=BlockPos{x=46007, y=200, z=46008}, reason=null] on tick 3002
+ci-out/gametest.txt:4466:[18:01:36] [Server thread/INFO] (Minecraft) 1 required tests failed :(
+ci-out/gametest.txt:4479:> Task :runGameTest FAILED
+ci-out/gametest.txt:4482:FAILURE: Build failed with an exception.
+ci-out/gametest.txt:4485:Execution failed for task ':runGameTest' (registered by plugin 'fabric-loom').
+ci-out/gametest.txt:4493:* Exception is:
+ci-out/gametest.txt:4494:org.gradle.api.tasks.TaskExecutionException: Execution failed for task ':runGameTest' (registered by plugin 'fabric-loom').
+ci-out/gametest.txt:4504:	at org.gradle.api.internal.tasks.execution.CatchExceptionTaskExecuter.execute(CatchExceptionTaskExecuter.java:36)
+ci-out/gametest.txt:4528:Caused by: org.gradle.process.ProcessExecutionException: Process 'command '/usr/lib/jvm/temurin-25-jdk-amd64/bin/java'' finished with non-zero exit value 1
+ci-out/gametest.txt:4637:BUILD FAILED in 1m 2s
