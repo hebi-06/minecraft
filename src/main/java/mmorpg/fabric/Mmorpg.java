@@ -48,6 +48,7 @@ public final class Mmorpg implements ModInitializer {
         mmorpg.fabric.mob.RpgEntities.init(); // 몬스터 6 · 보스 10 · 소품 10 (애드온 엔티티 그대로)
         mmorpg.fabric.boss.Arena.init(); // 보스 제단 목록 · 필드
         mmorpg.fabric.boss.Ticking.init(); // 붙잡아 둘 땅 (큰 필드 · 세계수)
+        mmorpg.fabric.mob.Monsters.init(); // 일반 몬스터 6종 (싸움 · 이름표 · 회복 · 경험치 · 전리품) · 사냥터 · /mob · /mobzone
         mmorpg.fabric.boss.ArenaGuard.init(); // 제단 블록 9종 · 보스 필드 짓기 · 필드 보호
         mmorpg.fabric.boss.Bosses.init(); // 보스 엔진 (제단 누르기 · 소환 · 싸움 · 보상) · 보스 모듈 · /boss
         mmorpg.fabric.smith.Smith.init();
