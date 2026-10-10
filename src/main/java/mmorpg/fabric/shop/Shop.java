@@ -59,8 +59,8 @@ public final class Shop {
         return sp.getEyePosition();
     }
 
-    /** 돈이 모자람 · 재료 부족: 낮은 소리 + 머리 위 화난 얼굴 */
-    static void angry(ServerPlayer sp) {
+    /** 돈이 모자람 · 재료 부족: 낮은 소리 + 머리 위 화난 얼굴 (대장장이도 씀) */
+    public static void angry(ServerPlayer sp) {
         SkillFx.playFor(sp, "note.bass", 0.6, 1);
         Vec3 h = head(sp);
         SkillFx.vanilla(sp.level(), "minecraft:villager_angry", new Vec3(h.x, h.y + 0.5, h.z));
