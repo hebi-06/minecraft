@@ -69,7 +69,7 @@ public final class MenuFormScreen extends FormScreen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float partialTick) {
         super.extractRenderState(g, mx, my, partialTick);
-        sprite(g, "dialog_bg", left, top, w, h);
+        panel(g, left, top, w, h);
         g.text(font, clip(font, form.title(), w - 44), left + 12, top + 9, 0xFFFFD659, true);
         closeButton(g, closeX(), closeY(), in(mx, my, closeX(), closeY(), 11, 11));
         int y = top + 24;

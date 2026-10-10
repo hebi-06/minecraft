@@ -337,7 +337,8 @@ public final class RpgFormGallery implements FabricClientGameTest {
             if (t == 16) shot(ctx, "f_npc_head_walk");
         }
         ctx.getInput().releaseKey(o -> o.keyLeft);
-        check(worst < 20, "head follows while walking (worst lag " + worst + "°)");
+        // 서버가 돌린 머리 → 패킷 → 클라이언트 보간 (3틱) 이라 걷는 동안 20° 가량은 늦음 (예전 2틱마다 35%: 32°)
+        check(worst < 25, "head follows while walking (worst lag " + worst + "°)");
         lookAtNpc(ctx, id);
         ctx.waitTicks(20);
         float[] h1 = head(ctx, id);

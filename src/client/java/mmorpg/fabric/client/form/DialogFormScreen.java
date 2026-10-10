@@ -46,7 +46,9 @@ public final class DialogFormScreen extends FormScreen {
         w = Math.min(W, width - 8);
         text = wrap(font, form.text(), w - 20);
         int listH = form.choices().size() * ROW;
-        int maxBox = height - 6 - NAME_H - 4;
+        // 상자는 화면 높이의 60% 까지 (대화하는 NPC 가 가려지지 않게 — 넘치는 선택지는 휠로). 작은 화면에서도 대사 두 줄 + 선택지 두 줄은
+        int full = height - 6 - NAME_H - 4;
+        int maxBox = Math.min(full, Math.max((int) (height * 0.6), 16 + 7 + 2 * ROW + 2 * LINE));
         // 대사가 길어도 선택지 두 줄 (적으면 그만큼) 은 보이게
         int room = Math.max(LINE, maxBox - 16 - 7 - Math.min(listH, 2 * ROW));
         textLines = Math.min(text.size(), room / LINE);

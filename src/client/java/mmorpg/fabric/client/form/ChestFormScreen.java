@@ -56,6 +56,17 @@ public final class ChestFormScreen extends FormScreen {
         top = Math.max(2, (height - h) / 2);
     }
 
+    /** 칸 숫자: 999 까지 그대로, 1000 ~ 9999 는 1k · 1.2k, 그 위는 12k (칸 폭 20 에 들어가게 — 애드온은 세 자리까지) */
+    static String shortNum(int n) {
+        if (n < 1000) return String.valueOf(n);
+        if (n < 10000) {
+            int t = n / 100;
+            return (t % 10 == 0 ? String.valueOf(t / 10) : t / 10 + "." + t % 10) + "k";
+        }
+        if (n < 1_000_000) return n / 1000 + "k";
+        return n / 1_000_000 + "m";
+    }
+
     private int slotX(int i) {
         return left + PAD_X + (i % 9) * CELL;
     }
@@ -108,8 +119,8 @@ public final class ChestFormScreen extends FormScreen {
             icon(g, s.icon(), sx + 2, sy + 2, 16);
             if (i == hover && s.kind() != Slot.DECO) sprite(g, "slot_hover", sx, sy, CELL, CELL);
             if (s.kind() == Slot.COUNT || s.kind() == Slot.PRICE) {
-                // 바닐라 아이템 수와 같은 자리 (그림 오른쪽 아래 — 칸 테두리 안)
-                String n = String.valueOf(s.num());
+                // 바닐라 아이템 수와 같은 자리 (그림 오른쪽 아래 — 칸 테두리 안), 네 자리부터 줄임 (옆 칸을 덮지 않게 — 온전한 수는 이름 · 설명에)
+                String n = shortNum(s.num());
                 int color = s.kind() == Slot.PRICE ? 0xFF55FF55 : 0xFFFFFFFF;
                 g.text(font, n, sx + CELL - 1 - font.width(n), sy + 11, color, true);
             }
