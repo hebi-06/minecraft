@@ -15,6 +15,7 @@
       "mmorpg.fabric.test.RpgWeaponGallery",
       "mmorpg.fabric.test.RpgParticleGallery",
       "mmorpg.fabric.test.RpgSkillGallery",
+      "mmorpg.fabric.test.RpgRuneGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

@@ -69,6 +69,45 @@ public final class RpgRuneTests {
         h.succeed();
     }
 
+    @GameTest(maxTicks = 20)
+    public void allRuneFnsRegistered(GameTestHelper h) {
+        StringBuilder missing = new StringBuilder();
+        for (String f : Runes.FAMILY_ORDER) {
+            for (String g : Runes.GRADE_ORDER) {
+                String fn = Runes.parseRune(Runes.runeId(f, g)).def().str("fn");
+                if (!RuneCast.has(fn)) missing.append(' ').append(f).append('_').append(g).append('=').append(fn);
+            }
+        }
+        h.assertTrue(missing.isEmpty(), "rune fns not registered:" + missing);
+        h.succeed();
+    }
+
+    @GameTest(maxTicks = 40)
+    public void quickCastOnSlotChange(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Runes.Rune r = Runes.parseRune("rpg:rune_str_common"); // 대지 강타: 대상이 없어도 나감
+        sp.getInventory().setItem(0, ItemStack.EMPTY);
+        sp.getInventory().setItem(1, new ItemStack(RuneItems.byId(r.id())));
+        sp.getInventory().setSelectedSlot(0);
+        RuneData.setQuick(sp, "off");
+        h.runAfterDelay(2, () -> {
+            sp.getInventory().setSelectedSlot(1);
+            h.runAfterDelay(2, () -> {
+                h.assertTrue(RuneCast.cooldownLeft(sp, r) == 0, "off: not cast on select");
+                RuneData.setQuick(sp, "on");
+                sp.getInventory().setSelectedSlot(0);
+                h.runAfterDelay(2, () -> {
+                    sp.getInventory().setSelectedSlot(1);
+                    h.runAfterDelay(2, () -> {
+                        h.assertTrue(RuneCast.cooldownLeft(sp, r) > 0, "on: cast on select");
+                        RuneCast.resetCooldowns(sp);
+                        done(h, sp);
+                    });
+                });
+            });
+        });
+    }
+
     @GameTest(maxTicks = 80)
     public void ticketDrawsRune(GameTestHelper h) {
         ServerPlayer sp = player(h);
