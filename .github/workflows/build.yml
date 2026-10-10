@@ -1,6 +1,6 @@
 # 빌드 · 시험 · 배포 (main · mc-* 에 올릴 때마다)
 # 1. Fabric 버전 확인  2. 규칙 코어 대조 시험 (애드온 JS 와 같은 값)  3. 모드 빌드 (컴파일, 시험 코드 포함)
-# 4. 게임 시험 (서버를 띄워 @GameTest)  5. 화면 시험 (클라이언트를 xvfb 로 띄워 실제 입력 · 확인 항목 · 장면 사진)
+# 3b. 배포 jar 로 진짜 Fabric 서버 켜 보기 (실제 설치와 같게)  4. 게임 시험 (서버를 띄워 @GameTest)  5. 화면 시험 (클라이언트를 xvfb 로 띄워 실제 입력 · 확인 항목 · 장면 사진)
 # 6. 로그 · 사진을 ci-logs 브랜치에 (늘)  7. 모두 통과하면 릴리스에 모드 jar (main → latest, mc-* → release-<브랜치>)
 name: build
 
@@ -57,6 +57,10 @@ jobs:
         id: build
         run: ./gradlew assemble gametestClasses --stacktrace --console=plain 2>&1 | tee ci-out/build.txt
 
+      - name: Production server
+        id: prod
+        run: bash ci/prod_smoke.sh 2>&1 | tee ci-out/prod.txt
+
       - name: Game tests
         id: gametest
         if: github.event_name != 'workflow_dispatch' || inputs.tests
@@ -81,6 +85,25 @@ jobs:
           grep -E "\[client-test\]" ci-out/client.txt ci-out/client-latest.log 2>/dev/null | sort -u > ci-out/client-checks.txt || true
           exit $code
 
+      - name: Production client
+        id: prodclient
+        # 배포 jar 로 진짜 클라이언트 (Fabric 설치와 같게) — 처음 넣은 단계라 실패해도 배포는 막지 않음 (로그 · 사진으로 확인)
+        if: github.event_name != 'workflow_dispatch' || inputs.tests
+        continue-on-error: true
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          set +e
+          timeout 1500 ./gradlew prodClient --stacktrace --console=plain 2>&1 | tee ci-out/prod-client.txt
+          code=${PIPESTATUS[0]}
+          set -e
+          mkdir -p ci-out/shots
+          find build -name 'prod_*.png' -exec cp {} ci-out/shots/ \; 2>/dev/null || true
+          for f in $(find build/run -path '*prod*' -name latest.log 2>/dev/null); do cp "$f" ci-out/prod-client-latest.log; done
+          grep -h -E "\[prod-client\]" ci-out/prod-client.txt ci-out/prod-client-latest.log 2>/dev/null | sort -u || true
+          grep -h -q "\[prod-client\] done, 0 failed" ci-out/prod-client.txt ci-out/prod-client-latest.log 2>/dev/null || code=1
+          exit $code
+
       - name: Publish logs
         if: always()
         env:
@@ -88,8 +111,10 @@ jobs:
           OUT_VERSIONS: ${{ steps.versions.outcome }}
           OUT_CORE: ${{ steps.core.outcome }}
           OUT_BUILD: ${{ steps.build.outcome }}
+          OUT_PROD: ${{ steps.prod.outcome }}
           OUT_GAMETEST: ${{ steps.gametest.outcome }}
           OUT_CLIENT: ${{ steps.client.outcome }}
+          OUT_PRODCLIENT: ${{ steps.prodclient.outcome }}
         run: bash ci/publish_logs.sh
 
       - name: Release jar

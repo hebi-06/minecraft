@@ -1,6 +1,7 @@
 // MMO RPG — Fabric 모드 (마인크래프트 자바 ${minecraft_version}, 난독화 없는 공식 이름)
 // 소스: src/main (공통 · 서버), src/client (HUD · 스탯 창 · 키), src/gametest (게임 시험: 서버 @GameTest + 클라이언트 화면 시험 — 모드 jar 에 안 들어감)
-// 규칙 코어 (:core — 밸런스 데이터 rules.json + 계산) 는 모드 jar 에 함께 넣음
+// 규칙 코어 (core/ — 밸런스 데이터 rules.json + 계산) 는 모드의 소스로 함께 컴파일해 모드 jar 에 넣음
+// (예전처럼 다른 프로젝트 (:core) 의 출력을 jar 에 덧붙이면 배포 jar 에서 빠져 서버 · 게임이 켜지지 않았음 — NoClassDefFoundError: mmorpg/core/Rules)
 plugins {
     id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
@@ -10,6 +11,13 @@ group = project.maven_group
 
 base {
     archivesName = project.archives_base_name
+}
+
+sourceSets {
+    main {
+        java { srcDir 'core/src/main/java' }
+        resources { srcDir 'core/src/main/resources' }
+    }
 }
 
 loom {
@@ -38,8 +46,6 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-    implementation project(':core')
 }
 
 processResources {
@@ -61,7 +67,27 @@ java {
     targetCompatibility = JavaVersion.VERSION_25
 }
 
-jar {
-    // 규칙 코어의 클래스 · rules.json 을 모드 jar 안에
-    from(project(':core').sourceSets.main.output)
+// 배포 환경 화면 시험 (CI): 실제 설치와 같게 배포 jar + Fabric API jar (+ 시험 모드 jar) 로 클라이언트를 띄워 RpgProdSmoke 만 (-Dmmorpg.prodSmoke=true)
+configurations {
+    prodMods {
+        transitive = false
+    }
 }
+
+dependencies {
+    prodMods "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+tasks.register('gametestJar', Jar) {
+    archiveClassifier = 'gametest'
+    destinationDirectory = layout.buildDirectory.dir('gametest-libs')
+    from sourceSets.gametest.output
+}
+
+tasks.register('prodClient', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+    mods.from(configurations.prodMods)
+    mods.from(tasks.named('gametestJar'))
+    jvmArgs.add('-Dfabric.client.gametest')
+    jvmArgs.add('-Dmmorpg.prodSmoke=true')
+}
+
