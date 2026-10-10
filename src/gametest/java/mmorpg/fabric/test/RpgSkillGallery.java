@@ -21,7 +21,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.phys.AABB;
@@ -37,7 +36,6 @@ import org.slf4j.LoggerFactory;
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgSkillGallery implements FabricClientGameTest {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-skill-gallery");
-    private static final float HUSK_HP = 5000F;
     /** 과녁: 앞쪽 무리 넷 (7~10칸) + 옆 둘 (4칸) — 평평한 세계 땅 y = -60 */
     private static final Vec3[] TARGETS = {
         new Vec3(0.5, -60, 7.5), new Vec3(-1.0, -60, 8.5), new Vec3(2.0, -60, 8.0), new Vec3(0.5, -60, 10.0), new Vec3(-3.5, -60, 4.5),
@@ -152,9 +150,8 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         double dealt = server.computeOnServer(s -> {
             double sum = 0;
             ServerLevel level = player(s).level();
-            List<Husk> list = level.getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 7, 0.5, -60, 7).inflate(40), h -> true);
-            for (Husk h : list) sum += HUSK_HP - Math.max(0, h.getHealth());
-            return sum + (TARGETS.length - list.size()) * (double) HUSK_HP;
+            for (Husk h : level.getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 7, 0.5, -60, 7).inflate(40), h -> true)) sum += TestDummies.dealt(h);
+            return sum;
         });
         LOG.info("[skill-gallery] {} {} cast={} dealt={}", id, third ? "3p" : "1p", cast, String.format(Locale.ROOT, "%.1f", dealt));
         if (!cast) failures.add(id + (third ? " (3p)" : "") + " not cast");
@@ -165,16 +162,13 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         return s.getPlayerList().getPlayers().get(0);
     }
 
+    /** 쓰러지지 않는 과녁 허스크 (받은 피해는 TestDummies.dealt) */
     private static void spawnHusks(ServerLevel level) {
+        TestDummies.reset();
         for (Vec3 at : TARGETS) {
             Husk h = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
             if (h == null) continue;
-            h.setNoAi(true);
-            h.setSilent(true);
-            h.setPersistenceRequired();
-            h.getAttribute(Attributes.ARMOR).setBaseValue(0);
-            h.getAttribute(Attributes.MAX_HEALTH).setBaseValue(HUSK_HP);
-            h.setHealth(HUSK_HP);
+            TestDummies.make(h);
             h.snapTo(at.x, at.y, at.z, 180F, 0F);
             h.setYHeadRot(180F);
             h.setYBodyRot(180F);

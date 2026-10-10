@@ -66,12 +66,9 @@ public final class RpgSkillTests {
         for (int x = 0; x < 8; x++) for (int z = 0; z < 8; z++) h.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
     }
 
+    /** 쓰러지지 않는 과녁 좀비 (받은 피해는 TestDummies.dealt) */
     private static Zombie dummy(GameTestHelper h, double x, double y, double z) {
-        Zombie zb = h.spawnWithNoFreeWill(EntityTypes.ZOMBIE, (float) x, (float) y, (float) z);
-        zb.getAttribute(Attributes.ARMOR).setBaseValue(0);
-        zb.getAttribute(Attributes.MAX_HEALTH).setBaseValue(500);
-        zb.setHealth(500);
-        return zb;
+        return TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.ZOMBIE, (float) x, (float) y, (float) z));
     }
 
     private static Weapon transcend(String type) {
@@ -127,10 +124,10 @@ public final class RpgSkillTests {
         h.assertTrue(Transcend.castSkill(sp, w, 0), "cast");
         h.assertTrue(sp.getZ() > z0 + 0.9, "dashed forward: " + z0 + " → " + sp.getZ());
         double first = k.num("mult") * base(sp, w);
-        h.runAfterDelay(2, () -> h.assertTrue(Math.abs((500 - z.getHealth()) - first) < 1e-3, "first hit " + (500 - z.getHealth()) + " vs " + first));
+        h.runAfterDelay(2, () -> h.assertTrue(Math.abs(TestDummies.dealt(z) - first) < 1e-3, "first hit " + TestDummies.dealt(z) + " vs " + first));
         double total = (k.num("mult") + k.num("afterMult")) * base(sp, w);
         h.runAfterDelay((int) k.num("delay") + 4, () -> {
-            h.assertTrue(Math.abs((500 - z.getHealth()) - total) < 1e-3, "both hits " + (500 - z.getHealth()) + " vs " + total);
+            h.assertTrue(Math.abs(TestDummies.dealt(z) - total) < 1e-3, "both hits " + TestDummies.dealt(z) + " vs " + total);
             done(h, sp);
         });
     }
@@ -147,7 +144,7 @@ public final class RpgSkillTests {
         h.assertTrue(text.contains("§e") && text.contains("12.3"), "rune style number: " + text);
         // 무적 시간 안의 두 번째 (같은 양) 는 들어가지 않음
         h.assertFalse(Kit.applySkillDamage(sp, z, 12.34, false, Kit.Cause.ATTACK, null), "blocked by i-frames");
-        h.assertTrue(Math.abs((500 - z.getHealth()) - 12.34) < 1e-3, "dealt once");
+        h.assertTrue(Math.abs(TestDummies.dealt(z) - 12.34) < 1e-3, "dealt once: " + TestDummies.dealt(z));
         done(h, sp);
     }
 
@@ -162,7 +159,7 @@ public final class RpgSkillTests {
         float next = RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z), 20F, 10F);
         h.assertTrue(Math.abs(next - (20 - 10 * 0.4)) < 1e-3, "60% less: " + next);
         h.runAfterDelay(3, () -> {
-            h.assertTrue(Math.abs((500 - z.getHealth()) - 5) < 1e-3, "reflected 5, got " + (500 - z.getHealth()));
+            h.assertTrue(Math.abs(TestDummies.dealt(z) - 5) < 1e-3, "reflected 5, got " + TestDummies.dealt(z));
             Guards.clear(sp.getUUID());
             done(h, sp);
         });
@@ -207,7 +204,7 @@ public final class RpgSkillTests {
         });
         double shot = base(sp, w);
         h.runAfterDelay(20, () -> {
-            h.assertTrue(Math.abs((500 - z.getHealth()) - shot) < 1e-3, "basic shot " + (500 - z.getHealth()) + " vs " + shot);
+            h.assertTrue(Math.abs(TestDummies.dealt(z) - shot) < 1e-3, "basic shot " + TestDummies.dealt(z) + " vs " + shot);
             // 웅크리고 누르면 스킬 1 (은월 관통) — 재사용 대기 시작
             sp.setShiftKeyDown(true);
             bow.use(h.getLevel(), sp, InteractionHand.MAIN_HAND);
