@@ -37,6 +37,8 @@ public final class MmorpgClient implements ClientModInitializer {
         ArmorModels.init();
         // 훈련용 허수아비 (애드온 모델 · 흔들림)
         DummyRenderer.init();
+        // 몬스터 · 보스 · 보스 소품 (애드온 모델 · 동작 · 렌더 컨트롤러 그대로)
+        mmorpg.fabric.client.bedrock.BedrockRenderer.init();
         // 서버 창 (상자 창 · 대화창 · 버튼 목록 · 입력창)
         mmorpg.fabric.client.form.FormClient.init();
         // 길 안내 화면 칸 (화면 위 가운데 화살표 · 이름 · 거리)

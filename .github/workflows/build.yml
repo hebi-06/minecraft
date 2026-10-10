@@ -14,7 +14,7 @@ on:
         type: boolean
         default: true
       only:
-        description: '화면 시험 중 이것만 (쉼표: client, weapon, particle, skill, rune, gear, form, nav — 비우면 모두, none 이면 사진첩 없이)'
+        description: '화면 시험 중 이것만 (쉼표: client, weapon, particle, skill, rune, gear, form, nav, mob — 비우면 모두, none 이면 사진첩 없이)'
         type: string
         default: ''
 

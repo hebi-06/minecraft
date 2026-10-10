@@ -6,11 +6,11 @@ import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * 베드락 Molang 식 (애드온 파티클이 쓰는 부분): 숫자 · 변수 (variable.x · v.x, 점이 든 이름 variable.color.r) ·
- * 사칙연산 · 비교 (참 1 / 거짓 0) · && || ! · 삼항 a ? b : c · 괄호 · math.함수.
+ * 베드락 Molang 식 (애드온 파티클 · 엔티티 동작 · 렌더 컨트롤러가 쓰는 부분): 숫자 · 변수 (variable.x · v.x, 점이 든 이름 variable.color.r) ·
+ * query (q.x · query.x, 글자 값 하나를 받는 q.property('rpg:flash')) · 사칙연산 · 비교 (참 1 / 거짓 0) · && || ! · 삼항 a ? b : c · 괄호 · math.함수.
  * 함수: abs floor ceil round trunc sqrt pow exp ln min max clamp mod lerp sin cos (도) random random_integer.
- * query (q.) · 임시 변수 (t.) · 문장 (;) 은 없음 (애드온 파티클에 없음 — 나오면 parse 가 예외).
- * 변수는 이름 → 칸 번호 (Vars) 로 미리 바꿔 두고, 값은 double[] 칸에서 읽음 (모르는 변수 = 0, 베드락과 같음).
+ * 임시 변수 (t.) · 문장 (;) 은 없음 (애드온에 없음 — 나오면 parse 가 예외).
+ * 변수 · query 는 이름 → 칸 번호 (Vars) 로 미리 바꿔 두고, 값은 double[] 칸에서 읽음 (모르는 변수 · query = 0).
  * 상수만 있는 부분은 미리 계산해 둠.
  */
 public final class Molang {
@@ -28,6 +28,14 @@ public final class Molang {
     /** 변수 이름 (variable. 을 뺀 것, 예: "color.r") → 칸 번호 (-1 = 모름 → 늘 0) */
     public interface Vars {
         int slot(String name);
+
+        /**
+         * query 이름 (q. · query. 을 뺀 것, 예: "life_time" — 글자 값을 받으면 "property:rpg:flash" 처럼 이름:값) → 칸 번호
+         * (-1 = 모름 → 늘 0. 파티클처럼 query 가 없는 곳은 기본 -1)
+         */
+        default int query(String name) {
+            return -1;
+        }
     }
 
     private record Const(double value) implements Expr {
@@ -81,6 +89,11 @@ public final class Molang {
                 if (j < s.length() && (s.charAt(j) == 'f' || s.charAt(j) == 'F')) j++;
                 out.add(s.substring(i, j));
                 i = j;
+            } else if (c == '\'') {
+                int j = s.indexOf('\'', i + 1);
+                if (j < 0) throw new IllegalArgumentException("Molang: 글자 값이 끝나지 않음 in " + s);
+                out.add(s.substring(i, j + 1));
+                i = j + 1;
             } else if (Character.isLetter(c) || c == '_') {
                 int j = i;
                 while (j < s.length() && (Character.isLetterOrDigit(s.charAt(j)) || s.charAt(j) == '_' || s.charAt(j) == '.')) j++;
@@ -267,6 +280,26 @@ public final class Molang {
                 if (name.startsWith("variable.") || name.startsWith("v.")) {
                     String var = name.substring(name.indexOf('.') + 1);
                     int slot = vars.slot(var);
+                    if (slot < 0) return constant(0);
+                    return v -> v[slot];
+                }
+                if (name.startsWith("query.") || name.startsWith("q.")) {
+                    String q = name.substring(name.indexOf('.') + 1);
+                    if (eat("(")) { // q.property('rpg:flash') — 글자 값 하나 (다른 값은 쓰지 않음)
+                        String arg = "";
+                        if (!eat(")")) {
+                            String a = peek();
+                            if (a.startsWith("'")) {
+                                pos++;
+                                arg = a.substring(1, a.length() - 1);
+                            } else {
+                                ternary();
+                            }
+                            expect(")");
+                        }
+                        if (!arg.isEmpty()) q = q + ":" + arg;
+                    }
+                    int slot = vars.query(q);
                     if (slot < 0) return constant(0);
                     return v -> v[slot];
                 }

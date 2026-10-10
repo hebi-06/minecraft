@@ -14,7 +14,8 @@
       "mmorpg.fabric.test.RpgRuneSmithTests",
       "mmorpg.fabric.test.RpgQuestTests",
       "mmorpg.fabric.test.RpgNavTests",
-      "mmorpg.fabric.test.RpgEditorTests"
+      "mmorpg.fabric.test.RpgEditorTests",
+      "mmorpg.fabric.test.RpgMobTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
@@ -25,6 +26,7 @@
       "mmorpg.fabric.test.RpgGearGallery",
       "mmorpg.fabric.test.RpgFormGallery",
       "mmorpg.fabric.test.RpgNavGallery",
+      "mmorpg.fabric.test.RpgMobGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },
