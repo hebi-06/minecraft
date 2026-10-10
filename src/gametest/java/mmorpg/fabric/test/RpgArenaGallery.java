@@ -48,6 +48,8 @@ public final class RpgArenaGallery implements FabricClientGameTest {
     private static final int GROUND = -60;
 
     private final List<String> failures = new ArrayList<>();
+    /** 사진마다 청크 기다림 (틱) — 수르트 (그리는 거리 8) 는 CI 에서 다 그려지지 않으므로 짧게 */
+    private static int shotWait = 1200;
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
@@ -122,7 +124,7 @@ public final class RpgArenaGallery implements FabricClientGameTest {
     }
 
     private static void shot(ClientGameTestContext ctx, TestSingleplayerContext world, String name) {
-        waitChunks(ctx, world, 1200);
+        waitChunks(ctx, world, shotWait);
         ctx.waitTicks(4);
         ctx.takeScreenshot(TestScreenshotOptions.of(name).withSize(960, 540));
     }
@@ -171,6 +173,7 @@ public final class RpgArenaGallery implements FabricClientGameTest {
         if (key.equals("surtr")) ctx.runOnClient(mc -> mc.options.renderDistance().set(8));
         camera(ctx, server, cx, ALTAR_Y + 30, cz, 180F, 90F);
         waitChunks(ctx, world, key.equals("surtr") ? 3600 : 1200);
+        shotWait = key.equals("surtr") ? 300 : 1200;
         String[] hold = new String[1];
         Arena.Altar[] altar = new Arena.Altar[1];
         String started = server.computeOnServer(s -> {
