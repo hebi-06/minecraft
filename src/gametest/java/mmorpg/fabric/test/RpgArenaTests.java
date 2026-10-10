@@ -36,16 +36,19 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 5단계 게임 시험 (서버) — 보스 제단 · 보스 필드 (arena.js): 제단 블록 9종 등록 (빛 · 부술 수 없음 · 폭발 · 아이템 · 이름), 신전 설계 9종의 블록이
  * 모두 자바 블록으로 풀림, 제단을 놓으면 목록에 들어가고 관리자에게 "보스 필드 만들기" 창, 짓기가 끝나면 특징 자리의 블록 (허수아비 킹 토템 짚단 ·
  * 잭오랜턴, 기둥) · 설계와 칸마다 같은지 · 다시 지어도 같은 블록, 필드 보호 (서바이벌은 못 부숨 · 못 놓음 · 도구 · 양동이 · 폭발), 제단이 없어지면
  * 목록에서 빠지고 훅이 불림, 겹치는 제단 · 높이가 맞지 않는 제단은 짓기 거절.
- * 짓는 시험은 시험 구조물과 겹치지 않게 멀리 (x · z 수만) 에서 — 붙잡아 둔 땅 (Ticking) 을 바로 불러옴.
+ * 짓는 시험은 시험 구조물 · 지형과 겹치지 않게 멀리 (x · z 수만) 하늘 (y 150) 에서 — 붙잡아 둔 땅 (Ticking) 을 바로 불러옴. 통과하면 [arena-test] OK 줄.
  */
 public final class RpgArenaTests {
     private static final String KEY = "scarecrow_king";
+    private static final Logger LOG = LoggerFactory.getLogger("mmorpg-arena-test");
 
     // ------------------------------------------------------------ 도우미
 
@@ -144,6 +147,7 @@ public final class RpgArenaTests {
             h.assertTrue(AltarBlocks.keyOf(s).equals(key), "keyOf");
         }
         h.assertTrue(Arena.altarItem("nope", 1).isEmpty(), "unknown key → empty");
+        LOG.info("[arena-test] OK altar blocks 9 registered");
         h.succeed();
     }
 
@@ -196,6 +200,7 @@ public final class RpgArenaTests {
         h.assertTrue(ArenaThemes.deepTile(0, 0, 3).dark() && !ArenaThemes.deepTile(2, 0, 3).dark() && ArenaThemes.deepTileSize("great_worm") == 3, "deepTile");
         h.assertTrue("sun".equals(Arena.discSide(new Vec3(2.5, 0, 0.5), new Vec3(0.5, 0, 0.5), 7)) && "moon".equals(Arena.discSide(new Vec3(-1.5, 0, 0.5), new Vec3(0.5, 0, 0.5), 7))
                 && "line".equals(Arena.discSide(new Vec3(0.9, 0, 4.5), new Vec3(0.5, 0, 0.5), 7)) && Arena.discSide(new Vec3(9.5, 0, 0.5), new Vec3(0.5, 0, 0.5), 7) == null, "discSide");
+        LOG.info("[arena-test] OK designs map to Java blocks ({} ops)", ops);
         h.succeed();
     }
 
@@ -206,10 +211,11 @@ public final class RpgArenaTests {
         sp.setGameMode(GameType.CREATIVE);
         Forms.HEADLESS.add(sp.getUUID());
         ServerLevel level = h.getLevel();
-        // 다른 시험의 제단과 겹치지 않게 멀리, 땅보다 높이 (평평한 시험 세계의 땅 높이에서는 필드 높이가 맞지 않음)
-        BlockPos pos = new BlockPos(42_003, -30, 42_005);
+        // 다른 시험의 제단과 겹치지 않게 멀리, 하늘에 (시험 세계는 지형이 있는 세계 — 땅 · 동굴과 겹치지 않게)
+        BlockPos pos = new BlockPos(42_003, 150, 42_005);
         String hold = loadArea(level, pos, 4);
         level.setBlock(pos.below(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         sp.setItemInHand(InteractionHand.MAIN_HAND, Arena.altarItem(KEY, 1));
         h.placeAt(sp, sp.getItemInHand(InteractionHand.MAIN_HAND), h.relativePos(pos.below()), Direction.UP);
         h.assertTrue(AltarBlocks.keyOf(level.getBlockState(pos)) != null, "altar block placed " + level.getBlockState(pos));
@@ -221,6 +227,7 @@ public final class RpgArenaTests {
                         "build question " + Forms.last(sp));
                 Forms.answer(sp, 1, null); // 나중에
                 h.assertFalse(Arena.isBuilding(a) || a.built, "later = no build");
+                LOG.info("[arena-test] OK placed altar listed + build question");
             } finally {
                 Forms.HEADLESS.remove(sp.getUUID());
                 forget(level, a);
@@ -236,7 +243,7 @@ public final class RpgArenaTests {
     public void buildMakesTheTemple(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         h.assertTrue(Arena.server() != null, "arena knows the server");
-        BlockPos pos = new BlockPos(40_007, -40, 40_013);
+        BlockPos pos = new BlockPos(40_007, 150, 40_013);
         String hold = loadArea(level, pos, 22);
         Arena.Altar a = altarAt(level, KEY, pos);
         h.assertTrue(Arena.buildProblem(a) == null, "no build problem: " + Arena.buildProblem(a));
@@ -278,6 +285,7 @@ public final class RpgArenaTests {
             }
             List<String> bad = mismatches(level, first);
             h.assertTrue(bad.isEmpty(), "rebuilt = first build: " + bad);
+            LOG.info("[arena-test] OK temple built = design ({} cells), rebuilt the same", want.size());
             Ticking.releaseArea(hold);
             forget(level, a);
         });
@@ -287,7 +295,7 @@ public final class RpgArenaTests {
     @GameTest(maxTicks = 900)
     public void fieldIsProtected(GameTestHelper h) {
         ServerLevel level = h.getLevel();
-        BlockPos pos = new BlockPos(40_209, -40, 40_011);
+        BlockPos pos = new BlockPos(40_209, 150, 40_011);
         String hold = loadArea(level, pos, 22);
         Arena.Altar a = altarAt(level, KEY, pos);
         h.assertTrue(Arena.buildArena(a, null), "build started");
@@ -336,6 +344,7 @@ public final class RpgArenaTests {
                 // 크리에이티브 (관리자) 는 부숨
                 h.assertTrue(Arena.canManage(op), "creative manages");
                 h.assertTrue(op.gameMode.destroyBlock(floor) && level.getBlockState(floor).isAir(), "creative can break");
+                LOG.info("[arena-test] OK field protection (break · place · fire · bucket · explosion · creative)");
             } finally {
                 level.getServer().getPlayerList().remove(sp);
                 level.getServer().getPlayerList().remove(op);
@@ -374,6 +383,7 @@ public final class RpgArenaTests {
             h.assertTrue(op.gameMode.destroyBlock(p2), "creative breaks the altar");
             h.assertFalse(Arena.altars().contains(a2), "removed when broken");
             h.assertTrue(removed.contains(a2), "hook called for the broken altar");
+            LOG.info("[arena-test] OK removed altars leave the list (block check · creative break) + hook");
             level.setBlock(p1, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         } finally {
             Arena.setAltarRemovedHook(prev);
@@ -385,7 +395,7 @@ public final class RpgArenaTests {
     @GameTest(maxTicks = 20)
     public void overlappingAltarIsRefused(GameTestHelper h) {
         ServerLevel level = h.getLevel();
-        BlockPos p1 = new BlockPos(41_000, -30, 41_000);
+        BlockPos p1 = new BlockPos(41_000, 150, 41_000);
         BlockPos p2 = p1.offset(20, 0, 0);
         String hold = loadArea(level, p1, 30);
         Arena.Altar a = altarAt(level, KEY, p1);
@@ -400,6 +410,7 @@ public final class RpgArenaTests {
             h.assertFalse(Arena.buildArena(low, null), "too low not built");
             double gap = Arena.arenaSize(a).radius() + Arena.arenaSize(b).radius() + Rules.get().obj("BOSS").num("nearAltars");
             h.assertTrue(Math.hypot(p2.getX() - p1.getX(), p2.getZ() - p1.getZ()) < gap, "test spots really overlap");
+            LOG.info("[arena-test] OK build refused: {} / {}", why, why2);
         } finally {
             forget(level, a);
             forget(level, b);
