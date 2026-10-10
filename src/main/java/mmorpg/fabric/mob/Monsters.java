@@ -48,6 +48,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -236,7 +237,8 @@ public final class Monsters {
     static State targetState(ServerPlayer p, Entity m) {
         if (p == null || p.isRemoved() || m == null || m.isRemoved()) return State.GONE;
         if (p.level() != m.level()) return State.GONE;
-        if (p.isCreative() || p.isSpectator()) return State.PAUSE;
+        GameType gm = p.gameMode.getGameModeForPlayer(); // 게임 모드 그대로 (RpgHealth.isRpgMode 와 같게)
+        if (gm == GameType.CREATIVE || gm == GameType.SPECTATOR) return State.PAUSE;
         return p.isDeadOrDying() ? State.PAUSE : State.OK;
     }
 

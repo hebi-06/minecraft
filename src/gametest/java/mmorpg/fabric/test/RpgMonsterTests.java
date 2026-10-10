@@ -2,7 +2,6 @@ package mmorpg.fabric.test;
 
 import java.util.List;
 import java.util.function.DoubleSupplier;
-import mmorpg.core.Armor;
 import mmorpg.core.Json;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
@@ -33,7 +32,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -177,20 +176,16 @@ public final class RpgMonsterTests {
             h.assertTrue(Monsters.monsterHit(troll, k, sp, k.attack()), "bare hit lands");
             near(h, a - sp.getHealth(), scaled(h, k.attack()), 1e-3, "bare damage");
             double bare = a - sp.getHealth();
-            // 갑옷 (40렙 힘 갑옷 가슴 — 요구 조건을 채움): 덜 아픔 (방어 속성은 다음 틱에 들어감)
-            Armor.Piece chest = Armor.armorFrom("str", 40, "common", "chest");
-            sp.setExperienceLevels(40);
-            RpgPlayers.checkLevelUp(sp);
-            for (Weapons.Req q : chest.reqs()) RpgPlayers.setStat(sp, q.stat(), Math.max(300, (int) Math.ceil(q.value())));
-            sp.setItemSlot(EquipmentSlot.CHEST, new ItemStack(GearItems.byId(chest.id())));
-            h.runAfterDelay(3, () -> {
+            // 갑옷 (방어 12 — 시험 플레이어는 장비 틱이 돌지 않아 방어 속성을 바로): 바닐라 방어 공식만큼 덜 아픔
+            sp.getAttribute(Attributes.ARMOR).setBaseValue(12);
+            h.runAfterDelay(1, () -> {
                 fresh(sp);
                 float b = sp.getHealth();
-                h.assertTrue(sp.getArmorValue() > 0, "armor on " + sp.getArmorValue());
+                h.assertTrue(sp.getArmorValue() == 12, "armor on " + sp.getArmorValue());
                 h.assertTrue(Monsters.monsterHit(troll, k, sp, k.attack()), "armored hit lands");
                 double armored = b - sp.getHealth();
                 h.assertTrue(armored < bare - 0.5 && armored > 0, "armor reduces: " + armored + " < " + bare);
-                sp.setItemSlot(EquipmentSlot.CHEST, ItemStack.EMPTY);
+                sp.getAttribute(Attributes.ARMOR).setBaseValue(0);
                 h.runAfterDelay(3, () -> shieldPart(h, sp, troll, k));
             });
         });
@@ -348,8 +343,10 @@ public final class RpgMonsterTests {
             double gained = troll.getHealth() - 100;
             double step = 230 * 0.03;
             h.assertTrue(gained >= step - 1e-3 && Math.abs(gained / step - Math.round(gained / step)) < 1e-3, "troll regen 3%/s while fighting: +" + gained);
-            int filled = (int) Math.round(troll.getHealth() / 230.0 * 20);
-            h.assertTrue(Monsters.labelOf(troll).endsWith("|".repeat(filled) + "§8" + "|".repeat(20 - filled)), "bar follows regen " + Monsters.labelOf(troll));
+            // 이름표는 몬스터 틱에 맞춰짐 (회복 바로 뒤 한 틱은 앞의 체력일 수 있음)
+            String now = Monsters.monsterLabel(Monsters.kind("troll"), troll.getHealth(), 230);
+            String prev = Monsters.monsterLabel(Monsters.kind("troll"), troll.getHealth() - step, 230);
+            h.assertTrue(Monsters.labelOf(troll).equals(now) || Monsters.labelOf(troll).equals(prev), "bar follows regen " + Monsters.labelOf(troll));
         });
         h.runAfterDelay(160, () -> {
             h.assertTrue(crow.getHealth() >= 13F - 1e-3, "scarecrow regen 10%/s after 6s " + crow.getHealth());
