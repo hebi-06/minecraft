@@ -4,8 +4,20 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Map;
 import mmorpg.core.Armor;
+import mmorpg.core.Enhance;
+import mmorpg.core.Rules;
 import mmorpg.core.Stats;
+import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
+import mmorpg.fabric.RpgCombat;
+import mmorpg.fabric.RpgItems;
+import mmorpg.fabric.gear.WeaponEnhance;
+import mmorpg.fabric.shop.Store;
+import mmorpg.fabric.ui.FormNet;
+import mmorpg.fabric.ui.Forms;
+import mmorpg.fabric.ui.Inv;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.Items;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.RpgStats;
@@ -25,7 +37,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 4단계 게임 시험 (서버): 갑옷 120 · 재료 등록, 갑옷 방어 · 스탯 보너스 (입으면 실제 스탯 · 최대 체력), 요구 조건이 모자라면 벗겨 가방으로.
+ * 4단계 게임 시험 (서버): 갑옷 120 · 재료 등록, 갑옷 방어 · 스탯 보너스 (입으면 실제 스탯 · 최대 체력), 요구 조건이 모자라면 벗겨 가방으로,
+ * 무기 강화 단계 (이름 · 피해 배율), 상점 창 흐름 (클라이언트 없이 — 무기 사기 · 전리품 팔기).
  */
 public final class RpgGearTests {
     private static final EquipmentSlot[] SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
@@ -136,6 +149,84 @@ public final class RpgGearTests {
         h.assertTrue(sp.getItemBySlot(EquipmentSlot.CHEST).isEmpty(), "taken off");
         h.assertTrue(countIn(sp, chest.getItem()) == 1, "back in the bag");
         h.assertTrue(RpgStats.bonusOf(sp).isEmpty(), "no bonus");
+        done(h, sp);
+    }
+
+    /** 강화 단계: 이름 "+N", 피해 배율 × (1 + 강화 보너스) — 손에 든 그 무기만 */
+    @GameTest(maxTicks = 20)
+    public void enhanceRaisesWeaponPower(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Weapon w = Weapons.weaponFrom("sword", 10, "common");
+        for (Weapons.Req q : w.reqs()) RpgPlayers.setStat(sp, q.stat(), (int) Math.ceil(q.value()) + 5);
+        ItemStack stack = new ItemStack(RpgItems.byId(w.id()));
+        sp.setItemInHand(InteractionHand.MAIN_HAND, stack);
+        double p0 = RpgCombat.powerOf(sp, w);
+        WeaponEnhance.write(sp.getMainHandItem(), 5);
+        double p5 = RpgCombat.powerOf(sp, w);
+        h.assertTrue(WeaponEnhance.of(sp.getMainHandItem()) == 5, "stored");
+        h.assertTrue(Math.abs(p5 - p0 * (1 + Enhance.enhanceBonus(5))) < 1e-9, "power " + p0 + " -> " + p5);
+        h.assertTrue(sp.getMainHandItem().getHoverName().getString().contains("+5"), "name " + sp.getMainHandItem().getHoverName().getString());
+        WeaponEnhance.write(sp.getMainHandItem(), 0);
+        h.assertTrue(WeaponEnhance.of(sp.getMainHandItem()) == 0 && !sp.getMainHandItem().has(WeaponEnhance.ENHANCE), "cleared");
+        done(h, sp);
+    }
+
+    private static FormNet.ChestPayload chest(ServerPlayer sp) {
+        return Forms.last(sp) instanceof FormNet.ChestPayload c ? c : null;
+    }
+
+    /** 상점 (클라이언트 없이 창 흐름): 10렙 일반 칼 칸 → 구매 확인 → 사기 (에메랄드 빠지고 칼), 닫으면 흐름 끝 */
+    @GameTest(maxTicks = 20)
+    public void shopBuysWeapon(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Forms.HEADLESS.add(sp.getUUID());
+        try {
+            sp.getInventory().setItem(9, new ItemStack(Items.EMERALD, 64));
+            Store.openStore(sp, 10, "weapons");
+            FormNet.ChestPayload c = chest(sp);
+            h.assertTrue(c != null && c.title().contains("무기 상점") && c.slots().size() == 27, "shop opened");
+            Weapon w = Weapons.weaponFrom("sword", 10, "common");
+            int price = (int) Weapons.shopPrice(w);
+            h.assertTrue(c.slots().get(11).num() == price && c.slots().get(11).kind() == mmorpg.fabric.ui.Slot.PRICE, "price shown " + c.slots().get(11).num());
+            h.assertTrue(Forms.answer(sp, 11, null), "pick sword");
+            c = chest(sp);
+            h.assertTrue(c != null && c.title().contains("구매 확인"), "confirm window");
+            Forms.answer(sp, 11, null);
+            h.assertTrue(countIn(sp, RpgItems.byId(w.id())) == 1, "got the sword");
+            h.assertTrue(Inv.money(sp) == 64 - price, "paid " + Inv.money(sp));
+            c = chest(sp);
+            h.assertTrue(c != null && c.body().contains("구매 완료"), "back to shop with message");
+            Forms.answer(sp, -1, null);
+            h.assertFalse(Forms.pending(sp), "closed");
+        } finally {
+            Forms.HEADLESS.remove(sp.getUUID());
+        }
+        done(h, sp);
+    }
+
+    /** 전리품 팔기: 트롤 엄니 10개 → 모두 팔기 → 1개 값 × 10 에메랄드 */
+    @GameTest(maxTicks = 20)
+    public void shopSellsLoot(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Forms.HEADLESS.add(sp.getUUID());
+        try {
+            net.minecraft.world.item.Item troll = GearItems.byId("rpg:loot_troll");
+            sp.getInventory().setItem(5, new ItemStack(troll, 10));
+            int price = (int) Rules.get().obj("MONSTER_DROPS").obj("troll").num("price");
+            int index = Rules.get().strings("MONSTER_ORDER").indexOf("troll");
+            Store.openStore(sp, 0, "sell");
+            FormNet.ChestPayload c = chest(sp);
+            h.assertTrue(c != null && c.title().contains("전리품 팔기"), "sell window");
+            h.assertTrue(c.slots().get(10 + index).num() == 10, "count shown");
+            Forms.answer(sp, 10 + index, null); // 그 전리품 → 개수 고르기
+            h.assertTrue(chest(sp) != null && chest(sp).title().contains("팔기"), "amount window");
+            Forms.answer(sp, 13, null); // 모두
+            h.assertTrue(countIn(sp, troll) == 0, "loot taken");
+            h.assertTrue(Inv.money(sp) == price * 10, "paid " + Inv.money(sp) + " vs " + price * 10);
+            Forms.answer(sp, -1, null);
+        } finally {
+            Forms.HEADLESS.remove(sp.getUUID());
+        }
         done(h, sp);
     }
 }

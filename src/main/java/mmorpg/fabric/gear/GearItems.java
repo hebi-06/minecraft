@@ -137,7 +137,8 @@ public final class GearItems {
         ResourceKey<Item> k = key(id);
         Item.Properties props = new Item.Properties().stacksTo(def.get("stack").getAsInt()).setId(k);
         if (def.get("glint").getAsBoolean()) props.component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
-        Item item = Registry.register(BuiltInRegistries.ITEM, k, new MaterialItem(def.get("name").getAsString(), lore, props));
+        String name = def.get("name").getAsString();
+        Item item = Registry.register(BuiltInRegistries.ITEM, k, id.equals("rpg:npc_tool") ? new NpcToolItem(name, lore, props) : new MaterialItem(name, lore, props));
         BY_ID.put(id, item);
         return item;
     }

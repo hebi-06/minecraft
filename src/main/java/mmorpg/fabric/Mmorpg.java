@@ -25,6 +25,7 @@ public final class Mmorpg implements ModInitializer {
     public void onInitialize() {
         Rules.get(); // rules.json 을 처음에 읽음 (잘못되었으면 여기서 바로 실패)
         RpgData.init();
+        Props.init(); // 베드락 동적 속성 (엔티티 · 플레이어 · 세계)
         RpgParticles.init();
         mmorpg.fabric.gear.WeaponEnhance.init(); // 무기 강화 단계 (아이템 구성 요소 — 아이템보다 먼저)
         RpgItems.init();
@@ -40,6 +41,12 @@ public final class Mmorpg implements ModInitializer {
         RuneSystem.init();
         mmorpg.fabric.gear.ArmorSystem.init();
         mmorpg.fabric.shop.ShopCommands.init();
+        mmorpg.fabric.npc.Npcs.init();
+        mmorpg.fabric.gear.NpcToolItem.onUse = mmorpg.fabric.npc.Npcs::onToolUse;
+        mmorpg.fabric.npc.Dummy.init();
+        mmorpg.fabric.smith.Smith.init();
+        mmorpg.fabric.rune.RuneSmith.init();
+        mmorpg.fabric.quest.QuestSystem.init();
         RpgPlayers.init();
         RpgCommands.init();
         LOG.info("MMO RPG: weapons {}, rules {}", RpgItems.WEAPONS.size(), Rules.RESOURCE);
