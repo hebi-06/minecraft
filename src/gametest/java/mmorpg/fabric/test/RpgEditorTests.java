@@ -33,7 +33,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 4단계 NPC · 퀘스트 설정 창 시험 (editor.js — 서버, 클라이언트 없이 창 흐름 Forms.HEADLESS): NPC 관리 → NPC 만들기 → 설정 창
+ * 4단계 NPC · 퀘스트 설정 창 시험 (editor.js — 서버, 클라이언트 없이 창 흐름 Forms.HEADLESS): NPC 관리 → NPC 만들기 (대화 · 상점 · 대장장이 · 룬술사,
+ * 가까운 NPC 설정) → 설정 창
  * (이름 · 인사말 · 상점 · 대장장이 · 대화 미리보기 · 스킨 · 옮기기 · 지우기 — 마네킹의 이름표 · 태그 · Props), 처치 퀘스트 만들기 · 고치기 (잘못된 몹 ID 는
  * 까닭과 함께 다시 · 가져오기로 바꾸면 대상 이름 자동) · 지우기, 말 걸기 퀘스트 · 선행 퀘스트가 서로를 가리키면 다시, NPC 를 지우면 그 NPC 의 퀘스트 ·
  * 말 걸기 퀘스트 · 메인 NPC 기록도, 권한 (생존 · 운영자 아님 → 못 엶, /npc 는 관리자), 설정 도구로 NPC 누르기 → 설정 창 · 허공 → 관리 창,
@@ -195,7 +196,13 @@ public final class RpgEditorTests {
     }
 
     private static Mannequin namedNear(GameTestHelper h, ServerPlayer sp, String name) {
-        for (Mannequin m : h.getLevel().getEntitiesOfClass(Mannequin.class, sp.getBoundingBox().inflate(8), e -> name.equals(NpcData.name(e)))) return m;
+        return namedNear(h, sp, name, Set.of());
+    }
+
+    /** 8칸 안의 그 이름 NPC (except 에 든 것 — 시험 전부터 있던 것 — 은 빼고) */
+    private static Mannequin namedNear(GameTestHelper h, ServerPlayer sp, String name, Set<UUID> except) {
+        for (Mannequin m : h.getLevel().getEntitiesOfClass(Mannequin.class, sp.getBoundingBox().inflate(8),
+                e -> name.equals(NpcData.name(e)) && !except.contains(e.getUUID()))) return m;
         return null;
     }
 
@@ -383,6 +390,65 @@ public final class RpgEditorTests {
             h.assertTrue(isMenu(sp, "NPC 관리"), "manager again " + what(sp));
             Forms.answer(sp, 7, null);
             h.assertFalse(Forms.pending(sp), "manager closed");
+        } finally {
+            cleanup(server, spawned);
+        }
+        finish(h, sp);
+    }
+
+    /**
+     * 관리 창의 상점 · 대장장이 · 룬술사 NPC 만들기 (기본 이름 · 역할 태그 · 상점 레벨 고르기), 닫으면 만들지 않음, 가까운 NPC 설정 (8칸 안),
+     * 설정 창에서 지우면 관리 창으로
+     */
+    @GameTest(maxTicks = 20)
+    public void managerCreatesRoleNpcs(GameTestHelper h) {
+        ServerPlayer sp = admin(h);
+        MinecraftServer server = h.getLevel().getServer();
+        List<Entity> spawned = new ArrayList<>();
+        try {
+            Set<UUID> before = mannequinsNear(h, sp);
+            NpcEditor.openNpcManager(sp);
+            // 상점: 파는 무기 레벨 (20렙) → 이름표 [상점] (20렙)
+            Forms.answer(sp, 1, null);
+            h.assertTrue(isModal(sp, "상점 NPC 만들기") && inputs(sp).equals(List.of("무기상", "", "0")), "shop create window " + what(sp));
+            Forms.answer(sp, 0, List.of("무기상", "", String.valueOf(Rules.get().numbers("LEVELS").indexOf(20.0))));
+            Mannequin shop = namedNear(h, sp, "무기상", before);
+            h.assertTrue(shop != null, "shop npc spawned");
+            spawned.add(shop);
+            h.assertTrue(NpcData.shopLevel(shop) == 20 && !NpcData.isSmith(shop) && nameTag(shop).contains("[상점]") && nameTag(shop).contains("(20렙)"), "shop npc " + nameTag(shop));
+            h.assertTrue(isMenu(sp, "NPC 설정 · 무기상") && plain(menu(sp).text()).contains("20렙 무기·갑옷 상점"), "shop settings " + what(sp));
+            Forms.answer(sp, S_DELETE, null);
+            Forms.answer(sp, 0, null);
+            h.assertTrue(shop.isRemoved() && isMenu(sp, "NPC 관리"), "shop npc deleted → manager " + what(sp));
+            // 대장장이 (닫으면 만들지 않음 → 다시)
+            Forms.answer(sp, 2, null);
+            h.assertTrue(isModal(sp, "대장장이 NPC 만들기") && inputs(sp).equals(List.of("대장장이", "")), "smith create window " + what(sp));
+            Forms.answer(sp, -1, null);
+            h.assertTrue(isMenu(sp, "NPC 관리") && namedNear(h, sp, "대장장이", before) == null, "closing makes no npc " + what(sp));
+            Forms.answer(sp, 2, null);
+            Forms.answer(sp, 0, List.of("대장장이", ""));
+            Mannequin smith = namedNear(h, sp, "대장장이", before);
+            h.assertTrue(smith != null && NpcData.isSmith(smith) && NpcData.shopLevel(smith) < 0 && nameTag(smith).contains("[대장장이]"), "smith npc " + (smith == null ? "-" : nameTag(smith)));
+            spawned.add(smith);
+            Forms.answer(sp, S_DELETE, null);
+            Forms.answer(sp, 0, null);
+            h.assertTrue(smith.isRemoved() && isMenu(sp, "NPC 관리"), "smith npc deleted " + what(sp));
+            // 룬술사 → 설정 창 닫기 → 가까운 NPC 설정 (8칸 안) 으로 다시
+            Forms.answer(sp, 3, null);
+            h.assertTrue(isModal(sp, "룬술사 NPC 만들기") && inputs(sp).equals(List.of("룬술사", "")), "runesmith create window " + what(sp));
+            Forms.answer(sp, 0, List.of("룬술사", "룬은 돌고 도는 법이지."));
+            Mannequin rune = namedNear(h, sp, "룬술사", before);
+            h.assertTrue(rune != null && NpcData.isRunesmith(rune) && nameTag(rune).contains("[룬술사]") && NpcData.greeting(rune).equals("룬은 돌고 도는 법이지."),
+                    "runesmith npc " + (rune == null ? "-" : nameTag(rune)));
+            spawned.add(rune);
+            Forms.answer(sp, S_CLOSE, null);
+            h.assertTrue(isMenu(sp, "NPC 관리"), "settings closed → manager " + what(sp));
+            Forms.answer(sp, 4, null); // 가까운 NPC 설정
+            h.assertTrue(isMenu(sp, "NPC 설정 · 룬술사"), "nearest npc settings " + what(sp));
+            Forms.answer(sp, -1, null);
+            h.assertTrue(isMenu(sp, "NPC 관리"), "manager again " + what(sp));
+            Forms.answer(sp, -1, null);
+            h.assertFalse(Forms.pending(sp), "closed");
         } finally {
             cleanup(server, spawned);
         }
