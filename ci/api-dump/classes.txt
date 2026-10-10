@@ -77,6 +77,7 @@ net.minecraft.client.multiplayer.ClientPacketListener
 net.minecraft.client.multiplayer.MultiPlayerGameMode
 net.minecraft.client.particle.Particle
 net.minecraft.client.particle.ParticleEngine
+net.minecraft.client.particle.ParticleGroup
 net.minecraft.client.particle.ParticleProvider
 net.minecraft.client.particle.ParticleProvider$Sprite
 net.minecraft.client.particle.ParticleRenderType
@@ -94,6 +95,7 @@ net.minecraft.client.renderer.OrderedSubmitNodeCollector
 net.minecraft.client.renderer.RenderPipelines
 net.minecraft.client.renderer.SkyRenderer
 net.minecraft.client.renderer.SubmitNodeCollector
+net.minecraft.client.renderer.culling.Frustum
 net.minecraft.client.renderer.entity.LivingEntityRenderer
 net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer
 net.minecraft.client.renderer.entity.layers.ItemInHandLayer

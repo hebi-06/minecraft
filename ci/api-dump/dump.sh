@@ -42,4 +42,6 @@ probe net.minecraft.server.network.ServerCommonPacketListenerImpl 'handleCustomC
 probe net.minecraft.server.MinecraftServer 'handleCustomClickAction'
 probe net.minecraft.world.inventory.AbstractContainerMenu 'clicked|doClick|quickMoveStack|stillValid'
 probe net.minecraft.client.renderer.entity.layers.HumanoidArmorLayer 'submit|renderArmorPiece|submitArmorPiece|getArmorModel'
+probe net.minecraft.client.particle.QuadParticleGroup 'extractRenderState'
+probe net.minecraft.client.particle.ParticleEngine 'extract|tick|add|createParticle'
 ls -la "$OUT/calls"
