@@ -34,6 +34,7 @@
       "mmorpg.fabric.test.RpgMobGallery",
       "mmorpg.fabric.test.RpgArenaGallery",
       "mmorpg.fabric.test.RpgBossGallery",
+      "mmorpg.fabric.test.RpgSurtrGallery",
       "mmorpg.fabric.test.RpgMonsterGallery",
       "mmorpg.fabric.test.RpgTreeGallery",
       "mmorpg.fabric.test.RpgProdSmoke"

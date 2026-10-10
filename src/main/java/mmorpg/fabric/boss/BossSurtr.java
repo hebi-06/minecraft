@@ -898,8 +898,8 @@ public final class BossSurtr implements BossModule {
         return Math.max(P.num("sword"), Math.max(P.num("fist"), P.num("crown")));
     }
 
-    /** 드러난 핵을 거둠 (부위 체력은 그대로) */
-    static void cover(Bosses.Unit u) {
+    /** 드러난 핵을 거둠 (부위 체력은 그대로 — 시험 · 사진첩도 씀) */
+    public static void cover(Bosses.Unit u) {
         M m = mem(u);
         Core c = m == null ? null : m.core;
         if (c == null) return;
