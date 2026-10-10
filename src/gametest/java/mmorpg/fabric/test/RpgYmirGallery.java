@@ -461,7 +461,7 @@ public final class RpgYmirGallery implements FabricClientGameTest {
         server.runOnServer(s -> enc().cast = null); // 틀을 풀면 가장 가까운 사람 쪽으로 걸음
         ctx.waitTicks(14);
         int id = bossId(server);
-        double gait = ctx.computeOnClient(mc -> mc.level.getEntity(id) instanceof BedrockMob m ? m.prop("rpg:gait") : -1);
+        double gait = ctx.computeOnClient(mc -> mc.level.getEntity(id) instanceof BedrockMob m ? m.prop("rpg:gait") : -1.0);
         check(gait > 0.9, "walking: rpg:gait " + gait + " on the client (stride)");
         shot(ctx, "ym_walk");
         double moved = server.computeOnServer(s -> BossKit.hdist(BossYmir.bodyOf(enc()), new Vec3(cx, ALTAR_Y, cz)));
@@ -537,7 +537,9 @@ public final class RpgYmirGallery implements FabricClientGameTest {
         int iceId = server.computeOnServer(s -> BossYmir.iceOf(enc()).isEmpty() ? -1 : BossYmir.iceOf(enc()).get(0).e.getId());
         String rend = ctx.computeOnClient(mc -> {
             Entity e = mc.level == null ? null : mc.level.getEntity(iceId);
-            return e != null && mc.getEntityRenderDispatcher().getRenderer(e) instanceof BedrockRenderer ? "ok" : "not drawn";
+            if (e == null) return "no entity";
+            Object r0 = mc.getEntityRenderDispatcher().getRenderer(e);
+            return r0 instanceof BedrockRenderer ? "ok" : "renderer " + r0;
         });
         check("ok".equals(rend), "the ice block is drawn (" + rend + ")");
         long breakAt = server.computeOnServer(s -> BossYmir.iceOf(enc()).isEmpty() ? 0L : BossYmir.iceOf(enc()).get(0).breakAt);
