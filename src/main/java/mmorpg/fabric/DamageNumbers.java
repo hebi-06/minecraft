@@ -243,7 +243,8 @@ public final class DamageNumbers {
         td.setText(Component.literal(text));
         td.setBillboardConstraints(Display.BillboardConstraints.CENTER);
         td.setBackgroundColor(0);
-        td.setFlags(Display.TextDisplay.FLAG_SHADOW);
+        // 그림자 + 겹쳐 보임 (베드락 이름표처럼 몸 · 블록에 가리지 않음 — 큰 몬스터 · 보스의 몸통에서 떠오르는 숫자가 처음부터 보이게)
+        td.setFlags((byte) (Display.TextDisplay.FLAG_SHADOW | Display.TextDisplay.FLAG_SEE_THROUGH));
         td.setBrightnessOverride(Brightness.FULL_BRIGHT); // 밤 · 동굴에서도 밝게
         td.setPosRotInterpolationDuration(1); // 틱마다 옮기는 것을 부드럽게
         // 처음엔 크게 → 3틱 동안 원래 크기로 (톡 튀어나오는 느낌)

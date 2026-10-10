@@ -136,7 +136,7 @@ def convert(path, rp):
     assert not (dyn and par and dyn != {}), pid
     if par:
         d["motion"] = {"parametric": [keep(x) for x in par["relative_position"]]}
-    elif dyn:
+    elif dyn is not None:  # 빈 particle_motion_dynamic {} 도 처음 빠르기로 움직임 (가속 · 끌림 0)
         d["motion"] = {"accel": [keep(x) for x in dyn.get("linear_acceleration", [0, 0, 0])], "drag": keep(dyn.get("linear_drag_coefficient", 0))}
     d["size"] = [keep(x) for x in bb["size"]]
     d["facing"] = bb.get("facing_camera_mode", "rotate_xyz")

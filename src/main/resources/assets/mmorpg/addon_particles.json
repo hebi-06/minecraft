@@ -131,6 +131,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -227,6 +235,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.thick"
@@ -274,6 +290,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * (1 + (variable.grow - 1) * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * (1 + (variable.grow - 1) * (variable.particle_age / variable.particle_lifetime))"
@@ -316,6 +340,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.thick * (1 - 0.6 * math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1))"
@@ -363,6 +395,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.1098",
     "variable.size * 0.2775"
@@ -406,6 +446,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -448,6 +496,14 @@
     "variable.spin",
     "variable.speed"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * (1 + variable.grow * math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1))",
     "variable.size * (1 + variable.grow * math.clamp((variable.particle_age - variable.delay) / math.max(0.01, variable.particle_lifetime - variable.delay), 0, 1))"
@@ -486,6 +542,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -908,6 +972,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -1106,6 +1178,14 @@
     "variable.spin",
     30
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * (0.55 + 0.6 * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * (0.55 + 0.6 * (variable.particle_age / variable.particle_lifetime))"
@@ -1215,6 +1295,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 0.25 * (0.7 + 0.3 * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.15, 0, 1))",
     "variable.size * 0.5 * (0.7 + 0.3 * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.15, 0, 1))"
@@ -1275,6 +1363,14 @@
    },
    "life": 0.35,
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 0.25 * (0.75 + 0.25 * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.2, 0, 1))",
     "variable.size * 0.5 * (0.75 + 0.25 * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.2, 0, 1))"
@@ -1313,6 +1409,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size * 0.6667"
@@ -1462,6 +1566,14 @@
     "variable.spin",
     0
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.3, 0.25, 1)",
     "variable.size * math.clamp((variable.particle_age / variable.particle_lifetime) / 0.3, 0.25, 1)"
@@ -1504,6 +1616,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0917",
     "variable.size * 0.2047"
@@ -1551,6 +1671,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 0.2729",
     "variable.size * 0.2047"
@@ -1598,6 +1726,14 @@
     "variable.spin",
     "variable.speed"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0917",
     "variable.size * 0.2047"
@@ -1800,6 +1936,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * math.min(1, variable.particle_age / 0.06)",
     "variable.thick * (1 + 0.6 * math.clamp((variable.particle_age - variable.delay) / 0.15, 0, 1))"
@@ -1847,6 +1991,14 @@
     "variable.spin",
     0
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -1889,6 +2041,14 @@
     "variable.spin",
     0
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * (1 + 0.35 * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * (1 + 0.35 * (variable.particle_age / variable.particle_lifetime))"
@@ -1931,6 +2091,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 0.5",
     "variable.size * 0.25"
@@ -1970,6 +2138,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -2008,6 +2184,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2050,6 +2234,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -2101,6 +2293,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.2500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2205,6 +2405,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 0.2500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2251,6 +2459,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2297,6 +2513,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2343,6 +2567,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2389,6 +2621,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.1875 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2440,6 +2680,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2486,6 +2734,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2590,6 +2846,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2636,6 +2900,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2682,6 +2954,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2728,6 +3008,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2827,6 +3115,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2878,6 +3174,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2924,6 +3228,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.2500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -2975,6 +3287,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3021,6 +3341,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3072,6 +3400,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3118,6 +3454,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3169,6 +3513,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3215,6 +3567,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3314,6 +3674,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.3125 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3471,6 +3839,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3517,6 +3893,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3568,6 +3952,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.2083 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3619,6 +4011,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3665,6 +4065,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3711,6 +4119,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.2500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3815,6 +4231,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.5000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -3861,6 +4285,14 @@
     "variable.spin",
     "variable.spin_rate"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * 0.6250 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -4058,6 +4490,14 @@
     "variable.spin",
     "variable.speed"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
     "variable.size * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
@@ -5366,6 +5806,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * 1.1707",
     "variable.size * 0.3902"
@@ -5518,6 +5966,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -5748,6 +6204,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
@@ -5786,6 +6250,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * (variable.grow > 0.5 ? 1.0 : math.clamp((variable.particle_age / variable.particle_lifetime), 0.02, 1))",
     "variable.size * (variable.grow > 0.5 ? 1.0 : math.clamp((variable.particle_age / variable.particle_lifetime), 0.02, 1))"
@@ -5824,6 +6296,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size * (variable.grow > 0.5 ? 1.0 : math.clamp((variable.particle_age / variable.particle_lifetime), 0.02, 1))",
     "variable.size * (variable.grow > 0.5 ? 1.0 : math.clamp((variable.particle_age / variable.particle_lifetime), 0.02, 1))"
@@ -5862,6 +6342,14 @@
    },
    "life": "variable.life",
    "speed": 0,
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "math.max(0.3, variable.speed * variable.particle_age / 0.955)",
     "math.max(0.3, variable.speed * variable.particle_age / 0.955)"
@@ -5904,6 +6392,14 @@
    },
    "life": "variable.life",
    "speed": "variable.speed",
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.thick"
@@ -6041,6 +6537,14 @@
     "variable.spin",
     "variable.speed"
    ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
    "size": [
     "variable.size",
     "variable.size"
