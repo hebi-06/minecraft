@@ -1,10 +1,12 @@
 package mmorpg.fabric.test;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import mmorpg.fabric.client.form.MenuFormScreen;
 import mmorpg.fabric.tree.TreeBlocks;
 import mmorpg.fabric.tree.TreeLog;
@@ -116,14 +118,24 @@ public final class RpgTreeGallery implements FabricClientGameTest {
     }
 
     private static void shot(ClientGameTestContext ctx, TestSingleplayerContext world, String name, int chunkWait) {
+        waitChunks(ctx, world, name, chunkWait);
+        ctx.takeScreenshot(TestScreenshotOptions.of(name).withSize(960, 540));
+    }
+
+    /** 창 사진: 창은 화면 크기에 맞춰 놓이므로 줄이지 않고 화면 그대로 */
+    private static void formShot(ClientGameTestContext ctx, TestSingleplayerContext world, String name, int chunkWait) {
+        waitChunks(ctx, world, name, chunkWait);
+        ctx.takeScreenshot(name);
+    }
+
+    /** 둘레 청크가 다 그려질 때까지 (CI 는 소프트웨어 그리기라 다 그려지지 않을 때가 많음 — 시간이 다 되면 그대로 찍음) */
+    private static void waitChunks(ClientGameTestContext ctx, TestSingleplayerContext world, String name, int chunkWait) {
         try {
             world.getConnection().waitForChunksRender(true, chunkWait);
         } catch (AssertionError e) {
-            LOG.warn("[tree-gallery] chunks not all rendered in {} ticks — taking {} anyway", chunkWait, name);
-            ctx.waitTicks(10);
+            LOG.info("[tree-gallery] chunks not all rendered in {} ticks — taking {} anyway", chunkWait, name);
         }
         ctx.waitTicks(4);
-        ctx.takeScreenshot(TestScreenshotOptions.of(name).withSize(960, 540));
     }
 
     // ------------------------------------------------------------ 세계수
@@ -162,7 +174,7 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         String body = server.computeOnServer(s -> Forms.pending(player(s)) ? "pending" : "none");
         check("pending".equals(body), "server waits for the answer");
         ctx.waitTicks(10);
-        shot(ctx, world, "t_ask", 200);
+        formShot(ctx, world, "t_ask", 60);
         server.runOnServer(s -> Forms.answer(player(s), 0, null));
         // 자라는 중: 단계 앞에서 멈춤 → 사진
         String[] names = {"t_grow1_roots", "t_grow2_trunk", "t_grow3_branches", "t_grow4_leaves"};
@@ -176,10 +188,10 @@ public final class RpgTreeGallery implements FabricClientGameTest {
             }
             check(held, "growing: held before stage " + stage + " (" + plan.stages.get(stage).kind() + ")");
             if (!held) return;
-            if (k == 0) ctx.waitTicks(100); // 시작 큰 글자가 걷힌 뒤
+            if (k == 0) ctx.waitTicks(60); // 시작 큰 글자가 걷힌 뒤
             double[] c = cams[k];
             lookRel(ctx, server, c[0], c[1], c[2], c[3], c[4], c[5]);
-            shot(ctx, world, names[k], k == 0 ? 300 : 150);
+            shot(ctx, world, names[k], k == 0 ? 120 : 60);
             at[0]++;
         }
         WorldTree.holdBeforeStage = null;
@@ -214,25 +226,26 @@ public final class RpgTreeGallery implements FabricClientGameTest {
                     + " berries " + berries;
         });
         check(client.startsWith("ok"), "client sees the tree (" + client + ")");
-        shot(ctx, world, "t_done_title", 100);
-        ctx.waitTicks(100); // 끝 큰 글자가 걷힌 뒤
+        // 다 자란 순간: 큰 글자 · 빛 고리 · 토템 빛 (같은 자리에서 — 청크는 이미 그려짐)
+        shot(ctx, world, "t_done", 10);
+        ctx.waitTicks(80); // 끝 큰 글자가 걷힌 뒤
         lookRel(ctx, server, 48, 16, 40, 0, 30, 0);
-        shot(ctx, world, "t_full", 200);
+        shot(ctx, world, "t_full", 60);
         lookRel(ctx, server, -46, 24, -36, 0, 30, 0);
-        shot(ctx, world, "t_full_back", 200);
+        shot(ctx, world, "t_full_back", 100);
         // 밑동: 버팀 뿌리 · 이끼 · 이끼 깔개 · 반딧불이 덤불 · 꽃 핀 진달래
         lookRel(ctx, server, 15, 2.5, 19, 0, 5, 0);
-        shot(ctx, world, "t_base", 150);
+        shot(ctx, world, "t_base", 60);
         // 잎 아래: 발광 열매 덩굴 · 포자 꽃 · 버섯불
         lookRel(ctx, server, 13, 12, 9, -4, 34, -3);
-        shot(ctx, world, "t_under", 150);
+        shot(ctx, world, "t_under", 60);
         // 밤
         server.runCommand("time set 18000");
         ctx.waitTicks(20);
         lookRel(ctx, server, 40, 12, 34, 0, 28, 0);
-        shot(ctx, world, "t_night", 150);
+        shot(ctx, world, "t_night", 60);
         lookRel(ctx, server, 13, 12, 9, -4, 34, -3);
-        shot(ctx, world, "t_night_under", 150);
+        shot(ctx, world, "t_night_under", 40);
         server.runCommand("time set 6000");
         // 되돌리기 (확인 창 → 되돌림)
         server.runOnServer(s -> WorldTree.undoTree(player(s)));
@@ -244,7 +257,7 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         check(askedUndo, "undo window on the client");
         if (!askedUndo) return;
         lookRel(ctx, server, 48, 16, 40, 0, 30, 0);
-        shot(ctx, world, "t_undo_ask", 100);
+        formShot(ctx, world, "t_undo_ask", 40);
         server.runOnServer(s -> Forms.answer(player(s), 0, null));
         boolean undone = false;
         for (int t = 0; t < 2400 && !undone; t += 5) {
@@ -255,20 +268,36 @@ public final class RpgTreeGallery implements FabricClientGameTest {
         if (!undone) return;
         WorldTree.Result u = server.computeOnServer(s -> WorldTree.lastResult());
         check(u.restored() == plan.total && u.changed() == 0 && u.failed() == 0, "every block restored: " + u.restored() + " / " + plan.total);
+        // 처음과 같음 — 나무 칸이 아닌 곳에서 풀이 흙이 된 것 (나무 밑 그늘: 바닐라 풀은 빛이 없으면 흙이 됨, 애드온도 같음) 은 따로 셈
+        Set<BlockPos> cells = new HashSet<>();
+        for (TreePlan.Op o : plan.allOps()) if (o.mode() != TreePlan.Mode.CARPET && o.mode() != TreePlan.Mode.BUSH) cells.add(BASE.offset(o.dx(), o.dy(), o.dz()));
         String back = server.computeOnServer(s -> {
             ServerLevel level = player(s).level();
             int bad = 0;
+            int decayed = 0;
             String first = "";
             for (Map.Entry<BlockPos, BlockState> e : before.entrySet()) {
                 BlockState now = level.getBlockState(e.getKey());
-                if (now != e.getValue() && bad++ == 0) first = e.getKey().toShortString() + " " + e.getValue() + " → " + now;
+                if (now == e.getValue()) continue;
+                if (!cells.contains(e.getKey()) && e.getValue().getBlock() == Blocks.GRASS_BLOCK && now.getBlock() == Blocks.DIRT) {
+                    decayed++;
+                    continue;
+                }
+                if (bad++ == 0) first = e.getKey().toShortString() + " " + e.getValue() + " → " + now;
             }
             TreeLog.Rec rec = TreeLog.last(s);
-            return bad == 0 && rec == null ? "ok " + before.size() + " cells" : bad + " cells differ (" + first + "), record " + rec;
+            return bad == 0 && rec == null ? "ok " + before.size() + " cells (grass gone to dirt in the shade: " + decayed + ")" : bad + " cells differ (" + first + "), record " + rec;
         });
         check(back.startsWith("ok"), "back as it was, record dropped (" + back + ")");
-        ctx.waitTicks(10);
-        shot(ctx, world, "t_undone", 150);
+        ctx.waitTicks(20);
+        String clientBack = ctx.computeOnClient(mc -> {
+            int left = 0;
+            for (BlockPos p : cells) if (p.getY() >= GROUND && !mc.level.getBlockState(p).isAir()) left++;
+            return left == 0 ? "ok" : left + " tree blocks still on the client";
+        });
+        check(clientBack.equals("ok"), "client: no tree blocks left above ground (" + clientBack + ")");
+        lookRel(ctx, server, 48, 16, 40, 0, 30, 0);
+        shot(ctx, world, "t_undone", 200);
     }
 
     /** 나무 자리의 지금 블록 (설계 칸, 깔개 · 덤불은 그 둘레 기둥) */

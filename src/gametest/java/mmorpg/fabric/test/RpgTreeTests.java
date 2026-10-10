@@ -88,12 +88,15 @@ public final class RpgTreeTests {
         return m;
     }
 
-    private static List<String> diff(ServerLevel level, Map<BlockPos, BlockState> before) {
+    /**
+     * 처음과 다른 칸 — 나무 칸 (cells) 이 아닌 곳에서 풀이 흙이 된 것은 셈하지 않음 (나무 밑 그늘: 바닐라 풀은 빛이 없으면 무작위 틱에 흙이 됨 — 나무가 바꾼 칸이 아님)
+     */
+    private static List<String> diff(ServerLevel level, Map<BlockPos, BlockState> before, java.util.Set<BlockPos> cells) {
         List<String> bad = new ArrayList<>();
         int n = 0;
         for (Map.Entry<BlockPos, BlockState> e : before.entrySet()) {
             BlockState now = level.getBlockState(e.getKey());
-            if (now != e.getValue()) {
+            if (now != e.getValue() && !(cells != null && !cells.contains(e.getKey()) && e.getValue().getBlock() == Blocks.GRASS_BLOCK && now.getBlock() == Blocks.DIRT)) {
                 n++;
                 if (bad.size() < 5) bad.add(e.getKey().toShortString() + " " + e.getValue() + " → " + now);
             }
@@ -523,7 +526,9 @@ public final class RpgTreeTests {
                 WorldTree.Result r = WorldTree.lastResult();
                 if (WorldTree.treeJob() != null || r == null || !r.undo()) throw h.assertionException("undoing (busy " + WorldTree.treeBusy() + ")");
                 h.assertTrue(r.restored() == plan.total && r.changed() == 0 && r.unknown() == 0 && r.failed() == 0, "every block restored: " + r);
-                List<String> d = diff(level, before);
+                java.util.Set<BlockPos> cells = new java.util.HashSet<>();
+                for (TreePlan.Op o : plan.allOps()) if (o.mode() != TreePlan.Mode.CARPET && o.mode() != TreePlan.Mode.BUSH) cells.add(base.offset(o.dx(), o.dy(), o.dz()));
+                List<String> d = diff(level, before, cells);
                 h.assertTrue(d.isEmpty(), "back as it was (air · grass · dirt · sunflower · poppy): " + d);
                 h.assertTrue(level.getBlockState(sunPos.above()).getValue(BlockStateProperties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.UPPER, "sunflower top half back");
                 TreeLog.Rec rec = TreeLog.last(server);
