@@ -112,12 +112,27 @@ public final class RpgNavGallery implements FabricClientGameTest {
         int s2 = ctx.computeOnClient(mc -> NavHud.sector());
         check(s2 >= 10 && s2 <= 12, "arrow turned left-behind when facing west (sector " + s2 + ")");
         shot(ctx, "n_main_turn_west");
-        // 3인칭 (뒤): 브란 쪽 (yaw -17) — 빛기둥 · 바닥 빛
+        // 3인칭 (뒤): 브란 쪽 (yaw -17) — 빛기둥, 내려다보면 바닥 빛 화살표 (낮게 보면 내 몸에 가려짐)
         look(ctx, -17F, 8F);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
-        waitWave(ctx, server);
+        ctx.waitTicks(4);
         shot(ctx, "n_main_3p");
+        look(ctx, -17F, 38F);
+        waitWave(ctx, server);
+        shot(ctx, "n_main_3p_ground");
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        // 보스 막대가 보이면 그 아래로 (애드온 rpg_nav_pad 20px — 막대 하나: 줄 위 19 + 1 + 틈 3)
+        look(ctx, -17F, 0F);
+        server.runCommand("bossbar add mmorpg:nav_test \"보스 막대\"");
+        server.runCommand("bossbar set mmorpg:nav_test players @a");
+        ctx.waitTicks(4);
+        int[] box = ctx.computeOnClient(mc -> NavHud.lastBox());
+        check(box != null && box[1] == 23, "row below one boss bar (y " + (box == null ? "-" : box[1]) + ", want 23)");
+        shot(ctx, "n_main_bossbar");
+        server.runCommand("bossbar remove mmorpg:nav_test");
+        ctx.waitTicks(3);
+        box = ctx.computeOnClient(mc -> NavHud.lastBox());
+        check(box != null && box[1] == 3, "row back at the top without a boss bar (y " + (box == null ? "-" : box[1]) + ")");
         // 브란 곁 (북쪽 2칸) 으로 → 도착 (핀 그림 · "여기!" · 고리 · 반짝임)
         server.runCommand(String.format(Locale.ROOT, "tp @a %.2f %.2f %.2f 0 10", BRAN_AT.x, BRAN_AT.y, BRAN_AT.z - 2.2));
         if (waitHud(ctx, q -> q.mode() == NavNet.NavPayload.HERE, "arrived at Bran")) {
@@ -294,7 +309,8 @@ public final class RpgNavGallery implements FabricClientGameTest {
     }
 
     /**
-     * 다음 바닥 빛 화살표 (2초마다) 가 다섯 개 다 켜진 때 (켜진 뒤 10틱 — i 번째는 2.4i 틱부터 12틱 동안) 까지 기다림 (서버 틱으로 맞춤 — Nav.nextWave)
+     * 다음 바닥 빛 화살표 (2초마다) 가 거의 다 켜진 때까지 기다림 (i 번째는 2.4i 틱부터 12틱 동안 — 서버 틱으로 맞춤, Nav.nextWave). 첫 사진첩에서 켜진 뒤
+     * 10틱 + 사진 1틱을 노렸더니 패킷 · 틱 차이로 첫 화살표가 이미 사라져서 8틱으로
      */
     private static void waitWave(ClientGameTestContext ctx, TestServerContext server) {
         long due = server.computeOnServer(s -> Nav.nextWave(player(s)));
@@ -304,7 +320,7 @@ public final class RpgNavGallery implements FabricClientGameTest {
             return;
         }
         long fire = due > now ? due : now + 2; // 지난 틱이면 다음 길 안내 틱 (2틱마다) 에 켜짐
-        ctx.waitTicks((int) Math.max(1, Math.min(60, fire + 10 - now)));
+        ctx.waitTicks((int) Math.max(1, Math.min(60, fire + 8 - now)));
     }
 
     /** 클라이언트 칸 패킷이 조건에 맞을 때까지 (100틱) */
