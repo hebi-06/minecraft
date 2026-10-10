@@ -98,7 +98,7 @@ jobs:
           code=${PIPESTATUS[0]}
           set -e
           mkdir -p ci-out/shots
-          find build -name 'prod_*.png' -exec cp {} ci-out/shots/ \; 2>/dev/null || true
+          find build -name '*prod_*.png' -exec cp {} ci-out/shots/ \; 2>/dev/null || true
           for f in $(find build/run -path '*prod*' -name latest.log 2>/dev/null); do cp "$f" ci-out/prod-client-latest.log; done
           grep -h -E "\[prod-client\]" ci-out/prod-client.txt ci-out/prod-client-latest.log 2>/dev/null | sort -u || true
           grep -h -q "\[prod-client\] done, 0 failed" ci-out/prod-client.txt ci-out/prod-client-latest.log 2>/dev/null || code=1

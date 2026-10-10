@@ -26,7 +26,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
@@ -77,9 +77,9 @@ public final class RpgSkillTests {
         for (int x = 0; x < 8; x++) for (int z = 0; z < 8; z++) h.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
     }
 
-    /** 쓰러지지 않는 과녁 좀비 (받은 피해는 TestDummies.dealt) */
-    private static Zombie dummy(GameTestHelper h, double x, double y, double z) {
-        return TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.ZOMBIE, (float) x, (float) y, (float) z));
+    /** 쓰러지지 않는 과녁 허스크 (햇빛에 타지 않음 — 받은 피해는 TestDummies.dealt) */
+    private static Husk dummy(GameTestHelper h, double x, double y, double z) {
+        return TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, (float) x, (float) y, (float) z));
     }
 
     private static Weapon transcend(String type) {
@@ -129,7 +129,7 @@ public final class RpgSkillTests {
         Weapon w = transcend("sword");
         hold(sp, w);
         Obj k = w.skills().get(0);
-        Zombie z = dummy(h, 1.5, 2, 4.5);
+        Husk z = dummy(h, 1.5, 2, 4.5);
         double z0 = sp.getZ();
         h.assertTrue(Transcend.castSkill(sp, w, 0), "cast");
         h.assertTrue(sp.getZ() > z0 + 0.9, "dashed forward: " + z0 + " → " + sp.getZ());
@@ -147,7 +147,7 @@ public final class RpgSkillTests {
     @GameTest(maxTicks = 40)
     public void skillNumbersUseSkillStyle(GameTestHelper h) {
         ServerPlayer sp = player(h);
-        Zombie z = dummy(h, 3.5, 2, 3.5);
+        Husk z = dummy(h, 3.5, 2, 3.5);
         h.assertTrue(Kit.applySkillDamage(sp, z, 12.34, false, Kit.Cause.ATTACK, DamageNumbers.Style.RUNE), "damage applied");
         List<Display.TextDisplay> nums = h.getLevel().getEntitiesOfClass(Display.TextDisplay.class, new AABB(z.getEyePosition(), z.getEyePosition()).inflate(3),
                 e -> e.entityTags().contains(DamageNumbers.TAG));
@@ -165,7 +165,7 @@ public final class RpgSkillTests {
     @GameTest(maxTicks = 40)
     public void guardReducesAndReflects(GameTestHelper h) {
         ServerPlayer sp = player(h);
-        Zombie z = dummy(h, 2.5, 2, 2.5);
+        Husk z = dummy(h, 2.5, 2, 2.5);
         Guards.set(sp, 40, 0.6, Guards.Reflect.amount(5, DamageNumbers.Style.RUNE), null);
         h.assertTrue(Guards.of(sp) != null && Math.abs(Guards.of(sp).reduce() - 0.6) < 1e-9, "guard on");
         float next = RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z), 20F, 10F);
@@ -204,7 +204,7 @@ public final class RpgSkillTests {
         ServerPlayer sp = player(h);
         Weapon w = transcend("bow");
         hold(sp, w);
-        Zombie z = dummy(h, 1.5, 2, 6.5);
+        Husk z = dummy(h, 1.5, 2, 6.5);
         sp.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
         ItemStack bow = sp.getMainHandItem();
         bow.use(h.getLevel(), sp, InteractionHand.MAIN_HAND);
