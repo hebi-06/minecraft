@@ -172,10 +172,14 @@ public final class RpgRuneSmithTests {
     @GameTest(maxTicks = 200)
     public void dummyNeverDies(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
+        Vec3 view = mmorpg.fabric.skill.V.flat(sp.getViewVector(1F));
+        Vec3 want = sp.position().add(view.scale(3));
         TrainingDummy d = Dummy.spawnDummy(sp);
         h.assertTrue(d != null && Dummy.isDummy(d) && Kit.hasFamily(d, "rpg_dummy"), "spawned (rpg_dummy)");
-        h.assertTrue(Math.abs(d.getZ() - sp.getZ() - 3) < 1e-6 && Math.abs(d.getX() - sp.getX()) < 1e-6, "3 blocks ahead " + d.position());
-        h.assertTrue(Math.abs(Kit.lookRotation(d.position(), sp.position())[0] - d.getYRot()) < 1, "faces the player " + d.getYRot());
+        h.assertTrue(Math.hypot(d.getX() - want.x, d.getZ() - want.z) < 1e-6 && Math.abs(d.getY() - sp.getY()) < 1e-6,
+                "3 blocks ahead " + d.position() + " player " + sp.position() + " view " + view);
+        float face = Kit.lookRotation(d.position(), sp.position())[0];
+        h.assertTrue(Math.abs(net.minecraft.util.Mth.wrapDegrees(face - d.getYRot())) < 1, "faces the player " + d.getYRot() + " vs " + face);
         h.assertTrue(labelText(d).contains("훈련용 허수아비") && labelText(d).contains("때리면"), "intro label: " + labelText(d));
         h.assertTrue(Kit.canHit(sp, d), "skills can hit it");
         float max = d.getMaxHealth();
