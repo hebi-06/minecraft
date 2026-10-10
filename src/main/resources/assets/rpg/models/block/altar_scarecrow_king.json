@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "rpg:block/altar/scarecrow_king_top",
+    "bottom": "rpg:block/altar/scarecrow_king_bottom",
+    "side": "rpg:block/altar/scarecrow_king_side"
+  }
+}

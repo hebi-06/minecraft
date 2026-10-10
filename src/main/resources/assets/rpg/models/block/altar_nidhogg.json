@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "rpg:block/altar/nidhogg_top",
+    "bottom": "rpg:block/altar/nidhogg_bottom",
+    "side": "rpg:block/altar/nidhogg_side"
+  }
+}

@@ -4,10 +4,12 @@
   "package": "mmorpg.fabric.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "BlockItemMixin",
     "LivingEntityMixin",
     "MannequinAccessor",
     "PlayerMixin",
     "RangedAttributeAccessor",
+    "ServerExplosionMixin",
     "ServerGamePacketListenerMixin"
   ],
   "injectors": {

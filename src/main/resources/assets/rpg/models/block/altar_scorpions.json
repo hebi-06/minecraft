@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "rpg:block/altar/scorpions_top",
+    "bottom": "rpg:block/altar/scorpions_bottom",
+    "side": "rpg:block/altar/scorpions_side"
+  }
+}
