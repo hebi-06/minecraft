@@ -3,6 +3,8 @@ package mmorpg.fabric.test;
 import java.util.ArrayList;
 import java.util.List;
 import mmorpg.core.Armor;
+import mmorpg.fabric.npc.Dummy;
+import mmorpg.fabric.npc.TrainingDummy;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
@@ -25,8 +27,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 4단계 사진첩 (화면 시험): 갑옷 세트 5종 (순찰대 · 강철 기사 · 흑요석 수호자 · 적룡 · 황제) 을 입은 모습 — 3인칭 앞 · 뒤, 마네킹 둘 (옆 · 앞),
- * 황제 망토가 걸을 때 날리는 모습 (마네킹을 옆으로 옮기며), 가방 화면의 갑옷 칸 · 설명 · 재료 그림.
- * 사진 이름 a_&lt;세트&gt;_front / _back · am_&lt;세트&gt; · a_cape_t&lt;틱&gt; · a_inventory → ci-logs 의 shots/.
+ * 황제 망토가 걸을 때 날리는 모습 (마네킹을 옆으로 옮기며), 가방 화면의 갑옷 칸 · 설명 · 재료 그림, 훈련용 허수아비 (맞기 전 · 흔들림 · 머리 위 기록).
+ * 사진 이름 a_&lt;세트&gt;_front / _back · am_&lt;세트&gt; · a_cape_t&lt;틱&gt; · a_inventory · d_dummy_* → ci-logs 의 shots/.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgGearGallery implements FabricClientGameTest {
@@ -62,6 +64,7 @@ public final class RpgGearGallery implements FabricClientGameTest {
             armor(ctx, server);
             cape(ctx, server);
             inventory(ctx, server);
+            dummy(ctx, server);
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         }
     }
@@ -169,5 +172,59 @@ public final class RpgGearGallery implements FabricClientGameTest {
         ctx.takeScreenshot(TestScreenshotOptions.of("a_inventory").withSize(1280, 720));
         ctx.setScreen(() -> null);
         LOG.info("[gear-gallery] inventory");
+    }
+
+    /** 플레이어 가까이의 훈련용 허수아비를 한 번 때림 (서버 — 피해 숫자 · 흔들림 · 머리 위 기록) */
+    private static void hitDummy(TestServerContext server, float amount) {
+        server.runOnServer(s -> {
+            var sp = s.getPlayerList().getPlayers().get(0);
+            for (TrainingDummy d : sp.level().getEntitiesOfClass(TrainingDummy.class, sp.getBoundingBox().inflate(16), e -> true)) {
+                d.setInvulnerableTime(0);
+                d.damageCooldownTime = 0;
+                d.hurtServer(sp.level(), sp.damageSources().playerAttack(sp), amount);
+            }
+        });
+    }
+
+    /**
+     * 훈련용 허수아비 (/dummy — 눈앞 3칸, 나를 봄): 맞기 전 (d_dummy_idle), 맞은 직후 흔들림 (d_dummy_hit_t2 · t5 · t9),
+     * 여러 번 맞은 뒤 머리 위 기록 (d_dummy_label), 옆에서 맞은 직후 (d_dummy_side)
+     */
+    private static void dummy(ClientGameTestContext ctx, TestServerContext server) {
+        server.runCommand("tp @a 0.5 -60 0.5 0 0");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.getInput().lookAt(0F, -4F);
+        server.runCommand("execute as @a at @a run dummy");
+        ctx.waitTicks(15);
+        ctx.takeScreenshot(TestScreenshotOptions.of("d_dummy_idle").withSize(960, 540));
+        hitDummy(server, 37.5F);
+        ctx.waitTicks(2);
+        ctx.takeScreenshot(TestScreenshotOptions.of("d_dummy_hit_t2").withSize(960, 540));
+        ctx.waitTicks(3);
+        ctx.takeScreenshot(TestScreenshotOptions.of("d_dummy_hit_t5").withSize(960, 540));
+        ctx.waitTicks(4);
+        ctx.takeScreenshot(TestScreenshotOptions.of("d_dummy_hit_t9").withSize(960, 540));
+        for (float amount : new float[] {120F, 8.4F, 1530F}) {
+            ctx.waitTicks(12);
+            hitDummy(server, amount);
+        }
+        ctx.waitTicks(25);
+        ctx.takeScreenshot(TestScreenshotOptions.of("d_dummy_label").withSize(960, 540));
+        String label = server.computeOnServer(s -> {
+            var sp = s.getPlayerList().getPlayers().get(0);
+            for (TrainingDummy d : sp.level().getEntitiesOfClass(TrainingDummy.class, sp.getBoundingBox().inflate(16), e -> true)) return Dummy.labelOf(d);
+            return null;
+        });
+        LOG.info("[gear-gallery] dummy label {}", label == null ? null : label.replace('\n', '|'));
+        server.runCommand("tp @a 3.5 -60 3.5 90 0");
+        ctx.getInput().lookAt(90F, -4F);
+        ctx.waitTicks(5);
+        hitDummy(server, 64F);
+        ctx.waitTicks(3);
+        ctx.takeScreenshot(TestScreenshotOptions.of("d_dummy_side").withSize(960, 540));
+        server.runCommand("execute as @a at @a run dummy clear");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.getInput().lookAt(0F, 0F);
+        LOG.info("[gear-gallery] dummy");
     }
 }

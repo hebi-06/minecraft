@@ -71,6 +71,12 @@ public final class DamageNumbers {
     /** 처음 크기 배율 (톡 튀어나옴) */
     private static final float POP = 1.45F;
 
+    /**
+     * 숫자를 띄울 자리 (null 이면 눈 높이 — fx.js showDamageText 의 head). 훈련용 허수아비는 머리 위에 기록이 떠 있어서 몸통 높이 (npc.Dummy 가 채움 —
+     * 다른 쪽이 더할 때는 앞의 훅을 이어 부름)
+     */
+    public static java.util.function.Function<LivingEntity, Vec3> anchor = e -> null;
+
     private static final class Text {
         final Display.TextDisplay e;
         final double x;
@@ -181,7 +187,8 @@ public final class DamageNumbers {
         boolean self = style == Style.HEAL && victim instanceof Player;
         if (ACTIVE.size() >= MAX_TEXTS + (self ? SELF_EXTRA : 0)) return;
         if (!(victim.level() instanceof ServerLevel level) || victim.isRemoved()) return;
-        Vec3 head = victim.getEyePosition();
+        Vec3 at = anchor.apply(victim);
+        Vec3 head = at != null ? at : victim.getEyePosition();
         if (self) {
             // 플레이어가 받은 회복은 얼굴 앞 2칸, 조준점 오른쪽 아래 (머리 위는 1인칭 화면 밖)
             Vec3 v = victim.getViewVector(1F);
