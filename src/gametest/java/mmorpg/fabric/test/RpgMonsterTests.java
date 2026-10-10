@@ -300,6 +300,16 @@ public final class RpgMonsterTests {
         h.assertTrue(RuneKit.isUndead(draugr) && !RuneKit.isUndead(nix), "draugr is undead (paladin rune 1.5x)");
         h.assertTrue(!draugr.getType().builtInRegistryHolder().is(EntityTypeTags.BURN_IN_DAYLIGHT), "draugr does not burn in daylight");
         h.assertTrue(Kit.hasFamily(nix, "rpg_monster") && Kit.hasFamily(nix, "nix") && !Kit.hasFamily(nix, "monster"), "families as entity tags");
+        // 체력 막대 20칸: 절반 넘게 초록, 1/4 넘게 노랑, 그 아래 빨강 (살아 있으면 최소 1칸)
+        Monsters.Kind sk = Monsters.kind("scarecrow");
+        h.assertTrue(Monsters.monsterLabel(sk, 30, 30).equals("§eLv.1 §f허수아비"), "full hp: one line");
+        h.assertTrue(Monsters.monsterLabel(sk, 16, 30).endsWith("\n§a" + "|".repeat(11) + "§8" + "|".repeat(9)), "green " + Monsters.monsterLabel(sk, 16, 30));
+        h.assertTrue(Monsters.monsterLabel(sk, 10, 30).endsWith("\n§e" + "|".repeat(7) + "§8" + "|".repeat(13)), "yellow " + Monsters.monsterLabel(sk, 10, 30));
+        h.assertTrue(Monsters.monsterLabel(sk, 5, 30).endsWith("\n§c" + "|".repeat(3) + "§8" + "|".repeat(17)), "red " + Monsters.monsterLabel(sk, 5, 30));
+        h.assertTrue(Monsters.monsterLabel(sk, 0.1, 30).endsWith("\n§c|§8" + "|".repeat(19)) && Monsters.monsterLabel(sk, 0, 30).endsWith("\n§c§8" + "|".repeat(20)),
+                "min 1 bar while alive, 0 when dead");
+        near(h, Monsters.damageTextHeight(sk), Math.min(1.92 * 0.62, 0.92), 1e-6, "damage text height (scarecrow)");
+        near(h, Monsters.damageTextHeight(Monsters.kind("troll")), 3.57 * 0.62, 1e-6, "damage text height (troll)");
         h.runAfterDelay(65, () -> {
             fresh(sp);
             h.assertTrue(Monsters.monsterHit(nix, Monsters.kind("nix"), sp, 1), "nix hit");
@@ -317,6 +327,58 @@ public final class RpgMonsterTests {
             ok("shell -20% · nix/draugr slowness · draugr undead · families");
             for (RpgMonster m : List.of(shell, nix, draugr)) m.discard();
             RpgGearTests.done(h, sp);
+        });
+    }
+
+    /**
+     * 나약함 한 단계마다 몬스터 피해 -20% (허수아비 3 → 나약함 I 2.4), 룬의 짧은 은신 (투명 5초 이하) 인 사람에게는 달려들기 없음 (긴 투명은 그대로),
+     * 트롤 내려치기: 맞은 사람 둘레 1.8칸의 다른 플레이어도 절반 피해
+     */
+    @GameTest(maxTicks = 200)
+    public void weaknessHiddenShockwave(GameTestHelper h) {
+        ServerPlayer weakTarget = player(h, 1.5, 2, 1.5, 300);
+        Monsters.Kind sk = Monsters.kind("scarecrow");
+        RpgMonster weak = monster(h, "scarecrow", 1.5 + sk.half() + 0.3 + 1.0, 2, 1.5, false);
+        weak.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 600, 0, false, false));
+        ServerPlayer hidden = player(h, 1.5, 2, 5.5, 300);
+        ServerPlayer seen = player(h, 1.5, 2, 9.5, 300);
+        hidden.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 80, 0, false, false)); // 연막 · 월광 암살 (5초 이하)
+        seen.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 6000, 0, false, false)); // 투명화 물약 (길다)
+        Monsters.Kind gk = Monsters.kind("gulon");
+        RpgMonster g1 = monster(h, "gulon", 1.5 + gk.half() + 0.3 + 4.3, 2, 5.5, false);
+        RpgMonster g2 = monster(h, "gulon", 1.5 + gk.half() + 0.3 + 4.3, 2, 9.5, false);
+        Monsters.Kind tk = Monsters.kind("troll");
+        ServerPlayer a = player(h, 9.0, 2, 1.5, 300);
+        ServerPlayer b = player(h, 9.0, 2, 2.7, 300); // a 에서 1.2칸 (1.8 안)
+        RpgMonster troll = monster(h, "troll", 9.0 + tk.half() + 0.3 + 1.5, 2, 1.5, false);
+        h.runAfterDelay(66, () -> {
+            for (ServerPlayer p : List.of(weakTarget, hidden, seen, a, b)) fresh(p);
+            weak.hurtServer(h.getLevel(), weakTarget.damageSources().playerAttack(weakTarget), 1F);
+            g1.hurtServer(h.getLevel(), hidden.damageSources().playerAttack(hidden), 1F);
+            g2.hurtServer(h.getLevel(), seen.damageSources().playerAttack(seen), 1F);
+            troll.hurtServer(h.getLevel(), a.damageSources().playerAttack(a), 1F);
+            float w0 = weakTarget.getHealth();
+            float a0 = a.getHealth();
+            float b0 = b.getHealth();
+            h.runAfterDelay(26, () -> {
+                Monsters.Fight fw = Monsters.fightOf(weak);
+                h.assertTrue(fw != null && fw.hits() == 1, "weak scarecrow hit " + (fw == null ? null : fw.hits()));
+                near(h, w0 - weakTarget.getHealth(), scaled(h, sk.attack() * 0.8), 1e-3, "weakness I: damage -20%");
+                Monsters.Fight f1 = Monsters.fightOf(g1);
+                Monsters.Fight f2 = Monsters.fightOf(g2);
+                h.assertTrue(f1 != null && f1.lastKind() == null && f1.windupKind() == null, "no lunge at a short-invisible player");
+                h.assertTrue(f2 != null && ("lunge".equals(f2.lastKind()) || "lunge".equals(f2.windupKind())), "lunge at a long-invisible player " + f2.lastKind());
+                Monsters.Fight ft = Monsters.fightOf(troll);
+                h.assertTrue(ft != null && ft.hits() == 1, "troll hit a " + (ft == null ? null : ft.hits()));
+                double hitA = a0 - a.getHealth();
+                double hitB = b0 - b.getHealth();
+                near(h, hitA, scaled(h, tk.attack()), 1e-3, "troll hit");
+                near(h, hitB, scaled(h, tk.attack() * 0.5), 1e-3, "shockwave: half to the player beside");
+                ok("weakness -20% · short invisibility blocks lunge · troll shockwave half damage");
+                for (RpgMonster m : List.of(weak, g1, g2, troll)) m.discard();
+                for (ServerPlayer p : List.of(weakTarget, hidden, seen, b)) h.getLevel().getServer().getPlayerList().remove(p);
+                RpgGearTests.done(h, a);
+            });
         });
     }
 
