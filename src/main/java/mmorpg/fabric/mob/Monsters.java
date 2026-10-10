@@ -1,0 +1,1035 @@
+package mmorpg.fabric.mob;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+import mmorpg.core.Mobs;
+import mmorpg.core.Obj;
+import mmorpg.core.Rules;
+import mmorpg.fabric.BedrockText;
+import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Mmorpg;
+import mmorpg.fabric.RpgCombat;
+import mmorpg.fabric.Tasks;
+import mmorpg.fabric.quest.Loot;
+import mmorpg.fabric.skill.Aegis;
+import mmorpg.fabric.skill.Kit;
+import mmorpg.fabric.skill.Opt;
+import mmorpg.fabric.skill.SkillFx;
+import mmorpg.fabric.skill.V;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Brightness;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * 일반 몬스터 (monsters.js v1.7.0 — 허수아비 → 굴론 → 스켈야스크림슬리 → 닉스 → 드라우그 → 트롤, 수치는 config.js MONSTERS · MONSTER).
+ * <ul>
+ * <li>후공: 맞기 전에는 둔 자리 둘레를 돌아다니기만 함. 맞으면 때린 플레이어 (마지막으로 때린 사람) 를 쫓아가 공격.
+ * 이동 · 추격 · 마주 보기는 엔티티 (BedrockGoals — hurt_by_target · melee_attack), 바닐라 근접 피해는 BedrockMob 이 막음 (doHurtTarget)</li>
+ * <li>공격 (스크립트): reach 안이고 서로 보이면 공격 동작 (playAnimation) + 붉은 고리 → windup 틱 뒤 처음 노린 플레이어가 아직 reach + tolerance 안 ·
+ * 노린 쪽 ±arc 도 · 보이면 맞음 (할퀴기 참격 · 불꽃 · 소리), 아니면 헛손질. 터치 사거리 (6.5칸) 에 맞춰 reach 밖이면 달려들기 (lunge),
+ * 높이 차이로 닿지 못하는 곳에서 방금 때렸으면 원거리 반격 (발밑 붉은 고리 → 기운이 날아와 침)</li>
+ * <li>룬 · 무기 효과: 구속 VII 이상 (속박 · 기절 · 빙결 · 석화) 이면 달려들기 · 원거리 반격 없음, 나약함까지 있으면 공격 못 함 (하던 동작도 끊김),
+ * 나약함 한 단계마다 피해 -20%, 룬의 짧은 은신 (투명 5초 이하) 인 사람에게는 달려들기 · 원거리 반격 없음</li>
+ * <li>대상이 크리에이티브 · 관전 · 쓰러지는 중이면 잠깐 멈춤 (pauseLimit 이 넘으면 끝), 죽음 · 나감 · 다른 차원 · leash 밖이면 끝 → 둔 자리로</li>
+ * <li>특성: 스켈야스크림슬리 껍질 (플레이어 피해 -20%), 닉스 · 드라우그 맞으면 구속, 트롤 재생 · 내려치기 충격파</li>
+ * <li>이름표 "Lv.8 굴론" (노란 레벨 + 흰 이름), 다치면 아래 줄 체력 막대 20칸 (hp.js 의 이름표 새로 고침 — 자바는 첫 줄이 이름이라 사망 메시지에는 늘 첫 줄만).
+ * 피해 숫자는 몸통에서 떠올라 이름표 아래에서 끝남 (DamageNumbers.anchor)</li>
+ * <li>회복: 싸움이 끝나고 regenDelay 틱 동안 맞지 않으면 1초마다 최대 체력 10% (다친 채 다시 불러와도). 트롤은 싸우는 중에도 재생</li>
+ * <li>죽으면 잡은 사람에게 경험치 (구슬 대신) · 전리품 (Loot.lootOnDeath), 도발 (아이기스의 방패 — tauntMonster)</li>
+ * </ul>
+ * 자바에서 달라진 점: 몬스터 피해는 바닐라 피해 (mobAttack — 갑옷 · 방패 · RPG 체력은 RpgHealth 가, 난이도 배율 · 밀침은 바닐라 그대로 — 애드온의 applyDamage 도
+ * 때린 몬스터 쪽에서 밀침), 무적 시간에 막혀도 맞힘 연출은 그대로 (구속만 없음). 이름표는 몬스터에 태운 글자 표시 엔티티. 싸움이 끝나면 엔티티의 대상도 놓아 줌
+ * (자바의 대상 고르기가 다른 차원의 사람을 계속 쫓지 않게). 사냥터는 {@link HuntZones}, 명령어는 {@link MonsterCommands}.
+ */
+public final class Monsters {
+    private Monsters() {}
+
+    private static final Rules R = Rules.get();
+    static final Obj MONSTERS = R.obj("MONSTERS");
+    static final Obj MONSTER = R.obj("MONSTER");
+    private static final double PLAYER_HALF = 0.3;
+    /** 머리 위 이름표 (글자 표시 엔티티) 의 태그 */
+    public static final String LABEL_TAG = "mmorpg_monster_label";
+    /** 사냥터 몬스터 태그 머리 (huntzone.js tagOf — rpg_zone_&lt;번호&gt;) */
+    public static final String ZONE_TAG = "rpg_zone_";
+    private static final double[] RED = {1.0, 0.28, 0.2};
+
+    // MONSTER 수치
+    static final double LUNGE_RANGE = MONSTER.num("lungeRange");
+    static final double LUNGE_HEIGHT = MONSTER.num("lungeHeight");
+    static final double LUNGE_PER_BLOCK = MONSTER.num("lungePerBlock");
+    static final double TOLERANCE = MONSTER.num("tolerance");
+    static final double LEASH = MONSTER.num("leash");
+    static final int REGEN_DELAY = (int) MONSTER.num("regenDelay");
+    static final double REGEN_PER_SEC = MONSTER.num("regenPerSec");
+    static final int HP_BAR = (int) MONSTER.num("hpBar");
+    static final double ARC = MONSTER.num("arc");
+    static final double COUNTER_RADIUS = MONSTER.num("counterRadius");
+    static final int COUNTER_EXTRA = (int) MONSTER.num("counterExtra");
+    static final int ROOT_AMP = (int) MONSTER.num("rootAmp");
+    static final double WEAK_PER_LEVEL = MONSTER.num("weakPerLevel");
+    static final int PAUSE_LIMIT = (int) MONSTER.num("pauseLimit");
+    static final int COUNTER_WINDOW = (int) MONSTER.num("counterWindow");
+    static final int HIDE_MAX = (int) MONSTER.num("hideMax");
+
+    // ------------------------------------------------------------ 설정 (config.js MONSTERS)
+
+    /** 맞으면 붙는 효과 (닉스 · 드라우그) */
+    public record OnHit(String effect, double seconds, int amplifier) {}
+
+    /** 싸우는 중에도 재생 (트롤): after 틱 동안 안 맞으면 1초마다 perSec */
+    public record Regen(int after, double perSec) {}
+
+    /** 내려치기 충격파 (트롤): 둘레 radius 칸의 다른 플레이어도 피해 × mult */
+    public record Shock(double radius, double mult) {}
+
+    /** 몬스터 설정 (monsters.js DEFS 의 값 — 키 포함) */
+    public record Kind(String key, String id, String name, int level, double hp, double attack, int every, int windup, double reach, int lungeEvery,
+            double scale, double boxW, double boxH, double[] color, double shell, OnHit onHit, Regen regen, Shock shock, String windupSound,
+            String hitSound, int xp, int xpUntil, double[] emerald) {
+        /** 크기 배율을 곱한 가로 반폭 (monsterSize.half) */
+        public double half() {
+            return boxW * scale / 2;
+        }
+
+        /** 크기 배율을 곱한 키 (monsterSize.height) */
+        public double height() {
+            return boxH * scale;
+        }
+    }
+
+    private static Map<String, Kind> kinds;
+
+    /** 몬스터 설정 모두 (엔티티 ID rpg:troll → 설정, 몬스터 순서) */
+    public static synchronized Map<String, Kind> kinds() {
+        if (kinds == null) {
+            Map<String, Kind> m = new LinkedHashMap<>();
+            for (String key : R.strings("MONSTER_ORDER")) {
+                Obj o = MONSTERS.objOrNull(key);
+                if (o == null) continue;
+                Obj hit = o.objOrNull("onHit");
+                Obj regen = o.objOrNull("regen");
+                Obj shock = o.objOrNull("shock");
+                List<Object> box = o.list("box");
+                List<Object> em = o.listOrNull("emerald");
+                double[] emerald = em == null || em.size() < 3 ? null
+                        : new double[] {((Number) em.get(0)).doubleValue(), ((Number) em.get(1)).doubleValue(), ((Number) em.get(2)).doubleValue()};
+                m.put(Mobs.monsterId(key), new Kind(key, Mobs.monsterId(key), o.str("name"), (int) o.num("level"), o.num("hp"), o.num("attack"),
+                        (int) o.num("every"), (int) o.num("windup"), o.num("reach"), (int) o.num("lungeEvery"), o.num("scale"),
+                        ((Number) box.get(0)).doubleValue(), ((Number) box.get(1)).doubleValue(), Kit.rgb(o.list("color")), o.numOr("shell", 0),
+                        hit == null ? null : new OnHit(hit.str("effect"), hit.num("seconds"), (int) hit.num("amplifier")),
+                        regen == null ? null : new Regen((int) regen.num("after"), regen.num("perSec")),
+                        shock == null ? null : new Shock(shock.num("radius"), shock.num("mult")),
+                        o.obj("sounds").str("windup"), o.obj("sounds").str("hit"), (int) o.num("xp"), (int) o.num("xpUntil"), emerald));
+            }
+            kinds = Collections.unmodifiableMap(m);
+        }
+        return kinds;
+    }
+
+    /** 키 (troll) 또는 ID (rpg:troll) 의 설정 (없으면 null) */
+    public static Kind kind(String keyOrId) {
+        if (keyOrId == null) return null;
+        return kinds().get(keyOrId.indexOf(':') < 0 ? Mobs.monsterId(keyOrId) : keyOrId);
+    }
+
+    /** 몬스터 설정 (몬스터가 아니면 null — monsterDef) */
+    public static Kind kindOf(Entity e) {
+        return e instanceof RpgMonster m ? kinds().get(m.def.id()) : null;
+    }
+
+    // ------------------------------------------------------------ 몸 · 거리 (monsterSize · gapTo · heightOk · canSee · touchReach · inArc)
+
+    /** 몬스터 몸 가장자리 ~ 플레이어 몸 가장자리 (가로 칸), 높이 차 (플레이어 발 - 몬스터 발), 가운데끼리 거리 */
+    public record Gap(double gap, double dy, double dist) {}
+
+    public static Gap gapTo(Entity m, Kind k, Entity p) {
+        double d = Math.hypot(p.getX() - m.getX(), p.getZ() - m.getZ());
+        return new Gap(Math.max(0, d - k.half() - PLAYER_HALF), p.getY() - m.getY(), d);
+    }
+
+    /** 높이가 닿는지: 플레이어 발이 몬스터 발 아래 1.5칸 ~ 몬스터 키 (+extra) */
+    static boolean heightOk(Kind k, double dy, double extra) {
+        return dy >= -1.5 - extra && dy <= k.height() + extra;
+    }
+
+    /** 피해 숫자 기준 높이 (발에서): 몸통 (키 × 0.62) 이되, 떠오른 숫자가 이름표에 닿지 않게 키 - 1 을 넘지 않음 (최소 0.45) */
+    public static double damageTextHeight(Kind k) {
+        double h = k.height();
+        return Math.min(h * 0.62, Math.max(0.45, h - 1.0));
+    }
+
+    /**
+     * 플레이어 눈에서 몬스터 몸이 보이는지 (벽 너머로는 서로 때리지 못함): 몸 위 가운데 · 가운데 · 위 네 모서리 중 하나라도 보이면
+     * (기둥 밑에 붙은 몬스터처럼 가운데가 가려도 모서리가 보이면 터치로 때릴 수 있으니 보이는 것으로)
+     */
+    static boolean canSee(Entity m, Kind k, ServerPlayer p) {
+        Vec3 eye = p.getEyePosition();
+        double x = m.getX();
+        double y = m.getY();
+        double z = m.getZ();
+        double top = y + k.height() - 0.1;
+        double c = Math.max(0, k.half() - 0.05);
+        Vec3[] pts = {new Vec3(x, top, z), new Vec3(x, y + k.height() * 0.5, z), new Vec3(x + c, top, z + c), new Vec3(x - c, top, z + c),
+            new Vec3(x + c, top, z - c), new Vec3(x - c, top, z - c)};
+        for (Vec3 to : pts) if (RpgCombat.lineOfSight(p, eye, to)) return true;
+        return false;
+    }
+
+    /** 플레이어가 터치로 때릴 수 있는 거리: 눈 → 몬스터 충돌 상자의 가장 가까운 점이 lungeRange 안 */
+    static boolean touchReach(Entity m, Kind k, ServerPlayer p) {
+        Vec3 eye = p.getEyePosition();
+        double dh = Math.max(0, Math.hypot(eye.x - m.getX(), eye.z - m.getZ()) - k.half());
+        double dv = eye.y < m.getY() ? m.getY() - eye.y : eye.y > m.getY() + k.height() ? eye.y - (m.getY() + k.height()) : 0;
+        return Math.hypot(dh, dv) <= LUNGE_RANGE;
+    }
+
+    /** 공격 동작 끝에 노린 쪽 (시작할 때 몬스터 → 플레이어) 에서 arc 도 안인지. 몸에 붙어 있으면 늘 안 */
+    static boolean inArc(Entity m, Kind k, Vec3 aim, Entity p) {
+        double dx = p.getX() - m.getX();
+        double dz = p.getZ() - m.getZ();
+        double d = Math.hypot(dx, dz);
+        if (aim == null || d <= k.half() + 0.1) return true;
+        return (dx * aim.x + dz * aim.z) / d >= Math.cos(Math.toRadians(ARC));
+    }
+
+    // ------------------------------------------------------------ 대상 상태 · 효과
+
+    enum State {
+        OK,
+        PAUSE,
+        GONE
+    }
+
+    /** 싸우는 대상의 상태: OK = 공격 가능, PAUSE = 잠깐 멈춤 (크리에이티브 · 관전 · 쓰러지는 중), GONE = 싸움 끝 (없어짐 · 다른 차원) */
+    static State targetState(ServerPlayer p, Entity m) {
+        if (p == null || p.isRemoved() || m == null || m.isRemoved()) return State.GONE;
+        if (p.level() != m.level()) return State.GONE;
+        if (p.isCreative() || p.isSpectator()) return State.PAUSE;
+        return p.isDeadOrDying() ? State.PAUSE : State.OK;
+    }
+
+    /** 효과 세기 (없으면 -1) */
+    static int effectAmp(LivingEntity e, net.minecraft.core.Holder<MobEffect> h) {
+        MobEffectInstance x = e.getEffect(h);
+        return x == null ? -1 : x.getAmplifier();
+    }
+
+    /** 움직이지 못함: 구속 VII 이상 (속박 화살 · 기절 · 빙결 · 석화) */
+    public static boolean rooted(LivingEntity m) {
+        return effectAmp(m, MobEffects.SLOWNESS) >= ROOT_AMP;
+    }
+
+    /** 공격하지 못함: 움직이지 못하고 나약함까지 (기절 · 빙결 · 석화) */
+    public static boolean stunned(LivingEntity m) {
+        return rooted(m) && effectAmp(m, MobEffects.WEAKNESS) >= 0;
+    }
+
+    /** 나약함: 한 단계마다 피해 -weakPerLevel */
+    static double weakMult(LivingEntity m) {
+        int w = effectAmp(m, MobEffects.WEAKNESS);
+        return w < 0 ? 1 : Math.max(0, 1 - WEAK_PER_LEVEL * (w + 1));
+    }
+
+    /** 룬의 짧은 은신 (연막 · 월광 암살, 남은 시간 hideMax 틱 이하): 멀리서는 못 찾음. 투명화 물약처럼 긴 투명은 셈하지 않음 */
+    static boolean hidden(ServerPlayer p) {
+        MobEffectInstance e = p.getEffect(MobEffects.INVISIBILITY);
+        return e != null && !e.isInfiniteDuration() && e.getDuration() >= 0 && e.getDuration() <= HIDE_MAX;
+    }
+
+    // ------------------------------------------------------------ 싸움
+
+    /** 때린 사람 하나: 플레이어 · 마지막으로 때린 틱 */
+    record Attacker(ServerPlayer p, long t) {}
+
+    /** 도발 (v2.20.0): 그 플레이어 · 끝나는 틱 */
+    record Taunt(UUID id, long until) {}
+
+    /** 공격 동작 하나: 시작 틱, 끝 (판정) 틱, 종류 (melee · lunge · counter), 처음 노린 플레이어, 노린 쪽 (가로 단위 벡터), 원거리 반격이 떨어질 자리 */
+    record Windup(long start, long at, String kind, ServerPlayer target, Vec3 aim, Vec3 spot) {}
+
+    /** 싸우는 몬스터 하나 (monsters.js fights 의 값) */
+    public static final class Fight {
+        final RpgMonster m;
+        final Kind k;
+        ServerPlayer player;
+        final Map<UUID, Attacker> attackers = new LinkedHashMap<>();
+        long nextAttack;
+        long nextLunge;
+        Long paused;
+        Windup windup;
+        Taunt taunt;
+        int hits;
+        int misses;
+        String lastKind;
+        long lastResolved;
+
+        Fight(RpgMonster m, Kind k, ServerPlayer p, long now) {
+            this.m = m;
+            this.k = k;
+            this.player = p;
+            this.attackers.put(p.getUUID(), new Attacker(p, now));
+            this.nextAttack = now;
+            this.nextLunge = now + 6;
+        }
+
+        /** 지금 노리는 플레이어 */
+        public ServerPlayer player() {
+            return player;
+        }
+
+        /** 하던 공격 동작의 종류 (melee · lunge · counter — 없으면 null) */
+        public String windupKind() {
+            return windup == null ? null : windup.kind();
+        }
+
+        /** 하던 공격 동작이 판정되는 틱 (없으면 -1) */
+        public long windupAt() {
+            return windup == null ? -1 : windup.at();
+        }
+
+        /** 원거리 반격이 떨어질 자리 (없으면 null) */
+        public Vec3 counterSpot() {
+            return windup == null ? null : windup.spot();
+        }
+
+        public long nextAttack() {
+            return nextAttack;
+        }
+
+        public long nextLunge() {
+            return nextLunge;
+        }
+
+        /** 잠깐 멈춰 있는지 (크리에이티브 · 관전 · 쓰러지는 중) */
+        public boolean paused() {
+            return paused != null;
+        }
+
+        /** 도발한 사람 (도발 중이 아니면 null) */
+        public UUID tauntId() {
+            return taunt != null && taunt.until() > Tasks.now() ? taunt.id() : null;
+        }
+
+        /** 때린 사람들 */
+        public Set<UUID> attackers() {
+            return Collections.unmodifiableSet(attackers.keySet());
+        }
+
+        /** 맞힌 수 · 빗나간 수 · 마지막으로 판정한 동작 (시험 · 사진첩) */
+        public int hits() {
+            return hits;
+        }
+
+        public int misses() {
+            return misses;
+        }
+
+        public String lastKind() {
+            return lastKind;
+        }
+    }
+
+    /** 싸우는 몬스터: 몬스터 UUID → 싸움 */
+    private static final Map<UUID, Fight> FIGHTS = new LinkedHashMap<>();
+
+    /** 다친 몬스터 (회복 · 재생용): 몬스터, 마지막으로 맞은 틱 */
+    private record Hurt(RpgMonster m, Kind k, long t) {}
+
+    private static final Map<UUID, Hurt> HURT = new LinkedHashMap<>();
+
+    /** 지금 싸우는 대상 (시험 · 다른 모듈용 — 없으면 null) */
+    public static Fight fightOf(Entity m) {
+        return m == null ? null : FIGHTS.get(m.getUUID());
+    }
+
+    /** 싸우는 몬스터 수 (시험용) */
+    public static int fightCount() {
+        return FIGHTS.size();
+    }
+
+    /**
+     * 도발 (v2.20.0 아이기스의 방패): ticks 동안 이 몬스터가 그 플레이어를 노림 — 다음 공격 대상이 그 사람이고, 그동안 다른 사람이 때려도 바뀌지 않음
+     * (싸우지 않던 몬스터도 싸움을 시작함). 걷는 쪽은 엔티티 (hurt_by_target) 가 정함 — 도발한 스킬의 피해가 마지막 피해면 같은 사람.
+     * 몬스터가 아니거나 · 쓰러지는 중이거나 · 그 사람을 노릴 수 없으면 (크리에이티브 · 다른 차원) false
+     */
+    public static boolean tauntMonster(LivingEntity e, ServerPlayer p, int ticks) {
+        Kind k = kindOf(e);
+        if (k == null || Kit.hasNoHealth(e) || targetState(p, e) != State.OK) return false;
+        RpgMonster m = (RpgMonster) e;
+        long now = Tasks.now();
+        Fight f = FIGHTS.get(m.getUUID());
+        if (f == null) {
+            f = new Fight(m, k, p, now);
+            FIGHTS.put(m.getUUID(), f);
+        }
+        f.player = p;
+        f.attackers.put(p.getUUID(), new Attacker(p, now));
+        f.taunt = new Taunt(p.getUUID(), now + ticks);
+        return true;
+    }
+
+    // ------------------------------------------------------------ 연출
+
+    private static Vec3 eyeish(Entity m, Kind k) {
+        return V.up(m.position(), k.height() * 0.62);
+    }
+
+    /** 몬스터 소리 (베드락 이름 — 대응표에 없는 몬스터 소리는 자바 소리로 바로) */
+    private static final Map<String, SoundEvent> SOUNDS = Map.of(
+            "mob.creaking.ambient", SoundEvents.CREAKING_AMBIENT,
+            "mob.creaking.attack", SoundEvents.CREAKING_ATTACK,
+            "mob.hoglin.angry", SoundEvents.HOGLIN_ANGRY,
+            "mob.hoglin.attack", SoundEvents.HOGLIN_ATTACK,
+            "mob.ravager.ambient", SoundEvents.RAVAGER_AMBIENT,
+            "mob.ravager.bite", SoundEvents.RAVAGER_ATTACK,
+            "mob.drowned.say_water", SoundEvents.DROWNED_AMBIENT_WATER,
+            "mob.stray.ambient", SoundEvents.STRAY_AMBIENT,
+            "mob.warden.attack", SoundEvents.WARDEN_ATTACK_IMPACT);
+
+    /** 그 자리에서 소리 (fx.js play — 몬스터 소리는 적대 몹 소리 갈래로) */
+    static void play(ServerLevel level, String bedrock, Vec3 at, double pitch, double volume) {
+        SoundEvent s = SOUNDS.get(bedrock);
+        if (s == null) s = SkillFx.sound(bedrock);
+        if (s != null) level.playSound(null, at.x, at.y, at.z, s, SoundSource.HOSTILE, (float) volume, (float) pitch);
+    }
+
+    /** 공격 동작 시작: 몬스터 앞 바닥에 사거리만큼 퍼지는 붉은 고리 (공격 예고) */
+    private static void telegraph(ServerLevel level, Entity m, Kind k, Vec3 toward) {
+        Vec3 d = V.flat(V.sub(toward, m.position()));
+        double reachAll = k.half() + k.reach();
+        Vec3 c = V.add(m.position(), d, reachAll * 0.55);
+        SkillFx.shock(level, c, RED, (reachAll * 0.55) / 2.1, k.windup() / 20.0);
+    }
+
+    /** 맞힘: 플레이어 가슴 앞 (몬스터 쪽) 에 몬스터 색 할퀴기 참격 + 불꽃 (1인칭에서도 화면 아래쪽에 보임) */
+    private static void impactFx(ServerLevel level, Entity m, Kind k, ServerPlayer p) {
+        Vec3 chest = V.up(p.position(), 1.2);
+        Vec3 toM = V.flat(V.sub(m.position(), p.position()));
+        Vec3 at = V.add(chest, toM, 0.7);
+        Vec3 v = V.unit(V.sub(chest, eyeish(m, k)));
+        boolean heavy = k.key().equals("troll");
+        SkillFx.arc(level, at, v, Opt.of("shape", heavy ? "heavy" : "thin", "flip", Kit.rand() < 0.5, "size", heavy ? 1.45 : 1.0, "life", 0.2, "speed", 1.0,
+                "spin", Kit.rand() * 60 - 30, "color", k.color()));
+        SkillFx.sparks(level, at, k.color(), 5, 3);
+    }
+
+    /** 헛손질: 몬스터 앞 허공을 가르는 흐린 참격 */
+    private static void missFx(ServerLevel level, Entity m, Kind k, Vec3 toward) {
+        Vec3 d = V.flat(V.sub(toward, m.position()));
+        Vec3 at = V.up(V.add(m.position(), d, k.half() + k.reach() * 0.6), k.height() * 0.5);
+        SkillFx.arc(level, at, d, Opt.of("shape", "thin", "flip", false, "size", 1.1, "life", 0.18, "speed", 1.0, "spin", -20.0, "color", k.color(),
+                "alpha", 0.5, "core", false));
+        play(level, "item.spear.attack_miss", at, 0.9, 0.5);
+    }
+
+    private static void attackAnim(RpgMonster m, Kind k) {
+        m.playAnimation("animation.rpg.monster." + k.key() + ".attack");
+    }
+
+    // ------------------------------------------------------------ 공격
+
+    /** 공격 동작 시작 (근접 · 달려들기): windup 틱 뒤 처음 노린 플레이어가 맞았는지 봄. 다음 공격은 시작부터 every 틱 뒤 */
+    private static void startAttack(Fight f, long now, String kind) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        ServerLevel level = (ServerLevel) m.level();
+        attackAnim(m, k);
+        play(level, k.windupSound(), m.position(), 0.9 + Kit.rand() * 0.2, 0.8);
+        telegraph(level, m, k, f.player.position());
+        f.nextAttack = now + k.every();
+        f.windup = new Windup(now, now + k.windup(), kind, f.player, V.flat(V.sub(f.player.position(), m.position())), null);
+    }
+
+    /** 달려들기: 플레이어 쪽으로 뛰어듦 (남은 거리 - reach 절반만큼) + 공격 동작 */
+    private static void lunge(Fight f, Gap g, long now) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        ServerLevel level = (ServerLevel) m.level();
+        Vec3 dir = V.flat(V.sub(f.player.position(), m.position()));
+        double travel = Math.max(0, g.gap() - k.reach() * 0.5);
+        double h = Math.max(0.3, Math.min(1.0, travel * LUNGE_PER_BLOCK));
+        double vy = g.dy() > 0.6 ? 0.5 : 0.32;
+        m.setDeltaMovement(dir.x * h, vy, dir.z * h); // clearVelocity + applyImpulse
+        m.needsSync = true;
+        SkillFx.burst(level, V.up(m.position(), 0.3), new double[] {0.55, 0.5, 0.45}, 0.9 + k.half(), 0.3);
+        SkillFx.beam(level, V.up(m.position(), k.height() * 0.45), V.up(V.add(m.position(), dir, Math.min(travel, 4)), k.height() * 0.45), k.color(),
+                Opt.of("half", 0.3, "thick", 0.1, "life", 0.25, "alpha", 0.6));
+        play(level, "mob.breeze.jump", m.position(), 0.8, 0.8);
+        f.nextLunge = now + k.lungeEvery();
+        startAttack(f, now, "lunge");
+    }
+
+    /**
+     * 원거리 반격: 높이 차이로 닿지도 달려들지도 못하는데 플레이어는 때릴 수 있는 곳 → 플레이어 발밑에 붉은 고리,
+     * windup + counterExtra 틱 뒤 몬스터 색 기운이 날아와 그 자리를 침 (달려들기와 같은 lungeEvery 마다)
+     */
+    private static void counter(Fight f, long now) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        ServerLevel level = (ServerLevel) m.level();
+        Vec3 spot = f.player.position();
+        int ticks = k.windup() + COUNTER_EXTRA;
+        attackAnim(m, k);
+        play(level, k.windupSound(), m.position(), 0.8, 1);
+        SkillFx.shock(level, spot, RED, COUNTER_RADIUS / 2.1, ticks / 20.0);
+        // 날아가는 기운: 마지막 0.2초 동안 몬스터 → 그 자리
+        SkillFx.beam(level, eyeish(m, k), V.up(spot, 0.9), k.color(),
+                Opt.of("half", 0.3, "thick", 0.12, "life", 0.15, "delay", Math.max(0, ticks / 20.0 - 0.2), "sweep", 0.2, "alpha", 0.85));
+        f.nextLunge = now + k.lungeEvery();
+        f.nextAttack = now + Math.max(k.every(), ticks + 4);
+        f.windup = new Windup(now, now + ticks, "counter", f.player, null, spot);
+    }
+
+    /**
+     * 몬스터 피해 한 번 (스크립트 공격 — 바닐라 근접은 BedrockMob 이 막음). 들어갔으면 true
+     * (무적 시간 등으로 안 들어가면 false: 맞힘 연출은 그대로, 맞으면 붙는 효과만 없음). amount = 바닐라 단위 (갑옷 · 방패 · 체력 스탯은 RpgHealth)
+     */
+    public static boolean monsterHit(RpgMonster m, Kind k, ServerPlayer target, double amount) {
+        if (!(amount > 0) || !(target.level() instanceof ServerLevel level) || target.isRemoved()) return false;
+        boolean ok = target.hurtServer(level, m.damageSources().mobAttack(m), (float) amount);
+        if (!ok) return false;
+        if (k.onHit() != null) {
+            net.minecraft.core.Holder<MobEffect> h = mmorpg.fabric.rune.RuneKit.effectOf(k.onHit().effect());
+            if (h != null && !target.isRemoved()) target.addEffect(new MobEffectInstance(h, (int) Math.round(k.onHit().seconds() * 20), k.onHit().amplifier(), false, true));
+        }
+        return true;
+    }
+
+    /** 트롤 내려치기 충격파: 맞은 곳 둘레 radius 칸의 다른 플레이어도 피해 × mult */
+    private static void shockwave(Fight f, ServerPlayer target, double dmg) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        ServerLevel level = (ServerLevel) m.level();
+        Vec3 at = target.position();
+        SkillFx.shock(level, at, k.color(), k.shock().radius() / 2.1, 0.45);
+        SkillFx.burst(level, V.up(at, 0.2), new double[] {0.5, 0.42, 0.32}, 1.6, 0.35);
+        double r = k.shock().radius() + 0.5;
+        for (ServerPlayer p : new ArrayList<>(level.players())) {
+            if (p.position().distanceTo(at) > r) continue;
+            if (targetState(p, m) != State.OK) continue;
+            SkillFx.shake(p, 0.25, 0.3);
+            if (p == target) continue;
+            if (Math.hypot(p.getX() - at.x, p.getZ() - at.z) > k.shock().radius()) continue;
+            monsterHit(m, k, p, dmg * k.shock().mult());
+        }
+    }
+
+    /** 맞힘: 피해 (나약함만큼 줄어듦) + 연출 + 트롤 충격파 */
+    private static void strike(Fight f, ServerPlayer target) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        ServerLevel level = (ServerLevel) m.level();
+        double dmg = k.attack() * weakMult(m);
+        f.hits++;
+        monsterHit(m, k, target, dmg);
+        impactFx(level, m, k, target);
+        play(level, k.hitSound(), target.position(), 0.9 + Kit.rand() * 0.2, 1);
+        if (k.shock() != null) shockwave(f, target, dmg);
+    }
+
+    /** 공격 동작 끝: 처음 노린 플레이어가 아직 사거리 · 노린 쪽 안이고 보이면 맞음, 아니면 빗나감. 대상이 사라졌으면 조용히 끝 */
+    private static boolean resolve(Fight f, long now) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        Windup w = f.windup;
+        f.windup = null;
+        f.nextAttack = Math.max(f.nextAttack, now + 4);
+        if (w == null) return false;
+        ServerPlayer target = w.target();
+        if (targetState(target, m) != State.OK) return false;
+        ServerLevel level = (ServerLevel) m.level();
+        f.lastKind = w.kind();
+        f.lastResolved = now;
+        if (w.kind().equals("counter")) {
+            Vec3 at = w.spot();
+            SkillFx.shock(level, at, k.color(), COUNTER_RADIUS / 2.1, 0.35);
+            SkillFx.burst(level, V.up(at, 0.3), k.color(), 1.2, 0.3);
+            if (Math.hypot(target.getX() - at.x, target.getZ() - at.z) <= COUNTER_RADIUS && Math.abs(target.getY() - at.y) <= 1.5 && canSee(m, k, target)) {
+                strike(f, target);
+                return true;
+            }
+            f.misses++;
+            play(level, "item.spear.attack_miss", at, 0.9, 0.5);
+            return false;
+        }
+        Gap g = gapTo(m, k, target);
+        if (g.gap() <= k.reach() + TOLERANCE && heightOk(k, g.dy(), 0.5) && inArc(m, k, w.aim(), target) && canSee(m, k, target)) {
+            strike(f, target);
+            return true;
+        }
+        f.misses++;
+        missFx(level, m, k, target.position());
+        return false;
+    }
+
+    /** 이번에 쫓을 플레이어 (상태): 지금 대상 → 최근에 때린 순서. 공격할 수 있는 첫 사람, 없으면 잠깐 멈춘 사람. 모두 없어졌거나 leash 밖이면 null */
+    private record Pick(ServerPlayer p, State st) {}
+
+    private static Pick pickTarget(Fight f) {
+        List<ServerPlayer> list = new ArrayList<>();
+        list.add(f.player);
+        List<Attacker> recent = new ArrayList<>(f.attackers.values());
+        recent.sort(Comparator.comparingLong(Attacker::t).reversed());
+        for (Attacker a : recent) list.add(a.p());
+        ServerPlayer paused = null;
+        for (ServerPlayer p : list) {
+            State st = targetState(p, f.m);
+            if (st == State.GONE) {
+                if (p != null) f.attackers.remove(p.getUUID());
+                continue;
+            }
+            if (gapTo(f.m, f.k, p).dist() > LEASH) continue;
+            if (st == State.OK) return new Pick(p, State.OK);
+            if (paused == null) paused = p;
+        }
+        return paused != null ? new Pick(paused, State.PAUSE) : null;
+    }
+
+    /** 싸움 끝: 기록을 지우고 엔티티가 노리던 이 싸움의 사람을 놓아 줌 (집으로 돌아가게) */
+    private static void endFight(Fight f) {
+        FIGHTS.remove(f.m.getUUID(), f);
+        LivingEntity t = f.m.getTarget();
+        if (t instanceof ServerPlayer p && (p == f.player || f.attackers.containsKey(p.getUUID()) || targetState(p, f.m) != State.OK)) f.m.setTarget(null);
+    }
+
+    /** 2틱마다: 싸우는 몬스터마다 대상 고르기 · 멈춤 · 공격 동작 · 판정 */
+    static void fightTick() {
+        long now = Tasks.now();
+        for (Fight f : new ArrayList<>(FIGHTS.values())) {
+            if (FIGHTS.get(f.m.getUUID()) != f) continue; // 이번 틱에 끝난 싸움 (플레이어가 쓰러짐 등)
+            try {
+                fightStep(f, now);
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] monster fight", e);
+                FIGHTS.remove(f.m.getUUID(), f);
+            }
+        }
+    }
+
+    private static void fightStep(Fight f, long now) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        if (m.isRemoved() || Kit.hasNoHealth(m)) {
+            FIGHTS.remove(m.getUUID(), f);
+            return;
+        }
+        Pick pick = pickTarget(f);
+        if (pick == null) {
+            endFight(f); // 때린 사람이 모두 없어지거나 leash 밖
+            return;
+        }
+        f.player = pick.p();
+        Gap g = gapTo(m, k, f.player);
+        if (pick.st() == State.PAUSE) {
+            // 크리에이티브 · 관전 · 쓰러지는 중: 하던 동작은 끊고 기다림 (토템으로 살아나면 이어서), 오래가면 싸움 끝
+            f.windup = null;
+            if (f.paused == null) f.paused = now;
+            if (now - f.paused > PAUSE_LIMIT) endFight(f);
+            return;
+        }
+        f.paused = null;
+        if (stunned(m)) {
+            f.windup = null; // 기절 · 빙결 · 석화: 하던 동작도 끊김
+            return;
+        }
+        if (f.windup != null) {
+            if (now >= f.windup.at()) resolve(f, now);
+            return;
+        }
+        if (now < f.nextAttack) return;
+        ServerPlayer p = f.player;
+        if (g.gap() <= k.reach() && heightOk(k, g.dy(), 0)) {
+            if (canSee(m, k, p)) startAttack(f, now, "melee");
+            return;
+        }
+        if (now < f.nextLunge || rooted(m) || hidden(p)) return;
+        if (g.gap() <= LUNGE_RANGE && Math.abs(g.dy()) <= LUNGE_HEIGHT) {
+            if (canSee(m, k, p)) lunge(f, g, now);
+        } else {
+            Attacker a = f.attackers.get(p.getUUID());
+            if (a != null && now - a.t() <= COUNTER_WINDOW && touchReach(m, k, p) && canSee(m, k, p)) counter(f, now); // 닿지 못하는 곳에서 방금 때렸을 때만
+        }
+    }
+
+    /** 1초마다 회복: 싸움이 끝나고 regenDelay 틱 동안 맞지 않으면 10%, 트롤은 싸우는 중에도 regen.after 틱 동안 안 맞으면 */
+    static void regenTick() {
+        long now = Tasks.now();
+        for (Map.Entry<UUID, Hurt> en : new ArrayList<>(HURT.entrySet())) {
+            Hurt s = en.getValue();
+            RpgMonster m = s.m();
+            Kind k = s.k();
+            if (m.isRemoved()) {
+                HURT.remove(en.getKey(), s);
+                continue;
+            }
+            boolean fighting = FIGHTS.containsKey(en.getKey());
+            double rate = 0;
+            if (fighting) {
+                if (k.regen() != null && now - s.t() >= k.regen().after()) rate = k.regen().perSec();
+            } else if (now - s.t() >= REGEN_DELAY) rate = REGEN_PER_SEC;
+            else if (k.regen() != null && now - s.t() >= k.regen().after()) rate = k.regen().perSec();
+            if (rate <= 0) continue;
+            float max = m.getMaxHealth();
+            float cur = m.getHealth();
+            if (cur <= 0) continue; // 죽는 중
+            double next = Math.min(max, cur + max * rate);
+            if (next > cur + 1e-9) {
+                m.setHealth((float) next);
+                if (k.regen() != null && rate == k.regen().perSec() && m.level() instanceof ServerLevel level) {
+                    SkillFx.sparks(level, V.up(m.position(), k.height() * 0.5), new double[] {0.45, 1.0, 0.45}, 3, 1.5);
+                }
+            }
+            if (next >= max - 1e-6 && !fighting) HURT.remove(en.getKey(), s);
+        }
+    }
+
+    // ------------------------------------------------------------ 이벤트
+
+    /** 몬스터가 맞음 (AFTER_DAMAGE): 회복 시계 · 싸움 시작 / 다음 대상 (마지막으로 때린 사람 — 도발 중이면 도발한 사람 그대로) */
+    static void onHurt(RpgMonster m, DamageSource source) {
+        Kind k = kindOf(m);
+        if (k == null || Kit.hasNoHealth(m)) return; // 죽는 중인 몸은 싸움을 시작하지 않음
+        long now = Tasks.now();
+        HURT.put(m.getUUID(), new Hurt(m, k, now));
+        if (!(source.getEntity() instanceof ServerPlayer p) || targetState(p, m) != State.OK) return;
+        Fight f = FIGHTS.get(m.getUUID());
+        if (f != null) {
+            // 다음 공격은 마지막으로 때린 사람에게 (엔티티 hurt_by_target 과 같게). 하던 동작은 처음 노린 사람에게. 도발 중에는 도발한 사람 그대로
+            if (f.taunt == null || now >= f.taunt.until() || f.taunt.id().equals(p.getUUID())) f.player = p;
+            f.attackers.put(p.getUUID(), new Attacker(p, now));
+            return;
+        }
+        // 처음 맞음: 사거리 안이면 바로 반격, 멀면 잠깐 뒤 달려듦
+        FIGHTS.put(m.getUUID(), new Fight(m, k, p, now));
+    }
+
+    /** 죽음 (AFTER_DEATH): 플레이어면 그 사람과의 싸움 끝, 몬스터면 연출 + 경험치 · 전리품 (loot.js lootOnDeath) */
+    static void onDeath(LivingEntity e, DamageSource source) {
+        if (e instanceof ServerPlayer sp) {
+            forgetMonsterFights(sp.getUUID()); // 죽은 플레이어와의 싸움 끝 (되살아나도 다시 때려야 싸움)
+            return;
+        }
+        Kind k = kindOf(e);
+        if (k == null || !(e.level() instanceof ServerLevel level)) return;
+        FIGHTS.remove(e.getUUID());
+        HURT.remove(e.getUUID());
+        Vec3 at = V.up(e.position(), k.height() * 0.5);
+        SkillFx.burst(level, at, k.color(), 1.2 + k.half(), 0.35);
+        SkillFx.sparks(level, at, k.color(), 8, 4);
+        // 잡은 플레이어에게 경험치 (최고 레벨이 xpUntil 이상이면 0) + 전리품. 불에 타 죽으면 10초 안에 마지막으로 때린 사람
+        try {
+            Loot.lootOnDeath(e, k.key(), Loot.killCredit(e, source), k.height());
+        } catch (RuntimeException err) {
+            Mmorpg.LOG.warn("[mmorpg] monster loot", err);
+        }
+    }
+
+    /** 플레이어가 나가거나 죽으면 그 플레이어와의 싸움을 끝냄 (같은 몬스터를 때린 다른 플레이어가 있으면 그 사람과 계속) */
+    public static void forgetMonsterFights(UUID playerId) {
+        for (Fight f : new ArrayList<>(FIGHTS.values())) {
+            f.attackers.remove(playerId);
+            if (f.windup != null && f.windup.target().getUUID().equals(playerId)) f.windup = null;
+            if (f.taunt != null && f.taunt.id().equals(playerId)) f.taunt = null; // 죽은 사람의 도발은 끝
+            if (f.player != null && !f.player.getUUID().equals(playerId) && !f.player.isRemoved()) continue;
+            Attacker next = null;
+            for (Attacker a : f.attackers.values()) {
+                if (a.p().isRemoved() || a.p().getUUID().equals(playerId)) continue;
+                if (next == null || a.t() > next.t()) next = a;
+            }
+            if (next != null) f.player = next.p();
+            else endFight(f);
+        }
+    }
+
+    // ------------------------------------------------------------ 받는 피해 · 전리품 (RpgMonster 가 부름)
+
+    /** 몬스터가 받는 피해 (플레이어가 때린 것): 스켈야스크림슬리 껍질 -20% (combat.js 몬스터 훅 incoming — 평타 · 활 · 완드 · 스킬 · 룬 모두) */
+    static float adjustIncoming(RpgMonster m, DamageSource source, float amount) {
+        Kind k = kindOf(m);
+        if (k == null || !(k.shell() > 0) || !(source.getEntity() instanceof Player)) return amount;
+        return (float) (amount * (1 - k.shell()));
+    }
+
+    /** 에메랄드 (행동 팩 전리품 표: random_chance → set_count 최소 ~ 최대 — 확률은 Loot.rand) */
+    static void dropEmerald(RpgMonster m, ServerLevel level) {
+        Kind k = kindOf(m);
+        if (k == null || k.emerald() == null || Loot.rand.getAsDouble() >= k.emerald()[0]) return;
+        int min = (int) k.emerald()[1];
+        int max = (int) k.emerald()[2];
+        int n = Math.max(min, Math.min(max, min + (int) Math.floor(Loot.rand.getAsDouble() * (max - min + 1))));
+        if (n > 0) m.spawnAtLocation(level, new ItemStack(Items.EMERALD, n));
+    }
+
+    // ------------------------------------------------------------ 이름표 (monsterLabel · refreshTag · hp.js 이름표 새로 고침)
+
+    /** 이름표: "Lv.8 굴론" (노란 레벨 + 흰 이름), 다쳤으면 아래 줄에 체력 막대 20칸 (절반 넘게 초록, 1/4 넘게 노랑, 그 아래 빨강) */
+    public static String monsterLabel(Kind k, double hp, double max) {
+        String head = "§eLv." + k.level() + " §f" + k.name();
+        if (!(max > 0) || hp >= max - 1e-6) return head;
+        int n = HP_BAR;
+        double r = Math.max(0, hp) / max;
+        int filled = (int) Math.min(n, Math.max(hp > 0 ? 1 : 0, Math.round(r * n)));
+        String col = r > 0.5 ? "§a" : r > 0.25 ? "§e" : "§c";
+        return head + "\n" + col + "|".repeat(filled) + "§8" + "|".repeat(n - filled);
+    }
+
+    /** 지금 머리 위 글자 (베드락 서식 — 없으면 null) */
+    public static String labelOf(Entity e) {
+        return e instanceof RpgMonster m ? m.labelText : null;
+    }
+
+    /** 머리 위 이름표 엔티티 (없으면 null — 시험용) */
+    public static Display.TextDisplay labelEntity(Entity e) {
+        return e instanceof RpgMonster m && m.label != null && !m.label.isRemoved() ? m.label : null;
+    }
+
+    /** 이름표를 바꿈: 첫 줄은 이름 (숨김 — 사망 메시지에 첫 줄만), 전체는 머리 위 글자 표시 엔티티 */
+    static void setLabel(RpgMonster m, String text) {
+        if (text == null || text.isEmpty()) {
+            m.labelText = null;
+            m.setCustomName(null);
+            dropLabel(m);
+            return;
+        }
+        int nl = text.indexOf('\n');
+        String first = nl < 0 ? text : text.substring(0, nl);
+        String prevFirst = m.labelText == null ? null : m.labelText.split("\n", 2)[0];
+        if (!first.equals(prevFirst) || m.getCustomName() == null) m.setCustomName(Component.literal(BedrockText.toJava(first)));
+        if (m.isCustomNameVisible()) m.setCustomNameVisible(false);
+        boolean same = text.equals(m.labelText);
+        m.labelText = text;
+        if (!(m.level() instanceof ServerLevel level) || m.isRemoved()) return;
+        Display.TextDisplay before = m.label;
+        Display.TextDisplay td = ensureLabel(m, level);
+        if (td != null && (!same || td != before)) td.setText(Component.literal(BedrockText.toJava(text)));
+    }
+
+    /** 이름표 엔티티: 타고 있는 것을 이어 쓰고 (다시 불러온 몬스터 — 남는 것은 치움), 없으면 만들어 태움 */
+    private static Display.TextDisplay ensureLabel(RpgMonster m, ServerLevel level) {
+        Display.TextDisplay td = m.label;
+        if (td != null && (td.isRemoved() || td.level() != level)) td = null;
+        for (Entity p : new ArrayList<>(m.getPassengers())) {
+            if (!(p instanceof Display.TextDisplay t) || !t.entityTags().contains(LABEL_TAG)) continue;
+            if (td == null) td = t;
+            else if (t != td) t.discard();
+        }
+        if (td == null) td = spawnLabel(level, m);
+        if (td == null) return null;
+        if (td.getVehicle() != m && !td.startRiding(m)) td.setPos(m.getX(), m.getY() + m.getBbHeight() + RpgMonster.LABEL_GAP, m.getZ());
+        m.label = td;
+        return td;
+    }
+
+    /** 글자 표시 엔티티 (여러 줄 — 늘 카메라를 보고, 밤에도 밝게, 이름표처럼 반투명 검은 바탕) — 몬스터에 태워 같이 저장 · 옮겨짐 */
+    private static Display.TextDisplay spawnLabel(ServerLevel level, RpgMonster m) {
+        Display.TextDisplay td = EntityTypes.TEXT_DISPLAY.create(level, EntitySpawnReason.TRIGGERED);
+        if (td == null) return null;
+        td.setText(Component.literal(BedrockText.toJava(m.labelText == null ? "" : m.labelText)));
+        td.setBillboardConstraints(Display.BillboardConstraints.CENTER);
+        td.setFlags(Display.TextDisplay.FLAG_SHADOW);
+        td.setBrightnessOverride(Brightness.FULL_BRIGHT);
+        td.addTag(LABEL_TAG);
+        td.snapTo(m.getX(), m.getY() + m.getBbHeight() + RpgMonster.LABEL_GAP, m.getZ(), 0F, 0F);
+        if (!level.addFreshEntity(td)) return null;
+        td.startRiding(m);
+        return td;
+    }
+
+    /** 이름표를 치움 (몬스터를 치우거나 죽을 때) */
+    static void dropLabel(RpgMonster m) {
+        if (m.label != null && !m.label.isRemoved()) m.label.discard();
+        m.label = null;
+        for (Entity p : new ArrayList<>(m.getPassengers())) if (p instanceof Display.TextDisplay t && t.entityTags().contains(LABEL_TAG)) t.discard();
+    }
+
+    /** 몬스터의 서버 틱 (RpgMonster.tick): 처음 틱에 무리 태그 · 회복 시작, 체력이 바뀌었거나 이름표가 없으면 이름표를 다시 맞춤 */
+    static void serverTick(RpgMonster m) {
+        Kind k = kindOf(m);
+        if (k == null || m.isRemoved()) return;
+        if (!m.tracked) {
+            m.tracked = true;
+            for (String f : m.def.families()) m.addTag(f);
+            track(m, k);
+        }
+        float hp = m.getHealth();
+        float max = m.getMaxHealth();
+        Display.TextDisplay td = m.label;
+        boolean labelOk = td != null && !td.isRemoved() && td.getVehicle() == m;
+        if (hp != m.labelHp || max != m.labelMax || !labelOk || m.labelText == null) {
+            m.labelHp = hp;
+            m.labelMax = max;
+            setLabel(m, monsterLabel(k, hp, max));
+        }
+    }
+
+    /** 다친 채로 (다시) 불러온 몬스터는 바로 회복을 시작 */
+    private static void track(RpgMonster m, Kind k) {
+        float hp = m.getHealth();
+        if (!(hp > 0) || hp >= m.getMaxHealth() - 1e-6) return;
+        Hurt h = HURT.get(m.getUUID());
+        // 같은 몬스터를 다시 불러오면 엔티티가 새로 만들어짐 (UUID 는 같음) — 예전 몸의 기록은 마지막으로 맞은 틱만 이어 받음
+        if (h == null || h.m() != m) HURT.put(m.getUUID(), new Hurt(m, k, h != null ? h.t() : Tasks.now() - REGEN_DELAY));
+    }
+
+    /** 불러온 엔티티 (ENTITY_LOAD): 몬스터에 타지 않은 이름표 (몬스터가 사라진 뒤 남은 것) 는 치움 */
+    private static void onLoad(Entity e, ServerLevel level) {
+        if (!(e instanceof Display.TextDisplay td) || !td.entityTags().contains(LABEL_TAG)) return;
+        Tasks.later(2, () -> {
+            if (!td.isRemoved() && !(td.getVehicle() instanceof RpgMonster)) td.discard();
+        });
+    }
+
+    // ------------------------------------------------------------ 소환 · 치우기 (/mob)
+
+    /** 그 자리에 몬스터 하나 (yaw 쪽을 보게). 못 세웠으면 null */
+    public static RpgMonster spawnAt(ServerLevel level, String key, Vec3 at, float yaw) {
+        EntityType<? extends BedrockMob> type = RpgEntities.type(Mobs.monsterId(key));
+        if (type == null) return null;
+        BedrockMob e = type.create(level, EntitySpawnReason.COMMAND);
+        if (!(e instanceof RpgMonster m)) return null;
+        m.snapTo(at.x, at.y, at.z, yaw, 0F);
+        m.setYHeadRot(yaw);
+        m.setYBodyRot(yaw);
+        if (!level.addFreshEntity(m)) return null;
+        Kind k = kindOf(m);
+        if (k != null) m.setNameTag(monsterLabel(k, 1, 1));
+        return m;
+    }
+
+    /** 눈앞 (4칸) 에 몬스터 n 마리 (시험 · 배치용, 운영자 — spawnMonsters) */
+    public static List<RpgMonster> spawnMonsters(ServerPlayer sp, String key, int n) {
+        Kind k = kind(key);
+        List<RpgMonster> out = new ArrayList<>();
+        if (k == null) return out;
+        ServerLevel level = sp.level();
+        Vec3 f = V.flat(sp.getViewVector(1F));
+        Vec3 side = new Vec3(-f.z, 0, f.x);
+        int count = Math.max(1, Math.min(10, n));
+        for (int i = 0; i < count; i++) {
+            double off = (i - (count - 1) / 2.0) * 1.8;
+            Vec3 at = V.add(V.add(sp.position(), f, 4 + k.half()), side, off);
+            float yaw = Kit.lookRotation(at, new Vec3(sp.getX(), at.y, sp.getZ()))[0];
+            RpgMonster m = spawnAt(level, k.key(), at, yaw);
+            if (m != null) out.add(m);
+        }
+        return out;
+    }
+
+    /** 사냥터 몬스터인지 (태그 rpg_zone_&lt;번호&gt;) */
+    public static boolean inZone(Entity e) {
+        for (String t : e.entityTags()) if (t.startsWith(ZONE_TAG)) return true;
+        return false;
+    }
+
+    /** 주변 radius 칸의 몬스터 치우기 (사냥터 몬스터는 남김 — 치워도 다시 채워짐 → /mobzone clear). 치운 수 */
+    public static int clearMonsters(ServerPlayer sp, double radius) {
+        Vec3 c = sp.position();
+        int n = 0;
+        for (RpgMonster m : sp.level().getEntitiesOfClass(RpgMonster.class, new AABB(c, c).inflate(radius), x -> x.position().distanceTo(c) <= radius)) {
+            if (inZone(m)) continue;
+            FIGHTS.remove(m.getUUID());
+            HURT.remove(m.getUUID());
+            m.discard();
+            n++;
+        }
+        return n;
+    }
+
+    // ------------------------------------------------------------ 등록
+
+    /** Mmorpg.onInitialize: 피해 · 죽음 · 불러옴 이벤트, 2틱마다 싸움 · 1초마다 회복, 도발 · 피해 숫자 자리 훅, 사냥터 · 명령어 */
+    public static void init() {
+        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, base, taken, blocked) -> {
+            if (!(entity instanceof RpgMonster m)) return;
+            try {
+                onHurt(m, source);
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] monster hurt", e);
+            }
+        });
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+            try {
+                onDeath(entity, source);
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] monster die", e);
+            }
+        });
+        ServerEntityEvents.ENTITY_LOAD.register(Monsters::onLoad);
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forgetMonsterFights(handler.player.getUUID()));
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            long now = Tasks.now();
+            if (now % 2 == 0) fightTick();
+            if (now % 20 == 0) {
+                try {
+                    regenTick();
+                } catch (RuntimeException e) {
+                    Mmorpg.LOG.warn("[mmorpg] monster regen", e);
+                }
+            }
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            FIGHTS.clear();
+            HURT.clear();
+        });
+        // v2.20.0 아이기스의 방패 도발
+        Aegis.addTauntHook((sp, e, ticks) -> tauntMonster(e, sp, ticks));
+        // 피해 숫자: 몸통에서 떠올라 이름표 아래에서 끝남
+        Function<LivingEntity, Vec3> prev = DamageNumbers.anchor;
+        DamageNumbers.anchor = e -> {
+            Kind k = kindOf(e);
+            return k != null ? new Vec3(e.getX(), e.getY() + damageTextHeight(k), e.getZ()) : prev.apply(e);
+        };
+        HuntZones.init();
+        MonsterCommands.init();
+    }
+
+    /** 시험용: 싸움 · 회복 기록을 지움 */
+    public static void clearState() {
+        FIGHTS.clear();
+        HURT.clear();
+    }
+
+    /** 다친 몬스터로 기록되어 있는지 (회복 대기 — 시험용) */
+    public static boolean isHurt(Entity m) {
+        return m != null && HURT.containsKey(m.getUUID());
+    }
+
+    /** 몬스터 키들 (명령어 제안 등 — 몬스터 순서) */
+    public static List<String> keys() {
+        List<String> out = new ArrayList<>();
+        for (Kind k : kinds().values()) out.add(k.key());
+        return out;
+    }
+}
