@@ -395,7 +395,8 @@ public final class RpgScorpionsGallery implements FabricClientGameTest {
             for (int id : ids) {
                 Entity e = mc.level == null ? null : mc.level.getEntity(id);
                 if (e == null) return "no entity " + id;
-                if (!(mc.getEntityRenderDispatcher().getRenderer(e) instanceof BedrockRenderer)) return "renderer " + mc.getEntityRenderDispatcher().getRenderer(e);
+                Object r0 = mc.getEntityRenderDispatcher().getRenderer(e);
+                if (!(r0 instanceof BedrockRenderer)) return "renderer " + r0;
             }
             return "ok";
         });
