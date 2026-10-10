@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import mmorpg.core.Rules;
+import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.boss.AltarBlocks;
 import mmorpg.fabric.boss.Arena;
@@ -26,6 +27,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -222,6 +224,16 @@ public final class RpgBossTests {
             // 근접 보너스 ×1.1
             h.assertTrue(Bosses.isClose(b, enc.def, p3, 3) && hit(p3, b, 100F), "close hit lands");
             h.assertTrue(Math.abs(b.getHealth() - (hp0 - 460)) < 1e-2, "close bonus x1.1 " + b.getHealth());
+            // 피해 숫자 자리: 가슴 높이, 몸 (반폭 1.3칸) 안이 아니라 때린 사람 쪽 겉면 (자바 글자 엔티티는 몸에 가려짐) — p3 (동쪽 2.4칸) 쪽 1.6칸
+            Vec3 anchor = Bosses.textAnchor(b, p3);
+            h.assertTrue(anchor != null && Math.abs(anchor.x - b.getX() - 1.6) < 1e-6 && Math.abs(anchor.z - b.getZ()) < 1e-6, "number anchor toward p3 " + anchor);
+            h.assertTrue(Math.abs(anchor.y - b.getY() - Math.min(2.6 * 2.6 * 0.45, 3.2)) < 1e-6, "number anchor at chest height " + (anchor.y - b.getY()));
+            Vec3 far1 = Bosses.textAnchor(b, p1);
+            h.assertTrue(far1 != null && Math.abs(far1.z - b.getZ() - 1.8) < 1e-6, "number anchor toward p1 (body + 0.5) " + far1);
+            // 떠 있는 숫자 (다른 시험이 숫자 상한을 채웠으면 없을 수 있음) 는 모두 몸 밖
+            for (Display.TextDisplay num : level.getEntitiesOfClass(Display.TextDisplay.class, b.getBoundingBox().inflate(4), d -> d.entityTags().contains(DamageNumbers.TAG))) {
+                h.assertTrue(BossKit.hdist(num.position(), b.position()) >= 1.0, "number outside the body " + BossKit.hdist(num.position(), b.position()));
+            }
             // 필드 밖 · 환경 피해 → 막힘
             h.assertFalse(hit(out, b, 100F), "outside the field is blocked");
             h.assertFalse(b.hurtServer(level, level.damageSources().generic(), 100F), "environment damage blocked");

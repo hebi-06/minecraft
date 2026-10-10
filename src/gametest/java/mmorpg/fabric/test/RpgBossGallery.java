@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Tasks;
@@ -24,7 +25,6 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
-import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -35,6 +35,9 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -51,6 +54,8 @@ import org.slf4j.LoggerFactory;
  * 피해 숫자 · 근접 보너스 »), 까마귀 떼 (보라 선 → 까마귀), 호박 폭탄 (주황 원 → 폭발), 짚단 감옥 (금빛 원 → 감옥 · 속박 → 안에서 클릭으로 부숨),
  * 분신 (넷 · 진짜 어깨의 까마귀 → 진짜를 때려 비틀거림), 수확의 낫 (붉은 테 · 토템 금빛 원 · 카운트다운 → 낫 한 바퀴), 원거리 견제 (발밑 원 · 불붙은 짚단 → 불),
  * 쓰러뜨림 (처치 글자 · 보상 채팅 · 가방). 패턴은 모듈 함수를 바로 부르고 그 사이 보스가 스스로 고르지 않게 멈춤 (BossScarecrow.M 의 다음 틱을 멀리).
+ * 바닥 예고는 뒤 위 3인칭 (CAMERA_DISTANCE 를 늘려 내려다봄 — 카메라 줄이 토템 · 제단에 닿지 않는 자리), 무작위 자리 · 방향은 BossKit.rand 를 정해서
+ * (까마귀 선 = 화면을 가로지름, 폭탄 = 화면 안 다섯 곳). 사진은 창 크기 그대로 (화면 글자 · 창이 잘리지 않게).
  * 사진 이름 bs_* → ci-logs 의 shots/. 확인 항목은 [boss-gallery] OK 줄, 실패가 있으면 끝에 AssertionError.
  */
 @SuppressWarnings("UnstableApiUsage")
@@ -150,8 +155,47 @@ public final class RpgBossGallery implements FabricClientGameTest {
         ctx.runOnClient(mc -> mc.options.setCameraType(type));
     }
 
+    /** 3인칭 카메라 거리 (속성 CAMERA_DISTANCE, 기본 4 — 서버 · 클라이언트 둘 다) */
+    private static void camDist(ClientGameTestContext ctx, TestServerContext server, double d) {
+        server.runOnServer(s -> {
+            AttributeInstance a = player(s).getAttribute(Attributes.CAMERA_DISTANCE);
+            if (a != null) a.setBaseValue(d);
+        });
+        ctx.runOnClient(mc -> {
+            AttributeInstance a = mc.player == null ? null : mc.player.getAttribute(Attributes.CAMERA_DISTANCE);
+            if (a != null) a.setBaseValue(d);
+        });
+    }
+
+    /**
+     * 뒤 3인칭 사진 자리: 플레이어를 (px, pz) 에 세우고 (tx, ty, tz) 를 보게 — 카메라는 시선 뒤로 dist 칸 (내려다보면 그만큼 높이).
+     * 카메라가 블록에 닿아 당겨졌으면 로그 (플레이어가 화면을 가림)
+     */
+    private static void chase(ClientGameTestContext ctx, TestServerContext server, double px, double pz, double tx, double ty, double tz, double dist) {
+        camera(ctx, CameraType.THIRD_PERSON_BACK);
+        camDist(ctx, server, dist);
+        look(ctx, server, px, ALTAR_Y, pz, tx, ty, tz);
+        ctx.waitTick();
+        double got = ctx.computeOnClient(mc -> mc.player == null ? -1.0 : mc.gameRenderer.mainCamera().position().distanceTo(mc.player.getEyePosition()));
+        if (got < dist - 0.5) LOG.warn("[boss-gallery] camera pulled in: {} of {} blocks", String.format(Locale.ROOT, "%.2f", got), dist);
+    }
+
+    /** 패턴의 무작위 (BossKit.rand) 를 정한 수열로 돌려 run 을 부르고 되돌림 (서버 스레드에서) */
+    private static void withRand(double[] seq, Runnable run) {
+        DoubleSupplier prev = BossKit.rand;
+        int[] i = {0};
+        BossKit.rand = () -> seq[i[0]++ % seq.length];
+        try {
+            run.run();
+        } finally {
+            BossKit.rand = prev;
+        }
+    }
+
+    /** 사진 — 창 크기 그대로 (큰 글자 · 창 · 가방이 잘리지 않게), 알림 토스트는 치움 */
     private static void shot(ClientGameTestContext ctx, String name) {
-        ctx.takeScreenshot(TestScreenshotOptions.of(name).withSize(960, 540));
+        ctx.runOnClient(mc -> mc.gui.toastManager().clear());
+        ctx.takeScreenshot(name);
     }
 
     private static void waitChunks(ClientGameTestContext ctx, TestSingleplayerContext world, int timeout) {
@@ -160,14 +204,6 @@ public final class RpgBossGallery implements FabricClientGameTest {
         } catch (AssertionError e) {
             LOG.warn("[boss-gallery] chunks not all rendered in {} ticks — going on", timeout);
         }
-    }
-
-    /** 보스 자리 (서버) */
-    private Vec3 bossAt(TestServerContext server) {
-        return server.computeOnServer(s -> {
-            Bosses.Enc e = enc();
-            return e != null && e.boss != null ? e.boss.position() : new Vec3(cx, ALTAR_Y + 1, cz);
-        });
     }
 
     /** 보스를 가운데 (제단 위) 로 돌려 세우고 멈춤 (패턴이 풀어 둔 것을 다시) — 바라볼 곳 face */
@@ -223,10 +259,9 @@ public final class RpgBossGallery implements FabricClientGameTest {
         ctx.getInput().pressKey(options -> options.keyAttack);
     }
 
-    /** 보스 몸 가운데 (가슴) 를 보는 눈높이 자리: 보스에게서 (dx, dz) */
-    private void faceBoss(ClientGameTestContext ctx, TestServerContext server, double dx, double dz, double chest) {
-        Vec3 b = bossAt(server);
-        look(ctx, server, b.x + dx, ALTAR_Y, b.z + dz, b.x, b.y + chest, b.z);
+    /** 서버 틱이 at 이 될 때까지 (패턴의 판정 순간을 찍으려고) */
+    private static void waitUntil(ClientGameTestContext ctx, TestServerContext server, long at) {
+        for (int i = 0; i < 400 && server.computeOnServer(s -> Tasks.now()) < at; i++) ctx.waitTick();
     }
 
     // ------------------------------------------------------------ 신전 짓기
@@ -325,6 +360,8 @@ public final class RpgBossGallery implements FabricClientGameTest {
         look(ctx, server, cx, ALTAR_Y, cz + 10, cx, ALTAR_Y + 1.2, cz);
         ctx.waitTicks(22);
         shot(ctx, "bs_summon");
+        // 등장: 키 약 7칸 — 조금 물러나 가슴을 봄 (몸 전체 + 보스 막대 + 큰 글자)
+        look(ctx, server, cx, ALTAR_Y, cz + 12, cx, ALTAR_Y + 4.0, cz);
         for (int t = 0; t < 40 && !server.computeOnServer(s -> enc() != null && "fight".equals(enc().state)); t++) ctx.waitTick();
         ctx.waitTicks(8);
         String r = server.computeOnServer(s -> {
@@ -346,11 +383,11 @@ public final class RpgBossGallery implements FabricClientGameTest {
         return true;
     }
 
-    /** 평타: 붉은 부채꼴 예고 (0.8초) → 낫 베기 */
+    /** 평타: 붉은 부채꼴 예고 (0.8초) → 낫 베기. 뒤 위에서 내려다봄 (보스와 플레이어 사이 땅의 부채꼴 — 반지름 6칸 · 120°) */
     private void melee(ClientGameTestContext ctx, TestServerContext server) {
+        server.runCommand("title @a clear");
         settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 5));
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
-        faceBoss(ctx, server, 0, 5, 2.5);
+        chase(ctx, server, cx, cz + 5, cx, ALTAR_Y, cz + 1.5, 9);
         boolean started = server.computeOnServer(s -> {
             Bosses.Enc e = enc();
             e.meleeAt = 0;
@@ -366,11 +403,13 @@ public final class RpgBossGallery implements FabricClientGameTest {
         ctx.waitTicks(10);
     }
 
-    /** 플레이어 평타 (진짜 클릭): 번쩍임 · 피해 숫자 (가슴 높이) · 근접 보너스 » */
+    /**
+     * 플레이어 평타 (진짜 클릭): 번쩍임 · 피해 숫자 (가슴 높이, 때린 사람 쪽 몸 겉면) · 근접 보너스 ». 3인칭 뒤 6칸 거의 수평 —
+     * 조준점은 보스 다리 (사거리 안), 숫자는 플레이어 머리 위로 보임
+     */
     private void playerHit(ClientGameTestContext ctx, TestServerContext server) {
-        settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 3));
-        camera(ctx, CameraType.FIRST_PERSON);
-        faceBoss(ctx, server, 0, 2.8, 3.0);
+        settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 3.5));
+        chase(ctx, server, cx, cz + 3.5, cx, ALTAR_Y + 1.9, cz, 6);
         float hp0 = server.computeOnServer(s -> enc().boss.getHealth());
         ctx.waitTicks(25); // 공격 충전
         attack(ctx);
@@ -388,22 +427,26 @@ public final class RpgBossGallery implements FabricClientGameTest {
             for (Display.TextDisplay td : level(s).getEntitiesOfClass(Display.TextDisplay.class, new AABB(b.position(), b.position()).inflate(5),
                     t -> t.entityTags().contains(DamageNumbers.TAG))) {
                 String t = td.getText().getString();
-                if (t.contains("»")) return t;
+                if (t.contains("»")) return t + String.format(Locale.ROOT, " @%.2f", BossKit.hdist(td.position(), b.position()));
             }
             return null;
         });
         check(num != null, "damage number with the close bonus mark » (" + num + ")");
+        // 몸 (반폭 1.3칸) 밖 — 자바 글자 엔티티는 몸 안에 두면 가려짐
+        check(num != null && Double.parseDouble(num.substring(num.lastIndexOf('@') + 1)) >= 1.0, "damage number in front of the body, not inside");
         ctx.waitTicks(1);
         shot(ctx, "bs_hit");
         ctx.waitTicks(15);
     }
 
-    /** 까마귀 떼: 보라 선 예고 (1.3초) → 선을 따라 까마귀 */
+    /**
+     * 까마귀 떼: 보라 선 예고 (1.3초) → 선을 따라 까마귀. 선 방향을 정함 (rand 0 → +x): 남쪽 7칸에 선 플레이어를 지나 동서로 필드 끝에서 끝 —
+     * 뒤 위에서 보면 화면을 가로지름
+     */
     private void crows(ClientGameTestContext ctx, TestServerContext server) {
-        settle(server, new Vec3(cx + 5, ALTAR_Y + 1, cz + 7));
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
-        faceBoss(ctx, server, 5, 7, 2.0);
-        server.runOnServer(s -> BossScarecrow.crows(enc(), Tasks.now(), BossKit.fighters(enc())));
+        settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 7));
+        chase(ctx, server, cx, cz + 7, cx, ALTAR_Y, cz + 3.5, 9);
+        server.runOnServer(s -> withRand(new double[] {0.0}, () -> BossScarecrow.crows(enc(), Tasks.now(), BossKit.fighters(enc()))));
         check(server.computeOnServer(s -> enc().cast != null && "crows".equals(enc().cast.id)), "crows cast");
         ctx.waitTicks(14);
         shot(ctx, "bs_crows_tele");
@@ -415,34 +458,43 @@ public final class RpgBossGallery implements FabricClientGameTest {
         server.runCommand("effect clear @a minecraft:blindness");
     }
 
-    /** 호박 폭탄: 호박 + 주황 원 (2.5초) → 폭발 */
+    /**
+     * 호박 폭탄: 플레이어 발밑 + 무작위 넷에 호박과 주황 원 (2.5초) → 폭발. 무작위 자리를 정함 (각 · 거리 수열): 북 7 · 서 8 · 동 8 · 북동 5.5칸
+     * (뒤 위 카메라의 화면 안, 서로 원 1.5배 넘게 떨어짐)
+     */
     private void bombs(ClientGameTestContext ctx, TestServerContext server) {
-        settle(server, new Vec3(cx - 5, ALTAR_Y + 1, cz + 6));
-        faceBoss(ctx, server, -5, 6, 2.0);
-        server.runOnServer(s -> BossScarecrow.bombs(enc(), Tasks.now(), BossKit.fighters(enc())));
+        settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 6));
+        chase(ctx, server, cx, cz + 6, cx, ALTAR_Y, cz + 2, 9);
+        long t0 = server.computeOnServer(s -> {
+            withRand(new double[] {0.75, 0.3, 0.5, 0.4, 0.0, 0.4, 0.9, 0.15}, () -> BossScarecrow.bombs(enc(), Tasks.now(), BossKit.fighters(enc())));
+            return Tasks.now();
+        });
         long n = server.computeOnServer(s -> enc().props.stream().filter(e -> Kit.isType(e, BossScarecrow.BOMB)).count());
         check(n == 5, "5 pumpkin bombs (" + n + ")");
         ctx.waitTicks(25);
         shot(ctx, "bs_bombs");
-        // 원 밖으로 비켜서 터지는 것을 봄
-        Vec3 b = bossAt(server);
-        look(ctx, server, b.x - 9, ALTAR_Y, b.z + 9, b.x - 4, ALTAR_Y + 0.5, b.z + 4);
-        ctx.waitTicks(23);
+        // 원 밖 (남쪽 10칸) 으로 비켜서 터지는 것을 봄
+        chase(ctx, server, cx, cz + 10, cx, ALTAR_Y, cz + 4, 9);
+        int fuse = (int) Arena.BOSSES.obj(KEY).obj("bombs").num("fuse");
+        waitUntil(ctx, server, t0 + fuse + 2);
         shot(ctx, "bs_bombs_boom");
         long left = server.computeOnServer(s -> enc().props.stream().filter(e -> Kit.isType(e, BossScarecrow.BOMB)).count());
         check(left == 0, "bombs exploded (" + left + " left)");
         ctx.waitTicks(10);
     }
 
-    /** 짚단 감옥: 금빛 원이 따라다님 → 감옥 + 속박 → 안에서 클릭해 부숨 (맞는 상자 1.6×2.6) */
+    /** 짚단 감옥: 금빛 원이 따라다님 (1초, 눈앞 글자) → 감옥 + 속박 → 안에서 클릭해 부숨 (맞는 상자 1.6×2.6) */
     private void prison(ClientGameTestContext ctx, TestServerContext server) {
         settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 11));
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
-        look(ctx, server, cx, ALTAR_Y, cz + 11, cx, ALTAR_Y + 1, cz);
+        chase(ctx, server, cx, cz + 11, cx, ALTAR_Y, cz + 7, 7);
         server.runOnServer(s -> BossScarecrow.prison(enc(), Tasks.now(), BossKit.fighters(enc())));
-        ctx.waitTicks(28);
+        ctx.waitTicks(6);
+        shot(ctx, "bs_prison_tele");
+        ctx.waitTicks(22);
         boolean caged = server.computeOnServer(s -> BossScarecrow.mem(enc()).cage != null && Status.isRooted(player(s)));
         check(caged, "straw cage + rooted");
+        // 감옥 가까이 (같은 자리에서 돌아보기만 — 속박 중)
+        chase(ctx, server, cx, cz + 11, cx, ALTAR_Y + 1, cz, 4.5);
         shot(ctx, "bs_prison");
         // 1인칭으로 감옥 안에서 앞을 보고 때림 (조준 광선이 감옥 상자 안에서 시작)
         camera(ctx, CameraType.FIRST_PERSON);
@@ -473,12 +525,14 @@ public final class RpgBossGallery implements FabricClientGameTest {
     /** 분신: 허수아비 넷 (진짜는 어깨에 까마귀 · 날갯짓) → 진짜를 때려 비틀거림 */
     private void decoys(ClientGameTestContext ctx, TestServerContext server) {
         settle(server, null);
-        server.runOnServer(s -> {
+        long t0 = server.computeOnServer(s -> {
             Bosses.Enc e = enc();
             e.boss.setHealth(7500 * 0.59F);
             BossScarecrow.decoys(e, Tasks.now());
+            return Tasks.now();
         });
         server.runCommand("gamemode spectator @a");
+        camera(ctx, CameraType.FIRST_PERSON);
         look(ctx, server, cx + 13, ALTAR_Y + 11, cz + 13, cx, ALTAR_Y + 1, cz);
         ctx.waitTicks(20);
         int n = server.computeOnServer(s -> {
@@ -487,16 +541,20 @@ public final class RpgBossGallery implements FabricClientGameTest {
         });
         check(n == 3, "3 decoys + the real one (" + n + ")");
         shot(ctx, "bs_decoys");
-        // 진짜의 어깨 까마귀 날갯짓 (나타나고 1초 뒤)
+        // 진짜의 어깨 까마귀 날갯짓 (나타나고 1초 뒤부터 2초마다 — 까마귀 둘이 날아오름): 진짜 앞 (몸이 보는 쪽) 5.5칸, 어깨 높이를 봄
+        server.runCommand("title @a clear");
+        int id = server.computeOnServer(s -> enc().boss.getId());
         Vec3 real = server.computeOnServer(s -> enc().boss.position());
-        Vec3 toC = new Vec3(cx - real.x, 0, cz - real.z).normalize();
-        look(ctx, server, real.x + toC.x * 6, real.y + 2.5, real.z + toC.z * 6, real.x, real.y + 5, real.z);
-        ctx.waitTicks(10);
+        float yaw = ctx.computeOnClient(mc -> mc.level != null && mc.level.getEntity(id) instanceof LivingEntity le ? le.yBodyRot : 0F);
+        double fx = -Math.sin(Math.toRadians(yaw));
+        double fz = Math.cos(Math.toRadians(yaw));
+        look(ctx, server, real.x + fx * 5.5, real.y + 3.0, real.z + fz * 5.5, real.x, real.y + 5.0, real.z);
+        waitUntil(ctx, server, t0 + 12 + 20 + 5);
         shot(ctx, "bs_decoys_tell");
-        // 진짜를 때림 (진짜 클릭)
+        // 진짜를 때림 (진짜 클릭 — 가운데 쪽 3칸에서)
+        Vec3 toC = new Vec3(cx - real.x, 0, cz - real.z).normalize();
         server.runCommand("gamemode survival @a");
-        camera(ctx, CameraType.FIRST_PERSON);
-        look(ctx, server, real.x + toC.x * 2.8, ALTAR_Y, real.z + toC.z * 2.8, real.x, ALTAR_Y + 3, real.z);
+        look(ctx, server, real.x + toC.x * 3.0, ALTAR_Y, real.z + toC.z * 3.0, real.x, ALTAR_Y + 2.0, real.z);
         ctx.waitTicks(20);
         attack(ctx);
         ctx.waitTicks(2);
@@ -505,9 +563,9 @@ public final class RpgBossGallery implements FabricClientGameTest {
             fail("clicking the real one did not find it — hitting it from the server");
             server.runOnServer(s -> enc().boss.hurtServer(level(s), player(s).damageSources().playerAttack(player(s)), 50F));
         } else ok("hitting the real scarecrow king ends the decoys → stagger");
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
-        look(ctx, server, real.x + toC.x * 7, ALTAR_Y, real.z + toC.z * 7, real.x, real.y + 3, real.z);
-        ctx.waitTicks(6);
+        // 비틀거림: 뒤 위 3인칭 (카메라 줄은 가운데 제단 위로 지나감)
+        chase(ctx, server, real.x + toC.x * 4.0, real.z + toC.z * 4.0, real.x, ALTAR_Y + 1.0, real.z, 6);
+        ctx.waitTicks(3);
         shot(ctx, "bs_stagger");
         // 비틀거림이 끝날 때까지
         ctx.waitTicks(100);
@@ -518,24 +576,30 @@ public final class RpgBossGallery implements FabricClientGameTest {
         settle(server, null);
         Vec3 t = server.computeOnServer(s -> enc().feat.totems().get(1));
         Vec3 in = new Vec3(cx - t.x, 0, cz - t.z).normalize();
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
-        look(ctx, server, t.x + in.x * 1.4, ALTAR_Y, t.z + in.z * 1.4, cx, ALTAR_Y + 2, cz);
-        server.runOnServer(s -> {
+        Vec3 side = new Vec3(in.z, 0, -in.x);
+        // 토템 원 안 (토템에서 가운데 쪽 1.4 · 옆 1.2칸 = 1.8칸, 안전 2.4칸) — 옆으로 비켜 서서 뒤 위 카메라 줄이 토템 (높이 3) 에 닿지 않게
+        double px = t.x + in.x * 1.4 + side.x * 1.2;
+        double pz = t.z + in.z * 1.4 + side.z * 1.2;
+        chase(ctx, server, px, pz, cx, ALTAR_Y + 0.5, cz, 8);
+        long t0 = server.computeOnServer(s -> {
             Bosses.Enc e = enc();
             e.boss.setHealth(7500 * 0.39F);
             BossScarecrow.reaping(e, Tasks.now());
+            return Tasks.now();
         });
         check(server.computeOnServer(s -> enc().cast != null && "reaping".equals(enc().cast.id)), "reaping cast");
-        ctx.waitTicks(42);
+        int count = (int) Arena.BOSSES.obj(KEY).obj("reaping").num("count");
+        waitUntil(ctx, server, t0 + 42);
         shot(ctx, "bs_reaping");
         // 높이에서 본 토템 넷의 금빛 원
         server.runCommand("gamemode spectator @a");
+        camera(ctx, CameraType.FIRST_PERSON);
         look(ctx, server, cx + 0.01, ALTAR_Y + 26, cz + 6, cx, ALTAR_Y, cz);
-        ctx.waitTicks(8);
+        ctx.waitTicks(6);
         shot(ctx, "bs_reaping_top");
         server.runCommand("gamemode survival @a");
-        look(ctx, server, t.x + in.x * 1.4, ALTAR_Y, t.z + in.z * 1.4, cx, ALTAR_Y + 2, cz);
-        ctx.waitTicks(52);
+        chase(ctx, server, px, pz, cx, ALTAR_Y + 0.5, cz, 8);
+        waitUntil(ctx, server, t0 + count + 2);
         shot(ctx, "bs_reaping_judge");
         boolean alive = server.computeOnServer(s -> player(s).isAlive() && !player(s).isDeadOrDying());
         check(alive, "player inside a totem circle survives the reaping");
@@ -545,8 +609,7 @@ public final class RpgBossGallery implements FabricClientGameTest {
     /** 원거리 견제: 10칸 넘게 떨어진 사람 발밑 주황 원 + 불붙은 짚단이 포물선으로 → 불 */
     private void far(ClientGameTestContext ctx, TestServerContext server) {
         settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 13));
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
-        look(ctx, server, cx, ALTAR_Y, cz + 13.5, cx, ALTAR_Y + 3, cz);
+        chase(ctx, server, cx, cz + 13.5, cx, ALTAR_Y + 3, cz, 4);
         server.runOnServer(s -> {
             Bosses.Enc e = enc();
             Bosses.farThrow(e, e, Tasks.now(), List.of(player(s)));
@@ -561,16 +624,20 @@ public final class RpgBossGallery implements FabricClientGameTest {
         ctx.waitTicks(10);
     }
 
-    /** 쓰러뜨림 (진짜 클릭): 처치 글자 · 보상 채팅 · 서버 알림 → 가방 */
+    /** 쓰러뜨림 (진짜 클릭): 처치 글자 · 보상 채팅 · 서버 알림 · 큰 폭발 (3인칭 뒤 7칸으로 물러나 봄) → 가방 */
     private void kill(ClientGameTestContext ctx, TestServerContext server) {
-        settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 3));
+        settle(server, new Vec3(cx, ALTAR_Y + 1, cz + 3.5));
         camera(ctx, CameraType.FIRST_PERSON);
-        faceBoss(ctx, server, 0, 2.8, 3.0);
+        // 거의 수평 (조준점 = 보스 다리, 사거리 안) — 쓰러뜨린 뒤 3인칭으로 물러나도 카메라가 땅에 닿지 않게
+        look(ctx, server, cx, ALTAR_Y, cz + 3.5, cx, ALTAR_Y + 1.9, cz);
         server.runOnServer(s -> enc().boss.setHealth(5F));
         ctx.runOnClient(mc -> mc.options.chatVisibility().set(ChatVisiblity.FULL));
         ctx.waitTicks(25);
         attack(ctx);
-        ctx.waitTicks(10);
+        ctx.waitTicks(2);
+        camera(ctx, CameraType.THIRD_PERSON_BACK);
+        camDist(ctx, server, 7);
+        ctx.waitTicks(6);
         String r = server.computeOnServer(s -> {
             if (Bosses.encounterAt(altar) != null) return "still fighting";
             if (altar.cooldownUntil <= System.currentTimeMillis()) return "no cooldown";
@@ -579,6 +646,8 @@ public final class RpgBossGallery implements FabricClientGameTest {
         });
         check(r.startsWith("ok"), "boss killed → rewards + cooldown (" + r + ")");
         shot(ctx, "bs_kill");
+        camera(ctx, CameraType.FIRST_PERSON);
+        camDist(ctx, server, 4);
         ctx.waitTicks(30);
         ctx.getInput().pressKey(options -> options.keyInventory);
         try {

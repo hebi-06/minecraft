@@ -1746,8 +1746,12 @@ public final class Bosses {
 
     private static boolean initialized;
 
-    /** 피해 숫자 자리 (fx.js setDamageTextAnchor): 보스 · 분신은 가슴 높이, 맞는 소품은 정한 높이, 큰 보스 (textNear) 는 때린 사람 쪽 몸 겉면 */
-    static Vec3 textAnchor(LivingEntity victim, ServerPlayer attacker) {
+    /**
+     * 피해 숫자 자리 (fx.js setDamageTextAnchor): 보스 · 분신은 가슴 높이, 맞는 소품은 정한 높이, 큰 보스 (textNear) 는 때린 사람 쪽 몸 겉면.
+     * 자바: 글자 엔티티는 깊이 시험을 받아 몸 안에 두면 몸에 가려짐 (베드락의 숫자는 몸 위에 그려짐) → 가슴 높이 숫자도 몸 가운데가 아니라
+     * 때린 사람 쪽 몸 겉면 (반폭 + 0.5칸, 때린 사람보다 멀지 않게 — textNearAt 과 같은 가로 자리, 높이는 가슴 그대로)
+     */
+    public static Vec3 textAnchor(LivingEntity victim, ServerPlayer attacker) {
         Enc enc = byEntity.get(victim.getUUID());
         if (enc == null) return null;
         PropInfo pi = propInfo.get(victim.getUUID());
@@ -1760,7 +1764,20 @@ public final class Bosses {
             Vec3 near = textNearAt(l, def, attacker);
             if (near != null) return near;
         }
-        return new Vec3(l.x, l.y + def.numOr("textHeight", Math.min(bossSize(def).height() * 0.45, 3.2)), l.z);
+        double y = l.y + def.numOr("textHeight", Math.min(bossSize(def).height() * 0.45, 3.2));
+        Vec3 side = surfaceToward(l, def, attacker);
+        return side != null ? new Vec3(side.x, y, side.z) : new Vec3(l.x, y, l.z);
+    }
+
+    /** 몸 가운데 l 에서 때린 사람 쪽 몸 겉면 (반폭 + 0.5칸, 때린 사람보다 0.8칸 앞까지만). 때린 사람이 없거나 몸 안이면 null */
+    static Vec3 surfaceToward(Vec3 l, Obj def, Entity attacker) {
+        if (attacker == null || attacker.isRemoved()) return null;
+        double dx = attacker.getX() - l.x;
+        double dz = attacker.getZ() - l.z;
+        double L = Math.hypot(dx, dz);
+        if (L < 0.5) return null;
+        double r = Math.min(bossSize(def).half() + 0.5, Math.max(0, L - 0.8));
+        return new Vec3(l.x + (dx / L) * r, l.y, l.z + (dz / L) * r);
     }
 
     /** 모듈 등록 (키 → 모듈) */
