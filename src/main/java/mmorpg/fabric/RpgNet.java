@@ -106,14 +106,20 @@ public final class RpgNet {
 
     /**
      * 초월 룬 하늘빛 (ultfx.js — 베드락 /fog): ticks 틱 동안 안개 start ~ end 칸 · 색 rgb (0 ~ 1) 로 하늘과 먼 곳을 물들임. ticks 0 = 걷음.
-     * token: 같은 하늘빛을 일찍 걷을 때 (다른 하늘빛으로 바뀌었으면 걷지 않음)
+     * token: 같은 하늘빛을 일찍 걷을 때 (다른 하늘빛으로 바뀌었으면 걷지 않음). edge: 화면 테두리 빛 (0 ~ 1 — 8단계 6돌 각성 연출, 보스 안개는 0)
      */
-    public record SkyPayload(int token, int ticks, float start, float end, float r, float g, float b) implements CustomPacketPayload {
+    public record SkyPayload(int token, int ticks, float start, float end, float r, float g, float b, float edge) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<SkyPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("sky"));
         public static final StreamCodec<FriendlyByteBuf, SkyPayload> CODEC = CustomPacketPayload.codec(SkyPayload::write, SkyPayload::read);
 
+        /** 테두리 빛 없음 */
+        public SkyPayload(int token, int ticks, float start, float end, float r, float g, float b) {
+            this(token, ticks, start, end, r, g, b, 0F);
+        }
+
         private static SkyPayload read(FriendlyByteBuf buf) {
-            return new SkyPayload(buf.readVarInt(), buf.readVarInt(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat());
+            return new SkyPayload(buf.readVarInt(), buf.readVarInt(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(), buf.readFloat(),
+                    buf.readFloat());
         }
 
         private void write(FriendlyByteBuf buf) {
@@ -124,6 +130,7 @@ public final class RpgNet {
             buf.writeFloat(r);
             buf.writeFloat(g);
             buf.writeFloat(b);
+            buf.writeFloat(edge);
         }
 
         @Override

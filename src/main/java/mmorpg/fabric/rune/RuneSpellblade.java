@@ -368,7 +368,7 @@ final class RuneSpellblade {
         String life = RuneKit.lifeToken(sp);
         // 2차 강화 — 예고: 남보라 하늘 · 발밑의 거대한 비전 문양 · 앞쪽 하늘의 비전 문양 (거꾸로 돎)
         Vec3 c0 = sp.position();
-        RuneKit.ultSkyFor(level0, c0, "spellbladeRelease", charge + gap + 36, null);
+        RuneKit.ultSkyFor(sp, level0, c0, "spellbladeRelease", charge + gap + 36, null);
         RuneKit.domainSigil(level0, c0, 5.6, "arcane", glow, core, Opt.of("life", (charge + gap + 2) / 20.0, "spinRate", 50.0, "grow", 0.25, "alpha", 0.82,
                 "fade", 0.15));
         Vec3 skyAt = RuneKit.skyPoint(sp, c0, 12, 21, 6, 22);
@@ -440,11 +440,12 @@ final class RuneSpellblade {
             RuneKit.later(3, () -> RuneKit.rfx2(level, "sword", V.add(hilt, f, len / 2), Opt.of("dir", f, "size", len / 2, "life", 0.55, "fade", 0.5), glow, core));
             SkillFx.fx(level, "rpg:light_cut", V.up(V.add(start, f, 3), 2.2), Opt.of("dir", V.UP, "size", 2.6, "thick", 0.35, "life", 0.3, "color", core, "alpha", 1.0));
             Vec3 mid = V.add(start, f, Math.min(len, length) * 0.55);
+            double wk = k.num("width") / 2.4; // 폭을 따라 (기본 2.4칸 — 8단계 6돌은 넓음)
             for (double s = 1; s <= len; s += 1.5) {
                 double ss = s;
                 RuneKit.later(3 + Math.round(ss / 3), () -> {
-                    SkillFx.burst(level, V.up(V.add(start, f, ss), 0.7), glow, 1.3, 0.35);
-                    SkillFx.shock(level, V.add(start, f, ss), ss % 3 < 1.5 ? glow : core, 0.9, 0.4);
+                    SkillFx.burst(level, V.up(V.add(start, f, ss), 0.7), glow, 1.3 * wk, 0.35);
+                    SkillFx.shock(level, V.add(start, f, ss), ss % 3 < 1.5 ? glow : core, 0.9 * wk, 0.4);
                 });
             }
             RuneKit.later(3, () -> {

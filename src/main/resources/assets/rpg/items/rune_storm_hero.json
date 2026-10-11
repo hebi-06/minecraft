@@ -1,6 +1,109 @@
 {
   "model": {
-    "type": "minecraft:model",
-    "model": "rpg:item/rune_storm_hero"
+    "type": "minecraft:range_dispatch",
+    "property": "minecraft:custom_model_data",
+    "index": 0,
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "rpg:item/rune_storm_hero"
+    },
+    "entries": [
+      {
+        "threshold": 1,
+        "model": {
+          "type": "minecraft:composite",
+          "models": [
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune_storm_hero"
+            },
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune/break_1"
+            }
+          ]
+        }
+      },
+      {
+        "threshold": 2,
+        "model": {
+          "type": "minecraft:composite",
+          "models": [
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune_storm_hero"
+            },
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune/break_2"
+            }
+          ]
+        }
+      },
+      {
+        "threshold": 3,
+        "model": {
+          "type": "minecraft:composite",
+          "models": [
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune_storm_hero"
+            },
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune/break_3"
+            }
+          ]
+        }
+      },
+      {
+        "threshold": 4,
+        "model": {
+          "type": "minecraft:composite",
+          "models": [
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune_storm_hero"
+            },
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune/break_4"
+            }
+          ]
+        }
+      },
+      {
+        "threshold": 5,
+        "model": {
+          "type": "minecraft:composite",
+          "models": [
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune_storm_hero"
+            },
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune/break_5"
+            }
+          ]
+        }
+      },
+      {
+        "threshold": 6,
+        "model": {
+          "type": "minecraft:composite",
+          "models": [
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune_storm_hero"
+            },
+            {
+              "type": "minecraft:model",
+              "model": "rpg:item/rune/break_6"
+            }
+          ]
+        }
+      }
+    ]
   }
 }

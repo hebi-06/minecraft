@@ -458,7 +458,7 @@ final class RuneAssassin {
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", sp.position(), 1.4, 0.8);
         SkillFx.play(level, "chime.amethyst_block", target.position(), 0.6, 1);
         // 2차 강화 — 예고: 한밤의 하늘 · 대상 뒤 하늘에 떠오르는 거대한 초승달 · 대상 발밑의 칼날 문양 (자홍)
-        RuneKit.ultSkyFor(level, target.position(), "moonAssassin", delay + 34, null);
+        RuneKit.ultSkyFor(sp, level, target.position(), "moonAssassin", delay + 34, null);
         Vec3 moonAt = RuneKit.skyPoint(sp, target.position(), 9, 20, 6, 22);
         RuneKit.rfx2(level, "moon", moonAt, Opt.of("size", 4.4, "life", (delay + 6) / 20.0, "grow", 0.12, "spin", -20.0, "alpha", 0.95, "fade", 0.25), MOON,
                 RuneKit.WHITE);

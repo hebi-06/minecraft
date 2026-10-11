@@ -352,7 +352,7 @@ final class RuneHoly {
         SkillFx.play(level0, "beacon.activate", c0, 0.9, 1);
         SkillFx.play(level0, "mob.allay.idle", c0, 0.8, 1);
         // 2차 강화 — 강림: 천상의 금빛 하늘 (죽으면 걷힘) · 흰 금빛 번쩍임 · 앞쪽 하늘의 거대한 성광 문양 (후광) · 발밑 문양 · 앞쪽 빛기둥 다섯 (2틱 뒤)
-        RuneKit.ultSkyFor(level0, c0, "archangel", 100, null);
+        RuneKit.ultSkyFor(sp, level0, c0, "archangel", 100, null);
         RuneKit.ultFlashFor(sp, level0, c0, "archangel", "flash", Opt.empty());
         Vec3 halo = RuneKit.skyPoint(sp, c0, 12, 22, 6, 22);
         RuneKit.skyPlate(sp, level0, "sigil", halo, 6.2, glow, RuneKit.WHITE, Opt.of("cell", (double) RuneKit.SIGIL.get("holy"), "life", 3.2, "spinRate", 18.0,

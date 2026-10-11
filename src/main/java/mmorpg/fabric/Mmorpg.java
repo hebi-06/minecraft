@@ -28,6 +28,7 @@ public final class Mmorpg implements ModInitializer {
         Props.init(); // 베드락 동적 속성 (엔티티 · 플레이어 · 세계)
         RpgParticles.init();
         mmorpg.fabric.gear.WeaponEnhance.init(); // 무기 강화 단계 (아이템 구성 요소 — 아이템보다 먼저)
+        mmorpg.fabric.rune.Breakthrough.initComponent(); // 룬 돌파 단계 (8단계 — 아이템 구성 요소)
         RpgItems.init();
         RpgNet.init();
         mmorpg.fabric.ui.Forms.init(); // 서버 창 (상자 창 · 대화창 · 버튼 목록 · 입력창)

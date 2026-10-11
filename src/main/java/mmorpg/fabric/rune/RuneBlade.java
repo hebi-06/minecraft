@@ -311,7 +311,7 @@ final class RuneBlade {
         SkillFx.play(level0, "beacon.power", sp.position(), 1.4, 0.7);
         // 2차 강화 — 예고: 청백 하늘 · 발밑의 칼날 문양 (빠르게 돎) · 앞쪽 하늘의 칼날 문양
         Vec3 c0 = sp.position();
-        RuneKit.ultSkyFor(level0, c0, "heavenSplit", (int) charge + 34, null);
+        RuneKit.ultSkyFor(sp, level0, c0, "heavenSplit", (int) charge + 34, null);
         RuneKit.domainSigil(level0, c0, 4.6, "blade", glow, white, Opt.of("life", (charge + 2) / 20, "spinRate", 140.0, "grow", 0.3, "alpha", 0.8, "fade", 0.15));
         Vec3 skyAt = RuneKit.skyPoint(sp, c0, 12, 21, 6, 22);
         RuneKit.skyPlate(sp, level0, "sigil", skyAt, 5.4, glow, white, Opt.of("cell", (double) RuneKit.SIGIL.get("blade"), "life", (charge + 6) / 20, "spinRate", 60.0,

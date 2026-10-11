@@ -349,7 +349,7 @@ final class RuneVit {
         SkillFx.play(level0, "random.totem", c0, 0.9, 0.9);
         SkillFx.play(level0, "mob.wither.spawn", c0, 1.8, 0.25);
         // 2차 강화 — 맹약: 진홍 하늘 · 붉은 번쩍임 · 발밑의 성광 문양 (진홍) · 앞쪽 하늘의 진홍 후광 · 앞쪽 핏빛 빛기둥 셋 (2틱 뒤)
-        RuneKit.ultSkyFor(level0, c0, "undyingPact", 90, null);
+        RuneKit.ultSkyFor(sp, level0, c0, "undyingPact", 90, null);
         RuneKit.ultFlashFor(sp, level0, c0, "undyingPact", "flash", Opt.empty());
         RuneKit.domainSigil(level0, c0, 4.6, "holy", crimson, gold, Opt.of("life", 1.6, "spinRate", 40.0, "grow", 0.3, "alpha", 0.85));
         // 하늘의 진홍 후광 (눈앞 문장과 겹치지 않게 문양)

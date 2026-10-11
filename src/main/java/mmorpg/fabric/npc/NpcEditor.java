@@ -229,7 +229,7 @@ public final class NpcEditor {
                 .button("NPC 만들기 §8(대화·퀘스트)", DialogForm.NEW)
                 .button("상점 NPC 만들기", Icon.of("textures/items/emerald"))
                 .button("대장장이 NPC 만들기 §8(강화·영웅 레벨)", Icon.of("textures/items/iron_ingot"))
-                .button("룬술사 NPC 만들기 §8(룬 갈기·뽑기권)", Icon.of("textures/items/rpg/rune_shard"))
+                .button("룬술사 NPC 만들기 §8(룬 갈기·돌파·뽑기권)", Icon.of("textures/items/rpg/rune_shard"))
                 .button("가까운 NPC 설정 §8(8칸 안)", Icon.of("textures/items/name_tag"))
                 .button("모든 퀘스트 §8(" + mine.size() + "개)", Icon.of("textures/items/book_writable"))
                 .button("NPC 설정 도구 받기", Icon.of(TOOL_ICON))
@@ -374,7 +374,7 @@ public final class NpcEditor {
         new ModalForm("상점·대장장이·룬술사 설정")
                 .dropdown("lv", "이 NPC를 누르면 여는 상점", opts, lv >= 0 ? LEVELS.indexOf((double) lv) + 1 : 0)
                 .toggle("smith", "대장장이 §7(무기 강화 +1~+10 · 영웅 무기 레벨 30→35→40렙)", NpcData.isSmith(npc))
-                .toggle("runesmith", "룬술사 §7(룬 갈기 → 룬 조각 → 룬 뽑기권 · 고급 룬 뽑기권)", NpcData.isRunesmith(npc))
+                .toggle("runesmith", "룬술사 §7(룬 갈기 → 룬 조각 → 룬 뽑기권 · 같은 룬 돌파)", NpcData.isRunesmith(npc))
                 .submit("저장")
                 .show(sp, v -> {
                     if (v != null) {

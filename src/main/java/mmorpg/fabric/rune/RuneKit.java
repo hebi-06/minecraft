@@ -448,15 +448,35 @@ public final class RuneKit {
         return o != null ? o : new Obj(Map.of(), "ULT_FX.runes." + fn);
     }
 
-    /** 하늘빛: 룬 함수 fn 의 하늘빛 (fogId 를 주면 그것) 을 at 둘레 사람에게 ticks 틱. 씌운 사람 수 */
-    public static int ultSkyFor(ServerLevel level, Vec3 at, String fn, int ticks, String fogId) {
-        return Ult.sky(level, at, fogId != null ? fogId : ultOf(fn).strOrNull("fog"), ticks);
+    /**
+     * 하늘빛: 룬 함수 fn 의 하늘빛 (fogId 를 주면 그것) 을 at 둘레 사람에게 ticks 틱. 씌운 사람 수.
+     * 8단계 돌파: sp 가 쓴 그 룬이 3돌 미만이면 하늘빛 없음 (화면 색 연출은 돌파 효과), 6돌이면 더 길고 짙게 + 화면 테두리 빛 (RuneBreak.Fx)
+     */
+    public static int ultSkyFor(ServerPlayer sp, ServerLevel level, Vec3 at, String fn, int ticks, String fogId) {
+        mmorpg.core.RuneBreak.Fx fx = Breakthrough.castFx(sp, fn);
+        if (fx == null) return 0;
+        return Ult.sky(level, at, fogId != null ? fogId : ultOf(fn).strOrNull("fog"), (int) Math.round(ticks * fx.skyTicks()), fx.skyDist(), fx.edge());
     }
 
-    /** 번쩍임: 룬 함수 fn 의 색 (key = flash 발동 · still 멈춘 시간 · dark 어둠) 으로 at 둘레 사람 + 룬을 쓴 사람의 화면. o: radius · time (fadeIn · hold · fadeOut 초) */
+    /**
+     * 번쩍임: 룬 함수 fn 의 색 (key = flash 발동 · still 멈춘 시간 · dark 어둠) 으로 at 둘레 사람 + 룬을 쓴 사람의 화면. o: radius · time (fadeIn · hold · fadeOut 초).
+     * 8단계 돌파: 3돌 미만이면 없음, 6돌이면 더 오래 머물고 천천히 걷힘
+     */
     public static int ultFlashFor(ServerPlayer sp, ServerLevel level, Vec3 at, String fn, String key, Opt o) {
+        mmorpg.core.RuneBreak.Fx fx = Breakthrough.castFx(sp, fn);
+        if (fx == null) return 0;
         List<Object> c = ultOf(fn).listOrNull(key == null ? "flash" : key);
-        return c == null ? 0 : Ult.flash(level, at, Kit.rgb(c), o == null ? Opt.empty() : o, sp);
+        if (c == null) return 0;
+        Opt oo = o == null ? Opt.empty() : o;
+        if (fx.flashHold() > 0 || fx.flashOut() != 1) {
+            Obj t = ULT_FX.obj("flashTime");
+            double[] time = oo.get("time") instanceof double[] d && d.length == 3 ? d.clone()
+                    : new double[] {t.num("fadeInTime"), t.num("holdTime"), t.num("fadeOutTime")};
+            time[1] += fx.flashHold();
+            time[2] *= fx.flashOut();
+            oo = oo.with("time", time);
+        }
+        return Ult.flash(level, at, Kit.rgb(c), oo, sp);
     }
 
     /**

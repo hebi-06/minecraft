@@ -43,9 +43,11 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest · MolangTest · StatTreeTest"
+echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest"
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.ParityTest
 # 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.MolangTest
 # 스탯 트리 (7단계 — stat_tree.json 의 모양 · 계산 · 스탯 룬 뽑기권)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.StatTreeTest
+# 룬 돌파 (8단계 — rune_break.json 의 모양 · 계수 · 합치기 · 초월 3 · 6돌 강화 · 글자)
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RuneBreakTest

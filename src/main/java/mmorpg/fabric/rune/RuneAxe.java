@@ -388,7 +388,7 @@ final class RuneAxe {
         SkillFx.play(level0, "mob.enderdragon.growl", c0, 1.4, 0.4);
         SkillFx.shake(sp, 0.2, 0.3);
         // 2차 강화 — 광폭화: 핏빛 하늘 (광폭화 동안 — 죽으면 걷힘) · 검붉은 번쩍임 · 발밑의 칼날 문양 · 앞쪽 하늘이 핏빛으로 찢어짐 · 난타마다 발밑 문양
-        RuneKit.ultSkyFor(level0, c0, "berserker", total + 10, null);
+        RuneKit.ultSkyFor(sp, level0, c0, "berserker", total + 10, null);
         RuneKit.ultFlashFor(sp, level0, c0, "berserker", "flash", Opt.empty());
         RuneKit.domainSigil(level0, c0, 4.8, "blade", BLOOD, core, Opt.of("life", 1.4, "spinRate", 70.0, "grow", 0.35, "alpha", 0.85));
         RuneKit.skyPlate(sp, level0, "crack", RuneKit.skyPoint(sp, c0, 12, 21, 6, 22), 6.2, BLOOD, core, Opt.of("life", 1.8, "grow", 0.4, "fade", 0.45));

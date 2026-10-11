@@ -594,7 +594,7 @@ final class RuneGravity {
         SkillFx.play(level, "mob.warden.sonic_charge", g, 1.0, 0.8);
         SkillFx.play(level, "conduit.activate", g, 1.0, 0.6);
         // v2.27.0 2차 강화 — 예고: 공허의 하늘 (어둠) · 겨눈 땅의 거대한 비전 문양 (거꾸로 돌며 빨려 듦) · 뒤쪽 하늘의 검은 일식 (아래) · 핵이 다 열리면 빛을 삼키는 어두운 번쩍임
-        RuneKit.ultSkyFor(level, g, "blackHole", charge + T + 34, null);
+        RuneKit.ultSkyFor(sp, level, g, "blackHole", charge + T + 34, null);
         RuneKit.domainSigil(level, g, radius * 1.15, "arcane", glow, core, Opt.of("life", (charge + T + 1) / 20.0, "spinRate", -70.0, "grow", -0.25, "alpha", 0.75,
                 "fade", 0.1));
         RuneKit.later(charge, () -> {

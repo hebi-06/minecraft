@@ -286,7 +286,7 @@ final class RuneBody {
                 "alpha", 1.0));
         SkillFx.play(level, "beacon.activate", c, 0.8, 1);
         // 2차 강화 — 각성: 호박빛 하늘 · 충격파 때 번쩍임 → 성광 문양 · 하늘의 섬광 (1틱 뒤) → 앞쪽 빛기둥 넷 (3틱 뒤 — 충격파 틱의 파티클 예산)
-        RuneKit.ultSkyFor(level, c, "awakening", 76, null);
+        RuneKit.ultSkyFor(sp, level, c, "awakening", 76, null);
         RuneKit.later(5, () -> {
             if (!RuneKit.sameLife(sp, life)) return; // 죽음 · 차원 이동이면 충격파 없음
             Vec3 cc = sp.position();

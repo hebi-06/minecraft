@@ -257,7 +257,7 @@ final class RuneSpirit {
         if (king != null && "transcend".equals(r.grade())) {
             double[] sg = cs[0];
             double[] sc = cs[1];
-            RuneKit.ultSkyFor(level, feet, "summonSpirits", 100, null);
+            RuneKit.ultSkyFor(sp, level, feet, "summonSpirits", 100, null);
             RuneKit.ultFlashFor(sp, level, feet, "summonSpirits", "flash", Opt.empty());
             RuneKit.skyPlate(sp, level, "sigil", V.up(V.add(king, Kit.facingOf(sp), 3.5), 0.6), 4.8, sg, sc, Opt.of("cell", (double) RuneKit.SIGIL.get("spirit"),
                     "life", 2.2, "spinRate", 25.0, "grow", 0.15, "alpha", 0.8, "fade", 0.35));

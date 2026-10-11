@@ -289,7 +289,7 @@ final class RuneBow {
         SkillFx.play(level, "beacon.power", center, 1.6, 0.8);
         SkillFx.play(level, "crossbow.loading.start", c0, 0.5, 1);
         // 2차 강화 — 예고: 새벽빛 하늘 · 활 뒤 하늘의 성광 문양 (돎) · 발밑 문양
-        RuneKit.ultSkyFor(level, c0, "skyBow", (int) Math.round(draw + 4 + list.size() * gap + 30), null);
+        RuneKit.ultSkyFor(sp, level, c0, "skyBow", (int) Math.round(draw + 4 + list.size() * gap + 30), null);
         Vec3 halo = V.add(V.up(center, 3.2), f0, 9);
         RuneKit.skyPlate(sp, level, "sigil", halo, 5.2, glow, gold, Opt.of("cell", (double) RuneKit.SIGIL.get("holy"), "life", (draw + 10) / 20, "spinRate", 35.0,
                 "grow", 0.15, "alpha", 0.75, "fade", 0.3));

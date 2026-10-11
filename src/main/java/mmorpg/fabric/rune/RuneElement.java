@@ -371,7 +371,7 @@ final class RuneElement {
                 boolean last = jj == ORDER.length - 1;
                 String fog = skies != null && jj < skies.size() && skies.get(jj) instanceof String s ? s : null;
                 ServerLevel level = sp.level();
-                RuneKit.ultSkyFor(level, sp.position(), "elementRelease", last ? charge - jj * third + 34 : third + 2, fog);
+                RuneKit.ultSkyFor(sp, level, sp.position(), "elementRelease", last ? charge - jj * third + 34 : third + 2, fog);
                 RuneKit.domainSigil(level, sp.position(), 5.2, "arcane", c[0], c[1], Opt.of("life", (last ? charge - jj * third + 2 : third + 1) / 20.0,
                         "spinRate", 70.0, "grow", 0.12, "alpha", 0.82, "fade", 0.1));
                 RuneKit.skyPlate(sp, level, "sigil", RuneKit.skyPoint(sp, sp.position(), 12, 21, 6, 22), 5, c[0], c[1], Opt.of("cell",

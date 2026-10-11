@@ -153,7 +153,7 @@ public final class Npcs {
                 kinds.add("smith");
             }
             if (runesmith) {
-                d.choice("§d룬 갈기 · 뽑기권", mmorpg.fabric.ui.Icon.item("rpg:rune_shard"));
+                d.choice("§d룬 갈기 · 돌파 · 뽑기권", mmorpg.fabric.ui.Icon.item("rpg:rune_shard"));
                 kinds.add("runesmith");
             }
             d.choice("§7안녕히 계세요", DialogForm.BYE);
@@ -176,7 +176,7 @@ public final class Npcs {
         if ("available".equals(mark)) return "§e§l! §r§f" + name + " §7- 눌러서 퀘스트 받기";
         if ("repeat".equals(mark)) return "§b§l! §r§f" + name + " §7- 눌러서 반복 의뢰 받기";
         if (smith) return "§6§l[대장장이] §r§f" + name + " §7- 눌러서 무기 강화·레벨 올리기";
-        if (runesmith) return "§d§l[룬술사] §r§f" + name + " §7- 눌러서 룬 갈기·뽑기권 사기";
+        if (runesmith) return "§d§l[룬술사] §r§f" + name + " §7- 눌러서 룬 갈기·돌파·뽑기권";
         if (lv >= 0) return "§a§l[상점] §r§f" + name + " §7- 눌러서 무기·갑옷 상점·전리품 팔기";
         return "§f" + name + " §7- 눌러서 대화하기";
     }

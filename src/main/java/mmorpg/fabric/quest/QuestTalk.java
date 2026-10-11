@@ -68,7 +68,7 @@ public final class QuestTalk {
         if (smith) opts.add(new Option("smith", null, "§6영웅 무기 레벨 올리기", Icon.of("textures/items/iron_ingot")));
         if (lv >= 0) opts.add(new Option("shop", null, "§b무기 상점 보기", DialogForm.SHOP));
         if (lv >= 0) opts.add(new Option("armor", null, "§b갑옷 상점 보기", Icon.of("textures/items/iron_chestplate")));
-        if (runesmith) opts.add(new Option("runesmith", null, "§d룬 갈기 · 뽑기권 사기", Icon.of(R.obj("RUNE_SMITH").str("shardIcon"))));
+        if (runesmith) opts.add(new Option("runesmith", null, "§d룬 갈기 · 돌파 · 뽑기권", Icon.of(R.obj("RUNE_SMITH").str("shardIcon"))));
         opts.add(new Option("bye", null, "§7대화 끝내기", DialogForm.BYE));
         List<Integer> idx = new ArrayList<>();
         for (int i = 0; i < opts.size(); i++) idx.add(i);

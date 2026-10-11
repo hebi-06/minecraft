@@ -91,6 +91,7 @@ public final class MmorpgClient implements ClientModInitializer {
             if (!RpgHud.active()) old.extractRenderState(graphics, delta);
         });
         // 화면 번쩍임 (초월 룬): HUD 맨 위
+        HudElementRegistry.addLast(Mmorpg.id("ult_edge"), (graphics, delta) -> UltFx.renderEdge(graphics)); // 6돌 초월 룬의 테두리 빛 (8단계)
         HudElementRegistry.addLast(Mmorpg.id("ult_flash"), (graphics, delta) -> UltFx.renderFlash(graphics));
     }
 }

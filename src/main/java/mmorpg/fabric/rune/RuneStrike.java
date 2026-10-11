@@ -235,7 +235,7 @@ final class RuneStrike {
         });
         SkillFx.play(level, "beacon.activate", sp.position(), 1.2, 0.8);
         // 2차 강화 — 강림: 흰 금빛 하늘 · 검이 내려오는 앞쪽 하늘이 갈라짐 → (꽂힐 때) 번쩍임 · 섬광 → 칼날 문양 · 충격 고리 (1틱 뒤)
-        RuneKit.ultSkyFor(level, at, "swordGod", 70, null);
+        RuneKit.ultSkyFor(sp, level, at, "swordGod", 70, null);
         Vec3 rift = RuneKit.skyPoint(sp, at, 7, 21, 6, 22);
         RuneKit.skyPlate(sp, level, "crack", rift, 5.2, col, white, Opt.of("life", 0.75, "grow", 0.4, "fade", 0.5));
         RuneKit.later(6, () -> {

@@ -30,7 +30,7 @@ import net.minecraft.world.level.GameType;
 /**
  * 룬 쓰기 (runes.js "쓰기" · 재사용 대기 표시 · 바로 쓰기): 룬 효과 표 (RUNE_FN — 계열마다 register), 재사용 대기 (핫바 아이콘의 쓸기 표시도),
  * 콤보 (암살자 계열이 넣음) · 쓴 뒤 할 일 (마검사 계열의 마검 부여), 화면 하단 상태 줄 (룬 이름 · 준비 · 적용 스탯 · 보호막 · 덧붙임).
- * 룬은 요구 스탯 없음. 위력 P = 룬 위력 (runePower — 실제 스탯) × 콤보 배율.
+ * 룬은 요구 스탯 없음. 위력 P = 룬 위력 (runePower — 실제 스탯) × 콤보 배율 × 돌파 계수 (8단계 — 룬 아이템의 돌파 단계, Breakthrough).
  */
 public final class RuneCast {
     private RuneCast() {}
@@ -170,13 +170,15 @@ public final class RuneCast {
         sp.getCooldowns().removeCooldown(Identifier.parse(r.id()));
     }
 
-    /** 재사용 대기 시작 (+ 핫바 쓸기 표시, 쓴 룬 이름 · 적용 스탯 알림) */
+    /** 재사용 대기 시작 (+ 핫바 쓸기 표시, 쓴 룬 이름 · 돌파 단계 · 적용 스탯 알림) */
     public static void startCooldown(ServerPlayer sp, Runes.Rune r) {
         String key = key(sp, r);
         COOLDOWNS.put(key, Tasks.now() + cooldownTicks(sp, r));
         READY_ANNOUNCED.remove(key);
         startItemCooldown(sp, r);
-        Notify.notify(sp, r.gradeColor() + r.def().str("name") + "§r §7(" + Runes.runeStatLabel(applied(sp, r.family())) + ")", 24);
+        String fn = r.def().strOrNull("fn");
+        String tag = fn == null ? "" : Breakthrough.nameTag(Breakthrough.castLevel(sp, fn));
+        Notify.notify(sp, r.gradeColor() + r.def().str("name") + tag + "§r §7(" + Runes.runeStatLabel(applied(sp, r.family())) + ")", 24);
     }
 
     /** 재사용 대기를 돌려줌 (콤보로 미뤄 둔 룬이 나가지 못함) */
@@ -185,13 +187,21 @@ public final class RuneCast {
         clearItemCooldown(sp, r);
     }
 
+    /** 룬 쓰기 (돌파 0돌 — 시험 · 명령) */
+    public static boolean castRune(ServerPlayer sp, Runes.Rune r, boolean quick) {
+        return castRune(sp, r, quick, 0);
+    }
+
     /**
      * 룬 쓰기 (castRune). 재사용 대기를 확인하고, 효과가 대상이 없어 취소하면 재사용 대기 없음.
      * 암살자 룬: 콤보 단계만큼 위력 배율, 이어 쓴 룬은 앞 룬의 마지막 타격 뒤에 나감 (그 사이 죽거나 못 나가면 재사용 대기를 돌려줌).
-     * quick = 칸을 골라서 쓴 것 (재사용 대기 중이면 소리 없이 알림만)
+     * quick = 칸을 골라서 쓴 것 (재사용 대기 중이면 소리 없이 알림만).
+     * breakLevel = 룬 아이템의 돌파 단계 (8단계): 위력 × 계수, 룬 정의는 그 단계의 것 (초월 3 · 6돌 강화 · 회복 · 보호막 × 계수), 화면 색 연출 단계
      */
-    public static boolean castRune(ServerPlayer sp, Runes.Rune r, boolean quick) {
-        if (r == null || sp.isRemoved()) return false;
+    public static boolean castRune(ServerPlayer sp, Runes.Rune base, boolean quick, int breakLevel) {
+        if (base == null || sp.isRemoved()) return false;
+        int lv = mmorpg.core.RuneBreak.clamp(breakLevel);
+        Runes.Rune r = mmorpg.core.RuneBreak.leveled(base, lv);
         if (Status.blockedBySilence(sp)) return false; // 보스 기믹: 침묵
         if (mmorpg.fabric.mount.Riding.blocked(sp, "skill")) return false; // 탈것에 탄 동안 (riding.js)
         long left = cooldownLeft(sp, r);
@@ -206,16 +216,21 @@ public final class RuneCast {
             Notify.warn(sp, "§c" + r.def().str("name") + " §7— 자바 판에는 아직 없는 룬입니다");
             return false;
         }
+        Breakthrough.noteCast(sp, r, lv); // 이 룬의 돌파 단계 (화면 색 연출 · 알림)
         Combo cb = r.family().equals(COMBO_FAMILY) ? combo : null;
         Plan plan = cb == null ? null : cb.plan(sp, r);
-        double P = power(sp, r.family()) * (plan == null ? 1 : plan.mult());
+        double P = power(sp, r.family()) * (plan == null ? 1 : plan.mult()) * mmorpg.core.RuneBreak.coef(lv);
         BooleanSupplier run = () -> {
+            Breakthrough.noteCast(sp, r, lv); // 콤보로 늦게 나가도 이 단계
+            boolean ok;
             try {
-                return fn.cast(sp, r, P, r.def());
+                ok = fn.cast(sp, r, P, r.def());
             } catch (RuntimeException e) {
                 Mmorpg.LOG.warn("[mmorpg] rune {}", r.id(), e);
-                return false;
+                ok = false;
             }
+            if (ok) Breakthrough.onCast(sp, r, lv); // 6돌 초월: 금빛 각성
+            return ok;
         };
         long now = Tasks.now();
         if (plan != null && plan.start() > now) {
@@ -243,9 +258,9 @@ public final class RuneCast {
 
     // ------------------------------------------------------------ 입력
 
-    /** 룬 아이템 우클릭 (onRuneItemUse — RuneItem.use, 서버) */
+    /** 룬 아이템 우클릭 (onRuneItemUse — RuneItem.use, 서버): 그 아이템의 돌파 단계로 */
     public static void onUse(ServerPlayer sp, ItemStack stack, Runes.Rune r) {
-        castRune(sp, r, false);
+        castRune(sp, r, false, Breakthrough.of(stack));
     }
 
     /** 룬 칸을 고르면 바로 쓰는지 (/runequick on — auto 는 터치일 때만이라 자바에서는 꺼짐) */
@@ -259,10 +274,11 @@ public final class RuneCast {
             int slot = sp.getInventory().getSelectedSlot();
             Integer last = LAST_SLOT.put(sp.getUUID(), slot);
             if (last == null || last == slot) continue;
-            Runes.Rune r = RuneItems.runeOf(sp.getInventory().getItem(slot));
+            ItemStack stack = sp.getInventory().getItem(slot);
+            Runes.Rune r = RuneItems.runeOf(stack);
             if (r == null || !quickCastOn(sp)) continue;
             if (sp.gameMode() == GameType.SPECTATOR || sp.isDeadOrDying()) continue;
-            castRune(sp, r, true);
+            castRune(sp, r, true, Breakthrough.of(stack));
         }
     }
 
@@ -298,7 +314,8 @@ public final class RuneCast {
             String state = left > 0 ? "§c" + sec(left) + "초" : "§a준비";
             double sh = RpgHealth.shieldOf(sp);
             String comboText = combo != null && r.family().equals(COMBO_FAMILY) ? combo.hud(sp) : "";
-            Notify.bar(sp, "§7룬 " + r.gradeColor() + r.def().str("name") + "§r " + state + " §8| §7" + Runes.runeStatLabel(applied(sp, r.family()), "×")
+            Notify.bar(sp, "§7룬 " + r.gradeColor() + r.def().str("name") + Breakthrough.nameTag(Breakthrough.of(sp.getMainHandItem())) + "§r " + state + " §8| §7"
+                    + Runes.runeStatLabel(applied(sp, r.family()), "×")
                     + (sh > 0 ? " §8| §6보호막 " + (long) Math.ceil(sh) : "") + comboText + Notify.hudSuffix(sp));
         }
     }

@@ -26,6 +26,8 @@ final class RuneDex {
 
     /** 그림자 분신 몸 (그림자보다 밝게 — 풀밭 위에서도 사람 모양이 보이게) */
     private static final double[] CLONE = {0.12, 0.45, 0.24};
+    /** 무영검의 멈춘 시간 빛 (ULT_FX.runes.shadowless.still — 돌파로 늘어난 멈춤 표시) */
+    private static final double[] STILL = {0.86, 0.9, 0.96};
 
     static void register() {
         RuneCast.register("galeSlash", RuneDex::galeSlash);
@@ -307,7 +309,7 @@ final class RuneDex {
             mz += e.getZ() / list.size();
         }
         Vec3 mid0 = new Vec3(mx, my, mz);
-        RuneKit.ultSkyFor(level, c0, "shadowless", delay + 24, null);
+        RuneKit.ultSkyFor(sp, level, c0, "shadowless", delay + 24, null);
         RuneKit.ultFlashFor(sp, level, c0, "shadowless", "still", Opt.of("time", new double[] {0.02, 0, 0.3}));
         RuneKit.domainSigil(level, c0, 6.5, "blade", glow, white, Opt.of("life", (delay + 2) / 20.0, "spinRate", 0.0, "alpha", 0.7, "fade", 0.15));
         Vec3 still = RuneKit.skyPoint(sp, mid0, 6, 20, 6, 22);
@@ -373,6 +375,10 @@ final class RuneDex {
                             "color", glow, "cell", (double) swordCell));
                 }
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) <= 0) return;
+                // 8단계 돌파 (3 · 6돌 — 멈춤이 꽂힌 뒤에도 남음): 머리 위에 멈춘 시간 문양 (돌지 않음) — 풀릴 때까지
+                int still = freeze - delay - (ii % 3);
+                if (still > 2) SkillFx.rune(level, V.up(e.getEyePosition(), 0.5), Opt.of("size", 0.5, "life", still / 20.0, "color", STILL, "alpha", 0.95,
+                        "rate", 0.0, "spin", ii * 37.0));
                 SkillFx.fx(level, "rpg:slash_x", V.add(at, v, -0.2), Opt.of("dir", v, "size", 1.6, "life", 0.3, "color", white, "alpha", 1.0));
                 RuneKit.rfx2(level, "wave", V.add(at, v, -0.3), Opt.of("size", 1.25, "life", 0.3, "spin", (double) ((ii * 47) % 180), "grow", 0.3, "fade", 0.5),
                         glow, white);

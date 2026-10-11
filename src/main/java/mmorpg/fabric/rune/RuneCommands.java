@@ -20,7 +20,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
 /**
- * 룬 명령어 (commands.js): /rune &lt;계열&gt; &lt;등급&gt; (룬 받기 · 관리자), /runeticket [장수] [advanced · str · dex · int · vit] (뽑기권 받기 · 관리자 —
+ * 룬 명령어 (commands.js): /rune &lt;계열&gt; &lt;등급&gt; [돌파 0 ~ 6] (룬 받기 · 관리자 — 돌파는 8단계), /runeticket [장수] [advanced · str · dex · int · vit] (뽑기권 받기 · 관리자 —
  * 스탯 룬 뽑기권은 7단계 스탯 트리),
  * /runequick auto|on|off (룬 칸을 고르면 바로 사용 — 모두).
  */
@@ -49,7 +49,9 @@ public final class RuneCommands {
         d.register(Commands.literal("rune").requires(RuneCommands::admin)
                 .then(Commands.argument("family", StringArgumentType.word()).suggests(FAMILIES)
                         .then(Commands.argument("grade", StringArgumentType.word()).suggests(GRADES)
-                                .executes(RuneCommands::give))));
+                                .executes(c -> give(c, 0))
+                                .then(Commands.argument("level", IntegerArgumentType.integer(0, mmorpg.core.RuneBreak.max()))
+                                        .executes(c -> give(c, IntegerArgumentType.getInteger(c, "level")))))));
         d.register(Commands.literal("runeticket").requires(RuneCommands::admin)
                 .executes(c -> tickets(c, 1, "normal"))
                 .then(Commands.argument("amount", IntegerArgumentType.integer(1, 640))
@@ -66,7 +68,7 @@ public final class RuneCommands {
         sp.sendSystemMessage(Component.literal(BedrockText.toJava(text)));
     }
 
-    private static int give(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+    private static int give(CommandContext<CommandSourceStack> c, int level) throws CommandSyntaxException {
         ServerPlayer sp = c.getSource().getPlayerOrException();
         String family = StringArgumentType.getString(c, "family");
         String grade = StringArgumentType.getString(c, "grade");
@@ -75,8 +77,8 @@ public final class RuneCommands {
             tell(sp, "§c없는 룬입니다. §7(계열 " + String.join("·", Runes.FAMILY_ORDER) + ", 등급 common·rare·noble·hero·transcend)");
             return 0;
         }
-        Notify.give(sp, RuneItems.stack(family, grade));
-        tell(sp, Notify.PREFIX + "룬 지급: " + r.gradeColor() + r.def().str("name") + "§r §7(" + r.famName() + " 룬 · " + r.gradeName() + ")");
+        Notify.give(sp, Breakthrough.stack(family, grade, level));
+        tell(sp, Notify.PREFIX + "룬 지급: " + r.gradeColor() + r.def().str("name") + Breakthrough.nameTag(level) + "§r §7(" + r.famName() + " 룬 · " + r.gradeName() + ")");
         return 1;
     }
 

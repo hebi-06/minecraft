@@ -36,6 +36,7 @@ public final class RuneSystem {
         RuneKit.init();
         Ult.init();
         RuneCast.init();
+        Breakthrough.init(); // 룬 돌파 (8단계 — 시전 단계 기록)
         RuneGacha.init();
         RuneCommands.init();
         RpgHealth.shieldBroken = RuneSystem::onShieldBreak;

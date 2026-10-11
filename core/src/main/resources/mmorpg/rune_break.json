@@ -1,0 +1,187 @@
+{
+  "_doc": "룬 돌파 (8단계 — 애드온에는 없음): 같은 룬 둘을 합치면 남는 룬의 돌파 단계 = 남는 룬 + 재료 + 1 (max 까지). 1돌마다 계수 +perLevel (피해 = 위력 P, 회복 · 보호막 = scaleKeys). 초월 룬은 tiers (3 · 6) 에 이르면 transcend[fn][단계] 의 값으로 바뀌고 연출도 바뀜 (fx — 0~2돌은 화면 색 연출 없음). change: key = 룬 정의의 값, to = 바뀐 값, div = 글자에 보일 때 나누는 수 (틱 → 초 20, 비율 → % 0.01), text 의 {from} · {to} = 앞 단계 값 · 바뀐 값.",
+  "max": 6,
+  "perLevel": 0.1,
+  "scaleKeys": ["heal", "shield"],
+  "grindPerLevel": 1,
+  "tiers": [3, 6],
+  "fx": {
+    "3": {"name": "화면 색 연출", "text": "하늘빛 · 번쩍임", "skyTicks": 1, "skyDist": 1, "flashHold": 0, "flashOut": 1, "edge": 0, "awaken": false},
+    "6": {"name": "각성 연출", "text": "짙은 하늘빛 · 테두리 빛", "skyTicks": 1.5, "skyDist": 0.6, "flashHold": 0.08, "flashOut": 1.5, "edge": 1, "awaken": true}
+  },
+  "transcend": {
+    "heavenFall": {
+      "3": [
+        {"key": "radius", "to": 7.5, "text": "검이 꽂히는 범위 {from} → {to}칸"},
+        {"key": "lift", "to": 1.3, "text": "더 높이 띄움"}
+      ],
+      "6": [
+        {"key": "radius", "to": 9, "text": "범위 {from} → {to}칸"},
+        {"key": "lift", "to": 1.6},
+        {"key": "range", "to": 28, "text": "사거리 {from} → {to}칸"}
+      ]
+    },
+    "shadowless": {
+      "3": [
+        {"key": "maxTargets", "to": 12, "text": "베는 적 {from} → {to}명"},
+        {"key": "freeze", "to": 40, "div": 20, "text": "멈춤 {from} → {to}초"}
+      ],
+      "6": [
+        {"key": "maxTargets", "to": 16, "text": "베는 적 {from} → {to}명"},
+        {"key": "freeze", "to": 60, "div": 20, "text": "멈춤 {from} → {to}초"},
+        {"key": "range", "to": 16, "text": "사거리 {from} → {to}칸"}
+      ]
+    },
+    "undyingPact": {
+      "3": [
+        {"key": "ticks", "to": 200, "div": 20, "text": "맹약 {from} → {to}초 (회복 · 반격도 더)"}
+      ],
+      "6": [
+        {"key": "ticks", "to": 240, "div": 20, "text": "맹약 {from} → {to}초"},
+        {"key": "radius", "to": 5.5, "text": "반격 범위 {from} → {to}칸"}
+      ]
+    },
+    "meteor": {
+      "3": [
+        {"key": "radius", "to": 7.5, "text": "운석 범위 {from} → {to}칸"},
+        {"key": "fire", "to": 8, "text": "불붙음 {from} → {to}초"}
+      ],
+      "6": [
+        {"key": "radius", "to": 9, "text": "운석 범위 {from} → {to}칸"},
+        {"key": "fire", "to": 12, "text": "불붙음 {from} → {to}초"},
+        {"key": "lift", "to": 1.3, "text": "더 높이 띄움"}
+      ]
+    },
+    "berserker": {
+      "3": [
+        {"key": "hits", "to": 8, "text": "광폭화 {from} → {to}초"},
+        {"key": "reduce", "to": 0.3, "div": 0.01, "text": "받는 피해 -{from} → -{to}%"}
+      ],
+      "6": [
+        {"key": "hits", "to": 10, "text": "광폭화 {from} → {to}초"},
+        {"key": "reduce", "to": 0.35, "div": 0.01, "text": "받는 피해 -{from} → -{to}%"},
+        {"key": "radius", "to": 5.5, "text": "난타 범위 {from} → {to}칸"}
+      ]
+    },
+    "skyBow": {
+      "3": [
+        {"key": "targets", "to": 7, "text": "화살 {from} → {to}발"},
+        {"key": "splash", "to": 2.5, "text": "폭발 {from} → {to}칸"}
+      ],
+      "6": [
+        {"key": "targets", "to": 10, "text": "화살 {from} → {to}발"},
+        {"key": "splash", "to": 3, "text": "폭발 {from} → {to}칸"},
+        {"key": "range", "to": 20, "text": "사거리 {from} → {to}칸"}
+      ]
+    },
+    "archangel": {
+      "3": [
+        {"key": "hits", "to": 10, "text": "강림 {from} → {to}초"},
+        {"key": "cap", "to": 0.3, "div": 0.01, "text": "보호막 최대 {from} → {to}%"}
+      ],
+      "6": [
+        {"key": "hits", "to": 12, "text": "강림 {from} → {to}초"},
+        {"key": "cap", "to": 0.35, "div": 0.01, "text": "보호막 최대 {from} → {to}%"},
+        {"key": "radius", "to": 7.5, "text": "빛의 범위 {from} → {to}칸"},
+        {"key": "allyRadius", "to": 10, "text": "아군 {from} → {to}칸"}
+      ]
+    },
+    "thunderSpear": {
+      "3": [
+        {"key": "chainRange", "to": 8, "text": "연쇄 폭발 {from} → {to}칸"},
+        {"key": "stun", "to": 30, "div": 20, "text": "기절 {from} → {to}초"}
+      ],
+      "6": [
+        {"key": "chainRange", "to": 10, "text": "연쇄 폭발 {from} → {to}칸"},
+        {"key": "stun", "to": 40, "div": 20, "text": "기절 {from} → {to}초"},
+        {"key": "width", "to": 2.4, "text": "창 폭 {from} → {to}칸"}
+      ]
+    },
+    "moonAssassin": {
+      "3": [
+        {"key": "splash", "to": 4.5, "text": "X 베기 주위 {from} → {to}칸"}
+      ],
+      "6": [
+        {"key": "splash", "to": 6, "text": "X 베기 주위 {from} → {to}칸"},
+        {"key": "range", "to": 20, "text": "표식 사거리 {from} → {to}칸"}
+      ]
+    },
+    "heavenSplit": {
+      "3": [
+        {"key": "width", "to": 3.4, "text": "검기 폭 {from} → {to}칸"},
+        {"key": "range", "to": 22, "text": "사거리 {from} → {to}칸"}
+      ],
+      "6": [
+        {"key": "width", "to": 4.4, "text": "검기 폭 {from} → {to}칸"},
+        {"key": "range", "to": 28, "text": "사거리 {from} → {to}칸"}
+      ]
+    },
+    "spellbladeRelease": {
+      "3": [
+        {"key": "length", "to": 15, "text": "내려찍기 {from} → {to}칸"},
+        {"key": "cross", "to": 4, "text": "십자 {from} → {to}칸"}
+      ],
+      "6": [
+        {"key": "length", "to": 18, "text": "내려찍기 {from} → {to}칸"},
+        {"key": "cross", "to": 5, "text": "십자 {from} → {to}칸"},
+        {"key": "width", "to": 3.2, "text": "폭 {from} → {to}칸"},
+        {"key": "range", "to": 12, "text": "가로 베기 {from} → {to}칸"}
+      ]
+    },
+    "elementRelease": {
+      "3": [
+        {"key": "width", "to": 2.6, "text": "검기 폭 {from} → {to}칸"},
+        {"key": "fire", "to": 8, "text": "불붙음 {from} → {to}초"},
+        {"key": "slowTicks", "to": 80, "div": 20, "text": "얼음 구속 {from} → {to}초"}
+      ],
+      "6": [
+        {"key": "width", "to": 3.2, "text": "검기 폭 {from} → {to}칸"},
+        {"key": "range", "to": 24, "text": "사거리 {from} → {to}칸"},
+        {"key": "chain", "to": 9, "text": "번개 연쇄 {from} → {to}칸"}
+      ]
+    },
+    "summonSpirits": {
+      "3": [
+        {"key": "hits", "to": 12, "div": 4, "text": "정령마다 {from} → {to}번"},
+        {"key": "ticks", "to": 140, "div": 20, "text": "소환 {from} → {to}초"}
+      ],
+      "6": [
+        {"key": "hits", "to": 16, "div": 4, "text": "정령마다 {from} → {to}번"},
+        {"key": "ticks", "to": 180, "div": 20, "text": "소환 {from} → {to}초"}
+      ]
+    },
+    "blackHole": {
+      "3": [
+        {"key": "pull", "to": 11, "text": "빨아들이는 범위 {from} → {to}칸"},
+        {"key": "radius", "to": 9.5, "text": "붕괴 {from} → {to}칸"}
+      ],
+      "6": [
+        {"key": "pull", "to": 13, "text": "빨아들이는 범위 {from} → {to}칸"},
+        {"key": "radius", "to": 11, "text": "붕괴 {from} → {to}칸"},
+        {"key": "hits", "to": 8, "text": "띄워 치기 {from} → {to}번"}
+      ]
+    },
+    "awakening": {
+      "3": [
+        {"key": "statUp", "to": 0.3, "div": 0.01, "text": "모든 스탯 +{from} → +{to}%"},
+        {"key": "ticks", "to": 360, "div": 20, "text": "각성 {from} → {to}초"}
+      ],
+      "6": [
+        {"key": "statUp", "to": 0.35, "div": 0.01, "text": "모든 스탯 +{from} → +{to}%"},
+        {"key": "ticks", "to": 400, "div": 20, "text": "각성 {from} → {to}초"},
+        {"key": "reduce", "to": 0.35, "div": 0.01, "text": "받는 피해 -{from} → -{to}%"}
+      ]
+    },
+    "swordGod": {
+      "3": [
+        {"key": "hits", "to": 20, "text": "평타 {from} → {to}번"},
+        {"key": "crit", "to": 0.25, "div": 0.01, "text": "치명타 +{from} → +{to}%p"}
+      ],
+      "6": [
+        {"key": "hits", "to": 24, "text": "평타 {from} → {to}번"},
+        {"key": "crit", "to": 0.3, "div": 0.01, "text": "치명타 +{from} → +{to}%p"},
+        {"key": "wave", "to": 14, "text": "검기 {from} → {to}칸"}
+      ]
+    }
+  }
+}

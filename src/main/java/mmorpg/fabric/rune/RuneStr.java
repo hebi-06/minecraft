@@ -256,7 +256,7 @@ final class RuneStr {
         SkillFx.play(level, "beacon.power", g, 0.6, 1);
         SkillFx.play(level, "mob.wither.spawn", sp.position(), 1.4, 0.35);
         // 2차 강화 — 예고: 금빛 하늘 (하늘빛) · 겨눈 땅의 성광 문양 (커지며 돎) · 검이 나오는 하늘 뒤쪽이 갈라짐 · 검이 떨어질 때 둘레의 빛기둥 넷
-        RuneKit.ultSkyFor(level, g, "heavenFall", delay + 40, null);
+        RuneKit.ultSkyFor(sp, level, g, "heavenFall", delay + 40, null);
         RuneKit.domainSigil(level, g, radius * 1.15, "holy", gold, white, Opt.of("life", (delay + 1) / 20.0, "spinRate", 28.0, "grow", 0.3, "alpha", 0.78,
                 "fade", 0.08));
         Vec3 rift = RuneKit.skyPoint(sp, g, 6, 21, 6, 22);

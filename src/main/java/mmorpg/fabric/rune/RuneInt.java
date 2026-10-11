@@ -318,7 +318,7 @@ final class RuneInt {
         SkillFx.play(level, "mob.blaze.shoot", sp.getEyePosition(), 0.6, 1);
         SkillFx.play(level, "fire.fire", g, 0.7, 1);
         // 2차 강화 — 예고: 불타는 하늘 · 겨눈 땅의 비전 문양 (불빛, 커지며 거꾸로 돎) · 운석이 오기 전에 앞쪽 하늘이 불타며 갈라짐
-        RuneKit.ultSkyFor(level, g, "meteor", delay + 46, null);
+        RuneKit.ultSkyFor(sp, level, g, "meteor", delay + 46, null);
         RuneKit.domainSigil(level, g, radius * 1.15, "arcane", glow, core, Opt.of("life", (delay + 1) / 20.0, "spinRate", -30.0, "grow", 0.3, "alpha", 0.78,
                 "fade", 0.08));
         Vec3 burning = RuneKit.skyPoint(sp, g, 6, 21, 6, 22);

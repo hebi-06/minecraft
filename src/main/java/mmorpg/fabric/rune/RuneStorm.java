@@ -330,7 +330,7 @@ final class RuneStorm {
         // 2차 강화 — 예고: 폭풍 하늘 · 앞쪽 하늘의 먹구름 둘 · 발밑의 칼날 문양 (빠르게 돎) · 모으는 동안 앞쪽 땅에 하늘에서 번개 셋
         Vec3 c0 = sp.position();
         Vec3 f0 = V.flat(sp.getViewVector(1F));
-        RuneKit.ultSkyFor(level, c0, "thunderSpear", (int) charge + 44, null);
+        RuneKit.ultSkyFor(sp, level, c0, "thunderSpear", (int) charge + 44, null);
         Vec3 storm = RuneKit.skyPoint(sp, V.add(c0, f0, 10), 6, 20, 6, 22);
         for (int sd : new int[] {-1, 1}) {
             RuneKit.rfx(level, "cloud", V.add(storm, V.rightOf(f0), sd * 4.5), Opt.of("size", 5.2, "life", (charge + 24) / 20, "grow", 0.2, "cell", sd > 0 ? 1.0 : 2.0,
@@ -355,12 +355,14 @@ final class RuneStorm {
             double len = Math.max(1, RuneKit.rayLength(level, from, view, k.num("range")));
             double speed = 50;
             Vec3 shown = V.up(from, 0.25);
-            RuneKit.rfx2(level, "spear", V.add(shown, view, 1.2), Opt.of("dir", view, "speed", speed, "size", 1.35, "life", Math.max(0.05, (len - 1.2) / speed), "cell",
-                    Math.floor(Kit.rand() * 4)), glow, white, SPEAR, null);
+            // 창 크기 · 길의 번개 굵기는 폭 width 를 따라 (기본 1.6칸 → 1.35 · 0.12 — 8단계 6돌은 폭이 넓어져 창도 큼)
+            double wk = k.num("width") / 1.6;
+            RuneKit.rfx2(level, "spear", V.add(shown, view, 1.2), Opt.of("dir", view, "speed", speed, "size", 1.35 * wk, "life", Math.max(0.05, (len - 1.2) / speed),
+                    "cell", Math.floor(Kit.rand() * 4)), glow, white, SPEAR, null);
             for (double s = 0; s < len; s += 4) {
                 final double ss = s;
                 RuneKit.later(Math.round((s / speed) * 20), () -> SkillFx.bolt(level, V.add(from, view, ss), V.add(from, view, Math.min(len, ss + 4)), glow,
-                        Opt.of("jag", 0.45, "thick", 0.12, "life", 0.35)));
+                        Opt.of("jag", 0.45 * wk, "thick", 0.12 * wk, "life", 0.35)));
             }
             SkillFx.play(level, "item.trident.throw", from, 0.5, 1);
             SkillFx.play(level, "item.trident.thunder", from, 0.8, 1);
