@@ -59,7 +59,7 @@ public final class StatScreen extends Screen {
     private static final Identifier ENDER = Mmorpg.id("ui/ender_chest");
     private static final Identifier MOUNT = Mmorpg.id("ui/icon_mount");
     /** 스탯 줄의 나무 칸 (+1 단추 왼쪽 · 첫 줄) */
-    public static final int TREE_W = 66;
+    public static final int TREE_W = 76;
     public static final int TREE_H = 11;
 
     private int left;
@@ -141,7 +141,7 @@ public final class StatScreen extends Screen {
         g.pose().scale(0.5625F, 0.5625F);
         g.item(SAPLING, 0, 0);
         g.pose().popMatrix();
-        String label = pending ? ((now / 400) % 2 == 0 ? "§e§l갈래 고르기!" : "§6§l갈래 고르기!") : "§7나무 " + Stats.info(key).str("color") + tier + "§7/" + size;
+        String label = pending ? ((now / 400) % 2 == 0 ? "§e갈래 고르기!" : "§6갈래 고르기!") : "§7나무 " + Stats.info(key).str("color") + tier + "§7/" + size;
         g.text(font, BedrockText.toJava(label), x + 12, y + 2, 0xFFFFFFFF, true);
     }
 

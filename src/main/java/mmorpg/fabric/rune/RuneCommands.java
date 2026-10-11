@@ -20,7 +20,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.Permissions;
 
 /**
- * 룬 명령어 (commands.js): /rune &lt;계열&gt; &lt;등급&gt; (룬 받기 · 관리자), /runeticket [장수] [advanced] (뽑기권 받기 · 관리자),
+ * 룬 명령어 (commands.js): /rune &lt;계열&gt; &lt;등급&gt; (룬 받기 · 관리자), /runeticket [장수] [advanced · str · dex · int · vit] (뽑기권 받기 · 관리자 —
+ * 스탯 룬 뽑기권은 7단계 스탯 트리),
  * /runequick auto|on|off (룬 칸을 고르면 바로 사용 — 모두).
  */
 public final class RuneCommands {
@@ -28,7 +29,12 @@ public final class RuneCommands {
 
     private static final SuggestionProvider<CommandSourceStack> FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.FAMILY_ORDER, b);
     private static final SuggestionProvider<CommandSourceStack> GRADES = (c, b) -> SharedSuggestionProvider.suggest(Runes.GRADE_ORDER, b);
-    private static final SuggestionProvider<CommandSourceStack> KINDS = (c, b) -> SharedSuggestionProvider.suggest(List.of("normal", "advanced"), b);
+    /** 뽑기권 종류: normal · advanced · 스탯 룬 뽑기권 (7단계 — str · dex · int · vit) */
+    private static final SuggestionProvider<CommandSourceStack> KINDS = (c, b) -> {
+        List<String> all = new java.util.ArrayList<>(List.of("normal", "advanced"));
+        all.addAll(mmorpg.core.StatTree.tickets().keySet());
+        return SharedSuggestionProvider.suggest(all, b);
+    };
     private static final SuggestionProvider<CommandSourceStack> MODES = (c, b) -> SharedSuggestionProvider.suggest(List.of("auto", "on", "off"), b);
 
     static void init() {
@@ -45,11 +51,11 @@ public final class RuneCommands {
                         .then(Commands.argument("grade", StringArgumentType.word()).suggests(GRADES)
                                 .executes(RuneCommands::give))));
         d.register(Commands.literal("runeticket").requires(RuneCommands::admin)
-                .executes(c -> tickets(c, 1, false))
+                .executes(c -> tickets(c, 1, "normal"))
                 .then(Commands.argument("amount", IntegerArgumentType.integer(1, 640))
-                        .executes(c -> tickets(c, IntegerArgumentType.getInteger(c, "amount"), false))
+                        .executes(c -> tickets(c, IntegerArgumentType.getInteger(c, "amount"), "normal"))
                         .then(Commands.argument("kind", StringArgumentType.word()).suggests(KINDS)
-                                .executes(c -> tickets(c, IntegerArgumentType.getInteger(c, "amount"), "advanced".equals(StringArgumentType.getString(c, "kind")))))));
+                                .executes(c -> tickets(c, IntegerArgumentType.getInteger(c, "amount"), StringArgumentType.getString(c, "kind"))))));
         d.register(Commands.literal("runequick")
                 .executes(c -> quick(c, "auto"))
                 .then(Commands.argument("mode", StringArgumentType.word()).suggests(MODES)
@@ -74,8 +80,16 @@ public final class RuneCommands {
         return 1;
     }
 
-    private static int tickets(CommandContext<CommandSourceStack> c, int amount, boolean adv) throws CommandSyntaxException {
+    /** 뽑기권 받기: kind = normal · advanced · 스탯 (str · dex · int · vit — 스탯 룬 뽑기권) */
+    private static int tickets(CommandContext<CommandSourceStack> c, int amount, String kind) throws CommandSyntaxException {
         ServerPlayer sp = c.getSource().getPlayerOrException();
+        mmorpg.core.StatTree.Ticket st = mmorpg.core.StatTree.tickets().get(kind);
+        if (st != null) {
+            for (int left = amount; left > 0; left -= 64) Notify.give(sp, RuneItems.ticketById(st.item(), Math.min(64, left)));
+            tell(sp, Notify.PREFIX + st.name() + " " + amount + "장 지급");
+            return amount;
+        }
+        boolean adv = "advanced".equals(kind);
         for (int left = amount; left > 0; left -= 64) Notify.give(sp, RuneItems.ticket(Math.min(64, left), adv));
         tell(sp, Notify.PREFIX + RuneKit.RUNE.str(adv ? "advTicketName" : "ticketName") + " " + amount + "장 지급");
         return amount;

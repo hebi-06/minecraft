@@ -236,7 +236,7 @@ public final class RpgStatTreeTests {
                 }
             }
             h.assertTrue(dexRunes == 3 && other == 0, "민첩 룬 3 · 다른 계열 0: " + dexRunes + " / " + other);
-            h.assertTrue(sp.getMainHandItem().isEmpty(), "뽑기권 3장 다 씀");
+            h.assertTrue(count(sp, t) == 0, "뽑기권 3장 다 씀 (" + count(sp, t) + ")"); // 마지막 룬은 빈 손 칸에 들어갈 수 있음
             done(h, sp);
             return;
         }

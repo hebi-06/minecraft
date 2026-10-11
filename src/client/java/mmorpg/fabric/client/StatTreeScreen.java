@@ -126,11 +126,26 @@ public final class StatTreeScreen extends Screen {
         return new int[] {left + W - 12 - RESET_W / 2, top + BTN_Y + BTN_H / 2};
     }
 
+    /** 확인 창 (가운데 상자 — x, y, 너비, 높이) */
+    private int[] confirmBox() {
+        int bw = 250;
+        int bh = 84;
+        return new int[] {left + (W - bw) / 2, top + (H - bh) / 2 - 6, bw, bh};
+    }
+
+    static final int CONFIRM_BTN_W = 80;
+    static final int CONFIRM_BTN_H = 18;
+
     /** 확인 창 단추 (yes = 고르기 · 초기화, 아니면 취소) */
     public int[] confirmCenter(boolean yes) {
-        int cx = left + W / 2;
-        int cy = top + H / 2;
-        return new int[] {yes ? cx - 40 : cx + 40, cy + 22};
+        int[] b = confirmBox();
+        int cx = b[0] + b[2] / 2;
+        return new int[] {yes ? cx - 48 : cx + 48, b[1] + b[3] - 16};
+    }
+
+    private boolean inConfirmBtn(double mx, double my, boolean yes) {
+        int[] c = confirmCenter(yes);
+        return Math.abs(mx - c[0]) < CONFIRM_BTN_W / 2.0 && Math.abs(my - c[1]) < CONFIRM_BTN_H / 2.0;
     }
 
     public boolean confirming() {
@@ -196,6 +211,39 @@ public final class StatTreeScreen extends Screen {
 
     private void click() {
         minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+    }
+
+    /** 받침이 있으면 "을", 없으면 "를" (힘을 · 민첩을 …) */
+    static String eul(String word) {
+        if (word == null || word.isEmpty()) return "을";
+        char c = word.charAt(word.length() - 1);
+        if (c < 0xAC00 || c > 0xD7A3) return "을(를)";
+        return (c - 0xAC00) % 28 == 0 ? "를" : "을";
+    }
+
+    /** 긴 줄은 " · " 에서 나눠 여러 줄로 (너비 max) */
+    private List<String> wrap(String line, int max) {
+        List<String> out = new ArrayList<>();
+        if (font.width(BedrockText.toJava(line)) <= max) {
+            out.add(line);
+            return out;
+        }
+        String[] parts = line.split(" · ");
+        StringBuilder cur = new StringBuilder();
+        String color = "";
+        for (String part : parts) {
+            String next = cur.length() == 0 ? part : cur + " · " + part;
+            if (cur.length() > 0 && font.width(BedrockText.toJava(next)) > max) {
+                out.add(cur.toString());
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("(§[0-9a-fk-or])+").matcher(cur);
+                while (m.find()) color = m.group();
+                cur = new StringBuilder("   " + color + part);
+            } else {
+                cur = new StringBuilder(next);
+            }
+        }
+        if (cur.length() > 0) out.add(cur.toString());
+        return out;
     }
 
     private void deny() {
@@ -278,7 +326,7 @@ public final class StatTreeScreen extends Screen {
         int ax0 = left + 10;
         int ax1 = left + W - 10;
         int ay0 = top + 46;
-        int ay1 = top + 127;
+        int ay1 = top + 128;
         g.fillGradient(ax0, ay0, ax1, ay1, rgb(tree.color(), 0x26), 0x40000000);
         g.fill(ax0, ay1 - 1, ax1, ay1, rgb(tree.color(), 0x50));
 
@@ -362,7 +410,7 @@ public final class StatTreeScreen extends Screen {
             }
             // 단계 값 (아래)
             String lab = (open ? "§7" : "§8") + n.at();
-            text(g, lab, nodeX(i) - font.width(BedrockText.toJava(lab)) / 2, top + CY + FORK_DY + 12);
+            text(g, lab, nodeX(i) - font.width(BedrockText.toJava(lab)) / 2, top + CY + FORK_DY + 11);
         }
         if (hoverIndex >= 0) {
             int[] c = nodeCenter(hoverIndex, hoverOption);
@@ -371,7 +419,9 @@ public final class StatTreeScreen extends Screen {
 
         // 설명 (마우스를 올린 칸, 아니면 나무 요약)
         g.fill(left + 10, top + PANEL_Y - 2, left + W - 10, top + BTN_Y - 4, 0x48000000);
-        List<String> lines = hoverIndex >= 0 ? nodeLines(tree, hoverIndex, hoverOption, value, picks) : summaryLines(tree, value, picks);
+        List<String> raw = hoverIndex >= 0 ? nodeLines(tree, hoverIndex, hoverOption, value, picks) : summaryLines(tree, value, picks);
+        List<String> lines = new ArrayList<>();
+        for (String l : raw) lines.addAll(wrap(l, W - 28));
         for (int k = 0; k < Math.min(7, lines.size()); k++) text(g, fit(lines.get(k), W - 28), left + 14, top + PANEL_Y + 2 + k * 10);
 
         // 단추: 스탯 창으로 · 갈래 초기화
@@ -507,7 +557,7 @@ public final class StatTreeScreen extends Screen {
     private List<String> summaryLines(StatTree.Tree tree, int value, Map<Integer, Integer> picks) {
         List<String> out = new ArrayList<>();
         String sname = Stats.info(tree.stat()).str("name");
-        out.add("§7" + sname + "을(를) 찍으면 나무가 자랍니다 (" + sname + " 10마다 한 칸 · 장비 · 버프 제외)");
+        out.add("§7" + sname + eul(sname) + " 찍으면 나무가 자랍니다 (" + sname + " 10마다 한 칸 · 장비 · 버프 제외)");
         String b = StatTree.bonusText(StatTree.treeTotals(tree.stat(), value, picks));
         out.add("§7이 나무: " + (b.isEmpty() ? "§8아직 없음" : "§a" + b));
         String all = StatTree.bonusText(ClientRpgState.treeTotals());
@@ -523,21 +573,19 @@ public final class StatTreeScreen extends Screen {
     }
 
     private void drawConfirm(GuiGraphicsExtractor g, int mx, int my) {
-        g.fill(left, top, left + W, top + H, 0xA0000000);
-        int bw = 250;
-        int bh = 70;
-        int bx = left + (W - bw) / 2;
-        int by = top + (H - bh) / 2 - 10;
-        RpgHud.sprite(g, BG, bx, by, bw, bh);
-        for (int k = 0; k < confirm.lines().size(); k++) text(g, fit(confirm.lines().get(k), bw - 20), bx + 10, by + 9 + k * 10);
-        int[] yes = confirmCenter(true);
-        int[] no = confirmCenter(false);
-        boolean overYes = Math.abs(mx - yes[0]) < 34 && Math.abs(my - yes[1]) < 9;
-        boolean overNo = Math.abs(mx - no[0]) < 34 && Math.abs(my - no[1]) < 9;
-        RpgHud.sprite(g, overYes ? BTN_HOVER : BTN, yes[0] - 34, yes[1] - 9, 68, 18);
-        RpgHud.sprite(g, overNo ? BTN_HOVER : BTN, no[0] - 34, no[1] - 9, 68, 18);
-        text(g, confirm.yes(), yes[0] - font.width(BedrockText.toJava(confirm.yes())) / 2, yes[1] - 4);
-        text(g, "§7취소", no[0] - font.width("취소") / 2, no[1] - 4);
+        g.fill(left, top, left + W, top + H, 0xB0000000);
+        int[] b = confirmBox();
+        g.fill(b[0] + 2, b[1] + 2, b[0] + b[2] - 2, b[1] + b[3] - 2, 0xF0141420);
+        RpgHud.sprite(g, BG, b[0], b[1], b[2], b[3]);
+        for (int k = 0; k < confirm.lines().size(); k++) text(g, fit(confirm.lines().get(k), b[2] - 22), b[0] + 11, b[1] + 11 + k * 11);
+        for (boolean yes : new boolean[] {true, false}) {
+            int[] c = confirmCenter(yes);
+            boolean over = inConfirmBtn(mx, my, yes);
+            g.fill(c[0] - CONFIRM_BTN_W / 2, c[1] - CONFIRM_BTN_H / 2, c[0] + CONFIRM_BTN_W / 2, c[1] + CONFIRM_BTN_H / 2, over ? 0xC0303040 : 0xC0181822);
+            RpgHud.sprite(g, over ? BTN_HOVER : BTN, c[0] - CONFIRM_BTN_W / 2, c[1] - CONFIRM_BTN_H / 2, CONFIRM_BTN_W, CONFIRM_BTN_H);
+            String label = yes ? confirm.yes() : "§f취소";
+            text(g, label, c[0] - font.width(BedrockText.toJava(label)) / 2, c[1] - 4);
+        }
     }
 
     // ------------------------------------------------------------ 누르기
@@ -548,13 +596,11 @@ public final class StatTreeScreen extends Screen {
         double mx = event.x();
         double my = event.y();
         if (confirm != null) {
-            int[] yes = confirmCenter(true);
-            int[] no = confirmCenter(false);
-            if (Math.abs(mx - yes[0]) < 34 && Math.abs(my - yes[1]) < 9) {
+            if (inConfirmBtn(mx, my, true)) {
                 click();
                 ClientPlayNetworking.send(new RpgNet.StatTreeActionPayload(confirm.action(), confirm.stat(), confirm.index(), confirm.option()));
                 confirm = null;
-            } else if (Math.abs(mx - no[0]) < 34 && Math.abs(my - no[1]) < 9) {
+            } else if (inConfirmBtn(mx, my, false)) {
                 click();
                 confirm = null;
             }

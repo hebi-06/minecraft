@@ -343,10 +343,11 @@ public final class StatTrees {
         return line;
     }
 
+    /** 잎 색: 나무 색을 흰색 쪽으로 반쯤 (잎 그림이 어두워 그대로 곱하면 갈색처럼 보임) */
     private static int argb(double[] c) {
-        int r = (int) Math.round(Math.max(0, Math.min(1, c[0])) * 255);
-        int g = (int) Math.round(Math.max(0, Math.min(1, c[1])) * 255);
-        int b = (int) Math.round(Math.max(0, Math.min(1, c[2])) * 255);
+        int r = (int) Math.round(Math.max(0, Math.min(1, c[0] + (1 - c[0]) * 0.55)) * 255);
+        int g = (int) Math.round(Math.max(0, Math.min(1, c[1] + (1 - c[1]) * 0.55)) * 255);
+        int b = (int) Math.round(Math.max(0, Math.min(1, c[2] + (1 - c[2]) * 0.55)) * 255);
         return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
@@ -359,7 +360,7 @@ public final class StatTrees {
         SkillFx.fx(level, "rpg:arrow_shot", V.up(c, 3.0), Opt.of("dir", V.UP, "speed", 0.0, "size", 3.0, "thick", 0.16, "life", 0.6, "color", SkillFx.WHITE, "alpha", 1.0));
         SkillFx.shock(level, c, color, 2.4, 0.6);
         SkillFx.sparks(level, V.up(c, 1.1), color, 14, 4);
-        SkillFx.particle(level, ColorParticleOption.create(ParticleTypes.TINTED_LEAVES, argb(color)), V.up(c, 2.2), 26, 0.9, 0.02);
+        SkillFx.particle(level, ColorParticleOption.create(ParticleTypes.TINTED_LEAVES, argb(color)), V.up(c, 2.2), 16, 0.8, 0.02);
         SkillFx.play(level, "random.levelup", c, 1.5, 0.7);
         SkillFx.play(level, "chime.amethyst_block", c, 1.2, 1.0);
         if (fork) Tasks.later(6, () -> {
