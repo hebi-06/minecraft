@@ -55,4 +55,7 @@ probe net.minecraft.world.entity.LivingEntity 'travelRidden|travel|jumpFromGroun
 probe net.minecraft.world.level.block.EnderChestBlock 'useWithoutItem|use'
 probe net.minecraft.client.player.LocalPlayer 'aiStep|jumpableVehicle|getJumpRidingScale|sendRidingJump|rideTick'
 probe net.minecraft.server.network.ServerGamePacketListenerImpl 'handlePlayerCommand|handlePlayerInput|handleMoveVehicle'
+probe net.minecraft.gametest.framework.GameTestHelper 'makeMockServerPlayerInLevel|makeMockPlayer'
+probe net.minecraft.server.level.ServerLevel 'isPvpAllowed|getGameRules'
+probe net.minecraft.server.level.ServerPlayer 'canHarmPlayer|isPvpAllowed|hurtServer'
 ls -la "$OUT/calls"

@@ -470,3 +470,10 @@ net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
 net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action
 net.minecraft.world.entity.player.Input
 net.minecraft.client.gui.contextualbar.JumpableVehicleBar
+net.fabricmc.fabric.api.client.gametest.v1.TestInput
+net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
+net.minecraft.server.network.CommonListenerCookie
+net.minecraft.gametest.framework.GameTestHelper
+net.minecraft.network.Connection
+net.minecraft.server.players.PlayerList
+net.minecraft.world.level.gamerules.GameRule
