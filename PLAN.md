@@ -49,6 +49,7 @@
 - 어디서나 엔더 상자: `ChestMenu(MenuType.GENERIC_9x3, id, 가방, getEnderChestInventory(), 3)` + `PlayerEnderChestContainer.setActiveChest(null)` (놓인 상자 없이 — 거리 제한 없음)
 - PvP 규칙: 게임 규칙 `GameRules.PVP` (`MinecraftServer.getGameRules().get / set(규칙, 값, 서버)`) — 꺼져 있으면 `ServerPlayer.canHarmPlayer` 가 플레이어끼리 피해를 먼저 막음
 - 화면 시험 Shift: `MouseButtonEvent.hasShiftDown()` 에 시험 입력의 Shift 가 안 실릴 수 있음 → `Minecraft.hasShiftDown()` 도 봄. 두 번째 플레이어: `CommonListenerCookie.createInitial` + `new ServerPlayer(서버, 세계, 프로필, 정보)` + `PlayerList.placeNewPlayer(가짜 연결 …)` (GameTestHelper 의 시험 플레이어와 같음)
+- 화면 시험 카메라: `Minecraft.setCameraEntity` 로 다른 엔티티의 눈으로 보면 내 플레이어 (`LocalPlayer`) 는 그려지지 않음 (LevelRenderer — 카메라 엔티티일 때만) → 탄 모습의 옆모습은 두 번째 플레이어로
 - 소리 이름: 늑대 · 바람 · 엔더 상자처럼 이름이 바뀐 소리는 `SoundEvents` 상수로 (`SkillFx` 대응표 — `BREEZE_WIND_CHARGE_BURST` · `WOLF_SHAKE` · `ENDER_CHEST_OPEN`)
 
 ## 2. 시험
@@ -61,7 +62,7 @@
 | 무기 사진첩 | 같은 화면 시험 (`RpgWeaponGallery`) | 디자인 31종 1인칭 · 3인칭 · 마네킹 옆 / 앞 · 밤 빛나는 칸, 활 · 완드 이펙트 틱별, 참격 7종 (평타 · 치명타 · 허공), 빛 알갱이 13종 (밤 실제 크기 · 마네킹 4배) — 사진으로 확인 |
 | 갑옷 · 창 · 길 안내 사진첩 | 같은 화면 시험 (`RpgGearGallery` · `RpgFormGallery` · `RpgNavGallery`) | 갑옷 세트 5종 (3인칭 앞 · 뒤 · 마네킹 · 걸을 때 망토) · 가방 설명 · 허수아비, 상점 · NPC 대화 · 버튼 목록 · 입력창 · 설정 창을 실제 마우스 · 키로 (확인 항목 + 사진), 길 안내 화살표 방향 · 바닥 빛 · 도착 |
 | 몬스터 · 신전 · 보스 · 세계수 사진첩 | 같은 화면 시험 (`RpgMobGallery` · `RpgMonsterGallery` · `RpgArenaGallery` · `RpgBossGallery` · 보스마다 `Rpg<보스>Gallery` · `RpgTreeGallery`) | 엔티티 26종 모습 · 동작, 몬스터 6종 공격 · 이름표 · 달려들기 · 반격, 신전 9종 (설계와 칸마다 같은지), 보스 9종은 진짜 신전을 짓고 제단 → 도전 창 → 소환 → 패턴마다 예고 · 판정 · 피하는 법 → 처치 · 보상까지 실제 입력으로 (확인 항목 + 사진), 세계수 자라기 · 밤 · 되돌리기 |
-| 탈것 · 결투 사진첩 | 같은 화면 시험 (`RpgMountGallery` · `RpgDuelGallery`) | 스탯 창 아랫줄 (풀이) → 탈것 칸 누르기 → 소환 · 탐 (3인칭 앞 · 뒤 · 옆 — 안장 위 높이), 달리기 빠르기 · 점프 키 길게 → 뛰기 막대 · 높이, 한 칸 오르기, 탄 채 공격 막힘, Shift + 탈것 칸 → 고르기 창 → 갈아탐, 내리면 사라짐, 탈것 아이템 (풀이 · 쓰기 · 이미 있음), 엔더 상자 창, 퀘스트 목록 → 스탯 창. 결투는 서버에 두 번째 플레이어 (가짜 연결) 를 넣고 /pvp → 3 · 2 · 1 → 실제 공격 · 맞음 · 상태 줄 → 승리 → 받은 신청 대화창 클릭 → /pvp 끝 · 결투 창 |
+| 탈것 · 결투 사진첩 | 같은 화면 시험 (`RpgMountGallery` · `RpgDuelGallery`) | 스탯 창 아랫줄 (풀이) → 탈것 칸 누르기 → 소환 · 탐 (3인칭 앞 · 뒤 — 안장 위 높이), 옆모습 (두 번째 플레이어가 탄 다이어울프 — 옆 · 비스듬한 앞 · 옆을 지나 달리기), 달리기 빠르기 · 점프 키 길게 → 뛰기 막대 · 높이, 한 칸 오르기, 탄 채 공격 막힘, Shift + 탈것 칸 → 고르기 창 → 갈아탐, 내리면 사라짐, 탈것 아이템 (풀이 · 쓰기 · 이미 있음), 엔더 상자 창, 퀘스트 목록 → 스탯 창. 결투는 서버에 두 번째 플레이어 (가짜 연결) 를 넣고 /pvp → 3 · 2 · 1 → 실제 공격 · 맞음 · 상태 줄 → 승리 → 받은 신청 대화창 클릭 → /pvp 끝 · 결투 창 |
 | 스킬 · 룬 사진첩 | 같은 화면 시험 (`RpgSkillGallery` · `RpgRuneGallery`) | 쓰러지지 않는 과녁 허스크 여섯 앞에서 스킬 14종 · 룬 80종을 실제 입력으로 (스킬 2 · 초월 룬은 3인칭으로 한 번 더): 써졌는지 · 들어간 피해를 로그로 확인 (안 써지거나 피해 룬의 피해가 0 이면 실패) + 순간 사진 |
 | 배포 환경 | `ci/prod_smoke.sh` · `./gradlew prodClient` | 릴리스 jar 그대로 실제 Fabric 서버 · 클라이언트를 켜서 시작 · HUD · 스탯 창 확인 (개발 환경에서만 되는 문제를 막음) |
 
