@@ -114,7 +114,8 @@ public final class Bosses {
             new BossWorm(),
             new BossJormungandr(),
             new BossNidhogg(),
-            new BossSkoll());
+            new BossSkoll(),
+            new BossYmir());
 
     /** 보스 키 → 모듈 */
     static final Map<String, BossModule> MODS = new LinkedHashMap<>();
