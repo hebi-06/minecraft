@@ -24,6 +24,7 @@
       "mmorpg.fabric.test.RpgJormungandrTests",
       "mmorpg.fabric.test.RpgNidhoggTests",
       "mmorpg.fabric.test.RpgSkollTests",
+      "mmorpg.fabric.test.RpgYmirTests",
       "mmorpg.fabric.test.RpgSurtrTests",
       "mmorpg.fabric.test.RpgMonsterTests",
       "mmorpg.fabric.test.RpgTreeTests"

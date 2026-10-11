@@ -74,7 +74,7 @@ public final class RpgJormungandrTests {
      * 헤엄 (엔진 pose): 목뿌리가 해자 가운데 원 (15.75칸) 위, 20틱에 0.18 × 20 / 15.75 라디안 돎, 엔티티 = 머리 (목뿌리 앞 3.94칸) = home,
      * 엔진 평타는 꺼짐, 밀어도 다음 틱에 머리 자리로, 속성 rpg:sink 1 (해자 위) · rpg:curve (원을 따라 굽음) · rpg:tail 0
      */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:jorm", maxTicks = 200)
     public void jormSwimsAroundTheMoat(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -120,7 +120,7 @@ public final class RpgJormungandrTests {
     }
 
     /** 독해 범람: 흰 고리 (안전 7.7칸) 안의 사람은 안 맞고, 밖의 사람은 독 물결 (피해 + 독) → 독이 빠지면 모인 곳으로 돌진 예약 */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:jorm", maxTicks = 300)
     public void floodSparesTheWhiteRing(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -160,7 +160,7 @@ public final class RpgJormungandrTests {
      * 세계를 감는 고리: 머리 앞 틈 (60°) — 예고 동안 틈으로 고리 밖에 나간 사람은 살고, 틈이 아닌 쪽 (담장 쪽) 으로 나간 사람은 조이기 시작할 때 짓눌림 (즉사).
      * 고리 소품 (rpg:prop_jorm_ring) 의 rpg:radius 는 21.5 에서 줄어듦
      */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:jorm", maxTicks = 300)
     public void ringSparesOnlyTheGap(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -205,7 +205,7 @@ public final class RpgJormungandrTests {
     }
 
     /** 아홉 걸음의 독: 표식이 없는 동료가 곁 (2.2칸) 에 1.5초 서 있으면 독이 빠짐 (도운 사람 조금 다침) · 다시 걸린 뒤 스스로 9칸을 걸으면 즉사 */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:jorm", maxTicks = 300)
     public void venomNineSteps(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -247,7 +247,7 @@ public final class RpgJormungandrTests {
     }
 
     /** 처치 보상: 에메랄드 22~32 · 경험치 70 · 빛나는 강화석 1~2 · 보스 재료 없음 · 처치 훅 · 재사용 대기 15분 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:jorm", maxTicks = 200)
     public void jormKillRewards(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -255,7 +255,10 @@ public final class RpgJormungandrTests {
         ServerPlayer p1 = RpgGearTests.player(h);
         RpgWormTests.put(p1, a, 0, 6);
         List<String> killed = new ArrayList<>();
-        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> killed.add(k);
+        // 훅은 서버 전체 (같이 도는 다른 시험의 처치도 옴) — 이 시험의 플레이어가 받은 처치만
+        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> {
+            if (list.contains(p1)) killed.add(k);
+        };
         Bosses.addBossKillHook(hook);
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.runAfterDelay(64, () -> {

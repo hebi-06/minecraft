@@ -173,7 +173,7 @@ public final class RpgYmirTests {
     // ------------------------------------------------------------ 시험
 
     /** 소환: 모듈 등록 · 체력 38000 · 호수 밑 10칸에서 깨운 사람 쪽을 보고 솟아오름 (그동안 무적 · 금이 가지 않음) · 모닥불 넷이 켜짐 → 땅 위에 서서 걸음 (rpg:gait) */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:ymir", maxTicks = 400)
     public void summonRisesFromTheLake(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -221,7 +221,7 @@ public final class RpgYmirTests {
     }
 
     /** 균열: 가까이에서 때린 피해만 온전히 (멀리서 ¼) · ⅓ · ⅔ 에서 rpg:crack 1 · 2 → 다 차면 하던 내려치기를 끊고 무릎 (rpg:crack 3) · 빈틈 +50% → 일어남 → 금이 가지 않음 */
-    @GameTest(maxTicks = 600)
+    @GameTest(environment = "mmorpg:ymir", maxTicks = 600)
     public void crackStagesKneelAndOpening(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -307,7 +307,7 @@ public final class RpgYmirTests {
     }
 
     /** 몽둥이 내려치기: 대상이 오른 어깨의 몽둥이 줄 위에 오게 몸을 돌림 → 직사각형 안은 피해 + 느림, 줄 옆 · 몸 뒤는 무사 */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:ymir", maxTicks = 400)
     public void clubSlamHitsTheLine(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -358,7 +358,7 @@ public final class RpgYmirTests {
     }
 
     /** 얼음 가시: 줄 위의 사람 → 피해 + 빙결 (속박) + 얼음 소품 (rpg:prop_ymir_ice) → 풀리는 순간 부서짐 (shatter, 틀 rpg_ice) → 0.6초 뒤 사라짐 */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:ymir", maxTicks = 400)
     public void spikesFreezeInIceThatShatters(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -405,7 +405,7 @@ public final class RpgYmirTests {
      * 니플헤임의 숨결 (체력 65%): 가운데로 뛰어옴 (무적) → 들이쉼 (보스 안개 · 모닥불 위 글자 · 걷어도 0.5초 안에 다시) →
      * 내쉼: 불이 켜진 모닥불 곁 (3.5칸) 은 안전, 눈밭은 얼어붙어 즉사 (얼음 덩어리) → 안개 걷힘
      */
-    @GameTest(maxTicks = 600)
+    @GameTest(environment = "mmorpg:ymir", maxTicks = 600)
     public void breathSparesTheFireside(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -486,7 +486,7 @@ public final class RpgYmirTests {
     }
 
     /** 쓰러뜨리면 보상 (에메랄드 34~48 · 서리 심장 · 거인 뼈 · 경험치 120) · 처치 훅 · 재사용 대기 20분 · 꺼진 모닥불은 다시 켜짐 · 얼음 · 안개 정리 */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:ymir", maxTicks = 400)
     public void killRewardsAndRelightsFires(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -496,7 +496,10 @@ public final class RpgYmirTests {
         put(p1, a, 0, 6);
         put(p2, a, 0, -9);
         List<Object[]> killed = new ArrayList<>();
-        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> killed.add(new Object[] {k, List.copyOf(list)});
+        // 훅은 서버 전체 (같이 도는 다른 시험의 처치도 옴) — 이 시험의 플레이어가 받은 처치만
+        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> {
+            if (list.contains(p1)) killed.add(new Object[] {k, List.copyOf(list)});
+        };
         Bosses.addBossKillHook(hook);
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.runAfterDelay(SPAWNED, () -> {

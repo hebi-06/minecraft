@@ -139,7 +139,7 @@ public final class RpgKrakenTests {
      * 움직이지 않는 보스: 가운데 (발 = 바닥) · 체력 15000 · 깨운 사람 쪽 (남쪽) 을 봄, 사람이 둘레를 돌아도 몸을 돌리지 않음 (바닐라 시선 없음),
      * 밀려도 0.5초 안에 제 자리 (보던 쪽 그대로), 몸 돌리기 16°/틱, 효과 면역
      */
-    @GameTest(maxTicks = 260)
+    @GameTest(environment = "mmorpg:kraken", maxTicks = 260)
     public void krakenHoldsItsPlace(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -202,7 +202,7 @@ public final class RpgKrakenTests {
      * 촉수 소환: 물구덩이 넷에서 솟음 (구덩이 1칸 아래 · 가운데를 봄 · rise 동작) · 체력 380 · 맞는 소품 (무적 시간 · 근접 보너스 · 이름표 체력 막대) ·
      * 살아 있는 동안 크라켄 회복 · 원거리 견제 쉼 → 쓰러지면 die 동작 (멈춤 0) · rpg_gone · 1초 뒤 이름표와 함께 치움 → 넷 다 베면 그로기 (+40%)
      */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:kraken", maxTicks = 300)
     public void tentaclesRiseAndFall(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -281,7 +281,7 @@ public final class RpgKrakenTests {
     }
 
     /** 촉수가 시간 안에 베어지지 않으면 물러남 (맞지 않음 · rpg_gone · sink 동작) → 치움, 그로기 없음 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:kraken", maxTicks = 200)
     public void tentaclesRetreatInTime(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -317,7 +317,7 @@ public final class RpgKrakenTests {
     }
 
     /** 해일: 서쪽에서 오는 물결 (rand 0) → 기둥 뒤 (동쪽) 그림자 안은 버티고, 열린 곳은 즉사 · 그림자 판정 (sheltered) */
-    @GameTest(maxTicks = 420)
+    @GameTest(environment = "mmorpg:kraken", maxTicks = 420)
     public void tideSparesTheSheltered(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -365,7 +365,7 @@ public final class RpgKrakenTests {
     }
 
     /** 처치: 보상 (에메랄드 16~24 · 보스 재료 칠흑 먹물 · 심해의 눈 2~3) · 재사용 대기 15분, 남은 촉수 · 이름표도 치움 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:kraken", maxTicks = 200)
     public void killRewardsMaterials(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];

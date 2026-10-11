@@ -139,7 +139,7 @@ public final class RpgWormTests {
     // ------------------------------------------------------------ 시험
 
     /** 소환: 체력 15000 · 모듈 · 가운데 굴 (home = 가운데, 중력 없음) · 굴 다섯 · 칸 3 · 깨운 사람 쪽을 봄 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:worm", maxTicks = 200)
     public void wormSummonsAtTheCenterHole(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -170,7 +170,7 @@ public final class RpgWormTests {
      * 굴 이동 (엔진 seat): 땅속으로 (6틱 뒤 무적 — 때려도 체력 그대로) → 사람이 가장 많은 다른 굴로 옮김 (home = 그 굴) → 밀어도 새 자리로 돌아옴 (leash) →
      * 튀어나옴: 무적이 풀리고 둘레 4.5칸 피해, 가장 가까운 사람 쪽을 봄
      */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:worm", maxTicks = 300)
     public void tunnelSeatsAtTheCrowdedHole(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -228,7 +228,7 @@ public final class RpgWormTests {
      * 삼키기: 노란 원 → 붉게 멈춤 → 원 안의 한 명을 삼킴 — 대상에서 빠짐 (targetable · targets) · 속박 · 침묵 · 실명 · 몸 안 (제단 위),
      * 이름표 · 보스 막대에 구출 진행, 삼킨 사람이 때린 것은 셈하지 않음 → 동료가 (사람 수 - 1) × 110 을 채우면 뱉고 구역질 (풀려남)
      */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:worm", maxTicks = 300)
     public void devourSwallowsAndSpits(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -280,7 +280,7 @@ public final class RpgWormTests {
     }
 
     /** 대지 분출: 칸 판정 = 바닥 칠하기 식 (deepTile), 어두운 칸 먼저 (rand) → 어두운 칸의 사람만 맞음 → gap 뒤 밝은 칸의 사람 */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:worm", maxTicks = 300)
     public void quakeHitsOneColorThenTheOther(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -327,7 +327,7 @@ public final class RpgWormTests {
     }
 
     /** 진동 감지: 땅속 (무적) → 듣는 동안 웅크리지 않고 걸은 사람은 들켜 발밑에서 즉사, 웅크려 걸은 사람은 들키지 않음 */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:worm", maxTicks = 300)
     public void tremorHearsWalkersNotSneakers(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -366,7 +366,7 @@ public final class RpgWormTests {
     }
 
     /** 처치 보상: 에메랄드 16~24 · 경험치 50 · 보스 재료 (파쇄의 송곳니 · 대지의 심장석 2~3) · 처치 훅 · 재사용 대기 15분 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:worm", maxTicks = 200)
     public void wormKillRewardsBossMaterials(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -374,7 +374,10 @@ public final class RpgWormTests {
         ServerPlayer p1 = RpgGearTests.player(h);
         put(p1, a, 0, 8);
         List<String> killed = new ArrayList<>();
-        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> killed.add(k);
+        // 훅은 서버 전체 (같이 도는 다른 시험의 처치도 옴) — 이 시험의 플레이어가 받은 처치만
+        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> {
+            if (list.contains(p1)) killed.add(k);
+        };
         Bosses.addBossKillHook(hook);
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.runAfterDelay(64, () -> {

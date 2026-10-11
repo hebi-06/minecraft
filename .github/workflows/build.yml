@@ -1,7 +1,8 @@
 # 빌드 · 시험 · 배포 (main · mc-* 에 올릴 때마다)
-# 1. Fabric 버전 확인  2. 규칙 코어 대조 시험 (애드온 JS 와 같은 값)  3. 모드 빌드 (컴파일, 시험 코드 포함)
-# 3b. 배포 jar 로 진짜 Fabric 서버 켜 보기 (실제 설치와 같게)  4. 게임 시험 (서버를 띄워 @GameTest)  5. 화면 시험 (클라이언트를 xvfb 로 띄워 실제 입력 · 확인 항목 · 장면 사진)
-# 6. 로그 · 사진을 ci-logs 브랜치에 (늘)  7. 모두 통과하면 릴리스에 모드 jar (main → latest, mc-* → release-<브랜치>)
+# build 일: 1. Fabric 버전 확인  2. 규칙 코어 대조 시험 (애드온 JS 와 같은 값)  3. 모드 빌드 (컴파일, 시험 코드 포함)
+#   3b. 배포 jar 로 진짜 Fabric 서버 켜 보기 (실제 설치와 같게)  4. 게임 시험 (서버를 띄워 @GameTest)
+# client 일 (묶음마다 동시에 — ci/gallery_groups.py): 5. 화면 시험 (클라이언트를 xvfb 로 띄워 실제 입력 · 확인 항목 · 장면 사진), 한 묶음은 배포 환경 클라이언트도
+# publish 일: 6. 로그 · 사진을 ci-logs 브랜치에 (늘)  7. 모두 통과하면 릴리스에 모드 jar (main → latest, mc-* → release-<브랜치>)
 name: build
 
 on:
@@ -14,7 +15,7 @@ on:
         type: boolean
         default: true
       only:
-        description: '화면 시험 중 이것만 (쉼표: client, weapon, particle, skill, rune, gear, form, nav, mob — 비우면 모두, none 이면 사진첩 없이)'
+        description: '화면 시험 중 이것만 (쉼표: client weapon particle skill rune gear form nav mob arena boss monster tree scorpions kraken worm jorm nidhogg skoll ymir surtr prod — 세미콜론으로 동시에 돌 묶음, 비우면 모두, none 이면 사진첩 없이)'
         type: string
         default: ''
 
@@ -32,7 +33,10 @@ defaults:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 40
+    outputs:
+      compiled: ${{ steps.build.outcome == 'success' }}
+      groups: ${{ steps.plan.outputs.groups }}
     steps:
       - uses: actions/checkout@v4
 
@@ -70,34 +74,88 @@ jobs:
         if: github.event_name != 'workflow_dispatch' || inputs.tests
         run: ./gradlew runGameTest --stacktrace --console=plain 2>&1 | tee ci-out/gametest.txt
 
+      - name: Gallery groups
+        id: plan
+        if: always()
+        run: |
+          if [ "${{ github.event_name != 'workflow_dispatch' || inputs.tests }}" = "true" ]; then
+            python3 ci/gallery_groups.py "${{ inputs.only }}" | tee -a "$GITHUB_OUTPUT"
+          else
+            echo "groups=[]" | tee -a "$GITHUB_OUTPUT"
+          fi
+
+      - name: Outcomes
+        if: always()
+        run: |
+          mkdir -p ci-out
+          {
+            echo "versions: ${{ steps.versions.outcome }}"
+            echo "core: ${{ steps.core.outcome }}"
+            echo "build: ${{ steps.build.outcome }}"
+            echo "prod: ${{ steps.prod.outcome }}"
+            echo "gametest: ${{ steps.gametest.outcome }}"
+          } > ci-out/outcome-0build.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-build
+          path: |
+            build/libs/*.jar
+            ci-out/
+          if-no-files-found: warn
+
+  client:
+    # 컴파일이 되면 게임 시험이 실패해도 사진은 찍음 (사진으로 확인할 수 있게) — 배포는 publish 에서 모두 통과해야
+    name: client (${{ matrix.name }})
+    needs: build
+    if: always() && needs.build.outputs.compiled == 'true' && needs.build.outputs.groups != '[]' && needs.build.outputs.groups != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.build.outputs.groups) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - uses: gradle/actions/setup-gradle@v4
+
       - name: Client screenshots
         id: client
-        if: github.event_name != 'workflow_dispatch' || inputs.tests
+        if: matrix.only != 'none'
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
-          MMORPG_ONLY: ${{ inputs.only }}
+          MMORPG_ONLY: ${{ matrix.only }}
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb libgl1 libgl1-mesa-dri libglx-mesa0 libegl1 mesa-vulkan-drivers libvulkan1 > /dev/null
           mkdir -p ci-out/shots
+          N=${{ matrix.name }}
           set +e
-          timeout 1500 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew runClientGameTest --stacktrace --console=plain 2>&1 | tee ci-out/client.txt
+          timeout 2700 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew runClientGameTest --stacktrace --console=plain 2>&1 | tee ci-out/client-$N.txt
           code=${PIPESTATUS[0]}
           set -e
-          cp build/run/clientGameTest/screenshots/*.png ci-out/shots/ 2>/dev/null || true
-          cp build/run/clientGameTest/logs/latest.log ci-out/client-latest.log 2>/dev/null || true
+          for f in build/run/clientGameTest/screenshots/*.png; do [ -f "$f" ] && cp "$f" "ci-out/shots/${N}_$(basename "$f")"; done
+          cp build/run/clientGameTest/logs/latest.log ci-out/client-$N-latest.log 2>/dev/null || true
           ls -la ci-out/shots
-          grep -E "\[client-test\]" ci-out/client.txt ci-out/client-latest.log 2>/dev/null | sort -u > ci-out/client-checks.txt || true
+          grep -h -E "\[[a-z-]+(-test|-gallery)\] (done|FAIL|stopped)" ci-out/client-$N.txt ci-out/client-$N-latest.log 2>/dev/null | sort -u > ci-out/client-checks-$N.txt || true
           exit $code
 
       - name: Production client
         id: prodclient
-        # 배포 jar 로 진짜 클라이언트 (Fabric 설치와 같게) — 처음 넣은 단계라 실패해도 배포는 막지 않음 (로그 · 사진으로 확인)
-        if: github.event_name != 'workflow_dispatch' || inputs.tests
+        # 배포 jar 로 진짜 클라이언트 (Fabric 설치와 같게) — 실패해도 배포는 막지 않음 (로그 · 사진으로 확인)
+        if: matrix.prod
         continue-on-error: true
         env:
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
+          sudo apt-get install -y -qq xvfb libgl1 libgl1-mesa-dri libglx-mesa0 libegl1 mesa-vulkan-drivers libvulkan1 > /dev/null
           set +e
           timeout 1500 ./gradlew prodClient --stacktrace --console=plain 2>&1 | tee ci-out/prod-client.txt
           code=${PIPESTATUS[0]}
@@ -109,22 +167,49 @@ jobs:
           grep -h -q "\[prod-client\] done, 0 failed" ci-out/prod-client.txt ci-out/prod-client-latest.log 2>/dev/null || code=1
           exit $code
 
-      - name: Publish logs
+      - name: Outcomes
         if: always()
+        run: |
+          mkdir -p ci-out
+          echo "client ${{ matrix.name }} (${{ matrix.only }}): ${{ steps.client.outcome }}" > ci-out/outcome-client-${{ matrix.name }}.txt
+          if [ "${{ matrix.prod }}" = "true" ]; then echo "prod-client: ${{ steps.prodclient.outcome }}" >> ci-out/outcome-client-${{ matrix.name }}.txt; fi
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ci-client-${{ matrix.name }}
+          path: ci-out/
+          if-no-files-found: warn
+
+  publish:
+    needs: [build, client]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-build
+          path: .
+        continue-on-error: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: ci-client-*
+          path: ci-out
+          merge-multiple: true
+        continue-on-error: true
+
+      - name: Publish logs
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          OUT_VERSIONS: ${{ steps.versions.outcome }}
-          OUT_CORE: ${{ steps.core.outcome }}
-          OUT_BUILD: ${{ steps.build.outcome }}
-          OUT_PROD: ${{ steps.prod.outcome }}
-          OUT_GAMETEST: ${{ steps.gametest.outcome }}
-          OUT_CLIENT: ${{ steps.client.outcome }}
-          OUT_PRODCLIENT: ${{ steps.prodclient.outcome }}
+          OUT_CLIENT_ALL: ${{ needs.client.result }}
         run: bash ci/publish_logs.sh
 
       - name: Release jar
         # 배포는 main · mc-* 에서 시험까지 다 돈 것만 (작업 브랜치 · 컴파일만 한 것은 배포하지 않음)
-        if: success() && (github.ref_name == 'main' || startsWith(github.ref_name, 'mc-')) && (github.event_name != 'workflow_dispatch' || inputs.tests)
+        if: needs.build.result == 'success' && needs.client.result == 'success' && (github.ref_name == 'main' || startsWith(github.ref_name, 'mc-')) && (github.event_name != 'workflow_dispatch' || inputs.tests)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -146,3 +231,10 @@ jobs:
             build/libs/*.jar
             ci-out/
           if-no-files-found: warn
+
+      - name: Overall
+        # 실행 전체의 성공 · 실패 (빌드 · 게임 시험 · 화면 시험 묶음 중 하나라도 실패면 실패)
+        if: always()
+        run: |
+          echo "build: ${{ needs.build.result }}  client: ${{ needs.client.result }}"
+          [ "${{ needs.build.result }}" = "success" ] && { [ "${{ needs.client.result }}" = "success" ] || [ "${{ needs.client.result }}" = "skipped" ]; }

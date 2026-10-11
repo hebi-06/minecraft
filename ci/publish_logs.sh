@@ -7,13 +7,13 @@ rm -rf "$OUT" && mkdir -p "$OUT"
 {
   echo "run: ${GITHUB_RUN_ID:-?}  attempt: ${GITHUB_RUN_ATTEMPT:-?}"
   echo "commit: ${GITHUB_SHA:-?}"
-  echo "versions: ${OUT_VERSIONS:-?}"
-  echo "core: ${OUT_CORE:-?}"
-  echo "build: ${OUT_BUILD:-?}"
-  echo "prod: ${OUT_PROD:-?}"
-  echo "gametest: ${OUT_GAMETEST:-?}"
-  echo "client: ${OUT_CLIENT:-?}"
-  echo "prod-client: ${OUT_PRODCLIENT:-?}"
+  # 일마다 단계 결과 (build 일 · client 일의 묶음마다 — ci-out/outcome-*.txt)
+  if ls ci-out/outcome-*.txt > /dev/null 2>&1; then
+    cat ci-out/outcome-*.txt
+  else
+    echo "build: (no outcome — build job did not finish)"
+  fi
+  echo "client (all groups): ${OUT_CLIENT_ALL:-?}"
 } > "$OUT/SUMMARY.txt"
 for f in ci-out/*; do
   [ -d "$f" ] && continue

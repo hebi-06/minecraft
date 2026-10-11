@@ -52,7 +52,7 @@ public final class RpgSkollTests {
     }
 
     /** 소환: 깨운 사람에게서 가장 먼 선돌 위 (5칸) 에서 울부짖음 → 가운데로 뛰어내림 (포물선) · 체력 27000 · 낮 (rpg:phase 0 · rpg:day 1) */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:skoll", maxTicks = 300)
     public void skollArrivesFromStone(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -92,7 +92,7 @@ public final class RpgSkollTests {
     }
 
     /** 낮 → 밤 → 황혼: 속성 rpg:day 1 → 0 · rpg:dusk 0 → 1, 텍스처 번호 rpg:phase 0 → 1 → 2, 깨어난 머리 · 약점 쪽 · 원거리 견제 모양 (태양 불씨 / 달 서리 / 번갈아) */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:skoll", maxTicks = 400)
     public void skollDayNightDusk(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -135,7 +135,7 @@ public final class RpgSkollTests {
     }
 
     /** 약점: 잠든 머리 쪽 옆구리에서 ×1.3 (노란 "약점"), 지친 동안 ×1.25 (하늘색 "지침"), 둘 다 ×1.625 — 황혼에는 약점 없음 */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:skoll", maxTicks = 400)
     public void skollWeakFlankAndWinded(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -200,7 +200,7 @@ public final class RpgSkollTests {
     }
 
     /** 해와 달의 심판: 북쪽 가장자리로 물러나 무적 → 표식 → 7초 뒤 제 색 반원 위는 살고, 반대 반원은 즉사 → 무적 풀림 */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:skoll", maxTicks = 400)
     public void skollJudgeKillsWrongHalf(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -250,7 +250,7 @@ public final class RpgSkollTests {
     }
 
     /** 뛰다가 쓰러지면 땅에 내려놓음 → 보상 (에메랄드 28~40 · 경험치 90 · 스콜의 불꽃 송곳니 · 하티의 달빛 갈기) · 재사용 대기 15분 */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:skoll", maxTicks = 300)
     public void skollKilledMidLeapRewards(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];

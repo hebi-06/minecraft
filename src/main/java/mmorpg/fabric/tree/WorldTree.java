@@ -467,7 +467,8 @@ public final class WorldTree {
     public static Spot treeSpot(ServerPlayer sp, int minD) {
         ServerLevel level = sp.level();
         Vec3 l = sp.position();
-        Vec3 v = sp.getViewVector(1F);
+        // 보는 쪽 = 플레이어가 돌린 시선 (yRot · xRot). getViewVector 는 산 것의 머리 방향 (yHeadRot) 이라 순간이동 직후엔 옛 방향일 수 있음
+        Vec3 v = sp.getLookAngle();
         double hx = v.x;
         double hz = v.z;
         double hl = Math.hypot(hx, hz);

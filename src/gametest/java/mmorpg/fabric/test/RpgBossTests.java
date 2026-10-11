@@ -125,7 +125,7 @@ public final class RpgBossTests {
     // ------------------------------------------------------------ 시험
 
     /** 소리 이름: 보스 9종 · 엔진 · 상태가 쓰는 베드락 소리 모두 자바 소리로 풀림, 맞는 상자 (감옥 1.6×2.6), 모듈 등록, /boss altar · list */
-    @GameTest(maxTicks = 20)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 20)
     public void soundsHitboxesAndCommand(GameTestHelper h) {
         List<String> missing = new ArrayList<>();
         for (String s : BossKit.soundNames()) if (BossKit.sound(s) == null) missing.add(s);
@@ -145,7 +145,7 @@ public final class RpgBossTests {
     }
 
     /** 제단 누르기 → 도전 창 → 도전 → 소환진 3초 → 보스 (체력 = 설정 7500 · 이름 · 무리 태그) · 싸우는 중 누르면 체력 알림 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 200)
     public void altarChallengeSummons(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -183,7 +183,7 @@ public final class RpgBossTests {
     }
 
     /** 플레이어마다 무적 시간 · 평타와 스킬은 따로 · 근접 보너스 · 필드 밖 · 환경 피해 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 200)
     public void perPlayerIframes(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -251,7 +251,7 @@ public final class RpgBossTests {
     }
 
     /** 쓰러뜨리면 보상 (필드 안 모두 — 가방 · 경험치) · 처치 훅 (퀘스트) · 재사용 대기 (누르면 남은 시간, 창 없음) */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 200)
     public void killRewardsAndCooldown(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -262,7 +262,10 @@ public final class RpgBossTests {
         put(p1, a, 0, 10);
         put(p2, a, 0, -10);
         List<Object[]> killed = new ArrayList<>();
-        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> killed.add(new Object[] {k, List.copyOf(list)});
+        // 훅은 서버 전체 (같이 도는 다른 시험의 처치도 옴) — 이 시험의 플레이어가 받은 처치만
+        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> {
+            if (list.contains(p1)) killed.add(new Object[] {k, List.copyOf(list)});
+        };
         Bosses.addBossKillHook(hook);
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.runAfterDelay(64, () -> {
@@ -298,7 +301,7 @@ public final class RpgBossTests {
     }
 
     /** 싸우는 사람이 필드에 없으면 10초 (resetAfter) 뒤 초기화 — 보스는 사라지고 재사용 대기 없음 */
-    @GameTest(maxTicks = 420)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 420)
     public void emptyFieldResets(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -324,7 +327,7 @@ public final class RpgBossTests {
     }
 
     /** 짚단 감옥: 가장 먼 사람 → 1초 뒤 감옥 + 속박 → 감옥을 부수면 (바닐라 피해) 풀림 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 200)
     public void prisonCagesAndFrees(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -359,7 +362,7 @@ public final class RpgBossTests {
     }
 
     /** 분신: 넷 사이로 숨음 → 가짜를 때리면 침묵 · 가짜는 흩어짐, 진짜를 때리면 분신이 사라지고 비틀거림 (받는 피해 +50%) */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 200)
     public void decoysSilenceAndStagger(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -395,7 +398,7 @@ public final class RpgBossTests {
     }
 
     /** 수확의 낫: 토템 금빛 원 안의 사람은 살고, 밖은 즉사 (Status.kill) */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 300)
     public void reapingKillsOutsideTotems(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -423,7 +426,7 @@ public final class RpgBossTests {
     }
 
     /** 원거리 견제: 10칸 넘게 떨어진 사람 발밑에 원 → 1.5초 뒤 불붙은 짚단 (피해 + 불) */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:boss", maxTicks = 200)
     public void farShotLands(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];

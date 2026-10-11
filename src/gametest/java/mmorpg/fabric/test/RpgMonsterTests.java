@@ -106,7 +106,7 @@ public final class RpgMonsterTests {
      * 허수아비 (제자리): 옆에 서 있어도 맞기 전에는 공격하지 않음 → 플레이어가 때리면 싸움 → windup 뒤 설정 attack (3) 만큼 맞음 →
      * 다음 공격 동작 중 사거리 밖으로 나가면 빗나감 → 크리에이티브면 멈춤 · 서바이벌이면 다시. 이름표: 첫 줄 = 이름 (숨김), 다치면 체력 막대
      */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 300)
     public void attacksOnlyAfterHit(GameTestHelper h) {
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 100);
         Monsters.Kind k = Monsters.kind("scarecrow");
@@ -165,7 +165,7 @@ public final class RpgMonsterTests {
     }
 
     /** 갑옷 · 방패 규칙: 몬스터 피해 (Monsters.monsterHit — 바닐라 mobAttack) 는 갑옷만큼 줄고, 웅크려 앞을 막은 방패는 RPG 방패 감소만큼 */
-    @GameTest(maxTicks = 120)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 120)
     public void armorAndShieldRules(GameTestHelper h) {
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 300);
         RpgMonster troll = monster(h, "troll", 4.5, 2, 1.5, false);
@@ -216,7 +216,7 @@ public final class RpgMonsterTests {
      * 달려들기 (굴론 — 제자리라 움직임은 사진첩에서): 사거리 밖 6.5칸 안에서 맞으면 뛰어들며 공격 동작 (사거리 밖이면 헛손질로 끝).
      * 속박 (구속 VII) 이면 달려들기 없음, 기절 (구속 + 나약함) 이면 붙어 있어도 공격 없음
      */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 200)
     public void lungeAndRootStun(GameTestHelper h) {
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 200);
         Monsters.Kind k = Monsters.kind("gulon");
@@ -249,7 +249,7 @@ public final class RpgMonsterTests {
      * 원거리 반격 (굴론 제자리): 플레이어가 4칸 위 (기둥 위) 2칸 옆에서 때리면 닿지도 달려들지도 못함 → 발밑 고리 → windup + 6 틱 뒤 맞음.
      * 다시 때리고 다음 반격 동작 중 고리 밖으로 나가면 피함
      */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 300)
     public void counterOnPillar(GameTestHelper h) {
         Monsters.Kind k = Monsters.kind("gulon");
         RpgMonster m = monster(h, "gulon", 2.5, 2, 1.5, false);
@@ -285,7 +285,7 @@ public final class RpgMonsterTests {
     }
 
     /** 특성: 스켈야스크림슬리 껍질 (플레이어 피해만 -20%), 닉스 구속 II · 드라우그 구속 I 2초, 드라우그 언데드 (성기사 룬 · 햇빛에 타지 않음), 무리 태그 */
-    @GameTest(maxTicks = 120)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 120)
     public void traits(GameTestHelper h) {
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 300);
         RpgMonster shell = monster(h, "skeljaskrimsli", 3.5, 2, 1.5, false);
@@ -334,7 +334,7 @@ public final class RpgMonsterTests {
      * 나약함 한 단계마다 몬스터 피해 -20% (허수아비 3 → 나약함 I 2.4), 룬의 짧은 은신 (투명 5초 이하) 인 사람에게는 달려들기 없음 (긴 투명은 그대로),
      * 트롤 내려치기: 맞은 사람 둘레 1.8칸의 다른 플레이어도 절반 피해
      */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 200)
     public void weaknessHiddenShockwave(GameTestHelper h) {
         ServerPlayer weakTarget = player(h, 1.5, 2, 1.5, 300);
         Monsters.Kind sk = Monsters.kind("scarecrow");
@@ -383,10 +383,12 @@ public final class RpgMonsterTests {
     }
 
     /** 트롤 재생: 싸우는 중에도 3초 안 맞으면 1초마다 3% · 회복: 싸움 없이 6초 안 맞으면 1초마다 10% · 다친 채 불러온 몬스터는 바로 회복 */
-    @GameTest(maxTicks = 220)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 220)
     public void regeneration(GameTestHelper h) {
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 100);
         RpgMonster troll = monster(h, "troll", 11.5, 2, 1.5, false); // 10칸 — 싸움은 이어지되 (leash 24) 닿지 않음
+        // 시험 구조물 (8칸) 밖이라 트롤 청크가 엔티티 틱을 안 돌 수 있음 (시험 자리는 실행마다 다름) — 이름표는 몬스터 틱에 맞춰지므로 붙잡음
+        String hold = Ticking.holdArea(h.getLevel(), troll.position(), 4, "t");
         troll.hurtServer(h.getLevel(), sp.damageSources().playerAttack(sp), 1F);
         troll.setHealth(100F);
         h.assertTrue(Monsters.fightOf(troll) != null, "troll fight");
@@ -415,12 +417,13 @@ public final class RpgMonsterTests {
             h.assertTrue(crow.getHealth() >= 13F - 1e-3, "scarecrow regen 10%/s after 6s " + crow.getHealth());
             ok("troll regen while fighting · regen after the fight · reloaded hurt monster");
             for (RpgMonster m : List.of(troll, crow, loaded)) m.discard();
+            Ticking.releaseArea(hold);
             RpgGearTests.done(h, sp);
         });
     }
 
     /** 도발: 다른 사람이 때려도 도발한 사람을 노림 → 끝나면 다시 마지막으로 때린 사람. 크리에이티브는 도발할 수 없음 */
-    @GameTest(maxTicks = 60)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 60)
     public void taunt(GameTestHelper h) {
         ServerPlayer a = player(h, 1.5, 2, 1.5, 0);
         ServerPlayer b = player(h, 1.5, 2, 3.5, 0);
@@ -452,7 +455,7 @@ public final class RpgMonsterTests {
     // ------------------------------------------------------------ 죽음 (lootOnDeath)
 
     /** 죽으면: 잡은 사람에게 경험치 (구슬 없이) · 전리품 (50%) · 에메랄드 (확률 — Loot.rand 로 정함) · 퀘스트 처치 수, 최고 레벨이 xpUntil 이상이면 경험치 0 */
-    @GameTest(maxTicks = 40)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 40)
     public void deathXpLootQuest(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 0);
@@ -520,7 +523,7 @@ public final class RpgMonsterTests {
     private static final int ZZ = 70_000;
 
     /** 사냥터 (멀리 하늘의 돌 바닥): 만들기 (기록 JSON · 태그 · 길 안내) · 하나 잡히면 respawn 뒤 채움 · 넘치면 먼 것부터 치움 · /mob · /mob clear 는 사냥터 몬스터를 남김 · 지우기 */
-    @GameTest(maxTicks = 600)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 600)
     public void huntZoneFillsAndTrims(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         BlockPos c = new BlockPos(ZX, ZY, ZZ);

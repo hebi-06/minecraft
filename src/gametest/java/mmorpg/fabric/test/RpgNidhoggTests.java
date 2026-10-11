@@ -122,7 +122,7 @@ public final class RpgNidhoggTests {
     // ------------------------------------------------------------ 시험
 
     /** 모듈 등록 · 소환: 체력 25000 · 하늘 (14칸) 에서 2초 동안 내려앉음 (rpg:fly 1 → 0) · 엔진 평타 없음 → 걷기 (대상 쪽으로, rpg:gait · 몸 방향) */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:nidhogg", maxTicks = 300)
     public void nidhoggArrivesAndWalks(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -176,7 +176,7 @@ public final class RpgNidhoggTests {
     }
 
     /** 비상: 날아오름 (1.5초) → 12칸 위 반지름 12칸 원을 돎 (pose · rpg:fly 1) → 독의 비 세 번 → 검붉은 원 · 급강하 → 내려앉음 (rpg:fly 0, 틀 끝) */
-    @GameTest(maxTicks = 500)
+    @GameTest(environment = "mmorpg:nidhogg", maxTicks = 500)
     public void nidhoggFlightRisesAndLands(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -238,7 +238,7 @@ public final class RpgNidhoggTests {
     }
 
     /** 뿌리의 올가미: 멀리 있는 사람부터 발밑 원 (1.4초) → 뿌리 소품 + 피해 + 속박 2.5초 → 가라앉음 (rpg_roots) → 사라짐 */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:nidhogg", maxTicks = 300)
     public void nidhoggSnareRootsAndBinds(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -283,7 +283,7 @@ public final class RpgNidhoggTests {
     }
 
     /** 독룡의 낙인: 6초 뒤 터짐 — 서로 원 안에 든 둘은 즉사, 혼자 떨어진 사람은 마법 피해만 */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:nidhogg", maxTicks = 400)
     public void nidhoggBrandKillsOverlaps(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -319,7 +319,7 @@ public final class RpgNidhoggTests {
     }
 
     /** 날다가 쓰러지면 땅에 내려놓음 (rpg:fly 0) → 보상 (에메랄드 28~40 · 경험치 90 · 세계수의 가지 · 타락한 세계수 뿌리) · 재사용 대기 15분 */
-    @GameTest(maxTicks = 300)
+    @GameTest(environment = "mmorpg:nidhogg", maxTicks = 300)
     public void nidhoggKilledInFlightRewards(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];

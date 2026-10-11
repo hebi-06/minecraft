@@ -180,7 +180,7 @@ public final class RpgSurtrTests {
     // ------------------------------------------------------------ 시험
 
     /** 모듈 등록 · 핵의 맞는 상자 3×3.5 · 업화 막대 보스 막대 · 도전 창 ([초월 보스] · 패턴을 깨는 법 · 권장 · 고급 룬 뽑기권 · 초월 장비 재료 · 30분) */
-    @GameTest(maxTicks = 40)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 40)
     public void moduleAndChallengeForm(GameTestHelper h) {
         h.assertTrue(Bosses.module(KEY) instanceof BossSurtr, "surtr module registered");
         float[] core = MobData.hitbox(BossSurtr.CORE_ID);
@@ -216,7 +216,7 @@ public final class RpgSurtrTests {
     }
 
     /** 소환 → 화구 밑 36칸에서 5초 동안 솟아오름 (무적, 깨운 사람 쪽을 봄) → 포효 → 싸움 · 체력 90000 · 필드를 붙잡음 · 사슬 기둥 · 얼음 결정이 서 있음 */
-    @GameTest(maxTicks = 320)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 320)
     public void summonRisesFromThePit(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -259,7 +259,7 @@ public final class RpgSurtrTests {
     }
 
     /** 레바테인 내려찍기: 대상이 붉은 줄 위 → 맞음 + 불길, 칼끝 쪽 레바테인의 핵 (5000 · rpg:part 0 · 두 줄 이름표) → 부수면 부위 파괴 (rpg:sword_broken · 불길 꺼짐 · 보상 재료) */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 200)
     public void slamCoreBreaksTheSword(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -316,7 +316,7 @@ public final class RpgSurtrTests {
     }
 
     /** 무스펠의 업화: 업화 막대 (1000 = 남은 업화) 가 피해로 깎임 → 다 깎으면 쓰러짐 (빈틈 ×1.5) · 불꽃 왕관의 핵 → 부수면 rpg:crown_broken. 열기 · 주황 안개 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 200)
     public void infernoGaugeAndGroggy(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -371,7 +371,7 @@ public final class RpgSurtrTests {
     }
 
     /** 반격: 횡베기의 금빛 창에 스킬 → 패턴이 끊김 (맞지 않음) · 비틀거림 · 3초 ×1.25. 겹친 보너스는 가장 큰 것 하나 (빈틈 > 속박 > 반격) */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 200)
     public void counterAndLargestBonus(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -431,7 +431,7 @@ public final class RpgSurtrTests {
     }
 
     /** 봉인의 사슬 기둥: 칼 줄 위의 기둥이 칼을 붙잡음 (기둥 뒤는 맞지 않음) → 속박 6초 (×1.3) · 칼의 핵 → 풀리면 기둥이 무너짐 → 싸움이 끝나면 되돌림 */
-    @GameTest(maxTicks = 420)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 420)
     public void chainPillarBindsAndIsRestored(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -485,7 +485,7 @@ public final class RpgSurtrTests {
     }
 
     /** 라그나로크: 가운데 7칸 자리로 뛰어감 (무적) → 9초 칼을 듦 (붉은 안개) → 불길: 얼음 결정 그림자 안은 삶 (결정이 녹음), 밖은 즉사 → 싸움이 끝나면 결정 되돌림 */
-    @GameTest(maxTicks = 480)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 480)
     public void ragnarokShadowSaves(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -537,7 +537,7 @@ public final class RpgSurtrTests {
     }
 
     /** 나머지 패턴: 불의 주먹 (원 · 건틀릿의 핵) → 발 구르기 (옆) → 불비 (발밑 원) → 불의 고리 (땅 = 맞음, 뛰면 넘음) → 찌르기 (가장 먼 사람 줄) */
-    @GameTest(maxTicks = 520)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 520)
     public void fistStompMeteorsRingsThrust(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -624,7 +624,7 @@ public final class RpgSurtrTests {
     }
 
     /** 처치: 딜 순위 · 부위 파괴 줄 · 보상 (고급 룬 뽑기권 · 초월 재료 + 부순 부위) · 처치 훅 ("surtr") · 전설 퀘스트 (왕녀) · 재사용 대기 30분 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:surtr", maxTicks = 200)
     public void killBoardLootAndLegend(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -638,7 +638,10 @@ public final class RpgSurtrTests {
         Quests.forgetQuestPlayer(p1.getUUID());
         h.assertTrue("active".equals(Quests.statusOf(p1, Quests.getQuest(legend))), "legend quest active " + Quests.statusOf(p1, Quests.getQuest(legend)));
         List<Object[]> killed = new ArrayList<>();
-        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> killed.add(new Object[] {k, List.copyOf(list)});
+        // 훅은 서버 전체 (같이 도는 다른 시험의 처치도 옴) — 이 시험의 플레이어가 받은 처치만
+        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> {
+            if (list.contains(p1)) killed.add(new Object[] {k, List.copyOf(list)});
+        };
         Bosses.addBossKillHook(hook);
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.runAfterDelay(62, () -> {

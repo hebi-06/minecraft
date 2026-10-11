@@ -146,7 +146,7 @@ public final class RpgScorpionsTests {
      * 소환 → 두 마리: 체력 5000 · 7000, 이름 · 보스 막대 (마리마다), 제 자리 (가운데 ∓ 8칸), 엔진 등록 · 모듈 시작.
      * 여러 마리 싸움 엔진: 마리마다 무적 시간 (한 사람이 같은 틱에 둘을 때려도 둘 다), 평타 · 틀 (한 마리만), 제 자리 끌어오기 (밀려난 마리는 제 자리로)
      */
-    @GameTest(maxTicks = 220)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 220)
     public void twoUnitsEachTheirOwn(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -212,7 +212,7 @@ public final class RpgScorpionsTests {
     }
 
     /** 공생: 두 전갈이 7칸 안 → 금빛 끈 (mem.bond) · 받는 피해 -60%, 떨어지면 다시 그대로 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 200)
     public void symbiosisCutsDamage(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -250,7 +250,7 @@ public final class RpgScorpionsTests {
      * 한 마리가 쓰러짐: 그 마리만 (싸움은 이어짐 · 보상 없음 · 엔진 등록 풀림) → 남은 마리 짝 잃은 분노 (피해 ×1.4 · 재사용 ×0.7 · 잡혀 있던 다음 패턴 당김 ·
      * 빠른 걸음 · rpg:rage) → 남은 마리도 쓰러지면 보상 (필드 안 모두) · 처치 훅 · 재사용 대기 15분
      */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 200)
     public void oneFallsTheOtherRagesThenRewards(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -260,7 +260,10 @@ public final class RpgScorpionsTests {
         put(p1, a, 0, 12);
         put(p2, a, 0, -12);
         List<Object[]> killed = new ArrayList<>();
-        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> killed.add(new Object[] {k, List.copyOf(list)});
+        // 훅은 서버 전체 (같이 도는 다른 시험의 처치도 옴) — 이 시험의 플레이어가 받은 처치만
+        BiConsumer<String, List<ServerPlayer>> hook = (k, list) -> {
+            if (list.contains(p1)) killed.add(new Object[] {k, List.copyOf(list)});
+        };
         Bosses.addBossKillHook(hook);
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.runAfterDelay(64, () -> {
@@ -307,7 +310,7 @@ public final class RpgScorpionsTests {
     /**
      * 맹독 표식: 표식을 받은 사람 곁 (3칸) 의 사람과 나눠 받음 (둘 다 다치고 살아남음) — 그동안 원거리 견제 쉼 · 다른 마리의 큰 패턴도 없음 → 혼자 받으면 즉사
      */
-    @GameTest(maxTicks = 420)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 420)
     public void venomSharedOrDeadly(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -357,7 +360,7 @@ public final class RpgScorpionsTests {
     }
 
     /** 석화의 포효: 울부짖음이 끝날 때 바위 전갈 쪽을 보던 사람만 석화 (속박 + 침묵), 등을 돌린 사람은 그대로 · 석화가 풀릴 때까지 큰 패턴 없음 */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 200)
     public void roarPetrifiesThoseLooking(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -391,7 +394,7 @@ public final class RpgScorpionsTests {
     }
 
     /** 모래 잠행: 사라지면 무적 (맞아도 체력 그대로) → 흙먼지가 쫓다가 멈춘 자리에서 튀어나옴 (무적 풀림 · 그 자리 · 원 안 피해) */
-    @GameTest(maxTicks = 200)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 200)
     public void burrowHidesThenBursts(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -430,7 +433,7 @@ public final class RpgScorpionsTests {
     }
 
     /** 대지의 파동: 고리가 발밑을 지날 때 땅에 선 사람은 맞고, 뛰어 있는 (공중) 사람은 피함 · 파동마다 한 번 */
-    @GameTest(maxTicks = 220)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 220)
     public void tremorHitsGroundedOnly(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];

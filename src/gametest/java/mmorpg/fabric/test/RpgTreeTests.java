@@ -146,7 +146,7 @@ public final class RpgTreeTests {
     // ------------------------------------------------------------ 설계
 
     /** 설계: 애드온 JS (worldtree.js treePlan) 와 같은 칸 수 · 지문 (로컬 대조 도구로 칸마다 · 차례마다 같음을 확인한 값), 같은 씨앗 = 같은 설계 */
-    @GameTest(maxTicks = 20)
+    @GameTest(environment = "mmorpg:tree", maxTicks = 20)
     public void planMatchesAddon(GameTestHelper h) {
         TreePlan a = TreePlan.plan(64, 12345);
         TreePlan b = TreePlan.plan(64, 12345);
@@ -189,7 +189,7 @@ public final class RpgTreeTests {
     }
 
     /** 블록 가리기 (애드온 시험과 같은 예) · 칸 번호 글 */
-    @GameTest(maxTicks = 20)
+    @GameTest(environment = "mmorpg:tree", maxTicks = 20)
     public void blockRulesAndCodes(GameTestHelper h) {
         List<Block> nat = List.of(Blocks.AIR, Blocks.GRASS_BLOCK, Blocks.DIRT, Blocks.STONE, Blocks.DEEPSLATE, Blocks.SAND, Blocks.GRAVEL, Blocks.WATER, Blocks.SNOW_BLOCK,
                 Blocks.OAK_LOG, Blocks.PALE_OAK_WOOD, Blocks.OAK_LEAVES, Blocks.TALL_GRASS, Blocks.POPPY, Blocks.BAMBOO, Blocks.SUGAR_CANE, Blocks.KELP, Blocks.BROWN_MUSHROOM_BLOCK);
@@ -225,7 +225,7 @@ public final class RpgTreeTests {
     }
 
     /** 기록 저장 · 다시 읽기: 큰 팔레트 (두 글자 번호) · 30000자씩 나눔 · 깔개 높이 · 함께 치운 칸 · 목록 (최근 5그루) */
-    @GameTest(maxTicks = 20)
+    @GameTest(environment = "mmorpg:tree", maxTicks = 20)
     public void logSavesAndLoads(GameTestHelper h) {
         MinecraftServer server = h.getLevel().getServer();
         List<BlockState> states = new ArrayList<>();
@@ -281,7 +281,7 @@ public final class RpgTreeTests {
     // ------------------------------------------------------------ 살핌
 
     /** 바로 거절: 세계 높이 · 보스 필드 · 물 속 · 네더 · 불러오지 않은 곳 */
-    @GameTest(maxTicks = 40)
+    @GameTest(environment = "mmorpg:tree", maxTicks = 40)
     public void refusesBadSpots(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         TreePlan plan = TreePlan.plan(40, 5);
@@ -327,7 +327,7 @@ public final class RpgTreeTests {
     }
 
     /** 살핌 (여러 틱): 트인 풀밭 = 괜찮음, 줄기 자리에 판자 13개 = 거절 (무엇이 몇 개), 뿌리 사이 땅속 용암 = 거절, 잎 자리 절반이 돌 = 거절 */
-    @GameTest(maxTicks = 400)
+    @GameTest(environment = "mmorpg:tree", maxTicks = 400)
     public void surveyRefusesBuildingsLavaAndRock(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         TreePlan plan = TreePlan.plan(40, 7);
@@ -396,7 +396,7 @@ public final class RpgTreeTests {
      * 작은 나무 (minHeight 40) 를 하늘의 풀밭에: 확인 창 → 심기 → 단계마다 자라남 → 설계대로 (모든 칸, 떨어지지 않는 잎, 덩굴 · 깔개 · 덤불), 밑동의 소는 뿌리 끝 밖으로,
      * 두 칸 해바라기 · 양귀비는 먼저 치움 → 기록 (지문 · 칸 수 · 원래 블록) → 기억을 지우고 (다시 불러온 것처럼) 되돌리기 확인 창 → 되돌림 → 처음과 칸마다 같음, 기록 지움
      */
-    @GameTest(maxTicks = 3000)
+    @GameTest(environment = "mmorpg:tree", maxTicks = 3000)
     public void growsAndUndoes(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         MinecraftServer server = level.getServer();
@@ -571,7 +571,7 @@ public final class RpgTreeTests {
     }
 
     /** 명령어: /worldtree · /세계수 · /segyesu (운영자 — plant [높이] · undo) */
-    @GameTest(maxTicks = 20)
+    @GameTest(environment = "mmorpg:tree", maxTicks = 20)
     public void commandsRegistered(GameTestHelper h) {
         var root = h.getLevel().getServer().getCommands().getDispatcher().getRoot();
         for (String name : List.of("worldtree", "세계수", "segyesu")) {
