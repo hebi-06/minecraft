@@ -143,7 +143,7 @@ public final class Breakthrough {
         RuneKit.later(ex.after(), () -> {
             if (sp.isRemoved() || sp.isDeadOrDying() || !RuneKit.sameLife(sp, life)) return;
             noteCast(sp, r, level);
-            DamageNumbers.showFace(sp, "§e§l◆ 한 번 더!", 2.4, 0, 0.75);
+            DamageNumbers.showFace(sp, "§e§l◆ 한 번 더!", 2.4, 0, 0.2); // 떠오르므로 낮게 (화면 위로 잘리지 않게)
             SkillFx.play(sp.level(), "beacon.power", sp.position(), 1.6, 0.6);
             try {
                 fn.cast(sp, r, P, def);
