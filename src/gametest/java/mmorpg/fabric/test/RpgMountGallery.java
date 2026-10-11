@@ -32,7 +32,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.inventory.ChestMenu;
@@ -47,7 +46,8 @@ import org.slf4j.LoggerFactory;
 /**
  * 6단계 탈것 · 스탯 창 아랫줄 사진첩 (화면 시험 — MMORPG_ONLY=mount, 실제 마우스 · 키 입력):
  * 스탯 창 아랫줄 (퀘스트 · 엔더 상자 · 탈것 — 풀이), 탈것 칸 누르기 → 창이 닫히고 소환 연출 · 바로 탐 (3인칭 앞 · 뒤 — 안장 위에 앉음),
- * 달리기 (앞으로 키 — 빠르기 · 발밑 반짝이), 뛰기 (점프 키를 길게 → 말 뛰기 막대 → 높이 뜀 · 발밑 고리), 한 칸 그냥 달려 오름, 탄 채 공격 → 막힘 안내,
+ * 달리기 (앞으로 키 — 빠르기 · 발밑 반짝이), 옆모습 (두 번째 플레이어가 탄 다이어울프 — 옆 · 비스듬한 앞 · 옆을 지나 달리기),
+ * 뛰기 (점프 키를 길게 → 말 뛰기 막대 → 높이 뜀 · 발밑 고리), 한 칸 그냥 달려 오름, 탄 채 공격 → 막힘 안내,
  * Shift + 탈것 칸 → 탈것 고르기 창 → 다른 탈것 (시험용) 으로 갈아탐 → 스탯 창으로, 탈것 아이템 (손 · 풀이 · 쓰면 목록에 · 연출),
  * 엔더 상자 칸 → 바닐라 상자 창 (내 엔더 상자 27칸), 퀘스트 칸 → 퀘스트 목록 → 닫으면 스탯 창, 웅크려 내림 → 사라짐 연출.
  * 사진 이름 m_… → ci-logs 의 shots/. 확인 항목은 로그 [mount-gallery] OK / FAIL.
@@ -81,6 +81,7 @@ public final class RpgMountGallery implements FabricClientGameTest {
             part(ctx, server, "stats", () -> stats(ctx));
             part(ctx, server, "summon", () -> summon(ctx, server, conn));
             part(ctx, server, "ride", () -> ride(ctx, server));
+            part(ctx, server, "side", () -> side(ctx, server));
             part(ctx, server, "jump", () -> jump(ctx, server));
             part(ctx, server, "step", () -> step(ctx, server));
             part(ctx, server, "blocked", () -> blocked(ctx, server, conn));
@@ -136,40 +137,105 @@ public final class RpgMountGallery implements FabricClientGameTest {
         camera(ctx, CameraType.THIRD_PERSON_FRONT);
         ctx.waitTicks(4);
         shot(ctx, "m_ride_front");
-        // 옆모습: 옆 4칸에 세운 (보이지 않는) 갑옷 거치대를 카메라로 — 안장 위에 앉은 높이 · 다리 · 꼬리
-        sideView(ctx, server, "m_ride_side");
         camera(ctx, CameraType.FIRST_PERSON);
         look(ctx, 0F, 20F);
         ctx.waitTicks(4);
         shot(ctx, "m_ride_fp");
     }
 
-    /** 탈것 옆 (동쪽 4칸, 서쪽을 봄) 갑옷 거치대의 눈으로 사진 한 장 */
-    private void sideView(ClientGameTestContext ctx, TestServerContext server, String name) {
-        Vec3 m = ctx.computeOnClient(mc -> mc.player.getVehicle() != null ? mc.player.getVehicle().position() : mc.player.position());
-        int id = server.computeOnServer(s -> {
-            ArmorStand as = EntityTypes.ARMOR_STAND.create(s.overworld(), EntitySpawnReason.COMMAND);
-            as.snapTo(m.x + 4.5, m.y + 0.2, m.z, 90F, 5F);
-            as.setYHeadRot(90F);
-            as.setInvisible(true);
-            as.setNoGravity(true);
-            s.overworld().addFreshEntity(as);
-            return as.getId();
+    // ------------------------------------------------------------ 옆모습 (두 번째 플레이어가 탄 다이어울프)
+
+    /**
+     * 옆모습 · 비스듬한 앞모습 · 옆을 지나 달리기. 바닐라는 카메라가 다른 엔티티일 때 내 플레이어를 그리지 않음 (LevelRenderer — LocalPlayer 는
+     * 카메라 엔티티일 때만) → 두 번째 플레이어 (가짜 연결 — RpgDuelGallery.rival) 를 탈것에 태우고 내가 옆 5칸에서 봄. 달리기는 서버가 탈것을
+     * 틱마다 0.5칸씩 옮김 (탄 사람이 플레이어면 탈것의 움직임은 그 사람의 클라이언트가 정함 — 가짜 연결이라 서버에서 직접).
+     */
+    private void side(ClientGameTestContext ctx, TestServerContext server) {
+        home(server, 0F, 0F);
+        camera(ctx, CameraType.FIRST_PERSON);
+        Vec3 at = new Vec3(HOME.x, HOME.y, HOME.z + 5);
+        java.util.UUID rid = server.computeOnServer(s -> {
+            ServerPlayer r = RpgDuelGallery.rival(s, "Rider", at, 90F); // 서쪽을 봄 — 나 (북쪽 5칸, 남쪽을 봄) 에게 오른쪽 옆을 보임
+            Mounts.summon(r);
+            return r.getUUID();
         });
-        boolean seen = waitFor(ctx, mc -> mc.level.getEntity(id) != null, 20);
-        if (seen) {
-            ctx.runOnClient(mc -> mc.setCameraEntity(mc.level.getEntity(id)));
-            ctx.waitTicks(3);
-            shot(ctx, name);
-            ctx.runOnClient(mc -> mc.setCameraEntity(mc.player));
-        } else {
-            check(false, "side camera stand not on the client");
+        try {
+            boolean seen = waitFor(ctx, mc -> rider(mc, rid) != null && rider(mc, rid).getVehicle() instanceof RpgMount, 60);
+            check(seen, "second player riding a dire wolf, seen by my client");
+            if (!seen) return;
+            ctx.runOnClient(mc -> {
+                if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle();
+            });
+            look(ctx, 0F, 4F);
+            ctx.waitTicks(15);
+            double seat = ctx.computeOnClient(mc -> {
+                var p = rider(mc, rid);
+                return p == null || p.getVehicle() == null ? -1 : p.getY() - p.getVehicle().getY();
+            });
+            check(seat > 0.95 && seat < 1.15, String.format(Locale.ROOT, "other rider's feet %.3f above the mount's (side view)", seat));
+            shot(ctx, "m_ride_side");
+            turnRider(server, rid, 135F); // 북서쪽 — 나를 비스듬히 봄
+            ctx.waitTicks(8);
+            shot(ctx, "m_ride_34");
+            // 옆을 지나 달리기: 서쪽 8칸에서 동쪽으로 (화면 오른쪽 → 왼쪽)
+            turnRider(server, rid, -90F);
+            server.runOnServer(s -> {
+                ServerPlayer r = s.getPlayerList().getPlayer(rid);
+                if (r != null && r.getVehicle() != null) r.getVehicle().snapTo(HOME.x - 8, HOME.y, at.z, -90F, 0F);
+            });
+            ctx.waitTicks(6);
+            boolean shotTaken = false;
+            for (int i = 0; i < 40 && !shotTaken; i++) {
+                server.runOnServer(s -> {
+                    ServerPlayer r = s.getPlayerList().getPlayer(rid);
+                    var m = r == null ? null : r.getVehicle();
+                    if (m != null && m.getX() < HOME.x + 8) m.setPos(m.getX() + 0.5, m.getY(), m.getZ());
+                });
+                ctx.waitTick();
+                double x = ctx.computeOnClient(mc -> {
+                    var p = rider(mc, rid);
+                    return p == null || p.getVehicle() == null ? Double.NaN : p.getVehicle().getX();
+                });
+                if (x >= HOME.x - 0.5) {
+                    shot(ctx, "m_run_side");
+                    shotTaken = true;
+                }
+            }
+            check(shotTaken, "other rider ran past my side view");
+            float walk = ctx.computeOnClient(mc -> {
+                var p = rider(mc, rid);
+                return p != null && p.getVehicle() instanceof RpgMount m ? m.walkAnimation.speed() : -1F;
+            });
+            LOG.info("[mount-gallery] other rider's mount walk animation speed {}", walk);
+        } finally {
+            ctx.runOnClient(mc -> {
+                if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
+            });
+            server.runOnServer(s -> {
+                ServerPlayer r = s.getPlayerList().getPlayer(rid);
+                if (r == null) return;
+                Mounts.dismiss(r);
+                s.getPlayerList().remove(r);
+            });
+            ctx.waitTicks(10);
         }
+    }
+
+    private static net.minecraft.world.entity.player.Player rider(Minecraft mc, java.util.UUID id) {
+        for (var p : mc.level.players()) if (p.getUUID().equals(id)) return p;
+        return null;
+    }
+
+    /** 두 번째 플레이어가 보는 쪽 (탈것은 서버의 tickRidden 에서 탄 사람을 따라 돎) */
+    private static void turnRider(TestServerContext server, java.util.UUID id, float yaw) {
         server.runOnServer(s -> {
-            var e = s.overworld().getEntity(id);
-            if (e != null) e.discard();
+            ServerPlayer r = s.getPlayerList().getPlayer(id);
+            if (r == null) return;
+            r.setYRot(yaw);
+            r.setYHeadRot(yaw);
+            r.setYBodyRot(yaw);
+            if (r.getVehicle() != null) r.getVehicle().setYRot(yaw);
         });
-        ctx.waitTick();
     }
 
     // ------------------------------------------------------------ 달리기 · 뛰기 · 오르기
@@ -184,7 +250,6 @@ public final class RpgMountGallery implements FabricClientGameTest {
         shot(ctx, "m_run");
         ctx.waitTicks(14);
         Vec3 b = ctx.computeOnClient(mc -> mc.player.position());
-        sideView(ctx, server, "m_run_side");
         ctx.getInput().releaseKey(o -> o.keyUp);
         double moved = Math.hypot(b.x - a.x, b.z - a.z);
         check(moved > 8, String.format(Locale.ROOT, "rode %.1f blocks in 30 ticks (speed 0.32)", moved));
