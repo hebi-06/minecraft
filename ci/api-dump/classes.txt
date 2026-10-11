@@ -477,3 +477,9 @@ net.minecraft.gametest.framework.GameTestHelper
 net.minecraft.network.Connection
 net.minecraft.server.players.PlayerList
 net.minecraft.world.level.gamerules.GameRule
+net.minecraft.core.particles.ColorParticleOption
+org.joml.Matrix3x2fStack
+org.joml.Matrix3x2f
+net.minecraft.client.gui.components.Tooltip
+net.minecraft.world.entity.ai.attributes.AttributeInstance
+net.minecraft.network.chat.ClickEvent$RunCommand
