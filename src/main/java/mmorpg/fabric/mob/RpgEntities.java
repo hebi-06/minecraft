@@ -27,7 +27,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 
 /**
- * 애드온 엔티티 26종 등록 (MobData 의 행동 팩 수치 그대로): 몬스터 6 (RpgMonster) · 보스 10 + 분신 (RpgBoss) · 소품 9 (RpgProp).
+ * 애드온 엔티티 27종 등록 (MobData 의 행동 팩 수치 그대로): 몬스터 6 (RpgMonster) · 보스 10 + 분신 (RpgBoss) · 소품 9 (RpgProp) · 탈것 1 (RpgMount — 6단계).
  * 크기 = 충돌 상자 (minecraft:collision_box) × 크기 속성 (minecraft:scale → 자바 SCALE 속성 — 그리기와 충돌 상자가 함께 커짐).
  * 최대 체력 상한을 1024 에서 1,000,000 으로 (보스 체력 90000 — 베드락은 상한이 없음).
  * 몬스터 소환 알 (rpg:<키>_spawn_egg — 이름 "<이름> 소환 (Lv.N)", 크리에이티브 RPG 장비 탭 · 소환 알 탭).
@@ -64,26 +64,49 @@ public final class RpgEntities {
         ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
         EntityType.Builder<? extends BedrockMob> b;
         if (d.monster()) b = EntityType.Builder.<RpgMonster>of(RpgMonster::new, MobCategory.MONSTER);
+        else if (d.mount()) b = EntityType.Builder.<RpgMount>of(RpgMount::new, MobCategory.MISC);
         else if (d.family("rpg_boss") || d.id().contains("decoy_")) b = EntityType.Builder.<RpgBoss>of(RpgBoss::new, MobCategory.MONSTER);
         else b = EntityType.Builder.<RpgProp>of(RpgProp::new, MobCategory.MISC);
         b.sized(Math.max(0.01F, d.width()), Math.max(0.01F, d.height())).noLootTable();
         if (d.monster()) b.clientTrackingRange(8);
-        else b.clientTrackingRange(10).updateInterval(1); // 보스 · 소품은 스크립트가 틱마다 옮기기도 함 (헤엄 · 날기 · 촉수)
+        else if (d.mount()) {
+            // 탈것: 탄 사람 자리 = 행동 팩 자리 + 자바 높이 보정 (mounts.json seatLift), 저장하지 않음 (부를 때마다 새로)
+            double[] seat = d.seat();
+            b.clientTrackingRange(10).updateInterval(2).noSave()
+                    .passengerAttachments(new net.minecraft.world.phys.Vec3(seat[0], seat[1] + seatLift(d.id()), seat[2]));
+        } else b.clientTrackingRange(10).updateInterval(1); // 보스 · 소품은 스크립트가 틱마다 옮기기도 함 (헤엄 · 날기 · 촉수)
         if (d.fireImmune()) b.fireImmune();
         EntityType<? extends BedrockMob> type = Registry.register(BuiltInRegistries.ENTITY_TYPE, key, b.build(key));
         FabricDefaultAttributeRegistry.register(type, attributes(d));
         TYPES.put(d.id(), type);
     }
 
-    /** 기본 속성 (최대 체력 · 이동 · 따라오는 거리 · 밀치기 저항 · 크기) */
+    /** 탈것 자리의 자바 높이 보정 (탄 사람의 엉덩이가 안장 위에 오게 — mounts.json 의 그 엔티티 seatLift, 없으면 {@link #SEAT_LIFT}) */
+    static double seatLift(String entityId) {
+        mmorpg.fabric.mount.MountDefs.Def m = mmorpg.fabric.mount.MountDefs.byEntity(entityId);
+        return m != null && m.seatLift() != null ? m.seatLift() : SEAT_LIFT;
+    }
+
+    /**
+     * 베드락 자리 → 자바 자리 높이 보정 (칸): 베드락은 자리 (seats position) 에 탄 사람의 몸 중심을 두고, 자바는 플레이어 발 + 0.6 을 둠
+     * (플레이어 vehicle 붙는 점). 다이어울프: 안장 윗면 1.75칸 = 자리 1.52 + 0.13 + 자바 엉덩이 (발 위 0.7 − 0.6 = 0.1)
+     */
+    public static final double SEAT_LIFT = 0.13;
+
+    /** 기본 속성 (최대 체력 · 이동 · 따라오는 거리 · 밀치기 저항 · 크기, 탈것은 뛰는 힘 · 걸어 오르는 높이) */
     static AttributeSupplier.Builder attributes(MobData.Def d) {
-        return Mob.createMobAttributes()
+        AttributeSupplier.Builder b = Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, Math.min(MAX_HEALTH_CAP, Math.max(1, d.health())))
                 .add(Attributes.MOVEMENT_SPEED, d.movement())
                 .add(Attributes.FOLLOW_RANGE, d.follow())
                 .add(Attributes.KNOCKBACK_RESISTANCE, d.knockback())
                 .add(Attributes.ATTACK_DAMAGE, 1)
                 .add(Attributes.SCALE, Math.max(0.0625, Math.min(16, d.scale())));
+        if (d.mount()) {
+            if (d.jumpStrength() > 0) b.add(Attributes.JUMP_STRENGTH, d.jumpStrength());
+            b.add(Attributes.STEP_HEIGHT, d.stepHeight());
+        }
+        return b;
     }
 
     /** ID (rpg:troll) → 엔티티 종류 (없으면 null) */

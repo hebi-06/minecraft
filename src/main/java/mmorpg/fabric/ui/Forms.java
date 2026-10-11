@@ -120,6 +120,12 @@ public final class Forms {
         return PENDING.containsKey(sp.getUUID());
     }
 
+    /** 지금 열려 기다리는 창 번호 (없으면 -1 — 내가 연 창이 아직 열려 있는지 볼 때) */
+    public static int pendingId(ServerPlayer sp) {
+        Pending p = PENDING.get(sp.getUUID());
+        return p == null ? -1 : p.id();
+    }
+
     /** 시험용 (HEADLESS): 마지막으로 연 창 (상자 창 · 대화창 · 버튼 목록 · 입력창 패킷, 없으면 null) */
     public static CustomPacketPayload last(ServerPlayer sp) {
         return LAST.get(sp.getUUID());

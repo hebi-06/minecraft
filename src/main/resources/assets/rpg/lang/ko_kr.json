@@ -185,5 +185,7 @@
   "block.rpg.altar_nidhogg": "니드호그 제단",
   "block.rpg.altar_skoll_hati": "스콜과 하티 제단",
   "block.rpg.altar_ymir": "이미르 제단",
-  "block.rpg.altar_surtr": "수르트 제단"
+  "block.rpg.altar_surtr": "수르트 제단",
+  "entity.rpg.dire_wolf_mount": "다이어울프",
+  "item.rpg.mount_dire_wolf": "다이어울프 탈것"
 }

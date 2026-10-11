@@ -156,13 +156,86 @@ public final class RpgNet {
         }
     }
 
+    /**
+     * 서버 → 클라이언트: 탈것 상태 (스탯 창 탈것 칸 — 6단계). current = 지금 탈것 키 ("" = 없음), owned = 가진 탈것 키들 (탈것 목록 순서),
+     * cooldown = 다시 부를 수 있을 때까지 남은 틱
+     */
+    public record MountPayload(String current, List<String> owned, int cooldown) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<MountPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("mount"));
+        public static final StreamCodec<FriendlyByteBuf, MountPayload> CODEC = CustomPacketPayload.codec(MountPayload::write, MountPayload::read);
+
+        private static MountPayload read(FriendlyByteBuf buf) {
+            String cur = buf.readUtf(64);
+            int n = Math.min(256, buf.readVarInt());
+            List<String> owned = new java.util.ArrayList<>();
+            for (int i = 0; i < n; i++) owned.add(buf.readUtf(64));
+            return new MountPayload(cur, List.copyOf(owned), buf.readVarInt());
+        }
+
+        private void write(FriendlyByteBuf buf) {
+            buf.writeUtf(current, 64);
+            buf.writeVarInt(owned.size());
+            for (String k : owned) buf.writeUtf(k, 64);
+            buf.writeVarInt(cooldown);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** 클라이언트 → 서버: 스탯 창 아래 단추 (quest · ender · mount · mount_select — 받는 곳은 {@link #onStatAction}) */
+    public record StatActionPayload(String action) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<StatActionPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("stat_action"));
+        public static final StreamCodec<FriendlyByteBuf, StatActionPayload> CODEC = CustomPacketPayload.codec(StatActionPayload::write,
+                StatActionPayload::read);
+
+        private static StatActionPayload read(FriendlyByteBuf buf) {
+            return new StatActionPayload(buf.readUtf(32));
+        }
+
+        private void write(FriendlyByteBuf buf) {
+            buf.writeUtf(action, 32);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** 스탯 창 단추 → 할 일 (퀘스트 목록 · 엔더 상자 · 탈것 — 각 모듈이 넣음) */
+    private static final java.util.Map<String, java.util.function.Consumer<ServerPlayer>> STAT_ACTIONS = new java.util.HashMap<>();
+
+    /** 스탯 창 단추의 할 일을 넣음 (같은 이름이면 바꿈) */
+    public static void onStatAction(String action, java.util.function.Consumer<ServerPlayer> run) {
+        STAT_ACTIONS.put(action, run);
+    }
+
+    /** 스탯 창 단추 처리 (클라이언트가 보낸 것 · 시험) — 모르는 이름이면 false */
+    public static boolean statAction(ServerPlayer sp, String action) {
+        java.util.function.Consumer<ServerPlayer> run = STAT_ACTIONS.get(action);
+        if (run == null || sp.isRemoved()) return false;
+        run.accept(sp);
+        return true;
+    }
+
     static void init() {
         PayloadTypeRegistry.clientboundPlay().register(SyncPayload.TYPE, SyncPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ShakePayload.TYPE, ShakePayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(SkyPayload.TYPE, SkyPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(FlashPayload.TYPE, FlashPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MountPayload.TYPE, MountPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SpendPayload.TYPE, SpendPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(StatActionPayload.TYPE, StatActionPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SpendPayload.TYPE, (payload, context) -> RpgPlayers.spend(context.player(), payload.stat(), Math.min(100, payload.count())));
+        ServerPlayNetworking.registerGlobalReceiver(StatActionPayload.TYPE, (payload, context) -> statAction(context.player(), payload.action()));
+    }
+
+    /** 탈것 상태 보내기 (모드가 있는 클라이언트만) */
+    public static void mount(ServerPlayer sp, MountPayload p) {
+        if (ServerPlayNetworking.canSend(sp, MountPayload.TYPE)) ServerPlayNetworking.send(sp, p);
     }
 
     /** 스탯 데이터를 클라이언트에 (모드가 있는 클라이언트만) */
@@ -191,9 +264,18 @@ public final class RpgNet {
         if (ServerPlayNetworking.canSend(sp, FlashPayload.TYPE)) ServerPlayNetworking.send(sp, p);
     }
 
+    /** 스탯 창을 열기 전에 보낼 것 (탈것 상태 등 — 각 모듈이 넣음) */
+    private static final List<java.util.function.Consumer<ServerPlayer>> BEFORE_OPEN = new java.util.ArrayList<>();
+
+    public static void beforeStatsOpen(java.util.function.Consumer<ServerPlayer> fn) {
+        BEFORE_OPEN.add(fn);
+    }
+
     /** 스탯 창 열기: 모드가 있으면 화면, 없으면 채팅 스탯 창 */
     public static void openStats(ServerPlayer sp) {
+        if (sp.isRemoved()) return;
         if (ServerPlayNetworking.canSend(sp, SyncPayload.TYPE)) {
+            for (java.util.function.Consumer<ServerPlayer> fn : BEFORE_OPEN) fn.accept(sp);
             sync(sp, true);
             return;
         }

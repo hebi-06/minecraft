@@ -133,6 +133,7 @@ public final class Transcend {
         if (ks == null || index < 0 || index >= ks.size() || sp.isRemoved()) return false;
         Obj k = ks.get(index);
         if (Status.blockedBySilence(sp)) return false;
+        if (mmorpg.fabric.mount.Riding.blocked(sp, "skill")) return false; // 탈것에 탄 동안 (riding.js)
         if (!RpgCombat.lackOf(sp, w).isEmpty()) {
             Notify.warn(sp, RpgCombat.reqText(sp, w));
             return false;

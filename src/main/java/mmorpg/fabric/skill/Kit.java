@@ -117,7 +117,7 @@ public final class Kit {
         if (e instanceof ArmorStand || e instanceof Mannequin || e instanceof AbstractVillager || e instanceof IronGolem || e instanceof SnowGolem) return false;
         if (e instanceof Player p && (p.isSpectator() || (!SKILLS.truthy("hitPlayers") && !duelPartner.test(sp, p)))) return false;
         if (e.entityTags().contains("rpg_npc") || e.entityTags().contains("rpg_gone")) return false;
-        if (sp.getVehicle() == e) return false;
+        if (sp.getVehicle() == e || e instanceof mmorpg.fabric.mob.RpgMount) return false; // 탈것은 맞지 않음 (다치지 않음 — 남의 탈것도)
         return !(e instanceof OwnableEntity o && o.getOwnerReference() != null);
     }
 

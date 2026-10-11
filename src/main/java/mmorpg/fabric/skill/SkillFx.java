@@ -224,6 +224,9 @@ public final class SkillFx {
             {"conduit.activate", "block.conduit.activate"}, {"crossbow.loading.end", "item.crossbow.loading_end"}, {"mob.allay.item_given", "entity.allay.item_given"},
             {"mob.breeze.shoot", "entity.breeze.shoot"}, {"mob.irongolem.repair", "entity.iron_golem.repair"}, {"mob.ravager.stun", "entity.ravager.stunned"},
             {"mob.shulker.shoot", "entity.shulker.shoot"}, {"item.trident.riptide_2", "item.trident.riptide_2"},
+            // 6단계 (탈것 · 엔더 상자 · 결투)
+            {"breeze_wind_charge.burst", "entity.breeze_wind_charge.wind_burst"}, {"mob.wolf.shake", "entity.wolf.shake"},
+            {"random.enderchestopen", "block.ender_chest.open"}, {"random.enderchestclosed", "block.ender_chest.close"},
         };
         for (String[] m : map) SOUND.put(m[0], m[1]);
     }
@@ -296,6 +299,8 @@ public final class SkillFx {
             case "minecraft:explosion_particle" -> level.sendParticles(ParticleTypes.EXPLOSION, at.x, at.y, at.z, 1, 0, 0, 0, 0);
             case "minecraft:note_particle" -> level.sendParticles(ParticleTypes.NOTE, at.x, at.y, at.z, 1, 0, 0, 0, 0);
             case "minecraft:enchanting_table_particle" -> level.sendParticles(ParticleTypes.ENCHANT, at.x, at.y, at.z, 8, 0.3, 0.3, 0.3, 0.5);
+            case "minecraft:white_smoke_particle" -> level.sendParticles(ParticleTypes.WHITE_SMOKE, at.x, at.y, at.z, 4, 0.2, 0.2, 0.2, 0.02);
+            case "minecraft:portal_reverse_particle" -> level.sendParticles(ParticleTypes.REVERSE_PORTAL, at.x, at.y, at.z, 2, 0.05, 0.05, 0.05, 0.02);
             default -> {
                 if (WARNED.add(bedrock)) LOG.warn("[mmorpg] no Java particle for {}", bedrock);
             }

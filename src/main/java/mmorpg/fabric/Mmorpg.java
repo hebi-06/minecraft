@@ -31,6 +31,7 @@ public final class Mmorpg implements ModInitializer {
         RpgItems.init();
         RpgNet.init();
         mmorpg.fabric.ui.Forms.init(); // 서버 창 (상자 창 · 대화창 · 버튼 목록 · 입력창)
+        mmorpg.fabric.ui.EnderWindow.init(); // 스탯 창 아랫줄 엔더 상자 (어디서나 내 엔더 상자)
         Tasks.init();
         Notify.init();
         RpgStats.init();
@@ -45,7 +46,10 @@ public final class Mmorpg implements ModInitializer {
         mmorpg.fabric.npc.NpcEditor.init(); // NPC · 퀘스트 설정 창 (Npcs 훅 · /npc)
         mmorpg.fabric.gear.NpcToolItem.onUse = mmorpg.fabric.npc.Npcs::onToolUse;
         mmorpg.fabric.npc.Dummy.init();
-        mmorpg.fabric.mob.RpgEntities.init(); // 몬스터 6 · 보스 10 · 소품 10 (애드온 엔티티 그대로)
+        mmorpg.fabric.mob.RpgEntities.init(); // 몬스터 6 · 보스 10 · 소품 10 · 탈것 (애드온 엔티티 그대로)
+        mmorpg.fabric.mount.MountItems.init(); // 탈것 아이템 (mounts.json — 쓰면 내 탈것 목록에)
+        mmorpg.fabric.mount.Mounts.init(); // 탈것 부르기 · 고르기 · 탄 동안 막기 · /mount
+        mmorpg.fabric.duel.DuelSystem.init(); // 결투 (/pvp · /결투 — 신청 · 수락 · 피해 감소 · 쓰러지지 않음 · 연출)
         mmorpg.fabric.boss.Arena.init(); // 보스 제단 목록 · 필드
         mmorpg.fabric.boss.Ticking.init(); // 붙잡아 둘 땅 (큰 필드 · 세계수)
         mmorpg.fabric.mob.Monsters.init(); // 일반 몬스터 6종 (싸움 · 이름표 · 회복 · 경험치 · 전리품) · 사냥터 · /mob · /mobzone

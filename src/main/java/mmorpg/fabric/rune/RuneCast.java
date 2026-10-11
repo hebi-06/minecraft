@@ -188,6 +188,7 @@ public final class RuneCast {
     public static boolean castRune(ServerPlayer sp, Runes.Rune r, boolean quick) {
         if (r == null || sp.isRemoved()) return false;
         if (Status.blockedBySilence(sp)) return false; // 보스 기믹: 침묵
+        if (mmorpg.fabric.mount.Riding.blocked(sp, "skill")) return false; // 탈것에 탄 동안 (riding.js)
         long left = cooldownLeft(sp, r);
         if (left > 0 && !ignoreCooldown) {
             String text = "§c" + r.def().str("name") + " §7재사용 대기 §f" + sec(left) + "초";

@@ -34,12 +34,14 @@ public final class MenuForm {
         return buttons.size();
     }
 
-    public void show(ServerPlayer sp, IntConsumer onSelect) {
+    /** 누른 버튼 번호를 onSelect 로 (닫으면 -1). 돌려주는 값 = 창 번호 (Forms.pendingId) */
+    public int show(ServerPlayer sp, IntConsumer onSelect) {
         int id = Forms.nextId();
         int n = buttons.size();
         Forms.open(sp, id, new FormNet.MenuPayload(id, BedrockText.toJava(title), BedrockText.toJava(text), List.copyOf(buttons)), r -> {
             int sel = r.selection();
             onSelect.accept(sel >= n ? -1 : sel);
         });
+        return id;
     }
 }

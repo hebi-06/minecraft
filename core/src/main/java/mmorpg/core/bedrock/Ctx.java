@@ -32,6 +32,8 @@ public final class Ctx implements Molang.Vars {
     public static final int MAX_HEALTH = 11;
     public static final int GROUND_SPEED = 12;
     public static final int IS_MOVING = 13;
+    /** q.is_saddled: 안장을 얹었는지 (탈것 — minecraft:is_saddled 컴포넌트가 있으면 1: 다이어울프의 안장 · 고삐가 보임) */
+    public static final int IS_SADDLED = 14;
     static final int FIXED = 16;
 
     private final List<String> props;
@@ -96,6 +98,8 @@ public final class Ctx implements Molang.Vars {
                 return GROUND_SPEED;
             case "is_moving":
                 return IS_MOVING;
+            case "is_saddled":
+                return IS_SADDLED;
             default:
                 if (name.startsWith("property:")) return prop(name.substring("property:".length()));
                 return -1;

@@ -45,14 +45,15 @@ public final class DialogForm {
         return choices.size();
     }
 
-    /** 누른 선택지 번호를 onSelect 로 (닫으면 -1) */
-    public void show(ServerPlayer sp, IntConsumer onSelect) {
+    /** 누른 선택지 번호를 onSelect 로 (닫으면 -1). 돌려주는 값 = 창 번호 (Forms.pendingId 로 아직 열려 있는지 확인) */
+    public int show(ServerPlayer sp, IntConsumer onSelect) {
         int id = Forms.nextId();
         int n = choices.size();
         Forms.open(sp, id, new FormNet.DialogPayload(id, BedrockText.toJava(name), BedrockText.toJava(text), List.copyOf(choices)), r -> {
             int sel = r.selection();
             onSelect.accept(sel >= n ? -1 : sel);
         });
+        return id;
     }
 
     /** 저장된 대사를 장으로 나눔 (forms.js toPages): "||" = 다음 장, "|" = 줄바꿈 */

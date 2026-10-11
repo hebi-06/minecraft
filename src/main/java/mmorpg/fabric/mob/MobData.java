@@ -14,7 +14,7 @@ import java.util.Set;
 import mmorpg.core.Json;
 
 /**
- * 애드온 엔티티 수치 (행동 팩 RPG_BP/entities/rpg_monsters · rpg_bosses — tools/bedrock_entities.py 가 /mmorpg/entities.json 으로 그대로 옮김).
+ * 애드온 엔티티 수치 (행동 팩 RPG_BP/entities/rpg_monsters · rpg_bosses · rpg_mounts — tools/bedrock_entities.py 가 /mmorpg/entities.json 으로 그대로 옮김).
  * 엔티티 ID (rpg:troll) 마다 체력 · 이동 · 충돌 상자 · 크기 · 중력 · 무리 · 집 반경 · 보스 막대 · 속성 (setProperty) · 효과 면역 · 피해 면역 · 행동.
  * 서버와 클라이언트가 같이 씀 (클라이언트는 속성 이름 · 기본값을 그리기 식에).
  */
@@ -31,7 +31,7 @@ public final class MobData {
             boolean collision, boolean pushable, double knockback, double follow, boolean fireImmune, List<String> families, double homeRadius,
             String homeType, String bossName, double bossRange, Map<String, Prop> props, Set<String> effectImmune, Set<String> noDamage,
             boolean breathesWater, boolean persistent, boolean nameAlways, Map<String, Double> groupMovement, Map<String, List<List<String>>> events,
-            Map<String, Map<String, Object>> behaviors) {
+            Map<String, Map<String, Object>> behaviors, Map<String, Object> components) {
 
         /** 이 무리인지 (minecraft:type_family) */
         public boolean family(String f) {
@@ -54,6 +54,38 @@ public final class MobData {
         /** 이 종류의 속성 이름 (정의 순서) */
         public List<String> propNames() {
             return new ArrayList<>(props.keySet());
+        }
+
+        /** 탈것 (6단계 — rpg_mount 무리, 행동 팩 rpg_mounts) */
+        public boolean mount() {
+            return "mounts".equals(group);
+        }
+
+        /** 컴포넌트 하나 (행동 팩 그대로 — 없으면 빈 맵): 탈것의 minecraft:rideable · horse.jump_strength · variable_max_auto_step 등 */
+        public Map<String, Object> component(String name) {
+            return map(components.get(name));
+        }
+
+        /** 탈것 자리 (minecraft:rideable 의 첫 자리 position — 발에서 [x, y, z], 없으면 [0, 키, 0]) */
+        public double[] seat() {
+            Object seats = component("minecraft:rideable").get("seats");
+            Map<String, Object> first = seats instanceof List<?> l && !l.isEmpty() ? map(l.get(0)) : map(seats);
+            List<Object> pos = list(first.get("position"));
+            if (pos.size() < 3) return new double[] {0, height, 0};
+            return new double[] {num(pos.get(0), 0), num(pos.get(1), height), num(pos.get(2), 0)};
+        }
+
+        /** 뛰는 힘 (minecraft:horse.jump_strength — 자바 말의 JUMP_STRENGTH 와 같은 뜻, 없으면 0) */
+        public double jumpStrength() {
+            Object v = component("minecraft:horse.jump_strength").get("value");
+            if (v instanceof Map<?, ?> range) return num(((Map<?, ?>) range).get("range_max"), 0.7); // {range_min, range_max} 인 말
+            return num(v, 0);
+        }
+
+        /** 걸어 오르는 높이 (minecraft:variable_max_auto_step — 탈 때 controlled_value, 없으면 base_value · 0.5625) */
+        public double stepHeight() {
+            Map<String, Object> st = component("minecraft:variable_max_auto_step");
+            return num(st.get("controlled_value"), num(st.get("base_value"), 0.5625));
         }
     }
 
@@ -174,7 +206,7 @@ public final class MobData {
                     Collections.unmodifiableMap(props), Collections.unmodifiableSet(effects), Collections.unmodifiableSet(noDamage),
                     Boolean.TRUE.equals(breath.get("breathes_water")), c.containsKey("minecraft:persistent"),
                     Boolean.TRUE.equals(map(c.get("minecraft:nameable")).get("always_show")), Collections.unmodifiableMap(groupMove),
-                    Collections.unmodifiableMap(events), Collections.unmodifiableMap(behaviors)));
+                    Collections.unmodifiableMap(events), Collections.unmodifiableMap(behaviors), Collections.unmodifiableMap(c)));
         }
         hitboxes = Collections.unmodifiableMap(hits);
         swimmers = Collections.unmodifiableSet(swim);

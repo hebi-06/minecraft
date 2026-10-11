@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import mmorpg.core.Stats;
@@ -12,6 +13,10 @@ import mmorpg.fabric.BedrockText;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgNet;
 import mmorpg.fabric.StatSheet;
+import mmorpg.fabric.mount.MountDefs;
+import mmorpg.fabric.mount.MountItem;
+import mmorpg.fabric.mount.MountItems;
+import mmorpg.fabric.mount.Riding;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -23,20 +28,35 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 /**
  * 스탯 창 (statui.js 의 자바 판): 남은 포인트, 힘 · 민첩 · 마력 · 체력 (줄을 누르면 +1, Shift 는 +5), 스탯마다 효과,
  * 가진 무기 기준 실제 피해 (기준 무기). 애드온과 같은 그림 (금테 창 · 스탯 아이콘). 게임은 멈추지 않음.
+ * 아랫줄 (6단계 — 애드온 상자 창의 아랫줄): 퀘스트 목록 · 엔더 상자 (내 엔더 상자 27칸) · 탈것 (누르면 고른 탈것을 불러 탐 · 타고 있으면 돌려보냄,
+ * Shift + 누르면 탈것 고르기 창).
  */
 public final class StatScreen extends Screen {
     public static final int W = 300;
-    public static final int H = 222;
-    public static final int ROW_Y = 34;
-    public static final int ROW_H = 29;
+    public static final int H = 234;
+    public static final int ROW_Y = 32;
+    public static final int ROW_H = 27;
+    /** 기준 무기 줄 간격 · 최대 줄 수 */
+    static final int LINE_H = 9;
+    static final int MAX_LINES = 6;
+    /** 아랫줄 단추 (위치 = 창 위에서 · 높이 · 사이 간격) */
+    public static final int BTN_Y = 204;
+    public static final int BTN_H = 23;
+    static final int BTN_GAP = 6;
+    /** 아랫줄 단추 이름 (서버에 보내는 할 일) */
+    public static final List<String> BUTTONS = List.of("quest", "ender", "mount");
     private static final Identifier BG = Mmorpg.id("stats/dialog_bg");
     private static final Identifier BTN = Mmorpg.id("stats/dialog_btn");
     private static final Identifier BTN_HOVER = Mmorpg.id("stats/dialog_btn_hover");
     private static final Identifier POINT = Mmorpg.id("hud/icon_point");
+    private static final Identifier ENDER = Mmorpg.id("ui/ender_chest");
+    private static final Identifier MOUNT = Mmorpg.id("ui/icon_mount");
 
     private int left;
     private int top;
@@ -51,7 +71,7 @@ public final class StatScreen extends Screen {
     @Override
     protected void init() {
         left = (width - W) / 2;
-        top = (height - H) / 2;
+        top = Math.max(0, (height - H) / 2);
     }
 
     @Override
@@ -75,7 +95,71 @@ public final class StatScreen extends Screen {
     }
 
     public int rowY(int i) {
-        return top + ROW_Y + i * ROW_H + 13;
+        return top + ROW_Y + i * ROW_H + 12;
+    }
+
+    // ------------------------------------------------------------ 아랫줄 단추
+
+    private int bottomW() {
+        return (W - 20 - BTN_GAP * (BUTTONS.size() - 1)) / BUTTONS.size();
+    }
+
+    private int bottomLeft(int i) {
+        return left + 10 + i * (bottomW() + BTN_GAP);
+    }
+
+    /** 아랫줄 단추 i 안인지 */
+    private boolean inBottom(int i, double mx, double my) {
+        int x = bottomLeft(i);
+        int y = top + BTN_Y;
+        return mx >= x && mx < x + bottomW() && my >= y && my < y + BTN_H;
+    }
+
+    /** 아랫줄 단추 i 의 가운데 (시험용 — 화면 좌표 {x, y}) */
+    public int[] bottomCenter(int i) {
+        return new int[] {bottomLeft(i) + bottomW() / 2, top + BTN_Y + BTN_H / 2};
+    }
+
+    /** 지금 고른 탈것 (없으면 null) */
+    private static MountDefs.Def currentMount() {
+        return MountDefs.get(ClientRpgState.mountCurrent());
+    }
+
+    private static boolean riding() {
+        LocalPlayer p = net.minecraft.client.Minecraft.getInstance().player;
+        return Riding.isMounted(p);
+    }
+
+    /** 단추의 그림 · 두 줄 글 · 풀이 (마우스를 올리면) */
+    private record Bottom(ItemStack item, Identifier sprite, String line1, String line2, List<String> tip) {}
+
+    private Bottom bottom(String name) {
+        switch (name) {
+            case "quest":
+                return new Bottom(new ItemStack(Items.WRITABLE_BOOK), null, "§e§l퀘스트", "§7목록 보기", List.of("§e퀘스트 목록", "§7진행 중인 퀘스트 보기"));
+            case "ender":
+                return new Bottom(ItemStack.EMPTY, ENDER, "§d§l엔더 상자", "§7내 보관함",
+                        List.of("§d§l엔더 상자", "§7누르면 내 엔더 상자가 열립니다", "§7어디서나 — 놓인 엔더 상자와 같은 27칸"));
+            default: {
+                MountDefs.Def d = currentMount();
+                String mname = d != null ? d.name() : "없음";
+                MountItem item = d != null ? MountItems.of(d.key()) : null;
+                ItemStack stack = item != null ? new ItemStack(item) : ItemStack.EMPTY;
+                int owned = ClientRpgState.mountOwned().size();
+                String shiftLine = "§eShift + 누르기: 탈것 고르기 §7(가진 탈것 " + owned + "종)";
+                if (riding()) {
+                    return new Bottom(stack, item == null ? MOUNT : null, "§c§l돌려보내기", "§7" + mname,
+                            List.of("§b" + mname + " 돌려보내기", "§7지금 타고 있습니다", "§7누르면 내려서 돌려보냄 (웅크려도 됨)", shiftLine));
+                }
+                double cd = ClientRpgState.mountCooldown();
+                List<String> tip = new ArrayList<>(List.of("§b§l탈것 소환 §r§7(" + mname + ")", "§7누르면 불러서 바로 탑니다", "§7웅크려 내리면 사라집니다",
+                        "§c탄 동안: 공격 · 스킬 · 룬 불가"));
+                if (cd > 0) tip.add(String.format(Locale.ROOT, "§8%.1f초 뒤에 다시 부를 수 있음", cd));
+                tip.add(shiftLine);
+                String l2 = cd > 0 ? String.format(Locale.ROOT, "§8%.1f초 뒤", cd) : "§7" + mname;
+                return new Bottom(stack, item == null ? MOUNT : null, "§b§l탈것 소환", l2, tip);
+            }
+        }
     }
 
     @Override
@@ -92,7 +176,7 @@ public final class StatScreen extends Screen {
         int pw = font.width(pts);
         g.text(font, pts, left + W - 12 - pw, top + 11, 0xFFFFFFFF, true);
         RpgHud.sprite(g, POINT, left + W - 12 - pw - 17, top + 7, 15, 15);
-        g.fill(left + 10, top + 27, left + W - 10, top + 28, 0x90C8A050);
+        g.fill(left + 10, top + 26, left + W - 10, top + 27, 0x90C8A050);
 
         // 스탯 줄
         List<String> keys = Stats.STAT_KEYS;
@@ -112,12 +196,12 @@ public final class StatScreen extends Screen {
                 int alpha = (int) (0x70 * (1 - (now - f) / 600.0));
                 g.fill(left + 10, y, left + W - 10, y + ROW_H - 2, (alpha << 24) | 0x7CFF8A);
             }
-            RpgHud.sprite(g, icon(key), left + 14, y + 5, 16, 16);
-            g.text(font, BedrockText.toJava(s.title(key)), left + 36, y + 4, 0xFFFFFFFF, true);
-            g.text(font, BedrockText.toJava(s.effect(key)), left + 36, y + 15, 0xFFFFFFFF, true);
+            RpgHud.sprite(g, icon(key), left + 14, y + 4, 16, 16);
+            g.text(font, BedrockText.toJava(s.title(key)), left + 36, y + 3, 0xFFFFFFFF, true);
+            g.text(font, BedrockText.toJava(s.effect(key)), left + 36, y + 14, 0xFFFFFFFF, true);
             // +1 단추
             int bx = left + W - 40;
-            int by = y + 5;
+            int by = y + 4;
             boolean can = s.point() > 0;
             RpgHud.sprite(g, over && can ? BTN_HOVER : BTN, bx, by, 26, 16);
             String plus = (can ? "§a§l" : "§8") + "+1";
@@ -125,17 +209,39 @@ public final class StatScreen extends Screen {
         }
 
         // 기준 무기
-        int wy = top + ROW_Y + keys.size() * ROW_H + 4;
+        int wy = top + ROW_Y + keys.size() * ROW_H + 3;
         g.fill(left + 10, wy - 3, left + W - 10, wy - 2, 0x60C8A050);
         Weapon w = StatSheet.referenceWeapon(player.getMainHandItem(), player.getOffhandItem(), player.getInventory().getNonEquipmentItems(), s::usable);
         List<String> lines = s.weaponLines(w, mmorpg.fabric.gear.WeaponEnhance.reference(player.getMainHandItem(), player.getInventory().getNonEquipmentItems(), w), false);
-        for (int i = 0; i < Math.min(6, lines.size()); i++) {
-            g.text(font, BedrockText.toJava(lines.get(i)), left + 14, wy + 2 + i * 10, 0xFFFFFFFF, true);
+        for (int i = 0; i < Math.min(MAX_LINES, lines.size()); i++) {
+            g.text(font, BedrockText.toJava(lines.get(i)), left + 14, wy + 1 + i * LINE_H, 0xFFFFFFFF, true);
+        }
+
+        // 아랫줄: 퀘스트 목록 · 엔더 상자 · 탈것
+        g.fill(left + 10, top + BTN_Y - 4, left + W - 10, top + BTN_Y - 3, 0x60C8A050);
+        int bottomHover = -1;
+        for (int i = 0; i < BUTTONS.size(); i++) {
+            Bottom b = bottom(BUTTONS.get(i));
+            int x = bottomLeft(i);
+            int y = top + BTN_Y;
+            boolean over = inBottom(i, mx, my);
+            if (over) bottomHover = i;
+            RpgHud.sprite(g, over ? BTN_HOVER : BTN, x, y, bottomW(), BTN_H);
+            int ix = x + 4;
+            int iy = y + (BTN_H - 16) / 2;
+            if (!b.item().isEmpty()) g.item(b.item(), ix, iy);
+            else if (b.sprite() != null) RpgHud.sprite(g, b.sprite(), ix, iy, 16, 16);
+            g.text(font, BedrockText.toJava(b.line1()), ix + 19, y + 3, 0xFFFFFFFF, true);
+            g.text(font, BedrockText.toJava(b.line2()), ix + 19, y + 12, 0xFFFFFFFF, true);
         }
 
         if (hover >= 0) {
             List<Component> tip = new ArrayList<>();
             for (String l : s.tooltip(keys.get(hover))) tip.add(Component.literal(BedrockText.toJava(l)));
+            g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
+        } else if (bottomHover >= 0) {
+            List<Component> tip = new ArrayList<>();
+            for (String l : bottom(BUTTONS.get(bottomHover)).tip()) tip.add(Component.literal(BedrockText.toJava(l)));
             g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
         }
     }
@@ -147,11 +253,36 @@ public final class StatScreen extends Screen {
                 if (!inRow(i, event.x(), event.y())) continue;
                 if (ClientRpgState.point() <= 0) return true;
                 ClientPlayNetworking.send(new RpgNet.SpendPayload(Stats.STAT_KEYS.get(i), event.hasShiftDown() ? 5 : 1));
-                minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                click();
+                return true;
+            }
+            for (int i = 0; i < BUTTONS.size(); i++) {
+                if (!inBottom(i, event.x(), event.y())) continue;
+                press(BUTTONS.get(i), event.hasShiftDown());
                 return true;
             }
         }
         return super.mouseClicked(event, doubleClick);
+    }
+
+    /**
+     * 아랫줄 단추 누르기: 퀘스트 목록 · 엔더 상자 (서버가 창을 엶 — 이 창 대신), 탈것 (창을 닫고 부름 · 돌려보냄 — 창이 열린 동안에는 탈것을 몰 수 없음),
+     * Shift + 탈것 = 탈것 고르기 창
+     */
+    void press(String name, boolean shift) {
+        click();
+        if (name.equals("mount")) {
+            if (shift) {
+                ClientPlayNetworking.send(new RpgNet.StatActionPayload("mount_select"));
+                return;
+            }
+            onClose();
+        }
+        ClientPlayNetworking.send(new RpgNet.StatActionPayload(name));
+    }
+
+    private void click() {
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
     }
 
     @Override

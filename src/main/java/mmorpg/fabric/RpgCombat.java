@@ -297,6 +297,11 @@ public final class RpgCombat {
      * 활 · 완드로 몹을 치면 그 몹에게 쏨 (모바일 터치와 같게), 요구 조건이 모자란 근접 무기는 막고 경고.
      */
     public static boolean beforeAttack(Player p, Entity target) {
+        // 탈것에 탄 동안은 공격 없음 (riding.js — 맨손 · 모든 무기)
+        if (mmorpg.fabric.mount.Riding.isMounted(p)) {
+            if (p instanceof ServerPlayer sp) mmorpg.fabric.mount.Riding.blocked(sp, "attack");
+            return true;
+        }
         Weapon w = weaponOf(p.getMainHandItem());
         if (w == null) return false;
         if (isRanged(w)) {
@@ -394,6 +399,7 @@ public final class RpgCombat {
      * 활은 빛줄기가 닿는 순간 (초당 arrowSpeed 칸), 완드는 마법진을 다 그린 뒤 (castTicks) 맞음.
      */
     public static void fireRanged(ServerPlayer sp, ItemStack stack, Weapon w, LivingEntity forced) {
+        if (mmorpg.fabric.mount.Riding.blocked(sp, "attack")) return; // 탈것에 탄 동안 활 · 완드 평타 없음
         Obj cfg = w.type().equals("bow") ? BOW : WAND;
         String k = sp.getUUID() + "|" + w.type();
         long now = Tasks.now();
@@ -562,10 +568,11 @@ public final class RpgCombat {
         return new Aim(target, dist, view);
     }
 
-    /** 바로 겨눌 수 있는 것: 살아 있는 생명체 (다른 플레이어 · 갑옷 거치대 제외 — 결투는 6단계) */
+    /** 바로 겨눌 수 있는 것: 살아 있는 생명체 (갑옷 거치대 제외, 다른 플레이어는 결투 상대만 — 아니면 지나가 뒤의 몹을 맞힘) */
     public static boolean aimable(ServerPlayer sp, Entity e) {
         if (!(e instanceof LivingEntity le) || e == sp || !le.isAlive() || e.isSpectator() || !e.isPickable()) return false;
-        return !(e instanceof Player) && !(e instanceof ArmorStand);
+        if (e instanceof Player p) return mmorpg.fabric.skill.Kit.duelPartner.test(sp, p);
+        return !(e instanceof ArmorStand);
     }
 
     /** 조준 보정 대상: 주민 · 골렘 · 길들인 동물 · 플레이어 제외 */

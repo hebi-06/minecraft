@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""몬스터 · 보스 · 보스 소품 자원 만들기 (5단계): 애드온의 엔티티를 자바 모드 자원으로.
+"""몬스터 · 보스 · 보스 소품 (5단계) · 탈것 (6단계) 자원 만들기: 애드온의 엔티티를 자바 모드 자원으로.
 
 tools/bedrock_entities.py <애드온 폴더 (rpg_addon)>
 
-- 수치 (서버 · 클라이언트 공통): RPG_BP/entities/rpg_monsters · rpg_bosses/*.json
+- 수치 (서버 · 클라이언트 공통): RPG_BP/entities/rpg_monsters · rpg_bosses · rpg_mounts/*.json
   → src/main/resources/mmorpg/entities.json  {엔티티 ID: {group, properties, components, component_groups, events}} (애드온 JSON 그대로 —
   자바 쪽 mob.MobData 가 체력 · 이동 · 충돌 상자 · 크기 · 중력 · 무리 · 보스 막대 · 속성 · 효과 면역 · 행동을 읽음)
 - 그리기 (클라이언트): RPG_RP/entity/... (그리는 법) · models/entity/... (geo) · animations/... · render_controllers/rpg_boss...
@@ -30,7 +30,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "src", "main", "resources")
 RPG = os.path.join(RES, "assets", "rpg")
 MM = os.path.join(RES, "assets", "mmorpg")
-GROUPS = ["rpg_monsters", "rpg_bosses"]
+GROUPS = ["rpg_monsters", "rpg_bosses", "rpg_mounts"]
 
 # 보스 소품 · 분신 이름 (엔티티 이름 — 머리 위 이름표는 스크립트가 정함)
 PROP_NAMES = {
@@ -132,6 +132,12 @@ def main():
             if f.endswith(".json"):
                 anims_all.update(load(os.path.join(root, f)).get("animations", {}))
     controllers = load(os.path.join(rp, "render_controllers", "rpg_boss.render_controllers.json"))["render_controllers"]
+    # 6단계 탈것 (rpg_mounts — 다이어울프 · 앞으로 더할 탈것): 탈것마다 렌더 컨트롤러 파일
+    mount_rc = os.path.join(rp, "render_controllers", "rpg_mounts")
+    if os.path.isdir(mount_rc):
+        for f in sorted(os.listdir(mount_rc)):
+            if f.endswith(".json"):
+                controllers.update(load(os.path.join(mount_rc, f)).get("render_controllers", {}))
 
     entities, models, anims, emissive = {}, {}, {}, []
     textures = {}  # 텍스처 경로 → (재질, [geometry])
@@ -219,6 +225,10 @@ def main():
             names["entity.rpg.boss_" + key] = b["name"]
     for eid, n in PROP_NAMES.items():
         names["entity.rpg." + eid.split(":")[1]] = n
+    # 탈것: 이름은 src/main/resources/mmorpg/mounts.json (탈것 목록 — 앞으로 더할 탈것도 여기에)
+    mounts = load(os.path.join(RES, "mmorpg", "mounts.json"))
+    for key, m in mounts["mounts"].items():
+        names["entity.rpg." + m["entity"].split(":")[1]] = m["name"]
     for lang in ("ko_kr", "en_us"):
         p = os.path.join(RPG, "lang", lang + ".json")
         d = load(p)

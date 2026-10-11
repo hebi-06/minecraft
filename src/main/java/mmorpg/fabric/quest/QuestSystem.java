@@ -63,6 +63,10 @@ public final class QuestSystem {
             Loot.forgetLoot(handler.player.getUUID());
         });
         QuestCommands.init();
+        // 스탯 창 아랫줄 퀘스트 목록 (6단계 — statui.js: 목록을 닫으면 스탯 창으로 돌아감)
+        mmorpg.fabric.RpgNet.onStatAction("quest", sp -> {
+            if (!mmorpg.fabric.ui.Forms.isOpen(sp)) QuestLog.questLogLoop(sp, () -> mmorpg.fabric.RpgNet.openStats(sp));
+        });
     }
 
     /** 보스를 쓰러뜨림 (5단계 보스가 부름: 보상을 받은 사람 모두) → 보스 처치 퀘스트 · 전설의 시련 (Quests.onBossKilled) */

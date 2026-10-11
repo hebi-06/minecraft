@@ -103,7 +103,12 @@ public final class Notify {
 
     /** 큰 글자 (hp.js showRealTitle — 0.5초 차오름 · 3.5초 · 1초 걷힘). subtitle 은 null 이면 없음 */
     public static void title(ServerPlayer sp, String title, String subtitle) {
-        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(10, 70, 20));
+        title(sp, title, subtitle, 10, 70, 20);
+    }
+
+    /** 큰 글자 (시간을 정해서 — 틱: 차오름 · 머묾 · 걷힘) */
+    public static void title(ServerPlayer sp, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+        sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut));
         sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(Component.literal(subtitle == null ? "" : BedrockText.toJava(subtitle))));
         sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(Component.literal(BedrockText.toJava(title))));
     }

@@ -57,6 +57,33 @@ public final class RpgHealth {
     public static Predicate<ServerPlayer> undying = p -> false;
     public static Consumer<ServerPlayer> undyingSaved = p -> {};
 
+    /** 결투 훅 (hp.js setDuelHooks — 6단계 결투가 넣음) */
+    public interface DuelHooks {
+        /** 결투 상대의 피해면 줄인 양 (× PVP.mult — 아니면 그대로) */
+        double scale(ServerPlayer sp, DamageSource source, double loss);
+
+        /** 이 (죽을) 피해로는 쓰러지지 않는지 (결투 상대 (탓) 의 피해 → 체력 1 로 남고 짐) */
+        boolean floor(ServerPlayer sp, DamageSource source);
+
+        /** 결투 상대에게 쓰러져 체력 1 로 남음 (다음 틱) */
+        void lost(ServerPlayer sp, DamageSource source);
+    }
+
+    public static DuelHooks duel = new DuelHooks() {
+        @Override
+        public double scale(ServerPlayer sp, DamageSource source, double loss) {
+            return loss;
+        }
+
+        @Override
+        public boolean floor(ServerPlayer sp, DamageSource source) {
+            return false;
+        }
+
+        @Override
+        public void lost(ServerPlayer sp, DamageSource source) {}
+    };
+
     static void init() {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             MAXES.clear();
@@ -198,7 +225,7 @@ public final class RpgHealth {
         double shield = RpgCombat.shieldReduction(sp, source);
         Guards.Guard g = Guards.of(sp);
         double reduce = g != null ? 1 - (1 - shield) * (1 - g.reduce()) : shield;
-        double loss = raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce);
+        double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce)); // 결투 상대의 피해 × PVP.mult
         Guards.afterHurt(sp, source, g); // 반사 버프: 때린 것에게 (다음 틱)
         boolean safe = isNonLethal(sp, source, raw);
         if (loss > 0 && !safe) loss = absorbShield(sp, loss); // 보호막 먼저
@@ -208,6 +235,11 @@ public final class RpgHealth {
             next = Math.min(health, 1); // 불사의 맹약: 체력 1 에서 버팀
             Tasks.later(1, () -> {
                 if (!sp.isRemoved()) undyingSaved.accept(sp);
+            });
+        } else if (next <= 0 && duel.floor(sp, source)) {
+            next = Math.min(health, 1); // 결투 상대에게 쓰러짐 (죽을 피해): 죽지 않고 체력 1 (그보다 적었으면 그대로) 로 남음 → 결투에서 짐
+            Tasks.later(1, () -> {
+                if (!sp.isRemoved()) duel.lost(sp, source);
             });
         }
         // 다른 플레이어가 준 피해: 맞은 사람 머리 위에 빨간 숫자 (fx.js player)

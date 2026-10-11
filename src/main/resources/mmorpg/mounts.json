@@ -1,0 +1,25 @@
+{
+  "_doc": [
+    "탈것 목록 (6단계 — 애드온 v2.8.0 의 탈것 1종을 여러 종으로). 새 탈것 = 여기에 한 항목 + 탈것 엔티티 (애드온 RPG_BP/entities/rpg_mounts · RPG_RP 의 모델 · 동작 · 렌더 컨트롤러 · 텍스처 → tools/bedrock_entities.py) + 아이템 그림 (portrait → tools/mount_items.py).",
+    "탈것 아이템을 쓰면 그 탈것이 내 탈것 목록에 들어감 (아이템 1개 사라짐, 이미 있으면 그대로). 스탯 창 탈것 칸: 누르면 고른 탈것을 불러 탐 · Shift + 누르면 탈것 고르기 (탄 채로 고르면 바로 갈아탐).",
+    "starter = 처음부터 가진 탈것 (애드온처럼 누구나 다이어울프). 빠르기 · 뛰기 · 자리 · 충돌 상자 · 오르는 높이는 탈것 엔티티 (행동 팩) 그대로.",
+    "color = 연출 색 [r, g, b] (0~1), particle = 부를 때 · 사라질 때 흩날리는 바닐라 파티클 (베드락 이름), sounds = [베드락 소리, 높이, 크기] 목록, desc = 아이템 설명 줄.",
+    "portrait = 아이템 그림의 바탕 (자원 폴더 안 경로 — 탈것 모습, 64×64 정도), seatLift = 자바에서 탄 사람 높이 보정 (칸, 없으면 0.13 — 엉덩이가 안장 위에 오게)."
+  ],
+  "mounts": {
+    "dire_wolf": {
+      "name": "다이어울프",
+      "entity": "rpg:dire_wolf_mount",
+      "item": "rpg:mount_dire_wolf",
+      "starter": true,
+      "color": [0.37, 0.85, 1.0],
+      "particle": "minecraft:snowflake_particle",
+      "portrait": "assets/mmorpg/textures/gui/sprites/ui/icon_mount.png",
+      "sounds": {
+        "summon": [["mob.wolf.big.growl", 0.85, 1.0], ["breeze_wind_charge.burst", 1.3, 0.6]],
+        "gone": [["mob.wolf.big.whine", 1.1, 0.8], ["mob.wolf.shake", 1.0, 0.7]]
+      },
+      "desc": ["§7얼음빛 갈기의 큰 늑대", "§7점프를 길게 누를수록 높이 뜀 · 한 칸은 그냥 달려 오름"]
+    }
+  }
+}

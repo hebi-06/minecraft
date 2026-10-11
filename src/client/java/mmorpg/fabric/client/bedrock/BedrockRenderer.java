@@ -39,8 +39,10 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
     private final BedrockLooks.Look look;
     /** 그림자 반지름 (크기 1 기준 — 충돌 상자 폭의 절반, 소품은 없음) */
     private final float shadow;
+    /** 안장을 얹은 종류 (minecraft:is_saddled — 탈것: q.is_saddled = 1) */
+    private final boolean saddled;
 
-    /** 클라이언트 시작: 애드온 엔티티 26종 그리기 (MmorpgClient) */
+    /** 클라이언트 시작: 애드온 엔티티 27종 그리기 (몬스터 · 보스 · 소품 · 탈것 — MmorpgClient) */
     @SuppressWarnings("unchecked")
     public static void init() {
         for (var e : RpgEntities.types().entrySet()) {
@@ -107,6 +109,7 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
         this.look = look;
         MobData.Def def = MobData.get(look.id);
         this.shadow = def == null || def.prop() ? 0F : def.width() * 0.5F;
+        this.saddled = def != null && def.components().containsKey("minecraft:is_saddled");
         addLayer(new GlowLayer(this));
         addLayer(new TintLayer(this));
     }
@@ -133,6 +136,7 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
         v[Ctx.MAX_HEALTH] = e.getMaxHealth();
         v[Ctx.GROUND_SPEED] = e.getDeltaMovement().horizontalDistance() * 20;
         v[Ctx.IS_MOVING] = s.walkAnimationSpeed > 0.01 ? 1 : 0;
+        v[Ctx.IS_SADDLED] = saddled ? 1 : 0;
         for (String p : ctx.props()) {
             int slot = ctx.prop(p);
             if (slot >= 0) v[slot] = e.prop(p);

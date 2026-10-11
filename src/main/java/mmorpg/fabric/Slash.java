@@ -59,6 +59,7 @@ public final class Slash {
     }
 
     private static void once(ServerPlayer sp) {
+        if (mmorpg.fabric.mount.Riding.blocked(sp, "attack")) return; // 탈것에 탄 동안 참격 없음 (피해도 막힘)
         long now = Tasks.now();
         Long last = LAST.get(sp.getUUID());
         if (last != null && last == now) return;
