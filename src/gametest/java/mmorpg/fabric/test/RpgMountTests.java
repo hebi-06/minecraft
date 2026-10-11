@@ -188,9 +188,13 @@ public final class RpgMountTests {
         h.assertTrue(Mounts.summon(sp) && sp.getVehicle() instanceof RpgMount, "+3 is fine");
         Mounts.dismiss(sp);
         Mounts.resetCooldown(sp);
+        // 불 (옆의 나무판에 붙어 꺼지지 않게)
+        h.getLevel().setBlockAndUpdate(feet.above(2).east(), Blocks.OAK_PLANKS.defaultBlockState());
         h.getLevel().setBlockAndUpdate(feet.above(2), Blocks.FIRE.defaultBlockState());
+        h.assertTrue(h.getLevel().getBlockState(feet.above(2)).is(Blocks.FIRE), "fire placed");
         h.assertTrue(!Mounts.summon(sp), "fire blocks");
         h.getLevel().setBlockAndUpdate(feet.above(2), Blocks.AIR.defaultBlockState());
+        h.getLevel().setBlockAndUpdate(feet.above(2).east(), Blocks.AIR.defaultBlockState());
         h.getLevel().setBlockAndUpdate(feet.above(3), Blocks.AIR.defaultBlockState());
         RpgGearTests.done(h, sp);
     }

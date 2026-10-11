@@ -92,6 +92,20 @@ public final class Smith {
             openSmith(c.getSource().getPlayerOrException(), "enhance");
             return 1;
         }));
+        // 손에 든 무기의 강화 단계 (시험용 — 애드온 /enhanceset)
+        d.register(admin("enhanceset").then(Commands.argument("level", com.mojang.brigadier.arguments.IntegerArgumentType.integer()).executes(c -> {
+            ServerPlayer sp = c.getSource().getPlayerOrException();
+            ItemStack held = sp.getMainHandItem();
+            Weapon w = RpgCombat.weaponOf(held);
+            if (w == null) {
+                Notify.say(sp, "§cRPG 무기를 손에 들고 쓰세요.");
+                return 0;
+            }
+            int v = Math.max(0, Math.min((int) Rules.get().obj("ENHANCE").num("max"), com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(c, "level")));
+            WeaponEnhance.write(held, v);
+            Notify.say(sp, w.title() + " 강화 +" + v);
+            return 1;
+        })));
     }
 
     /** 대장장이 창 (흐름 안에서 — 예: NPC 대화에서). start: "smith" · "enhance" · "craft", 끝나면 done (null 이면 없음) */

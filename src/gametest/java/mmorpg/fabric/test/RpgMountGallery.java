@@ -32,7 +32,8 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.zombie.Zombie;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.inventory.ChestMenu;
 import net.minecraft.world.item.ItemStack;
@@ -135,15 +136,40 @@ public final class RpgMountGallery implements FabricClientGameTest {
         camera(ctx, CameraType.THIRD_PERSON_FRONT);
         ctx.waitTicks(4);
         shot(ctx, "m_ride_front");
-        // 옆모습: 탈것 · 탄 사람을 왼쪽으로 돌리고 뒤 카메라
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
-        look(ctx, 90F, 10F);
-        ctx.waitTicks(6);
-        shot(ctx, "m_ride_turned");
+        // 옆모습: 옆 4칸에 세운 (보이지 않는) 갑옷 거치대를 카메라로 — 안장 위에 앉은 높이 · 다리 · 꼬리
+        sideView(ctx, server, "m_ride_side");
         camera(ctx, CameraType.FIRST_PERSON);
         look(ctx, 0F, 20F);
         ctx.waitTicks(4);
         shot(ctx, "m_ride_fp");
+    }
+
+    /** 탈것 옆 (동쪽 4칸, 서쪽을 봄) 갑옷 거치대의 눈으로 사진 한 장 */
+    private void sideView(ClientGameTestContext ctx, TestServerContext server, String name) {
+        Vec3 m = ctx.computeOnClient(mc -> mc.player.getVehicle() != null ? mc.player.getVehicle().position() : mc.player.position());
+        int id = server.computeOnServer(s -> {
+            ArmorStand as = EntityTypes.ARMOR_STAND.create(s.overworld(), EntitySpawnReason.COMMAND);
+            as.snapTo(m.x + 4.5, m.y + 0.2, m.z, 90F, 5F);
+            as.setYHeadRot(90F);
+            as.setInvisible(true);
+            as.setNoGravity(true);
+            s.overworld().addFreshEntity(as);
+            return as.getId();
+        });
+        boolean seen = waitFor(ctx, mc -> mc.level.getEntity(id) != null, 20);
+        if (seen) {
+            ctx.runOnClient(mc -> mc.setCameraEntity(mc.level.getEntity(id)));
+            ctx.waitTicks(3);
+            shot(ctx, name);
+            ctx.runOnClient(mc -> mc.setCameraEntity(mc.player));
+        } else {
+            check(false, "side camera stand not on the client");
+        }
+        server.runOnServer(s -> {
+            var e = s.overworld().getEntity(id);
+            if (e != null) e.discard();
+        });
+        ctx.waitTick();
     }
 
     // ------------------------------------------------------------ 달리기 · 뛰기 · 오르기
@@ -157,8 +183,9 @@ public final class RpgMountGallery implements FabricClientGameTest {
         ctx.waitTicks(16);
         shot(ctx, "m_run");
         ctx.waitTicks(14);
-        ctx.getInput().releaseKey(o -> o.keyUp);
         Vec3 b = ctx.computeOnClient(mc -> mc.player.position());
+        sideView(ctx, server, "m_run_side");
+        ctx.getInput().releaseKey(o -> o.keyUp);
         double moved = Math.hypot(b.x - a.x, b.z - a.z);
         check(moved > 8, String.format(Locale.ROOT, "rode %.1f blocks in 30 ticks (speed 0.32)", moved));
         float walk = ctx.computeOnClient(mc -> mc.player.getVehicle() instanceof RpgMount m ? m.walkAnimation.speed() : -1F);
@@ -218,7 +245,7 @@ public final class RpgMountGallery implements FabricClientGameTest {
         look(ctx, 0F, 10F);
         Vec3 at = ctx.computeOnClient(mc -> mc.player.position());
         server.runOnServer(s -> {
-            Zombie z = EntityTypes.ZOMBIE.create(s.overworld(), EntitySpawnReason.COMMAND);
+            Husk z = EntityTypes.HUSK.create(s.overworld(), EntitySpawnReason.COMMAND);
             z.snapTo(at.x, at.y - 1, at.z + 3.5, 180F, 0F);
             z.setNoAi(true);
             z.getAttribute(Attributes.MAX_HEALTH).setBaseValue(200);
@@ -234,11 +261,11 @@ public final class RpgMountGallery implements FabricClientGameTest {
         ctx.waitTicks(4);
         shot(ctx, "m_blocked");
         float hp = server.computeOnServer(s -> {
-            List<Zombie> zs = s.overworld().getEntitiesOfClass(Zombie.class, new AABB(at, at).inflate(8));
+            List<Husk> zs = s.overworld().getEntitiesOfClass(Husk.class, new AABB(at, at).inflate(8));
             return zs.isEmpty() ? -1F : zs.get(0).getHealth();
         });
-        check(hp == 200F, "attack while riding does nothing (zombie " + hp + ")");
-        server.runOnServer(s -> s.overworld().getEntitiesOfClass(Zombie.class, new AABB(at, at).inflate(8)).forEach(z -> z.discard()));
+        check(hp == 200F, "attack while riding does nothing (husk " + hp + ")");
+        server.runOnServer(s -> s.overworld().getEntitiesOfClass(Husk.class, new AABB(at, at).inflate(8)).forEach(z -> z.discard()));
     }
 
     // ------------------------------------------------------------ 탈것 고르기 (Shift + 탈것 칸)
@@ -382,7 +409,7 @@ public final class RpgMountGallery implements FabricClientGameTest {
     private void quest(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         openStats(ctx);
         click(ctx, conn, bottom(0));
-        boolean open = waitScreen(ctx, sc -> sc instanceof MenuFormScreen, "quest log");
+        boolean open = waitScreen(ctx, sc -> sc instanceof mmorpg.fabric.client.form.FormScreen, "quest log");
         if (!open) return;
         away(ctx);
         shot(ctx, "m_quest_log");

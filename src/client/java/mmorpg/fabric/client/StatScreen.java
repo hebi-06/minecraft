@@ -258,7 +258,7 @@ public final class StatScreen extends Screen {
             }
             for (int i = 0; i < BUTTONS.size(); i++) {
                 if (!inBottom(i, event.x(), event.y())) continue;
-                press(BUTTONS.get(i), event.hasShiftDown());
+                press(BUTTONS.get(i), event.hasShiftDown() || minecraft.hasShiftDown());
                 return true;
             }
         }
