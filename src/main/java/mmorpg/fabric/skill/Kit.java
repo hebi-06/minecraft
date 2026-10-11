@@ -23,6 +23,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
@@ -481,13 +482,23 @@ public final class Kit {
         double res = e instanceof LivingEntity le ? le.getAttributeValue(Attributes.KNOCKBACK_RESISTANCE) : 0;
         double k = Math.max(0, 1 - res);
         e.setDeltaMovement(hx * k, vy * k, hz * k);
-        e.needsSync = true;
+        syncVelocity(e);
     }
 
     /** 속도를 그대로 정함 (스스로 떠오르기 등 — 밀치기 저항 무시) */
     public static void launch(Entity e, double vx, double vy, double vz) {
         e.setDeltaMovement(vx, vy, vz);
+        syncVelocity(e);
+    }
+
+    /**
+     * 서버에서 바꾼 속도를 보냄. 플레이어는 클라이언트가 몸을 움직이므로 그 사람에게 속도 패킷을 바로 보냄 (바닐라 Player.attack 의 넉백과 같은 길) —
+     * 26.3 의 needsSync 만으로는 그 사람의 클라이언트에 가지 않아 보스 · 스킬의 밀치기 · 띄우기 · 끌어당기기가 화면에서 일어나지 않았음
+     * (크라켄 소용돌이 · 그람 용익 강하의 솟구침 — 사진첩으로 확인). 다른 엔티티는 서버가 움직이고 위치를 보냄 (needsSync)
+     */
+    public static void syncVelocity(Entity e) {
         e.needsSync = true;
+        if (e instanceof ServerPlayer sp && sp.connection != null && !sp.isRemoved()) sp.connection.send(new ClientboundSetEntityMotionPacket(sp));
     }
 
     // ------------------------------------------------------------ 스킬 피해 (combat.js applySkillDamage · skills.js skillHit)
@@ -537,7 +548,7 @@ public final class Kit {
         }
         if (!target.isRemoved()) {
             target.setDeltaMovement(v);
-            target.needsSync = true;
+            syncVelocity(target);
         }
         SKILL_LANDED.put(key(target, sp), Tasks.now());
         return true;

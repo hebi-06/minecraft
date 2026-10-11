@@ -146,6 +146,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
             ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
         }
         if (sneak) ctx.getInput().releaseShift();
+        double topY = -1e9; // 사진 찍는 순간마다 클라이언트의 플레이어 높이 (솟구치는 스킬 — 서버가 준 속도가 화면의 몸을 움직이는지)
         for (int shot : c.shots()) {
             if (third && c.shots().length > 2 && shot == c.shots()[0]) continue; // 3인칭은 뒤쪽 순간만
             if (shot > t) {
@@ -153,6 +154,13 @@ public final class RpgSkillGallery implements FabricClientGameTest {
                 t = shot;
             }
             ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "sk_%s_%02d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
+            topY = Math.max(topY, ctx.computeOnClient(mc -> mc.player == null ? -1e9 : mc.player.getY()));
+        }
+        if (id.equals("gram_descent") && !third) {
+            // 용익 강하: 솟구쳐 머문 뒤 내려꽂힘 (Kit.launch — 플레이어는 속도 패킷으로)
+            double rise = topY - (-60);
+            LOG.info("[skill-gallery] {} client rise {}", id, String.format(Locale.ROOT, "%.2f", rise));
+            if (!(rise > 1.5)) failures.add(id + " did not lift the player on the client (rise " + String.format(Locale.ROOT, "%.2f", rise) + ")");
         }
         if (c.total() > t) ctx.waitTicks(c.total() - t);
         boolean cast = server.computeOnServer(s -> Transcend.cooldownLeft(player(s), k) > 0);
