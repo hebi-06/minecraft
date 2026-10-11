@@ -181,7 +181,19 @@ public final class RuneBreakTest {
         // 글자
         check(RuneBreak.stars(2).equals("★★☆☆☆☆") && RuneBreak.stars(6).equals("★★★★★★"), "stars " + RuneBreak.stars(2));
         check(RuneBreak.tag(0).isEmpty() && RuneBreak.tag(3).equals("[3돌]"), "tag " + RuneBreak.tag(3));
-        check(RuneBreak.changeTexts(meteor, 3).equals(List.of("운석 범위 6 → 7.5칸", "불붙음 5 → 8초")), "meteor 3 text " + RuneBreak.changeTexts(meteor, 3));
+        check(RuneBreak.changeTexts(meteor, 3).equals(List.of("운석 범위 6 → 7.5칸", "불붙음 5 → 8초", "떨어진 자리 3초 불바다 (1초마다 위력 ×2)")),
+                "meteor 3 text " + RuneBreak.changeTexts(meteor, 3));
+        // 3돌 새 효과 (base): 각성 · 광전사 밀려나지 않음, 맹약 즉시 회복, 블랙홀 짓눌림
+        near(RuneBreak.def(rune("body", "transcend"), 3).num("steadfast"), 1, "awakening 3 steadfast");
+        check(RuneBreak.def(rune("body", "transcend"), 2).numOrNull("steadfast") == null, "awakening 2 no steadfast");
+        near(RuneBreak.def(rune("vit", "transcend"), 3).num("instantHeal"), 0.2, "undying 3 instant heal");
+        check(RuneBreak.changeTexts(rune("vit", "transcend"), 3).contains("쓸 때 최대 체력 20% 회복"), "undying 3 text");
+        near(RuneBreak.def(rune("gravity", "transcend"), 3).num("slowTicks"), 60, "blackHole 3 slow");
+        check(Runes.runeLore(RuneBreak.leveled(rune("gravity", "transcend"), 3), false).stream().anyMatch(l -> plain(l).contains("짓눌림: 구속 III 3초")),
+                "blackHole 3 lore shows the crush slow");
+        check(Runes.runeLore(RuneBreak.leveled(rune("body", "transcend"), 3), false).stream().anyMatch(l -> plain(l).contains("밀려나지 않음")),
+                "awakening 3 lore shows steadfast");
+        near(RuneBreak.def(rune("strike", "transcend"), 6).num("cross"), 0.75, "swordGod 6 cross");
         check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 위력 ×32 → ×40", "운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "더 높이 띄움", "맞은 적 기절 1초")),
                 "meteor 6 text " + RuneBreak.changeTexts(meteor, 6));
         check(RuneBreak.changeTexts(rune("axe", "transcend"), 3).contains("받는 피해 -25 → -30%"), "berserker % " + RuneBreak.changeTexts(rune("axe", "transcend"), 3));

@@ -319,10 +319,13 @@ final class RuneStr {
             SkillFx.play(level, "mace.heavy_smash_ground", g, 0.7, 1);
             Tasks.later(6, () -> SkillFx.play(level, "block.bell.hit", g, 0.5, 1));
             RuneKit.shakeAround(level, g, 18, 0.45, 0.4);
+            int stun = (int) k.numOr("stun", 0); // 8단계 3돌: 맞은 적 기절
+            int marks = 0;
             for (LivingEntity e : Kit.around(sp, g, radius, 4)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                     RuneKit.knock(e, V.sub(e.position(), g), 0.5, k.num("lift"));
                     RuneKit.effect(e, "slowness", 40, 2);
+                    if (stun > 0) RuneKit.stun(e, stun, gold, marks++ < 12);
                 }
             }
         });

@@ -404,34 +404,40 @@ final class RuneStrike {
                 }
             }
             case "swordGod" -> {
-                // 거대한 금빛 검기: 근접 = 내 앞에서, 활 · 완드 = 맞은 적에서 그 너머로 (맞은 적은 평타에 이미 들어감)
+                // 거대한 금빛 검기: 근접 = 내 앞에서, 활 · 완드 = 맞은 적에서 그 너머로 (맞은 적은 평타에 이미 들어감).
+                // 8단계 6돌 (cross): X자로 두 줄 (양옆 16° — 줄마다 위력 × cross)
                 Vec3 from = melee ? V.up(V.add(sp.position(), f, 0.6), 1.1) : at;
-                Vec3 dir = melee ? f : V.unit(new Vec3(v.x, Math.max(-0.4, Math.min(0.4, v.y)), v.z));
+                Vec3 dir0 = melee ? f : V.unit(new Vec3(v.x, Math.max(-0.4, Math.min(0.4, v.y)), v.z));
                 double speed = k.num("speed");
                 double width = k.num("width");
-                double len = Math.max(1, RuneKit.rayLength(level, from, dir, k.num("wave")));
-                double s0 = Math.min(1.2, len * 0.5);
-                RuneKit.rfx2(level, "wave", V.add(from, dir, s0), Opt.of("dir", dir, "speed", speed, "size", width, "life", Math.max(0.05, (len - s0) / speed),
-                        "fade", 0.2), col, white);
-                SkillFx.fx(level, "rpg:light_cut", V.add(from, dir, len / 2), Opt.of("dir", dir, "size", len / 2, "thick", 0.16, "life", 0.35, "delay", 0.15,
-                        "color", col, "alpha", 0.8));
-                List<Kit.LineHit> targets = new ArrayList<>();
-                for (Kit.LineHit hit : RuneKit.lineTargets(sp, from, dir, len, width)) {
-                    if (victim == null || !hit.e().getUUID().equals(victim.getUUID())) targets.add(hit);
-                }
-                // 적이 많으면 불티를 줄이고 X 는 10마리까지 (모바일 파티클 예산 — 같은 틱에 여럿이 맞음)
-                int sparkN = targets.size() > 6 ? 0 : targets.size() > 3 ? 2 : 5;
-                for (int j = 0; j < targets.size(); j++) {
-                    LivingEntity e = targets.get(j).e();
-                    final int jj = j;
-                    Tasks.later((int) Math.max(1, Math.round((targets.get(j).t() / speed) * 20)), () -> {
-                        if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
-                        if (RuneKit.runeHit(sp, e, st.P, k.num("bonus"), "str") > 0 && jj < 10) {
-                            Vec3 p = Kit.bodyPoint(e);
-                            SkillFx.fx(level, "rpg:slash_x", p, Opt.of("dir", dir, "size", 1.2, "life", 0.24, "color", col, "alpha", 1.0));
-                            if (sparkN > 0) SkillFx.sparks(level, p, white, sparkN, 5);
-                        }
-                    });
+                double cross = k.numOr("cross", 0);
+                double waveBonus = k.num("bonus") * (cross > 0 ? cross : 1);
+                for (double ang : cross > 0 ? new double[] {-16, 16} : new double[] {0}) {
+                    Vec3 dir = ang == 0 ? dir0 : V.turnY(dir0, ang);
+                    double len = Math.max(1, RuneKit.rayLength(level, from, dir, k.num("wave")));
+                    double s0 = Math.min(1.2, len * 0.5);
+                    RuneKit.rfx2(level, "wave", V.add(from, dir, s0), Opt.of("dir", dir, "speed", speed, "size", width, "life", Math.max(0.05, (len - s0) / speed),
+                            "fade", 0.2), col, white);
+                    SkillFx.fx(level, "rpg:light_cut", V.add(from, dir, len / 2), Opt.of("dir", dir, "size", len / 2, "thick", 0.16, "life", 0.35, "delay", 0.15,
+                            "color", col, "alpha", 0.8));
+                    List<Kit.LineHit> targets = new ArrayList<>();
+                    for (Kit.LineHit hit : RuneKit.lineTargets(sp, from, dir, len, width)) {
+                        if (victim == null || !hit.e().getUUID().equals(victim.getUUID())) targets.add(hit);
+                    }
+                    // 적이 많으면 불티를 줄이고 X 는 10마리까지 (모바일 파티클 예산 — 같은 틱에 여럿이 맞음)
+                    int sparkN = targets.size() > 6 ? 0 : targets.size() > 3 ? 2 : 5;
+                    for (int j = 0; j < targets.size(); j++) {
+                        LivingEntity e = targets.get(j).e();
+                        final int jj = j;
+                        Tasks.later((int) Math.max(1, Math.round((targets.get(j).t() / speed) * 20)), () -> {
+                            if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
+                            if (RuneKit.runeHit(sp, e, st.P, waveBonus, "str") > 0 && jj < 10) {
+                                Vec3 p = Kit.bodyPoint(e);
+                                SkillFx.fx(level, "rpg:slash_x", p, Opt.of("dir", dir, "size", 1.2, "life", 0.24, "color", col, "alpha", 1.0));
+                                if (sparkN > 0) SkillFx.sparks(level, p, white, sparkN, 5);
+                            }
+                        });
+                    }
                 }
                 SkillFx.play(level, "item.trident.throw", from, 1.4, 0.5);
             }

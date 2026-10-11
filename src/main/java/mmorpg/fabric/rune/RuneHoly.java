@@ -342,6 +342,12 @@ final class RuneHoly {
         ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
         double[] wingCol = {1.0, 0.9, 0.62};
+        // 8단계 3돌: 강림 동안 나 · 아군 이동 속도 (allySpeed 단계 — 1 = 속도 I)
+        int allySpeed = (int) k.numOr("allySpeed", 0);
+        if (allySpeed > 0) {
+            RuneKit.effect(sp, "speed", total, allySpeed - 1);
+            for (ServerPlayer pl : RuneKit.playersAround(level0, c0, k.num("allyRadius"), sp)) RuneKit.effect(pl, "speed", total, allySpeed - 1);
+        }
         SkillFx.fx(level0, "rpg:arrow_shot", V.up(c0, 7), Opt.of("dir", V.UP, "speed", 0.0, "size", 5.0, "thick", 1.4, "life", 0.8, "color", glow, "alpha", 0.85));
         SkillFx.fx(level0, "rpg:arrow_shot", V.up(c0, 7), Opt.of("dir", V.UP, "speed", 0.0, "size", 4.8, "thick", 0.4, "life", 0.7, "color", RuneKit.WHITE,
                 "alpha", 1.0));

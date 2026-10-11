@@ -516,9 +516,12 @@ final class RuneAssassin {
             SkillFx.play(level, "item.trident.thunder", at, 1.6, 0.6);
             SkillFx.play(level, "game.player.attack.critical", at, 0.8, 1);
             RuneKit.shakeAround(level, at, 8, 0.2, 0.25);
-            if (tgt != null) assassinHit(sp, tgt, P, k.num("mult"));
+            int stun = (int) k.numOr("stun", 0); // 8단계 3돌: X 베기에 맞은 적 기절
+            if (tgt != null && assassinHit(sp, tgt, P, k.num("mult")) > 0 && stun > 0) RuneKit.stun(tgt, stun, glow, true);
+            int marks = 0;
             for (LivingEntity e : Kit.around(sp, c, k.num("splash"))) {
-                if (tgt == null || !e.getUUID().equals(tgt.getUUID())) assassinHit(sp, e, P, k.num("splashMult"));
+                if (tgt != null && e.getUUID().equals(tgt.getUUID())) continue;
+                if (assassinHit(sp, e, P, k.num("splashMult")) > 0 && stun > 0) RuneKit.stun(e, stun, glow, marks++ < 8);
             }
         });
         return true;

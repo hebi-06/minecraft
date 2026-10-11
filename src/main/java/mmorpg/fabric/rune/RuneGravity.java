@@ -664,8 +664,11 @@ final class RuneGravity {
             });
             RuneKit.later(2, () -> RuneKit.glowCrack(level, g, radius * 1.1, glow, core, Opt.of("life", 2.2, "v", 1.0)));
             int stun = (int) k.numOr("stun", 0); // 8단계 6돌: 붕괴에 맞은 적 기절
+            int slowTicks = (int) k.numOr("slowTicks", 0); // 8단계 3돌: 붕괴 뒤 짓눌림 (구속)
             for (LivingEntity e : Kit.around(sp, g, radius, 5)) {
-                if (RuneKit.runeHit(sp, e, P, k.num("crush"), r.stat()) > 0 && stun > 0) RuneKit.stun(e, stun, glow, RuneKit.fxQuota("holeStun", 10));
+                boolean landed = RuneKit.runeHit(sp, e, P, k.num("crush"), r.stat()) > 0;
+                if (landed && slowTicks > 0) RuneKit.effect(e, "slowness", Math.max(slowTicks, stun), (int) k.numOr("slowAmp", 0));
+                if (landed && stun > 0) RuneKit.stun(e, stun, glow, RuneKit.fxQuota("holeStun", 10));
                 if (Kit.canHit(sp, e) && gravityMovable(e) && !e.onGround()) {
                     slamStreak(level, Kit.bodyPoint(e), 3);
                     slamDown(sp, e, life, x -> {});

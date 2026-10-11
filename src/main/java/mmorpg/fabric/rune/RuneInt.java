@@ -406,6 +406,30 @@ final class RuneInt {
                     if (stun > 0) RuneKit.stun(e, stun, glow, marks++ < 12);
                 }
             }
+            // 8단계 3돌: 떨어진 자리가 3초 동안 불바다 — 1초마다 위력 × burnZone (반지름 × 0.7, 불붙음 2초)
+            double burnZone = k.numOr("burnZone", 0);
+            if (burnZone > 0) {
+                double zr = radius * 0.7;
+                String zoneLife = RuneKit.lifeToken(sp);
+                RuneKit.glowCrack(level, g, zr, red, core, Opt.of("life", 3.2, "fade", 0.3));
+                for (int i = 1; i <= 3; i++) {
+                    RuneKit.later(i * 20, () -> {
+                        if (!RuneKit.sameLife(sp, zoneLife)) return;
+                        RuneKit.zonePulse(level, g, red, zr, 0.5);
+                        SkillFx.burst(level, V.up(g, 0.3), glow, zr * 0.45, 0.35);
+                        SkillFx.sparks(level, V.up(g, 0.6), core, 8, 4);
+                        for (int fl = 0; fl < 6; fl++) {
+                            double a = Kit.rand() * Math.PI * 2;
+                            double d = Kit.rand() * zr;
+                            SkillFx.vanilla(level, "minecraft:basic_flame_particle", new Vec3(g.x + Math.cos(a) * d, g.y + 0.2, g.z + Math.sin(a) * d));
+                        }
+                        SkillFx.play(level, "fire.fire", g, 0.8, 0.9);
+                        for (LivingEntity e : Kit.around(sp, g, zr, 3)) {
+                            if (RuneKit.runeHit(sp, e, P, burnZone, r.stat()) > 0) RuneKit.burn(e, 2);
+                        }
+                    });
+                }
+            }
         });
         return true;
     }

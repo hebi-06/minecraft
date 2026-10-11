@@ -333,6 +333,11 @@ final class RuneVit {
         int pulse = (int) k.num("pulse");
         double radius = k.num("radius");
         UNDYING.put(sp.getUUID(), Tasks.now() + ticks);
+        // 8단계 3돌: 쓸 때 최대 체력의 instantHeal 만큼 바로 회복
+        if (k.numOr("instantHeal", 0) > 0) {
+            double healed = RpgHealth.healBy(sp, RpgHealth.maxOf(sp) * k.num("instantHeal"));
+            if (healed > 0) DamageNumbers.show(sp, healed, DamageNumbers.Style.HEAL, "", 0);
+        }
         Vec3 c0 = sp.position();
         // 머리 위로 치솟는 핏빛 기둥 (몸에서 시작하면 1인칭 카메라가 기둥 안에 들어감)
         SkillFx.fx(level0, "rpg:arrow_shot", V.up(c0, 4.6), Opt.of("dir", V.UP, "speed", 0.0, "size", 2.6, "thick", 1.1, "life", 0.6, "color", crimson,

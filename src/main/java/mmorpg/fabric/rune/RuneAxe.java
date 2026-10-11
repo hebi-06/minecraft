@@ -379,6 +379,7 @@ final class RuneAxe {
         ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
         Guards.set(sp, total, k.num("reduce"), null, null);
+        if (k.truthy("steadfast")) mmorpg.fabric.RpgCombat.setSteadfast(sp, total); // 8단계 3돌: 광폭화 동안 밀려나지 않음
         SkillFx.fx(level0, "rpg:arrow_shot", V.up(c0, 4.4), Opt.of("dir", V.UP, "speed", 0.0, "size", 2.4, "thick", 1.0, "life", 0.6, "color", BLOOD,
                 "alpha", 0.85));
         SkillFx.burst(level0, V.up(c0, 1), glow, 2.2, 0.4);

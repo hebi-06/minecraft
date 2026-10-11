@@ -13,7 +13,8 @@
     "heavenFall": {
       "3": [
         {"key": "radius", "to": 7.5, "text": "검이 꽂히는 범위 {from} → {to}칸"},
-        {"key": "lift", "to": 1.3, "text": "더 높이 띄움"}
+        {"key": "lift", "to": 1.3, "text": "더 높이 띄움"},
+        {"key": "stun", "to": 10, "base": 0, "div": 20, "text": "맞은 적 기절 {to}초"}
       ],
       "6": [
         {"key": "radius", "to": 9, "text": "범위 {from} → {to}칸"},
@@ -36,7 +37,8 @@
     },
     "undyingPact": {
       "3": [
-        {"key": "ticks", "to": 200, "div": 20, "text": "맹약 {from} → {to}초 (회복 · 반격도 더)"}
+        {"key": "ticks", "to": 200, "div": 20, "text": "맹약 {from} → {to}초 (회복 · 반격도 더)"},
+        {"key": "instantHeal", "to": 0.2, "base": 0, "div": 0.01, "text": "쓸 때 최대 체력 {to}% 회복"}
       ],
       "6": [
         {"key": "ticks", "to": 240, "div": 20, "text": "맹약 {from} → {to}초"},
@@ -46,7 +48,8 @@
     "meteor": {
       "3": [
         {"key": "radius", "to": 7.5, "text": "운석 범위 {from} → {to}칸"},
-        {"key": "fire", "to": 8, "text": "불붙음 {from} → {to}초"}
+        {"key": "fire", "to": 8, "text": "불붙음 {from} → {to}초"},
+        {"key": "burnZone", "to": 2, "base": 0, "text": "떨어진 자리 3초 불바다 (1초마다 위력 ×{to})"}
       ],
       "6": [
         {"key": "mult", "to": 40, "text": "운석 위력 ×{from} → ×{to}"},
@@ -59,7 +62,8 @@
     "berserker": {
       "3": [
         {"key": "hits", "to": 8, "text": "광폭화 {from} → {to}초"},
-        {"key": "reduce", "to": 0.3, "div": 0.01, "text": "받는 피해 -{from} → -{to}%"}
+        {"key": "reduce", "to": 0.3, "div": 0.01, "text": "받는 피해 -{from} → -{to}%"},
+        {"key": "steadfast", "to": 1, "base": 0, "text": "광폭화 동안 밀려나지 않음"}
       ],
       "6": [
         {"key": "hits", "to": 10, "text": "광폭화 {from} → {to}초"},
@@ -81,7 +85,8 @@
     "archangel": {
       "3": [
         {"key": "hits", "to": 10, "text": "강림 {from} → {to}초"},
-        {"key": "cap", "to": 0.3, "div": 0.01, "text": "보호막 최대 {from} → {to}%"}
+        {"key": "cap", "to": 0.3, "div": 0.01, "text": "보호막 최대 {from} → {to}%"},
+        {"key": "allySpeed", "to": 1, "base": 0, "text": "강림 동안 나 · 아군 이동 속도 I"}
       ],
       "6": [
         {"key": "hits", "to": 12, "text": "강림 {from} → {to}초"},
@@ -105,7 +110,8 @@
     },
     "moonAssassin": {
       "3": [
-        {"key": "splash", "to": 4.5, "text": "X 베기 주위 {from} → {to}칸"}
+        {"key": "splash", "to": 4.5, "text": "X 베기 주위 {from} → {to}칸"},
+        {"key": "stun", "to": 10, "base": 0, "div": 20, "text": "X 베기에 맞은 적 기절 {to}초"}
       ],
       "6": [
         {"key": "mult", "to": 40, "text": "X 베기 위력 ×{from} → ×{to}"},
@@ -116,7 +122,8 @@
     "heavenSplit": {
       "3": [
         {"key": "width", "to": 3.4, "text": "검기 폭 {from} → {to}칸"},
-        {"key": "range", "to": 22, "text": "사거리 {from} → {to}칸"}
+        {"key": "range", "to": 22, "text": "사거리 {from} → {to}칸"},
+        {"key": "knock", "to": 2, "text": "맞은 적을 더 멀리 밀쳐냄"}
       ],
       "6": [
         {"key": "mult", "to": 40, "text": "검기 위력 ×{from} → ×{to}"},
@@ -128,7 +135,8 @@
     "spellbladeRelease": {
       "3": [
         {"key": "length", "to": 15, "text": "내려찍기 {from} → {to}칸"},
-        {"key": "cross", "to": 4, "text": "십자 {from} → {to}칸"}
+        {"key": "cross", "to": 4, "text": "십자 {from} → {to}칸"},
+        {"key": "imbueHits", "to": 2, "base": 0, "text": "마검 부여 평타 +{to}번"}
       ],
       "6": [
         {"key": "mult", "to": 20, "text": "베기 위력 ×{from} → ×{to}"},
@@ -165,7 +173,9 @@
     "blackHole": {
       "3": [
         {"key": "pull", "to": 11, "text": "빨아들이는 범위 {from} → {to}칸"},
-        {"key": "radius", "to": 9.5, "text": "붕괴 {from} → {to}칸"}
+        {"key": "radius", "to": 9.5, "text": "붕괴 {from} → {to}칸"},
+        {"key": "slowTicks", "to": 60, "base": 0, "div": 20, "text": "붕괴 뒤 짓눌림 (구속 III) {to}초"},
+        {"key": "slowAmp", "to": 2, "base": 0}
       ],
       "6": [
         {"key": "crush", "to": 28, "text": "붕괴 위력 ×{from} → ×{to}"},
@@ -178,7 +188,8 @@
     "awakening": {
       "3": [
         {"key": "statUp", "to": 0.3, "div": 0.01, "text": "모든 스탯 +{from} → +{to}%"},
-        {"key": "ticks", "to": 360, "div": 20, "text": "각성 {from} → {to}초"}
+        {"key": "ticks", "to": 360, "div": 20, "text": "각성 {from} → {to}초"},
+        {"key": "steadfast", "to": 1, "base": 0, "text": "각성 동안 밀려나지 않음"}
       ],
       "6": [
         {"key": "statUp", "to": 0.35, "div": 0.01, "text": "모든 스탯 +{from} → +{to}%"},
@@ -192,6 +203,7 @@
         {"key": "crit", "to": 0.25, "div": 0.01, "text": "치명타 +{from} → +{to}%p"}
       ],
       "6": [
+        {"key": "cross", "to": 0.75, "base": 0, "div": 0.01, "text": "검기가 X자 두 줄 (각 위력 {to}%)"},
         {"key": "hits", "to": 24, "text": "평타 {from} → {to}번"},
         {"key": "crit", "to": 0.3, "div": 0.01, "text": "치명타 +{from} → +{to}%p"},
         {"key": "wave", "to": 14, "text": "검기 {from} → {to}칸"}

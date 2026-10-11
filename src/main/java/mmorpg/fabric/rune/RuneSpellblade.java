@@ -520,7 +520,9 @@ final class RuneSpellblade {
         double mult = r.def().numOr("imbue", 0);
         if (!(mult > 0) || !(P > 0)) return;
         // 룬의 마지막 타격 (span 틱) 뒤 ticks 동안 (룬 타격 사이에는 몹 무적 시간에 막히므로: 마검 결계 4초 · 마검 해방 1.3초 등). 그 사이에도 다른 적에게는 쓸 수 있음
-        IMBUES.put(sp.getUUID(), new Imbue((int) IMBUE.num("hits"), Tasks.now() + r.def().numOr("span", 0) + IMBUE.num("ticks"), P * mult, mult,
+        // 8단계 3돌: 마검 해방은 부여 평타 + imbueHits 번 (r = 돌파 단계의 룬)
+        IMBUES.put(sp.getUUID(), new Imbue((int) IMBUE.num("hits") + (int) r.def().numOr("imbueHits", 0), Tasks.now() + r.def().numOr("span", 0) + IMBUE.num("ticks"),
+                P * mult, mult,
                 r.def().str("name"), RuneKit.lifeToken(sp)));
         double[][] cs = RuneKit.colorOf("spellblade");
         ServerLevel level = sp.level();
