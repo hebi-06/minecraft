@@ -157,7 +157,12 @@ public final class RuneCast {
 
     /** 핫바 아이콘의 쓸기 표시 (같은 룬 아이템 모두 — 아이템 재사용 대기, 대기 중에는 우클릭도 막힘) */
     private static void startItemCooldown(ServerPlayer sp, Runes.Rune r) {
-        sp.getCooldowns().addCooldown(Identifier.parse(r.id()), (int) Math.round(r.cd() * 20));
+        sp.getCooldowns().addCooldown(Identifier.parse(r.id()), (int) cooldownTicks(sp, r));
+    }
+
+    /** 재사용 대기 틱 = 룬의 초 × 20 × 스탯 트리 재사용 대기 (7단계) */
+    public static long cooldownTicks(ServerPlayer sp, Runes.Rune r) {
+        return Math.round(r.cd() * 20 * mmorpg.fabric.stattree.StatTrees.cdMult(sp));
     }
 
     /** 쓸기 표시를 풂 (룬이 나가지 않았을 때 · 재사용 대기를 돌려줄 때) */
@@ -168,7 +173,7 @@ public final class RuneCast {
     /** 재사용 대기 시작 (+ 핫바 쓸기 표시, 쓴 룬 이름 · 적용 스탯 알림) */
     public static void startCooldown(ServerPlayer sp, Runes.Rune r) {
         String key = key(sp, r);
-        COOLDOWNS.put(key, Tasks.now() + Math.round(r.cd() * 20));
+        COOLDOWNS.put(key, Tasks.now() + cooldownTicks(sp, r));
         READY_ANNOUNCED.remove(key);
         startItemCooldown(sp, r);
         Notify.notify(sp, r.gradeColor() + r.def().str("name") + "§r §7(" + Runes.runeStatLabel(applied(sp, r.family())) + ")", 24);

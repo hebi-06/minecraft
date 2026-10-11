@@ -205,6 +205,60 @@ public final class RpgNet {
         }
     }
 
+    /**
+     * 서버 → 클라이언트: 스탯 트리 (7단계). JSON {"on": 쓰는지, "state": 기록 (고른 갈래 · 받은 칸), "totals": 보너스 합, "open": 열 탭 ("" = 열지 않음),
+     * "money": 가진 에메랄드}
+     */
+    public record StatTreePayload(String json) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<StatTreePayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("stat_tree"));
+        public static final StreamCodec<FriendlyByteBuf, StatTreePayload> CODEC = CustomPacketPayload.codec(StatTreePayload::write, StatTreePayload::read);
+
+        private static StatTreePayload read(FriendlyByteBuf buf) {
+            return new StatTreePayload(buf.readUtf(32767));
+        }
+
+        private void write(FriendlyByteBuf buf) {
+            buf.writeUtf(json, 32767);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** 클라이언트 → 서버: 스탯 트리 창 (action = pick · reset · sync, stat, index = 칸, option = 갈래) */
+    public record StatTreeActionPayload(String action, String stat, int index, int option) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<StatTreeActionPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("stat_tree_action"));
+        public static final StreamCodec<FriendlyByteBuf, StatTreeActionPayload> CODEC = CustomPacketPayload.codec(StatTreeActionPayload::write,
+                StatTreeActionPayload::read);
+
+        private static StatTreeActionPayload read(FriendlyByteBuf buf) {
+            return new StatTreeActionPayload(buf.readUtf(16), buf.readUtf(16), buf.readVarInt(), buf.readVarInt());
+        }
+
+        private void write(FriendlyByteBuf buf) {
+            buf.writeUtf(action, 16);
+            buf.writeUtf(stat, 16);
+            buf.writeVarInt(index);
+            buf.writeVarInt(option);
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
+    /** 스탯 트리 보내기 (모드가 있는 클라이언트만) */
+    public static void statTree(ServerPlayer sp, StatTreePayload p) {
+        if (ServerPlayNetworking.canSend(sp, StatTreePayload.TYPE)) ServerPlayNetworking.send(sp, p);
+    }
+
+    public static boolean canSendStatTree(ServerPlayer sp) {
+        return ServerPlayNetworking.canSend(sp, StatTreePayload.TYPE);
+    }
+
     /** 스탯 창 단추 → 할 일 (퀘스트 목록 · 엔더 상자 · 탈것 — 각 모듈이 넣음) */
     private static final java.util.Map<String, java.util.function.Consumer<ServerPlayer>> STAT_ACTIONS = new java.util.HashMap<>();
 
@@ -227,8 +281,10 @@ public final class RpgNet {
         PayloadTypeRegistry.clientboundPlay().register(SkyPayload.TYPE, SkyPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(FlashPayload.TYPE, FlashPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MountPayload.TYPE, MountPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(StatTreePayload.TYPE, StatTreePayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SpendPayload.TYPE, SpendPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(StatActionPayload.TYPE, StatActionPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(StatTreeActionPayload.TYPE, StatTreeActionPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(SpendPayload.TYPE, (payload, context) -> RpgPlayers.spend(context.player(), payload.stat(), Math.min(100, payload.count())));
         ServerPlayNetworking.registerGlobalReceiver(StatActionPayload.TYPE, (payload, context) -> statAction(context.player(), payload.action()));
     }

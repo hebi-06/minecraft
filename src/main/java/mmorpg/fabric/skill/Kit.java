@@ -571,10 +571,11 @@ public final class Kit {
      */
     public static double skillHit(ServerPlayer sp, LivingEntity target, Weapon w, double mult, Opt o) {
         if (!canHit(sp, target)) return 0;
+        // 스탯 트리 (7단계): 치명타 확률 · 치명타 피해도 (공격력은 powerOf 안에)
         boolean crit = o.truthy("sure")
                 || (RpgCombat.forceCrit != null ? RpgCombat.forceCrit
-                        : ThreadLocalRandom.current().nextDouble() < Math.min(CRIT_CAP, w.critChance() + o.num("critBonus", 0)));
-        double dmg = w.damage() * mult * RpgCombat.powerOf(sp, w) * (crit ? w.critMult() : 1);
+                        : ThreadLocalRandom.current().nextDouble() < Math.min(CRIT_CAP, w.critChance() + o.num("critBonus", 0) + mmorpg.fabric.stattree.StatTrees.critAdd(sp)));
+        double dmg = w.damage() * mult * RpgCombat.powerOf(sp, w) * (crit ? RpgCombat.critMultOf(sp, w) : 1);
         Cause cause = o.get("cause") instanceof Cause c ? c : w.type().equals("wand") ? Cause.MAGIC : Cause.ATTACK;
         DamageNumbers.Style style = o.get("style") instanceof DamageNumbers.Style s ? s
                 : o.truthy("spell") ? (crit ? DamageNumbers.Style.SPELLCRIT : DamageNumbers.Style.SPELL) : null;

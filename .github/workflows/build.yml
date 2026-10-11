@@ -15,7 +15,7 @@ on:
         type: boolean
         default: true
       only:
-        description: '화면 시험 중 이것만 (쉼표: client weapon particle skill rune gear form nav mob arena boss monster tree scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp prod — 세미콜론으로 동시에 돌 묶음, 비우면 모두, none 이면 사진첩 없이)'
+        description: '화면 시험 중 이것만 (쉼표: client weapon particle skill rune gear form nav mob arena boss monster tree scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree prod — 세미콜론으로 동시에 돌 묶음, 비우면 모두, none 이면 사진첩 없이)'
         type: string
         default: ''
 

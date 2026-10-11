@@ -5,6 +5,9 @@
   "name": "MMO RPG game tests",
   "environment": "*",
   "entrypoints": {
+    "main": [
+      "mmorpg.fabric.test.TestSetup"
+    ],
     "fabric-gametest": [
       "mmorpg.fabric.test.RpgGameTests",
       "mmorpg.fabric.test.RpgSkillTests",
@@ -29,7 +32,8 @@
       "mmorpg.fabric.test.RpgMonsterTests",
       "mmorpg.fabric.test.RpgTreeTests",
       "mmorpg.fabric.test.RpgMountTests",
-      "mmorpg.fabric.test.RpgDuelTests"
+      "mmorpg.fabric.test.RpgDuelTests",
+      "mmorpg.fabric.test.RpgStatTreeTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
@@ -55,6 +59,7 @@
       "mmorpg.fabric.test.RpgTreeGallery",
       "mmorpg.fabric.test.RpgMountGallery",
       "mmorpg.fabric.test.RpgDuelGallery",
+      "mmorpg.fabric.test.RpgStatTreeGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

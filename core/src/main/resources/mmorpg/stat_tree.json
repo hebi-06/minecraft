@@ -1,0 +1,131 @@
+{
+  "_doc": [
+    "스탯 트리 (7단계): 스탯마다 나무 하나 (trees 의 순서 = 창의 탭 순서). 그 스탯에 찍은 포인트 (장비 · 룬 버프 제외) 가 칸의 at 이상이면 칸이 저절로 열림.",
+    "칸: name (이름) · bonus (열리면 늘 붙는 보너스) · reward (처음 열릴 때 한 번만 받는 뽑기권) · pick (갈래 — 둘 중 하나를 골라야 그 보너스가 붙음, 갈래 칸에는 reward 를 두지 않음).",
+    "보너스 (kinds): atk 공격력 % (평타 · 스킬 · 룬 피해), rune 룬 피해 %, crit 치명타 확률 %p (평타 · 스킬 — 최대 95%), critDmg 치명타 피해 % (치명타 배율에 더함: ×1.5 에 10 → ×1.6),",
+    "  hp 최대 체력 (+값), def 받는 피해 % 감소 (방패 · 버프 감소 뒤에 곱함), speed 이동 속도 %, cdr 스킬 · 룬 재사용 대기 % 감소. caps = 나무 넷을 더한 합의 상한.",
+    "reward: rune 룬 뽑기권 · adv 고급 룬 뽑기권 · stat 그 나무 스탯의 룬 뽑기권 (tickets — 이름이 같은 계열 5종만, 등급 확률은 룬 뽑기권과 같음).",
+    "갈래 초기화 (스탯 트리 창): 그 나무에서 고른 갈래를 모두 지움 — 에메랄드 reset.perPick × 고른 갈래 수. 받은 뽑기권은 다시 주지 않음 (나무마다 받은 칸 기록).",
+    "icon: 칸에 그릴 아이템 (minecraft:<아이템> · rpg:<아이템>)."
+  ],
+  "reset": {"perPick": 12},
+  "caps": {"crit": 50, "def": 40, "speed": 40, "cdr": 40},
+  "kinds": {
+    "atk": {"name": "공격력", "unit": "%", "icon": "minecraft:iron_sword", "desc": "평타 · 스킬 · 룬 피해"},
+    "rune": {"name": "룬 피해", "unit": "%", "icon": "rpg:rune_int_noble", "desc": "룬으로 넣는 피해"},
+    "crit": {"name": "치명타 확률", "unit": "%p", "icon": "minecraft:target", "desc": "평타 · 스킬 (최대 95%)"},
+    "critDmg": {"name": "치명타 피해", "unit": "%", "icon": "minecraft:mace", "desc": "치명타 배율에 더함 (×1.5 → ×1.6 = +10%)"},
+    "hp": {"name": "최대 체력", "unit": "", "icon": "minecraft:golden_apple", "desc": "RPG 최대 체력"},
+    "def": {"name": "받는 피해", "unit": "%", "neg": true, "icon": "minecraft:shield", "desc": "방패 · 버프 감소 뒤에 한 번 더 줄임"},
+    "speed": {"name": "이동 속도", "unit": "%", "icon": "minecraft:feather", "desc": "걷기 · 달리기"},
+    "cdr": {"name": "재사용 대기", "unit": "%", "neg": true, "icon": "minecraft:clock", "desc": "초월 무기 스킬 · 룬"}
+  },
+  "tickets": {
+    "str": {"item": "rpg:str_rune_ticket", "name": "힘 룬 뽑기권", "family": "str"},
+    "dex": {"item": "rpg:dex_rune_ticket", "name": "민첩 룬 뽑기권", "family": "dex"},
+    "int": {"item": "rpg:int_rune_ticket", "name": "마력 룬 뽑기권", "family": "int"},
+    "vit": {"item": "rpg:vit_rune_ticket", "name": "체력 룬 뽑기권", "family": "vit"}
+  },
+  "trees": {
+    "str": {
+      "title": "전사의 나무",
+      "color": [1.0, 0.42, 0.18],
+      "nodes": [
+        {"at": 10, "name": "단련", "bonus": {"atk": 2}},
+        {"at": 20, "name": "굳센 손아귀", "bonus": {"critDmg": 10}, "reward": {"stat": 1}},
+        {"at": 30, "pick": [
+          {"name": "광전사", "bonus": {"atk": 4}},
+          {"name": "강철 피부", "bonus": {"def": 4}}
+        ]},
+        {"at": 40, "name": "근력", "bonus": {"hp": 10}, "reward": {"rune": 1}},
+        {"at": 50, "name": "무쇠 팔", "bonus": {"atk": 3}, "reward": {"stat": 1}},
+        {"at": 60, "pick": [
+          {"name": "파괴자", "bonus": {"critDmg": 25}},
+          {"name": "불굴", "bonus": {"hp": 25}}
+        ]},
+        {"at": 70, "name": "전장의 기술", "bonus": {"atk": 3}, "reward": {"rune": 1}},
+        {"at": 80, "name": "거인의 숨결", "bonus": {"critDmg": 15}, "reward": {"stat": 1}},
+        {"at": 90, "pick": [
+          {"name": "전쟁광", "bonus": {"atk": 5}},
+          {"name": "처형자", "bonus": {"crit": 5}}
+        ]},
+        {"at": 100, "name": "힘의 정점", "bonus": {"atk": 5}, "reward": {"adv": 1, "stat": 1}}
+      ]
+    },
+    "dex": {
+      "title": "사냥꾼의 나무",
+      "color": [0.35, 1.0, 0.55],
+      "nodes": [
+        {"at": 10, "name": "날렵함", "bonus": {"crit": 1}},
+        {"at": 20, "name": "가벼운 발", "bonus": {"speed": 3}, "reward": {"stat": 1}},
+        {"at": 30, "pick": [
+          {"name": "급소 노리기", "bonus": {"crit": 3}},
+          {"name": "바람걸음", "bonus": {"speed": 5}}
+        ]},
+        {"at": 40, "name": "매의 눈", "bonus": {"atk": 2}, "reward": {"rune": 1}},
+        {"at": 50, "name": "쇄도", "bonus": {"crit": 2}, "reward": {"stat": 1}},
+        {"at": 60, "pick": [
+          {"name": "암살 본능", "bonus": {"critDmg": 25}},
+          {"name": "흘려보내기", "bonus": {"def": 5}}
+        ]},
+        {"at": 70, "name": "연속 사격", "bonus": {"cdr": 4}, "reward": {"rune": 1}},
+        {"at": 80, "name": "그림자 걸음", "bonus": {"crit": 2}, "reward": {"stat": 1}},
+        {"at": 90, "pick": [
+          {"name": "명사수", "bonus": {"atk": 5}},
+          {"name": "질풍", "bonus": {"speed": 6}}
+        ]},
+        {"at": 100, "name": "민첩의 정점", "bonus": {"crit": 3}, "reward": {"adv": 1, "stat": 1}}
+      ]
+    },
+    "int": {
+      "title": "마법사의 나무",
+      "color": [0.45, 0.62, 1.0],
+      "nodes": [
+        {"at": 10, "name": "마나의 흐름", "bonus": {"rune": 2}},
+        {"at": 20, "name": "집중", "bonus": {"cdr": 3}, "reward": {"stat": 1}},
+        {"at": 30, "pick": [
+          {"name": "원소의 힘", "bonus": {"rune": 5}},
+          {"name": "주문 칼날", "bonus": {"atk": 3}}
+        ]},
+        {"at": 40, "name": "깊은 마나", "bonus": {"hp": 10}, "reward": {"rune": 1}},
+        {"at": 50, "name": "고대 문자", "bonus": {"rune": 3}, "reward": {"stat": 1}},
+        {"at": 60, "pick": [
+          {"name": "시간 왜곡", "bonus": {"cdr": 6}},
+          {"name": "마력 폭주", "bonus": {"critDmg": 25}}
+        ]},
+        {"at": 70, "name": "마나 방벽", "bonus": {"def": 3}, "reward": {"rune": 1}},
+        {"at": 80, "name": "대마법", "bonus": {"rune": 3}, "reward": {"stat": 1}},
+        {"at": 90, "pick": [
+          {"name": "대마법사", "bonus": {"rune": 6}},
+          {"name": "현자", "bonus": {"cdr": 6}}
+        ]},
+        {"at": 100, "name": "마력의 정점", "bonus": {"atk": 4}, "reward": {"adv": 1, "stat": 1}}
+      ]
+    },
+    "vit": {
+      "title": "수호자의 나무",
+      "color": [1.0, 0.42, 0.68],
+      "nodes": [
+        {"at": 10, "name": "강건함", "bonus": {"hp": 5}},
+        {"at": 20, "name": "두꺼운 피부", "bonus": {"def": 2}, "reward": {"stat": 1}},
+        {"at": 30, "pick": [
+          {"name": "거대한 몸", "bonus": {"hp": 10}},
+          {"name": "반격 자세", "bonus": {"atk": 3}}
+        ]},
+        {"at": 40, "name": "회복력", "bonus": {"hp": 8}, "reward": {"rune": 1}},
+        {"at": 50, "name": "철벽", "bonus": {"def": 3}, "reward": {"stat": 1}},
+        {"at": 60, "pick": [
+          {"name": "수호자", "bonus": {"def": 5}},
+          {"name": "생명의 샘", "bonus": {"hp": 20}}
+        ]},
+        {"at": 70, "name": "단단한 뼈", "bonus": {"hp": 8}, "reward": {"rune": 1}},
+        {"at": 80, "name": "불굴의 의지", "bonus": {"def": 3}, "reward": {"stat": 1}},
+        {"at": 90, "pick": [
+          {"name": "성벽", "bonus": {"def": 6}},
+          {"name": "거인", "bonus": {"hp": 25}}
+        ]},
+        {"at": 100, "name": "체력의 정점", "bonus": {"hp": 15}, "reward": {"adv": 1, "stat": 1}}
+      ]
+    }
+  }
+}

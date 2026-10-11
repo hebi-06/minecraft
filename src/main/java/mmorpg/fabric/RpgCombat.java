@@ -245,9 +245,16 @@ public final class RpgCombat {
         return Combat.reqText(w, reqLevelOf(sp), RpgData.of(sp).base());
     }
 
-    /** 무기 피해 배율 = 스탯 배율 × (1 + 강화 보너스 — 손에 든 그 무기의 강화 단계, combat.js powerMultiplier) */
+    /**
+     * 무기 피해 배율 = 스탯 배율 × (1 + 강화 보너스 — 손에 든 그 무기의 강화 단계, combat.js powerMultiplier) × 스탯 트리 공격력 (7단계 — 평타 · 스킬)
+     */
     public static double powerOf(ServerPlayer sp, Weapon w) {
-        return Combat.powerMultiplier(RpgStats.effective(sp), w, mmorpg.fabric.gear.WeaponEnhance.held(sp, w));
+        return Combat.powerMultiplier(RpgStats.effective(sp), w, mmorpg.fabric.gear.WeaponEnhance.held(sp, w)) * mmorpg.fabric.stattree.StatTrees.atkMult(sp);
+    }
+
+    /** 치명타 배율 = 무기 배율 + 스탯 트리 치명타 피해 (7단계 — ×1.5 에 +10% → ×1.6) */
+    public static double critMultOf(ServerPlayer sp, Weapon w) {
+        return w.critMult() + mmorpg.fabric.stattree.StatTrees.critDmgAdd(sp);
     }
 
     public static boolean rollCrit(ServerPlayer sp, Weapon w) {
@@ -330,7 +337,7 @@ public final class RpgCombat {
         double dmg = w.damage() * powerOf(sp, w) * (0.2 + s * s * 0.8);
         LivingEntity victim = target instanceof LivingEntity le ? le : null;
         boolean crit = rollCrit(sp, w, victim);
-        if (crit) dmg *= w.critMult();
+        if (crit) dmg *= critMultOf(sp, w);
         WeaponBonus bonus = victim != null ? weaponBonus(sp, victim, w, dmg) : null; // 마검 부여 · 평타 강화 룬
         if (bonus != null) dmg += bonus.add();
         mark(target, sp, crit, w, true, bonus);
@@ -452,7 +459,7 @@ public final class RpgCombat {
         ServerLevel level = sp.level();
         double dmg = w.damage() * powerOf(sp, w);
         boolean crit = rollCrit(sp, w, target);
-        if (crit) dmg *= w.critMult();
+        if (crit) dmg *= critMultOf(sp, w);
         WeaponBonus bonus = weaponBonus(sp, target, w, dmg);
         if (bonus != null) dmg += bonus.add();
         mark(target, sp, crit, w, false, bonus);

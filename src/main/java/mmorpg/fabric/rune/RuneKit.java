@@ -102,7 +102,7 @@ public final class RuneKit {
     public static double runeHit(ServerPlayer sp, LivingEntity target, double P, double mult, String stat, Kit.Cause cause, DamageNumbers.Style style) {
         if (!Kit.canHit(sp, target)) return 0;
         if (target instanceof Player p && !RUNE.truthy("hitPlayers") && !(p instanceof ServerPlayer o && Kit.duelPartner.test(sp, o))) return 0;
-        double dmg = P * mult;
+        double dmg = P * mult * mmorpg.fabric.stattree.StatTrees.runeMult(sp); // 스탯 트리 공격력 + 룬 피해 (7단계)
         Kit.Cause c = cause != null ? cause : "int".equals(stat) ? Kit.Cause.MAGIC : Kit.Cause.ATTACK;
         float before = target.getHealth();
         if (!Kit.applySkillDamage(sp, target, dmg, false, c, style != null ? style : DamageNumbers.Style.RUNE)) return 0;

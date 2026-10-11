@@ -22,8 +22,9 @@ import net.minecraft.world.item.ItemStack;
  *
  * @param base 찍은 스탯 {str, dex, int, vit, point, lvmax} (요구 스탯 확인)
  * @param eff  실제 스탯 (찍은 스탯 + 장비 보너스 · 룬 버프 — 피해 · 최대 체력 계산)
+ * @param tree 스탯 트리 보너스 합 (7단계 — atk · crit · critDmg · hp …, 없으면 빈 지도)
  */
-public record StatSheet(Map<String, Double> base, Map<String, Double> eff, double reqLevel) {
+public record StatSheet(Map<String, Double> base, Map<String, Double> eff, double reqLevel, Map<String, Double> tree) {
     private static final Obj CONFIG = Rules.get().obj("CONFIG");
     private static final Obj TYPES = Rules.get().obj("TYPES");
     private static final Obj SHIELD = Rules.get().obj("SHIELD");
@@ -43,7 +44,18 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         b.put("vit", (double) vit);
         b.put("point", (double) point);
         b.put("lvmax", (double) lvmax);
-        return new StatSheet(b, Stats.effectiveStats(b, bonus, buff), Stats.reqLevelOf(lvmax, level));
+        return new StatSheet(b, Stats.effectiveStats(b, bonus, buff), Stats.reqLevelOf(lvmax, level), Map.of());
+    }
+
+    /** 스탯 트리 보너스 합을 넣은 것 (7단계 — 피해 · 치명타 · 최대 체력 줄에 반영) */
+    public StatSheet withTree(Map<String, Double> t) {
+        return new StatSheet(base, eff, reqLevel, t == null ? Map.of() : Map.copyOf(t));
+    }
+
+    /** 스탯 트리 보너스 (없으면 0) */
+    public double tree(String kind) {
+        Double v = tree.get(kind);
+        return v == null ? 0 : v;
     }
 
     public static StatSheet of(RpgData d, int level) {
@@ -53,7 +65,8 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
     /** 서버: 이 플레이어의 지금 스탯 (장비 보너스 · 룬 버프 포함) */
     public static StatSheet of(net.minecraft.server.level.ServerPlayer sp) {
         RpgData d = RpgData.of(sp);
-        return of(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), sp.experienceLevel, RpgStats.bonusOf(sp), RpgStats.buffOf(sp));
+        return of(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), sp.experienceLevel, RpgStats.bonusOf(sp), RpgStats.buffOf(sp))
+                .withTree(mmorpg.fabric.stattree.StatTrees.totals(sp));
     }
 
     /** 소수 둘째 자리까지 (끝의 0은 뺌) */
@@ -78,9 +91,9 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         return (int) Stats.get(base, key);
     }
 
-    /** 최대 체력 (실제 체력 스탯) */
+    /** 최대 체력 (실제 체력 스탯 + 스탯 트리) */
     public double maxHp() {
-        return Hp.maxHpOf(lvmax(), Stats.get(eff, "vit"));
+        return Hp.maxHpOf(lvmax(), Stats.get(eff, "vit")) + tree("hp");
     }
 
     /** 갑옷 · 버프 보너스 글자 (없으면 "") */
@@ -123,6 +136,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             String extra = vitBonusText();
             lore.add("§71포인트: 최대 체력 +" + CONFIG.text("HP_PER_VIT") + (extra.isEmpty() ? "" : " · " + extra));
             lore.add("§7레벨 보너스 +" + Js.str(Hp.levelHpOf(lvmax())) + " (레벨당 +" + CONFIG.text("HP_PER_LEVEL") + ")");
+            if (tree("hp") > 0) lore.add("§7스탯 트리 최대 체력 +" + Js.str(tree("hp")));
             Obj tyrfing = SKILLS.objOrNull("tyrfing");
             lore.add("§7티르빙 스킬 피해 × 최대 체력 ÷ " + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)));
         } else {
@@ -196,17 +210,21 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         double base0 = w.damage() * (1 + mmorpg.core.Enhance.enhanceBonus(enh));
         lines.add(L + "기준 무기: " + (enh > 0 ? "§6+" + enh + " " : "") + (dark ? w.darkName() : w.name()));
         List<Weapons.Lack> lack = Weapons.weaponLack(w, reqLevel, base);
-        double critAvg = 1 + w.critChance() * (w.critMult() - 1);
+        // 스탯 트리 (7단계): 공격력 · 치명타 확률 (평타 상한 RUNE_STRIKE.critCap) · 치명타 피해
+        double atk = 1 + tree("atk") / 100;
+        double critChance = mmorpg.core.Combat.critChanceOf(w, tree("crit") / 100);
+        double critMult = w.critMult() + tree("critDmg") / 100;
+        double critAvg = 1 + critChance * (critMult - 1);
         double sum = 0;
         for (Weapons.Scaling b : w.scaling()) sum += Stats.get(eff, b.stat()) * b.per();
-        double now = base0 * (1 + sum);
-        lines.add(L + "피해 " + V + num(now) + L + " · 치명타 " + V + num(w.critChance() * 100) + "%" + L + " ×" + num(w.critMult()));
+        double now = base0 * (1 + sum) * atk;
+        lines.add(L + "피해 " + V + num(now) + L + " · 치명타 " + V + num(critChance * 100) + "%" + L + " ×" + num(critMult));
         Weapons.Scaling main = w.scaling().get(0);
-        lines.add(L + "평균 " + V + num(now * critAvg) + L + " · " + Stats.info(main.stat()).str("name") + " 1당 " + V + "+" + num(base0 * main.per() * critAvg));
+        lines.add(L + "평균 " + V + num(now * critAvg) + L + " · " + Stats.info(main.stat()).str("name") + " 1당 " + V + "+" + num(base0 * main.per() * atk * critAvg));
         for (int i = 1; i < w.scaling().size(); i++) {
             Weapons.Scaling b = w.scaling().get(i);
             String hp = b.stat().equals("vit") ? L + " · 최대 체력 " + V + "+" + CONFIG.text("HP_PER_VIT") : "";
-            lines.add(L + Stats.info(b.stat()).str("name") + " 1당 피해 " + V + "+" + num(base0 * b.per() * critAvg) + hp);
+            lines.add(L + Stats.info(b.stat()).str("name") + " 1당 피해 " + V + "+" + num(base0 * b.per() * atk * critAvg) + hp);
         }
         if (w.type().equals("shield")) {
             double vit = Stats.get(eff, "vit");

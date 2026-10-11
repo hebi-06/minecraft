@@ -36,6 +36,7 @@ import net.minecraft.world.item.Items;
  * 가진 무기 기준 실제 피해 (기준 무기). 애드온과 같은 그림 (금테 창 · 스탯 아이콘). 게임은 멈추지 않음.
  * 아랫줄 (6단계 — 애드온 상자 창의 아랫줄): 퀘스트 목록 · 엔더 상자 (내 엔더 상자 27칸) · 탈것 (누르면 고른 탈것을 불러 탐 · 타고 있으면 돌려보냄,
  * Shift + 누르면 탈것 고르기 창).
+ * 스탯 줄마다 나무 칸 (7단계 스탯 트리 — "나무 3/10", 고를 갈래가 있으면 깜빡임): 누르면 그 스탯의 스탯 트리 창.
  */
 public final class StatScreen extends Screen {
     public static final int W = 300;
@@ -57,6 +58,9 @@ public final class StatScreen extends Screen {
     private static final Identifier POINT = Mmorpg.id("hud/icon_point");
     private static final Identifier ENDER = Mmorpg.id("ui/ender_chest");
     private static final Identifier MOUNT = Mmorpg.id("ui/icon_mount");
+    /** 스탯 줄의 나무 칸 (+1 단추 왼쪽 · 첫 줄) */
+    public static final int TREE_W = 66;
+    public static final int TREE_H = 11;
 
     private int left;
     private int top;
@@ -96,6 +100,65 @@ public final class StatScreen extends Screen {
 
     public int rowY(int i) {
         return top + ROW_Y + i * ROW_H + 12;
+    }
+
+    // ------------------------------------------------------------ 나무 칸 (스탯 트리)
+
+    private int treeX() {
+        return left + W - 40 - 6 - TREE_W;
+    }
+
+    private int treeY(int i) {
+        return top + ROW_Y + i * ROW_H + 2;
+    }
+
+    /** 줄 i 의 나무 칸 안인지 (스탯 트리를 쓰는 서버만) */
+    private boolean inTree(int i, double mx, double my) {
+        if (!ClientRpgState.treeOn()) return false;
+        int x = treeX();
+        int y = treeY(i);
+        return mx >= x && mx < x + TREE_W && my >= y && my < y + TREE_H;
+    }
+
+    /** 줄 i 의 나무 칸 가운데 (시험용 — 화면 좌표 {x, y}) */
+    public int[] treeCenter(int i) {
+        return new int[] {treeX() + TREE_W / 2, treeY(i) + TREE_H / 2};
+    }
+
+    private static final ItemStack SAPLING = new ItemStack(Items.OAK_SAPLING);
+
+    /** 나무 칸 그리기: 묘목 + "나무 3/10" (고를 갈래가 있으면 "갈래 고르기!" 깜빡임) */
+    private void drawTree(GuiGraphicsExtractor g, String key, int i, boolean over, long now) {
+        int x = treeX();
+        int y = treeY(i);
+        int v = ClientRpgState.spent(key);
+        int tier = mmorpg.core.StatTree.tier(key, v);
+        int size = mmorpg.core.StatTree.tree(key) == null ? 0 : mmorpg.core.StatTree.tree(key).nodes().size();
+        boolean pending = !mmorpg.core.StatTree.pending(key, v, ClientRpgState.treeState().picksOf(key)).isEmpty();
+        g.fill(x, y, x + TREE_W, y + TREE_H, over ? 0x50FFFFFF : pending && (now / 400) % 2 == 0 ? 0x50FFD24A : 0x30000000);
+        g.pose().pushMatrix();
+        g.pose().translate(x + 1, y + 1);
+        g.pose().scale(0.5625F, 0.5625F);
+        g.item(SAPLING, 0, 0);
+        g.pose().popMatrix();
+        String label = pending ? ((now / 400) % 2 == 0 ? "§e§l갈래 고르기!" : "§6§l갈래 고르기!") : "§7나무 " + Stats.info(key).str("color") + tier + "§7/" + size;
+        g.text(font, BedrockText.toJava(label), x + 12, y + 2, 0xFFFFFFFF, true);
+    }
+
+    private List<String> treeTip(String key) {
+        int v = ClientRpgState.spent(key);
+        mmorpg.core.StatTree.Tree t = mmorpg.core.StatTree.tree(key);
+        List<String> tip = new ArrayList<>();
+        if (t == null) return tip;
+        String name = Stats.info(key).str("name");
+        int nx = mmorpg.core.StatTree.nextAt(key, v);
+        tip.add(Stats.info(key).str("color") + "§l" + name + " 나무 §r§7(" + t.title() + ")");
+        tip.add("§7" + mmorpg.core.StatTree.tier(key, v) + "/" + t.nodes().size() + " 단계 · " + (nx > 0 ? "다음 단계 " + name + " " + nx : "다 자람"));
+        String b = mmorpg.core.StatTree.bonusText(mmorpg.core.StatTree.treeTotals(key, v, ClientRpgState.treeState().picksOf(key)));
+        tip.add(b.isEmpty() ? "§8보너스 없음" : "§a" + b);
+        if (!mmorpg.core.StatTree.pending(key, v, ClientRpgState.treeState().picksOf(key)).isEmpty()) tip.add("§e고를 갈래가 있습니다");
+        tip.add("§e누르면 스탯 트리");
+        return tip;
     }
 
     // ------------------------------------------------------------ 아랫줄 단추
@@ -182,13 +245,16 @@ public final class StatScreen extends Screen {
         List<String> keys = Stats.STAT_KEYS;
         long now = Util.getMillis();
         int hover = -1;
+        int treeHover = -1;
         for (int i = 0; i < keys.size(); i++) {
             String key = keys.get(i);
             int y = top + ROW_Y + i * ROW_H;
             int value = s.stat(key);
             Integer before = lastValue.put(key, value);
             if (before != null && value > before) flashAt.put(key, now);
-            boolean over = inRow(i, mx, my);
+            boolean overTree = inTree(i, mx, my);
+            if (overTree) treeHover = i;
+            boolean over = inRow(i, mx, my) && !overTree;
             if (over) hover = i;
             g.fill(left + 10, y, left + W - 10, y + ROW_H - 2, over ? 0x34FFFFFF : 0x22000000);
             Long f = flashAt.get(key);
@@ -206,6 +272,7 @@ public final class StatScreen extends Screen {
             RpgHud.sprite(g, over && can ? BTN_HOVER : BTN, bx, by, 26, 16);
             String plus = (can ? "§a§l" : "§8") + "+1";
             g.text(font, plus, bx + 13 - font.width(plus) / 2, by + 4, 0xFFFFFFFF, true);
+            if (ClientRpgState.treeOn()) drawTree(g, key, i, overTree, now);
         }
 
         // 기준 무기
@@ -235,7 +302,11 @@ public final class StatScreen extends Screen {
             g.text(font, BedrockText.toJava(b.line2()), ix + 19, y + 12, 0xFFFFFFFF, true);
         }
 
-        if (hover >= 0) {
+        if (treeHover >= 0) {
+            List<Component> tip = new ArrayList<>();
+            for (String l : treeTip(keys.get(treeHover))) tip.add(Component.literal(BedrockText.toJava(l)));
+            g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
+        } else if (hover >= 0) {
             List<Component> tip = new ArrayList<>();
             for (String l : s.tooltip(keys.get(hover))) tip.add(Component.literal(BedrockText.toJava(l)));
             g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
@@ -250,9 +321,15 @@ public final class StatScreen extends Screen {
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) { // 26.3 은 SDL 번호 (왼쪽 = 1)
             for (int i = 0; i < Stats.STAT_KEYS.size(); i++) {
+                if (!inTree(i, event.x(), event.y())) continue;
+                click();
+                minecraft.gui.setScreen(new StatTreeScreen(Stats.STAT_KEYS.get(i)));
+                return true;
+            }
+            for (int i = 0; i < Stats.STAT_KEYS.size(); i++) {
                 if (!inRow(i, event.x(), event.y())) continue;
                 if (ClientRpgState.point() <= 0) return true;
-                ClientPlayNetworking.send(new RpgNet.SpendPayload(Stats.STAT_KEYS.get(i), event.hasShiftDown() ? 5 : 1));
+                ClientPlayNetworking.send(new RpgNet.SpendPayload(Stats.STAT_KEYS.get(i), event.hasShiftDown() || minecraft.hasShiftDown() ? 5 : 1));
                 click();
                 return true;
             }

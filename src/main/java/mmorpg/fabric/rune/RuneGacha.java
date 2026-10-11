@@ -119,20 +119,30 @@ public final class RuneGacha {
      * 뽑기권은 연출 전에 씀 (연출의 색을 보고 뽑기권을 버려 공짜로 다시 뽑을 수 없게). adv = 고급 룬 뽑기권
      */
     public static boolean useTicket(ServerPlayer sp, boolean adv) {
+        return useTicket(sp, adv ? RuneItems.ADV_TICKET : RuneItems.TICKET);
+    }
+
+    /** 뽑기권 아이템으로 뽑기: 룬 뽑기권 · 고급 룬 뽑기권 · 스탯 룬 뽑기권 (7단계 — 계열이 정해짐, 등급 확률은 같음) */
+    public static boolean useTicket(ServerPlayer sp, TicketItem ticket) {
+        if (ticket == null) return false;
+        boolean adv = ticket.advanced();
         if (DRAWING.containsKey(sp.getUUID())) {
             Notify.warn(sp, "§7룬을 뽑는 중입니다");
             return false;
         }
-        Runes.Roll res = Runes.rollRune(Kit::rand, adv);
+        String family = ticket.family();
+        Runes.Roll res = family != null ? Runes.rollRuneOf(Kit::rand, adv, family) : Runes.rollRune(Kit::rand, adv);
         String rid = Runes.runeId(res.family(), res.grade());
         if (Runes.parseRune(rid) == null) return false; // 설정 표에 없는 조합 (뽑기권은 그대로)
         List<String> before = RuneData.pending(sp);
         List<String> next = new ArrayList<>(before);
         next.add(rid);
         RuneData.setPending(sp, next);
-        if (!takeTicket(sp, adv ? RuneItems.ADV_TICKET : RuneItems.TICKET)) {
+        if (!takeTicket(sp, ticket)) {
             RuneData.setPending(sp, before);
-            Notify.warn(sp, "§c" + RuneKit.RUNE.str(adv ? "advTicketName" : "ticketName") + "이 없습니다");
+            mmorpg.core.StatTree.Ticket st = ticket.stat() == null ? null : mmorpg.core.StatTree.tickets().get(ticket.stat());
+            String name = st != null ? st.name() : RuneKit.RUNE.str(adv ? "advTicketName" : "ticketName");
+            Notify.warn(sp, "§c" + name + "이 없습니다");
             return false;
         }
         DRAWING.put(sp.getUUID(), rid);

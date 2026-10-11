@@ -157,7 +157,7 @@ public final class Transcend {
         }
         if (!ok) return false;
         String key = key(sp, k);
-        COOLDOWNS.put(key, Tasks.now() + Math.round(k.num("cd") * 20));
+        COOLDOWNS.put(key, Tasks.now() + Math.round(k.num("cd") * 20 * mmorpg.fabric.stattree.StatTrees.cdMult(sp))); // 스탯 트리 재사용 대기 (7단계)
         READY_ANNOUNCED.remove(key);
         Notify.notify(sp, "§b§l" + k.str("name"), 20);
         return true;

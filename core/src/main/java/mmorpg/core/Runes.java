@@ -244,6 +244,28 @@ public final class Runes {
         return new Roll(family, FAMILIES.obj(family).str("stat"), grade);
     }
 
+    /**
+     * 스탯 룬 뽑기권 (7단계 스탯 트리 — 애드온에는 없음): 등급은 {@link #rollRune} 과 같은 무게로, 계열은 family 하나로 정함.
+     * {@code rand} 는 한 번 (등급) 부름.
+     */
+    public static Roll rollRuneOf(DoubleSupplier rand, boolean adv, String family) {
+        if (!FAMILY_ORDER.contains(family)) throw new IllegalArgumentException("unknown rune family: " + family);
+        Map<String, Double> w = gradeWeights(adv);
+        double total = 0;
+        for (String g : GRADE_ORDER) total = total + w.get(g);
+        double x = rand.getAsDouble() * total;
+        String grade = GRADE_ORDER.get(GRADE_ORDER.size() - 1);
+        for (String g : GRADE_ORDER) {
+            if (w.get(g) <= 0) continue;
+            if (x < w.get(g)) {
+                grade = g;
+                break;
+            }
+            x -= w.get(g);
+        }
+        return new Roll(family, FAMILIES.obj(family).str("stat"), grade);
+    }
+
     /** runesmith.js grindValue: rune shards from grinding one rune. */
     public static double grindValue(Rune r) {
         return r == null ? 0 : RUNE_SMITH.obj("grind").numOr(r.grade(), 0);

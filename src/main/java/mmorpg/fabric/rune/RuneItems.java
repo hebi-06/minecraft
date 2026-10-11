@@ -19,7 +19,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * 룬 아이템 등록: 룬 80 (계열 16 × 등급 5 — rpg:rune_&lt;계열&gt;_&lt;등급&gt;, 한 칸에 하나, 영웅 · 초월은 반짝임) + 룬 뽑기권 · 고급 룬 뽑기권 (64개씩, 반짝임).
+ * 룬 아이템 등록: 룬 80 (계열 16 × 등급 5 — rpg:rune_&lt;계열&gt;_&lt;등급&gt;, 한 칸에 하나, 영웅 · 초월은 반짝임) + 룬 뽑기권 · 고급 룬 뽑기권 (64개씩, 반짝임)
+ * + 스탯 룬 뽑기권 4 (7단계 스탯 트리 — rpg:&lt;스탯&gt;_rune_ticket, 이름이 같은 계열 5종만).
  * 크리에이티브 탭 "룬" 하나 (뽑기권 → 계열 순 → 등급 순).
  */
 public final class RuneItems {
@@ -51,23 +52,43 @@ public final class RuneItems {
                 BY_ID.put(r.id(), item);
             }
         }
-        TICKET = ticket(RuneKit.RUNE.str("ticketItem"), false);
-        ADV_TICKET = ticket(RuneKit.RUNE.str("advTicketItem"), true);
+        TICKET = ticket(RuneKit.RUNE.str("ticketItem"), false, null);
+        ADV_TICKET = ticket(RuneKit.RUNE.str("advTicketItem"), true, null);
+        // 스탯 룬 뽑기권 (7단계 스탯 트리 — stat_tree.json tickets: 이름이 같은 계열 5종만)
+        for (mmorpg.core.StatTree.Ticket t : mmorpg.core.StatTree.tickets().values()) STAT_TICKETS.put(t.stat(), ticket(t.item(), false, t.stat()));
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB, FabricCreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.mmorpg.runes"))
                 .icon(() -> new ItemStack(TICKET))
                 .displayItems((params, output) -> {
                     output.accept(TICKET);
                     output.accept(ADV_TICKET);
+                    for (TicketItem t : STAT_TICKETS.values()) output.accept(t);
                     for (RuneItem r : RUNES) output.accept(r);
                 })
                 .build());
     }
 
-    private static TicketItem ticket(String id, boolean adv) {
+    /** 스탯 → 스탯 룬 뽑기권 (스탯 트리 순서) */
+    private static final Map<String, TicketItem> STAT_TICKETS = new java.util.LinkedHashMap<>();
+
+    private static TicketItem ticket(String id, boolean adv, String stat) {
         ResourceKey<Item> key = key(id);
         return Registry.register(BuiltInRegistries.ITEM, key,
-                new TicketItem(adv, new Item.Properties().stacksTo(64).component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true).setId(key)));
+                new TicketItem(adv, stat, new Item.Properties().stacksTo(64).component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true).setId(key)));
+    }
+
+    /** 스탯 룬 뽑기권 (없으면 null) */
+    public static TicketItem statTicket(String stat) {
+        return STAT_TICKETS.get(stat);
+    }
+
+    /** 뽑기권 아이템 ID (rpg:rune_ticket · rpg:high_rune_ticket · rpg:str_rune_ticket …) → amount 장 (모르면 빈 칸) */
+    public static ItemStack ticketById(String id, int amount) {
+        TicketItem t = null;
+        if (TICKET != null && id.equals(BuiltInRegistries.ITEM.getKey(TICKET).toString())) t = TICKET;
+        else if (ADV_TICKET != null && id.equals(BuiltInRegistries.ITEM.getKey(ADV_TICKET).toString())) t = ADV_TICKET;
+        else for (TicketItem s : STAT_TICKETS.values()) if (id.equals(BuiltInRegistries.ITEM.getKey(s).toString())) t = s;
+        return t == null ? ItemStack.EMPTY : new ItemStack(t, Math.max(1, Math.min(64, amount)));
     }
 
     public static List<RuneItem> runes() {

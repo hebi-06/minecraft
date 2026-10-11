@@ -147,10 +147,10 @@ public final class RpgHealth {
         return sp.gameMode.getGameModeForPlayer().isSurvival();
     }
 
-    /** 최대 체력 (hp.js maxHpOf): 기본 + 최고 레벨 보너스 + 실제 체력 스탯 */
+    /** 최대 체력 (hp.js maxHpOf): 기본 + 최고 레벨 보너스 + 실제 체력 스탯 + 스탯 트리 (7단계) */
     public static double maxHpOf(ServerPlayer sp) {
         RpgData d = RpgData.of(sp);
-        return Hp.maxHpOf(d.lvmax(), Stats.get(RpgStats.effective(sp), "vit"));
+        return Hp.maxHpOf(d.lvmax(), Stats.get(RpgStats.effective(sp), "vit")) + mmorpg.fabric.stattree.StatTrees.hpAdd(sp);
     }
 
     /** 지금 넣어 둔 RPG 최대 체력 (없으면 계산) */
@@ -225,7 +225,9 @@ public final class RpgHealth {
         double shield = RpgCombat.shieldReduction(sp, source);
         Guards.Guard g = Guards.of(sp);
         double reduce = g != null ? 1 - (1 - shield) * (1 - g.reduce()) : shield;
-        double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce)); // 결투 상대의 피해 × PVP.mult
+        // 스탯 트리 받는 피해 감소 (7단계): 방패 · 버프 감소 뒤에 곱함
+        double tree = mmorpg.fabric.stattree.StatTrees.defMult(sp);
+        double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce) * tree); // 결투 상대의 피해 × PVP.mult
         Guards.afterHurt(sp, source, g); // 반사 버프: 때린 것에게 (다음 틱)
         boolean safe = isNonLethal(sp, source, raw);
         if (loss > 0 && !safe) loss = absorbShield(sp, loss); // 보호막 먼저

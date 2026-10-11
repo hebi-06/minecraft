@@ -50,6 +50,13 @@ public final class MmorpgClient implements ClientModInitializer {
             if (payload.open()) context.client().gui.setScreen(new StatScreen());
         });
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.MountPayload.TYPE, (payload, context) -> ClientRpgState.updateMount(payload));
+        // 스탯 트리 (7단계): 기록 · 보너스 합, open 이면 그 탭으로 창 (열려 있으면 탭만 바꿈)
+        ClientPlayNetworking.registerGlobalReceiver(RpgNet.StatTreePayload.TYPE, (payload, context) -> {
+            String open = ClientRpgState.updateStatTree(payload);
+            if (open == null || open.isEmpty()) return;
+            if (context.client().gui.screen() instanceof StatTreeScreen s) s.select(open);
+            else context.client().gui.setScreen(new StatTreeScreen(open));
+        });
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.ShakePayload.TYPE, (payload, context) -> CameraShake.add(payload.intensity(), payload.seconds()));
         // 초월 룬 하늘빛 · 화면 번쩍임
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SkyPayload.TYPE, (payload, context) -> UltFx.sky(payload));
