@@ -476,8 +476,11 @@ public final class RpgKrakenGallery implements FabricClientGameTest {
         refresh(server);
         // 앞 장면의 먹물 웅덩이를 치움 — 웅덩이 피해 (1초마다, 보스가 때린 것) 는 보스 반대쪽으로 밀어 (애드온 applyDamage 와 같음) 끌려가는 것을 가림
         server.runOnServer(s -> BossKraken.mem(enc()).puddles.clear());
-        chase(ctx, server, 0, 12, 0, 0, 3, 10);
-        double z0 = server.computeOnServer(s -> player(s).getZ());
+        // 길 (+z 축) 의 12칸은 촉수 물구덩이 — 구덩이에 빠진 채로는 끌려 나오지 못함 (가장자리가 한 칸 높음). 길과 대각선 기둥 사이 (22.5°, 12칸) 에서 가운데까지 막힌 것 없음
+        double sx = 12 * Math.sin(Math.toRadians(22.5));
+        double sz = 12 * Math.cos(Math.toRadians(22.5));
+        chase(ctx, server, sx, sz, 0, 0, 3, 10);
+        double r0 = server.computeOnServer(s -> Math.hypot(player(s).getX() - cx, player(s).getZ() - cz));
         long t0 = server.computeOnServer(s -> {
             BossKraken.whirl(enc(), Tasks.now());
             return Tasks.now();
@@ -485,8 +488,8 @@ public final class RpgKrakenGallery implements FabricClientGameTest {
         int time = (int) Arena.BOSSES.obj(KEY).obj("whirl").num("time");
         waitUntil(ctx, server, t0 + 40);
         shot(ctx, "kr_whirl");
-        double z1 = server.computeOnServer(s -> player(s).getZ());
-        check(z1 < z0 - 1, "pulled toward the center (" + String.format(Locale.ROOT, "%.1f → %.1f", z0 - cz, z1 - cz) + ")");
+        double r1 = server.computeOnServer(s -> Math.hypot(player(s).getX() - cx, player(s).getZ() - cz));
+        check(r1 < r0 - 1, "pulled toward the center (" + String.format(Locale.ROOT, "%.1f → %.1f blocks", r0, r1) + ")");
         // 바깥으로 달아남 (가운데 짓누름 원 밖)
         chase(ctx, server, 0, 14, 0, 0, 3, 10);
         waitUntil(ctx, server, t0 + time + 1);
