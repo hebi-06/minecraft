@@ -591,7 +591,18 @@ public final class RpgMonsterTests {
                     h.assertTrue(spawned.size() == 2 && spawned.stream().allMatch(m -> m.position().distanceTo(sp.position()) < 6), "/mob spawned in front");
                     int cleared = Monsters.clearMonsters(sp, 12);
                     h.assertTrue(cleared == 2 && spawned.stream().allMatch(Entity::isRemoved), "/mob clear removed the plain monsters " + cleared);
-                    h.assertTrue(members(level, zone[0]).size() == 2 && HuntZones.zoneMonstersNear(sp, 12) == 2, "zone monsters kept");
+                    int kept = members(level, zone[0]).size();
+                    int near = HuntZones.zoneMonstersNear(sp, 12);
+                    if (kept != 2 || near != 2) {
+                        // 무엇이 남았는지 (사냥터 몬스터 수 · 둘레 RPG 몬스터의 자리 · 태그)
+                        StringBuilder sb = new StringBuilder();
+                        for (RpgMonster m : level.getEntitiesOfClass(RpgMonster.class, new AABB(sp.position(), sp.position()).inflate(16))) {
+                            sb.append(String.format(java.util.Locale.ROOT, " [%.1f %.1f %.1f %s %s]", m.getX() - sp.getX(), m.getY() - sp.getY(), m.getZ() - sp.getZ(),
+                                    m.isRemoved() ? "removed" : "live", m.entityTags()));
+                        }
+                        LOG.warn("[monster-test] zone check: members {} near {} player {} monsters{}", kept, near, sp.position(), sb);
+                    }
+                    h.assertTrue(kept == 2 && near == 2, "zone monsters kept (members " + kept + ", near " + near + ")");
                     String list = HuntZones.zoneListText(level.getServer());
                     h.assertTrue(list.contains(zone[0].id() + " §fLv.8 굴론 ×2") && list.contains("(지금 2마리)"), "list " + list);
                     String msg = HuntZones.removeNearestZone(sp, 16);

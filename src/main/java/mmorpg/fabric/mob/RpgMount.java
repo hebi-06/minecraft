@@ -19,7 +19,7 @@ import net.minecraft.world.phys.Vec3;
  * <li>타기: 첫 탄 사람 (플레이어) 이 몰기 — 말과 같은 조작 (바라보는 쪽으로 돎, 옆 · 뒤는 느리게), 점프 키를 길게 누를수록 높이 뜀 (베드락 can_power_jump —
  * 바닐라 말 뛰기 막대가 화면에 나옴)</li>
  * <li>부르기 · 사라지기 · 연출 · 탄 동안 막기는 탈것 관리 (mount.Mounts — {@link #manager})</li>
- * <li>저장하지 않음 (EntityType noSave — 세계를 닫거나 나가면 사라지고, 나간 사람의 데이터에도 함께 적히지 않음)</li>
+ * <li>청크에 저장하지 않음 (shouldBeSaved — 탄 채로 나간 사람은 바닐라처럼 플레이어 데이터에 함께 적혀 다시 들어오면 탄 채로 — 탈것 관리가 그 사람의 탈것으로 기록)</li>
  * <li>탈것의 체력은 화면에 보이지 않음 (다치지 않음), 내리면 탈것이 있던 자리에 섬 (탈것은 곧 사라짐)</li>
  * </ul>
  */
@@ -152,6 +152,12 @@ public class RpgMount extends BedrockMob implements PlayerRideableJumping {
         AABB box = passenger.getDimensions(Pose.STANDING).makeBoundingBox(at);
         if (level().noCollision(passenger, box)) return at;
         return super.getDismountLocationForPassenger(passenger);
+    }
+
+    /** 청크와 함께 저장하지 않음 (탄 사람이 없는 탈것은 남기지 않음) */
+    @Override
+    public boolean shouldBeSaved() {
+        return false;
     }
 
     /** 다른 엔티티를 밀지 않음 (탄 채로 다른 플레이어 · 몹을 밀어내지 않게 — 베드락 pushable false) */

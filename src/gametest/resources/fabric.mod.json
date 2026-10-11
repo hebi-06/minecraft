@@ -53,6 +53,8 @@
       "mmorpg.fabric.test.RpgSurtrGallery",
       "mmorpg.fabric.test.RpgMonsterGallery",
       "mmorpg.fabric.test.RpgTreeGallery",
+      "mmorpg.fabric.test.RpgMountGallery",
+      "mmorpg.fabric.test.RpgDuelGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

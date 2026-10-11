@@ -258,6 +258,7 @@ public final class RpgNavTests {
             Props.set(sp, "rpg:qs", "{\"" + id + "\":{\"s\":\"a\",\"n\":1,\"c\":0}}");
             Quests.forgetQuestPlayer(sp.getUUID());
             Quests.pinQuest(sp, id);
+            Nav.zones = List::of; // 사냥터 없음 (다른 시험이 세계에 남긴 사냥터와 상관없이)
             Quests.NavGoal g = Quests.navGoal(sp);
             h.assertTrue(g != null && g.why().equals("hunt") && "gulon".equals(g.mob()), "hunt goal " + g);
             NavNet.NavPayload hud = tick(sp);

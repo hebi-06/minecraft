@@ -70,9 +70,10 @@ public final class RpgEntities {
         b.sized(Math.max(0.01F, d.width()), Math.max(0.01F, d.height())).noLootTable();
         if (d.monster()) b.clientTrackingRange(8);
         else if (d.mount()) {
-            // 탈것: 탄 사람 자리 = 행동 팩 자리 + 자바 높이 보정 (mounts.json seatLift), 저장하지 않음 (부를 때마다 새로)
+            // 탈것: 탄 사람 자리 = 행동 팩 자리 + 자바 높이 보정 (mounts.json seatLift). 청크에는 저장하지 않음 (RpgMount.shouldBeSaved —
+            // noSave 로 하면 서버가 탈 수 없는 엔티티로 봄: Entity.startRiding 이 "저장할 수 없는 탈것" 을 거절)
             double[] seat = d.seat();
-            b.clientTrackingRange(10).updateInterval(2).noSave()
+            b.clientTrackingRange(10).updateInterval(2)
                     .passengerAttachments(new net.minecraft.world.phys.Vec3(seat[0], seat[1] + seatLift(d.id()), seat[2]));
         } else b.clientTrackingRange(10).updateInterval(1); // 보스 · 소품은 스크립트가 틱마다 옮기기도 함 (헤엄 · 날기 · 촉수)
         if (d.fireImmune()) b.fireImmune();

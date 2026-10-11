@@ -7,7 +7,7 @@
   a,b;c,d       → 세미콜론으로 묶음, 쉼표로 묶음 안의 사진첩 키 (prod 를 넣으면 그 묶음에서 배포 환경 클라이언트도)
 출력: GITHUB_OUTPUT 줄 'groups=<JSON 목록>' — 항목 {name, only, prod}
 사진첩 키: client weapon particle skill rune gear form nav mob arena boss monster tree
-          scorpions kraken worm jorm nidhogg skoll ymir surtr
+          scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp
 """
 import json
 import sys
@@ -21,6 +21,7 @@ DEFAULT = [
     ("wj", "worm,jorm", False),
     ("ns", "nidhogg,skoll", False),
     ("ys", "ymir,surtr", False),
+    ("six", "mount,pvp", False),
 ]
 
 

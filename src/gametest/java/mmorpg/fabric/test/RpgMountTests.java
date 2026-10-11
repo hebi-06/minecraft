@@ -72,7 +72,6 @@ public final class RpgMountTests {
         MobData.Def md = MobData.get("rpg:dire_wolf_mount");
         h.assertTrue(md != null && md.mount(), "mob data mount");
         EntityType<?> type = RpgEntities.type("rpg:dire_wolf_mount");
-        h.assertTrue(!type.canSerialize(), "mount not saved");
         Vec3 seat = type.getDimensions().attachments().getNullable(EntityAttachment.PASSENGER, 0, 0F);
         h.assertTrue(seat != null, "seat attachment");
         near(h, seat.y, 1.52 + RpgEntities.SEAT_LIFT, 1e-4, "seat y");
@@ -86,6 +85,7 @@ public final class RpgMountTests {
         near(h, m.getMaxHealth(), 40, 1e-4, "health");
         h.assertTrue(type.fireImmune(), "fire immune");
         h.assertTrue(!m.showVehicleHealth(), "no vehicle hearts");
+        h.assertTrue(!m.shouldBeSaved() && type.canSerialize(), "not saved with chunks (but rideable — serializable type)");
         // 뛰기 세기 (말과 같음: 90 이상 = 1, 아니면 0.4 + 0.4 × 세기 / 90)
         m.onPlayerJump(90);
         near(h, m.pendingJump(), 1.0, 1e-6, "full jump");

@@ -224,9 +224,6 @@ public final class SkillFx {
             {"conduit.activate", "block.conduit.activate"}, {"crossbow.loading.end", "item.crossbow.loading_end"}, {"mob.allay.item_given", "entity.allay.item_given"},
             {"mob.breeze.shoot", "entity.breeze.shoot"}, {"mob.irongolem.repair", "entity.iron_golem.repair"}, {"mob.ravager.stun", "entity.ravager.stunned"},
             {"mob.shulker.shoot", "entity.shulker.shoot"}, {"item.trident.riptide_2", "item.trident.riptide_2"},
-            // 6단계 (탈것 · 엔더 상자 · 결투)
-            {"breeze_wind_charge.burst", "entity.breeze_wind_charge.wind_burst"}, {"mob.wolf.shake", "entity.wolf.shake"},
-            {"random.enderchestopen", "block.ender_chest.open"}, {"random.enderchestclosed", "block.ender_chest.close"},
         };
         for (String[] m : map) SOUND.put(m[0], m[1]);
     }
@@ -245,6 +242,11 @@ public final class SkillFx {
         CONST.put("mob.elderguardian.curse", () -> SoundEvents.ELDER_GUARDIAN_CURSE);
         CONST.put("mob.warden.emerge", () -> SoundEvents.WARDEN_EMERGE);
         CONST.put("mob.phantom.bite", () -> SoundEvents.PHANTOM_BITE);
+        // 6단계 (탈것 · 엔더 상자)
+        CONST.put("breeze_wind_charge.burst", () -> SoundEvents.BREEZE_WIND_CHARGE_BURST.value());
+        CONST.put("mob.wolf.shake", () -> SoundEvents.WOLF_SHAKE);
+        CONST.put("random.enderchestopen", () -> SoundEvents.ENDER_CHEST_OPEN);
+        CONST.put("random.enderchestclosed", () -> SoundEvents.ENDER_CHEST_CLOSE);
     }
 
     /** 베드락 소리 이름 → 자바 소리 (없으면 null — 한 번 로그) */
