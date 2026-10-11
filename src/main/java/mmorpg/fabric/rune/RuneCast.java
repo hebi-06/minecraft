@@ -113,6 +113,11 @@ public final class RuneCast {
         return FN.containsKey(fn);
     }
 
+    /** 룬 효과 (없으면 null — 돌파 단계 효과의 "한 번 더") */
+    static RuneFn fn(String name) {
+        return FN.get(name);
+    }
+
     /** 등록한 룬 효과 수 */
     public static int count() {
         return FN.size();
@@ -229,7 +234,7 @@ public final class RuneCast {
                 Mmorpg.LOG.warn("[mmorpg] rune {}", r.id(), e);
                 ok = false;
             }
-            if (ok) Breakthrough.onCast(sp, r, lv); // 6돌 초월: 금빛 각성
+            if (ok) Breakthrough.onCast(sp, r, lv, P); // 6돌 초월: 금빛 각성 · 단계 효과 (한 번 더)
             return ok;
         };
         long now = Tasks.now();

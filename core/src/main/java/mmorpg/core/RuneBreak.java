@@ -39,8 +39,14 @@ public final class RuneBreak {
      */
     public record Fx(int at, String name, String text, double skyTicks, double skyDist, double flashHold, double flashOut, double edge, boolean awaken) {}
 
+    /**
+     * 초월 룬 하나의 단계 효과 (extra — 하나씩): type echo = at 돌부터, 룬이 나가고 after 틱 뒤 그 룬 효과가 한 번 더 나감 (지금 겨눈 곳 · 위력 × mult,
+     * 룬 정의에 set 을 덮음 — 예고를 짧게). text 의 {mult} = mult × 100
+     */
+    public record Extra(int at, String type, double mult, int after, Map<String, Object> set, String text) {}
+
     private record Data(int max, double perLevel, List<String> scaleKeys, double grindPerLevel, List<Integer> tiers, Map<Integer, Fx> fx,
-            Map<String, Map<Integer, List<Change>>> transcend) {}
+            Map<String, Map<Integer, List<Change>>> transcend, Map<String, Extra> extras) {}
 
     private static final Data DATA = load();
 
@@ -106,6 +112,34 @@ public final class RuneBreak {
         Map<Integer, List<Change>> m = DATA.transcend().get(fn);
         List<Change> l = m == null ? null : m.get(tier);
         return l == null ? List.of() : l;
+    }
+
+    /** 룬 효과 fn 의 단계 효과 (없으면 null) */
+    public static Extra extra(String fn) {
+        return DATA.extras().get(fn);
+    }
+
+    /** 이 룬 · 단계에서 켜진 단계 효과 (초월이고 at 돌 이상 — 아니면 null) */
+    public static Extra extraFor(Runes.Rune r, int level) {
+        if (!tiered(r)) return null;
+        Extra e = DATA.extras().get(r.def().str("fn"));
+        return e != null && clamp(level) >= e.at() ? e : null;
+    }
+
+    /** 단계 효과 글자 ("검이 한 번 더 떨어짐 (… 위력 60%)") */
+    public static String extraText(Extra e) {
+        return e.text().replace("{mult}", Js.str(Math.round(e.mult() * 100)));
+    }
+
+    /** 한 번 더 (echo) 나갈 때의 룬 정의: 그 단계의 정의 + set */
+    public static Obj echoDef(Runes.Rune r, int level) {
+        Obj d = def(r, level);
+        Extra e = extraFor(r, level);
+        if (e == null || e.set().isEmpty()) return d;
+        Map<String, Object> m = new LinkedHashMap<>();
+        for (String k : d.keys()) m.put(k, d.get(k));
+        m.putAll(e.set());
+        return new Obj(Collections.unmodifiableMap(m), "RUNES." + r.family() + "." + r.grade() + "@" + clamp(level) + "+echo");
     }
 
     /** 이 단계의 연출 단계 (이른 tiers 중 가장 높은 것 — 없으면 0) */
@@ -230,7 +264,13 @@ public final class RuneBreak {
             String head = on ? "§r§6" + STAR + t + "돌 " + (dark ? "§0" : "§f") : "§r§8" + STAR_EMPTY + t + "돌 ";
             String cont = on ? "§r" + (dark ? "§0" : "§f") + "     " : "§r§8     ";
             List<String> lines = wrap(changeTexts(r, t));
-            for (int i = 0; i < lines.size(); i++) out.add((i == 0 ? head : cont) + lines.get(i));
+            Extra ex = extra(r.def().str("fn"));
+            if (ex != null && ex.at() == t) lines.add("◆ " + extraText(ex)); // 단계 효과 (한 번 더 …)
+            for (int i = 0; i < lines.size(); i++) {
+                String l = lines.get(i);
+                boolean special = l.startsWith("◆");
+                out.add((i == 0 ? head : special ? (on ? "§r§e     " : "§r§8     ") : cont) + l);
+            }
             Fx f = fx(t);
             if (f != null) {
                 String fl = (on ? "§r" + (dark ? "§5" : "§d") : "§r§8") + "     + " + f.name() + " (" + f.text() + ")";
@@ -295,13 +335,23 @@ public final class RuneBreak {
             Obj byTier = to.obj(fn);
             Map<Integer, List<Change>> m = new TreeMap<>();
             for (String t : byTier.keys()) {
+                if (t.isEmpty() || !t.chars().allMatch(Character::isDigit)) continue; // "extra" 등
                 List<Change> list = new ArrayList<>();
                 for (Obj c : byTier.objsOrNull(t)) list.add(new Change(c.str("key"), c.num("to"), c.numOr("div", 1), c.strOr("text", "")));
                 m.put(Integer.parseInt(t), List.copyOf(list));
             }
             tr.put(fn, Collections.unmodifiableMap(m));
         }
+        Map<String, Extra> extras = new LinkedHashMap<>();
+        for (String fn : to.keys()) {
+            Obj e = to.obj(fn).objOrNull("extra");
+            if (e == null) continue;
+            Map<String, Object> set = new LinkedHashMap<>();
+            Obj so = e.objOrNull("set");
+            if (so != null) for (String k : so.keys()) set.put(k, so.get(k));
+            extras.put(fn, new Extra((int) e.num("at"), e.str("type"), e.num("mult"), (int) e.num("after"), Collections.unmodifiableMap(set), e.str("text")));
+        }
         return new Data((int) root.num("max"), root.num("perLevel"), List.copyOf(scale), root.numOr("grindPerLevel", 1), List.copyOf(tiers),
-                Collections.unmodifiableMap(fx), Collections.unmodifiableMap(tr));
+                Collections.unmodifiableMap(fx), Collections.unmodifiableMap(tr), Collections.unmodifiableMap(extras));
     }
 }

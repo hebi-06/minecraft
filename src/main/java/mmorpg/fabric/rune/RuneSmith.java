@@ -448,12 +448,13 @@ public final class RuneSmith {
         for (int i = 0; i < list.size(); i++) {
             Breakthrough.Merge m = list.get(i);
             Runes.Rune r = m.target().r();
-            form.set(LIST_FIRST + i, Slot.of(runeStack(r, m.target().level()), r.gradeColor() + r.def().str("name") + " §7" + m.target().level() + "돌 → §e" + m.result()
-                    + "돌").count(m.result()).lore(mergeLore(m)));
+            // 그림 = 돌파 뒤의 룬 (배지 숫자 = 돌파 뒤 단계 — 칸 숫자는 배지를 가려서 두지 않음)
+            form.set(LIST_FIRST + i, Slot.of(runeStack(r, m.result()), r.gradeColor() + r.def().str("name") + " §7" + m.target().level() + "돌 → §e" + m.result()
+                    + "돌").lore(mergeLore(m)));
         }
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        lines.add(!list.isEmpty() ? "§8룬 칸을 누르면 확인 창 · 숫자 = 돌파 뒤 단계§r" : "§8같은 룬이 둘 있어야 돌파할 수 있습니다.§r");
+        lines.add(!list.isEmpty() ? "§8룬 칸을 누르면 확인 창 · 아이콘 숫자 = 돌파 뒤 단계§r" : "§8같은 룬이 둘 있어야 돌파할 수 있습니다.§r");
         if (opts.size() > LIST_MAX) lines.add("§8룬은 " + LIST_MAX + "종까지 보입니다.§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));

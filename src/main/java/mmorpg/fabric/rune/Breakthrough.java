@@ -121,11 +121,36 @@ public final class Breakthrough {
         return RuneBreak.fx(RuneBreak.fxTier(castLevel(sp, fn)));
     }
 
-    /** 룬이 나간 뒤 (RuneCast): 6돌 초월 룬이면 금빛 각성 */
-    static void onCast(ServerPlayer sp, Runes.Rune r, int level) {
+    /** 룬이 나간 뒤 (RuneCast — P = 그 룬의 위력): 6돌 초월 룬이면 금빛 각성, 단계 효과가 켜졌으면 (천붕 · 뇌신의 창 6돌) 한 번 더 */
+    static void onCast(ServerPlayer sp, Runes.Rune r, int level, double P) {
         if (!RuneBreak.tiered(r)) return;
         RuneBreak.Fx fx = RuneBreak.fx(RuneBreak.fxTier(level));
         if (fx != null && fx.awaken()) awakenFx(sp);
+        RuneBreak.Extra ex = RuneBreak.extraFor(r, level);
+        if (ex != null && "echo".equals(ex.type())) echo(sp, r, level, P * ex.mult(), ex);
+    }
+
+    /**
+     * 한 번 더 (echo): after 틱 뒤 같은 룬 효과를 지금 겨눈 곳으로 다시 (위력 P · 룬 정의 = 그 단계 + set — 예고가 짧음). 재사용 대기 · 각성 연출은 없음,
+     * 그 사이 죽거나 차원을 옮기면 없음. 화면 색 연출은 같은 단계 (시전 단계 기록)
+     */
+    private static void echo(ServerPlayer sp, Runes.Rune r, int level, double P, RuneBreak.Extra ex) {
+        RuneCast.RuneFn fn = RuneCast.fn(r.def().str("fn"));
+        if (fn == null) return;
+        Runes.Rune base = Runes.parseRune(r.id()); // r 은 이미 단계가 들어간 룬 — 정의는 원래 룬에서 다시 (회복 · 보호막 계수를 두 번 곱하지 않게)
+        Obj def = RuneBreak.echoDef(base != null ? base : r, level);
+        String life = RuneKit.lifeToken(sp);
+        RuneKit.later(ex.after(), () -> {
+            if (sp.isRemoved() || sp.isDeadOrDying() || !RuneKit.sameLife(sp, life)) return;
+            noteCast(sp, r, level);
+            DamageNumbers.showFace(sp, "§e§l◆ 한 번 더!", 2.4, 0, 0.75);
+            SkillFx.play(sp.level(), "beacon.power", sp.position(), 1.6, 0.6);
+            try {
+                fn.cast(sp, r, P, def);
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] rune echo {}", r.id(), e);
+            }
+        });
     }
 
     // ------------------------------------------------------------ 합치기
@@ -368,11 +393,12 @@ public final class Breakthrough {
         Vec3 c = sp.position();
         RuneKit.domainSigil(level, c, 2.4, "holy", GOLD, RuneKit.WHITE, Opt.of("life", 1.1, "spinRate", 90.0, "grow", 0.35, "alpha", 0.9));
         RuneKit.novaRing(level, c, 1.2, 3.0, GOLD, RuneKit.WHITE, Opt.of("life", 0.55));
-        SkillFx.fx(level, "rpg:arrow_shot", V.up(c, 5.0), Opt.of("dir", V.UP, "speed", 0.0, "size", 3.0, "thick", 0.9, "life", 0.6, "color", GOLD, "alpha", 0.8));
-        SkillFx.fx(level, "rpg:arrow_shot", V.up(c, 5.0), Opt.of("dir", V.UP, "speed", 0.0, "size", 2.8, "thick", 0.28, "life", 0.5, "color", RuneKit.WHITE,
+        // 머리 위 빛기둥은 머리에서 띄움 (1인칭 카메라가 기둥 안에 들어가지 않게)
+        SkillFx.fx(level, "rpg:arrow_shot", V.up(c, 6.2), Opt.of("dir", V.UP, "speed", 0.0, "size", 3.0, "thick", 0.8, "life", 0.6, "color", GOLD, "alpha", 0.8));
+        SkillFx.fx(level, "rpg:arrow_shot", V.up(c, 6.2), Opt.of("dir", V.UP, "speed", 0.0, "size", 2.8, "thick", 0.24, "life", 0.5, "color", RuneKit.WHITE,
                 "alpha", 1.0));
         RuneKit.selfCue(sp, GOLD, RuneKit.WHITE, true);
-        RuneKit.bodyAura(sp, GOLD, Opt.of("n", 6, "size", 1.2, "alpha", 0.85, "life", 0.4, "force", true));
+        RuneKit.bodyAura(sp, GOLD, Opt.of("n", 4, "size", 1.0, "alpha", 0.75, "life", 0.4, "force", true));
         SkillFx.vanilla(level, "minecraft:totem_particle", V.up(c, 1.2));
         SkillFx.play(level, "beacon.activate", c, 1.4, 0.8);
         SkillFx.play(level, "random.levelup", c, 0.7, 0.45);

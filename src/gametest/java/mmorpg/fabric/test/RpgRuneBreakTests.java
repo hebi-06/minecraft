@@ -60,7 +60,8 @@ public final class RpgRuneBreakTests {
         h.assertTrue(Breakthrough.of(s) == 3, "level 3: " + Breakthrough.of(s));
         CustomModelData cmd = s.get(DataComponents.CUSTOM_MODEL_DATA);
         h.assertTrue(cmd != null && cmd.floats().equals(List.of(3F)), "badge model value " + cmd);
-        h.assertTrue(s.getHoverName().getString().contains("메테오 [3돌]"), "name " + s.getHoverName().getString());
+        String nm = s.getHoverName().getString().replaceAll("§.", "");
+        h.assertTrue(nm.contains("메테오 [3돌]"), "name " + nm);
         ItemStack copy = s.copy();
         h.assertTrue(Breakthrough.of(copy) == 3, "copy keeps the level");
         // 저장 (아이템 코덱 → 다시 읽기)
@@ -72,7 +73,7 @@ public final class RpgRuneBreakTests {
         h.assertTrue(Breakthrough.of(s) == RuneBreak.max(), "clamped to " + RuneBreak.max());
         Breakthrough.write(s, 0);
         h.assertTrue(Breakthrough.of(s) == 0 && !s.has(Breakthrough.LEVEL) && !s.has(DataComponents.CUSTOM_MODEL_DATA), "cleared");
-        h.assertFalse(s.getHoverName().getString().contains("돌]"), "no tag at 0: " + s.getHoverName().getString());
+        h.assertFalse(s.getHoverName().getString().replaceAll("§.", "").contains("돌]"), "no tag at 0: " + s.getHoverName().getString());
         h.assertTrue(Breakthrough.of(RuneItems.stack("int", "transcend")) == 0, "plain rune = 0");
         h.succeed();
     }
@@ -134,9 +135,10 @@ public final class RpgRuneBreakTests {
 
     /**
      * 초월 룬 (불사의 맹약 — 쓰면 바로 하늘빛): 0 · 2돌은 화면 색 연출 없음, 3돌 하늘빛 (테두리 빛 없음), 6돌 하늘빛 + 테두리 빛, 룬 아이템을 쓰면 그 아이템의 단계,
-     * 메테오 2돌 + 0돌 → 3돌 돌파 때 그 룬의 하늘빛을 미리 보여 줌. 하늘빛은 둘레 사람 모두에게 가므로 이 시험 하나에서 차례로.
+     * 메테오 2돌 + 0돌 → 3돌 돌파 때 그 룬의 하늘빛을 미리 보여 줌, 천붕 6돌은 검이 한 번 더 떨어짐 (위력 60% — 앞 10칸의 과녁).
+     * 하늘빛은 둘레 사람 모두에게 가므로 이 시험 하나에서 차례로.
      */
-    @GameTest(maxTicks = 40)
+    @GameTest(maxTicks = 160)
     public void transcendScreenColorByLevel(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
         RpgPlayers.setStat(sp, "vit", 30);
@@ -177,8 +179,28 @@ public final class RpgRuneBreakTests {
         String meteorFog = RuneKitView.fogOf("meteor");
         h.runAfterDelay(14, () -> {
             h.assertTrue(meteorFog != null && meteorFog.equals(Ult.skyOf(sp)), "tier preview sky " + Ult.skyOf(sp));
-            RuneSystem.forget(sp.getUUID());
-            RpgGearTests.done(h, sp);
+            // 천붕 6돌: 첫 검 (delay 24틱) → 34틱 뒤 한 번 더 (delay 14틱) — 두 번째는 위력 60%
+            RpgPlayers.setStat(sp, "str", 30);
+            // 앞 10칸 (불사의 맹약 반격 범위 5.5칸 밖 — 앞에서 쓴 맹약이 아직 돎)
+            Husk z = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, 11.5F));
+            Runes.Rune fall = rune("str", "transcend");
+            RuneCast.resetCooldowns(sp);
+            h.assertTrue(RuneCast.castRune(sp, fall, false, 6), "heavenFall 6 cast");
+            RuneBreak.Extra ex = RuneBreak.extraFor(fall, 6);
+            int first = (int) RuneBreak.def(fall, 6).num("delay");
+            int second = ex.after() + (int) RuneBreak.echoDef(fall, 6).num("delay");
+            double[] d1 = {0};
+            h.runAfterDelay(first + 4, () -> {
+                d1[0] = TestDummies.dealt(z);
+                h.assertTrue(d1[0] > 0, "first sword hit " + d1[0]);
+                h.assertTrue(Breakthrough.castLevel(sp, "heavenFall") == 6, "cast level 6");
+            });
+            h.runAfterDelay(second + 4, () -> {
+                double d2 = TestDummies.dealt(z) - d1[0];
+                h.assertTrue(Math.abs(d2 - d1[0] * ex.mult()) < 1e-3 * Math.max(1, d1[0]), "second sword = 60% of the first: " + d2 + " vs " + d1[0]);
+                RuneSystem.forget(sp.getUUID());
+                RpgGearTests.done(h, sp);
+            });
         });
     }
 
@@ -286,7 +308,8 @@ public final class RpgRuneBreakTests {
             RuneSmith.openRunesmith(sp, "break");
             FormNet.ChestPayload c = chest(sp);
             h.assertTrue(c != null && c.title().contains("돌파") && c.slots().size() == 27, "break window " + (c == null ? null : c.title()));
-            h.assertTrue(c.slots().get(RuneSmith.LIST_FIRST).kind() == Slot.COUNT && c.slots().get(RuneSmith.LIST_FIRST).num() == 1, "rune slot → 1");
+            String row = mmorpg.fabric.BedrockText.plain(c.slots().get(RuneSmith.LIST_FIRST).name());
+            h.assertTrue(row.contains("0돌 → 1돌") && c.slots().get(RuneSmith.LIST_FIRST).kind() != Slot.DECO, "rune slot 0 → 1: " + row);
             h.assertTrue(c.slots().get(RuneSmith.BREAK_ALL_SLOT).num() == 1, "all: 1 merge");
             h.assertTrue(c.slots().get(RuneSmith.TAB).name().contains("갈기") && c.slots().get(RuneSmith.TAB2).name().contains("뽑기권"), "tabs");
             Forms.answer(sp, RuneSmith.LIST_FIRST, null);

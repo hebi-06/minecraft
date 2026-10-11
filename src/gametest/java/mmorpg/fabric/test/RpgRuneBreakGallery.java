@@ -39,7 +39,8 @@ import org.slf4j.LoggerFactory;
 /**
  * 8단계 룬 돌파 사진첩 (화면 시험 — MMORPG_ONLY=runebreak, 실제 마우스 입력): 룬술사 돌파 창 (목록 · 풀이 · 확인 창 → 돌파 → 초월 3돌 미리 보기 — 하늘빛 · 제목),
  * 모두 돌파 (확인 → 6돌), 가방의 배지 (1 ~ 6) · 설명 (3돌 · 6돌 강화 줄), 갈기 창 (돌파한 룬의 조각), 메테오 0 · 3 · 6돌을 실제로 써서
- * 화면 색 연출 단계 (0돌 없음 · 3돌 하늘빛 · 6돌 짙은 하늘빛 + 테두리 빛 + 금빛 각성 — 클라이언트의 하늘빛 짙기로도 확인), 3인칭 6돌 각성.
+ * 화면 색 연출 단계 (0돌 없음 · 3돌 하늘빛 · 6돌 짙은 하늘빛 + 테두리 빛 + 금빛 각성 — 클라이언트의 하늘빛 짙기로도 확인), 6돌 단계 효과 "한 번 더"
+ * (천붕 검 · 뇌신의 창 — 과녁 허스크의 두 번째 피해 = 첫 피해 × 60%), 3인칭 6돌 각성.
  * 사진 이름 rb_… → ci-logs 의 shots/. 확인 항목은 로그 [runebreak-gallery] OK / FAIL.
  */
 @SuppressWarnings("UnstableApiUsage")
@@ -96,8 +97,8 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
             RuneSmith.openRunesmith(sp, "break");
         });
         if (!waitChest(ctx, c -> c.title().contains("돌파"), "break window")) return;
-        int rows = ctx.computeOnClient(mc -> (int) ((ChestFormScreen) mc.gui.screen()).form().slots().stream().filter(x -> x.kind() == mmorpg.fabric.ui.Slot.COUNT).count());
-        check(rows >= 4, "break window lists merges + all (" + rows + " count slots)");
+        int rows = ctx.computeOnClient(mc -> (int) ((ChestFormScreen) mc.gui.screen()).form().slots().stream().filter(x -> x.name().contains("돌 → ")).count());
+        check(rows == 3, "break window lists 3 merges (" + rows + ")");
         away(ctx);
         shot(ctx, "rb_window");
         hover(ctx, chestSlot(RuneSmith.LIST_FIRST + listIndex(ctx, "메테오")));
@@ -239,6 +240,10 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
             check(castLv == lv, "cast at " + lv + " (" + castLv + ")");
             ctx.waitTicks(lv == 6 ? 110 : 80);
         }
+        // 천붕 6돌: 검이 한 번 더 떨어짐 (위력 60% — 앞 10칸의 과녁 허스크)
+        echo(ctx, server, conn, "str", "heavenFall", "rb_fall6");
+        // 뇌신의 창 6돌: 창이 한 번 더 날아감
+        echo(ctx, server, conn, "storm", "thunderSpear", "rb_spear6");
         // 3인칭: 6돌 각성 (발밑 금빛 문양 · 빛기둥 · 몸의 금빛 기운)
         camera(ctx, CameraType.THIRD_PERSON_BACK);
         server.runOnServer(s -> {
@@ -255,6 +260,59 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         shot(ctx, "rb_undying6_3p_later");
         camera(ctx, CameraType.FIRST_PERSON);
         check(RuneBreak.max() == 6, "max 6");
+    }
+
+    /** 6돌 초월 룬의 "한 번 더": 앞 10칸 과녁 → 첫 공격 · 두 번째 (위력 = 첫 공격 × mult) 사진 · 확인 */
+    private void echo(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn, String family, String fn, String shot) {
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            RuneCast.resetCooldowns(sp);
+            Ult.forgetSky(sp);
+            sp.getInventory().setItem(0, Breakthrough.stack(family, "transcend", 6));
+            sp.getInventory().setSelectedSlot(0);
+            for (net.minecraft.world.entity.monster.zombie.Husk h : sp.level().getEntitiesOfClass(net.minecraft.world.entity.monster.zombie.Husk.class,
+                    sp.getBoundingBox().inflate(48), h -> true)) h.discard();
+            TestDummies.reset();
+            net.minecraft.world.entity.monster.zombie.Husk h = net.minecraft.world.entity.EntityTypes.HUSK.create(sp.level(),
+                    net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+            if (h != null) {
+                TestDummies.make(h);
+                h.snapTo(HOME.x, HOME.y, HOME.z + 10, 180F, 0F);
+                sp.level().addFreshEntity(h);
+            }
+        });
+        look(ctx, 0F, 4F);
+        ctx.runOnClient(mc -> UltFx.clear());
+        ctx.waitTicks(10);
+        Runes.Rune r = Runes.parseRune(Runes.runeId(family, "transcend"));
+        RuneBreak.Extra ex = RuneBreak.extraFor(r, 6);
+        if (ex == null) {
+            check(false, fn + " has no 6 extra");
+            return;
+        }
+        int first = (int) (fn.equals("heavenFall") ? RuneBreak.def(r, 6).num("delay") : RuneBreak.def(r, 6).num("charge") + 4);
+        int second = ex.after() + (int) (fn.equals("heavenFall") ? RuneBreak.echoDef(r, 6).num("delay") : RuneBreak.echoDef(r, 6).num("charge") + 4);
+        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(first + 2);
+        shot(ctx, shot + "_first");
+        double d1 = server.computeOnServer(s -> dealt(player(s)));
+        ctx.waitTicks(ex.after() - first - 2 + 4);
+        shot(ctx, shot + "_again");
+        ctx.waitTicks(second - ex.after() - 4 + 2);
+        shot(ctx, shot + "_second");
+        ctx.waitTicks(10);
+        double d2 = server.computeOnServer(s -> dealt(player(s))) - d1;
+        check(d1 > 0 && Math.abs(d2 - d1 * ex.mult()) < Math.max(1e-3, d1 * 1e-3), fn + " 6: second hit = " + Math.round(ex.mult() * 100) + "% (" + d1 + " → " + d2 + ")");
+        ctx.waitTicks(60);
+    }
+
+    /** 과녁 허스크가 받은 피해 합 */
+    private static double dealt(ServerPlayer sp) {
+        double sum = 0;
+        for (net.minecraft.world.entity.monster.zombie.Husk h : sp.level().getEntitiesOfClass(net.minecraft.world.entity.monster.zombie.Husk.class,
+                sp.getBoundingBox().inflate(48), h -> true)) sum += TestDummies.dealt(h);
+        return sum;
     }
 
     // ------------------------------------------------------------ 도움

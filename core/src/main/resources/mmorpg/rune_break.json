@@ -1,5 +1,5 @@
 {
-  "_doc": "룬 돌파 (8단계 — 애드온에는 없음): 같은 룬 둘을 합치면 남는 룬의 돌파 단계 = 남는 룬 + 재료 + 1 (max 까지). 1돌마다 계수 +perLevel (피해 = 위력 P, 회복 · 보호막 = scaleKeys). 초월 룬은 tiers (3 · 6) 에 이르면 transcend[fn][단계] 의 값으로 바뀌고 연출도 바뀜 (fx — 0~2돌은 화면 색 연출 없음). change: key = 룬 정의의 값, to = 바뀐 값, div = 글자에 보일 때 나누는 수 (틱 → 초 20, 비율 → % 0.01), text 의 {from} · {to} = 앞 단계 값 · 바뀐 값.",
+  "_doc": "룬 돌파 (8단계 — 애드온에는 없음): 같은 룬 둘을 합치면 남는 룬의 돌파 단계 = 남는 룬 + 재료 + 1 (max 까지). 1돌마다 계수 +perLevel (피해 = 위력 P, 회복 · 보호막 = scaleKeys). 초월 룬은 tiers (3 · 6) 에 이르면 transcend[fn][단계] 의 값으로 바뀌고 연출도 바뀜 (fx — 0~2돌은 화면 색 연출 없음). change: key = 룬 정의의 값, to = 바뀐 값, div = 글자에 보일 때 나누는 수 (틱 → 초 20, 비율 → % 0.01), text 의 {from} · {to} = 앞 단계 값 · 바뀐 값. extra (초월 룬 하나에 하나): type echo = at 돌부터 after 틱 뒤 그 룬 효과가 한 번 더 나감 (위력 × mult, 룬 정의에 set 을 덮음 — 지금 겨눈 곳으로), text 의 {mult} = mult × 100.",
   "max": 6,
   "perLevel": 0.1,
   "scaleKeys": ["heal", "shield"],
@@ -19,7 +19,8 @@
         {"key": "radius", "to": 9, "text": "범위 {from} → {to}칸"},
         {"key": "lift", "to": 1.6},
         {"key": "range", "to": 28, "text": "사거리 {from} → {to}칸"}
-      ]
+      ],
+      "extra": {"at": 6, "type": "echo", "mult": 0.6, "after": 34, "set": {"delay": 14}, "text": "검이 한 번 더 떨어짐 (지금 겨눈 곳 · 위력 {mult}%)"}
     },
     "shadowless": {
       "3": [
@@ -27,6 +28,7 @@
         {"key": "freeze", "to": 40, "div": 20, "text": "멈춤 {from} → {to}초"}
       ],
       "6": [
+        {"key": "mult", "to": 40, "text": "칼자국 폭발 위력 ×{from} → ×{to}"},
         {"key": "maxTargets", "to": 16, "text": "베는 적 {from} → {to}명"},
         {"key": "freeze", "to": 60, "div": 20, "text": "멈춤 {from} → {to}초"},
         {"key": "range", "to": 16, "text": "사거리 {from} → {to}칸"}
@@ -47,6 +49,7 @@
         {"key": "fire", "to": 8, "text": "불붙음 {from} → {to}초"}
       ],
       "6": [
+        {"key": "mult", "to": 40, "text": "운석 위력 ×{from} → ×{to}"},
         {"key": "radius", "to": 9, "text": "운석 범위 {from} → {to}칸"},
         {"key": "fire", "to": 12, "text": "불붙음 {from} → {to}초"},
         {"key": "lift", "to": 1.3, "text": "더 높이 띄움"}
@@ -95,13 +98,15 @@
         {"key": "chainRange", "to": 10, "text": "연쇄 폭발 {from} → {to}칸"},
         {"key": "stun", "to": 40, "div": 20, "text": "기절 {from} → {to}초"},
         {"key": "width", "to": 2.4, "text": "창 폭 {from} → {to}칸"}
-      ]
+      ],
+      "extra": {"at": 6, "type": "echo", "mult": 0.6, "after": 30, "set": {"charge": 10}, "text": "창이 한 번 더 날아감 (위력 {mult}%)"}
     },
     "moonAssassin": {
       "3": [
         {"key": "splash", "to": 4.5, "text": "X 베기 주위 {from} → {to}칸"}
       ],
       "6": [
+        {"key": "mult", "to": 40, "text": "X 베기 위력 ×{from} → ×{to}"},
         {"key": "splash", "to": 6, "text": "X 베기 주위 {from} → {to}칸"},
         {"key": "range", "to": 20, "text": "표식 사거리 {from} → {to}칸"}
       ]
@@ -112,6 +117,7 @@
         {"key": "range", "to": 22, "text": "사거리 {from} → {to}칸"}
       ],
       "6": [
+        {"key": "mult", "to": 40, "text": "검기 위력 ×{from} → ×{to}"},
         {"key": "width", "to": 4.4, "text": "검기 폭 {from} → {to}칸"},
         {"key": "range", "to": 28, "text": "사거리 {from} → {to}칸"}
       ]
@@ -122,6 +128,7 @@
         {"key": "cross", "to": 4, "text": "십자 {from} → {to}칸"}
       ],
       "6": [
+        {"key": "mult", "to": 20, "text": "베기 위력 ×{from} → ×{to}"},
         {"key": "length", "to": 18, "text": "내려찍기 {from} → {to}칸"},
         {"key": "cross", "to": 5, "text": "십자 {from} → {to}칸"},
         {"key": "width", "to": 3.2, "text": "폭 {from} → {to}칸"},
@@ -135,6 +142,7 @@
         {"key": "slowTicks", "to": 80, "div": 20, "text": "얼음 구속 {from} → {to}초"}
       ],
       "6": [
+        {"key": "mult", "to": 40, "text": "원소 검기 위력 ×{from} → ×{to}"},
         {"key": "width", "to": 3.2, "text": "검기 폭 {from} → {to}칸"},
         {"key": "range", "to": 24, "text": "사거리 {from} → {to}칸"},
         {"key": "chain", "to": 9, "text": "번개 연쇄 {from} → {to}칸"}
@@ -156,6 +164,7 @@
         {"key": "radius", "to": 9.5, "text": "붕괴 {from} → {to}칸"}
       ],
       "6": [
+        {"key": "crush", "to": 28, "text": "붕괴 위력 ×{from} → ×{to}"},
         {"key": "pull", "to": 13, "text": "빨아들이는 범위 {from} → {to}칸"},
         {"key": "radius", "to": 11, "text": "붕괴 {from} → {to}칸"},
         {"key": "hits", "to": 8, "text": "띄워 치기 {from} → {to}번"}

@@ -114,7 +114,7 @@ public final class RuneBreakTest {
         near(RuneBreak.def(meteor, 6).num("radius"), 9, "meteor 6: radius 9");
         near(RuneBreak.def(meteor, 6).num("fire"), 12, "meteor 6: fire 12");
         near(RuneBreak.def(meteor, 6).num("lift"), 1.3, "meteor 6: lift 1.3");
-        near(RuneBreak.def(meteor, 6).num("mult"), 32, "mult stays (the power P carries the coef)");
+        near(RuneBreak.def(meteor, 3).num("mult"), 32, "mult stays at 3 (the power P carries the coef)");
         check(RuneBreak.def(meteor, 6).str("fn").equals("meteor") && RuneBreak.def(meteor, 6).str("name").equals("메테오"), "other keys kept");
         Runes.Rune angel = rune("holy", "transcend");
         near(RuneBreak.def(angel, 6).num("heal"), 0.03 * 1.6, "archangel 6 heal × 1.6");
@@ -132,11 +132,49 @@ public final class RuneBreakTest {
         check(lv != meteor && lv.id().equals(meteor.id()) && lv.grade().equals("transcend") && lv.cd() == meteor.cd(), "leveled keeps the id · grade · cd");
         near(Runes.runeTotalMult(RuneBreak.def(rune("vit", "transcend"), 3)), 2.5 * 10, "undying 3: 10 pulses");
 
+        // 6돌 더 세게 (위력 계수)
+        near(RuneBreak.def(meteor, 6).num("mult"), 40, "meteor 6: mult 40");
+        near(RuneBreak.def(meteor, 5).num("mult"), 32, "meteor 5: mult 32");
+        near(RuneBreak.def(rune("gravity", "transcend"), 6).num("crush"), 28, "blackHole 6: crush 28");
+        near(RuneBreak.def(rune("spellblade", "transcend"), 6).num("mult"), 20, "spellblade 6: mult 20");
+        near(Runes.runeTotalMult(RuneBreak.def(meteor, 6)), 40, "meteor 6 lore total 40");
+
+        // 단계 효과 (extra): 천붕 · 뇌신의 창 — 한 번 더 (echo)
+        Runes.Rune fall = rune("str", "transcend");
+        Runes.Rune spear = rune("storm", "transcend");
+        int extras = 0;
+        for (String fam : Runes.FAMILY_ORDER) {
+            Runes.Rune t = rune(fam, "transcend");
+            RuneBreak.Extra ex = RuneBreak.extra(t.def().str("fn"));
+            if (ex == null) continue;
+            extras++;
+            String fn = t.def().str("fn");
+            check("echo".equals(ex.type()), fn + " extra type " + ex.type());
+            check(RuneBreak.tiers().contains(ex.at()), fn + " extra at a tier " + ex.at());
+            check(ex.mult() > 0 && ex.mult() <= 1 && ex.after() > 0, fn + " extra mult / after");
+            for (String k : ex.set().keySet()) check(t.def().numOrNull(k) != null, fn + " echo set key " + k + " is in the rune");
+            check(!RuneBreak.extraText(ex).contains("{"), fn + " extra text " + RuneBreak.extraText(ex));
+            check(RuneBreak.extraFor(t, ex.at() - 1) == null && RuneBreak.extraFor(t, ex.at()) == ex, fn + " extra from " + ex.at());
+        }
+        check(extras == 2, "two echo runes " + extras);
+        check(RuneBreak.extraFor(rune("str", "hero"), 6) == null, "not for hero");
+        RuneBreak.Extra fx6 = RuneBreak.extraFor(fall, 6);
+        check(fx6 != null && Math.abs(fx6.mult() - 0.6) < 1e-9 && fx6.after() == 34, "heavenFall echo 60% after 34");
+        near(RuneBreak.echoDef(fall, 6).num("delay"), 14, "heavenFall echo delay 14");
+        near(RuneBreak.echoDef(fall, 6).num("radius"), 9, "heavenFall echo keeps the 6 radius");
+        near(RuneBreak.echoDef(spear, 6).num("charge"), 10, "thunderSpear echo charge 10");
+        check(RuneBreak.echoDef(meteor, 6) == RuneBreak.def(meteor, 6) || RuneBreak.echoDef(meteor, 6).num("mult") == 40, "no echo: plain def");
+        check(RuneBreak.extraText(fx6).equals("검이 한 번 더 떨어짐 (지금 겨눈 곳 · 위력 60%)"), "echo text " + RuneBreak.extraText(fx6));
+        List<String> fallLines = RuneBreak.tierLines(fall, 6, false).stream().map(RuneBreakTest::plain).toList();
+        check(fallLines.stream().anyMatch(s -> s.trim().equals("◆ 검이 한 번 더 떨어짐 (지금 겨눈 곳 · 위력 60%)")), "extra line in the 6 tier " + fallLines);
+        check(RuneBreak.tierLines(fall, 3, false).stream().anyMatch(s -> s.startsWith("§r§8     ◆")), "extra line dark below 6");
+
         // 글자
         check(RuneBreak.stars(2).equals("★★☆☆☆☆") && RuneBreak.stars(6).equals("★★★★★★"), "stars " + RuneBreak.stars(2));
         check(RuneBreak.tag(0).isEmpty() && RuneBreak.tag(3).equals("[3돌]"), "tag " + RuneBreak.tag(3));
         check(RuneBreak.changeTexts(meteor, 3).equals(List.of("운석 범위 6 → 7.5칸", "불붙음 5 → 8초")), "meteor 3 text " + RuneBreak.changeTexts(meteor, 3));
-        check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "더 높이 띄움")), "meteor 6 text " + RuneBreak.changeTexts(meteor, 6));
+        check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 위력 ×32 → ×40", "운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "더 높이 띄움")),
+                "meteor 6 text " + RuneBreak.changeTexts(meteor, 6));
         check(RuneBreak.changeTexts(rune("axe", "transcend"), 3).contains("받는 피해 -25 → -30%"), "berserker % " + RuneBreak.changeTexts(rune("axe", "transcend"), 3));
         check(RuneBreak.changeTexts(rune("dex", "transcend"), 3).contains("멈춤 1.5 → 2초"), "shadowless sec " + RuneBreak.changeTexts(rune("dex", "transcend"), 3));
         check(RuneBreak.changeTexts(rune("spirit", "transcend"), 3).contains("정령마다 2 → 3번"), "spirits per spirit " + RuneBreak.changeTexts(rune("spirit", "transcend"), 3));
