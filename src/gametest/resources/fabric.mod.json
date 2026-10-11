@@ -22,6 +22,8 @@
       "mmorpg.fabric.test.RpgKrakenTests",
       "mmorpg.fabric.test.RpgWormTests",
       "mmorpg.fabric.test.RpgJormungandrTests",
+      "mmorpg.fabric.test.RpgNidhoggTests",
+      "mmorpg.fabric.test.RpgSkollTests",
       "mmorpg.fabric.test.RpgMonsterTests",
       "mmorpg.fabric.test.RpgTreeTests"
     ],
@@ -41,6 +43,8 @@
       "mmorpg.fabric.test.RpgKrakenGallery",
       "mmorpg.fabric.test.RpgWormGallery",
       "mmorpg.fabric.test.RpgJormungandrGallery",
+      "mmorpg.fabric.test.RpgNidhoggGallery",
+      "mmorpg.fabric.test.RpgSkollGallery",
       "mmorpg.fabric.test.RpgMonsterGallery",
       "mmorpg.fabric.test.RpgTreeGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
