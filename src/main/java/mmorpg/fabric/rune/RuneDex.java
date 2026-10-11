@@ -376,8 +376,8 @@ final class RuneDex {
                 }
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) <= 0) return;
                 // 8단계 돌파 (3 · 6돌 — 멈춤이 꽂힌 뒤에도 남음): 머리 위에 멈춘 시간 문양 (돌지 않음) — 풀릴 때까지
-                int still = freeze - delay - (ii % 3);
-                if (still > 2) SkillFx.rune(level, V.up(e.getEyePosition(), 0.5), Opt.of("size", 0.5, "life", still / 20.0, "color", STILL, "alpha", 0.95,
+                int stillTicks = freeze - delay - (ii % 3);
+                if (stillTicks > 2) SkillFx.rune(level, V.up(e.getEyePosition(), 0.5), Opt.of("size", 0.5, "life", stillTicks / 20.0, "color", STILL, "alpha", 0.95,
                         "rate", 0.0, "spin", ii * 37.0));
                 SkillFx.fx(level, "rpg:slash_x", V.add(at, v, -0.2), Opt.of("dir", v, "size", 1.6, "life", 0.3, "color", white, "alpha", 1.0));
                 RuneKit.rfx2(level, "wave", V.add(at, v, -0.3), Opt.of("size", 1.25, "life", 0.3, "spin", (double) ((ii * 47) % 180), "grow", 0.3, "fade", 0.5),
