@@ -460,3 +460,4 @@ net.minecraft.world.phys.Vec3
 net.minecraft.world.phys.shapes.CollisionContext
 net.minecraft.world.phys.shapes.Shapes
 net.minecraft.world.phys.shapes.VoxelShape
+net.minecraft.client.gui.Hud

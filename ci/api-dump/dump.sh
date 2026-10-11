@@ -48,4 +48,5 @@ probe net.minecraft.world.entity.LivingEntity 'tickDeath|die|getMaxHealth|setHea
 probe net.minecraft.world.entity.Mob 'checkDespawn|removeWhenFarAway|requiresCustomPersistence|doHurtTarget|registerGoals|serverAiStep|isWithinHome|setHomeTo|getHomePosition|getHomeRadius'
 probe net.minecraft.world.entity.ai.attributes.RangedAttribute 'sanitizeValue|getMaxValue'
 probe net.minecraft.client.renderer.entity.EntityRenderer 'submit|shouldRender|extractRenderState|submitNameTag|getNameTag'
+probe net.minecraft.client.gui.Hud 'extractTitle|setTitle|setSubtitle|setTimes|resetTitleTimes|clearTitles'
 ls -la "$OUT/calls"
