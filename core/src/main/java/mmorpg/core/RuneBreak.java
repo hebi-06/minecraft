@@ -29,9 +29,9 @@ public final class RuneBreak {
 
     /**
      * 초월 룬 한 단계의 바뀌는 값 하나: 룬 정의의 key 를 to 로. 글자 (text — 없으면 줄 없음) 의 {from} · {to} = 앞 단계 값 · 바뀐 값 ÷ div
-     * (틱 → 초는 20, 비율 → % 는 0.01)
+     * (틱 → 초는 20, 비율 → % 는 0.01). base = 룬 정의에 없는 값을 새로 붙일 때의 원래 값 (예: 기절 0 → 1초 · 연쇄 1 → 2명 — 없으면 null)
      */
-    public record Change(String key, double to, double div, String text) {}
+    public record Change(String key, double to, double div, String text, Double base) {}
 
     /**
      * 연출 단계 (at 돌부터): 이름 · 풀이, 하늘빛 시간 배율 (skyTicks) · 하늘빛 거리 배율 (skyDist — 작을수록 짙음), 번쩍임 더 머묾 (flashHold 초) ·
@@ -219,6 +219,7 @@ public final class RuneBreak {
         for (Change c : changes(fn, tier)) {
             if (c.text() == null || c.text().isEmpty()) continue;
             Double from = cur.containsKey(c.key()) ? cur.get(c.key()) : r.def().numOrNull(c.key());
+            if (from == null) from = c.base();
             out.add(c.text().replace("{from}", from == null ? "?" : num(from, c.div())).replace("{to}", num(c.to(), c.div())));
         }
         return out;
@@ -337,7 +338,7 @@ public final class RuneBreak {
             for (String t : byTier.keys()) {
                 if (t.isEmpty() || !t.chars().allMatch(Character::isDigit)) continue; // "extra" 등
                 List<Change> list = new ArrayList<>();
-                for (Obj c : byTier.objsOrNull(t)) list.add(new Change(c.str("key"), c.num("to"), c.numOr("div", 1), c.strOr("text", "")));
+                for (Obj c : byTier.objsOrNull(t)) list.add(new Change(c.str("key"), c.num("to"), c.numOr("div", 1), c.strOr("text", ""), c.numOrNull("base")));
                 m.put(Integer.parseInt(t), List.copyOf(list));
             }
             tr.put(fn, Collections.unmodifiableMap(m));

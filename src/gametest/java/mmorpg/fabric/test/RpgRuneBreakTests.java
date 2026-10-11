@@ -135,10 +135,10 @@ public final class RpgRuneBreakTests {
 
     /**
      * 초월 룬 (불사의 맹약 — 쓰면 바로 하늘빛): 0 · 2돌은 화면 색 연출 없음, 3돌 하늘빛 (테두리 빛 없음), 6돌 하늘빛 + 테두리 빛, 룬 아이템을 쓰면 그 아이템의 단계,
-     * 메테오 2돌 + 0돌 → 3돌 돌파 때 그 룬의 하늘빛을 미리 보여 줌, 천붕 6돌은 검이 한 번 더 떨어짐 (위력 60% — 앞 10칸의 과녁).
+     * 메테오 2돌 + 0돌 → 3돌 돌파 때 그 룬의 하늘빛을 미리 보여 줌, 천붕 6돌은 검이 한 번 더 떨어짐 (위력 60% — 앞 10칸의 과녁), 메테오 6돌은 맞은 적 기절.
      * 하늘빛은 둘레 사람 모두에게 가므로 이 시험 하나에서 차례로.
      */
-    @GameTest(maxTicks = 160)
+    @GameTest(maxTicks = 220)
     public void transcendScreenColorByLevel(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
         RpgPlayers.setStat(sp, "vit", 30);
@@ -198,8 +198,18 @@ public final class RpgRuneBreakTests {
             h.runAfterDelay(second + 4, () -> {
                 double d2 = TestDummies.dealt(z) - d1[0];
                 h.assertTrue(Math.abs(d2 - d1[0] * ex.mult()) < 1e-3 * Math.max(1, d1[0]), "second sword = 60% of the first: " + d2 + " vs " + d1[0]);
-                RuneSystem.forget(sp.getUUID());
-                RpgGearTests.done(h, sp);
+                // 메테오 6돌: 맞은 적 기절 (구속 X · 1초) — 5돌은 기절 없음
+                z.removeAllEffects();
+                Runes.Rune met = rune("int", "transcend");
+                RuneCast.resetCooldowns(sp);
+                h.assertTrue(RuneCast.castRune(sp, met, false, 6), "meteor 6 cast");
+                int land = (int) RuneBreak.def(met, 6).num("delay");
+                h.runAfterDelay(land + 2, () -> {
+                    net.minecraft.world.effect.MobEffectInstance slow = z.getEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
+                    h.assertTrue(slow != null && slow.getAmplifier() >= 10, "meteor 6 stuns: " + slow);
+                    RuneSystem.forget(sp.getUUID());
+                    RpgGearTests.done(h, sp);
+                });
             });
         });
     }

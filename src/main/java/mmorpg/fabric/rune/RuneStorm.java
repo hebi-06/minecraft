@@ -401,16 +401,20 @@ final class RuneStorm {
                     List<LivingEntity> fresh = new ArrayList<>();
                     for (LivingEntity x : Kit.around(sp, e.position(), k.num("chainRange"), 3)) if (!hit.contains(x.getUUID())) fresh.add(x);
                     if (fresh.isEmpty()) return;
-                    LivingEntity next = RuneKit.nearestTo(fresh, e.position()).get(0);
-                    hit.add(next.getUUID());
-                    Tasks.later(3, () -> {
-                        if (sp.isRemoved() || next.isRemoved()) return;
-                        RuneKit.zap(level, at, Kit.bodyPoint(next), glow, core, 0.14, 0.3);
-                        if (RuneKit.runeHit(sp, next, P, k.num("chainMult"), r.stat()) > 0) {
-                            RuneKit.stun(next, stunTicks, glow, true);
-                            SkillFx.burst(level, Kit.bodyPoint(next), glow, 1.0, 0.24);
-                        }
-                    });
+                    List<LivingEntity> order = RuneKit.nearestTo(fresh, e.position());
+                    int chains = (int) Math.max(1, k.numOr("chainCount", 1)); // 8단계 3돌: 연쇄 2명
+                    for (int ci = 0; ci < Math.min(chains, order.size()); ci++) {
+                        LivingEntity next = order.get(ci);
+                        hit.add(next.getUUID());
+                        Tasks.later(3 + ci * 2, () -> {
+                            if (sp.isRemoved() || next.isRemoved()) return;
+                            RuneKit.zap(level, at, Kit.bodyPoint(next), glow, core, 0.14, 0.3);
+                            if (RuneKit.runeHit(sp, next, P, k.num("chainMult"), r.stat()) > 0) {
+                                RuneKit.stun(next, stunTicks, glow, true);
+                                SkillFx.burst(level, Kit.bodyPoint(next), glow, 1.0, 0.24);
+                            }
+                        });
+                    }
                 });
             }
             RuneKit.later(Math.round((len / speed) * 20), () -> {

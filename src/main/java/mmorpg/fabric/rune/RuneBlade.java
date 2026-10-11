@@ -374,6 +374,7 @@ final class RuneBlade {
                 RuneKit.later(Math.max(0, Math.round((h.t() / speed) * 20)), () -> {
                     if (sp.isRemoved() || e.isRemoved()) return;
                     if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
+                        if (k.numOr("stun", 0) > 0) RuneKit.stun(e, (int) k.num("stun"), glow, RuneKit.fxQuota("splitStun", 6)); // 8단계 6돌: 기절
                         if (RuneKit.fxQuota("splitHit", 4)) {
                             // 한 틱에 4명까지 그림 (줄지어 선 적 — 파티클 예산, 피해 · 밀침은 모두)
                             Vec3 at = Kit.bodyPoint(e);

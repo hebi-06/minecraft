@@ -474,7 +474,10 @@ final class RuneSpellblade {
             for (Kit.LineHit h : crossHits) {
                 LivingEntity e = h.e();
                 if (!hit.add(e.getUUID())) continue;
-                if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) RuneKit.knock(e, V.UP, 0, 0.45);
+                if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) {
+                    RuneKit.knock(e, V.UP, 0, 0.45);
+                    if (k.numOr("stun", 0) > 0) RuneKit.stun(e, (int) k.num("stun"), glow, RuneKit.fxQuota("releaseStun", 8)); // 8단계 6돌: 기절
+                }
             }
         });
         return true;

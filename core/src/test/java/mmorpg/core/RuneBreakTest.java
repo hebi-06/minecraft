@@ -88,8 +88,10 @@ public final class RuneBreakTest {
                 check(!RuneBreak.changeTexts(t, tier).isEmpty(), fn + " " + tier + " has text");
                 for (RuneBreak.Change c : cs) {
                     Double base = t.def().numOrNull(c.key());
-                    check(base != null, fn + " " + tier + " key " + c.key() + " is in the rune");
-                    check(base != null && c.to() > base, fn + " " + tier + " " + c.key() + " grows " + base + " → " + c.to());
+                    check(base != null || c.base() != null, fn + " " + tier + " key " + c.key() + " is in the rune (or has a base)");
+                    check(base == null || c.base() == null, fn + " " + tier + " key " + c.key() + ": base only for new keys");
+                    double from = base != null ? base : c.base() != null ? c.base() : Double.NaN;
+                    check(c.to() > from, fn + " " + tier + " " + c.key() + " grows " + from + " → " + c.to());
                     check(c.div() > 0, fn + " div");
                 }
                 for (String s : RuneBreak.changeTexts(t, tier)) check(!s.contains("{") && !s.contains("?"), fn + " text filled: " + s);
@@ -139,6 +141,13 @@ public final class RuneBreakTest {
         near(RuneBreak.def(rune("spellblade", "transcend"), 6).num("mult"), 20, "spellblade 6: mult 20");
         near(Runes.runeTotalMult(RuneBreak.def(meteor, 6)), 40, "meteor 6 lore total 40");
 
+        // 새로 붙는 값 (base): 메테오 6돌 기절 0 → 1초, 뇌신의 창 3돌 연쇄 1 → 2명
+        near(RuneBreak.def(meteor, 6).num("stun"), 20, "meteor 6 stun 20 ticks");
+        check(RuneBreak.def(meteor, 5).numOrNull("stun") == null, "meteor 5: no stun");
+        check(RuneBreak.changeTexts(meteor, 6).contains("맞은 적 기절 1초"), "meteor stun text " + RuneBreak.changeTexts(meteor, 6));
+        near(RuneBreak.def(rune("storm", "transcend"), 3).num("chainCount"), 2, "thunderSpear 3 chains 2");
+        check(RuneBreak.changeTexts(rune("storm", "transcend"), 3).contains("연쇄 1 → 2명"), "chain text " + RuneBreak.changeTexts(rune("storm", "transcend"), 3));
+
         // 단계 효과 (extra): 천붕 · 뇌신의 창 — 한 번 더 (echo)
         Runes.Rune fall = rune("str", "transcend");
         Runes.Rune spear = rune("storm", "transcend");
@@ -173,7 +182,7 @@ public final class RuneBreakTest {
         check(RuneBreak.stars(2).equals("★★☆☆☆☆") && RuneBreak.stars(6).equals("★★★★★★"), "stars " + RuneBreak.stars(2));
         check(RuneBreak.tag(0).isEmpty() && RuneBreak.tag(3).equals("[3돌]"), "tag " + RuneBreak.tag(3));
         check(RuneBreak.changeTexts(meteor, 3).equals(List.of("운석 범위 6 → 7.5칸", "불붙음 5 → 8초")), "meteor 3 text " + RuneBreak.changeTexts(meteor, 3));
-        check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 위력 ×32 → ×40", "운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "더 높이 띄움")),
+        check(RuneBreak.changeTexts(meteor, 6).equals(List.of("운석 위력 ×32 → ×40", "운석 범위 7.5 → 9칸", "불붙음 8 → 12초", "더 높이 띄움", "맞은 적 기절 1초")),
                 "meteor 6 text " + RuneBreak.changeTexts(meteor, 6));
         check(RuneBreak.changeTexts(rune("axe", "transcend"), 3).contains("받는 피해 -25 → -30%"), "berserker % " + RuneBreak.changeTexts(rune("axe", "transcend"), 3));
         check(RuneBreak.changeTexts(rune("dex", "transcend"), 3).contains("멈춤 1.5 → 2초"), "shadowless sec " + RuneBreak.changeTexts(rune("dex", "transcend"), 3));

@@ -397,10 +397,13 @@ final class RuneInt {
             SkillFx.play(level, "firework.large_blast", g, 0.8, 1);
             SkillFx.play(level, "item.trident.thunder", g, 0.5, 0.8);
             RuneKit.shakeAround(level, g, 20, 0.45, 0.45);
+            int stun = (int) k.numOr("stun", 0); // 8단계 6돌: 맞은 적 기절
+            int marks = 0;
             for (LivingEntity e : Kit.around(sp, g, radius, 4)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                     RuneKit.knock(e, V.sub(e.position(), g), 0.6, k.num("lift"));
                     RuneKit.burn(e, k.num("fire"));
+                    if (stun > 0) RuneKit.stun(e, stun, glow, marks++ < 12);
                 }
             }
         });
