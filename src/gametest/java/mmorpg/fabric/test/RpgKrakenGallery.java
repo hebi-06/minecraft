@@ -474,6 +474,8 @@ public final class RpgKrakenGallery implements FabricClientGameTest {
     /** 소용돌이: 물살 무늬 · 가운데 7칸 붉은 원 · 0.5초마다 끌려감 → 끝에 짓누름 (바깥으로 달아난 뒤) */
     private void whirl(ClientGameTestContext ctx, TestServerContext server) {
         refresh(server);
+        // 앞 장면의 먹물 웅덩이를 치움 — 웅덩이 피해 (1초마다, 보스가 때린 것) 는 보스 반대쪽으로 밀어 (애드온 applyDamage 와 같음) 끌려가는 것을 가림
+        server.runOnServer(s -> BossKraken.mem(enc()).puddles.clear());
         chase(ctx, server, 0, 12, 0, 0, 3, 10);
         double z0 = server.computeOnServer(s -> player(s).getZ());
         long t0 = server.computeOnServer(s -> {
