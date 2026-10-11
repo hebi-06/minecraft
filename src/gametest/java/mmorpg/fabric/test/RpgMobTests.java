@@ -10,7 +10,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 5단계 게임 시험 (서버) — 애드온 엔티티 바탕: 26종 등록 · 행동 팩 수치 (체력 · 크기 · 이동 · 충돌 상자, 보스 체력은 자바 상한 1024 를 넘음),
+ * 5단계 게임 시험 (서버) — 애드온 엔티티 바탕: 27종 등록 (6단계 탈것 포함) · 행동 팩 수치 (체력 · 크기 · 이동 · 충돌 상자, 보스 체력은 자바 상한 1024 를 넘음),
  * 속성 (범위 · 기본값 · 동기화 글자), 튼 동작 (컨트롤러마다 하나), 사건 (rpg:hold · rpg:release 로 이동 빠르기), 소환 알.
  */
 public final class RpgMobTests {
@@ -24,7 +24,7 @@ public final class RpgMobTests {
 
     @GameTest(maxTicks = 20)
     public void mobsRegistered(GameTestHelper h) {
-        h.assertTrue(RpgEntities.types().size() == 26, "types " + RpgEntities.types().size());
+        h.assertTrue(RpgEntities.types().size() == 27, "types " + RpgEntities.types().size());
         h.assertTrue(RpgEntities.eggs().size() == 6, "eggs " + RpgEntities.eggs().size());
         for (MobData.Def d : MobData.all().values()) {
             BedrockMob e = spawn(h, d.id());

@@ -438,13 +438,19 @@ public final class DuelSystem {
 
     /** /pvp 닉네임 */
     public static void requestDuel(ServerPlayer player, String name) {
-        MinecraftServer s = server(player);
         Object[] found = findPlayer(player, name);
         ServerPlayer target = (ServerPlayer) found[0];
         if (target == null) {
             say(player, found[1] != null ? (String) found[1] : "§c찾을 수 없습니다.");
             return;
         }
+        requestTo(player, target);
+    }
+
+    /** 결투 신청 (찾은 사람에게 — 결투 창 · 시험도 이것으로) */
+    public static void requestTo(ServerPlayer player, ServerPlayer target) {
+        MinecraftServer s = server(player);
+        server = s;
         if (target == player) {
             say(player, "§c자기 자신에게는 결투를 신청할 수 없습니다.");
             return;
@@ -700,7 +706,7 @@ public final class DuelSystem {
                 say(player, "§7그 사람이 나갔습니다.");
                 return;
             }
-            requestDuel(player, nameOf(t));
+            requestTo(player, t);
         });
     }
 

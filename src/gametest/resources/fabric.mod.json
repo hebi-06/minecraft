@@ -27,7 +27,9 @@
       "mmorpg.fabric.test.RpgYmirTests",
       "mmorpg.fabric.test.RpgSurtrTests",
       "mmorpg.fabric.test.RpgMonsterTests",
-      "mmorpg.fabric.test.RpgTreeTests"
+      "mmorpg.fabric.test.RpgTreeTests",
+      "mmorpg.fabric.test.RpgMountTests",
+      "mmorpg.fabric.test.RpgDuelTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",

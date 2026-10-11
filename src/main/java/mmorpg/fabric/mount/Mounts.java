@@ -413,8 +413,15 @@ public final class Mounts {
             UUID pid = en.getKey();
             Active a = en.getValue();
             RpgMount e = a.e;
-            if (e.isRemoved()) {
-                ACTIVE.remove(pid); // 청크가 내려가 사라짐 · /kill 등
+            if (e.isRemoved() || !e.isAlive()) {
+                // 청크가 내려가 사라짐 · /kill 등 (쓰러진 탈것은 탄 사람을 내려 놓고 바로 치움 — 다시 부르기 대기 없음)
+                if (!e.isRemoved()) {
+                    e.ejectPassengers();
+                    e.discard();
+                }
+                ACTIVE.remove(pid);
+                ServerPlayer p = server.getPlayerList().getPlayer(pid);
+                if (p != null) sync(p);
                 continue;
             }
             ServerPlayer p = server.getPlayerList().getPlayer(pid);
@@ -435,7 +442,7 @@ public final class Mounts {
 
     /** 부른 기록이 없는 탈것 (탈것 스스로 매 틱): 탄 플레이어가 있으면 그 사람의 탈것으로 기록, 없으면 치움 (/summon · 오류로 남은 것) */
     static void strayCheck(RpgMount m) {
-        if (m.isRemoved() || m.tickCount < 5) return;
+        if (m.isRemoved() || !m.isAlive() || m.tickCount < 5) return;
         for (Active a : ACTIVE.values()) if (a.e == m) return;
         if (m.getFirstPassenger() instanceof ServerPlayer rider) {
             Active old = ACTIVE.get(rider.getUUID());
