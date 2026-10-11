@@ -681,7 +681,10 @@ public final class RpgSurtrTests {
                     h.assertTrue(shard >= 2 && shard <= 4, "laevateinn shard " + shard);
                     h.assertTrue(p1.totalExperience - xp0 == 200, "xp " + (p1.totalExperience - xp0));
                     h.assertTrue(RpgGearTests.countIn(p2, RuneItems.ADV_TICKET) >= 1, "p2 rewarded too");
-                    h.assertTrue(killed.size() == 1 && KEY.equals(killed.get(0)[0]) && ((List<?>) killed.get(0)[1]).containsAll(List.of(p1, p2)), "kill hook (quests) surtr");
+                    // 훅은 서버 전체 (같이 도는 다른 보스 시험의 처치도 옴) — 수르트 것만
+                    List<Object[]> mine = new ArrayList<>();
+                    for (Object[] k : killed) if (KEY.equals(k[0])) mine.add(k);
+                    h.assertTrue(mine.size() == 1 && ((List<?>) mine.get(0)[1]).containsAll(List.of(p1, p2)), "kill hook (quests) surtr " + mine.size() + " of " + killed.size());
                     h.assertTrue("ready".equals(Quests.statusOf(p1, Quests.getQuest(legend))), "legend quest ready " + Quests.statusOf(p1, Quests.getQuest(legend)));
                     h.assertTrue(a.cooldownUntil > System.currentTimeMillis() + 1_790_000, "cooldown 30 min " + (a.cooldownUntil - System.currentTimeMillis()));
                     LOG.info("[surtr-test] OK kill: board {} · note {} · emerald {} · adv ticket {} · heart {} · shard {} · hook · legend ready · 30 min", board, note, em, adv, heart, shard);
