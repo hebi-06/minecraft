@@ -110,7 +110,9 @@ public final class Bosses {
     static final List<BossModule> MODULES = List.of(
             new BossScarecrow(),
             new BossScorpions(),
-            new BossKraken());
+            new BossKraken(),
+            new BossWorm(),
+            new BossJormungandr());
 
     /** 보스 키 → 모듈 */
     static final Map<String, BossModule> MODS = new LinkedHashMap<>();
