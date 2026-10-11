@@ -483,3 +483,7 @@ org.joml.Matrix3x2f
 net.minecraft.client.gui.components.Tooltip
 net.minecraft.world.entity.ai.attributes.AttributeInstance
 net.minecraft.network.chat.ClickEvent$RunCommand
+net.minecraft.world.item.component.CustomModelData
+net.minecraft.client.renderer.item.CompositeModel$Unbaked
+net.minecraft.client.renderer.item.RangeSelectItemModel$Unbaked
+net.minecraft.client.renderer.item.properties.numeric.CustomModelDataProperty
