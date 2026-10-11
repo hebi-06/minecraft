@@ -12,6 +12,7 @@ import mmorpg.fabric.boss.BossKit;
 import mmorpg.fabric.boss.BossScorpions;
 import mmorpg.fabric.boss.Bosses;
 import mmorpg.fabric.boss.Ticking;
+import mmorpg.fabric.client.TitleFit;
 import mmorpg.fabric.client.bedrock.BedrockRenderer;
 import mmorpg.fabric.client.form.MenuFormScreen;
 import mmorpg.fabric.mob.BedrockMob;
@@ -611,13 +612,16 @@ public final class RpgScorpionsGallery implements FabricClientGameTest {
             return !m.waves.isEmpty() && m.waves.get(0).hit().contains(player(s).getUUID());
         });
         check(hit1, "first ring hits the player standing on the ground");
-        // 첫 고리에 밀려난 자리를 되돌림 → 둘째 고리: 닿기 4틱 전에 점프 (진짜 키)
+        // 첫 고리에 밀려난 자리를 되돌림 → 둘째 고리: 닿기 6틱 전부터 점프 키를 누르고 있음 (진짜 키 — 한 번 누름은 그 틱에 땅에 없으면 (되돌린 뒤 내려앉는 중) 안 뛰어
+        // CI 에서 가끔 맞았음. 누르고 있으면 땅에 닿는 대로 뜀, 한 번 뛰면 약 12틱 공중)
         server.runOnServer(s -> Status.clear(player(s)));
         chase(ctx, server, 8, 7, 8, 0.5, 0, 9);
-        waitUntil(ctx, server, t0 + first + gap + reach - 4);
-        ctx.getInput().pressKey(options -> options.keyJump);
+        waitUntil(ctx, server, t0 + first + gap + reach - 6);
+        ctx.getInput().holdKey(options -> options.keyJump);
         waitUntil(ctx, server, t0 + first + gap + reach);
         shot(ctx, "sc_tremor_jump");
+        waitUntil(ctx, server, t0 + first + gap + reach + 2);
+        ctx.getInput().releaseKey(options -> options.keyJump);
         waitUntil(ctx, server, t0 + first + gap + reach + 6);
         String dodged = server.computeOnServer(s -> {
             BossScorpions.M m = BossScorpions.mem(enc());
@@ -713,6 +717,10 @@ public final class RpgScorpionsGallery implements FabricClientGameTest {
             return em >= 12 ? "ok " + em : "emeralds " + em;
         });
         check(r.startsWith("ok"), "both down → rewards + 15 min cooldown (" + r + ")");
+        // 긴 처치 제목 ("사막 전갈 · 바위 전갈 처치!" — 4배면 화면보다 넓음) 은 화면에 맞게 줄여 그림 (TitleFit)
+        String titleNow = ctx.computeOnClient(mc -> TitleFit.titleText());
+        float fit = ctx.computeOnClient(mc -> TitleFit.lastFactor());
+        check(titleNow.contains("처치") && fit < 0.999F, "long kill title shrunk to fit the screen (" + titleNow + " x" + fit + ")");
         shot(ctx, "sc_kill");
         camera(ctx, CameraType.FIRST_PERSON);
         camDist(ctx, server, 4);

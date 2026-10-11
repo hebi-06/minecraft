@@ -619,10 +619,11 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         });
         boolean on = server.computeOnServer(s -> mem().inferno != null && mem().inferno.gauge != null && !mem().inferno.gauge.isRemoved());
         check(on, "inferno: gauge prop (boss bar) spawned");
-        waitUntil(ctx, server, t0 + 44);
+        // 달아오름 = (지금 - t0) / inferno.time (240틱), 0.05 넘게 바뀔 때만 보냄 → t0 + 66 이면 0.25 를 받음 (t0 + 44 는 0.18 → 보낸 값 0.15 라 늘 못 넘었음)
+        waitUntil(ctx, server, t0 + 66);
         int id = bossId(server);
         double heat = clientProp(ctx, id, "rpg:heat");
-        check(heat > 0.2, "client sees rpg:heat " + heat);
+        check(heat >= 0.2, "client sees rpg:heat " + heat);
         shot(ctx, "su_inferno");
         // 피해로 막대를 반쯤 깎음
         double half = server.computeOnServer(s -> {
@@ -717,7 +718,13 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         for (int i = 0; i < 120 && server.computeOnServer(s -> mem().ragnarok != null); i++) ctx.waitTick();
         boolean melted = server.computeOnServer(s -> mem().crystals.get(0).melted && level(s).getBlockState(BlockPos.containing(crystal.x, crystal.y + 1, crystal.z)).isAir());
         check(melted, "the sheltering crystal melted");
-        String clientAir = ctx.computeOnClient(mc -> mc.level.getBlockState(BlockPos.containing(crystal.x, crystal.y + 1, crystal.z)).toString());
+        // 블록 바뀜은 다음 틱들에 클라이언트로 감 — 잠깐 기다림
+        String clientAir = "";
+        for (int i = 0; i < 40; i++) {
+            clientAir = ctx.computeOnClient(mc -> mc.level.getBlockState(BlockPos.containing(crystal.x, crystal.y + 1, crystal.z)).toString());
+            if (clientAir.contains("air")) break;
+            ctx.waitTick();
+        }
         check(clientAir.contains("air"), "client sees the melted crystal (" + clientAir + ")");
         ctx.waitTicks(6);
         shot(ctx, "su_rag_melt");

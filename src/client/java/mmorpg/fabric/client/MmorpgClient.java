@@ -43,6 +43,7 @@ public final class MmorpgClient implements ClientModInitializer {
         mmorpg.fabric.client.form.FormClient.init();
         // 길 안내 화면 칸 (화면 위 가운데 화살표 · 이름 · 거리)
         NavHud.init();
+        TitleFit.init();
         statsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.stats", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
             ClientRpgState.update(payload);
