@@ -158,7 +158,7 @@
 | 데이터 · 계산 | `stat_tree.json` (코어 resources — 나무 · 칸 · 갈래 · 보너스 종류 · 보상 · 상한 · 초기화 비용 · 스탯 룬 뽑기권) · `core.StatTree` (열린 칸 수 · 보너스 합 · 받을 보상 · 비용 · 글자 · 기록 JSON) · `StatTreeTest` (check-core.sh) |
 | 자람 · 보상 | `stattree.StatTrees.refresh` — `RpgPlayers.update` (스탯이 바뀔 때) · 접속 (알림은 2초 뒤) · 다시 태어남에서. 기록 = 플레이어 속성 `rpg:stat_tree` {picks, claimed} (claimed = 보상을 받은 칸 수 — 스탯을 되돌려도 남음) |
 | 보너스 | 공격력 = `RpgCombat.powerOf` (평타 · 스킬 · 반사) · `RuneKit.runeHit` (룬 — 공격력 + 룬 피해), 치명타 확률 = 평타 훅 (`addCritBonusHook`) · `Kit.skillHit`, 치명타 피해 = `RpgCombat.critMultOf`, 최대 체력 = `RpgHealth.maxHpOf`, 받는 피해 = `RpgHealth.onLoss` (방패 · 버프 뒤에 곱함), 이동 속도 = 속성 수정자 `mmorpg:stat_tree_speed`, 재사용 대기 = `RuneCast.cooldownTicks` · `Transcend.castSkill`. 스탯 창 피해 줄 (`StatSheet.withTree`) 에도 |
-| 갈래 · 초기화 | `StatTrees.pick` · `reset` (에메랄드 `Inv.remove`) ← 창 (`RpgNet.StatTreeActionPayload`) · `/stattree pick · reset` · 채팅의 갈래 이름 |
+| 갈래 · 초기화 | `StatTrees.pick` · `reset` (에메랄드 `Inv.remove`) ← 창 (`RpgNet.StatTreeActionPayload`) · `/stattree pick · reset` · 채팅의 갈래 이름. 관리자 `/stattree clear` 도 갈래만 지움 — 어떤 초기화 (갈래 · 스탯 · 관리자) 뒤에도 받은 칸 기록 (claimed) 이 남아 뽑기권을 다시 주지 않음 (사용자 요청, 0.7.1) |
 | 창 | `StatTreeScreen` (탭 · 줄기 · 갈래 · 칸 · 설명 · 확인 창 · 반짝임) · 스탯 창 줄마다 나무 칸 (`StatScreen.treeCenter`) · 서버 → 클라이언트 `RpgNet.StatTreePayload` (JSON — 켜짐 · 기록 · 보너스 합 · 열 탭 · 에메랄드) |
 | 스탯 룬 뽑기권 | `rune.TicketItem` (stat — 계열 고정) · `RuneItems.statTicket` · `RuneGacha.useTicket(sp, TicketItem)` · `Runes.rollRuneOf` (등급 무게는 룬 뽑기권과 같음) · 그림 `tools/stat_tickets.py` · `/runeticket 10 str` |
 

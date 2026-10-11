@@ -200,6 +200,18 @@ public final class RpgStatTreeTests {
         h.getLevel().getServer().getCommands().performPrefixedCommand(sp.createCommandSourceStack(), "stattree pick 민첩 3 2");
         h.assertTrue(Integer.valueOf(1).equals(StatTrees.state(sp).picksOf("dex").get(2)), "명령으로 바람걸음: " + StatTrees.state(sp).picksOf("dex"));
         h.getLevel().getServer().getCommands().performPrefixedCommand(sp.createCommandSourceStack(), "스탯트리 info");
+        // 관리자 초기화 (/stattree clear): 갈래만 지우고 받은 칸 기록은 그대로 — 스탯을 다시 찍어도 뽑기권을 다시 주지 않음
+        int strTickets = count(sp, RuneItems.statTicket("str"));
+        int vitTickets = count(sp, RuneItems.statTicket("vit"));
+        int runeTickets = count(sp, RuneItems.TICKET);
+        h.assertTrue(StatTrees.clear(sp) == 3, "갈래 3개 지움 (힘 · 체력 · 민첩)");
+        for (String stat : StatTree.stats()) h.assertTrue(StatTrees.state(sp).picksOf(stat).isEmpty(), stat + " 갈래 없음");
+        h.assertTrue(StatTrees.state(sp).claimedOf("str") == 3 && StatTrees.state(sp).claimedOf("vit") == 6, "받은 칸 기록 그대로");
+        RpgPlayers.reset(sp);
+        RpgPlayers.setStat(sp, "str", 35);
+        RpgPlayers.setStat(sp, "vit", 60);
+        h.assertTrue(count(sp, RuneItems.statTicket("str")) == strTickets && count(sp, RuneItems.statTicket("vit")) == vitTickets
+                && count(sp, RuneItems.TICKET) == runeTickets, "초기화 뒤 다시 찍어도 뽑기권 그대로");
         done(h, sp);
     }
 

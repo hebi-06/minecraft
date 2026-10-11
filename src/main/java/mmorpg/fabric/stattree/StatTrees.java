@@ -288,12 +288,23 @@ public final class StatTrees {
         return null;
     }
 
-    /** 모든 기록 지우기 (관리자 · 시험 — 받은 칸 기록도 지움, 다음 refresh 에 보상을 다시 받음) */
-    public static void clear(ServerPlayer sp) {
-        Props.set(sp, DATA, null);
-        recompute(sp, StatTree.State.EMPTY);
+    /**
+     * 나무 넷의 고른 갈래를 모두 지움 (관리자 — 에메랄드 없이). 받은 칸 기록 (claimed) 은 그대로: 어떤 초기화로도 뽑기권을 다시 주지 않음.
+     * 지운 갈래 수
+     */
+    public static int clear(ServerPlayer sp) {
+        StatTree.State s = state(sp);
+        int n = 0;
+        StatTree.State next = s;
+        for (String stat : StatTree.stats()) {
+            n += s.pickCount(stat);
+            next = next.withoutPicks(stat);
+        }
+        save(sp, next);
+        if (isActive(sp)) recompute(sp, next);
         RpgHealth.refreshMax(sp, false);
         sync(sp, "");
+        return n;
     }
 
     // ------------------------------------------------------------ 알림 · 연출

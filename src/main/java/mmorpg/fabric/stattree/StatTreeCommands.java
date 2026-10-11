@@ -31,7 +31,7 @@ import net.minecraft.server.permissions.Permissions;
  * <li>/stattree [스탯] — 스탯 트리 창 (모드가 없으면 채팅 요약) · /stattree info — 채팅 요약</li>
  * <li>/stattree pick &lt;스탯&gt; &lt;단계&gt; &lt;갈래 1 · 2&gt; — 갈래 고르기 (채팅의 갈래 이름을 누르면 이 명령)</li>
  * <li>/stattree reset &lt;스탯&gt; — 그 나무의 갈래 초기화 (에메랄드)</li>
- * <li>운영자: /stattree clear [대상] — 기록을 모두 지움 (받은 칸 기록도 — 다음에 스탯이 바뀌면 보상을 다시 받음)</li>
+ * <li>운영자: /stattree clear [대상] — 나무 넷의 고른 갈래를 모두 지움 (에메랄드 없이 — 받은 뽑기권 기록은 그대로, 다시 주지 않음)</li>
  * </ul>
  * 스탯: str · dex · int · vit 또는 힘 · 민첩 · 마력 · 체력.
  */
@@ -122,8 +122,10 @@ public final class StatTreeCommands {
     }
 
     private static int clear(CommandContext<CommandSourceStack> c, Collection<ServerPlayer> targets) {
-        for (ServerPlayer p : targets) StatTrees.clear(p);
-        c.getSource().sendSuccess(() -> Component.literal("스탯 트리 기록을 지웠습니다: " + targets.size() + "명"), true);
+        int picks = 0;
+        for (ServerPlayer p : targets) picks += StatTrees.clear(p);
+        int n = picks;
+        c.getSource().sendSuccess(() -> Component.literal("스탯 트리 갈래를 지웠습니다: " + targets.size() + "명 · 갈래 " + n + "개 (받은 뽑기권 기록은 그대로)"), true);
         return targets.size();
     }
 
