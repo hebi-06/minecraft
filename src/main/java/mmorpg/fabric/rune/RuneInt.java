@@ -412,16 +412,16 @@ final class RuneInt {
                 double zr = radius * 0.7;
                 String zoneLife = RuneKit.lifeToken(sp);
                 RuneKit.glowCrack(level, g, zr, red, core, Opt.of("life", 3.2, "fade", 0.3));
-                for (int i = 1; i <= 3; i++) {
-                    RuneKit.later(i * 20, () -> {
+                for (int zi = 1; zi <= 3; zi++) {
+                    RuneKit.later(zi * 20, () -> {
                         if (!RuneKit.sameLife(sp, zoneLife)) return;
                         RuneKit.zonePulse(level, g, red, zr, 0.5);
                         SkillFx.burst(level, V.up(g, 0.3), glow, zr * 0.45, 0.35);
                         SkillFx.sparks(level, V.up(g, 0.6), core, 8, 4);
                         for (int fl = 0; fl < 6; fl++) {
-                            double a = Kit.rand() * Math.PI * 2;
-                            double d = Kit.rand() * zr;
-                            SkillFx.vanilla(level, "minecraft:basic_flame_particle", new Vec3(g.x + Math.cos(a) * d, g.y + 0.2, g.z + Math.sin(a) * d));
+                            double fa = Kit.rand() * Math.PI * 2;
+                            double fd = Kit.rand() * zr;
+                            SkillFx.vanilla(level, "minecraft:basic_flame_particle", new Vec3(g.x + Math.cos(fa) * fd, g.y + 0.2, g.z + Math.sin(fa) * fd));
                         }
                         SkillFx.play(level, "fire.fire", g, 0.8, 0.9);
                         for (LivingEntity e : Kit.around(sp, g, zr, 3)) {
