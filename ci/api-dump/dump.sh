@@ -49,4 +49,10 @@ probe net.minecraft.world.entity.Mob 'checkDespawn|removeWhenFarAway|requiresCus
 probe net.minecraft.world.entity.ai.attributes.RangedAttribute 'sanitizeValue|getMaxValue'
 probe net.minecraft.client.renderer.entity.EntityRenderer 'submit|shouldRender|extractRenderState|submitNameTag|getNameTag'
 probe net.minecraft.client.gui.Hud 'extractTitle|setTitle|setSubtitle|setTimes|resetTitleTimes|clearTitles'
+probe net.minecraft.world.entity.animal.equine.AbstractHorse 'travel|tickRidden|getRiddenInput|getRiddenSpeed|onPlayerJump|handleStartJump|handleStopJump|executeRidersJump|canJump|getJumpCooldown|isJumping|setIsJumping|getControllingPassenger|getPassengerAttachmentPoint|getDismountLocationForPassenger|mobInteract|doPlayerRide|positionRider|getMaxUpStep|maxUpStep|isImmobile'
+probe net.minecraft.world.entity.animal.camel.Camel 'tickRidden|getRiddenInput|getRiddenSpeed|onPlayerJump|executeRidersJump|handleStartJump|handleStopJump|canJump|travel'
+probe net.minecraft.world.entity.LivingEntity 'travelRidden|travel|jumpFromGround|getJumpPower'
+probe net.minecraft.world.level.block.EnderChestBlock 'useWithoutItem|use'
+probe net.minecraft.client.player.LocalPlayer 'aiStep|jumpableVehicle|getJumpRidingScale|sendRidingJump|rideTick'
+probe net.minecraft.server.network.ServerGamePacketListenerImpl 'handlePlayerCommand|handlePlayerInput|handleMoveVehicle'
 ls -la "$OUT/calls"

@@ -461,3 +461,12 @@ net.minecraft.world.phys.shapes.CollisionContext
 net.minecraft.world.phys.shapes.Shapes
 net.minecraft.world.phys.shapes.VoxelShape
 net.minecraft.client.gui.Hud
+net.minecraft.world.entity.PlayerRideableJumping
+net.minecraft.world.entity.PlayerRideable
+net.minecraft.world.entity.animal.camel.Camel
+net.minecraft.world.inventory.PlayerEnderChestContainer
+net.minecraft.world.level.block.EnderChestBlock
+net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket
+net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action
+net.minecraft.world.entity.player.Input
+net.minecraft.client.gui.contextualbar.JumpableVehicleBar
