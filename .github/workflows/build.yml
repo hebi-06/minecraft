@@ -15,7 +15,7 @@ on:
         type: boolean
         default: true
       only:
-        description: '화면 시험 중 이것만 (쉼표: client weapon particle skill rune gear form nav mob arena boss monster tree scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree prod — 세미콜론으로 동시에 돌 묶음, 비우면 모두, none 이면 사진첩 없이)'
+        description: '화면 시험 중 이것만 (쉼표: client weapon particle skill rune gear form nav mob arena boss monster tree scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree runebreak prod — 세미콜론으로 동시에 돌 묶음, 비우면 모두, none 이면 사진첩 없이)'
         type: string
         default: ''
 
@@ -137,9 +137,13 @@ jobs:
           sudo apt-get install -y -qq xvfb libgl1 libgl1-mesa-dri libglx-mesa0 libegl1 mesa-vulkan-drivers libvulkan1 > /dev/null
           mkdir -p ci-out/shots
           N=${{ matrix.name }}
+          # 멈춤 진단: 시간 초과 (45분) 직전 42분에 자바 프로세스마다 스레드 덤프 → ci-out/threads-<묶음>-<pid>.txt (2026-10 ui 묶음이 사진첩 끝에서 한 번 멈춤)
+          ( sleep 2520; for p in $(pgrep -f java || true); do "$JAVA_HOME/bin/jcmd" "$p" Thread.print > "ci-out/threads-$N-$p.txt" 2>&1 || true; done ) &
+          WATCH=$!
           set +e
           timeout 2700 xvfb-run -a -s "-screen 0 1920x1080x24" ./gradlew runClientGameTest --stacktrace --console=plain 2>&1 | tee ci-out/client-$N.txt
           code=${PIPESTATUS[0]}
+          kill $WATCH 2>/dev/null
           set -e
           for f in build/run/clientGameTest/screenshots/*.png; do [ -f "$f" ] && cp "$f" "ci-out/shots/${N}_$(basename "$f")"; done
           cp build/run/clientGameTest/logs/latest.log ci-out/client-$N-latest.log 2>/dev/null || true
