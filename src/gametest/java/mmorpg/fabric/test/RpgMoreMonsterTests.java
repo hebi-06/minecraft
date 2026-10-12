@@ -56,6 +56,11 @@ public final class RpgMoreMonsterTests {
         LOG.info("[more-monster-test] OK {}", what);
     }
 
+    /** 시험 자리 바닥 (y 1 — 구조물은 비어 있어 AI 를 켠 몬스터는 떨어짐): 8 × 8 돌 */
+    private static void floor(GameTestHelper h) {
+        for (int x = 0; x < 8; x++) for (int z = 0; z < 8; z++) h.setBlock(new net.minecraft.core.BlockPos(x, 1, z), net.minecraft.world.level.block.Blocks.STONE);
+    }
+
     /** 가로 거리 */
     private static double flat(Vec3 a, Vec3 b) {
         return Math.hypot(a.x - b.x, a.z - b.z);
@@ -160,6 +165,7 @@ public final class RpgMoreMonsterTests {
     /** 니세: 때린 뒤 노린 사람 반대쪽으로 깡충 (1칸 넘게 물러남) — 다음 공격 · 달려들기는 pause 틱 뒤. 피해 = attack */
     @GameTest(environment = "mmorpg:monster", maxTicks = 200)
     public void nisseHopsBack(GameTestHelper h) {
+        floor(h);
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 300);
         Monsters.Kind k = Monsters.kind("nisse");
         RpgMonster m = monster(h, "nisse", 1.5 + k.half() + 0.3 + 0.8, 2, 1.5, false); // 몸 가장자리 사이 0.8칸 (reach 1.2 안)
@@ -206,6 +212,7 @@ public final class RpgMoreMonsterTests {
      */
     @GameTest(environment = "mmorpg:monster", maxTicks = 220)
     public void boarCharges(GameTestHelper h) {
+        floor(h);
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 300);
         Monsters.Kind k = Monsters.kind("boar");
         Monsters.Charge c = k.charge();
@@ -348,7 +355,8 @@ public final class RpgMoreMonsterTests {
             h.assertTrue(fa != null && fa.packCalled() >= 2, "howl called the pack " + (fa == null ? null : fa.packCalled()));
             for (RpgMonster w : List.of(b, c)) {
                 Monsters.Fight fw = Monsters.fightOf(w);
-                h.assertTrue(fw != null && fw.player() == sp && w.getTarget() == sp, "pack wolf joins the fight");
+                // getTarget 은 가짜 플레이어를 크리에이티브로 보아 비움 (asValidTarget) → 정해 둔 대상 그대로
+                h.assertTrue(fw != null && fw.player() == sp && w.getTargetUnchecked() == sp, "pack wolf joins the fight " + (fw == null ? null : fw.player()) + " " + w.getTargetUnchecked());
                 h.assertTrue(fw.packCalled() == -1, "called wolves do not howl for more");
             }
             h.assertTrue(Monsters.fightOf(draugr) == null, "other monsters are not called");

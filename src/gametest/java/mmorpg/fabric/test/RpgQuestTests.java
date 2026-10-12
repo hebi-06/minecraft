@@ -732,8 +732,9 @@ public final class RpgQuestTests {
     @GameTest(maxTicks = 20)
     public void mainArcsWithNewMonsters(GameTestHelper h) {
         h.assertTrue(MainQuests.PATH_STEPS == 46, "46 steps " + MainQuests.PATH_STEPS);
-        Object[][] want = {{"nisse", "main_13", 10}, {"boar", "main_13", 10}, {"sand_scorpion", "main_14", 12}, {"worm_larva", "main_14", 12},
-            {"crab", "main_15", 12}, {"grendel", "main_15", 10}, {"frost_wolf", "main_16", 12}, {"frost_giant", "main_16", 10}};
+        // [몬스터, 주는 NPC, 처치 수, 전리품 단계 (니세는 처치만 — 농장이 너무 길지 않게)]
+        Object[][] want = {{"nisse", "main_13", 10, false}, {"boar", "main_13", 10, true}, {"sand_scorpion", "main_14", 12, true}, {"worm_larva", "main_14", 12, true},
+            {"crab", "main_15", 12, true}, {"grendel", "main_15", 10, true}, {"frost_wolf", "main_16", 12, true}, {"frost_giant", "main_16", 10, true}};
         for (Object[] w : want) {
             String mob = (String) w[0];
             int kill = MainQuests.mainKillStep(mob);
@@ -746,7 +747,7 @@ public final class RpgQuestTests {
                 if (c.type.equals("boss")) break;
                 if (c.type.equals("collect") && c.target.equals("rpg:loot_" + mob)) collect = true;
             }
-            h.assertTrue(collect, mob + " loot step before the boss");
+            h.assertTrue(collect == (boolean) w[3], mob + " loot step before the boss: " + collect);
         }
         // 농장: 허수아비 12 → 니세 10 → 멧돼지 10 → 멧돼지 엄니 6 → 낡은 짚단 8 → 허수아비 킹
         String[] farm = {"kill rpg:scarecrow 12", "kill rpg:nisse 10", "kill rpg:boar 10", "collect rpg:loot_boar 6", "collect rpg:loot_scarecrow 8", "boss scarecrow_king 1"};

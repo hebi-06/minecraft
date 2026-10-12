@@ -7,7 +7,7 @@
   a,b;c,d       → 세미콜론으로 묶음, 쉼표로 묶음 안의 사진첩 키 (prod 를 넣으면 그 묶음에서 배포 환경 클라이언트도)
 출력: GITHUB_OUTPUT 줄 'groups=<JSON 목록>' — 항목 {name, only, prod}
 사진첩 키: client weapon particle skill rune gear form nav mob arena boss monster tree
-          scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree runebreak
+          scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree runebreak mob9
 """
 import json
 import sys
@@ -17,7 +17,7 @@ DEFAULT = [
     ("ui", "client,weapon,particle,skill,gear,form,nav,mob", True),
     ("rune", "rune,arena", False),
     ("world", "boss,monster,tree", False),
-    ("sk", "scorpions,kraken", False),
+    ("sk", "scorpions,kraken,mob9", False),
     ("wj", "worm,jorm", False),
     ("ns", "nidhogg,skoll", False),
     ("ys", "ymir,surtr", False),
