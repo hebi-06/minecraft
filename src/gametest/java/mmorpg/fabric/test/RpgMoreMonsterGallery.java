@@ -126,7 +126,7 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
             server.runCommand("fill -12 -61 -16 12 -61 6 minecraft:grass_block");
             ctx.runOnClient(mc -> {
                 mc.options.setCameraType(CameraType.FIRST_PERSON);
-                mc.options.hideGui = false;
+                if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
                 mc.options.fov().set(70);
             });
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
@@ -243,7 +243,9 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
 
     /** 손 · HUD 숨기기 (F1 — 모습 사진) */
     private static void hideGui(ClientGameTestContext ctx, boolean hide) {
-        ctx.runOnClient(mc -> mc.options.hideGui = hide);
+        ctx.runOnClient(mc -> {
+            if (mc.gui.hud.isHidden() != hide) mc.gui.hud.toggle();
+        });
     }
 
     /** 시야각 (멀리 있는 작은 것을 당겨 찍기 — 기본 70) */
