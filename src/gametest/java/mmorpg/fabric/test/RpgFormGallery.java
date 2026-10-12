@@ -161,10 +161,12 @@ public final class RpgFormGallery implements FabricClientGameTest {
         if (!waitChest(ctx, c -> c.title().contains("전리품 팔기"), "sell window")) return;
         away(ctx);
         shot(ctx, "f_shop_sell");
-        hover(ctx, chestSlot(15));
+        // 트롤 엄니 칸 (9단계: 전리품 14종 — 한 줄 7칸 두 줄, Shop.sellSlot)
+        int trollSlot = mmorpg.fabric.shop.Shop.sellSlot(mmorpg.core.Rules.get().strings("MONSTER_ORDER").indexOf("troll"));
+        hover(ctx, chestSlot(trollSlot));
         shot(ctx, "f_shop_sell_tooltip");
         int emeraldsBefore = server.computeOnServer(s -> Inv.money(player(s)));
-        click(ctx, conn, chestSlot(15));
+        click(ctx, conn, chestSlot(trollSlot));
         if (!waitChest(ctx, c -> c.title().contains("트롤 엄니"), "sell amount")) return;
         away(ctx);
         shot(ctx, "f_shop_sell_amount");

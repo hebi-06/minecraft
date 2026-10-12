@@ -272,7 +272,7 @@ public final class Shop {
         }
         form.set(SELL_INFO, Slot.of(Items.BUNDLE, "§f전리품").lore("§7몬스터를 잡으면 떨어짐 (50%)", "§7잉그리드의 반복 의뢰에 쓰면", "§7에메랄드·경험치를 더 받음").deco());
         form.fillEmpty();
-        List<String> lines = new ArrayList<>(List.of("§8가운데 줄: 전리품 · 칸을 누르면 팔 개수를 고릅니다.§r", "§8반복 의뢰 재료로 쓰면 더 많이 받습니다 (여관 주인 잉그리드).§r"));
+        List<String> lines = new ArrayList<>(List.of("§8가운데 두 줄: 전리품 · 칸을 누르면 팔 개수를 고릅니다.§r", "§8반복 의뢰 재료로 쓰면 더 많이 받습니다 (여관 주인 잉그리드).§r"));
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         return new SellBuilt(form, list);
