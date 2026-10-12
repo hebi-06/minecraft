@@ -348,9 +348,17 @@ public final class RpgMoreMonsterTests {
         RpgMonster b = monster(h, "frost_wolf", 4.5, 2, 4.5, false);
         RpgMonster c = monster(h, "frost_wolf", 7.5, 2, 6.5, false);
         RpgMonster draugr = monster(h, "draugr", 1.5, 2, 5.5, false);
+        // 불린 늑대의 울부짖음 (조금 늦게) 은 곧 덤비는 공격 동작이 같은 컨트롤러를 덮으므로 틱마다 봐 둠
+        boolean[] howled = {false, false, false}; // [맞음, b, c]
+        h.onEachTick(() -> {
+            if (!howled[0]) return;
+            if (played(b, "howl")) howled[1] = true;
+            if (played(c, "howl")) howled[2] = true;
+        });
         h.runAfterDelay(66, () -> {
             fresh(sp);
             a.hurtServer(h.getLevel(), sp.damageSources().playerAttack(sp), 1F);
+            howled[0] = true;
             Monsters.Fight fa = Monsters.fightOf(a);
             h.assertTrue(fa != null && fa.packCalled() >= 2, "howl called the pack " + (fa == null ? null : fa.packCalled()));
             for (RpgMonster w : List.of(b, c)) {
@@ -369,7 +377,7 @@ public final class RpgMoreMonsterTests {
             effect(h, sp, MobEffects.SLOWNESS, 1, 40, "frost wolf: slowness II 2s");
             sp.removeEffect(MobEffects.SLOWNESS);
             h.runAfterDelay(14, () -> {
-                h.assertTrue(played(b, "howl") && played(c, "howl"), "called wolves howl a little later");
+                h.assertTrue(howled[1] && howled[2], "called wolves howl a little later " + howled[1] + " " + howled[2]);
                 ok("frost wolf pack: howl calls " + fa.packCalled() + " · draugr not called · cold bite");
                 for (RpgMonster m : List.of(a, b, c, draugr)) m.discard();
                 RpgGearTests.done(h, sp);
