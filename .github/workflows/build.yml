@@ -96,14 +96,14 @@ jobs:
             echo "gametest: ${{ steps.gametest.outcome }}"
           } > ci-out/outcome-0build.txt
 
-      - uses: actions/upload-artifact@v4
+      # 일 사이에 넘기는 파일 (로그 · 사진 · jar): 아티팩트 대신 캐시 (아티팩트 저장 공간 한도에 걸리지 않게 — 캐시는 10GB 안에서 오래된 것부터 지워짐)
+      - uses: actions/cache/save@v4
         if: always()
         with:
-          name: ci-build
+          key: ci-${{ github.run_id }}-build-${{ github.run_attempt }}
           path: |
-            build/libs/*.jar
-            ci-out/
-          if-no-files-found: warn
+            ci-out
+            build/libs
 
   client:
     # 컴파일이 되면 게임 시험이 실패해도 사진은 찍음 (사진으로 확인할 수 있게) — 배포는 publish 에서 모두 통과해야
@@ -178,12 +178,11 @@ jobs:
           echo "client ${{ matrix.name }} (${{ matrix.only }}): ${{ steps.client.outcome }}" > ci-out/outcome-client-${{ matrix.name }}.txt
           if [ "${{ matrix.prod }}" = "true" ]; then echo "prod-client: ${{ steps.prodclient.outcome }}" >> ci-out/outcome-client-${{ matrix.name }}.txt; fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/cache/save@v4
         if: always()
         with:
-          name: ci-client-${{ matrix.name }}
-          path: ci-out/
-          if-no-files-found: warn
+          key: ci-${{ github.run_id }}-client-${{ matrix.name }}-${{ github.run_attempt }}
+          path: ci-out
 
   publish:
     needs: [build, client]
@@ -192,18 +191,99 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: ci-build
-          path: .
+      # 빌드 · 묶음마다 캐시에 넣은 파일을 모음 (다시 돌린 일은 가장 늦은 시도 — restore-keys 앞머리)
+      - uses: actions/cache/restore@v4
         continue-on-error: true
-
-      - uses: actions/download-artifact@v4
         with:
-          pattern: ci-client-*
+          key: ci-${{ github.run_id }}-build-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-build-
+          path: |
+            ci-out
+            build/libs
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-ui-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-ui-
           path: ci-out
-          merge-multiple: true
+      - uses: actions/cache/restore@v4
         continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-rune-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-rune-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-world-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-world-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-sk-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-sk-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-wj-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-wj-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-ns-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-ns-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-ys-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-ys-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-six-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-six-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g1-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g1-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g2-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g2-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g3-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g3-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g4-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g4-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g5-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g5-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-g6-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-g6-
+          path: ci-out
 
       - name: Publish logs
         env:
@@ -226,15 +306,6 @@ jobs:
           gh release create "$TAG" "$JAR" $PRE --target "$GITHUB_SHA" \
             --title "$TITLE" \
             --notes "$GITHUB_REF_NAME 의 $SHORT 에서 자동으로 만든 모드 jar. 마인크래프트 자바 $MC · Fabric Loader · Fabric API 가 필요합니다 (ci-out/versions.txt)."
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: mmorpg-build
-          path: |
-            build/libs/*.jar
-            ci-out/
-          if-no-files-found: warn
 
       - name: Overall
         # 실행 전체의 성공 · 실패 (빌드 · 게임 시험 · 화면 시험 묶음 중 하나라도 실패면 실패)
