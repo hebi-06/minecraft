@@ -253,6 +253,6 @@ ci/                    GitHub Actions 보조 (Fabric 버전 확인 · 화면 시
 ## 빌드 (GitHub Actions)
 
 `main` 에 올리면 자동으로: Fabric 버전 확인 → 규칙 코어 대조 시험 → 모드 빌드 → 게임 시험 (서버) → 화면 시험 (클라이언트, xvfb — 사진첩 26개를 8묶음으로 동시에) → 모두 통과하면 Releases 의 `latest` 에 jar.
-각 단계 로그와 화면 시험 사진은 `ci-logs` 브랜치에 올라갑니다 (`SUMMARY.txt` · `ERRORS.txt` · 단계별 로그 · 묶음마다 `client-checks-<묶음>.txt` · `shots/`).
+각 단계 로그와 화면 시험 사진은 `ci-logs` 브랜치에 올라갑니다 (`SUMMARY.txt` · `ERRORS.txt` · 단계별 로그 · 묶음마다 `client-checks-<묶음>.txt` · `shots/`). 빌드 · 게임 시험 로그는 `ci-logs-build` 브랜치에도 (build 일이 바로 올림).
 
 직접 빌드: JDK 25 + Node 22 가 있는 PC 에서 `./check-core.sh && ./gradlew build` (build 가 서버 게임 시험을 함께 돌림), 화면 시험은 `./gradlew runClientGameTest`.

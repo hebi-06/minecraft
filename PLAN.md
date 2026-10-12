@@ -65,7 +65,7 @@
 - 몹 대상: `Mob.setTarget` · `getTarget` 은 `asValidTarget` 을 거침 — 게임 시험의 가짜 플레이어는 바닐라가 크리에이티브로 보아 대상이 되지 않음 (시험은 Monsters 의 싸움 기록으로 확인). 원래 대상은 `getTargetUnchecked`
 - 게임 시험 구조물 (fabric-gametest-api-v1:empty) 은 바닥이 없음 — AI 를 끈 몹은 떠 있고, AI 를 켜면 떨어짐 (`h.setBlock` 으로 바닥을 깔고 시험). AI 를 끈 몹은 움직이지 않음 (속도를 줘도)
 - 화면 시험 사진: 창 (잘라 그리기 영역이 있는 화면) 이 열린 채 창보다 작은 크기 (`withSize`) 로 찍으면 영역이 사진 밖으로 나가 0 이 되어 그리기가 멈춤 (Scissor size must be >0) → 창은 창 크기 그대로 (`takeScreenshot(name)`). F1 (손 · HUD 숨김) 은 `mc.gui.hud.toggle()` · `isHidden()`, 시야각은 `options.fov()`
-- CI: main 에서는 gradle 캐시를 쓰는 일이 많아 저장소 캐시 (10GB) 가 넘치면 build 일이 넣은 jar · 로그 캐시가 publish 전에 지워질 수 있음 → publish 가 같은 커밋에서 jar 를 다시 만듦 (화면 시험 묶음의 gradle 캐시는 읽기만)
+- CI: main 에서는 gradle 캐시를 쓰는 일이 많아 저장소 캐시 (10GB) 가 넘치면 build 일이 넣은 jar · 로그 캐시가 publish 전에 지워질 수 있음 → publish 가 같은 커밋에서 jar 를 다시 만듦 (화면 시험 묶음의 gradle 캐시는 읽기만), build 일의 빌드 · 게임 시험 로그는 `ci-logs-build` 브랜치에도 바로 올림
 
 ## 2. 시험
 
