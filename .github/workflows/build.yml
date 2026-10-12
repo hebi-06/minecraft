@@ -124,7 +124,11 @@ jobs:
           distribution: temurin
           java-version: '25'
 
+      # 화면 시험 묶음은 gradle 캐시를 읽기만 (main 에서 묶음 여덟이 저마다 큰 gradle 캐시를 쓰면 저장소 캐시 10GB 를 넘겨
+      # build 일이 넣은 jar · 로그 캐시가 publish 전에 지워짐 — 2026-10-12 0.9.0 배포가 jar 를 못 찾음)
       - uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
 
       - name: Client screenshots
         id: client
@@ -291,13 +295,31 @@ jobs:
           OUT_CLIENT_ALL: ${{ needs.client.result }}
         run: bash ci/publish_logs.sh
 
+      # 캐시에서 jar 가 지워졌으면 같은 커밋에서 다시 만듦 (배포 조건일 때만)
+      - uses: actions/setup-java@v4
+        if: needs.build.result == 'success' && needs.client.result == 'success' && (github.ref_name == 'main' || startsWith(github.ref_name, 'mc-')) && (github.event_name != 'workflow_dispatch' || inputs.tests)
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+        if: needs.build.result == 'success' && needs.client.result == 'success' && (github.ref_name == 'main' || startsWith(github.ref_name, 'mc-')) && (github.event_name != 'workflow_dispatch' || inputs.tests)
+        with:
+          cache-read-only: true
+
       - name: Release jar
         # 배포는 main · mc-* 에서 시험까지 다 돈 것만 (작업 브랜치 · 컴파일만 한 것은 배포하지 않음)
         if: needs.build.result == 'success' && needs.client.result == 'success' && (github.ref_name == 'main' || startsWith(github.ref_name, 'mc-')) && (github.event_name != 'workflow_dispatch' || inputs.tests)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          set -eo pipefail
+          if ! ls build/libs/*.jar > /dev/null 2>&1; then
+            echo "jar not restored from the build cache (evicted?) — building it again from $GITHUB_SHA"
+            ./gradlew assemble --console=plain
+          fi
+          ls -la build/libs
           JAR=$(ls build/libs/*.jar | grep -v -- '-sources' | head -1)
+          [ -n "$JAR" ] || { echo "no jar"; exit 1; }
           SHORT=${GITHUB_SHA::7}
           MC=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)
           # main → "latest" (늘 새로), mc-* 브랜치 (옛 마인크래프트 버전 보관) → 브랜치 이름의 릴리스
