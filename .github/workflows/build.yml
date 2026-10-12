@@ -96,6 +96,16 @@ jobs:
             echo "gametest: ${{ steps.gametest.outcome }}"
           } > ci-out/outcome-0build.txt
 
+      # build 일의 로그 (빌드 · 게임 시험) 를 바로 ci-logs-build 브랜치에도 (main 에서 아래 캐시가 지워지면 publish 일의 ci-logs 에 빠지므로)
+      - name: Publish build logs
+        if: always()
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CI_LOGS_BRANCH: ci-logs-build
+          OUT_CLIENT_ALL: (build job only)
+        run: bash ci/publish_logs.sh
+
       # 일 사이에 넘기는 파일 (로그 · 사진 · jar): 아티팩트 대신 캐시 (아티팩트 저장 공간 한도에 걸리지 않게 — 캐시는 10GB 안에서 오래된 것부터 지워짐)
       - uses: actions/cache/save@v4
         if: always()

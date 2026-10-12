@@ -39,6 +39,8 @@ case "${GITHUB_REF_NAME:-}" in
   main | wip | mc-* | "") ;;
   *) BR="ci-logs-${GITHUB_REF_NAME//\//-}" ;;
 esac
+# build 일이 먼저 올리는 로그 (main 에서 캐시가 지워져 publish 일에 build 로그가 없을 때도 남게)
+BR="${CI_LOGS_BRANCH:-$BR}"
 cd "$OUT"
 git init -q -b "$BR"
 git config user.name "ci"
