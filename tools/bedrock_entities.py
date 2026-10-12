@@ -241,3 +241,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # 9단계: 자바 판에만 있는 새 몬스터 8종을 다시 더함 (애드온 엔티티만 옮기면 빠지니까)
+    import more_monsters  # noqa: E402
+
+    more_monsters.main()

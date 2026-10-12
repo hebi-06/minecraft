@@ -28,6 +28,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -112,13 +113,28 @@ public final class Monsters {
     /** 싸우는 중에도 재생 (트롤): after 틱 동안 안 맞으면 1초마다 perSec */
     public record Regen(int after, double perSec) {}
 
-    /** 내려치기 충격파 (트롤): 둘레 radius 칸의 다른 플레이어도 피해 × mult */
-    public record Shock(double radius, double mult) {}
+    /** 내려치기 충격파 (트롤 · 9단계 서리 거인): 둘레 radius 칸의 다른 플레이어도 피해 × mult (fx "ice" = 얼음 고리 · 고드름 · 서리 금) */
+    public record Shock(double radius, double mult, String fx) {}
 
-    /** 몬스터 설정 (monsters.js DEFS 의 값 — 키 포함) */
+    /** 9단계 니세: 공격한 뒤 뒤로 깡충 (가로 back · 위로 up) · 다음 공격 · 달려들기는 pause 틱 뒤 */
+    public record Hop(double back, double up, int pause) {}
+
+    /**
+     * 9단계 광폭 멧돼지 돌진 (달려들기 대신): reach 밖 range 칸 안이면 prep 틱 동안 앞발로 땅을 긁고 (멈춤 · 붉은 줄 예고) → 그 쪽으로 speed 칸/틱 으로
+     * dash 틱 동안 달림. 몸 앞 width 칸 안에 플레이어가 들어오면 피해 × mult · 밀쳐냄 (가로 knock · 위 lift)
+     */
+    public record Charge(double range, int prep, double speed, int dash, double width, double knock, double lift, double mult) {}
+
+    /** 9단계 웜 유충 매복: 싸우지 않으면 rest 틱 뒤 모래 속으로, 플레이어가 detect 칸 안에 오거나 맞으면 튀어나와 먼저 덤빔 (첫 공격은 emerge 틱 뒤) */
+    public record Burrow(double detect, int rest, int emerge) {}
+
+    /** 9단계 서리 늑대 무리 사냥: 처음 맞으면 울부짖고 둘레 radius 칸의 같은 늑대도 때린 사람에게 덤빔 */
+    public record Pack(double radius) {}
+
+    /** 몬스터 설정 (monsters.js DEFS 의 값 — 키 포함, 9단계 특성 hop · charge · burrow · pack 은 뒤에) */
     public record Kind(String key, String id, String name, int level, double hp, double attack, int every, int windup, double reach, int lungeEvery,
             double scale, double boxW, double boxH, double[] color, double shell, OnHit onHit, Regen regen, Shock shock, String windupSound,
-            String hitSound, int xp, int xpUntil, double[] emerald) {
+            String hitSound, int xp, int xpUntil, double[] emerald, Hop hop, Charge charge, Burrow burrow, Pack pack) {
         /** 크기 배율을 곱한 가로 반폭 (monsterSize.half) */
         public double half() {
             return boxW * scale / 2;
@@ -142,6 +158,10 @@ public final class Monsters {
                 Obj hit = o.objOrNull("onHit");
                 Obj regen = o.objOrNull("regen");
                 Obj shock = o.objOrNull("shock");
+                Obj hop = o.objOrNull("hop");
+                Obj charge = o.objOrNull("charge");
+                Obj burrow = o.objOrNull("burrow");
+                Obj pack = o.objOrNull("pack");
                 List<Object> box = o.list("box");
                 List<Object> em = o.listOrNull("emerald");
                 double[] emerald = em == null || em.size() < 3 ? null
@@ -151,8 +171,13 @@ public final class Monsters {
                         ((Number) box.get(0)).doubleValue(), ((Number) box.get(1)).doubleValue(), Kit.rgb(o.list("color")), o.numOr("shell", 0),
                         hit == null ? null : new OnHit(hit.str("effect"), hit.num("seconds"), (int) hit.num("amplifier")),
                         regen == null ? null : new Regen((int) regen.num("after"), regen.num("perSec")),
-                        shock == null ? null : new Shock(shock.num("radius"), shock.num("mult")),
-                        o.obj("sounds").str("windup"), o.obj("sounds").str("hit"), (int) o.num("xp"), (int) o.num("xpUntil"), emerald));
+                        shock == null ? null : new Shock(shock.num("radius"), shock.num("mult"), shock.strOr("fx", "")),
+                        o.obj("sounds").str("windup"), o.obj("sounds").str("hit"), (int) o.num("xp"), (int) o.num("xpUntil"), emerald,
+                        hop == null ? null : new Hop(hop.num("back"), hop.num("up"), (int) hop.num("pause")),
+                        charge == null ? null : new Charge(charge.num("range"), (int) charge.num("prep"), charge.num("speed"), (int) charge.num("dash"),
+                                charge.num("width"), charge.num("knock"), charge.num("lift"), charge.numOr("mult", 1)),
+                        burrow == null ? null : new Burrow(burrow.num("detect"), (int) burrow.num("rest"), (int) burrow.num("emerge")),
+                        pack == null ? null : new Pack(pack.num("radius"))));
             }
             kinds = Collections.unmodifiableMap(m);
         }
@@ -296,6 +321,12 @@ public final class Monsters {
         int misses;
         String lastKind;
         long lastResolved;
+        /** 9단계: 멧돼지 돌진 (없으면 null) · 니세가 깡충 뛴 수 · 서리 늑대가 울부짖어 부른 수 */
+        ChargeRun charge;
+        int hops;
+        int packCalled = -1;
+        /** 마지막 돌진에 맞은 사람을 밀어낸 속도 (없으면 null — 시험 · 사진첩) */
+        Vec3 lastPush;
 
         Fight(RpgMonster m, Kind k, ServerPlayer p, long now) {
             this.m = m;
@@ -361,6 +392,47 @@ public final class Monsters {
         public String lastKind() {
             return lastKind;
         }
+
+        /** 멧돼지 돌진 단계: "prep" (앞발 긁기) · "dash" (달림) · null (돌진 중이 아님) */
+        public String chargePhase() {
+            return charge == null ? null : charge.dashing ? "dash" : "prep";
+        }
+
+        /** 니세가 깡충 뛴 수 (시험) */
+        public int hops() {
+            return hops;
+        }
+
+        /** 서리 늑대가 처음 맞았을 때 부른 늑대 수 (-1 = 부르지 않음 — 시험) */
+        public int packCalled() {
+            return packCalled;
+        }
+
+        /** 마지막 돌진에 맞은 사람을 밀어낸 속도 (없으면 null) */
+        public Vec3 lastPush() {
+            return lastPush;
+        }
+    }
+
+    /** 멧돼지 돌진 하나: 준비 끝 틱 · 달리기 끝 틱 · 방향 (가로 단위) · 노린 사람, 달리는 중인지 · 맞혔는지 · 지난 틱 자리 · 막힌 틱 수 */
+    static final class ChargeRun {
+        final long start;
+        final long prepUntil;
+        final long dashUntil;
+        final Vec3 dir;
+        final ServerPlayer target;
+        boolean dashing;
+        boolean hit;
+        Vec3 last;
+        int stuck;
+
+        ChargeRun(long start, long prepUntil, long dashUntil, Vec3 dir, ServerPlayer target) {
+            this.start = start;
+            this.prepUntil = prepUntil;
+            this.dashUntil = dashUntil;
+            this.dir = dir;
+            this.target = target;
+        }
     }
 
     /** 싸우는 몬스터: 몬스터 UUID → 싸움 */
@@ -420,10 +492,15 @@ public final class Monsters {
             "mob.stray.ambient", SoundEvents.STRAY_AMBIENT,
             "mob.warden.attack", SoundEvents.WARDEN_ATTACK_IMPACT);
 
+    /** 몬스터 소리 이름 → 자바 소리 (대응표 → SkillFx 대응표 → 자바 이름 그대로, 없으면 null — 시험이 새 몬스터 소리를 모두 확인) */
+    public static SoundEvent soundOf(String bedrock) {
+        SoundEvent s = SOUNDS.get(bedrock);
+        return s != null ? s : SkillFx.sound(bedrock);
+    }
+
     /** 그 자리에서 소리 (fx.js play — 몬스터 소리는 적대 몹 소리 갈래로) */
     static void play(ServerLevel level, String bedrock, Vec3 at, double pitch, double volume) {
-        SoundEvent s = SOUNDS.get(bedrock);
-        if (s == null) s = SkillFx.sound(bedrock);
+        SoundEvent s = soundOf(bedrock);
         if (s != null) level.playSound(null, at.x, at.y, at.z, s, SoundSource.HOSTILE, (float) volume, (float) pitch);
     }
 
@@ -441,7 +518,7 @@ public final class Monsters {
         Vec3 toM = V.flat(V.sub(m.position(), p.position()));
         Vec3 at = V.add(chest, toM, 0.7);
         Vec3 v = V.unit(V.sub(chest, eyeish(m, k)));
-        boolean heavy = k.key().equals("troll");
+        boolean heavy = k.key().equals("troll") || k.key().equals("frost_giant") || k.key().equals("grendel");
         SkillFx.arc(level, at, v, Opt.of("shape", heavy ? "heavy" : "thin", "flip", Kit.rand() < 0.5, "size", heavy ? 1.45 : 1.0, "life", 0.2, "speed", 1.0,
                 "spin", Kit.rand() * 60 - 30, "color", k.color()));
         SkillFx.sparks(level, at, k.color(), 5, 3);
@@ -524,9 +601,35 @@ public final class Monsters {
         if (!ok) return false;
         if (k.onHit() != null) {
             net.minecraft.core.Holder<MobEffect> h = mmorpg.fabric.rune.RuneKit.effectOf(k.onHit().effect());
-            if (h != null && !target.isRemoved()) target.addEffect(new MobEffectInstance(h, (int) Math.round(k.onHit().seconds() * 20), k.onHit().amplifier(), false, true));
+            if (h != null && !target.isRemoved()) {
+                target.addEffect(new MobEffectInstance(h, (int) Math.round(k.onHit().seconds() * 20), k.onHit().amplifier(), false, true));
+                onHitFx(level, k, target);
+            }
         }
         return true;
+    }
+
+    /** 맞으면 붙는 효과의 연출 (9단계): 독 = 초록 방울, 시듦 = 검은 연기, 냉기 (서리 · 드라우그) = 눈송이 · 하늘빛, 붙잡기 (게) = 몬스터 색 불꽃 */
+    private static void onHitFx(ServerLevel level, Kind k, ServerPlayer p) {
+        Vec3 chest = V.up(p.position(), 1.1);
+        switch (k.onHit().effect()) {
+            case "poison" -> {
+                SkillFx.sparks(level, chest, POISON, 8, 2.5);
+                level.sendParticles(ParticleTypes.ITEM_SLIME, chest.x, chest.y, chest.z, 6, 0.25, 0.35, 0.25, 0.02);
+            }
+            case "wither" -> {
+                SkillFx.sparks(level, chest, WITHER, 8, 2);
+                level.sendParticles(ParticleTypes.LARGE_SMOKE, chest.x, chest.y, chest.z, 8, 0.25, 0.35, 0.25, 0.01);
+            }
+            case "slowness" -> {
+                if (k.key().startsWith("frost") || k.key().equals("draugr")) {
+                    SkillFx.sparks(level, chest, FROST, 6, 2);
+                    level.sendParticles(ParticleTypes.SNOWFLAKE, chest.x, chest.y, chest.z, 14, 0.35, 0.5, 0.35, 0.02);
+                } else SkillFx.sparks(level, chest, k.color(), 6, 2);
+            }
+            default -> {
+            }
+        }
     }
 
     /** 트롤 내려치기 충격파: 맞은 곳 둘레 radius 칸의 다른 플레이어도 피해 × mult */
@@ -536,7 +639,20 @@ public final class Monsters {
         ServerLevel level = (ServerLevel) m.level();
         Vec3 at = target.position();
         SkillFx.shock(level, at, k.color(), k.shock().radius() / 2.1, 0.45);
-        SkillFx.burst(level, V.up(at, 0.2), new double[] {0.5, 0.42, 0.32}, 1.6, 0.35);
+        if ("ice".equals(k.shock().fx())) {
+            // 서리 거인: 얼음 고리가 퍼지고 땅에 서리 금 · 고드름이 사방으로 튐 · 눈보라
+            double rr = k.shock().radius();
+            mmorpg.fabric.rune.RuneKit.novaRing(level, at, 0.5, rr, FROST, mmorpg.fabric.rune.RuneKit.WHITE, Opt.of("life", 0.5));
+            mmorpg.fabric.rune.RuneKit.glowCrack(level, at, rr * 0.9, FROST, mmorpg.fabric.rune.RuneKit.WHITE, Opt.of("life", 1.6, "fade", 0.5));
+            for (int i = 0; i < 6; i++) {
+                double a = i * Math.PI / 3 + Kit.rand() * 0.5;
+                Vec3 d = V.unit(new Vec3(Math.cos(a), 0.45, Math.sin(a)));
+                mmorpg.fabric.rune.RuneKit.rfx2(level, "icicle", V.add(V.up(at, 0.4), d, 0.4), Opt.of("dir", d, "speed", 9.0, "size", 0.34, "life", 0.35), FROST,
+                        mmorpg.fabric.rune.RuneKit.WHITE);
+            }
+            level.sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y + 0.4, at.z, 30, rr * 0.5, 0.25, rr * 0.5, 0.06);
+            play(level, "block.glass.break", at, 0.7, 0.9);
+        } else SkillFx.burst(level, V.up(at, 0.2), new double[] {0.5, 0.42, 0.32}, 1.6, 0.35);
         double r = k.shock().radius() + 0.5;
         for (ServerPlayer p : new ArrayList<>(level.players())) {
             if (p.position().distanceTo(at) > r) continue;
@@ -589,10 +705,12 @@ public final class Monsters {
         Gap g = gapTo(m, k, target);
         if (g.gap() <= k.reach() + TOLERANCE && heightOk(k, g.dy(), 0.5) && inArc(m, k, w.aim(), target) && canSee(m, k, target)) {
             strike(f, target);
+            hop(f, target, now);
             return true;
         }
         f.misses++;
         missFx(level, m, k, target.position());
+        hop(f, target, now);
         return false;
     }
 
@@ -621,6 +739,7 @@ public final class Monsters {
 
     /** 싸움 끝: 기록을 지우고 엔티티가 노리던 이 싸움의 사람을 놓아 줌 (집으로 돌아가게) */
     private static void endFight(Fight f) {
+        if (f.charge != null) endCharge(f, Tasks.now(), false);
         FIGHTS.remove(f.m.getUUID(), f);
         LivingEntity t = f.m.getTarget();
         if (t instanceof ServerPlayer p && (p == f.player || f.attackers.containsKey(p.getUUID()) || targetState(p, f.m) != State.OK)) f.m.setTarget(null);
@@ -657,6 +776,7 @@ public final class Monsters {
         if (pick.st() == State.PAUSE) {
             // 크리에이티브 · 관전 · 쓰러지는 중: 하던 동작은 끊고 기다림 (토템으로 살아나면 이어서), 오래가면 싸움 끝
             f.windup = null;
+            if (f.charge != null) endCharge(f, now, false);
             if (f.paused == null) f.paused = now;
             if (now - f.paused > PAUSE_LIMIT) endFight(f);
             return;
@@ -664,6 +784,11 @@ public final class Monsters {
         f.paused = null;
         if (stunned(m)) {
             f.windup = null; // 기절 · 빙결 · 석화: 하던 동작도 끊김
+            if (f.charge != null) endCharge(f, now, false);
+            return;
+        }
+        if (f.charge != null) {
+            chargeStep(f, now);
             return;
         }
         if (f.windup != null) {
@@ -677,8 +802,12 @@ public final class Monsters {
             return;
         }
         if (now < f.nextLunge || rooted(m) || hidden(p)) return;
-        if (g.gap() <= LUNGE_RANGE && Math.abs(g.dy()) <= LUNGE_HEIGHT) {
-            if (canSee(m, k, p)) lunge(f, g, now);
+        Charge ch = k.charge();
+        if (ch != null ? g.gap() <= ch.range() && Math.abs(g.dy()) <= 1.5 : g.gap() <= LUNGE_RANGE && Math.abs(g.dy()) <= LUNGE_HEIGHT) {
+            if (canSee(m, k, p)) {
+                if (ch != null) startCharge(f, now); // 멧돼지: 달려들기 대신 돌진
+                else lunge(f, g, now);
+            }
         } else {
             Attacker a = f.attackers.get(p.getUUID());
             if (a != null && now - a.t() <= COUNTER_WINDOW && touchReach(m, k, p) && canSee(m, k, p)) counter(f, now); // 닿지 못하는 곳에서 방금 때렸을 때만
@@ -717,6 +846,272 @@ public final class Monsters {
         }
     }
 
+    // ------------------------------------------------------------ 9단계 특성: 니세 깡충 · 멧돼지 돌진 · 웜 유충 매복 · 서리 늑대 무리
+
+    private static final double[] DUST = {0.66, 0.55, 0.4};
+    private static final double[] SAND = {0.93, 0.8, 0.52};
+    private static final double[] FROST = {0.72, 0.92, 1.0};
+    private static final double[] POISON = {0.45, 0.95, 0.3};
+    private static final double[] WITHER = {0.2, 0.17, 0.22};
+
+    private static String anim(Kind k, String name) {
+        return "animation.rpg.monster." + k.key() + "." + name;
+    }
+
+    /** 니세: 공격한 뒤 노린 사람 반대쪽으로 깡충 (구속 · 공중이면 안 함) — 다음 공격 · 달려들기는 pause 틱 뒤 */
+    private static void hop(Fight f, ServerPlayer from, long now) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        Hop h = k.hop();
+        if (h == null || rooted(m) || !m.onGround()) return;
+        ServerLevel level = (ServerLevel) m.level();
+        Vec3 away = V.flat(V.sub(m.position(), from.position()));
+        Kit.launch(m, away.x * h.back(), h.up(), away.z * h.back());
+        m.playAnimation(anim(k, "hop"));
+        SkillFx.burst(level, V.up(m.position(), 0.1), DUST, 0.5, 0.25);
+        play(level, "entity.rabbit.jump", m.position(), 1.3, 0.8);
+        f.nextAttack = Math.max(f.nextAttack, now + h.pause());
+        f.nextLunge = Math.max(f.nextLunge, now + h.pause());
+        f.hops++;
+    }
+
+    /** 멧돼지 돌진 시작: 그 사람 쪽을 보고 멈춰 앞발로 땅을 긁음 (prep 틱) — 달릴 길에 붉은 고리 줄 · 먼지 · 콧김 소리 */
+    private static void startCharge(Fight f, long now) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        Charge c = k.charge();
+        ServerLevel level = (ServerLevel) m.level();
+        Vec3 dir = V.flat(V.sub(f.player.position(), m.position()));
+        f.charge = new ChargeRun(now, now + c.prep(), now + c.prep() + c.dash(), dir, f.player);
+        m.holdUntil = now + c.prep() + c.dash() + 4;
+        m.getNavigation().stop();
+        float yaw = Kit.lookRotation(m.position(), V.add(m.position(), dir, 1))[0];
+        m.setYRot(yaw);
+        m.setYBodyRot(yaw);
+        m.setYHeadRot(yaw);
+        m.playAnimation(anim(k, "charge_prep"), "charge", "0");
+        play(level, k.windupSound(), m.position(), 0.75, 1.2);
+        for (double s = k.half() + 0.6; s <= c.range() + k.half(); s += 1.3) {
+            SkillFx.shock(level, V.add(m.position(), dir, s), RED, c.width() * 0.3, c.prep() / 20.0);
+        }
+        SkillFx.burst(level, V.up(m.position(), 0.1), DUST, 0.8 + k.half(), 0.4);
+        f.nextAttack = Math.max(f.nextAttack, now + c.prep() + c.dash() + 6);
+        f.nextLunge = now + c.prep() + c.dash() + k.lungeEvery();
+    }
+
+    /** 돌진 단계 (2틱마다): 준비 동안 앞발 먼지 → 준비가 끝나면 달리기 시작, 시간이 다하면 헛돌진 */
+    private static void chargeStep(Fight f, long now) {
+        ChargeRun c = f.charge;
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        ServerLevel level = (ServerLevel) m.level();
+        if (!c.dashing) {
+            if (now < c.prepUntil) {
+                if ((now - c.start) % 4 == 0) SkillFx.burst(level, V.up(V.add(m.position(), c.dir, k.half() * 0.7), 0.05), DUST, 0.45, 0.3);
+                return;
+            }
+            c.dashing = true;
+            c.last = m.position();
+            m.playAnimation(anim(k, "charge"), "charge", "0");
+            play(level, "entity.camel.dash", m.position(), 0.9, 1);
+            play(level, k.windupSound(), m.position(), 1.1, 1);
+            return;
+        }
+        if (now >= c.dashUntil) endCharge(f, now, false);
+    }
+
+    /** 달리는 동안 (틱마다): 그 방향으로 speed 칸/틱, 먼지 자국, 몸 앞 width 칸 안의 사람과 부딪히면 피해 · 밀쳐냄, 벽에 막히면 끝 */
+    private static void dashTick(Fight f, long now) {
+        ChargeRun c = f.charge;
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        Charge ch = k.charge();
+        ServerLevel level = (ServerLevel) m.level();
+        Vec3 v = m.getDeltaMovement();
+        m.setDeltaMovement(c.dir.x * ch.speed(), v.y, c.dir.z * ch.speed());
+        m.needsSync = true;
+        if (now % 2 == 0) SkillFx.burst(level, V.up(m.position(), 0.1), DUST, 0.5 + k.half() * 0.5, 0.35);
+        for (ServerPlayer p : new ArrayList<>(level.players())) {
+            if (targetState(p, m) != State.OK || hidden(p)) continue;
+            Vec3 rel = V.sub(p.position(), m.position());
+            double along = rel.x * c.dir.x + rel.z * c.dir.z;
+            double side = Math.abs(rel.x * c.dir.z - rel.z * c.dir.x);
+            if (along < -0.3 || along > k.half() + 0.9 || side > ch.width() * 0.5 + PLAYER_HALF || rel.y < -1.5 || rel.y > k.height()) continue;
+            chargeHit(f, p, now);
+            return;
+        }
+        double moved = Math.hypot(m.getX() - c.last.x, m.getZ() - c.last.z);
+        c.last = m.position();
+        if (now - c.prepUntil >= 3 && moved < 0.12 && ++c.stuck >= 2) endCharge(f, now, false); // 벽 · 나무에 막힘
+    }
+
+    /** 돌진에 맞음: 피해 × mult (나약함만큼 줄어듦) · 달리던 쪽으로 밀쳐냄 · 화면 흔들림 · 흙먼지 */
+    private static void chargeHit(Fight f, ServerPlayer p, long now) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        Charge ch = k.charge();
+        ChargeRun c = f.charge;
+        ServerLevel level = (ServerLevel) m.level();
+        c.hit = true;
+        f.hits++;
+        f.lastKind = "charge";
+        f.lastResolved = now;
+        monsterHit(m, k, p, k.attack() * ch.mult() * weakMult(m));
+        // 바닐라 밀침 (monsterHit 의 피해가 넣은 것) 위에 더하지 않고 바꿈: 가로 knock 칸/틱 (약 5칸 날아감) · 위로 lift
+        f.lastPush = new Vec3(c.dir.x * ch.knock(), ch.lift(), c.dir.z * ch.knock());
+        Kit.launch(p, f.lastPush.x, f.lastPush.y, f.lastPush.z);
+        impactFx(level, m, k, p);
+        SkillFx.burst(level, V.up(p.position(), 0.3), DUST, 1.6, 0.4);
+        SkillFx.shake(p, 0.4, 0.35);
+        play(level, k.hitSound(), p.position(), 0.8, 1.2);
+        play(level, "entity.player.attack.knockback", p.position(), 0.9, 1);
+        endCharge(f, now, true);
+    }
+
+    /** 돌진 끝: 멈춤 · 돌진 동작을 끔. 헛돌진이면 빗나감으로 세고 잠깐 숨을 고름 (다음 공격 24틱 뒤) */
+    private static void endCharge(Fight f, long now, boolean hit) {
+        ChargeRun c = f.charge;
+        if (c == null) return;
+        f.charge = null;
+        RpgMonster m = f.m;
+        m.holdUntil = 0;
+        m.stopAnimation("charge");
+        Vec3 v = m.getDeltaMovement();
+        m.setDeltaMovement(v.x * 0.2, v.y, v.z * 0.2);
+        m.needsSync = true;
+        if (!hit && c.dashing) {
+            f.misses++;
+            f.lastKind = "charge";
+            f.lastResolved = now;
+            if (m.level() instanceof ServerLevel level) {
+                SkillFx.burst(level, V.up(m.position(), 0.2), DUST, 1.2, 0.35);
+                play(level, "entity.hoglin.step", m.position(), 0.7, 1);
+            }
+        }
+        f.nextAttack = Math.max(f.nextAttack, now + (hit ? 10 : 24));
+    }
+
+    /** 숨었는지 (웜 유충 — 시험 · 다른 모듈) */
+    public static boolean buried(Entity e) {
+        return e instanceof RpgMonster m && m.buried();
+    }
+
+    /** 웜 유충 숨기: 모래 속으로 (속성 rpg:buried — 충돌 상자 낮춤 · 걷지 않음, 동작 buried 끝 자세 유지, 이름표 치움) · 모래가 튐 */
+    public static void burrow(RpgMonster m) {
+        Kind k = kindOf(m);
+        if (k == null || k.burrow() == null || m.buried() || !(m.level() instanceof ServerLevel level)) return;
+        m.setProp(RpgMonster.BURIED, true);
+        m.playAnimation(anim(k, "buried"), "burrow", "0");
+        m.getNavigation().stop();
+        setLabel(m, null);
+        sandFx(level, m, k, 0.8);
+        play(level, "block.sand.break", m.position(), 0.8, 1);
+    }
+
+    /** 튀어나오기: 숨은 웜 유충이 솟구침 (모래 · 흔들림 · 소리) — p 가 있으면 그 사람과 먼저 싸움을 시작 (첫 공격은 emerge 틱 뒤) */
+    public static void emerge(RpgMonster m, Kind k, ServerPlayer p, long now) {
+        if (!m.buried() || !(m.level() instanceof ServerLevel level)) return;
+        m.setProp(RpgMonster.BURIED, false);
+        m.playAnimation(anim(k, "emerge"), "burrow", null);
+        m.calmSince = 0;
+        sandFx(level, m, k, 1.6);
+        play(level, "block.sand.break", m.position(), 0.6, 1.4);
+        play(level, k.windupSound(), m.position(), 0.7, 1.2);
+        mmorpg.fabric.rune.RuneKit.shakeAround(level, m.position(), 6, 0.25, 0.3);
+        if (p == null || targetState(p, m) != State.OK) return;
+        Fight f = FIGHTS.get(m.getUUID());
+        if (f == null) {
+            f = new Fight(m, k, p, now);
+            FIGHTS.put(m.getUUID(), f);
+        }
+        f.player = p;
+        f.attackers.put(p.getUUID(), new Attacker(p, now));
+        f.nextAttack = Math.max(f.nextAttack, now + (k.burrow() != null ? k.burrow().emerge() : 10));
+        f.nextLunge = Math.max(f.nextLunge, f.nextAttack + 10);
+        m.setTarget(p);
+    }
+
+    /** 모래가 튐: 발밑 블록 조각 · 모래빛 고리 · 불꽃 */
+    private static void sandFx(ServerLevel level, RpgMonster m, Kind k, double size) {
+        Vec3 at = m.position();
+        net.minecraft.world.level.block.state.BlockState below = level.getBlockState(m.blockPosition().below());
+        if (below.isAir()) below = net.minecraft.world.level.block.Blocks.SAND.defaultBlockState();
+        level.sendParticles(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, below), at.x, at.y + 0.3, at.z, (int) (18 * size), 0.45 * size,
+                0.3, 0.45 * size, 0.15);
+        SkillFx.shock(level, at, SAND, (size + k.half()) / 2.1, 0.5);
+        SkillFx.burst(level, V.up(at, 0.3), SAND, size + k.half(), 0.4);
+    }
+
+    /** 웜 유충 (5틱마다): 숨은 채면 가까이 온 사람에게 튀어나옴 (맞았으면 그 사람), 나와 있으면 싸우지 않은 지 rest 틱 뒤 다시 숨음 */
+    private static void burrowTick(RpgMonster m, Kind k, long now) {
+        Burrow b = k.burrow();
+        ServerLevel level = (ServerLevel) m.level();
+        if (Kit.hasNoHealth(m)) return;
+        Fight f = FIGHTS.get(m.getUUID());
+        if (m.buried()) {
+            if (f != null) {
+                emerge(m, k, f.player, now);
+                return;
+            }
+            ServerPlayer near = null;
+            double best = b.detect();
+            for (ServerPlayer p : level.players()) {
+                if (targetState(p, m) != State.OK || hidden(p)) continue;
+                double d = p.position().distanceTo(m.position());
+                if (d <= best) {
+                    best = d;
+                    near = p;
+                }
+            }
+            if (near != null) emerge(m, k, near, now);
+            else if ((now / 5) % 8 == 0) {
+                // 숨은 자리 표시: 모래가 조금씩 흘러내림
+                net.minecraft.world.level.block.state.BlockState below = level.getBlockState(m.blockPosition().below());
+                if (!below.isAir()) {
+                    level.sendParticles(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.FALLING_DUST, below), m.getX(), m.getY() + 0.4, m.getZ(), 3,
+                            0.3, 0.1, 0.3, 0);
+                }
+            }
+            return;
+        }
+        if (f != null) {
+            m.calmSince = 0;
+            return;
+        }
+        if (m.calmSince == 0) {
+            m.calmSince = now;
+            return;
+        }
+        if (now - m.calmSince >= b.rest()) burrow(m);
+    }
+
+    /** 서리 늑대: 처음 맞으면 울부짖고 (동작 howl · 하늘빛 고리) 둘레 radius 칸의 싸우지 않던 서리 늑대도 그 사람에게 덤빔 (조금씩 늦게). 부른 수 */
+    private static int packAlert(RpgMonster m, Kind k, ServerPlayer p, long now) {
+        ServerLevel level = (ServerLevel) m.level();
+        double r = k.pack().radius();
+        m.playAnimation(anim(k, "howl"));
+        play(level, "item.goat_horn.sound.0", m.position(), 1.25, 1.4); // 울부짖음 (26.3 에는 늑대 울음소리가 없어 뿔피리 — 무리를 부르는 소리)
+        play(level, "entity.wolf.growl", m.position(), 0.8, 1.2);
+        SkillFx.shock(level, m.position(), FROST, r / 2.1, 0.8);
+        level.sendParticles(ParticleTypes.SNOWFLAKE, m.getX(), m.getY() + k.height() * 0.6, m.getZ(), 16, 0.4, 0.3, 0.4, 0.04);
+        int n = 0;
+        for (RpgMonster o : level.getEntitiesOfClass(RpgMonster.class, m.getBoundingBox().inflate(r), x -> x != m && kindOf(x) == k)) {
+            if (o.position().distanceTo(m.position()) > r || FIGHTS.containsKey(o.getUUID()) || Kit.hasNoHealth(o)) continue;
+            Fight f = new Fight(o, k, p, now);
+            f.nextLunge = now + 8 + n * 4;
+            FIGHTS.put(o.getUUID(), f);
+            o.setTarget(p);
+            int delay = 4 + n * 3;
+            Tasks.later(delay, () -> {
+                if (o.isRemoved() || Kit.hasNoHealth(o)) return;
+                o.playAnimation(anim(k, "howl"));
+                SkillFx.shock(level, o.position(), FROST, 0.9, 0.5);
+            });
+            n++;
+        }
+        return n;
+    }
+
     // ------------------------------------------------------------ 이벤트
 
     /** 몬스터가 맞음 (AFTER_DAMAGE): 회복 시계 · 싸움 시작 / 다음 대상 (마지막으로 때린 사람 — 도발 중이면 도발한 사람 그대로) */
@@ -725,6 +1120,8 @@ public final class Monsters {
         if (k == null || Kit.hasNoHealth(m)) return; // 죽는 중인 몸은 싸움을 시작하지 않음
         long now = Tasks.now();
         HURT.put(m.getUUID(), new Hurt(m, k, now));
+        ServerPlayer hitter = source.getEntity() instanceof ServerPlayer sp && targetState(sp, m) == State.OK ? sp : null;
+        if (m.buried()) emerge(m, k, hitter, now); // 웜 유충: 숨은 채 맞으면 튀어나옴
         if (!(source.getEntity() instanceof ServerPlayer p) || targetState(p, m) != State.OK) return;
         Fight f = FIGHTS.get(m.getUUID());
         if (f != null) {
@@ -734,7 +1131,9 @@ public final class Monsters {
             return;
         }
         // 처음 맞음: 사거리 안이면 바로 반격, 멀면 잠깐 뒤 달려듦
-        FIGHTS.put(m.getUUID(), new Fight(m, k, p, now));
+        Fight nf = new Fight(m, k, p, now);
+        FIGHTS.put(m.getUUID(), nf);
+        if (k.pack() != null) nf.packCalled = packAlert(m, k, p, now); // 서리 늑대: 울부짖어 무리를 부름
     }
 
     /** 죽음 (AFTER_DEATH): 플레이어면 그 사람과의 싸움 끝, 몬스터면 연출 + 경험치 · 전리품 (loot.js lootOnDeath) */
@@ -763,6 +1162,7 @@ public final class Monsters {
         for (Fight f : new ArrayList<>(FIGHTS.values())) {
             f.attackers.remove(playerId);
             if (f.windup != null && f.windup.target().getUUID().equals(playerId)) f.windup = null;
+            if (f.charge != null && f.charge.target.getUUID().equals(playerId)) endCharge(f, Tasks.now(), false);
             if (f.taunt != null && f.taunt.id().equals(playerId)) f.taunt = null; // 죽은 사람의 도발은 끝
             if (f.player != null && !f.player.getUUID().equals(playerId) && !f.player.isRemoved()) continue;
             Attacker next = null;
@@ -883,6 +1283,16 @@ public final class Monsters {
             m.tracked = true;
             for (String f : m.def.families()) m.addTag(f);
             track(m, k);
+        }
+        long now = Tasks.now();
+        if (k.charge() != null) {
+            Fight f = FIGHTS.get(m.getUUID());
+            if (f != null && f.charge != null && f.charge.dashing) dashTick(f, now);
+        }
+        if (k.burrow() != null && (now + m.getId()) % 5 == 0) burrowTick(m, k, now);
+        if (m.buried()) {
+            if (m.labelText != null || m.label != null) setLabel(m, null); // 숨은 동안 이름표 없음 (다시 나오면 아래에서 다시 붙음)
+            return;
         }
         float hp = m.getHealth();
         float max = m.getMaxHealth();

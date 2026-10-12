@@ -7,10 +7,10 @@
   "MONSTER_ORDER": ["scarecrow", "nisse", "boar", "gulon", "sand_scorpion", "skeljaskrimsli", "crab", "worm_larva", "nix", "grendel", "draugr", "frost_wolf", "troll", "frost_giant"],
   "MONSTERS": {
     "nisse": {"name": "니세", "region": "farm", "level": 4, "hp": 36, "attack": 4, "every": 20, "windup": 6, "reach": 1.2, "lungeEvery": 40, "speed": 0.3, "chase": 1.5, "knockResist": 0, "xp": 2, "xpUntil": 11, "emerald": [0.25, 1, 1], "scale": 1, "box": [0.5, 0.95], "color": [0.95, 0.32, 0.26],
-      "hop": {"back": 0.62, "up": 0.4, "pause": 16},
+      "hop": {"back": 0.42, "up": 0.36, "pause": 16},
       "trait": "작은 농장 요정: 때리고 뒤로 깡충 물러남", "sounds": {"windup": "entity.fox.screech", "hit": "entity.fox.bite"}},
     "boar": {"name": "광폭 멧돼지", "region": "farm", "level": 7, "hp": 46, "attack": 5, "every": 30, "windup": 9, "reach": 1.6, "lungeEvery": 70, "speed": 0.27, "chase": 1.4, "knockResist": 0.5, "xp": 3, "xpUntil": 14, "emerald": [0.3, 1, 1], "scale": 1.15, "box": [1, 1], "color": [0.66, 0.44, 0.28],
-      "charge": {"range": 10, "prep": 14, "speed": 0.95, "dash": 14, "width": 1.1, "knock": 1.25, "lift": 0.35, "mult": 1.4},
+      "charge": {"range": 10, "prep": 14, "speed": 0.95, "dash": 14, "width": 1.1, "knock": 0.85, "lift": 0.35, "mult": 1.4},
       "trait": "돌진: 앞발로 땅을 긁다 길게 달려와 들이받음 (피해 1.4배 · 밀쳐냄)", "sounds": {"windup": "mob.hoglin.angry", "hit": "mob.hoglin.attack"}},
     "sand_scorpion": {"name": "모래 전갈", "region": "desert", "level": 12, "hp": 60, "attack": 7, "every": 26, "windup": 9, "reach": 2, "lungeEvery": 50, "speed": 0.27, "chase": 1.35, "knockResist": 0.3, "xp": 4, "xpUntil": 19, "emerald": [0.35, 1, 2], "scale": 1.1, "box": [1.1, 0.75], "color": [0.93, 0.74, 0.38],
       "onHit": {"effect": "poison", "seconds": 4, "amplifier": 0},

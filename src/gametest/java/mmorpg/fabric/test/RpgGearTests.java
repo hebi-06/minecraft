@@ -217,8 +217,9 @@ public final class RpgGearTests {
             Store.openStore(sp, 0, "sell");
             FormNet.ChestPayload c = chest(sp);
             h.assertTrue(c != null && c.title().contains("전리품 팔기"), "sell window");
-            h.assertTrue(c.slots().get(10 + index).num() == 10, "count shown");
-            Forms.answer(sp, 10 + index, null); // 그 전리품 → 개수 고르기
+            int slot = mmorpg.fabric.shop.Shop.sellSlot(index); // 9단계: 전리품 14종 — 가운데 · 아랫줄 1 ~ 7 칸
+            h.assertTrue(c.slots().get(slot).num() == 10, "count shown");
+            Forms.answer(sp, slot, null); // 그 전리품 → 개수 고르기
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("팔기"), "amount window");
             Forms.answer(sp, 13, null); // 모두
             h.assertTrue(countIn(sp, troll) == 0, "loot taken");

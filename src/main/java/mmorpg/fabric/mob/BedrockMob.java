@@ -82,6 +82,16 @@ public abstract class BedrockMob extends PathfinderMob {
         builder.define(ANIMS, "");
     }
 
+    /** 속성 글자가 바뀌면 (서버 setProp · 클라이언트 동기화 모두) onPropsChanged */
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (PROPS.equals(key)) onPropsChanged();
+    }
+
+    /** 속성이 바뀜 (9단계 — 웜 유충이 숨으면 충돌 상자를 낮춤 등). 기본은 아무것도 안 함 */
+    protected void onPropsChanged() {}
+
     // ------------------------------------------------------------ 속성
 
     /** 속성 값 (bool = 0/1, enum = 번호). 서버는 지금 값, 클라이언트는 동기화된 값. 없는 속성 = 0 */

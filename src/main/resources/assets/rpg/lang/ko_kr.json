@@ -187,5 +187,13 @@
   "block.rpg.altar_ymir": "이미르 제단",
   "block.rpg.altar_surtr": "수르트 제단",
   "entity.rpg.dire_wolf_mount": "다이어울프",
-  "item.rpg.mount_dire_wolf": "다이어울프 탈것"
+  "item.rpg.mount_dire_wolf": "다이어울프 탈것",
+  "entity.rpg.nisse": "니세",
+  "entity.rpg.boar": "광폭 멧돼지",
+  "entity.rpg.sand_scorpion": "모래 전갈",
+  "entity.rpg.crab": "집게 게",
+  "entity.rpg.worm_larva": "웜 유충",
+  "entity.rpg.grendel": "그렌델",
+  "entity.rpg.frost_wolf": "서리 늑대",
+  "entity.rpg.frost_giant": "서리 거인"
 }

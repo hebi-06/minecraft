@@ -464,7 +464,7 @@ public final class RpgQuestTests {
             Quest rep = Quests.getQuest(SideQuests.repeatId("scarecrow"));
             h.assertTrue(rep != null && rep.afterStep == MainQuests.mainKillStep("scarecrow") && rep.repeat, "repeat def");
             h.assertTrue(Quests.statusOf(sp, rep).equals("locked") && Quests.lockReason(sp, rep).equals("requires"), "locked before path");
-            // 칼의 길 · 허수아비 처치 단계 (r03) 를 끝낸 저장 데이터
+            // 칼의 길 · 허수아비 처치 단계 (s03) 를 끝낸 저장 데이터
             Props.set(sp, "rpg:main_path", "sword");
             Props.set(sp, "rpg:qs", "{\"" + MainQuests.mainId("sword", rep.afterStep) + "\":{\"s\":\"d\",\"n\":0,\"c\":1}}");
             Quests.forgetQuestPlayer(sp.getUUID());
@@ -472,11 +472,12 @@ public final class RpgQuestTests {
             h.assertTrue(Quests.statusOf(sp, rep).equals("available"), "unlocked " + Quests.lockReason(sp, rep));
             h.assertTrue(status(sp, SideQuests.repeatId("gulon")).equals("locked"), "gulon still locked");
             h.assertTrue("repeat".equals(Quests.questMark(sp, SideQuests.REPEAT_GIVER)), "repeat mark " + Quests.questMark(sp, SideQuests.REPEAT_GIVER));
-            // 예전 (18단계) 진행: 허수아비 처치 (예전 2단계) 를 끝냈으면 열림 + 지역 퀘스트 단계로 옮김 (한 번)
+            // 예전 (18단계) 진행: 허수아비 처치 (예전 2단계) 를 끝냈으면 열림 + 지역 퀘스트 단계 (31단계 → 9단계 46단계) 로 옮김 (한 번)
             Props.set(sp, "rpg:qs", "{\"mq_sword_02\":{\"s\":\"d\",\"n\":0,\"c\":1}}");
             Quests.forgetQuestPlayer(sp.getUUID());
             h.assertTrue(Quests.statusOf(sp, rep).equals("available"), "old progress unlocks");
-            h.assertTrue(Quests.stateOf(sp).containsKey(MainQuests.MIGRATED_KEY) && Quests.stateOf(sp).get(MainQuests.mainId("sword", 3)).c == 1, "migrated");
+            h.assertTrue(Quests.stateOf(sp).containsKey(MainQuests.MIGRATED_KEY) && Quests.stateOf(sp).containsKey(MainQuests.MIGRATED_S_KEY)
+                    && Quests.stateOf(sp).get(MainQuests.mainId("sword", 3)).c == 1 && !Quests.stateOf(sp).containsKey(MainQuests.mainId("sword", 4)), "migrated");
             h.assertTrue(Props.get(sp, "rpg:qs").contains(MainQuests.MIGRATED_KEY), "migration saved");
             // 경험치 제한: 최고 레벨이 xpUntil (8) 이상이면 경험치 없음
             sp.setExperienceLevels(10);
@@ -659,7 +660,8 @@ public final class RpgQuestTests {
         h.assertTrue(boss.type.equals("boss") && boss.target.equals("scarecrow_king") && trial.type.equals("trial") && trial.goals.size() == 9, "defs");
         h.assertTrue(Quests.statusOf(sp, boss).equals("active"), "boss active");
         Quests.NavGoal g = Quests.goalOf(sp, trial);
-        h.assertTrue(g != null && g.why().equals("hunt") && g.mobs().equals(List.of("draugr", "troll")) && g.count() == 40, "trial goal " + g);
+        h.assertTrue(g != null && g.why().equals("hunt") && g.mobs().equals(List.of("draugr", "frost_wolf", "troll", "frost_giant")) && g.count() == 40,
+                "trial goal (9단계: 북쪽 새 몬스터도) " + g);
         QuestSystem.onBossKilled("scarecrow_king", List.of(sp));
         h.assertTrue(Quests.statusOf(sp, boss).equals("ready"), "boss ready");
         h.assertTrue(Quests.trialCounts(sp, trial).get(1) == 1, "trial boss goal " + Quests.trialCounts(sp, trial));
@@ -687,13 +689,204 @@ public final class RpgQuestTests {
         h.assertTrue("troll".equals(Loot.dropKeyOf("rpg:loot_troll")) && Loot.dropKeyOf("minecraft:dirt") == null, "drop key");
         ItemStack s = Loot.dropItem("troll", 3);
         h.assertTrue(s.is(GearItems.byId("rpg:loot_troll")) && s.getCount() == 3, "drop item");
-        h.assertTrue(Loot.dropItemIds().size() == 6, "drop ids " + Loot.dropItemIds());
+        h.assertTrue(Loot.dropItemIds().size() == 14 && Loot.dropItemIds().contains("rpg:loot_frost_giant"), "drop ids (9단계 14종) " + Loot.dropItemIds());
         h.assertTrue(Loot.huntKind(0).equals("scarecrow") && Loot.huntKind(9).equals("gulon"), "hunt kind");
         h.assertTrue(Loot.monsterXp(sp, "scarecrow") > 0 && !Loot.xpCapped(sp, "scarecrow"), "xp at level 0");
-        // 들어 있는 퀘스트 수 · 순서 (메인 3 + 6 × 31, 반복 6 · 왕실 7 · 전설 5)
+        // 들어 있는 퀘스트 수 · 순서 (메인 3 + 6 × 46, 반복 14 · 왕실 7 · 전설 5)
         h.assertTrue(Quests.allQuests().stream().filter(q -> q.main).count() == 3 + 6L * MainQuests.PATH_STEPS, "main count");
-        h.assertTrue(Quests.sideQuests().size() == 18, "side count " + Quests.sideQuests().size());
+        h.assertTrue(Quests.sideQuests().size() == 26, "side count " + Quests.sideQuests().size());
         h.assertTrue(Quests.allQuests().get(0).id.equals(MainQuests.MAIN_START), "order");
+        // 9단계 새 몬스터도 레벨 순서로 추천 (2렙 → 니세 Lv.4, 37렙 → 서리 거인 Lv.39)
+        h.assertTrue(Loot.huntKind(2).equals("nisse") && Loot.huntKind(37).equals("frost_giant"), "hunt kind (new monsters) " + Loot.huntKind(2) + " " + Loot.huntKind(37));
+        done(h, sp);
+    }
+
+    // ------------------------------------------------------------ 9단계: 레벨업 3배 · 지역 이야기의 새 몬스터 단계 · 31단계 → 46단계 옮기기
+
+    /** 레벨업에 필요한 경험치 = 바닐라 × 3 (사용자 요청 "약 3배"): 0렙 7 → 21 · 15렙 37 → 111 · 30렙 112 → 336, 21 포인트면 0 → 1렙 */
+    @GameTest(maxTicks = 20)
+    public void levelingTripled(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        h.assertTrue(mmorpg.core.Leveling.needMult() == 3, "needMult " + mmorpg.core.Leveling.needMult());
+        for (int[] c : new int[][] {{0, 21}, {14, 105}, {15, 111}, {29, 321}, {30, 336}, {40, 606}}) {
+            sp.setExperienceLevels(c[0]);
+            h.assertTrue(sp.getXpNeededForNextLevel() == c[1], "need at level " + c[0] + ": " + sp.getXpNeededForNextLevel() + " (want " + c[1] + ")");
+        }
+        sp.setExperienceLevels(0);
+        sp.experienceProgress = 0F;
+        sp.giveExperiencePoints(20);
+        h.assertTrue(sp.experienceLevel == 0, "20 points: still level 0 (" + sp.experienceLevel + ")");
+        sp.setExperienceLevels(0);
+        sp.experienceProgress = 0F;
+        sp.giveExperiencePoints(21);
+        h.assertTrue(sp.experienceLevel == 1 && sp.experienceProgress < 0.01F, "21 points: level 1 (" + sp.experienceLevel + ", " + sp.experienceProgress + ")");
+        // 퀘스트 레벨 보상 2 = 지금 레벨부터 바닐라 두 레벨의 경험치 (실제로는 2/3 레벨)
+        h.assertTrue(mmorpg.core.Leveling.pointsForLevels(1, 2) == 9 + 11, "quest 2 levels at level 1 = " + mmorpg.core.Leveling.pointsForLevels(1, 2));
+        done(h, sp);
+    }
+
+    /**
+     * 9단계 메인 이야기: 길마다 46단계, 지역마다 새 몬스터 둘의 처치 단계 (그 지역 NPC 가 줌) 와 그 전리품 모으기 단계 (보스 앞), 처치 · 모으기 수 늘림
+     * (칼의 길 처치 86 → 190 · 모으기 56 → 122), 모든 길 · 모든 단계에 대사 · 앞 단계 이어짐
+     */
+    @GameTest(maxTicks = 20)
+    public void mainArcsWithNewMonsters(GameTestHelper h) {
+        h.assertTrue(MainQuests.PATH_STEPS == 46, "46 steps " + MainQuests.PATH_STEPS);
+        Object[][] want = {{"nisse", "main_13", 10}, {"boar", "main_13", 10}, {"sand_scorpion", "main_14", 12}, {"worm_larva", "main_14", 12},
+            {"crab", "main_15", 12}, {"grendel", "main_15", 10}, {"frost_wolf", "main_16", 12}, {"frost_giant", "main_16", 10}};
+        for (Object[] w : want) {
+            String mob = (String) w[0];
+            int kill = MainQuests.mainKillStep(mob);
+            Quest q = Quests.getQuest(MainQuests.mainId("sword", kill));
+            h.assertTrue(q != null && q.type.equals("kill") && q.target.equals("rpg:" + mob) && q.giver.equals(w[1]) && q.count == (int) w[2],
+                    mob + " kill step " + kill + " " + (q == null ? null : q.type + " " + q.target + " " + q.giver + " " + q.count));
+            boolean collect = false;
+            for (int s = kill + 1; s <= MainQuests.PATH_STEPS; s++) {
+                Quest c = Quests.getQuest(MainQuests.mainId("sword", s));
+                if (c.type.equals("boss")) break;
+                if (c.type.equals("collect") && c.target.equals("rpg:loot_" + mob)) collect = true;
+            }
+            h.assertTrue(collect, mob + " loot step before the boss");
+        }
+        // 농장: 허수아비 12 → 니세 10 → 멧돼지 10 → 멧돼지 엄니 6 → 낡은 짚단 8 → 허수아비 킹
+        String[] farm = {"kill rpg:scarecrow 12", "kill rpg:nisse 10", "kill rpg:boar 10", "collect rpg:loot_boar 6", "collect rpg:loot_scarecrow 8", "boss scarecrow_king 1"};
+        for (int i = 0; i < farm.length; i++) {
+            Quest q = Quests.getQuest(MainQuests.mainId("sword", 3 + i));
+            h.assertTrue((q.type + " " + q.target + " " + q.count).equals(farm[i]), "farm step " + (3 + i) + ": " + q.type + " " + q.target + " " + q.count);
+        }
+        int kills = 0;
+        int collects = 0;
+        for (String path : MainQuests.PATH_ORDER) {
+            for (int s = 1; s <= MainQuests.PATH_STEPS; s++) {
+                Quest q = Quests.getQuest(MainQuests.mainId(path, s));
+                h.assertTrue(q != null && !q.title.isEmpty() && !q.offer.isEmpty() && !q.progress.isEmpty() && !q.done.isEmpty(), path + " step " + s + " text");
+                h.assertTrue(q.requires.equals(s == 1 ? MainQuests.MAIN_CHOOSE : MainQuests.mainId(path, s - 1)), path + " step " + s + " requires " + q.requires);
+                if (path.equals("sword") && q.type.equals("kill")) kills += q.count;
+                if (path.equals("sword") && q.type.equals("collect")) collects += q.count;
+            }
+        }
+        h.assertTrue(kills == 190 && collects == 122, "kills " + kills + " · collects " + collects + " (0.8: 86 · 56)");
+        h.succeed();
+    }
+
+    private static String rid(String path, int n) {
+        return MainQuests.MAIN_PREFIX + path + "_r" + (n < 10 ? "0" : "") + n;
+    }
+
+    /** 예전 31단계 기록: 1 ~ doneTo 끝, activeAt 진행 중 (n) */
+    private static java.util.Map<String, Quest.Entry> rState(String path, int doneTo, int activeAt, int n) {
+        java.util.Map<String, Quest.Entry> st = new java.util.LinkedHashMap<>();
+        for (int i = 1; i <= doneTo; i++) st.put(rid(path, i), new Quest.Entry("d", 0, 1));
+        if (activeAt > 0) st.put(rid(path, activeAt), new Quest.Entry("a", n, 0));
+        return st;
+    }
+
+    private static boolean sDone(java.util.Map<String, Quest.Entry> st, String path, int s) {
+        Quest.Entry e = st.get(MainQuests.mainId(path, s));
+        return e != null && e.c > 0;
+    }
+
+    /**
+     * 예전 31단계 (0.8.x 까지 "mq_&lt;길&gt;_rNN") 진행 → 9단계 46단계: 같은 일의 새 단계까지 끝 (사이에 생긴 새 몬스터 단계도), 잡고 보고 전인 보스는 보고만 남은 채로,
+     * 진행 중이던 단계는 새 단계에서도 바로 다음이면 그대로 (아니면 버림 — 사이에 새 몬스터 단계), 다른 길 기록은 건드리지 않음, 한 번만. 저장된 진행도 처음 읽을 때 옮김
+     */
+    @GameTest(maxTicks = 20)
+    public void migrate31To46(GameTestHelper h) {
+        int[] map = {0, 1, 2, 3, 7, 8, 9, 10, 11, 14, 15, 16, 19, 20, 21, 24, 25, 26, 29, 30, 31, 32, 33, 34, 37, 38, 39, 40, 43, 44, 45, 46};
+        for (int r = 1; r <= 31; r++) h.assertTrue(MainQuests.rToStep(r) == map[r], "r" + r + " → s" + MainQuests.rToStep(r) + " (want " + map[r] + ")");
+        // 1. 허수아비 킹을 잡고 보고함 (r05) → 새 보스 단계 (s08) 까지 끝 — 사이의 니세 · 멧돼지 단계도
+        java.util.Map<String, Quest.Entry> st = rState("sword", 5, 0, 0);
+        h.assertTrue(MainQuests.migrateRState(st, "sword") && st.containsKey(MainQuests.MIGRATED_S_KEY), "migrated once");
+        for (int s = 1; s <= 8; s++) h.assertTrue(sDone(st, "sword", s), "s" + s + " done");
+        h.assertTrue(!st.containsKey(MainQuests.mainId("sword", 9)), "s09 (travel) still to take");
+        h.assertFalse(MainQuests.migrateRState(st, "sword"), "only once");
+        // 2. 보스를 잡고 보고 전 (r05 진행 n=1) → s01 ~ s07 끝, s08 보고만 남음
+        st = rState("sword", 4, 5, 1);
+        MainQuests.migrateRState(st, "sword");
+        Quest.Entry boss = st.get(MainQuests.mainId("sword", 8));
+        h.assertTrue(sDone(st, "sword", 7) && boss != null && boss.active() && boss.n == 1 && boss.c == 0, "boss ready to report " + boss);
+        // 3. 바다에 와서 (r13) 껍질 괴물 처치 중 (r14 n=5) → s20 까지 끝, s21 진행 그대로
+        st = rState("dagger", 13, 14, 5);
+        MainQuests.migrateRState(st, "dagger");
+        Quest.Entry kill = st.get(MainQuests.mainId("dagger", 21));
+        h.assertTrue(sDone(st, "dagger", 20) && kill != null && kill.active() && kill.n == 5, "active kill kept " + kill);
+        // 4. 허수아비 처치 (r03) 뒤 짚단 모으는 중 (r04) → 새 단계로는 바로 다음이 아님 (니세 · 멧돼지가 먼저) → 버림
+        st = rState("axe", 3, 4, 3);
+        MainQuests.migrateRState(st, "axe");
+        h.assertTrue(sDone(st, "axe", 3) && !st.containsKey(MainQuests.mainId("axe", 4)) && !st.containsKey(MainQuests.mainId("axe", 7)), "non-adjacent active dropped");
+        // 5. 다른 길의 기록은 옮기지 않음 · 6. 끝까지 (r31) → 46단계 모두
+        st = rState("sword", 5, 0, 0);
+        MainQuests.migrateRState(st, "bow");
+        h.assertTrue(st.containsKey(MainQuests.MIGRATED_S_KEY) && !st.containsKey(MainQuests.mainId("sword", 1)) && !st.containsKey(MainQuests.mainId("bow", 1)), "other path");
+        st = rState("wand", 31, 0, 0);
+        MainQuests.migrateRState(st, "wand");
+        for (int s = 1; s <= MainQuests.PATH_STEPS; s++) h.assertTrue(sDone(st, "wand", s), "finished story: s" + s);
+        h.assertFalse(MainQuests.migrateRState(new java.util.LinkedHashMap<>(), "wand"), "nothing to migrate");
+        // 저장된 진행 (사막까지 끝 — r13 바다 도착) 을 처음 읽음 → 옮겨 저장, 반복 의뢰: 웜 유충 (사막) 열림 · 집게 게 (바다) 잠김
+        ServerPlayer sp = player(h);
+        StringBuilder qs = new StringBuilder("{");
+        for (int i = 1; i <= 13; i++) qs.append(i > 1 ? "," : "").append("\"").append(rid("shield", i)).append("\":{\"s\":\"d\",\"n\":0,\"c\":1}");
+        Props.set(sp, "rpg:main_path", "shield");
+        Props.set(sp, "rpg:qs", qs.append("}").toString());
+        Quests.forgetQuestPlayer(sp.getUUID());
+        sp.setExperienceLevels(30); // 바다 단계 (레벨 24) 를 받을 수 있게
+        RpgPlayers.checkLevelUp(sp);
+        h.assertTrue(sDone(Quests.stateOf(sp), "shield", 20) && !Quests.stateOf(sp).containsKey(MainQuests.mainId("shield", 21)), "saved progress migrated");
+        h.assertTrue(Props.get(sp, "rpg:qs").contains(MainQuests.MIGRATED_S_KEY), "migration saved");
+        h.assertTrue(status(sp, MainQuests.mainId("shield", 21)).equals("available"), "next: sea kill step " + status(sp, MainQuests.mainId("shield", 21)));
+        h.assertTrue(status(sp, SideQuests.repeatId("worm_larva")).equals("available") && status(sp, SideQuests.repeatId("crab")).equals("locked"),
+                "repeat quests by region " + status(sp, SideQuests.repeatId("worm_larva")) + " " + status(sp, SideQuests.repeatId("crab")));
+        done(h, sp);
+    }
+
+    /**
+     * 지역 이야기의 새 몬스터 단계 (농장): 허수아비 처치를 마치면 올라프가 "장난꾸러기 니세" (10마리) 를 줌 → 대사 · 길 안내 (니세 사냥) →
+     * 진짜 니세를 잡으면 셈 → 보고 (대사 · 에메랄드) → 대화가 이어져 다음 단계 (광폭 멧돼지) 를 받을 수 있음
+     */
+    @GameTest(maxTicks = 40)
+    public void regionalNewMonsterStep(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Mannequin olaf = mainNpc(h, "main_13", new Vec3(3.5, 2, 3.5));
+        Forms.HEADLESS.add(sp.getUUID());
+        mmorpg.fabric.mob.RpgMonster nisse = null;
+        try {
+            int ks = MainQuests.mainKillStep("nisse");
+            String nisseStep = MainQuests.mainId("sword", ks);
+            String boarStep = MainQuests.mainId("sword", MainQuests.mainKillStep("boar"));
+            StringBuilder qs = new StringBuilder("{");
+            for (int s = 1; s < ks; s++) qs.append(s > 1 ? "," : "").append("\"").append(MainQuests.mainId("sword", s)).append("\":{\"s\":\"d\",\"n\":0,\"c\":1}");
+            Props.set(sp, "rpg:main_path", "sword");
+            Props.set(sp, "rpg:qs", qs.append("}").toString());
+            Quests.forgetQuestPlayer(sp.getUUID());
+            h.assertTrue(status(sp, nisseStep).equals("available") && status(sp, boarStep).equals("locked"), "nisse step available " + status(sp, nisseStep));
+            QuestTalk.talkLoop(sp, olaf, null);
+            pick(h, sp, "장난꾸러기 니세");
+            nextPages(sp);
+            h.assertTrue(dialogText(sp).contains("니세 열만 혼내 주게") && dialogText(sp).contains("니세(Lv.4)"), "offer " + dialogText(sp));
+            pick(h, sp, "수락하기");
+            h.assertTrue(status(sp, nisseStep).equals("active"), "active");
+            Quests.NavGoal g = Quests.navGoal(sp);
+            h.assertTrue(g != null && g.why().equals("hunt") && "nisse".equals(g.mob()), "nav: hunt nisse " + g);
+            // 9마리 잡아 둔 채로 → 진짜 니세 하나를 잡음
+            Quests.stateOf(sp).get(nisseStep).n = 9;
+            nisse = mmorpg.fabric.mob.Monsters.spawnAt(h.getLevel(), "nisse", h.absoluteVec(new Vec3(1.5, 2, 4.5)), 0F);
+            hurt(h, nisse, sp.damageSources().playerAttack(sp), 1000F);
+            h.assertTrue(nisse.isDeadOrDying() && status(sp, nisseStep).equals("ready"), "10th nisse → ready " + Quests.stateOf(sp).get(nisseStep).n);
+            int money = Inv.money(sp);
+            QuestTalk.talkLoop(sp, olaf, null);
+            pick(h, sp, "완료 보고");
+            nextPages(sp);
+            h.assertTrue(dialogText(sp).contains("밭에 뭔가 단단히 잘못됐어") && dialogText(sp).contains("퀘스트 완료"), "done " + dialogText(sp));
+            pick(h, sp, "확인");
+            h.assertTrue(status(sp, nisseStep).equals("done") && Inv.money(sp) == money + Quests.getQuest(nisseStep).reward.emerald, "reported · emerald");
+            h.assertTrue(choices(sp).stream().anyMatch(c -> c.contains("광폭 멧돼지")), "next step offered " + choices(sp));
+            pick(h, sp, "대화 끝내기");
+            h.assertFalse(Forms.pending(sp), "closed");
+        } finally {
+            Forms.HEADLESS.remove(sp.getUUID());
+            olaf.discard();
+            if (nisse != null) nisse.discard();
+        }
         done(h, sp);
     }
 

@@ -58,7 +58,7 @@ public final class RpgMonsterTests {
     // ------------------------------------------------------------ 도우미
 
     /** 서바이벌 플레이어 (RpgGearTests.player) 를 (x, 2, z) 에, 체력 스탯 vit (최대 체력 20 + vit) */
-    private static ServerPlayer player(GameTestHelper h, double x, double y, double z, int vit) {
+    static ServerPlayer player(GameTestHelper h, double x, double y, double z, int vit) {
         ServerPlayer sp = RpgGearTests.player(h);
         Vec3 at = h.absoluteVec(new Vec3(x, y, z));
         sp.snapTo(at.x, at.y, at.z, 0F, 0F);
@@ -67,7 +67,7 @@ public final class RpgMonsterTests {
     }
 
     /** 몬스터를 (x, 2, z) 에 (ai = false 면 제자리 — 목표 없음, 스크립트 공격은 그대로) */
-    private static RpgMonster monster(GameTestHelper h, String key, double x, double y, double z, boolean ai) {
+    static RpgMonster monster(GameTestHelper h, String key, double x, double y, double z, boolean ai) {
         Vec3 at = h.absoluteVec(new Vec3(x, y, z));
         RpgMonster m = Monsters.spawnAt(h.getLevel(), key, at, 0F);
         h.assertTrue(m != null, "spawn " + key);
@@ -76,7 +76,7 @@ public final class RpgMonsterTests {
     }
 
     /** 바닐라 난이도 배율 (mobAttack — 플레이어가 받는 몹 피해) */
-    private static double scaled(GameTestHelper h, double a) {
+    static double scaled(GameTestHelper h, double a) {
         Difficulty d = h.getLevel().getDifficulty();
         return switch (d) {
             case PEACEFUL -> 0;
@@ -87,12 +87,12 @@ public final class RpgMonsterTests {
     }
 
     /** 무적 시간 없이 (다음 피해가 바로 들어가게) */
-    private static void fresh(ServerPlayer sp) {
+    static void fresh(ServerPlayer sp) {
         sp.setInvulnerableTime(0);
         sp.damageCooldownTime = 0;
     }
 
-    private static void near(GameTestHelper h, double got, double want, double eps, String what) {
+    static void near(GameTestHelper h, double got, double want, double eps, String what) {
         h.assertTrue(Math.abs(got - want) <= eps, what + ": " + got + " (want " + want + ")");
     }
 

@@ -196,7 +196,23 @@ public final class Shop {
     private static final int SELL_BACK = 0;
     private static final int SELL_ALL = 8;
     private static final int SELL_FIRST = 10;
-    private static final int SELL_INFO = 22;
+    /** 전리품 칸 (9단계 — 몬스터 14종): 가운데 · 아랫줄의 1 ~ 7 칸 (10 ~ 16 · 19 ~ 25), 풀이 칸은 윗줄 */
+    private static final int SELL_COLS = 7;
+    private static final int SELL_INFO = 2;
+
+    /** i 번째 전리품의 칸 */
+    public static int sellSlot(int i) {
+        return SELL_FIRST + (i / SELL_COLS) * 9 + i % SELL_COLS;
+    }
+
+    /** 칸 → 전리품 번호 (전리품 칸이 아니면 -1) */
+    static int sellIndex(int slot) {
+        int rel = slot - SELL_FIRST;
+        if (rel < 0) return -1;
+        int row = rel / 9;
+        int col = rel % 9;
+        return col < SELL_COLS ? row * SELL_COLS + col : -1;
+    }
 
     /** 팔 수 있는 전리품 하나 (몬스터 키 · 정의 · 가진 수) */
     public record Loot(String key, Obj d, int n) {
@@ -249,7 +265,8 @@ public final class Shop {
         for (int i = 0; i < list.size(); i++) {
             Loot e = list.get(i);
             Obj m = MONSTERS.obj(e.key());
-            form.set(SELL_FIRST + i, Slot.of(Icon.item(e.item()), e.d().str("color") + e.d().str("name") + " §7· 1개 " + e.price() + " " + Inv.CURRENCY_NAME).count(e.n())
+            if (sellSlot(i) >= ChestForm.SIZE) break;
+            form.set(sellSlot(i), Slot.of(Icon.item(e.item()), e.d().str("color") + e.d().str("name") + " §7· 1개 " + e.price() + " " + Inv.CURRENCY_NAME).count(e.n())
                     .lore(e.n() > 0 ? "§r§a보유 " + e.n() + "개 → " + e.n() * e.price() + " " + Inv.CURRENCY_NAME : "§r§8가진 것이 없음",
                             "§r§7" + m.str("name") + " (Lv." + Js.str(m.num("level")) + ") 전리품"));
         }
@@ -378,8 +395,8 @@ public final class Shop {
             else if (sel == SELL_BACK) next.accept("weapons");
             else if (sel == SELL_ALL) sellEverything(sp, msg -> sellStep(sp, msg, guard + 1, next));
             else {
-                int i = sel - SELL_FIRST;
-                Loot e = sel >= SELL_FIRST && i < b.list().size() ? b.list().get(i) : null;
+                int i = sellIndex(sel);
+                Loot e = i >= 0 && i < b.list().size() ? b.list().get(i) : null;
                 if (e == null) sellStep(sp, "", guard + 1, next);
                 else sellOne(sp, e, msg -> sellStep(sp, msg, guard + 1, next));
             }

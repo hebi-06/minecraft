@@ -316,14 +316,17 @@ public final class Quests {
     /** 길 안내 설정: off = 껐음 (/nav), q = 안내할 퀘스트 (받은 퀘스트 · 퀘스트 목록에서 고른 퀘스트, 없으면 "") */
     public record Nav(boolean off, String q) {}
 
-    /** 플레이어 진행 ({퀘스트 ID: 기록} — 바꾼 뒤 saveState). 처음 읽을 때 예전 (18단계) 메인 진행을 옮김 */
+    /** 플레이어 진행 ({퀘스트 ID: 기록} — 바꾼 뒤 saveState). 처음 읽을 때 예전 (18단계 · 31단계) 메인 진행을 옮김 */
     public static Map<String, Quest.Entry> stateOf(ServerPlayer sp) {
         Map<String, Quest.Entry> cached = STATES.get(sp.getUUID());
         if (cached != null) return cached;
         Map<String, Quest.Entry> st = Quest.parseState(Props.get(sp, P_STATE));
         STATES.put(sp.getUUID(), st);
         try {
-            if (MainQuests.migrateMainState(st, pathOf(sp))) saveState(sp);
+            // 예전 18단계 → 31단계 (rNN) → 9단계 46단계 (sNN) 차례로
+            boolean changed = MainQuests.migrateMainState(st, pathOf(sp));
+            if (MainQuests.migrateRState(st, pathOf(sp))) changed = true;
+            if (changed) saveState(sp);
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] main quest migration", e);
         }

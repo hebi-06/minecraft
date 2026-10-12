@@ -40,6 +40,14 @@ public class RpgMonster extends BedrockMob {
     float labelMax = -1F;
     /** 첫 서버 틱을 지났는지 (무리 태그 · 회복 시작 · 이름표) */
     boolean tracked;
+    /** 9단계 웜 유충 (매복): 숨어 있는지 — 속성 (클라이언트도 앎 → 충돌 상자 · 그리기) */
+    public static final String BURIED = "rpg:buried";
+    /** 숨은 동안의 충돌 상자 키 (모래 둔덕만 — 크기 배율 전) */
+    static final float BURIED_HEIGHT = 0.25F;
+    /** 싸우지 않고 지낸 첫 틱 (웜 유충이 다시 숨을 때를 셈 — 0 = 지금 싸우는 중이거나 아직 셈 시작 전, 서버) */
+    long calmSince;
+    /** 이 틱까지 스스로 걷지 못함 (멧돼지 돌진 준비 · 돌진 — 서버) */
+    long holdUntil;
 
     public RpgMonster(EntityType<? extends RpgMonster> type, Level level) {
         super(type, level);
@@ -64,6 +72,30 @@ public class RpgMonster extends BedrockMob {
     @Override
     protected void registerGoals() {
         BedrockGoals.add(this);
+    }
+
+    /** 숨어 있는지 (웜 유충 — 서버 · 클라이언트) */
+    public boolean buried() {
+        return def != null && def.props().containsKey(BURIED) && propBool(BURIED); // def: 만드는 중 (BedrockMob 생성자 앞) 에 크기를 물어도 되게
+    }
+
+    /** 숨은 동안은 모래 둔덕 높이만 (때리면 튀어나옴 — 몸에 부딪히지 않게) */
+    @Override
+    protected EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose pose) {
+        EntityDimensions d = super.getDefaultDimensions(pose);
+        return buried() ? EntityDimensions.scalable(d.width(), BURIED_HEIGHT) : d;
+    }
+
+    @Override
+    protected void onPropsChanged() {
+        refreshDimensions();
+    }
+
+    /** 숨은 동안 · 돌진 준비 중에는 스스로 걷지 않음 (목표 쪽으로 미는 힘이 0 — 돌진은 Monsters 가 빠르기를 줌) */
+    @Override
+    public boolean isImmobile() {
+        if (super.isImmobile() || buried()) return true;
+        return !level().isClientSide() && holdUntil > 0 && mmorpg.fabric.Tasks.now() < holdUntil;
     }
 
     @Override
