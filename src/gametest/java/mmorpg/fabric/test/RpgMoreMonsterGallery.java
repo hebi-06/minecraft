@@ -124,7 +124,11 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
             });
             server.runCommand("effect clear @a");
             server.runCommand("fill -12 -61 -16 12 -61 6 minecraft:grass_block");
-            ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+            ctx.runOnClient(mc -> {
+                mc.options.setCameraType(CameraType.FIRST_PERSON);
+                mc.options.hideGui = false;
+                mc.options.fov().set(70);
+            });
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             ctx.waitTicks(6);
         } catch (AssertionError | RuntimeException e) {
@@ -142,6 +146,13 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
 
     private static void shot(ClientGameTestContext ctx, String name) {
         ctx.takeScreenshot(TestScreenshotOptions.of(name).withSize(960, 540));
+    }
+
+    /**
+     * 창이 열린 장면은 창 크기 그대로 (작은 크기로 찍으면 창의 잘라 그리기 영역이 사진 밖으로 나가 0 이 되어 그리기가 멈춤 — 사진 찍기에서만 생기는 일)
+     */
+    private static void shotFull(ClientGameTestContext ctx, String name) {
+        ctx.takeScreenshot(name);
     }
 
     private static void teleport(ClientGameTestContext ctx, TestServerContext server, double x, double y, double z, float yaw, float pitch) {
@@ -217,6 +228,29 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
         ctx.runOnClient(mc -> mc.options.setCameraType(type));
     }
 
+    /**
+     * 3인칭 뒤 카메라를 비스듬히: 바라보던 쪽에서 yawOff 도 돌리고 pitch 도로 내려다봄 — 앞의 몬스터가 플레이어 몸에 가리지 않게
+     * (보는 쪽만 바꿈 — 몬스터는 이미 싸우는 중이라 상관없음)
+     */
+    private static void sideView(ClientGameTestContext ctx, float yawOff, float pitch) {
+        ctx.runOnClient(mc -> {
+            mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+            mc.player.setYRot(mc.player.getYRot() + yawOff);
+            mc.player.setXRot(pitch);
+        });
+        ctx.waitTicks(2);
+    }
+
+    /** 손 · HUD 숨기기 (F1 — 모습 사진) */
+    private static void hideGui(ClientGameTestContext ctx, boolean hide) {
+        ctx.runOnClient(mc -> mc.options.hideGui = hide);
+    }
+
+    /** 시야각 (멀리 있는 작은 것을 당겨 찍기 — 기본 70) */
+    private static void fov(ClientGameTestContext ctx, int deg) {
+        ctx.runOnClient(mc -> mc.options.fov().set(deg));
+    }
+
     /** 클라이언트의 이름표 (그 몬스터에 탄 글자 표시 엔티티의 글, 없으면 null) */
     private static String clientLabel(ClientGameTestContext ctx, int id) {
         return ctx.computeOnClient(mc -> {
@@ -229,8 +263,9 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
 
     // ------------------------------------------------------------ 장면
 
-    /** 한 줄로 선 새 몬스터 8종 (지역 순서 — 이름표 · 크기 비교) → 지역마다 둘씩 가까이 */
+    /** 한 줄로 선 새 몬스터 8종 (지역 순서 — 이름표 · 크기 비교) → 지역마다 둘씩 가까이 (비스듬히 서서 카메라를 봄) — 손 · HUD 없이 */
     private void lineup(ClientGameTestContext ctx, TestServerContext server) {
+        hideGui(ctx, true);
         teleport(ctx, server, PX, FLOOR, PZ, 180F, -6F);
         List<Integer> ids = new ArrayList<>();
         double z = PZ - 9.5;
@@ -243,14 +278,33 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
             Monsters.Kind k = Monsters.kind(RpgMoreMonsterTests.NEW.get(i));
             check(label != null && label.contains("Lv." + k.level()) && label.contains(k.name()), k.key() + ": label on client " + label);
         }
+        server.runOnServer(s -> {
+            for (RpgMonster m : level(s).getEntitiesOfClass(RpgMonster.class, new AABB(PX, FLOOR, PZ, PX, FLOOR, PZ).inflate(24))) m.discard();
+        });
+        // 지역마다 둘 (왼쪽 · 오른쪽에서 카메라 쪽으로 비스듬히)
         for (int r = 0; r < REGIONS.size(); r++) {
-            double mx = PX - 9.8 + (2 * r + 0.5) * 2.8;
-            Monsters.Kind big = Monsters.kind(RpgMoreMonsterTests.NEW.get(2 * r + 1));
-            teleport(ctx, server, mx, FLOOR, z + 5.2, 180F, 0F);
-            lookAtPoint(ctx, new Vec3(mx, FLOOR + Math.max(0.6, big.height() * 0.45), z));
+            Monsters.Kind a = Monsters.kind(RpgMoreMonsterTests.NEW.get(2 * r));
+            Monsters.Kind b = Monsters.kind(RpgMoreMonsterTests.NEW.get(2 * r + 1));
+            double big = Math.max(a.height(), b.height());
+            double d = big > 2.5 ? 5.4 : 3.9;
+            teleport(ctx, server, PX, FLOOR, PZ, 180F, 0F);
+            int ia = spawn(server, a.key(), PX - 0.7 - a.half(), FLOOR, PZ - d, -30F, false);
+            int ib = spawn(server, b.key(), PX + 0.7 + b.half(), FLOOR, PZ - d, 30F, false);
+            ctx.waitTicks(12);
+            lookAtPoint(ctx, new Vec3(PX, FLOOR + Math.max(0.5, big * 0.42), PZ - d));
             ctx.waitTicks(4);
             shot(ctx, "m9_pair_" + REGIONS.get(r));
+            discard(server, ia);
+            discard(server, ib);
         }
+        hideGui(ctx, false);
+    }
+
+    private static void discard(TestServerContext server, int id) {
+        server.runOnServer(s -> {
+            Entity e = level(s).getEntity(id);
+            if (e != null) e.discard();
+        });
     }
 
     /** 니세: 칼로 때림 → 쇠스랑 찌르기 → 뒤로 깡충 (3인칭 — 뛰어 물러나는 모습) */
@@ -261,12 +315,12 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
         int id = spawn(server, "nisse", PX, FLOOR, PZ - dist, 0F, false);
         ctx.waitTicks(6);
         lookAt(ctx, id, 0.5);
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
         ctx.waitTicks(4);
         attack(ctx, id);
         boolean fought = waitFor(ctx, server, 8, s -> fight(s, id) != null);
         wake(server, id);
         check(fought, "nisse: fight after the real hit");
+        sideView(ctx, -42F, 24F);
         boolean wind = waitFor(ctx, server, 10, s -> fight(s, id) != null && fight(s, id).windupKind() != null);
         ctx.waitTicks(3);
         shot(ctx, "m9_nisse_jab");
@@ -288,7 +342,6 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
         int id = spawn(server, "boar", PX, FLOOR, PZ - (k.half() + 0.3 + 6.0), 0F, false);
         ctx.waitTicks(8);
         lookAt(ctx, id, 0.6);
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
         ctx.waitTicks(6);
         Vec3 p0 = server.computeOnServer(s -> player(s).position());
         float hp0 = server.computeOnServer(s -> player(s).getHealth());
@@ -296,6 +349,7 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
         boolean fought = waitFor(ctx, server, 30, s -> fight(s, id) != null);
         wake(server, id);
         check(fought, "boar: fight after the arrow");
+        sideView(ctx, -32F, 18F);
         boolean prep = waitFor(ctx, server, 40, s -> fight(s, id) != null && "prep".equals(fight(s, id).chargePhase()));
         ctx.waitTicks(7);
         shot(ctx, "m9_boar_prep");
@@ -326,8 +380,10 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
         server.runOnServer(s -> Monsters.burrow(monster(s, id)));
         ctx.waitTicks(16);
         lookAt(ctx, id, 0.1);
-        ctx.waitTicks(2);
+        fov(ctx, 30); // 7칸 밖의 모래 둔덕을 당겨 찍음
+        ctx.waitTicks(3);
         shot(ctx, "m9_larva_buried");
+        fov(ctx, 70);
         boolean buriedClient = ctx.computeOnClient(mc -> mc.level.getEntity(id) instanceof RpgMonster m && m.buried() && m.getBbHeight() < 0.5);
         check(buriedClient && clientLabel(ctx, id) == null, "larva: buried on the client (low box, no tag)");
         // 다가감 (3칸 — detect 5 안)
@@ -377,11 +433,11 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
         int c = spawn(server, "frost_wolf", PX + 3.5, FLOOR, PZ - 10.0, 0F, false);
         ctx.waitTicks(8);
         lookAt(ctx, a, 0.7);
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
         ctx.waitTicks(6);
         use(ctx);
         boolean fought = waitFor(ctx, server, 30, s -> fight(s, a) != null);
         for (int id : List.of(a, b, c)) wake(server, id);
+        sideView(ctx, -28F, 20F);
         ctx.waitTicks(3);
         shot(ctx, "m9_wolf_howl");
         ctx.waitTicks(9);
@@ -405,8 +461,8 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
         ctx.waitTicks(3);
         attack(ctx, id);
         boolean wind = waitFor(ctx, server, 10, s -> fight(s, id) != null && fight(s, id).windupKind() != null);
-        camera(ctx, CameraType.THIRD_PERSON_BACK);
         lookAt(ctx, id, 1.4);
+        sideView(ctx, -36F, 16F);
         ctx.waitTicks(Math.max(1, k.windup() / 2));
         shot(ctx, "m9_giant_windup");
         boolean hit = waitFor(ctx, server, 20, s -> fight(s, id) != null && fight(s, id).hits() >= 1);
@@ -491,15 +547,15 @@ public final class RpgMoreMonsterGallery implements FabricClientGameTest {
             if (!waitDialog(ctx, d -> d.choices().stream().anyMatch(c -> c.text().contains("장난꾸러기 니세")), "olaf greeting with the nisse step")) return;
             ctx.getInput().setCursorPos(6, 6);
             ctx.waitTicks(2);
-            shot(ctx, "m9_q_greet");
+            shotFull(ctx, "m9_q_greet");
             click(ctx, conn, choiceWith(ctx, "장난꾸러기 니세"));
             if (!waitDialog(ctx, d -> d.text().contains("니세들이 말썽"), "offer page 1")) return;
-            shot(ctx, "m9_q_offer1");
+            shotFull(ctx, "m9_q_offer1");
             for (int i = 0; i < 4 && choiceWith(ctx, "수락하기") < 0; i++) click(ctx, conn, 0); // 다음 장
             if (!waitDialog(ctx, d -> d.text().contains("니세 열만 혼내 주게") && d.choices().size() >= 2, "offer last page")) return;
             ctx.getInput().setCursorPos(6, 6);
             ctx.waitTicks(2);
-            shot(ctx, "m9_q_offer");
+            shotFull(ctx, "m9_q_offer");
             click(ctx, conn, choiceWith(ctx, "수락하기"));
             ctx.waitTicks(6);
             String st = server.computeOnServer(s -> Quests.statusOf(player(s), Quests.getQuest(MainQuests.mainId("sword", MainQuests.mainKillStep("nisse")))));

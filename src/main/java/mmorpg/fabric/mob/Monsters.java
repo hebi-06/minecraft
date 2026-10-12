@@ -611,24 +611,40 @@ public final class Monsters {
 
     /** 맞으면 붙는 효과의 연출 (9단계): 독 = 초록 방울, 시듦 = 검은 연기, 냉기 (서리 · 드라우그) = 눈송이 · 하늘빛, 붙잡기 (게) = 몬스터 색 불꽃 */
     private static void onHitFx(ServerLevel level, Kind k, ServerPlayer p) {
-        Vec3 chest = V.up(p.position(), 1.1);
+        Vec3 chest = V.up(p.position(), 1.0);
         switch (k.onHit().effect()) {
             case "poison" -> {
                 SkillFx.sparks(level, chest, POISON, 8, 2.5);
-                level.sendParticles(ParticleTypes.ITEM_SLIME, chest.x, chest.y, chest.z, 6, 0.25, 0.35, 0.25, 0.02);
+                around(level, p, ParticleTypes.ITEM_SLIME, 6, 0.02);
             }
             case "wither" -> {
                 SkillFx.sparks(level, chest, WITHER, 8, 2);
-                level.sendParticles(ParticleTypes.LARGE_SMOKE, chest.x, chest.y, chest.z, 8, 0.25, 0.35, 0.25, 0.01);
+                around(level, p, ParticleTypes.LARGE_SMOKE, 8, 0.01);
             }
             case "slowness" -> {
                 if (k.key().startsWith("frost") || k.key().equals("draugr")) {
                     SkillFx.sparks(level, chest, FROST, 6, 2);
-                    level.sendParticles(ParticleTypes.SNOWFLAKE, chest.x, chest.y, chest.z, 14, 0.35, 0.5, 0.35, 0.02);
+                    around(level, p, ParticleTypes.SNOWFLAKE, 14, 0.02);
                 } else SkillFx.sparks(level, chest, k.color(), 6, 2);
             }
             default -> {
             }
+        }
+    }
+
+    /**
+     * 맞은 사람 둘레의 바닐라 알갱이: 다른 사람에게는 가슴 둘레에, 맞은 사람 자신에게는 발밑에 몇 개만 (가슴 높이의 큰 알갱이 · 연기가 1인칭 화면 바로 앞을
+     * 가리지 않게 — 9단계 사진첩에서 독 방울 · 시듦 연기가 화면을 덮던 것)
+     */
+    private static void around(ServerLevel level, ServerPlayer victim, net.minecraft.core.particles.ParticleOptions type, int n, double speed) {
+        Vec3 chest = V.up(victim.position(), 1.0);
+        Vec3 feet = V.up(victim.position(), 0.15);
+        for (ServerPlayer viewer : level.players()) {
+            boolean self = viewer == victim;
+            Vec3 at = self ? feet : chest;
+            if (viewer.position().distanceToSqr(at) > 48 * 48) continue;
+            level.sendParticles(viewer, type, false, false, at.x, at.y, at.z, self ? Math.max(1, n / 2) : n, self ? 0.45 : 0.25, self ? 0.05 : 0.35,
+                    self ? 0.45 : 0.25, self ? 0 : speed);
         }
     }
 

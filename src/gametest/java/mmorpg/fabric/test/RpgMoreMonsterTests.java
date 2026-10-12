@@ -355,8 +355,8 @@ public final class RpgMoreMonsterTests {
             h.assertTrue(fa != null && fa.packCalled() >= 2, "howl called the pack " + (fa == null ? null : fa.packCalled()));
             for (RpgMonster w : List.of(b, c)) {
                 Monsters.Fight fw = Monsters.fightOf(w);
-                // getTarget 은 가짜 플레이어를 크리에이티브로 보아 비움 (asValidTarget) → 정해 둔 대상 그대로
-                h.assertTrue(fw != null && fw.player() == sp && w.getTargetUnchecked() == sp, "pack wolf joins the fight " + (fw == null ? null : fw.player()) + " " + w.getTargetUnchecked());
+                // 엔티티 대상 (setTarget) 은 보지 않음: 가짜 플레이어는 바닐라가 크리에이티브로 보아 대상이 되지 않음 (asValidTarget) — 싸움 기록으로
+                h.assertTrue(fw != null && fw.player() == sp && fw.attackers().contains(sp.getUUID()), "pack wolf joins the fight " + (fw == null ? null : fw.player()));
                 h.assertTrue(fw.packCalled() == -1, "called wolves do not howl for more");
             }
             h.assertTrue(Monsters.fightOf(draugr) == null, "other monsters are not called");
