@@ -132,7 +132,7 @@ public final class Breakthrough {
 
     /**
      * 한 번 더 (echo): after 틱 뒤 같은 룬 효과를 지금 겨눈 곳으로 다시 (위력 P · 룬 정의 = 그 단계 + set — 예고가 짧음). 재사용 대기 · 각성 연출은 없음,
-     * 그 사이 죽거나 차원을 옮기면 없음. 화면 색 연출은 같은 단계 (시전 단계 기록)
+     * 그 사이 죽거나 차원을 옮기면 없음. 화면 색 연출은 같은 단계 (시전 단계 기록). 따로 띄우는 글자 · 알림 소리 없이 룬 연출만 다시 나감 (사용자 요청, 0.8.1)
      */
     private static void echo(ServerPlayer sp, Runes.Rune r, int level, double P, RuneBreak.Extra ex) {
         RuneCast.RuneFn fn = RuneCast.fn(r.def().str("fn"));
@@ -143,8 +143,6 @@ public final class Breakthrough {
         RuneKit.later(ex.after(), () -> {
             if (sp.isRemoved() || sp.isDeadOrDying() || !RuneKit.sameLife(sp, life)) return;
             noteCast(sp, r, level);
-            DamageNumbers.showFace(sp, "§e§l◆ 한 번 더!", 2.4, 0, 0.2); // 떠오르므로 낮게 (화면 위로 잘리지 않게)
-            SkillFx.play(sp.level(), "beacon.power", sp.position(), 1.6, 0.6);
             try {
                 fn.cast(sp, r, P, def);
             } catch (RuntimeException e) {

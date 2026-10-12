@@ -262,7 +262,7 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         check(RuneBreak.max() == 6, "max 6");
     }
 
-    /** 6돌 초월 룬의 "한 번 더": 앞 10칸 과녁 → 첫 공격 · 두 번째 (위력 = 첫 공격 × mult) 사진 · 확인 */
+    /** 6돌 초월 룬의 "한 번 더": 앞 10칸 과녁 → 첫 공격 · 두 번째 (위력 = 첫 공격 × mult, 따로 띄우는 글자 없음) 사진 · 확인 */
     private void echo(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn, String family, String fn, String shot) {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
@@ -299,6 +299,17 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         double d1 = server.computeOnServer(s -> dealt(player(s)));
         ctx.waitTicks(ex.after() - first - 2 + 4);
         shot(ctx, shot + "_again");
+        // 두 번째는 룬 연출만 (눈앞 "한 번 더" 글자 없음 — 사용자 요청, 0.8.1)
+        String label = server.computeOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (net.minecraft.world.entity.Display.TextDisplay td : sp.level().getEntitiesOfClass(net.minecraft.world.entity.Display.TextDisplay.class,
+                    sp.getBoundingBox().inflate(24), e -> true)) {
+                String t = td.getText().getString();
+                if (t.contains("한 번 더")) return t;
+            }
+            return "";
+        });
+        check(label.isEmpty(), fn + " 6: no echo label (" + label + ")");
         ctx.waitTicks(second - ex.after() - 4 + 2);
         shot(ctx, shot + "_second");
         ctx.waitTicks(10);
