@@ -118,5 +118,45 @@
     "name": "§b§lNPC 설정 도구§r§7 (NPC 터치 / 허공 누르기)",
     "glint": true,
     "stack": 1
+  },
+  "rpg:loot_nisse": {
+    "name": "§c니세의 빨간 모자§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_boar": {
+    "name": "§6멧돼지 엄니§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_sand_scorpion": {
+    "name": "§a전갈 독침§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_crab": {
+    "name": "§c게 집게발§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_worm_larva": {
+    "name": "§e유충 허물§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_grendel": {
+    "name": "§7그렌델의 발톱§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_frost_wolf": {
+    "name": "§b서리 늑대 가죽§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_frost_giant": {
+    "name": "§3서리 거인의 핵§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
   }
 }
