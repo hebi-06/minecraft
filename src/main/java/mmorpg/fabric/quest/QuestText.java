@@ -175,7 +175,7 @@ public final class QuestText {
         List<String> parts = new ArrayList<>();
         if (q.type.equals("choose") && r.weapon.isEmpty()) parts.add("고른 무기");
         if (r.emerald > 0) parts.add(CURRENCY_NAME + " " + r.emerald);
-        if (r.xp > 0) parts.add("경험치 " + r.xp + "레벨");
+        if (r.xp > 0) parts.add("경험치 " + r.xp + "레벨분"); // 정의 (받을 때 그 레벨 수만큼의 바닐라 경험치로 — 레벨업 3배)
         if (r.xpPoints > 0) parts.add("경험치 " + r.xpPoints);
         else if (!r.capped.isEmpty() && MONSTERS.objOrNull(r.capped) != null) {
             parts.add("§7경험치 없음 (최고 레벨 " + Js.str(MONSTERS.obj(r.capped).num("xpUntil")) + "부터)§f");

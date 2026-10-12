@@ -149,7 +149,7 @@ public final class RpgQuestTests {
 
     // ------------------------------------------------------------ 만든 퀘스트
 
-    /** 처치 퀘스트: 대화창으로 받기 → 플레이어가 잡음 · 때린 뒤 다른 피해로 죽음 (10초 안) → 보고 → 에메랄드 · 경험치 레벨 · 스탯 포인트 */
+    /** 처치 퀘스트: 대화창으로 받기 → 플레이어가 잡음 · 때린 뒤 다른 피해로 죽음 (10초 안) → 보고 → 에메랄드 · 경험치 (레벨 보상 → 바닐라 경험치, 9단계) · 스탯 포인트 */
     @GameTest(maxTicks = 40)
     public void customKillQuest(GameTestHelper h) {
         ServerPlayer sp = player(h);
@@ -194,14 +194,19 @@ public final class RpgQuestTests {
 
             int money = Inv.money(sp);
             int lv = sp.experienceLevel;
+            int xp0 = sp.totalExperience;
             int points = RpgData.of(sp).point();
             QuestTalk.talkLoop(sp, giver, null);
             pick(h, sp, "완료 보고");
-            h.assertTrue(dialogText(sp).contains("고맙네") && dialogText(sp).contains("퀘스트 완료"), "done " + dialogText(sp));
+            // 9단계 (레벨업 3배): 레벨 보상 1 = 지금 레벨의 바닐라 경험치 (완료 창에는 "경험치 N")
+            int want = mmorpg.core.Leveling.pointsForLevels(lv, 1);
+            h.assertTrue(dialogText(sp).contains("고맙네") && dialogText(sp).contains("퀘스트 완료") && dialogText(sp).contains("경험치 " + want),
+                    "done " + dialogText(sp));
             pick(h, sp, "확인");
             h.assertFalse(Forms.pending(sp), "closed");
             h.assertTrue(Inv.money(sp) == money + 5, "emerald " + Inv.money(sp));
-            h.assertTrue(sp.experienceLevel == lv + 1, "xp level " + sp.experienceLevel);
+            h.assertTrue(sp.totalExperience - xp0 == want, "xp +" + want + " (got " + (sp.totalExperience - xp0) + ")");
+            h.assertTrue(want < mmorpg.core.Leveling.need(lv), "1 quest level < 1 real level (×3)");
             h.assertTrue(RpgData.of(sp).point() >= points + 2, "points " + RpgData.of(sp).point() + " vs " + points);
             h.assertTrue(status(sp, saved.id).equals("done"), "done");
             h.assertTrue(Quests.questMark(sp, key) == null, "no mark");

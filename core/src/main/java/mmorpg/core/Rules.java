@@ -6,6 +6,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,9 +17,18 @@ import java.util.Map;
  * <p>Top-level keys are the config.js constant names ({@code TYPES}, {@code GRADES}, {@code RUNES}, ...).
  * Object key order is the JS order, so iterating a table here visits entries in the same order as
  * {@code Object.entries} in the add-on.
+ *
+ * <p>Java-only additions (stage 9 — the add-on is no longer developed): {@code /mmorpg/rules_more.json} is merged
+ * on top ({@link #merge}): an object constant gets the overlay's entries (added after the add-on's, or replacing an
+ * entry with the same key), an array or scalar constant is replaced, keys starting with "_" are comments.
+ * The parity test runs with {@code -Dmmorpg.pureRules=true} (no overlay — exactly the add-on's config.js).
  */
 public final class Rules {
     public static final String RESOURCE = "/mmorpg/rules.json";
+    /** Java-only additions merged on top of rules.json (new monsters, leveling — stage 9). */
+    public static final String MORE = "/mmorpg/rules_more.json";
+    /** System property: true = rules.json only (parity test). */
+    public static final String PURE = "mmorpg.pureRules";
 
     private final Obj root;
     private final List<Grade> grades;
@@ -45,12 +55,48 @@ public final class Rules {
     }
 
     private static Rules load() {
-        try (InputStream in = Rules.class.getResourceAsStream(RESOURCE)) {
-            if (in == null) throw new IllegalStateException(RESOURCE + " is not on the classpath (generate it with tools/export_rules.mjs)");
-            return new Rules(Json.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8)));
-        } catch (IOException e) {
-            throw new UncheckedIOException("cannot read " + RESOURCE, e);
+        Map<String, Object> base = read(RESOURCE);
+        if (base == null) throw new IllegalStateException(RESOURCE + " is not on the classpath (generate it with tools/export_rules.mjs)");
+        if (!Boolean.getBoolean(PURE)) {
+            Map<String, Object> more = read(MORE);
+            if (more != null) merge(base, more);
         }
+        return new Rules(base);
+    }
+
+    /** A JSON object resource (null if missing). */
+    private static Map<String, Object> read(String resource) {
+        try (InputStream in = Rules.class.getResourceAsStream(resource)) {
+            if (in == null) return null;
+            return Json.parseObject(new String(in.readAllBytes(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new UncheckedIOException("cannot read " + resource, e);
+        }
+    }
+
+    /**
+     * Merge an overlay into rules (in place): object + object → the overlay's entries are put into the object (new keys
+     * after the existing ones, same key replaced as a whole); anything else is replaced. Keys starting with "_" are skipped.
+     */
+    @SuppressWarnings("unchecked")
+    static void merge(Map<String, Object> base, Map<String, Object> overlay) {
+        for (Map.Entry<String, Object> e : overlay.entrySet()) {
+            String k = e.getKey();
+            if (k.startsWith("_")) continue;
+            Object old = base.get(k);
+            if (old instanceof Map && e.getValue() instanceof Map) {
+                Map<String, Object> into = new LinkedHashMap<>((Map<String, Object>) old);
+                for (Map.Entry<String, Object> x : ((Map<String, Object>) e.getValue()).entrySet()) {
+                    if (!x.getKey().startsWith("_")) into.put(x.getKey(), x.getValue());
+                }
+                base.put(k, into);
+            } else base.put(k, e.getValue());
+        }
+    }
+
+    /** True when the Java-only overlay is in (not the parity test's pure rules). */
+    public static boolean hasMore() {
+        return !Boolean.getBoolean(PURE) && Rules.class.getResource(MORE) != null;
     }
 
     // ------------------------------------------------------------------ typed accessors

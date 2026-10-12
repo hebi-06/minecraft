@@ -1,0 +1,56 @@
+{
+  "_comment": "자바 판에만 더한 규칙 (9단계 — 애드온 개발은 멈춤). Rules 가 rules.json (애드온 config.js) 위에 덧붙임: 표 (MONSTERS · MONSTER_DROPS · REPEAT_QUESTS) 는 항목을 더하고, 목록 (MONSTER_ORDER) · 값은 바꿈. 대조 시험은 덧붙이지 않음 (-Dmmorpg.pureRules=true).",
+  "LEVELING": {
+    "_comment": "한 레벨에 필요한 경험치 = 바닐라 × needMult (core.Leveling — 퀘스트의 레벨 보상은 그 레벨 수만큼의 바닐라 경험치로 줌)",
+    "needMult": 3
+  },
+  "MONSTER_ORDER": ["scarecrow", "nisse", "boar", "gulon", "sand_scorpion", "skeljaskrimsli", "crab", "worm_larva", "nix", "grendel", "draugr", "frost_wolf", "troll", "frost_giant"],
+  "MONSTERS": {
+    "nisse": {"name": "니세", "region": "farm", "level": 4, "hp": 36, "attack": 4, "every": 20, "windup": 6, "reach": 1.2, "lungeEvery": 40, "speed": 0.3, "chase": 1.5, "knockResist": 0, "xp": 2, "xpUntil": 11, "emerald": [0.25, 1, 1], "scale": 1, "box": [0.5, 0.95], "color": [0.95, 0.32, 0.26],
+      "hop": {"back": 0.62, "up": 0.4, "pause": 16},
+      "trait": "작은 농장 요정: 때리고 뒤로 깡충 물러남", "sounds": {"windup": "entity.fox.screech", "hit": "entity.fox.bite"}},
+    "boar": {"name": "광폭 멧돼지", "region": "farm", "level": 7, "hp": 46, "attack": 5, "every": 30, "windup": 9, "reach": 1.6, "lungeEvery": 70, "speed": 0.27, "chase": 1.4, "knockResist": 0.5, "xp": 3, "xpUntil": 14, "emerald": [0.3, 1, 1], "scale": 1.15, "box": [1, 1], "color": [0.66, 0.44, 0.28],
+      "charge": {"range": 10, "prep": 14, "speed": 0.95, "dash": 14, "width": 1.1, "knock": 1.25, "lift": 0.35, "mult": 1.4},
+      "trait": "돌진: 앞발로 땅을 긁다 길게 달려와 들이받음 (피해 1.4배 · 밀쳐냄)", "sounds": {"windup": "mob.hoglin.angry", "hit": "mob.hoglin.attack"}},
+    "sand_scorpion": {"name": "모래 전갈", "region": "desert", "level": 12, "hp": 60, "attack": 7, "every": 26, "windup": 9, "reach": 2, "lungeEvery": 50, "speed": 0.27, "chase": 1.35, "knockResist": 0.3, "xp": 4, "xpUntil": 19, "emerald": [0.35, 1, 2], "scale": 1.1, "box": [1.1, 0.75], "color": [0.93, 0.74, 0.38],
+      "onHit": {"effect": "poison", "seconds": 4, "amplifier": 0},
+      "trait": "꼬리 독침: 맞으면 독 4초", "sounds": {"windup": "entity.spider.ambient", "hit": "entity.bee.sting"}},
+    "crab": {"name": "집게 게", "region": "sea", "level": 18, "hp": 88, "attack": 12, "every": 30, "windup": 10, "reach": 1.7, "lungeEvery": 56, "speed": 0.24, "chase": 1.3, "knockResist": 0.7, "xp": 6, "xpUntil": 25, "emerald": [0.35, 1, 2], "scale": 1.2, "box": [1.3, 0.85], "color": [0.95, 0.42, 0.28], "shell": 0.25,
+      "onHit": {"effect": "slowness", "seconds": 1.5, "amplifier": 3},
+      "trait": "단단한 등딱지: 받는 피해 -25%, 집게로 붙잡음 (맞으면 구속 IV 1.5초)", "sounds": {"windup": "entity.armadillo.brush", "hit": "entity.armadillo.scute_drop"}},
+    "worm_larva": {"name": "웜 유충", "region": "desert", "level": 19, "hp": 92, "attack": 13, "every": 26, "windup": 9, "reach": 2.2, "lungeEvery": 48, "speed": 0.25, "chase": 1.3, "knockResist": 0.5, "xp": 7, "xpUntil": 26, "emerald": [0.4, 1, 2], "scale": 1.2, "box": [0.9, 1.5], "color": [0.92, 0.8, 0.56],
+      "burrow": {"detect": 5, "rest": 80, "emerge": 12},
+      "trait": "매복: 모래 속에 숨어 있다가 다가오면 튀어나와 먼저 덤빔", "sounds": {"windup": "entity.silverfish.ambient", "hit": "entity.silverfish.hurt"}},
+    "grendel": {"name": "그렌델", "region": "sea", "level": 27, "hp": 135, "attack": 19, "every": 28, "windup": 10, "reach": 2.3, "lungeEvery": 50, "speed": 0.27, "chase": 1.35, "knockResist": 0.5, "xp": 11, "xpUntil": 34, "emerald": [0.4, 1, 3], "scale": 1.6, "box": [0.8, 2], "color": [0.62, 0.72, 0.6],
+      "onHit": {"effect": "wither", "seconds": 3, "amplifier": 0},
+      "trait": "해안 동굴의 괴물: 할퀴면 시듦 3초", "sounds": {"windup": "entity.polar_bear.warning", "hit": "mob.ravager.bite"}},
+    "frost_wolf": {"name": "서리 늑대", "region": "north", "level": 32, "hp": 150, "attack": 23, "every": 20, "windup": 7, "reach": 1.6, "lungeEvery": 36, "speed": 0.33, "chase": 1.55, "knockResist": 0.3, "xp": 15, "xpUntil": 39, "emerald": [0.45, 1, 3], "scale": 1.25, "box": [0.9, 1.15], "color": [0.72, 0.9, 1],
+      "pack": {"radius": 12},
+      "onHit": {"effect": "slowness", "seconds": 2, "amplifier": 1},
+      "trait": "무리 사냥: 하나를 때리면 둘레 12칸의 서리 늑대도 덤빔, 물면 냉기 (구속 II 2초)", "sounds": {"windup": "entity.wolf.growl", "hit": "entity.fox.bite"}},
+    "frost_giant": {"name": "서리 거인", "region": "north", "level": 39, "hp": 290, "attack": 46, "every": 38, "windup": 12, "reach": 2.8, "lungeEvery": 72, "speed": 0.23, "chase": 1.3, "knockResist": 0.95, "xp": 26, "xpUntil": 46, "emerald": [0.55, 2, 5], "scale": 1.7, "box": [1.1, 2.3], "color": [0.56, 0.86, 1],
+      "shock": {"radius": 2.6, "mult": 0.5, "fx": "ice"},
+      "onHit": {"effect": "slowness", "seconds": 2, "amplifier": 1},
+      "trait": "이미르의 졸개: 내려치면 둘레 2.6칸 얼음 충격파 (절반), 맞으면 냉기 (구속 II 2초)", "sounds": {"windup": "mob.ravager.roar", "hit": "mob.irongolem.hit"}}
+  },
+  "MONSTER_DROPS": {
+    "nisse": {"item": "rpg:loot_nisse", "icon": "textures/items/rpg/loot/nisse", "name": "니세의 빨간 모자", "color": "§c", "chance": 0.5, "price": 1, "desc": "장난꾸러기 농장 요정의 작은 털모자", "rgb": [0.95, 0.3, 0.25]},
+    "boar": {"item": "rpg:loot_boar", "icon": "textures/items/rpg/loot/boar", "name": "멧돼지 엄니", "color": "§6", "chance": 0.5, "price": 1, "desc": "흙을 파헤치던 휘어진 엄니", "rgb": [0.96, 0.86, 0.66]},
+    "sand_scorpion": {"item": "rpg:loot_sand_scorpion", "icon": "textures/items/rpg/loot/sand_scorpion", "name": "전갈 독침", "color": "§a", "chance": 0.5, "price": 2, "desc": "끝에 독이 맺힌 꼬리 침", "rgb": [0.6, 0.95, 0.35]},
+    "crab": {"item": "rpg:loot_crab", "icon": "textures/items/rpg/loot/crab", "name": "게 집게발", "color": "§c", "chance": 0.5, "price": 2, "desc": "바위도 집어 부수는 단단한 집게", "rgb": [0.95, 0.45, 0.3]},
+    "worm_larva": {"item": "rpg:loot_worm_larva", "icon": "textures/items/rpg/loot/worm_larva", "name": "유충 허물", "color": "§e", "chance": 0.5, "price": 2, "desc": "모래 속에서 벗어 놓은 질긴 허물", "rgb": [0.95, 0.86, 0.56]},
+    "grendel": {"item": "rpg:loot_grendel", "icon": "textures/items/rpg/loot/grendel", "name": "그렌델의 발톱", "color": "§7", "chance": 0.5, "price": 3, "desc": "검게 젖은 괴물의 갈고리 발톱", "rgb": [0.62, 0.68, 0.62]},
+    "frost_wolf": {"item": "rpg:loot_frost_wolf", "icon": "textures/items/rpg/loot/frost_wolf", "name": "서리 늑대 가죽", "color": "§b", "chance": 0.5, "price": 4, "desc": "서리가 서린 은빛 가죽", "rgb": [0.76, 0.92, 1]},
+    "frost_giant": {"item": "rpg:loot_frost_giant", "icon": "textures/items/rpg/loot/frost_giant", "name": "서리 거인의 핵", "color": "§3", "chance": 0.5, "price": 5, "desc": "얼음 속에서 푸르게 빛나는 심장 조각", "rgb": [0.45, 0.85, 1]}
+  },
+  "REPEAT_QUESTS": {
+    "nisse": {"count": 8, "emerald": 10, "xp": 16},
+    "boar": {"count": 8, "emerald": 12, "xp": 24},
+    "sand_scorpion": {"count": 8, "emerald": 20, "xp": 32},
+    "crab": {"count": 10, "emerald": 30, "xp": 60},
+    "worm_larva": {"count": 10, "emerald": 32, "xp": 70},
+    "grendel": {"count": 10, "emerald": 45, "xp": 110},
+    "frost_wolf": {"count": 10, "emerald": 55, "xp": 150},
+    "frost_giant": {"count": 10, "emerald": 70, "xp": 260}
+  }
+}

@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.function.IntFunction;
 import mmorpg.core.Armor;
 import mmorpg.core.Js;
+import mmorpg.core.Leveling;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
@@ -56,6 +57,11 @@ public final class QuestRewards {
             r.xpPoints = 0;
             r.xp = 0;
             r.capped = q.xpMob;
+        }
+        // 9단계 (레벨업 3배): 레벨 보상은 지금 레벨부터 그 레벨 수만큼의 바닐라 경험치로 — 필요 경험치가 3배라 실제로는 1/3 레벨
+        if (r.xp > 0) {
+            r.xpPoints += Leveling.pointsForLevels(sp.experienceLevel, r.xp);
+            r.xp = 0;
         }
         if (r.armor.equals("path")) r.armorType = SideQuests.PATH_ARMOR.getOrDefault(Quests.pathOf(sp), "str");
         return r;
@@ -181,9 +187,12 @@ public final class QuestRewards {
         return lines.isEmpty() ? "" : "\n" + String.join("\n", lines);
     }
 
-    /** 보상 주기: 경험치 레벨 · 포인트 (바닐라 경험치 — 애드온 addLevels · addExperience), 스탯 포인트, 아이템 (가방이 차면 발밑) */
+    /**
+     * 보상 주기: 경험치 (바닐라 경험치 — 레벨 보상은 9단계부터 그 레벨 수만큼의 바닐라 경험치로, rewardFor 가 미리 바꿔 둠), 스탯 포인트,
+     * 아이템 (가방이 차면 발밑)
+     */
     public static void giveRewards(ServerPlayer sp, Quest.Reward r) {
-        if (r.xp > 0) sp.giveExperienceLevels(r.xp);
+        if (r.xp > 0) sp.giveExperiencePoints(Leveling.pointsForLevels(sp.experienceLevel, r.xp));
         if (r.xpPoints > 0) sp.giveExperiencePoints(r.xpPoints);
         if (r.points > 0) RpgPlayers.addPoints(sp, r.points);
         for (ItemStack stack : rewardStacks(r)) {
