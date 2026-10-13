@@ -56,9 +56,7 @@ public final class RpgScorpionsTests {
         BlockPos pos = new BlockPos(44_000 + slot * 96, 150, 53_140);
         int half = R + 8;
         hold[0] = Ticking.holdArea(level, Vec3.atCenterOf(pos), half, "t");
-        for (int cx = Math.floorDiv(pos.getX() - half, 16); cx <= Math.floorDiv(pos.getX() + half, 16); cx++) {
-            for (int cz = Math.floorDiv(pos.getZ() - half, 16); cz <= Math.floorDiv(pos.getZ() + half, 16); cz++) level.getChunk(cx, cz);
-        }
+        TestWait.loadAround(level, Vec3.atCenterOf(pos), half); // 둘레 청크까지 바로 (필드 몹이 곧 돌게)
         BlockState stone = Blocks.STONE.defaultBlockState();
         BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
         for (int dx = -(R + 6); dx <= R + 6; dx++) {
@@ -146,7 +144,7 @@ public final class RpgScorpionsTests {
      * 소환 → 두 마리: 체력 5000 · 7000, 이름 · 보스 막대 (마리마다), 제 자리 (가운데 ∓ 8칸), 엔진 등록 · 모듈 시작.
      * 여러 마리 싸움 엔진: 마리마다 무적 시간 (한 사람이 같은 틱에 둘을 때려도 둘 다), 평타 · 틀 (한 마리만), 제 자리 끌어오기 (밀려난 마리는 제 자리로)
      */
-    @GameTest(environment = "mmorpg:scorpions", maxTicks = 440)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 840)
     public void twoUnitsEachTheirOwn(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
@@ -154,7 +152,7 @@ public final class RpgScorpionsTests {
         ServerPlayer p1 = RpgGearTests.player(h);
         put(p1, a, 0, 10);
         // 필드의 몹이 돌기 시작할 때까지 기다렸다가 부름 (막대 · 끌어오기는 몹이 돌아야 — TestWait)
-        TestWait.await(h, () -> TestWait.entitiesTick(level, Arena.arenaCenter(a)), 200, () -> {
+        TestWait.await(h, () -> TestWait.entitiesTick(level, Arena.arenaCenter(a)), 600, () -> {
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.assertTrue(enc != null && enc.units.size() == 2, "two units " + (enc == null ? null : enc.units.size()));
         h.runAfterDelay(64, () -> {

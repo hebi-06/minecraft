@@ -24,6 +24,18 @@ final class TestWait {
         h.runAfterDelay(1, () -> await(h, cond, max - 1, then));
     }
 
+    /**
+     * 가운데 ± half 칸 네모와 그 둘레 3청크를 바로 불러옴 (이 스레드에서 — FULL). 엔티티 틱 상태는 둘레 2청크가 불러와져야 되는데, 다른 스레드가 만드는 동안
+     * 시험 서버는 틱을 쉬지 않고 돌려 몇백 틱이 지나기도 함 (2026-10-13 전갈 시험: 200틱을 기다려도 필드 몹이 한 번도 돌지 않음) — 먼저 불러 두면 몇 틱 안에 돎
+     */
+    static void loadAround(ServerLevel level, Vec3 center, double half) {
+        int cx0 = Math.floorDiv((int) Math.floor(center.x - half), 16) - 3;
+        int cx1 = Math.floorDiv((int) Math.floor(center.x + half), 16) + 3;
+        int cz0 = Math.floorDiv((int) Math.floor(center.z - half), 16) - 3;
+        int cz1 = Math.floorDiv((int) Math.floor(center.z + half), 16) + 3;
+        for (int cx = cx0; cx <= cx1; cx++) for (int cz = cz0; cz <= cz1; cz++) level.getChunk(cx, cz);
+    }
+
     /** 그 자리의 몹이 도는지 (청크가 엔티티 틱 범위 + 엔티티 구역이 도는 상태 — 바닐라가 몹을 자연 생성하는 조건과 같음) */
     static boolean entitiesTick(ServerLevel level, Vec3 at) {
         return level.canSpawnEntitiesInChunk(ChunkPos.containing(BlockPos.containing(at)));

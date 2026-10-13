@@ -138,7 +138,7 @@ public final class RpgRuneBreakTests {
      * 하늘빛은 둘레 사람 모두에게 가므로 이 시험 하나에서 차례로. 시험 환경 mmorpg:runebreak 로 따로 묶음 (앞 10칸 과녁은 시험 자리 밖 —
      * 다른 시험과 함께 돌면 남의 피해로 무적 시간이 걸려 두 번째 검이 들어가지 않을 수 있었음 · 천붕 9칸 범위가 남의 과녁도 맞힘, 빠른 CI 러너에서 2026-10-13).
      */
-    @GameTest(environment = "mmorpg:runebreak", maxTicks = 460)
+    @GameTest(environment = "mmorpg:runebreak", maxTicks = 860)
     public void transcendScreenColorByLevel(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
         RpgPlayers.setStat(sp, "vit", 30);
@@ -184,8 +184,9 @@ public final class RpgRuneBreakTests {
             // 기다렸다가 씀 (틱이 빠른 시험 서버에서는 몇십 틱 걸릴 수 있음 — 몹이 돌지 않으면 첫 검의 무적 시간 20틱이 줄지 않아 두 번째 검이 막혔음)
             Husk z = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, 11.5F));
             String held = mmorpg.fabric.boss.Ticking.holdArea(h.getLevel(), z.position(), 3, "t");
+            TestWait.loadAround(h.getLevel(), z.position(), 3);
             long waitFrom = h.getTick();
-            TestWait.await(h, () -> TestWait.entitiesTick(h.getLevel(), z.position()), 200, () -> {
+            TestWait.await(h, () -> TestWait.entitiesTick(h.getLevel(), z.position()), 600, () -> {
             long waited = h.getTick() - waitFrom;
             Runes.Rune fall = rune("str", "transcend");
             RuneCast.resetCooldowns(sp);
