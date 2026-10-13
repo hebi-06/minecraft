@@ -187,7 +187,8 @@ public final class Weapons {
         String designName = names == null ? null : names.strOrNull(g.id());
         String title = designName != null ? designName : g.name() + " " + t.str("name");
         boolean legacy = !isValidWeapon(level, g.id(), type);
-        List<Obj> skills = g.id().equals("transcend") && !legacy ? Skills.weaponSkills(type) : null;
+        // 초월 = SKILLS 의 두 스킬, 영웅 = HERO_SKILLS 의 한 스킬 (자바 전용 덧붙임 — 대조 시험의 규칙에는 없음). 구버전 조합은 없음
+        List<Obj> skills = legacy ? null : g.id().equals("transcend") ? Skills.weaponSkills(type) : g.id().equals("hero") ? Skills.heroSkills(type) : null;
         if (skills != null) skills = List.copyOf(skills);
         double damage = round1(LEVEL_DAMAGE.num(Js.str(level)) * t.num("damage") * g.mult());
         // 치명타는 무기 종류 · 레벨 · 등급으로만 (스탯은 치명타를 올리지 않음)
@@ -319,17 +320,22 @@ public final class Weapons {
         return lines;
     }
 
-    /** weapons.js skillLines: controls line + name/cooldown and description lines per skill. */
+    /**
+     * weapons.js skillLines: controls line + name/cooldown and description lines per skill.
+     * One skill (hero weapon — stage 10, Java only): "버튼: 스킬" / "웅크리면: 스킬" and "스킬 이름" without a number.
+     */
     public static List<String> skillLines(Weapon w, boolean dark) {
         String L = dark ? "§8" : "§7";
         String N = dark ? "§0" : "§f";
         String B = dark ? "§3" : "§b";
         boolean ranged = w.type().equals("bow") || w.type().equals("wand");
+        boolean one = w.skills().size() == 1;
         List<String> out = new ArrayList<>();
-        out.add(ranged ? "§r" + L + "웅크리면: 스킬1, 길게: 스킬2" : "§r" + L + "버튼: 스킬1, 웅크리면: 스킬2");
+        if (one) out.add(ranged ? "§r" + L + "웅크리면: 스킬" : "§r" + L + "버튼: 스킬");
+        else out.add(ranged ? "§r" + L + "웅크리면: 스킬1, 길게: 스킬2" : "§r" + L + "버튼: 스킬1, 웅크리면: 스킬2");
         for (int i = 0; i < w.skills().size(); i++) {
             Obj k = w.skills().get(i);
-            out.add("§r" + B + "스킬" + (i + 1) + " " + N + k.text("name") + " " + L + k.text("cd") + "초");
+            out.add("§r" + B + "스킬" + (one ? "" : String.valueOf(i + 1)) + " " + N + k.text("name") + " " + L + k.text("cd") + "초");
             out.add("§r" + L + " " + k.text("desc"));
             if (k.truthy("desc2")) out.add("§r" + L + " " + k.text("desc2"));
         }

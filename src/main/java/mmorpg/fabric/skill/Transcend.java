@@ -23,11 +23,13 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * 초월 무기 스킬 쓰기 (skills.js castSkill · 입력 · 재사용 대기 표시). 수치 · 이름은 규칙 코어의 SKILLS.
+ * 무기 스킬 쓰기 (skills.js castSkill · 입력 · 재사용 대기 표시). 수치 · 이름은 규칙 코어의 SKILLS (초월 — 둘) · HERO_SKILLS (영웅 — 하나, 10단계 자바 전용).
  * <ul>
  *   <li>근접 (그람 · 클라우 솔라스 · 궁니르 · 아이기스 · 티르빙): 우클릭 = 스킬 1, 웅크리고 우클릭 = 스킬 2</li>
  *   <li>활 · 완드 (아르테미스 · 간반테인): 짧게 우클릭 = 평타, 웅크리고 우클릭 = 스킬 1, 길게 (SKILLS.holdTicks 틱) = 스킬 2
  *       — 누르고 있는 동안 아이템 사용 (RpgWeaponItem 의 사용 시간), 떼면 평타</li>
+ *   <li>스킬이 하나인 무기 (영웅): 근접은 우클릭 · 웅크리고 우클릭 모두 그 스킬, 활 · 완드는 웅크리고 우클릭 = 스킬, 그냥 우클릭 = 바로 평타
+ *       (길게 누르기 없음 — 스킬 없는 활 · 완드와 같음)</li>
  * </ul>
  * 요구 조건 (레벨 · 요구 스탯) 은 무기와 같음. 재사용 대기는 스킬마다 따로, 초월 무기를 들고 있으면 화면 하단에 표시 (쓸 수 없으면 까닭) ·
  * 준비되면 작은 소리. 스킬이 대상이 없어 취소하면 (false) 재사용 대기 없음.
@@ -165,14 +167,21 @@ public final class Transcend {
 
     // ------------------------------------------------------------ 입력 (RpgWeaponItem 이 부름)
 
+    /** 길게 누르기를 재는 무기 (스킬이 둘인 활 · 완드 — 초월): 누르고 있는 동안 아이템 사용 */
+    public static boolean holdable(Weapon w) {
+        return w.skills() != null && w.skills().size() > 1 && RpgCombat.isRanged(w);
+    }
+
     /**
-     * 초월 무기 우클릭 (Item#use — 클라이언트 · 서버 둘 다). 근접은 바로 스킬, 활 · 완드는 웅크리면 스킬 1, 아니면 누르고 있기 시작 (사용)
+     * 스킬 무기 우클릭 (Item#use — 클라이언트 · 서버 둘 다). 근접은 바로 스킬 (스킬이 하나면 웅크려도 그 스킬), 활 · 완드는 웅크리면 스킬 1,
+     * 아니면 스킬이 둘이면 누르고 있기 시작 (사용), 하나면 바로 평타
      */
     public static InteractionResult use(Player p, InteractionHand hand, Weapon w) {
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
         boolean sneak = p.isShiftKeyDown();
+        boolean two = w.skills().size() > 1;
         if (!RpgCombat.isRanged(w)) {
-            if (p instanceof ServerPlayer sp) castSkill(sp, w, sneak ? 1 : 0);
+            if (p instanceof ServerPlayer sp) castSkill(sp, w, sneak && two ? 1 : 0);
             return InteractionResult.CONSUME;
         }
         if (sneak) {
@@ -181,6 +190,11 @@ public final class Transcend {
                 castSkill(sp, w, 0);
             }
             return InteractionResult.CONSUME;
+        }
+        if (!two) {
+            // 영웅 활 · 완드: 스킬 없는 활 · 완드처럼 바로 평타 (RpgWeaponItem.use 와 같음)
+            if (p instanceof ServerPlayer sp) RpgCombat.fireRanged(sp, p.getItemInHand(hand), w, null);
+            return InteractionResult.SUCCESS;
         }
         p.startUsingItem(hand);
         if (p instanceof ServerPlayer sp) PRESSES.put(sp.getUUID(), new Press(w, Tasks.now()));

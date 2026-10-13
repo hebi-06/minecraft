@@ -1,5 +1,5 @@
 {
-  "_comment": "자바 판에만 더한 규칙 (9단계 — 애드온 개발은 멈춤). Rules 가 rules.json (애드온 config.js) 위에 덧붙임: 표 (MONSTERS · MONSTER_DROPS · REPEAT_QUESTS) 는 항목을 더하고, 목록 (MONSTER_ORDER) · 값은 바꿈. 대조 시험은 덧붙이지 않음 (-Dmmorpg.pureRules=true).",
+  "_comment": "자바 판에만 더한 규칙 (9단계부터 — 애드온 개발은 멈춤). Rules 가 rules.json (애드온 config.js) 위에 덧붙임: 표 (MONSTERS · MONSTER_DROPS · REPEAT_QUESTS) 는 항목을 더하고, 새 표 (HERO_SKILLS — 10단계) 는 그대로 넣고, 목록 (MONSTER_ORDER) · 값은 바꿈. 대조 시험은 덧붙이지 않음 (-Dmmorpg.pureRules=true).",
   "LEVELING": {
     "_comment": "한 레벨에 필요한 경험치 = 바닐라 × needMult (core.Leveling — 퀘스트의 레벨 보상은 그 레벨 수만큼의 바닐라 경험치로 줌)",
     "needMult": 3
@@ -42,6 +42,21 @@
     "grendel": {"item": "rpg:loot_grendel", "icon": "textures/items/rpg/loot/grendel", "name": "그렌델의 발톱", "color": "§7", "chance": 0.5, "price": 3, "desc": "검게 젖은 괴물의 갈고리 발톱", "rgb": [0.62, 0.68, 0.62]},
     "frost_wolf": {"item": "rpg:loot_frost_wolf", "icon": "textures/items/rpg/loot/frost_wolf", "name": "서리 늑대 가죽", "color": "§b", "chance": 0.5, "price": 4, "desc": "서리가 서린 은빛 가죽", "rgb": [0.76, 0.92, 1]},
     "frost_giant": {"item": "rpg:loot_frost_giant", "icon": "textures/items/rpg/loot/frost_giant", "name": "서리 거인의 핵", "color": "§3", "chance": 0.5, "price": 5, "desc": "얼음 속에서 푸르게 빛나는 심장 조각", "rgb": [0.45, 0.85, 1]}
+  },
+  "HERO_SKILLS": {
+    "_comment": "영웅 무기 스킬 (10단계 — 자바 전용, 무기마다 하나). 근접 = 우클릭 (웅크리고 우클릭도), 활 · 완드 = 웅크리고 우클릭 (그냥 누르면 평타). 세기 = 같은 종류 초월 스킬 1 의 약 0.7배 (방패는 피해 배율이 낮아 아이기스와 같은 비율로 큰 수), 재사용 대기 10초. 피해 합 = Skills.skillTotalMult (mult × hits/shots + afterMult). color = [빛, 심지]",
+    "sword": {"id": "balmung_wave", "name": "용살 검기", "desc": "푸른 검기를 날려 앞의 적을 모두 벰", "desc2": "벤 자리의 검흔이 0.5초 뒤 터짐", "cd": 10, "mult": 3.6, "afterMult": 2.4,
+      "range": 12, "width": 1.5, "speed": 1.2, "windup": 3, "delay": 10, "knock": 0.25, "pitch": 25, "size": 3.4, "color": [[0.45, 0.82, 1], [0.92, 0.98, 1]]},
+    "dagger": {"id": "shadow_ambush", "name": "그림자 습격", "desc": "그림자가 되어 적의 등 뒤로 이동해 찌름", "desc2": "분신 둘이 베고 그림자가 터짐", "cd": 10, "mult": 1.95, "hits": 2, "afterMult": 2.2,
+      "range": 10, "cone": 70, "side": 1.1, "gap": 10, "radius": 2.5, "color": [[0.62, 0.3, 1], [0.9, 0.78, 1]]},
+    "axe": {"id": "earth_fissure", "name": "심판의 균열", "desc": "땅을 내리쳐 앞으로 균열을 냄", "desc2": "바위 가시가 적을 띄우고 용암이 분출", "cd": 10, "mult": 3.9, "afterMult": 3.0,
+      "range": 9, "width": 1.3, "start": 1.2, "lift": 0.6, "delay": 12, "color": [[1, 0.54, 0.16], [1, 0.88, 0.6]], "rock": [0.52, 0.38, 0.26]},
+    "shield": {"id": "durand_smite", "name": "성광 강타", "desc": "빛의 방패로 앞을 쳐 밀고 1초 기절", "desc2": "3초 피해 -30% · 빛기둥이 내리꽂힘", "cd": 10, "mult": 12, "afterMult": 8.6,
+      "range": 4.5, "cone": 120, "knock": 0.9, "stun": 20, "guard": 60, "reduce": 0.3, "delay": 12, "color": [[1, 0.85, 0.42], [1, 0.98, 0.86]]},
+    "bow": {"id": "elf_volley", "name": "정령의 연사", "desc": "바람 정령과 함께 유도 화살 4발", "desc2": "적이 여럿이면 3명까지 나눠 쏨", "cd": 10, "mult": 1.55, "shots": 4,
+      "range": 24, "cone": 30, "spread": 8, "targets": 3, "flight": 6, "gap": 3, "curve": 1.6, "color": [[0.43, 1, 0.56], [0.9, 1, 0.92]]},
+    "wand": {"id": "lich_harvest", "name": "영혼 수확", "desc": "망자의 사슬이 적을 묶고 느리게 함", "desc2": "영혼을 거둬 피해의 10% 회복", "cd": 10, "mult": 2.7, "afterMult": 3.2,
+      "range": 20, "radius": 3.5, "bind": 6, "delay": 10, "slow": 30, "slowAmp": 1, "heal": 0.1, "healCap": 0.1, "back": 8, "color": [[0.37, 1, 0.62], [0.85, 1, 0.9]]}
   },
   "REPEAT_QUESTS": {
     "nisse": {"count": 8, "emerald": 10, "xp": 16},

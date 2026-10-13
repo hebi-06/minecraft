@@ -17,7 +17,8 @@ import java.util.List;
  * @param typeLabel  type word on the first lore line (궁니르: "창")
  * @param look       alternative slash effect (궁니르: "spear") or null
  * @param legacy     a combination from older versions: still works, cannot be obtained anew
- * @param skills     the two SKILLS of a current-rule transcend weapon, else null
+ * @param skills     the two SKILLS of a current-rule transcend weapon, the one HERO_SKILLS skill of a current-rule hero
+ *                   weapon (Java overlay — stage 10), else null
  * @param damage     base damage (one decimal)
  * @param critChance crit chance (capped at CRIT_CAP), {@code critMult}: crit multiplier (two decimals)
  * @param passive    shields only: damage reduction while held, {@code block}: reduction while blocking

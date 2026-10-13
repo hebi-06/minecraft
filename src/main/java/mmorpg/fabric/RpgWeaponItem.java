@@ -27,6 +27,7 @@ import net.minecraft.world.level.Level;
  * 근접 (칼 · 단검 · 도끼 · 방패 · 마검): 평타 피해는 RpgCombat 이 바꿈 (공격 속도 2.0 = 0.5초마다 꽉 찬 공격 — 베드락의 초당 약 2번과 같게).
  * 활 · 완드: 누르면 (사용) 바라보는 대상에 바로 쏨 (완드는 시전 0.5초 뒤), 몹을 때려도 그 몹에게 쏨.
  * 초월 무기 (스킬 둘): 우클릭 · 웅크리고 우클릭 · 길게 우클릭으로 스킬 (Transcend) — 활 · 완드는 누르고 있는 동안 아이템 사용, 짧게 떼면 평타.
+ * 영웅 무기 (스킬 하나 — 10단계): 근접은 우클릭, 활 · 완드는 웅크리고 우클릭 (그냥 누르면 바로 평타).
  */
 public final class RpgWeaponItem extends Item {
     private final Weapon weapon;
@@ -63,15 +64,21 @@ public final class RpgWeaponItem extends Item {
     @Override
     public void appendHoverText(ItemStack stack, Item.TooltipContext context, TooltipDisplay display, Consumer<Component> tooltip, TooltipFlag flag) {
         for (String line : Weapons.weaponInfo(weapon, false, mmorpg.fabric.gear.WeaponEnhance.of(stack))) {
-            // 조작 줄: 애드온의 "버튼" (모바일) → 자바의 우클릭
-            tooltip.accept(Component.literal(BedrockText.toJava(line.replace("버튼: 스킬1, 웅크리면: 스킬2", "우클릭: 스킬1, 웅크리고 우클릭: 스킬2")
-                    .replace("웅크리면: 스킬1, 길게: 스킬2", "웅크리고 우클릭: 스킬1, 길게 우클릭: 스킬2"))));
+            tooltip.accept(Component.literal(BedrockText.toJava(javaControls(line))));
         }
     }
 
-    /** 활 · 완드 초월 무기: 길게 누르기를 재려고 아이템 사용 (스킬 2 는 HOLD_TICKS 틱에, 그 뒤 떼면 아무 일 없음) */
+    /** 조작 줄: 애드온의 "버튼" (모바일) → 자바의 우클릭 (스킬 둘 · 하나 — 하나는 줄 끝이 "스킬") */
+    public static String javaControls(String line) {
+        return line.replace("버튼: 스킬1, 웅크리면: 스킬2", "우클릭: 스킬1, 웅크리고 우클릭: 스킬2")
+                .replace("웅크리면: 스킬1, 길게: 스킬2", "웅크리고 우클릭: 스킬1, 길게 우클릭: 스킬2")
+                .replaceAll("버튼: 스킬$", "우클릭: 스킬")
+                .replaceAll("웅크리면: 스킬$", "웅크리고 우클릭: 스킬");
+    }
+
+    /** 활 · 완드 초월 무기 (스킬 둘): 길게 누르기를 재려고 아이템 사용 (스킬 2 는 HOLD_TICKS 틱에, 그 뒤 떼면 아무 일 없음) */
     private boolean holdable() {
-        return weapon.skills() != null && RpgCombat.isRanged(weapon);
+        return Transcend.holdable(weapon);
     }
 
     @Override

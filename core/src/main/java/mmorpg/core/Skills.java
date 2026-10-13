@@ -2,15 +2,35 @@ package mmorpg.core;
 
 import java.util.List;
 
-/** Transcend weapon skills: config.js {@code SKILLS}, {@code skillTotalMult}, {@code tyrfingHpFactor}. */
+/**
+ * Weapon skills: config.js {@code SKILLS} (transcend — two per type), {@code skillTotalMult}, {@code tyrfingHpFactor};
+ * Java-only {@code HERO_SKILLS} (stage 10 — one per hero weapon type, rules_more.json; absent with pure rules).
+ */
 public final class Skills {
     private Skills() {}
 
     private static final Obj SKILLS = Rules.get().obj("SKILLS");
+    /** HERO_SKILLS (Java overlay) or null (pure rules — the parity test) */
+    private static final Obj HERO = Rules.get().root().objOrNull("HERO_SKILLS");
 
     /** SKILLS[type]: the two skills of a weapon type, or null. */
     public static List<Obj> weaponSkills(String type) {
         return SKILLS.get(type) instanceof List ? SKILLS.objsOrNull(type) : null;
+    }
+
+    /** HERO_SKILLS[type]: the one skill of a hero weapon type (as a list), or null (no such type · pure rules). */
+    public static List<Obj> heroSkills(String type) {
+        if (HERO == null || type.startsWith("_")) return null;
+        Obj k = HERO.objOrNull(type);
+        return k == null ? null : List.of(k);
+    }
+
+    /** The weapon types that have a hero skill (HERO_SKILLS order, comments skipped). */
+    public static List<String> heroTypes() {
+        if (HERO == null) return List.of();
+        List<String> out = new java.util.ArrayList<>();
+        for (String t : HERO.keys()) if (!t.startsWith("_")) out.add(t);
+        return List.copyOf(out);
     }
 
     /**
