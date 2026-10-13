@@ -81,7 +81,9 @@ final class LichStaff {
         double openS = (bind + delay + 8) / 20.0;
         // 시전: 지팡이 끝 번쩍임 → 원 가운데로 가는 영혼빛
         Vec3 tip = tipAt(sp);
-        SkillFx.fx(level, "rpg:arrow_spark", tip, Opt.of("dir", V.UP, "size", 0.3, "grow", 3.0, "life", 0.25, "color", glow, "alpha", 1.0));
+        // 지팡이 끝 번쩍임 (눈 앞 1칸 남짓 — 작게: 크면 1인칭 화면에 흐린 네모로 보임)
+        SkillFx.fx(level, "rpg:arrow_spark", tip, Opt.of("dir", V.UP, "size", 0.1, "grow", 1.8, "life", 0.2, "color", glow, "alpha", 1.0));
+        SkillFx.sparks(level, tip, core, 4, 1.5);
         // 영혼빛은 지팡이 끝에서 1.5칸 앞부터 (눈 가까이의 굵은 조각이 1인칭 화면을 가리지 않게)
         Vec3 toC = V.sub(V.up(c, 0.3), tip);
         if (V.len(toC) > 2.0) {

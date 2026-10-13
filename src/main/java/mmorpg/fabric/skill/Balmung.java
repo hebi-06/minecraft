@@ -40,8 +40,8 @@ final class Balmung {
         Vec3 f0 = Kit.facingOf(sp);
         Vec3 eye0 = sp.getEyePosition();
         Vec3 hand = V.add(V.add(V.up(eye0, -0.4), f0, 0.8), V.rightOf(f0), 0.4);
-        SkillFx.fx(level, "rpg:arrow_spark", hand, Opt.of("dir", V.UP, "size", 0.22, "grow", 3.5, "life", 0.18, "color", core, "alpha", 1.0));
-        SkillFx.fx(level, "rpg:arrow_spark", hand, Opt.of("dir", V.UP, "size", 0.4, "grow", 2.0, "life", 0.16, "color", glow, "alpha", 0.8));
+        SkillFx.fx(level, "rpg:arrow_spark", hand, Opt.of("dir", V.UP, "size", 0.1, "grow", 2.0, "life", 0.18, "color", core, "alpha", 1.0));
+        SkillFx.sparks(level, hand, glow, 5, 1.5);
         SkillFx.shock(level, sp.position(), glow, 1.1, 0.3);
         SkillFx.play(level, "item.trident.riptide_1", eye0, 1.5, 0.6);
         SkillFx.play(level, "chime.amethyst_block", eye0, 1.4, 1.0);

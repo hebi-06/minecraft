@@ -88,9 +88,9 @@ final class ElfBow {
             arrow(sp, w, k, ok, e, i, (int) (launch - now), flight, arrive, glow, core);
         }
         // 정령: 나타나 화살을 다 쏠 때까지 (매 3틱 다시 그림 — 나를 따라감)
+        // 나타남: 정령 둘레에 작은 반짝임 · 나뭇잎 (눈 앞 1칸 남짓 — 큰 빛은 1인칭 화면을 가림)
         Vec3 s0 = sylphAt(sp);
-        SkillFx.burst(level, s0, glow, 0.3, 0.25);
-        SkillFx.sparks(level, s0, core, 4, 1.2);
+        SkillFx.sparks(level, s0, core, 6, 1.0);
         SkillFx.play(level, "mob.allay.idle", s0, 1.3, 0.9);
         SkillFx.play(level, "chime.amethyst_block", s0, 1.6, 0.8);
         int stay = (int) (end - now) + 8;
