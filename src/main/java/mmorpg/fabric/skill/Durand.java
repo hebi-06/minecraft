@@ -1,10 +1,7 @@
 package mmorpg.fabric.skill;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
@@ -54,14 +51,13 @@ final class Durand {
         double half = Math.toRadians(k.num("cone") / 2);
         List<LivingEntity> inCone = new ArrayList<>();
         for (LivingEntity e : Kit.around(sp, pos, k.num("range"))) if (Kit.bodyInCone(e, pos, f, half)) inCone.add(e);
-        Map<UUID, LivingEntity> struck = new LinkedHashMap<>();
+        List<LivingEntity> targets = Kit.visibleFrom(sp, eye, inCone);
         long now = Tasks.now();
         double knock = k.num("knock");
         int stun = (int) k.num("stun");
-        for (LivingEntity e : Kit.visibleFrom(sp, eye, inCone)) {
+        for (LivingEntity e : targets) {
             Kit.hitAt(sp, e, Kit.reserveHit(sp, e, now), ok, () -> {
                 if (Kit.skillHit(sp, e, w, k.num("mult")) <= 0) return;
-                struck.put(e.getUUID(), e);
                 Vec3 c = HeroKit.body(e, eye);
                 double near = HeroKit.near(sp.getEyePosition(), c, 0.5);
                 RuneKit.hitFlash(level, c, f, glow, core, 0.9 * near);
@@ -98,7 +94,8 @@ final class Durand {
             long t0 = Tasks.now();
             double reach = k.num("range") + 6;
             List<LivingEntity> list = new ArrayList<>();
-            for (LivingEntity e : struck.values()) if (!e.isRemoved() && V.hdist(e.position(), pos) <= reach) list.add(e);
+            // 친 적 (몹 무적 시간으로 강타가 밀렸어도 — 빛기둥은 그 뒤로 밀림)
+            for (LivingEntity e : targets) if (Kit.canHit(sp, e) && V.hdist(e.position(), pos) <= reach) list.add(e);
             if (!list.isEmpty()) {
                 SkillFx.play(level, "block.bell.hit", pos, 1.7, 0.8);
                 SkillFx.play(level, "ambient.weather.lightning.impact", pos, 1.9, 0.25);

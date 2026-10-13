@@ -50,7 +50,7 @@
     "dagger": {"id": "shadow_ambush", "name": "그림자 습격", "desc": "그림자가 되어 적의 등 뒤로 이동해 찌름", "desc2": "분신 둘이 베고 그림자가 터짐", "cd": 10, "mult": 1.95, "hits": 2, "afterMult": 2.2,
       "range": 10, "cone": 70, "side": 1.1, "gap": 10, "radius": 2.5, "color": [[0.62, 0.3, 1], [0.9, 0.78, 1]]},
     "axe": {"id": "earth_fissure", "name": "심판의 균열", "desc": "땅을 내리쳐 앞으로 균열을 냄", "desc2": "바위 가시가 적을 띄우고 용암이 분출", "cd": 10, "mult": 3.9, "afterMult": 3.0,
-      "range": 9, "width": 1.3, "start": 1.2, "lift": 0.6, "delay": 12, "color": [[1, 0.54, 0.16], [1, 0.88, 0.6]], "rock": [0.52, 0.38, 0.26]},
+      "range": 9, "width": 1.3, "start": 1.0, "lift": 0.6, "delay": 12, "color": [[1, 0.54, 0.16], [1, 0.88, 0.6]], "rock": [0.52, 0.38, 0.26]},
     "shield": {"id": "durand_smite", "name": "성광 강타", "desc": "빛의 방패로 앞을 쳐 밀고 1초 기절", "desc2": "3초 피해 -30% · 빛기둥이 내리꽂힘", "cd": 10, "mult": 12, "afterMult": 8.6,
       "range": 4.5, "cone": 120, "knock": 0.9, "stun": 20, "guard": 60, "reduce": 0.3, "delay": 12, "color": [[1, 0.85, 0.42], [1, 0.98, 0.86]]},
     "bow": {"id": "elf_volley", "name": "정령의 연사", "desc": "바람 정령과 함께 유도 화살 4발", "desc2": "적이 여럿이면 3명까지 나눠 쏨", "cd": 10, "mult": 1.55, "shots": 4,

@@ -228,7 +228,7 @@ public final class RpgHeroSkillTests {
         });
     }
 
-    @GameTest(environment = ENV, maxTicks = 60)
+    @GameTest(environment = ENV, maxTicks = 90)
     public void durandSmiteGuardsAndStuns(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h);

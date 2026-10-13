@@ -148,7 +148,7 @@ final class LichStaff {
             boolean souls = !list.isEmpty();
             Tasks.later(back, () -> {
                 if (!ok.getAsBoolean()) return;
-                double got = heal.flush();
+                double got = heal.open();
                 if (!souls && got <= 0) return;
                 Vec3 at = V.up(sp.position(), 1.0);
                 SkillFx.burst(level, at, glow, 1.0, 0.3);

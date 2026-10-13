@@ -44,12 +44,23 @@ final class EarthJudgment {
         Vec3 f = Kit.facingOf(sp);
         Double g = Kit.solidBelow(level, V.up(start, 0.3), 3.3);
         Vec3 from = new Vec3(start.x, g == null ? start.y : Math.min(start.y, g), start.z);
-        // 균열 자리: 한 칸마다 (start, start + 1, …) 의 설 자리 — Kit.dashSpots (0.5칸마다) 에서 고름
+        // 균열 자리: 한 칸마다 (start, start + 1, …) 의 설 자리 — Kit.dashSpots (0.5칸마다, 끊기는 데까지) 에서 가장 가까운 것 (0.26칸 안 — 없으면 거기서 끝)
         double first = k.num("start");
+        double range = k.num("range");
+        List<Kit.Spot> spots = Kit.dashSpots(level, from, f, range);
         List<Vec3> path = new ArrayList<>();
-        for (Kit.Spot x : Kit.dashSpots(level, from, f, k.num("range"))) {
-            double s = x.s() - first;
-            if (s > -0.01 && Math.abs(s - Math.round(s)) < 0.01) path.add(x.p());
+        for (double want = first; want <= range + 0.01; want += 1) {
+            Vec3 best = null;
+            double bd = 0.26;
+            for (Kit.Spot x : spots) {
+                double d = Math.abs(x.s() - want);
+                if (d <= bd) {
+                    bd = d;
+                    best = x.p();
+                }
+            }
+            if (best == null) break;
+            path.add(best);
         }
         boolean blocked = path.isEmpty();
         if (blocked) path.add(V.add(from, f, 0.6)); // 바로 앞이 막힘: 발 앞에서만

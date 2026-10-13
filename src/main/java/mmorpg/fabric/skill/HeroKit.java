@@ -56,13 +56,16 @@ final class HeroKit {
     }
 
     /**
-     * 준 피해의 rate 만큼 회복 (한 번 쓸 때 실제로 회복한 양이 최대 체력의 cap 까지): add 로 모으고 flush 로 한 번에 (숫자 하나 — 초록 +)
+     * 준 피해의 rate 만큼 회복 (한 번 쓸 때 실제로 회복한 양이 최대 체력의 cap 까지): add 로 모으고 open 으로 한 번에 (숫자 하나 — 초록 +).
+     * open 뒤에 늦게 들어온 피해 (몹 무적 시간으로 밀린 타격) 는 들어오는 대로 다음 틱에 회복
      */
     static final class Heal {
         private final ServerPlayer sp;
         private final double rate;
         private double left;
         private double pool;
+        private boolean open;
+        private boolean pending;
 
         Heal(ServerPlayer sp, double rate, double cap) {
             this.sp = sp;
@@ -71,11 +74,24 @@ final class HeroKit {
         }
 
         void add(double dealt) {
-            if (dealt > 0) pool += dealt;
+            if (!(dealt > 0)) return;
+            pool += dealt;
+            if (!open || pending) return;
+            pending = true;
+            Tasks.later(1, () -> {
+                pending = false;
+                flush();
+            });
+        }
+
+        /** 이제부터 회복: 모은 것을 바로 — 실제로 회복한 양 */
+        double open() {
+            open = true;
+            return flush();
         }
 
         /** 모은 피해만큼 회복 — 실제로 회복한 양 (0 = 없음) */
-        double flush() {
+        private double flush() {
             if (pool <= 0 || left <= 0 || sp.isRemoved() || !sp.isAlive()) return 0;
             double want = Math.min(left, pool * rate);
             pool = 0;
