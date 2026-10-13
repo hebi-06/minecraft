@@ -163,7 +163,7 @@ public final class RpgWeaponsMoreTests {
         hold(sp, w);
         Husk a = dummy(h, 1.5, 2, 3.5); // 맞힌 적 (앞 2칸)
         Husk b = dummy(h, 3.0, 2, 3.5); // 앞 비스듬히 (약 37°) — 넓게 베기
-        Husk c = dummy(h, 1.5, 2, 0.1); // 뒤 — 안 맞음
+        Husk c = dummy(h, 1.5, 2, 0.6); // 뒤 — 안 맞음 (시험 자리 가장자리의 barrier 벽에 눈이 걸려 숨 막힘 피해를 받지 않게 0.6)
         RpgCombat.forceCrit = false;
         h.runAfterDelay(2, () -> {
             sp.attack(a);
@@ -333,8 +333,10 @@ public final class RpgWeaponsMoreTests {
 
     @GameTest(environment = "mmorpg:w_mjolnir1", maxTicks = 80)
     public void mjolnirThrowGoesAndReturns(GameTestHelper h) {
-        // 과녁은 가는 길 (5칸) 에만 — 끝 (12칸) 의 번개 폭발 밖: 나갈 때 · 돌아올 때 두 번
-        skillCase(h, "hammer", "transcend", 0, 5.0, 56, k -> new double[] {k.num("mult"), k.num("backMult")}, null);
+        // 망치는 벽 앞에서 멈춤 (시험 자리는 8칸 — 둘레가 barrier 벽): 6칸 앞 (z 7) 에 돌 벽을 세워 끝을 정함 → 과녁 (4칸 앞) 은
+        // 나갈 때 · 끝의 번개 폭발 (반지름 3.5칸) · 돌아올 때 세 번
+        for (int x = 0; x < 4; x++) for (int y = 2; y < 6; y++) h.setBlock(new BlockPos(x, y, 7), Blocks.STONE);
+        skillCase(h, "hammer", "transcend", 0, 4.0, 56, k -> new double[] {k.num("mult"), k.num("boltMult"), k.num("backMult")}, null);
     }
 
     @GameTest(environment = "mmorpg:w_mjolnir2", maxTicks = 160)
