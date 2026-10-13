@@ -207,13 +207,10 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
                 ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
                 ctx.waitTicks(25); // 공격 쿨타임이 다 참
                 double front = type.equals("lance") ? 3.7 : 2.6;
-                ctx.runOnClient(mc -> {
-                    mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(0.5, -60 + 1.4, 0.5 + front));
-                    var e = mc.level.getEntitiesOfClass(Husk.class, mc.player.getBoundingBox().inflate(6), h -> Math.abs(h.getZ() - (0.5 + front)) < 0.2)
-                            .stream().findFirst().orElse(null);
-                    if (e != null) mc.gameMode.attack(mc.player, e);
-                    mc.player.swing(InteractionHand.MAIN_HAND);
-                });
+                // 과녁을 바라본 뒤 (조준점이 과녁에 놓이게 2틱) 실제 공격 키 — 휘두르는 손 · 조준점의 몹을 침
+                ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(0.5, -60 + 1.3, 0.5 + front)));
+                ctx.waitTicks(2);
+                ctx.getInput().pressKey(options -> options.keyAttack);
                 String tag = "wm_basic_" + type + (third ? "_3p" : "");
                 ctx.waitTicks(1);
                 ctx.takeScreenshot(TestScreenshotOptions.of(tag + "_t1").withSize(1280, 720));
