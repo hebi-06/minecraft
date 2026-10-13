@@ -265,6 +265,12 @@ jobs:
       - uses: actions/cache/restore@v4
         continue-on-error: true
         with:
+          key: ci-${{ github.run_id }}-client-hero-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-hero-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
           key: ci-${{ github.run_id }}-client-g1-${{ github.run_attempt }}
           restore-keys: ci-${{ github.run_id }}-client-g1-
           path: ci-out

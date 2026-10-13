@@ -12,7 +12,8 @@
 import json
 import sys
 
-# (이름, 사진첩 키, 배포 환경 클라이언트도) — 걸린 시간 (2026-10 CI): rune 8분 · arena 7분 · 보스 사진첩은 하나에 4~7분
+# (이름, 사진첩 키, 배포 환경 클라이언트도) — 걸린 시간 (2026-10 CI): rune 8분 · arena 7분 · 보스 사진첩은 하나에 4~7분 (공개 저장소 러너: rune 묶음 18분 · hero 2분)
+# 묶음을 더하면 build.yml 의 publish 일에도 그 이름의 로그 캐시를 되살리는 줄 (actions/cache/restore — ci-<run>-client-<이름>-) 을 더해야 ci-logs 에 올라감
 DEFAULT = [
     ("ui", "client,weapon,particle,skill,gear,form,nav,mob", True),
     ("rune", "rune,arena", False),

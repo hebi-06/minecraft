@@ -277,6 +277,7 @@ public final class RpgNavTests {
             h.assertTrue(hud.mode() == NavNet.NavPayload.ARROW && plain(hud).equals("굴론 처치 1/3"), "zone arrow " + plain(hud));
             // 보스 (허수아비 킹) → 제단
             Quests.NavGoal bg = new Quests.NavGoal(quest("nav_boss", "수확의 왕"), true, "boss", null, null, List.of(), "scarecrow_king", "허수아비 킹", 0, 1, 0);
+            Nav.altars = List::of; // 제단 없음 (함께 도는 다른 시험이 세계에 세운 제단과 상관없이 — 사냥터와 같음)
             h.assertTrue(Nav.resolve(sp, bg) == null, "no altar yet");
             Nav.Altar altar = new Nav.Altar("scarecrow_king", dim(h), bx + 30, by, bz + 4);
             Nav.altars = () -> List.of(new Nav.Altar("kraken", dim(h), bx + 3, by, bz), altar);
