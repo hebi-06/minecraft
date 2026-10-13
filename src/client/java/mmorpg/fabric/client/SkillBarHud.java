@@ -160,7 +160,9 @@ public final class SkillBarHud {
             double left = ClientSkillBar.cooldownLeft(i, partial);
             String t = left >= 10 ? String.valueOf((int) Math.ceil(left)) : String.format(Locale.ROOT, "%.1f", left);
             int tw = font.width(t);
-            g.text(font, t, cx - tw / 2 + 1, cy - 3, left < 1 ? 0xFFFFE066 : 0xFFFFFFFF, true);
+            // 남은 초: 키 글자 (왼쪽 위) 를 가리지 않게 아래쪽 가운데 (키 글자가 없는 창의 칸은 가운데)
+            int ty = key ? y + s - 9 : cy - 3;
+            g.text(font, t, cx - tw / 2 + 1, ty, left < 1 ? 0xFFFFE066 : 0xFFFFFFFF, true);
         }
         // 흰 번쩍 (시전 · 올림), 준비 빛, 막힘 빨강
         if (cast >= 0 && cast < 0.5F) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.75F * (1 - cast * 2), 0xFFFFFF));

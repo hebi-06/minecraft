@@ -18,7 +18,7 @@ import net.minecraft.network.chat.Component;
 /**
  * 클라이언트: 스탯 창 키 (K), 서버가 보낸 스탯 데이터, 체력 바 HUD, 이펙트 그림 파티클, 무기 빛 알갱이, 화면 흔들림,
  * 초월 룬 하늘빛 · 화면 번쩍임 (UltFx), 갑옷 입은 모습 (ArmorModels), 길 안내 칸 (NavHud),
- * 스킬 칸 (11단계 — 룬을 올려 둔 칸 8 · 칸마다 키 R Z V B G H N M · 스킬 칸 창 J · 화면 오른쪽 아래 HUD).
+ * 스킬 칸 (11단계 — 룬을 올려 둔 칸 8 · 칸마다 키 R Z V B Y H N M · 스킬 칸 창 J · 화면 오른쪽 아래 HUD).
  * HUD 는 Fabric HUD API 로 바닐라 하트 자리를 바꿈 (모드가 있는 서버의 생존 · 모험에서만 — 아니면 바닐라 그대로).
  */
 public final class MmorpgClient implements ClientModInitializer {
@@ -27,8 +27,8 @@ public final class MmorpgClient implements ClientModInitializer {
     /** 스킬 칸 키 (칸 순서 — 조작 설정에서 바꿈) · 스킬 칸 창 키 */
     public static KeyMapping[] skillKeys = new KeyMapping[0];
     public static KeyMapping skillBarKey;
-    /** 스킬 칸 기본 키: 왼손을 WASD 에 둔 채 닿는 키 중 바닐라가 쓰지 않는 것 (CI 화면 시험이 바닐라 키와 겹치지 않는지 확인) */
-    public static final int[] SKILL_KEYS = {InputConstants.KEY_R, InputConstants.KEY_Z, InputConstants.KEY_V, InputConstants.KEY_B, InputConstants.KEY_G,
+    /** 스킬 칸 기본 키: 왼손을 WASD 에 둔 채 닿는 키 중 바닐라가 쓰지 않는 것 (G 는 26.3 의 빠른 동작 키라 Y — CI 화면 시험이 바닐라 키와 겹치지 않는지 확인) */
+    public static final int[] SKILL_KEYS = {InputConstants.KEY_R, InputConstants.KEY_Z, InputConstants.KEY_V, InputConstants.KEY_B, InputConstants.KEY_Y,
         InputConstants.KEY_H, InputConstants.KEY_N, InputConstants.KEY_M};
 
     @Override

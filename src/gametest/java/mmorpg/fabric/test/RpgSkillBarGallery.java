@@ -132,7 +132,7 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
         });
         LOG.info("[skillbar-gallery] default keys: {}", r[0]);
         check(r[1].isEmpty(), "skill keys do not share a default key with any other mapping (" + r[1] + ")");
-        check(r[2].equals("R Z V B G H N M"), "slot key labels '" + r[2] + "'");
+        check(r[2].equals("R Z V B Y H N M"), "slot key labels '" + r[2] + "'");
     }
 
     // ------------------------------------------------------------ 빈 칸 HUD
@@ -272,14 +272,14 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
         ctx.waitTicks(2);
         shot(ctx, "sb_ready");
         check(ready, "slot 1 ready again on the client");
-        // 3인칭: 신성 영웅 (칸 5 — G)
+        // 3인칭: 신성 영웅 (칸 5 — Y)
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
         ctx.waitTicks(4);
         ctx.getInput().pressKey(MmorpgClient.skillKeys[4]);
         ctx.waitTicks(10);
         shot(ctx, "sb_holy_3p");
         Runes.Rune holy = Runes.parseRune(Runes.runeId("holy", "hero"));
-        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), holy) > 0), "G casts the holy rune");
+        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), holy) > 0), "Y casts the holy rune");
         ctx.waitTicks(30);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
     }

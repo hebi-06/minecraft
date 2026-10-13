@@ -238,6 +238,7 @@ public final class SkillBarScreen extends Screen {
         // 풀이
         if (hoverBar >= 0 && !ClientSkillBar.get(hoverBar).isEmpty()) {
             List<Component> lines = new ArrayList<>(Screen.getTooltipFromItem(minecraft, ClientSkillBar.get(hoverBar)));
+            lines.removeIf(c -> c.getString().contains("빈 스킬 칸에 올리기") || c.getString().contains("스킬 칸에 올려 키로 사용")); // 이미 올린 룬
             String key = SkillBarHud.label(MmorpgClient.skillKeys[hoverBar]);
             lines.add(Component.literal(BedrockText.toJava("§e[" + key + "] 키로 사용 §8(" + (hoverBar + 1) + "번 칸)")));
             lines.add(Component.literal(BedrockText.toJava("§8오른쪽 클릭: 빼기 · 끌어서 옮기기")));
