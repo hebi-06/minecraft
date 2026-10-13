@@ -20,7 +20,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 룬 (runes.js registerRunes · forgetRunes): 룬 도구 · 하늘빛 · 쓰기 · 뽑기 · 명령어 · 보호막 연출을 켜고, 계열 16개 (RuneFamilies) 의 룬 효과를 등록.
+ * 룬 (runes.js registerRunes · forgetRunes): 룬 도구 · 하늘빛 · 쓰기 · 스킬 칸 (11단계) · 뽑기 · 명령어 · 보호막 연출을 켜고, 계열 16개 (RuneFamilies) 의 룬 효과를 등록.
  * 나간 사람의 기록은 forget 이 모두 지움 (계열이 넣은 것도 — onForget).
  */
 public final class RuneSystem {
@@ -36,6 +36,7 @@ public final class RuneSystem {
         RuneKit.init();
         Ult.init();
         RuneCast.init();
+        SkillBar.init(); // 스킬 칸 (11단계 — 룬을 올려 키로 씀 · 저장 · 패킷)
         Breakthrough.init(); // 룬 돌파 (8단계 — 시전 단계 기록)
         RuneGacha.init();
         RuneCommands.init();

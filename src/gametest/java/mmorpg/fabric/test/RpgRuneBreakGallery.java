@@ -11,7 +11,9 @@ import mmorpg.core.Runes;
 import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.client.UltFx;
 import mmorpg.fabric.client.form.ChestFormScreen;
+import mmorpg.fabric.client.MmorpgClient;
 import mmorpg.fabric.rune.Breakthrough;
+import mmorpg.fabric.rune.SkillBar;
 import mmorpg.fabric.rune.RuneCast;
 import mmorpg.fabric.rune.RuneItems;
 import mmorpg.fabric.rune.RuneSmith;
@@ -29,7 +31,6 @@ import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
@@ -218,12 +219,12 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
                 ServerPlayer sp = player(s);
                 RuneCast.resetCooldowns(sp);
                 Ult.forgetSky(sp);
-                sp.getInventory().setItem(0, Breakthrough.stack("int", "transcend", level));
-                sp.getInventory().setSelectedSlot(0);
+                SkillBar.set(sp, 0, Breakthrough.stack("int", "transcend", level)); // 스킬 칸 1번 (11단계 — 룬은 스킬 칸의 키로만)
             });
             ctx.runOnClient(mc -> UltFx.clear());
             ctx.waitTicks(10);
-            ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+            ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+            ctx.waitTick();
             conn.waitForServerboundPackets();
             ctx.waitTicks(4);
             if (lv == 6) shot(ctx, "rb_meteor6_awaken");
@@ -249,10 +250,11 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             RuneCast.resetCooldowns(sp);
-            sp.getInventory().setItem(0, Breakthrough.stack("vit", "transcend", 6));
+            SkillBar.set(sp, 0, Breakthrough.stack("vit", "transcend", 6));
         });
         ctx.waitTicks(8);
-        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        ctx.waitTick();
         conn.waitForServerboundPackets();
         ctx.waitTicks(5);
         shot(ctx, "rb_undying6_3p");
@@ -268,8 +270,7 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
             ServerPlayer sp = player(s);
             RuneCast.resetCooldowns(sp);
             Ult.forgetSky(sp);
-            sp.getInventory().setItem(0, Breakthrough.stack(family, "transcend", 6));
-            sp.getInventory().setSelectedSlot(0);
+            SkillBar.set(sp, 0, Breakthrough.stack(family, "transcend", 6));
             for (net.minecraft.world.entity.monster.zombie.Husk h : sp.level().getEntitiesOfClass(net.minecraft.world.entity.monster.zombie.Husk.class,
                     sp.getBoundingBox().inflate(48), h -> true)) h.discard();
             TestDummies.reset();
@@ -292,7 +293,8 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         }
         int first = (int) (fn.equals("heavenFall") ? RuneBreak.def(r, 6).num("delay") : RuneBreak.def(r, 6).num("charge") + 4);
         int second = ex.after() + (int) (fn.equals("heavenFall") ? RuneBreak.echoDef(r, 6).num("delay") : RuneBreak.echoDef(r, 6).num("charge") + 4);
-        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        ctx.waitTick();
         conn.waitForServerboundPackets();
         ctx.waitTicks(first + 2);
         shot(ctx, shot + "_first");

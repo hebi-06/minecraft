@@ -26,14 +26,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
 /**
  * 암살자 룬 (runes.js "v1.6.0 암살자" — 자홍: 파고들고 · 숨고 · 난도질, 표식과 이어 쓰기 콤보): 배후 일격 · 독 표창 · 연막 · 그림자 난도질 · 월광 암살.
  * 암살자 룬에 맞은 적은 암살 표식 (머리 위 자홍 룬). 암살자 룬을 minOwned 종 이상 가지면 이어 쓰기 콤보 (RUNE_COMBO — RuneCast.Combo 로 castRune · 상태 줄에 넣음),
- * 5종을 모두 이으면 마무리 기술 그림자 처형.
+ * 5종을 모두 이으면 마무리 기술 그림자 처형. 자바 판 (11단계): "가진" 룬 = 스킬 칸에 올린 룬 (룬은 스킬 칸에서만 씀), 콤보가 이어지는 동안 상태 줄에 이은 단계.
  */
 final class RuneAssassin {
     private RuneAssassin() {}
@@ -74,8 +73,10 @@ final class RuneAssassin {
         RuneCast.register("smokeBomb", RuneAssassin::smokeBomb);
         RuneCast.register("shadowFlurry", RuneAssassin::shadowFlurry);
         RuneCast.register("moonAssassin", RuneAssassin::moonAssassin);
-        // 이어 쓰기 콤보: castRune 의 comboPlan · comboCommit · comboLanded · comboRollback, 상태 줄의 "암살자 N/5 · N 콤보"
+        // 이어 쓰기 콤보: castRune 의 comboPlan · comboCommit · comboLanded · comboRollback, 상태 줄의 "암살자 N/5 · N 콤보" (콤보가 이어지는 동안 —
+        // 룬을 들지 않고 스킬 칸 키로 쓰므로 무기 줄 · 덧붙임 줄에도 붙음)
         RuneCast.combo = new ComboHook();
+        Notify.addHudSuffix(sp -> RuneCast.combo == null ? "" : RuneCast.combo.hud(sp));
         // v1.6.0 암살 표식 표시 (10틱마다 — registerRunes 의 markTick)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 10 == 0) markTick();
@@ -614,12 +615,10 @@ final class RuneAssassin {
         }
     }
 
-    /** 가진 암살자 룬 (등급) — 가방 (핫바 포함 36칸) + 왼손 */
+    /** 가진 암살자 룬 (등급) — 스킬 칸에 올린 것 (자바 판은 룬을 스킬 칸에서만 씀 — 애드온은 가방 36칸 + 왼손) */
     static Set<String> ownedComboRunes(ServerPlayer sp) {
         Set<String> set = new HashSet<>();
-        Inventory inv = sp.getInventory();
-        for (int i = 0; i < Inventory.INVENTORY_SIZE; i++) noteRune(set, inv.getItem(i));
-        noteRune(set, sp.getOffhandItem());
+        for (ItemStack it : SkillBar.slots(sp)) noteRune(set, it);
         return set;
     }
 
@@ -823,12 +822,13 @@ final class RuneAssassin {
             if (COMBOS.get(sp.getUUID()) == state) COMBOS.remove(sp.getUUID());
         }
 
-        /** 상태 줄 덧붙임: 모은 암살자 룬 수 · 2단계부터 콤보 수 */
+        /** 상태 줄 덧붙임 (콤보가 이어지는 동안만 — 아니면 ""): 이은 단계 / 5 · 2단계부터 콤보 수 */
         @Override
         public String hud(ServerPlayer sp) {
             St st = comboOf(sp);
-            return " §8| §d암살자 " + ownedComboRunes(sp).size() + "/" + GRADE_ORDER.size()
-                    + (st != null && st.chain.size() >= 2 ? " §l" + st.chain.size() + " 콤보" : "");
+            if (st == null || st.chain.isEmpty()) return "";
+            int n = st.chain.size();
+            return " §8| §d암살자 " + n + "/" + GRADE_ORDER.size() + (n >= 2 ? " §l" + n + " 콤보" : "");
         }
     }
 }

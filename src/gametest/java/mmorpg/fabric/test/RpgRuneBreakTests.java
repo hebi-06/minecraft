@@ -23,7 +23,6 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.item.ItemStack;
@@ -161,14 +160,13 @@ public final class RpgRuneBreakTests {
         RuneCast.resetCooldowns(sp);
         h.assertTrue(RuneCast.castRune(sp, u, false, 6), "cast 6");
         h.assertTrue(fog.equals(Ult.skyOf(sp)) && Ult.skyEdgeOf(sp), "6: sky + edge " + Ult.skyOf(sp));
-        // 아이템으로 쓰면 그 아이템의 단계
+        // 스킬 칸 (11단계) 의 룬으로 쓰면 그 아이템의 단계
         Ult.forgetSky(sp);
         RuneCast.resetCooldowns(sp);
-        ItemStack st = Breakthrough.stack("vit", "transcend", 3);
-        sp.setItemInHand(InteractionHand.MAIN_HAND, st);
-        RuneCast.onUse(sp, st, RuneItems.runeOf(st));
-        h.assertTrue(Breakthrough.castLevel(sp, "undyingPact") == 3 && fog.equals(Ult.skyOf(sp)) && !Ult.skyEdgeOf(sp), "item use at 3");
-        sp.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        mmorpg.fabric.rune.SkillBar.set(sp, 0, Breakthrough.stack("vit", "transcend", 3));
+        h.assertTrue(mmorpg.fabric.rune.SkillBar.cast(sp, 0), "skill bar cast");
+        h.assertTrue(Breakthrough.castLevel(sp, "undyingPact") == 3 && fog.equals(Ult.skyOf(sp)) && !Ult.skyEdgeOf(sp), "skill bar use at 3");
+        mmorpg.fabric.rune.SkillBar.set(sp, 0, ItemStack.EMPTY);
         // 3돌 돌파 미리 보기: 메테오 2돌 (가방 20) + 0돌 (가방 21) → 3돌, 그 룬의 하늘빛 (이 사람에게만)
         Ult.forgetSky(sp);
         sp.getInventory().setItem(20, Breakthrough.stack("int", "transcend", 2));

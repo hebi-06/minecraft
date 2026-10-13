@@ -414,7 +414,8 @@ public final class RuneSmith {
         Runes.Rune r = m.target().r();
         List<String> lore = new ArrayList<>();
         Breakthrough.Held mat = m.material();
-        lore.add("§r§7재료: 같은 룬" + (mat.level() > 0 ? " [" + mat.level() + "돌]" : "") + " §8(" + (mat.slot() < 9 ? "핫바 " + (mat.slot() + 1) + "번 칸" : "가방") + ")");
+        lore.add("§r§7재료: 같은 룬" + (mat.level() > 0 ? " [" + mat.level() + "돌]" : "") + " §8(" + Breakthrough.where(mat.slot()) + ")");
+        if (SkillBar.isBarSlot(m.slot())) lore.add("§r§b결과는 " + Breakthrough.where(m.slot()) + "에 그대로");
         lore.add("§r§7계수 " + RuneBreak.coefText(m.target().level()) + " → §f" + RuneBreak.coefText(m.result()));
         lore.add("§r§e" + RuneBreak.stars(m.result()));
         for (int t : RuneBreak.tiers()) {

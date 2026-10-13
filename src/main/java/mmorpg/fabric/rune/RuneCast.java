@@ -1,10 +1,8 @@
 package mmorpg.fabric.rune;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
@@ -17,20 +15,18 @@ import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.Tasks;
-import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.Status;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.GameType;
 
 /**
- * 룬 쓰기 (runes.js "쓰기" · 재사용 대기 표시 · 바로 쓰기): 룬 효과 표 (RUNE_FN — 계열마다 register), 재사용 대기 (핫바 아이콘의 쓸기 표시도),
+ * 룬 쓰기 (runes.js "쓰기" · 재사용 대기 표시): 룬 효과 표 (RUNE_FN — 계열마다 register), 재사용 대기 (가방 아이콘의 쓸기 표시 · 스킬 칸에도 — SkillBarNet),
  * 콤보 (암살자 계열이 넣음) · 쓴 뒤 할 일 (마검사 계열의 마검 부여), 화면 하단 상태 줄 (룬 이름 · 준비 · 적용 스탯 · 보호막 · 덧붙임).
  * 룬은 요구 스탯 없음. 위력 P = 룬 위력 (runePower — 실제 스탯) × 콤보 배율 × 돌파 계수 (8단계 — 룬 아이템의 돌파 단계, Breakthrough).
+ * 자바 판 (11단계): 룬은 스킬 칸 (SkillBar) 에서 키로만 씀 — 들고 우클릭 · 칸을 고르면 바로 쓰기 (애드온의 터치) 는 없음.
  */
 public final class RuneCast {
     private RuneCast() {}
@@ -77,31 +73,20 @@ public final class RuneCast {
     private static final Map<String, AfterCast> AFTER_CAST = new HashMap<>();
     /** "플레이어|룬 ID" → 재사용 대기가 끝나는 틱 */
     private static final Map<String, Long> COOLDOWNS = new HashMap<>();
-    /** 준비 소리를 낸 재사용 대기 */
-    private static final Set<String> READY_ANNOUNCED = new HashSet<>();
-    /** 바로 쓰기: 플레이어 → 지난 틱에 고른 칸 */
-    private static final Map<UUID, Integer> LAST_SLOT = new HashMap<>();
     public static Combo combo;
     /** 시험용: 재사용 대기를 보지 않음 */
     public static boolean ignoreCooldown;
 
     static void init() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            quickTick(server);
             if (Tasks.now() % Math.max(1, (long) RUNE.num("hudEvery")) == 0) hudTick(server);
         });
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            COOLDOWNS.clear();
-            READY_ANNOUNCED.clear();
-            LAST_SLOT.clear();
-        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> COOLDOWNS.clear());
     }
 
     static void forget(UUID id) {
         String p = id + "|";
         COOLDOWNS.keySet().removeIf(k -> k.startsWith(p));
-        READY_ANNOUNCED.removeIf(k -> k.startsWith(p));
-        LAST_SLOT.remove(id);
     }
 
     /** 룬 효과 등록 (RUNE_FN[fn]) */
@@ -143,7 +128,7 @@ public final class RuneCast {
         String p = sp.getUUID() + "|";
         for (String k : COOLDOWNS.keySet()) if (k.startsWith(p)) sp.getCooldowns().removeCooldown(Identifier.parse(k.substring(p.length())));
         COOLDOWNS.keySet().removeIf(k -> k.startsWith(p));
-        READY_ANNOUNCED.removeIf(k -> k.startsWith(p));
+        SkillBarNet.cooldown(sp, "*", 0, 0);
     }
 
     /** 룬 위력 P (runePower — 실제 스탯: 찍은 스탯 + 룬 버프) */
@@ -160,9 +145,10 @@ public final class RuneCast {
         return String.format(Locale.ROOT, "%.1f", ticks / 20.0);
     }
 
-    /** 핫바 아이콘의 쓸기 표시 (같은 룬 아이템 모두 — 아이템 재사용 대기, 대기 중에는 우클릭도 막힘) */
-    private static void startItemCooldown(ServerPlayer sp, Runes.Rune r) {
-        sp.getCooldowns().addCooldown(Identifier.parse(r.id()), (int) cooldownTicks(sp, r));
+    /** 가방 아이콘의 쓸기 표시 (같은 룬 아이템 모두 — 아이템 재사용 대기) + 스킬 칸의 덮개 · 남은 초 (클라이언트) */
+    private static void startItemCooldown(ServerPlayer sp, Runes.Rune r, long ticks) {
+        sp.getCooldowns().addCooldown(Identifier.parse(r.id()), (int) ticks);
+        SkillBarNet.cooldown(sp, r.id(), (int) ticks, (int) ticks);
     }
 
     /** 재사용 대기 틱 = 룬의 초 × 20 × 스탯 트리 재사용 대기 (7단계) */
@@ -170,17 +156,18 @@ public final class RuneCast {
         return Math.round(r.cd() * 20 * mmorpg.fabric.stattree.StatTrees.cdMult(sp));
     }
 
-    /** 쓸기 표시를 풂 (룬이 나가지 않았을 때 · 재사용 대기를 돌려줄 때) */
+    /** 쓸기 표시를 풂 (룬이 나가지 않았을 때 · 재사용 대기를 돌려줄 때 — 스킬 칸도) */
     public static void clearItemCooldown(ServerPlayer sp, Runes.Rune r) {
         sp.getCooldowns().removeCooldown(Identifier.parse(r.id()));
+        SkillBarNet.cooldown(sp, r.id(), 0, 0);
     }
 
     /** 재사용 대기 시작 (+ 핫바 쓸기 표시, 쓴 룬 이름 · 돌파 단계 · 적용 스탯 알림) */
     public static void startCooldown(ServerPlayer sp, Runes.Rune r) {
         String key = key(sp, r);
-        COOLDOWNS.put(key, Tasks.now() + cooldownTicks(sp, r));
-        READY_ANNOUNCED.remove(key);
-        startItemCooldown(sp, r);
+        long ticks = cooldownTicks(sp, r);
+        COOLDOWNS.put(key, Tasks.now() + ticks);
+        startItemCooldown(sp, r, ticks);
         String fn = r.def().strOrNull("fn");
         String tag = fn == null ? "" : Breakthrough.nameTag(Breakthrough.castLevel(sp, fn));
         Notify.notify(sp, r.gradeColor() + r.def().str("name") + tag + "§r §7(" + Runes.runeStatLabel(applied(sp, r.family())) + ")", 24);
@@ -200,7 +187,7 @@ public final class RuneCast {
     /**
      * 룬 쓰기 (castRune). 재사용 대기를 확인하고, 효과가 대상이 없어 취소하면 재사용 대기 없음.
      * 암살자 룬: 콤보 단계만큼 위력 배율, 이어 쓴 룬은 앞 룬의 마지막 타격 뒤에 나감 (그 사이 죽거나 못 나가면 재사용 대기를 돌려줌).
-     * quick = 칸을 골라서 쓴 것 (재사용 대기 중이면 소리 없이 알림만).
+     * quick = 스킬 칸의 키로 쓴 것 (재사용 대기 중이면 소리 없이 알림만 — 칸의 덮개가 남은 시간을 보여 줌).
      * breakLevel = 룬 아이템의 돌파 단계 (8단계): 위력 × 계수, 룬 정의는 그 단계의 것 (초월 3 · 6돌 강화 · 회복 · 보호막 × 계수), 화면 색 연출 단계
      */
     public static boolean castRune(ServerPlayer sp, Runes.Rune base, boolean quick, int breakLevel) {
@@ -261,32 +248,6 @@ public final class RuneCast {
         return true;
     }
 
-    // ------------------------------------------------------------ 입력
-
-    /** 룬 아이템 우클릭 (onRuneItemUse — RuneItem.use, 서버): 그 아이템의 돌파 단계로 */
-    public static void onUse(ServerPlayer sp, ItemStack stack, Runes.Rune r) {
-        castRune(sp, r, false, Breakthrough.of(stack));
-    }
-
-    /** 룬 칸을 고르면 바로 쓰는지 (/runequick on — auto 는 터치일 때만이라 자바에서는 꺼짐) */
-    public static boolean quickCastOn(ServerPlayer sp) {
-        return "on".equals(RuneData.of(sp).quick());
-    }
-
-    /** 칸을 바꾼 틱에 고른 칸이 룬이면 바로 사용 (onHotbarSelect) */
-    private static void quickTick(MinecraftServer server) {
-        for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
-            int slot = sp.getInventory().getSelectedSlot();
-            Integer last = LAST_SLOT.put(sp.getUUID(), slot);
-            if (last == null || last == slot) continue;
-            ItemStack stack = sp.getInventory().getItem(slot);
-            Runes.Rune r = RuneItems.runeOf(stack);
-            if (r == null || !quickCastOn(sp)) continue;
-            if (sp.gameMode() == GameType.SPECTATOR || sp.isDeadOrDying()) continue;
-            castRune(sp, r, true, Breakthrough.of(stack));
-        }
-    }
-
     // ------------------------------------------------------------ 재사용 대기 표시
 
     /** 들고 있는 것이 초월 무기인지 (그때는 스킬 줄이 상태 줄을 씀) */
@@ -295,20 +256,14 @@ public final class RuneCast {
         return w != null && w.skills() != null;
     }
 
-    /** 상태 줄 (RUNE.hudEvery 틱마다): 룬을 들면 룬 줄, 아니면 덧붙임 (마검 부여 · 정령 · 신체 강화 …) 만 */
+    /**
+     * 상태 줄 (RUNE.hudEvery 틱마다): 룬을 들면 룬 줄 (준비 · 스킬 칸 — 룬은 스킬 칸에서만 씀), 아니면 덧붙임 (마검 부여 · 정령 · 신체 강화 · 암살자 콤보 …) 만.
+     * 스킬 칸 룬의 준비 표시 · 소리는 클라이언트 (스킬 칸 반짝임)
+     */
     static void hudTick(MinecraftServer server) {
-        long now = Tasks.now();
         for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
-            Runes.Rune r = RuneItems.runeOf(sp.getMainHandItem());
-            // 준비 알림 (들고 있지 않아도 — 소리는 든 룬만)
-            String p = sp.getUUID() + "|";
-            for (Map.Entry<String, Long> e : COOLDOWNS.entrySet()) {
-                String key = e.getKey();
-                if (!key.startsWith(p) || READY_ANNOUNCED.contains(key) || e.getValue() > now) continue;
-                READY_ANNOUNCED.add(key);
-                if (r != null && key.equals(key(sp, r))) SkillFx.playFor(sp, "random.orb", 1.6, 0.35);
-            }
             if (!Notify.actionbarFree(sp)) continue;
+            Runes.Rune r = RuneItems.runeOf(sp.getMainHandItem());
             if (r == null) {
                 String suffix = Notify.hudSuffix(sp);
                 if (suffix.isEmpty() || heldSkillWeapon(sp)) continue;
@@ -317,11 +272,12 @@ public final class RuneCast {
             }
             long left = cooldownLeft(sp, r);
             String state = left > 0 ? "§c" + sec(left) + "초" : "§a준비";
+            int slot = SkillBar.indexOf(sp, r.id());
+            String where = slot >= 0 ? "§b" + (slot + 1) + "번 스킬 칸" : "§e우클릭: 스킬 칸에 올리기";
             double sh = RpgHealth.shieldOf(sp);
-            String comboText = combo != null && r.family().equals(COMBO_FAMILY) ? combo.hud(sp) : "";
-            Notify.bar(sp, "§7룬 " + r.gradeColor() + r.def().str("name") + Breakthrough.nameTag(Breakthrough.of(sp.getMainHandItem())) + "§r " + state + " §8| §7"
-                    + Runes.runeStatLabel(applied(sp, r.family()), "×")
-                    + (sh > 0 ? " §8| §6보호막 " + (long) Math.ceil(sh) : "") + comboText + Notify.hudSuffix(sp));
+            Notify.bar(sp, "§7룬 " + r.gradeColor() + r.def().str("name") + Breakthrough.nameTag(Breakthrough.of(sp.getMainHandItem())) + "§r " + state + " §8| " + where
+                    + " §8| §7" + Runes.runeStatLabel(applied(sp, r.family()), "×")
+                    + (sh > 0 ? " §8| §6보호막 " + (long) Math.ceil(sh) : "") + Notify.hudSuffix(sp));
         }
     }
 }

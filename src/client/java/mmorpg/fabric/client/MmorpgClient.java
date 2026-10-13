@@ -17,12 +17,19 @@ import net.minecraft.network.chat.Component;
 
 /**
  * 클라이언트: 스탯 창 키 (K), 서버가 보낸 스탯 데이터, 체력 바 HUD, 이펙트 그림 파티클, 무기 빛 알갱이, 화면 흔들림,
- * 초월 룬 하늘빛 · 화면 번쩍임 (UltFx), 갑옷 입은 모습 (ArmorModels), 길 안내 칸 (NavHud).
+ * 초월 룬 하늘빛 · 화면 번쩍임 (UltFx), 갑옷 입은 모습 (ArmorModels), 길 안내 칸 (NavHud),
+ * 스킬 칸 (11단계 — 룬을 올려 둔 칸 8 · 칸마다 키 R Z V B G H N M · 스킬 칸 창 J · 화면 오른쪽 아래 HUD).
  * HUD 는 Fabric HUD API 로 바닐라 하트 자리를 바꿈 (모드가 있는 서버의 생존 · 모험에서만 — 아니면 바닐라 그대로).
  */
 public final class MmorpgClient implements ClientModInitializer {
     public static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(Mmorpg.id("main"));
     public static KeyMapping statsKey;
+    /** 스킬 칸 키 (칸 순서 — 조작 설정에서 바꿈) · 스킬 칸 창 키 */
+    public static KeyMapping[] skillKeys = new KeyMapping[0];
+    public static KeyMapping skillBarKey;
+    /** 스킬 칸 기본 키: 왼손을 WASD 에 둔 채 닿는 키 중 바닐라가 쓰지 않는 것 (CI 화면 시험이 바닐라 키와 겹치지 않는지 확인) */
+    public static final int[] SKILL_KEYS = {InputConstants.KEY_R, InputConstants.KEY_Z, InputConstants.KEY_V, InputConstants.KEY_B, InputConstants.KEY_G,
+        InputConstants.KEY_H, InputConstants.KEY_N, InputConstants.KEY_M};
 
     @Override
     public void onInitializeClient() {
@@ -45,6 +52,16 @@ public final class MmorpgClient implements ClientModInitializer {
         NavHud.init();
         TitleFit.init();
         statsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.stats", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, CATEGORY));
+        // 스킬 칸 (11단계): 칸 8 키 + 스킬 칸 창 키, 서버가 보낸 칸들 · 룬 재사용 대기
+        KeyMapping[] keys = new KeyMapping[ClientSkillBar.SIZE];
+        for (int i = 0; i < keys.length; i++) {
+            int def = i < SKILL_KEYS.length ? SKILL_KEYS[i] : InputConstants.UNKNOWN.getValue();
+            keys[i] = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.skill" + (i + 1), InputConstants.Type.KEYBOARD, def, CATEGORY));
+        }
+        skillKeys = keys;
+        skillBarKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.skillbar", InputConstants.Type.KEYBOARD, InputConstants.KEY_J, CATEGORY));
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.BarPayload.TYPE, (payload, context) -> ClientSkillBar.update(payload));
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.CooldownPayload.TYPE, (payload, context) -> ClientSkillBar.cooldown(payload));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
             ClientRpgState.update(payload);
             if (payload.open()) context.client().gui.setScreen(new StatScreen());
@@ -63,6 +80,7 @@ public final class MmorpgClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.FlashPayload.TYPE, (payload, context) -> UltFx.flash(payload));
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             ClientRpgState.clear();
+            ClientSkillBar.clear();
             CameraShake.clear();
             UltFx.clear();
         });
@@ -72,6 +90,19 @@ public final class MmorpgClient implements ClientModInitializer {
                 if (ClientRpgState.synced()) client.gui.setScreen(new StatScreen());
                 else client.player.sendSystemMessage(Component.literal("§c이 서버에는 MMO RPG 모드가 없습니다."));
             }
+            // 스킬 칸: 창 키 · 칸 키 (창이 열려 있으면 바닐라가 키를 넘기지 않음 — 창 안에서는 창이 받음)
+            while (skillBarKey.consumeClick()) {
+                if (client.player == null || client.gui.screen() != null) continue;
+                if (ClientRpgState.synced()) client.gui.setScreen(new SkillBarScreen());
+                else client.player.sendSystemMessage(Component.literal("§c이 서버에는 MMO RPG 모드가 없습니다."));
+            }
+            for (int i = 0; i < skillKeys.length; i++) {
+                while (skillKeys[i].consumeClick()) {
+                    if (client.player == null || client.gui.screen() != null || !ClientSkillBar.received()) continue;
+                    ClientSkillBar.press(i);
+                }
+            }
+            ClientSkillBar.tick(client);
             RpgHud.tick(client);
             if (!client.isPaused()) CameraShake.tick();
             WeaponAura.tick(client);
@@ -90,6 +121,8 @@ public final class MmorpgClient implements ClientModInitializer {
         HudElementRegistry.replaceElement(VanillaHudElements.AIR_BAR, old -> (graphics, delta) -> {
             if (!RpgHud.active()) old.extractRenderState(graphics, delta);
         });
+        // 스킬 칸 (11단계): 화면 오른쪽 아래 (핫바 옆)
+        HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, Mmorpg.id("skill_bar"), SkillBarHud::render);
         // 화면 번쩍임 (초월 룬): HUD 맨 위
         HudElementRegistry.addLast(Mmorpg.id("ult_edge"), (graphics, delta) -> UltFx.renderEdge(graphics)); // 6돌 초월 룬의 테두리 빛 (8단계)
         HudElementRegistry.addLast(Mmorpg.id("ult_flash"), (graphics, delta) -> UltFx.renderFlash(graphics));

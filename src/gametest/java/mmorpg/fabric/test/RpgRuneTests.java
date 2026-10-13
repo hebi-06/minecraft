@@ -28,7 +28,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 룬 게임 시험 (서버): 룬 아이템 80 · 뽑기권 등록, 룬 효과 80 등록, 칸을 고르면 바로 쓰기, 뽑기권 (바로 쓰고 연출 뒤 룬 지급 · 연출 중 다시 못 뽑음),
+ * 룬 게임 시험 (서버): 룬 아이템 80 · 뽑기권 등록, 룬 효과 80 등록, 뽑기권 (바로 쓰고 연출 뒤 룬 지급 · 연출 중 다시 못 뽑음) —
+ * 룬은 스킬 칸에서만 씀 (칸을 고르면 바로 쓰기는 11단계에서 없앰 — RpgSkillBarTests),
  * 룬 쓰기 (위력 · 재사용 대기 · 핫바 쓸기 표시 · 대상이 없으면 재사용 대기 없음), 평타 강화 (평타에 더함).
  */
 public final class RpgRuneTests {
@@ -87,32 +88,6 @@ public final class RpgRuneTests {
         }
         h.assertTrue(missing.isEmpty(), "rune fns not registered:" + missing);
         h.succeed();
-    }
-
-    @GameTest(maxTicks = 40)
-    public void quickCastOnSlotChange(GameTestHelper h) {
-        ServerPlayer sp = player(h);
-        Runes.Rune r = Runes.parseRune("rpg:rune_str_common"); // 대지 강타: 대상이 없어도 나감
-        sp.getInventory().setItem(0, ItemStack.EMPTY);
-        sp.getInventory().setItem(1, new ItemStack(RuneItems.byId(r.id())));
-        sp.getInventory().setSelectedSlot(0);
-        RuneData.setQuick(sp, "off");
-        h.runAfterDelay(2, () -> {
-            sp.getInventory().setSelectedSlot(1);
-            h.runAfterDelay(2, () -> {
-                h.assertTrue(RuneCast.cooldownLeft(sp, r) == 0, "off: not cast on select");
-                RuneData.setQuick(sp, "on");
-                sp.getInventory().setSelectedSlot(0);
-                h.runAfterDelay(2, () -> {
-                    sp.getInventory().setSelectedSlot(1);
-                    h.runAfterDelay(2, () -> {
-                        h.assertTrue(RuneCast.cooldownLeft(sp, r) > 0, "on: cast on select");
-                        RuneCast.resetCooldowns(sp);
-                        done(h, sp);
-                    });
-                });
-            });
-        });
     }
 
     @GameTest(maxTicks = 80)

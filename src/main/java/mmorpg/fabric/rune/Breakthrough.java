@@ -34,7 +34,8 @@ import net.minecraft.world.phys.Vec3;
  * 룬 돌파 (8단계 — 애드온에는 없음, 계산은 규칙 코어 RuneBreak):
  * <ul>
  * <li>단계: 아이템 구성 요소 mmorpg:rune_break (0 ~ 6 — 저장 · 클라이언트에도). 아이콘 배지는 minecraft:custom_model_data 의 첫 수 (아이템 모델이 고름)</li>
- * <li>합치기: 같은 룬 둘 → 남는 룬 (가장 높은 단계 — 같으면 핫바 · 앞 칸) + 재료 (합쳐도 6을 넘지 않는 것 중 가장 높은 단계) + 1. 룬술사 '돌파' 창 (RuneSmith)</li>
+ * <li>합치기: 같은 룬 둘 → 남는 룬 (가장 높은 단계 — 같으면 스킬 칸 · 핫바 · 앞 칸) + 재료 (합쳐도 6을 넘지 않는 것 중 가장 높은 단계) + 1. 룬술사 '돌파' 창 (RuneSmith).
+ * 스킬 칸 (11단계 — SkillBar) 의 룬도 합침: 칸 번호 SkillBar.SLOT_BASE + i, 둘 중 하나가 스킬 칸이면 결과는 그 스킬 칸에 그대로</li>
  * <li>시전 단계 기록: 룬을 쓸 때 (RuneCast) 사람 · 룬 효과마다 — 초월 룬의 화면 색 연출 (RuneKit.ultSkyFor · ultFlashFor) 이 이 단계를 봄 (3돌 미만이면 없음)</li>
  * <li>연출: 합칠 때 (양쪽 빛이 모여 번쩍 · 별), 초월 3 · 6돌에 이르면 그 단계의 하늘빛 · 번쩍임을 미리 보여 줌, 6돌 초월 룬을 쓰면 금빛 각성</li>
  * </ul>
@@ -153,13 +154,13 @@ public final class Breakthrough {
 
     // ------------------------------------------------------------ 합치기
 
-    /** 가방 칸의 룬 하나 (slot 0 ~ 35 · 룬 · 돌파 단계) */
+    /** 룬 하나 (slot = 가방 칸 0 ~ 35 · 스킬 칸 SkillBar.SLOT_BASE + i, 룬, 돌파 단계) */
     public record Held(int slot, Runes.Rune r, int level) {}
 
     /** 합치기 하나: 남는 룬 · 재료 · 결과 단계 · 결과를 둘 칸 (재료만 핫바에 있으면 핫바 칸) */
     public record Merge(Held target, Held material, int result, int slot) {}
 
-    /** 가방의 룬 (칸 순서) */
+    /** 가방의 룬 (칸 순서) + 스킬 칸의 룬 (칸 = SkillBar.SLOT_BASE + i) */
     public static List<Held> held(ServerPlayer sp) {
         List<Held> out = new ArrayList<>();
         for (int i = 0; i < Inv.SIZE; i++) {
@@ -167,12 +168,34 @@ public final class Breakthrough {
             Runes.Rune r = RuneItems.runeOf(s);
             if (r != null && s.getCount() == 1) out.add(new Held(i, r, of(s)));
         }
+        for (int i = 0; i < SkillBar.SIZE; i++) {
+            ItemStack s = SkillBar.get(sp, i);
+            Runes.Rune r = RuneItems.runeOf(s);
+            if (r != null && s.getCount() == 1) out.add(new Held(SkillBar.SLOT_BASE + i, r, of(s)));
+        }
         return out;
     }
 
-    /** 남는 룬 고르기 순서: 높은 단계 → 핫바 → 앞 칸 */
+    /** 칸 (가방 · 스킬 칸) 의 아이템 */
+    private static ItemStack itemAt(ServerPlayer sp, int slot) {
+        return SkillBar.isBarSlot(slot) ? SkillBar.get(sp, slot - SkillBar.SLOT_BASE) : Inv.get(sp, slot);
+    }
+
+    /** 칸 (가방 · 스킬 칸) 에 놓음 */
+    private static void setAt(ServerPlayer sp, int slot, ItemStack stack) {
+        if (SkillBar.isBarSlot(slot)) SkillBar.set(sp, slot - SkillBar.SLOT_BASE, stack);
+        else Inv.set(sp, slot, stack);
+    }
+
+    /** 칸 이름 (창의 풀이: "스킬 칸 3" · "핫바 2번 칸" · "가방") */
+    public static String where(int slot) {
+        if (SkillBar.isBarSlot(slot)) return "스킬 칸 " + (slot - SkillBar.SLOT_BASE + 1);
+        return slot >= 0 && slot < 9 ? "핫바 " + (slot + 1) + "번 칸" : "가방";
+    }
+
+    /** 남는 룬 고르기 순서: 높은 단계 → 스킬 칸 → 핫바 → 앞 칸 */
     private static final Comparator<Held> TARGET_ORDER = Comparator.<Held>comparingInt(h -> -h.level())
-            .thenComparingInt(h -> h.slot() < 9 ? 0 : 1).thenComparingInt(Held::slot);
+            .thenComparingInt(h -> SkillBar.isBarSlot(h.slot()) ? 0 : h.slot() < 9 ? 1 : 2).thenComparingInt(Held::slot);
 
     /** 같은 룬들 중 합치기 하나 (남는 룬 = 가장 높은 단계, 재료 = 합쳐도 넘치지 않는 것 중 가장 높은 단계 — 없으면 null) */
     public static Merge bestMerge(List<Held> same) {
@@ -187,7 +210,11 @@ public final class Breakthrough {
             if (mat == null || h.level() > mat.level() || (h.level() == mat.level() && h.slot() > mat.slot())) mat = h; // 같은 단계면 뒤 칸 (가방) 을 재료로
         }
         if (mat == null) return null;
-        int slot = mat.slot() < 9 && target.slot() >= 9 ? mat.slot() : target.slot();
+        // 결과를 둘 칸: 스킬 칸에 있던 쪽 (올린 룬이 그대로 남게) → 재료만 핫바에 있으면 핫바 → 남는 룬의 칸
+        int slot;
+        if (SkillBar.isBarSlot(target.slot())) slot = target.slot();
+        else if (SkillBar.isBarSlot(mat.slot())) slot = mat.slot();
+        else slot = mat.slot() < 9 && target.slot() >= 9 ? mat.slot() : target.slot();
         return new Merge(target, mat, RuneBreak.merged(target.level(), mat.level()), slot);
     }
 
@@ -287,18 +314,18 @@ public final class Breakthrough {
         if (t.slot() == mat.slot() || !t.r().id().equals(mat.r().id()) || (m.slot() != t.slot() && m.slot() != mat.slot())) return "§4같은 룬 둘이 필요합니다.§r";
         if (!RuneBreak.canMerge(t.level(), mat.level())) return "§4" + RuneBreak.max() + "돌을 넘어서 합칠 수 없습니다.§r";
         if (!same(sp, t) || !same(sp, mat)) return "§4룬이 옮겨져서 취소했습니다. 다시 골라 주세요.§r";
-        ItemStack keep = Inv.get(sp, t.slot()).copy();
+        ItemStack keep = itemAt(sp, t.slot()).copy();
         write(keep, RuneBreak.merged(t.level(), mat.level()));
-        Inv.set(sp, mat.slot(), ItemStack.EMPTY);
-        Inv.set(sp, t.slot(), ItemStack.EMPTY);
-        Inv.set(sp, m.slot(), keep);
+        setAt(sp, mat.slot(), ItemStack.EMPTY);
+        setAt(sp, t.slot(), ItemStack.EMPTY);
+        setAt(sp, m.slot(), keep);
         return null;
     }
 
-    /** 그 칸에 그 룬 · 그 단계 (한 개) 가 그대로 있는지 */
+    /** 그 칸 (가방 · 스킬 칸) 에 그 룬 · 그 단계 (한 개) 가 그대로 있는지 */
     private static boolean same(ServerPlayer sp, Held h) {
-        if (h.slot() < 0 || h.slot() >= Inv.SIZE) return false;
-        ItemStack s = Inv.get(sp, h.slot());
+        if ((h.slot() < 0 || h.slot() >= Inv.SIZE) && !SkillBar.isBarSlot(h.slot())) return false;
+        ItemStack s = itemAt(sp, h.slot());
         Runes.Rune r = RuneItems.runeOf(s);
         return r != null && r.id().equals(h.r().id()) && of(s) == h.level() && s.getCount() == 1;
     }

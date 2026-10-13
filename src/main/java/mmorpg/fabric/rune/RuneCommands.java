@@ -7,7 +7,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import java.util.List;
-import java.util.Map;
 import mmorpg.core.Runes;
 import mmorpg.fabric.BedrockText;
 import mmorpg.fabric.Notify;
@@ -22,7 +21,7 @@ import net.minecraft.server.permissions.Permissions;
 /**
  * 룬 명령어 (commands.js): /rune &lt;계열&gt; &lt;등급&gt; [돌파 0 ~ 6] (룬 받기 · 관리자 — 돌파는 8단계), /runeticket [장수] [advanced · str · dex · int · vit] (뽑기권 받기 · 관리자 —
  * 스탯 룬 뽑기권은 7단계 스탯 트리),
- * /runequick auto|on|off (룬 칸을 고르면 바로 사용 — 모두).
+ * /runequick (11단계부터 없어진 '룬 칸을 고르면 바로 사용' — 스킬 칸으로 안내만).
  */
 public final class RuneCommands {
     private RuneCommands() {}
@@ -35,7 +34,6 @@ public final class RuneCommands {
         all.addAll(mmorpg.core.StatTree.tickets().keySet());
         return SharedSuggestionProvider.suggest(all, b);
     };
-    private static final SuggestionProvider<CommandSourceStack> MODES = (c, b) -> SharedSuggestionProvider.suggest(List.of("auto", "on", "off"), b);
 
     static void init() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
@@ -59,9 +57,8 @@ public final class RuneCommands {
                         .then(Commands.argument("kind", StringArgumentType.word()).suggests(KINDS)
                                 .executes(c -> tickets(c, IntegerArgumentType.getInteger(c, "amount"), StringArgumentType.getString(c, "kind"))))));
         d.register(Commands.literal("runequick")
-                .executes(c -> quick(c, "auto"))
-                .then(Commands.argument("mode", StringArgumentType.word()).suggests(MODES)
-                        .executes(c -> quick(c, StringArgumentType.getString(c, "mode")))));
+                .executes(RuneCommands::quick)
+                .then(Commands.argument("mode", StringArgumentType.greedyString()).executes(RuneCommands::quick)));
     }
 
     private static void tell(ServerPlayer sp, String text) {
@@ -97,13 +94,10 @@ public final class RuneCommands {
         return amount;
     }
 
-    private static int quick(CommandContext<CommandSourceStack> c, String mode) throws CommandSyntaxException {
+    /** 룬 바로 쓰기는 없어짐 (11단계): 룬은 스킬 칸에 올려 키로만 씀 — 안내만 */
+    private static int quick(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
         ServerPlayer sp = c.getSource().getPlayerOrException();
-        String m = "on".equals(mode) || "off".equals(mode) ? mode : "auto";
-        RuneData.setQuick(sp, m);
-        String now = RuneCast.quickCastOn(sp) ? "§a켜짐" : "§7꺼짐";
-        String how = Map.of("auto", "자동 (자바에는 터치가 없어 꺼짐)", "on", "항상 켬", "off", "끔 (우클릭할 때만)").get(m);
-        tell(sp, Notify.PREFIX + "룬 바로 쓰기: " + how + " §8| §f지금 " + now);
+        tell(sp, Notify.PREFIX + "룬 바로 쓰기는 없어졌습니다. §7룬은 스킬 칸 (기본 J 키 — 스킬 칸 창) 에 올려 칸의 키로 씁니다 §8(룬을 들고 우클릭 = 빈 칸에 올리기)");
         return 1;
     }
 }

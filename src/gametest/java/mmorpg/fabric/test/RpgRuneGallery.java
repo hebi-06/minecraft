@@ -8,9 +8,12 @@ import mmorpg.core.Obj;
 import mmorpg.core.Runes;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
+import mmorpg.fabric.client.MmorpgClient;
 import mmorpg.fabric.rune.RuneCast;
+import mmorpg.fabric.rune.RuneItems;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.rune.RuneSystem;
+import mmorpg.fabric.rune.SkillBar;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.skill.Status;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -23,7 +26,6 @@ import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.monster.zombie.Husk;
@@ -34,7 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 룬 80종 사진첩 (화면 시험): 평평한 세계에서 과녁 허스크 여섯 앞에서 룬마다 실제 입력 (우클릭) 으로 쓰고 사진 (rn_&lt;계열&gt;_&lt;등급&gt;_&lt;틱&gt;[_3p]).
+ * 룬 80종 사진첩 (화면 시험): 평평한 세계에서 과녁 허스크 여섯 앞에서 룬마다 실제 입력 (스킬 칸 1번에 올리고 그 칸의 키 — 11단계부터 룬은 스킬 칸에서만)
+ * 으로 쓰고 사진 (rn_&lt;계열&gt;_&lt;등급&gt;_&lt;틱&gt;[_3p]).
  * 초월 룬은 3인칭으로 한 번 더. 룬마다 써졌는지 (재사용 대기 시작) · 들어간 피해를 로그 (rune-gallery) 로, 써지지 않았거나
  * 피해 룬인데 피해가 0 이면 마지막에 실패. 룬 사이에는 룬 기록 · 버프 · 보호막 · 쿨을 지움.
  */
@@ -111,13 +114,13 @@ public final class RpgRuneGallery implements FabricClientGameTest {
     private void run(ClientGameTestContext ctx, TestServerContext server, Runes.Rune r, boolean third) {
         String id = r.family() + "_" + r.grade();
         String fn = r.def().str("fn");
-        server.runCommand("item replace entity @a hotbar.0 with " + r.id());
+        server.runCommand("item replace entity @a hotbar.0 with air");
         server.runCommand("time set 6000");
         server.runCommand("tp @a 0.5 -60 0.5 0 8");
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
-            // 앞 룬의 재사용 대기 (핫바 쓸기 — 남아 있으면 우클릭이 막힘) · 기록 · 버프 · 보호막 · 막기 · 상태를 지우고,
+            // 앞 룬의 재사용 대기 (남아 있으면 키가 막힘) · 기록 · 버프 · 보호막 · 막기 · 상태를 지우고,
             // 삶 표시를 앞 룬들이 본 적 없는 값으로 (forget 이 0 으로 되돌리므로 그 뒤에 지금까지 넘긴 횟수 + 1 만큼)
             RuneCast.resetCooldowns(sp);
             RuneSystem.forget(sp.getUUID());
@@ -129,10 +132,11 @@ public final class RpgRuneGallery implements FabricClientGameTest {
             sp.removeAllEffects();
             RpgHealth.healFull(sp);
             spawnHusks(sp.level());
+            SkillBar.set(sp, 0, RuneItems.stack(r.family(), r.grade())); // 스킬 칸 1번 (키 R)
         });
         ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
         ctx.waitTicks(12);
-        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
         int t = 0;
         for (int shot : shots(r, third)) {
             if (shot > t) {
