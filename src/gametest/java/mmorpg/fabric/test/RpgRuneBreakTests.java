@@ -182,8 +182,10 @@ public final class RpgRuneBreakTests {
             h.assertTrue(meteorFog != null && meteorFog.equals(Ult.skyOf(sp)), "tier preview sky " + Ult.skyOf(sp));
             // 천붕 6돌: 첫 검 (delay 24틱) → 34틱 뒤 한 번 더 (delay 14틱) — 두 번째는 위력 60%
             RpgPlayers.setStat(sp, "str", 30);
-            // 앞 10칸 (불사의 맹약 반격 범위 5.5칸 밖 — 앞에서 쓴 맹약이 아직 돎)
+            // 앞 10칸 (불사의 맹약 반격 범위 5.5칸 밖 — 앞에서 쓴 맹약이 아직 돎). 시험 자리 (8 × 8) 밖이라 그 청크를 붙잡아 둠: 붙잡지 않으면
+            // 함께 도는 시험이 없을 때 그 청크의 몹이 돌지 않아 (틱이 빠른 시험 서버) 첫 검의 무적 시간 (20틱) 이 줄지 않고 두 번째 검이 막혔음
             Husk z = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, 11.5F));
+            String held = mmorpg.fabric.boss.Ticking.holdArea(h.getLevel(), z.position(), 3, "t");
             Runes.Rune fall = rune("str", "transcend");
             RuneCast.resetCooldowns(sp);
             h.assertTrue(RuneCast.castRune(sp, fall, false, 6), "heavenFall 6 cast");
@@ -210,6 +212,7 @@ public final class RpgRuneBreakTests {
                     net.minecraft.world.effect.MobEffectInstance slow = z.getEffect(net.minecraft.world.effect.MobEffects.SLOWNESS);
                     h.assertTrue(slow != null && slow.getAmplifier() >= 10, "meteor 6 stuns: " + slow);
                     RuneSystem.forget(sp.getUUID());
+                    mmorpg.fabric.boss.Ticking.releaseArea(held);
                     RpgGearTests.done(h, sp);
                 });
             }));
