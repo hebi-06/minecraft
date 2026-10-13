@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""무기 3D 모델: 애드온 (베드락) 디자인 31종 → 자바 아이템 모델.
+"""무기 3D 모델: 애드온 (베드락) 디자인 31종 + 12단계 새 무기 디자인 12종 (tools/weapon_art_more.py) → 자바 아이템 모델.
 
   python3 tools/weapon_models.py --import <애드온 폴더>   # 원본을 tools/weapon_art 로 가져옴 (geo · 팔레트 텍스처 · 1인칭 자세 · 무기 → 디자인)
   python3 tools/weapon_models.py                         # tools/weapon_art → src/main/resources/assets/rpg (모델 · 텍스처 · 아이템 정의)
@@ -43,10 +43,10 @@ MAX_SCALE = 4.0
 # 자바 1인칭 손 자리 (ItemInHandRenderer.applyItemArmTransform, 오른손, 들기 · 휘두르기 없음)
 JAVA_FP_ARM = np.array([0.56, -0.52, -0.72])
 # 1인칭에서 세워 드는 무기 (디자인 이름 앞부분) 와 날 방향 (자바 카메라 공간: 오른쪽 +x · 위 +y · 앞 -z) — 왼쪽으로 약 6° · 끝이 앞으로 약 13°
-UPRIGHT = ("sword_", "dagger_", "axe_", "spear_", "greatsword_", "staff_")
+UPRIGHT = ("sword_", "dagger_", "axe_", "spear_", "greatsword_", "staff_", "lance_", "scythe_", "hammer_", "scepter_")  # 12단계 새 무기 4종 포함
 UPRIGHT_DIR = np.array([-0.10, 0.97, -0.22]) / np.linalg.norm([-0.10, 0.97, -0.22])
 # 세운 뒤 날 축 둘레로 돌려 날이 앞을 향하게 하는 무기 (완드는 날이 없어 장식 면이 화면 쪽 그대로)
-EDGE_FORWARD = ("sword_", "dagger_", "axe_", "spear_", "greatsword_")
+EDGE_FORWARD = ("sword_", "dagger_", "axe_", "spear_", "greatsword_", "lance_", "scythe_", "hammer_")  # 홀은 완드처럼 장식 면이 화면 쪽
 # 자바 3인칭 (ItemInHandLayer): 팔 → X -90° → Y 180° → 이동 (1/16, 2/16, -10/16) (오른손)
 JAVA_3P_OFFSET = np.array([1 / 16, 2 / 16, -10 / 16])
 

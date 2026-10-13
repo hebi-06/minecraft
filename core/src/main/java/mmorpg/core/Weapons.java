@@ -34,8 +34,11 @@ public final class Weapons {
     private static final Obj SKILLS = R.obj("SKILLS");
     private static final double CRIT_CAP = R.num("CRIT_CAP");
 
-    /** weapons.js ID_RE ({@code matches()} = JS {@code ^…$}). */
-    private static final Pattern ID_RE = Pattern.compile("rpg:(sword|dagger|axe|shield|bow|wand|greatsword)_l([0-9]+)_([a-z]+)");
+    /**
+     * weapons.js ID_RE ({@code matches()} = JS {@code ^…$}): the add-on's seven types, plus the Java-only types of TYPES
+     * (stage 12 — rules_more.json: 창 · 낫 · 전투 망치 · 성스러운 홀; with pure rules TYPES has exactly the seven).
+     */
+    private static final Pattern ID_RE = Pattern.compile("rpg:(" + String.join("|", typeAlternatives()) + ")_l([0-9]+)_([a-z]+)");
     /** parseWeapon cache, as weapons.js (empty = not a weapon). */
     private static final Map<String, Optional<Weapon>> CACHE = new ConcurrentHashMap<>();
 
@@ -58,6 +61,43 @@ public final class Weapons {
 
     /** smith.js nextLevelOf: the raised hero weapon and its cost. */
     public record SmithStep(Weapon to, double emerald, double ore) {}
+
+    /** The add-on's ID_RE types (in its order), then any other TYPES key (Java-only types — lower-case letters only). */
+    private static List<String> typeAlternatives() {
+        List<String> out = new ArrayList<>(List.of("sword", "dagger", "axe", "shield", "bow", "wand", "greatsword"));
+        for (String t : TYPES.keys()) if (!out.contains(t) && t.matches("[a-z]+")) out.add(t);
+        return out;
+    }
+
+    /**
+     * All weapon types in display order: TYPE_ORDER (the six table types), then the TYPE_ONLY types (마검 · stage 12 types —
+     * only their listed grade levels exist). The order RpgItems registers and /weapon suggests.
+     */
+    public static List<String> allTypes() {
+        List<String> out = new ArrayList<>(R.strings("TYPE_ORDER"));
+        for (String t : TYPE_ONLY.keys()) if (!out.contains(t) && !t.startsWith("_")) out.add(t);
+        return List.copyOf(out);
+    }
+
+    /** The Java-only weapon types (TYPE_ORDER_MORE — stage 12: lance · scythe · hammer · scepter; empty with pure rules). */
+    public static List<String> moreTypes() {
+        List<Object> raw = R.root().listOrNull("TYPE_ORDER_MORE");
+        List<String> out = new ArrayList<>();
+        if (raw != null) for (Object o : raw) out.add(String.valueOf(o));
+        return List.copyOf(out);
+    }
+
+    /** Ranged types (bow · wand): press to shoot the aimed target, sneak / hold for skills. */
+    public static boolean isRangedType(String type) {
+        return "bow".equals(type) || "wand".equals(type);
+    }
+
+    /** Skills of this type deal magic damage (wand; stage 12 types with TYPES[type].magic — 성스러운 홀). */
+    public static boolean isMagicType(String type) {
+        if ("wand".equals(type)) return true;
+        Obj t = TYPES.objOrNull(type);
+        return t != null && t.truthy("magic");
+    }
 
     // ------------------------------------------------------------------ config.js
 
@@ -85,6 +125,27 @@ public final class Weapons {
     public static String gradeLevelsText(String gradeId) {
         StringJoiner j = new StringJoiner("·");
         for (double l : gradeLevels(gradeId)) j.add(Js.str(l));
+        return j + "렙";
+    }
+
+    /** The current levels of a grade for one type (TYPE_ONLY types: their listed levels or none; others: GRADE_LEVELS[grade]). */
+    public static List<Double> levelsOf(String type, String gradeId) {
+        Obj only = type == null ? null : TYPE_ONLY.objOrNull(type);
+        List<Double> list = only != null ? only.numbersOrNull(gradeId) : GRADE_LEVELS.numbersOrNull(gradeId);
+        return list == null ? List.of() : list;
+    }
+
+    /**
+     * The levels of a grade for one type ("10·20렙" — TYPE_ONLY types: only their listed levels, "" when the type has none of that grade;
+     * other types: {@link #gradeLevelsText(String)}).
+     */
+    public static String gradeLevelsText(String gradeId, String type) {
+        Obj only = type == null ? null : TYPE_ONLY.objOrNull(type);
+        if (only == null) return TYPES.has(type == null ? "" : type) ? gradeLevelsText(gradeId) : "";
+        List<Double> list = only.numbersOrNull(gradeId);
+        if (list == null || list.isEmpty()) return "";
+        StringJoiner j = new StringJoiner("·");
+        for (double l : list) j.add(Js.str(l));
         return j + "렙";
     }
 
@@ -307,6 +368,7 @@ public final class Weapons {
             lines.add("§r" + L + "스킬: 검(공격) + " + (dark ? "§1" : "§9") + "마력(마법)");
             lines.add("§r" + L + "스킬 피해 × 최대 체력 ÷ " + V + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)));
         }
+        lines.addAll(traitLines(w.typeDef(), L, V));
         if (w.type().equals("shield")) {
             lines.add("§r" + L + "피해 감소 " + V + pct(w.passive()));
             lines.add("§r" + L + "체력 1포인트당 감소 " + V + "+" + Js.str(round1(SHIELD.num("passivePerVit") * 100)) + "%p");
@@ -321,6 +383,35 @@ public final class Weapons {
     }
 
     /**
+     * Basic-attack traits of the stage 12 types (TYPES[type] — Java overlay only, so the add-on's types get no line):
+     * reach (창 — 사거리 +칸), sweep (낫 — 앞 cone° · range 칸의 다른 적 ratio), quake (전투 망치 — 맞힌 적 둘레 radius 칸의 다른 적 ratio),
+     * lifesteal (성스러운 홀 — 준 피해의 rate 회복, 한 번에 최대 체력의 cap 까지), magic (스킬이 마법 피해).
+     */
+    public static List<String> traitLines(Obj t, String L, String V) {
+        List<String> out = new ArrayList<>();
+        if (t == null) return out;
+        Double reach = t.numOrNull("reach");
+        if (reach != null && reach > 0) out.add("§r" + L + "찌르기: 사거리 " + V + "+" + Js.str(reach) + "칸");
+        Obj sweep = t.objOrNull("sweep");
+        if (sweep != null) {
+            out.add("§r" + L + "넓게 베기: 앞 " + V + Js.str(sweep.num("cone")) + "° · " + Js.str(sweep.num("range")) + "칸" + L + "의");
+            out.add("§r" + L + " 다른 적에게 피해 " + V + Js.str(Js.round(sweep.num("ratio") * 100)) + "%");
+        }
+        Obj quake = t.objOrNull("quake");
+        if (quake != null) {
+            out.add("§r" + L + "내려찍기: 맞힌 적 둘레 " + V + Js.str(quake.num("radius")) + "칸" + L + "의");
+            out.add("§r" + L + " 다른 적에게 피해 " + V + Js.str(Js.round(quake.num("ratio") * 100)) + "%");
+        }
+        Obj steal = t.objOrNull("lifesteal");
+        if (steal != null) {
+            out.add("§r" + L + "성스러운 일격: 준 피해의 " + V + Js.str(Js.round(steal.num("rate") * 100)) + "%" + L + " 회복");
+            out.add("§r" + L + " (한 번에 최대 체력의 " + Js.str(round1(steal.num("cap") * 100)) + "%까지)");
+        }
+        if (t.truthy("magic")) out.add("§r" + L + "스킬: " + V + "마법 피해" + L + " (방어 무시)");
+        return out;
+    }
+
+    /**
      * weapons.js skillLines: controls line + name/cooldown and description lines per skill.
      * One skill (hero weapon — stage 10, Java only): "버튼: 스킬" / "웅크리면: 스킬" and "스킬 이름" without a number.
      */
@@ -328,7 +419,7 @@ public final class Weapons {
         String L = dark ? "§8" : "§7";
         String N = dark ? "§0" : "§f";
         String B = dark ? "§3" : "§b";
-        boolean ranged = w.type().equals("bow") || w.type().equals("wand");
+        boolean ranged = isRangedType(w.type());
         boolean one = w.skills().size() == 1;
         List<String> out = new ArrayList<>();
         if (one) out.add(ranged ? "§r" + L + "웅크리면: 스킬" : "§r" + L + "버튼: 스킬");

@@ -74,7 +74,8 @@ public final class NpcEditor {
     private static final Rules R = Rules.get();
     private static final List<Double> LEVELS = R.numbers("LEVELS");
     private static final List<Double> ALL_LEVELS = R.numbers("ALL_LEVELS");
-    private static final List<String> TYPE_ORDER = R.strings("TYPE_ORDER");
+    /** 무기 보상 종류: TYPE_ORDER 여섯 + 마검 · 12단계 새 무기 넷 (Weapons.allTypes) */
+    private static final List<String> WEAPON_TYPES = Weapons.allTypes();
     private static final List<String> MONSTER_ORDER = R.strings("MONSTER_ORDER");
     private static final Obj TYPES = R.obj("TYPES");
     private static final Obj MONSTERS = R.obj("MONSTERS");
@@ -717,8 +718,8 @@ public final class NpcEditor {
         b.slider("points", "스탯 포인트", 0, 10, d.reward.points);
         List<String> wtypes = new ArrayList<>();
         wtypes.add("없음");
-        for (String t : TYPE_ORDER) wtypes.add(TYPES.obj(t).str("name"));
-        b.dropdown("wtype", "무기 보상", wtypes, w != null ? TYPE_ORDER.indexOf(w.type()) + 1 : 0);
+        for (String t : WEAPON_TYPES) wtypes.add(TYPES.obj(t).str("name"));
+        b.dropdown("wtype", "무기 보상", wtypes, w != null ? WEAPON_TYPES.indexOf(w.type()) + 1 : 0);
         List<String> wlevels = new ArrayList<>();
         for (double l : ALL_LEVELS) wlevels.add(Js.str(l) + "렙");
         b.dropdown("wlevel", "무기 레벨 §7(영웅 30·35·40, 초월 40)", wlevels, w != null ? Math.max(0, ALL_LEVELS.indexOf((double) w.level())) : 0);
@@ -826,17 +827,25 @@ public final class NpcEditor {
         d.reward.points = num(v, "points");
         d.reward.weapon = "";
         int wt = num(v, "wtype");
-        if (wt > 0 && wt - 1 < TYPE_ORDER.size()) {
-            // 그 등급에 없는 레벨이면 가장 가까운 레벨로 바꾼다 (영웅 30·35·40렙, 초월 40렙, 나머지는 35렙 없음)
+        if (wt > 0 && wt - 1 < WEAPON_TYPES.size()) {
+            // 그 등급에 없는 레벨이면 가장 가까운 레벨로 바꾼다 (영웅 30·35·40렙, 초월 40렙, 나머지는 35렙 없음 — 마검 · 12단계 새 무기는 그 종류에 있는 것만)
+            String type = WEAPON_TYPES.get(wt - 1);
             List<Grade> grades = R.grades();
             int wg = num(v, "wgrade");
             Grade g = wg < grades.size() ? grades.get(wg) : null;
             String gid = g != null ? g.id() : "common";
             int wl = num(v, "wlevel");
             double want = wl < ALL_LEVELS.size() ? ALL_LEVELS.get(wl) : 0;
-            double lv = Weapons.isValidWeapon(want, gid) ? want : Weapons.nearestGradeLevel(want, gid);
-            if (lv != want) say(sp, "§e" + (g != null ? g.name() : gid) + " 등급은 " + Weapons.gradeLevelsText(gid) + " 무기만 있어서 보상을 " + Js.str(lv) + "렙으로 바꿨습니다.");
-            d.reward.weapon = TYPE_ORDER.get(wt - 1) + "_l" + Js.str(lv) + "_" + gid;
+            List<Double> levels = Weapons.levelsOf(type, gid);
+            if (levels.isEmpty()) {
+                say(sp, "§e" + TYPES.obj(type).str("name") + " 은 " + (g != null ? g.name() : gid) + " 등급이 없어서 무기 보상을 넣지 않았습니다.");
+            } else {
+                double lv = levels.get(0);
+                for (double l : levels) if (Math.abs(l - want) < Math.abs(lv - want)) lv = l;
+                if (lv != want) say(sp, "§e" + (g != null ? g.name() : gid) + " " + TYPES.obj(type).str("name") + " 은 " + Weapons.gradeLevelsText(gid, type)
+                        + " 무기만 있어서 보상을 " + Js.str(lv) + "렙으로 바꿨습니다.");
+                d.reward.weapon = type + "_l" + Js.str(lv) + "_" + gid;
+            }
         }
         int ri = num(v, "ritem");
         int amount = num(v, "ramount");

@@ -121,6 +121,16 @@ public final class Kit {
         return !(e instanceof OwnableEntity o && o.getOwnerReference() != null);
     }
 
+    /**
+     * 평타가 옆으로 번지는 대상 (12단계 낫 넓게 베기 · 전투 망치 내려찍기): 맞을 수 있고 (canHit) 적대 무리 (몬스터 · RPG 몬스터 · 보스 · 보스 소품 ·
+     * 허수아비 — 섬광 난무와 같음) 이거나 결투 상대. 곁의 동물 · 건드리지 않은 중립 몹은 아님
+     */
+    public static boolean splashFoe(ServerPlayer sp, Entity e) {
+        if (!canHit(sp, e)) return false;
+        if (e instanceof Player p) return duelPartner.test(sp, p);
+        return Solas.hasFamily(e, Solas.RUSH_FAMILIES) && !Solas.RUSH_NEUTRAL.contains(typeId(e));
+    }
+
     /** 가운데에서 radius 안 (몸 가운데 기준, 몸 폭만큼 여유), 위아래 vertical 칸 안의 맞을 수 있는 대상 (skills.js around) */
     public static List<LivingEntity> around(ServerPlayer sp, Vec3 c, double radius, double vertical) {
         double r = radius + vertical + 4;
@@ -567,7 +577,7 @@ public final class Kit {
 
     /**
      * 스킬 피해 한 번 (skills.js skillHit): 무기 공격력 × mult × 스탯 배율 × 치명타. 실제로 깎인 체력 (0 = 안 들어감).
-     * o: critBonus · sure (늘 치명타) · cause (Cause — 없으면 완드는 마법, 나머지는 공격) · spell (마검의 마력: 파란 숫자) · style (숫자 모양)
+     * o: critBonus · sure (늘 치명타) · cause (Cause — 없으면 완드 · 성스러운 홀은 마법, 나머지는 공격) · spell (마검의 마력: 파란 숫자) · style (숫자 모양)
      */
     public static double skillHit(ServerPlayer sp, LivingEntity target, Weapon w, double mult, Opt o) {
         if (!canHit(sp, target)) return 0;
@@ -576,7 +586,7 @@ public final class Kit {
                 || (RpgCombat.forceCrit != null ? RpgCombat.forceCrit
                         : ThreadLocalRandom.current().nextDouble() < Math.min(CRIT_CAP, w.critChance() + o.num("critBonus", 0) + mmorpg.fabric.stattree.StatTrees.critAdd(sp)));
         double dmg = w.damage() * mult * RpgCombat.powerOf(sp, w) * (crit ? RpgCombat.critMultOf(sp, w) : 1);
-        Cause cause = o.get("cause") instanceof Cause c ? c : w.type().equals("wand") ? Cause.MAGIC : Cause.ATTACK;
+        Cause cause = o.get("cause") instanceof Cause c ? c : mmorpg.core.Weapons.isMagicType(w.type()) ? Cause.MAGIC : Cause.ATTACK; // 완드 · 성스러운 홀 (12단계)
         DamageNumbers.Style style = o.get("style") instanceof DamageNumbers.Style s ? s
                 : o.truthy("spell") ? (crit ? DamageNumbers.Style.SPELLCRIT : DamageNumbers.Style.SPELL) : null;
         float before = target.getHealth();

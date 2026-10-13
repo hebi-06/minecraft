@@ -13,6 +13,9 @@
     바닐라 그림 (textures/particle/particles 의 칸) 은 자바 바닐라 파티클 그림으로.
 - src/main/resources/assets/mmorpg/particles/addon.json   그림 목록 (파티클 아틀라스)
 - src/main/java/mmorpg/fabric/AddonFxTable.java           파티클 ID · 변수 이름표 (서버 · 클라이언트가 같은 번호를 씀)
+
+12단계부터 자바 전용 파티클도 함께: tools/java_fx (tools/java_fx_art.py 가 만듦 — 애드온과 같은 꼴의 particles/**/*.particle.json + textures/…) 를
+애드온 파티클 다음에 같은 방법으로 옮김 (이름이 겹치면 멈춤).
 """
 import json
 import os
@@ -168,10 +171,20 @@ def main(addon):
         assert pid not in defs, pid
         defs[pid] = d
         all_vars |= used
+    # 자바 전용 (12단계 — tools/java_fx): 애드온과 같은 꼴, 그림도 그 폴더에서
+    java_fx = os.path.join(ROOT, "tools", "java_fx")
+    extra = []
+    for dirpath, _, fs in os.walk(os.path.join(java_fx, "particles")):
+        extra += [os.path.join(dirpath, f) for f in fs if f.endswith(".json")]
+    for f in sorted(extra):
+        pid, d, used = convert(f, java_fx)
+        assert pid not in defs, f"자바 전용 파티클 이름이 애드온과 겹침: {pid}"
+        defs[pid] = d
+        all_vars |= used
     custom = sorted(v for v in all_vars if v not in BUILTIN)
     sprites = sorted({d["sprite"] for d in defs.values()})
     with open(OUT_DEFS, "w", encoding="utf-8") as fh:
-        json.dump({"source": "MMO RPG 애드온 RPG_RP/particles (tools/addon_particles.py 가 만듦, 손으로 고치지 않음)",
+        json.dump({"source": "MMO RPG 애드온 RPG_RP/particles + 자바 전용 tools/java_fx (tools/addon_particles.py 가 만듦, 손으로 고치지 않음)",
                    "builtin": BUILTIN, "vars": custom, "particles": dict(sorted(defs.items()))}, fh, ensure_ascii=False, indent=1)
         fh.write("\n")
     with open(OUT_SPRITES, "w", encoding="utf-8") as fh:

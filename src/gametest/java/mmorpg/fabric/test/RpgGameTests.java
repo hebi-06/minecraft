@@ -266,7 +266,8 @@ public final class RpgGameTests {
 
     @GameTest
     public void weaponsRegistered(GameTestHelper h) {
-        h.assertTrue(RpgItems.WEAPONS.size() == 151, "151 weapons, got " + RpgItems.WEAPONS.size());
+        // 151 (애드온) + 12단계 새 무기 24 (창 · 낫 · 전투 망치 · 성스러운 홀 × 고귀 10 · 20렙 · 영웅 30 · 35 · 40렙 · 초월 40렙)
+        h.assertTrue(RpgItems.WEAPONS.size() == 175, "175 weapons, got " + RpgItems.WEAPONS.size());
         for (RpgWeaponItem item : RpgItems.WEAPONS) {
             Weapon w = item.weapon();
             h.assertTrue(!w.legacy(), "legacy registered: " + w.id());

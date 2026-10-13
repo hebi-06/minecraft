@@ -160,14 +160,16 @@
         {"key": "chain", "to": 9, "text": "번개 연쇄 {from} → {to}칸"}
       ]
     },
-    "summonSpirits": {
+    "spiritKing": {
       "3": [
-        {"key": "hits", "to": 12, "div": 4, "text": "정령마다 {from} → {to}번"},
-        {"key": "ticks", "to": 140, "div": 20, "text": "소환 {from} → {to}초"}
+        {"key": "mult", "to": 5, "text": "정령 공격 위력 ×{from} → ×{to}"},
+        {"key": "radius", "to": 7.5, "text": "원소 마무리 범위 {from} → {to}칸"}
       ],
       "6": [
-        {"key": "hits", "to": 16, "div": 4, "text": "정령마다 {from} → {to}번"},
-        {"key": "ticks", "to": 180, "div": 20, "text": "소환 {from} → {to}초"}
+        {"key": "elemMult", "to": 4.5, "text": "원소 마무리 위력 ×{from} → ×{to}"},
+        {"key": "burstMult", "to": 12, "text": "원소 붕괴 위력 ×{from} → ×{to}"},
+        {"key": "radius", "to": 9, "text": "원소 마무리 범위 {from} → {to}칸"},
+        {"key": "stun", "to": 30, "div": 20, "text": "원소 붕괴에 맞은 적 기절 {to}초"}
       ]
     },
     "blackHole": {

@@ -3,8 +3,8 @@ package mmorpg.fabric;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
+import mmorpg.core.Combat;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
@@ -21,7 +21,8 @@ import net.minecraft.world.phys.Vec3;
  * 근접 무기 참격 연출 (slash.js 의 자바 판 — 같은 그림 · 크기 · 자리 · 색 · 소리, 수치는 rules.json 의 SLASH).
  * - 공격 동작 (허공 포함) 마다 눈앞에 참격이 나가며 사라짐: 칼 초승달 (좌우 번갈아) · 단검 가는 베기 + 반대 방향 한 번 더 (X자) ·
  *   도끼 두꺼운 내려찍기 · 마검 장밋빛 무거운 베기 + 1틱 뒤 하늘빛 룬 베기 · 방패 푸른 강철빛 고리 · 궁니르 (창) 찌르기 빛줄기
- * - 맞혔을 때: 도끼 발밑 충격파, 방패 · 창 대상 앞 폭발 + 고리, 치명타는 칼 금빛 초승달 · 단검 붉은 X · 마검 보랏빛 X + 장밋빛 초승달,
+ *   (12단계 새 무기: 창 금빛 찌르기 빛줄기 · 낫 넓은 보랏빛 초승달 + 양옆 잔상 · 전투 망치 무거운 내려찍기 · 성스러운 홀 금빛 고리 + 빛 십자)
+ * - 맞혔을 때: 도끼 · 전투 망치 발밑 충격파, 방패 · 창 대상 앞 폭발 + 고리, 홀 금빛 십자 섬광, 치명타는 칼 금빛 초승달 · 단검 붉은 X · 마검 보랏빛 X + 장밋빛 초승달,
  *   화면 가운데에서 벗어난 대상을 맞혔으면 맞은 자리에도 작은 참격
  * - 영웅 · 초월은 참격 안쪽에 금빛 · 붉은빛 기운, 요구 조건이 모자라면 회색으로 작게 (피해 없음)
  * - 도끼 · 방패로 맞히면 화면이 살짝 흔들림 (애드온 camerashake — 모드가 있는 클라이언트에 RpgNet.shake)
@@ -31,7 +32,6 @@ public final class Slash {
     private Slash() {}
 
     private static final Obj SLASH = Rules.get().obj("SLASH");
-    private static final Set<String> MELEE = Set.of("sword", "dagger", "axe", "shield", "greatsword");
     private static final double[] GREY = {0.55, 0.55, 0.55};
     private static final double[] WHITE = {1, 1, 1};
     /** 겹 (기운 → 빛 → 심지) 을 보는 방향으로 조금씩 앞뒤로 — 흰 심지가 늘 위에 */
@@ -159,12 +159,13 @@ public final class Slash {
     public static void swing(ServerPlayer sp) {
         if (!SLASH.truthy("enabled")) return;
         Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
-        if (w == null || !MELEE.contains(w.type())) return;
+        if (w == null || !Combat.isMeleeWeapon(w)) return;
         Obj style = styleOf(w);
         if (style == null) return;
         boolean ok = RpgCombat.lackOf(sp, w).isEmpty();
         if (style.truthy("bash")) {
             bashSwing(sp, w, style, ok);
+            if (ok && style.truthy("holy")) holySwing(sp, w, style);
             return;
         }
         if (style.truthy("thrust")) {
@@ -188,6 +189,17 @@ public final class Slash {
                 });
             }
             case "axe" -> sound(level, e, miss, 0.6, 0.8);
+            case "hammer" -> {
+                sound(level, e, miss, 0.5, 0.85);
+                sound(level, e, SoundEvents.MACE_SMASH_AIR, 0.8, 0.5);
+            }
+            case "scythe" -> {
+                sound(level, e, miss, 0.75, 0.7);
+                // 넓게 베기: 같은 방향의 작은 초승달 둘이 양옆으로 (휘두른 폭이 보이게 — 낫 기본 공격은 앞 120° 의 다른 적도 벰)
+                if (ok && style.truthy("wide")) Tasks.later(1, () -> {
+                    if (!sp.isRemoved()) wideSwing(sp, w, style, flip);
+                });
+            }
             case "greatsword" -> {
                 sound(level, e, miss, 0.85, 0.75);
                 if (ok && style.has("rune")) Tasks.later(1, () -> {
@@ -211,6 +223,44 @@ public final class Slash {
         emit(sp.level(), sprite("thin", flip, "glow"), at, dir, style.num("speed"), spin, size, life, rune, 0.9);
         emit(sp.level(), sprite("thin", flip, "core"), along(at, dir, -LAYER_GAP), dir, style.num("speed"), spin, size * (dist - LAYER_GAP) / dist, life,
                 whiten(rune, 0.75), 1);
+    }
+
+    /** 낫 넓게 베기 (12단계): 가운데 참격 1틱 뒤, 같은 방향의 작은 초승달 둘이 양옆 (±35°) 으로 — 휘두른 폭 */
+    private static void wideSwing(ServerPlayer sp, Weapon w, Obj style, boolean flip) {
+        Vec3 view = sp.getViewVector(1F);
+        Vec3 e = eye(sp);
+        double dist = style.num("dist") + 0.2;
+        for (int side : new int[] {-1, 1}) {
+            Vec3 dir = mmorpg.fabric.skill.V.turnY(view, side * 35);
+            Vec3 at = along(new Vec3(e.x, e.y - SLASH.numOr("drop", 0), e.z), dir, dist);
+            slashAt(sp.level(), at, dir, dist, w, style, flip, true, 0.62, style.num("speed"), sp.getRandom());
+        }
+    }
+
+    /** 성스러운 홀 (12단계): 금빛 고리 안에 빛 십자가 번쩍 (rpg:rfx_flare 별빛 — 1인칭 화면을 덮지 않게 작게) */
+    private static void holySwing(ServerPlayer sp, Weapon w, Obj style) {
+        Vec3 dir = sp.getViewVector(1F);
+        Vec3 e = eye(sp);
+        Vec3 at = along(new Vec3(e.x, e.y - SLASH.numOr("drop", 0), e.z), dir, style.num("dist") + 0.05);
+        double[] glow = rgb(style, "glow");
+        mmorpg.fabric.rune.RuneKit.rfx2(sp.level(), "flare", at, mmorpg.fabric.skill.Opt.of("size", 0.32 * gradeSize(w), "life", 0.22, "fade", 0.6, "spin", 45.0),
+                glow, WHITE, new int[] {0, 1}, null);
+    }
+
+    /** 성스러운 홀로 맞힘 (12단계): 대상 앞 금빛 십자 별빛 + 발밑에서 솟는 빛줄기 (치명타는 크고 하얗게) */
+    private static void holyHit(ServerLevel level, ServerPlayer attacker, LivingEntity victim, Vec3 mid, Weapon w, boolean crit, Obj style) {
+        Vec3 to = mid.subtract(eye(attacker));
+        double len = Math.max(1e-6, to.length());
+        Vec3 u = to.scale(1 / len);
+        Vec3 at = along(mid, u, -Math.min(0.45, len * 0.5));
+        double[] glow = crit ? rgb(style, "critColor") : rgb(style, "glow");
+        double size = (crit ? 0.95 : 0.7) * gradeSize(w);
+        mmorpg.fabric.rune.RuneKit.rfx2(level, "flare", at, mmorpg.fabric.skill.Opt.of("size", size, "life", crit ? 0.34 : 0.26, "fade", 0.6, "spin", 45.0, "grow", 0.3),
+                glow, WHITE, new int[] {0, 1}, null);
+        Vec3 feet = victim.position();
+        mmorpg.fabric.rune.RuneKit.rfx(level, "rays", feet, mmorpg.fabric.skill.Opt.of("size", crit ? 2.4 : 1.7, "life", 0.4, "fade", 0.6, "color", glow, "alpha", 0.8,
+                "cell", 0.0));
+        sound(level, at, SoundEvents.AMETHYST_BLOCK_CHIME, crit ? 0.8 : 1.3, crit ? 1.0 : 0.6);
     }
 
     /** 방패 치기: 눈앞에서 퍼지며 사라지는 고리 (영웅 · 초월은 바깥에 등급 빛 고리) */
@@ -257,7 +307,7 @@ public final class Slash {
      * @param crit 치명타였는지
      */
     public static void hit(ServerPlayer attacker, LivingEntity victim, Weapon w, boolean crit) {
-        if (!SLASH.truthy("enabled") || !MELEE.contains(w.type()) || victim.isRemoved()) return;
+        if (!SLASH.truthy("enabled") || !Combat.isMeleeWeapon(w) || victim.isRemoved()) return;
         if (!(victim.level() instanceof ServerLevel level)) return;
         Obj style = styleOf(w);
         Vec3 head = victim.getEyePosition();
@@ -267,6 +317,7 @@ public final class Slash {
         RandomSource rnd = attacker.getRandom();
         if (style != null && style.truthy("bash")) {
             bashHit(level, attacker, mid, w, crit, style, rnd);
+            if (style.truthy("holy")) holyHit(level, attacker, victim, mid, w, crit, style);
             if (crit) sound(level, mid, SoundEvents.PLAYER_ATTACK_CRIT, 1.0, 0.7);
             return;
         }
@@ -292,6 +343,18 @@ public final class Slash {
             sound(level, feet, SoundEvents.MACE_SMASH_GROUND, crit ? 0.9 : 1.2, crit ? 0.9 : 0.5);
             if (SLASH.truthy("cameraShake")) RpgNet.shake(attacker, crit ? 0.35 : 0.12, crit ? 0.2 : 0.1);
         }
+        if (w.type().equals("hammer") && style != null) {
+            // 전투 망치: 발밑 충격파 둘 (안쪽 금빛 · 바깥 흰빛) + 흙먼지, 화면이 크게 흔들림 (내려찍기 — 둘레의 다른 적도 맞음: WeaponTraits)
+            Vec3 feet = victim.position();
+            double r = Math.max(1, w.typeDef().objOrNull("quake") != null ? w.typeDef().obj("quake").num("radius") : 2);
+            double[] glow = rgb(style, "glow");
+            emit(level, FxSprite.SHOCK_RING, new Vec3(feet.x, feet.y + 0.08, feet.z), Vec3.ZERO, 0, 0, r * (crit ? 1.0 : 0.8), crit ? 0.5 : 0.38, glow, 0.95);
+            emit(level, FxSprite.SHOCK_RING, new Vec3(feet.x, feet.y + 0.1, feet.z), Vec3.ZERO, 0, 0, r * (crit ? 1.35 : 1.1), crit ? 0.42 : 0.3, WHITE, 0.6);
+            mmorpg.fabric.skill.SkillFx.fx(level, "rpg:dust", new Vec3(feet.x, feet.y + 0.3, feet.z), mmorpg.fabric.skill.Opt.of("size", r * 0.8, "life", 0.6, "color",
+                    new double[] {0.62, 0.52, 0.4}, "alpha", 0.75));
+            sound(level, feet, SoundEvents.MACE_SMASH_GROUND, crit ? 0.7 : 0.9, crit ? 1.0 : 0.7);
+            if (SLASH.truthy("cameraShake")) RpgNet.shake(attacker, crit ? 0.4 : 0.18, crit ? 0.22 : 0.12);
+        }
         if (w.type().equals("greatsword") && style != null && style.has("rune")) {
             // 마검: 맞힌 자리에 칼날 룬의 하늘빛 불꽃
             double[] rune = rgb(style, "rune");
@@ -310,6 +373,14 @@ public final class Slash {
                 boolean l = rnd.nextBoolean();
                 emit(level, sprite("arc", l, "glow"), mid, dir, 0, spin, 1.1, 0.25, new double[] {1.0, 0.85, 0.35}, 0.95);
                 emit(level, sprite("arc", l, "core"), front, dir, 0, spin, 1.1, 0.25, new double[] {1.0, 1.0, 0.9}, 1);
+            }
+            case "scythe" -> {
+                // 낫 치명타: 보랏빛 큰 초승달 둘이 X 로 (거둬들이는 낫질)
+                double spin = (rnd.nextDouble() * 2 - 1) * 25;
+                double[] glow = style != null ? rgb(style, "glow") : new double[] {0.66, 0.5, 1};
+                emit(level, sprite("arc", false, "glow"), mid, dir, 0, spin, 1.25, 0.28, glow, 0.95);
+                emit(level, sprite("arc", true, "glow"), along(mid, dir, -LAYER_GAP), dir, 0, -spin, 1.25, 0.28, glow, 0.95);
+                emit(level, sprite("arc", false, "core"), front, dir, 0, spin, 1.24, 0.26, new double[] {0.95, 0.9, 1}, 1);
             }
             case "greatsword" -> {
                 double spin = (rnd.nextDouble() * 2 - 1) * 30;

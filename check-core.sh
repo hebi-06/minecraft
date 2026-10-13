@@ -43,7 +43,7 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest"
+echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest"
 # 대조 시험은 애드온 config.js 그대로의 규칙으로 (자바 전용 덧붙임 rules_more.json 없이 — Rules.PURE)
 java -Dstdout.encoding=UTF-8 -Dmmorpg.pureRules=true -cp "$out/main:$out/test" mmorpg.core.ParityTest
 # 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
@@ -56,3 +56,5 @@ java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RuneBreakTest
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.MonstersMoreTest
 # 10단계 (자바 전용 규칙 덧붙임 — 영웅 무기 스킬 6종: 무기마다 하나 · 세기 · 설명 줄)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.HeroSkillsTest
+# 12단계 (자바 전용 규칙 덧붙임 — 새 무기 종류 4개: 조합 · 요구 스탯 · 세기 · 스킬 · 설명 줄 · 제작 · 정령왕 강림)
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.WeaponsMoreTest

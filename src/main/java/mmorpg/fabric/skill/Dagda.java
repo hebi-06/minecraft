@@ -1,0 +1,106 @@
+package mmorpg.fabric.skill;
+
+import java.util.List;
+import java.util.function.BooleanSupplier;
+import mmorpg.core.Obj;
+import mmorpg.core.Weapon;
+import mmorpg.fabric.Tasks;
+import mmorpg.fabric.rune.RuneKit;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
+
+/**
+ * 다그다의 곤봉 (영웅 전투 망치 — 12단계, 자바 전용): 생과 사의 일격. 수치는 HERO_SKILLS.hammer, 색은 생명의 초록 · 흰 심지 + 죽음의 보라 (dark).
+ * windup 틱 동안 곤봉을 들어 올림 (초록 · 보라 기운이 감김) → 앞 ahead 칸을 내려침: 둘레 radius 칸 충격파 (mult, 띄움 lift) → delay 틱 뒤 같은 자리 여진
+ * (afterMult) → 준 피해의 heal 만큼 회복 (한 번에 최대 체력의 healCap 까지 — 초록 숫자). 대상이 없어도 씀
+ */
+final class Dagda {
+    private Dagda() {}
+
+    static void register() {
+        Transcend.register("dagda_smash", Dagda::smash);
+    }
+
+    static boolean smash(ServerPlayer sp, Weapon w, Obj k) {
+        ServerLevel level = sp.level();
+        String life = Kit.lifeOf(sp);
+        BooleanSupplier ok = () -> Kit.sameLife(sp, life);
+        double[][] cs = HeroKit.colors(k);
+        double[] glow = cs[0];
+        double[] core = cs[1];
+        double[] dark = HeroKit.rgbOr(k, "dark", new double[] {0.55, 0.3, 0.8});
+        RuneKit.bodyAura(sp, glow, Opt.of("life", 0.45, "alpha", 0.75));
+        RuneKit.bodyAura(sp, dark, Opt.of("life", 0.45, "alpha", 0.6, "force", true));
+        Vec3 f0 = Kit.facingOf(sp);
+        Vec3 over = V.add(V.up(sp.getEyePosition(), 0.7), f0, 0.4);
+        SkillFx.sparks(level, over, glow, 6, 2);
+        SkillFx.sparks(level, over, dark, 6, 2);
+        SkillFx.play(level, "mob.ravager.roar", sp.position(), 1.5, 0.4);
+        SkillFx.play(level, "mace.smash_air", sp.position(), 0.6, 0.8);
+        HeroKit.Heal heal = new HeroKit.Heal(sp, k.num("heal"), k.num("healCap"));
+        HeroKit.at((int) k.num("windup"), () -> {
+            if (!ok.getAsBoolean()) return;
+            Vec3 f = Kit.facingOf(sp);
+            Vec3 c = V.add(sp.position(), f, k.num("ahead"));
+            double r = k.num("radius");
+            impact(sp, c, r, glow, core, dark, true);
+            long now = Tasks.now();
+            List<LivingEntity> hit = Kit.around(sp, c, r, 2.5);
+            for (LivingEntity e : hit) {
+                Kit.hitAt(sp, e, Kit.reserveHit(sp, e, now), ok, () -> {
+                    double dealt = Kit.skillHit(sp, e, w, k.num("mult"));
+                    if (dealt <= 0) return;
+                    heal.add(dealt);
+                    Vec3 d = V.flat(V.sub(e.position(), c));
+                    Kit.knockback(e, d.x * 0.25, d.z * 0.25, k.num("lift"));
+                    SkillFx.sparks(level, HeroKit.body(e, c), glow, 4, 3);
+                });
+            }
+            HeroKit.at((int) k.num("delay"), () -> {
+                if (!ok.getAsBoolean()) return;
+                impact(sp, c, r, glow, core, dark, false);
+                long t1 = Tasks.now();
+                for (LivingEntity e : Kit.around(sp, c, r, 2.5)) {
+                    Kit.hitAt(sp, e, Kit.reserveHit(sp, e, t1), ok, () -> {
+                        double dealt = Kit.skillHit(sp, e, w, k.num("afterMult"));
+                        if (dealt > 0) heal.add(dealt);
+                    });
+                }
+                // 생명의 기운이 돌아옴: 맞은 자리에서 나에게 초록 빛줄기 → 회복
+                HeroKit.at(8, () -> {
+                    if (!ok.getAsBoolean()) return;
+                    double healed = heal.open();
+                    if (healed > 0) {
+                        Vec3 chest = V.up(sp.position(), 1.0);
+                        RuneKit.streak(level, V.up(c, 0.8), chest, glow, 0.14, 0.3, 0.9, 0);
+                        RuneKit.selfCue(sp, glow, core, true);
+                        SkillFx.play(level, "beacon.power", chest, 1.6, 0.5);
+                    }
+                });
+            });
+        });
+        return true;
+    }
+
+    /** 내려친 자리: 갈라진 땅 (생명 초록 · 죽음 보라) · 충격파 고리 둘 · 흙먼지 · 튀는 돌 · 크게 흔들림 (first = 첫 일격) */
+    private static void impact(ServerPlayer sp, Vec3 c, double r, double[] glow, double[] core, double[] dark, boolean first) {
+        ServerLevel level = sp.level();
+        if (first) {
+            RuneKit.glowCrack(level, c, r * 0.9, glow, core, Opt.of("life", 1.4));
+            RuneKit.glowCrack(level, c, r * 0.7, dark, core, Opt.of("life", 1.2, "v", 1.0));
+            RuneKit.rockBurst(level, V.up(c, 0.3), 6, 5, 0.3);
+            SkillFx.play(level, "mace.heavy_smash_ground", c, 0.7, 1.0);
+            SkillFx.play(level, "random.anvil_land", c, 0.5, 0.6);
+            SkillFx.shake(sp, 0.35, 0.3);
+        } else {
+            SkillFx.play(level, "mace.smash_ground", c, 0.6, 0.9);
+            SkillFx.shake(sp, 0.2, 0.2);
+        }
+        SkillFx.shock(level, c, first ? glow : dark, r * (first ? 0.9 : 1.1), 0.45);
+        RuneKit.novaRing(level, c, r * 0.3, first ? 2.4 : 3.0, first ? glow : dark, core, Opt.of("life", 0.45));
+        SkillFx.fx(level, "rpg:dust", V.up(c, 0.5), Opt.of("size", r * 0.8, "life", 0.8, "color", new double[] {0.55, 0.45, 0.32}, "alpha", 0.75));
+        RuneKit.zonePulse(level, c, first ? glow : dark, r, 0.4);
+    }
+}

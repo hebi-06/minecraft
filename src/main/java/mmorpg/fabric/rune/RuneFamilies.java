@@ -18,6 +18,7 @@ final class RuneFamilies {
         RuneSpellblade.register();
         RuneElement.register();
         RuneSpirit.register();
+        RuneSpiritKing.register(); // 12단계: 정령사 초월 룬 정령왕 강림
         RuneGravity.register();
         RuneBody.register();
         RuneStrike.register();

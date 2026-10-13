@@ -17,9 +17,9 @@ public final class Combat {
     /** combat.js critChanceOf default cap (RUNE_STRIKE.critCap). */
     private static final double CRIT_CAP = Rules.get().obj("RUNE_STRIKE").num("critCap");
 
-    /** combat.js isMeleeWeapon. */
+    /** combat.js isMeleeWeapon (+ the Java-only stage 12 types: TYPES[type].melee — 창 · 낫 · 전투 망치 · 성스러운 홀). */
     public static boolean isMeleeWeapon(Weapon w) {
-        return w != null && MELEE.contains(w.type());
+        return w != null && (MELEE.contains(w.type()) || (w.typeDef() != null && w.typeDef().truthy("melee")));
     }
 
     /** combat.js statMultiplier: 1 + Σ stat × per over the weapon's damage scaling (skills use it too). */

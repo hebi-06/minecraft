@@ -160,7 +160,10 @@ public final class DamageNumbers {
         }
         if (shown > 0) show(victim, shown, style, mark, 0);
         if (extra > 0) showBonus(victim, extra, m.bonus());
-        if (m != null && m.melee() && m.w() != null) Slash.hit(attacker, victim, m.w(), m.crit()); // 참격 맞힘 연출 (slash.js slashHit)
+        if (m != null && m.melee() && m.w() != null) {
+            Slash.hit(attacker, victim, m.w(), m.crit()); // 참격 맞힘 연출 (slash.js slashHit)
+            WeaponTraits.hit(attacker, victim, m.w(), m.crit(), dealt); // 12단계 새 무기: 넓게 베기 · 내려찍기 · 회복
+        }
     }
 
     /** 평타 숫자 위에 더한 몫 (숫자 모양이 같은 것끼리 합쳐 — 마검 부여 = 보라 SPELL, 평타 강화 = 노랑 RUNE) */

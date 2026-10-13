@@ -30,6 +30,9 @@ import net.minecraft.world.level.Level;
  * 영웅 무기 (스킬 하나 — 10단계): 근접은 우클릭, 활 · 완드는 웅크리고 우클릭 (그냥 누르면 바로 평타).
  */
 public final class RpgWeaponItem extends Item {
+    /** 창의 사거리 (ENTITY_INTERACTION_RANGE) 속성 이름 */
+    public static final net.minecraft.resources.Identifier REACH_ID = Mmorpg.id("weapon_reach");
+
     private final Weapon weapon;
 
     public RpgWeaponItem(Weapon weapon, Item.Properties properties) {
@@ -41,13 +44,18 @@ public final class RpgWeaponItem extends Item {
     static Item.Properties properties(Weapon w) {
         double damage = Combat.isMeleeWeapon(w) ? Math.max(0, w.damage() - 1) : 0;
         // 바닐라 "공격 피해" 줄은 숨김 (실제 피해는 스탯 배율이 곱해지므로 애드온 설명으로)
-        ItemAttributeModifiers mods = ItemAttributeModifiers.builder()
+        ItemAttributeModifiers.Builder b = ItemAttributeModifiers.builder()
                 .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE),
                         EquipmentSlotGroup.MAINHAND, ItemAttributeModifiers.Display.hidden())
                 .add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_ID, -2.0, AttributeModifier.Operation.ADD_VALUE),
-                        EquipmentSlotGroup.MAINHAND, ItemAttributeModifiers.Display.hidden())
-                .build();
-        return new Item.Properties().stacksTo(1).attributes(mods);
+                        EquipmentSlotGroup.MAINHAND, ItemAttributeModifiers.Display.hidden());
+        // 창 (12단계): 몹을 칠 수 있는 거리 +reach 칸 (설명은 애드온 식 설명 줄 — Weapons.traitLines)
+        double reach = Combat.isMeleeWeapon(w) ? w.typeDef().numOr("reach", 0) : 0;
+        if (reach > 0) {
+            b.add(Attributes.ENTITY_INTERACTION_RANGE, new AttributeModifier(REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE), EquipmentSlotGroup.MAINHAND,
+                    ItemAttributeModifiers.Display.hidden());
+        }
+        return new Item.Properties().stacksTo(1).attributes(b.build());
     }
 
     public Weapon weapon() {

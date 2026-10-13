@@ -107,9 +107,9 @@ public final class RpgHeroSkillTests {
     @GameTest(environment = ENV, maxTicks = 20)
     public void heroWeaponsHaveOneSkill(GameTestHelper h) {
         ServerPlayer sp = player(h);
-        h.assertTrue(Skills.heroTypes().size() == 6, "six hero skill types " + Skills.heroTypes());
+        h.assertTrue(Skills.heroTypes().size() == 10, "ten hero skill types (6 + 12단계 4) " + Skills.heroTypes());
         for (String type : Skills.heroTypes()) {
-            boolean ranged = type.equals("bow") || type.equals("wand");
+            boolean ranged = Weapons.isRangedType(type);
             for (int lv : new int[] {30, 35, 40}) {
                 Weapon w = hero(type, lv);
                 h.assertTrue(w != null && w.skills() != null && w.skills().size() == 1, type + " " + lv + " one skill");

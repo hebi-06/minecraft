@@ -444,9 +444,12 @@ public final class RuneKit {
     /** 룬 함수의 하늘빛 · 번쩍임 설정 (ULT_FX.runes[fn] — 없으면 빈 것) */
     public static Obj ultOf(String fn) {
         Obj runes = ULT_FX.objOrNull("runes");
-        Obj o = runes != null ? runes.objOrNull(fn) : null;
+        Obj o = runes != null ? runes.objOrNull(ULT_ALIAS.getOrDefault(fn, fn)) : null;
         return o != null ? o : new Obj(Map.of(), "ULT_FX.runes." + fn);
     }
+
+    /** 자바 전용 초월 룬 함수 → 같은 하늘빛 · 번쩍임을 쓰는 애드온 룬 함수 (12단계 정령왕 강림 = 정령왕의 부름의 오로라) */
+    private static final Map<String, String> ULT_ALIAS = Map.of("spiritKing", "summonSpirits");
 
     /**
      * 하늘빛: 룬 함수 fn 의 하늘빛 (fogId 를 주면 그것) 을 at 둘레 사람에게 ticks 틱. 씌운 사람 수.

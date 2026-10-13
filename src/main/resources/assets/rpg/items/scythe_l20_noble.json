@@ -1,0 +1,25 @@
+{
+  "model": {
+    "type": "minecraft:select",
+    "property": "minecraft:display_context",
+    "cases": [
+      {
+        "when": [
+          "gui",
+          "ground",
+          "fixed",
+          "head",
+          "on_shelf"
+        ],
+        "model": {
+          "type": "minecraft:model",
+          "model": "rpg:item/scythe_l20_noble"
+        }
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "rpg:item/model/scythe_noble_lv0"
+    }
+  }
+}

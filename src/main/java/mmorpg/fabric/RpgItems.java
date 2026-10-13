@@ -23,7 +23,7 @@ import net.minecraft.world.item.ItemStack;
 public final class RpgItems {
     private RpgItems() {}
 
-    /** 등록한 무기 (TYPE_ORDER → 등급 → 레벨 순, 마지막에 제작 전용 TYPE_ONLY) */
+    /** 등록한 무기 (TYPE_ORDER → 등급 → 레벨 순, 마지막에 제작 전용 TYPE_ONLY — 마검 · 12단계 창 · 낫 · 전투 망치 · 성스러운 홀) */
     public static final List<RpgWeaponItem> WEAPONS = new ArrayList<>();
     /** 무기 ID (rpg:sword_l10_rare) → 아이템 */
     private static final Map<String, RpgWeaponItem> BY_ID = new HashMap<>();
@@ -36,8 +36,7 @@ public final class RpgItems {
 
     static void init() {
         Rules r = Rules.get();
-        List<String> types = new ArrayList<>(r.strings("TYPE_ORDER"));
-        for (String t : r.obj("TYPE_ONLY").keys()) if (!types.contains(t)) types.add(t);
+        List<String> types = Weapons.allTypes(); // TYPE_ORDER 여섯 → 제작 전용 (마검 · 12단계 새 무기 넷)
         List<Double> levels = r.numbers("ALL_LEVELS");
         for (String type : types) {
             for (Grade g : r.grades()) {

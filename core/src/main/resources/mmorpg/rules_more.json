@@ -1,5 +1,5 @@
 {
-  "_comment": "자바 판에만 더한 규칙 (9단계부터 — 애드온 개발은 멈춤). Rules 가 rules.json (애드온 config.js) 위에 덧붙임: 표 (MONSTERS · MONSTER_DROPS · REPEAT_QUESTS) 는 항목을 더하고, 새 표 (HERO_SKILLS — 10단계) 는 그대로 넣고, 목록 (MONSTER_ORDER) · 값은 바꿈. 대조 시험은 덧붙이지 않음 (-Dmmorpg.pureRules=true).",
+  "_comment": "자바 판에만 더한 규칙 (9단계부터 — 애드온 개발은 멈춤). Rules 가 rules.json (애드온 config.js) 위에 덧붙임: 표 (MONSTERS · MONSTER_DROPS · REPEAT_QUESTS · TYPES · TYPE_ONLY · WEAPON_NAMES · SKILLS · SLASH · STAT_INFO · RUNES) 는 항목을 더하거나 같은 이름의 항목을 통째로 바꾸고, 새 표 (HERO_SKILLS — 10단계, CRAFT_MORE · TYPE_ORDER_MORE — 12단계) 는 그대로 넣고, 목록 (MONSTER_ORDER) · 값은 바꿈. 대조 시험은 덧붙이지 않음 (-Dmmorpg.pureRules=true).",
   "LEVELING": {
     "_comment": "한 레벨에 필요한 경험치 = 바닐라 × needMult (core.Leveling — 퀘스트의 레벨 보상은 그 레벨 수만큼의 바닐라 경험치로 줌)",
     "needMult": 3
@@ -44,7 +44,7 @@
     "frost_giant": {"item": "rpg:loot_frost_giant", "icon": "textures/items/rpg/loot/frost_giant", "name": "서리 거인의 핵", "color": "§3", "chance": 0.5, "price": 5, "desc": "얼음 속에서 푸르게 빛나는 심장 조각", "rgb": [0.45, 0.85, 1]}
   },
   "HERO_SKILLS": {
-    "_comment": "영웅 무기 스킬 (10단계 — 자바 전용, 무기마다 하나). 근접 = 우클릭 (웅크리고 우클릭도), 활 · 완드 = 웅크리고 우클릭 (그냥 누르면 평타). 세기 = 같은 종류 초월 스킬 1 의 약 0.7배 (방패는 피해 배율이 낮아 아이기스와 같은 비율로 큰 수), 재사용 대기 10초. 피해 합 = Skills.skillTotalMult (mult × hits/shots + afterMult). color = [빛, 심지]",
+    "_comment": "영웅 무기 스킬 (10단계 — 자바 전용, 무기마다 하나 · 12단계 새 무기 4종 포함). 근접 = 우클릭 (웅크리고 우클릭도), 활 · 완드 = 웅크리고 우클릭 (그냥 누르면 평타). 세기 = 같은 종류 초월 스킬 1 의 약 0.7배 (방패는 피해 배율이 낮아 아이기스와 같은 비율로 큰 수), 재사용 대기 10초. 피해 합 = Skills.skillTotalMult (mult × hits/shots + afterMult). color = [빛, 심지]",
     "sword": {"id": "balmung_wave", "name": "용살 검기", "desc": "푸른 검기를 날려 앞의 적을 모두 벰", "desc2": "벤 자리의 검흔이 0.5초 뒤 터짐", "cd": 10, "mult": 3.6, "afterMult": 2.4,
       "range": 12, "width": 2.2, "speed": 1.2, "windup": 3, "delay": 10, "knock": 0.25, "pitch": 25, "size": 2.8, "color": [[0.45, 0.82, 1], [0.92, 0.98, 1]]},
     "dagger": {"id": "shadow_ambush", "name": "그림자 습격", "desc": "그림자가 되어 적의 등 뒤로 이동해 찌름", "desc2": "분신 둘이 베고 그림자가 터짐", "cd": 10, "mult": 1.95, "hits": 2, "afterMult": 2.2,
@@ -56,7 +56,11 @@
     "bow": {"id": "elf_volley", "name": "정령의 연사", "desc": "바람 정령과 함께 유도 화살 4발", "desc2": "적이 여럿이면 3명까지 나눠 쏨", "cd": 10, "mult": 1.55, "shots": 4,
       "range": 24, "cone": 30, "spread": 8, "targets": 3, "flight": 6, "gap": 3, "curve": 1.6, "color": [[0.43, 1, 0.56], [0.9, 1, 0.92]]},
     "wand": {"id": "lich_harvest", "name": "영혼 수확", "desc": "망자의 사슬이 적을 묶고 느리게 함", "desc2": "영혼을 거둬 피해의 10% 회복", "cd": 10, "mult": 2.7, "afterMult": 3.2,
-      "range": 20, "radius": 3.5, "bind": 6, "delay": 10, "slow": 30, "slowAmp": 1, "heal": 0.1, "healCap": 0.1, "back": 8, "color": [[0.37, 1, 0.62], [0.85, 1, 0.9]]}
+      "range": 20, "radius": 3.5, "bind": 6, "delay": 10, "slow": 30, "slowAmp": 1, "heal": 0.1, "healCap": 0.1, "back": 8, "color": [[0.37, 1, 0.62], [0.85, 1, 0.9]]},
+    "lance": {"id": "gaebolg_pierce", "name": "심장 꿰뚫기", "desc": "붉은 창을 던져 16칸을 꿰뚫음", "desc2": "맞은 적 몸에서 가시가 터짐 (둘레 2.5칸 · 구속)", "cd": 10, "mult": 2.85, "afterMult": 3.1, "range": 16, "width": 1.2, "speed": 2.4, "windup": 4, "pitch": 25, "radius": 2.5, "delay": 6, "slow": 40, "color": [[1, 0.18, 0.22], [1, 0.82, 0.78]]},
+    "scythe": {"id": "harpe_spin", "name": "초승달 회전베기", "desc": "낫을 크게 두 바퀴 휘둘러 둘레 4칸을 벰", "desc2": "벤 적의 초승달 낙인이 0.75초 뒤 터짐", "cd": 10, "mult": 1.85, "hits": 2, "afterMult": 2.6, "radius": 4, "gap": 10, "delay": 15, "color": [[0.72, 0.62, 1], [0.95, 0.92, 1]]},
+    "hammer": {"id": "dagda_smash", "name": "생과 사의 일격", "desc": "곤봉으로 땅을 내려쳐 둘레 4.5칸 충격파", "desc2": "0.5초 뒤 여진 · 준 피해의 15% 회복", "cd": 10, "mult": 5.8, "afterMult": 3.9, "radius": 4.5, "ahead": 1.5, "windup": 6, "delay": 10, "lift": 0.45, "heal": 0.15, "healCap": 0.1, "color": [[0.45, 1, 0.45], [0.92, 1, 0.85]], "dark": [0.55, 0.3, 0.8]},
+    "scepter": {"id": "caduceus_serpents", "name": "쌍뱀의 축복", "desc": "금빛 · 은빛 뱀이 적을 쫓아 두 번씩 묾", "desc2": "돌아오며 준 피해의 10% 회복 (마법 피해)", "cd": 10, "mult": 1.96, "hits": 4, "range": 16, "cone": 60, "speed": 0.9, "gap": 10, "heal": 0.1, "healCap": 0.08, "color": [[1, 0.84, 0.36], [1, 0.98, 0.86]], "silver": [[0.75, 0.88, 1], [0.95, 0.98, 1]]}
   },
   "REPEAT_QUESTS": {
     "nisse": {"count": 8, "emerald": 10, "xp": 16},
@@ -67,5 +71,76 @@
     "grendel": {"count": 10, "emerald": 45, "xp": 110},
     "frost_wolf": {"count": 10, "emerald": 55, "xp": 150},
     "frost_giant": {"count": 10, "emerald": 70, "xp": 260}
+  },
+  "TYPE_ORDER_MORE": ["lance", "scythe", "hammer", "scepter"],
+  "TYPES": {
+    "_comment": "12단계 새 무기 종류 (자바 전용, 근접 — melee). 두 스탯 혼합 2:1 (req · reqExtra), 1포인트당 피해는 그 스탯의 다른 무기와 같은 비율 (힘 · 마력 2%, 민첩 1%, 체력 0.5%). 기본 공격 특징: reach (창 — 사거리 +칸), sweep (낫 — 맞힌 적 말고 앞 cone° · range 칸의 다른 적에게 ratio), quake (전투 망치 — 맞힌 적 둘레 radius 칸의 다른 적에게 ratio + 띄움 lift), lifesteal (성스러운 홀 — 준 피해의 rate 회복, 한 번에 최대 체력의 cap 까지), magic (스킬이 마법 피해 — 완드처럼). 피해 계수 · 치명타는 40렙 초월 · 스탯 125포인트 (주 스탯 89 · 다른 스탯 36) 에서 평균 피해가 칼 · 단검과 비슷하게",
+    "lance": {"name": "창", "stat": "str", "damage": 1.12, "req": 0.6666666666666666, "reqExtra": {"dex": 0.3333333333333333}, "bonus": {"dex": 0.01}, "crit": 0.1, "critPerLevel": 0.004, "critPerGrade": 0.01, "critMult": 1.75, "critMultPerLevel": 0.0075, "critMultPerGrade": 0, "melee": true, "reach": 1},
+    "scythe": {"name": "낫", "stat": "dex", "damage": 1.05, "req": 0.6666666666666666, "reqExtra": {"int": 0.3333333333333333}, "bonus": {"int": 0.02}, "crit": 0.15, "critPerLevel": 0.006, "critPerGrade": 0.01, "critMult": 2, "critMultPerLevel": 0.0125, "critMultPerGrade": 0, "melee": true, "sweep": {"ratio": 0.4, "range": 3, "cone": 120}},
+    "hammer": {"name": "전투 망치", "stat": "vit", "damage": 1.25, "perPoint": 0.005, "req": 0.6666666666666666, "reqExtra": {"str": 0.3333333333333333}, "bonus": {"str": 0.02}, "crit": 0.04, "critPerLevel": 0.0005, "critPerGrade": 0.005, "critMult": 1.6, "critMultPerLevel": 0, "critMultPerGrade": 0.05, "melee": true, "quake": {"ratio": 0.35, "radius": 2, "lift": 0.25}},
+    "scepter": {"name": "성스러운 홀", "stat": "int", "damage": 1.1, "req": 0.6666666666666666, "reqExtra": {"vit": 0.3333333333333333}, "bonus": {"vit": 0.005}, "crit": 0.04, "critPerLevel": 0.0005, "critPerGrade": 0.01, "critMult": 1.5, "critMultPerLevel": 0, "critMultPerGrade": 0.05, "melee": true, "magic": true, "lifesteal": {"rate": 0.05, "cap": 0.01}}
+  },
+  "TYPE_ONLY": {
+    "_comment": "12단계 새 무기: 이 등급 · 레벨만 있음 (고귀 10 · 20렙 — 대장장이 제작, 영웅 30렙 — 보스 무기 제작 → 35 · 40렙으로 올림, 초월 40렙 — 보스 무기 제작)",
+    "lance": {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
+    "scythe": {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
+    "hammer": {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
+    "scepter": {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]}
+  },
+  "WEAPON_NAMES": {
+    "_comment": "12단계 새 무기 이름",
+    "lance": {"noble": "황금 기사창", "hero": "게이 볼그", "transcend": "브류나크"},
+    "scythe": {"noble": "황금 초승달낫", "hero": "하르페", "transcend": "크로노스의 낫"},
+    "hammer": {"noble": "황금 전투망치", "hero": "다그다의 곤봉", "transcend": "묠니르"},
+    "scepter": {"noble": "황금 성광홀", "hero": "카두케우스", "transcend": "아폴론의 태양홀"}
+  },
+  "SKILLS": {
+    "_comment": "12단계 초월 무기 스킬 (무기마다 둘 — 근접: 우클릭 = 스킬1, 웅크리고 우클릭 = 스킬2). 세기 = 40렙 초월 · 스탯 125포인트에서 스킬1 실효 피해가 그람 화룡 돌진과 같게 (피해 합 skillTotalMult × 무기 피해 × 스탯 배율 × 치명타 평균), 스킬2 = 스킬1 의 약 1.6배. 재사용 대기 12 · 30초. color = [빛, 심지]",
+    "lance": [{"id": "brionac_rays", "name": "광휘의 다섯 창", "desc": "빛의 창 다섯 자루가 차례로 날아가 꽂힘", "desc2": "꽂힌 자리에 십자 빛 폭발 · 3명까지 나눔", "cd": 12, "mult": 1.7, "shots": 5, "range": 18, "cone": 60, "targets": 3, "windup": 8, "gap": 3, "speed": 3, "radius": 1.2, "color": [[1, 0.86, 0.4], [1, 1, 0.92]]}, {"id": "brionac_flurry", "name": "섬광 백열창", "desc": "1.2초 동안 앞 7칸을 빛의 창으로 수없이 찌름", "desc2": "마지막에 나선 빛줄기가 12칸을 꿰뚫음", "cd": 30, "mult": 2.34, "hits": 4, "afterMult": 4.24, "range": 7, "cone": 50, "ticks": 24, "thrusts": 12, "beam": 12, "width": 1.6, "color": [[1, 0.86, 0.4], [1, 1, 0.92]]}],
+    "scythe": [{"id": "kronos_rend", "name": "시간 가르기", "desc": "거대한 낫이 앞 160° · 6칸을 벰", "desc2": "벤 적의 시간이 1.5초 멈춘 뒤 벤 자국이 터짐", "cd": 12, "mult": 3.9, "afterMult": 5.1, "range": 6, "cone": 160, "windup": 4, "stop": 30, "color": [[0.4, 0.9, 1], [0.95, 1, 1]], "gold": [1, 0.82, 0.4]}, {"id": "kronos_clock", "name": "종말의 시계", "desc": "발밑 반지름 7칸 시계판 — 바늘이 돌며 3초 동안 벰", "desc2": "자정에 하늘에서 거대한 낫이 내려와 시계판을 가름", "cd": 30, "mult": 1.6, "hits": 6, "afterMult": 4.8, "radius": 7, "gap": 10, "tick": 5, "slowAmp": 2, "fall": 12, "color": [[0.4, 0.9, 1], [0.95, 1, 1]], "gold": [1, 0.82, 0.4]}],
+    "hammer": [{"id": "mjolnir_throw", "name": "묠니르 투척", "desc": "던진 망치가 12칸을 날아가며 꿰뚫음", "desc2": "끝에서 번개 폭발 (반지름 3.5칸) · 돌아오며 다시 침", "cd": 12, "mult": 4.2, "boltMult": 5.5, "backMult": 4.2, "range": 12, "width": 1.4, "speed": 1.6, "back": 2, "hover": 6, "radius": 3.5, "stun": 10, "pitch": 30, "color": [[0.55, 0.78, 1], [0.95, 0.98, 1]]}, {"id": "mjolnir_storm", "name": "라그나로크의 뇌우", "desc": "망치를 들어 먹구름을 부름 — 5초 동안 번개", "desc2": "마지막에 나를 중심으로 거대한 번개 기둥 (반지름 6칸)", "cd": 30, "mult": 1.4, "hits": 10, "afterMult": 8.2, "radius": 9, "windup": 10, "gap": 10, "max": 4, "pillar": 6, "knock": 1.1, "color": [[0.55, 0.78, 1], [0.95, 0.98, 1]]}],
+    "scepter": [{"id": "apollo_sun", "name": "작은 태양", "desc": "조준한 곳에 작은 태양을 띄워 2.5초 동안 태움", "desc2": "마지막에 태양이 터짐 (반지름 4.5칸 · 불붙음)", "cd": 12, "pulseMult": 1.4, "pulses": 5, "afterMult": 4.2, "range": 18, "radius": 3.5, "burst": 4.5, "gap": 10, "speed": 1.2, "fire": 3, "color": [[1, 0.72, 0.22], [1, 0.97, 0.8]]}, {"id": "apollo_sanctuary", "name": "태양신의 성역", "desc": "5초 동안 반지름 7칸 성역 — 안의 플레이어 회복 · 피해 -20%", "desc2": "적은 계속 빛에 타고 마지막에 태양 폭발", "cd": 30, "pulseMult": 1.15, "pulses": 10, "afterMult": 6.4, "radius": 7, "gap": 10, "heal": 0.015, "reduce": 0.2, "knock": 0.8, "color": [[1, 0.72, 0.22], [1, 0.97, 0.8]]}]
+  },
+  "SLASH": {
+    "_comment": "12단계 새 무기의 기본 공격 연출 (Slash — 창 찌르기 빛줄기 · 낫 넓은 초승달 · 망치 내려찍기 · 홀 금빛 고리 + 성스러운 섬광)",
+    "lance": {"thrust": true, "glow": [1, 0.86, 0.45], "core": [1, 1, 0.9], "length": 1.5, "thick": 0.16, "dist": 0.9, "life": 0.16, "speed": 16, "hitSize": 0.55},
+    "scythe": {"shape": "arc", "glow": [0.66, 0.5, 1], "size": 1.55, "life": 0.26, "speed": 3, "dist": 1.8, "jitter": 4, "wide": true},
+    "hammer": {"shape": "heavy", "glow": [1, 0.72, 0.28], "size": 1.15, "life": 0.3, "speed": 2, "dist": 1.8, "jitter": 3},
+    "scepter": {"bash": true, "glow": [1, 0.88, 0.5], "size": 0.4, "life": 0.2, "speed": 3, "dist": 1.2, "jitter": 20, "hitSize": 0.62, "hitLife": 0.26, "critColor": [1, 0.95, 0.7], "holy": true}
+  },
+  "STAT_INFO": {
+    "_comment": "12단계: 스탯 창의 '이 스탯이 올리는 무기' 글자에 새 무기를 더함 (나머지 값은 애드온 그대로)",
+    "str": {"name": "힘", "color": "§c", "dark": "§4", "icon": "textures/rpg_ui/icon_str", "objective": "rpg_str", "effect": "칼·도끼·마검·창·망치 피해", "weapons": "칼·도끼·마검·창·망치", "perPoint": 0.02},
+    "dex": {"name": "민첩", "color": "§a", "dark": "§2", "icon": "textures/rpg_ui/icon_dex", "objective": "rpg_dex", "effect": "단검·활·창·낫 피해", "weapons": "단검·활·창·낫", "perPoint": 0.01},
+    "int": {"name": "마력", "color": "§9", "dark": "§1", "icon": "textures/rpg_ui/icon_int", "objective": "rpg_int", "effect": "완드·마검·낫·홀 피해", "weapons": "완드·마검·낫·홀", "perPoint": 0.02},
+    "vit": {"name": "체력", "color": "§d", "dark": "§5", "icon": "textures/rpg_ui/icon_vit", "objective": "rpg_vit", "effect": "최대 체력·방패·도끼·망치·홀", "weapons": "방패·도끼·망치·홀", "perPoint": 0}
+  },
+  "CRAFT_MORE": [
+    {"type": "lance", "grade": "noble", "level": 10, "drops": [["boar", 6], ["nisse", 6]], "emerald": 32, "ore": 0},
+    {"type": "scythe", "grade": "noble", "level": 10, "drops": [["nisse", 6], ["gulon", 6]], "emerald": 32, "ore": 0},
+    {"type": "hammer", "grade": "noble", "level": 10, "drops": [["boar", 6], ["gulon", 6]], "emerald": 32, "ore": 0},
+    {"type": "scepter", "grade": "noble", "level": 10, "drops": [["scarecrow", 8], ["nisse", 6]], "emerald": 32, "ore": 0},
+    {"type": "lance", "grade": "noble", "level": 20, "drops": [["sand_scorpion", 8], ["crab", 6]], "emerald": 64, "ore": 0},
+    {"type": "scythe", "grade": "noble", "level": 20, "drops": [["worm_larva", 8], ["sand_scorpion", 6]], "emerald": 64, "ore": 0},
+    {"type": "hammer", "grade": "noble", "level": 20, "drops": [["skeljaskrimsli", 8], ["crab", 6]], "emerald": 64, "ore": 0},
+    {"type": "scepter", "grade": "noble", "level": 20, "drops": [["crab", 8], ["worm_larva", 6]], "emerald": 64, "ore": 0},
+    {"type": "lance", "grade": "hero", "level": 30, "mat": "worm_fang", "count": 8, "also": [["kraken_ink", 4]], "drops": [["grendel", 8], ["crab", 6]], "emerald": 64, "ore": 2},
+    {"type": "scythe", "grade": "hero", "level": 30, "mat": "kraken_ink", "count": 8, "also": [["kraken_eye", 4]], "drops": [["grendel", 8], ["nix", 6]], "emerald": 64, "ore": 2},
+    {"type": "hammer", "grade": "hero", "level": 30, "mat": "worm_heart", "count": 8, "also": [["worm_fang", 4]], "drops": [["crab", 10], ["skeljaskrimsli", 6]], "emerald": 64, "ore": 2},
+    {"type": "scepter", "grade": "hero", "level": 30, "mat": "kraken_eye", "count": 8, "also": [["worm_heart", 4]], "drops": [["nix", 10], ["worm_larva", 6]], "emerald": 64, "ore": 2},
+    {"type": "lance", "grade": "transcend", "level": 40, "mat": "skoll_fang", "count": 10, "also": [["ygg_branch", 5], ["worm_fang", 4]], "drops": [["frost_wolf", 12], ["troll", 8]], "emerald": 128, "ore": 4},
+    {"type": "scythe", "grade": "transcend", "level": 40, "mat": "ygg_root", "count": 10, "also": [["hati_mane", 5], ["kraken_ink", 4]], "drops": [["draugr", 12], ["frost_wolf", 8]], "emerald": 128, "ore": 4},
+    {"type": "hammer", "grade": "transcend", "level": 40, "mat": "ymir_bone", "count": 10, "also": [["skoll_fang", 5], ["worm_heart", 4]], "drops": [["frost_giant", 12], ["troll", 8]], "emerald": 128, "ore": 4},
+    {"type": "scepter", "grade": "transcend", "level": 40, "mat": "hati_mane", "count": 10, "also": [["ymir_heart", 5], ["kraken_eye", 4]], "drops": [["frost_giant", 12], ["draugr", 8]], "emerald": 128, "ore": 4}
+  ],
+  "RUNES": {
+    "_comment": "12단계: 정령사 초월 룬 '정령왕의 부름' → '정령왕 강림' (spiritKing — 네 정령 공격 mult × hits, 합체한 정령왕의 원소 마무리 넷 elemMult, 원소 붕괴 burstMult: 합 ×32 그대로). 계열 표는 통째로 바뀌므로 다른 등급은 애드온 그대로 옮겨 둠",
+    "spirit": {
+      "common": {"fn": "summonSpirits", "name": "불의 정령", "desc": "샐러맨더가 불덩이를 던짐", "use": "소환 · 원거리 폭발 4번", "spirits": ["salamander"], "mult": 1, "hits": 4, "gap": 12, "first": 8, "ticks": 60, "range": 12},
+      "rare": {"fn": "summonSpirits", "name": "물의 정령", "desc": "운디네가 물줄기를 쏨", "use": "소환 · 밀치는 물줄기 3번", "spirits": ["undine"], "mult": 2.33, "hits": 3, "gap": 20, "first": 8, "ticks": 70, "range": 11},
+      "noble": {"fn": "summonSpirits", "name": "바람의 정령", "desc": "실프가 적을 꿰뚫으며 돌진", "use": "소환 · 관통 돌진 4번", "spirits": ["sylph"], "mult": 3, "hits": 4, "gap": 18, "first": 8, "ticks": 80, "range": 12},
+      "hero": {"fn": "summonSpirits", "name": "땅의 정령", "desc": "노움이 바위 가시를 솟게 함", "use": "소환 · 범위 가시 4번", "spirits": ["gnome"], "mult": 5, "hits": 4, "gap": 20, "first": 10, "ticks": 90, "range": 12},
+      "transcend": {"fn": "spiritKing", "name": "정령왕 강림", "desc": "네 정령이 합쳐져 거대한 정령왕이 강림함", "use": "정령 공격 넷 → 원소 마무리 넷 → 원소 붕괴", "spirits": ["salamander", "undine", "sylph", "gnome"], "mult": 2.5, "hits": 4, "elemMult": 3.5, "burstMult": 8, "range": 16, "radius": 6, "first": 4, "stagger": 5, "gap": 6, "ticks": 34, "elemGap": 10, "burstDelay": 16, "pull": 0.45, "knock": 1, "slowTicks": 40, "fire": 3, "stun": 0}
+    }
   }
 }

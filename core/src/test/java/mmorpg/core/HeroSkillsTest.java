@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * 10단계 시험 (JUnit 없이 main — check-core.sh): 영웅 무기 스킬 (자바 전용 덧붙임 HERO_SKILLS).
  * <ul>
- * <li>영웅 무기 6종 (30 · 35 · 40렙) 은 스킬 하나 — 종류마다 정한 id, 레벨이 달라도 같은 스킬</li>
+ * <li>영웅 무기 6종 + 12단계 새 무기 4종 (30 · 35 · 40렙) 은 스킬 하나 — 종류마다 정한 id, 레벨이 달라도 같은 스킬</li>
  * <li>초월 무기는 그대로 두 스킬, 일반 · 희귀 · 고귀 · 구버전 영웅 (20렙 등) 은 스킬 없음</li>
  * <li>세기: 피해 합 (skillTotalMult) = 같은 종류 초월 스킬 1 의 0.7배 (±3%), 재사용 대기 10초, 이름 · 설명 두 줄 · 색 [빛, 심지]</li>
  * <li>스킬 id 가 초월 스킬과 겹치지 않음, 설명 줄 (스킬 한 개: "버튼: 스킬" · "웅크리면: 스킬" · "스킬 이름 10초")</li>
@@ -38,13 +38,18 @@ public final class HeroSkillsTest {
         IDS.put("shield", "durand_smite");
         IDS.put("bow", "elf_volley");
         IDS.put("wand", "lich_harvest");
+        // 12단계 새 무기 (TYPE_ONLY — 고귀 10 · 20렙, 영웅 30 · 35 · 40렙, 초월 40렙만)
+        IDS.put("lance", "gaebolg_pierce");
+        IDS.put("scythe", "harpe_spin");
+        IDS.put("hammer", "dagda_smash");
+        IDS.put("scepter", "caduceus_serpents");
     }
 
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
         check(Skills.heroTypes().equals(new ArrayList<>(IDS.keySet())), "hero types " + Skills.heroTypes());
         Set<String> ids = new HashSet<>();
-        for (String type : Rules.get().strings("TYPE_ORDER")) {
+        for (String type : Weapons.allTypes()) {
             List<Obj> tk = Skills.weaponSkills(type);
             if (tk != null) for (Obj k : tk) ids.add(k.str("id"));
         }
@@ -78,17 +83,20 @@ public final class HeroSkillsTest {
             List<Object> color = hk.listOrNull("color");
             check(color != null && color.size() == 2 && color.get(0) instanceof List<?> c0 && c0.size() == 3 && color.get(1) instanceof List<?> c1 && c1.size() == 3,
                     type + " color [glow, core]");
-            // 다른 등급 · 구버전은 스킬 없음
+            // 다른 등급 · 구버전은 스킬 없음 (12단계 새 무기: 일반 · 희귀 · 구버전 조합이 아예 없고 고귀는 10 · 20렙)
+            boolean more = Weapons.moreTypes().contains(type);
             for (String g : new String[] {"common", "rare", "noble"}) {
-                Weapon o = Weapons.weaponFrom(type, 30, g);
-                check(o != null && o.skills() == null, type + " " + g + " has no skill");
+                Weapon o = Weapons.weaponFrom(type, more && g.equals("noble") ? 20 : 30, g);
+                if (more && !g.equals("noble")) check(o == null, type + " has no " + g);
+                else check(o != null && o.skills() == null, type + " " + g + " has no skill");
             }
             Weapon old = Weapons.parseWeapon("rpg:" + type + "_l20_hero");
-            check(old != null && old.legacy() && old.skills() == null, type + " legacy hero 20 has no skill");
+            if (more) check(old == null, type + " no legacy hero 20");
+            else check(old != null && old.legacy() && old.skills() == null, type + " legacy hero 20 has no skill");
             // 설명 줄
             Weapon w40 = Weapons.weaponFrom(type, 40, "hero");
             List<String> lore = Weapons.weaponInfo(w40);
-            boolean ranged = type.equals("bow") || type.equals("wand");
+            boolean ranged = Weapons.isRangedType(type);
             String controls = ranged ? "웅크리면: 스킬" : "버튼: 스킬";
             check(lore.stream().anyMatch(l -> l.endsWith(controls)), type + " controls line " + controls + " in " + lore);
             check(lore.stream().anyMatch(l -> l.contains("스킬 §f" + k0.str("name") + " §710초")), type + " skill line in " + lore);

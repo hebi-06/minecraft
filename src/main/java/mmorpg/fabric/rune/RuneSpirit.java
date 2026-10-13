@@ -147,7 +147,7 @@ final class RuneSpirit {
     }
 
     /** 정령 색 {빛, 심지} (RUNE_SPIRITS[kind].color) */
-    private static double[][] spiritColor(String kind) {
+    static double[][] spiritColor(String kind) {
         List<Object> c = SPIRIT_DEFS.obj(kind).list("color");
         return new double[][] {Kit.rgb(c.get(0)), Kit.rgb(c.get(1))};
     }
@@ -225,35 +225,18 @@ final class RuneSpirit {
      * 넷을 부르면 정령왕이 나타남
      */
     static boolean summonSpirits(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
-        long now = Tasks.now();
         ServerLevel level = sp.level();
-        List<Spirit> list = SPIRITS.getOrDefault(sp.getUUID(), new ArrayList<>());
-        String life = RuneKit.lifeToken(sp);
         List<Object> kinds = k.list("spirits");
-        int each = (int) Math.max(1, Math.round(k.num("hits") / kinds.size()));
         Vec3 king = kinds.size() > 1 ? spiritKing(sp) : null;
-        for (int i = 0; i < kinds.size(); i++) {
-            Set<Integer> used = new HashSet<>();
-            for (Spirit x : list) used.add(x.slot);
-            int slot = 0;
-            while (used.contains(slot)) slot++;
-            long nextAt = now + Math.round(k.num("first") + i * k.numOr("stagger", 0));
-            Spirit s = new Spirit((String) kinds.get(i), level, P, k, now, each, nextAt, slot, spiritSlot(sp, slot, now, level), sp.getEyePosition(), life);
-            list.add(s);
-            SkillFx.burst(level, s.pos, s.glow, 0.55, 0.3); // 눈앞 2칸이므로 작게
-            SkillFx.sparks(level, s.pos, s.core, 3, 3);
-            if (king != null) RuneKit.streak(level, king, s.pos, s.glow, 0.08, 0.35, 0.8, 0.1 + i * 0.08); // 정령왕 → 정령 자리
-            RuneKit.later(i * 3, () -> {
-                if (RuneKit.sameLife(sp, life)) DamageNumbers.showAt(level, spiritLabelAt(sp, s.slot, level), s.def.str("text") + "§l" + s.def.str("name"));
-            });
-        }
-        SPIRITS.put(sp.getUUID(), list);
+        String life = RuneKit.lifeToken(sp);
+        spawnSpirits(sp, P, k, king);
         double[][] cs = RuneKit.colorOf("spirit");
         Vec3 feet = sp.position();
         SkillFx.rune(level, feet, Opt.of("size", 1.6, "life", 0.8, "color", cs[0], "alpha", 0.9, "rate", 120.0, "progress", 1.0, "grow", 0.2));
         SkillFx.play(level, "mob.evocation_illager.prepare_summon", feet, 1.3, 0.7);
         SkillFx.play(level, "mob.allay.idle", feet, 1.2, 0.8);
         // v2.27.0 2차 강화 (정령왕의 부름 — 초월): 오로라 하늘 · 청록 번쩍임 · 정령왕 뒤 하늘의 정령 문양 · 발밑의 정령 문양 · 앞쪽 네 원소 빛기둥 (2틱 뒤)
+        // (12단계부터 초월 정령사 룬은 정령왕 강림 — RuneSpiritKing. 덧붙임 없는 규칙의 정령왕의 부름만 여기로 옴)
         if (king != null && "transcend".equals(r.grade())) {
             double[] sg = cs[0];
             double[] sc = cs[1];
@@ -270,6 +253,48 @@ final class RuneSpirit {
             });
         }
         return true;
+    }
+
+    /**
+     * 정령을 부름 (summonSpirits · 정령왕 강림이 같이 씀): k.spirits 를 ticks 틱 동안 — 정령마다 hits ÷ 정령 수 번, first 틱 뒤부터 gap 틱마다
+     * (둘째 정령부터 stagger 틱씩 늦게). king = 정령이 나타날 때 빛줄기가 나오는 곳 (없으면 null). 부른 정령들
+     */
+    static List<Spirit> spawnSpirits(ServerPlayer sp, double P, Obj k, Vec3 king) {
+        long now = Tasks.now();
+        ServerLevel level = sp.level();
+        List<Spirit> list = SPIRITS.getOrDefault(sp.getUUID(), new ArrayList<>());
+        String life = RuneKit.lifeToken(sp);
+        List<Object> kinds = k.list("spirits");
+        int each = (int) Math.max(1, Math.round(k.num("hits") / kinds.size()));
+        List<Spirit> made = new ArrayList<>();
+        for (int i = 0; i < kinds.size(); i++) {
+            Set<Integer> used = new HashSet<>();
+            for (Spirit x : list) used.add(x.slot);
+            int slot = 0;
+            while (used.contains(slot)) slot++;
+            long nextAt = now + Math.round(k.num("first") + i * k.numOr("stagger", 0));
+            Spirit s = new Spirit((String) kinds.get(i), level, P, k, now, each, nextAt, slot, spiritSlot(sp, slot, now, level), sp.getEyePosition(), life);
+            list.add(s);
+            made.add(s);
+            SkillFx.burst(level, s.pos, s.glow, 0.55, 0.3); // 눈앞 2칸이므로 작게
+            SkillFx.sparks(level, s.pos, s.core, 3, 3);
+            if (king != null) RuneKit.streak(level, king, s.pos, s.glow, 0.08, 0.35, 0.8, 0.1 + i * 0.08); // 정령왕 → 정령 자리
+            RuneKit.later(i * 3, () -> {
+                if (RuneKit.sameLife(sp, life)) DamageNumbers.showAt(level, spiritLabelAt(sp, s.slot, level), s.def.str("text") + "§l" + s.def.str("name"));
+            });
+        }
+        SPIRITS.put(sp.getUUID(), list);
+        return made;
+    }
+
+    /** 정령을 거둠 (정령왕 강림의 합체 — 흩어지는 그림 없이). 거둔 정령의 마지막 자리 */
+    static List<Vec3> recallSpirits(ServerPlayer sp, List<Spirit> which) {
+        List<Vec3> at = new ArrayList<>();
+        List<Spirit> list = SPIRITS.get(sp.getUUID());
+        if (list == null) return at;
+        for (Spirit s : which) if (list.remove(s)) at.add(s.pos);
+        if (list.isEmpty()) SPIRITS.remove(sp.getUUID());
+        return at;
     }
 
     /** 정령왕 (정령왕의 부름): 앞쪽 하늘에 왕관을 쓴 정령왕 (rpg:rfx_king) 이 팔을 들어 네 정령을 부름. 그 자리 (정령에게 가는 빛줄기의 시작) */
@@ -329,7 +354,7 @@ final class RuneSpirit {
      * 정령 피해 한 번 (마력, 마법 피해): 몹 무적 시간 (10틱) 에 막히지 않게 — 다른 정령 피해 · 내 공격 · 다른 룬 · 불 피해에서 10틱 뒤로 미룸.
      * 들어갈 때 그 사이 다른 피해가 있었으면 다시 미룸 (3번까지). fn = 들어간 뒤. s = 때린 정령 (범위에 맞은 적도 "때린 적" 으로 적어 다음에는 다른 적부터)
      */
-    private static void spiritDamage(ServerPlayer sp, LivingEntity e, double P, double mult, Consumer<LivingEntity> fn, Spirit s) {
+    static void spiritDamage(ServerPlayer sp, LivingEntity e, double P, double mult, Consumer<LivingEntity> fn, Spirit s) {
         long now = Tasks.now();
         if (s != null) s.lastHit.put(e.getUUID(), now);
         Map<UUID, Long> m = HIT_AT.computeIfAbsent(sp.getUUID(), id -> new HashMap<>());
@@ -364,7 +389,7 @@ final class RuneSpirit {
     }
 
     /** 정령의 범위 공격에 맞는 적 (at 둘레 radius 칸, 위아래 2.5칸): 노려도 되는 적만 (곁의 동물 · 중립 몹은 다치지 않음) */
-    private static List<LivingEntity> spiritFoesAround(ServerPlayer sp, Vec3 at, double radius) {
+    static List<LivingEntity> spiritFoesAround(ServerPlayer sp, Vec3 at, double radius) {
         List<LivingEntity> out = new ArrayList<>();
         for (LivingEntity e : Kit.around(sp, at, radius, 2.5)) if (spiritFoe(sp, e)) out.add(e);
         return out;

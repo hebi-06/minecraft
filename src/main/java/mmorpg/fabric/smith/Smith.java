@@ -43,7 +43,8 @@ import net.minecraft.world.phys.Vec3;
  *   <li>레벨 올리기: 영웅 무기의 레벨 제한을 SMITH.step 씩 (30 → 35 → 40). 그 칸의 무기를 다음 레벨 무기 아이템으로 바꾸므로 기본 성능 · 요구 레벨 · 요구 스탯이
  *       그 레벨 기준이 됨 (렙제: 아직 그 레벨이 아니어도 올릴 수 있고 창에 "N렙부터 사용" 을 알림). 비용: 에메랄드 + 별철 광석. 강화 단계 · 모루 이름은 그대로 옮김.</li>
  *   <li>보스 무기 제작: 재료 (여러 보스의 재료 + 일반 몬스터 전리품 — Crafting.craftMaterials) + 에메랄드 + 별철 광석 → 무기 (BOSS_CRAFT). 등급마다 한 쪽
- *       (영웅 30렙 · 초월 40렙), 윗줄 가운데 칸을 누르면 다른 쪽. 가운데 줄 = 그 쪽의 무기, 아랫줄 = 그 쪽 무기들의 재료 (가진 수).</li>
+ *       (영웅 30렙 · 초월 40렙 · 12단계 고귀 10 · 20렙 — 새 무기 넷, 전리품 + 에메랄드만), 윗줄 가운데 칸을 누르면 다음 쪽 (영웅 → 초월 → 고귀 → 영웅).
+ *       가운데 줄 = 그 쪽의 무기, 아랫줄 = 그 쪽 무기들의 재료 (가진 수). 12단계 새 무기의 영웅 · 초월은 같은 쪽에 더해짐 (CRAFT_MORE).</li>
  * </ul>
  * 명령어 (commands.js, 관리자): /smith (레벨 올리기 창부터) · /enhance (강화 창부터).
  * 자바에서 달라진 점: 애드온의 async 창 고리는 받을 일 (콜백) 되부름으로 (shop 과 같음). 모루 이름은 바닐라 CUSTOM_NAME (애드온은 동적 속성 rpg:name).
@@ -324,8 +325,23 @@ public final class Smith {
     /** 제작 창의 쪽: 등급마다 한 쪽 */
     public record CraftPage(String grade, String label) {}
 
-    /** 영웅 30렙 · 초월 40렙 (CRAFT_PAGES) */
-    public static final List<CraftPage> CRAFT_PAGES = List.of(new CraftPage("hero", "영웅 30렙"), new CraftPage("transcend", "초월 40렙"));
+    /** 영웅 30렙 · 초월 40렙 · 고귀 10·20렙 (CRAFT_PAGES — 고귀는 12단계 새 무기만, 보스 재료 없이) */
+    public static final List<CraftPage> CRAFT_PAGES = List.of(new CraftPage("hero", "영웅 30렙"), new CraftPage("transcend", "초월 40렙"),
+            new CraftPage("noble", "고귀 10·20렙"));
+
+    /** 윗줄 가운데 칸을 누르면 가는 쪽 (영웅 → 초월 → 고귀 → 영웅 — 제작할 무기가 없는 쪽은 건너뜀) */
+    public static int nextCraftPage(List<Recipe> list, int page) {
+        for (int i = 1; i <= CRAFT_PAGES.size(); i++) {
+            int p = (Math.max(0, page) + i) % CRAFT_PAGES.size();
+            if (!craftPage(list, p).isEmpty()) return p;
+        }
+        return Math.max(0, page);
+    }
+
+    /** 이 쪽에 보스 재료가 드는지 (고귀 쪽은 몬스터 전리품 + 에메랄드만) */
+    static boolean bossPage(int page) {
+        return page < 0 || page >= CRAFT_PAGES.size() || !CRAFT_PAGES.get(page).grade().equals("noble");
+    }
 
     private static Mat matInfo(Crafting.Material m) {
         int count = (int) m.count();
@@ -394,7 +410,7 @@ public final class Smith {
         return all.size() <= 9 ? new PageMats(List.copyOf(all), List.of()) : new PageMats(List.copyOf(all.subList(0, 8)), List.copyOf(all.subList(8, all.size())));
     }
 
-    /** 처음 여는 쪽 (firstCraftPage): 그 쪽 무기들의 재료를 더 많이 모은 쪽 (무기마다 필요한 만큼까지 셈, 같으면 영웅) */
+    /** 처음 여는 쪽 (firstCraftPage): 그 쪽 무기들의 재료를 가장 많이 모은 쪽 (무기마다 필요한 만큼까지 셈, 같으면 앞쪽 — 영웅) */
     public static int firstCraftPage(ServerPlayer sp, List<Recipe> list) {
         Map<String, Integer> have = new HashMap<>();
         int[] score = new int[CRAFT_PAGES.size()];
@@ -403,7 +419,9 @@ public final class Smith {
                 for (Mat m : e.mats()) score[p] += Math.min(have.computeIfAbsent(m.itemId(), id -> Inv.count(sp, Icon.itemById(id))), m.count());
             }
         }
-        return score[1] > score[0] ? 1 : 0;
+        int best = 0;
+        for (int p = 1; p < score.length; p++) if (score[p] > score[best]) best = p;
+        return best;
     }
 
     /** 필요한 것 하나 (같은 아이템이 여러 줄이면 합침) */
@@ -446,16 +464,21 @@ public final class Smith {
         return "§r" + (have >= m.count() ? "§a" : "§7") + m.name() + " §f" + Math.min(have, m.count()) + "/" + m.count() + " §8(" + m.from() + ")";
     }
 
-    /** 제작 창 (craftForm). list = 이 쪽의 제작 목록 (craftPage), page 0 = 영웅 · 1 = 초월 */
-    private static ChestForm craftForm(ServerPlayer sp, List<Recipe> list, String message, int page) {
+    /** 제작 창 (craftForm). list = 이 쪽의 제작 목록 (craftPage), page 0 = 영웅 · 1 = 초월 · 2 = 고귀 (12단계) */
+    private static ChestForm craftForm(ServerPlayer sp, List<Recipe> list, String message, int page, int nextPage) {
         CraftPage p = page >= 0 && page < CRAFT_PAGES.size() ? CRAFT_PAGES.get(page) : CRAFT_PAGES.get(0);
-        CraftPage other = 1 - page >= 0 && 1 - page < CRAFT_PAGES.size() ? CRAFT_PAGES.get(1 - page) : CRAFT_PAGES.get(1);
-        ChestForm form = new ChestForm("대장장이 §8· §7보스 무기 제작 §8· §7" + p.label());
+        CraftPage other = CRAFT_PAGES.get(nextPage >= 0 && nextPage < CRAFT_PAGES.size() ? nextPage : 0);
+        boolean boss = bossPage(page);
+        String what = boss ? "보스 무기 제작" : "무기 제작";
+        ChestForm form = new ChestForm("대장장이 §8· §7" + what + " §8· §7" + p.label());
         form.set(TAB_SLOT, Slot.of("textures/items/nether_star", "§6무기 강화로").lore("§7+1 ~ +10 무기 강화 창"));
         form.set(EMERALD_SLOT, Shop.balanceSlot(sp));
-        form.set(CRAFT_INFO_SLOT, Slot.of(page == 0 ? "textures/items/diamond_sword" : "textures/items/netherite_sword", "§6보스 무기 제작 §7· §f" + p.label())
-                .lore("§e누르면 " + other.label() + " 무기 보기", "§7여러 보스의 재료와 일반 몬스터", "§7전리품을 섞어 무기를 만듭니다", "§7(강화 +0) 영웅 무기는 30렙으로 만들어",
-                        "§7레벨 올리기 창에서 40렙까지", "§7초월 무기는 40렙으로 만듦"));
+        String icon = !boss ? "textures/items/golden_sword" : page == 0 ? "textures/items/diamond_sword" : "textures/items/netherite_sword";
+        form.set(CRAFT_INFO_SLOT, Slot.of(icon, "§6" + what + " §7· §f" + p.label())
+                .lore(boss ? new String[] {"§e누르면 " + other.label() + " 무기 보기", "§7여러 보스의 재료와 일반 몬스터", "§7전리품을 섞어 무기를 만듭니다",
+                        "§7(강화 +0) 영웅 무기는 30렙으로 만들어", "§7레벨 올리기 창에서 40렙까지", "§7초월 무기는 40렙으로 만듦"}
+                        : new String[] {"§e누르면 " + other.label() + " 무기 보기", "§7일반 몬스터 전리품과 에메랄드로", "§7새 무기 (창 · 낫 · 전투 망치 ·", "§7성스러운 홀) 의 고귀 무기를",
+                                "§7만듭니다 (강화 +0)"}));
         form.set(ORE_SLOT, oreSlot(sp));
         form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 올리기로").lore("§7영웅 무기 레벨 제한 올리기 창"));
         for (int i = 0; i < list.size(); i++) {
@@ -465,7 +488,7 @@ public final class Smith {
             List<String> lore = new ArrayList<>();
             lore.add("§r§7" + e.w().typeLabel() + " · " + statLine(e.w()));
             for (Mat m : e.mats()) lore.add(matLine(sp, m));
-            lore.add("§r§7" + Inv.CURRENCY_NAME + " §f" + e.emerald() + " §7· " + ORE_NAME + " §f" + e.ore());
+            lore.add("§r§7" + Inv.CURRENCY_NAME + " §f" + e.emerald() + (e.ore() > 0 ? " §7· " + ORE_NAME + " §f" + e.ore() : ""));
             lore.add(ok ? "§r§a만들 수 있음" : "§r§c재료 부족");
             if (gap != null) lore.add("§r§c" + Js.str(gap[0]) + "렙부터 사용 · 최고 " + Js.str(gap[1]) + "렙");
             form.set(CRAFT_FIRST + i, Slot.of(Shop.weaponItem(e.w()), e.w().name()).lore(lore));
@@ -490,8 +513,9 @@ public final class Smith {
         }
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        lines.add(list.isEmpty() ? "§8만들 수 있는 보스 무기가 없습니다.§r" : "§8무기 칸을 누르면 확인 창이 열립니다. 윗줄 가운데 칸: " + other.label() + " 쪽.§r");
-        lines.add("§8재료: 여러 보스의 재료 + 일반 몬스터 전리품 (무기 칸 설명).§r");
+        lines.add(list.isEmpty() ? "§8만들 수 있는 " + (boss ? "보스 " : "") + "무기가 없습니다.§r"
+                : "§8무기 칸을 누르면 확인 창이 열립니다. 윗줄 가운데 칸: " + other.label() + " 쪽.§r");
+        lines.add(boss ? "§8재료: 여러 보스의 재료 + 일반 몬스터 전리품 (무기 칸 설명).§r" : "§8재료: 일반 몬스터 전리품 + 에메랄드 (무기 칸 설명).§r");
         lines.add("§8아랫줄: 이 쪽 무기들의 재료를 가진 수.§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
@@ -500,7 +524,7 @@ public final class Smith {
 
     /** 보스 무기 제작 확인 창 (confirmCraft). 결과 문구를 done 으로 (취소면 "") */
     private static void confirmCraft(ServerPlayer sp, Recipe e, Consumer<String> done) {
-        ChestForm form = new ChestForm("보스 무기 제작");
+        ChestForm form = new ChestForm(e.grade().equals("noble") ? "무기 제작" : "보스 무기 제작");
         form.set(11, Slot.of(Icon.sprite("icon_check"), "§a만들기"));
         form.set(13, Slot.of(Shop.weaponItem(e.w()), e.w().name()).lore(Weapons.weaponInfo(e.w())));
         form.set(15, Slot.of(Icon.sprite("icon_cross"), "§c취소"));
@@ -517,7 +541,8 @@ public final class Smith {
         lines.add("§8" + statLine(e.w()) + " · 요구 스탯: " + Weapons.reqsText(e.w().reqs(), true) + "§r");
         if (gap != null) lines.add("§4" + Js.str(gap[0]) + "렙부터 사용 가능 §8(지금 최고 " + Js.str(gap[1]) + ")§r");
         for (int i = 0; i < mats.size(); i += 2) lines.add("§8" + String.join(" §8· ", mats.subList(i, Math.min(mats.size(), i + 2))) + "§r");
-        lines.add("§8" + Inv.CURRENCY_NAME + " §0" + Inv.money(sp) + "/" + e.emerald() + " §8· " + ORE_NAME + " §0" + Inv.count(sp, ore()) + "/" + e.ore() + "§r");
+        lines.add("§8" + Inv.CURRENCY_NAME + " §0" + Inv.money(sp) + "/" + e.emerald()
+                + (e.ore() > 0 ? " §8· " + ORE_NAME + " §0" + Inv.count(sp, ore()) + "/" + e.ore() : "") + "§r");
         lines.add("§8왼쪽 초록 칸: 만들기 · 오른쪽 빨간 칸: 취소§r");
         form.body(String.join("\n", lines));
         form.show(sp, sel -> done.accept(sel == 11 ? craft(sp, e) : ""));
@@ -537,7 +562,7 @@ public final class Smith {
         if (!Inv.remove(sp, Inv.CURRENCY, e.emerald()) || !Inv.remove(sp, ore(), e.ore())) return "§4결제 오류§r";
         Inv.give(sp, item);
         forgeFx(sp, 0.9, 0.9, 1.2, 0.6, 8);
-        Notify.notify(sp, "§6보스 무기 제작: " + e.w().name() + Weapons.levelNote(e.w(), RpgCombat.reqLevelOf(sp)), 60);
+        Notify.notify(sp, "§6" + (e.grade().equals("noble") ? "무기 제작: " : "보스 무기 제작: ") + e.w().name() + Weapons.levelNote(e.w(), RpgCombat.reqLevelOf(sp)), 60);
         return "§2완료: " + e.w().darkName() + " §8(" + statLine(e.w()) + ")§r";
     }
 
@@ -546,17 +571,24 @@ public final class Smith {
         craftStep(sp, "", firstCraftPage(sp, craftRecipes()), 0, next);
     }
 
+    /** 제작 창을 그 쪽 (0 영웅 · 1 초월 · 2 고귀) 부터 엶 (시험 · 사진첩 — 창이 열려 있으면 무시) */
+    public static void openCraftPage(ServerPlayer sp, int page) {
+        if (Forms.isOpen(sp)) return;
+        craftStep(sp, "", Math.max(0, Math.min(CRAFT_PAGES.size() - 1, page)), 0, n -> {});
+    }
+
     private static void craftStep(ServerPlayer sp, String message, int page, int guard, Consumer<String> next) {
         if (guard >= 100) {
             next.accept(null);
             return;
         }
         List<Recipe> list = craftPage(craftRecipes(), page);
-        craftForm(sp, list, message, page).show(sp, sel -> {
+        int nextPage = nextCraftPage(craftRecipes(), page);
+        craftForm(sp, list, message, page, nextPage).show(sp, sel -> {
             if (sel < 0) next.accept(null);
             else if (sel == TAB_SLOT) next.accept("enhance");
             else if (sel == CRAFT_TAB_SLOT) next.accept("smith");
-            else if (sel == CRAFT_INFO_SLOT) craftStep(sp, "", 1 - page, guard + 1, next); // 윗줄 가운데 칸 = 다른 쪽 (영웅 ↔ 초월)
+            else if (sel == CRAFT_INFO_SLOT) craftStep(sp, "", nextPage, guard + 1, next); // 윗줄 가운데 칸 = 다음 쪽 (영웅 → 초월 → 고귀)
             else {
                 int i = sel - CRAFT_FIRST;
                 Recipe e = sel >= CRAFT_FIRST && sel < MAT_FIRST && i < list.size() ? list.get(i) : null;

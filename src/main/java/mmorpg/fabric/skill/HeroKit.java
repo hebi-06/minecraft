@@ -17,7 +17,7 @@ import net.minecraft.world.phys.Vec3;
 final class HeroKit {
     private HeroKit() {}
 
-    /** 영웅 스킬 6종을 Transcend 에 등록 */
+    /** 영웅 스킬 10종 (10단계 6 + 12단계 새 무기 4) 을 Transcend 에 등록 */
     static void registerAll() {
         Balmung.register();
         ShadowDagger.register();
@@ -25,6 +25,11 @@ final class HeroKit {
         Durand.register();
         ElfBow.register();
         LichStaff.register();
+        // 12단계 새 무기 영웅 스킬
+        GaeBolg.register();
+        Harpe.register();
+        Dagda.register();
+        Caduceus.register();
     }
 
     /** 스킬 색 {빛, 심지} (HERO_SKILLS[종류].color — 없으면 흰색) */

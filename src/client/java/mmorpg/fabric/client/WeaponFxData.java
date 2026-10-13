@@ -28,6 +28,22 @@ public final class WeaponFxData {
             10.0F, 0.375F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x8A4DD6});
     private static final Spec GREATSWORD_TRANSCEND_LV0 = new Spec("greatsword_transcend_lv0", 0.72059F, 0.39957F, -1.60626F, -0.0625F, -0.1875F, -1.29904F,
             10.0F, 0.42F, 0.15F, 0.7F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.4F, 0.6F}, new int[] {0x87CCFF, 0x9E5CE6, 0xF5948C});
+    private static final Spec HAMMER_HERO_LV0 = new Spec("hammer_hero_lv0", 0.70746F, 0.52692F, -1.63515F, -0.0625F, -0.09375F, -1.13666F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x73FF73, 0xB266FF});
+    private static final Spec HAMMER_TRANSCEND_LV0 = new Spec("hammer_transcend_lv0", 0.74123F, 0.19943F, -1.56087F, -0.0625F, 0.09375F, -0.8119F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x99D1FF, 0xEBF7FF});
+    private static final Spec LANCE_HERO_LV0 = new Spec("lance_hero_lv0", 0.65982F, 0.98905F, -1.73996F, -0.0625F, -0.65625F, -2.11094F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFF4040});
+    private static final Spec LANCE_TRANSCEND_LV0 = new Spec("lance_transcend_lv0", 0.64282F, 1.15401F, -1.77737F, -0.0625F, -0.78125F, -2.32744F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFFEB8C, 0xA6F2FF});
+    private static final Spec SCEPTER_HERO_LV0 = new Spec("scepter_hero_lv0", 0.67683F, 0.82409F, -1.70255F, -0.0625F, -0.3125F, -1.51554F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFFD966, 0xCCE0FF});
+    private static final Spec SCEPTER_TRANSCEND_LV0 = new Spec("scepter_transcend_lv0", 0.67151F, 0.87564F, -1.71424F, -0.0625F, -0.34375F, -1.56967F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFFB840, 0xFFF2BF});
+    private static final Spec SCYTHE_HERO_LV0 = new Spec("scythe_hero_lv0", 0.62169F, 0.69087F, -1.84456F, -0.0625F, -0.18974F, -1.80292F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xCCB2FF});
+    private static final Spec SCYTHE_TRANSCEND_LV0 = new Spec("scythe_transcend_lv0", 0.45688F, 0.95326F, -2.24853F, -0.0625F, -0.00673F, -2.48594F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x73E6FF, 0xFFD973});
     private static final Spec SHIELD_HERO_LV0 = new Spec("shield_hero_lv0", 0.86253F, -0.55214F, -1.05695F, -0.1875F, 0.625F, 0.03125F,
             10.0F, 0.188F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFE27A});
     private static final Spec SHIELD_TRANSCEND_LV0 = new Spec("shield_transcend_lv0", 0.89167F, -0.50711F, -0.9357F, -0.3125F, 0.59375F, 0.0F,
@@ -58,6 +74,22 @@ public final class WeaponFxData {
             Map.entry("dagger_l40_hero", DAGGER_HERO_LV0),
             Map.entry("dagger_l40_transcend", DAGGER_TRANSCEND_LV0),
             Map.entry("greatsword_l40_transcend", GREATSWORD_TRANSCEND_LV0),
+            Map.entry("hammer_l30_hero", HAMMER_HERO_LV0),
+            Map.entry("hammer_l35_hero", HAMMER_HERO_LV0),
+            Map.entry("hammer_l40_hero", HAMMER_HERO_LV0),
+            Map.entry("hammer_l40_transcend", HAMMER_TRANSCEND_LV0),
+            Map.entry("lance_l30_hero", LANCE_HERO_LV0),
+            Map.entry("lance_l35_hero", LANCE_HERO_LV0),
+            Map.entry("lance_l40_hero", LANCE_HERO_LV0),
+            Map.entry("lance_l40_transcend", LANCE_TRANSCEND_LV0),
+            Map.entry("scepter_l30_hero", SCEPTER_HERO_LV0),
+            Map.entry("scepter_l35_hero", SCEPTER_HERO_LV0),
+            Map.entry("scepter_l40_hero", SCEPTER_HERO_LV0),
+            Map.entry("scepter_l40_transcend", SCEPTER_TRANSCEND_LV0),
+            Map.entry("scythe_l30_hero", SCYTHE_HERO_LV0),
+            Map.entry("scythe_l35_hero", SCYTHE_HERO_LV0),
+            Map.entry("scythe_l40_hero", SCYTHE_HERO_LV0),
+            Map.entry("scythe_l40_transcend", SCYTHE_TRANSCEND_LV0),
             Map.entry("shield_l30_hero", SHIELD_HERO_LV0),
             Map.entry("shield_l35_hero", SHIELD_HERO_LV0),
             Map.entry("shield_l40_hero", SHIELD_HERO_LV0),

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import mmorpg.core.Armor;
+import mmorpg.core.Crafting;
 import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
@@ -108,7 +109,7 @@ public final class GearItems {
         Obj raid = R.obj("RAID_MATERIALS");
         for (String m : R.strings("RAID_MATERIAL_ORDER")) material(names, raid.obj(m).str("item"), () -> strings(raid.obj(m).list("lore")));
         Obj boss = R.obj("BOSS_MATERIALS");
-        for (String m : boss.keys()) material(names, boss.obj(m).str("item"), () -> strings(boss.obj(m).list("lore")));
+        for (String m : boss.keys()) material(names, boss.obj(m).str("item"), () -> bossLore(m));
         Obj drops = R.obj("MONSTER_DROPS");
         for (String m : R.strings("MONSTER_ORDER")) {
             if (drops.objOrNull(m) != null) material(names, drops.obj(m).str("item"), () -> dropLore(m));
@@ -150,7 +151,7 @@ public final class GearItems {
         List<String> lines = new ArrayList<>(List.of("§r§7" + m.str("name") + " (Lv." + Js.str(m.num("level")) + ") 전리품", "§r§7" + d.str("desc"),
                 "§r§7상점: 1개 " + Js.str(d.num("price")) + " " + R.obj("CONFIG").str("CURRENCY_NAME"), "§r§7잉그리드의 반복 의뢰 재료"));
         Map<String, Integer> uses = new HashMap<>();
-        for (Obj r : R.root().objsOrNull("BOSS_CRAFT")) {
+        for (Obj r : Crafting.RECIPES) { // BOSS_CRAFT + 12단계 CRAFT_MORE (새 무기 — 고귀 제작은 전리품만)
             List<Object> ds = r.listOrNull("drops");
             if (ds == null) continue;
             for (Object o : ds) {
@@ -161,10 +162,25 @@ public final class GearItems {
             }
         }
         List<String> parts = new ArrayList<>();
+        if (uses.getOrDefault("noble", 0) > 0) parts.add("고귀 " + uses.get("noble"));
         if (uses.getOrDefault("hero", 0) > 0) parts.add("영웅 " + uses.get("hero"));
         if (uses.getOrDefault("transcend", 0) > 0) parts.add("초월 " + uses.get("transcend"));
-        if (!parts.isEmpty()) lines.add("§r§6보스 무기 재료: " + String.join(" · ", parts));
+        if (!parts.isEmpty()) lines.add("§r§6" + (uses.getOrDefault("noble", 0) > 0 ? "무기 제작 재료: " : "보스 무기 재료: ") + String.join(" · ", parts));
         return lines;
+    }
+
+    /**
+     * 보스 재료 설명: 애드온 설명 (BOSS_MATERIALS[m].lore) 의 "대장장이 보스 무기 제작:" 줄까지 그대로, 그 아래 무기 줄은 지금 제작 목록
+     * (Crafting.craftUseLines — 12단계 새 무기 포함) 으로 다시 씀. 그 줄이 없는 재료 (수르트 — 준비 중) 는 그대로
+     */
+    static List<String> bossLore(String key) {
+        List<String> lore = strings(R.obj("BOSS_MATERIALS").obj(key).list("lore"));
+        int head = -1;
+        for (int i = 0; i < lore.size(); i++) if (lore.get(i).contains("대장장이 보스 무기 제작")) head = i;
+        if (head < 0) return lore;
+        List<String> out = new ArrayList<>(lore.subList(0, head + 1));
+        out.addAll(Crafting.craftUseLines("boss", key));
+        return out;
     }
 
     public static List<RpgArmorItem> armor() {

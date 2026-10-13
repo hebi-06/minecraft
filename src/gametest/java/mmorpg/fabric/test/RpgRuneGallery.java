@@ -93,6 +93,8 @@ public final class RpgRuneGallery implements FabricClientGameTest {
     /** 사진 찍을 틱 (쓴 뒤): 예고 (delay) 가 있으면 터지는 순간 쯤, 초월은 셋 */
     private static int[] shots(Runes.Rune r, boolean third) {
         Obj k = r.def();
+        // 정령왕 강림 (12단계): 정령들 → 합체 (34틱) → 원소 넷 → 원소 붕괴 (97틱 쯤)
+        if ("spiritKing".equals(k.str("fn"))) return third ? new int[] {62} : new int[] {8, 46, 98};
         int delay = (int) Math.round(k.numOr("delay", 0));
         boolean ult = r.grade().equals("transcend");
         int hit = delay > 0 ? delay + 3 : 6;

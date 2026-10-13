@@ -207,6 +207,8 @@ public final class Runes {
         if (!def.truthy("mult")) return 0;
         double mult = def.num("mult");
         if ("bulwark".equals(fn) || "undyingPact".equals(fn)) return mult * Math.floor(def.numOr("ticks", Double.NaN) / def.numOr("pulse", Double.NaN));
+        // 정령왕 강림 (12단계 — 자바 전용): 정령 공격 mult × hits + 원소 마무리 넷 elemMult × 4 + 원소 붕괴 burstMult
+        if ("spiritKing".equals(fn)) return mult * def.numOr("hits", 1) + def.numOr("elemMult", 0) * 4 + def.numOr("burstMult", 0);
         return mult * def.numOr("hits", 1) + def.numOr("dot", 0) * def.numOr("dots", 0) + def.numOr("crush", 0);
     }
 

@@ -8,7 +8,6 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
-import java.util.ArrayList;
 import java.util.List;
 import mmorpg.core.Grade;
 import mmorpg.core.Hp;
@@ -38,17 +37,14 @@ public final class RpgCommands {
             "§f/stats §7- 스탯 창 (키 K · 스탯 책도 됨)",
             "§f/rpg info §7- 내 스탯 · 체력 · 기준 무기",
             "§f/rpg spend str 1 §7- 포인트 투자 (str 힘 · dex 민첩 · int 마력 · vit 체력)",
-            "§f/weapon sword 10 rare §7- 무기 받기 (관리자) — 종류 sword·dagger·axe·shield·bow·wand·greatsword, 등급 common·rare·noble·hero·transcend",
+            "§f/weapon sword 10 rare §7- 무기 받기 (관리자) — 종류 sword·dagger·axe·shield·bow·wand·greatsword·lance·scythe·hammer·scepter, 등급 common·rare·noble·hero·transcend",
             "§f/points 5 §7- 스탯 포인트 (관리자), §f/heal §7- 체력 회복 (관리자)",
             "§f/rpg reset §7- 스탯 초기화 (관리자), §f/rpg set str 20 §7- 스탯 값 정하기 (관리자 · 시험용), §f/rpg book §7- 스탯 책");
 
     private static final SuggestionProvider<CommandSourceStack> STATS =
             (c, b) -> SharedSuggestionProvider.suggest(Stats.STAT_KEYS, b);
-    private static final SuggestionProvider<CommandSourceStack> TYPES = (c, b) -> {
-        List<String> types = new ArrayList<>(Rules.get().strings("TYPE_ORDER"));
-        for (String t : Rules.get().obj("TYPE_ONLY").keys()) if (!types.contains(t)) types.add(t);
-        return SharedSuggestionProvider.suggest(types, b);
-    };
+    /** 무기 종류: TYPE_ORDER 여섯 + 제작 전용 (마검 · 12단계 새 무기 넷) */
+    private static final SuggestionProvider<CommandSourceStack> TYPES = (c, b) -> SharedSuggestionProvider.suggest(Weapons.allTypes(), b);
     private static final SuggestionProvider<CommandSourceStack> GRADES =
             (c, b) -> SharedSuggestionProvider.suggest(Rules.get().grades().stream().map(Grade::id).toList(), b);
 
@@ -188,8 +184,9 @@ public final class RpgCommands {
         if (item == null) {
             Grade g = Rules.get().grade(grade);
             String gname = g == null ? grade : g.name();
-            c.getSource().sendFailure(Component.literal(BedrockText.toJava("§c없는 무기입니다: " + gname + " 등급은 " + (g == null ? "?" : Weapons.gradeLevelsText(grade))
-                    + " 무기만 있습니다. §7(종류 sword·dagger·axe·shield·bow·wand·greatsword)")));
+            String lv = g == null ? "?" : Weapons.gradeLevelsText(grade, type);
+            c.getSource().sendFailure(Component.literal(BedrockText.toJava("§c없는 무기입니다: " + gname + " 등급은 " + (lv.isEmpty() ? "없음" : lv + " 무기만 있습니다")
+                    + ". §7(종류 " + String.join("·", Weapons.allTypes()) + ")")));
             return 0;
         }
         Notify.give(sp, new ItemStack(item));

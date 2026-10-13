@@ -198,7 +198,18 @@ public final class RuneBreakTest {
                 "meteor 6 text " + RuneBreak.changeTexts(meteor, 6));
         check(RuneBreak.changeTexts(rune("axe", "transcend"), 3).contains("받는 피해 -25 → -30%"), "berserker % " + RuneBreak.changeTexts(rune("axe", "transcend"), 3));
         check(RuneBreak.changeTexts(rune("dex", "transcend"), 3).contains("멈춤 1.5 → 2초"), "shadowless sec " + RuneBreak.changeTexts(rune("dex", "transcend"), 3));
-        check(RuneBreak.changeTexts(rune("spirit", "transcend"), 3).contains("정령마다 2 → 3번"), "spirits per spirit " + RuneBreak.changeTexts(rune("spirit", "transcend"), 3));
+        // 12단계: 정령왕 강림 (spiritKing — 정령 공격 · 원소 마무리 넷 · 원소 붕괴, 합 ×32 → 3돌 ×42 → 6돌 ×50)
+        Runes.Rune king = rune("spirit", "transcend");
+        check(king.def().str("fn").equals("spiritKing") && king.def().str("name").equals("정령왕 강림"), "spirit transcend = 정령왕 강림 " + king.def().str("name"));
+        check(RuneBreak.changeTexts(king, 3).contains("정령 공격 위력 ×2.5 → ×5") && RuneBreak.changeTexts(king, 3).contains("원소 마무리 범위 6 → 7.5칸"),
+                "spirit king 3 " + RuneBreak.changeTexts(king, 3));
+        check(RuneBreak.changeTexts(king, 6).contains("원소 붕괴 위력 ×8 → ×12") && RuneBreak.changeTexts(king, 6).contains("원소 붕괴에 맞은 적 기절 1.5초"),
+                "spirit king 6 " + RuneBreak.changeTexts(king, 6));
+        near(Runes.runeTotalMult(king.def()), 32, "spirit king total 32");
+        near(Runes.runeTotalMult(RuneBreak.def(king, 3)), 42, "spirit king 3 total 42");
+        near(Runes.runeTotalMult(RuneBreak.def(king, 6)), 50, "spirit king 6 total 50");
+        near(RuneBreak.def(king, 6).num("mult"), 5, "spirit king 6 keeps 3's spirit power");
+        near(RuneBreak.def(king, 6).num("hits"), 4, "spirit king: one attack per spirit at every tier (hits on one target stay 10 ticks apart)");
         check(RuneBreak.changeTexts(rune("str", "transcend"), 6).contains("사거리 22 → 28칸"), "heavenFall 6 range from base");
         check(plain(RuneBreak.summaryLine(3, false)).equals("돌파 ★★★☆☆☆ 3/6 · 계수 ×1.3"), "summary " + plain(RuneBreak.summaryLine(3, false)));
         check(plain(RuneBreak.summaryLine(0, false)).contains("0/6") && plain(RuneBreak.summaryLine(0, false)).contains("+10%"), "summary 0");
