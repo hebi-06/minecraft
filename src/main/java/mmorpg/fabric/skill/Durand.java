@@ -71,7 +71,7 @@ final class Durand {
         int guard = (int) k.num("guard");
         Guards.set(sp, guard, k.num("reduce"), null, null);
         int holy = RuneKit.SIGIL.get("holy");
-        SkillFx.burst(level, V.up(pos, 0.4), glow, 1.2, 0.3);
+        SkillFx.burst(level, V.up(pos, 0.1), glow, 0.8, 0.3); // 발밑 (1인칭 화면 아래 — 몸 높이의 큰 빛은 화면을 덮음)
         SkillFx.play(level, "beacon.power", pos, 1.6, 0.6);
         int[] glint = RuneKit.RFX.get("glint");
         for (int t = 0; t < guard; t += 5) {

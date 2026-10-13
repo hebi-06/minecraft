@@ -35,10 +35,12 @@ final class ElfBow {
         Transcend.register("elf_volley", ElfBow::volley);
     }
 
-    /** 정령 자리: 눈 앞 1칸 · 왼쪽 0.7칸 · 위 0.1칸 (1인칭 화면 왼쪽 위 — 3인칭에서는 왼쪽 어깨 앞) */
+    /**
+     * 정령 자리: 선 눈높이 (발 + 1.62 — 웅크려 쓴 처음 몇 틱에도 같은 자리) 에서 앞 1칸 · 왼쪽 0.7칸 · 위 0.1칸 (1인칭 화면 왼쪽 위 — 3인칭에서는 왼쪽 어깨 앞)
+     */
     static Vec3 sylphAt(ServerPlayer sp) {
         Vec3 f = Kit.facingOf(sp);
-        return V.up(V.add(V.add(sp.getEyePosition(), f, 1.0), V.rightOf(f), -0.7), 0.1);
+        return V.up(V.add(V.add(sp.position(), f, 1.0), V.rightOf(f), -0.7), 1.72);
     }
 
     /** 활 자리 (화살이 나가는 곳): 눈 앞 0.8칸 · 오른쪽 0.25칸 · 아래 0.2칸 */

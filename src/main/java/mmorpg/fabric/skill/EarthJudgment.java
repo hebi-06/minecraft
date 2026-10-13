@@ -68,7 +68,7 @@ final class EarthJudgment {
         // 내리침: 내려치는 초승달 · 땅 금 · 고리 · 튀는 돌 · 쿵
         SkillFx.arc(level, V.add(V.up(sp.getEyePosition(), -0.3), f, 2.2), V.unit(V.add(f, V.DOWN, 0.9)), Opt.of("shape", "heavy", "flip", false, "size", 1.4,
                 "life", 0.18, "speed", 1.6, "color", glow, "aura", core, "spin", 90.0));
-        SkillFx.burst(level, V.up(p0, 0.3), glow, 1.5, 0.3);
+        SkillFx.burst(level, V.up(p0, 0.3), glow, 1.1, 0.3);
         SkillFx.shock(level, p0, rock, 1.3, 0.45);
         SkillFx.fx(level, "rpg:ground_crack", V.up(p0, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 2.6, "life", 1.6, "color", ASH, "alpha", 0.9));
         RuneKit.rockBurst(level, V.up(p0, 0.3), 6, 7, 0.32);

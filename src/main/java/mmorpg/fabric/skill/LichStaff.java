@@ -157,10 +157,16 @@ final class LichStaff {
                 if (!ok.getAsBoolean()) return;
                 double got = heal.open();
                 if (!souls && got <= 0) return;
-                Vec3 at = V.up(sp.position(), 1.0);
-                SkillFx.burst(level, at, glow, 1.0, 0.3);
-                SkillFx.shock(level, sp.position(), glow, 0.8, 0.4);
-                SkillFx.play(level, "respawn_anchor.charge", at, 1.4, got > 0 ? 0.7 : 0.4);
+                // 내 몸에 스며듦: 발밑 고리 · 영혼불 · 솟는 빛 알갱이 (가슴 높이의 큰 빛은 1인칭 화면을 다 덮으므로 두지 않음)
+                Vec3 feet = sp.position();
+                SkillFx.shock(level, feet, glow, 0.8, 0.45);
+                soulFire(level, feet, 0.5, 0.45, glow, 2);
+                for (int j = 0; j < 6; j++) {
+                    Vec3 at = V.add(feet, V.turnY(new Vec3(1, 0, 0), j * 60 + Kit.rand() * 30), 0.55);
+                    SkillFx.fx(level, "rpg:arrow_spark", V.up(at, 0.2), Opt.of("dir", V.UP, "speed", 1.6, "size", 0.12, "grow", 0.4, "life", 0.6, "color", glow,
+                            "alpha", 1.0));
+                }
+                SkillFx.play(level, "respawn_anchor.charge", feet, 1.4, got > 0 ? 0.7 : 0.4);
             });
         });
         return true;
@@ -206,7 +212,7 @@ final class LichStaff {
         SkillFx.sparks(level, from, core, 5, 3);
     }
 
-    /** 영혼이 나에게 날아옴 (back 틱 — 휘어 날며, 끝은 내 가슴): 영혼빛 구슬 + 꼬리 */
+    /** 영혼이 나에게 날아옴 (back 틱 — 휘어 날며, 끝은 내 앞 0.6칸 · 허리 높이 — 1인칭 눈에 닿지 않게, 눈 가까이는 작게): 영혼빛 구슬 + 꼬리 */
     static void soulFly(ServerPlayer sp, Vec3 from, double[] glow, double[] core, int back) {
         ServerLevel level = sp.level();
         String life = Kit.lifeOf(sp);
@@ -215,10 +221,11 @@ final class LichStaff {
         Kit.ticks(t -> {
             if (!Kit.sameLife(sp, life)) return false;
             double u = Math.min(1, (t + 1) / (double) back);
-            Vec3 to = V.up(sp.position(), 1.1);
+            Vec3 to = V.up(V.add(sp.position(), Kit.facingOf(sp), 0.6), 0.6);
             Vec3 ctrl = V.lerp(lift, V.up(to, 1.2), 0.5);
             Vec3 p = Odin.bezAt(from, ctrl, to, u);
-            SkillFx.fx(level, "rpg:arrow_spark", p, Opt.of("dir", V.UP, "size", 0.26, "grow", 0.6, "life", 0.12, "color", glow, "alpha", 1.0));
+            double nk = HeroKit.near(sp.getEyePosition(), p, 0.35);
+            SkillFx.fx(level, "rpg:arrow_spark", p, Opt.of("dir", V.UP, "size", 0.26 * nk, "grow", 0.6, "life", 0.12, "color", glow, "alpha", 1.0));
             Gram.streakLine(level, prev[0], p, glow, 0.14, 0.3, 0.8, 0);
             Gram.streakLine(level, prev[0], p, core, 0.05, 0.22, 1.0, 0);
             prev[0] = p;
