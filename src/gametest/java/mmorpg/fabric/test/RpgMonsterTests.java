@@ -545,17 +545,25 @@ public final class RpgMonsterTests {
         long[] at = {0};
         HuntZones.Zone[] zone = {null};
         Entity[] extra = {null};
+        String[] added = {null};
         h.succeedWhen(() -> {
             long now = h.getTick();
             switch (phase[0]) {
                 case 0 -> {
                     if (now < 20) throw h.assertionException("loading");
-                    String msg = HuntZones.addZone(sp, "gulon", 2);
+                    // 사냥터는 한 번만 만듦 (이 단계의 확인이 한 틱 늦게 맞아도 다시 만들지 않게 — 빠른 CI 러너에서는 먼 청크의 새 몹이
+                    // 몇 틱 뒤에야 찾아짐: 전에는 확인이 실패할 때마다 사냥터가 하나씩 더 생겨 둘레 몬스터가 12 ~ 14마리가 됨)
+                    if (added[0] == null) {
+                        added[0] = HuntZones.addZone(sp, "gulon", 2);
+                        List<HuntZones.Zone> list = HuntZones.zoneList();
+                        zone[0] = list.get(list.size() - 1);
+                        at[0] = now;
+                    }
+                    String msg = added[0];
                     h.assertTrue(msg.startsWith("§6[사냥터] §fz") && msg.contains("Lv.8 굴론 2마리"), "add message " + msg);
-                    List<HuntZones.Zone> list = HuntZones.zoneList();
-                    zone[0] = list.get(list.size() - 1);
                     HuntZones.Zone z = zone[0];
                     h.assertTrue(z.kind().equals("gulon") && z.count() == 2 && z.x() == ZX && z.y() == ZY && z.z() == ZZ && z.dim().equals("minecraft:overworld"), "zone " + z);
+                    if (members(level, z).size() < 2 && now - at[0] < 100) throw h.assertionException("spawning (" + members(level, z).size() + ")");
                     h.assertTrue(members(level, z).size() == 2, "spawned 2");
                     Object saved = Json.parse(Props.world(level.getServer(), "rpg:hunt_zones"));
                     h.assertTrue(saved instanceof List<?> l && l.stream().anyMatch(o -> o instanceof java.util.Map<?, ?> m && z.id().equals(m.get("id"))

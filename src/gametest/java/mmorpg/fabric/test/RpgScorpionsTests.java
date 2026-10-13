@@ -136,6 +136,15 @@ public final class RpgScorpionsTests {
         return e.hurtServer((ServerLevel) e.level(), sp.damageSources().playerAttack(sp), amount);
     }
 
+    /** cond 가 참이 될 때까지 (틱마다 확인, 최대 max 틱) 기다렸다가 then — 시간이 다 되어도 then (그 안의 확인이 실패를 알림) */
+    static void await(GameTestHelper h, java.util.function.BooleanSupplier cond, int max, Runnable then) {
+        if (cond.getAsBoolean() || max <= 0) {
+            then.run();
+            return;
+        }
+        h.runAfterDelay(1, () -> await(h, cond, max - 1, then));
+    }
+
     private static boolean near(double a, double b, double eps) {
         return Math.abs(a - b) <= eps;
     }
@@ -201,7 +210,9 @@ public final class RpgScorpionsTests {
             // 제 자리 끌어오기: 밀려난 사막 전갈은 가운데가 아닌 제 자리 (서쪽) 로
             put(p1, a, 0, 12);
             move(db, a, 6, 12);
-            h.runAfterDelay(12, () -> {
+            // 막대는 몹이 10틱마다 보는 사람을 고름 — 멀리 (불러온 지 얼마 안 된) 청크의 몹이 바로 돌지 않을 수 있어 (빠른 CI 러너) 최대 60틱 기다림, 끌어오기는 12틱 뒤부터 봄
+            long moved = Tasks.now();
+            await(h, () -> db0.getPlayers().contains(p1) && rb0.getPlayers().contains(p1) && Tasks.now() - moved >= 12, 60, () -> {
                 h.assertTrue(db0.getPlayers().contains(p1) && rb0.getPlayers().contains(p1), "both bars shown to the fighter");
                 h.assertTrue(BossKit.hdist(db.position(), d.home) < 1.0, "desert pulled back to its own home " + db.position() + " (home " + d.home + ")");
                 h.assertTrue(BossKit.hdist(rb.position(), r.home) < 1.5, "rock stays at its home");

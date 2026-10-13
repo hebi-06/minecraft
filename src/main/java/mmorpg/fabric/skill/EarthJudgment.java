@@ -66,8 +66,8 @@ final class EarthJudgment {
         if (blocked) path.add(V.add(from, f, 0.6)); // 바로 앞이 막힘: 발 앞에서만
         Vec3 p0 = path.get(0);
         // 내리침: 내려치는 초승달 · 땅 금 · 고리 · 튀는 돌 · 쿵
-        SkillFx.arc(level, V.add(V.up(sp.getEyePosition(), -0.2), f, 1.5), V.unit(V.add(f, V.DOWN, 0.9)), Opt.of("shape", "heavy", "flip", false, "size", 2.0,
-                "life", 0.2, "speed", 1.6, "color", glow, "aura", core, "spin", 90.0));
+        SkillFx.arc(level, V.add(V.up(sp.getEyePosition(), -0.3), f, 2.2), V.unit(V.add(f, V.DOWN, 0.9)), Opt.of("shape", "heavy", "flip", false, "size", 1.4,
+                "life", 0.18, "speed", 1.6, "color", glow, "aura", core, "spin", 90.0));
         SkillFx.burst(level, V.up(p0, 0.3), glow, 1.5, 0.3);
         SkillFx.shock(level, p0, rock, 1.3, 0.45);
         SkillFx.fx(level, "rpg:ground_crack", V.up(p0, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 2.6, "life", 1.6, "color", ASH, "alpha", 0.9));
@@ -105,12 +105,12 @@ final class EarthJudgment {
                 }
             });
         }
-        // 용암 분출 (균열이 다 뻗고 delay 틱 뒤 — 앞쪽으로 두 칸에 한 틱씩)
+        // 용암 분출 (균열이 다 뻗고 delay 틱 뒤 — 앞쪽으로 세 칸에 한 틱씩)
         int eruptAt = (n - 1) + (int) k.num("delay");
         for (int i = 0; i < n; i++) {
             final int ii = i;
-            HeroKit.at(eruptAt + i / 2, () -> {
-                if (ok.getAsBoolean()) eruptFx(level, path.get(ii), glow, core, ii);
+            HeroKit.at(eruptAt + i / 3, () -> {
+                if (ok.getAsBoolean()) eruptFx(sp, path.get(ii), glow, core, ii);
             });
         }
         Tasks.later(eruptAt, () -> {
@@ -129,7 +129,7 @@ final class EarthJudgment {
                 Kit.hitAt(sp, e, Kit.reserveHit(sp, e, t0), ok, () -> {
                     if (Kit.skillHit(sp, e, w, k.num("afterMult")) <= 0) return;
                     Vec3 at = e.isRemoved() ? a : e.position();
-                    Gram.flame(level, at, 1.5, 0.5, glow);
+                    Gram.flame(level, at, 1.5 * RuneKit.nearK(sp, V.up(at, 0.8), 4, 0.4), 0.5, glow);
                     Gram.embers(level, at, 1.0, 0.5, 3);
                 });
             }
@@ -156,13 +156,15 @@ final class EarthJudgment {
         if (i % 3 == 1) SkillFx.play(level, "mace.smash_ground", p, 0.7, 0.5);
     }
 
-    /** 용암 분출 한 칸: 불기둥 (주황) · 불티 · 폭발 · 빛나는 금 (k 번째 칸 — 셋에 하나는 크게) */
-    static void eruptFx(ServerLevel level, Vec3 p, double[] glow, double[] core, int i) {
+    /** 용암 분출 한 칸: 불기둥 (주황) · 불티 · 폭발 · 빛나는 금 (i 번째 칸 — 셋에 하나는 크게, 1인칭 · 3인칭 화면 가까이는 작게) */
+    static void eruptFx(ServerPlayer sp, Vec3 p, double[] glow, double[] core, int i) {
+        ServerLevel level = sp.level();
         boolean big = i % 3 == 0;
-        Gram.flame(level, p, big ? 2.4 : 1.8, 0.55, glow);
-        if (big) Gram.flame(level, V.up(p, 0.1), 1.4, 0.45, core);
+        double nk = RuneKit.nearK(sp, V.up(p, 1.0), 4.5, 0.35);
+        Gram.flame(level, p, (big ? 2.4 : 1.8) * nk, 0.55, glow);
+        if (big) Gram.flame(level, V.up(p, 0.1), 1.4 * nk, 0.45, core);
         Gram.embers(level, p, 1.2, 0.6, 3.5);
-        SkillFx.burst(level, V.up(p, 0.4), glow, big ? 1.1 : 0.8, 0.25);
+        SkillFx.burst(level, V.up(p, 0.4), glow, (big ? 1.1 : 0.8) * nk, 0.25);
         if (big) SkillFx.sparks(level, V.up(p, 0.6), core, 5, 4);
         if (i % 2 == 0) SkillFx.play(level, "fire.ignite", p, 0.7, 0.6);
     }

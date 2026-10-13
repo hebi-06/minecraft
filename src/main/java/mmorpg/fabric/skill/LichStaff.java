@@ -22,7 +22,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 리치의 지팡이 (영웅 완드) — 영혼 수확 (10단계, 자바 전용). 수치는 HERO_SKILLS.wand, 색은 디자인의 영혼빛 초록 보석 · 뼈 빛 자루.
  * 조준한 곳 (몹의 발밑 · 시선이 닿은 곳 — range 칸, 그 아래 땅) 에 망자의 원 (반지름 radius 칸) 이 열리고 둘레에 영혼불이 솟음 →
- * bind 틱에 원 안의 적 (가운데에서 보이는) 을 원 가운데에서 뻗은 영혼 사슬이 묶음 (mult, slow 틱 구속 slowAmp + 1) →
+ * bind 틱에 원 안의 적 (가운데에서 보이는) 을 원 둘레의 땅에서 뻗은 영혼 사슬 셋이 묶음 (mult, slow 틱 구속 slowAmp + 1) →
  * delay 틱 뒤 묶인 적의 영혼을 뜯어냄 (afterMult — 밀려났어도 radius + 2.5칸 안) → 영혼이 나에게 날아와 back 틱 뒤 닿으면 회복
  * (이 스킬로 준 피해 합의 heal, 최대 체력의 healCap 까지 — 초록 + 숫자). 땅을 조준하지 않으면 (허공) 재사용 대기 없이 거절.
  * 쓰러지거나 차원을 옮기면 남은 것은 멈춤
@@ -82,7 +82,12 @@ final class LichStaff {
         // 시전: 지팡이 끝 번쩍임 → 원 가운데로 가는 영혼빛
         Vec3 tip = tipAt(sp);
         SkillFx.fx(level, "rpg:arrow_spark", tip, Opt.of("dir", V.UP, "size", 0.3, "grow", 3.0, "life", 0.25, "color", glow, "alpha", 1.0));
-        SkillFx.beam(level, tip, V.up(c, 0.3), glow, Opt.of("half", 0.45, "thick", 0.07, "life", 0.25, "sweep", 0.12, "gap", 0.8, "alpha", 0.8));
+        // 영혼빛은 지팡이 끝에서 1.5칸 앞부터 (눈 가까이의 굵은 조각이 1인칭 화면을 가리지 않게)
+        Vec3 toC = V.sub(V.up(c, 0.3), tip);
+        if (V.len(toC) > 2.0) {
+            SkillFx.beam(level, V.add(tip, V.unit(toC), 1.5), V.up(c, 0.3), glow, Opt.of("half", 0.45, "thick", 0.06, "life", 0.25, "sweep", 0.12, "gap", 0.8,
+                    "alpha", 0.8));
+        }
         SkillFx.play(level, "mob.evocation_illager.prepare_summon", c, 0.7, 0.8);
         SkillFx.play(level, "particle.soul_escape", tip, 0.8, 1.0);
         // 망자의 원: 짙은 바탕 + 빛나는 문양 (돎) + 퍼지는 고리 + 둘레 영혼불
@@ -110,7 +115,7 @@ final class LichStaff {
             int slow = (int) k.num("slow");
             int amp = (int) k.num("slowAmp");
             for (LivingEntity e : in) {
-                chainFx(level, c, e, glow, core, delay);
+                chainFx(level, c, r, e, glow, core, delay);
                 Kit.hitAt(sp, e, Kit.reserveHit(sp, e, now), ok, () -> {
                     double dealt = Kit.skillHit(sp, e, w, k.num("mult"));
                     if (dealt <= 0) return;
@@ -165,23 +170,36 @@ final class LichStaff {
                 glow, "alpha", 0.85, "cell", 0.0));
     }
 
-    /** 원 가운데 (땅 위) 에서 적의 몸으로 영혼 사슬 (rpg:rfx_chain 빛 + 심지 — 수확 때까지) */
-    static void chainFx(ServerLevel level, Vec3 c, LivingEntity e, double[] glow, double[] core, int hold) {
-        Vec3 a = V.up(c, 0.25);
+    /**
+     * 영혼 사슬 셋 (rpg:rfx_chain 빛 + 심지 — 수확 때까지): 원 둘레 (반지름 r) 의 세 곳 — 적 쪽 · 그 양옆 70° — 의 땅에서 적의 몸으로
+     * (원 가운데의 적은 둘레 세 곳 120° 마다에서)
+     */
+    static void chainFx(ServerLevel level, Vec3 c, double r, LivingEntity e, double[] glow, double[] core, int hold) {
         Vec3 b = Kit.bodyPoint(e);
-        Vec3 d = V.sub(b, a);
-        double len = V.len(d);
-        if (len < 0.4) return;
-        RuneKit.rfx2(level, "chain", V.add(a, d, 0.5), Opt.of("dir", V.unit(d), "size", len / 2, "life", (hold + 2) / 20.0, "fade", 0.25, "alpha", 0.9), glow, core,
-                new int[] {0, 1}, null);
+        double dx = e.getX() - c.x;
+        double dz = e.getZ() - c.z;
+        boolean centered = Math.hypot(dx, dz) < 0.6;
+        Vec3 toward = centered ? new Vec3(1, 0, 0) : V.flat(new Vec3(dx, 0, dz));
+        double[] angles = centered ? new double[] {0, 120, 240} : new double[] {0, 70, -70};
+        for (double a0 : angles) {
+            Vec3 a = V.up(V.add(c, V.turnY(toward, a0), r * 0.95), 0.15);
+            Vec3 d = V.sub(b, a);
+            double len = V.len(d);
+            if (len < 0.4) continue;
+            RuneKit.rfx2(level, "chain", V.add(a, d, 0.5), Opt.of("dir", V.unit(d), "size", len / 2, "life", (hold + 2) / 20.0, "fade", 0.25, "alpha", 0.9), glow,
+                    core, new int[] {0, 1}, null);
+            SkillFx.burst(level, a, glow, 0.35, 0.25);
+        }
     }
 
     /** 뜯겨 나오는 영혼: 몸에서 빠져나오는 영혼빛 그림자 (위로 떠오름) + 폭발 */
     static void ripFx(ServerPlayer sp, LivingEntity e, Vec3 from, double[] glow, double[] core) {
         ServerLevel level = sp.level();
         Vec3 feet = e.isRemoved() ? new Vec3(from.x, from.y - 0.9, from.z) : e.position();
-        RuneKit.shadeClone(sp, level, feet, Kit.facingOf(e), 0, glow, core, Opt.of("size", 0.95, "life", 0.5, "fade", 0.8, "alpha", 0.55, "grow", 0.15, "vel",
-                new Vec3(0, 1.6, 0)));
+        // 몸 겉면 (눈 쪽으로 0.45칸) 에서 떠오름 — 맞아서 붉어진 몸에 가려지지 않게
+        Vec3 v = V.flat(V.sub(feet, sp.getEyePosition()));
+        RuneKit.shadeClone(sp, level, V.add(feet, v, -0.45), Kit.facingOf(e), 0, glow, core, Opt.of("size", 1.0, "life", 0.55, "fade", 0.7, "alpha", 0.85, "grow",
+                0.15, "vel", new Vec3(0, 1.8, 0)));
         SkillFx.burst(level, from, glow, 0.9, 0.3);
         SkillFx.sparks(level, from, core, 5, 3);
     }

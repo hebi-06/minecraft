@@ -35,10 +35,10 @@ final class ElfBow {
         Transcend.register("elf_volley", ElfBow::volley);
     }
 
-    /** 정령 자리: 눈 앞 0.9칸 · 왼쪽 0.75칸 · 위 0.35칸 (1인칭 화면 왼쪽 위 — 3인칭에서는 왼쪽 어깨 앞) */
+    /** 정령 자리: 눈 앞 1칸 · 왼쪽 0.7칸 · 위 0.1칸 (1인칭 화면 왼쪽 위 — 3인칭에서는 왼쪽 어깨 앞) */
     static Vec3 sylphAt(ServerPlayer sp) {
         Vec3 f = Kit.facingOf(sp);
-        return V.up(V.add(V.add(sp.getEyePosition(), f, 0.9), V.rightOf(f), -0.75), 0.35);
+        return V.up(V.add(V.add(sp.getEyePosition(), f, 1.0), V.rightOf(f), -0.7), 0.1);
     }
 
     /** 활 자리 (화살이 나가는 곳): 눈 앞 0.8칸 · 오른쪽 0.25칸 · 아래 0.2칸 */
@@ -89,8 +89,8 @@ final class ElfBow {
         }
         // 정령: 나타나 화살을 다 쏠 때까지 (매 3틱 다시 그림 — 나를 따라감)
         Vec3 s0 = sylphAt(sp);
-        SkillFx.burst(level, s0, glow, 0.8, 0.3);
-        SkillFx.sparks(level, s0, core, 6, 2);
+        SkillFx.burst(level, s0, glow, 0.3, 0.25);
+        SkillFx.sparks(level, s0, core, 4, 1.2);
         SkillFx.play(level, "mob.allay.idle", s0, 1.3, 0.9);
         SkillFx.play(level, "chime.amethyst_block", s0, 1.6, 0.8);
         int stay = (int) (end - now) + 8;
@@ -139,9 +139,9 @@ final class ElfBow {
                 Vec3 p = Odin.bezAt(from, ctrl, to, u);
                 Vec3 tan = V.unit(Odin.bezTan(from, ctrl, to, u));
                 // 화살 (빛 + 심지 — 날아가는 쪽으로 누움) + 휘는 빛 꼬리 + 나뭇잎 (두 틱마다)
-                RuneKit.rfx2(level, "arrow", p, Opt.of("dir", tan, "size", 0.55, "life", 0.1, "fade", 0.3), glow, core, new int[] {0, 1}, null);
-                Gram.streakLine(level, prev[0], p, glow, 0.16, 0.32, 0.85, 0);
-                Gram.streakLine(level, prev[0], p, core, 0.05, 0.24, 1.0, 0);
+                RuneKit.rfx2(level, "arrow", p, Opt.of("dir", tan, "size", 0.72, "life", 0.1, "fade", 0.3), glow, core, new int[] {0, 1}, null);
+                Gram.streakLine(level, prev[0], p, glow, 0.24, 0.36, 0.85, 0);
+                Gram.streakLine(level, prev[0], p, core, 0.08, 0.28, 1.0, 0);
                 if (t % 2 == 1) {
                     RuneKit.rfx2(level, "prop", p, Opt.of("dir", V.DOWN, "speed", 0.6, "size", 0.1, "life", 0.6, "spin", Kit.rand() * 360, "spinRate", 260.0,
                             "fade", 0.5), LEAF, core, FEATHER, null);

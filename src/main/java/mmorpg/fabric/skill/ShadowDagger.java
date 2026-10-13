@@ -127,16 +127,16 @@ final class ShadowDagger {
         return null;
     }
 
-    /** 찌름: 보랏빛 가는 초승달 · 빛의 자국 · 불꽃 (눈 가까이는 작게) */
-    static void stabFx(ServerPlayer sp, Vec3 c, double[] glow, double[] core) {
+    /** 찌름: 보랏빛 가는 초승달 · 빛의 자국 · 불꽃 (몸 겉면 — 눈 쪽으로 0.45칸, 등 뒤에서 봐도 몸에 가려지지 않게 · 눈 가까이는 작게) */
+    static void stabFx(ServerPlayer sp, Vec3 c0, double[] glow, double[] core) {
         ServerLevel level = sp.level();
         Vec3 eye = sp.getEyePosition();
+        Vec3 v = V.unit(V.sub(c0, eye));
+        Vec3 c = V.add(c0, v, -0.45);
         double near = HeroKit.near(eye, c, 0.45);
-        Vec3 v = V.unit(V.sub(c, eye));
-        SkillFx.arc(level, V.add(c, v, -0.25), v, Opt.of("shape", "thin", "flip", false, "size", 1.4 * near, "life", 0.22, "speed", 1.0, "spin", 70.0, "color", glow,
-                "aura", DARK));
-        SkillFx.cutMark(level, c, v, 70, 0.12, glow, core, near);
-        SkillFx.burst(level, V.add(c, v, -0.2), DARK, 0.8 * near, 0.25);
+        SkillFx.arc(level, c, v, Opt.of("shape", "thin", "flip", false, "size", 1.4 * near, "life", 0.22, "speed", 1.0, "spin", 70.0, "color", glow, "aura", DARK));
+        SkillFx.cutMark(level, c, v, 70, 0.14, glow, core, near);
+        SkillFx.burst(level, V.add(c, v, -0.05), DARK, 0.8 * near, 0.25);
         SkillFx.sparks(level, c, core, 5, 4);
         SkillFx.play(level, "game.player.attack.critical", c, 1.3, 0.8);
         SkillFx.play(level, "item.spear.attack_miss", c, 1.5, 0.8);
@@ -157,15 +157,16 @@ final class ShadowDagger {
             RuneKit.shadeClone(sp, level, at, face, 2, DARK, glow, Opt.of("size", 0.95, "life", 0.42, "fade", 0.45, "alpha", 0.9, "vel", V.scale(face, 2.2)));
             SkillFx.burst(level, V.up(at, 1.0), DARK, 0.7, 0.25);
         }
-        double near = HeroKit.near(eye, c, 0.45);
         Vec3 v = V.unit(V.sub(c, eye));
+        Vec3 front = V.add(c, v, -0.45);
+        double near = HeroKit.near(eye, front, 0.45);
         for (int s : new int[] {-1, 1}) {
-            SkillFx.arc(level, V.add(c, v, -0.2), v, Opt.of("shape", "thin", "flip", s < 0, "size", 1.7 * near, "life", 0.24, "speed", 1.2, "spin", s * 45.0,
-                    "color", glow, "aura", DARK));
+            SkillFx.arc(level, front, v, Opt.of("shape", "thin", "flip", s < 0, "size", 1.7 * near, "life", 0.24, "speed", 1.2, "spin", s * 45.0, "color", glow,
+                    "aura", DARK));
         }
-        SkillFx.cutMark(level, c, v, 45, 0.1, glow, core, near);
-        SkillFx.cutMark(level, c, v, -45, 0.1, glow, core, near);
-        SkillFx.sparks(level, c, core, 6, 4);
+        SkillFx.cutMark(level, front, v, 45, 0.12, glow, core, near);
+        SkillFx.cutMark(level, front, v, -45, 0.12, glow, core, near);
+        SkillFx.sparks(level, front, core, 6, 4);
         SkillFx.play(level, "item.enchant.lunge2", c, 1.1, 1.0);
         SkillFx.play(level, "item.spear.attack_miss", c, 1.2, 0.9);
     }
@@ -174,12 +175,13 @@ final class ShadowDagger {
     static void burstFx(ServerPlayer sp, Vec3 c, double r, double[] glow, double[] core) {
         ServerLevel level = sp.level();
         Vec3 eye = sp.getEyePosition();
-        double near = HeroKit.near(eye, c, 0.5);
         Vec3 v = V.unit(V.sub(c, eye));
-        RuneKit.rfx(level, "hole", V.add(c, v, -0.1), Opt.of("size", 0.9 * near, "life", 0.3, "grow", -0.6, "fade", 0.4, "color", glow, "alpha", 0.95, "cell", 0.0,
-                "spinRate", 360.0));
-        SkillFx.burst(level, V.add(c, v, -0.2), glow, 1.5 * near, 0.35);
-        SkillFx.burst(level, V.add(c, v, -0.15), DARK, 1.1 * near, 0.4);
+        Vec3 front = V.add(c, v, -0.45);
+        double near = HeroKit.near(eye, front, 0.5);
+        RuneKit.rfx(level, "hole", front, Opt.of("size", 0.9 * near, "life", 0.3, "grow", -0.6, "fade", 0.4, "color", glow, "alpha", 0.95, "cell", 0.0, "spinRate",
+                360.0));
+        SkillFx.burst(level, V.add(front, v, -0.05), glow, 1.5 * near, 0.35);
+        SkillFx.burst(level, front, DARK, 1.1 * near, 0.4);
         Vec3 feet = new Vec3(c.x, c.y - 0.9, c.z);
         SkillFx.shock(level, feet, glow, r / 2.1, 0.45);
         SkillFx.sparks(level, c, core, 10, 5);

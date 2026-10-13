@@ -45,9 +45,9 @@ public final class RpgHeroSkillGallery implements FabricClientGameTest {
         new Vec3(0.5, -60, 7.5), new Vec3(-1.0, -60, 8.5), new Vec3(2.0, -60, 8.0), new Vec3(0.5, -60, 10.0), new Vec3(-3.5, -60, 4.5),
         new Vec3(4.0, -60, 5.0)
     };
-    /** 가까운 과녁 (성광 강타 — 앞 4.5칸): 앞 · 양옆 앞 3~4칸 + 옆 · 뒤 */
+    /** 가까운 과녁 (성광 강타 — 앞 4.5칸): 앞 · 양옆 앞 3~4칸 + 양옆 (부채꼴 밖 — 3인칭 카메라를 가리지 않게 뒤에는 두지 않음) */
     private static final Vec3[] NEAR = {
-        new Vec3(0.5, -60, 4.0), new Vec3(-2.3, -60, 3.0), new Vec3(3.3, -60, 3.0), new Vec3(-3.0, -60, 0.5), new Vec3(4.0, -60, 0.5), new Vec3(0.5, -60, -3.0)
+        new Vec3(0.5, -60, 4.0), new Vec3(-2.3, -60, 3.0), new Vec3(3.3, -60, 3.0), new Vec3(-3.5, -60, 0.5), new Vec3(4.5, -60, 0.5)
     };
 
     /** 스킬 하나: 무기 종류 · 사진 찍을 틱 (쓴 뒤) · 끝까지 기다릴 틱 · 가까운 과녁인지 */
@@ -56,8 +56,8 @@ public final class RpgHeroSkillGallery implements FabricClientGameTest {
     private static final Case[] CASES = {
         new Case("sword", new int[] {5, 8, 19}, 34, false),
         new Case("dagger", new int[] {2, 11, 21}, 36, false),
-        new Case("axe", new int[] {4, 9, 21}, 40, false),
-        new Case("shield", new int[] {2, 13, 30}, 66, true),
+        new Case("axe", new int[] {4, 9, 23}, 40, false),
+        new Case("shield", new int[] {4, 13, 30}, 66, true),
         new Case("bow", new int[] {4, 8, 14}, 34, false),
         new Case("wand", new int[] {4, 9, 18, 23}, 40, false),
     };

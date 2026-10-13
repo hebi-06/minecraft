@@ -15,8 +15,9 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 발뭉 (영웅 칼) — 용살 검기 (10단계, 자바 전용). 수치는 HERO_SKILLS.sword, 색은 디자인의 빛나는 칼날 (하늘빛) · 손잡이 (금빛).
- * windup 틱 동안 칼에 푸른 빛이 모임 → 휘두르면 거대한 푸른 초승달 검기가 보는 쪽 (위아래는 pitch 도까지) 으로 틱마다 speed 칸씩 range 칸 날아감
- * (벽에서 멈춤): 지나가며 검기 폭 width 칸 안의 적을 한 번씩 벰 (mult, 조금 밀침) → 벤 적마다 delay 틱 뒤 몸에 남은 검흔이 X 로 터짐 (afterMult — 적을 따라감).
+ * windup 틱 동안 칼에 푸른 빛이 모임 → 휘두르면 거대한 푸른 초승달 검기가 보는 쪽 (위아래는 15° 넘게 볼 때만, pitch 도까지) 으로 틱마다 speed 칸씩
+ * range 칸 날아감 (벽에서 멈춤): 지나가며 검기 반폭 width 칸 안의 적을 한 번씩 벰 (mult, 조금 밀침 — 몸에 푸른 검흔이 남음) → 벤 적마다 delay 틱 뒤
+ * 검흔이 X 로 터짐 (afterMult — 적을 따라감).
  * 대상이 없어도 씀 (재사용 대기). 쓰러지거나 차원을 옮기면 남은 것은 멈춤
  */
 final class Balmung {
@@ -66,14 +67,14 @@ final class Balmung {
         double speed = k.num("speed");
         double width = k.num("width");
         double size = k.num("size");
-        // 휘두름: 눈앞 초승달 (금빛 기운) + 바람 소리
-        SkillFx.arc(level, V.add(V.up(sp.getEyePosition(), -0.3), f, 1.7), f, Opt.of("shape", "heavy", "flip", false, "size", 1.9, "life", 0.2, "speed", 1.5, "color",
-                glow, "aura", GOLD, "spin", -15.0));
+        // 휘두름: 눈앞 2칸의 초승달 (금빛 기운 — 1인칭 화면을 다 덮지 않게 작게) + 바람 소리
+        SkillFx.arc(level, V.add(V.up(sp.getEyePosition(), -0.3), f, 2.0), f, Opt.of("shape", "heavy", "flip", false, "size", 1.35, "life", 0.18, "speed", 1.5,
+                "color", glow, "aura", GOLD, "spin", -15.0));
         SkillFx.play(level, "item.trident.riptide_2", sp.position(), 1.3, 0.9);
         SkillFx.play(level, "entity.player.attack.sweep", sp.position(), 0.75, 1.0);
         SkillFx.shake(sp, 0.12, 0.12);
-        // 검기 그림 (rpg:rfx_wave 빛 + 흰 심지): 앞 start 칸에서 나타나 끝까지 같은 빠르기로 (1인칭 화면을 덮지 않게 2칸 앞에서)
-        double start = Math.min(2.0, len);
+        // 검기 그림 (rpg:rfx_wave 빛 + 흰 심지 — 보이는 초승달 폭 ≈ 1.7 × size): 앞 start 칸에서 나타나 끝까지 같은 빠르기로 (1인칭 화면을 덮지 않게 2.6칸 앞에서)
+        double start = Math.min(2.6, len);
         double vel = speed * 20;
         double flightS = Math.max(0.05, (len - start) / vel);
         if (len > 0.6) {
@@ -129,9 +130,12 @@ final class Balmung {
             Vec3 c = HeroKit.body(e, eye);
             double near = HeroKit.near(eye, c, 0.5);
             Vec3 v = V.unit(V.sub(c, eye));
-            SkillFx.fx(level, "rpg:slash_x", c, Opt.of("dir", dir, "size", 1.1 * near, "life", 0.24, "color", glow, "alpha", 1.0));
-            SkillFx.cutMark(level, c, v, 6, 0.1, glow, core, near);
-            SkillFx.sparks(level, c, core, 5, 4);
+            // 벤 자리 (몸 겉면 — 눈 쪽으로 0.4칸, 몸에 가려지지 않게): X 번쩍임 + 검흔 (터질 때까지 남음)
+            Vec3 front = V.add(c, v, -0.4);
+            double hold = Math.max(0.05, k.num("delay") / 20.0 - 0.05);
+            SkillFx.fx(level, "rpg:slash_x", front, Opt.of("dir", dir, "size", 1.1 * near, "life", 0.24, "color", glow, "alpha", 1.0));
+            SkillFx.cutMark(level, front, v, 8, hold, glow, core, 1.1 * near);
+            SkillFx.sparks(level, front, core, 5, 4);
             SkillFx.play(level, "entity.player.attack.sweep", c, 1.3, 0.6);
             double knock = k.num("knock");
             Kit.knockback(e, dir.x * knock, dir.z * knock, 0.12);
@@ -142,12 +146,15 @@ final class Balmung {
                 Vec3 c2 = HeroKit.body(e, c);
                 double n2 = HeroKit.near(eye2, c2, 0.45);
                 Vec3 v2 = V.unit(V.sub(c2, eye2));
-                SkillFx.cutMark(level, c2, v2, 42, 0.05, glow, core, 1.15 * n2);
-                SkillFx.cutMark(level, c2, v2, -42, 0.05, glow, core, 1.15 * n2);
-                RuneKit.rfx2(level, "flare", V.add(c2, v2, -0.15), Opt.of("size", 1.1 * n2, "life", 0.3, "grow", 0.5, "fade", 0.6, "spin", Kit.rand() * 90), glow, core,
-                        new int[] {0, 1}, null);
-                SkillFx.burst(level, V.add(c2, v2, -0.2), glow, 0.8 * n2, 0.25);
-                SkillFx.sparks(level, c2, core, 6, 5);
+                Vec3 f2 = V.add(c2, v2, -0.4);
+                // 검흔이 X 로 갈라지며 번쩍 (푸른 별빛 · 고리 · 사방으로 튀는 빛 조각)
+                SkillFx.cutMark(level, f2, v2, 42, 0.06, glow, core, 1.45 * n2);
+                SkillFx.cutMark(level, f2, v2, -42, 0.06, glow, core, 1.45 * n2);
+                RuneKit.rfx2(level, "flare", V.add(f2, v2, -0.05), Opt.of("size", 1.5 * n2, "life", 0.32, "grow", 0.6, "fade", 0.6, "spin", Kit.rand() * 90), glow,
+                        core, new int[] {0, 1}, null);
+                SkillFx.burst(level, f2, glow, 1.0 * n2, 0.28);
+                SkillFx.ring(level, f2, v2, glow, 0.9 * n2, 0.3, 0);
+                SkillFx.sparks(level, f2, core, 8, 6);
                 SkillFx.play(level, "random.glass", c2, 1.7, 0.35);
                 SkillFx.play(level, "chime.amethyst_block", c2, 1.2, 0.9);
             });

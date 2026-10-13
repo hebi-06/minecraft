@@ -73,11 +73,18 @@ final class Durand {
         int holy = RuneKit.SIGIL.get("holy");
         SkillFx.burst(level, V.up(pos, 0.4), glow, 1.2, 0.3);
         SkillFx.play(level, "beacon.power", pos, 1.6, 0.6);
-        for (int t = 0; t < guard; t += 10) {
+        int[] glint = RuneKit.RFX.get("glint");
+        for (int t = 0; t < guard; t += 5) {
             final int tt = t;
             HeroKit.at(t, () -> {
                 if (!ok.getAsBoolean() || Guards.of(sp) == null) return;
                 Vec3 feet = sp.position();
+                // 몸을 도는 금빛 반짝임 셋 (1인칭 화면 아래 · 3인칭 몸 둘레 — 보호막이 걸린 동안)
+                for (int j = 0; j < 3; j++) {
+                    Vec3 at = V.up(V.add(feet, V.turnY(new Vec3(1, 0, 0), tt * 24 + j * 120), 0.85), 0.9 + 0.25 * j);
+                    RuneKit.rfx2(level, "prop", at, Opt.of("size", 0.12, "life", 0.3, "fade", 0.6, "spin", Kit.rand() * 90, "alpha", 0.95), glow, core, glint, null);
+                }
+                if (tt % 10 != 0) return;
                 RuneKit.rfx2(level, "sigil", V.up(feet, 0.06), Opt.of("dir", V.UP, "size", 1.3, "life", 0.6, "spin", tt * 4.0, "spinRate", 40.0, "fade", 0.3, "alpha",
                         0.8, "cell", (double) holy), glow, core, new int[] {0, 1}, null);
                 if (tt % 20 == 0) {
