@@ -136,9 +136,10 @@ public final class RpgRuneBreakTests {
     /**
      * 초월 룬 (불사의 맹약 — 쓰면 바로 하늘빛): 0 · 2돌은 화면 색 연출 없음, 3돌 하늘빛 (테두리 빛 없음), 6돌 하늘빛 + 테두리 빛, 룬 아이템을 쓰면 그 아이템의 단계,
      * 메테오 2돌 + 0돌 → 3돌 돌파 때 그 룬의 하늘빛을 미리 보여 줌, 천붕 6돌은 검이 한 번 더 떨어짐 (위력 60% — 앞 10칸의 과녁), 메테오 6돌은 맞은 적 기절.
-     * 하늘빛은 둘레 사람 모두에게 가므로 이 시험 하나에서 차례로.
+     * 하늘빛은 둘레 사람 모두에게 가므로 이 시험 하나에서 차례로. 시험 환경 mmorpg:runebreak 로 따로 묶음 (앞 10칸 과녁은 시험 자리 밖 —
+     * 다른 시험과 함께 돌면 남의 피해로 무적 시간이 걸려 두 번째 검이 들어가지 않을 수 있었음 · 천붕 9칸 범위가 남의 과녁도 맞힘, 빠른 CI 러너에서 2026-10-13).
      */
-    @GameTest(maxTicks = 220)
+    @GameTest(environment = "mmorpg:runebreak", maxTicks = 260)
     public void transcendScreenColorByLevel(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
         RpgPlayers.setStat(sp, "vit", 30);
@@ -195,7 +196,8 @@ public final class RpgRuneBreakTests {
                 h.assertTrue(d1[0] > 0, "first sword hit " + d1[0]);
                 h.assertTrue(Breakthrough.castLevel(sp, "heavenFall") == 6, "cast level 6");
             });
-            h.runAfterDelay(second + 4, () -> {
+            // 두 번째 검: 떨어질 틱 + 4 부터 들어올 때까지 (최대 30틱 더 — 무적 시간으로 밀리면) 기다려 봄
+            h.runAfterDelay(second + 4, () -> RpgScorpionsTests.await(h, () -> TestDummies.dealt(z) - d1[0] > 0, 30, () -> {
                 double d2 = TestDummies.dealt(z) - d1[0];
                 h.assertTrue(Math.abs(d2 - d1[0] * ex.mult()) < 1e-3 * Math.max(1, d1[0]), "second sword = 60% of the first: " + d2 + " vs " + d1[0]);
                 // 메테오 6돌: 맞은 적 기절 (구속 X · 1초) — 5돌은 기절 없음
@@ -210,7 +212,7 @@ public final class RpgRuneBreakTests {
                     RuneSystem.forget(sp.getUUID());
                     RpgGearTests.done(h, sp);
                 });
-            });
+            }));
         });
     }
 
