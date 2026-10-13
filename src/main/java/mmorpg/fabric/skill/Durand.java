@@ -38,7 +38,7 @@ final class Durand {
         // 빛의 방패: 눈앞 2칸에서 앞으로 밀려나며 커짐 + 내리치는 금빛 초승달 + 앞으로 퍼지는 빛의 물결
         RuneKit.rfx2(level, "shield", V.add(V.up(eye, -0.35), f, 2.0), Opt.of("dir", f, "size", 0.9, "life", 0.4, "speed", 3.5, "grow", 0.45, "fade", 0.55,
                 "alpha", 0.9), glow, core, new int[] {0, 1}, null);
-        SkillFx.arc(level, V.add(V.up(eye, -0.25), f, 1.6), V.unit(V.add(f, V.DOWN, 0.5)), Opt.of("shape", "heavy", "flip", false, "size", 2.0, "life", 0.22,
+        SkillFx.arc(level, V.add(V.up(eye, -0.3), f, 2.1), V.unit(V.add(f, V.DOWN, 0.5)), Opt.of("shape", "heavy", "flip", false, "size", 1.5, "life", 0.2,
                 "speed", 1.2, "color", glow, "aura", core, "spin", 80.0));
         RuneKit.rfx2(level, "wave", V.add(V.up(pos, 0.9), f, 2.3), Opt.of("dir", f, "size", 3.4, "life", 0.3, "speed", 9.0, "fade", 0.6, "alpha", 0.85), glow, core,
                 new int[] {0, 1}, null);

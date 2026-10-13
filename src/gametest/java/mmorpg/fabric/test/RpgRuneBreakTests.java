@@ -139,7 +139,7 @@ public final class RpgRuneBreakTests {
      * 하늘빛은 둘레 사람 모두에게 가므로 이 시험 하나에서 차례로. 시험 환경 mmorpg:runebreak 로 따로 묶음 (앞 10칸 과녁은 시험 자리 밖 —
      * 다른 시험과 함께 돌면 남의 피해로 무적 시간이 걸려 두 번째 검이 들어가지 않을 수 있었음 · 천붕 9칸 범위가 남의 과녁도 맞힘, 빠른 CI 러너에서 2026-10-13).
      */
-    @GameTest(environment = "mmorpg:runebreak", maxTicks = 260)
+    @GameTest(environment = "mmorpg:runebreak", maxTicks = 460)
     public void transcendScreenColorByLevel(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
         RpgPlayers.setStat(sp, "vit", 30);
@@ -182,10 +182,13 @@ public final class RpgRuneBreakTests {
             h.assertTrue(meteorFog != null && meteorFog.equals(Ult.skyOf(sp)), "tier preview sky " + Ult.skyOf(sp));
             // 천붕 6돌: 첫 검 (delay 24틱) → 34틱 뒤 한 번 더 (delay 14틱) — 두 번째는 위력 60%
             RpgPlayers.setStat(sp, "str", 30);
-            // 앞 10칸 (불사의 맹약 반격 범위 5.5칸 밖 — 앞에서 쓴 맹약이 아직 돎). 시험 자리 (8 × 8) 밖이라 그 청크를 붙잡아 둠: 붙잡지 않으면
-            // 함께 도는 시험이 없을 때 그 청크의 몹이 돌지 않아 (틱이 빠른 시험 서버) 첫 검의 무적 시간 (20틱) 이 줄지 않고 두 번째 검이 막혔음
+            // 앞 10칸 (불사의 맹약 반격 범위 5.5칸 밖 — 앞에서 쓴 맹약이 아직 돎). 시험 자리 (8 × 8) 밖이라 그 청크를 붙잡고, 그 자리의 몹이 돌기 시작할 때까지
+            // 기다렸다가 씀 (틱이 빠른 시험 서버에서는 몇십 틱 걸릴 수 있음 — 몹이 돌지 않으면 첫 검의 무적 시간 20틱이 줄지 않아 두 번째 검이 막혔음)
             Husk z = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, 11.5F));
             String held = mmorpg.fabric.boss.Ticking.holdArea(h.getLevel(), z.position(), 3, "t");
+            long waitFrom = h.getTick();
+            TestWait.await(h, () -> TestWait.entitiesTick(h.getLevel(), z.position()), 200, () -> {
+            long waited = h.getTick() - waitFrom;
             Runes.Rune fall = rune("str", "transcend");
             RuneCast.resetCooldowns(sp);
             h.assertTrue(RuneCast.castRune(sp, fall, false, 6), "heavenFall 6 cast");
@@ -198,17 +201,17 @@ public final class RpgRuneBreakTests {
                 h.assertTrue(d1[0] > 0, "first sword hit " + d1[0]);
                 h.assertTrue(Breakthrough.castLevel(sp, "heavenFall") == 6, "cast level 6");
             });
-            // 진단 (두 번째 검이 0 일 때 실패 글에 붙임): 틱마다 과녁의 받은 피해 · 무적 시간 · 몹 틱 수 · 청크가 도는지 · 지금 겨눈 대상
-            StringBuilder trace = new StringBuilder();
+            // 진단 (두 번째 검이 0 일 때 실패 글에 붙임): 몹이 돌기까지 기다린 틱, 틱마다 과녁의 받은 피해 · 무적 시간 · 몹 틱 수 · 몹이 도는지 · 지금 겨눈 대상
+            StringBuilder trace = new StringBuilder(" waited " + waited);
             for (int t = first + 2; t <= second + 6; t += 2) {
                 final int tt = t;
                 h.runAfterDelay(t, () -> trace.append(String.format(java.util.Locale.ROOT, " [t%d dealt %.1f cd %d hurt %d tick %d ticking %b tmpInv %b aim %s yaw %.0f pitch %.0f]",
-                        tt, TestDummies.dealt(z), z.damageCooldownTime, z.hurtTime, z.tickCount, h.getLevel().isPositionEntityTicking(z.blockPosition()),
+                        tt, TestDummies.dealt(z), z.damageCooldownTime, z.hurtTime, z.tickCount, TestWait.entitiesTick(h.getLevel(), z.position()),
                         z.isTemporarilyInvulnerable(), mmorpg.fabric.RpgCombat.aimTarget(sp, 28, 12).target() == z ? "husk" : String.valueOf(mmorpg.fabric.RpgCombat.aimTarget(sp, 28, 12).target()),
                         sp.getYRot(), sp.getXRot())));
             }
             // 두 번째 검: 떨어질 틱 + 4 부터 들어올 때까지 (최대 30틱 더 — 무적 시간으로 밀리면) 기다려 봄
-            h.runAfterDelay(second + 4, () -> RpgScorpionsTests.await(h, () -> TestDummies.dealt(z) - d1[0] > 0, 30, () -> {
+            h.runAfterDelay(second + 4, () -> TestWait.await(h, () -> TestDummies.dealt(z) - d1[0] > 0, 30, () -> {
                 double d2 = TestDummies.dealt(z) - d1[0];
                 h.assertTrue(Math.abs(d2 - d1[0] * ex.mult()) < 1e-3 * Math.max(1, d1[0]), "second sword = 60% of the first: " + d2 + " vs " + d1[0]
                         + (d2 > 0 ? "" : " — trace" + trace));
@@ -226,6 +229,7 @@ public final class RpgRuneBreakTests {
                     RpgGearTests.done(h, sp);
                 });
             }));
+            });
         });
     }
 

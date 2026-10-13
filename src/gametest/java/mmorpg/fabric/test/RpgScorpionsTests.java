@@ -136,15 +136,6 @@ public final class RpgScorpionsTests {
         return e.hurtServer((ServerLevel) e.level(), sp.damageSources().playerAttack(sp), amount);
     }
 
-    /** cond 가 참이 될 때까지 (틱마다 확인, 최대 max 틱) 기다렸다가 then — 시간이 다 되어도 then (그 안의 확인이 실패를 알림) */
-    static void await(GameTestHelper h, java.util.function.BooleanSupplier cond, int max, Runnable then) {
-        if (cond.getAsBoolean() || max <= 0) {
-            then.run();
-            return;
-        }
-        h.runAfterDelay(1, () -> await(h, cond, max - 1, then));
-    }
-
     private static boolean near(double a, double b, double eps) {
         return Math.abs(a - b) <= eps;
     }
@@ -155,13 +146,15 @@ public final class RpgScorpionsTests {
      * 소환 → 두 마리: 체력 5000 · 7000, 이름 · 보스 막대 (마리마다), 제 자리 (가운데 ∓ 8칸), 엔진 등록 · 모듈 시작.
      * 여러 마리 싸움 엔진: 마리마다 무적 시간 (한 사람이 같은 틱에 둘을 때려도 둘 다), 평타 · 틀 (한 마리만), 제 자리 끌어오기 (밀려난 마리는 제 자리로)
      */
-    @GameTest(environment = "mmorpg:scorpions", maxTicks = 220)
+    @GameTest(environment = "mmorpg:scorpions", maxTicks = 440)
     public void twoUnitsEachTheirOwn(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
         Arena.Altar a = field(level, 0, hold);
         ServerPlayer p1 = RpgGearTests.player(h);
         put(p1, a, 0, 10);
+        // 필드의 몹이 돌기 시작할 때까지 기다렸다가 부름 (막대 · 끌어오기는 몹이 돌아야 — TestWait)
+        TestWait.await(h, () -> TestWait.entitiesTick(level, Arena.arenaCenter(a)), 200, () -> {
         Bosses.Enc enc = Bosses.summon(a, p1);
         h.assertTrue(enc != null && enc.units.size() == 2, "two units " + (enc == null ? null : enc.units.size()));
         h.runAfterDelay(64, () -> {
@@ -212,13 +205,16 @@ public final class RpgScorpionsTests {
             move(db, a, 6, 12);
             // 막대는 몹이 10틱마다 보는 사람을 고름 — 멀리 (불러온 지 얼마 안 된) 청크의 몹이 바로 돌지 않을 수 있어 (빠른 CI 러너) 최대 60틱 기다림, 끌어오기는 12틱 뒤부터 봄
             long moved = Tasks.now();
-            await(h, () -> db0.getPlayers().contains(p1) && rb0.getPlayers().contains(p1) && Tasks.now() - moved >= 12, 60, () -> {
-                h.assertTrue(db0.getPlayers().contains(p1) && rb0.getPlayers().contains(p1), "both bars shown to the fighter");
+            TestWait.await(h, () -> db0.getPlayers().contains(p1) && rb0.getPlayers().contains(p1) && Tasks.now() - moved >= 12, 60, () -> {
+                h.assertTrue(db0.getPlayers().contains(p1) && rb0.getPlayers().contains(p1), "both bars shown to the fighter (desert tick " + db.tickCount + " · rock tick "
+                        + rb.tickCount + " · ticking " + TestWait.entitiesTick(level, db.position()) + " / " + TestWait.entitiesTick(level, rb.position()) + " · fighter "
+                        + String.format(java.util.Locale.ROOT, "%.1f", Math.sqrt(p1.distanceToSqr(db))) + " blocks · in level " + level.players().contains(p1) + ")");
                 h.assertTrue(BossKit.hdist(db.position(), d.home) < 1.0, "desert pulled back to its own home " + db.position() + " (home " + d.home + ")");
                 h.assertTrue(BossKit.hdist(rb.position(), r.home) < 1.5, "rock stays at its home");
                 LOG.info("[scorpions-test] OK two units: hp 5000 · 7000, bar · name · home per unit, iframes per unit, melee · cast per unit, leash to own home");
                 finish(h, level, a, hold, p1);
             });
+        });
         });
     }
 
