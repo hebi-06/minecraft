@@ -182,10 +182,15 @@ final class Apollo {
             if (!ok.getAsBoolean()) return;
             Vec3 top = V.up(c, sky);
             Gungnir.beamAway(level, sp.getEyePosition(), top, V.up(c, 0.5), glow, Opt.of("half", 0.7, "thick", 0.7, "life", 0.4, "gap", 1.0));
-            sunFx(level, V.up(c, 1.2), 4.0, 0.35, core, core, 1.0);
+            // 태양 폭발: 해는 머리 위에서 터지고 (쓴 사람의 눈을 덮지 않게) 성역 둘레에 불기둥 고리 · 땅의 고리 — 1인칭에서는 앞의 불기둥 · 고리가 보임
+            sunFx(level, V.up(c, Math.min(sky, 4.5)), 3.4, 0.35, core, core, 1.0);
             RuneKit.novaRing(level, c, r * 0.3, 2.4, glow, core, Opt.of("life", 0.55));
             RuneKit.novaRing(level, c, r * 0.2, 3.2, core, core, Opt.of("life", 0.45));
-            SkillFx.fx(level, "rpg:fire_wall", c, Opt.of("size", r * 1.4, "life", 0.6, "color", glow, "alpha", 0.95, "spin", Kit.rand() * 360));
+            for (int j = 0; j < 8; j++) {
+                double a = j / 8.0 * Math.PI * 2;
+                Vec3 at = new Vec3(c.x + Math.cos(a) * r * 0.6, c.y, c.z + Math.sin(a) * r * 0.6);
+                SkillFx.fx(level, "rpg:fire_wall", at, Opt.of("size", r * 0.5, "life", 0.6, "color", glow, "alpha", 0.95, "spin", Kit.rand() * 360));
+            }
             SkillFx.play(level, "random.explode", c, 0.9, 1.0);
             SkillFx.play(level, "firework.large_blast", c, 0.7, 0.9);
             SkillFx.shake(sp, 0.3, 0.3);

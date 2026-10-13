@@ -28,9 +28,9 @@ public final class WeaponFxData {
             10.0F, 0.375F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x8A4DD6});
     private static final Spec GREATSWORD_TRANSCEND_LV0 = new Spec("greatsword_transcend_lv0", 0.72059F, 0.39957F, -1.60626F, -0.0625F, -0.1875F, -1.29904F,
             10.0F, 0.42F, 0.15F, 0.7F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.4F, 0.6F}, new int[] {0x87CCFF, 0x9E5CE6, 0xF5948C});
-    private static final Spec HAMMER_HERO_LV0 = new Spec("hammer_hero_lv0", 0.70746F, 0.52692F, -1.63515F, -0.0625F, -0.09375F, -1.13666F,
+    private static final Spec HAMMER_HERO_LV0 = new Spec("hammer_hero_lv0", 0.72059F, 0.39957F, -1.60626F, -0.0625F, -0.09375F, -1.13666F,
             10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x73FF73, 0xB266FF});
-    private static final Spec HAMMER_TRANSCEND_LV0 = new Spec("hammer_transcend_lv0", 0.74123F, 0.19943F, -1.56087F, -0.0625F, 0.09375F, -0.8119F,
+    private static final Spec HAMMER_TRANSCEND_LV0 = new Spec("hammer_transcend_lv0", 0.75623F, 0.05388F, -1.52786F, -0.0625F, 0.09375F, -0.8119F,
             10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x99D1FF, 0xEBF7FF});
     private static final Spec LANCE_HERO_LV0 = new Spec("lance_hero_lv0", 0.65982F, 0.98905F, -1.73996F, -0.0625F, -0.65625F, -2.11094F,
             10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFF4040});

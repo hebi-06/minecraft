@@ -10,6 +10,7 @@ import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
+import mmorpg.fabric.Tasks;
 import mmorpg.fabric.client.MmorpgClient;
 import mmorpg.fabric.rune.RuneCast;
 import mmorpg.fabric.rune.RuneItems;
@@ -48,7 +49,7 @@ import org.slf4j.LoggerFactory;
  * <ol>
  *   <li>임시 디자인 12개를 손에 든 모습 (1인칭 · 3인칭 앞) — wm_hold_&lt;디자인&gt;[_3p]</li>
  *   <li>가방 아이콘 · 설명 (브류나크 · 카두케우스) — wm_inventory · wm_tooltip_&lt;종류&gt;</li>
- *   <li>기본 공격 (고귀 20렙 — 창 찌르기 · 낫 넓게 베기 · 망치 내려찍기 · 홀 성스러운 일격, 옆 과녁에 번진 숫자) — wm_basic_&lt;종류&gt;_t1 · t3 · 3p</li>
+ *   <li>기본 공격 (고귀 20렙 — 창 찌르기 · 낫 넓게 베기 · 망치 내려찍기 · 홀 성스러운 일격, 옆 과녁에 번진 숫자) — wm_basic_&lt;종류&gt;[_3p]_t3 · t6</li>
  *   <li>스킬 12개를 실제 입력 (우클릭 = 스킬1 · 웅크리고 우클릭 = 스킬2) 으로 — wm_&lt;스킬&gt;_&lt;틱&gt;[_3p]</li>
  *   <li>정령왕 강림 (스킬 칸 1번의 키) — wm_king_&lt;틱&gt;[_3p]</li>
  *   <li>대장장이 제작 창 (고귀 · 영웅 · 초월 쪽) — wm_craft_&lt;등급&gt;</li>
@@ -207,15 +208,16 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
                 ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
                 ctx.waitTicks(25); // 공격 쿨타임이 다 참
                 double front = type.equals("lance") ? 3.7 : 2.6;
-                // 과녁을 바라본 뒤 (조준점이 과녁에 놓이게 2틱) 실제 공격 키 — 휘두르는 손 · 조준점의 몹을 침
+                // 과녁을 바라본 뒤 (조준점이 과녁에 놓이게 2틱) 실제 공격 키 — 휘두르는 손 · 조준점의 몹을 침. 사진은 서버 틱에 맞춤 (참격은 서버가 보냄)
                 ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(0.5, -60 + 1.3, 0.5 + front)));
                 ctx.waitTicks(2);
+                long t0 = serverNow(server);
                 ctx.getInput().pressKey(options -> options.keyAttack);
                 String tag = "wm_basic_" + type + (third ? "_3p" : "");
-                ctx.waitTicks(1);
-                ctx.takeScreenshot(TestScreenshotOptions.of(tag + "_t1").withSize(1280, 720));
-                ctx.waitTicks(4);
-                ctx.takeScreenshot(TestScreenshotOptions.of(tag + "_t5").withSize(1280, 720));
+                waitServer(ctx, server, t0 + 3);
+                ctx.takeScreenshot(TestScreenshotOptions.of(tag + "_t3").withSize(1280, 720));
+                waitServer(ctx, server, t0 + 6);
+                ctx.takeScreenshot(TestScreenshotOptions.of(tag + "_t6").withSize(1280, 720));
                 double[] dealt = server.computeOnServer(s -> {
                     ServerPlayer sp = player(s);
                     List<Husk> hs = sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(12), h -> true);
@@ -262,17 +264,14 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
             ctx.getInput().holdShift();
             ctx.waitTicks(3);
         }
+        long t0 = serverNow(server) + 1; // 우클릭 패킷을 서버가 받는 틱 (사진은 서버 틱에 맞춤 — 사진을 찍는 동안에도 서버는 돎)
         ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
         if (c.index() == 1) ctx.getInput().releaseShift();
-        int t = 0;
         for (int shot : c.shots()) {
-            if (shot > t) {
-                ctx.waitTicks(shot - t);
-                t = shot;
-            }
+            waitServer(ctx, server, t0 + shot);
             ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "wm_%s_%03d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
         }
-        if (c.total() > t) ctx.waitTicks(c.total() - t);
+        waitServer(ctx, server, t0 + c.total());
         boolean cast = server.computeOnServer(s -> Transcend.cooldownLeft(player(s), k) > 0);
         double dealt = dealtAll(server);
         float hp1 = server.computeOnServer(s -> player(s).getHealth());
@@ -303,15 +302,15 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
         });
         ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
         ctx.waitTicks(12);
+        long t0 = serverNow(server) + 1; // 키 → 스킬 칸 패킷을 서버가 받는 틱
         ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        // 정령 (0~) → 합체 (34) → 정령왕 (42~) → 불 (48) · 물 (58) · 바람 (68) · 땅 (78) → 붕괴 (94 · 97)
         int[] shots = third ? new int[] {20, 46, 62, 84, 100} : new int[] {8, 22, 38, 44, 50, 60, 70, 80, 98, 102};
-        int t = 0;
         for (int shot : shots) {
-            ctx.waitTicks(shot - t);
-            t = shot;
+            waitServer(ctx, server, t0 + shot);
             ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "wm_king_%03d%s", shot, third ? "_3p" : "")).withSize(1280, 720));
         }
-        ctx.waitTicks(Math.max(0, 125 - t));
+        waitServer(ctx, server, t0 + 125);
         boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
         double dealt = dealtAll(server);
         LOG.info("[weapons12-gallery] spirit king {} cast={} dealt={}", third ? "3p" : "1p", cast, fmt(dealt));
@@ -341,6 +340,15 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
     }
 
     // ------------------------------------------------------------ 도움
+
+    private static long serverNow(TestServerContext server) {
+        return server.computeOnServer(s -> Tasks.now());
+    }
+
+    /** 서버 틱 (Tasks.now) 이 at 이 될 때까지 클라이언트 틱을 넘김 (사진을 찍는 동안에도 서버가 돌아 클라이언트 틱으로 세면 연출보다 늦어짐) */
+    private static void waitServer(ClientGameTestContext ctx, TestServerContext server, long at) {
+        for (int i = 0; i < 400 && serverNow(server) < at; i++) ctx.waitTick();
+    }
 
     private static String fmt(double v) {
         return String.format(Locale.ROOT, "%.2f", v);

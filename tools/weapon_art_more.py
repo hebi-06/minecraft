@@ -35,6 +35,8 @@ GRADES = {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]}
 # 1인칭 자세: 칼 · 도끼 · 궁니르와 같은 손잡이 자리 (애드온 FP — 긴 무기는 1인칭에서만 줄임)
 FP = {"rotation": [64.9, -2.4, 3.0], "position": [3.14, 3.87, 0.89]}
 FP_SCALE = {"lance": 0.68, "scythe": 0.72, "hammer": 0.9, "scepter": 0.85}
+# 머리가 큰 디자인은 1인칭에서 화면 오른쪽을 덜 가리게 작게 (사진첩 weapons12 로 봄)
+FP_SCALE_DESIGN = {"hammer_hero_lv0": 0.8, "hammer_transcend_lv0": 0.74}
 
 
 # ------------------------------------------------------------ 모델 만들기
@@ -622,7 +624,7 @@ def main():
             icon(geo, tex).save(icon_path)
         # designs.json: 1인칭 자세 · 빛 알갱이
         type_ = design.split("_")[0]
-        d = {"fp": dict(FP, scale=[FP_SCALE[type_]] * 3)}
+        d = {"fp": dict(FP, scale=[FP_SCALE_DESIGN.get(design, FP_SCALE[type_])] * 3)}
         if design in FX_COLORS:
             colors = FX_COLORS[design]
             d["fx"] = {"rate": 10.0, "max": 24, "radius": 0.18, "speed": 0.15, "life": 0.9, "accel": 1.4, "drag": 1.0, "size": 0.05,

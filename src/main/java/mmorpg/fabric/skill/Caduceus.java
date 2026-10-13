@@ -27,9 +27,27 @@ final class Caduceus {
     /** 빛의 뱀 (빛 + 심지, 꿈틀거림): at 에서 dir 쪽으로 speed 칸/초 */
     static void serpent(ServerLevel level, Vec3 at, Vec3 dir, double size, double life, double speed, double[] glow, double[] core) {
         Opt o = Opt.of("dir", dir, "size", size, "life", life, "speed", speed, "frames", 4.0, "fps", 12.0, "loop", true, "phase", Kit.rand() * 4, "fade", 0.25,
-                "alpha", 0.95);
+                "alpha", 1.0);
         RuneKit.rfx(level, "serpent", at, o.with("color", glow, "cell", 0.0));
         RuneKit.rfx(level, "serpent", V.add(at, dir, -0.02), o.with("color", core, "cell", 4.0));
+    }
+
+    /**
+     * 뱀이 지나는 길의 반짝임 (from → to, ticks 틱 동안 틱마다 — 옆으로 꿈틀거리는 작은 별빛 + 알갱이): 뱀 그림만으로는 멀리서 · 정면에서 잘 보이지 않음
+     */
+    static void trail(ServerLevel level, Vec3 from, Vec3 to, int ticks, double[] glow, double[] core) {
+        Vec3 d = V.sub(to, from);
+        Vec3 u = V.unit(d);
+        Vec3 side = V.unit(V.cross(u, Math.abs(u.y) > 0.95 ? new Vec3(1, 0, 0) : V.UP));
+        double phase = Kit.rand() * Math.PI * 2;
+        Kit.ticks(t -> {
+            if (t > ticks) return false;
+            double a = Math.min(1, (t + 0.5) / Math.max(1, ticks));
+            Vec3 p = V.add(V.add(from, d, a), side, Math.sin(a * Math.PI * 3 + phase) * 0.3);
+            RuneKit.rfx2(level, "flare", p, Opt.of("size", 0.5, "life", 0.3, "fade", 0.6, "spin", Kit.rand() * 90), glow, core, new int[] {0, 1}, null);
+            SkillFx.sparks(level, p, glow, 2, 1);
+            return true;
+        });
     }
 
     static boolean serpents(ServerPlayer sp, Weapon w, Obj k) {
@@ -72,8 +90,9 @@ final class Caduceus {
                 Vec3 to = Kit.bodyPoint(t);
                 Vec3 d = V.unit(V.sub(to, from));
                 int ticks = ii < 2 ? fly : 4;
-                serpent(level, from, d, 1.3, ticks / 20.0 + 0.1, V.len(V.sub(to, from)) / (ticks / 20.0) * 0.9, cols[s][0], cols[s][1]);
-                RuneKit.streak(level, from, to, cols[s][0], 0.08, 0.3, 0.6, 0.0);
+                serpent(level, from, d, ii < 2 ? 2.1 : 1.7, ticks / 20.0 + 0.1, V.len(V.sub(to, from)) / (ticks / 20.0) * 0.9, cols[s][0], cols[s][1]);
+                trail(level, from, to, ticks, cols[s][0], cols[s][1]);
+                RuneKit.streak(level, from, to, cols[s][0], 0.12, 0.35, 0.7, 0.0);
                 Tasks.later(ticks, () -> {
                     if (!ok.getAsBoolean()) return;
                     Kit.hitAt(sp, t, Kit.reserveHit(sp, t, Tasks.now()), ok, () -> {
@@ -82,9 +101,13 @@ final class Caduceus {
                         heal.add(dealt);
                         Vec3 c = HeroKit.body(t, to);
                         double near = HeroKit.near(sp.getEyePosition(), c, 0.5);
-                        RuneKit.rfx2(level, "flare", c, Opt.of("size", 0.9 * near, "life", 0.25, "grow", 0.4, "fade", 0.6, "spin", Kit.rand() * 90), cols[s][0],
+                        RuneKit.rfx2(level, "flare", c, Opt.of("size", 1.3 * near, "life", 0.28, "grow", 0.5, "fade", 0.6, "spin", Kit.rand() * 90), cols[s][0],
                                 cols[s][1], new int[] {0, 1}, null);
-                        SkillFx.sparks(level, c, cols[s][0], 5, 4);
+                        // 무는 이빨 자국 (위아래 두 줄이 맞물림)
+                        Vec3 vv = V.unit(V.sub(c, sp.getEyePosition()));
+                        SkillFx.cutMark(level, V.add(c, vv, -0.35), vv, 20, 0.03, cols[s][0], cols[s][1], 0.9 * near);
+                        SkillFx.cutMark(level, V.add(c, vv, -0.35), vv, -20, 0.03, cols[s][0], cols[s][1], 0.9 * near);
+                        SkillFx.sparks(level, c, cols[s][0], 8, 5);
                         SkillFx.play(level, "mob.phantom.bite", c, 1.4, 0.7);
                     });
                 });
@@ -99,7 +122,8 @@ final class Caduceus {
                 Vec3 from = t.isRemoved() ? V.add(sp.position(), f, 4) : Kit.bodyPoint(t);
                 Vec3 to = V.up(sp.position(), 1.1);
                 Vec3 d = V.unit(V.sub(to, from));
-                serpent(level, from, d, 1.0, 0.35, V.len(V.sub(to, from)) / 0.35, cols[s][0], cols[s][1]);
+                serpent(level, from, d, 1.4, 0.35, V.len(V.sub(to, from)) / 0.35, cols[s][0], cols[s][1]);
+                trail(level, from, to, 7, cols[s][0], cols[s][1]);
             }
             Tasks.later(7, () -> {
                 if (!ok.getAsBoolean()) return;

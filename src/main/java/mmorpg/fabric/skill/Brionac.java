@@ -186,13 +186,15 @@ final class Brionac {
         RuneKit.selfCue(sp, glow, core, true);
         SkillFx.play(level, "item.trident.riptide_2", sp.position(), 1.5, 0.8);
         SkillFx.play(level, "beacon.activate", sp.position(), 1.8, 0.5);
-        int every = Math.max(1, ticks / thrusts);
         Set<UUID> seen = new HashSet<>();
+        // 찌르기 thrusts 번을 ticks 틱에 고르게 (한 번에 양옆 둘 — 화면 가운데로 모이는 빛의 창의 비)
         for (int i = 0; i < thrusts; i++) {
             final int ii = i;
-            Tasks.later(i * every, () -> {
+            Tasks.later((int) Math.round(i * (double) ticks / thrusts), () -> {
                 if (!ok.getAsBoolean()) return;
-                thrustFx(sp, range, cone, glow, core, ii);
+                List<LivingEntity> aims = coneTargets(sp, range, cone);
+                thrustFx(sp, range, cone, glow, core, ii * 2, aims);
+                thrustFx(sp, range, cone, glow, core, ii * 2 + 1, aims);
             });
         }
         int hitEvery = Math.max(1, ticks / Math.max(1, hits));
@@ -230,21 +232,36 @@ final class Brionac {
         return Kit.visibleFrom(sp, sp.getEyePosition(), in);
     }
 
-    /** 찌르기 하나: 손 앞에서 부채꼴 안 아무 쪽으로 창 잔상이 뻗고 빛줄기가 남음 (번갈아 좌우) */
-    private static void thrustFx(ServerPlayer sp, double range, double cone, double[] glow, double[] core, int i) {
+    /**
+     * 찌르기 하나: 눈 둘레 (양옆 0.5~1.3칸 · 위아래로 흩어진 자리 — i 가 짝수면 오른쪽) 에서 겨눈 적의 몸 (없으면 앞 부채꼴 안의 한 점) 으로 빛의 창이
+     * 꽂히며 빛줄기가 남고 끝에서 번쩍 — 1인칭에서도 창이 비스듬히 화면 가운데로 모여 보이게 (앞으로 곧게 뻗으면 끝만 보임)
+     */
+    private static void thrustFx(ServerPlayer sp, double range, double cone, double[] glow, double[] core, int i, List<LivingEntity> aims) {
         ServerLevel level = sp.level();
         Vec3 eye = sp.getEyePosition();
         Vec3 view = sp.getViewVector(1F);
-        double yaw = (Kit.rand() * 2 - 1) * cone * 0.45;
-        double pitch = (Kit.rand() * 2 - 1) * 10;
-        Vec3 d = V.unit(V.add(V.turnY(view, yaw), V.UP, Math.toRadians(pitch)));
-        Vec3 from = V.add(V.add(V.up(eye, -0.35), V.rightOf(Kit.facingOf(sp)), (i % 2 == 0 ? 0.35 : -0.2)), d, 1.2);
-        double len = Math.max(1.5, Kit.rayDist(level, from, d, range - 1));
-        spear(level, from, d, 1.5, 0.14, len / 0.14 * 0.85, RELIC_CELL, 0.9);
-        SkillFx.fx(level, "rpg:arrow_shot", V.add(from, d, len / 2), Opt.of("dir", d, "speed", 0.0, "size", len / 2, "thick", 0.12, "life", 0.16, "color", glow,
+        Vec3 right = V.rightOf(Kit.facingOf(sp));
+        double side = (i % 2 == 0 ? 1 : -1) * (0.5 + Kit.rand() * 0.8);
+        Vec3 from = V.add(V.add(V.up(eye, -0.75 + Kit.rand() * 1.15), right, side), view, 0.9);
+        Vec3 to;
+        if (!aims.isEmpty()) {
+            LivingEntity t = aims.get((i / 2) % aims.size());
+            to = V.add(Kit.bodyPoint(t), new Vec3((Kit.rand() - 0.5) * 0.7, (Kit.rand() - 0.5) * 0.9, (Kit.rand() - 0.5) * 0.7));
+        } else {
+            Vec3 d = V.turnY(view, (Kit.rand() * 2 - 1) * cone * 0.4);
+            to = V.add(eye, d, 3 + Kit.rand() * Math.max(0.5, range - 3));
+        }
+        Vec3 d = V.unit(V.sub(to, from));
+        double len = Math.max(1.0, Math.min(V.len(V.sub(to, from)), Kit.rayDist(level, from, d, range)));
+        Vec3 end = V.add(from, d, len);
+        spear(level, from, d, 1.3, 0.12, len / 0.12 * 0.9, RELIC_CELL, 0.95);
+        SkillFx.fx(level, "rpg:arrow_shot", V.add(from, d, len / 2), Opt.of("dir", d, "speed", 0.0, "size", len / 2, "thick", 0.14, "life", 0.18, "color", glow,
                 "alpha", 0.9));
-        SkillFx.fx(level, "rpg:arrow_shot", V.add(from, d, len / 2), Opt.of("dir", d, "speed", 0.0, "size", len / 2 * 0.96, "thick", 0.05, "life", 0.14, "color",
+        SkillFx.fx(level, "rpg:arrow_shot", V.add(from, d, len / 2), Opt.of("dir", d, "speed", 0.0, "size", len / 2 * 0.96, "thick", 0.05, "life", 0.15, "color",
                 core, "alpha", 1.0));
+        double near = HeroKit.near(eye, end, 0.45);
+        Tasks.later(2, () -> RuneKit.rfx2(level, "flare", V.add(end, d, -0.25), Opt.of("size", 0.55 * near, "life", 0.16, "grow", 0.4, "fade", 0.6, "spin",
+                Kit.rand() * 90), glow, core, new int[] {0, 1}, null));
         if (i % 3 == 0) SkillFx.play(level, "item.spear.attack_miss", eye, 1.3 + Kit.rand() * 0.4, 0.5);
     }
 

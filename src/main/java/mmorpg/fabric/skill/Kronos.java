@@ -163,6 +163,7 @@ final class Kronos {
         double[] core = cs[1];
         double[] gold = HeroKit.rgbOr(k, "gold", new double[] {1, 0.82, 0.4});
         Vec3 c = sp.position();
+        Vec3 f = Kit.facingOf(sp);
         double r = k.num("radius");
         int tick = (int) k.num("tick");
         int hits = (int) k.num("hits");
@@ -212,15 +213,16 @@ final class Kronos {
                 }
             });
         }
-        // 자정: 거대한 낫이 하늘에서 내려와 판을 가름
+        // 자정: 거대한 낫이 하늘에서 내려와 판을 가름 — 쓴 사람 앞 (판 반지름의 절반) 으로 내려옴 (1인칭에서 보이고 3인칭 화면을 덮지 않게)
         int fall = (int) k.num("fall");
+        Vec3 drop = V.add(c, f, r * 0.5);
         Tasks.later(total, () -> {
             if (!ok.getAsBoolean()) return;
-            double room = Math.max(4, Math.min(12, Kit.skyRoom(level, V.up(c, 0.5), 12, true)));
-            Vec3 top = V.up(c, room);
-            RuneKit.rfx(level, "relicspin", top, Opt.of("size", r * 1.3, "life", fall / 20.0 + 0.15, "spin", 0.0, "spinRate", 720.0, "cell", (double) RELIC_SPIN_CELL,
-                    "alpha", 0.95, "fade", 0.2, "vel", new Vec3(0, -(room - 1.5) / (fall / 20.0), 0)));
-            SkillFx.beam(level, top, V.up(c, 1), gold, Opt.of("half", 0.5, "thick", 0.4, "life", fall / 20.0 + 0.2, "gap", 1.0));
+            double room = Math.max(4, Math.min(12, Kit.skyRoom(level, V.up(drop, 0.5), 12, true)));
+            Vec3 top = V.up(drop, room);
+            RuneKit.rfx(level, "relicspin", top, Opt.of("size", r * 1.1, "life", fall / 20.0 + 0.15, "spin", 0.0, "spinRate", 720.0, "cell", (double) RELIC_SPIN_CELL,
+                    "alpha", 0.95, "fade", 0.2, "vel", new Vec3(0, -(room - 2.2) / (fall / 20.0), 0)));
+            SkillFx.beam(level, top, V.up(drop, 1), gold, Opt.of("half", 0.5, "thick", 0.4, "life", fall / 20.0 + 0.2, "gap", 1.0));
             SkillFx.play(level, "block.bell.hit", c, 0.4, 1.0);
             SkillFx.play(level, "mob.warden.sonic_charge", c, 0.8, 0.7);
         });
@@ -233,6 +235,8 @@ final class Kronos {
                         "spin", 0.0, "color", glow, "aura", gold));
             }
             RuneKit.glowCrack(level, c, r * 1.1, glow, core, Opt.of("life", 1.2, "v", 1.0));
+            RuneKit.rfx2(level, "flare", V.up(drop, 1.2), Opt.of("size", 2.6, "life", 0.35, "grow", 0.5, "fade", 0.6, "spin", 45.0), glow, core, new int[] {0, 1},
+                    null);
             RuneKit.novaRing(level, c, r * 0.5, 1.4, glow, core, Opt.of("life", 0.5));
             clockPart(level, DIAL, V.up(c, 0.1), V.UP, r * 1.05, 0, 0, 0.35, gold, core, 1.0);
             SkillFx.play(level, "mob.warden.sonic_boom", c, 1.2, 0.8);
