@@ -198,10 +198,20 @@ public final class RpgRuneBreakTests {
                 h.assertTrue(d1[0] > 0, "first sword hit " + d1[0]);
                 h.assertTrue(Breakthrough.castLevel(sp, "heavenFall") == 6, "cast level 6");
             });
+            // 진단 (두 번째 검이 0 일 때 실패 글에 붙임): 틱마다 과녁의 받은 피해 · 무적 시간 · 몹 틱 수 · 청크가 도는지 · 지금 겨눈 대상
+            StringBuilder trace = new StringBuilder();
+            for (int t = first + 2; t <= second + 6; t += 2) {
+                final int tt = t;
+                h.runAfterDelay(t, () -> trace.append(String.format(java.util.Locale.ROOT, " [t%d dealt %.1f cd %d hurt %d tick %d ticking %b tmpInv %b aim %s yaw %.0f pitch %.0f]",
+                        tt, TestDummies.dealt(z), z.damageCooldownTime, z.hurtTime, z.tickCount, h.getLevel().isPositionEntityTicking(z.blockPosition()),
+                        z.isTemporarilyInvulnerable(), mmorpg.fabric.RpgCombat.aimTarget(sp, 28, 12).target() == z ? "husk" : String.valueOf(mmorpg.fabric.RpgCombat.aimTarget(sp, 28, 12).target()),
+                        sp.getYRot(), sp.getXRot())));
+            }
             // 두 번째 검: 떨어질 틱 + 4 부터 들어올 때까지 (최대 30틱 더 — 무적 시간으로 밀리면) 기다려 봄
             h.runAfterDelay(second + 4, () -> RpgScorpionsTests.await(h, () -> TestDummies.dealt(z) - d1[0] > 0, 30, () -> {
                 double d2 = TestDummies.dealt(z) - d1[0];
-                h.assertTrue(Math.abs(d2 - d1[0] * ex.mult()) < 1e-3 * Math.max(1, d1[0]), "second sword = 60% of the first: " + d2 + " vs " + d1[0]);
+                h.assertTrue(Math.abs(d2 - d1[0] * ex.mult()) < 1e-3 * Math.max(1, d1[0]), "second sword = 60% of the first: " + d2 + " vs " + d1[0]
+                        + (d2 > 0 ? "" : " — trace" + trace));
                 // 메테오 6돌: 맞은 적 기절 (구속 X · 1초) — 5돌은 기절 없음
                 z.removeAllEffects();
                 Runes.Rune met = rune("int", "transcend");
