@@ -18,7 +18,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import geo_tex  # noqa: E402
 import weapon_models  # noqa: E402
 
-DESIGNS = ["hammer_transcend_lv0", "scythe_hero_lv0", "lance_lv0", "scepter_rare_lv0", "sword_transcend_lv0"]
+# 칼 · 새 4종 (weapon 뼈 60°) + 활 (82°) · 완드 (30°) · 방패 (0° · 왼손 weapon_off 뼈) — 뼈대가 빠진 파일도 종류마다 같은 모델이 나오는지
+DESIGNS = ["hammer_transcend_lv0", "scythe_hero_lv0", "lance_lv0", "scepter_rare_lv0", "sword_transcend_lv0", "bow_rare_lv0", "staff_lv0",
+           "shield_hero_lv0"]
 BAD = []
 
 

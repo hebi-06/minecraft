@@ -140,7 +140,7 @@ def load(name, geo_path, tex_path, bone="weapon"):
     tex = Image.open(tex_path).convert("RGBA")
     pre = []
     if any(b["name"].lower() == bone for b in geo["bones"]) and bone == "weapon":
-        geo = with_skeleton(geo, pre)
+        geo = with_skeleton(geo, pre, name)
     desc = geo.get("description", {})
     tw = float(desc.get("texture_width") or tex.size[0])
     th = float(desc.get("texture_height") or tex.size[1])
@@ -221,11 +221,19 @@ SKELETON = [
 ]
 WEAPON_PIVOT = [-6, 13, 0]
 WEAPON_ROTATION = [60, 0, 0]
+# 종류마다 weapon 뼈 회전 (애드온 디자인 그대로 — 디자인 이름 앞부분 <종류>_ 로 고름, 나머지는 WEAPON_ROTATION)
+WEAPON_ROTATION_KIND = {"bow": [82, 0, 0], "staff": [30, 0, 0], "shield": [0, 0, 0]}
 
 
-def with_skeleton(geo, warnings):
-    """뼈대가 빠진 파일 (weapon 뼈만 있는 등) 이면 애드온 뼈대를 채움 — weapon 뼈의 부모 · 회전 중심 · 회전이 없으면 기본값 (경고).
-    geo = minecraft:geometry[0] (고친 사본을 돌려줌)"""
+def weapon_rotation(name):
+    """디자인 이름 (bow_rare_lv0 …) → 뼈대가 빠진 파일에 채울 weapon 뼈 회전"""
+    kind = (name or "").split("_")[0]
+    return list(WEAPON_ROTATION_KIND.get(kind, WEAPON_ROTATION))
+
+
+def with_skeleton(geo, warnings, name=None):
+    """뼈대가 빠진 파일 (weapon 뼈만 있는 등) 이면 애드온 뼈대를 채움 — weapon 뼈의 부모 · 회전 중심 · 회전이 없으면 기본값 (경고,
+    회전은 종류마다 — weapon_rotation). geo = minecraft:geometry[0] (고친 사본을 돌려줌)"""
     import copy
 
     g = copy.deepcopy(geo)
@@ -242,6 +250,7 @@ def with_skeleton(geo, warnings):
         warnings.append(f"weapon 뼈 회전 중심이 없음 → {WEAPON_PIVOT}")
         w["pivot"] = list(WEAPON_PIVOT)
     if w.get("rotation") is None:
-        warnings.append(f"weapon 뼈 회전이 없음 → {WEAPON_ROTATION}")
-        w["rotation"] = list(WEAPON_ROTATION)
+        rot = weapon_rotation(name)
+        warnings.append(f"weapon 뼈 회전이 없음 → {rot}")
+        w["rotation"] = rot
     return g

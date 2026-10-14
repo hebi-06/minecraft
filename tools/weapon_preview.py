@@ -73,8 +73,8 @@ def face_color(m, c, face):
     return col
 
 
-def render(m, f, scale, pad=24, grip=True, label=None, min_w=200):
-    """모델 한 모습 (정사영, f = 보는 방향): 보이는 면을 먼 것부터 — 색은 면 가운데 픽셀 · 빛나는 칸은 밝게"""
+def render(m, f, scale, pad=24, grip=True, label=None, min_w=200, bg=BG):
+    """모델 한 모습 (정사영, f = 보는 방향): 보이는 면을 먼 것부터 — 색은 면 가운데 픽셀 · 빛나는 칸은 밝게. bg = 배경 (투명이면 (0, 0, 0, 0))"""
     cam = basis(f)
     polys = []
     for c in m.cubes:
@@ -99,7 +99,7 @@ def render(m, f, scale, pad=24, grip=True, label=None, min_w=200):
     mw = int((x1 - x0) * scale) + 2 * pad
     w = max(mw, min_w)
     h = int((y1 - y0) * scale) + 2 * pad + (28 if label else 0)
-    img = Image.new("RGBA", (w, h), BG)
+    img = Image.new("RGBA", (w, h), bg)
     d = ImageDraw.Draw(img)
     top = 28 if label else 0
     left = pad + (w - mw) // 2
@@ -117,7 +117,8 @@ def render(m, f, scale, pad=24, grip=True, label=None, min_w=200):
     return img
 
 
-def preview(design, art=ART):
+def preview(design, art=ART, title=None):
+    """한 디자인의 미리보기 한 장 (옆 · 앞 · 비스듬히 · 텍스처). title = 맨 위 글자 (없으면 디자인 이름)"""
     m = geo_tex.load(design, os.path.join(art, f"{design}.geo.json"), os.path.join(art, f"{design}.png"))
     length = max(c.hi[1] for c in m.cubes) - min(c.lo[1] for c in m.cubes)
     scale = max(4.0, min(9.0, 520 / max(1.0, length)))
@@ -137,7 +138,7 @@ def preview(design, art=ART):
     H = max(p.size[1] for p in parts) + 70
     sheet = Image.new("RGBA", (W, H), BG)
     sd = ImageDraw.Draw(sheet)
-    sd.text((12, 8), design, font=font(24), fill=(255, 228, 150, 255))
+    sd.text((12, 8), title or design, font=font(24), fill=(255, 228, 150, 255))
     sd.text((12, 38), f"상자 {len(m.cubes)}개 · 노란 띠 = 손이 잡는 자리 (y {GRIP[0]:g} ~ {GRIP[1]:g}) · 위 = 무기 끝 (+y)", font=font(15),
             fill=(200, 200, 210, 255))
     x = 12
