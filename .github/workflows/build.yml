@@ -151,7 +151,7 @@ jobs:
           sudo apt-get install -y -qq xvfb libgl1 libgl1-mesa-dri libglx-mesa0 libegl1 mesa-vulkan-drivers libvulkan1 > /dev/null
           mkdir -p ci-out/shots
           N=${{ matrix.name }}
-          # 멈춤 진단: 시간 초과 (45분) 직전 42분에 자바 프로세스마다 스레드 덤프 → ci-out/threads-<묶음>-<pid>.txt (2026-10 ui 묶음이 사진첩 끝에서 한 번 멈춤)
+          # 멈춤 진단: 시간 초과 (45분) 직전 42분에 자바 프로세스마다 스레드 덤프 → ci-out/threads-<묶음>-<pid>.txt (2026-10 ui 묶음이 사진첩 끝에서 두 번 멈춤 — 두 번째 (0.12.2) 는 파티클 사진첩이 세계를 닫을 때: 렌더 스레드는 IntegratedServer.halt, 서버 · 시험 스레드는 Fabric ThreadingImpl.enterPhase 에서 서로 기다림. 코드와 무관 — 실패한 작업만 다시 돌리면 지나감)
           ( sleep 2520; for p in $(pgrep -f java || true); do "$JAVA_HOME/bin/jcmd" "$p" Thread.print > "ci-out/threads-$N-$p.txt" 2>&1 || true; done ) &
           WATCH=$!
           set +e
