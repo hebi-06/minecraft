@@ -228,9 +228,9 @@ final class Kronos {
         });
         Tasks.later(total + fall, () -> {
             if (!ok.getAsBoolean()) return;
-            // 판 전체를 가르는 초승달 넷 + 시계판이 깨짐 (금 · 빛 고리)
+            // 판을 가르는 초승달 넷 (앞쪽 반원으로 퍼짐 — 뒤로 퍼지면 3인칭 카메라를 금빛 기운이 덮음) + 시계판이 깨짐 (금 · 빛 고리)
             for (int j = 0; j < 4; j++) {
-                Vec3 d = V.turnY(new Vec3(0, 0, 1), j * 90 + 45);
+                Vec3 d = V.turnY(f, -66 + j * 44);
                 SkillFx.arc(level, V.add(V.up(c, 1.0), d, r * 0.45), d, Opt.of("shape", "heavy", "flip", j % 2 == 1, "size", r * 0.9, "life", 0.32, "speed", 3.0,
                         "spin", 0.0, "color", glow, "aura", gold));
             }
