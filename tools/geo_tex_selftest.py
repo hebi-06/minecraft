@@ -17,6 +17,7 @@ from PIL import Image
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import geo_tex  # noqa: E402
 import weapon_models  # noqa: E402
+import weapon_paint  # noqa: E402
 
 # 칼 · 새 4종 (weapon 뼈 60°) + 활 (82°) · 완드 (30°) · 방패 (0° · 왼손 weapon_off 뼈) — 뼈대가 빠진 파일도 종류마다 같은 모델이 나오는지
 DESIGNS = ["hammer_transcend_lv0", "scythe_hero_lv0", "lance_lv0", "scepter_rare_lv0", "sword_transcend_lv0", "bow_rare_lv0", "staff_lv0",
@@ -149,7 +150,9 @@ def main():
         try:
             base, base_tex = convert(tmp, design, geo, tex)
             base_cols = face_colors(base, base_tex)
-            for label, (g, t) in (("per-face x2", per_face(geo, tex, 2)), ("per-face x4", per_face(geo, tex, 4)), ("box uv", box_uv(geo, tex))):
+            layouts = (("per-face x2", per_face(geo, tex, 2)), ("per-face x4", per_face(geo, tex, 4)), ("box uv", box_uv(geo, tex)),
+                       ("paintable", weapon_paint.paintable(design, ROOT_ART)[:2]))  # 칠하기용 (weapon_paint — 넘겨 드리는 묶음)
+            for label, (g, t) in layouts:
                 model, mtex = convert(tmp, design, g, t)
                 check(len(model["elements"]) == len(base["elements"]), f"{design} {label}: element count")
                 cols = face_colors(model, mtex)

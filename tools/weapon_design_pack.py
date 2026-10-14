@@ -3,6 +3,8 @@
 
   python3 tools/weapon_design_pack.py <출력 폴더> [--game <게임 화면 그림>]            # 12단계 새 무기 20개 (창 · 낫 · 전투 망치 · 성스러운 홀)
   python3 tools/weapon_design_pack.py <출력 폴더> --all [--shots <CI 사진 폴더>]      # 무기 디자인 전부 51개 (기존 6종 · 마검 · 새 4종)
+  python3 tools/weapon_design_pack.py <출력 폴더> --all --skip lance,scythe,hammer,scepter --paint --name <이름> [--shots …]
+                                                                      # 일부 종류만 · 칠하기용 텍스처 (상자 면마다 따로 칸)
 
 디자인마다 모델 (.geo.json) · 텍스처 (.png) · 아이콘 (.icon.png) · 미리보기 (옆 · 앞 · 비스듬히 · 텍스처), 한눈에 보기 · 안내 (지킬 것 · 돌려주는 법).
 --all 은 종류별 폴더 · 등급 표 모양 한눈에 보기 · 디자인마다 게임 화면 (--shots: CI 사진첩의 손에 든 모습 — ci-logs 의 shots/ui_*_w_<디자인>_fp|3p.png ·
@@ -21,6 +23,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import geo_tex  # noqa: E402
+import weapon_paint  # noqa: E402
 import weapon_preview  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -83,16 +86,16 @@ GUIDE = """# 12단계 새 무기 디자인 — 창 · 낫 · 전투 망치 · �
 파일 → 열기 → `<이름>.geo.json` (Bedrock Model) → 같은 폴더의 `<이름>.png` 를 텍스처 칸에 끌어다 놓기.
 """
 
-GUIDE_ALL = """# 무기 디자인 모음 — {count}개 (기존 6종 · 마검 · 12단계 새 4종)
+GUIDE_ALL = """# {title} — {count}개
 
-지금 게임 (자바 모드) 에 들어 있는 무기 디자인 전부입니다. 다듬어 같은 이름으로 돌려주시면 그대로 바꿔 넣습니다. 일부만 주셔도 됩니다.
+{intro} 다듬어 같은 이름으로 돌려주시면 그대로 바꿔 넣습니다. 일부만 주셔도 됩니다.
 
 ## 들어 있는 것
 - 종류별 폴더 {folders}개 ({first} … {last}) — 디자인마다
   - `<이름>.geo.json` 베드락 모델 (애드온 무기 모델과 같은 형식 — Blockbench 에서 열림)
   - `<이름>.png` 텍스처 · `<이름>.icon.png` 가방 아이콘 (32 × 32)
   - `<이름>_미리보기.png` 옆 · 앞 · 비스듬히 · 텍스처 (노란 띠 = 손이 잡는 자리)
-{shots_line}- `한눈에_보기.png` — {count}개 (줄 = 무기 종류, 칸 = 등급)
+{files_extra}{shots_line}- `한눈에_보기.png` — {count}개 (줄 = 무기 종류, 칸 = 등급)
 - 디자인 하나를 같은 종류 · 등급의 여러 레벨 무기가 같이 씁니다 (예: 철검 0 ~ 40렙 7개 = `sword_lv0` 하나).
 
 ## 이름 → 무기
@@ -103,13 +106,11 @@ GUIDE_ALL = """# 무기 디자인 모음 — {count}개 (기존 6종 · 마검 �
    회전은 종류마다 다릅니다 — {rotations}.
    손에 든 자세 (1인칭 · 3인칭) 가 이 뼈대로 계산됩니다. 상자는 `weapon` 뼈 안에 (또는 그 아래 자식 뼈).
    뼈대가 빠진 파일 (weapon 뼈만) 도 받습니다 (종류마다 위 회전으로 맞춤).
-2. **방패의 `weapon_off` 뼈** (왼손) 는 애드온 (베드락) 용입니다. 자바 모드는 `weapon` 뼈만 쓰므로 `weapon` 만 고치셔도 됩니다.
+2. {shield_rule}
 3. **손잡이 자리**: 손은 `weapon` 뼈 회전 중심 `(-6, 13, 0)` 둘레를 잡습니다 (미리보기의 노란 띠 — y 8 ~ 18). 긴 무기는 끝이 +y,
    도끼 · 낫 · 망치처럼 한쪽으로 치는 무기는 치는 쪽이 -z (앞) 입니다. 활 · 방패 · 완드는 지금 파일의 방향을 따라 주세요.
    길이 · 손잡이 자리를 크게 바꾸셔도 되지만 그러면 손 자세를 다시 맞춥니다 (말씀만 해 주세요).
-4. **텍스처**: 지금은 16 × 16 팔레트 (칸 하나 = 색 하나, 상자 면마다 한 칸) 입니다. 다듬으실 때는 크기를 키워 (32 · 64 · 128 …) 직접
-   칠하셔도 됩니다 — 면 UV (per-face) · 상자 UV (box UV) 모두 받습니다. `description` 의 `texture_width` · `texture_height` 를 텍스처 크기와
-   같게 (또는 같은 비율로) 해 주세요.
+4. {texture_rule}
 5. **빛나는 칸**: 알파 102 (반투명) 픽셀이 빛나는 칸입니다 (밤에도 밝게). 자바 아이템 모델은 상자 단위로 빛나므로, 빛나는 부분은 따로
    상자로 만들어 주세요 (상자 면 넓이의 절반 넘게 빛나는 픽셀이면 그 상자 전체가 빛남).
 6. **투명 픽셀** (알파 0) 은 구멍입니다 (보이지 않음).
@@ -296,10 +297,31 @@ def pack_12(a):
     return write_zip(a.out, root)
 
 
+SHIELD_RULE = ("**방패의 `weapon_off` 뼈** (왼손) 는 애드온 (베드락) 용입니다. 자바 모드는 `weapon` 뼈만 쓰므로 `weapon` 만 고치셔도 "
+               "됩니다.")
+SHIELD_RULE_PAINT = "**방패**: 왼손용 `weapon_off` 뼈 (애드온 전용) 는 이 묶음에서 뺐습니다. 자바 모드는 `weapon` 뼈만 씁니다."
+TEXTURE_RULE = ("**텍스처**: 지금은 16 × 16 팔레트 (칸 하나 = 색 하나, 상자 면마다 한 칸) 입니다. 다듬으실 때는 크기를 키워 (32 · 64 · 128 …) 직접\n"
+                "   칠하셔도 됩니다 — 면 UV (per-face) · 상자 UV (box UV) 모두 받습니다. `description` 의 `texture_width` · `texture_height` 를 텍스처 크기와\n"
+                "   같게 (또는 같은 비율로) 해 주세요.")
+TEXTURE_RULE_PAINT = (
+    "**텍스처 (칠하기용)**: 상자 면마다 따로 칸이 있는 텍스처로 바꿔 두었습니다 (모델 1단위 = {px}픽셀, 지금 색이 칠해져 있어 게임 모습은\n"
+    "   그대로). 원래 팔레트는 여러 면이 한 칸을 같이 써서 한 면만 칠할 수 없었습니다.\n"
+    "   - Blockbench: 그리기 (Paint) 탭에서 모델에 바로 칠합니다. 같은 색을 한꺼번에 바꾸려면 채우기 도구를 '색' 모드로.\n"
+    "   - 그림 프로그램: `<이름>_텍스처_칸.png` (칸 지도 — 어느 칸이 어느 면인지, N E S W U D) 를 보고 `<이름>.png` 의 칸을 칠합니다.\n"
+    "   - 더 세밀하게 칠하려면 PNG 를 2배 · 4배로 키워도 됩니다 (UV 는 그대로 — 게임이 맞춰 읽음). 칸을 옮기거나 새로 펼쳐도 됩니다\n"
+    "     (면 UV · 상자 UV 모두 받음 — `texture_width` · `texture_height` 는 UV 기준 크기).")
+FILES_PAINT = "  - `<이름>_텍스처_칸.png` 칸 지도 (어느 칸이 어느 면인지 — 그림 프로그램으로 칠할 때)\n"
+
+
 def pack_all(a):
     cat = catalog()
+    skip = {s.strip() for s in (a.skip or "").split(",") if s.strip()}
+    unknown = skip - {t["type"] for t in cat}
+    if unknown:
+        raise SystemExit(f"모르는 종류: {', '.join(sorted(unknown))} (종류: {', '.join(t['type'] for t in cat)})")
+    cat = [t for t in cat if t["type"] not in skip]
     shots = game_shots(a.shots) if a.shots else {}
-    root = os.path.join(a.out, "무기_디자인_모음")
+    root = os.path.join(a.out, a.name or "무기_디자인_모음")
     if os.path.exists(root):
         shutil.rmtree(root)
     table = ["| 파일 이름 | 무기 | 종류 · 스탯 | 등급 · 레벨 | weapon 뼈 회전 |", "|---|---|---|---|---|"]
@@ -321,10 +343,13 @@ def pack_all(a):
             note = " (창 모양)" if not d.startswith(t["type"] if t["type"] != "wand" else "staff") else ""
             table.append(f"| `{d}` | {row['weapon']}{note} | {t['name']} ({t['stats']}) | {row['gname']} {level_text(row['levels'])} | "
                          f"({', '.join(str(v) for v in rot)}) |")
-            for ext in (".geo.json", ".png"):
-                shutil.copy(os.path.join(ART, d + ext), os.path.join(sub, d + ext))
+            if a.paint:
+                weapon_paint.write(d, sub, px=a.px, font=weapon_preview.font)
+            else:
+                for ext in (".geo.json", ".png"):
+                    shutil.copy(os.path.join(ART, d + ext), os.path.join(sub, d + ext))
             shutil.copy(icon_path(t["type"], row), os.path.join(sub, d + ".icon.png"))
-            img, m = weapon_preview.preview(d, title=f"{d} — {row['weapon']} ({t['name']} · {row['gname']})")
+            img, m = weapon_preview.preview(d, art=sub, title=f"{d} — {row['weapon']} ({t['name']} · {row['gname']})")
             img.save(os.path.join(sub, f"{d}_미리보기.png"))
             for w in m.warnings:
                 print(f"경고 {d}: {w}")
@@ -340,9 +365,17 @@ def pack_all(a):
     grid_sheet(cat, os.path.join(root, "한눈에_보기.png"))
     rotations = ", ".join(f"{' · '.join(names)} `({', '.join(str(v) for v in rot)})`" for rot, names in rot_kinds.items())
     shots_line = "  - `<이름>_게임_1인칭.jpg` · `<이름>_게임_3인칭.jpg` 게임에서 손에 든 모습 (게임 화면 시험 사진)\n" if a.shots else ""
-    guide = (GUIDE_ALL.replace("{count}", str(count)).replace("{folders}", str(len(folders))).replace("{first}", f"`{folders[0]}`")
-             .replace("{last}", f"`{folders[-1]}`").replace("{shots_line}", shots_line).replace("{rotations}", rotations)
-             .replace("{table}", "\n".join(table)))
+    kinds = " · ".join(t["name"] for t in cat)
+    if skip:
+        title, intro = f"무기 디자인 ({kinds})", f"지금 게임 (자바 모드) 에 들어 있는 {kinds} 디자인입니다."
+    else:
+        title, intro = "무기 디자인 모음 (기존 6종 · 마검 · 12단계 새 4종)", "지금 게임 (자바 모드) 에 들어 있는 무기 디자인 전부입니다."
+    guide = (GUIDE_ALL.replace("{title}", title).replace("{intro}", intro).replace("{count}", str(count))
+             .replace("{folders}", str(len(folders))).replace("{first}", f"`{folders[0]}`").replace("{last}", f"`{folders[-1]}`")
+             .replace("{files_extra}", FILES_PAINT if a.paint else "").replace("{shots_line}", shots_line)
+             .replace("{shield_rule}", SHIELD_RULE_PAINT if a.paint else SHIELD_RULE)
+             .replace("{texture_rule}", (TEXTURE_RULE_PAINT if a.paint else TEXTURE_RULE).replace("{px}", str(a.px)))
+             .replace("{rotations}", rotations).replace("{table}", "\n".join(table)))
     with open(os.path.join(root, "안내.md"), "w", encoding="utf-8") as fh:
         fh.write(guide)
     return write_zip(a.out, root)
@@ -354,6 +387,10 @@ def main():
     ap.add_argument("--all", action="store_true", help="무기 디자인 전부 (종류별 폴더)")
     ap.add_argument("--game", help="(12단계) 게임 화면 그림 (손에 든 모습 모음)")
     ap.add_argument("--shots", help="(--all) CI 사진 폴더 — 디자인마다 게임 화면 1 · 3인칭")
+    ap.add_argument("--skip", help="(--all) 뺄 종류 (쉼표로 — 예: lance,scythe,hammer,scepter)")
+    ap.add_argument("--paint", action="store_true", help="(--all) 칠하기용 텍스처 (상자 면마다 따로 칸 — tools/weapon_paint.py)")
+    ap.add_argument("--px", type=int, default=2, help="(--paint) 모델 1단위당 픽셀")
+    ap.add_argument("--name", help="(--all) 폴더 · zip 이름 (기본 무기_디자인_모음)")
     a = ap.parse_args()
     pack_all(a) if a.all else pack_12(a)
 

@@ -125,7 +125,7 @@ def preview(design, art=ART, title=None):
     views = [render(m, (1, 0, 0), scale, label="옆 (+x 쪽에서)"), render(m, (0, 0, 1), scale, label="앞 (날 쪽 -z 에서)"),
              render(m, (0.55, -0.35, 0.75), scale, label="비스듬히")]
     tex = m.tex
-    tscale = max(1, int(160 / max(tex.size)))
+    tscale = max(1, int(256 / max(tex.size)))
     tex_img = Image.new("RGBA", (max(tex.size[0] * tscale + 16, 290), tex.size[1] * tscale + 44), BG)
     td = ImageDraw.Draw(tex_img)
     td.text((8, 4), f"텍스처 {tex.size[0]}×{tex.size[1]}" + (" (팔레트 — 칸 = 색)" if m.palette else ""), font=font(16), fill=(240, 240, 240, 255))
