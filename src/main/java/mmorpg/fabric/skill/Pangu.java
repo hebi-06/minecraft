@@ -432,9 +432,9 @@ final class Pangu {
         Vec3 f = Kit.facingOf(sp);
         Vec3 right = V.rightOf(f);
         // 거대한 도끼 크기: 가까우면 (3인칭 카메라 · 눈) 작게, 트인 높이가 모자라면 그만큼 (내리찍은 자세의 높이 ≈ 0.7 × size)
-        double want = k.num("giantSize") * RuneKit.nearK(sp, V.up(spot, 2), 14, 0.5);
-        double room = Kit.skyRoom(level, V.up(spot, 0.2), want * 0.75 + k.num("drop") + 2, true) + 0.2;
-        double size = Math.max(1.5, Math.min(want, room / 0.75));
+        double giantWant = k.num("giantSize") * RuneKit.nearK(sp, V.up(spot, 2), 14, 0.5);
+        double room = Kit.skyRoom(level, V.up(spot, 0.2), giantWant * 0.75 + k.num("drop") + 2, true) + 0.2;
+        double size = Math.max(1.5, Math.min(giantWant, room / 0.75));
         double drop = Math.max(0, Math.min(k.num("drop"), room - size * 0.75));
         double sky = Math.max(1.2, Math.min(k.num("cloud"), room - 0.8));
         // 박힌 자리: 날 가운데가 spot (쓴 사람이 보기에 — 그림 가운데는 왼쪽으로), 날 끝이 날 깊이의 1/5 쯤 땅에 박힘
