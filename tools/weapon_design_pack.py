@@ -7,7 +7,7 @@
                                                                       # 일부 종류만 · 칠하기용 텍스처 (상자 면마다 따로 칸)
 
 디자인마다 모델 (.geo.json) · 텍스처 (.png) · 아이콘 (.icon.png) · 미리보기 (옆 · 앞 · 비스듬히 · 텍스처), 한눈에 보기 · 안내 (지킬 것 · 돌려주는 법).
---all 은 종류별 폴더 · 등급 표 모양 한눈에 보기 · 디자인마다 게임 화면 (--shots: CI 사진첩의 손에 든 모습 — ci-logs 의 shots/ui_*_w_<디자인>_fp|3p.png ·
+--all 은 종류별 폴더 · 등급 표 모양 한눈에 보기 · 디자인마다 게임 화면 (--shots: CI 사진첩의 손에 든 모습 — ci-logs 의 shots/ui_*_w_<디자인>_fp|3p.png (only 로 돌린 CI 는 g1_*) ·
 shots/w12_*_wm_hold_<종류>_<등급>[_3p].png, 잘라서 JPEG).
 """
 import argparse
