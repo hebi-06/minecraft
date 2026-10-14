@@ -7,7 +7,7 @@ final class Skills {
     static void registerAll() {
         Gram.register();
         Solas.register();
-        Pangu.register();
+        Yggdrasil.register(); // 도끼 초월 세계수의 도끼 (0.12.4 — 예전 반고의 도끼 자리)
         Aegis.register();
         Artemis.register();
         Odin.register();

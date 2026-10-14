@@ -1,0 +1,57 @@
+{
+  "format_version": "1.10.0",
+  "particle_effect": {
+    "description": {
+      "identifier": "rpg:svalinn_shield",
+      "basic_render_parameters": {
+        "material": "particles_blend",
+        "texture": "textures/particle/rpg/fx/svalinn_shield"
+      }
+    },
+    "components": {
+      "minecraft:emitter_rate_instant": {
+        "num_particles": 1
+      },
+      "minecraft:emitter_lifetime_once": {},
+      "minecraft:emitter_shape_point": {
+        "direction": [
+          "variable.dir.x",
+          "variable.dir.y",
+          "variable.dir.z"
+        ]
+      },
+      "minecraft:particle_lifetime_expression": {
+        "max_lifetime": "variable.life"
+      },
+      "minecraft:particle_initial_speed": "variable.speed",
+      "minecraft:particle_motion_dynamic": {},
+      "minecraft:particle_appearance_billboard": {
+        "size": [
+          "variable.size",
+          "variable.size"
+        ],
+        "facing_camera_mode": "lookat_y",
+        "uv": {
+          "texture_width": 1024,
+          "texture_height": 768,
+          "uv": [
+            "math.mod((variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 12 + variable.spin), 4) : (variable.progress < 2 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : 8 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3))), 4) * 256",
+            "math.floor((variable.progress < 0 ? math.mod(math.floor(variable.particle_age * 12 + variable.spin), 4) : (variable.progress < 2 ? 4 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3) : 8 + math.clamp(math.floor((variable.particle_age / variable.particle_lifetime) * 4), 0, 3))) / 4) * 256"
+          ],
+          "uv_size": [
+            256,
+            256
+          ]
+        }
+      },
+      "minecraft:particle_appearance_tinting": {
+        "color": [
+          "variable.color.r",
+          "variable.color.g",
+          "variable.color.b",
+          "variable.color.a"
+        ]
+      }
+    }
+  }
+}

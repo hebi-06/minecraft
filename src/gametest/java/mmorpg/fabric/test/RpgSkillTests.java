@@ -144,30 +144,33 @@ public final class RpgSkillTests {
         });
     }
 
-    // ------------------------------------------------------------ 반고의 도끼 (도끼 초월 — 예전 궁니르 자리, 수치는 같음)
+    // ------------------------------------------------------------ 세계수의 도끼 (도끼 초월 — 0.12.4, 반고의 도끼 자리 · 배율 합은 같음)
 
-    @GameTest(maxTicks = 120)
-    public void panguReturnHitsTwice(GameTestHelper h) {
+    @GameTest(maxTicks = 80)
+    public void yggSeedThornsThenBloom(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h);
         Weapon w = transcend("axe");
         hold(sp, w);
-        h.assertTrue(w.title().equals("반고의 도끼") && w.typeLabel().equals("도끼"), "axe transcend " + w.title() + " " + w.typeLabel());
-        h.assertTrue(Transcend.has("pangu_return") && Transcend.has("pangu_fall") && !Transcend.has("brionac_rays"), "pangu skills registered (궁니르는 창 초월)");
+        h.assertTrue(w.title().equals("세계수의 도끼") && w.typeLabel().equals("도끼"), "axe transcend " + w.title() + " " + w.typeLabel());
+        h.assertTrue(Transcend.has("ygg_seed") && Transcend.has("ygg_tree") && !Transcend.has("pangu_return"), "ygg skills registered");
         Obj k = w.skills().get(0);
         Husk z = dummy(h, 1.5, 2, 5.5);
         h.assertTrue(Transcend.castSkill(sp, w, 0), "cast");
         double b = base(sp, w);
         double c = w.critMult();
-        h.runAfterDelay(90, () -> {
-            h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("backMult")),
-                    "out + back " + TestDummies.dealt(z) + " vs " + (k.num("mult") + k.num("backMult")) * b);
+        int fly = (int) k.num("fly");
+        h.runAfterDelay(fly + 3, () -> h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult")),
+                "thorns " + TestDummies.dealt(z) + " vs " + k.num("mult") * b));
+        h.runAfterDelay(fly + (int) k.num("bind") + 6, () -> {
+            h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("afterMult")),
+                    "thorns + bloom " + TestDummies.dealt(z) + " vs " + (k.num("mult") + k.num("afterMult")) * b);
             done(h, sp);
         });
     }
 
     @GameTest(maxTicks = 120)
-    public void panguFallCleavesAndAftershocks(GameTestHelper h) {
+    public void yggTreeRootsThenLeaves(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h);
         Weapon w = transcend("axe");
@@ -179,12 +182,24 @@ public final class RpgSkillTests {
         double c = w.critMult();
         int delay = (int) k.num("delay");
         h.runAfterDelay(delay + 3, () -> h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult")),
-                "cleave " + TestDummies.dealt(z) + " vs " + k.num("mult") * b));
+                "tree " + TestDummies.dealt(z) + " vs " + k.num("mult") * b));
         h.runAfterDelay(delay + (int) (k.num("pulseGap") * k.num("pulses")) + 6, () -> {
             h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("pulseMult"), k.num("pulseMult")),
-                    "cleave + aftershocks " + TestDummies.dealt(z) + " vs " + (k.num("mult") + 2 * k.num("pulseMult")) * b);
+                    "tree + leaves " + TestDummies.dealt(z) + " vs " + (k.num("mult") + 2 * k.num("pulseMult")) * b);
             done(h, sp);
         });
+    }
+
+    // ------------------------------------------------------------ 스발린 (방패 초월 — 0.12.4, 아이기스의 방패 자리 · 동작 · 수치는 같음)
+
+    @GameTest(maxTicks = 40)
+    public void svalinnNamesAndSkills(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Weapon w = transcend("shield");
+        h.assertTrue(w.title().equals("스발린") && w.typeLabel().equals("방패"), "shield transcend " + w.title() + " " + w.typeLabel());
+        h.assertTrue(Transcend.has("svalinn_charge") && Transcend.has("svalinn_dome") && !Transcend.has("aegis_charge"), "svalinn skills registered");
+        h.assertTrue(w.skills().get(0).str("name").equals("서리 돌진") && w.skills().get(1).str("name").equals("일식"), "svalinn skill names");
+        done(h, sp);
     }
 
     @GameTest(maxTicks = 40)

@@ -35,7 +35,7 @@
         "facing_camera_mode": "lookat_direction",
         "uv": {
           "texture_width": 1024,
-          "texture_height": 640,
+          "texture_height": 512,
           "uv": [
             "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 512",
             "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 128"

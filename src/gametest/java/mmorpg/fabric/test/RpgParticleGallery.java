@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 애드온 파티클 사진첩 (화면 시험): 119종을 20개씩 벽처럼 늘어놓고 (이름표와 함께) 사진 — 그림 · UV · 방향 · 직사각형 나눔 확인.
+ * 애드온 파티클 사진첩 (화면 시험): 애드온 119종 + 자바 전용 (rfx_relic · 세계수 · 스발린 등) 을 20개씩 벽처럼 늘어놓고 (이름표와 함께) 사진 — 그림 · UV · 방향 · 직사각형 나눔 확인.
  * 변수는 보기 쉬운 기본값 (크기 0.9 · 수명 6초 · 흰색 · 첫 칸 — 특별한 변수 (마법진 progress 등) 는 1).
  * 면이 방향을 따르는 것 (direction_z) 은 카메라 쪽, 길쭉한 빛줄기 (lookat_direction) 는 가로. 사진 이름 pfx_<n>.
  */
@@ -87,7 +87,7 @@ public final class RpgParticleGallery implements FabricClientGameTest {
         // 면이 방향을 따르는 것은 카메라 쪽 (+z), 길쭉한 것은 가로 (+x)
         Vec3 dir = switch (id) {
             case "rpg:rfx_nova", "rpg:rfx_sigil", "rpg:rfx_crack", "rpg:fire_wing", "rpg:rfx_wings", "rpg:rfx_moon", "rpg:rfx_sun", "rpg:rfx_emblem",
-                    "rpg:rfx_hole", "rpg:rfx_hex" -> new Vec3(0, 0, 1);
+                    "rpg:rfx_hole", "rpg:rfx_hex", "rpg:rfx_bloomflat" -> new Vec3(0, 0, 1);
             default -> new Vec3(1, 0, 0);
         };
         AddonFx.Vars v = AddonFx.vars().vec("dir", dir).vec("move", dir).vec("vel", Vec3.ZERO).set("size", 0.9).set("life", 6).set("speed", 0)

@@ -83,7 +83,7 @@ public final class SkillFx {
         }
     }
 
-    /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게) — 궁니르 · 반고의 도끼 · 아폴론 */
+    /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게) — 궁니르 · 세계수의 도끼 · 아폴론 */
     public static void beamAway(ServerLevel level, Vec3 eye, Vec3 a, Vec3 b, double[] color, Opt o, double near) {
         Vec3 d = V.sub(b, a);
         double len = V.len(d);
@@ -248,6 +248,9 @@ public final class SkillFx {
             {"conduit.activate", "block.conduit.activate"}, {"crossbow.loading.end", "item.crossbow.loading_end"}, {"mob.allay.item_given", "entity.allay.item_given"},
             {"mob.breeze.shoot", "entity.breeze.shoot"}, {"mob.irongolem.repair", "entity.iron_golem.repair"}, {"mob.ravager.stun", "entity.ravager.stunned"},
             {"mob.shulker.shoot", "entity.shulker.shoot"}, {"item.trident.riptide_2", "item.trident.riptide_2"},
+            // 0.12.4 세계수의 도끼 (자바 이름 그대로 — 대응표에 두어 시험이 소리가 있는지 확인)
+            {"block.roots.break", "block.roots.break"}, {"block.azalea_leaves.break", "block.azalea_leaves.break"},
+            {"item.bone_meal.use", "item.bone_meal.use"}, {"entity.snowball.throw", "entity.snowball.throw"},
         };
         for (String[] m : map) SOUND.put(m[0], m[1]);
     }

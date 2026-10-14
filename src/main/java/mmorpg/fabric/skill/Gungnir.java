@@ -32,7 +32,7 @@ import net.minecraft.world.phys.Vec3;
  * 신창 귀환 · 신창 강림 (skills.js v2.18.0 "번개 · 신창" — 동작 · 연출 · 재사용 대기는 그대로). 수치 · 색은 SKILLS.lance (rules_more):
  * 배율 합은 창 세기 (예전 브류나크와 같은 8.5 · 13.6 — 도끼 룬 위력 기준이던 9.9 · 15.9 를 같은 비율로 줄임), 회복은 도끼 규칙 (딜탱) 이라 창에는 없음
  * (heal 이 있으면 씀). 그림은 파티클 그림만 (rpg:gungnir_spear = 모델 옆모습).
- * draggable · fallSpot 은 반고의 도끼 (Pangu — 같은 틀) 도 씀
+ * fallSpot (떨어질 땅) 은 세계수의 도끼 (Yggdrasil) 도 씀
  */
 final class Gungnir {
     private Gungnir() {}

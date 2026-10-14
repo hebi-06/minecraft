@@ -206,20 +206,40 @@ public final class WeaponsMoreTest {
             check(r != null && r.def().str("fn").equals("summonSpirits"), "spirit " + g + " unchanged");
         }
 
-        // 도끼 초월: 궁니르 (창 모양 — 12단계에 창 종류가 생겨 종류가 애매해짐) → 반고의 도끼. 종류 글자 · 평타는 도끼, 스킬 수치는 궁니르와 같음
+        // 도끼 초월: 궁니르 (창 모양) → 반고의 도끼 (0.12.2) → 세계수의 도끼 (0.12.4 — 사용자가 고른 새 컨셉, 동작을 새로). 종류 글자 · 평타는 도끼,
+        // 배율 합 · 재사용 대기 · 회복은 예전과 같음 (9.9 · 15.9 · 12 · 30초 · 15%)
         Weapon axeT = Weapons.parseWeapon("rpg:axe_l40_transcend");
-        check(axeT != null && axeT.title().equals("반고의 도끼"), "axe transcend name " + (axeT == null ? null : axeT.title()));
+        check(axeT != null && axeT.title().equals("세계수의 도끼"), "axe transcend name " + (axeT == null ? null : axeT.title()));
         if (axeT != null) {
             check(axeT.typeLabel().equals("도끼") && axeT.look() == null, "axe transcend label · look " + axeT.typeLabel() + " " + axeT.look());
             check(Weapons.weaponInfo(axeT).get(0).contains("도끼 · 레벨 40"), "axe transcend info " + Weapons.weaponInfo(axeT).get(0));
             List<Obj> sk = axeT.skills();
-            check(sk != null && sk.size() == 2 && sk.get(0).str("id").equals("pangu_return") && sk.get(1).str("id").equals("pangu_fall"), "axe transcend skills");
+            check(sk != null && sk.size() == 2 && sk.get(0).str("id").equals("ygg_seed") && sk.get(1).str("id").equals("ygg_tree"), "axe transcend skills");
             if (sk != null && sk.size() == 2) {
-                near(Skills.skillTotalMult(sk.get(0)), 4.4 + 5.5, 1e-9, "pangu_return total = gungnir_return");
-                near(Skills.skillTotalMult(sk.get(1)), 9.5 + 3.2 * 2, 1e-9, "pangu_fall total = gungnir_fall");
+                near(Skills.skillTotalMult(sk.get(0)), 4.4 + 5.5, 1e-9, "ygg_seed total = old axe skill 1");
+                near(Skills.skillTotalMult(sk.get(1)), 9.5 + 3.2 * 2, 1e-9, "ygg_tree total = old axe skill 2");
                 check(sk.get(0).num("cd") == 12 && sk.get(1).num("cd") == 30, "axe transcend cooldowns");
+                check(sk.get(1).num("heal") == 0.15 && sk.get(1).num("healCap") == 0.35, "axe transcend heal (딜탱)");
             }
         }
+        // 방패 초월: 아이기스의 방패 → 스발린 (0.12.4 — 동작 · 수치는 그대로, 이름 · 연출만)
+        Weapon shieldT = Weapons.parseWeapon("rpg:shield_l40_transcend");
+        check(shieldT != null && shieldT.title().equals("스발린"), "shield transcend name " + (shieldT == null ? null : shieldT.title()));
+        if (shieldT != null) {
+            check(shieldT.typeLabel().equals("방패"), "shield transcend label " + shieldT.typeLabel());
+            List<Obj> sk = shieldT.skills();
+            check(sk != null && sk.size() == 2 && sk.get(0).str("id").equals("svalinn_charge") && sk.get(1).str("id").equals("svalinn_dome"), "shield transcend skills");
+            if (sk != null && sk.size() == 2) {
+                near(Skills.skillTotalMult(sk.get(0)), 9.5 + 20, 1e-9, "svalinn_charge total = aegis_charge");
+                near(Skills.skillTotalMult(sk.get(1)), 7 + 10 + 30, 1e-9, "svalinn_dome total = aegis_dome");
+                check(sk.get(0).num("cd") == 12 && sk.get(1).num("cd") == 30 && sk.get(1).num("reduce") == 0.6, "shield transcend cooldowns · reduce");
+            }
+        }
+        for (String g : List.of("common", "rare", "noble", "hero")) {
+            Weapon sh = Weapons.weaponFrom("shield", g.equals("hero") ? 30 : 10, g);
+            check(sh != null && !sh.title().equals("스발린"), "shield " + g + " name unchanged " + (sh == null ? null : sh.title()));
+        }
+        check(Weapons.weaponFrom("shield", 30, "hero").title().equals("듀란드의 방패"), "shield hero name unchanged");
         check(Weapons.weaponFrom("axe", 40, "hero").title().equals("대지의 심판"), "axe hero name unchanged");
 
         // 창 초월: 브류나크 → 궁니르 (0.12.3 — 예전 도끼 초월의 궁니르를 옮김). 종류 글자 '창', 평타는 애드온 궁니르의 하늘빛 찌르기 (SLASH.spear),
@@ -240,7 +260,7 @@ public final class WeaponsMoreTest {
             }
         }
         check(Weapons.weaponFrom("lance", 40, "hero").title().equals("게이 볼그"), "lance hero name unchanged");
-        check(Crafting.craftUseLines("boss", "ygg_branch").stream().anyMatch(l -> l.contains("반고의 도끼")), "boss material lore uses the new name");
+        check(Crafting.craftUseLines("boss", "ygg_branch").stream().anyMatch(l -> l.contains("세계수의 도끼")), "boss material lore uses the new name");
 
         System.out.println("WeaponsMoreTest: " + ok + " ok, " + BAD.size() + " failed");
         for (String b : BAD) System.out.println("  FAIL " + b);
