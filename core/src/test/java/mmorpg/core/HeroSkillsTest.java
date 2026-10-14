@@ -83,12 +83,11 @@ public final class HeroSkillsTest {
             List<Object> color = hk.listOrNull("color");
             check(color != null && color.size() == 2 && color.get(0) instanceof List<?> c0 && c0.size() == 3 && color.get(1) instanceof List<?> c1 && c1.size() == 3,
                     type + " color [glow, core]");
-            // 다른 등급 · 구버전은 스킬 없음 (12단계 새 무기: 일반 · 희귀 · 구버전 조합이 아예 없고 고귀는 10 · 20렙)
+            // 다른 등급 · 구버전은 스킬 없음 (12단계 새 무기: 구버전 조합이 없고 고귀는 10 · 20렙, 일반 · 희귀는 다른 무기와 같은 레벨)
             boolean more = Weapons.moreTypes().contains(type);
             for (String g : new String[] {"common", "rare", "noble"}) {
                 Weapon o = Weapons.weaponFrom(type, more && g.equals("noble") ? 20 : 30, g);
-                if (more && !g.equals("noble")) check(o == null, type + " has no " + g);
-                else check(o != null && o.skills() == null, type + " " + g + " has no skill");
+                check(o != null && o.skills() == null, type + " " + g + " has no skill");
             }
             Weapon old = Weapons.parseWeapon("rpg:" + type + "_l20_hero");
             if (more) check(old == null, type + " no legacy hero 20");

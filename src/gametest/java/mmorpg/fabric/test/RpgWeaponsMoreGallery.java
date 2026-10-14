@@ -47,12 +47,12 @@ import org.slf4j.LoggerFactory;
 /**
  * 12단계 새 무기 사진첩 (화면 시험, only=weapons12): 평평한 세계에서
  * <ol>
- *   <li>임시 디자인 12개를 손에 든 모습 (1인칭 · 3인칭 앞) — wm_hold_&lt;디자인&gt;[_3p]</li>
+ *   <li>임시 디자인 20개 (일반 · 희귀 · 고귀 · 영웅 · 초월) 를 손에 든 모습 (1인칭 · 3인칭 앞) — wm_hold_&lt;종류&gt;_&lt;등급&gt;[_3p]</li>
  *   <li>가방 아이콘 · 설명 (브류나크 · 카두케우스) — wm_inventory · wm_tooltip_&lt;종류&gt;</li>
  *   <li>기본 공격 (고귀 20렙 — 창 찌르기 · 낫 넓게 베기 · 망치 내려찍기 · 홀 성스러운 일격, 옆 과녁에 번진 숫자) — wm_basic_&lt;종류&gt;[_3p]_t3 · t6</li>
  *   <li>스킬 12개를 실제 입력 (우클릭 = 스킬1 · 웅크리고 우클릭 = 스킬2) 으로 — wm_&lt;스킬&gt;_&lt;틱&gt;[_3p]</li>
  *   <li>정령왕 강림 (스킬 칸 1번의 키) — wm_king_&lt;틱&gt;[_3p]</li>
- *   <li>대장장이 제작 창 (고귀 · 영웅 · 초월 쪽) — wm_craft_&lt;등급&gt;</li>
+ *   <li>대장장이 제작 창 (고귀 · 영웅 · 초월 쪽) — wm_craft_&lt;등급&gt;, 무기 상점 (기본 쪽 → 새 무기 쪽) — wm_shop_page1 · 2</li>
  * </ol>
  * 스킬마다 써졌는지 (재사용 대기) · 들어간 피해를 로그 (weapons12-gallery) 로, 써지지 않았거나 피해가 0 이면 마지막에 실패.
  */
@@ -119,6 +119,7 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
             king(ctx, server, false);
             king(ctx, server, true);
             craft(ctx, server);
+            shop(ctx, server);
         }
         LOG.info("[weapons12-gallery] done, {} failed", failures.size());
         if (!failures.isEmpty()) throw new AssertionError("weapons12 gallery: " + String.join(" / ", failures));
@@ -130,8 +131,8 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
         server.runCommand("tp @a 0.5 -60 0.5 0 10");
         ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
         for (String type : TYPES) {
-            for (String grade : new String[] {"noble", "hero", "transcend"}) {
-                String id = type + "_l" + (grade.equals("noble") ? 20 : 40) + "_" + grade;
+            for (String grade : new String[] {"common", "rare", "noble", "hero", "transcend"}) {
+                String id = type + "_l" + (grade.equals("hero") || grade.equals("transcend") ? 40 : 20) + "_" + grade;
                 String design = type + "_" + grade;
                 server.runCommand("item replace entity @a hotbar.0 with rpg:" + id);
                 ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
@@ -337,6 +338,69 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
         server.runOnServer(s -> Forms.close(player(s)));
         ctx.setScreen(() -> null);
         ctx.waitTicks(5);
+    }
+
+    // ------------------------------------------------------------ 무기 상점 (기본 쪽 → 새 무기 쪽)
+
+    private void shop(ClientGameTestContext ctx, TestServerContext server) {
+        server.runCommand("give @a minecraft:emerald 64");
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            Forms.close(sp);
+            mmorpg.fabric.shop.Store.openStore(sp, 20, "weapons");
+        });
+        if (!waitShop(ctx, false)) failures.add("shop did not open");
+        ctx.takeScreenshot("wm_shop_page1");
+        // 쪽 넘김 칸을 실제 마우스로 누름 (윗줄 왼쪽 셋째 칸)
+        clickSlot(ctx, mmorpg.fabric.shop.Shop.PAGE_TAB);
+        if (!waitShop(ctx, true)) failures.add("shop page 2 not shown");
+        ctx.takeScreenshot("wm_shop_page2");
+        // 새 무기 칸 하나 (희귀 전투 망치) 에 마우스를 올려 설명
+        hoverSlot(ctx, mmorpg.fabric.shop.Shop.firstSlot(1, 1) + 2);
+        ctx.takeScreenshot("wm_shop_page2_tooltip");
+        server.runOnServer(s -> Forms.close(player(s)));
+        ctx.setScreen(() -> null);
+        ctx.waitTicks(5);
+    }
+
+    /** 무기 상점 창 (newPage = 새 무기 쪽) 이 열릴 때까지 */
+    private static boolean waitShop(ClientGameTestContext ctx, boolean newPage) {
+        try {
+            ctx.waitFor(mc -> mc.gui.screen() instanceof mmorpg.fabric.client.form.ChestFormScreen c && c.form().title().contains("무기 상점")
+                    && c.form().title().contains("새 무기") == newPage, 100);
+            ctx.waitTicks(3);
+            return true;
+        } catch (AssertionError | RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** 상자 창의 칸을 실제 마우스로 누름 (칸 자리는 ChestFormScreen.slotCenter — 창 픽셀로 바꿈) */
+    private static void clickSlot(ClientGameTestContext ctx, int slot) {
+        if (slot < 0) return;
+        double[] p = slotPixel(ctx, slot);
+        if (p == null) return;
+        ctx.getInput().setCursorPos(p[0], p[1]);
+        ctx.waitTicks(2);
+        ctx.getInput().pressMouse(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
+        ctx.waitTicks(3);
+    }
+
+    private static void hoverSlot(ClientGameTestContext ctx, int slot) {
+        double[] p = slotPixel(ctx, slot);
+        if (p == null) return;
+        ctx.getInput().setCursorPos(p[0], p[1]);
+        ctx.waitTicks(4);
+    }
+
+    private static double[] slotPixel(ClientGameTestContext ctx, int slot) {
+        return ctx.computeOnClient(mc -> {
+            if (!(mc.gui.screen() instanceof mmorpg.fabric.client.form.ChestFormScreen c)) return null;
+            int[] q = c.slotCenter(slot);
+            if (q == null) return null;
+            double k = (double) mc.getWindow().getScreenWidth() / c.width;
+            return new double[] {(q[0] + 0.5) * k, (q[1] + 0.5) * k};
+        });
     }
 
     // ------------------------------------------------------------ 도움

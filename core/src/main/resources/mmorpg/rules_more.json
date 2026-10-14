@@ -81,18 +81,18 @@
     "scepter": {"name": "성스러운 홀", "stat": "int", "damage": 1.1, "req": 0.6666666666666666, "reqExtra": {"vit": 0.3333333333333333}, "bonus": {"vit": 0.005}, "crit": 0.04, "critPerLevel": 0.0005, "critPerGrade": 0.01, "critMult": 1.5, "critMultPerLevel": 0, "critMultPerGrade": 0.05, "melee": true, "magic": true, "lifesteal": {"rate": 0.05, "cap": 0.01}}
   },
   "TYPE_ONLY": {
-    "_comment": "12단계 새 무기: 이 등급 · 레벨만 있음 (고귀 10 · 20렙 — 대장장이 제작, 영웅 30렙 — 보스 무기 제작 → 35 · 40렙으로 올림, 초월 40렙 — 보스 무기 제작)",
-    "lance": {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
-    "scythe": {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
-    "hammer": {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
-    "scepter": {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]}
+    "_comment": "12단계 새 무기: 이 등급 · 레벨만 있음 (일반 · 희귀 0 ~ 40렙 — 다른 무기와 같은 레벨, 무기 상점의 새 무기 쪽, 고귀 10 · 20렙 — 대장장이 제작, 영웅 30렙 — 보스 무기 제작 → 35 · 40렙으로 올림, 초월 40렙 — 보스 무기 제작)",
+    "lance": {"common": [0, 5, 10, 15, 20, 30, 40], "rare": [0, 5, 10, 15, 20, 30, 40], "noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
+    "scythe": {"common": [0, 5, 10, 15, 20, 30, 40], "rare": [0, 5, 10, 15, 20, 30, 40], "noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
+    "hammer": {"common": [0, 5, 10, 15, 20, 30, 40], "rare": [0, 5, 10, 15, 20, 30, 40], "noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]},
+    "scepter": {"common": [0, 5, 10, 15, 20, 30, 40], "rare": [0, 5, 10, 15, 20, 30, 40], "noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]}
   },
   "WEAPON_NAMES": {
-    "_comment": "12단계 새 무기 이름",
-    "lance": {"noble": "황금 기사창", "hero": "게이 볼그", "transcend": "브류나크"},
-    "scythe": {"noble": "황금 초승달낫", "hero": "하르페", "transcend": "크로노스의 낫"},
-    "hammer": {"noble": "황금 전투망치", "hero": "다그다의 곤봉", "transcend": "묠니르"},
-    "scepter": {"noble": "황금 성광홀", "hero": "카두케우스", "transcend": "아폴론의 태양홀"}
+    "_comment": "12단계 새 무기 이름 (일반 · 희귀는 다른 무기처럼 철 · 푸른 강철)",
+    "lance": {"common": "철 장창", "rare": "푸른 강철창", "noble": "황금 기사창", "hero": "게이 볼그", "transcend": "브류나크"},
+    "scythe": {"common": "철 전투낫", "rare": "청강 전투낫", "noble": "황금 초승달낫", "hero": "하르페", "transcend": "크로노스의 낫"},
+    "hammer": {"common": "철 전투망치", "rare": "푸른 강철 망치", "noble": "황금 전투망치", "hero": "다그다의 곤봉", "transcend": "묠니르"},
+    "scepter": {"common": "견습 사제의 홀", "rare": "청수정 성홀", "noble": "황금 성광홀", "hero": "카두케우스", "transcend": "아폴론의 태양홀"}
   },
   "SKILLS": {
     "_comment": "12단계 초월 무기 스킬 (무기마다 둘 — 근접: 우클릭 = 스킬1, 웅크리고 우클릭 = 스킬2). 세기 = 40렙 초월 · 스탯 125포인트에서 스킬1 실효 피해가 그람 화룡 돌진과 같게 (피해 합 skillTotalMult × 무기 피해 × 스탯 배율 × 치명타 평균), 스킬2 = 스킬1 의 약 1.6배. 재사용 대기 12 · 30초. color = [빛, 심지]",

@@ -398,7 +398,45 @@
     ]
    }
   },
+  "hammer_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.9,
+     0.9,
+     0.9
+    ]
+   }
+  },
   "hammer_noble_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.9,
+     0.9,
+     0.9
+    ]
+   }
+  },
+  "hammer_rare_lv0": {
    "fp": {
     "rotation": [
      64.9,
@@ -500,7 +538,45 @@
     ]
    }
   },
+  "lance_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.68,
+     0.68,
+     0.68
+    ]
+   }
+  },
   "lance_noble_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.68,
+     0.68,
+     0.68
+    ]
+   }
+  },
+  "lance_rare_lv0": {
    "fp": {
     "rotation": [
      64.9,
@@ -609,7 +685,45 @@
     ]
    }
   },
+  "scepter_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.85,
+     0.85,
+     0.85
+    ]
+   }
+  },
   "scepter_noble_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.85,
+     0.85,
+     0.85
+    ]
+   }
+  },
+  "scepter_rare_lv0": {
    "fp": {
     "rotation": [
      64.9,
@@ -711,7 +825,45 @@
     ]
    }
   },
+  "scythe_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.72,
+     0.72,
+     0.72
+    ]
+   }
+  },
   "scythe_noble_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.72,
+     0.72,
+     0.72
+    ]
+   }
+  },
+  "scythe_rare_lv0": {
    "fp": {
     "rotation": [
      64.9,
@@ -1258,30 +1410,86 @@
   "rpg:dagger_l5_rare": "dagger_rare_lv0",
   "rpg:dagger_l5_transcend": "dagger_transcend_lv0",
   "rpg:greatsword_l40_transcend": "greatsword_transcend_lv0",
+  "rpg:hammer_l0_common": "hammer_lv0",
+  "rpg:hammer_l0_rare": "hammer_rare_lv0",
+  "rpg:hammer_l10_common": "hammer_lv0",
   "rpg:hammer_l10_noble": "hammer_noble_lv0",
+  "rpg:hammer_l10_rare": "hammer_rare_lv0",
+  "rpg:hammer_l15_common": "hammer_lv0",
+  "rpg:hammer_l15_rare": "hammer_rare_lv0",
+  "rpg:hammer_l20_common": "hammer_lv0",
   "rpg:hammer_l20_noble": "hammer_noble_lv0",
+  "rpg:hammer_l20_rare": "hammer_rare_lv0",
+  "rpg:hammer_l30_common": "hammer_lv0",
   "rpg:hammer_l30_hero": "hammer_hero_lv0",
+  "rpg:hammer_l30_rare": "hammer_rare_lv0",
   "rpg:hammer_l35_hero": "hammer_hero_lv0",
+  "rpg:hammer_l40_common": "hammer_lv0",
   "rpg:hammer_l40_hero": "hammer_hero_lv0",
+  "rpg:hammer_l40_rare": "hammer_rare_lv0",
   "rpg:hammer_l40_transcend": "hammer_transcend_lv0",
+  "rpg:hammer_l5_common": "hammer_lv0",
+  "rpg:hammer_l5_rare": "hammer_rare_lv0",
+  "rpg:lance_l0_common": "lance_lv0",
+  "rpg:lance_l0_rare": "lance_rare_lv0",
+  "rpg:lance_l10_common": "lance_lv0",
   "rpg:lance_l10_noble": "lance_noble_lv0",
+  "rpg:lance_l10_rare": "lance_rare_lv0",
+  "rpg:lance_l15_common": "lance_lv0",
+  "rpg:lance_l15_rare": "lance_rare_lv0",
+  "rpg:lance_l20_common": "lance_lv0",
   "rpg:lance_l20_noble": "lance_noble_lv0",
+  "rpg:lance_l20_rare": "lance_rare_lv0",
+  "rpg:lance_l30_common": "lance_lv0",
   "rpg:lance_l30_hero": "lance_hero_lv0",
+  "rpg:lance_l30_rare": "lance_rare_lv0",
   "rpg:lance_l35_hero": "lance_hero_lv0",
+  "rpg:lance_l40_common": "lance_lv0",
   "rpg:lance_l40_hero": "lance_hero_lv0",
+  "rpg:lance_l40_rare": "lance_rare_lv0",
   "rpg:lance_l40_transcend": "lance_transcend_lv0",
+  "rpg:lance_l5_common": "lance_lv0",
+  "rpg:lance_l5_rare": "lance_rare_lv0",
+  "rpg:scepter_l0_common": "scepter_lv0",
+  "rpg:scepter_l0_rare": "scepter_rare_lv0",
+  "rpg:scepter_l10_common": "scepter_lv0",
   "rpg:scepter_l10_noble": "scepter_noble_lv0",
+  "rpg:scepter_l10_rare": "scepter_rare_lv0",
+  "rpg:scepter_l15_common": "scepter_lv0",
+  "rpg:scepter_l15_rare": "scepter_rare_lv0",
+  "rpg:scepter_l20_common": "scepter_lv0",
   "rpg:scepter_l20_noble": "scepter_noble_lv0",
+  "rpg:scepter_l20_rare": "scepter_rare_lv0",
+  "rpg:scepter_l30_common": "scepter_lv0",
   "rpg:scepter_l30_hero": "scepter_hero_lv0",
+  "rpg:scepter_l30_rare": "scepter_rare_lv0",
   "rpg:scepter_l35_hero": "scepter_hero_lv0",
+  "rpg:scepter_l40_common": "scepter_lv0",
   "rpg:scepter_l40_hero": "scepter_hero_lv0",
+  "rpg:scepter_l40_rare": "scepter_rare_lv0",
   "rpg:scepter_l40_transcend": "scepter_transcend_lv0",
+  "rpg:scepter_l5_common": "scepter_lv0",
+  "rpg:scepter_l5_rare": "scepter_rare_lv0",
+  "rpg:scythe_l0_common": "scythe_lv0",
+  "rpg:scythe_l0_rare": "scythe_rare_lv0",
+  "rpg:scythe_l10_common": "scythe_lv0",
   "rpg:scythe_l10_noble": "scythe_noble_lv0",
+  "rpg:scythe_l10_rare": "scythe_rare_lv0",
+  "rpg:scythe_l15_common": "scythe_lv0",
+  "rpg:scythe_l15_rare": "scythe_rare_lv0",
+  "rpg:scythe_l20_common": "scythe_lv0",
   "rpg:scythe_l20_noble": "scythe_noble_lv0",
+  "rpg:scythe_l20_rare": "scythe_rare_lv0",
+  "rpg:scythe_l30_common": "scythe_lv0",
   "rpg:scythe_l30_hero": "scythe_hero_lv0",
+  "rpg:scythe_l30_rare": "scythe_rare_lv0",
   "rpg:scythe_l35_hero": "scythe_hero_lv0",
+  "rpg:scythe_l40_common": "scythe_lv0",
   "rpg:scythe_l40_hero": "scythe_hero_lv0",
+  "rpg:scythe_l40_rare": "scythe_rare_lv0",
   "rpg:scythe_l40_transcend": "scythe_transcend_lv0",
+  "rpg:scythe_l5_common": "scythe_lv0",
+  "rpg:scythe_l5_rare": "scythe_rare_lv0",
   "rpg:shield_l0_common": "shield_lv0",
   "rpg:shield_l0_hero": "shield_hero_lv0",
   "rpg:shield_l0_noble": "shield_noble_lv0",

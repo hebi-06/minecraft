@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""12단계 새 무기 4종 (창 · 낫 · 전투 망치 · 성스러운 홀) × 고귀 · 영웅 · 초월 = 임시 디자인 12개 + 아이콘 + 아이템 그림 연결.
+"""12단계 새 무기 4종 (창 · 낫 · 전투 망치 · 성스러운 홀) × 일반 · 희귀 · 고귀 · 영웅 · 초월 = 임시 디자인 20개 + 아이콘 + 아이템 그림 연결.
 
   python3 tools/weapon_art_more.py            # 없는 디자인만 그림 (클로드 디자인 파일로 바꿔 넣은 것은 그대로 둠)
   python3 tools/weapon_art_more.py --force    # 임시 디자인을 다시 그림 (바꿔 넣은 파일도 덮어씀 — 조심)
@@ -13,7 +13,7 @@
 - src/main/resources/assets/rpg/textures/item/<종류>/<무기 ID>.png · models/item/<무기 ID>.json · items/<무기 ID>.json (아이콘 — weapon_models.py 가
   손에 든 모습을 3D 모델로 다시 씀)
 
-디자인 이름: <종류>_<등급>_lv0 (lance · scythe · hammer · scepter × noble · hero · transcend). 클로드 디자인에서 받은 파일로 바꾸려면 같은 이름으로
+디자인 이름: <종류>_<등급>_lv0 (lance · scythe · hammer · scepter × rare · noble · hero · transcend), 일반은 <종류>_lv0 (애드온과 같은 규칙). 클로드 디자인에서 받은 파일로 바꾸려면 같은 이름으로
 .geo.json · .png (애드온 .entity.png 를 이름만 바꿔서) · .icon.png 를 넣고 이 스크립트 (아이콘 · 연결) → weapon_models.py → tools/java_fx_art.py
 (스킬 그림 — 던지는 창 · 망치 등은 모델에서 그림) → tools/addon_particles.py 순서로 돌림.
 """
@@ -31,12 +31,20 @@ ASSETS = os.path.join(ROOT, "src", "main", "resources", "assets", "rpg")
 CX = -6.0  # 무기 뼈 가운데 x (손)
 GLOW_ALPHA = 102
 TYPES = ["lance", "scythe", "hammer", "scepter"]
-GRADES = {"noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]}
+BASIC_LEVELS = [0, 5, 10, 15, 20, 30, 40]
+GRADES = {"common": BASIC_LEVELS, "rare": BASIC_LEVELS, "noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]}
 # 1인칭 자세: 칼 · 도끼 · 궁니르와 같은 손잡이 자리 (애드온 FP — 긴 무기는 1인칭에서만 줄임)
 FP = {"rotation": [64.9, -2.4, 3.0], "position": [3.14, 3.87, 0.89]}
 FP_SCALE = {"lance": 0.68, "scythe": 0.72, "hammer": 0.9, "scepter": 0.85}
 # 머리가 큰 디자인은 1인칭에서 화면 오른쪽을 덜 가리게 작게 (사진첩 weapons12 로 봄)
 FP_SCALE_DESIGN = {"hammer_hero_lv0": 0.8, "hammer_transcend_lv0": 0.74}
+
+
+
+
+def design_of(t, g):
+    """디자인 이름: 일반은 <종류>_lv0, 그 밖은 <종류>_<등급>_lv0 (애드온 무기 디자인과 같은 규칙 — sword_lv0 · sword_rare_lv0)"""
+    return f"{t}_lv0" if g == "common" else f"{t}_{g}_lv0"
 
 
 # ------------------------------------------------------------ 모델 만들기
@@ -518,7 +526,183 @@ def scepter_transcend():
     return m
 
 
+
+# ------------------------------------------------------------ 일반 · 희귀 (애드온 일반 · 희귀 무기와 같은 색: 철 + 나무 / 푸른 강철 + 푸른 장식, 빛나는 칸 없음)
+
+IRON_D, IRON, IRON_L = (98, 103, 109), (168, 173, 179), (223, 226, 229)
+WOOD, WOOD_D, WOOD_DD = (124, 84, 49), (92, 60, 37), (78, 53, 32)
+BLUE_D, BLUE, STEEL, STEEL_L, GEM = (38, 56, 95), (52, 86, 143), (157, 180, 207), (215, 230, 246), (63, 140, 255)
+
+
+def grip(m, wrap, band, y0=8, y1=18, t=2.1):
+    """손잡이 감개 (y0 ~ y1) + 띠"""
+    m.rod(y0, y1, t, wrap)
+    for y in range(y0 + 2, y1, 3):
+        m.rod(y, y + 0.5, t + 0.1, band)
+
+
+def lance_common():
+    m = Model("lance_lv0")
+    iron_d, iron, iron_l = m.col(IRON_D), m.col(IRON), m.col(IRON_L)
+    wood, wood_d, wood_dd = m.col(WOOD), m.col(WOOD_D), m.col(WOOD_DD)
+    m.rod(-6, -4, 2, iron_d)
+    m.rod(-4, 42, 1.5, wood)
+    grip(m, wood_dd, wood_d)
+    m.rod(30, 31, 1.8, wood_d)
+    m.rod(40, 42, 2.4, iron_d)
+    for y0, y1, h in ((42, 44, 1.2), (44, 48, 2.0), (48, 52, 1.8), (52, 55, 1.2), (55, 57, 0.7), (57, 58, 0.35)):
+        m.plate(y0, y1, -h, h, 1.0, iron)
+    m.plate(43, 56.5, -0.4, 0.4, 1.3, iron_l)
+    m.fx = [CX, 50, 0]
+    return m
+
+
+def lance_rare():
+    m = Model("lance_rare_lv0")
+    blue_d, blue, steel, steel_l, gem = m.col(BLUE_D), m.col(BLUE), m.col(STEEL), m.col(STEEL_L), m.col(GEM)
+    wood_dd = m.col(WOOD_DD)
+    m.rod(-7, -5, 1, steel)
+    m.rod(-5, -3, 2.3, blue)
+    m.rod(-3, 42, 1.5, blue_d)
+    grip(m, wood_dd, blue)
+    for y in (24, 32):
+        m.rod(y, y + 1, 1.9, steel)
+    m.rod(40, 42.5, 2.6, steel)
+    m.rod(40.8, 41.7, 1, gem, tz=2.9)
+    # 날개 달린 창날 (밑동 양옆의 작은 날개 + 긴 잎날)
+    for s in (-1, 1):
+        m.plate(42.5, 44, s * 1.2, s * 3.2, 0.9, steel)
+        m.plate(43, 44.6, s * 3.2, s * 3.9, 0.8, steel_l)
+    for y0, y1, h in ((42.5, 45, 1.3), (45, 50, 2.1), (50, 54, 1.8), (54, 57, 1.2), (57, 59, 0.7), (59, 60, 0.35)):
+        m.plate(y0, y1, -h, h, 1.0, steel)
+    m.plate(43.5, 58.5, -0.45, 0.45, 1.3, steel_l)
+    # 푸른 술
+    m.plate(36, 40, -1.9, -1.2, 0.6, blue)
+    m.plate(35.2, 40, 1.2, 1.9, 0.6, blue)
+    m.fx = [CX, 52, 0]
+    return m
+
+
+def scythe_common():
+    m = Model("scythe_lv0")
+    iron_d, iron, iron_l = m.col(IRON_D), m.col(IRON), m.col(IRON_L)
+    wood, wood_d, wood_dd = m.col(WOOD), m.col(WOOD_D), m.col(WOOD_DD)
+    m.rod(-3, -1, 2, iron_d)
+    m.rod(-1, 44, 1.6, wood)
+    grip(m, wood_dd, wood_d)
+    # 옆 손잡이 (+z)
+    m.plate(26, 27.2, 0.8, 4.2, 1.2, wood_d)
+    m.plate(25, 28.2, 4.2, 5.0, 1.3, wood_dd)
+    m.rod(42, 46, 2.6, iron_d)
+    segments(m, [(-1.3, -5, 42, 45.5), (-5, -9, 42.4, 45.2), (-9, -12.5, 42, 44.6), (-12.5, -15.5, 41, 43.8), (-15.5, -17.5, 39.6, 42.6),
+                 (-17.5, -19, 38.2, 41)], iron, iron_l, iron_d)
+    m.fx = [CX, 43, -9]
+    return m
+
+
+def scythe_rare():
+    m = Model("scythe_rare_lv0")
+    blue_d, blue, steel, steel_l, gem = m.col(BLUE_D), m.col(BLUE), m.col(STEEL), m.col(STEEL_L), m.col(GEM)
+    wood_dd = m.col(WOOD_DD)
+    m.rod(-4, -2, 2.4, steel)
+    m.rod(-2, 46, 1.6, blue_d)
+    grip(m, wood_dd, blue)
+    for y in (24, 34):
+        m.rod(y, y + 1, 2, steel)
+    m.rod(44, 48, 2.8, steel)
+    m.rod(45.4, 46.6, 3.1, gem)
+    segments(m, [(-1.4, -5, 43.5, 48), (-5, -9, 44, 47.5), (-9, -12.5, 43.5, 47), (-12.5, -15.5, 42.5, 46), (-15.5, -18, 41, 44.5), (-18, -20, 39.2, 42.6),
+                 (-20, -21.2, 37.6, 40.4)], steel, steel_l, blue)
+    # 뒤쪽 작은 가시
+    m.plate(45, 46.6, 1.4, 4.2, 1.0, steel)
+    m.plate(45.4, 46.2, 4.2, 5.2, 0.9, blue)
+    m.fx = [CX, 44, -10]
+    return m
+
+
+def hammer_common():
+    m = Model("hammer_lv0")
+    iron_d, iron, iron_l = m.col(IRON_D), m.col(IRON), m.col(IRON_L)
+    wood, wood_d, wood_dd = m.col(WOOD), m.col(WOOD_D), m.col(WOOD_DD)
+    m.rod(0, 2, 2.4, iron_d)
+    m.rod(2, 29, 1.8, wood)
+    grip(m, wood_dd, wood_d, t=2.2)
+    m.rod(27, 29, 2.8, iron_d)
+    m.box(CX - 3, CX + 3, 29, 36, -4.5, 4.5, iron)
+    m.box(CX - 2.6, CX + 2.6, 29.4, 35.6, -5.3, -4.5, iron_d)
+    m.box(CX - 2.6, CX + 2.6, 29.4, 35.6, 4.5, 5.3, iron_d)
+    for y in (30.4, 34):
+        m.box(CX - 3.1, CX + 3.1, y, y + 0.8, -4.6, 4.6, iron_d)
+    m.box(CX - 3.1, CX + 3.1, 32.1, 32.9, -2, 2, iron_l)
+    m.rod(36, 37.5, 1.6, iron_d)
+    m.fx = [CX, 33, 0]
+    return m
+
+
+def hammer_rare():
+    m = Model("hammer_rare_lv0")
+    blue_d, blue, steel, steel_l, gem = m.col(BLUE_D), m.col(BLUE), m.col(STEEL), m.col(STEEL_L), m.col(GEM)
+    wood_dd = m.col(WOOD_DD)
+    m.rod(0, 2, 2.5, steel)
+    m.rod(2, 29, 1.8, blue_d)
+    grip(m, wood_dd, blue, t=2.2)
+    m.rod(26.5, 29, 3, steel)
+    m.box(CX - 3.5, CX + 3.5, 29, 37, -5, 5, steel)
+    m.box(CX - 3, CX + 3, 29.5, 36.5, -5.8, -5, steel_l)
+    m.box(CX - 3, CX + 3, 29.5, 36.5, 5, 5.8, steel_l)
+    for y in (30.5, 35):
+        m.box(CX - 3.6, CX + 3.6, y, y + 0.9, -5.1, 5.1, blue)
+    m.box(CX - 3.7, CX + 3.7, 32.4, 33.6, -1.2, 1.2, gem)
+    m.rod(37, 39.5, 1.4, steel_l)
+    m.fx = [CX, 33, 0]
+    return m
+
+
+def scepter_common():
+    m = Model("scepter_lv0")
+    iron_d, iron, iron_l = m.col(IRON_D), m.col(IRON), m.col(IRON_L)
+    wood, wood_d, wood_dd = m.col(WOOD), m.col(WOOD_D), m.col(WOOD_DD)
+    m.rod(0, 2, 2, iron_d)
+    m.rod(2, 32, 1.4, wood)
+    grip(m, wood_dd, wood_d, t=2.0)
+    m.rod(29, 32, 2.4, iron_d)
+    # 사제의 십자 머리 (철) + 가운데 흰 돌
+    m.rod(32, 41, 1.4, iron)
+    m.plate(35.6, 37, -3, 3, 1.4, iron)
+    m.box(CX - 0.9, CX + 0.9, 35.4, 37.2, -0.9, 0.9, iron_l)
+    m.rod(41, 42, 1, iron_d)
+    for s in (-1, 1):
+        m.plate(35.4, 37.2, s * 3, s * 3.6, 1.0, iron_d)
+    m.fx = [CX, 37, 0]
+    return m
+
+
+def scepter_rare():
+    m = Model("scepter_rare_lv0")
+    blue_d, blue, steel, steel_l, gem = m.col(BLUE_D), m.col(BLUE), m.col(STEEL), m.col(STEEL_L), m.col(GEM)
+    wood_dd = m.col(WOOD_DD)
+    m.rod(0, 2, 2, steel)
+    m.rod(2, 33, 1.4, blue_d)
+    grip(m, wood_dd, blue, t=2.0)
+    m.rod(31, 33.5, 2.4, steel)
+    # 작은 날개 (앞뒤 ±z) + 청수정 (층층이 마름모)
+    for y0, y1, h in ((32.5, 34, 3.4), (34, 35.5, 4.4)):
+        m.plate(y0, y1, 1.2, h, 0.8, steel)
+        m.plate(y0, y1, -h, -1.2, 0.8, steel)
+    m.plate(35, 35.5, 1.2, 4.4, 0.9, steel_l)
+    m.plate(35, 35.5, -4.4, -1.2, 0.9, steel_l)
+    for y0, y1, w in ((34, 35, 1.2), (35, 36.5, 2.2), (36.5, 38.5, 2.8), (38.5, 40, 2.0), (40, 41, 1.0)):
+        m.box(CX - w / 2, CX + w / 2, y0, y1, -w / 2, w / 2, gem)
+    m.rod(41, 42.5, 0.8, steel_l)
+    for dx, dz in ((1.7, 0), (-1.7, 0), (0, 1.7), (0, -1.7)):
+        m.box(CX + dx - 0.3, CX + dx + 0.3, 35.5, 39.5, dz - 0.3, dz + 0.3, steel)
+    m.fx = [CX, 38, 0]
+    return m
+
+
 DESIGNS = {
+    "lance_lv0": lance_common, "lance_rare_lv0": lance_rare, "scythe_lv0": scythe_common, "scythe_rare_lv0": scythe_rare,
+    "hammer_lv0": hammer_common, "hammer_rare_lv0": hammer_rare, "scepter_lv0": scepter_common, "scepter_rare_lv0": scepter_rare,
     "lance_noble_lv0": lance_noble, "lance_hero_lv0": lance_hero, "lance_transcend_lv0": lance_transcend,
     "scythe_noble_lv0": scythe_noble, "scythe_hero_lv0": scythe_hero, "scythe_transcend_lv0": scythe_transcend,
     "hammer_noble_lv0": hammer_noble, "hammer_hero_lv0": hammer_hero, "hammer_transcend_lv0": hammer_transcend,
@@ -636,7 +820,7 @@ def main():
     for t in TYPES:
         for g, levels in GRADES.items():
             for lv in levels:
-                meta["weapons"][f"rpg:{t}_l{lv}_{g}"] = f"{t}_{g}_lv0"
+                meta["weapons"][f"rpg:{t}_l{lv}_{g}"] = design_of(t, g)
     meta["designs"] = dict(sorted(meta["designs"].items()))
     meta["weapons"] = dict(sorted(meta["weapons"].items()))
     with open(meta_path, "w", encoding="utf-8") as fh:
@@ -647,7 +831,7 @@ def main():
         tex_dir = os.path.join(ASSETS, "textures", "item", t)
         os.makedirs(tex_dir, exist_ok=True)
         for g, levels in GRADES.items():
-            design = f"{t}_{g}_lv0"
+            design = design_of(t, g)
             ic = Image.open(os.path.join(ART, f"{design}.icon.png")).convert("RGBA")
             for lv in levels:
                 wid = f"{t}_l{lv}_{g}"

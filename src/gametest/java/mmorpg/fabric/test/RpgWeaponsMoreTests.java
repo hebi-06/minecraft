@@ -141,7 +141,7 @@ public final class RpgWeaponsMoreTests {
                 }
             }
         }
-        h.assertTrue(n == 24, "24 new weapons, got " + n);
+        h.assertTrue(n == 80, "80 new weapons (일반 · 희귀 56 + 고귀 · 영웅 · 초월 24), got " + n);
         // 창: 몹을 칠 수 있는 거리 +1 (아이템 속성 — 손에 들면)
         ItemStack lance = new ItemStack(RpgItems.byId("rpg:lance_l40_transcend"));
         ItemAttributeModifiers mods = lance.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
@@ -237,6 +237,59 @@ public final class RpgWeaponsMoreTests {
         h.assertTrue(RpgGearTests.countIn(sp, RpgItems.byId(r.w().id())) == 1, "got " + r.w().id());
         for (Smith.Mat m : r.mats()) h.assertTrue(RpgGearTests.countIn(sp, m.item()) == 0, "used " + m.name());
         done(h, sp);
+    }
+
+    /**
+     * 무기 상점 둘째 쪽 (12단계 보강): 쪽 넘김 칸 → 새 무기 4종 일반 · 희귀 (10렙 — 값 · 칸) → 창 사기 (에메랄드 · 창) → 같은 쪽으로 돌아옴 → 다시 넘기면
+     * 기본 무기 쪽
+     */
+    @GameTest(environment = ENV, maxTicks = 20)
+    public void shopSellsNewWeapons(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        mmorpg.fabric.ui.Forms.HEADLESS.add(sp.getUUID());
+        try {
+            sp.getInventory().setItem(9, new ItemStack(net.minecraft.world.item.Items.EMERALD, 64));
+            mmorpg.fabric.shop.Store.openStore(sp, 10, "weapons");
+            mmorpg.fabric.ui.FormNet.ChestPayload c = shopChest(sp);
+            h.assertTrue(c != null && c.title().contains("무기 상점") && !c.title().contains("새 무기"), "shop opens on the basic page");
+            h.assertTrue(c.slots().get(mmorpg.fabric.shop.Shop.PAGE_TAB).name().contains("새 무기"), "page tab " + c.slots().get(mmorpg.fabric.shop.Shop.PAGE_TAB).name());
+            h.assertTrue(mmorpg.fabric.ui.Forms.answer(sp, mmorpg.fabric.shop.Shop.PAGE_TAB, null), "turn the page");
+            c = shopChest(sp);
+            h.assertTrue(c != null && c.title().contains("새 무기"), "new weapons page " + (c == null ? null : c.title()));
+            List<String> types = mmorpg.fabric.shop.Shop.pageTypes(1);
+            h.assertTrue(types.equals(Weapons.moreTypes()), "page 2 types " + types);
+            for (int r = 0; r < 2; r++) {
+                for (int i = 0; i < types.size(); i++) {
+                    Weapon w = Weapons.weaponFrom(types.get(i), 10, r == 0 ? "common" : "rare");
+                    int slot = mmorpg.fabric.shop.Shop.firstSlot(r, 1) + i;
+                    h.assertTrue(w != null && c.slots().get(slot).num() == (int) Weapons.shopPrice(w) && c.slots().get(slot).kind() == mmorpg.fabric.ui.Slot.PRICE,
+                            types.get(i) + " row " + r + " slot " + slot + " price " + c.slots().get(slot).num());
+                }
+            }
+            Weapon lance = Weapons.weaponFrom("lance", 10, "common");
+            int price = (int) Weapons.shopPrice(lance);
+            mmorpg.fabric.ui.Forms.answer(sp, mmorpg.fabric.shop.Shop.firstSlot(0, 1), null);
+            c = shopChest(sp);
+            h.assertTrue(c != null && c.title().contains("구매 확인"), "confirm window");
+            mmorpg.fabric.ui.Forms.answer(sp, 11, null);
+            h.assertTrue(RpgGearTests.countIn(sp, RpgItems.byId(lance.id())) == 1, "got the lance");
+            h.assertTrue(mmorpg.fabric.ui.Inv.money(sp) == 64 - price, "paid " + mmorpg.fabric.ui.Inv.money(sp));
+            c = shopChest(sp);
+            h.assertTrue(c != null && c.title().contains("새 무기") && c.body().contains("구매 완료"), "back to the new weapons page");
+            mmorpg.fabric.ui.Forms.answer(sp, mmorpg.fabric.shop.Shop.PAGE_TAB, null);
+            c = shopChest(sp);
+            h.assertTrue(c != null && !c.title().contains("새 무기") && c.slots().get(11).num() == (int) Weapons.shopPrice(Weapons.weaponFrom("sword", 10, "common")),
+                    "back to the basic page");
+            mmorpg.fabric.ui.Forms.answer(sp, -1, null);
+            h.assertFalse(mmorpg.fabric.ui.Forms.pending(sp), "closed");
+        } finally {
+            mmorpg.fabric.ui.Forms.HEADLESS.remove(sp.getUUID());
+        }
+        done(h, sp);
+    }
+
+    private static mmorpg.fabric.ui.FormNet.ChestPayload shopChest(ServerPlayer sp) {
+        return mmorpg.fabric.ui.Forms.last(sp) instanceof mmorpg.fabric.ui.FormNet.ChestPayload c ? c : null;
     }
 
     // ------------------------------------------------------------ 스킬 (시험마다 따로 묶음)

@@ -8,7 +8,8 @@ import java.util.Map;
 /**
  * 12단계 시험 (JUnit 없이 main — check-core.sh): 새 무기 종류 4개 (자바 전용 덧붙임 — 창 · 낫 · 전투 망치 · 성스러운 홀).
  * <ul>
- * <li>있는 조합: 고귀 10 · 20렙, 영웅 30 · 35 · 40렙, 초월 40렙 (그 밖의 조합 · 구버전 없음), 이름 · 종류 글자</li>
+ * <li>있는 조합: 일반 · 희귀 0 ~ 40렙 (다른 무기와 같은 레벨 — 무기 상점), 고귀 10 · 20렙, 영웅 30 · 35 · 40렙, 초월 40렙 (그 밖의 조합 · 구버전 없음),
+ *     이름 · 종류 글자, 일반 · 희귀는 스킬 없음 · 같은 레벨 칼과 같은 값 · 요구 스탯 2:1</li>
  * <li>요구 스탯 (두 스탯 2:1 — 40렙 초월 74 + 36), 피해 배율 (1포인트당 그 스탯의 다른 무기와 같은 비율), 근접 · 마법 피해</li>
  * <li>세기: 40렙 초월 · 스탯 125 (주 89 · 다른 36) 의 평균 평타가 칼 · 단검 쪽과 비슷 (망치 · 홀은 체력 몫만큼 낮게), 초월 스킬1 실효 피해가
  *     그람 화룡 돌진과 ±8%, 스킬2 = 스킬1 × 1.55~1.65, 영웅 = 초월 스킬1 의 0.7배 (HeroSkillsTest)</li>
@@ -62,6 +63,8 @@ public final class WeaponsMoreTest {
         Map<String, String[]> names = Map.of("lance", new String[] {"황금 기사창", "게이 볼그", "브류나크", "창"}, "scythe",
                 new String[] {"황금 초승달낫", "하르페", "크로노스의 낫", "낫"}, "hammer", new String[] {"황금 전투망치", "다그다의 곤봉", "묠니르", "전투 망치"}, "scepter",
                 new String[] {"황금 성광홀", "카두케우스", "아폴론의 태양홀", "성스러운 홀"});
+        Map<String, String[]> basics = Map.of("lance", new String[] {"철 장창", "푸른 강철창"}, "scythe", new String[] {"철 전투낫", "청강 전투낫"}, "hammer",
+                new String[] {"철 전투망치", "푸른 강철 망치"}, "scepter", new String[] {"견습 사제의 홀", "청수정 성홀"});
         Map<String, String[]> stats = Map.of("lance", new String[] {"str", "dex"}, "scythe", new String[] {"dex", "int"}, "hammer", new String[] {"vit", "str"},
                 "scepter", new String[] {"int", "vit"});
         Map<String, String[]> skillIds = Map.of("lance", new String[] {"brionac_rays", "brionac_flurry"}, "scythe", new String[] {"kronos_rend", "kronos_clock"},
@@ -72,7 +75,8 @@ public final class WeaponsMoreTest {
             // 조합
             for (Grade g : Rules.get().grades()) {
                 for (double lv : Rules.get().numbers("ALL_LEVELS")) {
-                    boolean want = (g.id().equals("noble") && (lv == 10 || lv == 20)) || (g.id().equals("hero") && lv >= 30)
+                    boolean basic = (g.id().equals("common") || g.id().equals("rare")) && Rules.get().numbers("LEVELS").contains(lv);
+                    boolean want = basic || (g.id().equals("noble") && (lv == 10 || lv == 20)) || (g.id().equals("hero") && lv >= 30)
                             || (g.id().equals("transcend") && lv == 40);
                     Weapon w = Weapons.weaponFrom(type, lv, g.id());
                     check(Weapons.isValidWeapon(lv, g.id(), type) == want, type + " " + g.id() + " " + lv + " valid " + want);
@@ -80,7 +84,23 @@ public final class WeaponsMoreTest {
                     if (w != null) check(!w.legacy(), type + " " + g.id() + " " + lv + " not legacy");
                 }
             }
-            check(Weapons.parseWeapon("rpg:" + type + "_l5_noble") == null && Weapons.parseWeapon("rpg:" + type + "_l20_hero") == null, type + " no other combos");
+            check(Weapons.parseWeapon("rpg:" + type + "_l5_noble") == null && Weapons.parseWeapon("rpg:" + type + "_l20_hero") == null
+                    && Weapons.parseWeapon("rpg:" + type + "_l35_common") == null && Weapons.parseWeapon("rpg:" + type + "_l35_rare") == null, type + " no other combos");
+            // 일반 · 희귀 (0 ~ 40렙 — 다른 무기와 같은 레벨 · 무기 상점): 이름 · 스킬 없음 · 같은 레벨 칼과 같은 값 · 요구 스탯 2:1
+            String[] basicNames = basics.get(type);
+            for (double lv : Rules.get().numbers("LEVELS")) {
+                Weapon c = Weapons.weaponFrom(type, lv, "common");
+                Weapon r = Weapons.weaponFrom(type, lv, "rare");
+                if (c == null || r == null) continue;
+                check(c.title().equals(basicNames[0]) && r.title().equals(basicNames[1]), type + " common · rare names " + c.title() + " " + r.title());
+                check(c.skills() == null && r.skills() == null, type + " " + lv + " common · rare no skills");
+                check(Weapons.shopPrice(c) == Weapons.shopPrice(Weapons.weaponFrom("sword", lv, "common"))
+                        && Weapons.shopPrice(r) == Weapons.shopPrice(Weapons.weaponFrom("sword", lv, "rare")), type + " " + lv + " shop price = sword");
+                double unit = (lv + 1) * 2.5; // 희귀 (등급 번호 1)
+                check(r.reqs().size() == 2 && Math.abs(r.reqs().get(0).value() + r.reqs().get(1).value() - Math.round(unit)) <= 1
+                        && r.reqs().get(0).value() >= r.reqs().get(1).value() * 1.8, type + " " + lv + " rare reqs 2:1 " + r.reqs());
+                check(c.damage() < r.damage(), type + " " + lv + " common < rare damage");
+            }
             Weapon n10 = Weapons.weaponFrom(type, 10, "noble");
             Weapon h30 = Weapons.weaponFrom(type, 30, "hero");
             Weapon t40 = Weapons.weaponFrom(type, 40, "transcend");

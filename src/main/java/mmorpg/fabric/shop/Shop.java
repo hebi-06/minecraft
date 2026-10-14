@@ -30,6 +30,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 무기 상점 (shop.js, 상자 모양 9 × 3 — 구매에 스탯 · 레벨 제한 없음): 윗줄 가운데 보유 에메랄드, 둘째 줄 첫 판매 등급 (일반) 6종, 셋째 줄 둘째 판매 등급 (희귀) 6종.
  * 칸을 누르면 구매 확인 창. 윗줄 오른쪽 셋째 칸 = 전리품 팔기 (갑옷 상점에도 같은 자리), 오른쪽 끝 = 갑옷 상점.
+ * 12단계: 윗줄 왼쪽 셋째 칸 (PAGE_TAB) = 쪽 넘김 — 둘째 쪽은 새 무기 4종 (창 · 낫 · 전투 망치 · 성스러운 홀) 의 일반 · 희귀 (한 줄 9칸에 10종이 다 들어가지 않음).
  * 흐름 (애드온 async 고리) 은 받을 일 (콜백) 로: 다음 창을 열거나 next.accept(다음 창 이름 · null = 끝).
  */
 public final class Shop {
@@ -44,6 +45,8 @@ public final class Shop {
     /** 전리품 팔기 창으로 (무기 · 갑옷 상점 같은 자리) */
     public static final int SELL_TAB = 6;
     static final int ARMOR_TAB = 8;
+    /** 쪽 넘김 (12단계 — 기본 무기 6종 ↔ 새 무기 4종) */
+    public static final int PAGE_TAB = 2;
     private static final int[][] ROWS = {{9, 11}, {18, 20}};
 
     // ------------------------------------------------------------ 공통
@@ -78,27 +81,54 @@ public final class Shop {
         return it == null ? ItemStack.EMPTY : new ItemStack(it);
     }
 
-    private static List<List<Weapon>> levelWeapons(int level) {
+    /** 쪽의 무기 종류: 0 = 기본 6종 (TYPE_ORDER), 1 = 12단계 새 무기 4종 (TYPE_ORDER_MORE — 없으면 쪽 넘김도 없음) */
+    public static List<String> pageTypes(int page) {
+        return page == 1 ? Weapons.moreTypes() : R.strings("TYPE_ORDER");
+    }
+
+    /** 쪽 수 (새 무기가 없으면 1) */
+    static int pages() {
+        return Weapons.moreTypes().isEmpty() ? 1 : 2;
+    }
+
+    /** 줄 r 의 첫 무기 칸 — 둘째 쪽 (4종) 은 가운데로 한 칸 */
+    public static int firstSlot(int r, int page) {
+        return ROWS[r][1] + (page == 1 ? 1 : 0);
+    }
+
+    private static List<List<Weapon>> levelWeapons(int level, int page) {
         List<List<Weapon>> out = new ArrayList<>();
         List<Object> grades = SHOP.list("grades");
         for (int r = 0; r < Math.min(ROWS.length, grades.size()); r++) {
             String g = String.valueOf(grades.get(r));
             List<Weapon> row = new ArrayList<>();
-            for (String t : R.strings("TYPE_ORDER")) row.add(Weapons.isValidWeapon(level, g) ? Weapons.weaponFrom(t, level, g) : null);
+            for (String t : pageTypes(page)) row.add(Weapons.isValidWeapon(level, g, t) ? Weapons.weaponFrom(t, level, g) : null);
             out.add(row);
         }
         return out;
+    }
+
+    /** 쪽 넘김 칸: 다른 쪽의 첫 무기 그림 · 종류 이름 */
+    private static Slot pageTabSlot(int level, int page) {
+        int other = 1 - page;
+        List<String> types = pageTypes(other);
+        List<String> names = new ArrayList<>();
+        for (String t : types) names.add(R.obj("TYPES").obj(t).str("name"));
+        Weapon sample = types.isEmpty() ? null : Weapons.weaponFrom(types.get(0), level, "common");
+        ItemStack icon = sample != null ? weaponItem(sample) : new ItemStack(Items.IRON_SWORD);
+        String title = other == 1 ? "§e새 무기 보기 §7→" : "§e← 기본 무기 보기";
+        return Slot.of(icon, title).lore("§7" + String.join(" · ", names), "§8일반 · 희귀 " + level + "렙");
     }
 
     // ------------------------------------------------------------ 무기 상점
 
     private record Built(ChestForm form, Map<Integer, Weapon> bySlot) {}
 
-    private static Built buildShop(ServerPlayer sp, int level, String message) {
-        ChestForm form = new ChestForm("무기 상점 §8· §7" + level + "렙");
+    private static Built buildShop(ServerPlayer sp, int level, String message, int page) {
+        ChestForm form = new ChestForm("무기 상점 §8· §7" + level + "렙" + (page == 1 ? " §8· §7새 무기" : ""));
         form.set(BALANCE_SLOT, balanceSlot(sp));
         Map<Integer, Weapon> bySlot = new HashMap<>();
-        List<List<Weapon>> rows = levelWeapons(level);
+        List<List<Weapon>> rows = levelWeapons(level, page);
         List<Object> grades = SHOP.list("grades");
         for (int r = 0; r < rows.size(); r++) {
             Grade grade = R.grade(String.valueOf(grades.get(r)));
@@ -110,14 +140,16 @@ public final class Shop {
                 int price = (int) Weapons.shopPrice(w);
                 List<String> lore = new ArrayList<>(Weapons.weaponInfo(w));
                 lore.add("§r§a가격: " + price + " " + Inv.CURRENCY_NAME);
-                form.set(ROWS[r][1] + i, Slot.of(weaponItem(w), w.name()).price(price).lore(lore));
-                bySlot.put(ROWS[r][1] + i, w);
+                form.set(firstSlot(r, page) + i, Slot.of(weaponItem(w), w.name()).price(price).lore(lore));
+                bySlot.put(firstSlot(r, page) + i, w);
             }
         }
         form.set(ARMOR_TAB, Slot.of(Items.IRON_CHESTPLATE, "§b갑옷 상점으로").lore("§7힘·민첩·체력·힘+체력·마력 갑옷"));
         form.set(SELL_TAB, sellTabSlot(sp));
+        if (pages() > 1) form.set(PAGE_TAB, pageTabSlot(level, page));
         form.fillEmpty();
         List<String> lines = new ArrayList<>(List.of("§8칸을 누르면 구매 창이 열립니다. 칸의 초록 숫자는 가격입니다.§r"));
+        if (pages() > 1) lines.add(page == 0 ? "§8윗줄 왼쪽 무기 칸: 새 무기 (창 · 낫 · 전투 망치 · 성스러운 홀)§r" : "§8윗줄 왼쪽 무기 칸: 기본 무기 (칼 · 단검 · 도끼 · 방패 · 활 · 완드)§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         return new Built(form, bySlot);
@@ -170,23 +202,26 @@ public final class Shop {
      * 무기 상점 창 반복 (shopLoop). next: "armor" = 갑옷 상점으로, "sell" = 전리품 팔기로, null = 닫음
      */
     public static void shopLoop(ServerPlayer sp, int level, Consumer<String> next) {
-        shopStep(sp, level, "", 0, next);
+        shopStep(sp, level, "", 0, next, 0);
     }
 
-    private static void shopStep(ServerPlayer sp, int level, String message, int guard, Consumer<String> next) {
+    private static void shopStep(ServerPlayer sp, int level, String message, int guard, Consumer<String> next, int page) {
         if (guard >= 100) {
             next.accept(null);
             return;
         }
-        Built b = buildShop(sp, level, message);
+        Built b = buildShop(sp, level, message, page);
         b.form().show(sp, sel -> {
             if (sel < 0) next.accept(null);
             else if (sel == ARMOR_TAB) next.accept("armor");
             else if (sel == SELL_TAB) next.accept("sell");
-            else {
+            else if (sel == PAGE_TAB && pages() > 1) {
+                SkillFx.playFor(sp, "item.book.page_turn", 1, 0.8);
+                shopStep(sp, level, "", guard + 1, next, 1 - page);
+            } else {
                 Weapon w = b.bySlot().get(sel);
-                if (w == null) shopStep(sp, level, "", guard + 1, next);
-                else confirmPurchase(sp, w, msg -> shopStep(sp, level, msg, guard + 1, next));
+                if (w == null) shopStep(sp, level, "", guard + 1, next, page);
+                else confirmPurchase(sp, w, msg -> shopStep(sp, level, msg, guard + 1, next, page));
             }
         });
     }
