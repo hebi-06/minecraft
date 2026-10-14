@@ -185,11 +185,11 @@ def weapon_rotation_of(design):
 # ------------------------------------------------------------ 게임 화면 (CI 사진첩의 손에 든 모습)
 
 def game_shots(folder):
-    """디자인 → {"fp": 경로, "3p": 경로}. 기존 디자인: ui_NNNN_w_<디자인>_fp|3p.png (밤 사진 _night_ 은 뺌), 12단계: w12_NNNN_wm_hold_<종류>_<등급>[_3p].png"""
+    """디자인 → {"fp": 경로, "3p": 경로}. 기존 디자인: ui_NNNN_w_<디자인>_fp|3p.png (CI 를 only 로 돌리면 g1_NNNN_w_…, 밤 사진 _night_ 은 뺌), 12단계: w12_NNNN_wm_hold_<종류>_<등급>[_3p].png"""
     out = {}
     for p in sorted(glob.glob(os.path.join(folder, "*.png"))):
         n = os.path.basename(p)[:-4]
-        m = re.match(r"ui_\d+_w_(.+)_(fp|3p)$", n)
+        m = re.match(r"(?:ui|g\d+)_\d+_w_(.+)_(fp|3p)$", n)
         if m and "_night" not in m.group(1):
             out.setdefault(m.group(1), {})[m.group(2)] = p
             continue
