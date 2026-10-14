@@ -21,8 +21,12 @@ import argparse
 import json
 import math
 import os
+import sys
 
 from PIL import Image
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import geo_tex  # noqa: E402 — 베드락 무기 모델 읽기 (weapon_models · java_fx_art 와 같이 씀)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ART = os.path.join(ROOT, "tools", "weapon_art")
@@ -724,31 +728,25 @@ SS = 5
 EDGE = (24, 14, 22, 255)
 
 
-def weapon_cubes(geo):
-    return [c for b in geo["minecraft:geometry"][0]["bones"] if b["name"].lower() == "weapon" for c in b.get("cubes", [])]
-
-
-def icon(geo, tex, glow=1.7):
-    """옆모습 (x 축으로 본 — 가로 z, 세로 y), 끝 (+y) 이 왼쪽 위 · 날 (-z) 이 오른쪽 위로 눕힘. 크기는 대각선 길이에 맞춤"""
-    cubes = weapon_cubes(geo)
-    ys = [c["origin"][1] for c in cubes] + [c["origin"][1] + c["size"][1] for c in cubes]
-    zs = [c["origin"][2] for c in cubes] + [c["origin"][2] + c["size"][2] for c in cubes]
+def icon(m, glow=1.7):
+    """옆모습 (x 축으로 본 — 가로 z, 세로 y), 끝 (+y) 이 왼쪽 위 · 날 (-z) 이 오른쪽 위로 눕힘. 크기는 대각선 길이에 맞춤.
+    m = geo_tex.Model (팔레트 · 다듬은 텍스처 모두 — 보이는 면 (west) 의 그 자리 픽셀)"""
+    cubes = m.cubes
+    ys = [c.lo[1] for c in cubes] + [c.hi[1] for c in cubes]
+    zs = [c.lo[2] for c in cubes] + [c.hi[2] for c in cubes]
     ym, zm = (min(ys) + max(ys)) / 2, (min(zs) + max(zs)) / 2
     length, width = max(ys) - min(ys), max(zs) - min(zs)
     scale = min(41.0 / length, 30.0 / max(1.0, width), 1.6)
-    order = sorted(cubes, key=lambda c: c["origin"][0] + c["size"][0])
-    cols = []
-    for c in order:
-        u, v = c["uv"]["north"]["uv"]
-        cols.append(tex.getpixel((int(u), int(v))))
+    order = sorted(cubes, key=lambda c: c.hi[0])
 
     def sample(y, z):
-        hit = None
-        for c, col in zip(order, cols):
-            o, s = c["origin"], c["size"]
-            if o[1] <= y < o[1] + s[1] and o[2] <= z < o[2] + s[2]:
-                hit = col
-        return hit
+        # 앞 (+x) 의 상자부터 — 텍스처의 투명한 픽셀 (구멍) 은 뒤의 상자가 보임
+        for c in reversed(order):
+            if c.lo[1] <= y < c.hi[1] and c.lo[2] <= z < c.hi[2]:
+                col = m.side_color(c, y, z)
+                if col is not None and col[3] > 0:
+                    return col
+        return None
 
     r2 = 1 / math.sqrt(2)
     ax = (-r2, -r2)
@@ -801,11 +799,12 @@ def main():
                 fh.write("\n")
             m.texture().save(tex_path)
             drawn.append(f"{design} ({len(m.cubes)} cubes, {len(m.palette)} colors)")
-        geo = json.load(open(geo_path, encoding="utf-8"))
-        tex = Image.open(tex_path).convert("RGBA")
         icon_path = os.path.join(ART, f"{design}.icon.png")
         if a.force or not os.path.exists(icon_path):
-            icon(geo, tex).save(icon_path)
+            model = geo_tex.load(design, geo_path, tex_path)
+            for w in model.warnings:
+                print(f"  경고 {design}: {w}")
+            icon(model).save(icon_path)
         # designs.json: 1인칭 자세 · 빛 알갱이
         type_ = design.split("_")[0]
         d = {"fp": dict(FP, scale=[FP_SCALE_DESIGN.get(design, FP_SCALE[type_])] * 3)}

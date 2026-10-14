@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""무기 3D 모델: 애드온 (베드락) 디자인 31종 + 12단계 새 무기 디자인 12종 (tools/weapon_art_more.py) → 자바 아이템 모델.
+"""무기 3D 모델: 애드온 (베드락) 디자인 31종 + 12단계 새 무기 디자인 20종 (tools/weapon_art_more.py) → 자바 아이템 모델.
 
   python3 tools/weapon_models.py --import <애드온 폴더>   # 원본을 tools/weapon_art 로 가져옴 (geo · 팔레트 텍스처 · 1인칭 자세 · 무기 → 디자인)
   python3 tools/weapon_models.py                         # tools/weapon_art → src/main/resources/assets/rpg (모델 · 텍스처 · 아이템 정의)
 
 만들어지는 것
-- textures/item/model/<디자인>.png        16×16 팔레트 (빛나는 칸 = 애드온 알파 102 → 불투명, 그 칸을 쓰는 상자는 light_emission 15)
-- models/item/model/<디자인>.json         상자 (애드온 weapon 뼈의 상자 그대로 — 모두 축 정렬 · 면마다 한 칸 색) + 손 자세 (display)
+- textures/item/model/<디자인>.png        텍스처 (애드온 16×16 팔레트 · 다듬은 큰 텍스처 모두 — 빛나는 칸 (알파 < 255, 애드온 102) 은 불투명으로,
+                                          상자 면 넓이의 절반 넘게 빛나면 그 상자는 light_emission 15)
+- models/item/model/<디자인>.json         상자 (weapon 뼈 · 그 아래 뼈의 상자 — 면 UV · 상자 UV · mirror · inflate, 회전은 한 축 22.5° 단위 · ±45°:
+                                          tools/geo_tex.py 가 읽음, 맞지 않는 회전은 경고) + 손 자세 (display). 자체 시험: tools/geo_tex_selftest.py
 - items/<무기 ID>.json                    인벤토리 · 땅 · 액자 = 아이콘, 손 = 3D 모델
 
 손 자세 (display) 는 애드온 화면과 같은 자리가 되도록 계산한다 (Blockbench 베드락 미리보기 규칙 — 애드온 generator/tools/attachable_emu.py 와 같은 값):
@@ -30,6 +32,9 @@ import sys
 
 import numpy as np
 from PIL import Image
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import geo_tex  # noqa: E402 — 베드락 무기 모델 읽기 (weapon_art_more · java_fx_art 와 같이 씀)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ART = os.path.join(ROOT, "tools", "weapon_art")
@@ -218,58 +223,68 @@ def display(R, s, t):
 
 
 def convert(design, meta, out_models, out_textures):
-    geo = json.load(open(os.path.join(ART, f"{design}.geo.json"), encoding="utf-8"))["minecraft:geometry"][0]
-    tex = Image.open(os.path.join(ART, f"{design}.png")).convert("RGBA")
+    m = geo_tex.load(design, os.path.join(ART, f"{design}.geo.json"), os.path.join(ART, f"{design}.png"))
+    geo = m.geo
     wb = next(b for b in geo["bones"] if b["name"].lower() == "weapon")
     P = np.array(wb.get("pivot") or [0, 0, 0], float)
-    cubes = wb.get("cubes", [])
+    for w in m.warnings:
+        print(f"  경고 {design}: {w}")
 
     # 모델 좌표: local = to3(p) - to3(P) (three.js, 오른손 좌표계), m = k · local + C0 (상자 범위 안으로)
     lo = np.full(3, 1e9)
     hi = np.full(3, -1e9)
     boxes = []
-    for c in cubes:
-        o = np.array(c["origin"], float)
-        sz = np.array(c["size"], float)
-        a = to3(o) - to3(P)
-        b = to3(o + sz) - to3(P)
+    for c in m.cubes:
+        a = to3(np.array(c.lo, float)) - to3(P)
+        b = to3(np.array(c.hi, float)) - to3(P)
         f, t = np.minimum(a, b), np.maximum(a, b)
         lo, hi = np.minimum(lo, f), np.maximum(hi, t)
-        boxes.append((f, t, c["uv"]))
+        boxes.append((f, t, c))
     extent = float(np.max(hi - lo))
     room = EXTENT_MAX - EXTENT_MIN - 0.5
     k = min(1.0, room / extent)
     C0 = 8.0 - k * (lo + hi) / 2  # 상자 묶음 가운데를 모델 가운데 (8, 8, 8) 에
 
-    # 텍스처: 쓰는 칸만 불투명 (빛나는 칸도 색 그대로 불투명)
-    used = set()
-    glow = set()
-    for _, _, uv in boxes:
-        for face in uv.values():
-            u, v = (int(x) for x in face["uv"])
-            used.add((u, v))
-            if tex.getpixel((u, v))[3] == GLOW_ALPHA:
-                glow.add((u, v))
+    # 텍스처: 팔레트 (면마다 한 칸 — 애드온 · 임시 디자인) 는 쓰는 칸만 불투명, 다듬은 텍스처는 보이는 픽셀 모두 불투명 (빛나는 칸도 색 그대로)
+    tex = m.tex
+    palette = m.palette
     out_tex = Image.new("RGBA", tex.size, (0, 0, 0, 0))
-    for (u, v) in used:
-        r, g, b, a = tex.getpixel((u, v))
-        out_tex.putpixel((u, v), (r, g, b, 255))
+    if palette:
+        for c in m.cubes:
+            for u, v, _, _ in c.faces.values():
+                r, g, b, a = m.pixel(u, v)
+                out_tex.putpixel((int(u * tex.size[0] / m.tw), int(v * tex.size[1] / m.th)), (r, g, b, 255))
+    else:
+        px = tex.load()
+        dst = out_tex.load()
+        for y in range(tex.size[1]):
+            for x in range(tex.size[0]):
+                r, g, b, a = px[x, y]
+                if a > 0:
+                    dst[x, y] = (r, g, b, 255)
     out_tex.save(os.path.join(out_textures, f"{design}.png"))
 
+    su, sv = 16.0 / m.tw, 16.0 / m.th  # UV 단위 → 자바 모델 UV (0 ~ 16)
     elements = []
-    for f, t, uv in boxes:
+    for f, t, c in boxes:
         mf = k * f + C0
         mt = k * t + C0
         assert np.all(mf >= EXTENT_MIN - 1e-6) and np.all(mt <= EXTENT_MAX + 1e-6), (design, mf, mt)
         faces = {}
-        emits = False
-        for name, face in uv.items():
-            u, v = (int(x) for x in face["uv"])
-            if (u, v) in glow:
-                emits = True
-            faces[name] = {"uv": [u + 0.25, v + 0.25, u + 0.75, v + 0.75], "texture": "#0"}
+        for name, (u, v, w, h) in c.faces.items():
+            if palette:  # 한 칸의 가운데 (가장자리 번짐 없이)
+                uv = [u + 0.25, v + 0.25, u + 0.75, v + 0.75]
+            else:
+                uv = [u, v, u + w, v + h]
+            nd = 4 if palette else 6  # 큰 텍스처는 칸 경계가 어긋나지 않게 더 자세히
+            faces[name] = {"uv": [round(uv[0] * su, nd), round(uv[1] * sv, nd), round(uv[2] * su, nd), round(uv[3] * sv, nd)], "texture": "#0"}
         el = {"from": [round(float(x), 4) for x in mf], "to": [round(float(x), 4) for x in mt], "faces": faces}
-        if emits:
+        if c.rot is not None:
+            axis, ang, piv = c.rot
+            three_ang = {"x": -ang, "y": -ang, "z": ang}[axis]  # 베드락 → three.js (x 반전 — Bone.rest_rot 과 같은 규칙)
+            o = k * (to3(np.array(piv, float)) - to3(P)) + C0
+            el["rotation"] = {"origin": [round(float(x), 4) for x in o], "axis": axis, "angle": three_ang, "rescale": False}
+        if m.glow_fraction(c) >= 0.5:
             el["light_emission"] = 15
         elements.append(el)
 
@@ -304,9 +319,8 @@ def convert(design, meta, out_models, out_textures):
 
     # 빛 알갱이 자리 (weapon 뼈의 fx 위치) — 상자와 같은 규칙으로 옮김
     fx = None
-    loc = (wb.get("locators") or {}).get("fx")
+    loc = m.fx
     if loc is not None:
-        assert isinstance(loc, list) and len(loc) == 3, design
         local_l = to3(np.array(loc, float)) - to3(P)
         m_l = k * local_l + C0
         # 1인칭: 자바 카메라 공간 (블록 — 오른쪽 +x · 위 +y · 앞 -z), 오른손 · 휘두르기 없음 — 자바가 그리는 순서 (손 자리 → display → -0.5 → 모델 / 16)
@@ -323,7 +337,7 @@ def convert(design, meta, out_models, out_textures):
 
     model = {
         "credit": f"MMO RPG — 애드온 디자인 {design} (tools/weapon_models.py 가 만듦, 손으로 고치지 않음)",
-        "texture_size": [16, 16],
+        "texture_size": [int(m.tw) if float(m.tw).is_integer() else m.tw, int(m.th) if float(m.th).is_integer() else m.th],
         "textures": {"0": f"rpg:item/model/{design}", "particle": f"rpg:item/model/{design}"},
         "elements": elements,
         "display": {

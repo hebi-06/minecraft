@@ -15,8 +15,12 @@
 import json
 import math
 import os
+import sys
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import geo_tex  # noqa: E402 — 베드락 무기 모델 읽기
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ART = os.path.join(ROOT, "tools", "weapon_art")
@@ -108,51 +112,70 @@ def shrink(img, size):
 # ------------------------------------------------------------ 무기 그림 (모델 옆모습)
 
 def load_model(design):
-    geo = json.load(open(os.path.join(ART, f"{design}.geo.json"), encoding="utf-8"))["minecraft:geometry"][0]
-    tex = Image.open(os.path.join(ART, f"{design}.png")).convert("RGBA")
-    cubes = [c for b in geo["bones"] if b["name"].lower() == "weapon" for c in b.get("cubes", [])]
-    out = []
-    for c in cubes:
-        face = c["uv"]["north"] if isinstance(c.get("uv"), dict) else None
-        u, v = face["uv"] if face else (0, 0)
-        out.append((c["origin"], c["size"], tex.getpixel((int(u), int(v)))))
-    return out
+    """무기 모델 (geo_tex.Model — 팔레트 · 다듬은 텍스처 모두)"""
+    m = geo_tex.load(design, os.path.join(ART, f"{design}.geo.json"), os.path.join(ART, f"{design}.png"))
+    for w in m.warnings:
+        print(f"  경고 {design}: {w}")
+    return m
 
 
-def side_view(cubes, px):
-    """옆모습 (x 축으로 봄): 가로 = y (끝이 오른쪽), 세로 = z — px = 모델 1칸의 점 수. (그림, 빛 색)"""
-    ys = [o[1] for o, s, c in cubes] + [o[1] + s[1] for o, s, c in cubes]
-    zs = [o[2] for o, s, c in cubes] + [o[2] + s[2] for o, s, c in cubes]
+def side_view(m, px):
+    """옆모습 (x 축으로 봄): 가로 = y (끝이 오른쪽), 세로 = z — px = 모델 1칸의 점 수. (그림, 빛 색).
+    팔레트 모델은 상자마다 한 색, 다듬은 텍스처는 보이는 면 (west) 의 그 자리 픽셀"""
+    cubes = m.cubes
+    ys = [c.lo[1] for c in cubes] + [c.hi[1] for c in cubes]
+    zs = [c.lo[2] for c in cubes] + [c.hi[2] for c in cubes]
     y0, y1, z0, z1 = min(ys), max(ys), min(zs), max(zs)
     w, h = int(math.ceil((y1 - y0) * px)) + 2, int(math.ceil((z1 - z0) * px)) + 2
     img = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     glow_sum = [0.0, 0.0, 0.0, 0.0]
-    for o, s, c in sorted(cubes, key=lambda q: q[0][0] + q[1][0]):
-        r, g, b, a = c
+    palette = m.palette
+
+    def lit(col):
+        r, g, b, a = col
         if a < 255:
-            glow_sum = [glow_sum[0] + r, glow_sum[1] + g, glow_sum[2] + b, glow_sum[3] + 1]
+            glow_sum[0] += r
+            glow_sum[1] += g
+            glow_sum[2] += b
+            glow_sum[3] += 1
             r, g, b = (min(255, int(x * 1.1 + 30)) for x in (r, g, b))
-        u0 = 1 + (o[1] - y0) * px
-        u1 = 1 + (o[1] + s[1] - y0) * px
-        v0 = 1 + (z1 - (o[2] + s[2])) * px
-        v1 = 1 + (z1 - o[2]) * px
-        d.rectangle([u0, v0, u1 - 1, v1 - 1], fill=(r, g, b, 255))
+        return r, g, b, 255
+
+    for c in sorted(cubes, key=lambda q: q.hi[0]):
+        u0 = 1 + (c.lo[1] - y0) * px
+        u1 = 1 + (c.hi[1] - y0) * px
+        v0 = 1 + (z1 - c.hi[2]) * px
+        v1 = 1 + (z1 - c.lo[2]) * px
+        if palette:
+            col = m.side_color(c, (c.lo[1] + c.hi[1]) / 2, (c.lo[2] + c.hi[2]) / 2)
+            if col is None:
+                continue
+            d.rectangle([u0, v0, u1 - 1, v1 - 1], fill=lit(col))
+            continue
+        for yy in range(int(math.floor(v0)), int(math.ceil(v1))):
+            for xx in range(int(math.floor(u0)), int(math.ceil(u1))):
+                if not (0 <= xx < w and 0 <= yy < h):
+                    continue
+                col = m.side_color(c, y0 + (xx + 0.5 - 1) / px, z1 - (yy + 0.5 - 1) / px)
+                if col is None or col[3] == 0:
+                    continue
+                img.putpixel((xx, yy), lit(col))
     glow = tuple(x / glow_sum[3] for x in glow_sum[:3]) if glow_sum[3] else (255, 240, 200)
     return img, glow
 
 
 def relic_cell(design, cw, ch, diagonal):
-    cubes = load_model(design)
-    ys = [o[1] for o, s, c in cubes] + [o[1] + s[1] for o, s, c in cubes]
-    zs = [o[2] for o, s, c in cubes] + [o[2] + s[2] for o, s, c in cubes]
+    m = load_model(design)
+    ys = [c.lo[1] for c in m.cubes] + [c.hi[1] for c in m.cubes]
+    zs = [c.lo[2] for c in m.cubes] + [c.hi[2] for c in m.cubes]
     length, width = max(ys) - min(ys), max(zs) - min(zs)
     ss = 4
     if diagonal:
         px = min((cw * 0.84 * ss) / length, (cw * 0.5 * ss) / max(1, width))
     else:
         px = min((cw - 24) * ss / length, (ch - 24) * ss / max(1, width))
-    img, glow = side_view(cubes, px)
+    img, glow = side_view(m, px)
     if diagonal:
         img = img.rotate(45, resample=Image.BICUBIC, expand=True)
     canvas = Image.new("RGBA", (cw * ss, ch * ss), (0, 0, 0, 0))
