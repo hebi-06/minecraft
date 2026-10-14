@@ -51,7 +51,7 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             new String[] {"axe_rare_lv0", "rpg:axe_l40_rare"},
             new String[] {"axe_noble_lv0", "rpg:axe_l40_noble"},
             new String[] {"axe_hero_lv0", "rpg:axe_l40_hero"},
-            new String[] {"spear_transcend_lv0", "rpg:axe_l40_transcend"},
+            new String[] {"axe_transcend_lv0", "rpg:axe_l40_transcend"},
             new String[] {"greatsword_transcend_lv0", "rpg:greatsword_l40_transcend"},
             new String[] {"shield_lv0", "rpg:shield_l40_common"},
             new String[] {"shield_rare_lv0", "rpg:shield_l40_rare"},
@@ -165,7 +165,7 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             {"rpg:dagger_l40_hero", "dagger_hero"},
             {"rpg:axe_l40_hero", "axe_hero"},
             {"rpg:shield_l40_hero", "shield_hero"},
-            {"rpg:axe_l40_transcend", "spear_transcend"},
+            {"rpg:axe_l40_transcend", "axe_transcend"},
             {"rpg:greatsword_l40_transcend", "greatsword_transcend"},
         };
         for (String[] w : weapons) {

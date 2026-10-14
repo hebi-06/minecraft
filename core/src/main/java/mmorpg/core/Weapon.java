@@ -14,8 +14,8 @@ import java.util.List;
  * @param scaling    stats that raise damage (damage multiplier = 1 + Σ stat × per)
  * @param title      design name (WEAPON_NAMES) or "<grade> <type>"
  * @param name       colored display name for dark backgrounds, {@code darkName} for light ones
- * @param typeLabel  type word on the first lore line (궁니르: "창")
- * @param look       alternative slash effect (궁니르: "spear") or null
+ * @param typeLabel  type word on the first lore line (add-on rules LOOK — 궁니르: "창"; the Java overlay clears it for 반고의 도끼)
+ * @param look       alternative slash effect (add-on rules LOOK — 궁니르: "spear") or null
  * @param legacy     a combination from older versions: still works, cannot be obtained anew
  * @param skills     the two SKILLS of a current-rule transcend weapon, the one HERO_SKILLS skill of a current-rule hero
  *                   weapon (Java overlay — stage 10), else null

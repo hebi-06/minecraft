@@ -39,7 +39,7 @@ BASIC_LEVELS = [0, 5, 10, 15, 20, 30, 40]
 GRADES = {"common": BASIC_LEVELS, "rare": BASIC_LEVELS, "noble": [10, 20], "hero": [30, 35, 40], "transcend": [40]}
 # 1인칭 자세: 칼 · 도끼 · 궁니르와 같은 손잡이 자리 (애드온 FP — 긴 무기는 1인칭에서만 줄임)
 FP = {"rotation": [64.9, -2.4, 3.0], "position": [3.14, 3.87, 0.89]}
-FP_SCALE = {"lance": 0.68, "scythe": 0.72, "hammer": 0.9, "scepter": 0.85}
+FP_SCALE = {"lance": 0.68, "scythe": 0.72, "hammer": 0.9, "scepter": 0.85, "axe": 0.72}
 # 머리가 큰 디자인은 1인칭에서 화면 오른쪽을 덜 가리게 작게 (사진첩 weapons12 로 봄)
 FP_SCALE_DESIGN = {"hammer_hero_lv0": 0.8, "hammer_transcend_lv0": 0.74}
 
@@ -704,6 +704,72 @@ def scepter_rare():
     return m
 
 
+# ------------------------------------------------------------ 도끼 초월 (13단계 정리 — 궁니르 (창 모양) → 반고의 도끼)
+
+def axe_transcend():
+    """반고의 도끼: 하늘과 땅을 가른 도끼 (중국 신화). 앞 (-z) 으로 큰 초승달 날 — 위 절반은 하늘 (옥빛), 아래 절반은 땅 (청동 · 황토),
+    그 사이로 갈라진 금빛 틈 (빛남). 뒤 (+z) 는 청동 뿔, 자루는 옻칠한 나무 · 청동 고리 · 녹청"""
+    m = Model("axe_transcend_lv0")
+    lacquer, lacquer_d = m.col((54, 34, 30)), m.col((34, 22, 20))
+    bronze, bronze_d, bronze_l = m.col((178, 122, 54)), m.col((122, 80, 36)), m.col((222, 170, 96))
+    patina, patina_l = m.col((82, 146, 120)), m.col((132, 196, 166))
+    jade, jade_l, jade_d = m.col((150, 206, 190)), m.col((204, 240, 226)), m.col((104, 160, 146))
+    cloud = m.col((240, 252, 248))
+    earth, earth_d, ochre = m.col((150, 96, 44)), m.col((98, 60, 28)), m.col((214, 156, 82))
+    seam, seam_core = m.col((255, 196, 84), True), m.col((255, 240, 186), True)
+    amber = m.col((255, 170, 60), True)
+    # 자루 (아래 청동 뭉치 · 손잡이 감개 · 청동 고리)
+    m.rod(-1.5, 1.5, 2.8, bronze_d)
+    m.box(CX - 1.6, CX + 1.6, -0.6, 0.6, -1.6, 1.6, amber)
+    m.rod(1.5, 46, 2.0, lacquer)
+    for y in range(8, 18, 2):
+        m.rod(y, y + 1.0, 2.3, lacquer_d)
+    for y, c in ((3, bronze), (19, bronze), (24, patina), (27.5, bronze_d)):
+        m.rod(y, y + 1.0, 2.5, c)
+    # 날을 끼운 청동 목 (녹청 띠)
+    m.box(CX - 1.7, CX + 1.7, 30, 44, -2.2, 2.2, bronze)
+    for y in (31, 42.4):
+        m.box(CX - 1.9, CX + 1.9, y, y + 0.8, -2.4, 2.4, patina)
+    m.rod(44, 46.5, 2.6, bronze_d)
+    m.rod(46.5, 48, 1.8, bronze_l)
+    # 초승달 날 (z 칸마다 위 · 아래 끝, 하늘 · 땅이 갈라진 틈의 높이 — 틈은 갈라진 금처럼 칸마다 조금씩 오르내림)
+    blade = [  # (z0, z1, y0, y1, 틈)
+        (-2.2, -3, 33.4, 40.6, 37.0), (-3, -4, 32.8, 41.4, 37.5), (-4, -5, 32.0, 42.2, 36.6), (-5, -6, 31.2, 43.0, 37.5),
+        (-6, -7, 30.4, 43.8, 36.5), (-7, -8, 29.6, 44.6, 37.4), (-8, -9, 28.8, 45.4, 36.6), (-9, -10, 28.0, 46.2, 37.5),
+        (-10, -11, 27.2, 47.0, 36.6), (-11, -12, 26.6, 47.6, 37.4), (-12, -13, 26.1, 48.1, 36.6), (-13, -14, 25.8, 48.4, 37.2),
+    ]
+    t = 1.2
+    for z0, z1, y0, y1, s in blade:
+        m.plate(s + 0.5, y1, z1, z0, t, jade)  # 하늘 (위)
+        m.plate(y0, s - 0.5, z1, z0, t, earth)  # 땅 (아래)
+        m.plate(s - 0.5, s + 0.5, z1, z0, t + 0.15, seam)  # 갈라진 틈 (빛남 — 칸마다 오르내려 금처럼)
+        m.plate(s - 0.18, s + 0.18, z1, z0, t + 0.3, seam_core)  # 틈 한가운데 심지
+        m.plate(y1 - 0.6, y1, z1, z0, t + 0.1, jade_d)  # 위 가장자리
+        m.plate(y0, y0 + 0.6, z1, z0, t + 0.1, earth_d)  # 아래 가장자리
+    # 틈은 머리를 가로질러 뒤 뿔까지 (청동 목을 두르는 빛 띠)
+    m.box(CX - 1.95, CX + 1.95, 36.55, 37.45, -2.45, 2.45, seam)
+    m.box(CX - 1.0, CX + 1.0, 36.75, 37.25, 2.2, 6.8, seam)
+    # 날 끝 (벼린 날): 하늘 쪽은 흰 옥, 땅 쪽은 황토빛 — 위 · 아래 끝은 갈고리처럼 휨
+    m.plate(37.5, 48.6, -14.8, -14, 0.8, cloud)
+    m.plate(25.6, 36.6, -14.8, -14, 0.8, ochre)
+    m.plate(48.4, 50.0, -13.6, -12.4, 0.9, cloud)
+    m.plate(49.4, 50.6, -12.4, -11.4, 0.8, jade_l)
+    m.plate(24.2, 25.8, -13.6, -12.4, 0.9, ochre)
+    m.plate(23.4, 24.6, -12.4, -11.4, 0.8, earth_d)
+    # 하늘 쪽 구름 무늬 · 땅 쪽 산줄기 무늬 (날 면에서 조금 도드라짐)
+    for z0, z1, y0, y1 in ((-5, -8, 40.6, 41.4), (-6.5, -7.5, 41.4, 42.4), (-9, -12, 43.2, 44.0), (-10.5, -11.5, 44.0, 45.0), (-3.5, -5.5, 38.6, 39.3)):
+        m.plate(y0, y1, z1, z0, t + 0.3, cloud)
+    for z0, z1, y0, y1 in ((-4, -9, 32.6, 33.3), (-6, -7.5, 33.3, 34.6), (-8, -12.5, 29.6, 30.3), (-10, -11.5, 30.3, 31.8), (-12.5, -13.5, 28.0, 28.7)):
+        m.plate(y0, y1, z1, z0, t + 0.3, earth_d)
+    # 뒤 (+z) 청동 뿔 (녹청 위 끝)
+    for z0, z1, y0, y1, c in ((2.2, 3.4, 34.8, 39.2, bronze), (3.4, 4.6, 35.4, 38.6, bronze), (4.6, 5.8, 36.0, 38.0, bronze_d),
+                              (5.8, 6.8, 36.5, 37.5, patina_l)):
+        m.box(CX - 0.9, CX + 0.9, y0, y1, z0, z1, c)
+    m.box(CX - 1.0, CX + 1.0, 38.6, 39.2, 2.2, 3.6, patina)
+    m.fx = [CX, 37, -8]
+    return m
+
+
 DESIGNS = {
     "lance_lv0": lance_common, "lance_rare_lv0": lance_rare, "scythe_lv0": scythe_common, "scythe_rare_lv0": scythe_rare,
     "hammer_lv0": hammer_common, "hammer_rare_lv0": hammer_rare, "scepter_lv0": scepter_common, "scepter_rare_lv0": scepter_rare,
@@ -711,13 +777,17 @@ DESIGNS = {
     "scythe_noble_lv0": scythe_noble, "scythe_hero_lv0": scythe_hero, "scythe_transcend_lv0": scythe_transcend,
     "hammer_noble_lv0": hammer_noble, "hammer_hero_lv0": hammer_hero, "hammer_transcend_lv0": hammer_transcend,
     "scepter_noble_lv0": scepter_noble, "scepter_hero_lv0": scepter_hero, "scepter_transcend_lv0": scepter_transcend,
+    "axe_transcend_lv0": axe_transcend,
 }
+# 도끼 초월 (반고의 도끼) 이 대신하는 옛 디자인 (궁니르 — 창 모양): designs.json 에서 빼고 무기 ID 를 새 디자인으로
+REPLACED = {"spear_transcend_lv0": "axe_transcend_lv0"}
 # 영웅 · 초월 무기 빛 알갱이 색 (애드온 weapon_fx 와 같은 값 — 들고 있는 동안 fx 자리에서)
 FX_COLORS = {
     "lance_hero_lv0": [[1.0, 0.25, 0.25]], "lance_transcend_lv0": [[1.0, 0.92, 0.55], [0.65, 0.95, 1.0]],
     "scythe_hero_lv0": [[0.8, 0.7, 1.0]], "scythe_transcend_lv0": [[0.45, 0.9, 1.0], [1.0, 0.85, 0.45]],
     "hammer_hero_lv0": [[0.45, 1.0, 0.45], [0.7, 0.4, 1.0]], "hammer_transcend_lv0": [[0.6, 0.82, 1.0], [0.92, 0.97, 1.0]],
     "scepter_hero_lv0": [[1.0, 0.85, 0.4], [0.8, 0.88, 1.0]], "scepter_transcend_lv0": [[1.0, 0.72, 0.25], [1.0, 0.95, 0.75]],
+    "axe_transcend_lv0": [[1.0, 0.76, 0.32], [0.62, 0.95, 0.82]],
 }
 
 
@@ -820,6 +890,12 @@ def main():
         for g, levels in GRADES.items():
             for lv in levels:
                 meta["weapons"][f"rpg:{t}_l{lv}_{g}"] = design_of(t, g)
+    # 바뀐 디자인 (궁니르 → 반고의 도끼): 옛 디자인을 쓰던 무기 ID 를 새 디자인으로, 옛 디자인은 뺌
+    for old, new in REPLACED.items():
+        for wid, des in list(meta["weapons"].items()):
+            if des == old:
+                meta["weapons"][wid] = new
+        meta["designs"].pop(old, None)
     meta["designs"] = dict(sorted(meta["designs"].items()))
     meta["weapons"] = dict(sorted(meta["weapons"].items()))
     with open(meta_path, "w", encoding="utf-8") as fh:
@@ -842,6 +918,15 @@ def main():
                     with open(item_path, "w", encoding="utf-8") as fh:
                         json.dump({"model": {"type": "minecraft:model", "model": f"rpg:item/{wid}"}}, fh, indent=2)
                         fh.write("\n")
+                n += 1
+    # 바뀐 디자인을 쓰는 다른 종류 무기 (도끼 초월): 가방 아이콘만 새 디자인으로 (아이콘 모델 · 아이템 정의는 이미 있음)
+    for new in REPLACED.values():
+        ic = Image.open(os.path.join(ART, f"{new}.icon.png")).convert("RGBA")
+        for wid, des in meta["weapons"].items():
+            t, name = wid.split(":")[1].split("_l")[0], wid.split(":")[1]
+            path = os.path.join(ASSETS, "textures", "item", t, f"{name}.png")
+            if des == new and t not in TYPES and os.path.exists(path):
+                ic.save(path)
                 n += 1
     for line in drawn:
         print("drew", line)

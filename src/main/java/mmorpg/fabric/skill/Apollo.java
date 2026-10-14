@@ -181,7 +181,7 @@ final class Apollo {
         Tasks.later(total, () -> {
             if (!ok.getAsBoolean()) return;
             Vec3 top = V.up(c, sky);
-            Gungnir.beamAway(level, sp.getEyePosition(), top, V.up(c, 0.5), glow, Opt.of("half", 0.7, "thick", 0.7, "life", 0.4, "gap", 1.0));
+            SkillFx.beamAway(level, sp.getEyePosition(), top, V.up(c, 0.5), glow, Opt.of("half", 0.7, "thick", 0.7, "life", 0.4, "gap", 1.0));
             // 태양 폭발: 해는 머리 위에서 터지고 (쓴 사람의 눈을 덮지 않게) 성역 둘레에 불기둥 고리 · 땅의 고리 — 1인칭에서는 앞의 불기둥 · 고리가 보임
             sunFx(level, V.up(c, Math.min(sky, 4.5)), 3.4, 0.35, core, core, 1.0);
             RuneKit.novaRing(level, c, r * 0.3, 2.4, glow, core, Opt.of("life", 0.55));

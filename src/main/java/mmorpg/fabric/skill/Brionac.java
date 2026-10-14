@@ -274,8 +274,8 @@ final class Brionac {
         double len = Math.max(1, Kit.rayDist(level, from, dir, k.num("beam")));
         Vec3 end = V.add(from, dir, len);
         // 빛줄기 (금빛 굵게 + 흰 심지) + 나선 (빛 알갱이 두 줄이 감음) + 큰 빛의 창이 끝까지 날아감
-        Gungnir.beamAway(level, eye, from, end, glow, Opt.of("half", 0.5, "thick", 0.55, "life", 0.4, "sweep", 0.1, "gap", 0.8));
-        Gungnir.beamAway(level, eye, from, end, core, Opt.of("half", 0.45, "thick", 0.18, "life", 0.35, "sweep", 0.1, "gap", 0.8));
+        SkillFx.beamAway(level, eye, from, end, glow, Opt.of("half", 0.5, "thick", 0.55, "life", 0.4, "sweep", 0.1, "gap", 0.8));
+        SkillFx.beamAway(level, eye, from, end, core, Opt.of("half", 0.45, "thick", 0.18, "life", 0.35, "sweep", 0.1, "gap", 0.8));
         Vec3 side = V.unit(V.cross(dir, Math.abs(dir.y) > 0.95 ? new Vec3(1, 0, 0) : V.UP));
         Vec3 up = V.unit(V.cross(side, dir));
         for (double s = 1.6; s < len; s += 0.45) {

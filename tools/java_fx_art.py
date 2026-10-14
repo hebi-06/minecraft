@@ -6,9 +6,9 @@
 
 그림 (모두 미리 칠한 색 — 서버가 색을 [1, 1, 1] 로 주면 그대로, 시계 · 뱀은 빛 · 심지를 흰색으로 그려 색을 입힘)
 - rfx_spiritking  정령왕 강림의 거대한 정령왕 (512×512 × 4장: 팔을 내림 → 반쯤 → 듦 → 든 채 빛남) — 네 원소 색 몸 · 원소 왕관 · 빛 날개
-- rfx_relic       새 무기 8종을 모델 옆모습으로 (512×128 × 8칸 — 끝이 오른쪽, 날아가는 방향으로 눕는 그림: 던지는 창 · 망치 · 낫)
-- rfx_relicspin   같은 무기를 비스듬히 (256×256 × 8칸 — 도는 그림: 묠니르 · 거대한 낫)
-                  칸 순서 = RELIC (창 초월 · 창 영웅 · 낫 초월 · 낫 영웅 · 망치 초월 · 망치 영웅 · 홀 초월 · 홀 영웅) — 모델을 바꾸면 이 스크립트를 다시 돌리면 따라 바뀜
+- rfx_relic       무기 9종을 모델 옆모습으로 (512×128 × 9칸 — 끝이 오른쪽, 날아가는 방향으로 눕는 그림: 던지는 창 · 망치 · 낫)
+- rfx_relicspin   같은 무기를 비스듬히 (256×256 × 9칸 — 도는 그림: 묠니르 · 거대한 낫 · 반고의 도끼)
+                  칸 순서 = RELIC (창 초월 · 창 영웅 · 낫 초월 · 낫 영웅 · 망치 초월 · 망치 영웅 · 홀 초월 · 홀 영웅 · 도끼 초월) — 모델을 바꾸면 이 스크립트를 다시 돌리면 따라 바뀜
 - rfx_clock       크로노스의 시계 (256×256 × 8칸: 시계판 빛 · 심지, 시침 빛 · 심지, 분침 빛 · 심지, 톱니 빛 · 심지 — 바늘은 가운데에서 위로, 돌리면 됨)
 - rfx_serpent     카두케우스의 빛의 뱀 (256×128 × 8칸: 꿈틀거림 빛 4장 · 심지 4장 — 머리가 오른쪽)
 """
@@ -29,7 +29,7 @@ TEX = os.path.join(OUT, "textures", "particle", "rpg", "fx")
 PART = os.path.join(OUT, "particles", "rpg", "fx")
 
 RELIC = ["lance_transcend_lv0", "lance_hero_lv0", "scythe_transcend_lv0", "scythe_hero_lv0", "hammer_transcend_lv0", "hammer_hero_lv0",
-         "scepter_transcend_lv0", "scepter_hero_lv0"]
+         "scepter_transcend_lv0", "scepter_hero_lv0", "axe_transcend_lv0"]  # 칸 8 = 반고의 도끼 (궁니르 자리 — 던지는 · 떨어지는 도끼)
 GLOW_ALPHA = 102
 
 
@@ -187,12 +187,12 @@ def relic_cell(design, cw, ch, diagonal):
 
 def relic_sheets():
     cw, ch = 512, 128
-    sheet = Image.new("RGBA", (cw * 2, ch * 4), (0, 0, 0, 0))
+    sheet = Image.new("RGBA", (cw * 2, ch * ((len(RELIC) + 1) // 2)), (0, 0, 0, 0))
     for i, d in enumerate(RELIC):
         sheet.alpha_composite(relic_cell(d, cw, ch, False), ((i % 2) * cw, (i // 2) * ch))
     save("rfx_relic", sheet, cw, ch, "lookat_direction")
     c2 = 256
-    sheet = Image.new("RGBA", (c2 * 4, c2 * 2), (0, 0, 0, 0))
+    sheet = Image.new("RGBA", (c2 * 4, c2 * ((len(RELIC) + 3) // 4)), (0, 0, 0, 0))
     for i, d in enumerate(RELIC):
         sheet.alpha_composite(relic_cell(d, c2, c2, True), ((i % 4) * c2, (i // 4) * c2))
     save("rfx_relicspin", sheet, c2, c2, "rotate_xyz")

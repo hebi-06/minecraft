@@ -76,6 +76,51 @@
     ]
    }
   },
+  "axe_transcend_lv0": {
+   "fp": {
+    "rotation": [
+     64.9,
+     -2.4,
+     3.0
+    ],
+    "position": [
+     3.14,
+     3.87,
+     0.89
+    ],
+    "scale": [
+     0.72,
+     0.72,
+     0.72
+    ]
+   },
+   "fx": {
+    "rate": 10.0,
+    "max": 24,
+    "radius": 0.18,
+    "speed": 0.15,
+    "life": 0.9,
+    "accel": 1.4,
+    "drag": 1.0,
+    "size": 0.05,
+    "texture": "minecraft:generic_0",
+    "cuts": [
+     0.5
+    ],
+    "colors": [
+     [
+      1.0,
+      0.76,
+      0.32
+     ],
+     [
+      0.62,
+      0.95,
+      0.82
+     ]
+    ]
+   }
+  },
   "bow_hero_lv0": {
    "fp": {
     "rotation": [
@@ -1035,44 +1080,6 @@
     ]
    }
   },
-  "spear_transcend_lv0": {
-   "fp": {
-    "rotation": [
-     64.9,
-     -2.4,
-     3.0
-    ],
-    "position": [
-     3.14,
-     3.87,
-     0.89
-    ],
-    "scale": [
-     0.72,
-     0.72,
-     0.72
-    ]
-   },
-   "fx": {
-    "rate": 10.0,
-    "max": 24,
-    "radius": 0.156,
-    "speed": 0.15,
-    "life": 0.9,
-    "accel": 0.8,
-    "drag": 1.0,
-    "size": 0.05,
-    "texture": "minecraft:generic_0",
-    "cuts": [],
-    "colors": [
-     [
-      0.561,
-      0.831,
-      1.0
-     ]
-    ]
-   }
-  },
   "staff_hero_lv0": {
    "fp": {
     "rotation": [
@@ -1305,38 +1312,38 @@
   "rpg:axe_l0_hero": "axe_hero_lv0",
   "rpg:axe_l0_noble": "axe_noble_lv0",
   "rpg:axe_l0_rare": "axe_rare_lv0",
-  "rpg:axe_l0_transcend": "spear_transcend_lv0",
+  "rpg:axe_l0_transcend": "axe_transcend_lv0",
   "rpg:axe_l10_common": "axe_lv0",
   "rpg:axe_l10_hero": "axe_hero_lv0",
   "rpg:axe_l10_noble": "axe_noble_lv0",
   "rpg:axe_l10_rare": "axe_rare_lv0",
-  "rpg:axe_l10_transcend": "spear_transcend_lv0",
+  "rpg:axe_l10_transcend": "axe_transcend_lv0",
   "rpg:axe_l15_common": "axe_lv0",
   "rpg:axe_l15_hero": "axe_hero_lv0",
   "rpg:axe_l15_noble": "axe_noble_lv0",
   "rpg:axe_l15_rare": "axe_rare_lv0",
-  "rpg:axe_l15_transcend": "spear_transcend_lv0",
+  "rpg:axe_l15_transcend": "axe_transcend_lv0",
   "rpg:axe_l20_common": "axe_lv0",
   "rpg:axe_l20_hero": "axe_hero_lv0",
   "rpg:axe_l20_noble": "axe_noble_lv0",
   "rpg:axe_l20_rare": "axe_rare_lv0",
-  "rpg:axe_l20_transcend": "spear_transcend_lv0",
+  "rpg:axe_l20_transcend": "axe_transcend_lv0",
   "rpg:axe_l30_common": "axe_lv0",
   "rpg:axe_l30_hero": "axe_hero_lv0",
   "rpg:axe_l30_noble": "axe_noble_lv0",
   "rpg:axe_l30_rare": "axe_rare_lv0",
-  "rpg:axe_l30_transcend": "spear_transcend_lv0",
+  "rpg:axe_l30_transcend": "axe_transcend_lv0",
   "rpg:axe_l35_hero": "axe_hero_lv0",
   "rpg:axe_l40_common": "axe_lv0",
   "rpg:axe_l40_hero": "axe_hero_lv0",
   "rpg:axe_l40_noble": "axe_noble_lv0",
   "rpg:axe_l40_rare": "axe_rare_lv0",
-  "rpg:axe_l40_transcend": "spear_transcend_lv0",
+  "rpg:axe_l40_transcend": "axe_transcend_lv0",
   "rpg:axe_l5_common": "axe_lv0",
   "rpg:axe_l5_hero": "axe_hero_lv0",
   "rpg:axe_l5_noble": "axe_noble_lv0",
   "rpg:axe_l5_rare": "axe_rare_lv0",
-  "rpg:axe_l5_transcend": "spear_transcend_lv0",
+  "rpg:axe_l5_transcend": "axe_transcend_lv0",
   "rpg:bow_l0_common": "bow_lv0",
   "rpg:bow_l0_hero": "bow_hero_lv0",
   "rpg:bow_l0_noble": "bow_noble_lv0",

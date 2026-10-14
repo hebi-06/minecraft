@@ -83,6 +83,30 @@ public final class SkillFx {
         }
     }
 
+    /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게) — 반고의 도끼 · 브류나크 · 아폴론 (예전 궁니르에서 옮김) */
+    public static void beamAway(ServerLevel level, Vec3 eye, Vec3 a, Vec3 b, double[] color, Opt o, double near) {
+        Vec3 d = V.sub(b, a);
+        double len = V.len(d);
+        if (len < 0.05) return;
+        Vec3 u = V.unit(d);
+        double t0 = 0;
+        double t1 = len;
+        // 선에서 눈까지 near 칸 안인 구간을 잘라냄 (앞쪽이나 뒤쪽 한쪽만 남김)
+        Vec3 w = V.sub(eye, a);
+        double tc = V.dot(w, u);
+        double off2 = V.dot(w, w) - tc * tc;
+        if (off2 < near * near) {
+            double hw = Math.sqrt(near * near - off2);
+            if (tc - hw <= 0) t0 = Math.max(t0, tc + hw);
+            else t1 = Math.min(t1, tc - hw);
+        }
+        if (t1 - t0 > 0.3) beam(level, V.add(a, u, t0), V.add(a, u, t1), color, o);
+    }
+
+    public static void beamAway(ServerLevel level, Vec3 eye, Vec3 a, Vec3 b, double[] color, Opt o) {
+        beamAway(level, eye, a, b, color, o, 1.6);
+    }
+
     /** a → b 번개 (지그재그 선 조각). o: jag · thick · delay · life */
     public static void bolt(ServerLevel level, Vec3 a, Vec3 b, double[] color, Opt o) {
         Vec3 d = V.sub(b, a);

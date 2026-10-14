@@ -18,6 +18,8 @@ public final class WeaponFxData {
 
     private static final Spec AXE_HERO_LV0 = new Spec("axe_hero_lv0", 0.7506F, 0.10847F, -1.54024F, -0.0625F, 0.1875F, -0.64952F,
             10.0F, 0.188F, 0.15F, 1.6F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFF8A2A});
+    private static final Spec AXE_TRANSCEND_LV0 = new Spec("axe_transcend_lv0", 0.5888F, 0.34175F, -1.93761F, -0.0625F, 0.24551F, -1.54904F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFFC252, 0x9EF2D1});
     private static final Spec BOW_HERO_LV0 = new Spec("bow_hero_lv0", 1.29425F, -0.34334F, -1.88163F, -0.0625F, 0.68628F, -0.0174F,
             10.0F, 0.313F, 0.15F, -0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x6DFF8E});
     private static final Spec BOW_TRANSCEND_LV0 = new Spec("bow_transcend_lv0", 1.26384F, -0.33639F, -1.87979F, -0.06281F, 0.67853F, -0.01643F,
@@ -48,8 +50,6 @@ public final class WeaponFxData {
             10.0F, 0.188F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFE27A});
     private static final Spec SHIELD_TRANSCEND_LV0 = new Spec("shield_transcend_lv0", 0.89167F, -0.50711F, -0.9357F, -0.3125F, 0.59375F, 0.0F,
             10.0F, 0.297F, 0.15F, 0.2F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x7FF5E0});
-    private static final Spec SPEAR_TRANSCEND_LV0 = new Spec("spear_transcend_lv0", 0.66357F, 0.95266F, -1.73171F, -0.0625F, -0.5625F, -1.94856F,
-            10.0F, 0.156F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x8FD4FF});
     private static final Spec STAFF_HERO_LV0 = new Spec("staff_hero_lv0", 0.9475F, 0.19842F, -1.72677F, -0.0625F, -0.33059F, -0.51562F,
             10.0F, 0.094F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x5DFFB0});
     private static final Spec STAFF_TRANSCEND_LV0 = new Spec("staff_transcend_lv0", 0.86732F, 0.97621F, -1.90317F, -0.0625F, -1.30487F, -1.07812F,
@@ -64,7 +64,7 @@ public final class WeaponFxData {
             Map.entry("axe_l30_hero", AXE_HERO_LV0),
             Map.entry("axe_l35_hero", AXE_HERO_LV0),
             Map.entry("axe_l40_hero", AXE_HERO_LV0),
-            Map.entry("axe_l40_transcend", SPEAR_TRANSCEND_LV0),
+            Map.entry("axe_l40_transcend", AXE_TRANSCEND_LV0),
             Map.entry("bow_l30_hero", BOW_HERO_LV0),
             Map.entry("bow_l35_hero", BOW_HERO_LV0),
             Map.entry("bow_l40_hero", BOW_HERO_LV0),

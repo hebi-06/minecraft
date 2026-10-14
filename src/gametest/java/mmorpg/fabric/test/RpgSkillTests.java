@@ -144,6 +144,49 @@ public final class RpgSkillTests {
         });
     }
 
+    // ------------------------------------------------------------ 반고의 도끼 (도끼 초월 — 예전 궁니르 자리, 수치는 같음)
+
+    @GameTest(maxTicks = 120)
+    public void panguReturnHitsTwice(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon w = transcend("axe");
+        hold(sp, w);
+        h.assertTrue(w.title().equals("반고의 도끼") && w.typeLabel().equals("도끼"), "axe transcend " + w.title() + " " + w.typeLabel());
+        h.assertTrue(Transcend.has("pangu_return") && Transcend.has("pangu_fall") && !Transcend.has("gungnir_return"), "pangu skills registered");
+        Obj k = w.skills().get(0);
+        Husk z = dummy(h, 1.5, 2, 5.5);
+        h.assertTrue(Transcend.castSkill(sp, w, 0), "cast");
+        double b = base(sp, w);
+        double c = w.critMult();
+        h.runAfterDelay(90, () -> {
+            h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("backMult")),
+                    "out + back " + TestDummies.dealt(z) + " vs " + (k.num("mult") + k.num("backMult")) * b);
+            done(h, sp);
+        });
+    }
+
+    @GameTest(maxTicks = 120)
+    public void panguFallCleavesAndAftershocks(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon w = transcend("axe");
+        hold(sp, w);
+        Obj k = w.skills().get(1);
+        Husk z = dummy(h, 1.5, 2, 6.5);
+        h.assertTrue(Transcend.castSkill(sp, w, 1), "cast");
+        double b = base(sp, w);
+        double c = w.critMult();
+        int delay = (int) k.num("delay");
+        h.runAfterDelay(delay + 3, () -> h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult")),
+                "cleave " + TestDummies.dealt(z) + " vs " + k.num("mult") * b));
+        h.runAfterDelay(delay + (int) (k.num("pulseGap") * k.num("pulses")) + 6, () -> {
+            h.assertTrue(hitsMatch(TestDummies.dealt(z), b, c, k.num("mult"), k.num("pulseMult"), k.num("pulseMult")),
+                    "cleave + aftershocks " + TestDummies.dealt(z) + " vs " + (k.num("mult") + 2 * k.num("pulseMult")) * b);
+            done(h, sp);
+        });
+    }
+
     @GameTest(maxTicks = 40)
     public void skillNumbersUseSkillStyle(GameTestHelper h) {
         ServerPlayer sp = player(h);

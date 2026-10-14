@@ -19,7 +19,7 @@
     ],
     "fallback": {
       "type": "minecraft:model",
-      "model": "rpg:item/model/spear_transcend_lv0"
+      "model": "rpg:item/model/axe_transcend_lv0"
     }
   }
 }

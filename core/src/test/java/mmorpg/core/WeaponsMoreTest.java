@@ -206,6 +206,23 @@ public final class WeaponsMoreTest {
             check(r != null && r.def().str("fn").equals("summonSpirits"), "spirit " + g + " unchanged");
         }
 
+        // 도끼 초월: 궁니르 (창 모양 — 12단계에 창 종류가 생겨 종류가 애매해짐) → 반고의 도끼. 종류 글자 · 평타는 도끼, 스킬 수치는 궁니르와 같음
+        Weapon axeT = Weapons.parseWeapon("rpg:axe_l40_transcend");
+        check(axeT != null && axeT.title().equals("반고의 도끼"), "axe transcend name " + (axeT == null ? null : axeT.title()));
+        if (axeT != null) {
+            check(axeT.typeLabel().equals("도끼") && axeT.look() == null, "axe transcend label · look " + axeT.typeLabel() + " " + axeT.look());
+            check(Weapons.weaponInfo(axeT).get(0).contains("도끼 · 레벨 40"), "axe transcend info " + Weapons.weaponInfo(axeT).get(0));
+            List<Obj> sk = axeT.skills();
+            check(sk != null && sk.size() == 2 && sk.get(0).str("id").equals("pangu_return") && sk.get(1).str("id").equals("pangu_fall"), "axe transcend skills");
+            if (sk != null && sk.size() == 2) {
+                near(Skills.skillTotalMult(sk.get(0)), 4.4 + 5.5, 1e-9, "pangu_return total = gungnir_return");
+                near(Skills.skillTotalMult(sk.get(1)), 9.5 + 3.2 * 2, 1e-9, "pangu_fall total = gungnir_fall");
+                check(sk.get(0).num("cd") == 12 && sk.get(1).num("cd") == 30, "axe transcend cooldowns");
+            }
+        }
+        check(Weapons.weaponFrom("axe", 40, "hero").title().equals("대지의 심판"), "axe hero name unchanged");
+        check(Crafting.craftUseLines("boss", "ygg_branch").stream().anyMatch(l -> l.contains("반고의 도끼")), "boss material lore uses the new name");
+
         System.out.println("WeaponsMoreTest: " + ok + " ok, " + BAD.size() + " failed");
         for (String b : BAD) System.out.println("  FAIL " + b);
         if (!BAD.isEmpty()) System.exit(1);
