@@ -34,17 +34,17 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 방패 초월 (탱커) — 0.12.4 부터 스발린 (태양 앞에 서서 세상이 타지 않게 막는 방패 — 앞은 불꽃 테두리, 안쪽은 얼음): 서리 돌진 · 일식.
  * 동작 · 수치 · 판정은 애드온 아이기스의 방패 (skills.js v2.20.0 "고르곤 · 신의 방벽") 그대로 (SKILLS.shield — rules_more, 색은 스킬마다) — 연출만 바꿈:
- * 메두사의 시선 · 석화 → 얼음 핵의 서리 숨결 · 빙결 (얼음 조각 · 얼음 결정), 금빛 육각 돔 → 해를 가린 얼음빛 돔 (꼭대기에 가려진 해의 테두리),
- * 번개 폭발 → 해가 드러나며 불꽃 폭발 (하늘에서 햇빛 기둥). 세기 "영웅 룬~초월 룬" (Lv.40 체력 125 의 체력 룬 위력 기준).
- * 그림: rpg:svalinn_shield (스발린 앞모습 — 애드온 aegis_shield 와 같은 12장) · svalinn_hex (흰 육각 칸 — 색을 입힘) — tools/java_fx_art_more.py,
- * 얼음 조각은 rpg:aegis_stone 을 얼음빛으로. 도발 (TAUNT_HOOKS — 보스 · 몬스터) 은 그대로
+ * 메두사의 시선 · 석화 → 얼음 핵의 서리 숨결 · 빙결 (얼음 조각 · 얼음 결정), 금빛 육각 돔 → 얼음빛 돔 + 돔 너머 앞쪽 하늘의 일식 (해를 가린 스발린),
+ * 번개 폭발 → 해가 드러나며 불꽃 폭발 (드러난 해에서 적마다 햇빛 줄기). 세기 "영웅 룬~초월 룬" (Lv.40 체력 125 의 체력 룬 위력 기준).
+ * 그림: rpg:svalinn_shield (스발린 앞모습 — 애드온 aegis_shield 와 같은 12장) · svalinn_hex (흰 육각 칸 — 색을 입힘) · svalinn_ice (얼음 조각 —
+ * 애드온 aegis_stone 과 같은 정의) · rfx_eclipse (일식 4장) — tools/java_fx_art_more.py. 도발 (TAUNT_HOOKS — 보스 · 몬스터) 은 그대로
  */
 public final class Aegis {
     private Aegis() {}
 
     static final double[] AE_EYE = {0.6, 0.9, 1.0}; // 얼음 핵 · 서리 숨결 (얼음빛)
     static final double[] AE_WHITE = {1.0, 0.97, 0.84};
-    static final double[] AE_STONE = {0.78, 0.93, 1.0}; // 빙결 얼음 조각 (rpg:aegis_stone 회색 그림에 얼음빛을 곱함)
+    static final double[] AE_STONE = {0.9, 0.97, 1.0}; // 빙결 얼음 조각 (rpg:svalinn_ice — 미리 칠한 얼음 결정에 조금 더 차갑게)
     static final double[] AE_DUST = {0.82, 0.93, 1.0}; // 서리 안개
     /** 일식이 끝나며 드러나는 해 (불꽃 — 규칙의 flame 이 없을 때) */
     static final double[] FLAME = {1.0, 0.55, 0.18};
@@ -57,6 +57,8 @@ public final class Aegis {
     static final double AE_SHIELD_Y = 0.72;
     /** rpg:shock_ring 이 수명 동안 커지는 배수 (build.py 의 grow 1.6: 크기 × (1 + 1.6 × 진행) — 그림의 고리는 반 크기의 약 0.8) */
     static final double RING_GROW = 2.6;
+    /** 일식 그림 반 크기 (칸 — 돔 너머 r + 2.5칸 앞 · r × 0.9칸 위에 있을 때, 가까이 당기면 같은 비율로 작게) */
+    static final double ECLIPSE = 1.7;
 
     static void register() {
         Transcend.register("svalinn_charge", Aegis::charge);
@@ -215,9 +217,9 @@ public final class Aegis {
                 o.color("color", AE_WHITE), "alpha", o.num("alpha", 0.55), "fold", o.num("fold", 99), "reach", o.num("reach", 0), "frame", o.num("frame", 0)));
     }
 
-    /** 얼음 조각 하나 (rpg:aegis_stone 을 얼음빛으로): o.kind 0~3, o.dir · o.speed (칸/초), 아래로 o.grav (칸/초²), o.spin · o.rate (도 · 도/초) */
+    /** 얼음 조각 하나 (rpg:svalinn_ice — 애드온 aegis_stone 과 같은 정의, 얼음 결정 그림): o.kind 0~3, o.dir · o.speed (칸/초), 아래로 o.grav (칸/초²), o.spin · o.rate (도 · 도/초) */
     static void stoneFx(ServerLevel level, Vec3 at, Opt o) {
-        SkillFx.fx(level, "rpg:aegis_stone", at, Opt.of("dir", o.vec("dir", V.UP), "speed", o.num("speed", 0), "size", o.num("size", 0), "life",
+        SkillFx.fx(level, "rpg:svalinn_ice", at, Opt.of("dir", o.vec("dir", V.UP), "speed", o.num("speed", 0), "size", o.num("size", 0), "life",
                 o.num("life", 0), "spin", o.num("spin", 0), "color", o.color("color", AE_STONE), "alpha", o.num("alpha", 1), "grav", o.num("grav", 0),
                 "rate", o.num("rate", 0), "kind", o.num("kind", 0)));
     }
@@ -742,11 +744,12 @@ public final class Aegis {
     }
 
     /**
-     * 일식 (애드온 신의 방벽): 방패를 땅에 꽂아 (발밑 땅 — 3칸 안에 없으면 그 자리) 반지름 radius 칸 얼음빛 육각 돔을 ticks 틱 동안 세움 — 돔 꼭대기에 가려진 해의 테두리.
+     * 일식 (애드온 신의 방벽): 방패를 땅에 꽂아 (발밑 땅 — 3칸 안에 없으면 그 자리) 반지름 radius 칸 얼음빛 육각 돔을 ticks 틱 동안 세움 — 돔 너머 앞쪽 하늘에 일식
+     * (해를 가린 스발린 — 접힐 때 다이아몬드 고리).
      * 꽂는 충격: 돔 안의 적 (가운데 위 1.2칸에서 보이는) 에게 mult + 도발 · 둔화. 돔 안에 서 있는 동안 내가 받는 피해 -reduce (막을 때마다 육각 칸이 번쩍 —
      * 돔 밖으로 나가면 없음), 10틱마다 돔 안의 적을 도발 (taunt 틱) · 둔화 (구속 slow + 1, 보스는 아님). ticks 틱에 돔이 안으로 접힘 (fold 틱 — 육각 칸이 가운데로,
      * 돔 안의 적을 가운데로 끌어당기며 foldMult) → burst 틱 뒤 가려졌던 해가 드러나며 불꽃과 함께 바깥으로 터짐 (afterMult, 밖으로 밀쳐냄 — 접힐 때 맞은 적은 밀려났어도
-     * radius + 2.5칸 안이면 — 적마다 하늘에서 햇빛 기둥).
+     * radius + 2.5칸 안이면 — 드러난 해에서 적마다 햇빛 줄기).
      * 쓰러지거나 차원을 옮기면 막기 · 남은 타격 (접힘 · 폭발) 은 없음 (이미 그린 돔은 그대로 접히며 사라짐)
      */
     static boolean dome(ServerPlayer sp, Weapon w, Obj k) {
@@ -797,9 +800,18 @@ public final class Aegis {
         SkillFx.play(level, "beacon.activate", c, 1.2, 0.9);
         SkillFx.play(level, "step.powder_snow", c, 0.6, 1.0);
         Kit.shakeNear(level, c, 10, 0.2, 0.25);
-        // 일식: 돔 꼭대기 위에 가려진 해의 테두리 (금빛 빛살 고리 — 돔이 접힐 때까지 천천히 돎)
-        Vec3 apex = V.up(c, r + 1.4);
-        RuneKit.rfx(level, "sun", apex, Opt.of("size", 1.5, "life", ticks / 20.0, "cell", 1.0, "color", flame, "alpha", 0.9, "spinRate", 25.0, "fade", 0.15));
+        // 일식: 돔 너머 앞쪽 하늘에 해를 가린 스발린 (rpg:rfx_eclipse — 어두운 원판 + 불꽃 코로나가 일렁이며 천천히 돎, 돔이 접힐 때까지).
+        // 1인칭 · 3인칭 화면 위쪽에 보이는 자리 (보는 쪽 앞 r + 2.5칸 · 돔 바닥 위 r × 0.9칸) — 벽 · 지붕이 가까우면 그 앞으로 당기고 크기도 같은 비율로 (보이는 크기는 같음)
+        int burstT = (int) k.num("burst");
+        Vec3 eye0 = sp.getEyePosition();
+        Vec3 toSun = V.sub(V.up(V.add(c, f, r + 2.5), r * 0.9), eye0);
+        double sunFar = V.len(toSun);
+        Vec3 sunU = V.unit(toSun);
+        double sunD = Math.max(1.5, Math.min(sunFar, Kit.rayDist(level, eye0, sunU, sunFar) - 0.6));
+        Vec3 sun = V.add(eye0, sunU, sunD);
+        double sunK = sunD / sunFar;
+        double spinRate = 8.0;
+        RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", ticks / 20.0, "frames", 2.0, "fps", 5.0, "loop", 1.0, "spinRate", spinRate));
         for (LivingEntity e : enemiesIn(sp, c, r, 0)) {
             Kit.hitAt(sp, e, Kit.reserveHit(sp, e, Tasks.now()), ok, () -> {
                 if (Kit.skillHit(sp, e, w, k.num("mult")) > 0) slowAndTaunt(sp, level, e, k, true);
@@ -837,6 +849,9 @@ public final class Aegis {
         Map<UUID, LivingEntity> folded = new LinkedHashMap<>(); // 접힐 때 맞은 적 (밀려났어도 터질 때 맞음)
         Tasks.later(ticks, () -> {
             if (!ok.getAsBoolean()) return;
+            // 다이아몬드 고리: 접히는 동안 해의 테 한쪽이 번쩍 (곧 드러남 — 돌던 각도 그대로 이어서)
+            RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", burstT / 20.0, "cell", 2.0, "spin", spinRate * ticks / 20.0, "spinRate",
+                    spinRate, "grow", 0.12));
             SkillFx.play(level, "beacon.deactivate", c, 1.4, 1.0);
             SkillFx.play(level, "mob.warden.sonic_charge", c, 1.5, 0.7);
             // (땅의 룬보다 조금 위 — 같은 높이의 평면 둘이 깜빡이지 않게)
@@ -851,11 +866,14 @@ public final class Aegis {
                 });
             }
         });
-        // 터짐: 가려졌던 해가 드러남 → 불꽃과 함께 바깥으로 — 바닥으로 불꽃 줄기 여섯 · 고리 둘, 적마다 하늘에서 햇빛 기둥 (한 틱에 셋씩), 밖으로 밀쳐냄
-        Tasks.later(ticks + (int) k.num("burst"), () -> {
+        // 터짐: 가려졌던 해가 드러남 → 불꽃과 함께 바깥으로 — 바닥으로 불꽃 줄기 여섯 · 고리 둘, 드러난 해에서 적마다 햇빛 줄기 (한 틱에 셋씩), 밖으로 밀쳐냄
+        Tasks.later(ticks + burstT, () -> {
             if (!ok.getAsBoolean()) return;
-            // 가려졌던 해가 드러남: 돔 꼭대기의 해가 활활 커짐
-            RuneKit.rfx2(level, "sun", apex, Opt.of("size", 2.4, "life", 0.6, "grow", 0.8, "fade", 0.5, "spin", Kit.rand() * 90), flame, flameCore);
+            // 가려졌던 해가 드러남: 일식 자리에서 해가 활활 커짐 (빛살은 조금 뒤에 — 같은 자리 그림 둘이 겹쳐 깜빡이지 않게)
+            RuneKit.rfx2(level, "sun", V.add(sun, sunU, 0.2), Opt.of("size", 2.6 * sunK, "life", 0.6, "grow", 0.8, "fade", 0.5, "spin", Kit.rand() * 90), flame,
+                    flameCore);
+            RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", 0.9, "cell", 3.0, "spin", spinRate * (ticks + burstT) / 20.0, "spinRate",
+                    spinRate, "grow", 0.35, "fade", 0.55));
             // 가운데 번쩍임은 돔 가운데 가슴 높이 — 내 눈이 그 3칸 안이면 (가운데에 선 채로) 보는 쪽 앞 (벽 앞까지 2.2칸) 에 작게
             // (화면에 나란한 그림이 눈 바로 밑에 크게 그려지면 아래를 볼 때 1인칭 화면을 다 덮음 — 그람 용익 강하의 앞쪽 번쩍임과 같음)
             Vec3 mid = V.up(c, 1.2);
@@ -893,9 +911,10 @@ public final class Aegis {
                     if (!ok.getAsBoolean()) return;
                     Kit.hitAt(sp, e, Kit.reserveHit(sp, e, Tasks.now()), ok, () -> {
                         Vec3 b = Kit.bodyAt0(e, V.up(c, 1));
-                        // 햇빛 기둥 (하늘에서 곧게) — 예전 번개
-                        SkillFx.beam(level, V.up(b, 8), b, flame, Opt.of("half", 0.6, "thick", 0.42, "life", 0.3, "sweep", 0.1, "gap", 0.9, "alpha", 0.85));
-                        SkillFx.beam(level, V.up(b, 8), b, flameCore, Opt.of("half", 0.5, "thick", 0.14, "life", 0.25, "sweep", 0.1, "gap", 0.9, "alpha", 1.0));
+                        // 햇빛 줄기 (드러난 해에서 곧게 — 눈 가까이는 빼고) — 애드온의 번개
+                        Vec3 eyeAt = sp.getEyePosition();
+                        SkillFx.beamAway(level, eyeAt, sun, b, flame, Opt.of("half", 0.6, "thick", 0.42, "life", 0.4, "sweep", 0.1, "gap", 0.9, "alpha", 0.85));
+                        SkillFx.beamAway(level, eyeAt, sun, b, flameCore, Opt.of("half", 0.5, "thick", 0.14, "life", 0.32, "sweep", 0.1, "gap", 0.9, "alpha", 1.0));
                         if (Kit.skillHit(sp, e, w, k.num("afterMult")) <= 0) return;
                         SkillFx.fx(level, "rpg:arrow_spark", b, Opt.of("dir", V.UP, "size", 0.5, "grow", 2.2, "life", 0.22, "color", flameCore, "alpha", 1));
                         SkillFx.sparks(level, b, flame, 4, 4);

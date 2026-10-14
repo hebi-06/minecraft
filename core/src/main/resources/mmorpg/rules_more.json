@@ -106,16 +106,17 @@
     "shield": [{"id": "svalinn_charge", "name": "서리 돌진", "desc": "방패를 앞세워 적을 밀며 돌진", "desc2": "빙결 1초 → 깨지며 피해 · 도발", "cd": 12, "mult": 9.5, "afterMult": 20, "dash": 6, "speed": 1, "front": 1, "width": 1, "carry": 6, "gaze": 5, "cone": 80, "stone": 20, "taunt": 60, "color": [[0.55, 0.85, 1], [0.92, 0.98, 1]]}, {"id": "svalinn_dome", "name": "일식", "desc": "해를 가린 얼음 돔 4초: 받는 피해 -60%", "desc2": "적 도발 → 해가 드러나며 불꽃 폭발", "cd": 30, "mult": 7, "foldMult": 10, "afterMult": 30, "radius": 5, "ticks": 80, "reduce": 0.6, "fold": 8, "burst": 10, "slow": 2, "taunt": 30, "color": [[0.55, 0.85, 1], [0.92, 0.98, 1]], "flame": [[1, 0.55, 0.18], [1, 0.92, 0.6]]}]
   },
   "LOOK": {
-    "_comment": "도끼 초월의 다른 평타 · 종류 글자 (애드온: 궁니르 — 창 찌르기 · '창') 를 지움 — 반고의 도끼는 다른 도끼처럼 내려찍기 · '도끼'. 창 초월 궁니르 (0.12.3) 는 애드온 궁니르의 하늘빛 찌르기 (SLASH.spear — 종류 글자는 그대로 '창')",
-    "axe_transcend": {},
+    "_comment": "도끼 초월의 다른 평타 · 종류 글자 (애드온: 궁니르 — 창 찌르기 · '창') 를 바꿈 — 세계수의 도끼 (0.12.4) 는 다른 도끼처럼 내려찍기 · '도끼', 색만 잎빛 (SLASH.ygg_axe). 창 초월 궁니르 (0.12.3) 는 애드온 궁니르의 하늘빛 찌르기 (SLASH.spear — 종류 글자는 그대로 '창')",
+    "axe_transcend": {"slash": "ygg_axe"},
     "lance_transcend": {"slash": "spear"}
   },
   "SLASH": {
-    "_comment": "12단계 새 무기의 기본 공격 연출 (Slash — 창 찌르기 빛줄기 · 낫 넓은 초승달 · 망치 내려찍기 · 홀 금빛 고리 + 성스러운 섬광)",
+    "_comment": "12단계 새 무기의 기본 공격 연출 (Slash — 창 찌르기 빛줄기 · 낫 넓은 초승달 · 망치 내려찍기 · 홀 금빛 고리 + 성스러운 섬광). ygg_axe = 세계수의 도끼 (LOOK.axe_transcend — 도끼 내려찍기와 같은 크기, 잎빛 + 금빛 기운 aura · 발밑 고리도 잎빛)",
     "lance": {"thrust": true, "glow": [1, 0.86, 0.45], "core": [1, 1, 0.9], "length": 1.5, "thick": 0.16, "dist": 0.9, "life": 0.16, "speed": 16, "hitSize": 0.55},
     "scythe": {"shape": "arc", "glow": [0.66, 0.5, 1], "size": 1.55, "life": 0.26, "speed": 3, "dist": 1.8, "jitter": 4, "wide": true},
     "hammer": {"shape": "heavy", "glow": [1, 0.72, 0.28], "size": 1.15, "life": 0.3, "speed": 2, "dist": 1.8, "jitter": 3},
-    "scepter": {"bash": true, "glow": [1, 0.88, 0.5], "size": 0.4, "life": 0.2, "speed": 3, "dist": 1.2, "jitter": 20, "hitSize": 0.62, "hitLife": 0.26, "critColor": [1, 0.95, 0.7], "holy": true}
+    "scepter": {"bash": true, "glow": [1, 0.88, 0.5], "size": 0.4, "life": 0.2, "speed": 3, "dist": 1.2, "jitter": 20, "hitSize": 0.62, "hitLife": 0.26, "critColor": [1, 0.95, 0.7], "holy": true},
+    "ygg_axe": {"shape": "heavy", "glow": [0.45, 0.92, 0.4], "aura": [1, 0.84, 0.38], "size": 1.05, "life": 0.3, "speed": 2, "dist": 1.8, "jitter": 4}
   },
   "STAT_INFO": {
     "_comment": "12단계: 스탯 창의 '이 스탯이 올리는 무기' 글자에 새 무기를 더함 (나머지 값은 애드온 그대로)",

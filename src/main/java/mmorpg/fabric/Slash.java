@@ -21,7 +21,8 @@ import net.minecraft.world.phys.Vec3;
  * 근접 무기 참격 연출 (slash.js 의 자바 판 — 같은 그림 · 크기 · 자리 · 색 · 소리, 수치는 rules.json 의 SLASH).
  * - 공격 동작 (허공 포함) 마다 눈앞에 참격이 나가며 사라짐: 칼 초승달 (좌우 번갈아) · 단검 가는 베기 + 반대 방향 한 번 더 (X자) ·
  *   도끼 두꺼운 내려찍기 · 마검 장밋빛 무거운 베기 + 1틱 뒤 하늘빛 룬 베기 · 방패 푸른 강철빛 고리 · 창 찌르기 빛줄기 (SLASH.spear — 애드온의 궁니르.
- *   자바 판은 도끼 초월이 세계수의 도끼 (0.12.2 반고의 도끼) 라 다른 도끼처럼 내려찍기, 궁니르는 창 초월로 옮겨 하늘빛 찌르기 SLASH.spear 를 씀 — rules_more LOOK)
+ *   자바 판은 도끼 초월이 세계수의 도끼 (0.12.2 반고의 도끼) 라 다른 도끼처럼 내려찍기 — 잎빛 · 금빛 기운 SLASH.ygg_axe, 궁니르는 창 초월로 옮겨
+ *   하늘빛 찌르기 SLASH.spear 를 씀 — rules_more LOOK)
  *   (12단계 새 무기: 창 금빛 찌르기 빛줄기 (초월 궁니르는 하늘빛) · 낫 넓은 보랏빛 초승달 + 양옆 잔상 · 전투 망치 무거운 내려찍기 · 성스러운 홀 금빛 고리 + 빛 십자)
  * - 맞혔을 때: 도끼 · 전투 망치 발밑 충격파, 방패 · 창 대상 앞 폭발 + 고리, 홀 금빛 십자 섬광, 치명타는 칼 금빛 초승달 · 단검 붉은 X · 마검 보랏빛 X + 장밋빛 초승달,
  *   화면 가운데에서 벗어난 대상을 맞혔으면 맞은 자리에도 작은 참격
@@ -86,11 +87,12 @@ public final class Slash {
         return Fx.gradeSize(w.gradeIndex());
     }
 
-    /** 등급 기운 색 (영웅 · 초월만) */
-    private static double[] aura(Weapon w) {
+    /** 등급 기운 색 (영웅 · 초월만 — 무기 모양 style 에 aura 가 있으면 그 색: 세계수의 도끼 금빛) */
+    private static double[] aura(Weapon w, Obj style) {
         List<Object> a = SLASH.list("gradeAura");
         Object c = w.gradeIndex() >= 0 && w.gradeIndex() < a.size() ? a.get(w.gradeIndex()) : null;
-        return c instanceof List<?> l ? rgb(l) : null;
+        if (!(c instanceof List<?> l)) return null;
+        return style != null && style.has("aura") ? rgb(style, "aura") : rgb(l);
     }
 
     static Obj styleOf(Weapon w) {
@@ -135,7 +137,7 @@ public final class Slash {
         double spin = jitter(style, rnd);
         double life = style.num("life");
         double[] glow = ok ? rgb(style, "glow") : GREY;
-        double[] aura = ok ? aura(w) : null;
+        double[] aura = ok ? aura(w, style) : null;
         if (aura != null) {
             double k = 1;
             emit(level, sprite(shape, flip, "aura"), along(at, dir, k * LAYER_GAP), dir, speed, spin, size * (dist + k * LAYER_GAP) / dist, life, aura, 0.8);
@@ -272,7 +274,7 @@ public final class Slash {
         double dist = style.num("dist");
         Vec3 at = along(new Vec3(e.x, e.y - SLASH.numOr("drop", 0), e.z), dir, dist);
         double size = style.num("size") * (ok ? gradeSize(w) : 0.7);
-        double[] aura = ok ? aura(w) : null;
+        double[] aura = ok ? aura(w, style) : null;
         if (aura != null) {
             double k = dist + LAYER_GAP;
             emit(level, FxSprite.BASH_RING, along(at, dir, LAYER_GAP), dir, style.num("speed"), 0, size * 1.18 * k / dist, style.num("life") * 1.1, aura, 0.75);
@@ -289,7 +291,7 @@ public final class Slash {
         Vec3 at = along(new Vec3(e.x, e.y - SLASH.numOr("drop", 0) - 0.1, e.z), dir, style.num("dist") + style.num("length"));
         double grade = ok ? gradeSize(w) : 0.7;
         double[] glow = ok ? rgb(style, "glow") : GREY;
-        double[] aura = ok ? aura(w) : null;
+        double[] aura = ok ? aura(w, style) : null;
         if (aura != null) shot(level, at, dir, style, grade, aura, style.num("thick") * 2.2, 0.7);
         shot(level, at, dir, style, grade, glow, style.num("thick") * 1.4, 0.95);
         shot(level, at, dir, style, grade, ok ? rgb(style, "core") : GREY, style.num("thick") * 0.5, 1);
@@ -339,7 +341,8 @@ public final class Slash {
         }
         if (w.type().equals("axe")) {
             Vec3 feet = victim.position();
-            Obj axe = SLASH.obj("axe");
+            // 발밑 고리: 도끼 색 (모양이 따로 있으면 그 색 — 세계수의 도끼 잎빛)
+            Obj axe = style != null && style.has("glow") ? style : SLASH.obj("axe");
             emit(level, FxSprite.SHOCK_RING, new Vec3(feet.x, feet.y + 0.08, feet.z), Vec3.ZERO, 0, 0, crit ? 1.6 : 1.0, crit ? 0.5 : 0.35, rgb(axe, "glow"), 0.9);
             sound(level, feet, SoundEvents.MACE_SMASH_GROUND, crit ? 0.9 : 1.2, crit ? 0.9 : 0.5);
             if (SLASH.truthy("cameraShake")) RpgNet.shake(attacker, crit ? 0.35 : 0.12, crit ? 0.2 : 0.1);

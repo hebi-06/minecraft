@@ -206,12 +206,14 @@ public final class WeaponsMoreTest {
             check(r != null && r.def().str("fn").equals("summonSpirits"), "spirit " + g + " unchanged");
         }
 
-        // 도끼 초월: 궁니르 (창 모양) → 반고의 도끼 (0.12.2) → 세계수의 도끼 (0.12.4 — 사용자가 고른 새 컨셉, 동작을 새로). 종류 글자 · 평타는 도끼,
+        // 도끼 초월: 궁니르 (창 모양) → 반고의 도끼 (0.12.2) → 세계수의 도끼 (0.12.4 — 사용자가 고른 새 컨셉, 동작을 새로). 종류 글자 · 평타는 도끼 (잎빛),
         // 배율 합 · 재사용 대기 · 회복은 예전과 같음 (9.9 · 15.9 · 12 · 30초 · 15%)
         Weapon axeT = Weapons.parseWeapon("rpg:axe_l40_transcend");
         check(axeT != null && axeT.title().equals("세계수의 도끼"), "axe transcend name " + (axeT == null ? null : axeT.title()));
         if (axeT != null) {
-            check(axeT.typeLabel().equals("도끼") && axeT.look() == null, "axe transcend label · look " + axeT.typeLabel() + " " + axeT.look());
+            check(axeT.typeLabel().equals("도끼") && "ygg_axe".equals(axeT.look()), "axe transcend label · look " + axeT.typeLabel() + " " + axeT.look());
+            Obj yggSlash = Rules.get().obj("SLASH").objOrNull("ygg_axe");
+            check(yggSlash != null && "heavy".equals(yggSlash.strOrNull("shape")) && yggSlash.has("aura"), "axe transcend slash = heavy · leaf glow · gold aura");
             check(Weapons.weaponInfo(axeT).get(0).contains("도끼 · 레벨 40"), "axe transcend info " + Weapons.weaponInfo(axeT).get(0));
             List<Obj> sk = axeT.skills();
             check(sk != null && sk.size() == 2 && sk.get(0).str("id").equals("ygg_seed") && sk.get(1).str("id").equals("ygg_tree"), "axe transcend skills");

@@ -3038,6 +3038,60 @@
     "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
    ]
   },
+  "rpg:rfx_eclipse": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/rfx_eclipse",
+   "uv": {
+    "static": [
+     "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 256",
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 256"
+    ],
+    "size": [
+     256,
+     256
+    ],
+    "tw": 1024.0,
+    "th": 256.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.move.x",
+     "variable.move.y",
+     "variable.move.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.spin_rate"
+   ],
+   "motion": {
+    "accel": [
+     0,
+     0,
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
+    "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * math.clamp(variable.particle_age / 0.05, 0, 1) * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - (1 - variable.fade)) / math.max(0.01, variable.fade), 0, 1))"
+   ]
+  },
   "rpg:rfx_emblem": {
    "material": "blend",
    "sprite": "mmorpg:addon/rpg/fx/rfx_emblem",
@@ -6684,6 +6738,60 @@
     "variable.color.g",
     "variable.color.b",
     "math.min(1, variable.color.a * math.clamp(variable.particle_age / 0.15, 0, 1) * (1 + 0.8 * math.clamp((variable.particle_age - variable.fold) / 0.4, 0, 1)))"
+   ]
+  },
+  "rpg:svalinn_ice": {
+   "material": "blend",
+   "sprite": "mmorpg:addon/rpg/fx/svalinn_ice",
+   "uv": {
+    "static": [
+     "variable.kind * 32",
+     0
+    ],
+    "size": [
+     32,
+     32
+    ],
+    "tw": 128.0,
+    "th": 32.0
+   },
+   "rate": {
+    "instant": 1
+   },
+   "active": 10,
+   "shape": {
+    "type": "point",
+    "surface": false,
+    "dir": [
+     "variable.dir.x",
+     "variable.dir.y",
+     "variable.dir.z"
+    ]
+   },
+   "life": "variable.life",
+   "speed": "variable.speed",
+   "spin": [
+    "variable.spin",
+    "variable.rate"
+   ],
+   "motion": {
+    "accel": [
+     0,
+     "-variable.grav",
+     0
+    ],
+    "drag": 0
+   },
+   "size": [
+    "variable.size",
+    "variable.size"
+   ],
+   "facing": "rotate_xyz",
+   "color": [
+    "variable.color.r",
+    "variable.color.g",
+    "variable.color.b",
+    "variable.color.a * (1 - math.clamp(((variable.particle_age / variable.particle_lifetime) - 0.75) / 0.25, 0, 1))"
    ]
   },
   "rpg:svalinn_shield": {

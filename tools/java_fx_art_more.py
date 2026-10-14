@@ -9,6 +9,8 @@
 - rfx_bloomflat  같은 꽃을 땅에 눕혀 (direction_z — dir 이 위)
 - svalinn_shield 스발린 앞모습 (256×256 × 12장 — 애드온 aegis_shield 와 같은 칸 · 같은 정의: 0~3 빛이 지나감 · 4~7 가운데 얼음 핵이 번쩍 · 8~11 흩어짐)
 - svalinn_hex    스발린 돔의 육각 칸 (애드온 aegis_hex 를 흰빛으로 — 색을 입힘, 같은 정의: 접혀 들어감)
+- rfx_eclipse    일식 (256×256 × 4장: 해를 가린 스발린 둘 (코로나가 일렁임) · 다이아몬드 고리 · 드러난 해) — 보는 사람을 향함 (rotate_xyz)
+- svalinn_ice    서리 돌진의 얼음 조각 (32×32 × 4모양 — 애드온 aegis_stone 과 같은 칸 · 같은 정의, 미리 칠한 얼음빛)
 """
 import json
 import math
@@ -570,6 +572,123 @@ def svalinn_sheet():
     return sheet
 
 
+def eclipse_cell(kind, seed):
+    """일식 한 장 (64 × 64 판 → 256): kind 0 = 해를 가린 스발린 (어두운 원판 · 얼음빛 테 · 서리 문양 + 해의 테두리 · 불꽃 코로나),
+    1 = 다이아몬드 고리 (테 한쪽이 번쩍 — 해가 드러나기 직전), 2 = 드러난 해 (밝은 원판 + 큰 코로나). seed = 코로나 줄기 (장마다 일렁임)"""
+    S = 64
+    c = (S - 1) / 2
+    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    p = img.load()
+    rnd = random.Random(300 + seed)
+    rays = []
+    n = 16
+    for i in range(n):
+        a0 = (i + rnd.uniform(-0.3, 0.3)) / n * 2 * math.pi
+        L = rnd.uniform(4.0, 10.5) * (1.25 if kind == 2 else 1.0)
+        rays.append((a0, L, rnd.uniform(0.09, 0.17)))
+    disc = 16.5
+    limb = 18.2
+    for y in range(S):
+        for x in range(S):
+            dx, dy = x - c, y - c
+            r = math.hypot(dx, dy)
+            a = math.atan2(dy, dx)
+            ext = limb + 1.6
+            for a0, L, wd in rays:
+                da = (a - a0 + math.pi) % (2 * math.pi) - math.pi
+                if abs(da) < wd:
+                    ext = max(ext, limb + 1.6 + L * (1 - (da / wd) ** 2))
+            if r <= disc:
+                if kind == 2:
+                    t = r / disc
+                    p[x, y] = FIRE[4] if t < 0.45 else (FIRE[3] if t < 0.8 else FIRE[2])
+                    continue
+                # 해를 가린 방패: 어두운 남빛 + 가장자리 얼음빛 테 + 여섯 갈래 서리 문양 (흐리게)
+                col = (10, 14, 32, 255)
+                ang = math.degrees(a) % 60
+                arm = min(ang, 60 - ang)
+                if arm < 2.2 and 4 < r < 13.5:
+                    col = (28, 50, 92, 255)
+                if 9 < r < 10.3:
+                    col = (22, 40, 76, 255)
+                if r > disc - 1.6:
+                    col = (40, 84, 140, 255)
+                p[x, y] = col
+            elif r <= limb:
+                p[x, y] = FIRE[4] if kind != 2 else (255, 255, 240, 255)
+            elif r <= ext:
+                t = (r - limb) / max(0.5, ext - limb)
+                idx = 4 if t < 0.12 else (3 if t < 0.35 else (2 if t < 0.7 else 1))
+                p[x, y] = FIRE[idx]
+    big = up4(img)
+    corona = Image.new("RGBA", big.size, (0, 0, 0, 0))
+    bp, cp = big.load(), corona.load()
+    for y in range(big.size[1]):
+        for x in range(big.size[0]):
+            col = bp[x, y]
+            if col[3] and col in (FIRE[2], FIRE[3], FIRE[4], (255, 255, 240, 255)):
+                cp[x, y] = col
+    layers = [glow_of(corona, 14, (255, 130, 40), 1.5), glow_of(corona, 5, (255, 220, 140), 1.0), big]
+    if kind == 1:
+        # 다이아몬드 고리: 테 오른쪽 위에 흰 빛방울 + 네 갈래 빛살
+        fl = Image.new("RGBA", big.size, (0, 0, 0, 0))
+        d = ImageDraw.Draw(fl)
+        ang = math.radians(-50)
+        fx, fy = 128 + math.cos(ang) * 4 * (limb - 0.6), 128 + math.sin(ang) * 4 * (limb - 0.6)
+        d.ellipse([fx - 14, fy - 14, fx + 14, fy + 14], fill=(255, 255, 255, 255))
+        for k2, L in ((0, 66), (90, 66), (45, 30), (135, 30)):
+            aa = math.radians(k2)
+            d.line([(fx - math.cos(aa) * L, fy - math.sin(aa) * L), (fx + math.cos(aa) * L, fy + math.sin(aa) * L)], fill=(255, 255, 255, 255), width=5)
+        layers += [glow_of(fl, 18, (255, 236, 180), 2.0), fl]
+    if kind == 2:
+        core = Image.new("RGBA", big.size, (0, 0, 0, 0))
+        ImageDraw.Draw(core).ellipse([128 - 64, 128 - 64, 128 + 64, 128 + 64], fill=(255, 250, 220, 255))
+        layers.insert(0, glow_of(core, 26, (255, 200, 90), 1.8))
+    return over(*layers)
+
+
+def eclipse_sheet():
+    sheet = Image.new("RGBA", (1024, 256), (0, 0, 0, 0))
+    for i, (kind, seed) in enumerate(((0, 1), (0, 2), (1, 1), (2, 3))):
+        sheet.alpha_composite(eclipse_cell(kind, seed), (i * 256, 0))
+    return sheet
+
+
+def ice_shard(v):
+    """얼음 조각 하나 (32 × 32 — 애드온 aegis_stone 과 같은 칸): 모난 결정 (밝은 면 · 어두운 면 · 흰 날 · 남빛 테), v = 모양 0 ~ 3"""
+    rnd = random.Random(900 + v)
+    img = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    c = (15.5, 15.5)
+    k = rnd.randint(5, 7)
+    pts = []
+    rot = rnd.uniform(0, math.pi)
+    for i in range(k):
+        a = rot + i / k * 2 * math.pi + rnd.uniform(-0.25, 0.25)
+        long = 1.0 if i % 2 == 0 else 0.55
+        rr = rnd.uniform(9, 14) * (long if v != 3 else 1.0)
+        if i == 0:
+            rr = 14.5
+        pts.append((c[0] + math.cos(a) * rr, c[1] + math.sin(a) * rr * (0.75 if v == 2 else 1.0)))
+    d.polygon(pts, fill=ICE[2])
+    # 밝은 면: 가운데 → 앞 꼭짓점 셋 (빛을 받는 면)
+    for j in range(0, len(pts) - 1, 2):
+        d.polygon([c, pts[j], pts[j + 1]], fill=ICE[3])
+    d.polygon([c, pts[0], pts[1]], fill=ICE[4])
+    # 흰 날: 가운데에서 긴 꼭짓점으로
+    for j in range(0, len(pts), 2):
+        d.line([c, pts[j]], fill=(255, 255, 255, 255), width=1)
+    img = outline(img, ICE[0])
+    return img
+
+
+def ice_sheet():
+    sheet = Image.new("RGBA", (128, 32), (0, 0, 0, 0))
+    for v in range(4):
+        sheet.alpha_composite(ice_shard(v), (v * 32, 0))
+    return sheet
+
+
 def svalinn_hex():
     """애드온 aegis_hex (금빛) 를 밝기만 남긴 흰빛으로 — 색을 입힘"""
     src = Image.open(os.path.join(REPO_FX, "aegis_hex.png")).convert("RGBA")
@@ -618,6 +737,14 @@ def main():
     save_tex("svalinn_hex", hexes)
     borrow_def("aegis_hex", "svalinn_hex", 128, 64)
     print("svalinn_hex: 128x64 (aegis_hex 정의)")
+    sheet = eclipse_sheet()
+    save_tex("rfx_eclipse", sheet)
+    save_def("rfx_eclipse", generic("rfx_eclipse", 1024, 256, 256, 256, "rotate_xyz"))
+    print("rfx_eclipse: 1024x256 (256x256 cells, rotate_xyz)")
+    sheet = ice_sheet()
+    save_tex("svalinn_ice", sheet)
+    borrow_def("aegis_stone", "svalinn_ice", 128, 32)
+    print("svalinn_ice: 128x32 (aegis_stone 정의)")
 
 
 if __name__ == "__main__":

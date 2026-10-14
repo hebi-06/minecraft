@@ -65,6 +65,13 @@ final class Yggdrasil {
                 "alpha", o.num("alpha", 1)), o.color("wood", WOOD), glow, new int[] {0, THORN_CORE}, null);
     }
 
+    /** 쓴 사람 발밑 가로 CLEAR 칸 안 (둘레에 흩뿌리는 가시를 여기에는 돋우지 않음 — 1인칭 화면을 가시가 덮지 않게) */
+    static final double CLEAR = 2.2;
+
+    static boolean nearCaster(ServerPlayer sp, Vec3 p) {
+        return Math.hypot(p.x - sp.getX(), p.z - sp.getZ()) < CLEAR && Math.abs(p.y - sp.getY()) < 3;
+    }
+
     /** 잎 (꽃잎) n 장이 at 에서 흩날림: 옆으로 spread 칸/초 · 위로 up 칸/초 (아래로면 음수), life 초 */
     static void leaves(ServerLevel level, Vec3 at, int n, double[] color, double spread, double up, double life) {
         for (int i = 0; i < n; i++) {
@@ -150,8 +157,9 @@ final class Yggdrasil {
             for (int i = 0; i < 8; i++) {
                 double a = a0 + i / 8.0 * Math.PI * 2 + Kit.rand() * 0.3;
                 double rr = radius * (0.4 + Kit.rand() * 0.55);
-                thorn(sp, level, new Vec3(spot.x + Math.cos(a) * rr, spot.y, spot.z + Math.sin(a) * rr), 0.65 + Kit.rand() * 0.45, glow,
-                        Opt.of("life", hold + 0.1, "grow", 0.15));
+                Vec3 q = new Vec3(spot.x + Math.cos(a) * rr, spot.y, spot.z + Math.sin(a) * rr);
+                if (nearCaster(sp, q)) continue;
+                thorn(sp, level, q, 0.65 + Kit.rand() * 0.45, glow, Opt.of("life", hold + 0.1, "grow", 0.15));
             }
             SkillFx.rune(level, V.up(spot, 0.05), Opt.of("size", radius, "life", hold, "color", glow, "alpha", 0.75, "rate", 40.0));
             SkillFx.shock(level, spot, glow, radius / 2.6, 0.4);
@@ -273,6 +281,7 @@ final class Yggdrasil {
                     double a = Kit.rand() * Math.PI * 2;
                     double rr = radius * (0.45 + Kit.rand() * 0.5);
                     Vec3 q = new Vec3(spot.x + Math.cos(a) * rr, spot.y, spot.z + Math.sin(a) * rr);
+                    if (nearCaster(sp, q)) return;
                     thorn(sp, level, q, 0.35 + 0.3 * g, core, Opt.of("v", 0.0, "life", 0.5, "grow", 0.4, "full", 3.0));
                     leaves(level, V.up(q, 0.2), 2, LEAF, 0.4, 2.5, 0.8);
                 }
@@ -348,6 +357,7 @@ final class Yggdrasil {
                     double a = a0 + j / 8.0 * Math.PI * 2 + rr * 0.2;
                     double dist = radius * (0.3 + 0.3 * rr) + Kit.rand() * 0.4;
                     Vec3 p = new Vec3(spot.x + Math.cos(a) * dist, spot.y, spot.z + Math.sin(a) * dist);
+                    if (nearCaster(sp, p)) continue;
                     thorn(sp, level, p, 0.9 - 0.15 * rr + Kit.rand() * 0.3, glow, Opt.of("life", 1.2, "grow", 0.25, "full", 3.0));
                 }
             });

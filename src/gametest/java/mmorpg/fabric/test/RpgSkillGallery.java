@@ -62,7 +62,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         new Case("axe", 0, new int[] {6, 12, 34}, 44), // 세계수의 씨앗: 날아감 · 가시덤불 (8) · 꽃 (32)
         new Case("axe", 1, new int[] {12, 24, 35, 49}, 80), // 세계수 강림: 뿌리가 모여듦 · 나무가 솟음 (20) · 잎 (34 · 48)
         new Case("shield", 0, new int[] {3, 10, 24}, 40),
-        new Case("shield", 1, new int[] {12, 50, 86, 96}, 110),
+        new Case("shield", 1, new int[] {12, 50, 86, 92}, 110), // 일식: 꽂음 · 돔과 일식 · 접힘 (다이아몬드 고리, 80) · 해가 드러나며 터짐 (90)
         new Case("bow", 0, new int[] {5, 11, 22}, 36),
         new Case("bow", 1, new int[] {12, 28, 46, 60}, 76),
         new Case("wand", 0, new int[] {8, 22, 38}, 60),
