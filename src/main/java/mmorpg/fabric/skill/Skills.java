@@ -13,7 +13,7 @@ final class Skills {
         Odin.register();
         Tyrfing.register();
         // 12단계 새 무기 초월 스킬 (창 · 낫 · 전투 망치 · 성스러운 홀)
-        Brionac.register();
+        Gungnir.register(); // 창 초월 (0.12.3 — 예전 브류나크 자리)
         Kronos.register();
         Mjolnir.register();
         Apollo.register();

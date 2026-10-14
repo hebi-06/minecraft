@@ -1,10 +1,14 @@
 package mmorpg.fabric.skill;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import mmorpg.core.Obj;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.rune.RuneKit;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -111,5 +115,39 @@ final class HeroKit {
     static void at(int t, Runnable fn) {
         if (t <= 0) fn.run();
         else Tasks.later(t, fn);
+    }
+
+    /** rfx_relic 그림 칸 안의 창 길이 비율 (512점 칸에 약 488점 — tools/java_fx_art.py) */
+    static final double RELIC_LEN = 0.95;
+
+    /**
+     * 날아가는 창 그림 한 자루 (rpg:rfx_relic — 모델 옆모습, 날아가는 쪽으로 눕는 창): 가운데 at, 창끝 방향 dir, 길이 len 칸, 초당 speed 칸으로 dir 쪽,
+     * cell = tools/java_fx_art.py RELIC 순서 (게이 볼그 1 — 예전 브류나크에서 옮김)
+     */
+    static void relicSpear(ServerLevel level, Vec3 at, Vec3 dir, double len, double life, double speed, int cell, double alpha) {
+        RuneKit.rfx(level, "relic", at, Opt.of("dir", dir, "size", len / RELIC_LEN, "life", life, "speed", speed, "cell", (double) cell, "alpha", alpha,
+                "fade", 0.25));
+    }
+
+    /** 앞 cone° · range 칸 안의 보이는 적: 조준한 적이 먼저, 그다음 화면 가운데에 가까운 순 (max 명 — 카두케우스, 예전 브류나크에서 옮김) */
+    static List<LivingEntity> targetsIn(ServerPlayer sp, double range, double cone, int max) {
+        Vec3 eye = sp.getEyePosition();
+        Vec3 view = sp.getViewVector(1F);
+        double half = Math.toRadians(cone / 2);
+        List<LivingEntity> list = new ArrayList<>();
+        for (LivingEntity e : Kit.around(sp, sp.position(), range, 6)) {
+            Vec3 d = V.sub(Kit.bodyPoint(e), eye);
+            double len = V.len(d);
+            if (len < 0.5 || Math.acos(Math.max(-1, Math.min(1, V.dot(d, view) / len))) > half + Math.asin(Math.min(1, Kit.bodyPad(e) / len))) continue;
+            list.add(e);
+        }
+        list = Kit.visibleFrom(sp, eye, list);
+        list.sort(Comparator.comparingDouble(e -> {
+            Vec3 d = V.unit(V.sub(Kit.bodyPoint(e), eye));
+            return -V.dot(d, view) + V.len(V.sub(e.position(), sp.position())) * 0.002;
+        }));
+        LivingEntity aim = Kit.pickTarget(sp, range, 0);
+        if (aim != null && list.remove(aim)) list.add(0, aim);
+        return list.size() > max ? new ArrayList<>(list.subList(0, max)) : list;
     }
 }

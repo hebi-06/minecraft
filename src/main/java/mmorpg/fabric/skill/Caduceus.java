@@ -52,7 +52,7 @@ final class Caduceus {
 
     static boolean serpents(ServerPlayer sp, Weapon w, Obj k) {
         ServerLevel level = sp.level();
-        List<LivingEntity> targets = Brionac.targetsIn(sp, k.num("range"), k.num("cone"), 2);
+        List<LivingEntity> targets = HeroKit.targetsIn(sp, k.num("range"), k.num("cone"), 2);
         if (targets.isEmpty()) {
             mmorpg.fabric.Notify.warn(sp, "§c" + k.str("name") + " §7— 겨눌 적이 없습니다");
             return false;

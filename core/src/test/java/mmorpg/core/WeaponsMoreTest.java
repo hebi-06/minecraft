@@ -60,14 +60,14 @@ public final class WeaponsMoreTest {
         all.addAll(MORE);
         check(Weapons.allTypes().equals(all), "all types " + Weapons.allTypes());
 
-        Map<String, String[]> names = Map.of("lance", new String[] {"황금 기사창", "게이 볼그", "브류나크", "창"}, "scythe",
+        Map<String, String[]> names = Map.of("lance", new String[] {"황금 기사창", "게이 볼그", "궁니르", "창"}, "scythe",
                 new String[] {"황금 초승달낫", "하르페", "크로노스의 낫", "낫"}, "hammer", new String[] {"황금 전투망치", "다그다의 곤봉", "묠니르", "전투 망치"}, "scepter",
                 new String[] {"황금 성광홀", "카두케우스", "아폴론의 태양홀", "성스러운 홀"});
         Map<String, String[]> basics = Map.of("lance", new String[] {"철 장창", "푸른 강철창"}, "scythe", new String[] {"철 전투낫", "청강 전투낫"}, "hammer",
                 new String[] {"철 전투망치", "푸른 강철 망치"}, "scepter", new String[] {"견습 사제의 홀", "청수정 성홀"});
         Map<String, String[]> stats = Map.of("lance", new String[] {"str", "dex"}, "scythe", new String[] {"dex", "int"}, "hammer", new String[] {"vit", "str"},
                 "scepter", new String[] {"int", "vit"});
-        Map<String, String[]> skillIds = Map.of("lance", new String[] {"brionac_rays", "brionac_flurry"}, "scythe", new String[] {"kronos_rend", "kronos_clock"},
+        Map<String, String[]> skillIds = Map.of("lance", new String[] {"gungnir_return", "gungnir_fall"}, "scythe", new String[] {"kronos_rend", "kronos_clock"},
                 "hammer", new String[] {"mjolnir_throw", "mjolnir_storm"}, "scepter", new String[] {"apollo_sun", "apollo_sanctuary"});
         Weapon gram = Weapons.weaponFrom("sword", 40, "transcend");
         double gramSkill = avgHit(gram) * Skills.skillTotalMult(gram.skills().get(0));
@@ -190,7 +190,7 @@ public final class WeaponsMoreTest {
         check(more == 16, "16 new recipes, got " + more);
         check(perGrade.get("noble") == 8 && perGrade.get("hero") == 8 && perGrade.get("transcend") == 9, "per page ≤ 9: " + perGrade);
         check(Crafting.craftUseLines("boss", "worm_fang").contains("§r§f게이 볼그 §7영웅 8"), "worm fang lore " + Crafting.craftUseLines("boss", "worm_fang"));
-        check(Crafting.craftUseLines("boss", "worm_fang").contains("§r§f브류나크 §7초월 4"), "worm fang transcend lore");
+        check(Crafting.craftUseLines("boss", "worm_fang").contains("§r§f궁니르 §7초월 4"), "worm fang transcend lore " + Crafting.craftUseLines("boss", "worm_fang"));
         check(Crafting.craftUseLines("drop", "boar").contains("§r§f황금 기사창 §7고귀 6"), "boar noble lore " + Crafting.craftUseLines("drop", "boar"));
 
         // 스탯 창 글자
@@ -221,6 +221,25 @@ public final class WeaponsMoreTest {
             }
         }
         check(Weapons.weaponFrom("axe", 40, "hero").title().equals("대지의 심판"), "axe hero name unchanged");
+
+        // 창 초월: 브류나크 → 궁니르 (0.12.3 — 예전 도끼 초월의 궁니르를 옮김). 종류 글자 '창', 평타는 애드온 궁니르의 하늘빛 찌르기 (SLASH.spear),
+        // 스킬 = 신창 귀환 · 신창 강림 (재사용 대기 그대로, 배율 합은 창 세기 8.5 · 13.6 — 예전 궁니르 9.9 · 15.9 와 같은 비율), 도끼 규칙의 회복은 없음
+        Weapon lanceT = Weapons.parseWeapon("rpg:lance_l40_transcend");
+        check(lanceT != null && lanceT.title().equals("궁니르"), "lance transcend name " + (lanceT == null ? null : lanceT.title()));
+        if (lanceT != null) {
+            check(lanceT.typeLabel().equals("창") && "spear".equals(lanceT.look()), "lance transcend label · look " + lanceT.typeLabel() + " " + lanceT.look());
+            check(Weapons.weaponInfo(lanceT).get(0).contains("창 · 레벨 40"), "lance transcend info " + Weapons.weaponInfo(lanceT).get(0));
+            List<Obj> sk = lanceT.skills();
+            if (sk != null && sk.size() == 2) {
+                near(Skills.skillTotalMult(sk.get(0)), 8.5, 1e-9, "gungnir_return total = lance skill 1");
+                near(Skills.skillTotalMult(sk.get(1)), 13.6, 1e-9, "gungnir_fall total = lance skill 2");
+                near(sk.get(0).num("mult") / Skills.skillTotalMult(sk.get(0)), 4.4 / 9.9, 0.01, "gungnir_return out : back like the add-on");
+                near(sk.get(1).num("mult") / Skills.skillTotalMult(sk.get(1)), 9.5 / 15.9, 0.01, "gungnir_fall strike : bolts like the add-on");
+                check(sk.get(0).num("cd") == 12 && sk.get(1).num("cd") == 30, "lance transcend cooldowns");
+                check(!sk.get(1).has("heal") && !(sk.get(1).str("desc") + sk.get(1).str("desc2")).contains("회복"), "lance gungnir: no axe heal");
+            }
+        }
+        check(Weapons.weaponFrom("lance", 40, "hero").title().equals("게이 볼그"), "lance hero name unchanged");
         check(Crafting.craftUseLines("boss", "ygg_branch").stream().anyMatch(l -> l.contains("반고의 도끼")), "boss material lore uses the new name");
 
         System.out.println("WeaponsMoreTest: " + ok + " ok, " + BAD.size() + " failed");

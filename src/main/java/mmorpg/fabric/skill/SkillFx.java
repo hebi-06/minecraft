@@ -83,7 +83,7 @@ public final class SkillFx {
         }
     }
 
-    /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게) — 반고의 도끼 · 브류나크 · 아폴론 (예전 궁니르에서 옮김) */
+    /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게) — 궁니르 · 반고의 도끼 · 아폴론 */
     public static void beamAway(ServerLevel level, Vec3 eye, Vec3 a, Vec3 b, double[] color, Opt o, double near) {
         Vec3 d = V.sub(b, a);
         double len = V.len(d);

@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * 12단계 새 무기 사진첩 (화면 시험, only=weapons12): 평평한 세계에서
  * <ol>
  *   <li>임시 디자인 20개 (일반 · 희귀 · 고귀 · 영웅 · 초월) 를 손에 든 모습 (1인칭 · 3인칭 앞) — wm_hold_&lt;종류&gt;_&lt;등급&gt;[_3p]</li>
- *   <li>가방 아이콘 · 설명 (브류나크 · 카두케우스) — wm_inventory · wm_tooltip_&lt;종류&gt;</li>
+ *   <li>가방 아이콘 · 설명 (궁니르 · 카두케우스) — wm_inventory · wm_tooltip_&lt;종류&gt;</li>
  *   <li>기본 공격 (고귀 20렙 — 창 찌르기 · 낫 넓게 베기 · 망치 내려찍기 · 홀 성스러운 일격, 옆 과녁에 번진 숫자) — wm_basic_&lt;종류&gt;[_3p]_t3 · t6</li>
  *   <li>스킬 12개를 실제 입력 (우클릭 = 스킬1 · 웅크리고 우클릭 = 스킬2) 으로 — wm_&lt;스킬&gt;_&lt;틱&gt;[_3p]</li>
  *   <li>정령왕 강림 (스킬 칸 1번의 키) — wm_king_&lt;틱&gt;[_3p]</li>
@@ -74,8 +74,8 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
 
     private static final Case[] CASES = {
         new Case("lance_l40_hero", 0, new int[] {3, 8, 14}, 36, false),
-        new Case("lance_l40_transcend", 0, new int[] {6, 12, 18, 24}, 70, false),
-        new Case("lance_l40_transcend", 1, new int[] {6, 14, 22, 28}, 60, true),
+        new Case("lance_l40_transcend", 0, new int[] {4, 12, 22}, 40, false),
+        new Case("lance_l40_transcend", 1, new int[] {12, 26, 32, 46}, 70, false),
         new Case("scythe_l40_hero", 0, new int[] {3, 12, 26}, 40, true),
         new Case("scythe_l40_transcend", 0, new int[] {3, 7, 20, 35}, 50, true),
         new Case("scythe_l40_transcend", 1, new int[] {8, 30, 62, 74}, 92, true),
@@ -165,7 +165,7 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
         }
         ctx.waitTicks(5);
         ctx.takeScreenshot("wm_inventory");
-        // 설명: 브류나크 (핫바 4 — 창 초월) · 카두케우스 (가방 — 홀 영웅 40)
+        // 설명: 궁니르 (핫바 4 — 창 초월) · 카두케우스 (가방 — 홀 영웅 40)
         hover(ctx, sc -> new int[] {(sc.width - 176) / 2 + 8 + 18 * 4 + 8, (sc.height - 166) / 2 + 142 + 8});
         ctx.takeScreenshot("wm_tooltip_lance");
         int inv = 15 + 3 - 9; // 홀 영웅 40 = 18번째 (0부터) → 가방 칸 9

@@ -13,7 +13,6 @@ import java.util.function.DoubleConsumer;
 import java.util.function.IntPredicate;
 import java.util.function.Supplier;
 import mmorpg.core.Obj;
-import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Notify;
@@ -25,12 +24,12 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 /**
  * 반고의 도끼 (도끼 초월 — 하늘과 땅을 가른 도끼). 예전 궁니르 (창 모양 — 12단계에 창 종류가 생겨 종류가 애매해짐) 자리를 실제 도끼로 바꾼 것:
- * 스킬 동작 · 수치 · 재사용 대기는 궁니르와 같고 (SKILLS.axe — rules_more), 연출만 도끼 · 대지 (번개 대신 균열 · 바위 가시 · 흙먼지).
+ * 스킬 동작 · 수치 · 재사용 대기는 예전 도끼 궁니르와 같고 (SKILLS.axe — rules_more), 연출만 도끼 · 대지 (번개 대신 균열 · 바위 가시 · 흙먼지).
+ * 궁니르는 0.12.3 부터 창 초월 (Gungnir — 같은 틀이라 끌 수 있는 몹 · 떨어질 땅 규칙을 같이 씀).
  * <ul>
  * <li>혼돈 가르기 (pangu_return): 도는 도끼를 던져 꿰뚫음 → 끝에서 돌며 흙 · 돌을 모음 → 손으로 돌아오며 다시 벰 · 몹을 끌어옴</li>
  * <li>천지개벽 (pangu_fall): 하늘에서 거대한 도끼가 내리찍음 → 땅이 갈라짐 (폭발 · 띄움) → 여진 두 번 (바위 가시 — 마법 피해) → 준 피해 일부 회복</li>
@@ -56,23 +55,9 @@ final class Pangu {
     static final double[] SKY = {0.62, 0.95, 0.82};
     static final double[] WHITE = {1.0, 0.97, 0.88};
 
-    /** 끌지 않는 무거운 몹 (룬 중력의 heavy 목록 — 자바 이름) */
-    static final Set<String> HEAVY_MOB = javaTypes(Rules.get().obj("RUNE_GRAVITY").listOrNull("heavy"));
-    /** 끌지 않는 바닐라 몹 (몸이 넓거나 무거움 — 몸 크기를 스크립트가 모름) */
-    static final Set<String> DRAG_SKIP = javaTypes(List.of("minecraft:ravager", "minecraft:sniffer", "minecraft:camel", "minecraft:hoglin", "minecraft:zoglin",
-            "minecraft:polar_bear", "minecraft:horse", "minecraft:donkey", "minecraft:mule", "minecraft:skeleton_horse", "minecraft:zombie_horse",
-            "minecraft:llama", "minecraft:trader_llama", "minecraft:panda", "minecraft:strider", "minecraft:breeze"));
-
     static void register() {
         Transcend.register("pangu_return", Pangu::split);
         Transcend.register("pangu_fall", Pangu::cleave);
-    }
-
-    /** 애드온 (베드락) 엔티티 이름 목록 → 자바 이름 모음 */
-    private static Set<String> javaTypes(List<?> ids) {
-        Set<String> out = new HashSet<>();
-        if (ids != null) for (Object id : ids) if (id instanceof String s) out.add(Kit.javaType(s));
-        return Set.copyOf(out);
     }
 
     // ------------------------------------------------------------ 그림 도구
@@ -91,18 +76,6 @@ final class Pangu {
         SkillFx.fx(level, "rpg:slash_x", V.add(c, dir, -0.04), Opt.of("dir", dir, "size", 0.7 * near, "life", 0.2, "color", core, "alpha", 1.0));
         SkillFx.sparks(level, c, core, 5, 5);
         RuneKit.rockBurst(level, c, 2, 4, 0.16);
-    }
-
-    /**
-     * 혼돈 가르기가 꿰어 끌어올 수 있는 몹: 살아 있는 보통 몹 — 플레이어 · 보스 · 보스 소품 · 허수아비 · 아주 큰 몹 (엔더 드래곤 등) ·
-     * 넓거나 키 큰 몹 (엔더맨 · 트롤 등) 은 아님 (피해만)
-     */
-    static boolean draggable(Entity e) {
-        if (e == null || e.isRemoved() || Kit.hasNoHealth(e) || e instanceof Player) return false;
-        String type = Kit.typeId(e);
-        if (HEAVY_MOB.contains(type) || DRAG_SKIP.contains(type) || Kit.bodyPad(e) > 0.6) return false;
-        if (e.getEyeY() - e.getY() > 2.3) return false; // 키 큰 몸 (손 높이로 끌면 발이 땅에 박혀 옮겨지지 않음)
-        return !(Kit.hasFamily(e, "rpg_boss") || Kit.hasFamily(e, "rpg_boss_prop") || Kit.hasFamily(e, "rpg_dummy"));
     }
 
     // ------------------------------------------------------------ 스킬 1 혼돈 가르기
@@ -296,7 +269,7 @@ final class Pangu {
             for (Kit.LineHit h : Kit.lineHits(sp, from, u, st.per + tipBack + 0.4, width)) {
                 LivingEntity e = h.e();
                 if (!backHit.add(e.getUUID())) continue;
-                if (hooked.stream().filter(x -> !x.free).count() < hook && draggable(e)) hooked.add(new Hook(e, Kit.bodyPoint(e).y - e.getY()));
+                if (hooked.stream().filter(x -> !x.free).count() < hook && Gungnir.draggable(e)) hooked.add(new Hook(e, Kit.bodyPoint(e).y - e.getY()));
                 Kit.hitAt(sp, e, Kit.reserveHit(sp, e, Tasks.now()), ok, () -> {
                     if (Kit.skillHit(sp, e, w, backMult) > 0) {
                         hitFx(level, e, sp.getEyePosition(), u, glow, core);
@@ -350,39 +323,6 @@ final class Pangu {
 
     // ------------------------------------------------------------ 스킬 2 천지개벽
 
-    /**
-     * 천지개벽이 떨어질 땅: 조준한 몹의 발밑 → 시선이 닿은 곳 (사거리 끝) 에서 가로로 0.4칸 앞 (벽 면에 붙지 않게) 의 아래 땅 (물 · 용암 위도 됨).
-     * 가로 min 칸보다 가까우면 min 칸 앞 — 그 자리가 눈에서 보이지 않으면 (벽 너머) 밀지 않음. 없으면 null (k: range · min)
-     */
-    static Vec3 fallSpot(ServerPlayer sp, Obj k) {
-        ServerLevel level = sp.level();
-        Vec3 p = sp.position();
-        Vec3 eye = sp.getEyePosition();
-        double range = k.num("range");
-        double min = k.num("min");
-        Vec3 q;
-        RpgCombat.Aim r = RpgCombat.aimTarget(sp, range, Kit.BOW.numOr("aimAssist", 0));
-        if (r.target() != null && !r.target().isRemoved() && Kit.canHit(sp, r.target())) {
-            q = r.target().position();
-        } else {
-            Vec3 d = r.dir();
-            q = V.add(eye, d, r.dist());
-            if (Math.hypot(d.x, d.z) > 0.2) q = V.add(q, V.flat(d), -0.4);
-        }
-        Vec3 f = Kit.facingOf(sp);
-        double dx = q.x - p.x;
-        double dz = q.z - p.z;
-        double h = Math.hypot(dx, dz);
-        if (h < min) {
-            Vec3 pushed = new Vec3(p.x + (h > 0.5 ? dx / h : f.x) * min, q.y, p.z + (h > 0.5 ? dz / h : f.z) * min);
-            if (Kit.lineOfSight(sp, eye, new Vec3(pushed.x, Math.max(q.y, p.y) + 1.0, pushed.z))) q = pushed;
-        }
-        Kit.Hit hit = Kit.ray(level, new Vec3(q.x, q.y + 1.5, q.z), V.DOWN, 24, true);
-        if (hit == null) return null;
-        double fy = hit.point().y - hit.pos().getY(); // 맞은 면의 블록 안 높이 (반 블록 = 0.5)
-        return new Vec3(q.x, hit.pos().getY() + (fy > 0.05 && fy <= 1 ? fy : 1), q.z);
-    }
-
     /** 회복 모으기: 모인 피해 pool, 다음 틱 회복이 잡혔는지 pending, 이번에 더 회복할 수 있는 양 left */
     private static final class Heal {
         double pool;
@@ -417,7 +357,7 @@ final class Pangu {
      */
     static boolean cleave(ServerPlayer sp, Weapon w, Obj k) {
         ServerLevel level = sp.level();
-        Vec3 spot = fallSpot(sp, k);
+        Vec3 spot = Gungnir.fallSpot(sp, k); // 끌 수 있는 몹 · 떨어질 땅은 궁니르와 같은 규칙
         if (spot == null) {
             Notify.warn(sp, "§c" + k.str("name") + ": §7땅을 조준해야 합니다 (" + k.text("range") + "칸 안)");
             return false;

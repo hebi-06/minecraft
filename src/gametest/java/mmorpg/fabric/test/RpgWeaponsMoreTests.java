@@ -327,14 +327,15 @@ public final class RpgWeaponsMoreTests {
         }));
     }
 
-    @GameTest(environment = "mmorpg:w_brionac1", maxTicks = 90)
-    public void brionacFiveSpears(GameTestHelper h) {
-        skillCase(h, "lance", "transcend", 0, 5.5, 72, k -> times((int) k.num("shots"), k.num("mult")), null);
+    // 창 초월 궁니르 (0.12.3 — 예전 도끼 초월의 궁니르를 옮김, 브류나크 자리): 신창 귀환 = 갈 때 · 올 때 두 번, 신창 강림 = 꽂힘 + 번개 두 번 (마법 피해)
+    @GameTest(environment = "mmorpg:w_gungnir1", maxTicks = 120)
+    public void gungnirReturnHitsTwice(GameTestHelper h) {
+        skillCase(h, "lance", "transcend", 0, 4.0, 90, k -> new double[] {k.num("mult"), k.num("backMult")}, null);
     }
 
-    @GameTest(environment = "mmorpg:w_brionac2", maxTicks = 90)
-    public void brionacFlurryThenSpiral(GameTestHelper h) {
-        skillCase(h, "lance", "transcend", 1, 3.5, 66, k -> concat(times((int) k.num("hits"), k.num("mult")), k.num("afterMult")), null);
+    @GameTest(environment = "mmorpg:w_gungnir2", maxTicks = 100)
+    public void gungnirFallStrikesThenBolts(GameTestHelper h) {
+        skillCase(h, "lance", "transcend", 1, 5.0, 56, k -> concat(new double[] {k.num("mult")}, times((int) k.num("pulses"), k.num("pulseMult"))), null);
     }
 
     @GameTest(environment = "mmorpg:w_harpe", maxTicks = 60)

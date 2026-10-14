@@ -13,7 +13,9 @@
 - src/main/resources/assets/rpg/textures/item/<종류>/<무기 ID>.png · models/item/<무기 ID>.json · items/<무기 ID>.json (아이콘 — weapon_models.py 가
   손에 든 모습을 3D 모델로 다시 씀)
 
-디자인 이름: <종류>_<등급>_lv0 (lance · scythe · hammer · scepter × rare · noble · hero · transcend), 일반은 <종류>_lv0 (애드온과 같은 규칙). 클로드 디자인에서 받은 파일로 바꾸려면 같은 이름으로
+디자인 이름: <종류>_<등급>_lv0 (lance · scythe · hammer · scepter × rare · noble · hero · transcend), 일반은 <종류>_lv0 (애드온과 같은 규칙).
+창 초월 lance_transcend_lv0 은 임시 디자인이 아니라 애드온의 궁니르 창 모델 (예전 spear_transcend_lv0 — 0.12.3 부터 창 초월, DESIGNS 의 None) 이라
+--force 로도 다시 그리지 않음. 클로드 디자인에서 받은 파일로 바꾸려면 같은 이름으로
 .geo.json · .png (애드온 .entity.png 를 이름만 바꿔서) · .icon.png 를 넣고 이 스크립트 (아이콘 · 연결) → weapon_models.py → tools/java_fx_art.py
 (스킬 그림 — 던지는 창 · 망치 등은 모델에서 그림) → tools/addon_particles.py 순서로 돌림.
 """
@@ -41,7 +43,7 @@ GRADES = {"common": BASIC_LEVELS, "rare": BASIC_LEVELS, "noble": [10, 20], "hero
 FP = {"rotation": [64.9, -2.4, 3.0], "position": [3.14, 3.87, 0.89]}
 FP_SCALE = {"lance": 0.68, "scythe": 0.72, "hammer": 0.9, "scepter": 0.85, "axe": 0.72}
 # 머리가 큰 디자인은 1인칭에서 화면 오른쪽을 덜 가리게 작게 (사진첩 weapons12 로 봄)
-FP_SCALE_DESIGN = {"hammer_hero_lv0": 0.8, "hammer_transcend_lv0": 0.74}
+FP_SCALE_DESIGN = {"hammer_hero_lv0": 0.8, "hammer_transcend_lv0": 0.74, "lance_transcend_lv0": 0.72}  # 궁니르 = 애드온 1인칭 크기 그대로
 
 
 
@@ -218,42 +220,6 @@ def lance_hero():
     m.plate(36, 40, -2.2, -1.4, 0.6, barb)
     m.plate(35, 40, 1.4, 2.2, 0.6, barb)
     m.fx = [CX, 52, 0]
-    return m
-
-
-def lance_transcend():
-    m = Model("lance_transcend_lv0")
-    white, gold, gold_d, blade = m.col((240, 240, 250)), m.col((240, 196, 70)), m.col((186, 136, 40)), m.col((255, 222, 112))
-    light = m.col((255, 248, 204), True)
-    cyan = m.col((150, 240, 255), True)
-    m.rod(-9, -6, 1, gold)
-    m.rod(-6, -4, 2.5, gold_d)
-    m.rod(-4, 42, 1.5, white)
-    for y in (4, 22, 32):
-        m.rod(y, y + 1, 2, gold)
-    for y0 in (24, 34):
-        m.rod(y0, y0 + 4, 1.6, cyan)
-    m.rod(8, 18, 2.1, gold_d)
-    for y in (9.5, 12, 14.5, 17):
-        m.rod(y, y + 0.5, 2.2, white)
-    m.rod(42, 45, 3, gold)
-    # 빛 고리 (목 둘레 — 수평 네모 고리)
-    m.box(CX - 4, CX + 4, 39, 40, 3.5, 4.5, light)
-    m.box(CX - 4, CX + 4, 39, 40, -4.5, -3.5, light)
-    m.box(CX - 4.5, CX - 3.5, 39, 40, -4.5, 4.5, light)
-    m.box(CX + 3.5, CX + 4.5, 39, 40, -4.5, 4.5, light)
-    # 다섯 갈래 창날: 가로대 + 가운데 긴 날 + 안쪽 둘 + 바깥 둘
-    m.plate(45, 47, -7.5, 7.5, 1.5, gold)
-    for y0, y1, h in ((47, 58, 1.5), (58, 63, 1.0), (63, 66, 0.5)):
-        m.plate(y0, y1, -h, h, 1.0, blade)
-    m.plate(48, 63, -0.5, 0.5, 1.3, light)
-    for s in (-1, 1):
-        m.plate(47, 58, s * 3.0, s * 4.0, 1.0, blade)
-        m.plate(58, 60.5, s * 3.2, s * 3.8, 1.1, light)
-        m.plate(47, 49, s * 6.0, s * 7.5, 1.0, blade)
-        m.plate(49, 54, s * 6.0, s * 7.0, 1.0, blade)
-        m.plate(54, 56.5, s * 6.2, s * 6.8, 1.1, light)
-    m.fx = [CX, 56, 0]
     return m
 
 
@@ -773,21 +739,26 @@ def axe_transcend():
 DESIGNS = {
     "lance_lv0": lance_common, "lance_rare_lv0": lance_rare, "scythe_lv0": scythe_common, "scythe_rare_lv0": scythe_rare,
     "hammer_lv0": hammer_common, "hammer_rare_lv0": hammer_rare, "scepter_lv0": scepter_common, "scepter_rare_lv0": scepter_rare,
-    "lance_noble_lv0": lance_noble, "lance_hero_lv0": lance_hero, "lance_transcend_lv0": lance_transcend,
+    "lance_noble_lv0": lance_noble, "lance_hero_lv0": lance_hero, "lance_transcend_lv0": None,  # None = 원본 파일 (궁니르) — 그리지 않음
     "scythe_noble_lv0": scythe_noble, "scythe_hero_lv0": scythe_hero, "scythe_transcend_lv0": scythe_transcend,
     "hammer_noble_lv0": hammer_noble, "hammer_hero_lv0": hammer_hero, "hammer_transcend_lv0": hammer_transcend,
     "scepter_noble_lv0": scepter_noble, "scepter_hero_lv0": scepter_hero, "scepter_transcend_lv0": scepter_transcend,
     "axe_transcend_lv0": axe_transcend,
 }
-# 도끼 초월 (반고의 도끼) 이 대신하는 옛 디자인 (궁니르 — 창 모양): designs.json 에서 빼고 무기 ID 를 새 디자인으로
+# 도끼 초월 (반고의 도끼) 이 대신하는 옛 디자인 (궁니르 — 창 모양, 0.12.3 부터 창 초월 lance_transcend_lv0): designs.json 에서 빼고 무기 ID 를 새 디자인으로
 REPLACED = {"spear_transcend_lv0": "axe_transcend_lv0"}
 # 영웅 · 초월 무기 빛 알갱이 색 (애드온 weapon_fx 와 같은 값 — 들고 있는 동안 fx 자리에서)
 FX_COLORS = {
-    "lance_hero_lv0": [[1.0, 0.25, 0.25]], "lance_transcend_lv0": [[1.0, 0.92, 0.55], [0.65, 0.95, 1.0]],
+    "lance_hero_lv0": [[1.0, 0.25, 0.25]],
     "scythe_hero_lv0": [[0.8, 0.7, 1.0]], "scythe_transcend_lv0": [[0.45, 0.9, 1.0], [1.0, 0.85, 0.45]],
     "hammer_hero_lv0": [[0.45, 1.0, 0.45], [0.7, 0.4, 1.0]], "hammer_transcend_lv0": [[0.6, 0.82, 1.0], [0.92, 0.97, 1.0]],
     "scepter_hero_lv0": [[1.0, 0.85, 0.4], [0.8, 0.88, 1.0]], "scepter_transcend_lv0": [[1.0, 0.72, 0.25], [1.0, 0.95, 0.75]],
     "axe_transcend_lv0": [[1.0, 0.76, 0.32], [0.62, 0.95, 0.82]],
+}
+# 빛 알갱이를 통째로 정한 디자인 (애드온 weapon_fx 값 그대로 — 궁니르: 하늘빛 한 색)
+FX_DESIGN = {
+    "lance_transcend_lv0": {"rate": 10.0, "max": 24, "radius": 0.156, "speed": 0.15, "life": 0.9, "accel": 0.8, "drag": 1.0, "size": 0.05,
+                            "texture": "minecraft:generic_0", "cuts": [], "colors": [[0.561, 0.831, 1.0]]},
 }
 
 
@@ -862,7 +833,10 @@ def main():
     for design, fn in DESIGNS.items():
         geo_path = os.path.join(ART, f"{design}.geo.json")
         tex_path = os.path.join(ART, f"{design}.png")
-        if a.force or not (os.path.exists(geo_path) and os.path.exists(tex_path)):
+        if fn is None:
+            if not (os.path.exists(geo_path) and os.path.exists(tex_path)):
+                sys.exit(f"{design}: 원본 디자인 파일이 없음 ({geo_path} · .png)")
+        elif a.force or not (os.path.exists(geo_path) and os.path.exists(tex_path)):
             m = fn()
             with open(geo_path, "w", encoding="utf-8") as fh:
                 json.dump(m.geo(design in FX_COLORS), fh, ensure_ascii=False, indent=1)
@@ -870,7 +844,7 @@ def main():
             m.texture().save(tex_path)
             drawn.append(f"{design} ({len(m.cubes)} cubes, {len(m.palette)} colors)")
         icon_path = os.path.join(ART, f"{design}.icon.png")
-        if a.force or not os.path.exists(icon_path):
+        if (a.force and fn is not None) or not os.path.exists(icon_path):
             model = geo_tex.load(design, geo_path, tex_path)
             for w in model.warnings:
                 print(f"  경고 {design}: {w}")
@@ -878,12 +852,14 @@ def main():
         # designs.json: 1인칭 자세 · 빛 알갱이
         type_ = design.split("_")[0]
         d = {"fp": dict(FP, scale=[FP_SCALE_DESIGN.get(design, FP_SCALE[type_])] * 3)}
-        if design in FX_COLORS:
+        if design in FX_DESIGN:
+            d["fx"] = dict(FX_DESIGN[design])
+        elif design in FX_COLORS:
             colors = FX_COLORS[design]
             d["fx"] = {"rate": 10.0, "max": 24, "radius": 0.18, "speed": 0.15, "life": 0.9, "accel": 1.4, "drag": 1.0, "size": 0.05,
                        "texture": "minecraft:generic_0", "cuts": [0.5] if len(colors) == 2 else [], "colors": colors}
         old = meta["designs"].get(design)
-        if a.force or old is None:
+        if a.force or old is None or fn is None:  # 원본 디자인은 이 표의 값이 기준
             meta["designs"][design] = d
     # 무기 ID → 디자인 (고귀 · 영웅 · 초월 레벨마다 같은 디자인)
     for t in TYPES:

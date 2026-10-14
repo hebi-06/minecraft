@@ -166,6 +166,7 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             {"rpg:axe_l40_hero", "axe_hero"},
             {"rpg:shield_l40_hero", "shield_hero"},
             {"rpg:axe_l40_transcend", "axe_transcend"},
+            {"rpg:lance_l40_transcend", "lance_transcend"}, // 궁니르 (0.12.3 — 하늘빛 찌르기 SLASH.spear)
             {"rpg:greatsword_l40_transcend", "greatsword_transcend"},
         };
         for (String[] w : weapons) {

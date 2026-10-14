@@ -153,7 +153,7 @@ public final class RpgSkillTests {
         Weapon w = transcend("axe");
         hold(sp, w);
         h.assertTrue(w.title().equals("반고의 도끼") && w.typeLabel().equals("도끼"), "axe transcend " + w.title() + " " + w.typeLabel());
-        h.assertTrue(Transcend.has("pangu_return") && Transcend.has("pangu_fall") && !Transcend.has("gungnir_return"), "pangu skills registered");
+        h.assertTrue(Transcend.has("pangu_return") && Transcend.has("pangu_fall") && !Transcend.has("brionac_rays"), "pangu skills registered (궁니르는 창 초월)");
         Obj k = w.skills().get(0);
         Husk z = dummy(h, 1.5, 2, 5.5);
         h.assertTrue(Transcend.castSkill(sp, w, 0), "cast");

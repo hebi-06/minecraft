@@ -64,7 +64,7 @@ final class GaeBolg {
         int steps = Math.max(1, (int) Math.ceil(len / speed));
         // 던짐: 붉은 창 (모델 그림) 이 끝까지 같은 빠르기로 + 핏빛 꼬리
         double start = Math.min(1.8, len);
-        if (len > 1) Brionac.spear(level, V.add(from, dir, start), dir, 2.6, Math.max(0.05, (len - start) / (speed * 20)) + 0.05, speed * 20, RELIC_CELL, 1.0);
+        if (len > 1) HeroKit.relicSpear(level, V.add(from, dir, start), dir, 2.6, Math.max(0.05, (len - start) / (speed * 20)) + 0.05, speed * 20, RELIC_CELL, 1.0);
         SkillFx.play(level, "item.trident.throw", from, 0.7, 1.0);
         SkillFx.play(level, "entity.player.attack.sweep", from, 0.6, 0.6);
         SkillFx.shake(sp, 0.1, 0.1);

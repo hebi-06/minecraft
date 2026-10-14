@@ -36,8 +36,8 @@ public final class WeaponFxData {
             10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x99D1FF, 0xEBF7FF});
     private static final Spec LANCE_HERO_LV0 = new Spec("lance_hero_lv0", 0.65982F, 0.98905F, -1.73996F, -0.0625F, -0.65625F, -2.11094F,
             10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFF4040});
-    private static final Spec LANCE_TRANSCEND_LV0 = new Spec("lance_transcend_lv0", 0.64282F, 1.15401F, -1.77737F, -0.0625F, -0.78125F, -2.32744F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFFEB8C, 0xA6F2FF});
+    private static final Spec LANCE_TRANSCEND_LV0 = new Spec("lance_transcend_lv0", 0.66357F, 0.95266F, -1.73171F, -0.0625F, -0.5625F, -1.94856F,
+            10.0F, 0.156F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x8FD4FF});
     private static final Spec SCEPTER_HERO_LV0 = new Spec("scepter_hero_lv0", 0.67683F, 0.82409F, -1.70255F, -0.0625F, -0.3125F, -1.51554F,
             10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFFD966, 0xCCE0FF});
     private static final Spec SCEPTER_TRANSCEND_LV0 = new Spec("scepter_transcend_lv0", 0.67151F, 0.87564F, -1.71424F, -0.0625F, -0.34375F, -1.56967F,
