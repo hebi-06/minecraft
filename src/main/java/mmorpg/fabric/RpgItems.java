@@ -61,7 +61,7 @@ public final class RpgItems {
                 })
                 .build());
         mmorpg.fabric.rune.RuneItems.init(); // 룬 80 · 뽑기권 (탭 "룬")
-        mmorpg.fabric.gear.GearItems.init(); // 갑옷 120 · 재료 (탭 "RPG 장비 · 재료")
+        mmorpg.fabric.gear.GearItems.init(); // 갑옷 240 · 재료 (탭 "RPG 장비 · 재료")
     }
 
     public static List<RpgWeaponItem> weapons() {

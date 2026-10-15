@@ -36,7 +36,7 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.TooltipDisplay;
 
 /**
- * 갑옷 120 (armor.js — 종류 5 × 레벨 · 등급 6 × 부위 4) · 재료 (레이드 재료 4 · 보스 재료 12 · 몬스터 전리품 6 · 룬 조각) · NPC 설정 도구 등록,
+ * 갑옷 240 (armor.js — 종류 10 (애드온 5 + 0.12.5 두 스탯 무기용 5 — ARMOR_TYPE_ORDER) × 레벨 · 등급 6 × 부위 4) · 재료 (레이드 재료 4 · 보스 재료 12 · 몬스터 전리품 6 · 룬 조각) · NPC 설정 도구 등록,
  * 크리에이티브 탭 "RPG 장비 · 재료". 재료 이름 · 반짝임 · 쌓임은 애드온 아이템 정의 (assets/mmorpg/materials.json — tools/armor_items.py).
  */
 public final class GearItems {

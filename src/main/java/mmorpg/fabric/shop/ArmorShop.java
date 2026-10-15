@@ -22,7 +22,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * 갑옷 상점 (armor.js 상점): 상점 레벨 이하에서 가장 높은 갑옷 레벨의 일반 세트 — 종류 5개 (힘 · 민첩 · 체력 · 힘+체력 · 마력, 모양 같고 스탯이 다름).
+ * 갑옷 상점 (armor.js 상점): 상점 레벨 이하에서 가장 높은 갑옷 레벨의 일반 세트 — 종류 10개 (모양 같고 스탯이 다름): 가운데 줄 애드온의 5개
+ * (힘 · 민첩 · 체력 · 힘+체력 · 마력), 아랫줄 두 스탯 무기용 5개 (0.12.5 — 마력+힘 · 힘+민첩 · 민첩+마력 · 체력+힘 · 마력+체력). 칸 설명에 어울리는 무기.
  * 종류 칸 → 부위 창 (부위마다 구매 · 세트 구매 10% 할인). 초월 갑옷은 왕실 퀘스트 보상.
  */
 public final class ArmorShop {
@@ -36,7 +37,29 @@ public final class ArmorShop {
     private static final int WEAPON_TAB = 0;
     private static final int BALANCE_SLOT = 4;
     private static final int INFO_SLOT = 8;
+    /** 종류 칸: 한 줄 5칸씩 (가운데 줄 11 ~ 15, 아랫줄 20 ~ 24) */
     private static final int SET_FIRST = 11;
+    private static final int PER_ROW = 5;
+
+    /** ARMOR_TYPE_ORDER 의 i 번째 종류의 칸 */
+    public static int typeSlot(int i) {
+        return SET_FIRST + (i / PER_ROW) * 9 + i % PER_ROW;
+    }
+
+    /** 칸 → ARMOR_TYPE_ORDER 번호 (종류 칸이 아니면 -1) */
+    static int typeAt(int slot, int count) {
+        int d = slot - SET_FIRST;
+        if (d < 0 || d % 9 >= PER_ROW) return -1;
+        int i = (d / 9) * PER_ROW + d % 9;
+        return i < count ? i : -1;
+    }
+
+    /** 어울리는 무기 이름 ("창", "단검 · 활") — 갑옷과 요구 스탯 비율이 같은 무기 (Armor.weaponsFor) */
+    static String weaponNames(String armorType) {
+        List<String> names = new ArrayList<>();
+        for (String w : Armor.weaponsFor(armorType)) names.add(R.obj("TYPES").obj(w).str("name"));
+        return String.join(" · ", names);
+    }
 
     /** 상점 레벨 → 파는 갑옷 레벨 (그 레벨 이하에서 가장 높은 것 — 15렙 상점 → 10렙 갑옷) */
     public static int armorLevelFor(int level) {
@@ -71,14 +94,19 @@ public final class ArmorShop {
             Armor.Piece chest = Armor.armorFrom(type, lv, "common", "chest");
             int price = (int) Armor.setPrice(type, lv);
             Obj t = TYPES.obj(type);
-            form.set(SET_FIRST + i, Slot.of(armorItem(chest), t.str("color") + t.str("name") + " 갑옷 §f" + tier.str("name") + " 세트").price(price)
-                    .lore("§r§7세트 방어 §f" + Js.str(chest.setProt()) + "§7 · " + Armor.bonusText(chest.setBonus(), false), "§r§7요구: " + Armor.armorReqText(chest),
-                            "§r§a세트 " + price + " " + Inv.CURRENCY_NAME + " §7(낱개도 팜)"));
+            List<String> lore = new ArrayList<>();
+            lore.add("§r§7세트 방어 §f" + Js.str(chest.setProt()) + "§7 · " + Armor.bonusText(chest.setBonus(), false));
+            lore.add("§r§7요구: " + Armor.armorReqText(chest));
+            String weapons = weaponNames(type);
+            if (!weapons.isEmpty()) lore.add("§r§7어울리는 무기: §f" + weapons);
+            lore.add("§r§a세트 " + price + " " + Inv.CURRENCY_NAME + " §7(낱개도 팜)");
+            form.set(typeSlot(i), Slot.of(armorItem(chest), t.str("color") + t.str("name") + " 갑옷 §f" + tier.str("name") + " 세트").price(price).lore(lore));
         }
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        lines.add("§8가운데 줄: 종류별 " + tier.str("name") + " 세트 · 칸을 누르면 부위별로 살 수 있습니다.§r");
-        lines.add("§8힘·민첩·체력·힘+체력·마력 갑옷은 모양이 같고 스탯이 다릅니다.§r");
+        lines.add("§8종류별 " + tier.str("name") + " 세트 · 칸을 누르면 부위별로 살 수 있습니다.§r");
+        lines.add("§8아랫줄은 두 스탯 무기용 (마검 · 창 · 낫 · 전투 망치 · 성스러운 홀).§r");
+        lines.add("§8모양은 같고 스탯이 다릅니다 · 어울리는 무기는 칸 설명에.§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         return form;
@@ -171,9 +199,9 @@ public final class ArmorShop {
             else if (sel == WEAPON_TAB) next.accept("weapons");
             else if (sel == Shop.SELL_TAB) next.accept("sell");
             else {
-                int i = sel - SET_FIRST;
                 List<String> order = R.strings("ARMOR_TYPE_ORDER");
-                if (i >= 0 && i < order.size()) typeWindow(sp, order.get(i), lv, "", 0, () -> step(sp, level, "", guard + 1, next));
+                int i = typeAt(sel, order.size());
+                if (i >= 0) typeWindow(sp, order.get(i), lv, "", 0, () -> step(sp, level, "", guard + 1, next));
                 else step(sp, level, "", guard + 1, next);
             }
         });

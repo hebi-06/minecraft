@@ -27,8 +27,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 4단계 사진첩 (화면 시험): 갑옷 세트 5종 (순찰대 · 강철 기사 · 흑요석 수호자 · 적룡 · 황제) 을 입은 모습 — 3인칭 앞 · 뒤, 마네킹 둘 (옆 · 앞),
- * 황제 망토가 걸을 때 날리는 모습 (마네킹을 옆으로 옮기며), 가방 화면의 갑옷 칸 · 설명 · 재료 그림, 훈련용 허수아비 (맞기 전 · 흔들림 · 머리 위 기록).
- * 사진 이름 a_&lt;세트&gt;_front / _back · am_&lt;세트&gt; · a_cape_t&lt;틱&gt; · a_inventory · d_dummy_* → ci-logs 의 shots/.
+ * 황제 망토가 걸을 때 날리는 모습 (마네킹을 옆으로 옮기며), 가방 화면의 갑옷 칸 · 설명 · 재료 그림, 두 스탯 무기용 갑옷 5종 아이콘 (0.12.5),
+ * 훈련용 허수아비 (맞기 전 · 흔들림 · 머리 위 기록).
+ * 사진 이름 a_&lt;세트&gt;_front / _back · am_&lt;세트&gt; · a_cape_t&lt;틱&gt; · a_inventory · a_inventory_more · d_dummy_* → ci-logs 의 shots/.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgGearGallery implements FabricClientGameTest {
@@ -64,6 +65,7 @@ public final class RpgGearGallery implements FabricClientGameTest {
             armor(ctx, server);
             cape(ctx, server);
             inventory(ctx, server);
+            inventoryMore(ctx, server);
             dummy(ctx, server);
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         }
@@ -172,6 +174,32 @@ public final class RpgGearGallery implements FabricClientGameTest {
         ctx.takeScreenshot(TestScreenshotOptions.of("a_inventory").withSize(1280, 720));
         ctx.setScreen(() -> null);
         LOG.info("[gear-gallery] inventory");
+    }
+
+    /**
+     * 0.12.5 두 스탯 무기용 갑옷 5종 (마력+힘 · 힘+민첩 · 민첩+마력 · 체력+힘 · 마력+체력 — 적룡 40렙 일반) 의 아이콘 · 설명:
+     * 가방 줄에 20개 (종류마다 투구 · 갑옷 · 바지 · 신발), 첫 칸 (마력+힘 투구) 에 마우스 (a_inventory_more)
+     */
+    private static void inventoryMore(ClientGameTestContext ctx, TestServerContext server) {
+        int slot = 0;
+        for (String t : List.of("intstr", "strdex", "dexint", "vitstr", "intvit")) {
+            for (String p : Armor.PIECE_ORDER) server.runCommand("item replace entity @a inventory." + slot++ + " with " + Armor.armorId(t, 40, "common", p));
+        }
+        ctx.setScreen(() -> new InventoryScreen(net.minecraft.client.Minecraft.getInstance().player));
+        ctx.waitTicks(5);
+        double[] at = ctx.computeOnClient(mc -> {
+            var sc = mc.gui.screen();
+            double k = (double) mc.getWindow().getScreenWidth() / sc.width;
+            double left = (sc.width - 176) / 2.0;
+            double top = (sc.height - 166) / 2.0;
+            return new double[] {(left + 8 + 8) * k, (top + 84 + 8) * k};
+        });
+        ctx.getInput().setCursorPos(at[0], at[1]);
+        ctx.waitTicks(5);
+        ctx.takeScreenshot(TestScreenshotOptions.of("a_inventory_more").withSize(1280, 720));
+        ctx.setScreen(() -> null);
+        for (int i = 0; i < slot; i++) server.runCommand("item replace entity @a inventory." + i + " with air");
+        LOG.info("[gear-gallery] inventory more");
     }
 
     /** 플레이어 가까이의 훈련용 허수아비를 한 번 때림 (서버 — 피해 숫자 · 흔들림 · 머리 위 기록) */

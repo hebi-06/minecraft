@@ -113,7 +113,7 @@ public final class ArmorModels {
         return MODELS.get(set + "_" + piece);
     }
 
-    /** 클라이언트 시작: 모델을 모두 읽고, RPG 갑옷 120 에 그리기를 맡김 */
+    /** 클라이언트 시작: 모델을 모두 읽고, RPG 갑옷 240 에 그리기를 맡김 */
     static void init() {
         for (RpgArmorItem item : GearItems.armor()) {
             Armor.Piece a = item.piece();

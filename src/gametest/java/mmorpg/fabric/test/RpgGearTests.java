@@ -37,7 +37,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 4단계 게임 시험 (서버): 갑옷 120 · 재료 등록, 갑옷 방어 · 스탯 보너스 (입으면 실제 스탯 · 최대 체력), 요구 조건이 모자라면 벗겨 가방으로,
+ * 4단계 게임 시험 (서버): 갑옷 240 (0.12.5 — 두 스탯 무기용 5종 더함) · 재료 등록, 갑옷 방어 · 스탯 보너스 (입으면 실제 스탯 · 최대 체력), 요구 조건이 모자라면 벗겨 가방으로,
  * 무기 강화 단계 (이름 · 피해 배율), 상점 창 흐름 (클라이언트 없이 — 무기 사기 · 전리품 팔기).
  */
 public final class RpgGearTests {
@@ -80,7 +80,7 @@ public final class RpgGearTests {
 
     @GameTest(maxTicks = 20)
     public void gearItemsRegistered(GameTestHelper h) {
-        h.assertTrue(GearItems.armor().size() == 120, "armor " + GearItems.armor().size());
+        h.assertTrue(GearItems.armor().size() == 240, "armor " + GearItems.armor().size());
         for (RpgArmorItem it : GearItems.armor()) {
             Armor.Piece a = it.piece();
             ItemStack s = new ItemStack(it);
@@ -149,6 +149,82 @@ public final class RpgGearTests {
         h.assertTrue(sp.getItemBySlot(EquipmentSlot.CHEST).isEmpty(), "taken off");
         h.assertTrue(countIn(sp, chest.getItem()) == 1, "back in the bag");
         h.assertTrue(RpgStats.bonusOf(sp).isEmpty(), "no bonus");
+        done(h, sp);
+    }
+
+    /**
+     * 0.12.5 두 스탯 무기용 갑옷: 마검 (40렙 초월 — 마력 74 · 힘 36) 의 요구만 찍어도 같은 레벨 마력+힘 황제 세트를 입음
+     * (갑옷 요구 = 무기 요구, 전에는 마력 갑옷 요구 110 이라 못 입음) · 세트 방어 = 황제 × 0.9 · 보너스 마력 · 힘 19씩
+     */
+    @GameTest(maxTicks = 20)
+    public void twoStatArmorFitsItsWeapon(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        sp.setExperienceLevels(40);
+        Weapon w = Weapons.weaponFrom("greatsword", 40, "transcend");
+        for (Weapons.Req q : w.reqs()) RpgPlayers.setStat(sp, q.stat(), (int) Math.ceil(q.value()));
+        Armor.Piece chest = Armor.armorFrom("intstr", 40, "transcend", "chest");
+        h.assertTrue(chest != null && chest.reqs().equals(w.reqs()), "armor reqs = weapon reqs " + (chest == null ? null : chest.reqs()) + " vs " + w.reqs());
+        Map<String, Double> base = Map.copyOf(RpgStats.effective(sp));
+        for (int i = 0; i < 4; i++) sp.setItemSlot(SLOTS[i], armor("intstr", 40, "transcend", Armor.PIECE_ORDER.get(i)));
+        ArmorSystem.armorTick(sp);
+        for (int i = 0; i < 4; i++) h.assertFalse(sp.getItemBySlot(SLOTS[i]).isEmpty(), "kept " + SLOTS[i]);
+        double[] prot = {0};
+        for (EquipmentSlot slot : SLOTS) {
+            sp.getItemBySlot(slot).forEachModifier(slot, (attr, mod) -> {
+                if (attr.value() == Attributes.ARMOR.value()) prot[0] += mod.amount();
+            });
+        }
+        h.assertTrue(prot[0] == chest.setProt() && chest.setProt() == 22, "set armor " + prot[0] + " vs " + chest.setProt());
+        for (String s : List.of("int", "str")) {
+            double now = Stats.get(RpgStats.effective(sp), s);
+            h.assertTrue(now == Stats.get(base, s) + 19, s + " " + now + " vs " + Stats.get(base, s) + " + 19");
+        }
+        // 한 스탯 마력 갑옷 (요구 마력 110) 은 이 찍기로 못 입음 — 벗겨짐
+        sp.setItemSlot(EquipmentSlot.HEAD, armor("int", 40, "transcend", "helmet"));
+        ArmorSystem.armorTick(sp);
+        h.assertTrue(sp.getItemBySlot(EquipmentSlot.HEAD).isEmpty(), "int helmet taken off");
+        done(h, sp);
+    }
+
+    /** 갑옷 상점 (클라이언트 없이): 종류 10칸 (가운데 줄 11 ~ 15 · 아랫줄 20 ~ 24), 어울리는 무기 설명, 아랫줄 첫 칸 = 마력+힘 → 세트 구매 */
+    @GameTest(maxTicks = 20)
+    public void armorShopTwoRows(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Forms.HEADLESS.add(sp.getUUID());
+        try {
+            sp.getInventory().setItem(9, new ItemStack(Items.EMERALD, 64));
+            Store.openStore(sp, 40, "armor");
+            FormNet.ChestPayload c = chest(sp);
+            h.assertTrue(c != null && c.title().contains("갑옷 상점"), "armor shop opened");
+            List<String> order = Rules.get().strings("ARMOR_TYPE_ORDER");
+            h.assertTrue(order.size() == 10, "types " + order);
+            for (int i = 0; i < order.size(); i++) {
+                int slot = mmorpg.fabric.shop.ArmorShop.typeSlot(i);
+                h.assertTrue(slot == (i < 5 ? 11 + i : 20 + i - 5), "slot of " + order.get(i) + " = " + slot);
+                FormNet.SlotData d = c.slots().get(slot);
+                h.assertTrue(d.kind() == mmorpg.fabric.ui.Slot.PRICE && d.num() == (int) Armor.setPrice(order.get(i), 40), "set price " + order.get(i));
+                String lore = String.join("\n", d.lore());
+                h.assertTrue(lore.contains("어울리는 무기"), "weapons line " + order.get(i) + ": " + lore);
+            }
+            h.assertTrue(String.join("\n", c.slots().get(20).lore()).contains("마검"), "intstr → 마검");
+            h.assertTrue(String.join("\n", c.slots().get(12).lore()).contains("단검") && String.join("\n", c.slots().get(12).lore()).contains("활"), "dex → 단검 · 활");
+            h.assertTrue(Forms.answer(sp, 20, null), "pick intstr");
+            c = chest(sp);
+            h.assertTrue(c != null && c.title().contains("마력+힘 갑옷"), "pieces window " + (c == null ? null : c.title()));
+            int price = (int) Armor.setPrice("intstr", 40);
+            Forms.answer(sp, 15, null);
+            for (String p : Armor.PIECE_ORDER) {
+                h.assertTrue(countIn(sp, GearItems.byId(Armor.armorId("intstr", 40, "common", p))) == 1, "bought " + p);
+            }
+            h.assertTrue(Inv.money(sp) == 64 - price, "paid " + Inv.money(sp) + " (set " + price + ")");
+            Forms.answer(sp, 22, null); // 돌아가기
+            c = chest(sp);
+            h.assertTrue(c != null && c.title().contains("갑옷 상점"), "back to the shop");
+            Forms.answer(sp, -1, null);
+            h.assertFalse(Forms.pending(sp), "closed");
+        } finally {
+            Forms.HEADLESS.remove(sp.getUUID());
+        }
         done(h, sp);
     }
 

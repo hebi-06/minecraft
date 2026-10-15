@@ -31,8 +31,11 @@ public final class Armor {
     /** ARMOR_PIECE_ORDER: helmet, chest, legs, boots. */
     public static final List<String> PIECE_ORDER = R.strings("ARMOR_PIECE_ORDER");
 
-    /** armor.js ID_RE. */
-    private static final Pattern ID_RE = Pattern.compile("rpg:armor_(str|dex|vit|strvit|int)_l([0-9]+)_(common|transcend)_(helmet|chest|legs|boots)");
+    /**
+     * armor.js ID_RE ({@code matches()} = JS {@code ^…$}): the add-on's five types, plus the Java-only types of ARMOR_TYPES
+     * (0.12.5 — rules_more.json: 두 스탯 무기용 마력+힘 · 힘+민첩 · 민첩+마력 · 체력+힘 · 마력+체력; with pure rules exactly the five).
+     */
+    private static final Pattern ID_RE = Pattern.compile("rpg:armor_(" + String.join("|", typeAlternatives()) + ")_l([0-9]+)_(common|transcend)_(helmet|chest|legs|boots)");
     /** parseArmor cache, as armor.js (empty = not armor). */
     private static final Map<String, Optional<Piece>> CACHE = new ConcurrentHashMap<>();
 
@@ -65,6 +68,37 @@ public final class Armor {
             String title,
             String name,
             String darkName) {}
+
+    /** The add-on's ID_RE types (in its order), then any other ARMOR_TYPES key (Java-only types — lower-case letters only). */
+    private static List<String> typeAlternatives() {
+        List<String> out = new ArrayList<>(List.of("str", "dex", "vit", "strvit", "int"));
+        for (String t : TYPES.keys()) if (!out.contains(t) && t.matches("[a-z]+")) out.add(t);
+        return out;
+    }
+
+    /**
+     * Weapon types whose stat requirements have the same split as this armor type (0.12.5 — 갑옷 상점 "어울리는 무기"):
+     * 힘 → 칼, 민첩 → 단검 · 활, 힘+체력 → 도끼, 마력+힘 → 마검 … ({@link Weapons#allTypes} order).
+     */
+    public static List<String> weaponsFor(String armorType) {
+        Obj t = TYPES.objOrNull(armorType);
+        List<String> out = new ArrayList<>();
+        if (t == null) return out;
+        Obj req = t.obj("req");
+        Obj weaponTypes = R.obj("TYPES");
+        for (String w : Weapons.allTypes()) {
+            Obj wt = weaponTypes.objOrNull(w);
+            if (wt == null) continue;
+            Map<String, Double> m = new LinkedHashMap<>();
+            m.put(wt.strOr("stat", "str"), wt.numOr("req", 1));
+            Obj extra = wt.objOrNull("reqExtra");
+            if (extra != null) for (String s : extra.keys()) m.put(s, extra.num(s));
+            boolean same = m.size() == req.keys().size();
+            for (String s : req.keys()) same = same && m.containsKey(s) && Math.abs(m.get(s) - req.num(s)) < 1e-9;
+            if (same) out.add(w);
+        }
+        return out;
+    }
 
     /** config.js armorId: {@code rpg:armor_<type>_l<level>_<grade>_<piece>}. */
     public static String armorId(String type, double level, String grade, String piece) {

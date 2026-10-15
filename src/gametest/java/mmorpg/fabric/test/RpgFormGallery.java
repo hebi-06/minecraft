@@ -147,6 +147,11 @@ public final class RpgFormGallery implements FabricClientGameTest {
         shot(ctx, "f_shop_armor");
         hover(ctx, chestSlot(11));
         shot(ctx, "f_shop_armor_tooltip");
+        // 0.12.5: 아랫줄 (20 ~ 24) = 두 스탯 무기용 갑옷 5종 (마력+힘 … 마력+체력) · 어울리는 무기 설명
+        check(waitChest(ctx, c -> c.slots().size() == 27 && c.slots().get(20).name().contains("마력+힘") && c.slots().get(24).name().contains("마력+체력")
+                && String.join("\n", c.slots().get(20).lore()).contains("마검"), "armor shop bottom row"), "armor shop: two-stat armor on the bottom row (20 ~ 24)");
+        hover(ctx, chestSlot(20));
+        shot(ctx, "f_shop_armor_more_tooltip");
         click(ctx, conn, chestSlot(11));
         if (!waitChest(ctx, c -> c.title().contains("갑옷") && !c.title().contains("상점"), "armor pieces")) return;
         away(ctx);

@@ -371,7 +371,9 @@ public final class Weapons {
         lines.addAll(traitLines(w.typeDef(), L, V));
         if (w.type().equals("shield")) {
             lines.add("§r" + L + "피해 감소 " + V + pct(w.passive()));
-            lines.add("§r" + L + "체력 1포인트당 감소 " + V + "+" + Js.str(round1(SHIELD.num("passivePerVit") * 100)) + "%p");
+            // 0.12.5 (자바 전용 — 상한 25%): 상한을 글자로 (대조 시험의 애드온 규칙에는 없음)
+            lines.add("§r" + L + "체력 1포인트당 감소 " + V + "+" + Js.str(round1(SHIELD.num("passivePerVit") * 100)) + "%p"
+                    + (Rules.hasMore() ? L + " (최대 " + pct(SHIELD.num("passiveCap")) + ")" : ""));
             lines.add("§r" + L + "웅크려 막기 " + V + pct(w.block()));
             lines.add("§r" + L + "때리면 " + V + Js.str(SHIELD.num("bashBlockLockTicks") / 20) + "초" + L + " 동안 막기 풀림");
         }

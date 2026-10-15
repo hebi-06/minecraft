@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "rpg:item/armor/intvit_l20_common_chest"
+  }
+}

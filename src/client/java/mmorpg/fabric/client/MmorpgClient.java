@@ -40,7 +40,7 @@ public final class MmorpgClient implements ClientModInitializer {
         AddonParticles.init();
         ParticleProviderRegistry.getInstance().register(RpgParticles.ADDON,
                 sprites -> (options, level, x, y, z, xd, yd, zd, random) -> AddonParticles.create(level, x, y, z, options, sprites));
-        // RPG 갑옷 120 의 입은 모습 (애드온 3D 모델 20)
+        // RPG 갑옷 240 의 입은 모습 (애드온 3D 모델 20 — 세트마다, 종류와 상관없음)
         ArmorModels.init();
         // 훈련용 허수아비 (애드온 모델 · 흔들림)
         DummyRenderer.init();

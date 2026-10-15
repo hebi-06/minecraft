@@ -1,5 +1,5 @@
 {
-  "_comment": "자바 판에만 더한 규칙 (9단계부터 — 애드온 개발은 멈춤). Rules 가 rules.json (애드온 config.js) 위에 덧붙임: 표 (MONSTERS · MONSTER_DROPS · REPEAT_QUESTS · TYPES · TYPE_ONLY · WEAPON_NAMES · SKILLS · LOOK · SLASH · STAT_INFO · RUNES) 는 항목을 더하거나 같은 이름의 항목을 통째로 바꾸고, 새 표 (HERO_SKILLS — 10단계, CRAFT_MORE · TYPE_ORDER_MORE — 12단계) 는 그대로 넣고, 목록 (MONSTER_ORDER) · 값은 바꿈. 대조 시험은 덧붙이지 않음 (-Dmmorpg.pureRules=true).",
+  "_comment": "자바 판에만 더한 규칙 (9단계부터 — 애드온 개발은 멈춤). Rules 가 rules.json (애드온 config.js) 위에 덧붙임: 표 (MONSTERS · MONSTER_DROPS · REPEAT_QUESTS · TYPES · TYPE_ONLY · WEAPON_NAMES · SKILLS · LOOK · SLASH · STAT_INFO · RUNES · ARMOR_TYPES · SHIELD) 는 항목을 더하거나 같은 이름의 항목을 통째로 바꾸고, 새 표 (HERO_SKILLS — 10단계, CRAFT_MORE · TYPE_ORDER_MORE — 12단계) 는 그대로 넣고, 목록 (MONSTER_ORDER · ARMOR_TYPE_ORDER) · 값은 바꿈. 대조 시험은 덧붙이지 않음 (-Dmmorpg.pureRules=true).",
   "LEVELING": {
     "_comment": "한 레벨에 필요한 경험치 = 바닐라 × needMult (core.Leveling — 퀘스트의 레벨 보상은 그 레벨 수만큼의 바닐라 경험치로 줌)",
     "needMult": 3
@@ -152,5 +152,20 @@
       "hero": {"fn": "summonSpirits", "name": "땅의 정령", "desc": "노움이 바위 가시를 솟게 함", "use": "소환 · 범위 가시 4번", "spirits": ["gnome"], "mult": 5, "hits": 4, "gap": 20, "first": 10, "ticks": 90, "range": 12},
       "transcend": {"fn": "spiritKing", "name": "정령왕 강림", "desc": "네 정령이 합쳐져 거대한 정령왕이 강림함", "use": "정령 공격 넷 → 원소 마무리 넷 → 원소 붕괴", "spirits": ["salamander", "undine", "sylph", "gnome"], "mult": 2.5, "hits": 4, "elemMult": 3.5, "burstMult": 8, "range": 16, "radius": 6, "first": 4, "stagger": 5, "gap": 6, "ticks": 34, "elemGap": 10, "burstDelay": 16, "pull": 0.45, "knock": 1, "slowTicks": 40, "fire": 3, "stun": 0}
     }
+  },
+  "ARMOR_TYPE_ORDER": ["str", "dex", "vit", "strvit", "int", "intstr", "strdex", "dexint", "vitstr", "intvit"],
+  "ARMOR_TYPES": {
+    "_comment": "0.12.5 밸런스 (2026-10-15): 두 스탯 무기 (요구 2:1) 마다 같은 비율의 갑옷 — 마검 마력+힘 · 창 힘+민첩 · 낫 민첩+마력 · 전투 망치 체력+힘 · 성스러운 홀 마력+체력 (도끼는 원래 힘+체력). 세트 보너스는 힘+체력처럼 두 스탯 0.6씩, 방어는 두 스탯 갑옷 방어의 평균. 무기 요구 + 같은 레벨 갑옷 요구가 그 레벨 포인트 안에 들어감 (전에는 무기 2:1 + 한 스탯 갑옷 → 한 단계 아래 갑옷만). 가벼운 갑옷 방어 민첩 0.8 → 0.9 · 마력 0.7 → 0.8 (근접 민첩 · 마력 무기가 버티는 힘). 아이콘은 tools/armor_types_more.py (힘+체력 아이콘의 반반 배지를 두 스탯 색으로)",
+    "dex": {"name": "민첩", "stats": {"dex": 1}, "prot": 0.9, "req": {"dex": 1}, "color": "§a", "badge": [72, 214, 96]},
+    "int": {"name": "마력", "stats": {"int": 1}, "prot": 0.8, "req": {"int": 1}, "color": "§9", "badge": [90, 130, 255]},
+    "intstr": {"name": "마력+힘", "stats": {"int": 0.6, "str": 0.6}, "prot": 0.9, "req": {"int": 0.6666666666666666, "str": 0.3333333333333333}, "color": "§5", "badge": [90, 130, 255], "badge2": [235, 64, 52]},
+    "strdex": {"name": "힘+민첩", "stats": {"str": 0.6, "dex": 0.6}, "prot": 0.95, "req": {"str": 0.6666666666666666, "dex": 0.3333333333333333}, "color": "§e", "badge": [235, 64, 52], "badge2": [72, 214, 96]},
+    "dexint": {"name": "민첩+마력", "stats": {"dex": 0.6, "int": 0.6}, "prot": 0.85, "req": {"dex": 0.6666666666666666, "int": 0.3333333333333333}, "color": "§2", "badge": [72, 214, 96], "badge2": [90, 130, 255]},
+    "vitstr": {"name": "체력+힘", "stats": {"vit": 0.6, "str": 0.6}, "prot": 1.1, "req": {"vit": 0.6666666666666666, "str": 0.3333333333333333}, "color": "§4", "badge": [255, 110, 190], "badge2": [235, 64, 52]},
+    "intvit": {"name": "마력+체력", "stats": {"int": 0.6, "vit": 0.6}, "prot": 1.0, "req": {"int": 0.6666666666666666, "vit": 0.3333333333333333}, "color": "§b", "badge": [90, 130, 255], "badge2": [255, 110, 190]}
+  },
+  "SHIELD": {
+    "_comment": "0.12.5 밸런스: 방패 상시 피해 감소 상한 40% → 25% (40렙 방패 종합 지수 2.95 → 2.41 — 솔로에서 가장 쉬운 선택이던 것을 줄임, 막기는 그대로)",
+    "passiveCap": 0.25
   }
 }
