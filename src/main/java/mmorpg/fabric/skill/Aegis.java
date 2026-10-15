@@ -57,8 +57,10 @@ public final class Aegis {
     static final double AE_SHIELD_Y = 0.72;
     /** rpg:shock_ring 이 수명 동안 커지는 배수 (build.py 의 grow 1.6: 크기 × (1 + 1.6 × 진행) — 그림의 고리는 반 크기의 약 0.8) */
     static final double RING_GROW = 2.6;
-    /** 일식 그림 반 크기 (칸 — 돔 너머 r + 2.5칸 앞 · 눈 위 1.6칸에 있을 때, 가까이 당기면 같은 비율로 작게) */
-    static final double ECLIPSE = 1.7;
+    /** 일식 그림 반 크기 (칸 — 돔 너머 r + 2.5칸 앞 · 눈 위 ECLIPSE_UP 칸에 있을 때, 가까이 당기면 같은 비율로 작게) */
+    static final double ECLIPSE = 1.4;
+    /** 일식 높이 (눈 위 칸): 1인칭에서 적을 보느라 조금 내려다봐도 화면 위 끝에 잘리지 않고, 3인칭에서 머리 뒤에 가리지 않는 사이 (사진첩 일식 사진 — 1.6 은 3인칭에서 머리에 반쯤 가림) */
+    static final double ECLIPSE_UP = 2.1;
 
     static void register() {
         Transcend.register("svalinn_charge", Aegis::charge);
@@ -801,11 +803,11 @@ public final class Aegis {
         SkillFx.play(level, "step.powder_snow", c, 0.6, 1.0);
         Kit.shakeNear(level, c, 10, 0.2, 0.25);
         // 일식: 돔 너머 앞쪽 하늘에 해를 가린 스발린 (rpg:rfx_eclipse — 어두운 원판 + 불꽃 코로나가 일렁이며 천천히 돎, 돔이 접힐 때까지).
-        // 1인칭 · 3인칭 화면 위쪽에 보이는 자리 (보는 쪽 앞 r + 2.5칸 · 눈 위 1.6칸 — 적을 보느라 조금 내려다봐도 화면 안, 사진첩 일식 사진) —
+        // 1인칭 · 3인칭 화면 위쪽에 보이는 자리 (보는 쪽 앞 r + 2.5칸 · 눈 위 ECLIPSE_UP 칸) —
         // 벽 · 지붕이 가까우면 그 앞으로 당기고 크기도 같은 비율로 (보이는 크기는 같음)
         int burstT = (int) k.num("burst");
         Vec3 eye0 = sp.getEyePosition();
-        Vec3 toSun = V.sub(V.up(V.add(new Vec3(c.x, eye0.y, c.z), f, r + 2.5), 1.6), eye0);
+        Vec3 toSun = V.sub(V.up(V.add(new Vec3(c.x, eye0.y, c.z), f, r + 2.5), ECLIPSE_UP), eye0);
         double sunFar = V.len(toSun);
         Vec3 sunU = V.unit(toSun);
         double sunD = Math.max(1.5, Math.min(sunFar, Kit.rayDist(level, eye0, sunU, sunFar) - 0.6));
@@ -871,7 +873,7 @@ public final class Aegis {
         Tasks.later(ticks + burstT, () -> {
             if (!ok.getAsBoolean()) return;
             // 가려졌던 해가 드러남: 일식 자리에서 해가 활활 커짐 (빛살은 조금 뒤에 — 같은 자리 그림 둘이 겹쳐 깜빡이지 않게)
-            RuneKit.rfx2(level, "sun", V.add(sun, sunU, 0.2), Opt.of("size", 2.6 * sunK, "life", 0.6, "grow", 0.8, "fade", 0.5, "spin", Kit.rand() * 90), flame,
+            RuneKit.rfx2(level, "sun", V.add(sun, sunU, 0.2), Opt.of("size", ECLIPSE * 1.55 * sunK, "life", 0.6, "grow", 0.8, "fade", 0.5, "spin", Kit.rand() * 90), flame,
                     flameCore);
             RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", 0.9, "cell", 3.0, "spin", spinRate * (ticks + burstT) / 20.0, "spinRate",
                     spinRate, "grow", 0.35, "fade", 0.55));
