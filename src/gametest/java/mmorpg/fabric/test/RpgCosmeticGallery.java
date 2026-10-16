@@ -338,6 +338,11 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             Forms.HEADLESS.add(rivalId);
             r.getInventory().setItem(0, new ItemStack(RpgItems.byId(Weapons.weaponFrom("axe", 30, "hero").id())));
             r.getInventory().setSelectedSlot(0);
+            // 다이아몬드 갑옷 (바닐라 — 입을 조건 없음): 가짜 연결의 플레이어는 몸 틱이 돌지 않아 나중에 바꾼 장비는 다른 사람에게 가지 않으므로 처음부터
+            r.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
+            r.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE));
+            r.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.DIAMOND_LEGGINGS));
+            r.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
             for (String id : CosmeticDefs.all().keySet()) Cosmetics.give(r, id);
             for (String id : List.of("lava_axe", "wizard_hat", "demon_wings", "ember_aura", "title_slayer", "frost_dragon_chest")) Cosmetics.equip(r, id);
         });
@@ -360,13 +365,9 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
 
     private void rivalArmor(ClientGameTestContext ctx, TestServerContext server) {
         if (rivalId == null) return;
-        // 바닐라 다이아몬드 갑옷 (입을 조건 없음) 을 입히고 장식은 벗김 → 진짜 갑옷이 보임 → 모두 숨기기 → 빙룡 갑옷 스킨
+        // 입은 다이아몬드 갑옷 (처음부터) — 장식을 벗기면 진짜 갑옷이 보임 → 모두 숨기기 → 빙룡 갑옷 스킨
         server.runOnServer(s -> {
             ServerPlayer r = rival(s);
-            r.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
-            r.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE));
-            r.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.DIAMOND_LEGGINGS));
-            r.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
             Cosmetics.clear(r, "chest", null);
             Cosmetics.clear(r, "back", null);
             Cosmetics.clear(r, "head", null);
@@ -396,10 +397,15 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
     private void auras(ClientGameTestContext ctx, TestServerContext server) {
         if (rivalId == null) return;
         viewRival(ctx, server, "near");
-        for (String id : List.of("ember_aura", "star_aura", "frost_aura")) {
-            server.runOnServer(s -> Cosmetics.equip(rival(s), id));
-            ctx.waitTicks(40);
-            shot(ctx, "c_aura_" + id);
+        hideGui(ctx, true); // 손 · 화면 칸 없이 (발밑 오라가 가리지 않게 — F1)
+        try {
+            for (String id : List.of("ember_aura", "star_aura", "frost_aura")) {
+                server.runOnServer(s -> Cosmetics.equip(rival(s), id));
+                ctx.waitTicks(40);
+                shot(ctx, "c_aura_" + id);
+            }
+        } finally {
+            hideGui(ctx, false);
         }
     }
 
@@ -408,10 +414,11 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         double[] p = switch (where) {
             case "back" -> new double[] {RIVAL_AT.x, RIVAL_AT.z + 3.0, 180};
             case "side" -> new double[] {RIVAL_AT.x + 3.0, RIVAL_AT.z, 90};
-            case "near" -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 2.2, 0};
+            case "near" -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 2.6, 0, 16};
             default -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 3.0, 0};
         };
-        server.runCommand(String.format(Locale.ROOT, "tp @a[name=!Rival] %.2f %.2f %.2f %.1f 6", p[0], HOME.y, p[1], p[2]));
+        double pitch = p.length > 3 ? p[3] : 6;
+        server.runCommand(String.format(Locale.ROOT, "tp @a[name=!Rival] %.2f %.2f %.2f %.1f %.1f", p[0], HOME.y, p[1], p[2], pitch));
         ctx.waitTicks(20);
     }
 
@@ -454,6 +461,14 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             ctx.waitTick();
         }
         return server.computeOnServer(test::test);
+    }
+
+    /** 손 · HUD 숨기기 (F1 — 모습 사진) */
+    private static void hideGui(ClientGameTestContext ctx, boolean hide) {
+        ctx.runOnClient(mc -> {
+            if (mc.gui.hud.isHidden() != hide) mc.gui.hud.toggle();
+        });
+        ctx.waitTick();
     }
 
     private static void camera(ClientGameTestContext ctx, CameraType t) {

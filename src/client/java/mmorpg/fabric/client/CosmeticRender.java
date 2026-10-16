@@ -34,16 +34,17 @@ import net.minecraft.world.item.ItemStack;
  * 그리지 않음 — 투구 칸은 머리에 쓴 블록 · 머리도, 머리에 얹는 장식 (hideHelmet — 모자 · 왕관) 을 쓰면 투구도), 그릴 것 (갑옷 스킨 · 머리 · 등 장식 · 칭호) 은
  * 렌더 상태에 붙여 둠 → {@link CosmeticLayer}.
  * 등 장식이 있으면 바닐라 망토는 그리지 않음</li>
- * <li>칭호 ({@link #title} — AvatarRenderer.submitNameDisplay 끝): 이름 (아래 점수 줄이 있으면 그 위) 위에 한 줄 더</li>
+ * <li>칭호 ({@link #title} — AvatarRenderer.submitNameDisplay 끝): 이름 (아래 점수 줄이 있으면 그 위) 위에 한 줄 더. 높은 모자 (nameLift) 를 쓰면
+ * 이름표 · 칭호를 함께 올림 ({@link #nameStart} — submitNameDisplay 처음)</li>
  * </ul>
  */
 public final class CosmeticRender {
     private CosmeticRender() {}
 
-    /** 렌더 상태에 붙이는 그릴 것 */
-    public record Data(List<PieceModel> armor, PieceModel head, PieceModel back, Component title) {}
+    /** 렌더 상태에 붙이는 그릴 것 (nameLift = 이름표 · 칭호를 올릴 높이 — 블록) */
+    public record Data(List<PieceModel> armor, PieceModel head, PieceModel back, Component title, float nameLift) {}
 
-    public static final Data NONE = new Data(List.of(), null, null, null);
+    public static final Data NONE = new Data(List.of(), null, null, null, 0F);
     public static final RenderStateDataKey<Data> KEY = RenderStateDataKey.create(() -> "mmorpg:cosmetics");
 
     /** 무기 아이템 → 무기 종류 ("" = RPG 무기 아님) */
@@ -123,7 +124,9 @@ public final class CosmeticRender {
         if (back != null) state.showCape = false;
         CosmeticDefs.Def t = look.def("title");
         Component title = t == null || t.title() == null ? null : TITLES.computeIfAbsent(t.title(), s -> Component.literal(BedrockText.toJava(s)));
-        state.setData(KEY, armor.isEmpty() && head == null && back == null && title == null ? NONE : new Data(List.copyOf(armor), head, back, title));
+        float lift = headDef == null ? 0F : (float) headDef.nameLift();
+        state.setData(KEY, armor.isEmpty() && head == null && back == null && title == null ? NONE
+                : new Data(List.copyOf(armor), head, back, title, lift));
     }
 
     /** 갑옷 칸을 그리지 않게 (렌더 상태만 — 입은 갑옷 · 수치는 그대로) */
@@ -147,12 +150,22 @@ public final class CosmeticRender {
     /** 한 줄 높이 (바닐라 이름표 — 글자 9 × 1.15 줄 간격 × 0.025 크기) */
     private static final float LINE = 9.0F * 1.15F * 0.025F;
 
+    /** 이름표를 그리기 전 (submitNameDisplay 처음): 높은 모자면 이름표 · 칭호를 함께 올림 — 늘 pushPose (끝에서 nameEnd 가 popPose) */
+    public static void nameStart(AvatarRenderState state, PoseStack pose) {
+        pose.pushPose();
+        Data d = state.getData(KEY);
+        if (d != null && d.nameLift() > 0) pose.translate(0.0F, d.nameLift(), 0.0F);
+    }
+
+    /** 이름표를 그린 뒤: 칭호 한 줄 (아래 점수 줄이 있으면 그 위) → nameStart 의 자세를 되돌림 */
     public static void title(AvatarRenderState state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
         Data d = state.getData(KEY);
-        if (d == null || d.title() == null || state.nameTag == null || state.nameTagAttachment == null) return;
-        pose.pushPose();
-        pose.translate(0.0F, (state.scoreText != null ? 2 : 1) * LINE, 0.0F);
-        collector.submitNameTag(pose, state.nameTagAttachment, state.showExtraEars ? -10 : 0, d.title(), !state.isDiscrete, state.lightCoords, camera);
+        if (d != null && d.title() != null && state.nameTag != null && state.nameTagAttachment != null) {
+            pose.pushPose();
+            pose.translate(0.0F, (state.scoreText != null ? 2 : 1) * LINE, 0.0F);
+            collector.submitNameTag(pose, state.nameTagAttachment, state.showExtraEars ? -10 : 0, d.title(), !state.isDiscrete, state.lightCoords, camera);
+            pose.popPose();
+        }
         pose.popPose();
     }
 

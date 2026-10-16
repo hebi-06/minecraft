@@ -702,7 +702,7 @@ public final class CosmeticScreen extends Screen {
         g.text(font, hint, cx - font.width(hint) / 2, y1 - 12, 0xFFFFFFFF, false);
     }
 
-    /** 미리보기 오라 (그림 — 세계의 파티클과 비슷하게): front = 사람 앞쪽에 그릴 것 */
+    /** 미리보기 오라 (그림 — 세계의 파티클과 비슷하게): front = 사람 앞쪽에 그릴 것 (앞쪽은 사람 그림 위 층) */
     private void drawAura(GuiGraphicsExtractor g, CosmeticDefs.Aura a, int cx, int top0, int bottom, long now, boolean front) {
         List<double[]> cols = a.colors();
         double t = now / 1000.0;
@@ -710,44 +710,61 @@ public final class CosmeticScreen extends Screen {
         switch (a.kind()) {
             case "orbit" -> {
                 for (int k = 0; k < 2; k++) {
-                    for (int tail = 0; tail < 7; tail++) {
-                        double ang = (t - tail * 0.05) * Math.PI + k * Math.PI;
-                        boolean isFront = Math.sin(ang) > 0;
-                        if (isFront != front) continue;
-                        int x = cx + (int) Math.round(Math.cos(ang) * 30);
-                        int y = top0 + (int) (h * 0.46 + Math.sin((t - tail * 0.05) * 2.4 + k * Math.PI) * 8 + Math.sin(ang) * 6);
-                        int s = Math.max(1, 3 - tail / 2);
-                        int alpha = 230 - tail * 30;
-                        g.fill(x - s, y - s, x + s, y + s, (alpha << 24) | rgb(cols.get(k % cols.size())));
+                    for (int tail = 0; tail < 8; tail++) {
+                        double tt = t - tail * 0.045;
+                        double ang = tt * Math.PI + k * Math.PI;
+                        if ((Math.sin(ang) > 0) != front) continue;
+                        int x = cx + (int) Math.round(Math.cos(ang) * 31);
+                        int y = top0 + (int) (h * 0.5 + Math.sin(tt * 2.4 + k * Math.PI) * 9 + Math.sin(ang) * 5);
+                        glowDot(g, x, y, Math.max(1, 3 - tail / 2), 240 - tail * 26, rgb(cols.get(k % cols.size())));
+                    }
+                }
+                if (front) {
+                    for (int i = 0; i < 6; i++) {
+                        double ph = (t * 0.4 + i * 0.29) % 1.0;
+                        int x = cx + (int) Math.round(Math.sin(i * 2.1) * 26);
+                        int y = bottom - 6 - (int) (ph * h);
+                        glowDot(g, x, y, 1, (int) (200 * Math.sin(Math.PI * ph)), rgb(cols.get(i % cols.size())));
                     }
                 }
             }
             case "frost" -> {
                 if (!front) return;
-                for (int i = 0; i < 12; i++) {
-                    double ph = (t * 0.35 + i * 0.137) % 1.0;
-                    int x = cx + (int) Math.round(Math.sin(i * 2.3 + t * 0.6) * 26);
-                    int y = top0 - 8 + (int) (ph * (h + 6));
-                    int alpha = (int) (220 * Math.sin(Math.PI * ph));
-                    g.fill(x - 1, y - 1, x + 1, y + 1, (alpha << 24) | rgb(cols.get(i % cols.size())));
+                for (int i = 0; i < 14; i++) {
+                    double ph = (t * 0.3 + i * 0.137) % 1.0;
+                    int x = cx + (int) Math.round(Math.sin(i * 2.3 + t * 0.6) * 27);
+                    int y = top0 - 10 + (int) (ph * (h + 10));
+                    glowDot(g, x, y, i % 3 == 0 ? 2 : 1, (int) (230 * Math.sin(Math.PI * ph)), rgb(cols.get(i % cols.size())));
                 }
-                double ring = (t % 1.5) / 1.5;
-                int rw = (int) (14 + ring * 26);
-                int alpha = (int) (160 * (1 - ring));
-                g.fill(cx - rw, bottom - 1, cx + rw, bottom, (alpha << 24) | rgb(cols.get(0)));
+                double ring = (t % 1.2) / 1.2;
+                int rw = (int) (12 + ring * 30);
+                int alpha = (int) (170 * (1 - ring));
+                g.fill(cx - rw, bottom - 1, cx + rw, bottom + 1, (alpha << 24) | rgb(cols.get(0)));
+                g.fill(cx - rw + 4, bottom - 2, cx + rw - 4, bottom - 1, ((alpha / 2) << 24) | rgb(cols.get(0)));
             }
             default -> {
                 if (!front) return;
-                for (int i = 0; i < 14; i++) {
-                    double ph = (t * 0.7 + i * 0.173) % 1.0;
-                    int x = cx + (int) Math.round(Math.sin(i * 1.7) * 22 + Math.sin(t * 2 + i) * 2);
-                    int y = bottom - (int) (ph * h * 0.75);
-                    int alpha = (int) (230 * (1 - ph));
-                    int s = ph < 0.5 ? 2 : 1;
-                    g.fill(x - s / 2, y - s / 2, x + s - s / 2, y + s - s / 2, (alpha << 24) | rgb(cols.get(i % cols.size())));
+                for (int i = 0; i < 16; i++) {
+                    double ph = (t * 0.75 + i * 0.173) % 1.0;
+                    int x = cx + (int) Math.round(Math.sin(i * 1.7) * 23 + Math.sin(t * 2 + i) * 2);
+                    int y = bottom - (int) (ph * h * 0.8);
+                    glowDot(g, x, y, ph < 0.4 ? 2 : 1, (int) (240 * (1 - ph)), rgb(cols.get(i % cols.size())));
                 }
+                double ring = (t % 0.8) / 0.8;
+                int alpha = (int) (110 * (1 - ring));
+                int rw = (int) (14 + ring * 14);
+                g.fill(cx - rw, bottom - 1, cx + rw, bottom + 1, (alpha << 24) | rgb(cols.get(0)));
             }
         }
+    }
+
+    /** 빛 점 (가운데 + 옅은 번짐) */
+    private static void glowDot(GuiGraphicsExtractor g, int x, int y, int s, int alpha, int rgb) {
+        if (alpha <= 4) return;
+        alpha = Math.min(255, alpha);
+        g.fill(x - s - 2, y - s - 2, x + s + 2, y + s + 2, ((alpha / 5) << 24) | rgb);
+        g.fill(x - s - 1, y - s - 1, x + s + 1, y + s + 1, ((alpha / 3) << 24) | rgb);
+        g.fill(x - s, y - s, x + s, y + s, (alpha << 24) | rgb);
     }
 
     private static int rgb(double[] c) {
