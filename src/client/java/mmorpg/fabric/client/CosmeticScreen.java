@@ -481,7 +481,7 @@ public final class CosmeticScreen extends Screen {
             default -> {
                 CosmeticDefs.Def d = r.def();
                 g.item(CosmeticRender.icon(d.id()), x + 4, iy);
-                name = "title".equals(d.slot()) && d.title() != null ? d.title() : colored(d) + d.name();
+                name = "title".equals(d.slot()) && d.title() != null ? d.title() : null;
                 boolean owned = ClientCosmetics.owns(d.id());
                 right = cur ? "§a장착 중" : owned ? "§7가짐" : "§e" + d.price();
                 if (!cur && !owned) {
@@ -494,27 +494,41 @@ public final class CosmeticScreen extends Screen {
                 }
             }
         }
-        g.text(font, BedrockText.toJava(name), x + 25, y + 6, 0xFFFFFFFF, true);
+        if (name != null) g.text(font, BedrockText.toJava(name), x + 25, y + 6, 0xFFFFFFFF, true);
+        else g.text(font, r.def().name(), x + 25, y + 6, 0xFF000000 | light(r.def().rgb()), true); // 장식 색 그대로 (조금 밝게)
         String rr = BedrockText.toJava(right);
         g.text(font, rr, x + RIGHT_W - 8 - font.width(rr), y + 6, 0xFFFFFFFF, true);
     }
 
-    /** 장식 색에 가까운 글자 색 (§ 코드 — 밝은 색 위주) */
-    private static String colored(CosmeticDefs.Def d) {
-        int rgb = d.rgb();
+    /** 장식 색을 조금 밝게 (어두운 창 위에서 읽히게 — 흰색 30% 섞음) */
+    private static int light(int rgb) {
         int r = (rgb >> 16) & 255;
         int g = (rgb >> 8) & 255;
         int b = rgb & 255;
-        if (r > 200 && g > 200 && b > 200) return "§f";
-        if (r > 200 && g < 120 && b < 120) return "§c";
-        if (r > 200 && g > 150 && b < 120) return "§6";
-        if (r > 200 && b > 150 && g < 170) return "§d";
-        if (r > 200 && g < 170) return "§6";
-        if (b > 200 && r < 150 && g > 180) return "§b";
-        if (b > 200 && r > 120) return "§d";
-        if (b > 200) return "§9";
-        if (g > 200) return "§a";
-        return "§f";
+        r += (255 - r) * 3 / 10;
+        g += (255 - g) * 3 / 10;
+        b += (255 - b) * 3 / 10;
+        return (r << 16) | (g << 8) | b;
+    }
+
+    /** 풀이 첫 줄의 장식 이름 색 (§ 코드는 16색이라 가장 가까운 색 — 풀이는 글자 조각 하나로 그림) */
+    private static String colored(CosmeticDefs.Def d) {
+        int rgb = light(d.rgb());
+        int[][] codes = {{0xFFFFFF, 'f'}, {0xFF5555, 'c'}, {0xFFAA00, '6'}, {0xFFFF55, 'e'}, {0x55FF55, 'a'}, {0x55FFFF, 'b'}, {0x5555FF, '9'},
+            {0xFF55FF, 'd'}, {0xAAAAAA, '7'}};
+        int best = 'f';
+        long bestD = Long.MAX_VALUE;
+        for (int[] c : codes) {
+            long dr = ((rgb >> 16) & 255) - ((c[0] >> 16) & 255);
+            long dg = ((rgb >> 8) & 255) - ((c[0] >> 8) & 255);
+            long db = (rgb & 255) - (c[0] & 255);
+            long dist = dr * dr + dg * dg + db * db;
+            if (dist < bestD) {
+                bestD = dist;
+                best = c[1];
+            }
+        }
+        return "§" + (char) best;
     }
 
     private List<String> rowTip(Row r, boolean cur) {
@@ -537,6 +551,7 @@ public final class CosmeticScreen extends Screen {
                 tip.addAll(d.desc());
                 if (d.aura() != null) tip.add("§7" + CosmeticAura.label(d.aura().kind()));
                 if ("weapon".equals(d.slot())) tip.add("§8손에 든 모습만 바뀜 (아이콘 · 수치는 그대로)");
+                if (d.hideHelmet()) tip.add("§8쓰는 동안 투구는 보이지 않음 (머리에 얹는 장식)");
                 tip.add(cur ? "§a장착 중" : ClientCosmetics.owns(d.id()) ? "§7가진 장식 — 장착 단추로 입기" : "§e에메랄드 " + d.price() + " §7(가진 것 " + ClientCosmetics.money() + ")");
             }
         }
@@ -661,8 +676,14 @@ public final class CosmeticScreen extends Screen {
         Quaternionf cam = new Quaternionf().rotateX((float) Math.toRadians(8));
         Quaternionf rot = new Quaternionf().rotateZ((float) Math.PI).mul(cam);
         g.entity(state, FIGURE_SCALE, new Vector3f(0F, ty, 0F), rot, cam, bx0, by0, bx1, by1);
-        if (aura != null && aura.aura() != null) drawAura(g, aura.aura(), cx, headY, feetY, now, true);
         g.disableScissor();
+        // 사람 그림 (picture-in-picture) 은 같은 층의 다른 그림보다 나중에 그려지므로, 앞쪽 오라는 다음 층에
+        g.nextStratum();
+        if (aura != null && aura.aura() != null) {
+            g.enableScissor(bx0, by0, bx1, by1);
+            drawAura(g, aura.aura(), cx, headY, feetY, now, true);
+            g.disableScissor();
+        }
 
         // 이름표 (발 아래 — 큰 모자 · 고리와 겹치지 않게): 칭호 한 줄 + 이름
         CosmeticDefs.Def title = look.def("title");
@@ -755,7 +776,10 @@ public final class CosmeticScreen extends Screen {
             click();
             if ("weapon".equals(tab)) setWeaponType(Weapons.allTypes().get(i));
             else if (i < 4) setArmorSlot(CosmeticDefs.ARMOR.get(i));
-            else ClientCosmetics.send(i == 4 ? "hide_all" : "show_all", "", "");
+            else {
+                ClientCosmetics.send(i == 4 ? "hide_all" : "show_all", "", "");
+                select(-1); // 미리보기도 바뀐 모습 그대로
+            }
             return true;
         }
         List<Row> rows = rows();

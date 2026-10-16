@@ -31,7 +31,8 @@ import net.minecraft.world.item.ItemStack;
  * <li>무기 스킨 ({@link #skinned}): 사람 (플레이어 · 마네킹) 이 손에 든 RPG 무기를 그릴 때 (1인칭 · 3인칭 손 — ItemModelResolver.updateForLiving),
  * 그 무기 종류의 스킨이 있으면 아이템 모델만 rpg:cosmetic_&lt;스킨&gt; 으로 바꾼 복사본을 그림. 가방 · 핫바 아이콘 (GUI) · 땅에 떨어진 것은 그대로</li>
  * <li>갑옷 · 장식 ({@link #extract} — AvatarRenderer.extractRenderState 끝): 숨기거나 스킨을 입은 갑옷 칸은 렌더 상태에서 비움 (바닐라 · RPG 갑옷 모두
- * 그리지 않음 — 투구 칸은 머리에 쓴 블록 · 머리도), 그릴 것 (갑옷 스킨 · 머리 · 등 장식 · 칭호) 은 렌더 상태에 붙여 둠 → {@link CosmeticLayer}.
+ * 그리지 않음 — 투구 칸은 머리에 쓴 블록 · 머리도, 머리에 얹는 장식 (hideHelmet — 모자 · 왕관) 을 쓰면 투구도), 그릴 것 (갑옷 스킨 · 머리 · 등 장식 · 칭호) 은
+ * 렌더 상태에 붙여 둠 → {@link CosmeticLayer}.
  * 등 장식이 있으면 바닐라 망토는 그리지 않음</li>
  * <li>칭호 ({@link #title} — AvatarRenderer.submitNameDisplay 끝): 이름 (아래 점수 줄이 있으면 그 위) 위에 한 줄 더</li>
  * </ul>
@@ -105,15 +106,19 @@ public final class CosmeticRender {
             return;
         }
         List<PieceModel> armor = new ArrayList<>(4);
+        CosmeticDefs.Def headDef = look.def("head");
+        // 머리에 얹는 장식 (모자 · 왕관) 을 쓰면 투구는 그리지 않음 (투구 스킨도)
+        boolean noHelmet = headDef != null && headDef.hideHelmet();
+        if (noHelmet) clear(state, "helmet");
         for (String slot : CosmeticDefs.ARMOR) {
             String v = look.get(slot);
-            if (v == null) continue;
+            if (v == null || (noHelmet && slot.equals("helmet"))) continue;
             clear(state, slot);
             if (Look.HIDE.equals(v)) continue;
             PieceModel m = CosmeticModels.of(CosmeticDefs.get(v));
             if (m != null) armor.add(m);
         }
-        PieceModel head = CosmeticModels.of(look.def("head"));
+        PieceModel head = CosmeticModels.of(headDef);
         PieceModel back = CosmeticModels.of(look.def("back"));
         if (back != null) state.showCape = false;
         CosmeticDefs.Def t = look.def("title");

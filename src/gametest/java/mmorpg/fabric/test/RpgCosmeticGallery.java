@@ -7,9 +7,10 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import mmorpg.core.Armor;
+import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgItems;
+import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.client.ClientCosmetics;
 import mmorpg.fabric.client.CosmeticAura;
 import mmorpg.fabric.client.CosmeticLayer;
@@ -21,7 +22,6 @@ import mmorpg.fabric.client.StatScreen;
 import mmorpg.fabric.cosmetic.CosmeticDefs;
 import mmorpg.fabric.cosmetic.Cosmetics;
 import mmorpg.fabric.cosmetic.Look;
-import mmorpg.fabric.gear.GearItems;
 import mmorpg.fabric.ui.Forms;
 import mmorpg.fabric.ui.Inv;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -38,6 +38,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,7 +55,7 @@ import org.slf4j.LoggerFactory;
 public final class RpgCosmeticGallery implements FabricClientGameTest {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-cosmetic-gallery");
     private static final Vec3 HOME = new Vec3(0.5, -60, 0.5);
-    private static final Vec3 RIVAL_AT = new Vec3(0.5, -60, 4.0);
+    private static final Vec3 RIVAL_AT = new Vec3(0.5, -60, 3.5);
 
     private final List<String> failures = new ArrayList<>();
     private UUID rivalId;
@@ -78,7 +79,12 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
                 ServerPlayer me = me(s);
                 Cosmetics.reset(me);
                 me.getInventory().clearContent();
-                me.getInventory().setItem(0, new ItemStack(RpgItems.byId(Weapons.weaponFrom("sword", 30, "hero").id())));
+                // 영웅 칼을 쓸 수 있게 (요구 레벨 · 스탯 — 화면 하단 "필요" 안내가 사진을 가리지 않게)
+                me.setExperienceLevels(30);
+                RpgPlayers.checkLevelUp(me);
+                Weapon w = Weapons.weaponFrom("sword", 30, "hero");
+                for (Weapons.Req r : w.reqs()) RpgPlayers.setStat(me, r.stat(), (int) Math.ceil(r.value()) + 10);
+                me.getInventory().setItem(0, new ItemStack(RpgItems.byId(w.id())));
                 me.getInventory().setSelectedSlot(0);
                 for (int i = 0; i < 16; i++) me.getInventory().setItem(9 + i, new ItemStack(Inv.CURRENCY, 64));
             });
@@ -299,6 +305,11 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         camera(ctx, CameraType.THIRD_PERSON_FRONT);
         ctx.waitTicks(30);
         shot(ctx, "c_world_front");
+        // 왕관 (hideHelmet) → 성기사 투구는 그리지 않음 · 마법사 모자로 바꿔 봄 (사람 모델의 hat 뼈와 이름이 겹치지 않는지 — 머리 위에 앉음)
+        server.runOnServer(s -> Cosmetics.equip(me(s), "wizard_hat"));
+        ctx.waitTicks(15);
+        shot(ctx, "c_world_wizard_hat");
+        server.runOnServer(s -> Cosmetics.equip(me(s), "crown"));
         camera(ctx, CameraType.THIRD_PERSON_BACK);
         ctx.waitTicks(10);
         shot(ctx, "c_world_back");
@@ -335,62 +346,56 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         check(seen, "rival visible to the client");
         boolean got = waitFor(ctx, mc -> "title_slayer".equals(ClientCosmetics.lookOf(rivalId).get("title")), 40);
         check(got, "rival's look reached my client (broadcast)");
-        home(server, 0F, 4F);
         camera(ctx, CameraType.FIRST_PERSON);
-        ctx.waitTicks(25);
+        // 두 번째 플레이어는 그대로 두고 내가 둘레를 돌며 봄 (남의 몸 방향은 머리를 따라 늦게 돌아서)
+        int third0 = ctx.computeOnClient(mc -> CosmeticRender.skinnedThirdPerson);
+        viewRival(ctx, server, "front");
         shot(ctx, "c_rival_front");
-        rotateRival(server, 0F);
-        ctx.waitTicks(15);
+        check(ctx.computeOnClient(mc -> CosmeticRender.skinnedThirdPerson) > third0, "rival's axe drawn with the lava skin");
+        viewRival(ctx, server, "back");
         shot(ctx, "c_rival_back");
-        rotateRival(server, 90F);
-        ctx.waitTicks(15);
+        viewRival(ctx, server, "side");
         shot(ctx, "c_rival_side");
-        rotateRival(server, 180F);
     }
 
     private void rivalArmor(ClientGameTestContext ctx, TestServerContext server) {
         if (rivalId == null) return;
+        // 바닐라 다이아몬드 갑옷 (입을 조건 없음) 을 입히고 장식은 벗김 → 진짜 갑옷이 보임 → 모두 숨기기 → 빙룡 갑옷 스킨
         server.runOnServer(s -> {
             ServerPlayer r = rival(s);
-            for (String piece : Armor.PIECE_ORDER) {
-                EquipmentSlot slot = switch (piece) {
-                    case "helmet" -> EquipmentSlot.HEAD;
-                    case "chest" -> EquipmentSlot.CHEST;
-                    case "legs" -> EquipmentSlot.LEGS;
-                    default -> EquipmentSlot.FEET;
-                };
-                r.setItemSlot(slot, new ItemStack(GearItems.byId(Armor.armorId("str", 40, "transcend", piece))));
-            }
+            r.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
+            r.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE));
+            r.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.DIAMOND_LEGGINGS));
+            r.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
             Cosmetics.clear(r, "chest", null);
             Cosmetics.clear(r, "back", null);
             Cosmetics.clear(r, "head", null);
         });
-        ctx.waitTicks(20);
-        shot(ctx, "c_rival_emperor");
+        viewRival(ctx, server, "front");
+        shot(ctx, "c_rival_diamond");
         server.runOnServer(s -> Cosmetics.action(rival(s), "hide_all", "", ""));
         boolean hidden = waitFor(ctx, mc -> ClientCosmetics.lookOf(rivalId).hidden("chest"), 40);
         check(hidden, "rival armor hidden on my client");
         ctx.waitTicks(5);
-        shot(ctx, "c_rival_emperor_hidden");
+        shot(ctx, "c_rival_diamond_hidden");
+        boolean stillWorn = server.computeOnServer(s -> rival(s).getItemBySlot(EquipmentSlot.CHEST).is(Items.DIAMOND_CHESTPLATE));
+        check(stillWorn, "hiding keeps the real chestplate on (looks only)");
         server.runOnServer(s -> {
             ServerPlayer r = rival(s);
-            Cosmetics.equip(r, "frost_dragon_helmet");
-            Cosmetics.equip(r, "frost_dragon_chest");
-            Cosmetics.equip(r, "frost_dragon_legs");
-            Cosmetics.equip(r, "frost_dragon_boots");
-            Cosmetics.equip(r, "halo");
-            Cosmetics.equip(r, "crimson_cape");
+            for (String id : List.of("frost_dragon_helmet", "frost_dragon_chest", "frost_dragon_legs", "frost_dragon_boots", "halo", "crimson_cape")) {
+                Cosmetics.equip(r, id);
+            }
         });
         ctx.waitTicks(15);
         shot(ctx, "c_rival_frost_dragon");
-        rotateRival(server, 0F);
-        ctx.waitTicks(15);
+        viewRival(ctx, server, "back");
         shot(ctx, "c_rival_frost_dragon_back");
-        rotateRival(server, 180F);
+        viewRival(ctx, server, "front");
     }
 
     private void auras(ClientGameTestContext ctx, TestServerContext server) {
         if (rivalId == null) return;
+        viewRival(ctx, server, "near");
         for (String id : List.of("ember_aura", "star_aura", "frost_aura")) {
             server.runOnServer(s -> Cosmetics.equip(rival(s), id));
             ctx.waitTicks(40);
@@ -398,13 +403,16 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         }
     }
 
-    private void rotateRival(TestServerContext server, float yaw) {
-        server.runOnServer(s -> {
-            ServerPlayer r = rival(s);
-            r.setYRot(yaw);
-            r.setYHeadRot(yaw);
-            r.setYBodyRot(yaw);
-        });
+    /** 두 번째 플레이어를 보는 자리로 (앞 · 뒤 · 옆 · 가까이 — 두 번째 플레이어는 북쪽을 봄) */
+    private void viewRival(ClientGameTestContext ctx, TestServerContext server, String where) {
+        double[] p = switch (where) {
+            case "back" -> new double[] {RIVAL_AT.x, RIVAL_AT.z + 3.0, 180};
+            case "side" -> new double[] {RIVAL_AT.x + 3.0, RIVAL_AT.z, 90};
+            case "near" -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 2.2, 0};
+            default -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 3.0, 0};
+        };
+        server.runCommand(String.format(Locale.ROOT, "tp @a[name=!Rival] %.2f %.2f %.2f %.1f 6", p[0], HOME.y, p[1], p[2]));
+        ctx.waitTicks(20);
     }
 
     // ------------------------------------------------------------ 도움

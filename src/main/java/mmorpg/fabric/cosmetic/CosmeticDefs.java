@@ -32,10 +32,10 @@ public final class CosmeticDefs {
 
     /**
      * 장식 하나. weapon · design = 무기 스킨 (무기 종류 · 디자인), model = 갑옷 스킨 · 머리 · 등 장식 모델 (assets/mmorpg/cosmetic/&lt;model&gt;.json),
-     * set = 갑옷 스킨 세트, aura · title = 오라 · 칭호 글
+     * set = 갑옷 스킨 세트, aura · title = 오라 · 칭호 글, hideHelmet = 머리 장식을 쓴 동안 투구를 그리지 않음 (머리에 얹는 모자 · 왕관)
      */
     public record Def(String id, String slot, String name, int price, List<String> desc, double[] color, String weapon, String design, String model,
-            String set, Aura aura, String title) {
+            String set, Aura aura, String title, boolean hideHelmet) {
         /** 목록 · 연출 색 (0xRRGGBB) */
         public int rgb() {
             return (to255(color[0]) << 16) | (to255(color[1]) << 8) | to255(color[2]);
@@ -121,7 +121,7 @@ public final class CosmeticDefs {
             }
             out.put(e.getKey(), new Def(e.getKey(), slot, str(o.get("name"), e.getKey()), o.get("price") instanceof Number n ? Math.max(0, n.intValue()) : 0,
                     List.copyOf(desc), color(o.get("color")), strOrNull(o.get("weapon")), strOrNull(o.get("design")), strOrNull(o.get("model")),
-                    strOrNull(o.get("set")), aura, strOrNull(o.get("title"))));
+                    strOrNull(o.get("set")), aura, strOrNull(o.get("title")), Boolean.TRUE.equals(o.get("hideHelmet"))));
         }
         slots = s;
         defs = out;

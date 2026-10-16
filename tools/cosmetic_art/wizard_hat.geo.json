@@ -17,7 +17,7 @@
      ]
     },
     {
-     "name": "hat",
+     "name": "wizhat",
      "pivot": [
       0.0,
       32.0,
@@ -76,15 +76,15 @@
      ]
     },
     {
-     "name": "hat_mid",
+     "name": "wizhat_mid",
      "pivot": [
       0.0,
       37.0,
       0.0
      ],
-     "parent": "hat",
+     "parent": "wizhat",
      "rotation": [
-      -10.0,
+      -8.0,
       0.0,
       0.0
      ],
@@ -108,15 +108,15 @@
      ]
     },
     {
-     "name": "hat_top",
+     "name": "wizhat_top",
      "pivot": [
       0.0,
       40.0,
       0.0
      ],
-     "parent": "hat_mid",
+     "parent": "wizhat_mid",
      "rotation": [
-      -16.0,
+      -12.0,
       0.0,
       0.0
      ],
@@ -140,15 +140,15 @@
      ]
     },
     {
-     "name": "hat_tip",
+     "name": "wizhat_tip",
      "pivot": [
       0.0,
       43.0,
       0.0
      ],
-     "parent": "hat_top",
+     "parent": "wizhat_top",
      "rotation": [
-      -24.0,
+      -18.0,
       0.0,
       0.0
      ],

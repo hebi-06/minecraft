@@ -2,7 +2,8 @@
 """장식 그림 · 모델 만들기 (0.13.0 — src/main/resources/mmorpg/cosmetics.json 의 항목마다).
 
   python3 tools/cosmetic_art.py              # tools/cosmetic_art · tools/weapon_art 의 원본 → 게임 자원 (모델 · 텍스처 · 아이콘 · 아이템 정의)
-  python3 tools/cosmetic_art.py --samples    # 임시 견본 원본을 (다시) 만든 뒤 위와 같이 — 이미 있는 원본은 덮어씀
+  python3 tools/cosmetic_art.py --samples    # 없는 임시 견본 원본을 만든 뒤 위와 같이 (있는 원본 — 바꿔 넣은 디자인 — 은 그대로)
+  python3 tools/cosmetic_art.py --samples --force   # 임시 견본 원본을 모두 다시 (바꿔 넣은 디자인도 덮어씀)
   (무기 스킨을 더하거나 바꾼 뒤) python3 tools/weapon_models.py   # 무기 스킨 디자인 → 손에 든 3D 모델 · 빛 알갱이 (WeaponFxData.BY_SKIN)
 
 원본 (tools/cosmetic_art — 클로드 디자인에서 만든 것으로 바꿀 때는 같은 이름으로 넣고 다시 돌리면 됨):
@@ -396,17 +397,18 @@ def hat_paint(seed=0, band=False, stars=True):
 def wizard_hat():
     d = Design("wizard_hat", 64, 64)
     d.bone("head", pivot=(0, 24, 0))
-    d.bone("hat", "head", pivot=(0, 32, 0))
-    d.cube("hat", (-7, 31, -7), (14, 1, 14), hat_paint(1, stars=False))
-    d.cube("hat", (-4.5, 32, -4.5), (9, 2, 9), hat_paint(2, band=True))
-    d.cube("hat", (-4, 34, -4), (8, 3, 8), hat_paint(3))
-    d.bone("hat_mid", "hat", pivot=(0, 37, 0), rotation=(-10, 0, 0))
-    d.cube("hat_mid", (-3, 37, -3), (6, 3, 6), hat_paint(4))
-    d.bone("hat_top", "hat_mid", pivot=(0, 40, 0), rotation=(-16, 0, 0))
-    d.cube("hat_top", (-2, 40, -2), (4, 3, 4), hat_paint(5))
-    d.bone("hat_tip", "hat_top", pivot=(0, 43, 0), rotation=(-24, 0, 0))
-    d.cube("hat_tip", (-1, 43, -1), (2, 3, 2), hat_paint(6))
-    d.cube("hat_tip", (-0.5, 46, -0.5), (1, 1, 1), solid(STAR, rough=0.02), lambda *a: (180, 150, 40, 255))
+    # 뼈 이름 hat 은 쓰지 않음 (사람 모델의 겉 머리 층 이름 — 같은 이름이면 그 자리로 옮겨짐)
+    d.bone("wizhat", "head", pivot=(0, 32, 0))
+    d.cube("wizhat", (-7, 31, -7), (14, 1, 14), hat_paint(1, stars=False))
+    d.cube("wizhat", (-4.5, 32, -4.5), (9, 2, 9), hat_paint(2, band=True))
+    d.cube("wizhat", (-4, 34, -4), (8, 3, 8), hat_paint(3))
+    d.bone("wizhat_mid", "wizhat", pivot=(0, 37, 0), rotation=(-8, 0, 0))
+    d.cube("wizhat_mid", (-3, 37, -3), (6, 3, 6), hat_paint(4))
+    d.bone("wizhat_top", "wizhat_mid", pivot=(0, 40, 0), rotation=(-12, 0, 0))
+    d.cube("wizhat_top", (-2, 40, -2), (4, 3, 4), hat_paint(5))
+    d.bone("wizhat_tip", "wizhat_top", pivot=(0, 43, 0), rotation=(-18, 0, 0))
+    d.cube("wizhat_tip", (-1, 43, -1), (2, 3, 2), hat_paint(6))
+    d.cube("wizhat_tip", (-0.5, 46, -0.5), (1, 1, 1), solid(STAR, rough=0.02), lambda *a: (180, 150, 40, 255))
     return d
 
 
@@ -599,22 +601,44 @@ def sample_armor(item_id, item):
     write_json(os.path.join(SRC, f"{item['model']}.model.json"), m, indent=1)
 
 
-def make_samples(defs):
+def make_samples(defs, force=False):
+    """임시 견본 원본 만들기 — 원본이 이미 있으면 (바꿔 넣은 디자인) 그대로 둠, force 면 모두 다시"""
     os.makedirs(SRC, exist_ok=True)
+    made = []
     for name, fn in SAMPLE_DESIGNS.items():
-        fn().save(SRC)
+        if force or not os.path.exists(os.path.join(SRC, f"{name}.geo.json")):
+            fn().save(SRC)
+            made.append(name)
     for iid, it in defs["items"].items():
         s = it.get("sample")
         if not s:
             continue
         if it["slot"] == "weapon":
-            sample_weapon(iid, it)
-        else:
+            if force or not os.path.exists(os.path.join(WEAPON_ART, f"{it['design']}.geo.json")):
+                sample_weapon(iid, it)
+                made.append(it["design"])
+        elif force or not any(os.path.exists(os.path.join(SRC, f"{it['model']}{ext}")) for ext in (".geo.json", ".model.json")):
             sample_armor(iid, it)
-    print(f"samples: {len(SAMPLE_DESIGNS)} designs + recolored weapons/armor")
+            made.append(it["model"])
+    print(f"samples: {len(made)} made" + (f" ({', '.join(made)})" if made else " (all sources exist — --force to remake)"))
 
 
 # ------------------------------------------------------------ 게임 자원
+
+# 사람 모델 (PlayerModel) 의 뼈 이름 — 장식 모델의 아래 뼈가 같은 이름이면 그리기 (TransformCopyingModel) 가 그 뼈의 자리 · 회전으로 바꿔 버림
+RESERVED_BONES = {"hat", "jacket", "left_sleeve", "right_sleeve", "left_pants", "right_pants", "ear", "left_ear", "right_ear", "cloak"}
+
+
+def check_bones(model, m):
+    def walk(part, path):
+        for name, child in part.get("children", {}).items():
+            if name in RESERVED_BONES:
+                raise SystemExit(f"{model}: 뼈 이름 '{name}' ({'/'.join(path + [name])}) 은 사람 모델의 뼈 이름이라 쓸 수 없음 — 다른 이름으로 "
+                                 f"(쓰지 않는 이름: {', '.join(sorted(RESERVED_BONES))})")
+            walk(child, path + [name])
+    for name, part in m["parts"].items():
+        walk(part, [name])
+
 
 def load_model(model):
     """원본 → (자바 조각 JSON, 텍스처 그림, 빛 그림 또는 None)"""
@@ -750,6 +774,7 @@ def build(defs):
             if model:
                 if model not in models_done:
                     m, tex, glow, tname = load_model(model)
+                    check_bones(model, m)
                     tpath = f"mmorpg:textures/entity/cosmetic/{tname}"
                     m = {"tw": m["tw"], "th": m["th"], "texture": tpath, **({"emissive": f"mmorpg:textures/entity/cosmetic/{model}.glow.png"} if glow else {}),
                          "parts": m["parts"]}
@@ -780,11 +805,12 @@ def build(defs):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--samples", action="store_true", help="임시 견본 원본을 (다시) 만듦")
+    ap.add_argument("--samples", action="store_true", help="없는 임시 견본 원본을 만듦")
+    ap.add_argument("--force", action="store_true", help="--samples 와 함께: 있는 원본도 모두 다시")
     a = ap.parse_args()
     defs = json.load(open(COSMETICS, encoding="utf-8"))
     if a.samples:
-        make_samples(defs)
+        make_samples(defs, force=a.force)
     build(defs)
 
 
