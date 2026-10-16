@@ -32,6 +32,8 @@ public final class Solas {
 
     /** 흰 금빛 기운 */
     static final double[] SOL_LIGHT = {1.0, 0.95, 0.72};
+    /** 날밑 · 자루의 보랏빛 (0.12.8 — 무기 디자인 색): 참격 바깥 기운 (예전 SOL_LIGHT) */
+    static final double[] SOL_SHADE = {0.55, 0.36, 0.8};
     static final double[] SOL_WHITE = {1, 1, 1};
     /** 섬광 난무가 이어서 고르는 적이 될 수 있는 무리 (적대 몹 · 이 애드온 몬스터 · 보스 · 허수아비). 조준한 적은 무엇이든 */
     static final List<String> RUSH_FAMILIES = List.of("monster", "rpg_monster", "rpg_boss", "rpg_boss_prop", "rpg_dummy");
@@ -345,7 +347,7 @@ public final class Solas {
                 Vec3 v = V.unit(V.sub(look, eye));
                 double near = Math.min(1, Math.max(0.5, V.len(V.sub(look, eye)) / 3));
                 SkillFx.arc(level, V.add(look, v, -0.2), v, Opt.of("shape", "arc", "flip", ii % 2 == 1, "size", 1.9 * near, "life", 0.24, "speed", 1.2,
-                        "spin", (ii % 2 == 1 ? -1 : 1) * 40.0, "color", glow, "aura", SOL_LIGHT));
+                        "spin", (ii % 2 == 1 ? -1 : 1) * 40.0, "color", glow, "aura", SOL_SHADE));
                 int angle = ii % 2 == 1 ? -38 : 38;
                 SkillFx.cutMark(level, look, v, angle, 0.2, glow, core, near);
                 SkillFx.sparks(level, look, core, 5, 4);
@@ -696,9 +698,9 @@ public final class Solas {
             double big = Math.min(radius * 0.95, Math.max(1.0, dist * 0.32));
             Vec3 at = dist > 1e-3 ? c : V.add(eye, fv, 3);
             SkillFx.arc(level, at, dirX, Opt.of("shape", "heavy", "flip", false, "size", big, "life", 0.42, "speed", 1.5, "spin", 45.0, "color", glow,
-                    "aura", SOL_LIGHT));
+                    "aura", SOL_SHADE));
             Tasks.later(1, () -> SkillFx.arc(level, V.add(at, dirX, 0.08), dirX, Opt.of("shape", "heavy", "flip", true, "size", big, "life", 0.42, "speed", 1.5,
-                    "spin", -45.0, "color", glow, "aura", SOL_LIGHT)));
+                    "spin", -45.0, "color", glow, "aura", SOL_SHADE)));
             SkillFx.fx(level, "rpg:slash_x", V.add(at, dirX, -0.1), Opt.of("dir", dirX, "size", big * 0.45, "life", 0.3, "color", SOL_WHITE, "alpha", 1.0));
             SkillFx.burst(level, at, SOL_LIGHT, big * 0.5, 0.35);
             SkillFx.shock(level, ground, glow, radius / 2.1, 0.5);

@@ -37,9 +37,9 @@ import net.minecraft.world.phys.Vec3;
 final class Gungnir {
     private Gungnir() {}
 
-    static final double[] GN_BOLT = {0.62, 0.86, 1.0};
+    static final double[] GN_BOLT = {0.45, 0.85, 1.0}; // 창끝 수정의 청록빛 (0.12.8 — 무기 디자인 색)
     static final double[] GN_WHITE = {0.94, 0.98, 1.0};
-    static final double[] GN_DEEP = {0.22, 0.4, 0.95};
+    static final double[] GN_DEEP = {0.2, 0.3, 0.74}; // 자루의 짙은 청빛
     static final double[] GN_DARK = {0.05, 0.07, 0.16};
     static final double[] GN_CLOUD = {0.2, 0.22, 0.34};
     /** 끌지 않는 무거운 몹 (룬 중력의 heavy 목록 — 자바 이름) */

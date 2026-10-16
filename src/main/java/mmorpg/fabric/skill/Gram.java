@@ -29,7 +29,7 @@ final class Gram {
 
     static final double[] G_FIRE = {1.0, 0.45, 0.08};
     static final double[] G_EMBER = {1.0, 0.62, 0.2};
-    static final double[] G_DEEP = {0.9, 0.18, 0.04};
+    static final double[] G_DEEP = {0.85, 0.12, 0.1}; // 칼날 밑동 · 용 날밑의 짙은 붉은빛 (0.12.8 — 무기 디자인 색)
     static final double[] G_ASH = {0.16, 0.08, 0.06};
 
     static void register() {

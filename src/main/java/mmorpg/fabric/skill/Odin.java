@@ -31,7 +31,7 @@ import net.minecraft.world.phys.Vec3;
 final class Odin {
     private Odin() {}
 
-    static final double[] OD_GOLD = {1.0, 0.8, 0.36}; // 금빛 (지팡이 · 까마귀 빛)
+    static final double[] OD_GOLD = {1.0, 0.84, 0.5}; // 옅은 금빛 (지팡이 · 까마귀 빛 — 0.12.8 무기 디자인 색)
     static final double[] OD_WHITE = {1.0, 0.97, 0.86}; // 흰 금빛
     /** 빛의 까마귀 반 크기 (칸) — 그림 192점 = 2 × 반 크기 (날개 폭 약 160점 → 약 1.7칸) */
     static final double OD_RAVEN = 1.0;

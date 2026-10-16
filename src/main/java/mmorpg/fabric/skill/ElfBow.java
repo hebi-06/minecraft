@@ -25,7 +25,7 @@ final class ElfBow {
     private ElfBow() {}
 
     /** 나뭇잎 */
-    static final double[] LEAF = {0.36, 0.78, 0.36};
+    static final double[] LEAF = {0.3, 0.66, 0.44}; // 활대 잎 장식의 초록 (0.12.8 — 무기 디자인 색)
     /** 바람 정령 그림 (rpg:rfx_spirit — 실프 4장) */
     static final int SYLPH = RuneKit.SPIRIT_CELL.get("sylph");
     /** 깃털 그림 (rpg:rfx_prop) {빛, 심지} */

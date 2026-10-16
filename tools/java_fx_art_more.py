@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""세계수의 도끼 · 스발린 (0.12.4 — 도끼 · 방패 초월 새 컨셉) 연출 그림 → tools/java_fx (java_fx_art.py 가 함께 부름).
+"""세계수의 도끼 · 스발린 (0.12.4 — 도끼 · 방패 초월 새 컨셉, 0.12.8 무기 디자인 색) 연출 그림 → tools/java_fx (java_fx_art.py 가 함께 부름).
 
 그림 (점 그림 — 작은 판에 그려 4배로 키움, 마인크래프트 느낌)
 - rfx_yggdrasil  세계수 (512×512 × 4장: 싹 → 어린나무 → 다 자람 → 빛남). lookat_y (세로로 섬), 밑동 = 그림 위에서 118/128
@@ -7,9 +7,12 @@
 - rfx_leaf       잎 4모양 (64×64 — 흰 잎, 색을 입힘: 초록 · 금빛 · 꽃잎 분홍). rotate_xyz (돎)
 - rfx_bloom      빛의 꽃 (256×256 × 4장: 봉오리 → 핌 → 활짝 → 빛남) — 보는 사람을 향함 (rotate_xyz)
 - rfx_bloomflat  같은 꽃을 땅에 눕혀 (direction_z — dir 이 위)
-- svalinn_shield 스발린 앞모습 (256×256 × 12장 — 애드온 aegis_shield 와 같은 칸 · 같은 정의: 0~3 빛이 지나감 · 4~7 가운데 얼음 핵이 번쩍 · 8~11 흩어짐)
+- svalinn_shield 스발린 앞모습 (256×256 × 12장 — 애드온 aegis_shield 와 같은 칸 · 같은 정의: 0~3 빛이 지나감 · 4~7 가운데 보석이 번쩍 · 8~11 흩어짐).
+                 0.12.8: 무기 디자인 (0.12.7 사용자 리워크 — tools/weapon_art/shield_transcend_lv0.java.*) 의 앞모습을 광선 추적으로 그대로 (남빛 강철 · 하늘빛 룬)
 - svalinn_hex    스발린 돔의 육각 칸 (애드온 aegis_hex 를 흰빛으로 — 색을 입힘, 같은 정의: 접혀 들어감)
-- rfx_eclipse    일식 (256×256 × 4장: 해를 가린 스발린 둘 (코로나가 일렁임) · 다이아몬드 고리 · 드러난 해) — 보는 사람을 향함 (rotate_xyz)
+- rfx_eclipse    일식 (256×256 × 4장: 해를 가린 스발린 둘 (코로나가 일렁임) · 다이아몬드 고리 · 드러난 해) — 보는 사람을 향함 (rotate_xyz).
+                 0.12.8: 코로나 · 드러난 해를 스발린 룬의 하늘빛 · 흰빛으로 (예전 불꽃빛), 원판에 무기 문장 (마름모 · 네 갈래 별)
+- (0.12.8) 세계수 · 빛의 꽃: 결 · 열매 · 꽃잎을 세계수의 도끼 날의 민트 수정빛 · 연둣빛으로 (예전 금빛 · 분홍)
 - svalinn_ice    서리 돌진의 얼음 조각 (32×32 × 4모양 — 애드온 aegis_stone 과 같은 칸 · 같은 정의, 미리 칠한 얼음빛)
 """
 import json
@@ -106,13 +109,13 @@ def borrow_def(src, name, tw, th):
 BARK_D = (52, 32, 20, 255)
 BARK = (98, 66, 36, 255)
 BARK_L = (146, 102, 54, 255)
-VEIN = (255, 210, 104, 255)
-VEIN_C = (255, 246, 200, 255)
-LEAF_D = (20, 78, 44, 255)
-LEAF = (44, 136, 66, 255)
-LEAF_L = (104, 196, 92, 255)
-LEAF_G = (232, 208, 92, 255)
-LEAF_W = (255, 250, 196, 255)
+VEIN = (140, 236, 176, 255)  # 결 · 열매: 도끼 날의 민트 수정빛 (0.12.8 — 예전 금빛)
+VEIN_C = (222, 255, 232, 255)
+LEAF_D = (18, 80, 52, 255)
+LEAF = (40, 138, 82, 255)
+LEAF_L = (98, 198, 118, 255)
+LEAF_G = (196, 222, 92, 255)  # 연둣빛 잎 무리 (도끼 자루의 잎 장식)
+LEAF_W = (232, 255, 214, 255)
 OUT_D = (14, 34, 22, 255)
 
 
@@ -272,8 +275,8 @@ def tree_frame(g, shine, seed=7):
             p = bp[x, y]
             if p[3] and p[:3] in hot:
                 gp[x, y] = p
-    halo = glow_of(gold, 7, (255, 216, 110), 1.0 + 1.4 * shine)
-    aura = glow_of(big, 20, (140, 255, 150), 0.2 + 0.55 * shine * g)
+    halo = glow_of(gold, 7, (150, 245, 190), 1.0 + 1.4 * shine)
+    aura = glow_of(big, 20, (110, 235, 165), 0.2 + 0.55 * shine * g)
     return over(aura, halo, big)
 
 
@@ -398,8 +401,8 @@ def bloom_frame(open_t, shine):
         L = 8 + 10 * min(1, open_t * 1.3)
         x, y = c + math.cos(a) * L, c + math.sin(a) * L
         d.polygon([(c, c), (x + math.cos(a + 1.6) * 3, y + math.sin(a + 1.6) * 3), (x, y), (x + math.cos(a - 1.6) * 3, y + math.sin(a - 1.6) * 3)],
-                  fill=(60, 150, 70, 255))
-    # 꽃잎 (흰 → 분홍 끝, 바깥 줄 · 안 줄)
+                  fill=(46, 140, 86, 255))
+    # 꽃잎 (민트빛 바깥 줄 · 흰빛 안 줄 — 0.12.8 세계수의 도끼 날의 수정빛, 예전 분홍)
     for ring, (Rl, Rw, off) in enumerate(((26, 9, 0), (16, 7, 22.5))):
         if ring == 0 and open_t < 0.25:
             continue
@@ -419,14 +422,14 @@ def bloom_frame(open_t, shine):
                 px = math.cos(t) * L * 0.5
                 py = math.sin(t) * w * 0.5
                 pts.append((x + px * math.cos(a) - py * math.sin(a), y + px * math.sin(a) + py * math.cos(a)))
-            d.polygon(pts, fill=(250, 236, 244, 255) if ring else (255, 214, 232, 255))
-    # 가운데 (금빛 꽃술)
+            d.polygon(pts, fill=(236, 255, 242, 255) if ring else (206, 250, 222, 255))
+    # 가운데 (연둣빛 꽃술)
     r = 4 + 3 * open_t
-    d.ellipse([c - r, c - r, c + r, c + r], fill=(255, 206, 80, 255))
-    d.ellipse([c - r * 0.5, c - r * 0.5, c + r * 0.5, c + r * 0.5], fill=(255, 248, 200, 255))
-    img = outline(img, (120, 60, 90, 255))
+    d.ellipse([c - r, c - r, c + r, c + r], fill=(190, 222, 90, 255))
+    d.ellipse([c - r * 0.5, c - r * 0.5, c + r * 0.5, c + r * 0.5], fill=(240, 255, 206, 255))
+    img = outline(img, (34, 96, 64, 255))
     big = up4(img)
-    halo = glow_of(big, 10, (255, 230, 150), 0.6 + 1.4 * shine)
+    halo = glow_of(big, 10, (170, 255, 205), 0.6 + 1.4 * shine)
     return over(halo, big)
 
 
@@ -438,103 +441,108 @@ def bloom_sheet():
     return sheet
 
 
-# ------------------------------------------------------------ 스발린 (태양을 막는 방패 — 앞: 불꽃 테두리 · 얼음 안쪽)
+# ------------------------------------------------------------ 스발린 (0.12.8 — 무기 디자인 (0.12.7 사용자 리워크) 의 앞모습을 모델에서 그대로: 남빛 강철 · 하늘빛 룬)
 
-FIRE = [(120, 30, 10, 255), (220, 80, 20, 255), (255, 150, 40, 255), (255, 214, 90, 255), (255, 246, 190, 255)]
 ICE = [(16, 40, 92, 255), (34, 86, 160, 255), (80, 150, 220, 255), (150, 210, 250, 255), (225, 248, 255, 255)]
-GOLD = [(110, 70, 20, 255), (190, 130, 40, 255), (240, 190, 70, 255), (255, 236, 150, 255)]
+SVALINN = "shield_transcend_lv0"  # tools/weapon_art 의 스발린 자바 모델 (.java.json · .java.png — 룬이 맥동하는 16장 텍스처)
+SV_PPU = 2.0  # 64 × 64 판에 모델 1칸 = 2점 (텍스처 32 점 / 16칸 과 같은 밀도 — 텍스처 한 점 = 판 한 점)
+SV_GLOW = (60, 160, 255)  # 룬 빛 (무기 텍스처의 하늘빛 (40,149,240) · (90,184,255))
+SV_LIGHT = (155, 217, 255)
+SV_CORE = (225, 245, 255)
+SV_AURA = (40, 110, 220)  # 방패 둘레 은은한 빛
+_SV_CACHE = {}
 
 
-def svalinn_face(frame_seed, sweep=None, flash=0.0):
-    """스발린 한 장 (64 × 64 판): sweep = 빛줄기 자리 (-1 ~ 1, 없으면 None), flash = 가운데 얼음 핵 번쩍임 (0 ~ 1)"""
-    rnd = random.Random(1000 + frame_seed)
+def _sv_model():
+    """스발린 모델 앞모습 (모델 -x 쪽 — 가방 아이콘 'front' 와 같은 방향, 오른쪽 = +z) 을 64 × 64 판에 SV_PPU 로 그릴 광선 · 텍스처 프레임 · 보석 자리"""
+    if "m" in _SV_CACHE:
+        return _SV_CACHE["m"]
+    import numpy as np
+    import java_model_view as jmv
+    art = os.path.join(ROOT, "tools", "weapon_art")
+    jm = json.load(open(os.path.join(art, f"{SVALINN}.java.json"), encoding="utf-8"))
+    strip = np.asarray(Image.open(os.path.join(art, f"{SVALINN}.java.png")).convert("RGBA"))
+    w = strip.shape[1]
+    frames = [strip[i * w:(i + 1) * w] for i in range(strip.shape[0] // w)]
+    view = jmv.View(jm["elements"], frames[0])
+    lo, hi = view.bounds()
+    ym, zm = (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2
+    ss = 4
+    u, v = np.meshgrid((np.arange(64 * ss) + 0.5) / ss - 32, (np.arange(64 * ss) + 0.5) / ss - 32)
+    Y = ym - v.ravel() / SV_PPU
+    Z = zm + u.ravel() / SV_PPU
+    gem = next(e for e in view.els if e.name == "med_gem").center()
+    # 보석 자리 (판 가운데 기준, 반 크기 = 1 — 위가 +, Aegis.AE_EYES)
+    eye = ((gem[2] - zm) * SV_PPU / 32, (gem[1] - ym) * SV_PPU / 32)
+    _SV_CACHE["m"] = (jm, frames, Y, Z, ss, eye)
+    return _SV_CACHE["m"]
+
+
+def svalinn_eye():
+    return _sv_model()[5]
+
+
+def svalinn_render(frame_i):
+    """텍스처 프레임 frame_i 의 앞모습 (64 × 64 점 그림 — 표본 16개 중 가장 많은 색, 반 넘게 덮인 점만) + 빛나는 점 마스크 (룬 · 보석)"""
+    import numpy as np
+    import java_model_view as jmv
+    jm, frames, Y, Z, ss, _ = _sv_model()
+    view = jmv.View(jm["elements"], frames[frame_i % len(frames)])
+    col, glow, _, _ = jmv.grid_trace(view, Y, Z, from_plus_x=False, with_element=True)
+    col = col.reshape(64, ss, 64, ss, 4).transpose(0, 2, 1, 3, 4).reshape(64, 64, ss * ss, 4)
+    glow = glow.reshape(64, ss, 64, ss).transpose(0, 2, 1, 3).reshape(64, 64, ss * ss)
+    img = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    lit = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+    p, lp = img.load(), lit.load()
+    for y in range(64):
+        for x in range(64):
+            smp = col[y, x]
+            ok = smp[:, 3] >= 128
+            if ok.sum() * 2 < ss * ss:
+                continue
+            keys, counts = np.unique(np.round(smp[ok, :3]).astype(int), axis=0, return_counts=True)
+            c = tuple(int(v) for v in keys[counts.argmax()])
+            p[x, y] = c + (255,)
+            if glow[y, x][ok].mean() > 0.3 and max(c) > 90:
+                lp[x, y] = c + (255,)
+    return img, lit
+
+
+def svalinn_face(frame_i, sweep=None, flash=0.0):
+    """스발린 한 장 (256 × 256): 모델 앞모습 (텍스처 프레임 frame_i — 룬이 맥동) + 룬 빛 + 둘레 빛, sweep = 지나가는 빛줄기 자리 (-1 ~ 1),
+    flash = 가운데 보석 (마름모 문장 · 네 갈래 별) 번쩍임 (0 ~ 1)"""
+    img, lit = svalinn_render(frame_i)
     S = 64
     c = (S - 1) / 2
-    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
-    p = img.load()
-    trnd = random.Random(55)
-    tongues = []
-    for i in range(18):
-        a0 = (i + trnd.uniform(-0.3, 0.3)) / 18 * 2 * math.pi + frame_seed * 0.09
-        L = trnd.uniform(2.5, 5.0) * (0.8 + 0.4 * abs(math.sin(i * 1.7 + frame_seed * 1.3)))
-        tongues.append((a0, L, trnd.uniform(0.12, 0.2), trnd.uniform(-0.25, 0.25)))
-
-    def tongue(a, tg):
-        a0, L, wd, curl = tg
-        da = (a - a0 + math.pi) % (2 * math.pi) - math.pi
-        da -= curl * 0.15
-        if abs(da) > wd:
-            return 0.4
-        return 0.4 + L * (1 - (da / wd) ** 2)
-    for y in range(S):
-        for x in range(S):
-            dx, dy = x - c, y - c
-            r = math.hypot(dx, dy)
-            a = math.atan2(dy, dx)
-            # 불꽃 테두리: 혀 모양 불꽃 (각마다 길이 · 너비가 다르고 장마다 일렁임 — tongues)
-            flame = 26.5 + max(tongue(a, tg) for tg in tongues)
-            if r <= 24:
-                # 얼음 안쪽: 가운데 밝게 + 여섯 갈래 서리 문양 (룬 매듭)
-                t = r / 24
-                col = ICE[3] if t < 0.25 else (ICE[2] if t < 0.62 else ICE[1])
-                if t > 0.92:
-                    col = ICE[0]
-                ang = (math.degrees(a) % 60)
-                arm = min(ang, 60 - ang)
-                if arm < 3.0 and 6 < r < 21:
-                    col = ICE[4] if r < 15 else ICE[3]
-                if 13 < r < 15 and arm > 8:
-                    col = ICE[3]
-                # 가지 (서리 깃)
-                if 9 < r < 19 and abs(arm - 7 - (r - 9) * 0.5) < 0.9:
-                    col = ICE[3]
-                p[x, y] = col
-            elif r <= 26.5:
-                # 금빛 테
-                t = (r - 24) / 2.5
-                p[x, y] = GOLD[2] if t < 0.5 else GOLD[1]
-                if int((math.degrees(a) + 360) % 30) < 3:
-                    p[x, y] = GOLD[3]  # 테의 징
-            elif r <= flame:
-                t = (r - 26.5) / max(0.5, flame - 26.5)
-                idx = 4 if t < 0.12 else (3 if t < 0.38 else (2 if t < 0.72 else 1))
-                p[x, y] = FIRE[idx]
-    # 가운데 핵 (얼음 결정)
-    d = ImageDraw.Draw(img)
-    core_r = 4.5 + 3.0 * flash
-    d.polygon([(c, c - core_r), (c + core_r * 0.8, c), (c, c + core_r), (c - core_r * 0.8, c)], fill=ICE[4])
-    d.polygon([(c, c - core_r * 0.5), (c + core_r * 0.4, c), (c, c + core_r * 0.5), (c - core_r * 0.4, c)], fill=(255, 255, 255, 255))
-    img = outline(img, (40, 16, 8, 255))
+    img = outline(img, (8, 12, 22, 255))
     if sweep is not None:
         q = img.load()
         for y in range(S):
             for x in range(S):
                 if q[x, y][3] == 0:
                     continue
-                u = (x - c + (y - c) * 0.6) / 40
-                if abs(u - sweep) < 0.09:
-                    q[x, y] = mix(q[x, y], (255, 255, 255, 255), 0.55)
+                uu = (x - c + (y - c) * 0.6) / 40
+                if abs(uu - sweep) < 0.09:
+                    q[x, y] = mix(q[x, y], (190, 230, 255, 255), 0.6)
     big = up4(img)
-    fire_mask = Image.new("RGBA", big.size, (0, 0, 0, 0))
-    bp = big.load()
-    fp = fire_mask.load()
-    for y in range(big.size[1]):
-        for x in range(big.size[0]):
-            col = bp[x, y]
-            if col[3] and col in (FIRE[2], FIRE[3]):
-                fp[x, y] = col
-    layers = [glow_of(fire_mask, 9, (255, 140, 40), 1.4), big]
+    lit_big = up4(lit)
+    layers = [glow_of(big, 14, SV_AURA, 0.45), glow_of(lit_big, 7, SV_GLOW, 1.5), big, glow_of(lit_big, 3, SV_LIGHT, 0.6)]
     if flash > 0:
+        ex, ey = svalinn_eye()
+        gx, gy = 128 + ex * 128, 128 - ey * 128
         core = Image.new("RGBA", big.size, (0, 0, 0, 0))
-        ImageDraw.Draw(core).ellipse([128 - 40 - 50 * flash, 128 - 40 - 50 * flash, 128 + 40 + 50 * flash, 128 + 40 + 50 * flash], fill=(200, 240, 255, 255))
+        rr = 18 + 34 * flash
+        ImageDraw.Draw(core).ellipse([gx - rr, gy - rr, gx + rr, gy + rr], fill=SV_LIGHT + (255,))
         rays = Image.new("RGBA", big.size, (0, 0, 0, 0))
         dr = ImageDraw.Draw(rays)
-        for k in range(6):
-            a = math.radians(k * 60 + 30)
-            L = 60 + 70 * flash
-            dr.line([(128, 128), (128 + math.cos(a) * L, 128 + math.sin(a) * L)], fill=(230, 250, 255, 255), width=6)
-        layers.append(glow_of(core, 16, (170, 230, 255), 1.6 * flash))
-        layers.append(glow_of(rays, 4, (220, 248, 255), 1.6 * flash))
+        for k in range(8):
+            a = math.radians(k * 45)
+            L = min(116.0, 60 + 56 * flash) * (1.0 if k % 2 == 0 else 0.5)  # 문장의 네 갈래 별 — 위아래 · 옆이 길고 대각선은 짧게 (칸 안에서)
+            dr.line([(gx, gy), (gx + math.cos(a) * L, gy + math.sin(a) * L)], fill=SV_CORE + (255,), width=6 if k % 2 == 0 else 4)
+        dot = Image.new("RGBA", big.size, (0, 0, 0, 0))
+        r0 = 6 + 10 * flash
+        ImageDraw.Draw(dot).ellipse([gx - r0, gy - r0, gx + r0, gy + r0], fill=(255, 255, 255, 255))
+        layers += [glow_of(core, 16, SV_GLOW, 1.6 * flash), glow_of(rays, 4, SV_LIGHT, 1.6 * flash), glow_of(dot, 6, SV_CORE, 2.0 * flash), dot]
     return over(*layers)
 
 
@@ -561,20 +569,25 @@ def svalinn_dissolve(base, k):
 
 
 def svalinn_sheet():
+    """12장 (애드온 aegis_shield 와 같은 칸): 0 ~ 3 빛이 지나감 (텍스처 프레임 1 · 4 · 8 · 12 — 룬이 일렁임), 4 ~ 7 가운데 보석이 번쩍, 8 ~ 11 흩어짐"""
     sheet = Image.new("RGBA", (1024, 768), (0, 0, 0, 0))
+    for i, fi in enumerate((1, 4, 8, 12)):
+        sheet.alpha_composite(svalinn_face(fi, sweep=-1.2 + i * 0.8), (i * 256, 0))
     for i in range(4):
-        sheet.alpha_composite(svalinn_face(i, sweep=-1.2 + i * 0.8), (i * 256, 0))
-    for i in range(4):
-        sheet.alpha_composite(svalinn_face(i, flash=(i + 1) / 4), (i * 256, 256))
-    base = svalinn_face(0)
+        sheet.alpha_composite(svalinn_face(1, flash=(i + 1) / 4), (i * 256, 256))
+    base = svalinn_face(1)
     for i in range(4):
         sheet.alpha_composite(svalinn_dissolve(base, i), (i * 256, 512))
     return sheet
 
 
+# 일식 코로나 (어두운 → 밝은): 스발린 룬의 하늘빛 → 흰빛 (0.12.8 — 예전 불꽃 코로나)
+CORONA = [(14, 36, 104, 255), (34, 96, 206, 255), (76, 166, 255, 255), (168, 224, 255, 255), (238, 250, 255, 255)]
+
+
 def eclipse_cell(kind, seed):
-    """일식 한 장 (64 × 64 판 → 256): kind 0 = 해를 가린 스발린 (어두운 원판 · 얼음빛 테 · 서리 문양 + 해의 테두리 · 불꽃 코로나),
-    1 = 다이아몬드 고리 (테 한쪽이 번쩍 — 해가 드러나기 직전), 2 = 드러난 해 (밝은 원판 + 큰 코로나). seed = 코로나 줄기 (장마다 일렁임)"""
+    """일식 한 장 (64 × 64 판 → 256): kind 0 = 해를 가린 스발린 (남빛 강철 원판 · 하늘빛 테 · 문장의 마름모 · 네 갈래 별 + 해의 테두리 · 푸른 흰빛 코로나),
+    1 = 다이아몬드 고리 (테 한쪽이 번쩍 — 해가 드러나기 직전), 2 = 드러난 해 (흰빛 원판 + 큰 코로나). seed = 코로나 줄기 (장마다 일렁임)"""
     S = 64
     c = (S - 1) / 2
     img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
@@ -601,34 +614,35 @@ def eclipse_cell(kind, seed):
             if r <= disc:
                 if kind == 2:
                     t = r / disc
-                    p[x, y] = FIRE[4] if t < 0.45 else (FIRE[3] if t < 0.8 else FIRE[2])
+                    p[x, y] = CORONA[4] if t < 0.45 else (CORONA[3] if t < 0.8 else CORONA[2])
                     continue
-                # 해를 가린 방패: 어두운 남빛 + 가장자리 얼음빛 테 + 여섯 갈래 서리 문양 (흐리게)
-                col = (10, 14, 32, 255)
-                ang = math.degrees(a) % 60
-                arm = min(ang, 60 - ang)
-                if arm < 2.2 and 4 < r < 13.5:
-                    col = (28, 50, 92, 255)
-                if 9 < r < 10.3:
-                    col = (22, 40, 76, 255)
+                # 해를 가린 방패: 남빛 강철 + 가장자리 하늘빛 테 + 문장 (마름모 테 · 네 갈래 별 — 무기 디자인의 가운데 문장, 흐리게)
+                col = (12, 16, 28, 255)
+                diamond = abs(dx) + abs(dy)
+                if 8.6 < diamond < 10.4:
+                    col = (40, 64, 104, 255)
+                if (abs(dx) < 0.9 and abs(dy) < 13) or (abs(dy) < 0.9 and abs(dx) < 13):
+                    col = (34, 70, 130, 255)
+                if r < 2.2:
+                    col = (60, 150, 240, 255)
                 if r > disc - 1.6:
-                    col = (40, 84, 140, 255)
+                    col = (40, 110, 210, 255)
                 p[x, y] = col
             elif r <= limb:
-                p[x, y] = FIRE[4] if kind != 2 else (255, 255, 240, 255)
+                p[x, y] = CORONA[4] if kind != 2 else (250, 253, 255, 255)
             elif r <= ext:
                 t = (r - limb) / max(0.5, ext - limb)
                 idx = 4 if t < 0.12 else (3 if t < 0.35 else (2 if t < 0.7 else 1))
-                p[x, y] = FIRE[idx]
+                p[x, y] = CORONA[idx]
     big = up4(img)
     corona = Image.new("RGBA", big.size, (0, 0, 0, 0))
     bp, cp = big.load(), corona.load()
     for y in range(big.size[1]):
         for x in range(big.size[0]):
             col = bp[x, y]
-            if col[3] and col in (FIRE[2], FIRE[3], FIRE[4], (255, 255, 240, 255)):
+            if col[3] and col in (CORONA[2], CORONA[3], CORONA[4], (250, 253, 255, 255)):
                 cp[x, y] = col
-    layers = [glow_of(corona, 14, (255, 130, 40), 1.5), glow_of(corona, 5, (255, 220, 140), 1.0), big]
+    layers = [glow_of(corona, 14, (50, 130, 255), 1.5), glow_of(corona, 5, (170, 225, 255), 1.0), big]
     if kind == 1:
         # 다이아몬드 고리: 테 오른쪽 위에 흰 빛방울 + 네 갈래 빛살
         fl = Image.new("RGBA", big.size, (0, 0, 0, 0))
@@ -639,11 +653,11 @@ def eclipse_cell(kind, seed):
         for k2, L in ((0, 66), (90, 66), (45, 30), (135, 30)):
             aa = math.radians(k2)
             d.line([(fx - math.cos(aa) * L, fy - math.sin(aa) * L), (fx + math.cos(aa) * L, fy + math.sin(aa) * L)], fill=(255, 255, 255, 255), width=5)
-        layers += [glow_of(fl, 18, (255, 236, 180), 2.0), fl]
+        layers += [glow_of(fl, 18, (190, 232, 255), 2.0), fl]
     if kind == 2:
         core = Image.new("RGBA", big.size, (0, 0, 0, 0))
-        ImageDraw.Draw(core).ellipse([128 - 64, 128 - 64, 128 + 64, 128 + 64], fill=(255, 250, 220, 255))
-        layers.insert(0, glow_of(core, 26, (255, 200, 90), 1.8))
+        ImageDraw.Draw(core).ellipse([128 - 64, 128 - 64, 128 + 64, 128 + 64], fill=(236, 248, 255, 255))
+        layers.insert(0, glow_of(core, 26, (90, 170, 255), 1.8))
     return over(*layers)
 
 

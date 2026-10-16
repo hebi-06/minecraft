@@ -28,21 +28,23 @@ import net.minecraft.world.phys.Vec3;
  * <li>세계수의 씨앗 (ygg_seed): 빛나는 씨앗을 조준한 땅에 던짐 → 떨어진 자리에 가시덤불이 솟아 둘레 적을 찌르고 묶음 (mult, 구속) → bind 틱 뒤
  * 빛의 꽃이 피며 터짐 (afterMult)</li>
  * <li>세계수 강림 (ygg_tree): 땅속으로 뿌리가 달려가 조준한 곳에 모여듦 → 거대한 세계수가 솟음 (mult — 뿌리가 둘레 적을 띄우고 묶음) →
- * 금빛 잎이 두 번 쏟아짐 (pulseMult — 마법 피해) → 준 피해 일부 회복 (도끼 규칙 딜탱)</li>
+ * 연둣빛 잎이 두 번 쏟아짐 (pulseMult — 마법 피해) → 준 피해 일부 회복 (도끼 규칙 딜탱)</li>
  * </ul>
  * 그림: rpg:rfx_yggdrasil (세계수 4장 — 싹 → 다 자람 → 빛남) · rfx_thorn (가시뿌리) · rfx_leaf (잎 · 꽃잎) · rfx_bloom · rfx_bloomflat (빛의 꽃) —
- * tools/java_fx_art_more.py. 쓰러지거나 차원을 옮기면 남은 것은 없음
+ * tools/java_fx_art_more.py. 색 (0.12.8): 무기 디자인 (0.12.7 사용자 리워크) 의 비취 · 민트 수정 날 · 연둣빛 잎 장식 · 짙은 나무 자루. 쓰러지거나 차원을 옮기면 남은 것은 없음
  */
 final class Yggdrasil {
     private Yggdrasil() {}
 
     /** 나무 빛 (가시뿌리 바탕 — 그림이 회색이라 곱함) */
-    static final double[] WOOD = {0.62, 0.42, 0.24};
-    static final double[] LEAF = {0.45, 0.9, 0.42};
-    static final double[] GOLD = {1.0, 0.84, 0.38};
-    static final double[] PETAL = {1.0, 0.76, 0.9};
-    static final double[] WHITE = {1.0, 0.98, 0.88};
-    static final double[] DEEP = {0.1, 0.28, 0.1};
+    static final double[] WOOD = {0.52, 0.37, 0.2};
+    static final double[] LEAF = {0.4, 0.8, 0.46};
+    /** 쏟아지는 잎 (도끼 자루의 연둣빛 잎 장식 — 예전 금빛) */
+    static final double[] SPROUT = {0.72, 0.84, 0.3};
+    /** 꽃잎 (도끼 날의 민트 수정빛 — 예전 분홍) */
+    static final double[] PETAL = {0.8, 1.0, 0.86};
+    static final double[] WHITE = {0.92, 1.0, 0.94};
+    static final double[] DEEP = {0.06, 0.26, 0.16};
     /** rfx_thorn 의 빛줄기 칸 (위 줄 나무 0 ~ 2, 아래 줄 빛줄기 3 ~ 5 — rfx_rock 과 같음) */
     static final int THORN_CORE = 3;
     /** rfx_yggdrasil 그림: 밑동이 판 위에서 118/128 → 그림 가운데는 밑동 위 0.84375 × 반 크기 */
@@ -376,7 +378,7 @@ final class Yggdrasil {
                 }
                 List<LivingEntity> list = Kit.union(near, held);
                 RuneKit.rfx2(level, "flare", canopy, Opt.of("size", 2.6, "life", 0.35, "fade", 0.6, "spin", Kit.rand() * 90), glow, WHITE, new int[] {0, 1}, null);
-                leaves(level, canopy, 12, GOLD, 2.5, -2.0, 1.4);
+                leaves(level, canopy, 12, SPROUT, 2.5, -2.0, 1.4);
                 SkillFx.shock(level, spot, glow, 1.4 + 0.4 * ii, 0.35);
                 SkillFx.play(level, "chime.amethyst_block", spot, 0.9 + 0.15 * ii, 1.2);
                 SkillFx.play(level, "block.azalea_leaves.break", spot, 0.7, 1.0);
@@ -399,7 +401,7 @@ final class Yggdrasil {
         // 흩날림: 다 자란 나무의 잎이 흩날리며 사라짐 (솟기 전에 끊겼으면 없음 — 솟은 뒤에는 쓴 사람이 쓰러져도 나무는 그림대로 흐려짐)
         Tasks.later(delay + stay, () -> {
             if (!grown[0]) return;
-            leaves(level, canopy, 16, GOLD, 3.0, -1.0, 1.6);
+            leaves(level, canopy, 16, SPROUT, 3.0, -1.0, 1.6);
             leaves(level, V.up(spot, height * 0.6), 10, LEAF, 2.5, -0.5, 1.4);
             SkillFx.play(level, "block.azalea_leaves.break", spot, 0.6, 1.0);
             SkillFx.play(level, "beacon.deactivate", spot, 1.2, 0.6);

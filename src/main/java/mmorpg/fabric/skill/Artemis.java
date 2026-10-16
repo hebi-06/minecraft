@@ -25,7 +25,7 @@ final class Artemis {
     private Artemis() {}
 
     /** 달빛 (은빛 푸른) */
-    static final double[] AR_MOON = {0.78, 0.88, 1.0};
+    static final double[] AR_MOON = {0.7, 0.8, 1.0}; // 은활의 푸른 달빛 (0.12.8 — 무기 디자인 색)
     static final double[] AR_WHITE = {1, 1, 1};
     /** 만월 그림 색: 조금 푸르게 (앞의 흰 활과 구별) */
     static final double[] AR_MOON_TINT = {0.86, 0.9, 1.0};

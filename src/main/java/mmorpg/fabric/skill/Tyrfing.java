@@ -36,9 +36,9 @@ import net.minecraft.world.phys.Vec3;
 final class Tyrfing {
     private Tyrfing() {}
 
-    static final double[] TY_FIRE = {0.6, 0.46, 1.0}; // 무덤불 보랏빛 (번쩍임 · 고리)
+    static final double[] TY_FIRE = {0.58, 0.42, 0.95}; // 무덤불 보랏빛 (번쩍임 · 고리 — 칼날 룬의 보랏빛)
     static final double[] TY_GHOST = {0.74, 0.76, 1.0}; // 유령 흰 보랏빛 (벤 자국 · 불티)
-    static final double[] TY_DEEP = {0.3, 0.16, 0.8}; // 짙은 보랏빛 (기운)
+    static final double[] TY_DEEP = {0.32, 0.18, 0.66}; // 짙은 보랏빛 (기운)
     /** 무덤불을 그리지 않는 눈 둘레 (칸) · 가까우면 키를 거리 × 이 비율까지 — 1인칭 화면을 덮지 않게 */
     static final double TY_NEAR = 1.4;
     static final double TY_NEAR_K = 0.75;

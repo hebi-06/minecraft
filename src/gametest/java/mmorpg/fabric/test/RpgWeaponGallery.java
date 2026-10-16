@@ -124,8 +124,10 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
         ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(0.5, -60 + 1.5, -11.5)));
         String[][] shots = {
             {"rpg:bow_l40_common", "bow_common", "1,2,3,4,6,9"},
+            {"rpg:bow_l40_hero", "bow_hero", "1,2,3,4,6,9"}, // 0.12.8: 영웅 · 초월은 무기 디자인 색 (+ 흰 심지 · 빛 알갱이 궤적)
             {"rpg:bow_l40_transcend", "bow_transcend", "1,2,3,4,6,9"},
             {"rpg:wand_l40_common", "wand_common", "2,5,8,11,13,16"},
+            {"rpg:wand_l40_hero", "wand_hero", "2,5,8,11,13,16"},
             {"rpg:wand_l40_transcend", "wand_transcend", "2,5,8,11,13,16"},
         };
         for (String[] sh : shots) fire(ctx, server, sh[0], sh[1], sh[2], CameraType.FIRST_PERSON, "");
@@ -159,15 +161,26 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
         });
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.waitTicks(5);
+        // 0.12.8: 영웅 · 초월 근접 무기 17종 모두 (무기마다 디자인 색의 평타 — rules_more LOOK → SLASH)
         String[][] weapons = {
             {"rpg:sword_l40_common", "sword_common"},
             {"rpg:sword_l40_hero", "sword_hero"},
+            {"rpg:sword_l40_transcend", "sword_transcend"},
             {"rpg:dagger_l40_hero", "dagger_hero"},
+            {"rpg:dagger_l40_transcend", "dagger_transcend"},
             {"rpg:axe_l40_hero", "axe_hero"},
-            {"rpg:shield_l40_hero", "shield_hero"},
             {"rpg:axe_l40_transcend", "axe_transcend"},
-            {"rpg:lance_l40_transcend", "lance_transcend"}, // 궁니르 (0.12.3 — 하늘빛 찌르기 SLASH.spear)
+            {"rpg:shield_l40_hero", "shield_hero"},
+            {"rpg:shield_l40_transcend", "shield_transcend"},
             {"rpg:greatsword_l40_transcend", "greatsword_transcend"},
+            {"rpg:lance_l40_hero", "lance_hero"},
+            {"rpg:lance_l40_transcend", "lance_transcend"}, // 궁니르 (0.12.3 — 애드온 찌르기, 0.12.8 청록빛 SLASH.gungnir)
+            {"rpg:scythe_l40_hero", "scythe_hero"},
+            {"rpg:scythe_l40_transcend", "scythe_transcend"},
+            {"rpg:hammer_l40_hero", "hammer_hero"},
+            {"rpg:hammer_l40_transcend", "hammer_transcend"},
+            {"rpg:scepter_l40_hero", "scepter_hero"},
+            {"rpg:scepter_l40_transcend", "scepter_transcend"},
         };
         for (String[] w : weapons) {
             server.runCommand("item replace entity @a weapon.mainhand with " + w[0]);

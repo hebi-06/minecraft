@@ -17,7 +17,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 크로노스의 낫 (초월 낫 — 12단계, 자바 전용): 시간 가르기 · 종말의 시계. 수치는 SKILLS.scythe, 색은 시간의 푸른빛 · 흰 심지 + 금빛 (gold).
+ * 크로노스의 낫 (초월 낫 — 12단계, 자바 전용): 시간 가르기 · 종말의 시계. 수치는 SKILLS.scythe, 색은 낫 날의 보랏빛 · 연보라 심지 + 놋쇠빛 (gold —
+ * 0.12.8 무기 디자인 색, 예전 푸른빛 · 금빛).
  * 그림: rpg:rfx_clock (시계판 · 시침 · 분침 · 톱니 — 빛 · 심지), rpg:rfx_relicspin 칸 2 (크로노스의 낫 모델 — 하늘에서 내려오는 거대한 낫), 초승달 참격.
  * 시간이 멈춘 적: 움직이지 못함 (구속 X · 나약함 · 매 틱 속도 0), 머리 위에 거꾸로 도는 작은 시계. 보스는 움직임을 막지 않음 (피해만)
  */
@@ -78,7 +79,7 @@ final class Kronos {
         double[][] cs = HeroKit.colors(k);
         double[] glow = cs[0];
         double[] core = cs[1];
-        double[] gold = HeroKit.rgbOr(k, "gold", new double[] {1, 0.82, 0.4});
+        double[] gold = HeroKit.rgbOr(k, "gold", new double[] {0.86, 0.74, 0.48});
         Vec3 f = Kit.facingOf(sp);
         Vec3 pos = sp.position();
         // 등 뒤에 솟는 거대한 낫 (돌며 앞으로 넘어옴)
@@ -161,7 +162,7 @@ final class Kronos {
         double[][] cs = HeroKit.colors(k);
         double[] glow = cs[0];
         double[] core = cs[1];
-        double[] gold = HeroKit.rgbOr(k, "gold", new double[] {1, 0.82, 0.4});
+        double[] gold = HeroKit.rgbOr(k, "gold", new double[] {0.86, 0.74, 0.48});
         Vec3 c = sp.position();
         Vec3 f = Kit.facingOf(sp);
         double r = k.num("radius");

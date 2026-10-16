@@ -446,7 +446,7 @@ public final class RpgCombat {
         Shot shot = arrowShot(path.length());
         Fx.sound(level, head, SoundEvents.ARROW_SHOOT, 1.1, 0.8);
         int ticks = Math.max(1, (int) Math.round(shot.life() * 20));
-        Fx.arrowFx(level, path, shot, w.gradeIndex());
+        Fx.arrowFx(level, path, shot, w);
         if (target != null) {
             LivingEntity t = target;
             Tasks.later(ticks, () -> rangedHit(sp, t, w, path));
@@ -470,11 +470,11 @@ public final class RpgCombat {
             return;
         }
         if (path != null) {
-            Fx.arrowImpact(level, path.aim(), path.dir(), w.gradeIndex());
+            Fx.arrowImpact(level, path.aim(), path.dir(), w);
             Fx.sound(level, path.aim(), SoundEvents.ARROW_HIT, 1.0, 0.7);
         } else {
             Vec3 at = target.getEyePosition();
-            Fx.wandImpact(level, at, w.gradeIndex());
+            Fx.wandImpact(level, at, w);
             Fx.sound(level, at, SoundEvents.EXPERIENCE_ORB_PICKUP, 0.6, 0.5);
         }
     }
@@ -504,7 +504,7 @@ public final class RpgCombat {
             return;
         }
         Vec3[] c = circleAt(sp);
-        Fx.magicCircle(sp.level(), c[0], cast.w().gradeIndex(), cast.spin() + t * WAND.obj("circle").num("spinPerTick"), (t + 1) / castTicks);
+        Fx.magicCircle(sp.level(), c[0], cast.w(), cast.spin() + t * WAND.obj("circle").num("spinPerTick"), (t + 1) / castTicks);
         Tasks.later(1, () -> castStep(sp, cast));
     }
 
@@ -528,8 +528,8 @@ public final class RpgCombat {
             target = a.target();
             aim = head.add(a.dir().scale(a.dist()));
         }
-        Fx.circleFlash(level, from, cast.w().gradeIndex(), cast.spin() + WAND.num("castTicks") * WAND.obj("circle").num("spinPerTick"));
-        Fx.wandBeam(level, from, aim, cast.w().gradeIndex());
+        Fx.circleFlash(level, from, cast.w(), cast.spin() + WAND.num("castTicks") * WAND.obj("circle").num("spinPerTick"));
+        Fx.wandBeam(level, from, aim, cast.w());
         Fx.sound(level, head, SoundEvents.EVOKER_CAST_SPELL, 1.5, 0.6);
         if (target != null) rangedHit(sp, target, cast.w(), null);
     }

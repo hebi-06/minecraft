@@ -3,6 +3,8 @@ package mmorpg.fabric;
 import java.util.List;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
+import mmorpg.core.Weapon;
+import mmorpg.core.Weapons;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -17,6 +19,8 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 연출 (fx.js · combat.js 의 파티클 · 소리). 활 빛줄기 · 마법진 · 맞힘은 애드온 그림 그대로 (mmorpg:fx 파티클 — 클라이언트가 그림),
  * 완드 궤적 · 치명타 불꽃 등 애드온도 바닐라 파티클을 쓰는 것은 자바의 같은 파티클.
+ * 0.12.8: 영웅 · 초월 활 · 완드는 무기 디자인 색 (rules_more LOOK → SLASH 의 glow · core — 등급 색 대신): 화살 빛줄기에 흰 심지 한 줄,
+ * 마법진 · 번쩍임은 그 색, 완드 궤적 · 맞은 자리는 바닐라 파티클 대신 그 색의 빛 알갱이 (GLINT)
  */
 public final class Fx {
     private Fx() {}
@@ -77,6 +81,26 @@ public final class Fx {
         return FxOptions.argb(rgb[0], rgb[1], rgb[2], alpha);
     }
 
+    private static double[] rgbOf(Obj o, String key) {
+        List<Object> c = o.list(key);
+        return new double[] {((Number) c.get(0)).doubleValue(), ((Number) c.get(1)).doubleValue(), ((Number) c.get(2)).doubleValue()};
+    }
+
+    /**
+     * 원거리 평타 색 {빛, 심지 (없으면 null)} (0.12.8): 영웅 · 초월 무기는 무기 모양 (LOOK → SLASH) 의 glow · core — 무기 디자인 색,
+     * 그 밖에는 등급 색 (cfg = BOW · WAND 의 color)
+     */
+    static double[][] shotColors(Obj cfg, Weapon w) {
+        Obj s = w.look() == null ? null : Weapons.slashStyle(w.look());
+        if (s == null || !s.has("glow")) return new double[][] {gradeRgb(cfg, w.gradeIndex()), null};
+        return new double[][] {rgbOf(s, "glow"), s.has("core") ? rgbOf(s, "core") : null};
+    }
+
+    /** 빛 알갱이 하나 (GLINT — generic_0 에 색을 곱함, 늘 밝게): dir 쪽 speed, 위로 accel · 끌림 drag, 반 크기 size → 0 */
+    private static void glint(ServerLevel level, Vec3 at, Vec3 dir, double speed, double accel, double size, double life, double[] c) {
+        fx(level, at, FxOptions.glint(0, dir, speed, accel, 2.0, size, life, argb(c, 1)));
+    }
+
     /** 이펙트 하나를 그 자리 둘레 (늘 보이게) 에 보냄 */
     public static void fx(ServerLevel level, Vec3 at, FxOptions o) {
         level.sendParticles(o, true, true, at.x, at.y, at.z, 1, 0, 0, 0, 0);
@@ -96,12 +120,16 @@ public final class Fx {
      * 화살 연출 (쏘는 순간 한 번에): 날아가는 빛줄기 + 빛줄기 가운데가 지나가는 순간 켜져 가늘어지며 사라지는 선 조각.
      * 빛줄기 앞끝이 수명이 끝날 때 조준점에 닿음 (RpgCombat.arrowShot).
      */
-    static void arrowFx(ServerLevel level, RpgCombat.Path path, RpgCombat.Shot shot, int gradeIndex) {
-        double[] c = gradeRgb(BOW, gradeIndex);
+    static void arrowFx(ServerLevel level, RpgCombat.Path path, RpgCombat.Shot shot, Weapon w) {
+        double[][] cs = shotColors(BOW, w);
+        double[] c = cs[0];
         Vec3 d = path.dir();
         float thick = (float) (SHOT_THICK * (shot.half() / SHOT_HALF));
         fx(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, -1, d, (float) shot.speed(), (float) shot.half(), thick,
                 (float) shot.life(), 0F, 0F, 0F, 1F, argb(c, 1)));
+        // 영웅 · 초월: 빛줄기 가운데 흰 심지 한 줄 (뒤에 보냄 — 위에 그려짐)
+        if (cs[1] != null) fx(level, path.from().add(d.scale(shot.half())), new FxOptions(FxOptions.ARROW_SHOT, -1, d, (float) shot.speed(),
+                (float) (shot.half() * 0.9), thick * 0.38F, (float) shot.life(), 0F, 0F, 0F, 1F, argb(cs[1], 1)));
         for (double s = SEG_GAP / 2; s <= path.length() - 0.1; s += SEG_GAP) {
             double delay = shot.speed() > 0 ? Math.max(0, (s - shot.half()) / shot.speed()) : 0;
             fx(level, path.from().add(d.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, d, 0F, (float) SEG_HALF, (float) SEG_THICK,
@@ -110,9 +138,11 @@ public final class Fx {
     }
 
     /** 맞은 자리: 커지며 사라지는 번쩍임 + 쏜 쪽으로 튀는 불꽃 8개 */
-    static void arrowImpact(ServerLevel level, Vec3 at, Vec3 dir, int gradeIndex) {
-        double[] c = gradeRgb(BOW, gradeIndex);
+    static void arrowImpact(ServerLevel level, Vec3 at, Vec3 dir, Weapon w) {
+        double[][] cs = shotColors(BOW, w);
+        double[] c = cs[0];
         fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, dir, 0F, 0.45F, 0F, 0.15F, 0F, 1.6F, 0F, 1F, argb(c, 0.95)));
+        if (cs[1] != null) fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, dir, 0F, 0.22F, 0F, 0.12F, 0F, 1.4F, 0F, 1F, argb(cs[1], 1)));
         Vec3 u = dir.cross(Math.abs(dir.y) > 0.9 ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0)).normalize();
         Vec3 v = u.cross(dir);
         for (int k = 0; k < 8; k++) {
@@ -129,17 +159,21 @@ public final class Fx {
     }
 
     /** 마법진 한 틱 (0.1초짜리를 틱마다 새로 — 플레이어를 따라감): 보는 사람 쪽을 향하고, progress 만큼 그려진 그림 (10단계) */
-    static void magicCircle(ServerLevel level, Vec3 at, int gradeIndex, double spinDeg, double progress) {
+    static void magicCircle(ServerLevel level, Vec3 at, Weapon w, double spinDeg, double progress) {
         Obj circle = WAND.obj("circle");
-        fx(level, at, new FxOptions(FxOptions.MAGIC_CIRCLE, -1, Vec3.ZERO, 0F, (float) circleSize(gradeIndex), 0F, 0.1F, 0F, 0F, (float) spinDeg,
-                (float) progress, argb(gradeRgb(WAND, gradeIndex), circle.num("alpha"))));
+        fx(level, at, new FxOptions(FxOptions.MAGIC_CIRCLE, -1, Vec3.ZERO, 0F, (float) circleSize(w.gradeIndex()), 0F, 0.1F, 0F, 0F, (float) spinDeg,
+                (float) progress, argb(shotColors(WAND, w)[0], circle.num("alpha"))));
     }
 
     /** 다 그려진 마법진이 1.35배로 커지며 사라짐 */
-    static void circleFlash(ServerLevel level, Vec3 at, int gradeIndex, double spinDeg) {
+    static void circleFlash(ServerLevel level, Vec3 at, Weapon w, double spinDeg) {
         Obj circle = WAND.obj("circle");
-        fx(level, at, new FxOptions(FxOptions.MAGIC_FLASH, -1, Vec3.ZERO, 0F, (float) circleSize(gradeIndex), 0F, (float) circle.num("flashLife"), 0F, 0F,
-                (float) spinDeg, 1F, argb(gradeRgb(WAND, gradeIndex), 1)));
+        double[][] cs = shotColors(WAND, w);
+        fx(level, at, new FxOptions(FxOptions.MAGIC_FLASH, -1, Vec3.ZERO, 0F, (float) circleSize(w.gradeIndex()), 0F, (float) circle.num("flashLife"), 0F, 0F,
+                (float) spinDeg, 1F, argb(cs[0], 1)));
+        // 영웅 · 초월: 가운데 심지 빛 (작게 번쩍)
+        if (cs[1] != null) fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, Vec3.ZERO, 0F, (float) (circleSize(w.gradeIndex()) * 0.55), 0F, 0.2F, 0F, 2.2F,
+                0F, 1F, argb(cs[1], 0.9)));
     }
 
     /** 완드 궤적 파티클 (WAND.trail — 베드락 이름을 자바 파티클로) */
@@ -153,20 +187,39 @@ public final class Fx {
         };
     }
 
-    static void wandBeam(ServerLevel level, Vec3 from, Vec3 to, int gradeIndex) {
-        ParticleOptions p = wandTrail(gradeIndex);
+    static void wandBeam(ServerLevel level, Vec3 from, Vec3 to, Weapon w) {
+        double[][] cs = shotColors(WAND, w);
+        boolean look = cs[1] != null;
+        ParticleOptions p = wandTrail(w.gradeIndex());
         Vec3 d = to.subtract(from);
         double len = d.length();
         Vec3 u = len > 1e-6 ? d.scale(1 / len) : Vec3.ZERO;
-        for (double s = 0.8; s <= len; s += 0.4) {
+        int i = 0;
+        for (double s = 0.8; s <= len; s += 0.4, i++) {
             Vec3 at = from.add(u.scale(s));
-            level.sendParticles(p, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+            if (!look) {
+                level.sendParticles(p, at.x, at.y, at.z, 1, 0, 0, 0, 0);
+                continue;
+            }
+            // 영웅 · 초월: 무기 색 빛 알갱이 (셋에 하나는 심지 색 — 조금 위로 떠오르며 사라짐)
+            glint(level, at, u, 0.25, 0.5, i % 3 == 2 ? 0.07 : 0.1, 0.55, i % 3 == 2 ? cs[1] : cs[0]);
         }
     }
 
-    static void wandImpact(ServerLevel level, Vec3 at, int gradeIndex) {
+    static void wandImpact(ServerLevel level, Vec3 at, Weapon w) {
         level.sendParticles(ParticleTypes.CRIT, at.x, at.y, at.z, 10, 0.2, 0.2, 0.2, 0.3);
-        level.sendParticles(wandTrail(gradeIndex), at.x, at.y, at.z, 6, 0.15, 0.15, 0.15, 0.02);
+        double[][] cs = shotColors(WAND, w);
+        if (cs[1] == null) {
+            level.sendParticles(wandTrail(w.gradeIndex()), at.x, at.y, at.z, 6, 0.15, 0.15, 0.15, 0.02);
+            return;
+        }
+        // 영웅 · 초월: 무기 색 빛 알갱이 6개가 사방으로 + 가운데 번쩍임
+        fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, Vec3.ZERO, 0F, 0.4F, 0F, 0.16F, 0F, 1.6F, 0F, 1F, argb(cs[0], 0.95)));
+        for (int k = 0; k < 6; k++) {
+            double a = k * Math.PI / 3;
+            Vec3 dir = new Vec3(Math.cos(a), k % 2 == 0 ? 0.6 : -0.2, Math.sin(a)).normalize();
+            glint(level, at, dir, 2.2, 0.3, 0.09, 0.45, k % 2 == 0 ? cs[0] : cs[1]);
+        }
     }
 
     /** dir 에 수직인 두 단위 벡터 (오른쪽 · 위) */

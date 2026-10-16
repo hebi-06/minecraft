@@ -60,7 +60,7 @@ final class Caduceus {
         String life = Kit.lifeOf(sp);
         BooleanSupplier ok = () -> Kit.sameLife(sp, life);
         double[][] gold = HeroKit.colors(k);
-        double[][] silver = new double[][] {HeroKit.rgbOr(k, "silverGlow", new double[] {0.75, 0.88, 1}), new double[] {0.95, 0.98, 1}};
+        double[][] silver = new double[][] {HeroKit.rgbOr(k, "silverGlow", new double[] {0.8, 0.86, 0.95}), new double[] {0.96, 0.98, 1}};
         Object sv = k.has("silver") ? k.get("silver") : null;
         if (sv instanceof List<?> l && l.size() == 2) silver = new double[][] {Kit.rgb(l.get(0)), Kit.rgb(l.get(1))};
         double[][][] cols = {gold, silver};

@@ -30,7 +30,7 @@ final class Dagda {
         double[][] cs = HeroKit.colors(k);
         double[] glow = cs[0];
         double[] core = cs[1];
-        double[] dark = HeroKit.rgbOr(k, "dark", new double[] {0.55, 0.3, 0.8});
+        double[] dark = HeroKit.rgbOr(k, "dark", new double[] {0.8, 0.52, 0.24});
         RuneKit.bodyAura(sp, glow, Opt.of("life", 0.45, "alpha", 0.75));
         RuneKit.bodyAura(sp, dark, Opt.of("life", 0.45, "alpha", 0.6, "force", true));
         Vec3 f0 = Kit.facingOf(sp);
@@ -84,7 +84,7 @@ final class Dagda {
         return true;
     }
 
-    /** 내려친 자리: 갈라진 땅 (생명 초록 · 죽음 보라) · 충격파 고리 둘 · 흙먼지 · 튀는 돌 · 크게 흔들림 (first = 첫 일격) */
+    /** 내려친 자리: 갈라진 땅 (생명 = 보석의 초록 · 여진 = 곤봉 나무의 호박빛 — 0.12.8 무기 디자인 색, 예전 보라) · 충격파 고리 둘 · 흙먼지 · 튀는 돌 · 크게 흔들림 (first = 첫 일격) */
     private static void impact(ServerPlayer sp, Vec3 c, double r, double[] glow, double[] core, double[] dark, boolean first) {
         ServerLevel level = sp.level();
         if (first) {

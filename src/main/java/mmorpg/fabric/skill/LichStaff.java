@@ -31,7 +31,7 @@ final class LichStaff {
     private LichStaff() {}
 
     /** 망자의 원 바탕 (짙은 녹흑) */
-    static final double[] GRAVE = {0.06, 0.22, 0.14};
+    static final double[] GRAVE = {0.05, 0.2, 0.16};
     /** 망자의 원 문양 (rpg:rfx_sigil — 비전) */
     static final int ARCANE = RuneKit.SIGIL.get("arcane");
 

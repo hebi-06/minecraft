@@ -8,6 +8,7 @@ import mmorpg.core.Combat;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
+import mmorpg.core.Weapons;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -21,12 +22,14 @@ import net.minecraft.world.phys.Vec3;
  * 근접 무기 참격 연출 (slash.js 의 자바 판 — 같은 그림 · 크기 · 자리 · 색 · 소리, 수치는 rules.json 의 SLASH).
  * - 공격 동작 (허공 포함) 마다 눈앞에 참격이 나가며 사라짐: 칼 초승달 (좌우 번갈아) · 단검 가는 베기 + 반대 방향 한 번 더 (X자) ·
  *   도끼 두꺼운 내려찍기 · 마검 장밋빛 무거운 베기 + 1틱 뒤 하늘빛 룬 베기 · 방패 푸른 강철빛 고리 · 창 찌르기 빛줄기 (SLASH.spear — 애드온의 궁니르.
- *   자바 판은 도끼 초월이 세계수의 도끼 (0.12.2 반고의 도끼) 라 다른 도끼처럼 내려찍기 — 잎빛 · 금빛 기운 SLASH.ygg_axe, 궁니르는 창 초월로 옮겨
- *   하늘빛 찌르기 SLASH.spear 를 씀 — rules_more LOOK)
+ *   자바 판은 도끼 초월이 세계수의 도끼 (0.12.2 반고의 도끼) 라 다른 도끼처럼 내려찍기 — 비취빛 SLASH.ygg_axe, 궁니르는 창 초월로 옮겨
+ *   애드온 찌르기 SLASH.spear 를 바탕으로 청록빛 SLASH.gungnir — rules_more LOOK)
  *   (12단계 새 무기: 창 금빛 찌르기 빛줄기 (초월 궁니르는 하늘빛) · 낫 넓은 보랏빛 초승달 + 양옆 잔상 · 전투 망치 무거운 내려찍기 · 성스러운 홀 금빛 고리 + 빛 십자)
  * - 맞혔을 때: 도끼 · 전투 망치 발밑 충격파, 방패 · 창 대상 앞 폭발 + 고리, 홀 금빛 십자 섬광, 치명타는 칼 금빛 초승달 · 단검 붉은 X · 마검 보랏빛 X + 장밋빛 초승달,
  *   화면 가운데에서 벗어난 대상을 맞혔으면 맞은 자리에도 작은 참격
  * - 영웅 · 초월은 참격 안쪽에 금빛 · 붉은빛 기운, 요구 조건이 모자라면 회색으로 작게 (피해 없음)
+ * - 0.12.8: 영웅 · 초월 무기 21종은 무기마다 디자인 색의 모양 (rules_more LOOK → SLASH, base = 바탕 모양 — Weapons.slashStyle):
+ *   빛 glow · 심지 core · 기운 aura (등급 기운 대신) · 치명타 crit [빛, 심지] (칼 · 단검 · 낫 · 마검 · 창) · critColor (방패 · 홀)
  * - 도끼 · 방패로 맞히면 화면이 살짝 흔들림 (애드온 camerashake — 모드가 있는 클라이언트에 RpgNet.shake)
  * - 연출만 (피해는 평타 판정 그대로)
  */
@@ -96,7 +99,15 @@ public final class Slash {
     }
 
     static Obj styleOf(Weapon w) {
-        return SLASH.objOrNull(w.look() != null ? w.look() : w.type());
+        return Weapons.slashStyle(w.look() != null ? w.look() : w.type());
+    }
+
+    /** 치명타 색 {빛, 심지}: 무기 모양의 crit (0.12.8 — 영웅 · 초월 무기 디자인 색) 이 있으면 그것, 없으면 종류의 기본 색 */
+    private static double[][] critColors(Obj style, double[] glow, double[] core) {
+        if (style != null && style.get("crit") instanceof List<?> l && l.size() >= 2 && l.get(0) instanceof List<?> a && l.get(1) instanceof List<?> b) {
+            return new double[][] {rgb(a), rgb(b)};
+        }
+        return new double[][] {glow, core};
     }
 
     private static double jitter(Obj style, RandomSource r) {
@@ -145,7 +156,7 @@ public final class Slash {
         emit(level, sprite(shape, flip, "glow"), at, dir, speed, spin, size, life, glow, ok ? 0.95 : 0.5);
         double k = -1;
         emit(level, sprite(shape, flip, "core"), along(at, dir, k * LAYER_GAP), dir, speed, spin, size * (dist + k * LAYER_GAP) / dist, life,
-                ok ? whiten(glow, 0.8) : GREY, ok ? 1 : 0.5);
+                ok ? (style.has("core") ? rgb(style, "core") : whiten(glow, 0.8)) : GREY, ok ? 1 : 0.5);
     }
 
     /** 공격 동작의 참격: 눈앞 가운데 (눈높이보다 SLASH.drop 아래) */
@@ -353,7 +364,8 @@ public final class Slash {
             double r = Math.max(1, w.typeDef().objOrNull("quake") != null ? w.typeDef().obj("quake").num("radius") : 2);
             double[] glow = rgb(style, "glow");
             emit(level, FxSprite.SHOCK_RING, new Vec3(feet.x, feet.y + 0.08, feet.z), Vec3.ZERO, 0, 0, r * (crit ? 1.0 : 0.8), crit ? 0.5 : 0.38, glow, 0.95);
-            emit(level, FxSprite.SHOCK_RING, new Vec3(feet.x, feet.y + 0.1, feet.z), Vec3.ZERO, 0, 0, r * (crit ? 1.35 : 1.1), crit ? 0.42 : 0.3, WHITE, 0.6);
+            double[] outer = style.has("core") ? rgb(style, "core") : WHITE;
+            emit(level, FxSprite.SHOCK_RING, new Vec3(feet.x, feet.y + 0.1, feet.z), Vec3.ZERO, 0, 0, r * (crit ? 1.35 : 1.1), crit ? 0.42 : 0.3, outer, 0.6);
             mmorpg.fabric.skill.SkillFx.fx(level, "rpg:dust", new Vec3(feet.x, feet.y + 0.3, feet.z), mmorpg.fabric.skill.Opt.of("size", r * 0.8, "life", 0.6, "color",
                     new double[] {0.62, 0.52, 0.4}, "alpha", 0.75));
             sound(level, feet, SoundEvents.MACE_SMASH_GROUND, crit ? 0.7 : 0.9, crit ? 1.0 : 0.7);
@@ -369,30 +381,33 @@ public final class Slash {
         Vec3 front = along(mid, dir, -LAYER_GAP);
         switch (w.type()) {
             case "dagger" -> {
-                emit(level, FxSprite.SLASH_X, mid, dir, 0, 0, 0.8, 0.28, new double[] {1.0, 0.35, 0.3}, 1);
-                emit(level, FxSprite.SLASH_X, front, dir, 0, 0, 0.55, 0.22, new double[] {1.0, 0.95, 0.8}, 1);
+                double[][] c = critColors(style, new double[] {1.0, 0.35, 0.3}, new double[] {1.0, 0.95, 0.8});
+                emit(level, FxSprite.SLASH_X, mid, dir, 0, 0, 0.8, 0.28, c[0], 1);
+                emit(level, FxSprite.SLASH_X, front, dir, 0, 0, 0.55, 0.22, c[1], 1);
             }
             case "sword" -> {
                 double spin = (rnd.nextDouble() * 2 - 1) * 40;
                 boolean l = rnd.nextBoolean();
-                emit(level, sprite("arc", l, "glow"), mid, dir, 0, spin, 1.1, 0.25, new double[] {1.0, 0.85, 0.35}, 0.95);
-                emit(level, sprite("arc", l, "core"), front, dir, 0, spin, 1.1, 0.25, new double[] {1.0, 1.0, 0.9}, 1);
+                double[][] c = critColors(style, new double[] {1.0, 0.85, 0.35}, new double[] {1.0, 1.0, 0.9});
+                emit(level, sprite("arc", l, "glow"), mid, dir, 0, spin, 1.1, 0.25, c[0], 0.95);
+                emit(level, sprite("arc", l, "core"), front, dir, 0, spin, 1.1, 0.25, c[1], 1);
             }
             case "scythe" -> {
                 // 낫 치명타: 보랏빛 큰 초승달 둘이 X 로 (거둬들이는 낫질)
                 double spin = (rnd.nextDouble() * 2 - 1) * 25;
-                double[] glow = style != null ? rgb(style, "glow") : new double[] {0.66, 0.5, 1};
-                emit(level, sprite("arc", false, "glow"), mid, dir, 0, spin, 1.25, 0.28, glow, 0.95);
-                emit(level, sprite("arc", true, "glow"), along(mid, dir, -LAYER_GAP), dir, 0, -spin, 1.25, 0.28, glow, 0.95);
-                emit(level, sprite("arc", false, "core"), front, dir, 0, spin, 1.24, 0.26, new double[] {0.95, 0.9, 1}, 1);
+                double[][] c = critColors(style, style != null ? rgb(style, "glow") : new double[] {0.66, 0.5, 1}, new double[] {0.95, 0.9, 1});
+                emit(level, sprite("arc", false, "glow"), mid, dir, 0, spin, 1.25, 0.28, c[0], 0.95);
+                emit(level, sprite("arc", true, "glow"), along(mid, dir, -LAYER_GAP), dir, 0, -spin, 1.25, 0.28, c[0], 0.95);
+                emit(level, sprite("arc", false, "core"), front, dir, 0, spin, 1.24, 0.26, c[1], 1);
             }
             case "greatsword" -> {
                 double spin = (rnd.nextDouble() * 2 - 1) * 30;
                 boolean l = rnd.nextBoolean();
-                emit(level, FxSprite.SLASH_X, mid, dir, 0, 0, 0.95, 0.28, new double[] {0.62, 0.36, 0.9}, 1);
+                double[][] c = critColors(style, new double[] {0.62, 0.36, 0.9}, new double[] {1.0, 0.92, 0.88});
+                emit(level, FxSprite.SLASH_X, mid, dir, 0, 0, 0.95, 0.28, c[0], 1);
                 double[] glow = style != null ? rgb(style, "glow") : new double[] {0.96, 0.52, 0.5};
                 emit(level, sprite("heavy", l, "glow"), along(mid, dir, -LAYER_GAP), dir, 0, spin, 1.2, 0.26, glow, 0.95);
-                emit(level, sprite("heavy", l, "core"), along(front, dir, -LAYER_GAP), dir, 0, spin, 1.19, 0.26, new double[] {1.0, 0.92, 0.88}, 1);
+                emit(level, sprite("heavy", l, "core"), along(front, dir, -LAYER_GAP), dir, 0, spin, 1.19, 0.26, c[1], 1);
             }
             default -> {}
         }
@@ -420,8 +435,8 @@ public final class Slash {
         Vec3 u = to.scale(1 / len);
         Vec3 at = along(mid, u, -Math.min(0.35, len * 0.5));
         double size = style.num("hitSize") * gradeSize(w) * (crit ? 1.4 : 1);
-        emit(level, FxSprite.BASH_BURST, at, u, 0, rnd.nextDouble() * 360, size, crit ? 0.3 : 0.22, crit ? new double[] {1.0, 0.85, 0.35} : rgb(style, "glow"),
-                0.95);
+        double[] critGlow = critColors(style, new double[] {1.0, 0.85, 0.35}, WHITE)[0];
+        emit(level, FxSprite.BASH_BURST, at, u, 0, rnd.nextDouble() * 360, size, crit ? 0.3 : 0.22, crit ? critGlow : rgb(style, "glow"), 0.95);
         emit(level, FxSprite.BASH_RING, along(at, u, -LAYER_GAP), u, 0, 0, size * 0.6, 0.2, WHITE, 0.9);
         sound(level, at, SoundEvents.TRIDENT_HIT, crit ? 0.8 : 1.1, 0.8);
     }

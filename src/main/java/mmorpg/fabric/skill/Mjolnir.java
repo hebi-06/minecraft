@@ -17,7 +17,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 묠니르 (초월 전투 망치 — 12단계, 자바 전용): 묠니르 투척 · 라그나로크의 뇌우. 수치는 SKILLS.hammer, 색은 번개의 하늘빛 · 흰 심지.
+ * 묠니르 (초월 전투 망치 — 12단계, 자바 전용): 묠니르 투척 · 라그나로크의 뇌우. 수치는 SKILLS.hammer, 색은 망치 룬의 청록빛 · 흰 심지 (0.12.8 — 무기 디자인 색).
  * 그림: rpg:rfx_relicspin 칸 4 (묠니르 모델 — 돌며 날아가는 망치), 번개 (rpg:rfx_bolt · 지그재그 빛줄기), 먹구름 (rpg:rfx_cloud).
  * 쓰러지거나 차원을 옮기면 남은 것은 멈춤
  */
@@ -25,7 +25,7 @@ final class Mjolnir {
     private Mjolnir() {}
 
     static final int RELIC_SPIN_CELL = 4;
-    static final double[] CLOUD = {0.22, 0.24, 0.34};
+    static final double[] CLOUD = {0.18, 0.24, 0.32};
 
     static void register() {
         Transcend.register("mjolnir_throw", Mjolnir::toss);

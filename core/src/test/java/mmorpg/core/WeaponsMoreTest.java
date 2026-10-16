@@ -212,8 +212,9 @@ public final class WeaponsMoreTest {
         check(axeT != null && axeT.title().equals("세계수의 도끼"), "axe transcend name " + (axeT == null ? null : axeT.title()));
         if (axeT != null) {
             check(axeT.typeLabel().equals("도끼") && "ygg_axe".equals(axeT.look()), "axe transcend label · look " + axeT.typeLabel() + " " + axeT.look());
-            Obj yggSlash = Rules.get().obj("SLASH").objOrNull("ygg_axe");
-            check(yggSlash != null && "heavy".equals(yggSlash.strOrNull("shape")) && yggSlash.has("aura"), "axe transcend slash = heavy · leaf glow · gold aura");
+            Obj yggSlash = Weapons.slashStyle("ygg_axe");
+            check(yggSlash != null && "heavy".equals(yggSlash.strOrNull("shape")) && yggSlash.has("aura") && yggSlash.num("size") == Weapons.slashStyle("axe").num("size"),
+                    "axe transcend slash = axe heavy (base) · jade glow · sprout aura");
             check(Weapons.weaponInfo(axeT).get(0).contains("도끼 · 레벨 40"), "axe transcend info " + Weapons.weaponInfo(axeT).get(0));
             List<Obj> sk = axeT.skills();
             check(sk != null && sk.size() == 2 && sk.get(0).str("id").equals("ygg_seed") && sk.get(1).str("id").equals("ygg_tree"), "axe transcend skills");
@@ -244,12 +245,14 @@ public final class WeaponsMoreTest {
         check(Weapons.weaponFrom("shield", 30, "hero").title().equals("듀란드의 방패"), "shield hero name unchanged");
         check(Weapons.weaponFrom("axe", 40, "hero").title().equals("대지의 심판"), "axe hero name unchanged");
 
-        // 창 초월: 브류나크 → 궁니르 (0.12.3 — 예전 도끼 초월의 궁니르를 옮김). 종류 글자 '창', 평타는 애드온 궁니르의 하늘빛 찌르기 (SLASH.spear),
+        // 창 초월: 브류나크 → 궁니르 (0.12.3 — 예전 도끼 초월의 궁니르를 옮김). 종류 글자 '창', 평타는 애드온 궁니르의 찌르기 (SLASH.spear) 를 바탕으로 디자인 색 (0.12.8 — SLASH.gungnir 청록빛),
         // 스킬 = 신창 귀환 · 신창 강림 (재사용 대기 그대로, 배율 합은 창 세기 8.5 · 13.6 — 예전 궁니르 9.9 · 15.9 와 같은 비율), 도끼 규칙의 회복은 없음
         Weapon lanceT = Weapons.parseWeapon("rpg:lance_l40_transcend");
         check(lanceT != null && lanceT.title().equals("궁니르"), "lance transcend name " + (lanceT == null ? null : lanceT.title()));
         if (lanceT != null) {
-            check(lanceT.typeLabel().equals("창") && "spear".equals(lanceT.look()), "lance transcend label · look " + lanceT.typeLabel() + " " + lanceT.look());
+            check(lanceT.typeLabel().equals("창") && "gungnir".equals(lanceT.look()), "lance transcend label · look " + lanceT.typeLabel() + " " + lanceT.look());
+            Obj gn = Weapons.slashStyle("gungnir");
+            check(gn != null && gn.truthy("thrust") && gn.num("length") == Weapons.slashStyle("spear").num("length"), "gungnir look = add-on spear thrust (base) · cyan");
             check(Weapons.weaponInfo(lanceT).get(0).contains("창 · 레벨 40"), "lance transcend info " + Weapons.weaponInfo(lanceT).get(0));
             List<Obj> sk = lanceT.skills();
             if (sk != null && sk.size() == 2) {
@@ -263,6 +266,26 @@ public final class WeaponsMoreTest {
         }
         check(Weapons.weaponFrom("lance", 40, "hero").title().equals("게이 볼그"), "lance hero name unchanged");
         check(Crafting.craftUseLines("boss", "ygg_branch").stream().anyMatch(l -> l.contains("세계수의 도끼")), "boss material lore uses the new name");
+
+        // 0.12.8: 영웅 · 초월 무기 21종 — 무기마다 디자인 색의 평타 모양 (LOOK → SLASH, base 를 따라 바탕 모양의 값을 받음)
+        for (String type : List.of("sword", "dagger", "axe", "shield", "bow", "wand", "greatsword", "lance", "scythe", "hammer", "scepter")) {
+            for (String g : List.of("hero", "transcend")) {
+                Weapon w = Weapons.weaponFrom(type, 40, g);
+                if (w == null) continue; // 마검 영웅은 없음
+                Obj st = Weapons.slashStyle(w.look());
+                check(w.look() != null && st != null && st.has("glow") && !st.has("base"), type + " " + g + " look " + w.look());
+                if (st == null) continue;
+                boolean ranged = type.equals("bow") || type.equals("wand");
+                Obj plain = Weapons.slashStyle(type.equals("lance") && g.equals("transcend") ? "spear" : type);
+                if (ranged) check(st.has("core"), type + " " + g + " look has core (arrow · trail)");
+                else check(plain != null && st.truthy("thrust") == plain.truthy("thrust") && st.truthy("bash") == plain.truthy("bash")
+                        && java.util.Objects.equals(st.strOrNull("shape"), plain.strOrNull("shape")) && st.numOr("size", 0) == plain.numOr("size", 0),
+                        type + " " + g + " look keeps the type's shape · size");
+                if (st.has("crit")) check(st.list("crit").size() == 2, type + " " + g + " crit [glow, core]");
+            }
+        }
+        check(Weapons.weaponFrom("sword", 40, "rare").look() == null, "below hero: type look");
+        check(Weapons.slashStyle("nope") == null && Weapons.slashStyle(null) == null, "unknown look");
 
         System.out.println("WeaponsMoreTest: " + ok + " ok, " + BAD.size() + " failed");
         for (String b : BAD) System.out.println("  FAIL " + b);

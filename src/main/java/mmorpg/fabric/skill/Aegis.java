@@ -32,25 +32,26 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 방패 초월 (탱커) — 0.12.4 부터 스발린 (태양 앞에 서서 세상이 타지 않게 막는 방패 — 앞은 불꽃 테두리, 안쪽은 얼음): 서리 돌진 · 일식.
+ * 방패 초월 (탱커) — 0.12.4 부터 스발린 (태양 앞에 서서 세상이 타지 않게 막는 방패 — 0.12.8 부터 무기 디자인 (0.12.7 사용자 리워크) 의 남빛 강철 · 하늘빛 룬 색):
+ * 서리 돌진 · 일식.
  * 동작 · 수치 · 판정은 애드온 아이기스의 방패 (skills.js v2.20.0 "고르곤 · 신의 방벽") 그대로 (SKILLS.shield — rules_more, 색은 스킬마다) — 연출만 바꿈:
  * 메두사의 시선 · 석화 → 얼음 핵의 서리 숨결 · 빙결 (얼음 조각 · 얼음 결정), 금빛 육각 돔 → 얼음빛 돔 + 돔 너머 앞쪽 하늘의 일식 (해를 가린 스발린),
- * 번개 폭발 → 해가 드러나며 불꽃 폭발 (드러난 해에서 적마다 햇빛 줄기). 세기 "영웅 룬~초월 룬" (Lv.40 체력 125 의 체력 룬 위력 기준).
- * 그림: rpg:svalinn_shield (스발린 앞모습 — 애드온 aegis_shield 와 같은 12장) · svalinn_hex (흰 육각 칸 — 색을 입힘) · svalinn_ice (얼음 조각 —
+ * 번개 폭발 → 해가 드러나며 푸른 흰빛 불꽃 폭발 (드러난 해에서 적마다 햇빛 줄기 — 0.12.8 룬 색, 예전 주황 불꽃). 세기 "영웅 룬~초월 룬" (Lv.40 체력 125 의 체력 룬 위력 기준).
+ * 그림: rpg:svalinn_shield (스발린 앞모습 — 애드온 aegis_shield 와 같은 12장, 0.12.8 무기 모델 그대로) · svalinn_hex (흰 육각 칸 — 색을 입힘) · svalinn_ice (얼음 조각 —
  * 애드온 aegis_stone 과 같은 정의) · rfx_eclipse (일식 4장) — tools/java_fx_art_more.py. 도발 (TAUNT_HOOKS — 보스 · 몬스터) 은 그대로
  */
 public final class Aegis {
     private Aegis() {}
 
-    static final double[] AE_EYE = {0.6, 0.9, 1.0}; // 얼음 핵 · 서리 숨결 (얼음빛)
-    static final double[] AE_WHITE = {1.0, 0.97, 0.84};
+    static final double[] AE_EYE = {0.5, 0.82, 1.0}; // 문장 보석 · 서리 숨결 (룬의 하늘빛)
+    static final double[] AE_WHITE = {0.9, 0.96, 1.0};
     static final double[] AE_STONE = {0.9, 0.97, 1.0}; // 빙결 얼음 조각 (rpg:svalinn_ice — 미리 칠한 얼음 결정에 조금 더 차갑게)
-    static final double[] AE_DUST = {0.82, 0.93, 1.0}; // 서리 안개
-    /** 일식이 끝나며 드러나는 해 (불꽃 — 규칙의 flame 이 없을 때) */
-    static final double[] FLAME = {1.0, 0.55, 0.18};
-    static final double[] FLAME_CORE = {1.0, 0.92, 0.6};
-    /** 빛의 방패 그림에서 얼음 핵 자리 {x, y} (그림 가운데 기준, 반 크기 = 1 — svalinn_shield 의 가운데 결정) */
-    static final double[][] AE_EYES = {{0, 0}};
+    static final double[] AE_DUST = {0.78, 0.88, 1.0}; // 서리 안개
+    /** 일식이 끝나며 드러나는 해 (푸른 흰빛 불꽃 — 규칙의 flame 이 없을 때) */
+    static final double[] FLAME = {0.35, 0.7, 1.0};
+    static final double[] FLAME_CORE = {0.9, 0.97, 1.0};
+    /** 빛의 방패 그림에서 문장 보석 자리 {x, y} (그림 가운데 기준, 반 크기 = 1 · 위가 + — svalinn_shield 의 가운데 마름모 문장, java_fx_art_more.svalinn_eye) */
+    static final double[][] AE_EYES = {{0, 0.0625}};
     /** 고르곤 돌진의 빛의 방패 반 크기 (칸) — 지름 1.6칸 */
     static final double AE_SHIELD = 0.8;
     /** 빛의 방패 가운데 높이 (발에서) — 위끝 1.52칸: 눈 (1.62) 보다 조금 아래 (1인칭에서 앞을 가리지 않게) */
@@ -676,7 +677,7 @@ public final class Aegis {
                 }
                 if (moveAlong(c.e, Math.min(lm, s + ahead(c)), Double.NEGATIVE_INFINITY, lm, c.lat) == null) c.free = true;
             }
-            // 그림: 빛의 방패 (틱마다 다시 — 빛이 지나가는 장은 이어짐) + 양옆 금빛 빛줄기 + 발밑 흙먼지
+            // 그림: 빛의 방패 (틱마다 다시 — 빛이 지나가는 장은 이어짐) + 양옆 하늘빛 빛줄기 + 발밑 흙먼지
             Vec3 eye = sp.getEyePosition();
             shieldFx(level, shieldAt(), AE_SHIELD, 0.09, Opt.of("phase", i * 0.6, "alpha", 0.6));
             if (s > prev + 1e-3) {
@@ -802,7 +803,7 @@ public final class Aegis {
         SkillFx.play(level, "beacon.activate", c, 1.2, 0.9);
         SkillFx.play(level, "step.powder_snow", c, 0.6, 1.0);
         Kit.shakeNear(level, c, 10, 0.2, 0.25);
-        // 일식: 돔 너머 앞쪽 하늘에 해를 가린 스발린 (rpg:rfx_eclipse — 어두운 원판 + 불꽃 코로나가 일렁이며 천천히 돎, 돔이 접힐 때까지).
+        // 일식: 돔 너머 앞쪽 하늘에 해를 가린 스발린 (rpg:rfx_eclipse — 남빛 원판 + 푸른 흰빛 코로나가 일렁이며 천천히 돎, 돔이 접힐 때까지).
         // 1인칭 · 3인칭 화면 위쪽에 보이는 자리 (보는 쪽 앞 r + 2.5칸 · 눈 위 ECLIPSE_UP 칸) —
         // 벽 · 지붕이 가까우면 그 앞으로 당기고 크기도 같은 비율로 (보이는 크기는 같음)
         int burstT = (int) k.num("burst");

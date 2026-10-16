@@ -221,6 +221,30 @@ public final class Weapons {
         return parseWeapon(weaponId(type, level, gradeId));
     }
 
+    /** slashStyle cache (empty = no such style). */
+    private static final Map<String, Optional<Obj>> SLASH_STYLES = new ConcurrentHashMap<>();
+
+    /**
+     * 평타 연출 모양 SLASH[key] (Java-only, 0.12.8): a style with {@code "base": "<other key>"} takes every value of that
+     * style and replaces the ones it has itself (영웅 · 초월 무기마다 색만 다른 모양 — LOOK[type_grade].slash). Chains
+     * of bases are followed (at most 8). Null when SLASH has no such key.
+     */
+    public static Obj slashStyle(String key) {
+        if (key == null) return null;
+        return SLASH_STYLES.computeIfAbsent(key, k -> Optional.ofNullable(resolveSlash(k, 0))).orElse(null);
+    }
+
+    private static Obj resolveSlash(String key, int depth) {
+        Obj own = R.obj("SLASH").objOrNull(key);
+        if (own == null || !own.has("base") || depth >= 8) return own;
+        Obj base = resolveSlash(own.str("base"), depth + 1);
+        if (base == null) return own;
+        Map<String, Object> merged = new java.util.LinkedHashMap<>();
+        for (String k : base.keys()) merged.put(k, base.get(k));
+        for (String k : own.keys()) if (!k.equals("base")) merged.put(k, own.get(k));
+        return new Obj(java.util.Collections.unmodifiableMap(merged), "SLASH." + key);
+    }
+
     /** weapons.js currentWeapon: a legacy weapon becomes the same grade's nearest current level. */
     public static Weapon currentWeapon(Weapon w) {
         if (w == null || !w.legacy()) return w;
