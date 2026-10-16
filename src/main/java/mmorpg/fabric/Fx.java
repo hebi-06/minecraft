@@ -20,7 +20,7 @@ import net.minecraft.world.phys.Vec3;
  * 연출 (fx.js · combat.js 의 파티클 · 소리). 활 빛줄기 · 마법진 · 맞힘은 애드온 그림 그대로 (mmorpg:fx 파티클 — 클라이언트가 그림),
  * 완드 궤적 · 치명타 불꽃 등 애드온도 바닐라 파티클을 쓰는 것은 자바의 같은 파티클.
  * 0.12.8: 영웅 · 초월 활 · 완드는 무기 디자인 색 (rules_more LOOK → SLASH 의 glow · core — 등급 색 대신): 화살 빛줄기에 흰 심지 한 줄,
- * 마법진 · 번쩍임은 그 색, 완드 궤적은 바닐라 파티클 대신 그 색의 빛줄기 (활의 지나간 자리 선 조각 — 흰 심지 한 줄) + 떠오르는 빛 방울,
+ * 마법진 · 번쩍임은 그 색, 완드 궤적은 바닐라 파티클 대신 그 색의 빛줄기 (활의 지나간 자리 선 조각) + 0.4칸마다 떠오르는 빛 방울,
  * 맞은 자리는 그 색의 번쩍임 + 튀는 불꽃
  */
 public final class Fx {
@@ -196,18 +196,17 @@ public final class Fx {
             }
             return;
         }
-        // 영웅 · 초월 (0.12.8): 무기 색 빛줄기 — 활의 지나간 자리와 같은 선 조각이 한꺼번에 켜져 가늘어지며 사라짐 (가운데 흰 심지 한 줄),
-        // 두 조각마다 빛 방울이 위로 떠오름 (빛 · 심지 색 번갈아)
+        // 영웅 · 초월 (0.12.8): 무기 색 빛줄기 — 활의 지나간 자리와 같은 선 조각이 한꺼번에 켜져 가늘어지며 사라짐 (옆에서 보이는 줄기) +
+        // 바닐라 궤적 자리 (0.4칸마다) 에 빛 방울 (보는 쪽을 향함 — 1인칭 앞으로 곧게 뻗어도 보임), 셋에 하나는 심지 색 · 조금씩 위로 떠오름
         Vec3[] b = basis(u);
+        for (double s = 0.6; s <= len - 0.1; s += SEG_GAP) {
+            fx(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.08F, 0.45F, 0F, 0F, 0F, 1F, argb(cs[0], 0.85)));
+        }
         int i = 0;
-        for (double s = 0.6; s <= len - 0.1; s += SEG_GAP, i++) {
-            Vec3 at = from.add(u.scale(s));
-            fx(level, at, new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.09F, 0.5F, 0F, 0F, 0F, 1F, argb(cs[0], 0.9)));
-            fx(level, at, new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.035F, 0.4F, 0F, 0F, 0F, 1F, argb(cs[1], 1)));
-            if (i % 2 == 1) {
-                Vec3 drift = b[1].scale(0.8).add(b[0].scale(i % 4 == 1 ? 0.5 : -0.5)).normalize();
-                fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, drift, 0.6F, 0.11F, 0F, 0.6F, 0F, 0.4F, 0F, 1F, argb(i % 4 == 1 ? cs[1] : cs[0], 0.95)));
-            }
+        for (double s = 0.8; s <= len; s += 0.4, i++) {
+            Vec3 drift = b[1].scale(0.8).add(b[0].scale(i % 2 == 0 ? 0.5 : -0.5)).normalize();
+            fx(level, from.add(u.scale(s)), new FxOptions(FxOptions.ARROW_SPARK, -1, drift, 0.5F, 0.15F, 0F, 0.6F, 0F, 0.3F, 0F, 1F,
+                    argb(i % 3 == 2 ? cs[1] : cs[0], 0.95)));
         }
     }
 

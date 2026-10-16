@@ -126,9 +126,10 @@ public final class RpgWeaponGallery implements FabricClientGameTest {
             {"rpg:bow_l40_common", "bow_common", "1,2,3,4,6,9"},
             {"rpg:bow_l40_hero", "bow_hero", "1,2,3,4,6,9"}, // 0.12.8: 영웅 · 초월은 무기 디자인 색 (+ 흰 심지 · 빛 알갱이 궤적)
             {"rpg:bow_l40_transcend", "bow_transcend", "1,2,3,4,6,9"},
-            {"rpg:wand_l40_common", "wand_common", "2,5,8,11,13,16"},
+            // 완드 일반 (바닐라 end rod 궤적 — 3초쯤 남음) 은 마지막에: 영웅 · 초월 궤적 사진에 섞이지 않게
             {"rpg:wand_l40_hero", "wand_hero", "2,5,8,11,13,16"},
             {"rpg:wand_l40_transcend", "wand_transcend", "2,5,8,11,13,16"},
+            {"rpg:wand_l40_common", "wand_common", "2,5,8,11,13,16"},
         };
         for (String[] sh : shots) fire(ctx, server, sh[0], sh[1], sh[2], CameraType.FIRST_PERSON, "");
         fire(ctx, server, "rpg:bow_l40_hero", "bow_hero", "2,4", CameraType.THIRD_PERSON_BACK, "_3p");
