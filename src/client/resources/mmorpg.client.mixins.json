@@ -4,9 +4,11 @@
   "package": "mmorpg.fabric.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "AvatarRendererMixin",
     "CameraMixin",
     "ClientTitleMixin",
     "FogRendererMixin",
+    "ItemModelResolverMixin",
     "QuadParticleGroupMixin"
   ],
   "injectors": {

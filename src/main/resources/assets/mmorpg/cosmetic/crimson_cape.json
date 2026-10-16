@@ -1,0 +1,92 @@
+{
+ "tw": 64,
+ "th": 32,
+ "texture": "mmorpg:textures/entity/cosmetic/crimson_cape.png",
+ "parts": {
+  "body": {
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [
+    {
+     "from": [
+      -5.0,
+      -0.5,
+      2.4
+     ],
+     "size": [
+      2,
+      2,
+      1
+     ],
+     "uv": [
+      22,
+      0
+     ],
+     "inflate": 0,
+     "mirror": false
+    },
+    {
+     "from": [
+      3.0,
+      -0.5,
+      2.4
+     ],
+     "size": [
+      2,
+      2,
+      1
+     ],
+     "uv": [
+      28,
+      0
+     ],
+     "inflate": 0,
+     "mirror": false
+    }
+   ],
+   "children": {
+    "fw_cape": {
+     "pivot": [
+      0.0,
+      0.0,
+      3.2
+     ],
+     "rot": [
+      6.0,
+      -0.0,
+      -0.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -5.0,
+        0.0,
+        0.0
+       ],
+       "size": [
+        10,
+        16,
+        1
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    }
+   }
+  }
+ }
+}

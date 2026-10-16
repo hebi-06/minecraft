@@ -1,0 +1,542 @@
+package mmorpg.fabric.test;
+
+import com.mojang.blaze3d.platform.InputConstants;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import mmorpg.core.Armor;
+import mmorpg.core.Weapons;
+import mmorpg.fabric.RpgItems;
+import mmorpg.fabric.client.ClientCosmetics;
+import mmorpg.fabric.client.CosmeticAura;
+import mmorpg.fabric.client.CosmeticLayer;
+import mmorpg.fabric.client.CosmeticModels;
+import mmorpg.fabric.client.CosmeticRender;
+import mmorpg.fabric.client.CosmeticScreen;
+import mmorpg.fabric.client.MmorpgClient;
+import mmorpg.fabric.client.StatScreen;
+import mmorpg.fabric.cosmetic.CosmeticDefs;
+import mmorpg.fabric.cosmetic.Cosmetics;
+import mmorpg.fabric.cosmetic.Look;
+import mmorpg.fabric.gear.GearItems;
+import mmorpg.fabric.ui.Forms;
+import mmorpg.fabric.ui.Inv;
+import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
+import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.ChatVisiblity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 0.13.0 장식 사진첩 (화면 시험 — MMORPG_ONLY=cosmetic, 실제 마우스 · 키 입력):
+ * 스탯 창 아랫줄 장식 단추 (풀이) → 장식 창 (무기 탭 — 칼을 든 미리보기), 벚꽃 검 줄 → 미리보기 → 구매 (두 번 눌러 확인 — 에메랄드 줄어듦 · 바로 입음),
+ * 갑옷 탭 (투구 숨기기 · 성기사 세트 장착), 머리 (왕관 장착 · 고리 · 모자 입어 보기), 등 (뒤로 돌아간 미리보기 — 날개 장착 · 망토 · 악마 날개 입어 보기),
+ * 오라 (별빛 장착), 칭호 (용사 장착), U 키로 열기 · 닫기, 세계에서 3인칭 앞 · 뒤 · 1인칭 (벚꽃 검 스킨), 두 번째 플레이어 (가짜 연결 — 장식을 입히면
+ * 내 클라이언트에 모습이 옴): 앞 (칭호가 이름 위) · 뒤 · 옆, 진짜 갑옷 (황제 세트) 을 입은 채 숨기기 · 빙룡 갑옷 스킨, 오라 셋 (불씨 · 별빛 · 서리).
+ * 사진 이름 c_… → ci-logs 의 shots/. 확인 항목은 로그 [cosmetic-gallery] OK / FAIL.
+ */
+@SuppressWarnings("UnstableApiUsage")
+public final class RpgCosmeticGallery implements FabricClientGameTest {
+    private static final Logger LOG = LoggerFactory.getLogger("mmorpg-cosmetic-gallery");
+    private static final Vec3 HOME = new Vec3(0.5, -60, 0.5);
+    private static final Vec3 RIVAL_AT = new Vec3(0.5, -60, 4.0);
+
+    private final List<String> failures = new ArrayList<>();
+    private UUID rivalId;
+
+    @Override
+    public void runTest(ClientGameTestContext ctx) {
+        if (RpgProdSmoke.active() || !RpgProdSmoke.only("cosmetic")) return;
+        ctx.getInput().resizeWindow(1280, 720);
+        try (TestSingleplayerContext world = ctx.worldBuilder()
+                .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
+                .create()) {
+            TestServerContext server = world.getServer();
+            TestServerConnection conn = world.getConnection();
+            conn.waitForChunksRender();
+            server.runCommand("time set 6000");
+            server.runCommand("weather clear");
+            server.runCommand("gamerule doMobSpawning false");
+            ctx.runOnClient(mc -> mc.options.chatVisibility().set(ChatVisiblity.HIDDEN));
+            home(server, 0F, 0F);
+            server.runOnServer(s -> {
+                ServerPlayer me = me(s);
+                Cosmetics.reset(me);
+                me.getInventory().clearContent();
+                me.getInventory().setItem(0, new ItemStack(RpgItems.byId(Weapons.weaponFrom("sword", 30, "hero").id())));
+                me.getInventory().setSelectedSlot(0);
+                for (int i = 0; i < 16; i++) me.getInventory().setItem(9 + i, new ItemStack(Inv.CURRENCY, 64));
+            });
+            ctx.waitTicks(20);
+            String gui = ctx.computeOnClient(mc -> mc.getWindow().getScreenWidth() + "x" + mc.getWindow().getScreenHeight() + " → gui "
+                    + mc.getWindow().getGuiScaledWidth() + "x" + mc.getWindow().getGuiScaledHeight());
+            LOG.info("[cosmetic-gallery] window {}", gui);
+            int models = ctx.computeOnClient(mc -> CosmeticModels.count());
+            check(models == countModels(), "cosmetic models loaded " + models + " / " + countModels());
+            check(ctx.computeOnClient(mc -> CosmeticModels.animCount("angel_wings")) == 2, "wing bones animate (2)");
+            check(ctx.computeOnClient(mc -> CosmeticModels.animCount("halo")) == 2, "halo bob + spin bones");
+            check(ctx.computeOnClient(mc -> CosmeticModels.animCount("crimson_cape")) == 1, "cape bone");
+            part(ctx, "stats", () -> stats(ctx, conn));
+            part(ctx, "buy", () -> buy(ctx, server, conn));
+            server.runOnServer(s -> {
+                for (String id : CosmeticDefs.all().keySet()) Cosmetics.give(me(s), id);
+            });
+            ctx.waitTicks(3);
+            part(ctx, "armor", () -> armor(ctx, server, conn));
+            part(ctx, "head", () -> head(ctx, server, conn));
+            part(ctx, "back", () -> back(ctx, server, conn));
+            part(ctx, "aura_title", () -> auraTitle(ctx, server, conn));
+            part(ctx, "key", () -> key(ctx));
+            part(ctx, "world", () -> world(ctx, server));
+            part(ctx, "rival", () -> rival(ctx, server));
+            part(ctx, "rival_armor", () -> rivalArmor(ctx, server));
+            part(ctx, "auras", () -> auras(ctx, server));
+            server.runOnServer(s -> {
+                ServerPlayer r = rivalId == null ? null : s.getPlayerList().getPlayer(rivalId);
+                if (r != null) s.getPlayerList().remove(r);
+                if (rivalId != null) Forms.HEADLESS.remove(rivalId);
+            });
+            ctx.setScreen(() -> null);
+        }
+        LOG.info("[cosmetic-gallery] done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
+    }
+
+    private static int countModels() {
+        java.util.Set<String> m = new java.util.HashSet<>();
+        for (CosmeticDefs.Def d : CosmeticDefs.all().values()) if (d.model() != null) m.add(d.model());
+        return m.size();
+    }
+
+    // ------------------------------------------------------------ 스탯 창 → 장식 창
+
+    private void stats(ClientGameTestContext ctx, TestServerConnection conn) {
+        ctx.getInput().pressKey(MmorpgClient.statsKey);
+        if (!waitScreen(ctx, s -> s instanceof StatScreen, "stats")) return;
+        hover(ctx, sc -> ((StatScreen) sc).bottomCenter(3));
+        shot(ctx, "c_stats_button");
+        click(ctx, conn, sc -> ((StatScreen) sc).bottomCenter(3));
+        if (!waitScreen(ctx, s -> s instanceof CosmeticScreen, "cosmetic")) return;
+        away(ctx);
+        ctx.waitTicks(5);
+        shot(ctx, "c_screen_weapon");
+        String tab = ctx.computeOnClient(mc -> ((CosmeticScreen) mc.gui.screen()).tab());
+        check(tab.equals("weapon"), "opens on the weapon tab (" + tab + ")");
+        List<String> rows = ctx.computeOnClient(mc -> ((CosmeticScreen) mc.gui.screen()).rowIds());
+        check(rows.size() >= 2 && rows.get(0).equals("default") && rows.contains("sakura_sword") && !rows.contains("hide"),
+                "weapon rows (sword — held type, no hide row) " + rows);
+    }
+
+    private void buy(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        if (!ensureScreen(ctx)) return;
+        int before = server.computeOnServer(s -> Inv.money(me(s)));
+        int idx = rowIndex(ctx, "sakura_sword");
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(idx));
+        away(ctx);
+        ctx.waitTicks(3);
+        shot(ctx, "c_weapon_preview");
+        check(ctx.computeOnClient(mc -> CosmeticRender.skinnedThirdPerson) > 0, "preview holds the skinned sword (third person in the window)");
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
+        hover(ctx, sc -> ((CosmeticScreen) sc).actionCenter());
+        shot(ctx, "c_buy_confirm");
+        check(server.computeOnServer(s -> !Cosmetics.owns(me(s), "sakura_sword")), "first press only asks to confirm");
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
+        boolean owned = waitServer(ctx, server, s -> Cosmetics.owns(me(s), "sakura_sword"), 40);
+        int after = server.computeOnServer(s -> Inv.money(me(s)));
+        int price = CosmeticDefs.get("sakura_sword").price();
+        check(owned && after == before - price, "bought sakura sword (" + before + " → " + after + ", price " + price + ")");
+        check(server.computeOnServer(s -> "sakura_sword".equals(Cosmetics.look(me(s)).weaponSkin("sword"))), "worn right after buying");
+        ctx.waitTicks(4);
+        away(ctx);
+        shot(ctx, "c_bought");
+        boolean synced = waitFor(ctx, mc -> ClientCosmetics.owns("sakura_sword"), 40);
+        check(synced, "client knows it is owned");
+    }
+
+    // ------------------------------------------------------------ 갑옷 · 머리 · 등 · 오라 · 칭호
+
+    private void armor(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        if (!ensureScreen(ctx)) return;
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).tabCenter("armor"));
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(0));
+        List<String> rows = ctx.computeOnClient(mc -> ((CosmeticScreen) mc.gui.screen()).rowIds());
+        check(rows.size() >= 3 && rows.get(1).equals("hide") && rows.contains("paladin_helmet"), "helmet rows " + rows);
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(1));
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
+        check(waitServer(ctx, server, s -> Cosmetics.look(me(s)).hidden("helmet"), 40), "helmet hidden by clicking (free)");
+        // 성기사 세트: 부위마다 줄 → 장착
+        for (int i = 0; i < 4; i++) {
+            int piece = i;
+            String id = "paladin_" + CosmeticDefs.ARMOR.get(i);
+            click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(piece));
+            int row = rowIndex(ctx, id);
+            click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
+            click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
+        }
+        check(waitServer(ctx, server, s -> {
+            Look l = Cosmetics.look(me(s));
+            return "paladin_helmet".equals(l.get("helmet")) && "paladin_chest".equals(l.get("chest")) && "paladin_legs".equals(l.get("legs"))
+                    && "paladin_boots".equals(l.get("boots"));
+        }, 40), "paladin set worn");
+        away(ctx);
+        shot(ctx, "c_armor_paladin");
+        // 모두 숨기기 단추 → 미리보기에서 갑옷이 사라짐 → 모두 원래대로
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(4));
+        check(waitServer(ctx, server, s -> Cosmetics.look(me(s)).hidden("chest") && Cosmetics.look(me(s)).hidden("boots"), 40), "hide all");
+        away(ctx);
+        shot(ctx, "c_armor_hidden");
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(5));
+        check(waitServer(ctx, server, s -> Cosmetics.look(me(s)).get("chest") == null, 40), "show all");
+        // 다시 성기사 갑옷 (세계 사진용)
+        for (String slot : CosmeticDefs.ARMOR) server.runOnServer(s -> Cosmetics.equip(me(s), "paladin_" + slot));
+    }
+
+    private void head(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        if (!ensureScreen(ctx)) return;
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).tabCenter("head"));
+        equipRow(ctx, conn, "crown");
+        check(waitServer(ctx, server, s -> "crown".equals(Cosmetics.look(me(s)).get("head")), 40), "crown worn");
+        away(ctx);
+        shot(ctx, "c_head_crown");
+        for (String id : List.of("halo", "wizard_hat")) {
+            int row = rowIndex(ctx, id);
+            click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
+            away(ctx);
+            ctx.waitTicks(10);
+            shot(ctx, "c_head_" + id + "_try");
+        }
+        check(server.computeOnServer(s -> "crown".equals(Cosmetics.look(me(s)).get("head"))), "trying on does not change the worn look");
+    }
+
+    private void back(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        if (!ensureScreen(ctx)) return;
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).tabCenter("back"));
+        equipRow(ctx, conn, "angel_wings");
+        check(waitServer(ctx, server, s -> "angel_wings".equals(Cosmetics.look(me(s)).get("back")), 40), "wings worn");
+        away(ctx);
+        ctx.waitTicks(6);
+        shot(ctx, "c_back_wings");
+        for (String id : List.of("crimson_cape", "demon_wings")) {
+            int row = rowIndex(ctx, id);
+            click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
+            away(ctx);
+            ctx.waitTicks(10);
+            shot(ctx, "c_back_" + id + "_try");
+        }
+        // 끌어서 돌리기 (앞으로)
+        double[] p = at(ctx, sc -> ((CosmeticScreen) sc).previewCenter());
+        ctx.getInput().setCursorPos(p[0], p[1]);
+        ctx.waitTick();
+        ctx.getInput().holdMouse(InputConstants.MOUSE_BUTTON_LEFT);
+        for (int i = 1; i <= 8; i++) {
+            ctx.getInput().setCursorPos(p[0] - i * 12, p[1]);
+            ctx.waitTick();
+        }
+        ctx.getInput().releaseMouse(InputConstants.MOUSE_BUTTON_LEFT);
+        ctx.waitTicks(3);
+        shot(ctx, "c_back_dragged");
+    }
+
+    private void auraTitle(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        if (!ensureScreen(ctx)) return;
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).tabCenter("aura"));
+        equipRow(ctx, conn, "star_aura");
+        check(waitServer(ctx, server, s -> "star_aura".equals(Cosmetics.look(me(s)).get("aura")), 40), "star aura worn");
+        away(ctx);
+        shot(ctx, "c_aura_star");
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).tabCenter("title"));
+        equipRow(ctx, conn, "title_hero");
+        check(waitServer(ctx, server, s -> "title_hero".equals(Cosmetics.look(me(s)).get("title")), 40), "hero title worn");
+        int row = rowIndex(ctx, "title_slayer");
+        hover(ctx, sc -> ((CosmeticScreen) sc).rowCenter(row));
+        shot(ctx, "c_title_tip");
+        // 무기 탭: 활 종류 → 서리 활 장착 (칼 스킨은 그대로)
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).tabCenter("weapon"));
+        int bow = Weapons.allTypes().indexOf("bow");
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).subCenter(bow));
+        equipRow(ctx, conn, "frost_bow");
+        check(waitServer(ctx, server, s -> "frost_bow".equals(Cosmetics.look(me(s)).weaponSkin("bow"))
+                && "sakura_sword".equals(Cosmetics.look(me(s)).weaponSkin("sword")), 40), "bow skin added, sword skin kept");
+        away(ctx);
+        shot(ctx, "c_weapon_bow");
+    }
+
+    private void key(ClientGameTestContext ctx) {
+        closeScreen(ctx);
+        ctx.getInput().pressKey(MmorpgClient.cosmeticKey);
+        boolean open = waitScreen(ctx, s -> s instanceof CosmeticScreen, "cosmetic (U key)");
+        check(open, "U key opens the cosmetics window");
+        if (open) {
+            ctx.getInput().pressKey(MmorpgClient.cosmeticKey);
+            ctx.waitTicks(3);
+            check(ctx.computeOnClient(mc -> mc.gui.screen() == null), "U key closes it");
+        }
+        check(ctx.computeOnClient(mc -> ClientCosmetics.preview() == null), "closing drops the try-on look");
+    }
+
+    // ------------------------------------------------------------ 세계에서
+
+    private void world(ClientGameTestContext ctx, TestServerContext server) {
+        ctx.setScreen(() -> null);
+        home(server, 0F, 0F);
+        ctx.waitTicks(10);
+        int drawn0 = ctx.computeOnClient(mc -> CosmeticLayer.drawn);
+        int aura0 = ctx.computeOnClient(mc -> CosmeticAura.spawned);
+        camera(ctx, CameraType.THIRD_PERSON_FRONT);
+        ctx.waitTicks(30);
+        shot(ctx, "c_world_front");
+        camera(ctx, CameraType.THIRD_PERSON_BACK);
+        ctx.waitTicks(10);
+        shot(ctx, "c_world_back");
+        check(ctx.computeOnClient(mc -> CosmeticLayer.drawn) > drawn0, "decorations drawn in the world");
+        check(ctx.computeOnClient(mc -> CosmeticAura.spawned) > aura0, "aura particles spawned");
+        // 달리기 → 망토 · 날개가 더 크게
+        ctx.getInput().holdKey(o -> o.keyUp);
+        ctx.waitTicks(12);
+        shot(ctx, "c_world_run");
+        ctx.getInput().releaseKey(o -> o.keyUp);
+        camera(ctx, CameraType.FIRST_PERSON);
+        int fp0 = ctx.computeOnClient(mc -> CosmeticRender.skinnedFirstPerson);
+        ctx.waitTicks(8);
+        shot(ctx, "c_fp_sword");
+        check(ctx.computeOnClient(mc -> CosmeticRender.skinnedFirstPerson) > fp0, "first-person hand uses the skin");
+        // 핫바 아이콘은 그대로 (가방 아이콘 · 수치 그대로): 손의 아이템 자체는 바뀌지 않음
+        boolean plain = ctx.computeOnClient(mc -> !mc.player.getMainHandItem().has(net.minecraft.core.component.DataComponents.ITEM_MODEL)
+                || !mc.player.getMainHandItem().get(net.minecraft.core.component.DataComponents.ITEM_MODEL).getPath().startsWith("cosmetic_"));
+        check(plain, "the real item is untouched (icon stays)");
+    }
+
+    private void rival(ClientGameTestContext ctx, TestServerContext server) {
+        server.runOnServer(s -> {
+            ServerPlayer r = RpgDuelGallery.rival(s, "Rival", RIVAL_AT, 180F);
+            rivalId = r.getUUID();
+            Forms.HEADLESS.add(rivalId);
+            r.getInventory().setItem(0, new ItemStack(RpgItems.byId(Weapons.weaponFrom("axe", 30, "hero").id())));
+            r.getInventory().setSelectedSlot(0);
+            for (String id : CosmeticDefs.all().keySet()) Cosmetics.give(r, id);
+            for (String id : List.of("lava_axe", "wizard_hat", "demon_wings", "ember_aura", "title_slayer", "frost_dragon_chest")) Cosmetics.equip(r, id);
+        });
+        ctx.waitTicks(30);
+        boolean seen = ctx.computeOnClient(mc -> mc.level.players().stream().anyMatch(p -> p.getUUID().equals(rivalId)));
+        check(seen, "rival visible to the client");
+        boolean got = waitFor(ctx, mc -> "title_slayer".equals(ClientCosmetics.lookOf(rivalId).get("title")), 40);
+        check(got, "rival's look reached my client (broadcast)");
+        home(server, 0F, 4F);
+        camera(ctx, CameraType.FIRST_PERSON);
+        ctx.waitTicks(25);
+        shot(ctx, "c_rival_front");
+        rotateRival(server, 0F);
+        ctx.waitTicks(15);
+        shot(ctx, "c_rival_back");
+        rotateRival(server, 90F);
+        ctx.waitTicks(15);
+        shot(ctx, "c_rival_side");
+        rotateRival(server, 180F);
+    }
+
+    private void rivalArmor(ClientGameTestContext ctx, TestServerContext server) {
+        if (rivalId == null) return;
+        server.runOnServer(s -> {
+            ServerPlayer r = rival(s);
+            for (String piece : Armor.PIECE_ORDER) {
+                EquipmentSlot slot = switch (piece) {
+                    case "helmet" -> EquipmentSlot.HEAD;
+                    case "chest" -> EquipmentSlot.CHEST;
+                    case "legs" -> EquipmentSlot.LEGS;
+                    default -> EquipmentSlot.FEET;
+                };
+                r.setItemSlot(slot, new ItemStack(GearItems.byId(Armor.armorId("str", 40, "transcend", piece))));
+            }
+            Cosmetics.clear(r, "chest", null);
+            Cosmetics.clear(r, "back", null);
+            Cosmetics.clear(r, "head", null);
+        });
+        ctx.waitTicks(20);
+        shot(ctx, "c_rival_emperor");
+        server.runOnServer(s -> Cosmetics.action(rival(s), "hide_all", "", ""));
+        boolean hidden = waitFor(ctx, mc -> ClientCosmetics.lookOf(rivalId).hidden("chest"), 40);
+        check(hidden, "rival armor hidden on my client");
+        ctx.waitTicks(5);
+        shot(ctx, "c_rival_emperor_hidden");
+        server.runOnServer(s -> {
+            ServerPlayer r = rival(s);
+            Cosmetics.equip(r, "frost_dragon_helmet");
+            Cosmetics.equip(r, "frost_dragon_chest");
+            Cosmetics.equip(r, "frost_dragon_legs");
+            Cosmetics.equip(r, "frost_dragon_boots");
+            Cosmetics.equip(r, "halo");
+            Cosmetics.equip(r, "crimson_cape");
+        });
+        ctx.waitTicks(15);
+        shot(ctx, "c_rival_frost_dragon");
+        rotateRival(server, 0F);
+        ctx.waitTicks(15);
+        shot(ctx, "c_rival_frost_dragon_back");
+        rotateRival(server, 180F);
+    }
+
+    private void auras(ClientGameTestContext ctx, TestServerContext server) {
+        if (rivalId == null) return;
+        for (String id : List.of("ember_aura", "star_aura", "frost_aura")) {
+            server.runOnServer(s -> Cosmetics.equip(rival(s), id));
+            ctx.waitTicks(40);
+            shot(ctx, "c_aura_" + id);
+        }
+    }
+
+    private void rotateRival(TestServerContext server, float yaw) {
+        server.runOnServer(s -> {
+            ServerPlayer r = rival(s);
+            r.setYRot(yaw);
+            r.setYHeadRot(yaw);
+            r.setYBodyRot(yaw);
+        });
+    }
+
+    // ------------------------------------------------------------ 도움
+
+    private void equipRow(ClientGameTestContext ctx, TestServerConnection conn, String id) {
+        int row = rowIndex(ctx, id);
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
+        click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
+    }
+
+    private int rowIndex(ClientGameTestContext ctx, String id) {
+        int i = ctx.computeOnClient(mc -> mc.gui.screen() instanceof CosmeticScreen sc ? sc.rowIds().indexOf(id) : -1);
+        if (i < 0) throw new AssertionError("no row " + id);
+        return i;
+    }
+
+    private boolean ensureScreen(ClientGameTestContext ctx) {
+        if (ctx.computeOnClient(mc -> mc.gui.screen() instanceof CosmeticScreen)) return true;
+        ctx.setScreen(CosmeticScreen::new);
+        return waitScreen(ctx, s -> s instanceof CosmeticScreen, "cosmetic");
+    }
+
+    private static void home(TestServerContext server, float yaw, float pitch) {
+        server.runCommand(String.format(Locale.ROOT, "tp @a[name=!Rival] %.2f %.2f %.2f %.1f %.1f", HOME.x, HOME.y, HOME.z, yaw, pitch));
+    }
+
+    private ServerPlayer me(MinecraftServer s) {
+        for (ServerPlayer p : s.getPlayerList().getPlayers()) if (!p.getUUID().equals(rivalId)) return p;
+        throw new IllegalStateException("no client player");
+    }
+
+    private ServerPlayer rival(MinecraftServer s) {
+        return s.getPlayerList().getPlayer(rivalId);
+    }
+
+    private boolean waitServer(ClientGameTestContext ctx, TestServerContext server, Predicate<MinecraftServer> test, int ticks) {
+        for (int i = 0; i < ticks; i++) {
+            if (server.computeOnServer(test::test)) return true;
+            ctx.waitTick();
+        }
+        return server.computeOnServer(test::test);
+    }
+
+    private static void camera(ClientGameTestContext ctx, CameraType t) {
+        ctx.runOnClient(mc -> mc.options.setCameraType(t));
+        ctx.waitTick();
+    }
+
+    private void part(ClientGameTestContext ctx, String name, Runnable run) {
+        try {
+            run.run();
+            LOG.info("[cosmetic-gallery] part {} finished", name);
+        } catch (AssertionError | RuntimeException e) {
+            check(false, "part " + name + " threw " + e);
+            LOG.warn("[cosmetic-gallery] part " + name, e);
+        }
+        try {
+            ctx.getInput().releaseKey(o -> o.keyUp);
+            ctx.waitTicks(2);
+        } catch (AssertionError | RuntimeException e) {
+            LOG.warn("[cosmetic-gallery] reset after " + name, e);
+        }
+    }
+
+    private void check(boolean ok, String what) {
+        LOG.info("[cosmetic-gallery] {} {}", ok ? "OK  " : "FAIL", what);
+        if (!ok) failures.add(what);
+    }
+
+    private static void shot(ClientGameTestContext ctx, String name) {
+        ctx.runOnClient(mc -> mc.gui.toastManager().clear());
+        ctx.waitTick();
+        ctx.takeScreenshot(name);
+    }
+
+    private static void away(ClientGameTestContext ctx) {
+        ctx.getInput().setCursorPos(6, 6);
+        ctx.waitTicks(2);
+    }
+
+    private static boolean waitFor(ClientGameTestContext ctx, Predicate<Minecraft> test, int ticks) {
+        try {
+            ctx.waitFor(mc -> mc.player != null && test.test(mc), ticks);
+            return true;
+        } catch (AssertionError | RuntimeException e) {
+            return false;
+        }
+    }
+
+    private boolean waitScreen(ClientGameTestContext ctx, Predicate<Screen> test, String what) {
+        try {
+            ctx.waitFor(mc -> mc.gui.screen() != null && test.test(mc.gui.screen()), 100);
+            ctx.waitTicks(2);
+            return true;
+        } catch (AssertionError | RuntimeException e) {
+            check(false, "screen " + what + " did not open (now " + ctx.computeOnClient(mc -> mc.gui.screen() == null ? "none" : mc.gui.screen().getClass().getSimpleName()) + ")");
+            return false;
+        }
+    }
+
+    private static void closeScreen(ClientGameTestContext ctx) {
+        ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
+        ctx.waitTicks(3);
+        if (ctx.computeOnClient(mc -> mc.gui.screen() != null)) ctx.setScreen(() -> null);
+    }
+
+    /** 지금 화면의 GUI 좌표 → 창 픽셀 좌표 */
+    private static double[] at(ClientGameTestContext ctx, Function<Screen, int[]> where) {
+        return ctx.computeOnClient(mc -> {
+            Screen sc = mc.gui.screen();
+            int[] p = sc == null ? null : where.apply(sc);
+            if (p == null) throw new AssertionError("no point on screen " + (sc == null ? "none" : sc.getClass().getSimpleName()));
+            double k = (double) mc.getWindow().getScreenWidth() / sc.width;
+            return new double[] {(p[0] + 0.5) * k, (p[1] + 0.5) * k};
+        });
+    }
+
+    private static void hover(ClientGameTestContext ctx, Function<Screen, int[]> where) {
+        double[] p = at(ctx, where);
+        ctx.getInput().setCursorPos(p[0], p[1]);
+        ctx.waitTicks(3);
+    }
+
+    private static void click(ClientGameTestContext ctx, TestServerConnection conn, Function<Screen, int[]> where) {
+        double[] p = at(ctx, where);
+        ctx.getInput().setCursorPos(p[0], p[1]);
+        ctx.waitTick();
+        ctx.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(2);
+        conn.waitForClientboundPackets();
+        ctx.waitTicks(2);
+    }
+
+}

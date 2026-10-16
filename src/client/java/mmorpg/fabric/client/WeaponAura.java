@@ -49,7 +49,7 @@ public final class WeaponAura {
         if (cameraEntity == null) return;
         AABB box = cameraEntity.getBoundingBox().inflate(RANGE);
         for (Avatar a : level.getEntitiesOfClass(Avatar.class, box, e -> !e.isSpectator() && !e.isRemoved())) {
-            WeaponFxData.Spec spec = specOf(a.getMainHandItem());
+            WeaponFxData.Spec spec = specOf(a, a.getMainHandItem());
             if (spec == null) continue;
             int n = count(a.tickCount, spec.rate());
             if (n == 0) continue;
@@ -64,6 +64,17 @@ public final class WeaponAura {
             }
             for (int i = 0; i < n; i++) spawn(level, level.getRandom(), at, spec);
         }
+    }
+
+    /** 이 사람이 든 무기의 빛 알갱이: 그 무기 종류의 스킨을 입었으면 스킨 디자인의 것 (없으면 빛 알갱이 없음 — 0.13.0 장식) */
+    public static WeaponFxData.Spec specOf(Avatar a, ItemStack stack) {
+        if (stack.isEmpty()) return null;
+        String type = CosmeticRender.weaponType(stack);
+        if (!type.isEmpty() && ClientCosmetics.any()) {
+            String skin = ClientCosmetics.lookOf(a.getUUID()).weaponSkin(type);
+            if (skin != null) return WeaponFxData.BY_SKIN.get(skin);
+        }
+        return specOf(stack);
     }
 
     public static WeaponFxData.Spec specOf(ItemStack stack) {

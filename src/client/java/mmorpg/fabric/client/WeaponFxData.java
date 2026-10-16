@@ -28,6 +28,8 @@ public final class WeaponFxData {
             10.0F, 0.156F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xB97AFF});
     private static final Spec DAGGER_TRANSCEND_LV0 = new Spec("dagger_transcend_lv0", 0.62613F, 0.09369F, -1.29918F, -0.0625F, 0.11525F, -0.88511F,
             10.0F, 0.375F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFCC59});
+    private static final Spec GREATSWORD_SKIN_ABYSS = new Spec("greatsword_skin_abyss", 0.72335F, 0.37279F, -1.60019F, -0.0625F, -0.16779F, -1.2649F,
+            10.0F, 0.42F, 0.15F, 0.7F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x9E8FFF});
     private static final Spec GREATSWORD_TRANSCEND_LV0 = new Spec("greatsword_transcend_lv0", 0.72335F, 0.37279F, -1.60019F, -0.0625F, -0.16779F, -1.2649F,
             10.0F, 0.42F, 0.15F, 0.7F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x9ED7FF});
     private static final Spec HAMMER_HERO_LV0 = new Spec("hammer_hero_lv0", 0.71276F, 0.47558F, -1.6235F, -0.0625F, -0.14271F, -1.22146F,
@@ -102,4 +104,8 @@ public final class WeaponFxData {
             Map.entry("wand_l35_hero", STAFF_HERO_LV0),
             Map.entry("wand_l40_hero", STAFF_HERO_LV0),
             Map.entry("wand_l40_transcend", STAFF_TRANSCEND_LV0));
+
+    /** 무기 스킨 (장식 ID — cosmetics.json) → 빛 알갱이 (없으면 스킨을 든 동안 빛 알갱이 없음) */
+    public static final Map<String, Spec> BY_SKIN = Map.ofEntries(
+            Map.entry("abyss_greatsword", GREATSWORD_SKIN_ABYSS));
 }

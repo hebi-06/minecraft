@@ -1,0 +1,88 @@
+{
+ "tw": 64,
+ "th": 64,
+ "texture": "mmorpg:textures/entity/cosmetic/demon_wings.png",
+ "parts": {
+  "body": {
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [],
+   "children": {
+    "fw_wing_right": {
+     "pivot": [
+      -1.0,
+      2.0,
+      2.8
+     ],
+     "rot": [
+      0.0,
+      -24.0,
+      -6.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -15.0,
+        -6.0,
+        0.0
+       ],
+       "size": [
+        15,
+        17,
+        1
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    },
+    "fw_wing_left": {
+     "pivot": [
+      1.0,
+      2.0,
+      2.8
+     ],
+     "rot": [
+      0.0,
+      24.0,
+      6.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        0.0,
+        -6.0,
+        0.0
+       ],
+       "size": [
+        15,
+        17,
+        1
+       ],
+       "uv": [
+        32,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    }
+   }
+  }
+ }
+}

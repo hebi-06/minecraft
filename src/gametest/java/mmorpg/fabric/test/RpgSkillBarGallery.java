@@ -109,7 +109,7 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
 
     // ------------------------------------------------------------ 키 목록
 
-    /** 기본 키 표를 로그에 · 스킬 칸 · 창 · 스탯 키가 바닐라 키 (디버그 — F3 과 함께 — 는 빼고) 와 겹치지 않는지 */
+    /** 기본 키 표를 로그에 · 스킬 칸 · 창 · 스탯 · 장식 키가 바닐라 키 (디버그 — F3 과 함께 — 는 빼고) 와 겹치지 않는지 */
     private void keys(ClientGameTestContext ctx) {
         String[] r = ctx.computeOnClient(mc -> {
             StringBuilder table = new StringBuilder();
@@ -117,6 +117,7 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
             List<KeyMapping> ours = new ArrayList<>(List.of(MmorpgClient.skillKeys));
             ours.add(MmorpgClient.skillBarKey);
             ours.add(MmorpgClient.statsKey);
+            ours.add(MmorpgClient.cosmeticKey);
             for (KeyMapping k : mc.options.keyMappings) {
                 table.append(k.getName()).append('=').append(k.getDefaultKey().getName()).append(' ');
             }

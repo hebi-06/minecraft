@@ -1,0 +1,58 @@
+{
+ "tw": 64,
+ "th": 64,
+ "texture": "mmorpg:textures/entity/cosmetic/paladin_1.png",
+ "parts": {
+  "head": {
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [
+    {
+     "from": [
+      -4,
+      -8,
+      -4
+     ],
+     "size": [
+      8,
+      8,
+      8
+     ],
+     "uv": [
+      0,
+      0
+     ],
+     "inflate": 1,
+     "mirror": false
+    },
+    {
+     "from": [
+      -0.5,
+      -11,
+      -3
+     ],
+     "size": [
+      1,
+      2,
+      7
+     ],
+     "uv": [
+      0,
+      32
+     ],
+     "inflate": 0,
+     "mirror": false
+    }
+   ],
+   "children": {}
+  }
+ }
+}

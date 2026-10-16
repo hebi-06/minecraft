@@ -38,7 +38,8 @@
       "mmorpg.fabric.test.RpgRuneBreakTests",
       "mmorpg.fabric.test.RpgHeroSkillTests",
       "mmorpg.fabric.test.RpgSkillBarTests",
-      "mmorpg.fabric.test.RpgWeaponsMoreTests"
+      "mmorpg.fabric.test.RpgWeaponsMoreTests",
+      "mmorpg.fabric.test.RpgCosmeticTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
@@ -70,6 +71,7 @@
       "mmorpg.fabric.test.RpgHeroSkillGallery",
       "mmorpg.fabric.test.RpgSkillBarGallery",
       "mmorpg.fabric.test.RpgWeaponsMoreGallery",
+      "mmorpg.fabric.test.RpgCosmeticGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

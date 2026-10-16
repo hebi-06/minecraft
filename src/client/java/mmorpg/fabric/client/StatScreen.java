@@ -35,7 +35,7 @@ import net.minecraft.world.item.Items;
  * 스탯 창 (statui.js 의 자바 판): 남은 포인트, 힘 · 민첩 · 마력 · 체력 (줄을 누르면 +1, Shift 는 +5), 스탯마다 효과,
  * 가진 무기 기준 실제 피해 (기준 무기). 애드온과 같은 그림 (금테 창 · 스탯 아이콘). 게임은 멈추지 않음.
  * 아랫줄 (6단계 — 애드온 상자 창의 아랫줄): 퀘스트 목록 · 엔더 상자 (내 엔더 상자 27칸) · 탈것 (누르면 고른 탈것을 불러 탐 · 타고 있으면 돌려보냄,
- * Shift + 누르면 탈것 고르기 창).
+ * Shift + 누르면 탈것 고르기 창) · 장식 (0.13.0 — 장식 창: 무기 · 갑옷 스킨, 장식, 오라, 칭호, 갑옷 숨기기).
  * 스탯 줄마다 나무 칸 (7단계 스탯 트리 — "나무 3/10", 고를 갈래가 있으면 깜빡임): 누르면 그 스탯의 스탯 트리 창.
  */
 public final class StatScreen extends Screen {
@@ -51,7 +51,7 @@ public final class StatScreen extends Screen {
     public static final int BTN_H = 23;
     static final int BTN_GAP = 6;
     /** 아랫줄 단추 이름 (서버에 보내는 할 일) */
-    public static final List<String> BUTTONS = List.of("quest", "ender", "mount");
+    public static final List<String> BUTTONS = List.of("quest", "ender", "mount", "cosmetic");
     private static final Identifier BG = Mmorpg.id("stats/dialog_bg");
     private static final Identifier BTN = Mmorpg.id("stats/dialog_btn");
     private static final Identifier BTN_HOVER = Mmorpg.id("stats/dialog_btn_hover");
@@ -203,6 +203,9 @@ public final class StatScreen extends Screen {
             case "ender":
                 return new Bottom(ItemStack.EMPTY, ENDER, "§d§l엔더 상자", "§7내 보관함",
                         List.of("§d§l엔더 상자", "§7누르면 내 엔더 상자가 열립니다", "§7어디서나 — 놓인 엔더 상자와 같은 27칸"));
+            case "cosmetic":
+                return new Bottom(CosmeticRender.icon("crown"), null, "§d§l장식", "§7꾸미기",
+                        List.of("§d§l장식", "§7무기 · 갑옷 스킨, 머리 · 등 장식, 오라, 칭호", "§7갑옷 숨기기 (무료) · 에메랄드로 사기", "§8U 키로도 열림"));
             default: {
                 MountDefs.Def d = currentMount();
                 String mname = d != null ? d.name() : "없음";
@@ -298,8 +301,9 @@ public final class StatScreen extends Screen {
             int iy = y + (BTN_H - 16) / 2;
             if (!b.item().isEmpty()) g.item(b.item(), ix, iy);
             else if (b.sprite() != null) RpgHud.sprite(g, b.sprite(), ix, iy, 16, 16);
-            g.text(font, BedrockText.toJava(b.line1()), ix + 19, y + 3, 0xFFFFFFFF, true);
-            g.text(font, BedrockText.toJava(b.line2()), ix + 19, y + 12, 0xFFFFFFFF, true);
+            int textW = bottomW() - (ix + 19 - x) - 2;
+            fitText(g, BedrockText.toJava(b.line1()), ix + 19, y + 3, textW);
+            fitText(g, BedrockText.toJava(b.line2()), ix + 19, y + 12, textW);
         }
 
         if (treeHover >= 0) {
@@ -315,6 +319,20 @@ public final class StatScreen extends Screen {
             for (String l : bottom(BUTTONS.get(bottomHover)).tip()) tip.add(Component.literal(BedrockText.toJava(l)));
             g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
         }
+    }
+
+    /** 단추 글이 넓으면 가로로 줄여서 (단추 넷 — 0.13.0) */
+    private void fitText(GuiGraphicsExtractor g, String s, int x, int y, int maxW) {
+        int w = font.width(s);
+        if (w <= maxW) {
+            g.text(font, s, x, y, 0xFFFFFFFF, true);
+            return;
+        }
+        g.pose().pushMatrix();
+        g.pose().translate(x, y);
+        g.pose().scale(maxW / (float) w, 1F);
+        g.text(font, s, 0, 0, 0xFFFFFFFF, true);
+        g.pose().popMatrix();
     }
 
     @Override
@@ -348,6 +366,10 @@ public final class StatScreen extends Screen {
      */
     void press(String name, boolean shift) {
         click();
+        if (name.equals("cosmetic")) {
+            minecraft.gui.setScreen(new CosmeticScreen());
+            return;
+        }
         if (name.equals("mount")) {
             if (shift) {
                 ClientPlayNetworking.send(new RpgNet.StatActionPayload("mount_select"));

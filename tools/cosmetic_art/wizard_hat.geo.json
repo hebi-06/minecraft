@@ -1,0 +1,193 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.mmorpg.wizard_hat",
+    "texture_width": 64,
+    "texture_height": 64
+   },
+   "bones": [
+    {
+     "name": "head",
+     "pivot": [
+      0.0,
+      24.0,
+      0.0
+     ]
+    },
+    {
+     "name": "hat",
+     "pivot": [
+      0.0,
+      32.0,
+      0.0
+     ],
+     "parent": "head",
+     "cubes": [
+      {
+       "origin": [
+        -7.0,
+        31.0,
+        -7.0
+       ],
+       "size": [
+        14,
+        1,
+        14
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      },
+      {
+       "origin": [
+        -4.5,
+        32.0,
+        -4.5
+       ],
+       "size": [
+        9,
+        2,
+        9
+       ],
+       "uv": [
+        0,
+        15
+       ]
+      },
+      {
+       "origin": [
+        -4.0,
+        34.0,
+        -4.0
+       ],
+       "size": [
+        8,
+        3,
+        8
+       ],
+       "uv": [
+        0,
+        26
+       ]
+      }
+     ]
+    },
+    {
+     "name": "hat_mid",
+     "pivot": [
+      0.0,
+      37.0,
+      0.0
+     ],
+     "parent": "hat",
+     "rotation": [
+      -10.0,
+      0.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -3.0,
+        37.0,
+        -3.0
+       ],
+       "size": [
+        6,
+        3,
+        6
+       ],
+       "uv": [
+        32,
+        26
+       ]
+      }
+     ]
+    },
+    {
+     "name": "hat_top",
+     "pivot": [
+      0.0,
+      40.0,
+      0.0
+     ],
+     "parent": "hat_mid",
+     "rotation": [
+      -16.0,
+      0.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -2.0,
+        40.0,
+        -2.0
+       ],
+       "size": [
+        4,
+        3,
+        4
+       ],
+       "uv": [
+        0,
+        37
+       ]
+      }
+     ]
+    },
+    {
+     "name": "hat_tip",
+     "pivot": [
+      0.0,
+      43.0,
+      0.0
+     ],
+     "parent": "hat_top",
+     "rotation": [
+      -24.0,
+      0.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -1.0,
+        43.0,
+        -1.0
+       ],
+       "size": [
+        2,
+        3,
+        2
+       ],
+       "uv": [
+        16,
+        37
+       ]
+      },
+      {
+       "origin": [
+        -0.5,
+        46.0,
+        -0.5
+       ],
+       "size": [
+        1,
+        1,
+        1
+       ],
+       "uv": [
+        24,
+        37
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

@@ -18,7 +18,8 @@ import net.minecraft.network.chat.Component;
 /**
  * 클라이언트: 스탯 창 키 (K), 서버가 보낸 스탯 데이터, 체력 바 HUD, 이펙트 그림 파티클, 무기 빛 알갱이, 화면 흔들림,
  * 초월 룬 하늘빛 · 화면 번쩍임 (UltFx), 갑옷 입은 모습 (ArmorModels), 길 안내 칸 (NavHud),
- * 스킬 칸 (11단계 — 룬을 올려 둔 칸 8 · 칸마다 키 R Z V B Y H N M · 스킬 칸 창 J · 화면 오른쪽 아래 HUD).
+ * 스킬 칸 (11단계 — 룬을 올려 둔 칸 8 · 칸마다 키 R Z V B Y H N M · 스킬 칸 창 J · 화면 오른쪽 아래 HUD),
+ * 장식 (0.13.0 — 장식 창 U · 무기 · 갑옷 스킨 · 머리 · 등 장식 · 오라 · 칭호를 보이는 사람마다 그림).
  * HUD 는 Fabric HUD API 로 바닐라 하트 자리를 바꿈 (모드가 있는 서버의 생존 · 모험에서만 — 아니면 바닐라 그대로).
  */
 public final class MmorpgClient implements ClientModInitializer {
@@ -27,6 +28,8 @@ public final class MmorpgClient implements ClientModInitializer {
     /** 스킬 칸 키 (칸 순서 — 조작 설정에서 바꿈) · 스킬 칸 창 키 */
     public static KeyMapping[] skillKeys = new KeyMapping[0];
     public static KeyMapping skillBarKey;
+    /** 장식 창 키 (0.13.0 — U) */
+    public static KeyMapping cosmeticKey;
     /** 스킬 칸 기본 키: 왼손을 WASD 에 둔 채 닿는 키 중 바닐라가 쓰지 않는 것 (G 는 26.3 의 빠른 동작 키라 Y — CI 화면 시험이 바닐라 키와 겹치지 않는지 확인) */
     public static final int[] SKILL_KEYS = {InputConstants.KEY_R, InputConstants.KEY_Z, InputConstants.KEY_V, InputConstants.KEY_B, InputConstants.KEY_Y,
         InputConstants.KEY_H, InputConstants.KEY_N, InputConstants.KEY_M};
@@ -51,6 +54,10 @@ public final class MmorpgClient implements ClientModInitializer {
         // 길 안내 화면 칸 (화면 위 가운데 화살표 · 이름 · 거리)
         NavHud.init();
         TitleFit.init();
+        // 장식 (0.13.0): 받은 장식 · 모습들, 장식 모델 (갑옷 스킨 · 머리 · 등 장식), 사람 렌더러에 장식 층
+        ClientCosmetics.init();
+        CosmeticModels.init();
+        CosmeticLayer.init();
         statsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.stats", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, CATEGORY));
         // 스킬 칸 (11단계): 칸 8 키 + 스킬 칸 창 키, 서버가 보낸 칸들 · 룬 재사용 대기
         KeyMapping[] keys = new KeyMapping[ClientSkillBar.SIZE];
@@ -60,6 +67,7 @@ public final class MmorpgClient implements ClientModInitializer {
         }
         skillKeys = keys;
         skillBarKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.skillbar", InputConstants.Type.KEYBOARD, InputConstants.KEY_J, CATEGORY));
+        cosmeticKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.cosmetic", InputConstants.Type.KEYBOARD, InputConstants.KEY_U, CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.BarPayload.TYPE, (payload, context) -> ClientSkillBar.update(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.CooldownPayload.TYPE, (payload, context) -> ClientSkillBar.cooldown(payload));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
@@ -81,6 +89,7 @@ public final class MmorpgClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             ClientRpgState.clear();
             ClientSkillBar.clear();
+            ClientCosmetics.clear();
             CameraShake.clear();
             UltFx.clear();
         });
@@ -96,6 +105,11 @@ public final class MmorpgClient implements ClientModInitializer {
                 if (ClientRpgState.synced()) client.gui.setScreen(new SkillBarScreen());
                 else client.player.sendSystemMessage(Component.literal("§c이 서버에는 MMO RPG 모드가 없습니다."));
             }
+            while (cosmeticKey.consumeClick()) {
+                if (client.player == null || client.gui.screen() != null) continue;
+                if (ClientRpgState.synced() || ClientCosmetics.received()) client.gui.setScreen(new CosmeticScreen());
+                else client.player.sendSystemMessage(Component.literal("§c이 서버에는 MMO RPG 모드가 없습니다."));
+            }
             for (int i = 0; i < skillKeys.length; i++) {
                 while (skillKeys[i].consumeClick()) {
                     if (client.player == null || client.gui.screen() != null || !ClientSkillBar.received()) continue;
@@ -106,6 +120,7 @@ public final class MmorpgClient implements ClientModInitializer {
             RpgHud.tick(client);
             if (!client.isPaused()) CameraShake.tick();
             WeaponAura.tick(client);
+            CosmeticAura.tick(client);
         });
         // 체력 줄 자리에 RPG 체력 바 · 갑옷 · 레벨 · 공기, 배고픔 · 갑옷 · 공기 줄은 숨김 (RPG HUD 일 때만)
         HudElementRegistry.replaceElement(VanillaHudElements.HEALTH_BAR, old -> (graphics, delta) -> {

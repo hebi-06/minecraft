@@ -1,0 +1,142 @@
+{
+ "tw": 64,
+ "th": 64,
+ "texture": "mmorpg:textures/entity/cosmetic/paladin_1.png",
+ "parts": {
+  "body": {
+   "pivot": [
+    0,
+    0,
+    0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [
+    {
+     "from": [
+      -4,
+      0,
+      -2
+     ],
+     "size": [
+      8,
+      12,
+      4
+     ],
+     "uv": [
+      16,
+      16
+     ],
+     "inflate": 1.01,
+     "mirror": false
+    }
+   ],
+   "children": {}
+  },
+  "right_arm": {
+   "pivot": [
+    -5,
+    2,
+    0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [
+    {
+     "from": [
+      -3,
+      -2,
+      -2
+     ],
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "uv": [
+      40,
+      16
+     ],
+     "inflate": 1,
+     "mirror": false
+    },
+    {
+     "from": [
+      -4.5,
+      -4,
+      -3.5
+     ],
+     "size": [
+      6,
+      4,
+      7
+     ],
+     "uv": [
+      16,
+      32
+     ],
+     "inflate": 0,
+     "mirror": false
+    }
+   ],
+   "children": {}
+  },
+  "left_arm": {
+   "pivot": [
+    5,
+    2,
+    0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [
+    {
+     "from": [
+      -1,
+      -2,
+      -2
+     ],
+     "size": [
+      4,
+      12,
+      4
+     ],
+     "uv": [
+      40,
+      16
+     ],
+     "inflate": 1,
+     "mirror": true
+    },
+    {
+     "from": [
+      -1.5,
+      -4,
+      -3.5
+     ],
+     "size": [
+      6,
+      4,
+      7
+     ],
+     "uv": [
+      16,
+      32
+     ],
+     "inflate": 0,
+     "mirror": true
+    }
+   ],
+   "children": {}
+  }
+ }
+}

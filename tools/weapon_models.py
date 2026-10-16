@@ -526,8 +526,13 @@ def write_fx_java(meta, report, items):
     with_fx = {d for d, _ in specs}
     entries = [f'            Map.entry("{wid.split(":", 1)[1]}", {design.upper()})' for wid, design in sorted(meta["weapons"].items())
                if design in with_fx and wid in items]
+    # 무기 스킨 (장식 — cosmetics.json 의 weapon 칸): 스킨 ID → 그 디자인의 빛 알갱이
+    cosmetics = json.load(open(os.path.join(ROOT, "src", "main", "resources", "mmorpg", "cosmetics.json"), encoding="utf-8"))
+    skins = [f'            Map.entry("{cid}", {it["design"].upper()})' for cid, it in sorted(cosmetics["items"].items())
+             if it.get("slot") == "weapon" and it.get("design") in with_fx]
     body = "\n".join(line for _, line in specs)
     table = ",\n".join(entries)
+    skin_table = ",\n".join(skins)
     java = f'''package mmorpg.fabric.client;
 
 import java.util.Map;
@@ -551,12 +556,16 @@ public final class WeaponFxData {{
     /** 무기 ID (rpg: 뒤) → 빛 알갱이 */
     public static final Map<String, Spec> BY_ITEM = Map.ofEntries(
 {table});
+
+    /** 무기 스킨 (장식 ID — cosmetics.json) → 빛 알갱이 (없으면 스킨을 든 동안 빛 알갱이 없음) */
+    public static final Map<String, Spec> BY_SKIN = Map.ofEntries(
+{skin_table});
 }}
 '''
     out = os.path.join(ROOT, "src", "client", "java", "mmorpg", "fabric", "client", "WeaponFxData.java")
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(java)
-    print(f"weapon fx: {len(specs)} designs, {len(entries)} weapons → {os.path.relpath(out, ROOT)}")
+    print(f"weapon fx: {len(specs)} designs, {len(entries)} weapons, {len(skins)} skins → {os.path.relpath(out, ROOT)}")
 
 
 if __name__ == "__main__":

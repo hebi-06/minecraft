@@ -1,0 +1,212 @@
+{
+ "tw": 64,
+ "th": 64,
+ "texture": "mmorpg:textures/entity/cosmetic/wizard_hat.png",
+ "emissive": "mmorpg:textures/entity/cosmetic/wizard_hat.glow.png",
+ "parts": {
+  "head": {
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [],
+   "children": {
+    "hat": {
+     "pivot": [
+      0.0,
+      -8.0,
+      0.0
+     ],
+     "rot": [
+      0,
+      0,
+      0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -7.0,
+        0.0,
+        -7.0
+       ],
+       "size": [
+        14,
+        1,
+        14
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      },
+      {
+       "from": [
+        -4.5,
+        -2.0,
+        -4.5
+       ],
+       "size": [
+        9,
+        2,
+        9
+       ],
+       "uv": [
+        0,
+        15
+       ],
+       "inflate": 0,
+       "mirror": false
+      },
+      {
+       "from": [
+        -4.0,
+        -5.0,
+        -4.0
+       ],
+       "size": [
+        8,
+        3,
+        8
+       ],
+       "uv": [
+        0,
+        26
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {
+      "hat_mid": {
+       "pivot": [
+        0.0,
+        -5.0,
+        0.0
+       ],
+       "rot": [
+        -10.0,
+        -0.0,
+        -0.0
+       ],
+       "cubes": [
+        {
+         "from": [
+          -3.0,
+          -3.0,
+          -3.0
+         ],
+         "size": [
+          6,
+          3,
+          6
+         ],
+         "uv": [
+          32,
+          26
+         ],
+         "inflate": 0,
+         "mirror": false
+        }
+       ],
+       "children": {
+        "hat_top": {
+         "pivot": [
+          0.0,
+          -3.0,
+          0.0
+         ],
+         "rot": [
+          -16.0,
+          -0.0,
+          -0.0
+         ],
+         "cubes": [
+          {
+           "from": [
+            -2.0,
+            -3.0,
+            -2.0
+           ],
+           "size": [
+            4,
+            3,
+            4
+           ],
+           "uv": [
+            0,
+            37
+           ],
+           "inflate": 0,
+           "mirror": false
+          }
+         ],
+         "children": {
+          "hat_tip": {
+           "pivot": [
+            0.0,
+            -3.0,
+            0.0
+           ],
+           "rot": [
+            -24.0,
+            -0.0,
+            -0.0
+           ],
+           "cubes": [
+            {
+             "from": [
+              -1.0,
+              -3.0,
+              -1.0
+             ],
+             "size": [
+              2,
+              3,
+              2
+             ],
+             "uv": [
+              16,
+              37
+             ],
+             "inflate": 0,
+             "mirror": false
+            },
+            {
+             "from": [
+              -0.5,
+              -4.0,
+              -0.5
+             ],
+             "size": [
+              1,
+              1,
+              1
+             ],
+             "uv": [
+              24,
+              37
+             ],
+             "inflate": 0,
+             "mirror": false
+            }
+           ],
+           "children": {}
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}
