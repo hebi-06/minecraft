@@ -142,7 +142,77 @@ def face_colors(model, tex):
 ROOT_ART = weapon_models.ART
 
 
+# ------------------------------------------------------------ 자바 모델 디자인 (사용자 리워크 — 0.12.7)
+
+JAVA_DESIGNS = ["axe_transcend_lv0", "scythe_transcend_lv0", "staff_hero_lv0", "bow_lv0", "shield_transcend_lv0", "sword_transcend_lv0"]
+
+
+def java_checks():
+    """tools/weapon_art/<디자인>.java.json → weapon_models.convert 결과가 팩 모델의 x 거울상인지 (광선 추적으로 여섯 방향에서 같은 그림),
+    상자 수 · 빛나는 상자 수 · 면 rotation 수, 맥동 텍스처 · .mcmeta 그대로, 반투명 픽셀 그대로"""
+    import numpy as np
+    import java_model_view as jmv
+
+    tmp = tempfile.mkdtemp(prefix="geo_tex_java_")
+    try:
+        out_m, out_t = os.path.join(tmp, "m"), os.path.join(tmp, "t")
+        os.makedirs(out_m)
+        os.makedirs(out_t)
+        weapon_models.ART = ROOT_ART
+        for design in JAVA_DESIGNS:
+            jp = os.path.join(ROOT_ART, f"{design}.java.json")
+            if not os.path.exists(jp):
+                BAD.append(f"{design}: java model missing")
+                continue
+            jm = json.load(open(jp, encoding="utf-8"))
+            meta = json.load(open(os.path.join(ROOT_ART, "designs.json")))["designs"][design]
+            weapon_models.convert(design, meta, out_m, out_t)
+            model = json.load(open(os.path.join(out_m, f"{design}.json")))
+            els, pels = model["elements"], jm["elements"]
+            check(len(els) == len(pels), f"{design}: java element count {len(els)} vs {len(pels)}")
+            check(sum(1 for e in els if e.get("light_emission")) == sum(1 for e in pels if e.get("light_emission")), f"{design}: java glow count")
+            frot = lambda es: sum(1 for e in es for f in e["faces"].values() if f.get("rotation"))
+            check(frot(els) == frot(pels), f"{design}: face rotation count")
+            src_png = Image.open(os.path.join(ROOT_ART, f"{design}.java.png")).convert("RGBA")
+            out_png = Image.open(os.path.join(out_t, f"{design}.png")).convert("RGBA")
+            check(src_png.tobytes() == out_png.tobytes(), f"{design}: texture copied as is (frames · alpha)")
+            mc = os.path.join(ROOT_ART, f"{design}.java.png.mcmeta")
+            check(os.path.exists(mc) == os.path.exists(os.path.join(out_t, f"{design}.png.mcmeta")), f"{design}: mcmeta")
+            # 거울상: 팩을 한쪽에서 본 그림 = 모드 모델을 x 가 뒤집힌 쪽에서 본 그림
+            W = src_png.size[0]
+            fh = W if os.path.exists(mc) else src_png.size[1]
+            frame = np.array(src_png.crop((0, 0, W, fh)))
+            pv, mv = jmv.View(pels, frame), jmv.View(els, frame)
+            plo, phi = pv.bounds()
+            mlo, mhi = mv.bounds()
+            k = (mhi[1] - mlo[1]) / (phi[1] - plo[1])
+            check(abs((mhi[2] - mlo[2]) - k * (phi[2] - plo[2])) < 1e-3, f"{design}: uniform scale")
+            grid = lambda lo, hi, n: np.linspace(lo + 0.003 * (hi - lo), hi - 0.003 * (hi - lo), n)
+            px_, py_, pz_ = grid(plo[0], phi[0], 24), grid(plo[1], phi[1], 90), grid(plo[2], phi[2], 45)
+            mx_ = mlo[0] + (phi[0] - px_) * k  # 거울
+            my_ = mlo[1] + (py_ - plo[1]) * k
+            mz_ = mlo[2] + (pz_ - plo[2]) * k
+            for axis, (a_p, b_p, a_m, b_m) in ((0, (py_, pz_, my_, mz_)), (1, (px_, pz_, mx_, mz_)), (2, (px_, py_, mx_, my_))):
+                for sign in (1, -1):
+                    def shot(view, a, b, sgn):
+                        A, B = np.meshgrid(a, b, indexing="ij")
+                        P = np.zeros((A.size, 3))
+                        o = [i for i in range(3) if i != axis]
+                        P[:, axis] = 1000.0 * sgn
+                        P[:, o[0]], P[:, o[1]] = A.ravel(), B.ravel()
+                        D = np.zeros(3)
+                        D[axis] = -sgn
+                        return view.trace(P, D)[0]
+                    m_sign = -sign if axis == 0 else sign  # x 로 보면 반대쪽에서
+                    diff = np.abs(shot(pv, a_p, b_p, sign) - shot(mv, a_m, b_m, m_sign)).max(axis=1)
+                    # 텍셀 경계에 걸린 표본 몇 개는 옆 텍셀을 고를 수 있음 (부동소수) — 0.6% 까지
+                    check(float((diff > 40).mean()) < 0.006, f"{design}: mirror view axis {axis} sign {sign} ({float((diff > 40).mean()):.4f})")
+    finally:
+        shutil.rmtree(tmp)
+
+
 def main():
+    java_checks()
     for design in DESIGNS:
         geo = json.load(open(os.path.join(ROOT_ART, f"{design}.geo.json")))
         tex = Image.open(os.path.join(ROOT_ART, f"{design}.png")).convert("RGBA")
@@ -191,7 +261,7 @@ def main():
         finally:
             shutil.rmtree(tmp)
     weapon_models.ART = ROOT_ART
-    print(f"geo_tex selftest: {len(DESIGNS)} designs, {len(BAD)} problems")
+    print(f"geo_tex selftest: {len(DESIGNS)} designs + {len(JAVA_DESIGNS)} java designs, {len(BAD)} problems")
     for b in BAD[:40]:
         print("  FAIL", b)
     sys.exit(1 if BAD else 0)

@@ -16,48 +16,48 @@ public final class WeaponFxData {
     public record Spec(String design, float fpX, float fpY, float fpZ, float armX, float armY, float armZ, float rate, float radius, float speed,
             float accel, float drag, float life, float size, String texture, float[] cuts, int[] colors) {}
 
-    private static final Spec AXE_HERO_LV0 = new Spec("axe_hero_lv0", 0.7506F, 0.10847F, -1.54024F, -0.0625F, 0.1875F, -0.64952F,
-            10.0F, 0.188F, 0.15F, 1.6F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFF8A2A});
-    private static final Spec AXE_TRANSCEND_LV0 = new Spec("axe_transcend_lv0", 0.5888F, 0.34175F, -1.93761F, -0.0625F, 0.24551F, -1.54904F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x8CF273, 0xFFD959});
-    private static final Spec BOW_HERO_LV0 = new Spec("bow_hero_lv0", 1.29425F, -0.34334F, -1.88163F, -0.0625F, 0.68628F, -0.0174F,
-            10.0F, 0.313F, 0.15F, -0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x6DFF8E});
-    private static final Spec BOW_TRANSCEND_LV0 = new Spec("bow_transcend_lv0", 1.26384F, -0.33639F, -1.87979F, -0.06281F, 0.67853F, -0.01643F,
-            10.0F, 0.45F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xC7E6FF});
-    private static final Spec DAGGER_HERO_LV0 = new Spec("dagger_hero_lv0", 0.64216F, -0.04453F, -1.26339F, -0.0625F, 0.33956F, -0.44864F,
-            10.0F, 0.156F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x9B4DFF});
-    private static final Spec DAGGER_TRANSCEND_LV0 = new Spec("dagger_transcend_lv0", 0.66247F, 0.25135F, -1.20341F, -0.0625F, -0.16657F, -0.95028F,
-            10.0F, 0.375F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x8A4DD6});
-    private static final Spec GREATSWORD_TRANSCEND_LV0 = new Spec("greatsword_transcend_lv0", 0.72059F, 0.39957F, -1.60626F, -0.0625F, -0.1875F, -1.29904F,
-            10.0F, 0.42F, 0.15F, 0.7F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.4F, 0.6F}, new int[] {0x87CCFF, 0x9E5CE6, 0xF5948C});
-    private static final Spec HAMMER_HERO_LV0 = new Spec("hammer_hero_lv0", 0.72059F, 0.39957F, -1.60626F, -0.0625F, -0.09375F, -1.13666F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x73FF73, 0xB266FF});
-    private static final Spec HAMMER_TRANSCEND_LV0 = new Spec("hammer_transcend_lv0", 0.75623F, 0.05388F, -1.52786F, -0.0625F, 0.09375F, -0.8119F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x99D1FF, 0xEBF7FF});
-    private static final Spec LANCE_HERO_LV0 = new Spec("lance_hero_lv0", 0.65982F, 0.98905F, -1.73996F, -0.0625F, -0.65625F, -2.11094F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFF4040});
-    private static final Spec LANCE_TRANSCEND_LV0 = new Spec("lance_transcend_lv0", 0.66357F, 0.95266F, -1.73171F, -0.0625F, -0.5625F, -1.94856F,
-            10.0F, 0.156F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x8FD4FF});
-    private static final Spec SCEPTER_HERO_LV0 = new Spec("scepter_hero_lv0", 0.67683F, 0.82409F, -1.70255F, -0.0625F, -0.3125F, -1.51554F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFFD966, 0xCCE0FF});
-    private static final Spec SCEPTER_TRANSCEND_LV0 = new Spec("scepter_transcend_lv0", 0.67151F, 0.87564F, -1.71424F, -0.0625F, -0.34375F, -1.56967F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFFB840, 0xFFF2BF});
-    private static final Spec SCYTHE_HERO_LV0 = new Spec("scythe_hero_lv0", 0.62169F, 0.69087F, -1.84456F, -0.0625F, -0.18974F, -1.80292F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xCCB2FF});
-    private static final Spec SCYTHE_TRANSCEND_LV0 = new Spec("scythe_transcend_lv0", 0.45688F, 0.95326F, -2.24853F, -0.0625F, -0.00673F, -2.48594F,
-            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0x73E6FF, 0xFFD973});
-    private static final Spec SHIELD_HERO_LV0 = new Spec("shield_hero_lv0", 0.86253F, -0.55214F, -1.05695F, -0.1875F, 0.625F, 0.03125F,
-            10.0F, 0.188F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFE27A});
-    private static final Spec SHIELD_TRANSCEND_LV0 = new Spec("shield_transcend_lv0", 0.89167F, -0.50711F, -0.9357F, -0.3125F, 0.59375F, 0.0F,
-            10.0F, 0.297F, 0.15F, 0.2F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {0.5F}, new int[] {0xFF9938, 0x99E0FF});
-    private static final Spec STAFF_HERO_LV0 = new Spec("staff_hero_lv0", 0.9475F, 0.19842F, -1.72677F, -0.0625F, -0.33059F, -0.51562F,
-            10.0F, 0.094F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x5DFFB0});
-    private static final Spec STAFF_TRANSCEND_LV0 = new Spec("staff_transcend_lv0", 0.86732F, 0.97621F, -1.90317F, -0.0625F, -1.30487F, -1.07812F,
-            10.0F, 0.188F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFD66B});
-    private static final Spec SWORD_HERO_LV0 = new Spec("sword_hero_lv0", 0.74435F, 0.16911F, -1.554F, -0.0625F, 0.15625F, -0.70365F,
-            10.0F, 0.25F, 0.15F, 1.6F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x7FD4FF});
-    private static final Spec SWORD_TRANSCEND_LV0 = new Spec("sword_transcend_lv0", 0.71059F, 0.4966F, -1.62827F, -0.0625F, -0.15625F, -1.24491F,
-            10.0F, 0.344F, 0.15F, 2.4F, 1.0F, 0.9F, 0.05F, "flame", new float[] {}, new int[] {0xFF5A1A});
+    private static final Spec AXE_HERO_LV0 = new Spec("axe_hero_lv0", 0.76078F, 0.00979F, -1.51786F, -0.0625F, 0.23834F, -0.56146F,
+            10.0F, 0.188F, 0.15F, 1.6F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFF7417});
+    private static final Spec AXE_TRANSCEND_LV0 = new Spec("axe_transcend_lv0", 0.555F, 0.13251F, -2.02861F, -0.0625F, 0.54431F, -1.43347F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xC2FFD4});
+    private static final Spec BOW_HERO_LV0 = new Spec("bow_hero_lv0", 1.35518F, -0.35687F, -1.88493F, -0.0625F, 0.74818F, -0.02609F,
+            10.0F, 0.313F, 0.15F, -0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x53FFBC});
+    private static final Spec BOW_TRANSCEND_LV0 = new Spec("bow_transcend_lv0", 1.25861F, -0.33062F, -1.88168F, -0.0625F, 0.66992F, -0.02155F,
+            10.0F, 0.45F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xA0C1FF});
+    private static final Spec DAGGER_HERO_LV0 = new Spec("dagger_hero_lv0", 0.6388F, -0.03125F, -1.27137F, -0.0625F, 0.33658F, -0.46421F,
+            10.0F, 0.156F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xB97AFF});
+    private static final Spec DAGGER_TRANSCEND_LV0 = new Spec("dagger_transcend_lv0", 0.62613F, 0.09369F, -1.29918F, -0.0625F, 0.11525F, -0.88511F,
+            10.0F, 0.375F, 0.15F, 0.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFCC59});
+    private static final Spec GREATSWORD_TRANSCEND_LV0 = new Spec("greatsword_transcend_lv0", 0.72335F, 0.37279F, -1.60019F, -0.0625F, -0.16779F, -1.2649F,
+            10.0F, 0.42F, 0.15F, 0.7F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x9ED7FF});
+    private static final Spec HAMMER_HERO_LV0 = new Spec("hammer_hero_lv0", 0.71276F, 0.47558F, -1.6235F, -0.0625F, -0.14271F, -1.22146F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x47FF7E});
+    private static final Spec HAMMER_TRANSCEND_LV0 = new Spec("hammer_transcend_lv0", 0.74863F, 0.03663F, -1.6115F, -0.09466F, 0.18847F, -0.87037F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x7AE0FF});
+    private static final Spec LANCE_HERO_LV0 = new Spec("lance_hero_lv0", 0.6814F, 0.77978F, -1.6925F, -0.0625F, -0.49767F, -1.83627F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFF1E31});
+    private static final Spec LANCE_TRANSCEND_LV0 = new Spec("lance_transcend_lv0", 0.67319F, 0.92929F, -1.70839F, -0.0625F, -0.56517F, -1.90087F,
+            10.0F, 0.156F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x51D3FF});
+    private static final Spec SCEPTER_HERO_LV0 = new Spec("scepter_hero_lv0", 0.6828F, 0.76616F, -1.68941F, -0.0625F, -0.27738F, -1.45472F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFB22F});
+    private static final Spec SCEPTER_TRANSCEND_LV0 = new Spec("scepter_transcend_lv0", 0.66215F, 0.9665F, -1.73485F, -0.0625F, -0.39883F, -1.66507F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFC85B});
+    private static final Spec SCYTHE_HERO_LV0 = new Spec("scythe_hero_lv0", 0.62144F, 0.72046F, -1.84425F, -0.0625F, -0.21848F, -1.83231F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xB093FF});
+    private static final Spec SCYTHE_TRANSCEND_LV0 = new Spec("scythe_transcend_lv0", 0.56476F, 0.73737F, -1.98546F, -0.0625F, -0.0827F, -1.99596F,
+            10.0F, 0.18F, 0.15F, 1.4F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xAF6DFF});
+    private static final Spec SHIELD_HERO_LV0 = new Spec("shield_hero_lv0", 0.87549F, -0.18702F, -1.0108F, -0.2696F, 0.26738F, 0.0F,
+            10.0F, 0.188F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFB22F});
+    private static final Spec SHIELD_TRANSCEND_LV0 = new Spec("shield_transcend_lv0", 0.88779F, -0.4308F, -0.97241F, -0.28356F, 0.51408F, 0.0F,
+            10.0F, 0.297F, 0.15F, 0.2F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x35ADFF});
+    private static final Spec STAFF_HERO_LV0 = new Spec("staff_hero_lv0", 1.06049F, 0.28906F, -1.74991F, -0.11197F, -0.34573F, -0.65288F,
+            10.0F, 0.094F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x60FFAC});
+    private static final Spec STAFF_TRANSCEND_LV0 = new Spec("staff_transcend_lv0", 0.87068F, 0.94366F, -1.89579F, -0.0625F, -1.27069F, -1.05839F,
+            10.0F, 0.188F, 0.15F, 0.8F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0xFFF0C1});
+    private static final Spec SWORD_HERO_LV0 = new Spec("sword_hero_lv0", 0.73654F, 0.24487F, -1.57118F, -0.0625F, 0.11721F, -0.77126F,
+            10.0F, 0.25F, 0.15F, 1.6F, 1.0F, 0.9F, 0.05F, "generic_0", new float[] {}, new int[] {0x66DBFF});
+    private static final Spec SWORD_TRANSCEND_LV0 = new Spec("sword_transcend_lv0", 0.69777F, 0.62097F, -1.65648F, -0.0625F, -0.23636F, -1.38366F,
+            10.0F, 0.344F, 0.15F, 2.4F, 1.0F, 0.9F, 0.05F, "flame", new float[] {}, new int[] {0xFF463A});
 
     /** 무기 ID (rpg: 뒤) → 빛 알갱이 */
     public static final Map<String, Spec> BY_ITEM = Map.ofEntries(

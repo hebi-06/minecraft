@@ -85,7 +85,7 @@ def paintable(design, art=ART, px=2):
     """→ (geo JSON dict, 텍스처 Image, 칸 목록 [(상자 번호, 면, (x, y, w, h))])"""
     path = os.path.join(art, f"{design}.geo.json")
     raw = json.load(open(path, encoding="utf-8"))
-    m = geo_tex.load(design, path, os.path.join(art, f"{design}.png"))
+    m = geo_tex.load(design, path, os.path.join(art, f"{design}.png"), java=False)  # 베드락 디자인 파일 그대로 (자바 모델 디자인은 칠하기 묶음 밖)
     out = copy.deepcopy(raw)
     geo = out["minecraft:geometry"][0]
     geo["bones"] = [b for b in geo["bones"] if b["name"].lower() != "weapon_off"]

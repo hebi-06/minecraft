@@ -120,9 +120,44 @@ def load_model(design):
     return m
 
 
+def side_view_java(m, px):
+    """자바 모델 디자인 (사용자 리워크 — 0.12.7): 광선 추적 (java_model_view) 으로 같은 옆모습 — 회전 상자 · 반투명 · 면 rotation 까지.
+    맥동 텍스처는 가장 밝은 프레임, 빛나는 상자 (light_emission) 의 픽셀은 밝게, 빛 색 = 빛나는 상자 픽셀의 평균"""
+    import numpy as np
+    import java_model_view as jmv
+
+    j = m.java
+    strip = j["strip"]
+    W, fh = j["frame"]
+    n = strip.size[1] // fh
+    frames = [np.array(strip.crop((0, i * fh, W, (i + 1) * fh))) for i in range(max(1, n))]
+    frame = max(frames, key=lambda f: f[:, :, :3][f[:, :, 3] > 0].mean() if (f[:, :, 3] > 0).any() else 0)
+    view = jmv.View(j["elements"], frame)
+    ys = [c.lo[1] for c in m.cubes] + [c.hi[1] for c in m.cubes]
+    zs = [c.lo[2] for c in m.cubes] + [c.hi[2] for c in m.cubes]
+    y0, y1, z0, z1 = min(ys), max(ys), min(zs), max(zs)
+    w, h = int(math.ceil((y1 - y0) * px)) + 2, int(math.ceil((z1 - z0) * px)) + 2
+    gy = y0 + (np.arange(w) + 0.5 - 1) / px  # 베드락 디자인 좌표
+    gz = z1 - (np.arange(h) + 0.5 - 1) / px
+    A, B, k = j["anchor"], j["to"], j["scale"]
+    Y, Z = np.meshgrid(A[1] + (gy - B[1]) / k, A[2] + (gz - B[2]) / k, indexing="xy")  # 팩 좌표 (같은 방향 — 베드락 +x = 팩 +x)
+    col, glow, _ = jmv.grid_trace(view, Y, Z, from_plus_x=True)
+    col = col.reshape(h, w, 4)
+    glow = glow.reshape(h, w)
+    lit = col.copy()
+    g = glow > 0.5
+    lit[g, :3] = np.minimum(255, lit[g, :3] * 1.1 + 30)
+    img = Image.fromarray(lit.clip(0, 255).astype(np.uint8), "RGBA")
+    sel = g & (col[:, :, 3] > 0)
+    gc = tuple(col[sel, :3].mean(0)) if sel.any() else (255, 240, 200)
+    return img, gc
+
+
 def side_view(m, px):
     """옆모습 (x 축으로 봄): 가로 = y (끝이 오른쪽), 세로 = z — px = 모델 1칸의 점 수. (그림, 빛 색).
     팔레트 모델은 상자마다 한 색, 다듬은 텍스처는 보이는 면 (west) 의 그 자리 픽셀"""
+    if m.java:
+        return side_view_java(m, px)
     cubes = m.cubes
     ys = [c.lo[1] for c in cubes] + [c.hi[1] for c in cubes]
     zs = [c.lo[2] for c in cubes] + [c.hi[2] for c in cubes]

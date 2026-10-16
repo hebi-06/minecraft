@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """무기 3D 모델: 애드온 (베드락) 디자인 31종 + 12단계 새 무기 디자인 20종 (tools/weapon_art_more.py) → 자바 아이템 모델.
+0.12.7: 디자인마다 사용자 리워크 (자바 모델 — tools/weapon_art/<디자인>.java.json, tools/weapon_pack_import.py) 가 있으면 그것을 씀
+(geo_tex.load_java — 손 자세 · 뼈대는 .geo.json 그대로). 그때는 텍스처를 그대로 (반투명 · 발광 맥동 프레임 + .png.mcmeta),
+빛나는 상자는 light_emission 그대로, 면 rotation 그대로, 빛 알갱이 자리 · 색은 fx 자리에서 가장 가까운 빛나는 상자.
 
   python3 tools/weapon_models.py --import <애드온 폴더>   # 원본을 tools/weapon_art 로 가져옴 (geo · 팔레트 텍스처 · 1인칭 자세 · 무기 → 디자인)
   python3 tools/weapon_models.py                         # tools/weapon_art → src/main/resources/assets/rpg (모델 · 텍스처 · 아이템 정의)
@@ -245,11 +248,18 @@ def convert(design, meta, out_models, out_textures):
     k = min(1.0, room / extent)
     C0 = 8.0 - k * (lo + hi) / 2  # 상자 묶음 가운데를 모델 가운데 (8, 8, 8) 에
 
-    # 텍스처: 팔레트 (면마다 한 칸 — 애드온 · 임시 디자인) 는 쓰는 칸만 불투명, 다듬은 텍스처는 보이는 픽셀 모두 불투명 (빛나는 칸도 색 그대로)
+    # 텍스처: 팔레트 (면마다 한 칸 — 애드온 · 임시 디자인) 는 쓰는 칸만 불투명, 다듬은 텍스처는 보이는 픽셀 모두 불투명 (빛나는 칸도 색 그대로),
+    # 자바 모델 디자인 (사용자 리워크) 은 그대로 (반투명 · 맥동 프레임 — .png.mcmeta 도)
     tex = m.tex
     palette = m.palette
     out_tex = Image.new("RGBA", tex.size, (0, 0, 0, 0))
-    if palette:
+    if m.java:
+        out_tex = m.java["strip"]
+        if m.java["mcmeta"]:
+            with open(os.path.join(out_textures, f"{design}.png.mcmeta"), "w", encoding="utf-8") as fh:
+                json.dump(m.java["mcmeta"], fh, ensure_ascii=False, indent=2)
+                fh.write("\n")
+    elif palette:
         for c in m.cubes:
             for u, v, _, _ in c.faces.values():
                 r, g, b, a = m.pixel(u, v)
@@ -278,14 +288,19 @@ def convert(design, meta, out_models, out_textures):
                 uv = [u, v, u + w, v + h]
             nd = 4 if palette else 6  # 큰 텍스처는 칸 경계가 어긋나지 않게 더 자세히
             faces[name] = {"uv": [round(uv[0] * su, nd), round(uv[1] * sv, nd), round(uv[2] * su, nd), round(uv[3] * sv, nd)], "texture": "#0"}
+            if c.face_rot.get(name):
+                faces[name]["rotation"] = c.face_rot[name]
         el = {"from": [round(float(x), 4) for x in mf], "to": [round(float(x), 4) for x in mt], "faces": faces}
+        if c.name:
+            el = {"name": c.name, **el}
         if c.rot is not None:
             axis, ang, piv = c.rot
             three_ang = {"x": -ang, "y": -ang, "z": ang}[axis]  # 베드락 → three.js (x 반전 — Bone.rest_rot 과 같은 규칙)
             o = k * (to3(np.array(piv, float)) - to3(P)) + C0
-            el["rotation"] = {"origin": [round(float(x), 4) for x in o], "axis": axis, "angle": three_ang, "rescale": False}
-        if m.glow_fraction(c) >= 0.5:
-            el["light_emission"] = 15
+            el["rotation"] = {"origin": [round(float(x), 4) for x in o], "axis": axis, "angle": three_ang + 0.0, "rescale": bool(c.rescale)}
+        glow = c.glow if c.glow is not None else (15 if m.glow_fraction(c) >= 0.5 else 0)
+        if glow > 0:
+            el["light_emission"] = int(glow)
         elements.append(el)
 
     # 1인칭: 베드락 화면 자리 그대로
@@ -335,9 +350,15 @@ def convert(design, meta, out_models, out_textures):
         assert np.allclose(via_arm, fx_arm, atol=1e-9), design
         fx = {"fp": [round(float(x), 5) for x in fx_fp], "arm": [round(float(x), 5) for x in fx_arm]}
 
+    if m.java:
+        credit = f"MMO RPG — 사용자 디자인 {design} (tools/weapon_art/{design}.java.json → tools/weapon_models.py 가 만듦, 손으로 고치지 않음)"
+        tsize = list(m.java["frame"])
+    else:
+        credit = f"MMO RPG — 애드온 디자인 {design} (tools/weapon_models.py 가 만듦, 손으로 고치지 않음)"
+        tsize = [int(m.tw) if float(m.tw).is_integer() else m.tw, int(m.th) if float(m.th).is_integer() else m.th]
     model = {
-        "credit": f"MMO RPG — 애드온 디자인 {design} (tools/weapon_models.py 가 만듦, 손으로 고치지 않음)",
-        "texture_size": [int(m.tw) if float(m.tw).is_integer() else m.tw, int(m.th) if float(m.th).is_integer() else m.th],
+        "credit": credit,
+        "texture_size": tsize,
         "textures": {"0": f"rpg:item/model/{design}", "particle": f"rpg:item/model/{design}"},
         "elements": elements,
         "display": {
@@ -348,7 +369,8 @@ def convert(design, meta, out_models, out_textures):
     with open(os.path.join(out_models, f"{design}.json"), "w", encoding="utf-8") as fh:
         json.dump(model, fh, ensure_ascii=False, indent=1)
     return {"cubes": len(elements), "glow": sum(1 for e in elements if "light_emission" in e), "k": round(k, 3),
-            "fp": model["display"]["firstperson_righthand"], "tp": model["display"]["thirdperson_righthand"], "fx": fx}
+            "fp": model["display"]["firstperson_righthand"], "tp": model["display"]["thirdperson_righthand"], "fx": fx,
+            "fx_colors": m.fx_colors, "java": bool(m.java)}
 
 
 def item_definition(weapon_id, design):
@@ -469,7 +491,8 @@ def do_build():
             fh.write("\n")
         n += 1
     for design, r in report.items():
-        print(f"{design:28s} cubes {r['cubes']:3d} glow {r['glow']:2d} k {r['k']:.3f}  fp {r['fp']['rotation']} {r['fp']['translation']} {r['fp']['scale'][0]}  3p {r['tp']['rotation']} {r['tp']['translation']} {r['tp']['scale'][0]}")
+        print(f"{design:28s} {'J' if r['java'] else ' '} cubes {r['cubes']:3d} glow {r['glow']:2d} k {r['k']:.3f}  fp {r['fp']['rotation']} {r['fp']['translation']} {r['fp']['scale'][0]}  3p {r['tp']['rotation']} {r['tp']['translation']} {r['tp']['scale'][0]}"
+              + (f"  fx {r['fx']['fp']} {r['fx_colors']}" if r.get("fx") else ""))
     print(f"{len(report)} models, {n} item definitions")
     write_fx_java(meta, report, items)
 
@@ -492,6 +515,8 @@ def write_fx_java(meta, report, items):
             continue
         assert r["fx"] is not None, f"{design}: 파티클은 있는데 fx 위치가 없음"
         fp, arm = r["fx"]["fp"], r["fx"]["arm"]
+        if r.get("fx_colors"):  # 사용자 디자인 (자바 모델): fx 자리 상자의 빛나는 색 한 가지
+            fx = dict(fx, colors=r["fx_colors"], cuts=[])
         cuts = "new float[] {" + ", ".join(jf(c) for c in fx["cuts"]) + "}"
         colors = "new int[] {" + ", ".join(rgb(c) for c in fx["colors"]) + "}"
         tex = fx["texture"].split(":", 1)[1]
