@@ -73,7 +73,7 @@ public final class RuneBreakTest {
         check(f3 != null && f3.edge() == 0 && !f3.awaken() && f3.skyTicks() == 1 && f3.skyDist() == 1, "fx 3 = the plain sky + flash");
         check(f6 != null && f6.edge() > 0 && f6.awaken() && f6.skyTicks() > 1 && f6.skyDist() < 1 && f6.flashHold() > 0, "fx 6 = deeper, edge glow, awaken");
 
-        // 초월 16종 모두 3 · 6돌 강화 (값은 원래 정의에 있는 것 · 커짐 · 6돌 ≥ 3돌)
+        // 초월 17종 (자바 덧붙임 사신 포함) 모두 3 · 6돌 강화 (값은 원래 정의에 있는 것 · 커짐 · 6돌 ≥ 3돌)
         Set<String> fns = new HashSet<>();
         for (String fam : Runes.FAMILY_ORDER) {
             Runes.Rune t = rune(fam, "transcend");
@@ -104,7 +104,7 @@ public final class RuneBreakTest {
             check(RuneBreak.tierLines(t, 0, false).size() >= 4, fn + " tier lines");
             for (String l : RuneBreak.tierLines(t, 6, false)) check(plain(l).length() <= 40, fn + " line short: " + plain(l));
         }
-        check(fns.equals(new HashSet<>(RuneBreak.tieredFns())), "tiered fns = the 16 transcend runes " + RuneBreak.tieredFns());
+        check(fns.equals(new HashSet<>(RuneBreak.tieredFns())), "tiered fns = the transcend runes " + RuneBreak.tieredFns());
         check(!RuneBreak.tiered(common) && !RuneBreak.tiered(rune("int", "hero")), "only transcend is tiered");
 
         // 단계별 정의
