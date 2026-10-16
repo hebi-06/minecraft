@@ -473,16 +473,11 @@ net.minecraft.client.gui.contextualbar.JumpableVehicleBar
 net.fabricmc.fabric.api.client.gametest.v1.TestInput
 net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext
 net.minecraft.server.network.CommonListenerCookie
-net.minecraft.gametest.framework.GameTestHelper
 net.minecraft.network.Connection
-net.minecraft.server.players.PlayerList
 net.minecraft.world.level.gamerules.GameRule
 net.minecraft.core.particles.ColorParticleOption
 org.joml.Matrix3x2fStack
 org.joml.Matrix3x2f
-net.minecraft.client.gui.components.Tooltip
-net.minecraft.world.entity.ai.attributes.AttributeInstance
-net.minecraft.network.chat.ClickEvent$RunCommand
 net.minecraft.world.item.component.CustomModelData
 net.minecraft.client.renderer.item.CompositeModel$Unbaked
 net.minecraft.client.renderer.item.RangeSelectItemModel$Unbaked
@@ -513,3 +508,7 @@ net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey
 net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer
 net.fabricmc.fabric.api.client.rendering.v1.EntityRenderLayerRegistrationCallback
 net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback
+net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback$RegistrationHelper
+net.fabricmc.fabric.api.client.rendering.v1.EntityRenderLayerRegistrationCallback$RegistrationHelper
+net.minecraft.client.renderer.state.level.CameraRenderState
+net.minecraft.client.renderer.entity.HumanoidMobRenderer
