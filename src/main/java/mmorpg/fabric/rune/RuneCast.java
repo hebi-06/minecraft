@@ -196,6 +196,15 @@ public final class RuneCast {
         Runes.Rune r = mmorpg.core.RuneBreak.leveled(base, lv);
         if (Status.blockedBySilence(sp)) return false; // 보스 기믹: 침묵
         if (mmorpg.fabric.mount.Riding.blocked(sp, "skill")) return false; // 탈것에 탄 동안 (riding.js)
+        if (!usableNow(sp, r)) {
+            // 0.12.6: 무기 전용 계열 (사신 = 낫) — 그 무기를 든 동안만 (재사용 대기 없이 막음)
+            String w = Runes.weaponName(Runes.weaponOnly(r.family()));
+            String text = "§c" + r.def().str("name") + " §7— " + w + objectParticle(w) + " 들어야 쓸 수 있는 룬입니다";
+            if (quick) Notify.notify(sp, text, 30);
+            else Notify.warn(sp, text);
+            mmorpg.fabric.skill.SkillFx.playFor(sp, "note.bass", 0.6, 0.7);
+            return false;
+        }
         long left = cooldownLeft(sp, r);
         if (left > 0 && !ignoreCooldown) {
             String text = "§c" + r.def().str("name") + " §7재사용 대기 §f" + sec(left) + "초";
@@ -246,6 +255,20 @@ public final class RuneCast {
         AfterCast after = AFTER_CAST.get(r.family());
         if (after != null) after.run(sp, r, P);
         return true;
+    }
+
+    /** 0.12.6: 지금 든 무기로 이 룬을 쓸 수 있는지 (무기 전용 계열 — 사신 = 낫) */
+    public static boolean usableNow(ServerPlayer sp, Runes.Rune r) {
+        Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
+        return Runes.usableWith(r, w == null ? null : w.type());
+    }
+
+    /** 목적격 조사 (받침이 있으면 "을", 없으면 "를") */
+    static String objectParticle(String word) {
+        if (word == null || word.isEmpty()) return "을";
+        char c = word.charAt(word.length() - 1);
+        if (c < 0xAC00 || c > 0xD7A3) return "을";
+        return (c - 0xAC00) % 28 != 0 ? "을" : "를";
     }
 
     // ------------------------------------------------------------ 재사용 대기 표시

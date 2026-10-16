@@ -448,8 +448,10 @@ public final class RuneKit {
         return o != null ? o : new Obj(Map.of(), "ULT_FX.runes." + fn);
     }
 
-    /** 자바 전용 초월 룬 함수 → 같은 하늘빛 · 번쩍임을 쓰는 애드온 룬 함수 (12단계 정령왕 강림 = 정령왕의 부름의 오로라) */
-    private static final Map<String, String> ULT_ALIAS = Map.of("spiritKing", "summonSpirits");
+    /**
+     * 자바 전용 초월 룬 함수 → 같은 하늘빛 · 번쩍임을 쓰는 애드온 룬 함수 (12단계 정령왕 강림 = 정령왕의 부름의 오로라, 0.12.6 적월 강림 = 광전사의 혼의 핏빛 하늘)
+     */
+    private static final Map<String, String> ULT_ALIAS = Map.of("spiritKing", "summonSpirits", "crimsonMoon", "berserker");
 
     /**
      * 하늘빛: 룬 함수 fn 의 하늘빛 (fogId 를 주면 그것) 을 at 둘레 사람에게 ticks 틱. 씌운 사람 수.

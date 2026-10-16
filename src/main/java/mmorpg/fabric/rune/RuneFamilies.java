@@ -1,6 +1,6 @@
 package mmorpg.fabric.rune;
 
-/** 계열 16개의 룬 효과 등록 (RUNE_FN — 계열마다 한 파일) */
+/** 계열 17개의 룬 효과 등록 (RUNE_FN — 계열마다 한 파일, 0.12.6 사신 계열은 자바 전용) */
 final class RuneFamilies {
     private RuneFamilies() {}
 
@@ -20,6 +20,7 @@ final class RuneFamilies {
         RuneSpirit.register();
         RuneSpiritKing.register(); // 12단계: 정령사 초월 룬 정령왕 강림
         RuneGravity.register();
+        RuneReaper.register(); // 0.12.6: 사신 (낫 전용 — 피의 초승달)
         RuneBody.register();
         RuneStrike.register();
     }

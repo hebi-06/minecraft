@@ -187,6 +187,20 @@
         {"key": "stun", "to": 30, "base": 0, "div": 20, "text": "붕괴에 맞은 적 기절 {to}초"}
       ]
     },
+    "crimsonMoon": {
+      "3": [
+        {"key": "radius", "to": 8.5, "text": "핏빛 달빛 {from} → {to}칸"},
+        {"key": "hits", "to": 7, "text": "피의 칼날 {from} → {to}번"},
+        {"key": "dot", "to": 1, "base": 0, "text": "추락 뒤 출혈 위력 ×{to} (1초마다 4번)"},
+        {"key": "dots", "to": 4, "base": 0}
+      ],
+      "6": [
+        {"key": "crush", "to": 22, "text": "추락 위력 ×{from} → ×{to}"},
+        {"key": "radius", "to": 10, "text": "핏빛 달빛 {from} → {to}칸"},
+        {"key": "hits", "to": 8, "text": "피의 칼날 {from} → {to}번"},
+        {"key": "heal", "to": 0.08, "div": 0.01, "text": "흡혈 적마다 {from} → {to}%"}
+      ]
+    },
     "awakening": {
       "3": [
         {"key": "statUp", "to": 0.3, "div": 0.01, "text": "모든 스탯 +{from} → +{to}%"},

@@ -19,6 +19,7 @@ import net.minecraft.world.item.ItemStack;
  * 스킬 칸 HUD (11단계 — 메이플 퀵슬롯처럼 화면 오른쪽 아래): 칸마다 룬 그림 · 등급 색 테두리 · 키 글자 (왼쪽 위),
  * 재사용 대기 = 위에서 내려 덮는 어두운 덮개 (줄어듦) + 남은 초, 연출 = 올림 (금빛 고리) · 시전 (흰 번쩍 + 퍼지는 고리) · 준비 (등급 색 고리) ·
  * 눌림 (그림이 눌렸다 돌아옴) · 막힘 (빨간 덮개 + 흔들림) · 뺌. 넓으면 한 줄, 좁으면 두 줄 (핫바와 겹치지 않게).
+ * 무기 전용 룬 (0.12.6 사신 = 낫) 은 그 무기를 들지 않으면 어둡게 + 칸 아래에 무기 이름.
  * 칸이 모두 비었으면 "[J] 스킬 칸" 안내. 탈것에 탄 동안은 어둡게 (탄 동안 스킬 불가).
  */
 public final class SkillBarHud {
@@ -172,6 +173,13 @@ public final class SkillBarHud {
         float rem = phase(ClientSkillBar.REMOVE_AT[i], now, 300);
         if (rem >= 0) ring(g, cx, cy, s * (0.5F + 0.3F * rem), 0x9A9AA8, 0.8F * (1 - rem));
         if (dim) g.fill(x, y, x + s, y + s, 0x88000000);
+        // 0.12.6: 무기 전용 룬 (사신 = 낫) 인데 그 무기를 들지 않음 — 어둡게 + 아래에 그 무기 이름 (빨강)
+        if (!dim && ClientSkillBar.locked(i)) {
+            g.fill(x + 1, y + 1, x + s - 1, y + s - 1, 0x99100008);
+            String w = Runes.weaponName(Runes.weaponOnly(r.family()));
+            int tw = font.width(w);
+            g.text(font, w, cx - tw / 2 + 1, y + s - 9, 0xFFFF5A5A, true);
+        }
         // 키 글자 (왼쪽 위 — 작은 키 모양)
         if (key) {
             String label = ClientSkillBar.keyLabel(i);

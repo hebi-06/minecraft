@@ -293,7 +293,9 @@ public final class Runes {
         } else if (total > 0) {
             lines.add("§r" + L + "피해 " + N + "위력×" + Js.str(round1(total)) + L + (d.truthy("hits") ? " (" + d.text("hits") + "번)" : ""));
         }
-        if (d.truthy("dot")) lines.add("§r" + L + "중독 " + N + "위력×" + d.text("dot") + L + ", " + sec20(d, "dotGap") + "초마다 " + d.text("dots") + "번");
+        // 0.12.6 사신 계열의 지속 피해는 출혈 (암살자 독 표창은 애드온 그대로 중독)
+        String dotName = REAPER.equals(r.family()) ? "출혈 " : "중독 ";
+        if (d.truthy("dot")) lines.add("§r" + L + dotName + N + "위력×" + d.text("dot") + L + ", " + sec20(d, "dotGap") + "초마다 " + d.text("dots") + "번");
         if (d.truthy("splashMult")) lines.add("§r" + L + "주위 " + d.text("splash") + "칸 " + N + "위력×" + d.text("splashMult"));
         if (total > 0 && r.family().equals("holy")) lines.add("§r" + L + "신성 피해 · 언데드 " + N + RUNE.text("undeadBonus") + "배");
         if (d.truthy("reduce")) lines.add("§r" + L + "받는 피해 " + N + "-" + Js.str(Js.round(d.num("reduce") * 100)) + "%");
@@ -326,6 +328,10 @@ public final class Runes {
         } else {
             lines.add("§r" + L + coefText(r.family()) + " · 다른 스탯 " + RUNE.text("offStat"));
         }
+        // 0.12.6 (자바 전용): 무기 전용 계열 (사신 = 낫) — 그 무기를 든 동안만 씀
+        String only = weaponOnly(r.family());
+        if (only != null) lines.add("§r" + (dark ? "§4" : "§c") + weaponName(only) + " 전용" + L + " · 다른 무기로는 쓰지 못함");
+        if (REAPER.equals(r.family())) lines.addAll(reaperLore(d, L, dark));
         if (buff) lines.addAll(buffLore(r, L, dark));
         if (d.truthy("el")) lines.addAll(elementLore(d, L, dark));
         if (d.truthy("spirits")) lines.addAll(spiritLore(d, L, dark));
@@ -339,6 +345,43 @@ public final class Runes {
         lines.add("§r§8터치: 칸을 고르면 바로 사용");
         lines.add("§r§8누르면 사용 · 요구 스탯 없음");
         return lines;
+    }
+
+    /** 0.12.6 사신 계열 (낫 전용 — 피의 초승달): 낙인 · 적월 강림의 흐름 */
+    private static List<String> reaperLore(Obj d, String L, boolean dark) {
+        String N = dark ? "§0" : "§f";
+        String fn = d.strOrNull("fn");
+        List<String> out = new ArrayList<>();
+        if ("bloodHarvest".equals(fn)) out.add("§r" + L + "두 번 휘두름 (" + sec(d.numOr("gap", Double.NaN)) + " 사이)");
+        if ("bloodBrand".equals(fn)) out.add("§r" + L + "낙인 " + d.text("targets") + "명 → " + sec(d.numOr("delay", Double.NaN)) + " 뒤 폭발");
+        if ("crimsonMoon".equals(fn)) {
+            out.add("§r" + L + "칼날 " + sec(d.numOr("gap", Double.NaN)) + "마다 " + d.text("hits") + "번 (반지름 " + d.text("radius") + "칸)");
+            out.add("§r" + L + "달 추락 " + N + "위력×" + d.text("crush"));
+        }
+        return out;
+    }
+
+    /** 0.12.6 사신 계열 */
+    public static final String REAPER = "reaper";
+
+    /**
+     * 0.12.6 (자바 전용): 이 계열의 룬을 쓰려면 들어야 하는 무기 종류 (RUNE_FAMILIES[family].weapon — 사신 = scythe, 없으면 null — 아무 무기나)
+     */
+    public static String weaponOnly(String family) {
+        Obj f = FAMILIES.objOrNull(family);
+        return f == null ? null : f.strOrNull("weapon");
+    }
+
+    /** 이 룬을 이 무기 종류를 든 채 쓸 수 있는지 (weaponType = 손에 든 RPG 무기의 종류, 없으면 null) */
+    public static boolean usableWith(Rune r, String weaponType) {
+        String only = r == null ? null : weaponOnly(r.family());
+        return only == null || only.equals(weaponType);
+    }
+
+    /** 무기 종류 이름 ("낫") */
+    public static String weaponName(String type) {
+        Obj t = R.obj("TYPES").objOrNull(type);
+        return t == null ? type : t.str("name");
     }
 
     /** runes.js coefText: "민첩 계수 1.0", 도끼 "힘 1.0 + 체력 0.5". */

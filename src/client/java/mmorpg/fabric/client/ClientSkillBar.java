@@ -170,11 +170,22 @@ public final class ClientSkillBar {
 
     // ------------------------------------------------------------ 키
 
-    /** 칸 i 의 키를 누름: 서버에 쓰기 + 눌림 연출 (재사용 대기 중 · 빈 칸이면 막힘 연출도) */
+    /** 0.12.6: 칸 i 의 룬이 무기 전용 계열 (사신 = 낫) 인데 지금 그 무기를 들지 않음 (HUD 를 어둡게 · 누르면 막힘 연출) */
+    public static boolean locked(int i) {
+        Runes.Rune r = RuneItems.runeOf(get(i));
+        if (r == null || Runes.weaponOnly(r.family()) == null) return false;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return false;
+        ItemStack held = mc.player.getMainHandItem();
+        mmorpg.core.Weapon w = held.getItem() instanceof mmorpg.fabric.RpgWeaponItem item ? item.weapon() : null;
+        return !Runes.usableWith(r, w == null ? null : w.type());
+    }
+
+    /** 칸 i 의 키를 누름: 서버에 쓰기 + 눌림 연출 (재사용 대기 중 · 빈 칸 · 무기 전용 룬인데 그 무기를 들지 않았으면 막힘 연출도) */
     static void press(int i) {
         long now = Util.getMillis();
         PRESS_AT[i] = now;
-        if (get(i).isEmpty() || cooldownLeft(i, 0) > 0.05) DENY_AT[i] = now;
+        if (get(i).isEmpty() || cooldownLeft(i, 0) > 0.05 || locked(i)) DENY_AT[i] = now;
         ClientPlayNetworking.send(new SkillBarNet.ActionPayload("cast", i, 0));
     }
 

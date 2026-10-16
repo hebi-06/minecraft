@@ -19,7 +19,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * 룬 아이템 등록: 룬 80 (계열 16 × 등급 5 — rpg:rune_&lt;계열&gt;_&lt;등급&gt;, 한 칸에 하나, 영웅 · 초월은 반짝임) + 룬 뽑기권 · 고급 룬 뽑기권 (64개씩, 반짝임)
+ * 룬 아이템 등록: 룬 85 (계열 17 × 등급 5 — 0.12.6 사신 계열 포함, rpg:rune_&lt;계열&gt;_&lt;등급&gt;, 한 칸에 하나, 영웅 · 초월은 반짝임) + 룬 뽑기권 · 고급 룬 뽑기권 (64개씩, 반짝임)
  * + 스탯 룬 뽑기권 4 (7단계 스탯 트리 — rpg:&lt;스탯&gt;_rune_ticket, 이름이 같은 계열 5종만).
  * 크리에이티브 탭 "룬" 하나 (뽑기권 → 계열 순 → 등급 순).
  */
