@@ -20,7 +20,8 @@ import net.minecraft.world.phys.Vec3;
  * 연출 (fx.js · combat.js 의 파티클 · 소리). 활 빛줄기 · 마법진 · 맞힘은 애드온 그림 그대로 (mmorpg:fx 파티클 — 클라이언트가 그림),
  * 완드 궤적 · 치명타 불꽃 등 애드온도 바닐라 파티클을 쓰는 것은 자바의 같은 파티클.
  * 0.12.8: 영웅 · 초월 활 · 완드는 무기 디자인 색 (rules_more LOOK → SLASH 의 glow · core — 등급 색 대신): 화살 빛줄기에 흰 심지 한 줄,
- * 마법진 · 번쩍임은 그 색, 완드 궤적 · 맞은 자리는 바닐라 파티클 대신 그 색의 빛 알갱이 (GLINT)
+ * 마법진 · 번쩍임은 그 색, 완드 궤적은 바닐라 파티클 대신 그 색의 빛줄기 (활의 지나간 자리 선 조각 — 흰 심지 한 줄) + 떠오르는 빛 방울,
+ * 맞은 자리는 그 색의 번쩍임 + 튀는 불꽃
  */
 public final class Fx {
     private Fx() {}
@@ -94,11 +95,6 @@ public final class Fx {
         Obj s = w.look() == null ? null : Weapons.slashStyle(w.look());
         if (s == null || !s.has("glow")) return new double[][] {gradeRgb(cfg, w.gradeIndex()), null};
         return new double[][] {rgbOf(s, "glow"), s.has("core") ? rgbOf(s, "core") : null};
-    }
-
-    /** 빛 알갱이 하나 (GLINT — generic_0 에 색을 곱함, 늘 밝게): dir 쪽 speed, 위로 accel · 끌림 drag, 반 크기 size → 0 */
-    private static void glint(ServerLevel level, Vec3 at, Vec3 dir, double speed, double accel, double size, double life, double[] c) {
-        fx(level, at, FxOptions.glint(0, dir, speed, accel, 2.0, size, life, argb(c, 1)));
     }
 
     /** 이펙트 하나를 그 자리 둘레 (늘 보이게) 에 보냄 */
@@ -189,20 +185,29 @@ public final class Fx {
 
     static void wandBeam(ServerLevel level, Vec3 from, Vec3 to, Weapon w) {
         double[][] cs = shotColors(WAND, w);
-        boolean look = cs[1] != null;
-        ParticleOptions p = wandTrail(w.gradeIndex());
         Vec3 d = to.subtract(from);
         double len = d.length();
         Vec3 u = len > 1e-6 ? d.scale(1 / len) : Vec3.ZERO;
-        int i = 0;
-        for (double s = 0.8; s <= len; s += 0.4, i++) {
-            Vec3 at = from.add(u.scale(s));
-            if (!look) {
+        if (cs[1] == null) {
+            ParticleOptions p = wandTrail(w.gradeIndex());
+            for (double s = 0.8; s <= len; s += 0.4) {
+                Vec3 at = from.add(u.scale(s));
                 level.sendParticles(p, at.x, at.y, at.z, 1, 0, 0, 0, 0);
-                continue;
             }
-            // 영웅 · 초월: 무기 색 빛 알갱이 (셋에 하나는 심지 색 — 조금 위로 떠오르며 사라짐)
-            glint(level, at, u, 0.25, 0.5, i % 3 == 2 ? 0.07 : 0.1, 0.55, i % 3 == 2 ? cs[1] : cs[0]);
+            return;
+        }
+        // 영웅 · 초월 (0.12.8): 무기 색 빛줄기 — 활의 지나간 자리와 같은 선 조각이 한꺼번에 켜져 가늘어지며 사라짐 (가운데 흰 심지 한 줄),
+        // 두 조각마다 빛 방울이 위로 떠오름 (빛 · 심지 색 번갈아)
+        Vec3[] b = basis(u);
+        int i = 0;
+        for (double s = 0.6; s <= len - 0.1; s += SEG_GAP, i++) {
+            Vec3 at = from.add(u.scale(s));
+            fx(level, at, new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.09F, 0.5F, 0F, 0F, 0F, 1F, argb(cs[0], 0.9)));
+            fx(level, at, new FxOptions(FxOptions.ARROW_TRAIL, -1, u, 0F, (float) SEG_HALF, 0.035F, 0.4F, 0F, 0F, 0F, 1F, argb(cs[1], 1)));
+            if (i % 2 == 1) {
+                Vec3 drift = b[1].scale(0.8).add(b[0].scale(i % 4 == 1 ? 0.5 : -0.5)).normalize();
+                fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, drift, 0.6F, 0.11F, 0F, 0.6F, 0F, 0.4F, 0F, 1F, argb(i % 4 == 1 ? cs[1] : cs[0], 0.95)));
+            }
         }
     }
 
@@ -213,12 +218,13 @@ public final class Fx {
             level.sendParticles(wandTrail(w.gradeIndex()), at.x, at.y, at.z, 6, 0.15, 0.15, 0.15, 0.02);
             return;
         }
-        // 영웅 · 초월: 무기 색 빛 알갱이 6개가 사방으로 + 가운데 번쩍임
-        fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, Vec3.ZERO, 0F, 0.4F, 0F, 0.16F, 0F, 1.6F, 0F, 1F, argb(cs[0], 0.95)));
+        // 영웅 · 초월: 무기 색 번쩍임 (빛 + 심지) + 사방으로 튀는 불꽃 6개 (빛 · 심지 색 번갈아)
+        fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, Vec3.ZERO, 0F, 0.45F, 0F, 0.18F, 0F, 1.6F, 0F, 1F, argb(cs[0], 0.95)));
+        fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, Vec3.ZERO, 0F, 0.22F, 0F, 0.14F, 0F, 1.4F, 0F, 1F, argb(cs[1], 1)));
         for (int k = 0; k < 6; k++) {
             double a = k * Math.PI / 3;
             Vec3 dir = new Vec3(Math.cos(a), k % 2 == 0 ? 0.6 : -0.2, Math.sin(a)).normalize();
-            glint(level, at, dir, 2.2, 0.3, 0.09, 0.45, k % 2 == 0 ? cs[0] : cs[1]);
+            fx(level, at, new FxOptions(FxOptions.ARROW_SPARK, -1, dir, 4F, 0.1F, 0F, 0.28F, 0F, 0F, 0F, 1F, argb(k % 2 == 0 ? cs[0] : cs[1], 0.9)));
         }
     }
 
