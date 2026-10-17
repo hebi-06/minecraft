@@ -86,8 +86,8 @@ public final class CosmeticAura {
                         double y = h * 0.5 + Math.sin(t * 2.4 + k * Math.PI) * 0.3;
                         Vec3 at = feet.add(Math.cos(ang) * 0.75, y, Math.sin(ang) * 0.75);
                         double[] c = cols.get(k % cols.size());
-                        add(level, spark(Vec3.ZERO, 0, 0.2, decreased ? 0.9 : 0.7, 0.1, argb(c, 1)), at);
-                        if (tick % (decreased ? 4 : 2) == 0) add(level, spark(Vec3.ZERO, 0, 0.09, 0.35, 0.3, argb(new double[] {1, 1, 1}, 1)), at);
+                        add(level, spark(Vec3.ZERO, 0, 0.26, decreased ? 0.9 : 0.7, 0.1, argb(c, 1)), at);
+                        if (tick % (decreased ? 4 : 2) == 0) add(level, spark(Vec3.ZERO, 0, 0.12, 0.35, 0.3, argb(new double[] {1, 1, 1}, 1)), at);
                     }
                 }
                 // 반짝임: 몸 둘레에서 천천히 떠오름 (초당 rate 개)
@@ -95,7 +95,7 @@ public final class CosmeticAura {
                     double ang = r.nextDouble() * Math.PI * 2;
                     double rad = 0.4 + r.nextDouble() * 0.5;
                     Vec3 at = feet.add(Math.cos(ang) * rad, r.nextDouble() * h * 1.1, Math.sin(ang) * rad);
-                    add(level, spark(new Vec3(0, 1, 0), 0.15 + r.nextDouble() * 0.15, 0.06 + r.nextDouble() * 0.05, 0.9, 0.0, argb(pick(cols, r), 1)), at);
+                    add(level, spark(new Vec3(0, 1, 0), 0.15 + r.nextDouble() * 0.15, 0.09 + r.nextDouble() * 0.05, 0.9, 0.3, argb(pick(cols, r), 1)), at);
                 }
             }
             case "frost" -> {
@@ -105,7 +105,7 @@ public final class CosmeticAura {
                     double rad = 0.2 + r.nextDouble() * 0.65;
                     Vec3 at = feet.add(Math.cos(ang) * rad, h + 0.3 + r.nextDouble() * 0.5, Math.sin(ang) * rad);
                     Vec3 drift = new Vec3((r.nextDouble() - 0.5) * 0.5, -1, (r.nextDouble() - 0.5) * 0.5).normalize();
-                    add(level, spark(drift, 0.4 + r.nextDouble() * 0.3, 0.07 + r.nextDouble() * 0.05, 1.7 + r.nextDouble() * 0.6, 0.5,
+                    add(level, spark(drift, 0.4 + r.nextDouble() * 0.3, 0.09 + r.nextDouble() * 0.06, 1.7 + r.nextDouble() * 0.6, 0.5,
                             argb(pick(cols, r), 1)), at);
                 }
                 // 발밑 서리: 고리 (1.2초마다) · 반짝임
@@ -115,7 +115,7 @@ public final class CosmeticAura {
                 if (tick % 3 == 0) {
                     double ang = r.nextDouble() * Math.PI * 2;
                     Vec3 at = feet.add(Math.cos(ang) * 0.55, 0.08, Math.sin(ang) * 0.55);
-                    add(level, spark(new Vec3(0, 1, 0), 0.25, 0.09, 0.6, 0.0, argb(pick(cols, r), 1)), at);
+                    add(level, spark(new Vec3(0, 1, 0), 0.25, 0.12, 0.6, 0.2, argb(pick(cols, r), 1)), at);
                 }
             }
             default -> { // embers
@@ -125,17 +125,17 @@ public final class CosmeticAura {
                     double rad = 0.3 + r.nextDouble() * 0.35;
                     Vec3 at = feet.add(Math.cos(ang) * rad, 0.05 + r.nextDouble() * 0.35, Math.sin(ang) * rad);
                     Vec3 dir = new Vec3(Math.cos(ang) * 0.12, 1, Math.sin(ang) * 0.12).normalize();
-                    add(level, spark(dir, 0.5 + r.nextDouble() * 0.45, 0.07 + r.nextDouble() * 0.06, 0.9 + r.nextDouble() * 0.6, 0.15,
+                    add(level, spark(dir, 0.5 + r.nextDouble() * 0.45, 0.12 + r.nextDouble() * 0.08, 0.9 + r.nextDouble() * 0.6, 0.45,
                             argb(pick(cols, r), 1)), at);
                 }
                 // 작은 불꽃 (바닐라 불꽃 그림) · 발밑 고리 (0.8초마다)
-                if (r.nextFloat() < 0.4F * scale) {
+                if (r.nextFloat() < 0.6F * scale) {
                     double ang = r.nextDouble() * Math.PI * 2;
                     Vec3 at = feet.add(Math.cos(ang) * 0.4, 0.05, Math.sin(ang) * 0.4);
-                    add(level, FxOptions.glint(1, new Vec3(0, 1, 0), 0.3, 0.8, 1.2, 0.07 + r.nextDouble() * 0.03, 0.7, argb(cols.get(0), 1)), at);
+                    add(level, FxOptions.glint(1, new Vec3(0, 1, 0), 0.3, 0.8, 1.2, 0.09 + r.nextDouble() * 0.04, 0.7, argb(cols.get(0), 1)), at);
                 }
                 if (tick % 16 == 0) {
-                    add(level, FxOptions.ofSprite(FxSprite.SHOCK_RING, Vec3.ZERO, 0, 0.4, 0.9, r.nextFloat() * 360, argb(cols.get(0), 0.4)), feet.add(0, 0.05, 0));
+                    add(level, FxOptions.ofSprite(FxSprite.SHOCK_RING, Vec3.ZERO, 0, 0.4, 0.9, r.nextFloat() * 360, argb(cols.get(0), 0.55)), feet.add(0, 0.05, 0));
                 }
             }
         }
