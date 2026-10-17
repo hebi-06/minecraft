@@ -1,0 +1,22 @@
+ci-out/build.txt:31:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgRuneTests.java:38: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:34:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGearTests.java:47: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:37:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgWeaponsMoreTests.java:51: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:40:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgSkillTests.java:42: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:43:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgHeroSkillTests.java:43: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:46:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgLimitedRuneTests.java:32: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/build.txt:49:/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGameTests.java:56: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+ci-out/core.txt:92:StatTreeTest: 257 ok, 0 failed
+ci-out/core.txt:93:RuneBreakTest: 1140 ok, 0 failed
+ci-out/core.txt:94:MonstersMoreTest: 274 ok, 0 failed
+ci-out/core.txt:95:HeroSkillsTest: 245 ok, 0 failed
+ci-out/core.txt:96:WeaponsMoreTest: 884 ok, 0 failed
+ci-out/gametest.txt:12:> Task :deleteGameTestRunDir UP-TO-DATE
+ci-out/gametest.txt:13:> Task :acceptGameTestEula
+ci-out/gametest.txt:20:> Task :runGameTest
+ci-out/gametest.txt:73:[15:26:54] [main/ERROR] (Minecraft) Failed to load properties from file: server.properties
+ci-out/gametest.txt:75:java.nio.file.NoSuchFileException: server.properties
+ci-out/gametest.txt:76:	at java.base/sun.nio.fs.UnixException.translateToIOException(UnixException.java:92)
+ci-out/gametest.txt:77:	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:106)
+ci-out/gametest.txt:78:	at java.base/sun.nio.fs.UnixException.rethrowAsIOException(UnixException.java:111)
+ci-out/gametest.txt:93:[15:26:54] [main/WARN] (Minecraft) Failed to load eula.txt
+ci-out/gametest.txt:95:[15:26:55] [main/INFO] (FabricGameTestRunner) Starting test server

@@ -1,0 +1,8 @@
+run: 39044945404  attempt: 1
+commit: d8a6b15a280d7681951eb29f01109675f9f379b9
+versions: success
+core: success
+build: success
+prod: success
+gametest: success
+client (all groups): (build job only)
