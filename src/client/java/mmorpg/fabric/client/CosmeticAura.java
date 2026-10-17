@@ -21,8 +21,8 @@ import net.minecraft.world.phys.Vec3;
  * <li>orbit (별빛): 빛 둘이 허리 높이에서 몸 둘레를 돎 (2초에 한 바퀴 · 위아래로 출렁 · 흰 심지) — 지나간 자리에 꼬리, 반짝임이 떠오름</li>
  * <li>frost (서리): 머리 위 (반지름 0.85) 에서 눈송이가 흔들리며 내림 + 1.2초마다 발밑 서리 고리 · 발밑 반짝임</li>
  * <li>petals (벚꽃 — 0.15.0): 머리 위 (반지름 0.2 ~ 1.1) 에서 꽃잎이 빙글빙글 · 좌우로 하늘하늘 떨어짐</li>
- * <li>lightning (번개 — 0.15.0): 초당 rate 번, 몸 둘레 (반지름 0.45 ~ 0.75) 에 짧은 꺾은선 번개 (3 ~ 4 마디 · 0.12 ~ 0.22초) + 끝에 흰 불티,
- * 0.5초마다 몸 둘레 옅은 번쩍임</li>
+ * <li>lightning (번개 — 0.15.0): 초당 rate 번, 몸 둘레 (반지름 0.45 ~ 0.75) 에 지그재그 번개 (4 ~ 5 마디 — 위나 아래로 뻗으며 몸 둘레 쪽으로 엇갈려 꺾임,
+ * 0.22 ~ 0.34초) — 마디마다 굵고 옅은 빛무리 (그 색) 위에 가늘고 흰빛인 심, 초당 14번 깜빡이며 사라짐 · 끝에 흰 불티, 0.5초마다 몸 둘레 옅은 번쩍임</li>
  * <li>hearts (하트 — 0.15.0): 몸 둘레에서 하트가 튀어나오듯 생겨 천천히 피어오르며 흐려짐</li>
  * <li>shadow (그림자 — 0.15.0): 발밑 둘레에서 어두운 연기가 피어오르며 커지고 흐려짐 · 보랏빛 불티 (마지막 색) · 1.5초마다 발밑 어두운 고리</li>
  * </ul>
@@ -119,24 +119,33 @@ public final class CosmeticAura {
                 }
             }
             case "lightning" -> {
-                // 번개: 몸 둘레에 짧은 꺾은선 (마디마다 빛줄기 — 제자리) + 끝에 흰 불티
+                // 번개: 몸 둘레에 지그재그 (위나 아래로 뻗으며 몸 둘레 쪽으로 엇갈려 꺾임 — 마디마다 제자리 빛줄기 둘: 굵고 옅은 빛무리 + 가늘고 흰빛인 심,
+                // 이음새가 끊기지 않게 마디를 20% 길게 · 깜빡이며 사라짐) + 끝에 흰 불티
                 for (int i = 0; i < n; i++) {
                     double ang = r.nextDouble() * Math.PI * 2;
                     double rad = 0.45 + r.nextDouble() * 0.3;
-                    Vec3 p = feet.add(Math.cos(ang) * rad, 0.2 + r.nextDouble() * Math.max(0.1, h - 0.1), Math.sin(ang) * rad);
-                    int segs = 3 + r.nextInt(2);
-                    int color = argb(pick(cols, r), 1);
-                    float life = (float) (0.12 + r.nextDouble() * 0.1);
+                    Vec3 p = feet.add(Math.cos(ang) * rad, 0.3 + r.nextDouble() * Math.max(0.1, h - 0.3), Math.sin(ang) * rad);
+                    Vec3 around = new Vec3(-Math.sin(ang), 0, Math.cos(ang));
+                    double vy = p.y - feet.y > h * 0.5 ? -1 : 1; // 위쪽에서 나면 아래로, 아래쪽이면 위로
+                    int segs = 4 + r.nextInt(2);
+                    double[] c = pick(cols, r);
+                    int glow = argb(c, 0.5);
+                    int core = argb(new double[] {0.65 + 0.35 * c[0], 0.65 + 0.35 * c[1], 0.65 + 0.35 * c[2]}, 1);
+                    float life = (float) (0.22 + r.nextDouble() * 0.12);
                     for (int k = 0; k < segs; k++) {
-                        Vec3 step = new Vec3((r.nextDouble() - 0.5) * 0.5, (r.nextBoolean() ? 1 : -1) * (0.12 + r.nextDouble() * 0.15), (r.nextDouble() - 0.5) * 0.5);
+                        double side = (k % 2 == 0 ? 1 : -1) * (0.08 + r.nextDouble() * 0.14);
+                        double out = (r.nextDouble() - 0.5) * 0.12;
+                        Vec3 step = around.scale(side).add(Math.cos(ang) * out, vy * (0.12 + r.nextDouble() * 0.12), Math.sin(ang) * out);
                         Vec3 q = p.add(step);
-                        add(level, new FxOptions(FxOptions.ARROW_SHOT, -1, step, 0F, (float) (step.length() / 2), 0.025F, life, 0F, 0F, 0F, 1F, color),
-                                p.add(q).scale(0.5));
+                        Vec3 mid = p.add(q).scale(0.5);
+                        float half = (float) (step.length() * 0.6);
+                        add(level, new FxOptions(FxOptions.ARROW_SHOT, -1, step, 0F, half, 0.09F, life, 0F, 0F, 14F, 1F, glow), mid);
+                        add(level, new FxOptions(FxOptions.ARROW_SHOT, -1, step, 0F, half, 0.03F, life, 0F, 0F, 14F, 1F, core), mid);
                         p = q;
                     }
-                    add(level, spark(Vec3.ZERO, 0, 0.09, 0.22, 0.2, argb(new double[] {1, 1, 1}, 1)), p);
+                    add(level, spark(Vec3.ZERO, 0, 0.12, 0.25, 0.2, argb(new double[] {1, 1, 1}, 1)), p);
                 }
-                if (tick % 10 == 0) add(level, spark(Vec3.ZERO, 0, 0.55, 0.18, 1.3, argb(cols.get(0), 0.3)), feet.add(0, h * 0.55, 0));
+                if (tick % 10 == 0) add(level, spark(Vec3.ZERO, 0, 0.6, 0.2, 1.3, argb(cols.get(0), 0.3)), feet.add(0, h * 0.55, 0));
             }
             case "hearts" -> {
                 // 하트: 몸 둘레에서 튀어나오듯 생겨 천천히 피어오름
@@ -158,12 +167,12 @@ public final class CosmeticAura {
                     Vec3 at = feet.add(Math.cos(ang) * rad, 0.05 + r.nextDouble() * 0.5, Math.sin(ang) * rad);
                     Vec3 dir = new Vec3(Math.cos(ang) * 0.15, 1, Math.sin(ang) * 0.15).normalize();
                     add(level, spark(dir, 0.3 + r.nextDouble() * 0.3, 0.14 + r.nextDouble() * 0.1, 1.1 + r.nextDouble() * 0.6, 2.2,
-                            argb(cols.get(r.nextInt(dark)), 0.75)), at);
+                            argb(cols.get(r.nextInt(dark)), 0.85)), at);
                 }
-                if (r.nextFloat() < 0.5F * scale) {
+                if (r.nextFloat() < 0.9F * scale) {
                     double ang = r.nextDouble() * Math.PI * 2;
                     Vec3 at = feet.add(Math.cos(ang) * 0.5, 0.1 + r.nextDouble() * h * 0.7, Math.sin(ang) * 0.5);
-                    add(level, spark(new Vec3(0, 1, 0), 0.4, 0.06, 0.9, 0.3, argb(cols.get(cols.size() - 1), 1)), at);
+                    add(level, spark(new Vec3(0, 1, 0), 0.4, 0.08, 0.9, 0.3, argb(cols.get(cols.size() - 1), 1)), at);
                 }
                 if (tick % 30 == 0) {
                     add(level, FxOptions.ofSprite(FxSprite.SHOCK_RING, Vec3.ZERO, 0, 0.6, 1.4, r.nextFloat() * 360, argb(cols.get(0), 0.6)), feet.add(0, 0.05, 0));

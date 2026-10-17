@@ -761,18 +761,22 @@ public final class CosmeticScreen extends Screen {
             }
             case "lightning" -> {
                 if (!front) return;
-                // 번개: 0.15초마다 다른 자리에 꺾은선 둘 (마디 넷)
+                // 번개: 0.15초마다 다른 자리에 지그재그 둘 (마디 넷 — 위나 아래로 뻗으며 좌우로 엇갈림 · 옅은 빛무리 위에 흰빛 심)
                 long slot = now / 150;
                 for (int b = 0; b < 2; b++) {
                     java.util.Random rr = new java.util.Random(slot * 31 + b * 7);
                     double ang = rr.nextDouble() * Math.PI * 2;
                     int x = cx + (int) Math.round(Math.cos(ang) * 30);
                     int y = top0 + 10 + rr.nextInt(Math.max(1, h - 20));
-                    int rgb = rgb(cols.get(b % cols.size()));
+                    int dy = y - top0 > h / 2 ? -1 : 1;
+                    double[] c = cols.get(b % cols.size());
+                    int core = rgb(new double[] {0.65 + 0.35 * c[0], 0.65 + 0.35 * c[1], 0.65 + 0.35 * c[2]});
                     for (int k = 0; k < 4; k++) {
-                        int nx = x + rr.nextInt(9) - 4;
-                        int ny = y + (rr.nextBoolean() ? 1 : -1) * (4 + rr.nextInt(5));
-                        line(g, x, y, nx, ny, 0xFF000000 | rgb);
+                        int nx = x + (k % 2 == 0 ? 1 : -1) * (2 + rr.nextInt(4));
+                        int ny = y + dy * (4 + rr.nextInt(4));
+                        line(g, x - 1, y, nx - 1, ny, 0x50000000 | rgb(c));
+                        line(g, x + 1, y, nx + 1, ny, 0x50000000 | rgb(c));
+                        line(g, x, y, nx, ny, 0xFF000000 | core);
                         x = nx;
                         y = ny;
                     }

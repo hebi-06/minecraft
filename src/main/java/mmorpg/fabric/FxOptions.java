@@ -23,7 +23,7 @@ import net.minecraft.world.phys.Vec3;
  * @param life     수명 (초)
  * @param delay    처음에 보이지 않는 시간 (초, 지나간 자리 선)
  * @param grow     불꽃: 끝날 때 크기 배율 (0 이면 줄어들며 사라짐)
- * @param spin     처음 돌린 각 (도)
+ * @param spin     처음 돌린 각 (도) — 빛줄기 (ARROW_SHOT) 는 깜빡임: 초당 spin 번 (0 이면 깜빡이지 않음 — 번개 오라 0.15.0)
  * @param progress 마법진 그려진 정도 (0~1 → 10단계)
  * @param color    ARGB (그림은 흰색, 이 색을 곱함)
  * @param accel    위로 가속 (초당² 블록, 빛 알갱이)

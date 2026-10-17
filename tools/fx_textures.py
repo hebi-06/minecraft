@@ -82,22 +82,31 @@ def petal_texture():
 
 
 def heart_texture():
-    """하트 (흰색 — 색은 파티클이 곱함): 가장자리 조금 어둡게 · 왼쪽 위 반짝임 (0.15.0 하트 오라)"""
-    n = 32
+    """하트 (흰색 — 색은 파티클이 곱함, 0.15.0 하트 오라): 칸마다 4 × 4 표본으로 덮인 만큼 불투명 (곡선 값으로 흐리게 하면 허리 양옆이
+    넓게 흐려져 위 두 볼이 귀처럼 보임), 가장자리 1.5칸 어둡게 (작게 보여도 모양이 또렷하게) · 왼쪽 위 반짝임"""
+    n, ss = 32, 4
+
+    def inside(px_, py_):
+        u = (px_ - n / 2) / (n / 2) * 1.25
+        v = -((py_ - n / 2) / (n / 2) * 1.25 - 0.1)
+        return (u * u + v * v - 1) ** 3 - u * u * v ** 3 <= 0  # 하트 곡선 (안 = 0 이하)
+
+    cov = [[sum(inside(x + (sx + 0.5) / ss, y + (sy + 0.5) / ss) for sy in range(ss) for sx in range(ss)) / ss ** 2
+            for x in range(n)] for y in range(n)]
+    out = [(x, y) for y in range(n) for x in range(n) if cov[y][x] < 0.5]
     img = Image.new("RGBA", (n, n), (255, 255, 255, 0))
     px = img.load()
     for y in range(n):
         for x in range(n):
-            u = (x - (n - 1) / 2) / (n / 2) * 1.25
-            v = -((y - (n - 1) / 2) / (n / 2) * 1.25 - 0.1)
-            f = (u * u + v * v - 1) ** 3 - u * u * v ** 3  # 하트 곡선 (안 = 음수)
-            if f > 0:
+            if cov[y][x] <= 0:
                 continue
-            k = min(1.0, -f * 8)
-            shine = math.exp(-(((u + 0.45) / 0.18) ** 2 + ((v - 0.45) / 0.14) ** 2))
-            g = int(255 * (0.78 + 0.22 * k))
-            g = min(255, int(g + 120 * shine))
-            px[x, y] = (g, g, g, int(255 * min(1.0, -f * 30)))
+            d = min((math.hypot(x - ox, y - oy) for ox, oy in out if abs(x - ox) <= 3 and abs(y - oy) <= 3), default=4.0)
+            shade = 0.58 if d <= 1.5 else 0.86
+            u = (x + 0.5 - n / 2) / (n / 2) * 1.25
+            v = -((y + 0.5 - n / 2) / (n / 2) * 1.25 - 0.1)
+            shine = math.exp(-(((u + 0.45) / 0.2) ** 2 + ((v - 0.5) / 0.15) ** 2)) if d > 1.5 else 0.0
+            g = int(round(255 * min(1.0, shade + 0.4 * shine)))
+            px[x, y] = (g, g, g, int(round(255 * cov[y][x])))
     return img
 
 

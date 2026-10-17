@@ -153,6 +153,11 @@ public final class FxParticle extends SingleQuadParticle {
         switch (o.kind()) {
             case FxOptions.ARROW_SHOT -> {
                 float alpha = a * (1 - tn * tn * tn);
+                // 깜빡임 (번개 오라 — spin = 초당 번): 한 번의 60% 는 밝게, 나머지는 30%
+                if (o.spin() > 0) {
+                    float ph = sec * o.spin();
+                    if (ph - Mth.floor(ph) > 0.6F) alpha *= 0.3F;
+                }
                 directional(state, rx, ry, rz, o.size(), o.thick(), tex("arrow_streak"), alpha);
             }
             case FxOptions.ARROW_TRAIL -> {

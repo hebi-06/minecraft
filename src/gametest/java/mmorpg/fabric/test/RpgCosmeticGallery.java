@@ -279,6 +279,14 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         check(waitServer(ctx, server, s -> "star_aura".equals(Cosmetics.look(me(s)).get("aura")), 40), "star aura worn");
         away(ctx);
         shot(ctx, "c_aura_star");
+        // 0.15.0 새 오라: 미리보기 (입어 보기) 그림
+        for (String id : List.of("sakura_aura", "storm_aura", "heart_aura", "shadow_aura")) {
+            int row = rowIndex(ctx, id);
+            click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
+            away(ctx);
+            ctx.waitTicks(5);
+            shot(ctx, "c_aura_" + id + "_try");
+        }
         click(ctx, conn, sc -> ((CosmeticScreen) sc).tabCenter("title"));
         equipRow(ctx, conn, "title_hero");
         check(waitServer(ctx, server, s -> "title_hero".equals(Cosmetics.look(me(s)).get("title")), 40), "hero title worn");
@@ -527,6 +535,16 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         double up = p.length > 4 ? p[4] : 0; // 위에서 볼 때 (블록)
         server.runCommand(String.format(Locale.ROOT, "tp @a[name=!Rival] %.2f %.2f %.2f %.1f %.1f", p[0], HOME.y + up, p[1], p[2], pitch));
         ctx.waitTicks(20);
+        // 두 번째 플레이어의 몸통을 머리 쪽으로 (0.15.0 — 가만히 선 다른 플레이어는 몸통이 머리에서 50° 까지 비껴 있어 등 장식이 비스듬히 찍힘:
+        // 한쪽 날개가 옆면만 보이는 등. 몸통은 각 클라이언트가 정하고, 서 있으면 머리와 같은 쪽에서 움직이지 않음)
+        ctx.runOnClient(mc -> {
+            var r = mc.level == null || rivalId == null ? null : mc.level.getPlayerByUUID(rivalId);
+            if (r != null) {
+                r.yBodyRot = r.getYHeadRot();
+                r.yBodyRotO = r.yBodyRot;
+            }
+        });
+        ctx.waitTicks(2);
     }
 
     // ------------------------------------------------------------ 도움
