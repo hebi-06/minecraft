@@ -1,0 +1,2 @@
+[15:31:10] [Test thread/INFO] (mmorpg-nidhogg-gallery) [nidhogg-gallery] done, 0 failed checks
+[15:32:17] [Test thread/INFO] (mmorpg-skoll-gallery) [skoll-gallery] done, 0 failed checks

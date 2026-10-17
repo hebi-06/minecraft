@@ -1,0 +1,2 @@
+[15:31:06] [Test thread/INFO] (mmorpg-ymir-gallery) [ymir-gallery] done, 0 failed checks
+[15:32:34] [Test thread/INFO] (mmorpg-surtr-gallery) [surtr-gallery] done, 0 failed checks

@@ -1,0 +1,5 @@
+[15:30:48] [Test thread/INFO] (mmorpg-client-test) [client-test] done, 0 failed checks
+[15:36:05] [Test thread/INFO] (mmorpg-skill-gallery) [skill-gallery] done, 0 failed
+[15:37:12] [Test thread/INFO] (mmorpg-form-gallery) [form-gallery] done, 0 failed checks
+[15:37:35] [Test thread/INFO] (mmorpg-nav-gallery) [nav-gallery] done, 0 failed checks
+[15:39:29] [Test thread/INFO] (mmorpg-mob-gallery) [mob-gallery] done, 0 failed checks

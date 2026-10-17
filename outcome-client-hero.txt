@@ -1,0 +1,1 @@
+client hero (hero,skillbar,gacha,limited): success

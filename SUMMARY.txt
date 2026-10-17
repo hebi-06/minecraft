@@ -1,0 +1,19 @@
+run: 39044945404  attempt: 1
+commit: d8a6b15a280d7681951eb29f01109675f9f379b9
+versions: success
+core: success
+build: success
+prod: success
+gametest: success
+client hero (hero,skillbar,gacha,limited): success
+client ns (nidhogg,skoll): success
+client rune (rune,arena): success
+client six (mount,pvp,stattree,runebreak): success
+client sk (scorpions,kraken,mob9): success
+client ui (client,weapon,particle,skill,gear,form,nav,mob): success
+prod-client: success
+client w12 (weapons12,cosmetic): success
+client wj (worm,jorm): success
+client world (boss,monster,tree): success
+client ys (ymir,surtr): success
+client (all groups): success

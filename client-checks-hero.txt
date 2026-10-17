@@ -1,0 +1,4 @@
+[15:30:49] [Test thread/INFO] (mmorpg-hero-gallery) [hero-gallery] done, 0 failed
+[15:31:34] [Test thread/INFO] (mmorpg-skillbar-gallery) [skillbar-gallery] done, 0 failed checks
+[15:32:23] [Test thread/INFO] (mmorpg-gacha-gallery) [gacha-gallery] done, 0 failed checks
+[15:33:41] [Test thread/INFO] (mmorpg-limited-gallery) [limited-gallery] done, 0 failed

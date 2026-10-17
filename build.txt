@@ -1,0 +1,65 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+
+> Configure project :
+Fabric Loom: 1.18.4
+
+> Task :core:compileJava
+> Task :core:processResources
+> Task :core:classes
+> Task :core:jar
+> Task :core:assemble
+
+> Task :compileJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: /home/runner/work/minecraft/minecraft/src/main/java/mmorpg/fabric/mob/RpgMonster.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :processResources
+> Task :classes
+
+> Task :compileClientJava
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processClientResources
+> Task :processIncludeJars
+> Task :clientClasses
+> Task :jar
+
+> Task :compileGametestJava
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgRuneTests.java:38: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGearTests.java:47: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgWeaponsMoreTests.java:51: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgSkillTests.java:42: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgHeroSkillTests.java:43: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgLimitedRuneTests.java:32: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+/home/runner/work/minecraft/minecraft/src/gametest/java/mmorpg/fabric/test/RpgGameTests.java:56: warning: [removal] makeMockServerPlayerInLevel() in GameTestHelper has been deprecated and marked for removal
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+                           ^
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+7 warnings
+
+> Task :assemble
+> Task :processGametestResources
+> Task :gametestClasses
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/build-1792250752585.json
+
+[Incubating] Problems report is available at: file:///home/runner/work/minecraft/minecraft/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 29s
+11 actionable tasks: 11 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.1/userguide/configuration_cache_enabling.html

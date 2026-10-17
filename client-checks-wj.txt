@@ -1,0 +1,2 @@
+[15:31:14] [Test thread/INFO] (mmorpg-worm-gallery) [worm-gallery] done, 0 failed checks
+[15:32:19] [Test thread/INFO] (mmorpg-jorm-gallery) [jorm-gallery] done, 0 failed checks
