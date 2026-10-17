@@ -31,8 +31,16 @@ final class GachaArt {
     static final Identifier RING = Mmorpg.id("gacha/ring");
     static final Identifier STAR = Mmorpg.id("gacha/star");
     static final Identifier SHINE = Mmorpg.id("gacha/shine");
+    /** 1회 결과 카드 (등급 색으로 칠함) */
     static final Identifier CARD = Mmorpg.id("gacha/card");
-    static final Identifier CARD_BACK = Mmorpg.id("gacha/card_back");
+    /** 10회 카드 (0.14.1 — 영웅 미만 흰 카드 · 영웅 이상 노란 카드, 칠하지 않고 그대로): 앞 · 뒤 */
+    static final Identifier CARD_WHITE = Mmorpg.id("gacha/card_white");
+    static final Identifier CARD_GOLD = Mmorpg.id("gacha/card_gold");
+    static final Identifier CARD_BACK_WHITE = Mmorpg.id("gacha/card_back_white");
+    static final Identifier CARD_BACK_GOLD = Mmorpg.id("gacha/card_back_gold");
+    /** 노란 카드 · 흰 카드의 빛 색 (RGB) */
+    static final int GOLD = 0xFFD24A;
+    static final int SILVER = 0xDCE6FF;
     static final Identifier[] CIRCLE = new Identifier[10];
 
     static {
@@ -71,6 +79,18 @@ final class GachaArt {
 
     static int gradeIndex(String grade) {
         return Math.max(0, GRADES.indexOf(grade));
+    }
+
+    /** 10회 카드 색 (0.14.1 — 사용자: 영웅 미만은 흰 카드, 영웅 이상은 노란 카드) */
+    static boolean goldCard(String grade) {
+        return gradeIndex(grade) >= GRADES.indexOf("hero");
+    }
+
+    /** 밝은 카드 (흰 · 노란) 위 글자 색 — 등급 색을 진하게 (노란 바탕에서도 읽히게) */
+    private static final Map<String, Integer> INK_RGB = Map.of("common", 0x2E323C, "rare", 0x1D4FB8, "noble", 0x6E2AB0, "hero", 0x7A3A00, "transcend", 0xA30E0E);
+
+    static int ink(String grade) {
+        return INK_RGB.getOrDefault(grade, 0x2E323C);
     }
 
     static String gradeName(String grade) {
@@ -133,10 +153,15 @@ final class GachaArt {
 
     /** 글자를 가운데 (cx) 에 scale 배로 */
     static void textCentered(GuiGraphicsExtractor g, Font font, String s, float cx, float y, float scale, int argb) {
+        textCentered(g, font, s, cx, y, scale, argb, true);
+    }
+
+    /** shadow false = 그림자 없이 (밝은 카드 위 진한 글자) */
+    static void textCentered(GuiGraphicsExtractor g, Font font, String s, float cx, float y, float scale, int argb, boolean shadow) {
         g.pose().pushMatrix();
         g.pose().translate(cx, y);
         g.pose().scale(scale, scale);
-        g.text(font, s, -font.width(s) / 2, 0, argb, true);
+        g.text(font, s, -font.width(s) / 2, 0, argb, shadow);
         g.pose().popMatrix();
     }
 
