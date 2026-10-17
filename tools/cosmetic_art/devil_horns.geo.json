@@ -1,0 +1,278 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.mmorpg.devil_horns",
+    "texture_width": 64,
+    "texture_height": 32
+   },
+   "bones": [
+    {
+     "name": "head",
+     "pivot": [
+      0.0,
+      24.0,
+      0.0
+     ]
+    },
+    {
+     "name": "horn_right_0",
+     "pivot": [
+      -2.5,
+      31.5,
+      -2.5
+     ],
+     "parent": "head",
+     "rotation": [
+      -12.0,
+      0.0,
+      18.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -3.5,
+        31.5,
+        -3.5
+       ],
+       "size": [
+        2,
+        3,
+        2
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "horn_right_1",
+     "pivot": [
+      -2.5,
+      34.5,
+      -2.5
+     ],
+     "parent": "horn_right_0",
+     "rotation": [
+      -22.0,
+      0.0,
+      6.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -3.5,
+        34.5,
+        -3.5
+       ],
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "uv": [
+        16,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "horn_right_2",
+     "pivot": [
+      -2.5,
+      36.5,
+      -2.5
+     ],
+     "parent": "horn_right_1",
+     "rotation": [
+      -30.0,
+      0.0,
+      -8.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -3.0,
+        36.5,
+        -3.0
+       ],
+       "size": [
+        1,
+        2,
+        1
+       ],
+       "uv": [
+        32,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "horn_right_3",
+     "pivot": [
+      -2.5,
+      38.5,
+      -2.5
+     ],
+     "parent": "horn_right_2",
+     "rotation": [
+      -30.0,
+      0.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -3.0,
+        38.5,
+        -3.0
+       ],
+       "size": [
+        1,
+        1,
+        1
+       ],
+       "uv": [
+        40,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "horn_left_0",
+     "pivot": [
+      2.5,
+      31.5,
+      -2.5
+     ],
+     "parent": "head",
+     "rotation": [
+      -12.0,
+      0.0,
+      -18.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        1.5,
+        31.5,
+        -3.5
+       ],
+       "size": [
+        2,
+        3,
+        2
+       ],
+       "uv": [
+        8,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "horn_left_1",
+     "pivot": [
+      2.5,
+      34.5,
+      -2.5
+     ],
+     "parent": "horn_left_0",
+     "rotation": [
+      -22.0,
+      0.0,
+      -6.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        1.5,
+        34.5,
+        -3.5
+       ],
+       "size": [
+        2,
+        2,
+        2
+       ],
+       "uv": [
+        24,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "horn_left_2",
+     "pivot": [
+      2.5,
+      36.5,
+      -2.5
+     ],
+     "parent": "horn_left_1",
+     "rotation": [
+      -30.0,
+      0.0,
+      8.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        2.0,
+        36.5,
+        -3.0
+       ],
+       "size": [
+        1,
+        2,
+        1
+       ],
+       "uv": [
+        36,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "horn_left_3",
+     "pivot": [
+      2.5,
+      38.5,
+      -2.5
+     ],
+     "parent": "horn_left_2",
+     "rotation": [
+      -30.0,
+      0.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        2.0,
+        38.5,
+        -3.0
+       ],
+       "size": [
+        1,
+        1,
+        1
+       ],
+       "uv": [
+        44,
+        0
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

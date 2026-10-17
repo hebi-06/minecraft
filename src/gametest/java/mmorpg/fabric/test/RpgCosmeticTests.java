@@ -1,5 +1,6 @@
 package mmorpg.fabric.test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import mmorpg.core.Json;
@@ -51,6 +52,17 @@ public final class RpgCosmeticTests {
         h.assertTrue(Boolean.TRUE.equals(fm.get("translucent")) && fm.get("emissive") != null && res("/assets/mmorpg/textures/entity/cosmetic/fairy_wings.glow.png"),
                 "fairy model translucent + glow " + fm.keySet());
         h.assertTrue(res("/assets/mmorpg/textures/particle/fx/twinkle.png") && text("/assets/mmorpg/particles/fx.json").contains("mmorpg:fx/twinkle"), "twinkle particle");
+        // 0.15.0: 머리 4 · 등 3 · 오라 4 · 칭호 6 더함, 불사조 날개는 불티 (ember) · 꽃잎 · 하트 파티클 그림
+        for (String id : List.of("cat_ears", "devil_horns", "flower_crown", "ice_crown", "phoenix_wings", "frost_wings", "royal_cape", "sakura_aura", "storm_aura",
+                "heart_aura", "shadow_aura", "title_fairy_friend", "title_rune_collector", "title_frost_lord", "title_storm_knight", "title_light_guardian", "title_dark_lord")) {
+            h.assertTrue(CosmeticDefs.get(id) != null, "0.15.0 item " + id);
+        }
+        h.assertTrue("ember".equals(CosmeticDefs.get("phoenix_wings").dust().style()) && "sparkle".equals(CosmeticDefs.get("frost_wings").dust().style()),
+                "dust styles");
+        h.assertTrue(CosmeticDefs.get("ice_crown").translucent() && CosmeticDefs.get("frost_wings").translucent(), "ice crown · frost wings translucent");
+        for (String fx : List.of("petal", "heart")) {
+            h.assertTrue(res("/assets/mmorpg/textures/particle/fx/" + fx + ".png") && text("/assets/mmorpg/particles/fx.json").contains("mmorpg:fx/" + fx), fx + " particle");
+        }
         for (CosmeticDefs.Def d : all.values()) {
             h.assertTrue(d.price() > 0 && !d.name().isEmpty(), "price/name " + d.id());
             h.assertTrue(res("/assets/rpg/items/cosmetic_" + d.id() + ".json"), "icon item definition " + d.id());
@@ -61,8 +73,8 @@ public final class RpgCosmeticTests {
                     h.assertTrue(d.design() != null && d.design().startsWith(designPrefix(d.weapon())), "design name " + d.design());
                     h.assertTrue(res("/assets/rpg/models/item/model/" + d.design() + ".json"), "skin model " + d.design());
                 }
-                case "aura" -> h.assertTrue(d.aura() != null && Set.of("embers", "orbit", "frost").contains(d.aura().kind()) && !d.aura().colors().isEmpty(),
-                        "aura " + d.id());
+                case "aura" -> h.assertTrue(d.aura() != null && Set.of("embers", "orbit", "frost", "petals", "lightning", "hearts", "shadow").contains(d.aura().kind())
+                        && !d.aura().colors().isEmpty(), "aura " + d.id());
                 case "title" -> h.assertTrue(d.title() != null && !d.title().isEmpty(), "title " + d.id());
                 default -> {
                     h.assertTrue(d.model() != null && res("/assets/mmorpg/cosmetic/" + d.model() + ".json"), "model " + d.id() + " " + d.model());

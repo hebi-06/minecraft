@@ -1,0 +1,90 @@
+{
+ "tw": 64,
+ "th": 64,
+ "texture": "mmorpg:textures/entity/cosmetic/frost_wings.png",
+ "emissive": "mmorpg:textures/entity/cosmetic/frost_wings.glow.png",
+ "translucent": true,
+ "parts": {
+  "body": {
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [],
+   "children": {
+    "fw_wing_right": {
+     "pivot": [
+      -1.0,
+      2.0,
+      3.2
+     ],
+     "rot": [
+      0.0,
+      26.0,
+      -0.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -16.0,
+        -7.0,
+        0.0
+       ],
+       "size": [
+        16,
+        22,
+        0
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    },
+    "fw_wing_left": {
+     "pivot": [
+      1.0,
+      2.0,
+      3.2
+     ],
+     "rot": [
+      0.0,
+      -26.0,
+      -0.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        0.0,
+        -7.0,
+        0.0
+       ],
+       "size": [
+        16,
+        22,
+        0
+       ],
+       "uv": [
+        32,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    }
+   }
+  }
+ }
+}

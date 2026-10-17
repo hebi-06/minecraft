@@ -247,6 +247,16 @@ public final class CosmeticScreen extends Screen {
         return new int[] {left + RIGHT_X + RIGHT_W / 2, top + LIST_Y + (i - scroll) * ROW_H + ROW_H / 2};
     }
 
+    /** 시험용: 목록 줄 i 가 보이는지 (6줄 — 넘으면 굴림) */
+    public boolean rowVisible(int i) {
+        return i >= scroll && i < scroll + ROWS;
+    }
+
+    /** 시험용: 목록 가운데 (굴릴 때 마우스 자리) */
+    public int[] listCenter() {
+        return new int[] {left + RIGHT_X + RIGHT_W / 2, top + LIST_Y + ROWS * ROW_H / 2};
+    }
+
     public int[] actionCenter() {
         return new int[] {left + W - 10 - ACTION_W / 2, top + FOOT_Y + 11};
     }
@@ -735,6 +745,73 @@ public final class CosmeticScreen extends Screen {
                     }
                 }
             }
+            case "petals" -> {
+                if (!front) return;
+                // 꽃잎: 머리 위에서 하늘하늘 떨어짐 (가로로 긴 잎 · 세로로 긴 잎이 번갈아 — 도는 것처럼)
+                for (int i = 0; i < 14; i++) {
+                    double ph = (t * 0.22 + i * 0.071) % 1.0;
+                    int x = cx + (int) Math.round(Math.sin(i * 2.7) * 30 + Math.sin(t * 1.6 + i) * 5);
+                    int y = top0 - 14 + (int) (ph * (h + 16));
+                    int alpha = (int) (235 * Math.min(1, Math.sin(Math.PI * ph) * 2));
+                    int rgb = rgb(cols.get(i % cols.size()));
+                    boolean wide = ((int) (t * 3 + i)) % 2 == 0;
+                    g.fill(x - (wide ? 2 : 1), y - (wide ? 1 : 2), x + (wide ? 2 : 1), y + (wide ? 1 : 2), (Math.max(0, alpha) << 24) | rgb);
+                    g.fill(x, y, x + 1, y + 1, (Math.max(0, alpha) << 24) | 0xFFFFFF);
+                }
+            }
+            case "lightning" -> {
+                if (!front) return;
+                // 번개: 0.15초마다 다른 자리에 꺾은선 둘 (마디 넷)
+                long slot = now / 150;
+                for (int b = 0; b < 2; b++) {
+                    java.util.Random rr = new java.util.Random(slot * 31 + b * 7);
+                    double ang = rr.nextDouble() * Math.PI * 2;
+                    int x = cx + (int) Math.round(Math.cos(ang) * 30);
+                    int y = top0 + 10 + rr.nextInt(Math.max(1, h - 20));
+                    int rgb = rgb(cols.get(b % cols.size()));
+                    for (int k = 0; k < 4; k++) {
+                        int nx = x + rr.nextInt(9) - 4;
+                        int ny = y + (rr.nextBoolean() ? 1 : -1) * (4 + rr.nextInt(5));
+                        line(g, x, y, nx, ny, 0xFF000000 | rgb);
+                        x = nx;
+                        y = ny;
+                    }
+                    glowDot(g, x, y, 1, 240, 0xFFFFFF);
+                }
+            }
+            case "hearts" -> {
+                if (!front) return;
+                // 하트: 몸 둘레에서 피어오름 (5 × 4 점 하트)
+                for (int i = 0; i < 8; i++) {
+                    double ph = (t * 0.35 + i * 0.125) % 1.0;
+                    int x = cx + (int) Math.round(Math.sin(i * 2.3) * 28);
+                    int y = bottom - 8 - (int) (ph * h);
+                    int alpha = (int) (240 * Math.min(1, (1 - ph) * 2.5) * Math.min(1, ph * 6));
+                    heart(g, x, y, alpha, rgb(cols.get(i % cols.size())));
+                }
+            }
+            case "shadow" -> {
+                // 어두운 연기: 발밑에서 피어오르며 커지고 흐려짐 (사람 뒤 · 앞 모두) · 보랏빛 불티 (앞)
+                for (int i = 0; i < 10; i++) {
+                    if ((i % 2 == 0) != front) continue;
+                    double ph = (t * 0.5 + i * 0.1) % 1.0;
+                    int x = cx + (int) Math.round(Math.sin(i * 1.9) * 18);
+                    int y = bottom - 2 - (int) (ph * h * 0.6);
+                    int s = 3 + (int) (ph * 6);
+                    int alpha = (int) (170 * (1 - ph));
+                    double[] c = cols.get(i % Math.max(1, cols.size() - 1));
+                    g.fill(x - s, y - s / 2, x + s, y + s / 2, (alpha << 24) | rgb(c));
+                    g.fill(x - s / 2, y - s, x + s / 2, y + s, (alpha << 24) | rgb(c));
+                }
+                if (front) {
+                    for (int i = 0; i < 5; i++) {
+                        double ph = (t * 0.6 + i * 0.2) % 1.0;
+                        int x = cx + (int) Math.round(Math.sin(i * 2.9) * 24);
+                        int y = bottom - 6 - (int) (ph * h * 0.8);
+                        glowDot(g, x, y, 1, (int) (220 * (1 - ph)), rgb(cols.get(cols.size() - 1)));
+                    }
+                }
+            }
             case "frost" -> {
                 if (!front) return;
                 for (int i = 0; i < 14; i++) {
@@ -765,21 +842,43 @@ public final class CosmeticScreen extends Screen {
         }
     }
 
-    /** 미리보기 반짝이는 가루 (등 장식 dust): 날개 자리 (양옆 · 머리 위 ~ 허리) 에서 천천히 떨어지는 빛 · 네 갈래 반짝임 */
+    /** 미리보기 가루 (등 장식 dust): 날개 자리 (양옆 · 머리 위 ~ 허리) 에서 천천히 떨어지는 빛 · 네 갈래 반짝임 (ember 는 피어오르는 불티) */
     private void drawDust(GuiGraphicsExtractor g, CosmeticDefs.Dust d, int cx, int headY, int feetY, long now) {
         List<double[]> cols = d.colors();
         double t = now / 1000.0;
         int h = feetY - headY;
+        boolean ember = "ember".equals(d.style());
         for (int i = 0; i < 16; i++) {
             double ph = (t * 0.45 + i * 0.0625) % 1.0;
             double side = (i % 2 == 0 ? 1 : -1) * (8 + (i * 37) % 39);
             int x = cx + (int) Math.round(side + Math.sin(t * 1.3 + i) * 2);
-            int y = headY - 22 + (int) ((i * 53) % 71 / 71.0 * h * 0.75) + (int) (ph * 26);
+            int y = headY - 22 + (int) ((i * 53) % 71 / 71.0 * h * 0.75) + (int) ((ember ? -ph : ph) * 26);
             int alpha = (int) (235 * Math.sin(Math.PI * ph));
             int rgb = rgb(cols.get(i % cols.size()));
             if (i % 3 == 0) sparkle(g, x, y, ph < 0.5 ? 2 : 1, alpha, rgb);
             else glowDot(g, x, y, 1, alpha, rgb);
         }
+    }
+
+    /** 점 선 (번개 미리보기) */
+    private static void line(GuiGraphicsExtractor g, int x0, int y0, int x1, int y1, int argb) {
+        int n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+        for (int i = 0; i <= n; i++) {
+            int x = x0 + (n == 0 ? 0 : (x1 - x0) * i / n);
+            int y = y0 + (n == 0 ? 0 : (y1 - y0) * i / n);
+            g.fill(x, y, x + 1, y + 1, argb);
+        }
+    }
+
+    /** 작은 하트 (5 × 4 점) */
+    private static void heart(GuiGraphicsExtractor g, int x, int y, int alpha, int rgb) {
+        if (alpha <= 4) return;
+        int c = (Math.min(255, alpha) << 24) | rgb;
+        g.fill(x - 2, y - 1, x, y + 1, c);
+        g.fill(x + 1, y - 1, x + 3, y + 1, c);
+        g.fill(x - 2, y, x + 3, y + 1, c);
+        g.fill(x - 1, y + 1, x + 2, y + 2, c);
+        g.fill(x, y + 2, x + 1, y + 3, c);
     }
 
     /** 네 갈래 반짝임 (가로 · 세로 빛 줄 + 흰 가운데) */

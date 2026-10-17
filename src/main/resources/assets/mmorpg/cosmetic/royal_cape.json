@@ -1,0 +1,74 @@
+{
+ "tw": 64,
+ "th": 32,
+ "texture": "mmorpg:textures/entity/cosmetic/royal_cape.png",
+ "parts": {
+  "body": {
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [
+    {
+     "from": [
+      -5.5,
+      -0.5,
+      -3.5
+     ],
+     "size": [
+      11,
+      2,
+      7
+     ],
+     "uv": [
+      22,
+      0
+     ],
+     "inflate": 0,
+     "mirror": false
+    }
+   ],
+   "children": {
+    "fw_cape": {
+     "pivot": [
+      0.0,
+      0.0,
+      3.2
+     ],
+     "rot": [
+      6.0,
+      -0.0,
+      -0.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -5.0,
+        0.0,
+        0.0
+       ],
+       "size": [
+        10,
+        16,
+        1
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    }
+   }
+  }
+ }
+}

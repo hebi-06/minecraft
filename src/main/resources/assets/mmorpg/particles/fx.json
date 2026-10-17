@@ -108,6 +108,8 @@
     "mmorpg:fx/bash_burst",
     "minecraft:generic_0",
     "minecraft:flame",
-    "mmorpg:fx/twinkle"
+    "mmorpg:fx/twinkle",
+    "mmorpg:fx/petal",
+    "mmorpg:fx/heart"
   ]
 }

@@ -682,7 +682,304 @@ def fairy_wings():
     return d
 
 
+# ---- 0.15.0 머리 장식: 고양이 귀 · 악마의 뿔 · 꽃 화관 · 얼음 왕관
+# 회전 부호 (베드락 → 자바 변환에서 y · z 가 뒤집힘): 오른쪽 (x -) 귀 · 뿔을 바깥으로 기울이려면 베드락 z +, 끝을 뒤로 휘려면 베드락 x -
+
+CAT_FUR = (40, 36, 46)
+CAT_FUR_L = (74, 68, 84)
+CAT_PINK = (246, 158, 188)
+
+
+def cat_ear_paint(layer):
+    def f(face, x, y, w, h):
+        k = 0.92 + 0.12 * noise(x, y + layer * 7, 61)
+        if face == "north" and 0 < x < w - 1:  # 앞쪽 면 안쪽은 분홍
+            return shade(CAT_PINK, k) + (255,)
+        if face == "top":
+            return shade(CAT_FUR_L, k) + (255,)
+        return shade(CAT_FUR, k) + (255,)
+    return f
+
+
+def cat_ears():
+    """머리 위 양쪽 세모 귀 (아래 4 → 위 1, 두께 1) — 뼈 fw_twitch_* (가끔 귀를 바깥 · 뒤로 쫑긋)"""
+    d = Design("cat_ears", 64, 32)
+    d.bone("head", pivot=(0, 24, 0))
+    for side, sign in (("right", -1), ("left", 1)):
+        cx = sign * 2.5
+        bone = d.bone(f"fw_twitch_{side}", "head", pivot=(cx, 32, -1), rotation=(0, 0, -sign * 10))
+        for i, wd in enumerate((4, 3, 2, 1)):
+            d.cube(bone, (cx - wd / 2, 32 + i, -1.5), (wd, 1, 1), cat_ear_paint(i))
+    return d
+
+
+HORN_BASE = (132, 26, 36)
+HORN_TIP = (24, 8, 12)
+
+
+def horn_paint(t):
+    def f(face, x, y, w, h):
+        c = mix(HORN_BASE, HORN_TIP, t)
+        k = {"top": 1.15, "bottom": 0.7}.get(face, 0.95 if face in ("north", "south") else 0.84)
+        if y == h - 1 and face not in ("top", "bottom"):  # 마디마다 아래 줄 어둡게 (고리 무늬)
+            k *= 0.8
+        return shade(c, k * (0.94 + 0.12 * noise(x, y, 71 + int(t * 10)))) + (255,)
+    return f
+
+
+def horn_glow(face, x, y, w, h):
+    return (255, 96, 52, 210)
+
+
+def devil_horns():
+    """이마 양쪽에서 위 · 바깥으로 솟아 뒤로 휘는 뿔 (마디 넷 — 끝으로 갈수록 가늘고 검게, 끝은 붉게 빛남)"""
+    d = Design("devil_horns", 64, 32)
+    d.bone("head", pivot=(0, 24, 0))
+    for side, sign in (("right", -1), ("left", 1)):
+        x0 = sign * 2.5
+        b0 = d.bone(f"horn_{side}_0", "head", pivot=(x0, 31.5, -2.5), rotation=(-12, 0, -sign * 18))
+        d.cube(b0, (x0 - 1, 31.5, -3.5), (2, 3, 2), horn_paint(0.0))
+        b1 = d.bone(f"horn_{side}_1", b0, pivot=(x0, 34.5, -2.5), rotation=(-22, 0, -sign * 6))
+        d.cube(b1, (x0 - 1, 34.5, -3.5), (2, 2, 2), horn_paint(0.4))
+        b2 = d.bone(f"horn_{side}_2", b1, pivot=(x0, 36.5, -2.5), rotation=(-30, 0, sign * 8))
+        d.cube(b2, (x0 - 0.5, 36.5, -3), (1, 2, 1), horn_paint(0.75))
+        b3 = d.bone(f"horn_{side}_3", b2, pivot=(x0, 38.5, -2.5), rotation=(-30, 0, 0))
+        d.cube(b3, (x0 - 0.5, 38.5, -3), (1, 1, 1), horn_paint(1.0), horn_glow)
+    return d
+
+
+LEAF = (72, 156, 64)
+LEAF_D = (38, 108, 40)
+FLOWERS = [((255, 146, 188), (255, 214, 232)), ((250, 250, 244), (255, 224, 90)), ((150, 196, 255), (220, 236, 255)), ((255, 186, 120), (255, 232, 170))]
+
+
+def leaf_paint(seed):
+    def f(face, x, y, w, h):
+        c = LEAF_D if (x + seed) % 3 == 0 or face == "bottom" else LEAF
+        return shade(c, 0.92 + 0.14 * noise(x, y, seed)) + (255,)
+    return f
+
+
+def flower_paint(petal, light):
+    def f(face, x, y, w, h):
+        if face in ("north", "top") and x == 0 and y == 0:
+            return (255, 222, 84, 255) if face == "north" else light + (255,)  # 꽃술 (노랑)
+        return shade(light if (x + y) % 2 == 0 else petal, 0.95 + 0.08 * noise(x, y, 77)) + (255,)
+    return f
+
+
+def flower_crown():
+    """머리띠처럼 둘러싼 잎 고리 (12 조각) + 바깥에 꽃 여섯 (분홍 · 흰 · 하늘 · 살구 — 꽃술 노랑)"""
+    d = Design("flower_crown", 64, 32)
+    d.bone("head", pivot=(0, 24, 0))
+    r = 5.0
+    for i in range(12):
+        seg = d.bone(f"wreath_{i}", "head", pivot=(0, 31, 0), rotation=(0, i * 30, 0))
+        d.cube(seg, (-1.5, 30.5, -r - 0.5), (3, 1, 1), leaf_paint(i))
+        if i % 2 == 0:
+            petal, light = FLOWERS[(i // 2) % len(FLOWERS)]
+            d.cube(seg, (-1, 31, -r - 1.5), (2, 2, 1), flower_paint(petal, light))
+        else:
+            d.cube(seg, (-0.5, 31.5, -r - 0.5), (1, 1, 1), leaf_paint(i + 20))
+    return d
+
+
+ICE = (150, 214, 250)
+ICE_EDGE = (204, 238, 255)
+
+
+def ice_paint(tip=False):
+    """얼음 (반투명): 안쪽 하늘빛 (알파 170) · 넓은 상자의 양 가장자리와 윗면은 밝게 · 가시 끝 맨 위 줄은 흰빛"""
+    def f(face, x, y, w, h):
+        if tip and y == 0 and face not in ("bottom", "top"):
+            return (250, 254, 255, 240)
+        if face == "top":
+            return ICE_EDGE + (220,)
+        k = 0.9 if face in ("west", "east") else 1.0
+        if (x == 0 or x == w - 1) and w > 2:
+            return tuple(shade(ICE_EDGE, k)) + (210,)
+        return tuple(shade(ICE, k * (0.95 + 0.1 * noise(x, y, 83)))) + (170,)
+    return f
+
+
+def ice_glow(tip=False):
+    """빛 그림: 가시 끝은 하늘빛 · 띠는 윗면만 옅게"""
+    def f(face, x, y, w, h):
+        if tip:
+            return (176, 240, 255, 150)
+        return (176, 240, 255, 100) if face == "top" else None
+    return f
+
+
+def ice_crown():
+    """얼음 왕관 (반투명 — translucent): 얇은 얼음 띠 (12 조각) + 가시 여덟 (앞이 가장 높고 뒤로 갈수록 낮게 · 바깥으로 기울게), 가장자리 · 끝이 빛남"""
+    d = Design("ice_crown", 64, 32)
+    d.bone("head", pivot=(0, 24, 0))
+    r = 4.9
+    for i in range(12):
+        seg = d.bone(f"iceband_{i}", "head", pivot=(0, 31, 0), rotation=(0, i * 30, 0))
+        d.cube(seg, (-1.5, 30.5, -r - 0.5), (3, 1, 1), ice_paint(), ice_glow())
+    heights = {0: 6, 45: 4, 315: 4, 90: 3, 270: 3, 135: 3, 225: 3, 180: 2}
+    for ang, hgt in heights.items():
+        # 고리 자리 (머리 가운데를 축으로 돌림) → 그 자리에서 바깥으로 10° 기울임 (자식 뼈)
+        ring = d.bone(f"icespike_{ang}", "head", pivot=(0, 31.5, 0), rotation=(0, ang, 0))
+        sp = d.bone(f"icespike_{ang}_tilt", ring, pivot=(0, 31.5, -r), rotation=(10, 0, 0))
+        d.cube(sp, (-1, 31.5, -r - 0.5), (2, max(1, hgt - 2), 1), ice_paint())
+        d.cube(sp, (-0.5, 31.5 + max(1, hgt - 2), -r - 0.5), (1, 2, 1), ice_paint(tip=True), ice_glow(tip=True))
+    return d
+
+
+# ---- 0.15.0 등 장식: 불사조 날개 · 얼음 수정 날개 · 왕실 망토
+
+def face_paint(pixel, right, faces=("north", "south")):
+    """날개 판의 앞 · 뒤 면에 같은 모양 (pixel(u, v, x, y, w, h) — u 0 = 등 쪽, 1 = 바깥 끝, v 0 = 위)"""
+    def f(face, x, y, w, h):
+        if face not in faces:
+            return None
+        outer_left = (face == "north") == right
+        u = (w - 1 - x if outer_left else x) / (w - 1)
+        v = y / (h - 1)
+        return pixel(u, v, x, y, w, h)
+    return f
+
+
+PHOENIX_EDGE = (255, 238, 156)
+PHOENIX_COVERT = (255, 178, 62)
+PHOENIX_FEATHER = [(0.0, (255, 150, 44)), (0.55, (232, 68, 30)), (1.0, (150, 20, 26))]
+
+
+def _wing_shape(u, v, h, w):
+    """천사 날개와 같은 윤곽 (위 가장자리 · 깃털 끝) → (안인지, 깊이 0~1)"""
+    top = _lerp_curve(ANGEL_TOP, u)
+    bottom = _lerp_curve(ANGEL_BOTTOM, u)
+    fw = 2.5 / (w - 1)
+    k = (u % fw) / fw
+    bottom -= (1 - math.sin(math.pi * k)) * 1.6 / h
+    if not (top <= v <= bottom):
+        return False, 0.0, top
+    return True, (v - top) / max(1e-6, bottom - top), top
+
+
+def phoenix_pixel(glow):
+    def f(u, v, x, y, w, h):
+        inside, depth, top = _wing_shape(u, v, h, w)
+        if not inside:
+            return None
+        if v - top < 1.4 / h:
+            return PHOENIX_EDGE + ((230,) if glow else (255,))
+        if depth < 0.32:  # 덮깃: 비늘 무늬 (주황)
+            row = int((v - top) * h / 2)
+            c = shade(PHOENIX_COVERT, 1.0 if noise(int((u * (w - 1) + row % 2) / 2), row, 91) > 0.45 else 0.86)
+            return tuple(c) + ((150,) if glow else (255,))
+        fx = (u * (w - 1)) % 2.5
+        c = ramp(PHOENIX_FEATHER, (depth - 0.32) / 0.68)
+        if fx < 0.5:
+            c = shade(c, 0.72)  # 깃 사이 선
+        if glow:  # 몸 쪽이 가장 밝게 타오르고 끝으로 갈수록 옅게
+            return tuple(c) + (int(150 * (1 - depth) + 30),)
+        return tuple(shade(c, 0.94 + 0.08 * noise(x, y, 93))) + (255,)
+    return f
+
+
+def phoenix_wings():
+    """불사조 날개: 천사 날개 윤곽 (조금 크게) · 위 가장자리 노란빛 → 주황 덮깃 → 붉은 긴 깃, 빛 그림 = 몸 쪽부터 타오르듯 (끝으로 옅게)"""
+    d = Design("phoenix_wings", 64, 64)
+    d.bone("body", pivot=(0, 24, 0))
+    span, height = 16, 21
+    for side, sign in (("right", -1), ("left", 1)):
+        right = side == "right"
+        bone = d.bone(f"fw_wing_{side}", "body", pivot=(sign * 1.0, 22, 2.8), rotation=(0, sign * 24, sign * 8))
+        x0 = -1.0 - span if right else 1.0
+        d.cube(bone, (x0, 28 - height, 2.8), (span, height, 1), face_paint(phoenix_pixel(False), right), face_paint(phoenix_pixel(True), right))
+    return d
+
+
+FROST = (176, 226, 255)
+FROST_B = (146, 204, 252)
+FROST_EDGE = (246, 252, 255)
+
+
+def frost_pixel(glow):
+    """천사 날개 윤곽 · 아래 끝은 뾰족한 수정 (2.5칸마다 세모), 뿌리에서 부채꼴로 나뉜 면 여섯 (번갈아 두 빛 — 수정 결) · 면 사이 선 · 가장자리 흰빛"""
+    def f(u, v, x, y, w, h):
+        top = _lerp_curve(ANGEL_TOP, u)
+        bottom = _lerp_curve(ANGEL_BOTTOM, u)
+        fw = 2.5 / (w - 1)
+        k = (u % fw) / fw
+        bottom -= abs(2 * k - 1) * 2.4 / h
+        if not (top <= v <= bottom):
+            return None
+        if v - top < 1.2 / h or bottom - v < 1.1 / h:  # 가장자리 (위 · 아래 끝)
+            return FROST_EDGE + ((150,) if glow else (235,))
+        ang = math.atan2((v - 0.3) * (h - 1), max(1e-6, u * (w - 1) + 0.5))
+        facet = (ang + math.pi / 2) / math.pi * 6
+        if abs(facet - round(facet)) < 0.14 and u > 0.1:  # 면 사이 선
+            return (226, 246, 255) + ((110,) if glow else (205,))
+        if glow:
+            return None
+        c = FROST if int(facet) % 2 == 0 else FROST_B
+        depth = (v - top) / max(1e-6, bottom - top)
+        return tuple(shade(c, 1.04 - 0.1 * depth)) + (int(125 + 45 * u),)
+    return f
+
+
+def frost_wings():
+    """얼음 수정 날개 (반투명 — translucent): 수정 면으로 나뉜 날개 (아래 끝 뾰족), 두께 0 판의 뒤쪽 면 — 빛 그림 = 가장자리 · 면 사이 선"""
+    d = Design("frost_wings", 64, 64)
+    d.bone("body", pivot=(0, 24, 0))
+    span, height = 16, 22
+    for side, sign in (("right", -1), ("left", 1)):
+        right = side == "right"
+        bone = d.bone(f"fw_wing_{side}", "body", pivot=(sign * 1.0, 22, 3.2), rotation=(0, sign * 26, 0))
+        x0 = -1.0 - span if right else 1.0
+        d.cube(bone, (x0, 29 - height, 3.2), (span, height, 0), face_paint(frost_pixel(False), right, ("south",)),
+               face_paint(frost_pixel(True), right, ("south",)))
+    return d
+
+
+VELVET = (92, 34, 146)
+VELVET_D = (52, 16, 88)
+ERMINE = (246, 244, 238)
+
+
+def royal_cape_paint(face, x, y, w, h):
+    if face in ("west", "east", "top", "bottom"):
+        return shade(GOLD, 0.9) + (255,)
+    if x == 0 or x == w - 1 or y == h - 1:
+        return shade(GOLD, 0.95 + 0.1 * noise(x, y, 13)) + (255,)
+    if face == "north":  # 안쪽 (몸 쪽): 짙은 보라
+        return shade(VELVET_D, 0.9 + 0.12 * noise(x, y, 14)) + (255,)
+    # 뒤쪽: 금 왕관 문장 (가운데 위) · 아래로 갈수록 어둡게 · 세로 주름 · 아래 금 띠 위 한 줄 금
+    cx = (w - 1) / 2
+    if 3 <= y <= 6 and abs(x - cx) <= 2.5:
+        if y == 6 or (y == 5 and abs(x - cx) <= 2.5) or (y in (3, 4) and round(abs(x - cx) * 2) % 2 == 1):
+            return shade(GOLD_L if y < 5 else GOLD, 1.0) + (255,)
+    if y == h - 3:
+        return shade(GOLD_D, 1.0) + (255,)
+    k = 0.92 + 0.1 * noise(x, y, 15) - 0.18 * (y / h) - (0.08 if x % 3 == 1 else 0)
+    return shade(VELVET, k) + (255,)
+
+
+def ermine_paint(face, x, y, w, h):
+    spot = (x + 2 * y) % 4 == 0 and y % 2 == 0
+    if spot and face not in ("bottom",):
+        return (26, 22, 28, 255)
+    return shade(ERMINE, 0.94 + 0.08 * noise(x, y, 17)) + (255,)
+
+
+def royal_cape():
+    """왕실 망토: 보라 벨벳 (금테 · 금 왕관 문장 · 아래 금 줄) + 어깨를 두른 흰 담비털 깃 (검은 점 — 몸 뼈, 갑옷보다 조금 밖)"""
+    d = Design("royal_cape", 64, 32)
+    d.bone("body", pivot=(0, 24, 0))
+    d.bone("fw_cape", "body", pivot=(0, 24, 3.2), rotation=(6, 0, 0))
+    d.cube("fw_cape", (-5, 8, 3.2), (10, 16, 1), royal_cape_paint)
+    d.cube("body", (-5.5, 22.5, -3.5), (11, 2, 7), ermine_paint)
+    return d
+
+
 SAMPLE_DESIGNS = {"crown": crown, "halo": halo, "wizard_hat": wizard_hat, "crimson_cape": crimson_cape,
+                  "phoenix_wings": phoenix_wings, "frost_wings": frost_wings, "royal_cape": royal_cape,
+                  "cat_ears": cat_ears, "devil_horns": devil_horns, "flower_crown": flower_crown, "ice_crown": ice_crown,
                   "angel_wings": lambda: wings("angel_wings"), "demon_wings": lambda: wings("demon_wings", demon=True), "fairy_wings": fairy_wings}
 
 
@@ -821,6 +1118,14 @@ def fit_icon(img, pad=2):
     return outline(out)
 
 
+def translucent_icon_tex(tex):
+    """반투명 모델의 아이콘용 텍스처: 아이콘 그림은 알파를 있음 / 없음으로만 그리므로, 비치는 만큼 어둡게 (어두운 바탕 위에 비친 것처럼 — 가장자리와 안쪽이 구별되게)"""
+    a = np.array(tex.convert("RGBA")).astype(np.float64)
+    k = 0.4 + 0.6 * (a[..., 3:4] / 255.0)
+    a[..., :3] *= k
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8), "RGBA")
+
+
 def model_icon(model_json, tex, glow, yaw, pitch):
     mesh = cv.Mesh()
     mesh.add_model(model_json, tex, glow_img=glow)
@@ -831,7 +1136,63 @@ def model_icon(model_json, tex, glow, yaw, pitch):
     return fit_icon(img)
 
 
-def aura_icon(colors):
+def heart_poly(cx, cy, size, steps=40):
+    """하트 모양 점들 (가운데 cx, cy · 대략 너비 size)"""
+    pts = []
+    for i in range(steps):
+        t = 2 * math.pi * i / steps
+        x = 16 * math.sin(t) ** 3
+        y = 13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)
+        pts.append((cx + x * size / 34, cy - y * size / 34))
+    return pts
+
+
+def aura_icon_kind(kind, colors):
+    """0.15.0 오라 새 종류 아이콘: petals (꽃잎 넷) · lightning (번개) · hearts (하트 둘) · shadow (어두운 연기 + 보랏빛 불티)"""
+    img = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    cols = [tuple(int(c * 255) for c in col) for col in colors]
+    if kind == "petals":
+        for (x, y, ang, sz, ci) in ((40, 36, 30, 26, 0), (86, 30, -20, 22, 1), (62, 68, 60, 30, 2), (30, 90, -40, 20, 1), (96, 84, 15, 24, 0)):
+            petal = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+            pd = ImageDraw.Draw(petal)
+            pd.ellipse((32 - sz * 0.42, 32 - sz, 32 + sz * 0.42, 32 + sz), fill=cols[ci % len(cols)] + (255,))
+            pd.polygon([(32, 32 - sz - 2), (28, 32 - sz + 6), (36, 32 - sz + 6)], fill=(0, 0, 0, 0))  # 끝 홈
+            pd.line((32, 32 - sz + 8, 32, 32 + sz - 6), fill=tuple(int(c * 0.85) for c in cols[ci % len(cols)]) + (255,), width=2)
+            petal = petal.rotate(ang, resample=Image.BICUBIC)
+            img.alpha_composite(petal, (x - 32, y - 32))
+    elif kind == "lightning":
+        bolt = [(70, 6), (40, 62), (62, 62), (44, 122), (92, 50), (68, 50), (90, 6)]
+        glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        ImageDraw.Draw(glow).polygon(bolt, fill=cols[0] + (255,))
+        from PIL import ImageFilter
+        glow = glow.filter(ImageFilter.GaussianBlur(5))
+        img.alpha_composite(glow)
+        d = ImageDraw.Draw(img)
+        d.polygon(bolt, fill=(255, 255, 255, 255), outline=cols[0] + (255,))
+        for (x, y) in ((24, 30), (104, 92), (20, 100)):
+            d.line((x - 8, y, x + 8, y), fill=cols[0] + (255,), width=3)
+            d.line((x, y - 8, x, y + 8), fill=cols[0] + (255,), width=3)
+    elif kind == "hearts":
+        d.polygon(heart_poly(54, 66, 84), fill=cols[0] + (255,))
+        d.polygon(heart_poly(46, 58, 30), fill=(255, 255, 255, 120))
+        d.polygon(heart_poly(98, 30, 40), fill=cols[1 % len(cols)] + (255,))
+        d.polygon(heart_poly(100, 98, 26), fill=cols[2 % len(cols)] + (255,))
+    elif kind == "shadow":
+        for (x, y, r, a) in ((64, 92, 40, 230), (44, 64, 30, 200), (84, 58, 28, 200), (62, 34, 22, 170)):
+            d.ellipse((x - r, y - r * 0.8, x + r, y + r * 0.8), fill=cols[1 % len(cols)] + (a,))
+        for (x, y, r) in ((64, 96, 26), (50, 70, 16), (80, 64, 14)):
+            d.ellipse((x - r, y - r * 0.8, x + r, y + r * 0.8), fill=cols[0] + (255,))
+        spark = cols[-1]
+        for (x, y, s_) in ((30, 28, 9), (100, 24, 7), (98, 92, 8), (24, 96, 6)):
+            d.polygon([(x, y - s_), (x + s_ * 0.3, y), (x, y + s_), (x - s_ * 0.3, y)], fill=spark + (255,))
+            d.polygon([(x - s_, y), (x, y + s_ * 0.3), (x + s_, y), (x, y - s_ * 0.3)], fill=spark + (255,))
+    return fit_icon(img, pad=1)
+
+
+def aura_icon(colors, kind=None):
+    if kind in ("petals", "lightning", "hearts", "shadow"):
+        return aura_icon_kind(kind, colors)
     img = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     cols = [tuple(int(c * 255) for c in col) for col in colors]
@@ -918,10 +1279,10 @@ def build(defs):
                 m, tex, glow = models_done[model]
                 if icon is None:
                     yaw, pitch = ICON_VIEW.get(slot, (-28, 10))
-                    icon = model_icon(m, tex, glow, yaw, pitch)
+                    icon = model_icon(m, translucent_icon_tex(tex) if it.get("translucent") else tex, glow, yaw, pitch)
             elif slot == "aura":
                 if icon is None:
-                    icon = aura_icon(it["aura"]["colors"])
+                    icon = aura_icon(it["aura"]["colors"], it["aura"].get("kind"))
             elif slot == "title":
                 if icon is None:
                     icon = title_icon(it.get("color", [1, 1, 1]))

@@ -10,7 +10,8 @@
 - src/main/java/mmorpg/fabric/FxSprite.java                               (일반 그림 파티클의 모양 · 움직임: 장 수 · 크기 배율 · 커짐 · 끌림 · 사라짐 · 방향)
 활 빛줄기 · 지나간 자리 · 불꽃 · 마법진은 FxParticle 이 따로 그림 (FxOptions.ARROW_* · MAGIC_*) — 그림만 여기서 만듦.
 무기 빛 알갱이 (FxOptions.GLINT) 는 바닐라 파티클 그림을 그대로 씀 (애드온도 바닐라 particles.png 의 칸) — 목록에 이름만 넣음.
-자바 전용 그림 (JAVA_ONLY — 애드온에 없음, 여기서 그림): twinkle (네 갈래 반짝임 — FxOptions.GLINT_TEXTURES[TWINKLE], 0.14.2 요정 날개 가루).
+자바 전용 그림 (JAVA_ONLY — 애드온에 없음, 여기서 그림): twinkle (네 갈래 반짝임 — FxOptions.GLINT_TEXTURES[TWINKLE], 0.14.2 요정 날개 가루),
+  petal (꽃잎 — PETAL, 0.15.0 벚꽃 오라) · heart (하트 — HEART, 0.15.0 하트 오라).
   python3 tools/fx_textures.py --java-only   # 애드온 없이 자바 전용 그림만 다시 (fx.json 에 없으면 이름을 더함)
 """
 import json
@@ -58,8 +59,50 @@ def twinkle_texture():
     return img
 
 
+def petal_texture():
+    """꽃잎 (흰색 — 색은 파티클이 곱함): 끝이 살짝 패인 갸름한 잎 + 가운데 옅은 결 · 가장자리 조금 어둡게 (0.15.0 벚꽃 오라)"""
+    n = 32
+    img = Image.new("RGBA", (n, n), (255, 255, 255, 0))
+    px = img.load()
+    c = (n - 1) / 2
+    for y in range(n):
+        for x in range(n):
+            dx, dy = (x - c) / (n / 2), (y - c) / (n / 2)
+            # 세로로 긴 타원 (반폭 0.5 · 반높이 0.9), 위 끝 가운데가 패임
+            e = (dx / 0.5) ** 2 + (dy / 0.9) ** 2
+            notch = dy < -0.62 and abs(dx) < 0.13 * (1 + (dy + 0.9) * 2)
+            if e > 1 or notch:
+                continue
+            edge = max(0.0, (e - 0.7) / 0.3)
+            vein = math.exp(-(dx / 0.06) ** 2) * (1 - abs(dy)) * 0.25
+            v = int(255 * (1 - 0.18 * edge - vein))
+            a = int(255 * min(1.0, (1 - e) * 6))
+            px[x, y] = (v, v, v, a)
+    return img
+
+
+def heart_texture():
+    """하트 (흰색 — 색은 파티클이 곱함): 가장자리 조금 어둡게 · 왼쪽 위 반짝임 (0.15.0 하트 오라)"""
+    n = 32
+    img = Image.new("RGBA", (n, n), (255, 255, 255, 0))
+    px = img.load()
+    for y in range(n):
+        for x in range(n):
+            u = (x - (n - 1) / 2) / (n / 2) * 1.25
+            v = -((y - (n - 1) / 2) / (n / 2) * 1.25 - 0.1)
+            f = (u * u + v * v - 1) ** 3 - u * u * v ** 3  # 하트 곡선 (안 = 음수)
+            if f > 0:
+                continue
+            k = min(1.0, -f * 8)
+            shine = math.exp(-(((u + 0.45) / 0.18) ** 2 + ((v - 0.45) / 0.14) ** 2))
+            g = int(255 * (0.78 + 0.22 * k))
+            g = min(255, int(g + 120 * shine))
+            px[x, y] = (g, g, g, int(255 * min(1.0, -f * 30)))
+    return img
+
+
 # 자바 전용 그림 (애드온에 없음): 이름 → 그리는 함수
-JAVA_ONLY = {"twinkle": twinkle_texture}
+JAVA_ONLY = {"twinkle": twinkle_texture, "petal": petal_texture, "heart": heart_texture}
 
 
 def java_only():

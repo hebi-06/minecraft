@@ -24,7 +24,8 @@ import org.joml.Vector3f;
  * - 불꽃 · 마법진 · 번쩍임 (rotate_xyz): 카메라를 향한 사각형 + 돌린 각
  * - 일반 그림 (FxSprite — 참격 · X · 방패 고리 · 폭발: 카메라를 향함, 충격파: 땅에 눕힘): 여러 장이면 수명 동안 차례로, 끌림으로 느려짐
  * - 무기 빛 알갱이 (GLINT — 애드온 weapon_fx): 바닐라 파티클 그림 (generic_0 · flame), 위로 가속 · 끌림, 줄어들며 사라짐
- *   (twinkle — 0.14.2 요정 날개 가루: 네 갈래 반짝임, 커졌다 작아지며 돎)
+ *   (twinkle — 0.14.2 요정 날개 가루: 네 갈래 반짝임, 커졌다 작아지며 돎 · petal — 0.15.0 벚꽃잎: 빙글빙글 · 좌우로 흔들리며 떨어짐 ·
+ *   heart — 0.15.0 하트: 튀어나오듯 커졌다 흐려짐)
  * 모두 밝기 최대 (빛), 반투명 섞기. 그림은 이름으로 찾음 (assets/mmorpg/particles/fx.json).
  */
 public final class FxParticle extends SingleQuadParticle {
@@ -97,7 +98,13 @@ public final class FxParticle extends SingleQuadParticle {
             along = o.speed() * t;
             up = 0.5 * o.accel() * t * t;
         }
-        return start.add(dir.scale(along)).add(0, up, 0);
+        Vec3 p = start.add(dir.scale(along)).add(0, up, 0);
+        if (o.sprite() == FxOptions.PETAL) {
+            // 꽃잎: 좌우로 하늘하늘 (처음 각으로 엇갈림)
+            double ph = o.spin() * Mth.DEG_TO_RAD;
+            p = p.add(Math.sin(t * 2.6 + ph) * 0.18, 0, Math.cos(t * 2.1 + ph) * 0.18);
+        }
+        return p;
     }
 
     /** t 초 동안 간 거리: 끌림이 있으면 처음 속도 / 끌림 × (1 - e^(-끌림 × t)) (애드온 linear_drag_coefficient) */
@@ -180,6 +187,16 @@ public final class FxParticle extends SingleQuadParticle {
                     // 반짝임: 커졌다 작아지며 (수명의 가운데에서 가장 큼) 천천히 돎
                     float k = Mth.sin(Mth.PI * tn);
                     billboard(state, camera, rx, ry, rz, o.size() * (0.2F + 0.8F * k), sec * 140F, tex(FxOptions.GLINT_TEXTURES[t]), a * Math.min(1F, 0.3F + k));
+                } else if (t == FxOptions.PETAL) {
+                    // 꽃잎: 크기 그대로 · 빙글빙글 (처음 각에 따라 시계 · 반시계) · 끝 25% 동안 흐려짐
+                    float turn = ((int) o.spin()) % 2 == 0 ? 150F : -150F;
+                    float fade = tn > 0.75F ? 1 - (tn - 0.75F) / 0.25F : 1F;
+                    billboard(state, camera, rx, ry, rz, o.size(), o.spin() + sec * turn, tex(FxOptions.GLINT_TEXTURES[t]), a * fade);
+                } else if (t == FxOptions.HEART) {
+                    // 하트: 처음 1/6 동안 튀어나오듯 커짐 · 60% 부터 흐려짐
+                    float pop = Math.min(1F, tn * 6F);
+                    float fade = tn > 0.6F ? 1 - (tn - 0.6F) / 0.4F : 1F;
+                    billboard(state, camera, rx, ry, rz, o.size() * (0.4F + 0.6F * pop), 0F, tex(FxOptions.GLINT_TEXTURES[t]), a * fade);
                 } else {
                     billboard(state, camera, rx, ry, rz, o.size() * (1 - tn), 0F, tex(FxOptions.GLINT_TEXTURES[t]), a);
                 }

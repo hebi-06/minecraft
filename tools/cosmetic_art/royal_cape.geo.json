@@ -1,0 +1,72 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.mmorpg.royal_cape",
+    "texture_width": 64,
+    "texture_height": 32
+   },
+   "bones": [
+    {
+     "name": "body",
+     "pivot": [
+      0.0,
+      24.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -5.5,
+        22.5,
+        -3.5
+       ],
+       "size": [
+        11,
+        2,
+        7
+       ],
+       "uv": [
+        22,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "fw_cape",
+     "pivot": [
+      0.0,
+      24.0,
+      3.2
+     ],
+     "parent": "body",
+     "rotation": [
+      6.0,
+      0.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -5.0,
+        8.0,
+        3.2
+       ],
+       "size": [
+        10,
+        16,
+        1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

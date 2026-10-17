@@ -1,0 +1,86 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.mmorpg.phoenix_wings",
+    "texture_width": 64,
+    "texture_height": 64
+   },
+   "bones": [
+    {
+     "name": "body",
+     "pivot": [
+      0.0,
+      24.0,
+      0.0
+     ]
+    },
+    {
+     "name": "fw_wing_right",
+     "pivot": [
+      -1.0,
+      22.0,
+      2.8
+     ],
+     "parent": "body",
+     "rotation": [
+      0.0,
+      -24.0,
+      -8.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -17.0,
+        7.0,
+        2.8
+       ],
+       "size": [
+        16,
+        21,
+        1
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "fw_wing_left",
+     "pivot": [
+      1.0,
+      22.0,
+      2.8
+     ],
+     "parent": "body",
+     "rotation": [
+      0.0,
+      24.0,
+      8.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        1.0,
+        7.0,
+        2.8
+       ],
+       "size": [
+        16,
+        21,
+        1
+       ],
+       "uv": [
+        0,
+        22
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

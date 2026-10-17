@@ -30,8 +30,8 @@ public final class CosmeticDefs {
     /** 오라: kind (embers · orbit · frost) · 초당 수 · 색들 (0~1) */
     public record Aura(String kind, double rate, List<double[]> colors) {}
 
-    /** 등 장식의 반짝이는 가루 (0.14.2 — 요정의 날개): 초당 수 (움직이면 더) · 색들 (0~1) */
-    public record Dust(double rate, List<double[]> colors) {}
+    /** 등 장식의 가루 (0.14.2 — 요정의 날개): 초당 수 (움직이면 더) · 색들 (0~1) · style (sparkle 떨어지는 반짝임 · ember 피어오르는 불티 — 0.15.0) */
+    public record Dust(double rate, List<double[]> colors, String style) {}
 
     /**
      * 장식 하나. weapon · design = 무기 스킨 (무기 종류 · 디자인), model = 갑옷 스킨 · 머리 · 등 장식 모델 (assets/mmorpg/cosmetic/&lt;model&gt;.json),
@@ -129,7 +129,7 @@ public final class CosmeticDefs {
                 List<double[]> cols = new ArrayList<>();
                 if (dm.get("colors") instanceof List<?> cl) for (Object c : cl) cols.add(color(c));
                 if (cols.isEmpty()) cols.add(new double[] {1, 1, 1});
-                dust = new Dust(dm.get("rate") instanceof Number n ? Math.max(0, n.doubleValue()) : 8, List.copyOf(cols));
+                dust = new Dust(dm.get("rate") instanceof Number n ? Math.max(0, n.doubleValue()) : 8, List.copyOf(cols), str(dm.get("style"), "sparkle"));
             }
             out.put(e.getKey(), new Def(e.getKey(), slot, str(o.get("name"), e.getKey()), o.get("price") instanceof Number n ? Math.max(0, n.intValue()) : 0,
                     List.copyOf(desc), color(o.get("color")), strOrNull(o.get("weapon")), strOrNull(o.get("design")), strOrNull(o.get("model")),

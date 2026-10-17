@@ -1,0 +1,293 @@
+{
+ "tw": 64,
+ "th": 32,
+ "texture": "mmorpg:textures/entity/cosmetic/devil_horns.png",
+ "emissive": "mmorpg:textures/entity/cosmetic/devil_horns.glow.png",
+ "parts": {
+  "head": {
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [],
+   "children": {
+    "horn_right_0": {
+     "pivot": [
+      -2.5,
+      -7.5,
+      -2.5
+     ],
+     "rot": [
+      -12.0,
+      -0.0,
+      -18.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -1.0,
+        -3.0,
+        -1.0
+       ],
+       "size": [
+        2,
+        3,
+        2
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {
+      "horn_right_1": {
+       "pivot": [
+        0.0,
+        -3.0,
+        0.0
+       ],
+       "rot": [
+        -22.0,
+        -0.0,
+        -6.0
+       ],
+       "cubes": [
+        {
+         "from": [
+          -1.0,
+          -2.0,
+          -1.0
+         ],
+         "size": [
+          2,
+          2,
+          2
+         ],
+         "uv": [
+          16,
+          0
+         ],
+         "inflate": 0,
+         "mirror": false
+        }
+       ],
+       "children": {
+        "horn_right_2": {
+         "pivot": [
+          0.0,
+          -2.0,
+          0.0
+         ],
+         "rot": [
+          -30.0,
+          -0.0,
+          8.0
+         ],
+         "cubes": [
+          {
+           "from": [
+            -0.5,
+            -2.0,
+            -0.5
+           ],
+           "size": [
+            1,
+            2,
+            1
+           ],
+           "uv": [
+            32,
+            0
+           ],
+           "inflate": 0,
+           "mirror": false
+          }
+         ],
+         "children": {
+          "horn_right_3": {
+           "pivot": [
+            0.0,
+            -2.0,
+            0.0
+           ],
+           "rot": [
+            -30.0,
+            -0.0,
+            -0.0
+           ],
+           "cubes": [
+            {
+             "from": [
+              -0.5,
+              -1.0,
+              -0.5
+             ],
+             "size": [
+              1,
+              1,
+              1
+             ],
+             "uv": [
+              40,
+              0
+             ],
+             "inflate": 0,
+             "mirror": false
+            }
+           ],
+           "children": {}
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "horn_left_0": {
+     "pivot": [
+      2.5,
+      -7.5,
+      -2.5
+     ],
+     "rot": [
+      -12.0,
+      -0.0,
+      18.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -1.0,
+        -3.0,
+        -1.0
+       ],
+       "size": [
+        2,
+        3,
+        2
+       ],
+       "uv": [
+        8,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {
+      "horn_left_1": {
+       "pivot": [
+        0.0,
+        -3.0,
+        0.0
+       ],
+       "rot": [
+        -22.0,
+        -0.0,
+        6.0
+       ],
+       "cubes": [
+        {
+         "from": [
+          -1.0,
+          -2.0,
+          -1.0
+         ],
+         "size": [
+          2,
+          2,
+          2
+         ],
+         "uv": [
+          24,
+          0
+         ],
+         "inflate": 0,
+         "mirror": false
+        }
+       ],
+       "children": {
+        "horn_left_2": {
+         "pivot": [
+          0.0,
+          -2.0,
+          0.0
+         ],
+         "rot": [
+          -30.0,
+          -0.0,
+          -8.0
+         ],
+         "cubes": [
+          {
+           "from": [
+            -0.5,
+            -2.0,
+            -0.5
+           ],
+           "size": [
+            1,
+            2,
+            1
+           ],
+           "uv": [
+            36,
+            0
+           ],
+           "inflate": 0,
+           "mirror": false
+          }
+         ],
+         "children": {
+          "horn_left_3": {
+           "pivot": [
+            0.0,
+            -2.0,
+            0.0
+           ],
+           "rot": [
+            -30.0,
+            -0.0,
+            -0.0
+           ],
+           "cubes": [
+            {
+             "from": [
+              -0.5,
+              -1.0,
+              -0.5
+             ],
+             "size": [
+              1,
+              1,
+              1
+             ],
+             "uv": [
+              44,
+              0
+             ],
+             "inflate": 0,
+             "mirror": false
+            }
+           ],
+           "children": {}
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

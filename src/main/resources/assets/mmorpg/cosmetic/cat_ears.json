@@ -1,0 +1,196 @@
+{
+ "tw": 64,
+ "th": 32,
+ "texture": "mmorpg:textures/entity/cosmetic/cat_ears.png",
+ "parts": {
+  "head": {
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [],
+   "children": {
+    "fw_twitch_right": {
+     "pivot": [
+      -2.5,
+      -8.0,
+      -1.0
+     ],
+     "rot": [
+      0.0,
+      -0.0,
+      -10.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -2.0,
+        -1.0,
+        -0.5
+       ],
+       "size": [
+        4,
+        1,
+        1
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      },
+      {
+       "from": [
+        -1.5,
+        -2.0,
+        -0.5
+       ],
+       "size": [
+        3,
+        1,
+        1
+       ],
+       "uv": [
+        10,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      },
+      {
+       "from": [
+        -1.0,
+        -3.0,
+        -0.5
+       ],
+       "size": [
+        2,
+        1,
+        1
+       ],
+       "uv": [
+        18,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      },
+      {
+       "from": [
+        -0.5,
+        -4.0,
+        -0.5
+       ],
+       "size": [
+        1,
+        1,
+        1
+       ],
+       "uv": [
+        24,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    },
+    "fw_twitch_left": {
+     "pivot": [
+      2.5,
+      -8.0,
+      -1.0
+     ],
+     "rot": [
+      0.0,
+      -0.0,
+      10.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -2.0,
+        -1.0,
+        -0.5
+       ],
+       "size": [
+        4,
+        1,
+        1
+       ],
+       "uv": [
+        28,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      },
+      {
+       "from": [
+        -1.5,
+        -2.0,
+        -0.5
+       ],
+       "size": [
+        3,
+        1,
+        1
+       ],
+       "uv": [
+        38,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      },
+      {
+       "from": [
+        -1.0,
+        -3.0,
+        -0.5
+       ],
+       "size": [
+        2,
+        1,
+        1
+       ],
+       "uv": [
+        46,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      },
+      {
+       "from": [
+        -0.5,
+        -4.0,
+        -0.5
+       ],
+       "size": [
+        1,
+        1,
+        1
+       ],
+       "uv": [
+        52,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    }
+   }
+  }
+ }
+}

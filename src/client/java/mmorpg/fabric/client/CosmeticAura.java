@@ -20,6 +20,11 @@ import net.minecraft.world.phys.Vec3;
  * <li>embers (불씨): 발밑 고리 (반지름 0.3 ~ 0.65) 에서 빛나는 불꽃이 피어오르며 작아짐 + 작은 불꽃 그림 · 0.8초마다 발밑 고리</li>
  * <li>orbit (별빛): 빛 둘이 허리 높이에서 몸 둘레를 돎 (2초에 한 바퀴 · 위아래로 출렁 · 흰 심지) — 지나간 자리에 꼬리, 반짝임이 떠오름</li>
  * <li>frost (서리): 머리 위 (반지름 0.85) 에서 눈송이가 흔들리며 내림 + 1.2초마다 발밑 서리 고리 · 발밑 반짝임</li>
+ * <li>petals (벚꽃 — 0.15.0): 머리 위 (반지름 0.2 ~ 1.1) 에서 꽃잎이 빙글빙글 · 좌우로 하늘하늘 떨어짐</li>
+ * <li>lightning (번개 — 0.15.0): 초당 rate 번, 몸 둘레 (반지름 0.45 ~ 0.75) 에 짧은 꺾은선 번개 (3 ~ 4 마디 · 0.12 ~ 0.22초) + 끝에 흰 불티,
+ * 0.5초마다 몸 둘레 옅은 번쩍임</li>
+ * <li>hearts (하트 — 0.15.0): 몸 둘레에서 하트가 튀어나오듯 생겨 천천히 피어오르며 흐려짐</li>
+ * <li>shadow (그림자 — 0.15.0): 발밑 둘레에서 어두운 연기가 피어오르며 커지고 흐려짐 · 보랏빛 불티 (마지막 색) · 1.5초마다 발밑 어두운 고리</li>
  * </ul>
  * 등 장식의 반짝이는 가루 (dust — 0.14.2 요정의 날개, {@link #emitDust}) 도 여기서 (오라와 같은 조건).
  * 투명 · 관전 중이면 뿌리지 않음. 파티클 설정이 '최소' 면 뿌리지 않고, '줄임' 이면 반만 (orbit 의 도는 빛은 두 틱마다 — 꼬리를 길게).
@@ -102,6 +107,68 @@ public final class CosmeticAura {
                     add(level, spark(new Vec3(0, 1, 0), 0.15 + r.nextDouble() * 0.15, 0.09 + r.nextDouble() * 0.05, 0.9, 0.3, argb(pick(cols, r), 1)), at);
                 }
             }
+            case "petals" -> {
+                // 꽃잎: 머리 위에서 빙글빙글 · 하늘하늘 떨어짐 (처음 각 0 ~ 359 — 도는 쪽 · 흔들림이 엇갈림)
+                for (int i = 0; i < n; i++) {
+                    double ang = r.nextDouble() * Math.PI * 2;
+                    double rad = 0.2 + r.nextDouble() * 0.9;
+                    Vec3 at = feet.add(Math.cos(ang) * rad, h + 0.1 + r.nextDouble() * 0.7, Math.sin(ang) * rad);
+                    Vec3 drift = new Vec3((r.nextDouble() - 0.5) * 0.7, -1, (r.nextDouble() - 0.5) * 0.7).normalize();
+                    add(level, FxOptions.glint(FxOptions.PETAL, drift, 0.45 + r.nextDouble() * 0.25, 0, 0, 0.07 + r.nextDouble() * 0.04, 2.2 + r.nextDouble() * 0.8,
+                            r.nextInt(360), argb(pick(cols, r), 1)), at);
+                }
+            }
+            case "lightning" -> {
+                // 번개: 몸 둘레에 짧은 꺾은선 (마디마다 빛줄기 — 제자리) + 끝에 흰 불티
+                for (int i = 0; i < n; i++) {
+                    double ang = r.nextDouble() * Math.PI * 2;
+                    double rad = 0.45 + r.nextDouble() * 0.3;
+                    Vec3 p = feet.add(Math.cos(ang) * rad, 0.2 + r.nextDouble() * Math.max(0.1, h - 0.1), Math.sin(ang) * rad);
+                    int segs = 3 + r.nextInt(2);
+                    int color = argb(pick(cols, r), 1);
+                    float life = (float) (0.12 + r.nextDouble() * 0.1);
+                    for (int k = 0; k < segs; k++) {
+                        Vec3 step = new Vec3((r.nextDouble() - 0.5) * 0.5, (r.nextBoolean() ? 1 : -1) * (0.12 + r.nextDouble() * 0.15), (r.nextDouble() - 0.5) * 0.5);
+                        Vec3 q = p.add(step);
+                        add(level, new FxOptions(FxOptions.ARROW_SHOT, -1, step, 0F, (float) (step.length() / 2), 0.025F, life, 0F, 0F, 0F, 1F, color),
+                                p.add(q).scale(0.5));
+                        p = q;
+                    }
+                    add(level, spark(Vec3.ZERO, 0, 0.09, 0.22, 0.2, argb(new double[] {1, 1, 1}, 1)), p);
+                }
+                if (tick % 10 == 0) add(level, spark(Vec3.ZERO, 0, 0.55, 0.18, 1.3, argb(cols.get(0), 0.3)), feet.add(0, h * 0.55, 0));
+            }
+            case "hearts" -> {
+                // 하트: 몸 둘레에서 튀어나오듯 생겨 천천히 피어오름
+                for (int i = 0; i < n; i++) {
+                    double ang = r.nextDouble() * Math.PI * 2;
+                    double rad = 0.4 + r.nextDouble() * 0.45;
+                    Vec3 at = feet.add(Math.cos(ang) * rad, 0.3 + r.nextDouble() * h * 0.9, Math.sin(ang) * rad);
+                    Vec3 up = new Vec3((r.nextDouble() - 0.5) * 0.25, 1, (r.nextDouble() - 0.5) * 0.25).normalize();
+                    add(level, FxOptions.glint(FxOptions.HEART, up, 0.35 + r.nextDouble() * 0.2, 0, 0.6, 0.1 + r.nextDouble() * 0.05, 1.3 + r.nextDouble() * 0.5,
+                            argb(pick(cols, r), 1)), at);
+                }
+            }
+            case "shadow" -> {
+                // 어두운 연기: 발밑 둘레에서 피어오르며 커지고 흐려짐 (마지막 색은 불티 — 연기는 그 앞 색들)
+                int dark = Math.max(1, cols.size() - 1);
+                for (int i = 0; i < n; i++) {
+                    double ang = r.nextDouble() * Math.PI * 2;
+                    double rad = 0.15 + r.nextDouble() * 0.5;
+                    Vec3 at = feet.add(Math.cos(ang) * rad, 0.05 + r.nextDouble() * 0.5, Math.sin(ang) * rad);
+                    Vec3 dir = new Vec3(Math.cos(ang) * 0.15, 1, Math.sin(ang) * 0.15).normalize();
+                    add(level, spark(dir, 0.3 + r.nextDouble() * 0.3, 0.14 + r.nextDouble() * 0.1, 1.1 + r.nextDouble() * 0.6, 2.2,
+                            argb(cols.get(r.nextInt(dark)), 0.75)), at);
+                }
+                if (r.nextFloat() < 0.5F * scale) {
+                    double ang = r.nextDouble() * Math.PI * 2;
+                    Vec3 at = feet.add(Math.cos(ang) * 0.5, 0.1 + r.nextDouble() * h * 0.7, Math.sin(ang) * 0.5);
+                    add(level, spark(new Vec3(0, 1, 0), 0.4, 0.06, 0.9, 0.3, argb(cols.get(cols.size() - 1), 1)), at);
+                }
+                if (tick % 30 == 0) {
+                    add(level, FxOptions.ofSprite(FxSprite.SHOCK_RING, Vec3.ZERO, 0, 0.6, 1.4, r.nextFloat() * 360, argb(cols.get(0), 0.6)), feet.add(0, 0.05, 0));
+                }
+            }
             case "frost" -> {
                 // 눈송이: 머리 위에서 천천히 흔들리며 내림
                 for (int i = 0; i < n; i++) {
@@ -148,6 +215,7 @@ public final class CosmeticAura {
     /**
      * 반짝이는 가루 (등 장식 dust — 요정의 날개): 날개 자리 (등 뒤 · 허리 ~ 머리 위 · 양옆으로 1블록 — 바깥일수록 뒤로) 에서 천천히 떨어짐.
      * 네 갈래 반짝임 (커졌다 작아지며 돎) 이 반쯤, 나머지는 작은 빛. 초당 rate 개, 움직이면 더 많이 (달리면 2.5배 — 지나간 자리에 남음).
+     * style ember (불사조 날개 — 0.15.0) 는 같은 자리에서 불꽃 · 불티가 피어오름.
      */
     static void emitDust(ClientLevel level, RandomSource r, Avatar a, CosmeticDefs.Dust dust, int tick, float scale) {
         double move = Math.min(1, Math.hypot(a.getX() - a.xo, a.getZ() - a.zo) / 0.22); // 이번 틱에 움직인 거리 (남의 플레이어도 — 달리기 약 0.28)
@@ -164,8 +232,19 @@ public final class CosmeticAura {
             double up = (0.55 + r.nextDouble() * 1.65) * k;
             double back = 0.25 + Math.abs(side) * 0.4 + r.nextDouble() * 0.1;
             Vec3 at = feet.add(right.scale(side)).add(fwd.scale(-back)).add(0, up, 0);
-            Vec3 drift = new Vec3((r.nextDouble() - 0.5) * 0.6, -1, (r.nextDouble() - 0.5) * 0.6).normalize();
             int color = argb(pick(cols, r), 1);
+            if ("ember".equals(dust.style())) {
+                // 불티 (불사조 날개): 바닐라 불꽃 그림이 위로 피어오르며 작아짐 · 작은 빛
+                Vec3 rise = new Vec3((r.nextDouble() - 0.5) * 0.4, 1, (r.nextDouble() - 0.5) * 0.4).normalize();
+                if (r.nextFloat() < 0.55F) {
+                    add(level, FxOptions.glint(1, rise, 0.25 + r.nextDouble() * 0.3, 0.5, 1.2, 0.05 + r.nextDouble() * 0.04, 0.6 + r.nextDouble() * 0.5, color), at);
+                } else {
+                    add(level, spark(rise, 0.35 + r.nextDouble() * 0.35, 0.035 + r.nextDouble() * 0.03, 0.7 + r.nextDouble() * 0.5, 0.3, color), at);
+                }
+                dustSpawned++;
+                continue;
+            }
+            Vec3 drift = new Vec3((r.nextDouble() - 0.5) * 0.6, -1, (r.nextDouble() - 0.5) * 0.6).normalize();
             if (r.nextFloat() < 0.45F) {
                 add(level, FxOptions.glint(FxOptions.TWINKLE, drift, 0.15 + r.nextDouble() * 0.15, 0, 0.5, 0.06 + r.nextDouble() * 0.04,
                         0.6 + r.nextDouble() * 0.5, color), at);
@@ -186,6 +265,10 @@ public final class CosmeticAura {
         return switch (kind) {
             case "orbit" -> "몸 둘레를 도는 빛";
             case "frost" -> "내리는 눈송이 · 서리 고리";
+            case "petals" -> "흩날리는 벚꽃잎";
+            case "lightning" -> "몸 둘레의 번개";
+            case "hearts" -> "피어오르는 하트";
+            case "shadow" -> "피어오르는 그림자 연기";
             default -> "피어오르는 불씨";
         };
     }

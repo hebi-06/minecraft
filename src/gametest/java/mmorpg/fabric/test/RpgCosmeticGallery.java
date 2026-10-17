@@ -99,6 +99,9 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             check(ctx.computeOnClient(mc -> CosmeticModels.animCount("halo")) == 2, "halo bob + spin bones");
             check(ctx.computeOnClient(mc -> CosmeticModels.animCount("crimson_cape")) == 1, "cape bone");
             check(ctx.computeOnClient(mc -> CosmeticModels.animCount("fairy_wings")) == 4, "fairy wing bones flutter (4 — upper · lower × 2)");
+            check(ctx.computeOnClient(mc -> CosmeticModels.animCount("cat_ears")) == 2, "cat ear bones twitch (2)");
+            check(ctx.computeOnClient(mc -> CosmeticModels.translucent("ice_crown") && CosmeticModels.translucent("frost_wings")
+                    && !CosmeticModels.translucent("phoenix_wings")), "ice crown · frost wings translucent (phoenix not)");
             check(ctx.computeOnClient(mc -> CosmeticModels.translucent("fairy_wings") && !CosmeticModels.translucent("angel_wings")),
                     "fairy wings drawn translucent (angel wings not)");
             // 등 장식은 날갯짓 · 휘날림 중에도 몸을 뚫지 않음 (0.14.3 — 날개 끝이 앞으로 꺾여 몸을 뚫던 것): 가장 앞 꼭짓점이 몸통 등 면 (z 2 픽셀) 뒤
@@ -123,6 +126,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             part(ctx, "rival_armor", () -> rivalArmor(ctx, server));
             part(ctx, "auras", () -> auras(ctx, server));
             part(ctx, "fairy", () -> fairy(ctx, server));
+            part(ctx, "looks", () -> looks(ctx, server));
             server.runOnServer(s -> {
                 ServerPlayer r = rivalId == null ? null : s.getPlayerList().getPlayer(rivalId);
                 if (r != null) s.getPlayerList().remove(r);
@@ -229,7 +233,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         check(waitServer(ctx, server, s -> "crown".equals(Cosmetics.look(me(s)).get("head")), 40), "crown worn");
         away(ctx);
         shot(ctx, "c_head_crown");
-        for (String id : List.of("halo", "wizard_hat")) {
+        for (String id : List.of("halo", "wizard_hat", "cat_ears", "devil_horns", "flower_crown", "ice_crown")) {
             int row = rowIndex(ctx, id);
             click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
             away(ctx);
@@ -247,7 +251,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         away(ctx);
         ctx.waitTicks(6);
         shot(ctx, "c_back_wings");
-        for (String id : List.of("crimson_cape", "demon_wings", "fairy_wings")) {
+        for (String id : List.of("crimson_cape", "demon_wings", "fairy_wings", "phoenix_wings", "frost_wings", "royal_cape")) {
             int row = rowIndex(ctx, id);
             click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
             away(ctx);
@@ -415,7 +419,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         viewRival(ctx, server, "near");
         hideGui(ctx, true); // 손 · 화면 칸 없이 (발밑 오라가 가리지 않게 — F1)
         try {
-            for (String id : List.of("ember_aura", "star_aura", "frost_aura")) {
+            for (String id : List.of("ember_aura", "star_aura", "frost_aura", "sakura_aura", "storm_aura", "heart_aura", "shadow_aura")) {
                 server.runOnServer(s -> Cosmetics.equip(rival(s), id));
                 ctx.waitTicks(40);
                 shot(ctx, "c_aura_" + id);
@@ -466,6 +470,38 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         }
     }
 
+    /** 0.15.0 새 장식 묶음 셋을 두 번째 플레이어가 입음 (갑옷 숨김) — 앞 · 뒤 사진, 새 칭호 (글자 ☾ ❄ ♥), 불사조 날개의 불티 */
+    private void looks(ClientGameTestContext ctx, TestServerContext server) {
+        if (rivalId == null) return;
+        String[][] sets = {
+                {"devil_horns", "phoenix_wings", "title_dark_lord", "shadow_aura"},
+                {"cat_ears", "royal_cape", "title_fairy_friend", "heart_aura"},
+                {"ice_crown", "frost_wings", "title_frost_lord", "storm_aura"},
+                {"flower_crown", "fairy_wings", "title_light_guardian", "sakura_aura"}};
+        hideGui(ctx, true);
+        try {
+            for (String[] set : sets) {
+                int dust0 = ctx.computeOnClient(mc -> CosmeticAura.dustSpawned);
+                server.runOnServer(s -> {
+                    ServerPlayer r = rival(s);
+                    Cosmetics.action(r, "hide_all", "", "");
+                    for (String id : set) Cosmetics.equip(r, id);
+                });
+                boolean got = waitFor(ctx, mc -> set[1].equals(ClientCosmetics.lookOf(rivalId).get("back")) && set[0].equals(ClientCosmetics.lookOf(rivalId).get("head")), 40);
+                check(got, "rival wears " + String.join(" · ", set));
+                hideGui(ctx, false); // 앞: 이름표 위 칭호가 보이게 (F1 이면 이름표를 그리지 않음)
+                viewRival(ctx, server, "front");
+                shot(ctx, "c_look_" + set[0] + "_front");
+                hideGui(ctx, true);
+                viewRival(ctx, server, "back_near");
+                shot(ctx, "c_look_" + set[0] + "_back");
+                if (set[1].equals("phoenix_wings")) check(ctx.computeOnClient(mc -> CosmeticAura.dustSpawned) > dust0, "phoenix embers spawned");
+            }
+        } finally {
+            hideGui(ctx, false);
+        }
+    }
+
     /** 나 (사진 찍는 플레이어) 날기 켜기 · 끄기 (위에서 보는 사진 — 서바이벌 세계) */
     private void fly(TestServerContext server, boolean on) {
         server.runOnServer(s -> {
@@ -501,9 +537,18 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
     }
 
+    /** 그 장식의 목록 줄 번호 — 6줄 밖이면 실제 마우스 휠로 굴려 보이게 함 (0.15.0 — 칸마다 8줄) */
     private int rowIndex(ClientGameTestContext ctx, String id) {
         int i = ctx.computeOnClient(mc -> mc.gui.screen() instanceof CosmeticScreen sc ? sc.rowIds().indexOf(id) : -1);
         if (i < 0) throw new AssertionError("no row " + id);
+        for (int k = 0; k < 20 && !ctx.computeOnClient(mc -> mc.gui.screen() instanceof CosmeticScreen sc && sc.rowVisible(i)); k++) {
+            double[] p = at(ctx, sc -> ((CosmeticScreen) sc).listCenter());
+            ctx.getInput().setCursorPos(p[0], p[1]);
+            ctx.waitTick();
+            boolean below = ctx.computeOnClient(mc -> mc.gui.screen() instanceof CosmeticScreen sc && sc.rowCenter(i)[1] > sc.listCenter()[1]);
+            ctx.getInput().scroll(below ? -1 : 1);
+            ctx.waitTick();
+        }
         return i;
     }
 

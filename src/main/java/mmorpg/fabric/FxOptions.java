@@ -43,9 +43,13 @@ public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size,
      * 반 크기 size 에서 수명 동안 줄어듦, 카메라를 향함. sprite = 그림 (GLINT_TEXTURES 순번 — 바닐라 파티클 그림 · 자바 전용 twinkle)
      */
     public static final int GLINT = 6;
-    public static final String[] GLINT_TEXTURES = {"generic_0", "flame", "twinkle"};
+    public static final String[] GLINT_TEXTURES = {"generic_0", "flame", "twinkle", "petal", "heart"};
     /** GLINT 그림 twinkle (네 갈래 반짝임 — 0.14.2 요정 날개 가루, tools/fx_textures.py 자바 전용): 커졌다 작아지며 천천히 돎 */
     public static final int TWINKLE = 2;
+    /** GLINT 그림 petal (꽃잎 — 0.15.0 벚꽃 오라): 처음 각 spin 에서 빙글빙글 돌며 하늘하늘 (좌우로 흔들리며) 떨어지고 끝에 흐려짐 */
+    public static final int PETAL = 3;
+    /** GLINT 그림 heart (하트 — 0.15.0 하트 오라): 튀어나오듯 커졌다 끝에 흐려짐 */
+    public static final int HEART = 4;
 
     /** 끌림 · 가속 없는 그림 (빛줄기 · 불꽃 · 마법진 · 일반 그림) */
     public FxOptions(int kind, int sprite, Vec3 dir, float speed, float size, float thick, float life, float delay, float grow, float spin,
@@ -111,6 +115,11 @@ public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size,
     /** 빛 알갱이 하나: 처음 속도 dir × speed (초당 블록), 위로 accel · 끌림 drag, 반 크기 size → 0, 수명 life, 그림 GLINT_TEXTURES[texture] */
     public static FxOptions glint(int texture, Vec3 dir, double speed, double accel, double drag, double size, double life, int color) {
         return new FxOptions(GLINT, texture, dir, (float) speed, (float) size, 0F, (float) life, 0F, 0F, 0F, 1F, color, (float) accel, (float) drag);
+    }
+
+    /** 빛 알갱이 + 처음 돌린 각 spin (도 — 꽃잎) */
+    public static FxOptions glint(int texture, Vec3 dir, double speed, double accel, double drag, double size, double life, double spin, int color) {
+        return new FxOptions(GLINT, texture, dir, (float) speed, (float) size, 0F, (float) life, 0F, 0F, (float) spin, 1F, color, (float) accel, (float) drag);
     }
 
     /** 0~1 색 + 알파 → ARGB */

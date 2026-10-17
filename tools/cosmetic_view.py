@@ -213,9 +213,10 @@ def render(mesh, size, scale, center, yaw=0.0, pitch=0.0, ss=3, bg=(0, 0, 0, 0))
             sub[closer, :3] = col[closer]
             sub[closer, 3] = 255
     out = color.copy()
-    # 빛나는 층은 더하기 (eyes 렌더 타입처럼 — 앞을 가리지 않음)
+    # 빛나는 층은 알파대로 덮기 (26.3 eyes 렌더 타입 — 밝기 최대 · 반투명 섞기, 0.15.0 전에는 더하기라 아이콘이 하얗게 보였음)
     m = glow_layer[..., 3] > 0
-    out[m, :3] = np.minimum(255, out[m, :3] + glow_layer[m, :3])
+    ga = (glow_layer[m, 3] / 255.0)[:, None]
+    out[m, :3] = np.minimum(255, out[m, :3] * (1 - ga) + glow_layer[m, :3])
     out[m, 3] = np.maximum(out[m, 3], glow_layer[m, 3])
     img = Image.fromarray(out.astype(np.uint8), "RGBA")
     if bg[3]:

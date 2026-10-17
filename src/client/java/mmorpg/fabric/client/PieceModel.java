@@ -22,6 +22,7 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
+import org.joml.Vector3f;
 
 /**
  * 사람 모델에 붙는 조각 하나 (갑옷 한 부위 · 장식 — tools/armor_items.py · tools/cosmetic_art.py 가 만든 JSON
@@ -29,7 +30,8 @@ import net.minecraft.resources.Identifier;
  * 뿌리 뼈는 사람 모델과 같은 이름 — Fabric ArmorRenderer.submitTransformCopyingModel 로 입은 사람의 움직임을 그대로 받음.
  * 움직이는 뼈 (이름): fw_cape (걷는 빠르기 × 35° + 살랑임 2° 뒤로 — 황제 망토 · 진홍 망토), fw_wing_left · fw_wing_right (날갯짓 —
  * 천천히 ±9°, 달리면 더 크게), fw_flutter_left · fw_flutter_right (0.14.2 요정 날개 — 파르르: 초당 약 3번 ±14°, 달리면 더 빠르고 크게),
- * fw_flutter_low_left · fw_flutter_low_right (아래 날개 — 같은 날갯짓을 조금 늦게 · 작게), fw_spin (초당 40° 돎), fw_bob (위아래 0.6 픽셀 떠다님).
+ * fw_flutter_low_left · fw_flutter_low_right (아래 날개 — 같은 날갯짓을 조금 늦게 · 작게), fw_twitch_left · fw_twitch_right (0.15.0 고양이 귀 —
+ * 3.5초마다 0.3초 동안 바깥 · 뒤로 쫑긋, 두 귀가 엇갈려), fw_spin (초당 40° 돎), fw_bob (위아래 0.6 픽셀 떠다님).
  * emissive 가 있으면 그 그림을 빛나게 한 번 더, translucent 면 반투명으로 (CosmeticLayer).
  */
 public final class PieceModel extends Model<HumanoidRenderState> {
@@ -63,6 +65,8 @@ public final class PieceModel extends Model<HumanoidRenderState> {
         if (bone.startsWith("fw_flutter_low_right")) return "flutter_low_right";
         if (bone.startsWith("fw_flutter_left")) return "flutter_left";
         if (bone.startsWith("fw_flutter_right")) return "flutter_right";
+        if (bone.startsWith("fw_twitch_left")) return "twitch_left";
+        if (bone.startsWith("fw_twitch_right")) return "twitch_right";
         if (bone.startsWith("fw_cape")) return "cape";
         if (bone.startsWith("fw_wing_left")) return "wing_left";
         if (bone.startsWith("fw_wing_right")) return "wing_right";
@@ -82,8 +86,9 @@ public final class PieceModel extends Model<HumanoidRenderState> {
     }
 
     /**
-     * 시험용: 이 나이 (틱) · 걷는 빠르기 (0~1) 의 자세에서 가장 앞 (z 가 가장 작은) 꼭짓점 — 픽셀 (사람 모델 기준: 앞 -z, 몸통 등 면 = 2).
-     * 날개 · 망토가 날갯짓 · 휘날림 중에도 몸을 뚫지 않는지 (사진첩 — 0.14.3).
+     * 시험용: 이 나이 (틱) · 걷는 빠르기 (0~1) 의 자세에서 움직이는 뼈 (fw_… 와 그 아래) 의 가장 앞 (z 가 가장 작은) 꼭짓점 — 픽셀
+     * (사람 모델 기준: 앞 -z, 몸통 등 면 = 2). 날개 · 망토가 날갯짓 · 휘날림 중에도 몸을 뚫지 않는지 (사진첩 — 0.14.3). 움직이지 않는 조각
+     * (왕실 망토의 목둘레 털 깃처럼 몸을 두른 것) 은 넣지 않음 — 없으면 +∞.
      */
     public float frontmostZ(float ageInTicks, float walkSpeed) {
         HumanoidRenderState s = new HumanoidRenderState();
@@ -91,7 +96,18 @@ public final class PieceModel extends Model<HumanoidRenderState> {
         s.walkAnimationSpeed = walkSpeed;
         setupAnim(s);
         float[] min = {Float.MAX_VALUE};
-        root().getExtentsForGui(new PoseStack(), v -> min[0] = Math.min(min[0], v.z()));
+        Vector3f v = new Vector3f();
+        root().visit(new PoseStack(), (pose, path, index, cube) -> {
+            if (!path.contains("fw_")) return;
+            for (float x : new float[] {cube.minX, cube.maxX}) {
+                for (float y : new float[] {cube.minY, cube.maxY}) {
+                    for (float z : new float[] {cube.minZ, cube.maxZ}) {
+                        pose.pose().transformPosition(x / 16F, y / 16F, z / 16F, v);
+                        min[0] = Math.min(min[0], v.z());
+                    }
+                }
+            }
+        });
         return min[0] * 16F;
     }
 
@@ -118,6 +134,14 @@ public final class PieceModel extends Model<HumanoidRenderState> {
                     double flap = Math.sin(age * (0.95 + speed * 0.45) - (low ? 0.9 : 0)) * (14 + speed * 10) * (low ? 0.7 : 1);
                     double sign = a.kind().endsWith("right") ? 1 : -1;
                     a.part().yRot = a.yRot() + (float) Math.toRadians(sign * (flap + speed * 8));
+                }
+                case "twitch_left", "twitch_right" -> {
+                    // 쫑긋 (고양이 귀): 70틱마다 6틱 동안 바깥 (자바 z — 오른쪽 귀는 음수) · 뒤 (자바 x 음수) 로 — 두 귀는 35틱 엇갈림
+                    boolean right = a.kind().endsWith("right");
+                    double ph = (age + (right ? 0 : 35)) % 70;
+                    double flick = ph < 6 ? Math.sin(ph / 6 * Math.PI) : 0;
+                    a.part().zRot = a.zRot() + (float) Math.toRadians((right ? -1 : 1) * 18 * flick);
+                    a.part().xRot = a.xRot() + (float) Math.toRadians(-10 * flick);
                 }
                 case "spin" -> a.part().yRot = a.yRot() + (float) Math.toRadians(age * 2.0 % 360);
                 case "bob" -> a.part().y = a.y() + (float) (Math.sin(age * 0.09) * 0.6);
