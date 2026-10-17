@@ -141,6 +141,21 @@ final class RuneLimited {
         return out;
     }
 
+    /** 시전 중 구슬이 도는 고리 (발 위 높이 · 반지름) — 머리 위: 1인칭 화면 가운데를 가리지 않게 */
+    static final double ORBIT_Y = 2.35;
+    static final double ORBIT_R = 1.3;
+    /** 칠성 강림 밤빛 무리 (rpg:rfx_orb 8번 칸 — 무늬 없는 부드러운 원) */
+    static final double HAZE_CELL = 8;
+
+    /**
+     * 하늘 그림 높이: 시전자에서 at 까지 거리 × 0.42 (min ~ max 칸) — 1인칭으로 과녁을 보면 그림이 화면 위쪽 안에 들어오게
+     * (13.5칸이면 약 5.7칸 — 예전처럼 늘 max 면 눈 · 별자리 윗부분이 화면 위로 잘림)
+     */
+    static double skyHeight(ServerPlayer sp, Vec3 at, double min, double max) {
+        double d = V.len(V.flat(V.sub(at, sp.position())));
+        return Math.min(max, Math.max(min, 0.42 * d));
+    }
+
     /** 구슬 그림 (rpg:rfx_orb — 빛 = 스탯 색 · 심지 흰빛, 소용돌이가 돎) */
     static void orbFx(ServerLevel level, Vec3 at, Orb o, double size, double alpha, double life, int i) {
         RuneKit.rfx2(level, "orb", at, Opt.of("size", size, "life", life, "frames", 4.0, "fps", 10.0, "loop", true, "phase", (double) i, "fade", 0.3, "alpha", alpha),
@@ -169,7 +184,7 @@ final class RuneLimited {
         int fuseAt = volley0 + active.size() * gap;
         int blastAt = fuseAt + 6;
         Tally tally = new Tally();
-        // 시전: 발밑 비전 문양 · 구슬 넷이 몸 둘레를 돎
+        // 시전: 발밑 비전 문양 · 구슬 넷이 머리 위를 돎 (1인칭 화면 가운데를 가리지 않게 — 위쪽 끝에 보임, 3인칭은 머리 위 고리)
         Vec3 feet = sp.position();
         RuneKit.domainSigil(level, feet, 2.4, "arcane", PEARL, WHITE, Opt.of("life", (charge + 4) / 20.0, "spinRate", 70.0, "grow", 0.2, "alpha", 0.85));
         SkillFx.rune(level, feet, Opt.of("size", 1.6, "life", (charge + 2) / 20.0, "color", PEARL, "alpha", 0.9, "rate", 160.0, "progress", 1.0));
@@ -180,23 +195,23 @@ final class RuneLimited {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 c = V.up(sp.position(), 1.45);
+                Vec3 c = V.up(sp.position(), ORBIT_Y);
                 for (int i = 0; i < 4; i++) {
                     double a = tt * 0.28 + i * Math.PI / 2;
-                    Vec3 p = new Vec3(c.x + Math.cos(a) * 1.25, c.y + Math.sin(tt * 0.3 + i) * 0.15, c.z + Math.sin(a) * 1.25);
+                    Vec3 p = new Vec3(c.x + Math.cos(a) * ORBIT_R, c.y + Math.sin(tt * 0.3 + i) * 0.15, c.z + Math.sin(a) * ORBIT_R);
                     Orb o = orbs.get(i);
-                    orbFx(level, p, o, orbSize(o) * (0.6 + 0.4 * tt / charge), o.share() > 0 ? 0.95 : 0.5, 0.15, i);
+                    orbFx(level, p, o, orbSize(o) * (0.45 + 0.3 * tt / charge), o.share() > 0 ? 0.95 : 0.5, 0.15, i);
                 }
             });
         }
         // 날아감: 구슬 → 조준한 곳 위 (반지름 2.2 · 높이 h 의 고리)
         RuneKit.later(charge, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            Vec3 c = V.up(sp.position(), 1.45);
+            Vec3 c = V.up(sp.position(), ORBIT_Y);
             for (int i = 0; i < 4; i++) {
                 Orb o = orbs.get(i);
                 double a0 = charge * 0.28 + i * Math.PI / 2;
-                Vec3 from = new Vec3(c.x + Math.cos(a0) * 1.25, c.y, c.z + Math.sin(a0) * 1.25);
+                Vec3 from = new Vec3(c.x + Math.cos(a0) * ORBIT_R, c.y, c.z + Math.sin(a0) * ORBIT_R);
                 Vec3 to = V.up(ring(g, 2.2, i * Math.PI / 2), h);
                 if (o.share() > 0) RuneKit.flyStreak(level, from, to, 34, o.color(), WHITE, 0.7, 0.3);
             }
@@ -311,8 +326,9 @@ final class RuneLimited {
             double R = R0 - b * 0.7;
             double[] col = orbs.get(order[b]).color();
             for (int s = 0; s < segs; s++) {
-                double a0 = Math.PI * s / segs;
-                double a1 = Math.PI * (s + 1) / segs;
+                // 조각마다 양끝을 35% 씩 늘려 겹침 (빛줄기 그림은 끝이 가늘어 이어 붙이면 점선처럼 보임)
+                double a0 = Math.max(0, Math.PI * (s - 0.35) / segs);
+                double a1 = Math.min(Math.PI, Math.PI * (s + 1.35) / segs);
                 Vec3 p0 = V.add(V.up(g, Math.sin(a0) * R), side, Math.cos(a0) * R);
                 Vec3 p1 = V.add(V.up(g, Math.sin(a1) * R), side, Math.cos(a1) * R);
                 double delay = 0.5 * s / segs;
@@ -368,7 +384,7 @@ final class RuneLimited {
         int gap = (int) k.num("gap");
         double radius = k.num("radius");
         double beam = k.num("beam");
-        double h = k.num("height");
+        double h = skyHeight(sp, g, 5, k.num("height")); // 과녁까지 13.5칸이면 약 5.7칸 (가장 낮은 별도 땅 위 3칸 넘게)
         Vec3[] st = starsAt(sp, g, h, n);
         int collapse = draw + (n - 1) * gap + 8;
         int impact = collapse + 14;
@@ -388,27 +404,23 @@ final class RuneLimited {
                 double left = hold - ii * 3 / 20.0;
                 boolean polaris = ii == 7;
                 RuneKit.skyFlare(level, st[ii], polaris ? 1.9 : 1.45, STAR_GLOW, STAR_CORE, Opt.of("life", left, "grow", 0.0, "fade", 0.15, "spinRate", 25.0));
+                // 별 뒤 밤빛 무리 (부드러운 원 — 낮 하늘에서도 별이 또렷하게, 켜질 때 한 번 · 별과 같이 사라짐)
+                Vec3 toEye = RuneKit.towardEye(sp, st[ii]);
+                RuneKit.rfx(level, "orb", V.add(st[ii], toEye, -0.7), Opt.of("size", polaris ? 2.6 : 2.2, "life", left, "cell", HAZE_CELL, "color", NIGHT,
+                        "alpha", 0.34, "fade", 0.15));
+                RuneKit.rfx(level, "orb", V.add(st[ii], toEye, -0.35), Opt.of("size", polaris ? 1.3 : 1.05, "life", left, "cell", HAZE_CELL, "color", NIGHT,
+                        "alpha", 0.5, "fade", 0.15));
                 SkillFx.burst(level, st[ii], STAR_CORE, 0.9, 0.3);
                 SkillFx.play(level, "note.chime", st[ii], pitch[ii], 1.0);
                 if (polaris) SkillFx.play(level, "random.levelup", st[ii], 1.8, 0.5);
             });
         }
-        // 별자리 유지 (6틱마다 다시 그림 — 빛줄기 · 빛 그림은 수명 동안 옅어지므로): 넓은 밤빛 장막 · 별 뒤 밤빛 무리 (낮 하늘에서도 별이 또렷하게) ·
-        // 켜진 두 별을 잇는 선 (어두운 밑줄 + 별빛) · 북극성 길잡이 점선
+        // 별자리 선 유지 (6틱마다 다시 그림 — 빛줄기는 수명 동안 옅어지므로): 켜진 두 별을 잇는 선 (어두운 밑줄 + 별빛) · 북극성 길잡이 점선
         for (int t = 0; t < collapse; t += 6) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 int litN = Math.min(n, tt / 3 + 1);
-                for (int i = 0; i < n; i++) {
-                    Vec3 toEye = RuneKit.towardEye(sp, st[i]);
-                    SkillFx.fx(level, "rpg:arrow_spark", V.add(st[i], toEye, -0.6), Opt.of("dir", V.UP, "size", 3.0, "grow", 1.0, "life", 0.5, "color", NIGHT,
-                            "alpha", 0.38));
-                    if (i < litN) {
-                        SkillFx.fx(level, "rpg:arrow_spark", V.add(st[i], toEye, -0.3), Opt.of("dir", V.UP, "size", i == 7 ? 1.7 : 1.4, "grow", 1.0, "life", 0.5,
-                                "color", NIGHT, "alpha", 0.8));
-                    }
-                }
                 for (int[] ln : LINES) {
                     if (ln[0] >= litN || ln[1] >= litN) continue;
                     RuneKit.streak(level, st[ln[0]], st[ln[1]], NIGHT, 0.24, 0.5, 0.6, 0);
@@ -490,7 +502,10 @@ final class RuneLimited {
         return true;
     }
 
-    /** 6돌 별똥별 비: 떨어진 뒤 1.6초 동안 하늘을 가로지르는 별똥별 열여덟 · 북극성이 남아 빛남 · 땅의 별 문양 (피해 없음) */
+    /**
+     * 6돌 별똥별 비: 떨어진 뒤 약 2초 동안 하늘을 가로지르는 별똥별 스물넷 (빛 머리 + 긴 꼬리 — 별자리가 있던 높이라 1인칭에서도 화면 위쪽에 보임) ·
+     * 북극성이 남아 빛남 · 땅의 별 문양 (피해 없음)
+     */
     static void meteorShower(ServerPlayer sp, ServerLevel level, Vec3 g, double h, Vec3[] st, String life) {
         Vec3 f0 = V.flat(V.sub(g, sp.position()));
         Vec3 f = V.len(f0) > 0.5 ? V.unit(f0) : Kit.facingOf(sp);
@@ -500,16 +515,21 @@ final class RuneLimited {
             RuneKit.godRays(sp, level, g, 0.1, 1, STAR_GLOW, STAR_CORE, Opt.of("h", 22.0, "life", 2.0, "alpha", 0.7));
         }
         RuneKit.domainSigil(level, g, 7.5, "holy", STAR_CORE, WHITE, Opt.of("life", 2.4, "spinRate", 20.0, "alpha", 0.75, "grow", 0.1));
-        for (int n = 0; n < 18; n++) {
+        for (int n = 0; n < 24; n++) {
             final int nn = n;
             RuneKit.later(2 + n * 2 + (n % 3), () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                double across = (Kit.rand() - 0.5) * 18;
-                double depth = (Kit.rand() - 0.3) * 10;
-                Vec3 from = V.add(V.add(V.up(g, h + 3 + Kit.rand() * 5), side, across - 6), f, depth);
-                Vec3 to = V.add(V.add(from, side, 9 + Kit.rand() * 4), V.DOWN, 4 + Kit.rand() * 3);
+                double across = (Kit.rand() - 0.5) * 16;
+                double depth = (Kit.rand() - 0.25) * 8;
+                Vec3 from = V.add(V.add(V.up(g, h + 0.5 + Kit.rand() * 3.5), side, across - 5), f, depth);
+                Vec3 to = V.add(V.add(from, side, 8 + Kit.rand() * 4), V.DOWN, 3 + Kit.rand() * 2.5);
                 double[] col = nn % 3 == 0 ? STAR_CORE : STAR_GLOW;
-                RuneKit.flyStreak(level, from, to, 26, col, WHITE, 1.6, 0.16);
+                double len = V.len(V.sub(to, from));
+                double secs = Math.max(0.05, len / 20);
+                RuneKit.flyStreak(level, from, to, 20, col, WHITE, 3.0, 0.3);
+                // 빛 머리 (꼬리와 같은 빠르기로 날아감)
+                RuneKit.rfx2(level, "flare", from, Opt.of("size", 0.6, "life", secs, "vel", V.scale(V.unit(V.sub(to, from)), len / secs), "fade", 0.25,
+                        "spinRate", 120.0, "grow", 0.0), col, WHITE, new int[] {0, 1}, null);
                 if (nn % 2 == 0) SkillFx.play(level, "firework.twinkle", from, 1.2 + Kit.rand() * 0.6, 0.35);
             });
         }
@@ -524,6 +544,11 @@ final class RuneLimited {
         RuneKit.rfx(level, "skyeye", at, Opt.of("dir", RuneKit.towardEye(sp, at), "size", size, "life", life, "cell", (double) frame, "alpha", alpha, "fade", 0.2));
     }
 
+    /** 눈 · 눈 둘레 문양 크기 비율 (낮게 뜨면 작게 — 문양 아래 끝이 과녁 머리 위에 남게): 높이 / 8, 0.7 ~ 1 */
+    static double eyeScale(double h) {
+        return Math.max(0.7, Math.min(1, h / 8));
+    }
+
     static boolean eye(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         String life = RuneKit.lifeToken(sp);
@@ -534,7 +559,7 @@ final class RuneLimited {
         int gap = (int) k.num("gap");
         int hits = (int) k.num("hits");
         int end = charge + hits * gap;
-        double h = k.num("height");
+        double hMax = k.num("height");
         double width = k.num("width");
         double step = k.num("speed") / 20.0;
         double radius = k.num("radius");
@@ -549,13 +574,14 @@ final class RuneLimited {
             if (!RuneKit.sameLife(sp, life)) return false;
             if (t > end) return false;
             Vec3 cur = p[0];
+            double h = skyHeight(sp, cur, 6, hMax); // 과녁까지 13.5칸이면 약 6칸 — 눈 (반지름 3.4) 이 화면 위쪽 안에, 눈 둘레 문양은 과녁 머리 위
             Vec3 eyeAt = V.up(cur, h);
             if (t < charge) {
                 // 눈을 뜸 (감음 → 반쯤 → 뜸) · 조준한 곳에 금빛 고리
                 if (t % 2 == 0) {
                     int frame = t < charge / 3 ? 0 : t < charge * 2 / 3 ? 1 : 2;
-                    eyeFx(sp, level, eyeAt, 3.4, frame, 0.12, 0.95);
-                    RuneKit.domainSigil(level, eyeAt, 4.6, "arcane", SUN, SUN_CORE, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "life", 0.12, "spin", t * 4.0,
+                    eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), frame, 0.12, 0.95);
+                    RuneKit.domainSigil(level, eyeAt, 4.6 * eyeScale(h), "arcane", SUN, SUN_CORE, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "life", 0.12, "spin", t * 4.0,
                             "alpha", 0.6, "fade", 0.2));
                 }
                 if (t % 6 == 0) RuneKit.zonePulse(level, cur, SUN, width, 0.35);
@@ -572,12 +598,13 @@ final class RuneLimited {
             if (V.len(off) > range) next = new Vec3(sp.getX() + off.x / V.len(off) * range, next.y, sp.getZ() + off.z / V.len(off) * range);
             p[0] = next;
             cur = next;
+            h = skyHeight(sp, cur, 6, hMax);
             eyeAt = V.up(cur, h);
             int bt = t - charge;
             boolean pulse = bt % gap == 0 && bt / gap < hits;
             if (t % 2 == 0 || pulse) {
-                eyeFx(sp, level, eyeAt, 3.4, pulse ? 3 : 2, 0.12, 0.95);
-                RuneKit.domainSigil(level, eyeAt, 4.6, "arcane", SUN, SUN_CORE, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "life", 0.12, "spin", t * 4.0,
+                eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), pulse ? 3 : 2, 0.12, 0.95);
+                RuneKit.domainSigil(level, eyeAt, 4.6 * eyeScale(h), "arcane", SUN, SUN_CORE, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "life", 0.12, "spin", t * 4.0,
                         "alpha", 0.6, "fade", 0.2));
                 Vec3 top = V.up(cur, h - 0.8);
                 RuneKit.streak(level, top, V.up(cur, 0.1), SUN, width * 0.36, 0.12, 0.9, 0);
@@ -625,13 +652,14 @@ final class RuneLimited {
     /** 끝: 마무리 폭발 (반지름 radius) · 눈이 감김 · 총 피해 (+ 6돌 해빛 기둥 여덟 · 해무리) */
     static void finish(ServerPlayer sp, ServerLevel level, Vec3 c, double h, double radius, double P, Obj k, String life, Tally tally, boolean fin) {
         Vec3 eyeAt = V.up(c, h);
+        double es = eyeScale(h);
         double sc = RuneKit.nearK(sp, V.up(c, 1), 8, 0.4);
         RuneKit.ultFlashFor(sp, level, c, "heavenEye", "flash", Opt.empty());
         RuneKit.streak(level, V.up(c, h - 0.8), V.up(c, 0.1), SUN_CORE, 1.4, 0.3, 1.0, 0);
         RuneKit.novaRing(level, c, radius * 0.4, 2.2, SUN, SUN_CORE, Opt.of("life", 0.6));
         RuneKit.later(2, () -> RuneKit.novaRing(level, c, radius * 0.25, 3.0, SUN_CORE, WHITE, Opt.of("life", 0.5)));
         RuneKit.skyFlare(level, V.up(c, 1.2), radius * 0.9 * sc, SUN, SUN_CORE, Opt.of("life", 0.55, "grow", 0.7));
-        RuneKit.skyFlare(level, eyeAt, 4.0, SUN, SUN_CORE, Opt.of("life", 0.5, "grow", 0.5));
+        RuneKit.skyFlare(level, eyeAt, 4.0 * es, SUN, SUN_CORE, Opt.of("life", 0.5, "grow", 0.5));
         RuneKit.glowCrack(level, c, radius * 1.1, SCORCH, SUN, Opt.of("life", 2.6, "fade", 0.6, "v", 1.0));
         SkillFx.burst(level, V.up(c, 1), SUN, radius * 0.6 * sc, 0.45);
         SkillFx.sparks(level, V.up(c, 1), SUN_CORE, 18, 9);
@@ -648,12 +676,12 @@ final class RuneLimited {
         // 눈이 감김
         for (int i = 0; i < 3; i++) {
             final int frame = 2 - i;
-            RuneKit.later(2 + i * 3, () -> eyeFx(sp, level, eyeAt, 3.4, frame, 0.18, 0.9 - frame * 0.1));
+            RuneKit.later(2 + i * 3, () -> eyeFx(sp, level, eyeAt, 3.4 * es, frame, 0.18, 0.9 - frame * 0.1));
         }
         if (fin) {
             // 6돌: 해빛 기둥 여덟이 둘레에서 솟고 눈 자리에 해무리 (rfx_sun)
             RuneKit.godRays(sp, level, c, radius * 0.85, 8, SUN, SUN_CORE, Opt.of("h", 22.0, "life", 1.6, "alpha", 0.9, "skipNear", true));
-            RuneKit.rfx2(level, "sun", eyeAt, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "size", 5.0, "life", 1.4, "grow", 0.5, "fade", 0.5, "spinRate", 40.0),
+            RuneKit.rfx2(level, "sun", eyeAt, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "size", 5.0 * es, "life", 1.4, "grow", 0.5, "fade", 0.5, "spinRate", 40.0),
                     SUN, SUN_CORE, new int[] {0, 1}, null);
             RuneKit.later(4, () -> RuneKit.novaRing(level, c, radius * 0.9, 1.6, SUN_CORE, WHITE, Opt.of("life", 0.9)));
             SkillFx.play(level, "beacon.activate", eyeAt, 0.7, 1.0);

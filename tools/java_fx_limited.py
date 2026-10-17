@@ -5,8 +5,9 @@
   python3 tools/addon_particles.py <애드온 폴더>   # 그다음 자바 파티클 정의 · 그림 · 이름표 (AddonFxTable) 를 다시 만듦
 
 그림
-- rfx_orb     만상귀일의 스탯 구슬 (128×128 × 8칸 — 흰색, 색을 입힘): 0~3 빛 (부드러운 구슬 + 세 갈래 소용돌이 — 칸마다 30° 돎),
-              4~7 심지 (밝은 가운데 · 가는 고리 · 반짝임 넷 — 칸마다 22.5° 돎). rotate_xyz (보는 사람을 향함).
+- rfx_orb     만상귀일의 스탯 구슬 (128×128 칸, 8 × 2줄 — 흰색, 색을 입힘): 0~3 빛 (부드러운 구슬 + 세 갈래 소용돌이 — 칸마다 30° 돎),
+              4~7 심지 (밝은 가운데 · 가는 고리 · 반짝임 넷 — 칸마다 22.5° 돎), 8 무리 (무늬 없이 가장자리까지 부드러운 원 — 칠성 강림의
+              밤빛 무리: 어두운 색을 입혀 낮 하늘에서 별 둘레를 어둡게, 알파 섞기라 어두운 색도 보임). rotate_xyz (보는 사람을 향함).
               룬 연출에서 빛 (cell 0, frames 4) 과 심지 (cell 4, frames 4) 를 두 장 겹침 (RuneKit.rfx2 — 빛 = 스탯 색, 심지 = 흰빛)
 - rfx_skyeye  천공의 눈 (256×256 × 4장 — 미리 칠한 색: 금빛 마법진 · 흰 눈 · 해빛 눈동자): 0 감음 → 1 반쯤 → 2 뜸 → 3 뜬 채 빛남.
               direction_z (dir 이 판이 보는 쪽 — 하늘에서 시전자 눈 쪽으로). 점 그림 (128 판을 2배)
@@ -94,11 +95,21 @@ def orb_core(frame):
     return img.resize((S, S), Image.LANCZOS)
 
 
+def orb_haze():
+    """무리: 무늬 없는 부드러운 원 (가운데 알파 235 → 가장자리 0, 칸 가장자리 전에 끝남)"""
+    S = 128
+    ss = 2
+    big = S * ss
+    c = big / 2
+    return _radial(big, c, c, big * 0.48, 235, 0, 1.5).resize((S, S), Image.LANCZOS)
+
+
 def orb_sheet():
-    sheet = Image.new("RGBA", (128 * 8, 128), (255, 255, 255, 0))
+    sheet = Image.new("RGBA", (128 * 8, 128 * 2), (255, 255, 255, 0))
     for i in range(4):
         sheet.paste(orb_glow(i), (i * 128, 0))
         sheet.paste(orb_core(i), ((4 + i) * 128, 0))
+    sheet.paste(orb_haze(), (0, 128))
     return sheet
 
 
