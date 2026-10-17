@@ -64,7 +64,13 @@ public final class RpgRuneTests {
 
     @GameTest(maxTicks = 20)
     public void runeItemsRegistered(GameTestHelper h) {
-        h.assertTrue(RuneItems.runes().size() == Runes.FAMILY_ORDER.size() * Runes.GRADE_ORDER.size(), "runes " + RuneItems.runes().size());
+        // 뽑기 계열 17 × 등급 5 + 0.16.0 한정 초월 룬 셋 (초월 하나씩)
+        h.assertTrue(RuneItems.runes().size() == Runes.FAMILY_ORDER.size() * Runes.GRADE_ORDER.size() + Runes.LIMITED_ORDER.size(), "runes " + RuneItems.runes().size());
+        for (String f : Runes.LIMITED_ORDER) {
+            RuneItem it = RuneItems.byId(Runes.runeId(f, "transcend"));
+            h.assertTrue(it != null && RuneCast.has(it.rune().def().str("fn")), "limited rune item " + f);
+            h.assertTrue(RuneItems.byId(Runes.runeId(f, "hero")) == null, "no limited hero " + f);
+        }
         for (String f : Runes.FAMILY_ORDER) {
             for (String g : Runes.GRADE_ORDER) {
                 RuneItem it = RuneItems.byId(Runes.runeId(f, g));

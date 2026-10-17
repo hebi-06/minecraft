@@ -30,7 +30,8 @@ import net.minecraft.util.Util;
 
 /**
  * 한정 뽑기 설정 창 (0.14.0 — 관리자, 뽑기 창의 설정 단추): 이름 · 기간 (일 — 0 = 끝없음) · 룬술사 값 (룬 조각 — 0 = 팔지 않음),
- * 픽업 초월 (17 계열 그림을 눌러 고름 — 최대 3) · 픽업 영웅 (최대 6), 확률 (초월 · 영웅 % — 나머지 등급은 비율대로), 픽업 몫 (%), 천장 (초월 · 오르기 시작 · 영웅).
+ * 픽업 초월 (계열 그림을 눌러 고름 — 최대 3, 0.16.0: 뒤의 금빛 테두리 셋은 한정 초월 룬 — 한정 뽑기에서만 나옴) · 픽업 영웅 (뽑기 계열 17 — 최대 6),
+ * 확률 (초월 · 영웅 % — 나머지 등급은 비율대로), 픽업 몫 (%), 천장 (초월 · 오르기 시작 · 영웅).
  * 저장하면 서버가 검사하고 (틀리면 까닭) 모두에게 알림 — 열린 한정 뽑기를 고치면 시작은 그대로. 지금 끝내기 (두 번 눌러 확인).
  */
 public final class GachaAdminScreen extends Screen {
@@ -306,30 +307,53 @@ public final class GachaAdminScreen extends Screen {
         }
     }
 
+    /** 픽업 줄의 계열: 초월 = 모든 계열 (0.16.0 한정 계열 셋이 뒤에), 영웅 = 뽑기 계열 (한정 계열에는 영웅 룬이 없음) */
+    static List<String> rowFamilies(String grade) {
+        return "hero".equals(grade) ? Runes.FAMILY_ORDER : Runes.ALL_FAMILIES;
+    }
+
+    /** 줄의 칸 간격 (창 넓이 안에 들어가게 — 기본 21) · 칸 크기 (간격보다 크지 않게, 최대 19) */
+    static int step(String grade) {
+        int n = rowFamilies(grade).size();
+        return Math.min(ICON_STEP, (W - 2 * ICON_X - 19) / Math.max(1, n - 1));
+    }
+
+    static int box(String grade) {
+        return Math.min(19, step(grade) - 1);
+    }
+
     private List<String> drawIcons(GuiGraphicsExtractor g, String grade, Set<String> picked, int y, int mx, int my) {
         List<String> tip = null;
         int col = GachaArt.rgb(grade);
-        List<String> fams = Runes.FAMILY_ORDER;
+        List<String> fams = rowFamilies(grade);
+        int st = step(grade);
+        int bx = box(grade);
+        float half = bx / 2F;
+        int firstLimited = -1;
         for (int i = 0; i < fams.size(); i++) {
             String f = fams.get(i);
-            int x = left + ICON_X + i * ICON_STEP;
+            int x = left + ICON_X + i * st;
             boolean on = picked.contains(f);
-            boolean over = mx >= x && mx < x + 19 && my >= y && my < y + 19;
+            boolean lim = Runes.limited(f);
+            if (lim && firstLimited < 0) firstLimited = x;
+            boolean over = mx >= x && mx < x + bx && my >= y && my < y + bx;
             if (on) {
-                GachaArt.sprite(g, GachaArt.GLOW, x + 9.5F, y + 9.5F, 34, 0F, GachaArt.argb(200, col));
-                g.fill(x - 1, y - 1, x + 20, y + 20, GachaArt.argb(255, col));
-                g.fill(x, y, x + 19, y + 19, 0xFF1A1A22);
+                GachaArt.sprite(g, GachaArt.GLOW, x + half, y + half, 34, 0F, GachaArt.argb(200, col));
+                g.fill(x - 1, y - 1, x + bx + 1, y + bx + 1, GachaArt.argb(255, col));
+                g.fill(x, y, x + bx, y + bx, 0xFF1A1A22);
             } else {
-                g.fill(x, y, x + 19, y + 19, over ? 0x60FFFFFF : 0x40000000);
+                if (lim) g.fill(x - 1, y - 1, x + bx + 1, y + bx + 1, 0xC0E0B040); // 한정: 금빛 테두리
+                g.fill(x, y, x + bx, y + bx, over ? 0x60FFFFFF : lim ? 0xFF2A2214 : 0x40000000);
             }
-            GachaArt.item(g, GachaArt.rune(f, grade), x + 9.5F, y + 9.5F, 1F);
-            if (!on) g.fill(x, y, x + 19, y + 19, over ? 0x00000000 : 0x50000000);
+            GachaArt.item(g, GachaArt.rune(f, grade), x + half, y + half, bx / 19F);
+            if (!on) g.fill(x, y, x + bx, y + bx, over ? 0x00000000 : 0x50000000);
             if (over) {
                 List<String> rt = GachaScreen.runeTip(Runes.runeId(f, grade), false);
                 tip = rt == null ? null : new ArrayList<>(rt);
                 if (tip != null) tip.add(on ? "§e누르면 픽업에서 뺌" : "§a누르면 픽업으로");
             }
         }
+        if (firstLimited >= 0) g.text(font, "§6§l한정", firstLimited, y - 10, 0xFFFFFFFF, true);
         return tip;
     }
 
@@ -388,10 +412,12 @@ public final class GachaAdminScreen extends Screen {
     }
 
     private boolean toggle(String grade, Set<String> picked, int y, double mx, double my, int max) {
-        List<String> fams = Runes.FAMILY_ORDER;
+        List<String> fams = rowFamilies(grade);
+        int st = step(grade);
+        int bx = box(grade);
         for (int i = 0; i < fams.size(); i++) {
-            int x = left + ICON_X + i * ICON_STEP;
-            if (!(mx >= x && mx < x + 19 && my >= y && my < y + 19)) continue;
+            int x = left + ICON_X + i * st;
+            if (!(mx >= x && mx < x + bx && my >= y && my < y + bx)) continue;
             String f = fams.get(i);
             if (picked.contains(f)) picked.remove(f);
             else if (picked.size() >= max) {
@@ -413,9 +439,9 @@ public final class GachaAdminScreen extends Screen {
     // ------------------------------------------------------------ 시험용
 
     public int[] iconCenter(String grade, String family) {
-        int i = Runes.FAMILY_ORDER.indexOf(family);
+        int i = rowFamilies(grade).indexOf(family);
         int y = top + ("hero".equals(grade) ? ROW4_Y : ROW5_Y);
-        return new int[] {left + ICON_X + i * ICON_STEP + 9, y + 9};
+        return new int[] {left + ICON_X + i * step(grade) + box(grade) / 2, y + box(grade) / 2};
     }
 
     public int[] saveCenter() {

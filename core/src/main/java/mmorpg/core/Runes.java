@@ -38,13 +38,31 @@ public final class Runes {
 
     /** RUNE_FAMILY_ORDER (the draw picks one of these with equal chance). */
     public static final List<String> FAMILY_ORDER = R.strings("RUNE_FAMILY_ORDER");
+    /**
+     * 0.16.0 (자바 전용): 한정 뽑기 전용 계열 (RUNE_LIMITED_ORDER — 초월 하나씩). 룬 뽑기권 · 고급 · 스탯 뽑기권의 계열 (FAMILY_ORDER) 에는 없고
+     * 관리자가 한정 뽑기의 초월 픽업으로 고를 때만 나옴. 대조 시험 (rules.json 만 — 애드온 그대로) 이면 빈 목록
+     */
+    public static final List<String> LIMITED_ORDER = R.root().has("RUNE_LIMITED_ORDER") ? R.strings("RUNE_LIMITED_ORDER") : List.of();
+    /** 모든 계열 (뽑기 계열 다음에 한정 계열) — 아이템 · 이름 풀이 · 명령어 · 정렬 */
+    public static final List<String> ALL_FAMILIES = joined(FAMILY_ORDER, LIMITED_ORDER);
     /** runes.js GRADE_ORDER. */
     public static final List<String> GRADE_ORDER = List.of("common", "rare", "noble", "hero", "transcend");
 
-    /** runes.js RUNE_RE ({@code matches()} = JS {@code ^…$}). */
+    /** runes.js RUNE_RE ({@code matches()} = JS {@code ^…$}) — 0.16.0 한정 계열도 */
     private static final Pattern RUNE_RE = Pattern.compile("rpg:rune_("
-            + FAMILY_ORDER.stream().map(Pattern::quote).collect(Collectors.joining("|"))
+            + ALL_FAMILIES.stream().map(Pattern::quote).collect(Collectors.joining("|"))
             + ")_(common|rare|noble|hero|transcend)");
+
+    private static List<String> joined(List<String> a, List<String> b) {
+        List<String> out = new ArrayList<>(a);
+        for (String x : b) if (!out.contains(x)) out.add(x);
+        return List.copyOf(out);
+    }
+
+    /** 0.16.0: 한정 뽑기 전용 계열인지 (초월 하나 — 한정 뽑기의 초월 픽업으로만 나옴) */
+    public static boolean limited(String family) {
+        return LIMITED_ORDER.contains(family);
+    }
     /** runes.js STRIKE_BONUS_FNS: strike runes that add power × bonus to each of {@code hits} basic attacks. */
     private static final Set<String> STRIKE_BONUS_FNS = Set.of("edgeHone", "cleave", "bloodBlade", "swordGod");
     private static final String[] ROMAN = {"I", "II", "III", "IV", "V"};
@@ -172,6 +190,13 @@ public final class Runes {
     }
 
     public static String runeStatLabel(Applied e, String sep) {
+        // 0.16.0 한정 계열 (네 스탯의 합 — 계수가 모두 같음): "총 스탯 600" (계수가 1 이 아니면 " × 계수")
+        if (!e.off() && e.parts().size() == STAT_ORDER.size() && e.parts().stream().allMatch(p -> p.coef() == e.parts().get(0).coef())) {
+            double sum = 0;
+            for (Part p : e.parts()) sum += p.raw();
+            double c = e.parts().get(0).coef();
+            return "총 스탯 " + Js.str(sum) + (c == 1 ? "" : sep + Js.str(c));
+        }
         if (e.parts().size() == 1) {
             Part p = e.parts().get(0);
             return Stats.info(p.stat()).str("name") + " " + Js.str(p.raw()) + sep + Js.str(p.coef());
@@ -325,6 +350,11 @@ public final class Runes {
             }
         } else if (f != null && f.truthy("best")) {
             lines.add("§r" + L + "적용 = 가장 높은 스탯 × 1.0");
+        } else if (f != null && f.truthy("sum")) {
+            // 0.16.0 한정 계열: 네 스탯의 합 (스탯을 어떻게 찍어도 같은 세기)
+            double c = f.obj("coef").numOr("int", 1);
+            lines.add("§r" + L + "적용 = 네 스탯의 합 × " + Js.toFixed(c, 1));
+            lines.add("§r" + L + "힘 + 민첩 + 체력 + 마력 · 어떻게 찍어도 같음");
         } else {
             lines.add("§r" + L + coefText(r.family()) + " · 다른 스탯 " + RUNE.text("offStat"));
         }
@@ -332,6 +362,11 @@ public final class Runes {
         String only = weaponOnly(r.family());
         if (only != null) lines.add("§r" + (dark ? "§4" : "§c") + weaponName(only) + " 전용" + L + " · 다른 무기로는 쓰지 못함");
         if (REAPER.equals(r.family())) lines.addAll(reaperLore(d, L, dark));
+        // 0.16.0: 한정 뽑기 전용 룬 · 흐름
+        if (limited(r.family())) {
+            lines.add("§r" + (dark ? "§6" : "§e") + "한정 룬" + L + " · 한정 뽑기의 초월 픽업으로만");
+            lines.addAll(limitedLore(d, L, dark));
+        }
         if (buff) lines.addAll(buffLore(r, L, dark));
         if (d.truthy("el")) lines.addAll(elementLore(d, L, dark));
         if (d.truthy("spirits")) lines.addAll(spiritLore(d, L, dark));
@@ -358,6 +393,32 @@ public final class Runes {
             out.add("§r" + L + "칼날 " + sec(d.numOr("gap", Double.NaN)) + "마다 " + d.text("hits") + "번 (반지름 " + d.text("radius") + "칸)");
             out.add("§r" + L + "달 추락 " + N + "위력×" + d.text("crush"));
         }
+        return out;
+    }
+
+    /** 0.16.0 한정 초월 룬 (만상귀일 · 칠성 강림 · 천공의 눈): 흐름 */
+    private static List<String> limitedLore(Obj d, String L, boolean dark) {
+        String N = dark ? "§0" : "§f";
+        String fn = d.strOrNull("fn");
+        List<String> out = new ArrayList<>();
+        if ("arcanaUnity".equals(fn)) {
+            out.add("§r" + L + "구슬 넷: 힘 · 민첩 · 체력 · 마력 (크기 = 비율)");
+            out.add("§r" + L + "구슬 빛줄기 " + N + "위력×" + d.text("mult") + L + " (스탯 비율로 나눔)");
+            out.add("§r" + L + "귀일 폭발 " + N + "위력×" + d.text("crush") + L + " (반지름 " + d.text("radius") + "칸)");
+        }
+        if ("sevenStars".equals(fn)) {
+            out.add("§r" + L + "북두칠성 별 " + d.text("hits") + "개 · " + sec(d.numOr("gap", Double.NaN)) + "마다 별빛 기둥");
+            out.add("§r" + L + "별빛 기둥 " + N + "위력×" + d.text("mult") + L + " (" + d.text("beam") + "칸)");
+            out.add("§r" + L + "별 낙하 " + N + "위력×" + d.text("crush") + L + " (반지름 " + d.text("radius") + "칸)");
+        }
+        if ("heavenEye".equals(fn)) {
+            out.add("§r" + L + "광선 " + sec(d.numOr("hits", Double.NaN) * d.numOr("gap", Double.NaN)) + " · 바라보는 곳을 따라감");
+            out.add("§r" + L + sec(d.numOr("gap", Double.NaN)) + "마다 " + N + "위력×" + d.text("mult") + L + " (굵기 " + d.text("width") + "칸)");
+            out.add("§r" + L + "마무리 폭발 " + N + "위력×" + d.text("crush") + L + " (반지름 " + d.text("radius") + "칸)");
+            out.add("§r" + L + "광선 동안 천천히 걸음");
+        }
+        if (d.truthy("stun")) out.add("§r" + L + "맞은 적 기절 " + sec(d.num("stun")));
+        out.add("§r" + L + "끝나면 이번 시전의 " + N + "총 피해" + L + "를 띄움");
         return out;
     }
 

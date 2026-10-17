@@ -11,7 +11,7 @@
                   칸 순서 = RELIC (창 초월 (0.12.3 부터 궁니르 — 지금 쓰는 스킬은 없음) · 창 영웅 · 낫 초월 · 낫 영웅 · 망치 초월 · 망치 영웅 · 홀 초월 · 홀 영웅) — 모델을 바꾸면 이 스크립트를 다시 돌리면 따라 바뀜
 - rfx_clock       크로노스의 시계 (256×256 × 8칸: 시계판 빛 · 심지, 시침 빛 · 심지, 분침 빛 · 심지, 톱니 빛 · 심지 — 바늘은 가운데에서 위로, 돌리면 됨)
 - rfx_serpent     카두케우스의 빛의 뱀 (256×128 × 8칸: 꿈틀거림 빛 4장 · 심지 4장 — 머리가 오른쪽)
-- 세계수의 도끼 · 스발린 (0.12.4) 그림은 tools/java_fx_art_more.py (이 스크립트가 함께 부름)
+- 세계수의 도끼 · 스발린 (0.12.4) 그림은 tools/java_fx_art_more.py, 0.16.0 한정 초월 룬 그림 (rfx_orb · rfx_skyeye) 은 tools/java_fx_limited.py (이 스크립트가 함께 부름)
 """
 import json
 import math
@@ -644,3 +644,5 @@ if __name__ == "__main__":
     serpent_sheet()
     import java_fx_art_more  # 세계수의 도끼 · 스발린 (0.12.4)
     java_fx_art_more.main()
+    import java_fx_limited  # 0.16.0 한정 초월 룬 (스탯 구슬 · 천공의 눈)
+    java_fx_limited.main()

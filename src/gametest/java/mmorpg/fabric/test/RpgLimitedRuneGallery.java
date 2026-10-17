@@ -1,0 +1,167 @@
+package mmorpg.fabric.test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import mmorpg.core.Runes;
+import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.RpgHealth;
+import mmorpg.fabric.RpgStats;
+import mmorpg.fabric.client.MmorpgClient;
+import mmorpg.fabric.rune.Breakthrough;
+import mmorpg.fabric.rune.RuneCast;
+import mmorpg.fabric.rune.RuneKit;
+import mmorpg.fabric.rune.RuneSystem;
+import mmorpg.fabric.rune.SkillBar;
+import mmorpg.fabric.skill.Guards;
+import mmorpg.fabric.skill.Status;
+import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
+import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.monster.zombie.Husk;
+import net.minecraft.world.entity.player.ChatVisiblity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 0.16.0 한정 초월 룬 사진첩 (화면 시험 — 키 limited): 평평한 세계에서 과녁 허스크 여섯 (12 ~ 15칸 앞 — 하늘의 별자리 · 눈이 화면에 들어오게) 앞에서
+ * 룬마다 실제 입력 (스킬 칸 1번의 키) 으로 쓰고 단계마다 사진 (lr_&lt;계열&gt;_&lt;돌&gt;_&lt;틱&gt;[_3p]): 0돌 (1인칭) · 6돌 (3인칭 — 전용 연출 finale).
+ * 천공의 눈은 광선 동안 몸을 천천히 돌려 광선이 따라가는지 (lr_skyeye_0_*). 칠성 강림 6돌은 밤에도 한 번 (lr_dipper_6n_*).
+ * 써졌는지 (재사용 대기) · 들어간 피해 · 끝의 총 피해 글자 (DamageNumbers — "총 피해") 를 로그 (limited-gallery) 로, 아니면 마지막에 실패.
+ */
+@SuppressWarnings("UnstableApiUsage")
+public final class RpgLimitedRuneGallery implements FabricClientGameTest {
+    private static final Logger LOG = LoggerFactory.getLogger("mmorpg-limited-gallery");
+    /** 과녁: 앞쪽 무리 (평평한 세계 땅 y = -60) — 나는 z = -7 에서 북쪽 (z +) 을 봄 */
+    private static final Vec3[] TARGETS = {
+        new Vec3(0.5, -60, 6.5), new Vec3(-1.5, -60, 7.5), new Vec3(2.5, -60, 7.0), new Vec3(0.5, -60, 9.0), new Vec3(-3.0, -60, 5.0),
+        new Vec3(3.5, -60, 5.0)
+    };
+    private static final double ME_Z = -7.0;
+    private int lives;
+    private final List<String> failures = new ArrayList<>();
+
+    @Override
+    public void runTest(ClientGameTestContext ctx) {
+        if (RpgProdSmoke.active() || !RpgProdSmoke.only("limited")) return;
+        ctx.getInput().resizeWindow(1280, 720);
+        try (TestSingleplayerContext world = ctx.worldBuilder()
+                .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
+                .create()) {
+            TestServerContext server = world.getServer();
+            world.getConnection().waitForChunksRender();
+            server.runCommand("time set 6000");
+            server.runCommand("weather clear");
+            server.runCommand("xp set @a 40 levels");
+            ctx.runOnClient(mc -> {
+                mc.options.chatVisibility().set(ChatVisiblity.HIDDEN);
+                mc.options.setCameraType(CameraType.FIRST_PERSON);
+            });
+            ctx.waitTicks(10);
+            for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
+            ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
+            // 만상귀일: 구슬이 몸 둘레 → 조준한 곳 위 → 빛줄기 넷 (16 · 26 · 36 · 46틱 쯤 — 스탯 고르게) → 모임 (64) → 귀일 폭발 (70) → 총 피해 (78)
+            run(ctx, server, "arcana", 0, false, new int[] {8, 26, 36, 56, 66, 72, 82}, null, false);
+            run(ctx, server, "arcana", 6, true, new int[] {30, 72, 80, 90, 100}, null, false);
+            // 칠성 강림: 별이 켜짐 (0 ~ 18틱) → 별빛 기둥 7 (24 ~ 84틱) → 접힘 (92) → 큰 별 (98) → 떨어짐 (106) → 총 피해 (114)
+            run(ctx, server, "dipper", 0, false, new int[] {12, 26, 50, 94, 100, 108, 116}, null, false);
+            run(ctx, server, "dipper", 6, true, new int[] {30, 104, 118, 126, 136, 150}, null, false);
+            // 천공의 눈: 눈을 뜸 (0 ~ 20틱) → 광선 6번 (20 ~ 70틱 — 30틱부터 몸을 천천히 오른쪽으로 돌림) → 마무리 폭발 (80) → 총 피해 (88)
+            run(ctx, server, "skyeye", 0, false, new int[] {10, 24, 44, 66, 82, 90}, "turn", false);
+            run(ctx, server, "skyeye", 6, true, new int[] {12, 40, 70, 92, 100}, null, false);
+            // 밤: 칠성 강림 6돌 (별 · 별똥별 비)
+            server.runCommand("time set 18000");
+            run(ctx, server, "dipper", 6, false, new int[] {40, 118, 130, 145}, null, true);
+            server.runCommand("time set 6000");
+        }
+        LOG.info("[limited-gallery] done, {} failed", failures.size());
+        if (!failures.isEmpty()) throw new AssertionError("limited rune gallery: " + String.join(" / ", failures));
+    }
+
+    /** 룬 하나를 실제 입력으로 쓰고 사진 · 피해 · 총 피해 글자 기록. move = "turn" 이면 30틱부터 2틱마다 몸을 1° 씩 오른쪽으로 */
+    private void run(ClientGameTestContext ctx, TestServerContext server, String family, int level, boolean third, int[] shots, String move, boolean night) {
+        Runes.Rune r = Runes.parseRune(Runes.runeId(family, "transcend"));
+        if (r == null) {
+            failures.add(family + " no rune");
+            return;
+        }
+        String id = family + "_" + level + (night ? "n" : "");
+        server.runCommand("item replace entity @a hotbar.0 with air");
+        server.runCommand(String.format(Locale.ROOT, "tp @a 0.5 -60 %.1f 0 4", ME_Z));
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
+            RuneCast.resetCooldowns(sp);
+            RuneSystem.forget(sp.getUUID());
+            lives++;
+            for (int i = 0; i < lives; i++) RuneKit.lifeEnded(sp.getUUID());
+            RpgStats.setBuff(sp, 0);
+            Guards.clear(sp.getUUID());
+            Status.clear(sp);
+            sp.removeAllEffects();
+            RpgHealth.healFull(sp);
+            spawnHusks(sp.level());
+            SkillBar.set(sp, 0, Breakthrough.stack(family, "transcend", level)); // 스킬 칸 1번 (키 R) — 돌파 단계 그대로
+        });
+        ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
+        ctx.waitTicks(14);
+        int totals0 = server.computeOnServer(s -> DamageNumbers.totalsShown);
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        int t = 0;
+        float yaw = 0;
+        for (int shot : shots) {
+            while (t < shot) {
+                ctx.waitTick();
+                t++;
+                if ("turn".equals(move) && t >= 30 && t <= 70 && t % 2 == 0) {
+                    yaw += 1F;
+                    server.runCommand(String.format(Locale.ROOT, "tp @a 0.5 -60 %.1f %.1f 4", ME_Z, yaw));
+                }
+            }
+            ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "lr_%s_%03d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
+        }
+        int end = 170;
+        if (end > t) ctx.waitTicks(end - t);
+        boolean sawTotal = server.computeOnServer(s -> DamageNumbers.totalsShown) > totals0;
+        boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
+        double dealt = server.computeOnServer(s -> {
+            double sum = 0;
+            for (Husk h : player(s).level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 6, 0.5, -60, 6).inflate(40), h -> true)) sum += TestDummies.dealt(h);
+            return sum;
+        });
+        LOG.info("[limited-gallery] {} {} cast={} dealt={} total-text={}", id, third ? "3p" : "1p", cast, String.format(Locale.ROOT, "%.1f", dealt), sawTotal);
+        if (!cast) failures.add(id + " not cast");
+        else if (!(dealt > 0)) failures.add(id + " dealt no damage");
+        if (!sawTotal) failures.add(id + " no total damage text");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+    }
+
+    private static ServerPlayer player(MinecraftServer s) {
+        return s.getPlayerList().getPlayers().get(0);
+    }
+
+    /** 쓰러지지 않는 과녁 허스크 (받은 피해는 TestDummies.dealt) */
+    private static void spawnHusks(ServerLevel level) {
+        TestDummies.reset();
+        for (Vec3 at : TARGETS) {
+            Husk h = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
+            if (h == null) continue;
+            TestDummies.make(h);
+            h.snapTo(at.x, at.y, at.z, 180F, 0F);
+            h.setYHeadRot(180F);
+            h.setYBodyRot(180F);
+            level.addFreshEntity(h);
+        }
+    }
+}

@@ -39,7 +39,10 @@ import net.minecraft.world.item.ItemStack;
 public final class GachaCommands {
     private GachaCommands() {}
 
-    private static final SuggestionProvider<CommandSourceStack> FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.FAMILY_ORDER, b);
+    /** 초월 픽업: 모든 계열 (0.16.0 한정 계열 — 초월 하나 — 도) */
+    private static final SuggestionProvider<CommandSourceStack> FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.ALL_FAMILIES, b);
+    /** 영웅 픽업: 뽑기 계열만 (한정 계열에는 영웅 룬이 없음) */
+    private static final SuggestionProvider<CommandSourceStack> HERO_FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.FAMILY_ORDER, b);
 
     static void init() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
@@ -61,7 +64,7 @@ public final class GachaCommands {
                     lim.then(Commands.literal(s).then(Commands.argument("name", StringArgumentType.string())
                             .then(Commands.argument("transcend", StringArgumentType.string()).suggests(FAMILIES)
                                     .executes(c -> start(c, null, -1))
-                                    .then(Commands.argument("hero", StringArgumentType.string()).suggests(FAMILIES)
+                                    .then(Commands.argument("hero", StringArgumentType.string()).suggests(HERO_FAMILIES)
                                             .executes(c -> start(c, StringArgumentType.getString(c, "hero"), -1))
                                             .then(Commands.argument("days", IntegerArgumentType.integer(0, 365))
                                                     .executes(c -> start(c, StringArgumentType.getString(c, "hero"), IntegerArgumentType.getInteger(c, "days"))))))));

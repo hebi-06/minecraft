@@ -40,7 +40,8 @@
       "mmorpg.fabric.test.RpgSkillBarTests",
       "mmorpg.fabric.test.RpgWeaponsMoreTests",
       "mmorpg.fabric.test.RpgCosmeticTests",
-      "mmorpg.fabric.test.RpgGachaTests"
+      "mmorpg.fabric.test.RpgGachaTests",
+      "mmorpg.fabric.test.RpgLimitedRuneTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
@@ -74,6 +75,7 @@
       "mmorpg.fabric.test.RpgWeaponsMoreGallery",
       "mmorpg.fabric.test.RpgCosmeticGallery",
       "mmorpg.fabric.test.RpgGachaGallery",
+      "mmorpg.fabric.test.RpgLimitedRuneGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

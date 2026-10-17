@@ -60,7 +60,7 @@ public final class RpgItems {
                     for (RpgWeaponItem w : WEAPONS) output.accept(w);
                 })
                 .build());
-        mmorpg.fabric.rune.RuneItems.init(); // 룬 85 · 뽑기권 (탭 "룬")
+        mmorpg.fabric.rune.RuneItems.init(); // 룬 88 (0.16.0 한정 초월 셋 포함) · 뽑기권 (탭 "룬")
         mmorpg.fabric.gear.GearItems.init(); // 갑옷 240 · 재료 (탭 "RPG 장비 · 재료")
     }
 

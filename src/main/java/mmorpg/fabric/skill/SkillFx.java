@@ -251,6 +251,8 @@ public final class SkillFx {
             // 0.12.4 세계수의 도끼 (자바 이름 그대로 — 대응표에 두어 시험이 소리가 있는지 확인)
             {"block.roots.break", "block.roots.break"}, {"block.azalea_leaves.break", "block.azalea_leaves.break"},
             {"item.bone_meal.use", "item.bone_meal.use"}, {"entity.snowball.throw", "entity.snowball.throw"},
+            // 0.16.0 한정 초월 룬 (천공의 눈 광선)
+            {"beacon.ambient", "block.beacon.ambient"},
         };
         for (String[] m : map) SOUND.put(m[0], m[1]);
     }

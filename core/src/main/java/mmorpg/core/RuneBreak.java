@@ -41,7 +41,9 @@ public final class RuneBreak {
 
     /**
      * 초월 룬 하나의 단계 효과 (extra — 하나씩): type echo = at 돌부터, 룬이 나가고 after 틱 뒤 그 룬 효과가 한 번 더 나감 (지금 겨눈 곳 · 위력 × mult,
-     * 룬 정의에 set 을 덮음 — 예고를 짧게). text 의 {mult} = mult × 100
+     * 룬 정의에 set 을 덮음 — 예고를 짧게). text 의 {mult} = mult × 100.
+     * type finale (0.16.0 한정 초월 룬 — 사용자 요청 '6돌파하면 멋있는 연출 하나 더') = at 돌부터 그 룬 효과가 마지막에 전용 연출을 더함 (피해 없음 — mult · after 0,
+     * 룬 효과가 {@link #extraFor} 로 봄)
      */
     public record Extra(int at, String type, double mult, int after, Map<String, Object> set, String text) {}
 
@@ -350,7 +352,7 @@ public final class RuneBreak {
             Map<String, Object> set = new LinkedHashMap<>();
             Obj so = e.objOrNull("set");
             if (so != null) for (String k : so.keys()) set.put(k, so.get(k));
-            extras.put(fn, new Extra((int) e.num("at"), e.str("type"), e.num("mult"), (int) e.num("after"), Collections.unmodifiableMap(set), e.str("text")));
+            extras.put(fn, new Extra((int) e.num("at"), e.str("type"), e.numOr("mult", 0), (int) e.numOr("after", 0), Collections.unmodifiableMap(set), e.str("text")));
         }
         return new Data((int) root.num("max"), root.num("perLevel"), List.copyOf(scale), root.numOr("grindPerLevel", 1), List.copyOf(tiers),
                 Collections.unmodifiableMap(fx), Collections.unmodifiableMap(tr), Collections.unmodifiableMap(extras));

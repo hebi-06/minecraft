@@ -19,7 +19,8 @@ import java.util.function.DoubleSupplier;
  * 영웅도 같은 방식 (heroEvery 회째 확정 — 원신처럼 10회마다 영웅 이상). 초월이 영웅 확정 자리에 나오면 영웅 확정은 다음 뽑기로 밀림
  * (초월은 영웅 천장 수를 되돌리지 않음)</li>
  * <li>픽업 (한정 뽑기): 초월 · 영웅이 나오면 share 확률로 픽업 룬 (반천장) — 놓치면 다음 그 등급은 픽업 확정 (확천장), 놓친 결과는 픽업이 아닌 룬</li>
- * <li>계열은 고른 목록 (픽업 · 픽업 아닌 것 · 모두) 에서 고르게</li>
+ * <li>계열은 고른 목록 (픽업 · 픽업 아닌 것 · 모두) 에서 고르게. 0.16.0 한정 계열 ({@link Runes#LIMITED_ORDER} — 초월 하나) 은 families 에 없고
+ * 초월 픽업 (featured5) 으로 고른 때만 나옴 (픽업을 이기면 — 놓친 결과 · 다른 등급은 families 에서)</li>
  * </ul>
  * 천장 수 · 확정은 플레이어 기록 ({@link Counter}) 으로 — 한정 뽑기끼리는 이어짐 (배너가 바뀌어도).
  */
@@ -362,8 +363,12 @@ public final class Gacha {
             if (featured5.isEmpty()) out.add("픽업 초월 룬을 하나 이상 고르세요");
             if (featured5.size() > (int) d.num("maxFeatured5")) out.add("픽업 초월 룬은 " + (int) d.num("maxFeatured5") + "개까지");
             if (featured4.size() > (int) d.num("maxFeatured4")) out.add("픽업 영웅 룬은 " + (int) d.num("maxFeatured4") + "개까지");
-            for (String f : featured5) if (!Runes.FAMILY_ORDER.contains(f)) out.add("모르는 계열: " + f);
-            for (String f : featured4) if (!Runes.FAMILY_ORDER.contains(f)) out.add("모르는 계열: " + f);
+            // 0.16.0: 한정 계열 (초월 하나) 은 초월 픽업으로만 — 픽업이 아닌 몫 (놓친 결과 · 다른 등급) 은 뽑기 계열 (FAMILY_ORDER) 에서만 나옴
+            for (String f : featured5) if (!Runes.ALL_FAMILIES.contains(f)) out.add("모르는 계열: " + f);
+            for (String f : featured4) {
+                if (Runes.limited(f)) out.add("한정 룬은 초월 픽업만: " + f);
+                else if (!Runes.FAMILY_ORDER.contains(f)) out.add("모르는 계열: " + f);
+            }
             if (featured5.stream().distinct().count() != featured5.size() || featured4.stream().distinct().count() != featured4.size()) out.add("같은 계열을 두 번 골랐습니다");
             if (!(rate5 > 0) || rate5 > 100) out.add("초월 확률은 0 보다 크고 100 이하");
             if (rate4 < 0 || rate5 + rate4 > 100) out.add("초월 + 영웅 확률은 100 이하");

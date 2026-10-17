@@ -49,7 +49,21 @@ public final class DamageNumbers {
         HEAL("§a§l", "+", "", 1.35F),
         RUNE("§e§l", "", "", 1.5F),
         SPELL("§9§l", "", "", 1.5F),
-        SPELLCRIT("§9§l", "", "!!", 1.75F);
+        SPELLCRIT("§9§l", "", "!!", 1.75F),
+        // 0.16.0 한정 초월 룬: 만상귀일의 스탯 구슬 (그 스탯 색) · 귀일 폭발 (무지갯빛 숫자) · 칠성 강림 별 낙하 · 천공의 눈 광선 · 마무리
+        STAT_STR("§6§l", "", "", 1.5F),
+        STAT_DEX("§a§l", "", "", 1.5F),
+        STAT_VIT("§d§l", "", "", 1.5F),
+        STAT_INT("§9§l", "", "", 1.5F),
+        PRISM("§f§l", "", "", 1.95F) {
+            @Override
+            public String format(String n) {
+                return rainbow(n);
+            }
+        },
+        STARFALL("§e§l", "", "", 1.95F),
+        SOLAR("§6§l", "", "", 1.5F),
+        JUDGE("§6§l", "", "!", 1.95F);
 
         final String codes;
         final String before;
@@ -68,6 +82,22 @@ public final class DamageNumbers {
         }
     }
 
+    /** 무지갯빛 글자 (글자마다 색 — 빨강 · 주황 · 노랑 · 초록 · 하늘 · 파랑 · 보라, 굵게) */
+    public static String rainbow(String s) {
+        String[] cs = {"§c", "§6", "§e", "§a", "§b", "§9", "§d"};
+        StringBuilder b = new StringBuilder();
+        int k = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (Character.isWhitespace(ch)) {
+                b.append(ch);
+                continue;
+            }
+            b.append(cs[k++ % cs.length]).append("§l").append(ch);
+        }
+        return b.toString();
+    }
+
     /** 처음 크기 배율 (톡 튀어나옴) */
     private static final float POP = 1.45F;
 
@@ -83,6 +113,9 @@ public final class DamageNumbers {
         double y;
         final double z;
         final float scale;
+        /** 떠 있는 틱 (기본 LIFE) · 처음 빠르게 오르는 정도 (0 이면 천천히만 — 총 피해) */
+        int life = LIFE;
+        boolean slow;
         int t;
 
         Text(Display.TextDisplay e, Vec3 p, float scale) {
@@ -91,6 +124,24 @@ public final class DamageNumbers {
             this.y = p.y;
             this.z = p.z;
             this.scale = scale;
+        }
+    }
+
+    /**
+     * 0.16.0 한정 초월 룬: 한 번의 시전이 준 피해의 합을 그 자리에 크게 (2초 — 천천히 떠오름): "✦ 총 피해 12,345 ✦". 0 이하면 띄우지 않음.
+     * 숫자 수 제한 (MAX_TEXTS) 과 따로 하나 더 띄울 수 있음 (연타 숫자가 많아도 마지막 합은 보이게)
+     */
+    public static void showTotal(ServerLevel level, Vec3 at, double total, String label) {
+        if (!Rules.get().obj("CONFIG").truthy("DAMAGE_TEXT") || !(total > 0) || ACTIVE.size() >= MAX_TEXTS + SELF_EXTRA) return;
+        String n = String.format(java.util.Locale.ROOT, "%,d", Math.round(total));
+        Display.TextDisplay td = spawn(level, at, BedrockText.toJava("§e§l✦ §f§l" + label + " " + rainbow(n) + " §e§l✦"), 1.9F);
+        if (td == null) return;
+        totalsShown++;
+        for (Text a : ACTIVE) {
+            if (a.e == td) {
+                a.life = 40;
+                a.slow = true;
+            }
         }
     }
 
@@ -106,6 +157,9 @@ public final class DamageNumbers {
         ServerEntityEvents.ALLOW_LOAD.register((entity, level, reason, fromDisk) ->
                 !(fromDisk && entity instanceof Display.TextDisplay && entity.entityTags().contains(TAG)));
     }
+
+    /** 시험용: 지금까지 띄운 총 피해 글자 수 (showTotal) */
+    public static int totalsShown;
 
     /** 지금 떠 있는 숫자 수 (시험용) */
     public static int activeCount() {
@@ -272,7 +326,7 @@ public final class DamageNumbers {
         for (Iterator<Text> it = ACTIVE.iterator(); it.hasNext(); ) {
             Text a = it.next();
             a.t++;
-            if (a.e.isRemoved() || a.t > LIFE) {
+            if (a.e.isRemoved() || a.t > a.life) {
                 if (!a.e.isRemoved()) a.e.discard();
                 it.remove();
                 continue;
@@ -283,7 +337,7 @@ public final class DamageNumbers {
                 a.e.setTransformationInterpolationDuration(3);
                 a.e.setTransformation(scaled(a.scale));
             }
-            a.y += a.t < 6 ? 0.09 : 0.025;
+            a.y += a.slow ? 0.015 : a.t < 6 ? 0.09 : 0.025;
             a.e.setPos(a.x, a.y, a.z);
         }
     }

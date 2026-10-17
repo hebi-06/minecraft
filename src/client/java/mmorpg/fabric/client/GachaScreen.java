@@ -331,7 +331,9 @@ public final class GachaScreen extends Screen {
         g.text(font, up, (int) cx - uw / 2, ay + 8, 0xFFFFFFFF, true);
         if (n5 == 1) {
             GachaArt.textCentered(g, font, GachaArt.gradeColor("transcend") + GachaArt.runeName(Runes.runeId(f5.get(0), "transcend")), cx, cy + 32, 1F, 0xFFFFFFFF);
-            GachaArt.textCentered(g, font, "§7초월 · " + GachaArt.familyName(f5.get(0)) + " 계열", cx, cy + 43, 0.75F, 0xFFFFFFFF);
+            // 0.16.0 한정 초월 룬 (한정 뽑기의 픽업으로만 나옴)
+            String sub = Runes.limited(f5.get(0)) ? "§6§l한정 룬 §7· 이 한정 뽑기에서만" : "§7초월 · " + GachaArt.familyName(f5.get(0)) + " 계열";
+            GachaArt.textCentered(g, font, sub, cx, cy + 43, 0.75F, 0xFFFFFFFF);
         } else {
             GachaArt.textCentered(g, font, "§c§l초월 픽업 " + n5 + "종", cx, cy + 34, 1F, 0xFFFFFFFF);
         }

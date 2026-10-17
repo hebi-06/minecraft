@@ -143,7 +143,7 @@ public final class RuneSmith {
         }
         out.sort(Comparator.<RuneSlot>comparingInt(e -> e.dup() > 1 ? 0 : 1)
                 .thenComparingInt(e -> GRADE_ORDER.indexOf(e.r().grade()))
-                .thenComparingInt(e -> Runes.FAMILY_ORDER.indexOf(e.r().family()))
+                .thenComparingInt(e -> Runes.ALL_FAMILIES.indexOf(e.r().family()))
                 .thenComparingInt(RuneSlot::slot));
         return out;
     }

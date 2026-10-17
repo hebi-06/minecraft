@@ -1,5 +1,5 @@
 {
-  "_doc": "룬 돌파 (8단계 — 애드온에는 없음): 같은 룬 둘을 합치면 남는 룬의 돌파 단계 = 남는 룬 + 재료 + 1 (max 까지). 1돌마다 계수 +perLevel (피해 = 위력 P, 회복 · 보호막 = scaleKeys). 초월 룬은 tiers (3 · 6) 에 이르면 transcend[fn][단계] 의 값으로 바뀌고 연출도 바뀜 (fx — 0~2돌은 화면 색 연출 없음). change: key = 룬 정의의 값 (없는 값이면 base = 원래 값을 함께 — 예: 기절 0), to = 바뀐 값, div = 글자에 보일 때 나누는 수 (틱 → 초 20, 비율 → % 0.01), text 의 {from} · {to} = 앞 단계 값 · 바뀐 값. extra (초월 룬 하나에 하나): type echo = at 돌부터 after 틱 뒤 그 룬 효과가 한 번 더 나감 (위력 × mult, 룬 정의에 set 을 덮음 — 지금 겨눈 곳으로), text 의 {mult} = mult × 100.",
+  "_doc": "룬 돌파 (8단계 — 애드온에는 없음): 같은 룬 둘을 합치면 남는 룬의 돌파 단계 = 남는 룬 + 재료 + 1 (max 까지). 1돌마다 계수 +perLevel (피해 = 위력 P, 회복 · 보호막 = scaleKeys). 초월 룬은 tiers (3 · 6) 에 이르면 transcend[fn][단계] 의 값으로 바뀌고 연출도 바뀜 (fx — 0~2돌은 화면 색 연출 없음). change: key = 룬 정의의 값 (없는 값이면 base = 원래 값을 함께 — 예: 기절 0), to = 바뀐 값, div = 글자에 보일 때 나누는 수 (틱 → 초 20, 비율 → % 0.01), text 의 {from} · {to} = 앞 단계 값 · 바뀐 값. extra (초월 룬 하나에 하나): type echo = at 돌부터 after 틱 뒤 그 룬 효과가 한 번 더 나감 (위력 × mult, 룬 정의에 set 을 덮음 — 지금 겨눈 곳으로), text 의 {mult} = mult × 100. 0.16.0 한정 초월 룬 셋 (만상귀일 · 칠성 강림 · 천공의 눈): 다른 초월처럼 3돌 약 38 ~ 39 · 6돌 약 50 (배율 합, 돌파 계수 ×1.6 전).",
   "max": 6,
   "perLevel": 0.1,
   "scaleKeys": ["heal", "shield"],
@@ -200,6 +200,51 @@
         {"key": "hits", "to": 8, "text": "피의 칼날 {from} → {to}번"},
         {"key": "heal", "to": 0.08, "div": 0.01, "text": "흡혈 적마다 {from} → {to}%"}
       ]
+    },
+    "arcanaUnity": {
+      "3": [
+        {"key": "mult", "to": 25, "text": "구슬 빛줄기 위력 ×{from} → ×{to}"},
+        {"key": "zone", "to": 5, "text": "구슬 범위 {from} → {to}칸"},
+        {"key": "radius", "to": 8.5, "text": "귀일 폭발 {from} → {to}칸"}
+      ],
+      "6": [
+        {"key": "mult", "to": 29, "text": "구슬 빛줄기 위력 ×{from} → ×{to}"},
+        {"key": "crush", "to": 26, "text": "귀일 폭발 위력 ×{from} → ×{to}"},
+        {"key": "radius", "to": 10, "text": "귀일 폭발 {from} → {to}칸"},
+        {"key": "stun", "to": 30, "base": 0, "div": 20, "text": "폭발에 맞은 적 기절 {to}초"}
+      ],
+      "extra": {"at": 6, "type": "finale", "text": "근원의 프리즘 — 폭발 뒤 무지개 · 빛기둥이 쏟아짐"}
+    },
+    "sevenStars": {
+      "3": [
+        {"key": "mult", "to": 3, "text": "별빛 기둥 위력 ×{from} → ×{to}"},
+        {"key": "crush", "to": 21, "text": "별 낙하 위력 ×{from} → ×{to}"},
+        {"key": "beam", "to": 3.2, "text": "별빛 기둥 {from} → {to}칸"},
+        {"key": "radius", "to": 7.5, "text": "별 낙하 {from} → {to}칸"}
+      ],
+      "6": [
+        {"key": "hits", "to": 8, "text": "별 {from} → {to}개 (북극성)"},
+        {"key": "mult", "to": 3.5, "text": "별빛 기둥 위력 ×{from} → ×{to}"},
+        {"key": "crush", "to": 27, "text": "별 낙하 위력 ×{from} → ×{to}"},
+        {"key": "radius", "to": 9, "text": "별 낙하 {from} → {to}칸"}
+      ],
+      "extra": {"at": 6, "type": "finale", "text": "별똥별 비 — 별이 떨어진 뒤 하늘에 별똥별이 쏟아짐"}
+    },
+    "heavenEye": {
+      "3": [
+        {"key": "mult", "to": 4, "text": "광선 위력 ×{from} → ×{to}"},
+        {"key": "crush", "to": 18, "text": "마무리 폭발 위력 ×{from} → ×{to}"},
+        {"key": "width", "to": 3.2, "text": "광선 굵기 {from} → {to}칸"},
+        {"key": "speed", "to": 8, "text": "따라가기 초당 {from} → {to}칸"}
+      ],
+      "6": [
+        {"key": "hits", "to": 7, "text": "광선 {from} → {to}번 (0.5초 더)"},
+        {"key": "mult", "to": 5, "text": "광선 위력 ×{from} → ×{to}"},
+        {"key": "crush", "to": 20, "text": "마무리 폭발 위력 ×{from} → ×{to}"},
+        {"key": "radius", "to": 7, "text": "마무리 폭발 {from} → {to}칸"},
+        {"key": "width", "to": 4, "text": "광선 굵기 {from} → {to}칸"}
+      ],
+      "extra": {"at": 6, "type": "finale", "text": "심판의 눈 — 광선을 빛이 감돌고 끝에 해빛 기둥 여덟"}
     },
     "awakening": {
       "3": [

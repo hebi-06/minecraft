@@ -73,9 +73,9 @@ public final class RuneBreakTest {
         check(f3 != null && f3.edge() == 0 && !f3.awaken() && f3.skyTicks() == 1 && f3.skyDist() == 1, "fx 3 = the plain sky + flash");
         check(f6 != null && f6.edge() > 0 && f6.awaken() && f6.skyTicks() > 1 && f6.skyDist() < 1 && f6.flashHold() > 0, "fx 6 = deeper, edge glow, awaken");
 
-        // 초월 17종 (자바 덧붙임 사신 포함) 모두 3 · 6돌 강화 (값은 원래 정의에 있는 것 · 커짐 · 6돌 ≥ 3돌)
+        // 초월 20종 (자바 덧붙임 사신 · 0.16.0 한정 셋 포함) 모두 3 · 6돌 강화 (값은 원래 정의에 있는 것 · 커짐 · 6돌 ≥ 3돌)
         Set<String> fns = new HashSet<>();
-        for (String fam : Runes.FAMILY_ORDER) {
+        for (String fam : Runes.ALL_FAMILIES) {
             Runes.Rune t = rune(fam, "transcend");
             check(t != null, fam + " transcend");
             if (t == null) continue;
@@ -152,12 +152,21 @@ public final class RuneBreakTest {
         Runes.Rune fall = rune("str", "transcend");
         Runes.Rune spear = rune("storm", "transcend");
         int extras = 0;
-        for (String fam : Runes.FAMILY_ORDER) {
+        int finales = 0;
+        for (String fam : Runes.ALL_FAMILIES) {
             Runes.Rune t = rune(fam, "transcend");
             RuneBreak.Extra ex = RuneBreak.extra(t.def().str("fn"));
             if (ex == null) continue;
-            extras++;
             String fn = t.def().str("fn");
+            if ("finale".equals(ex.type())) {
+                // 0.16.0 한정 초월 룬의 6돌 전용 연출 (피해 없음)
+                finales++;
+                check(ex.at() == 6 && ex.mult() == 0 && ex.after() == 0 && ex.set().isEmpty(), fn + " finale at 6 · no damage");
+                check(!ex.text().isEmpty() && !RuneBreak.extraText(ex).contains("{"), fn + " finale text");
+                check(RuneBreak.tierLines(t, 6, false).stream().anyMatch(l -> l.contains("◆ " + ex.text())), fn + " finale line");
+                continue;
+            }
+            extras++;
             check("echo".equals(ex.type()), fn + " extra type " + ex.type());
             check(RuneBreak.tiers().contains(ex.at()), fn + " extra at a tier " + ex.at());
             check(ex.mult() > 0 && ex.mult() <= 1 && ex.after() > 0, fn + " extra mult / after");
@@ -166,6 +175,7 @@ public final class RuneBreakTest {
             check(RuneBreak.extraFor(t, ex.at() - 1) == null && RuneBreak.extraFor(t, ex.at()) == ex, fn + " extra from " + ex.at());
         }
         check(extras == 2, "two echo runes " + extras);
+        check(finales == Runes.LIMITED_ORDER.size(), "a finale for each limited rune " + finales);
         check(RuneBreak.extraFor(rune("str", "hero"), 6) == null, "not for hero");
         RuneBreak.Extra fx6 = RuneBreak.extraFor(fall, 6);
         check(fx6 != null && Math.abs(fx6.mult() - 0.6) < 1e-9 && fx6.after() == 34, "heavenFall echo 60% after 34");

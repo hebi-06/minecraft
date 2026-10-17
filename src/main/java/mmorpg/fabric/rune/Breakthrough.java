@@ -233,7 +233,7 @@ public final class Breakthrough {
             if (m != null) out.add(m);
         }
         out.sort(Comparator.<Merge>comparingInt(m -> Runes.GRADE_ORDER.indexOf(m.target().r().grade()))
-                .thenComparingInt(m -> Runes.FAMILY_ORDER.indexOf(m.target().r().family())));
+                .thenComparingInt(m -> Runes.ALL_FAMILIES.indexOf(m.target().r().family())));
         return out;
     }
 

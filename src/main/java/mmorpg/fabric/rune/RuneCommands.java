@@ -26,7 +26,7 @@ import net.minecraft.server.permissions.Permissions;
 public final class RuneCommands {
     private RuneCommands() {}
 
-    private static final SuggestionProvider<CommandSourceStack> FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.FAMILY_ORDER, b);
+    private static final SuggestionProvider<CommandSourceStack> FAMILIES = (c, b) -> SharedSuggestionProvider.suggest(Runes.ALL_FAMILIES, b);
     private static final SuggestionProvider<CommandSourceStack> GRADES = (c, b) -> SharedSuggestionProvider.suggest(Runes.GRADE_ORDER, b);
     /** 뽑기권 종류: normal · advanced · 스탯 룬 뽑기권 (7단계 — str · dex · int · vit) */
     private static final SuggestionProvider<CommandSourceStack> KINDS = (c, b) -> {
@@ -71,7 +71,7 @@ public final class RuneCommands {
         String grade = StringArgumentType.getString(c, "grade");
         Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));
         if (r == null) {
-            tell(sp, "§c없는 룬입니다. §7(계열 " + String.join("·", Runes.FAMILY_ORDER) + ", 등급 common·rare·noble·hero·transcend)");
+            tell(sp, "§c없는 룬입니다. §7(계열 " + String.join("·", Runes.ALL_FAMILIES) + ", 등급 common·rare·noble·hero·transcend)");
             return 0;
         }
         Notify.give(sp, Breakthrough.stack(family, grade, level));

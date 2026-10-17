@@ -19,7 +19,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * 룬 아이템 등록: 룬 85 (계열 17 × 등급 5 — 0.12.6 사신 계열 포함, rpg:rune_&lt;계열&gt;_&lt;등급&gt;, 한 칸에 하나, 영웅 · 초월은 반짝임) + 룬 뽑기권 · 고급 룬 뽑기권 (64개씩, 반짝임)
+ * 룬 아이템 등록: 룬 88 (계열 17 × 등급 5 — 0.12.6 사신 계열 포함 + 0.16.0 한정 초월 셋, rpg:rune_&lt;계열&gt;_&lt;등급&gt;, 한 칸에 하나, 영웅 · 초월은 반짝임) + 룬 뽑기권 · 고급 룬 뽑기권 (64개씩, 반짝임)
  * + 스탯 룬 뽑기권 4 (7단계 스탯 트리 — rpg:&lt;스탯&gt;_rune_ticket, 이름이 같은 계열 5종만).
  * 크리에이티브 탭 "룬" 하나 (뽑기권 → 계열 순 → 등급 순).
  */
@@ -42,7 +42,7 @@ public final class RuneItems {
 
     /** 아이템 등록 (RpgItems.init 이 부름 — 레지스트리가 얼기 전) */
     public static void init() {
-        for (String family : Runes.FAMILY_ORDER) {
+        for (String family : Runes.ALL_FAMILIES) { // 0.16.0 한정 계열 (초월 하나씩) 도
             for (String grade : Runes.GRADE_ORDER) {
                 Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));
                 if (r == null) continue;
