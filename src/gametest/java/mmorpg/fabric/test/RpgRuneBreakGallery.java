@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import mmorpg.core.RuneBreak;
+import mmorpg.core.RuneTip;
 import mmorpg.core.Runes;
 import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.client.UltFx;
@@ -18,6 +19,7 @@ import mmorpg.fabric.rune.RuneCast;
 import mmorpg.fabric.rune.RuneItems;
 import mmorpg.fabric.rune.RuneSmith;
 import mmorpg.fabric.rune.Ult;
+import mmorpg.fabric.stattree.StatTrees;
 import mmorpg.fabric.ui.FormNet;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -25,10 +27,12 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.ChatVisiblity;
@@ -42,7 +46,8 @@ import org.slf4j.LoggerFactory;
  * 모두 돌파 (확인 → 6돌), 가방의 배지 (1 ~ 6) · 설명 (3돌 · 6돌 강화 줄), 갈기 창 (돌파한 룬의 조각), 메테오 0 · 3 · 6돌을 실제로 써서
  * 화면 색 연출 단계 (0돌 없음 · 3돌 하늘빛 · 6돌 짙은 하늘빛 + 테두리 빛 + 금빛 각성 — 클라이언트의 하늘빛 짙기로도 확인), 6돌 단계 효과 "한 번 더"
  * (천붕 검 · 뇌신의 창 — 과녁 허스크의 두 번째 피해 = 첫 피해 × 60%), 3인칭 6돌 각성.
- * 사진 이름 rb_… → ci-logs 의 shots/. 확인 항목은 로그 [runebreak-gallery] OK / FAIL.
+ * 0.16.1 룬 툴팁 (RuneTip — 총 피해 · 회복 숫자, 계수 · 돌파 줄): 마력 125 로 9종을 가방에서 가리켜 사진 (rt_…), 메테오 툴팁의 총 피해 = 서버 위력 × 32 · 6돌 × 1.6 × 40.
+ * 사진 이름 rb_… · rt_… → ci-logs 의 shots/. 확인 항목은 로그 [runebreak-gallery] OK / FAIL.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgRuneBreakGallery implements FabricClientGameTest {
@@ -76,6 +81,7 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
             part(ctx, "window", () -> window(ctx, server, conn));
             part(ctx, "all", () -> all(ctx, server, conn));
             part(ctx, "bag", () -> bag(ctx, server));
+            part(ctx, "tips", () -> tips(ctx, server));
             part(ctx, "cast", () -> cast(ctx, server, conn));
             ctx.setScreen(() -> null);
         }
@@ -201,6 +207,56 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         hover(ctx, sc -> hotbar(sc, 8));
         shot(ctx, "rb_tip_shadowless0");
         closeScreen(ctx);
+    }
+
+    // ------------------------------------------------------------ 0.16.1 룬 툴팁: 총 피해 · 회복 숫자 (내 스탯), 계수 · 돌파 줄
+
+    private void tips(ClientGameTestContext ctx, TestServerContext server) {
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (String st : List.of("str", "dex", "vit")) RpgPlayers.setStat(sp, st, 0);
+            RpgPlayers.setStat(sp, "int", 125);
+            sp.getInventory().clearContent();
+            sp.getInventory().setItem(0, Breakthrough.stack("int", "transcend", 0)); // 메테오
+            sp.getInventory().setItem(1, Breakthrough.stack("int", "transcend", 6));
+            sp.getInventory().setItem(2, Breakthrough.stack("reaper", "transcend", 6)); // 적월 강림 (나눔이 길어 다음 줄)
+            sp.getInventory().setItem(3, Breakthrough.stack("spirit", "transcend", 0)); // 정령왕 강림
+            sp.getInventory().setItem(4, Breakthrough.stack("vit", "rare", 2)); // 생명의 샘 (회복)
+            sp.getInventory().setItem(5, Breakthrough.stack("holy", "transcend", 3)); // 대천사 강림 (회복 · 보호막)
+            sp.getInventory().setItem(6, Breakthrough.stack("strike", "hero", 0)); // 피의 칼날 (평타 강화)
+            sp.getInventory().setItem(7, Breakthrough.stack("arcana", "transcend", 6)); // 만상귀일 (한정)
+            sp.getInventory().setItem(8, Breakthrough.stack("assassin", "transcend", 0)); // 월광 암살 (콤보)
+            sp.getInventory().setSelectedSlot(8);
+        });
+        ctx.waitTicks(10);
+        // 툴팁 숫자 (클라이언트 — 받은 스탯) = 서버 위력 (RuneCast.power × 스탯 트리) × 배율
+        double P = server.computeOnServer(s -> RuneCast.power(player(s), "int") * StatTrees.runeMult(player(s)));
+        String want0 = "총 피해 " + RuneTip.fmt(P * 32);
+        String want6 = "총 피해 " + RuneTip.fmt(P * RuneBreak.coef(6) * 40);
+        String tip0 = ctx.computeOnClient(mc -> tooltipOf(mc, 0));
+        String tip6 = ctx.computeOnClient(mc -> tooltipOf(mc, 1));
+        check(tip0.contains(want0) && tip6.contains(want6), "meteor tooltip numbers = server power (" + want0 + " · " + want6 + ")");
+        check(!tip0.contains("위력") && !tip0.contains("연출") && !tip0.contains("용도") && tip0.contains("마력 계수 1.0 · 다른 스탯 0.85") && tip0.contains("돌파 ")
+                && tip0.contains("☆3돌 총 피해") && tip0.contains(RuneTip.CONTROL), "meteor tooltip lines (" + tip0 + ")");
+        String spring = ctx.computeOnClient(mc -> tooltipOf(mc, 4));
+        check(spring.contains("✚ 회복 ") && spring.contains(RuneTip.BASIS_SELF), "heal tooltip (" + spring + ")");
+        ctx.getInput().pressKey(o -> o.keyInventory);
+        if (!waitScreen(ctx, sc -> sc instanceof InventoryScreen, "inventory")) return;
+        away(ctx);
+        String[] names = {"meteor0", "meteor6", "crimson6", "spiritking0", "spring2", "archangel3", "bloodblade0", "arcana6", "moon0"};
+        for (int i = 0; i < names.length; i++) {
+            final int slot = i;
+            hover(ctx, sc -> hotbar(sc, slot));
+            shot(ctx, "rt_" + names[i]);
+        }
+        closeScreen(ctx);
+    }
+
+    /** 가방 slot 칸 아이템의 툴팁 글자 (줄을 " / " 로) */
+    private static String tooltipOf(Minecraft mc, int slot) {
+        StringBuilder b = new StringBuilder();
+        for (Component c : Screen.getTooltipFromItem(mc, mc.player.getInventory().getItem(slot))) b.append(c.getString()).append(" / ");
+        return b.toString();
     }
 
     /** 가방 창의 핫바 칸 가운데 */

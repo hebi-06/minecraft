@@ -1,9 +1,12 @@
 package mmorpg.fabric.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import mmorpg.core.RuneTip;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgNet;
 import mmorpg.fabric.RpgParticles;
+import mmorpg.fabric.StatSheet;
+import mmorpg.fabric.rune.RuneItem;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -57,6 +60,13 @@ public final class MmorpgClient implements ClientModInitializer {
         // 장식 (0.13.0): 받은 장식 · 모습들, 장식 모델 (갑옷 스킨 · 머리 · 등 장식), 사람 렌더러에 장식 층
         ClientCosmetics.init();
         ClientGacha.init(); // 룬 뽑기 창 · 연출 (0.14.0)
+        // 룬 툴팁 (0.16.1): 총 피해 · 회복을 내 스탯으로 (받은 스탯 · 장비 · 버프 · 스탯 트리 공격력 + 룬 피해 % · 최대 체력 — 서버 RuneCast 와 같은 식)
+        RuneItem.viewer = () -> {
+            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+            if (!ClientRpgState.synced() || mc.player == null) return null;
+            StatSheet s = ClientRpgState.sheet();
+            return new RuneTip.Viewer(s.eff(), 1 + (s.tree("atk") + s.tree("rune")) / 100, mc.player.getMaxHealth());
+        };
         CosmeticModels.init();
         CosmeticLayer.init();
         statsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.stats", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, CATEGORY));

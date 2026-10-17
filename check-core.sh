@@ -43,7 +43,7 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest"
+echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest"
 # 대조 시험은 애드온 config.js 그대로의 규칙으로 (자바 전용 덧붙임 rules_more.json 없이 — Rules.PURE)
 java -Dstdout.encoding=UTF-8 -Dmmorpg.pureRules=true -cp "$out/main:$out/test" mmorpg.core.ParityTest
 # 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
@@ -64,5 +64,7 @@ java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.ArmorMoreTest
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RunesMoreTest
 # 0.14.0 룬 뽑기 (자바 전용 — gacha.json: 원신식 천장 · 반천장 / 확천장 · 한정 뽑기 설정 · 통합 확률 모의)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.GachaTest
-# 0.16.0 한정 초월 룬 셋 (자바 전용 — 계열 arcana · dipper · skyeye: 네 스탯의 합 × 1.0 · 배율 32 · 한정 뽑기의 초월 픽업으로만 · 돌파)
+# 0.16.0 한정 초월 룬 셋 (자바 전용 — 계열 arcana · dipper · skyeye: 네 스탯의 합 × 1.0 · 배율 34 · 42 · 55 · 한정 뽑기의 초월 픽업으로만 · 돌파)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.LimitedRunesTest
+# 0.16.1: 자바 판 룬 툴팁 (총 피해 숫자 · 뺀 줄 · 계수 · 돌파 줄)
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RuneTipTest

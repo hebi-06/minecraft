@@ -348,7 +348,8 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
             for (Component c : Screen.getTooltipFromItem(mc, Breakthrough.stack("str", "noble", 0))) b.append(c.getString()).append(" / ");
             return b.toString();
         });
-        check(lore.contains("우클릭: 빈 스킬 칸에 올리기") && lore.contains("스킬 칸에 올려 키로 사용") && !lore.contains("runequick"), "rune lore lines (" + lore + ")");
+        check(lore.contains("우클릭: 빈 스킬 칸에 올리기") && lore.contains("칸의 키로 사용") && lore.contains("총 피해") && !lore.contains("위력×") && !lore.contains("runequick"),
+                "rune lore lines (" + lore + ")");
         ctx.getInput().pressKey(options -> options.keyInventory);
         if (waitScreen(ctx, sc -> sc instanceof InventoryScreen, "inventory")) {
             // 가방 첫 줄 (9 ~) 의 룬

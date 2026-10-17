@@ -445,8 +445,8 @@ public final class Runes {
         return t == null ? type : t.str("name");
     }
 
-    /** runes.js coefText: "민첩 계수 1.0", 도끼 "힘 1.0 + 체력 0.5". */
-    private static String coefText(String family) {
+    /** runes.js coefText: "민첩 계수 1.0", 도끼 "힘 1.0 + 체력 0.5". (RuneTip 도 씀) */
+    static String coefText(String family) {
         Obj f = FAMILIES.objOrNull(family);
         Obj coef = f == null ? null : f.objOrNull("coef");
         List<String> keys = coef == null ? List.of() : List.copyOf(coef.keys());
