@@ -170,11 +170,13 @@ public final class RpgSkollTests {
             float hp1 = b.getHealth();
             h.assertTrue(RpgNidhoggTests.hit(west, b, 100F), "west hit lands");
             h.assertTrue(Math.abs(hp1 - b.getHealth() - 100) < 1e-3, "plain side took 100 " + (hp1 - b.getHealth()));
-            // 숫자 앞 표시 (숫자 상한에 걸리지 않았으면): 노란 약점
+            // 숫자 앞 표시: 옆구리 숫자 (130) 에만 노란 약점. 숫자는 서버 전체 상한 (동시에 도는 다른 시험의 숫자와 같이 셈) 등으로 뜨지 않을 수 있어
+            // 뜬 숫자만 봄 (보통은 없음, 드물게 옆구리 숫자만 빠진 적이 있음 — 2026-10-17 CI)
             List<String> nums = level.getEntitiesOfClass(Display.TextDisplay.class, b.getBoundingBox().inflate(6), d -> d.entityTags().contains(DamageNumbers.TAG))
                     .stream().map(d -> d.getText().getString()).toList();
             LOG.info("[skoll-test] damage numbers near the boss: {}", nums);
-            h.assertTrue(nums.isEmpty() || nums.stream().anyMatch(t -> t.contains("약점")), "a number with the weak mark " + nums);
+            h.assertTrue(nums.stream().filter(t -> t.contains("130")).allMatch(t -> t.contains("약점"))
+                    && nums.stream().filter(t -> t.contains("100")).noneMatch(t -> t.contains("약점")), "weak mark only on the flank number " + nums);
             // 지침 (달빛 사냥이 끝난 뒤): ×1.25
             BossSkoll.mem(enc).windedUntil = Tasks.now() + 40;
             float hp2 = b.getHealth();
