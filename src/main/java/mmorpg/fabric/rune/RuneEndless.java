@@ -103,7 +103,9 @@ final class RuneEndless {
         int converge = cutAt - 8;
         int swords = (int) Math.round(R * 1.5);
         RuneLimited.Tally tally = new RuneLimited.Tally();
-        RuneKit.ultSkyFor(sp, level, c, "endlessSlash", cutAt + 30, null);
+        // 하늘빛 (3돌부터): 영역이 끝나고 1.5초 뒤까지 — 6돌의 하늘빛 시간 배율 (skyTicks 1.5) 을 나눠 둠 (긴 영역 룬이라 배율을 곱하면 14초나 남음)
+        double skyK = skyTicksOf(sp);
+        RuneKit.ultSkyFor(sp, level, c, "endlessSlash", (int) Math.round((cutAt + 30) / skyK), null);
 
         // ---- 전개: 퍼지는 고리 · 바닥 검진 문양 · 경계의 검이 차례로 솟음
         RuneKit.novaRing(level, c, R * 0.22, 4.4, VIOLET, EDGE, Opt.of("life", charge / 20.0 + 0.15, "fade", 0.45));
@@ -216,9 +218,16 @@ final class RuneEndless {
                 });
             }
         });
-        if (fin) RuneKit.later(cutAt + 4, () -> skySplit(sp, level, c, f, R, life));
-        RuneLimited.total(sp, "endlessSlash", V.up(V.add(c, f, R * 0.45), 3.0), tally, cutAt + 10);
+        if (fin) RuneKit.later(cutAt + 4, () -> skySplit(sp, level, c, f, R, life, skyK));
+        // 총 피해: 영역 앞쪽 끝 위 (1인칭 · 3인칭 모두 과녁 머리 위 · 화면 위쪽 안). 6돌은 하늘 가르기의 X 가 옅어진 뒤 (겹쳐 읽기 어렵지 않게)
+        RuneLimited.total(sp, "endlessSlash", V.up(V.add(c, f, R * 0.8), 2.6), tally, cutAt + (fin ? 22 : 10));
         return true;
+    }
+
+    /** 이 사람이 지금 쓴 무간참역의 하늘빛 시간 배율 (3돌 미만이면 1) */
+    static double skyTicksOf(ServerPlayer sp) {
+        mmorpg.core.RuneBreak.Fx fx = Breakthrough.castFx(sp, "endlessSlash");
+        return fx != null && fx.skyTicks() > 0 ? fx.skyTicks() : 1;
     }
 
     /** 일섬 한 줄: a → b 를 n 조각으로 나눠 secs 동안 차례로 그음 (조각 양끝 35% 겹침 — 끊겨 보이지 않게). 먹빛 · 보랏빛 · 흰 칼날 · 흰 심 네 겹 */
@@ -240,12 +249,17 @@ final class RuneEndless {
     /** 일섬 직전 검이 모여 멈추는 둘레 (한가운데에서) */
     static final double GATHER_R = 2.8;
 
-    /** 6돌 하늘 가르기: 앞쪽 하늘이 X자로 크게 갈라지고 (빛나는 금 · 섬광) 검 조각이 영역으로 쏟아짐 (피해 없음) */
-    static void skySplit(ServerPlayer sp, ServerLevel level, Vec3 c, Vec3 f, double R, String life) {
+    /**
+     * 6돌 하늘 가르기: 앞쪽 하늘이 X자로 크게 갈라지고 (빛나는 금 · 섬광) 검 조각이 영역으로 쏟아짐 (피해 없음). 갈라지는 순간 하늘빛이 공허 (검보라 —
+     * 6돌은 안개가 3 ~ 24칸이라 먼 그림이 어두워짐) 에서 보랏빛 (rpg:ult_thunder — 안개 6 ~ 38칸) 으로 바뀜 = 갈라진 하늘로 빛이 듦. X 는 영역 안쪽 하늘 (앞으로
+     * 반지름 × 0.75 · 높이 4.8칸 — 1인칭 화면 위쪽 안, 3인칭 과녁 뒤)
+     */
+    static void skySplit(ServerPlayer sp, ServerLevel level, Vec3 c, Vec3 f, double R, String life, double skyK) {
         if (!RuneKit.sameLife(sp, life)) return;
+        RuneKit.ultSkyFor(sp, level, c, "endlessSlash", (int) Math.round(70 / skyK), "rpg:ult_thunder");
         Vec3 side = V.rightOf(f);
-        Vec3 x0 = V.up(V.add(c, f, R + 3), 6.5);
-        double s = 5.2;
+        Vec3 x0 = V.up(V.add(c, f, R * 0.75), 4.8);
+        double s = 3.2;
         Vec3[][] arms = {{V.add(V.add(x0, side, -s), V.UP, -s), V.add(V.add(x0, side, s), V.UP, s)},
             {V.add(V.add(x0, side, -s), V.UP, s), V.add(V.add(x0, side, s), V.UP, -s)}};
         for (int i = 0; i < 2; i++) {
@@ -258,8 +272,8 @@ final class RuneEndless {
         }
         // 갈라진 하늘: 빛나는 금 (시전자 쪽을 보는 면) · 섬광
         Vec3 toward = V.unit(V.sub(sp.getEyePosition(), x0));
-        RuneKit.glowCrack(level, x0, s * 1.5, VIOLET, WHITE, Opt.of("dir", toward, "life", 2.4, "fade", 0.5, "v", 1.0, "grow", 0.15, "spin", 0.0));
-        RuneKit.skyFlare(level, x0, 5.5, VIOLET, WHITE, Opt.of("life", 1.4, "grow", 0.3, "fade", 0.5));
+        RuneKit.glowCrack(level, x0, s * 1.6, VIOLET, WHITE, Opt.of("dir", toward, "life", 2.4, "fade", 0.5, "v", 1.0, "grow", 0.15, "spin", 0.0));
+        RuneKit.skyFlare(level, x0, 4.0, VIOLET, WHITE, Opt.of("life", 1.4, "grow", 0.3, "fade", 0.5));
         SkillFx.play(level, "block.glass.break", x0, 0.5, 1.0);
         SkillFx.play(level, "item.trident.thunder", c, 1.3, 0.7);
         // 검 조각이 갈라진 곳에서 영역으로 쏟아짐 (1.2초 동안 스물넷)

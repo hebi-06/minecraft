@@ -121,10 +121,11 @@ public final class DamageNumbers {
         int life = LIFE;
         boolean slow;
         int t;
-        /** 총 피해 숫자 (0 보다 크면 0 → total 로 차오름 · 반짝임 — tickTotal) · 색 · 끝에 옅어지며 걷힘 */
+        /** 총 피해 숫자 (0 보다 크면 0 → total 로 차오름 · 반짝임 — tickTotal) · 색 · 끝에 옅어지며 걷힘 · 틱마다 오르는 칸 (0 보다 작으면 기본) */
         double total;
         Tone tone;
         boolean fade;
+        double rise = -1;
 
         Text(Display.TextDisplay e, Vec3 p, float scale) {
             this.e = e;
@@ -141,18 +142,21 @@ public final class DamageNumbers {
      */
     public record Tone(int[] stops, int rule, int label, int shadow) {
         private static final double[] W = {1, 1, 1};
-        /** 계열 색이 아주 옅을 때 (만상귀일 — 진줏빛): 흰빛 → 옅은 라일락 → 옅은 하늘빛 */
-        private static final int[] PEARL = {0xFFFFFF, 0xE6D9FF, 0xCDEBFF};
+        /** 계열 색이 아주 옅을 때 (만상귀일 — 진줏빛): 흰빛 → 라일락 → 하늘빛 */
+        private static final int[] PEARL = {0xFFFFFF, 0xDCCBFF, 0xB8E2FF};
         /** 기본 (금빛 — W · PEARL 다음에 만듦: 정적 초기화 순서) */
         public static final Tone GOLD = of(new double[] {1, 0.74, 0.25}, new double[] {1, 0.97, 0.85});
 
-        /** 룬 계열 색 (RUNE.color — accent = 첫째 색 · light = 둘째 색) 에서: 숫자 light → accent (흰빛을 30% 섞어 밝게), 그림자 accent × 0.45 */
+        /**
+         * 룬 계열 색 (RUNE.color — accent = 첫째 색 · light = 둘째 색) 에서: 숫자 light (흰빛 30%) → accent (흰빛 15%), 그림자 accent × 0.3 (밝은 하늘에서도
+         * 글자 테두리가 또렷하게). 두 끝이 너무 비슷하면 (아주 옅은 계열) 진줏빛
+         */
         public static Tone of(double[] accent, double[] light) {
             double[] l = mix(light, W, 0.3);
-            double[] d = mix(accent, W, 0.3);
+            double[] d = mix(accent, W, 0.15);
             double gap = Math.abs(l[0] - d[0]) + Math.abs(l[1] - d[1]) + Math.abs(l[2] - d[2]);
             int[] stops = gap < 0.3 ? PEARL : new int[] {rgb(l), rgb(d)};
-            return new Tone(stops, rgb(mix(accent, W, 0.15)), rgb(mix(light, W, 0.15)), rgb(new double[] {accent[0] * 0.45, accent[1] * 0.45, accent[2] * 0.45}));
+            return new Tone(stops, rgb(mix(accent, W, 0.15)), rgb(mix(light, W, 0.15)), rgb(new double[] {accent[0] * 0.3, accent[1] * 0.3, accent[2] * 0.3}));
         }
 
         /** 그라데이션의 f (0 ~ 1) 자리 색 */
@@ -183,10 +187,11 @@ public final class DamageNumbers {
         return (r << 16) | (g << 8) | bl;
     }
 
-    /** 총 피해: 숫자 크기 · 위 줄 크기 · 위 줄 높이 (숫자 위) · 떠 있는 틱 · 차오르는 틱 · 걷히는 틱 · 처음 크기 배율 (작게 나와 커짐) */
+    /** 총 피해: 숫자 크기 · 위 줄 크기 · 위 줄 높이 (숫자 위) · 떠 있는 틱 · 차오르는 틱 · 걷히는 틱 · 처음 크기 배율 (작게 나와 커짐) · 틱마다 오르는 칸 */
     static final float TOTAL_SCALE = 2.6F;
-    static final float TOTAL_LABEL_SCALE = 1.15F;
+    static final float TOTAL_LABEL_SCALE = 1.4F;
     static final double TOTAL_LABEL_UP = 0.68;
+    static final double TOTAL_RISE = 0.006;
     static final int TOTAL_LIFE = 56;
     static final int TOTAL_COUNT = 14;
     static final int TOTAL_FADE = 8;
@@ -221,32 +226,34 @@ public final class DamageNumbers {
     }
 
     /**
-     * 0.16.0 한정 초월 룬: 한 번의 시전이 준 피해의 합을 그 자리에 크게 (2.8초 — 천천히 떠오름). 0 이하면 띄우지 않음.
+     * 0.16.0 한정 초월 룬: 한 번의 시전이 준 피해의 합을 그 자리에 크게 (2.8초 — 아주 천천히 떠오름). 0 이하면 띄우지 않음.
      * 0.17.0 모양 (사용자 "총 피해 무지개 별로 — 더 세련되게"): 위에 작은 "── 총 피해 ──", 아래 큰 숫자 (룬 계열 색 그라데이션 · 계열 색 그림자) —
      * 작게 나와 커지며 0 에서 합까지 0.7초 동안 차오름 (처음 빠르게 · 끝에 천천히) → 다 차면 톡 커졌다 돌아오고 빛이 왼쪽 → 오른쪽으로 숫자를 훑음
      * → 끝 0.4초 동안 옅어지며 걷힘. 숫자 수 제한 (MAX_TEXTS) 과 따로 더 띄울 수 있음 (연타 숫자가 많아도 마지막 합은 보이게)
      */
     public static void showTotal(ServerLevel level, Vec3 at, double total, String label) {
-        showTotal(level, at, total, label, Tone.GOLD);
+        showTotal(level, at, total, label, Tone.GOLD, 1F);
     }
 
-    public static void showTotal(ServerLevel level, Vec3 at, double total, String label, Tone tone) {
+    /** k = 크기 배율 (멀리 띄울 때 크게 — RuneLimited.total: 시전자 눈에서 7칸 넘으면 거리 / 7, 최대 2.4) */
+    public static void showTotal(ServerLevel level, Vec3 at, double total, String label, Tone tone, float k) {
         if (!Rules.get().obj("CONFIG").truthy("DAMAGE_TEXT") || !(total > 0) || ACTIVE.size() >= MAX_TEXTS + SELF_EXTRA) return;
         Tone tn = tone != null ? tone : Tone.GOLD;
-        Text num = spawnText(level, at, totalNumber(0, tn, -1), TOTAL_SCALE, TOTAL_START);
+        float kk = Math.max(0.5F, k);
+        Text num = spawnText(level, at, totalNumber(0, tn, -1), TOTAL_SCALE * kk, TOTAL_START);
         if (num == null) return;
         totalsShown++;
         num.total = total;
         num.tone = tn;
         num.life = TOTAL_LIFE;
-        num.slow = true;
         num.fade = true;
+        num.rise = TOTAL_RISE * kk;
         if (label == null || label.isEmpty()) return;
-        Text lab = spawnText(level, new Vec3(at.x, at.y + TOTAL_LABEL_UP, at.z), totalLabel(label, tn), TOTAL_LABEL_SCALE, TOTAL_START);
+        Text lab = spawnText(level, new Vec3(at.x, at.y + TOTAL_LABEL_UP * kk, at.z), totalLabel(label, tn), TOTAL_LABEL_SCALE * kk, TOTAL_START);
         if (lab == null) return;
         lab.life = TOTAL_LIFE;
-        lab.slow = true;
         lab.fade = true;
+        lab.rise = TOTAL_RISE * kk;
     }
 
     /** 총 피해 숫자의 틱 (t = 띄운 뒤 틱): 차오름 → 톡 → 반짝임 (커졌다 돌아온 뒤 — 글자를 바꾸는 동안 크기 보간이 겹치지 않게) */
@@ -474,7 +481,7 @@ public final class DamageNumbers {
                 a.e.setTransformationInterpolationDuration(TOTAL_FADE);
                 a.e.setTextOpacity((byte) 24);
             }
-            a.y += a.slow ? 0.015 : a.t < 6 ? 0.09 : 0.025;
+            a.y += a.rise >= 0 ? a.rise : a.slow ? 0.015 : a.t < 6 ? 0.09 : 0.025;
             a.e.setPos(a.x, a.y, a.z);
         }
     }

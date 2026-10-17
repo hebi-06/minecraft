@@ -94,7 +94,11 @@ final class RuneLimited {
     static void total(ServerPlayer sp, String fn, Vec3 at, Tally t, int delay) {
         RuneKit.later(delay, () -> {
             LAST.put(sp.getUUID() + "|" + fn, new double[] {t.sum, t.hits});
-            if (t.sum > 0 && !sp.isRemoved()) DamageNumbers.showTotal(sp.level(), at, t.sum, "총 피해", toneOf(fn));
+            if (t.sum > 0 && !sp.isRemoved()) {
+                // 멀리 (조준한 곳 — 13칸 쯤) 띄우면 크게: 시전자 화면에서 7칸 앞에 띄운 것과 같은 크기 (최대 2.4배)
+                float k = (float) Math.max(1, Math.min(2.4, sp.getEyePosition().distanceTo(at) / 7.0));
+                DamageNumbers.showTotal(sp.level(), at, t.sum, "총 피해", toneOf(fn), k);
+            }
         });
     }
 
