@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.blaze3d.vertex.PoseStack;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -78,6 +79,20 @@ public final class PieceModel extends Model<HumanoidRenderState> {
     /** 반투명인지 (시험용) */
     public boolean translucent() {
         return translucent;
+    }
+
+    /**
+     * 시험용: 이 나이 (틱) · 걷는 빠르기 (0~1) 의 자세에서 가장 앞 (z 가 가장 작은) 꼭짓점 — 픽셀 (사람 모델 기준: 앞 -z, 몸통 등 면 = 2).
+     * 날개 · 망토가 날갯짓 · 휘날림 중에도 몸을 뚫지 않는지 (사진첩 — 0.14.3).
+     */
+    public float frontmostZ(float ageInTicks, float walkSpeed) {
+        HumanoidRenderState s = new HumanoidRenderState();
+        s.ageInTicks = ageInTicks;
+        s.walkAnimationSpeed = walkSpeed;
+        setupAnim(s);
+        float[] min = {Float.MAX_VALUE};
+        root().getExtentsForGui(new PoseStack(), v -> min[0] = Math.min(min[0], v.z()));
+        return min[0] * 16F;
     }
 
     /** 사람 모델의 움직임을 받은 뒤 (TransformCopyingModel): 움직이는 뼈만 */

@@ -101,6 +101,12 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             check(ctx.computeOnClient(mc -> CosmeticModels.animCount("fairy_wings")) == 4, "fairy wing bones flutter (4 — upper · lower × 2)");
             check(ctx.computeOnClient(mc -> CosmeticModels.translucent("fairy_wings") && !CosmeticModels.translucent("angel_wings")),
                     "fairy wings drawn translucent (angel wings not)");
+            // 등 장식은 날갯짓 · 휘날림 중에도 몸을 뚫지 않음 (0.14.3 — 날개 끝이 앞으로 꺾여 몸을 뚫던 것): 가장 앞 꼭짓점이 몸통 등 면 (z 2 픽셀) 뒤
+            for (CosmeticDefs.Def d : CosmeticDefs.of("back", null)) {
+                if (d.model() == null) continue;
+                float z = ctx.computeOnClient(mc -> CosmeticModels.frontmostZ(d.model()));
+                check(z >= 1.95F, d.id() + " stays behind the back while moving (frontmost z " + z + " px, back = 2)");
+            }
             part(ctx, "stats", () -> stats(ctx, conn));
             part(ctx, "buy", () -> buy(ctx, server, conn));
             server.runOnServer(s -> {
@@ -440,15 +446,34 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             shot(ctx, "c_fairy_back_near");
             viewRival(ctx, server, "side");
             shot(ctx, "c_fairy_side");
+            // 날갯짓 다른 때 (약 6.6틱에 한 번 — 3틱 뒤) · 위에서 (날개가 등 뒤로 V 자인지 — 0.14.3)
+            ctx.waitTicks(3);
+            shot(ctx, "c_fairy_side_2");
+            fly(server, true); // 위에서 볼 때 떨어지지 않게
+            viewRival(ctx, server, "top");
+            shot(ctx, "c_fairy_top");
+            ctx.waitTicks(3);
+            shot(ctx, "c_fairy_top_2");
             check(ctx.computeOnClient(mc -> CosmeticAura.dustSpawned) > dust0, "fairy dust spawned " + ctx.computeOnClient(mc -> CosmeticAura.dustSpawned - dust0));
             server.runCommand("time set 18000");
             viewRival(ctx, server, "back_near");
             ctx.waitTicks(20);
             shot(ctx, "c_fairy_night");
         } finally {
+            fly(server, false);
             server.runCommand("time set 6000");
             hideGui(ctx, false);
         }
+    }
+
+    /** 나 (사진 찍는 플레이어) 날기 켜기 · 끄기 (위에서 보는 사진 — 서바이벌 세계) */
+    private void fly(TestServerContext server, boolean on) {
+        server.runOnServer(s -> {
+            ServerPlayer p = me(s);
+            p.getAbilities().mayfly = on;
+            p.getAbilities().flying = on;
+            p.onUpdateAbilities();
+        });
     }
 
     /** 두 번째 플레이어를 보는 자리로 (앞 · 뒤 · 옆 · 가까이 — 두 번째 플레이어는 북쪽을 봄) */
@@ -456,13 +481,15 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         double[] p = switch (where) {
             case "back" -> new double[] {RIVAL_AT.x, RIVAL_AT.z + 3.0, 180};
             case "back_near" -> new double[] {RIVAL_AT.x, RIVAL_AT.z + 2.2, 180, 6};
+            case "top" -> new double[] {RIVAL_AT.x, RIVAL_AT.z + 0.6, 180, 80, 2.4};
             case "side" -> new double[] {RIVAL_AT.x + 3.0, RIVAL_AT.z, 90};
             case "near" -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 2.6, 0, 16};
             default -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 3.0, 0};
         };
         // 수평으로 봄 (높은 모자로 올라간 이름표 위 칭호까지 들어오게 — 발은 핫바 위)
         double pitch = p.length > 3 ? p[3] : 0;
-        server.runCommand(String.format(Locale.ROOT, "tp @a[name=!Rival] %.2f %.2f %.2f %.1f %.1f", p[0], HOME.y, p[1], p[2], pitch));
+        double up = p.length > 4 ? p[4] : 0; // 위에서 볼 때 (블록)
+        server.runCommand(String.format(Locale.ROOT, "tp @a[name=!Rival] %.2f %.2f %.2f %.1f %.1f", p[0], HOME.y + up, p[1], p[2], pitch));
         ctx.waitTicks(20);
     }
 

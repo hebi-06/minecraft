@@ -543,8 +543,9 @@ def wings(name, demon=False):
     span, height = (15, 20) if not demon else (15, 17)
     for side, sign in (("right", -1), ("left", 1)):
         bone = f"fw_wing_{side}"
-        # 등 가운데 옆에서 시작 · 바깥 끝이 조금 뒤로 (y 회전) · 살짝 들어 올림 (z 회전)
-        d.bone(bone, "body", pivot=(sign * 1.0, 22, 2.8), rotation=(0, sign * -24, sign * -6))
+        # 등 가운데 옆에서 시작 · 바깥 끝이 조금 뒤로 (y 회전) · 살짝 들어 올림 (z 회전) — 베드락 회전은 자바로 바꿀 때 y · z 가 뒤집혀
+        # (tools/armor_items.convert_geo) 오른쪽 날개 (sign -1) 의 베드락 y -24 = 자바 +24 = 바깥 끝이 뒤 (+z). 0.14.3 전에는 부호가 반대라 끝이 앞으로 (몸을 뚫음)
+        d.bone(bone, "body", pivot=(sign * 1.0, 22, 2.8), rotation=(0, sign * 24, sign * 6))
         x0 = sign * 1.0 - span if sign < 0 else sign * 1.0
         top = 22 + 6
         d.cube(bone, (x0, top - height, 2.8), (span, height, 1), wing_paint(side == "right", demon))
@@ -673,9 +674,10 @@ def fairy_wings():
     z = 3.2  # 갑옷 (등 z 3) 보다 조금 뒤 — 갑옷을 입어도 날개 뿌리가 보이게
     for side, sign in (("right", -1), ("left", 1)):
         right = side == "right"
-        ub = d.bone(f"fw_flutter_{side}", "body", pivot=(sign * 1.0, 20.5, z), rotation=(0, sign * -26, 0))
+        # 바깥 끝이 뒤로 26° (위) · 20° (아래) — 날갯짓 (±14° · 달리면 ±24° + 뒤로 8°) 중에도 등 뒤에 (wings 와 같은 부호)
+        ub = d.bone(f"fw_flutter_{side}", "body", pivot=(sign * 1.0, 20.5, z), rotation=(0, sign * 26, 0))
         d.cube(ub, (-17.0 if right else 1.0, 19, z), (16, 18, 0), fairy_paint(upper, right), fairy_paint(upper, right, glow=True))
-        lb = d.bone(f"fw_flutter_low_{side}", "body", pivot=(sign * 1.0, 19.5, z), rotation=(0, sign * -20, 0))
+        lb = d.bone(f"fw_flutter_low_{side}", "body", pivot=(sign * 1.0, 19.5, z), rotation=(0, sign * 20, 0))
         d.cube(lb, (-12.0 if right else 1.0, 8.5, z), (11, 12, 0), fairy_paint(lower, right), fairy_paint(lower, right, glow=True))
     return d
 

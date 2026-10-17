@@ -37,6 +37,17 @@ public final class CosmeticModels {
         return m == null ? -1 : m.animCount();
     }
 
+    /** 시험용: 모델 이름 → 움직이는 동안 (나이 0 ~ 44틱 · 걷기 0 · 0.5 · 1) 가장 앞 꼭짓점 z (픽셀 — 몸통 등 면 2 이상이면 몸을 뚫지 않음) */
+    public static float frontmostZ(String model) {
+        PieceModel m = MODELS.get(model);
+        if (m == null) return Float.NaN;
+        float min = Float.MAX_VALUE;
+        for (float speed : new float[] {0F, 0.5F, 1F}) {
+            for (int i = 0; i < 120; i++) min = Math.min(min, m.frontmostZ(i * 0.37F, speed));
+        }
+        return min;
+    }
+
     /** 시험용: 모델 이름 → 반투명인지 */
     public static boolean translucent(String model) {
         PieceModel m = MODELS.get(model);
