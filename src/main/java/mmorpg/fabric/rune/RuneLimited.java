@@ -492,8 +492,8 @@ final class RuneLimited {
 
     /** 6돌 별똥별 비: 떨어진 뒤 1.6초 동안 하늘을 가로지르는 별똥별 열여덟 · 북극성이 남아 빛남 · 땅의 별 문양 (피해 없음) */
     static void meteorShower(ServerPlayer sp, ServerLevel level, Vec3 g, double h, Vec3[] st, String life) {
-        Vec3 f = V.flat(V.sub(g, sp.position()));
-        f = V.len(f) > 0.5 ? V.unit(f) : Kit.facingOf(sp);
+        Vec3 f0 = V.flat(V.sub(g, sp.position()));
+        Vec3 f = V.len(f0) > 0.5 ? V.unit(f0) : Kit.facingOf(sp);
         Vec3 side = V.rightOf(f);
         if (st.length > 7) {
             RuneKit.skyFlare(level, st[7], 2.6, STAR_GLOW, WHITE, Opt.of("life", 2.6, "grow", 0.0, "fade", 0.3, "spinRate", 30.0));
