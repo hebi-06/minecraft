@@ -11,11 +11,12 @@ import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgItems;
 import mmorpg.fabric.RpgPlayers;
+import mmorpg.fabric.client.GachaScreen;
+import mmorpg.fabric.client.GachaShowScreen;
 import mmorpg.fabric.client.MmorpgClient;
 import mmorpg.fabric.client.StatScreen;
 import mmorpg.fabric.client.StatTreeScreen;
 import mmorpg.fabric.rune.RuneData;
-import mmorpg.fabric.rune.RuneGacha;
 import mmorpg.fabric.rune.RuneItem;
 import mmorpg.fabric.rune.RuneItems;
 import mmorpg.fabric.stattree.StatTrees;
@@ -44,7 +45,7 @@ import org.slf4j.LoggerFactory;
  * 7단계 스탯 트리 사진첩 (화면 시험 — MMORPG_ONLY=stattree, 실제 마우스 · 키 입력): 스탯 창 줄마다 나무 칸 (풀이), Shift + 힘 줄 두 번 → 힘 10 →
  * 나무가 자람 (3인칭 — 마법진 · 빛기둥 · 잎 · 큰 글자), 나무 칸 누르기 → 스탯 트리 창 (힘 35 — 3단계 갈래 깜빡임), 칸에 마우스 (줄기 · 갈래 · 보상 칸),
  * 갈래 누르기 → 확인 창 → 고름 (서버 기록), 탭 (민첩 · 마력 · 체력 — 다 자란 나무 · 금테), 갈래 초기화 (에메랄드 — 확인 창 → 지움), 힘 룬 뽑기권
- * (풀이 · 뽑기 연출 → 힘 계열 룬), 다시 스탯 창 (나무 칸 · 트리 보너스가 들어간 피해 줄). 사진 이름 t_… → ci-logs 의 shots/.
+ * (풀이 · 우클릭 → 뽑기 창 (힘 탭) → 1회 → 힘 계열 룬), 다시 스탯 창 (나무 칸 · 트리 보너스가 들어간 피해 줄). 사진 이름 t_… → ci-logs 의 shots/.
  * 확인 항목은 로그 [stattree-gallery] OK / FAIL.
  */
 @SuppressWarnings("UnstableApiUsage")
@@ -253,13 +254,21 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         camera(ctx, CameraType.FIRST_PERSON);
         look(ctx, 0F, 0F);
         int runesBefore = server.computeOnServer(s -> runes(player(s), null));
+        // 0.14.0: 뽑기권 우클릭 → 뽑기 창 (그 스탯의 탭) → 1회 뽑기 → 연출
         ctx.getInput().pressKey(o -> o.keyUse);
         conn.waitForServerboundPackets();
-        ctx.waitTicks(10);
+        if (!waitScreen(ctx, sc -> sc instanceof GachaScreen g && "stat_str".equals(g.tab()), "gacha window (str ticket)")) return;
+        away(ctx);
+        ctx.waitTicks(4);
         shot(ctx, "t_ticket_drawing");
-        ctx.waitTicks(RuneGacha.DRAW_TICKS - 8);
+        click(ctx, conn, sc -> ((GachaScreen) sc).pullCenter(1));
+        if (!waitScreen(ctx, sc -> sc instanceof GachaShowScreen, "gacha show (str ticket)")) return;
+        ctx.runOnClient(mc -> ((GachaShowScreen) mc.gui.screen()).skip());
+        away(ctx);
+        ctx.waitTicks(4);
         shot(ctx, "t_ticket_result");
-        ctx.waitTicks(6);
+        ctx.setScreen(() -> null);
+        ctx.waitTicks(4);
         int strRunes = server.computeOnServer(s -> runes(player(s), "str"));
         int all = server.computeOnServer(s -> runes(player(s), null));
         boolean pending = server.computeOnServer(s -> RuneData.pending(player(s)).isEmpty());

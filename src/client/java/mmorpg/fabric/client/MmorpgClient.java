@@ -56,6 +56,7 @@ public final class MmorpgClient implements ClientModInitializer {
         TitleFit.init();
         // 장식 (0.13.0): 받은 장식 · 모습들, 장식 모델 (갑옷 스킨 · 머리 · 등 장식), 사람 렌더러에 장식 층
         ClientCosmetics.init();
+        ClientGacha.init(); // 룬 뽑기 창 · 연출 (0.14.0)
         CosmeticModels.init();
         CosmeticLayer.init();
         statsKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.stats", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, CATEGORY));
@@ -90,6 +91,7 @@ public final class MmorpgClient implements ClientModInitializer {
             ClientRpgState.clear();
             ClientSkillBar.clear();
             ClientCosmetics.clear();
+            ClientGacha.clear();
             CameraShake.clear();
             UltFx.clear();
         });

@@ -47,7 +47,8 @@ import net.minecraft.world.phys.Vec3;
  *   · 룬 갈기: 가방의 룬 (최대 18개, 겹친 룬 먼저) → 누르면 확인 창 → 갈면 조각 (돌파한 룬은 들어간 룬 수만큼). 윗줄 오른쪽 = 겹친 룬 모두 갈기
  *     (룬마다 하나는 남김 — 가장 높은 돌파 단계 · 핫바의 것을 남김)
  *   · 돌파: 합칠 수 있는 룬 (룬마다 하나 — 남는 룬 + 재료) → 확인 창 → 돌파. 윗줄 오른쪽 = 모두 돌파 (룬마다 가장 높은 것 하나를 6돌을 넘지 않게 끝까지)
- *   · 뽑기권: 룬 뽑기권 (조각 10) · 고급 룬 뽑기권 (조각 40, 일반 룬 없음) → 1장 · 5장
+ *   · 뽑기권: 룬 뽑기권 (조각 10) · 고급 룬 뽑기권 (조각 40, 일반 룬 없음) → 1장 · 5장, 한정 룬 뽑기권 (0.14.0 — 한정 뽑기가 열려 있을 때,
+ *     값은 관리자가 정함 — 아랫줄 가운데)
  * - 연출: 갈면 눈앞에 등급 색 마법진 섬광 + 깨지는 빛 조각 + 숫돌 · 자수정 소리 + "+8 룬 조각", 사면 보랏빛 마법진 + 반짝이
  * 애드온의 창 고리 (for (;;) { await form.show }) 는 받을 일 (콜백) 되부름으로 (shop.Shop 과 같은 방식).
  */
@@ -77,8 +78,11 @@ public final class RuneSmith {
     public static final int NORMAL_SLOT = 11;
     public static final int INFO_SLOT = 13;
     public static final int ADV_SLOT = 15;
+    /** 뽑기권 창: 한정 룬 뽑기권 (0.14.0 — 한정 뽑기가 열려 있고 값이 있을 때만) */
+    public static final int LIMITED_SLOT = 22;
     private static final double[] PURPLE = {0.72, 0.42, 1.0};
     private static final double[] GOLD = {1.0, 0.75, 0.3};
+    private static final double[] RED = {1.0, 0.32, 0.36};
 
     public static void init() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
@@ -240,9 +244,30 @@ public final class RuneSmith {
                 RUNE.str(adv ? "advTicketIcon" : "ticketIcon"), (int) SMITH.obj("price").num(adv ? "adv" : "ticket"), List.copyOf(odds), adv ? "§6" : "§d");
     }
 
+    /** 한정 룬 뽑기권 정보 (0.14.0 — 열린 한정 뽑기가 없거나 값이 0 이면 null) */
+    public static TicketInfo limitedInfo(net.minecraft.server.MinecraftServer server) {
+        mmorpg.core.Gacha.Spec spec = mmorpg.fabric.gacha.GachaSystem.activeLimited(server);
+        if (spec == null || spec.price() <= 0 || RuneItems.LIMITED_TICKET == null) return null;
+        mmorpg.core.Obj t = mmorpg.core.Gacha.ticket();
+        return new TicketInfo(false, t.str("item"), t.str("name"), t.str("icon"), spec.price(),
+                List.of("한정 뽑기 §6" + spec.name(), "픽업 초월 · 영웅 확률 UP", "천장 " + spec.hard() + "회 · 영웅 " + spec.heroEvery() + "회"), "§c");
+    }
+
     /** 뽑기권 사기: 조각을 가져가고 뽑기권 n 장. 결과 문구 (buyTicket) */
     public static String buyTicket(ServerPlayer sp, boolean adv, int n) {
-        TicketInfo t = ticketInfo(adv);
+        return buyTicket(sp, ticketInfo(adv), n);
+    }
+
+    /** 한정 룬 뽑기권 사기 (열린 한정 뽑기가 없으면 실패) */
+    public static String buyLimited(ServerPlayer sp, int n) {
+        TicketInfo t = limitedInfo(sp.level().getServer());
+        if (t == null) return "§4지금은 한정 룬 뽑기권을 팔지 않습니다.§r";
+        return buyTicket(sp, t, n);
+    }
+
+    private static String buyTicket(ServerPlayer sp, TicketInfo t, int n) {
+        boolean adv = t.adv();
+        boolean limited = RuneItems.LIMITED_TICKET != null && t.id().equals(mmorpg.core.Gacha.ticket().str("item"));
         int cost = t.price() * n;
         int have = Inv.count(sp, shardItem());
         if (n <= 0 || have < cost) {
@@ -250,14 +275,14 @@ public final class RuneSmith {
             Notify.notify(sp, "§c" + shardName() + " 부족 §7(필요 " + cost + ", 보유 " + have + ")", 40);
             return "§4" + shardName() + " 부족: 필요 " + cost + ", 보유 " + have + "§r";
         }
-        ItemStack item = RuneItems.ticket(n, adv);
+        ItemStack item = limited ? new ItemStack(RuneItems.LIMITED_TICKET, Math.max(1, Math.min(64, n))) : RuneItems.ticket(n, adv);
         if (item.isEmpty()) return "§4뽑기권을 만들 수 없습니다.§r";
         if (!Inv.fitsAfter(sp, List.of(new Inv.Take(shardItem(), cost)), List.of(item))) return Inv.bagFull(sp); // 땅에 떨어지지 않게
         if (!Inv.remove(sp, shardItem(), cost)) return "§4결제 오류§r";
         Inv.give(sp, item);
         ServerLevel level = sp.level();
         Vec3 at = faceAt(sp);
-        double[] col = adv ? GOLD : PURPLE;
+        double[] col = limited ? RED : adv ? GOLD : PURPLE;
         SkillFx.fx(level, "rpg:magic_circle_flash", at, Opt.of("size", 0.7, "life", 0.5, "spin", Kit.rand() * 360, "progress", 1.0, "color", col, "alpha", 1.0));
         SkillFx.sparks(level, at, col, 10, 3);
         SkillFx.play(level, "vault.eject_item", sp.position(), 1.2, 0.9);
@@ -544,13 +569,21 @@ public final class RuneSmith {
             lore.removeIf(l -> l.equals("§r§7"));
             form.set(adv ? ADV_SLOT : NORMAL_SLOT, Slot.of(t.icon(), t.color() + t.name() + " §7· " + shardName() + " " + t.price()).price(t.price()).lore(lore));
         }
+        TicketInfo lim = limitedInfo(sp.level().getServer());
+        if (lim != null) {
+            List<String> lore = new ArrayList<>();
+            for (String o : lim.odds()) lore.add("§r§7" + o);
+            lore.add("§r§7누르면 1장 · 5장");
+            form.set(LIMITED_SLOT, Slot.of(lim.icon(), lim.color() + lim.name() + " §7· " + shardName() + " " + lim.price()).price(lim.price()).lore(lore));
+        }
         Obj grind = SMITH.obj("grind");
         form.set(INFO_SLOT, Slot.of(SMITH.str("shardIcon"), "§d" + shardName()).lore("§7룬을 갈면 나옴",
                 "§7일반 " + Js.str(grind.num("common")) + " · 희귀 " + Js.str(grind.num("rare")) + " · 고귀 " + Js.str(grind.num("noble")),
                 "§7영웅 " + Js.str(grind.num("hero")) + " · 초월 " + Js.str(grind.num("transcend"))).deco());
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        lines.add("§8왼쪽: §0" + RUNE.str("ticketName") + "§8 · 오른쪽: §0" + RUNE.str("advTicketName") + "§8 (일반 룬 없음)§r");
+        lines.add("§8왼쪽: §0" + RUNE.str("ticketName") + "§8 · 오른쪽: §0" + RUNE.str("advTicketName") + "§8 (일반 룬 없음)"
+                + (lim != null ? "§8 · 아래: §4" + lim.name() + "§8 (한정 뽑기 중)" : "") + "§r");
         lines.add("§8초록 숫자 = 필요한 룬 조각 · 누르면 확인 창§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
@@ -559,7 +592,10 @@ public final class RuneSmith {
 
     /** 뽑기권 사기 확인: 1장 · (모자라지 않으면) 5장 (confirmBuy) */
     private static void confirmBuy(ServerPlayer sp, boolean adv, Consumer<String> done) {
-        TicketInfo t = ticketInfo(adv);
+        confirmBuy(sp, ticketInfo(adv), done);
+    }
+
+    private static void confirmBuy(ServerPlayer sp, TicketInfo t, Consumer<String> done) {
         int have = Inv.count(sp, shardItem());
         ChestForm form = new ChestForm(t.name() + " 사기");
         form.set(11, Slot.of(t.icon(), "§a1장 사기 §7(" + shardName() + " " + t.price() + ")").price(t.price()));
@@ -575,7 +611,7 @@ public final class RuneSmith {
         form.body(String.join("\n", lines));
         form.show(sp, sel -> {
             int n = sel == 11 ? 1 : sel == 12 && have >= t.price() * 5 ? 5 : 0;
-            done.accept(n > 0 ? buyTicket(sp, adv, n) : "");
+            done.accept(n > 0 ? buyTicket(sp, t, n) : "");
         });
     }
 
@@ -594,6 +630,9 @@ public final class RuneSmith {
             else if (sel == TAB) next.accept("grind");
             else if (sel == TAB2) next.accept("break");
             else if (sel == NORMAL_SLOT || sel == ADV_SLOT) confirmBuy(sp, sel == ADV_SLOT, msg -> ticketStep(sp, msg, guard + 1, next));
+            else if (sel == LIMITED_SLOT && limitedInfo(sp.level().getServer()) != null) {
+                confirmBuy(sp, limitedInfo(sp.level().getServer()), msg -> ticketStep(sp, msg, guard + 1, next));
+            }
             else ticketStep(sp, "", guard + 1, next);
         });
     }

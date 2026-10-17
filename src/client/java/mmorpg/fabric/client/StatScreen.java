@@ -51,7 +51,7 @@ public final class StatScreen extends Screen {
     public static final int BTN_H = 23;
     static final int BTN_GAP = 6;
     /** 아랫줄 단추 이름 (서버에 보내는 할 일) */
-    public static final List<String> BUTTONS = List.of("quest", "ender", "mount", "cosmetic");
+    public static final List<String> BUTTONS = List.of("quest", "ender", "mount", "cosmetic", "gacha");
     private static final Identifier BG = Mmorpg.id("stats/dialog_bg");
     private static final Identifier BTN = Mmorpg.id("stats/dialog_btn");
     private static final Identifier BTN_HOVER = Mmorpg.id("stats/dialog_btn_hover");
@@ -206,6 +206,10 @@ public final class StatScreen extends Screen {
             case "cosmetic":
                 return new Bottom(CosmeticRender.icon("crown"), null, "§d§l장식", "§7꾸미기",
                         List.of("§d§l장식", "§7무기 · 갑옷 스킨, 머리 · 등 장식, 오라, 칭호", "§7갑옷 숨기기 (무료) · 에메랄드로 사기", "§8U 키로도 열림"));
+            case "gacha":
+                return new Bottom(new ItemStack(mmorpg.fabric.rune.RuneItems.TICKET), null, "§b§l뽑기", "§7룬 뽑기",
+                        List.of("§b§l룬 뽑기", "§71회 · 10회 · 천장 (초월 90 · 영웅 10)", ClientGacha.limitedActive() ? "§c한정 뽑기 중: §f" + ClientGacha.limited().name()
+                                : "§8한정 뽑기 없음", "§8뽑기권을 들고 우클릭 · /뽑기 로도 열림"));
             default: {
                 MountDefs.Def d = currentMount();
                 String mname = d != null ? d.name() : "없음";
@@ -368,6 +372,10 @@ public final class StatScreen extends Screen {
         click();
         if (name.equals("cosmetic")) {
             minecraft.gui.setScreen(new CosmeticScreen());
+            return;
+        }
+        if (name.equals("gacha")) {
+            minecraft.gui.setScreen(new GachaScreen(""));
             return;
         }
         if (name.equals("mount")) {

@@ -32,6 +32,8 @@ public final class RuneItems {
     private static final Map<String, RuneItem> BY_ID = new HashMap<>();
     public static TicketItem TICKET;
     public static TicketItem ADV_TICKET;
+    /** 한정 룬 뽑기권 (0.14.0 — 관리자가 연 한정 뽑기에만, gacha.json ticket) */
+    public static TicketItem LIMITED_TICKET;
     public static final ResourceKey<CreativeModeTab> TAB = ResourceKey.create(Registries.CREATIVE_MODE_TAB, Mmorpg.id("runes"));
 
     private static ResourceKey<Item> key(String id) {
@@ -54,6 +56,9 @@ public final class RuneItems {
         }
         TICKET = ticket(RuneKit.RUNE.str("ticketItem"), false, null);
         ADV_TICKET = ticket(RuneKit.RUNE.str("advTicketItem"), true, null);
+        ResourceKey<Item> limitedKey = key(mmorpg.core.Gacha.ticket().str("item"));
+        LIMITED_TICKET = Registry.register(BuiltInRegistries.ITEM, limitedKey, new TicketItem("limited", null,
+                new Item.Properties().stacksTo(64).component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true).setId(limitedKey)));
         // 스탯 룬 뽑기권 (7단계 스탯 트리 — stat_tree.json tickets: 이름이 같은 계열 5종만)
         for (mmorpg.core.StatTree.Ticket t : mmorpg.core.StatTree.tickets().values()) STAT_TICKETS.put(t.stat(), ticket(t.item(), false, t.stat()));
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB, FabricCreativeModeTab.builder()
@@ -62,6 +67,7 @@ public final class RuneItems {
                 .displayItems((params, output) -> {
                     output.accept(TICKET);
                     output.accept(ADV_TICKET);
+                    output.accept(LIMITED_TICKET);
                     for (TicketItem t : STAT_TICKETS.values()) output.accept(t);
                     for (RuneItem r : RUNES) output.accept(r);
                 })
@@ -87,6 +93,7 @@ public final class RuneItems {
         TicketItem t = null;
         if (TICKET != null && id.equals(BuiltInRegistries.ITEM.getKey(TICKET).toString())) t = TICKET;
         else if (ADV_TICKET != null && id.equals(BuiltInRegistries.ITEM.getKey(ADV_TICKET).toString())) t = ADV_TICKET;
+        else if (LIMITED_TICKET != null && id.equals(BuiltInRegistries.ITEM.getKey(LIMITED_TICKET).toString())) t = LIMITED_TICKET;
         else for (TicketItem s : STAT_TICKETS.values()) if (id.equals(BuiltInRegistries.ITEM.getKey(s).toString())) t = s;
         return t == null ? ItemStack.EMPTY : new ItemStack(t, Math.max(1, Math.min(64, amount)));
     }

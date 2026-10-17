@@ -1,0 +1,28 @@
+{
+  "_doc": "룬 뽑기 (0.14.0 — 자바 전용): 천장 (원신식) · 한정 뽑기 기본값. 확률 무게는 rules.json RUNE_GRADES.weight (일반 뽑기권) · RUNE.advWeights (고급) 를 그대로 씀. 읽기 mmorpg.core.Gacha",
+  "pity": {
+    "_doc": "hard = 초월 확정 (회 — 0 이면 없음), softStart = 이 회차부터 초월 확률이 회차마다 softStep (%) 씩 오름, heroEvery = 영웅 확정 (회), heroSoftStart · heroSoftStep = 영웅도 같은 방식 (원신: 90 · 74 · 6 · 10 · 9 · 51)",
+    "hard": 90,
+    "softStart": 74,
+    "softStep": 6,
+    "heroEvery": 10,
+    "heroSoftStart": 9,
+    "heroSoftStep": 51
+  },
+  "normalPity": true,
+  "limited": {
+    "_doc": "한정 뽑기 새로 열 때의 기본값 (관리자 설정 창에서 바꿈): share = 초월 · 영웅이 나올 때 픽업일 확률 (%), price = 룬술사의 한정 룬 뽑기권 값 (룬 조각 — 0 이면 팔지 않음), days = 기간 (일 — 0 이면 끝나지 않음), maxFeatured5 · maxFeatured4 = 픽업으로 고를 수 있는 수",
+    "share": 50,
+    "price": 15,
+    "days": 14,
+    "maxFeatured5": 3,
+    "maxFeatured4": 6
+  },
+  "ticket": {
+    "item": "rpg:limited_rune_ticket",
+    "name": "한정 룬 뽑기권",
+    "icon": "textures/items/rpg/limited_rune_ticket"
+  },
+  "multi": 10,
+  "historyMax": 100
+}
