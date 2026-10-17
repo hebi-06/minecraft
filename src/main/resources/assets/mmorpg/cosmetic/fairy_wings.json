@@ -1,0 +1,156 @@
+{
+ "tw": 64,
+ "th": 64,
+ "texture": "mmorpg:textures/entity/cosmetic/fairy_wings.png",
+ "emissive": "mmorpg:textures/entity/cosmetic/fairy_wings.glow.png",
+ "translucent": true,
+ "parts": {
+  "body": {
+   "pivot": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "rot": [
+    0,
+    0,
+    0
+   ],
+   "cubes": [],
+   "children": {
+    "fw_flutter_right": {
+     "pivot": [
+      -1.0,
+      3.5,
+      3.2
+     ],
+     "rot": [
+      0.0,
+      -26.0,
+      -0.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -16.0,
+        -16.5,
+        0.0
+       ],
+       "size": [
+        16,
+        18,
+        0
+       ],
+       "uv": [
+        0,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    },
+    "fw_flutter_low_right": {
+     "pivot": [
+      -1.0,
+      4.5,
+      3.2
+     ],
+     "rot": [
+      0.0,
+      -20.0,
+      -0.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        -11.0,
+        -1.0,
+        0.0
+       ],
+       "size": [
+        11,
+        12,
+        0
+       ],
+       "uv": [
+        0,
+        18
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    },
+    "fw_flutter_left": {
+     "pivot": [
+      1.0,
+      3.5,
+      3.2
+     ],
+     "rot": [
+      0.0,
+      26.0,
+      -0.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        0.0,
+        -16.5,
+        0.0
+       ],
+       "size": [
+        16,
+        18,
+        0
+       ],
+       "uv": [
+        32,
+        0
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    },
+    "fw_flutter_low_left": {
+     "pivot": [
+      1.0,
+      4.5,
+      3.2
+     ],
+     "rot": [
+      0.0,
+      20.0,
+      -0.0
+     ],
+     "cubes": [
+      {
+       "from": [
+        0.0,
+        -1.0,
+        0.0
+       ],
+       "size": [
+        11,
+        12,
+        0
+       ],
+       "uv": [
+        22,
+        18
+       ],
+       "inflate": 0,
+       "mirror": false
+      }
+     ],
+     "children": {}
+    }
+   }
+  }
+ }
+}

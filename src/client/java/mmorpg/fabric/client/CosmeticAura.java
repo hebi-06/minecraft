@@ -21,6 +21,7 @@ import net.minecraft.world.phys.Vec3;
  * <li>orbit (별빛): 빛 둘이 허리 높이에서 몸 둘레를 돎 (2초에 한 바퀴 · 위아래로 출렁 · 흰 심지) — 지나간 자리에 꼬리, 반짝임이 떠오름</li>
  * <li>frost (서리): 머리 위 (반지름 0.85) 에서 눈송이가 흔들리며 내림 + 1.2초마다 발밑 서리 고리 · 발밑 반짝임</li>
  * </ul>
+ * 등 장식의 반짝이는 가루 (dust — 0.14.2 요정의 날개, {@link #emitDust}) 도 여기서 (오라와 같은 조건).
  * 투명 · 관전 중이면 뿌리지 않음. 파티클 설정이 '최소' 면 뿌리지 않고, '줄임' 이면 반만 (orbit 의 도는 빛은 두 틱마다 — 꼬리를 길게).
  * 내 오라는 1인칭에서는 뿌리지 않음 (눈 바로 앞을 지나는 빛 · 눈송이가 시야를 가리지 않게 — 3인칭 (F5) · 장식 창 미리보기 · 다른 사람 화면에서는 보임).
  */
@@ -29,8 +30,10 @@ public final class CosmeticAura {
 
     private static final double RANGE = 48;
 
-    /** 시험용: 지금까지 뿌린 수 */
+    /** 시험용: 지금까지 뿌린 수 (오라 · 가루) */
     public static int spawned;
+    /** 시험용: 지금까지 뿌린 가루 수 (등 장식 dust) */
+    public static int dustSpawned;
 
     public static void tick(Minecraft mc) {
         ClientLevel level = mc.level;
@@ -45,10 +48,11 @@ public final class CosmeticAura {
         for (Avatar a : level.getEntitiesOfClass(Avatar.class, box, e -> !e.isSpectator() && !e.isRemoved() && !e.isInvisible())) {
             if (firstPerson && a == cam) continue;
             Look look = ClientCosmetics.lookOf(a.getUUID());
-            CosmeticDefs.Def d = look.def("aura");
-            if (d == null || d.aura() == null) continue;
             float scale = ps == ParticleStatus.DECREASED ? 0.5F : 1F;
-            emit(level, r, a, d.aura(), a.tickCount, scale);
+            CosmeticDefs.Def d = look.def("aura");
+            if (d != null && d.aura() != null) emit(level, r, a, d.aura(), a.tickCount, scale);
+            CosmeticDefs.Def back = look.def("back");
+            if (back != null && back.dust() != null) emitDust(level, r, a, back.dust(), a.tickCount, scale);
         }
     }
 
@@ -138,6 +142,37 @@ public final class CosmeticAura {
                     add(level, FxOptions.ofSprite(FxSprite.SHOCK_RING, Vec3.ZERO, 0, 0.4, 0.9, r.nextFloat() * 360, argb(cols.get(0), 0.55)), feet.add(0, 0.05, 0));
                 }
             }
+        }
+    }
+
+    /**
+     * 반짝이는 가루 (등 장식 dust — 요정의 날개): 날개 자리 (등 뒤 · 허리 ~ 머리 위 · 양옆으로 1블록 — 바깥일수록 뒤로) 에서 천천히 떨어짐.
+     * 네 갈래 반짝임 (커졌다 작아지며 돎) 이 반쯤, 나머지는 작은 빛. 초당 rate 개, 움직이면 더 많이 (달리면 2.5배 — 지나간 자리에 남음).
+     */
+    static void emitDust(ClientLevel level, RandomSource r, Avatar a, CosmeticDefs.Dust dust, int tick, float scale) {
+        double move = Math.min(1, Math.hypot(a.getX() - a.xo, a.getZ() - a.zo) / 0.22); // 이번 틱에 움직인 거리 (남의 플레이어도 — 달리기 약 0.28)
+        int n = count(tick, dust.rate() * scale * (1 + 1.5 * move));
+        if (n <= 0) return;
+        double yaw = Math.toRadians(a.yBodyRot);
+        Vec3 fwd = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
+        Vec3 right = new Vec3(-Math.cos(yaw), 0, -Math.sin(yaw));
+        double k = a.getBbHeight() / 1.8; // 웅크리면 낮게
+        Vec3 feet = a.position();
+        List<double[]> cols = dust.colors();
+        for (int i = 0; i < n; i++) {
+            double side = (r.nextBoolean() ? 1 : -1) * (0.1 + r.nextDouble() * 0.9);
+            double up = (0.55 + r.nextDouble() * 1.65) * k;
+            double back = 0.25 + Math.abs(side) * 0.4 + r.nextDouble() * 0.1;
+            Vec3 at = feet.add(right.scale(side)).add(fwd.scale(-back)).add(0, up, 0);
+            Vec3 drift = new Vec3((r.nextDouble() - 0.5) * 0.6, -1, (r.nextDouble() - 0.5) * 0.6).normalize();
+            int color = argb(pick(cols, r), 1);
+            if (r.nextFloat() < 0.45F) {
+                add(level, FxOptions.glint(FxOptions.TWINKLE, drift, 0.15 + r.nextDouble() * 0.15, 0, 0.5, 0.06 + r.nextDouble() * 0.04,
+                        0.6 + r.nextDouble() * 0.5, color), at);
+            } else {
+                add(level, spark(drift, 0.2 + r.nextDouble() * 0.2, 0.03 + r.nextDouble() * 0.025, 0.9 + r.nextDouble() * 0.7, 0.35, color), at);
+            }
+            dustSpawned++;
         }
     }
 

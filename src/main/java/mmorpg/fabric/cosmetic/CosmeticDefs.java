@@ -30,13 +30,16 @@ public final class CosmeticDefs {
     /** 오라: kind (embers · orbit · frost) · 초당 수 · 색들 (0~1) */
     public record Aura(String kind, double rate, List<double[]> colors) {}
 
+    /** 등 장식의 반짝이는 가루 (0.14.2 — 요정의 날개): 초당 수 (움직이면 더) · 색들 (0~1) */
+    public record Dust(double rate, List<double[]> colors) {}
+
     /**
      * 장식 하나. weapon · design = 무기 스킨 (무기 종류 · 디자인), model = 갑옷 스킨 · 머리 · 등 장식 모델 (assets/mmorpg/cosmetic/&lt;model&gt;.json),
      * set = 갑옷 스킨 세트, aura · title = 오라 · 칭호 글, hideHelmet = 머리 장식을 쓴 동안 투구를 그리지 않음 (머리에 얹는 모자 · 왕관),
-     * nameLift = 머리 장식을 쓴 동안 이름표 · 칭호를 그만큼 (블록) 위로 (높은 모자)
+     * nameLift = 머리 장식을 쓴 동안 이름표 · 칭호를 그만큼 (블록) 위로 (높은 모자), translucent = 모델을 반투명으로 (0.14.2), dust = 등 장식의 반짝이는 가루 (0.14.2)
      */
     public record Def(String id, String slot, String name, int price, List<String> desc, double[] color, String weapon, String design, String model,
-            String set, Aura aura, String title, boolean hideHelmet, double nameLift) {
+            String set, Aura aura, String title, boolean hideHelmet, double nameLift, boolean translucent, Dust dust) {
         /** 목록 · 연출 색 (0xRRGGBB) */
         public int rgb() {
             return (to255(color[0]) << 16) | (to255(color[1]) << 8) | to255(color[2]);
@@ -120,10 +123,18 @@ public final class CosmeticDefs {
                 if (cols.isEmpty()) cols.add(new double[] {1, 1, 1});
                 aura = new Aura(str(am.get("kind"), "embers"), am.get("rate") instanceof Number n ? n.doubleValue() : 8, List.copyOf(cols));
             }
+            Dust dust = null;
+            if (o.get("dust") instanceof Map<?, ?> dm0) {
+                Map<String, Object> dm = (Map<String, Object>) dm0;
+                List<double[]> cols = new ArrayList<>();
+                if (dm.get("colors") instanceof List<?> cl) for (Object c : cl) cols.add(color(c));
+                if (cols.isEmpty()) cols.add(new double[] {1, 1, 1});
+                dust = new Dust(dm.get("rate") instanceof Number n ? Math.max(0, n.doubleValue()) : 8, List.copyOf(cols));
+            }
             out.put(e.getKey(), new Def(e.getKey(), slot, str(o.get("name"), e.getKey()), o.get("price") instanceof Number n ? Math.max(0, n.intValue()) : 0,
                     List.copyOf(desc), color(o.get("color")), strOrNull(o.get("weapon")), strOrNull(o.get("design")), strOrNull(o.get("model")),
                     strOrNull(o.get("set")), aura, strOrNull(o.get("title")), Boolean.TRUE.equals(o.get("hideHelmet")),
-                    o.get("nameLift") instanceof Number n ? n.doubleValue() : 0));
+                    o.get("nameLift") instanceof Number n ? n.doubleValue() : 0, Boolean.TRUE.equals(o.get("translucent")), dust));
         }
         slots = s;
         defs = out;

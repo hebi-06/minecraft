@@ -684,6 +684,13 @@ public final class CosmeticScreen extends Screen {
             drawAura(g, aura.aura(), cx, headY, feetY, now, true);
             g.disableScissor();
         }
+        // 등 장식의 반짝이는 가루 (요정의 날개 — 세계의 파티클과 비슷하게)
+        CosmeticDefs.Def backDef = look.def("back");
+        if (backDef != null && backDef.dust() != null) {
+            g.enableScissor(bx0, by0, bx1, by1);
+            drawDust(g, backDef.dust(), cx, headY, feetY, now);
+            g.disableScissor();
+        }
 
         // 이름표 (발 아래 — 큰 모자 · 고리와 겹치지 않게): 칭호 한 줄 + 이름
         CosmeticDefs.Def title = look.def("title");
@@ -756,6 +763,32 @@ public final class CosmeticScreen extends Screen {
                 g.fill(cx - rw, bottom - 1, cx + rw, bottom + 1, (alpha << 24) | rgb(cols.get(0)));
             }
         }
+    }
+
+    /** 미리보기 반짝이는 가루 (등 장식 dust): 날개 자리 (양옆 · 머리 위 ~ 허리) 에서 천천히 떨어지는 빛 · 네 갈래 반짝임 */
+    private void drawDust(GuiGraphicsExtractor g, CosmeticDefs.Dust d, int cx, int headY, int feetY, long now) {
+        List<double[]> cols = d.colors();
+        double t = now / 1000.0;
+        int h = feetY - headY;
+        for (int i = 0; i < 16; i++) {
+            double ph = (t * 0.45 + i * 0.0625) % 1.0;
+            double side = (i % 2 == 0 ? 1 : -1) * (8 + (i * 37) % 39);
+            int x = cx + (int) Math.round(side + Math.sin(t * 1.3 + i) * 2);
+            int y = headY - 22 + (int) ((i * 53) % 71 / 71.0 * h * 0.75) + (int) (ph * 26);
+            int alpha = (int) (235 * Math.sin(Math.PI * ph));
+            int rgb = rgb(cols.get(i % cols.size()));
+            if (i % 3 == 0) sparkle(g, x, y, ph < 0.5 ? 2 : 1, alpha, rgb);
+            else glowDot(g, x, y, 1, alpha, rgb);
+        }
+    }
+
+    /** 네 갈래 반짝임 (가로 · 세로 빛 줄 + 흰 가운데) */
+    private static void sparkle(GuiGraphicsExtractor g, int x, int y, int arm, int alpha, int rgb) {
+        if (alpha <= 4) return;
+        int a = Math.min(255, alpha);
+        g.fill(x - arm - 1, y, x + arm + 2, y + 1, ((a * 2 / 3) << 24) | rgb);
+        g.fill(x, y - arm - 1, x + 1, y + arm + 2, ((a * 2 / 3) << 24) | rgb);
+        g.fill(x, y, x + 1, y + 1, (a << 24) | 0xFFFFFF);
     }
 
     /** 빛 점 (가운데 + 옅은 번짐) */

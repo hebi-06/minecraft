@@ -40,10 +40,12 @@ public record FxOptions(int kind, int sprite, Vec3 dir, float speed, float size,
     public static final int SPRITE = 5;
     /**
      * 무기 빛 알갱이 (애드온 영웅 · 초월 무기의 fx — 클라이언트가 직접 뿌림): 처음 속도 dir × speed, 위로 accel 가속 · drag 끌림,
-     * 반 크기 size 에서 수명 동안 줄어듦, 카메라를 향함. sprite = 그림 (GLINT_TEXTURES 순번 — 바닐라 파티클 그림)
+     * 반 크기 size 에서 수명 동안 줄어듦, 카메라를 향함. sprite = 그림 (GLINT_TEXTURES 순번 — 바닐라 파티클 그림 · 자바 전용 twinkle)
      */
     public static final int GLINT = 6;
-    public static final String[] GLINT_TEXTURES = {"generic_0", "flame"};
+    public static final String[] GLINT_TEXTURES = {"generic_0", "flame", "twinkle"};
+    /** GLINT 그림 twinkle (네 갈래 반짝임 — 0.14.2 요정 날개 가루, tools/fx_textures.py 자바 전용): 커졌다 작아지며 천천히 돎 */
+    public static final int TWINKLE = 2;
 
     /** 끌림 · 가속 없는 그림 (빛줄기 · 불꽃 · 마법진 · 일반 그림) */
     public FxOptions(int kind, int sprite, Vec3 dir, float speed, float size, float thick, float life, float delay, float grow, float spin,

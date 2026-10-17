@@ -36,4 +36,10 @@ public final class CosmeticModels {
         PieceModel m = MODELS.get(model);
         return m == null ? -1 : m.animCount();
     }
+
+    /** 시험용: 모델 이름 → 반투명인지 */
+    public static boolean translucent(String model) {
+        PieceModel m = MODELS.get(model);
+        return m != null && m.translucent();
+    }
 }

@@ -42,6 +42,15 @@ public final class RpgCosmeticTests {
             h.assertTrue(!CosmeticDefs.of(s, null).isEmpty(), "samples in slot " + s);
         }
         for (String type : Weapons.allTypes()) h.assertTrue(!CosmeticDefs.of("weapon", type).isEmpty(), "weapon skin sample for " + type);
+        // 요정의 날개 (0.14.2): 반투명 · 반짝이는 가루 · 빛 그림
+        CosmeticDefs.Def fairy = CosmeticDefs.get("fairy_wings");
+        h.assertTrue(fairy != null && "back".equals(fairy.slot()) && fairy.translucent() && fairy.dust() != null && fairy.dust().rate() > 0
+                && !fairy.dust().colors().isEmpty(), "fairy wings def " + fairy);
+        h.assertTrue(!CosmeticDefs.get("angel_wings").translucent() && CosmeticDefs.get("angel_wings").dust() == null, "other wings unchanged");
+        Map<String, Object> fm = Json.parseObject(text("/assets/mmorpg/cosmetic/fairy_wings.json"));
+        h.assertTrue(Boolean.TRUE.equals(fm.get("translucent")) && fm.get("emissive") != null && res("/assets/mmorpg/textures/entity/cosmetic/fairy_wings.glow.png"),
+                "fairy model translucent + glow " + fm.keySet());
+        h.assertTrue(res("/assets/mmorpg/textures/particle/fx/twinkle.png") && text("/assets/mmorpg/particles/fx.json").contains("mmorpg:fx/twinkle"), "twinkle particle");
         for (CosmeticDefs.Def d : all.values()) {
             h.assertTrue(d.price() > 0 && !d.name().isEmpty(), "price/name " + d.id());
             h.assertTrue(res("/assets/rpg/items/cosmetic_" + d.id() + ".json"), "icon item definition " + d.id());

@@ -10,8 +10,11 @@
 - src/main/java/mmorpg/fabric/FxSprite.java                               (일반 그림 파티클의 모양 · 움직임: 장 수 · 크기 배율 · 커짐 · 끌림 · 사라짐 · 방향)
 활 빛줄기 · 지나간 자리 · 불꽃 · 마법진은 FxParticle 이 따로 그림 (FxOptions.ARROW_* · MAGIC_*) — 그림만 여기서 만듦.
 무기 빛 알갱이 (FxOptions.GLINT) 는 바닐라 파티클 그림을 그대로 씀 (애드온도 바닐라 particles.png 의 칸) — 목록에 이름만 넣음.
+자바 전용 그림 (JAVA_ONLY — 애드온에 없음, 여기서 그림): twinkle (네 갈래 반짝임 — FxOptions.GLINT_TEXTURES[TWINKLE], 0.14.2 요정 날개 가루).
+  python3 tools/fx_textures.py --java-only   # 애드온 없이 자바 전용 그림만 다시 (fx.json 에 없으면 이름을 더함)
 """
 import json
+import math
 import os
 import re
 import sys
@@ -35,6 +38,36 @@ SPRITES = [f"slash/slash_{shape}_{side}_{layer}" for shape in ("arc", "thin", "h
 SPRITES += ["slash/slash_x", "slash/shock_ring", "slash/bash_ring", "slash/bash_burst"]
 # 무기 빛 알갱이: 바닐라 그림 (FxOptions.GLINT_TEXTURES 와 같은 순서 — tools/weapon_models.py 의 VANILLA_PARTICLE_CELL)
 VANILLA = ["minecraft:generic_0", "minecraft:flame"]
+
+
+def twinkle_texture():
+    """네 갈래 반짝임 (흰색 — 색은 파티클이 곱함): 가는 십자 빛 + 옅은 대각선 + 둥근 심지"""
+    n = 32
+    img = Image.new("RGBA", (n, n), (255, 255, 255, 0))
+    px = img.load()
+    c = (n - 1) / 2
+    for y in range(n):
+        for x in range(n):
+            dx, dy = (x - c) / (n / 2), (y - c) / (n / 2)
+            r = math.hypot(dx, dy)
+            arm = 1.3 * max(math.exp(-(abs(dy) / 0.06) ** 1.5) * max(0.0, 1 - abs(dx)) ** 1.3,
+                            math.exp(-(abs(dx) / 0.06) ** 1.5) * max(0.0, 1 - abs(dy)) ** 1.3)
+            diag = math.exp(-abs(abs(dx) - abs(dy)) / 0.06) * max(0.0, 1 - r / 0.5) ** 2 * 0.5
+            core = max(0.0, 1 - r / 0.3) ** 1.6
+            px[x, y] = (255, 255, 255, int(round(min(1.0, arm + diag + core) * 255)))
+    return img
+
+
+# 자바 전용 그림 (애드온에 없음): 이름 → 그리는 함수
+JAVA_ONLY = {"twinkle": twinkle_texture}
+
+
+def java_only():
+    names = []
+    for name, fn in JAVA_ONLY.items():
+        fn().save(os.path.join(OUT_TEX, f"{name}.png"))
+        names.append(f"mmorpg:fx/{name}")
+    return names
 
 
 def tex_name(path):
@@ -119,6 +152,7 @@ def main(addon):
         assert bb["facing_camera_mode"] in ("rotate_xyz", "emitter_transform_xz"), pid
         entries.append((tex_name(pid).upper(), base, frames, scale, gx, drag, fade, facing))
     textures += VANILLA
+    textures += java_only()
     with open(OUT_JSON, "w", encoding="utf-8") as fh:
         json.dump({"textures": textures}, fh, indent=2)
         fh.write("\n")
@@ -173,5 +207,22 @@ public enum FxSprite {{
         print("  ", e)
 
 
+def main_java_only():
+    os.makedirs(OUT_TEX, exist_ok=True)
+    names = java_only()
+    with open(OUT_JSON, encoding="utf-8") as fh:
+        d = json.load(fh)
+    for n in names:
+        if n not in d["textures"]:
+            d["textures"].append(n)
+    with open(OUT_JSON, "w", encoding="utf-8") as fh:
+        json.dump(d, fh, indent=2)
+        fh.write("\n")
+    print("java-only textures:", ", ".join(names))
+
+
 if __name__ == "__main__":
-    main(sys.argv[1] if len(sys.argv) > 1 else "/home/claude/rpg_addon")
+    if len(sys.argv) > 1 and sys.argv[1] == "--java-only":
+        main_java_only()
+    else:
+        main(sys.argv[1] if len(sys.argv) > 1 else "/home/claude/rpg_addon")

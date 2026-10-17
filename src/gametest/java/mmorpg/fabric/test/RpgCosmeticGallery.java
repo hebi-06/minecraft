@@ -98,6 +98,9 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             check(ctx.computeOnClient(mc -> CosmeticModels.animCount("angel_wings")) == 2, "wing bones animate (2)");
             check(ctx.computeOnClient(mc -> CosmeticModels.animCount("halo")) == 2, "halo bob + spin bones");
             check(ctx.computeOnClient(mc -> CosmeticModels.animCount("crimson_cape")) == 1, "cape bone");
+            check(ctx.computeOnClient(mc -> CosmeticModels.animCount("fairy_wings")) == 4, "fairy wing bones flutter (4 — upper · lower × 2)");
+            check(ctx.computeOnClient(mc -> CosmeticModels.translucent("fairy_wings") && !CosmeticModels.translucent("angel_wings")),
+                    "fairy wings drawn translucent (angel wings not)");
             part(ctx, "stats", () -> stats(ctx, conn));
             part(ctx, "buy", () -> buy(ctx, server, conn));
             server.runOnServer(s -> {
@@ -113,6 +116,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             part(ctx, "rival", () -> rival(ctx, server));
             part(ctx, "rival_armor", () -> rivalArmor(ctx, server));
             part(ctx, "auras", () -> auras(ctx, server));
+            part(ctx, "fairy", () -> fairy(ctx, server));
             server.runOnServer(s -> {
                 ServerPlayer r = rivalId == null ? null : s.getPlayerList().getPlayer(rivalId);
                 if (r != null) s.getPlayerList().remove(r);
@@ -237,7 +241,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         away(ctx);
         ctx.waitTicks(6);
         shot(ctx, "c_back_wings");
-        for (String id : List.of("crimson_cape", "demon_wings")) {
+        for (String id : List.of("crimson_cape", "demon_wings", "fairy_wings")) {
             int row = rowIndex(ctx, id);
             click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(row));
             away(ctx);
@@ -415,10 +419,43 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         }
     }
 
+    /** 요정의 날개 (0.14.2): 두 번째 플레이어가 입음 (갑옷 숨김 · 오라 · 머리 장식 없이) — 뒤 · 뒤 가까이 · 옆 · 밤 (날개맥 빛) · 가루 */
+    private void fairy(ClientGameTestContext ctx, TestServerContext server) {
+        if (rivalId == null) return;
+        int dust0 = ctx.computeOnClient(mc -> CosmeticAura.dustSpawned);
+        server.runOnServer(s -> {
+            ServerPlayer r = rival(s);
+            Cosmetics.clear(r, "aura", null);
+            Cosmetics.clear(r, "head", null);
+            Cosmetics.action(r, "hide_all", "", "");
+            Cosmetics.equip(r, "fairy_wings");
+        });
+        boolean worn = waitFor(ctx, mc -> "fairy_wings".equals(ClientCosmetics.lookOf(rivalId).get("back")), 40);
+        check(worn, "rival's fairy wings reached my client");
+        hideGui(ctx, true);
+        try {
+            viewRival(ctx, server, "back");
+            shot(ctx, "c_fairy_back");
+            viewRival(ctx, server, "back_near");
+            shot(ctx, "c_fairy_back_near");
+            viewRival(ctx, server, "side");
+            shot(ctx, "c_fairy_side");
+            check(ctx.computeOnClient(mc -> CosmeticAura.dustSpawned) > dust0, "fairy dust spawned " + ctx.computeOnClient(mc -> CosmeticAura.dustSpawned - dust0));
+            server.runCommand("time set 18000");
+            viewRival(ctx, server, "back_near");
+            ctx.waitTicks(20);
+            shot(ctx, "c_fairy_night");
+        } finally {
+            server.runCommand("time set 6000");
+            hideGui(ctx, false);
+        }
+    }
+
     /** 두 번째 플레이어를 보는 자리로 (앞 · 뒤 · 옆 · 가까이 — 두 번째 플레이어는 북쪽을 봄) */
     private void viewRival(ClientGameTestContext ctx, TestServerContext server, String where) {
         double[] p = switch (where) {
             case "back" -> new double[] {RIVAL_AT.x, RIVAL_AT.z + 3.0, 180};
+            case "back_near" -> new double[] {RIVAL_AT.x, RIVAL_AT.z + 2.2, 180, 6};
             case "side" -> new double[] {RIVAL_AT.x + 3.0, RIVAL_AT.z, 90};
             case "near" -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 2.6, 0, 16};
             default -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 3.0, 0};

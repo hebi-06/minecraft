@@ -24,24 +24,29 @@ import net.minecraft.resources.Identifier;
 
 /**
  * 사람 모델에 붙는 조각 하나 (갑옷 한 부위 · 장식 — tools/armor_items.py · tools/cosmetic_art.py 가 만든 JSON
- * {"tw", "th", "texture", "emissive"?, "parts": {head · body · right_arm · left_arm · right_leg · left_leg: 뼈}}).
+ * {"tw", "th", "texture", "emissive"?, "translucent"?, "parts": {head · body · right_arm · left_arm · right_leg · left_leg: 뼈}}).
  * 뿌리 뼈는 사람 모델과 같은 이름 — Fabric ArmorRenderer.submitTransformCopyingModel 로 입은 사람의 움직임을 그대로 받음.
  * 움직이는 뼈 (이름): fw_cape (걷는 빠르기 × 35° + 살랑임 2° 뒤로 — 황제 망토 · 진홍 망토), fw_wing_left · fw_wing_right (날갯짓 —
- * 천천히 ±9°, 달리면 더 크게), fw_spin (초당 40° 돎), fw_bob (위아래 0.6 픽셀 떠다님). emissive 가 있으면 그 그림을 빛나게 한 번 더 (CosmeticLayer).
+ * 천천히 ±9°, 달리면 더 크게), fw_flutter_left · fw_flutter_right (0.14.2 요정 날개 — 파르르: 초당 약 3번 ±14°, 달리면 더 빠르고 크게),
+ * fw_flutter_low_left · fw_flutter_low_right (아래 날개 — 같은 날갯짓을 조금 늦게 · 작게), fw_spin (초당 40° 돎), fw_bob (위아래 0.6 픽셀 떠다님).
+ * emissive 가 있으면 그 그림을 빛나게 한 번 더, translucent 면 반투명으로 (CosmeticLayer).
  */
 public final class PieceModel extends Model<HumanoidRenderState> {
     final Identifier texture;
     /** 빛나는 그림 (없으면 null) */
     final Identifier emissive;
+    /** 반투명으로 그림 (그림의 알파대로 섞음 — 요정 날개의 막) */
+    final boolean translucent;
     private final List<Anim> anims;
 
     /** 움직이는 뼈 하나 (처음 자세 기억) */
     private record Anim(ModelPart part, String kind, float x, float y, float z, float xRot, float yRot, float zRot) {}
 
-    private PieceModel(ModelPart root, Identifier texture, Identifier emissive, List<String[]> animPaths) {
-        super(root, RenderTypes::armorCutoutNoCull);
+    private PieceModel(ModelPart root, Identifier texture, Identifier emissive, boolean translucent, List<String[]> animPaths) {
+        super(root, translucent ? RenderTypes::entityTranslucent : RenderTypes::armorCutoutNoCull);
         this.texture = texture;
         this.emissive = emissive;
+        this.translucent = translucent;
         List<Anim> a = new ArrayList<>();
         for (String[] path : animPaths) {
             ModelPart p = root;
@@ -53,6 +58,10 @@ public final class PieceModel extends Model<HumanoidRenderState> {
     }
 
     private static String kindOf(String bone) {
+        if (bone.startsWith("fw_flutter_low_left")) return "flutter_low_left";
+        if (bone.startsWith("fw_flutter_low_right")) return "flutter_low_right";
+        if (bone.startsWith("fw_flutter_left")) return "flutter_left";
+        if (bone.startsWith("fw_flutter_right")) return "flutter_right";
         if (bone.startsWith("fw_cape")) return "cape";
         if (bone.startsWith("fw_wing_left")) return "wing_left";
         if (bone.startsWith("fw_wing_right")) return "wing_right";
@@ -64,6 +73,11 @@ public final class PieceModel extends Model<HumanoidRenderState> {
     /** 움직이는 뼈의 수 (시험용) */
     public int animCount() {
         return anims.size();
+    }
+
+    /** 반투명인지 (시험용) */
+    public boolean translucent() {
+        return translucent;
     }
 
     /** 사람 모델의 움직임을 받은 뒤 (TransformCopyingModel): 움직이는 뼈만 */
@@ -82,6 +96,13 @@ public final class PieceModel extends Model<HumanoidRenderState> {
                     double flap = Math.sin(age * (0.14 + speed * 0.22)) * (9 + speed * 14);
                     double sign = a.kind().equals("wing_right") ? 1 : -1;
                     a.part().yRot = a.yRot() + (float) Math.toRadians(sign * (flap + speed * 6));
+                }
+                case "flutter_left", "flutter_right", "flutter_low_left", "flutter_low_right" -> {
+                    // 파르르 (요정 날개): 틱마다 약 1 라디안 (초당 약 3번) — 아래 날개는 0.9 라디안 늦게 · 0.7 배
+                    boolean low = a.kind().startsWith("flutter_low");
+                    double flap = Math.sin(age * (0.95 + speed * 0.45) - (low ? 0.9 : 0)) * (14 + speed * 10) * (low ? 0.7 : 1);
+                    double sign = a.kind().endsWith("right") ? 1 : -1;
+                    a.part().yRot = a.yRot() + (float) Math.toRadians(sign * (flap + speed * 8));
                 }
                 case "spin" -> a.part().yRot = a.yRot() + (float) Math.toRadians(age * 2.0 % 360);
                 case "bob" -> a.part().y = a.y() + (float) (Math.sin(age * 0.09) * 0.6);
@@ -144,6 +165,7 @@ public final class PieceModel extends Model<HumanoidRenderState> {
         for (String name : parts.keySet()) addPart(root, name, parts.getAsJsonObject(name), List.of(), anims);
         ModelPart baked = LayerDefinition.create(mesh, m.get("tw").getAsInt(), m.get("th").getAsInt()).bakeRoot();
         Identifier emissive = m.has("emissive") ? Identifier.parse(m.get("emissive").getAsString()) : null;
-        return new PieceModel(baked, Identifier.parse(m.get("texture").getAsString()), emissive, anims);
+        boolean translucent = m.has("translucent") && m.get("translucent").getAsBoolean();
+        return new PieceModel(baked, Identifier.parse(m.get("texture").getAsString()), emissive, translucent, anims);
     }
 }

@@ -1,0 +1,150 @@
+{
+ "format_version": "1.12.0",
+ "minecraft:geometry": [
+  {
+   "description": {
+    "identifier": "geometry.mmorpg.fairy_wings",
+    "texture_width": 64,
+    "texture_height": 64
+   },
+   "bones": [
+    {
+     "name": "body",
+     "pivot": [
+      0.0,
+      24.0,
+      0.0
+     ]
+    },
+    {
+     "name": "fw_flutter_right",
+     "pivot": [
+      -1.0,
+      20.5,
+      3.2
+     ],
+     "parent": "body",
+     "rotation": [
+      0.0,
+      26.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -17.0,
+        19.0,
+        3.2
+       ],
+       "size": [
+        16,
+        18,
+        0
+       ],
+       "uv": [
+        0,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "fw_flutter_low_right",
+     "pivot": [
+      -1.0,
+      19.5,
+      3.2
+     ],
+     "parent": "body",
+     "rotation": [
+      0.0,
+      20.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        -12.0,
+        8.5,
+        3.2
+       ],
+       "size": [
+        11,
+        12,
+        0
+       ],
+       "uv": [
+        0,
+        18
+       ]
+      }
+     ]
+    },
+    {
+     "name": "fw_flutter_left",
+     "pivot": [
+      1.0,
+      20.5,
+      3.2
+     ],
+     "parent": "body",
+     "rotation": [
+      0.0,
+      -26.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        1.0,
+        19.0,
+        3.2
+       ],
+       "size": [
+        16,
+        18,
+        0
+       ],
+       "uv": [
+        32,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "name": "fw_flutter_low_left",
+     "pivot": [
+      1.0,
+      19.5,
+      3.2
+     ],
+     "parent": "body",
+     "rotation": [
+      0.0,
+      -20.0,
+      0.0
+     ],
+     "cubes": [
+      {
+       "origin": [
+        1.0,
+        8.5,
+        3.2
+       ],
+       "size": [
+        11,
+        12,
+        0
+       ],
+       "uv": [
+        22,
+        18
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

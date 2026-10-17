@@ -24,6 +24,7 @@ import org.joml.Vector3f;
  * - 불꽃 · 마법진 · 번쩍임 (rotate_xyz): 카메라를 향한 사각형 + 돌린 각
  * - 일반 그림 (FxSprite — 참격 · X · 방패 고리 · 폭발: 카메라를 향함, 충격파: 땅에 눕힘): 여러 장이면 수명 동안 차례로, 끌림으로 느려짐
  * - 무기 빛 알갱이 (GLINT — 애드온 weapon_fx): 바닐라 파티클 그림 (generic_0 · flame), 위로 가속 · 끌림, 줄어들며 사라짐
+ *   (twinkle — 0.14.2 요정 날개 가루: 네 갈래 반짝임, 커졌다 작아지며 돎)
  * 모두 밝기 최대 (빛), 반투명 섞기. 그림은 이름으로 찾음 (assets/mmorpg/particles/fx.json).
  */
 public final class FxParticle extends SingleQuadParticle {
@@ -175,7 +176,13 @@ public final class FxParticle extends SingleQuadParticle {
             }
             case FxOptions.GLINT -> {
                 int t = Mth.clamp(o.sprite(), 0, FxOptions.GLINT_TEXTURES.length - 1);
-                billboard(state, camera, rx, ry, rz, o.size() * (1 - tn), 0F, tex(FxOptions.GLINT_TEXTURES[t]), a);
+                if (t == FxOptions.TWINKLE) {
+                    // 반짝임: 커졌다 작아지며 (수명의 가운데에서 가장 큼) 천천히 돎
+                    float k = Mth.sin(Mth.PI * tn);
+                    billboard(state, camera, rx, ry, rz, o.size() * (0.2F + 0.8F * k), sec * 140F, tex(FxOptions.GLINT_TEXTURES[t]), a * Math.min(1F, 0.3F + k));
+                } else {
+                    billboard(state, camera, rx, ry, rz, o.size() * (1 - tn), 0F, tex(FxOptions.GLINT_TEXTURES[t]), a);
+                }
             }
             default -> {}
         }

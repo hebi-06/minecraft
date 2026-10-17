@@ -9,6 +9,7 @@
 원본 (tools/cosmetic_art — 클로드 디자인에서 만든 것으로 바꿀 때는 같은 이름으로 넣고 다시 돌리면 됨):
 - <model>.geo.json + <model>.png   베드락 모델 (뿌리 뼈 head · body · rightArm · leftArm · rightLeg · leftLeg — 갑옷 모델과 같음, 상자 회전 없이 뼈 회전만)
   + <model>.glow.png (있으면 그 그림을 빛나게 한 번 더 그림 — 천사의 고리처럼 어두운 곳에서도 보이는 부분)
+  (cosmetics.json 항목에 "translucent": true 면 모델 JSON 에 translucent — 그림의 알파대로 반투명하게 그림, 0.14.2 요정의 날개)
 - <model>.model.json + 그 안의 "texture" 파일   자바 사람 모델 조각 그대로 (견본 갑옷 — 지금 갑옷 세트의 모델에 색만 바꾼 텍스처)
 - <id>.icon.png   장식 창 아이콘 (32×32) — 없으면 모델 · 무기 디자인에서 그림 (오라 · 칭호는 색으로 그린 그림)
 무기 스킨 원본은 무기 디자인과 같은 자리 (tools/weapon_art/<design>.geo.json · .png · .java.json · .java.png + designs.json 의 항목).
@@ -550,8 +551,131 @@ def wings(name, demon=False):
     return d
 
 
+# ---- 요정의 날개 (0.14.2): 한쪽에 위 · 아래 날개 둘 (두께 없는 판 — 뒤쪽 면 (south) 에만 그림, 반투명이라 앞에서도 비쳐 보임).
+#      막 = 뿌리 분홍 → 보라 → 끝 하늘빛 (가운데일수록 투명), 흰 맥 (뿌리에서 퍼짐) · 가로 맥 · 테두리, 반짝이는 점.
+#      빛 그림 = 테두리 · 맥 · 반짝임 (어두워도 보임) + 막은 아주 옅게. 뼈 fw_flutter_* (빠른 날갯짓) · fw_flutter_low_* (아래 날개 — 조금 늦게)
+
+FAIRY_PINK = (255, 128, 214)
+FAIRY_LILAC = (186, 140, 255)
+FAIRY_SKY = (112, 208, 255)
+# 테두리 안쪽 띠 (같은 자리의 막 색을 짙게 — 뿌리 쪽 진분홍 · 가운데 보라 · 끝 파랑)
+FAIRY_DEEP = [(0.0, (232, 76, 186)), (0.5, (146, 96, 255)), (1.0, (64, 162, 255))]
+FAIRY_RIM = (255, 238, 252)
+FAIRY_VEIN = (255, 250, 255)
+
+
+class Lobe:
+    """날개 한 장의 모양 (판 픽셀 — lx 0 = 등 쪽, ly 0 = 위): 뿌리 base → 끝 tip 축 (bend 만큼 휨), 축을 따라 반폭 (widest 에서 width,
+    뿌리는 뾰족 · 끝은 둥글게). veins = 뿌리에서 퍼지는 맥 (반폭의 몇 배로 끝나는지), cross = 가로 맥 자리 (축의 몇 %), sparks = 반짝이는 점 (축 %, 반폭의 몇 배)"""
+
+    def __init__(self, w, h, base, tip, width, widest=0.58, bend=1.2, veins=(-0.5, 0.0, 0.5), cross=(), sparks=()):
+        self.w, self.h = w, h
+        self.base, self.tip = base, tip
+        ax, ay = tip[0] - base[0], tip[1] - base[1]
+        self.L = math.hypot(ax, ay)
+        self.t = (ax / self.L, ay / self.L)
+        self.n = (-self.t[1], self.t[0])
+        self.width, self.widest, self.bend = width, widest, bend
+        self.veins, self.cross, self.sparks = veins, cross, sparks
+        self.cells = {}
+        for ly in range(h):
+            for lx in range(w):
+                c = self._classify(lx, ly)
+                if c is not None:
+                    self.cells[(lx, ly)] = c
+        # 테두리: 안쪽 칸 가운데 상하좌우 이웃이 밖인 칸 (판 가장자리도 밖)
+        for (lx, ly), c in list(self.cells.items()):
+            if any((lx + dx, ly + dy) not in self.cells for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                self.cells[(lx, ly)] = ("rim",) + c[1:]
+
+    def hw(self, s):
+        if s <= 0 or s >= 1:
+            return 0.0
+        if s <= self.widest:
+            return self.width * math.sin(math.pi / 2 * s / self.widest) ** 0.75
+        k = (s - self.widest) / (1 - self.widest)
+        return self.width * math.sqrt(max(0.0, 1 - k * k))
+
+    def _classify(self, lx, ly):
+        px, py = lx + 0.5 - self.base[0], ly + 0.5 - self.base[1]
+        s = (px * self.t[0] + py * self.t[1]) / self.L
+        d = px * self.n[0] + py * self.n[1]
+        c = self.bend * math.sin(math.pi * max(0.0, min(1.0, s)))
+        hw = self.hw(s)
+        off = d - c
+        if hw <= 0.05 or abs(off) > hw + 0.2:
+            return None
+        e = min(1.0, abs(off) / hw)
+        for ss, kk in self.sparks:
+            sx = ss * self.L
+            if math.hypot(s * self.L - sx, off - kk * self.hw(ss)) < 0.6:
+                return ("spark", s, e)
+        if 0.05 < s < 0.93:
+            for k in self.veins:
+                spread = min(1.0, s / 0.55)
+                if abs(off - k * hw * spread) < 0.5:
+                    return ("vein", s, e)
+            for cs in self.cross:
+                if abs(s - cs) * self.L < 0.5 and e < 0.9:
+                    return ("cross", s, e)
+        return ("membrane", s, e)
+
+    def at(self, lx, ly):
+        return self.cells.get((lx, ly))
+
+
+def fairy_color(kind, s, e):
+    """막 · 맥 · 테두리 모두 같은 자리의 무지갯빛 (맥 · 테두리는 그 색을 밝게 — 흰 선이 많으면 날개가 하얗게만 보여서)"""
+    if kind == "spark":
+        return (255, 255, 255, 255)
+    c = ramp([(0.0, FAIRY_PINK), (0.5, FAIRY_LILAC), (1.0, FAIRY_SKY)], s)
+    if kind == "rim":
+        return tuple(mix(c, FAIRY_RIM, 0.55)) + (240,)
+    if kind == "vein":
+        return tuple(mix(c, FAIRY_VEIN, 0.5)) + (200,)
+    if kind == "cross":
+        return tuple(mix(c, FAIRY_VEIN, 0.3)) + (165,)
+    c = mix(c, (255, 255, 255), 0.08 * (1 - e))
+    if e > 0.72:
+        c = mix(c, ramp(FAIRY_DEEP, s), 0.5 * (e - 0.72) / 0.28)
+    return tuple(c) + (int(110 + 80 * e ** 1.6),)
+
+
+def fairy_glow_color(kind, s, e):
+    """빛 그림 (eyes — 더하기라 낮에도 그만큼 밝아짐): 반짝임은 흰빛, 테두리 · 맥은 옅은 보랏빛, 막은 아주 옅게 (밤에 날개 모양이 보이게)"""
+    return {"spark": (255, 255, 255, 255), "rim": (84, 62, 124, 255), "vein": (64, 54, 104, 255), "cross": (38, 32, 64, 255)}.get(kind, (16, 10, 28, 255))
+
+
+def fairy_paint(lobe, right, glow=False):
+    """뒤쪽 면 (south) 만 — 뒤에서 보면 왼쪽 = +x 이므로 오른쪽 날개 (-x 로 뻗음) 는 그림 왼쪽이 등 쪽"""
+    def f(face, x, y, w, h):
+        if face != "south":
+            return None
+        c = lobe.at(x if right else w - 1 - x, y)
+        if c is None:
+            return None
+        return (fairy_glow_color if glow else fairy_color)(*c)
+    return f
+
+
+def fairy_wings():
+    d = Design("fairy_wings", 64, 64)
+    d.bone("body", pivot=(0, 24, 0))
+    upper = Lobe(16, 18, base=(0.8, 15.6), tip=(15.2, 1.0), width=5.1, widest=0.6, bend=1.6, veins=(-0.5, 0.0, 0.5), cross=(0.6,),
+                 sparks=((0.8, 0.32), (0.6, -0.45), (0.9, -0.08)))
+    lower = Lobe(11, 12, base=(0.8, 1.4), tip=(9.8, 10.8), width=3.1, widest=0.6, bend=-1.1, veins=(0.0,), sparks=((0.72, 0.3),))
+    z = 3.2  # 갑옷 (등 z 3) 보다 조금 뒤 — 갑옷을 입어도 날개 뿌리가 보이게
+    for side, sign in (("right", -1), ("left", 1)):
+        right = side == "right"
+        ub = d.bone(f"fw_flutter_{side}", "body", pivot=(sign * 1.0, 20.5, z), rotation=(0, sign * -26, 0))
+        d.cube(ub, (-17.0 if right else 1.0, 19, z), (16, 18, 0), fairy_paint(upper, right), fairy_paint(upper, right, glow=True))
+        lb = d.bone(f"fw_flutter_low_{side}", "body", pivot=(sign * 1.0, 19.5, z), rotation=(0, sign * -20, 0))
+        d.cube(lb, (-12.0 if right else 1.0, 8.5, z), (11, 12, 0), fairy_paint(lower, right), fairy_paint(lower, right, glow=True))
+    return d
+
+
 SAMPLE_DESIGNS = {"crown": crown, "halo": halo, "wizard_hat": wizard_hat, "crimson_cape": crimson_cape,
-                  "angel_wings": lambda: wings("angel_wings"), "demon_wings": lambda: wings("demon_wings", demon=True)}
+                  "angel_wings": lambda: wings("angel_wings"), "demon_wings": lambda: wings("demon_wings", demon=True), "fairy_wings": fairy_wings}
 
 
 # ------------------------------------------------------------ 견본 만들기
@@ -777,7 +901,7 @@ def build(defs):
                     check_bones(model, m)
                     tpath = f"mmorpg:textures/entity/cosmetic/{tname}"
                     m = {"tw": m["tw"], "th": m["th"], "texture": tpath, **({"emissive": f"mmorpg:textures/entity/cosmetic/{model}.glow.png"} if glow else {}),
-                         "parts": m["parts"]}
+                         **({"translucent": True} if it.get("translucent") else {}), "parts": m["parts"]}
                     write_json(os.path.join(out_models, f"{model}.json"), m, indent=1)
                     tex.save(os.path.join(out_tex, tname))
                     if glow is not None:

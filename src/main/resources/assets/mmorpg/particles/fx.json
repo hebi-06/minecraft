@@ -107,6 +107,7 @@
     "mmorpg:fx/shock_ring",
     "mmorpg:fx/bash_burst",
     "minecraft:generic_0",
-    "minecraft:flame"
+    "minecraft:flame",
+    "mmorpg:fx/twinkle"
   ]
 }

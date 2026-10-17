@@ -15,6 +15,7 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 /**
  * 장식 렌더 층 (사람 — 플레이어 · 마네킹 렌더러에 Fabric 으로 붙임): 갑옷 스킨 · 머리 장식 · 등 장식을 사람 모델의 움직임 그대로
  * (ArmorRenderer.submitTransformCopyingModel — RPG 갑옷과 같은 방법). 빛나는 그림 (emissive) 이 있으면 eyes 렌더 타입으로 한 번 더 (어두워도 보임).
+ * 반투명 모델 (translucent — 0.14.2 요정 날개) 은 entityTranslucent (그림의 알파대로 섞음 · 양면), 나머지는 armorCutoutNoCull (알파는 있음 / 없음만).
  * 몸이 투명 (투명화 물약) 이면 머리 · 등 장식은 그리지 않음 (갑옷 스킨은 갑옷처럼 그림).
  */
 public final class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
@@ -44,8 +45,8 @@ public final class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerMo
     }
 
     private void draw(PieceModel m, PoseStack pose, SubmitNodeCollector collector, int light, AvatarRenderState state) {
-        ArmorRenderer.submitTransformCopyingModel(getParentModel(), state, m, state, true, collector, pose, RenderTypes.armorCutoutNoCull(m.texture), light,
-                OverlayTexture.NO_OVERLAY, state.outlineColor);
+        ArmorRenderer.submitTransformCopyingModel(getParentModel(), state, m, state, true, collector, pose,
+                m.translucent ? RenderTypes.entityTranslucent(m.texture) : RenderTypes.armorCutoutNoCull(m.texture), light, OverlayTexture.NO_OVERLAY, state.outlineColor);
         if (m.emissive != null) {
             ArmorRenderer.submitTransformCopyingModel(getParentModel(), state, m, state, true, collector, pose, RenderTypes.eyes(m.emissive), FULL_BRIGHT,
                     OverlayTexture.NO_OVERLAY, 0);
