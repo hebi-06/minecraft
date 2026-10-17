@@ -138,11 +138,13 @@ public final class Cosmetics {
         return null;
     }
 
-    /** 칸을 원래대로 (무기 칸은 type 의 스킨 → 기본 모습, 갑옷 칸 → 입은 갑옷 그대로, 장식 칸 → 없음) */
+    /** 칸을 원래대로 (무기 칸은 type 의 스킨 → 기본 모습 — type 이 없으면 모든 무기 종류, 갑옷 칸 → 입은 갑옷 그대로, 장식 칸 → 없음) */
     public static String clear(ServerPlayer sp, String slot, String type) {
         if (CosmeticDefs.slot(slot) == null) return "§c모르는 칸: " + slot;
         State s = state(sp);
-        Look next = "weapon".equals(slot) ? s.look().withWeapon(type == null ? "" : type, null) : s.look().with(slot, null);
+        Look next;
+        if ("weapon".equals(slot)) next = type == null || type.isBlank() ? new Look(java.util.Map.of(), s.look().slots()) : s.look().withWeapon(type, null);
+        else next = s.look().with(slot, null);
         if (next.equals(s.look())) return null;
         save(sp, new State(s.owned(), next));
         broadcast(sp);

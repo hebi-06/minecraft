@@ -108,14 +108,19 @@ public final class CosmeticRender {
         }
         List<PieceModel> armor = new ArrayList<>(4);
         CosmeticDefs.Def headDef = look.def("head");
+        // 투명 (투명화 물약) 이면 바닐라처럼 갑옷은 보임: 숨김 · 모자의 투구 가림은 쓰지 않음 (머리 · 등 장식도 그리지 않으므로 — 결투에서 갑옷까지 사라지지 않게)
+        boolean invisible = state.isInvisible;
         // 머리에 얹는 장식 (모자 · 왕관) 을 쓰면 투구는 그리지 않음 (투구 스킨도)
-        boolean noHelmet = headDef != null && headDef.hideHelmet();
+        boolean noHelmet = !invisible && headDef != null && headDef.hideHelmet();
         if (noHelmet) clear(state, "helmet");
         for (String slot : CosmeticDefs.ARMOR) {
             String v = look.get(slot);
             if (v == null || (noHelmet && slot.equals("helmet"))) continue;
+            if (Look.HIDE.equals(v)) {
+                if (!invisible) clear(state, slot);
+                continue;
+            }
             clear(state, slot);
-            if (Look.HIDE.equals(v)) continue;
             PieceModel m = CosmeticModels.of(CosmeticDefs.get(v));
             if (m != null) armor.add(m);
         }

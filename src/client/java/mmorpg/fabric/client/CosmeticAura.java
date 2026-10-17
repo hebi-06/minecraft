@@ -21,7 +21,8 @@ import net.minecraft.world.phys.Vec3;
  * <li>orbit (별빛): 빛 둘이 허리 높이에서 몸 둘레를 돎 (2초에 한 바퀴 · 위아래로 출렁 · 흰 심지) — 지나간 자리에 꼬리, 반짝임이 떠오름</li>
  * <li>frost (서리): 머리 위 (반지름 0.85) 에서 눈송이가 흔들리며 내림 + 1.2초마다 발밑 서리 고리 · 발밑 반짝임</li>
  * </ul>
- * 투명 · 관전 중이면 뿌리지 않음. 파티클 설정이 '최소' 면 뿌리지 않고, '줄임' 이면 반만.
+ * 투명 · 관전 중이면 뿌리지 않음. 파티클 설정이 '최소' 면 뿌리지 않고, '줄임' 이면 반만 (orbit 의 도는 빛은 두 틱마다 — 꼬리를 길게).
+ * 내 오라는 1인칭에서는 뿌리지 않음 (눈 바로 앞을 지나는 빛 · 눈송이가 시야를 가리지 않게 — 3인칭 (F5) · 장식 창 미리보기 · 다른 사람 화면에서는 보임).
  */
 public final class CosmeticAura {
     private CosmeticAura() {}
@@ -40,7 +41,9 @@ public final class CosmeticAura {
         if (cam == null) return;
         AABB box = cam.getBoundingBox().inflate(RANGE);
         RandomSource r = level.getRandom();
+        boolean firstPerson = mc.options.getCameraType().isFirstPerson();
         for (Avatar a : level.getEntitiesOfClass(Avatar.class, box, e -> !e.isSpectator() && !e.isRemoved() && !e.isInvisible())) {
+            if (firstPerson && a == cam) continue;
             Look look = ClientCosmetics.lookOf(a.getUUID());
             CosmeticDefs.Def d = look.def("aura");
             if (d == null || d.aura() == null) continue;
@@ -74,18 +77,21 @@ public final class CosmeticAura {
         int n = count(tick, aura.rate() * scale);
         switch (aura.kind()) {
             case "orbit" -> {
-                // 빛 둘이 몸 둘레를 돎 (틱마다 그 자리에 큰 빛 + 흰 심지 — 꼬리처럼 남음)
-                double t = tick / 20.0;
-                for (int k = 0; k < 2; k++) {
-                    double ang = t * Math.PI + k * Math.PI;
-                    double y = h * 0.5 + Math.sin(t * 2.4 + k * Math.PI) * 0.3;
-                    Vec3 at = feet.add(Math.cos(ang) * 0.75, y, Math.sin(ang) * 0.75);
-                    double[] c = cols.get(k % cols.size());
-                    add(level, spark(Vec3.ZERO, 0, 0.2, 0.7, 0.1, argb(c, 1)), at);
-                    if (tick % 2 == 0) add(level, spark(Vec3.ZERO, 0, 0.09, 0.35, 0.3, argb(new double[] {1, 1, 1}, 1)), at);
+                // 빛 둘이 몸 둘레를 돎 (그 자리에 큰 빛 + 흰 심지 — 꼬리처럼 남음): 틱마다, 파티클 '줄임' 이면 두 틱마다 (꼬리를 길게)
+                boolean decreased = scale < 1F;
+                if (!decreased || tick % 2 == 0) {
+                    double t = tick / 20.0;
+                    for (int k = 0; k < 2; k++) {
+                        double ang = t * Math.PI + k * Math.PI;
+                        double y = h * 0.5 + Math.sin(t * 2.4 + k * Math.PI) * 0.3;
+                        Vec3 at = feet.add(Math.cos(ang) * 0.75, y, Math.sin(ang) * 0.75);
+                        double[] c = cols.get(k % cols.size());
+                        add(level, spark(Vec3.ZERO, 0, 0.2, decreased ? 0.9 : 0.7, 0.1, argb(c, 1)), at);
+                        if (tick % (decreased ? 4 : 2) == 0) add(level, spark(Vec3.ZERO, 0, 0.09, 0.35, 0.3, argb(new double[] {1, 1, 1}, 1)), at);
+                    }
                 }
-                // 반짝임: 몸 둘레에서 천천히 떠오름
-                for (int i = 0; i < Math.max(1, n / 3); i++) {
+                // 반짝임: 몸 둘레에서 천천히 떠오름 (초당 rate 개)
+                for (int i = 0; i < n; i++) {
                     double ang = r.nextDouble() * Math.PI * 2;
                     double rad = 0.4 + r.nextDouble() * 0.5;
                     Vec3 at = feet.add(Math.cos(ang) * rad, r.nextDouble() * h * 1.1, Math.sin(ang) * rad);

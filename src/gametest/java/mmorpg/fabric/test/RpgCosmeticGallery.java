@@ -48,7 +48,8 @@ import org.slf4j.LoggerFactory;
  * 스탯 창 아랫줄 장식 단추 (풀이) → 장식 창 (무기 탭 — 칼을 든 미리보기), 벚꽃 검 줄 → 미리보기 → 구매 (두 번 눌러 확인 — 에메랄드 줄어듦 · 바로 입음),
  * 갑옷 탭 (투구 숨기기 · 성기사 세트 장착), 머리 (왕관 장착 · 고리 · 모자 입어 보기), 등 (뒤로 돌아간 미리보기 — 날개 장착 · 망토 · 악마 날개 입어 보기),
  * 오라 (별빛 장착), 칭호 (용사 장착), U 키로 열기 · 닫기, 세계에서 3인칭 앞 · 뒤 · 1인칭 (벚꽃 검 스킨), 두 번째 플레이어 (가짜 연결 — 장식을 입히면
- * 내 클라이언트에 모습이 옴): 앞 (칭호가 이름 위) · 뒤 · 옆, 진짜 갑옷 (황제 세트) 을 입은 채 숨기기 · 빙룡 갑옷 스킨, 오라 셋 (불씨 · 별빛 · 서리).
+ * 내 클라이언트에 모습이 옴): 앞 (칭호가 이름 위) · 뒤 · 옆, 진짜 갑옷 (다이아몬드) 을 입은 채 숨기기 · 빙룡 갑옷 스킨, 오라 셋 (불씨 · 별빛 · 서리 —
+ * 1인칭이므로 내 오라는 뿌리지 않음).
  * 사진 이름 c_… → ci-logs 의 shots/. 확인 항목은 로그 [cosmetic-gallery] OK / FAIL.
  */
 @SuppressWarnings("UnstableApiUsage")
@@ -338,11 +339,13 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             Forms.HEADLESS.add(rivalId);
             r.getInventory().setItem(0, new ItemStack(RpgItems.byId(Weapons.weaponFrom("axe", 30, "hero").id())));
             r.getInventory().setSelectedSlot(0);
-            // 다이아몬드 갑옷 (바닐라 — 입을 조건 없음): 가짜 연결의 플레이어는 몸 틱이 돌지 않아 나중에 바꾼 장비는 다른 사람에게 가지 않으므로 처음부터
+            // 다이아몬드 갑옷 (바닐라 — 입을 조건 없음): 가짜 연결의 플레이어는 몸 틱이 돌지 않아 바꾼 장비를 보는 사람에게 보내는 일
+            // (LivingEntity.detectEquipmentUpdates — 진짜 플레이어는 틱마다) 이 없으므로 직접 한 번 부름 (들고 있는 도끼도 함께 감)
             r.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.DIAMOND_HELMET));
             r.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.DIAMOND_CHESTPLATE));
             r.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.DIAMOND_LEGGINGS));
             r.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.DIAMOND_BOOTS));
+            sendEquipment(r);
             for (String id : CosmeticDefs.all().keySet()) Cosmetics.give(r, id);
             for (String id : List.of("lava_axe", "wizard_hat", "demon_wings", "ember_aura", "title_slayer", "frost_dragon_chest")) Cosmetics.equip(r, id);
         });
@@ -372,6 +375,9 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             Cosmetics.clear(r, "back", null);
             Cosmetics.clear(r, "head", null);
         });
+        boolean worn = waitFor(ctx, mc -> mc.level.getPlayerByUUID(rivalId) != null
+                && mc.level.getPlayerByUUID(rivalId).getItemBySlot(EquipmentSlot.CHEST).is(Items.DIAMOND_CHESTPLATE), 40);
+        check(worn, "rival's real diamond armor reached my client");
         viewRival(ctx, server, "front");
         shot(ctx, "c_rival_diamond");
         server.runOnServer(s -> Cosmetics.action(rival(s), "hide_all", "", ""));
@@ -417,7 +423,8 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
             case "near" -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 2.6, 0, 16};
             default -> new double[] {RIVAL_AT.x, RIVAL_AT.z - 3.0, 0};
         };
-        double pitch = p.length > 3 ? p[3] : 6;
+        // 수평으로 봄 (높은 모자로 올라간 이름표 위 칭호까지 들어오게 — 발은 핫바 위)
+        double pitch = p.length > 3 ? p[3] : 0;
         server.runCommand(String.format(Locale.ROOT, "tp @a[name=!Rival] %.2f %.2f %.2f %.1f %.1f", p[0], HOME.y, p[1], p[2], pitch));
         ctx.waitTicks(20);
     }
@@ -453,6 +460,17 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
 
     private ServerPlayer rival(MinecraftServer s) {
         return s.getPlayerList().getPlayer(rivalId);
+    }
+
+    /** 바꾼 장비를 보는 사람에게 (진짜 플레이어는 몸 틱마다 바닐라가 함 — 가짜 연결 플레이어는 틱이 돌지 않아 직접) */
+    private static void sendEquipment(ServerPlayer p) {
+        try {
+            java.lang.reflect.Method m = net.minecraft.world.entity.LivingEntity.class.getDeclaredMethod("detectEquipmentUpdates");
+            m.setAccessible(true);
+            m.invoke(p);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("cannot send the rival's equipment", e);
+        }
     }
 
     private boolean waitServer(ClientGameTestContext ctx, TestServerContext server, Predicate<MinecraftServer> test, int ticks) {

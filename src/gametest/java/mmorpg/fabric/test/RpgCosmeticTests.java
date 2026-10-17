@@ -107,6 +107,8 @@ public final class RpgCosmeticTests {
         h.assertTrue("sakura_sword".equals(l.weaponSkin("sword")) && "frost_bow".equals(l.weaponSkin("bow")) && l.weaponSkin("axe") == null, "per type " + l);
         h.assertTrue(Cosmetics.clear(sp, "weapon", "sword") == null && Cosmetics.look(sp).weaponSkin("sword") == null
                 && "frost_bow".equals(Cosmetics.look(sp).weaponSkin("bow")), "clear one weapon type");
+        Cosmetics.equip(sp, "sakura_sword");
+        h.assertTrue(Cosmetics.clear(sp, "weapon", null) == null && Cosmetics.look(sp).weapon().isEmpty(), "clear weapon without type = all types");
         // 벗기 · 다시 입기
         h.assertTrue(Cosmetics.clear(sp, "head", null) == null && Cosmetics.look(sp).get("head") == null, "clear head");
         h.assertTrue(Cosmetics.equip(sp, "crown") == null && "crown".equals(Cosmetics.look(sp).get("head")), "equip again (free)");
