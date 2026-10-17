@@ -1,0 +1,29 @@
+Compiled from "SnowGolem.java"
+public class net.minecraft.world.entity.animal.golem.SnowGolem extends net.minecraft.world.entity.animal.golem.AbstractGolem implements net.minecraft.world.entity.monster.RangedAttackMob,net.minecraft.world.entity.Shearable {
+  private static final net.minecraft.network.syncher.EntityDataAccessor<java.lang.Byte> DATA_PUMPKIN_ID;
+  private static final byte PUMPKIN_FLAG = 16;
+  private static final boolean DEFAULT_PUMPKIN = true;
+  public net.minecraft.world.entity.animal.golem.SnowGolem(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.animal.golem.SnowGolem>, net.minecraft.world.level.Level);
+  protected void registerGoals();
+  public static net.minecraft.world.entity.ai.attributes.AttributeSupplier$Builder createAttributes();
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  public boolean isSensitiveToWater();
+  public void aiStep();
+  public void performRangedAttack(net.minecraft.world.entity.LivingEntity, float);
+  public float rangedAttackUncertainty(net.minecraft.world.level.Level);
+  protected net.minecraft.world.InteractionResult mobInteract(net.minecraft.world.entity.player.Player, net.minecraft.world.InteractionHand);
+  public void shear(net.minecraft.server.level.ServerLevel, net.minecraft.sounds.SoundSource, net.minecraft.world.item.ItemStack);
+  public boolean readyForShearing();
+  public boolean hasPumpkin();
+  public void setPumpkin(boolean);
+  protected net.minecraft.sounds.SoundEvent getAmbientSound();
+  protected net.minecraft.sounds.SoundEvent getHurtSound(net.minecraft.world.damagesource.DamageSource);
+  protected net.minecraft.sounds.SoundEvent getDeathSound();
+  public net.minecraft.world.phys.Vec3 getLeashOffset();
+  private void lambda$shear$0(net.minecraft.server.level.ServerLevel, net.minecraft.world.item.ItemStack);
+  private void lambda$performRangedAttack$0(double, double, double, double, net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball);
+  private static boolean lambda$registerGoals$0(net.minecraft.world.entity.LivingEntity, net.minecraft.server.level.ServerLevel);
+  static {};
+}

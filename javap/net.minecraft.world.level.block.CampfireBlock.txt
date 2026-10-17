@@ -1,0 +1,37 @@
+Compiled from "CampfireBlock.java"
+public class net.minecraft.world.level.block.CampfireBlock extends net.minecraft.world.level.block.BaseEntityBlock implements net.minecraft.world.level.block.SimpleWaterloggedBlock {
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty LIT;
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty SIGNAL_FIRE;
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty WATERLOGGED;
+  public static final net.minecraft.world.level.block.state.properties.EnumProperty<net.minecraft.core.Direction> FACING;
+  private static final net.minecraft.world.phys.shapes.VoxelShape SHAPE;
+  private static final net.minecraft.world.phys.shapes.VoxelShape SHAPE_VIRTUAL_POST;
+  private static final int SMOKE_DISTANCE = 5;
+  private final boolean spawnParticles;
+  private final int fireDamage;
+  public net.minecraft.world.level.block.CampfireBlock(boolean, int, net.minecraft.world.level.block.state.BlockBehaviour$Properties);
+  protected net.minecraft.world.InteractionResult useItemOn(net.minecraft.world.item.ItemStack, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.entity.player.Player, net.minecraft.world.InteractionHand, net.minecraft.world.phys.BlockHitResult);
+  protected void entityInside(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.entity.Entity, net.minecraft.world.entity.InsideBlockEffectApplier, boolean);
+  public net.minecraft.world.level.block.state.BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext);
+  protected net.minecraft.world.level.block.state.BlockState updateShape(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.LevelReader, net.minecraft.world.level.ScheduledTickAccess, net.minecraft.core.BlockPos, net.minecraft.core.Direction, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.util.RandomSource);
+  private boolean isSmokeSource(net.minecraft.world.level.block.state.BlockState);
+  protected net.minecraft.world.phys.shapes.VoxelShape getShape(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos, net.minecraft.world.phys.shapes.CollisionContext);
+  public void animateTick(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource);
+  public static void douse(net.minecraft.world.entity.Entity, net.minecraft.world.level.LevelAccessor, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  public boolean placeLiquid(net.minecraft.world.level.LevelAccessor, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.material.FluidState);
+  protected void onProjectileHit(net.minecraft.world.level.Level, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.phys.BlockHitResult, net.minecraft.world.entity.projectile.Projectile);
+  public static void makeParticles(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, boolean, boolean);
+  public static boolean isSmokeyPos(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  public static boolean isLitCampfire(net.minecraft.world.level.block.state.BlockState);
+  protected net.minecraft.world.level.material.FluidState getFluidState(net.minecraft.world.level.block.state.BlockState);
+  protected net.minecraft.world.level.block.state.BlockState rotate(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.Rotation);
+  protected net.minecraft.world.level.block.state.BlockState mirror(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.Mirror);
+  protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition$Builder<net.minecraft.world.level.block.Block, net.minecraft.world.level.block.state.BlockState>);
+  public net.minecraft.world.level.block.entity.BlockEntity newBlockEntity(net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  public <T extends net.minecraft.world.level.block.entity.BlockEntity> net.minecraft.world.level.block.entity.BlockEntityTicker<T> getTicker(net.minecraft.world.level.Level, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.entity.BlockEntityType<T>);
+  protected boolean isPathfindable(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.pathfinder.PathComputationType);
+  public static boolean canLight(net.minecraft.world.level.block.state.BlockState);
+  private static boolean lambda$canLight$0(net.minecraft.world.level.block.state.BlockBehaviour$BlockStateBase);
+  private static void lambda$getTicker$0(net.minecraft.server.level.ServerLevel, net.minecraft.world.item.crafting.RecipeManager$CachedCheck, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.entity.CampfireBlockEntity);
+  static {};
+}

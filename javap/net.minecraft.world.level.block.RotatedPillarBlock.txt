@@ -1,0 +1,10 @@
+Compiled from "RotatedPillarBlock.java"
+public class net.minecraft.world.level.block.RotatedPillarBlock extends net.minecraft.world.level.block.Block {
+  public static final net.minecraft.world.level.block.state.properties.EnumProperty<net.minecraft.core.Direction$Axis> AXIS;
+  public net.minecraft.world.level.block.RotatedPillarBlock(net.minecraft.world.level.block.state.BlockBehaviour$Properties);
+  protected net.minecraft.world.level.block.state.BlockState rotate(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.Rotation);
+  public static net.minecraft.world.level.block.state.BlockState rotatePillar(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.Rotation);
+  protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition$Builder<net.minecraft.world.level.block.Block, net.minecraft.world.level.block.state.BlockState>);
+  public net.minecraft.world.level.block.state.BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext);
+  static {};
+}

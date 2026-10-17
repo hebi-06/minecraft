@@ -1,0 +1,8 @@
+Compiled from "ItemInHandLayer.java"
+public class net.minecraft.client.renderer.entity.layers.ItemInHandLayer<S extends net.minecraft.client.renderer.entity.state.ArmedEntityRenderState, M extends net.minecraft.client.model.EntityModel<S> & net.minecraft.client.model.ArmedModel<S>> extends net.minecraft.client.renderer.entity.layers.RenderLayer<S, M> {
+  public net.minecraft.client.renderer.entity.layers.ItemInHandLayer(net.minecraft.client.renderer.entity.RenderLayerParent<S, M>);
+  public void submit(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, S, float, float);
+  protected void submitArmWithItem(S, net.minecraft.client.renderer.item.ItemStackRenderState, net.minecraft.world.item.ItemStack, net.minecraft.world.entity.HumanoidArm, com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int);
+  private boolean useBabyOffset(S);
+  public void submit(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, net.minecraft.client.renderer.entity.state.EntityRenderState, float, float);
+}

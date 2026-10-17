@@ -1,0 +1,8 @@
+Compiled from "UseBlockCallback.java"
+public interface net.fabricmc.fabric.api.event.player.UseBlockCallback {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.player.UseBlockCallback> EVENT;
+  public abstract net.minecraft.world.InteractionResult interact(net.minecraft.world.entity.player.Player, net.minecraft.world.level.Level, net.minecraft.world.InteractionHand, net.minecraft.world.phys.BlockHitResult);
+  private static net.fabricmc.fabric.api.event.player.UseBlockCallback lambda$static$0(net.fabricmc.fabric.api.event.player.UseBlockCallback[]);
+  private static net.minecraft.world.InteractionResult lambda$static$1(net.fabricmc.fabric.api.event.player.UseBlockCallback[], net.minecraft.world.entity.player.Player, net.minecraft.world.level.Level, net.minecraft.world.InteractionHand, net.minecraft.world.phys.BlockHitResult);
+  static {};
+}

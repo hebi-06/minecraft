@@ -1,0 +1,11 @@
+Compiled from "FogRenderer.java"
+public final class net.minecraft.client.renderer.fog.FogRenderer$FogMode extends java.lang.Enum<net.minecraft.client.renderer.fog.FogRenderer$FogMode> {
+  public static final net.minecraft.client.renderer.fog.FogRenderer$FogMode NONE;
+  public static final net.minecraft.client.renderer.fog.FogRenderer$FogMode WORLD;
+  private static final net.minecraft.client.renderer.fog.FogRenderer$FogMode[] $VALUES;
+  public static net.minecraft.client.renderer.fog.FogRenderer$FogMode[] values();
+  public static net.minecraft.client.renderer.fog.FogRenderer$FogMode valueOf(java.lang.String);
+  private net.minecraft.client.renderer.fog.FogRenderer$FogMode();
+  private static net.minecraft.client.renderer.fog.FogRenderer$FogMode[] $values();
+  static {};
+}

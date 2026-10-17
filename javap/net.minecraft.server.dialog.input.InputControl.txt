@@ -1,0 +1,7 @@
+Compiled from "InputControl.java"
+public interface net.minecraft.server.dialog.input.InputControl {
+  public static final com.mojang.serialization.MapCodec<net.minecraft.server.dialog.input.InputControl> MAP_CODEC;
+  public abstract com.mojang.serialization.MapCodec<? extends net.minecraft.server.dialog.input.InputControl> mapCodec();
+  private static com.mojang.serialization.MapCodec lambda$static$0(com.mojang.serialization.MapCodec);
+  static {};
+}

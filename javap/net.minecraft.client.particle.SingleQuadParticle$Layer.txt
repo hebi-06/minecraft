@@ -1,0 +1,24 @@
+Compiled from "SingleQuadParticle.java"
+public final class net.minecraft.client.particle.SingleQuadParticle$Layer extends java.lang.Record {
+  private final boolean translucent;
+  private final net.minecraft.resources.Identifier textureAtlasLocation;
+  private final com.mojang.renderpearl.api.pipeline.RenderPipeline pipeline;
+  private final net.minecraft.client.renderer.oit.OitPipelineSet oitPipelineSet;
+  public static final net.minecraft.client.particle.SingleQuadParticle$Layer OPAQUE_TERRAIN;
+  public static final net.minecraft.client.particle.SingleQuadParticle$Layer TRANSLUCENT_TERRAIN;
+  public static final net.minecraft.client.particle.SingleQuadParticle$Layer OPAQUE_ITEMS;
+  public static final net.minecraft.client.particle.SingleQuadParticle$Layer TRANSLUCENT_ITEMS;
+  public static final net.minecraft.client.particle.SingleQuadParticle$Layer OPAQUE;
+  public static final net.minecraft.client.particle.SingleQuadParticle$Layer TRANSLUCENT;
+  public net.minecraft.client.particle.SingleQuadParticle$Layer(boolean, net.minecraft.resources.Identifier, com.mojang.renderpearl.api.pipeline.RenderPipeline);
+  public net.minecraft.client.particle.SingleQuadParticle$Layer(boolean, net.minecraft.resources.Identifier, com.mojang.renderpearl.api.pipeline.RenderPipeline, net.minecraft.client.renderer.oit.OitPipelineSet);
+  public static net.minecraft.client.particle.SingleQuadParticle$Layer bySprite(net.minecraft.client.renderer.texture.TextureAtlasSprite);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public boolean translucent();
+  public net.minecraft.resources.Identifier textureAtlasLocation();
+  public com.mojang.renderpearl.api.pipeline.RenderPipeline pipeline();
+  public net.minecraft.client.renderer.oit.OitPipelineSet oitPipelineSet();
+  static {};
+}

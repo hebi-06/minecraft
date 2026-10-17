@@ -1,0 +1,9 @@
+Compiled from "PlayerItemInHandLayer.java"
+public class net.minecraft.client.renderer.entity.layers.PlayerItemInHandLayer<S extends net.minecraft.client.renderer.entity.state.AvatarRenderState, M extends net.minecraft.client.model.EntityModel<S> & net.minecraft.client.model.ArmedModel<S> & net.minecraft.client.model.HeadedModel> extends net.minecraft.client.renderer.entity.layers.ItemInHandLayer<S, M> {
+  private static final float X_ROT_MIN = -0.5235988f;
+  private static final float X_ROT_MAX = 1.5707964f;
+  public net.minecraft.client.renderer.entity.layers.PlayerItemInHandLayer(net.minecraft.client.renderer.entity.RenderLayerParent<S, M>);
+  protected void submitArmWithItem(S, net.minecraft.client.renderer.item.ItemStackRenderState, net.minecraft.world.item.ItemStack, net.minecraft.world.entity.HumanoidArm, com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int);
+  private void renderItemHeldToEye(S, net.minecraft.world.entity.HumanoidArm, com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int);
+  protected void submitArmWithItem(net.minecraft.client.renderer.entity.state.ArmedEntityRenderState, net.minecraft.client.renderer.item.ItemStackRenderState, net.minecraft.world.item.ItemStack, net.minecraft.world.entity.HumanoidArm, com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int);
+}

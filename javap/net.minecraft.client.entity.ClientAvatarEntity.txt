@@ -1,0 +1,7 @@
+Compiled from "ClientAvatarEntity.java"
+public interface net.minecraft.client.entity.ClientAvatarEntity {
+  public abstract net.minecraft.client.entity.ClientAvatarState avatarState();
+  public abstract net.minecraft.world.entity.player.PlayerSkin getSkin();
+  public abstract net.minecraft.world.entity.animal.parrot.Parrot$Variant getParrotVariantOnShoulder(boolean);
+  public abstract boolean showExtraEars();
+}

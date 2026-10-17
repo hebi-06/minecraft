@@ -1,0 +1,23 @@
+Compiled from "LeashFenceKnotEntity.java"
+public class net.minecraft.world.entity.decoration.LeashFenceKnotEntity extends net.minecraft.world.entity.decoration.BlockAttachedEntity {
+  public static final double OFFSET_Y = 0.375d;
+  public net.minecraft.world.entity.decoration.LeashFenceKnotEntity(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.decoration.LeashFenceKnotEntity>, net.minecraft.world.level.Level);
+  public net.minecraft.world.entity.decoration.LeashFenceKnotEntity(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  protected void recalculateBoundingBox();
+  public boolean shouldRenderAtSqrDistance(double);
+  public void dropItem(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.Entity);
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  public net.minecraft.world.InteractionResult interact(net.minecraft.world.entity.player.Player, net.minecraft.world.InteractionHand, net.minecraft.world.phys.Vec3);
+  public void notifyLeasheeRemoved(net.minecraft.world.entity.Leashable);
+  public boolean survives();
+  public static net.minecraft.world.entity.decoration.LeashFenceKnotEntity getOrCreateKnot(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  public static java.util.Optional<net.minecraft.world.entity.decoration.LeashFenceKnotEntity> getKnot(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  public static net.minecraft.world.entity.decoration.LeashFenceKnotEntity createKnot(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  public void playPlacementSound();
+  public net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> getAddEntityPacket(net.minecraft.server.level.ServerEntity);
+  public net.minecraft.world.phys.Vec3 getRopeHoldPosition(float);
+  public net.minecraft.world.item.ItemStack getPickResult();
+  private static net.minecraft.world.entity.decoration.LeashFenceKnotEntity lambda$getOrCreateKnot$0(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+}

@@ -1,0 +1,15 @@
+Compiled from "EntityAttachment.java"
+public final class net.minecraft.world.entity.EntityAttachment extends java.lang.Enum<net.minecraft.world.entity.EntityAttachment> {
+  public static final net.minecraft.world.entity.EntityAttachment PASSENGER;
+  public static final net.minecraft.world.entity.EntityAttachment VEHICLE;
+  public static final net.minecraft.world.entity.EntityAttachment NAME_TAG;
+  public static final net.minecraft.world.entity.EntityAttachment WARDEN_CHEST;
+  private final net.minecraft.world.entity.EntityAttachment$Fallback fallback;
+  private static final net.minecraft.world.entity.EntityAttachment[] $VALUES;
+  public static net.minecraft.world.entity.EntityAttachment[] values();
+  public static net.minecraft.world.entity.EntityAttachment valueOf(java.lang.String);
+  private net.minecraft.world.entity.EntityAttachment(net.minecraft.world.entity.EntityAttachment$Fallback);
+  public java.util.List<net.minecraft.world.phys.Vec3> createFallbackPoints(float, float);
+  private static net.minecraft.world.entity.EntityAttachment[] $values();
+  static {};
+}

@@ -1,0 +1,16 @@
+Compiled from "ItemTransform.java"
+public final class net.minecraft.client.resources.model.cuboid.ItemTransform extends java.lang.Record {
+  private final org.joml.Vector3fc rotation;
+  private final org.joml.Vector3fc translation;
+  private final org.joml.Vector3fc scale;
+  public static final net.minecraft.client.resources.model.cuboid.ItemTransform NO_TRANSFORM;
+  public net.minecraft.client.resources.model.cuboid.ItemTransform(org.joml.Vector3fc, org.joml.Vector3fc, org.joml.Vector3fc);
+  public void apply(boolean, com.mojang.blaze3d.vertex.PoseStack$Pose);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public org.joml.Vector3fc rotation();
+  public org.joml.Vector3fc translation();
+  public org.joml.Vector3fc scale();
+  static {};
+}

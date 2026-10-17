@@ -1,0 +1,33 @@
+Compiled from "MobCategory.java"
+public final class net.minecraft.world.entity.MobCategory extends java.lang.Enum<net.minecraft.world.entity.MobCategory> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.entity.MobCategory MONSTER;
+  public static final net.minecraft.world.entity.MobCategory CREATURE;
+  public static final net.minecraft.world.entity.MobCategory AMBIENT;
+  public static final net.minecraft.world.entity.MobCategory AXOLOTLS;
+  public static final net.minecraft.world.entity.MobCategory UNDERGROUND_WATER_CREATURE;
+  public static final net.minecraft.world.entity.MobCategory WATER_CREATURE;
+  public static final net.minecraft.world.entity.MobCategory WATER_AMBIENT;
+  public static final net.minecraft.world.entity.MobCategory MISC;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.entity.MobCategory> CODEC;
+  private final int max;
+  private final boolean isFriendly;
+  private final boolean isPersistent;
+  private final java.lang.String name;
+  private final java.lang.String debugAbbreviation;
+  private final int noDespawnDistance = 32;
+  private final int despawnDistance;
+  private static final net.minecraft.world.entity.MobCategory[] $VALUES;
+  public static net.minecraft.world.entity.MobCategory[] values();
+  public static net.minecraft.world.entity.MobCategory valueOf(java.lang.String);
+  private net.minecraft.world.entity.MobCategory(java.lang.String, java.lang.String, int, boolean, boolean, int);
+  public java.lang.String getName();
+  public java.lang.String getDebugAbbreviation();
+  public java.lang.String getSerializedName();
+  public int getMaxInstancesPerChunk();
+  public boolean isFriendly();
+  public boolean isPersistent();
+  public int getDespawnDistance();
+  public int getNoDespawnDistance();
+  private static net.minecraft.world.entity.MobCategory[] $values();
+  static {};
+}

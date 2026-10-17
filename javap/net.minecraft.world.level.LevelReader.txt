@@ -1,0 +1,48 @@
+Compiled from "LevelReader.java"
+public interface net.minecraft.world.level.LevelReader extends net.minecraft.world.level.BlockAndLightGetter,net.minecraft.world.level.CollisionGetter,net.minecraft.world.level.SignalGetter,net.minecraft.world.level.biome.BiomeResolver {
+  public abstract net.minecraft.world.level.chunk.ChunkAccess getChunk(int, int, net.minecraft.world.level.chunk.status.ChunkStatus, boolean);
+  public abstract boolean hasChunk(int, int);
+  public abstract int getHeight(net.minecraft.world.level.levelgen.Heightmap$Types, int, int);
+  public default int getHeight(net.minecraft.world.level.levelgen.Heightmap$Types, net.minecraft.core.BlockPos);
+  public abstract int getSkyDarken();
+  public abstract net.minecraft.world.level.biome.BiomeManager getBiomeManager();
+  public default net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getBiome(net.minecraft.core.BlockPos);
+  public default java.util.stream.Stream<net.minecraft.world.level.block.state.BlockState> getBlockStatesIfLoaded(net.minecraft.world.phys.AABB);
+  public default net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getNoiseBiome(int, int, int);
+  public abstract net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getUncachedNoiseBiome(int, int, int);
+  public abstract boolean isClientSide();
+  public abstract int getSeaLevel();
+  public abstract net.minecraft.world.level.dimension.DimensionType dimensionType();
+  public default int getMinY();
+  public default int getHeight();
+  public default net.minecraft.core.BlockPos getHeightmapPos(net.minecraft.world.level.levelgen.Heightmap$Types, net.minecraft.core.BlockPos);
+  public default boolean isEmptyBlock(net.minecraft.core.BlockPos);
+  public default boolean canSeeSkyFromBelowWater(net.minecraft.core.BlockPos);
+  public default float getPathfindingCostFromLightLevels(net.minecraft.core.BlockPos);
+  public default float getLightLevelDependentMagicValue(net.minecraft.core.BlockPos);
+  public default net.minecraft.world.level.chunk.ChunkAccess getChunk(net.minecraft.core.BlockPos);
+  public default net.minecraft.world.level.chunk.ChunkAccess getChunk(int, int);
+  public default net.minecraft.world.level.chunk.ChunkAccess getChunk(int, int, net.minecraft.world.level.chunk.status.ChunkStatus);
+  public default net.minecraft.world.level.BlockGetter getChunkForCollisions(int, int);
+  public default boolean isWaterAt(net.minecraft.core.BlockPos);
+  public default boolean containsAnyLiquid(net.minecraft.world.phys.AABB);
+  public default int getMaxLocalRawBrightness(net.minecraft.core.BlockPos);
+  public default int getMaxLocalRawBrightness(net.minecraft.core.BlockPos, int);
+  public default int getEffectiveSkyBrightness(net.minecraft.core.BlockPos);
+  public default net.minecraft.world.level.blockscan.BlockMatcher findBlocksIn(net.minecraft.world.phys.AABB);
+  public default net.minecraft.world.level.blockscan.BlockMatcher findBlocksIn(net.minecraft.core.BlockPos, net.minecraft.core.BlockPos);
+  public default net.minecraft.world.level.blockscan.OrderedBlockMatcher findBlocksIn(java.lang.Iterable<net.minecraft.core.BlockPos>);
+  public default net.minecraft.world.level.blockscan.OrderedBlockMatcher findBlocksInBoxByManhattanDistance(net.minecraft.core.BlockPos, int);
+  public default net.minecraft.world.level.blockscan.OrderedBlockMatcher findBlocksInBoxByManhattanDistance(net.minecraft.core.BlockPos, int, int);
+  public default net.minecraft.world.level.blockscan.OrderedBlockMatcher findBlocksInManhattan(net.minecraft.core.BlockPos, int);
+  public default boolean hasChunkAt(int, int);
+  public default boolean hasChunkAt(net.minecraft.core.BlockPos);
+  public default boolean hasChunksAt(net.minecraft.core.BlockPos, net.minecraft.core.BlockPos);
+  public default boolean hasChunksAt(int, int, int, int, int, int);
+  public default boolean hasChunksAt(int, int, int, int);
+  public abstract net.minecraft.core.RegistryAccess registryAccess();
+  public abstract net.minecraft.world.flag.FeatureFlagSet enabledFeatures();
+  public default <T> net.minecraft.core.HolderLookup<T> holderLookup(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<? extends T>>);
+  public abstract net.minecraft.world.attribute.EnvironmentAttributeReader environmentAttributes();
+  private static boolean lambda$containsAnyLiquid$0(net.minecraft.world.level.block.state.BlockState);
+}

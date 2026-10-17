@@ -1,0 +1,13 @@
+Compiled from "ServerLevelData.java"
+public interface net.minecraft.world.level.storage.ServerLevelData extends net.minecraft.world.level.storage.WritableLevelData {
+  public abstract java.lang.String getLevelName();
+  public default void fillCrashReportCategory(net.minecraft.CrashReportCategory, net.minecraft.world.level.LevelHeightAccessor);
+  public abstract net.minecraft.world.level.GameType getGameType();
+  public abstract boolean isInitialized();
+  public abstract void setInitialized(boolean);
+  public abstract boolean isAllowCommands();
+  public abstract void setAllowCommands(boolean);
+  public abstract void setGameType(net.minecraft.world.level.GameType);
+  public abstract void setGameTime(long);
+  private java.lang.String lambda$fillCrashReportCategory$0() throws java.lang.Exception;
+}

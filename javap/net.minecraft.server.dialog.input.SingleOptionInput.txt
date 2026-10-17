@@ -1,0 +1,22 @@
+Compiled from "SingleOptionInput.java"
+public final class net.minecraft.server.dialog.input.SingleOptionInput extends java.lang.Record implements net.minecraft.server.dialog.input.InputControl {
+  private final int width;
+  private final java.util.List<net.minecraft.server.dialog.input.SingleOptionInput$Entry> entries;
+  private final net.minecraft.network.chat.Component label;
+  private final boolean labelVisible;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.server.dialog.input.SingleOptionInput> MAP_CODEC;
+  public net.minecraft.server.dialog.input.SingleOptionInput(int, java.util.List<net.minecraft.server.dialog.input.SingleOptionInput$Entry>, net.minecraft.network.chat.Component, boolean);
+  public com.mojang.serialization.MapCodec<net.minecraft.server.dialog.input.SingleOptionInput> mapCodec();
+  public java.util.Optional<net.minecraft.server.dialog.input.SingleOptionInput$Entry> initial();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int width();
+  public java.util.List<net.minecraft.server.dialog.input.SingleOptionInput$Entry> entries();
+  public net.minecraft.network.chat.Component label();
+  public boolean labelVisible();
+  private static com.mojang.serialization.DataResult lambda$static$1(net.minecraft.server.dialog.input.SingleOptionInput);
+  private static java.lang.String lambda$static$2();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

@@ -1,0 +1,12 @@
+Compiled from "MouseButtonInfo.java"
+public final class net.minecraft.client.input.MouseButtonInfo extends java.lang.Record implements net.minecraft.client.input.InputWithModifiers {
+  private final int button;
+  private final int modifiers;
+  public net.minecraft.client.input.MouseButtonInfo(int, int);
+  public int input();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int button();
+  public int modifiers();
+}

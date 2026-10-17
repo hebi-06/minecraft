@@ -1,0 +1,19 @@
+Compiled from "PlayerSkin.java"
+public final class net.minecraft.world.entity.player.PlayerSkin extends java.lang.Record {
+  private final net.minecraft.core.ClientAsset$Texture body;
+  private final net.minecraft.core.ClientAsset$Texture cape;
+  private final net.minecraft.core.ClientAsset$Texture elytra;
+  private final net.minecraft.world.entity.player.PlayerModelType model;
+  private final boolean secure;
+  public net.minecraft.world.entity.player.PlayerSkin(net.minecraft.core.ClientAsset$Texture, net.minecraft.core.ClientAsset$Texture, net.minecraft.core.ClientAsset$Texture, net.minecraft.world.entity.player.PlayerModelType, boolean);
+  public static net.minecraft.world.entity.player.PlayerSkin insecure(net.minecraft.core.ClientAsset$Texture, net.minecraft.core.ClientAsset$Texture, net.minecraft.core.ClientAsset$Texture, net.minecraft.world.entity.player.PlayerModelType);
+  public net.minecraft.world.entity.player.PlayerSkin with(net.minecraft.world.entity.player.PlayerSkin$Patch);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.core.ClientAsset$Texture body();
+  public net.minecraft.core.ClientAsset$Texture cape();
+  public net.minecraft.core.ClientAsset$Texture elytra();
+  public net.minecraft.world.entity.player.PlayerModelType model();
+  public boolean secure();
+}

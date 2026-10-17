@@ -1,0 +1,11 @@
+Compiled from "EntityDataAccessor.java"
+public final class net.minecraft.network.syncher.EntityDataAccessor<T> extends java.lang.Record {
+  private final int id;
+  private final net.minecraft.network.syncher.EntityDataSerializer<T> serializer;
+  public net.minecraft.network.syncher.EntityDataAccessor(int, net.minecraft.network.syncher.EntityDataSerializer<T>);
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+  public int id();
+  public net.minecraft.network.syncher.EntityDataSerializer<T> serializer();
+}

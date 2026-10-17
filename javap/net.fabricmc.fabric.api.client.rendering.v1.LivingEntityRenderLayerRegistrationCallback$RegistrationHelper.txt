@@ -1,0 +1,4 @@
+Compiled from "LivingEntityRenderLayerRegistrationCallback.java"
+public interface net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback$RegistrationHelper {
+  public abstract <T extends net.minecraft.client.renderer.entity.state.EntityRenderState> void register(net.minecraft.client.renderer.entity.layers.RenderLayer<T, ? extends net.minecraft.client.model.EntityModel<T>>);
+}

@@ -1,0 +1,34 @@
+Compiled from "PartPose.java"
+public final class net.minecraft.client.model.geom.PartPose extends java.lang.Record {
+  private final float x;
+  private final float y;
+  private final float z;
+  private final float xRot;
+  private final float yRot;
+  private final float zRot;
+  private final float xScale;
+  private final float yScale;
+  private final float zScale;
+  public static final net.minecraft.client.model.geom.PartPose ZERO;
+  public net.minecraft.client.model.geom.PartPose(float, float, float, float, float, float, float, float, float);
+  public static net.minecraft.client.model.geom.PartPose offset(float, float, float);
+  public static net.minecraft.client.model.geom.PartPose rotation(float, float, float);
+  public static net.minecraft.client.model.geom.PartPose offsetAndRotation(float, float, float, float, float, float);
+  public net.minecraft.client.model.geom.PartPose translated(float, float, float);
+  public net.minecraft.client.model.geom.PartPose withScale(float);
+  public net.minecraft.client.model.geom.PartPose scaled(float);
+  public net.minecraft.client.model.geom.PartPose scaled(float, float, float);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public float x();
+  public float y();
+  public float z();
+  public float xRot();
+  public float yRot();
+  public float zRot();
+  public float xScale();
+  public float yScale();
+  public float zScale();
+  static {};
+}

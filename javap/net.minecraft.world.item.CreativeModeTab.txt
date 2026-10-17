@@ -1,0 +1,36 @@
+Compiled from "CreativeModeTab.java"
+public class net.minecraft.world.item.CreativeModeTab {
+  private static final net.minecraft.resources.Identifier DEFAULT_BACKGROUND;
+  private final net.minecraft.network.chat.Component displayName;
+  private net.minecraft.resources.Identifier backgroundTexture;
+  private boolean canScroll;
+  private boolean showTitle;
+  private boolean alignedRight;
+  private final net.minecraft.world.item.CreativeModeTab$Row row;
+  private final int column;
+  private final net.minecraft.world.item.CreativeModeTab$Type type;
+  private net.minecraft.world.item.ItemStack iconItemStack;
+  private java.util.Collection<net.minecraft.world.item.ItemStack> displayItems;
+  private java.util.Set<net.minecraft.world.item.ItemStack> displayItemsSearchTab;
+  private final java.util.function.Supplier<net.minecraft.world.item.ItemStack> iconGenerator;
+  private final net.minecraft.world.item.CreativeModeTab$DisplayItemsGenerator displayItemsGenerator;
+  private net.minecraft.world.item.CreativeModeTab(net.minecraft.world.item.CreativeModeTab$Row, int, net.minecraft.world.item.CreativeModeTab$Type, net.minecraft.network.chat.Component, java.util.function.Supplier<net.minecraft.world.item.ItemStack>, net.minecraft.world.item.CreativeModeTab$DisplayItemsGenerator);
+  public static net.minecraft.resources.Identifier createTextureLocation(java.lang.String);
+  public static net.minecraft.world.item.CreativeModeTab$Builder builder(net.minecraft.world.item.CreativeModeTab$Row, int);
+  public net.minecraft.network.chat.Component getDisplayName();
+  public net.minecraft.world.item.ItemStack getIconItem();
+  public net.minecraft.resources.Identifier getBackgroundTexture();
+  public boolean showTitle();
+  public boolean canScroll();
+  public int column();
+  public net.minecraft.world.item.CreativeModeTab$Row row();
+  public boolean hasAnyItems();
+  public boolean shouldDisplay();
+  public boolean isAlignedRight();
+  public net.minecraft.world.item.CreativeModeTab$Type getType();
+  public void buildContents(net.minecraft.world.item.CreativeModeTab$ItemDisplayParameters);
+  public java.util.Collection<net.minecraft.world.item.ItemStack> getDisplayItems();
+  public java.util.Collection<net.minecraft.world.item.ItemStack> getSearchTabDisplayItems();
+  public boolean contains(net.minecraft.world.item.ItemStack);
+  static {};
+}

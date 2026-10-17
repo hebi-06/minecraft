@@ -1,0 +1,12 @@
+Compiled from "CaveVinesPlantBlock.java"
+public class net.minecraft.world.level.block.CaveVinesPlantBlock extends net.minecraft.world.level.block.GrowingPlantBodyBlock implements net.minecraft.world.level.block.CaveVines {
+  public net.minecraft.world.level.block.CaveVinesPlantBlock(net.minecraft.world.level.block.state.BlockBehaviour$Properties);
+  protected net.minecraft.world.level.block.GrowingPlantHeadBlock getHeadBlock();
+  protected net.minecraft.world.level.block.state.BlockState updateHeadAfterConvertedFromBody(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.state.BlockState);
+  protected net.minecraft.world.item.ItemStack getCloneItemStack(net.minecraft.world.level.LevelReader, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, boolean);
+  protected net.minecraft.world.InteractionResult useWithoutItem(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.entity.player.Player, net.minecraft.world.phys.BlockHitResult);
+  protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition$Builder<net.minecraft.world.level.block.Block, net.minecraft.world.level.block.state.BlockState>);
+  public boolean isValidBonemealTarget(net.minecraft.world.level.LevelReader, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.BonemealSource);
+  public boolean isBonemealSuccess(net.minecraft.world.level.Level, net.minecraft.util.RandomSource, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.BonemealSource);
+  public void performBonemeal(net.minecraft.server.level.ServerLevel, net.minecraft.util.RandomSource, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.BonemealSource);
+}

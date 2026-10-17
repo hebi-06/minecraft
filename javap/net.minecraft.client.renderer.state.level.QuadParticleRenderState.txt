@@ -1,0 +1,19 @@
+Compiled from "QuadParticleRenderState.java"
+public class net.minecraft.client.renderer.state.level.QuadParticleRenderState implements net.minecraft.client.renderer.state.level.ParticleGroupRenderState {
+  private static final int INITIAL_PARTICLE_CAPACITY = 1024;
+  private static final int FLOATS_PER_PARTICLE = 12;
+  private static final int INTS_PER_PARTICLE = 2;
+  private final java.util.Map<net.minecraft.client.particle.SingleQuadParticle$Layer, net.minecraft.client.renderer.state.level.QuadParticleRenderState$Storage> particles;
+  private int particleCount;
+  public net.minecraft.client.renderer.state.level.QuadParticleRenderState();
+  public void add(net.minecraft.client.particle.SingleQuadParticle$Layer, float, float, float, float, float, float, float, float, float, float, float, float, int, int);
+  public void clear();
+  public boolean isEmpty();
+  public void buildLayer(net.minecraft.client.particle.SingleQuadParticle$Layer, com.mojang.blaze3d.vertex.VertexConsumer);
+  public java.util.Set<net.minecraft.client.particle.SingleQuadParticle$Layer> layers();
+  protected void renderRotatedQuad(com.mojang.blaze3d.vertex.VertexConsumer, float, float, float, float, float, float, float, float, float, float, float, float, int, int);
+  private void renderVertex(com.mojang.blaze3d.vertex.VertexConsumer, org.joml.Quaternionf, float, float, float, float, float, float, float, float, int, int);
+  public void submit(net.minecraft.client.renderer.SubmitNodeCollector, net.minecraft.client.renderer.state.level.CameraRenderState);
+  private void lambda$buildLayer$0(com.mojang.blaze3d.vertex.VertexConsumer, float, float, float, float, float, float, float, float, float, float, float, float, int, int);
+  private static net.minecraft.client.renderer.state.level.QuadParticleRenderState$Storage lambda$add$0(net.minecraft.client.particle.SingleQuadParticle$Layer);
+}

@@ -1,0 +1,19 @@
+Compiled from "NearestAttackableTargetGoal.java"
+public class net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<T extends net.minecraft.world.entity.LivingEntity> extends net.minecraft.world.entity.ai.goal.target.TargetGoal {
+  private static final int DEFAULT_RANDOM_INTERVAL = 10;
+  protected final java.lang.Class<T> targetType;
+  protected final int randomInterval;
+  protected net.minecraft.world.entity.LivingEntity target;
+  protected final net.minecraft.world.entity.ai.targeting.TargetingConditions targetConditions;
+  public net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal(net.minecraft.world.entity.Mob, java.lang.Class<T>, boolean);
+  public net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal(net.minecraft.world.entity.Mob, java.lang.Class<T>, boolean, net.minecraft.world.entity.ai.targeting.TargetingConditions$Selector);
+  public net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal(net.minecraft.world.entity.Mob, java.lang.Class<T>, boolean, boolean);
+  public net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal(net.minecraft.world.entity.Mob, java.lang.Class<T>, int, boolean, boolean, net.minecraft.world.entity.ai.targeting.TargetingConditions$Selector);
+  public boolean canUse();
+  protected net.minecraft.world.phys.AABB getTargetSearchArea(double);
+  protected void findTarget();
+  public void start();
+  public void setTarget(net.minecraft.world.entity.LivingEntity);
+  private net.minecraft.world.entity.ai.targeting.TargetingConditions getTargetConditions();
+  private static boolean lambda$findTarget$0(net.minecraft.world.entity.LivingEntity);
+}

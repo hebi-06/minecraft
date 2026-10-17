@@ -1,0 +1,19 @@
+Compiled from "AttributeModifier.java"
+public final class net.minecraft.world.entity.ai.attributes.AttributeModifier extends java.lang.Record {
+  private final net.minecraft.resources.Identifier id;
+  private final double amount;
+  private final net.minecraft.world.entity.ai.attributes.AttributeModifier$Operation operation;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.world.entity.ai.attributes.AttributeModifier> MAP_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.entity.ai.attributes.AttributeModifier> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.entity.ai.attributes.AttributeModifier> STREAM_CODEC;
+  public net.minecraft.world.entity.ai.attributes.AttributeModifier(net.minecraft.resources.Identifier, double, net.minecraft.world.entity.ai.attributes.AttributeModifier$Operation);
+  public boolean is(net.minecraft.resources.Identifier);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.resources.Identifier id();
+  public double amount();
+  public net.minecraft.world.entity.ai.attributes.AttributeModifier$Operation operation();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

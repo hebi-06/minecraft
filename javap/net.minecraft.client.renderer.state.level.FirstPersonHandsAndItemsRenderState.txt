@@ -1,0 +1,30 @@
+Compiled from "FirstPersonHandsAndItemsRenderState.java"
+public class net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState implements net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState {
+  public net.minecraft.world.InteractionHand attackHand;
+  public float viewXRot;
+  public float viewYRot;
+  public float xBob;
+  public float yBob;
+  public boolean isScoping;
+  public int useItemRemainingTicks;
+  public int mainHandUseDuration;
+  public int offHandUseDuration;
+  public int mainHandChargeDuration;
+  public int offHandChargeDuration;
+  public float mainHandSwapScale;
+  public float offHandSwapScale;
+  public net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState$HandRenderSelection handRenderSelection;
+  public net.minecraft.world.item.ItemStack mainHandItem;
+  public net.minecraft.world.item.ItemStack offHandItem;
+  public float mainHandHeight;
+  public float oldMainHandHeight;
+  public float offHandHeight;
+  public float oldOffHandHeight;
+  public final net.minecraft.client.renderer.item.ItemStackRenderState mainHandRenderState;
+  public final net.minecraft.client.renderer.item.ItemStackRenderState offHandRenderState;
+  public final net.minecraft.client.renderer.state.MapRenderState mainHandMapRenderState;
+  public final net.minecraft.client.renderer.state.MapRenderState offHandMapRenderState;
+  public boolean hasMainHandMapData;
+  public boolean hasOffHandMapData;
+  public net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState();
+}

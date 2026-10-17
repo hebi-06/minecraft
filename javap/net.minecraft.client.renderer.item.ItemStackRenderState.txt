@@ -1,0 +1,25 @@
+Compiled from "ItemStackRenderState.java"
+public class net.minecraft.client.renderer.item.ItemStackRenderState implements net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState {
+  net.minecraft.world.item.ItemDisplayContext displayContext;
+  private int activeLayerCount;
+  private boolean animated;
+  private boolean oversizedInGui;
+  private net.minecraft.world.phys.AABB cachedModelBoundingBox;
+  private net.minecraft.client.renderer.item.ItemStackRenderState$LayerRenderState[] layers;
+  public net.minecraft.client.renderer.item.ItemStackRenderState();
+  public void ensureCapacity(int);
+  public net.minecraft.client.renderer.item.ItemStackRenderState$LayerRenderState newLayer();
+  public void clear();
+  public void setAnimated();
+  public boolean isAnimated();
+  public void appendModelIdentityElement(java.lang.Object);
+  private net.minecraft.client.renderer.item.ItemStackRenderState$LayerRenderState firstLayer();
+  public boolean isEmpty();
+  public boolean usesBlockLight();
+  public net.minecraft.client.resources.model.sprite.Material$Baked pickParticleMaterial(net.minecraft.util.RandomSource);
+  public void visitExtents(java.util.function.Consumer<org.joml.Vector3fc>);
+  public void submit(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, int, int);
+  public net.minecraft.world.phys.AABB getModelBoundingBox();
+  public void setOversizedInGui(boolean);
+  public boolean isOversizedInGui();
+}

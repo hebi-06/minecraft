@@ -1,0 +1,7 @@
+Compiled from "EntityTypeTest.java"
+public interface net.minecraft.world.level.entity.EntityTypeTest<B, T extends B> {
+  public static <B, T extends B> net.minecraft.world.level.entity.EntityTypeTest<B, T> forClass(java.lang.Class<T>);
+  public static <B, T extends B> net.minecraft.world.level.entity.EntityTypeTest<B, T> forExactClass(java.lang.Class<T>);
+  public abstract T tryCast(B);
+  public abstract java.lang.Class<? extends B> getBaseClass();
+}

@@ -1,0 +1,7 @@
+Compiled from "QuadParticleGroup.java"
+public class net.minecraft.client.particle.QuadParticleGroup extends net.minecraft.client.particle.ParticleGroup<net.minecraft.client.particle.SingleQuadParticle> {
+  private final net.minecraft.client.particle.ParticleRenderType particleType;
+  private final net.minecraft.client.renderer.state.level.QuadParticleRenderState particleTypeRenderState;
+  public net.minecraft.client.particle.QuadParticleGroup(net.minecraft.client.particle.ParticleEngine, net.minecraft.client.particle.ParticleRenderType);
+  public net.minecraft.client.renderer.state.level.ParticleGroupRenderState extractRenderState(net.minecraft.client.renderer.culling.Frustum, net.minecraft.client.Camera, float);
+}

@@ -1,0 +1,14 @@
+Compiled from "DataComponentType.java"
+public class net.minecraft.core.component.DataComponentType$Builder<T> {
+  private com.mojang.serialization.Codec<T> codec;
+  private net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, T> streamCodec;
+  private boolean cacheEncoding;
+  private boolean ignoreSwapAnimation;
+  public net.minecraft.core.component.DataComponentType$Builder();
+  public net.minecraft.core.component.DataComponentType$Builder<T> persistent(com.mojang.serialization.Codec<T>);
+  public net.minecraft.core.component.DataComponentType$Builder<T> networkSynchronized(net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, T>);
+  public net.minecraft.core.component.DataComponentType$Builder<T> cacheEncoding();
+  public net.minecraft.core.component.DataComponentType<T> build();
+  public net.minecraft.core.component.DataComponentType$Builder<T> ignoreSwapAnimation();
+  private net.minecraft.network.codec.StreamCodec lambda$build$0();
+}

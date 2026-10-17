@@ -1,0 +1,12 @@
+Compiled from "CuboidRotation.java"
+public final class net.minecraft.client.resources.model.cuboid.CuboidRotation$SingleAxisRotation extends java.lang.Record implements net.minecraft.client.resources.model.cuboid.CuboidRotation$RotationValue {
+  private final net.minecraft.core.Direction$Axis axis;
+  private final float angle;
+  public net.minecraft.client.resources.model.cuboid.CuboidRotation$SingleAxisRotation(net.minecraft.core.Direction$Axis, float);
+  public org.joml.Matrix4f transformation();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.core.Direction$Axis axis();
+  public float angle();
+}

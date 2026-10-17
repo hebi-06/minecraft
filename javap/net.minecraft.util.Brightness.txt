@@ -1,0 +1,18 @@
+Compiled from "Brightness.java"
+public final class net.minecraft.util.Brightness extends java.lang.Record {
+  private final int block;
+  private final int sky;
+  public static final com.mojang.serialization.Codec<java.lang.Integer> LIGHT_VALUE_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.util.Brightness> CODEC;
+  public static final net.minecraft.util.Brightness FULL_BRIGHT;
+  public net.minecraft.util.Brightness(int, int);
+  public int pack();
+  public static net.minecraft.util.Brightness unpack(int);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int block();
+  public int sky();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

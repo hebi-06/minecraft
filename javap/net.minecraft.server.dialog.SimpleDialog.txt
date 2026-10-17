@@ -1,0 +1,5 @@
+Compiled from "SimpleDialog.java"
+public interface net.minecraft.server.dialog.SimpleDialog extends net.minecraft.server.dialog.Dialog {
+  public abstract com.mojang.serialization.MapCodec<? extends net.minecraft.server.dialog.SimpleDialog> codec();
+  public abstract java.util.List<net.minecraft.server.dialog.ActionButton> mainActions();
+}

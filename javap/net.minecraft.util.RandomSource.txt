@@ -1,0 +1,24 @@
+Compiled from "RandomSource.java"
+public interface net.minecraft.util.RandomSource {
+  public static final double GAUSSIAN_SPREAD_FACTOR = 2.297d;
+  public static net.minecraft.util.RandomSource create();
+  public static net.minecraft.util.RandomSource createThreadSafe();
+  public static net.minecraft.util.RandomSource create(long);
+  public static net.minecraft.util.RandomSource createThreadLocalInstance();
+  public static net.minecraft.util.RandomSource createThreadLocalInstance(long);
+  public abstract net.minecraft.util.RandomSource fork();
+  public abstract net.minecraft.world.level.levelgen.PositionalRandomFactory forkPositional();
+  public abstract void setSeed(long);
+  public abstract int nextInt();
+  public abstract int nextInt(int);
+  public default int nextIntBetweenInclusive(int, int);
+  public abstract long nextLong();
+  public abstract boolean nextBoolean();
+  public abstract float nextFloat();
+  public abstract double nextDouble();
+  public abstract double nextGaussian();
+  public default double triangle(double, double);
+  public default float triangle(float, float);
+  public default void consumeCount(int);
+  public default int nextInt(int, int);
+}

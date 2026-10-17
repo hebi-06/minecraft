@@ -1,0 +1,16 @@
+Compiled from "AbstractButton.java"
+public abstract class net.minecraft.client.gui.components.AbstractButton extends net.minecraft.client.gui.components.AbstractWidget$WithInactiveMessage {
+  protected static final int TEXT_MARGIN = 2;
+  private static final net.minecraft.client.gui.components.WidgetSprites SPRITES;
+  private java.util.function.Supplier<java.lang.Boolean> overrideRenderHighlightedSprite;
+  public net.minecraft.client.gui.components.AbstractButton(int, int, int, int, net.minecraft.network.chat.Component);
+  public abstract void onPress(net.minecraft.client.input.InputWithModifiers);
+  protected final void extractWidgetRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+  protected abstract void extractContents(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+  protected void extractDefaultLabel(net.minecraft.client.gui.ActiveTextCollector);
+  protected final void extractDefaultSprite(net.minecraft.client.gui.GuiGraphicsExtractor);
+  public void onClick(net.minecraft.client.input.MouseButtonEvent, boolean);
+  public boolean keyPressed(net.minecraft.client.input.KeyEvent);
+  public void setOverrideRenderHighlightedSprite(java.util.function.Supplier<java.lang.Boolean>);
+  static {};
+}

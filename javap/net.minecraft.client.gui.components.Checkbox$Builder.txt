@@ -1,0 +1,21 @@
+Compiled from "Checkbox.java"
+public class net.minecraft.client.gui.components.Checkbox$Builder {
+  private final net.minecraft.network.chat.Component message;
+  private final net.minecraft.client.gui.Font font;
+  private int maxWidth;
+  private int x;
+  private int y;
+  private net.minecraft.client.gui.components.Checkbox$OnValueChange onValueChange;
+  private boolean selected;
+  private net.minecraft.client.OptionInstance<java.lang.Boolean> option;
+  private net.minecraft.client.gui.components.Tooltip tooltip;
+  private net.minecraft.client.gui.components.Checkbox$Builder(net.minecraft.network.chat.Component, net.minecraft.client.gui.Font);
+  public net.minecraft.client.gui.components.Checkbox$Builder pos(int, int);
+  public net.minecraft.client.gui.components.Checkbox$Builder onValueChange(net.minecraft.client.gui.components.Checkbox$OnValueChange);
+  public net.minecraft.client.gui.components.Checkbox$Builder selected(boolean);
+  public net.minecraft.client.gui.components.Checkbox$Builder selected(net.minecraft.client.OptionInstance<java.lang.Boolean>);
+  public net.minecraft.client.gui.components.Checkbox$Builder tooltip(net.minecraft.client.gui.components.Tooltip);
+  public net.minecraft.client.gui.components.Checkbox$Builder maxWidth(int);
+  public net.minecraft.client.gui.components.Checkbox build();
+  private void lambda$build$0(net.minecraft.client.gui.components.Checkbox, boolean);
+}

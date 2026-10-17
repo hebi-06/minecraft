@@ -1,0 +1,22 @@
+Compiled from "InputWithModifiers.java"
+public interface net.minecraft.client.input.InputWithModifiers {
+  public abstract int input();
+  public default int shortcutKey();
+  public abstract int modifiers();
+  public default boolean isSelection();
+  public default boolean isConfirmation();
+  public default boolean isEscape();
+  public default boolean isLeft();
+  public default boolean isRight();
+  public default boolean isUp();
+  public default boolean isDown();
+  public default boolean isCycleFocus();
+  public default boolean hasAltDown();
+  public default boolean hasShiftDown();
+  public default boolean hasControlDown();
+  public default boolean hasControlDownWithQuirk();
+  public default boolean isSelectAll();
+  public default boolean isCopy();
+  public default boolean isPaste();
+  public default boolean isCut();
+}

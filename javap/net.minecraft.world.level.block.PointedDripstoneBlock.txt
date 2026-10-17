@@ -1,0 +1,42 @@
+Compiled from "PointedDripstoneBlock.java"
+public class net.minecraft.world.level.block.PointedDripstoneBlock extends net.minecraft.world.level.block.SpeleothemBlock {
+  private static final int MAX_SEARCH_LENGTH_WHEN_CHECKING_DRIP_TYPE = 11;
+  private static final float DRIP_PROBABILITY_PER_ANIMATE_TICK = 0.02f;
+  private static final float DRIP_PROBABILITY_PER_ANIMATE_TICK_IF_UNDER_LIQUID_SOURCE = 0.12f;
+  private static final int MAX_SEARCH_LENGTH_BETWEEN_STALACTITE_TIP_AND_CAULDRON = 11;
+  private static final float WATER_TRANSFER_PROBABILITY_PER_RANDOM_TICK = 0.17578125f;
+  private static final float LAVA_TRANSFER_PROBABILITY_PER_RANDOM_TICK = 0.05859375f;
+  private static final float STALAGMITE_FALL_DISTANCE_OFFSET = 2.5f;
+  private static final int STALAGMITE_FALL_DAMAGE_MODIFIER = 2;
+  private static final double STALACTITE_DRIP_START_PIXEL;
+  private static final net.minecraft.world.phys.shapes.VoxelShape REQUIRED_SPACE_TO_DRIP_THROUGH_NON_SOLID_BLOCK;
+  public net.minecraft.world.level.block.PointedDripstoneBlock(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.state.BlockBehaviour$Properties);
+  protected int getStalactiteLandingSound();
+  public void fallOn(net.minecraft.world.level.Level, net.minecraft.world.level.block.state.BlockState, net.minecraft.core.BlockPos, net.minecraft.world.entity.Entity, double);
+  public void animateTick(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource);
+  protected void randomTick(net.minecraft.world.level.block.state.BlockState, net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource);
+  public static void maybeTransferFluid(net.minecraft.world.level.block.state.BlockState, net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, float);
+  public static void spawnDripParticle(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private static void spawnDripParticle(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.material.Fluid, net.minecraft.core.BlockPos);
+  private static java.util.Optional<net.minecraft.core.BlockPos> findRootBlock(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, int);
+  private static net.minecraft.core.BlockPos findFillableCauldronBelowStalactiteTip(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.material.Fluid);
+  public static net.minecraft.core.BlockPos findStalactiteTipAboveCauldron(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  public static net.minecraft.world.level.material.Fluid getCauldronFillFluidType(net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos);
+  private static java.util.Optional<net.minecraft.world.level.block.PointedDripstoneBlock$FluidInfo> getFluidAboveStalactite(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private static boolean canFillCauldron(net.minecraft.world.level.material.Fluid);
+  protected boolean canGrow(net.minecraft.world.level.LevelReader, net.minecraft.core.BlockPos);
+  private static net.minecraft.core.particles.ParticleOptions getDripParticle(net.minecraft.world.level.Level, net.minecraft.world.level.material.Fluid, net.minecraft.core.BlockPos);
+  protected boolean blocksStalagmiteScan(net.minecraft.world.level.LevelReader, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private static boolean canDripThrough(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private static net.minecraft.world.level.block.PointedDripstoneBlock$FluidInfo lambda$getFluidAboveStalactite$0(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  private static net.minecraft.world.level.material.Fluid lambda$getCauldronFillFluidType$0(net.minecraft.world.level.block.PointedDripstoneBlock$FluidInfo);
+  private static boolean lambda$findStalactiteTipAboveCauldron$0(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private static boolean lambda$findFillableCauldronBelowStalactiteTip$1(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private static boolean lambda$findFillableCauldronBelowStalactiteTip$0(net.minecraft.world.level.material.Fluid, net.minecraft.world.level.block.state.BlockState);
+  private static boolean lambda$findRootBlock$1(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.state.BlockState);
+  private static boolean lambda$findRootBlock$0(net.minecraft.world.level.block.state.BlockState, net.minecraft.core.Direction, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private static void lambda$spawnDripParticle$0(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.PointedDripstoneBlock$FluidInfo);
+  private static void lambda$animateTick$1(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.PointedDripstoneBlock$FluidInfo);
+  private static boolean lambda$animateTick$0(float, net.minecraft.world.level.block.PointedDripstoneBlock$FluidInfo);
+  static {};
+}

@@ -1,0 +1,21 @@
+Compiled from "ChatVisiblity.java"
+public final class net.minecraft.world.entity.player.ChatVisiblity extends java.lang.Enum<net.minecraft.world.entity.player.ChatVisiblity> {
+  public static final net.minecraft.world.entity.player.ChatVisiblity FULL;
+  public static final net.minecraft.world.entity.player.ChatVisiblity SYSTEM;
+  public static final net.minecraft.world.entity.player.ChatVisiblity HIDDEN;
+  private static final java.util.function.IntFunction<net.minecraft.world.entity.player.ChatVisiblity> BY_ID;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.entity.player.ChatVisiblity> LEGACY_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.entity.player.ChatVisiblity> STREAM_CODEC;
+  private final int id;
+  private final net.minecraft.network.chat.Component caption;
+  private static final net.minecraft.world.entity.player.ChatVisiblity[] $VALUES;
+  public static net.minecraft.world.entity.player.ChatVisiblity[] values();
+  public static net.minecraft.world.entity.player.ChatVisiblity valueOf(java.lang.String);
+  private net.minecraft.world.entity.player.ChatVisiblity(int, java.lang.String);
+  public net.minecraft.network.chat.Component caption();
+  private static net.minecraft.world.entity.player.ChatVisiblity[] $values();
+  private static int lambda$static$2(net.minecraft.world.entity.player.ChatVisiblity);
+  private static java.lang.Integer lambda$static$1(net.minecraft.world.entity.player.ChatVisiblity);
+  private static int lambda$static$0(net.minecraft.world.entity.player.ChatVisiblity);
+  static {};
+}

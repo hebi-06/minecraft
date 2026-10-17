@@ -1,0 +1,4 @@
+Compiled from "RenderLayerParent.java"
+public interface net.minecraft.client.renderer.entity.RenderLayerParent<S extends net.minecraft.client.renderer.entity.state.EntityRenderState, M extends net.minecraft.client.model.EntityModel<? super S>> {
+  public abstract M getModel();
+}

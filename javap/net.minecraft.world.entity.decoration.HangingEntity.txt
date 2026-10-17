@@ -1,0 +1,26 @@
+Compiled from "HangingEntity.java"
+public abstract class net.minecraft.world.entity.decoration.HangingEntity extends net.minecraft.world.entity.decoration.BlockAttachedEntity {
+  private static final net.minecraft.network.syncher.EntityDataAccessor<net.minecraft.core.Direction> DATA_DIRECTION;
+  private static final net.minecraft.core.Direction DEFAULT_DIRECTION;
+  protected net.minecraft.world.entity.decoration.HangingEntity(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.decoration.HangingEntity>, net.minecraft.world.level.Level);
+  protected net.minecraft.world.entity.decoration.HangingEntity(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.decoration.HangingEntity>, net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  public void onSyncedDataUpdated(net.minecraft.network.syncher.EntityDataAccessor<?>);
+  public net.minecraft.core.Direction getDirection();
+  protected void setDirectionRaw(net.minecraft.core.Direction);
+  protected void setDirection(net.minecraft.core.Direction);
+  protected void recalculateBoundingBox();
+  protected abstract net.minecraft.world.phys.AABB calculateBoundingBox(net.minecraft.core.BlockPos, net.minecraft.core.Direction);
+  public boolean survives();
+  private static boolean isSupportingBlock(net.minecraft.world.level.block.state.BlockState);
+  protected net.minecraft.world.phys.AABB calculateSupportBox();
+  protected boolean canCoexist(boolean);
+  protected boolean hasLevelCollision(net.minecraft.world.phys.AABB);
+  protected net.minecraft.world.phys.AABB getPopBox();
+  public abstract void playPlacementSound();
+  public net.minecraft.world.entity.item.ItemEntity spawnAtLocation(net.minecraft.server.level.ServerLevel, net.minecraft.world.item.ItemStack, float);
+  public float rotate(net.minecraft.world.level.block.Rotation);
+  public float mirror(net.minecraft.world.level.block.Mirror);
+  private boolean lambda$canCoexist$0(boolean, net.minecraft.world.entity.decoration.HangingEntity);
+  static {};
+}

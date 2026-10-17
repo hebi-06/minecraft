@@ -1,0 +1,26 @@
+Compiled from "Checkbox.java"
+public class net.minecraft.client.gui.components.Checkbox extends net.minecraft.client.gui.components.AbstractButton {
+  private static final net.minecraft.resources.Identifier CHECKBOX_SELECTED_HIGHLIGHTED_SPRITE;
+  private static final net.minecraft.resources.Identifier CHECKBOX_SELECTED_SPRITE;
+  private static final net.minecraft.resources.Identifier CHECKBOX_HIGHLIGHTED_SPRITE;
+  private static final net.minecraft.resources.Identifier CHECKBOX_SPRITE;
+  private static final int SPACING = 4;
+  private static final int ROWS = 2;
+  private static final int BOX_PADDING = 8;
+  private boolean selected;
+  private final net.minecraft.client.gui.components.Checkbox$OnValueChange onValueChange;
+  private final net.minecraft.client.gui.components.MultiLineTextWidget textWidget;
+  private net.minecraft.client.gui.components.Checkbox(int, int, int, net.minecraft.network.chat.Component, net.minecraft.client.gui.Font, boolean, net.minecraft.client.gui.components.Checkbox$OnValueChange);
+  public int adjustWidth(int, net.minecraft.client.gui.Font);
+  private int getAdjustedWidth(int, net.minecraft.network.chat.Component, net.minecraft.client.gui.Font);
+  private int getAdjustedHeight(net.minecraft.client.gui.Font);
+  private static int getDefaultWidth(net.minecraft.network.chat.Component, net.minecraft.client.gui.Font);
+  private boolean overflowsRowLimit(net.minecraft.client.gui.Font);
+  public static net.minecraft.client.gui.components.Checkbox$Builder builder(net.minecraft.network.chat.Component, net.minecraft.client.gui.Font);
+  public static int getBoxSize(net.minecraft.client.gui.Font);
+  public void onPress(net.minecraft.client.input.InputWithModifiers);
+  public boolean selected();
+  public void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput);
+  public void extractContents(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+  static {};
+}

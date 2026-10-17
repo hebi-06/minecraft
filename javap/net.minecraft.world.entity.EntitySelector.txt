@@ -1,0 +1,25 @@
+Compiled from "EntitySelector.java"
+public final class net.minecraft.world.entity.EntitySelector {
+  public static final java.util.function.Predicate<net.minecraft.world.entity.Entity> ENTITY_STILL_ALIVE;
+  public static final java.util.function.Predicate<net.minecraft.world.entity.Entity> LIVING_ENTITY_STILL_ALIVE;
+  public static final java.util.function.Predicate<net.minecraft.world.entity.Entity> ENTITY_NOT_BEING_RIDDEN;
+  public static final java.util.function.Predicate<net.minecraft.world.entity.Entity> CONTAINER_ENTITY_SELECTOR;
+  public static final java.util.function.Predicate<net.minecraft.world.entity.Entity> NO_CREATIVE_OR_SPECTATOR;
+  public static final java.util.function.Predicate<net.minecraft.world.entity.Entity> NO_SPECTATORS;
+  public static final java.util.function.Predicate<net.minecraft.world.entity.Entity> CAN_BE_COLLIDED_WITH;
+  public static final java.util.function.Predicate<net.minecraft.world.entity.Entity> CAN_BE_PICKED;
+  private net.minecraft.world.entity.EntitySelector();
+  public static java.util.function.Predicate<net.minecraft.world.entity.Entity> withinDistance(double, double, double, double);
+  public static java.util.function.Predicate<net.minecraft.world.entity.Entity> pushableBy(net.minecraft.world.entity.Entity);
+  public static java.util.function.Predicate<net.minecraft.world.entity.Entity> notRiding(net.minecraft.world.entity.Entity);
+  private static boolean lambda$notRiding$0(net.minecraft.world.entity.Entity, net.minecraft.world.entity.Entity);
+  private static boolean lambda$pushableBy$0(net.minecraft.world.entity.Entity, net.minecraft.world.scores.Team, net.minecraft.world.scores.Team$CollisionRule, net.minecraft.world.entity.Entity);
+  private static boolean lambda$withinDistance$0(double, double, double, double, net.minecraft.world.entity.Entity);
+  private static boolean lambda$static$5(net.minecraft.world.entity.Entity);
+  private static boolean lambda$static$4(net.minecraft.world.entity.Entity);
+  private static boolean lambda$static$3(net.minecraft.world.entity.Entity);
+  private static boolean lambda$static$2(net.minecraft.world.entity.Entity);
+  private static boolean lambda$static$1(net.minecraft.world.entity.Entity);
+  private static boolean lambda$static$0(net.minecraft.world.entity.Entity);
+  static {};
+}

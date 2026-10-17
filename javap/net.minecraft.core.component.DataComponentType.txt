@@ -1,0 +1,18 @@
+Compiled from "DataComponentType.java"
+public interface net.minecraft.core.component.DataComponentType<T> {
+  public static final com.mojang.serialization.Codec<net.minecraft.core.component.DataComponentType<?>> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.core.component.DataComponentType<?>> STREAM_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.core.component.DataComponentType<?>> PERSISTENT_CODEC;
+  public static final com.mojang.serialization.Codec<java.util.Map<net.minecraft.core.component.DataComponentType<?>, java.lang.Object>> VALUE_MAP_CODEC;
+  public static <T> net.minecraft.core.component.DataComponentType$Builder<T> builder();
+  public abstract com.mojang.serialization.Codec<T> codec();
+  public default com.mojang.serialization.Codec<T> codecOrThrow();
+  public default boolean isTransient();
+  public abstract boolean ignoreSwapAnimation();
+  public abstract net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, T> streamCodec();
+  private static com.mojang.serialization.DataResult lambda$static$2(net.minecraft.core.component.DataComponentType);
+  private static java.lang.String lambda$static$3(net.minecraft.core.component.DataComponentType);
+  private static net.minecraft.network.codec.StreamCodec lambda$static$1(net.minecraft.network.codec.StreamCodec);
+  private static com.mojang.serialization.Codec lambda$static$0();
+  static {};
+}

@@ -1,0 +1,22 @@
+Compiled from "LookAtPlayerGoal.java"
+public class net.minecraft.world.entity.ai.goal.LookAtPlayerGoal extends net.minecraft.world.entity.ai.goal.Goal {
+  public static final float DEFAULT_PROBABILITY = 0.02f;
+  protected final net.minecraft.world.entity.Mob mob;
+  protected net.minecraft.world.entity.Entity lookAt;
+  protected final float lookDistance;
+  private int lookTime;
+  protected final float probability;
+  private final boolean onlyHorizontal;
+  protected final java.lang.Class<? extends net.minecraft.world.entity.LivingEntity> lookAtType;
+  protected final net.minecraft.world.entity.ai.targeting.TargetingConditions lookAtContext;
+  public net.minecraft.world.entity.ai.goal.LookAtPlayerGoal(net.minecraft.world.entity.Mob, java.lang.Class<? extends net.minecraft.world.entity.LivingEntity>, float);
+  public net.minecraft.world.entity.ai.goal.LookAtPlayerGoal(net.minecraft.world.entity.Mob, java.lang.Class<? extends net.minecraft.world.entity.LivingEntity>, float, float);
+  public net.minecraft.world.entity.ai.goal.LookAtPlayerGoal(net.minecraft.world.entity.Mob, java.lang.Class<? extends net.minecraft.world.entity.LivingEntity>, float, float, boolean);
+  public boolean canUse();
+  public boolean canContinueToUse();
+  public void start();
+  public void stop();
+  public void tick();
+  private static boolean lambda$canUse$0(net.minecraft.world.entity.LivingEntity);
+  private static boolean lambda$new$0(java.util.function.Predicate, net.minecraft.world.entity.LivingEntity, net.minecraft.server.level.ServerLevel);
+}

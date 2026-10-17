@@ -1,0 +1,18 @@
+Compiled from "CompositeModel.java"
+public final class net.minecraft.client.renderer.item.CompositeModel$Unbaked extends java.lang.Record implements net.minecraft.client.renderer.item.ItemModel$Unbaked {
+  private final java.util.List<net.minecraft.client.renderer.item.ItemModel$Unbaked> models;
+  private final java.util.Optional<com.mojang.math.Transformation> transformation;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.client.renderer.item.CompositeModel$Unbaked> MAP_CODEC;
+  public net.minecraft.client.renderer.item.CompositeModel$Unbaked(java.util.List<net.minecraft.client.renderer.item.ItemModel$Unbaked>, java.util.Optional<com.mojang.math.Transformation>);
+  public com.mojang.serialization.MapCodec<net.minecraft.client.renderer.item.CompositeModel$Unbaked> type();
+  public void resolveDependencies(net.minecraft.client.resources.model.ResolvableModel$Resolver);
+  public net.minecraft.client.renderer.item.ItemModel bake(net.minecraft.client.renderer.item.ItemModel$BakingContext, org.joml.Matrix4fc);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public java.util.List<net.minecraft.client.renderer.item.ItemModel$Unbaked> models();
+  public java.util.Optional<com.mojang.math.Transformation> transformation();
+  private static net.minecraft.client.renderer.item.ItemModel lambda$bake$0(net.minecraft.client.renderer.item.ItemModel$BakingContext, org.joml.Matrix4fc, net.minecraft.client.renderer.item.ItemModel$Unbaked);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}
