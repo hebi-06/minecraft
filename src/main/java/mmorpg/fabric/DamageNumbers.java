@@ -142,8 +142,8 @@ public final class DamageNumbers {
      */
     public record Tone(int[] stops, int rule, int label, int shadow) {
         private static final double[] W = {1, 1, 1};
-        /** 계열 색이 아주 옅을 때 (만상귀일 — 진줏빛): 흰빛 → 라일락 → 하늘빛 */
-        private static final int[] PEARL = {0xFFFFFF, 0xDCCBFF, 0xB8E2FF};
+        /** 계열 색이 아주 옅을 때 (만상귀일 — 진줏빛): 흰빛 → 라일락 → 옅은 분홍 (하늘빛은 낮 하늘에 묻혀 뺌) */
+        private static final int[] PEARL = {0xFFFFFF, 0xE4D4FF, 0xFFDDF0};
         /** 기본 (금빛 — W · PEARL 다음에 만듦: 정적 초기화 순서) */
         public static final Tone GOLD = of(new double[] {1, 0.74, 0.25}, new double[] {1, 0.97, 0.85});
 
@@ -154,6 +154,8 @@ public final class DamageNumbers {
         public static Tone of(double[] accent, double[] light) {
             double[] l = mix(light, W, 0.3);
             double[] d = mix(accent, W, 0.15);
+            // 밝은 하늘빛 (푸른 계열) 숫자는 낮 하늘에 묻힘 → 흰빛 쪽 얼음빛으로 (계열 색은 그림자 · 줄에 남음 — 칠성 강림)
+            if (skyLike(d)) d = mix(d, W, 0.55);
             double gap = Math.abs(l[0] - d[0]) + Math.abs(l[1] - d[1]) + Math.abs(l[2] - d[2]);
             int[] stops = gap < 0.3 ? PEARL : new int[] {rgb(l), rgb(d)};
             return new Tone(stops, rgb(mix(accent, W, 0.15)), rgb(mix(light, W, 0.15)), rgb(new double[] {accent[0] * 0.3, accent[1] * 0.3, accent[2] * 0.3}));
@@ -165,6 +167,16 @@ public final class DamageNumbers {
             double x = Math.max(0, Math.min(1, f)) * (stops.length - 1);
             int i = Math.min(stops.length - 2, (int) Math.floor(x));
             return mixRgb(stops[i], stops[i + 1], x - i);
+        }
+
+        /** 낮 하늘과 비슷한 색인지: 색상 185 ~ 240° · 채도 0.15 넘음 · 밝음 */
+        static boolean skyLike(double[] c) {
+            double max = Math.max(c[0], Math.max(c[1], c[2]));
+            double min = Math.min(c[0], Math.min(c[1], c[2]));
+            if (max <= 0 || (max - min) / max < 0.15 || max != c[2]) return false;
+            double hue = 60 * ((c[0] - c[1]) / (max - min)) + 240;
+            double lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+            return hue >= 185 && hue <= 240 && lum > 0.45;
         }
 
         private static double[] mix(double[] a, double[] b, double k) {
