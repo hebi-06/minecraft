@@ -156,10 +156,12 @@ public final class DamageNumbers {
         public static Tone of(double[] accent, double[] light) {
             double[] l = mix(light, W, 0.3);
             double[] d = mix(accent, W, 0.15);
-            // 밝은 하늘빛 (푸른 계열) 숫자는 낮 하늘에 묻힘 → 둘째 색 (별빛 크림) 을 옅은 금빛 쪽으로 (푸른 계열 색은 그림자 · 줄에 남음 — 칠성 강림)
-            if (skyLike(d)) d = mix(light, STARLIGHT, 0.45);
             double gap = Math.abs(l[0] - d[0]) + Math.abs(l[1] - d[1]) + Math.abs(l[2] - d[2]);
-            int[] stops = gap < 0.3 ? PEARL : new int[] {rgb(l), rgb(d)};
+            int[] stops;
+            // 밝은 하늘빛 (푸른 계열) 숫자는 낮 하늘에 묻힘 → 둘째 색 (별빛 크림) → 옅은 금빛 (푸른 계열 색은 그림자 · 줄에 남음 — 칠성 강림)
+            if (skyLike(d)) stops = new int[] {rgb(l), rgb(mix(light, STARLIGHT, 0.55))};
+            else if (gap < 0.3) stops = PEARL; // 두 끝이 너무 비슷 (아주 옅은 계열 — 만상귀일)
+            else stops = new int[] {rgb(l), rgb(d)};
             return new Tone(stops, rgb(mix(accent, W, 0.15)), rgb(mix(light, W, 0.15)), rgb(new double[] {accent[0] * 0.3, accent[1] * 0.3, accent[2] * 0.3}));
         }
 
