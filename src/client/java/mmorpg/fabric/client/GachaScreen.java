@@ -359,7 +359,7 @@ public final class GachaScreen extends Screen {
         String end = String.format(Locale.ROOT, "%d.%02d %02d:%02d", t.getMonthValue(), t.getDayOfMonth(), t.getHour(), t.getMinute());
         String rest;
         if (left <= 0) rest = "§8끝남";
-        else if (left >= 86_400_000L) rest = "§e" + (left / 86_400_000L) + "일 " + (left % 86_400_000L) / 3_600_000L + "시간 남음";
+        else if (left >= 86_400_000L) rest = "§e" + (left / 86_400_000L) + "일 남음";
         else if (left >= 3_600_000L) rest = "§e" + (left / 3_600_000L) + "시간 " + (left % 3_600_000L) / 60_000L + "분 남음";
         else rest = "§c" + Math.max(1, left / 60_000L) + "분 남음";
         return "§7~ " + end + " §8· " + rest;
@@ -385,8 +385,8 @@ public final class GachaScreen extends Screen {
         int theme = adv ? 0xFFC65A : 0x6EA8FF;
         GachaArt.sprite(g, GachaArt.RAYS, cx, cy, 120, now / 1000F * 0.3F, GachaArt.argb(90, theme));
         GachaArt.sprite(g, GachaArt.GLOW, cx, cy, 96, 0F, GachaArt.argb((int) (140 * fade), GachaArt.rgb("transcend")));
-        GachaArt.item(g, GachaArt.rune(fam, "transcend"), cx, cy, 3.2F * (0.92F + 0.08F * fade));
-        if (fade < 1) g.fill((int) cx - 30, (int) cy - 30, (int) cx + 30, (int) cy + 30, GachaArt.argb((int) (120 * (1 - fade)), 0x000000));
+        // 바뀔 때: 작아졌다 커짐 (아이템 그림은 흐리게 할 수 없어 크기로)
+        GachaArt.item(g, GachaArt.rune(fam, "transcend"), cx, cy, 3.2F * (0.55F + 0.45F * (float) Math.sqrt(fade)));
         GachaArt.textCentered(g, font, GachaArt.gradeColor("transcend") + GachaArt.runeName(Runes.runeId(fam, "transcend")), cx, cy + 32, 1F, 0xFFFFFFFF);
         GachaArt.textCentered(g, font, "§7초월 · " + GachaArt.familyName(fam) + " 계열", cx, cy + 43, 0.75F, 0xFFFFFFFF);
         if (mx >= cx - 26 && mx < cx + 26 && my >= cy - 26 && my < cy + 26) tip = runeTip(Runes.runeId(fam, "transcend"), false);

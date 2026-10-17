@@ -162,7 +162,7 @@ public final class GachaShowScreen extends Screen {
 
     @Override
     public void extractBackground(GuiGraphicsExtractor g, int mx, int my, float partialTick) {
-        g.fill(0, 0, width, height, 0xF4060610);
+        g.fill(0, 0, width, height, 0xFF060610);
     }
 
     // ------------------------------------------------------------ 그리기
@@ -312,15 +312,15 @@ public final class GachaShowScreen extends Screen {
             double q = (sec * 0.8) % 1.0;
             GachaArt.sprite(g, GachaArt.RING, cx, cy, (float) (120 + 160 * q), 0F, GachaArt.argb((int) (140 * (1 - q)), col));
         }
-        // 카드 (튀어나옴)
+        // 카드 (튀어나옴) — 화면 높이 240 에서 위 글자 · 카드 · 아래 글자 · 단추가 겹치지 않게
         float s = u < 200 ? (float) (0.5 + 0.6 * ease(u / 200.0)) : u < 350 ? (float) (1.1 - 0.1 * ((u - 200) / 150.0)) : 1F;
-        float w = 96 * s;
-        float h = 132 * s;
-        float ccy = cy - 6;
+        float w = 84 * s;
+        float h = 116 * s;
+        float ccy = height / 2F - 22;
         GachaArt.sprite(g, GachaArt.CARD, cx, ccy, w, h, 0F, GachaArt.argb(255, col));
         float bob = (float) Math.sin(sec * 2) * 2;
-        GachaArt.sprite(g, GachaArt.GLOW, cx, ccy - 10 + bob, 90 * s, 0F, GachaArt.argb(gi >= 3 ? 170 : 110, col));
-        GachaArt.item(g, GachaArt.rune(p.rune()), cx, ccy - 10 + bob, 4.5F * s);
+        GachaArt.sprite(g, GachaArt.GLOW, cx, ccy - 8 + bob, 80 * s, 0F, GachaArt.argb(gi >= 3 ? 170 : 110, col));
+        GachaArt.item(g, GachaArt.rune(p.rune()), cx, ccy - 8 + bob, 4F * s);
         // 지나가는 빛
         if (u > 250 && u < 700) {
             double q = (u - 250) / 450.0;
@@ -341,18 +341,20 @@ public final class GachaShowScreen extends Screen {
         float ta = (float) Math.min(1, Math.max(0, (u - 150) / 300.0));
         int alpha = (int) (255 * ta);
         if (alpha > 8) {
+            float cardTop = ccy - 58;
+            float cardBottom = ccy + 58;
             String gl = GachaArt.gradeColor(p.grade()) + "§l" + GachaArt.gradeName(p.grade()) + " 룬";
-            GachaArt.textCentered(g, font, gl, cx, ccy - h / 2 - 26, 1.5F, GachaArt.argb(alpha, 0xFFFFFF));
-            GachaArt.textCentered(g, font, "★".repeat(gi + 1), cx, ccy - h / 2 - 11, 1F, GachaArt.argb(alpha, GachaArt.mix(col, 0xFFFFFF, 0.3)));
-            GachaArt.textCentered(g, font, GachaArt.gradeColor(p.grade()) + GachaArt.runeName(p.rune()), cx, ccy + h / 2 + 6, 1.5F, GachaArt.argb(alpha, 0xFFFFFF));
+            GachaArt.textCentered(g, font, gl, cx, cardTop - 24, 1.5F, GachaArt.argb(alpha, 0xFFFFFF));
+            GachaArt.textCentered(g, font, "★".repeat(gi + 1), cx, cardTop - 10, 1F, GachaArt.argb(alpha, GachaArt.mix(col, 0xFFFFFF, 0.3)));
+            GachaArt.textCentered(g, font, GachaArt.gradeColor(p.grade()) + GachaArt.runeName(p.rune()), cx, cardBottom + 5, 1.5F, GachaArt.argb(alpha, 0xFFFFFF));
             Runes.Rune r = Runes.parseRune(p.rune());
             String fam = r == null ? "" : "§7" + r.famName() + " 계열 룬 · 재사용 " + Js.str(r.cd()) + "초" + (p.at() > 0 && gi >= 3 ? " §8· " + p.at() + "회째" : "");
-            GachaArt.textCentered(g, font, fam, cx, ccy + h / 2 + 22, 1F, GachaArt.argb(alpha, 0xFFFFFF));
+            GachaArt.textCentered(g, font, fam, cx, cardBottom + 20, 1F, GachaArt.argb(alpha, 0xFFFFFF));
             String desc = r == null ? null : r.def().strOrNull("desc");
-            if (desc != null) GachaArt.textCentered(g, font, "§8" + BedrockText.toJava(desc), cx, ccy + h / 2 + 33, 0.75F, GachaArt.argb(alpha, 0xFFFFFF));
-            if (p.featured()) badge(g, "§0§l픽업!", cx - w / 2 - 6, ccy - h / 2 + 4, 0xFFFFD24A, alpha);
-            if (p.fresh()) badge(g, "§0§lNEW", cx + w / 2 - 22, ccy - h / 2 - 4, 0xFF7CFF8A, alpha);
-            if (p.lost()) GachaArt.textCentered(g, font, "§7픽업을 놓쳤습니다 — 다음 " + GachaArt.gradeName(p.grade()) + "은(는) 픽업 확정", cx, ccy + h / 2 + 44, 0.75F,
+            if (desc != null) GachaArt.textCentered(g, font, "§8" + BedrockText.toJava(desc), cx, cardBottom + 31, 0.75F, GachaArt.argb(alpha, 0xFFFFFF));
+            if (p.featured()) badge(g, "§0§l픽업!", cx - w / 2 - 6, cardTop + 4, 0xFFFFD24A, alpha);
+            if (p.fresh()) badge(g, "§0§lNEW", cx + w / 2 - 22, cardTop - 4, 0xFF7CFF8A, alpha);
+            if (p.lost()) GachaArt.textCentered(g, font, "§7픽업을 놓쳤습니다 — 다음 " + GachaArt.gradeName(p.grade()) + "은(는) 픽업 확정", cx, cardBottom + 40, 0.75F,
                     GachaArt.argb(alpha, 0xFFFFFF));
         }
         return null;
@@ -443,7 +445,7 @@ public final class GachaShowScreen extends Screen {
             if (sx > 0.3F) {
                 GachaArt.item(g, GachaArt.rune(p.rune()), x, y - 8, 2.25F * sx);
                 String name = GachaArt.gradeColor(p.grade()) + GachaArt.runeName(p.rune());
-                float ns = Math.min(0.625F, (CW - 6) / (float) Math.max(1, font.width(name)));
+                float ns = Math.min(0.7F, (CW - 6) / (float) Math.max(1, font.width(name)));
                 GachaArt.textCentered(g, font, name, x, y + 18, ns * sx, 0xFFFFFFFF);
                 GachaArt.textCentered(g, font, "★".repeat(gi + 1), x, y + 26, 0.5F * sx, GachaArt.argb(255, GachaArt.mix(col, 0xFFFFFF, 0.3)));
                 if (p.featured()) badge(g, "§0§lUP", x - w / 2 - 2, y - h / 2 - 3, 0xFFFFD24A, 255);
@@ -515,7 +517,8 @@ public final class GachaShowScreen extends Screen {
             }
         }
         if (!multi) return;
-        GachaArt.textCentered(g, font, "§8카드에 마우스를 올리면 풀이", width / 2F, height - BTN_H - 22, 0.75F, 0xFFFFFFFF);
+        String hint = "§8카드에 마우스 → 풀이";
+        GachaArt.text(g, font, hint, width - 8 - font.width(hint) * 0.75F, 8, 0.75F, 0xFFFFFFFF);
     }
 
     private static boolean in(int[] r, double mx, double my) {

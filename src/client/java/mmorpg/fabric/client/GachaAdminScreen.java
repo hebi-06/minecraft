@@ -112,7 +112,7 @@ public final class GachaAdminScreen extends Screen {
         nameBox = box(left + 44, top + 27, 150, values.get("name"), 32);
         nameBox.setHint(Component.literal("§7예: 불꽃의 축제"));
         daysBox = box(left + 236, top + 27, 30, values.get("days"), 6);
-        priceBox = box(left + 330, top + 27, 30, values.get("price"), 4);
+        priceBox = box(left + 322, top + 27, 30, values.get("price"), 4);
         for (int i = 0; i < FIELDS.size(); i++) {
             Field f = FIELDS.get(i);
             int[] r = fieldRect(i);
@@ -241,8 +241,8 @@ public final class GachaAdminScreen extends Screen {
         g.text(font, "§f이름", left + 14, top + 31, 0xFFFFFFFF, true);
         g.text(font, "§f기간", left + 206, top + 31, 0xFFFFFFFF, true);
         g.text(font, "§7일", left + 270, top + 31, 0xFFFFFFFF, true);
-        g.text(font, "§f룬술사", left + 292, top + 31, 0xFFFFFFFF, true);
-        g.text(font, "§7조각", left + 363, top + 27 + 4, 0xFFFFFFFF, true);
+        g.text(font, "§f룬술사", left + 286, top + 31, 0xFFFFFFFF, true);
+        g.text(font, "§7조각", left + 355, top + 31, 0xFFFFFFFF, true);
         if (my >= top + 27 && my < top + 43) {
             if (mx >= left + 200 && mx < left + 280) tip = List.of("§f기간 (일)", "§70 이면 관리자가 끝낼 때까지", "§7고칠 때는 처음 연 때부터 셈");
             else if (mx >= left + 288 && mx < left + W - 6) tip = List.of("§f룬술사의 한정 룬 뽑기권 값 (룬 조각)", "§70 이면 팔지 않음 (관리자 지급만 — /뽑기 뽑기권)");
