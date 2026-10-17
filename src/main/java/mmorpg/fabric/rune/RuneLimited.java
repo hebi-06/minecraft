@@ -144,8 +144,6 @@ final class RuneLimited {
     /** 시전 중 구슬이 도는 고리 (발 위 높이 · 반지름) — 머리 위: 1인칭 화면 가운데를 가리지 않게 */
     static final double ORBIT_Y = 2.35;
     static final double ORBIT_R = 1.3;
-    /** 칠성 강림 밤빛 무리 (rpg:rfx_orb 8번 칸 — 무늬 없는 부드러운 원) */
-    static final double HAZE_CELL = 8;
 
     /**
      * 하늘 그림 높이: 시전자에서 at 까지 거리 × 0.42 (min ~ max 칸) — 1인칭으로 과녁을 보면 그림이 화면 위쪽 안에 들어오게
@@ -404,12 +402,6 @@ final class RuneLimited {
                 double left = hold - ii * 3 / 20.0;
                 boolean polaris = ii == 7;
                 RuneKit.skyFlare(level, st[ii], polaris ? 1.9 : 1.45, STAR_GLOW, STAR_CORE, Opt.of("life", left, "grow", 0.0, "fade", 0.15, "spinRate", 25.0));
-                // 별 뒤 밤빛 무리 (부드러운 원 — 낮 하늘에서도 별이 또렷하게, 켜질 때 한 번 · 별과 같이 사라짐)
-                Vec3 toEye = RuneKit.towardEye(sp, st[ii]);
-                RuneKit.rfx(level, "orb", V.add(st[ii], toEye, -0.7), Opt.of("size", polaris ? 2.6 : 2.2, "life", left, "cell", HAZE_CELL, "color", NIGHT,
-                        "alpha", 0.34, "fade", 0.15));
-                RuneKit.rfx(level, "orb", V.add(st[ii], toEye, -0.35), Opt.of("size", polaris ? 1.3 : 1.05, "life", left, "cell", HAZE_CELL, "color", NIGHT,
-                        "alpha", 0.5, "fade", 0.15));
                 SkillFx.burst(level, st[ii], STAR_CORE, 0.9, 0.3);
                 SkillFx.play(level, "note.chime", st[ii], pitch[ii], 1.0);
                 if (polaris) SkillFx.play(level, "random.levelup", st[ii], 1.8, 0.5);
@@ -526,9 +518,9 @@ final class RuneLimited {
                 double[] col = nn % 3 == 0 ? STAR_CORE : STAR_GLOW;
                 double len = V.len(V.sub(to, from));
                 double secs = Math.max(0.05, len / 20);
-                RuneKit.flyStreak(level, from, to, 20, col, WHITE, 3.0, 0.3);
+                RuneKit.flyStreak(level, from, to, 20, col, WHITE, 3.2, 0.4);
                 // 빛 머리 (꼬리와 같은 빠르기로 날아감)
-                RuneKit.rfx2(level, "flare", from, Opt.of("size", 0.6, "life", secs, "vel", V.scale(V.unit(V.sub(to, from)), len / secs), "fade", 0.25,
+                RuneKit.rfx2(level, "flare", from, Opt.of("size", 0.75, "life", secs, "vel", V.scale(V.unit(V.sub(to, from)), len / secs), "fade", 0.25,
                         "spinRate", 120.0, "grow", 0.0), col, WHITE, new int[] {0, 1}, null);
                 if (nn % 2 == 0) SkillFx.play(level, "firework.twinkle", from, 1.2 + Kit.rand() * 0.6, 0.35);
             });

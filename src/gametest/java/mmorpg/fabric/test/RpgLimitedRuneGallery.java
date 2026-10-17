@@ -3,6 +3,7 @@ package mmorpg.fabric.test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CopyOnWriteArrayList;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.RpgHealth;
@@ -16,6 +17,7 @@ import mmorpg.fabric.rune.SkillBar;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.skill.Status;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
@@ -27,6 +29,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.zombie.Husk;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.phys.AABB;
@@ -39,6 +42,8 @@ import org.slf4j.LoggerFactory;
  * 룬마다 실제 입력 (스킬 칸 1번의 키) 으로 쓰고 단계마다 사진 (lr_&lt;계열&gt;_&lt;돌&gt;_&lt;틱&gt;[_3p]): 0돌 (1인칭) · 6돌 (3인칭 — 전용 연출 finale).
  * 천공의 눈은 광선 동안 몸을 천천히 돌려 광선이 따라가는지 (lr_skyeye_0_*). 칠성 강림 6돌은 밤에도 한 번 (lr_dipper_6n_*).
  * 써졌는지 (재사용 대기) · 들어간 피해 · 끝의 총 피해 글자 (DamageNumbers — "총 피해") 를 로그 (limited-gallery) 로, 아니면 마지막에 실패.
+ * 스탯은 40렙 실제 분배 (31 · 31 · 31 · 32 = 총 125). 피해 숫자는 실제로 깎인 체력이라 과녁 체력 상한 (바닐라 1024) 에서 잘리므로,
+ * 이 사진첩의 과녁은 흡수 체력 2048 을 매 틱 다시 채움 (6돌 큰 한 방 약 1,800 도 그대로 보이게 — 공용 TestDummies 는 그대로).
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgLimitedRuneGallery implements FabricClientGameTest {
@@ -49,6 +54,10 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         new Vec3(3.5, -60, 5.0)
     };
     private static final double ME_Z = -7.0;
+    /** 과녁의 흡수 체력 (바닐라 상한 2048 — 체력 1024 와 합쳐 한 방 3072 까지 숫자가 잘리지 않음) */
+    private static final float BUFFER = 2048F;
+    private static final List<Husk> BUFFERED = new CopyOnWriteArrayList<>();
+    private static boolean tickInstalled;
     private int lives;
     private final List<String> failures = new ArrayList<>();
 
@@ -69,7 +78,9 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
                 mc.options.setCameraType(CameraType.FIRST_PERSON);
             });
             ctx.waitTicks(10);
-            for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
+            // 40렙 실제 분배 (총 125 — 한정 룬의 적용 스탯 = 네 스탯의 합)
+            for (String s : List.of("str 31", "dex 31", "vit 31", "int 32")) server.runCommand("execute as @a run rpg set " + s);
+            server.runOnServer(s -> installBuffer());
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             // 만상귀일: 구슬이 몸 둘레 → 조준한 곳 위 → 빛줄기 넷 (16 · 26 · 36 · 46틱 쯤 — 스탯 고르게) → 모임 (64) → 귀일 폭발 (70) → 총 피해 (78)
             run(ctx, server, "arcana", 0, false, new int[] {8, 26, 36, 56, 66, 72, 82}, null, false);
@@ -151,13 +162,29 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         return s.getPlayerList().getPlayers().get(0);
     }
 
-    /** 쓰러지지 않는 과녁 허스크 (받은 피해는 TestDummies.dealt) */
+    /** 서버 틱마다 과녁의 흡수 체력을 다시 채움 (서버 스레드에서 한 번) */
+    private static synchronized void installBuffer() {
+        if (tickInstalled) return;
+        tickInstalled = true;
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            for (Husk h : BUFFERED) {
+                if (h.isRemoved()) BUFFERED.remove(h);
+                else if (h.getAbsorptionAmount() < BUFFER) h.setAbsorptionAmount(BUFFER);
+            }
+        });
+    }
+
+    /** 쓰러지지 않는 과녁 허스크 (받은 피해는 TestDummies.dealt) · 흡수 체력 2048 (매 틱 채움 — 큰 피해 숫자가 잘리지 않게) */
     private static void spawnHusks(ServerLevel level) {
         TestDummies.reset();
+        BUFFERED.clear();
         for (Vec3 at : TARGETS) {
             Husk h = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
             if (h == null) continue;
             TestDummies.make(h);
+            if (h.getAttribute(Attributes.MAX_ABSORPTION) != null) h.getAttribute(Attributes.MAX_ABSORPTION).setBaseValue(BUFFER);
+            h.setAbsorptionAmount(BUFFER);
+            BUFFERED.add(h);
             h.snapTo(at.x, at.y, at.z, 180F, 0F);
             h.setYHeadRot(180F);
             h.setYBodyRot(180F);
