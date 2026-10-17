@@ -90,11 +90,27 @@ final class RuneLimited {
         });
     }
 
-    /** 이번 시전의 총 피해를 at 에 (delay 틱 뒤 — 0 이면 띄우지 않음) */
+    /** 이번 시전의 총 피해를 at 에 (delay 틱 뒤 — 0 이면 띄우지 않음). 글자 색 = 그 룬 계열 색 (0.17.0 — toneOf) */
     static void total(ServerPlayer sp, String fn, Vec3 at, Tally t, int delay) {
         RuneKit.later(delay, () -> {
             LAST.put(sp.getUUID() + "|" + fn, new double[] {t.sum, t.hits});
-            if (t.sum > 0 && !sp.isRemoved()) DamageNumbers.showTotal(sp.level(), at, t.sum, "총 피해");
+            if (t.sum > 0 && !sp.isRemoved()) DamageNumbers.showTotal(sp.level(), at, t.sum, "총 피해", toneOf(fn));
+        });
+    }
+
+    private static final Map<String, DamageNumbers.Tone> TONES = new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** 룬 함수 fn 의 한정 계열 색 (RUNE.color) 으로 만든 총 피해 글자 색 — 한정 계열이 아니면 금빛 */
+    static DamageNumbers.Tone toneOf(String fn) {
+        return TONES.computeIfAbsent(fn, k -> {
+            for (String fam : Runes.LIMITED_ORDER) {
+                Runes.Rune r = Runes.parseRune(Runes.runeId(fam, "transcend"));
+                if (r != null && k.equals(r.def().str("fn"))) {
+                    double[][] cs = RuneKit.colorOf(fam);
+                    return DamageNumbers.Tone.of(cs[0], cs[1]);
+                }
+            }
+            return DamageNumbers.Tone.GOLD;
         });
     }
 

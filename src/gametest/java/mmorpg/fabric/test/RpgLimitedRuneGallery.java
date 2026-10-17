@@ -84,23 +84,26 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             server.runOnServer(s -> installBuffer());
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             // 만상귀일: 구슬이 몸 둘레 → 조준한 곳 위 → 빛줄기 넷 (16 · 26 · 36 · 46틱 쯤 — 스탯 고르게) → 모임 (64) → 귀일 폭발 (70) → 총 피해 (78)
-            run(ctx, server, "arcana", 0, false, new int[] {8, 26, 36, 56, 66, 72, 82}, null, false);
-            run(ctx, server, "arcana", 6, true, new int[] {30, 72, 80, 90, 100}, null, false);
+            run(ctx, server, "arcana", 0, false, new int[] {8, 26, 36, 56, 66, 72, 82, 98}, null, false);
+            run(ctx, server, "arcana", 6, true, new int[] {30, 72, 80, 90, 100, 114}, null, false);
             // 칠성 강림: 별이 켜짐 (0 ~ 18틱) → 별빛 기둥 7 (24 ~ 84틱) → 접힘 (92) → 큰 별 (98) → 떨어짐 (106) → 총 피해 (114)
-            run(ctx, server, "dipper", 0, false, new int[] {12, 26, 50, 94, 100, 108, 116}, null, false);
-            run(ctx, server, "dipper", 6, true, new int[] {30, 104, 118, 126, 136, 150}, null, false);
+            run(ctx, server, "dipper", 0, false, new int[] {12, 26, 50, 94, 100, 108, 116, 132}, null, false);
+            run(ctx, server, "dipper", 6, true, new int[] {30, 104, 118, 126, 136, 150, 162}, null, false);
             // 천공의 눈: 눈을 뜸 (0 ~ 20틱) → 광선 6번 (20 ~ 70틱 — 30틱부터 몸을 천천히 오른쪽으로 돌림) → 마무리 폭발 (80) → 총 피해 (88)
-            run(ctx, server, "skyeye", 0, false, new int[] {10, 24, 44, 66, 82, 90}, "turn", false);
-            run(ctx, server, "skyeye", 6, true, new int[] {12, 40, 70, 92, 100}, null, false);
+            run(ctx, server, "skyeye", 0, false, new int[] {10, 24, 44, 66, 82, 90, 106}, "turn", false);
+            run(ctx, server, "skyeye", 6, true, new int[] {12, 40, 70, 92, 100, 116}, null, false);
             // 밤: 칠성 강림 6돌 (별 · 별똥별 비)
             server.runCommand("time set 18000");
-            run(ctx, server, "dipper", 6, false, new int[] {40, 118, 130, 145}, null, true);
+            run(ctx, server, "dipper", 6, false, new int[] {40, 118, 130, 145, 160}, null, true);
             server.runCommand("time set 6000");
-            // 무간참역 (0.17.0): 영역 전개 (0 ~ 16틱 — 검이 솟음) → 베기 0.5초마다 (16 ~ 106틱) → 검이 모임 (110) → 일섬 (118) → 총 피해 (128)
-            run(ctx, server, "endless", 0, false, new int[] {10, 30, 62, 96, 113, 119, 124, 132}, null, false, 1.5, 170);
-            run(ctx, server, "endless", 6, true, new int[] {24, 80, 146, 152, 159, 165, 176, 192}, null, false, 1.5, 215);
+            ctx.waitTicks(100); // 앞 시전의 6돌 하늘빛이 다 걷힌 뒤 (무간참역 0돌 사진에 남지 않게)
+            // 무간참역 (0.17.0): 영역 전개 (0 ~ 16틱 — 검이 떨어져 꽂힘) → 베기 0.5초마다 (16 ~ 106틱) → 검이 모임 (110) → 일섬 (118 — 0.15초에 그어짐)
+            //   → 총 피해 (128 — 0.7초 차오름 · 반짝임). 사진 틱은 클라이언트 기준 (사진 찍는 동안 서버가 앞서 — 뒤 사진일수록 서버가 몇 틱 앞).
+            //   다른 룬의 마지막 사진도 총 피해가 다 차오른 뒤 (0.17.0 총 피해 모양)
+            run(ctx, server, "endless", 0, false, new int[] {12, 30, 62, 100, 106, 110, 114, 124, 132, 142}, null, false, 1.5, 175);
+            run(ctx, server, "endless", 6, true, new int[] {24, 80, 140, 148, 152, 157, 164, 172, 180, 196}, null, false, 1.5, 215);
             server.runCommand("time set 18000");
-            run(ctx, server, "endless", 6, false, new int[] {70, 159, 166, 180}, null, true, 1.5, 215);
+            run(ctx, server, "endless", 6, false, new int[] {12, 70, 150, 155, 162, 176, 190}, null, true, 1.5, 215);
             server.runCommand("time set 6000");
         }
         LOG.info("[limited-gallery] done, {} failed", failures.size());
