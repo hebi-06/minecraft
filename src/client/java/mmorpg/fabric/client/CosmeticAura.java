@@ -22,7 +22,8 @@ import net.minecraft.world.phys.Vec3;
  * <li>frost (서리): 머리 위 (반지름 0.85) 에서 눈송이가 흔들리며 내림 + 1.2초마다 발밑 서리 고리 · 발밑 반짝임</li>
  * <li>petals (벚꽃 — 0.15.0): 머리 위 (반지름 0.2 ~ 1.1) 에서 꽃잎이 빙글빙글 · 좌우로 하늘하늘 떨어짐</li>
  * <li>lightning (번개 — 0.15.0): 초당 rate 번, 몸 둘레 (반지름 0.45 ~ 0.75) 에 지그재그 번개 (4 ~ 5 마디 — 위나 아래로 뻗으며 몸 둘레 쪽으로 엇갈려 꺾임,
- * 0.22 ~ 0.34초) — 마디마다 굵고 옅은 빛무리 (그 색) 위에 가늘고 흰빛인 심, 초당 14번 깜빡이며 사라짐 · 끝에 흰 불티, 0.5초마다 몸 둘레 옅은 번쩍임</li>
+ * 0.22 ~ 0.34초) — 마디마다 굵고 옅은 빛무리 (그 색) 위에 가늘고 흰빛인 심, 초당 14번 깜빡이며 사라짐 · 끝에 흰 불티, 0.5초마다 몸 둘레 옅은 번쩍임.
+ * 보는 쪽 반대편 (몸에 가림) 에 날 번개는 한 번 더 뽑아 보는 쪽이 약 3/4</li>
  * <li>hearts (하트 — 0.15.0): 몸 둘레에서 하트가 튀어나오듯 생겨 천천히 피어오르며 흐려짐</li>
  * <li>shadow (그림자 — 0.15.0): 발밑 둘레에서 어두운 연기가 피어오르며 커지고 흐려짐 · 보랏빛 불티 (마지막 색) · 1.5초마다 발밑 어두운 고리</li>
  * </ul>
@@ -55,7 +56,7 @@ public final class CosmeticAura {
             Look look = ClientCosmetics.lookOf(a.getUUID());
             float scale = ps == ParticleStatus.DECREASED ? 0.5F : 1F;
             CosmeticDefs.Def d = look.def("aura");
-            if (d != null && d.aura() != null) emit(level, r, a, d.aura(), a.tickCount, scale);
+            if (d != null && d.aura() != null) emit(level, r, a, d.aura(), a.tickCount, scale, cam.getEyePosition());
             CosmeticDefs.Def back = look.def("back");
             if (back != null && back.dust() != null) emitDust(level, r, a, back.dust(), a.tickCount, scale);
         }
@@ -79,7 +80,8 @@ public final class CosmeticAura {
         return new FxOptions(FxOptions.ARROW_SPARK, -1, dir, (float) speed, (float) size, 0F, (float) life, 0F, (float) grow, 0F, 1F, color);
     }
 
-    static void emit(ClientLevel level, RandomSource r, Avatar a, CosmeticDefs.Aura aura, int tick, float scale) {
+    /** @param view 보는 눈 자리 (번개를 보는 쪽에 더 많이 — 오라 파티클은 클라이언트마다 따로 뿌림) */
+    static void emit(ClientLevel level, RandomSource r, Avatar a, CosmeticDefs.Aura aura, int tick, float scale, Vec3 view) {
         Vec3 feet = a.position();
         double h = a.getBbHeight();
         List<double[]> cols = aura.colors();
@@ -121,8 +123,11 @@ public final class CosmeticAura {
             case "lightning" -> {
                 // 번개: 몸 둘레에 지그재그 (위나 아래로 뻗으며 몸 둘레 쪽으로 엇갈려 꺾임 — 마디마다 제자리 빛줄기 둘: 굵고 옅은 빛무리 + 가늘고 흰빛인 심,
                 // 이음새가 끊기지 않게 마디를 20% 길게 · 깜빡이며 사라짐) + 끝에 흰 불티
+                double vx = view.x - feet.x, vz = view.z - feet.z, vl = Math.sqrt(vx * vx + vz * vz);
                 for (int i = 0; i < n; i++) {
                     double ang = r.nextDouble() * Math.PI * 2;
+                    // 보는 쪽 반대편 (몸에 가려 안 보임) 이면 한 번 더 뽑음 — 보는 쪽이 약 3/4
+                    if (vl > 0.3 && (Math.cos(ang) * vx + Math.sin(ang) * vz) / vl < -0.2) ang = r.nextDouble() * Math.PI * 2;
                     double rad = 0.45 + r.nextDouble() * 0.3;
                     Vec3 p = feet.add(Math.cos(ang) * rad, 0.3 + r.nextDouble() * Math.max(0.1, h - 0.3), Math.sin(ang) * rad);
                     Vec3 around = new Vec3(-Math.sin(ang), 0, Math.cos(ang));
