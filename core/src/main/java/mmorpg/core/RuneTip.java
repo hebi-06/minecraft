@@ -220,6 +220,7 @@ public final class RuneTip {
             case "heavenEye" -> "광선 ";
             case "gravityReverse" -> "띄우기 ";
             case "blackHole" -> "띄워 치기 ";
+            case "endlessSlash" -> "베기 ";
             default -> "";
         };
     }
@@ -232,6 +233,7 @@ public final class RuneTip {
             case "arcanaUnity" -> "귀일 폭발";
             case "sevenStars" -> "별 낙하";
             case "heavenEye" -> "마무리 폭발";
+            case "endlessSlash" -> "마무리 일섬";
             default -> "마무리";
         };
     }
@@ -303,6 +305,7 @@ public final class RuneTip {
         }
         if ("arcanaUnity".equals(fn)) out.add("§r" + L + "구슬 몫은 스탯 비율로 · 폭발 반지름 " + d.text("radius") + "칸");
         if ("sevenStars".equals(fn)) out.add("§r" + L + "별빛 기둥 " + d.text("beam") + "칸 · 별 낙하 반지름 " + d.text("radius") + "칸");
+        if ("endlessSlash".equals(fn)) out.add("§r" + L + "영역 반지름 " + d.text("radius") + "칸 · " + sec(d.numOr("gap", 10)) + "마다 영역 안 모든 적");
         if ("heavenEye".equals(fn)) {
             out.add("§r" + L + "광선이 바라보는 곳을 따라감 (굵기 " + d.text("width") + "칸)");
             out.add("§r" + L + "폭발 반지름 " + d.text("radius") + "칸 · 쓰는 동안 천천히 걸음");

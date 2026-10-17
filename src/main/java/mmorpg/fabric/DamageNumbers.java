@@ -63,7 +63,10 @@ public final class DamageNumbers {
         },
         STARFALL("§e§l", "", "", 1.95F),
         SOLAR("§6§l", "", "", 1.5F),
-        JUDGE("§6§l", "", "!", 1.95F);
+        JUDGE("§6§l", "", "!", 1.95F),
+        // 0.17.0 무간참역: 영역 베기 (흰 기울임 — 작게, 자주) · 마무리 일섬 (굵은 흰 기울임 !)
+        CUT("§f§o", "", "", 1.3F),
+        ISSEOM("§f§l§o", "", "!", 2.0F);
 
         final String codes;
         final String before;

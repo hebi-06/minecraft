@@ -10,7 +10,7 @@ import java.util.Random;
 /**
  * 0.16.0 시험 (JUnit 없이 main — check-core.sh): 한정 초월 룬 셋 (만상귀일 · 칠성 강림 · 천공의 눈 — 자바 전용 덧붙임).
  * <ul>
- * <li>계열: RUNE_LIMITED_ORDER = arcana · dipper · skyeye, 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 20 (뒤에 셋), 초월 하나씩</li>
+ * <li>계열: RUNE_LIMITED_ORDER = arcana · dipper · skyeye · endless (0.17.0 무간참역), 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 21 (뒤에 넷), 초월 하나씩</li>
  * <li>적용 스탯 = 네 스탯의 합 × 1.0 (스탯을 어떻게 찍어도 같은 위력 — 40렙 125포인트 = 한 스탯만 찍은 자기 계열 룬과 같은 P 42), 알림 글자 "총 스탯 N"</li>
  * <li>배율 합 34 (다른 초월 32 보다 6.25% 위 — 사용자 요청 '5% ~ 12% 더 쎄게'), 재사용 대기 36초, 설명 줄 (한정 룬 · 네 스탯의 합 · 흐름 · 총 피해)</li>
  * <li>뽑기: 룬 뽑기권 · 고급 · 스탯 뽑기권에는 나오지 않음, 한정 뽑기의 초월 픽업으로만 (영웅 픽업 · 놓친 결과 · 다른 등급에는 없음)</li>
@@ -51,18 +51,18 @@ public final class LimitedRunesTest {
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
         List<String> lim = Runes.LIMITED_ORDER;
-        check(lim.equals(List.of("arcana", "dipper", "skyeye")), "limited order " + lim);
+        check(lim.equals(List.of("arcana", "dipper", "skyeye", "endless")), "limited order " + lim);
         check(Runes.FAMILY_ORDER.size() == 17, "draw families stay 17 " + Runes.FAMILY_ORDER.size());
         for (String f : lim) check(!Runes.FAMILY_ORDER.contains(f), f + " not in the draw families");
-        check(Runes.ALL_FAMILIES.size() == 20 && Runes.ALL_FAMILIES.subList(17, 20).equals(lim), "all families " + Runes.ALL_FAMILIES);
+        check(Runes.ALL_FAMILIES.size() == 21 && Runes.ALL_FAMILIES.subList(17, 21).equals(lim), "all families " + Runes.ALL_FAMILIES);
         check(!Runes.limited("int") && Runes.limited("arcana"), "limited()");
 
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 36초
-        String[] fams = {"arcana", "dipper", "skyeye"};
-        String[] fns = {"arcanaUnity", "sevenStars", "heavenEye"};
-        String[] names = {"만상귀일", "칠성 강림", "천공의 눈"};
-        String[] famNames = {"만상", "칠성", "천공"};
-        for (int i = 0; i < 3; i++) {
+        String[] fams = {"arcana", "dipper", "skyeye", "endless"};
+        String[] fns = {"arcanaUnity", "sevenStars", "heavenEye", "endlessSlash"};
+        String[] names = {"만상귀일", "칠성 강림", "천공의 눈", "무간참역"};
+        String[] famNames = {"만상", "칠성", "천공", "무간"};
+        for (int i = 0; i < fams.length; i++) {
             for (String g : Runes.GRADE_ORDER) {
                 Runes.Rune r = Runes.parseRune(Runes.runeId(fams[i], g));
                 check(g.equals("transcend") == (r != null), fams[i] + " " + g + " exists only as transcend");
@@ -83,6 +83,7 @@ public final class LimitedRunesTest {
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_arcana_transcend"), false)).contains("(17 + 17)"), "arcana parts 17 + 17");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_dipper_transcend"), false)).contains("(2×7 + 20)"), "dipper parts 2×7 + 20");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_skyeye_transcend"), false)).contains("(3×6 + 16)"), "skyeye parts 3×6 + 16");
+        check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_endless_transcend"), false)).contains("(2×10 + 14)"), "endless parts 2×10 + 14");
         check(Runes.parseRune("rpg:rune_arcana_hero") == null && Runes.parseRune("rpg:rune_nope_transcend") == null, "no other ids");
 
         // 적용 스탯 = 네 스탯의 합 (40렙 125포인트면 어떻게 찍어도 P 42 = 한 스탯만 찍은 자기 룬)
@@ -159,10 +160,12 @@ public final class LimitedRunesTest {
         check(top > 100 && lostTop > 0 && lostTop < top, "transcend " + top + " lost " + lostTop);
 
         // 돌파 3 · 6돌 (배율 합: 0돌 34 · 3돌 42 · 6돌 55)
-        double[][] totals = {{17 + 17, 25 + 17, 29 + 26}, {2 * 7 + 20, 3 * 7 + 21, 3.5 * 8 + 27}, {3 * 6 + 16, 4 * 6 + 18, 5 * 7 + 20}};
+        double[][] totals = {{17 + 17, 25 + 17, 29 + 26}, {2 * 7 + 20, 3 * 7 + 21, 3.5 * 8 + 27}, {3 * 6 + 16, 4 * 6 + 18, 5 * 7 + 20},
+            {2 * 10 + 14, 2.25 * 12 + 15, 2.5 * 14 + 20}};
         // 처음 설계 (다른 초월과 같은 줄) — 사용자 요청 '5% ~ 12% 더 쎄게': 0 · 3 · 6돌 모두 이 값의 1.05 ~ 1.12 배
-        double[][] first = {{32, 38, 50}, {32, 2.6 * 7 + 21, 3.2 * 8 + 24}, {32, 3.6 * 6 + 17, 4.2 * 7 + 20}};
-        for (int i = 0; i < 3; i++) {
+        // (0.17.0 무간참역은 처음부터 이 줄로 — 다른 초월의 기준 32 · 39 · 50 보다 5 ~ 12% 위)
+        double[][] first = {{32, 38, 50}, {32, 2.6 * 7 + 21, 3.2 * 8 + 24}, {32, 3.6 * 6 + 17, 4.2 * 7 + 20}, {32, 39, 50}};
+        for (int i = 0; i < fams.length; i++) {
             Runes.Rune r = Runes.parseRune(Runes.runeId(fams[i], "transcend"));
             check(RuneBreak.tiered(r), fams[i] + " tiered");
             near(Runes.runeTotalMult(RuneBreak.def(r, 0)), totals[i][0], fams[i] + " 0 total");

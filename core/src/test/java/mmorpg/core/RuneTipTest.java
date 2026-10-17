@@ -123,7 +123,7 @@ public final class RuneTipTest {
                 }
             }
         }
-        check(runes == 88, "88 runes " + runes);
+        check(runes == 89, "89 runes " + runes);
 
         // 하나씩: 메테오 (마력 125 — P 42)
         Map<String, Double> mage = stats(0, 0, 0, 125);
@@ -141,6 +141,12 @@ public final class RuneTipTest {
         // 만상귀일 (네 스탯 31 · 31 · 31 · 32 = 125 → P 42): 구슬 17 + 폭발 17
         String ar = joined(RuneTip.lines(rune("arcana", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
         check(ar.contains("⚔ 총 피해 1,428 (구슬 714 + 귀일 폭발 714)") && ar.contains("재사용 36초 · 한정") && ar.contains("적용 = 네 스탯의 합 × 1.0"), "arcana: " + ar);
+        // 0.17.0 무간참역: 베기 2 × 10 + 마무리 일섬 14 (P 42 → 84 × 10번 + 588 — 나눔이 길어 다음 줄), 영역 줄, 6돌 기절
+        List<String> en = plain(RuneTip.lines(rune("endless", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
+        check(en.contains("⚔ 총 피해 1,428") && en.contains("  베기 84 × 10번 + 마무리 일섬 588") && en.contains("영역 반지름 8칸 · 0.5초마다 영역 안 모든 적")
+                && en.get(0).equals("재사용 36초 · 한정"), "endless: " + en);
+        String en6 = joined(RuneTip.lines(rune("endless", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
+        check(en6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55)) && en6.contains("기절 1초") && en6.contains("영역 반지름 12칸") && !en6.contains("하늘 가르기"), "endless 6: " + en6);
         // 적월 강림 6돌: 나눔이 길면 다음 줄 (이어지는 줄은 "+ ")
         List<String> cm = plain(RuneTip.lines(rune("reaper", "transcend"), 6, new RuneTip.Viewer(stats(0, 84, 0, 41), 1, 131)));
         int ti = -1;

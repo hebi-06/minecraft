@@ -12,7 +12,7 @@ rules.json 위에 rules_more.json 을 덧붙인 RUNE_FAMILY_ORDER 에서 애드�
   사신 (reaper): 핏빛 초승달 (왼쪽이 볼록 — 가운데가 굵음) + 아래 끝에 맺힌 핏방울
 - 아이템 모델 assets/rpg/models/item/rune_<계열>_<등급>.json (generated), 아이템 정의 assets/rpg/items/rune_<계열>_<등급>.json
   (tools/rune_break_badges.py 와 같은 모양 — custom_model_data 첫 수 = 돌파 단계로 range_dispatch → 배지 모델 composite)
-- 0.16.0 한정 초월 룬 (RUNE_LIMITED_ORDER — 초월 하나씩): 같은 초월 돌 위에 여러 색 문양 (LIMITED_GLYPHS — 층마다 심지 · 빛 · 빛무리 색),
+- 0.16.0 한정 초월 룬 (RUNE_LIMITED_ORDER — 초월 하나씩 · 0.17.0 무간참역 더함): 같은 초월 돌 위에 여러 색 문양 (LIMITED_GLYPHS — 층마다 심지 · 빛 · 빛무리 색),
   테두리의 붉은 빛을 무지갯빛으로 (가운데에서 본 각도마다 색 — 한정 룬 표시)
   만상 (arcana): 네 스탯 구슬 (위 힘 주황 · 오른쪽 민첩 초록 · 아래 체력 분홍 · 왼쪽 마력 파랑) + 잇는 고리 + 가운데 흰 네 갈래 별
   칠성 (dipper): 북두칠성 일곱 별 (흰 · 금빛 별, 푸른 빛무리) + 잇는 선
@@ -242,7 +242,27 @@ def skyeye_layers():
             (lambda g: disc(16, cy, 0.7), (60, 30, 10), (60, 30, 10), (60, 30, 10))]
 
 
-LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers}
+def endless_layers():
+    """0.17.0 무간참역: 끊어진 보랏빛 고리 (영역) 위로 엇갈린 참격 여섯 (흰 심 · 먹빛 테두리 — / 셋 · \\ 셋) + 가장 긴 흰 일섬 한 줄"""
+    cx, cy = 16.0, 15.6
+
+    def ring(g):
+        def f(x, y):
+            if abs(math.hypot(x - cx, y - cy) - 6.4) > 0.36 + g * 0.3:
+                return False
+            a = math.degrees(math.atan2(y - cy, x - cx)) % 90
+            return 12 < a < 78  # 네 토막 (사이가 끊김)
+        return f
+    cuts = [((9.2, 14.4), (16.4, 9.2), 0.6), ((15.4, 22.8), (22.8, 17.4), 0.6), ((10.0, 9.6), (14.6, 14.2), 0.5), ((17.4, 17.2), (21.8, 21.6), 0.5),
+            ((19.2, 8.0), (22.6, 11.4), 0.42), ((9.4, 18.6), (12.4, 21.6), 0.42)]
+    small = lambda g: union(*[seg(p0[0], p0[1], p1[0], p1[1], w + g * 0.45) for p0, p1, w in cuts])
+    big = lambda g: seg(7.4, 21.4, 24.0, 9.0, 1.0 + g * 0.6)
+    return [(ring, (200, 176, 255), (122, 86, 210), (30, 16, 52)),
+            (small, (255, 255, 255), (214, 206, 244), (10, 6, 18)),
+            (big, (255, 255, 255), (236, 230, 255), (20, 10, 38))]
+
+
+LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers, "endless": endless_layers}
 
 
 def prism_frame(stone):

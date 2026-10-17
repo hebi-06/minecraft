@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
  * 0.16.0 한정 초월 룬 사진첩 (화면 시험 — 키 limited): 평평한 세계에서 과녁 허스크 여섯 (12 ~ 15칸 앞 — 하늘의 별자리 · 눈이 화면에 들어오게) 앞에서
  * 룬마다 실제 입력 (스킬 칸 1번의 키) 으로 쓰고 단계마다 사진 (lr_&lt;계열&gt;_&lt;돌&gt;_&lt;틱&gt;[_3p]): 0돌 (1인칭) · 6돌 (3인칭 — 전용 연출 finale).
  * 천공의 눈은 광선 동안 몸을 천천히 돌려 광선이 따라가는지 (lr_skyeye_0_*). 칠성 강림 6돌은 밤에도 한 번 (lr_dipper_6n_*).
+ * 0.17.0 무간참역 (쓴 자리 영역 — 과녁 가까이 z = 1.5 에 섬): 0돌 1인칭 · 6돌 3인칭 (하늘 가르기) · 6돌 밤 1인칭 (lr_endless_…).
  * 써졌는지 (재사용 대기) · 들어간 피해 · 끝의 총 피해 글자 (DamageNumbers — "총 피해") 를 로그 (limited-gallery) 로, 아니면 마지막에 실패.
  * 스탯은 40렙 실제 분배 (31 · 31 · 31 · 32 = 총 125). 피해 숫자는 실제로 깎인 체력이라 과녁 체력 상한 (바닐라 1024) 에서 잘리므로,
  * 이 사진첩의 과녁은 흡수 체력 2048 을 매 틱 다시 채움 (6돌 큰 한 방 약 1,800 도 그대로 보이게 — 공용 TestDummies 는 그대로).
@@ -95,6 +96,12 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             server.runCommand("time set 18000");
             run(ctx, server, "dipper", 6, false, new int[] {40, 118, 130, 145}, null, true);
             server.runCommand("time set 6000");
+            // 무간참역 (0.17.0): 영역 전개 (0 ~ 16틱 — 검이 솟음) → 베기 0.5초마다 (16 ~ 106틱) → 검이 모임 (110) → 일섬 (118) → 총 피해 (128)
+            run(ctx, server, "endless", 0, false, new int[] {10, 30, 62, 96, 113, 119, 124, 132}, null, false, 1.5, 170);
+            run(ctx, server, "endless", 6, true, new int[] {24, 80, 146, 152, 159, 165, 176, 192}, null, false, 1.5, 215);
+            server.runCommand("time set 18000");
+            run(ctx, server, "endless", 6, false, new int[] {70, 159, 166, 180}, null, true, 1.5, 215);
+            server.runCommand("time set 6000");
         }
         LOG.info("[limited-gallery] done, {} failed", failures.size());
         if (!failures.isEmpty()) throw new AssertionError("limited rune gallery: " + String.join(" / ", failures));
@@ -102,6 +109,12 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
 
     /** 룬 하나를 실제 입력으로 쓰고 사진 · 피해 · 총 피해 글자 기록. move = "turn" 이면 30틱부터 2틱마다 몸을 1° 씩 오른쪽으로 */
     private void run(ClientGameTestContext ctx, TestServerContext server, String family, int level, boolean third, int[] shots, String move, boolean night) {
+        run(ctx, server, family, level, third, shots, move, night, ME_Z, 170);
+    }
+
+    /** meZ = 서는 자리 (z), end = 기다리는 틱 (쓴 뒤) */
+    private void run(ClientGameTestContext ctx, TestServerContext server, String family, int level, boolean third, int[] shots, String move, boolean night,
+            double meZ, int end) {
         Runes.Rune r = Runes.parseRune(Runes.runeId(family, "transcend"));
         if (r == null) {
             failures.add(family + " no rune");
@@ -109,7 +122,7 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         }
         String id = family + "_" + level + (night ? "n" : "");
         server.runCommand("item replace entity @a hotbar.0 with air");
-        server.runCommand(String.format(Locale.ROOT, "tp @a 0.5 -60 %.1f 0 4", ME_Z));
+        server.runCommand(String.format(Locale.ROOT, "tp @a 0.5 -60 %.1f 0 4", meZ));
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
@@ -137,12 +150,11 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
                 t++;
                 if ("turn".equals(move) && t >= 30 && t <= 70 && t % 2 == 0) {
                     yaw += 1F;
-                    server.runCommand(String.format(Locale.ROOT, "tp @a 0.5 -60 %.1f %.1f 4", ME_Z, yaw));
+                    server.runCommand(String.format(Locale.ROOT, "tp @a 0.5 -60 %.1f %.1f 4", meZ, yaw));
                 }
             }
             ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "lr_%s_%03d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
         }
-        int end = 170;
         if (end > t) ctx.waitTicks(end - t);
         boolean sawTotal = server.computeOnServer(s -> DamageNumbers.totalsShown) > totals0;
         boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);

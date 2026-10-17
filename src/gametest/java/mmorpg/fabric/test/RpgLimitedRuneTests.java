@@ -24,7 +24,8 @@ import net.minecraft.world.phys.Vec3;
  * 0.16.0 한정 초월 룬 셋 게임 시험 (서버): 만상귀일 · 칠성 강림 · 천공의 눈을 실제로 써서 과녁 하나에 들어간 피해 = 위력 P × 배율 합
  * (0돌 34 · 6돌 55 — 처음 설계 32 · 50 보다 5 ~ 12% 위, 몹 무적 시간을 피해 모두), P 의 적용 스탯 = 네 스탯의 합 (네 스탯 150 → 600 · 마력만 150 → 150),
  * 만상귀일은 스탯 비율로 구슬 몫을 나눔 (마력만 찍으면 마력 구슬 하나가 17 을 다), 타격 수 (구슬 넷 + 폭발 · 별 7 + 낙하 · 광선 6 + 폭발),
- * 천공의 눈은 시전 중 시전자 구속 (천천히 걸음).
+ * 천공의 눈은 시전 중 시전자 구속 (천천히 걸음). 0.17.0 무간참역: 쓴 자리 영역 (과녁 4.5칸 — 반지름 8 안) 베기 2 × 10 + 마무리 일섬 14 = 34 (6돌 2.5 × 14 + 20 = 55),
+ * 타격 = 베기 10 (6돌 14) + 일섬 1.
  * 사거리 · 범위가 넓어 시험마다 시험 환경을 따로 (mmorpg:lr_…) — 같은 묶음에서 함께 도는 다른 시험의 과녁을 맞히지 않게.
  */
 public final class RpgLimitedRuneTests {
@@ -147,6 +148,16 @@ public final class RpgLimitedRuneTests {
         cast(h, "skyeye", 6, EVEN, 5 * 7 + 20, 8, 125, true);
     }
 
+    @GameTest(environment = "mmorpg:lr_endless", maxTicks = 200)
+    public void endlessSlash(GameTestHelper h) {
+        cast(h, "endless", 0, EVEN, 2 * 10 + 14, 11, 150, false);
+    }
+
+    @GameTest(environment = "mmorpg:lr_endless6", maxTicks = 240)
+    public void endlessSlashSixStars(GameTestHelper h) {
+        cast(h, "endless", 6, EVEN, 2.5 * 14 + 20, 15, 190, false);
+    }
+
     /** 네 스탯을 어떻게 찍어도 같은 위력 (합이 같으면) · 한 스탯만 찍은 사람의 자기 계열 룬과 같은 P */
     @GameTest(maxTicks = 20)
     public void totalStatPower(GameTestHelper h) {
@@ -157,7 +168,7 @@ public final class RpgLimitedRuneTests {
         String[] keys = {"str", "dex", "vit", "int"};
         for (double[] b : builds) {
             for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], (int) b[i]);
-            for (String f : List.of("arcana", "dipper", "skyeye")) {
+            for (String f : List.of("arcana", "dipper", "skyeye", "endless")) {
                 double P = RuneCast.power(sp, f);
                 h.assertTrue(Math.abs(P - 12 * (1 + 125 * 0.02)) < 1e-6, f + " P " + P + " for " + java.util.Arrays.toString(b));
             }

@@ -450,10 +450,10 @@ public final class RuneKit {
 
     /**
      * 자바 전용 초월 룬 함수 → 같은 하늘빛 · 번쩍임을 쓰는 애드온 룬 함수 (12단계 정령왕 강림 = 정령왕의 부름의 오로라, 0.12.6 적월 강림 = 광전사의 혼의 핏빛 하늘,
-     * 0.16.0 한정: 만상귀일 = 마검 해방의 비전 하늘 · 칠성 강림 = 월광 암살의 밤하늘 · 천공의 눈 = 대천사 강림의 금빛 하늘)
+     * 0.16.0 한정: 만상귀일 = 마검 해방의 비전 하늘 · 칠성 강림 = 월광 암살의 밤하늘 · 천공의 눈 = 대천사 강림의 금빛 하늘 · 0.17.0 무간참역 = 블랙홀의 공허 하늘)
      */
     private static final Map<String, String> ULT_ALIAS = Map.of("spiritKing", "summonSpirits", "crimsonMoon", "berserker", "arcanaUnity", "spellbladeRelease",
-            "sevenStars", "moonAssassin", "heavenEye", "archangel");
+            "sevenStars", "moonAssassin", "heavenEye", "archangel", "endlessSlash", "blackHole");
 
     /**
      * 하늘빛: 룬 함수 fn 의 하늘빛 (fogId 를 주면 그것) 을 at 둘레 사람에게 ticks 틱. 씌운 사람 수.
