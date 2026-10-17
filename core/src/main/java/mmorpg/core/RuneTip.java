@@ -87,7 +87,8 @@ public final class RuneTip {
         out.addAll(flow(c));
         for (String l : wrap(effects(c), LINE_MAX)) out.add("§r" + L + l);
         out.addAll(coefLines(r));
-        out.add(RuneBreak.summaryLine(lv, false));
+        String summary = RuneBreak.summaryLine(lv, false);
+        out.add(lv == 0 ? "§r" + L + plain(summary) : summary);
         out.addAll(tiers(c));
         if (viewer != null) out.add("§r" + D + (dealsDamage(c) ? BASIS : BASIS_SELF));
         out.add("§r" + D + CONTROL);
@@ -163,11 +164,11 @@ public final class RuneTip {
         double total = c.strike() ? 0 : Runes.runeTotalMult(d);
         if (c.body()) {
             // 신체 강화 초월: 쓸 때 충격파
-            if (total > 0) out.add("§r§c⚔ " + L + "쓸 때 충격파 " + N + "§l" + dmg(c, total) + "§r" + D + " (반지름 " + d.text("radius") + "칸)");
+            if (total > 0) out.add("§r§c⚔ " + L + "쓸 때 충격파 " + N + "§l" + dmg(c, total) + "§r" + L + " (반지름 " + d.text("radius") + "칸)");
         } else if (total > 0) {
             List<String> parts = breakdown(c);
             String line = "§r§c⚔ " + L + "총 피해 " + N + "§l" + dmg(c, total);
-            String inline = line + "§r" + D + " (" + String.join(" + ", parts) + ")";
+            String inline = line + "§r" + L + " (" + String.join(" + ", parts) + ")";
             if (parts.isEmpty()) {
                 out.add(line);
             } else if (plain(inline).length() <= LINE_MAX + 4) {
@@ -175,12 +176,12 @@ public final class RuneTip {
             } else {
                 // 길면 나눔을 다음 줄로 (" + " 에서 나눔 — 이어지는 줄은 "+ " 로 시작)
                 out.add(line);
-                for (String l : wrapSum(parts, LINE_MAX - 2)) out.add("§r" + D + "  " + l);
+                for (String l : wrapSum(parts, LINE_MAX - 2)) out.add("§r" + L + "  " + l);
             }
         }
         if (d.truthy("splashMult")) out.add("§r" + L + "주위 " + d.text("splash") + "칸 " + N + dmg(c, d.num("splashMult")));
         if ("thunderSpear".equals(c.fn()) && d.truthy("chainMult")) {
-            out.add("§r" + L + "연쇄 번개 " + N + dmg(c, d.num("chainMult")) + D + " (맞은 적마다 " + d.text("chainRange") + "칸 안 하나)");
+            out.add("§r" + L + "연쇄 번개 " + N + dmg(c, d.num("chainMult")) + L + " (맞은 적마다 " + d.text("chainRange") + "칸 안 하나)");
         }
         if (d.truthy("reflect")) out.add("§r" + L + "때린 몹에게 반사 " + N + dmg(c, d.num("reflect")));
         if (total > 0 && c.r().family().equals("holy")) out.add("§r" + L + "신성 피해 · 언데드 " + N + "×" + RUNE.text("undeadBonus"));
@@ -242,7 +243,7 @@ public final class RuneTip {
         List<String> out = new ArrayList<>();
         if (c.body() || c.strike()) return out; // 강화 룬은 flow 에서
         if (d.truthy("heal") && d.truthy("healMax")) {
-            out.add("§r§a✚ " + L + "흡혈 " + N + "적마다 " + hp(c, d.num("heal")) + D + " (" + d.text("healMax") + "명까지)");
+            out.add("§r§a✚ " + L + "흡혈 " + N + "적마다 " + hp(c, d.num("heal")) + L + " (" + d.text("healMax") + "명까지)");
         } else if (d.truthy("heal")) {
             boolean pact = "undyingPact".equals(c.fn());
             double times = pact ? Math.floor(d.numOr("ticks", 0) / d.numOr("pulse", 20)) : d.numOr("hits", 1);
@@ -250,10 +251,10 @@ public final class RuneTip {
             if (pact) detail = sec(d.numOr("pulse", 20)) + "마다 " + hp(c, d.num("heal")) + " × " + n(times) + "번";
             else if (d.truthy("pulses")) detail = sec(d.numOr("gap", 10)) + "마다 " + d.text("pulses") + "번 나눠";
             else if (times > 1) detail = hp(c, d.num("heal")) + " × " + n(times) + "번";
-            out.add("§r§a✚ " + L + "회복 " + N + "§l" + hp(c, d.num("heal") * times) + (detail.isEmpty() ? "" : "§r" + D + " (" + detail + ")"));
+            out.add("§r§a✚ " + L + "회복 " + N + "§l" + hp(c, d.num("heal") * times) + (detail.isEmpty() ? "" : "§r" + L + " (" + detail + ")"));
         }
         if (d.truthy("shield") && d.truthy("cap")) {
-            out.add("§r§b◈ " + L + "보호막 " + N + hp(c, d.num("shield")) + "씩" + D + " (최대 " + hpRaw(c, d.num("cap")) + ")");
+            out.add("§r§b◈ " + L + "보호막 " + N + hp(c, d.num("shield")) + "씩" + L + " (최대 " + hpRaw(c, d.num("cap")) + ")");
         } else if (d.truthy("shield")) {
             out.add("§r§b◈ " + L + "보호막 " + N + "§l" + hp(c, d.num("shield")));
         }
@@ -276,7 +277,7 @@ public final class RuneTip {
             out.add("§r" + L + (d.truthy("hits") ? "평타 " + d.text("hits") + "번 · " : "") + sec(d.numOr("ticks", 0)) + " 동안");
             if (d.truthy("bonus")) {
                 double hits = d.numOr("hits", 1);
-                out.add("§r§c⚔ " + L + "평타마다 " + N + "§l+" + dmg(c, d.num("bonus")) + (hits > 1 ? "§r" + D + " (" + n(hits) + "번 합 +" + dmg(c, d.num("bonus") * hits) + ")" : ""));
+                out.add("§r§c⚔ " + L + "평타마다 " + N + "§l+" + dmg(c, d.num("bonus")) + (hits > 1 ? "§r" + L + " (" + n(hits) + "번 합 +" + dmg(c, d.num("bonus") * hits) + ")" : ""));
             }
             if (d.truthy("rangedCd")) out.add("§r" + L + "활·완드 재사용 " + N + "-" + pct(1 - d.num("rangedCd")) + "%");
             if (d.truthy("echo")) out.add("§r§c⚔ " + L + "근접 " + N + "+" + dmg(c, d.num("echo")) + L + " · 옆의 적도");
@@ -430,8 +431,8 @@ public final class RuneTip {
         Map<String, Double> cur = new LinkedHashMap<>();
         for (int t : RuneBreak.tiers()) {
             boolean on = c.lv() >= t;
-            String body = on ? N : D;
-            String num = on ? "§e" : D;
+            String body = on ? N : L;
+            String num = on ? "§e" : N;
             Obj dt = RuneBreak.def(r, t);
             double tot = c.strike() || c.body() ? 0 : Runes.runeTotalMult(dt);
             List<String> parts = new ArrayList<>();
@@ -455,8 +456,8 @@ public final class RuneTip {
             }
             List<String> lines = wrap(parts, LINE_MAX);
             for (int i = 0; i < lines.size(); i++) {
-                String head = i == 0 ? (on ? "§6" + RuneBreak.STAR : D + RuneBreak.STAR_EMPTY) + t + "돌 " : "     ";
-                out.add("§r" + (on ? "§6" : D) + head + body + lines.get(i));
+                String head = i == 0 ? (on ? "§6" + RuneBreak.STAR : L + RuneBreak.STAR_EMPTY) + t + "돌 " : "     ";
+                out.add("§r" + (on ? "§6" : L) + head + body + lines.get(i));
             }
         }
         return out;

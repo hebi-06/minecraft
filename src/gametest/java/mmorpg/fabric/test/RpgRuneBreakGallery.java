@@ -252,10 +252,10 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         closeScreen(ctx);
     }
 
-    /** 가방 slot 칸 아이템의 툴팁 글자 (줄을 " / " 로) */
+    /** 가방 slot 칸 아이템의 툴팁 글자 (색 코드 § 를 뺀 것, 줄을 " / " 로) */
     private static String tooltipOf(Minecraft mc, int slot) {
         StringBuilder b = new StringBuilder();
-        for (Component c : Screen.getTooltipFromItem(mc, mc.player.getInventory().getItem(slot))) b.append(c.getString()).append(" / ");
+        for (Component c : Screen.getTooltipFromItem(mc, mc.player.getInventory().getItem(slot))) b.append(RuneTip.plain(c.getString())).append(" / ");
         return b.toString();
     }
 
