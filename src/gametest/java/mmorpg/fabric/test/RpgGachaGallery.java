@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 0.14.0 룬 뽑기 사진첩 (화면 시험 — MMORPG_ONLY=gacha, 실제 마우스 입력):
  * 스탯 창 아랫줄 뽑기 단추 → 뽑기 창 (일반 — 초월 룬이 차례로 · 확률 · 천장), 관리자 설정 창 (이름 · 픽업 초월 · 영웅 그림 누르기 → 저장 — 한정 뽑기가 열림),
- * 한정 탭 (픽업 초월 큰 그림 · 기간 · 픽업 영웅), 고급 · 스탯 탭, 한정 1회 (확천장 — 소환 · 초월 흔들림 · 섬광 · 카드), 일반 10회 (천장 85 — 펼쳐짐 · 뒤집기 전 카드 색 (0.14.1 — 영웅 미만 흰 카드 · 영웅 이상 노란 카드, 사진 픽셀로 확인) · 뒤집기 · 결과 · 풀이),
+ * 한정 탭 (픽업 초월 큰 그림 · 기간 · 픽업 영웅), 고급 · 스탯 탭, 한정 1회 (확천장 — 소환 · 초월 흔들림 · 섬광 · 카드), 일반 10회 (천장 85 — 펼쳐짐 · 뒤집기 전 뒷면 선 색 (0.14.1 — 영웅 미만 흰 선 · 영웅 이상 노란 선, 사진 픽셀로 확인) · 뒤집기 · 결과 · 풀이),
  * 확인 → 뽑기 창 (천장 막대), 기록, 룬술사 뽑기권 창 (한정 룬 뽑기권), 뽑기권 우클릭 → 뽑기 창, 설정 창에서 지금 끝내기.
  * 연출은 시험이 정한 때에 멈춰 사진 (GachaShowScreen.freezeAt). 사진 이름 g_… → ci-logs 의 shots/. 확인 항목은 로그 [gacha-gallery] OK / FAIL.
  */
@@ -210,22 +210,22 @@ public final class RpgGachaGallery implements FabricClientGameTest {
         check(grades.size() == 10 && grades.contains("transcend"), "10 results with the pity transcend " + grades);
         check(server.computeOnServer(s -> runes(me(s))) == runes0 + 10, "10 runes given");
         away(ctx);
-        // 카드 색 (0.14.1 — 영웅 미만 흰 카드 · 영웅 이상 노란 카드): 규칙, 그리고 뒤집기 전 화면 사진의 픽셀 (카드 뒷면 몸통)
+        // 뒷면 선 색 (0.14.1 — 영웅 미만 흰 선 · 영웅 이상 노란 선): 규칙, 그리고 뒤집기 전 화면 사진의 픽셀 (카드 자리 안의 흰 · 노란 선 픽셀 수)
         List<String> tones = ctx.computeOnClient(mc -> ((GachaShowScreen) mc.gui.screen()).cardTones());
         boolean rule = tones.size() == grades.size();
-        for (int i = 0; rule && i < grades.size(); i++) rule = tones.get(i).equals(List.of("hero", "transcend").contains(grades.get(i)) ? "gold" : "white");
-        check(rule && tones.contains("gold"), "card tones: hero and above gold, below white " + tones + " " + grades);
+        for (int i = 0; rule && i < grades.size(); i++) rule = tones.get(i).equals(List.of("hero", "transcend").contains(grades.get(i)) ? "yellow" : "white");
+        check(rule && tones.contains("yellow"), "card back lines: hero and above yellow, below white " + tones + " " + grades);
         long backs = ctx.computeOnClient(mc -> ((GachaShowScreen) mc.gui.screen()).flipAt(0)) - 5;
         ctx.runOnClient(mc -> ((GachaShowScreen) mc.gui.screen()).freezeAt(backs));
         ctx.waitTicks(3);
         Path backsShot = shot(ctx, "g_ten_backs");
-        List<int[]> probes = ctx.computeOnClient(mc -> {
+        List<int[]> rects = ctx.computeOnClient(mc -> {
             List<int[]> out = new ArrayList<>();
-            for (int i = 0; i < grades.size(); i++) out.add(((GachaShowScreen) mc.gui.screen()).cardProbe(i));
+            for (int i = 0; i < grades.size(); i++) out.add(((GachaShowScreen) mc.gui.screen()).cardRect(i));
             return out;
         });
         int guiW = ctx.computeOnClient(mc -> mc.gui.screen().width);
-        List<String> seen = screenTones(backsShot, probes, guiW);
+        List<String> seen = screenTones(backsShot, rects, guiW);
         check(seen.equals(tones), "card backs on screen " + seen + " = " + tones);
         long end = ctx.computeOnClient(mc -> ((GachaShowScreen) mc.gui.screen()).endAt());
         long mid = ctx.computeOnClient(mc -> ((GachaShowScreen) mc.gui.screen()).flipAt(4)) + 60;
@@ -349,32 +349,31 @@ public final class RpgGachaGallery implements FabricClientGameTest {
         return ctx.takeScreenshot(name);
     }
 
-    /** 사진에서 GUI 좌표들 둘레 (5 × 5 픽셀 평균) 의 색 → gold (노란 카드) · white (흰 카드) · 그 밖은 rgb(…) */
-    private static List<String> screenTones(Path file, List<int[]> guiPoints, int guiW) {
+    /**
+     * 사진에서 GUI 네모들 (x0, y0, x1, y1) 안의 선 색 → yellow (노란 선이 흰 선의 3배 넘게) · white (그 반대) · 그 밖은 수.
+     * 뒷면 몸통은 어두운 남보라라 밝은 픽셀은 거의 선 (테두리 · 마법진) — 펼쳐지는 중이라 몇 픽셀 어긋나도 셈이 같음.
+     */
+    private static List<String> screenTones(Path file, List<int[]> guiRects, int guiW) {
         List<String> out = new ArrayList<>();
         try {
             BufferedImage img = ImageIO.read(file.toFile());
             double k = img.getWidth() / (double) guiW;
-            for (int[] p : guiPoints) {
-                int x0 = (int) ((p[0] + 0.5) * k);
-                int y0 = (int) ((p[1] + 0.5) * k);
-                long r = 0, g = 0, b = 0;
-                int n = 0;
-                for (int dy = -2; dy <= 2; dy++) {
-                    for (int dx = -2; dx <= 2; dx++) {
-                        int c = img.getRGB(Math.max(0, Math.min(img.getWidth() - 1, x0 + dx)), Math.max(0, Math.min(img.getHeight() - 1, y0 + dy)));
-                        r += (c >> 16) & 0xFF;
-                        g += (c >> 8) & 0xFF;
-                        b += c & 0xFF;
-                        n++;
+            for (int[] r : guiRects) {
+                int white = 0;
+                int yellow = 0;
+                for (int y = (int) (r[1] * k); y < Math.min(img.getHeight(), (int) (r[3] * k)); y++) {
+                    for (int x = (int) (r[0] * k); x < Math.min(img.getWidth(), (int) (r[2] * k)); x++) {
+                        int c = img.getRGB(Math.max(0, x), Math.max(0, y));
+                        int cr = (c >> 16) & 0xFF;
+                        int cg = (c >> 8) & 0xFF;
+                        int cb = c & 0xFF;
+                        if (Math.min(cr, Math.min(cg, cb)) > 190 && Math.max(cr, Math.max(cg, cb)) - Math.min(cr, Math.min(cg, cb)) < 45) white++;
+                        else if (cr > 190 && cg > 140 && cb < 130 && cr - cb > 90) yellow++;
                     }
                 }
-                r /= n;
-                g /= n;
-                b /= n;
-                if (r > 200 && g > 150 && b < 170 && r - b > 70) out.add("gold");
-                else if (r > 200 && g > 200 && b > 200 && Math.abs(r - b) < 40) out.add("white");
-                else out.add("rgb(" + r + "," + g + "," + b + ")");
+                if (yellow > 300 && yellow > white * 3) out.add("yellow");
+                else if (white > 300 && white > yellow * 3) out.add("white");
+                else out.add("white " + white + " / yellow " + yellow);
             }
         } catch (IOException | RuntimeException e) {
             out.add("unreadable " + e);

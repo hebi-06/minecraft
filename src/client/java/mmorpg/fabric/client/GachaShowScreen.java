@@ -26,9 +26,9 @@ import net.minecraft.world.item.ItemStack;
  * <li>소환 (1.5초): 어둠 속 별 · 가운데 마법진이 한 칸씩 그려지며 돌고, 빛 알갱이가 빨려 듦 — 색은 일반부터 차례로 바뀌다 이번 결과의 가장 높은 등급에서 멈춤
  * (영웅부터 퍼지는 고리, 초월은 화면이 흔들림)</li>
  * <li>섬광 (0.45초): 화면이 하얗게 번쩍 · 등급 색 빛살 · 고리 · 등급 소리</li>
- * <li>공개 — 1회: 등급 색 카드가 튀어나오며 룬 (큰 그림 · 지나가는 빛) · 이름 · 계열 · 픽업 · NEW · 몇 회째. 10회: 카드 10장이 펼쳐지고 하나씩 뒤집힘 —
- * 0.14.1 부터 카드 색은 영웅 미만 흰 카드 · 영웅 이상 노란 카드 (뒷면부터 — 펼쳐질 때 보임, 앞면도 같은 색, 글자는 등급 색을 진하게),
- * 노란 카드는 뒤집기 전에 금빛이 모이고 뒤집을 때 번쩍 · 뒤에 금빛 (초월은 빛살 하나 더 · 둘레 반짝임)</li>
+ * <li>공개 — 1회: 등급 색 카드가 튀어나오며 룬 (큰 그림 · 지나가는 빛) · 이름 · 계열 · 픽업 · NEW · 몇 회째. 10회: 카드 뒷면 10장이 펼쳐지고 하나씩 뒤집힘
+ * — 뒷면의 선 (테두리 · 마법진 · 안쪽 테) 은 영웅 미만 흰 선 · 영웅 이상 노란 선 (0.14.1 — 펼쳐질 때 보임), 앞면은 등급 색
+ * (영웅 이상은 뒤집기 전에 빛이 모이고 뒤집을 때 번쩍)</li>
  * <li>끝: 다시 뽑기 · 확인 단추 (10회는 카드에 마우스를 올리면 풀이)</li>
  * </ol>
  * 누르면 다음 단계로 (소환 → 섬광, 10회 뒤집기 → 모두), 오른쪽 위 건너뛰기 · ESC. 결과가 보이면 서버에 알림 (revealed — 영웅 이상 알림 · 빛기둥).
@@ -79,7 +79,7 @@ public final class GachaShowScreen extends Screen {
         buildSound = new boolean[n];
         long at = REVEAL + DROP;
         for (int i = 0; i < n; i++) {
-            boolean big = GachaArt.goldCard(result.pulls().get(i).grade());
+            boolean big = GachaArt.gradeIndex(result.pulls().get(i).grade()) >= 3;
             flipAt[i] = at + (big ? BUILD : 0);
             at = flipAt[i] + STEP + (big ? 230 : 0);
         }
@@ -389,18 +389,16 @@ public final class GachaShowScreen extends Screen {
         float sec = t / 1000F;
         int n = result.pulls().size();
         List<String> tip = null;
-        // 은은한 빛 — 노란 카드가 있으면 금빛, 없으면 흰빛
-        int ambient = GachaArt.goldCard(GachaArt.GRADES.get(top)) ? GachaArt.GOLD : GachaArt.SILVER;
-        GachaArt.sprite(g, GachaArt.GLOW, cx, cy, 420, 0F, GachaArt.argb(70, ambient));
-        GachaArt.sprite(g, GachaArt.RAYS, cx, cy, 460, sec * 0.12F, GachaArt.argb(45, ambient));
+        // 이번에 가장 높은 등급의 은은한 빛
+        int topCol = GachaArt.rgb(GachaArt.GRADES.get(top));
+        GachaArt.sprite(g, GachaArt.GLOW, cx, cy, 420, 0F, GachaArt.argb(70, topCol));
+        GachaArt.sprite(g, GachaArt.RAYS, cx, cy, 460, sec * 0.12F, GachaArt.argb(45, topCol));
         int[] count = new int[5];
         int flipped = 0;
         for (int i = 0; i < n; i++) {
             ClientGacha.Pulled p = result.pulls().get(i);
             int gi = GachaArt.gradeIndex(p.grade());
-            // 카드 색 (0.14.1): 영웅 미만 흰 카드 · 영웅 이상 노란 카드 — 빛도 카드 색
-            boolean gold = GachaArt.goldCard(p.grade());
-            int col = gold ? GachaArt.GOLD : GachaArt.SILVER;
+            int col = GachaArt.rgb(p.grade());
             float[] at = slot(i, cx, cy);
             // 펼쳐지기
             double q = ease((u - i * 20) / 280.0);
@@ -409,8 +407,8 @@ public final class GachaShowScreen extends Screen {
             float y = (float) (cy + (at[1] - cy) * q);
             float s = (float) (0.6 + 0.4 * q);
             double f = (t - flipAt[i]) / (double) FLIP;
-            // 노란 카드 (영웅 이상): 뒤집기 전에 금빛이 모임
-            if (gold && f < 0 && t >= flipAt[i] - BUILD) {
+            // 영웅 이상: 뒤집기 전에 빛이 모임
+            if (gi >= 3 && f < 0 && t >= flipAt[i] - BUILD) {
                 double b = 1 - (flipAt[i] - t) / (double) BUILD;
                 if (!buildSound[i]) {
                     buildSound[i] = true;
@@ -433,42 +431,31 @@ public final class GachaShowScreen extends Screen {
             float h = CH * s;
             if (f < 0.5) {
                 float sx = f <= 0 ? 1 : (float) (1 - 2 * f);
-                GachaArt.sprite(g, gold ? GachaArt.CARD_BACK_GOLD : GachaArt.CARD_BACK_WHITE, x, y, Math.max(1, w * sx), h, 0F, 0xFFFFFFFF);
+                // 뒷면 선 색 (0.14.1): 영웅 이상 노란 선 · 영웅 미만 흰 선
+                GachaArt.sprite(g, GachaArt.yellowCard(p.grade()) ? GachaArt.CARD_BACK : GachaArt.CARD_BACK_WHITE, x, y, Math.max(1, w * sx), h, 0F, 0xFFFFFFFF);
                 continue;
             }
             flipped++;
             count[gi]++;
             float sx = f >= 1 ? 1 : (float) (2 * f - 1);
-            if (gold) {
+            if (gi >= 2) {
                 float pulse = 0.85F + 0.15F * (float) Math.sin(sec * 3 + i);
-                GachaArt.sprite(g, GachaArt.GLOW, x, y, 92 * pulse, 0F, GachaArt.argb(190, col));
-                GachaArt.sprite(g, GachaArt.RAYS, x, y, 110, sec * 0.5F + i, GachaArt.argb(gi >= 4 ? 170 : 120, col));
-                if (gi >= 4) GachaArt.sprite(g, GachaArt.RAYS, x, y, 96, -sec * 0.7F - i, GachaArt.argb(110, 0xFFFFFF));
+                GachaArt.sprite(g, GachaArt.GLOW, x, y, 92 * pulse, 0F, GachaArt.argb(gi >= 3 ? 190 : 110, col));
             }
-            GachaArt.sprite(g, gold ? GachaArt.CARD_GOLD : GachaArt.CARD_WHITE, x, y, Math.max(1, w * sx), h, 0F, 0xFFFFFFFF);
+            if (gi >= 3) GachaArt.sprite(g, GachaArt.RAYS, x, y, 110, sec * 0.5F + i, GachaArt.argb(gi >= 4 ? 170 : 120, col));
+            GachaArt.sprite(g, GachaArt.CARD, x, y, Math.max(1, w * sx), h, 0F, GachaArt.argb(255, col));
             if (sx > 0.3F) {
                 GachaArt.item(g, GachaArt.rune(p.rune()), x, y - 8, 2.25F * sx);
-                // 밝은 카드라 글자는 그림자 없이 등급 색을 진하게 (초월은 굵게)
-                int ink = GachaArt.argb(255, GachaArt.ink(p.grade()));
-                String name = (gi >= 4 ? "§l" : "") + GachaArt.runeName(p.rune());
-                float ns = Math.min(0.7F, (CW - 8) / (float) Math.max(1, font.width(name)));
-                GachaArt.textCentered(g, font, name, x, y + 18, ns * sx, ink, false);
-                GachaArt.textCentered(g, font, "★".repeat(gi + 1), x, y + 26, 0.5F * sx, ink, false);
-                // 픽업은 노란 카드에만 붙어 노란 배지 대신 붉은 배지
-                if (p.featured()) badge(g, "§f§lUP", x - w / 2 - 2, y - h / 2 - 3, 0xFFE5394F, 255);
+                String name = GachaArt.gradeColor(p.grade()) + GachaArt.runeName(p.rune());
+                float ns = Math.min(0.7F, (CW - 6) / (float) Math.max(1, font.width(name)));
+                GachaArt.textCentered(g, font, name, x, y + 18, ns * sx, 0xFFFFFFFF);
+                GachaArt.textCentered(g, font, "★".repeat(gi + 1), x, y + 26, 0.5F * sx, GachaArt.argb(255, GachaArt.mix(col, 0xFFFFFF, 0.3)));
+                if (p.featured()) badge(g, "§0§lUP", x - w / 2 - 2, y - h / 2 - 3, 0xFFFFD24A, 255);
                 if (p.fresh()) badge(g, "§0§lN", x + w / 2 - 9, y - h / 2 - 3, 0xFF7CFF8A, 255);
-                // 초월: 카드 둘레 반짝임
-                if (gi >= 4) {
-                    for (int k = 0; k < 4; k++) {
-                        double a = sec * 1.3 + k * Math.PI / 2 + i;
-                        GachaArt.twinkle(g, x + (float) Math.cos(a) * w * 0.56F, y + (float) Math.sin(a) * h * 0.54F, 7 + 3 * (float) Math.sin(sec * 4 + k),
-                                GachaArt.argb(230, k % 2 == 0 ? 0xFFFFFF : col));
-                    }
-                }
             }
-            // 뒤집은 순간 번쩍 (노란 카드)
+            // 뒤집은 순간 번쩍 (영웅 이상)
             double fl = (t - flipAt[i] - FLIP / 2.0) / 260.0;
-            if (gold && fl >= 0 && fl < 1) {
+            if (gi >= 3 && fl >= 0 && fl < 1) {
                 GachaArt.sprite(g, GachaArt.RING, x, y, (float) (40 + 140 * fl), 0F, GachaArt.argb((int) (230 * (1 - fl)), col));
                 g.fill((int) (x - w / 2), (int) (y - h / 2), (int) (x + w / 2), (int) (y + h / 2), GachaArt.argb((int) (200 * (1 - fl)), 0xFFFFFF));
             }
@@ -626,17 +613,17 @@ public final class GachaShowScreen extends Screen {
         return new int[] {(int) s[0], (int) s[1]};
     }
 
-    /** 10회 카드 색들 (시험용 — gold 노란 카드 · white 흰 카드) */
+    /** 10회 카드 뒷면 선 색들 (시험용 — yellow 노란 선 · white 흰 선) */
     public List<String> cardTones() {
         List<String> out = new ArrayList<>();
-        for (ClientGacha.Pulled p : result.pulls()) out.add(GachaArt.goldCard(p.grade()) ? "gold" : "white");
+        for (ClientGacha.Pulled p : result.pulls()) out.add(GachaArt.yellowCard(p.grade()) ? "yellow" : "white");
         return out;
     }
 
-    /** 카드 i 의 뒷면 몸통 색을 재는 곳 (시험용 — 펼쳐진 뒤, 위 테 안쪽 · 마법진 위) */
-    public int[] cardProbe(int i) {
+    /** 카드 i 의 자리 (시험용 — 펼쳐진 뒤, 가장자리 2칸 안쪽 · 테두리 일부 포함: x0, y0, x1, y1) */
+    public int[] cardRect(int i) {
         float[] s = slot(i, width / 2F, height / 2F - 8);
-        return new int[] {(int) s[0], (int) (s[1] - CH / 2F + 9)};
+        return new int[] {Math.round(s[0] - CW / 2F + 2), Math.round(s[1] - CH / 2F + 2), Math.round(s[0] + CW / 2F - 2), Math.round(s[1] + CH / 2F - 2)};
     }
 
     /** 결과 등급들 (시험용) */

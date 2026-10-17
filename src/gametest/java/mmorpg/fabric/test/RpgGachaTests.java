@@ -77,7 +77,7 @@ public final class RpgGachaTests {
         h.assertTrue(BuiltInRegistries.ITEM.getKey(lim).toString().equals(Gacha.ticket().str("item")), "limited ticket id " + BuiltInRegistries.ITEM.getKey(lim));
         h.assertTrue(res("/assets/rpg/items/limited_rune_ticket.json") && res("/assets/rpg/models/item/limited_rune_ticket.json")
                 && res("/assets/rpg/textures/item/rune/limited_rune_ticket.png"), "limited ticket assets");
-        for (String s : new String[] {"glow", "rays", "ring", "star", "card", "card_white", "card_gold", "card_back_white", "card_back_gold", "shine", "banner_limited", "banner_normal", "circle_0", "circle_9"}) {
+        for (String s : new String[] {"glow", "rays", "ring", "star", "card", "card_back", "card_back_white", "shine", "banner_limited", "banner_normal", "circle_0", "circle_9"}) {
             h.assertTrue(res("/assets/mmorpg/textures/gui/sprites/gacha/" + s + ".png"), "gacha sprite " + s);
         }
         h.assertTrue(RuneItems.ticketById(Gacha.ticket().str("item"), 3).getCount() == 3, "ticketById limited");
