@@ -211,10 +211,14 @@ public final class DamageNumbers {
     static final int TOTAL_FADE = 8;
     static final float TOTAL_START = 0.6F;
 
-    /** 총 피해 숫자 글자 (굵게 · 그라데이션 · 계열 색 그림자, 쉼표는 가늘게). glint = 반짝이는 글자 자리 (-1 이면 없음) */
+    /** 총 피해 숫자 뒤 반투명 판 (계열 색 그림자 색 · 알파 — 낮 하늘 · 같은 색 하늘빛에서도 숫자가 또렷하게) */
+    static final int TOTAL_PLATE_ALPHA = 0x5C;
+
+    /** 총 피해 숫자 글자 (굵게 · 그라데이션 · 계열 색 그림자, 쉼표는 가늘게 · 앞뒤 빈칸 = 뒤 판의 좌우 여백). glint = 반짝이는 글자 자리 (-1 이면 없음) */
     public static Component totalNumber(double value, Tone tone, int glint) {
         String s = String.format(java.util.Locale.ROOT, "%,d", Math.round(Math.max(0, value)));
         MutableComponent c = Component.empty();
+        c.append(Component.literal(" "));
         int n = s.length();
         int shadow = 0xFF000000 | tone.shadow();
         for (int i = 0; i < n; i++) {
@@ -226,6 +230,7 @@ public final class DamageNumbers {
             final int col = rgb;
             c.append(Component.literal(String.valueOf(ch)).withStyle(st -> st.withColor(col).withBold(!comma).withShadowColor(shadow)));
         }
+        c.append(Component.literal(" "));
         return c;
     }
 
@@ -262,6 +267,7 @@ public final class DamageNumbers {
         num.life = TOTAL_LIFE;
         num.fade = true;
         num.rise = TOTAL_RISE * kk;
+        num.e.setBackgroundColor((TOTAL_PLATE_ALPHA << 24) | tn.shadow());
         if (label == null || label.isEmpty()) return;
         Text lab = spawnText(level, new Vec3(at.x, at.y + TOTAL_LABEL_UP * kk, at.z), totalLabel(label, tn), TOTAL_LABEL_SCALE * kk, TOTAL_START);
         if (lab == null) return;
@@ -494,6 +500,7 @@ public final class DamageNumbers {
                 a.e.setTransformationInterpolationDelay(0);
                 a.e.setTransformationInterpolationDuration(TOTAL_FADE);
                 a.e.setTextOpacity((byte) 24);
+                if (a.total > 0) a.e.setBackgroundColor(a.tone.shadow()); // 판도 같이 걷힘 (알파 0)
             }
             a.y += a.rise >= 0 ? a.rise : a.slow ? 0.015 : a.t < 6 ? 0.09 : 0.025;
             a.e.setPos(a.x, a.y, a.z);
