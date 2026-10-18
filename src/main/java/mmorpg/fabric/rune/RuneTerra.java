@@ -210,7 +210,7 @@ final class RuneTerra {
             if (!RuneKit.sameLife(sp, life)) return;
             for (double along = -1.5; along < L - 0.2; along += 1.0) {
                 for (int sgn : new int[] {-1, 1}) {
-                    Plate p = Plate.make(level, E, f, side, along + (Kit.rand() - 0.5) * 0.15, sgn, refY, endAt);
+                    Plate p = Plate.make(level, E, f, side, along + (Kit.rand() - 0.5) * 0.15, sgn, refY, endAt, L);
                     if (p != null) plates.add(p);
                 }
             }
@@ -471,7 +471,7 @@ final class RuneTerra {
         }
 
         /** E 에서 시전자 쪽으로 along 칸, sgn 쪽 (오른쪽 +1 · 왼쪽 -1) 판 — 땅속에 숨긴 채 띄움 (공중이면 null) */
-        static Plate make(ServerLevel level, Vec3 E, Vec3 f, Vec3 side, double along, int sgn, double refY, int life) {
+        static Plate make(ServerLevel level, Vec3 E, Vec3 f, Vec3 side, double along, int sgn, double refY, int life, double riftLen) {
             double l = 1.0 + Kit.rand() * 0.22;
             double w = 1.15 + Kit.rand() * 0.35;
             Vec3 o = V.scale(side, sgn);
@@ -481,6 +481,7 @@ final class RuneTerra {
             BlockState st = plateBlock(level, hingeXZ.x, gy, hingeXZ.z);
             if (st == null) return null;
             double phi = 24 + Kit.rand() * 14;
+            if (along > riftLen - 3.2) phi *= 0.55; // 시전자 바로 앞 (3칸 안) 은 낮게 — 1인칭 화면 아래를 덮지 않게
             Vec3 hinge = new Vec3(hingeXZ.x, gy, hingeXZ.z);
             Plate p0 = new Plate(null, along, o, f, l, w, phi);
             Display.BlockDisplay d = FxDisplays.block(level, hinge, st, p0.at(0, -(PLATE_T + 0.45)), life, null);
