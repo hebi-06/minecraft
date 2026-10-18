@@ -259,8 +259,8 @@ final class RuneGrove {
         int ticks = (int) k.num("ticks");
         int charge = Math.max(GROW + 2, (int) k.numOr("charge", 18));
         double s = k.numOr("tree", 2.8);
-        double dist = k.numOr("dist", 10);
-        double side = k.numOr("side", 5.5);
+        double dist = k.numOr("dist", 12);
+        double side = k.numOr("side", 6);
         // 가호 세기: 시전자의 네 스탯의 합 (장비 · 버프 포함) · 이 단계의 정의 (돌파 계수가 든 값)
         double applied = Runes.runeStat(RpgStats.effective(sp), r.family()).value();
         double up = Runes.graceUp(k, applied);
@@ -308,7 +308,7 @@ final class RuneGrove {
                 return false;
             }
             if (t < charge) grow(level, base, s, t, charge);
-            else if (t < standEnd) stand(level, base, s, rot, t - charge, fin, c, radius);
+            else if (t < standEnd) stand(sp, level, base, s, rot, t - charge, fin, c, radius);
             if (t >= standEnd) {
                 fade(level, tree, base, s, rot);
                 return false;
@@ -424,7 +424,7 @@ final class RuneGrove {
     }
 
     /** 서 있는 동안 (u = 가호 뒤 틱): 잎 지붕에서 떨어지는 잎 · 열매가 차례로 반짝임 · 둘레에서 오르는 빛 알갱이 · 밑동 고리 · (6돌) 꽃잎 비 */
-    private static void stand(ServerLevel level, Vec3 base, double s, float rot, int u, boolean fin, Vec3 c, double radius) {
+    private static void stand(ServerPlayer sp, ServerLevel level, Vec3 base, double s, float rot, int u, boolean fin, Vec3 c, double radius) {
         if (u % 3 == 0) {
             for (int j = 0; j < 2; j++) {
                 double a = Kit.rand() * Math.PI * 2;
@@ -447,11 +447,15 @@ final class RuneGrove {
         }
         if (u % 20 == 0) SkillFx.shock(level, base, JADE, s * 0.45, 0.7);
         if (fin && u % 2 == 0) {
-            // 6돌: 가호의 땅에 꽃잎 비 (시전자 바로 둘레는 비움)
+            // 6돌: 가호의 땅에 꽃잎 비 (시전자 바로 둘레 · 3인칭 카메라 (보는 쪽 뒤 4.5칸) 둘레는 비움 — 사진 검토: 카메라 앞을 지나는 꽃잎이 크게 보임)
+            Vec3 f = Kit.facingOf(sp);
+            double camX = sp.getX() - f.x * 4.5;
+            double camZ = sp.getZ() - f.z * 4.5;
             for (int j = 0; j < 3; j++) {
                 double a = Kit.rand() * Math.PI * 2;
                 double rr = NEAR_CLEAR + Math.sqrt(Kit.rand()) * Math.max(0, radius - NEAR_CLEAR);
                 Vec3 p = new Vec3(c.x + Math.cos(a) * rr, c.y + 6 + Kit.rand() * 3, c.z + Math.sin(a) * rr);
+                if (Math.hypot(p.x - sp.getX(), p.z - sp.getZ()) < NEAR_CLEAR || Math.hypot(p.x - camX, p.z - camZ) < 2.2) continue;
                 fallingLeaf(level, p, Kit.rand() < 0.5 ? PETAL : PETAL_W, 0.14, 4.0, 1.6 + Kit.rand() * 0.6);
             }
         }
@@ -536,7 +540,7 @@ final class RuneGrove {
         DamageNumbers.Tone tone = RuneLimited.toneOf(FN);
         float k = 0.72F;
         if (cast.extra > 0) DamageNumbers.showTotal(level, at, cast.extra, "가호 · 더한 피해", tone, k);
-        if (cast.saved > 0) DamageNumbers.showTotal(level, V.up(at, cast.extra > 0 ? -1.0 : 0), cast.saved, "가호 · 막은 피해", tone, k * 0.82F);
+        if (cast.saved > 0) DamageNumbers.showTotal(level, V.up(at, cast.extra > 0 ? -1.25 : 0), cast.saved, "가호 · 막은 피해", tone, k * 0.82F);
         if (cast.extra > 0 || cast.saved > 0) {
             leaves(level, at, 10, GOLD, 1.8, 0.8, 1.0, 0.12);
             SkillFx.playFor(sp, "chime.amethyst_block", 1.3, 0.7);
