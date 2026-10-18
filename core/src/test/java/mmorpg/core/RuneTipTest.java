@@ -9,7 +9,7 @@ import java.util.Map;
  * 0.16.1 시험 (JUnit 없이 main — check-core.sh): 자바 판 룬 툴팁 (RuneTip — 사용자 요청 "위력×32 대신 총 피해량처럼 구체적으로 · 쓸모없는 줄 · 연출 줄 빼기 ·
  * 돌파 · 주스탯 / 다른 스탯 계수는 남기기").
  * <ul>
- * <li>모든 룬 91 (0.19.0 — 세계수의 가호까지) × 돌파 0 ~ 6: "위력" 이 남지 않음 (모두 숫자), 뺀 줄 (용도 · 공식 · 연출 · 터치 · 돌파 안내 · 총 피해 글자 · 한정 뽑기) 없음,
+ * <li>모든 룬 92 (0.20.0 — 심연의 낙인까지) × 돌파 0 ~ 6: "위력" 이 남지 않음 (모두 숫자), 뺀 줄 (용도 · 공식 · 연출 · 터치 · 돌파 안내 · 총 피해 글자 · 한정 뽑기) 없음,
  * 계수 줄 (주스탯 계수 · 다른 스탯 0.85 / 적용 = …) · 돌파 줄 있음, 줄 길이 · 줄 수 상한, 마지막 줄 = 조작</li>
  * <li>총 피해 = 위력 P (스탯 트리 배수 포함) × 돌파 계수 × 배율 합 (Runes.runeTotalMult), 초월은 3 · 6돌마다 그 단계의 총 피해</li>
  * <li>회복 = 최대 체력 × 비율 × (1 + 적용 스탯 × 1%), 스탯을 모르면 "위력×N" · "최대 체력 N%+"</li>
@@ -62,7 +62,7 @@ public final class RuneTipTest {
         double treeMult = 1.1;
         RuneTip.Viewer v = new RuneTip.Viewer(even, treeMult, 131);
         String[] gone = {"위력", "용도", "레벨 공격력", "연출", "터치:", "누르면 사용", "룬술사 '돌파'", "총 피해를 띄움", "한정 뽑기", "근원의 프리즘", "별똥별 비",
-            "심판의 눈", "세계수 개화"};
+            "심판의 눈", "세계수 개화", "심연의 문"};
         int runes = 0;
         int maxLen = 0;
         int maxLines = 0;
@@ -123,7 +123,20 @@ public final class RuneTipTest {
                 }
             }
         }
-        check(runes == 91, "91 runes " + runes);
+        check(runes == 92, "92 runes " + runes);
+
+        // 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 적이 받는 피해 + · 주는 피해 − (스탯 합 125: 0돌 20% · 3돌 26% · 6돌 32%)
+        Runes.Rune aby = rune("abyss", "transcend");
+        String a0 = joined(RuneTip.lines(aby, 0, v));
+        check(a0.contains("✦ 적이 받는 피해 +20%") && a0.contains("◈ 적이 주는 피해 -20%") && !a0.contains("총 피해") && a0.contains(RuneTip.BASIS_SELF), "brand 0: " + a0);
+        check(a0.contains("조준한 곳 반지름 6칸 안 적 · 10초 (보스 포함)") && a0.contains("세기 = 10% + 스탯 합×0.08% (최대 22%)")
+                && a0.contains("모든 플레이어의 피해에 · 가호와 곱"), "brand flow: " + a0);
+        check(a0.contains("☆3돌 낙인 26% · 지속 10 → 12초") && a0.contains("반지름 6 → 7칸") && a0.contains("☆6돌 낙인 32% · 지속 12 → 14초")
+                && a0.contains("사거리 20 → 24칸"), "brand tiers: " + a0);
+        String a6 = joined(RuneTip.lines(aby, 6, v));
+        check(a6.contains("✦ 적이 받는 피해 +32%") && a6.contains("◈ 적이 주는 피해 -32%") && a6.contains("반지름 8칸") && a6.contains("14초"), "brand 6: " + a6);
+        String abn = joined(RuneTip.lines(aby, 0, null));
+        check(abn.contains("적이 받는 피해 +10% + 스탯 비례") && abn.contains("☆3돌 낙인 ×1.3"), "brand without stats: " + abn);
 
         // 0.19.0 세계수의 가호 (버프 — 피해 없음): 가하는 피해 + · 받는 피해 − (스탯 합 125: 0돌 20% · 3돌 26% · 6돌 32%)
         Runes.Rune ygg = rune("yggdrasil", "transcend");

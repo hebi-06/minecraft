@@ -10,8 +10,10 @@ import java.util.Random;
 /**
  * 0.16.0 시험 (JUnit 없이 main — check-core.sh): 한정 초월 룬 셋 (만상귀일 · 칠성 강림 · 천공의 눈 — 자바 전용 덧붙임).
  * <ul>
- * <li>계열: RUNE_LIMITED_ORDER = arcana · dipper · skyeye · endless (0.17.0 무간참역) · terra (0.18.0 대지 가르기) · yggdrasil (0.19.0 세계수의 가호 — 버프),
- * 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 23 (뒤에 여섯), 초월 하나씩</li>
+ * <li>계열: RUNE_LIMITED_ORDER = arcana · dipper · skyeye · endless (0.17.0 무간참역) · terra (0.18.0 대지 가르기) · yggdrasil (0.19.0 세계수의 가호 — 버프)
+ * · abyss (0.20.0 심연의 낙인 — 적 약화), 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 24 (뒤에 일곱), 초월 하나씩</li>
+ * <li>0.20.0 심연의 낙인: 피해 없음, 낙인 = brandUp (주는 피해 brandCut) + min(brandPer × 네 스탯의 합, brandCap) × 돌파 계수 (가호와 같은 틀 —
+ * 0돌 20% · 3돌 26% · 6돌 32%), 지속 10 → 12 → 14초 · 반지름 6 → 7 → 8칸 · 6돌 사거리 24칸, 6돌 연출 (심연의 문)</li>
  * <li>0.19.0 세계수의 가호: 피해 없음, 가호 = graceUp (받는 피해 graceCut) + min(gracePer × 네 스탯의 합, graceCap), 돌파 계수가 값 넷 모두에
  * (40렙 125포인트 0돌 20% · 3돌 26% · 6돌 32%, 스탯 합 150 에서 최대), 단계는 지속 12 → 14 → 16초 · 반지름 8 → 10 → 12칸, 6돌 연출 (세계수 개화)</li>
  * <li>적용 스탯 = 네 스탯의 합 × 1.0 (스탯을 어떻게 찍어도 같은 위력 — 40렙 125포인트 = 한 스탯만 찍은 자기 계열 룬과 같은 P 42), 알림 글자 "총 스탯 N"</li>
@@ -54,10 +56,10 @@ public final class LimitedRunesTest {
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
         List<String> lim = Runes.LIMITED_ORDER;
-        check(lim.equals(List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil")), "limited order " + lim);
+        check(lim.equals(List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss")), "limited order " + lim);
         check(Runes.FAMILY_ORDER.size() == 17, "draw families stay 17 " + Runes.FAMILY_ORDER.size());
         for (String f : lim) check(!Runes.FAMILY_ORDER.contains(f), f + " not in the draw families");
-        check(Runes.ALL_FAMILIES.size() == 23 && Runes.ALL_FAMILIES.subList(17, 23).equals(lim), "all families " + Runes.ALL_FAMILIES);
+        check(Runes.ALL_FAMILIES.size() == 24 && Runes.ALL_FAMILIES.subList(17, 24).equals(lim), "all families " + Runes.ALL_FAMILIES);
         check(!Runes.limited("int") && Runes.limited("arcana"), "limited()");
 
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 36초
@@ -230,6 +232,46 @@ public final class LimitedRunesTest {
             check(lore.contains("더한 피해 · 막은 피해") && !lore.contains("위력") && !lore.contains("총 피해"), "yggdrasil lore no damage: " + lore);
             String lore6 = plain(RuneBreak.lore(ygg, 6, false));
             check(lore6.contains("가하는 피해 +32%") && lore6.contains("반지름 12칸") && lore6.contains("16초"), "yggdrasil 6 lore: " + lore6);
+        }
+
+        // 0.20.0 심연의 낙인 (한정 약화 룬 — 사용자가 고름: 적이 받는 피해 + · 주는 피해 −, 세계수의 가호와 곱연산)
+        for (String g : Runes.GRADE_ORDER) check(g.equals("transcend") == (Runes.parseRune(Runes.runeId("abyss", g)) != null), "abyss only transcend " + g);
+        Runes.Rune aby = Runes.parseRune("rpg:rune_abyss_transcend");
+        check(aby != null, "abyss rune");
+        if (aby != null) {
+            check(aby.def().str("fn").equals("abyssBrand") && aby.def().str("name").equals("심연의 낙인") && aby.famName().equals("심연"), "abyss def");
+            near(aby.cd(), 36, "abyss cd");
+            near(Runes.runeTotalMult(aby.def()), 0, "abyss deals no damage");
+            check(Runes.isBrand(aby.def()) && !Runes.isGrace(aby.def()) && Runes.isSupport(aby.def()) && ygg != null && !Runes.isBrand(ygg.def())
+                    && !Runes.isSupport(Runes.parseRune("rpg:rune_terra_transcend").def()), "isBrand / isSupport");
+            check(Rules.get().obj("RUNE").obj("color").has("abyss"), "abyss color");
+            double S = Runes.runeStat(stats(31, 31, 31, 32), "abyss").value();
+            near(S, 125, "abyss applied = four stats");
+            near(Runes.brandUp(aby.def(), S), 0.2, "abyss 0 up 20%");
+            near(Runes.brandCut(aby.def(), S), 0.2, "abyss 0 cut 20%");
+            near(Runes.brandUp(aby.def(), 0), 0.1, "abyss base 10%");
+            near(Runes.brandUp(aby.def(), 150), 0.22, "abyss cap at 150");
+            near(Runes.brandCut(aby.def(), 600), 0.22, "abyss cap 22%");
+            near(Runes.brandUp(RuneBreak.def(aby, 3), S), 0.26, "abyss 3 26%");
+            near(Runes.brandCut(RuneBreak.def(aby, 6), S), 0.32, "abyss 6 32%");
+            near(Runes.brandUp(RuneBreak.def(aby, 6), 600), 0.22 * 1.6, "abyss 6 cap 35.2%");
+            double[][] at = {{200, 6, 20}, {240, 7, 20}, {280, 8, 24}};
+            for (int i = 0; i < 3; i++) {
+                Obj d = RuneBreak.def(aby, i * 3);
+                near(d.num("ticks"), at[i][0], "abyss ticks " + i * 3);
+                near(d.num("radius"), at[i][1], "abyss radius " + i * 3);
+                near(d.num("range"), at[i][2], "abyss range " + i * 3);
+            }
+            RuneBreak.Extra fin = RuneBreak.extra("abyssBrand");
+            check(fin != null && "finale".equals(fin.type()) && fin.at() == 6, "abyss 6 finale");
+            for (String l : RuneBreak.tierLines(aby, 6, false)) check(l.replaceAll("§.", "").length() <= 40, "abyss tier line short: " + l);
+            String lore = plain(Runes.runeLore(aby, false));
+            check(lore.contains("한정 룬") && lore.contains("네 스탯의 합 × 1.0"), "abyss lore limited / sum: " + lore);
+            check(lore.contains("적이 받는 피해 +20%") && lore.contains("적이 주는 피해 -20%") && lore.contains("가호와 곱") && lore.contains("반지름 6칸")
+                    && lore.contains("10초"), "abyss lore brand: " + lore);
+            check(lore.contains("더한 피해 · 줄인 피해") && !lore.contains("위력") && !lore.contains("총 피해"), "abyss lore no damage: " + lore);
+            String lore6 = plain(RuneBreak.lore(aby, 6, false));
+            check(lore6.contains("적이 받는 피해 +32%") && lore6.contains("반지름 8칸") && lore6.contains("14초"), "abyss 6 lore: " + lore6);
         }
         near(RuneBreak.def(Runes.parseRune("rpg:rune_dipper_transcend"), 6).num("hits"), 8, "dipper 6: 8 stars");
         near(RuneBreak.def(Runes.parseRune("rpg:rune_skyeye_transcend"), 6).num("hits"), 7, "skyeye 6: 7 pulses");

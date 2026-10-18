@@ -262,6 +262,17 @@ public final class RuneTip {
             }
             return out;
         }
+        if (Runes.isBrand(d)) {
+            // 0.20.0 심연의 낙인: 적이 받는 피해 + · 적이 주는 피해 − (보는 사람의 스탯 합 · 돌파 계수)
+            if (Double.isNaN(c.applied())) {
+                out.add("§r§d✦ " + L + "적이 받는 피해 " + N + "+" + pct(d.num("brandUp")) + "%" + L + " + 스탯 비례");
+                out.add("§r§5◈ " + L + "적이 주는 피해 " + N + "-" + pct(d.num("brandCut")) + "%" + L + " + 스탯 비례");
+            } else {
+                out.add("§r§d✦ " + L + "적이 받는 피해 " + N + "§l+" + pct(Runes.brandUp(d, c.applied())) + "%");
+                out.add("§r§5◈ " + L + "적이 주는 피해 " + N + "§l-" + pct(Runes.brandCut(d, c.applied())) + "%");
+            }
+            return out;
+        }
         if (d.truthy("heal") && d.truthy("healMax")) {
             out.add("§r§a✚ " + L + "흡혈 " + N + "적마다 " + hp(c, d.num("heal")) + L + " (" + d.text("healMax") + "명까지)");
         } else if (d.truthy("heal")) {
@@ -332,6 +343,11 @@ public final class RuneTip {
             out.add("§r" + L + "쓴 자리 반지름 " + d.text("radius") + "칸 안 아군 (나 포함) · " + sec(d.numOr("ticks", 0)));
             out.add("§r" + L + Runes.graceFormula(d));
             out.add("§r" + L + "받는 피해 감소는 다른 감소와 겹치지 않음");
+        }
+        if (Runes.isBrand(d)) {
+            out.add("§r" + L + "조준한 곳 반지름 " + d.text("radius") + "칸 안 적 · " + sec(d.numOr("ticks", 0)) + " (보스 포함)");
+            out.add("§r" + L + Runes.brandFormula(d));
+            out.add("§r" + L + "모든 플레이어의 피해에 · 가호와 곱");
         }
         if ("heavenEye".equals(fn)) {
             out.add("§r" + L + "광선이 바라보는 곳을 따라감 (굵기 " + d.text("width") + "칸)");
@@ -468,6 +484,7 @@ public final class RuneTip {
             List<String> parts = new ArrayList<>();
             if (tot > 0) parts.add("총 피해 " + num + dmg(c, tot, t) + body);
             if (Runes.isGrace(dt)) parts.add("가호 " + num + graceText(dt, c.applied(), t) + body);
+            if (Runes.isBrand(dt)) parts.add("낙인 " + num + brandText(dt, c.applied(), t) + body);
             for (RuneBreak.Change ch : RuneBreak.changes(fn, t)) {
                 String txt = ch.text();
                 if (txt == null || txt.isEmpty()) continue;
@@ -499,6 +516,14 @@ public final class RuneTip {
         if (Double.isNaN(applied)) return RuneBreak.coefText(t);
         String up = pct(Runes.graceUp(dt, applied));
         String cut = pct(Runes.graceCut(dt, applied));
+        return up.equals(cut) ? up + "%" : "+" + up + "% · -" + cut + "%";
+    }
+
+    /** 단계의 낙인 세기 (가호와 같은 모양) */
+    private static String brandText(Obj dt, double applied, int t) {
+        if (Double.isNaN(applied)) return RuneBreak.coefText(t);
+        String up = pct(Runes.brandUp(dt, applied));
+        String cut = pct(Runes.brandCut(dt, applied));
         return up.equals(cut) ? up + "%" : "+" + up + "% · -" + cut + "%";
     }
 

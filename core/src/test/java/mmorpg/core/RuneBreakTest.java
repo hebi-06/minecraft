@@ -38,7 +38,7 @@ public final class RuneBreakTest {
         check(RuneBreak.max() == 6, "max 6");
         near(RuneBreak.perLevel(), 0.1, "perLevel");
         check(RuneBreak.tiers().equals(List.of(3, 6)), "tiers " + RuneBreak.tiers());
-        check(RuneBreak.scaleKeys().equals(List.of("heal", "shield", "graceUp", "graceCut", "gracePer", "graceCap")), "scale keys " + RuneBreak.scaleKeys());
+        check(RuneBreak.scaleKeys().equals(List.of("heal", "shield", "graceUp", "graceCut", "gracePer", "graceCap", "brandUp", "brandCut", "brandPer", "brandCap")), "scale keys " + RuneBreak.scaleKeys());
 
         // 계수
         near(RuneBreak.coef(0), 1, "coef 0");

@@ -121,6 +121,9 @@ public final class DamageNumbers {
 
     public static DealtHook dealtHook = (a, v, d) -> {};
 
+    /** 0.20.0 맞은 것의 숫자 앞 표시 (심연의 낙인 — 낙인 찍힌 적은 "◆", 없으면 "") */
+    public static java.util.function.Function<LivingEntity, String> victimMark = e -> "";
+
     private static final class Text {
         final Display.TextDisplay e;
         final double x;
@@ -360,6 +363,8 @@ public final class DamageNumbers {
             Mmorpg.LOG.warn("[mmorpg] dealt hook", e);
         }
         if (mark == null) mark = "";
+        String vm = victimMark.apply(victim);
+        if (vm != null && !vm.isEmpty()) mark = vm + mark;
         if (m != null && m.style() != null) {
             // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback)
             show(victim, dealt, m.style(), mark, 0);

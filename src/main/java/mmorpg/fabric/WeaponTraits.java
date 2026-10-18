@@ -37,10 +37,13 @@ public final class WeaponTraits {
     public static void hit(ServerPlayer sp, LivingEntity victim, Weapon w, boolean crit, double dealt) {
         Obj t = w.typeDef();
         if (t == null || !(dealt > 0) || sp.isRemoved()) return;
+        // 0.20.0 넓게 베기 · 내려찍기는 맞힌 적의 낙인 몫을 빼고 번짐 (번진 적에게 낙인이 있으면 거기서 다시 곱함 — 두 번 세지 않게). 흡혈은 실제로 준 피해 그대로
+        double mt = RpgCombat.takenMult.applyAsDouble(victim);
+        double base = mt > 0 ? dealt / mt : dealt;
         Obj sweep = t.objOrNull("sweep");
-        if (sweep != null) sweep(sp, victim, w, crit, dealt, sweep);
+        if (sweep != null) sweep(sp, victim, w, crit, base, sweep);
         Obj quake = t.objOrNull("quake");
-        if (quake != null) quake(sp, victim, crit, dealt, quake);
+        if (quake != null) quake(sp, victim, crit, base, quake);
         Obj steal = t.objOrNull("lifesteal");
         if (steal != null) lifesteal(sp, dealt, steal);
     }

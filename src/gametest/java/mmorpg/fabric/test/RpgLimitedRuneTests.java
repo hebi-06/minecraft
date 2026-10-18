@@ -38,6 +38,8 @@ import net.minecraft.world.phys.Vec3;
  * 타격 = 베기 10 (6돌 14) + 일섬 1.
  * 0.19.0 세계수의 가호 (버프 — 피해 없음): 반지름 안 아군 (나 포함) 만 가하는 피해 × (1 + 가호) · 받는 피해 × (1 − 가호, Guards 감소와는 센 것 하나),
  * 가호 몫 · 막은 양을 시전 기록에 모음, 끝나면 그대로 · 요약 글자 (총 피해 글자 둘).
+ * 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 조준한 곳 반지름 안 적만 받는 피해 × (1 + 낙인) · 그 적이 준 피해 × (1 − 낙인), 가호와 곱 (1.44배),
+ * 적이 없으면 재사용 대기 없이 거절.
  * 사거리 · 범위가 넓어 시험마다 시험 환경을 따로 (mmorpg:lr_…) — 같은 묶음에서 함께 도는 다른 시험의 과녁을 맞히지 않게.
  */
 public final class RpgLimitedRuneTests {
@@ -92,6 +94,18 @@ public final class RpgLimitedRuneTests {
     private static double[] graceOf(ServerPlayer sp) {
         try {
             Class<?> c = Class.forName("mmorpg.fabric.rune.RuneGrove");
+            Method m = c.getDeclaredMethod("last", java.util.UUID.class);
+            m.setAccessible(true);
+            return (double[]) m.invoke(null, sp.getUUID());
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /** RuneAbyss 의 마지막 시전 {더한 피해, 줄인 피해, 낙인 찍은 수, 요약 1, 끝 틱} — 패키지 밖이라 리플렉션 */
+    private static double[] brandOf(ServerPlayer sp) {
+        try {
+            Class<?> c = Class.forName("mmorpg.fabric.rune.RuneAbyss");
             Method m = c.getDeclaredMethod("last", java.util.UUID.class);
             m.setAccessible(true);
             return (double[]) m.invoke(null, sp.getUUID());
@@ -329,6 +343,123 @@ public final class RpgLimitedRuneTests {
             for (ServerPlayer p : List.of(sp, ally, far)) h.getLevel().getServer().getPlayerList().remove(p);
             h.succeed();
         });
+    }
+
+    /**
+     * 0.20.0 심연의 낙인 0돌 (스탯 31 · 31 · 31 · 32 — 합 125 → 낙인 20%): 조준한 과녁 (5칸 앞) 둘레 반지름 6칸 안 과녁 둘에 낙인, 그 밖 (8칸) 은 없음.
+     * 낙인 찍힌 과녁이 받는 룬 피해 1.2배 · 그 과녁이 준 피해 0.8배 (낙인 없는 몹은 그대로), 세계수의 가호를 더하면 1.2 × 1.2 = 1.44배 (곱연산),
+     * 시전 기록 (낙인 몫 · 줄인 양 · 찍은 수 2), 10초 뒤 그대로 · 요약 글자 둘
+     */
+    @GameTest(environment = "mmorpg:lr_abyss", maxTicks = 300)
+    public void abyssBrand(GameTestHelper h) {
+        floor(h, 16);
+        ServerPlayer sp = playerAt(h, 1.5, 1.5);
+        ServerPlayer far = playerAt(h, 14.5, 1.5);
+        sp.setExperienceLevels(40);
+        RpgPlayers.checkLevelUp(sp);
+        String[] keys = {"str", "dex", "vit", "int"};
+        int[] st = {31, 31, 31, 32};
+        for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], st[i]);
+        Husk z1 = dummy(h, 1.5, 2, 6.5);
+        Husk z2 = dummy(h, 4.5, 2, 8.5);
+        Husk z3 = dummy(h, 1.5, 2, 14.5);
+        Runes.Rune r = Runes.parseRune("rpg:rune_abyss_transcend");
+        Runes.Rune grace = Runes.parseRune("rpg:rune_yggdrasil_transcend");
+        h.assertTrue(r != null && grace != null && Runes.limited("abyss"), "brand rune");
+        int charge = (int) r.def().num("charge");
+        int ticks = (int) r.def().num("ticks");
+        double[] d0 = new double[1];
+        int[] totals0 = new int[1];
+        h.runAfterDelay(2, () -> {
+            sp.lookAt(EntityAnchorArgument.Anchor.EYES, z1.getEyePosition());
+            near(h, RpgCombat.takenMult.applyAsDouble(z1), 1, 1e-9, "no brand before");
+            RuneKit.runeHit(sp, z1, 10, 1, "int");
+            d0[0] = TestDummies.dealt(z1);
+            h.assertTrue(d0[0] > 0, "rune hit before");
+            totals0[0] = DamageNumbers.totalsShown;
+            h.assertTrue(RuneCast.castRune(sp, r, false, 0), "brand cast");
+        });
+        h.runAfterDelay(3 + charge + 4, () -> {
+            near(h, RpgCombat.takenMult.applyAsDouble(z1), 1.2, 1e-9, "aimed husk takes ×1.2");
+            near(h, RpgCombat.takenMult.applyAsDouble(z2), 1.2, 1e-9, "husk in radius takes ×1.2");
+            near(h, RpgCombat.takenMult.applyAsDouble(z3), 1, 1e-9, "outside radius: no brand");
+            near(h, RpgHealth.weakenOf.applyAsDouble(z1), 0.2, 1e-9, "branded husk deals -20%");
+            near(h, RpgHealth.weakenOf.applyAsDouble(z3), 0, 1e-9, "outside: not weakened");
+            double[] b = brandOf(sp);
+            h.assertTrue(b != null && (int) b[2] == 2, "marked 2: " + (b == null ? "none" : (int) b[2]));
+            near(h, b[4] - Tasks.now(), ticks - 4, 3, "brand lasts " + ticks + " ticks");
+            h.assertTrue(Notify.hudSuffix(sp).contains("낙인"), "hud " + Notify.hudSuffix(sp));
+            // 낙인 찍힌 몹이 준 피해 × 0.8 (RpgHealth.onLoss — 체력 100 → 90 의 피해 10)
+            float a = RpgHealth.onLoss(far, far.damageSources().mobAttack(z1), 100F, 90F);
+            float c = RpgHealth.onLoss(far, far.damageSources().mobAttack(z3), 100F, 90F);
+            near(h, 100 - a, 8, 1e-3, "branded mob deals ×0.8");
+            near(h, 100 - c, 10, 1e-3, "unbranded mob deals ×1");
+            near(h, brandOf(sp)[1], 2, 1e-3, "saved = 2");
+        });
+        h.runAfterDelay(36, () -> {
+            RuneKit.runeHit(sp, z1, 10, 1, "int");
+            double d1 = TestDummies.dealt(z1) - d0[0];
+            near(h, d1 / d0[0], 1.2, 1e-4, "rune damage ×1.2 on the branded husk");
+            near(h, brandOf(sp)[0], d1 - d0[0], 1e-3 * d1, "extra = branded part");
+            h.assertTrue(RuneCast.castRune(sp, grace, false, 0), "grace cast");
+        });
+        h.runAfterDelay(36 + 18 + 8, () -> {
+            near(h, RpgCombat.dealtMult.applyAsDouble(sp), 1.2, 1e-9, "grace on the caster");
+            double before = TestDummies.dealt(z1);
+            RuneKit.runeHit(sp, z1, 10, 1, "int");
+            double d2 = TestDummies.dealt(z1) - before;
+            near(h, d2 / d0[0], 1.44, 1e-4, "grace × brand = 1.2 × 1.2 (multiplicative)");
+        });
+        h.runAfterDelay(3 + charge + ticks + 6, () -> {
+            near(h, RpgCombat.takenMult.applyAsDouble(z1), 1, 1e-9, "brand ended");
+            near(h, RpgHealth.weakenOf.applyAsDouble(z1), 0, 1e-9, "weaken ended");
+            h.assertTrue(brandOf(sp)[3] == 1, "brand summary shown");
+            h.assertTrue(DamageNumbers.totalsShown >= totals0[0] + 2, "two summary numbers " + (DamageNumbers.totalsShown - totals0[0]));
+            for (ServerPlayer p : List.of(sp, far)) h.getLevel().getServer().getPlayerList().remove(p);
+            h.succeed();
+        });
+    }
+
+    /** 6돌: 낙인 32% · 반지름 8칸 (가운데에서 7.5칸 과녁은 받음 · 9.5칸은 밖) · 14초 */
+    @GameTest(environment = "mmorpg:lr_abyss6", maxTicks = 80)
+    public void abyssBrandSixStars(GameTestHelper h) {
+        floor(h, 16);
+        ServerPlayer sp = playerAt(h, 1.5, 1.5);
+        sp.setExperienceLevels(40);
+        RpgPlayers.checkLevelUp(sp);
+        String[] keys = {"str", "dex", "vit", "int"};
+        int[] st = {31, 31, 31, 32};
+        for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], st[i]);
+        Husk z1 = dummy(h, 1.5, 2, 6.5);
+        Husk z2 = dummy(h, 9.0, 2, 6.5);
+        Husk z3 = dummy(h, 11.0, 2, 6.5);
+        Runes.Rune r = Runes.parseRune("rpg:rune_abyss_transcend");
+        int charge = (int) r.def().num("charge");
+        h.runAfterDelay(2, () -> {
+            sp.lookAt(EntityAnchorArgument.Anchor.EYES, z1.getEyePosition());
+            h.assertTrue(RuneCast.castRune(sp, r, false, 6), "brand 6 cast");
+        });
+        h.runAfterDelay(3 + charge + 4, () -> {
+            near(h, RpgCombat.takenMult.applyAsDouble(z1), 1.32, 1e-9, "6: ×1.32");
+            near(h, RpgCombat.takenMult.applyAsDouble(z2), 1.32, 1e-9, "6: 7.5 from the center (radius 8)");
+            near(h, RpgCombat.takenMult.applyAsDouble(z3), 1, 1e-9, "6: 9.5 outside");
+            near(h, RpgHealth.weakenOf.applyAsDouble(z1), 0.32, 1e-9, "6: deals -32%");
+            near(h, brandOf(sp)[4] - Tasks.now(), 280 - 4, 3, "6: 14 s");
+            h.getLevel().getServer().getPlayerList().remove(sp);
+            h.succeed();
+        });
+    }
+
+    /** 조준한 곳 반지름 안에 적이 없으면 거절 (재사용 대기 없음) */
+    @GameTest(environment = "mmorpg:lr_abyss_none", maxTicks = 20)
+    public void abyssBrandNoTarget(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Runes.Rune r = Runes.parseRune("rpg:rune_abyss_transcend");
+        h.assertFalse(RuneCast.castRune(sp, r, false, 0), "no target: refused");
+        h.assertTrue(RuneCast.cooldownLeft(sp, r) == 0, "no cooldown when refused");
+        h.getLevel().getServer().getPlayerList().remove(sp);
+        h.succeed();
     }
 
     /** 네 스탯을 어떻게 찍어도 같은 위력 (합이 같으면) · 한 스탯만 찍은 사람의 자기 계열 룬과 같은 P */

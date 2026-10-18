@@ -121,6 +121,12 @@ public final class RpgCombat {
      */
     public static java.util.function.ToDoubleFunction<ServerPlayer> dealtMult = p -> 1;
 
+    /**
+     * 0.20.0 맞는 쪽 배율 (심연의 낙인이 넣음 — 1 = 그대로): 플레이어가 준 피해가 이 생명체에 들어갈 때 한 번 곱함 — 바닐라 경로는
+     * LivingEntity.hurtServer 앞 (mixin), 보스 엔진은 Bosses.absorb. 공격 쪽 배율 (dealtMult — 세계수의 가호) 과는 곱
+     */
+    public static java.util.function.ToDoubleFunction<LivingEntity> takenMult = e -> 1;
+
     public static void setSteadfast(ServerPlayer sp, int ticks) {
         STEADFAST.merge(sp.getUUID(), Tasks.now() + ticks, Math::max);
     }

@@ -566,6 +566,7 @@ public final class Bosses {
         if (src.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) return null; // /kill · 세계 밖
         ServerPlayer p = attackerOf(src);
         if (p == null) return false; // 환경 · 몹 피해 없음
+        damage = (float) (damage * Math.max(0, RpgCombat.takenMult.applyAsDouble(e))); // 0.20.0 심연의 낙인 (낙인 찍힌 보스 · 소품은 더 아픔 — 무적 시간 비교도 이 값으로)
         long now = Tasks.now();
         // 무적 시간 칸: 평타 (근접 · 활 · 완드) 와 스킬 · 룬 피해는 따로 (v2.1.0: 평타 바로 뒤에 쓴 스킬이 막히거나 줄지 않게)
         RpgCombat.Mark mark = RpgCombat.takeMark(e, p);

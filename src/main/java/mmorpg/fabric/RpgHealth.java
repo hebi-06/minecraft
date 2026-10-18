@@ -62,6 +62,16 @@ public final class RpgHealth {
      */
     public static java.util.function.ToDoubleFunction<ServerPlayer> buffReduce = p -> 0;
     public static BiConsumer<ServerPlayer, Double> buffSaved = (p, a) -> {};
+    /**
+     * 0.20.0 때린 쪽의 약화 (심연의 낙인 — 0 = 없음): 이 적 (피해의 주인 — 화살은 쏜 몹) 이 준 피해 × (1 − 약화). 받는 쪽 감소 (방패 · 룬 · 가호 ·
+     * 스탯 트리) 와는 곱. 줄인 양은 weakenSaved 로 (맞은 사람 · 때린 적 · 양)
+     */
+    public static java.util.function.ToDoubleFunction<net.minecraft.world.entity.Entity> weakenOf = e -> 0;
+    public interface WeakenSaved {
+        void saved(ServerPlayer victim, net.minecraft.world.entity.Entity attacker, double amount);
+    }
+
+    public static WeakenSaved weakenSaved = (p, e, a) -> {};
 
     /** 결투 훅 (hp.js setDuelHooks — 6단계 결투가 넣음) */
     public interface DuelHooks {
@@ -237,6 +247,14 @@ public final class RpgHealth {
         double tree = mmorpg.fabric.stattree.StatTrees.defMult(sp);
         double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce) * tree); // 결투 상대의 피해 × PVP.mult
         Guards.afterHurt(sp, source, g); // 반사 버프: 때린 것에게 (다음 틱)
+        // 0.20.0 심연의 낙인: 낙인 찍힌 적이 준 피해 × (1 − 낙인) — 받는 쪽 감소와 곱 (가호의 막은 양은 이 뒤의 깎임으로 셈)
+        net.minecraft.world.entity.Entity from = source.getEntity();
+        double weak = from != null && from != sp ? Math.max(0, Math.min(0.95, weakenOf.applyAsDouble(from))) : 0;
+        if (weak > 0 && loss > 0) {
+            double cut = loss * weak;
+            loss -= cut;
+            weakenSaved.saved(sp, from, cut);
+        }
         if (buff > gr && loss > 0) {
             // 가호가 막아 준 양: 가호가 없었을 때 (Guards 감소만) 의 깎임 − 지금 깎임
             double without = 1 - (1 - shield) * (1 - gr);

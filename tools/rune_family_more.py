@@ -12,7 +12,7 @@ rules.json 위에 rules_more.json 을 덧붙인 RUNE_FAMILY_ORDER 에서 애드�
   사신 (reaper): 핏빛 초승달 (왼쪽이 볼록 — 가운데가 굵음) + 아래 끝에 맺힌 핏방울
 - 아이템 모델 assets/rpg/models/item/rune_<계열>_<등급>.json (generated), 아이템 정의 assets/rpg/items/rune_<계열>_<등급>.json
   (tools/rune_break_badges.py 와 같은 모양 — custom_model_data 첫 수 = 돌파 단계로 range_dispatch → 배지 모델 composite)
-- 0.16.0 한정 초월 룬 (RUNE_LIMITED_ORDER — 초월 하나씩 · 0.17.0 무간참역 · 0.18.0 대지 가르기 · 0.19.0 세계수의 가호 더함): 같은 초월 돌 위에 여러 색 문양 (LIMITED_GLYPHS — 층마다 심지 · 빛 · 빛무리 색),
+- 0.16.0 한정 초월 룬 (RUNE_LIMITED_ORDER — 초월 하나씩 · 0.17.0 무간참역 · 0.18.0 대지 가르기 · 0.19.0 세계수의 가호 · 0.20.0 심연의 낙인 더함): 같은 초월 돌 위에 여러 색 문양 (LIMITED_GLYPHS — 층마다 심지 · 빛 · 빛무리 색),
   테두리의 붉은 빛을 무지갯빛으로 (가운데에서 본 각도마다 색 — 한정 룬 표시)
   만상 (arcana): 네 스탯 구슬 (위 힘 주황 · 오른쪽 민첩 초록 · 아래 체력 분홍 · 왼쪽 마력 파랑) + 잇는 고리 + 가운데 흰 네 갈래 별
   칠성 (dipper): 북두칠성 일곱 별 (흰 · 금빛 별, 푸른 빛무리) + 잇는 선
@@ -325,8 +325,45 @@ def yggdrasil_layers():
             (fruits, (255, 255, 236), (255, 204, 72), (110, 70, 10))]
 
 
+def abyss_layers():
+    """0.20.0 심연의 낙인: 엇갈린 짙은 사슬 둘 (고리 마디) 위에 낙인 — 가시 여섯이 돋은 자홍 고리 · 가운데 아래를 향한 세모 · 세로로 갈라진 눈"""
+    cx, cy = 16.0, 15.0
+
+    def chains(g):
+        parts = []
+        for (x0, y0, x1, y1) in ((7.0, 24.0, 25.0, 7.0), (7.0, 7.0, 25.0, 24.0)):
+            for k in range(7):
+                t = (k + 0.5) / 7
+                x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+                parts.append(lambda px, py, x=x, y=y, g=g: abs(math.hypot(px - x, py - y) - 1.0) <= 0.32 + g * 0.3)
+        return union(*parts)
+
+    def seal(g):
+        def f(x, y):
+            r = math.hypot(x - cx, y - cy)
+            if abs(r - 6.2) <= 0.42 + g * 0.35:
+                return True
+            a = (math.degrees(math.atan2(y - cy, x - cx)) + 90) % 60
+            return 6.2 <= r <= 8.0 + g * 0.3 and min(a, 60 - a) <= (8.0 + g * 0.3 - r) * 4.5
+        return f
+
+    def tri(g):
+        def f(x, y):
+            top, bot, half = cy - 3.0 - g * 0.5, cy + 3.6 + g * 0.6, 3.6 + g * 0.6
+            if not (top <= y <= bot):
+                return False
+            return abs(x - cx) <= half * (bot - y) / (bot - top)
+        return f
+
+    eye = lambda g: (lambda x, y: ((x - cx) / (0.9 + g * 0.5)) ** 2 + ((y - (cy - 0.6)) / (2.4 + g * 0.5)) ** 2 <= 1)
+    return [(chains, (176, 120, 196), (96, 50, 120), (16, 4, 26)),
+            (seal, (255, 190, 236), (226, 40, 150), (70, 6, 50)),
+            (tri, (150, 40, 120), (70, 10, 70), (20, 2, 24)),
+            (eye, (255, 236, 250), (255, 120, 210), (90, 10, 70))]
+
+
 LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers, "endless": endless_layers, "terra": terra_layers,
-                  "yggdrasil": yggdrasil_layers}
+                  "yggdrasil": yggdrasil_layers, "abyss": abyss_layers}
 
 
 def prism_frame(stone):

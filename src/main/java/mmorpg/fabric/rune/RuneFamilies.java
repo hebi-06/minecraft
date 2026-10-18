@@ -1,6 +1,6 @@
 package mmorpg.fabric.rune;
 
-/** 계열 17개의 룬 효과 등록 (RUNE_FN — 계열마다 한 파일, 0.12.6 사신 계열은 자바 전용) + 0.16.0 한정 초월 룬 셋 (RuneLimited — 한정 뽑기 전용) · 0.17.0 무간참역 (RuneEndless) · 0.18.0 대지 가르기 (RuneTerra) · 0.19.0 세계수의 가호 (RuneGrove — 버프) */
+/** 계열 17개의 룬 효과 등록 (RUNE_FN — 계열마다 한 파일, 0.12.6 사신 계열은 자바 전용) + 0.16.0 한정 초월 룬 셋 (RuneLimited — 한정 뽑기 전용) · 0.17.0 무간참역 (RuneEndless) · 0.18.0 대지 가르기 (RuneTerra) · 0.19.0 세계수의 가호 (RuneGrove — 버프) · 0.20.0 심연의 낙인 (RuneAbyss — 적 약화) */
 final class RuneFamilies {
     private RuneFamilies() {}
 
@@ -27,6 +27,7 @@ final class RuneFamilies {
         RuneEndless.register(); // 0.17.0: 한정 초월 룬 무간참역
         RuneTerra.register(); // 0.18.0: 한정 초월 룬 대지 가르기
         RuneGrove.register(); // 0.19.0: 한정 룬 세계수의 가호 (버프)
+        RuneAbyss.register(); // 0.20.0: 한정 룬 심연의 낙인 (적 약화)
     }
 
     /** 등록한 룬 효과 수 (함수 이름 — 정령사는 다섯 등급이 하나) */

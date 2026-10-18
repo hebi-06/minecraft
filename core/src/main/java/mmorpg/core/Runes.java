@@ -226,12 +226,40 @@ public final class Runes {
      * 돌파 계수는 RuneBreak.def 가 값 넷 모두에 곱함 (scaleKeys — min(c·a, c·b) = c·min(a, b) 라 가호 전체 × 계수) — 단계의 정의를 그대로 넘김
      */
     public static double graceUp(Obj d, double applied) {
-        return graceOf(d, "graceUp", applied);
+        return supportOf(d, "graceUp", "gracePer", "graceCap", applied);
     }
 
     /** 0.19.0 세계수의 가호: 받는 피해 감소 비율 = graceCut + min(gracePer × 적용 스탯, graceCap) */
     public static double graceCut(Obj d, double applied) {
-        return graceOf(d, "graceCut", applied);
+        return supportOf(d, "graceCut", "gracePer", "graceCap", applied);
+    }
+
+    /**
+     * 0.20.0 심연의 낙인 (한정 약화 룬 — 자바 전용): 낙인 찍힌 적이 받는 피해 증가 비율 = brandUp + min(brandPer × 적용 스탯, brandCap)
+     * (돌파 계수는 가호처럼 scaleKeys 로 값 넷에)
+     */
+    public static double brandUp(Obj d, double applied) {
+        return supportOf(d, "brandUp", "brandPer", "brandCap", applied);
+    }
+
+    /** 0.20.0 심연의 낙인: 낙인 찍힌 적이 주는 피해 감소 비율 = brandCut + min(brandPer × 적용 스탯, brandCap) */
+    public static double brandCut(Obj d, double applied) {
+        return supportOf(d, "brandCut", "brandPer", "brandCap", applied);
+    }
+
+    /** 낙인 룬 (적이 받는 피해 · 주는 피해 값이 있는 약화) 인지 */
+    public static boolean isBrand(Obj d) {
+        return d != null && (d.truthy("brandUp") || d.truthy("brandCut"));
+    }
+
+    /** 낙인 세기 공식 글자 (가호와 같은 모양) */
+    public static String brandFormula(Obj d) {
+        return supportFormula(d, "brandUp", "brandCut", "brandPer", "brandCap");
+    }
+
+    /** 피해 대신 세기 (%) 를 쓰는 한정 룬 (0.19.0 가호 · 0.20.0 낙인) 인지 */
+    public static boolean isSupport(Obj d) {
+        return isGrace(d) || isBrand(d);
     }
 
     /**
@@ -239,10 +267,14 @@ public final class Runes {
      * "세기 = 10 · 12% + …")
      */
     public static String graceFormula(Obj d) {
-        double up = d.numOr("graceUp", 0);
-        double cut = d.numOr("graceCut", 0);
+        return supportFormula(d, "graceUp", "graceCut", "gracePer", "graceCap");
+    }
+
+    private static String supportFormula(Obj d, String upKey, String cutKey, String perKey, String capKey) {
+        double up = d.numOr(upKey, 0);
+        double cut = d.numOr(cutKey, 0);
         String base = Math.abs(up - cut) < 1e-9 ? pct1(up) : pct1(up) + " · " + pct1(cut);
-        return "세기 = " + base + "% + 스탯 합×" + Js.str(Math.round(d.numOr("gracePer", 0) * 100000) / 1000.0) + "% (최대 " + pct1(Math.max(up, cut) + d.numOr("graceCap", 0)) + "%)";
+        return "세기 = " + base + "% + 스탯 합×" + Js.str(Math.round(d.numOr(perKey, 0) * 100000) / 1000.0) + "% (최대 " + pct1(Math.max(up, cut) + d.numOr(capKey, 0)) + "%)";
     }
 
     /** 비율 → 백분율 글자 (소수 한 자리까지 — 0.286 → "28.6") */
@@ -255,9 +287,10 @@ public final class Runes {
         return d != null && (d.truthy("graceUp") || d.truthy("graceCut"));
     }
 
-    private static double graceOf(Obj d, String key, double applied) {
+    /** 기본 + min(스탯당 × 적용 스탯, 상한) — 가호 · 낙인 공용 (적용 스탯을 모르면 기본만) */
+    private static double supportOf(Obj d, String key, String perKey, String capKey, double applied) {
         double s = applied > 0 && Double.isFinite(applied) ? applied : 0;
-        return d.numOr(key, 0) + Math.min(d.numOr("gracePer", 0) * s, d.numOr("graceCap", 0));
+        return d.numOr(key, 0) + Math.min(d.numOr(perKey, 0) * s, d.numOr(capKey, 0));
     }
 
     /**
@@ -410,7 +443,7 @@ public final class Runes {
         if (d.truthy("el")) lines.addAll(elementLore(d, L, dark));
         if (d.truthy("spirits")) lines.addAll(spiritLore(d, L, dark));
         if (r.family().equals("gravity")) lines.addAll(gravityLore(d, L, dark));
-        if (!isGrace(d)) lines.add("§r" + L + "위력 = 레벨 공격력×(1+스탯×" + Js.str(Js.round(RUNE.num("perPoint") * 100)) + "%)"); // 가호 룬은 위력을 쓰지 않음
+        if (!isSupport(d)) lines.add("§r" + L + "위력 = 레벨 공격력×(1+스탯×" + Js.str(Js.round(RUNE.num("perPoint") * 100)) + "%)"); // 가호 · 낙인 룬은 위력을 쓰지 않음
         if (r.family().equals(RUNE_COMBO.str("family"))) {
             lines.add("§r" + (dark ? "§5" : "§d") + "콤보" + L + ": " + Js.str(Js.round(RUNE_COMBO.num("window") / 20)) + "초 안에 다른 암살자 룬");
             lines.add("§r" + L + "이을 때마다 피해 +" + Js.str(Js.round(RUNE_COMBO.num("step") * 100)) + "% (" + RUNE_COMBO.text("minOwned") + "종부터)");
@@ -465,6 +498,17 @@ public final class Runes {
             out.add("§r" + L + graceFormula(d));
             out.add("§r" + L + "쓴 자리 반지름 " + d.text("radius") + "칸 안 아군 (나 포함) · " + sec(d.numOr("ticks", Double.NaN)));
             out.add("§r" + L + "끝나면 가호로 " + N + "더한 피해 · 막은 피해" + L + "를 띄움");
+            return out;
+        }
+        if (isBrand(d)) {
+            // 0.20.0 심연의 낙인: 피해 없음 — 낙인 (스탯 합 125 기준) · 세기 공식 · 범위 · 끝 요약
+            double up = brandUp(d, GRACE_REF);
+            double cut = brandCut(d, GRACE_REF);
+            out.add("§r" + L + "낙인 (스탯 합 " + Js.str(GRACE_REF) + "): " + N + "적이 받는 피해 +" + Js.str(Js.round(up * 100)) + "%");
+            out.add("§r" + L + "    · " + N + "적이 주는 피해 -" + Js.str(Js.round(cut * 100)) + "%" + L + " (가호와 곱)");
+            out.add("§r" + L + brandFormula(d));
+            out.add("§r" + L + "조준한 곳 반지름 " + d.text("radius") + "칸 안 적 (보스 포함) · " + sec(d.numOr("ticks", Double.NaN)));
+            out.add("§r" + L + "끝나면 낙인으로 " + N + "더한 피해 · 줄인 피해" + L + "를 띄움");
             return out;
         }
         if (d.truthy("stun")) out.add("§r" + L + "맞은 적 기절 " + sec(d.num("stun")));
