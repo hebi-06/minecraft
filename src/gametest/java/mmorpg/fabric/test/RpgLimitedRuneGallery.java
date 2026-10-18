@@ -43,7 +43,8 @@ import org.slf4j.LoggerFactory;
  * 룬마다 실제 입력 (스킬 칸 1번의 키) 으로 쓰고 단계마다 사진 (lr_&lt;계열&gt;_&lt;돌&gt;_&lt;틱&gt;[_3p]): 0돌 (1인칭) · 6돌 (3인칭 — 전용 연출 finale).
  * 천공의 눈은 광선 동안 몸을 천천히 돌려 광선이 따라가는지 (lr_skyeye_0_*). 칠성 강림 6돌은 밤에도 한 번 (lr_dipper_6n_*).
  * 0.17.0 무간참역 (쓴 자리 영역 — 과녁 가까이 z = 1.5 에 섬): 0돌 1인칭 · 6돌 3인칭 (하늘 가르기) · 6돌 밤 1인칭 (lr_endless_…).
- * 0.18.0 대지 가르기 (앞쪽 균열 — z = -3 에 서서 과녁이 모두 균열 안 · 대검은 과녁 뒤 균열 끝): 0돌 1인칭 · 6돌 3인칭 (지맥 폭발) · 6돌 밤 1인칭 (lr_terra_…),
+ * 0.18.0 대지 가르기 (앞쪽 균열 — z = -3 에 서서 과녁이 균열 안 · 대검은 머리 위에서 앞으로 휘둘러 과녁 앞에 박힘): 0돌 1인칭 · 6돌 3인칭 (지맥 폭발) ·
+ * 6돌 밤 1인칭 (lr_terra_…),
  * 표시 엔티티 (대검 · 들린 땅 · 기둥) 가 떴는지 (FxDisplays.spawned) 도 기록.
  * 써졌는지 (재사용 대기) · 들어간 피해 · 끝의 총 피해 글자 (DamageNumbers — "총 피해") 를 로그 (limited-gallery) 로, 아니면 마지막에 실패.
  * 스탯은 40렙 실제 분배 (31 · 31 · 31 · 32 = 총 125). 피해 숫자는 실제로 깎인 체력이라 과녁 체력 상한 (바닐라 1024) 에서 잘리므로,
@@ -109,13 +110,14 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             run(ctx, server, "endless", 6, false, new int[] {12, 70, 150, 155, 162, 176, 190}, null, true, 1.5, 215);
             server.runCommand("time set 6000");
             ctx.waitTicks(100);
-            // 대지 가르기 (0.18.0): 땅이 빛남 · 대검이 손잡이부터 뽑혀 오름 (0 ~ 16틱) → 기욺 (16 ~ 21) → 내리꽂힘 (24) → 시전자 쪽으로 땅이 갈라짐 (24 ~ 30)
-            //   → 여진 0.5초마다 (40 ~ 94) → 대검이 가라앉음 (102) · 총 피해 (104). 6돌: 여진 8번 (~114) · 지맥 폭발 (116 ~ 150) · 총 피해 (148)
+            // 대지 가르기 (0.18.0): 머리 위에 대검이 생김 (2 ~ 8틱) → 뒤로 젖힘 (9 ~ 19) → 앞으로 휘둘러 내려옴 (19 ~ 24 — 화면에는 마지막 두 틱)
+            //   → 박힘 · 칼 아래 줄이 갈라지고 앞으로 끝까지 (24 ~ 29) → 대검이 부서짐 (36 ~ 41) → 여진 0.5초마다 (40 ~ 94) → 총 피해 (104).
+            //   6돌: 여진 8번 (~114) · 지맥 폭발 (116 ~ 150) · 총 피해 (148). 서버가 사진보다 2 ~ 3틱 앞서므로 휘두르는 사진은 19 ~ 22
             int fx0 = server.computeOnServer(s -> FxDisplays.spawned);
-            run(ctx, server, "terra", 0, false, new int[] {8, 16, 22, 26, 30, 44, 70, 104, 122}, null, false, -3.0, 150);
-            run(ctx, server, "terra", 6, true, new int[] {14, 22, 27, 32, 60, 112, 122, 130, 140, 156}, null, false, -3.0, 185);
+            run(ctx, server, "terra", 0, false, new int[] {8, 16, 19, 20, 21, 22, 26, 32, 44, 70, 104}, null, false, -3.0, 150);
+            run(ctx, server, "terra", 6, true, new int[] {14, 19, 20, 21, 22, 27, 34, 60, 112, 130, 156}, null, false, -3.0, 185);
             server.runCommand("time set 18000");
-            run(ctx, server, "terra", 6, false, new int[] {20, 27, 50, 122, 130, 156}, null, true, -3.0, 185);
+            run(ctx, server, "terra", 6, false, new int[] {16, 20, 21, 23, 50, 130, 156}, null, true, -3.0, 185);
             server.runCommand("time set 6000");
             int fx1 = server.computeOnServer(s -> FxDisplays.spawned);
             LOG.info("[limited-gallery] terra displays spawned={}", fx1 - fx0);
