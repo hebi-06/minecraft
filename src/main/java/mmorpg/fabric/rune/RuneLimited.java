@@ -22,7 +22,8 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 0.16.0 한정 초월 룬 셋 (자바 전용 — 사용자 요청 '한정 초월 룬, 총 스탯의 합으로 계수'): 위력 P 의 적용 스탯 = 네 스탯의 합 × 1.0 (Runes — coef 넷),
  * 마법 피해 (방어구 무시). 수치는 RUNES.arcana · dipper · skyeye (rules_more.json), 돌파 3 · 6돌은 rune_break.json, 6돌 전용 연출 (finale — 피해 없음).
- * 피해는 몹 무적 시간을 피해 들어가게 (Kit.reserveHit · hitAt — 같은 적에게 10틱마다), 끝나면 이번 시전이 준 피해의 합을 크게 띄움 (DamageNumbers.showTotal).
+ * 피해는 몹 무적 시간을 피해 들어가게 (Kit.reserveHit · hitAt — 같은 적에게 10틱마다). 시전마다 준 피해의 합 · 타격 수를 기록 (시험용 — 끝에 띄우던
+ * 총 피해 글자는 0.20.1 에서 뺌: 사용자 "총 가한 피해량 · 더한 피해 같은 글자 없애고 체감으로만, 거추장스럽다" — 맞을 때마다의 피해 숫자는 그대로).
  * <ol>
  *   <li>만상귀일 (arcanaUnity): 네 스탯의 구슬 (힘 주황 · 민첩 초록 · 체력 분홍 · 마력 파랑 — 크기 = 그 스탯이 총합에서 차지하는 비율) 이 몸 둘레를 돌다
  *       (charge 틱) 조준한 곳 (range 칸) 위로 날아가 돌며, 스탯 차례로 gap 틱마다 구슬마다 한 번 빛줄기 (zone 칸 안의 적 — 위력 × mult × 그 비율, 숫자는 그 스탯 색).
@@ -68,7 +69,7 @@ final class RuneLimited {
 
     // ------------------------------------------------------------ 공통
 
-    /** 한 번의 시전이 준 피해의 합 (끝에 띄움) · 맞은 횟수 (시험) */
+    /** 한 번의 시전이 준 피해의 합 · 맞은 횟수 (시험 기록) */
     static final class Tally {
         double sum;
         int hits;
@@ -90,32 +91,9 @@ final class RuneLimited {
         });
     }
 
-    /** 이번 시전의 총 피해를 at 에 (delay 틱 뒤 — 0 이면 띄우지 않음). 글자 색 = 그 룬 계열 색 (0.17.0 — toneOf) */
-    static void total(ServerPlayer sp, String fn, Vec3 at, Tally t, int delay) {
-        RuneKit.later(delay, () -> {
-            LAST.put(sp.getUUID() + "|" + fn, new double[] {t.sum, t.hits});
-            if (t.sum > 0 && !sp.isRemoved()) {
-                // 멀리 (조준한 곳 — 13칸 쯤) 띄우면 크게: 시전자 화면에서 7칸 앞에 띄운 것과 같은 크기 (최대 2.4배)
-                float k = (float) Math.max(1, Math.min(2.4, sp.getEyePosition().distanceTo(at) / 7.0));
-                DamageNumbers.showTotal(sp.level(), at, t.sum, "총 피해", toneOf(fn), k);
-            }
-        });
-    }
-
-    private static final Map<String, DamageNumbers.Tone> TONES = new java.util.concurrent.ConcurrentHashMap<>();
-
-    /** 룬 함수 fn 의 한정 계열 색 (RUNE.color) 으로 만든 총 피해 글자 색 — 한정 계열이 아니면 금빛 */
-    static DamageNumbers.Tone toneOf(String fn) {
-        return TONES.computeIfAbsent(fn, k -> {
-            for (String fam : Runes.LIMITED_ORDER) {
-                Runes.Rune r = Runes.parseRune(Runes.runeId(fam, "transcend"));
-                if (r != null && k.equals(r.def().str("fn"))) {
-                    double[][] cs = RuneKit.colorOf(fam);
-                    return DamageNumbers.Tone.of(cs[0], cs[1]);
-                }
-            }
-            return DamageNumbers.Tone.GOLD;
-        });
+    /** 이번 시전의 피해 합 · 타격 수를 delay 틱 뒤 (마지막 타격이 들어간 뒤) 기록 — 시험용, 화면에는 띄우지 않음 (0.20.1) */
+    static void saveTally(ServerPlayer sp, String fn, Tally t, int delay) {
+        RuneKit.later(delay, () -> LAST.put(sp.getUUID() + "|" + fn, new double[] {t.sum, t.hits}));
     }
 
     /** 이 사람이 지금 쓴 이 룬의 6돌 전용 연출 (finale) 이 켜졌는지 */
@@ -321,7 +299,7 @@ final class RuneLimited {
             }
             if (fin) prism(sp, level, g, radius, orbs, life);
         });
-        total(sp, "arcanaUnity", V.up(g, 3.2), tally, blastAt + 8);
+        saveTally(sp, "arcanaUnity", tally, blastAt + 8);
         return true;
     }
 
@@ -510,7 +488,7 @@ final class RuneLimited {
             }
             if (fin) meteorShower(sp, level, g, h, st, life);
         });
-        total(sp, "sevenStars", V.up(g, 3.2), tally, impact + 8);
+        saveTally(sp, "sevenStars", tally, impact + 8);
         return true;
     }
 
@@ -661,7 +639,7 @@ final class RuneLimited {
         }
     }
 
-    /** 끝: 마무리 폭발 (반지름 radius) · 눈이 감김 · 총 피해 (+ 6돌 해빛 기둥 여덟 · 해무리) */
+    /** 끝: 마무리 폭발 (반지름 radius) · 눈이 감김 (+ 6돌 해빛 기둥 여덟 · 해무리) */
     static void finish(ServerPlayer sp, ServerLevel level, Vec3 c, double h, double radius, double P, Obj k, String life, Tally tally, boolean fin) {
         Vec3 eyeAt = V.up(c, h);
         double es = eyeScale(h);
@@ -699,6 +677,6 @@ final class RuneLimited {
             SkillFx.play(level, "beacon.activate", eyeAt, 0.7, 1.0);
             SkillFx.play(level, "random.totem", c, 1.4, 0.5);
         }
-        total(sp, "heavenEye", V.up(c, 3.2), tally, 8);
+        saveTally(sp, "heavenEye", tally, 8);
     }
 }

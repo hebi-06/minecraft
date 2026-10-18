@@ -38,9 +38,9 @@ import net.minecraft.world.phys.Vec3;
  * Bosses.absorb: RpgCombat.takenMult), 그 적이 플레이어에게 주는 피해 × (1 − 낙인) (RpgHealth.weakenOf — 받는 쪽 감소와 곱).
  * 세계수의 가호 (공격 쪽 dealtMult · 받는 쪽 buffReduce) 와는 곱 (사용자 "곱연산" — 가호 20% + 낙인 20% = 1.2 × 1.2 = 1.44배 · 0.8 × 0.8 = 0.64배).
  * 낙인 = Runes.brandUp / brandCut (시전자의 네 스탯의 합 · 돌파 계수 — 0돌 20% · 3돌 26% · 6돌 32%), 낙인끼리는 센 것 하나 (같으면 오래 가는 것)</li>
- * <li>숫자: 낙인 찍힌 적에게 들어간 피해 중 낙인 몫 (준 피해 × 낙인 ÷ (1 + 낙인)) 과 낙인으로 줄인 피해를 시전마다 모아, 끝나면 시전자 눈앞에
- * "── 낙인 · 더한 피해 ──" · "── 낙인 · 줄인 피해 ──". 낙인 찍힌 적의 피해 숫자 앞에 분홍 ◆ (DamageNumbers.victimMark), 낙인 찍힌 적의 공격이
- * 약해지면 그 적에게 어두운 금이 감 (잦으면 잠깐에 한 번). 시전자 상태 줄 "낙인 3체 7.5초"</li>
+ * <li>체감: 낙인 찍힌 적의 피해 숫자 앞에 분홍 ◆ (DamageNumbers.victimMark), 낙인 찍힌 적의 공격이 약해지면 그 적에게 어두운 금이 감
+ * (잦으면 잠깐에 한 번). 시전자 상태 줄 "낙인 3체 7.5초". 끝에 띄우던 요약 글자 ("낙인 · 더한 피해" · "낙인 · 줄인 피해") 는 0.20.1 에서 뺌
+ * (사용자 "체감으로만, 거추장스럽다")</li>
  * <li>6돌 (finale — 심연의 문): 낙인 찍힌 적 발밑에 심연의 문양 · 검은 손이 계속 솟음 (보기만)</li>
  * </ul>
  * 하늘빛 · 번쩍임 (3돌부터): 블랙홀의 공허 하늘 (ULT_ALIAS abyssBrand → blackHole). 조준한 곳 반지름 안에 적이 없으면 재사용 대기 없이 거절.
@@ -63,15 +63,12 @@ final class RuneAbyss {
     /** 낙인 하나 (적마다): 어느 시전의 것 · 끝 틱 · 받는 피해 + · 주는 피해 − · 그 적 */
     private record Brand(Cast cast, long until, double up, double cut, LivingEntity e) {}
 
-    /** 시전 하나: 시전자 · 낙인이 끝나는 틱 · 낙인으로 더한 피해 · 줄인 피해 · 낙인 찍은 적 수 · 요약을 띄웠는지 · 6돌 */
+    /** 시전 하나: 시전자 · 낙인이 끝나는 틱 · 6돌 · 낙인 찍은 적 수 */
     static final class Cast {
         final UUID caster;
         final long until;
         final boolean fin;
-        double extra;
-        double saved;
         int marked;
-        boolean shown;
 
         Cast(UUID caster, long until, boolean fin) {
             this.caster = caster;
@@ -81,7 +78,6 @@ final class RuneAbyss {
     }
 
     private static final Map<UUID, Brand> BRANDS = new HashMap<>();
-    private static final List<Cast> CASTS = new ArrayList<>();
     /** 시험 · 사진첩 · 상태 줄: 사람마다 마지막 시전 */
     private static final Map<UUID, Cast> LAST = new HashMap<>();
     /** 약해진 공격 연출을 그린 틱 (적마다) */
@@ -99,11 +95,6 @@ final class RuneAbyss {
             ws.saved(p, e, a);
             weakened(p, e, a);
         };
-        DamageNumbers.DealtHook dh = DamageNumbers.dealtHook;
-        DamageNumbers.dealtHook = (a, v, d) -> {
-            dh.dealt(a, v, d);
-            dealt(a, v, d);
-        };
         java.util.function.Function<LivingEntity, String> vm = DamageNumbers.victimMark;
         DamageNumbers.victimMark = e -> {
             String s = vm.apply(e);
@@ -114,15 +105,13 @@ final class RuneAbyss {
         RuneSystem.onForget(RuneAbyss::forget);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             BRANDS.clear();
-            CASTS.clear();
             LAST.clear();
             WEAK_CUE.clear();
         });
     }
 
-    /** 나감 · 기록 지우기: 이 사람이 건 시전의 요약은 띄우지 않음 (찍힌 낙인은 그대로 — 남은 사람에게 도움) */
+    /** 나감 · 기록 지우기: 마지막 시전 기록 (찍힌 낙인은 그대로 — 남은 사람에게 도움) */
     private static void forget(UUID id) {
-        CASTS.removeIf(c -> c.caster.equals(id));
         LAST.remove(id);
     }
 
@@ -148,18 +137,10 @@ final class RuneAbyss {
         return b == null ? 0 : b.cut();
     }
 
-    /** 낙인 찍힌 적에게 피해가 들어감: 낙인 몫을 시전에 더함 */
-    private static void dealt(ServerPlayer attacker, LivingEntity victim, double dealt) {
-        Brand b = active(victim);
-        if (b == null || !(b.up() > 0) || !(dealt > 0)) return;
-        b.cast().extra += dealt * b.up() / (1 + b.up());
-    }
-
-    /** 낙인 찍힌 적의 공격이 약해짐: 줄인 양을 시전에 더함 · 그 적에게 어두운 금 (적마다 10틱에 한 번) */
+    /** 낙인 찍힌 적의 공격이 약해짐: 그 적에게 어두운 금 (적마다 10틱에 한 번) */
     private static void weakened(ServerPlayer victim, Entity attacker, double amount) {
         Brand b = active(attacker);
         if (b == null || !(amount > 0)) return;
-        b.cast().saved += amount;
         long now = Tasks.now();
         Long last = WEAK_CUE.get(attacker.getUUID());
         if (last != null && now - last < 10) return;
@@ -185,13 +166,13 @@ final class RuneAbyss {
         return "§d낙인 §f" + n + "체 §7" + Js.toFixed(Math.max(0, (c.until - now) / 20.0), 1) + "초";
     }
 
-    /** 시험용: 이 사람의 마지막 시전 {더한 피해, 줄인 피해, 낙인 찍은 적 수, 요약을 띄웠으면 1, 낙인이 끝나는 틱} (없으면 null) */
+    /** 시험용: 이 사람의 마지막 시전 {낙인 찍은 적 수, 낙인이 끝나는 틱} (없으면 null) */
     static double[] last(UUID id) {
         Cast c = LAST.get(id);
-        return c == null ? null : new double[] {c.extra, c.saved, c.marked, c.shown ? 1 : 0, c.until};
+        return c == null ? null : new double[] {c.marked, c.until};
     }
 
-    /** 매 틱: 끝난 낙인 (흩어짐) · 낙인 찍힌 적의 문양 (적마다 10틱에 한 번 — 엇갈리게) · 끝난 시전의 요약 */
+    /** 매 틱: 끝난 낙인 (흩어짐) · 낙인 찍힌 적의 문양 (적마다 10틱에 한 번 — 엇갈리게) */
     private static void tick(MinecraftServer server) {
         long now = Tasks.now();
         if (!BRANDS.isEmpty()) {
@@ -213,14 +194,6 @@ final class RuneAbyss {
                     drawn++;
                     brandFx(e, b.cast(), now);
                 }
-            }
-        }
-        if (!CASTS.isEmpty()) {
-            for (Iterator<Cast> it = CASTS.iterator(); it.hasNext(); ) {
-                Cast c = it.next();
-                if (now < c.until + 2) continue;
-                it.remove();
-                summary(server, c);
             }
         }
     }
@@ -311,7 +284,6 @@ final class RuneAbyss {
                 if (Math.hypot(g.x - sp.getX(), g.z - sp.getZ()) > 2.5) hand(level, g, 1.3, 1.0);
             }
         }
-        CASTS.add(cast);
         int n = 0;
         for (LivingEntity e : targets(sp, c, radius)) {
             Brand old = active(e);
@@ -401,25 +373,5 @@ final class RuneAbyss {
         Vec3 top = new Vec3(e.getX(), e.getY() + e.getBbHeight() + 0.55, e.getZ());
         SkillFx.sparks(level, top, PINK, 6, 2);
         SkillFx.play(level, "random.glass", top, 1.3, 0.25);
-    }
-
-    /**
-     * 시전의 요약: 시전자 눈앞 5칸에 "── 낙인 · 더한 피해 ──" (아래에 "── 낙인 · 줄인 피해 ──") — 0 이면 그 줄은 없음.
-     * 두 줄이면 둘 다 1.25칸 올림 (사진 검토: 아랫줄이 앞 5칸쯤 서 있는 적의 머리 높이에 걸림)
-     */
-    private static void summary(MinecraftServer server, Cast cast) {
-        cast.shown = true;
-        ServerPlayer sp = server.getPlayerList().getPlayer(cast.caster);
-        if (sp == null || sp.isRemoved()) return;
-        ServerLevel level = sp.level();
-        Vec3 at = V.up(V.add(sp.getEyePosition(), Kit.facingOf(sp), 5.0), cast.extra > 0 && cast.saved > 0 ? 1.8 : 0.55);
-        DamageNumbers.Tone tone = RuneLimited.toneOf(FN);
-        float k = 0.72F;
-        if (cast.extra > 0) DamageNumbers.showTotal(level, at, cast.extra, "낙인 · 더한 피해", tone, k);
-        if (cast.saved > 0) DamageNumbers.showTotal(level, V.up(at, cast.extra > 0 ? -1.25 : 0), cast.saved, "낙인 · 줄인 피해", tone, k * 0.82F);
-        if (cast.extra > 0 || cast.saved > 0) {
-            SkillFx.sparks(level, at, PINK, 8, 2);
-            SkillFx.playFor(sp, "chime.amethyst_block", 0.8, 0.7);
-        }
     }
 }

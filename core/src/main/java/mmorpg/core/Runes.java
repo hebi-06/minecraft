@@ -490,30 +490,27 @@ public final class Runes {
             out.add("§r" + L + "광선 동안 천천히 걸음");
         }
         if (isGrace(d)) {
-            // 0.19.0 세계수의 가호: 피해 없음 — 가호 (스탯 합 125 기준) · 세기 공식 · 범위 · 끝 요약
+            // 0.19.0 세계수의 가호: 피해 없음 — 가호 (스탯 합 125 기준) · 세기 공식 · 범위 (끝 요약 글자는 0.20.1 에서 뺌)
             double up = graceUp(d, GRACE_REF);
             double cut = graceCut(d, GRACE_REF);
             out.add("§r" + L + "가호 (스탯 합 " + Js.str(GRACE_REF) + "): " + N + "가하는 피해 +" + Js.str(Js.round(up * 100)) + "%");
             out.add("§r" + L + "    · " + N + "받는 피해 -" + Js.str(Js.round(cut * 100)) + "%" + L + " (다른 감소와는 센 것 하나)");
             out.add("§r" + L + graceFormula(d));
             out.add("§r" + L + "쓴 자리 반지름 " + d.text("radius") + "칸 안 아군 (나 포함) · " + sec(d.numOr("ticks", Double.NaN)));
-            out.add("§r" + L + "끝나면 가호로 " + N + "더한 피해 · 막은 피해" + L + "를 띄움");
             return out;
         }
         if (isBrand(d)) {
-            // 0.20.0 심연의 낙인: 피해 없음 — 낙인 (스탯 합 125 기준) · 세기 공식 · 범위 · 끝 요약
+            // 0.20.0 심연의 낙인: 피해 없음 — 낙인 (스탯 합 125 기준) · 세기 공식 · 범위 (끝 요약 글자는 0.20.1 에서 뺌)
             double up = brandUp(d, GRACE_REF);
             double cut = brandCut(d, GRACE_REF);
             out.add("§r" + L + "낙인 (스탯 합 " + Js.str(GRACE_REF) + "): " + N + "적이 받는 피해 +" + Js.str(Js.round(up * 100)) + "%");
             out.add("§r" + L + "    · " + N + "적이 주는 피해 -" + Js.str(Js.round(cut * 100)) + "%" + L + " (가호와 곱)");
             out.add("§r" + L + brandFormula(d));
             out.add("§r" + L + "조준한 곳 반지름 " + d.text("radius") + "칸 안 적 (보스 포함) · " + sec(d.numOr("ticks", Double.NaN)));
-            out.add("§r" + L + "끝나면 낙인으로 " + N + "더한 피해 · 줄인 피해" + L + "를 띄움");
             return out;
         }
         if (d.truthy("stun")) out.add("§r" + L + "맞은 적 기절 " + sec(d.num("stun")));
-        out.add("§r" + L + "끝나면 이번 시전의 " + N + "총 피해" + L + "를 띄움");
-        return out;
+        return out; // 끝에 띄우던 총 피해 글자 줄은 0.20.1 에서 뺌 (사용자 "체감으로만")
     }
 
     /** 가호 룬 설명의 기준 스탯 합 (40렙 125포인트) */

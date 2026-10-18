@@ -1,10 +1,8 @@
 package mmorpg.fabric.rune;
 
 import com.mojang.math.Transformation;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import mmorpg.core.Js;
@@ -46,9 +44,8 @@ import org.joml.Vector3f;
  * <li>가호: 가하는 피해 × (1 + 가호) — 평타 · 활 · 완드 · 스킬 (RpgCombat.powerOf) · 평타에 더한 피해 · 룬 피해 (RuneKit.runeHit) 에 한 번씩,
  * 받는 피해 × (1 − 가호) — 룬 · 스킬 감소 (Guards) 와는 가장 센 것 하나 (RpgHealth.buffReduce). 가호 = Runes.graceUp / graceCut (시전자의 네 스탯의 합 ·
  * 돌파 계수 — 40렙 125포인트 0돌 20% · 3돌 26% · 6돌 32%). 여러 가호가 겹치면 센 것 (같으면 오래 가는 것) 하나</li>
- * <li>숫자: 가호를 받은 사람이 준 피해 중 가호 몫 (준 피해 × 가호 / (1 + 가호)) 과 막아 준 피해를 시전마다 모아, 가호가 끝나면 시전자 눈앞에
- * "── 가호 · 더한 피해 ──" · "── 가호 · 막은 피해 ──" (총 피해 글자 — 세계수 비췻빛 · 금빛). 가호로 더한 피해가 들어가면 맞은 적에게 금빛 잎 · 반짝임,
- * 가호가 막아 주면 몸 둘레에 비췻빛 고리 (자주 맞아도 잠깐에 한 번)</li>
+ * <li>체감: 가호를 받은 사람이 맞히면 맞은 적에게 금빛 잎 · 반짝임, 가호가 막아 주면 몸 둘레에 비췻빛 고리 (자주 맞아도 잠깐에 한 번).
+ * 끝에 띄우던 요약 글자 ("가호 · 더한 피해" · "가호 · 막은 피해") 는 0.20.1 에서 뺌 (사용자 "체감으로만, 거추장스럽다")</li>
  * <li>가호 동안: 상태 줄 "세계수 +20%·-20% 8.5초", 몸 둘레에 떨어지는 잎 · 1인칭 화면 아래 빛 알갱이. 죽으면 끝 (차원 이동 · 탈것으로는 끝나지 않음), 나가면 지움</li>
  * <li>6돌 (finale — 세계수 개화): 나무가 더 크게 (tree), 잎 지붕의 꽃이 피고 땅에 빛의 꽃 · 가호의 땅에 꽃잎 비 (수치는 돌파 계수 · 단계 값 그대로)</li>
  * </ul>
@@ -88,14 +85,11 @@ final class RuneGrove {
     /** 가호 하나 (사람마다): 어느 시전의 것 · 끝 틱 · 가하는 피해 + · 받는 피해 − · 걸 때의 죽음 표 (죽으면 끝) */
     private record Grace(Cast cast, long until, double up, double cut, int deaths) {}
 
-    /** 시전 하나: 시전자 · 가호가 끝나는 틱 · 가호로 더한 피해 · 막아 준 피해 · 받은 사람 수 · 요약을 띄웠는지 */
+    /** 시전 하나: 시전자 · 가호가 끝나는 틱 · 받은 사람 수 */
     static final class Cast {
         final UUID caster;
         final long until;
-        double extra;
-        double saved;
         int members;
-        boolean shown;
 
         Cast(UUID caster, long until) {
             this.caster = caster;
@@ -104,8 +98,6 @@ final class RuneGrove {
     }
 
     private static final Map<UUID, Grace> GRACE = new HashMap<>();
-    /** 가호를 건 시전 (끝나면 요약) */
-    private static final List<Cast> CASTS = new ArrayList<>();
     /** 시험 · 사진첩: 사람마다 마지막 시전 */
     private static final Map<UUID, Cast> LAST = new HashMap<>();
     /** 맞힘 · 막음 연출을 그린 틱 (잦으면 건너뜀) */
@@ -114,7 +106,7 @@ final class RuneGrove {
 
     static void register() {
         RuneCast.register(FN, RuneGrove::cast);
-        // 훅: 앞에 다른 것이 있으면 이어서 (가하는 피해는 곱, 받는 피해 감소는 센 것, 막은 양 · 준 피해는 둘 다에)
+        // 훅: 앞에 다른 것이 있으면 이어서 (가하는 피해는 곱, 받는 피해 감소는 센 것, 막음 · 맞힘 연출은 둘 다에)
         java.util.function.ToDoubleFunction<ServerPlayer> dm = RpgCombat.dealtMult;
         RpgCombat.dealtMult = p -> dm.applyAsDouble(p) * dealtMult(p);
         java.util.function.ToDoubleFunction<ServerPlayer> br = RpgHealth.buffReduce;
@@ -134,19 +126,17 @@ final class RuneGrove {
         RuneSystem.onForget(RuneGrove::forget);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             GRACE.clear();
-            CASTS.clear();
             LAST.clear();
             HIT_CUE.clear();
             WARD_CUE.clear();
         });
     }
 
-    /** 나감 · 기록 지우기: 가호 · 이 사람이 건 시전의 요약 (띄우지 않음) */
+    /** 나감 · 기록 지우기: 가호 · 연출 틱 */
     private static void forget(UUID id) {
         GRACE.remove(id);
         HIT_CUE.remove(id);
         WARD_CUE.remove(id);
-        CASTS.removeIf(c -> c.caster.equals(id));
     }
 
     // ------------------------------------------------------------ 가호 (훅)
@@ -171,11 +161,10 @@ final class RuneGrove {
         return g == null ? 0 : g.cut();
     }
 
-    /** 가호를 받은 사람이 준 피해가 들어감: 가호 몫을 시전에 더함 · 맞은 적에게 금빛 잎 (공격자마다 6틱에 한 번) */
+    /** 가호를 받은 사람이 준 피해가 들어감: 맞은 적에게 금빛 잎 (공격자마다 6틱에 한 번) */
     private static void dealt(ServerPlayer attacker, LivingEntity victim, double dealt) {
         Grace g = active(attacker);
         if (g == null || !(g.up() > 0) || !(dealt > 0)) return;
-        g.cast().extra += dealt * g.up() / (1 + g.up());
         long now = Tasks.now();
         Long last = HIT_CUE.get(attacker.getUUID());
         if (last != null && now - last < 6) return;
@@ -183,11 +172,10 @@ final class RuneGrove {
         hitCue(victim);
     }
 
-    /** 가호가 피해를 막아 줌 (가장 센 감소일 때): 막은 양을 시전에 더함 · 몸 둘레 비췻빛 고리 (8틱에 한 번) */
+    /** 가호가 피해를 막아 줌 (가장 센 감소일 때): 몸 둘레 비췻빛 고리 (8틱에 한 번) */
     private static void saved(ServerPlayer sp, double amount) {
         Grace g = active(sp);
         if (g == null || !(amount > 0)) return;
-        g.cast().saved += amount;
         long now = Tasks.now();
         Long last = WARD_CUE.get(sp.getUUID());
         if (last != null && now - last < 8) return;
@@ -207,13 +195,13 @@ final class RuneGrove {
         return Js.str(Math.round(f * 100));
     }
 
-    /** 시험용: 이 사람의 마지막 시전 {더한 피해, 막은 피해, 받은 사람 수, 요약을 띄웠으면 1, 가호가 끝나는 틱} (없으면 null) */
+    /** 시험용: 이 사람의 마지막 시전 {받은 사람 수, 가호가 끝나는 틱} (없으면 null) */
     static double[] last(UUID id) {
         Cast c = LAST.get(id);
-        return c == null ? null : new double[] {c.extra, c.saved, c.members, c.shown ? 1 : 0, c.until};
+        return c == null ? null : new double[] {c.members, c.until};
     }
 
-    /** 매 틱: 끝난 가호 (잎이 흩어지며 걷힘 · 알림) · 가호 동안의 기운 (사람마다 10틱에 한 번 — 엇갈리게) · 끝난 시전의 요약 */
+    /** 매 틱: 끝난 가호 (잎이 흩어지며 걷힘 · 알림) · 가호 동안의 기운 (사람마다 10틱에 한 번 — 엇갈리게) */
     private static void tick(MinecraftServer server) {
         long now = Tasks.now();
         if (!GRACE.isEmpty()) {
@@ -235,14 +223,6 @@ final class RuneGrove {
                     continue;
                 }
                 if ((now + (e.getKey().hashCode() & 7)) % 10 == 0) aura(sp, now);
-            }
-        }
-        if (!CASTS.isEmpty()) {
-            for (Iterator<Cast> it = CASTS.iterator(); it.hasNext(); ) {
-                Cast c = it.next();
-                if (now < c.until + 2) continue; // 마지막 피해 · 막음이 다 셈해진 뒤
-                it.remove();
-                summary(server, c);
             }
         }
     }
@@ -349,7 +329,6 @@ final class RuneGrove {
             SkillFx.play(level, "firework.twinkle", crown, 1.0, 1.0);
         }
         long until = cast.until;
-        CASTS.add(cast);
         int idx = 0;
         for (ServerPlayer m : RuneKit.playersAround(level, c, radius, sp)) {
             Grace old = active(m);
@@ -527,27 +506,6 @@ final class RuneGrove {
         leaves(level, V.up(sp.position(), 0.3), 8, JADE, 2.2, 0.5, 0.9, 0.12);
         Notify.notify(sp, "§7세계수의 가호가 걷혔습니다", 40);
         SkillFx.playFor(sp, "beacon.deactivate", 1.5, 0.35);
-    }
-
-    /**
-     * 시전의 요약: 시전자 눈앞 5칸에 "── 가호 · 더한 피해 ──" (아래에 "── 가호 · 막은 피해 ──") — 0 이면 그 줄은 없음.
-     * 두 줄이면 둘 다 1.25칸 올림 (심연의 낙인 사진 검토: 아랫줄이 앞 5칸쯤 서 있는 적의 머리 높이에 걸림)
-     */
-    private static void summary(MinecraftServer server, Cast cast) {
-        cast.shown = true;
-        ServerPlayer sp = server.getPlayerList().getPlayer(cast.caster);
-        if (sp == null || sp.isRemoved()) return;
-        ServerLevel level = sp.level();
-        Vec3 f = Kit.facingOf(sp);
-        Vec3 at = V.up(V.add(sp.getEyePosition(), f, 5.0), cast.extra > 0 && cast.saved > 0 ? 1.8 : 0.55);
-        DamageNumbers.Tone tone = RuneLimited.toneOf(FN);
-        float k = 0.72F;
-        if (cast.extra > 0) DamageNumbers.showTotal(level, at, cast.extra, "가호 · 더한 피해", tone, k);
-        if (cast.saved > 0) DamageNumbers.showTotal(level, V.up(at, cast.extra > 0 ? -1.25 : 0), cast.saved, "가호 · 막은 피해", tone, k * 0.82F);
-        if (cast.extra > 0 || cast.saved > 0) {
-            leaves(level, at, 10, GOLD, 1.8, 0.8, 1.0, 0.12);
-            SkillFx.playFor(sp, "chime.amethyst_block", 1.3, 0.7);
-        }
     }
 
     // ------------------------------------------------------------ 그림 도구

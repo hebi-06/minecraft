@@ -4,7 +4,6 @@ import java.lang.reflect.Method;
 import java.util.List;
 import mmorpg.core.RuneBreak;
 import mmorpg.core.Runes;
-import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.FxDisplays;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
@@ -37,7 +36,7 @@ import net.minecraft.world.phys.Vec3;
  * 천공의 눈은 시전 중 시전자 구속 (천천히 걸음). 0.17.0 무간참역: 쓴 자리 영역 (과녁 4.5칸 — 반지름 8 안) 베기 2 × 10 + 마무리 일섬 14 = 34 (6돌 2.5 × 14 + 20 = 55),
  * 타격 = 베기 10 (6돌 14) + 일섬 1.
  * 0.19.0 세계수의 가호 (버프 — 피해 없음): 반지름 안 아군 (나 포함) 만 가하는 피해 × (1 + 가호) · 받는 피해 × (1 − 가호, Guards 감소와는 센 것 하나),
- * 가호 몫 · 막은 양을 시전 기록에 모음, 끝나면 그대로 · 요약 글자 (총 피해 글자 둘).
+ * 끝나면 그대로 (0.20.1 — 끝에 띄우던 요약 글자는 없음).
  * 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 조준한 곳 반지름 안 적만 받는 피해 × (1 + 낙인) · 그 적이 준 피해 × (1 − 낙인), 가호와 곱 (1.44배),
  * 적이 없으면 재사용 대기 없이 거절.
  * 사거리 · 범위가 넓어 시험마다 시험 환경을 따로 (mmorpg:lr_…) — 같은 묶음에서 함께 도는 다른 시험의 과녁을 맞히지 않게.
@@ -90,7 +89,7 @@ public final class RpgLimitedRuneTests {
         return before - sp.getHealth();
     }
 
-    /** RuneGrove 의 마지막 시전 {더한 피해, 막은 피해, 받은 사람 수, 요약 1, 끝 틱} — 패키지 밖이라 리플렉션 */
+    /** RuneGrove 의 마지막 시전 {받은 사람 수, 끝 틱} — 패키지 밖이라 리플렉션 */
     private static double[] graceOf(ServerPlayer sp) {
         try {
             Class<?> c = Class.forName("mmorpg.fabric.rune.RuneGrove");
@@ -102,7 +101,7 @@ public final class RpgLimitedRuneTests {
         }
     }
 
-    /** RuneAbyss 의 마지막 시전 {더한 피해, 줄인 피해, 낙인 찍은 수, 요약 1, 끝 틱} — 패키지 밖이라 리플렉션 */
+    /** RuneAbyss 의 마지막 시전 {낙인 찍은 수, 끝 틱} — 패키지 밖이라 리플렉션 */
     private static double[] brandOf(ServerPlayer sp) {
         try {
             Class<?> c = Class.forName("mmorpg.fabric.rune.RuneAbyss");
@@ -158,7 +157,7 @@ public final class RpgLimitedRuneTests {
                 h.assertTrue(Math.abs(dealt - total * P) < 1e-2 * P, family + " " + breakLevel + " dealt " + dealt + " vs " + total + " × " + P);
                 double[] last = lastOf(sp, r.def().str("fn"));
                 h.assertTrue(last != null && (int) last[1] == hits, family + " hits " + (last == null ? "none" : (int) last[1]) + " vs " + hits);
-                h.assertTrue(last != null && Math.abs(last[0] - dealt) < 1e-2 * P, family + " total text sum " + (last == null ? 0 : last[0]));
+                h.assertTrue(last != null && Math.abs(last[0] - dealt) < 1e-2 * P, family + " recorded sum " + (last == null ? 0 : last[0]));
                 h.getLevel().getServer().getPlayerList().remove(sp);
                 h.succeed();
             });
@@ -240,8 +239,8 @@ public final class RpgLimitedRuneTests {
 
     /**
      * 0.19.0 세계수의 가호 0돌 (스탯 31 · 31 · 31 · 32 — 합 125 → 가호 20%): 시전자 · 5칸 아군은 가하는 피해 ×1.2 · 받는 피해 ×0.8, 13칸 (반지름 8 밖) 은 그대로.
-     * 룬 피해가 1.2배, 같은 피해에 아군은 바깥 사람의 0.8배 (강철 피부 같은 감소 45% 가 함께면 센 것 하나 — 0.55배, 막은 양에 더하지 않음),
-     * 시전 기록 = 가호 몫 (늘어난 피해) · 막은 양 · 받은 사람 2, 12초 뒤 그대로 돌아오고 요약 (총 피해 글자 둘)
+     * 룬 피해가 1.2배, 같은 피해에 아군은 바깥 사람의 0.8배 (강철 피부 같은 감소 45% 가 함께면 센 것 하나 — 0.55배),
+     * 시전 기록 = 받은 사람 2, 12초 뒤 그대로 돌아옴 (0.20.1 — 요약 글자 없음)
      */
     @GameTest(environment = "mmorpg:lr_grace", maxTicks = 330)
     public void worldTreeGrace(GameTestHelper h) {
@@ -260,13 +259,11 @@ public final class RpgLimitedRuneTests {
         int charge = (int) r.def().num("charge");
         int ticks = (int) r.def().num("ticks");
         double[] d0 = new double[1];
-        int[] totals0 = new int[1];
         h.runAfterDelay(2, () -> {
             near(h, RpgCombat.dealtMult.applyAsDouble(sp), 1, 1e-9, "no grace before");
             RuneKit.runeHit(sp, z, 10, 1, "int");
             d0[0] = TestDummies.dealt(z);
             h.assertTrue(d0[0] > 0, "rune hit before");
-            totals0[0] = DamageNumbers.totalsShown;
             h.assertTrue(RuneCast.castRune(sp, r, false, 0), "grace cast");
         });
         h.runAfterDelay(3 + charge + 2, () -> {
@@ -277,8 +274,8 @@ public final class RpgLimitedRuneTests {
             near(h, RpgHealth.buffReduce.applyAsDouble(far), 0, 1e-9, "outside: no cut");
             h.assertTrue(Notify.hudSuffix(ally).contains("세계수") && !Notify.hudSuffix(far).contains("세계수"), "hud " + Notify.hudSuffix(ally));
             double[] g = graceOf(sp);
-            h.assertTrue(g != null && (int) g[2] == 2, "members 2: " + (g == null ? "none" : (int) g[2]));
-            near(h, g[4] - Tasks.now(), ticks - 2, 3, "grace lasts " + ticks + " ticks");
+            h.assertTrue(g != null && (int) g[0] == 2, "members 2: " + (g == null ? "none" : (int) g[0]));
+            near(h, g[1] - Tasks.now(), ticks - 2, 3, "grace lasts " + ticks + " ticks");
             h.assertTrue(FxDisplays.activeCount() >= 1, "world tree display");
         });
         h.runAfterDelay(34, () -> {
@@ -286,32 +283,24 @@ public final class RpgLimitedRuneTests {
             RuneKit.runeHit(sp, z, 10, 1, "int");
             double d1 = TestDummies.dealt(z) - d0[0];
             near(h, d1 / d0[0], 1.2, 1e-4, "rune damage ×1.2");
-            double[] g = graceOf(sp);
-            near(h, g[0], d1 - d0[0], 1e-3 * d1, "extra = boosted part");
         });
         h.runAfterDelay(70, () -> {
             double a = lossOf(h, ally, 10F);
             double b = lossOf(h, far, 10F);
             h.assertTrue(b > 0, "outsider hurt " + b);
             near(h, a / b, 0.8, 1e-4, "ally takes ×0.8");
-            double[] g = graceOf(sp);
-            near(h, g[1], b - a, 1e-3, "saved = prevented");
-            // 다른 감소 (45%) 가 함께: 센 것 하나 (0.55배), 가호가 막은 것은 아님
+            // 다른 감소 (45%) 가 함께: 센 것 하나 (0.55배)
             Guards.set(ally, 40, 0.45, null, null);
             Guards.set(far, 40, 0.45, null, null);
             double a2 = lossOf(h, ally, 10F);
             double b2 = lossOf(h, far, 10F);
             near(h, a2 / b, 0.55, 1e-4, "stronger guard wins (no stacking)");
             near(h, a2, b2, 1e-4, "same as the guard alone");
-            near(h, graceOf(sp)[1], b - a, 1e-3, "guard-covered hit not counted");
         });
         h.runAfterDelay(3 + charge + ticks + 6, () -> {
             near(h, RpgCombat.dealtMult.applyAsDouble(sp), 1, 1e-9, "caster grace ended");
             near(h, RpgHealth.buffReduce.applyAsDouble(ally), 0, 1e-9, "ally grace ended");
             h.assertTrue(!Notify.hudSuffix(ally).contains("세계수"), "hud cleared");
-            double[] g = graceOf(sp);
-            h.assertTrue(g[3] == 1, "summary shown");
-            h.assertTrue(DamageNumbers.totalsShown >= totals0[0] + 2, "two summary numbers " + (DamageNumbers.totalsShown - totals0[0]));
             for (ServerPlayer p : List.of(sp, ally, far)) h.getLevel().getServer().getPlayerList().remove(p);
             h.succeed();
         });
@@ -338,7 +327,7 @@ public final class RpgLimitedRuneTests {
             near(h, RpgHealth.buffReduce.applyAsDouble(ally), 0.32, 1e-9, "ally cut 32%");
             near(h, RpgCombat.dealtMult.applyAsDouble(far), 1, 1e-9, "outside 12");
             double[] g = graceOf(sp);
-            near(h, g[4] - Tasks.now(), 320 - 2, 3, "16 s");
+            near(h, g[1] - Tasks.now(), 320 - 2, 3, "16 s");
             h.assertTrue(FxDisplays.activeCount() >= 1, "world tree display");
             for (ServerPlayer p : List.of(sp, ally, far)) h.getLevel().getServer().getPlayerList().remove(p);
             h.succeed();
@@ -348,7 +337,7 @@ public final class RpgLimitedRuneTests {
     /**
      * 0.20.0 심연의 낙인 0돌 (스탯 31 · 31 · 31 · 32 — 합 125 → 낙인 20%): 조준한 과녁 (5칸 앞) 둘레 반지름 6칸 안 과녁 둘에 낙인, 그 밖 (8칸) 은 없음.
      * 낙인 찍힌 과녁이 받는 룬 피해 1.2배 · 그 과녁이 준 피해 0.8배 (낙인 없는 몹은 그대로), 세계수의 가호를 더하면 1.2 × 1.2 = 1.44배 (곱연산),
-     * 시전 기록 (낙인 몫 · 줄인 양 · 찍은 수 2), 10초 뒤 그대로 · 요약 글자 둘
+     * 시전 기록 (찍은 수 2), 10초 뒤 그대로 (0.20.1 — 요약 글자 없음)
      */
     @GameTest(environment = "mmorpg:lr_abyss", maxTicks = 300)
     public void abyssBrand(GameTestHelper h) {
@@ -369,14 +358,12 @@ public final class RpgLimitedRuneTests {
         int charge = (int) r.def().num("charge");
         int ticks = (int) r.def().num("ticks");
         double[] d0 = new double[1];
-        int[] totals0 = new int[1];
         h.runAfterDelay(2, () -> {
             sp.lookAt(EntityAnchorArgument.Anchor.EYES, z1.getEyePosition());
             near(h, RpgCombat.takenMult.applyAsDouble(z1), 1, 1e-9, "no brand before");
             RuneKit.runeHit(sp, z1, 10, 1, "int");
             d0[0] = TestDummies.dealt(z1);
             h.assertTrue(d0[0] > 0, "rune hit before");
-            totals0[0] = DamageNumbers.totalsShown;
             h.assertTrue(RuneCast.castRune(sp, r, false, 0), "brand cast");
         });
         h.runAfterDelay(3 + charge + 4, () -> {
@@ -386,21 +373,19 @@ public final class RpgLimitedRuneTests {
             near(h, RpgHealth.weakenOf.applyAsDouble(z1), 0.2, 1e-9, "branded husk deals -20%");
             near(h, RpgHealth.weakenOf.applyAsDouble(z3), 0, 1e-9, "outside: not weakened");
             double[] b = brandOf(sp);
-            h.assertTrue(b != null && (int) b[2] == 2, "marked 2: " + (b == null ? "none" : (int) b[2]));
-            near(h, b[4] - Tasks.now(), ticks - 4, 3, "brand lasts " + ticks + " ticks");
+            h.assertTrue(b != null && (int) b[0] == 2, "marked 2: " + (b == null ? "none" : (int) b[0]));
+            near(h, b[1] - Tasks.now(), ticks - 4, 3, "brand lasts " + ticks + " ticks");
             h.assertTrue(Notify.hudSuffix(sp).contains("낙인"), "hud " + Notify.hudSuffix(sp));
             // 낙인 찍힌 몹이 준 피해 × 0.8 (RpgHealth.onLoss — 체력 100 → 90 의 피해 10)
             float a = RpgHealth.onLoss(far, far.damageSources().mobAttack(z1), 100F, 90F);
             float c = RpgHealth.onLoss(far, far.damageSources().mobAttack(z3), 100F, 90F);
             near(h, 100 - a, 8, 1e-3, "branded mob deals ×0.8");
             near(h, 100 - c, 10, 1e-3, "unbranded mob deals ×1");
-            near(h, brandOf(sp)[1], 2, 1e-3, "saved = 2");
         });
         h.runAfterDelay(36, () -> {
             RuneKit.runeHit(sp, z1, 10, 1, "int");
             double d1 = TestDummies.dealt(z1) - d0[0];
             near(h, d1 / d0[0], 1.2, 1e-4, "rune damage ×1.2 on the branded husk");
-            near(h, brandOf(sp)[0], d1 - d0[0], 1e-3 * d1, "extra = branded part");
             h.assertTrue(RuneCast.castRune(sp, grace, false, 0), "grace cast");
         });
         h.runAfterDelay(36 + 18 + 8, () -> {
@@ -413,8 +398,6 @@ public final class RpgLimitedRuneTests {
         h.runAfterDelay(3 + charge + ticks + 6, () -> {
             near(h, RpgCombat.takenMult.applyAsDouble(z1), 1, 1e-9, "brand ended");
             near(h, RpgHealth.weakenOf.applyAsDouble(z1), 0, 1e-9, "weaken ended");
-            h.assertTrue(brandOf(sp)[3] == 1, "brand summary shown");
-            h.assertTrue(DamageNumbers.totalsShown >= totals0[0] + 2, "two summary numbers " + (DamageNumbers.totalsShown - totals0[0]));
             for (ServerPlayer p : List.of(sp, far)) h.getLevel().getServer().getPlayerList().remove(p);
             h.succeed();
         });
@@ -444,7 +427,7 @@ public final class RpgLimitedRuneTests {
             near(h, RpgCombat.takenMult.applyAsDouble(z2), 1.32, 1e-9, "6: 7.5 from the center (radius 8)");
             near(h, RpgCombat.takenMult.applyAsDouble(z3), 1, 1e-9, "6: 9.5 outside");
             near(h, RpgHealth.weakenOf.applyAsDouble(z1), 0.32, 1e-9, "6: deals -32%");
-            near(h, brandOf(sp)[4] - Tasks.now(), 280 - 4, 3, "6: 14 s");
+            near(h, brandOf(sp)[1] - Tasks.now(), 280 - 4, 3, "6: 14 s");
             h.getLevel().getServer().getPlayerList().remove(sp);
             h.succeed();
         });

@@ -34,7 +34,7 @@ import org.joml.Quaternionf;
 /**
  * 0.18.0 다섯째 한정 초월 룬 대지 가르기 (earthSplitter — 사용자 요청 "거대한 대지의 대검이 땅을 가르고 땅이 갈라지는 이펙트" → 고침 "거대한 검을 전방으로
  * 내려찍는 모습 · 전방으로 직선 베기"): 다른 한정 룬처럼 위력 P 의 적용 스탯 = 네 스탯의 합 × 1.0, 마법 피해, 피해는 몹 무적 시간을 피해 (RuneLimited.hit),
- * 끝에 총 피해 글자. 수치는 RUNES.terra (rules_more.json), 돌파는 rune_break.json (3 · 6돌 + 6돌 지맥 폭발 — finale, 피해 없음).
+ * 수치는 RUNES.terra (rules_more.json), 돌파는 rune_break.json (3 · 6돌 + 6돌 지맥 폭발 — finale, 피해 없음).
  * <ol>
  *   <li>대검 모임 (charge 틱): 시전자 머리 위 (칼자루 = 발 + HILT_UP · 조금 뒤 · 오른쪽) 에 대지의 대검 (3D 모델 — tools/terra_blade.py, 아이템 표시 엔티티) 이
  *       칼끝을 하늘로 한 채 커지며 생기고 (둘레 땅에서 바위 · 흙이 솟아 모임), 뒤로 더 젖혀 힘을 모음. 앞 땅에는 벨 줄이 빛남 (시전자 앞 start ~ start + length 칸)</li>
@@ -44,7 +44,7 @@ import org.joml.Quaternionf;
  *       양옆 땅이 판처럼 들림 (그 자리 블록의 블록 표시 엔티티). 갈라짐이 지나는 적마다 위력 × crush (굵은 금빛 숫자 !) · 옆으로 띄움 (6돌 기절).
  *       대검은 HOLD 틱 박혀 있다가 바위로 부서져 사라짐 (여진 동안 화면을 가리지 않게)</li>
  *   <li>갈라진 땅 여진 (gap 틱마다 hits 번): 균열을 따라 시전자 쪽에서 앞으로 바위 가시 · 불씨가 솟는 물결 (WAVE_T 틱) — 균열 안 모든 적 위력 × mult</li>
- *   <li>끝: 들린 땅이 내려앉음 → 총 피해. 6돌 지맥 폭발 (마지막 여진 뒤): 균열 양옆으로 바위 기둥 (꼭대기 마그마) 이 줄지어 솟았다 무너짐 (피해 없음)</li>
+ *   <li>끝: 들린 땅이 내려앉음. 6돌 지맥 폭발 (마지막 여진 뒤): 균열 양옆으로 바위 기둥 (꼭대기 마그마) 이 줄지어 솟았다 무너짐 (피해 없음)</li>
  * </ol>
  * 줄 = S (시전자 앞 start 칸) 에서 앞으로 d (0 ~ length) · 옆으로 width 칸. 화면 색 연출은 3돌부터 (옅은 모래빛 흙먼지 하늘 SKY_FOG · 메테오의 주황 번쩍임 —
  * RuneKit.ULT_ALIAS). 쓰러지면 남은 것은 멈춤 (표시 엔티티는 정해진 틱 뒤 FxDisplays 가 지움).
@@ -458,15 +458,14 @@ final class RuneTerra {
             return true;
         }));
 
-        // ---- 끝: 들린 땅이 내려앉음 (6돌 — 지맥 폭발, 총 피해는 그 뒤)
+        // ---- 끝: 들린 땅이 내려앉음 (6돌 — 지맥 폭발)
         RuneKit.later(settleAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             SkillFx.play(level, "block.grindstone.use", V.add(S, f, L / 2), 0.4, 0.8);
             for (Plate p : plates) p.settle();
         });
         if (fin) RuneKit.later(lastWave + 2, () -> veinBurst(sp, level, S, f, side, L, start, refY, life));
-        int totalAt = lastWave + (fin ? 34 : 10);
-        RuneLimited.total(sp, "earthSplitter", V.up(V.add(S, f, L * 0.55), 3.2), tally, totalAt);
+        RuneLimited.saveTally(sp, "earthSplitter", tally, lastWave + (fin ? 34 : 10)); // 시전 기록 (시험): 마지막 여진 뒤
         return true;
     }
 

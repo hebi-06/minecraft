@@ -17,7 +17,8 @@ import java.util.Random;
  * <li>0.19.0 세계수의 가호: 피해 없음, 가호 = graceUp (받는 피해 graceCut) + min(gracePer × 네 스탯의 합, graceCap), 돌파 계수가 값 넷 모두에
  * (40렙 125포인트 0돌 20% · 3돌 26% · 6돌 32%, 스탯 합 150 에서 최대), 단계는 지속 12 → 14 → 16초 · 반지름 8 → 10 → 12칸, 6돌 연출 (세계수 개화)</li>
  * <li>적용 스탯 = 네 스탯의 합 × 1.0 (스탯을 어떻게 찍어도 같은 위력 — 40렙 125포인트 = 한 스탯만 찍은 자기 계열 룬과 같은 P 42), 알림 글자 "총 스탯 N"</li>
- * <li>배율 합 34 (다른 초월 32 보다 6.25% 위 — 사용자 요청 '5% ~ 12% 더 쎄게'), 재사용 대기 36초, 설명 줄 (한정 룬 · 네 스탯의 합 · 흐름 · 총 피해)</li>
+ * <li>배율 합 34 (다른 초월 32 보다 6.25% 위 — 사용자 요청 '5% ~ 12% 더 쎄게'), 재사용 대기 36초, 설명 줄 (한정 룬 · 네 스탯의 합 · 흐름 — 0.20.1 부터 끝에 띄우는
+ * 총 피해 · 요약 글자 줄 없음)</li>
  * <li>뽑기: 룬 뽑기권 · 고급 · 스탯 뽑기권에는 나오지 않음, 한정 뽑기의 초월 픽업으로만 (영웅 픽업 · 놓친 결과 · 다른 등급에는 없음)</li>
  * <li>돌파 3 · 6돌 (배율 합 42 · 55 — 0 · 3 · 6돌 모두 처음 설계 (32 · 38 ~ 39.2 · 49.4 ~ 50 — 다른 초월과 같은 줄) 보다 5 ~ 12% 위),
  * 6돌 전용 연출 (finale — 피해 없음: 근원의 프리즘 · 별똥별 비 · 심판의 눈)</li>
@@ -82,7 +83,7 @@ public final class LimitedRunesTest {
             String lore = plain(Runes.runeLore(r, false));
             check(lore.contains("한정 룬") && lore.contains("한정 뽑기의 초월 픽업으로만"), fams[i] + " lore limited: " + lore);
             check(lore.contains("네 스탯의 합 × 1.0") && lore.contains("어떻게 찍어도 같음"), fams[i] + " lore sum");
-            check(lore.contains("총 피해") && lore.contains("위력×34"), fams[i] + " lore total");
+            check(!lore.contains("총 피해") && lore.contains("위력×34"), fams[i] + " lore: ×34, no total-text line (0.20.1): " + lore);
             check(!lore.contains("다른 스탯 0.85"), fams[i] + " no off-stat line");
         }
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_arcana_transcend"), false)).contains("(17 + 17)"), "arcana parts 17 + 17");
@@ -229,7 +230,7 @@ public final class LimitedRunesTest {
             String lore = plain(Runes.runeLore(ygg, false));
             check(lore.contains("한정 룬") && lore.contains("네 스탯의 합 × 1.0"), "yggdrasil lore limited / sum: " + lore);
             check(lore.contains("가하는 피해 +20%") && lore.contains("받는 피해 -20%") && lore.contains("반지름 8칸") && lore.contains("12초"), "yggdrasil lore grace: " + lore);
-            check(lore.contains("더한 피해 · 막은 피해") && !lore.contains("위력") && !lore.contains("총 피해"), "yggdrasil lore no damage: " + lore);
+            check(!lore.contains("더한 피해") && !lore.contains("막은 피해") && !lore.contains("위력") && !lore.contains("총 피해"), "yggdrasil lore no damage / summary: " + lore);
             String lore6 = plain(RuneBreak.lore(ygg, 6, false));
             check(lore6.contains("가하는 피해 +32%") && lore6.contains("반지름 12칸") && lore6.contains("16초"), "yggdrasil 6 lore: " + lore6);
         }
@@ -269,7 +270,7 @@ public final class LimitedRunesTest {
             check(lore.contains("한정 룬") && lore.contains("네 스탯의 합 × 1.0"), "abyss lore limited / sum: " + lore);
             check(lore.contains("적이 받는 피해 +20%") && lore.contains("적이 주는 피해 -20%") && lore.contains("가호와 곱") && lore.contains("반지름 6칸")
                     && lore.contains("10초"), "abyss lore brand: " + lore);
-            check(lore.contains("더한 피해 · 줄인 피해") && !lore.contains("위력") && !lore.contains("총 피해"), "abyss lore no damage: " + lore);
+            check(!lore.contains("더한 피해") && !lore.contains("줄인 피해") && !lore.contains("위력") && !lore.contains("총 피해"), "abyss lore no damage / summary: " + lore);
             String lore6 = plain(RuneBreak.lore(aby, 6, false));
             check(lore6.contains("적이 받는 피해 +32%") && lore6.contains("반지름 8칸") && lore6.contains("14초"), "abyss 6 lore: " + lore6);
         }

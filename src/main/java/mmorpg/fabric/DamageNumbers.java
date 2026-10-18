@@ -10,7 +10,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import com.mojang.math.Transformation;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.RandomSource;
@@ -130,15 +129,9 @@ public final class DamageNumbers {
         double y;
         final double z;
         final float scale;
-        /** 떠 있는 틱 (기본 LIFE) · 처음 빠르게 오르는 정도 (0 이면 천천히만 — 총 피해) */
+        /** 떠 있는 틱 (LIFE) */
         int life = LIFE;
-        boolean slow;
         int t;
-        /** 총 피해 숫자 (0 보다 크면 0 → total 로 차오름 · 반짝임 — tickTotal) · 색 · 끝에 옅어지며 걷힘 · 틱마다 오르는 칸 (0 보다 작으면 기본) */
-        double total;
-        Tone tone;
-        boolean fade;
-        double rise = -1;
 
         Text(Display.TextDisplay e, Vec3 p, float scale) {
             this.e = e;
@@ -147,163 +140,6 @@ public final class DamageNumbers {
             this.z = p.z;
             this.scale = scale;
         }
-    }
-
-    /**
-     * 총 피해 글자 색 (0.17.0 — 무지갯빛 대신 룬 계열 색 하나로 정돈): 숫자는 stops 를 왼쪽 → 오른쪽으로 잇는 그라데이션, 그림자 (글자 아래 1픽셀) 는
-     * 계열 색을 어둡게 한 색 (검정 대신 — 은은한 입체감), 위 작은 줄 "── 총 피해 ──" 의 줄 (rule) · 글자 (label) 색. 색은 0xRRGGBB
-     */
-    public record Tone(int[] stops, int rule, int label, int shadow) {
-        private static final double[] W = {1, 1, 1};
-        /** 계열 색이 아주 옅을 때 (만상귀일 — 진줏빛): 흰빛 → 라일락 → 옅은 분홍 (하늘빛은 낮 하늘에 묻혀 뺌) */
-        private static final int[] PEARL = {0xFFFFFF, 0xE4D4FF, 0xFFDDF0};
-        /** 하늘빛 계열의 숫자 끝 색 쪽 (옅은 금빛) */
-        private static final double[] STARLIGHT = {1, 0.8, 0.42};
-        /** 기본 (금빛 — W · PEARL 다음에 만듦: 정적 초기화 순서) */
-        public static final Tone GOLD = of(new double[] {1, 0.74, 0.25}, new double[] {1, 0.97, 0.85});
-
-        /**
-         * 룬 계열 색 (RUNE.color — accent = 첫째 색 · light = 둘째 색) 에서: 숫자 light (흰빛 30%) → accent (흰빛 15%), 그림자 accent × 0.3 (밝은 하늘에서도
-         * 글자 테두리가 또렷하게). 두 끝이 너무 비슷하면 (아주 옅은 계열) 진줏빛
-         */
-        public static Tone of(double[] accent, double[] light) {
-            double[] l = mix(light, W, 0.3);
-            double[] d = mix(accent, W, 0.15);
-            double gap = Math.abs(l[0] - d[0]) + Math.abs(l[1] - d[1]) + Math.abs(l[2] - d[2]);
-            int[] stops;
-            // 밝은 하늘빛 (푸른 계열) 숫자는 낮 하늘에 묻힘 → 둘째 색 (별빛 크림) → 옅은 금빛 (푸른 계열 색은 그림자 · 줄에 남음 — 칠성 강림)
-            if (skyLike(d)) stops = new int[] {rgb(l), rgb(mix(light, STARLIGHT, 0.55))};
-            else if (gap < 0.3) stops = PEARL; // 두 끝이 너무 비슷 (아주 옅은 계열 — 만상귀일)
-            else stops = new int[] {rgb(l), rgb(d)};
-            return new Tone(stops, rgb(mix(accent, W, 0.15)), rgb(mix(light, W, 0.15)), rgb(new double[] {accent[0] * 0.3, accent[1] * 0.3, accent[2] * 0.3}));
-        }
-
-        /** 그라데이션의 f (0 ~ 1) 자리 색 */
-        public int at(double f) {
-            if (stops.length == 1) return stops[0];
-            double x = Math.max(0, Math.min(1, f)) * (stops.length - 1);
-            int i = Math.min(stops.length - 2, (int) Math.floor(x));
-            return mixRgb(stops[i], stops[i + 1], x - i);
-        }
-
-        /** 낮 하늘과 비슷한 색인지: 색상 185 ~ 240° · 채도 0.15 넘음 · 밝음 */
-        static boolean skyLike(double[] c) {
-            double max = Math.max(c[0], Math.max(c[1], c[2]));
-            double min = Math.min(c[0], Math.min(c[1], c[2]));
-            if (max <= 0 || (max - min) / max < 0.15 || max != c[2]) return false;
-            double hue = 60 * ((c[0] - c[1]) / (max - min)) + 240;
-            double lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-            return hue >= 185 && hue <= 240 && lum > 0.45;
-        }
-
-        private static double[] mix(double[] a, double[] b, double k) {
-            return new double[] {a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k};
-        }
-
-        private static int rgb(double[] c) {
-            int r = (int) Math.round(Math.max(0, Math.min(1, c[0])) * 255);
-            int g = (int) Math.round(Math.max(0, Math.min(1, c[1])) * 255);
-            int b = (int) Math.round(Math.max(0, Math.min(1, c[2])) * 255);
-            return (r << 16) | (g << 8) | b;
-        }
-    }
-
-    /** 두 색 (0xRRGGBB) 사이 */
-    static int mixRgb(int a, int b, double k) {
-        int r = (int) Math.round(((a >> 16) & 255) + (((b >> 16) & 255) - ((a >> 16) & 255)) * k);
-        int g = (int) Math.round(((a >> 8) & 255) + (((b >> 8) & 255) - ((a >> 8) & 255)) * k);
-        int bl = (int) Math.round((a & 255) + ((b & 255) - (a & 255)) * k);
-        return (r << 16) | (g << 8) | bl;
-    }
-
-    /** 총 피해: 숫자 크기 · 위 줄 크기 · 위 줄 높이 (숫자 위) · 떠 있는 틱 · 차오르는 틱 · 걷히는 틱 · 처음 크기 배율 (작게 나와 커짐) · 틱마다 오르는 칸 */
-    static final float TOTAL_SCALE = 2.6F;
-    static final float TOTAL_LABEL_SCALE = 1.4F;
-    static final double TOTAL_LABEL_UP = 0.68;
-    static final double TOTAL_RISE = 0.006;
-    static final int TOTAL_LIFE = 56;
-    static final int TOTAL_COUNT = 14;
-    static final int TOTAL_FADE = 8;
-    static final float TOTAL_START = 0.6F;
-
-    /** 총 피해 숫자 뒤 반투명 판 (계열 색 그림자 색 · 알파 — 낮 하늘 · 같은 색 하늘빛에서도 숫자가 또렷하게) */
-    static final int TOTAL_PLATE_ALPHA = 0x5C;
-
-    /** 총 피해 숫자 글자 (굵게 · 그라데이션 · 계열 색 그림자, 쉼표는 가늘게 · 앞뒤 빈칸 = 뒤 판의 좌우 여백). glint = 반짝이는 글자 자리 (-1 이면 없음) */
-    public static Component totalNumber(double value, Tone tone, int glint) {
-        String s = String.format(java.util.Locale.ROOT, "%,d", Math.round(Math.max(0, value)));
-        MutableComponent c = Component.empty();
-        c.append(Component.literal(" "));
-        int n = s.length();
-        int shadow = 0xFF000000 | tone.shadow();
-        for (int i = 0; i < n; i++) {
-            char ch = s.charAt(i);
-            boolean comma = ch == ',';
-            int rgb = tone.at(n <= 1 ? 0 : (double) i / (n - 1));
-            if (comma) rgb = tone.at(1);
-            else if (glint >= 0 && Math.abs(i - glint) <= 1) rgb = i == glint ? 0xFFFFFF : mixRgb(rgb, 0xFFFFFF, 0.5);
-            final int col = rgb;
-            c.append(Component.literal(String.valueOf(ch)).withStyle(st -> st.withColor(col).withBold(!comma).withShadowColor(shadow)));
-        }
-        c.append(Component.literal(" "));
-        return c;
-    }
-
-    /** 총 피해 위 작은 줄: "── 총 피해 ──" (줄 = 가운데 줄 그은 빈칸 — 이어진 가는 선) */
-    public static Component totalLabel(String label, Tone tone) {
-        int shadow = 0xFF000000 | tone.shadow();
-        MutableComponent c = Component.empty();
-        c.append(Component.literal("      ").withStyle(st -> st.withStrikethrough(true).withColor(tone.rule()).withShadowColor(shadow)));
-        c.append(Component.literal("  " + label + "  ").withStyle(st -> st.withColor(tone.label()).withShadowColor(shadow)));
-        c.append(Component.literal("      ").withStyle(st -> st.withStrikethrough(true).withColor(tone.rule()).withShadowColor(shadow)));
-        return c;
-    }
-
-    /**
-     * 0.16.0 한정 초월 룬: 한 번의 시전이 준 피해의 합을 그 자리에 크게 (2.8초 — 아주 천천히 떠오름). 0 이하면 띄우지 않음.
-     * 0.17.0 모양 (사용자 "총 피해 무지개 별로 — 더 세련되게"): 위에 작은 "── 총 피해 ──", 아래 큰 숫자 (룬 계열 색 그라데이션 · 계열 색 그림자) —
-     * 작게 나와 커지며 0 에서 합까지 0.7초 동안 차오름 (처음 빠르게 · 끝에 천천히) → 다 차면 톡 커졌다 돌아오고 빛이 왼쪽 → 오른쪽으로 숫자를 훑음
-     * → 끝 0.4초 동안 옅어지며 걷힘. 숫자 수 제한 (MAX_TEXTS) 과 따로 더 띄울 수 있음 (연타 숫자가 많아도 마지막 합은 보이게)
-     */
-    public static void showTotal(ServerLevel level, Vec3 at, double total, String label) {
-        showTotal(level, at, total, label, Tone.GOLD, 1F);
-    }
-
-    /** k = 크기 배율 (멀리 띄울 때 크게 — RuneLimited.total: 시전자 눈에서 7칸 넘으면 거리 / 7, 최대 2.4) */
-    public static void showTotal(ServerLevel level, Vec3 at, double total, String label, Tone tone, float k) {
-        if (!Rules.get().obj("CONFIG").truthy("DAMAGE_TEXT") || !(total > 0) || ACTIVE.size() >= MAX_TEXTS + SELF_EXTRA) return;
-        Tone tn = tone != null ? tone : Tone.GOLD;
-        float kk = Math.max(0.5F, k);
-        Text num = spawnText(level, at, totalNumber(0, tn, -1), TOTAL_SCALE * kk, TOTAL_START);
-        if (num == null) return;
-        totalsShown++;
-        num.total = total;
-        num.tone = tn;
-        num.life = TOTAL_LIFE;
-        num.fade = true;
-        num.rise = TOTAL_RISE * kk;
-        num.e.setBackgroundColor((TOTAL_PLATE_ALPHA << 24) | tn.shadow());
-        if (label == null || label.isEmpty()) return;
-        Text lab = spawnText(level, new Vec3(at.x, at.y + TOTAL_LABEL_UP * kk, at.z), totalLabel(label, tn), TOTAL_LABEL_SCALE * kk, TOTAL_START);
-        if (lab == null) return;
-        lab.life = TOTAL_LIFE;
-        lab.fade = true;
-        lab.rise = TOTAL_RISE * kk;
-    }
-
-    /** 총 피해 숫자의 틱 (t = 띄운 뒤 틱): 차오름 → 톡 → 반짝임 (커졌다 돌아온 뒤 — 글자를 바꾸는 동안 크기 보간이 겹치지 않게) */
-    private static void tickTotal(Text a) {
-        int t = a.t;
-        if (t <= TOTAL_COUNT) {
-            double x = (double) t / TOTAL_COUNT;
-            a.e.setText(totalNumber(t == TOTAL_COUNT ? a.total : a.total * (1 - Math.pow(1 - x, 3)), a.tone, -1));
-            if (t == TOTAL_COUNT) interp(a, 2, a.scale * 1.14F);
-            return;
-        }
-        if (t == TOTAL_COUNT + 2) interp(a, 4, a.scale);
-        int len = String.format(java.util.Locale.ROOT, "%,d", Math.round(a.total)).length();
-        int g = t - (TOTAL_COUNT + 7);
-        if (g >= 0 && g <= len + 1) a.e.setText(totalNumber(a.total, a.tone, g <= len ? g : -1));
     }
 
     /** 크기를 ticks 동안 바꿈 (클라이언트 보간) */
@@ -325,9 +161,6 @@ public final class DamageNumbers {
         ServerEntityEvents.ALLOW_LOAD.register((entity, level, reason, fromDisk) ->
                 !(fromDisk && entity instanceof Display.TextDisplay && entity.entityTags().contains(TAG)));
     }
-
-    /** 시험용: 지금까지 띄운 총 피해 글자 수 (showTotal) */
-    public static int totalsShown;
 
     /** 지금 떠 있는 숫자 수 (시험용) */
     public static int activeCount() {
@@ -358,7 +191,7 @@ public final class DamageNumbers {
     public static void feedback(LivingEntity victim, ServerPlayer attacker, double dealt, RpgCombat.Mark m, String mark) {
         if (victim == null || attacker == null || attacker == victim || !(dealt > 0)) return;
         try {
-            dealtHook.dealt(attacker, victim, dealt); // 0.19.0 세계수의 가호: 가호로 더한 피해 셈
+            dealtHook.dealt(attacker, victim, dealt); // 0.19.0 세계수의 가호: 가호를 받은 사람이 맞히면 맞은 적에게 금빛 잎 (RuneGrove)
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] dealt hook", e);
         }
@@ -485,7 +318,7 @@ public final class DamageNumbers {
         td.setFlags((byte) (Display.TextDisplay.FLAG_SHADOW | Display.TextDisplay.FLAG_SEE_THROUGH));
         td.setBrightnessOverride(Brightness.FULL_BRIGHT); // 밤 · 동굴에서도 밝게
         td.setPosRotInterpolationDuration(1); // 틱마다 옮기는 것을 부드럽게
-        // 처음엔 크게 (총 피해는 작게) → 3틱 동안 원래 크기로 (톡 튀어나오는 느낌)
+        // 처음엔 크게 → 3틱 동안 원래 크기로 (톡 튀어나오는 느낌)
         td.setTransformation(scaled(scale * start));
         td.snapTo(pos.x, pos.y, pos.z, 0F, 0F);
         td.addTag(TAG);
@@ -513,18 +346,10 @@ public final class DamageNumbers {
                 continue;
             }
             if (a.t == 2) {
-                // 셋째 틱 (클라이언트가 처음 모양을 받은 뒤): 원래 크기로 줄어드는 (총 피해는 커지는) 보간
+                // 셋째 틱 (클라이언트가 처음 모양을 받은 뒤): 원래 크기로 줄어드는 보간
                 interp(a, 3, a.scale);
             }
-            if (a.total > 0) tickTotal(a);
-            if (a.fade && a.t == a.life - TOTAL_FADE) {
-                // 끝: 옅어지며 걷힘 (글자 불투명도도 같은 보간)
-                a.e.setTransformationInterpolationDelay(0);
-                a.e.setTransformationInterpolationDuration(TOTAL_FADE);
-                a.e.setTextOpacity((byte) 24);
-                if (a.total > 0) a.e.setBackgroundColor(a.tone.shadow()); // 판도 같이 걷힘 (알파 0)
-            }
-            a.y += a.rise >= 0 ? a.rise : a.slow ? 0.015 : a.t < 6 ? 0.09 : 0.025;
+            a.y += a.t < 6 ? 0.09 : 0.025;
             a.e.setPos(a.x, a.y, a.z);
         }
     }

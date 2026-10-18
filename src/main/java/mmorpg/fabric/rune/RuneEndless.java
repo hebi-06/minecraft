@@ -15,7 +15,7 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 0.17.0 넷째 한정 초월 룬 무간참역 (endlessSlash — 사용자 요청 "한정 룬으로 무수한 참격 공격" 영역 룬, 이름 · 모습은 오리지널): 다른 한정 룬처럼
- * 위력 P 의 적용 스탯 = 네 스탯의 합 × 1.0, 마법 피해, 피해는 몹 무적 시간을 피해 (RuneLimited.hit), 끝에 총 피해 글자. 수치는 RUNES.endless (rules_more.json),
+ * 위력 P 의 적용 스탯 = 네 스탯의 합 × 1.0, 마법 피해, 피해는 몹 무적 시간을 피해 (RuneLimited.hit). 수치는 RUNES.endless (rules_more.json),
  * 돌파는 rune_break.json (3 · 6돌 + 6돌 하늘 가르기 — finale, 피해 없음).
  * <ol>
  *   <li>전개 (charge 틱): 쓴 자리 (영역은 그 자리에 남음 — 시전자는 움직여도 됨) 에서 고리가 반지름 radius 칸까지 퍼지고 바닥에 먹빛 검진 문양,
@@ -219,8 +219,8 @@ final class RuneEndless {
             }
         });
         if (fin) RuneKit.later(cutAt + 4, () -> skySplit(sp, level, c, f, R, life, skyK));
-        // 총 피해: 영역 앞쪽 끝 위 (1인칭 · 3인칭 모두 과녁 머리 위 · 화면 위쪽 안). 6돌은 하늘 가르기의 X 가 옅어진 뒤 (겹쳐 읽기 어렵지 않게)
-        RuneLimited.total(sp, "endlessSlash", V.up(V.add(c, f, R * 0.8), 2.6), tally, cutAt + (fin ? 22 : 10));
+        // 시전 기록 (피해 합 · 타격 수 — 시험): 일섬이 다 들어간 뒤
+        RuneLimited.saveTally(sp, "endlessSlash", tally, cutAt + (fin ? 22 : 10));
         return true;
     }
 

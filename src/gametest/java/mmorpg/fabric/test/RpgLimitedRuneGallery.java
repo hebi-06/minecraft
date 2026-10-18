@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CopyOnWriteArrayList;
 import mmorpg.core.Runes;
-import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.FxDisplays;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
@@ -47,11 +46,12 @@ import org.slf4j.LoggerFactory;
  * 0.18.0 대지 가르기 (앞쪽 균열 — z = -3 에 서서 과녁이 균열 안 · 대검은 머리 위에서 앞으로 휘둘러 과녁 앞에 박힘): 0돌 1인칭 · 6돌 3인칭 (지맥 폭발) ·
  * 6돌 밤 1인칭 (lr_terra_…),
  * 표시 엔티티 (대검 · 들린 땅 · 기둥) 가 떴는지 (FxDisplays.spawned) 도 기록.
- * 0.19.0 세계수의 가호 (버프 — 앞 8칸에 세계수 환영이 자람 · 금빛 빛줄기가 나에게): 0돌 1인칭 (가호 뒤 과녁을 치고 · 맞음 → 끝의 요약 "가호 · 더한 피해" ·
- * "가호 · 막은 피해" 까지) · 6돌 3인칭 (세계수 개화 — 큰 나무 · 꽃잎 비) · 6돌 밤 1인칭 (lr_ygg_…).
- * 0.20.0 심연의 낙인 (적 약화 — 조준한 과녁 무리에 심연이 열리고 사슬 · 머리 위 낙인): 0돌 1인칭 (낙인 뒤 과녁을 치고 (◆ 숫자) · 맞은 뒤 요약
- * "낙인 · 더한 피해" · "낙인 · 줄인 피해" 까지) · 6돌 3인칭 (심연의 문) · 6돌 밤 1인칭 (lr_abyss_…).
- * 써졌는지 (재사용 대기) · 들어간 피해 · 끝의 총 피해 글자 (DamageNumbers — "총 피해") 를 로그 (limited-gallery) 로, 아니면 마지막에 실패.
+ * 0.19.0 세계수의 가호 (버프 — 앞 12칸 · 왼쪽 6칸에 세계수 환영이 자람 · 금빛 빛줄기가 나에게): 0돌 1인칭 (가호 뒤 과녁을 치고 (금빛 잎) · 맞음 (비췻빛 고리)
+ * → 가호가 끝난 뒤까지) · 6돌 3인칭 (세계수 개화 — 큰 나무 · 꽃잎 비) · 6돌 밤 1인칭 (lr_ygg_…).
+ * 0.20.0 심연의 낙인 (적 약화 — 조준한 과녁 무리에 심연이 열리고 사슬 · 머리 위 낙인): 0돌 1인칭 (낙인 뒤 과녁을 치고 (◆ 숫자) · 맞음 (어두운 금)
+ * → 낙인이 끝난 뒤까지) · 6돌 3인칭 (심연의 문) · 6돌 밤 1인칭 (lr_abyss_…).
+ * 써졌는지 (재사용 대기) · 들어간 피해를 로그 (limited-gallery) 로, 아니면 마지막에 실패. 0.20.1 부터 끝에 띄우던 총 피해 · 요약 글자는 없음
+ * (사용자 "체감으로만, 거추장스럽다") — 룬마다 마지막 사진은 글자가 뜨지 않는지 보는 자리.
  * 스탯은 40렙 실제 분배 (31 · 31 · 31 · 32 = 총 125). 피해 숫자는 실제로 깎인 체력이라 과녁 체력 상한 (바닐라 1024) 에서 잘리므로,
  * 이 사진첩의 과녁은 흡수 체력 2048 을 매 틱 다시 채움 (6돌 큰 한 방 약 1,800 도 그대로 보이게 — 공용 TestDummies 는 그대로).
  */
@@ -92,13 +92,13 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             for (String s : List.of("str 31", "dex 31", "vit 31", "int 32")) server.runCommand("execute as @a run rpg set " + s);
             server.runOnServer(s -> installBuffer());
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
-            // 만상귀일: 구슬이 몸 둘레 → 조준한 곳 위 → 빛줄기 넷 (16 · 26 · 36 · 46틱 쯤 — 스탯 고르게) → 모임 (64) → 귀일 폭발 (70) → 총 피해 (78)
+            // 만상귀일: 구슬이 몸 둘레 → 조준한 곳 위 → 빛줄기 넷 (16 · 26 · 36 · 46틱 쯤 — 스탯 고르게) → 모임 (64) → 귀일 폭발 (70) → 끝 (글자 없음)
             run(ctx, server, "arcana", 0, false, new int[] {8, 26, 36, 56, 66, 72, 82, 98}, null, false);
             run(ctx, server, "arcana", 6, true, new int[] {30, 72, 80, 90, 100, 114}, null, false);
-            // 칠성 강림: 별이 켜짐 (0 ~ 18틱) → 별빛 기둥 7 (24 ~ 84틱) → 접힘 (92) → 큰 별 (98) → 떨어짐 (106) → 총 피해 (114)
+            // 칠성 강림: 별이 켜짐 (0 ~ 18틱) → 별빛 기둥 7 (24 ~ 84틱) → 접힘 (92) → 큰 별 (98) → 떨어짐 (106) → 끝 (글자 없음)
             run(ctx, server, "dipper", 0, false, new int[] {12, 26, 50, 94, 100, 108, 116, 132}, null, false);
             run(ctx, server, "dipper", 6, true, new int[] {30, 104, 118, 126, 136, 150, 162}, null, false);
-            // 천공의 눈: 눈을 뜸 (0 ~ 20틱) → 광선 6번 (20 ~ 70틱 — 30틱부터 몸을 천천히 오른쪽으로 돌림) → 마무리 폭발 (80) → 총 피해 (88)
+            // 천공의 눈: 눈을 뜸 (0 ~ 20틱) → 광선 6번 (20 ~ 70틱 — 30틱부터 몸을 천천히 오른쪽으로 돌림) → 마무리 폭발 (80) → 끝 (글자 없음)
             run(ctx, server, "skyeye", 0, false, new int[] {10, 24, 44, 66, 82, 90, 106}, "turn", false);
             run(ctx, server, "skyeye", 6, true, new int[] {12, 40, 70, 92, 100, 116}, null, false);
             // 밤: 칠성 강림 6돌 (별 · 별똥별 비)
@@ -107,8 +107,7 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             server.runCommand("time set 6000");
             ctx.waitTicks(100); // 앞 시전의 6돌 하늘빛이 다 걷힌 뒤 (무간참역 0돌 사진에 남지 않게)
             // 무간참역 (0.17.0): 영역 전개 (0 ~ 16틱 — 검이 떨어져 꽂힘) → 베기 0.5초마다 (16 ~ 106틱) → 검이 모임 (110) → 일섬 (118 — 0.15초에 그어짐)
-            //   → 총 피해 (128 — 0.7초 차오름 · 반짝임). 사진 틱은 클라이언트 기준 (사진 찍는 동안 서버가 앞서 — 뒤 사진일수록 서버가 몇 틱 앞).
-            //   다른 룬의 마지막 사진도 총 피해가 다 차오른 뒤 (0.17.0 총 피해 모양)
+            //   → 끝 (글자 없음). 사진 틱은 클라이언트 기준 (사진 찍는 동안 서버가 앞서 — 뒤 사진일수록 서버가 몇 틱 앞)
             run(ctx, server, "endless", 0, false, new int[] {12, 30, 62, 100, 106, 110, 114, 124, 132, 142}, null, false, 1.5, 175);
             run(ctx, server, "endless", 6, true, new int[] {24, 80, 140, 148, 152, 157, 164, 172, 180, 196}, null, false, 1.5, 215);
             server.runCommand("time set 18000");
@@ -116,8 +115,8 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             server.runCommand("time set 6000");
             ctx.waitTicks(100);
             // 대지 가르기 (0.18.0): 머리 위에 대검이 생김 (2 ~ 8틱) → 뒤로 젖힘 (9 ~ 19) → 앞으로 휘둘러 내려옴 (19 ~ 24 — 화면에는 마지막 두 틱)
-            //   → 박힘 · 칼 아래 줄이 갈라지고 앞으로 끝까지 (24 ~ 29) → 대검이 부서짐 (36 ~ 41) → 여진 0.5초마다 (40 ~ 94) → 총 피해 (104).
-            //   6돌: 여진 8번 (~114) · 지맥 폭발 (116 ~ 150) · 총 피해 (148). 서버가 사진보다 2 ~ 3틱 앞서므로 휘두르는 사진은 19 ~ 22
+            //   → 박힘 · 칼 아래 줄이 갈라지고 앞으로 끝까지 (24 ~ 29) → 대검이 부서짐 (36 ~ 41) → 여진 0.5초마다 (40 ~ 94) → 끝 (104 — 글자 없음).
+            //   6돌: 여진 8번 (~114) · 지맥 폭발 (116 ~ 150). 서버가 사진보다 2 ~ 3틱 앞서므로 휘두르는 사진은 19 ~ 22
             int fx0 = server.computeOnServer(s -> FxDisplays.spawned);
             run(ctx, server, "terra", 0, false, new int[] {8, 16, 19, 20, 21, 22, 26, 32, 44, 70, 104}, null, false, -3.0, 150);
             run(ctx, server, "terra", 6, true, new int[] {14, 19, 20, 21, 22, 27, 34, 60, 112, 130, 156}, null, false, -3.0, 185);
@@ -129,17 +128,17 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             if (fx1 - fx0 < 3 * 20) failures.add("terra displays " + (fx1 - fx0));
             ctx.waitTicks(100);
             // 세계수의 가호 (0.19.0): 씨앗 → 돌며 자람 (2 ~ 18틱) → 가호 (18 — 잎 지붕이 피고 금빛 빛줄기가 나에게 · 몸에 가호) → 서 있음 (~88) →
-            //   오그라들며 흩어짐 (88 ~ 102) → 과녁을 침 (110 ~ 140 — 가호로 더한 피해: 금빛 잎) · 맞음 (126 · 142 — 막은 피해: 비췻빛 고리) →
-            //   가호 끝 (258) · 요약 (262 ~ — 더한 피해 · 막은 피해 차오름). 6돌: 큰 나무 · 꽃잎 비 · 땅의 빛의 꽃
-            runGrace(ctx, server, 0, false, new int[] {4, 10, 15, 19, 23, 30, 60, 92, 100, 114, 128, 144, 268, 280}, false, true);
+            //   오그라들며 흩어짐 (88 ~ 102) → 과녁을 침 (110 ~ 140 — 가호를 받은 맞힘: 금빛 잎) · 맞음 (126 · 142 — 막아 줌: 비췻빛 고리) →
+            //   가호 끝 (258 — 잎이 흩어짐, 요약 글자 없음 — 0.20.1). 6돌: 큰 나무 · 꽃잎 비 · 땅의 빛의 꽃
+            runGrace(ctx, server, 0, false, new int[] {4, 10, 15, 19, 23, 30, 60, 92, 100, 114, 128, 144, 268}, false, true);
             runGrace(ctx, server, 6, true, new int[] {6, 14, 19, 24, 32, 60, 100, 110}, false, false);
             server.runCommand("time set 18000");
             runGrace(ctx, server, 6, false, new int[] {12, 20, 28, 60, 100}, true, false);
             server.runCommand("time set 6000");
             ctx.waitTicks(60);
             // 심연의 낙인 (0.20.0): 손에서 심연의 빛 → 조준한 곳에 심연이 열림 (0 ~ 14틱 — 검은 바닥 · 문양 · 검은 손) → 낙인 (14 — 사슬 · 머리 위 낙인 · 낙인 ×N)
-            //   → 과녁을 침 (60 ~ 96 — ◆ 숫자 · 1.2배) · 맞음 (104 · 118 — 0.8배 · 어두운 금) → 낙인 끝 (214) · 요약 (218 ~ — 더한 피해 · 줄인 피해)
-            runBrand(ctx, server, 0, false, new int[] {4, 10, 14, 17, 22, 40, 66, 90, 106, 120, 222, 234}, false, true);
+            //   → 과녁을 침 (60 ~ 96 — ◆ 숫자 · 1.2배) · 맞음 (104 · 118 — 0.8배 · 어두운 금) → 낙인 끝 (214 — 분홍 조각, 요약 글자 없음 — 0.20.1)
+            runBrand(ctx, server, 0, false, new int[] {4, 10, 14, 17, 22, 40, 66, 90, 106, 120, 222}, false, true);
             runBrand(ctx, server, 6, true, new int[] {6, 12, 17, 24, 40, 80, 120}, false, false);
             server.runCommand("time set 18000");
             runBrand(ctx, server, 6, false, new int[] {10, 17, 30, 70}, true, false);
@@ -149,7 +148,7 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         if (!failures.isEmpty()) throw new AssertionError("limited rune gallery: " + String.join(" / ", failures));
     }
 
-    /** 룬 하나를 실제 입력으로 쓰고 사진 · 피해 · 총 피해 글자 기록. move = "turn" 이면 30틱부터 2틱마다 몸을 1° 씩 오른쪽으로 */
+    /** 룬 하나를 실제 입력으로 쓰고 사진 · 피해 기록. move = "turn" 이면 30틱부터 2틱마다 몸을 1° 씩 오른쪽으로 */
     private void run(ClientGameTestContext ctx, TestServerContext server, String family, int level, boolean third, int[] shots, String move, boolean night) {
         run(ctx, server, family, level, third, shots, move, night, ME_Z, 170);
     }
@@ -182,7 +181,6 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         });
         ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
         ctx.waitTicks(14);
-        int totals0 = server.computeOnServer(s -> DamageNumbers.totalsShown);
         ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
         int t = 0;
         float yaw = 0;
@@ -198,23 +196,21 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "lr_%s_%03d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
         }
         if (end > t) ctx.waitTicks(end - t);
-        boolean sawTotal = server.computeOnServer(s -> DamageNumbers.totalsShown) > totals0;
         boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
         double dealt = server.computeOnServer(s -> {
             double sum = 0;
             for (Husk h : player(s).level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 6, 0.5, -60, 6).inflate(40), h -> true)) sum += TestDummies.dealt(h);
             return sum;
         });
-        LOG.info("[limited-gallery] {} {} cast={} dealt={} total-text={}", id, third ? "3p" : "1p", cast, String.format(Locale.ROOT, "%.1f", dealt), sawTotal);
+        LOG.info("[limited-gallery] {} {} cast={} dealt={}", id, third ? "3p" : "1p", cast, String.format(Locale.ROOT, "%.1f", dealt));
         if (!cast) failures.add(id + " not cast");
         else if (!(dealt > 0)) failures.add(id + " dealt no damage");
-        if (!sawTotal) failures.add(id + " no total damage text");
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
     }
 
     /**
      * 세계수의 가호 하나: 실제 입력으로 쓰고 사진 (lr_ygg_&lt;돌&gt;[n]_&lt;틱&gt;[_3p]). full = 가호 뒤 과녁을 치고 (110틱부터 6틱마다 하나 — 룬 피해) 맞고 (126 · 142틱)
-     * 가호가 끝날 때까지 (요약 글자 둘). 써졌는지 · 세계수가 떴는지 · 가호가 걸렸는지 (가하는 피해 배율) · (full) 요약을 로그로
+     * 가호가 끝난 뒤까지 (끝 사진 — 요약 글자가 없는지). 써졌는지 · 세계수가 떴는지 · 가호가 걸렸는지 (가하는 피해 배율) 를 로그로
      */
     private void runGrace(ClientGameTestContext ctx, TestServerContext server, int level, boolean third, int[] shots, boolean night, boolean full) {
         Runes.Rune r = Runes.parseRune(Runes.runeId("yggdrasil", "transcend"));
@@ -242,7 +238,6 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         });
         ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
         ctx.waitTicks(14);
-        int totals0 = server.computeOnServer(s -> DamageNumbers.totalsShown);
         int fx0 = server.computeOnServer(s -> FxDisplays.spawned);
         ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
         int t = 0;
@@ -274,20 +269,17 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         }
         boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
         int displays = server.computeOnServer(s -> FxDisplays.spawned) - fx0;
-        boolean summary = server.computeOnServer(s -> DamageNumbers.totalsShown) >= totals0 + 2;
-        LOG.info("[limited-gallery] {} {} cast={} displays={} dealtMult={} summary={}", id, third ? "3p" : "1p", cast, displays, String.format(Locale.ROOT, "%.3f", mult),
-                summary);
+        LOG.info("[limited-gallery] {} {} cast={} displays={} dealtMult={}", id, third ? "3p" : "1p", cast, displays, String.format(Locale.ROOT, "%.3f", mult));
         if (!cast) failures.add(id + " not cast");
         if (displays < 1) failures.add(id + " no world tree");
         if (!(mult > 1.1)) failures.add(id + " no grace (dealt ×" + mult + ")");
-        if (full && !summary) failures.add(id + " no grace summary");
         if (!full) ctx.waitTicks(Math.max(0, 140 - t)); // 나무가 다 흩어진 뒤 (다음 시전의 사진에 남지 않게)
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
     }
 
     /**
      * 심연의 낙인 하나: 실제 입력으로 쓰고 사진 (lr_abyss_&lt;돌&gt;[n]_&lt;틱&gt;[_3p]). 과녁 무리 가운데 (0.5, 6.5) 를 조준. full = 낙인 뒤 과녁을 치고
-     * (60틱부터 6틱마다 하나 — 룬 피해) 맞고 (104 · 118틱) 낙인이 끝날 때까지 (요약 글자 둘). 써졌는지 · 낙인 찍힌 과녁 수 · 맞는 쪽 배율 · (full) 요약을 로그로
+     * (60틱부터 6틱마다 하나 — 룬 피해) 맞고 (104 · 118틱) 낙인이 끝난 뒤까지 (끝 사진 — 요약 글자가 없는지). 써졌는지 · 낙인 찍힌 과녁 수 · 맞는 쪽 배율을 로그로
      */
     private void runBrand(ClientGameTestContext ctx, TestServerContext server, int level, boolean third, int[] shots, boolean night, boolean full) {
         Runes.Rune r = Runes.parseRune(Runes.runeId("abyss", "transcend"));
@@ -316,7 +308,6 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         });
         ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
         ctx.waitTicks(14);
-        int totals0 = server.computeOnServer(s -> DamageNumbers.totalsShown);
         ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
         int t = 0;
         double mult = 1;
@@ -358,13 +349,10 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "lr_%s_%03d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
         }
         boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
-        boolean summary = server.computeOnServer(s -> DamageNumbers.totalsShown) >= totals0 + 2;
-        LOG.info("[limited-gallery] {} {} cast={} marked={} takenMult={} summary={}", id, third ? "3p" : "1p", cast, marked, String.format(Locale.ROOT, "%.3f", mult),
-                summary);
+        LOG.info("[limited-gallery] {} {} cast={} marked={} takenMult={}", id, third ? "3p" : "1p", cast, marked, String.format(Locale.ROOT, "%.3f", mult));
         if (!cast) failures.add(id + " not cast");
         if (marked < 4) failures.add(id + " marked " + marked);
         if (!(mult > 1.1)) failures.add(id + " no brand (taken ×" + mult + ")");
-        if (full && !summary) failures.add(id + " no brand summary");
         if (!full) ctx.waitTicks(Math.max(0, 140 - t));
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
     }
