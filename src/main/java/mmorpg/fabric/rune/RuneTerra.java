@@ -63,17 +63,21 @@ final class RuneTerra {
     static final double SCALE = 7.0;
     static final double TIP_U = 24.0;
     static final double MID_U = 14.0;
-    /** 칼자루 (모델 가운데) 자리: 시전자 발에서 위 · 앞 (뒤면 -) · 오른쪽 (칸) — 1인칭에서 칼자루 쪽 칼날이 화면 위로 비켜 가게 높이 · 조금 뒤 */
-    static final double HILT_UP = 4.5;
-    static final double HILT_FWD = -0.5;
-    static final double HILT_SIDE = 0.6;
+    /**
+     * 칼자루 (모델 가운데) 자리: 시전자 발에서 위 · 앞 · 오른쪽 (칸). 사진 검토: 칼자루가 머리 위 (4.5칸 · 0.5칸 뒤) 면 코등이 · 칼날이 1인칭 · 3인칭 눈 2 ~ 4칸
+     * 곁을 지나 화면을 덮음 → 앞 3칸 · 높이 6.5칸 (박힌 칼날은 눈에서 5.7칸 넘게 떨어져 지나고, 코등이는 1인칭 화면 위 밖), 가운데 (1인칭 · 3인칭에서 칼과
+     * 궤적이 화면 가운데를 세로로 가름)
+     */
+    static final double HILT_UP = 6.5;
+    static final double HILT_FWD = 3.0;
+    static final double HILT_SIDE = 0.0;
     /** 칼끝이 땅속으로 박히는 깊이 */
     static final double TIP_BURY = 0.35;
     /** 칼 방향각 (앞 수평 = 0°, 위 = 90°, 90° 넘으면 뒤로 젖힘): 생길 때 · 힘을 모은 끝 */
-    static final double RAISE = 105;
-    static final double WINDUP = 140;
+    static final double RAISE = 100;
+    static final double WINDUP = 135;
     /** 칼날 넓은 면: 휘두르는 면 안의 위 · 뒤 (시전자 눈 쪽) 에서 옆으로 기울인 각 — 1인칭 · 3인칭에서 칼날 면이 보이게, 조금 비틀어 입체감 */
-    static final double TWIST = 30;
+    static final double TWIST = 15;
     /** 휘두르는 틱별 진행 (점점 빠르게 — 마지막이 박힘) · 박혀 있는 틱 · 부서지는 틱 */
     static final double[] SWING = {0.10, 0.27, 0.48, 0.72, 1.0};
     static final int HOLD = 12;
@@ -197,7 +201,7 @@ final class RuneTerra {
         // ---- 대검 자리: 칼자루 H · 칼끝이 박힐 곳 T (줄 위 — 칼 길이만큼 떨어진 곳) · 휘두르는 쪽 u · 박힌 방향각
         double reach = TIP_U * SCALE / 16;
         Vec3 H = V.add(V.add(V.up(c, HILT_UP), f, HILT_FWD), side, HILT_SIDE);
-        double dist = 9.0;
+        double dist = 11.0;
         Vec3 T = c;
         for (int i = 0; i < 2; i++) {
             Vec3 g = V.add(c, f, dist);
