@@ -40,7 +40,7 @@ import org.joml.Vector3f;
 /**
  * 0.19.0 여섯째 한정 룬 세계수의 가호 (yggdrasil · worldTreeGrace — 사용자 요청 "버프 계열 한정 룬: 가하는 피해 증가 버프 · 받는 피해 감소"). 피해 없음.
  * <ul>
- * <li>흐름: 시전자 앞 dist 칸 땅에 세계수의 환영 (아이템 표시 rpg:fx_worldtree — tools/worldtree_spirit.py) 이 씨앗 크기에서 돌며 자람 (GROW 틱) →
+ * <li>흐름: 시전자 앞 dist 칸 · 왼쪽 side 칸 땅에 세계수의 환영 (아이템 표시 rpg:fx_worldtree — tools/worldtree_spirit.py) 이 씨앗 크기에서 돌며 자람 (GROW 틱) →
  * charge 틱에 잎 지붕이 피어 금빛 빛줄기가 쓴 자리 반지름 radius 칸 안 아군 (나 포함 — 결투 상대 빼고) 에게 닿음 → 가호 ticks 틱 →
  * 나무는 STAND 틱 서 있다가 오그라들며 잎으로 흩어짐</li>
  * <li>가호: 가하는 피해 × (1 + 가호) — 평타 · 활 · 완드 · 스킬 (RpgCombat.powerOf) · 평타에 더한 피해 · 룬 피해 (RuneKit.runeHit) 에 한 번씩,
@@ -259,12 +259,14 @@ final class RuneGrove {
         int ticks = (int) k.num("ticks");
         int charge = Math.max(GROW + 2, (int) k.numOr("charge", 18));
         double s = k.numOr("tree", 2.8);
-        double dist = k.numOr("dist", 8);
+        double dist = k.numOr("dist", 10);
+        double side = k.numOr("side", 5.5);
         // 가호 세기: 시전자의 네 스탯의 합 (장비 · 버프 포함) · 이 단계의 정의 (돌파 계수가 든 값)
         double applied = Runes.runeStat(RpgStats.effective(sp), r.family()).value();
         double up = Runes.graceUp(k, applied);
         double cut = Runes.graceCut(k, applied);
-        Vec3 g0 = V.add(c, f, dist);
+        // 나무 자리: 앞 dist 칸 · 왼쪽 side 칸 (1인칭 화면 왼쪽에 나무 전체가 들고 가운데 (조준 · 적) 는 비게, 3인칭에서 몸에 가리지 않게)
+        Vec3 g0 = V.add(V.add(c, f, dist), V.rightOf(f), -side);
         Vec3 base = new Vec3(g0.x, RuneTerra.groundY(level, g0.x, g0.z, c.y), g0.z);
         float rot = (float) Math.atan2(f.x, f.z);
         int standEnd = charge + STAND + (fin ? 20 : 0);
@@ -376,9 +378,10 @@ final class RuneGrove {
         SkillFx.shock(level, c, CREAM, 0.7, 0.45);
         SkillFx.burst(level, V.up(c, 1.0), GOLD, 1.2, 0.3);
         for (int i = 0; i < 10; i++) {
+            // 발밑에서 바깥으로 감아 도는 잎 (눈보다 아래 — 1인칭 화면을 덮지 않게)
             double a = i * Math.PI * 2 / 10;
-            Vec3 p = new Vec3(c.x + Math.cos(a) * 0.75, c.y + 0.1 + i * 0.08, c.z + Math.sin(a) * 0.75);
-            Vec3 vel = new Vec3(-Math.sin(a) * 1.4, 1.6, Math.cos(a) * 1.4);
+            Vec3 p = new Vec3(c.x + Math.cos(a) * 1.1, c.y + 0.05 + i * 0.04, c.z + Math.sin(a) * 1.1);
+            Vec3 vel = new Vec3(-Math.sin(a) * 1.2 + Math.cos(a) * 0.5, 0.7, Math.cos(a) * 1.2 + Math.sin(a) * 0.5);
             RuneKit.rfx(level, "leaf", p, Opt.of("size", 0.14, "life", 0.8, "spin", Kit.rand() * 360, "spinRate", 500.0, "cell", (double) (i % 4), "color",
                     i % 2 == 0 ? JADE : GOLD, "fade", 0.4, "vel", vel));
         }
@@ -468,16 +471,19 @@ final class RuneGrove {
 
     // ------------------------------------------------------------ 몸 · 맞힘 · 막음 · 끝 연출
 
-    /** 가호 동안 (10틱마다): 머리 위에서 떨어지는 잎 둘 (비취 · 금빛) · 20틱마다 1인칭 화면 아래 빛 알갱이 · 40틱마다 발밑 작은 고리 */
+    /**
+     * 가호 동안 (10틱마다): 몸 둘레 (1.5 ~ 1.9칸 · 눈보다 아래 — 1인칭 카메라 바로 앞에 큰 잎이 지나지 않게) 에서 떨어지는 잎 둘 (비취 · 금빛) ·
+     * 20틱마다 1인칭 화면 아래 빛 알갱이 · 40틱마다 발밑 작은 고리
+     */
     private static void aura(ServerPlayer sp, long now) {
         if (sp.isRemoved() || sp.isSpectator()) return;
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         for (int i = 0; i < 2; i++) {
             double a = Kit.rand() * Math.PI * 2;
-            double rr = 0.8 + Kit.rand() * 0.25;
-            Vec3 p = new Vec3(c.x + Math.cos(a) * rr, c.y + 2.0 + Kit.rand() * 0.4, c.z + Math.sin(a) * rr);
-            fallingLeaf(level, p, i == 0 ? JADE : GOLD, 0.12, 1.1, 0.9);
+            double rr = 1.5 + Kit.rand() * 0.4;
+            Vec3 p = new Vec3(c.x + Math.cos(a) * rr, c.y + 1.0 + Kit.rand() * 0.4, c.z + Math.sin(a) * rr);
+            fallingLeaf(level, p, i == 0 ? JADE : GOLD, 0.12, 1.3, 0.55);
         }
         long n = now / 10;
         if (n % 2 == 0) RuneKit.auraCue(sp, MINT, 2);
@@ -492,20 +498,29 @@ final class RuneGrove {
         glint(level, at, 0.42, 0.26);
     }
 
-    /** 가호가 막아 줌: 가슴 높이에 눕힌 비췻빛 고리 · 잎 다섯 · 맑은 소리 */
+    /**
+     * 가호가 막아 줌: 발밑 비췻빛 고리 · 발치에서 바깥으로 흩어지는 잎 · 1인칭 화면 아래 빛 알갱이 · 맑은 소리 (사진 검토: 가슴 높이 고리는 1인칭 화면을 통째로 덮음)
+     */
     private static void wardCue(ServerPlayer sp) {
         ServerLevel level = sp.level();
-        Vec3 chest = V.up(sp.position(), 1.0);
-        SkillFx.ring(level, chest, V.UP, JADE, 1.1, 0.35, 0.0);
-        leaves(level, chest, 5, JADE, 2.6, 0.6, 0.7, 0.12);
-        SkillFx.play(level, "hit.amethyst_cluster", chest, 1.5, 0.5);
+        Vec3 feet = sp.position();
+        SkillFx.shock(level, feet, JADE, 0.55, 0.4);
+        SkillFx.shock(level, feet, CREAM, 0.3, 0.3);
+        for (int i = 0; i < 5; i++) {
+            double a = Kit.rand() * Math.PI * 2;
+            Vec3 p = new Vec3(feet.x + Math.cos(a) * 0.9, feet.y + 0.3, feet.z + Math.sin(a) * 0.9);
+            RuneKit.rfx(level, "leaf", p, Opt.of("size", 0.11, "life", 0.6, "spin", Kit.rand() * 360, "spinRate", 500.0, "cell", Math.floor(Kit.rand() * 4),
+                    "color", JADE, "fade", 0.4, "vel", new Vec3(Math.cos(a) * 2.0, 0.4, Math.sin(a) * 2.0)));
+        }
+        RuneKit.auraCue(sp, JADE, 2);
+        SkillFx.play(level, "hit.amethyst_cluster", feet, 1.5, 0.5);
     }
 
     /** 가호가 걷힘 (끝): 잎이 흩어짐 · 알림 · 작은 소리 */
     private static void expired(ServerPlayer sp) {
         if (sp.isRemoved()) return;
         ServerLevel level = sp.level();
-        leaves(level, V.up(sp.position(), 1.2), 8, JADE, 1.6, 1.4, 0.9, 0.12);
+        leaves(level, V.up(sp.position(), 0.3), 8, JADE, 2.2, 0.5, 0.9, 0.12);
         Notify.notify(sp, "§7세계수의 가호가 걷혔습니다", 40);
         SkillFx.playFor(sp, "beacon.deactivate", 1.5, 0.35);
     }

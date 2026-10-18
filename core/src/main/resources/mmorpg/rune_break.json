@@ -270,7 +270,9 @@
       "6": [
         {"key": "ticks", "to": 320, "div": 20, "text": "지속 {from} → {to}초"},
         {"key": "radius", "to": 12, "text": "반지름 {from} → {to}칸"},
-        {"key": "tree", "to": 3.4}
+        {"key": "tree", "to": 3.4},
+        {"key": "dist", "to": 12},
+        {"key": "side", "to": 6.5}
       ],
       "extra": {"at": 6, "type": "finale", "text": "세계수 개화 — 꽃잎 비가 가호의 땅을 덮음"}
     },
