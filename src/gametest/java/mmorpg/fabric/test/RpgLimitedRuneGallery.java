@@ -110,12 +110,12 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             server.runCommand("time set 6000");
             ctx.waitTicks(100);
             // 대지 가르기 (0.18.0): 땅이 빛남 · 대검이 손잡이부터 뽑혀 오름 (0 ~ 16틱) → 기욺 (16 ~ 21) → 내리꽂힘 (24) → 시전자 쪽으로 땅이 갈라짐 (24 ~ 30)
-            //   → 여진 0.5초마다 (40 ~ 94) → 대검이 가라앉음 (102) · 총 피해 (104). 6돌: 여진 8번 (~114) · 지맥 폭발 (120 ~ 140) · 총 피해 (124)
+            //   → 여진 0.5초마다 (40 ~ 94) → 대검이 가라앉음 (102) · 총 피해 (104). 6돌: 여진 8번 (~114) · 지맥 폭발 (116 ~ 150) · 총 피해 (148)
             int fx0 = server.computeOnServer(s -> FxDisplays.spawned);
             run(ctx, server, "terra", 0, false, new int[] {8, 16, 22, 26, 30, 44, 70, 104, 122}, null, false, -3.0, 150);
-            run(ctx, server, "terra", 6, true, new int[] {14, 22, 27, 32, 60, 116, 125, 131, 140, 152}, null, false, -3.0, 175);
+            run(ctx, server, "terra", 6, true, new int[] {14, 22, 27, 32, 60, 112, 122, 130, 140, 156}, null, false, -3.0, 185);
             server.runCommand("time set 18000");
-            run(ctx, server, "terra", 6, false, new int[] {20, 27, 50, 125, 131, 142, 154}, null, true, -3.0, 175);
+            run(ctx, server, "terra", 6, false, new int[] {20, 27, 50, 122, 130, 156}, null, true, -3.0, 185);
             server.runCommand("time set 6000");
             int fx1 = server.computeOnServer(s -> FxDisplays.spawned);
             LOG.info("[limited-gallery] terra displays spawned={}", fx1 - fx0);
