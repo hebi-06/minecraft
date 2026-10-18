@@ -516,3 +516,11 @@ net.minecraft.world.entity.Display$ItemDisplay
 net.minecraft.world.entity.Display$BlockDisplay
 net.minecraft.world.entity.SlotAccess
 net.minecraft.core.particles.BlockParticleOption
+net.minecraft.world.level.storage.SavedDataStorage
+net.minecraft.util.Prediction
+net.minecraft.core.UUIDUtil
+net.minecraft.world.inventory.ClickType
+net.minecraft.world.level.storage.ValueInput
+net.minecraft.world.level.storage.ValueOutput
+net.minecraft.util.datafix.DataFixTypes
+net.minecraft.world.level.storage.LevelResource
