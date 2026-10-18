@@ -211,7 +211,7 @@ final class RuneAbyss {
                 }
                 if ((now + (en.getKey().hashCode() & 7)) % 10 == 0 && drawn < 16) {
                     drawn++;
-                    brandFx(e, b.cast().fin, now);
+                    brandFx(e, b.cast(), now);
                 }
             }
         }
@@ -252,7 +252,7 @@ final class RuneAbyss {
         double cut = Runes.brandCut(k, applied);
         Cast cast = new Cast(sp.getUUID(), Tasks.now() + charge + ticks, fin);
         LAST.put(sp.getUUID(), cast);
-        RuneKit.ultSkyFor(sp, level, c, FN, charge + 70, null);
+        RuneKit.ultSkyFor(sp, level, c, FN, charge + 30, null); // 공허 하늘은 심연이 열리는 동안만 (사진 검토: 길면 낙인 찍힌 적이 어둠에 묻힘)
 
         // ---- 쓸 때: 시전자 발밑 룬 · 손에서 조준한 곳으로 날아가는 심연의 빛 · 조준한 곳에 심연이 열림 (영역 문양 · 소용돌이 · 금) · 소리
         SkillFx.rune(level, sp.position(), Opt.of("size", 1.4, "life", (charge + 4) / 20.0, "color", WINE, "alpha", 0.9, "rate", 140.0, "progress", 1.0));
@@ -318,7 +318,7 @@ final class RuneAbyss {
             if (old != null && (old.up() > up + 1e-9 || (Math.abs(old.up() - up) <= 1e-9 && old.until() > until))) continue; // 더 센 (같으면 더 오래 가는) 낙인이 이미
             BRANDS.put(e.getUUID(), new Brand(cast, until, up, cut, e));
             cast.marked++;
-            chains(level, e, n);
+            chains(level, e, n, sp.getUUID());
             n++;
         }
         DamageNumbers.showFace(sp, "§d§l낙인 ×" + n, 2.4, 0, -0.2);
@@ -338,7 +338,7 @@ final class RuneAbyss {
     }
 
     /** 적 하나에 낙인: 땅의 둘레에서 몸으로 감기는 사슬 둘 (짙은 심연 · 자홍 심지) · 발밑 검은 손 · 머리 위 낙인 · 터짐 · 쇠사슬 소리 (차례로 조금씩 늦게) */
-    private static void chains(ServerLevel level, LivingEntity e, int idx) {
+    private static void chains(ServerLevel level, LivingEntity e, int idx, UUID caster) {
         RuneKit.later(Math.min(8, idx), () -> {
             if (e.isRemoved()) return;
             Vec3 body = RuneLimited.body(e);
@@ -353,24 +353,38 @@ final class RuneAbyss {
             }
             SkillFx.burst(level, body, MAGENTA, 1.1, 0.25);
             SkillFx.sparks(level, body, PINK, 6, 3);
-            mark(e, 0.9);
+            // 누가 낙인 찍혔는지 한눈에: 몸을 꿰는 자홍 빛기둥 (0.5초)
+            Vec3 pillar = new Vec3(e.getX(), e.getY() + e.getBbHeight() * 0.5 + 1.2, e.getZ());
+            SkillFx.fx(level, "rpg:arrow_shot", pillar, Opt.of("dir", V.UP, "speed", 0.0, "size", 1.7, "thick", 0.42, "life", 0.5, "color", MAGENTA, "alpha", 0.85));
+            SkillFx.fx(level, "rpg:arrow_shot", pillar, Opt.of("dir", V.UP, "speed", 0.0, "size", 1.6, "thick", 0.14, "life", 0.45, "color", PINK, "alpha", 1.0));
+            mark(e, 0.9, caster);
             SkillFx.play(level, "place.chain", body, 0.8, 0.8);
         });
     }
 
-    /** 머리 위 낙인 문양 (도는 분홍 룬 · 아래로 떨어지는 어두운 방울) — life 초 */
-    private static void mark(LivingEntity e, double life) {
+    /**
+     * 머리 위 낙인 (life 초): 시전자 (없으면 가까운 플레이어) 쪽을 보고 서서 도는 자홍 문양 (사진 검토: 눕힌 룬은 멀리서 · 어둠에서 거의 안 보임) ·
+     * 가운데 반짝임 · 머리 위에 눕힌 작은 룬
+     */
+    private static void mark(LivingEntity e, double life, UUID caster) {
         if (!(e.level() instanceof ServerLevel level)) return;
-        Vec3 top = new Vec3(e.getX(), e.getY() + e.getBbHeight() + 0.55, e.getZ());
-        SkillFx.fx(level, "rpg:skill_rune", top, Opt.of("size", 0.62, "life", life, "spin", Kit.rand() * 360, "speed", 160.0, "progress", 1.0, "color", MAGENTA,
-                "alpha", 0.95));
-        RuneKit.rfx2(level, "prop", top, Opt.of("size", 0.34, "life", Math.min(0.5, life), "spin", Kit.rand() * 90, "fade", 0.5), WINE, PINK, RuneKit.RFX.get("glint"), null);
+        Vec3 top = new Vec3(e.getX(), e.getY() + e.getBbHeight() + 0.6, e.getZ());
+        net.minecraft.world.entity.player.Player viewer = caster != null ? level.getPlayerByUUID(caster) : null;
+        if (viewer == null || viewer.distanceToSqr(e) > 64 * 64) viewer = level.getNearestPlayer(e, 48);
+        Vec3 face = viewer != null ? V.sub(viewer.getEyePosition(), top) : V.SOUTH;
+        if (V.len(face) < 1e-3) face = V.SOUTH;
+        RuneKit.domainSigil(level, top, 0.42, "arcane", WINE, PINK, Opt.of("dir", V.unit(face), "life", life, "spinRate", 90.0, "alpha", 0.95, "fade", 0.3,
+                "coreAlpha", 1.0));
+        RuneKit.rfx2(level, "prop", top, Opt.of("size", 0.3, "life", Math.min(0.5, life), "spin", Kit.rand() * 90, "fade", 0.5), WINE, PINK, RuneKit.RFX.get("glint"), null);
+        SkillFx.fx(level, "rpg:skill_rune", V.up(top, -0.25), Opt.of("size", 0.5, "life", life, "spin", Kit.rand() * 360, "speed", 160.0, "progress", 1.0, "color",
+                MAGENTA, "alpha", 0.8));
     }
 
     /** 낙인 동안 (10틱마다): 머리 위 낙인 · 몸에서 떨어지는 어두운 방울 · (6돌) 발밑 심연 문양 · 가끔 검은 손 */
-    private static void brandFx(LivingEntity e, boolean fin, long now) {
+    private static void brandFx(LivingEntity e, Cast cast, long now) {
         if (!(e.level() instanceof ServerLevel level)) return;
-        mark(e, 0.55);
+        boolean fin = cast.fin;
+        mark(e, 0.6, cast.caster);
         Vec3 body = RuneLimited.body(e);
         SkillFx.fx(level, "rpg:arrow_spark", V.up(body, 0.3), Opt.of("dir", V.DOWN, "speed", 1.2, "size", 0.12, "life", 0.5, "color", WINE, "alpha", 1.0));
         if (fin) {
