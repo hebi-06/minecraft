@@ -524,3 +524,12 @@ net.minecraft.world.level.storage.ValueInput
 net.minecraft.world.level.storage.ValueOutput
 net.minecraft.util.datafix.DataFixTypes
 net.minecraft.world.level.storage.LevelResource
+net.minecraft.world.item.component.ItemContainerContents
+net.minecraft.world.item.component.BundleContents
+net.minecraft.client.gui.screens.ChatScreen
+net.minecraft.resources.RegistryOps
+net.minecraft.client.gui.components.ChatComponent
+net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry
+net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry$Builder
+net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
+net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
