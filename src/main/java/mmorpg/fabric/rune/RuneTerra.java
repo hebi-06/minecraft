@@ -287,8 +287,9 @@ final class RuneTerra {
             SkillFx.play(level, "item.trident.riptide_3", c, 0.6, 0.8);
         });
 
-        // ---- 휘두름: 칼끝이 지나간 자리의 호박빛 궤적 (부채꼴 — 칼끝 쪽일수록 밝고 굵게)
-        double[] radii = {0.5, 0.66, 0.8, 0.92, 1.0};
+        // ---- 휘두름: 칼끝이 지나간 자리의 호박빛 궤적 (부채꼴 — 칼끝 쪽일수록 밝고 굵게. 휘두르는 면 옆에서 보는 사람에게 보임 — 뒤에서는 칼에 가려
+        //      세로 줄이 되므로 아래 세로 참격을 더함)
+        double[] radii = {0.62, 0.84, 1.0};
         for (int i = 0; i < SWING.length; i++) {
             final double e0 = WINDUP + (eHit - WINDUP) * (i == 0 ? 0 : SWING[i - 1]);
             final double e1 = WINDUP + (eHit - WINDUP) * SWING[i];
@@ -311,6 +312,17 @@ final class RuneTerra {
                 }
                 if (ii == 1) SkillFx.play(level, "entity.player.attack.sweep", H, 0.5, 1.6);
                 if (ii == 3) SkillFx.play(level, "item.trident.riptide_1", TT, 0.6, 1.0);
+            });
+        }
+
+        // ---- 세로 참격 (박히기 한 틱 전 · 박힐 때): 칼이 내려오는 자리 (앞 7칸 · 높이 3.5칸) 에 크게 세운 초승달 참격 — 1인칭 · 3인칭 화면 가운데를 세로로 가름
+        for (int i = 0; i < 2; i++) {
+            final int ii = i;
+            RuneKit.later(charge - 1 + i, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 at = V.up(V.add(c, f, 7.0 - ii * 0.5), 3.5 - ii * 0.6);
+                SkillFx.arc(level, at, V.scale(f, -1), Opt.of("shape", "heavy", "flip", ii == 1, "size", 4.2 + ii * 1.0, "life", 0.3, "spin", ii * 8.0, "color", AMBER,
+                        "aura", MOLTEN));
             });
         }
 
