@@ -403,13 +403,16 @@ final class RuneAbyss {
         SkillFx.play(level, "random.glass", top, 1.3, 0.25);
     }
 
-    /** 시전의 요약: 시전자 눈앞 5칸에 "── 낙인 · 더한 피해 ──" (아래에 "── 낙인 · 줄인 피해 ──") — 0 이면 그 줄은 없음 */
+    /**
+     * 시전의 요약: 시전자 눈앞 5칸에 "── 낙인 · 더한 피해 ──" (아래에 "── 낙인 · 줄인 피해 ──") — 0 이면 그 줄은 없음.
+     * 두 줄이면 둘 다 1.25칸 올림 (사진 검토: 아랫줄이 앞 5칸쯤 서 있는 적의 머리 높이에 걸림)
+     */
     private static void summary(MinecraftServer server, Cast cast) {
         cast.shown = true;
         ServerPlayer sp = server.getPlayerList().getPlayer(cast.caster);
         if (sp == null || sp.isRemoved()) return;
         ServerLevel level = sp.level();
-        Vec3 at = V.up(V.add(sp.getEyePosition(), Kit.facingOf(sp), 5.0), 0.55);
+        Vec3 at = V.up(V.add(sp.getEyePosition(), Kit.facingOf(sp), 5.0), cast.extra > 0 && cast.saved > 0 ? 1.8 : 0.55);
         DamageNumbers.Tone tone = RuneLimited.toneOf(FN);
         float k = 0.72F;
         if (cast.extra > 0) DamageNumbers.showTotal(level, at, cast.extra, "낙인 · 더한 피해", tone, k);
