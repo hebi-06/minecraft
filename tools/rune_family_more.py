@@ -12,7 +12,7 @@ rules.json 위에 rules_more.json 을 덧붙인 RUNE_FAMILY_ORDER 에서 애드�
   사신 (reaper): 핏빛 초승달 (왼쪽이 볼록 — 가운데가 굵음) + 아래 끝에 맺힌 핏방울
 - 아이템 모델 assets/rpg/models/item/rune_<계열>_<등급>.json (generated), 아이템 정의 assets/rpg/items/rune_<계열>_<등급>.json
   (tools/rune_break_badges.py 와 같은 모양 — custom_model_data 첫 수 = 돌파 단계로 range_dispatch → 배지 모델 composite)
-- 0.16.0 한정 초월 룬 (RUNE_LIMITED_ORDER — 초월 하나씩 · 0.17.0 무간참역 더함): 같은 초월 돌 위에 여러 색 문양 (LIMITED_GLYPHS — 층마다 심지 · 빛 · 빛무리 색),
+- 0.16.0 한정 초월 룬 (RUNE_LIMITED_ORDER — 초월 하나씩 · 0.17.0 무간참역 · 0.18.0 대지 가르기 더함): 같은 초월 돌 위에 여러 색 문양 (LIMITED_GLYPHS — 층마다 심지 · 빛 · 빛무리 색),
   테두리의 붉은 빛을 무지갯빛으로 (가운데에서 본 각도마다 색 — 한정 룬 표시)
   만상 (arcana): 네 스탯 구슬 (위 힘 주황 · 오른쪽 민첩 초록 · 아래 체력 분홍 · 왼쪽 마력 파랑) + 잇는 고리 + 가운데 흰 네 갈래 별
   칠성 (dipper): 북두칠성 일곱 별 (흰 · 금빛 별, 푸른 빛무리) + 잇는 선
@@ -262,7 +262,40 @@ def endless_layers():
             (big, (255, 255, 255), (236, 230, 255), (20, 10, 38))]
 
 
-LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers, "endless": endless_layers}
+def terra_layers():
+    """0.18.0 대지 가르기: 칼끝이 아래로 꽂힌 넓은 돌 대검 (돌 빛 · 어두운 테두리) + 칼날 가운데 호박빛 맥 + 칼끝에서 좌우로 갈라진 땅 (호박빛 틈)"""
+    cx = 16.0
+    tip = 22.4
+
+    def crack(g):
+        left = [(cx, tip), (13.6, 22.9), (12.0, 21.9), (9.8, 22.8), (8.0, 21.8), (6.0, 22.6)]
+        right = [(cx, tip), (18.4, 21.8), (20.0, 22.9), (22.2, 21.9), (24.0, 22.8), (26.0, 22.0)]
+        w = 0.8 + g * 0.55
+        parts = [seg(a[0], a[1], b[0], b[1], w * (1 - 0.08 * i)) for path in (left, right) for i, (a, b) in enumerate(zip(path, path[1:]))]
+        parts += [seg(12.0, 21.9, 11.2, 24.6, 0.55 + g * 0.45), seg(20.0, 22.9, 21.0, 25.0, 0.55 + g * 0.45), seg(cx, tip, cx + 0.4, 25.2, 0.7 + g * 0.5)]
+        return union(*parts)
+
+    def sword(g):
+        def blade(x, y):
+            if not (8.3 - g * 0.4 <= y <= tip + g * 0.5):
+                return False
+            half = 2.4 + g * 0.5
+            if y > 19.4:
+                half *= max(0.0, (tip + g * 0.5 - y) / (tip - 19.4 + g * 0.5))
+            return abs(x - cx) <= half
+        guard = lambda x, y: abs(y - 7.6) <= 0.75 + g * 0.45 and abs(x - cx) <= 3.8 + g * 0.45
+        grip = lambda x, y: 5.0 - g * 0.4 <= y <= 7.0 and abs(x - cx) <= 0.7 + g * 0.45
+        pommel = disc(cx, 4.5, 0.95 + g * 0.45)
+        return union(blade, guard, grip, pommel)
+
+    vein = lambda g: union(seg(cx, 9.0, cx, 20.6, 0.75 + g * 0.6), seg(cx, 11.6, cx + 1.5, 10.3, 0.45 + g * 0.4), seg(cx, 14.8, cx - 1.5, 13.5, 0.45 + g * 0.4),
+                           seg(cx, 17.6, cx + 1.3, 16.5, 0.4 + g * 0.4))
+    return [(crack, (255, 226, 140), (240, 122, 30), (70, 26, 6)),
+            (sword, (172, 156, 132), (92, 76, 60), (20, 12, 6)),
+            (vein, (255, 240, 176), (255, 150, 40), (110, 46, 8))]
+
+
+LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers, "endless": endless_layers, "terra": terra_layers}
 
 
 def prism_frame(stone):

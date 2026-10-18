@@ -205,9 +205,12 @@ public final class RuneTip {
         boolean crush = d.truthy("crush");
         if (!(h > 1) && !dot && !crush) return List.of();
         List<String> out = new ArrayList<>();
+        // 0.18.0 대지 가르기: 대검 내려치기 (crush) 가 먼저, 그 뒤 갈라진 땅 여진 (mult × hits)
+        boolean crushFirst = "earthSplitter".equals(fn);
+        if (crush && crushFirst) out.add(crushLabel(fn, d) + " " + dmg(c, d.num("crush")));
         if (m > 0) out.add(multLabel(fn) + dmg(c, m) + (h > 1 ? " × " + n(h) + "번" : ""));
         if (dot) out.add((Runes.REAPER.equals(c.r().family()) ? "출혈 " : "중독 ") + dmg(c, d.num("dot")) + " × " + n(d.num("dots")) + "번");
-        if (crush) out.add(crushLabel(fn, d) + " " + dmg(c, d.num("crush")));
+        if (crush && !crushFirst) out.add(crushLabel(fn, d) + " " + dmg(c, d.num("crush")));
         return out;
     }
 
@@ -221,6 +224,7 @@ public final class RuneTip {
             case "gravityReverse" -> "띄우기 ";
             case "blackHole" -> "띄워 치기 ";
             case "endlessSlash" -> "베기 ";
+            case "earthSplitter" -> "여진 ";
             default -> "";
         };
     }
@@ -234,6 +238,7 @@ public final class RuneTip {
             case "sevenStars" -> "별 낙하";
             case "heavenEye" -> "마무리 폭발";
             case "endlessSlash" -> "마무리 일섬";
+            case "earthSplitter" -> "대검";
             default -> "마무리";
         };
     }
@@ -306,6 +311,10 @@ public final class RuneTip {
         if ("arcanaUnity".equals(fn)) out.add("§r" + L + "구슬 몫은 스탯 비율로 · 폭발 반지름 " + d.text("radius") + "칸");
         if ("sevenStars".equals(fn)) out.add("§r" + L + "별빛 기둥 " + d.text("beam") + "칸 · 별 낙하 반지름 " + d.text("radius") + "칸");
         if ("endlessSlash".equals(fn)) out.add("§r" + L + "영역 반지름 " + d.text("radius") + "칸 · " + sec(d.numOr("gap", 10)) + "마다 영역 안 모든 적");
+        if ("earthSplitter".equals(fn)) {
+            out.add("§r" + L + "앞으로 " + d.text("length") + "칸 균열 (폭 " + n(d.numOr("width", 0) * 2) + "칸) 안 모든 적");
+            out.add("§r" + L + "대검이 내려친 뒤 " + sec(d.numOr("gap", 10)) + "마다 여진");
+        }
         if ("heavenEye".equals(fn)) {
             out.add("§r" + L + "광선이 바라보는 곳을 따라감 (굵기 " + d.text("width") + "칸)");
             out.add("§r" + L + "폭발 반지름 " + d.text("radius") + "칸 · 쓰는 동안 천천히 걸음");

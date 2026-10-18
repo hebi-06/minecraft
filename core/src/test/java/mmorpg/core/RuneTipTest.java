@@ -123,7 +123,7 @@ public final class RuneTipTest {
                 }
             }
         }
-        check(runes == 89, "89 runes " + runes);
+        check(runes == 90, "90 runes " + runes);
 
         // 하나씩: 메테오 (마력 125 — P 42)
         Map<String, Double> mage = stats(0, 0, 0, 125);
@@ -147,6 +147,14 @@ public final class RuneTipTest {
                 && en.get(0).equals("재사용 36초 · 한정"), "endless: " + en);
         String en6 = joined(RuneTip.lines(rune("endless", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
         check(en6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55)) && en6.contains("기절 1초") && en6.contains("영역 반지름 12칸") && !en6.contains("하늘 가르기"), "endless 6: " + en6);
+        // 0.18.0 대지 가르기: 대검 16 (먼저) + 여진 3 × 6 (P 42 → 672 + 126 × 6번), 균열 줄 (앞으로 14칸 · 폭 5칸), 6돌 20칸 · 폭 7칸 · 기절
+        List<String> te = plain(RuneTip.lines(rune("terra", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
+        String tej = String.join("\n", te);
+        check(tej.contains("⚔ 총 피해 1,428") && tej.contains("대검 672 + 여진 126 × 6번") && te.contains("앞으로 14칸 균열 (폭 5칸) 안 모든 적")
+                && te.contains("대검이 내려친 뒤 0.5초마다 여진") && te.get(0).equals("재사용 36초 · 한정") && tej.contains("띄움"), "terra: " + te);
+        String te6 = joined(RuneTip.lines(rune("terra", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
+        check(te6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55)) && te6.contains("기절 1초") && te6.contains("앞으로 20칸 균열 (폭 7칸)") && !te6.contains("지맥 폭발"),
+                "terra 6: " + te6);
         // 적월 강림 6돌: 나눔이 길면 다음 줄 (이어지는 줄은 "+ ")
         List<String> cm = plain(RuneTip.lines(rune("reaper", "transcend"), 6, new RuneTip.Viewer(stats(0, 84, 0, 41), 1, 131)));
         int ti = -1;

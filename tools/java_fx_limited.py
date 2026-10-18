@@ -10,6 +10,9 @@
               룬 연출에서 빛 (cell 0, frames 4) 과 심지 (cell 4, frames 4) 를 두 장 겹침 (RuneKit.rfx2 — 빛 = 스탯 색, 심지 = 흰빛)
 - rfx_skyeye  천공의 눈 (256×256 × 4장 — 미리 칠한 색: 금빛 마법진 · 흰 눈 · 해빛 눈동자): 0 감음 → 1 반쯤 → 2 뜸 → 3 뜬 채 빛남.
               direction_z (dir 이 판이 보는 쪽 — 하늘에서 시전자 눈 쪽으로). 점 그림 (128 판을 2배)
+- rfx_fissure 0.18.0 대지 가르기의 갈라진 땅 (512×128 × 3칸 — 흰색, 색을 입힘): 0 틈 (굵고 들쭉날쭉한 틈 + 곁가지 + 둘레 그늘 — 짙은 흙빛),
+              1 빛 (틈을 따라 퍼진 부드러운 빛 — 호박빛), 2 심지 (가운데 가는 용암 줄 — 밝은 노랑). 가로 = 틈의 길이 (양끝은 가늘어짐).
+              direction_z (dir = 위 → 땅에 눕힘, spin 으로 가로를 시전자 앞쪽에 맞춤 — RuneTerra)
 """
 import math
 import os
@@ -236,9 +239,93 @@ def skyeye_sheet():
     return sheet
 
 
+# ------------------------------------------------------------ 갈라진 땅 (0.18.0)
+
+def _fissure_path(rng, W, H, n=56):
+    """왼쪽 → 오른쪽 들쭉날쭉한 틈의 가운데 줄 (점 · 그 자리의 반폭): 가운데가 굵고 양끝은 가늘게"""
+    pts = []
+    y = H / 2
+    for i in range(n + 1):
+        t = i / n
+        x = 10 + (W - 20) * t
+        y += rng.uniform(-1, 1) * H * 0.045
+        y = H / 2 + (y - H / 2) * 0.82  # 가운데 줄에서 너무 멀어지지 않게
+        half = (0.25 + 0.75 * math.sin(math.pi * t) ** 0.6) * H * 0.105 * rng.uniform(0.65, 1.35)
+        pts.append((x, y, half))
+    return pts
+
+
+def _poly_of(path, jag=None):
+    """가운데 줄 · 반폭 → 위 · 아래 가장자리를 이은 다각형. jag (점마다 위 · 아래 배율) 로 두 가장자리가 따로 들쭉날쭉"""
+    top = [(x, y - h * (jag[i][0] if jag else 1)) for i, (x, y, h) in enumerate(path)]
+    bot = [(x, y + h * (jag[i][1] if jag else 1)) for i, (x, y, h) in enumerate(path)]
+    return top + bot[::-1]
+
+
+def fissure_sheet():
+    import random
+    rng = random.Random(1805)
+    W, H = 512, 128
+    ss = 2
+    path = _fissure_path(rng, W, H)
+    # 곁가지: 가운데 줄의 몇 자리에서 비스듬히 갈라져 나가 가늘어짐
+    branches = []
+    for i in (6, 11, 17, 22, 28, 33, 39, 45, 50):
+        x, y, h = path[i]
+        side = -1 if rng.random() < 0.5 else 1
+        ang = math.radians(rng.uniform(25, 60)) * side
+        L = rng.uniform(26, 58)
+        bp = []
+        bx, by = x, y
+        for k in range(9):
+            t = k / 8
+            bx += math.cos(ang) * L / 8 * (1 if rng.random() < 0.85 else -0.4)
+            by += math.sin(ang) * L / 8 + rng.uniform(-1.5, 1.5)
+            bp.append((bx, by, max(0.9, h * 0.7 * (1 - t) ** 0.8)))
+        branches.append([(x, y, h * 0.6)] + bp)
+
+    jag = [(rng.uniform(0.6, 1.45), rng.uniform(0.6, 1.45)) for _ in path]
+
+    def draw(widen, fill_alpha, blur, core=False):
+        big = Image.new("RGBA", (W * ss, H * ss), (255, 255, 255, 0))
+        d = ImageDraw.Draw(big)
+        k = 0.18 if core else 1.0
+        for j, p in enumerate([path] + branches):
+            q = [(x * ss, y * ss, (h * k + widen) * ss) for x, y, h in p]
+            d.polygon(_poly_of(q, None if (core or j > 0) else jag), fill=(255, 255, 255, fill_alpha))
+            if j > 0 or core:  # 곁가지 · 심지의 이음매를 둥글게 (큰 틈은 들쭉날쭉한 가장자리 그대로)
+                for x, y, h in q:
+                    d.ellipse((x - h, y - h, x + h, y + h), fill=(255, 255, 255, fill_alpha))
+        if blur:
+            big = big.filter(ImageFilter.GaussianBlur(blur * ss))
+        return big.resize((W, H), Image.LANCZOS)
+
+    # 0 틈: 짙은 틈 (가장자리 또렷 — 거의 불투명) + 가장자리 바로 바깥의 옅은 그늘
+    rim = Image.new("RGBA", (W, H), (255, 255, 255, 0))
+    rim.alpha_composite(draw(3.5, 70, 2.5))
+    rim.alpha_composite(draw(1.2, 250, 0.5))
+    # 1 빛: 틈 바깥으로 번지는 빛무리 (틈 안쪽은 비움 — 겹치는 순서와 상관없이 틈이 어둡게 보이게)
+    glow = Image.new("RGBA", (W, H), (255, 255, 255, 0))
+    glow.alpha_composite(draw(12, 110, 9))
+    glow.alpha_composite(draw(4, 170, 3))
+    hole = draw(0.6, 255, 0.4).split()[3]
+    ga = glow.split()[3]
+    glow.putalpha(Image.eval(Image.merge("LA", (ga, hole)).split()[0], lambda v: v) if False else Image.fromarray(
+        __import__("numpy").clip(__import__("numpy").array(ga, float) * (1 - __import__("numpy").array(hole, float) / 255.0), 0, 255).astype("uint8")))
+    # 2 심지: 틈 가운데 가는 용암 줄 (틈 폭의 18%) + 틈 안을 밝히는 옅은 번짐
+    core = Image.new("RGBA", (W, H), (255, 255, 255, 0))
+    core.alpha_composite(draw(1.0, 110, 2.0, core=True))
+    core.alpha_composite(draw(0.25, 255, 0.3, core=True))
+    sheet = Image.new("RGBA", (W, H * 3), (255, 255, 255, 0))
+    for i, im in enumerate((rim, glow, core)):
+        sheet.alpha_composite(im, (0, H * i))
+    return sheet
+
+
 def main():
     java_fx_art.save("rfx_orb", orb_sheet(), 128, 128, "rotate_xyz")
     java_fx_art.save("rfx_skyeye", skyeye_sheet(), 256, 256, "direction_z")
+    java_fx_art.save("rfx_fissure", fissure_sheet(), 512, 128, "direction_z")
 
 
 if __name__ == "__main__":

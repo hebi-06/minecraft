@@ -39,6 +39,7 @@ public final class Mmorpg implements ModInitializer {
         RpgHealth.init();
         RpgCombat.init();
         DamageNumbers.init();
+        FxDisplays.init(); // 0.18.0 연출용 표시 엔티티 (대지 가르기의 대검 · 들리는 땅)
         Transcend.init();
         RuneSystem.init();
         mmorpg.fabric.gear.ArmorSystem.init();

@@ -158,6 +158,17 @@ public final class RpgLimitedRuneTests {
         cast(h, "endless", 6, EVEN, 2.5 * 14 + 20, 15, 190, false);
     }
 
+    /** 0.18.0 대지 가르기: 대검 내려치기 16 + 갈라진 땅 여진 3 × 6 (과녁은 시전자 앞 4.5칸 — 균열 안), 6돌 27 + 3.5 × 8 */
+    @GameTest(environment = "mmorpg:lr_terra", maxTicks = 200)
+    public void earthSplitter(GameTestHelper h) {
+        cast(h, "terra", 0, EVEN, 16 + 3 * 6, 7, 140, false);
+    }
+
+    @GameTest(environment = "mmorpg:lr_terra6", maxTicks = 230)
+    public void earthSplitterSixStars(GameTestHelper h) {
+        cast(h, "terra", 6, EVEN, 27 + 3.5 * 8, 9, 165, false);
+    }
+
     /** 네 스탯을 어떻게 찍어도 같은 위력 (합이 같으면) · 한 스탯만 찍은 사람의 자기 계열 룬과 같은 P */
     @GameTest(maxTicks = 20)
     public void totalStatPower(GameTestHelper h) {
@@ -168,7 +179,7 @@ public final class RpgLimitedRuneTests {
         String[] keys = {"str", "dex", "vit", "int"};
         for (double[] b : builds) {
             for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], (int) b[i]);
-            for (String f : List.of("arcana", "dipper", "skyeye", "endless")) {
+            for (String f : List.of("arcana", "dipper", "skyeye", "endless", "terra")) {
                 double P = RuneCast.power(sp, f);
                 h.assertTrue(Math.abs(P - 12 * (1 + 125 * 0.02)) < 1e-6, f + " P " + P + " for " + java.util.Arrays.toString(b));
             }

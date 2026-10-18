@@ -25,6 +25,7 @@ final class RuneFamilies {
         RuneStrike.register();
         RuneLimited.register(); // 0.16.0: 한정 초월 룬 (만상귀일 · 칠성 강림 · 천공의 눈)
         RuneEndless.register(); // 0.17.0: 한정 초월 룬 무간참역
+        RuneTerra.register(); // 0.18.0: 한정 초월 룬 대지 가르기
     }
 
     /** 등록한 룬 효과 수 (함수 이름 — 정령사는 다섯 등급이 하나) */

@@ -71,6 +71,7 @@ public final class AddonFxTable {
         "rpg:rfx_eclipse",
         "rpg:rfx_emblem",
         "rpg:rfx_fireball",
+        "rpg:rfx_fissure",
         "rpg:rfx_flare",
         "rpg:rfx_fountain",
         "rpg:rfx_hex",
