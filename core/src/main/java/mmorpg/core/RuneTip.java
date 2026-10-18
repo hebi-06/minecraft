@@ -55,8 +55,8 @@ public final class RuneTip {
     public static final String BASIS = "숫자: 지금 내 스탯 · 적 하나 기준";
     public static final String BASIS_SELF = "숫자: 지금 내 스탯 기준";
 
-    /** 계산에 쓰는 값: 룬 · 단계 · 단계의 정의 · 돌파 계수 전 위력 (스탯 트리 포함 — 모르면 NaN) · 최대 체력 · 회복 배율 */
-    private record Ctx(Runes.Rune r, int lv, Obj d, String fn, double pBase, double maxHp, double scale) {
+    /** 계산에 쓰는 값: 룬 · 단계 · 단계의 정의 · 돌파 계수 전 위력 (스탯 트리 포함 — 모르면 NaN) · 최대 체력 · 회복 배율 · 적용 스탯 (가호 룬 — 모르면 NaN) */
+    private record Ctx(Runes.Rune r, int lv, Obj d, String fn, double pBase, double maxHp, double scale, double applied) {
         boolean body() {
             return r.family().equals(BODY.str("family"));
         }
@@ -73,12 +73,14 @@ public final class RuneTip {
         double pBase = Double.NaN;
         double maxHp = Double.NaN;
         double scale = Double.NaN;
+        double applied = Double.NaN;
         if (viewer != null && viewer.stats() != null) {
             pBase = Runes.runePower(viewer.stats(), r.family()) * (viewer.runeMult() > 0 ? viewer.runeMult() : 1);
             scale = Runes.supportScale(viewer.stats(), r.family());
+            applied = Runes.runeStat(viewer.stats(), r.family()).value();
             if (viewer.maxHp() > 0) maxHp = viewer.maxHp();
         }
-        Ctx c = new Ctx(r, lv, d, d.strOrNull("fn"), pBase, maxHp, scale);
+        Ctx c = new Ctx(r, lv, d, d.strOrNull("fn"), pBase, maxHp, scale, applied);
         List<String> out = new ArrayList<>();
         out.add(head(r));
         out.add("§r" + L + d.text("desc"));
@@ -249,6 +251,17 @@ public final class RuneTip {
         Obj d = c.d();
         List<String> out = new ArrayList<>();
         if (c.body() || c.strike()) return out; // 강화 룬은 flow 에서
+        if (Runes.isGrace(d)) {
+            // 0.19.0 세계수의 가호: 가하는 피해 + · 받는 피해 − (보는 사람의 스탯 합 · 돌파 계수 — 모르면 기본 값 + 스탯 비례)
+            if (Double.isNaN(c.applied())) {
+                out.add("§r§6✦ " + L + "가하는 피해 " + N + "+" + pct(d.num("graceUp")) + "%" + L + " + 스탯 비례");
+                out.add("§r§b◈ " + L + "받는 피해 " + N + "-" + pct(d.num("graceCut")) + "%" + L + " + 스탯 비례");
+            } else {
+                out.add("§r§6✦ " + L + "가하는 피해 " + N + "§l+" + pct(Runes.graceUp(d, c.applied())) + "%");
+                out.add("§r§b◈ " + L + "받는 피해 " + N + "§l-" + pct(Runes.graceCut(d, c.applied())) + "%");
+            }
+            return out;
+        }
         if (d.truthy("heal") && d.truthy("healMax")) {
             out.add("§r§a✚ " + L + "흡혈 " + N + "적마다 " + hp(c, d.num("heal")) + L + " (" + d.text("healMax") + "명까지)");
         } else if (d.truthy("heal")) {
@@ -314,6 +327,11 @@ public final class RuneTip {
         if ("earthSplitter".equals(fn)) {
             out.add("§r" + L + "앞으로 " + d.text("length") + "칸 균열 (폭 " + n(d.numOr("width", 0) * 2) + "칸) 안 모든 적");
             out.add("§r" + L + "대검이 내려친 뒤 " + sec(d.numOr("gap", 10)) + "마다 여진");
+        }
+        if (Runes.isGrace(d)) {
+            out.add("§r" + L + "쓴 자리 반지름 " + d.text("radius") + "칸 안 아군 (나 포함) · " + sec(d.numOr("ticks", 0)));
+            out.add("§r" + L + Runes.graceFormula(d));
+            out.add("§r" + L + "받는 피해 감소는 다른 감소와 겹치지 않음");
         }
         if ("heavenEye".equals(fn)) {
             out.add("§r" + L + "광선이 바라보는 곳을 따라감 (굵기 " + d.text("width") + "칸)");
@@ -449,6 +467,7 @@ public final class RuneTip {
             double tot = c.strike() || c.body() ? 0 : Runes.runeTotalMult(dt);
             List<String> parts = new ArrayList<>();
             if (tot > 0) parts.add("총 피해 " + num + dmg(c, tot, t) + body);
+            if (Runes.isGrace(dt)) parts.add("가호 " + num + graceText(dt, c.applied(), t) + body);
             for (RuneBreak.Change ch : RuneBreak.changes(fn, t)) {
                 String txt = ch.text();
                 if (txt == null || txt.isEmpty()) continue;
@@ -473,6 +492,14 @@ public final class RuneTip {
             }
         }
         return out;
+    }
+
+    /** 단계의 가호 세기 ("26%" — 가하는 피해 · 받는 피해가 다르면 "+26% · -24%", 스탯을 모르면 돌파 계수 "×1.3") */
+    private static String graceText(Obj dt, double applied, int t) {
+        if (Double.isNaN(applied)) return RuneBreak.coefText(t);
+        String up = pct(Runes.graceUp(dt, applied));
+        String cut = pct(Runes.graceCut(dt, applied));
+        return up.equals(cut) ? up + "%" : "+" + up + "% · -" + cut + "%";
     }
 
     // ------------------------------------------------------------------ 줄 나누기

@@ -114,6 +114,13 @@ public final class DamageNumbers {
      */
     public static java.util.function.Function<LivingEntity, Vec3> anchor = e -> null;
 
+    /** 0.19.0 플레이어가 준 피해가 들어감 (공격자 · 맞은 것 · 실제로 깎인 체력 — 바닐라 피해 · 보스 엔진 모두, 숫자를 띄우기 전) */
+    public interface DealtHook {
+        void dealt(ServerPlayer attacker, LivingEntity victim, double dealt);
+    }
+
+    public static DealtHook dealtHook = (a, v, d) -> {};
+
     private static final class Text {
         final Display.TextDisplay e;
         final double x;
@@ -347,6 +354,11 @@ public final class DamageNumbers {
      */
     public static void feedback(LivingEntity victim, ServerPlayer attacker, double dealt, RpgCombat.Mark m, String mark) {
         if (victim == null || attacker == null || attacker == victim || !(dealt > 0)) return;
+        try {
+            dealtHook.dealt(attacker, victim, dealt); // 0.19.0 세계수의 가호: 가호로 더한 피해 셈
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] dealt hook", e);
+        }
         if (mark == null) mark = "";
         if (m != null && m.style() != null) {
             // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback)

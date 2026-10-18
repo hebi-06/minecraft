@@ -253,6 +253,8 @@ public final class SkillFx {
             {"item.bone_meal.use", "item.bone_meal.use"}, {"entity.snowball.throw", "entity.snowball.throw"},
             // 0.16.0 한정 초월 룬 (천공의 눈 광선)
             {"beacon.ambient", "block.beacon.ambient"},
+            // 0.19.0 세계수의 가호 (자라는 소리 · 6돌 꽃잎)
+            {"block.chorus_flower.grow", "block.chorus_flower.grow"}, {"block.cherry_leaves.break", "block.cherry_leaves.break"},
         };
         for (String[] m : map) SOUND.put(m[0], m[1]);
     }

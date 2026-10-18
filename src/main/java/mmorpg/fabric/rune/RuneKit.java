@@ -102,7 +102,8 @@ public final class RuneKit {
     public static double runeHit(ServerPlayer sp, LivingEntity target, double P, double mult, String stat, Kit.Cause cause, DamageNumbers.Style style) {
         if (!Kit.canHit(sp, target)) return 0;
         if (target instanceof Player p && !RUNE.truthy("hitPlayers") && !(p instanceof ServerPlayer o && Kit.duelPartner.test(sp, o))) return 0;
-        double dmg = P * mult * mmorpg.fabric.stattree.StatTrees.runeMult(sp); // 스탯 트리 공격력 + 룬 피해 (7단계)
+        double dmg = P * mult * mmorpg.fabric.stattree.StatTrees.runeMult(sp) // 스탯 트리 공격력 + 룬 피해 (7단계)
+                * RpgCombat.dealtMult.applyAsDouble(sp); // 0.19.0 세계수의 가호
         Kit.Cause c = cause != null ? cause : "int".equals(stat) ? Kit.Cause.MAGIC : Kit.Cause.ATTACK;
         float before = target.getHealth();
         if (!Kit.applySkillDamage(sp, target, dmg, false, c, style != null ? style : DamageNumbers.Style.RUNE)) return 0;
@@ -451,10 +452,10 @@ public final class RuneKit {
     /**
      * 자바 전용 초월 룬 함수 → 같은 하늘빛 · 번쩍임을 쓰는 애드온 룬 함수 (12단계 정령왕 강림 = 정령왕의 부름의 오로라, 0.12.6 적월 강림 = 광전사의 혼의 핏빛 하늘,
      * 0.16.0 한정: 만상귀일 = 마검 해방의 비전 하늘 · 칠성 강림 = 월광 암살의 밤하늘 · 천공의 눈 = 대천사 강림의 금빛 하늘 · 0.17.0 무간참역 = 블랙홀의 공허 하늘 ·
-     * 0.18.0 대지 가르기 = 메테오의 노을 하늘)
+     * 0.18.0 대지 가르기 = 메테오의 노을 하늘 · 0.19.0 세계수의 가호 = 하늘의 활의 새벽빛)
      */
     private static final Map<String, String> ULT_ALIAS = Map.of("spiritKing", "summonSpirits", "crimsonMoon", "berserker", "arcanaUnity", "spellbladeRelease",
-            "sevenStars", "moonAssassin", "heavenEye", "archangel", "endlessSlash", "blackHole", "earthSplitter", "meteor");
+            "sevenStars", "moonAssassin", "heavenEye", "archangel", "endlessSlash", "blackHole", "earthSplitter", "meteor", "worldTreeGrace", "skyBow");
 
     /**
      * 하늘빛: 룬 함수 fn 의 하늘빛 (fogId 를 주면 그것) 을 at 둘레 사람에게 ticks 틱. 씌운 사람 수.

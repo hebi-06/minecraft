@@ -56,6 +56,12 @@ public final class RpgHealth {
     /** 쓰러지지 않는 상태인지 (불사의 맹약 룬) · 그것으로 버텼을 때 (다음 틱에) */
     public static Predicate<ServerPlayer> undying = p -> false;
     public static Consumer<ServerPlayer> undyingSaved = p -> {};
+    /**
+     * 0.19.0 버프의 받는 피해 감소 (세계수의 가호 — 0 = 없음): 룬 · 스킬 감소 (Guards) 와는 가장 센 것 하나 (Guards 끼리처럼), 방패 감소와는 곱함.
+     * 막아 준 양 (이 감소가 가장 셀 때 — 감소가 없었을 때보다 덜 깎인 체력) 은 buffSaved 로
+     */
+    public static java.util.function.ToDoubleFunction<ServerPlayer> buffReduce = p -> 0;
+    public static BiConsumer<ServerPlayer, Double> buffSaved = (p, a) -> {};
 
     /** 결투 훅 (hp.js setDuelHooks — 6단계 결투가 넣음) */
     public interface DuelHooks {
@@ -224,11 +230,18 @@ public final class RpgHealth {
         if (!(raw > 0)) return newHealth;
         double shield = RpgCombat.shieldReduction(sp, source);
         Guards.Guard g = Guards.of(sp);
-        double reduce = g != null ? 1 - (1 - shield) * (1 - g.reduce()) : shield;
+        double gr = g != null ? g.reduce() : 0;
+        double buff = Math.max(0, Math.min(0.95, buffReduce.applyAsDouble(sp))); // 0.19.0 세계수의 가호
+        double reduce = 1 - (1 - shield) * (1 - Math.max(gr, buff));
         // 스탯 트리 받는 피해 감소 (7단계): 방패 · 버프 감소 뒤에 곱함
         double tree = mmorpg.fabric.stattree.StatTrees.defMult(sp);
         double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce) * tree); // 결투 상대의 피해 × PVP.mult
         Guards.afterHurt(sp, source, g); // 반사 버프: 때린 것에게 (다음 틱)
+        if (buff > gr && loss > 0) {
+            // 가호가 막아 준 양: 가호가 없었을 때 (Guards 감소만) 의 깎임 − 지금 깎임
+            double without = 1 - (1 - shield) * (1 - gr);
+            if (1 - reduce > 1e-6) buffSaved.accept(sp, loss * ((1 - without) / (1 - reduce) - 1));
+        }
         boolean safe = isNonLethal(sp, source, raw);
         if (loss > 0 && !safe) loss = absorbShield(sp, loss); // 보호막 먼저
         double next = health - loss;

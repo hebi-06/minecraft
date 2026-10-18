@@ -12,7 +12,7 @@ rules.json 위에 rules_more.json 을 덧붙인 RUNE_FAMILY_ORDER 에서 애드�
   사신 (reaper): 핏빛 초승달 (왼쪽이 볼록 — 가운데가 굵음) + 아래 끝에 맺힌 핏방울
 - 아이템 모델 assets/rpg/models/item/rune_<계열>_<등급>.json (generated), 아이템 정의 assets/rpg/items/rune_<계열>_<등급>.json
   (tools/rune_break_badges.py 와 같은 모양 — custom_model_data 첫 수 = 돌파 단계로 range_dispatch → 배지 모델 composite)
-- 0.16.0 한정 초월 룬 (RUNE_LIMITED_ORDER — 초월 하나씩 · 0.17.0 무간참역 · 0.18.0 대지 가르기 더함): 같은 초월 돌 위에 여러 색 문양 (LIMITED_GLYPHS — 층마다 심지 · 빛 · 빛무리 색),
+- 0.16.0 한정 초월 룬 (RUNE_LIMITED_ORDER — 초월 하나씩 · 0.17.0 무간참역 · 0.18.0 대지 가르기 · 0.19.0 세계수의 가호 더함): 같은 초월 돌 위에 여러 색 문양 (LIMITED_GLYPHS — 층마다 심지 · 빛 · 빛무리 색),
   테두리의 붉은 빛을 무지갯빛으로 (가운데에서 본 각도마다 색 — 한정 룬 표시)
   만상 (arcana): 네 스탯 구슬 (위 힘 주황 · 오른쪽 민첩 초록 · 아래 체력 분홍 · 왼쪽 마력 파랑) + 잇는 고리 + 가운데 흰 네 갈래 별
   칠성 (dipper): 북두칠성 일곱 별 (흰 · 금빛 별, 푸른 빛무리) + 잇는 선
@@ -295,7 +295,38 @@ def terra_layers():
             (vein, (255, 240, 176), (255, 150, 40), (110, 46, 8))]
 
 
-LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers, "endless": endless_layers, "terra": terra_layers}
+def yggdrasil_layers():
+    """0.19.0 세계수의 가호: 둥근 비췻빛 잎 지붕 (덩이 다섯) + 금빛 줄기 · 가지 · 아래로 퍼지는 뿌리 + 잎 사이 금빛 열매 셋 + 둘레의 가호 고리 (아래가 열린 호)"""
+    cx = 16.0
+
+    def halo(g):
+        def f(x, y):
+            if abs(math.hypot(x - cx, y - 15.2) - 9.3) > 0.3 + g * 0.3:
+                return False
+            a = math.degrees(math.atan2(y - 15.2, x - cx))
+            return not (40 < a < 140)  # 아래 (뿌리 쪽) 는 열림
+        return f
+
+    def crown(g):
+        return union(disc(cx, 8.9, 3.4 + g), disc(12.0, 11.3, 2.8 + g), disc(20.0, 11.3, 2.8 + g), disc(13.6, 13.4, 2.4 + g), disc(18.4, 13.4, 2.4 + g),
+                     disc(cx, 12.2, 2.6 + g))
+
+    def wood(g):
+        trunk = seg(cx, 13.4, cx, 21.2, 1.2 + g * 0.6)
+        arms = union(seg(cx, 15.6, 13.0, 12.6, 0.55 + g * 0.45), seg(cx, 15.8, 19.0, 12.8, 0.55 + g * 0.45))
+        roots = union(seg(cx, 20.8, 11.2, 23.6, 0.75 + g * 0.5), seg(cx, 20.8, 20.8, 23.6, 0.75 + g * 0.5), seg(cx, 21.2, 13.6, 24.8, 0.6 + g * 0.45),
+                      seg(cx, 21.2, 18.4, 24.8, 0.6 + g * 0.45), seg(cx, 21.2, cx, 25.0, 0.6 + g * 0.45))
+        return union(trunk, arms, roots)
+
+    fruits = lambda g: union(disc(12.6, 10.4, 0.7 + g * 0.55), disc(19.4, 10.4, 0.7 + g * 0.55), disc(cx, 7.4, 0.7 + g * 0.55))
+    return [(halo, (236, 255, 214), (150, 220, 140), (24, 60, 30)),
+            (crown, (150, 236, 150), (52, 168, 86), (10, 46, 22)),
+            (wood, (255, 232, 168), (176, 120, 52), (44, 24, 6)),
+            (fruits, (255, 255, 236), (255, 204, 72), (110, 70, 10))]
+
+
+LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers, "endless": endless_layers, "terra": terra_layers,
+                  "yggdrasil": yggdrasil_layers}
 
 
 def prism_frame(stone):

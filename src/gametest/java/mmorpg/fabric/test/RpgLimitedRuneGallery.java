@@ -7,6 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.FxDisplays;
+import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.client.MmorpgClient;
@@ -46,6 +47,8 @@ import org.slf4j.LoggerFactory;
  * 0.18.0 대지 가르기 (앞쪽 균열 — z = -3 에 서서 과녁이 균열 안 · 대검은 머리 위에서 앞으로 휘둘러 과녁 앞에 박힘): 0돌 1인칭 · 6돌 3인칭 (지맥 폭발) ·
  * 6돌 밤 1인칭 (lr_terra_…),
  * 표시 엔티티 (대검 · 들린 땅 · 기둥) 가 떴는지 (FxDisplays.spawned) 도 기록.
+ * 0.19.0 세계수의 가호 (버프 — 앞 8칸에 세계수 환영이 자람 · 금빛 빛줄기가 나에게): 0돌 1인칭 (가호 뒤 과녁을 치고 · 맞음 → 끝의 요약 "가호 · 더한 피해" ·
+ * "가호 · 막은 피해" 까지) · 6돌 3인칭 (세계수 개화 — 큰 나무 · 꽃잎 비) · 6돌 밤 1인칭 (lr_ygg_…).
  * 써졌는지 (재사용 대기) · 들어간 피해 · 끝의 총 피해 글자 (DamageNumbers — "총 피해") 를 로그 (limited-gallery) 로, 아니면 마지막에 실패.
  * 스탯은 40렙 실제 분배 (31 · 31 · 31 · 32 = 총 125). 피해 숫자는 실제로 깎인 체력이라 과녁 체력 상한 (바닐라 1024) 에서 잘리므로,
  * 이 사진첩의 과녁은 흡수 체력 2048 을 매 틱 다시 채움 (6돌 큰 한 방 약 1,800 도 그대로 보이게 — 공용 TestDummies 는 그대로).
@@ -122,6 +125,15 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             int fx1 = server.computeOnServer(s -> FxDisplays.spawned);
             LOG.info("[limited-gallery] terra displays spawned={}", fx1 - fx0);
             if (fx1 - fx0 < 3 * 20) failures.add("terra displays " + (fx1 - fx0));
+            ctx.waitTicks(100);
+            // 세계수의 가호 (0.19.0): 씨앗 → 돌며 자람 (2 ~ 18틱) → 가호 (18 — 잎 지붕이 피고 금빛 빛줄기가 나에게 · 몸에 가호) → 서 있음 (~88) →
+            //   오그라들며 흩어짐 (88 ~ 102) → 과녁을 침 (110 ~ 140 — 가호로 더한 피해: 금빛 잎) · 맞음 (126 · 142 — 막은 피해: 비췻빛 고리) →
+            //   가호 끝 (258) · 요약 (262 ~ — 더한 피해 · 막은 피해 차오름). 6돌: 큰 나무 · 꽃잎 비 · 땅의 빛의 꽃
+            runGrace(ctx, server, 0, false, new int[] {4, 10, 15, 19, 23, 30, 60, 92, 100, 114, 128, 144, 268, 280}, false, true);
+            runGrace(ctx, server, 6, true, new int[] {6, 14, 19, 24, 32, 60, 100, 110}, false, false);
+            server.runCommand("time set 18000");
+            runGrace(ctx, server, 6, false, new int[] {12, 20, 28, 60, 100}, true, false);
+            server.runCommand("time set 6000");
         }
         LOG.info("[limited-gallery] done, {} failed", failures.size());
         if (!failures.isEmpty()) throw new AssertionError("limited rune gallery: " + String.join(" / ", failures));
@@ -187,6 +199,79 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         if (!cast) failures.add(id + " not cast");
         else if (!(dealt > 0)) failures.add(id + " dealt no damage");
         if (!sawTotal) failures.add(id + " no total damage text");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+    }
+
+    /**
+     * 세계수의 가호 하나: 실제 입력으로 쓰고 사진 (lr_ygg_&lt;돌&gt;[n]_&lt;틱&gt;[_3p]). full = 가호 뒤 과녁을 치고 (110틱부터 6틱마다 하나 — 룬 피해) 맞고 (126 · 142틱)
+     * 가호가 끝날 때까지 (요약 글자 둘). 써졌는지 · 세계수가 떴는지 · 가호가 걸렸는지 (가하는 피해 배율) · (full) 요약을 로그로
+     */
+    private void runGrace(ClientGameTestContext ctx, TestServerContext server, int level, boolean third, int[] shots, boolean night, boolean full) {
+        Runes.Rune r = Runes.parseRune(Runes.runeId("yggdrasil", "transcend"));
+        if (r == null) {
+            failures.add("yggdrasil no rune");
+            return;
+        }
+        String id = "ygg_" + level + (night ? "n" : "");
+        server.runCommand("item replace entity @a hotbar.0 with air");
+        server.runCommand(String.format(Locale.ROOT, "tp @a 0.5 -60 %.1f 0 4", ME_Z));
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
+            RuneCast.resetCooldowns(sp);
+            RuneSystem.forget(sp.getUUID());
+            lives++;
+            for (int i = 0; i < lives; i++) RuneKit.lifeEnded(sp.getUUID());
+            RpgStats.setBuff(sp, 0);
+            Guards.clear(sp.getUUID());
+            Status.clear(sp);
+            sp.removeAllEffects();
+            RpgHealth.healFull(sp);
+            spawnHusks(sp.level());
+            SkillBar.set(sp, 0, Breakthrough.stack("yggdrasil", "transcend", level));
+        });
+        ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
+        ctx.waitTicks(14);
+        int totals0 = server.computeOnServer(s -> DamageNumbers.totalsShown);
+        int fx0 = server.computeOnServer(s -> FxDisplays.spawned);
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        int t = 0;
+        double mult = 1;
+        int hit = 0;
+        for (int shot : shots) {
+            while (t < shot) {
+                ctx.waitTick();
+                t++;
+                if (t == 30) mult = server.computeOnServer(s -> RpgCombat.dealtMult.applyAsDouble(player(s)));
+                if (full && t >= 110 && t <= 140 && (t - 110) % 6 == 0) {
+                    final int k = hit++;
+                    server.runOnServer(s -> {
+                        ServerPlayer sp = player(s);
+                        List<Husk> hs = sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(40), h -> true);
+                        if (!hs.isEmpty()) RuneKit.runeHit(sp, hs.get(k % hs.size()), RuneCast.power(sp, "yggdrasil"), 3, "int");
+                    });
+                }
+                if (full && (t == 126 || t == 142)) {
+                    server.runOnServer(s -> {
+                        ServerPlayer sp = player(s);
+                        List<Husk> hs = sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(40), h -> true);
+                        sp.setInvulnerableTime(0);
+                        sp.hurtServer(sp.level(), hs.isEmpty() ? sp.damageSources().generic() : sp.damageSources().mobAttack(hs.get(0)), 8F);
+                    });
+                }
+            }
+            ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "lr_%s_%03d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
+        }
+        boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
+        int displays = server.computeOnServer(s -> FxDisplays.spawned) - fx0;
+        boolean summary = server.computeOnServer(s -> DamageNumbers.totalsShown) >= totals0 + 2;
+        LOG.info("[limited-gallery] {} {} cast={} displays={} dealtMult={} summary={}", id, third ? "3p" : "1p", cast, displays, String.format(Locale.ROOT, "%.3f", mult),
+                summary);
+        if (!cast) failures.add(id + " not cast");
+        if (displays < 1) failures.add(id + " no world tree");
+        if (!(mult > 1.1)) failures.add(id + " no grace (dealt ×" + mult + ")");
+        if (full && !summary) failures.add(id + " no grace summary");
+        if (!full) ctx.waitTicks(Math.max(0, 140 - t)); // 나무가 다 흩어진 뒤 (다음 시전의 사진에 남지 않게)
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
     }
 

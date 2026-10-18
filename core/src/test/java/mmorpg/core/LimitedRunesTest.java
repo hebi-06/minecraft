@@ -10,7 +10,10 @@ import java.util.Random;
 /**
  * 0.16.0 시험 (JUnit 없이 main — check-core.sh): 한정 초월 룬 셋 (만상귀일 · 칠성 강림 · 천공의 눈 — 자바 전용 덧붙임).
  * <ul>
- * <li>계열: RUNE_LIMITED_ORDER = arcana · dipper · skyeye · endless (0.17.0 무간참역) · terra (0.18.0 대지 가르기), 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 22 (뒤에 다섯), 초월 하나씩</li>
+ * <li>계열: RUNE_LIMITED_ORDER = arcana · dipper · skyeye · endless (0.17.0 무간참역) · terra (0.18.0 대지 가르기) · yggdrasil (0.19.0 세계수의 가호 — 버프),
+ * 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 23 (뒤에 여섯), 초월 하나씩</li>
+ * <li>0.19.0 세계수의 가호: 피해 없음, 가호 = graceUp (받는 피해 graceCut) + min(gracePer × 네 스탯의 합, graceCap), 돌파 계수가 값 넷 모두에
+ * (40렙 125포인트 0돌 20% · 3돌 26% · 6돌 32%, 스탯 합 150 에서 최대), 단계는 지속 12 → 14 → 16초 · 반지름 8 → 10 → 12칸, 6돌 연출 (세계수 개화)</li>
  * <li>적용 스탯 = 네 스탯의 합 × 1.0 (스탯을 어떻게 찍어도 같은 위력 — 40렙 125포인트 = 한 스탯만 찍은 자기 계열 룬과 같은 P 42), 알림 글자 "총 스탯 N"</li>
  * <li>배율 합 34 (다른 초월 32 보다 6.25% 위 — 사용자 요청 '5% ~ 12% 더 쎄게'), 재사용 대기 36초, 설명 줄 (한정 룬 · 네 스탯의 합 · 흐름 · 총 피해)</li>
  * <li>뽑기: 룬 뽑기권 · 고급 · 스탯 뽑기권에는 나오지 않음, 한정 뽑기의 초월 픽업으로만 (영웅 픽업 · 놓친 결과 · 다른 등급에는 없음)</li>
@@ -51,10 +54,10 @@ public final class LimitedRunesTest {
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
         List<String> lim = Runes.LIMITED_ORDER;
-        check(lim.equals(List.of("arcana", "dipper", "skyeye", "endless", "terra")), "limited order " + lim);
+        check(lim.equals(List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil")), "limited order " + lim);
         check(Runes.FAMILY_ORDER.size() == 17, "draw families stay 17 " + Runes.FAMILY_ORDER.size());
         for (String f : lim) check(!Runes.FAMILY_ORDER.contains(f), f + " not in the draw families");
-        check(Runes.ALL_FAMILIES.size() == 22 && Runes.ALL_FAMILIES.subList(17, 22).equals(lim), "all families " + Runes.ALL_FAMILIES);
+        check(Runes.ALL_FAMILIES.size() == 23 && Runes.ALL_FAMILIES.subList(17, 23).equals(lim), "all families " + Runes.ALL_FAMILIES);
         check(!Runes.limited("int") && Runes.limited("arcana"), "limited()");
 
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 36초
@@ -184,6 +187,50 @@ public final class LimitedRunesTest {
             for (String l : RuneBreak.tierLines(r, 6, false)) check(l.replaceAll("§.", "").length() <= 40, fams[i] + " tier line short: " + l);
         }
         near(RuneBreak.def(Runes.parseRune("rpg:rune_arcana_transcend"), 6).num("stun"), 30, "arcana 6 stun");
+
+        // 0.19.0 세계수의 가호 (한정 버프 룬 — 사용자 요청 "가하는 피해 증가 버프 · 받는 피해 감소")
+        for (String g : Runes.GRADE_ORDER) check(g.equals("transcend") == (Runes.parseRune(Runes.runeId("yggdrasil", g)) != null), "yggdrasil only transcend " + g);
+        Runes.Rune ygg = Runes.parseRune("rpg:rune_yggdrasil_transcend");
+        check(ygg != null, "yggdrasil rune");
+        if (ygg != null) {
+            check(ygg.def().str("fn").equals("worldTreeGrace") && ygg.def().str("name").equals("세계수의 가호") && ygg.famName().equals("세계수"), "yggdrasil def");
+            near(ygg.cd(), 36, "yggdrasil cd");
+            near(Runes.runeTotalMult(ygg.def()), 0, "yggdrasil deals no damage");
+            check(Runes.isGrace(ygg.def()) && !Runes.isGrace(Runes.parseRune("rpg:rune_terra_transcend").def()) && !Runes.isGrace(Runes.parseRune("rpg:rune_body_transcend").def()),
+                    "isGrace only the grace rune");
+            check(Rules.get().obj("RUNE").obj("color").has("yggdrasil"), "yggdrasil color");
+            double S = Runes.runeStat(stats(31, 31, 31, 32), "yggdrasil").value();
+            near(S, 125, "yggdrasil applied = four stats");
+            near(Runes.runeStat(stats(125, 0, 0, 0), "yggdrasil").value(), 125, "yggdrasil any build");
+            near(Runes.graceUp(ygg.def(), S), 0.2, "0 up 20%");
+            near(Runes.graceCut(ygg.def(), S), 0.2, "0 cut 20%");
+            near(Runes.graceUp(ygg.def(), 0), 0.1, "base 10% without stats");
+            near(Runes.graceUp(ygg.def(), Double.NaN), 0.1, "NaN stats = base");
+            near(Runes.graceUp(ygg.def(), 100), 0.18, "100 → 18%");
+            near(Runes.graceUp(ygg.def(), 150), 0.22, "150 → 22% (cap)");
+            near(Runes.graceCut(ygg.def(), 600), 0.22, "cap 22%");
+            near(Runes.graceUp(RuneBreak.def(ygg, 1), S), 0.22, "1 × 1.1");
+            near(Runes.graceUp(RuneBreak.def(ygg, 3), S), 0.26, "3 up 26%");
+            near(Runes.graceCut(RuneBreak.def(ygg, 3), S), 0.26, "3 cut 26%");
+            near(Runes.graceUp(RuneBreak.def(ygg, 6), S), 0.32, "6 up 32%");
+            near(Runes.graceCut(RuneBreak.def(ygg, 6), 600), 0.22 * 1.6, "6 cap 35.2%");
+            double[][] tier = {{240, 8, 2.8}, {280, 10, 2.8}, {320, 12, 3.4}};
+            for (int i = 0; i < 3; i++) {
+                Obj d = RuneBreak.def(ygg, i * 3);
+                near(d.num("ticks"), tier[i][0], "ticks " + i * 3);
+                near(d.num("radius"), tier[i][1], "radius " + i * 3);
+                near(d.num("tree"), tier[i][2], "tree " + i * 3);
+            }
+            RuneBreak.Extra fin = RuneBreak.extra("worldTreeGrace");
+            check(fin != null && "finale".equals(fin.type()) && fin.at() == 6, "yggdrasil 6 finale");
+            for (String l : RuneBreak.tierLines(ygg, 6, false)) check(l.replaceAll("§.", "").length() <= 40, "yggdrasil tier line short: " + l);
+            String lore = plain(Runes.runeLore(ygg, false));
+            check(lore.contains("한정 룬") && lore.contains("네 스탯의 합 × 1.0"), "yggdrasil lore limited / sum: " + lore);
+            check(lore.contains("가하는 피해 +20%") && lore.contains("받는 피해 -20%") && lore.contains("반지름 8칸") && lore.contains("12초"), "yggdrasil lore grace: " + lore);
+            check(lore.contains("더한 피해 · 막은 피해") && !lore.contains("위력") && !lore.contains("총 피해"), "yggdrasil lore no damage: " + lore);
+            String lore6 = plain(RuneBreak.lore(ygg, 6, false));
+            check(lore6.contains("가하는 피해 +32%") && lore6.contains("반지름 12칸") && lore6.contains("16초"), "yggdrasil 6 lore: " + lore6);
+        }
         near(RuneBreak.def(Runes.parseRune("rpg:rune_dipper_transcend"), 6).num("hits"), 8, "dipper 6: 8 stars");
         near(RuneBreak.def(Runes.parseRune("rpg:rune_skyeye_transcend"), 6).num("hits"), 7, "skyeye 6: 7 pulses");
         check(RuneBreak.changeTexts(Runes.parseRune("rpg:rune_dipper_transcend"), 6).contains("별 7 → 8개 (북극성)"), "polaris text");

@@ -115,6 +115,12 @@ public final class RpgCombat {
         RANGED_CD_HOOKS.add(h);
     }
 
+    /**
+     * 0.19.0 가하는 피해 배율 (세계수의 가호 룬이 넣음 — 1 = 그대로): 평타 · 활 · 완드 · 스킬 (powerOf), 평타에 더한 피해 (weaponBonus), 룬 피해 (RuneKit.runeHit)
+     * 에 한 번씩 곱함. 보스 엔진 (Bosses.absorb) 도 이 값이 곱해진 피해를 받음
+     */
+    public static java.util.function.ToDoubleFunction<ServerPlayer> dealtMult = p -> 1;
+
     public static void setSteadfast(ServerPlayer sp, int ticks) {
         STEADFAST.merge(sp.getUUID(), Tasks.now() + ticks, Math::max);
     }
@@ -177,6 +183,7 @@ public final class RpgCombat {
                 Mmorpg.LOG.warn("[mmorpg] weapon bonus", e);
             }
         }
+        add *= dealtMult.applyAsDouble(attacker); // 0.19.0 가호: 평타 몫 (powerOf) 과 같은 배율
         return add > 0 ? new WeaponBonus(add, dmg + add, mk.toString(), parts) : null;
     }
 
@@ -247,9 +254,11 @@ public final class RpgCombat {
 
     /**
      * 무기 피해 배율 = 스탯 배율 × (1 + 강화 보너스 — 손에 든 그 무기의 강화 단계, combat.js powerMultiplier) × 스탯 트리 공격력 (7단계 — 평타 · 스킬)
+     * × 가하는 피해 배율 (0.19.0 세계수의 가호 — {@link #dealtMult})
      */
     public static double powerOf(ServerPlayer sp, Weapon w) {
-        return Combat.powerMultiplier(RpgStats.effective(sp), w, mmorpg.fabric.gear.WeaponEnhance.held(sp, w)) * mmorpg.fabric.stattree.StatTrees.atkMult(sp);
+        return Combat.powerMultiplier(RpgStats.effective(sp), w, mmorpg.fabric.gear.WeaponEnhance.held(sp, w)) * mmorpg.fabric.stattree.StatTrees.atkMult(sp)
+                * dealtMult.applyAsDouble(sp); // 0.19.0 가호 (세계수의 가호 — 걸린 동안 1 + 가호)
     }
 
     /** 치명타 배율 = 무기 배율 + 스탯 트리 치명타 피해 (7단계 — ×1.5 에 +10% → ×1.6) */
