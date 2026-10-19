@@ -78,6 +78,7 @@ public final class TrashWindow {
         burned++;
         String what = gone.size() == 1 ? gone.get(0).getHoverName().getString() + (n > 1 ? " " + n + "개" : "") : gone.size() + "묶음 · " + n + "개";
         Notify.say(sp, "§7쓰레기통: §f" + what + " §7을(를) 지웠습니다 §8— 되찾기: /쓰레기통 되살리기 (다음에 지우기 전까지)");
+        Notify.notify(sp, "§c쓰레기통: §f" + what + " §7지움 §8(되찾기: /쓰레기통 되살리기)", 60);
         if (!sp.isRemoved()) burnFx(sp);
     }
 
@@ -91,6 +92,11 @@ public final class TrashWindow {
         ThreadLocalRandom r = ThreadLocalRandom.current();
         for (int i = 0; i < 6; i++) {
             SkillFx.vanilla(level, "minecraft:basic_smoke_particle", feet.add((r.nextDouble() - 0.5) * 1.2, 0.2 + r.nextDouble() * 0.8, (r.nextDouble() - 0.5) * 1.2));
+        }
+        // 고리 둘레에서 피어오르는 불꽃
+        for (int i = 0; i < 12; i++) {
+            double a = i * Math.PI * 2 / 12;
+            SkillFx.vanilla(level, "minecraft:basic_flame_particle", feet.add(Math.cos(a) * 0.9, 0.1 + r.nextDouble() * 0.3, Math.sin(a) * 0.9));
         }
         SkillFx.play(level, "random.fizz", V.up(feet, 0.5), 1.0, 0.8);
     }

@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameType;
 
 /**
  * 0.21.0 버린 아이템은 가방으로 (사용자 요청): 살아 있는 플레이어가 아이템을 버리지 못하게 (mixin ServerPlayerDropMixin) — 핫바의 Q 는
@@ -28,10 +29,12 @@ public final class DropGuard {
     /** 시험용: 가방으로 돌려보낸 횟수 */
     public static int kept;
 
-    /** 막을 사람인지 (켬 · 설정 · 살아 있음 · 생존 · 모험) */
+    /** 막을 사람인지 (켬 · 설정 · 살아 있음 · 생존 · 모험 — 게임 모드는 서버의 실제 모드로: 시험용 가짜 플레이어는 isCreative 가 늘 참) */
     static boolean applies(ServerPlayer sp) {
         if (!enabled || sp == null || !Economy.cfg().truthy("dropReturn")) return false;
-        return !sp.isRemoved() && sp.isAlive() && !sp.isSpectator() && !sp.isCreative();
+        if (sp.isRemoved() || !sp.isAlive()) return false;
+        GameType mode = sp.gameMode.getGameModeForPlayer();
+        return mode == GameType.SURVIVAL || mode == GameType.ADVENTURE;
     }
 
     /**

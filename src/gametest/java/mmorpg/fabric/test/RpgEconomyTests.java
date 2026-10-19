@@ -296,7 +296,8 @@ public final class RpgEconomyTests {
             h.assertTrue(chest(a).slots().get(MarketWindow.SELL).name().contains("판매 등록"), "sell button");
             Forms.answer(a, MarketWindow.SELL, null);
             h.assertTrue(chest(a) != null && chest(a).title().contains("판매할 아이템"), "pick window " + title(a));
-            h.assertTrue(chest(a).slots().get(0).name().contains("황금 사과") || chest(a).slots().get(0).name().toLowerCase().contains("apple"), "bag item shown " + chest(a).slots().get(0).name());
+            h.assertTrue(chest(a).slots().get(0).icon().item().is(Items.GOLDEN_APPLE) && chest(a).slots().get(0).name().contains("{item}")
+                    && chest(a).slots().get(0).lore().contains("{tooltip}"), "bag item shown (name · tooltip by the client) " + chest(a).slots().get(0).name());
             Forms.answer(a, 0, null);
             FormNet.ModalPayload m = Forms.last(a) instanceof FormNet.ModalPayload mm ? mm : null;
             h.assertTrue(m != null && m.title().contains("판매 등록"), "price window");

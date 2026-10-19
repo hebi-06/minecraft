@@ -9,6 +9,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
 
 /**
  * 상자 모양 창 (애드온 server_form.json rpg_chest): 회색 상자 테두리 (chest_bg) 안에 제목 · 9 × 3 칸 (slot 20 × 20, 그림 16 × 16) · 본문.
@@ -43,9 +46,59 @@ public final class ChestFormScreen extends FormScreen {
         this.title = onLight(form.title());
     }
 
+    /** 0.21.0 칸 이름의 "{item}" = 칸 아이템의 이름 (보는 사람의 언어 · 아이템 색 그대로 — 유저 장터의 바닐라 아이템) */
+    static final String ITEM = "{item}";
+    /** 0.21.0 설명 줄 "{tooltip}" = 칸 아이템의 설명 줄 (보는 사람의 언어 — 무기 · 갑옷 · 룬 · 마법 부여) */
+    static final String TOOLTIP = "{tooltip}";
+    static final int TOOLTIP_MAX = 12;
+
+    static Component withItemName(String name, ItemStack icon) {
+        int at = name.indexOf(ITEM);
+        if (at < 0 || icon.isEmpty()) return Component.literal(name.replace(ITEM, ""));
+        return Component.literal(name.substring(0, at)).append(icon.getHoverName()).append(Component.literal(name.substring(at + ITEM.length())));
+    }
+
+    private List<Component> itemTooltip(ItemStack icon) {
+        List<Component> out = new ArrayList<>();
+        try {
+            List<Component> lines = icon.getTooltipLines(Item.TooltipContext.of(minecraft.level), minecraft.player, TooltipFlag.NORMAL);
+            for (int i = 1; i < lines.size() && out.size() < TOOLTIP_MAX; i++) out.add(lines.get(i));
+            if (lines.size() - 1 > TOOLTIP_MAX) out.add(Component.literal("§8…"));
+        } catch (RuntimeException e) {
+            // 설명을 만들 수 없으면 이름만
+        }
+        return out;
+    }
+
+    /** 본문의 "{slot:N}" = 칸 N 아이템의 이름 (보는 사람의 언어) */
+    private String localize(String text) {
+        if (text == null || !text.contains("{slot:")) return text;
+        StringBuilder out = new StringBuilder();
+        int i = 0;
+        while (true) {
+            int a = text.indexOf("{slot:", i);
+            int b = a < 0 ? -1 : text.indexOf('}', a);
+            if (a < 0 || b < 0) {
+                out.append(text.substring(i));
+                break;
+            }
+            out.append(text, i, a);
+            String name = "";
+            try {
+                FormNet.SlotData d = slot(Integer.parseInt(text.substring(a + 6, b)));
+                if (d != null && !d.icon().item().isEmpty()) name = d.icon().item().getHoverName().getString();
+            } catch (NumberFormatException e) {
+                // 잘못된 번호는 비움
+            }
+            out.append(name);
+            i = b + 1;
+        }
+        return out.toString();
+    }
+
     @Override
     protected void init() {
-        body = wrap(font, onLight(form.body()), GRID_W);
+        body = wrap(font, onLight(localize(form.body())), GRID_W);
         w = GRID_W + PAD_X * 2;
         int fixed = PAD_Y + HEADER + GRID_H + GAP + PAD_Y;
         int fit = Math.max(1, (height - 4 - fixed) / LINE);
@@ -146,8 +199,12 @@ public final class ChestFormScreen extends FormScreen {
             FormNet.SlotData s = slot(hover);
             if (s != null && !s.name().isEmpty()) {
                 List<Component> tip = new ArrayList<>();
-                tip.add(Component.literal(s.name()));
-                for (String l : s.lore()) tip.add(Component.literal(l));
+                ItemStack icon = s.icon().item();
+                tip.add(withItemName(s.name(), icon));
+                for (String l : s.lore()) {
+                    if (l.equals(TOOLTIP) && !icon.isEmpty()) tip.addAll(itemTooltip(icon));
+                    else tip.add(Component.literal(l));
+                }
                 g.setComponentTooltipForNextFrame(font, tip, mx, my);
             }
         }

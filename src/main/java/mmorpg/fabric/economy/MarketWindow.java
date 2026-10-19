@@ -17,12 +17,9 @@ import mmorpg.fabric.ui.Inv;
 import mmorpg.fabric.ui.ModalForm;
 import mmorpg.fabric.ui.Slot;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.TooltipFlag;
 
 /**
  * 0.21.0 유저 장터 창 (서버 상자 창 9 × 3 — 상점과 같은 모양): 둘러보기 (윗 두 줄 18칸씩 · 정렬 · 종류 · 쪽), 사기 확인, 판매 등록 (가방에서 고르기 →
@@ -111,21 +108,18 @@ public final class MarketWindow {
         return (chat == null ? "" : chat).replace("§a", "§2").replace("§c", "§4").replace("§f", "§0").replace("§7", "§8").replace("§e", "§6") + "§r";
     }
 
-    /** 아이템의 설명 줄 (이름 줄 뺀 앞 max 줄 — 무기 · 갑옷 · 룬의 정보) */
-    static List<String> itemLines(ServerPlayer sp, ItemStack s, int max) {
-        List<String> out = new ArrayList<>();
-        try {
-            List<Component> tip = s.getTooltipLines(Item.TooltipContext.of(sp.level()), sp, TooltipFlag.NORMAL);
-            for (int i = 1; i < tip.size() && out.size() < max; i++) {
-                String t = tip.get(i).getString();
-                if (!t.isBlank()) out.add("§r§7" + t);
-            }
-            if (tip.size() - 1 > max) out.add("§8…");
-        } catch (RuntimeException e) {
-            // 설명을 만들 수 없는 아이템은 이름만
-        }
-        return out;
+    /** 칸 이름: 아이템 이름 (보는 사람의 언어 — 클라이언트가 "{item}" 을 바꿈) + 개수 */
+    static String itemName(String color, ItemStack s) {
+        return color + "{item}" + (s.getCount() > 1 ? " §7×" + s.getCount() : "");
     }
+
+    /** 본문의 개수 글자 (" ×8" — 1개면 없음) */
+    static String countText(ItemStack s) {
+        return s.getCount() > 1 ? " §8×" + s.getCount() : "";
+    }
+
+    /** 설명 줄 자리: 클라이언트가 아이템의 설명 줄 (보는 사람의 언어) 로 바꿈 */
+    static final String TOOLTIP = "{tooltip}";
 
     static Slot goldSlot(ServerPlayer sp) {
         long g = Wallet.total(sp, Economy.Kind.GOLD);
@@ -142,13 +136,10 @@ public final class MarketWindow {
         lore.add("§6가격: " + Economy.fmt(l.price()) + " 골드");
         lore.add("§7판매자: §f" + l.sellerName());
         lore.add("§7남은 시간: §f" + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + " §8· #" + l.id());
-        List<String> tip = itemLines(sp, s, 6);
-        if (!tip.isEmpty()) {
-            lore.add("");
-            lore.addAll(tip);
-        }
+        lore.add("");
+        lore.add(TOOLTIP);
         if (action != null && !action.isEmpty()) lore.add(action);
-        return Slot.of(s, "§f" + MarketStore.label(s)).lore(lore).price(l.price());
+        return Slot.of(s, itemName("§f", s)).lore(lore).price(l.price());
     }
 
     // ------------------------------------------------------------ 둘러보기
@@ -177,16 +168,18 @@ public final class MarketWindow {
         form.set(HELP, Slot.of(Items.BOOK, "§e장터 안내").lore("§7골드로만 사고팝니다", "§7등록은 무료 · 팔리면 수수료 " + Math.round(Economy.feeRate() * 100) + "%",
                 "§7" + Economy.timeLeft(Economy.marketMillis()) + " 동안 올라감 (지나면 보관함)", "§7한 사람 " + Economy.marketMax() + "개까지",
                 "§7가격 " + Economy.fmt(Economy.minPrice()) + " ~ " + Economy.fmt(Economy.maxPrice()) + " 골드", "§8손에 들고 /장터 등록 <가격> 도 됨").deco());
-        form.set(SELL, Slot.of(Icon.item(EconomyItems.GOLD_COIN), "§a판매 등록").lore("§7가방에서 아이템을 골라", "§7골드 가격을 정해 올립니다", "§8(내 물건 " + mine + " / "
+        form.set(SELL, Slot.of(Items.NAME_TAG, "§a판매 등록").lore("§7가방에서 아이템을 골라", "§7골드 가격을 정해 올립니다", "§8(내 물건 " + mine + " / "
                 + Economy.marketMax() + ")"));
-        form.set(MINE, Slot.of(Items.CHEST, "§f내 물건 §7" + mine + " / " + Economy.marketMax()).count(mine).lore("§7올린 물건 보기 · 내리기"));
-        form.set(BOX, Slot.of(Items.BARREL, (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개").count(boxed)
-                .lore("§7기간이 끝났거나 내렸는데", "§7가방이 가득 찬 물건", boxed > 0 ? "§e누르면 꺼내기" : "§8비었음"));
+        Slot mineSlot = Slot.of(Items.CHEST, "§f내 물건 §7" + mine + " / " + Economy.marketMax()).lore("§7올린 물건 보기 · 내리기");
+        form.set(MINE, mine > 0 ? mineSlot.count(mine) : mineSlot);
+        Slot boxSlot = Slot.of(Items.BARREL, (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개")
+                .lore("§7기간이 끝났거나 내렸는데", "§7가방이 가득 찬 물건", boxed > 0 ? "§e누르면 꺼내기" : "§8비었음");
+        form.set(BOX, boxed > 0 ? boxSlot.count(boxed) : boxSlot);
         form.set(PURSE, goldSlot(sp));
         form.set(NEXT, page < pages - 1 ? Slot.of(Icon.sprite("icon_next"), "§e다음 쪽 ▶").lore("§7" + (page + 2) + " / " + pages + "쪽으로") : Slot.PANE);
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        lines.add(list.isEmpty() ? "§8올라온 물건이 없습니다" + (cur.kind() != Kind.ALL ? " (" + cur.kind().label + ")" : "") + ". 아랫줄 금화 칸: 판매 등록.§r"
+        lines.add(list.isEmpty() ? "§8올라온 물건이 없습니다" + (cur.kind() != Kind.ALL ? " (" + cur.kind().label + ")" : "") + ". 아랫줄 이름표 칸: 판매 등록.§r"
                 : "§8물건을 누르면 사기 확인 창이 열립니다. 초록 숫자 = 가격 (골드).§r");
         lines.add("§8쪽 " + (page + 1) + "/" + pages + " · 정렬 " + sortLabel(cur.sort()) + " · 종류 " + cur.kind().label + " · 수수료 " + Math.round(Economy.feeRate() * 100)
                 + "% (팔릴 때)§r");
@@ -227,7 +220,7 @@ public final class MarketWindow {
         form.set(NO, Slot.of(Icon.sprite("icon_cross"), "§c취소"));
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        lines.add("§0" + MarketStore.label(l.item().stack()).replace("§7", "§8") + "§r");
+        lines.add("§0{slot:" + ITEM + "}" + countText(l.item().stack()) + "§r");
         lines.add("§8가격 §6§l" + Economy.fmt(l.price()) + "§r§8 골드 · 판매자 §0" + l.sellerName() + "§8 · " + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r");
         lines.add(enough ? "§8보유 §0" + Economy.fmt(have) + "§8 → §0" + Economy.fmt(have - l.price()) + "§8 골드§r"
                 : "§4골드가 모자랍니다: 보유 " + Economy.fmt(have) + " / " + Economy.fmt(l.price()) + "§r");
@@ -250,7 +243,7 @@ public final class MarketWindow {
         form.set(ITEM, listingSlot(sp, l, "").deco());
         form.set(NO, Slot.of(Icon.sprite("icon_cross"), "§c그대로 두기"));
         form.fillEmpty();
-        form.body("§0" + MarketStore.label(l.item().stack()).replace("§7", "§8") + "§r\n§8가격 §0" + Economy.fmt(l.price()) + "§8 골드 · 남은 시간 "
+        form.body("§0{slot:" + ITEM + "}" + countText(l.item().stack()) + "§r\n§8가격 §0" + Economy.fmt(l.price()) + "§8 골드 · 남은 시간 "
                 + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r\n§8내리면 가방으로 돌아옵니다 (가득이면 보관함) · 다시 올려도 무료§r");
         form.show(sp, sel -> {
             if (sel < 0) return;
@@ -286,13 +279,13 @@ public final class MarketWindow {
             if (at >= items.size()) break;
             BagItem b = items.get(at);
             String why = MarketStore.refuse(b.stack());
-            List<String> lore = new ArrayList<>(itemLines(sp, b.stack(), 4));
+            List<String> lore = new ArrayList<>(List.of(TOOLTIP));
             if (why != null) {
                 lore.add("§c" + why);
-                form.set(i, Slot.of(b.stack(), "§7" + MarketStore.label(b.stack())).lore(lore).deco());
+                form.set(i, Slot.of(b.stack(), itemName("§7", b.stack())).lore(lore).deco());
             } else {
                 lore.add(full ? "§c올릴 수 있는 수를 다 채웠습니다" : "§a누르면 가격 정하기");
-                form.set(i, Slot.of(b.stack(), "§f" + MarketStore.label(b.stack())).lore(lore).count(b.stack().getCount()));
+                form.set(i, Slot.of(b.stack(), itemName("§f", b.stack())).lore(lore).count(b.stack().getCount()));
                 bySlot.put(i, b);
             }
         }
@@ -368,8 +361,9 @@ public final class MarketWindow {
         }
         int boxed = MarketStore.box(sp).size();
         form.set(PREV, Slot.of(Icon.sprite("icon_prev"), "§e◀ 장터로"));
-        form.set(SELL, Slot.of(Icon.item(EconomyItems.GOLD_COIN), "§a판매 등록"));
-        form.set(BOX, Slot.of(Items.BARREL, (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개").count(boxed));
+        form.set(SELL, Slot.of(Items.NAME_TAG, "§a판매 등록"));
+        Slot boxSlot = Slot.of(Items.BARREL, (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개");
+        form.set(BOX, boxed > 0 ? boxSlot.count(boxed) : boxSlot);
         form.set(PURSE, goldSlot(sp));
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
@@ -399,9 +393,7 @@ public final class MarketWindow {
             int at = pg * PER_PAGE + i;
             if (at >= box.size()) break;
             ItemStack s = box.get(at).stack();
-            List<String> lore = new ArrayList<>(itemLines(sp, s, 4));
-            lore.add("§a누르면 가방으로");
-            form.set(i, Slot.of(s, "§f" + MarketStore.label(s)).lore(lore).count(s.getCount()));
+            form.set(i, Slot.of(s, itemName("§f", s)).lore(TOOLTIP, "§a누르면 가방으로").count(s.getCount()));
             bySlot.put(i, at);
         }
         form.set(PREV, pg > 0 ? Slot.of(Icon.sprite("icon_prev"), "§e◀ 이전 쪽") : Slot.of(Icon.sprite("icon_prev"), "§e◀ 돌아가기"));
