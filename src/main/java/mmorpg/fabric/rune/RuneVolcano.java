@@ -102,6 +102,7 @@ final class RuneVolcano {
                     Kit.rand() * 360));
         }
         RuneKit.zonePulse(level, at, LAVA, radius, 0.4);
+        SkillFx.particle(level, ParticleTypes.EXPLOSION, V.up(at, 0.8), 3, radius * 0.22, 0);
         SkillFx.particle(level, ParticleTypes.LARGE_SMOKE, V.up(at, 1.0), 12, radius * 0.3, 0.05);
     }
 
@@ -182,7 +183,7 @@ final class RuneVolcano {
                     0.6, "color", LAVA, "alpha", 0.9));
         }
         splatter(level, V.up(hit, 0.3), 10, 6);
-        SkillFx.burst(level, V.up(hit, 0.5), LAVA, 1.8, 0.3);
+        SkillFx.burst(level, V.up(V.add(c, f, 2.4), 0.4), LAVA, 0.9, 0.25);
         RuneKit.shakeAround(level, c, 8, 0.2, 0.2);
         SkillFx.play(level, "mace.smash_ground", c, 0.8, 1.0);
         SkillFx.play(level, "item.bucket.empty_lava", c, 0.8, 1.0);
@@ -228,7 +229,7 @@ final class RuneVolcano {
             });
             RuneKit.later(i * gap + fly, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                blast(sp, level, land, radius, 0.5);
+                blast(sp, level, land, radius, 0.32);
                 splatter(level, V.up(land, 0.3), 10, 6);
                 RuneKit.glowCrack(level, land, radius * 0.8, LAVA, CORE, Opt.of("life", 1.0));
                 RuneKit.shakeAround(level, land, 10, 0.2, 0.2);
