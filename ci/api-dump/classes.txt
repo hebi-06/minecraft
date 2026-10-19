@@ -553,3 +553,13 @@ net.minecraft.core.NonNullList
 net.minecraft.client.gui.components.AbstractWidget$WithInactiveMessage
 net.minecraft.client.gui.screens.MenuScreens
 net.minecraft.world.inventory.Slot
+net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen
+net.minecraft.client.gui.screens.inventory.AbstractRecipeBookScreen
+net.minecraft.client.gui.screens.recipebook.RecipeBookComponent
+net.minecraft.world.inventory.InventoryMenu
+net.minecraft.world.inventory.ShulkerBoxMenu
+net.minecraft.client.gui.screens.inventory.EffectsInInventory
+net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen
+net.minecraft.client.gui.components.Renderable
+net.minecraft.world.item.CreativeModeTabs
+net.minecraft.client.gui.screens.inventory.HopperScreen
