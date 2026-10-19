@@ -100,6 +100,32 @@ public abstract class FormScreen extends Screen {
     }
 
     /**
+     * 0.23.0 어두운 바탕 (금테 상자 모양 창): 서버가 밝은 상자 창용으로 보낸 짙은 색 (검정 · 짙은 회색 · 짙은 파랑 … — 무기 · 등급 이름의 dark 색) 을
+     * 같은 계열의 밝은 색으로 (§0 → §f · §8 → §7 · §1 → §9 · §2 → §a · §3 → §b · §4 → §c · §5 → §d)
+     */
+    static String onDark(String s) {
+        if (s == null || s.indexOf('§') < 0) return s == null ? "" : s;
+        StringBuilder b = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            b.append(c);
+            if (c != '§' || i + 1 >= s.length()) continue;
+            char k = s.charAt(++i);
+            b.append(switch (k) {
+                case '0' -> 'f';
+                case '8' -> '7';
+                case '1' -> '9';
+                case '2' -> 'a';
+                case '3' -> 'b';
+                case '4' -> 'c';
+                case '5' -> 'd';
+                default -> k;
+            });
+        }
+        return b.toString();
+    }
+
+    /**
      * 금테 상자 (대화창 · 버튼 목록 · 입력창): dialog_bg 의 안쪽은 91% 불투명이라 뒤의 HUD · 채팅 글자가 비쳐 겹쳐 보이므로 같은 색을 먼저 깔아
      * 불투명하게 (세상이 9% 비치던 것은 눈에 띄지 않음)
      */

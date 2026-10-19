@@ -118,6 +118,19 @@ public final class RpgLimitedRuneTests {
     }
 
     /** 쓰러지지 않는 과녁 허스크 (불에 타지 않음 — 받은 피해는 TestDummies.dealt) */
+    /**
+     * 앞 묶음의 시험이 남긴 적대 몹 (시험 구조물 밖에 세운 과녁은 구조물을 지울 때 남음 — 묶음마다 같은 자리에서 시작) 을 치움:
+     * 낙인처럼 "반지름 안 적 모두" 를 세는 시험이 남의 몹까지 세지 않게 (0.23.0 — 시험이 늘어 자리가 바뀌자 "marked 2: 3")
+     */
+    private static void clearStrays(GameTestHelper h, net.minecraft.world.entity.Entity... keep) {
+        var box = new net.minecraft.world.phys.AABB(h.absoluteVec(new Vec3(-12, -4, -12)), h.absoluteVec(new Vec3(28, 10, 28)));
+        java.util.Set<net.minecraft.world.entity.Entity> own = java.util.Set.of(keep);
+        for (net.minecraft.world.entity.Mob m : h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.Mob.class, box,
+                e -> !own.contains(e) && e instanceof net.minecraft.world.entity.monster.Enemy)) {
+            m.discard();
+        }
+    }
+
     private static Husk dummy(GameTestHelper h, double x, double y, double z) {
         Husk m = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, (float) x, (float) y, (float) z));
         m.setYRot(180F);
@@ -359,6 +372,7 @@ public final class RpgLimitedRuneTests {
         int ticks = (int) r.def().num("ticks");
         double[] d0 = new double[1];
         h.runAfterDelay(2, () -> {
+            clearStrays(h, z1, z2, z3);
             sp.lookAt(EntityAnchorArgument.Anchor.EYES, z1.getEyePosition());
             near(h, RpgCombat.takenMult.applyAsDouble(z1), 1, 1e-9, "no brand before");
             RuneKit.runeHit(sp, z1, 10, 1, "int");

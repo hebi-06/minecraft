@@ -30,8 +30,9 @@ import net.minecraft.world.item.Items;
  * 0.23.0 RPG 창 (어둠의 금테): 탭도 남색 바탕 · 작은 금테 (지금 상자는 밝고 창 테두리를 덮어 창 바탕과 이어짐).
  */
 public final class StorageTabs extends AbstractWidget {
-    static final int TAB_W = 32;
-    static final int TAB_H = 25;
+    /** 탭 크기 (0.23.0 금테 — 테두리 4칸 안쪽에 번호 · 그림 · 막대가 들어가게 38 × 28) */
+    static final int TAB_W = 38;
+    static final int TAB_H = 28;
     static final int GAP = 2;
     /** 지금 상자의 탭이 창 테두리를 덮는 폭 (창에 붙어 보이게) */
     static final int JOIN = 4;
@@ -175,21 +176,21 @@ public final class StorageTabs extends AbstractWidget {
             mmorpg.fabric.client.rpgui.RpgUi.smallPanel(g, x, y, w, TAB_H, bodyTop, bodyBottom);
             if (current) {
                 int c = windowBody(y + TAB_H / 2);
-                g.fill(left - 2, y + 2, left + JOIN, y + TAB_H - 2, c);
+                g.fill(left - 2, y + 4, left + JOIN, y + TAB_H - 4, c);
             }
-            // 상자 번호는 왼쪽, 그림은 창 쪽 (겹치지 않게 — 탭 폭 32)
-            int ix = left - 19;
-            int iy = y + 3;
+            // 상자 번호는 왼쪽, 그림은 창 쪽 (겹치지 않게 — 탭 폭 38 · 금테 안쪽)
+            int ix = left - 22;
+            int iy = y + 4;
             if (open) {
                 g.item(new ItemStack(Items.ENDER_CHEST), ix, iy);
                 // 든 칸 막대
                 int n = current ? liveStacks() : i < s.stacks().size() ? s.stacks().get(i) : 0;
-                int bx = left - 27;
-                int bw = 24;
+                int bx = left - 31;
+                int bw = 25;
                 int fillW = Math.round(bw * Math.min(1F, n / (float) Storage.SIZE));
                 int color = n >= Storage.SIZE ? 0xFFE05050 : n >= Storage.SIZE * 3 / 4 ? 0xFFE0C040 : 0xFF55C055;
-                g.fill(bx, y + TAB_H - 5, bx + bw, y + TAB_H - 3, 0xFF3A3A3A);
-                if (fillW > 0) g.fill(bx, y + TAB_H - 5, bx + fillW, y + TAB_H - 3, color);
+                g.fill(bx, y + TAB_H - 7, bx + bw, y + TAB_H - 5, 0xFF3A3A3A);
+                if (fillW > 0) g.fill(bx, y + TAB_H - 7, bx + fillW, y + TAB_H - 5, color);
             } else if (next) {
                 Economy.Kind k = kindOf(i < s.prices().size() ? s.prices().get(i) : "");
                 if (k != null) g.item(new ItemStack(EconomyItems.coin(k)), ix, iy);
@@ -207,7 +208,7 @@ public final class StorageTabs extends AbstractWidget {
                 g.blitSprite(RenderPipelines.GUI_TEXTURED, LOCK, ix, iy, 16, 16, 0xB0FFFFFF);
             }
             // 상자 번호 (왼쪽 — 열린 상자는 막대 자리만큼 1칸 위)
-            g.text(font, String.valueOf(i + 1), left - 27, y + (TAB_H - 8) / 2 - (open ? 1 : 0), open ? 0xFFFFFFFF : 0xFFBBBBBB, true);
+            g.text(font, String.valueOf(i + 1), left - 31, y + (TAB_H - 8) / 2 - (open ? 2 : 0), open ? 0xFFFFFFFF : 0xFFBBBBBB, true);
         }
         // 창 제목 줄 오른쪽: "2번 상자 · 3/5" (0.23.0 금테 창 — 옅은 금빛 · 그림자)
         String label = Storage.label(s.page() + 1) + " · " + s.unlocked() + "/" + s.chests();

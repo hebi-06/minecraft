@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.inventory.ShulkerBoxScreen;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.util.Util;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.inventory.Slot;
 
 /**
@@ -36,8 +37,20 @@ public final class RpgScreens {
         for (Slot slot : s.getMenu().slots) if (slot.isActive()) RpgUi.slot(g, left + slot.x, top + slot.y);
     }
 
-    /** 인벤토리 바탕: 금테 창 · 사람 그림 칸 (26, 8 — 49 × 70) · 제작 화살표 · 칸 */
-    public static void inventoryBackground(InventoryScreen s, GuiGraphicsExtractor g) {
+    /** 미뤄 둔 바닐라 사람 그림 (InventoryScreenMixin — 바탕을 덮은 뒤 그림) */
+    private record EntityDraw(int x0, int y0, int x1, int y1, int scale, float yOffset, float mouseX, float mouseY, LivingEntity entity) {}
+
+    private static EntityDraw deferred;
+
+    public static void deferEntity(int x0, int y0, int x1, int y1, int scale, float yOffset, float mouseX, float mouseY, LivingEntity entity) {
+        deferred = new EntityDraw(x0, y0, x1, y1, scale, yOffset, mouseX, mouseY, entity);
+    }
+
+    /**
+     * 인벤토리 바탕: 금테 창 · 사람 그림 칸 (26, 8 — 49 × 70) · 제작 화살표 · 칸, 그 위 층에 사람 그림 (바닐라와 같은 자리 · 크기 · 마우스를 따라 봄 —
+     * 사람 그림은 그린 차례대로 겹치므로 바탕보다 나중에)
+     */
+    public static void inventoryBackground(InventoryScreen s, GuiGraphicsExtractor g, int mx, int my) {
         AbstractContainerScreenAccessor a = acc(s);
         int l = a.mmorpg$leftPos();
         int t = a.mmorpg$topPos();
@@ -45,6 +58,14 @@ public final class RpgScreens {
         g.blitSprite(RenderPipelines.GUI_TEXTURED, RpgUi.MODEL_BG, l + 26, t + 8, 49, 70);
         g.blitSprite(RenderPipelines.GUI_TEXTURED, RpgUi.ARROW, l + 135, t + 30, 16, 13);
         slots(g, s, l, t);
+        EntityDraw d = deferred;
+        deferred = null;
+        g.nextStratum();
+        if (d != null) {
+            InventoryScreen.extractEntityInInventoryFollowsMouse(g, d.x0(), d.y0(), d.x1(), d.y1(), d.scale(), d.yOffset(), d.mouseX(), d.mouseY(), d.entity());
+        } else if (Minecraft.getInstance().player != null) {
+            InventoryScreen.extractEntityInInventoryFollowsMouse(g, l + 26, t + 8, l + 75, t + 78, 30, 0.0625F, mx, my, Minecraft.getInstance().player);
+        }
     }
 
     /** 상자 · 셜커 바탕: 금테 창 · 칸 */

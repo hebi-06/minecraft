@@ -19,7 +19,7 @@ import net.minecraft.world.item.TooltipFlag;
  * 0.21.0 줄 수 = 받은 칸 수 ÷ 9 (1 ~ 6 — 유저 장터는 큰 상자 9 × 6), 진열 칸 (Slot.BIG) 은 그 칸을 가운데로 3 × 3 칸 크기 · 그림 3배.
  * 칸 오른쪽 아래 숫자 — 흰색 = 보유 수, 초록 = 가격 (바닐라 아이템 수 자리). 마우스를 올리면 금빛 테두리 · 이름 · 설명. 장식 · 진열 칸은 누를 수 없음.
  * 0.23.0 RPG 창 (인벤토리 · 상자와 같은 어둠의 금테 — 사용자 요청): 남색 바탕 · 금테 · 어두운 칸 · 등급 색 칸, 제목 금빛 · 본문 밝은 회색 (그림자 —
- * 다른 대화창과 같음, 예전의 §7 → §8 바꿈 없음). 본문이 화면보다 길면 휠로 넘김.
+ * 다른 대화창과 같음, 예전의 §7 → §8 바꿈 없음 · 서버가 밝은 창용으로 보낸 짙은 색은 같은 계열의 밝은 색으로 — onDark). 본문이 화면보다 길면 휠로 넘김.
  */
 public final class ChestFormScreen extends FormScreen {
     static final int GRID_W = 180;
@@ -54,7 +54,7 @@ public final class ChestFormScreen extends FormScreen {
     public ChestFormScreen(FormNet.ChestPayload form) {
         super(form.id(), Component.literal(form.title()));
         this.form = form;
-        this.title = form.title();
+        this.title = onDark(form.title());
         this.rows = Math.max(1, Math.min(6, (form.slots().size() + 8) / 9));
         this.big = findBig();
     }
@@ -137,7 +137,7 @@ public final class ChestFormScreen extends FormScreen {
 
     @Override
     protected void init() {
-        body = wrap(font, localize(form.body()), GRID_W);
+        body = wrap(font, onDark(localize(form.body())), GRID_W);
         w = GRID_W + PAD_X * 2;
         int fixed = PAD_Y + HEADER + gridH() + GAP + PAD_Y;
         int fit = Math.max(1, (height - 4 - fixed) / LINE);
