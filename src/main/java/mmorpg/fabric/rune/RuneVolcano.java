@@ -102,7 +102,6 @@ final class RuneVolcano {
                     Kit.rand() * 360));
         }
         RuneKit.zonePulse(level, at, LAVA, radius, 0.4);
-        SkillFx.particle(level, ParticleTypes.EXPLOSION, V.up(at, 0.8), 3, radius * 0.22, 0);
         SkillFx.particle(level, ParticleTypes.LARGE_SMOKE, V.up(at, 1.0), 12, radius * 0.3, 0.05);
     }
 
@@ -137,20 +136,38 @@ final class RuneVolcano {
 
     /** 화산탄 하나: from 에서 to 로 ticks 틱 포물선 (불타는 덩어리 rpg:glob · 연기 꼬리) */
     static void bomb(ServerLevel level, Vec3 from, Vec3 to, int ticks, double size) {
+        bomb(null, level, from, to, ticks, size, 0);
+    }
+
+    /**
+     * 화산탄 하나 — sp 의 눈 · 3인칭 카메라에서 clear 칸 안의 앞부분은 그리지 않음 (손에서 던진 화산탄이 1인칭 화면을 덮지 않게): 덩어리는 처음으로 clear 칸
+     * 밖에 나온 틱의 자리 · 속도로 띄움 (같은 포물선)
+     */
+    static void bomb(ServerPlayer sp, ServerLevel level, Vec3 from, Vec3 to, int ticks, double size, double clear) {
         double t = ticks / 20.0;
         Vec3 v = PairKit.lob(from, to, t, PairKit.GRAVITY);
-        SkillFx.fx(level, "rpg:glob", from, Opt.of("dir", V.unit(v), "speed", V.len(v), "size", size, "life", t, "spin", Kit.rand() * 360, "color", LAVA, "alpha",
-                1.0));
-        SkillFx.fx(level, "rpg:glob", from, Opt.of("dir", V.unit(v), "speed", V.len(v), "size", size * 0.6, "life", t, "spin", Kit.rand() * 360, "color", CORE,
+        int i0 = 0;
+        while (sp != null && i0 < ticks - 2 && PairKit.nearCam(sp, lobAt(from, v, i0 / 20.0), clear)) i0++;
+        double s0 = i0 / 20.0;
+        Vec3 p0 = lobAt(from, v, s0);
+        Vec3 v0 = new Vec3(v.x, v.y - PairKit.GRAVITY * s0, v.z);
+        double rest = t - s0;
+        SkillFx.fx(level, "rpg:glob", p0, Opt.of("dir", V.unit(v0), "speed", V.len(v0), "size", size, "life", rest, "spin", Kit.rand() * 360, "color", LAVA,
                 "alpha", 1.0));
-        for (int i = 1; i < ticks; i++) {
-            final double s = i / 20.0;
+        SkillFx.fx(level, "rpg:glob", p0, Opt.of("dir", V.unit(v0), "speed", V.len(v0), "size", size * 0.6, "life", rest, "spin", Kit.rand() * 360, "color",
+                CORE, "alpha", 1.0));
+        for (int i = Math.max(1, i0); i < ticks; i++) {
+            final Vec3 p = lobAt(from, v, i / 20.0);
             RuneKit.later(i, () -> {
-                Vec3 p = new Vec3(from.x + v.x * s, from.y + v.y * s - PairKit.GRAVITY * s * s / 2, from.z + v.z * s);
                 SkillFx.particle(level, ParticleTypes.LARGE_SMOKE, p, 1, 0.05, 0.01);
                 SkillFx.particle(level, ParticleTypes.FLAME, p, 2, 0.08, 0.01);
             });
         }
+    }
+
+    /** 포물선 위 s 초 뒤 자리 (처음 속도 v · 중력 PairKit.GRAVITY) */
+    private static Vec3 lobAt(Vec3 from, Vec3 v, double s) {
+        return new Vec3(from.x + v.x * s, from.y + v.y * s - PairKit.GRAVITY * s * s / 2, from.z + v.z * s);
     }
 
     // ------------------------------------------------------------ 일반: 용암 강타
@@ -223,13 +240,15 @@ final class RuneVolcano {
             RuneKit.later(i * gap, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 Vec3 hand = V.add(V.up(sp.position(), 1.6), Kit.facingOf(sp), 0.8);
-                bomb(level, hand, V.up(land, 0.3), fly, 0.75);
+                bomb(sp, level, hand, V.up(land, 0.3), fly, 0.75, 3.0);
+                Vec3 fist = V.add(V.add(V.up(sp.position(), 1.2), Kit.facingOf(sp), 0.9), V.rightOf(Kit.facingOf(sp)), 0.35);
+                SkillFx.particle(level, ParticleTypes.FLAME, fist, 5, 0.08, 0.03);
                 SkillFx.play(level, "entity.blaze.shoot", sp.position(), 0.8 + ii * 0.1, 0.8);
                 SkillFx.play(level, "item.firecharge.use", sp.position(), 0.9, 0.6);
             });
             RuneKit.later(i * gap + fly, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                blast(sp, level, land, radius, 0.32);
+                blast(sp, level, land, radius, 0.5);
                 splatter(level, V.up(land, 0.3), 10, 6);
                 RuneKit.glowCrack(level, land, radius * 0.8, LAVA, CORE, Opt.of("life", 1.0));
                 RuneKit.shakeAround(level, land, 10, 0.2, 0.2);

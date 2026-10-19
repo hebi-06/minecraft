@@ -58,7 +58,7 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
             Map.entry("hundredFists", new int[] {10, 52}), Map.entry("heavenFist", new int[] {12, 40, 84, 88}),
             Map.entry("steelTrap", new int[] {5, 9}), Map.entry("falconStrike", new int[] {4, 14}), Map.entry("huntNet", new int[] {4, 8, 31}),
             Map.entry("wolfPack", new int[] {4, 23, 54}), Map.entry("beastKing", new int[] {12, 41, 85}),
-            Map.entry("magmaSlam", new int[] {3}), Map.entry("lavaBombs", new int[] {5, 9, 29}), Map.entry("magmaGeyser", new int[] {8, 28}),
+            Map.entry("magmaSlam", new int[] {3}), Map.entry("lavaBombs", new int[] {5, 9, 11, 20, 29}), Map.entry("magmaGeyser", new int[] {8, 28}),
             Map.entry("magmaField", new int[] {8, 30, 42}), Map.entry("grandEruption", new int[] {14, 40, 92, 100}),
             Map.entry("chainHook", new int[] {3, 6}), Map.entry("shieldRush", new int[] {2, 13}), Map.entry("chainWhirl", new int[] {12, 41}),
             Map.entry("arenaDomain", new int[] {12, 50, 86}), Map.entry("warChains", new int[] {10, 30, 80, 84}));
