@@ -116,10 +116,10 @@ public final class Loot {
         return m != null && m.num("xpUntil") > 0 && RpgCombat.reqLevelOf(sp) >= m.num("xpUntil");
     }
 
-    /** 그 몬스터를 잡으면 받는 경험치 (못 받으면 0) */
+    /** 그 몬스터를 잡으면 받는 경험치 (못 받으면 0 — 0.24.2 최고 레벨이어도) */
     public static int monsterXp(ServerPlayer sp, String key) {
         Obj m = key == null ? null : MONSTERS.objOrNull(key);
-        return m == null || xpCapped(sp, key) ? 0 : (int) m.num("xp");
+        return m == null || xpCapped(sp, key) || mmorpg.core.Leveling.atMax(sp.experienceLevel) ? 0 : (int) m.num("xp");
     }
 
     /** 레벨에 맞는 몬스터 (몬스터 레벨 ≤ 내 레벨 + 2 중 가장 높은 것) — 추천 사냥 */
@@ -182,6 +182,11 @@ public final class Loot {
         NOTED.put(k, now);
         Obj m = MONSTERS.objOrNull(key);
         if (m == null) return;
+        // 0.24.2 최고 레벨: 몬스터와 상관없이 경험치가 오르지 않음
+        if (mmorpg.core.Leveling.atMax(sp.experienceLevel) && !xpCapped(sp, key)) {
+            sp.sendSystemMessage(Component.literal(BedrockText.toJava("§7[경험치] §f최고 레벨 " + mmorpg.core.Leveling.maxLevel() + "§7 — 더는 경험치가 오르지 않습니다")));
+            return;
+        }
         String bestKey = huntKind(RpgCombat.reqLevelOf(sp));
         Obj best = bestKey == null ? null : MONSTERS.objOrNull(bestKey);
         String hint = best != null && !bestKey.equals(key) ? " §8· §7추천 사냥: §f" + best.str("name") + " (Lv." + (int) best.num("level") + ")" : "";

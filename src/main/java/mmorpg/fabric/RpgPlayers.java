@@ -38,6 +38,7 @@ public final class RpgPlayers {
     /** 접속 (애드온 onJoin · setupNewPlayer). 처음이면 스탯 0 · 시작 포인트 · 최고 레벨 = 지금 레벨, 2초 뒤 스탯 책 */
     public static void onJoin(ServerPlayer sp) {
         JOINED.add(sp.getUUID());
+        capLevel(sp);
         RpgData d = RpgData.of(sp);
         boolean isNew = !d.started();
         if (isNew) RpgData.set(sp, RpgData.first(sp.experienceLevel));
@@ -80,14 +81,27 @@ public final class RpgPlayers {
         }
     }
 
+    /**
+     * 0.24.2 최고 레벨 (LEVELING.maxLevel = 60): 레벨이 그보다 높으면 (예전 저장 · 경험치 길을 거치지 않고 레벨을 바꾼 것) 최고 레벨로 · 막대는 비움,
+     * 최고 레벨 기록 (lvmax — 최대 체력 · 룬 위력 · 렙제) 도 그 아래로. 이미 받은 스탯 포인트는 그대로
+     */
+    public static void capLevel(ServerPlayer sp) {
+        int max = mmorpg.core.Leveling.maxLevel();
+        if (sp.experienceLevel > max || (sp.experienceLevel >= max && sp.experienceProgress != 0F)) sp.setExperienceLevels(max);
+        RpgData d = RpgData.of(sp);
+        if (d.started() && d.lvmax() > max) update(sp, d.withLvmax(max));
+    }
+
     /** 경험치 레벨이 처음 도달한 값이면 포인트 + 알림 (stats.js checkLevelUp, main.js levelUpTick). 받은 포인트 수 */
     public static int checkLevelUp(ServerPlayer sp) {
+        capLevel(sp);
         RpgData d = RpgData.of(sp);
         int lv = sp.experienceLevel;
         if (lv <= d.lvmax()) return 0;
         int gained = (int) Stats.checkLevelUp(lv, d.lvmax());
         update(sp, d.withLvmax(lv).withPoint(d.point() + gained));
-        Notify.notify(sp, "§e§l레벨 업! §r§f스탯 포인트 +" + gained + " §7(스탯 창: K · 스탯 책)");
+        Notify.notify(sp, "§e§l레벨 업! §r§f스탯 포인트 +" + gained + (mmorpg.core.Leveling.atMax(lv) ? " §6§l최고 레벨 " + lv + "§r§7 (더는 경험치가 오르지 않음)"
+                : " §7(스탯 창: K · 스탯 책)"));
         Notify.sound(sp, SoundEvents.PLAYER_LEVELUP, 1F, 1.2F);
         return gained;
     }

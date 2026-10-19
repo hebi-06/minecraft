@@ -892,7 +892,8 @@ public final class Bosses {
             giveLoot(got, p, GearItems.byId(mats.obj(k).str("item")), rollRange(L.numbersOrNull(k)) + more.apply(k), mats.obj(k).str("name"));
         }
         double xp = L.numOr("xp", 0);
-        if (xp > 0) {
+        // 0.24.2 최고 레벨 (60) 이면 경험치 없음 (줄도 빼고)
+        if (xp > 0 && !mmorpg.core.Leveling.atMax(p.experienceLevel)) {
             p.giveExperiencePoints((int) xp);
             got.add("경험치 " + Js.str(xp));
         }

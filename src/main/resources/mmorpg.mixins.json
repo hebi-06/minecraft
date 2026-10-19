@@ -11,7 +11,8 @@
     "RangedAttributeAccessor",
     "ServerExplosionMixin",
     "ServerGamePacketListenerMixin",
-    "ServerPlayerDropMixin"
+    "ServerPlayerDropMixin",
+    "ServerPlayerXpMixin"
   ],
   "injectors": {
     "defaultRequire": 1

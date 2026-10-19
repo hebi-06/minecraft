@@ -44,6 +44,8 @@ public final class QuestRewards {
     private static final Obj RUNE = R.obj("RUNE");
     /** 시험용 무기 표시 (사용자 데이터 — 애드온의 아이템 동적 속성 이름 그대로) */
     static final String TRIAL = "rpg:trial";
+    /** Reward.capped 의 표시: 최고 레벨이라 경험치 없음 (0.24.2 — 몬스터 키가 아님) */
+    public static final String MAX_CAP = "@max";
 
     /**
      * 이 플레이어가 실제로 받는 보상: 반복 의뢰의 경험치는 최고 레벨이 그 몬스터의 xpUntil 이상이면 0 (capped),
@@ -64,6 +66,11 @@ public final class QuestRewards {
         if (r.xp > 0) {
             r.xpPoints += Leveling.pointsForLevels(sp.experienceLevel, r.xp);
             r.xp = 0;
+        }
+        // 0.24.2 최고 레벨 (60): 경험치 보상 없음 (완료 창에 "경험치 없음 (최고 레벨 60)")
+        if (r.xpPoints > 0 && Leveling.atMax(sp.experienceLevel)) {
+            r.xpPoints = 0;
+            r.capped = MAX_CAP;
         }
         if (r.armor.equals("path")) r.armorType = SideQuests.PATH_ARMOR.getOrDefault(Quests.pathOf(sp), "str");
         return r;

@@ -178,6 +178,7 @@ public final class QuestText {
         if (r.gold > 0) parts.add("§6골드 " + r.gold + "§r§f");
         if (r.xp > 0) parts.add("경험치 " + r.xp + "레벨분"); // 정의 (받을 때 그 레벨 수만큼의 바닐라 경험치로 — 레벨업 3배)
         if (r.xpPoints > 0) parts.add("경험치 " + r.xpPoints);
+        else if (QuestRewards.MAX_CAP.equals(r.capped)) parts.add("§7경험치 없음 (최고 레벨 " + mmorpg.core.Leveling.maxLevel() + ")§f");
         else if (!r.capped.isEmpty() && MONSTERS.objOrNull(r.capped) != null) {
             parts.add("§7경험치 없음 (최고 레벨 " + Js.str(MONSTERS.obj(r.capped).num("xpUntil")) + "부터)§f");
         }

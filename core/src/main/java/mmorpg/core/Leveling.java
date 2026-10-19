@@ -40,6 +40,18 @@ public final class Leveling {
         return Math.max(0.01, 1 + (k - 1) * (level - from) / (to - from));
     }
 
+    /** 최고 레벨 (0.24.2 — LEVELING.maxLevel, 사용자 "최고 레벨 60렙으로 고정 후 그 이후부터는 경험치가 안 올라가게"): 없으면 끝없음 */
+    public static int maxLevel() {
+        Obj l = leveling();
+        double m = l == null ? 0 : l.numOr("maxLevel", 0);
+        return m >= 1 ? (int) m : Integer.MAX_VALUE;
+    }
+
+    /** 최고 레벨에 이르렀는지 (경험치를 더 받지 않음) */
+    public static boolean atMax(int level) {
+        return level >= maxLevel();
+    }
+
     /** 바닐라의 다음 레벨까지 경험치 (Player.getXpNeededForNextLevel 원래 식) */
     public static int baseNeed(int level) {
         int l = Math.max(0, level);

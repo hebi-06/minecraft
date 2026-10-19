@@ -130,6 +130,8 @@ public final class MonstersMoreTest {
                 && Leveling.need(45) == 2470, "need with ramp " + Leveling.need(11) + " " + Leveling.need(20) + " " + Leveling.need(30) + " " + Leveling.need(39)
                         + " " + Leveling.need(40) + " " + Leveling.need(45));
         for (int lv = 10; lv < 60; lv++) check(Leveling.need(lv + 1) > Leveling.need(lv), "need grows at " + lv);
+        // 0.24.2 최고 레벨 60
+        check(Leveling.maxLevel() == 60 && Leveling.atMax(60) && Leveling.atMax(61) && !Leveling.atMax(59), "max level 60 " + Leveling.maxLevel());
         check(Leveling.pointsForLevels(0, 3) == 7 + 9 + 11, "quest 3 levels at 0 = 27 " + Leveling.pointsForLevels(0, 3));
         check(Leveling.pointsForLevels(30, 1) == 112 && Leveling.pointsForLevels(5, 0) == 0, "quest levels → points (vanilla — ramp 없음)");
         check(Leveling.total(1) == 21 && Leveling.total(11) == 561 && Leveling.total(40) == 19317, "total to 11 = 561 (그대로) · to 40 = 19,317 (예전 8,760) "

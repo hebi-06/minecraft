@@ -6,7 +6,9 @@
     "_ramp": "0.24.1 갈수록 더: ramp = rampFrom 레벨까지 1, 그 뒤 한 레벨마다 같은 만큼 커져 rampTo 레벨에서 rampMult (그 뒤로도 같은 기울기) — 10렙까지 지금과 같고 40렙에서 지금의 3배",
     "rampFrom": 10,
     "rampTo": 40,
-    "rampMult": 3
+    "rampMult": 3,
+    "_maxLevel": "0.24.2 최고 레벨: 이 레벨에 이르면 경험치가 더 오르지 않음 (경험치 막대는 비움 — 몬스터 · 보스 · 퀘스트 · 경험치 구슬 모두), /xp 로 더 올려도 이 레벨. 레벨을 쓰는 것 (인챈트 · 모루) 은 그대로",
+    "maxLevel": 60
   },
   "MONSTER_ORDER": ["scarecrow", "nisse", "boar", "gulon", "sand_scorpion", "skeljaskrimsli", "crab", "worm_larva", "nix", "grendel", "draugr", "frost_wolf", "troll", "frost_giant"],
   "MONSTERS": {

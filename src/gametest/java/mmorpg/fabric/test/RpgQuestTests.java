@@ -729,6 +729,48 @@ public final class RpgQuestTests {
     }
 
     /**
+     * 0.24.2 최고 레벨 60 (사용자 "최고 레벨 60렙으로 고정 후 그 이후부터는 경험치가 안 올라가게"): 경험치로 60에 이르면 멈추고 남은 경험치는 버림 ·
+     * 60에서는 경험치를 더 받지 않음 (막대 비움 · 모은 경험치도 그대로) · 레벨을 더하거나 (/xp add … levels) 정해도 (/xp set) 60 · 레벨을 쓰면 (인챈트 — 음수) 내려가고
+     * 다시 받음 · 60이면 몬스터 · 퀘스트 경험치 0 (완료 창 "경험치 없음 (최고 레벨 60)") · 최고 레벨 기록 60
+     */
+    @GameTest(maxTicks = 20)
+    public void levelCap60(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        h.assertTrue(mmorpg.core.Leveling.maxLevel() == 60, "max level " + mmorpg.core.Leveling.maxLevel());
+        sp.setExperienceLevels(59);
+        sp.experienceProgress = 0F;
+        sp.giveExperiencePoints(mmorpg.core.Leveling.need(59) + 500);
+        h.assertTrue(sp.experienceLevel == 60 && sp.experienceProgress == 0F, "59 → 60, rest dropped (" + sp.experienceLevel + ", " + sp.experienceProgress + ")");
+        int total = sp.totalExperience;
+        sp.giveExperiencePoints(1000);
+        h.assertTrue(sp.experienceLevel == 60 && sp.experienceProgress == 0F && sp.totalExperience == total, "no xp at 60 (" + sp.experienceLevel + ", "
+                + sp.experienceProgress + ", " + (sp.totalExperience - total) + ")");
+        sp.giveExperienceLevels(5);
+        h.assertTrue(sp.experienceLevel == 60, "add levels capped " + sp.experienceLevel);
+        sp.setExperienceLevels(75);
+        h.assertTrue(sp.experienceLevel == 60 && sp.experienceProgress == 0F, "set levels capped " + sp.experienceLevel);
+        sp.giveExperienceLevels(-3);
+        h.assertTrue(sp.experienceLevel == 57, "spend levels " + sp.experienceLevel);
+        sp.experienceProgress = 0F;
+        sp.giveExperiencePoints(10);
+        h.assertTrue(sp.experienceLevel == 57 && sp.experienceProgress > 0F, "xp again below max (" + sp.experienceProgress + ")");
+        sp.setExperienceLevels(60);
+        h.assertTrue(Loot.monsterXp(sp, "frost_giant") == 0, "monster xp 0 at max");
+        Quest trial = Quests.allQuests().stream().filter(q -> q.id.equals(MainQuests.MAIN_TRIAL)).findFirst().orElse(null);
+        h.assertTrue(trial != null && trial.reward.xp > 0, "trial quest has a level reward");
+        Quest.Reward rw = QuestRewards.rewardFor(sp, trial);
+        h.assertTrue(rw.xpPoints == 0 && rw.xp == 0 && QuestRewards.MAX_CAP.equals(rw.capped) && Quests.rewardText(trial, rw).contains("최고 레벨 60"),
+                "quest reward at max: " + Quests.rewardText(trial, rw));
+        sp.setExperienceLevels(30);
+        Quest.Reward low = QuestRewards.rewardFor(sp, trial);
+        h.assertTrue(low.xpPoints == mmorpg.core.Leveling.pointsForLevels(30, trial.reward.xp) && low.capped.isEmpty(), "quest reward below max " + low.xpPoints);
+        sp.setExperienceLevels(60);
+        RpgPlayers.checkLevelUp(sp);
+        h.assertTrue(RpgData.of(sp).lvmax() == 60, "lvmax " + RpgData.of(sp).lvmax());
+        done(h, sp);
+    }
+
+    /**
      * 9단계 메인 이야기: 길마다 46단계, 지역마다 새 몬스터 둘의 처치 단계 (그 지역 NPC 가 줌) 와 그 전리품 모으기 단계 (보스 앞), 처치 · 모으기 수 늘림
      * (칼의 길 처치 86 → 190 · 모으기 56 → 122), 모든 길 · 모든 단계에 대사 · 앞 단계 이어짐
      */
