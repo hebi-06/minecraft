@@ -300,17 +300,17 @@
     "ticketLore": ["§r§7보스·퀘스트·룬술사에게서 얻음", "§r§7들고 누르면 룬 하나를 뽑습니다", "§r§7일반 50% · 희귀 28% · 고귀 14%", "§r§7영웅 6.5% · 초월 1.5%", "§r§7계열 23개 중 하나 (같은 확률)"]
   },
   "ULT_RUNES_MORE": {
-    "_comment": "0.25.0: 자바 전용 초월 룬의 하늘빛 · 번쩍임 (ULT_FX.runes 에 없는 함수 — RuneKit.ultOf 가 먼저 찾음, 하늘빛 이름은 ULT_FOGS_MORE). 0.25.2: 무간참역 (endlessSlash) 은 블랙홀의 공허 하늘 (검보라) 대신 검붉은 하늘 rpg:ult_bloodvoid · 진홍 번쩍임 (사용자 \"보라색에서 붉고 어두운 빨간색으로\" — 6돌 하늘 가르기 뒤는 rpg:ult_crimson)",
+    "_comment": "0.25.0: 자바 전용 초월 룬의 하늘빛 · 번쩍임 (ULT_FX.runes 에 없는 함수 — RuneKit.ultOf 가 먼저 찾음, 하늘빛 이름은 ULT_FOGS_MORE). 0.25.2: 무간참역 (endlessSlash) 은 블랙홀의 공허 하늘 (검보라) 대신 검붉은 하늘 rpg:ult_bloodvoid · 붉은 기 도는 흰 번쩍임 (짙은 진홍 번쩍임은 화면을 덮어 일섬 · 숫자가 묻힘 — 사진 검토) (사용자 \"보라색에서 붉고 어두운 빨간색으로\" — 6돌 하늘 가르기 뒤는 짙은 진홍 rpg:ult_bloodsplit)",
     "leviathan": {"fog": "rpg:ult_deepsea", "flash": [0.62, 0.92, 1]},
     "colossus": {"fog": "rpg:ult_stone", "flash": [0.72, 1, 0.86]},
     "heavenFist": {"fog": "rpg:ult_chi", "flash": [1, 0.9, 0.55]},
     "beastKing": {"fog": "rpg:ult_wild", "flash": [0.86, 1, 0.6]},
     "grandEruption": {"fog": "rpg:ult_ash", "flash": [1, 0.5, 0.12]},
     "warChains": {"fog": "rpg:ult_arena", "flash": [1, 0.93, 0.76]},
-    "endlessSlash": {"fog": "rpg:ult_bloodvoid", "flash": [0.82, 0.08, 0.12]}
+    "endlessSlash": {"fog": "rpg:ult_bloodvoid", "flash": [1, 0.76, 0.76]}
   },
   "ULT_FOGS_MORE": {
-    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리)",
+    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸)",
     "rpg:ult_glacier": [16, 96, "#1B3C80"],
     "rpg:ult_polar": [16, 100, "#0A2438"],
     "rpg:ult_deepsea": [12, 80, "#0E3A72"],
@@ -319,7 +319,8 @@
     "rpg:ult_wild": [10, 70, "#3E5A22"],
     "rpg:ult_ash": [6, 48, "#4A1608"],
     "rpg:ult_arena": [10, 72, "#6A5A48"],
-    "rpg:ult_bloodvoid": [5, 40, "#2A0408"]
+    "rpg:ult_bloodvoid": [5, 40, "#2A0408"],
+    "rpg:ult_bloodsplit": [8, 56, "#5C0A14"]
   },
   "ARMOR_TYPE_ORDER": ["str", "dex", "vit", "strvit", "int", "intstr", "strdex", "dexint", "vitstr", "intvit"],
   "ARMOR_TYPES": {

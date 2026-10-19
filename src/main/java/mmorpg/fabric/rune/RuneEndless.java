@@ -27,7 +27,7 @@ import net.minecraft.world.phys.Vec3;
  *       → 영역 곳곳에 한꺼번에 베인 자국, 영역 안 모든 적 위력 × crush (굵은 흰 기울임 숫자 !) · 밀쳐냄 · 띄움 (6돌 기절 stun 틱), 바닥이 갈라짐</li>
  *   <li>6돌 하늘 가르기: 일섬 뒤 앞쪽 하늘이 X자로 크게 갈라지고 (빛나는 금 · 섬광) 갈라진 곳에서 검 조각이 영역으로 쏟아짐 (피해 없음)</li>
  * </ol>
- * 화면 색 연출 (하늘빛 · 번쩍임) 은 3돌부터 (검붉은 하늘 rpg:ult_bloodvoid · 진홍 번쩍임 — rules_more ULT_RUNES_MORE, 번쩍임은 일섬이 다 그어진 뒤 짧게).
+ * 화면 색 연출 (하늘빛 · 번쩍임) 은 3돌부터 (검붉은 하늘 rpg:ult_bloodvoid · 붉은 기 도는 흰 번쩍임 — rules_more ULT_RUNES_MORE, 번쩍임은 일섬이 다 그어진 뒤 짧게).
  * 쓰러지면 남은 것은 멈춤. 0.25.2: 색을 보랏빛에서 검붉은 · 진홍빛으로 (사용자 "무간참역 보라색에서 붉고 어두운 빨간색으로")
  */
 final class RuneEndless {
@@ -252,12 +252,12 @@ final class RuneEndless {
 
     /**
      * 6돌 하늘 가르기: 앞쪽 하늘이 X자로 크게 갈라지고 (빛나는 금 · 섬광) 검 조각이 영역으로 쏟아짐 (피해 없음). 갈라지는 순간 하늘빛이 검붉은 하늘 (rpg:ult_bloodvoid
-     * — 6돌은 안개가 3 ~ 24칸이라 먼 그림이 어두워짐) 에서 진홍 (rpg:ult_crimson — 안개 8 ~ 56칸) 으로 바뀜 = 갈라진 하늘로 빛이 듦. X 는 영역 안쪽 하늘 (앞으로
+     * — 6돌은 안개가 3 ~ 24칸이라 먼 그림이 어두워짐) 에서 짙은 진홍 (rpg:ult_bloodsplit — 안개 8 ~ 56칸) 으로 바뀜 = 갈라진 하늘로 빛이 듦. X 는 영역 안쪽 하늘 (앞으로
      * 반지름 × 0.75 · 높이 4.8칸 — 1인칭 화면 위쪽 안, 3인칭 과녁 뒤)
      */
     static void skySplit(ServerPlayer sp, ServerLevel level, Vec3 c, Vec3 f, double R, String life, double skyK) {
         if (!RuneKit.sameLife(sp, life)) return;
-        RuneKit.ultSkyFor(sp, level, c, "endlessSlash", (int) Math.round(70 / skyK), "rpg:ult_crimson");
+        RuneKit.ultSkyFor(sp, level, c, "endlessSlash", (int) Math.round(70 / skyK), "rpg:ult_bloodsplit");
         Vec3 side = V.rightOf(f);
         Vec3 x0 = V.up(V.add(c, f, R * 0.75), 4.8);
         double s = 3.2;
