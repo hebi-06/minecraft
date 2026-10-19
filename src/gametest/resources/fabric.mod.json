@@ -42,6 +42,7 @@
       "mmorpg.fabric.test.RpgCosmeticTests",
       "mmorpg.fabric.test.RpgGachaTests",
       "mmorpg.fabric.test.RpgLimitedRuneTests",
+      "mmorpg.fabric.test.RpgPairRuneTests",
       "mmorpg.fabric.test.RpgEconomyTests",
       "mmorpg.fabric.test.RpgStorageTests",
       "mmorpg.fabric.test.RpgContainerToolsTests"
@@ -80,6 +81,7 @@
       "mmorpg.fabric.test.RpgGachaGallery",
       "mmorpg.fabric.test.RpgLimitedRuneGallery",
       "mmorpg.fabric.test.RpgGlacierGallery",
+      "mmorpg.fabric.test.RpgPairRuneGallery",
       "mmorpg.fabric.test.RpgMarketGallery",
       "mmorpg.fabric.test.RpgStorageGallery",
       "mmorpg.fabric.test.RpgUiGallery",

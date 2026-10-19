@@ -59,9 +59,9 @@ public final class LimitedRunesTest {
         check(Rules.hasMore(), "overlay present");
         List<String> lim = Runes.LIMITED_ORDER;
         check(lim.equals(List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier")), "limited order " + lim);
-        check(Runes.FAMILY_ORDER.size() == 17, "draw families stay 17 " + Runes.FAMILY_ORDER.size());
+        check(Runes.FAMILY_ORDER.size() == 23, "draw families 23 (0.25.0 두 스탯 계열 여섯) " + Runes.FAMILY_ORDER.size());
         for (String f : lim) check(!Runes.FAMILY_ORDER.contains(f), f + " not in the draw families");
-        check(Runes.ALL_FAMILIES.size() == 25 && Runes.ALL_FAMILIES.subList(17, 25).equals(lim), "all families " + Runes.ALL_FAMILIES);
+        check(Runes.ALL_FAMILIES.size() == 31 && Runes.ALL_FAMILIES.subList(23, 31).equals(lim), "all families " + Runes.ALL_FAMILIES);
         check(!Runes.limited("int") && Runes.limited("arcana"), "limited()");
 
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 36초

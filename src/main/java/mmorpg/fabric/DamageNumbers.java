@@ -77,7 +77,16 @@ public final class DamageNumbers {
             public String format(String n) {
                 return icy(n) + "§b§l!";
             }
-        };
+        },
+        // 0.25.0 두 스탯 룬 계열의 마무리 (계열 빛 굵게 ! — 해류 물기둥 · 대해일, 골렘 붕괴, 무투 마지막 일격, 사냥꾼 울부짖음 · 짓밟기, 화산 대분출, 투사 철퇴) ·
+        // 화산의 화상 (주황 — 작게, 자주)
+        SURGE("§b§l", "", "!", 1.95F),
+        RUBBLE("§7§l", "", "!", 1.95F),
+        IMPACT("§6§l", "", "!!", 1.95F),
+        FERAL("§a§l", "", "!", 1.95F),
+        ERUPT("§c§l", "", "!", 2.05F),
+        BURN("§6", "", "", 1.3F),
+        IRON("§f§l", "", "!", 1.95F);
 
         final String codes;
         final String before;

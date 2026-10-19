@@ -278,6 +278,49 @@ public final class SkillFx {
         CONST.put("mob.wolf.shake", () -> SoundEvents.WOLF_SHAKE);
         CONST.put("random.enderchestopen", () -> SoundEvents.ENDER_CHEST_OPEN);
         CONST.put("random.enderchestclosed", () -> SoundEvents.ENDER_CHEST_CLOSE);
+        // 0.25.0 두 스탯 룬 계열 (해류 · 골렘 · 무투 · 사냥꾼 · 화산 · 투사 — 자바 이름 그대로, 상수로 확인)
+        CONST.put("entity.generic.splash", () -> SoundEvents.GENERIC_SPLASH);
+        CONST.put("entity.dolphin.splash", () -> SoundEvents.DOLPHIN_SPLASH);
+        CONST.put("entity.hostile.splash", () -> SoundEvents.HOSTILE_SPLASH);
+        CONST.put("block.bubble_column.bubble_pop", () -> SoundEvents.BUBBLE_POP);
+        CONST.put("block.bubble_column.whirlpool_inside", () -> SoundEvents.BUBBLE_COLUMN_WHIRLPOOL_INSIDE);
+        CONST.put("block.bubble_column.upwards_inside", () -> SoundEvents.BUBBLE_COLUMN_UPWARDS_INSIDE);
+        CONST.put("entity.guardian.attack", () -> SoundEvents.GUARDIAN_ATTACK);
+        CONST.put("block.conduit.attack.target", () -> SoundEvents.CONDUIT_ATTACK_TARGET);
+        CONST.put("ambient.underwater.enter", () -> SoundEvents.AMBIENT_UNDERWATER_ENTER);
+        CONST.put("weather.rain", () -> SoundEvents.WEATHER_RAIN);
+        CONST.put("block.deepslate.break", () -> SoundEvents.DEEPSLATE_BREAK);
+        CONST.put("block.deepslate_bricks.break", () -> SoundEvents.DEEPSLATE_BRICKS_BREAK);
+        CONST.put("block.stone.break", () -> SoundEvents.STONE_BREAK);
+        CONST.put("entity.iron_golem.attack", () -> SoundEvents.IRON_GOLEM_ATTACK);
+        CONST.put("entity.iron_golem.step", () -> SoundEvents.IRON_GOLEM_STEP);
+        CONST.put("entity.warden.dig", () -> SoundEvents.WARDEN_DIG);
+        CONST.put("entity.warden.roar", () -> SoundEvents.WARDEN_ROAR);
+        CONST.put("entity.goat.ram_impact", () -> SoundEvents.GOAT_RAM_IMPACT);
+        CONST.put("entity.player.attack.strong", () -> SoundEvents.PLAYER_ATTACK_STRONG);
+        CONST.put("entity.player.attack.knockback", () -> SoundEvents.PLAYER_ATTACK_KNOCKBACK);
+        CONST.put("entity.player.attack.crit", () -> SoundEvents.PLAYER_ATTACK_CRIT);
+        CONST.put("entity.fox.bite", () -> SoundEvents.FOX_BITE);
+        CONST.put("entity.polar_bear.warning", () -> SoundEvents.POLAR_BEAR_WARNING);
+        CONST.put("entity.parrot.fly", () -> SoundEvents.PARROT_FLY);
+        CONST.put("block.iron_trapdoor.close", () -> SoundEvents.IRON_TRAPDOOR_CLOSE);
+        CONST.put("entity.fishing_bobber.throw", () -> SoundEvents.FISHING_BOBBER_THROW);
+        CONST.put("block.lava.pop", () -> SoundEvents.LAVA_POP);
+        CONST.put("block.lava.extinguish", () -> SoundEvents.LAVA_EXTINGUISH);
+        CONST.put("block.lava.ambient", () -> SoundEvents.LAVA_AMBIENT);
+        CONST.put("item.bucket.empty_lava", () -> SoundEvents.BUCKET_EMPTY_LAVA);
+        CONST.put("block.basalt.break", () -> SoundEvents.BASALT_BREAK);
+        CONST.put("entity.magma_cube.squish", () -> SoundEvents.MAGMA_CUBE_SQUISH);
+        CONST.put("block.chain.place", () -> SoundEvents.CHAIN_PLACE);
+        CONST.put("block.chain.hit", () -> SoundEvents.CHAIN_HIT);
+        CONST.put("block.chain.break", () -> SoundEvents.CHAIN_BREAK);
+        CONST.put("item.armor.equip_chain", () -> SoundEvents.ARMOR_EQUIP_CHAIN.value());
+        CONST.put("block.anvil.land", () -> SoundEvents.ANVIL_LAND);
+        CONST.put("entity.blaze.shoot", () -> SoundEvents.BLAZE_SHOOT);
+        CONST.put("entity.ghast.shoot", () -> SoundEvents.GHAST_SHOOT);
+        CONST.put("entity.ravager.roar", () -> SoundEvents.RAVAGER_ROAR);
+        CONST.put("entity.breeze.jump", () -> SoundEvents.BREEZE_JUMP);
+        CONST.put("item.mace.smash_ground_heavy", () -> SoundEvents.MACE_SMASH_GROUND_HEAVY);
     }
 
     /** 베드락 소리 이름 → 자바 소리 (없으면 null — 한 번 로그) */

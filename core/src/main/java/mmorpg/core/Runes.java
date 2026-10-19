@@ -390,8 +390,8 @@ public final class Runes {
         } else if (total > 0) {
             lines.add("§r" + L + "피해 " + N + "위력×" + Js.str(round1(total)) + L + (d.truthy("hits") ? " (" + d.text("hits") + "번)" : ""));
         }
-        // 0.12.6 사신 계열의 지속 피해는 출혈 (암살자 독 표창은 애드온 그대로 중독)
-        String dotName = REAPER.equals(r.family()) ? "출혈 " : "중독 ";
+        // 0.12.6 사신 계열의 지속 피해는 출혈 (암살자 독 표창은 애드온 그대로 중독), 0.25.0 화산은 화상 (def.dotName)
+        String dotName = dotName(r.family(), d) + " ";
         if (d.truthy("dot")) lines.add("§r" + L + dotName + N + "위력×" + d.text("dot") + L + ", " + sec20(d, "dotGap") + "초마다 " + d.text("dots") + "번");
         if (d.truthy("splashMult")) lines.add("§r" + L + "주위 " + d.text("splash") + "칸 " + N + "위력×" + d.text("splashMult"));
         if (total > 0 && r.family().equals("holy")) lines.add("§r" + L + "신성 피해 · 언데드 " + N + RUNE.text("undeadBonus") + "배");
@@ -434,6 +434,8 @@ public final class Runes {
         String only = weaponOnly(r.family());
         if (only != null) lines.add("§r" + (dark ? "§4" : "§c") + weaponName(only) + " 전용" + L + " · 다른 무기로는 쓰지 못함");
         if (REAPER.equals(r.family())) lines.addAll(reaperLore(d, L, dark));
+        // 0.25.0 두 스탯 계열: 흐름 줄 (def.flow)
+        for (String l : flowLines(d)) lines.add("§r" + L + l);
         // 0.16.0: 한정 뽑기 전용 룬 · 흐름
         if (limited(r.family())) {
             lines.add("§r" + (dark ? "§6" : "§e") + "한정 룬" + L + " · 한정 뽑기의 초월 픽업으로만");
@@ -664,6 +666,37 @@ public final class Runes {
     /** "1.5초" from ticks (runes.js sec). */
     private static String sec(double ticks) {
         return Js.str(round1(ticks / 20)) + "초";
+    }
+
+    /** 0.25.0 두 스탯 계열 여섯 (해류 · 골렘 · 무투 · 사냥꾼 · 화산 · 투사 — 자바 전용) */
+    public static final List<String> PAIR_FAMILIES = List.of("tide", "golem", "monk", "hunter", "volcano", "gladiator");
+
+    /**
+     * 룬 정의의 흐름 줄 (0.25.0 — def.flow: 글자 목록, {key} = 그 값 · {t:key} = 그 틱을 초로). 툴팁 (RuneTip) · 아이템 설명 (runeLore) 이 같은 줄을 씀
+     */
+    public static List<String> flowLines(Obj d) {
+        List<String> out = new ArrayList<>();
+        List<Object> list = d.listOrNull("flow");
+        if (list == null) return out;
+        Pattern p = Pattern.compile("\\{(t:)?([A-Za-z]+)\\}");
+        for (Object o : list) {
+            Matcher m = p.matcher(String.valueOf(o));
+            StringBuilder sb = new StringBuilder();
+            while (m.find()) {
+                String key = m.group(2);
+                String v = m.group(1) != null ? sec(d.numOr(key, 0)) : d.has(key) ? d.text(key) : "?";
+                m.appendReplacement(sb, Matcher.quoteReplacement(v));
+            }
+            m.appendTail(sb);
+            out.add(sb.toString());
+        }
+        return out;
+    }
+
+    /** 지속 피해의 이름 (def.dotName — 없으면 사신은 출혈, 나머지는 중독) */
+    public static String dotName(String family, Obj d) {
+        if (d.truthy("dotName")) return d.text("dotName");
+        return REAPER.equals(family) ? "출혈" : "중독";
     }
 
     /** {@code ${d[key] / 20}}. */

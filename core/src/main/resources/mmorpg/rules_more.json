@@ -206,6 +206,48 @@
       "hero": {"fn": "bloodBrand", "name": "피의 낙인", "desc": "초승달 낙인을 새기고 터뜨림", "use": "낙인 · 폭발 · 출혈 · 흡혈", "mult": 14, "dot": 1.5, "dots": 4, "dotGap": 20, "targets": 5, "range": 12, "cone": 70, "delay": 20, "heal": 0.03, "healMax": 5},
       "transcend": {"fn": "crimsonMoon", "name": "적월 강림", "desc": "핏빛 달이 떠올라 칼날을 퍼붓고 떨어짐", "use": "원거리 광역 연타 · 추락 · 흡혈", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "dotGap": 20, "range": 20, "radius": 7, "delay": 16, "heal": 0.05, "healMax": 5}
     },
+    "tide": {
+      "common": {"fn": "tideLance", "name": "물의 창", "desc": "고압 물줄기 창을 쏘아 꿰뚫음", "use": "직선 관통 · 밀쳐냄", "mult": 4, "range": 15, "width": 1.5, "speed": 32, "knock": 0.45, "flow": ["앞으로 {range}칸 관통 (폭 {width}칸)"]},
+      "rare": {"fn": "healingRain", "name": "치유의 비", "desc": "비구름을 불러 적을 때리고 나를 치유", "use": "원거리 광역 4번 · 회복", "mult": 1.75, "hits": 4, "gap": 12, "range": 16, "radius": 4, "delay": 10, "heal": 0.025, "multName": "빗줄기 ", "flow": ["조준한 곳 반지름 {radius}칸 비구름 · {t:gap}마다", "빗줄기마다 나와 구름 아래 아군 회복"]},
+      "noble": {"fn": "maelstrom", "name": "소용돌이 감옥", "desc": "소용돌이에 적을 가두고 물기둥으로 터뜨림", "use": "원거리 광역 · 끌어당김 6번 · 물기둥", "mult": 1.5, "hits": 6, "gap": 10, "crush": 3, "range": 16, "radius": 4.5, "pull": 0.32, "slowTicks": 70, "slowAmp": 2, "multName": "소용돌이 ", "crushName": "물기둥", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 가운데로 끌어당김", "끝에 물기둥이 솟아 터짐"]},
+      "hero": {"fn": "tidalWave", "name": "해일", "desc": "거대한 파도를 일으켜 앞을 휩쓺", "use": "전방 광역 · 밀어냄 · 파도 부서짐", "mult": 14, "crush": 6, "length": 16, "width": 5, "span": 10, "speed": 12, "radius": 3.5, "knock": 0.9, "multName": "해일 ", "crushName": "파도 부서짐", "flow": ["앞으로 {length}칸 · 폭 {span}칸 파도가 밀려감", "휩쓸린 적은 끝에서 부서지는 파도에 한 번 더"]},
+      "transcend": {"fn": "leviathan", "name": "심해의 군주", "desc": "심해에서 거대한 바다뱀이 솟아 휘감고 내리꽂힘", "use": "원거리 광역 · 휘감기 연타 · 대해일", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 20, "multName": "휘감기 ", "crushName": "대해일", "flow": ["조준한 곳 반지름 {radius}칸 소용돌이 · {t:gap}마다 휘감음", "끝에 바다뱀이 내리꽂혀 대해일"]}
+    },
+    "golem": {
+      "common": {"fn": "stoneFist", "name": "바위 주먹", "desc": "땅에서 돌 주먹이 솟아 적을 올려침", "use": "원거리 · 띄움", "mult": 4, "range": 14, "cone": 40, "radius": 2, "lift": 0.75, "flow": ["겨눈 적 (앞 {range}칸) 발밑에서 주먹 · 둘레 {radius}칸"]},
+      "rare": {"fn": "stoneWard", "name": "돌의 수호", "desc": "돌기둥을 세워 둘레를 치고 몸을 지킴", "use": "주위 2타 · 보호막", "mult": 3.5, "hits": 2, "gap": 20, "radius": 4, "shield": 0.12, "ticks": 120, "multName": "돌기둥 ", "flow": ["내 둘레 {radius}칸 돌기둥 넷 · 솟을 때와 무너질 때"]},
+      "noble": {"fn": "petrify", "name": "석화 결계", "desc": "룬 결계로 적을 돌로 굳히고 깨뜨림", "use": "원거리 광역 · 기절 · 깨뜨림", "mult": 4, "crush": 8, "range": 15, "radius": 4, "delay": 24, "stun": 40, "multName": "결계 ", "crushName": "깨뜨림", "flow": ["조준한 곳 반지름 {radius}칸 결계 → {t:delay} 뒤 돌로 굳음", "굳은 적은 깨지며 한 번 더 (보스는 굳지 않음)"]},
+      "hero": {"fn": "golemSummon", "name": "골렘 소환", "desc": "룬 골렘을 깨워 적을 내려치게 함", "use": "소환 · 내려치기 3번 · 붕괴", "mult": 5, "hits": 3, "gap": 20, "crush": 5, "range": 10, "radius": 3.5, "delay": 16, "multName": "내려치기 ", "crushName": "붕괴", "flow": ["앞 {range}칸에 골렘 · {t:gap}마다 둘레 {radius}칸 내려침", "끝에 골렘이 무너지며 한 번 더"]},
+      "transcend": {"fn": "colossus", "name": "거신 강림", "desc": "땅을 가르고 거대한 룬 거신이 솟아 내리찍음", "use": "원거리 광역 · 주먹 연타 · 대지 붕괴", "mult": 3.5, "hits": 4, "gap": 16, "crush": 18, "range": 20, "radius": 7, "delay": 28, "multName": "주먹 ", "crushName": "대지 붕괴", "flow": ["조준한 곳 반지름 {radius}칸 · 거신이 솟아 {t:gap}마다 주먹", "끝에 두 주먹으로 대지를 내려침"]}
+    },
+    "monk": {
+      "common": {"fn": "chainFist", "name": "연환권", "desc": "주먹을 세 번 내지르고 장풍으로 마무리", "use": "전방 3타 · 장풍", "mult": 1, "hits": 3, "gap": 10, "crush": 1, "radius": 3.6, "cone": 110, "knock": 0.55, "multName": "주먹 ", "crushName": "장풍", "flow": ["앞 {radius}칸 · {t:gap}마다 주먹 셋 → 장풍"]},
+      "rare": {"fn": "flyingKick", "name": "비각", "desc": "날아차기로 돌진해 처음 맞은 적을 차고 내려찍음", "use": "돌진 · 착지 충격", "mult": 4, "crush": 3, "range": 8, "width": 1.4, "radius": 2.6, "multName": "날아차기 ", "crushName": "내려찍기", "flow": ["앞 {range}칸 돌진 · 처음 맞은 적에서 멈춤", "내려찍기 둘레 {radius}칸"]},
+      "noble": {"fn": "palmBlast", "name": "붕권", "desc": "기를 모아 거대한 장풍을 내지름", "use": "전방 광역 · 밀쳐냄", "mult": 12, "range": 8, "cone": 70, "delay": 10, "knock": 1.4, "flow": ["{t:delay} 기를 모아 앞 {range}칸 부채꼴 ({cone}도)"]},
+      "hero": {"fn": "hundredFists", "name": "백열권", "desc": "수많은 주먹을 퍼붓고 마지막 일격", "use": "전방 연타 · 마무리", "mult": 3.2, "hits": 5, "gap": 10, "crush": 4, "radius": 4, "cone": 100, "knock": 0.8, "multName": "주먹 ", "crushName": "마지막 일격", "flow": ["앞 {radius}칸 · 주먹 비 ({t:gap}마다 피해)", "마지막 일격에 밀쳐냄"]},
+      "transcend": {"fn": "heavenFist", "name": "천권 강림", "desc": "하늘에 맺힌 기의 주먹이 쏟아지고 거대한 주먹이 내리꽂힘", "use": "원거리 광역 · 주먹 비 · 거대한 주먹", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 6.5, "delay": 20, "multName": "주먹 ", "crushName": "거대한 주먹", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 주먹", "끝에 하늘의 거대한 주먹"]}
+    },
+    "hunter": {
+      "common": {"fn": "steelTrap", "name": "강철 덫", "desc": "덫을 던져 적을 물고 묶음", "use": "원거리 · 묶음", "mult": 4, "range": 13, "radius": 2.2, "root": 30, "flow": ["조준한 곳에 덫 · 둘레 {radius}칸 적을 묾"]},
+      "rare": {"fn": "falconStrike", "name": "매의 습격", "desc": "영혼의 매가 적에게 거듭 내리꽂힘", "use": "원거리 단일 4번", "mult": 1.75, "hits": 4, "gap": 10, "range": 16, "cone": 60, "radius": 1.6, "multName": "급강하 ", "flow": ["겨눈 적에게 {t:gap}마다 급강하 (둘레 {radius}칸)"]},
+      "noble": {"fn": "huntNet", "name": "사냥 그물", "desc": "그물을 던져 적을 묶고 조여 벰", "use": "원거리 광역 · 묶음 · 조이기 3번", "mult": 4, "hits": 3, "gap": 12, "range": 13, "radius": 3.2, "root": 50, "multName": "조이기 ", "flow": ["조준한 곳 반지름 {radius}칸 그물 · {t:gap}마다 조임"]},
+      "hero": {"fn": "wolfPack", "name": "늑대 무리", "desc": "영혼의 늑대들이 달려들어 물어뜯음", "use": "전방 광역 · 물기 5번 · 울부짖음", "mult": 3, "hits": 5, "gap": 10, "crush": 5, "range": 12, "cone": 80, "radius": 3.5, "multName": "물기 ", "crushName": "울부짖음", "flow": ["앞 {range}칸 부채꼴 적에게 늑대 다섯 · {t:gap}마다", "끝에 울부짖음 (물린 적 · 둘레 {radius}칸)"]},
+      "transcend": {"fn": "beastKing", "name": "야수왕 강림", "desc": "거대한 영혼의 야수왕이 내려와 할퀴고 짓밟음", "use": "원거리 광역 · 할퀴기 연타 · 짓밟기", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 20, "multName": "할퀴기 ", "crushName": "짓밟기", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 할퀴기", "끝에 야수왕이 짓밟음"]}
+    },
+    "volcano": {
+      "common": {"fn": "magmaSlam", "name": "용암 강타", "desc": "땅을 내리쳐 용암을 튀김", "use": "전방 광역 · 화상", "mult": 2.5, "dot": 0.5, "dots": 3, "dotGap": 20, "radius": 3.6, "cone": 120, "dotName": "화상", "flow": ["앞 {radius}칸 부채꼴 · 화상 {t:dotGap}마다"]},
+      "rare": {"fn": "lavaBombs", "name": "화산탄", "desc": "불타는 화산탄 셋을 던져 터뜨림", "use": "원거리 광역 3번 · 화상", "mult": 2, "hits": 3, "gap": 10, "dot": 0.5, "dots": 2, "dotGap": 20, "range": 16, "radius": 2.8, "dotName": "화상", "multName": "화산탄 ", "flow": ["조준한 곳으로 화산탄 셋 · {t:gap}마다 반지름 {radius}칸 폭발"]},
+      "noble": {"fn": "magmaGeyser", "name": "용암 분출", "desc": "땅을 갈라 용암 기둥을 연달아 솟구치게 함", "use": "원거리 광역 · 분출 4번 · 화상", "mult": 2.5, "hits": 4, "gap": 10, "dot": 0.5, "dots": 4, "dotGap": 20, "range": 15, "radius": 3, "lift": 0.35, "dotName": "화상", "multName": "분출 ", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 용암 기둥"]},
+      "hero": {"fn": "magmaField", "name": "마그마 대지", "desc": "땅을 용암으로 녹이고 크게 분출시킴", "use": "원거리 광역 · 화상 지대 · 대분출", "mult": 4, "crush": 10, "dot": 1, "dots": 6, "dotGap": 10, "range": 16, "radius": 4.5, "delay": 40, "dotName": "화상", "multName": "녹아내림 ", "crushName": "대분출", "flow": ["조준한 곳 {radius}칸이 녹아 {t:dotGap}마다 화상", "{t:delay} 뒤 대분출"]},
+      "transcend": {"fn": "grandEruption", "name": "대분화", "desc": "땅에서 화산이 솟아 화산탄을 퍼붓고 크게 터짐", "use": "원거리 광역 · 화산탄 비 · 대분화", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 24, "dotGap": 20, "dotName": "화상", "multName": "화산탄 ", "crushName": "대분화", "flow": ["조준한 곳에 화산 · {t:gap}마다 화산탄 (반지름 {radius}칸)", "끝에 대분화"]}
+    },
+    "gladiator": {
+      "common": {"fn": "chainHook", "name": "사슬 갈고리", "desc": "사슬 갈고리를 던져 적을 끌어옴", "use": "원거리 단일 · 끌어당김", "mult": 4, "range": 14, "cone": 30, "pull": 1, "flow": ["겨눈 적 (앞 {range}칸) 을 내 앞으로 끌어옴 (보스 제외)"]},
+      "rare": {"fn": "shieldRush", "name": "방패 돌진", "desc": "방패를 앞세워 돌진하고 부딪힌 자리를 내려찍음", "use": "돌진 · 밀쳐냄 · 받는 피해 감소", "mult": 5, "crush": 2, "range": 8, "width": 1.6, "radius": 2.6, "reduce": 0.3, "ticks": 40, "knock": 0.8, "multName": "돌진 ", "crushName": "내려찍기", "flow": ["앞 {range}칸 돌진 · 처음 부딪힌 적에서 멈춤", "돌진하는 동안 받는 피해 감소"]},
+      "noble": {"fn": "chainWhirl", "name": "사슬 회전", "desc": "사슬을 휘둘러 둘레를 치고 끌어모음", "use": "주위 4타 · 끌어당김 · 받는 피해 감소", "mult": 2.5, "hits": 4, "gap": 10, "crush": 2, "radius": 4.5, "reduce": 0.25, "ticks": 50, "pull": 0.4, "multName": "사슬 ", "crushName": "끌어모음", "flow": ["둘레 {radius}칸 · {t:gap}마다 사슬", "끝에 사슬로 끌어모아 한 번 더"]},
+      "hero": {"fn": "arenaDomain", "name": "투기장", "desc": "사슬 울타리로 투기장을 세우고 사슬로 내려침", "use": "주위 영역 · 가둠 · 내려치기 4번 · 받는 피해 감소", "mult": 4, "hits": 4, "gap": 20, "crush": 4, "radius": 6, "reduce": 0.2, "ticks": 90, "multName": "내려치기 ", "crushName": "마무리", "flow": ["반지름 {radius}칸 투기장 {t:ticks} · 적은 못 나감", "{t:gap}마다 안의 적을 사슬로 내려침"]},
+      "transcend": {"fn": "warChains", "name": "투신의 사슬", "desc": "거대한 사슬이 솟아 적을 묶고 조인 뒤 거대한 철퇴가 내리꽂힘", "use": "원거리 광역 · 묶음 · 조이기 연타 · 철퇴", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 16, "root": 40, "multName": "조이기 ", "crushName": "철퇴", "flow": ["조준한 곳 반지름 {radius}칸 · 사슬이 솟아 묶고 {t:gap}마다 조임", "끝에 거대한 철퇴"]}
+    },
     "arcana": {
       "transcend": {"fn": "arcanaUnity", "name": "만상귀일", "desc": "네 스탯의 구슬이 하나로 모여 터짐", "use": "원거리 광역 · 스탯 구슬 연격 · 대폭발", "mult": 17, "crush": 17, "range": 22, "zone": 4, "radius": 7, "charge": 16, "gap": 10, "height": 3.4, "lift": 0.8}
     },
@@ -231,12 +273,18 @@
       "transcend": {"fn": "heavenEye", "name": "천공의 눈", "desc": "하늘의 눈이 바라보는 곳을 광선으로 태움", "use": "조종하는 광선 · 6연타 · 마무리 폭발", "mult": 3, "hits": 6, "crush": 16, "range": 24, "width": 2.5, "speed": 6, "charge": 20, "gap": 10, "radius": 5, "height": 10, "fire": 3}
     }
   },
-  "RUNE_FAMILY_ORDER": ["str", "dex", "vit", "int", "axe", "bow", "holy", "storm", "assassin", "blade", "spellblade", "element", "spirit", "gravity", "reaper", "body", "strike"],
+  "RUNE_FAMILY_ORDER": ["str", "dex", "vit", "int", "axe", "bow", "holy", "storm", "assassin", "blade", "spellblade", "element", "spirit", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike"],
   "RUNE_LIMITED_ORDER": ["arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier"],
   "RUNE_FAMILIES": {
     "_comment": "0.12.6: 성기사 룬 적용 스탯 체력 → 체력 + 힘 × 0.5 (사용자 요청 '성기사 체력힘으로' — 도끼 · 검사처럼 둘째 스탯 0.5), 사신 계열 (낫 전용 — weapon: 이 무기를 든 동안만 씀 · 민첩 + 마력 × 0.5 = 낫의 요구 비율) 0.16.0: 한정 계열 셋 (arcana 만상 · dipper 칠성 · skyeye 천공 — 마법 피해 · 0.17.0 endless 무간 · 0.18.0 terra 대지 · 0.19.0 yggdrasil 세계수 — 버프 · 0.20.0 abyss 심연 — 적 약화 · 0.24.0 glacier 빙하) 은 적용 스탯 = 네 스탯의 합 × 1.0 (coef 넷이 1 — sum: 설명 · 알림을 '총 스탯' 으로, limited: 한정 뽑기 전용)",
     "holy": {"stat": "vit", "name": "성기사", "coef": {"vit": 1, "str": 0.5}},
     "reaper": {"stat": "dex", "name": "사신", "coef": {"dex": 1, "int": 0.5}, "weapon": "scythe"},
+    "tide": {"stat": "int", "name": "해류", "coef": {"int": 1, "vit": 0.5}},
+    "golem": {"stat": "vit", "name": "골렘", "coef": {"vit": 1, "int": 0.5}},
+    "monk": {"stat": "dex", "name": "무투", "coef": {"dex": 1, "str": 0.5}},
+    "hunter": {"stat": "dex", "name": "사냥꾼", "coef": {"dex": 1, "vit": 0.5}},
+    "volcano": {"stat": "str", "name": "화산", "coef": {"str": 1, "int": 0.5}},
+    "gladiator": {"stat": "vit", "name": "투사", "coef": {"vit": 1, "dex": 0.5}},
     "arcana": {"stat": "int", "name": "만상", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
     "dipper": {"stat": "int", "name": "칠성", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
     "skyeye": {"stat": "int", "name": "천공", "coef": {"str": 1, "dex": 1, "vit": 1, "int": 1}, "sum": true, "limited": true},
@@ -248,13 +296,28 @@
   },
   "RUNE": {
     "_comment": "0.12.6: 사신 계열 색 (핏빛 · 연분홍 심지) · 뽑기권 설명 (계열 17개) · 0.16.0 한정 계열 색 (만상 진줏빛 · 칠성 별빛 · 천공 해빛 · 0.17.0 무간 먹빛 보라 · 0.18.0 대지 호박빛 · 0.19.0 세계수 비췻빛 · 금빛 심지 · 0.20.0 심연 핏빛 보라 · 분홍 심지 · 0.24.0 빙하 얼음빛 · 흰 심지)",
-    "color": {"str": [[1, 0.42, 0.18], [1, 0.86, 0.62]], "dex": [[0.35, 1, 0.55], [0.9, 1, 0.92]], "vit": [[1, 0.42, 0.68], [1, 0.9, 0.95]], "int": [[0.45, 0.62, 1], [0.86, 0.92, 1]], "axe": [[0.95, 0.2, 0.14], [1, 0.78, 0.62]], "bow": [[0.66, 1, 0.28], [0.95, 1, 0.82]], "holy": [[1, 0.82, 0.32], [1, 0.98, 0.86]], "storm": [[0.62, 0.48, 1], [0.9, 0.92, 1]], "assassin": [[0.84, 0.18, 0.96], [1, 0.84, 1]], "blade": [[0.3, 0.92, 0.92], [0.9, 1, 1]], "spellblade": [[0.5, 0.3, 1], [0.55, 1, 1]], "element": [[1, 0.58, 0.22], [1, 0.95, 0.82]], "spirit": [[0.42, 1, 0.76], [0.92, 1, 0.97]], "gravity": [[0.6, 0.24, 0.9], [1, 0.86, 0.98]], "body": [[1, 0.66, 0.2], [1, 0.96, 0.82]], "strike": [[0.78, 0.86, 1], [1, 1, 1]], "reaper": [[0.86, 0.06, 0.12], [1, 0.72, 0.68]], "arcana": [[0.9, 0.84, 1], [1, 1, 1]], "dipper": [[0.6, 0.76, 1], [1, 0.94, 0.72]], "skyeye": [[1, 0.74, 0.25], [1, 0.97, 0.85]], "endless": [[0.55, 0.36, 0.95], [0.93, 0.9, 1]], "terra": [[0.86, 0.52, 0.2], [1, 0.86, 0.58]], "yggdrasil": [[0.36, 0.86, 0.46], [1, 0.93, 0.62]], "abyss": [[0.62, 0.1, 0.42], [1, 0.62, 0.86]], "glacier": [[0.45, 0.82, 1], [0.92, 0.98, 1]]},
-    "ticketLore": ["§r§7보스·퀘스트·룬술사에게서 얻음", "§r§7들고 누르면 룬 하나를 뽑습니다", "§r§7일반 50% · 희귀 28% · 고귀 14%", "§r§7영웅 6.5% · 초월 1.5%", "§r§7계열 17개 중 하나 (같은 확률)"]
+    "color": {"str": [[1, 0.42, 0.18], [1, 0.86, 0.62]], "dex": [[0.35, 1, 0.55], [0.9, 1, 0.92]], "vit": [[1, 0.42, 0.68], [1, 0.9, 0.95]], "int": [[0.45, 0.62, 1], [0.86, 0.92, 1]], "axe": [[0.95, 0.2, 0.14], [1, 0.78, 0.62]], "bow": [[0.66, 1, 0.28], [0.95, 1, 0.82]], "holy": [[1, 0.82, 0.32], [1, 0.98, 0.86]], "storm": [[0.62, 0.48, 1], [0.9, 0.92, 1]], "assassin": [[0.84, 0.18, 0.96], [1, 0.84, 1]], "blade": [[0.3, 0.92, 0.92], [0.9, 1, 1]], "spellblade": [[0.5, 0.3, 1], [0.55, 1, 1]], "element": [[1, 0.58, 0.22], [1, 0.95, 0.82]], "spirit": [[0.42, 1, 0.76], [0.92, 1, 0.97]], "gravity": [[0.6, 0.24, 0.9], [1, 0.86, 0.98]], "body": [[1, 0.66, 0.2], [1, 0.96, 0.82]], "strike": [[0.78, 0.86, 1], [1, 1, 1]], "reaper": [[0.86, 0.06, 0.12], [1, 0.72, 0.68]], "arcana": [[0.9, 0.84, 1], [1, 1, 1]], "dipper": [[0.6, 0.76, 1], [1, 0.94, 0.72]], "skyeye": [[1, 0.74, 0.25], [1, 0.97, 0.85]], "endless": [[0.55, 0.36, 0.95], [0.93, 0.9, 1]], "terra": [[0.86, 0.52, 0.2], [1, 0.86, 0.58]], "yggdrasil": [[0.36, 0.86, 0.46], [1, 0.93, 0.62]], "abyss": [[0.62, 0.1, 0.42], [1, 0.62, 0.86]], "glacier": [[0.45, 0.82, 1], [0.92, 0.98, 1]], "tide": [[0.12, 0.52, 1], [0.72, 0.98, 1]], "golem": [[0.32, 0.92, 0.7], [0.88, 1, 0.94]], "monk": [[1, 0.7, 0.18], [1, 0.97, 0.82]], "hunter": [[0.6, 0.86, 0.3], [0.97, 1, 0.8]], "volcano": [[1, 0.3, 0.04], [1, 0.86, 0.42]], "gladiator": [[0.66, 0.76, 0.9], [1, 0.95, 0.85]]},
+    "ticketLore": ["§r§7보스·퀘스트·룬술사에게서 얻음", "§r§7들고 누르면 룬 하나를 뽑습니다", "§r§7일반 50% · 희귀 28% · 고귀 14%", "§r§7영웅 6.5% · 초월 1.5%", "§r§7계열 23개 중 하나 (같은 확률)"]
+  },
+  "ULT_RUNES_MORE": {
+    "_comment": "0.25.0: 자바 전용 초월 룬의 하늘빛 · 번쩍임 (ULT_FX.runes 에 없는 함수 — RuneKit.ultOf 가 먼저 찾음, 하늘빛 이름은 ULT_FOGS_MORE)",
+    "leviathan": {"fog": "rpg:ult_deepsea", "flash": [0.62, 0.92, 1]},
+    "colossus": {"fog": "rpg:ult_stone", "flash": [0.72, 1, 0.86]},
+    "heavenFist": {"fog": "rpg:ult_chi", "flash": [1, 0.9, 0.55]},
+    "beastKing": {"fog": "rpg:ult_wild", "flash": [0.86, 1, 0.6]},
+    "grandEruption": {"fog": "rpg:ult_ash", "flash": [1, 0.5, 0.12]},
+    "warChains": {"fog": "rpg:ult_arena", "flash": [1, 0.93, 0.76]}
   },
   "ULT_FOGS_MORE": {
     "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청)",
     "rpg:ult_glacier": [16, 96, "#1B3C80"],
-    "rpg:ult_polar": [16, 100, "#0A2438"]
+    "rpg:ult_polar": [16, 100, "#0A2438"],
+    "rpg:ult_deepsea": [12, 80, "#0E3A72"],
+    "rpg:ult_stone": [10, 72, "#3E5A4E"],
+    "rpg:ult_chi": [12, 84, "#C8862E"],
+    "rpg:ult_wild": [10, 70, "#3E5A22"],
+    "rpg:ult_ash": [6, 48, "#4A1608"],
+    "rpg:ult_arena": [10, 72, "#6A5A48"]
   },
   "ARMOR_TYPE_ORDER": ["str", "dex", "vit", "strvit", "int", "intstr", "strdex", "dexint", "vitstr", "intvit"],
   "ARMOR_TYPES": {

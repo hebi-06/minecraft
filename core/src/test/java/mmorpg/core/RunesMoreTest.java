@@ -47,7 +47,7 @@ public final class RunesMoreTest {
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
         List<String> order = Runes.FAMILY_ORDER;
-        check(order.size() == 17 && order.indexOf("reaper") == order.indexOf("gravity") + 1, "family order " + order);
+        check(order.size() == 23 && order.indexOf("reaper") == order.indexOf("gravity") + 1, "family order " + order);
 
         // 사신 다섯 등급
         String[] fns = {"bloodCrescent", "bloodHarvest", "bloodWhirl", "bloodBrand", "crimsonMoon"};
@@ -98,13 +98,13 @@ public final class RunesMoreTest {
         check(holy.obj("coef").keys().size() == 2 && holy.obj("coef").num("str") == 0.5 && holy.str("stat").equals("vit"), "holy coef");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_holy_common"), false)).contains("체력 1.0 + 힘 0.5"), "holy lore coef");
 
-        // 뽑기: 계열은 17개에서 같은 확률 — 사신 자리
+        // 뽑기: 계열은 23개에서 같은 확률 — 사신 자리
         int at = order.indexOf("reaper");
         double[] seq = {0.0, (at + 0.5) / order.size()};
         int[] k = {0};
         Runes.Roll roll = Runes.rollRune(() -> seq[k[0]++], false);
         check(roll.family().equals("reaper") && roll.grade().equals("common"), "roll reaper " + roll);
-        check(String.valueOf(Rules.get().obj("RUNE").list("ticketLore")).contains("계열 17개"), "ticket lore 17");
+        check(String.valueOf(Rules.get().obj("RUNE").list("ticketLore")).contains("계열 23개"), "ticket lore 23");
         check(Rules.get().obj("RUNE").obj("color").has("reaper"), "reaper color");
 
         // 적월 강림 돌파
@@ -122,6 +122,59 @@ public final class RunesMoreTest {
         near(d6.num("heal"), 0.08 * RuneBreak.coef(6), "6: lifesteal × coef");
         near(Runes.runeTotalMult(d6), 3 * 8 + 22 + 1 * 4, "6: total");
         check(cm.def().numOrNull("dot") == null, "no bleed at 0");
+
+        // 0.25.0 두 스탯 계열 여섯 (사용자: "룬에 마력+체력, 체력+힘, 민첩+힘 등 다양한 스탯 연계" → 조합마다 새 계열 · 보조 × 0.5)
+        String[][] pairs = {{"tide", "int", "vit", "해류"}, {"golem", "vit", "int", "골렘"}, {"monk", "dex", "str", "무투"}, {"hunter", "dex", "vit", "사냥꾼"},
+            {"volcano", "str", "int", "화산"}, {"gladiator", "vit", "dex", "투사"}};
+        check(Runes.PAIR_FAMILIES.size() == 6 && order.indexOf("tide") == order.indexOf("reaper") + 1 && order.indexOf("body") == order.indexOf("gladiator") + 1,
+                "pair families after reaper " + order);
+        java.util.Set<String> fnsSeen = new java.util.HashSet<>();
+        java.util.Set<String> pairSet = new java.util.HashSet<>();
+        for (String[] p : pairs) {
+            String fam = p[0];
+            Obj f = Rules.get().obj("RUNE_FAMILIES").obj(fam);
+            check(f.str("stat").equals(p[1]) && f.str("name").equals(p[3]) && f.obj("coef").keys().size() == 2 && f.obj("coef").num(p[1]) == 1
+                    && f.obj("coef").num(p[2]) == 0.5 && !f.truthy("weapon") && !f.truthy("limited"), fam + " family " + f);
+            check(Rules.get().obj("RUNE").obj("color").has(fam), fam + " color");
+            check(Runes.weaponOnly(fam) == null && !Runes.limited(fam), fam + " any weapon · not limited");
+            pairSet.add(p[1] + "+" + p[2]);
+            // 적용 스탯 = 주 + 보조 × 0.5 (보조만 찍으면 다른 스탯 0.85 가 큼)
+            Map<String, Double> s2 = stats(0, 0, 0, 0);
+            s2.put(p[1], 100.0);
+            s2.put(p[2], 60.0);
+            near(Runes.runeStat(s2, fam).value(), 100 + 60 * 0.5, fam + " applied = main + sub × 0.5");
+            Map<String, Double> subOnly = stats(0, 0, 0, 0);
+            subOnly.put(p[2], 100.0);
+            near(Runes.runeStat(subOnly, fam).value(), 85, fam + " sub only → off stat 0.85");
+            for (int i = 0; i < 5; i++) {
+                String g = Runes.GRADE_ORDER.get(i);
+                Runes.Rune r = Runes.parseRune(Runes.runeId(fam, g));
+                check(r != null, fam + " " + g);
+                if (r == null) continue;
+                check(r.famName().equals(p[3]) && r.stat().equals(p[1]), fam + " " + g + " family name");
+                near(Runes.runeTotalMult(r.def()), totals[i], fam + " " + g + " total");
+                String fn = r.def().str("fn");
+                check(fnsSeen.add(fn), "unique fn " + fn);
+                check(r.cd() == Rules.get().obj("RUNE_GRADES").obj(g).num("cd"), fam + " " + g + " cooldown");
+                List<String> flow = Runes.flowLines(r.def());
+                check(!flow.isEmpty(), fam + " " + g + " flow");
+                for (String l : flow) check(!l.contains("{") && !l.contains("?") && l.length() <= 34, fam + " " + g + " flow line: " + l);
+                String text = plain(Runes.runeLore(r, false));
+                check(text.contains(p[3] + " 룬") && text.contains(flow.get(0)) && text.contains(Runes.coefText(fam)), fam + " " + g + " lore: " + text);
+                if (r.def().truthy("dot")) check(text.contains(Runes.dotName(fam, r.def()) + " 위력×"), fam + " " + g + " dot lore");
+            }
+            Runes.Rune ult = Runes.parseRune(Runes.runeId(fam, "transcend"));
+            check(RuneBreak.tiered(ult), fam + " transcend tiered");
+            double t3 = Runes.runeTotalMult(RuneBreak.def(ult, 3));
+            double t6 = Runes.runeTotalMult(RuneBreak.def(ult, 6));
+            check(t3 >= 38 && t3 <= 39.5 && Math.abs(t6 - 50) < 1e-9, fam + " transcend totals 3 · 6 = " + t3 + " · " + t6);
+            check(RuneBreak.def(ult, 6).num("radius") > ult.def().num("radius"), fam + " 6 radius grows");
+        }
+        check(pairSet.equals(java.util.Set.of("int+vit", "vit+int", "dex+str", "dex+vit", "str+int", "vit+dex")), "six missing pairs " + pairSet);
+        check(Runes.dotName("volcano", Runes.parseRune("rpg:rune_volcano_common").def()).equals("화상") && Runes.dotName("reaper", cm.def()).equals("출혈")
+                && Runes.dotName("assassin", stars.def()).equals("중독"), "dot names");
+        double ge3 = Runes.runeTotalMult(RuneBreak.def(Runes.parseRune("rpg:rune_volcano_transcend"), 3));
+        near(ge3, 3 * 7 + 14 + 1 * 4, "grand eruption 3: burn after the blast");
 
         System.out.println("RunesMoreTest: " + ok + " ok, " + BAD.size() + " bad");
         for (String b : BAD) System.out.println("  BAD " + b);

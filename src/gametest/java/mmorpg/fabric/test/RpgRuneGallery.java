@@ -81,6 +81,7 @@ public final class RpgRuneGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             lockedCheck(ctx, server);
             for (String family : Runes.FAMILY_ORDER) {
+                if (Runes.PAIR_FAMILIES.contains(family)) continue; // 0.25.0 두 스탯 계열은 RpgPairRuneGallery (사진첩 키 pairs)
                 for (String grade : Runes.GRADE_ORDER) {
                     Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));
                     if (r == null) continue;

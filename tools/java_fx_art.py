@@ -646,3 +646,5 @@ if __name__ == "__main__":
     java_fx_art_more.main()
     import java_fx_limited  # 0.16.0 한정 초월 룬 (스탯 구슬 · 천공의 눈)
     java_fx_limited.main()
+    import java_fx_pairs  # 0.25.0 두 스탯 룬 계열 여섯 (주먹 · 영혼 짐승 · 물보라 · 그물)
+    java_fx_pairs.main()

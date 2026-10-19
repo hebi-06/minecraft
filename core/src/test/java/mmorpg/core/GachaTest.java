@@ -56,7 +56,7 @@ public final class GachaTest {
         near(std.rate("transcend"), 0.015, 1e-12, "standard transcend 1.5%");
         near(std.rate("hero"), 0.065, 1e-12, "standard hero 6.5%");
         near(std.rate("common"), 0.5, 1e-12, "standard common 50%");
-        check(std.families().size() == Runes.FAMILY_ORDER.size() && std.families().size() == 17, "standard: all 17 families " + std.families().size());
+        check(std.families().size() == Runes.FAMILY_ORDER.size() && std.families().size() == 23, "standard: all 23 families (0.25.0 두 스탯 계열 여섯 더함) " + std.families().size());
         check(!std.pickup(), "standard has no pickup");
 
         // ---------------------------------------------------------- 확률 곡선
@@ -140,7 +140,7 @@ public final class GachaTest {
             Gacha.Pull x = Gacha.pull(lim, Gacha.Counter.ZERO, 1, script(0.0, 0.9, f)).pulls().get(0);
             lostFamilies.add(x.family());
         }
-        check(!lostFamilies.contains("spirit") && lostFamilies.size() == 16, "lost pool = 16 others " + lostFamilies.size());
+        check(!lostFamilies.contains("spirit") && lostFamilies.size() == 22, "lost pool = 22 others " + lostFamilies.size());
 
         // ---------------------------------------------------------- 고급 · 한 계열
         Gacha.Banner adv = Gacha.advanced();

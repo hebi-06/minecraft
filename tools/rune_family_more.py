@@ -418,6 +418,130 @@ LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": sk
                   "yggdrasil": yggdrasil_layers, "abyss": abyss_layers, "glacier": glacier_layers}
 
 
+# ------------------------------------------------------------ 0.25.0 두 스탯 계열 여섯 (층 문양 — 다섯 등급 같은 문양)
+
+def arc_band(cx, cy, r, a0, a1, w0, w1, g):
+    """원 (cx, cy, r) 의 a0° → a1° 띠 (굵기 w0 → w1)"""
+    def f(x, y):
+        a = (math.degrees(math.atan2(y - cy, x - cx)) - a0) % 360
+        span = (a1 - a0) % 360
+        if a > span:
+            return False
+        t = a / span if span else 0
+        w = w0 + (w1 - w0) * t
+        return abs(math.hypot(x - cx, y - cy) - r) <= w / 2 + g
+    return f
+
+
+def tide_layers():
+    """해류 (마력 + 체력): 말려 오르는 파도 (굵은 물마루 → 안으로 말린 끝) + 아래 물결 줄 + 튀는 물방울 셋"""
+    crest = lambda g: union(arc_band(16.6, 15.4, 6.2, 150, 40, 3.0, 1.0, g * 0.8), arc_band(19.2, 14.2, 2.6, 300, 140, 1.4, 0.5, g * 0.7))
+    swell = lambda g: union(seg(6.4, 21.6, 11.0, 18.8, 1.9 + g), seg(11.0, 18.8, 11.4, 13.4, 1.6 + g))
+    ripple = lambda g: union(arc_band(10.0, 26.4, 3.2, 200, 340, 0.8, 0.8, g * 0.5), arc_band(16.4, 26.4, 3.2, 200, 340, 0.8, 0.8, g * 0.5),
+                             arc_band(22.8, 26.4, 3.2, 200, 340, 0.8, 0.8, g * 0.5))
+    drops = lambda g: union(disc(24.6, 8.2, 1.0 + g * 0.6), disc(26.4, 11.6, 0.8 + g * 0.6), disc(22.2, 6.0, 0.65 + g * 0.5))
+    return [(ripple, (190, 230, 255), (60, 130, 230), (10, 30, 80)),
+            (swell, (200, 236, 255), (40, 120, 240), (6, 30, 96)),
+            (crest, (236, 250, 255), (70, 160, 255), (8, 40, 120)),
+            (drops, (255, 255, 255), (150, 220, 255), (20, 70, 150))]
+
+
+def golem_layers():
+    """골렘 (체력 + 마력): 네모진 돌 머리 (어깨 받침) · 비췻빛 두 눈 · 이마의 룬 (세로 줄 + 꺾쇠)"""
+    def head(g):
+        return lambda x, y: (abs(x - 16) <= 5.4 + g and 7.4 - g <= y <= 19.6 + g) and not (abs(x - 16) > 4.2 + g and y < 8.6 - g)
+    shoulders = lambda g: poly([(7.0, 25.0), (9.0, 20.4), (23.0, 20.4), (25.0, 25.0)], g)
+    eyes = lambda g: union(lambda x, y: abs(x - 13.4) <= 1.3 + g * 0.6 and abs(y - 14.6) <= 0.8 + g * 0.6,
+                           lambda x, y: abs(x - 18.6) <= 1.3 + g * 0.6 and abs(y - 14.6) <= 0.8 + g * 0.6)
+    rune = lambda g: union(seg(16, 8.6, 16, 12.0, 0.6 + g * 0.5), seg(14.4, 9.4, 16, 10.6, 0.5 + g * 0.45), seg(17.6, 9.4, 16, 10.6, 0.5 + g * 0.45),
+                           seg(13.0, 17.6, 19.0, 17.6, 0.55 + g * 0.45), seg(9.8, 22.6, 22.2, 22.6, 0.5 + g * 0.4))
+    return [(shoulders, (150, 156, 150), (84, 90, 86), (14, 18, 16)),
+            (head, (176, 182, 176), (100, 108, 104), (16, 22, 20)),
+            (rune, (210, 255, 232), (70, 220, 160), (8, 60, 40)),
+            (eyes, (240, 255, 248), (90, 255, 190), (10, 90, 60))]
+
+
+def monk_layers():
+    """무투 (민첩 + 힘): 앞을 보는 주먹 (손가락 마디 넷 · 엄지 · 손목) + 둘레로 터지는 기의 빛살"""
+    def fist(g):
+        knuckles = union(*[lambda x, y, cx=cx: (x - cx) ** 2 / (1.55 + g) ** 2 + (y - 11.6) ** 2 / (2.0 + g) ** 2 <= 1 for cx in (11.6, 14.6, 17.6, 20.6)])
+        palm = lambda x, y: 10.0 - g <= x <= 22.2 + g and 11.6 <= y <= 18.6 + g
+        thumb = seg(10.6, 16.0, 17.6, 17.4, 2.2 + g)
+        wrist = lambda x, y: 12.2 - g <= x <= 20.0 + g and 18.0 <= y <= 23.4 + g
+        return union(knuckles, palm, thumb, wrist)
+    creases = lambda g: union(seg(13.1, 10.4, 13.1, 14.0, 0.4 + g * 0.4), seg(16.1, 10.4, 16.1, 14.0, 0.4 + g * 0.4), seg(19.1, 10.4, 19.1, 14.0, 0.4 + g * 0.4))
+    burst = lambda g: union(*[seg(16 + math.cos(a) * 9.4, 15.4 + math.sin(a) * 9.4, 16 + math.cos(a) * 12.2, 15.4 + math.sin(a) * 12.2, 0.7 + g * 0.5)
+                              for a in [math.radians(d) for d in (200, 240, 300, 340, 20, 160)]])
+    return [(burst, (255, 246, 210), (255, 190, 60), (110, 60, 0)),
+            (fist, (255, 236, 196), (240, 168, 60), (90, 46, 6)),
+            (creases, (150, 80, 20), (150, 80, 20), (150, 80, 20))]
+
+
+def hunter_layers():
+    """사냥꾼 (민첩 + 체력): 사선으로 크게 그은 발톱 자국 셋 (양끝이 가늘고 가운데가 굵은 곡선 — 사이가 띄어짐) + 오른쪽 아래 발자국 (발바닥 · 발가락 넷)"""
+    def claw(x0, y0, x1, y1, w, bend):
+        def f(g):
+            def h(x, y):
+                best = 99.0
+                bt = 0.0
+                for i in range(25):
+                    t = i / 24
+                    px = x0 + (x1 - x0) * t + bend * math.sin(math.pi * t)
+                    py = y0 + (y1 - y0) * t - bend * 0.6 * math.sin(math.pi * t)
+                    d = (x - px) ** 2 + (y - py) ** 2
+                    if d < best:
+                        best, bt = d, t
+                ww = w * (0.2 + 0.8 * math.sin(math.pi * bt)) + g * 0.7
+                return best <= (ww / 2) ** 2
+            return h
+        return f
+    claws = lambda g: union(claw(15.2, 6.6, 22.6, 16.6, 1.3, 0.7)(g), claw(11.6, 7.6, 19.6, 19.4, 1.6, 0.8)(g), claw(8.0, 9.2, 15.8, 21.4, 1.3, 0.7)(g))
+    paw = lambda g: union(lambda x, y: ((x - 22.0) / (2.2 + g)) ** 2 + ((y - 24.2) / (1.7 + g)) ** 2 <= 1,
+                          disc(19.2, 21.8, 0.8 + g * 0.6), disc(20.9, 20.4, 0.8 + g * 0.6), disc(23.1, 20.4, 0.8 + g * 0.6), disc(24.8, 21.8, 0.8 + g * 0.6))
+    return [(paw, (226, 240, 196), (130, 170, 70), (24, 40, 10)),
+            (claws, (246, 255, 222), (160, 226, 70), (34, 70, 8))]
+
+
+def volcano_layers():
+    """화산 (힘 + 마력): 검은 화산 (사다리꼴 · 꼭대기 분화구) + 솟구치는 용암 · 튀는 용암 덩이 · 옆으로 흐르는 용암 줄기"""
+    cone = lambda g: poly([(5.6, 25.4), (12.6, 12.6), (19.4, 12.6), (26.4, 25.4)], g)
+    lava_up = lambda g: union(lambda x, y: ((x - 16) / (2.4 + g)) ** 2 + ((y - 8.8) / (3.6 + g)) ** 2 <= 1, disc(11.4, 5.8, 1.1 + g * 0.6), disc(21.0, 5.0, 1.0 + g * 0.6),
+                              disc(17.6, 3.4, 0.8 + g * 0.5))
+    streams = lambda g: union(seg(13.6, 13.0, 11.6, 18.8, 0.9 + g * 0.6), seg(11.6, 18.8, 12.4, 23.6, 0.8 + g * 0.6), seg(18.4, 13.0, 20.6, 20.4, 0.9 + g * 0.6),
+                              seg(15.6, 13.0, 16.0, 17.4, 0.7 + g * 0.5))
+    return [(cone, (112, 96, 92), (58, 46, 44), (14, 8, 6)),
+            (streams, (255, 220, 120), (255, 96, 16), (110, 20, 0)),
+            (lava_up, (255, 246, 190), (255, 120, 24), (130, 26, 0))]
+
+
+def gladiator_layers():
+    """투사 (체력 + 민첩): 엇갈린 쇠사슬 둘 (굵은 고리 마디 — 네 귀퉁이로 뻗음) 앞에 투사의 투구 (둥근 머리 · 볏 · T 자 얼굴 틈)"""
+    def chains(g):
+        parts = []
+        for (x0, y0, x1, y1) in ((6.0, 25.6, 26.0, 5.6), (6.0, 5.6, 26.0, 25.6)):
+            for k in range(6):
+                t = (k + 0.5) / 6
+                x, y = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
+                parts.append(lambda px, py, x=x, y=y, g=g: abs(math.hypot(px - x, py - y) - 1.35) <= 0.42 + g * 0.3)
+        return union(*parts)
+
+    def helmet(g):
+        dome = lambda x, y: ((x - 16) / (5.0 + g)) ** 2 + ((y - 15.0) / (6.0 + g)) ** 2 <= 1 and y <= 15.0 + g
+        face = lambda x, y: abs(x - 16) <= 5.0 + g and 15.0 <= y <= 21.6 + g
+        return union(dome, face)
+    crest = lambda g: union(lambda x, y: abs(x - 16) <= 1.0 + g * 0.6 and 6.2 - g <= y <= 10.4, seg(13.4, 7.2, 18.6, 7.2, 1.0 + g * 0.6))
+    slit = lambda g: union(seg(12.2, 15.6, 19.8, 15.6, 0.9 + g * 0.3), seg(16, 15.6, 16, 20.6, 1.0 + g * 0.3))
+    trim = lambda g: union(seg(11.2, 21.6, 20.8, 21.6, 0.7 + g * 0.5), seg(11.0, 14.0, 21.0, 14.0, 0.45 + g * 0.4))
+    return [(chains, (226, 232, 244), (130, 146, 172), (22, 26, 38)),
+            (helmet, (220, 226, 236), (130, 140, 160), (20, 22, 30)),
+            (crest, (255, 210, 170), (210, 80, 50), (70, 16, 8)),
+            (trim, (255, 236, 196), (220, 176, 96), (60, 40, 12)),
+            (slit, (20, 22, 30), (20, 22, 30), (20, 22, 30))]
+
+
+PAIR_GLYPHS = {"tide": tide_layers, "golem": golem_layers, "monk": monk_layers, "hunter": hunter_layers, "volcano": volcano_layers, "gladiator": gladiator_layers}
+
+
 def prism_frame(stone):
     """붉은 테두리 · 빛무리 → 무지갯빛 (가운데에서 본 각도마다 색, 밝기 · 알파는 그대로)"""
     import colorsys
@@ -449,6 +573,14 @@ def main():
     made = []
     for fam in order:
         if fam in addon:
+            continue
+        if fam in PAIR_GLYPHS:
+            # 0.25.0 두 스탯 계열: 여러 색 층 문양
+            for g in GRADES:
+                name = f"rune_{fam}_{g}"
+                draw_layers(blank_stone(g, addon), PAIR_GLYPHS[fam]()).save(os.path.join(TEX, f"{name}.png"))
+                item_files(name, int(rb["max"]))
+                made.append(name)
             continue
         if fam not in GLYPHS:
             raise SystemExit(f"{fam}: 문양이 없음 (GLYPHS)")

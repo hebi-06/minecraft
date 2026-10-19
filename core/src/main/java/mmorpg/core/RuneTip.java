@@ -210,8 +210,9 @@ public final class RuneTip {
         // 0.18.0 대지 가르기: 대검 내려치기 (crush) 가 먼저, 그 뒤 갈라진 땅 여진 (mult × hits)
         boolean crushFirst = "earthSplitter".equals(fn);
         if (crush && crushFirst) out.add(crushLabel(fn, d) + " " + dmg(c, d.num("crush")));
-        if (m > 0) out.add(multLabel(fn) + dmg(c, m) + (h > 1 ? " × " + n(h) + "번" : ""));
-        if (dot) out.add((Runes.REAPER.equals(c.r().family()) ? "출혈 " : "중독 ") + dmg(c, d.num("dot")) + " × " + n(d.num("dots")) + "번");
+        // 0.25.0: 조각 이름을 룬 정의에서 (multName · dotName — 없으면 함수마다 · 출혈 / 중독)
+        if (m > 0) out.add((d.truthy("multName") ? d.text("multName") : multLabel(fn)) + dmg(c, m) + (h > 1 ? " × " + n(h) + "번" : ""));
+        if (dot) out.add(Runes.dotName(c.r().family(), d) + " " + dmg(c, d.num("dot")) + " × " + n(d.num("dots")) + "번");
         if (crush && !crushFirst) out.add(crushLabel(fn, d) + " " + dmg(c, d.num("crush")));
         return out;
     }
@@ -334,6 +335,8 @@ public final class RuneTip {
             if ("bloodBrand".equals(fn)) out.add("§r" + L + "낙인 " + d.text("targets") + "명 → " + sec(d.numOr("delay", 0)) + " 뒤 폭발");
             if ("crimsonMoon".equals(fn)) out.add("§r" + L + "칼날 " + sec(d.numOr("gap", 0)) + "마다 (반지름 " + d.text("radius") + "칸)");
         }
+        // 0.25.0 두 스탯 계열: 흐름 줄 (def.flow — {key} · {t:key})
+        for (String l : Runes.flowLines(d)) out.add("§r" + L + l);
         if ("arcanaUnity".equals(fn)) out.add("§r" + L + "구슬 몫은 스탯 비율로 · 폭발 반지름 " + d.text("radius") + "칸");
         if ("sevenStars".equals(fn)) out.add("§r" + L + "별빛 기둥 " + d.text("beam") + "칸 · 별 낙하 반지름 " + d.text("radius") + "칸");
         if ("endlessSlash".equals(fn)) out.add("§r" + L + "영역 반지름 " + d.text("radius") + "칸 · " + sec(d.numOr("gap", 10)) + "마다 영역 안 모든 적");

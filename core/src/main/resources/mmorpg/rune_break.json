@@ -343,6 +343,30 @@
         {"key": "crit", "to": 0.3, "div": 0.01, "text": "치명타 +{from} → +{to}%p"},
         {"key": "wave", "to": 14, "text": "검기 {from} → {to}칸"}
       ]
+    },
+    "leviathan": {
+      "3": [{"key": "radius", "to": 8.5, "text": "소용돌이 {from} → {to}칸"}, {"key": "hits", "to": 7, "text": "휘감기 {from} → {to}번"}, {"key": "crush", "to": 17, "text": "대해일 위력 ×{from} → ×{to}"}],
+      "6": [{"key": "crush", "to": 26, "text": "대해일 위력 ×{from} → ×{to}"}, {"key": "radius", "to": 10, "text": "소용돌이 {from} → {to}칸"}, {"key": "hits", "to": 8, "text": "휘감기 {from} → {to}번"}]
+    },
+    "colossus": {
+      "3": [{"key": "radius", "to": 8.5, "text": "대지 {from} → {to}칸"}, {"key": "hits", "to": 5, "text": "주먹 {from} → {to}번"}, {"key": "crush", "to": 21, "text": "대지 붕괴 위력 ×{from} → ×{to}"}],
+      "6": [{"key": "crush", "to": 29, "text": "대지 붕괴 위력 ×{from} → ×{to}"}, {"key": "radius", "to": 10, "text": "대지 {from} → {to}칸"}, {"key": "hits", "to": 6, "text": "주먹 {from} → {to}번"}]
+    },
+    "heavenFist": {
+      "3": [{"key": "radius", "to": 8, "text": "주먹 비 {from} → {to}칸"}, {"key": "hits", "to": 7, "text": "주먹 {from} → {to}번"}, {"key": "crush", "to": 17, "text": "거대한 주먹 위력 ×{from} → ×{to}"}],
+      "6": [{"key": "crush", "to": 26, "text": "거대한 주먹 위력 ×{from} → ×{to}"}, {"key": "radius", "to": 9.5, "text": "주먹 비 {from} → {to}칸"}, {"key": "hits", "to": 8, "text": "주먹 {from} → {to}번"}]
+    },
+    "beastKing": {
+      "3": [{"key": "radius", "to": 8.5, "text": "사냥터 {from} → {to}칸"}, {"key": "hits", "to": 7, "text": "할퀴기 {from} → {to}번"}, {"key": "crush", "to": 17, "text": "짓밟기 위력 ×{from} → ×{to}"}],
+      "6": [{"key": "crush", "to": 26, "text": "짓밟기 위력 ×{from} → ×{to}"}, {"key": "radius", "to": 10, "text": "사냥터 {from} → {to}칸"}, {"key": "hits", "to": 8, "text": "할퀴기 {from} → {to}번"}]
+    },
+    "grandEruption": {
+      "3": [{"key": "radius", "to": 8.5, "text": "분화 범위 {from} → {to}칸"}, {"key": "hits", "to": 7, "text": "화산탄 {from} → {to}번"}, {"key": "dot", "to": 1, "text": "분화 뒤 화상 위력 ×{to} (1초마다 4번)", "base": 0}, {"key": "dots", "to": 4, "base": 0}],
+      "6": [{"key": "crush", "to": 22, "text": "대분화 위력 ×{from} → ×{to}"}, {"key": "radius", "to": 10, "text": "분화 범위 {from} → {to}칸"}, {"key": "hits", "to": 8, "text": "화산탄 {from} → {to}번"}]
+    },
+    "warChains": {
+      "3": [{"key": "radius", "to": 8.5, "text": "사슬 {from} → {to}칸"}, {"key": "hits", "to": 7, "text": "조이기 {from} → {to}번"}, {"key": "crush", "to": 17, "text": "철퇴 위력 ×{from} → ×{to}"}],
+      "6": [{"key": "crush", "to": 26, "text": "철퇴 위력 ×{from} → ×{to}"}, {"key": "radius", "to": 10, "text": "사슬 {from} → {to}칸"}, {"key": "hits", "to": 8, "text": "조이기 {from} → {to}번"}]
     }
   }
 }

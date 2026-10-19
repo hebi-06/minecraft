@@ -444,10 +444,16 @@ public final class RuneKit {
 
     /** 룬 함수의 하늘빛 · 번쩍임 설정 (ULT_FX.runes[fn] — 없으면 빈 것) */
     public static Obj ultOf(String fn) {
+        // 0.25.0 자바 전용 초월 룬 (두 스탯 계열 여섯): rules_more ULT_RUNES_MORE 를 먼저
+        Obj more = ULT_MORE != null ? ULT_MORE.objOrNull(fn) : null;
+        if (more != null) return more;
         Obj runes = ULT_FX.objOrNull("runes");
         Obj o = runes != null ? runes.objOrNull(ULT_ALIAS.getOrDefault(fn, fn)) : null;
         return o != null ? o : new Obj(Map.of(), "ULT_FX.runes." + fn);
     }
+
+    /** 0.25.0 자바 전용 초월 룬의 하늘빛 · 번쩍임 (rules_more ULT_RUNES_MORE — 하늘빛 이름은 ULT_FOGS_MORE) */
+    private static final Obj ULT_MORE = mmorpg.core.Rules.get().root().objOrNull("ULT_RUNES_MORE");
 
     /**
      * 자바 전용 초월 룬 함수 → 같은 하늘빛 · 번쩍임을 쓰는 애드온 룬 함수 (12단계 정령왕 강림 = 정령왕의 부름의 오로라, 0.12.6 적월 강림 = 광전사의 혼의 핏빛 하늘,
