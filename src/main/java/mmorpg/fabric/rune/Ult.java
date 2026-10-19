@@ -50,8 +50,12 @@ public final class Ult {
     /**
      * ULT_FX.fogs[id] = [start, end, "#RRGGBB"] → 하늘빛 패킷. dist = 거리 배율 (작을수록 가까이서부터 짙음 — 8단계 6돌), edge = 화면 테두리 빛 (0 ~ 1)
      */
+    /** 0.24.0 자바 전용 하늘빛 (rules_more ULT_FOGS_MORE — ULT_FX.fogs 에 없는 이름) */
+    private static final Obj MORE_FOGS = mmorpg.core.Rules.get().root().objOrNull("ULT_FOGS_MORE");
+
     private static RpgNet.SkyPayload payload(String id, int token, int ticks, double dist, double edge) {
         List<Object> f = U.obj("fogs").listOrNull(id);
+        if (f == null && MORE_FOGS != null) f = MORE_FOGS.listOrNull(id);
         if (f == null || f.size() < 3) return null;
         int rgb = Integer.parseInt(((String) f.get(2)).substring(1), 16);
         float k = (float) Math.max(0.1, dist);

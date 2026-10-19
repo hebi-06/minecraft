@@ -79,14 +79,14 @@ public final class RpgGlacierGallery implements FabricClientGameTest {
             for (String s : List.of("str 31", "dex 31", "vit 31", "int 32")) server.runCommand("execute as @a run rpg set " + s);
             server.runOnServer(s -> installBuffer());
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
-            // 0돌: 서리 빛 · 마법진 (0 ~ 16틱 — 얼음판이 가운데부터 퍼짐) → 경계 결정 · 첫 거대한 얼음 (16 ~ 18) → 0.7초마다 (30 · 44 — 세 번째에 빙결)
-            //   → 얼어 있는 과녁 (50 ~ 80) → 다시 쌓여 또 빙결 (114) → 서리가 모임 (118) → 빙하 첨탑 · 붕괴 (128 ~ 131) → 부서짐 (138) → 끝
-            //   (사진 틱은 클라이언트 기준 — 서버가 2 ~ 3틱 앞섬)
-            run(ctx, server, 0, false, new int[] {5, 10, 15, 17, 22, 30, 44, 47, 52, 78, 116, 124, 127, 129, 133, 138, 146, 160}, false, 175);
-            // 6돌 (3인칭): 필드 8칸 · 얼음 12번 · 붕괴 184 → 부서짐 194 → 빙하의 왕관 (196 ~ 210 차례로 솟음) · 오로라 · 눈 (196 ~ 264)
-            run(ctx, server, 6, true, new int[] {16, 46, 100, 172, 183, 186, 192, 197, 202, 210, 226, 250, 268}, false, 280);
+            // 0돌 (사진 틱 = 서버에서 쓴 뒤): 서리 빛 · 마법진 (0 ~ 16틱 — 얼음판이 가운데부터 퍼짐) → 경계 결정 · 첫 거대한 얼음 (14 땅속 → 16 솟음 · 17 피해)
+            //   → 0.7초마다 (31 · 45 — 세 번째에 빙결) → 얼어 있는 과녁 (45 ~ 85) → 다시 쌓여 또 빙결 (115) → 서리가 모임 (118) → 빙하 첨탑 · 붕괴 (128 ~ 131)
+            //   → 부서짐 (138) → 끝
+            run(ctx, server, 0, false, new int[] {4, 9, 14, 17, 19, 25, 33, 47, 52, 80, 119, 124, 129, 131, 134, 139, 144, 160}, false, 175);
+            // 6돌 (3인칭): 필드 8칸 · 얼음 12번 (17 ~ 171) · 붕괴 184 → 부서짐 194 → 빙하의 왕관 (196 ~ 210 차례로 솟음) · 오로라 · 눈 (196 ~ 264)
+            run(ctx, server, 6, true, new int[] {16, 19, 47, 103, 176, 185, 187, 193, 199, 205, 212, 230, 255}, false, 275);
             server.runCommand("time set 18000");
-            run(ctx, server, 6, false, new int[] {14, 18, 48, 120, 184, 187, 200, 214, 240}, true, 280);
+            run(ctx, server, 6, false, new int[] {12, 19, 50, 122, 185, 188, 196, 206, 216, 240}, true, 275);
             server.runCommand("time set 6000");
         }
         LOG.info("[glacier-gallery] done, {} failed", failures.size());
@@ -123,13 +123,25 @@ public final class RpgGlacierGallery implements FabricClientGameTest {
         ctx.waitTicks(14);
         int fx0 = server.computeOnServer(s -> FxDisplays.spawned);
         ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
-        int t = 0;
+        // 사진 틱 = 서버에서 룬을 쓴 틱 (시전 기록) 부터 — 사진을 찍는 동안 서버가 앞서 나가므로 클라이언트 틱이 아니라 서버 틱으로 맞춤
+        long c0 = -1;
+        for (int i = 0; i < 40 && c0 < 0; i++) {
+            ctx.waitTick();
+            double[] l = server.computeOnServer(s -> glacierOf(player(s)));
+            if (l != null && l.length > 3) c0 = (long) l[3];
+        }
+        if (c0 < 0) {
+            failures.add(id + " not cast (no record)");
+            return;
+        }
+        final long cast0 = c0;
         int frozenSeen = 0;
+        int loops = 0;
+        long t = 0;
         for (int shot : shots) {
-            while (t < shot) {
+            while ((t = server.computeOnServer(s -> mmorpg.fabric.Tasks.now()) - cast0) < shot) {
                 ctx.waitTick();
-                t++;
-                if (t % 10 == 0) {
+                if (++loops % 8 == 0) {
                     int n = server.computeOnServer(s -> {
                         int k = 0;
                         for (Husk h : player(s).level().getEntitiesOfClass(Husk.class, player(s).getBoundingBox().inflate(40), h -> true)) {
@@ -142,7 +154,7 @@ public final class RpgGlacierGallery implements FabricClientGameTest {
             }
             ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "lr_%s_%03d%s", id, shot, third ? "_3p" : "")).withSize(1280, 720));
         }
-        if (end > t) ctx.waitTicks(end - t);
+        while (server.computeOnServer(s -> mmorpg.fabric.Tasks.now()) - cast0 < end) ctx.waitTick();
         boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
         double dealt = server.computeOnServer(s -> {
             double sum = 0;

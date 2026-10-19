@@ -75,16 +75,20 @@ final class RuneGlacier {
     static final String MARK = "§b❄";
     /** 얼음의 밝기 (밤 · 동굴에서도 얼음빛이 보이게 — 블록 빛 15) */
     static final Brightness GLOW = new Brightness(15, 15);
-    /** 하늘빛: 얼음빛 (rpg:ult_ice — 10 ~ 64칸) · 6돌 왕관은 오로라빛 */
-    static final String SKY_FOG = "rpg:ult_ice";
-    static final String CROWN_FOG = "rpg:ult_aurora";
+    /**
+     * 하늘빛: 짙은 사파이어빛 (rpg:ult_glacier — 16 ~ 96칸, rules_more ULT_FOGS_MORE) · 6돌 왕관은 극야 (rpg:ult_polar — 오로라가 보이게 짙은 남청).
+     * 사진 검토: 옅은 얼음빛 하늘 (rpg:ult_ice) 에서는 투명한 얼음이 하늘빛에 묻힘 — 어두운 하늘에서 빛나는 얼음이 또렷
+     */
+    static final String SKY_FOG = "rpg:ult_glacier";
+    static final String CROWN_FOG = "rpg:ult_polar";
     /** 시전자 눈 · 3인칭 카메라에서 이 칸 안에는 꾸밈 결정 · 경계 결정을 세우지 않음 (1인칭 화면을 덮지 않게) */
     static final double CLEAR = 3.4;
     /** 얼음판 조각 크기 · 고리 간격 (칸) */
     static final double TILE = 2.0;
     static final double TILE_STEP = 1.7;
-    /** 거대한 얼음: 솟기 전 땅속에 띄우는 틱 · 솟는 틱 · 서 있는 틱 · 부서지는 틱 */
+    /** 거대한 얼음: 솟기 전 땅속에 띄우는 틱 · 솟는 틱 · 서 있는 틱 · 부서지는 틱 · 솟기 시작한 뒤 피해가 들어가는 틱 (얼음이 몸에 닿을 때 숫자) */
     static final int PRE = 2;
+    static final int STRIKE = 1;
     static final int RISE = 2;
     static final int HOLD = 6;
     static final int BREAK = 4;
@@ -114,6 +118,7 @@ final class RuneGlacier {
     /** 시전 하나: 적마다 쌓인 냉기 · 얼린 수 · 거대한 얼음 수 (시험 · 사진첩) */
     static final class Cast {
         final Map<UUID, Integer> chill = new HashMap<>();
+        final long at = Tasks.now();
         int frozen;
         int giants;
         double radius;
@@ -145,10 +150,10 @@ final class RuneGlacier {
         return f != null && f.until > Tasks.now() && !e.isRemoved();
     }
 
-    /** 시험용: 이 사람의 마지막 시전 {얼린 적 수, 거대한 얼음 수, 필드 반지름} (없으면 null) */
+    /** 시험용: 이 사람의 마지막 시전 {얼린 적 수, 거대한 얼음 수, 필드 반지름, 쓴 틱 (Tasks.now)} (없으면 null) */
     static double[] last(UUID id) {
         Cast c = LAST.get(id);
-        return c == null ? null : new double[] {c.frozen, c.giants, c.radius};
+        return c == null ? null : new double[] {c.frozen, c.giants, c.radius, c.at};
     }
 
     /** 이 사람이 지금 쓴 만년빙하의 하늘빛 시간 배율 (3돌 미만이면 1 — 긴 룬이라 6돌 배율 1.5 를 나눠 씀) */
@@ -206,7 +211,7 @@ final class RuneGlacier {
         List<Display> out = new ArrayList<>();
         int life = delay + rise + hold + brk + 2;
         Display.BlockDisplay outer = spawnCrystal(level, base, shell, c, 0.7, life);
-        Crystal inner = new Crystal(c.axis(), c.h() * 0.86, c.w() * 0.52, c.spin() + 30);
+        Crystal inner = new Crystal(c.axis(), c.h() * 0.9, c.w() * 0.62, c.spin() + 30);
         Display.BlockDisplay in = core ? spawnCrystal(level, base, BLUE, inner, 0.7, life) : null;
         if (outer != null) out.add(outer);
         if (in != null) out.add(in);
@@ -351,14 +356,14 @@ final class RuneGlacier {
                     RuneKit.glowCrack(level, base, 1.3 + e.getBbWidth(), DEEP, ICE, Opt.of("life", 0.6, "fade", 0.5, "v", (double) (idx % 2)));
                     shards(level, V.up(base, 0.15), 6, 0.4, 0.05, 0.05);
                 }
-                // 적이 없는 자리에도: 꾸밈 결정 (적이 적을수록 많이)
+                // 적이 없는 자리에도: 꾸밈 결정 (적이 적을수록 많이 — 시전자가 필드 밖이면 시전자 쪽 앞자리는 빼고: 적을 가리지 않게)
                 int extra = spots.isEmpty() ? 4 : spots.size() < 3 ? 2 : 1;
                 for (int j = 0; j < extra; j++) {
                     Vec3 p = null;
-                    for (int tries = 0; tries < 6 && p == null; tries++) {
+                    for (int tries = 0; tries < 8 && p == null; tries++) {
                         Vec3 q = anywhere(c, R * 0.92, refY);
                         q = new Vec3(q.x, groundY(level, q.x, q.z, refY), q.z);
-                        if (RuneKit.camDist(sp, V.up(q, 1.5)) > CLEAR + 1 && Math.abs(q.y - refY) < 3) p = q;
+                        if (RuneKit.camDist(sp, V.up(q, 1.5)) > CLEAR + 1 && Math.abs(q.y - refY) < 3 && !nearSide(sp, c, R, q, 0.15)) p = q;
                     }
                     if (p == null) continue;
                     spots.add(p);
@@ -383,6 +388,9 @@ final class RuneGlacier {
                 SkillFx.play(level, "entity.player.hurt_freeze", mid, 0.7, 0.7);
                 if (idx % 2 == 0) SkillFx.play(level, "block.basalt.break", mid, 0.5, 0.8);
                 RuneKit.shakeAround(level, c, R + 6, 0.12, 0.2);
+            });
+            RuneKit.later(at + STRIKE, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
                 for (LivingEntity e : Kit.around(sp, c, R, 4)) {
                     RuneLimited.hit(sp, life, e, P, k.num("mult"), DamageNumbers.Style.FROST, tally, x -> chillUp(sp, level, x, cast, chill, frost, gap));
                 }
@@ -410,7 +418,7 @@ final class RuneGlacier {
             SkillFx.play(level, "block.amethyst_block.resonate", c, 1.4, 1.0);
         });
         RuneKit.later(crushAt - 2, () -> {
-            if (RuneKit.sameLife(sp, life)) spire(sp, level, c, R, refY, SHATTER); // 땅속에 띄움 → 붕괴 틱에 솟기 시작
+            if (RuneKit.sameLife(sp, life)) spire(sp, level, c, R, refY, SHATTER - 3); // 땅속에 띄움 → 붕괴 틱에 솟기 시작 (3틱) → 얼음판과 함께 부서짐
         });
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -453,6 +461,16 @@ final class RuneGlacier {
         return true;
     }
 
+    /**
+     * 시전자가 필드 밖 (가운데에서 반지름 × 0.8 넘게) 일 때 p 가 시전자 쪽 앞자리인지 (가운데에서 시전자 쪽으로 반지름 × k 넘게 — 그 자리의 결정은 적을 가림)
+     */
+    static boolean nearSide(ServerPlayer sp, Vec3 c, double R, Vec3 p, double k) {
+        double d = V.hdist(sp.position(), c);
+        if (d <= R * 0.8) return false;
+        Vec3 toward = V.flat(V.sub(sp.position(), c));
+        return V.dot(new Vec3(p.x - c.x, 0, p.z - c.z), toward) > R * k;
+    }
+
     /** 필드 안 아무 곳 (가운데가 몰리지 않게 √) */
     static Vec3 anywhere(Vec3 c, double R, double y) {
         double rr = R * Math.sqrt(Kit.rand());
@@ -466,35 +484,45 @@ final class RuneGlacier {
      * (적을 덮지 않게 — 몸과 피해 숫자가 얼음 앞에 보임), 없으면 (빈 자리) 큰 결정이 가운데 · 곁결정이 둘레
      */
     static void giant(ServerLevel level, Vec3 base, double bh, double bw, Vec3 behind, int pre) {
-        double H = Math.max(3.2, Math.min(6.0, bh * 1.5 + 1.6));
-        double W = Math.max(1.4, Math.min(3.0, bw * 1.6 + 0.9));
+        double H = Math.max(4.5, Math.min(8.0, bh * 2.2 + 1.8));
+        double W = Math.max(1.8, Math.min(3.6, bw * 2.0 + 1.1));
         double spin = Kit.rand() * 120;
+        Crystal main;
+        Vec3 b0;
         if (behind != null) {
-            Vec3 b0 = V.add(base, behind, bw * 0.5 + W * 0.3);
-            Crystal main = new Crystal(tilted(behind, 6 + Kit.rand() * 6), H, W, spin);
+            b0 = V.add(base, behind, bw * 0.5 + W * 0.3);
+            main = new Crystal(tilted(behind, 6 + Kit.rand() * 6), H, W, spin);
             erupt(level, b0, main, true, ICE_BLOCK, pre, RISE, HOLD, BREAK);
             for (int j = 0; j < 3; j++) {
                 boolean front = j == 2;
                 double deg = front ? 180 + (Kit.rand() - 0.5) * 40 : (j == 0 ? -1 : 1) * (62 + Kit.rand() * 18);
                 Vec3 out = V.turnY(behind, deg);
                 Vec3 b = V.add(base, out, front ? bw * 0.5 + W * 0.45 : bw * 0.5 + W * (0.42 + Kit.rand() * 0.12));
-                double h = H * (front ? 0.3 + Kit.rand() * 0.08 : 0.5 + Kit.rand() * 0.18);
-                Crystal side = new Crystal(tilted(out, front ? 34 + Kit.rand() * 10 : 22 + Kit.rand() * 12), h, W * (front ? 0.36 : 0.48 + Kit.rand() * 0.1), Kit.rand() * 120);
-                erupt(level, b, side, false, j == 1 ? PACKED : ICE_BLOCK, pre + (front ? 1 : 0), RISE, HOLD - 1, BREAK);
+                double h = H * (front ? 0.28 + Kit.rand() * 0.08 : 0.48 + Kit.rand() * 0.18);
+                Crystal side = new Crystal(tilted(out, front ? 34 + Kit.rand() * 10 : 22 + Kit.rand() * 12), h, W * (front ? 0.36 : 0.46 + Kit.rand() * 0.1), Kit.rand() * 120);
+                erupt(level, b, side, !front && j == 0, j == 1 ? PACKED : ICE_BLOCK, pre + (front ? 1 : 0), RISE, HOLD - 1, BREAK);
             }
-            return;
+        } else {
+            b0 = base;
+            Vec3 lean = V.flat(new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5));
+            main = new Crystal(tilted(lean, Kit.rand() * 7), H, W, spin);
+            erupt(level, base, main, true, ICE_BLOCK, pre, RISE, HOLD, BREAK);
+            double a0 = Kit.rand() * Math.PI * 2;
+            for (int j = 0; j < 3; j++) {
+                double a = a0 + j * Math.PI * 2 / 3 + (Kit.rand() - 0.5) * 0.6;
+                Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
+                Vec3 b = V.add(base, out, W * (0.38 + Kit.rand() * 0.12));
+                Crystal side = new Crystal(tilted(out, 24 + Kit.rand() * 14), H * (0.42 + Kit.rand() * 0.2), W * (0.42 + Kit.rand() * 0.12), Kit.rand() * 120);
+                erupt(level, b, side, false, j == 1 ? PACKED : ICE_BLOCK, pre + (j == 2 ? 1 : 0), RISE, HOLD - 1, BREAK);
+            }
         }
-        Vec3 lean = V.flat(new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5));
-        Crystal main = new Crystal(tilted(lean, Kit.rand() * 7), H, W, spin);
-        erupt(level, base, main, true, ICE_BLOCK, pre, RISE, HOLD, BREAK);
-        double a0 = Kit.rand() * Math.PI * 2;
-        for (int j = 0; j < 3; j++) {
-            double a = a0 + j * Math.PI * 2 / 3 + (Kit.rand() - 0.5) * 0.6;
-            Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
-            Vec3 b = V.add(base, out, W * (0.38 + Kit.rand() * 0.12));
-            Crystal side = new Crystal(tilted(out, 24 + Kit.rand() * 14), H * (0.42 + Kit.rand() * 0.2), W * (0.42 + Kit.rand() * 0.12), Kit.rand() * 120);
-            erupt(level, b, side, false, j == 1 ? PACKED : ICE_BLOCK, pre + (j == 2 ? 1 : 0), RISE, HOLD - 1, BREAK);
-        }
+        // 솟을 때 결정을 타고 오르는 빛 · 끝의 반짝임 (빛나는 얼음)
+        final Crystal mc = main;
+        final Vec3 mb = b0;
+        RuneKit.later(Math.max(2, pre) + 1, () -> {
+            RuneKit.streak(level, V.up(mb, 0.3), mc.tip(mb), CORE, 0.3 + mc.w() * 0.06, 0.3, 0.9, 0);
+            RuneKit.skyFlare(level, mc.tip(mb), 0.9 + mc.w() * 0.15, ICE, CORE, Opt.of("life", 0.35, "grow", 0.4, "fade", 0.6));
+        });
     }
 
     // ------------------------------------------------------------ 빙결
@@ -701,7 +729,7 @@ final class RuneGlacier {
                 double z = c.z + out.z * (R - 0.2);
                 double gy = groundY(level, x, z, refY);
                 Vec3 base = new Vec3(x, gy, z);
-                if (Math.abs(gy - refY) > 3 || RuneKit.camDist(sp, V.up(base, 0.8)) < CLEAR) continue;
+                if (Math.abs(gy - refY) > 3 || RuneKit.camDist(sp, V.up(base, 0.8)) < CLEAR || nearSide(sp, c, R, base, 0.55)) continue;
                 Crystal cr = new Crystal(tilted(out, 18 + Kit.rand() * 16), 0.9 + Kit.rand() * 0.8 + (i % 3 == 0 ? 0.6 : 0), 0.55 + Kit.rand() * 0.25, Kit.rand() * 120);
                 final int delay = i % 4;
                 List<Display> ds = erupt(level, base, cr, false, i % 3 == 0 ? PACKED : ICE_BLOCK, 2 + delay, 3, hold - delay, BREAK);
@@ -732,8 +760,8 @@ final class RuneGlacier {
      */
     static void spire(ServerPlayer sp, ServerLevel level, Vec3 c, double R, double refY, int hold) {
         double near = RuneKit.nearK(sp, V.up(c, 2), 9, 0.35);
-        double H = Math.min(9.0, R + 2.5) * near;
-        Crystal main = new Crystal(V.UP, H, 3.2 * near, Kit.rand() * 120);
+        double H = Math.min(9.5, R + 3.5) * near;
+        Crystal main = new Crystal(V.UP, H, 3.6 * near, Kit.rand() * 120);
         erupt(level, c, main, true, ICE_BLOCK, 0, 3, hold, BREAK);
         double a0 = Kit.rand() * Math.PI * 2;
         for (int i = 0; i < 6; i++) {
@@ -741,16 +769,20 @@ final class RuneGlacier {
             Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
             Vec3 b = V.add(c, out, (1.4 + Kit.rand() * 0.6) * near);
             b = new Vec3(b.x, groundY(level, b.x, b.z, refY), b.z);
-            Crystal cr = new Crystal(tilted(out, 25 + Kit.rand() * 15), (3.6 + Kit.rand() * 1.8) * near, (1.5 + Kit.rand() * 0.5) * near, Kit.rand() * 120);
+            Crystal cr = new Crystal(tilted(out, 25 + Kit.rand() * 15), (4.2 + Kit.rand() * 2.0) * near, (1.7 + Kit.rand() * 0.5) * near, Kit.rand() * 120);
             erupt(level, b, cr, i % 2 == 0, i % 2 == 0 ? ICE_BLOCK : PACKED, 2, 3, hold - 2, BREAK);
         }
+        RuneKit.later(3, () -> {
+            RuneKit.streak(level, V.up(c, 0.3), main.tip(c), CORE, 0.9, 0.45, 0.95, 0);
+            RuneKit.skyFlare(level, main.tip(c), 2.4, ICE, CORE, Opt.of("life", 0.6, "grow", 0.5, "fade", 0.6));
+        });
         for (int i = 0; i < 8; i++) {
             double a = a0 + Math.PI / 8 + Math.PI * 2 * i / 8;
             Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
             Vec3 b = V.add(c, out, R * (0.5 + Kit.rand() * 0.12));
             b = new Vec3(b.x, groundY(level, b.x, b.z, refY), b.z);
             if (RuneKit.camDist(sp, V.up(b, 1.5)) < CLEAR) continue;
-            Crystal cr = new Crystal(tilted(out, 30 + Kit.rand() * 15), 2.4 + Kit.rand() * 1.4, 1.0 + Kit.rand() * 0.4, Kit.rand() * 120);
+            Crystal cr = new Crystal(tilted(out, 30 + Kit.rand() * 15), (nearSide(sp, c, R, b, 0.3) ? 1.6 : 2.6) + Kit.rand() * 1.4, 1.1 + Kit.rand() * 0.4, Kit.rand() * 120);
             erupt(level, b, cr, false, i % 3 == 0 ? PACKED : ICE_BLOCK, 4, 3, hold - 4, BREAK);
         }
     }
@@ -780,16 +812,18 @@ final class RuneGlacier {
                 if (ii % 2 == 0) SkillFx.play(level, "block.amethyst_block.chime", bb, 0.6 + ii * 0.08, 1.0);
             });
         }
-        // 오로라: 필드 너머 하늘 (시전자에서 과녁 쪽 — 필드 반지름 + 6칸 뒤, 높이 9 ~ 13칸) 에 장막 셋
+        // 오로라: 왕관 위 하늘 (시전자에서 과녁 쪽 — 가운데에서 반지름 × 0.5 ~ 뒤, 높이 9 ~ 11.5칸 — 6돌 짙은 하늘빛 (안개 6 ~ 43칸) 에 묻히지 않게 가깝게) 에
+        // 장막 셋 (초록 · 보라 · 초록 — 가운데가 조금 더 뒤)
         Vec3 f = V.flat(V.sub(c, sp.position()));
         if (V.len(V.sub(c, sp.position())) < 1.5) f = Kit.facingOf(sp);
         Vec3 side = V.rightOf(f);
         double[][][] cols = {{AURORA, AURORA_CORE}, {AURORA2, AURORA2_CORE}, {AURORA, AURORA_CORE}};
         for (int i = 0; i < 3; i++) {
-            Vec3 at = V.up(V.add(V.add(c, f, R + 6 + i * 3), side, (i - 1) * 9), 10 + i * 1.5);
+            Vec3 at = V.up(V.add(V.add(c, f, R * 0.5 + (i == 1 ? 3 : 0)), side, (i - 1) * 8), 9 + i * 1.2);
             final int ii = i;
-            RuneKit.later(i * 3, () -> RuneKit.rfx2(level, "aurora", at, Opt.of("dir", RuneKit.towardEye(sp, at), "size", 13.0 - ii * 1.5, "life", 3.4, "fade", 0.35,
-                    "frames", 2.0, "fps", 2.5, "loop", true, "phase", (double) ii, "alpha", 0.85, "spin", 0.0), cols[ii][0], cols[ii][1], new int[] {0, 2}, 0.9));
+            RuneKit.later(i * 3, () -> RuneKit.rfx2(level, "aurora", at, Opt.of("dir", RuneKit.towardEye(sp, at), "size", 11.0 - (ii == 1 ? 0 : 1.5), "life", 3.4,
+                    "fade", 0.35, "frames", 2.0, "fps", 2.5, "loop", true, "phase", (double) ii, "alpha", 0.9, "spin", 0.0), cols[ii][0], cols[ii][1], new int[] {0, 2},
+                    0.95));
         }
         frostSigil(level, c, R * 1.1, ICE, CORE, Opt.of("life", 2.6, "spinRate", 10.0, "alpha", 0.75, "fade", 0.4));
         // 눈 (2틱마다 3초)

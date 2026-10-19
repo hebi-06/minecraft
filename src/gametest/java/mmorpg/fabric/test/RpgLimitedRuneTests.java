@@ -486,8 +486,8 @@ public final class RpgLimitedRuneTests {
     }
 
     /**
-     * 0.24.0 만년빙하 빙결 (0돌 — 얼음 16 · 30 · 44 · … · 114틱, 붕괴 128틱): 같은 과녁이 얼음에 세 번 꿰뚫리면 (44틱) 2초 얼어붙음 (구속 XI · 나약함 V —
-     * 기절 · 피해 숫자 앞 ❄ · 얼음 덩어리 표시 엔티티), 얼어 있는 동안 (58 · 72틱) 은 쌓이지 않고 풀린 뒤 (84틱) 다시 세 번 (86 · 100 · 114틱) 이면 또 얼음
+     * 0.24.0 만년빙하 빙결 (0돌 — 얼음 피해 17 · 31 · 45 · … · 115틱, 붕괴 128틱): 같은 과녁이 얼음에 세 번 꿰뚫리면 (45틱) 2초 얼어붙음 (구속 XI · 나약함 V —
+     * 기절 · 피해 숫자 앞 ❄ · 얼음 덩어리 표시 엔티티), 얼어 있는 동안 (59 · 73틱) 은 쌓이지 않고 풀린 뒤 (85틱) 다시 세 번 (87 · 101 · 115틱) 이면 또 얼음
      * (시전 기록 얼린 수 2), 붕괴에 얼음째 부서짐 (기절도 풀림). 필드 밖 (가운데에서 8칸) 과녁은 맞지도 얼지도 않음
      */
     @GameTest(environment = "mmorpg:lr_glacier_freeze", maxTicks = 200)
@@ -515,7 +515,7 @@ public final class RpgLimitedRuneTests {
             h.assertTrue(TestDummies.dealt(z) > 0, "ice hits the husk");
             h.assertTrue(FxDisplays.spawned - fx0[0] > 20, "ice field + giant ice displays " + (FxDisplays.spawned - fx0[0]));
         });
-        h.runAfterDelay(2 + 47, () -> {
+        h.runAfterDelay(2 + 49, () -> {
             MobEffectInstance s = z.getEffect(MobEffects.SLOWNESS);
             h.assertTrue(s != null && s.getAmplifier() >= 10, "third hit: frozen (slowness XI)");
             h.assertTrue(z.hasEffect(MobEffects.WEAKNESS), "frozen: weakness");
