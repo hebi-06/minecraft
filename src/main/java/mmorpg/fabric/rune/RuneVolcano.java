@@ -241,8 +241,8 @@ final class RuneVolcano {
                 if (!RuneKit.sameLife(sp, life)) return;
                 Vec3 hand = V.add(V.up(sp.position(), 1.6), Kit.facingOf(sp), 0.8);
                 bomb(sp, level, hand, V.up(land, 0.3), fly, 0.75, 3.0);
-                Vec3 fist = V.add(V.add(V.up(sp.position(), 1.2), Kit.facingOf(sp), 0.9), V.rightOf(Kit.facingOf(sp)), 0.35);
-                SkillFx.particle(level, ParticleTypes.FLAME, fist, 5, 0.08, 0.03);
+                Vec3 fist = V.add(V.add(V.up(sp.position(), 1.05), Kit.facingOf(sp), 0.8), V.rightOf(Kit.facingOf(sp)), 0.55);
+                SkillFx.particle(level, ParticleTypes.SMALL_FLAME, fist, 4, 0.05, 0.01);
                 SkillFx.play(level, "entity.blaze.shoot", sp.position(), 0.8 + ii * 0.1, 0.8);
                 SkillFx.play(level, "item.firecharge.use", sp.position(), 0.9, 0.6);
             });
