@@ -168,7 +168,7 @@ public final class RpgMarketGallery implements FabricClientGameTest {
     private void market(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         server.runOnServer(s -> {
             MarketStore.seed(s, HANS, "대장장이한스", new ItemStack(RpgItems.byId(Weapons.weaponFrom("sword", 20, "rare").id())), 450);
-            MarketStore.seed(s, HANS, "대장장이한스", new ItemStack(GearItems.byId(Armor.armorId("str", 30, "hero", "chest"))), 1200);
+            MarketStore.seed(s, HANS, "대장장이한스", new ItemStack(GearItems.byId(Armor.armorId("str", 40, "transcend", "chest"))), 1200);
             MarketStore.seed(s, HANS, "대장장이한스", new ItemStack(GearItems.byId("rpg:enhance_stone"), 5), 120);
             MarketStore.seed(s, MIRA, "룬수집가미라", RuneItems.stack("int", "hero"), 2800);
             MarketStore.seed(s, MIRA, "룬수집가미라", RuneItems.ticket(2, false), 300);
@@ -396,9 +396,12 @@ public final class RpgMarketGallery implements FabricClientGameTest {
         ctx.waitTicks(4);
         shot(ctx, "w_drop");
         boolean held = server.computeOnServer(s -> !player(s).getInventory().getItem(0).isEmpty());
+        int swords = server.computeOnServer(s -> RpgGearTests.countIn(player(s), RpgItems.byId(Weapons.weaponFrom("sword", 10, "rare").id())));
         int ground = server.computeOnServer(s -> player(s).level().getEntitiesOfClass(ItemEntity.class, player(s).getBoundingBox().inflate(5)).size());
         int kept = server.computeOnServer(s -> DropGuard.kept);
-        check(held && ground == 0 && kept == kept0 + 1, "Q: the sword stays in the hand slot (held " + held + ", on ground " + ground + ")");
+        boolean shown = ctx.computeOnClient(mc -> !mc.player.getInventory().getItem(0).isEmpty());
+        check(held && swords == 1 && ground == 0 && kept == kept0 + 1 && shown,
+                "Q: the sword stays in the hand slot (held " + held + ", swords " + swords + ", on ground " + ground + ", client shows " + shown + ")");
     }
 
     // ------------------------------------------------------------ 도움

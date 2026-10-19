@@ -30,7 +30,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ChestMenu;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
@@ -133,14 +135,26 @@ public final class RpgEconomyTests {
         sp.getInventory().setSelectedSlot(2);
         sp.getInventory().setItem(2, new ItemStack(Items.DIAMOND, 5));
         int kept = DropGuard.kept;
-        sp.drop(false); // Q: 하나
-        h.assertTrue(sp.getInventory().getItem(2).is(Items.DIAMOND) && sp.getInventory().getItem(2).getCount() == 5, "one diamond back on the stack");
+        sp.drop(false); // Q: 하나 — 막음 (그 칸 그대로)
+        h.assertTrue(sp.getInventory().getItem(2).is(Items.DIAMOND) && sp.getInventory().getItem(2).getCount() == 5 && count(sp, Items.DIAMOND) == 5,
+                "Q: stack stays 5 (slot " + sp.getInventory().getItem(2) + ", total " + count(sp, Items.DIAMOND) + ")");
         sp.drop(true); // Ctrl + Q: 통째
-        h.assertTrue(sp.getInventory().getItem(2).getCount() == 5 && count(sp, Items.DIAMOND) == 5, "whole stack back in the held slot");
+        h.assertTrue(sp.getInventory().getItem(2).getCount() == 5 && count(sp, Items.DIAMOND) == 5, "Ctrl+Q: whole stack stays (total " + count(sp, Items.DIAMOND) + ")");
+        // 창 안에서 Q (THROW — 하나 · 통째) · 창 밖으로 끌어 놓기 (들고 있던 것) → 가방으로 (늘지도 줄지도 않음)
+        sp.inventoryMenu.clicked(36 + 2, 0, ContainerInput.THROW, sp);
+        h.assertTrue(count(sp, Items.DIAMOND) == 5, "throw one in the inventory screen → still 5 (" + count(sp, Items.DIAMOND) + ")");
+        sp.inventoryMenu.clicked(36 + 2, 1, ContainerInput.THROW, sp);
+        h.assertTrue(count(sp, Items.DIAMOND) == 5, "throw the stack → still 5 (" + count(sp, Items.DIAMOND) + ")");
+        sp.inventoryMenu.setCarried(new ItemStack(Items.GOLD_INGOT, 3));
+        sp.inventoryMenu.clicked(AbstractContainerMenu.SLOT_CLICKED_OUTSIDE, 0, ContainerInput.PICKUP, sp);
+        h.assertTrue(sp.inventoryMenu.getCarried().isEmpty() && count(sp, Items.GOLD_INGOT) == 3, "click outside with 3 ingots → bag (" + count(sp, Items.GOLD_INGOT) + ")");
         h.assertTrue(DropGuard.kept >= kept + 2, "counted " + (DropGuard.kept - kept));
         AABB around = sp.getBoundingBox().inflate(4);
-        h.assertTrue(h.getLevel().getEntitiesOfClass(ItemEntity.class, around, e -> e.getItem().is(Items.DIAMOND)).isEmpty(), "nothing on the ground");
+        h.assertTrue(h.getLevel().getEntitiesOfClass(ItemEntity.class, around, e -> e.getItem().is(Items.DIAMOND) || e.getItem().is(Items.GOLD_INGOT)).isEmpty(),
+                "nothing on the ground");
         // 창작 모드는 바닐라대로
+        sp.getInventory().clearContent();
+        sp.getInventory().setItem(2, new ItemStack(Items.DIAMOND, 5));
         sp.setGameMode(GameType.CREATIVE);
         sp.drop(true);
         h.assertTrue(sp.getInventory().getItem(2).isEmpty(), "creative drops");
