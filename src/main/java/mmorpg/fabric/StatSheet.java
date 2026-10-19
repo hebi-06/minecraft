@@ -192,6 +192,22 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         return best != null ? best : RpgCombat.weaponOf(off);
     }
 
+    /**
+     * 0.23.0 인벤토리 캐릭터 패널: 기준 무기의 지금 수치 {피해 (요구 조건이 모자라면 0), 치명타 확률, 치명타 배율, 쓸 수 있음 1 · 없음 0} —
+     * weaponLines 의 "피해 · 치명타" 줄과 같은 식 (강화 enh 단계). 무기가 없으면 null
+     */
+    public double[] weaponNow(Weapon w, int enh) {
+        if (w == null) return null;
+        double base0 = w.damage() * (1 + mmorpg.core.Enhance.enhanceBonus(enh));
+        double atk = 1 + tree("atk") / 100;
+        double critChance = mmorpg.core.Combat.critChanceOf(w, tree("crit") / 100);
+        double critMult = w.critMult() + tree("critDmg") / 100;
+        double sum = 0;
+        for (Weapons.Scaling b : w.scaling()) sum += Stats.get(eff, b.stat()) * b.per();
+        boolean ok = Weapons.weaponLack(w, reqLevel, base).isEmpty();
+        return new double[] {ok ? base0 * (1 + sum) * atk : 0, critChance, critMult, ok ? 1 : 0};
+    }
+
     /** 가진 무기 기준 실제 수치 (statui.js weaponLines) — 강화 없이 */
     public List<String> weaponLines(Weapon w, boolean dark) {
         return weaponLines(w, 0, dark);

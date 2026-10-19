@@ -3,6 +3,7 @@ package mmorpg.fabric.client.form;
 import com.mojang.blaze3d.platform.InputConstants;
 import java.util.ArrayList;
 import java.util.List;
+import mmorpg.fabric.client.rpgui.RpgUi;
 import mmorpg.fabric.ui.FormNet;
 import mmorpg.fabric.ui.Slot;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -14,10 +15,11 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 
 /**
- * 상자 모양 창 (애드온 server_form.json rpg_chest): 회색 상자 테두리 (chest_bg) 안에 제목 · 9 × 3 칸 (slot 20 × 20, 그림 16 × 16) · 본문.
+ * 상자 모양 창 (애드온 server_form.json rpg_chest): 상자 테두리 안에 제목 · 9 × 3 칸 (slot 20 × 20, 그림 16 × 16) · 본문.
  * 0.21.0 줄 수 = 받은 칸 수 ÷ 9 (1 ~ 6 — 유저 장터는 큰 상자 9 × 6), 진열 칸 (Slot.BIG) 은 그 칸을 가운데로 3 × 3 칸 크기 · 그림 3배.
- * 칸 오른쪽 아래 숫자 — 흰색 = 보유 수, 초록 = 가격 (바닐라 아이템 수 자리). 마우스를 올리면 밝아지고 이름 · 설명. 장식 · 진열 칸은 누를 수 없음.
- * 제목 · 본문은 짙은 회색 (#404040, 그림자 없음 — 애드온 색), 덧붙임 §7 은 바탕에 묻히지 않게 §8 로. 본문이 화면보다 길면 휠로 넘김.
+ * 칸 오른쪽 아래 숫자 — 흰색 = 보유 수, 초록 = 가격 (바닐라 아이템 수 자리). 마우스를 올리면 금빛 테두리 · 이름 · 설명. 장식 · 진열 칸은 누를 수 없음.
+ * 0.23.0 RPG 창 (인벤토리 · 상자와 같은 어둠의 금테 — 사용자 요청): 남색 바탕 · 금테 · 어두운 칸 · 등급 색 칸, 제목 금빛 · 본문 밝은 회색 (그림자 —
+ * 다른 대화창과 같음, 예전의 §7 → §8 바꿈 없음). 본문이 화면보다 길면 휠로 넘김.
  */
 public final class ChestFormScreen extends FormScreen {
     static final int GRID_W = 180;
@@ -27,7 +29,8 @@ public final class ChestFormScreen extends FormScreen {
     static final int HEADER = 13;
     static final int GAP = 4;
     static final int LINE = 10;
-    static final int TEXT = 0xFF404040;
+    /** 본문 글자 (0.23.0 어두운 바탕 — 밝은 회색 · 그림자) */
+    static final int TEXT = 0xFFD8D8E0;
     /** 진열 칸 그림 크기 (16 × 3 — 3 × 3 칸 60 안) */
     static final int BIG_ICON = 48;
     /** 창 자리를 정하는 본문 줄 수 (실제 줄 수와 상관없이 — 칸 자리가 창마다 같게) */
@@ -51,7 +54,7 @@ public final class ChestFormScreen extends FormScreen {
     public ChestFormScreen(FormNet.ChestPayload form) {
         super(form.id(), Component.literal(form.title()));
         this.form = form;
-        this.title = onLight(form.title());
+        this.title = form.title();
         this.rows = Math.max(1, Math.min(6, (form.slots().size() + 8) / 9));
         this.big = findBig();
     }
@@ -134,7 +137,7 @@ public final class ChestFormScreen extends FormScreen {
 
     @Override
     protected void init() {
-        body = wrap(font, onLight(localize(form.body())), GRID_W);
+        body = wrap(font, localize(form.body()), GRID_W);
         w = GRID_W + PAD_X * 2;
         int fixed = PAD_Y + HEADER + gridH() + GAP + PAD_Y;
         int fit = Math.max(1, (height - 4 - fixed) / LINE);
@@ -200,13 +203,10 @@ public final class ChestFormScreen extends FormScreen {
         int n = CELL * 3;
         int x = slotX(big) - CELL;
         int y = slotY(big) - CELL;
-        g.fill(x, y, x + n, y + n, 0xFF8B8B8B);
-        g.fillGradient(x + 1, y + 1, x + n - 1, y + n / 2, 0x30FFFFFF, 0x00FFFFFF);
-        g.fill(x, y, x + n, y + 1, 0xFF373737);
-        g.fill(x, y, x + 1, y + n, 0xFF373737);
-        g.fill(x + 1, y + n - 1, x + n, y + n, 0xFFFFFFFF);
-        g.fill(x + n - 1, y + 1, x + n, y + n, 0xFFFFFFFF);
+        RpgUi.slot(g, x, y, n);
+        g.fillGradient(x + 1, y + 2, x + n - 1, y + n / 2, 0x26D6AA50, 0x00D6AA50);
         if (s == null || s.empty()) return;
+        RpgUi.gradeUnder(g, s.icon().item(), x + 1, y + 1, n - 2, net.minecraft.util.Util.getMillis());
         icon(g, s.icon(), x + (n - BIG_ICON) / 2, y + (n - BIG_ICON) / 2, BIG_ICON);
         int count = s.icon().item().isEmpty() ? 1 : s.icon().item().getCount();
         if (count > 1) {
@@ -230,10 +230,10 @@ public final class ChestFormScreen extends FormScreen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor g, int mx, int my, float partialTick) {
         super.extractRenderState(g, mx, my, partialTick);
-        sprite(g, "chest_bg", left, top, w, h);
+        RpgUi.panel(g, left, top, w, h);
         int x0 = left + PAD_X;
         int y0 = top + PAD_Y;
-        g.text(font, clip(font, title, GRID_W - 22), x0 + 1, y0 + 1, TEXT, false);
+        g.text(font, clip(font, title, GRID_W - 22), x0 + 1, y0 + 1, RpgUi.GOLD_TEXT, true);
         closeButton(g, closeX(), closeY(), in(mx, my, closeX(), closeY(), 11, 11));
         int hover = responded ? -1 : slotAt(mx, my);
         for (int i = 0; i < cells(); i++) {
@@ -244,13 +244,15 @@ public final class ChestFormScreen extends FormScreen {
             }
             int sx = slotX(i);
             int sy = slotY(i);
-            sprite(g, "slot", sx, sy, CELL, CELL);
+            RpgUi.slot(g, sx, sy, CELL);
             FormNet.SlotData s = slot(i);
             if (s == null || s.empty()) continue;
+            RpgUi.gradeUnder(g, s.icon().item(), sx + 2, sy + 2, 16, net.minecraft.util.Util.getMillis());
+            boolean over = i == hover && pressable(s);
+            if (over) RpgUi.hover(g, sx + 2, sy + 2, 16);
             icon(g, s.icon(), sx + 2, sy + 2, 16);
             // 흐린 장식 칸 (Slot.dim — 장식 칸의 숫자 1): 칸 안쪽 색을 반쯤 덮어 그림을 흐리게 (누를 수 없는 아이템)
-            if (s.kind() == Slot.DECO && s.num() == 1) g.fill(sx + 1, sy + 1, sx + CELL - 1, sy + CELL - 1, 0xA88B8B8B);
-            if (i == hover && pressable(s)) sprite(g, "slot_hover", sx, sy, CELL, CELL);
+            if (s.kind() == Slot.DECO && s.num() == 1) g.fill(sx + 1, sy + 1, sx + CELL - 1, sy + CELL - 1, 0xA812131F);
             if (s.kind() == Slot.COUNT || s.kind() == Slot.PRICE) {
                 // 바닐라 아이템 수와 같은 자리 (그림 오른쪽 아래 — 칸 테두리 안), 네 자리부터 줄임 (옆 칸을 덮지 않게 — 온전한 수는 이름 · 설명에)
                 String n = shortNum(s.num());
@@ -263,17 +265,17 @@ public final class ChestFormScreen extends FormScreen {
         boolean scrolls = body.size() > bodyLines;
         if (scrolls) g.enableScissor(x0, by, x0 + GRID_W, by + bodyLines * LINE);
         for (int i = bodyScroll; i < Math.min(body.size(), bodyScroll + bodyLines); i++) {
-            g.text(font, body.get(i), x0, by + (i - bodyScroll) * LINE, TEXT, false);
+            g.text(font, body.get(i), x0, by + (i - bodyScroll) * LINE, TEXT, true);
         }
         if (scrolls) {
             g.disableScissor();
             int view = bodyLines * LINE;
             int max = (body.size() - bodyLines) * LINE;
             int x = left + w - 5;
-            g.fill(x, by, x + 2, by + view, 0x40000000);
+            g.fill(x, by, x + 2, by + view, 0x40FFFFFF);
             int barH = Math.max(6, view * view / (view + max));
             int barY = by + (view - barH) * bodyScroll * LINE / max;
-            g.fill(x, barY, x + 2, barY + barH, 0xFF555555);
+            g.fill(x, barY, x + 2, barY + barH, 0xFFD6AA50);
         }
         if (hover >= 0) {
             FormNet.SlotData s = slot(hover);

@@ -5,12 +5,17 @@
   "compatibilityLevel": "JAVA_25",
   "client": [
     "AbstractContainerScreenAccessor",
+    "AbstractContainerScreenMixin",
+    "AbstractRecipeBookScreenAccessor",
     "AvatarRendererMixin",
     "CameraMixin",
     "ClientTitleMixin",
+    "ContainerScreenMixin",
     "FogRendererMixin",
+    "InventoryScreenMixin",
     "ItemModelResolverMixin",
-    "QuadParticleGroupMixin"
+    "QuadParticleGroupMixin",
+    "ShulkerBoxScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

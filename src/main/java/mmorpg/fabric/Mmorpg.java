@@ -67,6 +67,7 @@ public final class Mmorpg implements ModInitializer {
         mmorpg.fabric.gacha.GachaSystem.init(); // 룬 뽑기 (0.14.0 — 뽑기 창 · 1회 · 10회 · 원신식 천장 · 관리자 한정 뽑기 · /뽑기)
         mmorpg.fabric.economy.EconomySystem.init(); // 0.21.0 화폐 (골드 · 실버 지갑) · 유저 장터 · 쓰레기통 · 버린 아이템은 가방으로
         mmorpg.fabric.storage.StorageSystem.init(); // 0.22.0 엔더 창고 (큰 상자 54칸 × 상자 5개 — 2번 실버 · 3번부터 골드 · /창고)
+        mmorpg.fabric.container.ContainerTools.init(); // 0.23.0 상자 정렬 · 모두 넣기 · 같은 종류 넣기 (상자 창 오른쪽 단추)
         RpgPlayers.init();
         RpgCommands.init();
         LOG.info("MMO RPG: weapons {}, rules {}", RpgItems.WEAPONS.size(), Rules.RESOURCE);

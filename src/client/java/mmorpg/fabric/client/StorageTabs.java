@@ -27,6 +27,7 @@ import net.minecraft.world.item.Items;
  * 지금 상자 = 밝은 탭이 창에 붙음, 다음에 살 상자 = 그 화폐의 동전 + 작은 자물쇠 (두 번 누르면 삼 — 첫 번째 누름 뒤 3초 동안 노란 테가 깜빡임),
  * 그 뒤 상자 = 자물쇠 (앞 상자부터). 누르면 서버가 같은 창의 칸을 그 상자로 바꿈 (든 아이템은 그대로 — 다른 상자로 옮기기).
  * 창 제목 줄 오른쪽에 "2번 상자 · 3/5". 마우스를 올리면 풀이 (든 칸 · 값 · 보유 · 누르면 할 일).
+ * 0.23.0 RPG 창 (어둠의 금테): 탭도 남색 바탕 · 작은 금테 (지금 상자는 밝고 창 테두리를 덮어 창 바탕과 이어짐).
  */
 public final class StorageTabs extends AbstractWidget {
     static final int TAB_W = 32;
@@ -166,16 +167,16 @@ public final class StorageTabs extends AbstractWidget {
             int x = getX() + (current ? 0 : 3);
             int y = tabY(i);
             int w = current ? TAB_W + JOIN : TAB_W - 3;
-            int body = current ? 0xFFC6C6C6 : open ? (i == hover ? 0xFFB4B4B4 : 0xFFA2A2A2) : next ? (i == hover ? 0xFF9C9C9C : 0xFF8E8E8E) : 0xFF6E6E6E;
-            int light = current ? 0xFFFFFFFF : open ? 0xFFD6D6D6 : 0xFFAAAAAA;
-            int dark = current ? 0xFF555555 : 0xFF4A4A4A;
-            // 바탕 · 테두리 (지금 상자는 오른쪽 테두리 없이 창에 붙음)
-            g.fill(x, y, x + w, y + TAB_H, 0xFF000000);
-            g.fill(x + 1, y + 1, x + w - (current ? 0 : 1), y + TAB_H - 1, body);
-            g.fill(x + 1, y + 1, x + w - (current ? 0 : 2), y + 2, light);
-            g.fill(x + 1, y + 1, x + 2, y + TAB_H - 2, light);
-            g.fill(x + 2, y + TAB_H - 2, x + w - (current ? 0 : 1), y + TAB_H - 1, dark);
-            if (!current) g.fill(x + w - 2, y + 2, x + w - 1, y + TAB_H - 1, dark);
+            // 0.23.0 RPG 창 (금테): 남색 바탕 · 작은 금테 — 지금 상자는 밝고 창에 붙음 (창 테두리를 덮고 창 바탕색으로 이음), 열린 상자 · 다음 상자 ·
+            // 잠긴 상자 차례로 어둡게, 마우스를 올리면 밝게
+            boolean over = i == hover;
+            int bodyTop = current ? 0xFF2E3354 : open ? (over ? 0xFF2A2E4A : 0xFF1C1F33) : next ? (over ? 0xFF262A40 : 0xFF181A2A) : 0xFF101018;
+            int bodyBottom = current ? 0xFF22253C : open ? (over ? 0xFF1E2136 : 0xFF141624) : next ? (over ? 0xFF1A1C2E : 0xFF10111C) : 0xFF0B0B12;
+            mmorpg.fabric.client.rpgui.RpgUi.smallPanel(g, x, y, w, TAB_H, bodyTop, bodyBottom);
+            if (current) {
+                int c = windowBody(y + TAB_H / 2);
+                g.fill(left - 2, y + 2, left + JOIN, y + TAB_H - 2, c);
+            }
             // 상자 번호는 왼쪽, 그림은 창 쪽 (겹치지 않게 — 탭 폭 32)
             int ix = left - 19;
             int iy = y + 3;
@@ -208,10 +209,22 @@ public final class StorageTabs extends AbstractWidget {
             // 상자 번호 (왼쪽 — 열린 상자는 막대 자리만큼 1칸 위)
             g.text(font, String.valueOf(i + 1), left - 27, y + (TAB_H - 8) / 2 - (open ? 1 : 0), open ? 0xFFFFFFFF : 0xFFBBBBBB, true);
         }
-        // 창 제목 줄 오른쪽: "2번 상자 · 3/5"
+        // 창 제목 줄 오른쪽: "2번 상자 · 3/5" (0.23.0 금테 창 — 옅은 금빛 · 그림자)
         String label = Storage.label(s.page() + 1) + " · " + s.unlocked() + "/" + s.chests();
-        g.text(font, label, left + imageW - 8 - font.width(label), top + 6, 0xFF404040, false);
+        g.text(font, label, left + imageW - 8 - font.width(label), top + 6, 0xFFD8C8A0, true);
         if (hover >= 0) g.setComponentTooltipForNextFrame(font, tooltip(s, hover), mx, my);
+    }
+
+    /** 창 바탕색 (RpgUi.panel 의 세로 그라데이션 — 지금 상자 탭을 창에 이을 때) */
+    private int windowBody(int y) {
+        int h = ((AbstractContainerScreenAccessor) screen).mmorpg$imageHeight();
+        float t = Math.max(0F, Math.min(1F, (y - top - 3) / (float) Math.max(1, h - 6)));
+        int a = mmorpg.fabric.client.rpgui.RpgUi.BODY_TOP;
+        int b = mmorpg.fabric.client.rpgui.RpgUi.BODY_BOTTOM;
+        int r = (int) (((a >> 16) & 255) + (((b >> 16) & 255) - ((a >> 16) & 255)) * t);
+        int gg = (int) (((a >> 8) & 255) + (((b >> 8) & 255) - ((a >> 8) & 255)) * t);
+        int bl = (int) ((a & 255) + ((b & 255) - (a & 255)) * t);
+        return 0xFF000000 | (r << 16) | (gg << 8) | bl;
     }
 
     /** 탭 풀이 */

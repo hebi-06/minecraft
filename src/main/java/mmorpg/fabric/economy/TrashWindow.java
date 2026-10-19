@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgNet;
+import mmorpg.fabric.container.ContainerTools;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
@@ -51,16 +52,29 @@ public final class TrashWindow {
             return false;
         }
         SimpleContainer box = new SimpleContainer(SIZE);
-        sp.openMenu(new SimpleMenuProvider((id, playerInv, p) -> new ChestMenu(MenuType.GENERIC_9x3, id, playerInv, box, 3) {
-            @Override
-            public void removed(Player player) {
-                super.removed(player);
-                if (player instanceof ServerPlayer s) burn(s, box);
-            }
-        }, Component.literal("쓰레기통 — 닫으면 지워집니다")));
+        sp.openMenu(new SimpleMenuProvider((id, playerInv, p) -> new TrashMenu(id, playerInv, box), Component.literal("쓰레기통 — 닫으면 지워집니다")));
         Notify.notify(sp, "§7지울 아이템을 넣고 창을 닫으세요 §8(마지막 것은 /쓰레기통 되살리기)", 60);
         SkillFx.play(sp.level(), "random.chestopen", V.up(sp.position(), 1), 0.7, 0.6);
         return true;
+    }
+
+    /**
+     * 쓰레기통 창 (바닐라 상자 창 27칸): 닫으면 넣은 것을 지움. 0.23.0 상자 정렬 · 모두 넣기 단추는 없음 ({@link ContainerTools.NoTools} —
+     * "모두 넣기" 가 가방을 통째로 지우지 않게)
+     */
+    public static final class TrashMenu extends ChestMenu implements ContainerTools.NoTools {
+        private final SimpleContainer box;
+
+        public TrashMenu(int id, net.minecraft.world.entity.player.Inventory playerInv, SimpleContainer box) {
+            super(MenuType.GENERIC_9x3, id, playerInv, box, 3);
+            this.box = box;
+        }
+
+        @Override
+        public void removed(Player player) {
+            super.removed(player);
+            if (player instanceof ServerPlayer s) burn(s, box);
+        }
     }
 
     /** 창이 닫힘: 넣은 것을 모두 지우고 되살리기 기록 */
