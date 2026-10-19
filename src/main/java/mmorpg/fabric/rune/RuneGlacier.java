@@ -42,19 +42,20 @@ import org.joml.Vector3fc;
  * <ol>
  *   <li>얼어붙음 (charge 틱): 손에서 조준한 곳 (range 칸) 으로 서리 빛이 날아가고, 그 자리에서 얼음 마법진 (rpg:rfx_frost — 눈꽃 문양) 이 반지름 radius 칸까지
  *       퍼지며 땅이 가운데부터 바깥으로 얼음판 (얼음 · 굳은 얼음 블록 조각) 으로 덮임. 경계에 작은 얼음 결정이 빙 둘러 솟음 (필드 경계 표시)</li>
- *   <li>거대한 얼음 (gap 틱마다 hits 번): 필드 안 적마다 발밑이 얼음빛으로 갈라진 뒤 거대한 얼음 결정 (키 3.2 ~ 6칸 · 속은 푸른 얼음, 겉은 투명한 얼음 —
- *       블록을 꼭짓점으로 세워 늘인 뾰족한 결정 + 바깥으로 기운 곁결정 셋) 이 땅에서 솟구쳐 몸을 꿰뚫음 → 위력 × mult (얼음빛 숫자), 잠시 뒤 부서져 가라앉음.
- *       적이 없는 자리에도 결정이 솟아 필드가 살아 있게 (시전자 눈 · 3인칭 카메라 가까이는 빼고)</li>
+ *   <li>거대한 얼음 (gap 틱마다 hits 번): 필드 안 적마다 발밑이 얼음빛으로 갈라진 뒤 거대한 얼음 결정 (키 4.5 ~ 8칸 · 속은 푸른 얼음, 겉은 투명한 얼음 —
+ *       블록을 꼭짓점으로 세워 늘인 뾰족한 결정 + 곁결정 셋 · 타고 오르는 빛) 이 땅에서 솟구침 — 큰 결정은 적 바로 뒤 (시전자 쪽에서 볼 때) 에서 솟아 적과
+ *       숫자가 얼음 앞에 보임 → 얼음이 몸에 닿는 틱 (솟기 시작 + STRIKE) 에 위력 × mult (얼음빛 숫자), 잠시 뒤 부서져 가라앉음.
+ *       적이 없는 자리에도 결정이 솟아 필드가 살아 있게 (시전자 눈 · 3인칭 카메라 가까이 · 시전자 쪽 앞자리는 빼고)</li>
  *   <li>빙결: 같은 적이 이번 시전의 얼음에 chill 번 꿰뚫리면 얼어붙음 — frost 틱 동안 얼음 덩어리 (투명한 얼음 블록 + 삐죽한 얼음 조각) 에 갇혀 움직이지도
  *       공격하지도 못함 (RuneKit.stun — 구속 XI · 나약함 V). 얼어 있는 동안 피해 숫자 앞에 ❄ · 덩어리는 몸을 따라감 · 얼어 있는 동안은 더 쌓이지 않음 ·
  *       풀리면 얼음이 부서짐. 보스는 얼지 않음 (서리만 — 보스 싸움의 흐름을 지킴)</li>
- *   <li>빙하 붕괴 (마지막 얼음 finish 틱 뒤): 경계에서 가운데로 서리가 모인 뒤 필드 한가운데에서 거대한 빙하 첨탑 (키 8 ~ 9칸) 과 둘레의 큰 결정들이 꽃처럼
+ *   <li>빙하 붕괴 (마지막 얼음 finish 틱 뒤): 경계에서 가운데로 서리가 모인 뒤 필드 한가운데에서 거대한 빙하 첨탑 (키 9.5칸) 과 둘레의 큰 결정들이 꽃처럼
  *       피어 솟음 → 필드 안 모든 적 위력 × crush (얼음빛 · 흰빛 굵은 숫자 !) · 띄움 (얼어 있던 적은 얼음째 부서짐), 10틱 뒤 첨탑 · 얼음판이 한꺼번에 부서져
  *       얼음 조각이 사방으로 튐</li>
  *   <li>6돌 빙하의 왕관 (finale — 피해 없음): 부서진 뒤 필드 경계에 거대한 얼음 기둥 열이 왕관처럼 솟고 하늘에 오로라 장막 (rpg:rfx_aurora) · 눈이 내림,
- *       하늘빛이 얼음빛에서 오로라빛 (rpg:ult_aurora) 으로 바뀜</li>
+ *       하늘빛이 극야 (rpg:ult_polar) 로 바뀜</li>
  * </ol>
- * 화면 색 연출 (하늘빛 · 번쩍임) 은 3돌부터 (얼음빛 하늘 rpg:ult_ice · 번쩍임은 하늘 가르기의 얼음빛 — RuneKit.ULT_ALIAS). 쓰러지거나 차원을 옮기면
+ * 화면 색 연출 (하늘빛 · 번쩍임) 은 3돌부터 (짙은 사파이어 하늘 rpg:ult_glacier · 번쩍임은 하늘 가르기의 얼음빛 — RuneKit.ULT_ALIAS). 쓰러지거나 차원을 옮기면
  * 남은 것은 멈춤 (얼음은 정해진 틱 뒤 FxDisplays 가 지움, 얼어 있는 적은 제때 풀림).
  */
 final class RuneGlacier {
@@ -95,6 +96,8 @@ final class RuneGlacier {
     /** 붕괴: 서리가 모이는 틱 (붕괴 전) · 첨탑이 서 있다 부서지기까지 */
     static final int GATHER = 10;
     static final int SHATTER = 10;
+    /** 붕괴 번쩍임 (들어옴 · 머묾 · 걷힘 초 — 3 · 6돌 돌파가 머묾 · 걷힘을 늘림): 기본보다 짧게 (첨탑이 번쩍임에 묻히지 않게 — 무간참역의 일섬과 같음) */
+    static final double[] FLASH_TIME = {0.03, 0.0, 0.25};
 
     private static final BlockState ICE_BLOCK = Blocks.ICE.defaultBlockState();
     private static final BlockState PACKED = Blocks.PACKED_ICE.defaultBlockState();
@@ -417,12 +420,14 @@ final class RuneGlacier {
             SkillFx.play(level, "entity.warden.sonic_charge", c, 1.2, 0.8);
             SkillFx.play(level, "block.amethyst_block.resonate", c, 1.4, 1.0);
         });
-        RuneKit.later(crushAt - 2, () -> {
-            if (RuneKit.sameLife(sp, life)) spire(sp, level, c, R, refY, SHATTER - 3); // 땅속에 띄움 → 붕괴 틱에 솟기 시작 (3틱) → 얼음판과 함께 부서짐
+        RuneKit.later(crushAt - 4, () -> {
+            // 땅속에 띄움 → 붕괴 2틱 전에 솟기 시작 (3틱 — 숫자가 뜰 때 첨탑이 거의 다 솟음) → 얼음판과 함께 부서짐
+            if (RuneKit.sameLife(sp, life)) spire(sp, level, c, R, refY, SHATTER - 1);
         });
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            RuneKit.ultFlashFor(sp, level, c, FN, "flash", Opt.empty());
+            // 번쩍임은 첨탑이 다 솟은 뒤 짧게 (사진 검토: 기본 번쩍임 · 6돌의 긴 머묾이 솟는 첨탑을 덮음)
+            RuneKit.later(2, () -> RuneKit.ultFlashFor(sp, level, c, FN, "flash", Opt.of("time", FLASH_TIME.clone())));
             RuneKit.novaRing(level, c, R * 0.3, 3.2, ICE, CORE, Opt.of("life", 0.6));
             RuneKit.later(2, () -> RuneKit.novaRing(level, c, R * 0.2, 4.0, CORE, RuneKit.WHITE, Opt.of("life", 0.55)));
             RuneKit.glowCrack(level, c, R * 1.05, DEEP, ICE, Opt.of("life", (SHATTER + 30) / 20.0, "fade", 0.5, "v", 1.0));
@@ -772,7 +777,7 @@ final class RuneGlacier {
             Crystal cr = new Crystal(tilted(out, 25 + Kit.rand() * 15), (4.2 + Kit.rand() * 2.0) * near, (1.7 + Kit.rand() * 0.5) * near, Kit.rand() * 120);
             erupt(level, b, cr, i % 2 == 0, i % 2 == 0 ? ICE_BLOCK : PACKED, 2, 3, hold - 2, BREAK);
         }
-        RuneKit.later(3, () -> {
+        RuneKit.later(5, () -> { // 다 솟았을 때 (붕괴 + 1틱)
             RuneKit.streak(level, V.up(c, 0.3), main.tip(c), CORE, 0.9, 0.45, 0.95, 0);
             RuneKit.skyFlare(level, main.tip(c), 2.4, ICE, CORE, Opt.of("life", 0.6, "grow", 0.5, "fade", 0.6));
         });
