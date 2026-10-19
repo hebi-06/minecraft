@@ -1,0 +1,40 @@
+Compiled from "InventoryMenu.java"
+public class net.minecraft.world.inventory.InventoryMenu extends net.minecraft.world.inventory.AbstractCraftingMenu {
+  public static final int CONTAINER_ID = 0;
+  public static final int RESULT_SLOT = 0;
+  private static final int CRAFTING_GRID_WIDTH = 2;
+  private static final int CRAFTING_GRID_HEIGHT = 2;
+  public static final int CRAFT_SLOT_START = 1;
+  public static final int CRAFT_SLOT_COUNT = 4;
+  public static final int CRAFT_SLOT_END = 5;
+  public static final int ARMOR_SLOT_START = 5;
+  public static final int ARMOR_SLOT_COUNT = 4;
+  public static final int ARMOR_SLOT_END = 9;
+  public static final int INV_SLOT_START = 9;
+  public static final int INV_SLOT_END = 36;
+  public static final int USE_ROW_SLOT_START = 36;
+  public static final int USE_ROW_SLOT_END = 45;
+  public static final int SHIELD_SLOT = 45;
+  public static final net.minecraft.resources.Identifier EMPTY_ARMOR_SLOT_HELMET;
+  public static final net.minecraft.resources.Identifier EMPTY_ARMOR_SLOT_CHESTPLATE;
+  public static final net.minecraft.resources.Identifier EMPTY_ARMOR_SLOT_LEGGINGS;
+  public static final net.minecraft.resources.Identifier EMPTY_ARMOR_SLOT_BOOTS;
+  public static final net.minecraft.resources.Identifier EMPTY_ARMOR_SLOT_SHIELD;
+  private static final java.util.Map<net.minecraft.world.entity.EquipmentSlot, net.minecraft.resources.Identifier> TEXTURE_EMPTY_SLOTS;
+  private static final net.minecraft.world.entity.EquipmentSlot[] SLOT_IDS;
+  public final boolean active;
+  private final net.minecraft.world.entity.player.Player owner;
+  public net.minecraft.world.inventory.InventoryMenu(net.minecraft.world.entity.player.Inventory, boolean, net.minecraft.world.entity.player.Player);
+  public static boolean isHotbarSlot(int);
+  public void slotsChanged(net.minecraft.world.Container);
+  public void removed(net.minecraft.world.entity.player.Player);
+  public boolean stillValid(net.minecraft.world.entity.player.Player);
+  public net.minecraft.world.item.ItemStack quickMoveStack(net.minecraft.world.entity.player.Player, int);
+  public boolean canTakeItemForPickAll(net.minecraft.world.item.ItemStack, net.minecraft.world.inventory.Slot);
+  public net.minecraft.world.inventory.Slot getResultSlot();
+  public java.util.List<net.minecraft.world.inventory.Slot> getInputGridSlots();
+  public net.minecraft.world.inventory.CraftingContainer getCraftSlots();
+  public net.minecraft.world.inventory.RecipeBookType getRecipeBookType();
+  protected net.minecraft.world.entity.player.Player owner();
+  static {};
+}

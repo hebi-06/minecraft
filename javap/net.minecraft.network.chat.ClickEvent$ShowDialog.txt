@@ -1,0 +1,13 @@
+Compiled from "ClickEvent.java"
+public final class net.minecraft.network.chat.ClickEvent$ShowDialog extends java.lang.Record implements net.minecraft.network.chat.ClickEvent {
+  private final net.minecraft.core.Holder<net.minecraft.server.dialog.Dialog> dialog;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.network.chat.ClickEvent$ShowDialog> CODEC;
+  public net.minecraft.network.chat.ClickEvent$ShowDialog(net.minecraft.core.Holder<net.minecraft.server.dialog.Dialog>);
+  public net.minecraft.network.chat.ClickEvent$Action action();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.core.Holder<net.minecraft.server.dialog.Dialog> dialog();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

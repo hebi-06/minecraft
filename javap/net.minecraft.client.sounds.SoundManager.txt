@@ -1,0 +1,46 @@
+Compiled from "SoundManager.java"
+public class net.minecraft.client.sounds.SoundManager extends net.minecraft.server.packs.resources.SimplePreparableReloadListener<net.minecraft.client.sounds.SoundManager$Preparations> {
+  public static final net.minecraft.resources.Identifier EMPTY_SOUND_LOCATION;
+  public static final net.minecraft.client.resources.sounds.Sound EMPTY_SOUND;
+  public static final net.minecraft.resources.Identifier INTENTIONALLY_EMPTY_SOUND_LOCATION;
+  public static final net.minecraft.client.sounds.WeighedSoundEvents INTENTIONALLY_EMPTY_SOUND_EVENT;
+  public static final net.minecraft.client.resources.sounds.Sound INTENTIONALLY_EMPTY_SOUND;
+  private static final org.slf4j.Logger LOGGER;
+  private static final java.lang.String SOUNDS_PATH = "sounds.json";
+  private static final com.google.gson.Gson GSON;
+  private static final com.google.gson.reflect.TypeToken<java.util.Map<java.lang.String, net.minecraft.client.resources.sounds.SoundEventRegistration>> SOUND_EVENT_REGISTRATION_TYPE;
+  private final java.util.Map<net.minecraft.resources.Identifier, net.minecraft.client.sounds.WeighedSoundEvents> registry;
+  private final net.minecraft.client.sounds.SoundEngine soundEngine;
+  private final java.util.Map<net.minecraft.resources.Identifier, net.minecraft.server.packs.resources.Resource> soundCache;
+  public net.minecraft.client.sounds.SoundManager(net.minecraft.client.Options);
+  protected net.minecraft.client.sounds.SoundManager$Preparations prepare(net.minecraft.server.packs.resources.ResourceManager, net.minecraft.util.profiling.ProfilerFiller);
+  protected void apply(net.minecraft.client.sounds.SoundManager$Preparations, net.minecraft.server.packs.resources.ResourceManager, net.minecraft.util.profiling.ProfilerFiller);
+  public java.util.List<java.lang.String> getAvailableSoundDevices();
+  public com.mojang.blaze3d.audio.ListenerTransform getListenerTransform();
+  private static boolean validateSoundResource(net.minecraft.client.resources.sounds.Sound, net.minecraft.resources.Identifier, net.minecraft.server.packs.resources.ResourceProvider);
+  public net.minecraft.client.sounds.WeighedSoundEvents getSoundEvent(net.minecraft.resources.Identifier);
+  public java.util.Collection<net.minecraft.resources.Identifier> getAvailableSounds();
+  public void queueTickingSound(net.minecraft.client.resources.sounds.TickableSoundInstance);
+  public net.minecraft.client.sounds.SoundEngine$PlayResult play(net.minecraft.client.resources.sounds.SoundInstance);
+  public void playDelayed(net.minecraft.client.resources.sounds.SoundInstance, int);
+  public void updateSource(net.minecraft.client.Camera);
+  public void pauseAllExcept(net.minecraft.sounds.SoundSource...);
+  public void stop();
+  public void destroy();
+  public void emergencyShutdown();
+  public void tick(boolean);
+  public void resume();
+  public void refreshCategoryVolume(net.minecraft.sounds.SoundSource);
+  public void stop(net.minecraft.client.resources.sounds.SoundInstance);
+  public void updateCategoryVolume(net.minecraft.sounds.SoundSource, float);
+  public boolean isActive(net.minecraft.client.resources.sounds.SoundInstance);
+  public void addListener(net.minecraft.client.sounds.SoundEventListener);
+  public void removeListener(net.minecraft.client.sounds.SoundEventListener);
+  public void stop(net.minecraft.resources.Identifier, net.minecraft.sounds.SoundSource);
+  public java.lang.String getChannelDebugString();
+  public void getSoundCacheDebugStats(net.minecraft.client.sounds.SoundBufferLibrary$DebugOutput);
+  public void reload();
+  protected void apply(java.lang.Object, net.minecraft.server.packs.resources.ResourceManager, net.minecraft.util.profiling.ProfilerFiller);
+  protected java.lang.Object prepare(net.minecraft.server.packs.resources.ResourceManager, net.minecraft.util.profiling.ProfilerFiller);
+  static {};
+}

@@ -1,0 +1,8 @@
+Compiled from "SavedData.java"
+public abstract class net.minecraft.world.level.saveddata.SavedData {
+  private boolean dirty;
+  public net.minecraft.world.level.saveddata.SavedData();
+  public void setDirty();
+  public void setDirty(boolean);
+  public boolean isDirty();
+}

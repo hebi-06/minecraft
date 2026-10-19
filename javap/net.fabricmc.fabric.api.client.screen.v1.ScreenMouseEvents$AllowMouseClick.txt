@@ -1,0 +1,4 @@
+Compiled from "ScreenMouseEvents.java"
+public interface net.fabricmc.fabric.api.client.screen.v1.ScreenMouseEvents$AllowMouseClick {
+  public abstract boolean allowMouseClick(net.minecraft.client.gui.screens.Screen, net.minecraft.client.input.MouseButtonEvent);
+}

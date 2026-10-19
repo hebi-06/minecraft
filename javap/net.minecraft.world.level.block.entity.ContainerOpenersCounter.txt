@@ -1,0 +1,20 @@
+Compiled from "ContainerOpenersCounter.java"
+public abstract class net.minecraft.world.level.block.entity.ContainerOpenersCounter {
+  private static final int CHECK_TICK_DELAY = 5;
+  private int openCount;
+  private double maxInteractionRange;
+  public net.minecraft.world.level.block.entity.ContainerOpenersCounter();
+  protected abstract void onOpen(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  protected abstract void onClose(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  protected abstract void openerCountChanged(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, int, int);
+  public abstract boolean isOwnContainer(net.minecraft.world.entity.player.Player);
+  public void incrementOpeners(net.minecraft.world.entity.LivingEntity, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, double);
+  public void decrementOpeners(net.minecraft.world.entity.LivingEntity, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  public java.util.List<net.minecraft.world.entity.ContainerUser> getEntitiesWithContainerOpen(net.minecraft.world.level.Level, net.minecraft.core.BlockPos);
+  private boolean hasContainerOpen(net.minecraft.world.entity.Entity, net.minecraft.core.BlockPos);
+  public void recheckOpeners(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  public int getOpenerCount();
+  private static void scheduleRecheck(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  private static net.minecraft.world.entity.ContainerUser lambda$getEntitiesWithContainerOpen$1(net.minecraft.world.entity.Entity);
+  private boolean lambda$getEntitiesWithContainerOpen$0(net.minecraft.core.BlockPos, net.minecraft.world.entity.Entity);
+}

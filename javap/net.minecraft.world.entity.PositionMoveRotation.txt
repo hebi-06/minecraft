@@ -1,0 +1,22 @@
+Compiled from "PositionMoveRotation.java"
+public final class net.minecraft.world.entity.PositionMoveRotation extends java.lang.Record {
+  private final net.minecraft.world.phys.Vec3 position;
+  private final net.minecraft.world.phys.Vec3 deltaMovement;
+  private final float yRot;
+  private final float xRot;
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, net.minecraft.world.entity.PositionMoveRotation> STREAM_CODEC;
+  public net.minecraft.world.entity.PositionMoveRotation(net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, float, float);
+  public static net.minecraft.world.entity.PositionMoveRotation of(net.minecraft.world.entity.Entity);
+  public net.minecraft.world.entity.PositionMoveRotation withRotation(float, float);
+  public static net.minecraft.world.entity.PositionMoveRotation of(net.minecraft.world.level.portal.TeleportTransition);
+  public static net.minecraft.world.entity.PositionMoveRotation calculateAbsolute(net.minecraft.world.entity.PositionMoveRotation, net.minecraft.world.entity.PositionMoveRotation, java.util.Set<net.minecraft.world.entity.Relative>);
+  private static double calculateDelta(double, double, java.util.Set<net.minecraft.world.entity.Relative>, net.minecraft.world.entity.Relative);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.world.phys.Vec3 position();
+  public net.minecraft.world.phys.Vec3 deltaMovement();
+  public float yRot();
+  public float xRot();
+  static {};
+}

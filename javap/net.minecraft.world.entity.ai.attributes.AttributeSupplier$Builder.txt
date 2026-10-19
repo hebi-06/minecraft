@@ -1,0 +1,11 @@
+Compiled from "AttributeSupplier.java"
+public class net.minecraft.world.entity.ai.attributes.AttributeSupplier$Builder {
+  private final com.google.common.collect.ImmutableMap$Builder<net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, net.minecraft.world.entity.ai.attributes.AttributeInstance> builder;
+  private boolean instanceFrozen;
+  public net.minecraft.world.entity.ai.attributes.AttributeSupplier$Builder();
+  private net.minecraft.world.entity.ai.attributes.AttributeInstance create(net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>);
+  public net.minecraft.world.entity.ai.attributes.AttributeSupplier$Builder add(net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>);
+  public net.minecraft.world.entity.ai.attributes.AttributeSupplier$Builder add(net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, double);
+  public net.minecraft.world.entity.ai.attributes.AttributeSupplier build();
+  private void lambda$create$0(net.minecraft.core.Holder, net.minecraft.world.entity.ai.attributes.AttributeInstance);
+}

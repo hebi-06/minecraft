@@ -1,0 +1,27 @@
+Compiled from "CommonDialogData.java"
+public final class net.minecraft.server.dialog.CommonDialogData extends java.lang.Record {
+  private final net.minecraft.network.chat.Component title;
+  private final java.util.Optional<net.minecraft.network.chat.Component> externalTitle;
+  private final boolean canCloseWithEscape;
+  private final boolean pause;
+  private final net.minecraft.server.dialog.DialogAction afterAction;
+  private final java.util.List<net.minecraft.server.dialog.body.DialogBody> body;
+  private final java.util.List<net.minecraft.server.dialog.Input> inputs;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.server.dialog.CommonDialogData> MAP_CODEC;
+  public net.minecraft.server.dialog.CommonDialogData(net.minecraft.network.chat.Component, java.util.Optional<net.minecraft.network.chat.Component>, boolean, boolean, net.minecraft.server.dialog.DialogAction, java.util.List<net.minecraft.server.dialog.body.DialogBody>, java.util.List<net.minecraft.server.dialog.Input>);
+  public net.minecraft.network.chat.Component computeExternalTitle();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.network.chat.Component title();
+  public java.util.Optional<net.minecraft.network.chat.Component> externalTitle();
+  public boolean canCloseWithEscape();
+  public boolean pause();
+  public net.minecraft.server.dialog.DialogAction afterAction();
+  public java.util.List<net.minecraft.server.dialog.body.DialogBody> body();
+  public java.util.List<net.minecraft.server.dialog.Input> inputs();
+  private static com.mojang.serialization.DataResult lambda$static$1(net.minecraft.server.dialog.CommonDialogData);
+  private static java.lang.String lambda$static$2();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

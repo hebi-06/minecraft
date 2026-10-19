@@ -1,0 +1,13 @@
+Compiled from "HoverEvent.java"
+public final class net.minecraft.network.chat.HoverEvent$ShowText extends java.lang.Record implements net.minecraft.network.chat.HoverEvent {
+  private final net.minecraft.network.chat.Component value;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.network.chat.HoverEvent$ShowText> CODEC;
+  public net.minecraft.network.chat.HoverEvent$ShowText(net.minecraft.network.chat.Component);
+  public net.minecraft.network.chat.HoverEvent$Action action();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.network.chat.Component value();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

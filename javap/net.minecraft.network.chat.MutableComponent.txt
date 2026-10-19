@@ -1,0 +1,27 @@
+Compiled from "MutableComponent.java"
+public final class net.minecraft.network.chat.MutableComponent implements net.minecraft.network.chat.Component {
+  private final net.minecraft.network.chat.ComponentContents contents;
+  private final java.util.List<net.minecraft.network.chat.Component> siblings;
+  private net.minecraft.network.chat.Style style;
+  private net.minecraft.util.FormattedCharSequence visualOrderText;
+  private net.minecraft.locale.Language decomposedWith;
+  net.minecraft.network.chat.MutableComponent(net.minecraft.network.chat.ComponentContents, java.util.List<net.minecraft.network.chat.Component>, net.minecraft.network.chat.Style);
+  public static net.minecraft.network.chat.MutableComponent create(net.minecraft.network.chat.ComponentContents);
+  public net.minecraft.network.chat.ComponentContents getContents();
+  public java.util.List<net.minecraft.network.chat.Component> getSiblings();
+  public net.minecraft.network.chat.MutableComponent setStyle(net.minecraft.network.chat.Style);
+  public net.minecraft.network.chat.Style getStyle();
+  public net.minecraft.network.chat.MutableComponent append(java.lang.String);
+  public net.minecraft.network.chat.MutableComponent append(net.minecraft.network.chat.Component);
+  public net.minecraft.network.chat.MutableComponent withStyle(java.util.function.UnaryOperator<net.minecraft.network.chat.Style>);
+  public net.minecraft.network.chat.MutableComponent withStyle(net.minecraft.network.chat.Style);
+  public net.minecraft.network.chat.MutableComponent withStyle(net.minecraft.ChatFormatting...);
+  public net.minecraft.network.chat.MutableComponent withStyle(net.minecraft.ChatFormatting);
+  public net.minecraft.network.chat.MutableComponent withColor(int);
+  public net.minecraft.network.chat.MutableComponent withColor(net.minecraft.network.chat.TextColor);
+  public net.minecraft.network.chat.MutableComponent withoutShadow();
+  public net.minecraft.util.FormattedCharSequence getVisualOrderText();
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+}

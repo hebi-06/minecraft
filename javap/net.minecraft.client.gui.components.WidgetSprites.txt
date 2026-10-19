@@ -1,0 +1,19 @@
+Compiled from "WidgetSprites.java"
+public final class net.minecraft.client.gui.components.WidgetSprites extends java.lang.Record {
+  private final net.minecraft.resources.Identifier enabled;
+  private final net.minecraft.resources.Identifier disabled;
+  private final net.minecraft.resources.Identifier enabledFocused;
+  private final net.minecraft.resources.Identifier disabledFocused;
+  public net.minecraft.client.gui.components.WidgetSprites(net.minecraft.resources.Identifier);
+  public net.minecraft.client.gui.components.WidgetSprites(net.minecraft.resources.Identifier, net.minecraft.resources.Identifier);
+  public net.minecraft.client.gui.components.WidgetSprites(net.minecraft.resources.Identifier, net.minecraft.resources.Identifier, net.minecraft.resources.Identifier);
+  public net.minecraft.client.gui.components.WidgetSprites(net.minecraft.resources.Identifier, net.minecraft.resources.Identifier, net.minecraft.resources.Identifier, net.minecraft.resources.Identifier);
+  public net.minecraft.resources.Identifier get(boolean, boolean);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.resources.Identifier enabled();
+  public net.minecraft.resources.Identifier disabled();
+  public net.minecraft.resources.Identifier enabledFocused();
+  public net.minecraft.resources.Identifier disabledFocused();
+}

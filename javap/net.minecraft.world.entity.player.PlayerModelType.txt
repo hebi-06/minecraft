@@ -1,0 +1,21 @@
+Compiled from "PlayerModelType.java"
+public final class net.minecraft.world.entity.player.PlayerModelType extends java.lang.Enum<net.minecraft.world.entity.player.PlayerModelType> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.entity.player.PlayerModelType SLIM;
+  public static final net.minecraft.world.entity.player.PlayerModelType WIDE;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.entity.player.PlayerModelType> CODEC;
+  private static final java.util.function.Function<java.lang.String, net.minecraft.world.entity.player.PlayerModelType> NAME_LOOKUP;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.entity.player.PlayerModelType> STREAM_CODEC;
+  private final java.lang.String id;
+  private final java.lang.String legacyServicesId;
+  private static final net.minecraft.world.entity.player.PlayerModelType[] $VALUES;
+  public static net.minecraft.world.entity.player.PlayerModelType[] values();
+  public static net.minecraft.world.entity.player.PlayerModelType valueOf(java.lang.String);
+  private net.minecraft.world.entity.player.PlayerModelType(java.lang.String, java.lang.String);
+  public static net.minecraft.world.entity.player.PlayerModelType byLegacyServicesName(java.lang.String);
+  public java.lang.String getSerializedName();
+  private static net.minecraft.world.entity.player.PlayerModelType[] $values();
+  private static java.lang.Boolean lambda$static$2(net.minecraft.world.entity.player.PlayerModelType);
+  private static net.minecraft.world.entity.player.PlayerModelType lambda$static$1(java.lang.Boolean);
+  private static java.lang.String lambda$static$0(net.minecraft.world.entity.player.PlayerModelType);
+  static {};
+}

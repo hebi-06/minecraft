@@ -1,0 +1,4 @@
+Compiled from "ScreenEvents.java"
+public interface net.fabricmc.fabric.api.client.screen.v1.ScreenEvents$Remove {
+  public abstract void onRemove(net.minecraft.client.gui.screens.Screen);
+}

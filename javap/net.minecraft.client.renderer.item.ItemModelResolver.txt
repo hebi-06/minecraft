@@ -1,0 +1,13 @@
+Compiled from "ItemModelResolver.java"
+public class net.minecraft.client.renderer.item.ItemModelResolver {
+  private final net.minecraft.client.resources.model.ModelManager modelManager;
+  public net.minecraft.client.renderer.item.ItemModelResolver(net.minecraft.client.resources.model.ModelManager);
+  private net.minecraft.client.renderer.item.ClientItem$Properties getItemProperties(net.minecraft.resources.Identifier);
+  private net.minecraft.client.renderer.item.ItemModel getItemModel(net.minecraft.resources.Identifier);
+  public void updateForLiving(net.minecraft.client.renderer.item.ItemStackRenderState, net.minecraft.world.item.ItemStack, net.minecraft.world.item.ItemDisplayContext, net.minecraft.world.entity.LivingEntity);
+  public void updateForNonLiving(net.minecraft.client.renderer.item.ItemStackRenderState, net.minecraft.world.item.ItemStack, net.minecraft.world.item.ItemDisplayContext, net.minecraft.world.entity.Entity);
+  public void updateForTopItem(net.minecraft.client.renderer.item.ItemStackRenderState, net.minecraft.world.item.ItemStack, net.minecraft.world.item.ItemDisplayContext, net.minecraft.world.level.Level, net.minecraft.world.entity.ItemOwner, int);
+  public void appendItemLayers(net.minecraft.client.renderer.item.ItemStackRenderState, net.minecraft.world.item.ItemStack, net.minecraft.world.item.ItemDisplayContext, net.minecraft.world.level.Level, net.minecraft.world.entity.ItemOwner, int);
+  public boolean shouldPlaySwapAnimation(net.minecraft.world.item.ItemStack);
+  public float swapAnimationScale(net.minecraft.world.item.ItemStack);
+}

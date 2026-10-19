@@ -1,0 +1,28 @@
+Compiled from "ItemTransforms.java"
+public final class net.minecraft.client.resources.model.cuboid.ItemTransforms extends java.lang.Record {
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform thirdPersonLeftHand;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform thirdPersonRightHand;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform firstPersonLeftHand;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform firstPersonRightHand;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform head;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform gui;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform ground;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform fixed;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransform fixedFromBottom;
+  public static final net.minecraft.client.resources.model.cuboid.ItemTransforms NO_TRANSFORMS;
+  public net.minecraft.client.resources.model.cuboid.ItemTransforms(net.minecraft.client.resources.model.cuboid.ItemTransform, net.minecraft.client.resources.model.cuboid.ItemTransform, net.minecraft.client.resources.model.cuboid.ItemTransform, net.minecraft.client.resources.model.cuboid.ItemTransform, net.minecraft.client.resources.model.cuboid.ItemTransform, net.minecraft.client.resources.model.cuboid.ItemTransform, net.minecraft.client.resources.model.cuboid.ItemTransform, net.minecraft.client.resources.model.cuboid.ItemTransform, net.minecraft.client.resources.model.cuboid.ItemTransform);
+  public net.minecraft.client.resources.model.cuboid.ItemTransform getTransform(net.minecraft.world.item.ItemDisplayContext);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.client.resources.model.cuboid.ItemTransform thirdPersonLeftHand();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform thirdPersonRightHand();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform firstPersonLeftHand();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform firstPersonRightHand();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform head();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform gui();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform ground();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform fixed();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform fixedFromBottom();
+  static {};
+}

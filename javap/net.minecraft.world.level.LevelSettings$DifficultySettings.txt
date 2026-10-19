@@ -1,0 +1,17 @@
+Compiled from "LevelSettings.java"
+public final class net.minecraft.world.level.LevelSettings$DifficultySettings extends java.lang.Record {
+  private final net.minecraft.world.Difficulty difficulty;
+  private final boolean hardcore;
+  private final boolean locked;
+  public static final net.minecraft.world.level.LevelSettings$DifficultySettings DEFAULT;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.level.LevelSettings$DifficultySettings> CODEC;
+  public net.minecraft.world.level.LevelSettings$DifficultySettings(net.minecraft.world.Difficulty, boolean, boolean);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.world.Difficulty difficulty();
+  public boolean hardcore();
+  public boolean locked();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

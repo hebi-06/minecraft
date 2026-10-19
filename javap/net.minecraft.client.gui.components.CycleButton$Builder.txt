@@ -1,0 +1,27 @@
+Compiled from "CycleButton.java"
+public class net.minecraft.client.gui.components.CycleButton$Builder<T> {
+  private final java.util.function.Supplier<T> defaultValueSupplier;
+  private final java.util.function.Function<T, net.minecraft.network.chat.Component> valueStringifier;
+  private net.minecraft.client.OptionInstance$TooltipSupplier<T> tooltipSupplier;
+  private net.minecraft.client.gui.components.CycleButton$SpriteSupplier<T> spriteSupplier;
+  private java.util.function.Function<net.minecraft.client.gui.components.CycleButton<T>, net.minecraft.network.chat.MutableComponent> narrationProvider;
+  private net.minecraft.client.gui.components.CycleButton$ValueListSupplier<T> values;
+  private net.minecraft.client.gui.components.CycleButton$DisplayState displayState;
+  public net.minecraft.client.gui.components.CycleButton$Builder(java.util.function.Function<T, net.minecraft.network.chat.Component>, java.util.function.Supplier<T>);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> withValues(java.util.Collection<T>);
+  public final net.minecraft.client.gui.components.CycleButton$Builder<T> withValues(T...);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> withValues(java.util.List<T>, java.util.List<T>);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> withValues(java.util.function.BooleanSupplier, java.util.List<T>, java.util.List<T>);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> withValues(net.minecraft.client.gui.components.CycleButton$ValueListSupplier<T>);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> withTooltip(net.minecraft.client.OptionInstance$TooltipSupplier<T>);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> withCustomNarration(java.util.function.Function<net.minecraft.client.gui.components.CycleButton<T>, net.minecraft.network.chat.MutableComponent>);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> withSprite(net.minecraft.client.gui.components.CycleButton$SpriteSupplier<T>);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> displayState(net.minecraft.client.gui.components.CycleButton$DisplayState);
+  public net.minecraft.client.gui.components.CycleButton$Builder<T> displayOnlyValue();
+  public net.minecraft.client.gui.components.CycleButton<T> create(net.minecraft.network.chat.Component, net.minecraft.client.gui.components.CycleButton$OnValueChange<T>);
+  public net.minecraft.client.gui.components.CycleButton<T> create(int, int, int, int, net.minecraft.network.chat.Component);
+  public net.minecraft.client.gui.components.CycleButton<T> create(int, int, int, int, net.minecraft.network.chat.Component, net.minecraft.client.gui.components.CycleButton$OnValueChange<T>);
+  private static void lambda$create$0(net.minecraft.client.gui.components.CycleButton, java.lang.Object);
+  private static net.minecraft.resources.Identifier lambda$new$1(net.minecraft.client.gui.components.CycleButton, java.lang.Object);
+  private static net.minecraft.client.gui.components.Tooltip lambda$new$0(java.lang.Object);
+}

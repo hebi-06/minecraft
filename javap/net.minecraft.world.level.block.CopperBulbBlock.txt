@@ -1,0 +1,13 @@
+Compiled from "CopperBulbBlock.java"
+public class net.minecraft.world.level.block.CopperBulbBlock extends net.minecraft.world.level.block.Block {
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty POWERED;
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty LIT;
+  public net.minecraft.world.level.block.CopperBulbBlock(net.minecraft.world.level.block.state.BlockBehaviour$Properties);
+  protected void onPlace(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, boolean);
+  protected void neighborChanged(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.world.level.block.Block, net.minecraft.world.level.redstone.Orientation, boolean);
+  public void checkAndFlip(net.minecraft.world.level.block.state.BlockState, net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos);
+  protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition$Builder<net.minecraft.world.level.block.Block, net.minecraft.world.level.block.state.BlockState>);
+  protected boolean hasAnalogOutputSignal(net.minecraft.world.level.block.state.BlockState);
+  protected int getAnalogOutputSignal(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.core.Direction);
+  static {};
+}

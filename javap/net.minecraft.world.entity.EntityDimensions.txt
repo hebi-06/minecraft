@@ -1,0 +1,27 @@
+Compiled from "EntityDimensions.java"
+public final class net.minecraft.world.entity.EntityDimensions extends java.lang.Record {
+  private final float width;
+  private final float height;
+  private final float eyeHeight;
+  private final net.minecraft.world.entity.EntityAttachments attachments;
+  private final boolean fixed;
+  private net.minecraft.world.entity.EntityDimensions(float, float, boolean);
+  public net.minecraft.world.entity.EntityDimensions(float, float, float, net.minecraft.world.entity.EntityAttachments, boolean);
+  private static float defaultEyeHeight(float);
+  public net.minecraft.world.phys.AABB makeBoundingBox(net.minecraft.world.phys.Vec3);
+  public net.minecraft.world.phys.AABB makeBoundingBox(double, double, double);
+  public net.minecraft.world.entity.EntityDimensions scale(float);
+  public net.minecraft.world.entity.EntityDimensions scale(float, float);
+  public static net.minecraft.world.entity.EntityDimensions scalable(float, float);
+  public static net.minecraft.world.entity.EntityDimensions fixed(float, float);
+  public net.minecraft.world.entity.EntityDimensions withEyeHeight(float);
+  public net.minecraft.world.entity.EntityDimensions withAttachments(net.minecraft.world.entity.EntityAttachments$Builder);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public float width();
+  public float height();
+  public float eyeHeight();
+  public net.minecraft.world.entity.EntityAttachments attachments();
+  public boolean fixed();
+}

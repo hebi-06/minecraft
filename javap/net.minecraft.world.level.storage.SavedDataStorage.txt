@@ -1,0 +1,35 @@
+Compiled from "SavedDataStorage.java"
+public class net.minecraft.world.level.storage.SavedDataStorage implements java.lang.AutoCloseable {
+  private static final org.slf4j.Logger LOGGER;
+  private final java.util.Map<net.minecraft.world.level.saveddata.SavedDataType<?>, java.util.Optional<net.minecraft.world.level.saveddata.SavedData>> cache;
+  private final com.mojang.datafixers.DataFixer fixerUpper;
+  private final net.minecraft.core.HolderLookup$Provider registries;
+  private final java.nio.file.Path dataFolder;
+  private java.util.concurrent.CompletableFuture<?> pendingWriteFuture;
+  private boolean closed;
+  public net.minecraft.world.level.storage.SavedDataStorage(java.nio.file.Path, com.mojang.datafixers.DataFixer, net.minecraft.core.HolderLookup$Provider);
+  private java.nio.file.Path getDataFile(net.minecraft.resources.Identifier);
+  public <T extends net.minecraft.world.level.saveddata.SavedData> T computeIfAbsent(net.minecraft.world.level.saveddata.SavedDataType<T>);
+  public <T extends net.minecraft.world.level.saveddata.SavedData> T get(net.minecraft.world.level.saveddata.SavedDataType<T>);
+  private <T extends net.minecraft.world.level.saveddata.SavedData> T readSavedData(net.minecraft.world.level.saveddata.SavedDataType<T>);
+  public <T extends net.minecraft.world.level.saveddata.SavedData> void set(net.minecraft.world.level.saveddata.SavedDataType<T>, T);
+  public net.minecraft.nbt.CompoundTag readTagFromDisk(java.nio.file.Path, net.minecraft.util.datafix.DataFixTypes, int) throws java.io.IOException;
+  private boolean isGzip(java.io.PushbackInputStream) throws java.io.IOException;
+  public java.util.concurrent.CompletableFuture<?> scheduleSave();
+  private java.util.Map<net.minecraft.world.level.saveddata.SavedDataType<?>, net.minecraft.nbt.CompoundTag> collectDirtyTagsToSave();
+  private <T extends net.minecraft.world.level.saveddata.SavedData> net.minecraft.nbt.CompoundTag encodeUnchecked(net.minecraft.world.level.saveddata.SavedDataType<T>, net.minecraft.world.level.saveddata.SavedData, net.minecraft.resources.RegistryOps<net.minecraft.nbt.Tag>);
+  private void tryWrite(net.minecraft.world.level.saveddata.SavedDataType<?>, net.minecraft.nbt.CompoundTag);
+  public void saveAndJoin();
+  public void close();
+  private void lambda$collectDirtyTagsToSave$0(java.util.Map, net.minecraft.resources.RegistryOps, net.minecraft.world.level.saveddata.SavedDataType, java.util.Optional);
+  private void lambda$collectDirtyTagsToSave$1(java.util.Map, net.minecraft.world.level.saveddata.SavedDataType, net.minecraft.resources.RegistryOps, net.minecraft.world.level.saveddata.SavedData);
+  private java.util.concurrent.CompletionStage lambda$scheduleSave$3(java.util.Map, java.lang.Object);
+  private static java.util.concurrent.CompletableFuture[] lambda$scheduleSave$6(int);
+  private java.util.concurrent.CompletableFuture lambda$scheduleSave$4(java.util.Map$Entry);
+  private void lambda$scheduleSave$5(java.util.Map$Entry);
+  private java.util.concurrent.CompletionStage lambda$scheduleSave$0(int, int, java.util.Map, java.lang.Object);
+  private static java.util.concurrent.CompletableFuture[] lambda$scheduleSave$2(int);
+  private void lambda$scheduleSave$1(java.util.List);
+  private static void lambda$readSavedData$0(net.minecraft.world.level.saveddata.SavedDataType, java.lang.String);
+  static {};
+}

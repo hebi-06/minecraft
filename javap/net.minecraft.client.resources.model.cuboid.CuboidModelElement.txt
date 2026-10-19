@@ -1,0 +1,23 @@
+Compiled from "CuboidModelElement.java"
+public final class net.minecraft.client.resources.model.cuboid.CuboidModelElement extends java.lang.Record {
+  private final org.joml.Vector3fc from;
+  private final org.joml.Vector3fc to;
+  private final java.util.Map<net.minecraft.core.Direction, net.minecraft.client.resources.model.cuboid.CuboidFace> faces;
+  private final net.minecraft.client.resources.model.cuboid.CuboidRotation rotation;
+  private final net.minecraft.core.Direction shadeDirectionOverride;
+  private final int lightEmission;
+  private static final boolean DEFAULT_RESCALE = false;
+  private static final float MIN_EXTENT = -16.0f;
+  private static final float MAX_EXTENT = 32.0f;
+  public net.minecraft.client.resources.model.cuboid.CuboidModelElement(org.joml.Vector3fc, org.joml.Vector3fc, java.util.Map<net.minecraft.core.Direction, net.minecraft.client.resources.model.cuboid.CuboidFace>);
+  public net.minecraft.client.resources.model.cuboid.CuboidModelElement(org.joml.Vector3fc, org.joml.Vector3fc, java.util.Map<net.minecraft.core.Direction, net.minecraft.client.resources.model.cuboid.CuboidFace>, net.minecraft.client.resources.model.cuboid.CuboidRotation, net.minecraft.core.Direction, int);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public org.joml.Vector3fc from();
+  public org.joml.Vector3fc to();
+  public java.util.Map<net.minecraft.core.Direction, net.minecraft.client.resources.model.cuboid.CuboidFace> faces();
+  public net.minecraft.client.resources.model.cuboid.CuboidRotation rotation();
+  public net.minecraft.core.Direction shadeDirectionOverride();
+  public int lightEmission();
+}

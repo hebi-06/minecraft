@@ -1,0 +1,17 @@
+Compiled from "WorldCreationUiState.java"
+public final class net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode extends java.lang.Enum<net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode> {
+  public static final net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode SURVIVAL;
+  public static final net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode HARDCORE;
+  public static final net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode CREATIVE;
+  public static final net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode DEBUG;
+  public final net.minecraft.world.level.GameType gameType;
+  public final net.minecraft.network.chat.Component displayName;
+  private final net.minecraft.network.chat.Component info;
+  private static final net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode[] $VALUES;
+  public static net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode[] values();
+  public static net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode valueOf(java.lang.String);
+  private net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode(java.lang.String, net.minecraft.world.level.GameType);
+  public net.minecraft.network.chat.Component getInfo();
+  private static net.minecraft.client.gui.screens.worldselection.WorldCreationUiState$SelectedGameMode[] $values();
+  static {};
+}

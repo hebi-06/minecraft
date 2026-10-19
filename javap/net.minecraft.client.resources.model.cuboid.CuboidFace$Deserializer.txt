@@ -1,0 +1,13 @@
+Compiled from "CuboidFace.java"
+public class net.minecraft.client.resources.model.cuboid.CuboidFace$Deserializer implements com.google.gson.JsonDeserializer<net.minecraft.client.resources.model.cuboid.CuboidFace> {
+  private static final int DEFAULT_TINT_INDEX = -1;
+  private static final int DEFAULT_ROTATION = 0;
+  protected net.minecraft.client.resources.model.cuboid.CuboidFace$Deserializer();
+  public net.minecraft.client.resources.model.cuboid.CuboidFace deserialize(com.google.gson.JsonElement, java.lang.reflect.Type, com.google.gson.JsonDeserializationContext) throws com.google.gson.JsonParseException;
+  private static int getTintIndex(com.google.gson.JsonObject);
+  private static java.lang.String getTexture(com.google.gson.JsonObject);
+  private static net.minecraft.core.Direction getCullFacing(com.google.gson.JsonObject);
+  private static com.mojang.math.Quadrant getRotation(com.google.gson.JsonObject);
+  private static net.minecraft.client.resources.model.cuboid.CuboidFace$UVs getUVs(com.google.gson.JsonObject);
+  public java.lang.Object deserialize(com.google.gson.JsonElement, java.lang.reflect.Type, com.google.gson.JsonDeserializationContext) throws com.google.gson.JsonParseException;
+}

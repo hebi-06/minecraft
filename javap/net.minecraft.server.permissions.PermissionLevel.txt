@@ -1,0 +1,25 @@
+Compiled from "PermissionLevel.java"
+public final class net.minecraft.server.permissions.PermissionLevel extends java.lang.Enum<net.minecraft.server.permissions.PermissionLevel> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.server.permissions.PermissionLevel ALL;
+  public static final net.minecraft.server.permissions.PermissionLevel MODERATORS;
+  public static final net.minecraft.server.permissions.PermissionLevel GAMEMASTERS;
+  public static final net.minecraft.server.permissions.PermissionLevel ADMINS;
+  public static final net.minecraft.server.permissions.PermissionLevel OWNERS;
+  public static final com.mojang.serialization.Codec<net.minecraft.server.permissions.PermissionLevel> CODEC;
+  private static final java.util.function.IntFunction<net.minecraft.server.permissions.PermissionLevel> BY_ID;
+  public static final com.mojang.serialization.Codec<net.minecraft.server.permissions.PermissionLevel> INT_CODEC;
+  private final java.lang.String name;
+  private final int id;
+  private static final net.minecraft.server.permissions.PermissionLevel[] $VALUES;
+  public static net.minecraft.server.permissions.PermissionLevel[] values();
+  public static net.minecraft.server.permissions.PermissionLevel valueOf(java.lang.String);
+  private net.minecraft.server.permissions.PermissionLevel(java.lang.String, int);
+  public boolean isEqualOrHigherThan(net.minecraft.server.permissions.PermissionLevel);
+  public static net.minecraft.server.permissions.PermissionLevel byId(int);
+  public int id();
+  public java.lang.String getSerializedName();
+  private static net.minecraft.server.permissions.PermissionLevel[] $values();
+  private static java.lang.Integer lambda$static$1(net.minecraft.server.permissions.PermissionLevel);
+  private static int lambda$static$0(net.minecraft.server.permissions.PermissionLevel);
+  static {};
+}

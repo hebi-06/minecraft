@@ -1,0 +1,29 @@
+Compiled from "NeutralMob.java"
+public interface net.minecraft.world.entity.NeutralMob {
+  public static final java.lang.String TAG_ANGER_END_TIME = "anger_end_time";
+  public static final java.lang.String TAG_ANGRY_AT = "angry_at";
+  public static final long NO_ANGER_END_TIME = -1l;
+  public abstract long getPersistentAngerEndTime();
+  public default void setTimeToRemainAngry(long);
+  public abstract void setPersistentAngerEndTime(long);
+  public abstract net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.LivingEntity> getPersistentAngerTarget();
+  public abstract void setPersistentAngerTarget(net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.LivingEntity>);
+  public abstract void startPersistentAngerTimer();
+  public abstract net.minecraft.world.level.Level level();
+  public default void addPersistentAngerSaveData(net.minecraft.world.level.storage.ValueOutput);
+  public default void readPersistentAngerSaveData(net.minecraft.world.level.Level, net.minecraft.world.level.storage.ValueInput);
+  public default void updatePersistentAnger(net.minecraft.server.level.ServerLevel, boolean);
+  private static boolean isValidPlayerTarget(net.minecraft.world.entity.LivingEntity);
+  public default boolean isAngryAt(net.minecraft.world.entity.LivingEntity, net.minecraft.server.level.ServerLevel);
+  public default boolean isAngryAtAllPlayers(net.minecraft.server.level.ServerLevel);
+  public default boolean isAngry();
+  public default void playerDied(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.player.Player);
+  public default void forgetCurrentTargetAndRefreshUniversalAnger();
+  public default void stopBeingAngry();
+  public abstract net.minecraft.world.entity.LivingEntity getLastHurtByMob();
+  public abstract void setLastHurtByMob(net.minecraft.world.entity.LivingEntity);
+  public abstract void setTarget(net.minecraft.world.entity.LivingEntity);
+  public abstract boolean canAttack(net.minecraft.world.entity.LivingEntity);
+  public abstract net.minecraft.world.entity.LivingEntity getTarget();
+  public abstract net.minecraft.world.entity.LivingEntity getTargetUnchecked();
+}

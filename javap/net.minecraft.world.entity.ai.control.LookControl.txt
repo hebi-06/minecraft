@@ -1,0 +1,27 @@
+Compiled from "LookControl.java"
+public class net.minecraft.world.entity.ai.control.LookControl implements net.minecraft.world.entity.ai.control.Control {
+  protected final net.minecraft.world.entity.Mob mob;
+  protected float yMaxRotSpeed;
+  protected float xMaxRotAngle;
+  protected int lookAtCooldown;
+  protected double wantedX;
+  protected double wantedY;
+  protected double wantedZ;
+  public net.minecraft.world.entity.ai.control.LookControl(net.minecraft.world.entity.Mob);
+  public void setLookAt(net.minecraft.world.phys.Vec3);
+  public void setLookAt(net.minecraft.world.entity.Entity);
+  public void setLookAt(net.minecraft.world.entity.Entity, float, float);
+  public void setLookAt(double, double, double);
+  public void setLookAt(double, double, double, float, float);
+  public void tick();
+  protected void clampHeadRotationToBody();
+  protected boolean resetXRotOnTick();
+  public boolean isLookingAtTarget();
+  public double getWantedX();
+  public double getWantedY();
+  public double getWantedZ();
+  protected java.util.Optional<java.lang.Float> getXRotD();
+  protected java.util.Optional<java.lang.Float> getYRotD();
+  private void lambda$tick$1(java.lang.Float);
+  private void lambda$tick$0(java.lang.Float);
+}

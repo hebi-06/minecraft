@@ -1,0 +1,30 @@
+Compiled from "GuiEntityRenderState.java"
+public final class net.minecraft.client.renderer.state.gui.pip.GuiEntityRenderState extends java.lang.Record implements net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState {
+  private final net.minecraft.client.renderer.entity.state.EntityRenderState renderState;
+  private final org.joml.Vector3fc translation;
+  private final org.joml.Quaternionfc rotation;
+  private final org.joml.Quaternionfc overrideCameraAngle;
+  private final int x0;
+  private final int y0;
+  private final int x1;
+  private final int y1;
+  private final float scale;
+  private final net.minecraft.client.gui.navigation.ScreenRectangle scissorArea;
+  private final net.minecraft.client.gui.navigation.ScreenRectangle bounds;
+  public net.minecraft.client.renderer.state.gui.pip.GuiEntityRenderState(net.minecraft.client.renderer.entity.state.EntityRenderState, org.joml.Vector3fc, org.joml.Quaternionfc, org.joml.Quaternionfc, int, int, int, int, float, net.minecraft.client.gui.navigation.ScreenRectangle);
+  public net.minecraft.client.renderer.state.gui.pip.GuiEntityRenderState(net.minecraft.client.renderer.entity.state.EntityRenderState, org.joml.Vector3fc, org.joml.Quaternionfc, org.joml.Quaternionfc, int, int, int, int, float, net.minecraft.client.gui.navigation.ScreenRectangle, net.minecraft.client.gui.navigation.ScreenRectangle);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.client.renderer.entity.state.EntityRenderState renderState();
+  public org.joml.Vector3fc translation();
+  public org.joml.Quaternionfc rotation();
+  public org.joml.Quaternionfc overrideCameraAngle();
+  public int x0();
+  public int y0();
+  public int x1();
+  public int y1();
+  public float scale();
+  public net.minecraft.client.gui.navigation.ScreenRectangle scissorArea();
+  public net.minecraft.client.gui.navigation.ScreenRectangle bounds();
+}

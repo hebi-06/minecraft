@@ -1,0 +1,9 @@
+Compiled from "RenderStateDataKey.java"
+public final class net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<T> {
+  private final java.util.function.Supplier<java.lang.String> name;
+  private net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey(java.util.function.Supplier<java.lang.String>);
+  public static <T> net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<T> create(java.util.function.Supplier<java.lang.String>);
+  public static <T> net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey<T> create();
+  public java.lang.String toString();
+  private static java.lang.String lambda$create$0();
+}

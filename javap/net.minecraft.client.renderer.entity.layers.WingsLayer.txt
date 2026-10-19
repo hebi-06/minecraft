@@ -1,0 +1,10 @@
+Compiled from "WingsLayer.java"
+public class net.minecraft.client.renderer.entity.layers.WingsLayer<S extends net.minecraft.client.renderer.entity.state.HumanoidRenderState, M extends net.minecraft.client.model.EntityModel<S>> extends net.minecraft.client.renderer.entity.layers.RenderLayer<S, M> {
+  private final net.minecraft.client.model.object.equipment.ElytraModel elytraModel;
+  private final net.minecraft.client.model.object.equipment.ElytraModel elytraBabyModel;
+  private final net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer equipmentRenderer;
+  public net.minecraft.client.renderer.entity.layers.WingsLayer(net.minecraft.client.renderer.entity.RenderLayerParent<S, M>, net.minecraft.client.model.geom.EntityModelSet, net.minecraft.client.renderer.entity.layers.EquipmentLayerRenderer);
+  public void submit(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, S, float, float);
+  private static net.minecraft.resources.Identifier getPlayerElytraTexture(net.minecraft.client.renderer.entity.state.HumanoidRenderState);
+  public void submit(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.client.renderer.SubmitNodeCollector, int, net.minecraft.client.renderer.entity.state.EntityRenderState, float, float);
+}

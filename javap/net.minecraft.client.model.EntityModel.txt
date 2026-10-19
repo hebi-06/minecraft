@@ -1,0 +1,6 @@
+Compiled from "EntityModel.java"
+public abstract class net.minecraft.client.model.EntityModel<T extends net.minecraft.client.renderer.entity.state.EntityRenderState> extends net.minecraft.client.model.Model<T> {
+  public static final float MODEL_Y_OFFSET = -1.501f;
+  protected net.minecraft.client.model.EntityModel(net.minecraft.client.model.geom.ModelPart);
+  protected net.minecraft.client.model.EntityModel(net.minecraft.client.model.geom.ModelPart, java.util.function.Function<net.minecraft.resources.Identifier, net.minecraft.client.renderer.rendertype.RenderType>);
+}

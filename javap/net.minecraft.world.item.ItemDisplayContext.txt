@@ -1,0 +1,27 @@
+Compiled from "ItemDisplayContext.java"
+public final class net.minecraft.world.item.ItemDisplayContext extends java.lang.Enum<net.minecraft.world.item.ItemDisplayContext> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.item.ItemDisplayContext NONE;
+  public static final net.minecraft.world.item.ItemDisplayContext THIRD_PERSON_LEFT_HAND;
+  public static final net.minecraft.world.item.ItemDisplayContext THIRD_PERSON_RIGHT_HAND;
+  public static final net.minecraft.world.item.ItemDisplayContext FIRST_PERSON_LEFT_HAND;
+  public static final net.minecraft.world.item.ItemDisplayContext FIRST_PERSON_RIGHT_HAND;
+  public static final net.minecraft.world.item.ItemDisplayContext HEAD;
+  public static final net.minecraft.world.item.ItemDisplayContext GUI;
+  public static final net.minecraft.world.item.ItemDisplayContext GROUND;
+  public static final net.minecraft.world.item.ItemDisplayContext FIXED;
+  public static final net.minecraft.world.item.ItemDisplayContext ON_SHELF;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.item.ItemDisplayContext> CODEC;
+  public static final java.util.function.IntFunction<net.minecraft.world.item.ItemDisplayContext> BY_ID;
+  private final byte id;
+  private final java.lang.String name;
+  private static final net.minecraft.world.item.ItemDisplayContext[] $VALUES;
+  public static net.minecraft.world.item.ItemDisplayContext[] values();
+  public static net.minecraft.world.item.ItemDisplayContext valueOf(java.lang.String);
+  private net.minecraft.world.item.ItemDisplayContext(int, java.lang.String);
+  public java.lang.String getSerializedName();
+  public byte getId();
+  public boolean firstPerson();
+  public boolean leftHand();
+  private static net.minecraft.world.item.ItemDisplayContext[] $values();
+  static {};
+}

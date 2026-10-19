@@ -1,0 +1,27 @@
+Compiled from "Container.java"
+public interface net.minecraft.world.Container extends net.minecraft.world.Clearable, java.lang.Iterable<net.minecraft.world.item.ItemStack>, net.minecraft.world.entity.SlotProvider {
+  public static final float DEFAULT_DISTANCE_BUFFER = 4.0f;
+  public abstract int getContainerSize();
+  public abstract boolean isEmpty();
+  public abstract net.minecraft.world.item.ItemStack getItem(int);
+  public abstract net.minecraft.world.item.ItemStack removeItem(int, int);
+  public abstract net.minecraft.world.item.ItemStack removeItemNoUpdate(int);
+  public abstract void setItem(int, net.minecraft.world.item.ItemStack);
+  public default int getMaxStackSize();
+  public default int getMaxStackSize(net.minecraft.world.item.ItemStack);
+  public abstract void setChanged();
+  public abstract boolean stillValid(net.minecraft.world.entity.player.Player);
+  public default void startOpen(net.minecraft.world.entity.ContainerUser);
+  public default void stopOpen(net.minecraft.world.entity.ContainerUser);
+  public default java.util.List<net.minecraft.world.entity.ContainerUser> getEntitiesWithContainerOpen();
+  public default boolean canPlaceItem(int, net.minecraft.world.item.ItemStack);
+  public default boolean canTakeItem(net.minecraft.world.Container, int, net.minecraft.world.item.ItemStack);
+  public default int countItem(net.minecraft.world.item.Item);
+  public default boolean hasAnyOf(java.util.Set<net.minecraft.world.item.Item>);
+  public default boolean hasAnyMatching(java.util.function.Predicate<net.minecraft.world.item.ItemStack>);
+  public static boolean stillValidBlockEntity(net.minecraft.world.level.block.entity.BlockEntity, net.minecraft.world.entity.player.Player);
+  public static boolean stillValidBlockEntity(net.minecraft.world.level.block.entity.BlockEntity, net.minecraft.world.entity.player.Player, float);
+  public default net.minecraft.world.entity.SlotAccess getSlot(int);
+  public default java.util.Iterator<net.minecraft.world.item.ItemStack> iterator();
+  private static boolean lambda$hasAnyOf$0(java.util.Set, net.minecraft.world.item.ItemStack);
+}

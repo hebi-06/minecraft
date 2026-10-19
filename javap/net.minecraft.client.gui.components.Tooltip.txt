@@ -1,0 +1,19 @@
+Compiled from "Tooltip.java"
+public class net.minecraft.client.gui.components.Tooltip implements net.minecraft.client.gui.narration.NarrationSupplier {
+  private static final int MAX_WIDTH = 170;
+  private final net.minecraft.network.chat.Component message;
+  private java.util.List<net.minecraft.util.FormattedCharSequence> cachedTooltip;
+  private net.minecraft.locale.Language splitWithLanguage;
+  private final net.minecraft.resources.Identifier style;
+  private final net.minecraft.network.chat.Component narration;
+  private final java.util.Optional<net.minecraft.world.inventory.tooltip.TooltipComponent> component;
+  private net.minecraft.client.gui.components.Tooltip(net.minecraft.network.chat.Component, net.minecraft.network.chat.Component, java.util.Optional<net.minecraft.world.inventory.tooltip.TooltipComponent>, net.minecraft.resources.Identifier);
+  public static net.minecraft.client.gui.components.Tooltip create(net.minecraft.network.chat.Component);
+  public static net.minecraft.client.gui.components.Tooltip create(net.minecraft.network.chat.Component, net.minecraft.network.chat.Component);
+  public static net.minecraft.client.gui.components.Tooltip create(net.minecraft.network.chat.Component, java.util.Optional<net.minecraft.world.inventory.tooltip.TooltipComponent>, net.minecraft.resources.Identifier);
+  public java.util.Optional<net.minecraft.world.inventory.tooltip.TooltipComponent> component();
+  public net.minecraft.resources.Identifier style();
+  public void updateNarration(net.minecraft.client.gui.narration.NarrationElementOutput);
+  public java.util.List<net.minecraft.util.FormattedCharSequence> toCharSequence(net.minecraft.client.Minecraft);
+  public static java.util.List<net.minecraft.util.FormattedCharSequence> splitTooltip(net.minecraft.client.Minecraft, net.minecraft.network.chat.Component);
+}

@@ -1,0 +1,6 @@
+Compiled from "ContainerUser.java"
+public interface net.minecraft.world.entity.ContainerUser {
+  public abstract boolean hasContainerOpen(net.minecraft.world.level.block.entity.ContainerOpenersCounter, net.minecraft.core.BlockPos);
+  public abstract double getContainerInteractionRange();
+  public default net.minecraft.world.entity.LivingEntity getLivingEntity();
+}

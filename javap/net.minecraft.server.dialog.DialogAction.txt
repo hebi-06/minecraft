@@ -1,0 +1,21 @@
+Compiled from "DialogAction.java"
+public final class net.minecraft.server.dialog.DialogAction extends java.lang.Enum<net.minecraft.server.dialog.DialogAction> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.server.dialog.DialogAction CLOSE;
+  public static final net.minecraft.server.dialog.DialogAction NONE;
+  public static final net.minecraft.server.dialog.DialogAction WAIT_FOR_RESPONSE;
+  public static final java.util.function.IntFunction<net.minecraft.server.dialog.DialogAction> BY_ID;
+  public static final com.mojang.serialization.Codec<net.minecraft.server.dialog.DialogAction> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.server.dialog.DialogAction> STREAM_CODEC;
+  private final int id;
+  private final java.lang.String name;
+  private static final net.minecraft.server.dialog.DialogAction[] $VALUES;
+  public static net.minecraft.server.dialog.DialogAction[] values();
+  public static net.minecraft.server.dialog.DialogAction valueOf(java.lang.String);
+  private net.minecraft.server.dialog.DialogAction(int, java.lang.String);
+  public java.lang.String getSerializedName();
+  public boolean willUnpause();
+  private static net.minecraft.server.dialog.DialogAction[] $values();
+  private static int lambda$static$1(net.minecraft.server.dialog.DialogAction);
+  private static int lambda$static$0(net.minecraft.server.dialog.DialogAction);
+  static {};
+}

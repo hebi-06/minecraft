@@ -1,0 +1,12 @@
+Compiled from "FogEnvironment.java"
+public abstract class net.minecraft.client.renderer.fog.environment.FogEnvironment {
+  private static final org.joml.Vector3fc WHITE;
+  public net.minecraft.client.renderer.fog.environment.FogEnvironment();
+  public abstract void setupFog(net.minecraft.client.renderer.fog.FogData, net.minecraft.client.Camera, net.minecraft.client.multiplayer.ClientLevel, float, net.minecraft.client.DeltaTracker);
+  public boolean providesColor();
+  public org.joml.Vector3fc getBaseColor(net.minecraft.client.multiplayer.ClientLevel, net.minecraft.client.Camera, int, float);
+  public boolean modifiesDarkness();
+  public float getModifiedDarkness(net.minecraft.world.entity.LivingEntity, float, float);
+  public abstract boolean isApplicable(net.minecraft.world.level.material.FogType, net.minecraft.world.entity.Entity);
+  static {};
+}

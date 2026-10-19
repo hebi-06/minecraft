@@ -1,0 +1,11 @@
+Compiled from "MenuScreens.java"
+public class net.minecraft.client.gui.screens.MenuScreens {
+  private static final org.slf4j.Logger LOGGER;
+  private static final java.util.Map<net.minecraft.world.inventory.MenuType<?>, net.minecraft.client.gui.screens.MenuScreens$ScreenConstructor<?, ?>> SCREENS;
+  public net.minecraft.client.gui.screens.MenuScreens();
+  public static <T extends net.minecraft.world.inventory.AbstractContainerMenu> void create(net.minecraft.world.inventory.MenuType<T>, net.minecraft.client.Minecraft, int, net.minecraft.network.chat.Component);
+  private static <T extends net.minecraft.world.inventory.AbstractContainerMenu> net.minecraft.client.gui.screens.MenuScreens$ScreenConstructor<T, ?> getConstructor(net.minecraft.world.inventory.MenuType<T>);
+  public static <M extends net.minecraft.world.inventory.AbstractContainerMenu, U extends net.minecraft.client.gui.screens.Screen & net.minecraft.client.gui.screens.inventory.MenuAccess<M>> void register(net.minecraft.world.inventory.MenuType<? extends M>, net.minecraft.client.gui.screens.MenuScreens$ScreenConstructor<M, U>);
+  public static boolean selfTest();
+  static {};
+}

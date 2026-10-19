@@ -1,0 +1,17 @@
+Compiled from "ServerEntityEvents.java"
+public final class net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$Load> ENTITY_LOAD;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$AllowLoad> ALLOW_LOAD;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$Unload> ENTITY_UNLOAD;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$EquipmentChange> EQUIPMENT_CHANGE;
+  private net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents();
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$EquipmentChange lambda$static$6(net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$EquipmentChange[]);
+  private static void lambda$static$7(net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$EquipmentChange[], net.minecraft.world.entity.LivingEntity, net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.item.ItemStack, net.minecraft.world.item.ItemStack);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$Unload lambda$static$4(net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$Unload[]);
+  private static void lambda$static$5(net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$Unload[], net.minecraft.world.entity.Entity, net.minecraft.server.level.ServerLevel);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$AllowLoad lambda$static$2(net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$AllowLoad[]);
+  private static boolean lambda$static$3(net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$AllowLoad[], net.minecraft.world.entity.Entity, net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.EntitySpawnReason, boolean);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$Load lambda$static$0(net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$Load[]);
+  private static void lambda$static$1(net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents$Load[], net.minecraft.world.entity.Entity, net.minecraft.server.level.ServerLevel);
+  static {};
+}

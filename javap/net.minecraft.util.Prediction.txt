@@ -1,0 +1,11 @@
+Compiled from "Prediction.java"
+public final class net.minecraft.util.Prediction extends java.lang.Enum<net.minecraft.util.Prediction> {
+  public static final net.minecraft.util.Prediction PREDICTED;
+  public static final net.minecraft.util.Prediction SERVER_ONLY;
+  private static final net.minecraft.util.Prediction[] $VALUES;
+  public static net.minecraft.util.Prediction[] values();
+  public static net.minecraft.util.Prediction valueOf(java.lang.String);
+  private net.minecraft.util.Prediction();
+  private static net.minecraft.util.Prediction[] $values();
+  static {};
+}

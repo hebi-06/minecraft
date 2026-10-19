@@ -1,0 +1,7 @@
+Compiled from "SelectItemModel.java"
+public class net.minecraft.client.renderer.item.SelectItemModel<T> implements net.minecraft.client.renderer.item.ItemModel {
+  private final net.minecraft.client.renderer.item.properties.select.SelectItemModelProperty<T> property;
+  private final net.minecraft.client.renderer.item.SelectItemModel$ModelSelector<T> models;
+  public net.minecraft.client.renderer.item.SelectItemModel(net.minecraft.client.renderer.item.properties.select.SelectItemModelProperty<T>, net.minecraft.client.renderer.item.SelectItemModel$ModelSelector<T>);
+  public void update(net.minecraft.client.renderer.item.ItemStackRenderState, net.minecraft.world.item.ItemStack, net.minecraft.client.renderer.item.ItemModelResolver, net.minecraft.world.item.ItemDisplayContext, net.minecraft.client.multiplayer.ClientLevel, net.minecraft.world.entity.ItemOwner, int);
+}

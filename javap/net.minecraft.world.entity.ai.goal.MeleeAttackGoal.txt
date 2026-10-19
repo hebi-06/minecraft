@@ -1,0 +1,28 @@
+Compiled from "MeleeAttackGoal.java"
+public class net.minecraft.world.entity.ai.goal.MeleeAttackGoal extends net.minecraft.world.entity.ai.goal.Goal {
+  protected final net.minecraft.world.entity.PathfinderMob mob;
+  private final double speedModifier;
+  private final boolean followingTargetEvenIfNotSeen;
+  private net.minecraft.world.level.pathfinder.Path path;
+  private double pathedTargetX;
+  private double pathedTargetY;
+  private double pathedTargetZ;
+  private int ticksUntilNextPathRecalculation;
+  private int ticksUntilNextAttack;
+  private final int attackInterval = 20;
+  private long lastCanUseCheck;
+  private static final long COOLDOWN_BETWEEN_CAN_USE_CHECKS = 20l;
+  public net.minecraft.world.entity.ai.goal.MeleeAttackGoal(net.minecraft.world.entity.PathfinderMob, double, boolean);
+  public boolean canUse();
+  public boolean canContinueToUse();
+  public void start();
+  public void stop();
+  public boolean requiresUpdateEveryTick();
+  public void tick();
+  protected void checkAndPerformAttack(net.minecraft.world.entity.LivingEntity);
+  protected void resetAttackCooldown();
+  protected boolean isTimeToAttack();
+  protected boolean canPerformAttack(net.minecraft.world.entity.LivingEntity);
+  protected int getTicksUntilNextAttack();
+  protected int getAttackInterval();
+}

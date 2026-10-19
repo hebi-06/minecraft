@@ -1,0 +1,20 @@
+Compiled from "EntityAnchorArgument.java"
+public final class net.minecraft.commands.arguments.EntityAnchorArgument$Anchor extends java.lang.Enum<net.minecraft.commands.arguments.EntityAnchorArgument$Anchor> {
+  public static final net.minecraft.commands.arguments.EntityAnchorArgument$Anchor FEET;
+  public static final net.minecraft.commands.arguments.EntityAnchorArgument$Anchor EYES;
+  private static final java.util.Map<java.lang.String, net.minecraft.commands.arguments.EntityAnchorArgument$Anchor> BY_NAME;
+  private final java.lang.String name;
+  private final java.util.function.BiFunction<net.minecraft.world.phys.Vec3, net.minecraft.world.entity.Entity, net.minecraft.world.phys.Vec3> transform;
+  private static final net.minecraft.commands.arguments.EntityAnchorArgument$Anchor[] $VALUES;
+  public static net.minecraft.commands.arguments.EntityAnchorArgument$Anchor[] values();
+  public static net.minecraft.commands.arguments.EntityAnchorArgument$Anchor valueOf(java.lang.String);
+  private net.minecraft.commands.arguments.EntityAnchorArgument$Anchor(java.lang.String, java.util.function.BiFunction<net.minecraft.world.phys.Vec3, net.minecraft.world.entity.Entity, net.minecraft.world.phys.Vec3>);
+  public static net.minecraft.commands.arguments.EntityAnchorArgument$Anchor getByName(java.lang.String);
+  public net.minecraft.world.phys.Vec3 apply(net.minecraft.world.entity.Entity);
+  public net.minecraft.world.phys.Vec3 apply(net.minecraft.commands.CommandSourceStack);
+  private static net.minecraft.commands.arguments.EntityAnchorArgument$Anchor[] $values();
+  private static void lambda$static$2(java.util.HashMap);
+  private static net.minecraft.world.phys.Vec3 lambda$static$1(net.minecraft.world.phys.Vec3, net.minecraft.world.entity.Entity);
+  private static net.minecraft.world.phys.Vec3 lambda$static$0(net.minecraft.world.phys.Vec3, net.minecraft.world.entity.Entity);
+  static {};
+}

@@ -1,0 +1,12 @@
+Compiled from "ContainerHelper.java"
+public class net.minecraft.world.ContainerHelper {
+  public static final java.lang.String TAG_ITEMS = "Items";
+  public net.minecraft.world.ContainerHelper();
+  public static net.minecraft.world.item.ItemStack removeItem(java.util.List<net.minecraft.world.item.ItemStack>, int, int);
+  public static net.minecraft.world.item.ItemStack takeItem(java.util.List<net.minecraft.world.item.ItemStack>, int);
+  public static void saveAllItems(net.minecraft.world.level.storage.ValueOutput, net.minecraft.core.NonNullList<net.minecraft.world.item.ItemStack>);
+  public static void saveAllItems(net.minecraft.world.level.storage.ValueOutput, net.minecraft.core.NonNullList<net.minecraft.world.item.ItemStack>, boolean);
+  public static void loadAllItems(net.minecraft.world.level.storage.ValueInput, net.minecraft.core.NonNullList<net.minecraft.world.item.ItemStack>);
+  public static int clearOrCountMatchingItems(net.minecraft.world.Container, java.util.function.Predicate<net.minecraft.world.item.ItemStack>, int, boolean);
+  public static int clearOrCountMatchingItems(net.minecraft.world.item.ItemStack, java.util.function.Predicate<net.minecraft.world.item.ItemStack>, int, boolean);
+}

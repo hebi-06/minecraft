@@ -1,0 +1,31 @@
+Compiled from "Relative.java"
+public final class net.minecraft.world.entity.Relative extends java.lang.Enum<net.minecraft.world.entity.Relative> {
+  public static final net.minecraft.world.entity.Relative X;
+  public static final net.minecraft.world.entity.Relative Y;
+  public static final net.minecraft.world.entity.Relative Z;
+  public static final net.minecraft.world.entity.Relative Y_ROT;
+  public static final net.minecraft.world.entity.Relative X_ROT;
+  public static final net.minecraft.world.entity.Relative DELTA_X;
+  public static final net.minecraft.world.entity.Relative DELTA_Y;
+  public static final net.minecraft.world.entity.Relative DELTA_Z;
+  public static final net.minecraft.world.entity.Relative ROTATE_DELTA;
+  public static final java.util.Set<net.minecraft.world.entity.Relative> ALL;
+  public static final java.util.Set<net.minecraft.world.entity.Relative> ROTATION;
+  public static final java.util.Set<net.minecraft.world.entity.Relative> DELTA;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, java.util.Set<net.minecraft.world.entity.Relative>> SET_STREAM_CODEC;
+  private final int bit;
+  private static final net.minecraft.world.entity.Relative[] $VALUES;
+  public static net.minecraft.world.entity.Relative[] values();
+  public static net.minecraft.world.entity.Relative valueOf(java.lang.String);
+  public static java.util.Set<net.minecraft.world.entity.Relative> union(java.util.Set<net.minecraft.world.entity.Relative>...);
+  public static java.util.Set<net.minecraft.world.entity.Relative> rotation(boolean, boolean);
+  public static java.util.Set<net.minecraft.world.entity.Relative> position(boolean, boolean, boolean);
+  public static java.util.Set<net.minecraft.world.entity.Relative> direction(boolean, boolean, boolean);
+  private net.minecraft.world.entity.Relative(int);
+  private int getMask();
+  private boolean isSet(int);
+  public static java.util.Set<net.minecraft.world.entity.Relative> unpack(int);
+  public static int pack(java.util.Set<net.minecraft.world.entity.Relative>);
+  private static net.minecraft.world.entity.Relative[] $values();
+  static {};
+}

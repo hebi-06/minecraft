@@ -1,0 +1,18 @@
+Compiled from "ServerChunkEvents.java"
+public final class net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Load> CHUNK_LOAD;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Generate> CHUNK_GENERATE;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Unload> CHUNK_UNLOAD;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$FullChunkStatusChange> FULL_CHUNK_STATUS_CHANGE;
+  private net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents();
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$FullChunkStatusChange lambda$static$7(net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$FullChunkStatusChange[]);
+  private static void lambda$static$8(net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$FullChunkStatusChange[], net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.LevelChunk, net.minecraft.server.level.FullChunkStatus, net.minecraft.server.level.FullChunkStatus);
+  private static void lambda$static$6(net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.LevelChunk, net.minecraft.server.level.FullChunkStatus, net.minecraft.server.level.FullChunkStatus);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Unload lambda$static$4(net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Unload[]);
+  private static void lambda$static$5(net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Unload[], net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.LevelChunk);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Generate lambda$static$2(net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Generate[]);
+  private static void lambda$static$3(net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Generate[], net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.LevelChunk);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Load lambda$static$0(net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Load[]);
+  private static void lambda$static$1(net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents$Load[], net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.LevelChunk, boolean);
+  static {};
+}

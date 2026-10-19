@@ -1,0 +1,31 @@
+Compiled from "Heightmap.java"
+public final class net.minecraft.world.level.levelgen.Heightmap$Types extends java.lang.Enum<net.minecraft.world.level.levelgen.Heightmap$Types> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.level.levelgen.Heightmap$Types WORLD_SURFACE_WG;
+  public static final net.minecraft.world.level.levelgen.Heightmap$Types WORLD_SURFACE;
+  public static final net.minecraft.world.level.levelgen.Heightmap$Types OCEAN_FLOOR_WG;
+  public static final net.minecraft.world.level.levelgen.Heightmap$Types OCEAN_FLOOR;
+  public static final net.minecraft.world.level.levelgen.Heightmap$Types MOTION_BLOCKING;
+  public static final net.minecraft.world.level.levelgen.Heightmap$Types MOTION_BLOCKING_NO_LEAVES;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.level.levelgen.Heightmap$Types> CODEC;
+  private static final java.util.function.IntFunction<net.minecraft.world.level.levelgen.Heightmap$Types> BY_ID;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.level.levelgen.Heightmap$Types> STREAM_CODEC;
+  private final int id;
+  private final java.lang.String serializationKey;
+  private final net.minecraft.world.level.levelgen.Heightmap$Usage usage;
+  private final java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState> isOpaque;
+  private static final net.minecraft.world.level.levelgen.Heightmap$Types[] $VALUES;
+  public static net.minecraft.world.level.levelgen.Heightmap$Types[] values();
+  public static net.minecraft.world.level.levelgen.Heightmap$Types valueOf(java.lang.String);
+  private net.minecraft.world.level.levelgen.Heightmap$Types(int, java.lang.String, net.minecraft.world.level.levelgen.Heightmap$Usage, java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState>);
+  public java.lang.String getSerializationKey();
+  public boolean sendToClient();
+  public boolean keepAfterWorldgen();
+  public java.util.function.Predicate<net.minecraft.world.level.block.state.BlockState> isOpaque();
+  public java.lang.String getSerializedName();
+  private static net.minecraft.world.level.levelgen.Heightmap$Types[] $values();
+  private static int lambda$static$3(net.minecraft.world.level.levelgen.Heightmap$Types);
+  private static int lambda$static$2(net.minecraft.world.level.levelgen.Heightmap$Types);
+  private static boolean lambda$static$1(net.minecraft.world.level.block.state.BlockState);
+  private static boolean lambda$static$0(net.minecraft.world.level.block.state.BlockState);
+  static {};
+}
