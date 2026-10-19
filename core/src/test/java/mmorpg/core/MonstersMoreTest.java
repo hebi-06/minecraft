@@ -16,7 +16,7 @@ import java.util.Set;
  * <li>덧붙임: 몬스터 14종 (애드온 6 + 새 8) — 순서는 레벨 순, 몬스터마다 설정 · 전리품 · 반복 의뢰, 애드온 6종은 그대로 (rules.json 과 같음)</li>
  * <li>새 몬스터: 지역 (farm · desert · sea · north) 마다 둘, 특성 값 (hop · charge · burrow · pack · onHit · shock · shell), 전리품 아이템 이름이 겹치지 않음</li>
  * <li>레벨마다 경험치를 주는 몬스터가 있음 (내 레벨 + 2 이하 · xpUntil 이 내 레벨보다 큼 — 0 ~ 44)</li>
- * <li>Leveling: 바닐라 곡선 · ×3 · 퀘스트 레벨 보상 → 바닐라 경험치</li>
+ * <li>Leveling: 바닐라 곡선 · ×3 · 0.24.1 갈수록 더 (10렙 뒤로 커져 40렙에서 ×3 더) · 퀘스트 레벨 보상 → 바닐라 경험치</li>
  * <li>Rules.merge: 표는 더하고 목록 · 값은 바꾸고 "_" 는 건너뜀</li>
  * </ul>
  * 하나라도 틀리면 종료 코드 1.
@@ -122,10 +122,18 @@ public final class MonstersMoreTest {
         check(Leveling.baseNeed(0) == 7 && Leveling.baseNeed(14) == 35 && Leveling.baseNeed(15) == 37 && Leveling.baseNeed(29) == 107
                 && Leveling.baseNeed(30) == 112 && Leveling.baseNeed(39) == 193, "vanilla curve");
         check(Math.abs(Leveling.needMult() - 3) < 1e-9, "needMult 3");
-        check(Leveling.need(0) == 21 && Leveling.need(30) == 336, "need ×3 " + Leveling.need(0) + " " + Leveling.need(30));
+        // 0.24.1 갈수록 더 (ramp): 10렙까지 바닐라 × 3 그대로, 그 뒤 한 레벨마다 커져 40렙에서 × 3 (= 바닐라 × 9), 그 뒤로도 같은 기울기
+        check(Leveling.ramp(0) == 1 && Leveling.ramp(10) == 1 && Math.abs(Leveling.ramp(25) - 2) < 1e-9 && Math.abs(Leveling.ramp(40) - 3) < 1e-9
+                && Math.abs(Leveling.ramp(55) - 4) < 1e-9, "ramp 1 · 1 · 2 · 3 · 4 at 0 · 10 · 25 · 40 · 55");
+        check(Leveling.need(0) == 21 && Leveling.need(9) == 75 && Leveling.need(10) == 81, "need up to level 10 = vanilla × 3 " + Leveling.need(0) + " " + Leveling.need(10));
+        check(Leveling.need(11) == 93 && Leveling.need(20) == 310 && Leveling.need(30) == 784 && Leveling.need(39) == 1698 && Leveling.need(40) == 1818
+                && Leveling.need(45) == 2470, "need with ramp " + Leveling.need(11) + " " + Leveling.need(20) + " " + Leveling.need(30) + " " + Leveling.need(39)
+                        + " " + Leveling.need(40) + " " + Leveling.need(45));
+        for (int lv = 10; lv < 60; lv++) check(Leveling.need(lv + 1) > Leveling.need(lv), "need grows at " + lv);
         check(Leveling.pointsForLevels(0, 3) == 7 + 9 + 11, "quest 3 levels at 0 = 27 " + Leveling.pointsForLevels(0, 3));
-        check(Leveling.pointsForLevels(30, 1) == 112 && Leveling.pointsForLevels(5, 0) == 0, "quest levels → points");
-        check(Leveling.total(1) == 21 && Leveling.total(40) == 3 * 2920, "total to 40 = 3 × vanilla " + Leveling.total(40));
+        check(Leveling.pointsForLevels(30, 1) == 112 && Leveling.pointsForLevels(5, 0) == 0, "quest levels → points (vanilla — ramp 없음)");
+        check(Leveling.total(1) == 21 && Leveling.total(11) == 561 && Leveling.total(40) == 19317, "total to 11 = 561 (그대로) · to 40 = 19,317 (예전 8,760) "
+                + Leveling.total(11) + " " + Leveling.total(40));
         // merge
         Map<String, Object> a = new LinkedHashMap<>();
         Map<String, Object> t = new LinkedHashMap<>();

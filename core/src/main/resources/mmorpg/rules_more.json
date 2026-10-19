@@ -1,8 +1,12 @@
 {
   "_comment": "자바 판에만 더한 규칙 (9단계부터 — 애드온 개발은 멈춤). Rules 가 rules.json (애드온 config.js) 위에 덧붙임: 표 (MONSTERS · MONSTER_DROPS · REPEAT_QUESTS · TYPES · TYPE_ONLY · WEAPON_NAMES · SKILLS · LOOK · SLASH · STAT_INFO · RUNES · RUNE_FAMILIES · RUNE · ARMOR_TYPES · SHIELD) 는 항목을 더하거나 같은 이름의 항목을 통째로 바꾸고, 새 표 (HERO_SKILLS — 10단계, CRAFT_MORE · TYPE_ORDER_MORE — 12단계) 는 그대로 넣고, 목록 (MONSTER_ORDER · RUNE_FAMILY_ORDER · ARMOR_TYPE_ORDER) · 값은 바꿈. 새 목록 RUNE_LIMITED_ORDER (0.16.0 — 한정 뽑기 전용 룬 계열) 는 그대로 넣음. 대조 시험은 덧붙이지 않음 (-Dmmorpg.pureRules=true).",
   "LEVELING": {
-    "_comment": "한 레벨에 필요한 경험치 = 바닐라 × needMult (core.Leveling — 퀘스트의 레벨 보상은 그 레벨 수만큼의 바닐라 경험치로 줌)",
-    "needMult": 3
+    "_comment": "한 레벨에 필요한 경험치 = 바닐라 × needMult × ramp (core.Leveling — 퀘스트의 레벨 보상은 그 레벨 수만큼의 바닐라 경험치로 줌)",
+    "needMult": 3,
+    "_ramp": "0.24.1 갈수록 더: ramp = rampFrom 레벨까지 1, 그 뒤 한 레벨마다 같은 만큼 커져 rampTo 레벨에서 rampMult (그 뒤로도 같은 기울기) — 10렙까지 지금과 같고 40렙에서 지금의 3배",
+    "rampFrom": 10,
+    "rampTo": 40,
+    "rampMult": 3
   },
   "MONSTER_ORDER": ["scarecrow", "nisse", "boar", "gulon", "sand_scorpion", "skeljaskrimsli", "crab", "worm_larva", "nix", "grendel", "draugr", "frost_wolf", "troll", "frost_giant"],
   "MONSTERS": {

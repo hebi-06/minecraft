@@ -206,7 +206,7 @@ public final class RpgQuestTests {
             h.assertFalse(Forms.pending(sp), "closed");
             h.assertTrue(Inv.money(sp) == money + 5, "emerald " + Inv.money(sp));
             h.assertTrue(sp.totalExperience - xp0 == want, "xp +" + want + " (got " + (sp.totalExperience - xp0) + ")");
-            h.assertTrue(want < mmorpg.core.Leveling.need(lv), "1 quest level < 1 real level (×3)");
+            h.assertTrue(want < mmorpg.core.Leveling.need(lv), "1 quest level < 1 real level (×3 · 갈수록 더)");
             h.assertTrue(RpgData.of(sp).point() >= points + 2, "points " + RpgData.of(sp).point() + " vs " + points);
             h.assertTrue(status(sp, saved.id).equals("done"), "done");
             h.assertTrue(Quests.questMark(sp, key) == null, "no mark");
@@ -703,12 +703,15 @@ public final class RpgQuestTests {
 
     // ------------------------------------------------------------ 9단계: 레벨업 3배 · 지역 이야기의 새 몬스터 단계 · 31단계 → 46단계 옮기기
 
-    /** 레벨업에 필요한 경험치 = 바닐라 × 3 (사용자 요청 "약 3배"): 0렙 7 → 21 · 15렙 37 → 111 · 30렙 112 → 336, 21 포인트면 0 → 1렙 */
+    /**
+     * 레벨업에 필요한 경험치 = 바닐라 × 3 (사용자 요청 "약 3배") × 0.24.1 갈수록 더 (10렙까지 1 → 40렙 3): 0렙 7 → 21 · 10렙 27 → 81 (그대로) ·
+     * 15렙 37 → 148 · 30렙 112 → 784 · 40렙 202 → 1,818, 21 포인트면 0 → 1렙
+     */
     @GameTest(maxTicks = 20)
     public void levelingTripled(GameTestHelper h) {
         ServerPlayer sp = player(h);
         h.assertTrue(mmorpg.core.Leveling.needMult() == 3, "needMult " + mmorpg.core.Leveling.needMult());
-        for (int[] c : new int[][] {{0, 21}, {14, 105}, {15, 111}, {29, 321}, {30, 336}, {40, 606}}) {
+        for (int[] c : new int[][] {{0, 21}, {10, 81}, {11, 93}, {14, 133}, {15, 148}, {29, 728}, {30, 784}, {39, 1698}, {40, 1818}}) {
             sp.setExperienceLevels(c[0]);
             h.assertTrue(sp.getXpNeededForNextLevel() == c[1], "need at level " + c[0] + ": " + sp.getXpNeededForNextLevel() + " (want " + c[1] + ")");
         }

@@ -60,7 +60,7 @@ public final class QuestRewards {
             r.xp = 0;
             r.capped = q.xpMob;
         }
-        // 9단계 (레벨업 3배): 레벨 보상은 지금 레벨부터 그 레벨 수만큼의 바닐라 경험치로 — 필요 경험치가 3배라 실제로는 1/3 레벨
+        // 9단계 (레벨업 3배): 레벨 보상은 지금 레벨부터 그 레벨 수만큼의 바닐라 경험치로 — 필요 경험치가 3배 (0.24.1: 10렙 뒤로 더 — 40렙 9배) 라 실제로는 1/3 레벨 이하
         if (r.xp > 0) {
             r.xpPoints += Leveling.pointsForLevels(sp.experienceLevel, r.xp);
             r.xp = 0;

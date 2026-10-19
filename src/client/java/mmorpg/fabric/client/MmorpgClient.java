@@ -142,7 +142,7 @@ public final class MmorpgClient implements ClientModInitializer {
             WeaponAura.tick(client);
             CosmeticAura.tick(client);
         });
-        // 체력 줄 자리에 RPG 체력 바 · 갑옷 · 레벨 · 공기, 배고픔 · 갑옷 · 공기 줄은 숨김 (RPG HUD 일 때만)
+        // 체력 줄 자리에 RPG 체력 바 · 갑옷 · 레벨 · 공기, 배고픔 · 갑옷 · 공기 줄 · 바닐라 레벨 숫자는 숨김 (RPG HUD 일 때만)
         HudElementRegistry.replaceElement(VanillaHudElements.HEALTH_BAR, old -> (graphics, delta) -> {
             if (RpgHud.active()) RpgHud.render(graphics);
             else old.extractRenderState(graphics, delta);
@@ -154,6 +154,10 @@ public final class MmorpgClient implements ClientModInitializer {
             if (!RpgHud.active()) old.extractRenderState(graphics, delta);
         });
         HudElementRegistry.replaceElement(VanillaHudElements.AIR_BAR, old -> (graphics, delta) -> {
+            if (!RpgHud.active()) old.extractRenderState(graphics, delta);
+        });
+        // 0.24.1 경험치 막대 가운데 위의 바닐라 레벨 숫자 (초록) 도 숨김 — 레벨은 RPG 줄의 "Lv" 칸만 (사용자 요청, RPG HUD 일 때만 · 경험치 막대는 그대로)
+        HudElementRegistry.replaceElement(VanillaHudElements.EXPERIENCE_LEVEL, old -> (graphics, delta) -> {
             if (!RpgHud.active()) old.extractRenderState(graphics, delta);
         });
         // 스킬 칸 (11단계): 화면 오른쪽 아래 (핫바 옆)

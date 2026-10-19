@@ -23,7 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  * - attack 처음: 공격 충전 정도와 대상을 기억, 참격 연출, 활 · 완드는 쏘고 취소, 요구 조건이 모자란 근접 무기는 취소
  * - attack 의 대상.hurtOrSimulate(…, 피해): RPG 평타 공식으로 바꿈
  * - actuallyHurt 의 setHealth: 방패 감소 · 죽지 않는 피해 (RPG 체력 규칙)
- * - getXpNeededForNextLevel: 레벨업에 필요한 경험치 = 바닐라 × 3 (9단계 — 규칙 코어 Leveling, rules_more.json LEVELING.needMult)
+ * - getXpNeededForNextLevel: 레벨업에 필요한 경험치 = 바닐라 × 3 (9단계) × 10렙 뒤로 점점 커지는 배율 (0.24.1 — 40렙에서 3) — 규칙 코어 Leveling, rules_more.json LEVELING
  */
 @Mixin(Player.class)
 public abstract class PlayerMixin {
@@ -52,7 +52,7 @@ public abstract class PlayerMixin {
         original.call(self, next);
     }
 
-    /** 레벨업에 필요한 경험치 (9단계): 바닐라 식 × LEVELING.needMult — 경험치 막대 · /xp · 경험치 구슬 모두 이 값으로 */
+    /** 레벨업에 필요한 경험치 (9단계 · 0.24.1): 바닐라 식 × LEVELING.needMult × ramp — 경험치 막대 · /xp · 경험치 구슬 모두 이 값으로 */
     @Inject(method = "getXpNeededForNextLevel", at = @At("HEAD"), cancellable = true)
     private void mmorpg$xpNeeded(CallbackInfoReturnable<Integer> cir) {
         cir.setReturnValue(mmorpg.core.Leveling.need(((Player) (Object) this).experienceLevel));
