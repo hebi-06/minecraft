@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
  * 12단계 새 무기의 기본 공격 특징 (TYPES[종류] — rules_more.json). 근접 평타의 피해가 실제로 들어간 뒤 (DamageNumbers — 참격 연출 다음) 부름.
  * <ul>
  *   <li>낫 sweep: 맞힌 적 말고 앞 cone° · range 칸 안의 다른 적 (적대 무리 · 결투 상대 — Kit.splashFoe, 눈에서 보이는) 에게 준 피해 × ratio,
- *       맞은 자리에 작은 보랏빛 참격</li>
+ *       맞은 자리에 낫 빛 불꽃 (0.25.2 — 작은 참격 대신: 낫의 참격은 휘두른 초승달 하나만)</li>
  *   <li>전투 망치 quake: 맞힌 적 둘레 radius 칸의 다른 적에게 준 피해 × ratio + 살짝 띄움 (lift)</li>
  *   <li>성스러운 홀 lifesteal: 준 피해 × rate 만큼 회복 (한 번에 최대 체력 × cap 까지 — 초록 + 숫자)</li>
  *   <li>창 reach 는 아이템 속성 (RpgWeaponItem) 이라 여기 없음</li>
@@ -71,8 +71,9 @@ public final class WeaponTraits {
             if (!Kit.applySkillDamage(sp, e, amount, crit, Kit.Cause.ATTACK, crit ? DamageNumbers.Style.CRIT : DamageNumbers.Style.NORMAL)) continue;
             Vec3 c = Kit.bodyPoint(e);
             Vec3 u = V.unit(V.sub(c, sp.getEyePosition()));
-            SkillFx.arc(level, V.add(c, u, -0.35), u, Opt.of("shape", "thin", "flip", Kit.rand() < 0.5, "size", 0.9, "life", 0.2, "speed", 0.0, "spin",
-                    Kit.rand() * 40 - 20, "color", glow, "core", true));
+            Vec3 front = V.add(c, u, -0.35);
+            SkillFx.burst(level, front, glow, 0.55, 0.2);
+            SkillFx.sparks(level, front, glow, 6, 3);
         }
     }
 

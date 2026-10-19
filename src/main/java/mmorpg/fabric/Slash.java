@@ -24,8 +24,10 @@ import net.minecraft.world.phys.Vec3;
  *   도끼 두꺼운 내려찍기 · 마검 장밋빛 무거운 베기 + 1틱 뒤 하늘빛 룬 베기 · 방패 푸른 강철빛 고리 · 창 찌르기 빛줄기 (SLASH.spear — 애드온의 궁니르.
  *   자바 판은 도끼 초월이 세계수의 도끼 (0.12.2 반고의 도끼) 라 다른 도끼처럼 내려찍기 — 비취빛 SLASH.ygg_axe, 궁니르는 창 초월로 옮겨
  *   애드온 찌르기 SLASH.spear 를 바탕으로 청록빛 SLASH.gungnir — rules_more LOOK)
- *   (12단계 새 무기: 창 금빛 찌르기 빛줄기 (초월 궁니르는 하늘빛) · 낫 넓은 보랏빛 초승달 + 양옆 잔상 · 전투 망치 무거운 내려찍기 · 성스러운 홀 금빛 고리 + 빛 십자)
- * - 맞혔을 때: 도끼 · 전투 망치 발밑 충격파, 방패 · 창 대상 앞 폭발 + 고리, 홀 금빛 십자 섬광, 치명타는 칼 금빛 초승달 · 단검 붉은 X · 마검 보랏빛 X + 장밋빛 초승달,
+ *   (12단계 새 무기: 창 금빛 찌르기 빛줄기 (초월 궁니르는 하늘빛) · 낫 넓은 보랏빛 초승달 하나 (0.25.2 — 양옆 작은 초승달 둘을 뺌) · 전투 망치 무거운 내려찍기 ·
+ *   성스러운 홀 금빛 고리 + 빛 십자)
+ * - 맞혔을 때: 도끼 · 전투 망치 발밑 충격파, 방패 · 창 대상 앞 폭발 + 고리, 홀 금빛 십자 섬광, 치명타는 칼 금빛 초승달 · 단검 붉은 X · 마검 보랏빛 X + 장밋빛 초승달 ·
+ *   낫 큰 초승달 하나 (0.25.2 — X 대신),
  *   화면 가운데에서 벗어난 대상을 맞혔으면 맞은 자리에도 작은 참격
  * - 영웅 · 초월은 참격 안쪽에 금빛 · 붉은빛 기운, 요구 조건이 모자라면 회색으로 작게 (피해 없음)
  * - 0.12.8: 영웅 · 초월 무기 21종은 무기마다 디자인 색의 모양 (rules_more LOOK → SLASH, base = 바탕 모양 — Weapons.slashStyle):
@@ -207,13 +209,8 @@ public final class Slash {
                 sound(level, e, miss, 0.5, 0.85);
                 sound(level, e, SoundEvents.MACE_SMASH_AIR, 0.8, 0.5);
             }
-            case "scythe" -> {
-                sound(level, e, miss, 0.75, 0.7);
-                // 넓게 베기: 같은 방향의 작은 초승달 둘이 양옆으로 (휘두른 폭이 보이게 — 낫 기본 공격은 앞 120° 의 다른 적도 벰)
-                if (ok && style.truthy("wide")) Tasks.later(1, () -> {
-                    if (!sp.isRemoved()) wideSwing(sp, w, style, flip);
-                });
-            }
+            // 낫: 넓은 초승달 하나 (0.25.2 — 양옆 작은 초승달 둘을 뺌: 사용자 "초승달 모양의 참격 하나만". 앞 120° 의 다른 적을 베는 것은 그대로 — WeaponTraits)
+            case "scythe" -> sound(level, e, miss, 0.75, 0.7);
             case "greatsword" -> {
                 sound(level, e, miss, 0.85, 0.75);
                 if (ok && style.has("rune")) Tasks.later(1, () -> {
@@ -237,18 +234,6 @@ public final class Slash {
         emit(sp.level(), sprite("thin", flip, "glow"), at, dir, style.num("speed"), spin, size, life, rune, 0.9);
         emit(sp.level(), sprite("thin", flip, "core"), along(at, dir, -LAYER_GAP), dir, style.num("speed"), spin, size * (dist - LAYER_GAP) / dist, life,
                 whiten(rune, 0.75), 1);
-    }
-
-    /** 낫 넓게 베기 (12단계): 가운데 참격 1틱 뒤, 같은 방향의 작은 초승달 둘이 양옆 (±35°) 으로 — 휘두른 폭 */
-    private static void wideSwing(ServerPlayer sp, Weapon w, Obj style, boolean flip) {
-        Vec3 view = sp.getViewVector(1F);
-        Vec3 e = eye(sp);
-        double dist = style.num("dist") + 0.2;
-        for (int side : new int[] {-1, 1}) {
-            Vec3 dir = mmorpg.fabric.skill.V.turnY(view, side * 35);
-            Vec3 at = along(new Vec3(e.x, e.y - SLASH.numOr("drop", 0), e.z), dir, dist);
-            slashAt(sp.level(), at, dir, dist, w, style, flip, true, 0.62, style.num("speed"), sp.getRandom());
-        }
     }
 
     /** 성스러운 홀 (12단계): 금빛 고리 안에 빛 십자가 번쩍 (rpg:rfx_flare 별빛 — 1인칭 화면을 덮지 않게 작게) */
@@ -340,8 +325,8 @@ public final class Slash {
             if (crit) sound(level, mid, SoundEvents.PLAYER_ATTACK_CRIT, 1.0, 0.7);
             return;
         }
-        // 화면 가운데에서 벗어난 대상을 맞혔으면 맞은 자리에도 참격 (가운데 참격과 같은 방향)
-        if (style != null && offAxisDegrees(e, dir, victim) > SLASH.numOr("offAxis", 12)) {
+        // 화면 가운데에서 벗어난 대상을 맞혔으면 맞은 자리에도 참격 (가운데 참격과 같은 방향) — 낫은 빼고 (0.25.2: 넓은 초승달 하나가 앞 120° 를 덮음 · 참격은 하나만)
+        if (style != null && !w.type().equals("scythe") && offAxisDegrees(e, dir, victim) > SLASH.numOr("offAxis", 12)) {
             Vec3 to = mid.subtract(e);
             double len = to.length();
             if (len > 0.6) {
@@ -393,12 +378,12 @@ public final class Slash {
                 emit(level, sprite("arc", l, "core"), front, dir, 0, spin, 1.1, 0.25, c[1], 1);
             }
             case "scythe" -> {
-                // 낫 치명타: 보랏빛 큰 초승달 둘이 X 로 (거둬들이는 낫질)
+                // 낫 치명타: 휘두른 쪽의 큰 초승달 하나 (0.25.2 — 둘이 X 로 엇갈리던 것을 하나로: 낫은 늘 초승달 참격 하나)
                 double spin = (rnd.nextDouble() * 2 - 1) * 25;
+                boolean l = SIDE.getOrDefault(attacker.getUUID(), false);
                 double[][] c = critColors(style, style != null ? rgb(style, "glow") : new double[] {0.66, 0.5, 1}, new double[] {0.95, 0.9, 1});
-                emit(level, sprite("arc", false, "glow"), mid, dir, 0, spin, 1.25, 0.28, c[0], 0.95);
-                emit(level, sprite("arc", true, "glow"), along(mid, dir, -LAYER_GAP), dir, 0, -spin, 1.25, 0.28, c[0], 0.95);
-                emit(level, sprite("arc", false, "core"), front, dir, 0, spin, 1.24, 0.26, c[1], 1);
+                emit(level, sprite("arc", l, "glow"), mid, dir, 0, spin, 1.4, 0.28, c[0], 0.95);
+                emit(level, sprite("arc", l, "core"), front, dir, 0, spin, 1.39, 0.26, c[1], 1);
             }
             case "greatsword" -> {
                 double spin = (rnd.nextDouble() * 2 - 1) * 30;

@@ -27,15 +27,16 @@ import net.minecraft.world.phys.Vec3;
  *       → 영역 곳곳에 한꺼번에 베인 자국, 영역 안 모든 적 위력 × crush (굵은 흰 기울임 숫자 !) · 밀쳐냄 · 띄움 (6돌 기절 stun 틱), 바닥이 갈라짐</li>
  *   <li>6돌 하늘 가르기: 일섬 뒤 앞쪽 하늘이 X자로 크게 갈라지고 (빛나는 금 · 섬광) 갈라진 곳에서 검 조각이 영역으로 쏟아짐 (피해 없음)</li>
  * </ol>
- * 화면 색 연출 (하늘빛 · 번쩍임) 은 3돌부터 (중력 블랙홀의 공허 하늘 — RuneKit.ULT_ALIAS, 번쩍임은 일섬이 다 그어진 뒤 짧게). 쓰러지면 남은 것은 멈춤.
+ * 화면 색 연출 (하늘빛 · 번쩍임) 은 3돌부터 (검붉은 하늘 rpg:ult_bloodvoid · 진홍 번쩍임 — rules_more ULT_RUNES_MORE, 번쩍임은 일섬이 다 그어진 뒤 짧게).
+ * 쓰러지면 남은 것은 멈춤. 0.25.2: 색을 보랏빛에서 검붉은 · 진홍빛으로 (사용자 "무간참역 보라색에서 붉고 어두운 빨간색으로")
  */
 final class RuneEndless {
     private RuneEndless() {}
 
-    /** 먹빛 (참격 바깥 — 알파로 겹쳐 낮 하늘에서도 또렷) · 흰 칼날 (심) · 보랏빛 (빛무리 · 고리) */
-    static final double[] INK = {0.06, 0.02, 0.1};
-    static final double[] EDGE = {0.95, 0.93, 1.0};
-    static final double[] VIOLET = {0.58, 0.38, 0.98};
+    /** 검붉은 먹 (참격 바깥 — 알파로 겹쳐 낮 하늘에서도 또렷) · 흰 칼날 (심 — 붉은 기가 조금) · 진홍 (빛무리 · 고리 · 일섬 — 0.25.2 보랏빛에서) */
+    static final double[] INK = {0.12, 0.0, 0.02};
+    static final double[] EDGE = {1.0, 0.92, 0.92};
+    static final double[] CRIMSON = {0.74, 0.04, 0.1};
     static final double[] WHITE = {1, 1, 1};
     /** 공중 참격 모양 (무기 참격 그림 — 곡선 · 가는 · 굵은) */
     private static final String[] SHAPES = {"arc", "thin", "heavy"};
@@ -76,15 +77,15 @@ final class RuneEndless {
         return V.len(v) > 0.3 ? V.unit(v) : Kit.facingOf(sp);
     }
 
-    /** 먹빛 베인 자국 하나 (나타났다 hold 초 뒤 벌어지며 사라짐) */
+    /** 검붉은 베인 자국 하나 (나타났다 hold 초 뒤 벌어지며 사라짐) */
     static void cut(ServerLevel level, ServerPlayer sp, Vec3 at, double scale, double hold) {
         SkillFx.cutMark(level, at, viewTo(sp, at), Kit.rand() * 180, hold, INK, EDGE, scale);
     }
 
-    /** 먹빛 초승달 참격 하나 (흰 심 · 보랏빛 바깥 빛) */
+    /** 검붉은 초승달 참격 하나 (흰 심 · 진홍 바깥 빛) */
     static void crescentCut(ServerLevel level, Vec3 at, double size) {
         SkillFx.arc(level, at, V.UP, Opt.of("shape", SHAPES[(int) (Kit.rand() * SHAPES.length)], "flip", Kit.rand() < 0.5, "size", size, "life", 0.18,
-                "spin", Kit.rand() * 360, "color", INK, "aura", VIOLET));
+                "spin", Kit.rand() * 360, "color", INK, "aura", CRIMSON));
     }
 
     static boolean cast(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -108,9 +109,9 @@ final class RuneEndless {
         RuneKit.ultSkyFor(sp, level, c, "endlessSlash", (int) Math.round((cutAt + 30) / skyK), null);
 
         // ---- 전개: 퍼지는 고리 · 바닥 검진 문양 · 경계의 검이 차례로 솟음
-        RuneKit.novaRing(level, c, R * 0.22, 4.4, VIOLET, EDGE, Opt.of("life", charge / 20.0 + 0.15, "fade", 0.45));
+        RuneKit.novaRing(level, c, R * 0.22, 4.4, CRIMSON, EDGE, Opt.of("life", charge / 20.0 + 0.15, "fade", 0.45));
         RuneKit.domainSigil(level, c, R, "blade", INK, EDGE, Opt.of("life", (cutAt + 10) / 20.0, "spinRate", 5.0, "grow", 0.0, "alpha", 0.92, "fade", 0.12));
-        RuneKit.domainSigil(level, c, R * 0.55, "blade", VIOLET, EDGE, Opt.of("life", (cutAt + 6) / 20.0, "spinRate", -12.0, "alpha", 0.55, "fade", 0.15));
+        RuneKit.domainSigil(level, c, R * 0.55, "blade", CRIMSON, EDGE, Opt.of("life", (cutAt + 6) / 20.0, "spinRate", -12.0, "alpha", 0.55, "fade", 0.15));
         SkillFx.play(level, "block.bell.use", c, 0.5, 1.0);
         SkillFx.play(level, "entity.warden.sonic_charge", c, 1.4, 0.6);
         SkillFx.play(level, "item.trident.riptide_3", c, 0.6, 0.8);
@@ -131,7 +132,7 @@ final class RuneEndless {
                     RuneKit.rfx2(level, "sword", planted, Opt.of("dir", tilt, "size", SWORD_SIZE, "life", Math.max(0.2, (converge - drop - 3) / 20.0), "fade", 0.04),
                             INK, EDGE);
                     SkillFx.sparks(level, ground, EDGE, 5, 3);
-                    RuneKit.novaRing(level, ground, 0.3, 1.3, VIOLET, EDGE, Opt.of("life", 0.3));
+                    RuneKit.novaRing(level, ground, 0.3, 1.3, CRIMSON, EDGE, Opt.of("life", 0.3));
                     if (ii % 2 == 0) SkillFx.play(level, "item.trident.hit_ground", ground, 1.1 + Kit.rand() * 0.3, 0.7);
                 });
             });
@@ -198,8 +199,8 @@ final class RuneEndless {
             sweep(level, a, b, 6, 0.15);
             RuneKit.later(3, () -> RuneKit.ultFlashFor(sp, level, c, "endlessSlash", "flash", Opt.of("time", FLASH_TIME.clone())));
             SkillFx.burst(level, m, EDGE, 2.2, 0.3);
-            RuneKit.novaRing(level, c, R * 0.3, 3.4, VIOLET, EDGE, Opt.of("life", 0.5));
-            RuneKit.glowCrack(level, c, R * 0.95, INK, VIOLET, Opt.of("life", 2.2, "fade", 0.6, "v", 1.0));
+            RuneKit.novaRing(level, c, R * 0.3, 3.4, CRIMSON, EDGE, Opt.of("life", 0.5));
+            RuneKit.glowCrack(level, c, R * 0.95, INK, CRIMSON, Opt.of("life", 2.2, "fade", 0.6, "v", 1.0));
             RuneKit.shakeAround(level, c, R + 4, 0.5, 0.5);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.5, 1.4);
             SkillFx.play(level, "entity.warden.sonic_boom", c, 1.7, 0.5);
@@ -214,7 +215,7 @@ final class RuneEndless {
                 if (marks[0] < 10) SkillFx.fx(level, "rpg:slash_x", body, Opt.of("dir", viewTo(sp, body), "size", 1.6, "life", 0.3, "color", EDGE, "alpha", 1.0));
                 RuneLimited.hit(sp, life, e, P, k.num("crush"), DamageNumbers.Style.ISSEOM, tally, x -> {
                     RuneKit.knock(x, V.sub(x.position(), c), 0.7, k.numOr("lift", 0.5));
-                    if (stun > 0) RuneKit.stun(x, stun, VIOLET, marks[0]++ < 10);
+                    if (stun > 0) RuneKit.stun(x, stun, CRIMSON, marks[0]++ < 10);
                 });
             }
         });
@@ -230,7 +231,7 @@ final class RuneEndless {
         return fx != null && fx.skyTicks() > 0 ? fx.skyTicks() : 1;
     }
 
-    /** 일섬 한 줄: a → b 를 n 조각으로 나눠 secs 동안 차례로 그음 (조각 양끝 35% 겹침 — 끊겨 보이지 않게). 먹빛 · 보랏빛 · 흰 칼날 · 흰 심 네 겹 */
+    /** 일섬 한 줄: a → b 를 n 조각으로 나눠 secs 동안 차례로 그음 (조각 양끝 35% 겹침 — 끊겨 보이지 않게). 검붉은 먹 · 진홍 · 흰 칼날 · 흰 심 네 겹 */
     static void sweep(ServerLevel level, Vec3 a, Vec3 b, int n, double secs) {
         Vec3 d = V.sub(b, a);
         for (int k = 0; k < n; k++) {
@@ -238,7 +239,7 @@ final class RuneEndless {
             Vec3 p1 = V.add(a, d, Math.min(1, (k + 1.35) / n));
             double delay = secs * k / n;
             RuneKit.streak(level, p0, p1, INK, 1.5, 0.9, 0.9, delay);
-            RuneKit.streak(level, p0, p1, VIOLET, 0.8, 0.8, 0.9, delay);
+            RuneKit.streak(level, p0, p1, CRIMSON, 0.8, 0.8, 0.9, delay);
             RuneKit.streak(level, p0, p1, EDGE, 0.42, 0.7, 1.0, delay);
             RuneKit.streak(level, p0, p1, WHITE, 0.18, 0.6, 1.0, delay);
         }
@@ -250,13 +251,13 @@ final class RuneEndless {
     static final double GATHER_R = 2.8;
 
     /**
-     * 6돌 하늘 가르기: 앞쪽 하늘이 X자로 크게 갈라지고 (빛나는 금 · 섬광) 검 조각이 영역으로 쏟아짐 (피해 없음). 갈라지는 순간 하늘빛이 공허 (검보라 —
-     * 6돌은 안개가 3 ~ 24칸이라 먼 그림이 어두워짐) 에서 보랏빛 (rpg:ult_thunder — 안개 6 ~ 38칸) 으로 바뀜 = 갈라진 하늘로 빛이 듦. X 는 영역 안쪽 하늘 (앞으로
+     * 6돌 하늘 가르기: 앞쪽 하늘이 X자로 크게 갈라지고 (빛나는 금 · 섬광) 검 조각이 영역으로 쏟아짐 (피해 없음). 갈라지는 순간 하늘빛이 검붉은 하늘 (rpg:ult_bloodvoid
+     * — 6돌은 안개가 3 ~ 24칸이라 먼 그림이 어두워짐) 에서 진홍 (rpg:ult_crimson — 안개 8 ~ 56칸) 으로 바뀜 = 갈라진 하늘로 빛이 듦. X 는 영역 안쪽 하늘 (앞으로
      * 반지름 × 0.75 · 높이 4.8칸 — 1인칭 화면 위쪽 안, 3인칭 과녁 뒤)
      */
     static void skySplit(ServerPlayer sp, ServerLevel level, Vec3 c, Vec3 f, double R, String life, double skyK) {
         if (!RuneKit.sameLife(sp, life)) return;
-        RuneKit.ultSkyFor(sp, level, c, "endlessSlash", (int) Math.round(70 / skyK), "rpg:ult_thunder");
+        RuneKit.ultSkyFor(sp, level, c, "endlessSlash", (int) Math.round(70 / skyK), "rpg:ult_crimson");
         Vec3 side = V.rightOf(f);
         Vec3 x0 = V.up(V.add(c, f, R * 0.75), 4.8);
         double s = 3.2;
@@ -266,14 +267,14 @@ final class RuneEndless {
             Vec3 a = arms[i][0];
             Vec3 b = arms[i][1];
             double delay = i * 0.15;
-            RuneKit.streak(level, a, b, VIOLET, 2.6, 2.2, 0.95, delay);
+            RuneKit.streak(level, a, b, CRIMSON, 2.6, 2.2, 0.95, delay);
             RuneKit.streak(level, a, b, EDGE, 1.1, 2.0, 1.0, delay);
             RuneKit.streak(level, a, b, WHITE, 0.45, 1.8, 1.0, delay);
         }
         // 갈라진 하늘: 빛나는 금 (시전자 쪽을 보는 면) · 섬광
         Vec3 toward = V.unit(V.sub(sp.getEyePosition(), x0));
-        RuneKit.glowCrack(level, x0, s * 1.6, VIOLET, WHITE, Opt.of("dir", toward, "life", 2.4, "fade", 0.5, "v", 1.0, "grow", 0.15, "spin", 0.0));
-        RuneKit.skyFlare(level, x0, 4.0, VIOLET, WHITE, Opt.of("life", 1.4, "grow", 0.3, "fade", 0.5));
+        RuneKit.glowCrack(level, x0, s * 1.6, CRIMSON, WHITE, Opt.of("dir", toward, "life", 2.4, "fade", 0.5, "v", 1.0, "grow", 0.15, "spin", 0.0));
+        RuneKit.skyFlare(level, x0, 4.0, CRIMSON, WHITE, Opt.of("life", 1.4, "grow", 0.3, "fade", 0.5));
         SkillFx.play(level, "block.glass.break", x0, 0.5, 1.0);
         SkillFx.play(level, "item.trident.thunder", c, 1.3, 0.7);
         // 검 조각이 갈라진 곳에서 영역으로 쏟아짐 (1.2초 동안 스물넷)
@@ -287,7 +288,7 @@ final class RuneEndless {
                 RuneKit.rfx2(level, "sword", from, Opt.of("dir", V.unit(d), "speed", V.len(d) / secs, "size", 1.0, "life", secs), INK, EDGE);
                 RuneKit.later((int) Math.round(secs * 20), () -> {
                     SkillFx.sparks(level, V.up(to, 0.2), EDGE, 4, 3);
-                    RuneKit.novaRing(level, to, 0.5, 1.6, VIOLET, EDGE, Opt.of("life", 0.35));
+                    RuneKit.novaRing(level, to, 0.5, 1.6, CRIMSON, EDGE, Opt.of("life", 0.35));
                 });
             });
         }
