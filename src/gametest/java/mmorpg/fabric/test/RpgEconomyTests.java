@@ -343,6 +343,9 @@ public final class RpgEconomyTests {
             Forms.answer(b, 45, null); // 왼쪽 연두 칸도 사기
             h.assertTrue(chest(b) != null && chest(b).body().contains("샀습니다") && count(b, Items.GOLDEN_APPLE) == 2 && Wallet.get(b, Economy.Kind.GOLD) == 750,
                     "bought: " + body(b));
+            // 결과 글의 이름은 산 물건 (가방에 넣어 빈 묶음이 된 뒤의 "Air" 가 아님)
+            String appleName = new ItemStack(Items.GOLDEN_APPLE).getHoverName().getString();
+            h.assertTrue(body(b).contains(appleName) && !body(b).contains("Air"), "bought message names the item: " + body(b));
             h.assertTrue(Wallet.get(a, Economy.Kind.GOLD) == 1250 - Economy.fee(1250), "seller got " + Wallet.get(a, Economy.Kind.GOLD));
             Forms.answer(b, -1, null);
             h.assertTrue(MarketWindow.parsePrice("1,500 골드") == 1500 && MarketWindow.parsePrice("abc") == -1 && MarketWindow.parsePrice("") == -1, "parse price");

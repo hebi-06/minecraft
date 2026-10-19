@@ -220,8 +220,8 @@ public final class MarketWindow {
         List<String> lines = new ArrayList<>();
         lines.add(list.isEmpty() ? "§8올라온 물건이 없습니다" + (cur.kind() != Kind.ALL ? " (" + cur.kind().label + ")" : "") + ". 아랫줄 이름표 칸: 판매 등록.§r"
                 : "§8물건을 누르면 사기 확인 창이 열립니다. 초록 숫자 = 가격 (골드).§r");
-        lines.add("§8쪽 " + (page + 1) + "/" + pages + " · 정렬 " + sortLabel(cur.sort()) + " · 종류 " + cur.kind().label + " · 수수료 " + Math.round(Economy.feeRate() * 100)
-                + "% (팔릴 때)§r");
+        // 한 줄로 (본문이 결과 글까지 6줄 안 — 창 자리가 움직이지 않게)
+        lines.add("§8쪽 " + (page + 1) + "/" + pages + " · " + sortLabel(cur.sort()) + " · " + cur.kind().label + " · 수수료 " + Math.round(Economy.feeRate() * 100) + "%§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         form.show(sp, sel -> {
@@ -268,12 +268,13 @@ public final class MarketWindow {
         }
         form.set(CONFIRM_PURSE, goldSlot(sp));
         form.fillRange(PER_PAGE, SIZE, Slot.PANE);
+        // 본문 4줄 (창 자리 기준 줄 수 — 둘러보기와 칸 자리가 같게): 물건 · 가격과 보유 · 판매자와 남은 시간 · 칸 안내
         List<String> lines = new ArrayList<>();
         lines.add("§0{slot:" + ITEM + "}" + countText(l.item().stack()) + "§r");
-        lines.add("§8가격 §6§l" + Economy.fmt(l.price()) + "§r§8 골드 · 판매자 §0" + l.sellerName() + "§8 · " + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r");
-        lines.add(enough ? "§8보유 §0" + Economy.fmt(have) + "§8 → §0" + Economy.fmt(have - l.price()) + "§8 골드§r"
-                : "§4골드가 모자랍니다: 보유 " + Economy.fmt(have) + " / " + Economy.fmt(l.price()) + "§r");
-        lines.add("§8아랫줄 왼쪽 초록 칸: 사기 · 오른쪽 빨간 칸: 취소§r");
+        lines.add(enough ? "§8가격 §6§l" + Economy.fmt(l.price()) + "§r§8 골드 · 보유 §0" + Economy.fmt(have) + "§8 → §0" + Economy.fmt(have - l.price()) + "§r"
+                : "§8가격 §6§l" + Economy.fmt(l.price()) + "§r§8 골드 · §4보유 " + Economy.fmt(have) + " (모자랍니다)§r");
+        lines.add("§8판매자 §0" + l.sellerName() + "§8 · 남은 시간 " + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r");
+        lines.add("§8초록 칸: 사기 · 빨간 칸: 취소§r");
         form.body(String.join("\n", lines));
         form.show(sp, sel -> {
             if (sel < 0) return;
@@ -293,8 +294,8 @@ public final class MarketWindow {
         decisionRow(form, "§a내리기", "§c그대로 두기", "§7가방으로 (가득이면 보관함)");
         form.fillRange(PER_PAGE, SIZE, Slot.PANE);
         form.body("§0{slot:" + ITEM + "}" + countText(l.item().stack()) + "§r\n§8가격 §0" + Economy.fmt(l.price()) + "§8 골드 · 남은 시간 "
-                + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r\n§8내리면 가방으로 돌아옵니다 (가득이면 보관함) · 다시 올려도 무료§r\n"
-                + "§8아랫줄 왼쪽 초록 칸: 내리기 · 오른쪽 빨간 칸: 그대로 두기§r");
+                + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r\n§8내리면 가방으로 (가득이면 보관함) · 다시 올려도 무료§r\n"
+                + "§8초록 칸: 내리기 · 빨간 칸: 그대로 두기§r");
         form.show(sp, sel -> {
             if (sel < 0) return;
             if (!isOk(sel)) {
@@ -331,7 +332,7 @@ public final class MarketWindow {
             List<String> lore = new ArrayList<>(List.of(TOOLTIP));
             if (why != null) {
                 lore.add("§c" + why);
-                form.set(at, Slot.of(b.stack(), itemName("§7", b.stack())).lore(lore).deco());
+                form.set(at, Slot.of(b.stack(), itemName("§7", b.stack())).lore(lore).dim()); // 흐린 칸 (본문 "회색 칸은 올릴 수 없음")
             } else {
                 lore.add(full ? "§c올릴 수 있는 수를 다 채웠습니다" : "§a누르면 가격 정하기");
                 form.set(at, Slot.of(b.stack(), itemName("§f", b.stack())).lore(lore).count(b.stack().getCount()));

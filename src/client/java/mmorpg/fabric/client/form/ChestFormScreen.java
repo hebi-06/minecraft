@@ -248,6 +248,8 @@ public final class ChestFormScreen extends FormScreen {
             FormNet.SlotData s = slot(i);
             if (s == null || s.empty()) continue;
             icon(g, s.icon(), sx + 2, sy + 2, 16);
+            // 흐린 장식 칸 (Slot.dim — 장식 칸의 숫자 1): 칸 안쪽 색을 반쯤 덮어 그림을 흐리게 (누를 수 없는 아이템)
+            if (s.kind() == Slot.DECO && s.num() == 1) g.fill(sx + 1, sy + 1, sx + CELL - 1, sy + CELL - 1, 0xA88B8B8B);
             if (i == hover && pressable(s)) sprite(g, "slot_hover", sx, sy, CELL, CELL);
             if (s.kind() == Slot.COUNT || s.kind() == Slot.PRICE) {
                 // 바닐라 아이템 수와 같은 자리 (그림 오른쪽 아래 — 칸 테두리 안), 네 자리부터 줄임 (옆 칸을 덮지 않게 — 온전한 수는 이름 · 설명에)
@@ -283,6 +285,8 @@ public final class ChestFormScreen extends FormScreen {
                     if (l.equals(TOOLTIP) && !icon.isEmpty()) tip.addAll(itemTooltip(icon));
                     else tip.add(Component.literal(l));
                 }
+                // 아이템 설명이 없으면 그 앞의 빈 줄이 끝에 남음 — 끝의 빈 줄은 뺌
+                while (tip.size() > 1 && tip.get(tip.size() - 1).getString().isBlank()) tip.remove(tip.size() - 1);
                 g.setComponentTooltipForNextFrame(font, tip, mx, my);
             }
         }

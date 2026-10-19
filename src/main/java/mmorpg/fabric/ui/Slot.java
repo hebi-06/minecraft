@@ -29,6 +29,7 @@ public final class Slot {
     Integer price;
     boolean deco;
     boolean big;
+    boolean dim;
 
     public Slot(Icon icon, String name) {
         this.icon = icon == null ? Icon.NONE : icon;
@@ -98,6 +99,13 @@ public final class Slot {
         return this;
     }
 
+    /** 흐린 장식 칸 (누를 수 없음 · 그림을 흐리게 — 장터 판매 고르기의 올릴 수 없는 아이템). 장식 칸의 숫자 1 로 보냄 */
+    public Slot dim() {
+        this.deco = true;
+        this.dim = true;
+        return this;
+    }
+
     public Icon icon() {
         return icon;
     }
@@ -124,7 +132,9 @@ public final class Slot {
     }
 
     int number() {
-        int n = deco || big ? 0 : price != null ? price : count != null ? count : 0;
+        if (big) return 0;
+        if (deco) return dim ? 1 : 0; // 장식 칸의 숫자 = 흐리게 그리기 (0.21.0)
+        int n = price != null ? price : count != null ? count : 0;
         return Math.max(0, Math.min(99999, n));
     }
 }

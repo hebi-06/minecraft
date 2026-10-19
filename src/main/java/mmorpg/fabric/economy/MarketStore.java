@@ -372,9 +372,9 @@ public final class MarketStore {
             Wallet.give(sp, Economy.Kind.GOLD, l.price()); // 돌려줌
             return Outcome.no(r.refusal().text);
         }
+        String name = label(item); // 가방에 넣기 전에 (Inv.give 가 묶음을 비우면 이름이 "Air")
         Inv.give(sp, item);
         Market.Sale<Ware> sale = r.value();
-        String name = label(item);
         ServerPlayer seller = sp.level().getServer().getPlayerList().getPlayer(l.seller());
         String sellerText = "§6[장터] §f" + name + " §7이(가) 팔렸습니다 §6+" + Economy.fmt(sale.proceeds()) + " 골드 §8(가격 " + Economy.fmt(l.price()) + " · 수수료 "
                 + Economy.fmt(sale.fee()) + " · 산 사람 " + sp.getName().getString() + ")";

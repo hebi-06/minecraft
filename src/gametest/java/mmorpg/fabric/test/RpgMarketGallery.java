@@ -314,11 +314,11 @@ public final class RpgMarketGallery implements FabricClientGameTest {
             if (!(mc.gui.screen() instanceof ChestFormScreen c)) return -1;
             for (int i = 0; i < MarketWindow.PER_PAGE; i++) {
                 FormNet.SlotData d = c.form().slots().get(i);
-                if (!d.empty() && d.icon().item().is(EconomyItems.GOLD_COIN)) return d.kind() == mmorpg.fabric.ui.Slot.DECO ? 1 : 0;
+                if (!d.empty() && d.icon().item().is(EconomyItems.GOLD_COIN)) return d.kind() == mmorpg.fabric.ui.Slot.DECO && d.num() == 1 ? 1 : 0; // 흐린 장식 칸
             }
             return -1;
         });
-        check(nix == MarketWindow.pickIndex(3) && coin == 1, "nix scale (hotbar 3 → 4th row " + MarketWindow.pickIndex(3) + ") selectable, gold coins grey (deco): " + nix + " / " + coin);
+        check(nix == MarketWindow.pickIndex(3) && coin == 1, "nix scale (hotbar 3 → 4th row " + MarketWindow.pickIndex(3) + ") selectable, gold coins dimmed (deco · dim): " + nix + " / " + coin);
         if (nix >= 0) hover(ctx, chestSlot(nix));
         shot(ctx, "w_sell_pick_tip");
         if (nix < 0) return;
