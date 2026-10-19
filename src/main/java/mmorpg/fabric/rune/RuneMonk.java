@@ -95,28 +95,26 @@ final class RuneMonk {
                 int side = i % 2 == 0 ? 1 : -1;
                 Vec3 h = hand(sp, side);
                 punch(level, V.add(h, d, 0.6), d, 0.75, 14.0, 0.16, GOLD, CORE);
-                Vec3 end = V.add(V.up(c, 1.2), d, 2.4);
-                RuneKit.later(2, () -> impact(level, V.add(end, V.rightOf(f), 0.25 * side), 0.6));
-                SkillFx.ring(level, V.add(h, d, 1.4), d, GOLD, 0.45, 0.2, 2.0);
+                Vec3 end = V.add(V.up(c, 1.2), d, 2.6);
+                RuneKit.later(2, () -> impact(level, V.add(end, V.rightOf(f), 0.25 * side), 0.42));
+                SkillFx.ring(level, V.add(h, d, 1.6), d, GOLD, 0.3, 0.18, 2.0);
                 SkillFx.play(level, "entity.player.attack.strong", c, 1.1 + i * 0.1, 0.8);
                 SkillFx.play(level, "entity.player.attack.knockback", c, 1.3, 0.5);
             } else {
                 // 장풍: 펼친 손바닥이 앞으로 밀려나가며 커짐 · 기의 고리
-                Vec3 at = V.add(V.up(c, 1.2), d, 1.6);
-                palm(level, at, Opt.of("dir", d, "speed", 6.0, "size", 1.0, "life", 0.32, "grow", 0.6, "fade", 0.55));
+                Vec3 at = V.add(V.up(c, 1.2), d, 2.2);
+                palm(level, at, Opt.of("dir", d, "speed", 6.0, "size", 0.75, "life", 0.32, "grow", 0.5, "fade", 0.55));
                 for (int j = 0; j < 3; j++) {
                     final int jj = j;
-                    RuneKit.later(j, () -> SkillFx.ring(level, V.add(at, d, 0.8 + jj * 0.9), d, jj % 2 == 0 ? GOLD : CORE, 0.8 + jj * 0.35, 0.3, 3.0));
+                    RuneKit.later(j, () -> SkillFx.ring(level, V.add(at, d, 0.8 + jj * 0.9), d, jj % 2 == 0 ? GOLD : CORE, 0.55 + jj * 0.25, 0.3, 3.0));
                 }
-                SkillFx.arc(level, V.add(V.up(c, 1.1), f, 1.8), f, Opt.of("shape", "arc", "size", 2.4, "life", 0.22, "speed", 3.0, "spin", 0.0, "color", GOLD, "aura",
-                        EMBER));
                 SkillFx.play(level, "wind_charge.burst", c, 0.9, 0.9);
                 SkillFx.play(level, "entity.player.attack.knockback", c, 0.7, 1.0);
             }
             for (LivingEntity e : RuneKit.nearestTo(RuneKit.coneAround(sp, c, f, radius, cone), c)) {
                 PairKit.hit(sp, r, e, P, last ? k.num("crush") : k.num("mult"), last ? DamageNumbers.Style.IMPACT : null, life, dmg -> {
                     Vec3 b = Kit.bodyPoint(e);
-                    if (RuneKit.fxQuota("chainFist", 4)) impact(level, V.add(b, V.unit(V.sub(sp.getEyePosition(), b)), 0.3), last ? 0.9 : 0.55);
+                    if (RuneKit.fxQuota("chainFist", 4)) impact(level, V.add(b, V.unit(V.sub(sp.getEyePosition(), b)), 0.3), (last ? 0.6 : 0.4) * RuneKit.nearK(sp, b, 4, 0.5));
                     if (last && !PairKit.boss(e)) RuneKit.knock(e, f, k.num("knock"), 0.3);
                 });
             }
@@ -141,7 +139,7 @@ final class RuneMonk {
         double stop = can;
         for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(start, 1.0), f, can + 1.0, k.num("width"))) {
             first = h.e();
-            stop = Math.max(0, Math.min(can, h.t() - 1.1 - Kit.bodyPad(h.e())));
+            stop = Math.max(0, Math.min(can, h.t() - 1.7 - Kit.bodyPad(h.e())));
             break;
         }
         final LivingEntity kicked = first;
@@ -179,7 +177,7 @@ final class RuneMonk {
             SkillFx.play(level, "entity.goat.ram_impact", c, 1.2, 0.8);
             List<LivingEntity> got = new ArrayList<>();
             if (kicked != null && !kicked.isRemoved()) got.add(kicked);
-            for (LivingEntity e : RuneKit.coneAround(sp, c, f, 2.2, 90)) if (!got.contains(e)) got.add(e);
+            for (LivingEntity e : RuneKit.coneAround(sp, c, f, 2.6, 90)) if (!got.contains(e)) got.add(e);
             for (LivingEntity e : got) {
                 PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                     impact(level, Kit.bodyPoint(e), 0.7);
@@ -258,7 +256,7 @@ final class RuneMonk {
             Vec3 view = sp.getViewVector(1F);
             Vec3 f = V.flat(view);
             Vec3 at = V.add(V.up(c, 1.15), f, 1.6);
-            palm(level, at, Opt.of("dir", f, "speed", range * 1.4, "size", 1.6, "life", 0.42, "grow", 0.9, "fade", 0.5));
+            palm(level, at, Opt.of("dir", f, "speed", range * 1.4, "size", 1.4, "life", 0.42, "grow", 0.6, "fade", 0.5));
             for (int j = 0; j < 4; j++) {
                 final int jj = j;
                 RuneKit.later(j, () -> SkillFx.ring(level, V.add(at, f, 1.0 + jj * 1.6), f, jj % 2 == 0 ? GOLD : CORE, 1.0 + jj * 0.55, 0.32, 3.0));
@@ -373,7 +371,7 @@ final class RuneMonk {
     private static final double GIANT = 2.6;
     private static final int SLAM = 4;
 
-    /** 아래를 향한 거대한 금빛 주먹 (모형: 주먹 아래 끝 = 0, 아래팔은 위로) */
+    /** 아래를 향한 거대한 금빛 주먹 (모형: 주먹 아래 끝 = 0, 아래팔은 위로, +z = 손바닥 쪽 — 말아 쥔 손가락 넷 · 가로지르는 엄지가 보임) */
     private static PairKit.Rig giantFist(ServerLevel level, Vec3 base, int life, Vec3 offset, Quaternionf rot, double scale) {
         PairKit.Rig g = new PairKit.Rig(level, base, life);
         g.offset = offset;
@@ -382,7 +380,8 @@ final class RuneMonk {
         g.add(GOLD_BLOCK, new Vec3(0, 2.75, 0), 1.0, 2.6, 1.0, PairKit.GLOW);
         g.add(SHROOM, new Vec3(0, 1.35, 0), 1.12, 0.26, 1.12, PairKit.GLOW);
         g.add(GOLD_BLOCK, new Vec3(0, 0.72, 0), 1.5, 1.15, 1.4, PairKit.GLOW);
-        g.add(RAW_GOLD, new Vec3(0.78, 0.85, 0.35), 0.36, 0.7, 0.42, PairKit.GLOW);
+        for (int i = 0; i < 4; i++) g.add(RAW_GOLD, new Vec3(-0.54 + i * 0.36, 0.6, 0.74), 0.31, 0.95, 0.14, PairKit.GLOW);
+        g.add(GLOW_BLOCK, new Vec3(-0.12, 0.88, 0.84), 1.05, 0.3, 0.16, PairKit.GLOW);
         for (int i = 0; i < 4; i++) g.add(GLOW_BLOCK, new Vec3(-0.51 + i * 0.34, 0.08, 0.2), 0.3, 0.26, 0.5, PairKit.GLOW);
         return g;
     }
@@ -421,8 +420,8 @@ final class RuneMonk {
         }
         // 하늘의 거대한 주먹: 작게 맺혀 커짐 (조준한 곳 위 — 주먹 아래 끝이 땅에서 sky 칸)
         // 조준한 곳 너머 위 (1인칭에서도 보이게 — 눈에서 30° 안쪽)
-        double sky = 5.8;
-        Vec3 skyAt = V.add(V.up(aim, sky), f, 3.0);
+        double sky = 3.6;
+        Vec3 skyAt = V.add(V.up(aim, sky), f, 3.5);
         Quaternionf q = PairKit.facing(V.scale(f, -1));
         PairKit.Rig fist = giantFist(level, aim, end, V.sub(skyAt, aim), q, 0.15);
         RuneKit.later(2, () -> fist.pose(V.sub(skyAt, aim), q, GIANT, delay - 2));

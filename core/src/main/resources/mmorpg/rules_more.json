@@ -224,7 +224,7 @@
       "common": {"fn": "chainFist", "name": "연환권", "desc": "주먹을 세 번 내지르고 장풍으로 마무리", "use": "전방 3타 · 장풍", "mult": 1, "hits": 3, "gap": 10, "crush": 1, "radius": 3.6, "cone": 110, "knock": 0.55, "multName": "주먹 ", "crushName": "장풍", "flow": ["앞 {radius}칸 · {t:gap}마다 주먹 셋 → 장풍"]},
       "rare": {"fn": "flyingKick", "name": "비각", "desc": "날아차기로 돌진해 처음 맞은 적을 차고 내려찍음", "use": "돌진 · 착지 충격", "mult": 4, "crush": 3, "range": 8, "width": 1.4, "radius": 2.6, "multName": "날아차기 ", "crushName": "내려찍기", "flow": ["앞 {range}칸 돌진 · 처음 맞은 적에서 멈춤", "내려찍기 둘레 {radius}칸"]},
       "noble": {"fn": "palmBlast", "name": "붕권", "desc": "기를 모아 거대한 장풍을 내지름", "use": "전방 광역 · 밀쳐냄", "mult": 12, "range": 8, "cone": 70, "delay": 10, "knock": 1.4, "flow": ["{t:delay} 기를 모아 앞 {range}칸 부채꼴 ({cone}도)"]},
-      "hero": {"fn": "hundredFists", "name": "백열권", "desc": "수많은 주먹을 퍼붓고 마지막 일격", "use": "전방 연타 · 마무리", "mult": 3.2, "hits": 5, "gap": 10, "crush": 4, "radius": 4, "cone": 100, "knock": 0.8, "multName": "주먹 ", "crushName": "마지막 일격", "flow": ["앞 {radius}칸 · 주먹 비 ({t:gap}마다 피해)", "마지막 일격에 밀쳐냄"]},
+      "hero": {"fn": "hundredFists", "name": "백열권", "desc": "수많은 주먹을 퍼붓고 마지막 일격", "use": "전방 연타 · 마무리", "mult": 3.2, "hits": 5, "gap": 10, "crush": 4, "radius": 4.5, "cone": 120, "knock": 0.8, "multName": "주먹 ", "crushName": "마지막 일격", "flow": ["앞 {radius}칸 · 주먹 비 ({t:gap}마다 피해)", "마지막 일격에 밀쳐냄"]},
       "transcend": {"fn": "heavenFist", "name": "천권 강림", "desc": "하늘에 맺힌 기의 주먹이 쏟아지고 거대한 주먹이 내리꽂힘", "use": "원거리 광역 · 주먹 비 · 거대한 주먹", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 6.5, "delay": 20, "multName": "주먹 ", "crushName": "거대한 주먹", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 주먹", "끝에 하늘의 거대한 주먹"]}
     },
     "hunter": {

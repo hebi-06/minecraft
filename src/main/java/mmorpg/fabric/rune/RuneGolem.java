@@ -180,6 +180,9 @@ final class RuneGolem {
 
     // ------------------------------------------------------------ 희귀: 돌의 수호
 
+    /** 돌기둥 넷의 방위 (보는 쪽에서 — 앞 양옆은 1인칭 화면 가장자리) */
+    private static final double[] WARD_ANGLES = {52, -52, 128, -128};
+
     /**
      * 돌의 수호: 몸에 보호막 (최대 체력 × shield × 스탯 비례, ticks 틱 — 비취빛 방패 문장 · 둘레 육각 판) + 내 둘레 대각선 넷에 룬 돌기둥 (블록 표시) 이 솟으며
      * 둘레 radius 칸의 적을 침 (위력 × mult) → gap 틱 뒤 돌기둥이 바깥으로 쓰러지며 한 번 더 (위력 × mult) · 무너짐
@@ -206,8 +209,9 @@ final class RuneGolem {
         List<Vec3> outs = new ArrayList<>();
         int pillarLife = 4 + gap + 16;
         for (int j = 0; j < 4; j++) {
-            Vec3 out = RuneKit.turn(f, 45 + j * 90);
-            Vec3 p = PairKit.onGround(level, V.add(c, out, 2.7));
+            // 앞 양옆 (±52° — 1인칭 화면 가장자리) · 뒤 양옆 (±128°), 3.1칸
+            Vec3 out = RuneKit.turn(f, WARD_ANGLES[j]);
+            Vec3 p = PairKit.onGround(level, V.add(c, out, 3.1));
             PairKit.Rig pl = new PairKit.Rig(level, p, pillarLife);
             pl.offset = new Vec3(0, -3.4, 0);
             pl.rot = PairKit.facing(out);

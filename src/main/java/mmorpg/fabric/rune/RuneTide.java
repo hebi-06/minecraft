@@ -106,7 +106,7 @@ final class RuneTide {
         int ticks = Math.max(1, (int) Math.round(fly * 20));
         Vec3 hand = V.add(from, d, s0);
         // 손 앞에 물이 모임
-        SkillFx.ring(level, V.add(sp.getEyePosition(), view, 1.0), view, WATER, 0.85, 0.3, 3.0);
+        SkillFx.ring(level, V.add(sp.getEyePosition(), view, 1.6), view, WATER, 0.42, 0.22, 3.0);
         SkillFx.particle(level, ParticleTypes.SPLASH, hand, 16, 0.25, 0.1);
         // 물의 창 (뾰족한 촉) + 감싼 물줄기 둘
         RuneKit.rfx2(level, "icicle", hand, Opt.of("dir", d, "speed", speed, "size", 0.95, "life", fly, "fade", 0.15), WATER, FOAM);
@@ -159,7 +159,7 @@ final class RuneTide {
         int gap = (int) k.num("gap");
         int delay = (int) k.num("delay");
         int total = delay + (hits - 1) * gap + 10;
-        Vec3 sky = V.up(g, 5.4);
+        Vec3 sky = V.up(g, 4.1); // 1인칭에서도 구름이 보이게 (눈에서 30° 안쪽)
         SkillFx.rune(level, g, Opt.of("size", radius, "life", total / 20.0, "color", WATER, "alpha", 0.7, "rate", 25.0, "progress", 1.0));
         SkillFx.play(level, "weather.rain", g, 1.0, 0.9);
         SkillFx.play(level, "mob.evocation_illager.cast_spell", sp.position(), 1.3, 0.6);
@@ -319,7 +319,7 @@ final class RuneTide {
             for (int j = 0; j < 8; j++) {
                 double a = a0 + j * Math.PI / 4;
                 Vec3 p = PairKit.ring(g, radius * 0.55, a);
-                if (!PairKit.nearCam(sp, V.up(p, 1), 2.4)) RuneKit.later(j % 2, () -> crest(level, p, 1.1, 0.4, 0.9));
+                if (!PairKit.nearCam(sp, V.up(p, 1), 3.4)) RuneKit.later(j % 2, () -> crest(level, p, 0.9, 0.4, 0.85));
             }
             spray(level, V.up(g, 1.5), 16, 1.2);
             SkillFx.particle(level, ParticleTypes.SPLASH, V.up(g, 2.5), 60, 1.2, 0.4);
@@ -362,10 +362,10 @@ final class RuneTide {
         // 파도 (세 겹 — 앞의 큰 물마루 · 뒤의 낮은 물결 · 앞의 흰 거품): 옆으로 2.5칸마다
         for (double l = -span / 2; l <= span / 2 + 0.01; l += 2.5) {
             Vec3 at = V.add(start, side, l);
-            SkillFx.fx(level, "rpg:tide_wave", V.up(at, 1.9), Opt.of("dir", f, "speed", speed, "size", 2.0, "thick", 2.0, "life", lifeS, "color", SEA, "alpha", 0.95));
+            SkillFx.fx(level, "rpg:tide_wave", V.up(at, 1.7), Opt.of("dir", f, "speed", speed, "size", 2.0, "thick", 1.7, "life", lifeS, "color", SEA, "alpha", 0.92));
             SkillFx.fx(level, "rpg:tide_wave", V.add(V.up(at, 0.9), f, -0.8), Opt.of("dir", f, "speed", speed, "size", 2.3, "thick", 1.2, "life", lifeS, "color", WATER,
                     "alpha", 0.9));
-            SkillFx.fx(level, "rpg:tide_wave", V.add(V.up(at, 3.1), f, 0.3), Opt.of("dir", f, "speed", speed, "size", 1.6, "thick", 0.7, "life", lifeS, "color",
+            SkillFx.fx(level, "rpg:tide_wave", V.add(V.up(at, 2.8), f, 0.3), Opt.of("dir", f, "speed", speed, "size", 1.6, "thick", 0.6, "life", lifeS, "color",
                     FOAM, "alpha", 0.85));
         }
         SkillFx.play(level, "ambient.weather.thunder", c0, 0.6, 0.4);
@@ -456,7 +456,7 @@ final class RuneTide {
     private static final int DIVE = 6;
     private static final double SEG = 0.95;
     private static final double COIL_R = 2.4;
-    private static final double COIL_H = 6.0;
+    private static final double COIL_H = 4.8;
     private static final double TURNS = 1.35;
 
     /** 똬리 위 자리 (u = 0 땅속 ~ 1 머리) */

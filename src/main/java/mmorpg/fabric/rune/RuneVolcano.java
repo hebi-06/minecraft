@@ -91,9 +91,9 @@ final class RuneVolcano {
         SkillFx.particle(level, ParticleTypes.LAVA, at, Math.max(2, n / 2), 0.3, 0);
     }
 
-    /** 폭발 (rpg:rfx_boom — 미리 칠한 불꽃) · 불길 고리 · 연기 */
-    static void blast(ServerPlayer sp, ServerLevel level, Vec3 at, double radius) {
-        double sc = RuneKit.nearK(sp, V.up(at, radius * 0.4), 6, 0.45);
+    /** 폭발 (rpg:rfx_boom — 미리 칠한 불꽃, 크기 배율 k) · 불길 고리 · 연기 */
+    static void blast(ServerPlayer sp, ServerLevel level, Vec3 at, double radius, double k) {
+        double sc = RuneKit.nearK(sp, V.up(at, radius * 0.4), 6, 0.45) * k;
         RuneKit.rfx(level, "boom", V.up(at, radius * 0.35 * sc), Opt.of("size", radius * 0.75 * sc, "life", 0.55, "frames", 8.0, "fps", 15.0));
         for (int j = 0; j < 8; j++) {
             double a = j / 8.0 * Math.PI * 2 + Kit.rand() * 0.3;
@@ -164,7 +164,7 @@ final class RuneVolcano {
         Vec3 f = Kit.facingOf(sp);
         double radius = k.num("radius");
         double cone = k.num("cone");
-        SkillFx.arc(level, V.up(V.add(c, f, 1.5), 1.2), f, Opt.of("shape", "heavy", "flip", false, "size", 2.4, "life", 0.22, "speed", 1.0, "spin", -90.0, "color",
+        SkillFx.arc(level, V.up(V.add(c, f, 2.4), 0.7), f, Opt.of("shape", "heavy", "flip", false, "size", 1.5, "life", 0.2, "speed", 1.0, "spin", -90.0, "alpha", 0.8, "color",
                 LAVA, "aura", CHAR));
         Vec3 hit = V.add(c, f, 1.4);
         SkillFx.fx(level, "rpg:ground_crack", V.up(hit, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.1, "life", 1.4, "color", LAVA,
@@ -228,7 +228,7 @@ final class RuneVolcano {
             });
             RuneKit.later(i * gap + fly, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                blast(sp, level, land, radius);
+                blast(sp, level, land, radius, 0.5);
                 splatter(level, V.up(land, 0.3), 10, 6);
                 RuneKit.glowCrack(level, land, radius * 0.8, LAVA, CORE, Opt.of("life", 1.0));
                 RuneKit.shakeAround(level, land, 10, 0.2, 0.2);
@@ -393,7 +393,7 @@ final class RuneVolcano {
                 final int jj = j;
                 RuneKit.later(jj, () -> geyser(sp, level, p, 1.2, 3.6 + jj * 0.3, 5));
             }
-            blast(sp, level, g, radius);
+            blast(sp, level, g, radius, 0.75);
             RuneKit.novaRing(level, g, 1.2, radius * 0.9, LAVA, CORE, Opt.of("life", 0.5));
             RuneKit.shakeAround(level, g, 16, 0.4, 0.4);
             SkillFx.play(level, "random.explode", g, 0.6, 1.0);
@@ -544,7 +544,7 @@ final class RuneVolcano {
                 double a = Kit.rand() * Math.PI * 2;
                 bomb(level, top, V.up(PairKit.onGround(level, PairKit.ring(aim, radius * (0.5 + 0.5 * Kit.rand()), a)), 0.3), 10, 0.7);
             }
-            blast(sp, level, aim, radius);
+            blast(sp, level, aim, radius, 0.9);
             RuneKit.rfx(level, "boom", V.up(top, 1.5), Opt.of("size", 4.0, "life", 0.8, "frames", 8.0, "fps", 10.0));
             RuneKit.novaRing(level, aim, 1.8, radius * 0.9, LAVA, CORE, Opt.of("life", 0.6));
             RuneKit.glowCrack(level, aim, radius * 1.1, LAVA, CORE, Opt.of("life", 2.0, "v", 1.0));

@@ -37,7 +37,8 @@ import org.slf4j.LoggerFactory;
 /**
  * 0.25.0 두 스탯 룬 계열 여섯 (해류 · 골렘 · 무투 · 사냥꾼 · 화산 · 투사 — 30종) 사진첩 (화면 시험, 사진첩 키 pairs): RpgRuneGallery 와 같은 길
  * (평평한 세계 · 과녁 허스크 여섯 · 스킬 칸 1번에 올리고 그 칸의 키로 씀) 으로 룬마다 그 룬의 볼거리 틱에 사진 (pr_&lt;계열&gt;_&lt;등급&gt;_&lt;틱&gt;[_3p]) —
- * 초월 룬은 3인칭으로 한 번 더. 룬마다 써졌는지 · 들어간 피해 · 떠 있는 블록 표시 수를 로그 (pair-gallery) 로, 써지지 않았거나 피해가 0 이면 마지막에 실패.
+ * 초월 룬은 3인칭으로 한 번 더. 룬마다 써졌는지 · 들어간 피해 · 띄운 블록 표시 수를 로그 (pair-gallery) 로, 써지지 않았거나 피해가 0 이거나
+ * 가장 많이 맞은 과녁 하나의 피해가 P × 총 배율 (±1%) 이 아니면 마지막에 실패.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgPairRuneGallery implements FabricClientGameTest {
@@ -102,8 +103,13 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
         if (!failures.isEmpty()) throw new AssertionError("pair rune gallery: " + String.join(" / ", failures));
     }
 
+    /** 화상이 마지막 타격 뒤에 이어지는 룬 (화산) — 끝까지 기다릴 틱 (로그의 피해가 P × 총 배율이 되게) */
+    private static final Map<String, Integer> WAIT = Map.of("magmaSlam", 72, "lavaBombs", 80, "magmaGeyser", 125);
+
     /** 끝까지 기다릴 틱 (마무리 · 화상 · 무너짐까지) */
     private static int total(Runes.Rune r) {
+        Integer w = WAIT.get(r.def().str("fn"));
+        if (w != null) return w;
         return switch (r.grade()) {
             case "transcend" -> 130;
             case "hero" -> 100;
@@ -167,8 +173,11 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
         LOG.info("[pair-gallery] {} {} {} cast={} dealt={} maxOne={} (P×total {}) displays={}", id, fn, third ? "3p" : "1p", cast,
                 String.format(Locale.ROOT, "%.1f", dealt[0]), String.format(Locale.ROOT, "%.1f", dealt[1]),
                 String.format(Locale.ROOT, "%.1f", P * Runes.runeTotalMult(r.def())), displays);
+        double want = P * Runes.runeTotalMult(r.def());
         if (!cast) failures.add(id + (third ? " (3p)" : "") + " not cast");
         else if (!(dealt[0] > 0)) failures.add(id + (third ? " (3p)" : "") + " dealt no damage");
+        // 가장 많이 맞은 과녁 하나 = P × 총 배율 (같은 적을 여러 번 · 화상 · 마무리가 모두 들어감 — 실제 입력 · 클라이언트에서도)
+        else if (Math.abs(dealt[1] - want) > want * 0.01) failures.add(id + (third ? " (3p)" : "") + " one target " + Math.round(dealt[1]) + " vs " + Math.round(want));
     }
 
     private static ServerPlayer player(MinecraftServer s) {

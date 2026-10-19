@@ -154,7 +154,7 @@ final class RuneGladiator {
         double stop = can;
         for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(start, 1.0), f, can + 1.0, k.num("width"))) {
             first = h.e();
-            stop = Math.max(0, Math.min(can, h.t() - 1.2 - Kit.bodyPad(h.e())));
+            stop = Math.max(0, Math.min(can, h.t() - 1.7 - Kit.bodyPad(h.e())));
             break;
         }
         final LivingEntity rammed = first;
@@ -190,7 +190,7 @@ final class RuneGladiator {
             SkillFx.play(level, "block.anvil.land", c, 1.4, 0.4);
             List<LivingEntity> got = new ArrayList<>();
             if (rammed != null && !rammed.isRemoved()) got.add(rammed);
-            for (LivingEntity e : RuneKit.coneAround(sp, c, f, 2.4, 100)) if (!got.contains(e)) got.add(e);
+            for (LivingEntity e : RuneKit.coneAround(sp, c, f, 2.8, 100)) if (!got.contains(e)) got.add(e);
             for (LivingEntity e : got) {
                 PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                     clang(level, Kit.bodyPoint(e), 0.8);
@@ -274,8 +274,15 @@ final class RuneGladiator {
         SkillFx.every(hits, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 c = sp.position();
-            SkillFx.arc(level, V.up(c, 1.1), Kit.facingOf(sp), Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", radius * 0.75, "life", 0.25, "speed", 0.0, "spin",
-                    i * 90.0, "color", STEEL, "aura", DARK, "alpha", 0.6));
+            // 몸 둘레의 사슬 참격 여섯 (도는 쪽으로 — 앞 (1인칭 화면) 의 것은 흐리게, 몸 가운데에는 그리지 않음)
+            for (int j = 0; j < 6; j++) {
+                double a = j / 6.0 * Math.PI * 2 + i * 0.7;
+                Vec3 dir = new Vec3(Math.cos(a + Math.PI / 2), 0, Math.sin(a + Math.PI / 2));
+                Vec3 at = new Vec3(c.x + Math.cos(a) * radius * 0.7, c.y + 1.0, c.z + Math.sin(a) * radius * 0.7);
+                boolean ahead = V.dot(V.flat(V.sub(at, c)), Kit.facingOf(sp)) > 0.6;
+                SkillFx.arc(level, at, dir, Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", 1.6, "life", 0.22, "speed", 2.0, "spin", i % 2 == 0 ? 30.0 : -30.0,
+                        "color", STEEL, "aura", j % 2 == 0 ? DARK : null, "alpha", ahead ? 0.4 : 0.9));
+            }
             RuneKit.zonePulse(level, c, STEEL, radius, 0.35);
             SkillFx.play(level, "block.chain.hit", c, 0.7 + i * 0.1, 1.0);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.8, 0.8);

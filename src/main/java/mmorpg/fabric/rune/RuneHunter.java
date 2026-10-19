@@ -66,12 +66,15 @@ final class RuneHunter {
     private static final BlockState IRON = Blocks.IRON_BLOCK.defaultBlockState();
     private static final BlockState PLATE = Blocks.POLISHED_DEEPSLATE.defaultBlockState();
     private static final BlockState TRIGGER = Blocks.VERDANT_FROGLIGHT.defaultBlockState();
+    /** 덫 크기 (모형 배 — 1인칭 5칸 앞에서도 턱이 보이게) */
+    private static final double TRAP_SCALE = 1.3;
 
     /** 강철 덫 모형 (닫히는 턱 둘 — 무리 1 은 +z 쪽에 눕고 -90° 로 섬, 무리 2 는 -z 쪽 · +90°) */
     private static PairKit.Rig trap(ServerLevel level, Vec3 base, int life, Vec3 offset, Quaternionf rot) {
         PairKit.Rig t = new PairKit.Rig(level, base, life);
         t.offset = offset;
         t.rot = rot;
+        t.scale = TRAP_SCALE;
         t.add(PLATE, new Vec3(0, 0.03, 0), 1.3, 0.06, 1.75, PairKit.LIT);
         t.add(TRIGGER, new Vec3(0, 0.07, 0), 0.45, 0.07, 0.45, PairKit.GLOW);
         int a = t.group(new Vec3(0, 0.06, 0));
@@ -109,13 +112,13 @@ final class RuneHunter {
         SkillFx.play(level, "item.armor.equip_chain", sp.position(), 1.2, 0.8);
         Quaternionf open = new Quaternionf();
         PairKit.Rig t = trap(level, g, 8 + root + 6, new Vec3(0, 2.6, 0), new Quaternionf(q).mul(PairKit.about(new Vec3(0, 1, 0), 140)));
-        RuneKit.later(2, () -> t.pose(Vec3.ZERO, q, 1.0, 3, open, open, open));
+        RuneKit.later(2, () -> t.pose(Vec3.ZERO, q, TRAP_SCALE, 3, open, open, open));
         RuneKit.later(5, () -> {
             SkillFx.play(level, "block.chain.place", g, 1.0, 1.0);
             SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.35, "color", WILD, "alpha", 0.8, "rate", 200.0, "progress", 1.0));
         });
         // 철컥 (턱이 닫힘)
-        RuneKit.later(6, () -> t.pose(Vec3.ZERO, q, 1.0, 2, open, PairKit.about(new Vec3(1, 0, 0), -88), PairKit.about(new Vec3(1, 0, 0), 88)));
+        RuneKit.later(6, () -> t.pose(Vec3.ZERO, q, TRAP_SCALE, 2, open, PairKit.about(new Vec3(1, 0, 0), -88), PairKit.about(new Vec3(1, 0, 0), 88)));
         RuneKit.later(8, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             claw(level, V.up(g, 0.6), 0.9);
@@ -209,9 +212,9 @@ final class RuneHunter {
 
     // ------------------------------------------------------------ 고귀: 사냥 그물
 
-    /** 그물 (rpg:rfx_net — 땅에 눕힌 판): at 에 size, vel 로 움직임 */
-    static void net(ServerLevel level, Vec3 at, double size, double life, Vec3 vel, double spin, double alpha) {
-        RuneKit.rfx2(level, "net", at, Opt.of("dir", V.UP, "size", size, "life", life, "vel", vel, "spin", spin, "alpha", alpha, "fade", 0.2), WILD, CORE,
+    /** 그물 (rpg:rfx_net — dir 쪽을 보는 판, 땅에 덮을 때는 위): at 에 size, vel 로 움직임 */
+    static void net(ServerLevel level, Vec3 at, Vec3 dir, double size, double life, Vec3 vel, double spin, double alpha) {
+        RuneKit.rfx2(level, "net", at, Opt.of("dir", dir, "size", size, "life", life, "vel", vel, "spin", spin, "alpha", alpha, "fade", 0.2), WILD, CORE,
                 new int[] {0, 1}, null);
     }
 
@@ -237,7 +240,9 @@ final class RuneHunter {
             RuneKit.later(t, () -> {
                 double u = (tt + 1) / (double) fly;
                 Vec3 p = PairKit.arcAt(hand, V.up(land, 0.3), 2.0, u);
-                net(level, p, radius * (0.25 + 0.7 * u), 0.08, Vec3.ZERO, tt * 25.0, 0.9);
+                // 날아가는 동안은 시전자 쪽을 보며 펼쳐짐 (눕혀 두면 옆에서 안 보임) → 떨어지며 눕음
+                Vec3 face = V.unit(V.lerp(RuneKit.towardEye(sp, p), V.UP, u * u));
+                net(level, p, face, radius * (0.25 + 0.7 * u), 0.08, Vec3.ZERO, tt * 25.0, 0.9);
             });
         }
         SkillFx.play(level, "entity.fishing_bobber.throw", sp.position(), 0.6, 1.0);
@@ -250,7 +255,7 @@ final class RuneHunter {
                 if (!RuneKit.sameLife(sp, life)) return;
                 int step = Math.min(hits - 1, (tt - fly) / gap);
                 double s = radius * (1.0 - 0.1 * step);
-                net(level, land, s, 0.14, Vec3.ZERO, 0, 0.95);
+                net(level, land, V.UP, s, 0.14, Vec3.ZERO, 0, 0.95);
                 if (tt % 6 == 0) {
                     for (int j = 0; j < 6; j++) {
                         Vec3 p = PairKit.ring(land, s * 0.95, j / 6.0 * Math.PI * 2);
@@ -281,7 +286,7 @@ final class RuneHunter {
                     SkillFx.fx(level, "rpg:light_cut", V.lerp(p, land, 0.5), Opt.of("dir", V.unit(V.sub(land, p)), "size", s * 0.5, "thick", 0.18, "life", 0.35,
                             "delay", 0.2, "color", WILD, "alpha", 0.9));
                 }
-                net(level, V.up(land, 0.02), s * 1.05, 0.25, Vec3.ZERO, 0, 1.0);
+                net(level, V.up(land, 0.02), V.UP, s * 1.05, 0.25, Vec3.ZERO, 0, 1.0);
                 SkillFx.play(level, "block.chain.hit", g, 0.8 + ii * 0.1, 1.0);
                 SkillFx.play(level, "entity.player.attack.sweep", g, 1.2, 0.5);
                 for (LivingEntity e : Kit.around(sp, g, radius, 2.5)) {
@@ -314,10 +319,10 @@ final class RuneHunter {
         Vec3 f0 = Kit.facingOf(sp);
         // 내 둘레에서 늑대 다섯이 나타남
         for (int j = 0; j < 5; j++) {
-            Vec3 d = RuneKit.turn(f0, -100 + j * 50);
-            Vec3 p = V.up(V.add(sp.position(), d, 1.6), 0.9);
-            beast(level0, p, WOLF, Opt.of("size", 0.55, "life", 0.3, "grow", 0.4, "fade", 0.5));
-            SkillFx.particle(level0, ParticleTypes.POOF, p, 4, 0.2, 0.02);
+            Vec3 d = RuneKit.turn(f0, -56 + j * 28);
+            Vec3 p = V.up(V.add(sp.position(), d, 2.7), 0.8);
+            beast(level0, p, WOLF, Opt.of("size", 0.4, "life", 0.3, "grow", 0.4, "fade", 0.5));
+            SkillFx.particle(level0, ParticleTypes.POOF, p, 2, 0.15, 0.02);
         }
         SkillFx.play(level0, "entity.polar_bear.warning", sp.position(), 1.4, 0.7);
         SkillFx.play(level0, "mob.wolf.shake", sp.position(), 0.8, 1.0);
@@ -412,8 +417,9 @@ final class RuneHunter {
         SkillFx.play(level, "entity.ravager.roar", sp.position(), 0.7, 0.8);
         SkillFx.play(level, "mob.wither.spawn", aim, 1.6, 0.4);
         // 늑대왕: 하늘 높이에서 내려와 (delay) 할퀴는 동안 떠 있음 · 숨결 (2틱마다 다시 그림)
-        Vec3 high = V.add(V.up(aim, 13), f, 4.0);
-        Vec3 hover = V.add(V.up(aim, 6.5), f, 3.0);
+        // 늑대왕은 조준한 곳 너머 위 (1인칭에서도 보이게 — 눈에서 20° 남짓)
+        Vec3 high = V.add(V.up(aim, 9.5), f, 5.0);
+        Vec3 hover = V.add(V.up(aim, 4.4), f, 3.6);
         for (int t = 0; t < crushAt; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
