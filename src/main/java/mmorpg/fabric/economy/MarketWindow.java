@@ -171,14 +171,14 @@ public final class MarketWindow {
         form.set(INFO_TIME, Slot.of(Items.CLOCK, "§7남은 시간 §f" + Economy.timeLeft(l.expiresAt() - MarketStore.now())).lore("§8물건 번호 #" + l.id()).deco());
     }
 
-    /** 확인 창 맨 아랫줄: 왼쪽 세 칸 = 하기 (가운데 체크 · 양옆 연두 유리판), 오른쪽 세 칸 = 그만두기 (가운데 X · 양옆 빨간 유리판) */
+    /** 확인 창 맨 아랫줄: 왼쪽 세 칸 = 하기 (가운데 체크 · 양옆 초록 판 pane_yes), 오른쪽 세 칸 = 그만두기 (가운데 X · 양옆 빨간 판 pane_no) */
     static void decisionRow(ChestForm form, String yes, String no, String... yesLore) {
-        form.set(OK_CELLS[0], Slot.of(Items.LIME_STAINED_GLASS_PANE, yes).lore(yesLore));
+        form.set(OK_CELLS[0], Slot.of(Icon.sprite("pane_yes"), yes).lore(yesLore));
         form.set(OK, Slot.of(Icon.sprite("icon_check"), yes).lore(yesLore));
-        form.set(OK_CELLS[2], Slot.of(Items.LIME_STAINED_GLASS_PANE, yes).lore(yesLore));
-        form.set(NO_CELLS[0], Slot.of(Items.RED_STAINED_GLASS_PANE, no));
+        form.set(OK_CELLS[2], Slot.of(Icon.sprite("pane_yes"), yes).lore(yesLore));
+        form.set(NO_CELLS[0], Slot.of(Icon.sprite("pane_no"), no));
         form.set(NO, Slot.of(Icon.sprite("icon_cross"), no));
-        form.set(NO_CELLS[2], Slot.of(Items.RED_STAINED_GLASS_PANE, no));
+        form.set(NO_CELLS[2], Slot.of(Icon.sprite("pane_no"), no));
     }
 
     // ------------------------------------------------------------ 둘러보기
@@ -259,12 +259,12 @@ public final class MarketWindow {
             decisionRow(form, "§a사기 §7(" + Economy.fmt(l.price()) + " 골드)", "§c취소",
                     "§7보유 " + Economy.fmt(have) + " → " + Economy.fmt(have - l.price()) + " 골드");
         } else {
-            // 모자라면 사기 칸은 누를 수 없는 회색 (방벽 — 왜 안 되는지 이름에)
+            // 모자라면 사기 칸은 누를 수 없는 회색 (가운데 방벽 · 양옆 회색 판 pane_off — 왜 안 되는지 이름에)
             String why = "§c골드가 모자랍니다 §7(" + Economy.fmt(have) + " / " + Economy.fmt(l.price()) + ")";
             decisionRow(form, why, "§c취소");
-            form.set(OK_CELLS[0], Slot.of(Items.GRAY_STAINED_GLASS_PANE, why).deco());
+            form.set(OK_CELLS[0], Slot.of(Icon.sprite("pane_off"), why).deco());
             form.set(OK, Slot.of(Items.BARRIER, why).lore("§7골드: 보스 · 퀘스트 보상, 장터에서 팔기").deco());
-            form.set(OK_CELLS[2], Slot.of(Items.GRAY_STAINED_GLASS_PANE, why).deco());
+            form.set(OK_CELLS[2], Slot.of(Icon.sprite("pane_off"), why).deco());
         }
         form.set(CONFIRM_PURSE, goldSlot(sp));
         form.fillRange(PER_PAGE, SIZE, Slot.PANE);
