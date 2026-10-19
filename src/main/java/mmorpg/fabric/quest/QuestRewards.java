@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.IntFunction;
 import mmorpg.core.Armor;
+import mmorpg.core.Economy;
 import mmorpg.core.Js;
 import mmorpg.core.Leveling;
 import mmorpg.core.Obj;
@@ -16,6 +17,7 @@ import mmorpg.fabric.BedrockText;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgPlayers;
+import mmorpg.fabric.economy.Wallet;
 import mmorpg.fabric.gear.GearItems;
 import mmorpg.fabric.rune.RuneItems;
 import mmorpg.fabric.shop.ArmorShop;
@@ -98,10 +100,9 @@ public final class QuestRewards {
         }
     }
 
-    /** 보상으로 줄 아이템 묶음 (giveRewards 가 이대로 줌 — 가방 계산 missingSlots 도 같은 묶음으로) */
+    /** 보상으로 줄 아이템 묶음 (giveRewards 가 이대로 줌 — 가방 계산 missingSlots 도 같은 묶음으로). 실버 · 골드는 지갑으로 (0.21.0 — 아이템 아님) */
     public static List<ItemStack> rewardStacks(Quest.Reward r) {
         List<ItemStack> out = new ArrayList<>();
-        if (r.emerald > 0) split(out, R.obj("CONFIG").str("CURRENCY_ITEM"), r.emerald, n -> new ItemStack(Inv.CURRENCY, n));
         Weapon w = QuestText.rewardWeapon(r);
         if (w != null) {
             ItemStack s = Shop.weaponItem(w);
@@ -189,12 +190,14 @@ public final class QuestRewards {
 
     /**
      * 보상 주기: 경험치 (바닐라 경험치 — 레벨 보상은 9단계부터 그 레벨 수만큼의 바닐라 경험치로, rewardFor 가 미리 바꿔 둠), 스탯 포인트,
-     * 아이템 (가방이 차면 발밑)
+     * 실버 · 골드 (0.21.0 — 지갑으로), 아이템 (가방이 차면 발밑)
      */
     public static void giveRewards(ServerPlayer sp, Quest.Reward r) {
         if (r.xp > 0) sp.giveExperiencePoints(Leveling.pointsForLevels(sp.experienceLevel, r.xp));
         if (r.xpPoints > 0) sp.giveExperiencePoints(r.xpPoints);
         if (r.points > 0) RpgPlayers.addPoints(sp, r.points);
+        if (r.emerald > 0) Inv.earn(sp, r.emerald);
+        if (r.gold > 0) Wallet.give(sp, Economy.Kind.GOLD, r.gold);
         for (ItemStack stack : rewardStacks(r)) {
             try {
                 Inv.give(sp, stack);

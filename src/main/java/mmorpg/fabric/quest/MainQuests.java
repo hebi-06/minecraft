@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import mmorpg.core.Economy;
 import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
@@ -245,7 +246,7 @@ public final class MainQuests {
             new Arc("ymir", "north", List.of(kill("draugr", 12, 0, 30), kill("frost_giant", 10, 1, 32), collect("frost_giant", 6, 1, 32),
                     collect("troll", 8, 0, 30)), 40, null, "transcend"));
 
-    /** 지역 사이 · 마지막 귀환 보상 (에메랄드) */
+    /** 지역 사이 · 마지막 귀환 보상 (실버 — 0.21.0 전에는 에메랄드) */
     private static final Map<String, Integer> TRAVEL_EMERALD = Map.of("farm", 2, "desert", 4, "sea", 6, "north", 8, "home", 20);
 
     /**
@@ -579,8 +580,8 @@ public final class MainQuests {
     public record BossReward(JsonObject reward, String mat) {}
 
     /**
-     * 요르문간드 (hero) · 이미르 (transcend) 보상: 그 길 · 등급의 무기를 만들 수 있으면 주재료 절반 + 제작 에메랄드 · 별철 광석,
-     * 전설 무기 길이면 (만들 수 없음 — 전설 퀘스트) 같은 에메랄드 · 별철 광석만. 룬 뽑기권 1 · 2장, 경험치 2 · 3레벨
+     * 요르문간드 (hero) · 이미르 (transcend) 보상: 그 길 · 등급의 무기를 만들 수 있으면 주재료 절반 + 제작 실버 · 별철 광석,
+     * 전설 무기 길이면 (만들 수 없음 — 전설 퀘스트) 같은 실버 · 별철 광석만. 룬 뽑기권 1 · 2장, 경험치 2 · 3레벨
      */
     public static BossReward bossReward(String type, String grade) {
         boolean big = grade.equals("transcend");
@@ -717,6 +718,9 @@ public final class MainQuests {
                 // 단계 표의 "l10_noble" = 그 길의 무기 종류
                 String weapon = reward.get("weapon").getAsString();
                 if (!weapon.isEmpty() && weapon.matches("^l\\d+_.*")) reward.addProperty("weapon", type + "_" + weapon);
+                // 0.21.0 골드: 실버 ÷ mainGoldPer (내림) + 보스 단계 bossStepGold
+                int gold = Economy.mainGold(reward.get("emerald").getAsInt(), "boss".equals(q.get("type").getAsString()));
+                if (gold > 0) reward.addProperty("gold", gold);
                 J.put(q, "title", t.title(), "offer", fill(t.offer(), type, mat), "progress", fill(t.progress(), type, mat), "done", fill(t.done(), type, mat), "reward", reward);
                 out.add(q);
                 prev = mainId(type, step);

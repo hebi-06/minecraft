@@ -5,9 +5,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import mmorpg.core.Rules;
 import mmorpg.fabric.BedrockText;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.Items;
 
 /**
  * 대화창 (forms.js DialogForm): 화면 아래 금테 대화 상자 — 말하는 이름표 · 대사 · 선택지 (그림 + 글자, 한 줄에 넘치면 … — 클라이언트가 자름).
@@ -21,7 +21,8 @@ public final class DialogForm {
     public static final Icon NEXT = Icon.sprite("icon_next");
     public static final Icon OK = Icon.sprite("icon_check");
     public static final Icon BYE = Icon.sprite("icon_cross");
-    public static final Icon SHOP = Icon.item(Items.EMERALD);
+    /** 상점 선택지 그림 (0.21.0 — 은화: NPC 화폐) */
+    public static final Icon SHOP = Icon.item(Rules.get().obj("CONFIG").str("CURRENCY_ITEM"));
 
     private final String name;
     private final String text;

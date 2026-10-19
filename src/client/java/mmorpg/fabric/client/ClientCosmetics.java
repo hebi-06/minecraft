@@ -12,8 +12,6 @@ import mmorpg.fabric.cosmetic.Look;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 
 /**
  * 클라이언트의 장식 (0.13.0): 내 장식 (가진 것 · 모습 — 서버가 보냄), 보이는 사람들의 모습 (UUID → 모습), 장식 창의 입어 보기 (preview).
@@ -126,16 +124,9 @@ public final class ClientCosmetics {
         return preview;
     }
 
-    /** 가진 에메랄드 (내 가방 — 서버 Inv.money 와 같게 핫바 + 가방 36칸) */
+    /** 가진 골드 (0.21.0 — 장식은 골드로: 지갑 + 가방의 금화, 서버 Wallet.total 과 같게) */
     public static int money() {
-        Player p = Minecraft.getInstance().player;
-        if (p == null) return 0;
-        int n = 0;
-        for (int i = 0; i < 36; i++) {
-            ItemStack s = p.getInventory().getItem(i);
-            if (s.is(Items.EMERALD)) n += s.getCount();
-        }
-        return n;
+        return (int) Math.min(Integer.MAX_VALUE, ClientWallet.total(mmorpg.core.Economy.Kind.GOLD));
     }
 
     /** 시험용: 이 사람의 모습을 바로 넣음 (서버를 거치지 않음) */

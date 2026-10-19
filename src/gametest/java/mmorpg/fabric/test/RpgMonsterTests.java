@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  * 5단계 게임 시험 (서버) — 일반 몬스터 (monsters.js) · 사냥터 (huntzone.js) · 전리품 (loot.js lootOnDeath):
  * 맞기 전에는 공격하지 않음 · 맞으면 windup 뒤 설정 attack 만큼 (난이도 · 갑옷 · 방패 규칙), 사거리 밖으로 나가면 빗나감, 멈춤 (크리에이티브),
  * 달려들기 · 속박/기절이면 달려들기/공격 없음, 원거리 반격 (맞음 · 고리 밖으로 피함), 껍질 -20% · 구속 · 언데드 · 무리 태그, 트롤 재생 · 회복 (다친 채 불러와도),
- * 도발, 죽으면 경험치 · 전리품 · 에메랄드 (Loot.rand) · 퀘스트 처치 수 · 경험치 제한, 이름표 (첫 줄 = 이름, 체력 막대 · 타고 있는 글자 표시),
+ * 도발, 죽으면 경험치 · 전리품 · 은화 (0.21.0 — 예전 에메랄드, Loot.rand) · 퀘스트 처치 수 · 경험치 제한, 이름표 (첫 줄 = 이름, 체력 막대 · 타고 있는 글자 표시),
  * 사냥터 (만들기 · 채우기 · 넘치면 치우기 · /mob clear 가 사냥터 몬스터를 남김 · 지우기 · 기록 JSON).
  * 사냥터 · /mob clear 시험은 다른 시험과 겹치지 않게 멀리 (x · z 7만) 하늘 (y 150) 에서. 통과하면 [monster-test] OK 줄.
  */
@@ -454,7 +454,7 @@ public final class RpgMonsterTests {
 
     // ------------------------------------------------------------ 죽음 (lootOnDeath)
 
-    /** 죽으면: 잡은 사람에게 경험치 (구슬 없이) · 전리품 (50%) · 에메랄드 (확률 — Loot.rand 로 정함) · 퀘스트 처치 수, 최고 레벨이 xpUntil 이상이면 경험치 0 */
+    /** 죽으면: 잡은 사람에게 경험치 (구슬 없이) · 전리품 (50%) · 은화 (확률 — Loot.rand 로 정함) · 퀘스트 처치 수, 최고 레벨이 xpUntil 이상이면 경험치 0 */
     @GameTest(environment = "mmorpg:monster", maxTicks = 40)
     public void deathXpLootQuest(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -470,7 +470,7 @@ public final class RpgMonsterTests {
         Quests.stateOf(sp).put(saved.id, new Quest.Entry("a", 0, 0));
         try {
             Monsters.Kind k = Monsters.kind("gulon");
-            // 1. 잡음 (Loot.rand = 0 → 전리품 · 에메랄드 떨어짐)
+            // 1. 잡음 (Loot.rand = 0 → 전리품 · 은화 떨어짐)
             Loot.rand = () -> 0.0;
             RpgMonster g1 = monster(h, "gulon", 3.5, 2, 1.5, false);
             int xp0 = sp.totalExperience;
@@ -480,11 +480,11 @@ public final class RpgMonsterTests {
             AABB around = new AABB(g1.position(), g1.position()).inflate(3);
             List<ItemEntity> items = level.getEntitiesOfClass(ItemEntity.class, around);
             long loot = items.stream().filter(e -> e.getItem().is(GearItems.byId("rpg:loot_gulon"))).count();
-            long emerald = items.stream().filter(e -> e.getItem().is(Items.EMERALD)).mapToInt(e -> e.getItem().getCount()).sum();
+            long emerald = items.stream().filter(e -> e.getItem().is(mmorpg.fabric.economy.EconomyItems.SILVER_COIN)).mapToInt(e -> e.getItem().getCount()).sum();
             h.assertTrue(loot == 1 && emerald == (int) k.emerald()[1], "dropped loot " + loot + " · emerald " + emerald);
             h.assertTrue(Quests.stateOf(sp).get(saved.id).n == 1, "quest kill counted " + Quests.stateOf(sp).get(saved.id).n);
             for (ItemEntity e : items) e.discard();
-            // 2. 확률에 걸리지 않음 (0.99) → 전리품 · 에메랄드 없음, 경험치는 그대로
+            // 2. 확률에 걸리지 않음 (0.99) → 전리품 · 은화 없음, 경험치는 그대로
             Loot.rand = () -> 0.99;
             RpgMonster g2 = monster(h, "gulon", 3.5, 2, 3.5, false);
             int xp1 = sp.totalExperience;
@@ -499,14 +499,14 @@ public final class RpgMonsterTests {
             g3.hurtServer(level, sp.damageSources().playerAttack(sp), 1000F);
             h.assertTrue(sp.totalExperience == xp2, "no xp when capped " + (sp.totalExperience - xp2));
             h.assertTrue(Quests.stateOf(sp).get(saved.id).n == 3, "kills still counted " + Quests.stateOf(sp).get(saved.id).n);
-            // 4. 플레이어가 잡지 않은 죽음 (때린 적 없음) → 경험치 · 전리품 없음, 에메랄드 (전리품 표) 는 떨어짐
+            // 4. 플레이어가 잡지 않은 죽음 (때린 적 없음) → 경험치 · 전리품 없음, 은화 (전리품 표) 는 떨어짐
             Loot.rand = () -> 0.0;
             RpgMonster g4 = monster(h, "gulon", 4.5, 2, 4.5, false);
             int xp3 = sp.totalExperience;
             g4.hurtServer(level, level.damageSources().generic(), 1000F);
             List<ItemEntity> after = level.getEntitiesOfClass(ItemEntity.class, new AABB(g4.position(), g4.position()).inflate(3));
             h.assertTrue(sp.totalExperience == xp3 && after.stream().noneMatch(e -> e.getItem().is(GearItems.byId("rpg:loot_gulon")))
-                    && after.stream().anyMatch(e -> e.getItem().is(Items.EMERALD)), "no credit: emerald only");
+                    && after.stream().anyMatch(e -> e.getItem().is(mmorpg.fabric.economy.EconomyItems.SILVER_COIN)), "no credit: silver coins only");
             for (ItemEntity e : level.getEntitiesOfClass(ItemEntity.class, new AABB(sp.position(), sp.position()).inflate(8))) e.discard();
             ok("death: xp · loot · emerald · quest kill count · xp cap · no credit");
         } finally {

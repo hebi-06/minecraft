@@ -37,6 +37,7 @@ import net.minecraft.world.item.Items;
  * 아랫줄 (6단계 — 애드온 상자 창의 아랫줄): 퀘스트 목록 · 엔더 상자 (내 엔더 상자 27칸) · 탈것 (누르면 고른 탈것을 불러 탐 · 타고 있으면 돌려보냄,
  * Shift + 누르면 탈것 고르기 창) · 장식 (0.13.0 — 장식 창: 무기 · 갑옷 스킨, 장식, 오라, 칭호, 갑옷 숨기기).
  * 스탯 줄마다 나무 칸 (7단계 스탯 트리 — "나무 3/10", 고를 갈래가 있으면 깜빡임): 누르면 그 스탯의 스탯 트리 창.
+ * 제목 옆 작은 단추 (0.21.0): 유저 장터 · 쓰레기통 (서버가 창을 엶 — 이 창 대신).
  */
 public final class StatScreen extends Screen {
     public static final int W = 300;
@@ -52,6 +53,14 @@ public final class StatScreen extends Screen {
     static final int BTN_GAP = 6;
     /** 아랫줄 단추 이름 (서버에 보내는 할 일) */
     public static final List<String> BUTTONS = List.of("quest", "ender", "mount", "cosmetic", "gacha");
+    /** 0.21.0 윗줄 (제목 옆) 작은 단추: 유저 장터 · 쓰레기통 (서버에 보내는 할 일) */
+    public static final List<String> HEADER = List.of("market", "trash");
+    static final int HEAD_Y = 5;
+    static final int HEAD_H = 15;
+    static final int HEAD_X = 44;
+    static final int HEAD_GAP = 4;
+    private static final ItemStack GOLD_COIN = new ItemStack(mmorpg.fabric.economy.EconomyItems.GOLD_COIN);
+    private static final ItemStack TRASH = new ItemStack(Items.LAVA_BUCKET);
     private static final Identifier BG = Mmorpg.id("stats/dialog_bg");
     private static final Identifier BTN = Mmorpg.id("stats/dialog_btn");
     private static final Identifier BTN_HOVER = Mmorpg.id("stats/dialog_btn_hover");
@@ -161,6 +170,39 @@ public final class StatScreen extends Screen {
         return tip;
     }
 
+    // ------------------------------------------------------------ 윗줄 단추 (0.21.0 장터 · 쓰레기통)
+
+    private static String headLabel(String name) {
+        return name.equals("market") ? "§6장터" : "§c쓰레기통";
+    }
+
+    private int headW(int i) {
+        return 4 + 12 + 3 + font.width(BedrockText.toJava(headLabel(HEADER.get(i)))) + 5;
+    }
+
+    private int headLeft(int i) {
+        int x = left + HEAD_X;
+        for (int k = 0; k < i; k++) x += headW(k) + HEAD_GAP;
+        return x;
+    }
+
+    private boolean inHead(int i, double mx, double my) {
+        int x = headLeft(i);
+        int y = top + HEAD_Y;
+        return mx >= x && mx < x + headW(i) && my >= y && my < y + HEAD_H;
+    }
+
+    /** 윗줄 단추 i 의 가운데 (시험용 — 화면 좌표 {x, y}) */
+    public int[] headCenter(int i) {
+        return new int[] {headLeft(i) + headW(i) / 2, top + HEAD_Y + HEAD_H / 2};
+    }
+
+    private static List<String> headTip(String name) {
+        return name.equals("market")
+                ? List.of("§6§l유저 장터", "§7다른 사람과 골드로 사고팔기", "§7판매 수수료 5% · 3일 · 한 사람 10개", "§8/장터 로도 열림")
+                : List.of("§c§l쓰레기통", "§7넣고 창을 닫으면 지워집니다", "§7(버린 아이템은 가방으로 돌아옴)", "§8마지막 것 되찾기: /쓰레기통 되살리기");
+    }
+
     // ------------------------------------------------------------ 아랫줄 단추
 
     private int bottomW() {
@@ -205,7 +247,7 @@ public final class StatScreen extends Screen {
                         List.of("§d§l엔더 상자", "§7누르면 내 엔더 상자가 열립니다", "§7어디서나 — 놓인 엔더 상자와 같은 27칸"));
             case "cosmetic":
                 return new Bottom(CosmeticRender.icon("crown"), null, "§d§l장식", "§7꾸미기",
-                        List.of("§d§l장식", "§7무기 · 갑옷 스킨, 머리 · 등 장식, 오라, 칭호", "§7갑옷 숨기기 (무료) · 에메랄드로 사기", "§8U 키로도 열림"));
+                        List.of("§d§l장식", "§7무기 · 갑옷 스킨, 머리 · 등 장식, 오라, 칭호", "§7갑옷 숨기기 (무료) · 골드로 사기", "§8U 키로도 열림"));
             case "gacha":
                 return new Bottom(new ItemStack(mmorpg.fabric.rune.RuneItems.TICKET), null, "§b§l뽑기", "§7룬 뽑기",
                         List.of("§b§l룬 뽑기", "§71회 · 10회 · 천장 (초월 90 · 영웅 10)", ClientGacha.limitedActive() ? "§c한정 뽑기 중: §f" + ClientGacha.limited().name()
@@ -246,6 +288,21 @@ public final class StatScreen extends Screen {
         int pw = font.width(pts);
         g.text(font, pts, left + W - 12 - pw, top + 11, 0xFFFFFFFF, true);
         RpgHud.sprite(g, POINT, left + W - 12 - pw - 17, top + 7, 15, 15);
+        // 윗줄 작은 단추 (0.21.0): 유저 장터 · 쓰레기통
+        int headHover = -1;
+        for (int i = 0; i < HEADER.size(); i++) {
+            int hx = headLeft(i);
+            int hy = top + HEAD_Y;
+            boolean over = inHead(i, mx, my);
+            if (over) headHover = i;
+            RpgHud.sprite(g, over ? BTN_HOVER : BTN, hx, hy, headW(i), HEAD_H);
+            g.pose().pushMatrix();
+            g.pose().translate(hx + 4, hy + 1.5F);
+            g.pose().scale(0.75F, 0.75F);
+            g.item(HEADER.get(i).equals("market") ? GOLD_COIN : TRASH, 0, 0);
+            g.pose().popMatrix();
+            g.text(font, BedrockText.toJava(headLabel(HEADER.get(i))), hx + 19, hy + 4, 0xFFFFFFFF, true);
+        }
         g.fill(left + 10, top + 26, left + W - 10, top + 27, 0x90C8A050);
 
         // 스탯 줄
@@ -310,7 +367,11 @@ public final class StatScreen extends Screen {
             fitText(g, BedrockText.toJava(b.line2()), ix + 19, y + 12, textW);
         }
 
-        if (treeHover >= 0) {
+        if (headHover >= 0) {
+            List<Component> tip = new ArrayList<>();
+            for (String l : headTip(HEADER.get(headHover))) tip.add(Component.literal(BedrockText.toJava(l)));
+            g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
+        } else if (treeHover >= 0) {
             List<Component> tip = new ArrayList<>();
             for (String l : treeTip(keys.get(treeHover))) tip.add(Component.literal(BedrockText.toJava(l)));
             g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
@@ -342,6 +403,12 @@ public final class StatScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) { // 26.3 은 SDL 번호 (왼쪽 = 1)
+            for (int i = 0; i < HEADER.size(); i++) {
+                if (!inHead(i, event.x(), event.y())) continue;
+                click();
+                ClientPlayNetworking.send(new RpgNet.StatActionPayload(HEADER.get(i)));
+                return true;
+            }
             for (int i = 0; i < Stats.STAT_KEYS.size(); i++) {
                 if (!inTree(i, event.x(), event.y())) continue;
                 click();

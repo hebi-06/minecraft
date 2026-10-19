@@ -71,9 +71,9 @@ public final class ClientRpgState {
         return treeTotals;
     }
 
-    /** 가진 에메랄드 (갈래 초기화 비용 표시) */
+    /** 가진 실버 (0.21.0 — 지갑 + 가방의 은화, 갈래 초기화 비용 표시 · 지갑을 받았으면 그때그때 셈) */
     public static int money() {
-        return money;
+        return ClientWallet.received() ? (int) Math.min(Integer.MAX_VALUE, ClientWallet.total(mmorpg.core.Economy.Kind.SILVER)) : money;
     }
 
     /** 찍은 스탯 값 (스탯 트리 칸 계산) */

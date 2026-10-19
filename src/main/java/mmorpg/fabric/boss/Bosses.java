@@ -39,6 +39,7 @@ import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import mmorpg.core.Economy;
 import mmorpg.core.Js;
 import mmorpg.core.Mobs;
 import mmorpg.core.Obj;
@@ -47,6 +48,7 @@ import mmorpg.fabric.BedrockText;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.economy.Wallet;
 import mmorpg.fabric.gear.GearItems;
 import mmorpg.fabric.mob.BedrockMob;
 import mmorpg.fabric.mob.RpgBoss;
@@ -79,7 +81,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
@@ -867,7 +868,18 @@ public final class Bosses {
         Map<String, Double> b = bonus == null ? Map.of() : bonus;
         Function<String, Integer> more = k -> (int) Math.max(0, Math.floor(b.getOrDefault(k, 0.0)));
         List<String> got = new ArrayList<>();
-        giveLoot(got, p, Items.EMERALD, rollRange(L.numbersOrNull("emerald")) + more.apply("emerald"), "에메랄드");
+        // 0.21.0 화폐: 실버 (예전 에메랄드 그대로 — 지갑으로) · 골드 (ECONOMY.bossGold — 유저 장터 · 장식 화폐)
+        int silver = rollRange(L.numbersOrNull("emerald")) + more.apply("emerald");
+        if (silver > 0) {
+            Inv.earn(p, silver);
+            got.add(Inv.CURRENCY_NAME + " " + silver);
+        }
+        int[] gr = Economy.bossGold(enc.key);
+        int gold = rollRange(List.of((double) gr[0], (double) gr[1]));
+        if (gold > 0) {
+            Wallet.give(p, Economy.Kind.GOLD, gold);
+            got.add("§6골드 " + gold + "§r§f");
+        }
         giveTickets(got, p, rollRange(L.numbersOrNull("ticket")), false, "룬 뽑기권");
         giveTickets(got, p, rollRange(L.numbersOrNull("ticketAdv")), true, "고급 룬 뽑기권");
         Obj raid = R.obj("RAID_MATERIALS");
@@ -1655,7 +1667,7 @@ public final class Bosses {
         }
         String body = (transcend ? "§c§l[초월 보스]§r " : "") + "§f" + def.strOr("title", "") + " §7— §fLv." + Js.str(def.num("level")) + with
                 + "\n§7권장: " + (transcend ? "초월 장비를 갖춘 4명 파티" : "3~4명 파티 (혼자서는 사실상 어려움)") + rule + notes
-                + "\n\n§7보상: 에메랄드 · 경험치 · 룬 뽑기권" + (transcend ? " · 고급 룬 뽑기권" : "") + " · 강화 재료" + matNote
+                + "\n\n§7보상: 실버 · §6골드§7 · 경험치 · 룬 뽑기권" + (transcend ? " · 고급 룬 뽑기권" : "") + " · 강화 재료" + matNote
                 + "\n§7잡힌 뒤 " + Js.str(Js.round(def.numOr("cooldown", 600) / 60)) + "분 동안 다시 나오지 않습니다";
         return new MenuForm("§l" + def.str("name") + "에게 도전", body).button("§4도전").button("취소");
     }

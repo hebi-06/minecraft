@@ -43,7 +43,7 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest"
+echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · EconomyTest"
 # 대조 시험은 애드온 config.js 그대로의 규칙으로 (자바 전용 덧붙임 rules_more.json 없이 — Rules.PURE)
 java -Dstdout.encoding=UTF-8 -Dmmorpg.pureRules=true -cp "$out/main:$out/test" mmorpg.core.ParityTest
 # 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
@@ -68,3 +68,5 @@ java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.GachaTest
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.LimitedRunesTest
 # 0.16.1: 자바 판 룬 툴팁 (총 피해 숫자 · 뺀 줄 · 계수 · 돌파 줄)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RuneTipTest
+# 0.21.0 화폐 (골드 · 실버 지갑) · 유저 장터 (수수료 · 개수 · 기간 · 정렬) · 골드 보상
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.EconomyTest

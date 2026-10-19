@@ -255,5 +255,28 @@
   "SHIELD": {
     "_comment": "0.12.5 밸런스: 방패 상시 피해 감소 상한 40% → 25% (40렙 방패 종합 지수 2.95 → 2.41 — 솔로에서 가장 쉬운 선택이던 것을 줄임, 막기는 그대로)",
     "passiveCap": 0.25
+  },
+  "CONFIG": {
+    "_comment": "0.21.0: NPC 와의 교환 화폐 이름 · 아이템 (예전 에메랄드 — 지갑의 실버로 셈, 동전 아이템은 은화)",
+    "CURRENCY_ITEM": "rpg:silver_coin",
+    "CURRENCY_NAME": "실버"
+  },
+  "ECONOMY": {
+    "_comment": "0.21.0 화폐 (core.Economy · core.Wallets · core.Market) — 골드: 유저 장터 · 치장 (보스 · 퀘스트 보상으로만 생김 — 사용자 선택), 실버: NPC 와의 교환 (상점 · 갑옷 상점 · 대장장이 · 룬술사 · 스탯 트리 초기화 · 의뢰 보상 — 예전 에메랄드 값 1:1, 가진 에메랄드는 처음 접속할 때 실버로 1:1). 둘 다 지갑 숫자 (화면 왼쪽 아래), 금화 · 은화 아이템은 우클릭하면 지갑으로, /골드 · /실버 수 로 꺼냄. 장터: 판매 수수료 marketFee (내림) · 등록 무료 · marketHours 시간 · 한 사람 marketMax 개 · 가격 marketMinPrice ~ marketMaxPrice 골드. 골드 보상: 보스 전리품 bossGold [min, max], 반복 의뢰 = 실버 ÷ repeatGoldPer (내림), 메인 퀘스트 = 실버 ÷ mainGoldPer (내림) + 보스 단계 bossStepGold. migrateEmeralds = 처음 접속할 때 가방 · 엔더 상자의 에메랄드를 실버로, emeraldExchange = /환전 (에메랄드 → 실버 1:1), dropReturn = 버린 아이템을 가방으로 (쓰레기통으로 지움)",
+    "gold": {"name": "골드", "item": "rpg:gold_coin", "color": "§6"},
+    "silver": {"name": "실버", "item": "rpg:silver_coin", "color": "§f"},
+    "walletMax": 1000000000,
+    "marketFee": 0.05,
+    "marketHours": 72,
+    "marketMax": 10,
+    "marketMinPrice": 1,
+    "marketMaxPrice": 1000000,
+    "bossGold": {"scarecrow_king": [1, 2], "scorpions": [2, 3], "kraken": [2, 3], "great_worm": [2, 3], "jormungandr": [3, 4], "nidhogg": [4, 5], "skoll_hati": [4, 5], "ymir": [5, 6], "surtr": [6, 8]},
+    "repeatGoldPer": 40,
+    "mainGoldPer": 50,
+    "bossStepGold": 2,
+    "migrateEmeralds": true,
+    "emeraldExchange": true,
+    "dropReturn": true
   }
 }

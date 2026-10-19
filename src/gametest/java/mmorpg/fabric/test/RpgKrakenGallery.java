@@ -673,7 +673,7 @@ public final class RpgKrakenGallery implements FabricClientGameTest {
         String r = server.computeOnServer(s -> {
             if (Bosses.encounterAt(altar) != null) return "still fighting";
             if (altar.cooldownUntil <= System.currentTimeMillis() + 890_000) return "no 15 min cooldown";
-            int em = RpgGearTests.countIn(player(s), Items.EMERALD);
+            int em = RpgGearTests.silver(player(s));
             int ink = RpgGearTests.countIn(player(s), GearItems.byId("rpg:kraken_ink"));
             int eye = RpgGearTests.countIn(player(s), GearItems.byId("rpg:kraken_eye"));
             return em >= 16 && ink >= 2 && eye >= 2 ? "ok " + em + " · ink " + ink + " · eye " + eye : "emeralds " + em + " ink " + ink + " eye " + eye;

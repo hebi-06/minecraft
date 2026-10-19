@@ -57,9 +57,12 @@ public final class RpgItems {
                 .icon(() -> new ItemStack(WEAPONS.isEmpty() ? STAT_BOOK : WEAPONS.get(WEAPONS.size() - 1)))
                 .displayItems((params, output) -> {
                     output.accept(STAT_BOOK);
+                    output.accept(mmorpg.fabric.economy.EconomyItems.GOLD_COIN);
+                    output.accept(mmorpg.fabric.economy.EconomyItems.SILVER_COIN);
                     for (RpgWeaponItem w : WEAPONS) output.accept(w);
                 })
                 .build());
+        mmorpg.fabric.economy.EconomyItems.init(); // 0.21.0 금화 · 은화 (화폐 — 우클릭하면 지갑으로)
         mmorpg.fabric.rune.RuneItems.init(); // 룬 88 (0.16.0 한정 초월 셋 포함) · 뽑기권 (탭 "룬")
         mmorpg.fabric.gear.GearItems.init(); // 갑옷 240 · 재료 (탭 "RPG 장비 · 재료")
     }

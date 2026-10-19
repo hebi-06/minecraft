@@ -285,7 +285,7 @@ public final class RpgScorpionsTests {
                 h.assertTrue(hit(p1, d.boss, 50F), "killing blow on the desert scorpion");
                 h.assertTrue(!d.alive && r.alive && "fight".equals(enc.state) && Bosses.encounterAt(a) == enc, "only the desert falls, the fight goes on");
                 h.assertTrue(Bosses.unitOf(d.boss) == null && !d.boss.isAlive(), "fallen unit unregistered + dying");
-                h.assertTrue(RpgGearTests.countIn(p1, Items.EMERALD) == 0 && killed.isEmpty(), "no reward yet");
+                h.assertTrue(RpgGearTests.silver(p1) == 0 && killed.isEmpty(), "no reward yet");
                 h.assertTrue(near(r.dmgMult, 1.4, 1e-9) && near(r.cdMult, 0.7, 1e-9) && r.fast, "rage: damage x1.4 · cooldown x0.7 · fast " + r.dmgMult + " " + r.cdMult);
                 h.assertTrue(r.boss.propBool("rpg:rage") && m.enraged == r && !m.bond, "red body (rpg:rage), enraged unit");
                 h.assertTrue(m.next.get("boulders") == now + 70 && m.next.get("tremor") == now + 140, "pending patterns pulled in x0.7 " + before + " → " + m.next);
@@ -297,9 +297,10 @@ public final class RpgScorpionsTests {
                 r.boss.setHealth(5F);
                 h.assertTrue(hit(p2, r.boss, 50F), "killing blow on the rock scorpion");
                 h.assertTrue(Bosses.encounterAt(a) == null && "dead".equals(enc.state), "encounter over " + enc.state);
-                int em = RpgGearTests.countIn(p1, Items.EMERALD);
-                h.assertTrue(em >= 12 && em <= 18, "emeralds 12~18: " + em);
-                h.assertTrue(RpgGearTests.countIn(p2, Items.EMERALD) >= 12, "p2 rewarded too");
+                int em = RpgGearTests.silver(p1);
+                h.assertTrue(em >= 12 && em <= 18, "silver 12~18: " + em);
+                h.assertTrue(RpgGearTests.bossGold(p1, KEY), "0.21.0 boss gold " + RpgGearTests.gold(p1) + " in " + java.util.Arrays.toString(mmorpg.core.Economy.bossGold(KEY)));
+                h.assertTrue(RpgGearTests.silver(p2) >= 12, "p2 rewarded too");
                 int stone = RpgGearTests.countIn(p1, GearItems.byId("rpg:enhance_stone"));
                 h.assertTrue(stone >= 5 && stone <= 8, "enhance stones 5~8: " + stone);
                 h.assertTrue(killed.size() == 1 && KEY.equals(killed.get(0)[0]) && ((List<?>) killed.get(0)[1]).containsAll(List.of(p1, p2)), "kill hook once (quests)");

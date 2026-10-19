@@ -48,7 +48,6 @@ import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -1200,14 +1199,17 @@ public final class Monsters {
         return (float) (amount * (1 - k.shell()));
     }
 
-    /** 에메랄드 (행동 팩 전리품 표: random_chance → set_count 최소 ~ 최대 — 확률은 Loot.rand) */
-    static void dropEmerald(RpgMonster m, ServerLevel level) {
+    /**
+     * 은화 (0.21.0 — 실버, 예전 에메랄드 그대로 1:1. 행동 팩 전리품 표: random_chance → set_count 최소 ~ 최대 — 확률은 Loot.rand). 주우면 가방에,
+     * 우클릭하면 지갑으로 (상점에서는 가방의 은화도 그대로 씀)
+     */
+    static void dropSilver(RpgMonster m, ServerLevel level) {
         Kind k = kindOf(m);
         if (k == null || k.emerald() == null || Loot.rand.getAsDouble() >= k.emerald()[0]) return;
         int min = (int) k.emerald()[1];
         int max = (int) k.emerald()[2];
         int n = Math.max(min, Math.min(max, min + (int) Math.floor(Loot.rand.getAsDouble() * (max - min + 1))));
-        if (n > 0) m.spawnAtLocation(level, new ItemStack(Items.EMERALD, n));
+        if (n > 0) m.spawnAtLocation(level, new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, n));
     }
 
     // ------------------------------------------------------------ 이름표 (monsterLabel · refreshTag · hp.js 이름표 새로 고침)

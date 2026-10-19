@@ -318,7 +318,7 @@ public final class RpgNidhoggTests {
         });
     }
 
-    /** 날다가 쓰러지면 땅에 내려놓음 (rpg:fly 0) → 보상 (에메랄드 28~40 · 경험치 90 · 세계수의 가지 · 타락한 세계수 뿌리) · 재사용 대기 15분 */
+    /** 날다가 쓰러지면 땅에 내려놓음 (rpg:fly 0) → 보상 (실버 28~40 · 골드 · 경험치 90 · 세계수의 가지 · 타락한 세계수 뿌리) · 재사용 대기 15분 */
     @GameTest(environment = "mmorpg:nidhogg", maxTicks = 300)
     public void nidhoggKilledInFlightRewards(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -343,10 +343,11 @@ public final class RpgNidhoggTests {
             h.assertTrue(Bosses.encounterAt(a) == null && "dead".equals(enc.state), "encounter over");
             h.assertTrue(Math.abs(b.getY() - c.y) < 1e-6, "put on the ground before dying " + (b.getY() - c.y));
             h.assertTrue(b.prop("rpg:fly") == 0.0, "wings folded (rpg:fly 0)");
-            int em = RpgGearTests.countIn(p1, Items.EMERALD);
+            int em = RpgGearTests.silver(p1);
             int branch = RpgGearTests.countIn(p1, GearItems.byId("rpg:ygg_branch"));
             int rootN = RpgGearTests.countIn(p1, GearItems.byId("rpg:ygg_root"));
-            h.assertTrue(em >= 28 && em <= 40, "emeralds " + em);
+            h.assertTrue(em >= 28 && em <= 40, "silver " + em);
+            h.assertTrue(RpgGearTests.bossGold(p1, KEY), "0.21.0 boss gold " + RpgGearTests.gold(p1) + " in " + java.util.Arrays.toString(mmorpg.core.Economy.bossGold(KEY)));
             h.assertTrue(branch >= 2 && branch <= 4 && rootN >= 2 && rootN <= 4, "boss materials " + branch + " / " + rootN);
             h.assertTrue(p1.totalExperience - xp0 == 90, "xp " + (p1.totalExperience - xp0));
             h.assertTrue(a.cooldownUntil > System.currentTimeMillis() + 890_000, "cooldown 15 min");

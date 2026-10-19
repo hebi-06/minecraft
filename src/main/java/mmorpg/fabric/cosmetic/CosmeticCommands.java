@@ -9,8 +9,9 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import mmorpg.core.Economy;
 import mmorpg.fabric.BedrockText;
-import mmorpg.fabric.ui.Inv;
+import mmorpg.fabric.economy.Wallet;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -105,8 +106,8 @@ public final class CosmeticCommands {
     private static int list(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
         ServerPlayer sp = c.getSource().getPlayerOrException();
         Cosmetics.State s = Cosmetics.state(sp);
-        StringBuilder sb = new StringBuilder("§d[장식] §f가진 장식 " + s.owned().size() + " / " + CosmeticDefs.all().size() + " §7(" + Inv.CURRENCY_NAME + " "
-                + Inv.money(sp) + ")");
+        StringBuilder sb = new StringBuilder("§d[장식] §f가진 장식 " + s.owned().size() + " / " + CosmeticDefs.all().size() + " §7(골드 "
+                + Wallet.total(sp, Economy.Kind.GOLD) + ")");
         for (String slot : CosmeticDefs.SLOTS) {
             CosmeticDefs.Slot sl = CosmeticDefs.slot(slot);
             sb.append("\n §e").append(sl.name()).append("§7: ");
@@ -121,7 +122,7 @@ public final class CosmeticCommands {
         for (CosmeticDefs.Def d : CosmeticDefs.all().values()) {
             boolean has = s.owned().contains(d.id());
             sb.append("\n ").append(has ? "§a✔ §f" : "§8").append(d.name()).append(" §8(").append(d.id()).append(" · ").append(CosmeticDefs.slot(d.slot()).name())
-                    .append(has ? ")" : " · " + Inv.CURRENCY_NAME + " " + d.price() + ")");
+                    .append(has ? ")" : " · 골드 " + d.price() + ")");
         }
         for (String line : sb.toString().split("\n")) sp.sendSystemMessage(Component.literal(BedrockText.toJava(line)));
         return s.owned().size();

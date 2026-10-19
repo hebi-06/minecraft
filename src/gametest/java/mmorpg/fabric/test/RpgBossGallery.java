@@ -648,7 +648,7 @@ public final class RpgBossGallery implements FabricClientGameTest {
         String r = server.computeOnServer(s -> {
             if (Bosses.encounterAt(altar) != null) return "still fighting";
             if (altar.cooldownUntil <= System.currentTimeMillis()) return "no cooldown";
-            int em = RpgGearTests.countIn(player(s), Items.EMERALD);
+            int em = RpgGearTests.silver(player(s));
             return em >= 8 ? "ok " + em : "emeralds " + em;
         });
         check(r.startsWith("ok"), "boss killed → rewards + cooldown (" + r + ")");

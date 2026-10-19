@@ -28,7 +28,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 무기 상점 (shop.js, 상자 모양 9 × 3 — 구매에 스탯 · 레벨 제한 없음): 윗줄 가운데 보유 에메랄드, 둘째 줄 첫 판매 등급 (일반) 6종, 셋째 줄 둘째 판매 등급 (희귀) 6종.
+ * 무기 상점 (shop.js, 상자 모양 9 × 3 — 구매에 스탯 · 레벨 제한 없음): 윗줄 가운데 보유 실버 (0.21.0 — 예전 에메랄드), 둘째 줄 첫 판매 등급 (일반) 6종, 셋째 줄 둘째 판매 등급 (희귀) 6종.
  * 칸을 누르면 구매 확인 창. 윗줄 오른쪽 셋째 칸 = 전리품 팔기 (갑옷 상점에도 같은 자리), 오른쪽 끝 = 갑옷 상점.
  * 12단계: 윗줄 왼쪽 셋째 칸 (PAGE_TAB) = 쪽 넘김 — 둘째 쪽은 새 무기 4종 (창 · 낫 · 전투 망치 · 성스러운 홀) 의 일반 · 희귀 (한 줄 9칸에 10종이 다 들어가지 않음).
  * 흐름 (애드온 async 고리) 은 받을 일 (콜백) 로: 다음 창을 열거나 next.accept(다음 창 이름 · null = 끝).
@@ -188,8 +188,8 @@ public final class Shop {
         }
         ItemStack item = weaponItem(w);
         if (item.isEmpty()) return "§4아이템을 만들 수 없습니다.§r";
-        if (!Inv.fitsAfter(sp, List.of(new Inv.Take(Inv.CURRENCY, price)), List.of(item))) return Inv.bagFull(sp);
-        if (!Inv.remove(sp, Inv.CURRENCY, price)) return "§4결제 오류§r";
+        if (!Inv.fitsAfter(sp, Inv.payTakes(sp, price), List.of(item))) return Inv.bagFull(sp);
+        if (!Inv.pay(sp, price)) return "§4결제 오류§r";
         Inv.give(sp, item);
         SkillFx.playFor(sp, "random.orb", 1.2, 1);
         SkillFx.playFor(sp, "mob.villager.yes", 1, 0.7);
@@ -271,7 +271,7 @@ public final class Shop {
         return out;
     }
 
-    /** 가진 전리품을 모두 팔면 받는 에메랄드 */
+    /** 가진 전리품을 모두 팔면 받는 화폐 (실버) */
     public static int sellTotal(ServerPlayer sp) {
         int t = 0;
         for (Loot e : sellList(sp)) t += e.n() * e.price();
@@ -281,7 +281,7 @@ public final class Shop {
     /** 무기 · 갑옷 상점 윗줄의 "전리품 팔기" 칸 */
     public static Slot sellTabSlot(ServerPlayer sp) {
         int total = sellTotal(sp);
-        return Slot.of(Items.BUNDLE, "§e전리품 팔기").lore("§7몬스터 전리품을 에메랄드로",
+        return Slot.of(Items.BUNDLE, "§e전리품 팔기").lore("§7몬스터 전리품을 " + Inv.CURRENCY_NAME + "로",
                 total > 0 ? "§a지금 모두 팔면 " + total + " " + Inv.CURRENCY_NAME : "§8가진 전리품 없음");
     }
 
@@ -305,7 +305,7 @@ public final class Shop {
                     .lore(e.n() > 0 ? "§r§a보유 " + e.n() + "개 → " + e.n() * e.price() + " " + Inv.CURRENCY_NAME : "§r§8가진 것이 없음",
                             "§r§7" + m.str("name") + " (Lv." + Js.str(m.num("level")) + ") 전리품"));
         }
-        form.set(SELL_INFO, Slot.of(Items.BUNDLE, "§f전리품").lore("§7몬스터를 잡으면 떨어짐 (50%)", "§7잉그리드의 반복 의뢰에 쓰면", "§7에메랄드·경험치를 더 받음").deco());
+        form.set(SELL_INFO, Slot.of(Items.BUNDLE, "§f전리품").lore("§7몬스터를 잡으면 떨어짐 (50%)", "§7잉그리드의 반복 의뢰에 쓰면", "§7" + Inv.CURRENCY_NAME + "·경험치를 더 받음").deco());
         form.fillEmpty();
         List<String> lines = new ArrayList<>(List.of("§8가운데 두 줄: 전리품 · 칸을 누르면 팔 개수를 고릅니다.§r", "§8반복 의뢰 재료로 쓰면 더 많이 받습니다 (여관 주인 잉그리드).§r"));
         if (message != null && !message.isEmpty()) lines.add(message);
@@ -314,7 +314,7 @@ public final class Shop {
     }
 
     /**
-     * 판매 처리 (sellLoot): 전리품 n 개를 가져가고 에메랄드를 줌. 같은 전리품이 여러 번 오면 합쳐서 가진 만큼만. 결과 문구
+     * 판매 처리 (sellLoot): 전리품 n 개를 가져가고 실버를 줌 (0.21.0 — 지갑으로, 가방 자리가 필요 없음). 같은 전리품이 여러 번 오면 합쳐서 가진 만큼만. 결과 문구
      */
     public static String sellLoot(ServerPlayer sp, Map<String, Integer> what) {
         Map<String, Integer> want = new LinkedHashMap<>();
@@ -331,9 +331,6 @@ public final class Shop {
             SkillFx.playFor(sp, "note.bass", 0.6, 1);
             return "§4팔 전리품이 없습니다§r";
         }
-        List<Inv.Take> takes = new ArrayList<>();
-        for (Loot x : plan) takes.add(new Inv.Take(x.item(), x.n()));
-        if (!Inv.fitsAfter(sp, takes, Inv.currency(total))) return Inv.bagFull(sp);
         List<String> lines = new ArrayList<>();
         int got = 0;
         for (Loot x : plan) {
@@ -345,7 +342,7 @@ public final class Shop {
             SkillFx.playFor(sp, "note.bass", 0.6, 1);
             return "§4팔 전리품이 없습니다§r";
         }
-        for (ItemStack st : Inv.currency(got)) Inv.give(sp, st);
+        Inv.earn(sp, got);
         SkillFx.playFor(sp, "random.orb", 1.3, 1);
         SkillFx.playFor(sp, "mob.villager.yes", 1, 0.7);
         happy(sp);

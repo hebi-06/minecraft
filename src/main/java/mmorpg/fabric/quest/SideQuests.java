@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import mmorpg.core.Economy;
 import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
@@ -12,7 +13,7 @@ import mmorpg.core.Rules;
 /**
  * 메인 이야기 밖의 들어 있는 퀘스트 (sidequest.js — ID "sq_…", 편집 창에서 고칠 수 없음):
  * - 반복 의뢰 (side "repeat", 여관 주인 잉그리드 main_10): 몬스터마다 하나 — 메인 이야기에서 그 몬스터 처치 단계를 끝내면 열림.
- *   전리품을 가져오면 에메랄드 + 경험치 (포인트 — 최고 레벨이 그 몬스터의 xpUntil 이상이면 0). 보고하면 바로 다시 받을 수 있음
+ *   전리품을 가져오면 실버 (0.21.0 — 예전 에메랄드) + 경험치 (큰 의뢰는 골드도) (포인트 — 최고 레벨이 그 몬스터의 xpUntil 이상이면 0). 보고하면 바로 다시 받을 수 있음
  * - 왕실 퀘스트 (side "royal", 왕녀 시그리드 main_11): 35렙부터, 무기의 길을 고른 사람만. 7단계, 마지막 (이미르) 을 마치면 무기의 길에 맞는 초월 갑옷 한 벌
  * - 전설 퀘스트 (side "legend", 그 길의 스승): 전설 무기 4개는 이 퀘스트로만. 메인의 그 보스 단계를 끝내면 열림, 목표 종류 "trial" (처치 · 보스 목표 여럿)
  * - 초월 보스 전설 퀘스트 (side "legend", 왕녀, 길과 무관): 왕실 퀘스트를 모두 마치고 40렙부터 초월 보스 (수르트) 를 잡음
@@ -189,6 +190,13 @@ public final class SideQuests {
         return J.o("emerald", emerald, "xp", 0, "points", 0, "weapon", weapon, "item", JsonNull.INSTANCE, "items", MainQuests.items(items));
     }
 
+    /** 0.21.0 골드 보상 (메인 퀘스트와 같은 식 — 실버 ÷ mainGoldPer, 보스면 + bossStepGold) */
+    private static JsonObject withGold(JsonObject reward, boolean boss) {
+        int gold = Economy.mainGold(reward.get("emerald").getAsInt(), boss);
+        if (gold > 0) reward.addProperty("gold", gold);
+        return reward;
+    }
+
     /**
      * 들어 있는 퀘스트 전체 (반복 의뢰 14 (9단계 새 몬스터 8 포함) + 왕실 7 + 전설 4 + 초월 보스 전설 1 — 정의 그대로, Quest.normalizeBuiltin 이 다듬어 씀).
      * 추가 필드: side, ord (순서), afterStep (이 메인 단계를 끝내면 열림), xpMob (경험치 제한 몬스터), reward.xpPoints, reward.armor ("path"),
@@ -205,6 +213,8 @@ public final class SideQuests {
             if (rq == null || d == null || l == null) continue;
             String n = Js.str(rq.num("count"));
             JsonObject reward = J.o("emerald", rq.num("emerald"), "xp", 0, "points", 0, "weapon", "", "item", JsonNull.INSTANCE, "items", List.of(), "xpPoints", rq.num("xp"));
+            int gold = Economy.repeatGold((int) rq.num("emerald")); // 0.21.0 큰 의뢰만 골드
+            if (gold > 0) reward.addProperty("gold", gold);
             out.add(J.o("id", repeatId(mob), "side", "repeat", "ord", 100 + i, "giver", REPEAT_GIVER, "type", "collect", "target", d.str("item"), "targetName", d.str("name"),
                     "count", rq.num("count"), "title", l.title(), "offer", l.offer().replace("{n}", n), "progress", l.progress().replace("{n}", n),
                     "done", l.done().replace("{n}", n), "reward", reward, "repeat", true, "requires", "", "afterStep", MainQuests.mainKillStep(mob), "xpMob", mob,
@@ -214,8 +224,8 @@ public final class SideQuests {
         for (int i = 0; i < ROYAL.size(); i++) {
             Royal r = ROYAL.get(i);
             int step = i + 1;
-            JsonObject reward = J.o("emerald", r.emerald(), "xp", 0, "points", 0, "weapon", "", "item", JsonNull.INSTANCE, "items", MainQuests.items(r.items()),
-                    "armor", r.armor() == null ? "" : r.armor());
+            JsonObject reward = withGold(J.o("emerald", r.emerald(), "xp", 0, "points", 0, "weapon", "", "item", JsonNull.INSTANCE, "items", MainQuests.items(r.items()),
+                    "armor", r.armor() == null ? "" : r.armor()), !List.of("talk", "collect", "kill").contains(r.goal()));
             JsonObject q = J.o("id", royalId(step), "side", "royal", "ord", 200 + step, "step", step, "giver", ROYAL_GIVER, "title", r.text().title(), "offer", r.text().offer(),
                     "progress", r.text().progress(), "done", r.text().done(), "count", 1, "target", "", "targetName", "", "reward", reward, "repeat", false,
                     "requires", prev, "minLevel", r.lv(), "finale", r.finale());
@@ -240,7 +250,7 @@ public final class SideQuests {
             for (JsonObject g : l.goals()) count += g.get("count").getAsInt();
             out.add(J.o("id", MainQuests.legendId(l.path(), l.grade()), "side", "legend", "ord", 300 + i, "path", l.path(), "giver", MainQuests.MAIN_PATHS.get(l.path()).mentor(),
                     "type", "trial", "target", "", "targetName", l.title(), "goals", l.goals(), "count", count, "title", l.title(), "offer", l.offer(), "progress", l.progress(),
-                    "done", l.done(), "reward", reward(0, l.weapon(), new Object[0]), "legend", true, "repeat", false, "requires", "",
+                    "done", l.done(), "reward", withGold(reward(0, l.weapon(), new Object[0]), true), "legend", true, "repeat", false, "requires", "",
                     "afterStep", MainQuests.mainBossStep(l.after()), "minLevel", l.lv()));
         }
         // 초월 보스 전설 퀘스트 (왕녀, 왕실 퀘스트 마지막 단계 뒤)
@@ -249,7 +259,8 @@ public final class SideQuests {
             Obj b = BOSSES.objOrNull(l.boss());
             out.add(J.o("id", transcendLegendId(l.boss()), "side", "legend", "ord", 320 + i, "giver", ROYAL_GIVER, "type", "boss", "target", l.boss(),
                     "targetName", b != null ? b.str("name") : l.boss(), "count", 1, "title", l.title(), "offer", l.offer(), "progress", l.progress(), "done", l.done(),
-                    "reward", reward(l.emerald(), "", l.items()), "legend", true, "honor", l.honor(), "repeat", false, "requires", royalId(ROYAL_STEPS), "minLevel", l.lv()));
+                    "reward", withGold(reward(l.emerald(), "", l.items()), true), "legend", true, "honor", l.honor(), "repeat", false, "requires", royalId(ROYAL_STEPS),
+                    "minLevel", l.lv()));
         }
         return out;
     }

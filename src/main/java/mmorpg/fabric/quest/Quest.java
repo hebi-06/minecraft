@@ -101,7 +101,10 @@ public final class Quest {
 
     /** 보상 (quest.js Reward). xpPoints · items · armor 는 애드온에 들어 있는 퀘스트만, armorType · capped 는 rewardFor 가 정함 */
     public static final class Reward {
+        /** 실버 (0.21.0 — 예전 에메랄드 값 그대로, 저장 이름 "emerald" 도 그대로) */
         public int emerald;
+        /** 골드 (0.21.0 — 메인 퀘스트 · 반복 의뢰 · 전설 · 왕실 · 만든 퀘스트) */
+        public int gold;
         /** 경험치 레벨 */
         public int xp;
         /** 스탯 포인트 */
@@ -124,6 +127,7 @@ public final class Quest {
         public Reward copy() {
             Reward r = new Reward();
             r.emerald = emerald;
+            r.gold = gold;
             r.xp = xp;
             r.points = points;
             r.weapon = weapon;
@@ -305,6 +309,7 @@ public final class Quest {
         j.addProperty("done", done);
         JsonObject r = new JsonObject();
         r.addProperty("emerald", reward.emerald);
+        if (reward.gold > 0) r.addProperty("gold", reward.gold);
         r.addProperty("xp", reward.xp);
         r.addProperty("points", reward.points);
         r.addProperty("weapon", reward.weapon);
@@ -501,6 +506,7 @@ public final class Quest {
         n.progress = str(q, "progress", "");
         n.done = str(q, "done", "");
         n.reward.emerald = clampInt(r.get("emerald"), 6400);
+        n.reward.gold = clampInt(r.get("gold"), 1000);
         n.reward.xp = clampInt(r.get("xp"), 1000);
         n.reward.points = clampInt(r.get("points"), 1000);
         n.reward.weapon = str(r, "weapon", "");

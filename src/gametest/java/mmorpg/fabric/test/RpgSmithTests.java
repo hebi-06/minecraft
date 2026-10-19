@@ -25,7 +25,7 @@ import net.minecraft.world.item.Items;
 /**
  * 대장장이 게임 시험 (서버, 클라이언트 없이 창 흐름 — Forms.HEADLESS · Forms.answer): 무기 강화 (성공 · 실패 — +1~+5 그대로, +6 부터 한 단계 하락,
  * 수호 주문서는 실패했을 때만 사라지고 단계 유지 · 재료는 판정 때 소모), 재료가 모자라면 쓰지 않음, 망치질 도중 무기를 옮기면 취소 (재료 그대로),
- * 영웅 무기 레벨 올리기 (30 → 35 · 비용 · 강화 단계 · 모루 이름 유지), 보스 무기 제작 (재료 · 에메랄드 · 별철 광석 소모, 모자라면 아무것도 쓰지 않음).
+ * 영웅 무기 레벨 올리기 (30 → 35 · 비용 · 강화 단계 · 모루 이름 유지), 보스 무기 제작 (재료 · 실버 · 별철 광석 소모, 모자라면 아무것도 쓰지 않음).
  * 강화 성공 여부는 EnhanceWindow.rand 로 정함 — 난수를 바꾸는 시험은 하나 (enhanceOutcomes) 에 모아 차례로 (함께 도는 시험끼리 섞이지 않게).
  */
 public final class RpgSmithTests {
@@ -194,7 +194,7 @@ public final class RpgSmithTests {
         });
     }
 
-    /** 영웅 무기 레벨 올리기 30 → 35: 비용이 모자라면 그대로, 있으면 에메랄드 64 · 별철 광석 4, 강화 단계 · 모루 이름은 새 무기로 */
+    /** 영웅 무기 레벨 올리기 30 → 35: 비용이 모자라면 그대로, 있으면 실버 64 (가방의 은화 + 지갑) · 별철 광석 4, 강화 단계 · 모루 이름은 새 무기로 */
     @GameTest(maxTicks = 40)
     public void raiseHeroWeapon(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
@@ -206,19 +206,19 @@ public final class RpgSmithTests {
         WeaponEnhance.write(stack, 4);
         stack.set(DataComponents.CUSTOM_NAME, Component.literal("내 검"));
         sp.getInventory().setItem(2, stack);
-        sp.getInventory().setItem(20, new ItemStack(Items.EMERALD, 50));
+        sp.getInventory().setItem(20, new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, 50));
         sp.getInventory().setItem(21, new ItemStack(ore(), 10));
         Smith.smithLoop(sp, "smith", null);
         FormNet.ChestPayload c = chest(sp);
         h.assertTrue(c != null && c.title().contains("레벨 올리기") && c.slots().get(FIRST).icon().item().is(RpgItems.byId(w30.id())), "raise window");
-        // 에메랄드 50 < 64: 그대로
+        // 실버 50 < 64: 그대로
         Forms.answer(sp, FIRST, null);
         h.assertTrue(chest(sp) != null && chest(sp).title().contains("레벨 제한 올리기"), "confirm window");
         Forms.answer(sp, 11, null);
-        h.assertTrue(body(sp).contains("재료 부족") && body(sp).contains("에메랄드 14"), "lack: " + body(sp));
+        h.assertTrue(body(sp).contains("재료 부족") && body(sp).contains("실버 14"), "lack: " + body(sp));
         h.assertTrue(Inv.money(sp) == 50 && RpgGearTests.countIn(sp, ore()) == 10 && sp.getInventory().getItem(2).is(RpgItems.byId(w30.id())), "nothing changed");
-        // 에메랄드를 더 주고 다시
-        sp.getInventory().setItem(22, new ItemStack(Items.EMERALD, 50));
+        // 실버를 더 주고 다시 (0.21.0: 지갑에 50 — 지갑 먼저, 모자란 14 는 가방의 은화)
+        mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.SILVER, 50);
         Forms.answer(sp, FIRST, null);
         Forms.answer(sp, 11, null);
         ItemStack now = sp.getInventory().getItem(2);
@@ -230,7 +230,7 @@ public final class RpgSmithTests {
         finish(h, sp);
     }
 
-    /** 보스 무기 제작 (영웅 쪽 첫 무기): 별철 광석이 하나 모자라면 아무것도 쓰지 않음, 채우면 재료 · 에메랄드 · 별철 광석을 내고 무기 */
+    /** 보스 무기 제작 (영웅 쪽 첫 무기): 별철 광석이 하나 모자라면 아무것도 쓰지 않음, 채우면 재료 · 실버 · 별철 광석을 내고 무기 */
     @GameTest(maxTicks = 40)
     public void craftBossWeapon(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
@@ -239,7 +239,7 @@ public final class RpgSmithTests {
         h.assertTrue(!hero.isEmpty() && Smith.craftPage(Smith.craftRecipes(), 1).size() > 0, "recipes on both pages");
         Smith.Recipe r = hero.get(0);
         for (Smith.Mat m : r.mats()) sp.getInventory().add(new ItemStack(m.item(), m.count()));
-        sp.getInventory().setItem(30, new ItemStack(Items.EMERALD, r.emerald() + 5));
+        mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.SILVER, r.emerald() + 5);
         sp.getInventory().setItem(31, new ItemStack(ore(), r.ore() - 1));
         Item weapon = RpgItems.byId(r.w().id());
         Smith.smithLoop(sp, "craft", null);

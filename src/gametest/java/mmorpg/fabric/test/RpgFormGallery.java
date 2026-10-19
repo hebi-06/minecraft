@@ -105,8 +105,9 @@ public final class RpgFormGallery implements FabricClientGameTest {
     private void shop(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
-            sp.getInventory().setItem(9, new ItemStack(Items.EMERALD, 64));
-            sp.getInventory().setItem(10, new ItemStack(Items.EMERALD, 64));
+            // 0.21.0 화폐 = 실버: 지갑 64 + 가방의 은화 64 (지갑 먼저 냄)
+            mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.SILVER, 64);
+            sp.getInventory().setItem(9, new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, 64));
             sp.getInventory().setItem(11, new ItemStack(GearItems.byId("rpg:loot_troll"), 12));
             sp.getInventory().setItem(12, new ItemStack(GearItems.byId("rpg:loot_nix"), 7));
             sp.getInventory().setItem(13, new ItemStack(GearItems.byId("rpg:loot_scarecrow"), 30));
@@ -136,7 +137,7 @@ public final class RpgFormGallery implements FabricClientGameTest {
         check(waitChest(ctx, c -> c.title().contains("무기 상점") && c.body().contains("구매 완료"), "shop after buying"), "bought: back to the shop, result in the body");
         int got = server.computeOnServer(s -> RpgGearTests.countIn(player(s), RpgItems.byId(w.id())));
         int money1 = server.computeOnServer(s -> Inv.money(player(s)));
-        check(got == 1 && money1 == money0 - price, "bought sword x" + got + ", emeralds " + money0 + " -> " + money1 + " (price " + price + ")");
+        check(got == 1 && money1 == money0 - price, "bought sword x" + got + ", silver " + money0 + " -> " + money1 + " (price " + price + ")");
         away(ctx);
         shot(ctx, "f_shop_bought");
 
@@ -179,7 +180,7 @@ public final class RpgFormGallery implements FabricClientGameTest {
         check(waitChest(ctx, c -> c.title().contains("전리품 팔기") && c.body().contains("판매"), "sold"), "sold: back to the sell window, result in the body");
         int trolls = server.computeOnServer(s -> RpgGearTests.countIn(player(s), GearItems.byId("rpg:loot_troll")));
         int emeraldsAfter = server.computeOnServer(s -> Inv.money(player(s)));
-        check(trolls == 0 && emeraldsAfter == emeraldsBefore + 12 * 5, "sold 12 troll tusks: left " + trolls + ", emeralds " + emeraldsBefore + " -> " + emeraldsAfter);
+        check(trolls == 0 && emeraldsAfter == emeraldsBefore + 12 * 5, "sold 12 troll tusks: left " + trolls + ", silver " + emeraldsBefore + " -> " + emeraldsAfter);
         away(ctx);
         shot(ctx, "f_shop_sold");
 
@@ -197,7 +198,7 @@ public final class RpgFormGallery implements FabricClientGameTest {
         server.runOnServer(s -> {
             ChestForm f = new ChestForm("숫자 · 긴 본문 §8· §7시험용 상자 창 (제목이 아주 길면 닫기 단추 앞에서 잘립니다)");
             int[] counts = {1, 9, 64, 99, 128, 999, 1000, 12345, 99999};
-            for (int i = 0; i < counts.length; i++) f.set(i, Slot.of(Items.EMERALD, "§a보유 " + counts[i]).count(counts[i]));
+            for (int i = 0; i < counts.length; i++) f.set(i, Slot.of(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, "§a보유 " + counts[i]).count(counts[i]));
             int[] prices = {1, 8, 24, 120, 999, 2500};
             for (int i = 0; i < prices.length; i++) f.set(9 + i, Slot.of(Items.IRON_SWORD, "§f칼 · 가격 " + prices[i]).price(prices[i]).lore("§7설명 줄", "§a가격: " + prices[i]));
             f.set(16, Slot.of(Icon.sprite("q_new"), "§e장식 칸 (누를 수 없음)").deco());
@@ -393,7 +394,7 @@ public final class RpgFormGallery implements FabricClientGameTest {
         ctx.runOnClient(mc -> mc.options.chatVisibility().set(ChatVisiblity.FULL));
         for (int i = 1; i <= 6; i++) server.runCommand("tellraw @a \"채팅 " + i + ": 대화 상자 뒤로 채팅 글자가 비쳐 보이는지 확인하는 줄\"");
         server.runOnServer(s -> {
-            DialogForm d = new DialogForm("§e여관 주인 잉그리드 §7(마을 광장)", "오늘도 일거리가 산더미예요. 몬스터 전리품을 가져다주면 에메랄드와 경험치를 넉넉히 드릴게요.\n"
+            DialogForm d = new DialogForm("§e여관 주인 잉그리드 §7(마을 광장)", "오늘도 일거리가 산더미예요. 몬스터 전리품을 가져다주면 실버와 경험치를 넉넉히 드릴게요.\n"
                     + "§7(반복 의뢰는 하루에 세 번까지 받을 수 있습니다. 아주 긴 대사는 상자 폭에 맞춰 줄이 바뀝니다.)");
             d.choice("§e[의뢰] 트롤 엄니 10개 모아 오기", DialogForm.NEW);
             d.choice("§f[진행 중] 굴론 털가죽 5개", DialogForm.ACTIVE);
@@ -434,7 +435,7 @@ public final class RpgFormGallery implements FabricClientGameTest {
             m.button("§b퀘스트 만들기", DialogForm.NEW);
             m.button("§f진행 중인 퀘스트", DialogForm.ACTIVE);
             m.button("§a보고할 퀘스트", DialogForm.READY);
-            m.button("§6상점 설정 §7(무기 · 갑옷 · 전리품)", Icon.item(Items.EMERALD));
+            m.button("§6상점 설정 §7(무기 · 갑옷 · 전리품)", Icon.item(mmorpg.fabric.economy.EconomyItems.SILVER_COIN));
             m.button("§6대장장이 · 강화 확률", Icon.item(Items.ANVIL));
             m.button("§d룬술사 · 뽑기권", Icon.item("rpg:rune_shard"));
             m.button("§f허수아비 세우기", Icon.item(Items.HAY_BLOCK));

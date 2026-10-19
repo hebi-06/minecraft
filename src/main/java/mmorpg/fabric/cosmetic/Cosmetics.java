@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import mmorpg.core.Economy;
 import mmorpg.core.Json;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.Props;
@@ -14,7 +15,7 @@ import mmorpg.fabric.RpgNet;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
-import mmorpg.fabric.ui.Inv;
+import mmorpg.fabric.economy.Wallet;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
@@ -25,7 +26,8 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 장식 (0.13.0 — 무기 스킨 · 갑옷 스킨 · 머리 · 등 장식 · 오라 · 칭호, 목록은 cosmetics.json {@link CosmeticDefs}).
  * <ul>
- * <li>얻기: 장식 창 (스탯 창 장식 단추 · U 키 · /장식) 에서 에메랄드로 사기 — 산 것은 바로 입음. 한 번 사면 계속 가짐 (죽어도 그대로)</li>
+ * <li>얻기: 장식 창 (스탯 창 장식 단추 · U 키 · /장식) 에서 골드로 사기 (0.21.0 — 사용자 요청 "치장템은 골드로", 예전 에메랄드 값의 1/10) — 산 것은 바로 입음.
+ * 한 번 사면 계속 가짐 (죽어도 그대로)</li>
  * <li>입기 · 벗기: 가진 것만. 무기 스킨은 무기 종류마다 하나 (손에 든 모습만 — 가방 아이콘 · 수치는 그대로). 무기는 숨길 수 없음</li>
  * <li>갑옷 숨기기: 투구 · 갑옷 · 바지 · 신발 칸마다 무료로 언제든 (원래 · 숨기기 · 갑옷 스킨 중 하나) — 막는 수치는 그대로</li>
  * <li>기록: 플레이어 속성 rpg:cosmetics {"owned": [키…], "look": 모습} — 모습 ({@link Look}) 은 모두에게 보냄 (들어올 때 전체 표 · 바뀔 때 그 사람만),
@@ -106,21 +108,21 @@ public final class Cosmetics {
         sync(sp, "");
     }
 
-    /** 사기: 에메랄드 price 개를 내고 내 것으로 · 바로 입음. 실패면 까닭 (성공 null) */
+    /** 사기: 골드 price 를 내고 (지갑 먼저 · 모자라면 가방의 금화) 내 것으로 · 바로 입음. 실패면 까닭 (성공 null) */
     public static String buy(ServerPlayer sp, String id) {
         CosmeticDefs.Def d = CosmeticDefs.get(id);
         if (d == null) return "§c없는 장식입니다";
         State s = state(sp);
         if (s.owned().contains(id)) return "§7이미 가진 장식입니다: §f" + d.name();
-        int money = Inv.money(sp);
-        if (money < d.price()) return "§c" + Inv.CURRENCY_NAME + "가 모자랍니다 §7(" + d.name() + " " + d.price() + " · 가진 것 " + money + ")";
-        if (d.price() > 0 && !Inv.remove(sp, Inv.CURRENCY, d.price())) return "§c" + Inv.CURRENCY_NAME + "를 낼 수 없습니다";
+        long money = Wallet.total(sp, Economy.Kind.GOLD);
+        if (money < d.price()) return "§c골드가 모자랍니다 §7(" + d.name() + " " + d.price() + " · 가진 것 " + money + ")";
+        if (d.price() > 0 && !Wallet.pay(sp, Economy.Kind.GOLD, d.price())) return "§c골드를 낼 수 없습니다";
         Set<String> owned = new LinkedHashSet<>(s.owned());
         owned.add(id);
         save(sp, new State(owned, apply(s.look(), d)));
         broadcast(sp);
         buyFx(sp, d);
-        Notify.say(sp, "§d[장식] §f" + d.name() + " §7을(를) 샀습니다 §8(" + Inv.CURRENCY_NAME + " " + d.price() + ") §7— 바로 입었습니다");
+        Notify.say(sp, "§d[장식] §f" + d.name() + " §7을(를) 샀습니다 §8(골드 " + d.price() + ") §7— 바로 입었습니다");
         return null;
     }
 
@@ -129,7 +131,7 @@ public final class Cosmetics {
         CosmeticDefs.Def d = CosmeticDefs.get(id);
         if (d == null) return "§c없는 장식입니다";
         State s = state(sp);
-        if (!s.owned().contains(id)) return "§c아직 가지지 않은 장식입니다: §f" + d.name() + " §7(" + Inv.CURRENCY_NAME + " " + d.price() + ")";
+        if (!s.owned().contains(id)) return "§c아직 가지지 않은 장식입니다: §f" + d.name() + " §7(골드 " + d.price() + ")";
         Look next = apply(s.look(), d);
         if (next.equals(s.look())) return null;
         save(sp, new State(s.owned(), next));

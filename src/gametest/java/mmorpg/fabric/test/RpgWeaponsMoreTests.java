@@ -41,7 +41,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 12단계 새 무기 게임 시험 (서버): 창 · 낫 · 전투 망치 · 성스러운 홀 × 고귀 · 영웅 · 초월 24개의 등록 · 조합 · 조작 줄 · 창의 사거리 속성,
  * 기본 공격 특징 (낫 넓게 베기 · 망치 내려찍기 — 다른 적에게 준 피해의 비율, 앞 · 둘레 밖은 안 맞음 · 홀 회복), 스킬 12개마다 들어간 피해 (배율 합 —
- * 몹 무적 시간을 피해 모두) · 상태 (시간 정지 · 구속 · 보호막 · 회복), 대장장이 제작 (고귀 쪽 — 전리품 + 에메랄드만), 정령왕 강림 (합 ×32 · 6돌 ×50).
+ * 몹 무적 시간을 피해 모두) · 상태 (시간 정지 · 구속 · 보호막 · 회복), 대장장이 제작 (고귀 쪽 — 전리품 + 실버만), 정령왕 강림 (합 ×32 · 6돌 ×50).
  * 사거리가 길거나 넓은 스킬은 시험마다 시험 환경을 따로 (mmorpg:w_…) — 같은 묶음에서 함께 도는 다른 시험의 과녁을 맞히지 않게.
  */
 public final class RpgWeaponsMoreTests {
@@ -230,7 +230,7 @@ public final class RpgWeaponsMoreTests {
         Smith.Recipe r = noble.get(0);
         h.assertTrue(r.ore() == 0 && r.mats().stream().allMatch(m -> m.kind().equals("drop")), "drops only");
         for (Smith.Mat m : r.mats()) sp.getInventory().add(new ItemStack(m.item(), m.count()));
-        sp.getInventory().setItem(30, new ItemStack(net.minecraft.world.item.Items.EMERALD, r.emerald()));
+        sp.getInventory().setItem(30, new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, r.emerald()));
         h.assertTrue(Smith.firstCraftPage(sp, Smith.craftRecipes()) == 2, "opens on the noble page with those drops");
         String msg = Smith.craft(sp, r);
         h.assertTrue(msg.contains("완료"), "crafted: " + msg);
@@ -240,7 +240,7 @@ public final class RpgWeaponsMoreTests {
     }
 
     /**
-     * 무기 상점 둘째 쪽 (12단계 보강): 쪽 넘김 칸 → 새 무기 4종 일반 · 희귀 (10렙 — 값 · 칸) → 창 사기 (에메랄드 · 창) → 같은 쪽으로 돌아옴 → 다시 넘기면
+     * 무기 상점 둘째 쪽 (12단계 보강): 쪽 넘김 칸 → 새 무기 4종 일반 · 희귀 (10렙 — 값 · 칸) → 창 사기 (실버 · 창) → 같은 쪽으로 돌아옴 → 다시 넘기면
      * 기본 무기 쪽
      */
     @GameTest(environment = ENV, maxTicks = 20)
@@ -248,7 +248,7 @@ public final class RpgWeaponsMoreTests {
         ServerPlayer sp = player(h);
         mmorpg.fabric.ui.Forms.HEADLESS.add(sp.getUUID());
         try {
-            sp.getInventory().setItem(9, new ItemStack(net.minecraft.world.item.Items.EMERALD, 64));
+            mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.SILVER, 64);
             mmorpg.fabric.shop.Store.openStore(sp, 10, "weapons");
             mmorpg.fabric.ui.FormNet.ChestPayload c = shopChest(sp);
             h.assertTrue(c != null && c.title().contains("무기 상점") && !c.title().contains("새 무기"), "shop opens on the basic page");

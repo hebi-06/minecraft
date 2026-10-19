@@ -86,6 +86,8 @@ public final class MmorpgClient implements ClientModInitializer {
             if (payload.open()) context.client().gui.setScreen(new StatScreen());
         });
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.MountPayload.TYPE, (payload, context) -> ClientRpgState.updateMount(payload));
+        // 0.21.0 지갑 (골드 · 실버 — 화면 왼쪽 아래)
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.economy.EconomyNet.WalletPayload.TYPE, (payload, context) -> ClientWallet.update(payload));
         // 스탯 트리 (7단계): 기록 · 보너스 합, open 이면 그 탭으로 창 (열려 있으면 탭만 바꿈)
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.StatTreePayload.TYPE, (payload, context) -> {
             String open = ClientRpgState.updateStatTree(payload);
@@ -102,6 +104,7 @@ public final class MmorpgClient implements ClientModInitializer {
             ClientSkillBar.clear();
             ClientCosmetics.clear();
             ClientGacha.clear();
+            ClientWallet.clear();
             CameraShake.clear();
             UltFx.clear();
         });
@@ -130,6 +133,7 @@ public final class MmorpgClient implements ClientModInitializer {
             }
             ClientSkillBar.tick(client);
             RpgHud.tick(client);
+            ClientWallet.tick();
             if (!client.isPaused()) CameraShake.tick();
             WeaponAura.tick(client);
             CosmeticAura.tick(client);
@@ -150,6 +154,8 @@ public final class MmorpgClient implements ClientModInitializer {
         });
         // 스킬 칸 (11단계): 화면 오른쪽 아래 (핫바 옆)
         HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, Mmorpg.id("skill_bar"), SkillBarHud::render);
+        // 0.21.0 지갑: 화면 왼쪽 아래 (골드 · 실버)
+        HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, Mmorpg.id("wallet"), WalletHud::render);
         // 화면 번쩍임 (초월 룬): HUD 맨 위
         HudElementRegistry.addLast(Mmorpg.id("ult_edge"), (graphics, delta) -> UltFx.renderEdge(graphics)); // 6돌 초월 룬의 테두리 빛 (8단계)
         HudElementRegistry.addLast(Mmorpg.id("ult_flash"), (graphics, delta) -> UltFx.renderFlash(graphics));

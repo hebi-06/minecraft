@@ -652,7 +652,7 @@ public final class RpgWormGallery implements FabricClientGameTest {
             if (altar.cooldownUntil <= System.currentTimeMillis()) return "no cooldown";
             int fang = RpgGearTests.countIn(player(s), GearItems.byId("rpg:worm_fang"));
             int heart = RpgGearTests.countIn(player(s), GearItems.byId("rpg:worm_heart"));
-            int em = RpgGearTests.countIn(player(s), Items.EMERALD);
+            int em = RpgGearTests.silver(player(s));
             return em >= 16 && fang >= 2 && heart >= 2 ? "ok " + em + " " + fang + " " + heart : "loot " + em + " " + fang + " " + heart;
         });
         check(r.startsWith("ok"), "worm killed → rewards + boss materials + cooldown (" + r + ")");

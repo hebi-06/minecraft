@@ -418,7 +418,7 @@ abstract class RpgDriveGallery implements FabricClientGameTest {
         String r = server.computeOnServer(s -> {
             if (Bosses.encounterAt(altar) != null) return "still fighting";
             if (altar.cooldownUntil <= System.currentTimeMillis() + 890_000) return "no 15 min cooldown";
-            int em = RpgGearTests.countIn(player(s), Items.EMERALD);
+            int em = RpgGearTests.silver(player(s));
             return em >= minEmerald ? "ok " + em : "emeralds " + em;
         });
         check(r.startsWith("ok"), "boss killed → rewards + cooldown (" + r + ")");

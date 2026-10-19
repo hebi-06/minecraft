@@ -278,8 +278,9 @@ public final class RpgBossTests {
                 h.assertTrue(hit(p1, b, 100F), "killing blow lands");
                 h.assertTrue(Bosses.encounterAt(a) == null && "dead".equals(enc.state), "encounter over " + enc.state);
                 h.assertTrue(!b.isAlive(), "boss dies");
-                int em = count(p1, Items.EMERALD);
-                h.assertTrue(em >= 8 && em <= 12, "emeralds " + em);
+                int em = RpgGearTests.silver(p1);
+                h.assertTrue(em >= 8 && em <= 12, "silver " + em);
+                h.assertTrue(RpgGearTests.bossGold(p1, KEY), "0.21.0 boss gold " + RpgGearTests.gold(p1) + " in " + java.util.Arrays.toString(mmorpg.core.Economy.bossGold(KEY)));
                 int tickets = count(p1, RuneItems.ticket(1, false).getItem());
                 h.assertTrue(tickets >= 1 && tickets <= 2, "rune tickets " + tickets);
                 int stone = count(p1, GearItems.byId("rpg:enhance_stone"));
@@ -287,7 +288,7 @@ public final class RpgBossTests {
                 int ore = count(p1, GearItems.byId("rpg:star_ore"));
                 h.assertTrue(ore >= 1 && ore <= 2, "star ore " + ore);
                 h.assertTrue(p1.totalExperience - xp0 == 20, "xp " + (p1.totalExperience - xp0));
-                h.assertTrue(count(p2, Items.EMERALD) >= 8, "p2 in the field is rewarded too");
+                h.assertTrue(RpgGearTests.silver(p2) >= 8, "p2 in the field is rewarded too");
                 h.assertTrue(killed.size() == 1 && KEY.equals(killed.get(0)[0]) && ((List<?>) killed.get(0)[1]).containsAll(List.of(p1, p2)), "kill hook (quests)");
                 h.assertTrue(a.cooldownUntil > System.currentTimeMillis() + 590_000, "cooldown 10 min " + (a.cooldownUntil - System.currentTimeMillis()));
                 Arena.onAltarUse.accept(p1, a);

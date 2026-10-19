@@ -149,7 +149,7 @@ public final class RpgQuestTests {
 
     // ------------------------------------------------------------ 만든 퀘스트
 
-    /** 처치 퀘스트: 대화창으로 받기 → 플레이어가 잡음 · 때린 뒤 다른 피해로 죽음 (10초 안) → 보고 → 에메랄드 · 경험치 (레벨 보상 → 바닐라 경험치, 9단계) · 스탯 포인트 */
+    /** 처치 퀘스트: 대화창으로 받기 → 플레이어가 잡음 · 때린 뒤 다른 피해로 죽음 (10초 안) → 보고 → 실버 (지갑) · 경험치 (레벨 보상 → 바닐라 경험치, 9단계) · 스탯 포인트 */
     @GameTest(maxTicks = 40)
     public void customKillQuest(GameTestHelper h) {
         ServerPlayer sp = player(h);
@@ -170,7 +170,7 @@ public final class RpgQuestTests {
             QuestTalk.talkLoop(sp, giver, null);
             h.assertTrue(dialogText(sp).contains("안녕하신가"), "greeting " + dialogText(sp));
             pick(h, sp, "좀비 사냥");
-            h.assertTrue(dialogText(sp).contains("부탁이 하나 있네") && dialogText(sp).contains("좀비 2마리 처치") && dialogText(sp).contains("에메랄드 5"),
+            h.assertTrue(dialogText(sp).contains("부탁이 하나 있네") && dialogText(sp).contains("좀비 2마리 처치") && dialogText(sp).contains("실버 5"),
                     "offer " + dialogText(sp));
             pick(h, sp, "수락하기");
             h.assertFalse(Forms.pending(sp), "flow ended");
@@ -218,7 +218,7 @@ public final class RpgQuestTests {
         done(h, sp);
     }
 
-    /** 가져오기 (반복 가능): 모으면 달성 알림 → 보고하면 아이템을 가져가고 에메랄드 + 아이템 보상, 다시 받을 수 있음 */
+    /** 가져오기 (반복 가능): 모으면 달성 알림 → 보고하면 아이템을 가져가고 실버 + 아이템 보상, 다시 받을 수 있음 */
     @GameTest(maxTicks = 40)
     public void customCollectQuest(GameTestHelper h) {
         ServerPlayer sp = player(h);
@@ -842,7 +842,7 @@ public final class RpgQuestTests {
 
     /**
      * 지역 이야기의 새 몬스터 단계 (농장): 허수아비 처치를 마치면 올라프가 "장난꾸러기 니세" (10마리) 를 줌 → 대사 · 길 안내 (니세 사냥) →
-     * 진짜 니세를 잡으면 셈 → 보고 (대사 · 에메랄드) → 대화가 이어져 다음 단계 (광폭 멧돼지) 를 받을 수 있음
+     * 진짜 니세를 잡으면 셈 → 보고 (대사 · 실버) → 대화가 이어져 다음 단계 (광폭 멧돼지) 를 받을 수 있음
      */
     @GameTest(maxTicks = 40)
     public void regionalNewMonsterStep(GameTestHelper h) {

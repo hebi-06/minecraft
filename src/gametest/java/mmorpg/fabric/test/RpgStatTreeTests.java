@@ -34,7 +34,7 @@ import net.minecraft.world.level.block.Blocks;
 /**
  * 7단계 스탯 트리 게임 시험 (서버 — 시험 서버는 스탯 트리가 기본으로 꺼져 있어 TestSetup.treeOn 으로 켠 플레이어만):
  * 스탯을 찍으면 칸이 열리고 보상은 칸마다 처음 한 번만 (스탯을 되돌렸다 다시 찍어도 다시 안 줌), 보너스가 실제 수치에 (켠 플레이어 ÷ 끈 플레이어 —
- * 공격력 · 평타 피해 · 치명타 확률 · 치명타 배율 · 최대 체력 · 받는 피해 · 이동 속도 · 룬 재사용 대기 · 룬 피해), 갈래 고르기 · 에메랄드 초기화,
+ * 공격력 · 평타 피해 · 치명타 확률 · 치명타 배율 · 최대 체력 · 받는 피해 · 이동 속도 · 룬 재사용 대기 · 룬 피해), 갈래 고르기 · 실버 초기화,
  * 스탯 룬 뽑기권 (등록 · 이름이 같은 계열만 나옴).
  */
 public final class RpgStatTreeTests {
@@ -178,11 +178,11 @@ public final class RpgStatTreeTests {
         h.assertTrue(StatTrees.pick(sp, "str", 2, 1) != null, "이미 고름");
         h.assertTrue(StatTrees.resetCost(sp, "str") == StatTree.perPick(), "비용 = 갈래 1개");
         String err = StatTrees.reset(sp, "str", false);
-        h.assertTrue(err != null && err.contains("모자랍니다"), "에메랄드 없음: " + err);
+        h.assertTrue(err != null && err.contains("모자랍니다"), "실버 없음: " + err);
         h.assertTrue(StatTrees.state(sp).picksOf("str").size() == 1, "못 지웠으면 그대로");
-        sp.getInventory().add(new ItemStack(Items.EMERALD, 30));
+        sp.getInventory().add(new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, 30)); // 0.21.0 가방의 은화로도 냄
         h.assertTrue(StatTrees.reset(sp, "str", false) == null, "초기화");
-        h.assertTrue(count(sp, Items.EMERALD) == 30 - StatTree.perPick(), "에메랄드 " + StatTree.perPick() + " 냄: " + count(sp, Items.EMERALD));
+        h.assertTrue(count(sp, mmorpg.fabric.economy.EconomyItems.SILVER_COIN) == 30 - StatTree.perPick(), "실버 " + StatTree.perPick() + " 냄: " + count(sp, mmorpg.fabric.economy.EconomyItems.SILVER_COIN));
         h.assertTrue(StatTrees.state(sp).picksOf("str").isEmpty(), "갈래 지움");
         near(h, StatTrees.bonus(sp, "atk"), 2, "보너스 원래대로");
         h.assertTrue(StatTrees.reset(sp, "str", false) != null, "고른 갈래가 없으면 초기화 없음");

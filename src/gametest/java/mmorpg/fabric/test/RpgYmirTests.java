@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * 균열 단계 (rpg:crack 1 · 2 · 3, 몸 가까이에서 때린 피해만 온전히 — 멀리서는 ¼) → 무릎 꿇음 (하던 내려치기를 끊음 · 빈틈 +50% · 일어난 뒤 금이 가지 않음),
  * 몽둥이 내려치기 (대상이 몽둥이 줄 위 · 옆 · 뒤는 무사 · 느림), 얼음 가시 → 빙결 (속박 + 얼음 소품이 생기고 깨지고 사라짐),
  * 니플헤임의 숨결 (뛰어옴 · 무적 → 들이쉬는 동안 보스 안개 (엔진의 syncBossFog — 걷어도 0.5초 안에 다시) · 모닥불 위 글자 → 내쉼: 모닥불 곁은 안전, 밖은 얼어붙어 즉사 · 안개 걷힘),
- * 처치 보상 (에메랄드 · 서리 심장 · 거인 뼈 · 경험치 · 재사용 대기 20분 · 처치 훅) · 꺼진 모닥불은 다시 켜짐.
+ * 처치 보상 (실버 · 골드 · 서리 심장 · 거인 뼈 · 경험치 · 재사용 대기 20분 · 처치 훅) · 꺼진 모닥불은 다시 켜짐.
  * 필드는 신전 없이 하늘 (y 150) 의 돌 바닥 + 제단 (지었다고 표시 — 모닥불 자리는 설계에서, 모닥불 블록은 모듈이 놓음). 시험마다 멀리 (x 61_000 + 100 × 번호).
  * 통과하면 [ymir-test] OK 줄.
  */
@@ -485,7 +485,7 @@ public final class RpgYmirTests {
         });
     }
 
-    /** 쓰러뜨리면 보상 (에메랄드 34~48 · 서리 심장 · 거인 뼈 · 경험치 120) · 처치 훅 · 재사용 대기 20분 · 꺼진 모닥불은 다시 켜짐 · 얼음 · 안개 정리 */
+    /** 쓰러뜨리면 보상 (실버 34~48 · 골드 · 서리 심장 · 거인 뼈 · 경험치 120) · 처치 훅 · 재사용 대기 20분 · 꺼진 모닥불은 다시 켜짐 · 얼음 · 안개 정리 */
     @GameTest(environment = "mmorpg:ymir", maxTicks = 400)
     public void killRewardsAndRelightsFires(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -522,8 +522,9 @@ public final class RpgYmirTests {
                             h.assertTrue(hit(p1, b, 100F), "killing blow lands");
                             h.assertTrue(Bosses.encounterAt(a) == null && "dead".equals(enc.state), "Ymir falls " + enc.state);
                             Obj L = Rules.get().obj("BOSSES").obj(KEY).obj("loot");
-                            int em = count(p1, Items.EMERALD);
-                            h.assertTrue(em >= L.numbersOrNull("emerald").get(0) && em <= L.numbersOrNull("emerald").get(1), "emeralds " + em);
+                            int em = RpgGearTests.silver(p1);
+                            h.assertTrue(em >= L.numbersOrNull("emerald").get(0) && em <= L.numbersOrNull("emerald").get(1), "silver " + em);
+                            h.assertTrue(RpgGearTests.bossGold(p1, KEY), "0.21.0 boss gold " + RpgGearTests.gold(p1) + " in " + java.util.Arrays.toString(mmorpg.core.Economy.bossGold(KEY)));
                             Obj mats = Rules.get().obj("BOSS_MATERIALS");
                             for (String k : List.of("ymir_heart", "ymir_bone")) {
                                 int n = count(p1, GearItems.byId(mats.obj(k).str("item")));

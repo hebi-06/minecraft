@@ -626,7 +626,7 @@ public final class RpgJormungandrGallery implements FabricClientGameTest {
         String r = server.computeOnServer(s -> {
             if (Bosses.encounterAt(altar) != null) return "still fighting";
             if (altar.cooldownUntil <= System.currentTimeMillis()) return "no cooldown";
-            int em = RpgGearTests.countIn(player(s), Items.EMERALD);
+            int em = RpgGearTests.silver(player(s));
             return em >= 22 ? "ok " + em : "emeralds " + em;
         });
         check(r.startsWith("ok"), "jormungandr killed → rewards + cooldown (" + r + ")");

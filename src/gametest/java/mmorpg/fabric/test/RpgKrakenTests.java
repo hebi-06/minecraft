@@ -364,7 +364,7 @@ public final class RpgKrakenTests {
         });
     }
 
-    /** 처치: 보상 (에메랄드 16~24 · 보스 재료 칠흑 먹물 · 심해의 눈 2~3) · 재사용 대기 15분, 남은 촉수 · 이름표도 치움 */
+    /** 처치: 보상 (실버 16~24 · 골드 · 보스 재료 칠흑 먹물 · 심해의 눈 2~3) · 재사용 대기 15분, 남은 촉수 · 이름표도 치움 */
     @GameTest(environment = "mmorpg:kraken", maxTicks = 200)
     public void killRewardsMaterials(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -389,10 +389,11 @@ public final class RpgKrakenTests {
                 put(p1, a, 0, 9);
                 h.assertTrue(hit(p1, enc.boss, 50F), "killing blow");
                 h.assertTrue(Bosses.encounterAt(a) == null && "dead".equals(enc.state), "kraken down");
-                int em = RpgGearTests.countIn(p1, Items.EMERALD);
+                int em = RpgGearTests.silver(p1);
                 int ink = RpgGearTests.countIn(p1, GearItems.byId("rpg:kraken_ink"));
                 int eye = RpgGearTests.countIn(p1, GearItems.byId("rpg:kraken_eye"));
-                h.assertTrue(em >= 16 && em <= 24, "emeralds 16~24: " + em);
+                h.assertTrue(em >= 16 && em <= 24, "silver 16~24: " + em);
+                h.assertTrue(RpgGearTests.bossGold(p1, KEY), "0.21.0 boss gold " + RpgGearTests.gold(p1) + " in " + java.util.Arrays.toString(mmorpg.core.Economy.bossGold(KEY)));
                 h.assertTrue(ink >= 2 && ink <= 4 && eye >= 2 && eye <= 4, "boss materials 2~3 (+25% one more): ink " + ink + " · eye " + eye);
                 h.assertTrue(a.cooldownUntil > System.currentTimeMillis() + 890_000, "cooldown 15 min");
                 for (Entity e : tents) h.assertTrue(e.isRemoved(), "tentacles cleared");

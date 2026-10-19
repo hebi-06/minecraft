@@ -64,6 +64,23 @@ public final class RpgGearTests {
         h.succeed();
     }
 
+    /** 0.21.0 지갑의 실버 (보스 · 퀘스트 · 상점 판매로 받은 것) */
+    static int silver(ServerPlayer sp) {
+        return (int) mmorpg.fabric.economy.Wallet.get(sp, mmorpg.core.Economy.Kind.SILVER);
+    }
+
+    /** 0.21.0 지갑의 골드 */
+    static int gold(ServerPlayer sp) {
+        return (int) mmorpg.fabric.economy.Wallet.get(sp, mmorpg.core.Economy.Kind.GOLD);
+    }
+
+    /** 0.21.0 보스 골드가 그 보스의 범위 (ECONOMY.bossGold) 안인지 */
+    static boolean bossGold(ServerPlayer sp, String boss) {
+        int[] r = mmorpg.core.Economy.bossGold(boss);
+        int g = gold(sp);
+        return r[1] > 0 && g >= r[0] && g <= r[1];
+    }
+
     /** 가방에서 이 아이템 수 */
     static int countIn(ServerPlayer sp, net.minecraft.world.item.Item item) {
         int n = 0;
@@ -192,7 +209,7 @@ public final class RpgGearTests {
         ServerPlayer sp = player(h);
         Forms.HEADLESS.add(sp.getUUID());
         try {
-            sp.getInventory().setItem(9, new ItemStack(Items.EMERALD, 64));
+            mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.SILVER, 64); // 0.21.0 지갑의 실버로 냄
             Store.openStore(sp, 40, "armor");
             FormNet.ChestPayload c = chest(sp);
             h.assertTrue(c != null && c.title().contains("갑옷 상점"), "armor shop opened");
@@ -251,13 +268,13 @@ public final class RpgGearTests {
         return Forms.last(sp) instanceof FormNet.ChestPayload c ? c : null;
     }
 
-    /** 상점 (클라이언트 없이 창 흐름): 10렙 일반 칼 칸 → 구매 확인 → 사기 (에메랄드 빠지고 칼), 닫으면 흐름 끝 */
+    /** 상점 (클라이언트 없이 창 흐름): 10렙 일반 칼 칸 → 구매 확인 → 사기 (가방의 은화 빠지고 칼 — 0.21.0), 닫으면 흐름 끝 */
     @GameTest(maxTicks = 20)
     public void shopBuysWeapon(GameTestHelper h) {
         ServerPlayer sp = player(h);
         Forms.HEADLESS.add(sp.getUUID());
         try {
-            sp.getInventory().setItem(9, new ItemStack(Items.EMERALD, 64));
+            sp.getInventory().setItem(9, new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, 64));
             Store.openStore(sp, 10, "weapons");
             FormNet.ChestPayload c = chest(sp);
             h.assertTrue(c != null && c.title().contains("무기 상점") && c.slots().size() == 27, "shop opened");
@@ -280,7 +297,7 @@ public final class RpgGearTests {
         done(h, sp);
     }
 
-    /** 전리품 팔기: 트롤 엄니 10개 → 모두 팔기 → 1개 값 × 10 에메랄드 */
+    /** 전리품 팔기: 트롤 엄니 10개 → 모두 팔기 → 1개 값 × 10 실버 (지갑으로) */
     @GameTest(maxTicks = 20)
     public void shopSellsLoot(GameTestHelper h) {
         ServerPlayer sp = player(h);
@@ -300,6 +317,8 @@ public final class RpgGearTests {
             Forms.answer(sp, 13, null); // 모두
             h.assertTrue(countIn(sp, troll) == 0, "loot taken");
             h.assertTrue(Inv.money(sp) == price * 10, "paid " + Inv.money(sp) + " vs " + price * 10);
+            h.assertTrue(mmorpg.fabric.economy.Wallet.get(sp, mmorpg.core.Economy.Kind.SILVER) == price * 10 && countIn(sp, mmorpg.fabric.economy.EconomyItems.SILVER_COIN) == 0,
+                    "0.21.0: paid into the wallet (no coins in the bag)");
             Forms.answer(sp, -1, null);
         } finally {
             Forms.HEADLESS.remove(sp.getUUID());

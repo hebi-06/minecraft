@@ -49,7 +49,7 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  * <li>스탯을 찍으면 그 스탯의 나무가 저절로 자람 (찍은 포인트 — 장비 · 룬 버프 제외). 새 칸이 열리면 그 칸의 보상 (뽑기권) 을 처음 한 번만 줌
  * (나무마다 받은 칸 수를 적어 둠 — 스탯을 되돌렸다 다시 찍어도 다시 주지 않음) · 큰 글자 · 채팅 · 자라는 연출</li>
- * <li>갈래 칸: 열린 뒤 둘 중 하나를 고름 (스탯 트리 창 · /스탯트리). 갈래 초기화 = 그 나무의 고른 갈래를 모두 지움 — 에메랄드 (갈래당 perPick)</li>
+ * <li>갈래 칸: 열린 뒤 둘 중 하나를 고름 (스탯 트리 창 · /스탯트리). 갈래 초기화 = 그 나무의 고른 갈래를 모두 지움 — 실버 (갈래당 perPick · 0.21.0 전에는 에메랄드)</li>
  * <li>보너스: 공격력 (RpgCombat.powerOf · 룬 피해), 룬 피해, 치명타 확률 (평타 훅 · 스킬), 치명타 피해 (치명타 배율에 더함), 최대 체력
  * (RpgHealth.maxHpOf), 받는 피해 (RpgHealth.onLoss), 이동 속도 (속성 수정자 mmorpg:stat_tree_speed), 재사용 대기 (스킬 · 룬)</li>
  * <li>기록: 플레이어 속성 rpg:stat_tree (JSON — 고른 갈래 · 받은 칸). 클라이언트에는 {@link RpgNet.StatTreePayload}</li>
@@ -266,7 +266,7 @@ public final class StatTrees {
         return StatTree.resetCost(state(sp).pickCount(stat));
     }
 
-    /** 갈래 초기화 (에메랄드). 잘못이면 그 까닭 (null = 지움) */
+    /** 갈래 초기화 (실버 — 0.21.0 전에는 에메랄드). 잘못이면 그 까닭 (null = 지움) */
     public static String reset(ServerPlayer sp, String stat, boolean free) {
         if (!isActive(sp)) return "§c스탯 트리를 쓸 수 없습니다";
         if (StatTree.tree(stat) == null) return "§c그런 나무가 없습니다";
@@ -274,14 +274,14 @@ public final class StatTrees {
         int n = s.pickCount(stat);
         if (n == 0) return "§7고른 갈래가 없습니다";
         int cost = free ? 0 : StatTree.resetCost(n);
-        int have = Inv.count(sp, Inv.CURRENCY);
+        int have = Inv.money(sp);
         if (have < cost) return "§c" + Inv.CURRENCY_NAME + "가 모자랍니다 §7(필요 " + cost + ", 가진 것 " + have + ")";
-        if (cost > 0 && !Inv.remove(sp, Inv.CURRENCY, cost)) return "§c" + Inv.CURRENCY_NAME + "를 꺼낼 수 없습니다";
+        if (cost > 0 && !Inv.pay(sp, cost)) return "§c" + Inv.CURRENCY_NAME + "를 낼 수 없습니다";
         StatTree.State next = s.withoutPicks(stat);
         save(sp, next);
         recompute(sp, next);
         RpgHealth.refreshMax(sp, false);
-        Notify.say(sp, color(stat) + Stats.info(stat).str("name") + " 나무 §f갈래 초기화 §7(갈래 " + n + "개" + (cost > 0 ? " · " + Inv.CURRENCY_NAME + " " + cost + "개" : "")
+        Notify.say(sp, color(stat) + Stats.info(stat).str("name") + " 나무 §f갈래 초기화 §7(갈래 " + n + "개" + (cost > 0 ? " · " + Inv.CURRENCY_NAME + " " + cost : "")
                 + ") — 다시 고를 수 있습니다");
         resetFx(sp, StatTree.tree(stat).color());
         sync(sp, "");
@@ -289,7 +289,7 @@ public final class StatTrees {
     }
 
     /**
-     * 나무 넷의 고른 갈래를 모두 지움 (관리자 — 에메랄드 없이). 받은 칸 기록 (claimed) 은 그대로: 어떤 초기화로도 뽑기권을 다시 주지 않음.
+     * 나무 넷의 고른 갈래를 모두 지움 (관리자 — 실버 없이). 받은 칸 기록 (claimed) 은 그대로: 어떤 초기화로도 뽑기권을 다시 주지 않음.
      * 지운 갈래 수
      */
     public static int clear(ServerPlayer sp) {
@@ -410,7 +410,7 @@ public final class StatTrees {
         m.put("state", Json.parse(state(sp).json()));
         m.put("totals", new LinkedHashMap<>(totals(sp)));
         m.put("open", open == null ? "" : open);
-        m.put("money", Inv.count(sp, Inv.CURRENCY));
+        m.put("money", Inv.money(sp));
         RpgNet.statTree(sp, new RpgNet.StatTreePayload(Json.stringify(m)));
     }
 

@@ -672,12 +672,13 @@ public final class RpgSurtrTests {
                     List<String> note = Bosses.module(KEY).killNote(enc);
                     h.assertTrue(note.size() == 2 && note.get(0).equals("§6[부위 파괴] §f1/3 §7— 불꽃 왕관 (p2)"), "note " + note);
                     h.assertTrue(note.get(1).equals("§7반격 2번 · 업화 막음 1/2 · 사슬 속박 1번"), "note " + note.get(1));
-                    int em = RpgGearTests.countIn(p1, Items.EMERALD);
+                    int em = RpgGearTests.silver(p1);
                     int adv = RpgGearTests.countIn(p1, RuneItems.ADV_TICKET);
                     int tickets = RpgGearTests.countIn(p1, RuneItems.TICKET);
                     int heart = RpgGearTests.countIn(p1, GearItems.byId("rpg:muspel_heart"));
                     int shard = RpgGearTests.countIn(p1, GearItems.byId("rpg:laevateinn_shard"));
-                    h.assertTrue(em >= 48 && em <= 64, "emeralds " + em);
+                    h.assertTrue(em >= 48 && em <= 64, "silver " + em);
+                    h.assertTrue(RpgGearTests.bossGold(p1, KEY), "0.21.0 boss gold " + RpgGearTests.gold(p1) + " in " + java.util.Arrays.toString(mmorpg.core.Economy.bossGold(KEY)));
                     h.assertTrue(adv >= 1 && adv <= 2, "advanced rune tickets " + adv);
                     h.assertTrue(tickets >= 2 && tickets <= 4, "rune tickets " + tickets);
                     h.assertTrue(heart >= 2 && heart <= 4, "muspel heart (1~2 +30% +1 crown) " + heart);

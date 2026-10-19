@@ -713,7 +713,7 @@ public final class RpgScorpionsGallery implements FabricClientGameTest {
         String r = server.computeOnServer(s -> {
             if (Bosses.encounterAt(altar) != null) return "still fighting";
             if (altar.cooldownUntil <= System.currentTimeMillis() + 890_000) return "no 15 min cooldown";
-            int em = RpgGearTests.countIn(player(s), Items.EMERALD);
+            int em = RpgGearTests.silver(player(s));
             return em >= 12 ? "ok " + em : "emeralds " + em;
         });
         check(r.startsWith("ok"), "both down → rewards + 15 min cooldown (" + r + ")");

@@ -246,7 +246,7 @@ public final class RpgJormungandrTests {
         });
     }
 
-    /** 처치 보상: 에메랄드 22~32 · 경험치 70 · 빛나는 강화석 1~2 · 보스 재료 없음 · 처치 훅 · 재사용 대기 15분 */
+    /** 처치 보상: 실버 · 골드 · 22~32 · 경험치 70 · 빛나는 강화석 1~2 · 보스 재료 없음 · 처치 훅 · 재사용 대기 15분 */
     @GameTest(environment = "mmorpg:jorm", maxTicks = 200)
     public void jormKillRewards(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -270,9 +270,10 @@ public final class RpgJormungandrTests {
                 enc.boss.setHealth(50F);
                 h.assertTrue(RpgWormTests.hit(p1, enc.boss, 100F), "killing blow");
                 h.assertTrue(Bosses.encounterAt(a) == null && "dead".equals(enc.state), "dead");
-                int em = RpgGearTests.countIn(p1, Items.EMERALD);
+                int em = RpgGearTests.silver(p1);
                 int bright = RpgGearTests.countIn(p1, GearItems.byId("rpg:bright_stone"));
-                h.assertTrue(em >= 22 && em <= 32, "emeralds " + em);
+                h.assertTrue(em >= 22 && em <= 32, "silver " + em);
+                h.assertTrue(RpgGearTests.bossGold(p1, KEY), "0.21.0 boss gold " + RpgGearTests.gold(p1) + " in " + java.util.Arrays.toString(mmorpg.core.Economy.bossGold(KEY)));
                 h.assertTrue(bright >= 1 && bright <= 2, "bright stones " + bright);
                 h.assertTrue(RpgGearTests.countIn(p1, GearItems.byId("rpg:worm_fang")) == 0 && RpgGearTests.countIn(p1, GearItems.byId("rpg:kraken_ink")) == 0,
                         "no boss materials");

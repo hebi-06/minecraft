@@ -753,7 +753,7 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         check(note.size() == 2 && note.get(0).contains("3/3"), "part break note " + note);
         String r = server.computeOnServer(s -> {
             if (altar.cooldownUntil <= System.currentTimeMillis() + 1_700_000) return "no 30 min cooldown";
-            int em = RpgGearTests.countIn(player(s), Items.EMERALD);
+            int em = RpgGearTests.silver(player(s));
             int adv = RpgGearTests.countIn(player(s), mmorpg.fabric.rune.RuneItems.ADV_TICKET);
             int shard = RpgGearTests.countIn(player(s), mmorpg.fabric.gear.GearItems.byId("rpg:laevateinn_shard"));
             int heart = RpgGearTests.countIn(player(s), mmorpg.fabric.gear.GearItems.byId("rpg:muspel_heart"));

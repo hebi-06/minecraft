@@ -66,16 +66,17 @@ public final class RpgEditorTests {
     private static final int Q_PROGRESS = 10;
     private static final int Q_DONE = 11;
     private static final int Q_EMERALD = 12;
-    private static final int Q_XP = 13;
-    private static final int Q_POINTS = 14;
-    private static final int Q_WTYPE = 15;
-    private static final int Q_WLEVEL = 16;
-    private static final int Q_WGRADE = 17;
-    private static final int Q_RITEM = 18;
-    private static final int Q_REQUIRES = 20;
-    private static final int Q_MIN_LEVEL = 21;
-    private static final int Q_REPEAT = 22;
-    private static final int Q_INPUTS = 23;
+    private static final int Q_GOLD = 13;
+    private static final int Q_XP = 14;
+    private static final int Q_POINTS = 15;
+    private static final int Q_WTYPE = 16;
+    private static final int Q_WLEVEL = 17;
+    private static final int Q_WGRADE = 18;
+    private static final int Q_RITEM = 19;
+    private static final int Q_REQUIRES = 21;
+    private static final int Q_MIN_LEVEL = 22;
+    private static final int Q_REPEAT = 23;
+    private static final int Q_INPUTS = 24;
 
     // ------------------------------------------------------------ 도움
 
@@ -294,7 +295,7 @@ public final class RpgEditorTests {
             List<String> q = inputs(sp);
             h.assertTrue(q.size() == Q_INPUTS, "quest inputs " + q.size() + " " + q);
             h.assertTrue(q.get(Q_TITLE).equals("새 퀘스트") && q.get(Q_TYPE).equals("0") && q.get(Q_MOB).equals("0") && q.get(Q_COUNT).equals("10")
-                    && q.get(Q_EMERALD).equals("5") && q.get(Q_WTYPE).equals("0") && q.get(Q_RITEM).equals("0") && q.get(Q_REPEAT).equals("false"), "new quest defaults " + q);
+                    && q.get(Q_EMERALD).equals("5") && q.get(Q_GOLD).equals("0") && q.get(Q_WTYPE).equals("0") && q.get(Q_RITEM).equals("0") && q.get(Q_REPEAT).equals("false"), "new quest defaults " + q);
             h.assertTrue(q.get(Q_GIVER).equals(String.valueOf(npcIndex(server, key))), "giver preselected " + q.get(Q_GIVER) + " vs " + npcIndex(server, key));
             q.set(Q_TITLE, "허수아비 소탕 시험");
             q.set(Q_COUNT, "5");
@@ -302,6 +303,7 @@ public final class RpgEditorTests {
             q.set(Q_PROGRESS, "아직인가?");
             q.set(Q_DONE, "고맙네!");
             q.set(Q_EMERALD, "7");
+            q.set(Q_GOLD, "2"); // 0.21.0 골드 보상
             q.set(Q_XP, "2");
             q.set(Q_POINTS, "1");
             q.set(Q_WTYPE, "1"); // 칼
@@ -326,7 +328,7 @@ public final class RpgEditorTests {
             h.assertTrue(isMenu(sp, "퀘스트 목록") && m.buttons().size() == 3 && plain(m.buttons().get(1).text()).contains("허수아비 소탕 시험"), "quest list " + what(sp));
             Forms.answer(sp, 1, null);
             m = menu(sp);
-            h.assertTrue(isMenu(sp, "퀘스트") && plain(m.text()).contains("5마리 처치") && plain(m.text()).contains("에메랄드 7") && plain(m.text()).contains("레벨 3 이상"), "quest actions " + what(sp));
+            h.assertTrue(isMenu(sp, "퀘스트") && plain(m.text()).contains("5마리 처치") && plain(m.text()).contains("실버 7") && plain(m.text()).contains("골드 2") && plain(m.text()).contains("레벨 3 이상"), "quest actions " + what(sp));
             Forms.answer(sp, 0, null); // 수정
             h.assertTrue(isModal(sp, "퀘스트 수정"), "edit window " + what(sp));
             q = inputs(sp);

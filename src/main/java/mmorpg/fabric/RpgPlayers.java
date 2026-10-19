@@ -45,6 +45,7 @@ public final class RpgPlayers {
         mmorpg.fabric.stattree.StatTrees.refreshOnJoin(sp);
         RpgHealth.onJoin(sp);
         RpgNet.sync(sp, false);
+        mmorpg.fabric.economy.EconomySystem.onJoin(sp); // 0.21.0 에메랄드 → 실버 (한 번) · 지갑 · 장터 대금
         if (isNew) {
             Tasks.later(40, () -> {
                 if (sp.isRemoved()) return;
@@ -64,6 +65,7 @@ public final class RpgPlayers {
         Notify.forget(sp.getUUID());
         Transcend.forget(sp.getUUID());
         mmorpg.fabric.rune.RuneSystem.forget(sp.getUUID());
+        mmorpg.fabric.economy.EconomySystem.onLeave(sp);
     }
 
     private static void tick(MinecraftServer server) {

@@ -839,7 +839,7 @@ public final class RpgYmirGallery implements FabricClientGameTest {
             if (altar.cooldownUntil <= System.currentTimeMillis() + 1_190_000) return "no 20 min cooldown";
             int heart = RpgGearTests.countIn(player(s), GearItems.byId("rpg:ymir_heart"));
             int bone = RpgGearTests.countIn(player(s), GearItems.byId("rpg:ymir_bone"));
-            int em = RpgGearTests.countIn(player(s), net.minecraft.world.item.Items.EMERALD);
+            int em = RpgGearTests.silver(player(s));
             return heart >= 2 && bone >= 2 && em >= 34 ? "ok " + em + " emeralds, " + heart + " hearts, " + bone + " bones" : "loot " + em + "/" + heart + "/" + bone;
         });
         check(r.startsWith("ok"), "Ymir killed → rewards + cooldown (" + r + ")");

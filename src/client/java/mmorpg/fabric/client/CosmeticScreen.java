@@ -35,7 +35,7 @@ import org.joml.Vector3f;
  * 장식 창 (0.13.0 — 스탯 창 장식 단추 · U 키 · /장식): 왼쪽은 내 모습 미리보기 (끌어서 돌리기 · 고른 것을 입어 본 모습 · 칭호 · 오라),
  * 오른쪽은 탭 (무기 · 갑옷 · 머리 장식 · 등 장식 · 오라 · 칭호) 과 목록. 무기 탭은 무기 종류 줄 (스킨은 종류마다 하나 — 숨기기 없음),
  * 갑옷 탭은 부위 줄 (투구 · 갑옷 · 바지 · 신발) + 모두 숨기기 · 모두 보이기 (무료). 줄을 누르면 고르고 (미리보기에 입혀 봄),
- * 아래 단추로 장착 · 원래대로 · 숨기기 · 구매 (에메랄드 — 두 번 눌러 확인). 게임은 멈추지 않음.
+ * 아래 단추로 장착 · 원래대로 · 숨기기 · 구매 (골드 — 0.21.0, 두 번 눌러 확인). 게임은 멈추지 않음.
  */
 public final class CosmeticScreen extends Screen {
     public static final int W = 384;
@@ -54,7 +54,8 @@ public final class CosmeticScreen extends Screen {
     private static final Identifier PANEL = Mmorpg.id("ui/dialog_name");
     private static final Identifier CHECK = Mmorpg.id("ui/icon_check");
     private static final Identifier CROSS = Mmorpg.id("ui/icon_cross");
-    private static final ItemStack EMERALD = new ItemStack(Items.EMERALD);
+    /** 값 그림 (0.21.0 — 금화) */
+    private static final ItemStack COIN = new ItemStack(mmorpg.fabric.economy.EconomyItems.GOLD_COIN);
 
     // 자리 (창 왼쪽 위 기준)
     static final int PREVIEW_X = 10;
@@ -218,19 +219,19 @@ public final class CosmeticScreen extends Screen {
                 if (ClientCosmetics.owns(d.id())) return new Action("§e장착", true, () -> ClientCosmetics.send("equip", d.id(), ""), List.of("§7가진 장식"));
                 int money = ClientCosmetics.money();
                 if (money < d.price()) {
-                    return new Action("§c에메랄드 부족", false, null, List.of("§c" + d.price() + " 필요 §7(가진 것 " + money + ")"));
+                    return new Action("§c골드 부족", false, null, List.of("§c" + d.price() + " 필요 §7(가진 것 " + money + ")", "§8골드: 보스 · 퀘스트 보상, 유저 장터"));
                 }
                 boolean confirming = d.id().equals(confirmId) && Util.getMillis() < confirmUntil;
                 if (confirming) {
                     return new Action("§6§l정말 살까요?", true, () -> {
                         ClientCosmetics.send("buy", d.id(), "");
                         confirmId = null;
-                    }, List.of("§e한 번 더 누르면 삽니다 §7(에메랄드 " + d.price() + ")"));
+                    }, List.of("§e한 번 더 누르면 삽니다 §7(골드 " + d.price() + ")"));
                 }
                 return new Action("§a구매 §f" + d.price(), true, () -> {
                     confirmId = d.id();
                     confirmUntil = Util.getMillis() + 4000;
-                }, List.of("§7에메랄드 " + d.price() + " §8(가진 것 " + money + ")", "§7사면 바로 입습니다 · 한 번 사면 계속 가짐"));
+                }, List.of("§6골드 " + d.price() + " §8(가진 것 " + money + ")", "§7사면 바로 입습니다 · 한 번 사면 계속 가짐"));
             }
         }
     }
@@ -335,16 +336,16 @@ public final class CosmeticScreen extends Screen {
         RpgHud.sprite(g, BG, left, top, W, H);
         long now = Util.getMillis();
 
-        // 제목 · 가진 에메랄드
+        // 제목 · 가진 골드
         g.text(font, "§d§l장식", left + 12, top + 9, 0xFFFFFFFF, true);
         g.text(font, "§7· 무기 · 갑옷 스킨, 장식, 오라, 칭호", left + 46, top + 9, 0xFFFFFFFF, true);
-        String money = "§a§l" + ClientCosmetics.money();
+        String money = "§6§l" + ClientCosmetics.money();
         int mw = font.width(money);
         g.text(font, money, left + W - 12 - mw, top + 9, 0xFFFFFFFF, true);
         g.pose().pushMatrix();
         g.pose().translate(left + W - 12 - mw - 15, top + 5);
         g.pose().scale(0.8125F, 0.8125F);
-        g.item(EMERALD, 0, 0);
+        g.item(COIN, 0, 0);
         g.pose().popMatrix();
         g.fill(left + 10, top + 21, left + W - 10, top + 22, 0x90C8A050);
 
@@ -449,7 +450,7 @@ public final class CosmeticScreen extends Screen {
             g.pose().pushMatrix();
             g.pose().translate(lx + font.width(al) + 2, ay + 4);
             g.pose().scale(0.75F, 0.75F);
-            g.item(EMERALD, 0, 0);
+            g.item(COIN, 0, 0);
             g.pose().popMatrix();
         } else {
             g.text(font, al, ax + ACTION_W / 2 - font.width(al) / 2, ay + 7, a.enabled() ? 0xFFFFFFFF : 0xFFB0B0B0, true);
@@ -499,7 +500,7 @@ public final class CosmeticScreen extends Screen {
                     g.pose().pushMatrix();
                     g.pose().translate(x + RIGHT_W - 8 - rw - 13, y + 4);
                     g.pose().scale(0.75F, 0.75F);
-                    g.item(EMERALD, 0, 0);
+                    g.item(COIN, 0, 0);
                     g.pose().popMatrix();
                 }
             }
@@ -562,7 +563,7 @@ public final class CosmeticScreen extends Screen {
                 if (d.aura() != null) tip.add("§7" + CosmeticAura.label(d.aura().kind()));
                 if ("weapon".equals(d.slot())) tip.add("§8손에 든 모습만 바뀜 (아이콘 · 수치는 그대로)");
                 if (d.hideHelmet()) tip.add("§8쓰는 동안 투구는 보이지 않음 (머리에 얹는 장식)");
-                tip.add(cur ? "§a장착 중" : ClientCosmetics.owns(d.id()) ? "§7가진 장식 — 장착 단추로 입기" : "§e에메랄드 " + d.price() + " §7(가진 것 " + ClientCosmetics.money() + ")");
+                tip.add(cur ? "§a장착 중" : ClientCosmetics.owns(d.id()) ? "§7가진 장식 — 장착 단추로 입기" : "§6골드 " + d.price() + " §7(가진 것 " + ClientCosmetics.money() + ")");
             }
         }
         if (!cur) tip.add("§8누르면 미리보기에 입혀 봄");

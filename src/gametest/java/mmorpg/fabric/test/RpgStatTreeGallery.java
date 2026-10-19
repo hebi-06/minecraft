@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 /**
  * 7단계 스탯 트리 사진첩 (화면 시험 — MMORPG_ONLY=stattree, 실제 마우스 · 키 입력): 스탯 창 줄마다 나무 칸 (풀이), Shift + 힘 줄 두 번 → 힘 10 →
  * 나무가 자람 (3인칭 — 마법진 · 빛기둥 · 잎 · 큰 글자), 나무 칸 누르기 → 스탯 트리 창 (힘 35 — 3단계 갈래 깜빡임), 칸에 마우스 (줄기 · 갈래 · 보상 칸),
- * 갈래 누르기 → 확인 창 → 고름 (서버 기록), 탭 (민첩 · 마력 · 체력 — 다 자란 나무 · 금테), 갈래 초기화 (에메랄드 — 확인 창 → 지움), 힘 룬 뽑기권
+ * 갈래 누르기 → 확인 창 → 고름 (서버 기록), 탭 (민첩 · 마력 · 체력 — 다 자란 나무 · 금테), 갈래 초기화 (실버 — 확인 창 → 지움), 힘 룬 뽑기권
  * (풀이 · 우클릭 → 뽑기 창 (힘 탭) → 1회 → 힘 계열 룬), 다시 스탯 창 (나무 칸 · 트리 보너스가 들어간 피해 줄). 사진 이름 t_… → ci-logs 의 shots/.
  * 확인 항목은 로그 [stattree-gallery] OK / FAIL.
  */
@@ -203,12 +203,12 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         shot(ctx, "t_tab_tip");
     }
 
-    // ------------------------------------------------------------ 갈래 초기화 (체력 나무 — 갈래 셋 → 에메랄드 36)
+    // ------------------------------------------------------------ 갈래 초기화 (체력 나무 — 갈래 셋 → 실버 36)
 
     private void reset(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
-            sp.getInventory().setItem(8, new ItemStack(Items.EMERALD, 50));
+            mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.SILVER, 50); // 0.21.0 실버 (지갑)
             StatTrees.sync(sp, "");
         });
         ctx.waitTicks(4);
@@ -224,9 +224,9 @@ public final class RpgStatTreeGallery implements FabricClientGameTest {
         int cost = server.computeOnServer(s -> StatTrees.resetCost(player(s), "vit"));
         click(ctx, conn, sc -> ((StatTreeScreen) sc).confirmCenter(true));
         ctx.waitTicks(6);
-        int left = server.computeOnServer(s -> Inv.count(player(s), Inv.CURRENCY));
+        int left = server.computeOnServer(s -> (int) mmorpg.fabric.economy.Wallet.get(player(s), mmorpg.core.Economy.Kind.SILVER));
         int picks = server.computeOnServer(s -> StatTrees.state(player(s)).pickCount("vit"));
-        check(cost == 3 * StatTree.perPick() && left == 50 - cost && picks == 0, "reset: cost " + cost + ", emeralds left " + left + ", picks " + picks);
+        check(cost == 3 * StatTree.perPick() && left == 50 - cost && picks == 0, "reset: cost " + cost + ", silver left " + left + ", picks " + picks);
         away(ctx);
         ctx.waitTicks(4);
         shot(ctx, "t_reset_done");

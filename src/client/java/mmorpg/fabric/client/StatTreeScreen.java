@@ -31,7 +31,7 @@ import net.minecraft.world.item.Items;
 /**
  * 스탯 트리 창 (7단계): 위 = 나무 4개 탭 (힘 · 민첩 · 마력 · 체력 — 그 스탯 아이콘 · 단계), 가운데 = 고른 나무 (왼쪽 뿌리에서 오른쪽으로 자람: 줄기 ·
  * 3 · 6 · 9단계는 위아래 두 갈래 · 칸마다 보너스 그림 · 뽑기권 보상 표시 · 스탯 값까지 차오르는 줄기 · 흐르는 빛), 아래 = 마우스를 올린 칸의 설명
- * (아니면 나무 요약), 단추 = 스탯 창으로 · 갈래 초기화 (에메랄드). 갈래는 눌러서 고름 (확인 창). 서버가 보낸 기록 · 보너스 합은 ClientRpgState.
+ * (아니면 나무 요약), 단추 = 스탯 창으로 · 갈래 초기화 (실버 — 0.21.0 전에는 에메랄드). 갈래는 눌러서 고름 (확인 창). 서버가 보낸 기록 · 보너스 합은 ClientRpgState.
  */
 public final class StatTreeScreen extends Screen {
     public static final int W = 330;
@@ -56,6 +56,8 @@ public final class StatTreeScreen extends Screen {
     private static final Identifier BTN = Mmorpg.id("stats/dialog_btn");
     private static final Identifier BTN_HOVER = Mmorpg.id("stats/dialog_btn_hover");
     private static final Map<String, ItemStack> ICONS = new HashMap<>();
+    /** 갈래 초기화 단추의 값 그림 (0.21.0 — 은화) */
+    private static final ItemStack SILVER_COIN = new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN);
 
     private int left;
     private int top;
@@ -435,8 +437,8 @@ public final class StatTreeScreen extends Screen {
         int rx = left + W - 12 - RESET_W;
         boolean overReset = confirm == null && inBtn(mx, my, rx, RESET_W);
         RpgHud.sprite(g, overReset && canReset ? BTN_HOVER : BTN, rx, top + BTN_Y, RESET_W, BTN_H);
-        String rs = canReset ? "§c갈래 초기화 §7· §a에메랄드 " + cost : "§8갈래 초기화";
-        g.item(new ItemStack(Items.EMERALD), rx + 4, top + BTN_Y + 2);
+        String rs = canReset ? "§c갈래 초기화 §7· §f실버 " + cost : "§8갈래 초기화";
+        g.item(SILVER_COIN, rx + 4, top + BTN_Y + 2);
         text(g, rs, rx + 22, top + BTN_Y + 6);
 
         if (confirm != null) drawConfirm(g, mx, my);
@@ -455,8 +457,8 @@ public final class StatTreeScreen extends Screen {
             List<Component> tip = new ArrayList<>();
             tip.add(Component.literal(BedrockText.toJava("§c§l갈래 초기화 §r§7(" + tree.title() + ")")));
             tip.add(Component.literal(BedrockText.toJava("§7이 나무에서 고른 갈래를 모두 지웁니다 (다시 고를 수 있음)")));
-            tip.add(Component.literal(BedrockText.toJava("§7갈래 1개당 에메랄드 " + StatTree.perPick() + " · 지금 " + nPicks + "개 → §a" + cost)));
-            tip.add(Component.literal(BedrockText.toJava("§7가진 에메랄드 " + ClientRpgState.money() + " · 받은 뽑기권은 그대로")));
+            tip.add(Component.literal(BedrockText.toJava("§7갈래 1개당 실버 " + StatTree.perPick() + " · 지금 " + nPicks + "개 → §f" + cost)));
+            tip.add(Component.literal(BedrockText.toJava("§7가진 실버 " + ClientRpgState.money() + " · 받은 뽑기권은 그대로")));
             g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
         }
     }
@@ -534,7 +536,7 @@ public final class StatTreeScreen extends Screen {
             }
             Integer chosen = picks.get(index);
             if (!open) out.add("§c잠김 §7— " + sname + " " + n.at() + " 필요 (지금 " + value + ")");
-            else if (chosen == null) out.add("§e누르면 고름 §7(바꾸려면 갈래 초기화 — 에메랄드 " + StatTree.perPick() + ")");
+            else if (chosen == null) out.add("§e누르면 고름 §7(바꾸려면 갈래 초기화 — 실버 " + StatTree.perPick() + ")");
             else if (chosen == option) out.add("§6고른 갈래 §7(보너스가 붙어 있음)");
             else out.add("§8고르지 않은 갈래 §7(갈래 초기화로 바꿀 수 있음)");
         } else {
@@ -568,7 +570,7 @@ public final class StatTreeScreen extends Screen {
         out.add("§7받은 보상: " + (parts.isEmpty() ? "§8없음" : "§d" + String.join(" · ", parts)));
         List<Integer> pend = StatTree.pending(tree.stat(), value, picks);
         if (!pend.isEmpty()) out.add("§e" + (pend.get(0) + 1) + "단계 갈래를 고르세요 §7(노랗게 깜빡이는 칸을 누름)");
-        out.add("§8칸에 마우스를 올리면 설명 · 갈래 초기화 = 고른 갈래 1개당 에메랄드 " + StatTree.perPick());
+        out.add("§8칸에 마우스를 올리면 설명 · 갈래 초기화 = 고른 갈래 1개당 실버 " + StatTree.perPick());
         return out;
     }
 
@@ -631,7 +633,7 @@ public final class StatTreeScreen extends Screen {
             StatTree.Tree t = StatTree.tree(tab);
             int cost = StatTree.resetCost(picks.size());
             confirm = new Confirm("reset", tab, 0, 0, List.of("§c§l" + t.title() + " 갈래 초기화", "§7고른 갈래 " + picks.size() + "개를 모두 지울까요?",
-                    "§a에메랄드 " + cost + "개 §7(가진 것 " + ClientRpgState.money() + ") · 받은 뽑기권은 그대로"), "§c초기화");
+                    "§f실버 " + cost + " §7(가진 것 " + ClientRpgState.money() + ") · 받은 뽑기권은 그대로"), "§c초기화");
             return true;
         }
         StatTree.Tree tree = StatTree.tree(tab);
@@ -649,7 +651,7 @@ public final class StatTreeScreen extends Screen {
                 click();
                 StatTree.Option opt = n.pick().get(o);
                 confirm = new Confirm("pick", tab, i, o, List.of(Stats.info(tab).str("color") + "§l" + (i + 1) + "단계 갈래: 「" + opt.name() + "」",
-                        "§a" + StatTree.bonusText(opt.bonus()), "§7바꾸려면 갈래 초기화 (에메랄드 " + StatTree.perPick() + ")"), "§e고르기");
+                        "§a" + StatTree.bonusText(opt.bonus()), "§7바꾸려면 갈래 초기화 (실버 " + StatTree.perPick() + ")"), "§e고르기");
                 return true;
             }
         }

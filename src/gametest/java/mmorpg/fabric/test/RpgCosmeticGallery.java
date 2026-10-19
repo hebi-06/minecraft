@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 0.13.0 장식 사진첩 (화면 시험 — MMORPG_ONLY=cosmetic, 실제 마우스 · 키 입력):
- * 스탯 창 아랫줄 장식 단추 (풀이) → 장식 창 (무기 탭 — 칼을 든 미리보기), 벚꽃 검 줄 → 미리보기 → 구매 (두 번 눌러 확인 — 에메랄드 줄어듦 · 바로 입음),
+ * 스탯 창 아랫줄 장식 단추 (풀이) → 장식 창 (무기 탭 — 칼을 든 미리보기), 벚꽃 검 줄 → 미리보기 → 구매 (두 번 눌러 확인 — 골드 줄어듦 · 바로 입음),
  * 갑옷 탭 (투구 숨기기 · 성기사 세트 장착), 머리 (왕관 장착 · 고리 · 모자 입어 보기), 등 (뒤로 돌아간 미리보기 — 날개 장착 · 망토 · 악마 날개 입어 보기),
  * 오라 (별빛 장착), 칭호 (용사 장착), U 키로 열기 · 닫기, 세계에서 3인칭 앞 · 뒤 · 1인칭 (벚꽃 검 스킨), 두 번째 플레이어 (가짜 연결 — 장식을 입히면
  * 내 클라이언트에 모습이 옴): 앞 (칭호가 이름 위) · 뒤 · 옆, 진짜 갑옷 (다이아몬드) 을 입은 채 숨기기 · 빙룡 갑옷 스킨, 오라 셋 (불씨 · 별빛 · 서리 —
@@ -87,7 +87,9 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
                 for (Weapons.Req r : w.reqs()) RpgPlayers.setStat(me, r.stat(), (int) Math.ceil(r.value()) + 10);
                 me.getInventory().setItem(0, new ItemStack(RpgItems.byId(w.id())));
                 me.getInventory().setSelectedSlot(0);
-                for (int i = 0; i < 16; i++) me.getInventory().setItem(9 + i, new ItemStack(Inv.CURRENCY, 64));
+                // 0.21.0 장식은 골드: 지갑 500 + 가방의 금화 40
+                mmorpg.fabric.economy.Wallet.set(me, mmorpg.core.Economy.Kind.GOLD, 500);
+                me.getInventory().setItem(9, new ItemStack(mmorpg.fabric.economy.EconomyItems.GOLD_COIN, 40));
             });
             ctx.waitTicks(20);
             String gui = ctx.computeOnClient(mc -> mc.getWindow().getScreenWidth() + "x" + mc.getWindow().getScreenHeight() + " → gui "
@@ -164,7 +166,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
 
     private void buy(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         if (!ensureScreen(ctx)) return;
-        int before = server.computeOnServer(s -> Inv.money(me(s)));
+        int before = server.computeOnServer(s -> (int) mmorpg.fabric.economy.Wallet.total(me(s), mmorpg.core.Economy.Kind.GOLD));
         int idx = rowIndex(ctx, "sakura_sword");
         click(ctx, conn, sc -> ((CosmeticScreen) sc).rowCenter(idx));
         away(ctx);
@@ -177,7 +179,7 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
         check(server.computeOnServer(s -> !Cosmetics.owns(me(s), "sakura_sword")), "first press only asks to confirm");
         click(ctx, conn, sc -> ((CosmeticScreen) sc).actionCenter());
         boolean owned = waitServer(ctx, server, s -> Cosmetics.owns(me(s), "sakura_sword"), 40);
-        int after = server.computeOnServer(s -> Inv.money(me(s)));
+        int after = server.computeOnServer(s -> (int) mmorpg.fabric.economy.Wallet.total(me(s), mmorpg.core.Economy.Kind.GOLD));
         int price = CosmeticDefs.get("sakura_sword").price();
         check(owned && after == before - price, "bought sakura sword (" + before + " → " + after + ", price " + price + ")");
         check(server.computeOnServer(s -> "sakura_sword".equals(Cosmetics.look(me(s)).weaponSkin("sword"))), "worn right after buying");

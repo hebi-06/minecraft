@@ -714,6 +714,7 @@ public final class NpcEditor {
         b.divider();
         b.header("보상");
         b.slider("emerald", CURRENCY_NAME, 0, 64, d.reward.emerald);
+        b.slider("gold", "골드 §7(유저 장터 · 장식 화폐)", 0, 20, d.reward.gold);
         b.slider("xp", "경험치 레벨", 0, 30, d.reward.xp);
         b.slider("points", "스탯 포인트", 0, 10, d.reward.points);
         List<String> wtypes = new ArrayList<>();
@@ -823,6 +824,7 @@ public final class NpcEditor {
         d.progress = text(v, "progress").strip();
         d.done = text(v, "done").strip();
         d.reward.emerald = num(v, "emerald");
+        d.reward.gold = num(v, "gold");
         d.reward.xp = num(v, "xp");
         d.reward.points = num(v, "points");
         d.reward.weapon = "";

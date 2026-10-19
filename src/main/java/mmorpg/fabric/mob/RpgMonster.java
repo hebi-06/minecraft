@@ -24,7 +24,7 @@ import net.minecraft.world.phys.Vec3;
  * 머리 위 글은 몬스터에 태운 글자 표시 엔티티 ({@link #label}) —
  * 타고 있으니 클라이언트가 몬스터와 같이 옮겨 그림 (늦거나 앞서지 않음). 몸 위 {@link #LABEL_GAP} 칸에 앉음 (getPassengerAttachmentPoint — 서버 · 클라이언트 같은 식)</li>
  * <li>받는 피해 (combat.js 몬스터 훅 incoming): 플레이어가 준 피해는 껍질만큼 줄임 (스켈야스크림슬리 -20%, 평타 · 활 · 완드 · 스킬 · 룬 모두)</li>
- * <li>에메랄드 (행동 팩 loot_tables/entities/rpg_&lt;키&gt;.json — random_chance · set_count): 죽으면 (누가 잡든) MONSTERS.&lt;키&gt;.emerald [확률, 최소, 최대]</li>
+ * <li>은화 (0.21.0 실버 — 예전 에메랄드, 행동 팩 loot_tables/entities/rpg_&lt;키&gt;.json — random_chance · set_count): 죽으면 (누가 잡든) MONSTERS.&lt;키&gt;.emerald [확률, 최소, 최대]</li>
  * </ul>
  */
 public class RpgMonster extends BedrockMob {
@@ -132,11 +132,11 @@ public class RpgMonster extends BedrockMob {
         return super.getPassengerAttachmentPoint(passenger, dimensions, scale);
     }
 
-    /** 에메랄드 (행동 팩 전리품 표 — 몹 전리품 규칙을 따름) */
+    /** 은화 (0.21.0 — 예전 에메랄드 · 행동 팩 전리품 표 — 몹 전리품 규칙을 따름) */
     @Override
     protected void dropCustomDeathLoot(ServerLevel level, DamageSource source, boolean killedByPlayer) {
         super.dropCustomDeathLoot(level, source, killedByPlayer);
-        Monsters.dropEmerald(this, level);
+        Monsters.dropSilver(this, level);
     }
 
     @Override

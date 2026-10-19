@@ -448,7 +448,7 @@ public final class RpgMountGallery implements FabricClientGameTest {
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             sp.getEnderChestInventory().setItem(0, new ItemStack(Items.DIAMOND, 12));
-            sp.getEnderChestInventory().setItem(4, new ItemStack(Items.EMERALD, 30));
+            sp.getEnderChestInventory().setItem(4, new ItemStack(mmorpg.fabric.economy.EconomyItems.SILVER_COIN, 30));
             sp.getEnderChestInventory().setItem(13, new ItemStack(MountItems.of("dire_wolf"), 1));
         });
         home(server, 0F, 20F);

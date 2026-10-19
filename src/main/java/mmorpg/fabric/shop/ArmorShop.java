@@ -171,8 +171,8 @@ public final class ArmorShop {
             if (it.isEmpty()) return "§4아이템을 만들 수 없습니다.§r";
             items.add(it);
         }
-        if (!Inv.fitsAfter(sp, List.of(new Inv.Take(Inv.CURRENCY, price)), items)) return Inv.bagFull(sp);
-        if (!Inv.remove(sp, Inv.CURRENCY, price)) return "§4결제 오류§r";
+        if (!Inv.fitsAfter(sp, Inv.payTakes(sp, price), items)) return Inv.bagFull(sp);
+        if (!Inv.pay(sp, price)) return "§4결제 오류§r";
         for (ItemStack it : items) Inv.give(sp, it);
         SkillFx.playFor(sp, "armor.equip_iron", 1.1, 1);
         SkillFx.playFor(sp, "random.orb", 1.2, 0.6);

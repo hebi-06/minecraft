@@ -365,7 +365,7 @@ public final class RpgWormTests {
         });
     }
 
-    /** 처치 보상: 에메랄드 16~24 · 경험치 50 · 보스 재료 (파쇄의 송곳니 · 대지의 심장석 2~3) · 처치 훅 · 재사용 대기 15분 */
+    /** 처치 보상: 실버 · 골드 · 16~24 · 경험치 50 · 보스 재료 (파쇄의 송곳니 · 대지의 심장석 2~3) · 처치 훅 · 재사용 대기 15분 */
     @GameTest(environment = "mmorpg:worm", maxTicks = 200)
     public void wormKillRewardsBossMaterials(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -388,10 +388,11 @@ public final class RpgWormTests {
                 enc.boss.setHealth(50F);
                 h.assertTrue(hit(p1, enc.boss, 100F), "killing blow");
                 h.assertTrue(Bosses.encounterAt(a) == null && "dead".equals(enc.state), "dead");
-                int em = RpgGearTests.countIn(p1, Items.EMERALD);
+                int em = RpgGearTests.silver(p1);
                 int fang = RpgGearTests.countIn(p1, GearItems.byId("rpg:worm_fang"));
                 int heart = RpgGearTests.countIn(p1, GearItems.byId("rpg:worm_heart"));
-                h.assertTrue(em >= 16 && em <= 24, "emeralds " + em);
+                h.assertTrue(em >= 16 && em <= 24, "silver " + em);
+                h.assertTrue(RpgGearTests.bossGold(p1, KEY), "0.21.0 boss gold " + RpgGearTests.gold(p1) + " in " + java.util.Arrays.toString(mmorpg.core.Economy.bossGold(KEY)));
                 h.assertTrue(fang >= 2 && fang <= 4 && heart >= 2 && heart <= 4, "boss materials fang " + fang + " heart " + heart);
                 h.assertTrue(p1.totalExperience - xp0 == 50, "xp " + (p1.totalExperience - xp0));
                 h.assertTrue(killed.contains(KEY), "kill hook");

@@ -1,10 +1,11 @@
 package mmorpg.fabric.ui;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import mmorpg.core.Economy;
 import mmorpg.core.Rules;
 import mmorpg.fabric.Notify;
+import mmorpg.fabric.economy.Wallet;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.player.Inventory;
@@ -13,7 +14,8 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * 가방 도우미 (shop.js countItem · removeItem · giveItem · fitsAfter · bagFull): 핫바 + 가방 36칸 (갑옷 · 왼손 칸은 셈하지 않음 — 베드락
- * 인벤토리 컨테이너와 같음). 화폐 (에메랄드 — CONFIG.CURRENCY_ITEM) 도 여기.
+ * 인벤토리 컨테이너와 같음). NPC 화폐도 여기 — 0.21.0 부터 실버 (CONFIG.CURRENCY_NAME · 동전 CONFIG.CURRENCY_ITEM = 은화): 지갑의 실버 +
+ * 가방의 은화 ({@link Wallet} — 낼 때는 지갑 먼저, 받으면 지갑으로).
  */
 public final class Inv {
     private Inv() {}
@@ -45,9 +47,24 @@ public final class Inv {
         return n;
     }
 
-    /** 가진 화폐 (에메랄드) */
+    /** 가진 화폐 (0.21.0 — 지갑의 실버 + 가방의 은화) */
     public static int money(ServerPlayer sp) {
-        return count(sp, CURRENCY);
+        return (int) Math.min(Integer.MAX_VALUE, Wallet.total(sp, Economy.Kind.SILVER));
+    }
+
+    /** 화폐 내기 (지갑 먼저, 모자라면 가방의 은화 — 모두 합쳐도 모자라면 그대로 false) */
+    public static boolean pay(ServerPlayer sp, int amount) {
+        return Wallet.pay(sp, Economy.Kind.SILVER, amount);
+    }
+
+    /** 화폐 받기 (지갑으로 — 가방 자리가 필요 없음) */
+    public static void earn(ServerPlayer sp, int amount) {
+        Wallet.give(sp, Economy.Kind.SILVER, amount);
+    }
+
+    /** 화폐를 낼 때 가방에서 빠질 은화 (fitsAfter 의 뺄 것 — 지갑으로 모자란 몫만) */
+    public static List<Take> payTakes(ServerPlayer sp, int amount) {
+        return Wallet.takes(sp, Economy.Kind.SILVER, amount);
     }
 
     /** amount 개를 앞 칸부터 가져감 (모자라도 있는 만큼 가져감 — 다 가져갔는지) */
@@ -70,13 +87,6 @@ public final class Inv {
     /** 주기 (가득 차면 발밑) */
     public static void give(ServerPlayer sp, ItemStack stack) {
         Notify.give(sp, stack);
-    }
-
-    /** 화폐 n 개를 64 씩 묶음으로 */
-    public static List<ItemStack> currency(int n) {
-        List<ItemStack> out = new ArrayList<>();
-        for (int left = n; left > 0; left -= 64) out.add(new ItemStack(CURRENCY, Math.min(64, left)));
-        return out;
     }
 
     /** 빼고 넣을 것 하나 */

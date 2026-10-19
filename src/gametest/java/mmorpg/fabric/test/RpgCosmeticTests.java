@@ -3,6 +3,7 @@ package mmorpg.fabric.test;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import mmorpg.core.Economy;
 import mmorpg.core.Json;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.Props;
@@ -10,6 +11,8 @@ import mmorpg.fabric.RpgNet;
 import mmorpg.fabric.cosmetic.CosmeticDefs;
 import mmorpg.fabric.cosmetic.Cosmetics;
 import mmorpg.fabric.cosmetic.Look;
+import mmorpg.fabric.economy.EconomyItems;
+import mmorpg.fabric.economy.Wallet;
 import mmorpg.fabric.ui.Inv;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -18,19 +21,26 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * 0.13.0 게임 시험 (서버) — 장식: 목록 (칸 · 무기 종류 · 모델 · 아이콘 · 무기 스킨 모델 파일), 사기 (에메랄드 · 이미 가짐 · 모자람 · 바로 입음),
+ * 0.13.0 게임 시험 (서버) — 장식: 목록 (칸 · 무기 종류 · 모델 · 아이콘 · 무기 스킨 모델 파일), 사기 (골드 — 0.21.0 · 이미 가짐 · 모자람 · 바로 입음),
  * 입기 · 벗기 (가진 것만 · 무기 종류마다 하나), 갑옷 숨기기 (무료 · 무기 · 장식 칸은 안 됨 · 모두 숨기기 · 모두 보이기), 기록 (플레이어 속성 JSON · 모르는 키는 뺌),
  * 운영자 (지급 · 회수 — 입은 것 벗김 · 초기화), 스탯 창 단추 (cosmetic), 명령어 (/장식 · /cosmetic).
  */
 public final class RpgCosmeticTests {
     static final String ENV = "mmorpg:cosmetic";
 
-    static ServerPlayer player(GameTestHelper h, int emeralds) {
+    /** 0.21.0 장식은 골드: 지갑에 절반 · 가방의 금화로 나머지 (둘 다 쓰는지) */
+    static ServerPlayer player(GameTestHelper h, int gold) {
         ServerPlayer sp = RpgGearTests.player(h);
         Cosmetics.reset(sp);
         sp.getInventory().clearContent();
-        for (int left = emeralds; left > 0; left -= 64) sp.getInventory().add(new ItemStack(Items.EMERALD, Math.min(64, left)));
+        Wallet.set(sp, Economy.Kind.GOLD, gold / 2);
+        for (int left = gold - gold / 2; left > 0; left -= 64) sp.getInventory().add(new ItemStack(EconomyItems.GOLD_COIN, Math.min(64, left)));
         return sp;
+    }
+
+    /** 가진 골드 (지갑 + 가방의 금화) */
+    static int gold(ServerPlayer sp) {
+        return (int) Wallet.total(sp, Economy.Kind.GOLD);
     }
 
     @GameTest(environment = ENV, maxTicks = 20)
@@ -108,18 +118,18 @@ public final class RpgCosmeticTests {
 
     @GameTest(environment = ENV, maxTicks = 20)
     public void buyAndEquip(GameTestHelper h) {
-        ServerPlayer sp = player(h, 500);
+        ServerPlayer sp = player(h, 50);
         CosmeticDefs.Def crown = CosmeticDefs.get("crown");
-        h.assertTrue(Inv.money(sp) == 500, "start money " + Inv.money(sp));
+        h.assertTrue(gold(sp) == 50, "start money " + gold(sp));
         h.assertTrue(Cosmetics.equip(sp, "crown") != null, "cannot equip before buying");
         h.assertTrue(Cosmetics.buy(sp, "crown") == null, "buy crown");
-        h.assertTrue(Inv.money(sp) == 500 - crown.price(), "paid " + Inv.money(sp));
+        h.assertTrue(gold(sp) == 50 - crown.price(), "paid " + gold(sp));
         h.assertTrue(Cosmetics.owns(sp, "crown") && "crown".equals(Cosmetics.look(sp).get("head")), "owned + worn " + Cosmetics.look(sp));
-        h.assertTrue(Cosmetics.buy(sp, "crown") != null && Inv.money(sp) == 500 - crown.price(), "buying twice refused, no charge");
+        h.assertTrue(Cosmetics.buy(sp, "crown") != null && gold(sp) == 50 - crown.price(), "buying twice refused, no charge");
         // 모자라면 사지 못하고 그대로
-        int before = Inv.money(sp);
+        int before = gold(sp);
         h.assertTrue(CosmeticDefs.get("angel_wings").price() > before, "wings cost more than left");
-        h.assertTrue(Cosmetics.buy(sp, "angel_wings") != null && Inv.money(sp) == before && !Cosmetics.owns(sp, "angel_wings"), "not enough money");
+        h.assertTrue(Cosmetics.buy(sp, "angel_wings") != null && gold(sp) == before && !Cosmetics.owns(sp, "angel_wings"), "not enough money");
         // 무기 스킨: 종류마다 하나 (다른 종류는 그대로)
         Cosmetics.give(sp, "sakura_sword");
         Cosmetics.give(sp, "frost_bow");
@@ -133,7 +143,7 @@ public final class RpgCosmeticTests {
         // 벗기 · 다시 입기
         h.assertTrue(Cosmetics.clear(sp, "head", null) == null && Cosmetics.look(sp).get("head") == null, "clear head");
         h.assertTrue(Cosmetics.equip(sp, "crown") == null && "crown".equals(Cosmetics.look(sp).get("head")), "equip again (free)");
-        h.assertTrue(Inv.money(sp) == before, "equip/clear cost nothing");
+        h.assertTrue(gold(sp) == before, "equip/clear cost nothing");
         RpgGearTests.done(h, sp);
     }
 

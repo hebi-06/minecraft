@@ -214,7 +214,7 @@ public final class RpgNet {
 
     /**
      * 서버 → 클라이언트: 스탯 트리 (7단계). JSON {"on": 쓰는지, "state": 기록 (고른 갈래 · 받은 칸), "totals": 보너스 합, "open": 열 탭 ("" = 열지 않음),
-     * "money": 가진 에메랄드}
+     * "money": 가진 실버 (지갑 + 은화 — 0.21.0 전에는 에메랄드)}
      */
     public record StatTreePayload(String json) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<StatTreePayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("stat_tree"));
