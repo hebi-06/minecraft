@@ -292,13 +292,21 @@ public final class RpgEconomyTests {
         Forms.HEADLESS.add(b.getUUID());
         try {
             Inv.set(a, 0, new ItemStack(Items.GOLDEN_APPLE, 3));
+            Inv.set(a, 9, new ItemStack(Items.IRON_INGOT, 7));
             h.assertTrue(RpgNet.statAction(a, "market") && chest(a) != null && chest(a).title().contains("유저 장터"), "stat button → market");
+            // 큰 상자 (9 × 6): 물건 0 ~ 44 · 단추는 맨 아랫줄
+            h.assertTrue(chest(a).slots().size() == 54 && MarketWindow.PER_PAGE == 45 && MarketWindow.SELL >= 45 && MarketWindow.OK >= 45 && MarketWindow.NO >= 45,
+                    "market is a large chest (" + chest(a).slots().size() + " slots)");
             h.assertTrue(chest(a).slots().get(MarketWindow.SELL).name().contains("판매 등록"), "sell button");
             Forms.answer(a, MarketWindow.SELL, null);
-            h.assertTrue(chest(a) != null && chest(a).title().contains("판매할 아이템"), "pick window " + title(a));
-            h.assertTrue(chest(a).slots().get(0).icon().item().is(Items.GOLDEN_APPLE) && chest(a).slots().get(0).name().contains("{item}")
-                    && chest(a).slots().get(0).lore().contains("{tooltip}"), "bag item shown (name · tooltip by the client) " + chest(a).slots().get(0).name());
-            Forms.answer(a, 0, null);
+            h.assertTrue(chest(a) != null && chest(a).title().contains("판매할 아이템") && chest(a).slots().size() == 54, "pick window " + title(a));
+            // 가방 모양 그대로: 핫바 0 → 넷째 줄 첫 칸 (27), 가방 9 → 첫 칸 (0)
+            FormNet.SlotData apple = chest(a).slots().get(MarketWindow.pickIndex(0));
+            h.assertTrue(MarketWindow.pickIndex(0) == 27 && MarketWindow.pickIndex(9) == 0 && MarketWindow.pickIndex(35) == 26, "pick index (bag layout)");
+            h.assertTrue(apple.icon().item().is(Items.GOLDEN_APPLE) && apple.name().contains("{item}") && apple.lore().contains("{tooltip}"),
+                    "hotbar item shown in the 4th row (name · tooltip by the client) " + apple.name());
+            h.assertTrue(chest(a).slots().get(0).icon().item().is(Items.IRON_INGOT) && chest(a).slots().get(1).empty(), "bag slot 9 → first cell, empty bag slot → empty cell");
+            Forms.answer(a, MarketWindow.pickIndex(0), null);
             FormNet.ModalPayload m = Forms.last(a) instanceof FormNet.ModalPayload mm ? mm : null;
             h.assertTrue(m != null && m.title().contains("판매 등록"), "price window");
             // 가격 "1,250" · 개수 2
@@ -307,15 +315,32 @@ public final class RpgEconomyTests {
             h.assertTrue(count(a, Items.GOLDEN_APPLE) == 1 && MarketStore.mine(a).size() == 1 && MarketStore.mine(a).get(0).price() == 1250, "listed 2 apples at 1,250");
             Forms.answer(a, -1, null);
             // 사는 사람: 둘러보기 → 그 칸 → 확인 → 삼
-            Wallet.set(b, Economy.Kind.GOLD, 2000);
+            Wallet.set(b, Economy.Kind.GOLD, 100);
             MarketWindow.open(b);
             int slot = -1;
             List<FormNet.SlotData> slots = chest(b).slots();
             for (int i = 0; i < MarketWindow.PER_PAGE; i++) if (slots.get(i).name().contains("×2") && slots.get(i).num() == 1250) slot = i;
-            h.assertTrue(slot >= 0, "listing shown with price " + slots.subList(0, 18));
+            h.assertTrue(slot >= 0, "listing shown with price " + slots.subList(0, MarketWindow.PER_PAGE));
+            // 골드가 모자라면: 사기 칸 셋이 누를 수 없는 장식 (방벽) · 본문에 까닭
             Forms.answer(b, slot, null);
-            h.assertTrue(chest(b) != null && chest(b).title().contains("사기 확인"), "confirm " + title(b));
-            Forms.answer(b, MarketWindow.OK, null);
+            h.assertTrue(chest(b) != null && chest(b).title().contains("사기 확인") && chest(b).slots().get(MarketWindow.OK).kind() == mmorpg.fabric.ui.Slot.DECO
+                    && chest(b).slots().get(MarketWindow.OK).icon().item().is(Items.BARRIER) && chest(b).body().contains("모자랍니다"), "not enough gold: buy cells disabled " + body(b));
+            Forms.answer(b, MarketWindow.NO, null);
+            h.assertTrue(chest(b) != null && chest(b).title().contains("유저 장터") && count(b, Items.GOLDEN_APPLE) == 0, "cancel → back to the market, nothing bought");
+            Forms.answer(b, -1, null);
+            Wallet.set(b, Economy.Kind.GOLD, 2000);
+            MarketWindow.open(b);
+            Forms.answer(b, slot, null);
+            FormNet.ChestPayload confirm = chest(b);
+            h.assertTrue(confirm != null && confirm.title().contains("사기 확인"), "confirm " + title(b));
+            // 확인 창: 물건 진열 칸 (3 × 3) · 정보 줄 · 사기 / 취소 칸은 맨 아랫줄 (물건 칸을 두 번 눌러도 사지 않음)
+            h.assertTrue(confirm.slots().size() == 54 && confirm.slots().get(MarketWindow.ITEM).kind() == mmorpg.fabric.ui.Slot.BIG
+                    && confirm.slots().get(MarketWindow.ITEM).icon().item().is(Items.GOLDEN_APPLE) && confirm.slots().get(MarketWindow.INFO_PRICE).name().contains("1,250")
+                    && slot < MarketWindow.PER_PAGE && !confirm.slots().get(slot).name().contains("사기"),
+                    "confirm layout (showcase · info · decision row) " + confirm.slots().get(MarketWindow.ITEM));
+            h.assertTrue(confirm.slots().get(45).name().contains("사기") && confirm.slots().get(47).name().contains("사기") && confirm.slots().get(53).name().contains("취소"),
+                    "three buy cells · three cancel cells");
+            Forms.answer(b, 45, null); // 왼쪽 연두 칸도 사기
             h.assertTrue(chest(b) != null && chest(b).body().contains("샀습니다") && count(b, Items.GOLDEN_APPLE) == 2 && Wallet.get(b, Economy.Kind.GOLD) == 750,
                     "bought: " + body(b));
             h.assertTrue(Wallet.get(a, Economy.Kind.GOLD) == 1250 - Economy.fee(1250), "seller got " + Wallet.get(a, Economy.Kind.GOLD));

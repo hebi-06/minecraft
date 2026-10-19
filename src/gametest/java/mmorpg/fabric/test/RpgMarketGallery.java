@@ -192,6 +192,12 @@ public final class RpgMarketGallery implements FabricClientGameTest {
         if (!waitChest(ctx, c -> c.title().contains("유저 장터"), "market from the stat window")) return;
         away(ctx);
         shot(ctx, "w_market");
+        // 큰 상자 크기 (9 × 6 — 사용자 요청): 줄 수 · 창 크기 · 화면 안
+        int[] lay = ctx.computeOnClient(mc -> mc.gui.screen() instanceof ChestFormScreen c ? c.layout() : new int[] {0, -1});
+        int[] box0 = ctx.computeOnClient(mc -> mc.gui.screen() instanceof ChestFormScreen c ? c.bounds() : new int[4]);
+        int sh = ctx.computeOnClient(mc -> mc.gui.screen().height);
+        check(lay[0] == 6 && box0[3] >= 170 && box0[1] >= 0 && box0[1] + box0[3] <= sh,
+                "market is a large chest: " + lay[0] + " rows, " + box0[2] + " × " + box0[3] + " at y " + box0[1] + " (screen height " + sh + ")");
         hover(ctx, chestSlot(0));
         shot(ctx, "w_market_tip");
         hover(ctx, chestSlot(MarketWindow.HELP));
@@ -211,10 +217,34 @@ public final class RpgMarketGallery implements FabricClientGameTest {
         check(slot >= 0, "diamond listing on the page (" + slot + ")");
         if (slot < 0) return;
         long gold0 = server.computeOnServer(s -> Wallet.total(player(s), Economy.Kind.GOLD));
-        click(ctx, conn, chestSlot(slot));
+        // 물건 칸을 두 번 누름: 두 번째 누름은 확인 창의 같은 자리 (진열 · 빈 칸) 에 떨어져 아무 일도 없음 — 사기 칸은 맨 아랫줄
+        int[] gridBefore = ctx.computeOnClient(mc -> ((ChestFormScreen) mc.gui.screen()).bounds());
+        double[] pt = at(ctx, chestSlot(slot));
+        ctx.getInput().setCursorPos(pt[0], pt[1]);
+        ctx.waitTick();
+        ctx.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(2);
+        conn.waitForClientboundPackets();
         if (!waitChest(ctx, c -> c.title().contains("사기 확인"), "buy confirm")) return;
+        int[] gridConfirm = ctx.computeOnClient(mc -> ((ChestFormScreen) mc.gui.screen()).bounds());
+        ctx.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(3);
+        conn.waitForClientboundPackets();
+        ctx.waitTicks(2);
+        long goldMid = server.computeOnServer(s -> Wallet.total(player(s), Economy.Kind.GOLD));
+        boolean stillConfirm = ctx.computeOnClient(mc -> mc.gui.screen() instanceof ChestFormScreen c && c.form().title().contains("사기 확인"));
+        check(stillConfirm && goldMid == gold0 && gridBefore[1] == gridConfirm[1],
+                "double-click on a listing: only the confirm opens, nothing bought (gold " + gold0 + " → " + goldMid + ", grid top " + gridBefore[1] + " / " + gridConfirm[1] + ")");
+        int[] confirmLayout = ctx.computeOnClient(mc -> ((ChestFormScreen) mc.gui.screen()).layout());
+        check(confirmLayout[0] == 6 && confirmLayout[1] == MarketWindow.ITEM, "confirm: 6 rows, showcase at " + confirmLayout[1]);
         away(ctx);
         shot(ctx, "w_market_confirm");
+        hover(ctx, chestSlot(MarketWindow.ITEM));
+        shot(ctx, "w_market_confirm_tip");
+        hover(ctx, chestSlot(MarketWindow.OK));
+        shot(ctx, "w_market_confirm_ok");
         click(ctx, conn, chestSlot(MarketWindow.OK));
         check(waitChest(ctx, c -> c.title().contains("유저 장터") && c.body().contains("샀습니다"), "bought"), "bought: back to the market, result in the body");
         away(ctx);
@@ -228,6 +258,32 @@ public final class RpgMarketGallery implements FabricClientGameTest {
         check(waitChest(ctx, c -> c.slots().get(MarketWindow.KIND).name().contains("무기"), "kind weapon"), "kind → weapons");
         away(ctx);
         shot(ctx, "w_market_weapons");
+        // 골드가 모자랄 때: 사기 칸이 회색 · 방벽 (누를 수 없음)
+        long keepGold = server.computeOnServer(s -> Wallet.get(player(s), Economy.Kind.GOLD));
+        server.runOnServer(s -> {
+            Wallet.set(player(s), Economy.Kind.GOLD, 10);
+            MarketWindow.open(player(s));
+        });
+        if (waitChest(ctx, c -> c.title().contains("유저 장터") && c.slots().get(MarketWindow.KIND).name().contains("전체"), "market (all)")) {
+            int dear = ctx.computeOnClient(mc -> {
+                if (!(mc.gui.screen() instanceof ChestFormScreen c)) return -1;
+                for (int i = 0; i < MarketWindow.PER_PAGE; i++) if (c.form().slots().get(i).num() == 1200) return i;
+                return -1;
+            });
+            check(dear >= 0, "armor listing (1,200) on the page (" + dear + ")");
+            if (dear >= 0) {
+                click(ctx, conn, chestSlot(dear));
+                if (waitChest(ctx, c -> c.title().contains("사기 확인") && c.body().contains("모자랍니다"), "poor confirm")) {
+                    away(ctx);
+                    shot(ctx, "w_market_poor");
+                    click(ctx, conn, chestSlot(MarketWindow.OK));
+                    boolean stays = ctx.computeOnClient(mc -> mc.gui.screen() instanceof ChestFormScreen c && c.form().title().contains("사기 확인"));
+                    long g = server.computeOnServer(s -> Wallet.get(player(s), Economy.Kind.GOLD));
+                    check(stays && g == 10, "not enough gold: the buy cell does nothing (gold " + g + ")");
+                }
+            }
+        }
+        server.runOnServer(s -> Wallet.set(player(s), Economy.Kind.GOLD, keepGold));
         ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
         ctx.waitTicks(3);
     }
@@ -262,7 +318,7 @@ public final class RpgMarketGallery implements FabricClientGameTest {
             }
             return -1;
         });
-        check(nix >= 0 && coin == 1, "nix scale selectable, gold coins grey (deco): " + nix + " / " + coin);
+        check(nix == MarketWindow.pickIndex(3) && coin == 1, "nix scale (hotbar 3 → 4th row " + MarketWindow.pickIndex(3) + ") selectable, gold coins grey (deco): " + nix + " / " + coin);
         if (nix >= 0) hover(ctx, chestSlot(nix));
         shot(ctx, "w_sell_pick_tip");
         if (nix < 0) return;

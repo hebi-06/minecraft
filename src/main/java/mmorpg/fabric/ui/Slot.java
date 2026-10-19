@@ -16,6 +16,8 @@ public final class Slot {
     public static final byte COUNT = 1;
     public static final byte PRICE = 2;
     public static final byte DECO = 3;
+    /** 0.21.0 진열 칸: 이 칸을 가운데로 3 × 3 칸 크기 (그림 3배 — 유저 장터 확인 창의 물건), 누를 수 없음. 둘레 8칸은 그리지 않음 */
+    public static final byte BIG = 4;
 
     /** 빈 칸 채우기 (chestui.js PANE) */
     public static final Slot PANE = new Slot(Icon.sprite("pane"), "").deco();
@@ -26,6 +28,7 @@ public final class Slot {
     Integer count;
     Integer price;
     boolean deco;
+    boolean big;
 
     public Slot(Icon icon, String name) {
         this.icon = icon == null ? Icon.NONE : icon;
@@ -89,6 +92,12 @@ public final class Slot {
         return this;
     }
 
+    /** 진열 칸 (BIG — 3 × 3 칸 크기 · 누를 수 없음) */
+    public Slot big() {
+        this.big = true;
+        return this;
+    }
+
     public Icon icon() {
         return icon;
     }
@@ -105,8 +114,9 @@ public final class Slot {
         return deco;
     }
 
-    /** chestui.js encode: 종류 (장식 > 가격 > 개수) 와 숫자 (애드온은 세 자리까지 — 자바 창은 그대로 보임) */
+    /** chestui.js encode: 종류 (진열 > 장식 > 가격 > 개수) 와 숫자 (애드온은 세 자리까지 — 자바 창은 그대로 보임) */
     byte kind() {
+        if (big) return BIG;
         if (deco) return DECO;
         if (price != null) return PRICE;
         if (count != null) return COUNT;
@@ -114,7 +124,7 @@ public final class Slot {
     }
 
     int number() {
-        int n = deco ? 0 : price != null ? price : count != null ? count : 0;
+        int n = deco || big ? 0 : price != null ? price : count != null ? count : 0;
         return Math.max(0, Math.min(99999, n));
     }
 }

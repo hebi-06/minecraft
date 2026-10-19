@@ -22,28 +22,50 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 /**
- * 0.21.0 유저 장터 창 (서버 상자 창 9 × 3 — 상점과 같은 모양): 둘러보기 (윗 두 줄 18칸씩 · 정렬 · 종류 · 쪽), 사기 확인, 판매 등록 (가방에서 고르기 →
- * 가격 입력창), 내 물건 (누르면 내리기), 보관함 (기간이 끝났거나 내렸는데 가방이 가득 찬 물건). 스탯 창 아랫줄 장터 단추 · /장터 (/market).
+ * 0.21.0 유저 장터 창 (서버 상자 창 — 큰 상자 9 × 6, 사용자 요청 "마크 큰 상자 열 때 그 크기"): 둘러보기 (위 다섯 줄 45칸씩 · 정렬 · 종류 · 쪽),
+ * 사기 확인 (물건 진열 3 × 3 · 가격 · 판매자 · 남은 시간), 판매 등록 (가방 모양 그대로 고르기 → 가격 입력창), 내 물건 (누르면 내리기),
+ * 보관함 (기간이 끝났거나 내렸는데 가방이 가득 찬 물건). 단추는 모두 맨 아랫줄 (45 ~ 53) — 물건 칸 (0 ~ 44) 을 두 번 눌러도 확인 창의 사기 ·
+ * 내리기 칸이 그 자리에 있지 않음. 스탯 창 윗줄 장터 단추 · /장터 (/market).
  */
 public final class MarketWindow {
     private MarketWindow() {}
 
-    public static final int PER_PAGE = 18;
-    /** 아랫줄 단추 */
-    public static final int PREV = 18;
-    public static final int SORT = 19;
-    public static final int KIND = 20;
-    public static final int HELP = 21;
-    public static final int SELL = 22;
-    public static final int MINE = 23;
-    public static final int BOX = 24;
-    public static final int PURSE = 25;
-    public static final int NEXT = 26;
-    /** 확인 창 */
-    public static final int OK = 11;
+    /** 큰 상자 (9 × 6) */
+    public static final int ROWS = ChestForm.BIG_ROWS;
+    public static final int SIZE = ROWS * 9;
+    /** 물건 칸 (위 다섯 줄) */
+    public static final int PER_PAGE = 45;
+    /** 맨 아랫줄 단추 */
+    public static final int PREV = 45;
+    public static final int HELP = 46;
+    public static final int SORT = 47;
+    public static final int KIND = 48;
+    public static final int SELL = 49;
+    public static final int MINE = 50;
+    public static final int BOX = 51;
+    public static final int PURSE = 52;
+    public static final int NEXT = 53;
+    /** 확인 창: 물건 진열 (3 × 3 — 위 세 줄 가운데), 정보 (넷째 줄 — 가격 · 판매자 · 남은 시간), 맨 아랫줄 사기 (왼쪽 셋) · 보유 골드 · 취소 (오른쪽 셋) */
     public static final int ITEM = 13;
-    public static final int NO = 15;
+    public static final int INFO_PRICE = 29;
+    public static final int INFO_SELLER = 31;
+    public static final int INFO_TIME = 33;
+    public static final int OK = 46;
+    public static final int NO = 52;
+    public static final int CONFIRM_PURSE = 49;
+    static final int[] OK_CELLS = {45, 46, 47};
+    static final int[] NO_CELLS = {51, 52, 53};
     static final int GUARD = 200;
+
+    /** 판매 등록 고르기 창의 칸 (가방 모양 그대로 — 위 세 줄 = 가방 9 ~ 35, 넷째 줄 = 핫바 0 ~ 8) */
+    public static int pickIndex(int bagSlot) {
+        return bagSlot < 9 ? 27 + bagSlot : bagSlot - 9;
+    }
+
+    static boolean isOk(int sel) {
+        for (int c : OK_CELLS) if (c == sel) return true;
+        return false;
+    }
 
     /** 종류 거르기 */
     public enum Kind {
@@ -142,6 +164,23 @@ public final class MarketWindow {
         return Slot.of(s, itemName("§f", s)).lore(lore).price(l.price());
     }
 
+    /** 확인 창 정보 줄: 가격 · 판매자 · 남은 시간 (장식) */
+    static void infoRow(ChestForm form, Market.Listing<MarketStore.Ware> l, String priceNote) {
+        form.set(INFO_PRICE, Slot.of(Icon.item(EconomyItems.GOLD_COIN), "§6가격 §f" + Economy.fmt(l.price()) + " 골드").lore(priceNote).deco());
+        form.set(INFO_SELLER, Slot.of(Items.PLAYER_HEAD, "§7판매자 §f" + l.sellerName()).deco());
+        form.set(INFO_TIME, Slot.of(Items.CLOCK, "§7남은 시간 §f" + Economy.timeLeft(l.expiresAt() - MarketStore.now())).lore("§8물건 번호 #" + l.id()).deco());
+    }
+
+    /** 확인 창 맨 아랫줄: 왼쪽 세 칸 = 하기 (가운데 체크 · 양옆 연두 유리판), 오른쪽 세 칸 = 그만두기 (가운데 X · 양옆 빨간 유리판) */
+    static void decisionRow(ChestForm form, String yes, String no, String... yesLore) {
+        form.set(OK_CELLS[0], Slot.of(Items.LIME_STAINED_GLASS_PANE, yes).lore(yesLore));
+        form.set(OK, Slot.of(Icon.sprite("icon_check"), yes).lore(yesLore));
+        form.set(OK_CELLS[2], Slot.of(Items.LIME_STAINED_GLASS_PANE, yes).lore(yesLore));
+        form.set(NO_CELLS[0], Slot.of(Items.RED_STAINED_GLASS_PANE, no));
+        form.set(NO, Slot.of(Icon.sprite("icon_cross"), no));
+        form.set(NO_CELLS[2], Slot.of(Items.RED_STAINED_GLASS_PANE, no));
+    }
+
     // ------------------------------------------------------------ 둘러보기
 
     static void browse(ServerPlayer sp, View v, String message, int guard) {
@@ -150,7 +189,7 @@ public final class MarketWindow {
         int pages = Math.max(1, (list.size() + PER_PAGE - 1) / PER_PAGE);
         int page = Math.max(0, Math.min(pages - 1, v.page()));
         View cur = v.page(page);
-        ChestForm form = new ChestForm("유저 장터 §8· §7" + list.size() + "개");
+        ChestForm form = new ChestForm("유저 장터 §8· §7" + list.size() + "개", ROWS);
         Map<Integer, Market.Listing<MarketStore.Ware>> bySlot = new HashMap<>();
         for (int i = 0; i < PER_PAGE; i++) {
             int at = page * PER_PAGE + i;
@@ -177,7 +216,7 @@ public final class MarketWindow {
         form.set(BOX, boxed > 0 ? boxSlot.count(boxed) : boxSlot);
         form.set(PURSE, goldSlot(sp));
         form.set(NEXT, page < pages - 1 ? Slot.of(Icon.sprite("icon_next"), "§e다음 쪽 ▶").lore("§7" + (page + 2) + " / " + pages + "쪽으로") : Slot.PANE);
-        form.fillEmpty();
+        form.fillRange(PER_PAGE, SIZE, Slot.PANE); // 물건 자리의 빈 칸은 그림 없이 (큰 상자의 빈 칸처럼), 아랫줄 빈 자리만 장식
         List<String> lines = new ArrayList<>();
         lines.add(list.isEmpty() ? "§8올라온 물건이 없습니다" + (cur.kind() != Kind.ALL ? " (" + cur.kind().label + ")" : "") + ". 아랫줄 이름표 칸: 판매 등록.§r"
                 : "§8물건을 누르면 사기 확인 창이 열립니다. 초록 숫자 = 가격 (골드).§r");
@@ -196,7 +235,7 @@ public final class MarketWindow {
                 browse(sp, cur.page(page + 1), "", guard + 1);
             } else if (sel == SORT) browse(sp, new View(0, nextSort(cur.sort()), cur.kind()), "", guard + 1);
             else if (sel == KIND) browse(sp, new View(0, cur.sort(), cur.kind().next()), "", guard + 1);
-            else if (sel == SELL) pick(sp, 0, "", back, guard + 1);
+            else if (sel == SELL) pick(sp, "", back, guard + 1);
             else if (sel == MINE) mine(sp, "", back, guard + 1);
             else if (sel == BOX) box(sp, 0, "", back, guard + 1);
             else if (bySlot.containsKey(sel)) {
@@ -213,22 +252,32 @@ public final class MarketWindow {
         if (guard >= GUARD) return;
         long have = Wallet.total(sp, Economy.Kind.GOLD);
         boolean enough = have >= l.price();
-        ChestForm form = new ChestForm("사기 확인");
-        form.set(4, goldSlot(sp));
-        form.set(OK, Slot.of(Icon.sprite("icon_check"), "§a사기 §7(" + Economy.fmt(l.price()) + " 골드)"));
-        form.set(ITEM, listingSlot(sp, l, "").deco());
-        form.set(NO, Slot.of(Icon.sprite("icon_cross"), "§c취소"));
-        form.fillEmpty();
+        ChestForm form = new ChestForm("사기 확인", ROWS);
+        form.set(ITEM, listingSlot(sp, l, "").big());
+        infoRow(form, l, "§7지갑에서 먼저 · 모자라면 가방의 금화");
+        if (enough) {
+            decisionRow(form, "§a사기 §7(" + Economy.fmt(l.price()) + " 골드)", "§c취소",
+                    "§7보유 " + Economy.fmt(have) + " → " + Economy.fmt(have - l.price()) + " 골드");
+        } else {
+            // 모자라면 사기 칸은 누를 수 없는 회색 (방벽 — 왜 안 되는지 이름에)
+            String why = "§c골드가 모자랍니다 §7(" + Economy.fmt(have) + " / " + Economy.fmt(l.price()) + ")";
+            decisionRow(form, why, "§c취소");
+            form.set(OK_CELLS[0], Slot.of(Items.GRAY_STAINED_GLASS_PANE, why).deco());
+            form.set(OK, Slot.of(Items.BARRIER, why).lore("§7골드: 보스 · 퀘스트 보상, 장터에서 팔기").deco());
+            form.set(OK_CELLS[2], Slot.of(Items.GRAY_STAINED_GLASS_PANE, why).deco());
+        }
+        form.set(CONFIRM_PURSE, goldSlot(sp));
+        form.fillRange(PER_PAGE, SIZE, Slot.PANE);
         List<String> lines = new ArrayList<>();
         lines.add("§0{slot:" + ITEM + "}" + countText(l.item().stack()) + "§r");
         lines.add("§8가격 §6§l" + Economy.fmt(l.price()) + "§r§8 골드 · 판매자 §0" + l.sellerName() + "§8 · " + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r");
         lines.add(enough ? "§8보유 §0" + Economy.fmt(have) + "§8 → §0" + Economy.fmt(have - l.price()) + "§8 골드§r"
                 : "§4골드가 모자랍니다: 보유 " + Economy.fmt(have) + " / " + Economy.fmt(l.price()) + "§r");
-        lines.add("§8왼쪽 초록 칸: 사기 · 오른쪽 빨간 칸: 취소§r");
+        lines.add("§8아랫줄 왼쪽 초록 칸: 사기 · 오른쪽 빨간 칸: 취소§r");
         form.body(String.join("\n", lines));
         form.show(sp, sel -> {
             if (sel < 0) return;
-            if (sel != OK) {
+            if (!isOk(sel)) {
                 back.accept("");
                 return;
             }
@@ -238,16 +287,17 @@ public final class MarketWindow {
 
     static void confirmCancel(ServerPlayer sp, Market.Listing<MarketStore.Ware> l, Consumer<String> back, int guard) {
         if (guard >= GUARD) return;
-        ChestForm form = new ChestForm("내리기 확인");
-        form.set(OK, Slot.of(Icon.sprite("icon_check"), "§a내리기"));
-        form.set(ITEM, listingSlot(sp, l, "").deco());
-        form.set(NO, Slot.of(Icon.sprite("icon_cross"), "§c그대로 두기"));
-        form.fillEmpty();
+        ChestForm form = new ChestForm("내리기 확인", ROWS);
+        form.set(ITEM, listingSlot(sp, l, "").big());
+        infoRow(form, l, "§7팔리면 수수료 " + Math.round(Economy.feeRate() * 100) + "% 를 뺀 " + Economy.fmt(Economy.proceeds(l.price())) + " 골드");
+        decisionRow(form, "§a내리기", "§c그대로 두기", "§7가방으로 (가득이면 보관함)");
+        form.fillRange(PER_PAGE, SIZE, Slot.PANE);
         form.body("§0{slot:" + ITEM + "}" + countText(l.item().stack()) + "§r\n§8가격 §0" + Economy.fmt(l.price()) + "§8 골드 · 남은 시간 "
-                + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r\n§8내리면 가방으로 돌아옵니다 (가득이면 보관함) · 다시 올려도 무료§r");
+                + Economy.timeLeft(l.expiresAt() - MarketStore.now()) + "§r\n§8내리면 가방으로 돌아옵니다 (가득이면 보관함) · 다시 올려도 무료§r\n"
+                + "§8아랫줄 왼쪽 초록 칸: 내리기 · 오른쪽 빨간 칸: 그대로 두기§r");
         form.show(sp, sel -> {
             if (sel < 0) return;
-            if (sel != OK) {
+            if (!isOk(sel)) {
                 back.accept("");
                 return;
             }
@@ -260,54 +310,49 @@ public final class MarketWindow {
     /** 가방 칸 하나 (번호 · 아이템) */
     record BagItem(int slot, ItemStack stack) {}
 
-    /** 판매 등록 1: 가방에서 고르기 (가방 36칸의 아이템 — 올릴 수 없는 것은 회색 장식) */
-    static void pick(ServerPlayer sp, int page, String message, Consumer<String> back, int guard) {
+    /**
+     * 판매 등록 1: 가방에서 고르기 — 가방 모양 그대로 (위 세 줄 = 가방 9 ~ 35, 넷째 줄 = 핫바 — 큰 상자 창이라 한 쪽에 가방 36칸이 모두),
+     * 올릴 수 없는 것은 회색 장식
+     */
+    static void pick(ServerPlayer sp, String message, Consumer<String> back, int guard) {
         if (guard >= GUARD || sp.isRemoved()) return;
-        List<BagItem> items = new ArrayList<>();
-        for (int i = 0; i < Inv.SIZE; i++) {
-            ItemStack s = Inv.get(sp, i);
-            if (!s.isEmpty()) items.add(new BagItem(i, s.copy()));
-        }
-        int pages = Math.max(1, (items.size() + PER_PAGE - 1) / PER_PAGE);
-        int pg = Math.max(0, Math.min(pages - 1, page));
         int mine = MarketStore.mine(sp).size();
         boolean full = mine >= Economy.marketMax();
-        ChestForm form = new ChestForm("판매할 아이템 고르기 §8· §7" + mine + " / " + Economy.marketMax());
+        ChestForm form = new ChestForm("판매할 아이템 고르기 §8· §7" + mine + " / " + Economy.marketMax(), ROWS);
         Map<Integer, BagItem> bySlot = new HashMap<>();
-        for (int i = 0; i < PER_PAGE; i++) {
-            int at = pg * PER_PAGE + i;
-            if (at >= items.size()) break;
-            BagItem b = items.get(at);
+        int items = 0;
+        for (int bag = 0; bag < Inv.SIZE; bag++) {
+            ItemStack s = Inv.get(sp, bag);
+            if (s.isEmpty()) continue;
+            items++;
+            BagItem b = new BagItem(bag, s.copy());
+            int at = pickIndex(bag);
             String why = MarketStore.refuse(b.stack());
             List<String> lore = new ArrayList<>(List.of(TOOLTIP));
             if (why != null) {
                 lore.add("§c" + why);
-                form.set(i, Slot.of(b.stack(), itemName("§7", b.stack())).lore(lore).deco());
+                form.set(at, Slot.of(b.stack(), itemName("§7", b.stack())).lore(lore).deco());
             } else {
                 lore.add(full ? "§c올릴 수 있는 수를 다 채웠습니다" : "§a누르면 가격 정하기");
-                form.set(i, Slot.of(b.stack(), itemName("§f", b.stack())).lore(lore).count(b.stack().getCount()));
-                bySlot.put(i, b);
+                form.set(at, Slot.of(b.stack(), itemName("§f", b.stack())).lore(lore).count(b.stack().getCount()));
+                bySlot.put(at, b);
             }
         }
-        form.set(PREV, pg > 0 ? Slot.of(Icon.sprite("icon_prev"), "§e◀ 이전 쪽") : Slot.PANE);
-        form.set(SELL, Slot.of(Icon.sprite("icon_cross"), "§c장터로 돌아가기"));
+        form.set(PREV, Slot.of(Icon.sprite("icon_prev"), "§e◀ 장터로"));
         form.set(PURSE, goldSlot(sp));
-        form.set(NEXT, pg < pages - 1 ? Slot.of(Icon.sprite("icon_next"), "§e다음 쪽 ▶") : Slot.PANE);
-        form.fillEmpty();
+        form.fillRange(PER_PAGE, SIZE, Slot.PANE);
         List<String> lines = new ArrayList<>();
-        lines.add(items.isEmpty() ? "§8가방이 비었습니다.§r" : "§8올릴 아이템을 누르면 가격 입력창이 열립니다. 회색 칸은 올릴 수 없음.§r");
-        lines.add("§8등록 무료 · 팔리면 수수료 " + Math.round(Economy.feeRate() * 100) + "% · " + Economy.timeLeft(Economy.marketMillis()) + " · 쪽 " + (pg + 1) + "/" + pages + "§r");
+        lines.add(items == 0 ? "§8가방이 비었습니다.§r" : "§8올릴 아이템을 누르면 가격 입력창이 열립니다. 넷째 줄 = 핫바 · 회색 칸은 올릴 수 없음.§r");
+        lines.add("§8등록 무료 · 팔리면 수수료 " + Math.round(Economy.feeRate() * 100) + "% · " + Economy.timeLeft(Economy.marketMillis()) + "§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         form.show(sp, sel -> {
             if (sel < 0) return;
-            if (sel == SELL) back.accept("");
-            else if (sel == PREV && pg > 0) pick(sp, pg - 1, "", back, guard + 1);
-            else if (sel == NEXT && pg < pages - 1) pick(sp, pg + 1, "", back, guard + 1);
+            if (sel == PREV) back.accept("");
             else if (bySlot.containsKey(sel)) {
-                if (full) pick(sp, pg, "§4" + Market.Refusal.LIMIT.text + "§r", back, guard + 1);
-                else priceForm(sp, bySlot.get(sel), "", msg -> pick(sp, pg, msg, back, guard + 1), back, guard + 1);
-            } else pick(sp, pg, "", back, guard + 1);
+                if (full) pick(sp, "§4" + Market.Refusal.LIMIT.text + "§r", back, guard + 1);
+                else priceForm(sp, bySlot.get(sel), "", msg -> pick(sp, msg, back, guard + 1), back, guard + 1);
+            } else pick(sp, "", back, guard + 1);
         });
     }
 
@@ -353,7 +398,7 @@ public final class MarketWindow {
     static void mine(ServerPlayer sp, String message, Consumer<String> back, int guard) {
         if (guard >= GUARD || sp.isRemoved()) return;
         List<Market.Listing<MarketStore.Ware>> mine = MarketStore.mine(sp);
-        ChestForm form = new ChestForm("내 물건 §8· §7" + mine.size() + " / " + Economy.marketMax());
+        ChestForm form = new ChestForm("내 물건 §8· §7" + mine.size() + " / " + Economy.marketMax(), ROWS);
         Map<Integer, Market.Listing<MarketStore.Ware>> bySlot = new HashMap<>();
         for (int i = 0; i < Math.min(PER_PAGE, mine.size()); i++) {
             form.set(i, listingSlot(sp, mine.get(i), "§e누르면 내리기"));
@@ -365,7 +410,7 @@ public final class MarketWindow {
         Slot boxSlot = Slot.of(Items.BARREL, (boxed > 0 ? "§e" : "§f") + "보관함 §7" + boxed + "개");
         form.set(BOX, boxed > 0 ? boxSlot.count(boxed) : boxSlot);
         form.set(PURSE, goldSlot(sp));
-        form.fillEmpty();
+        form.fillRange(PER_PAGE, SIZE, Slot.PANE);
         List<String> lines = new ArrayList<>();
         lines.add(mine.isEmpty() ? "§8올린 물건이 없습니다.§r" : "§8누르면 내립니다 (가방으로 — 가득이면 보관함). 팔리면 지갑으로 골드 (수수료 " + Math.round(Economy.feeRate() * 100)
                 + "%).§r");
@@ -375,7 +420,7 @@ public final class MarketWindow {
         form.show(sp, sel -> {
             if (sel < 0) return;
             if (sel == PREV) back.accept("");
-            else if (sel == SELL) pick(sp, 0, "", here, guard + 1);
+            else if (sel == SELL) pick(sp, "", here, guard + 1);
             else if (sel == BOX) box(sp, 0, "", here, guard + 1);
             else if (bySlot.containsKey(sel)) confirmCancel(sp, bySlot.get(sel), here, guard + 1);
             else here.accept("");
@@ -387,7 +432,7 @@ public final class MarketWindow {
         List<MarketStore.Ware> box = MarketStore.box(sp);
         int pages = Math.max(1, (box.size() + PER_PAGE - 1) / PER_PAGE);
         int pg = Math.max(0, Math.min(pages - 1, page));
-        ChestForm form = new ChestForm("보관함 §8· §7" + box.size() + "개");
+        ChestForm form = new ChestForm("보관함 §8· §7" + box.size() + "개", ROWS);
         Map<Integer, Integer> bySlot = new HashMap<>();
         for (int i = 0; i < PER_PAGE; i++) {
             int at = pg * PER_PAGE + i;
@@ -399,7 +444,7 @@ public final class MarketWindow {
         form.set(PREV, pg > 0 ? Slot.of(Icon.sprite("icon_prev"), "§e◀ 이전 쪽") : Slot.of(Icon.sprite("icon_prev"), "§e◀ 돌아가기"));
         form.set(SELL, box.isEmpty() ? Slot.PANE : Slot.of(Icon.sprite("icon_check"), "§a모두 꺼내기 §7(" + box.size() + "개)"));
         form.set(NEXT, pg < pages - 1 ? Slot.of(Icon.sprite("icon_next"), "§e다음 쪽 ▶") : Slot.PANE);
-        form.fillEmpty();
+        form.fillRange(PER_PAGE, SIZE, Slot.PANE);
         List<String> lines = new ArrayList<>();
         lines.add(box.isEmpty() ? "§8보관함이 비었습니다.§r" : "§8누르면 가방으로 꺼냅니다. 기간이 끝났거나 내렸는데 가방이 가득 찼던 물건.§r");
         if (message != null && !message.isEmpty()) lines.add(message);

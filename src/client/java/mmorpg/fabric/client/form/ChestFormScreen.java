@@ -15,7 +15,8 @@ import net.minecraft.world.item.TooltipFlag;
 
 /**
  * 상자 모양 창 (애드온 server_form.json rpg_chest): 회색 상자 테두리 (chest_bg) 안에 제목 · 9 × 3 칸 (slot 20 × 20, 그림 16 × 16) · 본문.
- * 칸 오른쪽 아래 숫자 — 흰색 = 보유 수, 초록 = 가격 (바닐라 아이템 수 자리). 마우스를 올리면 밝아지고 이름 · 설명. 장식 칸은 누를 수 없음.
+ * 0.21.0 줄 수 = 받은 칸 수 ÷ 9 (1 ~ 6 — 유저 장터는 큰 상자 9 × 6), 진열 칸 (Slot.BIG) 은 그 칸을 가운데로 3 × 3 칸 크기 · 그림 3배.
+ * 칸 오른쪽 아래 숫자 — 흰색 = 보유 수, 초록 = 가격 (바닐라 아이템 수 자리). 마우스를 올리면 밝아지고 이름 · 설명. 장식 · 진열 칸은 누를 수 없음.
  * 제목 · 본문은 짙은 회색 (#404040, 그림자 없음 — 애드온 색), 덧붙임 §7 은 바탕에 묻히지 않게 §8 로. 본문이 화면보다 길면 휠로 넘김.
  */
 public final class ChestFormScreen extends FormScreen {
@@ -24,13 +25,20 @@ public final class ChestFormScreen extends FormScreen {
     static final int PAD_X = 7;
     static final int PAD_Y = 6;
     static final int HEADER = 13;
-    static final int GRID_H = 60;
     static final int GAP = 4;
     static final int LINE = 10;
     static final int TEXT = 0xFF404040;
+    /** 진열 칸 그림 크기 (16 × 3 — 3 × 3 칸 60 안) */
+    static final int BIG_ICON = 48;
+    /** 창 자리를 정하는 본문 줄 수 (실제 줄 수와 상관없이 — 칸 자리가 창마다 같게) */
+    static final int NOMINAL_LINES = 4;
 
     private final FormNet.ChestPayload form;
     private final String title;
+    /** 줄 수 (칸 수 ÷ 9 — 보통 3, 0.21.0 큰 상자 6) */
+    private final int rows;
+    /** 진열 칸 번호 (없으면 -1) — 둘레 8칸은 그리지 않음 */
+    private final int big;
     private List<FormattedCharSequence> body = List.of();
     private int left;
     private int top;
@@ -44,6 +52,34 @@ public final class ChestFormScreen extends FormScreen {
         super(form.id(), Component.literal(form.title()));
         this.form = form;
         this.title = onLight(form.title());
+        this.rows = Math.max(1, Math.min(6, (form.slots().size() + 8) / 9));
+        this.big = findBig();
+    }
+
+    /** 그릴 칸 수 (줄 × 9 까지) */
+    private int cells() {
+        return Math.min(rows * 9, form.slots().size());
+    }
+
+    private int gridH() {
+        return rows * CELL;
+    }
+
+    /** 진열 칸: 가장자리가 아닌 첫 BIG 칸 (가장자리의 BIG 은 보통 크기 장식처럼) */
+    private int findBig() {
+        for (int i = 0; i < cells(); i++) {
+            FormNet.SlotData s = form.slots().get(i);
+            if (s.empty() || s.kind() != Slot.BIG) continue;
+            int r = i / 9;
+            int c = i % 9;
+            if (r >= 1 && r <= rows - 2 && c >= 1 && c <= 7) return i;
+        }
+        return -1;
+    }
+
+    /** 진열 칸이 덮는 둘레 칸 */
+    private boolean covered(int i) {
+        return big >= 0 && i != big && Math.abs(i / 9 - big / 9) <= 1 && Math.abs(i % 9 - big % 9) <= 1;
     }
 
     /** 0.21.0 칸 이름의 "{item}" = 칸 아이템의 이름 (보는 사람의 언어 · 아이템 색 그대로 — 유저 장터의 바닐라 아이템) */
@@ -100,13 +136,16 @@ public final class ChestFormScreen extends FormScreen {
     protected void init() {
         body = wrap(font, onLight(localize(form.body())), GRID_W);
         w = GRID_W + PAD_X * 2;
-        int fixed = PAD_Y + HEADER + GRID_H + GAP + PAD_Y;
+        int fixed = PAD_Y + HEADER + gridH() + GAP + PAD_Y;
         int fit = Math.max(1, (height - 4 - fixed) / LINE);
         bodyLines = Math.min(body.size(), fit);
         bodyScroll = Math.max(0, Math.min(bodyScroll, body.size() - bodyLines));
         h = fixed + bodyLines * LINE;
         left = (width - w) / 2;
-        top = Math.max(2, (height - h) / 2);
+        // 0.21.0 위치는 본문 NOMINAL_LINES 줄 기준으로 가운데 — 본문 줄 수가 바뀌어도 (결과 한 줄 · 확인 창) 같은 줄 수의 창은 칸 자리가 그대로
+        // (길면 아래로 늘고, 화면을 넘으면 위로 올림). 다음 창의 같은 자리에 무엇이 있는지가 정해져 두 번 누르기를 막을 수 있음
+        int nominal = fixed + NOMINAL_LINES * LINE;
+        top = Math.max(2, Math.min((height - nominal) / 2, height - 2 - h));
     }
 
     /** 칸 숫자: 999 까지 그대로, 1000 ~ 9999 는 1k · 1.2k, 그 위는 12k (칸 폭 20 에 들어가게 — 애드온은 세 자리까지) */
@@ -129,21 +168,55 @@ public final class ChestFormScreen extends FormScreen {
     }
 
     private int bodyTop() {
-        return top + PAD_Y + HEADER + GRID_H + GAP;
+        return top + PAD_Y + HEADER + gridH() + GAP;
     }
 
     private FormNet.SlotData slot(int i) {
         return i >= 0 && i < form.slots().size() ? form.slots().get(i) : null;
     }
 
-    /** 마우스 아래 칸 (빈 칸은 -1 — 보이지 않음) */
+    /** 마우스 아래 칸 (빈 칸은 -1 — 보이지 않음, 진열 칸은 3 × 3 칸 넓이) */
     private int slotAt(double mx, double my) {
-        for (int i = 0; i < Math.min(27, form.slots().size()); i++) {
+        if (big >= 0 && in(mx, my, slotX(big) - CELL, slotY(big) - CELL, CELL * 3, CELL * 3)) return big;
+        for (int i = 0; i < cells(); i++) {
+            if (covered(i)) continue;
             FormNet.SlotData s = slot(i);
             if (s == null || s.empty()) continue;
             if (in(mx, my, slotX(i), slotY(i), CELL, CELL)) return i;
         }
         return -1;
+    }
+
+    /** 누를 수 있는 칸인지 (장식 · 진열 칸은 아님) */
+    private static boolean pressable(FormNet.SlotData s) {
+        return s != null && !s.empty() && s.kind() != Slot.DECO && s.kind() != Slot.BIG;
+    }
+
+    /**
+     * 진열 칸: 3 × 3 칸 자리에 바닐라 칸 테두리 (slot 그림과 같은 색 — 위 · 왼쪽 짙게, 아래 · 오른쪽 흰빛) · 위에서 내려오는 옅은 빛 ·
+     * 그림 3배 (48) · 개수 (2배 글자 — 오른쪽 아래)
+     */
+    private void drawBig(GuiGraphicsExtractor g, FormNet.SlotData s) {
+        int n = CELL * 3;
+        int x = slotX(big) - CELL;
+        int y = slotY(big) - CELL;
+        g.fill(x, y, x + n, y + n, 0xFF8B8B8B);
+        g.fillGradient(x + 1, y + 1, x + n - 1, y + n / 2, 0x30FFFFFF, 0x00FFFFFF);
+        g.fill(x, y, x + n, y + 1, 0xFF373737);
+        g.fill(x, y, x + 1, y + n, 0xFF373737);
+        g.fill(x + 1, y + n - 1, x + n, y + n, 0xFFFFFFFF);
+        g.fill(x + n - 1, y + 1, x + n, y + n, 0xFFFFFFFF);
+        if (s == null || s.empty()) return;
+        icon(g, s.icon(), x + (n - BIG_ICON) / 2, y + (n - BIG_ICON) / 2, BIG_ICON);
+        int count = s.icon().item().isEmpty() ? 1 : s.icon().item().getCount();
+        if (count > 1) {
+            String t = String.valueOf(count);
+            g.pose().pushMatrix();
+            g.pose().translate(x + n - 3, y + n - 3);
+            g.pose().scale(2F, 2F);
+            g.text(font, t, -font.width(t), -8, 0xFFFFFFFF, true);
+            g.pose().popMatrix();
+        }
     }
 
     private int closeX() {
@@ -163,14 +236,19 @@ public final class ChestFormScreen extends FormScreen {
         g.text(font, clip(font, title, GRID_W - 22), x0 + 1, y0 + 1, TEXT, false);
         closeButton(g, closeX(), closeY(), in(mx, my, closeX(), closeY(), 11, 11));
         int hover = responded ? -1 : slotAt(mx, my);
-        for (int i = 0; i < Math.min(27, form.slots().size()); i++) {
+        for (int i = 0; i < cells(); i++) {
+            if (covered(i)) continue;
+            if (i == big) {
+                drawBig(g, slot(i));
+                continue;
+            }
             int sx = slotX(i);
             int sy = slotY(i);
             sprite(g, "slot", sx, sy, CELL, CELL);
             FormNet.SlotData s = slot(i);
             if (s == null || s.empty()) continue;
             icon(g, s.icon(), sx + 2, sy + 2, 16);
-            if (i == hover && s.kind() != Slot.DECO) sprite(g, "slot_hover", sx, sy, CELL, CELL);
+            if (i == hover && pressable(s)) sprite(g, "slot_hover", sx, sy, CELL, CELL);
             if (s.kind() == Slot.COUNT || s.kind() == Slot.PRICE) {
                 // 바닐라 아이템 수와 같은 자리 (그림 오른쪽 아래 — 칸 테두리 안), 네 자리부터 줄임 (옆 칸을 덮지 않게 — 온전한 수는 이름 · 설명에)
                 String n = shortNum(s.num());
@@ -220,8 +298,7 @@ public final class ChestFormScreen extends FormScreen {
             if (responded) return true;
             int i = slotAt(event.x(), event.y());
             if (i >= 0) {
-                FormNet.SlotData s = slot(i);
-                if (s != null && s.kind() != Slot.DECO) respond(i);
+                if (pressable(slot(i))) respond(i);
                 return true;
             }
         }
@@ -254,5 +331,10 @@ public final class ChestFormScreen extends FormScreen {
     /** 시험용: 창 자리 [왼쪽, 위, 폭, 높이] */
     public int[] bounds() {
         return new int[] {left, top, w, h};
+    }
+
+    /** 시험용: 줄 수 · 진열 칸 번호 (없으면 -1) */
+    public int[] layout() {
+        return new int[] {rows, big};
     }
 }

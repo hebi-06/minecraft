@@ -48,7 +48,7 @@ public final class FormNet {
         }
     }
 
-    /** 상자 창 칸 (kind: Slot.NONE · COUNT · PRICE · DECO, 빈 칸은 empty) */
+    /** 상자 창 칸 (kind: Slot.NONE · COUNT · PRICE · DECO · BIG (0.21.0 진열 칸), 빈 칸은 empty) */
     public record SlotData(boolean empty, IconData icon, String name, List<String> lore, byte kind, int num) {
         static final SlotData EMPTY = new SlotData(true, new IconData(ItemStack.EMPTY, ""), "", List.of(), Slot.NONE, 0);
 
@@ -111,7 +111,7 @@ public final class FormNet {
         }
     }
 
-    /** 상자 창 (9 × 3 칸 + 본문 — chestui.js ChestForm) */
+    /** 상자 창 (9 × 3 칸 + 본문 — chestui.js ChestForm, 0.21.0 칸 수 9 ~ 54 — 줄 = 칸 수 ÷ 9) */
     public record ChestPayload(int id, String title, String body, List<SlotData> slots) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ChestPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("form_chest"));
         public static final StreamCodec<RegistryFriendlyByteBuf, ChestPayload> CODEC = CustomPacketPayload.codec(ChestPayload::write, ChestPayload::read);

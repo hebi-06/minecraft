@@ -614,7 +614,8 @@ public final class RpgFormGallery implements FabricClientGameTest {
             hover(ctx, sc -> ((MenuFormScreen) sc).buttonCenter(3));
             shot(ctx, "f_editor_settings_hover");
             click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(3)); // 퀘스트 추가
-            if (!waitScreen(ctx, sc -> sc instanceof ModalFormScreen m && m.values().size() == 23, "quest editor")) return;
+            // 입력 24칸 (0.21.0 보상에 골드 밀대 — 23 → 24)
+            if (!waitScreen(ctx, sc -> sc instanceof ModalFormScreen m && m.values().size() == 24, "quest editor")) return;
             away(ctx);
             shot(ctx, "f_editor_quest");
             int[] steps = {-8, -40};
