@@ -39,6 +39,8 @@ import net.minecraft.world.phys.Vec3;
  * 끝나면 그대로 (0.20.1 — 끝에 띄우던 요약 글자는 없음).
  * 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 조준한 곳 반지름 안 적만 받는 피해 × (1 + 낙인) · 그 적이 준 피해 × (1 − 낙인), 가호와 곱 (1.44배),
  * 적이 없으면 재사용 대기 없이 거절.
+ * 0.24.0 만년빙하: 조준한 과녁 둘레 얼음 필드 — 거대한 얼음 3 × 8 + 빙하 붕괴 10 = 34 (6돌 3.5 × 12 + 13 = 55), 타격 = 얼음 8 (6돌 12) + 붕괴 1,
+ * 빙결 (같은 적이 3번 꿰뚫리면 2초 기절 · ❄ · 풀리면 다시 쌓임 · 붕괴에 부서짐 · 필드 밖은 그대로).
  * 사거리 · 범위가 넓어 시험마다 시험 환경을 따로 (mmorpg:lr_…) — 같은 묶음에서 함께 도는 다른 시험의 과녁을 맞히지 않게.
  */
 public final class RpgLimitedRuneTests {
@@ -176,6 +178,18 @@ public final class RpgLimitedRuneTests {
                 h.succeed();
             });
         });
+    }
+
+    /** RuneGlacier 의 마지막 시전 {얼린 수, 거대한 얼음 수, 필드 반지름} — 패키지 밖이라 리플렉션 */
+    private static double[] glacierOf(ServerPlayer sp) {
+        try {
+            Class<?> c = Class.forName("mmorpg.fabric.rune.RuneGlacier");
+            Method m = c.getDeclaredMethod("last", java.util.UUID.class);
+            m.setAccessible(true);
+            return (double[]) m.invoke(null, sp.getUUID());
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     /** RuneLimited 의 마지막 시전 기록 (피해 합 · 타격 수) — 패키지 밖이라 리플렉션 */
@@ -460,6 +474,73 @@ public final class RpgLimitedRuneTests {
         h.succeed();
     }
 
+    /** 0.24.0 만년빙하: 거대한 얼음 3 × 8 + 빙하 붕괴 10 (과녁은 조준한 곳 — 필드 가운데), 6돌 3.5 × 12 + 13 */
+    @GameTest(environment = "mmorpg:lr_glacier", maxTicks = 200)
+    public void glacierField(GameTestHelper h) {
+        cast(h, "glacier", 0, EVEN, 3 * 8 + 10, 9, 150, false);
+    }
+
+    @GameTest(environment = "mmorpg:lr_glacier6", maxTicks = 250)
+    public void glacierFieldSixStars(GameTestHelper h) {
+        cast(h, "glacier", 6, EVEN, 3.5 * 12 + 13, 13, 205, false);
+    }
+
+    /**
+     * 0.24.0 만년빙하 빙결 (0돌 — 얼음 16 · 30 · 44 · … · 114틱, 붕괴 128틱): 같은 과녁이 얼음에 세 번 꿰뚫리면 (44틱) 2초 얼어붙음 (구속 XI · 나약함 V —
+     * 기절 · 피해 숫자 앞 ❄ · 얼음 덩어리 표시 엔티티), 얼어 있는 동안 (58 · 72틱) 은 쌓이지 않고 풀린 뒤 (84틱) 다시 세 번 (86 · 100 · 114틱) 이면 또 얼음
+     * (시전 기록 얼린 수 2), 붕괴에 얼음째 부서짐 (기절도 풀림). 필드 밖 (가운데에서 8칸) 과녁은 맞지도 얼지도 않음
+     */
+    @GameTest(environment = "mmorpg:lr_glacier_freeze", maxTicks = 200)
+    public void glacierFreeze(GameTestHelper h) {
+        floor(h, 16);
+        ServerPlayer sp = playerAt(h, 1.5, 1.5);
+        sp.setExperienceLevels(40);
+        RpgPlayers.checkLevelUp(sp);
+        String[] keys = {"str", "dex", "vit", "int"};
+        int[] st = {31, 31, 31, 32};
+        for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], st[i]);
+        Husk z = dummy(h, 1.5, 2, 6.5);
+        Husk out = dummy(h, 1.5, 2, 14.5);
+        Runes.Rune r = Runes.parseRune("rpg:rune_glacier_transcend");
+        h.assertTrue(r != null && Runes.limited("glacier"), "glacier rune");
+        int[] fx0 = {0};
+        h.runAfterDelay(2, () -> {
+            clearStrays(h, z, out);
+            sp.lookAt(EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
+            fx0[0] = FxDisplays.spawned;
+            h.assertTrue(RuneCast.castRune(sp, r, false, 0), "glacier cast");
+        });
+        h.runAfterDelay(2 + 40, () -> {
+            h.assertFalse(z.hasEffect(MobEffects.SLOWNESS), "two hits: not frozen yet");
+            h.assertTrue(TestDummies.dealt(z) > 0, "ice hits the husk");
+            h.assertTrue(FxDisplays.spawned - fx0[0] > 20, "ice field + giant ice displays " + (FxDisplays.spawned - fx0[0]));
+        });
+        h.runAfterDelay(2 + 47, () -> {
+            MobEffectInstance s = z.getEffect(MobEffects.SLOWNESS);
+            h.assertTrue(s != null && s.getAmplifier() >= 10, "third hit: frozen (slowness XI)");
+            h.assertTrue(z.hasEffect(MobEffects.WEAKNESS), "frozen: weakness");
+            h.assertTrue(mmorpg.fabric.DamageNumbers.victimMark.apply(z).contains("❄"), "frozen mark ❄");
+            double[] g = glacierOf(sp);
+            h.assertTrue(g != null && (int) g[0] == 1, "frozen 1: " + (g == null ? "none" : (int) g[0]));
+            h.assertTrue(TestDummies.dealt(out) == 0 && !out.hasEffect(MobEffects.SLOWNESS), "outside the field: untouched");
+        });
+        h.runAfterDelay(2 + 90, () -> {
+            h.assertFalse(z.hasEffect(MobEffects.SLOWNESS), "thawed after 2 s");
+            h.assertFalse(mmorpg.fabric.DamageNumbers.victimMark.apply(z).contains("❄"), "no mark after thaw");
+            h.assertTrue((int) glacierOf(sp)[0] == 1, "no stacking while frozen");
+        });
+        h.runAfterDelay(2 + 118, () -> {
+            h.assertTrue(z.hasEffect(MobEffects.SLOWNESS), "three more hits: frozen again");
+            h.assertTrue((int) glacierOf(sp)[0] == 2, "frozen 2: " + (int) glacierOf(sp)[0]);
+        });
+        h.runAfterDelay(2 + 134, () -> {
+            h.assertFalse(z.hasEffect(MobEffects.SLOWNESS), "the collapse shatters the ice (stun ends)");
+            h.assertTrue(TestDummies.dealt(out) == 0, "outside the field: no damage");
+            h.getLevel().getServer().getPlayerList().remove(sp);
+            h.succeed();
+        });
+    }
+
     /** 네 스탯을 어떻게 찍어도 같은 위력 (합이 같으면) · 한 스탯만 찍은 사람의 자기 계열 룬과 같은 P */
     @GameTest(maxTicks = 20)
     public void totalStatPower(GameTestHelper h) {
@@ -470,7 +551,7 @@ public final class RpgLimitedRuneTests {
         String[] keys = {"str", "dex", "vit", "int"};
         for (double[] b : builds) {
             for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], (int) b[i]);
-            for (String f : List.of("arcana", "dipper", "skyeye", "endless", "terra")) {
+            for (String f : List.of("arcana", "dipper", "skyeye", "endless", "terra", "glacier")) {
                 double P = RuneCast.power(sp, f);
                 h.assertTrue(Math.abs(P - 12 * (1 + 125 * 0.02)) < 1e-6, f + " P " + P + " for " + java.util.Arrays.toString(b));
             }

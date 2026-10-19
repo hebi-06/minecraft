@@ -1,5 +1,5 @@
 {
-  "_doc": "룬 돌파 (8단계 — 애드온에는 없음): 같은 룬 둘을 합치면 남는 룬의 돌파 단계 = 남는 룬 + 재료 + 1 (max 까지). 1돌마다 계수 +perLevel (피해 = 위력 P, 회복 · 보호막 = scaleKeys). 초월 룬은 tiers (3 · 6) 에 이르면 transcend[fn][단계] 의 값으로 바뀌고 연출도 바뀜 (fx — 0~2돌은 화면 색 연출 없음). change: key = 룬 정의의 값 (없는 값이면 base = 원래 값을 함께 — 예: 기절 0), to = 바뀐 값, div = 글자에 보일 때 나누는 수 (틱 → 초 20, 비율 → % 0.01), text 의 {from} · {to} = 앞 단계 값 · 바뀐 값. extra (초월 룬 하나에 하나): type echo = at 돌부터 after 틱 뒤 그 룬 효과가 한 번 더 나감 (위력 × mult, 룬 정의에 set 을 덮음 — 지금 겨눈 곳으로), text 의 {mult} = mult × 100. 0.16.0 한정 초월 룬 셋 (만상귀일 · 칠성 강림 · 천공의 눈 · 0.17.0 무간참역 · 0.18.0 대지 가르기): 배율 합 0돌 34 · 3돌 42 · 6돌 55 (처음 설계 32 · 38 ~ 39.2 · 49.4 ~ 50 보다 5 ~ 12% 위, 돌파 계수 ×1.6 전). 0.16.1: 자바 판 툴팁 (core RuneTip) 은 단계마다 그 단계의 총 피해를 숫자로 — text 의 \"위력 ×{from} → ×{to}\" (총 피해에 든 값) 는 그 숫자로 대신하고, \"위력 ×{to}\" · extra 의 \"위력 {mult}%\" 는 숫자로 바꿈, fx · finale 는 툴팁에 쓰지 않음. 0.19.0 세계수의 가호 (한정 버프 룬 — 피해 없음): 가호 세기의 값 넷 (graceUp · graceCut · gracePer · graceCap) 도 scaleKeys — 가호 = 기본 + min(스탯 합 × gracePer, graceCap) 전체에 돌파 계수가 곱해짐 (0돌 20% · 3돌 26% · 6돌 32% — 40렙 125포인트), 단계는 지속 · 반지름만 바뀜. 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 낙인 값 넷 (brandUp · brandCut · brandPer · brandCap) 도 같은 방식, 단계는 지속 · 반지름 · 사거리.",
+  "_doc": "룬 돌파 (8단계 — 애드온에는 없음): 같은 룬 둘을 합치면 남는 룬의 돌파 단계 = 남는 룬 + 재료 + 1 (max 까지). 1돌마다 계수 +perLevel (피해 = 위력 P, 회복 · 보호막 = scaleKeys). 초월 룬은 tiers (3 · 6) 에 이르면 transcend[fn][단계] 의 값으로 바뀌고 연출도 바뀜 (fx — 0~2돌은 화면 색 연출 없음). change: key = 룬 정의의 값 (없는 값이면 base = 원래 값을 함께 — 예: 기절 0), to = 바뀐 값, div = 글자에 보일 때 나누는 수 (틱 → 초 20, 비율 → % 0.01), text 의 {from} · {to} = 앞 단계 값 · 바뀐 값. extra (초월 룬 하나에 하나): type echo = at 돌부터 after 틱 뒤 그 룬 효과가 한 번 더 나감 (위력 × mult, 룬 정의에 set 을 덮음 — 지금 겨눈 곳으로), text 의 {mult} = mult × 100. 0.16.0 한정 초월 룬 셋 (만상귀일 · 칠성 강림 · 천공의 눈 · 0.17.0 무간참역 · 0.18.0 대지 가르기): 배율 합 0돌 34 · 3돌 42 · 6돌 55 (처음 설계 32 · 38 ~ 39.2 · 49.4 ~ 50 보다 5 ~ 12% 위, 돌파 계수 ×1.6 전). 0.16.1: 자바 판 툴팁 (core RuneTip) 은 단계마다 그 단계의 총 피해를 숫자로 — text 의 \"위력 ×{from} → ×{to}\" (총 피해에 든 값) 는 그 숫자로 대신하고, \"위력 ×{to}\" · extra 의 \"위력 {mult}%\" 는 숫자로 바꿈, fx · finale 는 툴팁에 쓰지 않음. 0.19.0 세계수의 가호 (한정 버프 룬 — 피해 없음): 가호 세기의 값 넷 (graceUp · graceCut · gracePer · graceCap) 도 scaleKeys — 가호 = 기본 + min(스탯 합 × gracePer, graceCap) 전체에 돌파 계수가 곱해짐 (0돌 20% · 3돌 26% · 6돌 32% — 40렙 125포인트), 단계는 지속 · 반지름만 바뀜. 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 낙인 값 넷 (brandUp · brandCut · brandPer · brandCap) 도 같은 방식, 단계는 지속 · 반지름 · 사거리. 0.24.0 만년빙하 (얼음 필드 — 다른 한정 룬처럼 배율 합 34 · 42 · 55): 단계는 필드 반지름 · 거대한 얼음 수 · 붕괴 위력 · 빙결 (frost 틱 — 같은 적이 chill 번 맞으면 얼어붙는 시간, 보스는 얼지 않음).",
   "max": 6,
   "perLevel": 0.1,
   "scaleKeys": ["heal", "shield", "graceUp", "graceCut", "gracePer", "graceCap", "brandUp", "brandCut", "brandPer", "brandCap"],
@@ -287,6 +287,22 @@
         {"key": "range", "to": 24, "text": "사거리 {from} → {to}칸"}
       ],
       "extra": {"at": 6, "type": "finale", "text": "심연의 문 — 낙인 찍힌 적 발밑에 심연이 열림"}
+    },
+    "glacierField": {
+      "3": [
+        {"key": "radius", "to": 7, "text": "얼음 필드 {from} → {to}칸"},
+        {"key": "hits", "to": 10, "text": "거대한 얼음 {from} → {to}번"},
+        {"key": "crush", "to": 12, "text": "빙하 붕괴 위력 ×{from} → ×{to}"},
+        {"key": "frost", "to": 50, "div": 20, "text": "빙결 {from} → {to}초"}
+      ],
+      "6": [
+        {"key": "radius", "to": 8, "text": "얼음 필드 {from} → {to}칸"},
+        {"key": "hits", "to": 12, "text": "거대한 얼음 {from} → {to}번"},
+        {"key": "mult", "to": 3.5, "text": "얼음 위력 ×{from} → ×{to}"},
+        {"key": "crush", "to": 13, "text": "빙하 붕괴 위력 ×{from} → ×{to}"},
+        {"key": "frost", "to": 60, "div": 20, "text": "빙결 {from} → {to}초"}
+      ],
+      "extra": {"at": 6, "type": "finale", "text": "빙하의 왕관 — 붕괴 뒤 얼음 왕관 · 오로라"}
     },
     "heavenEye": {
       "3": [

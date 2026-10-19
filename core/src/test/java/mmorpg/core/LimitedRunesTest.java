@@ -11,7 +11,8 @@ import java.util.Random;
  * 0.16.0 시험 (JUnit 없이 main — check-core.sh): 한정 초월 룬 셋 (만상귀일 · 칠성 강림 · 천공의 눈 — 자바 전용 덧붙임).
  * <ul>
  * <li>계열: RUNE_LIMITED_ORDER = arcana · dipper · skyeye · endless (0.17.0 무간참역) · terra (0.18.0 대지 가르기) · yggdrasil (0.19.0 세계수의 가호 — 버프)
- * · abyss (0.20.0 심연의 낙인 — 적 약화), 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 24 (뒤에 일곱), 초월 하나씩</li>
+ * · abyss (0.20.0 심연의 낙인 — 적 약화) · glacier (0.24.0 만년빙하 — 얼음 필드), 뽑기 계열 (FAMILY_ORDER 17) 에는 없음, 모든 계열 25 (뒤에 여덟), 초월 하나씩</li>
+ * <li>0.24.0 만년빙하: 배율 합 34 · 42 · 55 (얼음 3 × 8 + 붕괴 10 → 3 × 10 + 12 → 3.5 × 12 + 13), 필드 6 → 7 → 8칸 · 빙결 2 → 2.5 → 3초 (같은 적 3번), 6돌 연출 (빙하의 왕관)</li>
  * <li>0.20.0 심연의 낙인: 피해 없음, 낙인 = brandUp (주는 피해 brandCut) + min(brandPer × 네 스탯의 합, brandCap) × 돌파 계수 (가호와 같은 틀 —
  * 0돌 20% · 3돌 26% · 6돌 32%), 지속 10 → 12 → 14초 · 반지름 6 → 7 → 8칸 · 6돌 사거리 24칸, 6돌 연출 (심연의 문)</li>
  * <li>0.19.0 세계수의 가호: 피해 없음, 가호 = graceUp (받는 피해 graceCut) + min(gracePer × 네 스탯의 합, graceCap), 돌파 계수가 값 넷 모두에
@@ -57,17 +58,17 @@ public final class LimitedRunesTest {
     public static void main(String[] argv) {
         check(Rules.hasMore(), "overlay present");
         List<String> lim = Runes.LIMITED_ORDER;
-        check(lim.equals(List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss")), "limited order " + lim);
+        check(lim.equals(List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier")), "limited order " + lim);
         check(Runes.FAMILY_ORDER.size() == 17, "draw families stay 17 " + Runes.FAMILY_ORDER.size());
         for (String f : lim) check(!Runes.FAMILY_ORDER.contains(f), f + " not in the draw families");
-        check(Runes.ALL_FAMILIES.size() == 24 && Runes.ALL_FAMILIES.subList(17, 24).equals(lim), "all families " + Runes.ALL_FAMILIES);
+        check(Runes.ALL_FAMILIES.size() == 25 && Runes.ALL_FAMILIES.subList(17, 25).equals(lim), "all families " + Runes.ALL_FAMILIES);
         check(!Runes.limited("int") && Runes.limited("arcana"), "limited()");
 
         // 초월 하나씩 · 이름 · 함수 · 배율 합 34 · 재사용 대기 36초
-        String[] fams = {"arcana", "dipper", "skyeye", "endless", "terra"};
-        String[] fns = {"arcanaUnity", "sevenStars", "heavenEye", "endlessSlash", "earthSplitter"};
-        String[] names = {"만상귀일", "칠성 강림", "천공의 눈", "무간참역", "대지 가르기"};
-        String[] famNames = {"만상", "칠성", "천공", "무간", "대지"};
+        String[] fams = {"arcana", "dipper", "skyeye", "endless", "terra", "glacier"};
+        String[] fns = {"arcanaUnity", "sevenStars", "heavenEye", "endlessSlash", "earthSplitter", "glacierField"};
+        String[] names = {"만상귀일", "칠성 강림", "천공의 눈", "무간참역", "대지 가르기", "만년빙하"};
+        String[] famNames = {"만상", "칠성", "천공", "무간", "대지", "빙하"};
         for (int i = 0; i < fams.length; i++) {
             for (String g : Runes.GRADE_ORDER) {
                 Runes.Rune r = Runes.parseRune(Runes.runeId(fams[i], g));
@@ -91,6 +92,7 @@ public final class LimitedRunesTest {
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_skyeye_transcend"), false)).contains("(3×6 + 16)"), "skyeye parts 3×6 + 16");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_endless_transcend"), false)).contains("(2×10 + 14)"), "endless parts 2×10 + 14");
         check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_terra_transcend"), false)).contains("(3×6 + 16)"), "terra parts 3×6 + 16");
+        check(plain(Runes.runeLore(Runes.parseRune("rpg:rune_glacier_transcend"), false)).contains("(3×8 + 10)"), "glacier parts 3×8 + 10");
         check(Runes.parseRune("rpg:rune_arcana_hero") == null && Runes.parseRune("rpg:rune_nope_transcend") == null, "no other ids");
 
         // 적용 스탯 = 네 스탯의 합 (40렙 125포인트면 어떻게 찍어도 P 42 = 한 스탯만 찍은 자기 룬)
@@ -168,10 +170,10 @@ public final class LimitedRunesTest {
 
         // 돌파 3 · 6돌 (배율 합: 0돌 34 · 3돌 42 · 6돌 55)
         double[][] totals = {{17 + 17, 25 + 17, 29 + 26}, {2 * 7 + 20, 3 * 7 + 21, 3.5 * 8 + 27}, {3 * 6 + 16, 4 * 6 + 18, 5 * 7 + 20},
-            {2 * 10 + 14, 2.25 * 12 + 15, 2.5 * 14 + 20}, {3 * 6 + 16, 3 * 7 + 21, 3.5 * 8 + 27}};
+            {2 * 10 + 14, 2.25 * 12 + 15, 2.5 * 14 + 20}, {3 * 6 + 16, 3 * 7 + 21, 3.5 * 8 + 27}, {3 * 8 + 10, 3 * 10 + 12, 3.5 * 12 + 13}};
         // 처음 설계 (다른 초월과 같은 줄) — 사용자 요청 '5% ~ 12% 더 쎄게': 0 · 3 · 6돌 모두 이 값의 1.05 ~ 1.12 배
         // (0.17.0 무간참역 · 0.18.0 대지 가르기는 처음부터 이 줄로 — 다른 초월의 기준 32 · 39 · 50 보다 5 ~ 12% 위)
-        double[][] first = {{32, 38, 50}, {32, 2.6 * 7 + 21, 3.2 * 8 + 24}, {32, 3.6 * 6 + 17, 4.2 * 7 + 20}, {32, 39, 50}, {32, 39, 50}};
+        double[][] first = {{32, 38, 50}, {32, 2.6 * 7 + 21, 3.2 * 8 + 24}, {32, 3.6 * 6 + 17, 4.2 * 7 + 20}, {32, 39, 50}, {32, 39, 50}, {32, 39, 50}};
         for (int i = 0; i < fams.length; i++) {
             Runes.Rune r = Runes.parseRune(Runes.runeId(fams[i], "transcend"));
             check(RuneBreak.tiered(r), fams[i] + " tiered");
@@ -190,6 +192,24 @@ public final class LimitedRunesTest {
             for (String l : RuneBreak.tierLines(r, 6, false)) check(l.replaceAll("§.", "").length() <= 40, fams[i] + " tier line short: " + l);
         }
         near(RuneBreak.def(Runes.parseRune("rpg:rune_arcana_transcend"), 6).num("stun"), 30, "arcana 6 stun");
+
+        // 0.24.0 만년빙하: 단계마다 필드 반지름 · 거대한 얼음 수 · 빙결 시간 (같은 적 3번), 사거리 20칸, 6돌 연출 (빙하의 왕관)
+        Runes.Rune gla = Runes.parseRune("rpg:rune_glacier_transcend");
+        check(gla != null, "glacier rune");
+        if (gla != null) {
+            double[][] at = {{6, 8, 40, 10}, {7, 10, 50, 12}, {8, 12, 60, 13}};
+            for (int i = 0; i < 3; i++) {
+                Obj d = RuneBreak.def(gla, i * 3);
+                near(d.num("radius"), at[i][0], "glacier radius " + i * 3);
+                near(d.num("hits"), at[i][1], "glacier hits " + i * 3);
+                near(d.num("frost"), at[i][2], "glacier frost " + i * 3);
+                near(d.num("crush"), at[i][3], "glacier crush " + i * 3);
+                near(d.num("chill"), 3, "glacier chill " + i * 3);
+                near(d.num("range"), 20, "glacier range " + i * 3);
+            }
+            check(RuneBreak.changeTexts(gla, 3).contains("빙결 2 → 2.5초") && RuneBreak.changeTexts(gla, 6).contains("얼음 필드 7 → 8칸"), "glacier change texts "
+                    + RuneBreak.changeTexts(gla, 6));
+        }
 
         // 0.19.0 세계수의 가호 (한정 버프 룬 — 사용자 요청 "가하는 피해 증가 버프 · 받는 피해 감소")
         for (String g : Runes.GRADE_ORDER) check(g.equals("transcend") == (Runes.parseRune(Runes.runeId("yggdrasil", g)) != null), "yggdrasil only transcend " + g);

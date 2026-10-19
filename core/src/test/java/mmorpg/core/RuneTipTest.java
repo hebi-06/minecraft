@@ -9,7 +9,7 @@ import java.util.Map;
  * 0.16.1 시험 (JUnit 없이 main — check-core.sh): 자바 판 룬 툴팁 (RuneTip — 사용자 요청 "위력×32 대신 총 피해량처럼 구체적으로 · 쓸모없는 줄 · 연출 줄 빼기 ·
  * 돌파 · 주스탯 / 다른 스탯 계수는 남기기").
  * <ul>
- * <li>모든 룬 92 (0.20.0 — 심연의 낙인까지) × 돌파 0 ~ 6: "위력" 이 남지 않음 (모두 숫자), 뺀 줄 (용도 · 공식 · 연출 · 터치 · 돌파 안내 · 총 피해 글자 · 한정 뽑기) 없음,
+ * <li>모든 룬 93 (0.24.0 — 만년빙하까지) × 돌파 0 ~ 6: "위력" 이 남지 않음 (모두 숫자), 뺀 줄 (용도 · 공식 · 연출 · 터치 · 돌파 안내 · 총 피해 글자 · 한정 뽑기) 없음,
  * 계수 줄 (주스탯 계수 · 다른 스탯 0.85 / 적용 = …) · 돌파 줄 있음, 줄 길이 · 줄 수 상한, 마지막 줄 = 조작</li>
  * <li>총 피해 = 위력 P (스탯 트리 배수 포함) × 돌파 계수 × 배율 합 (Runes.runeTotalMult), 초월은 3 · 6돌마다 그 단계의 총 피해</li>
  * <li>회복 = 최대 체력 × 비율 × (1 + 적용 스탯 × 1%), 스탯을 모르면 "위력×N" · "최대 체력 N%+"</li>
@@ -62,7 +62,7 @@ public final class RuneTipTest {
         double treeMult = 1.1;
         RuneTip.Viewer v = new RuneTip.Viewer(even, treeMult, 131);
         String[] gone = {"위력", "용도", "레벨 공격력", "연출", "터치:", "누르면 사용", "룬술사 '돌파'", "총 피해를 띄움", "한정 뽑기", "근원의 프리즘", "별똥별 비",
-            "심판의 눈", "세계수 개화", "심연의 문"};
+            "심판의 눈", "세계수 개화", "심연의 문", "빙하의 왕관", "오로라"};
         int runes = 0;
         int maxLen = 0;
         int maxLines = 0;
@@ -123,7 +123,19 @@ public final class RuneTipTest {
                 }
             }
         }
-        check(runes == 92, "92 runes " + runes);
+        check(runes == 93, "93 runes " + runes);
+
+        // 0.24.0 만년빙하: 얼음 3 × 8 + 빙하 붕괴 10 (P 42 → 126 × 8번 + 420 — 나눔이 길어 다음 줄), 필드 · 빙결 줄, 3 · 6돌 (필드 · 얼음 수 · 빙결)
+        List<String> gl = plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
+        String glj = String.join("\n", gl);
+        check(gl.contains("⚔ 총 피해 1,428") && gl.contains("  얼음 126 × 8번 + 빙하 붕괴 420") && gl.contains("조준한 곳 반지름 6칸 얼음 필드 · 0.7초마다")
+                && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초 (보스는 얼지 않음)") && gl.get(0).equals("재사용 36초 · 한정")
+                && glj.contains("띄움"), "glacier: " + gl);
+        check(glj.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 42)) && glj.contains("얼음 필드 6 → 7칸") && glj.contains("거대한 얼음 8 → 10번")
+                && glj.contains("빙결 2 → 2.5초") && glj.contains("☆6돌 총 피해 " + RuneTip.fmt(42 * 1.6 * 55)) && glj.contains("빙결 2.5 → 3초"), "glacier tiers: " + glj);
+        String gl6 = joined(RuneTip.lines(rune("glacier", "transcend"), 6, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
+        check(gl6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55)) && gl6.contains("얼음 235 × 12번 + 빙하 붕괴 874") && gl6.contains("반지름 8칸 얼음 필드") && gl6.contains("같은 적 3번 → 3초"),
+                "glacier 6: " + gl6);
 
         // 0.20.0 심연의 낙인 (적 약화 — 피해 없음): 적이 받는 피해 + · 주는 피해 − (스탯 합 125: 0돌 20% · 3돌 26% · 6돌 32%)
         Runes.Rune aby = rune("abyss", "transcend");

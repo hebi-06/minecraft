@@ -79,6 +79,7 @@
       "mmorpg.fabric.test.RpgCosmeticGallery",
       "mmorpg.fabric.test.RpgGachaGallery",
       "mmorpg.fabric.test.RpgLimitedRuneGallery",
+      "mmorpg.fabric.test.RpgGlacierGallery",
       "mmorpg.fabric.test.RpgMarketGallery",
       "mmorpg.fabric.test.RpgStorageGallery",
       "mmorpg.fabric.test.RpgUiGallery",

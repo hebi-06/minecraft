@@ -227,6 +227,7 @@ public final class RuneTip {
             case "blackHole" -> "띄워 치기 ";
             case "endlessSlash" -> "베기 ";
             case "earthSplitter" -> "여진 ";
+            case "glacierField" -> "얼음 ";
             default -> "";
         };
     }
@@ -241,6 +242,7 @@ public final class RuneTip {
             case "heavenEye" -> "마무리 폭발";
             case "endlessSlash" -> "마무리 일섬";
             case "earthSplitter" -> "대검";
+            case "glacierField" -> "빙하 붕괴";
             default -> "마무리";
         };
     }
@@ -338,6 +340,12 @@ public final class RuneTip {
         if ("earthSplitter".equals(fn)) {
             out.add("§r" + L + "앞으로 " + d.text("length") + "칸 균열 (폭 " + n(d.numOr("width", 0) * 2) + "칸) 안 모든 적");
             out.add("§r" + L + "대검이 내려친 뒤 " + sec(d.numOr("gap", 10)) + "마다 여진");
+        }
+        if ("glacierField".equals(fn)) {
+            // 0.24.0 만년빙하: 얼음 필드 · 거대한 얼음 · 빙결 (같은 적이 chill 번 맞으면 frost 틱)
+            out.add("§r" + L + "조준한 곳 반지름 " + d.text("radius") + "칸 얼음 필드 · " + sec(d.numOr("gap", 14)) + "마다");
+            out.add("§r" + L + "필드 안 적마다 발밑에서 거대한 얼음이 솟음");
+            out.add("§r§b빙결" + L + ": 같은 적 " + d.text("chill") + "번 → " + sec(d.numOr("frost", 0)) + " (보스는 얼지 않음)");
         }
         if (Runes.isGrace(d)) {
             out.add("§r" + L + "쓴 자리 반지름 " + d.text("radius") + "칸 안 아군 (나 포함) · " + sec(d.numOr("ticks", 0)));

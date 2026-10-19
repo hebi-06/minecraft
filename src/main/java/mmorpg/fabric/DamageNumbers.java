@@ -69,7 +69,15 @@ public final class DamageNumbers {
         ISSEOM("§f§l§o", "", "!", 2.0F),
         // 0.18.0 대지 가르기: 갈라진 땅 여진 (금빛 — 작게, 자주) · 대검 내려치기 (굵은 금빛 !)
         QUAKE("§6", "", "", 1.4F),
-        CLEAVE("§6§l", "", "!", 2.15F);
+        CLEAVE("§6§l", "", "!", 2.15F),
+        // 0.24.0 만년빙하: 거대한 얼음 (얼음빛 굵게) · 빙하 붕괴 (얼음빛 · 흰빛이 글자마다 번갈아 — 굵게 !)
+        FROST("§b§l", "", "", 1.5F),
+        SHATTER("§b§l", "", "!", 2.1F) {
+            @Override
+            public String format(String n) {
+                return icy(n) + "§b§l!";
+            }
+        };
 
         final String codes;
         final String before;
@@ -100,6 +108,21 @@ public final class DamageNumbers {
                 continue;
             }
             b.append(cs[k++ % cs.length]).append("§l").append(ch);
+        }
+        return b.toString();
+    }
+
+    /** 얼음빛 글자 (글자마다 얼음빛 · 흰빛 번갈아, 굵게 — 빙하 붕괴) */
+    public static String icy(String s) {
+        StringBuilder b = new StringBuilder();
+        int k = 0;
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (Character.isWhitespace(ch)) {
+                b.append(ch);
+                continue;
+            }
+            b.append(k++ % 2 == 0 ? "§b" : "§f").append("§l").append(ch);
         }
         return b.toString();
     }

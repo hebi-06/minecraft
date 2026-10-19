@@ -362,8 +362,60 @@ def abyss_layers():
             (eye, (255, 236, 250), (255, 120, 210), (90, 10, 70))]
 
 
+def poly(pts, g):
+    """다각형 (점 목록) 안 — g 만큼 바깥으로 두껍게 (모서리까지 거리)"""
+    n = len(pts)
+
+    def inside(x, y):
+        c = False
+        for i in range(n):
+            x0, y0 = pts[i]
+            x1, y1 = pts[(i + 1) % n]
+            if (y0 > y) != (y1 > y) and x < (x1 - x0) * (y - y0) / (y1 - y0) + x0:
+                c = not c
+        return c
+
+    def f(x, y):
+        if inside(x, y):
+            return True
+        if g <= 0:
+            return False
+        for i in range(n):
+            if seg(pts[i][0], pts[i][1], pts[(i + 1) % n][0], pts[(i + 1) % n][1], g * 2)(x, y):
+                return True
+        return False
+    return f
+
+
+def glacier_layers():
+    """0.24.0 만년빙하: 땅의 얼음판에서 솟은 거대한 얼음 결정 셋 (가운데 높이 · 양옆은 바깥으로 기욺 — 끝이 뾰족한 육각 기둥) · 가운데 결정의 빛나는 모서리 ·
+    위쪽 양옆의 눈꽃 반짝임 둘"""
+    def spike(bx, by, tx, ty, half):
+        # 밑동 (bx, by) → 끝 (tx, ty): 70% 까지 곧은 기둥, 그 위는 뾰족하게
+        dx, dy = tx - bx, ty - by
+        L = math.hypot(dx, dy)
+        ux, uy = dx / L, dy / L
+        nx, ny = -uy, ux
+        sx, sy = bx + dx * 0.62, by + dy * 0.62
+        return [(bx + nx * half, by + ny * half), (sx + nx * half, sy + ny * half), (tx, ty), (sx - nx * half, sy - ny * half), (bx - nx * half, by - ny * half)]
+
+    crystals = lambda g: union(poly(spike(16.0, 23.4, 16.0, 6.2, 2.3), g), poly(spike(11.6, 23.4, 8.6, 12.4, 1.6), g), poly(spike(20.4, 23.4, 23.4, 12.4, 1.6), g))
+    edge = lambda g: union(seg(16.0, 21.8, 16.0, 8.4, 0.5 + g * 0.5), seg(10.6, 21.6, 9.4, 15.0, 0.4 + g * 0.4), seg(21.4, 21.6, 22.6, 15.0, 0.4 + g * 0.4))
+    floor = lambda g: seg(8.2, 23.8, 23.8, 23.8, 1.0 + g * 0.8)
+
+    def flake(cx, cy, r):
+        return lambda g: union(*[seg(cx - math.cos(a) * r, cy - math.sin(a) * r, cx + math.cos(a) * r, cy + math.sin(a) * r, 0.42 + g * 0.5)
+                                 for a in (0.0, math.pi / 3, 2 * math.pi / 3)])
+
+    return [(floor, (214, 240, 255), (96, 170, 236), (8, 36, 84)),
+            (crystals, (196, 236, 255), (86, 176, 246), (10, 44, 104)),
+            (edge, (255, 255, 255), (220, 246, 255), (60, 140, 220)),
+            (flake(9.4, 8.2, 1.7), (255, 255, 255), (190, 236, 255), (40, 96, 160)),
+            (flake(22.8, 7.4, 1.4), (255, 255, 255), (190, 236, 255), (40, 96, 160))]
+
+
 LIMITED_GLYPHS = {"arcana": arcana_layers, "dipper": dipper_layers, "skyeye": skyeye_layers, "endless": endless_layers, "terra": terra_layers,
-                  "yggdrasil": yggdrasil_layers, "abyss": abyss_layers}
+                  "yggdrasil": yggdrasil_layers, "abyss": abyss_layers, "glacier": glacier_layers}
 
 
 def prism_frame(stone):

@@ -322,10 +322,184 @@ def fissure_sheet():
     return sheet
 
 
+# ------------------------------------------------------------ 만년빙하 (0.24.0)
+
+def _snow_lines(R, c, glow):
+    """눈꽃 마법진의 선 (가운데 c · 반지름 R): [(점들, 굵기 비율)] — 바깥 두 겹 고리 · 고리 사이 눈꽃 여섯 · 안쪽 고리의 고드름 이빨 열둘 ·
+    큰 눈꽃 (여섯 팔 · 팔마다 곁가지 셋 · 끝 마름모) · 팔 끝을 잇는 육각별 · 가운데 육각형"""
+    out = []
+
+    def circle(r, n=180):
+        return [(c + math.cos(math.tau * i / n) * r, c + math.sin(math.tau * i / n) * r) for i in range(n + 1)]
+
+    def ray(a, r0, r1):
+        return [(c + math.cos(a) * r0, c + math.sin(a) * r0), (c + math.cos(a) * r1, c + math.sin(a) * r1)]
+
+    out.append((circle(R * 0.965), 1.25))
+    out.append((circle(R * 0.885), 0.8))
+    # 고리 사이: 작은 눈꽃 여섯 (30° 엇갈림) · 그 사이 점 눈금
+    for k in range(6):
+        a = math.tau * k / 6 + math.tau / 12
+        mx, my = c + math.cos(a) * R * 0.925, c + math.sin(a) * R * 0.925
+        for j in range(3):
+            b = a + j * math.pi / 3
+            out.append(([(mx - math.cos(b) * R * 0.032, my - math.sin(b) * R * 0.032), (mx + math.cos(b) * R * 0.032, my + math.sin(b) * R * 0.032)], 0.55))
+        for j in (-2, -1, 1, 2):
+            b = a + j * math.tau / 30
+            out.append((ray(b, R * 0.905, R * 0.945), 0.45))
+    # 안쪽 고리 + 고드름 이빨 (안쪽으로 뾰족)
+    out.append((circle(R * 0.72), 0.85))
+    for k in range(12):
+        a = math.tau * k / 12
+        w = math.tau / 12 * 0.3
+        L = R * (0.11 if k % 2 == 0 else 0.07)
+        p0 = (c + math.cos(a - w) * R * 0.72, c + math.sin(a - w) * R * 0.72)
+        p1 = (c + math.cos(a) * (R * 0.72 - L), c + math.sin(a) * (R * 0.72 - L))
+        p2 = (c + math.cos(a + w) * R * 0.72, c + math.sin(a + w) * R * 0.72)
+        out.append(([p0, p1, p2], 0.6))
+    # 큰 눈꽃: 여섯 팔
+    for k in range(6):
+        a = math.tau * k / 6 - math.pi / 2
+        out.append((ray(a, R * 0.1, R * 0.6), 1.15))
+        for t, L in ((0.26, 0.15), (0.4, 0.13), (0.52, 0.08)):
+            bx, by = c + math.cos(a) * R * t, c + math.sin(a) * R * t
+            for s in (-1, 1):
+                b = a + s * math.pi / 3
+                out.append(([(bx, by), (bx + math.cos(b) * R * L, by + math.sin(b) * R * L)], 0.8))
+        # 끝 마름모
+        tx, ty = c + math.cos(a) * R * 0.6, c + math.sin(a) * R * 0.6
+        nx, ny = -math.sin(a), math.cos(a)
+        d = [(tx, ty), (tx + math.cos(a) * R * 0.045 + nx * R * 0.03, ty + math.sin(a) * R * 0.045 + ny * R * 0.03),
+             (tx + math.cos(a) * R * 0.09, ty + math.sin(a) * R * 0.09),
+             (tx + math.cos(a) * R * 0.045 - nx * R * 0.03, ty + math.sin(a) * R * 0.045 - ny * R * 0.03), (tx, ty)]
+        out.append((d, 0.7))
+    # 육각별 (팔 끝 둘을 건너 이음) — 빛 그림에는 옅게
+    tips = [(c + math.cos(math.tau * k / 6 - math.pi / 2) * R * 0.6, c + math.sin(math.tau * k / 6 - math.pi / 2) * R * 0.6) for k in range(6)]
+    for s in (0, 1):
+        tri = [tips[s], tips[s + 2], tips[s + 4], tips[s]]
+        out.append((tri, 0.35 if glow else 0.5))
+    # 가운데 육각형
+    hexa = [(c + math.cos(math.tau * k / 6) * R * 0.1, c + math.sin(math.tau * k / 6) * R * 0.1) for k in range(7)]
+    out.append((hexa, 0.9))
+    return out
+
+
+def frost_cell(glow):
+    """만년빙하의 얼음 마법진 (256 판 — 흰색, 색을 입힘). glow = 빛 (굵은 선 + 넓은 빛무리), 아니면 심지 (가는 선 · 가운데 반짝임)"""
+    S = 256
+    ss = 4
+    big = S * ss
+    c = big / 2
+    R = big / 2 * 0.98
+    lines = Image.new("RGBA", (big, big), (255, 255, 255, 0))
+    d = ImageDraw.Draw(lines)
+    base = big * (0.012 if glow else 0.0055)
+    for pts, k in _snow_lines(R, c, glow):
+        w = max(2, int(base * k))
+        d.line(pts, fill=(255, 255, 255, 255), width=w, joint="curve")
+        if not glow:
+            for x, y in (pts[0], pts[-1]):
+                d.ellipse((x - w / 2, y - w / 2, x + w / 2, y + w / 2), fill=(255, 255, 255, 255))
+    if glow:
+        halo = lines.filter(ImageFilter.GaussianBlur(big * 0.018))
+        ha = halo.split()[3].point(lambda v: min(255, int(v * 1.6)))
+        halo.putalpha(ha)
+        soft = Image.new("RGBA", (big, big), (255, 255, 255, 0))
+        soft.alpha_composite(halo)
+        la = lines.split()[3].point(lambda v: int(v * 0.78))
+        lines.putalpha(la)
+        soft.alpha_composite(lines)
+        # 판 전체에 아주 옅은 서리 (얼음판 느낌)
+        frost = _radial(big, c, c, R * 0.98, 34, 10, 0.6)
+        out = Image.new("RGBA", (big, big), (255, 255, 255, 0))
+        out.alpha_composite(frost)
+        out.alpha_composite(soft)
+    else:
+        out = Image.new("RGBA", (big, big), (255, 255, 255, 0))
+        out.alpha_composite(lines.filter(ImageFilter.GaussianBlur(big * 0.0015)))
+        # 가운데 반짝임 (여섯 갈래)
+        sp = Image.new("RGBA", (big, big), (255, 255, 255, 0))
+        sd = ImageDraw.Draw(sp)
+        for k in range(6):
+            a = math.tau * k / 6
+            L = big * (0.05 if k % 2 == 0 else 0.035)
+            nx, ny = -math.sin(a) * big * 0.006, math.cos(a) * big * 0.006
+            sd.polygon([(c + nx, c + ny), (c + math.cos(a) * L, c + math.sin(a) * L), (c - nx, c - ny)], fill=(255, 255, 255, 255))
+        sd.ellipse((c - big * 0.012, c - big * 0.012, c + big * 0.012, c + big * 0.012), fill=(255, 255, 255, 255))
+        out.alpha_composite(sp.filter(ImageFilter.GaussianBlur(big * 0.002)))
+    return out.resize((S, S), Image.LANCZOS)
+
+
+def frost_sheet():
+    sheet = Image.new("RGBA", (512, 256), (255, 255, 255, 0))
+    sheet.paste(frost_cell(True), (0, 0))
+    sheet.paste(frost_cell(False), (256, 0))
+    return sheet
+
+
+def aurora_cell(glow, phase):
+    """6돌 빙하의 왕관 하늘의 오로라 장막 (512×256 — 흰색, 색을 입힘): 아래 가장자리가 물결치는 띠에서 위로 뻗는 빛살 (위로 갈수록 옅어짐).
+    glow = 넓고 부드러운 장막, 아니면 심지 (밝은 아래 가장자리 · 짧고 또렷한 빛살). phase = 물결 (두 장을 번갈아 — 천천히 일렁임)"""
+    import random
+    W, H = 512, 256
+    ss = 2
+    BW, BH = W * ss, H * ss
+    rng = random.Random(2407)
+    # 빛살 세기 (가로 자리마다 — 고정 씨앗 · 장마다 조금 다르게)
+    rays = []
+    for i in range(BW):
+        rays.append(0.0)
+    for _ in range(140):
+        x0 = rng.uniform(0, BW)
+        w = rng.uniform(2, 16) * ss
+        a = rng.uniform(0.25, 1.0)
+        for x in range(max(0, int(x0 - w * 2)), min(BW, int(x0 + w * 2))):
+            rays[x] = max(rays[x], a * math.exp(-((x - x0) / w) ** 2))
+    img = Image.new("RGBA", (BW, BH), (255, 255, 255, 0))
+    px = img.load()
+    for x in range(BW):
+        u = x / BW
+        edge = 1 - min(1, max(0, (min(u, 1 - u) - 0.0) / 0.12))  # 양끝은 옅게
+        fade_x = 1 - edge ** 2
+        base = BH * (0.78 + 0.08 * math.sin(u * math.tau * 1.6 + phase * 1.3) + 0.04 * math.sin(u * math.tau * 4.2 - phase * 2.1))
+        r = rays[(x + int(phase * 37 * ss)) % BW] if glow else rays[(x + int(phase * 37 * ss)) % BW] ** 1.6
+        top = base - BH * (0.35 + 0.4 * r) * (1.0 if glow else 0.55)
+        for y in range(int(max(0, top - 8)), min(BH, int(base + BH * 0.06))):
+            if y <= base:
+                t = (base - y) / max(1.0, base - top)  # 0 = 아래 가장자리 · 1 = 빛살 끝
+                if t > 1:
+                    continue
+                if glow:
+                    a = (0.35 + 0.65 * r) * (1 - t) ** 1.4 * 0.85 + 0.12 * (1 - t) ** 3
+                else:
+                    a = (0.5 + 0.5 * r) * (1 - t) ** 2.6
+            else:
+                t = (y - base) / (BH * 0.06)
+                a = (0.9 if not glow else 0.6) * (1 - t) ** 2
+            a *= fade_x
+            if a > 0:
+                px[x, y] = (255, 255, 255, int(min(255, a * 255)))
+    if glow:
+        img = img.filter(ImageFilter.GaussianBlur(3 * ss))
+    else:
+        img = img.filter(ImageFilter.GaussianBlur(0.8 * ss))
+    return img.resize((W, H), Image.LANCZOS)
+
+
+def aurora_sheet():
+    sheet = Image.new("RGBA", (1024, 512), (255, 255, 255, 0))
+    for f in range(2):
+        sheet.paste(aurora_cell(True, f * 1.0), (f * 512, 0))
+        sheet.paste(aurora_cell(False, f * 1.0), (f * 512, 256))
+    return sheet
+
+
 def main():
     java_fx_art.save("rfx_orb", orb_sheet(), 128, 128, "rotate_xyz")
     java_fx_art.save("rfx_skyeye", skyeye_sheet(), 256, 256, "direction_z")
     java_fx_art.save("rfx_fissure", fissure_sheet(), 512, 128, "direction_z")
+    java_fx_art.save("rfx_frost", frost_sheet(), 256, 256, "direction_z")
+    java_fx_art.save("rfx_aurora", aurora_sheet(), 512, 256, "direction_z")
 
 
 if __name__ == "__main__":
