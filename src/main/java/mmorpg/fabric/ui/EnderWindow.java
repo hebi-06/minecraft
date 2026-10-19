@@ -1,23 +1,17 @@
 package mmorpg.fabric.ui;
 
 import java.util.concurrent.ThreadLocalRandom;
-import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgNet;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.SimpleMenuProvider;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.ChestMenu;
-import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.inventory.PlayerEnderChestContainer;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 엔더 상자 창 (enderui.js — 스탯 창 아랫줄 "엔더 상자"): 어디서나 내 엔더 상자 27칸 (놓인 엔더 상자와 같은 칸).
+ * 엔더 상자 창 (enderui.js — 스탯 창 아랫줄 "엔더 상자"): 0.22.0 부터 엔더 창고 (storage.StorageWindow — 큰 상자 54칸 × 상자 5개) 를 엶.
+ * 아래는 0.21.0 까지의 설명 — 어디서나 내 엔더 상자 27칸 (놓인 엔더 상자와 같은 칸).
  * 애드온은 상자 모양 창에서 칸을 눌러 인벤토리와 서로 옮겼지만 (베드락은 스크립트로 바닐라 상자 창을 열 수 없음),
  * 자바는 바닐라 상자 창 (끌어 놓기 · Shift + 누르기 · 숫자 키 그대로) 으로 엶. 연출은 애드온 그대로: 열 때 발밑 보랏빛 룬 · 고리 · 거꾸로 포털 알갱이 +
  * 엔더 상자 여는 소리, 닫을 때 닫는 소리.
@@ -32,29 +26,13 @@ public final class EnderWindow {
         RpgNet.onStatAction("ender", EnderWindow::open);
     }
 
-    /** 내 엔더 상자를 엶. 열었으면 true (관전 모드는 못 엶) */
+    /** 스탯 창 아랫줄 단추 · 예전 호출: 0.22.0 부터 엔더 창고 (큰 상자 · 상자 5개 — storage.StorageWindow) 를 마지막으로 본 상자로 엶 */
     public static boolean open(ServerPlayer sp) {
-        if (sp == null || sp.isRemoved()) return false;
-        if (sp.isSpectator()) {
-            Notify.notify(sp, "§c관전 모드에서는 엔더 상자를 열 수 없습니다", 60);
-            return false;
-        }
-        PlayerEnderChestContainer inv = sp.getEnderChestInventory();
-        inv.setActiveChest(null); // 놓인 상자 없이 (어디서나 — 거리 제한 없음)
-        sp.openMenu(new SimpleMenuProvider((id, playerInv, p) -> new ChestMenu(MenuType.GENERIC_9x3, id, playerInv, inv, 3) {
-            @Override
-            public void removed(Player player) {
-                super.removed(player);
-                if (player instanceof ServerPlayer s && !s.isRemoved()) closeFx(s);
-            }
-        }, Component.translatable("container.enderchest")));
-        sp.awardStat(net.minecraft.stats.Stats.OPEN_ENDERCHEST);
-        openFx(sp);
-        return true;
+        return mmorpg.fabric.storage.StorageWindow.open(sp, -1, null, null);
     }
 
     /** 열 때: 발밑 보랏빛 룬 · 고리 · 거꾸로 포털 알갱이 + 여는 소리 */
-    static void openFx(ServerPlayer sp) {
+    public static void openFx(ServerPlayer sp) {
         ServerLevel level = sp.level();
         Vec3 feet = sp.position();
         SkillFx.rune(level, feet, Opt.of("size", 1.3, "life", 0.6, "color", COLOR, "alpha", 0.9, "progress", 1, "rate", 160, "grow", 0.25));
@@ -67,7 +45,7 @@ public final class EnderWindow {
     }
 
     /** 닫을 때: 닫는 소리 */
-    static void closeFx(ServerPlayer sp) {
+    public static void closeFx(ServerPlayer sp) {
         SkillFx.play(sp.level(), "random.enderchestclosed", V.up(sp.position(), 1), 1, 0.8);
     }
 }

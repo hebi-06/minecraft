@@ -458,9 +458,10 @@ public final class RpgMountGallery implements FabricClientGameTest {
         boolean open = waitScreen(ctx, sc -> sc instanceof ContainerScreen, "ender chest window");
         if (!open) return;
         String title = ctx.computeOnClient(mc -> mc.gui.screen().getTitle().getString());
-        boolean rows = ctx.computeOnClient(mc -> mc.player.containerMenu instanceof ChestMenu cm && cm.getRowCount() == 3
+        // 0.22.0 엔더 창고: 큰 상자 (6줄) · 엔더 상자에 있던 아이템이 1번 상자의 같은 칸으로
+        boolean rows = ctx.computeOnClient(mc -> mc.player.containerMenu instanceof ChestMenu cm && cm.getRowCount() == 6
                 && cm.getSlot(0).getItem().is(Items.DIAMOND) && cm.getSlot(13).getItem().getCount() == 1);
-        check(rows, "ender chest: 27 slots with my items (title '" + title + "')");
+        check(rows, "ender storage: large chest with my ender chest items (title '" + title + "')");
         away(ctx);
         shot(ctx, "m_ender");
         closeScreen(ctx);
@@ -468,7 +469,10 @@ public final class RpgMountGallery implements FabricClientGameTest {
         boolean closed = server.computeOnServer(s -> player(s).containerMenu == player(s).inventoryMenu);
         check(closed, "ender window closed on the server");
         shot(ctx, "m_ender_closed");
-        server.runOnServer(s -> player(s).getEnderChestInventory().clearContent());
+        server.runOnServer(s -> {
+            player(s).getEnderChestInventory().clearContent();
+            mmorpg.fabric.storage.StorageData.of(player(s)).page(0).clear();
+        });
     }
 
     private void quest(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {

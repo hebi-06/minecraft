@@ -88,6 +88,8 @@ public final class MmorpgClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.MountPayload.TYPE, (payload, context) -> ClientRpgState.updateMount(payload));
         // 0.21.0 지갑 (골드 · 실버 — 화면 왼쪽 아래)
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.economy.EconomyNet.WalletPayload.TYPE, (payload, context) -> ClientWallet.update(payload));
+        // 0.22.0 엔더 창고 (큰 상자 창 왼쪽의 상자 탭 · 사기)
+        ClientStorage.init();
         // 스탯 트리 (7단계): 기록 · 보너스 합, open 이면 그 탭으로 창 (열려 있으면 탭만 바꿈)
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.StatTreePayload.TYPE, (payload, context) -> {
             String open = ClientRpgState.updateStatTree(payload);

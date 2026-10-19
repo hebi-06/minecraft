@@ -278,5 +278,12 @@
     "migrateEmeralds": true,
     "emeraldExchange": true,
     "dropReturn": true
+  },
+  "STORAGE": {
+    "_comment": "0.22.0 엔더 창고 (core.Storage — 사용자 요청 \"엔더 상자를 플레이어 전용 창고로, 큰 상자 UI, 최대 5개, 1개는 기본, 2단계는 실버 그다음부터 골드\"): 상자마다 큰 상자 54칸 (9 × 6), chests 개까지, 처음 free 개는 기본. prices = free 다음 상자부터 차례로 [화폐, 값] (silver · gold — 지갑 먼저, 모자라면 가방의 동전). 앞 상자부터 차례로만 삼. migrateEnderChest = 바닐라 엔더 상자 27칸의 아이템을 1번 상자로 옮김 (열 때 · 접속할 때 — 빈 칸에)",
+    "chests": 5,
+    "free": 1,
+    "prices": [["silver", 300], ["gold", 30], ["gold", 60], ["gold", 100]],
+    "migrateEnderChest": true
   }
 }

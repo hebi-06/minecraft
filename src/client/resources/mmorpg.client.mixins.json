@@ -4,6 +4,7 @@
   "package": "mmorpg.fabric.client.mixin",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "AbstractContainerScreenAccessor",
     "AvatarRendererMixin",
     "CameraMixin",
     "ClientTitleMixin",

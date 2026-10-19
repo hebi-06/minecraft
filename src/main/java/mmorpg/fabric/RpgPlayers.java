@@ -46,6 +46,7 @@ public final class RpgPlayers {
         RpgHealth.onJoin(sp);
         RpgNet.sync(sp, false);
         mmorpg.fabric.economy.EconomySystem.onJoin(sp); // 0.21.0 에메랄드 → 실버 (한 번) · 지갑 · 장터 대금
+        mmorpg.fabric.storage.StorageSystem.onJoin(sp); // 0.22.0 바닐라 엔더 상자 → 엔더 창고 1번 상자 (에메랄드 → 실버 다음)
         if (isNew) {
             Tasks.later(40, () -> {
                 if (sp.isRemoved()) return;

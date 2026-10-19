@@ -34,7 +34,7 @@ import net.minecraft.world.item.Items;
 /**
  * 스탯 창 (statui.js 의 자바 판): 남은 포인트, 힘 · 민첩 · 마력 · 체력 (줄을 누르면 +1, Shift 는 +5), 스탯마다 효과,
  * 가진 무기 기준 실제 피해 (기준 무기). 애드온과 같은 그림 (금테 창 · 스탯 아이콘). 게임은 멈추지 않음.
- * 아랫줄 (6단계 — 애드온 상자 창의 아랫줄): 퀘스트 목록 · 엔더 상자 (내 엔더 상자 27칸) · 탈것 (누르면 고른 탈것을 불러 탐 · 타고 있으면 돌려보냄,
+ * 아랫줄 (6단계 — 애드온 상자 창의 아랫줄): 퀘스트 목록 · 창고 (0.22.0 엔더 창고 — 큰 상자 54칸 × 상자 5개) · 탈것 (누르면 고른 탈것을 불러 탐 · 타고 있으면 돌려보냄,
  * Shift + 누르면 탈것 고르기 창) · 장식 (0.13.0 — 장식 창: 무기 · 갑옷 스킨, 장식, 오라, 칭호, 갑옷 숨기기).
  * 스탯 줄마다 나무 칸 (7단계 스탯 트리 — "나무 3/10", 고를 갈래가 있으면 깜빡임): 누르면 그 스탯의 스탯 트리 창.
  * 제목 옆 작은 단추 (0.21.0): 유저 장터 · 쓰레기통 (서버가 창을 엶 — 이 창 대신).
@@ -243,8 +243,9 @@ public final class StatScreen extends Screen {
             case "quest":
                 return new Bottom(new ItemStack(Items.WRITABLE_BOOK), null, "§e§l퀘스트", "§7목록 보기", List.of("§e퀘스트 목록", "§7진행 중인 퀘스트 보기"));
             case "ender":
-                return new Bottom(ItemStack.EMPTY, ENDER, "§d§l엔더 상자", "§7내 보관함",
-                        List.of("§d§l엔더 상자", "§7누르면 내 엔더 상자가 열립니다", "§7어디서나 — 놓인 엔더 상자와 같은 27칸"));
+                return new Bottom(ItemStack.EMPTY, ENDER, "§d§l창고", "§7엔더 창고",
+                        List.of("§d§l엔더 창고", "§7누르면 내 창고가 열립니다 (큰 상자 54칸)", "§7상자 " + mmorpg.core.Storage.chests() + "개 — 1번은 기본, 2번 실버 · 3번부터 골드",
+                                "§7어디서나 · 놓인 엔더 상자 · /창고 — 모두 같은 창고"));
             case "cosmetic":
                 return new Bottom(CosmeticRender.icon("crown"), null, "§d§l장식", "§7꾸미기",
                         List.of("§d§l장식", "§7무기 · 갑옷 스킨, 머리 · 등 장식, 오라, 칭호", "§7갑옷 숨기기 (무료) · 골드로 사기", "§8U 키로도 열림"));
