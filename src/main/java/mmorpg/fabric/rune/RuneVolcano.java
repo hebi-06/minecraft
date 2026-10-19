@@ -141,7 +141,7 @@ final class RuneVolcano {
 
     /**
      * 화산탄 하나 — sp 의 눈 · 3인칭 카메라에서 clear 칸 안의 앞부분은 그리지 않음 (손에서 던진 화산탄이 1인칭 화면을 덮지 않게): 덩어리는 처음으로 clear 칸
-     * 밖에 나온 틱의 자리 · 속도로 띄움 (같은 포물선)
+     * 밖에 나온 틱에 그 자리 · 속도로 띄움 (같은 포물선 · 떨어지는 때도 같음)
      */
     static void bomb(ServerPlayer sp, ServerLevel level, Vec3 from, Vec3 to, int ticks, double size, double clear) {
         double t = ticks / 20.0;
@@ -152,10 +152,13 @@ final class RuneVolcano {
         Vec3 p0 = lobAt(from, v, s0);
         Vec3 v0 = new Vec3(v.x, v.y - PairKit.GRAVITY * s0, v.z);
         double rest = t - s0;
-        SkillFx.fx(level, "rpg:glob", p0, Opt.of("dir", V.unit(v0), "speed", V.len(v0), "size", size, "life", rest, "spin", Kit.rand() * 360, "color", LAVA,
-                "alpha", 1.0));
-        SkillFx.fx(level, "rpg:glob", p0, Opt.of("dir", V.unit(v0), "speed", V.len(v0), "size", size * 0.6, "life", rest, "spin", Kit.rand() * 360, "color",
-                CORE, "alpha", 1.0));
+        Runnable glob = () -> {
+            SkillFx.fx(level, "rpg:glob", p0, Opt.of("dir", V.unit(v0), "speed", V.len(v0), "size", size, "life", rest, "spin", Kit.rand() * 360, "color", LAVA,
+                    "alpha", 1.0));
+            SkillFx.fx(level, "rpg:glob", p0, Opt.of("dir", V.unit(v0), "speed", V.len(v0), "size", size * 0.6, "life", rest, "spin", Kit.rand() * 360, "color",
+                    CORE, "alpha", 1.0));
+        };
+        RuneKit.later(i0, glob);
         for (int i = Math.max(1, i0); i < ticks; i++) {
             final Vec3 p = lobAt(from, v, i / 20.0);
             RuneKit.later(i, () -> {
