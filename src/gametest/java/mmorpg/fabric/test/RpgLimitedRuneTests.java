@@ -155,6 +155,7 @@ public final class RpgLimitedRuneTests {
         Runes.Rune r = Runes.parseRune(Runes.runeId(family, "transcend"));
         h.assertTrue(r != null && Runes.limited(family), family + " limited transcend rune");
         h.runAfterDelay(2, () -> {
+            clearStrays(h, z); // 영역 · 균열 룬은 범위 안 적 모두를 침 — 앞 묶음이 남긴 몹까지 세지 않게 ("endless hits 30 vs 15")
             sp.lookAt(EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
             double sum = 0;
             for (int i = 0; i < 4; i++) sum += stats[i];
