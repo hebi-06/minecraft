@@ -112,7 +112,8 @@
 - 26.3 에는 색 유리판 아이템 상수 (`Items.LIME_STAINED_GLASS_PANE` 등) 가 없음 (컴파일 오류 — 0.21.0 장터 확인 창은 그림 `ui/pane_yes` · `pane_no` · `pane_off` 로)
 - GUI 그리는 차례 (0.23.0 RPG 창): 같은 층 (stratum) 안에서는 나중에 낸 그림 (blitSprite) 이 사람 그림 (entity — picture-in-picture) 도 덮음 — 바닐라 인벤토리는 `extractBackground` 안에서 바탕 다음에 사람을 그리므로 그 뒤 (믹스인 TAIL) 에 바탕을 덮으면 사람이 가려짐 → 바닐라 호출 `InventoryScreen.extractEntityInInventoryFollowsMouse(GuiGraphicsExtractor, int × 5, float × 3, LivingEntity)` 를 @Redirect (require 0) 로 미뤘다가 바탕을 덮은 뒤 `nextStratum()` 하고 같은 값으로 그림. 아이템 · 글자는 같은 층의 채우기 · 그림보다 위
 - 바닐라 창 덮기: `InventoryScreen` · `ContainerScreen` · `ShulkerBoxScreen` 의 `extractBackground` (TAIL) · `AbstractContainerScreen.extractLabels` (HEAD · 취소 — 인벤토리는 자기 `extractLabels`) · `extractSlot(GuiGraphicsExtractor, Slot, int, int)` (HEAD — 창 기준 자리, 아이템 아래) · `extractSlotHighlightBack` (private · HEAD 취소 — 앞쪽 흰 강조는 그대로). 바닐라 자리: 사람 칸 (26, 8)–(75, 78) · 조합법 책 단추 (leftPos + 104, height / 2 − 22) · 상자 "인벤토리" 글자 y = imageHeight − 94. 조합법 책은 `AbstractRecipeBookScreen.recipeBookComponent` (private) 의 `isVisible()`
-- 시험 묶음 사이의 몹: 시험 구조물 밖 (바닥을 깐 자리) 에 세운 과녁은 구조물을 지울 때 남아 다음 묶음의 같은 자리 시험이 셀 수 있음 — 0.23.0 시험이 늘어 자리가 바뀌자 심연의 낙인 시험이 "찍은 수 3" → 낙인 시험은 시전 전에 남의 적대 몹을 치움 (`RpgLimitedRuneTests.clearStrays`)
+- 시험 묶음 사이의 몹: 시험 구조물 밖 (바닥을 깐 자리) 에 세운 과녁은 구조물을 지울 때 남아 다음 묶음의 같은 자리 시험이 셀 수 있음 — 0.23.0 시험이 늘어 자리가 바뀌자 심연의 낙인 시험이 "찍은 수 3" → 낙인 시험 · 한정 룬 cast 도우미 (영역 · 균열 · 광선 — "endless hits 30 vs 15") 는 시전 전에 남의 적대 몹을 치움 (`RpgLimitedRuneTests.clearStrays`)
+- CI 화면 시험이 코드와 상관없이 멈추는 경우 (0.23.0 릴리스 첫 실행): 묶음 시작 때 Loom 이 게임 리소스 (resources.download.minecraft.net) 를 받다 실패 (BUILD FAILED 35초) · 사진첩이 끝나고 세계를 닫을 때 Fabric 클라이언트 시험 스레드 교착 (Render thread 는 IntegratedServer.halt, Server thread 는 ThreadingImpl.enterPhase 에서 기다림 — threads-ui-*.txt) → 50분 시간 초과. 같은 커밋을 다시 돌리면 통과
 
 ## 2. 시험
 
