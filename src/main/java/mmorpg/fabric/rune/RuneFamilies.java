@@ -20,7 +20,7 @@ final class RuneFamilies {
         RuneSpirit.register();
         RuneSpiritKing.register(); // 12단계: 정령사 초월 룬 정령왕 강림
         RuneGravity.register();
-        RuneReaper.register(); // 0.12.6: 사신 (낫 전용 — 피의 초승달)
+        RuneReaper.register(); // 0.12.6: 사신 (피의 초승달 — 0.27.0 부터 낫 조건 없음)
         RuneBody.register();
         RuneStrike.register();
         RuneLimited.register(); // 0.16.0: 한정 초월 룬 (만상귀일 · 칠성 강림 · 천공의 눈)

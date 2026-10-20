@@ -217,7 +217,7 @@ public final class RuneTipTest {
         int ti = -1;
         for (int i = 0; i < cm.size(); i++) if (cm.get(i).startsWith("⚔ 총 피해 ")) ti = i;
         check(ti > 0 && !cm.get(ti).contains("(") && cm.get(ti + 1).startsWith("  칼날 ") && cm.get(ti + 2).startsWith("  + 달 추락 "), "crimson moon split breakdown " + cm);
-        check(cm.get(0).contains("낫 전용"), "reaper head: " + cm.get(0));
+        check(!cm.get(0).contains("전용"), "reaper head: no weapon-only (0.27.0) " + cm.get(0));
         // 생명의 샘: 회복 = 최대 체력 × 14% × (1 + 체력 31 × 1%)
         Runes.Rune spring = rune("vit", "rare");
         String sp = joined(RuneTip.lines(spring, 0, new RuneTip.Viewer(even, 1, 131)));

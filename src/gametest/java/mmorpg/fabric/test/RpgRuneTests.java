@@ -31,7 +31,7 @@ import net.minecraft.world.phys.Vec3;
  * 룬 게임 시험 (서버): 룬 아이템 85 · 뽑기권 등록, 룬 효과 85 등록 (0.12.6 사신 계열 포함), 뽑기권 (바로 쓰고 연출 뒤 룬 지급 · 연출 중 다시 못 뽑음) —
  * 룬은 스킬 칸에서만 씀 (칸을 고르면 바로 쓰기는 11단계에서 없앰 — RpgSkillBarTests),
  * 룬 쓰기 (위력 · 재사용 대기 · 핫바 쓸기 표시 · 대상이 없으면 재사용 대기 없음), 평타 강화 (평타에 더함),
- * 무기 전용 계열 (0.12.6 사신 = 낫 — 낫을 들지 않으면 쓰지 않고 재사용 대기도 없음, 다른 계열은 아무 무기나).
+ * 무기 조건 없음 (0.12.6 에 사신 = 낫 전용이었으나 0.27.0 에 뺌 — 맨손 · 칼 · 낫 모두 씀).
  */
 public final class RpgRuneTests {
     private static ServerPlayer player(GameTestHelper h) {
@@ -172,9 +172,9 @@ public final class RpgRuneTests {
         done(h, sp);
     }
 
-    /** 0.12.6 사신 계열은 낫을 든 동안만: 맨손 · 칼이면 쓰지 않음 (효과도 부르지 않고 재사용 대기 없음), 낫이면 씀 · 다른 계열은 낫을 들어도 씀 */
+    /** 0.27.0 사신 계열의 낫 조건을 뺌 (사용자 "사신의 룬 조건인 낫을 없애고"): 맨손 · 칼 · 낫 모두 씀 (효과를 부르고 재사용 대기) · 다른 계열도 그대로 */
     @GameTest(maxTicks = 40)
-    public void reaperRuneNeedsScythe(GameTestHelper h) {
+    public void reaperRuneAnyWeapon(GameTestHelper h) {
         ServerPlayer sp = player(h);
         int[] calls = {0};
         RuneCast.register("mmorpgTestReaper", (p, r, P, k) -> {
@@ -185,18 +185,18 @@ public final class RpgRuneTests {
         m.put("fn", "mmorpgTestReaper");
         m.put("name", "시험 사신 룬");
         Runes.Rune base = Runes.parseRune("rpg:rune_reaper_common");
-        h.assertTrue(base != null && "scythe".equals(Runes.weaponOnly(base.family())), "reaper rune is scythe-only");
+        h.assertTrue(base != null && Runes.weaponOnly(base.family()) == null, "reaper rune has no weapon condition");
         Runes.Rune r = new Runes.Rune(base.id(), base.family(), base.stat(), base.famName(), base.grade(), new Obj(m, "test"), base.cd(), base.gradeName(),
                 base.gradeColor());
         RuneCast.resetCooldowns(sp);
-        h.assertFalse(RuneCast.castRune(sp, r, true), "bare hand: not cast");
+        h.assertTrue(RuneCast.usableNow(sp, r) && RuneCast.castRune(sp, r, true), "bare hand: cast");
+        h.assertTrue(calls[0] == 1 && RuneCast.cooldownLeft(sp, r) > 0, "cast with cooldown: calls " + calls[0]);
+        RuneCast.resetCooldowns(sp);
         sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(Weapons.weaponId("sword", 10, "common"))));
-        h.assertFalse(RuneCast.castRune(sp, r, true), "sword: not cast");
-        h.assertTrue(calls[0] == 0 && RuneCast.cooldownLeft(sp, r) == 0, "refused before the effect, no cooldown: calls " + calls[0]);
+        h.assertTrue(RuneCast.castRune(sp, r, true) && calls[0] == 2, "sword: cast");
+        RuneCast.resetCooldowns(sp);
         sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(Weapons.weaponId("scythe", 10, "common"))));
-        h.assertTrue(RuneCast.usableNow(sp, r), "usable with a scythe");
-        h.assertTrue(RuneCast.castRune(sp, r, true), "scythe: cast");
-        h.assertTrue(calls[0] == 1 && RuneCast.cooldownLeft(sp, r) > 0, "cast with cooldown");
+        h.assertTrue(RuneCast.castRune(sp, r, true) && calls[0] == 3, "scythe: cast");
         Runes.Rune str = Runes.parseRune("rpg:rune_str_common");
         h.assertTrue(RuneCast.usableNow(sp, str), "other families: any weapon");
         done(h, sp);

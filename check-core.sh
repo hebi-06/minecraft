@@ -43,7 +43,7 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · EconomyTest · StorageTest"
+echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · EconomyTest · StorageTest · JobsTest"
 # 대조 시험은 애드온 config.js 그대로의 규칙으로 (자바 전용 덧붙임 rules_more.json 없이 — Rules.PURE)
 java -Dstdout.encoding=UTF-8 -Dmmorpg.pureRules=true -cp "$out/main:$out/test" mmorpg.core.ParityTest
 # 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
@@ -72,3 +72,5 @@ java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RuneTipTest
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.EconomyTest
 # 0.22.0 엔더 창고 (상자 5개 · 기본 1개 · 54칸 · 2번 실버 · 3번부터 골드 · 차례로)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.StorageTest
+# 0.27.0 직업 (jobs.json: 직업 11 · 칸 다섯 · 세기 = 검사 틀 × 직업 세기 · 해금 레벨 · 위력 P · 지속 보정 · 마검사 마력 검술 · 마검 힘 계수 1%)
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.JobsTest

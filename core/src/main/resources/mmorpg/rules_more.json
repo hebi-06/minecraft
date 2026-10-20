@@ -84,7 +84,9 @@
     "lance": {"name": "창", "stat": "str", "damage": 1.12, "req": 0.6666666666666666, "reqExtra": {"dex": 0.3333333333333333}, "bonus": {"dex": 0.01}, "crit": 0.1, "critPerLevel": 0.004, "critPerGrade": 0.01, "critMult": 1.75, "critMultPerLevel": 0.0075, "critMultPerGrade": 0, "melee": true, "reach": 1},
     "scythe": {"name": "낫", "stat": "dex", "damage": 1.05, "req": 0.6666666666666666, "reqExtra": {"int": 0.3333333333333333}, "bonus": {"int": 0.02}, "crit": 0.15, "critPerLevel": 0.006, "critPerGrade": 0.01, "critMult": 2, "critMultPerLevel": 0.0125, "critMultPerGrade": 0, "melee": true, "sweep": {"ratio": 0.4, "range": 3, "cone": 120}},
     "hammer": {"name": "전투 망치", "stat": "vit", "damage": 1.25, "perPoint": 0.005, "req": 0.6666666666666666, "reqExtra": {"str": 0.3333333333333333}, "bonus": {"str": 0.02}, "crit": 0.04, "critPerLevel": 0.0005, "critPerGrade": 0.005, "critMult": 1.6, "critMultPerLevel": 0, "critMultPerGrade": 0.05, "melee": true, "quake": {"ratio": 0.35, "radius": 2, "lift": 0.25}},
-    "scepter": {"name": "성스러운 홀", "stat": "int", "damage": 1.1, "req": 0.6666666666666666, "reqExtra": {"vit": 0.3333333333333333}, "bonus": {"vit": 0.005}, "crit": 0.04, "critPerLevel": 0.0005, "critPerGrade": 0.01, "critMult": 1.5, "critMultPerLevel": 0, "critMultPerGrade": 0.05, "melee": true, "magic": true, "lifesteal": {"rate": 0.05, "cap": 0.01}}
+    "scepter": {"name": "성스러운 홀", "stat": "int", "damage": 1.1, "req": 0.6666666666666666, "reqExtra": {"vit": 0.3333333333333333}, "bonus": {"vit": 0.005}, "crit": 0.04, "critPerLevel": 0.0005, "critPerGrade": 0.01, "critMult": 1.5, "critMultPerLevel": 0, "critMultPerGrade": 0.05, "melee": true, "magic": true, "lifesteal": {"rate": 0.05, "cap": 0.01}},
+    "_greatsword": "0.27.0 마검 (티르빙 포함 모든 등급) 힘 계수 2% → 1% (직업 설계 2026-10-20 — 마검사 6 : 4 빌드의 티르빙 평타가 검사와 같은 3.5 → 2.99 (85%) 로 '평타 약함' 유지, 요구 스탯 · 피해 계수 · 치명타는 그대로. 마검을 든 모든 플레이어에게 적용). 애드온 규칙 (rules.json) 의 정의를 통째로 덮음 (덮을 때 키 하나가 통째로 바뀜)",
+    "greatsword": {"name": "마검", "stat": "int", "damage": 1.25, "req": 0.6666666666666666, "reqExtra": {"str": 0.3333333333333333}, "bonus": {"str": 0.01}, "crit": 0.05, "critPerLevel": 0.0005, "critPerGrade": 0.01, "critMult": 1.5, "critMultPerLevel": 0, "critMultPerGrade": 0.05}
   },
   "TYPE_ONLY": {
     "_comment": "12단계 새 무기: 이 등급 · 레벨만 있음 (일반 · 희귀 0 ~ 40렙 — 다른 무기와 같은 레벨, 무기 상점의 새 무기 쪽, 고귀 10 · 20렙 — 대장장이 제작, 영웅 30렙 — 보스 무기 제작 → 35 · 40렙으로 올림, 초월 40렙 — 보스 무기 제작)",
@@ -276,9 +278,9 @@
   "RUNE_FAMILY_ORDER": ["str", "dex", "vit", "int", "axe", "bow", "holy", "storm", "assassin", "blade", "spellblade", "element", "spirit", "gravity", "reaper", "tide", "golem", "monk", "hunter", "volcano", "gladiator", "body", "strike"],
   "RUNE_LIMITED_ORDER": ["arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier"],
   "RUNE_FAMILIES": {
-    "_comment": "0.12.6: 성기사 룬 적용 스탯 체력 → 체력 + 힘 × 0.5 (사용자 요청 '성기사 체력힘으로' — 도끼 · 검사처럼 둘째 스탯 0.5), 사신 계열 (낫 전용 — weapon: 이 무기를 든 동안만 씀 · 민첩 + 마력 × 0.5 = 낫의 요구 비율) 0.16.0: 한정 계열 셋 (arcana 만상 · dipper 칠성 · skyeye 천공 — 마법 피해 · 0.17.0 endless 무간 · 0.18.0 terra 대지 · 0.19.0 yggdrasil 세계수 — 버프 · 0.20.0 abyss 심연 — 적 약화 · 0.24.0 glacier 빙하) 은 적용 스탯 = 네 스탯의 합 × 1.0 (coef 넷이 1 — sum: 설명 · 알림을 '총 스탯' 으로, limited: 한정 뽑기 전용)",
+    "_comment": "0.12.6: 성기사 룬 적용 스탯 체력 → 체력 + 힘 × 0.5 (사용자 요청 '성기사 체력힘으로' — 도끼 · 검사처럼 둘째 스탯 0.5), 사신 계열 (민첩 + 마력 × 0.5 = 낫의 요구 비율 — 0.12.6 에는 낫 전용 (weapon: 이 무기를 든 동안만 씀) 이었으나 0.27.0 에 사용자 요청 '사신의 룬 조건인 낫을 없애고' 로 뺌: 아무 무기나, weapon 키는 코드에 남아 있으나 쓰는 계열 없음) 0.16.0: 한정 계열 셋 (arcana 만상 · dipper 칠성 · skyeye 천공 — 마법 피해 · 0.17.0 endless 무간 · 0.18.0 terra 대지 · 0.19.0 yggdrasil 세계수 — 버프 · 0.20.0 abyss 심연 — 적 약화 · 0.24.0 glacier 빙하) 은 적용 스탯 = 네 스탯의 합 × 1.0 (coef 넷이 1 — sum: 설명 · 알림을 '총 스탯' 으로, limited: 한정 뽑기 전용)",
     "holy": {"stat": "vit", "name": "성기사", "coef": {"vit": 1, "str": 0.5}},
-    "reaper": {"stat": "dex", "name": "사신", "coef": {"dex": 1, "int": 0.5}, "weapon": "scythe"},
+    "reaper": {"stat": "dex", "name": "사신", "coef": {"dex": 1, "int": 0.5}},
     "tide": {"stat": "int", "name": "해류", "coef": {"int": 1, "vit": 0.5}},
     "golem": {"stat": "vit", "name": "골렘", "coef": {"vit": 1, "int": 0.5}},
     "monk": {"stat": "dex", "name": "무투", "coef": {"dex": 1, "str": 0.5}},

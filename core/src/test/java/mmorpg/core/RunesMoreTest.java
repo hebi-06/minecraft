@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 0.12.6 시험 (JUnit 없이 main — check-core.sh): 사신 계열 룬 (낫 전용 — 피의 초승달) · 성기사 룬 적용 스탯 (체력 + 힘 × 0.5) (자바 전용 덧붙임).
+ * 0.12.6 시험 (JUnit 없이 main — check-core.sh): 사신 계열 룬 (피의 초승달 — 0.12.6 에는 낫 전용, 0.27.0 부터 아무 무기나) · 성기사 룬 적용 스탯 (체력 + 힘 × 0.5) (자바 전용 덧붙임).
  * <ul>
  * <li>계열 17개 (중력 다음 사신), 룬 아이템 85 · 사신 다섯 등급 (이름 · 함수 · 배율 합 4 · 7 · 12 · 20 · 32 — 출혈 포함), 뽑기에 같은 확률</li>
- * <li>낫 전용: weaponOnly · usableWith (낫만 · 맨손이나 다른 무기는 안 됨, 다른 계열은 아무 무기나), 설명 줄 (낫 전용 · 출혈 · 흡혈 · 낙인 · 달 추락)</li>
+ * <li>무기 조건 없음 (0.27.0 사용자 "사신의 룬 조건인 낫을 없애고"): weaponOnly 없음 · usableWith (낫 · 칼 · 맨손 모두), 설명 줄에 "낫 전용" 없음 (출혈 · 흡혈 · 낙인 · 달 추락)</li>
  * <li>적용 스탯: 사신 = 민첩 + 마력 × 0.5, 성기사 = 체력 + 힘 × 0.5</li>
  * <li>적월 강림 돌파 (3돌: 범위 · 칼날 · 출혈, 6돌: 추락 위력 · 범위 · 칼날 · 흡혈)</li>
  * </ul>
@@ -66,7 +66,7 @@ public final class RunesMoreTest {
             check(Math.abs(Runes.runeTotalMult(r.def()) - strTotal) < 0.1, "same total as str " + g + " (" + strTotal + ")");
             List<String> lore = Runes.runeLore(r, false);
             String text = plain(lore);
-            check(text.contains("낫 전용"), "lore scythe only " + g);
+            check(!text.contains("전용"), "lore: no weapon-only line (0.27.0) " + g);
             check(!text.contains("중독"), "no poison wording " + g);
             if (r.def().truthy("dot")) check(text.contains("출혈 위력×" + r.def().text("dot")), "lore bleed " + g + ": " + text);
             if (r.def().truthy("healMax")) check(text.contains("흡혈"), "lore lifesteal " + g);
@@ -79,13 +79,13 @@ public final class RunesMoreTest {
         Runes.Rune stars = Runes.parseRune("rpg:rune_assassin_rare");
         check(plain(Runes.runeLore(stars, false)).contains("중독") && !plain(Runes.runeLore(stars, false)).contains("전용"), "poison stars lore unchanged");
 
-        // 낫 전용
+        // 0.27.0: 사신 룬의 낫 조건을 뺌 (사용자 "사신의 룬 조건인 낫을 없애고") — 무기 전용 계열이 없음
         Runes.Rune reaper = Runes.parseRune("rpg:rune_reaper_common");
         Runes.Rune str = Runes.parseRune("rpg:rune_str_common");
-        check("scythe".equals(Runes.weaponOnly("reaper")) && Runes.weaponOnly("str") == null, "weaponOnly");
-        check(Runes.usableWith(reaper, "scythe"), "reaper with scythe");
-        check(!Runes.usableWith(reaper, "sword") && !Runes.usableWith(reaper, null), "reaper without scythe");
+        check(Runes.weaponOnly("reaper") == null && Runes.weaponOnly("str") == null, "weaponOnly: none");
+        check(Runes.usableWith(reaper, "scythe") && Runes.usableWith(reaper, "sword") && Runes.usableWith(reaper, null), "reaper with any weapon");
         check(Runes.usableWith(str, null) && Runes.usableWith(str, "scythe"), "other families: any weapon");
+        for (String fam : Runes.ALL_FAMILIES) check(Runes.weaponOnly(fam) == null, fam + " no weapon-only");
         check(Runes.weaponName("scythe").equals("낫"), "weapon name");
 
         // 적용 스탯

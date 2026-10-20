@@ -38,8 +38,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 룬 85종 사진첩 (화면 시험): 평평한 세계에서 과녁 허스크 여섯 앞에서 룬마다 실제 입력 (스킬 칸 1번에 올리고 그 칸의 키 — 11단계부터 룬은 스킬 칸에서만)
- * 으로 쓰고 사진 (rn_&lt;계열&gt;_&lt;등급&gt;_&lt;틱&gt;[_3p]). 무기 전용 계열 (0.12.6 사신 = 낫) 은 그 무기를 들고 씀 — 먼저 맨손으로 눌러 막히는지 (재사용 대기 없음 ·
- * 스킬 칸이 어둡고 무기 이름 — rn_reaper_locked).
+ * 으로 쓰고 사진 (rn_&lt;계열&gt;_&lt;등급&gt;_&lt;틱&gt;[_3p]). 0.27.0: 사신 룬의 낫 조건을 뺌 — 먼저 맨손으로 눌러 쓰이는지 (재사용 대기 시작 ·
+ * 스킬 칸이 어둡지 않음 — rn_reaper_bare).
  * 초월 룬은 3인칭으로 한 번 더. 룬마다 써졌는지 (재사용 대기 시작) · 들어간 피해를 로그 (rune-gallery) 로, 써지지 않았거나
  * 피해 룬인데 피해가 0 이면 마지막에 실패. 룬 사이에는 룬 기록 · 버프 · 보호막 · 쿨을 지움.
  */
@@ -122,7 +122,7 @@ public final class RpgRuneGallery implements FabricClientGameTest {
     private void run(ClientGameTestContext ctx, TestServerContext server, Runes.Rune r, boolean third) {
         String id = r.family() + "_" + r.grade();
         String fn = r.def().str("fn");
-        // 무기 전용 계열 (사신 = 낫) 은 그 무기를 듦 (40렙 일반)
+        // 무기 전용 계열이 있으면 그 무기를 듦 (40렙 일반 — 0.27.0 부터 없음: 맨손)
         String only = Runes.weaponOnly(r.family());
         server.runCommand("item replace entity @a hotbar.0 with " + (only != null ? Weapons.weaponId(only, 40, "common") : "air"));
         server.runCommand("time set 6000");
@@ -169,7 +169,7 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         else if (!(dealt > 0) && !SUPPORT.contains(fn)) failures.add(id + (third ? " (3p)" : "") + " dealt no damage");
     }
 
-    /** 무기 전용 룬 (사신 = 낫) 을 맨손으로 누름: 쓰이지 않음 (재사용 대기 없음) · 스킬 칸이 어둡고 무기 이름 (사진 rn_reaper_locked) */
+    /** 0.27.0 사신 룬을 맨손으로 누름 (낫 조건을 뺌 — 사용자 "사신의 룬 조건인 낫을 없애고"): 쓰임 (재사용 대기 시작) · 스킬 칸이 잠김 표시가 아님 (사진 rn_reaper_bare) */
     private void lockedCheck(ClientGameTestContext ctx, TestServerContext server) {
         Runes.Rune r = Runes.parseRune(Runes.runeId("reaper", "common"));
         if (r == null) return;
@@ -177,18 +177,19 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         server.runCommand("tp @a 0.5 -60 0.5 0 8");
         server.runOnServer(s -> {
             RuneCast.resetCooldowns(player(s));
+            spawnHusks(player(s).level());
             SkillBar.set(player(s), 0, RuneItems.stack(r.family(), r.grade()));
         });
         ctx.waitTicks(12);
         boolean locked = ctx.computeOnClient(mc -> mmorpg.fabric.client.ClientSkillBar.locked(0));
         ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
         ctx.waitTicks(4);
-        ctx.takeScreenshot(TestScreenshotOptions.of("rn_reaper_locked").withSize(1280, 720));
+        ctx.takeScreenshot(TestScreenshotOptions.of("rn_reaper_bare").withSize(1280, 720));
         ctx.waitTicks(6);
         boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
-        LOG.info("[rune-gallery] reaper locked without a scythe: hud={} cast={}", locked, cast);
-        if (!locked) failures.add("reaper rune not shown locked without a scythe");
-        if (cast) failures.add("reaper rune cast without a scythe");
+        LOG.info("[rune-gallery] reaper bare-handed (0.27.0 no scythe condition): hud locked={} cast={}", locked, cast);
+        if (locked) failures.add("reaper rune shown locked bare-handed (0.27.0 no scythe condition)");
+        if (!cast) failures.add("reaper rune not cast bare-handed (0.27.0 no scythe condition)");
     }
 
     private static ServerPlayer player(MinecraftServer s) {
