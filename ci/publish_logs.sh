@@ -31,6 +31,8 @@ if [ -d ci-out/shots ]; then
   mkdir -p "$OUT/shots"
   cp ci-out/shots/* "$OUT/shots/" 2>/dev/null || true
 fi
+# 0.26.0 룬 지속 시간 재기 (RpgRuneTimingTests — 게임 시험 로그가 길어 가운데가 잘리므로 따로)
+grep -h "\[rune-timing\]" ci-out/gametest.txt 2>/dev/null > "$OUT/rune-timing.txt" || true
 # 오류 줄만 모아서 (컴파일 오류 · 실패한 시험 · 예외)
 grep -n -E "error:|warning: \[|FAILED|Exception|Caused by|GameTest|failed|Failed|FAIL" ci-out/*.txt ci-out/*.log 2>/dev/null | head -n 600 > "$OUT/ERRORS.txt" || true
 # 브랜치: main · wip · mc-* 는 ci-logs, 다른 작업 브랜치는 ci-logs-<브랜치> (동시에 돈 실행이 서로 덮어쓰지 않게)
