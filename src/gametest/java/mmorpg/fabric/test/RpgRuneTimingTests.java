@@ -1,0 +1,304 @@
+package mmorpg.fabric.test;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import mmorpg.core.Runes;
+import mmorpg.core.Weapons;
+import mmorpg.fabric.RpgHealth;
+import mmorpg.fabric.RpgItems;
+import mmorpg.fabric.RpgPlayers;
+import mmorpg.fabric.rune.RuneCast;
+import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.zombie.Husk;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 0.26.0 룬 지속 보정 (사용자 "풀딜을 다 때릴려면 시간이 걸리거나 장판기인 애들은 한방 딜 애들보다 조금 더 쎄게"): 계열마다 다섯 등급 (한정은 초월 하나) 을
+ * 차례로 앞 3칸 과녁 하나에 써서, 쓴 틱부터 첫 피해 · 마지막 피해까지의 틱을 잼 (과녁이 밀려나지 않게 밀쳐냄 저항 1). 결과는 로그 [rune-timing].
+ */
+public final class RpgRuneTimingTests {
+    private static final Logger LOG = LoggerFactory.getLogger("mmorpg-rune-timing");
+    private static final String[] GRADES = {"common", "rare", "noble", "hero", "transcend"};
+    /** 마지막 피해 뒤 이만큼 더 피해가 없으면 끝 · 아무 피해가 없으면 이만큼 · 한 룬을 재는 가장 긴 틱 */
+    private static final int QUIET = 100;
+    private static final int NONE = 200;
+    private static final int MAX = 360;
+
+    private static ServerPlayer player(GameTestHelper h) {
+        ServerPlayer sp = h.makeMockServerPlayerInLevel();
+        try {
+            Method m = ServerGamePacketListenerImpl.class.getDeclaredMethod("markClientLoaded");
+            m.setAccessible(true);
+            m.invoke(sp.connection);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("cannot mark mock player loaded", e);
+        }
+        sp.setGameMode(GameType.SURVIVAL);
+        RpgPlayers.onJoin(sp);
+        return sp;
+    }
+
+    private static void clearStrays(GameTestHelper h, net.minecraft.world.entity.Entity... keep) {
+        var box = new net.minecraft.world.phys.AABB(h.absoluteVec(new Vec3(-14, -4, -14)), h.absoluteVec(new Vec3(30, 12, 30)));
+        java.util.Set<net.minecraft.world.entity.Entity> own = java.util.Set.of(keep);
+        for (net.minecraft.world.entity.Mob m : h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.Mob.class, box,
+                e -> !own.contains(e) && e instanceof net.minecraft.world.entity.monster.Enemy)) {
+            m.discard();
+        }
+    }
+
+    private static Husk dummy(GameTestHelper h) {
+        Husk m = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, 4.5F));
+        m.setYRot(180F);
+        m.setYHeadRot(180F);
+        m.setYBodyRot(180F);
+        m.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0);
+        m.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 20 * 600, 0, false, false));
+        return m;
+    }
+
+    /** 이 계열의 룬을 차례로 재는 상태 */
+    private static final class Probe {
+        final List<Runes.Rune> runes = new ArrayList<>();
+        int idx;
+        boolean measuring;
+        long t0;
+        int first = -1;
+        int last = -1;
+        double prev;
+        double want;
+        boolean cast;
+        Husk z;
+    }
+
+    private static void probe(GameTestHelper h, String family) {
+        for (int x = 0; x < 10; x++) for (int z = 0; z < 10; z++) h.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
+        ServerPlayer sp = player(h);
+        sp.setExperienceLevels(40);
+        RpgPlayers.checkLevelUp(sp);
+        for (String s : new String[] {"str", "dex", "vit", "int"}) RpgPlayers.setStat(sp, s, 120);
+        if ("scythe".equals(Runes.weaponOnly(family))) sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(Weapons.weaponId("scythe", 40, "transcend"))));
+        Probe p = new Probe();
+        for (String g : GRADES) {
+            Runes.Rune r = Runes.parseRune(Runes.runeId(family, g));
+            if (r != null) p.runes.add(r);
+        }
+        h.assertTrue(!p.runes.isEmpty(), family + " runes");
+        h.succeedWhen(() -> {
+            long now = h.getTick();
+            if (now < 3) throw h.assertionException("loading");
+            if (!p.measuring) {
+                if (p.idx >= p.runes.size()) {
+                    h.getLevel().getServer().getPlayerList().remove(sp);
+                    return;
+                }
+                Runes.Rune r = p.runes.get(p.idx);
+                Vec3 at = h.absoluteVec(new Vec3(1.5, 2, 1.5));
+                sp.snapTo(at.x, at.y, at.z, 0F, 0F);
+                sp.setDeltaMovement(Vec3.ZERO);
+                sp.removeAllEffects();
+                RpgHealth.healFull(sp);
+                RuneCast.resetCooldowns(sp);
+                p.z = dummy(h);
+                clearStrays(h, p.z);
+                sp.lookAt(EntityAnchorArgument.Anchor.EYES, p.z.getEyePosition());
+                p.want = RuneCast.power(sp, family) * Runes.runeTotalMult(r.def());
+                p.cast = RuneCast.castRune(sp, r, false, 0);
+                p.t0 = now;
+                p.first = -1;
+                p.last = -1;
+                p.prev = 0;
+                p.measuring = true;
+                throw h.assertionException("measuring");
+            }
+            int t = (int) (now - p.t0);
+            double d = TestDummies.dealt(p.z);
+            if (d > p.prev + 1e-9) {
+                if (p.first < 0) p.first = t;
+                p.last = t;
+                p.prev = d;
+            }
+            boolean done = t >= MAX || (p.first >= 0 && t - p.last >= QUIET) || (p.first < 0 && t >= NONE) || !p.cast && t >= 5;
+            if (!done) throw h.assertionException("measuring " + t);
+            Runes.Rune r = p.runes.get(p.idx);
+            LOG.info("[rune-timing] {} {} {} cast={} first={} last={} dealt={} want={}", family, r.grade(), r.def().strOrNull("fn"), p.cast, p.first, p.last,
+                    String.format(Locale.ROOT, "%.1f", p.prev), String.format(Locale.ROOT, "%.1f", p.want));
+            p.z.discard();
+            p.idx++;
+            p.measuring = false;
+            throw h.assertionException("next");
+        });
+    }
+
+    @GameTest(environment = "mmorpg:rt_str", maxTicks = 2100)
+    public void timingStr(GameTestHelper h) {
+        probe(h, "str");
+    }
+
+    @GameTest(environment = "mmorpg:rt_dex", maxTicks = 2100)
+    public void timingDex(GameTestHelper h) {
+        probe(h, "dex");
+    }
+
+    @GameTest(environment = "mmorpg:rt_vit", maxTicks = 2100)
+    public void timingVit(GameTestHelper h) {
+        probe(h, "vit");
+    }
+
+    @GameTest(environment = "mmorpg:rt_int", maxTicks = 2100)
+    public void timingInt(GameTestHelper h) {
+        probe(h, "int");
+    }
+
+    @GameTest(environment = "mmorpg:rt_axe", maxTicks = 2100)
+    public void timingAxe(GameTestHelper h) {
+        probe(h, "axe");
+    }
+
+    @GameTest(environment = "mmorpg:rt_bow", maxTicks = 2100)
+    public void timingBow(GameTestHelper h) {
+        probe(h, "bow");
+    }
+
+    @GameTest(environment = "mmorpg:rt_holy", maxTicks = 2100)
+    public void timingHoly(GameTestHelper h) {
+        probe(h, "holy");
+    }
+
+    @GameTest(environment = "mmorpg:rt_storm", maxTicks = 2100)
+    public void timingStorm(GameTestHelper h) {
+        probe(h, "storm");
+    }
+
+    @GameTest(environment = "mmorpg:rt_assassin", maxTicks = 2100)
+    public void timingAssassin(GameTestHelper h) {
+        probe(h, "assassin");
+    }
+
+    @GameTest(environment = "mmorpg:rt_blade", maxTicks = 2100)
+    public void timingBlade(GameTestHelper h) {
+        probe(h, "blade");
+    }
+
+    @GameTest(environment = "mmorpg:rt_spellblade", maxTicks = 2100)
+    public void timingSpellblade(GameTestHelper h) {
+        probe(h, "spellblade");
+    }
+
+    @GameTest(environment = "mmorpg:rt_element", maxTicks = 2100)
+    public void timingElement(GameTestHelper h) {
+        probe(h, "element");
+    }
+
+    @GameTest(environment = "mmorpg:rt_spirit", maxTicks = 2100)
+    public void timingSpirit(GameTestHelper h) {
+        probe(h, "spirit");
+    }
+
+    @GameTest(environment = "mmorpg:rt_gravity", maxTicks = 2100)
+    public void timingGravity(GameTestHelper h) {
+        probe(h, "gravity");
+    }
+
+    @GameTest(environment = "mmorpg:rt_reaper", maxTicks = 2100)
+    public void timingReaper(GameTestHelper h) {
+        probe(h, "reaper");
+    }
+
+    @GameTest(environment = "mmorpg:rt_tide", maxTicks = 2100)
+    public void timingTide(GameTestHelper h) {
+        probe(h, "tide");
+    }
+
+    @GameTest(environment = "mmorpg:rt_golem", maxTicks = 2100)
+    public void timingGolem(GameTestHelper h) {
+        probe(h, "golem");
+    }
+
+    @GameTest(environment = "mmorpg:rt_monk", maxTicks = 2100)
+    public void timingMonk(GameTestHelper h) {
+        probe(h, "monk");
+    }
+
+    @GameTest(environment = "mmorpg:rt_hunter", maxTicks = 2100)
+    public void timingHunter(GameTestHelper h) {
+        probe(h, "hunter");
+    }
+
+    @GameTest(environment = "mmorpg:rt_volcano", maxTicks = 2100)
+    public void timingVolcano(GameTestHelper h) {
+        probe(h, "volcano");
+    }
+
+    @GameTest(environment = "mmorpg:rt_gladiator", maxTicks = 2100)
+    public void timingGladiator(GameTestHelper h) {
+        probe(h, "gladiator");
+    }
+
+    @GameTest(environment = "mmorpg:rt_body", maxTicks = 2100)
+    public void timingBody(GameTestHelper h) {
+        probe(h, "body");
+    }
+
+    @GameTest(environment = "mmorpg:rt_strike", maxTicks = 2100)
+    public void timingStrike(GameTestHelper h) {
+        probe(h, "strike");
+    }
+
+    @GameTest(environment = "mmorpg:rt_arcana", maxTicks = 460)
+    public void timingArcana(GameTestHelper h) {
+        probe(h, "arcana");
+    }
+
+    @GameTest(environment = "mmorpg:rt_dipper", maxTicks = 460)
+    public void timingDipper(GameTestHelper h) {
+        probe(h, "dipper");
+    }
+
+    @GameTest(environment = "mmorpg:rt_skyeye", maxTicks = 460)
+    public void timingSkyeye(GameTestHelper h) {
+        probe(h, "skyeye");
+    }
+
+    @GameTest(environment = "mmorpg:rt_endless", maxTicks = 460)
+    public void timingEndless(GameTestHelper h) {
+        probe(h, "endless");
+    }
+
+    @GameTest(environment = "mmorpg:rt_terra", maxTicks = 460)
+    public void timingTerra(GameTestHelper h) {
+        probe(h, "terra");
+    }
+
+    @GameTest(environment = "mmorpg:rt_yggdrasil", maxTicks = 460)
+    public void timingYggdrasil(GameTestHelper h) {
+        probe(h, "yggdrasil");
+    }
+
+    @GameTest(environment = "mmorpg:rt_abyss", maxTicks = 460)
+    public void timingAbyss(GameTestHelper h) {
+        probe(h, "abyss");
+    }
+
+    @GameTest(environment = "mmorpg:rt_glacier", maxTicks = 460)
+    public void timingGlacier(GameTestHelper h) {
+        probe(h, "glacier");
+    }
+}
