@@ -119,8 +119,8 @@ public final class RpgJobTests {
         return false;
     }
 
-    /** 차례로 할 일 (wait 틱 뒤 run) */
-    record Step(int wait, Runnable run) {}
+    /** 차례로 할 일 (delay 틱 뒤 task) */
+    record Step(int delay, Runnable task) {}
 
     static void chain(GameTestHelper h, List<Step> steps, int i, Runnable end) {
         if (i >= steps.size()) {
@@ -128,8 +128,8 @@ public final class RpgJobTests {
             return;
         }
         Step s = steps.get(i);
-        h.runAfterDelay(Math.max(1, s.wait()), () -> {
-            s.run().run();
+        h.runAfterDelay(Math.max(1, s.delay()), () -> {
+            s.task().run();
             chain(h, steps, i + 1, end);
         });
     }
