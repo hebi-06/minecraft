@@ -14,18 +14,18 @@
       "trait": {"name": "검세", "max": 5, "decay": 80,
         "desc": "칼 평타가 맞을 때마다 검세 +1 (최대 5 — 4초 동안 못 맞히면 하나씩 사라짐). 직업 스킬이 검세를 써서 세짐"},
       "skills": [
-        {"id": "swordsman_flurry", "name": "연참", "cd": 6, "total": 5, "hits": [1.2, 1.2, 2.6], "gap": 6, "reach": 3.6, "arc": 130, "step": 0.6,
-          "wave": {"need": 3, "use": 3, "range": 6, "width": 1.4}, "t": 12,
-          "desc": "반 걸음 들어가며 3번 베기 (1.2 · 1.2 · 2.6). 검세 3 이상이면 마지막 베기가 검기로 앞 6칸 관통 (검세 3 씀)"},
+        {"id": "swordsman_flurry", "name": "연참", "cd": 6, "total": 5, "hits": [1.2, 1.2, 2.6], "gap": 10, "reach": 3.6, "arc": 130, "step": 0.6,
+          "wave": {"need": 3, "use": 3, "range": 6, "width": 1.4}, "t": 20,
+          "desc": "반 걸음 들어가며 0.5초마다 3번 베기 (1.2 · 1.2 · 2.6). 검세 3 이상이면 마지막 베기가 검기로 앞 6칸 관통 (검세 3 씀)"},
         {"id": "swordsman_flash", "name": "섬보", "cd": 12, "total": 3, "mult": 3, "dist": 6, "width": 1.6, "critFor": 60, "t": 3,
           "desc": "바라보는 쪽 6칸을 미끄러지듯 지나가며 벰 (3), 3초 안의 다음 평타 한 번 치명타 확정"},
-        {"id": "swordsman_moon", "name": "원월참", "cd": 15, "total": 9, "hits": [4.5, 4.5], "gap": 6, "radius": 4.5, "perStack": 0.08, "t": 6,
+        {"id": "swordsman_moon", "name": "원월참", "cd": 15, "total": 9, "hits": [4.5, 4.5], "gap": 10, "radius": 4.5, "perStack": 0.08, "t": 10,
           "desc": "칼을 크게 한 바퀴 — 둘레 4.5칸 둥근 참격 2번 (4.5 · 4.5, 안쪽 → 바깥), 검세를 모두 써서 하나당 +8%"},
         {"id": "swordsman_mirror", "name": "명경지수", "cd": 30, "dur": 160, "echo": 0.35, "echoDelay": 4, "guard": 0.15,
-          "desc": "8초 태세: 칼 평타가 두 번 베기 (두 번째 35%) · 검세가 사라지지 않음 · 받는 근접 피해 −15%"},
-        {"id": "swordsman_ult", "name": "천검난무", "cd": 60, "total": 40, "swords": 24, "sword": 1, "radius": 10, "final": 16, "finalRange": 12, "finalWidth": 3.2,
-          "rise": 16, "every": 2, "gather": 12, "t": 78,
-          "desc": "등 뒤에 환영 검 24자루 → 둘레 10칸 적에게 차례로 꽂힘 (1 × 24) → 한데 모여 앞을 가르는 일섬 (16)"}
+          "desc": "8초 태세: 칼 평타가 두 번 베기 (두 번째 35%) · 검세가 사라지지 않음 · 받는 피해 −15%"},
+        {"id": "swordsman_ult", "name": "천검난무", "cd": 60, "total": 40, "swords": 24, "volleys": 6, "sword": 1, "radius": 10, "targets": 8, "final": 16, "finalRange": 12,
+          "finalWidth": 3.2, "rise": 16, "every": 10, "gather": 16, "t": 82,
+          "desc": "등 뒤에 환영 검 24자루 → 둘레 10칸 적에게 0.5초마다 4자루씩 꽂힘 (4 × 6) → 한데 모여 앞을 가르는 일섬 (16)"}
       ]
     },
     "warrior": {
@@ -50,16 +50,16 @@
         "markBurst": 1.0, "markFor": 200,
         "desc": "칼의 요구 스탯 '힘' 을 힘 + 마력 합으로 채움 · 칼 평타 · 칼 무기 스킬 배율 = 1 + (힘 + 마력 × 0.5) × 2%. 직업 스킬이 맞힌 적에 마력 각인 (최대 3 · 10초) — 평타가 각인 찍힌 적을 때리면 각인 하나가 터짐 (마법 피해 · 위력 × 1.0)"},
       "skills": [
-        {"id": "spellblade_arcslash", "name": "비전 참격", "cd": 6, "total": 8.5, "slash": 3.8, "burst": 4.7, "reach": 5, "arc": 100, "burstAt": 2.6, "burstRadius": 2.4, "delay": 8, "t": 8,
-          "desc": "칼에 마력을 둘러 앞 5칸 부채꼴 베기 (3.8) → 0.4초 뒤 벤 자리 룬 폭발 (4.7), 각인 1"},
-        {"id": "spellblade_blink", "name": "마력 도약", "cd": 12, "total": 5.1, "blast": 2.55, "dist": 7, "radius": 2.5, "t": 2,
-          "desc": "조준한 곳 7칸으로 순간 이동 — 떠난 자리 · 닿은 자리 둘레 2.5칸 폭발 (2.55 씩), 각인 1"},
-        {"id": "spellblade_runedance", "name": "룬 검무", "cd": 15, "total": 15.3, "lap": 5.1, "laps": 3, "swords": 6, "radius": 4, "dur": 40, "t": 40, "zone": true,
-          "desc": "둘레 반지름 4칸 룬 원 → 마력 검 6자루가 원을 따라 3바퀴 벰 (5.1 × 3 · 2초), 각인 1"},
+        {"id": "spellblade_arcslash", "name": "비전 참격", "cd": 6, "total": 8.5, "slash": 3.8, "burst": 4.7, "reach": 5, "arc": 100, "burstRadius": 2.4, "delay": 10, "t": 10,
+          "desc": "칼에 마력을 둘러 앞 5칸 부채꼴 베기 (3.8) → 0.5초 뒤 벤 자리 룬 폭발 (4.7), 각인 1"},
+        {"id": "spellblade_blink", "name": "마력 도약", "cd": 12, "total": 5.1, "path": 2.55, "blast": 2.55, "dist": 7, "width": 1.5, "radius": 3, "delay": 10, "t": 10,
+          "desc": "조준한 곳 (7칸) 으로 순간 이동 — 지나간 길의 적을 마력으로 베고 (2.55) 0.5초 뒤 닿은 자리 둘레 3칸 룬 폭발 (2.55), 각인 1"},
+        {"id": "spellblade_runedance", "name": "룬 검무", "cd": 15, "total": 15.3, "lap": 5.1, "laps": 3, "gap": 15, "swords": 6, "radius": 4, "dur": 40, "t": 30, "zone": true,
+          "desc": "둘레 반지름 4칸 룬 원 → 마력 검 6자루가 원을 따라 돌며 0.75초마다 벰 (5.1 × 3 · 2초), 각인 1"},
         {"id": "spellblade_awaken", "name": "마검 각성", "cd": 30, "dur": 240, "echo": 0.93, "reach": 1,
           "desc": "12초: 평타가 맞을 때마다 마력 참격 잔상이 한 번 더 벰 (위력 × 0.93 — 칼 · 티르빙 같음) · 평타 사거리 +1칸"},
         {"id": "spellblade_ult", "name": "비전 거검", "cd": 60, "total": 68, "slashes": [11, 11, 11], "thrust": 35, "range": 10, "width": 4.5, "thrustAt": 6, "thrustRadius": 4,
-          "rise": 20, "gap": 9, "t": 62,
+          "rise": 20, "gap": 10, "after": 15, "t": 55,
           "desc": "하늘에 룬 아홉이 원을 이루며 거대한 마력 검 → 가로 · 세로 · 대각 3번 베기 (11 × 3) → 찌르기 폭발 (35), 각인을 모두 터뜨림"}
       ]
     },

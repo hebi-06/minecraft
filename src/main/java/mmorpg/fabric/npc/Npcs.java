@@ -171,12 +171,13 @@ public final class Npcs {
 
     // ------------------------------------------------------------ 연출
 
-    private static String promptText(String mark, int lv, String name, boolean smith, boolean runesmith) {
+    private static String promptText(String mark, int lv, String name, boolean smith, boolean runesmith, boolean job) {
         if ("ready".equals(mark)) return "§a§l? §r§f" + name + " §7- 눌러서 퀘스트 완료 보고";
         if ("available".equals(mark)) return "§e§l! §r§f" + name + " §7- 눌러서 퀘스트 받기";
         if ("repeat".equals(mark)) return "§b§l! §r§f" + name + " §7- 눌러서 반복 의뢰 받기";
         if (smith) return "§6§l[대장장이] §r§f" + name + " §7- 눌러서 무기 강화·레벨 올리기";
         if (runesmith) return "§d§l[룬술사] §r§f" + name + " §7- 눌러서 룬 갈기·돌파·뽑기권";
+        if (job) return "§b§l[직업 교관] §r§f" + name + " §7- 눌러서 전직·직업 바꾸기 (10렙부터)";
         if (lv >= 0) return "§a§l[상점] §r§f" + name + " §7- 눌러서 무기·갑옷 상점·전리품 팔기";
         return "§f" + name + " §7- 눌러서 대화하기";
     }
@@ -228,12 +229,13 @@ public final class Npcs {
                 int lv = NpcData.shopLevel(npc);
                 boolean smith = NpcData.isSmith(npc);
                 boolean runesmith = NpcData.isRunesmith(npc);
+                boolean job = NpcData.isJobTrainer(npc); // 0.27.0 직업 교관
                 Vec3 h = npc.getEyePosition();
                 Vec3 at = new Vec3(h.x, h.y + 0.75, h.z);
                 if (mark != null) {
                     markParticle(sp, level, "ready".equals(mark) ? NPC.str("readyParticle") : "repeat".equals(mark) ? NPC.str("repeatParticle") : NPC.str("questParticle"), at);
-                } else if ((lv >= 0 || smith || runesmith) && shopDone.add(npc.getUUID())) {
-                    markParticle(null, level, smith ? NPC.str("smithParticle") : runesmith ? NPC.str("runesmithParticle") : NPC.str("shopParticle"), at);
+                } else if ((lv >= 0 || smith || runesmith || job) && shopDone.add(npc.getUUID())) {
+                    markParticle(null, level, smith ? NPC.str("smithParticle") : runesmith ? NPC.str("runesmithParticle") : job ? "minecraft:endrod" : NPC.str("shopParticle"), at);
                 }
                 String pk = sp.getUUID() + "|" + npc.getUUID();
                 double d = npc.position().distanceTo(sp.position());
@@ -244,11 +246,12 @@ public final class Npcs {
                         if (mark != null) SkillFx.playFor(sp, "random.orb", "ready".equals(mark) ? 1.8 : 1.4, 0.7);
                         else if (smith) SkillFx.playFor(sp, "random.anvil_land", 1.4, 0.35);
                         else if (runesmith) SkillFx.playFor(sp, "chime.amethyst_block", 1.2, 0.6);
+                        else if (job) SkillFx.playFor(sp, "block.bell.hit", 1.4, 0.5);
                         else if (lv >= 0) SkillFx.playFor(sp, "mob.villager.yes", 1, 0.8);
                     }
                     boolean due = since == null || (now - since) % 40 < 10;
                     if (due && !Forms.isOpen(sp) && Notify.actionbarFree(sp)) {
-                        Notify.notify(sp, promptText(mark, lv, NpcData.name(npc), smith, runesmith), 12);
+                        Notify.notify(sp, promptText(mark, lv, NpcData.name(npc), smith, runesmith, job), 12);
                     }
                 } else if (NEAR_SINCE.containsKey(pk) && d > prompt + 1) {
                     NEAR_SINCE.remove(pk);

@@ -36,9 +36,9 @@ public final class QuestTalk {
     static final int TALK_PAGE = 3;
     private static final Map<String, Integer> KIND_ORDER = Map.ofEntries(Map.entry("deliver", 0), Map.entry("turnin", 0), Map.entry("offer", 1), Map.entry("progress", 2),
             Map.entry("wait", 2), Map.entry("more", 3), Map.entry("smith", 4), Map.entry("enhance", 4), Map.entry("shop", 4), Map.entry("armor", 4),
-            Map.entry("runesmith", 4), Map.entry("bye", 5));
-    /** 대화창의 일거리 칸 (퀘스트가 아닌 것) */
-    private static final Set<String> SERVICE = Set.of("shop", "armor", "smith", "enhance", "runesmith", "bye");
+            Map.entry("runesmith", 4), Map.entry("job", 4), Map.entry("bye", 5));
+    /** 대화창의 일거리 칸 (퀘스트가 아닌 것 — 0.27.0 직업 교관 job) */
+    private static final Set<String> SERVICE = Set.of("shop", "armor", "smith", "enhance", "runesmith", "job", "bye");
 
     /** 대화창 선택지 하나 (kind: deliver · turnin · offer · progress · wait · more · 일거리) */
     record Option(String kind, Quest q, String text, Icon icon) {}
@@ -150,6 +150,13 @@ public final class QuestTalk {
         String greet = NpcData.greeting(t.npc);
         if (greet.isEmpty()) greet = mainGreeting(sp, t.key);
         List<Option> all = dialogOptions(sp, t.key, lv, smith, runesmith);
+        // 0.27.0 직업 교관: "직업 고르기 · 바꾸기" (대화 끝내기 바로 앞)
+        boolean job = NpcData.isJobTrainer(t.npc);
+        if (job) {
+            int bye = all.size();
+            for (int i = 0; i < all.size(); i++) if (all.get(i).kind().equals("bye")) bye = i;
+            all.add(bye, new Option("job", null, mmorpg.fabric.job.JobTrainer.optionText(sp), mmorpg.fabric.ui.Icon.of("textures/items/book_enchanted")));
+        }
         List<Option> questOpts = new ArrayList<>();
         for (Option o : all) if (!SERVICE.contains(o.kind())) questOpts.add(o);
         boolean hasQuest = !questOpts.isEmpty();
@@ -160,15 +167,17 @@ public final class QuestTalk {
         if (pages > 1) opts.add(new Option("more", null, "§f다른 퀘스트 보기 §7(" + (t.page + 1) + "/" + pages + ")", DialogForm.NEXT));
         for (Option o : all) if (SERVICE.contains(o.kind())) opts.add(o);
         // 인사말도 퀘스트도 없는 상점 · 대장장이 · 룬술사 NPC 는 바로 그 창을 엶 (둘 이상이면 대화창에서 고름)
-        int services = (lv >= 0 ? 1 : 0) + (smith ? 1 : 0) + (runesmith ? 1 : 0);
+        int services = (lv >= 0 ? 1 : 0) + (smith ? 1 : 0) + (runesmith ? 1 : 0) + (job ? 1 : 0);
         if (t.first && greet.isEmpty() && !hasQuest && services == 1) {
             if (smith) Smith.smithLoop(sp, "enhance", t.done); // 대장장이는 강화 창부터
             else if (runesmith) RuneSmith.runesmithLoop(sp, "grind", t.done);
+            else if (job) mmorpg.fabric.job.JobTrainer.open(sp, t.done); // 0.27.0 직업 교관: 전직 창부터
             else Store.storeLoop(sp, lv, "weapons", t.done);
             return;
         }
         String fallback = smith ? "무기를 벼려 주지. 강화석이나 별철 광석은 챙겨 왔나?"
                 : runesmith ? "룬은 돌고 도는 법이지. 쓰지 않는 룬이 있으면 가져오게."
+                : job ? "길을 정할 때가 되었군. 손에 맞는 무기를 따라 직업을 고르게."
                 : lv >= 0 ? "어서 오게. 좋은 무기와 갑옷이 많다네." : "안녕하신가, 모험가.";
         if (t.first) {
             t.first = false;
@@ -198,6 +207,7 @@ public final class QuestTalk {
                 case "shop", "armor" -> Store.storeLoop(sp, lv, o.kind().equals("armor") ? "armor" : "weapons", t.done);
                 case "smith", "enhance" -> Smith.smithLoop(sp, o.kind().equals("enhance") ? "enhance" : "smith", t.done);
                 case "runesmith" -> RuneSmith.runesmithLoop(sp, "grind", t.done);
+                case "job" -> mmorpg.fabric.job.JobTrainer.open(sp, t.done); // 0.27.0 전직 · 직업 바꾸기 창
                 // 받자마자 끝낼 수 있으면 (전리품을 이미 모아 온 반복 의뢰 등) 대화를 이어 가 바로 보고
                 case "offer" -> offerFlow(sp, t.name, q, ok -> {
                     if (!ok || status(sp, q).equals("ready")) step(t);

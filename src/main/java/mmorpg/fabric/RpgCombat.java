@@ -49,17 +49,28 @@ public final class RpgCombat {
     /** 시험용: 치명타를 정함 (null = 확률대로) */
     public static Boolean forceCrit = null;
 
+    /** 0.27.0 이번 평타가 치명타로 확정인지 (검사 섬보 — 확인하면 그 확정을 씀, 평타 · 활 · 완드가 실제로 나갈 때만 부름) */
+    public static java.util.function.BiPredicate<ServerPlayer, Weapon> sureCrit = (p, w) -> false;
+
     /**
      * 맞히기 직전에 기억한 공격 (피해가 실제로 들어간 뒤 숫자 · 연출에 씀): 치명타였는지, 무기 (평타 · 활 · 완드 — 스킬은 null),
      * 근접 평타인지 (참격 연출), 스킬 · 룬 피해면 숫자 모양 (평타는 null — combat.js skillMarks), 평타에 더한 피해 (없으면 null)
      */
-    public record Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus) {}
+    public record Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus, int[] grad) {
+        public Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus) {
+            this(crit, tick, w, melee, style, bonus, null);
+        }
+    }
 
     /**
      * 평타에 더하는 피해 하나 (룬 훅이 줌 — combat.js bonusHooks): add = 더할 양, mark = 숫자 앞 표시, key = 훅 구분,
      * style = 더한 몫의 숫자 모양 (null = 마검 부여의 보라 SPELL), grades = 평타 강화가 더한 등급들
      */
-    public record Bonus(double add, String mark, String key, DamageNumbers.Style style, List<String> grades) {}
+    public record Bonus(double add, String mark, String key, DamageNumbers.Style style, List<String> grades, int[] grad) {
+        public Bonus(double add, String mark, String key, DamageNumbers.Style style, List<String> grades) {
+            this(add, mark, key, style, grades, null);
+        }
+    }
 
     /** 평타 한 번에 더한 피해 모두: add = 합, total = 평타 + 더한 것, mark = 표시들, parts = 훅마다 */
     public record WeaponBonus(double add, double total, String mark, List<Bonus> parts) {}
@@ -68,6 +79,12 @@ public final class RpgCombat {
     @FunctionalInterface
     public interface BonusHook {
         Bonus bonus(ServerPlayer attacker, LivingEntity victim, Weapon w);
+    }
+
+    /** 0.27.0 평타에 더할 것 — 평타 피해 dmg (치명타 뒤, 더하기 전) 를 아는 훅 (직업: 명경지수 두 번째 베기 35% 등) */
+    @FunctionalInterface
+    public interface ScaledBonusHook {
+        Bonus bonus(ServerPlayer attacker, LivingEntity victim, Weapon w, double dmg);
     }
 
     /** 무기로 맞힘 (평타 · 활 · 완드 피해가 실제로 들어간 뒤 — combat.js addWeaponHitHook) */
@@ -89,6 +106,7 @@ public final class RpgCombat {
     }
 
     private static final List<BonusHook> BONUS_HOOKS = new ArrayList<>();
+    private static final List<ScaledBonusHook> SCALED_BONUS_HOOKS = new ArrayList<>();
     private static final List<HitHook> HIT_HOOKS = new ArrayList<>();
     private static final List<CritHook> CRIT_HOOKS = new ArrayList<>();
     private static final List<RangedCdHook> RANGED_CD_HOOKS = new ArrayList<>();
@@ -101,6 +119,10 @@ public final class RpgCombat {
 
     public static void addWeaponBonusHook(BonusHook h) {
         BONUS_HOOKS.add(h);
+    }
+
+    public static void addScaledBonusHook(ScaledBonusHook h) {
+        SCALED_BONUS_HOOKS.add(h);
     }
 
     public static void addWeaponHitHook(HitHook h) {
@@ -171,7 +193,7 @@ public final class RpgCombat {
 
     /** 평타 피해 dmg 에 더할 것 (combat.js weaponBonus — 없으면 null) */
     static WeaponBonus weaponBonus(ServerPlayer attacker, LivingEntity victim, Weapon w, double dmg) {
-        if (BONUS_HOOKS.isEmpty()) return null;
+        if (BONUS_HOOKS.isEmpty() && SCALED_BONUS_HOOKS.isEmpty()) return null;
         Long landed = BONUS_LANDED.get(key(victim, attacker));
         if (landed != null && Tasks.now() - landed < BONUS_GAP) return null; // 무적 시간 안의 평타에는 더하지 않음
         double add = 0;
@@ -187,6 +209,18 @@ public final class RpgCombat {
                 }
             } catch (RuntimeException e) {
                 Mmorpg.LOG.warn("[mmorpg] weapon bonus", e);
+            }
+        }
+        for (ScaledBonusHook h : SCALED_BONUS_HOOKS) {
+            try {
+                Bonus b = h.bonus(attacker, victim, w, dmg);
+                if (b != null && b.add() > 0) {
+                    add += b.add();
+                    if (b.mark() != null) mk.append(b.mark());
+                    parts.add(b);
+                }
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] weapon bonus (scaled)", e);
             }
         }
         add *= dealtMult.applyAsDouble(attacker); // 0.19.0 가호: 평타 몫 (powerOf) 과 같은 배율
@@ -249,13 +283,13 @@ public final class RpgCombat {
         return Stats.reqLevelOf(RpgData.of(sp).lvmax(), sp.experienceLevel);
     }
 
-    /** 무기를 쓰는 데 모자란 것 (레벨 · 찍은 스탯 — 장비 보너스 제외) */
+    /** 무기를 쓰는 데 모자란 것 (레벨 · 찍은 스탯 — 장비 보너스 제외 · 0.27.0 마검사 「마력 검술」: 칼의 힘 요구를 힘 + 마력으로) */
     public static List<Weapons.Lack> lackOf(ServerPlayer sp, Weapon w) {
-        return Weapons.weaponLack(w, reqLevelOf(sp), RpgData.of(sp).base());
+        return Weapons.weaponLack(w, reqLevelOf(sp), mmorpg.fabric.job.JobSystem.reqStats(sp, w, RpgData.of(sp).base()));
     }
 
     public static String reqText(ServerPlayer sp, Weapon w) {
-        return Combat.reqText(w, reqLevelOf(sp), RpgData.of(sp).base());
+        return Combat.reqText(w, reqLevelOf(sp), mmorpg.fabric.job.JobSystem.reqStats(sp, w, RpgData.of(sp).base()));
     }
 
     /**
@@ -263,7 +297,9 @@ public final class RpgCombat {
      * × 가하는 피해 배율 (0.19.0 세계수의 가호 — {@link #dealtMult})
      */
     public static double powerOf(ServerPlayer sp, Weapon w) {
-        return Combat.powerMultiplier(RpgStats.effective(sp), w, mmorpg.fabric.gear.WeaponEnhance.held(sp, w)) * mmorpg.fabric.stattree.StatTrees.atkMult(sp)
+        // 0.27.0 마검사 「마력 검술」: 칼 평타 · 칼 무기 스킬의 스탯 배율 = 1 + (힘 + 마력 × 0.5) × 2% (JobSystem.damageStats — 다른 직업 · 무기는 그대로)
+        Map<String, Double> eff = mmorpg.fabric.job.JobSystem.damageStats(sp, w, RpgStats.effective(sp));
+        return Combat.powerMultiplier(eff, w, mmorpg.fabric.gear.WeaponEnhance.held(sp, w)) * mmorpg.fabric.stattree.StatTrees.atkMult(sp)
                 * dealtMult.applyAsDouble(sp); // 0.19.0 가호 (세계수의 가호 — 걸린 동안 1 + 가호)
     }
 
@@ -279,6 +315,7 @@ public final class RpgCombat {
     /** 평타 치명타 (룬 훅으로 더한 확률 포함 — victim 은 null 일 수 있음) */
     public static boolean rollCrit(ServerPlayer sp, Weapon w, LivingEntity victim) {
         if (forceCrit != null) return forceCrit;
+        if (sureCrit.test(sp, w)) return true; // 0.27.0 검사 섬보: 다음 평타 한 번 치명타 확정 (JobSystem — 쓰면 지움)
         return sp.getRandom().nextDouble() < critChanceOf(sp, w, victim);
     }
 
@@ -298,6 +335,11 @@ public final class RpgCombat {
     /** 스킬 · 룬 피해 표시 (숫자 모양 style — 평타 공식 · 참격 연출 없음) */
     public static void skillMark(Entity victim, ServerPlayer attacker, boolean crit, DamageNumbers.Style style) {
         MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, false, style, null));
+    }
+
+    /** 0.27.0 직업 스킬 피해 표시: 숫자 모양 style + 직업 색 두 빛 그라데이션 grad {0xRRGGBB, 0xRRGGBB} (DamageNumbers.feedback) */
+    public static void jobMark(Entity victim, ServerPlayer attacker, boolean crit, DamageNumbers.Style style, int[] grad) {
+        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, false, style, null, grad));
     }
 
     /** 들어가지 않은 공격의 기억을 지움 */

@@ -42,6 +42,7 @@ public final class Mmorpg implements ModInitializer {
         FxDisplays.init(); // 0.18.0 연출용 표시 엔티티 (대지 가르기의 대검 · 들리는 땅)
         Transcend.init();
         RuneSystem.init();
+        mmorpg.fabric.job.JobSystem.init(); // 0.27.0 직업 (전직 · 직업 스킬 칸 다섯 · 특성 · /job — 직업 스킬 칸 패킷은 RuneSystem 의 SkillBar 가 등록)
         mmorpg.fabric.gear.ArmorSystem.init();
         mmorpg.fabric.shop.ShopCommands.init();
         mmorpg.fabric.npc.Npcs.init();

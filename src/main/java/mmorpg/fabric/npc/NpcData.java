@@ -96,7 +96,7 @@ public final class NpcData {
     private static String legacyName(Entity npc) {
         Component c = npc.getCustomName();
         String s = c == null ? "" : stripFormat(c.getString());
-        return s.replaceAll("\\[(상점|!|대장장이|룬술사)\\]", "").replaceAll("\\(\\d+렙\\)", "").trim();
+        return s.replaceAll("\\[(상점|!|대장장이|룬술사|직업 교관)\\]", "").replaceAll("\\(\\d+렙\\)", "").trim();
     }
 
     private static MinecraftServer server(Entity e) {
@@ -189,13 +189,29 @@ public final class NpcData {
         else npc.removeTag("rpg_runesmith");
     }
 
+    /** 0.27.0 직업 교관 (태그 rpg_job — 전직 · 직업 바꾸기 창) */
+    public static boolean isJobTrainer(Entity npc) {
+        return npc.entityTags().contains("rpg_job");
+    }
+
+    public static void setJobTrainer(Entity npc, boolean on) {
+        if (on) npc.addTag("rpg_job");
+        else npc.removeTag("rpg_job");
+    }
+
     /** 이름표: [!] · [상점] · [대장장이] · [룬술사] + 이름 (+ 상점 레벨) */
     public static String nameTagFor(String name, int shopLv, boolean hasQuest, boolean smith, boolean runesmith) {
+        return nameTagFor(name, shopLv, hasQuest, smith, runesmith, false);
+    }
+
+    /** 이름표 (0.27.0 직업 교관 [직업 교관] 도) */
+    public static String nameTagFor(String name, int shopLv, boolean hasQuest, boolean smith, boolean runesmith, boolean job) {
         StringBuilder p = new StringBuilder();
         if (hasQuest) p.append("§e§l[!] ");
         if (shopLv >= 0) p.append("§a§l[상점] ");
         if (smith) p.append("§6§l[대장장이] ");
         if (runesmith) p.append("§d§l[룬술사] ");
+        if (job) p.append("§b§l[직업 교관] ");
         String suffix = shopLv >= 0 ? " §7(" + shopLv + "렙)" : "";
         return p + "§r§f" + name + suffix;
     }
@@ -313,7 +329,7 @@ public final class NpcData {
         npc.addTag(TAG);
         if (questCount > 0) npc.addTag("rpg_quest");
         else npc.removeTag("rpg_quest");
-        npc.setCustomName(Component.literal(BedrockText.toJava(nameTagFor(name, lv, questCount > 0, isSmith(npc), isRunesmith(npc)))));
+        npc.setCustomName(Component.literal(BedrockText.toJava(nameTagFor(name, lv, questCount > 0, isSmith(npc), isRunesmith(npc), isJobTrainer(npc)))));
         npc.setCustomNameVisible(true);
         MinecraftServer s = server(npc);
         JsonObject reg = readObj(s, W_REG);

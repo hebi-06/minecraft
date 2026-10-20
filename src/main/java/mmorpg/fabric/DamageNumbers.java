@@ -86,7 +86,10 @@ public final class DamageNumbers {
         FERAL("§a§l", "", "!", 1.95F),
         ERUPT("§c§l", "", "!", 2.05F),
         BURN("§6", "", "", 1.3F),
-        IRON("§f§l", "", "!", 1.95F);
+        IRON("§f§l", "", "!", 1.95F),
+        // 0.27.0 직업 스킬: 직업 색 두 빛 그라데이션 (글자마다 RGB — Mark.grad, 없으면 흰 굵게), 궁극기 마지막 타는 1.4배 크기 + "!"
+        JOB("§f§l", "", "", 1.6F),
+        JOB_BIG("§f§l", "", "!", 2.25F);
 
         final String codes;
         final String before;
@@ -231,8 +234,9 @@ public final class DamageNumbers {
         String vm = victimMark.apply(victim);
         if (vm != null && !vm.isEmpty()) mark = vm + mark;
         if (m != null && m.style() != null) {
-            // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback)
-            show(victim, dealt, m.style(), mark, 0);
+            // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback), 0.27.0 직업 스킬은 직업 색 그라데이션
+            if (m.grad() != null && m.grad().length >= 2) showGradient(victim, dealt, m.style(), m.grad(), mark, 0);
+            else show(victim, dealt, m.style(), mark, 0);
             return;
         }
         Style style = Style.NORMAL;
@@ -260,29 +264,83 @@ public final class DamageNumbers {
         }
     }
 
-    /** 평타 숫자 위에 더한 몫 (숫자 모양이 같은 것끼리 합쳐 — 마검 부여 = 보라 SPELL, 평타 강화 = 노랑 RUNE) */
+    /**
+     * 평타 숫자 위에 더한 몫 (숫자 모양이 같은 것끼리 합쳐 — 마검 부여 = 보라 SPELL, 평타 강화 = 노랑 RUNE). 0.27.0 직업 몫 (명경지수 두 번째 베기 · 마검 각성 잔상 ·
+     * 마력 각인 폭발 — Bonus.grad) 은 몫마다 직업 색 그라데이션 숫자
+     */
     private static void showBonus(LivingEntity victim, double extra, RpgCombat.WeaponBonus b) {
         java.util.Map<Style, double[]> by = new java.util.LinkedHashMap<>();
         java.util.Map<Style, String> marks = new java.util.LinkedHashMap<>();
+        List<RpgCombat.Bonus> graded = new ArrayList<>();
+        double all = 0;
         for (RpgCombat.Bonus p : b.parts()) {
+            all += p.add();
+            if (p.grad() != null && p.grad().length >= 2) {
+                graded.add(p);
+                continue;
+            }
             Style st = p.style() != null ? p.style() : Style.SPELL;
             by.computeIfAbsent(st, k -> new double[1])[0] += p.add();
             String mk = p.mark() == null ? "" : p.mark();
             String cur = marks.getOrDefault(st, "");
             if (!cur.contains(mk)) marks.put(st, cur + mk);
         }
-        double total = 0;
-        for (double[] g : by.values()) total += g[0];
-        if (by.size() <= 1 || !(total > 0)) {
+        if (graded.isEmpty() && (by.size() <= 1 || !(all > 0))) {
             Style st = by.isEmpty() ? Style.SPELL : by.keySet().iterator().next();
             show(victim, extra, st, b.mark() == null ? "" : b.mark(), 0.45);
             return;
         }
+        if (!(all > 0)) return;
         double lift = 0.45;
         for (var e : by.entrySet()) {
-            show(victim, extra * e.getValue()[0] / total, e.getKey(), marks.getOrDefault(e.getKey(), ""), lift);
+            show(victim, extra * e.getValue()[0] / all, e.getKey(), marks.getOrDefault(e.getKey(), ""), lift);
             lift += 0.4;
         }
+        for (RpgCombat.Bonus p : graded) {
+            showGradient(victim, extra * p.add() / all, p.style() != null ? p.style() : Style.JOB, p.grad(), p.mark() == null ? "" : p.mark(), lift);
+            lift += 0.4;
+        }
+    }
+
+    /**
+     * 0.27.0 직업 스킬 숫자: 맞은 대상 머리 위에 직업 색 두 빛 그라데이션 (글자마다 grad[0] → grad[1] — 만상귀일 무지갯빛 숫자와 같은 방식, RGB 라 직업 색
+     * 그대로) · 굵게. style 은 크기 · 앞뒤 글자 (JOB_BIG = 궁극기 마지막 타 1.4배 + "!")
+     */
+    public static void showGradient(LivingEntity victim, double amount, Style style, int[] grad, String mark, double lift) {
+        if (!Rules.get().obj("CONFIG").truthy("DAMAGE_TEXT") || grad == null || grad.length < 2) return;
+        if (ACTIVE.size() >= MAX_TEXTS) return;
+        if (!(victim.level() instanceof ServerLevel level) || victim.isRemoved()) return;
+        Vec3 at = anchor.apply(victim);
+        Vec3 head = at != null ? at : victim.getEyePosition();
+        RandomSource r = victim.getRandom();
+        Vec3 pos = new Vec3(head.x + (r.nextDouble() - 0.5) * 0.7, head.y + 0.3 + lift, head.z + (r.nextDouble() - 0.5) * 0.7);
+        spawnText(level, pos, gradient(mark, style.before + number(amount) + style.after, grad[0], grad[1]), style.scale, POP);
+    }
+
+    /** 글자마다 a → b 로 바뀌는 색 (굵게 — 빈칸은 세지 않음), 앞 표시 mark 는 베드락 서식 그대로 */
+    public static Component gradient(String mark, String text, int a, int b) {
+        net.minecraft.network.chat.MutableComponent out = Component.empty();
+        if (mark != null && !mark.isEmpty()) out.append(Component.literal(BedrockText.toJava(mark)));
+        int n = 0;
+        for (int i = 0; i < text.length(); i++) if (!Character.isWhitespace(text.charAt(i))) n++;
+        int k = 0;
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            double t = n <= 1 ? 0 : (double) k / (n - 1);
+            if (!Character.isWhitespace(ch)) k++;
+            int rgb = lerpRgb(a, b, t);
+            out.append(Component.literal(String.valueOf(ch)).withColor(rgb).withStyle(net.minecraft.ChatFormatting.BOLD));
+        }
+        return out;
+    }
+
+    /** 0xRRGGBB 사이 (t = 0 ~ 1) */
+    public static int lerpRgb(int a, int b, double t) {
+        double u = Math.max(0, Math.min(1, t));
+        int r = (int) Math.round(((a >> 16) & 0xFF) + (((b >> 16) & 0xFF) - ((a >> 16) & 0xFF)) * u);
+        int g = (int) Math.round(((a >> 8) & 0xFF) + (((b >> 8) & 0xFF) - ((a >> 8) & 0xFF)) * u);
+        int bl = (int) Math.round((a & 0xFF) + ((b & 0xFF) - (a & 0xFF)) * u);
+        return (r << 16) | (g << 8) | bl;
     }
 
     /**

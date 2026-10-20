@@ -85,7 +85,13 @@ public final class JobsTest {
         check(near(sum(sw.skill(2), "hits"), 9), "원월참 4.5 × 2");
         check(near(sw.skill(4).num("swords", 0) * sw.skill(4).num("sword", 0) + sw.skill(4).num("final", 0), 40), "천검난무 1 × 24 + 16");
         check(near(sb.skill(0).num("slash", 0) + sb.skill(0).num("burst", 0), 8.5), "비전 참격 3.8 + 4.7");
-        check(near(sb.skill(1).num("blast", 0) * 2, 5.1), "마력 도약 2.55 × 2");
+        check(near(sb.skill(1).num("path", 0) + sb.skill(1).num("blast", 0), 5.1), "마력 도약 2.55 + 2.55");
+        check(near(sw.skill(4).num("swords", 0) / sw.skill(4).num("volleys", 1), 4), "천검난무 4자루씩");
+        // 같은 적을 여러 번 치는 스킬은 무적 시간 (10틱) 만큼 띄움
+        check(sw.skill(0).num("gap", 0) >= 10 && sw.skill(2).num("gap", 0) >= 10 && sw.skill(4).num("every", 0) >= 10 && sb.skill(0).num("delay", 0) >= 10
+                && sb.skill(1).num("delay", 0) >= 10 && sb.skill(2).num("gap", 0) >= 10 && sb.skill(4).num("gap", 0) >= 10 && sb.skill(4).num("after", 0) >= 10, "i-frame spacing");
+        // 천검난무: 마지막 꽂힘 (검이 날아가는 데 6틱까지) 과 일섬 사이도 10틱 넘게
+        check(sw.skill(4).num("gather", 0) >= 16, "천검난무 모임 16틱 (날아감 6 + 무적 10)");
         check(near(sb.skill(2).num("lap", 0) * sb.skill(2).num("laps", 0), 15.3), "룬 검무 5.1 × 3");
         check(near(sum(sb.skill(4), "slashes") + sb.skill(4).num("thrust", 0), 68), "비전 거검 11 × 3 + 35");
         check(near(sb.skill(3).num("echo", 0) * sb.skill(3).num("dur", 0) / 10 / 30, 0.744), "마검 각성 0.93 × 24 / 30초 = 0.744 P/초 (검사 명경지수 × 1.7)");

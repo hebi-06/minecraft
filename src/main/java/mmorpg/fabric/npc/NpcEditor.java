@@ -322,7 +322,7 @@ public final class NpcEditor {
         info.add("§l" + name + "§r §8(번호 " + key + ")");
         if (main != null) info.add("§6메인 퀘스트 NPC " + main.n() + "번§7 · " + main.role());
         info.add("§7상점: §f" + (lv >= 0 ? lv + "렙 무기·갑옷 상점" : "없음") + "§7 · 대장장이: §f" + (NpcData.isSmith(npc) ? "예" : "아니오") + "§7 · 룬술사: §f"
-                + (NpcData.isRunesmith(npc) ? "예" : "아니오"));
+                + (NpcData.isRunesmith(npc) ? "예" : "아니오") + "§7 · 직업 교관: §f" + (NpcData.isJobTrainer(npc) ? "예" : "아니오"));
         info.add("§7퀘스트: §f" + list.size() + "개" + (builtinText.isEmpty() ? "" : " §8(+ " + builtinText + ", 고칠 수 없음)"));
         info.add("§7인사말: §f" + preview(greet, 40) + (main != null && greet.isEmpty() ? " §8(비우면 메인 퀘스트 인사말)" : ""));
         info.add("§7스킨: §f" + (skin.isEmpty() ? "기본" : skin));
@@ -376,6 +376,7 @@ public final class NpcEditor {
                 .dropdown("lv", "이 NPC를 누르면 여는 상점", opts, lv >= 0 ? LEVELS.indexOf((double) lv) + 1 : 0)
                 .toggle("smith", "대장장이 §7(무기 강화 +1~+10 · 영웅 무기 레벨 30→35→40렙)", NpcData.isSmith(npc))
                 .toggle("runesmith", "룬술사 §7(룬 갈기 → 룬 조각 → 룬 뽑기권 · 같은 룬 돌파)", NpcData.isRunesmith(npc))
+                .toggle("job", "직업 교관 §7(10렙 전직 · 직업 바꾸기 — 0.27.0)", NpcData.isJobTrainer(npc))
                 .submit("저장")
                 .show(sp, v -> {
                     if (v != null) {
@@ -383,6 +384,7 @@ public final class NpcEditor {
                         NpcData.setShop(npc, i > 0 && i - 1 < LEVELS.size() ? level(LEVELS, i - 1) : -1);
                         NpcData.setSmith(npc, flag(v, "smith"));
                         NpcData.setRunesmith(npc, flag(v, "runesmith"));
+                        NpcData.setJobTrainer(npc, flag(v, "job"));
                     }
                     then.run();
                 });
@@ -908,6 +910,13 @@ public final class NpcEditor {
                 refresh(npc);
                 return "룬술사로 지정했습니다. §7룬을 갈아 룬 조각으로, 룬 조각으로 뽑기권을 팝니다.";
             }
+            case "job" -> {
+                NpcData.setJobTrainer(npc, true);
+                if (!a.isEmpty()) NpcData.setName(npc, a);
+                else if (!named) NpcData.setName(npc, "직업 교관");
+                refresh(npc);
+                return "직업 교관으로 지정했습니다. §710렙부터 전직하고, 실버를 내고 직업을 바꿉니다.";
+            }
             case "shop" -> {
                 int lv = level(LEVELS, 0);
                 try {
@@ -963,7 +972,7 @@ public final class NpcEditor {
 
     private static LiteralArgumentBuilder<CommandSourceStack> roleCommand(String sub, boolean tag) {
         LiteralArgumentBuilder<CommandSourceStack> node = Commands.literal(sub);
-        List<String> roles = tag ? List.of("quest", "shop", "smith", "runesmith", "clear") : List.of("quest", "shop", "smith", "runesmith");
+        List<String> roles = tag ? List.of("quest", "shop", "smith", "runesmith", "job", "clear") : List.of("quest", "shop", "smith", "runesmith", "job");
         for (String role : roles) {
             LiteralArgumentBuilder<CommandSourceStack> r = Commands.literal(role).executes(c -> runRole(c, tag, role, ""));
             if (!role.equals("clear")) {

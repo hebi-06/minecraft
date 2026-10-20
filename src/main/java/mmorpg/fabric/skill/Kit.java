@@ -547,9 +547,23 @@ public final class Kit {
      * 자바의 기본 밀침은 없앰 (애드온의 applyDamage 처럼 — 밀치는 스킬은 직접 밈). 실제로 들어갔는지 (무적 시간 · 면역이면 false)
      */
     public static boolean applySkillDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style) {
+        return applyDamage(sp, target, amount, crit, cause, style, null);
+    }
+
+    /**
+     * 0.27.0 직업 스킬 피해 한 번: {@link #applySkillDamage} 와 같고 (평타 공식 · 밀침 없음, 무적 시간 · 면역이면 false) 숫자는 직업 색 두 빛 그라데이션
+     * (grad = {0xRRGGBB, 0xRRGGBB} — DamageNumbers.feedback)
+     */
+    public static boolean applyJobDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad) {
+        return applyDamage(sp, target, amount, crit, cause, style, grad);
+    }
+
+    private static boolean applyDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad) {
         if (sp.isRemoved() || target == null || target.isRemoved() || !(amount > 0)) return false;
         if (!(target.level() instanceof ServerLevel tl)) return false;
-        RpgCombat.skillMark(target, sp, crit, style != null ? style : crit ? DamageNumbers.Style.SKILLCRIT : DamageNumbers.Style.SKILL);
+        DamageNumbers.Style st = style != null ? style : crit ? DamageNumbers.Style.SKILLCRIT : DamageNumbers.Style.SKILL;
+        if (grad != null) RpgCombat.jobMark(target, sp, crit, st, grad);
+        else RpgCombat.skillMark(target, sp, crit, st);
         Vec3 v = target.getDeltaMovement();
         boolean hurt = target.hurtServer(tl, source(sp, cause), (float) amount);
         if (!hurt) {

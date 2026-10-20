@@ -60,7 +60,7 @@ java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.HeroSkillsTes
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.WeaponsMoreTest
 # 0.12.5 밸런스 (자바 전용 규칙 덧붙임 — 두 스탯 무기용 갑옷 5종 · 방패 상시 감소 상한 25% · 가벼운 갑옷 방어 민첩 0.9 · 마력 0.8)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.ArmorMoreTest
-# 0.12.6 (자바 전용 규칙 덧붙임 — 사신 계열 룬 (낫 전용 · 피의 초승달) · 성기사 룬 적용 스탯 체력 + 힘 × 0.5)
+# 0.12.6 (자바 전용 규칙 덧붙임 — 사신 계열 룬 (피의 초승달 — 0.27.0 부터 낫 조건 없음) · 성기사 룬 적용 스탯 체력 + 힘 × 0.5)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RunesMoreTest
 # 0.14.0 룬 뽑기 (자바 전용 — gacha.json: 원신식 천장 · 반천장 / 확천장 · 한정 뽑기 설정 · 통합 확률 모의)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.GachaTest
