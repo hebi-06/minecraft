@@ -155,7 +155,7 @@ public final class ClientJobBar {
         PRESS_AT[i] = now;
         if (empty(i) || cooldownLeft(i, 0) > 0.05) {
             DENY_AT[i] = now;
-            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS, 0.7F, 0.4F));
+            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.7F, 0.4F));
         }
         ClientPlayNetworking.send(new SkillBarNet.ActionPayload("job", i, 0));
     }
