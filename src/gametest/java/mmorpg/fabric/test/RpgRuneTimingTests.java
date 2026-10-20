@@ -152,10 +152,10 @@ public final class RpgRuneTimingTests {
             else if (e == null) {
                 if (p.prev > 0) p.failures.add(id + " deals damage (" + Math.round(p.prev) + ") but has no RUNE_SPREAD entry");
             } else {
-                int t = (int) e.num("t");
+                int want = (int) e.num("t");
                 if (!(p.prev > 0)) p.failures.add(id + " no damage");
-                else if (full && Math.abs(p.last - t) > 3) p.failures.add(id + " last " + p.last + " vs t " + t);
-                else if (!full && p.last > t + 3) p.failures.add(id + " (partial) last " + p.last + " > t " + t);
+                else if (full && Math.abs(p.last - want) > 3) p.failures.add(id + " last " + p.last + " vs t " + want);
+                else if (!full && p.last > want + 3) p.failures.add(id + " (partial) last " + p.last + " > t " + want);
                 if (p.prev > p.want * 1.01 + 1e-6 && !"holy".equals(family)) p.failures.add(id + " dealt " + Math.round(p.prev) + " > want " + Math.round(p.want)); // 성기사: 언데드 ×1.5
             }
             p.z.discard();
