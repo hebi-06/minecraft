@@ -46,7 +46,8 @@
       "mmorpg.fabric.test.RpgRuneTimingTests",
       "mmorpg.fabric.test.RpgEconomyTests",
       "mmorpg.fabric.test.RpgStorageTests",
-      "mmorpg.fabric.test.RpgContainerToolsTests"
+      "mmorpg.fabric.test.RpgContainerToolsTests",
+      "mmorpg.fabric.test.RpgJobTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
@@ -86,6 +87,7 @@
       "mmorpg.fabric.test.RpgMarketGallery",
       "mmorpg.fabric.test.RpgStorageGallery",
       "mmorpg.fabric.test.RpgUiGallery",
+      "mmorpg.fabric.test.RpgJobGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

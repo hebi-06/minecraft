@@ -426,7 +426,10 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
         check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) == 0), "Shift + R does not cast rune slot 1");
         // 시험용 직업 스킬 (칸 1) → Shift + R 로 씀 · 재사용 대기 덮개, 다시 누르면 막힘
         JOB_CALLS.set(0);
+        // 0.27.0: 직업 칸은 JobSystem 의 것 — 시험용 스킬로 바꿨다가 끝에 되돌림
+        java.util.concurrent.atomic.AtomicReference<java.util.function.BiFunction<ServerPlayer, Integer, JobSkills.Skill>> saved = new java.util.concurrent.atomic.AtomicReference<>();
         server.runOnServer(s -> {
+            saved.set(JobSkills.provider);
             JobSkills.provider = (sp, i) -> i == 0 ? TEST_JOB : null;
             JobSkills.send(player(s));
         });
@@ -467,7 +470,7 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
         ctx.setScreen(() -> null);
         ctx.waitTicks(2);
         server.runOnServer(s -> {
-            JobSkills.provider = (sp, i) -> null;
+            if (saved.get() != null) JobSkills.provider = saved.get();
             JobSkills.resetCooldowns(player(s));
             JobSkills.send(player(s));
         });
