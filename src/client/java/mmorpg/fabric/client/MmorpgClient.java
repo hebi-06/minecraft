@@ -83,6 +83,7 @@ public final class MmorpgClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.CooldownPayload.TYPE, (payload, context) -> ClientSkillBar.cooldown(payload));
         // 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키)
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobSkills.BarPayload.TYPE, (payload, context) -> ClientJobBar.update(payload));
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobSkills.GaugePayload.TYPE, (payload, context) -> ClientJobBar.gauge(payload)); // 0.27.0 직업 자원 · 태세
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
             ClientRpgState.update(payload);
             if (payload.open()) context.client().gui.setScreen(new StatScreen());

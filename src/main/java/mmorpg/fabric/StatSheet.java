@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 import mmorpg.core.Hp;
+import mmorpg.core.Jobs;
 import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
@@ -23,8 +24,9 @@ import net.minecraft.world.item.ItemStack;
  * @param base 찍은 스탯 {str, dex, int, vit, point, lvmax} (요구 스탯 확인)
  * @param eff  실제 스탯 (찍은 스탯 + 장비 보너스 · 룬 버프 — 피해 · 최대 체력 계산)
  * @param tree 스탯 트리 보너스 합 (7단계 — atk · crit · critDmg · hp …, 없으면 빈 지도)
+ * @param job  0.27.0 직업 id (없으면 "") — 마검사 「마력 검술」: 칼의 요구 힘 = 힘 + 마력 · 칼 피해의 힘 = 힘 + 마력 × 0.5 (core.Jobs)
  */
-public record StatSheet(Map<String, Double> base, Map<String, Double> eff, double reqLevel, Map<String, Double> tree) {
+public record StatSheet(Map<String, Double> base, Map<String, Double> eff, double reqLevel, Map<String, Double> tree, String job) {
     private static final Obj CONFIG = Rules.get().obj("CONFIG");
     private static final Obj TYPES = Rules.get().obj("TYPES");
     private static final Obj SHIELD = Rules.get().obj("SHIELD");
@@ -44,12 +46,35 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         b.put("vit", (double) vit);
         b.put("point", (double) point);
         b.put("lvmax", (double) lvmax);
-        return new StatSheet(b, Stats.effectiveStats(b, bonus, buff), Stats.reqLevelOf(lvmax, level), Map.of());
+        return new StatSheet(b, Stats.effectiveStats(b, bonus, buff), Stats.reqLevelOf(lvmax, level), Map.of(), "");
     }
 
     /** 스탯 트리 보너스 합을 넣은 것 (7단계 — 피해 · 치명타 · 최대 체력 줄에 반영) */
     public StatSheet withTree(Map<String, Double> t) {
-        return new StatSheet(base, eff, reqLevel, t == null ? Map.of() : Map.copyOf(t));
+        return new StatSheet(base, eff, reqLevel, t == null ? Map.of() : Map.copyOf(t), job);
+    }
+
+    /** 0.27.0 직업을 넣은 것 (마검사 「마력 검술」 — 요구 스탯 · 피해 줄에 반영) */
+    public StatSheet withJob(String id) {
+        return new StatSheet(base, eff, reqLevel, tree, id == null ? "" : id);
+    }
+
+    /** 요구 스탯을 따질 때의 찍은 스탯 (마검사 · 칼: 힘 = 힘 + 마력) */
+    Map<String, Double> reqBase(Weapon w) {
+        Jobs.Job j = Jobs.job(job);
+        return j == null || w == null ? base : Jobs.reqStats(j, w.type(), base);
+    }
+
+    /** 무기 피해를 셀 때의 스탯 (마검사 · 칼: 힘 = 힘 + 마력 × 0.5) */
+    Map<String, Double> dmgEff(Weapon w) {
+        Jobs.Job j = Jobs.job(job);
+        return j == null || w == null ? eff : Jobs.damageStats(j, w.type(), eff);
+    }
+
+    /** 이 무기에 「마력 검술」 이 걸리는지 */
+    boolean magicSword(Weapon w) {
+        Jobs.Job j = Jobs.job(job);
+        return j != null && w != null && Jobs.magicSword(j, w.type());
     }
 
     /** 스탯 트리 보너스 (없으면 0) */
@@ -66,7 +91,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
     public static StatSheet of(net.minecraft.server.level.ServerPlayer sp) {
         RpgData d = RpgData.of(sp);
         return of(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), sp.experienceLevel, RpgStats.bonusOf(sp), RpgStats.buffOf(sp))
-                .withTree(mmorpg.fabric.stattree.StatTrees.totals(sp));
+                .withTree(mmorpg.fabric.stattree.StatTrees.totals(sp)).withJob(mmorpg.fabric.job.JobSystem.jobOf(sp));
     }
 
     /** 소수 둘째 자리까지 (끝의 0은 뺌) */
@@ -167,7 +192,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
 
     /** 무기를 지금 쓸 수 있는지 (레벨 · 찍은 스탯) */
     public boolean usable(Weapon w) {
-        return Weapons.weaponLack(w, reqLevel, base).isEmpty();
+        return Weapons.weaponLack(w, reqLevel, reqBase(w)).isEmpty();
     }
 
     /**
@@ -203,8 +228,9 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         double critChance = mmorpg.core.Combat.critChanceOf(w, tree("crit") / 100);
         double critMult = w.critMult() + tree("critDmg") / 100;
         double sum = 0;
-        for (Weapons.Scaling b : w.scaling()) sum += Stats.get(eff, b.stat()) * b.per();
-        boolean ok = Weapons.weaponLack(w, reqLevel, base).isEmpty();
+        Map<String, Double> de = dmgEff(w);
+        for (Weapons.Scaling b : w.scaling()) sum += Stats.get(de, b.stat()) * b.per();
+        boolean ok = Weapons.weaponLack(w, reqLevel, reqBase(w)).isEmpty();
         return new double[] {ok ? base0 * (1 + sum) * atk : 0, critChance, critMult, ok ? 1 : 0};
     }
 
@@ -225,14 +251,15 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         }
         double base0 = w.damage() * (1 + mmorpg.core.Enhance.enhanceBonus(enh));
         lines.add(L + "기준 무기: " + (enh > 0 ? "§6+" + enh + " " : "") + (dark ? w.darkName() : w.name()));
-        List<Weapons.Lack> lack = Weapons.weaponLack(w, reqLevel, base);
+        List<Weapons.Lack> lack = Weapons.weaponLack(w, reqLevel, reqBase(w));
+        Map<String, Double> de = dmgEff(w);
         // 스탯 트리 (7단계): 공격력 · 치명타 확률 (평타 상한 RUNE_STRIKE.critCap) · 치명타 피해
         double atk = 1 + tree("atk") / 100;
         double critChance = mmorpg.core.Combat.critChanceOf(w, tree("crit") / 100);
         double critMult = w.critMult() + tree("critDmg") / 100;
         double critAvg = 1 + critChance * (critMult - 1);
         double sum = 0;
-        for (Weapons.Scaling b : w.scaling()) sum += Stats.get(eff, b.stat()) * b.per();
+        for (Weapons.Scaling b : w.scaling()) sum += Stats.get(de, b.stat()) * b.per();
         double now = base0 * (1 + sum) * atk;
         lines.add(L + "피해 " + V + num(now) + L + " · 치명타 " + V + num(critChance * 100) + "%" + L + " ×" + num(critMult));
         Weapons.Scaling main = w.scaling().get(0);
@@ -241,6 +268,16 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             Weapons.Scaling b = w.scaling().get(i);
             String hp = b.stat().equals("vit") ? L + " · 최대 체력 " + V + "+" + CONFIG.text("HP_PER_VIT") : "";
             lines.add(L + Stats.info(b.stat()).str("name") + " 1당 피해 " + V + "+" + num(base0 * b.per() * atk * critAvg) + hp);
+        }
+        if (magicSword(w)) {
+            // 0.27.0 마검사 「마력 검술」: 마력 1 이 늘 때 피해 배율 스탯이 얼마나 느는지 (core.Jobs.damageStats)
+            Jobs.Job j = Jobs.job(job);
+            Map<String, Double> plus = new LinkedHashMap<>(eff);
+            plus.put("int", Stats.get(eff, "int") + 1);
+            Map<String, Double> dp = Jobs.damageStats(j, w.type(), plus);
+            double per = 0;
+            for (Weapons.Scaling b : w.scaling()) per += (Stats.get(dp, b.stat()) - Stats.get(de, b.stat())) * b.per();
+            lines.add(L + "「마력 검술」 마력 1당 피해 " + V + "+" + num(base0 * per * atk * critAvg) + L + " · 요구 힘 = 힘 + 마력");
         }
         if (w.type().equals("shield")) {
             double vit = Stats.get(eff, "vit");
@@ -264,7 +301,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             } else {
                 StringJoiner req = new StringJoiner(" · ");
                 for (Weapons.Req r : w.reqs()) req.add(Stats.info(r.stat()).str("name") + " " + Js.str(r.value()));
-                lines.add(R + req + " 필요 - " + zero);
+                lines.add(R + req + " 필요" + (magicSword(w) ? " (힘 = 힘 + 마력)" : "") + " - " + zero);
             }
         }
         return lines;

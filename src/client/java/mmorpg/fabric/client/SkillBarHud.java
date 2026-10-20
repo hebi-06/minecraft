@@ -23,6 +23,8 @@ import net.minecraft.world.item.ItemStack;
  * 칸이 모두 비었으면 "[J] 스킬 칸" 안내. 탈것에 탄 동안은 어둡게 (탄 동안 스킬 불가).
  * 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키 — 키 글자 "⇧R"): 룬 칸 바로 위 (같은 칸 수의 줄 · 오른쪽 맞춤), 위에 작은 "직업 스킬" 글자.
  * 빈 칸은 푸른 기 도는 흐린 테두리 (직업이 추가되면 직업 스킬 그림).
+ * 0.27.0 직업: 칸 테두리 · 연출 고리가 직업 색, 잠긴 칸은 어둡게 + 아래에 사유 ("15렙" · "무기" · "스탯"), 칸 위 글자 = 직업 이름 (두 빛 그라데이션) +
+ * 자원 보석 (검세 다섯 · 마력 각인 셋 — 찬 만큼 빛남) · 태세 이름과 남은 초 (오른쪽) + 남은 시간 줄.
  */
 public final class SkillBarHud {
     private SkillBarHud() {}
@@ -66,7 +68,7 @@ public final class SkillBarHud {
 
     /** 직업 칸과 룬 칸 사이 · 직업 칸 위 글자 높이 */
     static final int JOB_GAP = 5;
-    static final int JOB_CAPTION = 10;
+    static final int JOB_CAPTION = 13;
 
     /**
      * 0.26.0 직업 스킬 칸 자리 {x0, y0, 한 줄 칸 수}: 룬 칸 바로 위에 같은 칸 수 (5보다 많으면 5) 의 줄들, 오른쪽을 룬 칸에 맞춤
@@ -119,8 +121,8 @@ public final class SkillBarHud {
             int y = jl[1] + (i / jl[2]) * (S + GAP);
             drawJobSlot(g, mc.font, i, x, y, S, partial, now, riding, true);
         }
-        String cap = ClientJobBar.any() ? "§7직업 스킬" : "§8직업 스킬";
-        g.text(mc.font, cap, jl[0], jl[1] - JOB_CAPTION, 0xFFFFFFFF, true);
+        int rowW = jl[2] * S + (jl[2] - 1) * GAP;
+        drawJobCaption(g, mc.font, jl[0], jl[1] - JOB_CAPTION, rowW, partial, now);
         if (!any) {
             String hint = "§e[" + label(MmorpgClient.skillBarKey) + "] §7스킬 칸 §8· §7룬 우클릭 = 올리기";
             int tw = mc.font.width(hint);
@@ -137,16 +139,18 @@ public final class SkillBarHud {
      */
     static void drawJobSlot(GuiGraphicsExtractor g, Font font, int i, int x0, int y, int s, float partial, long now, boolean dim, boolean key) {
         boolean empty = ClientJobBar.empty(i);
+        boolean locked = ClientJobBar.locked(i);
+        int edge = ClientJobBar.colorA();
         float deny = phase(ClientJobBar.DENY_AT[i], now, 260);
         int x = x0 + (deny >= 0 ? Math.round((float) Math.sin(deny * Math.PI * 6) * 2 * (1 - deny)) : 0);
         int cx = x + s / 2;
         int cy = y + s / 2;
         g.blitSprite(RenderPipelines.GUI_TEXTURED, FRAME, x, y, s, s, empty ? 0x8CA8C8FF : 0xFFFFFFFF);
-        if (!empty) g.blitSprite(RenderPipelines.GUI_TEXTURED, EDGE, x, y, s, s, 0xFF7FD8FF);
+        if (!empty) g.blitSprite(RenderPipelines.GUI_TEXTURED, EDGE, x, y, s, s, (locked ? 0x80000000 : 0xFF000000) | edge);
         float cast = phase(ClientJobBar.CAST_AT[i], now, 380);
-        if (cast >= 0) ring(g, cx, cy, s * (0.5F + 0.7F * cast), 0x7FD8FF, 0.9F * (1 - cast));
+        if (cast >= 0) ring(g, cx, cy, s * (0.5F + 0.7F * cast), ClientJobBar.colorB(), 0.9F * (1 - cast));
         float ready = phase(ClientJobBar.READY_AT[i], now, 520);
-        if (ready >= 0) ring(g, cx, cy, s * (0.62F + 0.18F * (float) Math.sin(ready * Math.PI)), 0x7FD8FF, (float) Math.sin(ready * Math.PI));
+        if (ready >= 0) ring(g, cx, cy, s * (0.62F + 0.18F * (float) Math.sin(ready * Math.PI)), edge, (float) Math.sin(ready * Math.PI));
         ItemStack icon = ClientJobBar.icon(i);
         if (!icon.isEmpty()) {
             float press = phase(ClientJobBar.PRESS_AT[i], now, 160);
@@ -174,6 +178,19 @@ public final class SkillBarHud {
         if (empty && press >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.3F * (1 - press), 0xFFFFFF));
         if (deny >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.5F * (1 - deny), 0xFF2A2A));
         if (dim) g.fill(x, y, x + s, y + s, 0x88000000);
+        // 0.27.0 잠김: 어둡게 + 아래에 짧은 사유 (레벨 "15렙" · 무기 "무기" · 요구 스탯 "스탯" — 작은 글자)
+        if (locked && !dim) {
+            g.fill(x + 1, y + 1, x + s - 1, y + s - 1, 0xA0080610);
+            String lock = ClientJobBar.lock(i);
+            String t = lock.endsWith("렙") ? lock : lock.contains("스탯") ? "스탯" : "무기";
+            int col = lock.endsWith("렙") ? 0xFFFFB04A : 0xFFFF6A6A;
+            float k = 0.75F;
+            g.pose().pushMatrix();
+            g.pose().translate(cx, y + s - 7);
+            g.pose().scale(k, k);
+            g.text(font, t, -font.width(t) / 2, 0, col, true);
+            g.pose().popMatrix();
+        }
         if (key) {
             String label = ClientJobBar.keyLabel(i);
             if (!label.isEmpty()) {
@@ -182,6 +199,79 @@ public final class SkillBarHud {
                 g.text(font, label, x + 1, y, empty ? 0xFF98A8C0 : 0xFFFFFFFF, true);
             }
         }
+    }
+
+    /**
+     * 0.27.0 직업 칸 위 글자 (x, y = 왼쪽 위 · w = 칸 줄 너비): 직업 이름 (첫째 빛 → 둘째 빛 그라데이션, 직업이 없으면 "직업 스킬") + 자원 보석
+     * (검세 · 마력 각인 — 찬 것은 둘째 빛, 빈 것은 어두운 테두리, 다 차면 반짝임) · 오른쪽에 태세 이름과 남은 초 + 아래 남은 시간 줄
+     */
+    static void drawJobCaption(GuiGraphicsExtractor g, Font font, int x, int y, int w, float partial, long now) {
+        if (ClientJobBar.jobId().isEmpty()) {
+            g.text(font, ClientJobBar.any() ? "§7직업 스킬" : "§8직업 스킬", x, y, 0xFFFFFFFF, true);
+            return;
+        }
+        int a = ClientJobBar.colorA();
+        int b = ClientJobBar.colorB();
+        int tx = gradientText(g, font, ClientJobBar.jobName(), x, y, a, b);
+        int max = ClientJobBar.gaugeMax();
+        if (max > 0) {
+            int v = Math.min(max, ClientJobBar.gaugeValue());
+            boolean full = v >= max;
+            float pulse = full ? 0.5F + 0.5F * (float) Math.sin(now / 140.0) : 0;
+            int px = tx + 4;
+            for (int i = 0; i < max; i++) {
+                int bx = px + i * 6;
+                int by = y + 1;
+                // 마름모 보석 (5 × 5): 바깥 어두운 테두리 + 안쪽 (찬 것은 둘째 빛)
+                g.fill(bx + 2, by, bx + 3, by + 5, 0xC0000000);
+                g.fill(bx, by + 2, bx + 5, by + 3, 0xC0000000);
+                g.fill(bx + 1, by + 1, bx + 4, by + 4, 0xC0000000);
+                if (i < v) {
+                    int col = 0xFF000000 | lerp(b, 0xFFFFFF, pulse * 0.6F);
+                    g.fill(bx + 2, by + 1, bx + 3, by + 4, col);
+                    g.fill(bx + 1, by + 2, bx + 4, by + 3, col);
+                } else {
+                    g.fill(bx + 2, by + 2, bx + 3, by + 3, 0x80FFFFFF & (0xFF000000 | a));
+                }
+            }
+        }
+        String stance = ClientJobBar.stance();
+        if (!stance.isEmpty()) {
+            double left = ClientJobBar.stanceLeft(partial);
+            String t = stance + " " + String.format(Locale.ROOT, "%.1f", left);
+            int sw = font.width(t);
+            g.text(font, t, x + w - sw, y, 0xFF000000 | a, true);
+            double frac = ClientJobBar.stanceFrac(partial);
+            int bw = (int) Math.round(w * frac);
+            g.fill(x, y + 10, x + w, y + 11, 0x80000000);
+            g.fill(x + w - bw, y + 10, x + w, y + 11, 0xFF000000 | b);
+        }
+    }
+
+    /** 글자마다 a → b 로 바뀌는 색 (굵게) — 그린 끝 x */
+    static int gradientText(GuiGraphicsExtractor g, Font font, String text, int x, int y, int a, int b) {
+        int n = text.codePointCount(0, text.length());
+        int cx = x;
+        int i = 0;
+        for (int off = 0; off < text.length(); ) {
+            int cp = text.codePointAt(off);
+            String ch = new String(Character.toChars(cp));
+            int col = 0xFF000000 | lerp(a, b, n <= 1 ? 0 : i / (float) (n - 1));
+            g.text(font, "§l" + ch, cx, y, col, true);
+            cx += font.width("§l" + ch);
+            off += Character.charCount(cp);
+            i++;
+        }
+        return cx;
+    }
+
+    /** 0xRRGGBB 사이 t (0 ~ 1) */
+    static int lerp(int a, int b, float t) {
+        float k = Mth.clamp(t, 0, 1);
+        int r = Math.round(((a >> 16) & 255) + (((b >> 16) & 255) - ((a >> 16) & 255)) * k);
+        int gg = Math.round(((a >> 8) & 255) + (((b >> 8) & 255) - ((a >> 8) & 255)) * k);
+        int bb = Math.round((a & 255) + ((b & 255) - (a & 255)) * k);
+        return (r << 16) | (gg << 8) | bb;
     }
 
     static String label(net.minecraft.client.KeyMapping k) {

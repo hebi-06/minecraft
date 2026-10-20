@@ -217,16 +217,17 @@ public final class SkillBarScreen extends Screen {
             g.text(font, (ClientSkillBar.get(i).isEmpty() ? "§7" : "§e") + key, kx + 3, ky + 2, 0xFFFFFFFF, true);
         }
 
-        // 0.26.0 직업 스킬 칸 (Shift + 룬 칸 1 ~ 5 의 키 — 지금은 보기만)
+        // 0.26.0 직업 스킬 칸 (Shift + 룬 칸 1 ~ 5 의 키 — 보기만), 0.27.0 직업 이름 (두 빛 그라데이션)
         int jy = jobY();
-        g.text(font, ClientJobBar.any() ? "§b직업 스킬" : "§7직업 스킬", left + 12, jy + 6, 0xFFFFFFFF, true);
+        if (ClientJobBar.jobId().isEmpty()) g.text(font, ClientJobBar.any() ? "§b직업 스킬" : "§7직업 스킬", left + 12, jy + 6, 0xFFFFFFFF, true);
+        else SkillBarHud.gradientText(g, font, ClientJobBar.jobName(), left + 12, jy + 6, ClientJobBar.colorA(), ClientJobBar.colorB());
         int hoverJob = dragging ? -1 : jobAt(mx, my);
         for (int i = 0; i < ClientJobBar.SIZE; i++) {
             int x = jobX(i);
             if (hoverJob == i) g.fill(x - 2, jy - 2, x + SkillBarHud.S + 2, jy + SkillBarHud.S + 2, 0x40FFFFFF);
             SkillBarHud.drawJobSlot(g, font, i, x, jy, SkillBarHud.S, partialTick, now, false, true);
         }
-        String jobNote = ClientJobBar.any() ? "§8Shift + 칸의 키" : "§8직업 추가 후 · Shift + 키";
+        String jobNote = ClientJobBar.any() ? "§8Shift + 칸의 키" : "§8직업 교관에게서 전직 · Shift + 키";
         g.text(font, jobNote, left + W - 12 - font.width(jobNote), jy + 6, 0xFFFFFFFF, true);
 
         // 가방의 룬
@@ -292,9 +293,16 @@ public final class SkillBarScreen extends Screen {
             List<Component> lines = new ArrayList<>();
             if (ClientJobBar.empty(hoverJob)) {
                 lines.add(Component.literal(BedrockText.toJava("§7직업 스킬 " + (hoverJob + 1) + "번 칸 §8([" + key + "] — Shift + 키)")));
-                lines.add(Component.literal(BedrockText.toJava("§8직업이 추가되면 직업 스킬이 들어갑니다")));
+                lines.add(Component.literal(BedrockText.toJava("§8마을의 직업 교관에게서 직업을 고르면 (10렙부터) 직업 스킬이 들어갑니다")));
             } else {
-                lines.add(Component.literal(BedrockText.toJava("§b" + ClientJobBar.name(hoverJob))));
+                lines.add(Component.literal(ClientJobBar.name(hoverJob)).withColor(ClientJobBar.colorA()));
+                String lock = ClientJobBar.lock(hoverJob);
+                if (!lock.isEmpty()) {
+                    String why = lock.endsWith("렙") ? lock + "부터" : lock.contains("스탯") ? "든 무기의 요구 스탯이 모자람" : lock + " 을(를) 들어야 함";
+                    lines.add(Component.literal(BedrockText.toJava("§c잠김 §7— " + why)));
+                }
+                double cd = ClientJobBar.cooldownLeft(hoverJob, partialTick);
+                if (cd > 0.05) lines.add(Component.literal(BedrockText.toJava("§7재사용 대기 §f" + String.format(java.util.Locale.ROOT, "%.1f", cd) + "초")));
                 lines.add(Component.literal(BedrockText.toJava("§e[" + key + "] 키로 사용 §8(직업 스킬 " + (hoverJob + 1) + "번 칸)")));
             }
             g.setTooltipForNextFrame(font, lines, Optional.empty(), mx, my);
