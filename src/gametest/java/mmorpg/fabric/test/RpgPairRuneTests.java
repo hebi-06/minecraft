@@ -81,7 +81,7 @@ public final class RpgPairRuneTests {
             clearStrays(h, z);
             sp.lookAt(EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
             h.assertTrue(Math.abs(RuneCast.applied(sp, family).value() - 180) < 1e-6, family + " applied = 120 + 120 × 0.5: " + RuneCast.applied(sp, family).value());
-            double P = RuneCast.power(sp, family) * RuneBreak.coef(breakLevel);
+            double P = RuneCast.power(sp, family) * RuneBreak.coef(breakLevel) * Runes.spreadMult(r); // 0.26.0 지속 보정
             double total = Runes.runeTotalMult(RuneBreak.def(r, breakLevel));
             h.assertTrue(RuneCast.castRune(sp, r, false, breakLevel), family + " " + grade + " cast");
             h.runAfterDelay(wait, () -> {

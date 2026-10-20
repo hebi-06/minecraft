@@ -309,6 +309,40 @@ public final class Runes {
         return mult * def.numOr("hits", 1) + def.numOr("dot", 0) * def.numOr("dots", 0) + def.numOr("crush", 0);
     }
 
+    // ------------------------------------------------------------------ 0.26.0 지속 보정
+
+    /**
+     * 0.26.0 지속 보정 (RUNE_SPREAD — rules_more.json, 사용자 "풀딜을 다 때릴려면 시간이 걸리거나 장판기인 애들은 한방 딜 애들보다 조금 더 쎄게"):
+     * 룬 (계열.등급) 마다 쓴 때부터 마지막 피해까지의 틱 t (0돌 · 과녁 하나 — RpgRuneTimingTests 로 잰 것) · 장판 zone (자리 · 내 둘레에 남아 여러 번 치는
+     * 것 — 적이 벗어날 수 있음). 한정 룬도 같음 (사용자 "같이 적용")
+     */
+    private static final Obj SPREAD = R.root().has("RUNE_SPREAD") ? R.obj("RUNE_SPREAD") : null;
+
+    /** 지속 보정 표 (룬 계열.등급 → {t, zone}) — 없으면 null */
+    public static Obj spreadEntry(Rune r) {
+        if (SPREAD == null || r == null) return null;
+        return SPREAD.obj("runes").objOrNull(r.family() + "." + r.grade());
+    }
+
+    /**
+     * 지속 보정 단계 (null = 한방 — t 가 instant 틱 안): short (t 가 short 틱 안 — 연타 · 늦게 맞는 한 방) · long (그보다 김) · zone (장판) ·
+     * zoneLong (zoneLong 틱 넘는 장판)
+     */
+    public static String spreadKind(Rune r) {
+        Obj e = spreadEntry(r);
+        if (e == null) return null;
+        double t = e.num("t");
+        if (e.truthy("zone")) return t > SPREAD.num("zoneLong") ? "zoneLong" : "zone";
+        if (t <= SPREAD.num("instant")) return null;
+        return t > SPREAD.num("short") ? "long" : "short";
+    }
+
+    /** 지속 보정 배율 (1 + 단계의 bonus — 한방이면 1). 피해에만 (룬을 쓸 때 위력 P 에 곱함 · 툴팁의 총 피해도) */
+    public static double spreadMult(Rune r) {
+        String k = spreadKind(r);
+        return k == null ? 1 : 1 + SPREAD.obj("bonus").num(k);
+    }
+
     // ------------------------------------------------------------------ draw and grinding
 
     /** runes.js gradeWeights: grade → weight of a ticket (adv = high ticket, RUNE.advWeights). */

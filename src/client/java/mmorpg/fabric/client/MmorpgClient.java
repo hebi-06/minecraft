@@ -81,6 +81,8 @@ public final class MmorpgClient implements ClientModInitializer {
         cosmeticKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.cosmetic", InputConstants.Type.KEYBOARD, InputConstants.KEY_U, CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.BarPayload.TYPE, (payload, context) -> ClientSkillBar.update(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.CooldownPayload.TYPE, (payload, context) -> ClientSkillBar.cooldown(payload));
+        // 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키)
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobSkills.BarPayload.TYPE, (payload, context) -> ClientJobBar.update(payload));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
             ClientRpgState.update(payload);
             if (payload.open()) context.client().gui.setScreen(new StatScreen());
@@ -106,6 +108,7 @@ public final class MmorpgClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             ClientRpgState.clear();
             ClientSkillBar.clear();
+            ClientJobBar.clear();
             ClientCosmetics.clear();
             ClientGacha.clear();
             ClientWallet.clear();
@@ -132,10 +135,13 @@ public final class MmorpgClient implements ClientModInitializer {
             for (int i = 0; i < skillKeys.length; i++) {
                 while (skillKeys[i].consumeClick()) {
                     if (client.player == null || client.gui.screen() != null || !ClientSkillBar.received()) continue;
-                    ClientSkillBar.press(i);
+                    // 0.26.0: Shift 를 누른 채 룬 칸 1 ~ 5 의 키 = 직업 스킬 칸 1 ~ 5 (사용자 "shift 누르고 r 이런 식으로")
+                    if (i < ClientJobBar.SIZE && (client.hasShiftDown() || client.options.keyShift.isDown())) ClientJobBar.press(i);
+                    else ClientSkillBar.press(i);
                 }
             }
             ClientSkillBar.tick(client);
+            ClientJobBar.tick(client);
             RpgHud.tick(client);
             ClientWallet.tick();
             if (!client.isPaused()) CameraShake.tick();

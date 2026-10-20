@@ -88,6 +88,11 @@ public final class ClientSkillBar {
     static void cooldown(SkillBarNet.CooldownPayload p) {
         if ("*".equals(p.rune())) {
             COOLDOWNS.clear();
+            ClientJobBar.clearCooldowns();
+            return;
+        }
+        if (p.rune().startsWith(mmorpg.fabric.job.JobSkills.CD_PREFIX)) { // 0.26.0 직업 스킬 칸의 재사용 대기
+            ClientJobBar.cooldown(p.rune().substring(mmorpg.fabric.job.JobSkills.CD_PREFIX.length()), p.left(), p.total());
             return;
         }
         if (p.left() <= 0) {

@@ -63,6 +63,7 @@ public final class SkillBar {
                 .copyOnDeath()
                 .initializer(Data::empty));
         SkillBarNet.register();
+        mmorpg.fabric.job.JobSkills.init(); // 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키)
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> SkillBarNet.sendBar(handler.player));
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> SkillBarNet.sendBar(newPlayer));
     }
@@ -223,11 +224,12 @@ public final class SkillBar {
         return RuneCast.castRune(sp, r, true, Breakthrough.of(st));
     }
 
-    /** 클라이언트가 보낸 일 (cast · equip · unequip · move) */
+    /** 클라이언트가 보낸 일 (cast · job · equip · unequip · move) */
     static void action(ServerPlayer sp, String action, int a, int b) {
         if (sp == null || sp.isRemoved()) return;
         switch (action) {
             case "cast" -> cast(sp, a);
+            case "job" -> mmorpg.fabric.job.JobSkills.press(sp, a); // 0.26.0 직업 스킬 칸 (Shift + 키)
             case "equip" -> equip(sp, a, b);
             case "unequip" -> unequip(sp, a);
             case "move" -> move(sp, a, b);

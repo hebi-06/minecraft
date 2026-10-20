@@ -27,10 +27,11 @@ import net.minecraft.world.item.ItemStack;
  * 스킬 칸 창 (11단계 — 기본 J 키, 메이플 스킬 창처럼): 위에 스킬 칸 8 (키 글자 · 재사용 대기), 아래에 가방의 룬 (인벤토리 · 왼손).
  * 룬을 끌어 칸에 놓기 · 룬을 누르면 빈 칸에 · 룬 위에서 스킬 키를 누르면 그 칸에, 칸을 오른쪽 클릭 · 창 밖 (칸 줄 밖) 으로 끌면 빼기,
  * 칸끼리 끌면 바꾸기 · 칸 위에서 다른 스킬 키 = 그 칸으로 옮기기. 실제로 옮기는 것은 서버 (SkillBar) — 받은 칸으로 다시 그림. 게임은 멈추지 않음.
+ * 0.26.0: 룬 칸 아래에 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키 — 직업이 추가되면 직업 스킬이 들어감, 지금은 보기만).
  */
 public final class SkillBarScreen extends Screen {
     public static final int W = 300;
-    public static final int H = 214;
+    public static final int H = 238;
     /** 스킬 칸 (큰 칸) */
     static final int BIG = 26;
     static final int BIG_GAP = 6;
@@ -39,7 +40,11 @@ public final class SkillBarScreen extends Screen {
     static final int CELL = 20;
     static final int COLS = 9;
     static final int ROWS = 4;
-    static final int GRID_Y = 96;
+    static final int GRID_Y = 122;
+    /** 0.26.0 직업 스킬 칸 줄 (작은 칸) */
+    static final int JOB_Y = 84;
+    static final int JOB_X = 64;
+    static final int JOB_STEP = 26;
     private static final Identifier BG = Mmorpg.id("stats/dialog_bg");
 
     private int left;
@@ -101,6 +106,29 @@ public final class SkillBarScreen extends Screen {
     /** 가방의 룬 칸 (그리드 순서 n) 가운데 (시험용) */
     public int[] gridCenter(int n) {
         return new int[] {gridX() + (n % COLS) * CELL + CELL / 2, gridY() + (n / COLS) * CELL + CELL / 2};
+    }
+
+    private int jobX(int i) {
+        return left + JOB_X + i * JOB_STEP;
+    }
+
+    private int jobY() {
+        return top + JOB_Y;
+    }
+
+    /** 직업 스킬 칸 i 가운데 (시험용) */
+    public int[] jobCenter(int i) {
+        return new int[] {jobX(i) + SkillBarHud.S / 2, jobY() + SkillBarHud.S / 2};
+    }
+
+    /** 마우스 아래 직업 스킬 칸 (-1 없음) */
+    private int jobAt(double mx, double my) {
+        for (int i = 0; i < ClientJobBar.SIZE; i++) {
+            int x = jobX(i);
+            int y = jobY();
+            if (mx >= x - 1 && mx < x + SkillBarHud.S + 1 && my >= y - 1 && my < y + SkillBarHud.S + 1) return i;
+        }
+        return -1;
     }
 
     /** 마우스 아래 스킬 칸 (-1 없음) */
@@ -189,6 +217,18 @@ public final class SkillBarScreen extends Screen {
             g.text(font, (ClientSkillBar.get(i).isEmpty() ? "§7" : "§e") + key, kx + 3, ky + 2, 0xFFFFFFFF, true);
         }
 
+        // 0.26.0 직업 스킬 칸 (Shift + 룬 칸 1 ~ 5 의 키 — 지금은 보기만)
+        int jy = jobY();
+        g.text(font, ClientJobBar.any() ? "§b직업 스킬" : "§7직업 스킬", left + 12, jy + 6, 0xFFFFFFFF, true);
+        int hoverJob = dragging ? -1 : jobAt(mx, my);
+        for (int i = 0; i < ClientJobBar.SIZE; i++) {
+            int x = jobX(i);
+            if (hoverJob == i) g.fill(x - 2, jy - 2, x + SkillBarHud.S + 2, jy + SkillBarHud.S + 2, 0x40FFFFFF);
+            SkillBarHud.drawJobSlot(g, font, i, x, jy, SkillBarHud.S, partialTick, now, false, true);
+        }
+        String jobNote = ClientJobBar.any() ? "§8Shift + 칸의 키" : "§8직업 추가 후 · Shift + 키";
+        g.text(font, jobNote, left + W - 12 - font.width(jobNote), jy + 6, 0xFFFFFFFF, true);
+
         // 가방의 룬
         List<Integer> runes = runeSlots();
         int gy = gridY();
@@ -247,6 +287,17 @@ public final class SkillBarScreen extends Screen {
             String key = SkillBarHud.label(MmorpgClient.skillKeys[hoverBar]);
             g.setTooltipForNextFrame(font, List.of(Component.literal(BedrockText.toJava("§7빈 칸 §8(" + (hoverBar + 1) + "번 · [" + key + "] 키)")),
                     Component.literal(BedrockText.toJava("§8룬을 끌어 놓으세요"))), Optional.empty(), mx, my);
+        } else if (hoverJob >= 0) {
+            String key = ClientJobBar.keyLabel(hoverJob);
+            List<Component> lines = new ArrayList<>();
+            if (ClientJobBar.empty(hoverJob)) {
+                lines.add(Component.literal(BedrockText.toJava("§7직업 스킬 " + (hoverJob + 1) + "번 칸 §8([" + key + "] — Shift + 키)")));
+                lines.add(Component.literal(BedrockText.toJava("§8직업이 추가되면 직업 스킬이 들어갑니다")));
+            } else {
+                lines.add(Component.literal(BedrockText.toJava("§b" + ClientJobBar.name(hoverJob))));
+                lines.add(Component.literal(BedrockText.toJava("§e[" + key + "] 키로 사용 §8(직업 스킬 " + (hoverJob + 1) + "번 칸)")));
+            }
+            g.setTooltipForNextFrame(font, lines, Optional.empty(), mx, my);
         } else if (hoverInv >= 0) {
             List<Component> lines = new ArrayList<>(Screen.getTooltipFromItem(minecraft, invItem(hoverInv)));
             lines.add(Component.literal(BedrockText.toJava("§e누르면 빈 스킬 칸에 · 위에서 칸의 키 = 그 칸에")));

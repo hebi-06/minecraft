@@ -230,7 +230,8 @@ public final class RpgRuneBreakGallery implements FabricClientGameTest {
         });
         ctx.waitTicks(10);
         // 툴팁 숫자 (클라이언트 — 받은 스탯) = 서버 위력 (RuneCast.power × 스탯 트리) × 배율
-        double P = server.computeOnServer(s -> RuneCast.power(player(s), "int") * StatTrees.runeMult(player(s)));
+        double P = server.computeOnServer(s -> RuneCast.power(player(s), "int") * StatTrees.runeMult(player(s)))
+                * mmorpg.core.Runes.spreadMult(mmorpg.core.Runes.parseRune(mmorpg.core.Runes.runeId("int", "transcend"))); // 0.26.0 지속 보정 (메테오 +5%)
         String want0 = "총 피해 " + RuneTip.fmt(P * 32);
         String want6 = "총 피해 " + RuneTip.fmt(P * RuneBreak.coef(6) * 40);
         String tip0 = ctx.computeOnClient(mc -> tooltipOf(mc, 0));

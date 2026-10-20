@@ -63,7 +63,7 @@ public final class SkillBarNet {
         }
     }
 
-    /** 클라이언트 → 서버: action = cast (a = 칸) · equip (a = 가방 칸, b = 스킬 칸) · unequip (a = 칸) · move (a → b) · sync */
+    /** 클라이언트 → 서버: action = cast (a = 칸) · job (a = 직업 스킬 칸 — 0.26.0) · equip (a = 가방 칸, b = 스킬 칸) · unequip (a = 칸) · move (a → b) · sync */
     public record ActionPayload(String action, int a, int b) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ActionPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("skill_bar_action"));
         public static final StreamCodec<RegistryFriendlyByteBuf, ActionPayload> CODEC = CustomPacketPayload.codec(ActionPayload::write, ActionPayload::read);

@@ -4,6 +4,7 @@ import com.mojang.serialization.JsonOps;
 import java.util.List;
 import mmorpg.core.Runes;
 import mmorpg.fabric.RpgPlayers;
+import mmorpg.fabric.job.JobSkills;
 import mmorpg.fabric.rune.Breakthrough;
 import mmorpg.fabric.rune.RuneCast;
 import mmorpg.fabric.rune.RuneItems;
@@ -201,5 +202,57 @@ public final class RpgSkillBarTests {
                 RpgGearTests.done(h, sp);
             });
         });
+    }
+
+    /** 0.26.0 직업 스킬 칸 (Shift + 룬 칸 1 ~ 5 의 키 — 직업은 아직 없음): 빈 칸 · 시험 스킬 쓰기 · 재사용 대기 · 잘못된 칸 */
+    @GameTest(environment = ENV, maxTicks = 20)
+    public void jobSkillSlots(GameTestHelper h) {
+        ServerPlayer sp = RpgGearTests.player(h);
+        h.assertTrue(JobSkills.SIZE == 5, "5 job slots");
+        h.assertFalse(JobSkills.press(sp, 0), "no jobs yet: empty job slot does nothing");
+        int[] calls = {0};
+        JobSkills.Skill sk = new JobSkills.Skill() {
+            @Override
+            public String id() {
+                return "test_job";
+            }
+
+            @Override
+            public String name() {
+                return "시험 직업 스킬";
+            }
+
+            @Override
+            public ItemStack icon() {
+                return new ItemStack(Items.IRON_SWORD);
+            }
+
+            @Override
+            public int cooldown() {
+                return 40;
+            }
+
+            @Override
+            public boolean cast(ServerPlayer p) {
+                calls[0]++;
+                return true;
+            }
+        };
+        var old = JobSkills.provider;
+        try {
+            JobSkills.provider = (p, i) -> p == sp && i == 1 ? sk : null;
+            h.assertFalse(JobSkills.press(sp, 0), "slot 1 still empty");
+            h.assertTrue(JobSkills.press(sp, 1), "slot 2 casts the job skill");
+            h.assertTrue(calls[0] == 1 && JobSkills.cooldownLeft(sp, sk) == 40, "cast once, cooldown 40: " + calls[0] + " / " + JobSkills.cooldownLeft(sp, sk));
+            h.assertFalse(JobSkills.press(sp, 1), "cooldown blocks");
+            h.assertTrue(calls[0] == 1, "not cast again while cooling");
+            h.assertFalse(JobSkills.press(sp, 5) || JobSkills.press(sp, -1), "bad slots");
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.cooldownLeft(sp, sk) == 0 && JobSkills.press(sp, 1) && calls[0] == 2, "after reset: casts again");
+        } finally {
+            JobSkills.provider = old;
+            JobSkills.resetCooldowns(sp);
+        }
+        RpgGearTests.done(h, sp);
     }
 }

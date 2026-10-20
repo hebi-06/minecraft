@@ -75,7 +75,8 @@ public final class RuneTip {
         double scale = Double.NaN;
         double applied = Double.NaN;
         if (viewer != null && viewer.stats() != null) {
-            pBase = Runes.runePower(viewer.stats(), r.family()) * (viewer.runeMult() > 0 ? viewer.runeMult() : 1);
+            // 0.26.0 지속 보정 (시간이 걸리거나 장판인 룬 — 쓸 때 위력에 곱하는 것과 같음)
+            pBase = Runes.runePower(viewer.stats(), r.family()) * (viewer.runeMult() > 0 ? viewer.runeMult() : 1) * Runes.spreadMult(r);
             scale = Runes.supportScale(viewer.stats(), r.family());
             applied = Runes.runeStat(viewer.stats(), r.family()).value();
             if (viewer.maxHp() > 0) maxHp = viewer.maxHp();
@@ -85,6 +86,8 @@ public final class RuneTip {
         out.add(head(r));
         out.add("§r" + L + d.text("desc"));
         out.addAll(damage(c));
+        String spread = spreadLine(c);
+        if (spread != null) out.add(spread);
         out.addAll(support(c));
         out.addAll(flow(c));
         for (String l : wrap(effects(c), LINE_MAX)) out.add("§r" + L + l);
@@ -121,7 +124,7 @@ public final class RuneTip {
 
     /** 피해: 단계 lv 의 위력 × mult (스탯을 모르면 "위력×mult") */
     private static String dmg(Ctx c, double mult, int lv) {
-        if (Double.isNaN(c.pBase())) return "위력×" + Js.str(Math.round(mult * 100) / 100.0);
+        if (Double.isNaN(c.pBase())) return "위력×" + Js.str(Math.round(mult * Runes.spreadMult(c.r()) * 100) / 100.0);
         return fmt(c.pBase() * RuneBreak.coef(lv) * mult);
     }
 
@@ -188,6 +191,19 @@ public final class RuneTip {
         if (d.truthy("reflect")) out.add("§r" + L + "때린 몹에게 반사 " + N + dmg(c, d.num("reflect")));
         if (total > 0 && c.r().family().equals("holy")) out.add("§r" + L + "신성 피해 · 언데드 " + N + "×" + RUNE.text("undeadBonus"));
         return out;
+    }
+
+    /** 0.26.0 지속 보정 줄 ("지속 보정 +10% 포함 (장판)" — 위의 총 피해에 든 것) — 한방 · 피해 없는 룬은 null */
+    private static String spreadLine(Ctx c) {
+        String k = Runes.spreadKind(c.r());
+        if (k == null || !dealsDamage(c) || c.strike()) return null;
+        String why = switch (k) {
+            case "short" -> "다 맞는 데 2초 안";
+            case "long" -> "다 맞는 데 2초 넘게";
+            case "zone" -> "장판";
+            default -> "장판 · 4초 넘게";
+        };
+        return "§r" + L + "지속 보정 " + N + "+" + pct(Runes.spreadMult(c.r()) - 1) + "%" + L + " 포함" + D + " (" + why + ")";
     }
 
     /** 총 피해 나눔 조각 ("칼날 126 × 6번", "달 추락 588") — 한 번에 다 들어가면 빈 목록 */

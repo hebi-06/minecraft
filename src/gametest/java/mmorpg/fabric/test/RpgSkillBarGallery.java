@@ -7,10 +7,12 @@ import java.util.Locale;
 import java.util.function.Function;
 import mmorpg.core.Runes;
 import mmorpg.fabric.RpgHealth;
+import mmorpg.fabric.client.ClientJobBar;
 import mmorpg.fabric.client.ClientSkillBar;
 import mmorpg.fabric.client.MmorpgClient;
 import mmorpg.fabric.client.SkillBarHud;
 import mmorpg.fabric.client.SkillBarScreen;
+import mmorpg.fabric.job.JobSkills;
 import mmorpg.fabric.rune.Breakthrough;
 import mmorpg.fabric.rune.RuneCast;
 import mmorpg.fabric.rune.RuneItems;
@@ -46,7 +48,8 @@ import org.slf4j.LoggerFactory;
  * 11단계 스킬 칸 사진첩 (화면 시험, only=skillbar — 실제 키 · 마우스 입력): 키 목록 (바닐라 키와 겹치지 않는지 — 로그에 기본 키 표),
  * 빈 스킬 칸 HUD (안내), J 키 → 스킬 칸 창 → 룬을 끌어 칸에 놓기 (끄는 중 사진) · 누르면 빈 칸 · 룬 위에서 칸의 키 · 오른쪽 클릭 · 칸끼리 끌기 · 오른쪽 클릭 빼기 ·
  * 줄 밖으로 끌어 빼기 · 풀이, 칸의 키로 쓰기 (무기를 든 채 — 눌림 · 시전 연출 · 재사용 대기 덮개 · 다시 누르면 막힘 · 준비 반짝임), 메테오 (1 · 3인칭),
- * 룬을 들고 우클릭 = 쓰지 않고 빈 칸에 올림, 핫바에서 룬 칸을 골라도 쓰지 않음, 암살자 콤보 (스킬 칸 둘), 룬 설명 (조작 줄), 넓은 화면의 한 줄 HUD.
+ * 룬을 들고 우클릭 = 쓰지 않고 빈 칸에 올림, 핫바에서 룬 칸을 골라도 쓰지 않음, 암살자 콤보 (스킬 칸 둘), 룬 설명 (조작 줄), 넓은 화면의 한 줄 HUD,
+ * 0.26.0 직업 스킬 칸 5 (룬 칸 위 · 키 글자 ⇧R … — Shift + R 은 룬 칸 1 을 쓰지 않고 직업 칸 1, 빈 칸은 막힘 · 시험용 직업 스킬은 써지고 재사용 대기 · 창의 직업 줄).
  * 사진 이름 sb_… → ci-logs 의 shots/. 확인 항목은 로그 [skillbar-gallery] OK / FAIL.
  */
 @SuppressWarnings("UnstableApiUsage")
@@ -99,6 +102,7 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
             part(ctx, "cast", () -> cast(ctx, server, conn));
             part(ctx, "rightclick", () -> rightClick(ctx, server, conn));
             part(ctx, "combo", () -> combo(ctx, server, conn));
+            part(ctx, "job", () -> job(ctx, server, conn));
             part(ctx, "tooltip", () -> tooltip(ctx));
             part(ctx, "wide", () -> wide(ctx));
             ctx.setScreen(() -> null);
@@ -338,6 +342,136 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
         check(hud.contains("2 콤보"), "assassin combo from two slots ('" + hud + "')");
         ctx.waitTicks(50);
         shot(ctx, "sb_combo_after");
+    }
+
+    // ------------------------------------------------------------ 0.26.0 직업 스킬 칸 (Shift + 룬 칸 1 ~ 5 의 키)
+
+    /** 시험용 직업 스킬 (칸 1 — 철 검 그림 · 재사용 대기 3초 · 쓰면 calls 하나 · 둘레 불꽃) */
+    private static final java.util.concurrent.atomic.AtomicInteger JOB_CALLS = new java.util.concurrent.atomic.AtomicInteger();
+    private static final JobSkills.Skill TEST_JOB = new JobSkills.Skill() {
+        @Override
+        public String id() {
+            return "test_slash";
+        }
+
+        @Override
+        public String name() {
+            return "시험 직업 스킬";
+        }
+
+        @Override
+        public ItemStack icon() {
+            return new ItemStack(net.minecraft.world.item.Items.IRON_SWORD);
+        }
+
+        @Override
+        public int cooldown() {
+            return 60;
+        }
+
+        @Override
+        public boolean cast(ServerPlayer sp) {
+            JOB_CALLS.incrementAndGet();
+            mmorpg.fabric.skill.SkillFx.sparks(sp.level(), sp.getEyePosition().add(sp.getViewVector(1F).scale(2)), new double[] {0.5, 0.85, 1}, 12, 4);
+            return true;
+        }
+    };
+
+    private void job(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        home(server);
+        server.runOnServer(s -> {
+            RuneCast.resetCooldowns(player(s));
+            JobSkills.resetCooldowns(player(s));
+        });
+        ctx.waitTicks(5);
+        // 자리: 화면 안 · 룬 칸 위 (겹치지 않음) · 핫바 · RPG HUD 줄과 겹치지 않음
+        String fit = ctx.computeOnClient(mc -> {
+            int w = mc.getWindow().getGuiScaledWidth();
+            int h = mc.getWindow().getGuiScaledHeight();
+            StringBuilder b = new StringBuilder("gui " + w + "x" + h + ":");
+            boolean ok = true;
+            int runeTop = Integer.MAX_VALUE;
+            for (int i = 0; i < ClientSkillBar.SIZE; i++) runeTop = Math.min(runeTop, SkillBarHud.slotPos(w, h, i)[1]);
+            for (int i = 0; i < ClientJobBar.SIZE; i++) {
+                int[] p = SkillBarHud.jobSlotPos(w, h, i);
+                b.append(' ').append(p[0]).append(',').append(p[1]);
+                boolean inside = p[0] >= 0 && p[1] >= 12 && p[0] + SkillBarHud.S <= w && p[1] + SkillBarHud.S <= h;
+                boolean overRunes = p[1] + SkillBarHud.S > runeTop - 2;
+                boolean overHotbar = p[0] + SkillBarHud.S > w / 2 - 91 && p[0] < w / 2 + 91 && p[1] + SkillBarHud.S > h - 22;
+                boolean overHud = p[0] < w / 2 + 152 && p[0] + SkillBarHud.S > w / 2 + 12 && p[1] < h - 31 && p[1] + SkillBarHud.S > h - 47;
+                if (!inside || overRunes || overHotbar || overHud) ok = false;
+            }
+            return (ok ? "OK " : "BAD ") + b;
+        });
+        LOG.info("[skillbar-gallery] job layout {}", fit);
+        check(fit.startsWith("OK"), "job slots inside the screen, above the rune slots, off the hotbar and the RPG HUD row (" + fit + ")");
+        check(ctx.computeOnClient(mc -> ClientJobBar.received() && !ClientJobBar.any()), "job bar received, empty (no jobs yet)");
+        String labels = ctx.computeOnClient(mc -> {
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < ClientJobBar.SIZE; i++) b.append(ClientJobBar.keyLabel(i)).append(' ');
+            return b.toString().trim();
+        });
+        check(labels.equals("⇧R ⇧Z ⇧V ⇧B ⇧Y"), "job key labels '" + labels + "'");
+        shot(ctx, "sb_job_hud");
+        // 빈 칸: Shift + R → 룬 칸 1 (대지 강타) 은 쓰지 않음 · 직업 칸 1 은 막힘 (안내)
+        Runes.Rune slam = Runes.parseRune(Runes.runeId("str", "common"));
+        ctx.getInput().holdKey(o -> o.keyShift);
+        ctx.waitTicks(3);
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        ctx.waitTicks(2);
+        shot(ctx, "sb_job_empty_press");
+        ctx.getInput().releaseKey(o -> o.keyShift);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(4);
+        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) == 0), "Shift + R does not cast rune slot 1");
+        // 시험용 직업 스킬 (칸 1) → Shift + R 로 씀 · 재사용 대기 덮개, 다시 누르면 막힘
+        JOB_CALLS.set(0);
+        server.runOnServer(s -> {
+            JobSkills.provider = (sp, i) -> i == 0 ? TEST_JOB : null;
+            JobSkills.send(player(s));
+        });
+        conn.waitForClientboundPackets();
+        ctx.waitTicks(3);
+        check(ctx.computeOnClient(mc -> ClientJobBar.any() && !ClientJobBar.empty(0) && ClientJobBar.empty(1)), "job slot 1 shows the test skill");
+        ctx.getInput().holdKey(o -> o.keyShift);
+        ctx.waitTicks(3);
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        ctx.waitTicks(2);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(3);
+        shot(ctx, "sb_job_cast");
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        ctx.waitTicks(2);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(2);
+        ctx.getInput().releaseKey(o -> o.keyShift);
+        check(JOB_CALLS.get() == 1, "Shift + R casts job slot 1 once, then the cooldown blocks it (" + JOB_CALLS.get() + ")");
+        check(server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), TEST_JOB) > 0), "job skill cooldown on the server");
+        check(ctx.computeOnClient(mc -> ClientJobBar.cooldownFrac(0, 0) > 0.3), "HUD shows the job cooldown");
+        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) == 0), "rune slot 1 still not cast");
+        // R 만 누르면 룬 칸 1
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        ctx.waitTicks(2);
+        conn.waitForServerboundPackets();
+        ctx.waitTicks(3);
+        check(server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), slam) > 0), "R alone still casts rune slot 1");
+        shot(ctx, "sb_job_and_rune");
+        // 스킬 칸 창의 직업 줄
+        ctx.getInput().pressKey(MmorpgClient.skillBarKey);
+        if (!waitScreen(ctx, sc -> sc instanceof SkillBarScreen, "skill bar window (J)")) ctx.setScreen(SkillBarScreen::new);
+        ctx.waitTicks(3);
+        hover(ctx, sc -> sc.jobCenter(0));
+        shot(ctx, "sb_window_job");
+        hover(ctx, sc -> sc.jobCenter(2));
+        shot(ctx, "sb_window_job_empty");
+        ctx.setScreen(() -> null);
+        ctx.waitTicks(2);
+        server.runOnServer(s -> {
+            JobSkills.provider = (sp, i) -> null;
+            JobSkills.resetCooldowns(player(s));
+            JobSkills.send(player(s));
+        });
+        ctx.waitTicks(3);
     }
 
     // ------------------------------------------------------------ 룬 설명

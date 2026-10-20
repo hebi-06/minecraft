@@ -21,6 +21,8 @@ import net.minecraft.world.item.ItemStack;
  * 눌림 (그림이 눌렸다 돌아옴) · 막힘 (빨간 덮개 + 흔들림) · 뺌. 넓으면 한 줄, 좁으면 두 줄 (핫바와 겹치지 않게).
  * 무기 전용 룬 (0.12.6 사신 = 낫) 은 그 무기를 들지 않으면 어둡게 + 칸 아래에 무기 이름.
  * 칸이 모두 비었으면 "[J] 스킬 칸" 안내. 탈것에 탄 동안은 어둡게 (탄 동안 스킬 불가).
+ * 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키 — 키 글자 "⇧R"): 룬 칸 바로 위 (같은 칸 수의 줄 · 오른쪽 맞춤), 위에 작은 "직업 스킬" 글자.
+ * 빈 칸은 푸른 기 도는 흐린 테두리 (직업이 추가되면 직업 스킬 그림).
  */
 public final class SkillBarHud {
     private SkillBarHud() {}
@@ -62,6 +64,30 @@ public final class SkillBarHud {
         return new int[] {right - (2 * S + GAP), h - rows * S - (rows - 1) * GAP - 1, 2};
     }
 
+    /** 직업 칸과 룬 칸 사이 · 직업 칸 위 글자 높이 */
+    static final int JOB_GAP = 5;
+    static final int JOB_CAPTION = 10;
+
+    /**
+     * 0.26.0 직업 스킬 칸 자리 {x0, y0, 한 줄 칸 수}: 룬 칸 바로 위에 같은 칸 수 (5보다 많으면 5) 의 줄들, 오른쪽을 룬 칸에 맞춤
+     */
+    public static int[] jobLayout(int w, int h) {
+        int[] l = layout(w, h);
+        int n = ClientJobBar.SIZE;
+        int cols = Math.min(l[2], n);
+        int rows = (n + cols - 1) / cols;
+        int runeRight = l[0] + l[2] * S + (l[2] - 1) * GAP;
+        int x0 = runeRight - (cols * S + (cols - 1) * GAP);
+        int y0 = l[1] - JOB_GAP - rows * S - (rows - 1) * GAP;
+        return new int[] {x0, y0, cols};
+    }
+
+    /** 직업 칸 i 의 왼쪽 위 (GUI 좌표 — 시험용) */
+    public static int[] jobSlotPos(int w, int h, int i) {
+        int[] l = jobLayout(w, h);
+        return new int[] {l[0] + (i % l[2]) * (S + GAP), l[1] + (i / l[2]) * (S + GAP)};
+    }
+
     /** 칸 i 의 왼쪽 위 (GUI 좌표 — 시험용) */
     public static int[] slotPos(int w, int h, int i) {
         int[] l = layout(w, h);
@@ -86,13 +112,75 @@ public final class SkillBarHud {
             int y = l[1] + (i / l[2]) * (S + GAP);
             drawSlot(g, mc.font, i, x, y, S, partial, now, riding, true);
         }
+        // 0.26.0 직업 스킬 칸 (룬 칸 위) + "직업 스킬" 글자
+        int[] jl = jobLayout(w, h);
+        for (int i = 0; i < ClientJobBar.SIZE; i++) {
+            int x = jl[0] + (i % jl[2]) * (S + GAP);
+            int y = jl[1] + (i / jl[2]) * (S + GAP);
+            drawJobSlot(g, mc.font, i, x, y, S, partial, now, riding, true);
+        }
+        String cap = ClientJobBar.any() ? "§7직업 스킬" : "§8직업 스킬";
+        g.text(mc.font, cap, jl[0], jl[1] - JOB_CAPTION, 0xFFFFFFFF, true);
         if (!any) {
             String hint = "§e[" + label(MmorpgClient.skillBarKey) + "] §7스킬 칸 §8· §7룬 우클릭 = 올리기";
             int tw = mc.font.width(hint);
             int tx = w - 4 - tw;
-            int ty = l[1] - 11;
+            int ty = jl[1] - JOB_CAPTION - 12;
             g.fill(tx - 3, ty - 2, w - 1, ty + 9, 0x90000000);
             g.text(mc.font, hint, tx, ty, 0xFFFFFFFF, true);
+        }
+    }
+
+    /**
+     * 0.26.0 직업 스킬 칸 하나 (HUD · 스킬 칸 창 공용): 빈 칸은 푸른 기 도는 흐린 테두리, 스킬이 있으면 그 그림 · 재사용 대기 덮개 · 남은 초, 눌림 · 막힘 (빨간
+     * 덮개 + 흔들림) · 시전 (흰 번쩍) · 준비 (빛) 연출, 키 글자 "⇧R" (key 이면 왼쪽 위)
+     */
+    static void drawJobSlot(GuiGraphicsExtractor g, Font font, int i, int x0, int y, int s, float partial, long now, boolean dim, boolean key) {
+        boolean empty = ClientJobBar.empty(i);
+        float deny = phase(ClientJobBar.DENY_AT[i], now, 260);
+        int x = x0 + (deny >= 0 ? Math.round((float) Math.sin(deny * Math.PI * 6) * 2 * (1 - deny)) : 0);
+        int cx = x + s / 2;
+        int cy = y + s / 2;
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, FRAME, x, y, s, s, empty ? 0x8CA8C8FF : 0xFFFFFFFF);
+        if (!empty) g.blitSprite(RenderPipelines.GUI_TEXTURED, EDGE, x, y, s, s, 0xFF7FD8FF);
+        float cast = phase(ClientJobBar.CAST_AT[i], now, 380);
+        if (cast >= 0) ring(g, cx, cy, s * (0.5F + 0.7F * cast), 0x7FD8FF, 0.9F * (1 - cast));
+        float ready = phase(ClientJobBar.READY_AT[i], now, 520);
+        if (ready >= 0) ring(g, cx, cy, s * (0.62F + 0.18F * (float) Math.sin(ready * Math.PI)), 0x7FD8FF, (float) Math.sin(ready * Math.PI));
+        ItemStack icon = ClientJobBar.icon(i);
+        if (!icon.isEmpty()) {
+            float press = phase(ClientJobBar.PRESS_AT[i], now, 160);
+            float k = s / 20F * (press >= 0 ? 0.84F + 0.16F * press : 1F);
+            g.pose().pushMatrix();
+            g.pose().translate(cx, cy);
+            g.pose().scale(k, k);
+            g.item(icon, -8, -8);
+            g.pose().popMatrix();
+        }
+        double frac = ClientJobBar.cooldownFrac(i, partial);
+        if (frac > 0) {
+            int inner = s - 2;
+            int hgt = (int) Math.ceil(inner * frac);
+            g.fill(x + 1, y + 1, x + s - 1, y + 1 + hgt, 0xB4000008);
+            if (hgt > 0 && hgt < inner) g.fill(x + 1, y + hgt, x + s - 1, y + 1 + hgt, 0x70FFFFFF);
+            double left = ClientJobBar.cooldownLeft(i, partial);
+            String t = left >= 10 ? String.valueOf((int) Math.ceil(left)) : String.format(Locale.ROOT, "%.1f", left);
+            int tw = font.width(t);
+            g.text(font, t, cx - tw / 2 + 1, key ? y + s - 9 : cy - 3, left < 1 ? 0xFFFFE066 : 0xFFFFFFFF, true);
+        }
+        if (cast >= 0 && cast < 0.5F) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.75F * (1 - cast * 2), 0xFFFFFF));
+        if (ready >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.35F * (float) Math.sin(ready * Math.PI), 0xFFFFFF));
+        float press = phase(ClientJobBar.PRESS_AT[i], now, 160);
+        if (empty && press >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.3F * (1 - press), 0xFFFFFF));
+        if (deny >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.5F * (1 - deny), 0xFF2A2A));
+        if (dim) g.fill(x, y, x + s, y + s, 0x88000000);
+        if (key) {
+            String label = ClientJobBar.keyLabel(i);
+            if (!label.isEmpty()) {
+                int lw = font.width(label);
+                g.blitSprite(RenderPipelines.GUI_TEXTURED, KEY, x - 2, y - 2, lw + 5, 11, empty ? 0xB0FFFFFF : 0xFFFFFFFF);
+                g.text(font, label, x + 1, y, empty ? 0xFF98A8C0 : 0xFFFFFFFF, true);
+            }
         }
     }
 
