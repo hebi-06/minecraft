@@ -336,6 +336,13 @@ final class ArcherSkills {
         // 광선은 활을 든 손에서 (1인칭: 오른쪽 아래에서 과녁 쪽으로 뻗는 줄로 보임 — 눈에서 곧장 나가면 점으로만 보임)
         Vec3 hand = V.add(RuneKit.bowHand(sp), look, 1.2);
         JobFx.beam(level, hand, end, j, 3.2, len / speed + 0.35, Opt.of("alpha", 0.85));
+        // 화살이 지나가는 자리마다 카메라를 보는 작은 터짐 (가까운 것부터 차례로 — 광선 띠는 길이 방향 그림이라 쏜 사람 뒤 · 1인칭에서는 옆면만 보여 보이지 않음)
+        for (double dd = 1.6; dd <= len; dd += 1.3) {
+            Vec3 at = V.add(from, look, dd);
+            int delay = (int) Math.round(dd / speed * 20);
+            double sz = 0.32 + Math.min(0.3, dd * 0.008);
+            RuneKit.later(delay, () -> JobFx.burst(level, at, sz, j, 0.34, Opt.of("alpha", 0.9)));
+        }
         // 화살이 지나가며 남기는 충격 고리 (화살 쪽을 봄 — 1인칭에서는 과녁 둘레로 겹겹이 퍼지는 고리)
         for (double dd : new double[] {3, 6, 10, 15, 21, 28, 36}) {
             if (dd > len) break;

@@ -424,6 +424,8 @@ public final class JobTraitsMore {
         if (j.id().equals("mage") && "wand".equals(w.type()) && JobTraits.stanceOn(sp, "mage_overload")) {
             Vec3 end = V.add(from, dir, Math.max(1, dist));
             JobFx.beam(level, V.add(from, dir, 0.6), end, j, 2.6, 0.3, Opt.of("alpha", 0.9));
+            // 광선 띠는 옆에서만 보임 → 쏜 사람 (1인칭 · 뒤 3인칭) 에게는 길을 따라 카메라를 보는 작은 터짐
+            for (double dd = 0.9; dd < Math.max(1, dist); dd += 1.1) JobFx.burst(level, V.add(from, dir, dd), 0.2, j, 0.22, Opt.empty());
             JobFx.burst(level, from, 0.35, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
             SkillFx.play(level, "mob.warden.sonic_charge", from, 1.9, 0.25);
         }
