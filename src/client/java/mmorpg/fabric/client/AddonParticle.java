@@ -37,6 +37,9 @@ public final class AddonParticle extends SingleQuadParticle {
     private final double spin0;
     private final double spinRate;
     private final TextureAtlasSprite tex;
+    /** 0.27.0 보는 사람 걸러내기: 0 = 모두 · 1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만 (주인 = owner 엔티티 번호) */
+    private final int view;
+    private final int owner;
 
     AddonParticle(ClientLevel level, Vec3 origin, Def d, double[] emitterVars, double emitterAge, TextureAtlasSprite sprite) {
         super(level, origin.x, origin.y, origin.z, sprite);
@@ -48,6 +51,9 @@ public final class AddonParticle extends SingleQuadParticle {
         v[AddonParticles.AGE] = 0;
         v[AddonParticles.EAGE] = emitterAge;
         this.emitterAge0 = emitterAge;
+        this.view = AddonParticles.VIEW >= 0 ? (int) Math.round(v[AddonParticles.VIEW]) : 0;
+        this.owner = view == 0 || AddonParticles.OWNER_HI < 0 || AddonParticles.OWNER_LO < 0 ? -1
+                : ((int) Math.round(v[AddonParticles.OWNER_HI]) << 16) | ((int) Math.round(v[AddonParticles.OWNER_LO]) & 0xFFFF);
         // 자리 · 방향 (발생기 모양)
         double ox = 0;
         double oy = 0;
@@ -230,6 +236,7 @@ public final class AddonParticle extends SingleQuadParticle {
     public void extract(QuadParticleRenderState state, Camera camera, float partialTick) {
         double t = (this.age + partialTick) / 20.0;
         if (t > life) return;
+        if (view != 0 && !shown()) return;
         v[AddonParticles.AGE] = t;
         v[AddonParticles.EAGE] = emitterAge0 + t;
         float w = (float) d.sizeX.eval(v);
@@ -293,6 +300,17 @@ public final class AddonParticle extends SingleQuadParticle {
         if (spin != 0 && d.facing != AddonParticles.LOOKAT_DIRECTION) q.rotateZ((float) Math.toRadians(spin));
         int color = ARGB.colorFromFloat(ca, cr, cg, cb);
         quads(state, q, rx, ry, rz, w, h, u0, u1, v0, v1, color);
+    }
+
+    /**
+     * 0.27.0 이 그림을 지금 그릴지 (view): 1 = 주인 (스킬을 쓴 사람) 이 1인칭이면 숨김 — 몸 둘레 · 발밑 그림은 1인칭 카메라 바로 옆이라 픽셀이 화면을 덮는
+     * 큰 네모가 됨, 2 = 주인의 1인칭에서만 (눈앞에 따로 그리는 그림 — 3인칭 · 다른 사람은 몸 둘레 그림을 봄)
+     */
+    private boolean shown() {
+        net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
+        boolean mine = mc.player != null && mc.player.getId() == owner;
+        boolean first = mc.options.getCameraType().isFirstPerson();
+        return view == 1 ? !(mine && first) : mine && first;
     }
 
     private static float clamp01(double x) {

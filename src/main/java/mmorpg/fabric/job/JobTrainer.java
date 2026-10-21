@@ -29,7 +29,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 0.27.0 직업 교관 (NPC 역할 "job" — /npc tag job · NPC 설정 창): 전직 · 직업 바꾸기 창. 10렙 (Jobs.changeLevel) 부터, 첫 전직은 무료 · 바꾸기는 은화
  * 300 (Jobs.changeSilver). 상자 창에 직업 카드 열하나 (jobs.json order — 그림은 그 직업의 40렙 초월 무기, 마검사는 마검) · 지금 직업 · 보유 은화 · 안내,
- * 카드를 누르면 확인 창 (특성 · 스킬 다섯 설명) → 전직 연출 (직업 색 문양 · 빛기둥 · 고리 · 번쩍임 · 제목).
+ * 카드를 누르면 확인 창 (특성 · 스킬 다섯 설명) → 전직 연출 (직업 색 둥근 베기 · 빛기둥 · 솟는 빛 · 번쩍임 · 제목).
  * 스킬이 아직 들어가지 않은 직업 (ready false) 은 흐린 카드 ("준비 중").
  */
 public final class JobTrainer {
@@ -52,10 +52,6 @@ public final class JobTrainer {
     private static final Map<String, String> CODE = Map.ofEntries(Map.entry("swordsman", "§b"), Map.entry("warrior", "§c"), Map.entry("spellblade", "§d"),
             Map.entry("mage", "§9"), Map.entry("archer", "§a"), Map.entry("assassin", "§5"), Map.entry("lancer", "§6"), Map.entry("reaper", "§3"),
             Map.entry("paladin", "§e"), Map.entry("priest", "§f"), Map.entry("guardian", "§7"));
-    /** 전직 연출의 발밑 문양 (RuneKit.SIGIL: arcane · holy · blade · spirit) */
-    private static final Map<String, String> SIGIL = Map.ofEntries(Map.entry("swordsman", "blade"), Map.entry("warrior", "blade"),
-            Map.entry("spellblade", "arcane"), Map.entry("mage", "arcane"), Map.entry("archer", "spirit"), Map.entry("assassin", "blade"),
-            Map.entry("lancer", "blade"), Map.entry("reaper", "spirit"), Map.entry("paladin", "holy"), Map.entry("priest", "holy"), Map.entry("guardian", "holy"));
     /** 카드 그림 (직업 id → 무기 아이템) */
     private static final Map<String, ItemStack> CARD_ITEMS = new ConcurrentHashMap<>();
 
@@ -283,27 +279,26 @@ public final class JobTrainer {
     }
 
     /**
-     * 전직 연출 (직업 색 두 빛): 발밑 문양 (직업 계열 — 칼날 · 비전 · 성스러운 · 정령) + 바닥 룬, 둘레 빛기둥 여섯, 퍼지는 고리, 손에서 튀는 불꽃 (세 번),
-     * 화면 번쩍임, 제목 (직업 이름 · 역할), 소리 (레벨 업 · 신호기 · 종)
+     * 전직 연출 (직업 색 두 빛 — 메이플식 2D 그림 JobFx): 발밑에서 도는 큰 둥근 베기 둘 (거꾸로), 둘레 빛기둥 여섯, 몸에서 솟는 빛 (3인칭 · 다른 사람),
+     * 몸 둘레 터짐 세 번 (3인칭) · 1인칭 눈앞 고리 · 손에서 튀는 불꽃, 화면 번쩍임, 제목 (직업 이름 · 역할), 소리 (레벨 업 · 신호기 · 종)
      */
     static void celebrate(ServerPlayer sp, Jobs.Job j, boolean first) {
         ServerLevel level = sp.level();
         Vec3 feet = sp.position();
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
-        SkillFx.rune(level, feet, Opt.of("size", 2.6, "life", 1.6, "color", glow, "alpha", 0.9, "rate", 140.0, "progress", 1.0, "grow", 0.25));
-        RuneKit.domainSigil(level, feet, 3.4, SIGIL.getOrDefault(j.id(), "spirit"), glow, core, Opt.of("life", 1.5, "spinRate", 90.0, "grow", 0.3, "alpha", 0.8,
-                "fade", 0.3));
+        JobFx.ring(level, V.up(feet, 0.06), 3.2, j, false, 0.7, Opt.empty());
+        RuneKit.later(4, () -> JobFx.ring(level, V.up(feet, 0.08), 2.0, j, true, 0.6, Opt.of("alpha", 0.85)));
         RuneKit.godRays(sp, level, feet, 2.6, 6, glow, core, Opt.of("h", 12.0, "life", 1.3, "alpha", 0.8));
-        SkillFx.ring(level, V.up(feet, 0.1), V.UP, glow, 2.8, 0.9, 3.0);
-        RuneKit.later(4, () -> RuneKit.novaRing(level, feet, 1.0, 3.2, glow, core, Opt.of("life", 0.7)));
+        JobFx.aura(sp, j, 2.8, 1.4, 0.95);
+        JobFx.eyeRing(sp, j, 2.4, 1.0, 0.6);
         String life = RuneKit.lifeToken(sp);
         for (int i = 0; i < 3; i++) {
             RuneKit.later(i * 5, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 RuneKit.Hand h = RuneKit.handOf(sp);
                 SkillFx.sparks(level, h.hand(), core, 8, 4);
-                SkillFx.burst(level, V.up(sp.position(), 1.0), glow, 0.9, 0.3);
+                JobFx.burst(level, V.up(sp.position(), 1.0), 1.0, j, 0.32, JobFx.hide1p(sp));
             });
         }
         Ult.flash(level, feet, glow, Opt.of("radius", 8.0, "time", new double[] {0.05, 0.12, 0.6}), sp);

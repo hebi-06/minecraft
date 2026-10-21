@@ -81,6 +81,14 @@ public final class AddonFxTable {
         "rpg:rfx_hex",
         "rpg:rfx_hole",
         "rpg:rfx_icicle",
+        "rpg:rfx_jaura",
+        "rpg:rfx_jburst",
+        "rpg:rfx_jdash",
+        "rpg:rfx_jhit",
+        "rpg:rfx_jline",
+        "rpg:rfx_jring",
+        "rpg:rfx_jslash",
+        "rpg:rfx_jspeed",
         "rpg:rfx_king",
         "rpg:rfx_leaf",
         "rpg:rfx_meteor",
@@ -182,6 +190,8 @@ public final class AddonFxTable {
         "move.x",
         "move.y",
         "move.z",
+        "owner_hi",
+        "owner_lo",
         "phase",
         "progress",
         "rate",
@@ -197,6 +207,7 @@ public final class AddonFxTable {
         "vel.x",
         "vel.y",
         "vel.z",
+        "view",
         "wax"
     };
 

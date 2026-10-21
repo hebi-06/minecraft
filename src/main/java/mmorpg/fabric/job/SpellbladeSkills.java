@@ -26,6 +26,7 @@ import net.minecraft.world.phys.Vec3;
  * 0.27.0 마검사 직업 스킬 (jobs.json spellblade — 남보라 마력 · 청록 칼날, 특성 「마력 검술」 · 마력 각인): 비전 참격 · 마력 도약 · 룬 검무 · 마검 각성 · 비전 거검.
  * 칼 = 공격 피해, 마력 = 마법 피해 (방어 무시) — 숫자는 둘 다 직업 색 그라데이션. 스킬이 처음 맞힌 적마다 마력 각인 하나 (한 번 쓸 때 적마다 하나 — JobTraits.mark),
  * 평타가 각인 찍힌 적을 치면 하나가 터지고 (JobTraits), 비전 거검은 남은 각인을 모두 터뜨림.
+ * 연출 = 메이플식 2D 그림 (JobFx — 눈앞 큰 베기 · 타격 그림 · 터짐 · 둥근 베기 · 돌진 줄기, 룬 연출의 문양 · 룬 글자는 쓰지 않음).
  */
 final class SpellbladeSkills {
     private SpellbladeSkills() {}
@@ -50,8 +51,8 @@ final class SpellbladeSkills {
     // ------------------------------------------------------------ 비전 참격
 
     /**
-     * 비전 참격: 칼에 마력을 둘러 앞 reach 칸 · arc 도 부채꼴 베기 (slash — 칼, 공격 피해) → delay 틱 뒤 벤 자리마다 룬 폭발 (burst — 둘레 burstRadius 칸,
-     * 마력, 마법 피해, 적마다 한 번 · 벤 적이 없으면 칼끝 앞에서). 벤 자리에 마력 문양이 그려지다 터짐 (보라 별빛 · 고리 · 불꽃)
+     * 비전 참격: 칼에 마력을 둘러 앞 reach 칸 · arc 도 부채꼴 베기 (slash — 칼, 공격 피해) → delay 틱 뒤 벤 자리마다 마력 폭발 (burst — 둘레 burstRadius 칸,
+     * 마력, 마법 피해, 적마다 한 번 · 벤 적이 없으면 칼끝 앞에서). 그림: 눈앞 큰 베기 · 앞으로 퍼지는 베기, 벤 자리에 타격 그림과 도는 고리 → 터짐 · 발밑 둥근 베기
      */
     static boolean arcslash(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level = sp.level();
@@ -64,15 +65,12 @@ final class SpellbladeSkills {
         double reach = k.num("reach", 5);
         double burstR = k.num("burstRadius", 2.4);
         Set<UUID> marked = new HashSet<>();
-        // 칼에 두른 마력 (손의 칼빛) → 초승달 베기 · 앞으로 퍼지는 검기 · 화면을 가로지르는 빛
+        // 칼에 두른 마력 (손의 칼빛) → 눈앞 큰 베기 · 그 베기가 앞으로 퍼져 날아감
         RuneKit.Hand h = RuneKit.handOf(sp);
         RuneKit.rfx2(level, "sword", V.up(h.hand(), 0.3), Opt.of("dir", V.UP, "size", 0.55, "life", 0.18, "alpha", 0.8, "vel", RuneKit.bodyVel(sp)), glow, core);
-        SkillFx.arc(level, V.up(V.add(eye, f, 1.5), -0.3), f, Opt.of("shape", "arc", "flip", false, "size", 2.9, "life", 0.26, "speed", 3.0, "spin", -6.0,
-                "color", core, "aura", glow));
-        RuneKit.rfx2(level, "wave", V.up(V.add(eye, f, 2.6), -0.35), Opt.of("dir", f, "speed", 7.0, "size", 1.6, "life", 0.24, "grow", 0.35, "fade", 0.6,
-                "spin", 4.0, "alpha", 0.9), glow, core);
-        SkillFx.fx(level, "rpg:light_cut", V.up(V.add(eye, f, 2.2), -0.25), Opt.of("dir", V.rightOf(f), "size", 2.8, "thick", 0.16, "life", 0.3, "delay", 0.04,
-                "color", glow, "alpha", 1.0));
+        JobFx.slash(sp, j, 2.2, 0.35, 1.9, -8.0, 0.26);
+        JobFx.two(level, "jslash", JobFx.SLASH, V.up(V.add(eye, f, 3.0), -0.4), 0.26, Opt.of("dir", f, "speed", 8.0, "size", 1.7, "grow", 0.35, "spin", -8.0,
+                "alpha", 0.75, "fade", 0.3), JobFx.outer(j), JobFx.inner(j));
         SkillFx.play(level, "item.spear.attack_miss", eye, 1.15, 0.9);
         SkillFx.play(level, "mob.evocation_illager.cast_spell", eye, 1.7, 0.45);
         List<LivingEntity> cut = RuneKit.coneTargets(sp, reach, k.num("arc", 100), 10);
@@ -82,15 +80,16 @@ final class SpellbladeSkills {
             Vec3 at = Kit.bodyPoint(e);
             centers.add(at);
             if (n++ < 8) {
-                SkillFx.cutMark(level, at, V.unit(V.sub(at, eye)), -8, 0.1, core, WHITE, 1.0);
-                SkillFx.fx(level, "rpg:magic_circle", at, Opt.of("size", 0.5, "life", delay / 20.0, "spin", 0.0, "progress", 1.0, "color", glow, "alpha", 0.9));
+                // 벤 자리: 타격 그림 + 터질 때까지 그 둘레를 도는 고리 (보는 사람 쪽을 봄)
+                JobFx.hit(e, j, 1.0);
+                JobFx.ringFacing(level, at, 0.55 + Kit.bodyPad(e) * 0.3, j, V.unit(V.sub(eye, at)), delay / 20.0, Opt.of("alpha", 0.9));
             }
             JobKit.strike(sp, e, j, P, k.num("slash", 3.8), false, false, life, 0, d -> markOnce(sp, e, j, marked));
         }
         if (centers.isEmpty()) {
             Vec3 tip = V.up(V.add(sp.position(), f, reach * 0.6), 1.0);
             centers.add(tip);
-            SkillFx.fx(level, "rpg:magic_circle", tip, Opt.of("size", 0.6, "life", delay / 20.0, "spin", 0.0, "progress", 1.0, "color", glow, "alpha", 0.9));
+            JobFx.ringFacing(level, tip, 0.6, j, V.unit(V.sub(eye, tip)), delay / 20.0, Opt.of("alpha", 0.9));
         }
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -103,15 +102,11 @@ final class SpellbladeSkills {
             }
             int m = 0;
             for (Vec3 c : now) {
-                // 터지는 자리 (파티클 예산): 별빛 문장 · 번쩍임 6곳, 불꽃 3곳까지
-                if (m < 6) {
-                    SkillFx.fx(d, "rpg:magic_circle_flash", c, Opt.of("size", burstR * 0.45, "life", 0.28, "spin", 0.0, "progress", 1.0, "color", glow, "alpha", 1.0));
-                    RuneKit.rfx2(d, "sun", c, Opt.of("size", 0.6, "life", 0.26, "grow", 0.7, "fade", 0.6, "spin", Kit.rand() * 360), glow, core);
-                    SkillFx.burst(d, c, glow, 1.2, 0.3);
-                    RuneKit.zonePulse(d, V.up(c, -1.0), core, burstR, 0.35);
+                // 터지는 자리 (파티클 예산 6곳): 터짐 · 발밑 둥근 베기
+                if (m++ < 6) {
+                    JobFx.burst(d, c, burstR * 0.5, j, 0.36, Opt.empty());
+                    JobFx.ring(d, V.up(c, -0.95), burstR * 0.9, j, m % 2 == 0, 0.32, Opt.of("alpha", 0.8));
                 }
-                if (m < 3) SkillFx.sparks(d, c, core, 5, 5);
-                m++;
             }
             SkillFx.play(d, "chime.amethyst_block", sp.position(), 1.3, 1.0);
             SkillFx.play(d, "random.explode", now.get(0), 1.7, 0.4);
@@ -130,7 +125,7 @@ final class SpellbladeSkills {
 
     /**
      * 마력 도약: 보는 쪽 dist 칸 (벽 앞까지, 땅 높이로 — 한 칸 턱 · 낮은 곳도) 으로 순간 이동 — 지나간 길 (폭 width) 의 적을 마력으로 벰 (path, 마법 피해) →
-     * delay 틱 뒤 닿은 자리 둘레 radius 칸 룬 폭발 (blast, 마법 피해). 떠난 자리에 남보라 잔상, 길에는 마력 번개 · 룬 글자, 닿은 자리에 마력 문양이 그려지다 터짐.
+     * delay 틱 뒤 닿은 자리 둘레 radius 칸 마력 폭발 (blast, 마법 피해). 떠난 자리에 남보라 잔상 · 터짐, 길에는 마력 번개 · 돌진 줄기 (1인칭은 빠른 줄), 닿은 자리에 도는 둥근 베기가 그려지다 터짐.
      * 묶였거나 앞이 막혀 못 가면 쓰지 않음
      */
     static boolean blink(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
@@ -164,19 +159,15 @@ final class SpellbladeSkills {
         String life = RuneKit.lifeToken(sp);
         Set<UUID> marked = new HashSet<>();
         Kit.noFall(sp, 40);
-        // 떠난 자리: 잔상 · 터지는 빛 · 룬
+        // 떠난 자리: 잔상 · 터짐 · 발밑 둥근 베기
         RuneKit.shadeClone(sp, level, start, f, 1, SHADE, glow, Opt.of("life", 0.5, "fade", 0.6, "alpha", 0.85));
-        SkillFx.burst(level, V.up(start, 1.0), glow, 1.1, 0.25);
-        SkillFx.rune(level, start, Opt.of("size", 1.1, "life", 0.5, "color", glow, "alpha", 0.85, "rate", 220.0, "progress", 1.0));
-        SkillFx.sparks(level, V.up(start, 1.0), core, 6, 5);
-        // 길: 마력 번개 · 룬 글자 (1.5칸마다 — 내 몸 1.6칸 안은 빼서 1인칭 화면을 덮지 않게)
-        RuneKit.zap(level, V.up(start, 1.0), V.up(dest, 1.0), glow, core, 0.2, 0.35);
-        for (double s = 1.0; s < len; s += 1.5) {
-            Vec3 p = V.add(start, f, s);
-            if (V.hdist(p, dest) < 1.6) continue;
-            SkillFx.rune(level, new Vec3(p.x, RuneKit.groundAt(level, p, start.y), p.z), Opt.of("size", 0.55, "life", 0.6, "color", core, "alpha", 0.8, "rate", 300.0,
-                    "progress", 1.0));
-        }
+        JobFx.burst(level, V.up(start, 1.0), 0.9, j, 0.3, Opt.empty());
+        JobFx.ring(level, V.up(start, 0.06), 1.1, j, false, 0.35, Opt.of("alpha", 0.85));
+        // 길: 마력 번개 (허리 높이 · 닿은 자리 1.8칸 앞까지 — 1인칭 카메라 · 3인칭 카메라 가까이를 지나지 않게) + 돌진 줄기 (1인칭에서는 숨김) + 1인칭 빠른 줄
+        Vec3 zapEnd = V.add(dest, f, -Math.min(1.8, len * 0.4));
+        RuneKit.zap(level, V.up(start, 0.6), V.up(zapEnd, 0.6), glow, core, 0.18, 0.35);
+        JobFx.dash(level, V.up(start, 0.9), V.up(zapEnd, 0.9), j, 0.35, JobFx.hide1p(sp));
+        JobFx.speed(sp, j, 0.35, 0.9);
         SkillFx.play(level, "mob.endermen.portal", start, 1.4, 0.8);
         SkillFx.play(level, "mob.evocation_illager.cast_spell", dest, 1.5, 0.5);
         double half = k.num("width", 1.5) / 2;
@@ -185,29 +176,22 @@ final class SpellbladeSkills {
             LivingEntity e = h.e();
             JobKit.strike(sp, e, j, P, k.num("path", 2.55), true, false, life, 0, d -> {
                 markOnce(sp, e, j, marked);
-                if (cnt[0]++ >= 8 || !(e.level() instanceof ServerLevel lv)) return;
-                Vec3 b = Kit.bodyPoint(e);
-                SkillFx.fx(lv, "rpg:slash_x", b, Opt.of("dir", f, "size", RuneKit.nearK(sp, b, 3, 0.4), "life", 0.25, "color", core, "alpha", 1.0));
-                RuneKit.plasmaOrb(lv, b, 0.4, glow, Opt.of("life", 0.2));
+                if (cnt[0]++ < 8) JobFx.hit(e, j, 1.0);
             });
         }
-        // 닿은 자리: 마력 문양이 delay 틱 동안 그려지다 터짐
+        // 닿은 자리: 발밑에서 도는 둥근 베기가 delay 틱 동안 그려지다 터짐
         int delay = (int) k.num("delay", 10);
         double radius = k.num("radius", 3);
-        SkillFx.fx(level, "rpg:magic_circle", V.up(dest, 0.1), Opt.of("dir", V.UP, "size", radius * 0.8, "life", delay / 20.0, "spin", 0.0, "progress", 1.0, "color",
-                glow, "alpha", 0.85));
-        RuneKit.domainSigil(level, dest, radius, "arcane", glow, core, Opt.of("life", delay / 20.0 + 0.1, "spinRate", 180.0, "grow", 0.1, "alpha", 0.7, "fade", 0.2));
+        JobFx.ring(level, V.up(dest, 0.06), radius * 0.9, j, true, delay / 20.0 + 0.1, Opt.of("alpha", 0.85));
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            SkillFx.fx(d, "rpg:magic_circle_flash", V.up(dest, 0.15), Opt.of("size", radius * 0.8, "life", 0.4, "spin", Kit.rand() * 360, "progress", 1.0,
-                    "color", glow, "alpha", 1.0));
-            RuneKit.novaRing(d, dest, radius * 0.5, 1.2, glow, core, Opt.of("life", 0.4));
-            RuneKit.zonePulse(d, dest, core, radius, 0.35);
-            // 터지는 빛: 내 몸 가까이는 작게 (1인칭 화면이 보랏빛으로 덮이지 않게)
-            Vec3 c = V.up(dest, 1.0);
-            SkillFx.burst(d, V.add(c, Kit.facingOf(sp), 1.6), glow, 1.4, 0.3);
-            SkillFx.sparks(d, c, core, 10, 6);
+            // 터짐: 둘레 둥근 베기 · 몸 둘레 큰 터짐 (3인칭 · 다른 사람) · 눈앞 터짐 (보는 쪽 2.4칸 — 1인칭 화면 가운데) · 알갱이도 눈앞에서
+            JobFx.ring(d, V.up(dest, 0.06), radius, j, false, 0.36, Opt.empty());
+            JobFx.burst(d, V.up(dest, 1.0), radius * 0.6, j, 0.36, JobFx.hide1p(sp));
+            Vec3 ahead = V.up(V.add(dest, Kit.facingOf(sp), 2.4), 1.0);
+            JobFx.burst(d, ahead, 1.3, j, 0.34, Opt.empty());
+            SkillFx.sparks(d, ahead, core, 8, 5);
             SkillFx.play(d, "random.explode", dest, 1.5, 0.6);
             SkillFx.play(d, "chime.amethyst_block", dest, 0.9, 1.0);
             for (LivingEntity e : Kit.around(sp, dest, radius, 2.5)) {
@@ -223,8 +207,8 @@ final class SpellbladeSkills {
     // ------------------------------------------------------------ 룬 검무
 
     /**
-     * 룬 검무: 쓴 자리 둘레 반지름 radius 칸 룬 원 (dur 틱 — 그 자리에 남음) → 마력 검 swords 자루가 원을 따라 돌고, gap 틱마다 (laps 번) 원 안의 적을 벰
-     * (lap — 짝수 번째 칼, 공격 피해 · 홀수 번째 마력, 마법 피해). 원 = 비전 문양 · 안쪽 거꾸로 도는 룬 · 벨 때 범위 고리
+     * 룬 검무: 쓴 자리 둘레 반지름 radius 칸 원 (dur 틱 — 그 자리에 남음) → 마력 검 swords 자루가 원을 따라 돌고, gap 틱마다 (laps 번) 원 안의 적을 벰
+     * (lap — 짝수 번째 칼, 공격 피해 · 홀수 번째 마력, 마법 피해). 그림: 발밑 둥근 베기 (벨 때마다 다시 · 거꾸로 번갈아) · 벨 때 허리 높이 둥근 베기 · 1인칭 눈앞 고리
      */
     static boolean runedance(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level = sp.level();
@@ -239,8 +223,9 @@ final class SpellbladeSkills {
         double[] core = JobKit.core(j);
         String life = RuneKit.lifeToken(sp);
         Set<UUID> marked = new HashSet<>();
-        RuneKit.domainSigil(level, c, r, "arcane", glow, core, Opt.of("life", (dur + 6) / 20.0, "spinRate", 45.0, "grow", 0.1, "alpha", 0.85, "fade", 0.2));
-        SkillFx.rune(level, c, Opt.of("size", r * 0.55, "life", (dur + 4) / 20.0, "color", core, "alpha", 0.7, "rate", -90.0, "progress", 1.0));
+        // 자리: 발밑에서 도는 둥근 베기 (벨 때마다 다시 — 거꾸로 번갈아) · 1인칭 눈앞 고리
+        JobFx.ring(level, V.up(c, 0.06), r, j, false, gap / 20.0 + 0.2, Opt.of("alpha", 0.8));
+        JobFx.eyeRing(sp, j, 2.4, 0.9, 0.45);
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", c, 1.4, 0.8);
         SkillFx.play(level, "beacon.activate", c, 1.7, 0.6);
         // 도는 검 (2틱마다 — 칼날이 도는 쪽으로 누움, 눈 가까이는 흐리게)
@@ -262,21 +247,17 @@ final class SpellbladeSkills {
         SkillFx.every(laps, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             boolean magic = i % 2 == 1;
-            RuneKit.zonePulse(level, c, magic ? glow : core, r, 0.35);
+            // 벨 때마다: 허리 높이 둥근 베기 (거꾸로 번갈아) · 발밑 고리
+            JobFx.ring(level, V.up(c, 1.0), r * 0.92, j, magic, 0.3, Opt.empty());
+            if (i > 0) JobFx.ring(level, V.up(c, 0.06), r, j, magic, gap / 20.0 + 0.2, Opt.of("alpha", 0.75));
             SkillFx.play(level, magic ? "chime.amethyst_block" : "entity.player.attack.sweep", c, magic ? 1.4 : 1.1 + i * 0.1, 0.9);
-            Vec3 eye = sp.getEyePosition();
             int[] cnt = {0};
             for (LivingEntity e : Kit.around(sp, c, r, 3)) {
                 JobKit.strike(sp, e, j, P, lap, magic, false, life, 0, d -> {
                     markOnce(sp, e, j, marked);
                     if (cnt[0]++ >= 8 || !(e.level() instanceof ServerLevel lv)) return;
-                    Vec3 b = Kit.bodyPoint(e);
-                    if (magic) {
-                        SkillFx.burst(lv, b, glow, 0.8, 0.25);
-                        RuneKit.plasmaOrb(lv, b, 0.4, glow, Opt.of("life", 0.2));
-                    } else {
-                        SkillFx.cutMark(lv, b, V.unit(V.sub(b, eye)), ((i * 47) % 180) - 90, 0.08, core, WHITE, 0.9);
-                    }
+                    if (magic) JobFx.burst(lv, Kit.bodyPoint(e), 0.8 + Kit.bodyPad(e) * 0.4, j, 0.3, Opt.empty());
+                    else JobFx.hit(e, j, 1.0);
                 });
             }
         });
@@ -287,7 +268,7 @@ final class SpellbladeSkills {
 
     /**
      * 마검 각성: dur 틱 태세 — 평타가 맞을 때마다 마력 참격 잔상 (위력 × echo — JobTraits) · 평타 사거리 +reach 칸.
-     * 그림: 손의 칼이 룬 빛으로 길어짐 · 발밑 비전 문양 · 솟는 룬 빛 · 1인칭 고리 · 글자, 태세 동안 8틱마다 칼빛 (JobTraits)
+     * 그림: 손의 칼이 마력으로 길어짐 · 몸에서 솟는 빛 (3인칭) · 발밑 둥근 베기 · 솟는 불꽃 · 1인칭 눈앞 고리 · 글자, 태세 동안 8틱마다 칼빛 (JobTraits)
      */
     static boolean awaken(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         int dur = (int) k.num("dur", 240);
@@ -296,7 +277,8 @@ final class SpellbladeSkills {
         Vec3 c = sp.position();
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
-        RuneKit.domainSigil(level, c, 2.8, "arcane", glow, core, Opt.of("life", 1.2, "spinRate", 120.0, "grow", 0.25, "alpha", 0.8, "fade", 0.4));
+        JobFx.aura(sp, j, 2.6, 1.2, 0.95);
+        JobFx.ring(level, V.up(c, 0.06), 2.2, j, false, 0.5, Opt.of("alpha", 0.85));
         String life = RuneKit.lifeToken(sp);
         for (int t = 0; t < 10; t += 2) {
             int tt = t;
@@ -310,7 +292,7 @@ final class SpellbladeSkills {
                         "color", tt % 4 == 0 ? glow : core, "alpha", 1.0));
             });
         }
-        RuneKit.selfCue(sp, glow, core, true);
+        JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
         Ult.flash(level, c, glow, Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         DamageNumbers.showFace(sp, "§d§l마검 각성", 2.4, 0, 0.2);
         SkillFx.play(level, "beacon.activate", c, 1.5, 0.8);
@@ -322,7 +304,7 @@ final class SpellbladeSkills {
     // ------------------------------------------------------------ 비전 거검
 
     /**
-     * 비전 거검: 남보라 하늘 · 발밑 거대한 비전 문양 · 하늘에 룬 아홉이 원을 이룸 → 눈앞에 거대한 마력 검이 솟음 (rise 틱) → gap 틱마다 가로 · 세로 · 대각 베기
+     * 비전 거검: 남보라 하늘 · 발밑에서 크게 도는 둥근 베기 · 둘레 빛기둥 → 눈앞에 거대한 마력 검이 솟음 (rise 틱) → gap 틱마다 가로 · 세로 · 대각 베기
      * (slashes — 앞 range 칸 · 폭 width, 칼, 공격 피해) → after 틱 뒤 앞 thrustAt 칸 찌르기 폭발 (thrust — 그 둘레 thrustRadius 칸 + 찌르는 길, 마력, 큰 숫자) —
      * 맞은 적의 남은 각인을 모두 터뜨려 더함 (각인 하나 = 위력 × markBurst), 찌르기에 닿지 않은 각인 찍힌 적도 그 자리에서 터짐.
      * 발동: 번쩍임 · 빛기둥 · 퍼지는 고리 · 하늘 룬의 섬광
@@ -342,22 +324,12 @@ final class SpellbladeSkills {
         Vec3 c0 = sp.position();
         Set<UUID> marked = new HashSet<>();
         Ult.sky(level0, c0, "rpg:ult_arcane", thrustTick + 30);
-        RuneKit.domainSigil(level0, c0, 5.5, "arcane", glow, core, Opt.of("life", (thrustTick + 4) / 20.0, "spinRate", 50.0, "grow", 0.25, "alpha", 0.82,
-                "fade", 0.15));
-        // 하늘의 룬 아홉 (원 — 번갈아 거꾸로 돎) + 가운데 큰 문양
-        Vec3 skyAt = RuneKit.skyPoint(sp, c0, 10, 24, 7, 22);
-        Vec3 toEye = RuneKit.towardEye(sp, skyAt);
-        Vec3 sx = V.unit(V.cross(toEye, V.UP));
-        Vec3 sy = V.unit(V.cross(sx, toEye));
-        for (int i = 0; i < 9; i++) {
-            double a = i / 9.0 * Math.PI * 2;
-            Vec3 at = V.add(V.add(skyAt, sx, Math.cos(a) * 4.2), sy, Math.sin(a) * 4.2);
-            int ii = i;
-            RuneKit.later(i, () -> RuneKit.skyPlate(sp, level0, "sigil", at, 1.0, glow, core, Opt.of("cell", (double) RuneKit.SIGIL.get("arcane"), "life",
-                    (thrustTick + 6 - ii) / 20.0, "spinRate", ii % 2 == 0 ? 90.0 : -90.0, "grow", 0.1, "alpha", 0.9, "fade", 0.3)));
-        }
-        RuneKit.skyPlate(sp, level0, "sigil", skyAt, 3.2, glow, core, Opt.of("cell", (double) RuneKit.SIGIL.get("arcane"), "life", (thrustTick + 8) / 20.0,
-                "spinRate", -30.0, "grow", 0.15, "alpha", 0.78, "fade", 0.3));
+        // 발동: 발밑에서 크게 도는 둥근 베기 둘 (거꾸로) · 둘레에서 솟는 빛기둥 여섯 · 몸에서 솟는 빛 · 1인칭 눈앞 고리
+        JobFx.ring(level0, V.up(c0, 0.06), 5.5, j, false, rise / 20.0 + 0.3, Opt.of("alpha", 0.85));
+        JobFx.ring(level0, V.up(c0, 0.08), 3.4, j, true, rise / 20.0 + 0.2, Opt.of("alpha", 0.7));
+        RuneKit.godRays(sp, level0, c0, 5.0, 6, glow, core, Opt.of("h", 12.0, "life", rise / 20.0 + 0.4, "alpha", 0.7, "skipNear", true));
+        JobFx.aura(sp, j, 2.8, rise / 20.0 + 0.4, 0.9);
+        JobFx.eyeRing(sp, j, 2.6, 1.1, 0.5);
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", c0, 1.0, 1.0);
         SkillFx.play(level0, "beacon.power", c0, 1.2, 0.8);
         // 솟아오르는 거대한 마력 검 (눈앞 2.6칸, 칼끝 위) + 빨려 드는 빛 → 베기 사이에도 들고 있음
@@ -389,7 +361,7 @@ final class SpellbladeSkills {
             });
         }
         RuneKit.later(thrustTick, () -> {
-            if (RuneKit.sameLife(sp, life)) thrust(sp, j, k, P, range, skyAt, glow, core, life);
+            if (RuneKit.sameLife(sp, life)) thrust(sp, j, k, P, range, glow, core, life);
         });
         return true;
     }
@@ -423,8 +395,7 @@ final class SpellbladeSkills {
             default -> V.unit(V.add(right, V.UP));
         };
         double spin = i % 3 == 0 ? -4.0 : i % 3 == 1 ? 90.0 : 45.0;
-        RuneKit.rfx2(level, "wave", V.up(V.add(eye, f, 3.0), -0.4), Opt.of("dir", f, "speed", 9.0, "size", 2.6, "life", 0.3, "grow", 0.3, "fade", 0.5, "spin", spin),
-                glow, core);
+        JobFx.slash(sp, j, 3.0, 0.2, 3.0, spin, 0.3);
         SkillFx.fx(level, "rpg:light_cut", V.up(V.add(eye, f, 3.4), -0.3), Opt.of("dir", cutDir, "size", 4.6, "thick", 0.3, "life", 0.4, "delay", 0.05, "color", glow,
                 "alpha", 1.0));
         SkillFx.fx(level, "rpg:light_cut", V.up(V.add(eye, f, 3.35), -0.3), Opt.of("dir", cutDir, "size", 4.3, "thick", 0.1, "life", 0.36, "delay", 0.05, "color",
@@ -439,16 +410,13 @@ final class SpellbladeSkills {
             LivingEntity e = h.e();
             JobKit.strike(sp, e, j, P, mult, false, false, life, 0, d -> {
                 markOnce(sp, e, j, marked);
-                if (cnt[0]++ >= 8 || !(e.level() instanceof ServerLevel lv)) return;
-                Vec3 b = Kit.bodyPoint(e);
-                SkillFx.cutMark(lv, b, V.unit(V.sub(b, sp.getEyePosition())), i % 3 == 0 ? -4 : i % 3 == 1 ? 90 : 45, 0.1, core, WHITE, 1.3);
-                if (cnt[0] <= 4) SkillFx.sparks(lv, b, core, 5, 5);
+                if (cnt[0]++ < 8) JobFx.hit(e, j, 1.3);
             });
         }
     }
 
     /** 찌르기 폭발 + 각인 터뜨림 (비전 거검 마지막) */
-    private static void thrust(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double range, Vec3 skyAt, double[] glow, double[] core, String life) {
+    private static void thrust(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double range, double[] glow, double[] core, String life) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         Vec3 from = V.up(sp.position(), 1.0);
@@ -463,15 +431,12 @@ final class SpellbladeSkills {
         double lv0 = Math.max(1, V.len(V.sub(point, hilt)));
         RuneKit.rfx2(level, "sword", V.add(hilt, dv, lv0 / 2), Opt.of("dir", dv, "size", lv0 / 2 + 0.6, "life", 0.5, "fade", 0.5), glow, core);
         RuneKit.flyStreak(level, hilt, point, 60, glow, core, 1.2, 0.45);
-        // 폭발: 문양 섬광 · 퍼지는 고리 · 빛기둥 · 하늘 룬 섬광 · 번쩍임
-        SkillFx.fx(level, "rpg:magic_circle_flash", V.up(ground, 0.15), Opt.of("size", radius * 0.9, "life", 0.5, "spin", Kit.rand() * 360, "progress", 1.0,
-                "color", glow, "alpha", 1.0));
-        RuneKit.later(2, () -> RuneKit.novaRing(level, ground, radius * 0.45, 2.0, glow, core, Opt.of("life", 0.5)));
-        RuneKit.zonePulse(level, ground, core, radius, 0.45);
-        SkillFx.burst(level, point, glow, 2.4, 0.4);
+        // 폭발: 큰 터짐 · 둘레 둥근 베기 둘 (거꾸로) · 빛기둥 · 번쩍임
+        JobFx.burst(level, point, 2.6, j, 0.45, Opt.empty());
+        JobFx.ring(level, V.up(ground, 0.06), radius, j, false, 0.4, Opt.empty());
+        RuneKit.later(2, () -> JobFx.ring(level, V.up(ground, 0.1), radius * 0.6, j, true, 0.36, Opt.empty()));
         SkillFx.sparks(level, point, core, 14, 7);
         RuneKit.later(3, () -> RuneKit.godRays(sp, level, ground, 0, 1, glow, core, Opt.of("h", 16.0, "life", 0.8, "skipNear", true)));
-        RuneKit.skyFlare(level, skyAt, 3.4, glow, core, Opt.of("life", 0.5));
         Ult.flash(level, point, glow, Opt.empty(), sp);
         SkillFx.play(level, "random.explode", point, 1.0, 1.0);
         SkillFx.play(level, "item.trident.thunder", point, 1.1, 0.9);
@@ -486,7 +451,7 @@ final class SpellbladeSkills {
             int marks = JobTraits.takeAllMarks(sp, e);
             JobKit.strike(sp, e, j, P, mult + markBurst * marks, true, true, life, 0, d -> {
                 RuneKit.knock(e, V.sub(e.position(), ground), 0.4, 0.45);
-                if (marks > 0 && e.level() instanceof ServerLevel lv) markBlast(sp, lv, e, marks, glow, core);
+                if (marks > 0 && e.level() instanceof ServerLevel lv) markBlast(sp, lv, e, marks, j);
             });
         }
         // 찌르기에 닿지 않은 각인 찍힌 적 (range + radius 칸 안): 그 자리에서 터짐
@@ -495,20 +460,20 @@ final class SpellbladeSkills {
             int marks = JobTraits.takeAllMarks(sp, e);
             if (marks <= 0) continue;
             JobKit.strike(sp, e, j, P, markBurst * marks, true, false, life, 0, d -> {
-                if (e.level() instanceof ServerLevel lv) markBlast(sp, lv, e, marks, glow, core);
+                if (e.level() instanceof ServerLevel lv) markBlast(sp, lv, e, marks, j);
             });
         }
     }
 
-    /** 각인이 터짐: 머리 위 룬이 각인 수만큼 겹쳐 터짐 · 별빛 · "◈×n" */
-    private static void markBlast(ServerPlayer sp, ServerLevel level, LivingEntity e, int marks, double[] glow, double[] core) {
+    /** 각인이 터짐: 각인 수만큼 겹쳐 커지는 터짐 · 타격 그림 · "◈×n" */
+    private static void markBlast(ServerPlayer sp, ServerLevel level, LivingEntity e, int marks, Jobs.Job j) {
         if (!RuneKit.fxQuota("jobMarkBlast", 6)) return;
         Vec3 b = Kit.bodyPoint(e);
         for (int m = 0; m < Math.min(3, marks); m++) {
-            SkillFx.fx(level, "rpg:magic_circle_flash", V.up(b, 0.3 * m), Opt.of("size", 0.6 + 0.2 * m, "life", 0.3, "spin", Kit.rand() * 360, "progress", 1.0,
-                    "color", m % 2 == 0 ? glow : core, "alpha", 1.0));
+            int mm = m;
+            RuneKit.later(m * 2, () -> JobFx.burst(level, V.up(b, 0.25 * mm), 0.8 + 0.25 * mm + Kit.bodyPad(e) * 0.4, j, 0.32, Opt.empty()));
         }
-        RuneKit.rfx2(level, "sun", b, Opt.of("size", 0.8, "life", 0.3, "grow", 0.8, "fade", 0.6, "spin", Kit.rand() * 360), glow, core);
+        JobFx.hit(e, j, 1.3);
         DamageNumbers.showAt(level, V.up(b, 1.4), "§d§l◈×" + marks);
     }
 }

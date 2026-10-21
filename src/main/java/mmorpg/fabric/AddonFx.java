@@ -55,6 +55,11 @@ public final class AddonFx {
             return set(name + ".r", rgb[0]).set(name + ".g", rgb[1]).set(name + ".b", rgb[2]).set(name + ".a", alpha);
         }
 
+        /** 0.27.0 보는 사람 걸러내기: view (1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만) · 주인 엔티티 번호 (16비트씩 — float 칸에 정확히) */
+        public Vars view(int view, int owner) {
+            return set("view", view).set("owner_hi", (owner >>> 16) & 0xFFFF).set("owner_lo", owner & 0xFFFF);
+        }
+
         AddonParticleOptions options(int particle) {
             return new AddonParticleOptions(particle, java.util.Arrays.copyOf(slots, n), java.util.Arrays.copyOf(values, n));
         }
@@ -213,6 +218,9 @@ public final class AddonFx {
         public double phase;
         public double fade;
         public Vec3 vel = Vec3.ZERO;
+        /** 0.27.0 보는 사람 걸러내기 (0 = 모두 · 1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만) · 주인 엔티티 번호 */
+        public int view;
+        public int owner;
 
         public Rfx copy() {
             Rfx r = new Rfx();
@@ -232,6 +240,8 @@ public final class AddonFx {
             r.phase = phase;
             r.fade = fade;
             r.vel = vel;
+            r.view = view;
+            r.owner = owner;
             return r;
         }
     }
@@ -247,6 +257,7 @@ public final class AddonFx {
         v.vec("vel", o.vel == null ? Vec3.ZERO : o.vel);
         v.set("spin_rate", o.spinRate).set("cell", o.cell).set("frames", o.frames).set("fps", o.fps).set("loop", o.loop ? 1 : 0)
                 .set("phase", o.phase).set("fade", o.fade);
+        if (o.view != 0) v.view(o.view, o.owner);
         spawn(level, "rpg:rfx_" + name, at, v);
     }
 }

@@ -33,6 +33,9 @@ public final class SkillBarHud {
     static final Identifier EDGE = Mmorpg.id("hud/skill_edge");
     static final Identifier GLOW = Mmorpg.id("hud/skill_glow");
     static final Identifier KEY = Mmorpg.id("hud/skill_key");
+    /** 0.27.0 직업 칸 (룬 칸과 다른 네모 퀵슬롯 — tools/job_skill_icons.py) */
+    static final Identifier JOB_SLOT = Mmorpg.id("hud/job_slot");
+    static final Identifier JOB_EDGE = Mmorpg.id("hud/job_edge");
     /** HUD 칸 크기 · 사이 */
     public static final int S = 20;
     public static final int GAP = 2;
@@ -134,8 +137,10 @@ public final class SkillBarHud {
     }
 
     /**
-     * 0.26.0 직업 스킬 칸 하나 (HUD · 스킬 칸 창 공용): 빈 칸은 푸른 기 도는 흐린 테두리, 스킬이 있으면 그 그림 · 재사용 대기 덮개 · 남은 초, 눌림 · 막힘 (빨간
-     * 덮개 + 흔들림) · 시전 (흰 번쩍) · 준비 (빛) 연출, 키 글자 "⇧R" (key 이면 왼쪽 위)
+     * 직업 스킬 칸 하나 (HUD · 스킬 칸 창 공용 — 0.27.0 메이플식 퀵슬롯): 네모 칸 (job_slot — 룬 칸과 다른 모양) 에 스킬 아이콘 (job_skill/&lt;스킬 id&gt;
+     * 32×32 — 룬 그림 대신), 직업 첫째 빛의 안쪽 줄 · 모서리 ㄱ자 (job_edge), 재사용 대기 = 12시에서 시계 방향으로 걷히는 어두운 덮개 + 남은 초,
+     * 연출 = 눌림 (아이콘이 눌렸다 돌아옴) · 막힘 (빨간 덮개 + 흔들림) · 시전 (흰 번쩍 + 퍼지는 직업 색 고리) · 준비 (빛 고리), 잠기면 어둡게 + 아래 사유,
+     * 키 글자 "⇧R" (key 이면 왼쪽 위). 빈 칸은 흐린 칸만
      */
     static void drawJobSlot(GuiGraphicsExtractor g, Font font, int i, int x0, int y, int s, float partial, long now, boolean dim, boolean key) {
         boolean empty = ClientJobBar.empty(i);
@@ -145,42 +150,40 @@ public final class SkillBarHud {
         int x = x0 + (deny >= 0 ? Math.round((float) Math.sin(deny * Math.PI * 6) * 2 * (1 - deny)) : 0);
         int cx = x + s / 2;
         int cy = y + s / 2;
-        g.blitSprite(RenderPipelines.GUI_TEXTURED, FRAME, x, y, s, s, empty ? 0x8CA8C8FF : 0xFFFFFFFF);
-        if (!empty) g.blitSprite(RenderPipelines.GUI_TEXTURED, EDGE, x, y, s, s, (locked ? 0x80000000 : 0xFF000000) | edge);
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, JOB_SLOT, x, y, s, s, empty ? 0x9CFFFFFF : 0xFFFFFFFF);
         float cast = phase(ClientJobBar.CAST_AT[i], now, 380);
-        if (cast >= 0) ring(g, cx, cy, s * (0.5F + 0.7F * cast), ClientJobBar.colorB(), 0.9F * (1 - cast));
         float ready = phase(ClientJobBar.READY_AT[i], now, 520);
-        if (ready >= 0) ring(g, cx, cy, s * (0.62F + 0.18F * (float) Math.sin(ready * Math.PI)), edge, (float) Math.sin(ready * Math.PI));
-        ItemStack icon = ClientJobBar.icon(i);
-        if (!icon.isEmpty()) {
+        int in = Math.max(1, s / 10); // 아이콘 둘레 여백 (20칸 → 2)
+        if (!empty) {
             float press = phase(ClientJobBar.PRESS_AT[i], now, 160);
-            float k = s / 20F * (press >= 0 ? 0.84F + 0.16F * press : 1F);
+            float k = press >= 0 ? 0.84F + 0.16F * press : 1F;
+            int is = s - in * 2;
             g.pose().pushMatrix();
             g.pose().translate(cx, cy);
             g.pose().scale(k, k);
-            g.item(icon, -8, -8);
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, jobIcon(ClientJobBar.id(i)), -is / 2, -is / 2, is, is, locked ? 0xFF8C8C8C : 0xFFFFFFFF);
             g.pose().popMatrix();
         }
         double frac = ClientJobBar.cooldownFrac(i, partial);
         if (frac > 0) {
-            int inner = s - 2;
-            int hgt = (int) Math.ceil(inner * frac);
-            g.fill(x + 1, y + 1, x + s - 1, y + 1 + hgt, 0xB4000008);
-            if (hgt > 0 && hgt < inner) g.fill(x + 1, y + hgt, x + s - 1, y + 1 + hgt, 0x70FFFFFF);
+            clockWipe(g, x + in, y + in, s - in * 2, s - in * 2, frac, 0xB8000006);
             double left = ClientJobBar.cooldownLeft(i, partial);
             String t = left >= 10 ? String.valueOf((int) Math.ceil(left)) : String.format(Locale.ROOT, "%.1f", left);
             int tw = font.width(t);
             g.text(font, t, cx - tw / 2 + 1, key ? y + s - 9 : cy - 3, left < 1 ? 0xFFFFE066 : 0xFFFFFFFF, true);
         }
+        if (!empty) g.blitSprite(RenderPipelines.GUI_TEXTURED, JOB_EDGE, x, y, s, s, (locked || frac > 0 ? 0x70000000 : 0xFF000000) | edge);
+        if (cast >= 0) ring(g, cx, cy, s * (0.5F + 0.7F * cast), ClientJobBar.colorB(), 0.9F * (1 - cast));
+        if (ready >= 0) ring(g, cx, cy, s * (0.62F + 0.18F * (float) Math.sin(ready * Math.PI)), edge, (float) Math.sin(ready * Math.PI));
         if (cast >= 0 && cast < 0.5F) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.75F * (1 - cast * 2), 0xFFFFFF));
         if (ready >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.35F * (float) Math.sin(ready * Math.PI), 0xFFFFFF));
         float press = phase(ClientJobBar.PRESS_AT[i], now, 160);
         if (empty && press >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.3F * (1 - press), 0xFFFFFF));
         if (deny >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.5F * (1 - deny), 0xFF2A2A));
         if (dim) g.fill(x, y, x + s, y + s, 0x88000000);
-        // 0.27.0 잠김: 어둡게 + 아래에 짧은 사유 (해금 레벨 "15렙" · 든 무기의 레벨 · 직업 무기 아님 "무기" · 요구 스탯 "스탯" — 작은 글자)
+        // 잠김: 어둡게 + 아래에 짧은 사유 (해금 레벨 "15렙" · 든 무기의 레벨 · 직업 무기 아님 "무기" · 요구 스탯 "스탯" — 작은 글자)
         if (locked && !dim) {
-            g.fill(x + 1, y + 1, x + s - 1, y + s - 1, 0xA0080610);
+            g.fill(x + 1, y + 1, x + s - 1, y + s - 1, 0x90080610);
             String lock = ClientJobBar.lock(i);
             String t = mmorpg.fabric.job.JobSkills.lockShort(lock);
             int col = t.endsWith("렙") ? 0xFFFFB04A : 0xFFFF6A6A;
@@ -197,6 +200,42 @@ public final class SkillBarHud {
                 int lw = font.width(label);
                 g.blitSprite(RenderPipelines.GUI_TEXTURED, KEY, x - 2, y - 2, lw + 5, 11, empty ? 0xB0FFFFFF : 0xFFFFFFFF);
                 g.text(font, label, x + 1, y, empty ? 0xFF98A8C0 : 0xFFFFFFFF, true);
+            }
+        }
+    }
+
+    /** 직업 스킬 아이콘 (GUI 그림 job_skill/&lt;스킬 id&gt; — tools/job_skill_icons.py) */
+    static Identifier jobIcon(String skillId) {
+        return Mmorpg.id("job_skill/" + skillId);
+    }
+
+    /**
+     * 시계 방향으로 걷히는 덮개 (메이플 퀵슬롯의 재사용 대기): frac = 남은 비율 (1 = 다 덮음). 12시에서 시계 방향으로 지난 몫 (1 - frac) 이 걷히고 남은
+     * 쪽만 덮음 — 줄마다 덮인 칸 구간을 한 번에 칠함
+     */
+    static void clockWipe(GuiGraphicsExtractor g, int x0, int y0, int w, int h, double frac, int color) {
+        if (!(frac > 0) || w <= 0 || h <= 0) return;
+        if (frac >= 1) {
+            g.fill(x0, y0, x0 + w, y0 + h, color);
+            return;
+        }
+        double done = (1 - frac) * Math.PI * 2;
+        double cx = w / 2.0;
+        double cy = h / 2.0;
+        for (int yy = 0; yy < h; yy++) {
+            int start = -1;
+            for (int xx = 0; xx <= w; xx++) {
+                boolean cov = false;
+                if (xx < w) {
+                    double a = Math.atan2(xx + 0.5 - cx, -(yy + 0.5 - cy)); // 12시 = 0, 시계 방향으로 커짐
+                    if (a < 0) a += Math.PI * 2;
+                    cov = a >= done;
+                }
+                if (cov && start < 0) start = xx;
+                else if (!cov && start >= 0) {
+                    g.fill(x0 + start, y0 + yy, x0 + xx, y0 + yy + 1, color);
+                    start = -1;
+                }
             }
         }
     }

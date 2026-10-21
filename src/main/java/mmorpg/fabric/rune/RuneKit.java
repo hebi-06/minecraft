@@ -391,7 +391,7 @@ public final class RuneKit {
 
     /**
      * 룬 연출 그림 하나 (rpg:rfx_&lt;name&gt;). o: dir (긴 그림은 그 방향으로 눕고 그 방향으로 움직임) · size · life · color · alpha · spin · spinRate ·
-     * speed (dir 쪽 칸/초) · grow · cell · frames · fps · loop · phase · fade · vel (몸을 따라오는 속도 칸/초)
+     * speed (dir 쪽 칸/초) · grow · cell · frames · fps · loop · phase · fade · vel (몸을 따라오는 속도 칸/초) · view · owner (0.27.0 보는 사람 걸러내기)
      */
     public static void rfx(ServerLevel level, String name, Vec3 at, Opt o) {
         AddonFx.Rfx r = new AddonFx.Rfx();
@@ -411,6 +411,8 @@ public final class RuneKit {
         r.phase = o.num("phase", 0);
         r.fade = o.num("fade", 0);
         r.vel = o.vec("vel", V_ZERO);
+        r.view = (int) o.num("view", 0); // 0.27.0 보는 사람 걸러내기 (1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만)
+        r.owner = (int) o.num("owner", 0);
         AddonFx.rfx(level, name, at, r);
     }
 

@@ -12,14 +12,12 @@ import java.util.Map;
 import java.util.UUID;
 import mmorpg.core.Js;
 import mmorpg.core.Jobs;
-import mmorpg.core.Runes;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.Props;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.Tasks;
-import mmorpg.fabric.rune.RuneItems;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -146,12 +144,11 @@ public final class JobSystem {
     }
 
 
-    /** 칸 그림 (직업 문장 · 스킬 그림이 나오기 전 임시: 그 직업 전용 룬 계열의 그림 — 칸마다 등급 하나씩, 전용 룬이 없으면 직업 무기) */
+    /**
+     * 칸 그림: 0.27.0 부터 비움 — 직업 스킬은 룬 그림이 아니라 클라이언트가 스킬 id 로 그리는 메이플식 스킬 아이콘 (GUI 그림 job_skill/&lt;스킬 id&gt;,
+     * tools/job_skill_icons.py)
+     */
     static ItemStack icon(Jobs.Job j, int slot) {
-        if (j.rune() != null) {
-            ItemStack s = RuneItems.stack(j.rune(), Runes.GRADE_ORDER.get(Math.max(0, Math.min(Runes.GRADE_ORDER.size() - 1, slot))));
-            if (s != null && !s.isEmpty()) return s;
-        }
         return ItemStack.EMPTY;
     }
 

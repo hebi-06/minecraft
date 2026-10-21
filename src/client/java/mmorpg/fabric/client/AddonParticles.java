@@ -42,6 +42,15 @@ public final class AddonParticles {
     static final int ER1 = 8;
     static final int CUSTOM = BUILTIN.length;
     static final int SLOTS = CUSTOM + AddonFxTable.VARS.length;
+    /** 0.27.0 보는 사람 걸러내기 (tools/addon_particles.py SERVER_VARS — 식에서 쓰지 않고 AddonParticle 이 직접 읽음): 변수 칸 (없으면 -1) */
+    static final int VIEW = slot("view");
+    static final int OWNER_HI = slot("owner_hi");
+    static final int OWNER_LO = slot("owner_lo");
+
+    private static int slot(String name) {
+        int i = AddonFxTable.var(name);
+        return i < 0 ? -1 : CUSTOM + i;
+    }
 
     // 발생기 모양 · 방향
     static final int SHAPE_POINT = 0;

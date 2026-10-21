@@ -37,6 +37,9 @@ VANILLA_CELL = {(0, 0): "minecraft:generic_0", (0, 24): "minecraft:flame"}
 BUILTIN = ["particle_age", "particle_lifetime", "particle_random_1", "particle_random_2", "particle_random_3", "particle_random_4",
            "emitter_age", "emitter_lifetime", "emitter_random_1", "emitter_random_2", "emitter_random_3", "emitter_random_4"]
 MATERIAL = {"particles_blend": "blend", "particles_add": "add", "particles_alpha": "alpha"}
+# 0.27.0 서버가 보내는 공통 변수 (식에서 쓰지 않음 — 클라이언트 AddonParticle 이 직접 읽음): 보는 사람 걸러내기
+#   view 0 = 모두 · 1 = 주인이 1인칭이면 숨김 (몸 둘레 · 카메라 가까운 그림) · 2 = 주인의 1인칭에만 (눈앞 그림), owner_hi · owner_lo = 주인 엔티티 번호 (16비트씩)
+SERVER_VARS = ["view", "owner_hi", "owner_lo"]
 
 
 def norm(e):
@@ -181,7 +184,7 @@ def main(addon):
         assert pid not in defs, f"자바 전용 파티클 이름이 애드온과 겹침: {pid}"
         defs[pid] = d
         all_vars |= used
-    custom = sorted(v for v in all_vars if v not in BUILTIN)
+    custom = sorted({v for v in all_vars if v not in BUILTIN} | set(SERVER_VARS))
     sprites = sorted({d["sprite"] for d in defs.values()})
     with open(OUT_DEFS, "w", encoding="utf-8") as fh:
         json.dump({"source": "MMO RPG 애드온 RPG_RP/particles + 자바 전용 tools/java_fx (tools/addon_particles.py 가 만듦, 손으로 고치지 않음)",

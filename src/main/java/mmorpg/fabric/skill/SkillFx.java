@@ -47,11 +47,13 @@ public final class SkillFx {
         for (String k : STD) v.set(k, o.num(k, 0));
         v.color("color", o.color("color", WHITE), o.num("alpha", 1));
         for (String k : o.keys()) {
-            if (SKIP.contains(k)) continue;
+            if (SKIP.contains(k) || k.equals("view") || k.equals("owner")) continue;
             Object val = o.get(k);
             if (val instanceof Number n) v.set(k, n.doubleValue());
             else if (val instanceof Vec3 vec) v.vec(k, vec);
         }
+        // 0.27.0 보는 사람 걸러내기 (view 1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만, owner = 주인 엔티티 번호)
+        if (o.num("view", 0) != 0) v.view((int) o.num("view", 0), (int) o.num("owner", 0));
         return v;
     }
 

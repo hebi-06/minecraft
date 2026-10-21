@@ -648,3 +648,5 @@ if __name__ == "__main__":
     java_fx_limited.main()
     import java_fx_pairs  # 0.25.0 두 스탯 룬 계열 여섯 (주먹 · 영혼 짐승 · 물보라 · 그물)
     java_fx_pairs.main()
+    import job_fx_art  # 0.27.0 직업 스킬 연출 (메이플식 2D — 베기 · 맞은 자리 · 둥근 베기 · 돌진 · 일섬 · 터짐 · 솟는 빛 · 빠른 줄)
+    job_fx_art.main()

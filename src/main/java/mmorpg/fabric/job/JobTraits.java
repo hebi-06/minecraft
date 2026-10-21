@@ -155,7 +155,8 @@ public final class JobTraits {
         SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.25), Opt.of("dir", V.UP, "speed", 1.4, "size", 0.14, "grow", 0.8, "life", 0.35, "color",
                 JobKit.core(j), "alpha", 1.0));
         if (st.stacks == max) {
-            SkillFx.ring(level, V.up(h.hand(), 0.1), h.f(), JobKit.glow(j), 0.5, 0.3, 1.5);
+            // 다 참: 칼끝 앞 작은 터짐 (1인칭 오른쪽 아래)
+            JobFx.burst(level, V.up(V.add(h.hand(), h.f(), 0.6), 0.3), 0.3, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
             SkillFx.play(level, "block.bell.hit", sp.position(), 2.0, 0.25);
         }
         sendGauge(sp, false);
@@ -245,11 +246,15 @@ public final class JobTraits {
         m[1] = now + (long) j.trait().def().numOr("markFor", 200);
         of(sp).target = e.getUUID();
         if (e.level() instanceof ServerLevel level && RuneKit.fxQuota("jobMark", 6)) {
-            // 각인: 머리 위 작은 룬이 각인 수만큼 겹쳐 돎 + 찍히는 순간 문양 번쩍
-            Vec3 over = RuneKit.overHead(e, 0.55);
-            SkillFx.rune(level, over, Opt.of("size", 0.32 + 0.1 * m[0], "life", 0.8, "color", JobKit.glow(j), "alpha", 0.95, "rate", 260.0));
-            SkillFx.fx(level, "rpg:magic_circle_flash", Kit.bodyPoint(e), Opt.of("size", 0.45, "life", 0.2, "spin", 0.0, "progress", 1.0, "color", JobKit.core(j),
-                    "alpha", 0.9));
+            // 각인: 머리 위에 각인 수만큼 반짝임이 한 줄로 (돌며 빛남)
+            Vec3 over = RuneKit.overHead(e, 0.5);
+            Vec3 right = V.rightOf(V.flat(V.sub(over, sp.getEyePosition())));
+            int n = (int) m[0];
+            for (int i = 0; i < n; i++) {
+                Vec3 at = V.add(over, right, (i - (n - 1) / 2.0) * 0.3);
+                RuneKit.rfx(level, "prop", at, Opt.of("size", 0.14, "life", 0.8, "cell", (double) RuneKit.RFX.get("glint")[0], "spin", 45.0, "spinRate", 160.0,
+                        "color", i == n - 1 ? JobFx.inner(j) : JobFx.outer(j), "grow", 0.3, "fade", 0.4));
+            }
         }
         sendGauge(sp, false);
     }
@@ -327,9 +332,8 @@ public final class JobTraits {
                     // 두 번째 베기: 맞은 자리에 반대로 그은 물빛 칼날 (조금 늦게)
                     RuneKit.later(3, () -> {
                         if (victim.isRemoved()) return;
-                        Vec3 p = Kit.bodyPoint(victim);
-                        SkillFx.cutMark(level, p, V.unit(V.sub(p, sp.getEyePosition())), 140, 0.06, JobKit.glow(j), JobKit.core(j), 1.1);
-                        SkillFx.play(level, "item.spear.attack_miss", p, 1.7, 0.5);
+                        JobFx.hit(victim, j, 1.0);
+                        SkillFx.play(level, "item.spear.attack_miss", Kit.bodyPoint(victim), 1.7, 0.5);
                     });
                 }
             }
@@ -339,21 +343,16 @@ public final class JobTraits {
                 if (has(bonus, KEY_MARK)) {
                     long[] m = MARKS.get(key(sp, victim));
                     if (m != null && m[0] > 0) m[0]--;
-                    // 각인 폭발: 맞은 자리에서 룬이 터짐
-                    SkillFx.fx(level, "rpg:magic_circle_flash", at, Opt.of("size", 0.7, "life", 0.25, "spin", Kit.rand() * 360, "progress", 1.0, "color",
-                            JobKit.glow(j), "alpha", 1.0));
-                    SkillFx.burst(level, at, JobKit.core(j), 0.9, 0.25);
-                    SkillFx.sparks(level, at, JobKit.glow(j), 6, 5);
+                    // 각인 폭발: 맞은 자리에서 터짐
+                    JobFx.burst(level, at, 0.85 + Kit.bodyPad(victim) * 0.4, j, 0.3, Opt.empty());
                     SkillFx.play(level, "chime.amethyst_block", at, 1.6, 0.8);
                 }
                 if (has(bonus, KEY_AWAKEN)) {
                     // 마력 참격 잔상: 평타 궤적을 따라 보라 · 청록 참격이 한 번 더 (2틱 뒤)
                     RuneKit.later(2, () -> {
                         if (victim.isRemoved()) return;
-                        Vec3 p = Kit.bodyPoint(victim);
-                        Vec3 vv = V.unit(V.sub(p, sp.getEyePosition()));
-                        SkillFx.fx(level, "rpg:slash_x", V.add(p, vv, -0.2), Opt.of("dir", vv, "size", 1.3, "life", 0.26, "color", JobKit.glow(j), "alpha", 0.95));
-                        SkillFx.cutMark(level, p, vv, -35, 0.05, JobKit.core(j), JobKit.glow(j), 1.15);
+                        JobFx.slash(sp, j, 2.0, 0.3, 1.3, 160.0, 0.22);
+                        JobFx.hit(victim, j, 1.1);
                     });
                 }
                 sendGauge(sp, false);
@@ -384,22 +383,25 @@ public final class JobTraits {
                     st.lastDecay = now;
                 }
             }
-            // 태세 연출 (8틱마다): 명경지수 = 발밑 잔물결 고리 · 물빛 칼날, 마검 각성 = 칼날이 룬 빛으로 길어짐
+            // 태세 연출 (8틱마다): 몸에서 솟는 옅은 빛 (3인칭) + 칼의 빛 (명경지수 = 물빛 줄 · 마검 각성 = 마력으로 길어진 칼날)
             if (now % 8 == 0 && !st.stance.isEmpty() && st.stanceUntil > now && !sp.isSpectator()) stanceFx(sp, j, st);
             sendGauge(sp, false);
         }
     }
 
+    /**
+     * 태세 동안 8틱마다: 몸에서 솟는 옅은 빛 (3인칭 · 다른 사람 — 1인칭에서는 숨김) + 1인칭에서 보이는 칼의 빛 (명경지수 = 칼날을 따라 물빛 줄 ·
+     * 마검 각성 = 칼이 마력으로 길어짐)
+     */
     private static void stanceFx(ServerPlayer sp, Jobs.Job j, State st) {
         ServerLevel level = sp.level();
         RuneKit.Hand h = RuneKit.handOf(sp);
+        JobFx.aura(sp, j, 2.4, 0.5, 0.55);
         if (st.stance.equals("swordsman_mirror")) {
-            SkillFx.ring(level, V.up(sp.position(), 0.08), V.UP, JobKit.glow(j), 0.9, 0.5, 2.2);
             SkillFx.fx(level, "rpg:light_cut", V.up(h.hand(), 0.2), Opt.of("dir", V.UP, "size", 0.45, "thick", 0.07, "life", 0.4, "color", JobKit.core(j), "alpha", 0.8));
         } else if (st.stance.equals("spellblade_awaken")) {
             RuneKit.rfx2(level, "sword", V.up(h.hand(), 0.35), Opt.of("dir", V.UP, "size", 0.5, "life", 0.42, "alpha", 0.7, "fade", 0.5, "vel", RuneKit.bodyVel(sp)),
                     JobKit.glow(j), JobKit.core(j));
-            SkillFx.rune(level, sp.position(), Opt.of("size", 1.1, "life", 0.45, "color", JobKit.glow(j), "alpha", 0.55, "rate", 120.0));
         }
     }
 

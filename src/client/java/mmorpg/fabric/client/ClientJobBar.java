@@ -165,6 +165,11 @@ public final class ClientJobBar {
         return false;
     }
 
+    /** 칸 i 의 스킬 id (없으면 "" — 아이콘 job_skill/&lt;id&gt;) */
+    public static String id(int i) {
+        return i < 0 || i >= SIZE ? "" : ids.get(i);
+    }
+
     public static String name(int i) {
         return i < 0 || i >= SIZE ? "" : names.get(i);
     }
