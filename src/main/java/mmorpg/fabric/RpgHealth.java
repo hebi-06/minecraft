@@ -73,6 +73,13 @@ public final class RpgHealth {
 
     public static WeakenSaved weakenSaved = (p, e, a) -> {};
 
+    /** 0.28.0 받은 피해가 정해짐 (깎일 양 loss > 0 — 전사 분노 · 투혼): 그 전 체력 before → 넣을 체력 after */
+    public interface LossHook {
+        void lost(ServerPlayer sp, DamageSource source, double loss, double before, double after);
+    }
+
+    public static LossHook lossHook = (p, src, loss, before, after) -> {};
+
     /** 결투 훅 (hp.js setDuelHooks — 6단계 결투가 넣음) */
     public interface DuelHooks {
         /** 결투 상대의 피해면 줄인 양 (× PVP.mult — 아니면 그대로) */
@@ -278,6 +285,13 @@ public final class RpgHealth {
         // 다른 플레이어가 준 피해: 맞은 사람 머리 위에 빨간 숫자 (fx.js player)
         if (loss > 0 && source.getEntity() instanceof ServerPlayer attacker && attacker != sp) {
             DamageNumbers.show(sp, Math.min(loss, health), DamageNumbers.Style.PLAYER, "", 0);
+        }
+        if (loss > 0) {
+            try {
+                lossHook.lost(sp, source, loss, health, next); // 0.28.0 전사 분노 · 투혼
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] loss hook", e);
+            }
         }
         return (float) next;
     }

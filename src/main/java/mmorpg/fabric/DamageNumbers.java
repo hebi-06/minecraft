@@ -235,8 +235,10 @@ public final class DamageNumbers {
         if (vm != null && !vm.isEmpty()) mark = vm + mark;
         if (m != null && m.style() != null) {
             // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback), 0.27.0 직업 스킬은 직업 색 그라데이션
-            if (m.grad() != null && m.grad().length >= 2) showGradient(victim, dealt, m.style(), m.grad(), mark, 0);
-            else show(victim, dealt, m.style(), mark, 0);
+            if (m.grad() != null && m.grad().length >= 2) {
+                if (m.split() > 1) showSplit(victim, dealt, m.style(), m.grad(), mark, m.split(), m.gap());
+                else showGradient(victim, dealt, m.style(), m.grad(), mark, 0);
+            } else show(victim, dealt, m.style(), mark, 0);
             return;
         }
         Style style = Style.NORMAL;
@@ -299,6 +301,19 @@ public final class DamageNumbers {
         for (RpgCombat.Bonus p : graded) {
             showGradient(victim, extra * p.add() / all, p.style() != null ? p.style() : Style.JOB, p.grad(), p.mark() == null ? "" : p.mark(), lift);
             lift += 0.4;
+        }
+    }
+
+    /**
+     * 0.28.0 빠른 연타 숫자 (메이플식 쌓이는 숫자): 한 번 들어간 피해 amount 를 n 줄로 (줄마다 amount ÷ n) — gap 틱마다 한 줄씩 한 칸 위에 (첫 줄은 바로)
+     */
+    public static void showSplit(LivingEntity victim, double amount, Style style, int[] grad, String mark, int n, int gap) {
+        double each = amount / Math.max(1, n);
+        for (int i = 0; i < n; i++) {
+            double lift = i * 0.38;
+            String mk = i == 0 ? mark : "";
+            if (i == 0 || gap <= 0) showGradient(victim, each, style, grad, mk, lift);
+            else Tasks.later(i * gap, () -> showGradient(victim, each, style, grad, mk, lift));
         }
     }
 

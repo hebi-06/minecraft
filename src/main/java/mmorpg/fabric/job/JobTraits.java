@@ -70,7 +70,9 @@ public final class JobTraits {
         RpgCombat.addScaledBonusHook(JobTraits::awakenBonus);
         RpgCombat.addWeaponHitHook(JobTraits::onWeaponHit);
         RpgCombat.sureCrit = JobTraits::sureCrit;
+        JobTraitsMore.init(); // 0.28.0 전사 · 매지션 · 궁수
         ServerTickEvents.END_SERVER_TICK.register(server -> {
+            JobTraitsMore.tickBreaks(Tasks.now());
             if (Tasks.now() % 4 == 0) tick(server);
         });
         // 죽음 · 차원 이동 · 탈것 부르기: 자원 · 태세 · 각인이 끝남
@@ -89,6 +91,7 @@ public final class JobTraits {
     static void reset(ServerPlayer sp) {
         endStance(sp);
         STATES.remove(sp.getUUID());
+        JobTraitsMore.reset(sp);
         String p = sp.getUUID() + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
         sendGauge(sp, true);
@@ -97,11 +100,13 @@ public final class JobTraits {
     /** 나감 */
     static void forget(UUID id) {
         STATES.remove(id);
+        JobTraitsMore.forget(id);
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
 
     private static void lifeEnded(UUID id) {
+        JobTraitsMore.lifeEnded(id);
         State st = STATES.get(id);
         if (st != null) {
             st.stacks = 0;
@@ -369,11 +374,14 @@ public final class JobTraits {
         for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
             State st = STATES.get(sp.getUUID());
             Jobs.Job j = JobSystem.job(sp);
+            if (j != null) JobTraitsMore.tick(sp, j, now); // 0.28.0 분노 · 연쇄 · 호흡
             if (st == null || j == null) continue;
             // 태세가 끝남
             if (!st.stance.isEmpty() && st.stanceUntil <= now) {
+                String ended = st.stance;
                 endStance(sp);
                 SkillFx.play(sp.level(), "block.amethyst_block.chime", sp.position(), 0.8, 0.4);
+                JobTraitsMore.stanceEnded(sp, ended); // 마나 과부하 → 이동 느려짐
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
             if (j.id().equals("swordsman") && st.stacks > 0 && !stanceOn(st, "swordsman_mirror")) {
@@ -402,6 +410,26 @@ public final class JobTraits {
         } else if (st.stance.equals("spellblade_awaken")) {
             RuneKit.rfx2(level, "sword", V.up(h.hand(), 0.35), Opt.of("dir", V.UP, "size", 0.5, "life", 0.42, "alpha", 0.7, "fade", 0.5, "vel", RuneKit.bodyVel(sp)),
                     JobKit.glow(j), JobKit.core(j));
+        } else if (st.stance.equals("warrior_spirit")) {
+            // 투혼: 몸의 불꽃 (위 aura) + 손에서 솟는 불티 · 1인칭 화면 아래 양옆 불티
+            RuneKit.auraCue(sp, JobKit.glow(j), 2);
+            SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.1), Opt.of("dir", V.UP, "speed", 1.6, "size", 0.13, "grow", 0.8, "life", 0.35, "color", JobKit.glow(j),
+                    "alpha", 1.0));
+        } else if (st.stance.equals("mage_overload")) {
+            // 마나 과부하: 완드 끝에 작은 구체 · 몸 둘레를 도는 반짝임 (3인칭)
+            Vec3 tip = RpgCombat.circleAt(sp)[0];
+            JobFx.orb(level, tip, 0.11, j, 0.42, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.95));
+            double a = Tasks.now() * 0.35;
+            for (int i = 0; i < 3; i++) {
+                double b = a + i * Math.PI * 2 / 3;
+                Vec3 p = V.up(sp.position(), 0.6 + 0.5 * i);
+                RuneKit.rfx(level, "prop", new Vec3(p.x + Math.cos(b) * 0.85, p.y, p.z + Math.sin(b) * 0.85), JobFx.hide1p(sp).with("size", 0.13, "life", 0.42, "cell",
+                        (double) RuneKit.RFX.get("glint")[0], "spin", 0.0, "spinRate", 180.0, "color", JobKit.core(j), "fade", 0.4, "vel", RuneKit.bodyVel(sp)));
+            }
+        } else if (st.stance.equals("archer_focus")) {
+            // 정조준: 활을 든 손 앞 금빛 반짝임
+            RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
+                    (double) RuneKit.RFX.get("glint")[0], "spin", 30.0, "spinRate", 160.0, "color", JobKit.core(j), "grow", 0.4, "fade", 0.5, "vel", RuneKit.bodyVel(sp)));
         }
     }
 
@@ -418,10 +446,12 @@ public final class JobTraits {
         int total = st != null && st.stanceUntil > now ? st.stanceTotal : 0;
         int value = 0;
         if (j.id().equals("swordsman")) value = st == null ? 0 : st.stacks;
-        else if (j.id().equals("spellblade") && st != null && st.target != null) {
-            Entity e = sp.level().getEntity(st.target);
-            value = e == null || e.isRemoved() || !e.isAlive() ? 0 : marks(sp, e);
-        }
+        else if (j.id().equals("spellblade")) {
+            if (st != null && st.target != null) {
+                Entity e = sp.level().getEntity(st.target);
+                value = e == null || e.isRemoved() || !e.isAlive() ? 0 : marks(sp, e);
+            }
+        } else value = JobTraitsMore.gaugeValue(sp, j); // 0.28.0 분노 · 연쇄 · 호흡
         return new JobSkills.GaugePayload(j.trait().name(), value, Math.max(0, j.trait().max()), stance, left, total);
     }
 

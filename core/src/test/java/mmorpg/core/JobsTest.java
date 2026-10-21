@@ -76,9 +76,15 @@ public final class JobsTest {
         }
         Jobs.Job sw = Jobs.job("swordsman");
         Jobs.Job sb = Jobs.job("spellblade");
-        check(sw.ready() && sb.ready() && Jobs.all().stream().filter(Jobs.Job::ready).count() == 2, "ready: swordsman · spellblade");
+        Jobs.Job wa = Jobs.job("warrior");
+        Jobs.Job mg = Jobs.job("mage");
+        Jobs.Job ar = Jobs.job("archer");
+        check(sw.ready() && sb.ready() && wa.ready() && mg.ready() && ar.ready() && Jobs.all().stream().filter(Jobs.Job::ready).count() == 5,
+                "ready: swordsman · spellblade · warrior · mage · archer (0.28.0)");
         Set<String> skillIds = new HashSet<>();
-        for (Jobs.Job j : List.of(sw, sb)) for (Jobs.Skill k : j.skills()) check(!k.id().isEmpty() && skillIds.add(k.id()), "unique skill id " + k.id());
+        for (Jobs.Job j : List.of(sw, sb, wa, mg, ar)) {
+            for (Jobs.Skill k : j.skills()) check(!k.id().isEmpty() && k.id().startsWith(j.id() + "_") && skillIds.add(k.id()), "unique skill id " + k.id());
+        }
         // 부분 합 = 배율 합
         check(near(sum(sw.skill(0), "hits"), 5) && near(sw.skill(0).total(), 5), "연참 1.2 + 1.2 + 2.6");
         check(near(sw.skill(1).num("mult", 0), 3), "섬보 3");
@@ -96,6 +102,34 @@ public final class JobsTest {
         check(near(sum(sb.skill(4), "slashes") + sb.skill(4).num("thrust", 0), 68), "비전 거검 11 × 3 + 35");
         check(near(sb.skill(3).num("echo", 0) * sb.skill(3).num("dur", 0) / 10 / 30, 0.744), "마검 각성 0.93 × 24 / 30초 = 0.744 P/초 (검사 명경지수 × 1.7)");
         check(sw.skill(1).cooldownTicks() == 240 && sb.skill(4).cooldownTicks() == 1200, "cooldown ticks");
+
+        // 0.28.0 전사 · 매지션 · 궁수: 부분 합 = 배율 합
+        check(near(wa.skill(0).num("mult", 0), 6.5) && near(wa.skill(1).num("ram", 0) + wa.skill(1).num("slam", 0), 3.9), "파쇄격 6.5 · 돌격 1.9 + 2.0");
+        check(near(wa.skill(2).num("hit", 0) * wa.skill(2).num("hits", 0), 11.7), "대회전 2.34 × 5");
+        check(near(wa.skill(4).num("leap", 0) * wa.skill(4).num("leaps", 0) + wa.skill(4).num("final", 0), 52), "격노 도약 7 × 4 + 24");
+        check(near(mg.skill(0).num("bolt", 0) * mg.skill(0).num("bolts", 0), 7) && near(mg.skill(1).num("blast", 0), 4.2), "마탄 연사 1.4 × 5 · 위상 전환 4.2");
+        check(near(mg.skill(2).num("pulse", 0) * mg.skill(2).num("pulses", 0) + mg.skill(2).num("burst", 0), 12.6), "비전 구체 1.4 × 6 + 4.2");
+        check(near(mg.skill(4).num("page", 0) * mg.skill(4).num("pages", 0) + mg.skill(4).num("final", 0), 56)
+                && near(mg.skill(4).num("pages", 0) % mg.skill(4).num("waves", 1), 0), "금서 개방 3 × 12 + 20 (물결마다 같은 장 수)");
+        check(near(ar.skill(0).num("arrow", 0) * ar.skill(0).num("arrows", 0), 7.5) && ar.skill(0).num("more", 0) == 4, "속사 2.5 × 3 (호흡 3 이상 4발)");
+        check(near(ar.skill(2).num("wave", 0) * ar.skill(2).num("waves", 0), 13.5) && ar.skill(2).num("per", 0) == 2, "화살비 2.7 × 5 (두 발씩)");
+        check(near(ar.skill(4).num("shot", 0) + ar.skill(4).num("after", 0), 60), "관천일시 40 + 20");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (빠른 연타는 한 번에 넣고 숫자만 여러 줄 — 마탄 연사 · 속사 · 화살비 한 물결 · 금서의 주문)
+        check(wa.skill(2).num("gap", 0) >= 10 && wa.skill(4).num("leapTicks", 0) >= 10 && wa.skill(4).num("finalDelay", 0) >= 10, "warrior i-frame spacing");
+        check(mg.skill(2).num("gap", 0) >= 10 && mg.skill(2).num("dur", 0) - mg.skill(2).num("gap", 0) * mg.skill(2).num("pulses", 0) >= 10
+                && mg.skill(4).num("gap", 0) >= 10 && mg.skill(4).num("finalDelay", 0) >= 10, "mage i-frame spacing");
+        check(ar.skill(2).num("gap", 0) >= 10 && ar.skill(4).num("burstDelay", 0) >= 10, "archer i-frame spacing");
+        // 지속 보정: 대회전 t 40 → short · 격노 도약 · 비전 구체 · 관천일시 → long · 화살비 · 금서 개방 (장판) → zone, 나머지 한방
+        check(Jobs.spreadKind(wa.skill(0)) == null && Jobs.spreadKind(wa.skill(1)) == null && "short".equals(Jobs.spreadKind(wa.skill(2)))
+                && "long".equals(Jobs.spreadKind(wa.skill(4))), "warrior spread");
+        check(Jobs.spreadKind(mg.skill(0)) == null && Jobs.spreadKind(mg.skill(1)) == null && "long".equals(Jobs.spreadKind(mg.skill(2)))
+                && "zone".equals(Jobs.spreadKind(mg.skill(4))), "mage spread");
+        check(Jobs.spreadKind(ar.skill(0)) == null && "zone".equals(Jobs.spreadKind(ar.skill(2))) && "long".equals(Jobs.spreadKind(ar.skill(4))), "archer spread");
+        // 특성 수치
+        check(wa.trait().max() == 100 && near(wa.trait().def().num("halfBonus"), 0.1) && near(wa.trait().def().num("fullBonus"), 0.2), "분노 0 ~ 100 · +10% · +20%");
+        check(mg.trait().max() == 3 && near(mg.trait().def().num("perChain"), 0.12) && mg.trait().def().num("window") == 80, "주문 연쇄 3 · 12% · 4초");
+        check(ar.trait().max() == 5 && near(ar.trait().def().num("perStack"), 0.04) && ar.trait().def().num("rangePer") == 1, "호흡 5 · 4% · 1칸");
+        check(near(Jobs.power(mg, Map.of("int", 125.0, "lvmax", 40.0)), 42) && near(Jobs.power(ar, Map.of("dex", 125.0, "lvmax", 40.0)), 42), "mage · archer P 42");
 
         // 칸 해금 레벨: 10 · 15 · 20 · 30 · 40
         int[] unlock = {10, 15, 20, 30, 40};

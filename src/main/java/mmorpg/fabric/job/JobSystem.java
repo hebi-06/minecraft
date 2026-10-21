@@ -57,6 +57,9 @@ public final class JobSystem {
         JobTraits.init();
         SwordsmanSkills.register();
         SpellbladeSkills.register();
+        WarriorSkills.register(); // 0.28.0
+        MageSkills.register();
+        ArcherSkills.register();
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);
@@ -187,9 +190,15 @@ public final class JobSystem {
                 return false;
             }
             // 0.26.0 지속 보정: 시간이 걸리거나 장판인 스킬은 위력 × (1 + 5 ~ 15%) — 룬과 같은 단계 (Jobs.spreadMult)
-            double P = power(sp, job) * Jobs.spreadMult(k);
+            // 0.28.0 매지션 「주문 연쇄」: 4초 안에 다른 직업 스킬이면 위력 × (1 + 연쇄 × 12%)
+            int chain = JobTraitsMore.chainNext(sp, job, k);
+            double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain);
             boolean ok = impl.cast(sp, job, k, P);
-            if (ok) Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + ")", 24);
+            if (ok) {
+                JobTraitsMore.chainCommit(sp, job, k, chain);
+                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + (chain > 0 ? " §e· 연쇄 " + chain : "§7") + "§7)",
+                        24);
+            }
             return ok;
         }
     }

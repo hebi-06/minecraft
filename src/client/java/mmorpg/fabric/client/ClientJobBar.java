@@ -120,13 +120,16 @@ public final class ClientJobBar {
 
     /** 재사용 대기 (SkillBarNet.CooldownPayload 의 이름이 "job:" 으로 시작 — ClientSkillBar 가 넘김) */
     static void cooldown(String id, int left, int total) {
+        int i = ids.indexOf(id);
         if (left <= 0) {
-            COOLDOWNS.remove(id);
+            // 0.28.0 줄어서 끝남 (매지션 주문 연쇄): 준비 연출
+            if (COOLDOWNS.remove(id) != null && i >= 0) READY_AT[i] = Util.getMillis();
             return;
         }
+        Cd old = COOLDOWNS.get(id);
         COOLDOWNS.put(id, new Cd(ticks + left, Math.max(left, total)));
-        int i = ids.indexOf(id);
-        if (i >= 0) CAST_AT[i] = Util.getMillis();
+        // 시전 연출은 새 재사용 대기일 때만 (줄어든 재사용 대기 — 남은 틱이 짧아짐 — 는 덮개만 걷힘)
+        if (i >= 0 && (old == null || old.end() <= ticks || old.end() < ticks + left)) CAST_AT[i] = Util.getMillis();
     }
 
     static void clearCooldowns() {

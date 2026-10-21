@@ -502,6 +502,9 @@ def slot_sprites():
 
 
 def main():
+    # 0.28.0 전사 · 매지션 · 궁수 아이콘 (tools/job_skill_icons_more.py)
+    import job_skill_icons_more
+    ICONS.update(job_skill_icons_more.ICONS)
     slot_sprites()
     cols = job_colors()
     os.makedirs(OUT, exist_ok=True)

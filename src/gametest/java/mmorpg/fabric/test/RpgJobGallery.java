@@ -17,6 +17,7 @@ import mmorpg.fabric.job.JobSkills;
 import mmorpg.fabric.job.JobSystem;
 import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
+import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.rune.RuneCast;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -54,8 +55,15 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Vec3(0.5, -60, 3.2), new Vec3(-1.2, -60, 4.5), new Vec3(2.2, -60, 4.5), new Vec3(0.5, -60, 6.0), new Vec3(-3.0, -60, 2.5), new Vec3(4.0, -60, 2.5)
     };
 
-    /** 스킬 하나: 칸 · 사진 틱 (1인칭 · 3인칭) · 끝까지 기다릴 틱 · 피해가 없는 태세인지 */
-    private record Case(int slot, int[] shots, int[] shots3p, int total, boolean stance) {}
+    /**
+     * 스킬 하나: 칸 · 사진 틱 (1인칭 · 3인칭) · 끝까지 기다릴 틱 · 피해가 없는 태세인지 (태세 · 강화 — 뒤에 평타를 누름) · 0.28.0 태세가 아닌 강화 (바람 타기 — 평타만 확인) ·
+     * 평타 뒤 사진 틱 (완드는 마법진을 다 그린 뒤)
+     */
+    private record Case(int slot, int[] shots, int[] shots3p, int total, boolean stance, boolean buff, int hitAt) {
+        Case(int slot, int[] shots, int[] shots3p, int total, boolean stance) {
+            this(slot, shots, shots3p, total, stance, false, 3);
+        }
+    }
 
     private static final Case[] CASES = {
         new Case(0, new int[] {2, 12, 22}, new int[] {12, 22}, 30, false),
@@ -70,6 +78,29 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(2, new int[] {4, 18, 34}, new int[] {18}, 42, false),
         new Case(3, new int[] {4, 20}, new int[] {6}, 24, true),
         new Case(4, new int[] {10, 22, 32, 42, 56, 62}, new int[] {22, 56}, 72, false),
+    };
+
+    /** 0.28.0 전사 · 매지션 · 궁수 */
+    private static final Case[] CASES_WA = {
+        new Case(0, new int[] {3, 8, 14}, new int[] {8, 14}, 24, false),
+        new Case(1, new int[] {2, 5, 10}, new int[] {3, 10}, 22, false),
+        new Case(2, new int[] {6, 20, 40}, new int[] {10, 30}, 54, false),
+        new Case(3, new int[] {4, 20}, new int[] {6}, 24, true),
+        new Case(4, new int[] {8, 12, 30, 48, 62, 66}, new int[] {6, 12, 36, 62}, 80, false),
+    };
+    private static final Case[] CASES_MG = {
+        new Case(0, new int[] {2, 6, 12}, new int[] {3, 8}, 18, false),
+        new Case(1, new int[] {1, 6, 12}, new int[] {2, 12}, 18, false),
+        new Case(2, new int[] {6, 25, 50, 71}, new int[] {20, 71}, 76, false),
+        new Case(3, new int[] {4, 20}, new int[] {6}, 40, true, false, 11),
+        new Case(4, new int[] {10, 22, 34, 46, 58, 70, 74}, new int[] {22, 46, 70}, 84, false),
+    };
+    private static final Case[] CASES_AR = {
+        new Case(0, new int[] {2, 6, 12}, new int[] {3, 9}, 18, false),
+        new Case(1, new int[] {1, 3, 8}, new int[] {2, 6}, 30, false, true, 4),
+        new Case(2, new int[] {3, 10, 26, 46}, new int[] {10, 30}, 52, false),
+        new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
+        new Case(4, new int[] {8, 18, 25, 28, 40, 52}, new int[] {14, 26, 44}, 64, false),
     };
 
     private final List<String> failures = new ArrayList<>();
@@ -93,7 +124,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 mc.options.setCameraType(CameraType.FIRST_PERSON);
             });
             ctx.waitTicks(10);
-            for (String s : List.of("str", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
+            for (String s : List.of("str", "int", "vit", "dex")) server.runCommand("execute as @a run rpg set " + s + " 150");
             server.runCommand("item replace entity @a hotbar.0 with rpg:sword_l40_hero");
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             home(server);
@@ -104,6 +135,19 @@ public final class RpgJobGallery implements FabricClientGameTest {
             part(ctx, "change", () -> change(ctx, server, conn));
             part(ctx, "spellblade", () -> skills(ctx, server, conn, "spellblade", CASES_SB));
             part(ctx, "stat", () -> stat(ctx));
+            // 0.28.0 전사 · 매지션 · 궁수: 직업 · 무기 (핫바 셋째 칸) → 자원 HUD → 스킬 다섯
+            part(ctx, "warrior", () -> {
+                newJob(ctx, server, conn, "warrior", "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
+                skills(ctx, server, conn, "warrior", CASES_WA);
+            });
+            part(ctx, "mage", () -> {
+                newJob(ctx, server, conn, "mage", "rpg:wand_l40_hero", 3, sp -> JobTraitsMore.setChain(sp, 2));
+                skills(ctx, server, conn, "mage", CASES_MG);
+            });
+            part(ctx, "archer", () -> {
+                newJob(ctx, server, conn, "archer", "rpg:bow_l40_hero", 5, sp -> JobTraitsMore.setBreath(sp, 3));
+                skills(ctx, server, conn, "archer", CASES_AR);
+            });
             server.runOnServer(s -> JobSystem.setJob(player(s), null));
             ctx.setScreen(() -> null);
         }
@@ -207,6 +251,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
                     RuneCast.resetCooldowns(sp);
                     RpgHealth.healFull(sp);
                     if (k.id().equals("swordsman_flurry")) JobTraits.setStacks(sp, 3); // 검기
+                    if (k.id().equals("warrior_crush")) JobTraitsMore.setRage(sp, 60); // 분노 30 을 씀
+                    if (k.id().equals("archer_rapid")) JobTraitsMore.setBreath(sp, 3); // 4발
+                    JobTraitsMore.setChain(sp, 0);
                     spawnHusks(sp.level());
                 });
                 ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
@@ -223,10 +270,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
                     }
                     ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "job_%s_%02d%s", k.id(), shot, third ? "_3p" : "")).withSize(1280, 720));
                 }
-                if (c.stance()) {
-                    // 태세 뒤 평타 (왼쪽 클릭 — 눈앞 과녁): 명경지수 두 번째 베기 · 마검 각성 잔상
+                if (c.stance() || c.buff()) {
+                    // 태세 · 강화 뒤 평타 (왼쪽 클릭 — 눈앞 과녁): 명경지수 두 번째 베기 · 마검 각성 잔상 · 투혼 · 마나 과부하 광선 · 정조준 관통 · 바람 타기 두 발
                     ctx.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
-                    ctx.waitTicks(3);
+                    ctx.waitTicks(c.hitAt());
+                    t += c.hitAt();
                     ctx.takeScreenshot(TestScreenshotOptions.of("job_" + k.id() + "_hit" + (third ? "_3p" : "")).withSize(1280, 720));
                 }
                 if (c.total() > t) ctx.waitTicks(c.total() - t);
@@ -241,12 +289,34 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 String tag = k.id() + (third ? " (3p)" : "");
                 check(cast, tag + " cast");
                 if (c.stance()) check(stance && dealt > 0, tag + " stance on, hit after it");
+                else if (c.buff()) check(dealt > 0, tag + " buffed basic hit (" + String.format(Locale.ROOT, "%.1f", dealt) + ")");
                 else check(dealt > 0, tag + " dealt damage (" + String.format(Locale.ROOT, "%.1f", dealt) + ")");
             }
         }
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         server.runOnServer(s -> JobSystem.setJob(player(s), job)); // 태세 · 자원 지움
         ctx.waitTicks(5);
+    }
+
+    // ------------------------------------------------------------ 0.28.0 새 직업 (운영자 /job set 과 같은 길) · 자원 HUD
+
+    private void newJob(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn, String job, String item, int gaugeMax,
+            java.util.function.Consumer<ServerPlayer> gauge) {
+        home(server);
+        server.runCommand("item replace entity @a hotbar.2 with " + item);
+        ctx.getInput().pressKey(options -> options.keyHotbarSlots[2]);
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            JobSystem.setJob(sp, job);
+            gauge.accept(sp);
+            JobSystem.refresh(sp, true);
+        });
+        settle(ctx, conn);
+        ctx.waitTicks(8);
+        shot(ctx, "job_hud_" + job);
+        check(ctx.computeOnClient(mc -> ClientJobBar.jobId().equals(job) && ClientJobBar.gaugeMax() == gaugeMax && !ClientJobBar.empty(4) && ClientJobBar.lock(0).isEmpty()),
+                job + ": client bar (gauge max " + gaugeMax + ", slots, unlocked) — '" + ctx.computeOnClient(mc -> ClientJobBar.jobId() + "' max "
+                        + ClientJobBar.gaugeMax() + " lock '" + ClientJobBar.lock(0)) + "'");
     }
 
     // ------------------------------------------------------------ 직업 바꾸기 (300 은화)

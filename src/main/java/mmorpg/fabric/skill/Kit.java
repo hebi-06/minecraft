@@ -555,15 +555,28 @@ public final class Kit {
      * (grad = {0xRRGGBB, 0xRRGGBB} — DamageNumbers.feedback)
      */
     public static boolean applyJobDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad) {
-        return applyDamage(sp, target, amount, crit, cause, style, grad);
+        return applyDamage(sp, target, amount, crit, cause, style, grad, 1, 0);
+    }
+
+    /** 0.28.0 빠른 연타: 피해 한 번 (amount) 을 split 줄의 숫자로 (gap 틱마다 한 줄 — 메이플식 쌓이는 숫자, RpgCombat.jobMark) */
+    public static boolean applyJobDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad, int split,
+            int gap) {
+        return applyDamage(sp, target, amount, crit, cause, style, grad, split, gap);
     }
 
     private static boolean applyDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad) {
+        return applyDamage(sp, target, amount, crit, cause, style, grad, 1, 0);
+    }
+
+    private static boolean applyDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad, int split,
+            int gap) {
         if (sp.isRemoved() || target == null || target.isRemoved() || !(amount > 0)) return false;
         if (!(target.level() instanceof ServerLevel tl)) return false;
         DamageNumbers.Style st = style != null ? style : crit ? DamageNumbers.Style.SKILLCRIT : DamageNumbers.Style.SKILL;
-        if (grad != null) RpgCombat.jobMark(target, sp, crit, st, grad);
-        else RpgCombat.skillMark(target, sp, crit, st);
+        if (grad != null) {
+            if (split > 1) RpgCombat.jobMark(target, sp, crit, st, grad, split, gap);
+            else RpgCombat.jobMark(target, sp, crit, st, grad);
+        } else RpgCombat.skillMark(target, sp, crit, st);
         Vec3 v = target.getDeltaMovement();
         boolean hurt = target.hurtServer(tl, source(sp, cause), (float) amount);
         if (!hurt) {

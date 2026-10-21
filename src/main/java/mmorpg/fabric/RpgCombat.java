@@ -52,13 +52,85 @@ public final class RpgCombat {
     /** 0.27.0 이번 평타가 치명타로 확정인지 (검사 섬보 — 확인하면 그 확정을 씀, 평타 · 활 · 완드가 실제로 나갈 때만 부름) */
     public static java.util.function.BiPredicate<ServerPlayer, Weapon> sureCrit = (p, w) -> false;
 
+    /** 0.28.0 평타 배율 (직업 특성 — 전사 분노 · 궁수 호흡, 1 = 그대로): 근접 평타 · 활 · 완드 명중의 피해에 곱함 (치명타 · 더한 피해 전) */
+    public static java.util.function.ToDoubleBiFunction<ServerPlayer, Weapon> basicMult = (p, w) -> 1;
+
+    /**
+     * 0.28.0 활 · 완드 평타를 바꾸는 직업 특성 (job.JobTraitsMore — 궁수 호흡 · 정조준 · 바람 타기, 매지션 마나 과부하): 사거리 더하기 · 관통 · 쏜 뒤 (덧쏘기 · 연출)
+     */
+    public interface RangedMod {
+        /** 사거리에 더할 칸 */
+        double range(ServerPlayer sp, Weapon w);
+
+        /** 관통 폭 (칸 — 0 = 처음 맞는 대상만): 조준선 위의 적을 모두 맞힘 */
+        double pierce(ServerPlayer sp, Weapon w);
+
+        /** 쏨 (재사용 대기를 건 뒤 · 맞기 전): 맞힐 대상 (없으면 null) · 나가는 자리 · 단위 방향 · 머리에서 잰 거리 */
+        void fired(ServerPlayer sp, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist);
+    }
+
+    public static RangedMod rangedMod = new RangedMod() {
+        @Override
+        public double range(ServerPlayer sp, Weapon w) {
+            return 0;
+        }
+
+        @Override
+        public double pierce(ServerPlayer sp, Weapon w) {
+            return 0;
+        }
+
+        @Override
+        public void fired(ServerPlayer sp, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist) {}
+    };
+
+    static double rangedRange(ServerPlayer sp, Weapon w) {
+        try {
+            return Math.max(0, rangedMod.range(sp, w));
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] ranged range", e);
+            return 0;
+        }
+    }
+
+    static double rangedPierce(ServerPlayer sp, Weapon w) {
+        try {
+            return Math.max(0, rangedMod.pierce(sp, w));
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] ranged pierce", e);
+            return 0;
+        }
+    }
+
+    static void rangedFired(ServerPlayer sp, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist) {
+        try {
+            rangedMod.fired(sp, w, target, from, dir, dist);
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] ranged fired", e);
+        }
+    }
+
+    static double basicMultOf(ServerPlayer sp, Weapon w) {
+        try {
+            double k = basicMult.applyAsDouble(sp, w);
+            return k > 0 ? k : 1;
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] basic mult", e);
+            return 1;
+        }
+    }
+
     /**
      * 맞히기 직전에 기억한 공격 (피해가 실제로 들어간 뒤 숫자 · 연출에 씀): 치명타였는지, 무기 (평타 · 활 · 완드 — 스킬은 null),
      * 근접 평타인지 (참격 연출), 스킬 · 룬 피해면 숫자 모양 (평타는 null — combat.js skillMarks), 평타에 더한 피해 (없으면 null)
      */
-    public record Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus, int[] grad) {
+    public record Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus, int[] grad, int split, int gap) {
         public Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus) {
-            this(crit, tick, w, melee, style, bonus, null);
+            this(crit, tick, w, melee, style, bonus, null, 1, 0);
+        }
+
+        public Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus, int[] grad) {
+            this(crit, tick, w, melee, style, bonus, grad, 1, 0);
         }
     }
 
@@ -342,6 +414,14 @@ public final class RpgCombat {
         MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, false, style, null, grad));
     }
 
+    /**
+     * 0.28.0 빠른 연타 (메이플식 쌓이는 숫자): 한 번 들어간 피해를 split 줄의 숫자로 (줄마다 피해 ÷ split, gap 틱마다 한 줄씩 위로) — 몹 무적 시간 (10틱) 에
+     * 막히지 않게 피해는 한 번에 넣음
+     */
+    public static void jobMark(Entity victim, ServerPlayer attacker, boolean crit, DamageNumbers.Style style, int[] grad, int split, int gap) {
+        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, false, style, null, grad, Math.max(1, split), Math.max(0, gap)));
+    }
+
     /** 들어가지 않은 공격의 기억을 지움 */
     public static void dropMark(Entity victim, Entity attacker) {
         MARKS.remove(key(victim, attacker));
@@ -391,7 +471,7 @@ public final class RpgCombat {
         Weapon w = weaponOf(p.getMainHandItem());
         if (w == null || !Combat.isMeleeWeapon(w)) return vanilla;
         double s = Math.max(0, Math.min(1, strength));
-        double dmg = w.damage() * powerOf(sp, w) * (0.2 + s * s * 0.8);
+        double dmg = w.damage() * powerOf(sp, w) * (0.2 + s * s * 0.8) * basicMultOf(sp, w); // 0.28.0 직업 특성 (전사 분노)
         LivingEntity victim = target instanceof LivingEntity le ? le : null;
         boolean crit = rollCrit(sp, w, victim);
         if (crit) dmg *= critMultOf(sp, w);
@@ -465,6 +545,7 @@ public final class RpgCombat {
     public static void fireRanged(ServerPlayer sp, ItemStack stack, Weapon w, LivingEntity forced) {
         if (mmorpg.fabric.mount.Riding.blocked(sp, "attack")) return; // 탈것에 탄 동안 활 · 완드 평타 없음
         Obj cfg = w.type().equals("bow") ? BOW : WAND;
+        double range = cfg.num("range") + rangedRange(sp, w); // 0.28.0 궁수 호흡 · 매지션 마나 과부하: 사거리 +
         String k = sp.getUUID() + "|" + w.type();
         long now = Tasks.now();
         Long ready = RANGED_READY.get(k);
@@ -494,27 +575,63 @@ public final class RpgCombat {
             target = forced;
             dist = Math.max(0.5, len - 0.3);
         } else {
-            Aim a = aimTarget(sp, cfg.num("range"), cfg.numOr("aimAssist", 0));
+            Aim a = aimTarget(sp, range, cfg.numOr("aimAssist", 0));
             target = a.target();
             dist = a.dist();
             dir = a.dir();
         }
-        Path path = arrowPath(head, dir, dist);
+        // 0.28.0 관통 (궁수 정조준): 화살이 첫 대상에서 멈추지 않고 사거리 끝 (막힌 블록) 까지 — 길 위의 적은 화살이 닿는 틱에
+        double pierce = rangedPierce(sp, w);
+        double drawn = dist;
+        if (pierce > 0) drawn = Math.max(dist, mmorpg.fabric.skill.Kit.rayDist(level, head, dir, range));
+        Path path = arrowPath(head, dir, drawn);
         Shot shot = arrowShot(path.length());
         Fx.sound(level, head, SoundEvents.ARROW_SHOOT, 1.1, 0.8);
         int ticks = Math.max(1, (int) Math.round(shot.life() * 20));
         Fx.arrowFx(level, path, shot, w);
         if (target != null) {
             LivingEntity t = target;
-            Tasks.later(ticks, () -> rangedHit(sp, t, w, path));
+            int tt = pierce > 0 ? Math.max(1, (int) Math.round(ticks * Math.min(1, dist / Math.max(0.5, drawn)))) : ticks;
+            Path tp = pierce > 0 ? arrowPath(head, dir, dist) : path;
+            Tasks.later(tt, () -> rangedHit(sp, t, w, tp));
         }
+        if (pierce > 0) {
+            for (mmorpg.fabric.skill.Kit.LineHit lh : mmorpg.fabric.skill.Kit.lineHits(sp, head, dir, drawn, pierce)) {
+                LivingEntity e = lh.e();
+                if (e == target || isTalkable(e)) continue;
+                double d = Math.max(0.5, lh.t());
+                Path ep = arrowPath(head, dir, d);
+                int et = Math.max(1, (int) Math.round(ticks * Math.min(1, d / Math.max(0.5, drawn))));
+                Tasks.later(et, () -> rangedHit(sp, e, w, ep));
+            }
+        }
+        rangedFired(sp, w, target, path.from(), dir, dist);
+    }
+
+    /**
+     * 0.28.0 덧쏘기 (궁수 바람 타기의 두 번째 화살): 지금 손에서 대상의 몸 가운데로 활 화살 한 발 더 — 평타와 같은 피해 (치명타 · 더한 피해 · 맞힘 훅까지 평타 그대로).
+     * 쏜 틱 (화살 수명) 뒤에 맞음. 대상이 없거나 사라졌으면 쏘지 않음 — 들어갈 틱 (쏘지 않으면 -1)
+     */
+    public static int extraArrow(ServerPlayer sp, LivingEntity target, Weapon w) {
+        if (sp.isRemoved() || target == null || target.isRemoved() || !target.isAlive() || w == null || target.level() != sp.level()) return -1;
+        Vec3 head = sp.getEyePosition();
+        Vec3 d = bodyPoint(target).subtract(head);
+        double len = d.length();
+        Vec3 dir = len > 1e-6 ? d.scale(1 / len) : sp.getViewVector(1F);
+        Path path = arrowPath(head, dir, Math.max(0.5, len - 0.3));
+        Shot shot = arrowShot(path.length());
+        Fx.sound(sp.level(), head, SoundEvents.ARROW_SHOOT, 1.3, 0.6);
+        Fx.arrowFx(sp.level(), path, shot, w);
+        int ticks = Math.max(1, (int) Math.round(shot.life() * 20));
+        Tasks.later(ticks, () -> rangedHit(sp, target, w, path));
+        return ticks;
     }
 
     /** 원거리 명중 (combat.js rangedHit): 활 = 공격 피해 (방어구 적용), 완드 = 마법 피해 (방어 무시) */
     static void rangedHit(ServerPlayer sp, LivingEntity target, Weapon w, Path path) {
         if (sp.isRemoved() || target.isRemoved() || !target.isAlive()) return;
         ServerLevel level = sp.level();
-        double dmg = w.damage() * powerOf(sp, w);
+        double dmg = w.damage() * powerOf(sp, w) * basicMultOf(sp, w); // 0.28.0 직업 특성 (궁수 호흡)
         boolean crit = rollCrit(sp, w, target);
         if (crit) dmg *= critMultOf(sp, w);
         WeaponBonus bonus = weaponBonus(sp, target, w, dmg);
@@ -573,22 +690,36 @@ public final class RpgCombat {
         Vec3 head = c[2];
         LivingEntity target;
         Vec3 aim;
+        double range = WAND.num("range") + rangedRange(sp, cast.w()); // 0.28.0 마나 과부하: 사거리 +
         LivingEntity f = cast.forced();
         Vec3 fp = f != null && f.isAlive() && !f.isRemoved() && f.level() == level ? bodyPoint(f) : null;
-        if (fp != null && fp.distanceTo(head) <= WAND.num("range") + 2) {
+        if (fp != null && fp.distanceTo(head) <= range + 2) {
             Vec3 d = fp.subtract(head);
             target = f;
             aim = head.add(d.normalize().scale(Math.max(0.5, d.length() - 0.3)));
         } else {
             // 다 그려진 순간 바라보는 대상 (시전 중에 조준을 옮길 수 있음)
-            Aim a = aimTarget(sp, WAND.num("range"), WAND.numOr("aimAssist", 0));
+            Aim a = aimTarget(sp, range, WAND.numOr("aimAssist", 0));
             target = a.target();
             aim = head.add(a.dir().scale(a.dist()));
         }
+        // 0.28.0 관통 광선 (마나 과부하): 사거리 끝 (막힌 블록) 까지 — 광선 위의 적을 모두 (한 번에)
+        double pierce = rangedPierce(sp, cast.w());
+        Vec3 dir = aim.subtract(head);
+        double dist = dir.length();
+        dir = dist > 1e-6 ? dir.scale(1 / dist) : sp.getViewVector(1F);
+        Vec3 end = aim;
+        if (pierce > 0) end = head.add(dir.scale(Math.max(dist, mmorpg.fabric.skill.Kit.rayDist(level, head, dir, range))));
         Fx.circleFlash(level, from, cast.w(), cast.spin() + WAND.num("castTicks") * WAND.obj("circle").num("spinPerTick"));
-        Fx.wandBeam(level, from, aim, cast.w());
+        Fx.wandBeam(level, from, end, cast.w());
         Fx.sound(level, head, SoundEvents.EVOKER_CAST_SPELL, 1.5, 0.6);
         if (target != null) rangedHit(sp, target, cast.w(), null);
+        if (pierce > 0) {
+            for (mmorpg.fabric.skill.Kit.LineHit lh : mmorpg.fabric.skill.Kit.lineHits(sp, head, dir, end.distanceTo(head), pierce)) {
+                if (lh.e() != target && !isTalkable(lh.e())) rangedHit(sp, lh.e(), cast.w(), null);
+            }
+        }
+        rangedFired(sp, cast.w(), target, from, dir, pierce > 0 ? end.distanceTo(head) : dist);
     }
 
     /** 마법진 자리: 눈앞 · 완드를 든 오른손 쪽 · 조금 아래 → {자리, 바라보는 방향, 머리} */

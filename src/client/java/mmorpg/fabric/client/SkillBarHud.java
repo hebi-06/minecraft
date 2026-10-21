@@ -260,7 +260,11 @@ public final class SkillBarHud {
         int b = ClientJobBar.colorB();
         String name = ClientJobBar.jobName();
         int max = ClientJobBar.gaugeMax();
-        int total = gradientWidth(font, name) + (max > 0 ? 4 + max * PIP - 1 : 0);
+        String job = ClientJobBar.jobId();
+        // 0.28.0 자원이 큰 직업 (전사 분노 0 ~ 100) 은 막대, 나머지는 보석 (검세 · 각인 = 마름모, 매지션 연쇄 = 고리, 궁수 호흡 = 과녁)
+        boolean bar = max > 10;
+        int gw = max <= 0 ? 0 : bar ? RAGE_W : max * PIP - 1;
+        int total = gradientWidth(font, name) + (max > 0 ? 4 + gw : 0);
         int x0 = total > w ? Math.max(2, x + w - total) : x;
         int tx = gradientText(g, font, name, x0, y, a, b);
         if (max > 0) {
@@ -268,19 +272,49 @@ public final class SkillBarHud {
             boolean full = v >= max;
             float pulse = full ? 0.5F + 0.5F * (float) Math.sin(now / 140.0) : 0;
             int px = tx + 4;
-            for (int i = 0; i < max; i++) {
-                int bx = px + i * PIP;
-                int by = y + 1;
-                // 마름모 보석 (5 × 5): 바깥 어두운 테두리 + 안쪽 (찬 것은 둘째 빛)
-                g.fill(bx + 2, by, bx + 3, by + 5, 0xC0000000);
-                g.fill(bx, by + 2, bx + 5, by + 3, 0xC0000000);
-                g.fill(bx + 1, by + 1, bx + 4, by + 4, 0xC0000000);
-                if (i < v) {
+            if (bar) {
+                drawRageBar(g, px, y + 1, v, max, a, b, pulse, now);
+            } else {
+                for (int i = 0; i < max; i++) {
+                    int bx = px + i * PIP;
+                    int by = y + 1;
                     int col = 0xFF000000 | lerp(b, 0xFFFFFF, pulse * 0.6F);
-                    g.fill(bx + 2, by + 1, bx + 3, by + 4, col);
-                    g.fill(bx + 1, by + 2, bx + 4, by + 3, col);
-                } else {
-                    g.fill(bx + 2, by + 2, bx + 3, by + 3, 0x80FFFFFF & (0xFF000000 | a));
+                    int dim = 0x80FFFFFF & (0xFF000000 | a);
+                    switch (job) {
+                        case "mage" -> {
+                            // 금빛 고리 (5 × 5): 찬 것은 고리 전체가 둘째 빛 + 가운데 흰 점
+                            g.fill(bx + 1, by, bx + 4, by + 5, 0xC0000000);
+                            g.fill(bx, by + 1, bx + 5, by + 4, 0xC0000000);
+                            int c = i < v ? col : dim;
+                            g.fill(bx + 1, by, bx + 4, by + 1, c);
+                            g.fill(bx + 1, by + 4, bx + 4, by + 5, c);
+                            g.fill(bx, by + 1, bx + 1, by + 4, c);
+                            g.fill(bx + 4, by + 1, bx + 5, by + 4, c);
+                            if (i < v) g.fill(bx + 2, by + 2, bx + 3, by + 3, 0xFFFFFFFF);
+                        }
+                        case "archer" -> {
+                            // 과녁 (5 × 5): 바깥 네모 줄 + 가운데 점 — 찬 것은 둘째 빛
+                            g.fill(bx, by, bx + 5, by + 5, 0xC0000000);
+                            int c = i < v ? col : dim;
+                            g.fill(bx, by, bx + 5, by + 1, c);
+                            g.fill(bx, by + 4, bx + 5, by + 5, c);
+                            g.fill(bx, by + 1, bx + 1, by + 4, c);
+                            g.fill(bx + 4, by + 1, bx + 5, by + 4, c);
+                            g.fill(bx + 2, by + 2, bx + 3, by + 3, i < v ? 0xFFFFFFFF : dim);
+                        }
+                        default -> {
+                            // 마름모 보석 (5 × 5): 바깥 어두운 테두리 + 안쪽 (찬 것은 둘째 빛)
+                            g.fill(bx + 2, by, bx + 3, by + 5, 0xC0000000);
+                            g.fill(bx, by + 2, bx + 5, by + 3, 0xC0000000);
+                            g.fill(bx + 1, by + 1, bx + 4, by + 4, 0xC0000000);
+                            if (i < v) {
+                                g.fill(bx + 2, by + 1, bx + 3, by + 4, col);
+                                g.fill(bx + 1, by + 2, bx + 4, by + 3, col);
+                            } else {
+                                g.fill(bx + 2, by + 2, bx + 3, by + 3, dim);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -301,6 +335,33 @@ public final class SkillBarHud {
     /** 자원 보석 간격 · 태세 줄 높이 (직업 이름 줄 위) */
     static final int PIP = 6;
     static final int STANCE_LINE = 11;
+    /** 0.28.0 분노 막대 너비 */
+    static final int RAGE_W = 30;
+
+    /**
+     * 0.28.0 전사 분노 막대 (RAGE_W × 5): 어두운 테두리 · 첫째 빛 → 둘째 빛으로 차는 줄 · 가운데 (반) 눈금 — 다 차면 깜빡이며 위로 불티 몇 점
+     */
+    static void drawRageBar(GuiGraphicsExtractor g, int x, int y, int v, int max, int a, int b, float pulse, long now) {
+        int w = RAGE_W;
+        g.fill(x, y, x + w, y + 5, 0xC0000000);
+        int inner = w - 2;
+        int fillW = (int) Math.round(inner * Math.min(1.0, v / (double) Math.max(1, max)));
+        for (int i = 0; i < fillW; i++) {
+            float t = inner <= 1 ? 1 : i / (float) (inner - 1);
+            int c = lerp(lerp(a, b, t), 0xFFFFFF, pulse * 0.45F);
+            g.fill(x + 1 + i, y + 1, x + 2 + i, y + 4, 0xFF000000 | c);
+        }
+        g.fill(x + 1, y + 1, x + 1 + fillW, y + 2, 0x40FFFFFF);
+        int half = x + 1 + inner / 2;
+        g.fill(half, y, half + 1, y + 5, v >= max / 2 ? 0xFFFFFFFF : 0x80FFFFFF);
+        if (v >= max) {
+            for (int i = 0; i < 4; i++) {
+                int fx = x + 3 + (int) ((now / 90 + i * 7) % (w - 6));
+                int fy = y - 1 - (int) ((now / 60 + i * 3) % 3);
+                g.fill(fx, fy, fx + 1, fy + 1, 0xFF000000 | lerp(b, 0xFFE070, 0.6F));
+            }
+        }
+    }
 
     /** gradientText 로 그릴 때의 너비 (글자마다 굵게) */
     static int gradientWidth(Font font, String text) {

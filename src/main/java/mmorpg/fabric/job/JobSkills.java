@@ -71,6 +71,8 @@ public final class JobSkills {
 
     /** "UUID|스킬 id" → 재사용 대기가 끝나는 서버 틱 */
     private static final Map<String, Long> COOLDOWNS = new HashMap<>();
+    /** "UUID|스킬 id" → 그 재사용 대기의 전체 틱 (줄일 때 칸의 덮개 비율) */
+    private static final Map<String, Integer> TOTALS = new HashMap<>();
 
     /** 서버 → 클라이언트: 직업 스킬 칸 (늘 SIZE 개 — 빈 칸은 id "", 잠김은 사유 글자) + 직업 (없으면 job "") */
     public record BarPayload(String job, String jobName, int colorA, int colorB, List<String> ids, List<String> names, List<ItemStack> icons,
@@ -183,6 +185,34 @@ public final class JobSkills {
     public static void resetCooldowns(ServerPlayer sp) {
         String p = sp.getUUID() + "|";
         COOLDOWNS.keySet().removeIf(k -> k.startsWith(p));
+        TOTALS.keySet().removeIf(k -> k.startsWith(p));
+    }
+
+    /**
+     * 0.28.0 이 사람의 직업 스킬 재사용 대기를 모두 ticks 틱 줄임 (매지션 「주문 연쇄」 — 완드 평타가 맞을 때): 줄어든 칸은 클라이언트에 다시 보냄
+     * (전체 틱은 그대로 — 덮개가 그만큼 걷힘). 줄인 칸 수
+     */
+    public static int reduceCooldowns(ServerPlayer sp, int ticks) {
+        if (sp == null || ticks <= 0) return 0;
+        String p = sp.getUUID() + "|";
+        long now = Tasks.now();
+        int n = 0;
+        for (var it = COOLDOWNS.entrySet().iterator(); it.hasNext(); ) {
+            var e = it.next();
+            if (!e.getKey().startsWith(p) || e.getValue() <= now) continue;
+            long until = Math.max(now, e.getValue() - ticks);
+            String id = e.getKey().substring(p.length());
+            int total = TOTALS.getOrDefault(e.getKey(), (int) (e.getValue() - now));
+            n++;
+            if (until <= now) {
+                it.remove();
+                SkillBarNet.cooldown(sp, CD_PREFIX + id, 0, total);
+            } else {
+                e.setValue(until);
+                SkillBarNet.cooldown(sp, CD_PREFIX + id, (int) (until - now), total);
+            }
+        }
+        return n;
     }
 
     /** 칸 i 의 키 (Shift + 룬 칸 i 의 키): 그 직업 스킬을 씀. 나갔으면 true */
@@ -238,6 +268,7 @@ public final class JobSkills {
         int cd = Math.max(0, s.cooldown());
         if (cd > 0) {
             COOLDOWNS.put(key(sp, s), Tasks.now() + cd);
+            TOTALS.put(key(sp, s), cd);
             SkillBarNet.cooldown(sp, CD_PREFIX + s.id(), cd, cd);
         }
         return true;
