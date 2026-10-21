@@ -491,14 +491,14 @@ def bow_frame(f, frames=6, S=192, core=False):
         t = i / n
         a = math.radians(122 + 116 * t)
         pts.append((ecx + math.cos(a) * rx, ecy + math.sin(a) * ry))
-        widths.append(S * (0.042 if not core else 0.02) * (0.35 + 0.65 * math.sin(math.pi * t)))
+        widths.append(S * (0.058 if not core else 0.028) * (0.35 + 0.65 * math.sin(math.pi * t)))
     for i in range(n):
         m.line([pts[i], pts[i + 1]], (widths[i] + widths[i + 1]) / 2, 255)
     top, bot = pts[0], pts[-1]
     for tip in (top, bot):
         star(m, tip[0], tip[1], S * (0.05 if core else 0.065), 0.2, 0, 255)
     nx, ny = (top[0] + bot[0]) / 2 + pull, S * 0.5
-    sw = S * (0.012 if not core else 0.007)
+    sw = S * (0.016 if not core else 0.009)
     if f < 4:
         m.line([top, (nx, ny), bot], sw, 230)
         k = (f + 1) / 4

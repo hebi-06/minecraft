@@ -59,7 +59,7 @@ final class ArcherSkills {
         int every = Math.max(1, (int) k.num("every", 3));
         double mult = k.num("arrow", 2.5) * n;
         String life = RuneKit.lifeToken(sp);
-        if (n > (int) k.num("arrows", 3)) DamageNumbers.showFace(sp, "§a§l호흡 " + breath + " §r§7— " + n + "발", 2.4, 0.9, -0.3);
+        if (n > (int) k.num("arrows", 3)) JobSystem.note(sp, "§a호흡 " + breath + " §7→ " + n + "발");
         for (int i = 0; i < n; i++) {
             int ii = i;
             RuneKit.later(i * every, () -> {
@@ -85,8 +85,10 @@ final class ArcherSkills {
     // ------------------------------------------------------------ 바람 타기
 
     /**
-     * 바람 타기: 보는 쪽 dist 칸 (벽 · 낭떠러지 앞까지) 을 steps 틱에 미끄러지듯 지나감 (발밑 바람 고리 · 지나온 자리 연두 잔상 · 1인칭 빠른 줄) → for 틱 안의 다음 활 평타
-     * shots 번이 각각 한 발 더 (JobTraitsMore — 두 번째 화살 = 평타와 같은 피해) · 그동안 호흡이 줄지 않음. 묶였거나 앞이 막혀 못 가면 쓰지 않음
+     * 바람 타기: 움직이는 쪽 (가만히 서 있으면 뒤 — 활을 겨눈 채 물러남, 그쪽이 막혔으면 다른 쪽) dist 칸 (벽 · 낭떠러지 앞까지 · 적 앞에서 멈춤) 을 steps 틱에 미끄러지듯
+     * 지나감 (발밑 바람 고리 · 지나온 자리 연두 잔상 · 1인칭 빠른 줄) → for 틱 안의 다음 활 평타 shots 번이 각각 한 발 더 (JobTraitsMore — 두 번째 화살 = 평타와 같은 피해) ·
+     * 그동안 호흡이 줄지 않음. 묶였거나 사방이 막혀 못 가면 쓰지 않음.
+     * 0.28.0 사진첩: 보는 쪽으로만 가면 적을 겨눈 궁수가 적 몸속으로 미끄러져 들어갔음 → 움직이는 쪽 · 서 있으면 뒤로
      */
     static boolean wind(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level = sp.level();
@@ -95,11 +97,30 @@ final class ArcherSkills {
             return false;
         }
         Vec3 start = sp.position();
-        Vec3 f = Kit.facingOf(sp);
+        Vec3 look = Kit.facingOf(sp);
+        Vec3 move = sp.getKnownMovement();
+        Vec3 moveH = new Vec3(move.x, 0, move.z);
+        Vec3 first = V.len(moveH) > 0.04 ? V.unit(moveH) : V.scale(look, -1);
+        Vec3 f = first;
         double free = Kit.reachFlat(level, start, f, k.num("dist", 5));
+        for (Vec3 alt : new Vec3[] {V.scale(first, -1), look, V.scale(look, -1)}) {
+            if (free >= 1.2) break;
+            double a = Kit.reachFlat(level, start, alt, k.num("dist", 5));
+            if (a > free) {
+                f = alt;
+                free = a;
+            }
+        }
+        // 적 앞에서 멈춤 (적 몸속으로 들어가지 않게)
+        for (LivingEntity e : Kit.around(sp, start, k.num("dist", 5) + 1.5, 2.0)) {
+            Vec3 rel = V.sub(e.position(), start);
+            double along = V.dot(rel, f);
+            double side = V.len(V.sub(new Vec3(rel.x, 0, rel.z), V.scale(f, along)));
+            if (along > 0 && side < 0.9 + Kit.bodyPad(e)) free = Math.min(free, along - 1.0 - Kit.bodyPad(e));
+        }
         List<Kit.Spot> spots = free > 0.4 ? Kit.dashSpots(level, start, f, free) : List.of();
         if (spots.isEmpty()) {
-            Notify.notify(sp, "§c" + k.name() + " §7— 앞이 막혔습니다", 30);
+            Notify.notify(sp, "§c" + k.name() + " §7— 갈 곳이 막혔습니다", 30);
             return false;
         }
         double len = spots.get(spots.size() - 1).s();
@@ -111,11 +132,14 @@ final class ArcherSkills {
             for (Kit.Spot x : spots) if (Math.abs(x.s() - want) < Math.abs(best.s() - want)) best = x;
             marks.add(best.p());
         }
+        Vec3 dir = f;
+        // 1인칭 빠른 줄은 앞으로 갈 때만 (뒤 · 옆으로 물러날 때 앞으로 달리는 것처럼 보이지 않게)
+        boolean ahead = V.dot(dir, look) > 0.35;
         String life = RuneKit.lifeToken(sp);
         JobTraitsMore.windStart(sp, (int) k.num("shots", 2), (int) k.num("for", 100));
         Kit.noFall(sp, 30);
         JobFx.wind(level, V.up(start, 0.08), 1.6, j, 0.45, Opt.empty());
-        RuneKit.shadeClone(sp, level, start, f, 1, SHADE, JobKit.glow(j), Opt.of("life", 0.4, "fade", 0.6, "alpha", 0.8));
+        RuneKit.shadeClone(sp, level, start, look, 1, SHADE, JobKit.glow(j), Opt.of("life", 0.4, "fade", 0.6, "alpha", 0.8));
         SkillFx.play(level, "mob.breeze.charge", start, 1.4, 0.8);
         SkillFx.play(level, "mob.phantom.flap", start, 1.2, 0.8);
         boolean[] stopped = {false};
@@ -132,8 +156,8 @@ final class ArcherSkills {
                 ServerLevel d = sp.level();
                 JobFx.dash(d, V.up(prev, 0.6), V.up(to, 0.6), j, 0.3, JobFx.hide1p(sp));
                 JobFx.wind(d, V.up(to, 0.08), 1.1, j, 0.35, Opt.of("alpha", 0.85));
-                JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.75);
-                SkillFx.fx(d, "rpg:arrow_spark", V.up(to, 0.3), Opt.of("dir", V.unit(new Vec3(-f.x, 0.5, -f.z)), "speed", 2.0, "size", 0.12, "grow", 0.6, "life", 0.35,
+                if (ahead) JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.75);
+                SkillFx.fx(d, "rpg:arrow_spark", V.up(to, 0.3), Opt.of("dir", V.unit(new Vec3(-dir.x, 0.5, -dir.z)), "speed", 2.0, "size", 0.12, "grow", 0.6, "life", 0.35,
                         "color", JobKit.glow(j), "alpha", 1.0));
             });
         }
@@ -175,26 +199,41 @@ final class ArcherSkills {
         RuneKit.later(6, () -> {
             if (RuneKit.sameLife(sp, life)) JobFx.target(sp.level(), V.up(center, 0.06), r, j, V.UP, 1, (end - 6) / 20.0 + 0.4, Opt.of("alpha", 0.85));
         });
-        Vec3 sky = V.up(V.add(center, V.flat(V.sub(sp.position(), center)), 4), 12);
-        for (int w = 0; w < waves; w++) {
-            int ww = w;
-            // 화살이 떨어지는 그림은 닿기 5틱 전부터
-            RuneKit.later(first + w * gap - 5, () -> {
+        // 하늘 (과녁 위 — 쏜 사람 쪽으로 조금, 8.5칸 위): 1인칭에서 떨어지는 화살이 화면에 들어오게 낮게
+        boolean onMe = Math.hypot(sp.getX() - center.x, sp.getZ() - center.z) < 0.1;
+        Vec3 sky = V.up(V.add(center, onMe ? V.ZERO : V.flat(V.sub(sp.position(), center)), 2.5), 8.5);
+        int fall = 6;
+        // 쏟아지는 화살 (2틱마다 셋 — 피해와 따로, 빈 자리에도): 닿으면 불티 · 땅에 잠깐 꽂혀 있음
+        for (int t = Math.max(0, first - fall); t <= end - 2; t += 2) {
+            RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                for (int i = 0; i < 9; i++) {
+                for (int i = 0; i < 3; i++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 g = V.add(center, new Vec3(Math.cos(a), 0, Math.sin(a)), r * Math.sqrt(Kit.rand()));
-                    Vec3 to = new Vec3(g.x, RuneKit.groundAt(level, g, center.y) + 0.1, g.z);
-                    Vec3 from = V.add(sky, new Vec3(Kit.rand() * 2 - 1, Kit.rand(), Kit.rand() * 2 - 1), 1.5);
-                    JobFx.arrow(level, from, to, j, (V.len(V.sub(to, from))) / 0.25, 0.55, Opt.of("fade", 0.05));
-                    RuneKit.later(5, () -> SkillFx.sparks(level, to, JobKit.glow(j), 2, 2));
+                    Vec3 to = new Vec3(g.x, RuneKit.groundAt(level, g, center.y) + 0.05, g.z);
+                    Vec3 from = V.add(sky, new Vec3(Kit.rand() * 2 - 1, Kit.rand(), Kit.rand() * 2 - 1), 1.6);
+                    Vec3 dv = V.unit(V.sub(to, from));
+                    JobFx.arrow(level, from, to, j, V.len(V.sub(to, from)) / (fall / 20.0), 0.55, Opt.of("fade", 0.05));
+                    RuneKit.later(fall, () -> {
+                        SkillFx.sparks(level, V.up(to, 0.1), JobKit.glow(j), 2, 2);
+                        JobFx.arrowAt(level, V.up(to, 0.05), dv, 0.42, 0.55, j, Opt.of("alpha", 0.85, "fade", 0.35));
+                    });
                 }
+            });
+        }
+        for (int w = 0; w < waves; w++) {
+            int ww = w;
+            // 적마다 per 발 (피해와 같은 틱에 닿게 fall 틱 전에 떨어지기 시작)
+            RuneKit.later(Math.max(0, first + w * gap - fall), () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel level = sp.level();
                 for (LivingEntity e : Kit.around(sp, center, r, 4)) {
                     Vec3 to = Kit.bodyPoint(e);
                     for (int p = 0; p < per; p++) {
                         Vec3 from = V.add(sky, new Vec3(Kit.rand() * 2 - 1, Kit.rand(), Kit.rand() * 2 - 1), 1.2);
-                        JobFx.arrow(level, from, V.up(to, (p - 0.5) * 0.4), j, (V.len(V.sub(to, from))) / 0.25, 0.6, Opt.of("fade", 0.05));
+                        Vec3 at = V.up(to, (p - 0.5) * 0.4);
+                        JobFx.arrow(level, from, at, j, V.len(V.sub(at, from)) / (fall / 20.0), 0.6, Opt.of("fade", 0.05));
                     }
                 }
                 if (ww % 2 == 0) SkillFx.play(level, "random.bowhit", center, 0.9 + ww * 0.08, 0.8);
@@ -262,8 +301,9 @@ final class ArcherSkills {
                 ServerLevel level = sp.level();
                 double q = (tt + 2.0) / draw;
                 Vec3 look = sp.getViewVector(1F);
-                Vec3 at = V.add(V.add(sp.getEyePosition(), look, 3.0), JobFx.screenUp(look), -0.15);
-                JobFx.bow(level, at, 0.85 + 0.5 * q, j, Math.min(3, (int) (q * 4)), 1, 0.13, Opt.of("fade", 0.05, "alpha", 0.75 + 0.25 * q));
+                // 눈앞 2.3칸 — 시위를 당길수록 커져 화면을 채움 (1인칭) · 3인칭에서는 몸 앞
+                Vec3 at = V.add(V.add(sp.getEyePosition(), look, 2.3), JobFx.screenUp(look), -0.1);
+                JobFx.bow(level, at, 1.0 + 0.4 * q, j, Math.min(3, (int) (q * 4)), 1, 0.13, Opt.of("fade", 0.05, "alpha", 0.8 + 0.2 * q));
                 for (int sd : new int[] {-1, 1}) {
                     Vec3 a = V.add(V.add(at, V.rightOf(V.flat(look)), sd * (2.4 - q * 1.6)), V.UP, 1.2 - q);
                     SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.unit(V.sub(at, a)), "speed", 4.0, "size", 0.16, "grow", 0.5, "life", 0.25, "color", core,
@@ -290,10 +330,20 @@ final class ArcherSkills {
         int n = Math.max(1, (int) k.num("afterimages", 20));
         int burstDelay = (int) k.num("burstDelay", 12);
         // 놓은 활 (번쩍) · 거대한 빛의 화살 · 지나가는 길의 굵은 광선 (1인칭에서는 눈 가까이를 뺌) · 번쩍임 · 흔들림
-        Vec3 bowAt = V.add(V.add(sp.getEyePosition(), look, 3.0), JobFx.screenUp(look), -0.15);
-        JobFx.bow(level, bowAt, 1.35, j, 4, 2, 0.3, Opt.empty());
+        Vec3 bowAt = V.add(V.add(sp.getEyePosition(), look, 2.3), JobFx.screenUp(look), -0.1);
+        JobFx.bow(level, bowAt, 1.4, j, 4, 2, 0.3, Opt.empty());
         JobFx.arrow(level, V.add(from, look, 1.6), end, j, speed, 2.4, Opt.empty());
-        JobFx.beam(level, V.add(from, look, 2.2), end, j, 3.2, len / speed + 0.35, Opt.of("alpha", 0.85));
+        // 광선은 활을 든 손에서 (1인칭: 오른쪽 아래에서 과녁 쪽으로 뻗는 줄로 보임 — 눈에서 곧장 나가면 점으로만 보임)
+        Vec3 hand = V.add(RuneKit.bowHand(sp), look, 1.2);
+        JobFx.beam(level, hand, end, j, 3.2, len / speed + 0.35, Opt.of("alpha", 0.85));
+        // 화살이 지나가며 남기는 충격 고리 (화살 쪽을 봄 — 1인칭에서는 과녁 둘레로 겹겹이 퍼지는 고리)
+        for (double dd : new double[] {3, 6, 10, 15, 21, 28, 36}) {
+            if (dd > len) break;
+            Vec3 ringAt = V.add(from, look, dd);
+            int delay = (int) Math.round(dd / speed * 20);
+            double rr = 0.9 + dd * 0.035;
+            RuneKit.later(delay, () -> JobFx.ringFacing(level, ringAt, rr, j, V.scale(look, -1), 0.4, Opt.of("alpha", 0.9)));
+        }
         SkillFx.beamAway(level, sp.getEyePosition(), from, end, core, Opt.of("half", 0.4, "thick", 0.45, "life", len / speed + 0.4, "alpha", 0.9, "sweep",
                 len / speed), 2.4);
         Ult.flash(level, from, glow, Opt.empty(), sp);

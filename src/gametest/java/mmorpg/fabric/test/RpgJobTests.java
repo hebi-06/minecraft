@@ -542,15 +542,16 @@ public final class RpgJobTests {
             h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
             z.get(0).discard();
             home(h, sp);
-            z.set(0, dummy(h, 2.5));
+            z.set(0, dummy(h, 6));
             mark[0] = sp.position().z;
             h.assertTrue(JobSkills.press(sp, 1), "돌격 cast");
         }));
-        // 돌격: 부딪혀 밀고 감 (1.9) + 끝 내려찍기 (2.0)
+        // 돌격: 달려가 처음 닿은 적 앞에서 멈춰 들이받음 (1.9) + 내려찍기 (2.0)
         steps.add(new Step(30, () -> {
             double want = expected(sp, j, j.skill(1), 3.9);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "돌격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(sp.position().z - mark[0] > 3, "charged forward " + (sp.position().z - mark[0]));
+            h.assertTrue(sp.position().z - mark[0] > 3 && z.get(0).position().z - sp.position().z < 2.2, "charged forward, stopped in front of the target: "
+                    + (sp.position().z - mark[0]) + " / gap " + (z.get(0).position().z - sp.position().z));
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2));
@@ -620,6 +621,9 @@ public final class RpgJobTests {
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "비전 구체 (연쇄 1) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             z.get(0).discard();
             home(h, sp);
+            // 북쪽을 보고 서서 뒤 (남쪽 — 돌 바닥 위) 로 물러남 (시험 자리 북쪽은 틀 밖이라 막힘)
+            sp.snapTo(sp.getX(), sp.getY(), sp.getZ(), 180F, 0F);
+            sp.setYHeadRot(180F);
             z.set(0, dummy(h, 1.5));
             JobTraitsMore.setChain(sp, 0);
             h.assertTrue(JobSkills.press(sp, 1), "위상 전환 cast");

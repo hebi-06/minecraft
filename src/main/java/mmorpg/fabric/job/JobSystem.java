@@ -50,6 +50,13 @@ public final class JobSystem {
     private static final Map<String, Impl> IMPL = new HashMap<>();
     /** 마지막으로 보낸 칸 (직업 · 스킬 · 잠김 — 바뀌었을 때만 다시 보냄) */
     private static final Map<UUID, String> SENT = new HashMap<>();
+    /** 시전 알림 줄에 덧붙일 말 (0.28.0 — 분노 −30 · 호흡 → 4발: 눈앞 글자 대신 아래 알림 줄에) */
+    private static final Map<UUID, String> NOTES = new HashMap<>();
+
+    /** 지금 시전하는 스킬의 알림 줄에 덧붙임 (스킬 효과 안에서 부름) */
+    static void note(ServerPlayer sp, String text) {
+        NOTES.put(sp.getUUID(), text);
+    }
 
     public static void init() {
         JobSkills.provider = JobSystem::slot;
@@ -193,11 +200,14 @@ public final class JobSystem {
             // 0.28.0 매지션 「주문 연쇄」: 4초 안에 다른 직업 스킬이면 위력 × (1 + 연쇄 × 12%)
             int chain = JobTraitsMore.chainNext(sp, job, k);
             double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain);
+            NOTES.remove(sp.getUUID());
             boolean ok = impl.cast(sp, job, k, P);
+            String note = NOTES.remove(sp.getUUID());
             if (ok) {
                 JobTraitsMore.chainCommit(sp, job, k, chain);
-                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + (chain > 0 ? " §e· 연쇄 " + chain : "§7") + "§7)",
-                        24);
+                String chainText = chain > 0 ? " §e· 연쇄 ×" + chain + " +" + Math.round((JobTraitsMore.chainMult(job, chain) - 1) * 100) + "%" : "";
+                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + chainText + "§7)"
+                        + (note != null ? " §8· " + note : ""), 24);
             }
             return ok;
         }

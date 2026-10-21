@@ -2,9 +2,7 @@ package mmorpg.fabric.job;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import mmorpg.core.Jobs;
@@ -84,7 +82,7 @@ final class WarriorSkills {
                 "alpha", 1.0));
         if (rage) {
             JobFx.burst(level0, V.up(V.add(h.hand(), h.f(), 0.5), 0.35), 0.42, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
-            DamageNumbers.showFace(sp, "§6§l분노 −" + (int) k.num("rageUse", 30) + " §r§7+" + Math.round(k.num("rageBonus", 0.3) * 100) + "%", 2.4, 0.9, -0.3);
+            JobSystem.note(sp, "§6분노 −" + (int) k.num("rageUse", 30) + " §7(+" + Math.round(k.num("rageBonus", 0.3) * 100) + "%)");
             SkillFx.play(level0, "fire.ignite", sp.position(), 0.8, 0.9);
         }
         SkillFx.play(level0, "mob.ravager.roar", sp.position(), 1.6, 0.35);
@@ -120,9 +118,10 @@ final class WarriorSkills {
     // ------------------------------------------------------------ 돌격
 
     /**
-     * 돌격: 보는 쪽 dist 칸 (벽 · 낭떠러지 앞까지) 을 steps 틱에 내달림 (한 틱에 한 마디 — 그동안 밀려나지 않음). 길 앞 (폭 width) 에 닿은 적은 부딪혀 (ram) 앞으로 밀고 감
-     * (보스 · 허수아비 · 플레이어는 밀리지 않음 — 보스에 닿으면 그 자리에서 멈춤), 끝나고 slamDelay 틱 뒤 앞을 짧게 내려찍음 (slam — 둘레 slamRadius 칸 · 밀어낸 적은 앞으로 날아감).
-     * 묶였거나 앞이 막혀 한 칸도 못 가면 쓰지 않음
+     * 돌격: 보는 쪽 dist 칸 (벽 · 낭떠러지 앞까지) 을 steps 틱에 내달림 (한 틱에 한 마디 — 그동안 밀려나지 않음). 길 앞 (폭 width) 에 처음 닿은 적들 앞에서 멈춰
+     * 어깨로 들이받음 (ram — 밀리는 적은 앞으로 조금 밀려남 · 보스 · 허수아비 · 플레이어는 밀리지 않음) → 멈춘 뒤 (적이 없으면 끝까지 가서) slamDelay 틱 뒤 앞을 짧게
+     * 내려찍음 (slam — 둘레 slamRadius 칸 · 밀리는 적은 앞으로 날아감). 묶였거나 앞이 막혀 한 칸도 못 가면 쓰지 않음.
+     * 0.28.0 사진첩: 적을 순간 이동으로 몸 앞에 끌고 가면 몹 위치가 클라이언트에서 몇 틱 늦게 따라와 1인칭 눈앞 · 3인칭 카메라 앞을 가렸음 → 닿으면 멈추는 몸통 박치기로
      */
     static boolean charge(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level = sp.level();
@@ -150,72 +149,90 @@ final class WarriorSkills {
         String life = RuneKit.lifeToken(sp);
         double half = k.num("width", 1.8) / 2;
         double ram = k.num("ram", 1.9);
-        RpgCombat.setSteadfast(sp, steps + 10);
+        int slamDelay = (int) k.num("slamDelay", 3);
+        RpgCombat.setSteadfast(sp, steps + slamDelay + 10);
         Kit.noFall(sp, steps + 30);
         // 출발: 발밑 흙먼지 · 어깨 앞 충돌 고리 · 소리
         RuneKit.shadeClone(sp, level, start, f, 1, SHADE, JobKit.glow(j), Opt.of("life", 0.45, "fade", 0.6, "alpha", 0.8));
         SkillFx.sparks(level, V.up(start, 0.2), DUST, 8, 3);
         SkillFx.play(level, "mob.ravager.roar", start, 1.3, 0.6);
         SkillFx.play(level, "item.trident.riptide_1", start, 0.8, 0.8);
-        Set<UUID> rammed = new HashSet<>();
-        Map<UUID, LivingEntity> carried = new LinkedHashMap<>();
-        boolean[] stopped = {false};
-        int[] cnt = {0};
+        boolean[] done = {false};
         for (int s = 0; s < marks.size(); s++) {
             Vec3 to = marks.get(s);
             int ss = s;
             RuneKit.later(s, () -> {
-                if (stopped[0] || !RuneKit.sameLife(sp, life)) return;
+                if (done[0] || !RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
                 Vec3 prev = sp.position();
-                // 이 마디 앞의 적: 부딪힘 (처음 한 번) — 보스 · 밀리지 않는 적에 닿으면 여기서 멈춤
-                for (LivingEntity e : Kit.around(sp, V.add(to, f, 0.6), half + 0.6, 2.0)) {
-                    if (!rammed.add(e.getUUID())) continue;
-                    JobKit.strike(sp, e, j, P, ram, false, false, life, 0, x -> {
-                        if (cnt[0]++ >= 8) return;
-                        JobFx.hit(e, j, 1.1);
-                        JobFx.ringFacing(e.level() instanceof ServerLevel lv ? lv : d, Kit.bodyPoint(e), 0.7 + Kit.bodyPad(e) * 0.4, j, V.scale(f, -1), 0.3, Opt.empty());
-                    });
-                    if (JobKit.pushable(e)) carried.put(e.getUUID(), e);
-                    else stopped[0] = true;
-                }
-                if (stopped[0]) {
-                    SkillFx.play(d, "entity.goat.ram_impact", to, 0.8, 1.0);
-                    JobKit.shake(sp, 6, 0.25, 0.2);
+                // 이 마디 앞의 적: 처음 닿은 적들 앞에서 멈춰 들이받음
+                List<LivingEntity> hit = Kit.around(sp, V.add(to, f, 0.6), half + 0.6, 2.0);
+                if (!hit.isEmpty()) {
+                    done[0] = true;
+                    double sPrev = V.dot(V.sub(prev, start), f);
+                    double near = 1e9;
+                    for (LivingEntity e : hit) near = Math.min(near, V.dot(V.sub(e.position(), start), f) - 0.9 - Kit.bodyPad(e));
+                    double want = Math.max(sPrev, Math.min(len, near));
+                    Kit.Spot best = null;
+                    for (Kit.Spot x : spots) if (x.s() <= want + 0.05 && (best == null || x.s() > best.s())) best = x;
+                    Vec3 stop = prev;
+                    if (best != null && best.s() > sPrev + 0.05 && Kit.moveTo(sp, best.p())) stop = best.p();
+                    JobFx.dash(d, V.up(prev, 0.9), V.up(stop, 0.9), j, 0.3, JobFx.hide1p(sp));
+                    ramHit(sp, j, P, ram, hit, f, life);
+                    JobKit.shake(sp, 6, 0.3, 0.2);
+                    JobFx.speed(sp, j, 0.25, 0.8);
+                    RuneKit.later(slamDelay, () -> chargeSlam(sp, j, k, P, f, life));
                     return;
                 }
                 if (!Kit.moveTo(sp, to)) {
-                    stopped[0] = true;
+                    done[0] = true;
+                    RuneKit.later(slamDelay, () -> chargeSlam(sp, j, k, P, f, life));
                     return;
-                }
-                // 밀고 감: 부딪힌 적을 몸 바로 앞으로
-                for (LivingEntity e : carried.values()) {
-                    if (e.isRemoved() || !e.isAlive() || e.level() != d) continue;
-                    Vec3 p = V.add(to, f, 1.15 + Kit.bodyPad(e));
-                    Kit.moveTo(e, new Vec3(p.x, Math.max(to.y, RuneKit.groundAt(d, p, to.y)), p.z));
                 }
                 // 지나온 마디: 돌진 줄기 (1인칭에서는 숨김) · 발밑 흙먼지 · 1인칭 빠른 줄 · 어깨 앞 고리
                 JobFx.dash(d, V.up(prev, 0.9), V.up(to, 0.9), j, 0.3, JobFx.hide1p(sp));
                 SkillFx.sparks(d, V.up(to, 0.15), DUST, 3, 2);
                 JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.8);
                 if (ss % 2 == 0) JobFx.ringFacing(d, V.up(V.add(to, f, 0.9), 1.0), 0.75, j, V.scale(f, -1), 0.18, JobFx.hide1p(sp));
+                if (ss == marks.size() - 1) {
+                    done[0] = true;
+                    RuneKit.later(slamDelay, () -> chargeSlam(sp, j, k, P, f, life));
+                }
             });
         }
-        // 끝: 짧게 내려찍음 — 몸 앞 둘레 slamRadius 칸 (밀고 온 적 포함), 밀리는 적은 앞으로 날아감
-        RuneKit.later(steps + (int) k.num("slamDelay", 3), () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            Vec3 ground = groundAhead(sp, f, 1.2);
-            double r = k.num("slamRadius", 2.6);
-            JobFx.slash(sp, j, 2.2, 0.2, 1.6, 100.0, 0.2);
-            slamFx(sp, j, ground, r, 0.9);
-            for (LivingEntity e : Kit.around(sp, ground, r, 2.5)) {
-                JobKit.strike(sp, e, j, P, k.num("slam", 2.0), false, false, life, 0, x -> {
-                    if (JobKit.pushable(e)) RuneKit.knock(e, f, 0.7, 0.35);
-                    if (RuneKit.fxQuota("jobChargeSlam", 6)) JobFx.hit(e, j, 1.2);
-                });
-            }
-        });
         return true;
+    }
+
+    /** 들이받음: 닿은 적마다 ram · 맞은 자리 충돌 고리 · 밀리는 적은 앞으로 조금 (내려찍기 안에 남게) */
+    private static void ramHit(ServerPlayer sp, Jobs.Job j, double P, double ram, List<LivingEntity> hit, Vec3 f, String life) {
+        ServerLevel d = sp.level();
+        int[] cnt = {0};
+        for (LivingEntity e : hit) {
+            JobKit.strike(sp, e, j, P, ram, false, false, life, 0, x -> {
+                if (JobKit.pushable(e)) RuneKit.knock(e, f, 0.38, 0.22);
+                if (cnt[0]++ >= 8) return;
+                JobFx.hit(e, j, 1.2);
+                JobFx.ringFacing(e.level() instanceof ServerLevel lv ? lv : d, Kit.bodyPoint(e), 0.8 + Kit.bodyPad(e) * 0.4, j, V.scale(f, -1), 0.3, Opt.empty());
+            });
+        }
+        SkillFx.sparks(d, V.up(V.add(sp.position(), f, 0.9), 1.1), JobKit.glow(j), 8, 4);
+        SkillFx.play(d, "entity.goat.ram_impact", sp.position(), 0.8, 1.0);
+        SkillFx.play(d, "entity.player.attack.knockback", sp.position(), 0.7, 0.9);
+    }
+
+    /** 끝: 짧게 내려찍음 — 몸 앞 둘레 slamRadius 칸 (들이받은 적 포함), 밀리는 적은 앞으로 날아감 */
+    private static void chargeSlam(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 f, String life) {
+        if (!RuneKit.sameLife(sp, life)) return;
+        Vec3 ground = groundAhead(sp, f, 1.2);
+        double r = k.num("slamRadius", 2.6);
+        JobFx.slash(sp, j, 2.2, 0.2, 1.6, 100.0, 0.2);
+        slamFx(sp, j, ground, r, 0.9);
+        for (LivingEntity e : Kit.around(sp, ground, r, 2.5)) {
+            JobKit.strike(sp, e, j, P, k.num("slam", 2.0), false, false, life, 0, x -> {
+                if (JobKit.pushable(e)) RuneKit.knock(e, f, 0.7, 0.35);
+                if (RuneKit.fxQuota("jobChargeSlam", 6)) JobFx.hit(e, j, 1.2);
+            });
+        }
     }
 
     // ------------------------------------------------------------ 대회전
@@ -348,8 +365,13 @@ final class WarriorSkills {
         return true;
     }
 
-    /** 다음 착지 자리: range 칸 안의 적 무리 곁 (같은 적이면 둘레를 돌아가며) — 적이 없으면 앞으로 5칸 */
-    private static Vec3 landingFor(ServerPlayer sp, Jobs.Skill k, int i) {
+    /** 착지 자리 (spot) 와 그때 바라볼 곳 (focus — 노린 적의 몸, 없으면 앞) */
+    private record Landing(Vec3 spot, Vec3 focus) {}
+
+    /**
+     * 다음 착지 자리: range 칸 안의 적 무리 곁 (노린 적에서 2.4칸 — 1인칭에서 적이 눈앞을 가리지 않게, 같은 적이면 둘레를 돌아가며) — 적이 없으면 앞으로 5칸
+     */
+    private static Landing landingFor(ServerPlayer sp, Jobs.Skill k, int i) {
         ServerLevel level = sp.level();
         Vec3 from = sp.position();
         double landR = k.num("landRadius", 3.5);
@@ -368,23 +390,39 @@ final class WarriorSkills {
             }
         }
         Vec3 want;
+        Vec3 focus;
         if (best != null) {
-            Vec3 away = V.flat(V.sub(from, best.position()));
+            boolean onTop = Math.hypot(from.x - best.getX(), from.z - best.getZ()) < 0.1;
+            Vec3 away = onTop ? V.scale(Kit.facingOf(sp), -1) : V.flat(V.sub(from, best.position()));
             Vec3 dir = V.turnY(away, i % 2 == 0 ? 0 : (i % 4 == 1 ? 110 : -110));
-            want = V.add(best.position(), dir, 1.3 + Kit.bodyPad(best));
-        } else want = V.add(from, Kit.facingOf(sp), 5);
+            want = V.add(best.position(), dir, 2.4 + Kit.bodyPad(best));
+            focus = V.up(best.position(), best.getBbHeight() * 0.55);
+        } else {
+            want = V.add(from, Kit.facingOf(sp), 5);
+            focus = V.up(V.add(from, Kit.facingOf(sp), 9), 1.0);
+        }
         Vec3 spot = Kit.standSpot(level, new Vec3(want.x, Math.max(want.y, from.y) + 0.5, want.z), 3.0);
         if (spot == null && best != null) spot = Kit.standSpot(level, new Vec3(best.getX(), best.getY() + 0.5, best.getZ()), 3.0);
-        return spot != null ? spot : from;
+        return new Landing(spot != null ? spot : from, focus);
     }
 
-    /** 뛰어 내려찍기 한 번: leapTicks 틱 동안 포물선 (한 틱에 한 마디) → 착지 둘레 landRadius 칸 (leap) */
+    private static float wrapDeg(float a) {
+        a %= 360F;
+        if (a >= 180F) a -= 360F;
+        if (a < -180F) a += 360F;
+        return a;
+    }
+
+    /** 뛰어 내려찍기 한 번: leapTicks 틱 동안 포물선 (한 틱에 한 마디 — 노린 적 쪽으로 시선이 돌아감) → 착지 둘레 landRadius 칸 (leap) */
     private static void leap(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, int i, int leapTicks, Vec3[] last, String life) {
         Vec3 from = sp.position();
-        Vec3 to = landingFor(sp, k, i);
+        Landing landing = landingFor(sp, k, i);
+        Vec3 to = landing.spot();
         last[0] = to;
         double height = k.num("height", 3.2);
-        Vec3 face = V.flat(V.sub(to, from));
+        Vec3 face = Math.hypot(landing.focus().x - to.x, landing.focus().z - to.z) >= 0.1 ? V.flat(V.sub(landing.focus(), to)) : V.flat(V.sub(to, from));
+        float yaw0 = sp.getYRot();
+        float pitch0 = sp.getXRot();
         SkillFx.play(sp.level(), "mob.breeze.jump", from, 0.8, 0.9);
         SkillFx.sparks(sp.level(), V.up(from, 0.2), DUST, 6, 3);
         for (int s = 1; s <= leapTicks; s++) {
@@ -394,7 +432,13 @@ final class WarriorSkills {
                 double t = (double) ss / leapTicks;
                 Vec3 p = V.up(V.lerp(from, to, t), height * 4 * t * (1 - t));
                 Vec3 prev = sp.position();
-                Kit.moveTo(sp, p);
+                // 시선: 처음 반쯤 동안 노린 적 쪽으로 돌아감 (뛰는 동안 적을 내려다보고, 내려서면 정면으로)
+                float[] want = Kit.lookRotation(V.up(p, sp.getEyeHeight()), landing.focus());
+                double q = Math.min(1, t * 1.8);
+                q = q * q * (3 - 2 * q);
+                float yaw = (float) (yaw0 + wrapDeg(want[0] - yaw0) * q);
+                float pitch = (float) (pitch0 + (Math.max(-30F, Math.min(55F, want[1])) - pitch0) * q);
+                if (!Kit.moveTo(sp, p, yaw, pitch)) Kit.moveTo(sp, p);
                 ServerLevel d = sp.level();
                 if (t > 0.45 && ss < leapTicks) {
                     // 떨어짐: 몸에 불꽃 꼬리 (머리 = 몸 가운데, 꼬리는 지나온 쪽 — 3인칭) · 1인칭 빠른 줄

@@ -164,8 +164,8 @@ final class MageSkills {
     // ------------------------------------------------------------ 비전 구체
 
     /**
-     * 비전 구체: 완드 끝에서 구체가 나와 겨눈 적 (없으면 조준한 곳) 을 천천히 쫓음 (speed 칸/초 · 몸 1.2칸 앞까지 · 모두 range 칸까지) — gap 틱마다 (pulses 번) 둘레 radius 칸
-     * 적에게 금빛 마력 줄기 (pulse) → dur 틱에 터짐 (burst — 둘레 radius 칸). 모두 마법 피해
+     * 비전 구체: 완드 끝에서 구체가 나와 겨눈 적 (없으면 조준한 곳) 을 천천히 쫓아가 그 몸을 감쌈 (speed 칸/초 · 모두 range 칸까지 — 1인칭에서 구체가 눈앞을 가리지 않게
+     * 적 앞에서 멈추지 않음) — gap 틱마다 (pulses 번) 둘레 radius 칸 적에게 금빛 마력 줄기 (pulse) → dur 틱에 터짐 (burst — 둘레 radius 칸). 모두 마법 피해
      */
     static boolean orb(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         LivingEntity target = Kit.pickTarget(sp, 20, 12);
@@ -190,12 +190,12 @@ final class MageSkills {
                 Vec3 goal = target != null && !target.isRemoved() && target.isAlive() && target.level() == sp.level() ? Kit.bodyPoint(target) : aim != null ? aim : pos[0];
                 Vec3 d = V.sub(goal, pos[0]);
                 double len = V.len(d);
-                double step = Math.min(Math.max(0, len - 1.2), Math.min(speed * (tt < 6 ? 3 : 1), range - travelled[0]));
+                double step = Math.min(Math.max(0, len - 0.2), Math.min(speed * (tt < 6 ? 3 : 1), range - travelled[0]));
                 if (step > 0) {
                     pos[0] = V.add(pos[0], V.scale(d, 1 / Math.max(1e-6, len)), step);
                     travelled[0] += step;
                 }
-                if (tt % 2 == 0) JobFx.orb(sp.level(), pos[0], 0.42, j, 0.14, Opt.of("fade", 0.1));
+                if (tt % 2 == 0) JobFx.orb(sp.level(), pos[0], 0.36, j, 0.14, Opt.of("fade", 0.1));
                 if (tt % 6 == 0) SkillFx.fx(sp.level(), "rpg:arrow_spark", pos[0], Opt.of("dir", V.unit(new Vec3(Kit.rand() - 0.5, 0.6, Kit.rand() - 0.5)), "speed", 1.5,
                         "size", 0.12, "grow", 0.6, "life", 0.35, "color", core, "alpha", 1.0));
             });
@@ -276,7 +276,10 @@ final class MageSkills {
         int per = Math.max(1, (int) k.num("pages", 12) / Math.max(1, waves));
         int finalAt = rise + (waves - 1) * gap + (int) k.num("finalDelay", 15);
         double radius = k.num("radius", 8);
-        Vec3 bookAt = V.up(center, 4.6);
+        // 금서 자리: 과녁 가운데 위 — 가까우면 조금 더 뒤로 · 낮게 (1인칭 화면 위쪽에 책이 들어오게), 멀면 조금 더 높이
+        double distH = Math.hypot(center.x - sp.getX(), center.z - sp.getZ());
+        Vec3 back = distH > 0.1 ? V.flat(V.sub(center, sp.position())) : Kit.facingOf(sp);
+        Vec3 bookAt = V.up(V.add(center, back, Math.max(0, 7 - distH) * 0.6), 3.9 + Math.max(0, Math.min(1.0, (distH - 7) * 0.15)));
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);

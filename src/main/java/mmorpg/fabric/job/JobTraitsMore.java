@@ -7,6 +7,7 @@ import mmorpg.core.Combat;
 import mmorpg.core.Jobs;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
@@ -176,7 +177,7 @@ public final class JobTraitsMore {
             JobFx.burst(level, V.up(V.add(h.hand(), h.f(), 0.6), 0.3), full ? 0.45 : 0.32, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
             SkillFx.sparks(level, h.hand(), JobKit.glow(j), full ? 10 : 6, 3);
             SkillFx.play(level, full ? "mob.ravager.roar" : "fire.ignite", sp.position(), full ? 1.4 : 1.2, full ? 0.5 : 0.8);
-            if (full) DamageNumbers.showFace(sp, "§6§l분노 최고조", 2.4, 0.9, -0.3);
+            if (full) Notify.notify(sp, "§6§l분노 최고조 §7— 도끼 평타 +" + Math.round(trait(j, "fullBonus", 0.2) * 100) + "%", 30);
         }
         JobTraits.sendGauge(sp, false);
     }
@@ -288,7 +289,7 @@ public final class JobTraitsMore {
         st.lastCast = Tasks.now();
         st.lastSkill = k.id();
         if (chain > 0) {
-            DamageNumbers.showFace(sp, "§e§l연쇄 ×" + chain + " §r§7+" + Math.round(chain * trait(j, "perChain", 0.12) * 100) + "%", 2.4, -0.9, -0.3);
+            // 연쇄 글자는 시전 알림 줄에 (JobSystem — "연쇄 ×n +x%"), 여기서는 완드 끝 금빛 고리 · 소리만
             Vec3 tip = RpgCombat.circleAt(sp)[0];
             JobFx.ringFacing(sp.level(), tip, 0.22 + 0.08 * chain, j, V.scale(sp.getViewVector(1F), -1), 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
             SkillFx.play(sp.level(), "block.amethyst_block.chime", sp.position(), 1.2 + chain * 0.2, 0.8);
