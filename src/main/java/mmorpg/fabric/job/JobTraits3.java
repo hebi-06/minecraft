@@ -662,6 +662,22 @@ public final class JobTraits3 {
     }
 
     /**
+     * 사신 현신을 걸 때: 땅에서 솟는 그림자 (자라며 올라옴) — 같은 solo 라 서 있는 그림이 이어 받음 (솟는 동안은 서 있는 그림을 다시 그리지 않고, 끝나기 전에
+     * 서 있는 그림이 바꿈 — 겹친 두 장의 줄무늬 없이)
+     */
+    static void avatarRise(ServerPlayer sp, Jobs.Job j) {
+        of(sp).avatarSwingUntil = Tasks.now() + 10;
+        JobFx.reaper(sp.level(), V.up(avatarAt(sp), -0.6), 1.5, j, 0, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "grow", 0.25, "alpha", 0.9, "solo",
+                1.0));
+        String life = RuneKit.lifeToken(sp);
+        RuneKit.later(10, () -> {
+            State st = STATES.get(sp.getUUID());
+            if (!RuneKit.sameLife(sp, life) || !JobTraits.stanceOn(sp, "reaper_avatar") || st == null || st.avatarSwingUntil > Tasks.now()) return;
+            avatarStand(sp, j);
+        });
+    }
+
+    /**
      * 사신 현신: 서 있는 그림자 (4장을 6 fps 로 되풀이 — 장면은 서버 시간으로 이어서, 다시 그려도 튀지 않음). 주인마다 하나만 (solo 1 — 다시 그릴 때 앞 그림이
      * 바로 사라짐: 겹친 두 장이 깊이 싸움으로 줄무늬가 지던 것, 사진 검토). 수명은 다시 그리는 간격 (8틱) 보다 길게 (늦게 와도 비지 않게)
      */

@@ -236,7 +236,7 @@ final class ReaperSkills {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         Vec3 behind = JobTraits3.avatarAt(sp);
-        JobFx.reaper(level, V.up(behind, -0.6), 1.5, j, 0, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "grow", 0.25, "alpha", 0.9));
+        JobTraits3.avatarRise(sp, j);
         JobFx.smoke(level, V.up(c, 0.3), 1.6, j, 0.8, JobFx.hide1p(sp));
         JobFx.smoke(level, V.up(behind, -0.4), 1.4, j, 0.7, JobFx.hide1p(sp).with("alpha", 0.7));
         for (int i = 0; i < 6; i++) {
