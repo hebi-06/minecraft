@@ -226,6 +226,7 @@ public final class AddonFxTable {
         "seg",
         "sink",
         "size",
+        "solo",
         "speed",
         "spin",
         "spin_rate",

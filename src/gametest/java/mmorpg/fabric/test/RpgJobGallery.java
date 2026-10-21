@@ -60,6 +60,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
      * 스킬 하나: 칸 · 사진 틱 (1인칭 · 3인칭) · 끝까지 기다릴 틱 · 피해가 없는 태세인지 (태세 · 강화 — 뒤에 평타를 누름) · 0.28.0 태세가 아닌 강화 (바람 타기 — 평타만 확인) ·
      * 평타 뒤 사진 틱 (완드는 마법진을 다 그린 뒤)
      */
+    /** 3인칭 사진을 앞 카메라로 찍는 스킬 (과녁 사이를 지나감) */
+    private static final java.util.Set<String> FRONT_3P = java.util.Set.of("assassin_shade", "lancer_vault", "reaper_wraith");
+
     private record Case(int slot, int[] shots, int[] shots3p, int total, boolean stance, boolean buff, int hitAt) {
         Case(int slot, int[] shots, int[] shots3p, int total, boolean stance) {
             this(slot, shots, shots3p, total, stance, false, 3);
@@ -284,6 +287,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 home(server);
                 server.runOnServer(s -> {
                     ServerPlayer sp = player(s);
+                    JobSystem.setJob(sp, job); // 0.29.0 앞 칸의 태세를 지움 (창벽 자동 찌르기 · 사신 현신 그림자가 궁극기 사진에 남았음)
                     JobSkills.resetCooldowns(sp);
                     RuneCast.resetCooldowns(sp);
                     RpgHealth.healFull(sp);
@@ -295,7 +299,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
                     if (k.id().equals("assassin_bloom") || k.id().equals("assassin_ult")) markHusks(sp, 5); // 낙화 · 흑야: 표식 가득
                     if (k.id().equals("reaper_burst")) JobTraits3.setSouls(sp, 10); // 혼 가득 → 큰 폭발
                 });
-                ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
+                // 0.29.0 과녁 사이를 지나가는 스킬 (잔영 · 장대 도약 · 망령 걸음) 은 3인칭을 앞에서 — 뒤 카메라는 지나간 뒤 과녁 몸 안에 들어감
+                CameraType cam3 = FRONT_3P.contains(k.id()) ? CameraType.THIRD_PERSON_FRONT : CameraType.THIRD_PERSON_BACK;
+                ctx.runOnClient(mc -> mc.options.setCameraType(third ? cam3 : CameraType.FIRST_PERSON));
                 ctx.waitTicks(12);
                 ctx.getInput().holdKey(o -> o.keyShift);
                 ctx.waitTicks(2);

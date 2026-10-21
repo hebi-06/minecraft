@@ -324,13 +324,18 @@ public final class SkillBarHud {
                             }
                         }
                         case "lancer" -> {
-                            // 창날 (5 × 5): 위가 뾰족한 잎 모양 + 아래 자루 — 찬 것은 둘째 빛 (흰 금빛) + 가운데 줄
-                            int c = i < v ? col : dim;
-                            g.fill(bx + 1, by, bx + 4, by + 5, 0xC0000000);
-                            g.fill(bx + 2, by, bx + 3, by + 1, c);
-                            g.fill(bx + 1, by + 1, bx + 4, by + 3, c);
-                            g.fill(bx + 2, by + 3, bx + 3, by + 5, c);
-                            if (i < v) g.fill(bx + 2, by + 1, bx + 3, by + 3, 0xFFFFFFFF);
+                            // 창날 (5 × 8 — 하나뿐이라 줄 높이만큼 크게: 5 × 5 는 글자 옆 점처럼 보였음, 사진 검토): 위가 뾰족한 잎 모양 날 · 아래 자루,
+                            // 켜지면 첫째 빛 (금빛) + 가운데 흰 줄 (기세가 남은 동안 반짝임), 꺼지면 어두운 날
+                            int c = i < v ? bright : dim;
+                            int ty = y - 1;
+                            g.fill(bx + 1, ty, bx + 4, ty + 8, 0xC0000000);
+                            g.fill(bx, ty + 2, bx + 5, ty + 4, 0xC0000000);
+                            g.fill(bx + 2, ty, bx + 3, ty + 1, c);
+                            g.fill(bx + 1, ty + 1, bx + 4, ty + 2, c);
+                            g.fill(bx, ty + 2, bx + 5, ty + 4, c);
+                            g.fill(bx + 1, ty + 4, bx + 4, ty + 5, c);
+                            g.fill(bx + 2, ty + 5, bx + 3, ty + 8, i < v ? col : dim);
+                            if (i < v) g.fill(bx + 2, ty + 1, bx + 3, ty + 4, 0xFFFFFFFF);
                         }
                         case "reaper" -> {
                             // 혼불 (5 × 5): 위로 가늘어지는 불꽃 — 찬 것은 첫째 빛 (청록) + 아래 흰 심지

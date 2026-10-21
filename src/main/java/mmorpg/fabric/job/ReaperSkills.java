@@ -137,7 +137,10 @@ final class ReaperSkills {
         // 출발: 몸에서 빠져나오는 그림자 · 연기 · 소리
         RuneKit.shadeClone(sp, level, start, f, 1, JobKit.glow(j), JobKit.core(j), Opt.of("life", 0.5, "fade", 0.6, "alpha", 0.85));
         JobFx.smoke(level, V.up(start, 1.0), 1.0, j, 0.55, JobFx.hide1p(sp));
-        JobFx.eyeRing(sp, j, 2.4, 0.8, 0.4);
+        // 1인칭: 눈앞 고리 · 빠른 줄이 몸과 같이 나아감 (한 틱에 len / steps 칸 — 걸음마다 그리면 다음 틱에 카메라 뒤로 지나가 보이지 않았음, 사진 검토)
+        Vec3 dashVel = V.scale(f, len / steps * 20);
+        JobFx.eyeRing(sp, j, 2.4, 0.8, steps / 20.0 + 0.15, dashVel);
+        JobFx.speed(sp, j, steps / 20.0 + 0.05, 0.7, dashVel);
         SkillFx.play(level, "mob.vex.charge", start, 0.8, 0.9);
         SkillFx.play(level, "particle.soul_escape", start, 0.7, 1.0);
         for (int s = 0; s < marks.size(); s++) {
@@ -152,7 +155,13 @@ final class ReaperSkills {
                 RuneKit.shadeClone(sp, d, prev, f, 1 + ss % 3, JobKit.glow(j), JobKit.core(j), Opt.of("life", 0.3, "fade", 0.6, "alpha", 0.75));
                 JobFx.dash(d, V.up(prev, 1.0), V.up(to, 1.0), j, 0.3, JobFx.hide1p(sp));
                 JobFx.soul(d, V.up(prev, 0.6 + Kit.rand() * 0.8), 0.14, j, 0.45, Opt.of("dir", V.UP, "speed", 0.8));
-                JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.7);
+                if (ss == marks.size() - 1) JobFx.speed(sp, j, 0.25, 0.7);
+            });
+        }
+        // 망령인 동안: 1인칭 화면 네 귀퉁이의 옅은 청록 연기 (암영과 같은 꼴 — 몸이 그림자인 동안)
+        for (int t = steps; t < ghost; t += 8) {
+            RuneKit.later(t, () -> {
+                if (RuneKit.sameLife(sp, life) && JobTraits3.ghost(sp)) JobFx.cornerSmoke(sp, j, 0.55, 0.45, 0.4, RuneKit.bodyVel(sp));
             });
         }
         // 망령이 풀림
@@ -262,13 +271,20 @@ final class ReaperSkills {
         int lastDrain = first + (drains - 1) * gap;
         int finalAt = lastDrain + (int) k.num("finalDelay", 15);
         String life = RuneKit.lifeToken(sp);
-        double gs = 3.0;
-        Vec3 gateAt = V.up(ground, gs);
+        // 문은 조준한 곳 뒤 (시전자에서 먼 쪽으로 2.5칸) 에 서고 시전자 눈에 가까우면 작게 — 낫은 가까이서 쓰는 무기라 눈앞 4칸에 높이 6칸 문이 서면
+        // 화면을 다 덮었음 (사진 검토). 손 · 빨아냄 · 큰 피해는 그대로 조준한 곳 둘레
+        Vec3 away = V.flat(V.sub(ground, sp.position()));
+        Vec3 behind = V.add(ground, V.len(away) > 0.3 ? V.unit(away) : Kit.facingOf(sp), 2.5);
+        Vec3 gateGround = new Vec3(behind.x, RuneKit.groundAt(level0, behind, ground.y), behind.z);
+        double gs = 3.0 * RuneKit.nearK(sp, V.up(gateGround, 3.0), 10, 0.65);
+        Vec3 gateAt = V.up(gateGround, gs);
+        // 문 그림은 주인마다 하나만 (solo — 다시 그릴 때 겹친 두 장이 짙어지며 깜빡이지 않게, 솟음 → 열림 → 닫힘도 바로 바뀜)
+        Opt gateO = Opt.of("owner", (double) sp.getId(), "solo", 2.0);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         Ult.sky(level0, sp.position(), "rpg:ult_void", finalAt + 25);
         // 문이 솟음: 땅의 연기 · 둥근 베기 · 문 (솟는 장)
-        JobFx.gate(level0, gateAt, gs, j, 0, first / 20.0, Opt.of("fade", 0.05));
+        JobFx.gate(level0, gateAt, gs, j, 0, first / 20.0 + 0.1, gateO.with("fade", 0.05));
         JobFx.smoke(level0, V.up(ground, 0.4), 2.4, j, 0.9, Opt.empty());
         JobFx.ring(level0, V.up(ground, 0.08), r, j, false, 0.5, Opt.of("alpha", 0.8));
         JobFx.slash(sp, j, 2.2, 0.0, 1.8, 275.0, 0.25);
@@ -280,7 +296,7 @@ final class ReaperSkills {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
-                JobFx.gate(d, gateAt, gs, j, 1, 0.56, Opt.of("fade", 0.05));
+                JobFx.gate(d, gateAt, gs, j, 1, 0.6, gateO.with("fade", 0.05, "phase", (mmorpg.fabric.Tasks.now() * 8 / 20.0) % 3)); // 소용돌이가 이어 돎
                 JobFx.smoke(d, V.up(ground, 0.3), 2.0, j, 0.6, Opt.of("alpha", 0.6));
                 for (int i = 0; i < 3; i++) {
                     double a = Kit.rand() * Math.PI * 2;
@@ -332,7 +348,7 @@ final class ReaperSkills {
         RuneKit.later(lastDrain + 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            JobFx.gate(d, gateAt, gs, j, 2, (finalAt - lastDrain - 6) / 20.0 + 0.1, Opt.of("fade", 0.15));
+            JobFx.gate(d, gateAt, gs, j, 2, (finalAt - lastDrain - 6) / 20.0 + 0.1, gateO.with("fade", 0.15));
             SkillFx.play(d, "block.respawn_anchor.charge", ground, 0.6, 1.0);
         });
         RuneKit.later(finalAt, () -> {

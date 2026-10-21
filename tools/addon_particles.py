@@ -39,7 +39,9 @@ BUILTIN = ["particle_age", "particle_lifetime", "particle_random_1", "particle_r
 MATERIAL = {"particles_blend": "blend", "particles_add": "add", "particles_alpha": "alpha"}
 # 0.27.0 서버가 보내는 공통 변수 (식에서 쓰지 않음 — 클라이언트 AddonParticle 이 직접 읽음): 보는 사람 걸러내기
 #   view 0 = 모두 · 1 = 주인이 1인칭이면 숨김 (몸 둘레 · 카메라 가까운 그림) · 2 = 주인의 1인칭에만 (눈앞 그림), owner_hi · owner_lo = 주인 엔티티 번호 (16비트씩)
-SERVER_VARS = ["view", "owner_hi", "owner_lo"]
+#   0.29.0 solo = 주인마다 하나만 (같은 주인 · 같은 solo 번호의 새 그림이 나오면 앞 그림은 바로 사라짐 — 오래 서 있는 큰 그림 (사신 현신 그림자) 을
+#   다시 그릴 때 겹친 두 장이 깊이 싸움으로 줄무늬가 지지 않게)
+SERVER_VARS = ["view", "owner_hi", "owner_lo", "solo"]
 
 
 def norm(e):

@@ -155,19 +155,42 @@ final class JobFx {
 
     /** 1인칭 눈앞 고리 (시전자의 1인칭에만 — 태세 · 각성 신호): 눈앞 ahead 칸에 반지름 radius 칸, 화면을 보고 시계 방향으로 한 바퀴 */
     static void eyeRing(ServerPlayer sp, Jobs.Job j, double ahead, double radius, double life) {
+        eyeRing(sp, j, ahead, radius, life, RuneKit.bodyVel(sp));
+    }
+
+    /** 같은 것 — vel (칸/초) 로 같이 움직임 (0.29.0 순간 이동 걸음으로 나아가는 망령 걸음: 걸음마다 그리면 다음 틱에 카메라 뒤로 지나감) */
+    static void eyeRing(ServerPlayer sp, Jobs.Job j, double ahead, double radius, double life, Vec3 vel) {
         Vec3 look = sp.getViewVector(1F);
-        ringFacing(sp.level(), V.add(sp.getEyePosition(), look, ahead), radius, j, V.scale(look, -1), life, only1p(sp).with("vel", RuneKit.bodyVel(sp)));
+        ringFacing(sp.level(), V.add(sp.getEyePosition(), look, ahead), radius, j, V.scale(look, -1), life, only1p(sp).with("vel", vel));
     }
 
     /** 빠른 줄 (rfx_jspeed — 시전자의 1인칭에만, 화면 가장자리): 눈앞 1.4칸, life 초 동안 깜빡이며 흐름 (순간 이동 뒤에 부름 — 자리를 따라가지 않음) */
     static void speed(ServerPlayer sp, Jobs.Job j, double life, double alpha) {
+        speed(sp, j, life, alpha, V.ZERO);
+    }
+
+    /** 같은 것 — vel (칸/초) 로 같이 움직임 (0.29.0 망령 걸음 — 걸음 동안 눈앞에 머무름) */
+    static void speed(ServerPlayer sp, Jobs.Job j, double life, double alpha, Vec3 vel) {
         Vec3 look = sp.getViewVector(1F);
         // 반 크기 1.35 (1.4칸 앞): 줄 안쪽 끝이 화면 가운데에서 약 30° — 위아래 시야 (반 35°) 안에도 줄이 보임
-        Opt o = only1p(sp).with("size", 1.35, "loop", 1.0, "alpha", alpha, "fade", 0.4, "spin", Kit.rand() * 360);
+        Opt o = only1p(sp).with("size", 1.35, "loop", 1.0, "alpha", alpha, "fade", 0.4, "spin", Kit.rand() * 360, "vel", vel);
         Opt base = o.with("life", life, "frames", (double) SPEED, "fps", 24.0);
         Vec3 at = V.add(sp.getEyePosition(), look, 1.4);
         RuneKit.rfx(sp.level(), "jspeed", at, base.with("color", outer(j), "cell", 0.0));
         RuneKit.rfx(sp.level(), "jspeed", at, base.with("color", inner(j), "cell", (double) SPEED, "alpha", alpha * 0.9));
+    }
+
+    /** 0.29.0 1인칭 화면 네 귀퉁이의 옅은 연기 (시전자의 1인칭에만 — 암영 은신 · 망령 걸음): 눈앞 1.3칸, vel (칸/초) 로 같이 움직임 */
+    static void cornerSmoke(ServerPlayer sp, Jobs.Job j, double size, double life, double alpha, Vec3 vel) {
+        Vec3 look = sp.getViewVector(1F);
+        Vec3 up = screenUp(look);
+        Vec3 right = V.unit(V.cross(look, up));
+        Vec3 c = V.add(sp.getEyePosition(), look, 1.3);
+        for (int i = 0; i < 4; i++) {
+            double sx = (i % 2 == 0 ? -1 : 1) * 0.95;
+            double sy = (i < 2 ? -1 : 1) * 0.55;
+            smoke(sp.level(), V.add(V.add(c, right, sx), up, sy), size, j, life, only1p(sp).with("alpha", alpha, "vel", vel));
+        }
     }
 
     /** 돌진 줄기 (rfx_jdash — 오른쪽이 앞): from → to. 굵기 = 길이의 1/4 (줄 여럿이 그 안에) */
@@ -210,8 +233,11 @@ final class JobFx {
         double f = fps > 0 ? fps : count / Math.max(0.05, life);
         Opt b = o.with("life", life, "frames", (double) count, "fps", f, "fade", o.num("fade", 0.2), "loop", loop ? 1.0 : null, "phase",
                 loop ? (o.has("phase") ? o.num("phase", 0) : Kit.rand() * count) : null);
-        RuneKit.rfx(level, name, at, b.with("color", glow, "cell", (double) start));
-        RuneKit.rfx(level, name, at, b.with("color", core, "cell", (double) (total + start), "alpha", o.num("coreAlpha", o.num("alpha", 1))));
+        // 0.29.0 solo (주인마다 하나만 — owner 가 있어야 함): 빛 · 심지가 서로를 지우지 않게 번호를 나눔
+        double solo = o.num("solo", 0);
+        RuneKit.rfx(level, name, at, b.with("color", glow, "cell", (double) start, "solo", solo > 0 ? solo * 2 : null));
+        RuneKit.rfx(level, name, at, b.with("color", core, "cell", (double) (total + start), "alpha", o.num("coreAlpha", o.num("alpha", 1)), "solo",
+                solo > 0 ? solo * 2 + 1 : null));
     }
 
     /** 이어 돌리는 그림 (회전 칼날 · 회오리 · 구체 · 책장 …): 장 frames 개를 fps 로 되풀이 */

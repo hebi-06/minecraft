@@ -40,6 +40,12 @@ public final class AddonParticle extends SingleQuadParticle {
     /** 0.27.0 보는 사람 걸러내기: 0 = 모두 · 1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만 (주인 = owner 엔티티 번호) */
     private final int view;
     private final int owner;
+    /**
+     * 0.29.0 solo: (주인 · 번호) 마다 가장 새 그림 하나만 — 앞 그림은 그리지 않고 다음 틱에 사라짐. 오래 서 있는 큰 그림 (사신 현신 그림자) 을 다시 그릴 때
+     * 겹친 두 장 (움직이면 자리가 조금 다름) 이 깊이 싸움으로 줄무늬가 지던 것을 막음. -1 = 아님
+     */
+    private final long soloKey;
+    private static final java.util.Map<Long, AddonParticle> SOLO = new java.util.HashMap<>();
 
     AddonParticle(ClientLevel level, Vec3 origin, Def d, double[] emitterVars, double emitterAge, TextureAtlasSprite sprite) {
         super(level, origin.x, origin.y, origin.z, sprite);
@@ -52,8 +58,11 @@ public final class AddonParticle extends SingleQuadParticle {
         v[AddonParticles.EAGE] = emitterAge;
         this.emitterAge0 = emitterAge;
         this.view = AddonParticles.VIEW >= 0 ? (int) Math.round(v[AddonParticles.VIEW]) : 0;
-        this.owner = view == 0 || AddonParticles.OWNER_HI < 0 || AddonParticles.OWNER_LO < 0 ? -1
+        int solo = AddonParticles.SOLO >= 0 ? (int) Math.round(v[AddonParticles.SOLO]) : 0;
+        this.owner = (view == 0 && solo <= 0) || AddonParticles.OWNER_HI < 0 || AddonParticles.OWNER_LO < 0 ? -1
                 : ((int) Math.round(v[AddonParticles.OWNER_HI]) << 16) | ((int) Math.round(v[AddonParticles.OWNER_LO]) & 0xFFFF);
+        this.soloKey = solo > 0 && owner >= 0 ? ((long) owner << 20) | (solo & 0xFFFFF) : -1;
+        if (soloKey >= 0) SOLO.put(soloKey, this);
         // 자리 · 방향 (발생기 모양)
         double ox = 0;
         double oy = 0;
@@ -175,13 +184,19 @@ public final class AddonParticle extends SingleQuadParticle {
         this.xo = this.x;
         this.yo = this.y;
         this.zo = this.z;
+        if (soloKey >= 0 && SOLO.get(soloKey) != this) {
+            this.remove(); // 같은 (주인 · 번호) 의 새 그림이 나옴
+            return;
+        }
         if (this.age++ >= this.lifetime) {
             this.remove();
+            if (soloKey >= 0) SOLO.remove(soloKey, this);
             return;
         }
         double t = this.age / 20.0;
         if (t >= life) {
             this.remove();
+            if (soloKey >= 0) SOLO.remove(soloKey, this);
             return;
         }
         v[AddonParticles.AGE] = t;
@@ -236,6 +251,7 @@ public final class AddonParticle extends SingleQuadParticle {
     public void extract(QuadParticleRenderState state, Camera camera, float partialTick) {
         double t = (this.age + partialTick) / 20.0;
         if (t > life) return;
+        if (soloKey >= 0 && SOLO.get(soloKey) != this) return;
         if (view != 0 && !shown()) return;
         v[AddonParticles.AGE] = t;
         v[AddonParticles.EAGE] = emitterAge0 + t;

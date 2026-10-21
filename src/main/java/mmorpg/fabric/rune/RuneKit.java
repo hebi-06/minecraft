@@ -413,6 +413,7 @@ public final class RuneKit {
         r.vel = o.vec("vel", V_ZERO);
         r.view = (int) o.num("view", 0); // 0.27.0 보는 사람 걸러내기 (1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만)
         r.owner = (int) o.num("owner", 0);
+        r.solo = (int) o.num("solo", 0); // 0.29.0 주인마다 하나만 (AddonParticle — 다시 그리는 큰 그림이 겹쳐 줄무늬가 지지 않게)
         AddonFx.rfx(level, name, at, r);
     }
 
@@ -420,8 +421,9 @@ public final class RuneKit {
     public static void rfx2(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core, int[] cells, Double coreAlpha) {
         int[] c = cells != null ? cells : RFX.getOrDefault(name, new int[] {0, 1});
         double cell = o.num("cell", 0);
-        rfx(level, name, at, o.with("color", glow, "cell", c[0] + cell));
-        rfx(level, name, at, o.with("color", core, "cell", c[1] + cell, "alpha", coreAlpha != null ? coreAlpha : o.num("alpha", 1)));
+        double solo = o.num("solo", 0); // 0.29.0 주인마다 하나만 — 빛 · 심지가 서로를 지우지 않게 번호를 나눔
+        rfx(level, name, at, o.with("color", glow, "cell", c[0] + cell, "solo", solo > 0 ? solo * 2 : null));
+        rfx(level, name, at, o.with("color", core, "cell", c[1] + cell, "alpha", coreAlpha != null ? coreAlpha : o.num("alpha", 1), "solo", solo > 0 ? solo * 2 + 1 : null));
     }
 
     public static void rfx2(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core) {

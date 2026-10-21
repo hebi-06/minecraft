@@ -46,6 +46,8 @@ public final class AddonParticles {
     static final int VIEW = slot("view");
     static final int OWNER_HI = slot("owner_hi");
     static final int OWNER_LO = slot("owner_lo");
+    /** 0.29.0 주인마다 하나만 (AddonParticle — 같은 주인 · 같은 번호의 새 그림이 나오면 앞 그림은 사라짐) */
+    static final int SOLO = slot("solo");
 
     private static int slot(String name) {
         int i = AddonFxTable.var(name);

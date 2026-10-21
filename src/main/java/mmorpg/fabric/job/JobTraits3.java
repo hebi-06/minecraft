@@ -74,6 +74,8 @@ public final class JobTraits3 {
         double leechAcc;
         long leechShown;
         long ghostUntil;
+        /** 사신 현신 그림자가 휘두르는 중 (이 틱까지 — 서 있는 그림을 다시 그리지 않음) */
+        long avatarSwingUntil;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -646,9 +648,26 @@ public final class JobTraits3 {
     private static void avatarSwing(ServerPlayer sp, Jobs.Job j) {
         if (!RuneKit.fxQuota("jobAvatarSwing" + sp.getId(), 1)) return;
         ServerLevel level = sp.level();
-        JobFx.reaper(level, avatarAt(sp), 1.5, j, 1, 0.35, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.9));
+        // 휘두르는 그림이 서 있는 그림을 바꿈 (solo — 두 장이 겹치지 않게), 끝나기 한 틱 전에 서 있는 그림이 다시 바꿈 (그사이 다른 휘두름이면 그쪽이)
+        of(sp).avatarSwingUntil = Tasks.now() + 6;
+        JobFx.reaper(level, avatarAt(sp), 1.5, j, 1, 0.35, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.9, "solo", 1.0));
+        String life = RuneKit.lifeToken(sp);
+        RuneKit.later(6, () -> {
+            State st = STATES.get(sp.getUUID());
+            if (!RuneKit.sameLife(sp, life) || !JobTraits.stanceOn(sp, "reaper_avatar") || st == null || st.avatarSwingUntil > Tasks.now()) return;
+            avatarStand(sp, j);
+        });
         JobFx.slash(sp, j, 2.6, 0.1, 2.3, Kit.rand() < 0.5 ? 10.0 : 190.0, 0.26);
         SkillFx.play(level, "entity.player.attack.sweep", sp.position(), 0.55, 0.8);
+    }
+
+    /**
+     * 사신 현신: 서 있는 그림자 (4장을 6 fps 로 되풀이 — 장면은 서버 시간으로 이어서, 다시 그려도 튀지 않음). 주인마다 하나만 (solo 1 — 다시 그릴 때 앞 그림이
+     * 바로 사라짐: 겹친 두 장이 깊이 싸움으로 줄무늬가 지던 것, 사진 검토). 수명은 다시 그리는 간격 (8틱) 보다 길게 (늦게 와도 비지 않게)
+     */
+    private static void avatarStand(ServerPlayer sp, Jobs.Job j) {
+        double phase = (Tasks.now() * 6 / 20.0) % 4;
+        JobFx.reaper(sp.level(), avatarAt(sp), 1.5, j, 0, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.75, "solo", 1.0, "phase", phase));
     }
 
     // ------------------------------------------------------------ 틱 (JobTraits 가 4틱마다) · 태세 연출 · 태세 끝 · 게이지
@@ -685,15 +704,7 @@ public final class JobTraits3 {
         ServerLevel level = sp.level();
         if (stance.equals("assassin_veil")) {
             // 1인칭: 화면 네 귀퉁이의 옅은 그림자 연기 (다른 사람에게는 아무것도 — 은신)
-            Vec3 look = sp.getViewVector(1F);
-            Vec3 up = JobFx.screenUp(look);
-            Vec3 right = V.unit(V.cross(look, up));
-            Vec3 c = V.add(sp.getEyePosition(), look, 1.3);
-            for (int i = 0; i < 4; i++) {
-                double sx = (i % 2 == 0 ? -1 : 1) * 0.95;
-                double sy = (i < 2 ? -1 : 1) * 0.55;
-                JobFx.smoke(level, V.add(V.add(c, right, sx), up, sy), 0.55, j, 0.45, JobFx.only1p(sp).with("alpha", 0.45, "vel", RuneKit.bodyVel(sp)));
-            }
+            JobFx.cornerSmoke(sp, j, 0.55, 0.45, 0.45, RuneKit.bodyVel(sp));
             return true;
         }
         if (stance.equals("lancer_wall")) {
@@ -713,8 +724,9 @@ public final class JobTraits3 {
             return true;
         }
         if (stance.equals("reaper_avatar")) {
-            // 등 뒤의 사신 그림자 (서서 흔들림 — 1인칭에서는 숨김) · 손의 혼불
-            JobFx.reaper(level, avatarAt(sp), 1.5, j, 0, 0.45, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.75));
+            // 등 뒤의 사신 그림자 (서서 흔들림 — 1인칭에서는 숨김, 휘두르는 동안은 그대로) · 손의 혼불
+            State st = STATES.get(sp.getUUID());
+            if (st == null || st.avatarSwingUntil <= Tasks.now()) avatarStand(sp, j);
             RuneKit.Hand h = RuneKit.handOf(sp);
             JobFx.soul(level, V.up(h.hand(), 0.15), 0.12, j, 0.4, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.9));
             return true;

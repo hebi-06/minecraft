@@ -221,6 +221,8 @@ public final class AddonFx {
         /** 0.27.0 보는 사람 걸러내기 (0 = 모두 · 1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만) · 주인 엔티티 번호 */
         public int view;
         public int owner;
+        /** 0.29.0 주인마다 하나만 (같은 주인 · 같은 번호의 새 그림이 나오면 앞 그림은 사라짐 — 0 = 아님, 주인 번호 owner 가 있어야 함) */
+        public int solo;
 
         public Rfx copy() {
             Rfx r = new Rfx();
@@ -242,6 +244,7 @@ public final class AddonFx {
             r.vel = vel;
             r.view = view;
             r.owner = owner;
+            r.solo = solo;
             return r;
         }
     }
@@ -257,7 +260,8 @@ public final class AddonFx {
         v.vec("vel", o.vel == null ? Vec3.ZERO : o.vel);
         v.set("spin_rate", o.spinRate).set("cell", o.cell).set("frames", o.frames).set("fps", o.fps).set("loop", o.loop ? 1 : 0)
                 .set("phase", o.phase).set("fade", o.fade);
-        if (o.view != 0) v.view(o.view, o.owner);
+        if (o.view != 0 || o.solo != 0) v.view(o.view, o.owner);
+        if (o.solo != 0) v.set("solo", o.solo);
         spawn(level, "rpg:rfx_" + name, at, v);
     }
 }

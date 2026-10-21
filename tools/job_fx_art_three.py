@@ -347,19 +347,39 @@ def reaper_body(m, W, H, dy, sway, core, v):
     for i in range(9, 0, -1):
         t = i / 9
         robe.append((cx + W * 0.02 - W * 0.19 * math.sin(t * math.pi / 2), H * (0.06 + 0.26 * t) + dy))
+    # 눈: 안쪽이 내려간 비스듬한 가는 틈 둘 (둥근 점 눈은 귀여운 유령처럼 보여서 바꿈 — 사진 검토)
+    fx = cx + W * 0.015
+    eyes = []
+    for ex in (-1, 1):
+        x, y = fx + ex * W * 0.036, H * 0.212 + dy
+        eyes.append([(x + ex * W * 0.024, y - H * 0.011), (x - ex * W * 0.016, y + H * 0.007)])
     if core:
         # 심지: 두건 테두리 · 옷 주름 줄 · 눈
         m.line(hood + [sh_r], W * 0.02, v)
         for k in range(3):
             x0 = cx - W * 0.1 + k * W * 0.1
             m.line([(x0, H * 0.42 + dy), (x0 + sway * 0.3 - W * 0.03 * (k - 1), H * 0.9 + dy * 0.3)], W * 0.012, v * 0.7)
-        for ex in (-1, 1):
-            m.disc(cx + W * 0.015 + ex * W * 0.035, H * 0.2 + dy, W * 0.018, 255)
+        for e in eyes:
+            m.line(e, W * 0.016, 255)
     else:
         m.poly(robe, v * 0.42)
         m.line(hood + [sh_r], W * 0.03, v)
-        # 얼굴 구멍 (어둡게 — 빛 장면에서 지움)
-        m.d.ellipse([(cx - W * 0.07) * SS, (H * 0.13 + dy) * SS, (cx + W * 0.1) * SS, (H * 0.28 + dy) * SS], fill=0)
+        # 두건 속 어둠 (빛 장면에서 지움): 위가 뾰족하고 아래가 둥근 두건 구멍
+        top, mid, bot, half = H * 0.115 + dy, H * 0.2 + dy, H * 0.29 + dy, W * 0.085
+        hole = [(fx, top)]
+        for i in range(1, 9):
+            th = math.pi / 2 * i / 8
+            hole.append((fx + half * math.sin(th), top + (mid - top) * (1 - math.cos(th))))
+        for i in range(1, 16):
+            th = math.pi * i / 16
+            hole.append((fx + half * math.cos(th), mid + (bot - mid) * math.sin(th)))
+        for i in range(8, 0, -1):
+            th = math.pi / 2 * i / 8
+            hole.append((fx - half * math.sin(th), top + (mid - top) * (1 - math.cos(th))))
+        m.poly(hole, 0)
+        # 어둠 속에서 빛나는 눈 (빛 장면 — 심지의 틈 둘레 번짐)
+        for e in eyes:
+            m.line(e, W * 0.034, v)
     return cx
 
 
