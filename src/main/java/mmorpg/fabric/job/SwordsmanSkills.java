@@ -175,7 +175,6 @@ final class SwordsmanSkills {
         // 출발: 쓴 자리의 잔상 · 발밑 작은 둥근 베기 · 1인칭 빠른 줄 · 소리
         RuneKit.shadeClone(sp, level, start, f, 1, SHADE, glow, Opt.of("life", 0.5, "fade", 0.6, "alpha", 0.85));
         JobFx.ring(level, V.up(start, 0.06), 0.9, j, false, 0.3, Opt.of("alpha", 0.85));
-        JobFx.speed(sp, j, (steps + 4) / 20.0, 0.85);
         SkillFx.play(level, "item.trident.riptide_1", start, 1.6, 0.8);
         SkillFx.play(level, "item.spear.attack_miss", start, 1.5, 0.9);
         Kit.noFall(sp, 30);
@@ -192,8 +191,9 @@ final class SwordsmanSkills {
                 }
                 ServerLevel d = sp.level();
                 if (ss < marks.size() - 1) RuneKit.shadeClone(sp, d, prev, f, 1, SHADE, glow, Opt.of("life", 0.32, "fade", 0.6, "alpha", 0.7));
-                // 지나온 마디의 돌진 줄기 (몸 높이 — 1인칭에서는 카메라 옆이라 숨김)
+                // 지나온 마디의 돌진 줄기 (몸 높이 — 1인칭에서는 카메라 옆이라 숨김) · 1인칭 빠른 줄 (옮긴 자리 눈앞에 — 마디마다 새로, 마지막은 조금 길게)
                 JobFx.dash(d, V.up(prev, 0.9), V.up(to, 0.9), j, 0.3, JobFx.hide1p(sp));
+                JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.85);
             });
         }
         // 지나가며 벰: 길 가까이 적 — 지나는 마디의 틱에 (그림은 2틱 늦게 — 다 지나간 뒤 베인 줄이 그어짐)
@@ -482,7 +482,7 @@ final class SwordsmanSkills {
         Vec3 eye = sp.getEyePosition();
         double speed = 40;
         // 거대한 베기 (눈앞) + 그 베기가 앞으로 날아감 + 화면을 가로지르는 일섬 (1인칭) · 지나는 길의 일섬 (3인칭 · 다른 사람) + 앞으로 뻗는 긴 빛줄기
-        JobFx.slash(sp, j, 2.6, 0.25, 3.4, 4.0, 0.34);
+        JobFx.slash(sp, j, 2.6, 0.25, 3.0, 4.0, 0.42);
         JobFx.two(level, "jslash", JobFx.SLASH, V.add(from, f, 2.4), Math.max(0.15, (len - 2.4) / speed) + 0.12, Opt.of("dir", f, "speed", speed, "size", half * 1.6,
                 "spin", 4.0, "fade", 0.2), JobFx.outer(j), JobFx.inner(j));
         Vec3 look = sp.getViewVector(1F);

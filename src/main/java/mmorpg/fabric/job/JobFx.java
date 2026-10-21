@@ -77,10 +77,15 @@ final class JobFx {
 
     /** 그림 한 벌 (빛 칸 0 · 심지 칸 frames): life 초 동안 frames 장. o: dir · size · spin · spinRate · speed · grow · fade · alpha · coreAlpha · vel · view · owner */
     static void two(ServerLevel level, String name, int frames, Vec3 at, double life, Opt o, double[] glow, double[] core) {
+        two(level, name, frames, 0, at, life, o, glow, core);
+    }
+
+    /** 같은 것 — 빛 칸 base · 심지 칸 base + frames (rfx_jring 의 뒤집은 장면은 base = 2 × frames) */
+    static void two(ServerLevel level, String name, int frames, int base, Vec3 at, double life, Opt o, double[] glow, double[] core) {
         double fps = frames / Math.max(0.05, life);
-        Opt base = o.with("life", life, "frames", (double) frames, "fps", fps, "fade", o.num("fade", 0.2));
-        RuneKit.rfx(level, name, at, base.with("color", glow, "cell", 0.0));
-        RuneKit.rfx(level, name, at, base.with("color", core, "cell", (double) frames, "alpha", o.num("coreAlpha", o.num("alpha", 1))));
+        Opt b = o.with("life", life, "frames", (double) frames, "fps", fps, "fade", o.num("fade", 0.2));
+        RuneKit.rfx(level, name, at, b.with("color", glow, "cell", (double) base));
+        RuneKit.rfx(level, name, at, b.with("color", core, "cell", (double) (base + frames), "alpha", o.num("coreAlpha", o.num("alpha", 1))));
     }
 
     /** 화면 위쪽 (보는 쪽에 수직 — 고개를 들고 숙여도 화면에서 위) */
@@ -107,12 +112,15 @@ final class JobFx {
         two(level, "jhit", HIT, Kit.bodyPoint(e), 0.3, Opt.of("size", size, "spin", Kit.rand() * 360, "fade", 0.2), outer(j), inner(j));
     }
 
-    /** 땅 (또는 그 높이) 에 눕힌 한 바퀴 베기 (rfx_jring): 반지름 radius 칸, reverse = 반시계. o: alpha · fade · view · owner · grow */
+    /**
+     * 땅 (또는 그 높이) 에 눕힌 한 바퀴 베기 (rfx_jring — 면은 늘 위를 봄): 반지름 radius 칸, reverse = 반시계 (좌우를 뒤집은 장면 — 면을 아래로 눕히면 위에서
+     * 보이지 않음). o: alpha · coreAlpha · fade · view · owner · grow · vel
+     */
     static void ring(ServerLevel level, Vec3 center, double radius, Jobs.Job j, boolean reverse, double life, Opt o) {
-        two(level, "jring", RING, center, life, o.with("dir", reverse ? V.DOWN : V.UP, "size", radius / RING_R, "spin", o.num("spin", 0)), outer(j), inner(j));
+        two(level, "jring", RING, reverse ? 2 * RING : 0, center, life, o.with("dir", V.UP, "size", radius / RING_R, "spin", o.num("spin", 0)), outer(j), inner(j));
     }
 
-    /** 세운 둥근 베기 (rfx_jring 을 normal 쪽을 보게 — 눈앞 고리 · 적 둘레 고리) */
+    /** 세운 둥근 베기 (rfx_jring 을 normal 쪽을 보게 — 보는 사람 쪽을 보게 두면 눈앞 고리 · 적 둘레 고리) */
     static void ringFacing(ServerLevel level, Vec3 center, double radius, Jobs.Job j, Vec3 normal, double life, Opt o) {
         two(level, "jring", RING, center, life, o.with("dir", normal, "size", radius / RING_R, "spin", o.num("spin", 0)), outer(j), inner(j));
     }
@@ -123,10 +131,11 @@ final class JobFx {
         ringFacing(sp.level(), V.add(sp.getEyePosition(), look, ahead), radius, j, V.scale(look, -1), life, only1p(sp).with("vel", RuneKit.bodyVel(sp)));
     }
 
-    /** 빠른 줄 (rfx_jspeed — 시전자의 1인칭에만, 화면 가장자리): 눈앞 1.4칸 · 화면을 덮는 크기, life 초 동안 깜빡이며 흐름 */
+    /** 빠른 줄 (rfx_jspeed — 시전자의 1인칭에만, 화면 가장자리): 눈앞 1.4칸, life 초 동안 깜빡이며 흐름 (순간 이동 뒤에 부름 — 자리를 따라가지 않음) */
     static void speed(ServerPlayer sp, Jobs.Job j, double life, double alpha) {
         Vec3 look = sp.getViewVector(1F);
-        Opt o = only1p(sp).with("size", 1.9, "loop", 1.0, "alpha", alpha, "vel", RuneKit.bodyVel(sp), "fade", 0.4, "spin", Kit.rand() * 360);
+        // 반 크기 1.35 (1.4칸 앞): 줄 안쪽 끝이 화면 가운데에서 약 30° — 위아래 시야 (반 35°) 안에도 줄이 보임
+        Opt o = only1p(sp).with("size", 1.35, "loop", 1.0, "alpha", alpha, "fade", 0.4, "spin", Kit.rand() * 360);
         Opt base = o.with("life", life, "frames", (double) SPEED, "fps", 24.0);
         Vec3 at = V.add(sp.getEyePosition(), look, 1.4);
         RuneKit.rfx(sp.level(), "jspeed", at, base.with("color", outer(j), "cell", 0.0));
@@ -154,10 +163,11 @@ final class JobFx {
         two(level, "jburst", BURST, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
-    /** 몸에서 솟는 빛 (rfx_jaura — 세워 카메라 쪽으로 돎): 높이 height 칸, life 초 동안 이어 돌림. 시전자 1인칭에서는 숨김 */
+    /** 몸에서 솟는 빛 (rfx_jaura — 세워 카메라 쪽으로 돎): 높이 약 height 칸, life 초 동안 이어 돌림. 시전자 1인칭에서는 숨김 */
     static void aura(ServerPlayer sp, Jobs.Job j, double height, double life, double alpha) {
-        Vec3 c = V.up(sp.position(), height / 2 - 0.1);
-        Opt o = hide1p(sp).with("size", height / 4, "loop", 1.0, "alpha", alpha, "coreAlpha", alpha * 0.8, "vel", RuneKit.bodyVel(sp), "fade", 0.3);
+        // 그림 칸 128 × 256: 반 너비 = 0.3 × 높이 (몸 뒤에 다 가려지지 않게 넓게), 반 높이 = 0.6 × 높이 — 아래 끝이 발밑 조금 아래
+        Vec3 c = V.up(sp.position(), height * 0.6 - 0.15);
+        Opt o = hide1p(sp).with("size", height * 0.3, "loop", 1.0, "alpha", alpha, "coreAlpha", alpha * 0.8, "vel", RuneKit.bodyVel(sp), "fade", 0.3);
         double fps = AURA / 0.45; // 한 바퀴 0.45초
         Opt base = o.with("life", life, "frames", (double) AURA, "fps", fps);
         RuneKit.rfx(sp.level(), "jaura", c, base.with("color", outer(j), "cell", 0.0));

@@ -186,11 +186,13 @@ final class SpellbladeSkills {
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            // 터짐: 둘레 둥근 베기 · 몸 둘레 큰 터짐 (3인칭 · 다른 사람) · 눈앞 터짐 (보는 쪽 2.4칸 — 1인칭 화면 가운데) · 알갱이도 눈앞에서
-            JobFx.ring(d, V.up(dest, 0.06), radius, j, false, 0.36, Opt.empty());
-            JobFx.burst(d, V.up(dest, 1.0), radius * 0.6, j, 0.36, JobFx.hide1p(sp));
-            Vec3 ahead = V.up(V.add(dest, Kit.facingOf(sp), 2.4), 1.0);
-            JobFx.burst(d, ahead, 1.3, j, 0.34, Opt.empty());
+            // 터짐: 둘레 둥근 베기 · 몸 둘레 큰 터짐 (3인칭 · 다른 사람) · 1인칭 눈앞 터짐과 고리 (보는 쪽 2.8칸 — 화면 가운데 조금 아래) · 알갱이도 눈앞에서
+            JobFx.ring(d, V.up(dest, 0.06), radius, j, false, 0.4, Opt.empty());
+            JobFx.burst(d, V.up(dest, 1.0), radius * 0.6, j, 0.4, JobFx.hide1p(sp));
+            Vec3 look = sp.getViewVector(1F);
+            Vec3 ahead = V.add(V.add(sp.getEyePosition(), look, 2.8), JobFx.screenUp(look), -0.3);
+            JobFx.burst(d, ahead, 1.5, j, 0.42, JobFx.only1p(sp));
+            JobFx.ringFacing(d, ahead, 1.1, j, V.scale(look, -1), 0.4, JobFx.only1p(sp));
             SkillFx.sparks(d, ahead, core, 8, 5);
             SkillFx.play(d, "random.explode", dest, 1.5, 0.6);
             SkillFx.play(d, "chime.amethyst_block", dest, 0.9, 1.0);

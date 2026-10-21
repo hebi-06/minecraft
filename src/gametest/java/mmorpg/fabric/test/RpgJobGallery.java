@@ -62,7 +62,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(1, new int[] {1, 3, 8}, new int[] {2, 6}, 16, false),
         new Case(2, new int[] {2, 12}, new int[] {2, 12}, 22, false),
         new Case(3, new int[] {4, 20}, new int[] {6}, 24, true),
-        new Case(4, new int[] {8, 20, 40, 66, 84, 90}, new int[] {20, 60, 84}, 100, false),
+        new Case(4, new int[] {8, 20, 40, 66, 83, 86, 90}, new int[] {20, 60, 83}, 100, false),
     };
     private static final Case[] CASES_SB = {
         new Case(0, new int[] {2, 6, 12}, new int[] {3, 12}, 22, false),

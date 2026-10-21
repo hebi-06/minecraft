@@ -140,7 +140,7 @@ public final class SkillBarHud {
      * 직업 스킬 칸 하나 (HUD · 스킬 칸 창 공용 — 0.27.0 메이플식 퀵슬롯): 네모 칸 (job_slot — 룬 칸과 다른 모양) 에 스킬 아이콘 (job_skill/&lt;스킬 id&gt;
      * 32×32 — 룬 그림 대신), 직업 첫째 빛의 안쪽 줄 · 모서리 ㄱ자 (job_edge), 재사용 대기 = 12시에서 시계 방향으로 걷히는 어두운 덮개 + 남은 초,
      * 연출 = 눌림 (아이콘이 눌렸다 돌아옴) · 막힘 (빨간 덮개 + 흔들림) · 시전 (흰 번쩍 + 퍼지는 직업 색 고리) · 준비 (빛 고리), 잠기면 어둡게 + 아래 사유,
-     * 키 글자 "⇧R" (key 이면 왼쪽 위). 빈 칸은 흐린 칸만
+     * 키 글자 "⇧R" (key 이면 왼쪽 위 · 0.75배). 빈 칸은 흐린 칸만
      */
     static void drawJobSlot(GuiGraphicsExtractor g, Font font, int i, int x0, int y, int s, float partial, long now, boolean dim, boolean key) {
         boolean empty = ClientJobBar.empty(i);
@@ -197,9 +197,15 @@ public final class SkillBarHud {
         if (key) {
             String label = ClientJobBar.keyLabel(i);
             if (!label.isEmpty()) {
+                // 키 글자는 0.75배 (스킬 아이콘을 덜 가리게 — 룬 칸은 그대로)
+                float k = 0.75F;
                 int lw = font.width(label);
-                g.blitSprite(RenderPipelines.GUI_TEXTURED, KEY, x - 2, y - 2, lw + 5, 11, empty ? 0xB0FFFFFF : 0xFFFFFFFF);
-                g.text(font, label, x + 1, y, empty ? 0xFF98A8C0 : 0xFFFFFFFF, true);
+                g.pose().pushMatrix();
+                g.pose().translate(x - 1, y - 1);
+                g.pose().scale(k, k);
+                g.blitSprite(RenderPipelines.GUI_TEXTURED, KEY, -2, -2, lw + 5, 11, empty ? 0xB0FFFFFF : 0xFFFFFFFF);
+                g.text(font, label, 1, 0, empty ? 0xFF98A8C0 : 0xFFFFFFFF, true);
+                g.pose().popMatrix();
             }
         }
     }

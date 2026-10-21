@@ -10,6 +10,7 @@
 - rfx_jslash  카메라를 보는 큰 베기 (256×128 × 8장): 왼쪽에서 아래를 지나 오른쪽으로 휘두르는 초승달이 그려지고 (머리가 굵음) 꼬리부터 사라짐, 속도 줄 · 머리의 반짝임
 - rfx_jhit    맞은 자리 (128×128 × 6장): 번쩍 · 대각선 베인 줄 · 퍼지는 고리 · 튀는 조각
 - rfx_jring   땅에 눕는 둥근 베기 (192×192 × 8장): 12시에서 시계 방향으로 한 바퀴 도는 빛 머리 + 뒤로 흐려지는 꼬리, 다 돌면 고리 전체가 빛나다 사라짐
+              (칸 16 ~ 31 = 좌우를 뒤집은 반시계 — 면을 아래로 눕히면 위에서 보이지 않음)
 - rfx_jdash   돌진 줄기 (방향으로 누움 — 오른쪽이 앞, 256×64 × 6장): 앞에서 뒤로 뻗는 빠른 줄 여럿, 앞부터 줄어듦
 - rfx_jline   일섬 (방향으로 누움, 256×32 × 6장): 가는 선이 한 번에 그어지고 가운데가 부풀었다 가늘어지며 사라짐
 - rfx_jburst  터짐 (카메라를 봄, 192×192 × 8장): 가운데 번쩍 · 퍼지는 충격 고리 · 빛 갈래 여덟 · 튀는 알갱이
@@ -271,9 +272,11 @@ def ring_frame(f, frames=8, S=192, core=False):
 
 
 def ring_sheet():
+    """빛 0 ~ 7 · 심지 8 ~ 15 (시계 방향) + 좌우를 뒤집은 빛 16 ~ 23 · 심지 24 ~ 31 (반시계 — 면을 아래로 눕히면 위에서 보이지 않아서 따로 그림)"""
     frames = 8
     cells = [rgba(ring_frame(f, frames, core=False)) for f in range(frames)] + [rgba(ring_frame(f, frames, core=True)) for f in range(frames)]
-    save("rfx_jring", sheet(cells, 4), 192, 192, "direction_z")
+    cells += [c.transpose(Image.FLIP_LEFT_RIGHT) for c in cells]
+    save("rfx_jring", sheet(cells, 8), 192, 192, "direction_z")
     return cells
 
 
