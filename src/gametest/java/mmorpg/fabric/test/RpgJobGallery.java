@@ -92,7 +92,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(0, new int[] {2, 6, 12}, new int[] {3, 8}, 18, false),
         new Case(1, new int[] {1, 6, 12}, new int[] {2, 12}, 18, false),
         new Case(2, new int[] {6, 25, 50, 71}, new int[] {20, 71}, 76, false),
-        new Case(3, new int[] {4, 20}, new int[] {6}, 40, true, false, 3),
+        new Case(3, new int[] {4, 20}, new int[] {6}, 40, true, false, 13),
         new Case(4, new int[] {10, 22, 34, 46, 58, 70, 74}, new int[] {22, 46, 70}, 84, false),
     };
     private static final Case[] CASES_AR = {
@@ -100,7 +100,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(1, new int[] {1, 3, 8}, new int[] {2, 6}, 30, false, true, 4),
         new Case(2, new int[] {3, 10, 26, 46}, new int[] {10, 30}, 52, false),
         new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
-        new Case(4, new int[] {8, 18, 25, 28, 40, 52}, new int[] {14, 26, 44}, 64, false),
+        new Case(4, new int[] {8, 18, 25, 31, 40, 52}, new int[] {14, 26, 32, 44}, 64, false),
     };
 
     private final List<String> failures = new ArrayList<>();
@@ -271,8 +271,10 @@ public final class RpgJobGallery implements FabricClientGameTest {
                     ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "job_%s_%02d%s", k.id(), shot, third ? "_3p" : "")).withSize(1280, 720));
                 }
                 if (c.stance() || c.buff()) {
-                    // 태세 · 강화 뒤 평타 (왼쪽 클릭 — 눈앞 과녁): 명경지수 두 번째 베기 · 마검 각성 잔상 · 투혼 · 마나 과부하 광선 · 정조준 관통 · 바람 타기 두 발
-                    ctx.getInput().pressMouse(InputConstants.MOUSE_BUTTON_LEFT);
+                    // 태세 · 강화 뒤 평타 (근접 = 왼쪽 클릭 — 눈앞 과녁, 활 · 완드 = 오른쪽 클릭 — 바람 타기로 물러나면 과녁이 손 닿는 거리 밖): 명경지수 두 번째 베기 ·
+                    // 마검 각성 잔상 · 투혼 · 마나 과부하 광선 · 정조준 관통 · 바람 타기 두 발
+                    boolean ranged = job.equals("archer") || job.equals("mage");
+                    ctx.getInput().pressMouse(ranged ? InputConstants.MOUSE_BUTTON_RIGHT : InputConstants.MOUSE_BUTTON_LEFT);
                     ctx.waitTicks(c.hitAt());
                     t += c.hitAt();
                     ctx.takeScreenshot(TestScreenshotOptions.of("job_" + k.id() + "_hit" + (third ? "_3p" : "")).withSize(1280, 720));

@@ -550,7 +550,7 @@ public final class RpgJobTests {
         steps.add(new Step(30, () -> {
             double want = expected(sp, j, j.skill(1), 3.9);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "돌격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(sp.position().z - mark[0] > 3 && z.get(0).position().z - sp.position().z < 2.2, "charged forward, stopped in front of the target: "
+            h.assertTrue(sp.position().z - mark[0] > 3 && z.get(0).position().z - sp.position().z < 2.6, "charged forward, stopped in front of the target: "
                     + (sp.position().z - mark[0]) + " / gap " + (z.get(0).position().z - sp.position().z));
             z.get(0).discard();
             home(h, sp);
@@ -726,6 +726,8 @@ public final class RpgJobTests {
         steps.add(new Step(8, () -> {
             z.set(0, dummyAhead(h, sp, 3.5));
             RpgCombat.forceCrit = false;
+            // 호흡 가득 (멈춰 쏘면 +1 이 붙는지는 바람 타기가 끝난 뒤 움직임을 재는 4틱 마디에 따라 달라짐 — 가득이면 그대로)
+            JobTraitsMore.setBreath(sp, 5);
             want0[0] = 2 * w.damage() * RpgCombat.powerOf(sp, w) * RpgCombat.basicMult.applyAsDouble(sp, w);
             RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
             h.assertTrue(JobTraitsMore.windShots(sp) == 1, "one wind shot used");

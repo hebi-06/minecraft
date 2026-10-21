@@ -171,7 +171,8 @@ final class WarriorSkills {
                     done[0] = true;
                     double sPrev = V.dot(V.sub(prev, start), f);
                     double near = 1e9;
-                    for (LivingEntity e : hit) near = Math.min(near, V.dot(V.sub(e.position(), start), f) - 0.9 - Kit.bodyPad(e));
+                    // 적 몸 1.5칸 앞에서 멈춤 (1인칭에서 들이받은 적이 화면을 다 가리지 않게 — 내려찍기는 그 앞까지 닿음)
+                    for (LivingEntity e : hit) near = Math.min(near, V.dot(V.sub(e.position(), start), f) - 1.5 - Kit.bodyPad(e));
                     double want = Math.max(sPrev, Math.min(len, near));
                     Kit.Spot best = null;
                     for (Kit.Spot x : spots) if (x.s() <= want + 0.05 && (best == null || x.s() > best.s())) best = x;
