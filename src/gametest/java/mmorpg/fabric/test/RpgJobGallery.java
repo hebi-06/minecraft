@@ -61,7 +61,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
      * 평타 뒤 사진 틱 (완드는 마법진을 다 그린 뒤)
      */
     /** 3인칭 사진을 앞 카메라로 찍는 스킬 (과녁 사이를 지나감) */
-    private static final java.util.Set<String> FRONT_3P = java.util.Set.of("assassin_shade", "lancer_vault", "reaper_wraith");
+    private static final java.util.Set<String> FRONT_3P = java.util.Set.of("lancer_vault", "reaper_wraith");
+    /** 순간 이동이 끝난 뒤 (4틱) 뒤로 돌아 찍는 스킬 — 잔영: 과녁 너머로 간 뒤 분신 · 끌려간 과녁을 1인칭 · 3인칭 뒤 카메라로 (앞 카메라는 몸이 분신을 가림) */
+    private static final java.util.Set<String> TURN_AFTER = java.util.Set.of("assassin_shade");
 
     private record Case(int slot, int[] shots, int[] shots3p, int total, boolean stance, boolean buff, int hitAt) {
         Case(int slot, int[] shots, int[] shots3p, int total, boolean stance) {
@@ -308,10 +310,24 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
                 ctx.getInput().releaseKey(o -> o.keyShift);
                 int t = 0;
+                boolean turned = false;
                 for (int shot : shots) {
                     if (shot > t) {
                         ctx.waitTicks(shot - t);
                         t = shot;
+                    }
+                    if (!turned && shot >= 4 && TURN_AFTER.contains(k.id())) {
+                        // 사진첩만: 뒤로 돎 (클라이언트 시점 — 스킬은 이미 끝난 순간 이동이라 그대로)
+                        ctx.runOnClient(mc -> {
+                            if (mc.player == null) return;
+                            float yaw = mc.player.getYRot() + 165F;
+                            mc.player.setYRot(yaw);
+                            mc.player.yRotO = yaw;
+                            mc.player.setYHeadRot(yaw);
+                        });
+                        ctx.waitTicks(1);
+                        t++;
+                        turned = true;
                     }
                     ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "job_%s_%02d%s", k.id(), shot, third ? "_3p" : "")).withSize(1280, 720));
                 }

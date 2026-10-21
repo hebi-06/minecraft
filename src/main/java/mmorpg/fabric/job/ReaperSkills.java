@@ -296,7 +296,8 @@ final class ReaperSkills {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
-                JobFx.gate(d, gateAt, gs, j, 1, 0.6, gateO.with("fade", 0.05, "phase", (mmorpg.fabric.Tasks.now() * 8 / 20.0) % 3)); // 소용돌이가 이어 돎
+                // 소용돌이가 이어 돎 · 수명은 다시 그리는 간격 (0.5초) 의 두 배 (solo 라 겹치지 않음 — 서버가 밀려 다음 그림이 늦어도 비지 않게: 사진에서 문이 빈 틱이 있었음)
+                JobFx.gate(d, gateAt, gs, j, 1, 1.0, gateO.with("fade", 0.05, "phase", (mmorpg.fabric.Tasks.now() * 8 / 20.0) % 3));
                 JobFx.smoke(d, V.up(ground, 0.3), 2.0, j, 0.6, Opt.of("alpha", 0.6));
                 for (int i = 0; i < 3; i++) {
                     double a = Kit.rand() * Math.PI * 2;

@@ -326,15 +326,12 @@ public final class SkillBarHud {
                         case "lancer" -> {
                             // 창날 (5 × 8 — 하나뿐이라 줄 높이만큼 크게: 5 × 5 는 글자 옆 점처럼 보였음, 사진 검토): 위가 뾰족한 잎 모양 날 · 아래 자루,
                             // 켜지면 첫째 빛 (금빛) + 가운데 흰 줄 (기세가 남은 동안 반짝임), 꺼지면 어두운 날
+                            // 마름모 날 (1 · 3 · 5 · 3 · 1) · 코등이 (3) · 자루 (1 × 2) — 글자처럼 오른쪽 아래 1칸 그림자 (어두운 판을 깔면 사람 모양처럼 보였음)
                             int c = i < v ? bright : dim;
                             int ty = y - 1;
-                            g.fill(bx + 1, ty, bx + 4, ty + 8, 0xC0000000);
-                            g.fill(bx, ty + 2, bx + 5, ty + 4, 0xC0000000);
-                            g.fill(bx + 2, ty, bx + 3, ty + 1, c);
-                            g.fill(bx + 1, ty + 1, bx + 4, ty + 2, c);
-                            g.fill(bx, ty + 2, bx + 5, ty + 4, c);
-                            g.fill(bx + 1, ty + 4, bx + 4, ty + 5, c);
-                            g.fill(bx + 2, ty + 5, bx + 3, ty + 8, i < v ? col : dim);
+                            int[][] rows = {{2, 3}, {1, 4}, {0, 5}, {1, 4}, {2, 3}, {1, 4}, {2, 3}, {2, 3}};
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0] + 1, ty + r + 1, bx + rows[r][1] + 1, ty + r + 2, 0xA0000000);
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, r < 5 ? c : i < v ? col : dim);
                             if (i < v) g.fill(bx + 2, ty + 1, bx + 3, ty + 4, 0xFFFFFFFF);
                         }
                         case "reaper" -> {
