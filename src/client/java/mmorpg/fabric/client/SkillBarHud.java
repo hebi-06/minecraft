@@ -127,7 +127,7 @@ public final class SkillBarHud {
             String hint = "§e[" + label(MmorpgClient.skillBarKey) + "] §7스킬 칸 §8· §7룬 우클릭 = 올리기";
             int tw = mc.font.width(hint);
             int tx = w - 4 - tw;
-            int ty = jl[1] - JOB_CAPTION - 12;
+            int ty = jl[1] - JOB_CAPTION - 12 - (ClientJobBar.stance().isEmpty() ? 0 : STANCE_LINE); // 태세 줄이 있으면 그 위
             g.fill(tx - 3, ty - 2, w - 1, ty + 9, 0x90000000);
             g.text(mc.font, hint, tx, ty, 0xFFFFFFFF, true);
         }
@@ -178,12 +178,12 @@ public final class SkillBarHud {
         if (empty && press >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.3F * (1 - press), 0xFFFFFF));
         if (deny >= 0) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.5F * (1 - deny), 0xFF2A2A));
         if (dim) g.fill(x, y, x + s, y + s, 0x88000000);
-        // 0.27.0 잠김: 어둡게 + 아래에 짧은 사유 (레벨 "15렙" · 무기 "무기" · 요구 스탯 "스탯" — 작은 글자)
+        // 0.27.0 잠김: 어둡게 + 아래에 짧은 사유 (해금 레벨 "15렙" · 든 무기의 레벨 · 직업 무기 아님 "무기" · 요구 스탯 "스탯" — 작은 글자)
         if (locked && !dim) {
             g.fill(x + 1, y + 1, x + s - 1, y + s - 1, 0xA0080610);
             String lock = ClientJobBar.lock(i);
-            String t = lock.endsWith("렙") ? lock : lock.contains("스탯") ? "스탯" : "무기";
-            int col = lock.endsWith("렙") ? 0xFFFFB04A : 0xFFFF6A6A;
+            String t = mmorpg.fabric.job.JobSkills.lockShort(lock);
+            int col = t.endsWith("렙") ? 0xFFFFB04A : 0xFFFF6A6A;
             float k = 0.75F;
             g.pose().pushMatrix();
             g.pose().translate(cx, y + s - 7);
@@ -203,7 +203,8 @@ public final class SkillBarHud {
 
     /**
      * 0.27.0 직업 칸 위 글자 (x, y = 왼쪽 위 · w = 칸 줄 너비): 직업 이름 (첫째 빛 → 둘째 빛 그라데이션, 직업이 없으면 "직업 스킬") + 자원 보석
-     * (검세 · 마력 각인 — 찬 것은 둘째 빛, 빈 것은 어두운 테두리, 다 차면 반짝임) · 오른쪽에 태세 이름과 남은 초 + 아래 남은 시간 줄
+     * (검세 · 마력 각인 — 찬 것은 둘째 빛, 빈 것은 어두운 테두리, 다 차면 반짝임). 이름 + 보석이 칸 줄보다 넓으면 (좁은 화면의 두 칸 배치) 칸 줄의 오른쪽 끝에
+     * 맞춤 (화면 밖으로 나가지 않게). 태세는 한 줄 위에 이름과 남은 초 (오른쪽 맞춤) + 칸 바로 위에 남은 시간 줄
      */
     static void drawJobCaption(GuiGraphicsExtractor g, Font font, int x, int y, int w, float partial, long now) {
         if (ClientJobBar.jobId().isEmpty()) {
@@ -212,15 +213,18 @@ public final class SkillBarHud {
         }
         int a = ClientJobBar.colorA();
         int b = ClientJobBar.colorB();
-        int tx = gradientText(g, font, ClientJobBar.jobName(), x, y, a, b);
+        String name = ClientJobBar.jobName();
         int max = ClientJobBar.gaugeMax();
+        int total = gradientWidth(font, name) + (max > 0 ? 4 + max * PIP - 1 : 0);
+        int x0 = total > w ? Math.max(2, x + w - total) : x;
+        int tx = gradientText(g, font, name, x0, y, a, b);
         if (max > 0) {
             int v = Math.min(max, ClientJobBar.gaugeValue());
             boolean full = v >= max;
             float pulse = full ? 0.5F + 0.5F * (float) Math.sin(now / 140.0) : 0;
             int px = tx + 4;
             for (int i = 0; i < max; i++) {
-                int bx = px + i * 6;
+                int bx = px + i * PIP;
                 int by = y + 1;
                 // 마름모 보석 (5 × 5): 바깥 어두운 테두리 + 안쪽 (찬 것은 둘째 빛)
                 g.fill(bx + 2, by, bx + 3, by + 5, 0xC0000000);
@@ -240,12 +244,28 @@ public final class SkillBarHud {
             double left = ClientJobBar.stanceLeft(partial);
             String t = stance + " " + String.format(Locale.ROOT, "%.1f", left);
             int sw = font.width(t);
-            g.text(font, t, x + w - sw, y, 0xFF000000 | a, true);
+            int sx = Math.max(2, x + w - sw);
+            g.text(font, t, sx, y - STANCE_LINE, 0xFF000000 | a, true);
             double frac = ClientJobBar.stanceFrac(partial);
             int bw = (int) Math.round(w * frac);
             g.fill(x, y + 10, x + w, y + 11, 0x80000000);
             g.fill(x + w - bw, y + 10, x + w, y + 11, 0xFF000000 | b);
         }
+    }
+
+    /** 자원 보석 간격 · 태세 줄 높이 (직업 이름 줄 위) */
+    static final int PIP = 6;
+    static final int STANCE_LINE = 11;
+
+    /** gradientText 로 그릴 때의 너비 (글자마다 굵게) */
+    static int gradientWidth(Font font, String text) {
+        int wsum = 0;
+        for (int off = 0; off < text.length(); ) {
+            int cp = text.codePointAt(off);
+            wsum += font.width("§l" + new String(Character.toChars(cp)));
+            off += Character.charCount(cp);
+        }
+        return wsum;
     }
 
     /** 글자마다 a → b 로 바뀌는 색 (굵게) — 그린 끝 x */

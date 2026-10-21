@@ -190,6 +190,16 @@ public final class JobTraits {
         return skillId.equals(st.stance) && st.stanceUntil > Tasks.now();
     }
 
+    /**
+     * 마검 각성이 더한 사거리 칸 (걸린 속성 수정치 — 없으면 0). 시험 · 표시용: 창작 모드의 사거리 +2 (ServerPlayer 가 틱마다 붙임) 와 섞이지 않게
+     * 값 대신 이 수정치를 봄
+     */
+    public static double reachBonus(ServerPlayer sp) {
+        AttributeInstance a = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+        AttributeModifier m = a == null ? null : a.getModifier(REACH_ID);
+        return m == null ? 0 : m.amount();
+    }
+
     private static void endStance(ServerPlayer sp) {
         AttributeInstance a = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
         if (a != null) a.removeModifier(REACH_ID);

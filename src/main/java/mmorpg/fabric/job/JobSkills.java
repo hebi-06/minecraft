@@ -186,6 +186,26 @@ public final class JobSkills {
     }
 
     /** 칸 i 의 키 (Shift + 룬 칸 i 의 키): 그 직업 스킬을 씀. 나갔으면 true */
+    /**
+     * 잠김 사유 (Skill.lock — "30렙" · "무기 40렙" · "요구 스탯" · 직업 무기 이름) → 알림 · 툴팁 문장: "30렙부터", "든 무기는 40렙부터", "든 무기의 요구 스탯이
+     * 모자람", "칼 을(를) 들어야 함" (서버 알림 · 클라이언트 스킬 칸 창이 같이 씀)
+     */
+    public static String lockText(String lock) {
+        if (lock == null || lock.isEmpty()) return "";
+        if (lock.startsWith("무기 ") && lock.endsWith("렙")) return "든 무기는 " + lock.substring(3) + "부터";
+        if (lock.endsWith("렙")) return lock + "부터";
+        if (lock.contains("스탯")) return "든 무기의 요구 스탯이 모자람";
+        return lock + " 을(를) 들어야 함";
+    }
+
+    /** HUD 칸 아래의 짧은 사유: 해금 레벨 "30렙" 그대로, 든 무기 레벨 · 직업 무기 아님 "무기", 요구 스탯 "스탯" */
+    public static String lockShort(String lock) {
+        if (lock == null || lock.isEmpty()) return "";
+        if (lock.startsWith("무기 ")) return "무기";
+        if (lock.endsWith("렙")) return lock;
+        return lock.contains("스탯") ? "스탯" : "무기";
+    }
+
     public static boolean press(ServerPlayer sp, int i) {
         if (sp == null || i < 0 || i >= SIZE || sp.isRemoved() || sp.isSpectator() || sp.isDeadOrDying()) return false;
         Skill s = skill(sp, i);
@@ -197,7 +217,7 @@ public final class JobSkills {
         }
         String lock = s.lock(sp);
         if (lock != null && !lock.isEmpty()) {
-            Notify.notify(sp, "§c" + s.name() + " §7— " + lock, 30);
+            Notify.notify(sp, "§c" + s.name() + " §7— " + lockText(lock), 30);
             return false;
         }
         if (Status.blockedBySilence(sp)) return false; // 보스 기믹: 침묵 (룬과 같음)

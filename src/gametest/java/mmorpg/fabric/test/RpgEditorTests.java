@@ -257,17 +257,23 @@ public final class RpgEditorTests {
             Forms.answer(sp, 0, List.of("  안녕하신가|모험가여  "));
             h.assertTrue(NpcData.greeting(npc).equals("안녕하신가|모험가여"), "greeting " + NpcData.greeting(npc));
 
-            // 상점 10렙 + 대장장이
+            // 상점 10렙 + 대장장이 + 직업 교관 (0.27.0 넷째 토글)
             Forms.answer(sp, S_ROLES, null);
-            h.assertTrue(isModal(sp, "상점·대장장이·룬술사") && inputs(sp).equals(List.of("0", "false", "false")), "roles window " + what(sp));
+            h.assertTrue(isModal(sp, "상점·대장장이·룬술사·교관") && inputs(sp).equals(List.of("0", "false", "false", "false")), "roles window " + what(sp));
             String lv10 = String.valueOf(Rules.get().numbers("LEVELS").indexOf(10.0) + 1);
-            Forms.answer(sp, 0, List.of(lv10, "true", "false"));
-            h.assertTrue(NpcData.shopLevel(npc) == 10 && NpcData.isSmith(npc) && !NpcData.isRunesmith(npc), "roles " + npc.entityTags());
-            h.assertTrue(npc.entityTags().containsAll(List.of("rpg_shop", "rpg_shop_lv_10", "rpg_smith")), "tags " + npc.entityTags());
+            Forms.answer(sp, 0, List.of(lv10, "true", "false", "true"));
+            h.assertTrue(NpcData.shopLevel(npc) == 10 && NpcData.isSmith(npc) && !NpcData.isRunesmith(npc) && NpcData.isJobTrainer(npc), "roles " + npc.entityTags());
+            h.assertTrue(npc.entityTags().containsAll(List.of("rpg_shop", "rpg_shop_lv_10", "rpg_smith", "rpg_job")), "tags " + npc.entityTags());
             String tag = nameTag(npc);
-            h.assertTrue(tag.contains("[상점]") && tag.contains("[대장장이]") && tag.contains("(10렙)") && !tag.contains("[!]"), "name tag " + tag);
+            h.assertTrue(tag.contains("[상점]") && tag.contains("[대장장이]") && tag.contains("[직업 교관]") && tag.contains("(10렙)") && !tag.contains("[!]"),
+                    "name tag " + tag);
             Forms.answer(sp, S_ROLES, null);
-            h.assertTrue(inputs(sp).equals(List.of(lv10, "true", "false")), "roles window shows the settings " + inputs(sp));
+            h.assertTrue(inputs(sp).equals(List.of(lv10, "true", "false", "true")), "roles window shows the settings " + inputs(sp));
+            // 직업 교관만 끔 (아래는 상점 · 대장장이 NPC 로 시험)
+            Forms.answer(sp, 0, List.of(lv10, "true", "false", "false"));
+            h.assertTrue(!NpcData.isJobTrainer(npc) && !nameTag(npc).contains("[직업 교관]") && NpcData.isSmith(npc), "job trainer off " + npc.entityTags());
+            Forms.answer(sp, S_ROLES, null);
+            h.assertTrue(inputs(sp).equals(List.of(lv10, "true", "false", "false")), "roles window after job off " + inputs(sp));
             Forms.answer(sp, -1, null); // 닫으면 그대로
             h.assertTrue(isMenu(sp, "NPC 설정") && NpcData.shopLevel(npc) == 10 && NpcData.isSmith(npc), "closing keeps roles " + what(sp));
 

@@ -387,7 +387,6 @@ public final class RpgJobTests {
         Jobs.Job j = Jobs.job("spellblade");
         Weapon w = Weapons.weaponFrom("sword", 0, "common");
         List<Husk> z = new ArrayList<>(List.of(dummy(h, 2.5)));
-        double reach0 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
         List<Step> steps = new ArrayList<>();
         steps.add(new Step(1, () -> {
             home(h, sp);
@@ -434,9 +433,12 @@ public final class RpgJobTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2));
+            // 사거리는 같은 틱의 앞뒤를 비교 (시험 플레이어는 창작 모드 — 첫 틱에 사거리 +2 가 붙음)
+            double r0 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
             h.assertTrue(JobSkills.press(sp, 3), "마검 각성 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "spellblade_awaken") && Math.abs(sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) - reach0 - 1) < 1e-9,
-                    "awaken: stance, reach +1");
+            h.assertTrue(JobTraits.stanceOn(sp, "spellblade_awaken"), "awaken stance");
+            double r1 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
+            h.assertTrue(JobTraits.reachBonus(sp) == 1 && Math.abs(r1 - r0 - 1) < 1e-9, "awaken reach +1: bonus " + JobTraits.reachBonus(sp) + ", " + r0 + " -> " + r1);
         }));
         // 마검 각성: 평타 + 위력 × 0.93 잔상
         steps.add(new Step(12, () -> {
@@ -460,8 +462,11 @@ public final class RpgJobTests {
             h.assertTrue(JobTraits.marks(sp, z.get(0)) == 0, "all marks detonated");
         }));
         chain(h, steps, 0, () -> {
+            double during = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
+            h.assertTrue(JobTraits.stanceOn(sp, "spellblade_awaken") && JobTraits.reachBonus(sp) == 1, "awaken still on at the end");
             cleanup(sp);
-            h.assertTrue(Math.abs(sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) - reach0) < 1e-9, "reach restored on job change");
+            double after = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
+            h.assertTrue(JobTraits.reachBonus(sp) == 0 && Math.abs(during - after - 1) < 1e-9, "reach restored on job change: " + during + " -> " + after);
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });

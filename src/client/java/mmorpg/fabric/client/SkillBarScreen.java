@@ -298,8 +298,7 @@ public final class SkillBarScreen extends Screen {
                 lines.add(Component.literal(ClientJobBar.name(hoverJob)).withColor(ClientJobBar.colorA()));
                 String lock = ClientJobBar.lock(hoverJob);
                 if (!lock.isEmpty()) {
-                    String why = lock.endsWith("렙") ? lock + "부터" : lock.contains("스탯") ? "든 무기의 요구 스탯이 모자람" : lock + " 을(를) 들어야 함";
-                    lines.add(Component.literal(BedrockText.toJava("§c잠김 §7— " + why)));
+                    lines.add(Component.literal(BedrockText.toJava("§c잠김 §7— " + mmorpg.fabric.job.JobSkills.lockText(lock))));
                 }
                 double cd = ClientJobBar.cooldownLeft(hoverJob, partialTick);
                 if (cd > 0.05) lines.add(Component.literal(BedrockText.toJava("§7재사용 대기 §f" + String.format(java.util.Locale.ROOT, "%.1f", cd) + "초")));

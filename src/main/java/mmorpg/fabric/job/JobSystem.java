@@ -139,9 +139,12 @@ public final class JobSystem {
         if (RpgCombat.reqLevelOf(sp) < need) return need + "렙";
         Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
         if (w == null || !j.usesWeapon(w.type())) return j.weaponText();
-        if (!RpgCombat.lackOf(sp, w).isEmpty()) return "요구 스탯";
+        List<mmorpg.core.Weapons.Lack> lack = RpgCombat.lackOf(sp, w);
+        for (mmorpg.core.Weapons.Lack l : lack) if (l.isLevel()) return "무기 " + Js.str(l.value()) + "렙"; // 든 무기의 레벨이 모자람
+        if (!lack.isEmpty()) return "요구 스탯";
         return "";
     }
+
 
     /** 칸 그림 (직업 문장 · 스킬 그림이 나오기 전 임시: 그 직업 전용 룬 계열의 그림 — 칸마다 등급 하나씩, 전용 룬이 없으면 직업 무기) */
     static ItemStack icon(Jobs.Job j, int slot) {
@@ -183,7 +186,7 @@ public final class JobSystem {
         public boolean cast(ServerPlayer sp) {
             String lock = lockOf(sp, job, k);
             if (!lock.isEmpty()) {
-                Notify.notify(sp, "§c" + k.name() + " §7— " + lock, 30);
+                Notify.notify(sp, "§c" + k.name() + " §7— " + JobSkills.lockText(lock), 30);
                 return false;
             }
             // 0.26.0 지속 보정: 시간이 걸리거나 장판인 스킬은 위력 × (1 + 5 ~ 15%) — 룬과 같은 단계 (Jobs.spreadMult)
@@ -287,7 +290,7 @@ public final class JobSystem {
             if (k == null) continue;
             String lock = lockOf(sp, j, k);
             String key = "⇧" + "RZVBY".charAt(i);
-            Notify.say(sp, " §e" + key + " §f" + Jobs.skillLine(k) + (lock.isEmpty() ? " §a준비" : " §c잠김 (" + lock + ")"));
+            Notify.say(sp, " §e" + key + " §f" + Jobs.skillLine(k) + (lock.isEmpty() ? " §a준비" : " §c잠김 (" + JobSkills.lockText(lock) + ")"));
         }
         return 1;
     }

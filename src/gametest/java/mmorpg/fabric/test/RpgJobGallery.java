@@ -144,8 +144,10 @@ public final class RpgJobGallery implements FabricClientGameTest {
     // ------------------------------------------------------------ HUD
 
     private void hud(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
-        // 20렙: 칸 4 · 5 (30 · 40렙) 잠김
+        // 20렙 + 20렙 칼 (둘째 칸): 칸 4 · 5 (30 · 40렙) 만 잠김
         server.runCommand("xp set @a 20 levels");
+        server.runCommand("item replace entity @a hotbar.1 with rpg:sword_l20_rare");
+        ctx.getInput().pressKey(options -> options.keyHotbarSlots[1]);
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             mmorpg.fabric.RpgPlayers.update(sp, mmorpg.fabric.RpgData.of(sp).withLvmax(20));
@@ -155,7 +157,13 @@ public final class RpgJobGallery implements FabricClientGameTest {
         ctx.waitTicks(6);
         shot(ctx, "job_hud_locked");
         check(ctx.computeOnClient(mc -> ClientJobBar.lock(3).equals("30렙") && ClientJobBar.lock(4).equals("40렙") && ClientJobBar.lock(0).isEmpty()),
-                "locks at 20: '" + ctx.computeOnClient(mc -> ClientJobBar.lock(3) + "' '" + ClientJobBar.lock(4)) + "'");
+                "locks at 20: '" + ctx.computeOnClient(mc -> ClientJobBar.lock(0) + "' '" + ClientJobBar.lock(3) + "' '" + ClientJobBar.lock(4)) + "'");
+        // 20렙에 40렙 칼 (첫째 칸): 칸 1 ~ 3 은 든 무기의 레벨로 잠김 ("무기 40렙" — HUD 는 "무기")
+        ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
+        ctx.waitTicks(10);
+        shot(ctx, "job_hud_weapon_level");
+        check(ctx.computeOnClient(mc -> ClientJobBar.lock(0).equals("무기 40렙") && ClientJobBar.lock(3).equals("30렙")),
+                "weapon level lock: '" + ctx.computeOnClient(mc -> ClientJobBar.lock(0)) + "'");
         server.runCommand("xp set @a 40 levels");
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);

@@ -329,7 +329,7 @@ public final class NpcEditor {
         new MenuForm("NPC 설정 · " + name, String.join("\n", info))
                 .button("이름 바꾸기", Icon.of("textures/items/name_tag"))
                 .button("인사말 바꾸기", Icon.of("textures/items/book_writable"))
-                .button("상점·대장장이·룬술사 설정", Icon.of("textures/items/emerald"))
+                .button("상점·대장장이·룬술사·교관 설정", Icon.of("textures/items/emerald"))
                 .button("퀘스트 추가", DialogForm.NEW)
                 .button("퀘스트 목록·수정 §8(" + list.size() + "개)", Icon.of("textures/items/book_normal"))
                 .button("대화 미리보기", Icon.of("textures/items/paper"))
@@ -367,12 +367,12 @@ public final class NpcEditor {
                 });
     }
 
-    /** 상점 · 대장장이 · 룬술사 설정 */
+    /** 상점 · 대장장이 · 룬술사 · 직업 교관 설정 */
     private static void roleFlow(ServerPlayer sp, Entity npc, int lv, Runnable then) {
         List<String> opts = new ArrayList<>();
         opts.add("상점 아님");
         for (double l : LEVELS) opts.add(Js.str(l) + "렙 무기 상점 (갑옷 · 전리품 팔기)");
-        new ModalForm("상점·대장장이·룬술사 설정")
+        new ModalForm("상점·대장장이·룬술사·교관 설정")
                 .dropdown("lv", "이 NPC를 누르면 여는 상점", opts, lv >= 0 ? LEVELS.indexOf((double) lv) + 1 : 0)
                 .toggle("smith", "대장장이 §7(무기 강화 +1~+10 · 영웅 무기 레벨 30→35→40렙)", NpcData.isSmith(npc))
                 .toggle("runesmith", "룬술사 §7(룬 갈기 → 룬 조각 → 룬 뽑기권 · 같은 룬 돌파)", NpcData.isRunesmith(npc))
