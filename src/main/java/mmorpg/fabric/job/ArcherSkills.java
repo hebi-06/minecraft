@@ -341,7 +341,7 @@ final class ArcherSkills {
             Vec3 at = V.add(from, look, dd);
             int delay = (int) Math.round(dd / speed * 20);
             double sz = 0.32 + Math.min(0.3, dd * 0.008);
-            RuneKit.later(delay, () -> JobFx.burst(level, at, sz, j, 0.34, Opt.of("alpha", 0.9)));
+            RuneKit.later(delay, () -> JobFx.burst(level, at, sz, j, 0.5, Opt.of("alpha", 0.9)));
         }
         // 화살이 지나가며 남기는 충격 고리 (화살 쪽을 봄 — 1인칭에서는 과녁 둘레로 겹겹이 퍼지는 고리)
         for (double dd : new double[] {3, 6, 10, 15, 21, 28, 36}) {
@@ -349,7 +349,7 @@ final class ArcherSkills {
             Vec3 ringAt = V.add(from, look, dd);
             int delay = (int) Math.round(dd / speed * 20);
             double rr = 0.9 + dd * 0.035;
-            RuneKit.later(delay, () -> JobFx.ringFacing(level, ringAt, rr, j, V.scale(look, -1), 0.4, Opt.of("alpha", 0.9)));
+            RuneKit.later(delay, () -> JobFx.ringFacing(level, ringAt, rr, j, V.scale(look, -1), 0.55, Opt.of("alpha", 0.9)));
         }
         SkillFx.beamAway(level, sp.getEyePosition(), from, end, core, Opt.of("half", 0.4, "thick", 0.45, "life", len / speed + 0.4, "alpha", 0.9, "sweep",
                 len / speed), 2.4);
