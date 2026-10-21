@@ -311,7 +311,7 @@ final class ReaperSkills {
                 }
             }
             SkillFx.play(d, "particle.soul_escape", ground, 0.5, 1.0);
-            SkillFx.play(d, "mob.warden.dig", ground, 1.2, 0.6);
+            SkillFx.play(d, "entity.warden.dig", ground, 1.2, 0.6);
         });
         // 빨아냄: 둘레의 적마다 drain · 혼 +1 · 적 → 문으로 혼불
         for (int i = 0; i < drains; i++) {

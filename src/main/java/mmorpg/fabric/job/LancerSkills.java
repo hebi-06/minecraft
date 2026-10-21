@@ -301,9 +301,23 @@ final class LancerSkills {
         return true;
     }
 
+    /** 앞 부채꼴 (보는 쪽 수평 arc° · reach 칸) 의 적 — 가까워도 옆 · 뒤는 아님 (RuneKit.coneTargets 는 1.2칸 안을 방향 없이 셈), 벽 뒤 제외 · 가까운 순 max 명 */
+    private static List<LivingEntity> front(ServerPlayer sp, double reach, double arc, int max) {
+        Vec3 c = sp.position();
+        Vec3 head = sp.getEyePosition();
+        Vec3 f = Kit.facingOf(sp);
+        double half = Math.toRadians(arc / 2);
+        List<LivingEntity> list = new ArrayList<>();
+        for (LivingEntity e : Kit.around(sp, c, reach, 3)) {
+            if (Kit.bodyInCone(e, c, f, half, 0.2) && Kit.lineOfSight(sp, head, Kit.bodyAt(e, head.y))) list.add(e);
+        }
+        list.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(sp)));
+        return list.size() > max ? new ArrayList<>(list.subList(0, max)) : list;
+    }
+
     /** 창벽의 자동 찌르기 한 번: 앞 부채꼴의 적마다 thrust — 찌르는 줄 · 창끝 번쩍 (1인칭은 그 적 쪽 눈앞 번쩍) */
     private static void wallThrust(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, String life) {
-        List<LivingEntity> list = RuneKit.coneTargets(sp, k.num("reach", 4), k.num("arc", 100), 6);
+        List<LivingEntity> list = front(sp, k.num("reach", 4), k.num("arc", 100), 6);
         if (list.isEmpty()) return;
         ServerLevel level = sp.level();
         Vec3 from = chest(sp);
