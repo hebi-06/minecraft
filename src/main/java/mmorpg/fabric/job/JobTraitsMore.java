@@ -525,7 +525,7 @@ public final class JobTraitsMore {
             case "warrior" -> rage(sp);
             case "mage" -> chain(sp);
             case "archer" -> breath(sp);
-            default -> 0;
+            default -> JobTraits3.gaugeValue(sp, j); // 0.29.0 표식 · 창끝 · 혼
         };
     }
 }

@@ -56,6 +56,17 @@ public final class RpgCombat {
     public static java.util.function.ToDoubleBiFunction<ServerPlayer, Weapon> basicMult = (p, w) -> 1;
 
     /**
+     * 0.29.0 근접 평타 배율 — 맞을 적을 아는 것 (창술사 「창끝」 사거리 끝자락 + · 암살자 암영의 첫 공격 ×, 1 = 그대로): basicMult 와 곱함 (치명타 · 더한 피해 전).
+     * 맞을 것이 생명체가 아니면 victim = null
+     */
+    @FunctionalInterface
+    public interface MeleeMult {
+        double mult(ServerPlayer sp, Weapon w, LivingEntity victim);
+    }
+
+    public static MeleeMult meleeMult = (sp, w, victim) -> 1;
+
+    /**
      * 0.28.0 활 · 완드 평타를 바꾸는 직업 특성 (job.JobTraitsMore — 궁수 호흡 · 정조준 · 바람 타기, 매지션 마나 과부하): 사거리 더하기 · 관통 · 쏜 뒤 (덧쏘기 · 연출)
      */
     public interface RangedMod {
@@ -107,6 +118,16 @@ public final class RpgCombat {
             rangedMod.fired(sp, w, target, from, dir, dist);
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] ranged fired", e);
+        }
+    }
+
+    static double meleeMultOf(ServerPlayer sp, Weapon w, LivingEntity victim) {
+        try {
+            double k = meleeMult.mult(sp, w, victim);
+            return k > 0 ? k : 1;
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] melee mult", e);
+            return 1;
         }
     }
 
@@ -471,8 +492,9 @@ public final class RpgCombat {
         Weapon w = weaponOf(p.getMainHandItem());
         if (w == null || !Combat.isMeleeWeapon(w)) return vanilla;
         double s = Math.max(0, Math.min(1, strength));
-        double dmg = w.damage() * powerOf(sp, w) * (0.2 + s * s * 0.8) * basicMultOf(sp, w); // 0.28.0 직업 특성 (전사 분노)
         LivingEntity victim = target instanceof LivingEntity le ? le : null;
+        // 0.28.0 직업 특성 (전사 분노) · 0.29.0 맞을 적을 아는 배율 (창끝 · 암영 첫 공격 — 치명타 확정은 rollCrit 의 sureCrit)
+        double dmg = w.damage() * powerOf(sp, w) * (0.2 + s * s * 0.8) * basicMultOf(sp, w) * meleeMultOf(sp, w, victim);
         boolean crit = rollCrit(sp, w, victim);
         if (crit) dmg *= critMultOf(sp, w);
         WeaponBonus bonus = victim != null ? weaponBonus(sp, victim, w, dmg) : null; // 마검 부여 · 평타 강화 룬

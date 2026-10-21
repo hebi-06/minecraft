@@ -80,6 +80,12 @@ public final class RpgHealth {
 
     public static LossHook lossHook = (p, src, loss, before, after) -> {};
 
+    /**
+     * 0.29.0 피해가 온 쪽을 아는 받는 피해 감소 (창술사 창벽 — 정면에서 온 피해 −30%, 사신 망령 걸음 — 1 = 받지 않음, 0 = 없음): Guards · 가호 감소와는 가장 센 것
+     * 하나, 방패 감소와는 곱함
+     */
+    public static java.util.function.ToDoubleBiFunction<ServerPlayer, DamageSource> sourceReduce = (p, src) -> 0;
+
     /** 결투 훅 (hp.js setDuelHooks — 6단계 결투가 넣음) */
     public interface DuelHooks {
         /** 결투 상대의 피해면 줄인 양 (× PVP.mult — 아니면 그대로) */
@@ -249,7 +255,14 @@ public final class RpgHealth {
         Guards.Guard g = Guards.of(sp);
         double gr = g != null ? g.reduce() : 0;
         double buff = Math.max(0, Math.min(0.95, buffReduce.applyAsDouble(sp))); // 0.19.0 세계수의 가호
-        double reduce = 1 - (1 - shield) * (1 - Math.max(gr, buff));
+        double sr = 0;
+        try {
+            sr = Math.max(0, Math.min(1, sourceReduce.applyAsDouble(sp, source))); // 0.29.0 창벽 정면 · 망령 걸음
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] source reduce", e);
+        }
+        double gsr = Math.max(gr, sr);
+        double reduce = 1 - (1 - shield) * (1 - Math.max(gsr, buff));
         // 스탯 트리 받는 피해 감소 (7단계): 방패 · 버프 감소 뒤에 곱함
         double tree = mmorpg.fabric.stattree.StatTrees.defMult(sp);
         double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce) * tree); // 결투 상대의 피해 × PVP.mult
@@ -262,9 +275,9 @@ public final class RpgHealth {
             loss -= cut;
             weakenSaved.saved(sp, from, cut);
         }
-        if (buff > gr && loss > 0) {
-            // 가호가 막아 준 양: 가호가 없었을 때 (Guards 감소만) 의 깎임 − 지금 깎임
-            double without = 1 - (1 - shield) * (1 - gr);
+        if (buff > gsr && loss > 0) {
+            // 가호가 막아 준 양: 가호가 없었을 때 (Guards · 창벽 감소만) 의 깎임 − 지금 깎임
+            double without = 1 - (1 - shield) * (1 - gsr);
             if (1 - reduce > 1e-6) buffSaved.accept(sp, loss * ((1 - without) / (1 - reduce) - 1));
         }
         boolean safe = isNonLethal(sp, source, raw);

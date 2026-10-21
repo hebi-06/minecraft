@@ -326,6 +326,9 @@ public final class Monsters {
         int packCalled = -1;
         /** 마지막 돌진에 맞은 사람을 밀어낸 속도 (없으면 null — 시험 · 사진첩) */
         Vec3 lastPush;
+        /** 0.29.0 미끼 (암살자 잔영): 이 틱까지 그 사람 대신 미끼 자리로 감 (없으면 null) */
+        Vec3 decoy;
+        long decoyUntil;
 
         Fight(RpgMonster m, Kind k, ServerPlayer p, long now) {
             this.m = m;
@@ -411,6 +414,11 @@ public final class Monsters {
         public Vec3 lastPush() {
             return lastPush;
         }
+
+        /** 0.29.0 미끼 자리 (미끼를 쫓는 중이 아니면 null — 시험) */
+        public Vec3 decoy() {
+            return decoy != null && decoyUntil > Tasks.now() ? decoy : null;
+        }
     }
 
     /** 멧돼지 돌진 하나: 준비 끝 틱 · 달리기 끝 틱 · 방향 (가로 단위) · 노린 사람, 달리는 중인지 · 맞혔는지 · 지난 틱 자리 · 막힌 틱 수 */
@@ -471,6 +479,44 @@ public final class Monsters {
         f.attackers.put(p.getUUID(), new Attacker(p, now));
         f.taunt = new Taunt(p.getUUID(), now + ticks);
         return true;
+    }
+
+    /**
+     * 0.29.0 미끼 (암살자 잔영): at 둘레 radius 칸 안에서 그 사람과 싸우던 몬스터가 ticks 동안 그 사람 대신 미끼 자리로 걸어감 (하던 공격 동작은 멈춤 — 끝나면 다시 그 사람).
+     * 바닐라 몹 (좀비 등) 은 그 사람을 놓고 미끼 자리로 감. 미끼를 쫓는 몬스터 · 몹 수
+     */
+    public static int decoy(ServerPlayer p, Vec3 at, double radius, int ticks) {
+        long now = Tasks.now();
+        int n = 0;
+        for (Fight f : FIGHTS.values()) {
+            if (f.m.isRemoved() || Kit.hasNoHealth(f.m) || (f.player != p && !f.attackers.containsKey(p.getUUID()))) continue;
+            if (f.m.position().distanceTo(at) > radius) continue;
+            f.decoy = at;
+            f.decoyUntil = now + ticks;
+            f.windup = null;
+            if (f.charge != null) endCharge(f, now, false);
+            f.m.setTarget(null);
+            f.m.getNavigation().moveTo(at.x, at.y, at.z, 1.0);
+            n++;
+        }
+        ServerLevel level = p.level();
+        for (net.minecraft.world.entity.Mob mob : level.getEntitiesOfClass(net.minecraft.world.entity.Mob.class, new AABB(at, at).inflate(radius),
+                x -> x.getTarget() == p && !(x instanceof RpgMonster))) {
+            mob.setTarget(null);
+            mob.getNavigation().moveTo(at.x, at.y, at.z, 1.0);
+            n++;
+        }
+        return n;
+    }
+
+    /** 미끼가 사라짐 (잔영이 터짐): 그 사람의 미끼를 쫓던 몬스터가 다시 그 사람을 노림 */
+    public static void endDecoy(ServerPlayer p) {
+        for (Fight f : FIGHTS.values()) {
+            if (f.decoy == null || (f.player != p && !f.attackers.containsKey(p.getUUID()))) continue;
+            f.decoy = null;
+            f.decoyUntil = 0;
+            if (!f.m.isRemoved() && f.player != null && !f.player.isRemoved()) f.m.setTarget(f.player);
+        }
     }
 
     // ------------------------------------------------------------ 연출
@@ -797,6 +843,17 @@ public final class Monsters {
             return;
         }
         f.paused = null;
+        if (f.decoy != null) {
+            // 0.29.0 미끼 (잔영): 그 자리로 걸어감 · 공격하지 않음 — 끝나면 다시 그 사람
+            if (now < f.decoyUntil) {
+                f.windup = null;
+                if (m.getTarget() != null) m.setTarget(null);
+                if (now % 10 == 0 && m.position().distanceTo(f.decoy) > 1.2) m.getNavigation().moveTo(f.decoy.x, f.decoy.y, f.decoy.z, 1.0);
+                return;
+            }
+            f.decoy = null;
+            m.setTarget(f.player);
+        }
         if (stunned(m)) {
             f.windup = null; // 기절 · 빙결 · 석화: 하던 동작도 끊김
             if (f.charge != null) endCharge(f, now, false);

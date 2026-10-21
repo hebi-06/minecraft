@@ -67,6 +67,9 @@ public final class JobSystem {
         WarriorSkills.register(); // 0.28.0
         MageSkills.register();
         ArcherSkills.register();
+        AssassinSkills.register(); // 0.29.0
+        LancerSkills.register();
+        ReaperSkills.register();
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);
@@ -199,14 +202,20 @@ public final class JobSystem {
             // 0.26.0 지속 보정: 시간이 걸리거나 장판인 스킬은 위력 × (1 + 5 ~ 15%) — 룬과 같은 단계 (Jobs.spreadMult)
             // 0.28.0 매지션 「주문 연쇄」: 4초 안에 다른 직업 스킬이면 위력 × (1 + 연쇄 × 12%)
             int chain = JobTraitsMore.chainNext(sp, job, k);
-            double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain);
+            // 0.29.0 창술사 「창끝」: 앞으로 움직이며 창 평타를 맞히면 5초 안의 다음 직업 스킬 위력 × (1 + 10%)
+            double boost = JobTraits3.castMult(sp, job);
+            double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain) * boost;
             NOTES.remove(sp.getUUID());
+            JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
             boolean ok = impl.cast(sp, job, k, P);
+            JobTraits3.afterCast(sp, job, k, ok);
             String note = NOTES.remove(sp.getUUID());
             if (ok) {
                 JobTraitsMore.chainCommit(sp, job, k, chain);
+                if (boost > 1) JobTraits3.castCommit(sp, job);
                 String chainText = chain > 0 ? " §e· 연쇄 ×" + chain + " +" + Math.round((JobTraitsMore.chainMult(job, chain) - 1) * 100) + "%" : "";
-                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + chainText + "§7)"
+                String boostText = boost > 1 ? " §6· 창끝 +" + Math.round((boost - 1) * 100) + "%" : "";
+                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + chainText + boostText + "§7)"
                         + (note != null ? " §8· " + note : ""), 24);
             }
             return ok;

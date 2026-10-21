@@ -261,7 +261,8 @@ public final class SkillBarHud {
         String name = ClientJobBar.jobName();
         int max = ClientJobBar.gaugeMax();
         String job = ClientJobBar.jobId();
-        // 0.28.0 자원이 큰 직업 (전사 분노 0 ~ 100) 은 막대, 나머지는 보석 (검세 · 각인 = 마름모, 매지션 연쇄 = 고리, 궁수 호흡 = 과녁)
+        // 0.28.0 자원이 큰 직업 (전사 분노 0 ~ 100) 은 막대, 나머지는 보석 (검세 · 각인 = 마름모, 매지션 연쇄 = 고리, 궁수 호흡 = 과녁,
+        // 0.29.0 암살자 표식 = 꽃, 창술사 창끝 = 창날, 사신 혼 = 혼불)
         boolean bar = max > 10;
         int gw = max <= 0 ? 0 : bar ? RAGE_W : max * PIP - 1;
         int total = gradientWidth(font, name) + (max > 0 ? 4 + gw : 0);
@@ -280,6 +281,8 @@ public final class SkillBarHud {
                     int by = y + 1;
                     int col = 0xFF000000 | lerp(b, 0xFFFFFF, pulse * 0.6F);
                     int dim = 0x80FFFFFF & (0xFF000000 | a);
+                    // 0.29.0 둘째 빛이 짙은 직업 (암살자 짙은 보라 · 사신 짙은 청록) 은 찬 것을 첫째 빛으로
+                    int bright = 0xFF000000 | lerp(a, 0xFFFFFF, 0.15F + pulse * 0.5F);
                     switch (job) {
                         case "mage" -> {
                             // 금빛 고리 (5 × 5): 찬 것은 고리 전체가 둘째 빛 + 가운데 흰 점
@@ -301,6 +304,44 @@ public final class SkillBarHud {
                             g.fill(bx, by + 1, bx + 1, by + 4, c);
                             g.fill(bx + 4, by + 1, bx + 5, by + 4, c);
                             g.fill(bx + 2, by + 2, bx + 3, by + 3, i < v ? 0xFFFFFFFF : dim);
+                        }
+                        case "assassin" -> {
+                            // 꽃 (5 × 5): 둥근 어두운 바탕 · 찬 것은 꽃잎 여덟 점 (첫째 빛) + 가운데 흰 점
+                            g.fill(bx + 1, by, bx + 4, by + 5, 0xC0000000);
+                            g.fill(bx, by + 1, bx + 5, by + 4, 0xC0000000);
+                            if (i < v) {
+                                g.fill(bx + 2, by, bx + 3, by + 1, bright);
+                                g.fill(bx + 2, by + 4, bx + 3, by + 5, bright);
+                                g.fill(bx, by + 2, bx + 1, by + 3, bright);
+                                g.fill(bx + 4, by + 2, bx + 5, by + 3, bright);
+                                g.fill(bx + 1, by + 1, bx + 2, by + 2, bright);
+                                g.fill(bx + 3, by + 1, bx + 4, by + 2, bright);
+                                g.fill(bx + 1, by + 3, bx + 2, by + 4, bright);
+                                g.fill(bx + 3, by + 3, bx + 4, by + 4, bright);
+                                g.fill(bx + 2, by + 2, bx + 3, by + 3, 0xFFFFFFFF);
+                            } else {
+                                g.fill(bx + 2, by + 2, bx + 3, by + 3, dim);
+                            }
+                        }
+                        case "lancer" -> {
+                            // 창날 (5 × 5): 위가 뾰족한 잎 모양 + 아래 자루 — 찬 것은 둘째 빛 (흰 금빛) + 가운데 줄
+                            int c = i < v ? col : dim;
+                            g.fill(bx + 1, by, bx + 4, by + 5, 0xC0000000);
+                            g.fill(bx + 2, by, bx + 3, by + 1, c);
+                            g.fill(bx + 1, by + 1, bx + 4, by + 3, c);
+                            g.fill(bx + 2, by + 3, bx + 3, by + 5, c);
+                            if (i < v) g.fill(bx + 2, by + 1, bx + 3, by + 3, 0xFFFFFFFF);
+                        }
+                        case "reaper" -> {
+                            // 혼불 (5 × 5): 위로 가늘어지는 불꽃 — 찬 것은 첫째 빛 (청록) + 아래 흰 심지
+                            g.fill(bx + 1, by, bx + 4, by + 5, 0xC0000000);
+                            g.fill(bx, by + 2, bx + 5, by + 5, 0xC0000000);
+                            int c = i < v ? bright : dim;
+                            g.fill(bx + 2, by, bx + 3, by + 1, c);
+                            g.fill(bx + 1, by + 1, bx + 4, by + 3, c);
+                            g.fill(bx, by + 3, bx + 5, by + 4, c);
+                            g.fill(bx + 1, by + 4, bx + 4, by + 5, c);
+                            if (i < v) g.fill(bx + 2, by + 3, bx + 3, by + 4, 0xFFFFFFFF);
                         }
                         default -> {
                             // 마름모 보석 (5 × 5): 바깥 어두운 테두리 + 안쪽 (찬 것은 둘째 빛)

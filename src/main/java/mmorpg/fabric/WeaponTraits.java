@@ -31,6 +31,28 @@ public final class WeaponTraits {
     /** 한 번에 번지는 적 수 상한 */
     static final int MAX_SPLASH = 6;
 
+    /** 0.29.0 낫 넓게 베기를 바꾸는 것 (사신 현신 — {범위 칸, 비율}, null = 그대로) */
+    @FunctionalInterface
+    public interface SweepMod {
+        double[] mod(ServerPlayer sp, Weapon w);
+    }
+
+    public static SweepMod sweepMod = (sp, w) -> null;
+
+    /** 0.29.0 넓게 베기가 다른 적에게 들어감 (사신 「혼」 — 맞힌 적마다 +1) */
+    public static java.util.function.BiConsumer<ServerPlayer, LivingEntity> swept = (sp, e) -> {};
+
+    /** 넓게 베기의 {범위, 비율} (직업 태세가 바꾸면 그것) */
+    static double[] sweepOf(ServerPlayer sp, Weapon w, Obj sweep) {
+        double[] m = null;
+        try {
+            m = sweepMod.mod(sp, w);
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] sweep mod", e);
+        }
+        return m != null && m.length >= 2 ? m : new double[] {sweep.num("range"), sweep.num("ratio")};
+    }
+
     /**
      * 근접 평타가 victim 에게 dealt 만큼 들어감 (crit = 치명타였는지)
      */
@@ -50,11 +72,16 @@ public final class WeaponTraits {
 
     /** 낫: 앞 부채꼴의 다른 적 */
     static List<LivingEntity> sweepTargets(ServerPlayer sp, LivingEntity victim, Obj sweep) {
+        return sweepTargets(sp, victim, sweep, sweep.num("range"));
+    }
+
+    /** 같은 것 — 범위 range 칸 (0.29.0 사신 현신) */
+    static List<LivingEntity> sweepTargets(ServerPlayer sp, LivingEntity victim, Obj sweep, double range) {
         Vec3 pos = sp.position();
         Vec3 f = Kit.facingOf(sp);
         double half = Math.toRadians(sweep.num("cone") / 2);
         List<LivingEntity> cone = new ArrayList<>();
-        for (LivingEntity e : Kit.around(sp, pos, sweep.num("range"), 2)) {
+        for (LivingEntity e : Kit.around(sp, pos, range, 2)) {
             if (e != victim && Kit.splashFoe(sp, e) && Kit.bodyInCone(e, pos, f, half, 0.6)) cone.add(e);
         }
         List<LivingEntity> out = Kit.visibleFrom(sp, sp.getEyePosition(), cone);
@@ -64,11 +91,17 @@ public final class WeaponTraits {
 
     private static void sweep(ServerPlayer sp, LivingEntity victim, Weapon w, boolean crit, double dealt, Obj sweep) {
         ServerLevel level = sp.level();
-        double amount = dealt * sweep.num("ratio");
+        double[] rr = sweepOf(sp, w, sweep);
+        double amount = dealt * rr[1];
         Obj style = Slash.styleOf(w);
         double[] glow = style != null && style.has("glow") ? Kit.rgb(style.get("glow")) : new double[] {0.66, 0.5, 1};
-        for (LivingEntity e : sweepTargets(sp, victim, sweep)) {
+        for (LivingEntity e : sweepTargets(sp, victim, sweep, rr[0])) {
             if (!Kit.applySkillDamage(sp, e, amount, crit, Kit.Cause.ATTACK, crit ? DamageNumbers.Style.CRIT : DamageNumbers.Style.NORMAL)) continue;
+            try {
+                swept.accept(sp, e);
+            } catch (RuntimeException err) {
+                Mmorpg.LOG.warn("[mmorpg] swept hook", err);
+            }
             Vec3 c = Kit.bodyPoint(e);
             Vec3 u = V.unit(V.sub(c, sp.getEyePosition()));
             Vec3 front = V.add(c, u, -0.35);

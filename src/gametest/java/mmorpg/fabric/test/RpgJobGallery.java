@@ -17,6 +17,7 @@ import mmorpg.fabric.job.JobSkills;
 import mmorpg.fabric.job.JobSystem;
 import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
+import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.rune.RuneCast;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -103,6 +104,29 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {8, 18, 25, 31, 40, 52}, new int[] {14, 26, 32, 44}, 64, false),
     };
 
+    /** 0.29.0 암살자 · 창술사 · 사신 (암영은 태세지만 평타가 풀므로 강화처럼 — 평타가 들어갔는지만) */
+    private static final Case[] CASES_AS = {
+        new Case(0, new int[] {2, 6, 12}, new int[] {3, 10}, 20, false),
+        new Case(1, new int[] {2, 6, 14, 30, 42}, new int[] {4, 20, 42}, 50, false),
+        new Case(2, new int[] {3, 8, 14, 20}, new int[] {6, 16}, 26, false),
+        new Case(3, new int[] {4, 16}, new int[] {6}, 24, false, true, 4),
+        new Case(4, new int[] {3, 8, 18, 28, 34, 41, 46}, new int[] {10, 30, 42}, 58, false),
+    };
+    private static final Case[] CASES_LA = {
+        new Case(0, new int[] {1, 6, 11, 16}, new int[] {2, 11}, 20, false),
+        new Case(1, new int[] {3, 7, 11, 14}, new int[] {5, 11}, 22, false),
+        new Case(2, new int[] {2, 8, 14}, new int[] {4, 12}, 24, false),
+        new Case(3, new int[] {4, 12, 22}, new int[] {6, 22}, 30, true),
+        new Case(4, new int[] {4, 12, 18, 24, 34, 52, 60, 66, 70}, new int[] {12, 24, 50, 66}, 80, false),
+    };
+    private static final Case[] CASES_RE = {
+        new Case(0, new int[] {2, 6, 12, 16}, new int[] {3, 13}, 22, false),
+        new Case(1, new int[] {1, 3, 6, 12}, new int[] {2, 6}, 34, false),
+        new Case(2, new int[] {1, 4, 7, 12}, new int[] {4, 8}, 16, false),
+        new Case(3, new int[] {4, 20}, new int[] {6}, 24, true),
+        new Case(4, new int[] {4, 14, 24, 44, 66, 76, 80}, new int[] {14, 44, 76}, 90, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
@@ -147,6 +171,19 @@ public final class RpgJobGallery implements FabricClientGameTest {
             part(ctx, "archer", () -> {
                 newJob(ctx, server, conn, "archer", "rpg:bow_l40_hero", 5, sp -> JobTraitsMore.setBreath(sp, 3));
                 skills(ctx, server, conn, "archer", CASES_AR);
+            });
+            // 0.29.0 암살자 · 창술사 · 사신 (핫바 셋째 칸 — 단검 · 창 · 낫)
+            part(ctx, "assassin", () -> {
+                newJob(ctx, server, conn, "assassin", "rpg:dagger_l40_hero", 5, sp -> markHusks(sp, 3));
+                skills(ctx, server, conn, "assassin", CASES_AS);
+            });
+            part(ctx, "lancer", () -> {
+                newJob(ctx, server, conn, "lancer", "rpg:lance_l40_hero", 1, sp -> JobTraits3.setMomentum(sp, true));
+                skills(ctx, server, conn, "lancer", CASES_LA);
+            });
+            part(ctx, "reaper", () -> {
+                newJob(ctx, server, conn, "reaper", "rpg:scythe_l40_hero", 10, sp -> JobTraits3.setSouls(sp, 6));
+                skills(ctx, server, conn, "reaper", CASES_RE);
             });
             server.runOnServer(s -> JobSystem.setJob(player(s), null));
             ctx.setScreen(() -> null);
@@ -255,6 +292,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
                     if (k.id().equals("archer_rapid")) JobTraitsMore.setBreath(sp, 3); // 4발
                     JobTraitsMore.setChain(sp, 0);
                     spawnHusks(sp.level());
+                    if (k.id().equals("assassin_bloom") || k.id().equals("assassin_ult")) markHusks(sp, 5); // 낙화 · 흑야: 표식 가득
+                    if (k.id().equals("reaper_burst")) JobTraits3.setSouls(sp, 10); // 혼 가득 → 큰 폭발
                 });
                 ctx.runOnClient(mc -> mc.options.setCameraType(third ? CameraType.THIRD_PERSON_BACK : CameraType.FIRST_PERSON));
                 ctx.waitTicks(12);
@@ -365,6 +404,17 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     private static ServerPlayer player(MinecraftServer s) {
         return s.getPlayerList().getPlayers().get(0);
+    }
+
+    /** 0.29.0 암살자: 과녁 허스크 (없으면 세움) 마다 표식 n — 가까운 것이 게이지 대상 (마지막에 찍음) */
+    private static void markHusks(ServerPlayer sp, int n) {
+        List<Husk> list = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true);
+        if (list.isEmpty()) {
+            spawnHusks(sp.level());
+            list = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true);
+        }
+        list.sort(java.util.Comparator.comparingDouble(h -> -h.distanceToSqr(sp)));
+        for (Husk h : list) JobTraits3.setMarks(sp, h, n);
     }
 
     /** 쓰러지지 않는 과녁 허스크 (받은 피해는 TestDummies.dealt) — 나를 봄 */

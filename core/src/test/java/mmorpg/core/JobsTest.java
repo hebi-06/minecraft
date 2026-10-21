@@ -26,6 +26,10 @@ public final class JobsTest {
         return Math.abs(a - b) < 1e-6;
     }
 
+    private static boolean near(double a, double b, double eps) {
+        return Math.abs(a - b) < eps;
+    }
+
     private static double sum(Jobs.Skill k, String key) {
         double s = 0;
         for (Object o : k.def().list(key)) s += ((Number) o).doubleValue();
@@ -79,10 +83,13 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job mg = Jobs.job("mage");
         Jobs.Job ar = Jobs.job("archer");
-        check(sw.ready() && sb.ready() && wa.ready() && mg.ready() && ar.ready() && Jobs.all().stream().filter(Jobs.Job::ready).count() == 5,
-                "ready: swordsman · spellblade · warrior · mage · archer (0.28.0)");
+        Jobs.Job as = Jobs.job("assassin");
+        Jobs.Job la = Jobs.job("lancer");
+        Jobs.Job re = Jobs.job("reaper");
+        check(sw.ready() && sb.ready() && wa.ready() && mg.ready() && ar.ready() && as.ready() && la.ready() && re.ready()
+                && Jobs.all().stream().filter(Jobs.Job::ready).count() == 8, "ready: swordsman · spellblade · warrior · mage · archer (0.28.0) · assassin · lancer · reaper (0.29.0)");
         Set<String> skillIds = new HashSet<>();
-        for (Jobs.Job j : List.of(sw, sb, wa, mg, ar)) {
+        for (Jobs.Job j : List.of(sw, sb, wa, mg, ar, as, la, re)) {
             for (Jobs.Skill k : j.skills()) check(!k.id().isEmpty() && k.id().startsWith(j.id() + "_") && skillIds.add(k.id()), "unique skill id " + k.id());
         }
         // 부분 합 = 배율 합
@@ -125,6 +132,38 @@ public final class JobsTest {
         check(Jobs.spreadKind(mg.skill(0)) == null && Jobs.spreadKind(mg.skill(1)) == null && "long".equals(Jobs.spreadKind(mg.skill(2)))
                 && "zone".equals(Jobs.spreadKind(mg.skill(4))), "mage spread");
         check(Jobs.spreadKind(ar.skill(0)) == null && "zone".equals(Jobs.spreadKind(ar.skill(2))) && "long".equals(Jobs.spreadKind(ar.skill(4))), "archer spread");
+        // 0.29.0 암살자 · 창술사 · 사신: 부분 합 = 배율 합 (설계 문서의 소수 한 자리 대신 틀 × 세기 그대로 — 4.75 · 2.85 · 8.55 / 7.25 · 4.35 · 13.05 / 6.25 · 3.75)
+        check(near(as.skill(0).num("base", 0) + as.skill(0).num("per", 0) * as.trait().max(), 4.75), "낙화 0.5 + 0.85 × 표식 5");
+        check(near(as.skill(1).num("blast", 0), 2.85) && near(as.skill(2).num("out", 0) + as.skill(2).num("back", 0), 8.55), "잔영 2.85 · 귀환 비수 4.275 × 2");
+        check(near(as.skill(4).num("slash", 0) * as.skill(4).num("slashes", 0) + as.skill(4).num("final", 0), 38), "흑야 3 × 6 + 20");
+        check(near(sum(la.skill(0), "hits"), 7.25) && la.skill(0).def().list("hits").size() == 3, "삼연창 2 + 2 + 3.25");
+        check(near(la.skill(1).num("slam", 0), 4.35) && near(la.skill(2).num("spin", 0) * la.skill(2).num("spins", 0), 13.05), "장대 도약 4.35 · 선회창 6.525 × 2");
+        check(near(la.skill(4).num("spear", 0) * la.skill(4).num("spears", 0) + la.skill(4).num("final", 0), 58)
+                && near(la.skill(4).num("spears", 0) % la.skill(4).num("waves", 1), 0), "천창유성 2 × 20 + 18 (물결마다 같은 수)");
+        check(near(la.skill(3).num("thrust", 0) * la.skill(3).num("dur", 0) / la.skill(3).num("every", 1) / 30, 0.5867, 1e-3), "창벽 1.1 × 16 / 30초 ≈ 0.58 P/초 (검사 태세 0.4 × 1.45)");
+        check(near(re.skill(0).num("swing", 0) * re.skill(0).num("swings", 0), 6.25) && near(re.skill(1).num("hit", 0), 3.75), "갈퀴 베기 3.125 × 2 · 망령 걸음 3.75");
+        check(near(re.skill(2).num("base", 0) * (1 + re.skill(2).num("per", 0) * 8), 11.2) && near(re.skill(2).num("base", 0) * (1 + re.skill(2).num("per", 0) * 10), 12),
+                "혼백 폭발 8 × (1 + 5% × 혼) — 혼 8 = 11.2 · 10 = 12");
+        check(near(re.skill(4).num("drain", 0) * re.skill(4).num("drains", 0) + re.skill(4).num("final", 0), 50), "황천문 3 × 6 + 32");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (흑야는 두 번 벨 때마다 한 번에 — every × 2, 비수가 돌아오는 길은 JobKit 이 무적 시간 뒤로 미룸)
+        check(as.skill(4).num("every", 0) * 2 >= 10 && as.skill(4).num("finalDelay", 0) >= 10 && as.skill(2).num("hold", 0) + as.skill(2).num("flight", 0) >= 10,
+                "assassin i-frame spacing");
+        check(la.skill(0).num("gap", 0) * 2 >= 10 && la.skill(2).num("gap", 0) >= 10 && la.skill(3).num("every", 0) >= 10 && la.skill(4).num("gap", 0) >= 10
+                && la.skill(4).num("finalDelay", 0) >= 10, "lancer i-frame spacing");
+        check(re.skill(0).num("gap", 0) >= 10 && re.skill(4).num("gap", 0) >= 10 && re.skill(4).num("finalDelay", 0) >= 10, "reaper i-frame spacing");
+        // 지속 보정: 잔영 (2초 안에 터짐) · 귀환 비수 · 흑야 → short, 천창유성 · 황천문 (장판) → zone, 나머지 한방
+        check(Jobs.spreadKind(as.skill(0)) == null && "short".equals(Jobs.spreadKind(as.skill(1))) && "short".equals(Jobs.spreadKind(as.skill(2)))
+                && "short".equals(Jobs.spreadKind(as.skill(4))), "assassin spread");
+        check(Jobs.spreadKind(la.skill(0)) == null && Jobs.spreadKind(la.skill(1)) == null && Jobs.spreadKind(la.skill(2)) == null
+                && "zone".equals(Jobs.spreadKind(la.skill(4))), "lancer spread");
+        check(Jobs.spreadKind(re.skill(0)) == null && Jobs.spreadKind(re.skill(1)) == null && Jobs.spreadKind(re.skill(2)) == null
+                && "zone".equals(Jobs.spreadKind(re.skill(4))), "reaper spread");
+        check(as.trait().max() == 5 && near(as.trait().def().num("back"), 0.25) && as.trait().def().num("backArc") == 120, "표식 5 · 등 뒤 +25%p · 120°");
+        check(la.trait().max() == 1 && near(la.trait().def().num("edgeBonus"), 0.15) && near(la.trait().def().num("momentum"), 0.1), "창끝 +15% · 다음 스킬 +10%");
+        check(re.trait().max() == 10 && re.trait().def().num("kill") == 3 && near(re.trait().def().num("speedPer"), 0.01) && near(re.trait().def().num("leechPer"), 0.001),
+                "혼 10 · 처치 +3 · 이동 1% · 흡혈 0.1%");
+        check(near(Jobs.power(as, Map.of("dex", 125.0, "lvmax", 40.0)), 42) && near(Jobs.power(la, Map.of("str", 89.0, "dex", 36.0, "lvmax", 40.0)), 42)
+                && near(Jobs.power(re, Map.of("dex", 89.0, "int", 36.0, "lvmax", 40.0)), 42), "assassin · lancer · reaper P 42");
         // 특성 수치
         check(wa.trait().max() == 100 && near(wa.trait().def().num("halfBonus"), 0.1) && near(wa.trait().def().num("fullBonus"), 0.2), "분노 0 ~ 100 · +10% · +20%");
         check(mg.trait().max() == 3 && near(mg.trait().def().num("perChain"), 0.12) && mg.trait().def().num("window") == 80, "주문 연쇄 3 · 12% · 4초");

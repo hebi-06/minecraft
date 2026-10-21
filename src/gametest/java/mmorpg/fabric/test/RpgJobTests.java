@@ -18,6 +18,7 @@ import mmorpg.fabric.job.JobSkills;
 import mmorpg.fabric.job.JobSystem;
 import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
+import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.stattree.StatTrees;
@@ -58,6 +59,9 @@ public final class RpgJobTests {
     static final String ENV_WA = "mmorpg:job_wa";
     static final String ENV_MG = "mmorpg:job_mg";
     static final String ENV_AR = "mmorpg:job_ar";
+    static final String ENV_AS = "mmorpg:job_as";
+    static final String ENV_LA = "mmorpg:job_la";
+    static final String ENV_RE = "mmorpg:job_re";
 
     // ------------------------------------------------------------ 도구
 
@@ -169,7 +173,7 @@ public final class RpgJobTests {
                 for (Jobs.Skill k : j.skills()) h.assertTrue(JobSystem.implemented(k.id()), "implemented " + k.id());
             }
             h.assertTrue(JobSkills.skill(sp, 0) == null && JobSystem.job(sp) == null, "no job: empty slots");
-            JobSystem.setJob(sp, "assassin");
+            JobSystem.setJob(sp, "paladin");
             h.assertTrue(JobSystem.job(sp) != null && JobSkills.skill(sp, 0) == null, "not-ready job: no slots yet");
             JobSystem.setJob(sp, "swordsman");
             JobSkills.Skill s0 = JobSkills.skill(sp, 0);
@@ -273,9 +277,9 @@ public final class RpgJobTests {
             FormNet.ChestPayload list = Forms.last(sp) instanceof FormNet.ChestPayload c ? c : null;
             h.assertTrue(list != null && list.slots().size() == 27, "card window");
             int sw = JobTrainer.slotOf("swordsman");
-            int war = JobTrainer.slotOf("assassin");
-            h.assertTrue(list.slots().get(sw).name().contains("검사") && list.slots().get(war).kind() == 3 && list.slots().get(JobTrainer.slotOf("warrior")).kind() != 3,
-                    "cards: swordsman, warrior ready, assassin dim (not ready)");
+            int war = JobTrainer.slotOf("paladin");
+            h.assertTrue(list.slots().get(sw).name().contains("검사") && list.slots().get(war).kind() == 3 && list.slots().get(JobTrainer.slotOf("assassin")).kind() != 3,
+                    "cards: swordsman, assassin ready, paladin dim (not ready)");
             // 준비 중인 직업 → 창 그대로 (안내)
             Forms.answer(sp, war, null);
             h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c2 && c2.body().contains("준비 중"), "not ready: back to the list");
@@ -770,6 +774,317 @@ public final class RpgJobTests {
         steps.add(new Step(70, () -> {
             double want = expected(sp, j, j.skill(4), 60);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "관천일시 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        chain(h, steps, 0, () -> {
+            cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 0.29.0 암살자
+
+    /** 과녁의 몸이 향한 쪽 (yaw — 0 = 남쪽) 을 정함 */
+    static void face(Husk z, float yaw) {
+        z.setYRot(yaw);
+        z.setYHeadRot(yaw);
+        z.setYBodyRot(yaw);
+    }
+
+    /**
+     * 암살자: 표식 (단검 평타 +1 · 등 뒤 치명타 +25%p) → 낙화 (표식 5 → 0.5 + 0.85 × 5) · 잔영 (분신이 닿으면 터짐 2.85) · 귀환 비수 (갈 때 · 올 때 4.275 × 2) · 암영
+     * (투명 · 첫 단검 평타 치명타 확정 × 2.5 · 풀리면 이동 +30% / 직업 스킬 첫 타 × 2.5) · 흑야 (3 × 6 + 20)
+     */
+    @GameTest(environment = ENV_AS, maxTicks = 460)
+    public void assassinSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = jobPlayer(h, "assassin", Map.of("dex", 50), 40);
+        Weapon w = Weapons.weaponFrom("dagger", 0, "common");
+        hold(sp, w);
+        Jobs.Job j = Jobs.job("assassin");
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 2)));
+        List<Step> steps = new ArrayList<>();
+        double[] want0 = {0, 0};
+        // 표식: 단검 평타 +1 · 등 뒤 (과녁이 남쪽을 봄 — 나는 북쪽) 면 치명타 +25%p
+        steps.add(new Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            double base = basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), base), "dagger basic " + TestDummies.dealt(z.get(0)) + " vs " + base);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 1, "dagger hit → 1 mark: " + JobTraits3.marks(sp, z.get(0)));
+            face(z.get(0), 180F);
+            double c0 = RpgCombat.critChanceOf(sp, w, z.get(0));
+            face(z.get(0), 0F);
+            double c1 = RpgCombat.critChanceOf(sp, w, z.get(0));
+            h.assertTrue(Math.abs(c1 - c0 - 0.25) < 1e-9 && JobTraits3.behind(sp, z.get(0), 120), "back crit +0.25: " + c0 + " -> " + c1);
+        }));
+        // 낙화: 표식 5 → 4.75 (숫자 여섯 줄), 표식이 사라짐
+        steps.add(new Step(12, () -> {
+            RpgCombat.forceCrit = null;
+            z.get(0).discard();
+            z.set(0, dummy(h, 2));
+            JobTraits3.setMarks(sp, z.get(0), 5);
+            h.assertTrue(JobSkills.press(sp, 0), "낙화 cast");
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 0, "marks used");
+        }));
+        steps.add(new Step(14, () -> {
+            double want = expected(sp, j, j.skill(0), 4.75);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "낙화 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 1.2));
+            want0[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "잔영 cast");
+        }));
+        // 잔영: 앞으로 옮겨 감 · 원래 자리 분신에 닿은 과녁 → 터짐 2.85 (지속 보정 short)
+        steps.add(new Step(10, () -> {
+            double want = expected(sp, j, j.skill(1), 2.85);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "잔영 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - want0[0] > 4, "teleported ahead: " + (sp.position().z - want0[0]));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 3));
+            h.assertTrue(JobSkills.press(sp, 2), "귀환 비수 cast");
+        }));
+        // 귀환 비수: 갈 때 · 올 때 한 번씩
+        steps.add(new Step(30, () -> {
+            double want = expected(sp, j, j.skill(2), 8.55);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "귀환 비수 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 2));
+            h.assertTrue(JobSkills.press(sp, 3), "암영 cast");
+            h.assertTrue(JobTraits3.veilOn(sp) && JobTraits.stanceOn(sp, "assassin_veil") && sp.hasEffect(net.minecraft.world.effect.MobEffects.INVISIBILITY),
+                    "veil: stealth stance, invisible");
+        }));
+        // 암영 중 첫 단검 평타: 치명타 확정 × 2.5 → 풀림 · 이동 +30%
+        steps.add(new Step(4, () -> {
+            double base = basic(sp, w);
+            sp.attack(z.get(0));
+            double want = base * 2.5 * RpgCombat.critMultOf(sp, w);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "veil first hit " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!JobTraits3.veilOn(sp) && !JobTraits.stanceOn(sp, "assassin_veil") && !sp.hasEffect(net.minecraft.world.effect.MobEffects.INVISIBILITY),
+                    "attack breaks the veil");
+            h.assertTrue(Math.abs(JobTraits3.speedBonus(sp, false) - 0.3) < 1e-9, "speed +30% after veil: " + JobTraits3.speedBonus(sp, false));
+        }));
+        // 암영 중 직업 스킬: 첫 타 × 2.5 (낙화 — 표식 0 → 0.5)
+        steps.add(new Step(4, () -> {
+            z.get(0).discard();
+            z.set(0, dummy(h, 2));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 3) && JobTraits3.veilOn(sp), "암영 again");
+            h.assertTrue(JobSkills.press(sp, 0), "낙화 from stealth");
+            h.assertTrue(!JobTraits3.veilOn(sp), "job skill breaks the veil");
+        }));
+        steps.add(new Step(6, () -> {
+            double want = expected(sp, j, j.skill(0), 0.5 * 2.5);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "낙화 from stealth × 2.5 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 3));
+            h.assertTrue(JobSkills.press(sp, 4), "흑야 cast");
+        }));
+        steps.add(new Step(60, () -> {
+            double want = expected(sp, j, j.skill(4), 38);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "흑야 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        chain(h, steps, 0, () -> {
+            cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 0.29.0 창술사
+
+    /**
+     * 창술사: 창끝 (사거리 끝 1칸 안 평타 +15% · 기세 → 다음 직업 스킬 +10%) → 삼연창 (2 + 2 + 3.25) · 장대 도약 (4.35) · 선회창 (6.525 × 2) · 창벽 (0.5초마다 1.1 ·
+     * 정면 −30%) · 천창유성 (2 × 20 + 18 — 장판)
+     */
+    @GameTest(environment = ENV_LA, maxTicks = 440)
+    public void lancerSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = jobPlayer(h, "lancer", Map.of("str", 50, "dex", 20), 40);
+        Weapon w = Weapons.weaponFrom("lance", 0, "common");
+        hold(sp, w);
+        Jobs.Job j = Jobs.job("lancer");
+        List<Husk> z = new ArrayList<>();
+        List<Step> steps = new ArrayList<>();
+        double[] mark = {0};
+        // 창끝: 사거리 끝 (몸 상자까지 사거리 − 0.8 — 끝 1칸 안) 은 평타 × 1.15, 가까우면 그대로
+        steps.add(new Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            double r = sp.entityInteractionRange();
+            z.add(dummy(h, Math.min(6.2, r - 0.5)));
+            h.assertTrue(JobTraits3.edgeHit(sp, z.get(0), 1.0), "edge distance (reach " + r + ")");
+            double base = basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), base * 1.15), "edge +15% " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.15);
+        }));
+        steps.add(new Step(14, () -> {
+            z.get(0).discard();
+            z.set(0, dummy(h, 2));
+            h.assertFalse(JobTraits3.edgeHit(sp, z.get(0), 1.0), "near is not the edge");
+            double base = basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), base), "near basic " + TestDummies.dealt(z.get(0)) + " vs " + base);
+            RpgCombat.forceCrit = null;
+            // 기세 → 삼연창 +10%
+            z.get(0).discard();
+            z.set(0, dummy(h, 3));
+            JobTraits3.setMomentum(sp, true);
+            h.assertTrue(JobSkills.press(sp, 0), "삼연창 cast");
+            h.assertFalse(JobTraits3.momentum(sp), "momentum used");
+        }));
+        steps.add(new Step(16, () -> {
+            double want = expected(sp, j, j.skill(0), 7.25) * 1.1;
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "삼연창 (기세 +10%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 5));
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "장대 도약 cast");
+        }));
+        // 장대 도약: 앞으로 뛰어 넘어 내려찍음 4.35
+        steps.add(new Step(16, () -> {
+            double want = expected(sp, j, j.skill(1), 4.35);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "장대 도약 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - mark[0] > 4, "vaulted ahead: " + (sp.position().z - mark[0]));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 2));
+            h.assertTrue(JobSkills.press(sp, 2), "선회창 cast");
+        }));
+        // 선회창: 6.525 × 2 (한방 — t 10)
+        steps.add(new Step(16, () -> {
+            double want = expected(sp, j, j.skill(2), 13.05);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "선회창 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 2));
+            z.add(dummy(h, -1));
+            h.assertTrue(JobSkills.press(sp, 3), "창벽 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "lancer_wall") && sp.hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS), "wall stance, slowed");
+            double front = mmorpg.fabric.RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0)));
+            double back = mmorpg.fabric.RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(1)));
+            h.assertTrue(Math.abs(front - 0.3) < 1e-9 && back == 0, "front −30%, back none: " + front + " / " + back);
+        }));
+        // 창벽: 10 · 20틱에 자동 찌르기 (1.1 × 2) — 뒤의 과녁은 맞지 않음
+        steps.add(new Step(25, () -> {
+            double want = expected(sp, j, j.skill(3), 2.2);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "창벽 2 thrusts " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(TestDummies.dealt(z.get(1)) == 0, "behind not thrust");
+            JobSystem.setJob(sp, "lancer"); // 태세 · 재사용 대기 지움 (남은 찌르기는 멈춤)
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 5));
+            h.assertTrue(JobSkills.press(sp, 4), "천창유성 cast");
+        }));
+        steps.add(new Step(80, () -> {
+            double want = expected(sp, j, j.skill(4), 58);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "천창유성 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        chain(h, steps, 0, () -> {
+            cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 0.29.0 사신
+
+    /**
+     * 사신: 혼 (낫 평타 +1 · 하나당 이동 +1%) → 갈퀴 베기 (3.125 × 2 · 혼 +2) · 망령 걸음 (받는 피해 없음 · 지나가며 3.75) · 혼백 폭발 (혼 8 → 8 × 1.4) · 사신 현신
+     * (넓게 베기 5칸 · 60%) · 황천문 (3 × 6 + 32 — 장판)
+     */
+    @GameTest(environment = ENV_RE, maxTicks = 460)
+    public void reaperSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = jobPlayer(h, "reaper", Map.of("dex", 50, "int", 20), 40);
+        Weapon w = Weapons.weaponFrom("scythe", 0, "common");
+        hold(sp, w);
+        Jobs.Job j = Jobs.job("reaper");
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 2)));
+        List<Step> steps = new ArrayList<>();
+        double[] mark = {0, 0};
+        steps.add(new Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            JobTraits3.setSouls(sp, 0);
+            double base = basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), base), "scythe basic " + TestDummies.dealt(z.get(0)) + " vs " + base);
+            h.assertTrue(JobTraits3.souls(sp) == 1, "scythe hit → 1 soul: " + JobTraits3.souls(sp));
+            JobTraits3.setSouls(sp, 10);
+            h.assertTrue(Math.abs(JobTraits3.speedBonus(sp, true) - 0.1) < 1e-9, "10 souls → speed +10%: " + JobTraits3.speedBonus(sp, true));
+            RpgCombat.forceCrit = null;
+            JobTraits3.setSouls(sp, 0);
+            z.get(0).discard();
+            z.set(0, dummy(h, 2.5));
+            h.assertTrue(JobSkills.press(sp, 0), "갈퀴 베기 cast");
+        }));
+        // 갈퀴 베기: 3.125 × 2 · 혼 +2
+        steps.add(new Step(16, () -> {
+            double want = expected(sp, j, j.skill(0), 6.25);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "갈퀴 베기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.souls(sp) == 2, "two hits → 2 souls: " + JobTraits3.souls(sp));
+            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 3));
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "망령 걸음 cast");
+            h.assertTrue(JobTraits3.ghost(sp) && mmorpg.fabric.RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) == 1,
+                    "wraith: no damage taken");
+        }));
+        // 망령 걸음: 지나가며 3.75 · 앞으로
+        steps.add(new Step(12, () -> {
+            double want = expected(sp, j, j.skill(1), 3.75);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "망령 걸음 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - mark[0] > 4, "walked through: " + (sp.position().z - mark[0]));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 2));
+            JobTraits3.setSouls(sp, 8);
+            h.assertTrue(JobSkills.press(sp, 2), "혼백 폭발 cast");
+            h.assertTrue(JobTraits3.souls(sp) == 0, "souls used");
+        }));
+        // 혼백 폭발: 혼 8 → 8 × 1.4
+        steps.add(new Step(8, () -> {
+            double want = expected(sp, j, j.skill(2), 8 * 1.4);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "혼백 폭발 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 2));
+            z.add(dummy(h, 4.5));
+            RpgCombat.forceCrit = false;
+            sp.attack(z.get(0));
+            h.assertTrue(TestDummies.dealt(z.get(1)) == 0, "no avatar: 4.5 blocks is outside the 3-block sweep");
+        }));
+        // 사신 현신: 넓게 베기 5칸 · 60%
+        steps.add(new Step(14, () -> {
+            h.assertTrue(JobSkills.press(sp, 3), "사신 현신 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "reaper_avatar"), "avatar stance");
+            mark[1] = TestDummies.dealt(z.get(0));
+            sp.attack(z.get(0));
+            double main = TestDummies.dealt(z.get(0)) - mark[1];
+            h.assertTrue(main > 0 && near(TestDummies.dealt(z.get(1)), main * 0.6), "avatar sweep 60% at 4.5 blocks: " + TestDummies.dealt(z.get(1)) + " vs " + main * 0.6);
+            RpgCombat.forceCrit = null;
+            JobSystem.setJob(sp, "reaper");
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 5));
+            h.assertTrue(JobSkills.press(sp, 4), "황천문 cast");
+        }));
+        steps.add(new Step(90, () -> {
+            double want = expected(sp, j, j.skill(4), 50);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "황천문 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         chain(h, steps, 0, () -> {
             cleanup(sp);

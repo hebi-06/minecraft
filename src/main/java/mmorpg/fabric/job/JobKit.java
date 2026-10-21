@@ -40,11 +40,17 @@ public final class JobKit {
      */
     public static double hit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, boolean magic, boolean big) {
         if (e == null || !Kit.canHit(sp, e) || !(mult > 0)) return 0;
-        double dmg = P * mult * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+        // 0.29.0 암영의 첫 타 (직업 스킬 첫 타 하나 — 치명타 확정 · × first): 큰 숫자 · 치명타 연출
+        double veil = JobTraits3.firstHit(sp, j);
+        double dmg = P * mult * veil * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
         float before = e.getHealth();
-        if (!Kit.applyJobDamage(sp, e, dmg, false, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, big ? DamageNumbers.Style.JOB_BIG : DamageNumbers.Style.JOB, grad(j))) {
+        boolean bigger = big || veil > 1;
+        if (!Kit.applyJobDamage(sp, e, dmg, veil > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG : DamageNumbers.Style.JOB,
+                grad(j))) {
+            if (veil > 1) JobTraits3.firstHitMissed(sp);
             return 0;
         }
+        if (veil > 1) JobTraits3.firstHitLanded(sp, e, j);
         float after = e.isRemoved() ? 0 : e.getHealth();
         return before > after ? before - after : dmg;
     }
@@ -75,12 +81,16 @@ public final class JobKit {
      */
     public static double hitSplit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, int split, int gap, boolean magic, boolean big) {
         if (e == null || !Kit.canHit(sp, e) || !(mult > 0)) return 0;
-        double dmg = P * mult * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+        double veil = JobTraits3.firstHit(sp, j); // 0.29.0 암영의 첫 타
+        double dmg = P * mult * veil * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
         float before = e.getHealth();
-        if (!Kit.applyJobDamage(sp, e, dmg, false, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, big ? DamageNumbers.Style.JOB_BIG : DamageNumbers.Style.JOB, grad(j),
-                split, gap)) {
+        boolean bigger = big || veil > 1;
+        if (!Kit.applyJobDamage(sp, e, dmg, veil > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG : DamageNumbers.Style.JOB,
+                grad(j), split, gap)) {
+            if (veil > 1) JobTraits3.firstHitMissed(sp);
             return 0;
         }
+        if (veil > 1) JobTraits3.firstHitLanded(sp, e, j);
         float after = e.isRemoved() ? 0 : e.getHealth();
         return before > after ? before - after : dmg;
     }
