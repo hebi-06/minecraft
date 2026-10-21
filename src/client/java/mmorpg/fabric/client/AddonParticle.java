@@ -195,8 +195,8 @@ public final class AddonParticle extends SingleQuadParticle {
         this.xo = this.x;
         this.yo = this.y;
         this.zo = this.z;
-        if (soloKey >= 0 && SOLO.get(soloKey) != this) {
-            this.remove(); // 같은 (주인 · 번호) 의 새 그림이 나옴
+        if (replaced()) {
+            this.remove(); // 같은 (주인 · 번호) 의 새 그림이 나와 한 틱 지남
             return;
         }
         if (this.age++ >= this.lifetime) {
@@ -262,7 +262,7 @@ public final class AddonParticle extends SingleQuadParticle {
     public void extract(QuadParticleRenderState state, Camera camera, float partialTick) {
         double t = (this.age + partialTick) / 20.0;
         if (t > life) return;
-        if (soloKey >= 0 && SOLO.get(soloKey) != this) return;
+        if (replaced()) return;
         if (view != 0 && !shown()) return;
         v[AddonParticles.AGE] = t;
         v[AddonParticles.EAGE] = emitterAge0 + t;
@@ -327,6 +327,16 @@ public final class AddonParticle extends SingleQuadParticle {
         if (spin != 0 && d.facing != AddonParticles.LOOKAT_DIRECTION) q.rotateZ((float) Math.toRadians(spin));
         int color = ARGB.colorFromFloat(ca, cr, cg, cb);
         quads(state, q, rx, ry, rz, w, h, u0, u1, v0, v1, color);
+    }
+
+    /**
+     * 0.29.0 solo: 같은 (주인 · 번호) 의 새 그림이 한 틱 넘게 살아 있음 → 이 그림은 그리지 않고 사라짐. 새 그림이 막 나온 틱 (엔진에 들어가기 전이거나
+     * 처음 0.05초 페이드인 — 알파 0 에서 시작) 에는 앞 그림을 그대로 그림: 바로 숨기면 그 한 화면에 문 · 그림자가 비었음 (사진첩 — 황천문 1인칭 34 · 40틱)
+     */
+    private boolean replaced() {
+        if (soloKey < 0) return false;
+        AddonParticle cur = SOLO.get(soloKey);
+        return cur != null && cur != this && cur.isAlive() && cur.age >= 1;
     }
 
     /**
