@@ -129,7 +129,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(1, new int[] {1, 3, 6, 12}, new int[] {2, 6}, 34, false),
         new Case(2, new int[] {1, 4, 7, 12}, new int[] {4, 8}, 16, false),
         new Case(3, new int[] {4, 20}, new int[] {6}, 24, true),
-        new Case(4, new int[] {4, 14, 24, 44, 66, 76, 80}, new int[] {14, 44, 76}, 90, false),
+        new Case(4, new int[] {4, 14, 24, 34, 38, 40, 42, 44, 48, 52, 66, 76, 80}, new int[] {14, 44, 76}, 90, false),
     };
 
     private final List<String> failures = new ArrayList<>();
@@ -305,6 +305,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 CameraType cam3 = FRONT_3P.contains(k.id()) ? CameraType.THIRD_PERSON_FRONT : CameraType.THIRD_PERSON_BACK;
                 ctx.runOnClient(mc -> mc.options.setCameraType(third ? cam3 : CameraType.FIRST_PERSON));
                 ctx.waitTicks(12);
+                if (TURN_AFTER.contains(k.id())) {
+                    // 사진첩만: 과녁을 등지고 씀 (순간 이동이 과녁에서 멀어지고 분신이 과녁 앞에 남음) — 순간 이동 뒤 다시 돌아서 찍음
+                    ctx.runOnClient(mc -> turn(mc, 180F));
+                    ctx.waitTicks(3);
+                }
                 ctx.getInput().holdKey(o -> o.keyShift);
                 ctx.waitTicks(2);
                 ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
@@ -317,19 +322,18 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         t = shot;
                     }
                     if (!turned && shot >= 4 && TURN_AFTER.contains(k.id())) {
-                        // 사진첩만: 뒤로 돎 (클라이언트 시점 — 스킬은 이미 끝난 순간 이동이라 그대로)
-                        ctx.runOnClient(mc -> {
-                            if (mc.player == null) return;
-                            float yaw = mc.player.getYRot() + 165F;
-                            mc.player.setYRot(yaw);
-                            mc.player.yRotO = yaw;
-                            mc.player.setYHeadRot(yaw);
-                        });
+                        // 사진첩만: 다시 돌아섬 (클라이언트 시점 — 스킬은 이미 끝난 순간 이동이라 그대로) → 분신 · 끌려오는 과녁이 보임
+                        ctx.runOnClient(mc -> turn(mc, 170F));
                         ctx.waitTicks(1);
                         t++;
                         turned = true;
                     }
                     ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "job_%s_%02d%s", k.id(), shot, third ? "_3p" : "")).withSize(1280, 720));
+                    if (k.id().startsWith("reaper_ult") || k.id().startsWith("reaper_avatar")) {
+                        // 0.29.0 solo 표 (같은 주인 · 번호의 그림은 하나만 — 문이 빈 사진 원인 찾기)
+                        String solo = ctx.computeOnClient(mc -> mmorpg.fabric.client.AddonParticle.soloDebug());
+                        LOG.info("[job-gallery] solo {} {}{}: {}", k.id(), shot, third ? " 3p" : "", solo);
+                    }
                 }
                 if (c.stance() || c.buff()) {
                     // 태세 · 강화 뒤 평타 (근접 = 왼쪽 클릭 — 눈앞 과녁, 활 · 완드 = 오른쪽 클릭 — 바람 타기로 물러나면 과녁이 손 닿는 거리 밖): 명경지수 두 번째 베기 ·
@@ -429,6 +433,15 @@ public final class RpgJobGallery implements FabricClientGameTest {
     }
 
     /** 0.29.0 암살자: 과녁 허스크 (없으면 세움) 마다 표식 n — 가까운 것이 게이지 대상 (마지막에 찍음) */
+    /** 사진첩만: 클라이언트 시점을 deg 도 돌림 (보간 없이 바로) */
+    private static void turn(net.minecraft.client.Minecraft mc, float deg) {
+        if (mc.player == null) return;
+        float yaw = mc.player.getYRot() + deg;
+        mc.player.setYRot(yaw);
+        mc.player.yRotO = yaw;
+        mc.player.setYHeadRot(yaw);
+    }
+
     private static void markHusks(ServerPlayer sp, int n) {
         List<Husk> list = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true);
         if (list.isEmpty()) {

@@ -47,6 +47,17 @@ public final class AddonParticle extends SingleQuadParticle {
     private final long soloKey;
     private static final java.util.Map<Long, AddonParticle> SOLO = new java.util.HashMap<>();
 
+    /** 시험 (사진첩 로그): solo 표 — 주인:번호 → 살아 있는지 · 나이 / 수명 (틱) · 그림 */
+    public static String soloDebug() {
+        StringBuilder b = new StringBuilder();
+        for (var e : SOLO.entrySet()) {
+            AddonParticle p = e.getValue();
+            b.append(e.getKey() >> 20).append(':').append(e.getKey() & 0xFFFFF).append('=').append(p.isAlive() ? "alive" : "dead").append(' ').append(p.age)
+                    .append('/').append(p.lifetime).append(' ').append(p.d.sprite).append("; ");
+        }
+        return b.toString();
+    }
+
     AddonParticle(ClientLevel level, Vec3 origin, Def d, double[] emitterVars, double emitterAge, TextureAtlasSprite sprite) {
         super(level, origin.x, origin.y, origin.z, sprite);
         this.d = d;
