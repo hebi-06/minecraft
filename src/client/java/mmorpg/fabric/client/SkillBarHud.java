@@ -345,6 +345,25 @@ public final class SkillBarHud {
                             g.fill(bx + 1, by + 4, bx + 4, by + 5, c);
                             if (i < v) g.fill(bx + 2, by + 3, bx + 3, by + 4, 0xFFFFFFFF);
                         }
+                        case "paladin" -> {
+                            // 0.30.0 심판 — 번개 (5 × 7, 창날처럼 줄 높이만큼): 위오른쪽에서 아래왼쪽으로 꺾인 번개, 찬 것은 첫째 빛 (금빛) + 가운데 흰 점,
+                            // 오른쪽 아래 1칸 그림자
+                            int c = i < v ? bright : dim;
+                            int ty = y - 1;
+                            int[][] rows = {{3, 5}, {2, 4}, {1, 5}, {2, 4}, {1, 3}, {1, 2}, {0, 1}};
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0] + 1, ty + r + 1, bx + rows[r][1] + 1, ty + r + 2, 0xA0000000);
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
+                            if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
+                        }
+                        case "priest" -> {
+                            // 0.30.0 신앙 — 십자 (5 × 7): 세로가 긴 십자, 찬 것은 둘째 빛 (초록) + 가운데 흰 점, 오른쪽 아래 1칸 그림자
+                            int c = i < v ? col : dim;
+                            int ty = y - 1;
+                            int[][] rows = {{2, 3}, {0, 5}, {2, 3}, {2, 3}, {2, 3}, {2, 3}};
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0] + 1, ty + r + 1, bx + rows[r][1] + 1, ty + r + 2, 0xA0000000);
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
+                            if (i < v) g.fill(bx + 2, ty + 1, bx + 3, ty + 2, 0xFFFFFFFF);
+                        }
                         default -> {
                             // 마름모 보석 (5 × 5): 바깥 어두운 테두리 + 안쪽 (찬 것은 둘째 빛)
                             g.fill(bx + 2, by, bx + 3, by + 5, 0xC0000000);

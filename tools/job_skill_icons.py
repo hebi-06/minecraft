@@ -508,6 +508,9 @@ def main():
     # 0.29.0 암살자 · 창술사 · 사신 아이콘 (tools/job_skill_icons_three.py)
     import job_skill_icons_three
     ICONS.update(job_skill_icons_three.ICONS)
+    # 0.30.0 성기사 · 사제 · 수호기사 아이콘 (tools/job_skill_icons_four.py)
+    import job_skill_icons_four
+    ICONS.update(job_skill_icons_four.ICONS)
     slot_sprites()
     cols = job_colors()
     os.makedirs(OUT, exist_ok=True)

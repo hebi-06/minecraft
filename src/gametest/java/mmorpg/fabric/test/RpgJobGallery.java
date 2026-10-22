@@ -18,6 +18,7 @@ import mmorpg.fabric.job.JobSystem;
 import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits3;
+import mmorpg.fabric.job.JobTraits4;
 import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.rune.RuneCast;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -61,7 +62,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
      * 평타 뒤 사진 틱 (완드는 마법진을 다 그린 뒤)
      */
     /** 3인칭 사진을 앞 카메라로 찍는 스킬 (과녁 사이를 지나감) */
-    private static final java.util.Set<String> FRONT_3P = java.util.Set.of("lancer_vault", "reaper_wraith");
+    private static final java.util.Set<String> FRONT_3P = java.util.Set.of("lancer_vault", "reaper_wraith", "guardian_rush");
+    /** 0.30.0 피해가 없는 스킬 (회복 · 보호막 · 성흔 — 써졌는지만 확인) */
+    private static final java.util.Set<String> NO_DAMAGE = java.util.Set.of("priest_heal", "priest_step", "priest_stigma");
     /** 순간 이동이 끝난 뒤 (4틱) 뒤로 돌아 찍는 스킬 — 잔영: 과녁 너머로 간 뒤 분신 · 끌려간 과녁을 1인칭 · 3인칭 뒤 카메라로 (앞 카메라는 몸이 분신을 가림) */
     private static final java.util.Set<String> TURN_AFTER = java.util.Set.of("assassin_shade");
 
@@ -132,6 +135,29 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {4, 14, 24, 34, 38, 40, 42, 44, 48, 52, 66, 76, 80}, new int[] {14, 44, 76}, 90, false),
     };
 
+    /** 0.30.0 성기사 · 사제 · 수호기사 */
+    private static final Case[] CASES_PA = {
+        new Case(0, new int[] {2, 6, 11, 14}, new int[] {3, 12}, 20, false),
+        new Case(1, new int[] {1, 3, 6, 12}, new int[] {3, 8}, 18, false),
+        new Case(2, new int[] {2, 12, 22, 26}, new int[] {2, 22}, 30, false),
+        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 24, true),
+        new Case(4, new int[] {6, 14, 19, 21, 34, 48, 52, 70}, new int[] {14, 21, 48, 70}, 90, false),
+    };
+    private static final Case[] CASES_PR = {
+        new Case(0, new int[] {2, 8}, new int[] {3, 8}, 14, false),
+        new Case(1, new int[] {1, 3, 6, 12}, new int[] {2, 8}, 16, false),
+        new Case(2, new int[] {4, 20, 40, 60}, new int[] {10, 40}, 76, false),
+        new Case(3, new int[] {3, 10, 20}, new int[] {6, 20}, 24, false),
+        new Case(4, new int[] {6, 12, 16, 18, 32, 48, 52}, new int[] {16, 32, 50}, 60, false),
+    };
+    private static final Case[] CASES_GU = {
+        new Case(0, new int[] {1, 3, 8}, new int[] {2, 8}, 14, false),
+        new Case(1, new int[] {1, 3, 5, 10}, new int[] {3, 6}, 16, false),
+        new Case(2, new int[] {2, 5, 9, 14, 20}, new int[] {5, 14}, 30, false),
+        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 24, true),
+        new Case(4, new int[] {6, 12, 30, 80, 161, 166, 172}, new int[] {12, 40, 163, 172}, 180, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
@@ -190,6 +216,19 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 newJob(ctx, server, conn, "reaper", "rpg:scythe_l40_hero", 10, sp -> JobTraits3.setSouls(sp, 6));
                 skills(ctx, server, conn, "reaper", CASES_RE);
             });
+            // 0.30.0 성기사 · 사제 · 수호기사 (핫바 셋째 칸 — 망치 · 홀 · 방패)
+            part(ctx, "paladin", () -> {
+                newJob(ctx, server, conn, "paladin", "rpg:hammer_l40_hero", 5, sp -> judgeHusks(sp, 3));
+                skills(ctx, server, conn, "paladin", CASES_PA);
+            });
+            part(ctx, "priest", () -> {
+                newJob(ctx, server, conn, "priest", "rpg:scepter_l40_hero", 5, sp -> JobTraits4.setFaith(sp, 3));
+                skills(ctx, server, conn, "priest", CASES_PR);
+            });
+            part(ctx, "guardian", () -> {
+                newJob(ctx, server, conn, "guardian", "rpg:shield_l40_hero", 100, sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
+                skills(ctx, server, conn, "guardian", CASES_GU);
+            });
             server.runOnServer(s -> JobSystem.setJob(player(s), null));
             ctx.setScreen(() -> null);
         }
@@ -207,7 +246,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("spellblade")));
         shot(ctx, "job_trainer_spellblade");
         hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("paladin")));
-        shot(ctx, "job_trainer_dim");
+        shot(ctx, "job_trainer_paladin");
         click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.slotOf("swordsman")));
         if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("확인"), "confirm window")) return;
         hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(13));
@@ -300,6 +339,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
                     spawnHusks(sp.level());
                     if (k.id().equals("assassin_bloom") || k.id().equals("assassin_ult")) markHusks(sp, 5); // 낙화 · 흑야: 표식 가득
                     if (k.id().equals("reaper_burst")) JobTraits3.setSouls(sp, 10); // 혼 가득 → 큰 폭발
+                    if (k.id().equals("paladin_smite")) judgeHusks(sp, 3); // 심판 3 + 2 → 벼락 · 기절 별
+                    if (k.id().equals("priest_hymn") || k.id().equals("priest_ult")) JobTraits4.setFaith(sp, 3); // 신앙 3 → +30%
+                    if (k.id().equals("guardian_bash")) JobTraits4.setCounter(sp, 30); // 반격 게이지가 첫 타에
                 });
                 // 0.29.0 과녁 사이를 지나가는 스킬 (잔영 · 장대 도약 · 망령 걸음) 은 3인칭을 앞에서 — 뒤 카메라는 지나간 뒤 과녁 몸 안에 들어감
                 CameraType cam3 = FRONT_3P.contains(k.id()) ? CameraType.THIRD_PERSON_FRONT : CameraType.THIRD_PERSON_BACK;
@@ -355,7 +397,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 LOG.info("[job-gallery] {} {} cast={} dealt={} stance={}", k.id(), third ? "3p" : "1p", cast, String.format(Locale.ROOT, "%.1f", dealt), stance);
                 String tag = k.id() + (third ? " (3p)" : "");
                 check(cast, tag + " cast");
-                if (c.stance()) check(stance && dealt > 0, tag + " stance on, hit after it");
+                if (NO_DAMAGE.contains(k.id())) {
+                    // 0.30.0 회복 · 보호막 · 성흔: 써졌는지만 (위의 cast)
+                } else if (c.stance()) check(stance && dealt > 0, tag + " stance on, hit after it");
                 else if (c.buff()) check(dealt > 0, tag + " buffed basic hit (" + String.format(Locale.ROOT, "%.1f", dealt) + ")");
                 else check(dealt > 0, tag + " dealt damage (" + String.format(Locale.ROOT, "%.1f", dealt) + ")");
             }
@@ -440,6 +484,17 @@ public final class RpgJobGallery implements FabricClientGameTest {
         mc.player.setYRot(yaw);
         mc.player.yRotO = yaw;
         mc.player.setYHeadRot(yaw);
+    }
+
+    /** 0.30.0 성기사: 과녁 허스크마다 심판 n — 가까운 것이 게이지 대상 (마지막에 찍음) */
+    private static void judgeHusks(ServerPlayer sp, int n) {
+        List<Husk> list = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true);
+        if (list.isEmpty()) {
+            spawnHusks(sp.level());
+            list = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true);
+        }
+        list.sort(java.util.Comparator.comparingDouble(h -> -h.distanceToSqr(sp)));
+        for (Husk h : list) JobTraits4.setJudges(sp, h, n);
     }
 
     private static void markHusks(ServerPlayer sp, int n) {

@@ -22,8 +22,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -339,15 +337,13 @@ final class GuardianSkills {
                 if (top != null) bricks.add(top);
             }
             if (tower) {
-                // 망루 위 파란 깃발 (아이템 표시 — 바깥을 봄)
-                Vec3 top = V.up(g, h + 0.95);
-                Vec3 ez = out;
-                Vec3 ey = V.UP;
-                Vec3 ex = V.unit(V.cross(ey, ez));
-                Display.ItemDisplay flag = FxDisplays.item(level, top, new ItemStack(Items.BLUE_BANNER), FxDisplays.of(new Vec3(0, -h - 1.6, 0), FxDisplays.basis(ex,
-                        ey, ez), 1.3), life2, null);
-                RuneKit.later(2, () -> FxDisplays.move(flag, FxDisplays.of(Vec3.ZERO, FxDisplays.basis(ex, ey, ez), 1.3), 8));
-                RuneKit.later(dur, () -> FxDisplays.move(flag, FxDisplays.of(new Vec3(0, -h - 1.6, 0), FxDisplays.basis(ex, ey, ez), 1.0), 14));
+                // 망루 위 깃대 (울타리 기둥) · 파란 깃발 (얇은 양털 판 — 바깥 옆으로)
+                Vec3 top = V.up(g, h);
+                Vec3 side = V.unit(V.cross(V.UP, out));
+                Brick pole = wallBlock(level, top, out, 1.0, 1.8, 1.0, Blocks.DARK_OAK_FENCE.defaultBlockState(), life2);
+                if (pole != null) bricks.add(pole);
+                Brick cloth = wallBlock(level, V.up(V.add(top, side, 0.58), 1.05), out, 0.95, 0.62, 0.06, flagCloth(), life2);
+                if (cloth != null) bricks.add(cloth);
             }
         }
         // 솟음 (2틱 뒤부터 조금씩 엇갈리며 8틱) · 먼지 · 돌조각 · 흔들림
@@ -394,6 +390,13 @@ final class GuardianSkills {
             else for (Brick b : bricks) FxDisplays.move(b.d(), FxDisplays.of(V.add(b.off(), V.scale(V.UP, -b.h() - 0.4)), b.q(), b.w() * 0.9, b.h(), b.t() * 0.9), 12);
         });
         return true;
+    }
+
+    /** 깃발 천 (파란 양털 — 이 판에 없으면 청금석 블록) */
+    private static BlockState flagCloth() {
+        net.minecraft.world.level.block.Block b = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier
+                .withDefaultNamespace("blue_wool"));
+        return b == null || b == Blocks.AIR ? Blocks.LAPIS_BLOCK.defaultBlockState() : b.defaultBlockState();
     }
 
     /** 성벽 조각 하나 (처음엔 땅 밑) */

@@ -483,6 +483,9 @@ def main():
     # 0.29.0 암살자 · 창술사 · 사신 그림 (tools/job_fx_art_three.py)
     import job_fx_art_three
     made.update(job_fx_art_three.main())
+    # 0.30.0 성기사 · 사제 · 수호기사 그림 (tools/job_fx_art_four.py)
+    import job_fx_art_four
+    made.update(job_fx_art_four.main())
     if "--sheet" in sys.argv:
         folder = sys.argv[sys.argv.index("--sheet") + 1]
         os.makedirs(folder, exist_ok=True)

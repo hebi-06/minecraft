@@ -10,6 +10,7 @@ import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgData;
+import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgItems;
 import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.RpgStats;
@@ -19,6 +20,7 @@ import mmorpg.fabric.job.JobSystem;
 import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits3;
+import mmorpg.fabric.job.JobTraits4;
 import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.stattree.StatTrees;
@@ -62,6 +64,9 @@ public final class RpgJobTests {
     static final String ENV_AS = "mmorpg:job_as";
     static final String ENV_LA = "mmorpg:job_la";
     static final String ENV_RE = "mmorpg:job_re";
+    static final String ENV_PA = "mmorpg:job_pa";
+    static final String ENV_PR = "mmorpg:job_pr";
+    static final String ENV_GU = "mmorpg:job_gu";
 
     // ------------------------------------------------------------ 도구
 
@@ -173,8 +178,10 @@ public final class RpgJobTests {
                 for (Jobs.Skill k : j.skills()) h.assertTrue(JobSystem.implemented(k.id()), "implemented " + k.id());
             }
             h.assertTrue(JobSkills.skill(sp, 0) == null && JobSystem.job(sp) == null, "no job: empty slots");
+            // 0.30.0 열한 직업 모두 스킬이 들어감: 칼을 든 성기사는 칸이 보이되 잠김 (전투 망치)
             JobSystem.setJob(sp, "paladin");
-            h.assertTrue(JobSystem.job(sp) != null && JobSkills.skill(sp, 0) == null, "not-ready job: no slots yet");
+            h.assertTrue(JobSystem.job(sp) != null && JobSkills.skill(sp, 0) != null && JobSkills.skill(sp, 0).lock(sp).equals("전투 망치"),
+                    "paladin with a sword: slot locked to the hammer — " + (JobSkills.skill(sp, 0) == null ? "null" : JobSkills.skill(sp, 0).lock(sp)));
             JobSystem.setJob(sp, "swordsman");
             JobSkills.Skill s0 = JobSkills.skill(sp, 0);
             h.assertTrue(s0 != null && s0.name().equals("연참") && s0.lock(sp).isEmpty(), "swordsman slot 1 = 연참, usable");
@@ -277,12 +284,9 @@ public final class RpgJobTests {
             FormNet.ChestPayload list = Forms.last(sp) instanceof FormNet.ChestPayload c ? c : null;
             h.assertTrue(list != null && list.slots().size() == 27, "card window");
             int sw = JobTrainer.slotOf("swordsman");
-            int war = JobTrainer.slotOf("paladin");
-            h.assertTrue(list.slots().get(sw).name().contains("검사") && list.slots().get(war).kind() == 3 && list.slots().get(JobTrainer.slotOf("assassin")).kind() != 3,
-                    "cards: swordsman, assassin ready, paladin dim (not ready)");
-            // 준비 중인 직업 → 창 그대로 (안내)
-            Forms.answer(sp, war, null);
-            h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c2 && c2.body().contains("준비 중"), "not ready: back to the list");
+            boolean allReady = true;
+            for (Jobs.Job jj : Jobs.all()) allReady &= list.slots().get(JobTrainer.slotOf(jj.id())).kind() != 3;
+            h.assertTrue(list.slots().get(sw).name().contains("검사") && allReady, "cards: all 11 jobs ready (0.30.0 — none dim)");
             // 검사 → 확인 → 전직 (무료)
             Forms.answer(sp, sw, null);
             h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c3 && c3.title().contains("전직 확인"), "confirm window");
@@ -1089,6 +1093,379 @@ public final class RpgJobTests {
         chain(h, steps, 0, () -> {
             cleanup(sp);
             for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+    // ------------------------------------------------------------ 0.30.0 도구
+
+    /** 시험 플레이어 sp 의 지금 자리에서 (dx, dz) 칸에 선 아군 (시험 플레이어 — 끝나면 bye 로 지움) */
+    static ServerPlayer allyAt(GameTestHelper h, ServerPlayer sp, double dx, double dz) {
+        ServerPlayer o = RpgGearTests.player(h);
+        o.snapTo(sp.getX() + dx, sp.getY(), sp.getZ() + dz, 180F, 0F);
+        return o;
+    }
+
+    /** 아군을 (sp 기준 dx, dz) 로 옮김 */
+    static void moveAlly(ServerPlayer o, ServerPlayer sp, double dx, double dz) {
+        o.snapTo(sp.getX() + dx, sp.getY(), sp.getZ() + dz, 180F, 0F);
+    }
+
+    static void bye(GameTestHelper h, ServerPlayer o) {
+        if (o != null) h.getLevel().getServer().getPlayerList().remove(o);
+    }
+
+    /** 시험 자리 기준 (dx, dz) 칸의 과녁 */
+    static Husk dummyAt(GameTestHelper h, double dx, double dz) {
+        return TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, (float) (1.5 + dx), 2F, (float) (1.5 + dz)));
+    }
+
+    static boolean close(double a, double b, double eps) {
+        return Math.abs(a - b) <= eps;
+    }
+
+    // ------------------------------------------------------------ 0.30.0 성기사
+
+    /**
+     * 성기사: 심판 (망치 평타 +1 · 다섯이면 벼락 — 기절 뒤 0) · 수호 오라 (망치를 든 성기사 둘레 6칸 −5%) → 뇌격 강타 (3 + 2.5 · 심판 +2) · 신념의 돌진 (3.3 · 기절
+     * · 둘레 아군 보호막 8%) · 뇌진 (3.3 × 3 · 심판 +3) · 수호의 맹세 (오라 −15% · 1초마다 1% 회복) · 천뢰의 대망치 (10 + 10 + 24)
+     */
+    @GameTest(environment = ENV_PA, maxTicks = 420)
+    public void paladinSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = jobPlayer(h, "paladin", Map.of("vit", 50, "str", 20), 40);
+        Weapon w = Weapons.weaponFrom("hammer", 0, "common");
+        hold(sp, w);
+        Jobs.Job j = Jobs.job("paladin");
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 2)));
+        List<Step> steps = new ArrayList<>();
+        ServerPlayer[] ally = {null};
+        double[] mark = {0, 0};
+        steps.add(new Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 1, "hammer hit → 1 judgement: " + JobTraits4.judges(sp, z.get(0)));
+            JobTraits4.setJudges(sp, z.get(0), 4);
+        }));
+        steps.add(new Step(14, () -> {
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 0 && z.get(0).hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS),
+                    "5th judgement → verdict (stunned), back to 0: " + JobTraits4.judges(sp, z.get(0)));
+            RpgCombat.forceCrit = null;
+            // 수호 오라: 둘레 6칸 아군 (나 포함) −5%, 11칸 밖 · 망치가 아니면 없음
+            ally[0] = allyAt(h, sp, 0, 4);
+            h.assertTrue(close(JobTraits4.auraFor(sp), 0.05, 1e-9) && close(JobTraits4.auraFor(ally[0]), 0.05, 1e-9), "aura 5%: " + JobTraits4.auraFor(ally[0]));
+            h.assertTrue(close(RpgHealth.sourceReduce.applyAsDouble(ally[0], ally[0].damageSources().mobAttack(z.get(0))), 0.05, 1e-9), "aura reduces damage taken");
+            moveAlly(ally[0], sp, 0, 11);
+            h.assertTrue(JobTraits4.auraFor(ally[0]) == 0, "11 blocks away: no aura");
+            hold(sp, Weapons.weaponFrom("sword", 0, "common"));
+            h.assertTrue(JobTraits4.auraFor(sp) == 0, "no hammer: no aura");
+            hold(sp, w);
+            z.get(0).discard();
+            z.set(0, dummy(h, 2.5));
+            h.assertTrue(JobSkills.press(sp, 0), "뇌격 강타 cast");
+        }));
+        // 뇌격 강타: 충격파 3 → 10틱 뒤 벼락 2.5 · 심판 +2
+        steps.add(new Step(16, () -> {
+            double want = expected(sp, j, j.skill(0), 5.5);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "뇌격 강타 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 2, "smite → 2 judgements: " + JobTraits4.judges(sp, z.get(0)));
+            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 5));
+            moveAlly(ally[0], sp, 2, 3);
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "신념의 돌진 cast");
+        }));
+        // 신념의 돌진: 부딪힘 3.3 · 기절 · 나와 둘레 아군 보호막 (최대 체력 8%)
+        steps.add(new Step(10, () -> {
+            double want = expected(sp, j, j.skill(1), 3.3);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "신념의 돌진 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - mark[0] > 1.5, "charged ahead: " + (sp.position().z - mark[0]));
+            h.assertTrue(z.get(0).hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS), "ram stuns");
+            h.assertTrue(close(RpgHealth.shieldOf(sp), RpgHealth.maxOf(sp) * 0.08, 1e-6) && close(RpgHealth.shieldOf(ally[0]), RpgHealth.maxOf(ally[0]) * 0.08, 1e-6),
+                    "shield 8% on me and the ally: " + RpgHealth.shieldOf(sp) + " / " + RpgHealth.shieldOf(ally[0]));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 2));
+            h.assertTrue(JobSkills.press(sp, 2), "뇌진 cast");
+        }));
+        // 뇌진: 3.3 × 3 (지속 보정 short) · 맞을 때마다 심판 +1
+        steps.add(new Step(26, () -> {
+            double want = expected(sp, j, j.skill(2), 9.9);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "뇌진 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 3, "quake → 3 judgements: " + JobTraits4.judges(sp, z.get(0)));
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[1] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 3), "수호의 맹세 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "paladin_oath") && close(JobTraits4.auraFor(sp), 0.15, 1e-9) && RpgCombat.isSteadfast(sp), "oath: aura 15%, steadfast");
+        }));
+        // 수호의 맹세: 1초마다 최대 체력 1% (자연 회복이 더해질 수 있어 그 이상)
+        steps.add(new Step(25, () -> {
+            double got = sp.getHealth() - mark[1];
+            h.assertTrue(got >= RpgHealth.maxOf(sp) * 0.01 - 1e-3, "oath regen ≥ 1%: " + got);
+            JobSystem.setJob(sp, "paladin");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 3));
+            h.assertTrue(JobSkills.press(sp, 4), "천뢰의 대망치 cast");
+        }));
+        // 천뢰의 대망치: 10 + 10 + 24 (지속 보정 long — 앞 3칸 가운데 둘레 8칸) · 마지막에 기절
+        steps.add(new Step(60, () -> {
+            double want = expected(sp, j, j.skill(4), 44);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "천뢰의 대망치 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(z.get(0).hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS), "last strike stuns");
+        }));
+        chain(h, steps, 0, () -> {
+            cleanup(sp);
+            for (Husk x : z) x.discard();
+            bye(h, ally[0]);
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 0.30.0 사제
+
+    /**
+     * 사제: 치유의 손길 (겨눈 아군 · 없으면 나 12% · −10% · 신앙 +1) · 빛의 걸음 (지나간 아군 · 나 보호막 10%) · 성가 (0.7 × 8 × 신앙 · 아군 1.5% × 8 · 신앙을
+     * 씀) · 성흔 (때린 아군이 준 피해 4% 회복) · 넘친 홀 흡혈 → 다친 아군 · 새벽의 종 (8 × 3 · 15% × 3 · 정화 · 쓰러지지 않음)
+     */
+    @GameTest(environment = ENV_PR, maxTicks = 460)
+    public void priestSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = jobPlayer(h, "priest", Map.of("int", 50, "vit", 20), 40);
+        Weapon w = Weapons.weaponFrom("scepter", 0, "common");
+        hold(sp, w);
+        Jobs.Job j = Jobs.job("priest");
+        List<Husk> z = new ArrayList<>();
+        List<Step> steps = new ArrayList<>();
+        ServerPlayer[] ally = {null};
+        double[] mark = {0, 0, 0};
+        steps.add(new Step(1, () -> {
+            home(h, sp);
+            ally[0] = allyAt(h, sp, 0, 4);
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.5F);
+            mark[0] = ally[0].getHealth();
+            h.assertTrue(JobSkills.press(sp, 0), "치유의 손길 cast (aimed ally)");
+            double got = ally[0].getHealth() - mark[0];
+            h.assertTrue(close(got, RpgHealth.maxOf(ally[0]) * 0.12, 0.01), "ally healed 12%: " + got);
+            mmorpg.fabric.skill.Guards.Guard g = mmorpg.fabric.skill.Guards.of(ally[0]);
+            h.assertTrue(g != null && close(g.reduce(), 0.1, 1e-9), "ally guard −10%");
+            h.assertTrue(JobTraits4.faith(sp) == 1, "faith 1: " + JobTraits4.faith(sp));
+            // 아군을 겨누지 않으면 나
+            Vec3 at = sp.position();
+            sp.snapTo(at.x, at.y, at.z, 180F, 0F);
+            sp.setYHeadRot(180F);
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[1] = sp.getHealth();
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 0), "치유의 손길 cast (self)");
+            h.assertTrue(close(sp.getHealth() - mark[1], RpgHealth.maxOf(sp) * 0.12, 0.01) && JobTraits4.faith(sp) == 2, "self healed 12%, faith 2");
+        }));
+        // 빛의 걸음: 앞으로 미끄러지며 지나간 아군 · 나 보호막 10% · 신앙 +1
+        steps.add(new Step(4, () -> {
+            home(h, sp);
+            moveAlly(ally[0], sp, 1.5, 3);
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "빛의 걸음 cast");
+        }));
+        steps.add(new Step(8, () -> {
+            h.assertTrue(sp.position().z - mark[0] > 3, "slid ahead: " + (sp.position().z - mark[0]));
+            h.assertTrue(close(RpgHealth.shieldOf(ally[0]), RpgHealth.maxOf(ally[0]) * 0.1, 1e-6) && close(RpgHealth.shieldOf(sp), RpgHealth.maxOf(sp) * 0.1, 1e-6),
+                    "shield 10%: " + RpgHealth.shieldOf(ally[0]) + " / " + RpgHealth.shieldOf(sp));
+            h.assertTrue(JobTraits4.faith(sp) == 3, "faith 3: " + JobTraits4.faith(sp));
+            home(h, sp);
+            z.add(dummy(h, 2.5));
+            moveAlly(ally[0], sp, 2, 0);
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.5F);
+            mark[0] = ally[0].getHealth();
+            h.assertTrue(JobSkills.press(sp, 2), "성가 cast");
+            h.assertTrue(JobTraits4.faith(sp) == 0, "attack skill uses all faith");
+        }));
+        // 성가: 0.7 × 8 (장판 +10%) × 신앙 3 (+30%) · 아군 1.5% × 8
+        steps.add(new Step(80, () -> {
+            double want = expected(sp, j, j.skill(2), 5.6) * 1.3;
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "성가 (신앙 3) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            h.assertTrue(ally[0].getHealth() - mark[0] >= RpgHealth.maxOf(ally[0]) * 0.12 - 0.01, "hymn healed the ally ≥ 12%: " + (ally[0].getHealth() - mark[0]));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 3));
+            h.assertTrue(JobSkills.press(sp, 3), "성흔 cast");
+            h.assertTrue(JobTraits4.stigmaOn(z.get(0)) && JobTraits4.faith(sp) == 1, "stigma on the target, faith 1");
+        }));
+        // 성흔 찍힌 적을 홀 평타로: 홀 흡혈 (준 피해 5% · 최대 체력 1% 까지) + 성흔 4%
+        steps.add(new Step(4, () -> {
+            RpgCombat.forceCrit = false;
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[1] = sp.getHealth();
+            mark[2] = TestDummies.dealt(z.get(0));
+            sp.attack(z.get(0));
+            double dealt = TestDummies.dealt(z.get(0)) - mark[2];
+            double want = Math.min(dealt * 0.05, RpgHealth.maxOf(sp) * 0.01) + dealt * 0.04;
+            double got = sp.getHealth() - mark[1];
+            h.assertTrue(dealt > 0 && close(got, want, 0.02), "stigma + lifesteal heal " + got + " vs " + want + " (dealt " + dealt + ")");
+        }));
+        // 넘친 흡혈: 내 체력이 가득이면 둘레 4칸에서 체력 비율이 가장 낮은 아군에게
+        steps.add(new Step(14, () -> {
+            sp.setHealth(sp.getMaxHealth());
+            moveAlly(ally[0], sp, 1.5, 0);
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.5F);
+            mark[0] = ally[0].getHealth();
+            mark[2] = TestDummies.dealt(z.get(0));
+            sp.attack(z.get(0));
+            double dealt = TestDummies.dealt(z.get(0)) - mark[2];
+            double want = Math.min(dealt * 0.05, RpgHealth.maxOf(sp) * 0.01);
+            double got = ally[0].getHealth() - mark[0];
+            h.assertTrue(dealt > 0 && close(got, want, 0.02), "overflow to the hurt ally " + got + " vs " + want);
+            RpgCombat.forceCrit = null;
+            // 새벽의 종: 신앙 2 (+20%)
+            JobTraits4.setFaith(sp, 2);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 3));
+            moveAlly(ally[0], sp, 2, 1);
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.5F);
+            mark[0] = ally[0].getHealth();
+            ally[0].addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON, 200, 0));
+            h.assertTrue(JobSkills.press(sp, 4), "새벽의 종 cast");
+        }));
+        // 첫 울림 (16틱): 15% 회복 · 정화 · 쓰러지지 않음 (큰 피해에도 체력 1)
+        steps.add(new Step(20, () -> {
+            h.assertTrue(!ally[0].hasEffect(net.minecraft.world.effect.MobEffects.POISON), "first toll cleanses");
+            h.assertTrue(JobTraits4.dawnOn(ally[0]) && JobTraits4.dawnOn(sp), "dawn: undying on the ally and me");
+            h.assertTrue(ally[0].getHealth() - mark[0] >= RpgHealth.maxOf(ally[0]) * 0.15 - 0.01, "first toll heals 15%: " + (ally[0].getHealth() - mark[0]));
+            float hp = ally[0].getHealth();
+            float next = RpgHealth.onLoss(ally[0], ally[0].damageSources().magic(), hp, hp - 10000F);
+            h.assertTrue(close(next, Math.min(hp, 1F), 1e-6), "undying: a lethal hit leaves 1 HP (" + next + ")");
+        }));
+        // 새벽의 종: 8 × 3 (지속 보정 long) × 신앙 2 (+20%)
+        steps.add(new Step(40, () -> {
+            double want = expected(sp, j, j.skill(4), 24) * 1.2;
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "새벽의 종 (신앙 2) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        chain(h, steps, 0, () -> {
+            cleanup(sp);
+            for (Husk x : z) x.discard();
+            bye(h, ally[0]);
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 0.30.0 수호기사
+
+    /**
+     * 수호기사: 반격 (웅크려 막은 양 × 30% · 최대 체력 50% 까지 → 다음 공격 직업 스킬 첫 타에 더함) · 방패 치기 (4 + 반격 · 기절) · 철옹성 (막기 정면 100% · 옆 60%
+     * · 이동 −40%) · 수호 돌입 (겨눈 아군에게 · 2.4 · 아군 피해의 40% 를 내가 × 0.7) · 방패 투척 (적마다 7.2) · 성채 (안의 아군 −35% → 32)
+     */
+    @GameTest(environment = ENV_GU, maxTicks = 460)
+    public void guardianSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = jobPlayer(h, "guardian", Map.of("vit", 70), 40);
+        Weapon w = Weapons.weaponFrom("shield", 0, "common");
+        hold(sp, w);
+        Jobs.Job j = Jobs.job("guardian");
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 2)));
+        List<Step> steps = new ArrayList<>();
+        ServerPlayer[] ally = {null};
+        double[] mark = {0, 0};
+        steps.add(new Step(1, () -> {
+            home(h, sp);
+            JobTraits4.setCounter(sp, 0);
+            // 받은 피해 (RpgHealth.onLoss — 바닐라의 연속 피해 막기 · 접속 직후 무적 없이): 웅크려 앞에서
+            float hp = sp.getHealth();
+            sp.setShiftKeyDown(true);
+            RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 10F);
+            sp.setShiftKeyDown(false);
+            double c = JobTraits4.counter(sp);
+            h.assertTrue(c > 0 && c <= JobTraits4.counterCap(sp, j) + 1e-9, "blocked hit → counter " + c);
+            JobTraits4.setCounter(sp, 1e9);
+            h.assertTrue(close(JobTraits4.counter(sp), RpgHealth.maxOf(sp) * 0.5, 1e-6), "counter cap 50% max HP: " + JobTraits4.counter(sp));
+            JobTraits4.setCounter(sp, 20);
+            sp.setHealth(sp.getMaxHealth());
+            h.assertTrue(JobSkills.press(sp, 0), "방패 치기 cast");
+        }));
+        // 방패 치기: 4 + 반격 20 (첫 타) · 기절
+        steps.add(new Step(6, () -> {
+            double want = expected(sp, j, j.skill(0), 4) + 20;
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "방패 치기 + 반격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits4.counter(sp) == 0, "counter used");
+            h.assertTrue(z.get(0).hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS), "bash stuns");
+            h.assertTrue(gradientNumber(h, z.get(0), j), "job-colored gradient number");
+            // 철옹성: 정면 100% · 옆 60% · 뒤 없음 · 이동 −40% · 밀려나지 않음
+            h.assertTrue(JobSkills.press(sp, 3), "철옹성 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "guardian_bulwark") && close(JobTraits4.slowBonus(sp), -0.4, 1e-9) && RpgCombat.isSteadfast(sp),
+                    "bulwark stance, −40% speed, steadfast");
+            h.assertTrue(close(RpgCombat.blockMod.block(sp, w, 0.9), 1.0, 1e-9) && close(RpgCombat.blockMod.block(sp, w, 0.0), 0.6, 1e-9)
+                    && RpgCombat.blockMod.block(sp, w, -0.8) == 0, "bulwark block: front 1.0 · side 0.6 · back 0");
+            z.add(dummyAt(h, 2, 0));
+            sp.setShiftKeyDown(true);
+            double side = RpgCombat.shieldReduction(sp, sp.damageSources().mobAttack(z.get(1)));
+            sp.setShiftKeyDown(false);
+            h.assertTrue(side >= 0.6 - 1e-9 && side < 1, "side attack blocked 60%: " + side);
+        }));
+        // 수호 돌입: 겨눈 아군 (앞 7칸) 앞까지 → 둘레 2.5칸 적 2.4 → 아군이 받을 피해의 40% 를 내가 × 0.7
+        steps.add(new Step(4, () -> {
+            JobSystem.setJob(sp, "guardian");
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            ally[0] = allyAt(h, sp, 0, 7);
+            z.add(dummyAt(h, 1.3, 5.6));
+            h.assertTrue(JobSkills.press(sp, 1), "수호 돌입 cast");
+        }));
+        steps.add(new Step(8, () -> {
+            h.assertTrue(sp.distanceTo(ally[0]) < 2.5, "rushed to the ally: " + sp.distanceTo(ally[0]));
+            double want = expected(sp, j, j.skill(1), 2.4);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "수호 돌입 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.getUUID().equals(JobTraits4.guardOf(ally[0])), "ally guarded");
+            sp.setHealth(sp.getMaxHealth());
+            ally[0].setHealth(ally[0].getMaxHealth());
+            mark[0] = ally[0].getHealth();
+            mark[1] = sp.getHealth();
+            float next = RpgHealth.onLoss(ally[0], ally[0].damageSources().mobAttack(z.get(0)), (float) mark[0], (float) mark[0] - 10F);
+            double lossA = mark[0] - next;
+            double lossG = mark[1] - sp.getHealth();
+            h.assertTrue(lossA > 0 && close(lossG, lossA * (0.4 * 0.7 / 0.6), 0.02 + lossA * 0.002), "shared: guardian " + lossG + " vs ally " + lossA);
+        }));
+        // 방패 투척: 3 · 6 · 9칸 (6칸 안으로 튕김) 적마다 한 번 7.2 (지속 보정 short)
+        steps.add(new Step(4, () -> {
+            JobTraits4.setCounter(sp, 0);
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            moveAlly(ally[0], sp, -3, -3);
+            for (double d : new double[] {3, 6, 9}) z.add(dummy(h, d));
+            h.assertTrue(JobSkills.press(sp, 2), "방패 투척 cast");
+        }));
+        steps.add(new Step(30, () -> {
+            double want = expected(sp, j, j.skill(2), 7.2);
+            for (int i = 0; i < 3; i++) h.assertTrue(near(TestDummies.dealt(z.get(i)), want), "방패 투척 " + i + ": " + TestDummies.dealt(z.get(i)) + " vs " + want);
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 3));
+            moveAlly(ally[0], sp, 2, 2);
+            mark[0] = mmorpg.fabric.FxDisplays.activeCount();
+            h.assertTrue(JobSkills.press(sp, 4), "성채 cast");
+        }));
+        // 성채: 안의 아군 · 나 받는 피해 −35%, 성벽 (블록 표시)
+        steps.add(new Step(12, () -> {
+            h.assertTrue(close(JobTraits4.fortFor(sp), 0.35, 1e-9) && close(JobTraits4.fortFor(ally[0]), 0.35, 1e-9), "inside the fortress −35%");
+            h.assertTrue(close(RpgHealth.sourceReduce.applyAsDouble(ally[0], ally[0].damageSources().mobAttack(z.get(0))), 0.35, 1e-9), "fortress in sourceReduce");
+            h.assertTrue(mmorpg.fabric.FxDisplays.activeCount() - mark[0] >= 30, "walls: " + (mmorpg.fabric.FxDisplays.activeCount() - mark[0]) + " block displays");
+        }));
+        // 무너짐 (160틱): 둘레 9칸 32 (지속 보정 zoneLong)
+        steps.add(new Step(156, () -> {
+            double want = expected(sp, j, j.skill(4), 32);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "성채 무너짐 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits4.fortFor(sp) == 0, "fortress over");
+        }));
+        chain(h, steps, 0, () -> {
+            cleanup(sp);
+            for (Husk x : z) x.discard();
+            bye(h, ally[0]);
             RpgGearTests.done(h, sp);
         });
     }
