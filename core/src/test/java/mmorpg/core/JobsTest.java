@@ -86,10 +86,13 @@ public final class JobsTest {
         Jobs.Job as = Jobs.job("assassin");
         Jobs.Job la = Jobs.job("lancer");
         Jobs.Job re = Jobs.job("reaper");
-        check(sw.ready() && sb.ready() && wa.ready() && mg.ready() && ar.ready() && as.ready() && la.ready() && re.ready()
-                && Jobs.all().stream().filter(Jobs.Job::ready).count() == 8, "ready: swordsman · spellblade · warrior · mage · archer (0.28.0) · assassin · lancer · reaper (0.29.0)");
+        Jobs.Job pa = Jobs.job("paladin");
+        Jobs.Job pr = Jobs.job("priest");
+        Jobs.Job gu = Jobs.job("guardian");
+        check(Jobs.all().stream().allMatch(Jobs.Job::ready) && Jobs.all().size() == 11,
+                "ready: all 11 (0.28.0 검사 · 마검사 · 전사 · 매지션 · 궁수 · 0.29.0 암살자 · 창술사 · 사신 · 0.30.0 성기사 · 사제 · 수호기사)");
         Set<String> skillIds = new HashSet<>();
-        for (Jobs.Job j : List.of(sw, sb, wa, mg, ar, as, la, re)) {
+        for (Jobs.Job j : Jobs.all()) {
             for (Jobs.Skill k : j.skills()) check(!k.id().isEmpty() && k.id().startsWith(j.id() + "_") && skillIds.add(k.id()), "unique skill id " + k.id());
         }
         // 부분 합 = 배율 합
@@ -164,6 +167,38 @@ public final class JobsTest {
                 "혼 10 · 처치 +3 · 이동 1% · 흡혈 0.1%");
         check(near(Jobs.power(as, Map.of("dex", 125.0, "lvmax", 40.0)), 42) && near(Jobs.power(la, Map.of("str", 89.0, "dex", 36.0, "lvmax", 40.0)), 42)
                 && near(Jobs.power(re, Map.of("dex", 89.0, "int", 36.0, "lvmax", 40.0)), 42), "assassin · lancer · reaper P 42");
+        // 0.30.0 성기사 · 사제 · 수호기사: 부분 합 = 배율 합 (성기사 ×1.1 · 사제 ×0.6 · 수호기사 ×0.8)
+        check(near(pa.skill(0).num("wave", 0) + pa.skill(0).num("bolt", 0), 5.5) && near(pa.skill(1).num("ram", 0), 3.3), "뇌격 강타 3 + 2.5 · 신념의 돌진 3.3");
+        check(near(pa.skill(2).num("ring", 0) * pa.skill(2).def().list("radii").size(), 9.9), "뇌진 3.3 × 고리 3");
+        check(near(sum(pa.skill(4), "hits"), 44) && pa.skill(4).def().list("hits").size() == 3, "천뢰의 대망치 10 + 10 + 24");
+        check(pr.skill(0).total() == 0 && pr.skill(1).total() == 0 && pr.skill(3).total() == 0, "치유의 손길 · 빛의 걸음 · 성흔 피해 없음");
+        check(near(pr.skill(2).num("pulse", 0) * pr.skill(2).num("pulses", 0), 5.6) && near(pr.skill(2).num("heal", 0) * pr.skill(2).num("pulses", 0), 0.12),
+                "성가 0.7 × 8 · 회복 1.5% × 8 = 12%");
+        check(near(pr.skill(4).num("ring", 0) * pr.skill(4).num("rings", 0), 24) && near(pr.skill(4).num("heal", 0) * pr.skill(4).num("rings", 0), 0.45),
+                "새벽의 종 8 × 3 · 회복 15% × 3");
+        check(near(gu.skill(0).num("mult", 0), 4) && near(gu.skill(1).num("hit", 0), 2.4) && near(gu.skill(2).num("hit", 0), 7.2) && near(gu.skill(4).num("final", 0), 32),
+                "방패 치기 4 · 수호 돌입 2.4 · 방패 투척 7.2 (적마다 한 번) · 성채 32");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (벼락은 충격파 10틱 뒤 · 고리 · 대망치 · 성가 · 종은 10틱 넘게)
+        check(pa.skill(0).num("delay", 0) >= 10 && pa.skill(2).num("gap", 0) >= 10 && pa.skill(4).num("gap", 0) >= 10, "paladin i-frame spacing");
+        check(pr.skill(2).num("gap", 0) >= 10 && pr.skill(4).num("gap", 0) >= 10, "priest i-frame spacing");
+        // 수호 돌입 · 방패 치기 · 투척 · 성채는 같은 적을 한 번만
+        check(near(pa.skill(4).num("first", 0) + pa.skill(4).num("gap", 0) * 2, pa.skill(4).num("t", 0)) && near(pr.skill(4).num("first", 0) + pr.skill(4).num("gap", 0) * 2,
+                pr.skill(4).num("t", 0)), "궁극기 t = 첫 타 + 간격 × 2");
+        // 지속 보정: 뇌진 · 방패 투척 → short, 천뢰의 대망치 · 새벽의 종 → long, 성가 → zone, 성채 (8초 뒤 무너짐) → zoneLong, 나머지 한방
+        check(Jobs.spreadKind(pa.skill(0)) == null && Jobs.spreadKind(pa.skill(1)) == null && "short".equals(Jobs.spreadKind(pa.skill(2)))
+                && "long".equals(Jobs.spreadKind(pa.skill(4))), "paladin spread");
+        check("zone".equals(Jobs.spreadKind(pr.skill(2))) && "long".equals(Jobs.spreadKind(pr.skill(4))), "priest spread");
+        check(Jobs.spreadKind(gu.skill(0)) == null && Jobs.spreadKind(gu.skill(1)) == null && "short".equals(Jobs.spreadKind(gu.skill(2)))
+                && "zoneLong".equals(Jobs.spreadKind(gu.skill(4))) && near(Jobs.spreadMult(gu.skill(4)), 1.15), "guardian spread");
+        check(pa.trait().max() == 5 && pa.trait().def().num("judgeFor") == 200 && pa.trait().def().num("stun") == 20 && near(pa.trait().def().num("aura"), 0.05)
+                && pa.trait().def().num("auraRadius") == 6 && near(pa.trait().def().num("bossTaken"), 0.08), "심판 5 · 10초 · 기절 1초 · 오라 5% · 6칸 · 보스 +8%");
+        check(near(pa.skill(3).num("aura", 0), 0.15) && near(pa.skill(3).num("regen", 0), 0.01) && pa.skill(3).num("dur", 0) == 200, "수호의 맹세 15% · 1%/초 · 10초");
+        check(pr.trait().max() == 5 && near(pr.trait().def().num("per"), 0.1) && pr.trait().def().num("overflowRadius") == 4, "신앙 5 · +10% · 넘친 흡혈 4칸");
+        check(gu.trait().max() == 100 && near(gu.trait().def().num("rate"), 0.3) && near(gu.trait().def().num("cap"), 0.5), "반격 30% · 최대 체력 50% 까지");
+        check(near(gu.skill(1).num("share", 0), 0.4) && near(gu.skill(1).num("cut", 0), 0.3) && near(gu.skill(4).num("guard", 0), 0.35)
+                && near(gu.skill(3).num("front", 0), 1) && near(gu.skill(3).num("side", 0), 0.6), "수호 돌입 40% (−30%) · 성채 −35% · 철옹성 100% · 60%");
+        check(near(Jobs.power(pa, Map.of("vit", 89.0, "str", 36.0, "lvmax", 40.0)), 42) && near(Jobs.power(pr, Map.of("int", 89.0, "vit", 36.0, "lvmax", 40.0)), 42)
+                && near(Jobs.power(gu, Map.of("vit", 125.0, "lvmax", 40.0)), 42), "paladin · priest · guardian P 42");
         // 특성 수치
         check(wa.trait().max() == 100 && near(wa.trait().def().num("halfBonus"), 0.1) && near(wa.trait().def().num("fullBonus"), 0.2), "분노 0 ~ 100 · +10% · +20%");
         check(mg.trait().max() == 3 && near(mg.trait().def().num("perChain"), 0.12) && mg.trait().def().num("window") == 80, "주문 연쇄 3 · 12% · 4초");
