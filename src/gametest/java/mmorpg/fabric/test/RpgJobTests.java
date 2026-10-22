@@ -730,8 +730,10 @@ public final class RpgJobTests {
             h.assertTrue(JobSkills.press(sp, 1), "바람 타기 cast");
             h.assertTrue(JobTraitsMore.windShots(sp) == 2, "wind shots 2");
         }));
-        // 바람 타기 뒤 활 평타: 두 발 (두 번째 = 평타와 같은 피해)
+        // 바람 타기 뒤 활 평타: 두 발 (두 번째 = 평타와 같은 피해). 바람 타기가 간 쪽은 움직이던 쪽 · 막힌 쪽에 따라 달라 (뒤가 바닥 끝이면 앞으로) 그 앞 3.5칸
+        // 과녁이 시험 자리 (barrier 벽 8칸) 밖에 설 수 있었음 — 제자리로 돌아와 쏨 (0.30.0: 두 번째 화살이 들어가지 않은 시험이 다섯 번에 두 번)
         steps.add(new Step(8, () -> {
+            home(h, sp);
             z.set(0, dummyAhead(h, sp, 3.5));
             RpgCombat.forceCrit = false;
             // 호흡 가득 (멈춰 쏘면 +1 이 붙는지는 바람 타기가 끝난 뒤 움직임을 재는 4틱 마디에 따라 달라짐 — 가득이면 그대로)
@@ -1405,7 +1407,8 @@ public final class RpgJobTests {
             sp.setShiftKeyDown(false);
             h.assertTrue(side >= 0.6 - 1e-9 && side < 1, "side attack blocked 60%: " + side);
         }));
-        // 수호 돌입: 겨눈 아군 (앞 5.5칸 — 바닥 8×8 안. 바닥 밖 7칸에 세운 아군은 시험에서 지켜지지 않았음) 앞까지 → 둘레 2.5칸 적 2.4 → 아군이 받을 피해의 40% 를 내가 × 0.7
+        // 수호 돌입: 겨눈 아군 (앞 5.5칸 — 바닥 8×8 안: 7칸은 시험 자리 둘레 barrier 벽 너머라 시선이 막혀 겨누지 못했음) 앞까지 → 둘레 2.5칸 적 2.4 → 아군이 받을 피해의 40% 를
+        // 내가 × 0.7
         steps.add(new Step(4, () -> {
             JobSystem.setJob(sp, "guardian");
             for (Husk x : z) x.discard();
