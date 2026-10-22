@@ -1178,8 +1178,8 @@ public final class RpgJobTests {
             mark[0] = sp.position().z;
             h.assertTrue(JobSkills.press(sp, 1), "신념의 돌진 cast");
         }));
-        // 신념의 돌진: 부딪힘 3.3 · 기절 · 나와 둘레 아군 보호막 (최대 체력 8%)
-        steps.add(new Step(10, () -> {
+        // 신념의 돌진: 부딪힘 3.3 · 기절 (0.5초 — 끝나기 전에 봄) · 나와 둘레 아군 보호막 (최대 체력 8%)
+        steps.add(new Step(7, () -> {
             double want = expected(sp, j, j.skill(1), 3.3);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "신념의 돌진 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(sp.position().z - mark[0] > 1.5, "charged ahead: " + (sp.position().z - mark[0]));
@@ -1405,21 +1405,22 @@ public final class RpgJobTests {
             sp.setShiftKeyDown(false);
             h.assertTrue(side >= 0.6 - 1e-9 && side < 1, "side attack blocked 60%: " + side);
         }));
-        // 수호 돌입: 겨눈 아군 (앞 7칸) 앞까지 → 둘레 2.5칸 적 2.4 → 아군이 받을 피해의 40% 를 내가 × 0.7
+        // 수호 돌입: 겨눈 아군 (앞 5.5칸 — 바닥 8×8 안. 바닥 밖 7칸에 세운 아군은 시험에서 지켜지지 않았음) 앞까지 → 둘레 2.5칸 적 2.4 → 아군이 받을 피해의 40% 를 내가 × 0.7
         steps.add(new Step(4, () -> {
             JobSystem.setJob(sp, "guardian");
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            ally[0] = allyAt(h, sp, 0, 7);
-            z.add(dummyAt(h, 1.3, 5.6));
+            ally[0] = allyAt(h, sp, 0, 5.5);
+            z.add(dummyAt(h, 1.3, 4.3));
             h.assertTrue(JobSkills.press(sp, 1), "수호 돌입 cast");
         }));
         steps.add(new Step(8, () -> {
             h.assertTrue(sp.distanceTo(ally[0]) < 2.5, "rushed to the ally: " + sp.distanceTo(ally[0]));
             double want = expected(sp, j, j.skill(1), 2.4);
             h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "수호 돌입 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(sp.getUUID().equals(JobTraits4.guardOf(ally[0])), "ally guarded");
+            h.assertTrue(sp.getUUID().equals(JobTraits4.guardOf(ally[0])), "ally guarded (guard " + JobTraits4.guardOf(ally[0]) + ", me " + sp.position() + ", ally "
+                    + ally[0].position() + ")");
             sp.setHealth(sp.getMaxHealth());
             ally[0].setHealth(ally[0].getMaxHealth());
             mark[0] = ally[0].getHealth();
@@ -1428,6 +1429,24 @@ public final class RpgJobTests {
             double lossA = mark[0] - next;
             double lossG = mark[1] - sp.getHealth();
             h.assertTrue(lossA > 0 && close(lossG, lossA * (0.4 * 0.7 / 0.6), 0.02 + lossA * 0.002), "shared: guardian " + lossG + " vs ally " + lossA);
+        }));
+        // 아군 없이 앞으로: 길 앞에 처음 닿은 적 (4칸) 앞에서 멈춰 닿음 (지나치지 않음)
+        steps.add(new Step(4, () -> {
+            JobTraits4.setCounter(sp, 0);
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            moveAlly(ally[0], sp, -3, -3);
+            z.add(dummy(h, 4));
+            JobSkills.resetCooldowns(sp);
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "수호 돌입 cast (no ally)");
+        }));
+        steps.add(new Step(8, () -> {
+            double moved = sp.position().z - mark[0];
+            h.assertTrue(moved > 1.0 && moved < 3.2, "stopped before the first enemy: moved " + moved);
+            double want = expected(sp, j, j.skill(1), 2.4);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "수호 돌입 (no ally) " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         // 방패 투척: 3 · 6 · 9칸 (6칸 안으로 튕김) 적마다 한 번 7.2 (지속 보정 short)
         steps.add(new Step(4, () -> {

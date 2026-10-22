@@ -511,9 +511,15 @@ final class JobFx {
         loop(level, "jmaul", MAUL, at, life, 12, o.with("size", size), outer(j), inner(j));
     }
 
-    /** 빛의 날개 (rfx_jwing — 면이 dir 쪽, 이어 돌림 · 천천히 날갯짓, 그림 256 × 192): 가운데 at (등 뒤) · 너비 약 size × 2 칸 */
-    static void wing(ServerLevel level, Vec3 at, Vec3 dir, double size, Jobs.Job j, double life, Opt o) {
-        loop(level, "jwing", WING, at, life, 5, o.with("dir", dir, "size", size), outer(j), inner(j));
+    /**
+     * 빛의 날개 (rfx_jwing — 세워 면이 앞뒤로, 이어 돌림 · 천천히 날갯짓, 그림 256 × 192): 가운데 at (등 뒤) · 너비 약 size × 2 칸. 사각형은 앞면만 그려지므로
+     * (뒷면은 걸러짐 — 0.30.0 사진첩: 면이 보는 쪽 facing 이면 뒤 3인칭에서 날개가 안 보였음) 뒤를 보는 장 (뒤 3인칭 · 뒤의 사람) 과 앞을 보는 장 (앞의 사람) 둘.
+     * solo 가 있으면 앞 장은 solo + 16
+     */
+    static void wing(ServerLevel level, Vec3 at, Vec3 facing, double size, Jobs.Job j, double life, Opt o) {
+        loop(level, "jwing", WING, at, life, 5, o.with("dir", V.scale(facing, -1), "size", size), outer(j), inner(j));
+        double solo = o.num("solo", 0);
+        loop(level, "jwing", WING, at, life, 5, o.with("dir", facing, "size", size, "solo", solo > 0 ? solo + 16 : null), outer(j), inner(j));
     }
 
     /** 기절 별 (rfx_jstun — 카메라를 봄, 이어 돌림): 머리 위를 도는 별 다섯 (너비 약 몸 + 0.8칸) — ticks 동안 */

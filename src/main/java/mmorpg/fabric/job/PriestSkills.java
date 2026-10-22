@@ -245,6 +245,9 @@ final class PriestSkills {
         Vec3 ground = PaladinSkills.groundAhead(sp, c0, f, 3.0);
         Vec3 bellAt = V.up(ground, 4.6);
         double bellSize = 1.5;
+        // 0.30.0 사진첩: 머리 위 종은 시전자 1인칭 시야 밖 (위로 45°) → 시전자 1인칭에서는 눈앞 6.5칸 · 조금 위의 작은 종 (only1p), 머리 위 종은 숨김
+        Vec3 bell1p = V.up(V.add(sp.getEyePosition(), f, 6.5), 1.4);
+        double size1p = 0.9;
         int endAt = first + gap * (rings - 1);
         Ult.sky(level0, c0, "rpg:ult_heaven", endAt + 30);
         JobFx.aura(sp, j, 3.0, 0.9, 1.0);
@@ -253,28 +256,35 @@ final class PriestSkills {
         SkillFx.play(level0, "block.beacon.activate", c0, 1.0, 0.8);
         // 종이 내려옴 (위에서 first − 4 틱 동안 — 흔들리기 전의 가만한 장면)
         int down = Math.max(4, first - 4);
-        JobFx.bellStill(level0, V.up(bellAt, 4), bellSize, GOLD, DAWN, down / 20.0, Opt.of("dir", V.DOWN, "speed", 4 / (down / 20.0), "fade", 0.02));
+        JobFx.bellStill(level0, V.up(bellAt, 4), bellSize, GOLD, DAWN, down / 20.0, JobFx.hide1p(sp).with("dir", V.DOWN, "speed", 4 / (down / 20.0), "fade", 0.02));
+        JobFx.bellStill(level0, V.up(bell1p, 2.4), size1p, GOLD, DAWN, down / 20.0, JobFx.only1p(sp).with("dir", V.DOWN, "speed", 2.4 / (down / 20.0), "fade",
+                0.02));
         RuneKit.godRays(sp, level0, ground, 2.5, 4, GOLD, DAWN, Opt.of("h", 10.0, "life", 1.0, "alpha", 0.6, "skipNear", true));
         for (int i = 0; i < rings; i++) {
             int ii = i;
             int at = first + gap * i;
             // 흔들림 (8장 — 4장째에 울림): 울리기 4틱 전부터
             RuneKit.later(at - 4, () -> {
-                if (RuneKit.sameLife(sp, life)) JobFx.bell(sp.level(), bellAt, bellSize, GOLD, DAWN, ii == rings - 1 ? 0.9 : gap / 20.0 + 0.05, Opt.of("fade", 0.15));
+                if (!RuneKit.sameLife(sp, life)) return;
+                double swing = ii == rings - 1 ? 0.9 : gap / 20.0 + 0.05;
+                JobFx.bell(sp.level(), bellAt, bellSize, GOLD, DAWN, swing, JobFx.hide1p(sp).with("fade", 0.15));
+                JobFx.bell(sp.level(), bell1p, size1p, GOLD, DAWN, swing, JobFx.only1p(sp).with("fade", 0.15));
             });
             RuneKit.later(at, () -> {
-                if (RuneKit.sameLife(sp, life)) toll(sp, j, k, P, ground, bellAt, r, ii, ii == rings - 1, life);
+                if (RuneKit.sameLife(sp, life)) toll(sp, j, k, P, ground, bellAt, bell1p, r, ii, ii == rings - 1, life);
             });
         }
         return true;
     }
 
     /** 종이 울림: 땅의 빛 고리 둘 · 퍼지는 충격 고리 · 빛살 — 아군 회복 (첫 울림에 정화 · 쓰러지지 않음), 적에게 ring (마법) */
-    private static void toll(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 ground, Vec3 bellAt, double r, int i, boolean fin, String life) {
+    private static void toll(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 ground, Vec3 bellAt, Vec3 bell1p, double r, int i, boolean fin,
+            String life) {
         ServerLevel level = sp.level();
         JobFx.ring(level, V.up(ground, 0.06), r, j, i % 2 == 1, 0.6, Opt.empty());
         RuneKit.zonePulse(level, V.up(ground, 0.1), GOLD, r, 0.55);
-        JobFx.burst(level, bellAt, 1.6, j, 0.35, Opt.of("alpha", 0.8));
+        JobFx.burst(level, bellAt, 1.6, j, 0.35, JobFx.hide1p(sp).with("alpha", 0.8));
+        JobFx.burst(level, bell1p, 1.0, j, 0.35, JobFx.only1p(sp).with("alpha", 0.8));
         RuneKit.godRays(sp, level, ground, r * 0.5, 5, GOLD, DAWN, Opt.of("h", 10.0, "life", 0.8, "alpha", 0.7, "skipNear", true));
         if (fin) Ult.flash(level, ground, GOLD, Opt.empty(), sp);
         RuneKit.shakeAround(level, ground, 16, fin ? 0.3 : 0.18, 0.3);

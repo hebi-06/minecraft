@@ -370,9 +370,16 @@ final class PaladinSkills {
         double size = fin ? 2.2 : 1.9;
         JobFx.maul(level, V.up(center, size * 2.67 / 2), size, j, 0.3, Opt.of("alpha", 0.9, "fade", 0.6, "grow", 0.1));
         JobFx.thunder(level, center, fin ? 16 : 13, j, 0.5, Opt.empty());
+        Vec3 me = sp.position();
         for (int b = 0; b < (fin ? 6 : 4); b++) {
-            double a = Kit.rand() * Math.PI * 2;
-            Vec3 p = V.add(center, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * (0.35 + Kit.rand() * 0.55));
+            // 둘레 벼락은 시전자에게서 3.5칸 넘게 (0.30.0 사진첩: 카메라 바로 옆에 떨어진 벼락이 화면을 덮으며 그림 칸이 계단처럼 보였음)
+            Vec3 p = center;
+            for (int tries = 0; tries < 8; tries++) {
+                double a = Kit.rand() * Math.PI * 2;
+                p = V.add(center, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * (0.35 + Kit.rand() * 0.55));
+                if (Math.hypot(p.x - me.x, p.z - me.z) > 3.5) break;
+            }
+            if (Math.hypot(p.x - me.x, p.z - me.z) <= 3.5) continue;
             p = new Vec3(p.x, RuneKit.groundAt(level, p, center.y), p.z);
             Vec3 pp = p;
             RuneKit.later(b % 3, () -> JobFx.thunder(level, pp, 9 + Kit.rand() * 3, j, 0.4, Opt.of("alpha", 0.9)));

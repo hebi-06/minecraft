@@ -667,8 +667,21 @@ public final class RpgCombat {
         Fx.sound(sp.level(), head, SoundEvents.ARROW_SHOOT, 1.3, 0.6);
         Fx.arrowFx(sp.level(), path, shot, w);
         int ticks = Math.max(1, (int) Math.round(shot.life() * 20));
-        Tasks.later(ticks, () -> rangedHit(sp, target, w, path));
+        Tasks.later(ticks, () -> landExtra(sp, target, w, path, 2));
         return ticks;
+    }
+
+    /**
+     * 0.30.0 덧쏘기가 닿음: 대상이 아직 무적 시간 (바닐라 — 앞 화살 · 다른 피해 뒤 10틱) 이면 끝날 때까지 미룸 (두 번까지). 두 번째 화살은 첫 화살과 꼭 10틱
+     * 차이라 틱 순서에 따라 무적 시간에 막혀 버려질 수 있었음 (게임 시험 — 바람 타기 두 발 중 한 발만 들어감)
+     */
+    private static void landExtra(ServerPlayer sp, LivingEntity target, Weapon w, Path path, int retry) {
+        int wait = target.damageCooldownTime - 10;
+        if (wait > 0 && retry > 0 && !target.isRemoved() && target.isAlive()) {
+            Tasks.later(wait, () -> landExtra(sp, target, w, path, retry - 1));
+            return;
+        }
+        rangedHit(sp, target, w, path);
     }
 
     /** 원거리 명중 (combat.js rangedHit): 활 = 공격 피해 (방어구 적용), 완드 = 마법 피해 (방어 무시) */

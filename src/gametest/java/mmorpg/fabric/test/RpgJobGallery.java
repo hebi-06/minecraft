@@ -62,7 +62,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
      * 평타 뒤 사진 틱 (완드는 마법진을 다 그린 뒤)
      */
     /** 3인칭 사진을 앞 카메라로 찍는 스킬 (과녁 사이를 지나감) */
-    private static final java.util.Set<String> FRONT_3P = java.util.Set.of("lancer_vault", "reaper_wraith", "guardian_rush");
+    private static final java.util.Set<String> FRONT_3P = java.util.Set.of("lancer_vault", "reaper_wraith", "priest_step");
     /** 0.30.0 피해가 없는 스킬 (회복 · 보호막 · 성흔 — 써졌는지만 확인) */
     private static final java.util.Set<String> NO_DAMAGE = java.util.Set.of("priest_heal", "priest_step", "priest_stigma");
     /** 순간 이동이 끝난 뒤 (4틱) 뒤로 돌아 찍는 스킬 — 잔영: 과녁 너머로 간 뒤 분신 · 끌려간 과녁을 1인칭 · 3인칭 뒤 카메라로 (앞 카메라는 몸이 분신을 가림) */

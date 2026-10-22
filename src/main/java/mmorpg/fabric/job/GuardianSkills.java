@@ -88,7 +88,8 @@ final class GuardianSkills {
     // ------------------------------------------------------------ 수호 돌입
 
     /**
-     * 수호 돌입: 겨눈 아군 (range 칸 — 그 앞 1.2칸까지) 에게, 없으면 앞 dist 칸으로 steps 틱에 돌진 (벽 앞에서 멈춤) → 닿은 자리 둘레 radius 칸 적에게 hit (반격
+     * 수호 돌입: 겨눈 아군 (range 칸 — 그 앞 1.2칸까지) 에게, 없으면 앞 dist 칸으로 steps 틱에 돌진 (벽 앞 · 아군이 없으면 길 앞에 처음 닿은 적 앞에서 멈춤)
+     * → 닿은 자리 둘레 radius 칸 적에게 hit (반격
      * 게이지 — 첫 타) · 밀침, 아군이면 shareFor 틱 동안 그 아군이 받을 피해의 share 를 내가 × (1 − cut) 로 (JobTraits4 — 둘 사이 빛의 사슬). 묶였거나 아군도 없이
      * 앞이 막혔으면 쓰지 않음
      */
@@ -117,8 +118,8 @@ final class GuardianSkills {
         String life = RuneKit.lifeToken(sp);
         int steps = Math.max(1, (int) k.num("steps", 4));
         List<Vec3> marks = new ArrayList<>();
+        double len = spots.isEmpty() ? 0 : spots.get(spots.size() - 1).s();
         if (!spots.isEmpty()) {
-            double len = spots.get(spots.size() - 1).s();
             for (int s = 1; s <= steps; s++) {
                 double w = len * s / steps;
                 Kit.Spot best = spots.get(0);
@@ -132,13 +133,33 @@ final class GuardianSkills {
         SkillFx.play(level, "item.trident.riptide_1", start, 1.2, 0.7);
         SkillFx.play(level, "item.armor.equip_iron", start, 0.9, 0.8);
         JobFx.eyeRing(sp, j, 2.4, 0.8, 0.3);
+        boolean[] done = {false};
         for (int s = 0; s < marks.size(); s++) {
             Vec3 to = marks.get(s);
             int ss = s;
             RuneKit.later(s, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
+                if (done[0] || !RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
                 Vec3 prev = sp.position();
+                if (ally == null) {
+                    // 0.30.0 아군 없이 앞으로: 길 앞에 처음 닿은 적들 앞에서 멈춰 닿음 (성기사 신념의 돌진과 같음 — 사진첩: 과녁 무리를 지나쳐 빈 곳에 섰음)
+                    List<LivingEntity> hit = Kit.around(sp, V.add(to, dir, 0.6), 1.5, 2.0);
+                    if (!hit.isEmpty()) {
+                        done[0] = true;
+                        double sPrev = V.dot(V.sub(prev, start), dir);
+                        double near = 1e9;
+                        for (LivingEntity e : hit) near = Math.min(near, V.dot(V.sub(e.position(), start), dir) - 1.5 - Kit.bodyPad(e));
+                        double stopAt = Math.max(sPrev, Math.min(len, near));
+                        Kit.Spot best = null;
+                        for (Kit.Spot x : spots) if (x.s() <= stopAt + 0.05 && (best == null || x.s() > best.s())) best = x;
+                        Vec3 stop = prev;
+                        if (best != null && best.s() > sPrev + 0.05 && Kit.moveTo(sp, best.p())) stop = best.p();
+                        JobFx.dash(d, V.up(prev, 0.9), V.up(stop, 0.9), j, 0.3, JobFx.hide1p(sp));
+                        JobFx.speed(sp, j, 0.25, 0.8);
+                        arrive(sp, j, k, P, null, dir, life);
+                        return;
+                    }
+                }
                 if (!Kit.moveTo(sp, to)) return;
                 JobFx.dash(d, V.up(prev, 0.9), V.up(to, 0.9), j, 0.3, JobFx.hide1p(sp));
                 SkillFx.sparks(d, V.up(to, 0.15), DUST, 3, 2);
@@ -146,7 +167,7 @@ final class GuardianSkills {
             });
         }
         RuneKit.later(marks.size(), () -> {
-            if (RuneKit.sameLife(sp, life)) arrive(sp, j, k, P, ally, dir, life);
+            if (!done[0] && RuneKit.sameLife(sp, life)) arrive(sp, j, k, P, ally, dir, life);
         });
         return true;
     }
@@ -157,7 +178,7 @@ final class GuardianSkills {
         Vec3 c = sp.position();
         double r = k.num("radius", 2.5);
         JobFx.ring(level, V.up(c, 0.08), r, j, false, 0.35, Opt.empty());
-        JobFx.aegis(level, shieldFront(sp, 1.0), 0.5, j, 2, 0.3, JobFx.hide1p(sp));
+        JobFx.aegis(level, shieldFront(sp, 1.0), 0.5, j, 0, 0.3, JobFx.hide1p(sp)); // 방패를 앞세워 부딪힘 (피어나는 장 — 금 간 장은 성채가 밀칠 때)
         JobKit.shake(sp, 6, 0.2, 0.15);
         SkillFx.play(level, "item.shield.block", c, 0.9, 1.0);
         SkillFx.play(level, "entity.iron_golem.attack", c, 1.1, 0.7);
@@ -298,7 +319,8 @@ final class GuardianSkills {
     // ------------------------------------------------------------ 성채
 
     /** 성벽 한 조각 (블록 표시 — 아래 모서리를 땅 g 에, 회전 q · 크기) */
-    private record Brick(Display.BlockDisplay d, Quaternionf q, Vec3 off, double w, double h, double t, Vec3 out) {}
+    /** 성벽 조각: base = 이 조각의 기준점이 땅에서 높은 만큼 (성벽 0 · 성가퀴 · 깃대 = 성벽 높이 · 깃발 = 망루 + 1.05 — 무너질 때 그만큼 더 가라앉음) */
+    private record Brick(Display.BlockDisplay d, Quaternionf q, Vec3 off, double w, double h, double t, Vec3 out, double base) {}
 
     /**
      * 성채: 둘레 radius 칸에 돌 성벽이 솟아 (블록 표시 — 성가퀴 · 네 망루의 파란 깃발) dur 틱 요새 — 안의 아군 (나 포함) 받는 피해 − guard (JobTraits4), 성벽에 닿은
@@ -329,20 +351,20 @@ final class GuardianSkills {
             double t = tower ? 1.5 : 0.8;
             Vec3 p = V.add(c, out, r);
             Vec3 g = new Vec3(p.x, RuneKit.groundAt(level, p, c.y), p.z);
-            Brick b = wallBlock(level, g, out, w, h, t, tower ? Blocks.DEEPSLATE_BRICKS.defaultBlockState() : Blocks.STONE_BRICKS.defaultBlockState(), life2);
+            Brick b = wallBlock(level, g, out, w, h, t, tower ? Blocks.DEEPSLATE_BRICKS.defaultBlockState() : Blocks.STONE_BRICKS.defaultBlockState(), life2, 0);
             if (b != null) bricks.add(b);
             if (!tower && i % 2 == 0) {
                 // 성가퀴 (성벽 위 작은 돌)
-                Brick top = wallBlock(level, V.up(g, h), out, 0.75, 0.55, 0.85, Blocks.STONE_BRICKS.defaultBlockState(), life2);
+                Brick top = wallBlock(level, V.up(g, h), out, 0.75, 0.55, 0.85, Blocks.STONE_BRICKS.defaultBlockState(), life2, h);
                 if (top != null) bricks.add(top);
             }
             if (tower) {
                 // 망루 위 깃대 (울타리 기둥) · 파란 깃발 (얇은 양털 판 — 바깥 옆으로)
                 Vec3 top = V.up(g, h);
                 Vec3 side = V.unit(V.cross(V.UP, out));
-                Brick pole = wallBlock(level, top, out, 1.0, 1.8, 1.0, Blocks.DARK_OAK_FENCE.defaultBlockState(), life2);
+                Brick pole = wallBlock(level, top, out, 1.0, 1.8, 1.0, Blocks.DARK_OAK_FENCE.defaultBlockState(), life2, h);
                 if (pole != null) bricks.add(pole);
-                Brick cloth = wallBlock(level, V.up(V.add(top, side, 0.58), 1.05), out, 0.95, 0.62, 0.06, flagCloth(), life2);
+                Brick cloth = wallBlock(level, V.up(V.add(top, side, 0.58), 1.05), out, 0.95, 0.62, 0.06, flagCloth(), life2, h + 1.05);
                 if (cloth != null) bricks.add(cloth);
             }
         }
@@ -387,7 +409,7 @@ final class GuardianSkills {
         RuneKit.later(dur, () -> {
             JobTraits4.fortEnd(sp);
             if (RuneKit.sameLife(sp, life)) collapse(sp, j, k, P, c, r, bricks, life);
-            else for (Brick b : bricks) FxDisplays.move(b.d(), FxDisplays.of(V.add(b.off(), V.scale(V.UP, -b.h() - 0.4)), b.q(), b.w() * 0.9, b.h(), b.t() * 0.9), 12);
+            else for (Brick b : bricks) FxDisplays.move(b.d(), FxDisplays.of(V.add(b.off(), V.scale(V.UP, -b.base() - b.h() - 0.4)), b.q(), b.w() * 0.9, b.h(), b.t() * 0.9), 12);
         });
         return true;
     }
@@ -399,16 +421,18 @@ final class GuardianSkills {
         return b == null || b == Blocks.AIR ? Blocks.LAPIS_BLOCK.defaultBlockState() : b.defaultBlockState();
     }
 
-    /** 성벽 조각 하나 (처음엔 땅 밑) */
-    private static Brick wallBlock(ServerLevel level, Vec3 g, Vec3 out, double w, double h, double t, BlockState st, int life) {
+    /**
+     * 성벽 조각 하나 (처음엔 땅 밑 — 성벽 위 조각도 기준점 높이 base 만큼 더 내려가 땅 밑에서 시작: 0.30.0 사진첩에서 성벽이 솟기 전에 성가퀴가 공중에 떠 있었음)
+     */
+    private static Brick wallBlock(ServerLevel level, Vec3 g, Vec3 out, double w, double h, double t, BlockState st, int life, double base) {
         Vec3 ez = out;
         Vec3 ey = V.UP;
         Vec3 ex = V.unit(V.cross(ey, ez));
         Quaternionf q = FxDisplays.basis(ex, ey, ez);
         // 블록 모서리 → 가운데 아래 (x · z 반) 를 g 에
         Vec3 off = V.add(V.scale(ex, -w / 2), V.scale(ez, -t / 2));
-        Display.BlockDisplay d = FxDisplays.block(level, g, st, FxDisplays.of(V.add(off, V.scale(V.UP, -h - 0.4)), q, w, h, t), life, null);
-        return d == null ? null : new Brick(d, q, off, w, h, t, out);
+        Display.BlockDisplay d = FxDisplays.block(level, g, st, FxDisplays.of(V.add(off, V.scale(V.UP, -base - h - 0.4)), q, w, h, t), life, null);
+        return d == null ? null : new Brick(d, q, off, w, h, t, out, base);
     }
 
     /** 무너짐: 성벽이 바깥으로 기울며 가라앉음 · 돌조각 · 먼지 · 흔들림 — 둘레 collapse 칸 (final — 큰 숫자 · 밀침) */
@@ -416,14 +440,15 @@ final class GuardianSkills {
         ServerLevel level = sp.level();
         for (int i = 0; i < bricks.size(); i++) {
             Brick b = bricks.get(i);
-            // 바깥쪽으로 40° 기울며 땅 밑으로 (12틱)
+            // 바깥쪽으로 40° 기울며 땅 밑으로 (12틱) — 성벽 위 조각 (성가퀴 · 깃대 · 깃발) 은 기준점 높이 base 만큼 더 내려감 (0.30.0 사진첩: 성벽이 가라앉은 뒤 공중에 떠 있었음)
             Vec3 tilt = V.unit(V.add(V.UP, b.out(), 0.85));
             Vec3 ez = V.unit(V.sub(b.out(), V.scale(tilt, V.dot(b.out(), tilt))));
             Vec3 ex = V.unit(V.cross(tilt, ez));
             Quaternionf q = FxDisplays.basis(ex, tilt, ez);
             Vec3 off = V.add(V.scale(ex, -b.w() / 2), V.scale(ez, -b.t() / 2));
             int delay = i % 3;
-            RuneKit.later(delay, () -> FxDisplays.move(b.d(), FxDisplays.of(V.add(off, V.scale(tilt, -b.h() - 0.6)), q, b.w() * 0.9, b.h(), b.t() * 0.9), 12));
+            RuneKit.later(delay, () -> FxDisplays.move(b.d(), FxDisplays.of(V.add(V.add(off, V.scale(tilt, -b.h() - 0.6)), V.scale(V.UP, -b.base())), q, b.w() * 0.9,
+                    b.h(), b.t() * 0.9), 12));
         }
         for (int i = 0; i < 10; i++) {
             double a = i * Math.PI * 2 / 10;
