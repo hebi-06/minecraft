@@ -319,8 +319,11 @@ final class GuardianSkills {
     // ------------------------------------------------------------ 성채
 
     /** 성벽 한 조각 (블록 표시 — 아래 모서리를 땅 g 에, 회전 q · 크기) */
-    /** 성벽 조각: base = 이 조각의 기준점이 땅에서 높은 만큼 (성벽 0 · 성가퀴 · 깃대 = 성벽 높이 · 깃발 = 망루 + 1.05 — 무너질 때 그만큼 더 가라앉음) */
-    private record Brick(Display.BlockDisplay d, Quaternionf q, Vec3 off, double w, double h, double t, Vec3 out, double base) {}
+    /**
+     * 성벽 조각: base = 이 조각의 기준점이 땅에서 높은 만큼 (성벽 0 · 성가퀴 · 깃대 = 성벽 높이 · 깃발 = 망루 + 1.05 — 무너질 때 그만큼 더 가라앉음), seg = 둘레의 몇
+     * 번째 성벽인지 (위 조각도 그 성벽과 같은 틱에 솟고 무너짐 — 0.30.0 사진첩: 조각마다 엇갈린 틱이라 성가퀴가 먼저 솟아 공중에 떠 있었음)
+     */
+    private record Brick(Display.BlockDisplay d, Quaternionf q, Vec3 off, double w, double h, double t, Vec3 out, double base, int seg) {}
 
     /**
      * 성채: 둘레 radius 칸에 돌 성벽이 솟아 (블록 표시 — 성가퀴 · 네 망루의 파란 깃발) dur 틱 요새 — 안의 아군 (나 포함) 받는 피해 − guard (JobTraits4), 성벽에 닿은
@@ -351,27 +354,27 @@ final class GuardianSkills {
             double t = tower ? 1.5 : 0.8;
             Vec3 p = V.add(c, out, r);
             Vec3 g = new Vec3(p.x, RuneKit.groundAt(level, p, c.y), p.z);
-            Brick b = wallBlock(level, g, out, w, h, t, tower ? Blocks.DEEPSLATE_BRICKS.defaultBlockState() : Blocks.STONE_BRICKS.defaultBlockState(), life2, 0);
+            Brick b = wallBlock(level, g, out, w, h, t, tower ? Blocks.DEEPSLATE_BRICKS.defaultBlockState() : Blocks.STONE_BRICKS.defaultBlockState(), life2, 0, i);
             if (b != null) bricks.add(b);
             if (!tower && i % 2 == 0) {
                 // 성가퀴 (성벽 위 작은 돌)
-                Brick top = wallBlock(level, V.up(g, h), out, 0.75, 0.55, 0.85, Blocks.STONE_BRICKS.defaultBlockState(), life2, h);
+                Brick top = wallBlock(level, V.up(g, h), out, 0.75, 0.55, 0.85, Blocks.STONE_BRICKS.defaultBlockState(), life2, h, i);
                 if (top != null) bricks.add(top);
             }
             if (tower) {
                 // 망루 위 깃대 (울타리 기둥) · 파란 깃발 (얇은 양털 판 — 바깥 옆으로)
                 Vec3 top = V.up(g, h);
                 Vec3 side = V.unit(V.cross(V.UP, out));
-                Brick pole = wallBlock(level, top, out, 1.0, 1.8, 1.0, Blocks.DARK_OAK_FENCE.defaultBlockState(), life2, h);
+                Brick pole = wallBlock(level, top, out, 1.0, 1.8, 1.0, Blocks.DARK_OAK_FENCE.defaultBlockState(), life2, h, i);
                 if (pole != null) bricks.add(pole);
-                Brick cloth = wallBlock(level, V.up(V.add(top, side, 0.58), 1.05), out, 0.95, 0.62, 0.06, flagCloth(), life2, h + 1.05);
+                Brick cloth = wallBlock(level, V.up(V.add(top, side, 0.58), 1.05), out, 0.95, 0.62, 0.06, flagCloth(), life2, h + 1.05, i);
                 if (cloth != null) bricks.add(cloth);
             }
         }
         // 솟음 (2틱 뒤부터 조금씩 엇갈리며 8틱) · 먼지 · 돌조각 · 흔들림
         for (int i = 0; i < bricks.size(); i++) {
             Brick b = bricks.get(i);
-            int delay = 2 + (i % 4);
+            int delay = 2 + (b.seg() % 4);
             RuneKit.later(delay, () -> FxDisplays.move(b.d(), FxDisplays.of(V.add(b.off(), V.scale(V.UP, -0.05)), b.q(), b.w(), b.h(), b.t()), 8));
         }
         for (int i = 0; i < 8; i++) {
@@ -424,7 +427,7 @@ final class GuardianSkills {
     /**
      * 성벽 조각 하나 (처음엔 땅 밑 — 성벽 위 조각도 기준점 높이 base 만큼 더 내려가 땅 밑에서 시작: 0.30.0 사진첩에서 성벽이 솟기 전에 성가퀴가 공중에 떠 있었음)
      */
-    private static Brick wallBlock(ServerLevel level, Vec3 g, Vec3 out, double w, double h, double t, BlockState st, int life, double base) {
+    private static Brick wallBlock(ServerLevel level, Vec3 g, Vec3 out, double w, double h, double t, BlockState st, int life, double base, int seg) {
         Vec3 ez = out;
         Vec3 ey = V.UP;
         Vec3 ex = V.unit(V.cross(ey, ez));
@@ -432,7 +435,7 @@ final class GuardianSkills {
         // 블록 모서리 → 가운데 아래 (x · z 반) 를 g 에
         Vec3 off = V.add(V.scale(ex, -w / 2), V.scale(ez, -t / 2));
         Display.BlockDisplay d = FxDisplays.block(level, g, st, FxDisplays.of(V.add(off, V.scale(V.UP, -base - h - 0.4)), q, w, h, t), life, null);
-        return d == null ? null : new Brick(d, q, off, w, h, t, out, base);
+        return d == null ? null : new Brick(d, q, off, w, h, t, out, base, seg);
     }
 
     /** 무너짐: 성벽이 바깥으로 기울며 가라앉음 · 돌조각 · 먼지 · 흔들림 — 둘레 collapse 칸 (final — 큰 숫자 · 밀침) */
@@ -446,7 +449,7 @@ final class GuardianSkills {
             Vec3 ex = V.unit(V.cross(tilt, ez));
             Quaternionf q = FxDisplays.basis(ex, tilt, ez);
             Vec3 off = V.add(V.scale(ex, -b.w() / 2), V.scale(ez, -b.t() / 2));
-            int delay = i % 3;
+            int delay = b.seg() % 3;
             RuneKit.later(delay, () -> FxDisplays.move(b.d(), FxDisplays.of(V.add(V.add(off, V.scale(tilt, -b.h() - 0.6)), V.scale(V.UP, -b.base())), q, b.w() * 0.9,
                     b.h(), b.t() * 0.9), 12));
         }
