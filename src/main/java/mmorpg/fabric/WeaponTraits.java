@@ -131,12 +131,22 @@ public final class WeaponTraits {
         if (crit) Fx.sound(level, c, SoundEvents.MACE_SMASH_GROUND_HEAVY, 0.8, 0.6);
     }
 
+    /** 0.30.0 홀 흡혈이 넘침 (체력이 가득이라 다 못 받은 몫 — 사제 「신앙」: 둘레의 다친 아군에게): (홀을 든 사람, 넘친 양) */
+    public static java.util.function.BiConsumer<ServerPlayer, Double> stealOverflow = (sp, extra) -> {};
+
     /** 성스러운 홀: 준 피해의 rate (한 번에 최대 체력 × cap 까지) — 실제로 회복한 양 */
     static double lifesteal(ServerPlayer sp, double dealt, Obj steal) {
         if (!sp.isAlive() || sp.getHealth() <= 0) return 0;
         double want = Math.min(dealt * steal.num("rate"), RpgHealth.maxOf(sp) * steal.num("cap"));
         double healed = RpgHealth.healBy(sp, want);
         if (healed >= 0.05) DamageNumbers.show(sp, healed, DamageNumbers.Style.HEAL, "", 0);
+        if (want - healed >= 0.05) {
+            try {
+                stealOverflow.accept(sp, want - healed);
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] steal overflow", e);
+            }
+        }
         return healed;
     }
 }

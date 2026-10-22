@@ -70,6 +70,9 @@ public final class JobSystem {
         AssassinSkills.register(); // 0.29.0
         LancerSkills.register();
         ReaperSkills.register();
+        PaladinSkills.register(); // 0.30.0
+        PriestSkills.register();
+        GuardianSkills.register();
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);
@@ -204,7 +207,10 @@ public final class JobSystem {
             int chain = JobTraitsMore.chainNext(sp, job, k);
             // 0.29.0 창술사 「창끝」: 앞으로 움직이며 창 평타를 맞히면 5초 안의 다음 직업 스킬 위력 × (1 + 10%)
             double boost = JobTraits3.castMult(sp, job);
-            double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain) * boost;
+            // 0.30.0 사제 「신앙」: 공격 직업 스킬 (성가 · 새벽의 종) 은 신앙 하나당 위력 × (1 + 10%) — 나가면 모두 씀
+            double faith = JobTraits4.castMult(sp, job, k);
+            int faithN = JobTraits4.faith(sp);
+            double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain) * boost * faith;
             NOTES.remove(sp.getUUID());
             JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
             boolean ok = impl.cast(sp, job, k, P);
@@ -213,10 +219,12 @@ public final class JobSystem {
             if (ok) {
                 JobTraitsMore.chainCommit(sp, job, k, chain);
                 if (boost > 1) JobTraits3.castCommit(sp, job);
+                JobTraits4.castCommit(sp, job, k);
                 String chainText = chain > 0 ? " §e· 연쇄 ×" + chain + " +" + Math.round((JobTraitsMore.chainMult(job, chain) - 1) * 100) + "%" : "";
                 String boostText = boost > 1 ? " §6· 창끝 +" + Math.round((boost - 1) * 100) + "%" : "";
-                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + chainText + boostText + "§7)"
-                        + (note != null ? " §8· " + note : ""), 24);
+                String faithText = faith > 1 ? " §e· 신앙 ×" + faithN + " +" + Math.round((faith - 1) * 100) + "%" : "";
+                String powerText = k.total() > 0 ? " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + chainText + boostText + faithText + "§7)" : "";
+                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + powerText + (note != null ? " §8· " + note : ""), 24);
             }
             return ok;
         }

@@ -163,6 +163,14 @@ public final class Aegis {
         return Kit.hasFamily(e, "rpg_boss") || Kit.hasFamily(e, "rpg_boss_prop");
     }
 
+    /** 0.30.0 직업 스킬의 도발 (수호기사 방패 치기 · 방패 투척): ticks 동안 그 적이 이 사람을 노림 + (mark) 머리 위 "도발". 스크립트가 걸었으면 true */
+    public static boolean tauntFor(ServerPlayer sp, LivingEntity e, int ticks, boolean mark) {
+        if (e == null || e.isRemoved() || !(e.level() instanceof ServerLevel level)) return false;
+        boolean scripted = taunt(sp, e, ticks);
+        if (mark) tauntMark(level, e, scripted);
+        return scripted;
+    }
+
     /** 도발 표시 (머리 위 "도발") — 몬스터 · 보스 (스크립트가 건 도발) 와 바닐라 적대 몹 */
     static void tauntMark(ServerLevel level, LivingEntity e, boolean scripted) {
         if (!scripted && !Kit.hasFamily(e, "monster")) return;

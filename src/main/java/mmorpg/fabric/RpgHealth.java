@@ -86,6 +86,23 @@ public final class RpgHealth {
      */
     public static java.util.function.ToDoubleBiFunction<ServerPlayer, DamageSource> sourceReduce = (p, src) -> 0;
 
+    /**
+     * 0.30.0 받을 피해를 다른 사람이 나눠 받음 (수호기사 수호 돌입 — 지켜 주는 아군이 받을 피해의 몫): 깎일 양 loss 중 이 사람에게서 덜어 낼 양 (0 = 없음).
+     * 덜어 낸 몫은 훅이 다른 사람에게 ({@link #takeShared}) — 보호막 · 쓰러짐 판정 앞
+     */
+    public interface LossShare {
+        double share(ServerPlayer sp, DamageSource source, double loss);
+    }
+
+    public static LossShare lossShare = (p, src, loss) -> 0;
+
+    /** 0.30.0 웅크려 막은 공격 (수호기사 「반격」): 방패가 줄여 준 양 (막기 · 방패 감소 몫 — 다른 감소 뒤 · 결투 배율 앞) */
+    public interface BlockHook {
+        void blocked(ServerPlayer sp, DamageSource source, double saved);
+    }
+
+    public static BlockHook blockHook = (p, src, saved) -> {};
+
     /** 결투 훅 (hp.js setDuelHooks — 6단계 결투가 넣음) */
     public interface DuelHooks {
         /** 결투 상대의 피해면 줄인 양 (× PVP.mult — 아니면 그대로) */
@@ -252,6 +269,7 @@ public final class RpgHealth {
         double raw = health - newHealth;
         if (!(raw > 0)) return newHealth;
         double shield = RpgCombat.shieldReduction(sp, source);
+        boolean blocked = RpgCombat.lastBlocked; // 0.30.0 이번 감소가 웅크려 막은 것인지 (수호기사 「반격」)
         Guards.Guard g = Guards.of(sp);
         double gr = g != null ? g.reduce() : 0;
         double buff = Math.max(0, Math.min(0.95, buffReduce.applyAsDouble(sp))); // 0.19.0 세계수의 가호
@@ -266,6 +284,14 @@ public final class RpgHealth {
         // 스탯 트리 받는 피해 감소 (7단계): 방패 · 버프 감소 뒤에 곱함
         double tree = mmorpg.fabric.stattree.StatTrees.defMult(sp);
         double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce) * tree); // 결투 상대의 피해 × PVP.mult
+        if (blocked && shield > 0) {
+            // 0.30.0 막아 준 양 (방패 감소 몫): 다른 감소 (Guards · 창벽 · 가호) · 스탯 트리 뒤의 피해 × 방패 감소
+            try {
+                blockHook.blocked(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - Math.max(gsr, buff)) * tree * shield);
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] block hook", e);
+            }
+        }
         Guards.afterHurt(sp, source, g); // 반사 버프: 때린 것에게 (다음 틱)
         // 0.20.0 심연의 낙인: 낙인 찍힌 적이 준 피해 × (1 − 낙인) — 받는 쪽 감소와 곱 (가호의 막은 양은 이 뒤의 깎임으로 셈)
         net.minecraft.world.entity.Entity from = source.getEntity();
@@ -281,6 +307,15 @@ public final class RpgHealth {
             if (1 - reduce > 1e-6) buffSaved.accept(sp, loss * ((1 - without) / (1 - reduce) - 1));
         }
         boolean safe = isNonLethal(sp, source, raw);
+        if (loss > 0 && !safe) {
+            // 0.30.0 수호 돌입: 지켜 주는 수호기사가 몫을 나눠 받음 (보호막 앞)
+            try {
+                double moved = Math.max(0, Math.min(loss, lossShare.share(sp, source, loss)));
+                loss -= moved;
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] loss share", e);
+            }
+        }
         if (loss > 0 && !safe) loss = absorbShield(sp, loss); // 보호막 먼저
         double next = health - loss;
         if (next < 1 && safe) next = Math.min(health, 1);
@@ -327,6 +362,19 @@ public final class RpgHealth {
         float next = (float) Math.min(sp.getMaxHealth(), before + amount);
         if (next > before) sp.setHealth(next);
         return Math.max(0, next - before);
+    }
+
+    /**
+     * 0.30.0 나눠 받은 피해 (수호기사 수호 돌입 — 아군이 받을 피해의 몫): 보호막이 먼저 흡수, 체력 1 아래로는 깎지 않음 (대신 맞다가 쓰러지지 않게).
+     * 받는 피해 감소 · 방패는 다시 거치지 않음 (덜어 오는 쪽이 이미 줄인 몫). 실제로 깎인 체력
+     */
+    public static double takeShared(ServerPlayer sp, double amount) {
+        if (!isRpgMode(sp) || sp.isDeadOrDying() || !(amount > 0)) return 0;
+        double left = absorbShield(sp, amount);
+        float hp = sp.getHealth();
+        float next = (float) Math.max(Math.min(hp, 1), hp - left);
+        if (next < hp) sp.setHealth(next);
+        return Math.max(0, hp - next);
     }
 
     /** 체력을 대가로 냄 (hp.js payHp): 1 아래로는 내지 못함 (0 = 못 냄). RPG 체력이 아니면 (크리에이티브) 0 */

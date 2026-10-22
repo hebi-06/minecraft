@@ -510,6 +510,7 @@ public final class RpgCombat {
      * 방패로 때린 뒤 잠깐 (bashBlockLockTicks) 은 막기 없음.
      */
     public static double shieldReduction(ServerPlayer sp, DamageSource src) {
+        lastBlocked = false;
         Weapon w = weaponOf(sp.getMainHandItem());
         if (w == null || !w.type().equals("shield")) return 0;
         if (!lackOf(sp, w).isEmpty()) {
@@ -526,13 +527,34 @@ public final class RpgCombat {
             double hv = Math.hypot(dir.x, dir.z);
             double len = Math.hypot(dx, dz) * (hv > 0 ? hv : 1);
             double dot = len > 0 ? (dx * dir.x + dz * dir.z) / len : 1;
-            if (dot > 0.2) {
-                r = Math.max(r, w.block());
+            double b = dot > 0.2 ? w.block() : 0;
+            try {
+                b = Math.max(b, blockMod.block(sp, w, dot)); // 0.30.0 수호기사 철옹성 (정면 100% · 옆 60%)
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] block mod", e);
+            }
+            if (b > 0) {
+                r = Math.max(r, Math.min(1, b));
+                lastBlocked = true;
                 Fx.block(sp);
             }
         }
         return r;
     }
+
+    /**
+     * 0.30.0 웅크려 막기의 비율을 바꾸는 것 (수호기사 철옹성 — 막는 사람 · 든 방패 · 공격이 온 쪽과 보는 쪽의 cos): 막기 비율 (0 = 그대로 — 정면 0.2 넘게면 방패의
+     * 막기 비율). 큰 쪽이 들어감
+     */
+    @FunctionalInterface
+    public interface BlockMod {
+        double block(ServerPlayer sp, Weapon w, double dot);
+    }
+
+    public static BlockMod blockMod = (sp, w, dot) -> 0;
+
+    /** 0.30.0 마지막 shieldReduction 이 웅크려 막은 것인지 (RpgHealth.onLoss 가 바로 읽음 — 막은 양을 BlockHook 으로) */
+    static boolean lastBlocked;
 
     static boolean bashLocked(ServerPlayer sp) {
         Long t = LAST_BASH.get(sp.getUUID());

@@ -63,6 +63,20 @@ final class JobFx {
     static final int REAPER = 8;
     static final int GATE = 8;
     static final int HAND = 6;
+    /** 0.30.0 성기사 · 사제 · 수호기사 그림 (tools/job_fx_art_four.py) 의 장 수 */
+    static final int THUNDER = 6;
+    static final int VOLT = 8;
+    static final int MAUL = 4;
+    static final int WING = 4;
+    static final int STUN = 8;
+    static final int JUDGE = 4;
+    static final int HEAL = 6;
+    static final int NOTE = 4;
+    static final int STIGMA = 4;
+    static final int BELL = 8;
+    static final int CHAIN = 4;
+    static final int BUCKLER = 4;
+    static final int AEGIS = 6;
     /** 그림 칸의 고리 반지름 = 사각형 반 크기 × 0.88 (tools/job_fx_art.py ring_frame R = 칸의 0.44) */
     private static final double RING_R = 0.88;
 
@@ -469,5 +483,117 @@ final class JobFx {
     /** 망자의 손 (rfx_jhand — 세워 카메라 쪽으로 돎): 땅 ground 에서 솟아 움켜쥠 (높이 약 size × 4 칸 — 그림 아래 끝이 땅) */
     static void hand(ServerLevel level, Vec3 ground, double size, Jobs.Job j, double life, Opt o) {
         two(level, "jhand", HAND, V.up(ground, size * 2), life, o.with("size", size), outer(j), inner(j));
+    }
+
+    // ------------------------------------------------------------ 0.30.0 성기사 · 사제 · 수호기사 그림
+
+    /**
+     * 내리치는 벼락 (rfx_jthunder — 세워 카메라 쪽으로 돎, 그림 128 × 512): 아래 끝이 ground · 높이 height 칸 (반 너비 = 높이 / 8). 위에서 내려와 번쩍 →
+     * 가지가 갈라져 깜빡이며 사라짐
+     */
+    static void thunder(ServerLevel level, Vec3 ground, double height, Jobs.Job j, double life, Opt o) {
+        two(level, "jthunder", THUNDER, V.up(ground, height / 2), life, o.with("size", height / 8), outer(j), inner(j));
+    }
+
+    /** 같은 것 — 색을 정함 */
+    static void thunder(ServerLevel level, Vec3 ground, double height, double[] glow, double[] core, double life, Opt o) {
+        two(level, "jthunder", THUNDER, V.up(ground, height / 2), life, o.with("size", height / 8), glow, core);
+    }
+
+    /** 땅에 눕는 번개 고리 (rfx_jvolt — 면이 위): 고리 반지름 radius 칸 (= 반 크기 × 0.8) — 나타나 지직거리다 사라짐 (안쪽 무늬 없음) */
+    static void volt(ServerLevel level, Vec3 center, double radius, Jobs.Job j, double life, Opt o) {
+        two(level, "jvolt", VOLT, center, life, o.with("dir", V.UP, "size", radius / 0.8, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j),
+                inner(j));
+    }
+
+    /** 번개 대망치 (rfx_jmaul — 세워 카메라 쪽으로 돎, 이어 돌림 · 머리가 아래, 그림 192 × 256): 가운데 at · 높이 약 size × 2.67 칸 */
+    static void maul(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        loop(level, "jmaul", MAUL, at, life, 12, o.with("size", size), outer(j), inner(j));
+    }
+
+    /** 빛의 날개 (rfx_jwing — 면이 dir 쪽, 이어 돌림 · 천천히 날갯짓, 그림 256 × 192): 가운데 at (등 뒤) · 너비 약 size × 2 칸 */
+    static void wing(ServerLevel level, Vec3 at, Vec3 dir, double size, Jobs.Job j, double life, Opt o) {
+        loop(level, "jwing", WING, at, life, 5, o.with("dir", dir, "size", size), outer(j), inner(j));
+    }
+
+    /** 기절 별 (rfx_jstun — 카메라를 봄, 이어 돌림): 머리 위를 도는 별 다섯 (너비 약 몸 + 0.8칸) — ticks 동안 */
+    static void stunStars(LivingEntity e, Jobs.Job j, int ticks) {
+        if (!(e.level() instanceof ServerLevel level) || ticks <= 0) return;
+        double size = 0.45 + Kit.bodyPad(e) * 0.4;
+        loop(level, "jstun", STUN, RuneKit.overHead(e, 0.32), ticks / 20.0, 14, Opt.of("size", size, "vel", RuneKit.entVel(e), "fade", 0.12, "alpha", 0.95),
+                new double[] {1, 0.86, 0.3}, new double[] {1, 1, 0.82});
+    }
+
+    /** 심판 표시 (rfx_jjudge — 카메라를 봄, 깜빡임): 작은 번개 문장 (반 크기 size) */
+    static void judgePip(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        loop(level, "jjudge", JUDGE, at, life, 10, o.with("size", size), outer(j), inner(j));
+    }
+
+    /** 회복 십자 (rfx_jheal — 카메라를 봄): 십자 빛이 피어나 조금 떠오르며 사라짐 (반 크기 size) */
+    static void healCross(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        two(level, "jheal", HEAL, at, life, o.with("size", size), outer(j), inner(j));
+    }
+
+    /** 같은 것 — 색을 정함 (성기사의 성역 · 맹세 회복은 금빛) */
+    static void healCross(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
+        two(level, "jheal", HEAL, at, life, o.with("size", size), glow, core);
+    }
+
+    /** 음표 (rfx_jnote — 카메라를 봄, kind 0 ~ 3 중 한 장): o 의 dir · speed 로 떠감 (높이 약 size × 2) */
+    static void note(ServerLevel level, Vec3 at, int kind, double size, Jobs.Job j, double life, Opt o) {
+        cells(level, "jnote", NOTE, Math.floorMod(kind, NOTE), 1, at, life, 1, false, o.with("size", size), outer(j), inner(j));
+    }
+
+    /** 성흔 (rfx_jstigma — 카메라를 봄, 이어 돌림): 빛나는 십자가와 빛살 (반 크기 size) */
+    static void stigma(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        loop(level, "jstigma", STIGMA, at, life, 8, o.with("size", size), outer(j), inner(j));
+    }
+
+    /** 큰 종 (rfx_jbell — 세워 카메라 쪽으로 돎): 한 번 흔들리며 울림 (소리 물결) · 가운데 at · 높이 약 size × 2 칸 */
+    static void bell(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
+        two(level, "jbell", BELL, at, life, o.with("size", size), glow, core);
+    }
+
+    /** 가만히 매달린 종 (rfx_jbell 첫 장 — 내려오는 동안) */
+    static void bellStill(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
+        cells(level, "jbell", BELL, 0, 1, at, life, 1, false, o.with("size", size), glow, core);
+    }
+
+    /** 빛의 사슬 (rfx_jchain — 방향으로 누움, 이어 돌림 · 그림 256 × 32): from → to 를 seg 칸 조각으로 (굵기 = 조각 길이 / 8) */
+    static void chain(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double seg, double life, Opt o) {
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.3) return;
+        Vec3 u = V.scale(d, 1 / len);
+        int n = Math.max(1, (int) Math.ceil(len / seg));
+        double step = len / n;
+        for (int i = 0; i < n; i++) {
+            Vec3 c = V.add(from, u, step * (i + 0.5));
+            loop(level, "jchain", CHAIN, c, life, 10, o.with("dir", u, "size", step / 2 * 1.04), outer(j), inner(j));
+        }
+    }
+
+    /** 둥근 방패 (rfx_jbuckler — 카메라를 봄, 이어 돌림 · 화면에서 팽이처럼 돎): 반지름 약 size × 0.9 칸 */
+    static void buckler(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        loop(level, "jbuckler", BUCKLER, at, life, 16, o.with("size", size, "spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 1080)), outer(j), inner(j));
+    }
+
+    /** 날아가는 방패 from → to (speed 칸/초): 닿는 틱 */
+    static int bucklerFly(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Jobs.Job j, Opt o) {
+        return fly(level, "jbuckler", BUCKLER, from, to, speed, size, 0, o.with("spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 1080)), outer(j),
+                inner(j));
+    }
+
+    /**
+     * 빛의 방패 (rfx_jaegis — 세워 카메라 쪽으로 돎, 그림 192 × 256 · 긴 연 모양): stage 0 = 나타남 (0 ~ 1) · 1 = 버팀 (2 ~ 3 이어 돌림) · 2 = 금이 가며 사라짐
+     * (4 ~ 5). 가운데 at · 높이 약 size × 2.67 칸
+     */
+    static void aegis(ServerLevel level, Vec3 at, double size, Jobs.Job j, int stage, double life, Opt o) {
+        Opt b = o.with("size", size);
+        switch (stage) {
+            case 0 -> cells(level, "jaegis", AEGIS, 0, 2, at, life, 0, false, b, outer(j), inner(j));
+            case 1 -> cells(level, "jaegis", AEGIS, 2, 2, at, life, 6, true, b, outer(j), inner(j));
+            default -> cells(level, "jaegis", AEGIS, 4, 2, at, life, 0, false, b, outer(j), inner(j));
+        }
     }
 }

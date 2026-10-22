@@ -72,9 +72,11 @@ public final class JobTraits {
         RpgCombat.sureCrit = JobTraits::sureCrit;
         JobTraitsMore.init(); // 0.28.0 전사 · 매지션 · 궁수
         JobTraits3.init(); // 0.29.0 암살자 · 창술사 · 사신 (sureCrit 를 이어 받으므로 위의 sureCrit 다음)
+        JobTraits4.init(); // 0.30.0 성기사 · 사제 · 수호기사
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
             JobTraits3.tickMarks(Tasks.now());
+            JobTraits4.tickGlobal(server, Tasks.now());
             if (Tasks.now() % 4 == 0) tick(server);
         });
         // 죽음 · 차원 이동 · 탈것 부르기: 자원 · 태세 · 각인이 끝남
@@ -95,6 +97,7 @@ public final class JobTraits {
         STATES.remove(sp.getUUID());
         JobTraitsMore.reset(sp);
         JobTraits3.reset(sp);
+        JobTraits4.reset(sp);
         String p = sp.getUUID() + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
         sendGauge(sp, true);
@@ -105,6 +108,7 @@ public final class JobTraits {
         STATES.remove(id);
         JobTraitsMore.forget(id);
         JobTraits3.forget(id);
+        JobTraits4.forget(id);
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
@@ -112,6 +116,7 @@ public final class JobTraits {
     private static void lifeEnded(UUID id) {
         JobTraitsMore.lifeEnded(id);
         JobTraits3.lifeEnded(id);
+        JobTraits4.lifeEnded(id);
         State st = STATES.get(id);
         if (st != null) {
             st.stacks = 0;
@@ -220,6 +225,7 @@ public final class JobTraits {
         endStance(sp);
         JobTraitsMore.stanceEnded(sp, id);
         JobTraits3.stanceEnded(sp, id);
+        JobTraits4.stanceEnded(sp, id);
         sendGauge(sp, true);
     }
 
@@ -394,6 +400,7 @@ public final class JobTraits {
             if (j != null) {
                 JobTraitsMore.tick(sp, j, now); // 0.28.0 분노 · 연쇄 · 호흡
                 JobTraits3.tick(sp, j, now); // 0.29.0 암영 · 창끝 · 혼
+                JobTraits4.tick(sp, j, now); // 0.30.0 수호의 맹세 회복
             }
             if (st == null || j == null) continue;
             // 태세가 끝남
@@ -403,6 +410,7 @@ public final class JobTraits {
                 SkillFx.play(sp.level(), "block.amethyst_block.chime", sp.position(), 0.8, 0.4);
                 JobTraitsMore.stanceEnded(sp, ended); // 마나 과부하 → 이동 느려짐
                 JobTraits3.stanceEnded(sp, ended); // 0.29.0 암영 → 이동 빨라짐 · 투명이 풀림
+                JobTraits4.stanceEnded(sp, ended); // 0.30.0 철옹성 → 이동 수정치를 뗌
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
             if (j.id().equals("swordsman") && st.stacks > 0 && !stanceOn(st, "swordsman_mirror")) {
@@ -449,6 +457,8 @@ public final class JobTraits {
             }
         } else if (JobTraits3.stanceFx(sp, j, st.stance)) {
             // 0.29.0 암영 (1인칭 화면 가장자리의 옅은 연기) · 창벽 (앞의 창끝 셋) · 사신 현신 (등 뒤의 사신 그림자)
+        } else if (JobTraits4.stanceFx(sp, j, st.stance)) {
+            // 0.30.0 수호의 맹세 (등 뒤 빛의 날개) · 철옹성 (앞의 큰 빛의 방패)
         } else if (st.stance.equals("archer_focus")) {
             // 정조준: 활을 든 손 앞 금빛 반짝임
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
