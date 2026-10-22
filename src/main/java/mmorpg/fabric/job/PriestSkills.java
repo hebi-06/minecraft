@@ -245,11 +245,11 @@ final class PriestSkills {
         Vec3 ground = PaladinSkills.groundAhead(sp, c0, f, 3.0);
         Vec3 bellAt = V.up(ground, 4.6);
         double bellSize = 1.5;
-        // 0.30.0 사진첩: 머리 위 종은 시전자 1인칭 시야 밖 (위로 45°) → 시전자 1인칭에서는 눈앞 2.8칸 · 화면 위쪽 (시선에서 22° 위) 의 작은 종 (only1p — 6.5 ·
-        // 3.5칸 앞에 두었더니 3.5칸 앞 과녁 머리 뒤에 가려졌음), 머리 위 종은 숨김
+        // 0.30.0 사진첩: 머리 위 종은 시전자 1인칭 시야 밖 (위로 45°) → 시전자 1인칭에서는 눈앞 1.8칸 · 화면 위쪽 (시선에서 25° 위) 의 작은 종 (only1p — 6.5 · 3.5 ·
+        // 2.8칸 앞에 두었더니 가까이 선 과녁 (2.2칸) 머리 뒤에 가려졌음), 머리 위 종은 숨김
         Vec3 look = sp.getViewVector(1F);
-        Vec3 bell1p = V.add(V.add(sp.getEyePosition(), look, 2.8), JobFx.screenUp(look), 1.13);
-        double size1p = 0.5;
+        Vec3 bell1p = V.add(V.add(sp.getEyePosition(), look, 1.8), JobFx.screenUp(look), 0.84);
+        double size1p = 0.32;
         int endAt = first + gap * (rings - 1);
         Ult.sky(level0, c0, "rpg:ult_heaven", endAt + 30);
         JobFx.aura(sp, j, 3.0, 0.9, 1.0);
@@ -259,7 +259,7 @@ final class PriestSkills {
         // 종이 내려옴 (위에서 first − 4 틱 동안 — 흔들리기 전의 가만한 장면)
         int down = Math.max(4, first - 4);
         JobFx.bellStill(level0, V.up(bellAt, 4), bellSize, GOLD, DAWN, down / 20.0, JobFx.hide1p(sp).with("dir", V.DOWN, "speed", 4 / (down / 20.0), "fade", 0.02));
-        JobFx.bellStill(level0, V.up(bell1p, 1.0), size1p, GOLD, DAWN, down / 20.0, JobFx.only1p(sp).with("dir", V.DOWN, "speed", 1.0 / (down / 20.0), "fade",
+        JobFx.bellStill(level0, V.up(bell1p, 0.8), size1p, GOLD, DAWN, down / 20.0, JobFx.only1p(sp).with("dir", V.DOWN, "speed", 0.8 / (down / 20.0), "fade",
                 0.02));
         RuneKit.godRays(sp, level0, ground, 2.5, 4, GOLD, DAWN, Opt.of("h", 10.0, "life", 1.0, "alpha", 0.6, "skipNear", true));
         for (int i = 0; i < rings; i++) {
@@ -286,7 +286,7 @@ final class PriestSkills {
         JobFx.ring(level, V.up(ground, 0.06), r, j, i % 2 == 1, 0.6, Opt.empty());
         RuneKit.zonePulse(level, V.up(ground, 0.1), GOLD, r, 0.55);
         JobFx.burst(level, bellAt, 1.6, j, 0.35, JobFx.hide1p(sp).with("alpha", 0.8));
-        JobFx.burst(level, bell1p, 0.5, j, 0.35, JobFx.only1p(sp).with("alpha", 0.8));
+        JobFx.burst(level, bell1p, 0.35, j, 0.35, JobFx.only1p(sp).with("alpha", 0.8));
         RuneKit.godRays(sp, level, ground, r * 0.5, 5, GOLD, DAWN, Opt.of("h", 10.0, "life", 0.8, "alpha", 0.7, "skipNear", true));
         if (fin) Ult.flash(level, ground, GOLD, Opt.empty(), sp);
         RuneKit.shakeAround(level, ground, 16, fin ? 0.3 : 0.18, 0.3);
