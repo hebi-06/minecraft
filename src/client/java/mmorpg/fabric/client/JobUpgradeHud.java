@@ -11,11 +11,13 @@ import net.minecraft.util.Util;
  * 0.31.0 직업 스킬 강화 성공 화면 연출 (서버 JobUpgrades.FxPayload — 강화한 사람에게만): 화면 가운데 위쪽에
  * <ul>
  * <li>어두운 띠 · 직업 색 빛살 (천천히 돎 — 5단계는 금빛 빛살이 거꾸로 하나 더) · 빛 덩이 · 퍼지는 빛 고리</li>
- * <li>스킬 아이콘 (메이플식 직업 스킬 아이콘 · 네모 칸 · 직업 색 테) — 작게 나타나 크게 튀었다 돌아옴 · 흰 번쩍임 · 둘레 반짝임</li>
+ * <li>스킬 아이콘 (메이플식 직업 스킬 아이콘 · 네모 칸 · 직업 색 테) — 작게 나타나 크게 튀었다 돌아옴 · 흰 번쩍임 · 둘레 반짝임, 처음 0.25초 온 화면이 직업
+ * 색으로 옅게 번쩍임</li>
  * <li>이름 (직업 색) + "+3" (금빛) · 별 다섯 (오른 별은 0.45초에 금빛으로 크게 튀어 들어옴 · 반짝임 · 고리) · 바뀐 값 줄 ("위력 ×1.2 → ×1.3"),
  * 5단계는 별 옆 "MAX"</li>
  * </ul>
- * 2.2초 (처음 0.15초 나타남 · 끝 0.45초 사라짐 — 서버는 2.2초 뒤에 강화 창을 다시 엶).
+ * 자리: 조준점 (화면 가운데) 을 피해 아이콘 · 이름 · 별은 가운데 위, 바뀐 값 줄은 가운데 아래. 2.2초 (처음 0.15초 나타남 · 끝 0.45초 사라짐 — 서버는 2.2초
+ * 뒤에 강화 창을 다시 엶).
  */
 public final class JobUpgradeHud {
     private JobUpgradeHud() {}
@@ -54,16 +56,20 @@ public final class JobUpgradeHud {
         int w = g.guiWidth();
         int h = g.guiHeight();
         float cx = w / 2F;
-        float cy = Math.max(60, h * 0.34F);
+        // 조준점 (화면 가운데) 을 피함: 아이콘 · 이름 · 별은 가운데 위, 바뀐 값 줄은 가운데 아래
+        float mid0 = h / 2F;
+        float cy = mid0 - 64;
         int colA = p.colorA() & 0xFFFFFF;
         int colB = p.colorB() & 0xFFFFFF;
         boolean max = p.level() >= p.max();
         int n = Math.min(4, p.lines().size());
 
+        // 처음 0.25초: 직업 색이 온 화면에 옅게 번쩍임 (글자를 가리지 않게 옅게)
+        if (t < 0.25F) g.fill(0, 0, w, h, GachaArt.argb(Math.round(70 * (1 - t / 0.25F)), GachaArt.mix(colA, 0xFFFFFF, 0.5)));
         // 어두운 띠 (위 · 아래로 옅어짐)
-        int top = Math.round(cy - 58);
-        int mid = Math.round(cy + 8);
-        int bot = Math.round(cy + 72 + n * 11);
+        int top = Math.max(0, Math.round(cy - 58));
+        int mid = Math.round(cy + 30);
+        int bot = Math.round(mid0 + 18 + n * 11);
         int band = Math.round(150 * a);
         g.fillGradient(0, top, w, mid, GachaArt.argb(0, 0x05030A), GachaArt.argb(band, 0x05030A));
         g.fillGradient(0, mid, w, bot, GachaArt.argb(band, 0x05030A), GachaArt.argb(0, 0x05030A));
@@ -108,12 +114,12 @@ public final class JobUpgradeHud {
         float ts = 1.35F;
         float tw = (font.width(name) + font.width(lv)) * ts;
         float tx = cx - tw / 2;
-        float ty = cy + 28;
+        float ty = cy + 27;
         GachaArt.text(g, font, name, tx, ty, ts, GachaArt.argb(Math.round(255 * a), GachaArt.mix(colA, 0xFFFFFF, 0.25)));
         GachaArt.text(g, font, lv, tx + font.width(name) * ts, ty, ts, GachaArt.argb(Math.round(255 * a), GOLD));
 
-        // 별 다섯 (오른 별은 STAR_AT 에 튀어 들어옴)
-        float sy = cy + 46;
+        // 별 다섯 (오른 별은 STAR_AT 에 튀어 들어옴) — 별 줄 가운데가 조준점보다 17 위
+        float sy = mid0 - 22;
         float gap = 16;
         for (int i = 0; i < p.max(); i++) {
             float sx = cx + (i - (p.max() - 1) / 2F) * gap;
@@ -135,9 +141,9 @@ public final class JobUpgradeHud {
             GachaArt.text(g, font, "MAX", cx + (p.max() / 2F) * gap + 6, sy - 1, 1.1F, GachaArt.argb(Math.round(255 * a * pulse), GOLD));
         }
 
-        // 바뀐 값 줄
+        // 바뀐 값 줄 (조준점 아래)
         for (int i = 0; i < n; i++) {
-            GachaArt.textCentered(g, font, p.lines().get(i), cx, cy + 62 + i * 11, 1F, GachaArt.argb(Math.round(240 * a), 0xEDE8F5));
+            GachaArt.textCentered(g, font, p.lines().get(i), cx, mid0 + 11 + i * 11, 1F, GachaArt.argb(Math.round(240 * a), 0xEDE8F5));
         }
     }
 

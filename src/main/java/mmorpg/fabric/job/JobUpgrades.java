@@ -29,7 +29,6 @@ import mmorpg.fabric.Tasks;
 import mmorpg.fabric.economy.EconomyItems;
 import mmorpg.fabric.economy.Wallet;
 import mmorpg.fabric.rune.RuneKit;
-import mmorpg.fabric.rune.Ult;
 import mmorpg.fabric.shop.Shop;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -408,8 +407,8 @@ public final class JobUpgrades {
     }
 
     /**
-     * 오른 순간: 눈앞 터짐 · 불꽃 · 1인칭 고리, 몸 둘레 빛기둥 (단계만큼 더) · 발밑 거꾸로 도는 고리 · 화면 번쩍임, 소리 (레벨 업 · 자수정 · 모루 — 5단계는 신호기),
-     * 화면 가운데 연출 ({@link FxPayload} — 스킬 아이콘 · 별 · 바뀐 값)
+     * 오른 순간: 눈앞 터짐 · 불꽃 · 1인칭 고리, 몸 둘레 빛기둥 (단계만큼 더) · 발밑 거꾸로 도는 고리 · 몸의 빛, 소리 (레벨 업 · 자수정 · 모루 — 5단계는 신호기),
+     * 화면 가운데 연출 ({@link FxPayload} — 스킬 아이콘 · 별 · 바뀐 값 — 화면 번쩍임은 그쪽이 옅게: 온 화면 흰 번쩍임은 글자를 가려서 뺌)
      */
     static void doneFx(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, int from, int to) {
         ServerLevel level = sp.level();
@@ -424,7 +423,6 @@ public final class JobUpgrades {
         JobFx.ring(level, V.up(feet, 0.08), 2.2, j, true, 0.9, Opt.of("alpha", 0.9));
         RuneKit.godRays(sp, level, feet, 2.3, 3 + to, glow, core, Opt.of("h", 8.0 + to, "life", 1.2, "alpha", 0.75));
         JobFx.aura(sp, j, 2.6, 1.0, 0.9);
-        Ult.flash(level, feet, glow, Opt.of("radius", 6.0, "time", new double[] {0.04, 0.08, 0.45}), sp);
         SkillFx.play(level, "random.levelup", feet, 0.9 + to * 0.08, 0.9);
         SkillFx.play(level, "chime.amethyst_block", feet, 0.8 + to * 0.12, 1.0);
         SkillFx.play(level, "block.anvil.use", feet, 1.5, 0.25);
@@ -634,7 +632,8 @@ public final class JobUpgrades {
                     return;
                 }
                 upgrade(sp, j, k, back);
-            } else back.accept("");
+            } else if (sel >= NEED_FIRST && sel < NEED_FIRST + 7) confirm(sp, j, k, back); // 필요한 것 칸 (설명만) — 창 그대로
+            else back.accept("");
         });
     }
 
@@ -644,14 +643,15 @@ public final class JobUpgrades {
         ChestForm form = new ChestForm("스킬 강화 확인 §8· " + k.name() + " +" + to);
         int at = NEED_FIRST;
         if (n.step() != null) {
+            // 필요한 것 칸: 숫자 = 필요한 수 (장식 칸은 숫자가 보이지 않아 보통 칸 — 누르면 창 그대로)
             form.set(at++, Slot.of(Icon.item(Items.EXPERIENCE_BOTTLE), mark(n.levelOk()) + " §f필요 레벨 " + n.step().level())
-                    .lore("§7지금 " + n.myLevel() + "렙").count(n.step().level()).deco());
+                    .lore("§7지금 " + n.myLevel() + "렙").count(n.step().level()));
             form.set(at++, Slot.of(Icon.item(EconomyItems.GOLD_COIN), mark(n.goldOk()) + " §6골드 " + n.step().gold())
-                    .lore("§7보유 " + Economy.fmt(n.gold()) + " §8(지갑 먼저, 모자라면 가방의 금화)").count(n.step().gold()).deco());
+                    .lore("§7보유 " + Economy.fmt(n.gold()) + " §8(지갑 먼저, 모자라면 가방의 금화)").count(n.step().gold()));
             for (Have h : n.items()) {
                 Icon icon = h.mat().item() == null ? Icon.sprite("item_unknown") : Icon.item(h.mat().item());
                 form.set(at++, Slot.of(icon, mark(h.ok()) + " " + h.mat().code() + h.mat().name() + " §7×" + h.need().count())
-                        .lore("§7보유 §f" + h.have() + " §8/ 필요 " + h.need().count(), "§8" + h.mat().from()).count(h.need().count()).deco());
+                        .lore("§7보유 §f" + h.have() + " §8/ 필요 " + h.need().count(), "§8" + h.mat().from()).count(h.need().count()));
             }
         }
         Slot ok = Slot.of(Icon.sprite("icon_check"), n.ok() ? "§a강화하기 §7(+" + n.from() + " → +" + to + ")" : "§8강화할 수 없음");

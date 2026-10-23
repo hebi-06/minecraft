@@ -66,7 +66,7 @@ public final class RpgJobUpGallery implements FabricClientGameTest {
             server.runCommand("item replace entity @a hotbar.0 with rpg:sword_l40_hero");
             String[][] bag = {{"rpg:loot_frost_giant", "64"}, {"rpg:loot_frost_giant", "64"}, {"rpg:loot_frost_giant", "64"}, {"rpg:loot_troll", "64"},
                 {"rpg:loot_frost_wolf", "64"}, {"rpg:loot_draugr", "64"}, {"rpg:ymir_heart", "8"}, {"rpg:ymir_bone", "2"}, {"rpg:muspel_heart", "3"},
-                {"rpg:laevateinn_shard", "6"}};
+                {"rpg:laevateinn_shard", "6"}, {"rpg:loot_frost_giant", "64"}};
             for (int i = 0; i < bag.length; i++) server.runCommand("item replace entity @a inventory." + i + " with " + bag[i][0] + " " + bag[i][1]);
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             server.runCommand("tp @a 0.5 -60 0.5 0 10");
@@ -113,6 +113,8 @@ public final class RpgJobUpGallery implements FabricClientGameTest {
         shot(ctx, "jobup_confirm");
         hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(5));
         shot(ctx, "jobup_confirm_item");
+        click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(4)); // 필요한 것 칸을 눌러도 확인 창 그대로
+        if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("확인"), "confirm stays")) return;
         click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(10));
         ctx.waitTicks(2);
         shot(ctx, "jobup_gather_a");
