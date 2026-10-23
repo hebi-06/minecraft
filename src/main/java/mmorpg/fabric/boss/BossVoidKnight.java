@@ -1393,11 +1393,13 @@ public final class BossVoidKnight implements BossModule {
         Vec3 c = enc.center;
         Vec3 p = enc.starter != null && !enc.starter.isRemoved() ? enc.starter.position() : new Vec3(c.x, c.y, c.z + 8);
         M m = new M();
-        // 제단 앞 (부른 사람 쪽으로 ALTAR_OFF 칸 — 가운데 제단 블록에 다리가 묻히지 않게) 에서 나와 부른 사람을 봄
+        // 제단 앞 (부른 사람 쪽으로 ALTAR_OFF 칸 — 가운데 제단 블록에 다리가 묻히지 않게) 에서 나와 부른 사람을 봄.
+        // 부른 사람이 제단 곁에 서 있으면 제단 건너편에서 (몸에 겹쳐 나오지 않게)
         Vec3 toward = dirTo(c, p);
-        m.body.x = c.x + toward.x * ALTAR_OFF;
-        m.body.z = c.z + toward.z * ALTAR_OFF;
-        m.body.yaw = angOf(toward);
+        double side = hdist(p, c) < ALTAR_OFF + 1.5 ? -1 : 1;
+        m.body.x = c.x + toward.x * ALTAR_OFF * side;
+        m.body.z = c.z + toward.z * ALTAR_OFF * side;
+        m.body.yaw = angOf(dirTo(new Vec3(m.body.x, c.y, m.body.z), p));
         Vec3 at = new Vec3(m.body.x, c.y, m.body.z);
         m.t0 = now;
         m.limit = now + (long) d.obj("enrage").num("limit");
