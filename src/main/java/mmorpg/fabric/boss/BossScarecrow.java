@@ -295,7 +295,7 @@ public final class BossScarecrow implements BossModule {
             BedrockMob cage = BossKit.spawn(e.dim, CAGE, target.position(), target.getYRot());
             if (cage == null) return;
             api.own(cage);
-            Status.root(target, hold, "짚단 감옥");
+            Status.root(target, hold, BossKit.rootLabel("짚단 감옥"));
             M m = mem(e);
             if (m != null) m.cage = new Cage(target, cage, Tasks.now() + hold);
             BossKit.hintSay(e, "§6[보스] §e" + target.getName().getString() + "§f님이 짚단 감옥에 갇혔습니다! §7감옥을 부수면 풀려납니다 (" + Js.str(Js.round(hold / 20.0)) + "초)");

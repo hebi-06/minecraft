@@ -744,7 +744,7 @@ public final class BossNidhogg implements BossModule {
                 if (hit.contains(p.getUUID()) || hdist(p.position(), s) > d.num("radius") + 0.3 || Math.abs(p.getY() - s.y) > 3) continue;
                 hit.add(p.getUUID());
                 bossHit(u, p, d.num("damage"), Opt.of("noSource", true));
-                Status.root(p, rootT, "뿌리에 휘감김");
+                Status.root(p, rootT, BossKit.rootLabel("뿌리에 휘감김"));
             }
         }
     }

@@ -332,7 +332,7 @@ public final class BossKraken implements BossModule {
             double s = (p.getX() - apex.x) * side.x + (p.getZ() - apex.z) * side.z >= 0 ? 1 : -1;
             if (!bossHit(u, p, d.num("damage"), Opt.of("knock", knock(side.x * s * 0.5, side.z * s * 0.5, 0.3)))) continue;
             struck.add(p.getUUID());
-            Status.root(p, (int) d.num("root"), "휘감김");
+            Status.root(p, (int) d.num("root"), BossKit.rootLabel("휘감김"));
             SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(p.getX(), p.getY() + 1, p.getZ()), Opt.of("dir", new Vec3(0, 0, 1), "size", 1.4, "life", 0.4, "color", SEA,
                     "alpha", 0.9));
         }
@@ -687,7 +687,7 @@ public final class BossKraken implements BossModule {
             if (hdist(p.position(), h) > radius + 0.3 || Math.abs(p.getY() - h.y) > 3) continue;
             Vec3 dir = dirTo(h, p.position());
             if (!bossHit(u, p, T.num("damage"), Opt.of("from", a.e, "knock", knock(dir.x * 0.6, dir.z * 0.6, 0.3)))) continue;
-            Status.root(p, (int) T.num("root"), "휘감김");
+            Status.root(p, (int) T.num("root"), BossKit.rootLabel("휘감김"));
         }
     }
 

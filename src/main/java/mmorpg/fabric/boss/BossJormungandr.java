@@ -718,7 +718,7 @@ public final class BossJormungandr implements BossModule {
             if (!inTail(u, Z, p.position()) || Math.abs(p.getY() - c.y) > 3) continue;
             boolean landed = bossHit(u, p, d.num("damage"), Opt.of("knock", knock(0, 0, 0.2)));
             calm(u, p);
-            if (landed) Status.root(p, (int) d.num("root"), "꼬리에 휘감김");
+            if (landed) Status.root(p, (int) d.num("root"), BossKit.rootLabel("꼬리에 휘감김"));
         }
     }
 

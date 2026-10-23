@@ -642,7 +642,7 @@ public final class BossScorpions implements BossModule {
             if (vl == 0) vl = 1;
             double cos = L < 0.5 ? 1 : (v.x * to.x + v.y * to.y + v.z * to.z) / (L * vl);
             if (cos < cosMax) continue;
-            Status.root(p, hold, "석화");
+            Status.root(p, hold, BossKit.rootLabel("석화"));
             Status.silence(p, hold);
             if (m != null) m.stone.put(p.getUUID(), new Stone(p, Tasks.now() + hold));
             SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(p.getX(), p.getY() + 1, p.getZ()), Opt.of("dir", new Vec3(0, 0, 1), "size", 1.6, "life", 0.45, "color", GRAY,

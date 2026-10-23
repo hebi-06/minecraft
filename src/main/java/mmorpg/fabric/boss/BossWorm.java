@@ -747,7 +747,7 @@ public final class BossWorm implements BossModule {
         D.inside = gutSpot(u);
         D.lastShown = -1;
         m.bigUntil = now + hold + 80;
-        Status.root(v, hold + 40, "삼켜짐");
+        Status.root(v, hold + 40, BossKit.rootLabel("삼켜짐"));
         Status.silence(v, hold + 40);
         BossKit.addEffect(v, "blindness", 40, 0, false);
         movePlayer(v, D.inside);

@@ -464,14 +464,18 @@ public final class RpgBossTests {
         return out;
     }
 
+    /** 한글이 든 글자가 있는지 (상태 이름 "속박!" · "침묵!" 은 뺌 — 상태 표시라 늘 보임, 0.34.0 보스가 건 속박도 패턴 이름 대신 "속박") */
     private static boolean hangul(List<String> texts) {
-        for (String t : texts) if (t.codePoints().anyMatch(c -> c >= 0xAC00 && c <= 0xD7A3)) return true;
+        for (String t : texts) {
+            if (t.equals("속박!") || t.equals("침묵!")) continue;
+            if (t.codePoints().anyMatch(c -> c >= 0xAC00 && c <= 0xD7A3)) return true;
+        }
         return false;
     }
 
     /**
      * 0.34.0 패턴 안내 숨김 (설정 BOSS_HINTS — 사용자 "패턴을 알려주는 채팅이나 타이틀을 없애고 카운트만 텍스트로"): 다섯 종류 모두 꺼짐,
-     * hint* 는 보내지 않고 (숨긴 수가 늘어남), 짚단 감옥 · 원거리 견제를 겪어도 눈앞에 글자 (한글) 가 뜨지 않음 — 감옥 카운트는 숫자만
+     * hint* 는 보내지 않고 (숨긴 수가 늘어남), 원거리 견제 · 짚단 감옥을 겪어도 눈앞에 안내 글자가 뜨지 않음 — 감옥 카운트는 숫자만, 속박 글자는 "짚단 감옥!" 대신 "속박!"
      */
     @GameTest(environment = "mmorpg:boss", maxTicks = 200)
     public void patternHintsHidden(GameTestHelper h) {
@@ -493,6 +497,12 @@ public final class RpgBossTests {
             BossKit.hintNotify(p1, "§6시험 안내", 20);
             h.assertTrue(BossKit.hiddenHints - hidden0 >= 5, "five hints held back " + (BossKit.hiddenHints - hidden0));
             h.assertFalse(hangul(textsNear(level, p1)), "no hint text in front of the player " + textsNear(level, p1));
+            // 원거리 견제: 안내 채팅 · 눈앞 글자 ("불붙은 짚단! 발밑 원 밖으로") 없이 날아옴 (한 번 알렸다는 표시는 그대로)
+            List<ServerPlayer> far = Bosses.farTargets(enc, BossKit.fighters(enc), p -> true);
+            h.assertTrue(far.contains(p1), "far target " + far);
+            Bosses.farThrow(enc, enc, Tasks.now(), far);
+            h.assertTrue(enc.farShots.size() == 1 && enc.farTold, "shot in flight, far rule marked told");
+            h.assertFalse(hangul(textsNear(level, p1)), "far shot: no hint text " + textsNear(level, p1));
             // 짚단 감옥: "노립니다!" · 갇힘 채팅 없이, 갇힌 사람에게 숫자만 (3 2 1)
             BossScarecrow.prison(enc, Tasks.now(), BossKit.fighters(enc));
             h.assertFalse(hangul(textsNear(level, p1)), "prison aim: no hint text " + textsNear(level, p1));
@@ -500,12 +510,7 @@ public final class RpgBossTests {
                 BossScarecrow.M m = BossScarecrow.mem(enc);
                 h.assertTrue(m.cage != null && m.cage.p == p1 && Status.isRooted(p1), "caged as before (the pattern still works)");
                 h.assertFalse(hangul(textsNear(level, p1)), "caged: numbers only " + textsNear(level, p1));
-                // 원거리 견제: 안내 채팅 · 눈앞 글자 없이 날아옴 (한 번 알렸다는 표시는 그대로)
-                List<ServerPlayer> far = Bosses.farTargets(enc, BossKit.fighters(enc), p -> true);
-                Bosses.farThrow(enc, enc, Tasks.now(), far);
-                h.assertTrue(enc.farTold, "far rule marked told");
-                h.assertFalse(hangul(textsNear(level, p1)), "far shot: no hint text " + textsNear(level, p1));
-                LOG.info("[boss-test] OK pattern hints hidden (BOSS_HINTS all off): hint* held back, prison · far shot show no text, counts are numbers");
+                LOG.info("[boss-test] OK pattern hints hidden (BOSS_HINTS all off): hint* held back, far shot · prison show no text, counts are numbers");
                 finish(h, level, a, hold, p1);
             });
         });

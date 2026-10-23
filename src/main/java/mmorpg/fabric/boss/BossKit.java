@@ -416,6 +416,11 @@ public final class BossKit {
         if (hint("face")) faceAll(enc, text, o, list);
     }
 
+    /** 보스가 건 속박의 눈앞 글자 (Status.root): 패턴 이름 (짚단 감옥 · 석화 · 빙결 …) 은 BOSS_HINTS.face 일 때만, 아니면 상태 이름 "속박" */
+    public static String rootLabel(String label) {
+        return hints("face") ? label : "속박";
+    }
+
     /** 화면 아래 패턴 안내 (BOSS_HINTS.chat 일 때만) */
     public static void hintNotify(ServerPlayer p, String text, int hold) {
         if (hint("chat")) notify(p, text, hold);

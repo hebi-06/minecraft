@@ -591,7 +591,7 @@ public final class BossYmir implements BossModule {
 
     /** 빙결: 속박 ticks (얼음에 갇힘, 그동안 이미르의 다른 공격은 막아 줌) + 얼음 덩어리 */
     static void freeze(Bosses.Unit u, ServerPlayer p, int ticks) {
-        Status.root(p, ticks, "빙결");
+        Status.root(p, ticks, BossKit.rootLabel("빙결"));
         encase(u, p, ticks);
     }
 
