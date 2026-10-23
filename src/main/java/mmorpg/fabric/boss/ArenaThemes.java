@@ -1822,7 +1822,7 @@ public final class ArenaThemes {
                 new Stage("땅 고르기", clearLayers(H, EDGE), List.of(), "dig.stone"),
                 new Stage("기초", List.of(fillLayer(-3, EDGE, p("minecraft:blackstone")), fillLayer(-2, EDGE, p("minecraft:deepslate"))), List.of(), "dig.deepslate"),
                 new Stage("바닥", List.of(new Layer(-1, floor)), List.of(), "dig.deepslate"),
-                new Stage("담장·오벨리스크", List.of(new Layer(0, (dx, dz, r, deg) -> ring.cell.test(dx, dz) ? wall : null)), struct, "break.amethyst_block"),
+                new Stage("담장·오벨리스크", List.of(new Layer(0, (dx, dz, r, deg) -> ring.cell.test(dx, dz) ? wall : null)), struct, "block.amethyst_block.break"),
                 new Stage("장식", List.of(), deco, "block.lantern.place"));
         Feat f = new Feat(List.of(), List.of(), gates, posts, List.of(), List.of(), null, List.of(), List.of(), obelisks, List.of(), List.of(), List.of());
         return new Plan(stages, f);

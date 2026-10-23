@@ -1414,7 +1414,7 @@ public final class BossVoidKnight implements BossModule {
         enc.meleeAt = NEVER;
         place(enc);
         bodyTick(enc);
-        // 등장: 가운데 균열에서 비집고 나와 칼을 세워 예를 갖춤 (무적)
+        // 등장: 제단 앞 균열에서 비집고 나와 칼을 세워 예를 갖춤 (무적)
         enc.immune = true;
         enc.api.anim(enc, "spawn", null, ATK, null);
         rift(enc.dim, new Vec3(at.x, at.y + 2.6, at.z), 2.6, 1.4);
