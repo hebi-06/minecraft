@@ -45,11 +45,15 @@ public final class CosmeticLayer extends RenderLayer<AvatarRenderState, PlayerMo
     }
 
     private void draw(PieceModel m, PoseStack pose, SubmitNodeCollector collector, int light, AvatarRenderState state) {
+        // 0.36.0: 빛 그림이 있는 불투명 장식 (악마의 뿔 · 후광 · 불사조 날개 · 마법사 모자) 은 바탕을 entityCutout, 빛을 entityTranslucentEmissive 로
+        // (보스 · 공허의 갑옷과 같은 짝) — armorCutoutNoCull 바탕은 갑옷 겹침 보정으로 빛 그림을 가려 밤에 빛나지 않았음 (공허의 갑옷 밤 사진에서 찾음).
+        // 반투명 장식 (요정 · 얼음 날개 · 얼음 왕관) 은 그대로 (entityTranslucent + eyes — 밤 사진에서 빛남)
         ArmorRenderer.submitTransformCopyingModel(getParentModel(), state, m, state, true, collector, pose,
-                m.translucent ? RenderTypes.entityTranslucent(m.texture) : RenderTypes.armorCutoutNoCull(m.texture), light, OverlayTexture.NO_OVERLAY, state.outlineColor);
+                m.translucent ? RenderTypes.entityTranslucent(m.texture) : m.emissive != null ? RenderTypes.entityCutout(m.texture) : RenderTypes.armorCutoutNoCull(m.texture),
+                light, OverlayTexture.NO_OVERLAY, state.outlineColor);
         if (m.emissive != null) {
-            ArmorRenderer.submitTransformCopyingModel(getParentModel(), state, m, state, true, collector, pose, RenderTypes.eyes(m.emissive), FULL_BRIGHT,
-                    OverlayTexture.NO_OVERLAY, 0);
+            ArmorRenderer.submitTransformCopyingModel(getParentModel(), state, m, state, true, collector, pose,
+                    m.translucent ? RenderTypes.eyes(m.emissive) : RenderTypes.entityTranslucentEmissive(m.emissive), FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0);
         }
         drawn++;
     }

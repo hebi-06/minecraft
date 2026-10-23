@@ -506,6 +506,16 @@ public final class RpgCosmeticGallery implements FabricClientGameTest {
                 viewRival(ctx, server, "back_near");
                 shot(ctx, "c_look_" + set[0] + "_back");
                 if (set[1].equals("phoenix_wings")) check(ctx.computeOnClient(mc -> CosmeticAura.dustSpawned) > dust0, "phoenix embers spawned");
+                if (set[0].equals("devil_horns")) {
+                    // 0.36.0: 불투명 장식의 빛 그림이 밤에 보이는지 (악마의 뿔 · 불사조 날개 — 바탕 entityCutout + 빛 entityTranslucentEmissive)
+                    server.runCommand("time set 18000");
+                    viewRival(ctx, server, "front");
+                    ctx.waitTicks(10);
+                    shot(ctx, "c_look_devil_horns_night_front");
+                    viewRival(ctx, server, "back_near");
+                    shot(ctx, "c_look_devil_horns_night_back");
+                    server.runCommand("time set 6000");
+                }
             }
         } finally {
             hideGui(ctx, false);
