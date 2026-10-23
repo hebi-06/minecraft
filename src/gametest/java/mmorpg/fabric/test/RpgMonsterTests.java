@@ -531,7 +531,7 @@ public final class RpgMonsterTests {
     private static final int ZZ = 70_000;
 
     /** 사냥터 (멀리 하늘의 돌 바닥): 만들기 (기록 JSON · 태그 · 길 안내) · 하나 잡히면 respawn 뒤 채움 · 넘치면 먼 것부터 치움 · /mob · /mob clear 는 사냥터 몬스터를 남김 · 지우기 */
-    @GameTest(environment = "mmorpg:monster", maxTicks = 2400)
+    @GameTest(environment = "mmorpg:monster", maxTicks = 24000)
     public void huntZoneFillsAndTrims(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         BlockPos c = new BlockPos(ZX, ZY, ZZ);
@@ -559,11 +559,12 @@ public final class RpgMonsterTests {
             switch (phase[0]) {
                 case 0 -> {
                     if (now < 20) throw h.assertionException("loading");
-                    // 0.34.0: 시험 서버는 틱을 쉬지 않고 돌려서 먼 곳의 새 청크 (엔티티) 를 불러오는 동안 수백 틱이 지날 수 있음 — 사냥터 넓이
-                    // (가운데 ± 16칸) 가 다 불러와진 뒤에 만들고, 채우기를 기다리는 동안 넓이가 덜 불러와졌으면 시간을 세지 않음 (CI 에서 "not refilled" 로 한 번 떨어짐)
+                    // 0.34.0: 시험 서버는 틱을 쉬지 않고 돌려서 (CI 에서 2,400틱이 1초 남짓) 먼 곳의 새 청크 (엔티티) 를 불러오는 동안 수천 틱이 지날 수 있음 —
+                    // 사냥터 넓이 (가운데 ± 16칸) 가 다 불러와진 뒤에 만들고, 채우기를 기다리는 동안 넓이가 덜 불러와졌으면 시간을 세지 않음 (최대 24,000틱 — 실제 시간 10초 남짓)
                     if (added[0] == null && !HuntZones.areaLoaded(level, new HuntZones.Zone("probe", "gulon", 2, "minecraft:overworld", ZX, ZY, ZZ))) {
                         throw h.assertionException("area loading");
                     }
+                    if (added[0] == null) LOG.info("[monster-test] hunt zone area loaded on tick {}", now);
                     // 사냥터는 한 번만 만듦 (이 단계의 확인이 한 틱 늦게 맞아도 다시 만들지 않게 — 빠른 CI 러너에서는 먼 청크의 새 몹이
                     // 몇 틱 뒤에야 찾아짐: 전에는 확인이 실패할 때마다 사냥터가 하나씩 더 생겨 둘레 몬스터가 12 ~ 14마리가 됨)
                     if (added[0] == null) {
