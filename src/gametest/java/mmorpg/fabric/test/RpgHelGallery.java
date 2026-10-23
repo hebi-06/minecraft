@@ -270,9 +270,10 @@ public final class RpgHelGallery extends RpgDriveGallery {
         long t0 = start(server, e -> BossHel.riverAt(e, 0, 3, 1), "river starts (band z 0 ~ 6, flowing +x)");
         waitUntil(ctx, server, t0 + 20);
         shot(ctx, "river_mark");
-        waitUntil(ctx, server, t0 + w + 5);
+        // 물결 (0.7초 동안 흐름 — 화면은 서버보다 몇 틱 늦게 그려짐): 가운데쯤 · 끝 무렵
+        waitUntil(ctx, server, t0 + w + 8);
         shot(ctx, "river_wave");
-        waitUntil(ctx, server, t0 + w + 11);
+        waitUntil(ctx, server, t0 + w + 13);
         shot(ctx, "river_wave2");
         ctx.waitTicks(16);
         settle(server, cx, z0(), SOUTH);
