@@ -103,7 +103,7 @@ public final class VoidMonsters {
             "entity.silverfish.ambient", "entity.breeze.jump", "entity.magma_cube.squish", "entity.evoker.prepare_attack", "entity.warden.attack_impact",
             "entity.illusioner.cast_spell", "entity.shulker.shoot", "entity.shulker_bullet.hit", "entity.generic.explode", "entity.warden.dig", "block.gravel.break",
             "entity.warden.emerge", "block.amethyst_cluster.break", "block.amethyst_block.resonate", "entity.ravager.roar", "item.mace.smash_ground_heavy",
-            "entity.player.attack.sweep");
+            "entity.player.attack.sweep", "block.end_portal_frame.fill");
 
     // ------------------------------------------------------------ 상태
 
@@ -190,7 +190,7 @@ public final class VoidMonsters {
             startOrb(f, now);
             return true;
         }
-        if (t.tunnel() != null && gap >= t.tunnel().min() && gap <= t.tunnel().range() && Math.abs(g.dy()) <= 3 && m.onGround()) {
+        if (t.tunnel() != null && gap >= t.tunnel().min() && gap <= t.tunnel().range() && Math.abs(g.dy()) <= 3 && onSolid(m)) {
             startTunnel(f, now);
             return true;
         }
@@ -199,6 +199,12 @@ public final class VoidMonsters {
             return true;
         }
         return false;
+    }
+
+    /** 발밑이 단단한 땅인지 (굴착자가 파고들 수 있는 곳 — 물 · 공중은 아님) */
+    static boolean onSolid(RpgMonster m) {
+        Double g = RuneKit.solidGround(m.level(), V.up(m.position(), 0.3), 1.0);
+        return g != null && !m.isInWater();
     }
 
     /** 해파리: 구체를 쏠 거리 (사거리 밖 · keep 안) 면 다가오지 않고 그 자리에 머묾 (2틱마다) */
@@ -310,23 +316,39 @@ public final class VoidMonsters {
         m.setYHeadRot(yaw);
     }
 
-    /** 나타남 (Monsters.spawnAt): 세로 균열이 열리고 공허 알갱이가 쏟아짐 */
+    /** 몸이 균열에서 비집고 나오는 틱 (동작 spawn — 처음 0.22초는 몸이 보이지 않음) */
+    public static final int EMERGE_TICKS = 5;
+
+    /**
+     * 나타남 (Monsters.spawnAt): 몸 뒤 (바라보는 쪽 반대 0.5 × 크기 칸) 에 세로 균열이 열리고 (알갱이가 빨려 듦), EMERGE_TICKS 뒤 몸이 균열에서 비집고 나옴
+     * (동작 spawn — 좁고 작게 → 부풀며 앞으로) · 보라 폭발 · 소리. 상태는 바꾸지 않음 (그림만 — 바로 맞고 싸울 수 있음)
+     */
     static void spawnFx(ServerLevel level, RpgMonster m, Monsters.Kind k) {
-        Vec3 c = V.up(m.position(), k.height() * 0.5);
-        rift(level, c, Math.max(0.9, k.height() * 0.55), 0.9, 0.6);
-        SkillFx.burst(level, c, VIOLET, 1.0 + k.half(), 0.4);
-        level.sendParticles(ParticleTypes.REVERSE_PORTAL, c.x, c.y, c.z, 30, k.half() * 0.6, k.height() * 0.35, k.half() * 0.6, 0.06);
-        Monsters.play(level, "entity.enderman.teleport", c, 0.55, 0.9);
+        double size = Math.max(1.0, k.height() * 0.62);
+        Vec3 back = V.scale(Kit.facingOf(m), -0.5 * m.getScale());
+        Vec3 c = new Vec3(m.getX() + back.x, m.getY() + size * 0.95, m.getZ() + back.z);
+        rift(level, c, size, 1.5, 0.5);
+        level.sendParticles(ParticleTypes.PORTAL, c.x, c.y, c.z, 36, size * 0.5, size * 0.6, size * 0.5, 0.6);
         Monsters.play(level, "block.respawn_anchor.charge", c, 1.3, 0.5);
+        Monsters.play(level, "block.end_portal_frame.fill", c, 0.6, 0.7);
+        m.playAnimation(Monsters.anim(k, "spawn"), "spawn", null);
+        Tasks.later(EMERGE_TICKS, () -> {
+            if (m.isRemoved() || !(m.level() instanceof ServerLevel lv)) return;
+            Vec3 b = V.up(m.position(), k.height() * 0.5);
+            SkillFx.burst(lv, c, VIOLET, 0.8 + k.half(), 0.4);
+            lv.sendParticles(ParticleTypes.REVERSE_PORTAL, b.x, b.y, b.z, 30, k.half() * 0.6, k.height() * 0.35, k.half() * 0.6, 0.06);
+            Monsters.play(lv, "entity.enderman.teleport", b, 0.55, 0.9);
+        });
     }
 
-    /** 죽음: 검은 구멍이 오므라들며 몸이 빨려 듦 (알갱이가 안으로) */
-    static void deathFx(ServerLevel level, Vec3 at, Monsters.Kind k) {
+    /** 죽음: 검은 구멍이 오므라들며 몸이 빨려 듦 (동작 die — 비틀리며 오그라들어 구멍 가운데로 · 알갱이가 안으로 · 사라질 때 흰 연기 대신 보랏빛 — RpgMonster) */
+    static void deathFx(ServerLevel level, net.minecraft.world.entity.LivingEntity e, Vec3 at, Monsters.Kind k) {
         double s = 0.8 + k.half() * 0.9;
-        RuneKit.rfx(level, "hole", at, Opt.of("size", s * 1.3, "life", 0.5, "cell", 0.0, "spinRate", 360.0, "grow", -0.85, "alpha", 0.95));
-        RuneKit.rfx(level, "hole", at, Opt.of("size", s * 1.3, "life", 0.5, "cell", (double) RuneKit.HOLE_CORE, "grow", -0.85));
+        RuneKit.rfx(level, "hole", at, Opt.of("size", s * 1.3, "life", 0.8, "cell", 0.0, "spinRate", 360.0, "grow", -0.85, "alpha", 0.95));
+        RuneKit.rfx(level, "hole", at, Opt.of("size", s * 1.3, "life", 0.8, "cell", (double) RuneKit.HOLE_CORE, "grow", -0.85));
         SkillFx.sparks(level, at, PINK, 10, 4);
         level.sendParticles(ParticleTypes.PORTAL, at.x, at.y, at.z, 40, k.half() + 0.4, k.height() * 0.4, k.half() + 0.4, 0.9);
+        if (e instanceof RpgMonster m) m.playAnimation(Monsters.anim(k, "die"), "die", "0");
         Monsters.play(level, "block.respawn_anchor.deplete", at, 1.1, 0.9);
         Monsters.play(level, "entity.endermite.death", at, 0.6, 1);
     }

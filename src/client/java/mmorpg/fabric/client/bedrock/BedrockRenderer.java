@@ -41,6 +41,8 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
     private final float shadow;
     /** 안장을 얹은 종류 (minecraft:is_saddled — 탈것: q.is_saddled = 1) */
     private final boolean saddled;
+    /** 제 죽음 동작 (die — 0.32.0 공허 몬스터: 구멍으로 빨려 듦) 이 있는 종류: 바닐라처럼 옆으로 쓰러지지 않음 (동작이 몸을 오그라뜨림) */
+    private final boolean ownDeath;
 
     /** 클라이언트 시작: 애드온 엔티티 27종 그리기 (몬스터 · 보스 · 소품 · 탈것 — MmorpgClient) */
     @SuppressWarnings("unchecked")
@@ -110,6 +112,7 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
         MobData.Def def = MobData.get(look.id);
         this.shadow = def == null || def.prop() ? 0F : def.width() * 0.5F;
         this.saddled = def != null && def.components().containsKey("minecraft:is_saddled");
+        this.ownDeath = look.animator.anim("die") != null;
         addLayer(new GlowLayer(this));
         addLayer(new TintLayer(this));
     }
@@ -122,6 +125,7 @@ public final class BedrockRenderer extends LivingEntityRenderer<BedrockMob, Bedr
     @Override
     public void extractRenderState(BedrockMob e, State s, float partialTick) {
         super.extractRenderState(e, s, partialTick);
+        if (ownDeath) s.deathTime = 0; // 쓰러지는 회전 없이 (붉은 빛은 그대로 — hasRedOverlay)
         Ctx ctx = look.animator.ctx;
         double[] v = new double[ctx.size()];
         v[Ctx.LIFE_TIME] = s.ageInTicks / 20.0;

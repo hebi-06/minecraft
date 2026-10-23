@@ -132,6 +132,34 @@ public class RpgMonster extends BedrockMob {
         return !isInvisible() && super.isPickable();
     }
 
+    /** 공허 몬스터인지 (무리 void — 서버 · 클라이언트) */
+    public boolean voidKind() {
+        return def != null && def.families().contains("void");
+    }
+
+    /**
+     * 0.32.0 공허 몬스터: 죽어 사라질 때 (바닐라 엔티티 이벤트 60 — 흰 연기) 대신 보랏빛 공허 알갱이가 가운데로 빨려 듦 (클라이언트 — 몸은 동작 die 로 오그라듦)
+     */
+    @Override
+    public void handleEntityEvent(byte id) {
+        if (id == 60 && voidKind()) {
+            Level lv = level();
+            double cy = getY() + getBbHeight() * 0.5;
+            for (int i = 0; i < 26; i++) {
+                double dx = (random.nextDouble() - 0.5) * getBbWidth() * 2.2;
+                double dy = (random.nextDouble() - 0.5) * getBbHeight() * 1.4;
+                double dz = (random.nextDouble() - 0.5) * getBbWidth() * 2.2;
+                lv.addParticle(net.minecraft.core.particles.ParticleTypes.PORTAL, getX(), cy, getZ(), dx, dy, dz); // 바깥에서 가운데로 모여듦
+            }
+            for (int i = 0; i < 10; i++) {
+                lv.addParticle(net.minecraft.core.particles.ParticleTypes.REVERSE_PORTAL, getX() + (random.nextDouble() - 0.5) * 0.4, cy,
+                        getZ() + (random.nextDouble() - 0.5) * 0.4, (random.nextDouble() - 0.5) * 0.08, random.nextDouble() * 0.06, (random.nextDouble() - 0.5) * 0.08);
+            }
+            return;
+        }
+        super.handleEntityEvent(id);
+    }
+
     /** 플레이어가 준 피해는 껍질만큼 줄여서 (combat.js 의 incoming 훅 — 무기 공식 뒤) */
     @Override
     public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {

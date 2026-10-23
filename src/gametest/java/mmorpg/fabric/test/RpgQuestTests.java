@@ -689,15 +689,19 @@ public final class RpgQuestTests {
         h.assertTrue("troll".equals(Loot.dropKeyOf("rpg:loot_troll")) && Loot.dropKeyOf("minecraft:dirt") == null, "drop key");
         ItemStack s = Loot.dropItem("troll", 3);
         h.assertTrue(s.is(GearItems.byId("rpg:loot_troll")) && s.getCount() == 3, "drop item");
-        h.assertTrue(Loot.dropItemIds().size() == 14 && Loot.dropItemIds().contains("rpg:loot_frost_giant"), "drop ids (9단계 14종) " + Loot.dropItemIds());
+        h.assertTrue(Loot.dropItemIds().size() == 19 && Loot.dropItemIds().contains("rpg:loot_frost_giant") && Loot.dropItemIds().contains("rpg:loot_void_behemoth"),
+                "drop ids (9단계 14종 + 0.32.0 공허 5종) " + Loot.dropItemIds());
         h.assertTrue(Loot.huntKind(0).equals("scarecrow") && Loot.huntKind(9).equals("gulon"), "hunt kind");
         h.assertTrue(Loot.monsterXp(sp, "scarecrow") > 0 && !Loot.xpCapped(sp, "scarecrow"), "xp at level 0");
-        // 들어 있는 퀘스트 수 · 순서 (메인 3 + 6 × 46, 반복 14 · 왕실 7 · 전설 5)
+        // 들어 있는 퀘스트 수 · 순서 (메인 3 + 6 × 46, 반복 19 (0.32.0 공허 5 포함) · 왕실 7 · 전설 5)
         h.assertTrue(Quests.allQuests().stream().filter(q -> q.main).count() == 3 + 6L * MainQuests.PATH_STEPS, "main count");
-        h.assertTrue(Quests.sideQuests().size() == 26, "side count " + Quests.sideQuests().size());
+        h.assertTrue(Quests.sideQuests().size() == 31, "side count " + Quests.sideQuests().size());
         h.assertTrue(Quests.allQuests().get(0).id.equals(MainQuests.MAIN_START), "order");
         // 9단계 새 몬스터도 레벨 순서로 추천 (2렙 → 니세 Lv.4, 37렙 → 서리 거인 Lv.39)
         h.assertTrue(Loot.huntKind(2).equals("nisse") && Loot.huntKind(37).equals("frost_giant"), "hunt kind (new monsters) " + Loot.huntKind(2) + " " + Loot.huntKind(37));
+        // 0.32.0 공허 몬스터: 40렙 → 도약충 Lv.42 · 46렙 → 추적자 Lv.48 · 56렙 → 거수 Lv.58
+        h.assertTrue(Loot.huntKind(40).equals("void_leaper") && Loot.huntKind(46).equals("void_stalker") && Loot.huntKind(56).equals("void_behemoth"),
+                "hunt kind (void) " + Loot.huntKind(40) + " " + Loot.huntKind(46) + " " + Loot.huntKind(56));
         done(h, sp);
     }
 

@@ -84,7 +84,7 @@ def behavior(key, m, cfg):
     """행동 팩 엔티티 (애드온 build.py monster_behavior 와 같은 모양 — 맞기 전에는 돌아다니기만, 피해는 Monsters 가 넣음)"""
     leash = cfg["leash"]
     comps = {
-        "minecraft:type_family": {"family": ["rpg_monster", key, "mob"] + (["undead"] if m.get("undead") else [])},
+        "minecraft:type_family": {"family": ["rpg_monster", key, "mob"] + (["undead"] if m.get("undead") else []) + (["void"] if m.get("void") else [])},
         "minecraft:health": {"value": m["hp"], "max": m["hp"]},
         "minecraft:attack": {"damage": 1},
         "minecraft:movement": {"value": m["speed"]},
@@ -99,7 +99,9 @@ def behavior(key, m, cfg):
         "minecraft:persistent": {},
         "minecraft:loot": {"table": f"loot_tables/entities/rpg_{key}.json"},
         "minecraft:experience_reward": {"on_death": "0"},
-        "minecraft:damage_sensor": {"triggers": [{"cause": "fall", "deals_damage": "no"}]},
+        "minecraft:damage_sensor": {"triggers": [{"cause": "fall", "deals_damage": "no"}] + (
+            # 0.32.0 공허 몬스터: 큰 몸이 사냥터 벽 · 나무에 걸려도 숨이 막히지 않게 (굴착자는 땅속도 지나감)
+            [{"cause": "suffocation", "deals_damage": "no"}] if m.get("void") else [])},
         "minecraft:home": {"restriction_radius": cfg["homeRadius"], "restriction_type": "random_movement"},
         "minecraft:behavior.hurt_by_target": {"priority": 1, "entity_types": [{"filters": {"test": "is_family", "subject": "other", "value": "player"}, "max_dist": leash}]},
         "minecraft:behavior.melee_attack": {"priority": 2, "speed_multiplier": m["chase"], "track_target": True, "reach_multiplier": 1.2, "cooldown_time": 1},

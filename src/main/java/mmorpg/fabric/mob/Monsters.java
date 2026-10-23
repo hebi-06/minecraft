@@ -1247,7 +1247,7 @@ public final class Monsters {
         FIGHTS.remove(e.getUUID());
         HURT.remove(e.getUUID());
         Vec3 at = V.up(e.position(), k.height() * 0.5);
-        if (k.traits().isVoid()) VoidMonsters.deathFx(level, at, k); // 0.32.0 빨려 들어가듯 사라짐
+        if (k.traits().isVoid()) VoidMonsters.deathFx(level, e, at, k); // 0.32.0 빨려 들어가듯 사라짐 (동작 die)
         else {
             SkillFx.burst(level, at, k.color(), 1.2 + k.half(), 0.35);
             SkillFx.sparks(level, at, k.color(), 8, 4);

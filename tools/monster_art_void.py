@@ -72,14 +72,66 @@ def blade(seed, base=BONE, **kw):
     return Mat(base, "metal", noise=4, edge=0.9, seed=seed, **o)
 
 
-def crystal(seed, base="#8e4cff", **kw):
-    o = dict(seam="#f0c8ff", seam_band=3, seam_dir="v", seam_glow=1.0, seam_gap=0.5)
+def crystal(seed, base="#8e4cff", glow=0.5, **kw):
+    """공허 수정: 깎은 면 (monster_kit pattern "crystal" — 위가 밝고 한쪽 모서리가 빛남 · 가운데 심, seam = 심 색)"""
+    o = dict(seam="#f6d4ff")
     o.update(kw)
-    return Mat(base, "ice", noise=6, edge=0.85, glow=0.6, seed=seed, **o)
+    return Mat(base, "crystal", noise=3, edge=1.0, glow=glow, seed=seed, **o)
+
+
+def shard(m, name, parent, base, size, mat, tip, rot, seed):
+    """수정 한 개 — 밑동 가운데 base [x, y, z] 를 축으로 rot 만큼 기울인 뼈: 몸 (키의 60%) → 좁은 몸 (폭 3 넘으면) → 빛나는 끝 (폭 1)"""
+    w, h, d = size
+    b = m.bone(name, list(base), parent, list(rot))
+    oy = base[1]
+    body_h = h if w == 1 else max(2, round(h * 0.6))
+    b.box([base[0] - w / 2, oy, base[2] - d / 2], [w, body_h, d], mat.with_(seed=seed))
+    y = oy + body_h
+    if w >= 3:
+        w2 = w - 2 if w >= 4 else w - 1
+        d2 = d - 2 if d >= 4 else d - 1
+        h2 = max(1, round(h * 0.25))
+        b.box([base[0] - w2 / 2, y, base[2] - d2 / 2], [w2, h2, d2], mat.with_(seed=seed + 1))
+        y += h2
+    if w >= 2:
+        b.box([base[0] - 0.5, y, base[2] - 0.5], [1, int(max(2, oy + h - y)), 1], tip.with_(seed=seed + 2))
+    return b
 
 
 def flat(seed, base=DARK, **kw):
     return Mat(base, "flat", noise=4, seed=seed, **kw)
+
+
+def void_common(fn):
+    """다섯 공통 동작 (뿌리 뼈마다):
+    spawn — 균열에서 비집고 나옴 (VoidMonsters.spawnFx: 몸 뒤 0.5 × 크기 칸 = 8 픽셀에 균열): 0.22초는 보이지 않다가 좁고 작게 균열 자리에서 → 부풀며 앞으로 (0.8초)
+    die — 구멍으로 빨려 듦: 살짝 눌렸다가 비틀리며 오그라들어 몸 가운데 (모델 높이의 절반) 로 (0.75초 · 끝 자세 유지 — 바닐라 쓰러짐 대신, BedrockRenderer)"""
+    def make():
+        m, anims = fn()
+        roots = [b for b in m.bones if not b.parent]
+        top = max(bx.origin[1] + bx.size[1] for bone in m.bones for bx in bone.boxes)
+        spawn = {}
+        die = {}
+        for r in roots:
+            rise = round(max(0.0, top * 0.5 - r.pivot[1]), 2)
+            z = 0.001
+            spawn[r.name] = {
+                "scale": kf([(0, [z, z, z]), (0.22, [z, z, z]), (0.24, [0.15, 0.7, 0.35]), (0.5, [1.12, 1.05, 1.12]), (0.66, [0.97, 1.0, 0.97]), (0.8, [1, 1, 1])]),
+                "position": kf([(0, [0, 0, 8]), (0.24, [0, 0, 8]), (0.5, [0, 0, 2]), (0.8, [0, 0, 0])]),
+                "rotation": kf([(0, [-14, 0, 0]), (0.24, [-14, 0, 0]), (0.5, [5, 0, 0]), (0.8, [0, 0, 0])]),
+            }
+            die[r.name] = {
+                "scale": kf([(0, [1, 1, 1]), (0.12, [1.12, 0.86, 1.12]), (0.75, [0.02, 0.02, 0.02])]),
+                "position": kf([(0, [0, 0, 0]), (0.75, [0, rise, 0])]),
+                "rotation": kf([(0, [0, 0, 0]), (0.75, [0, 260, 0])]),
+            }
+        anims["spawn"] = {"animation_length": 0.8, "bones": spawn}
+        anims["die"] = {"animation_length": 0.75, "loop": "hold_on_last_frame", "bones": die}
+        return m, anims
+
+    make.__name__ = fn.__name__
+    make.__doc__ = fn.__doc__
+    return make
 
 
 # ================================================================= 공허 도약충 (Lv42)
@@ -106,6 +158,7 @@ def leg_steps(bone_, sx, x0, y0, z, out, rise, down, mat, foot=None):
     return kx
 
 
+@void_common
 def void_leaper():
     m = Model("void_leaper")
     sh = shell(301)
@@ -217,6 +270,7 @@ def void_leaper():
 
 # ================================================================= 공허 추적자 (Lv48)
 
+@void_common
 def void_stalker():
     m = Model("void_stalker")
     sh = shell(401)
@@ -347,6 +401,7 @@ def void_stalker():
 TENDRILS = [(6, 0), (4, 4), (0, 6), (-4, 4), (-6, 0), (-4, -4), (0, -6), (4, -4)]
 
 
+@void_common
 def void_jelly():
     m = Model("void_jelly")
     bell = Mat("#2e2152", "skin", noise=6, accent="#1c1236", seed=501, seam=VIOLET, seam_band=3, seam_dir="v", seam_glow=0.6, seam_gap=0.25,
@@ -436,6 +491,7 @@ def void_jelly():
 BORE = -30  # 땅속 자세: 몸 전체를 땅 밑으로 (등 수정 끝만 조금 — 실제로는 서버가 이름표를 치우고 금 간 자국을 그림)
 
 
+@void_common
 def void_borer():
     m = Model("void_borer")
     sh = shell(601, seam_band=3, seam_glow=0.8, seam_gap=0.2)
@@ -446,14 +502,15 @@ def void_borer():
     maw = core(606, base="#ff52da", spots=6)
     leg = Mat("#2c2150", "chitin", noise=5, band=2, accent="#170f2c", seed=607)
     cry = crystal(608)
+    tip = crystal(616, base="#dcb2ff", glow=0.95)
 
     base = m.bone("base", [0, 0, 0])
     s1 = m.bone("seg1", [0, 6, -4], "base")
     s1.box([-5, 1, -8], [10, 9, 8], sh, faces={"down": belly})
     s1.box([-4.5, 10, -7], [9, 1, 6], pl)
-    s1.box([-1, 11, -6], [2, 3, 2], cry)
-    s1.box([2, 10, -4], [1, 2, 1], cry.with_(seed=609))
-    s1.box([-3, 10, -4], [1, 2, 1], cry.with_(seed=610))
+    shard(m, "crystal0", "seg1", [0, 11, -5], [2, 6, 2], cry, tip, [-14, 0, 0], 609)
+    shard(m, "crystal1", "seg1", [2.5, 10, -3.5], [1, 3, 1], cry, tip, [-8, 0, -24], 612)
+    shard(m, "crystal2", "seg1", [-2.5, 10, -3.5], [1, 3, 1], cry, tip, [-8, 0, 24], 615)
     head = m.bone("head", [0, 6, -8], "seg1", [6, 0, 0])
     eyes = [("east", 1, 1, EYE, 1.0), ("east", 2, 1, EYE2, 0.9), ("west", 2, 1, EYE, 1.0), ("west", 1, 1, EYE2, 0.9)]
     head.box([-4, 2, -13], [8, 7, 5], sh2, decals=eyes)
@@ -469,14 +526,16 @@ def void_borer():
     s2 = m.bone("seg2", [0, 6, 0], "seg1")
     s2.box([-4.5, 1, 0], [9, 8, 7], sh.with_(seed=620), faces={"down": belly})
     s2.box([-4, 9, 1], [8, 1, 5], pl.with_(seed=621))
-    s2.box([-1, 10, 2], [2, 4, 2], cry.with_(seed=622))
+    shard(m, "crystal3", "seg2", [0, 10, 3], [2, 7, 2], cry, tip, [-18, 0, 6], 622)
+    shard(m, "crystal4", "seg2", [2.5, 9, 4.5], [1, 3, 1], cry, tip, [-10, 0, -22], 625)
     s3 = m.bone("seg3", [0, 5, 7], "seg2")
     s3.box([-4, 1, 7], [8, 7, 6], sh2.with_(seed=630), faces={"down": belly})
     s3.box([-3.5, 8, 8], [7, 1, 4], pl.with_(seed=631))
-    s3.box([-0.5, 9, 9], [1, 3, 1], cry.with_(seed=632))
+    shard(m, "crystal5", "seg3", [0, 9, 10], [2, 5, 2], cry, tip, [-20, 0, -8], 632)
+    shard(m, "crystal6", "seg3", [-2.5, 8, 11], [1, 3, 1], cry, tip, [-12, 0, 22], 635)
     s4 = m.bone("seg4", [0, 4, 13], "seg3")
     s4.box([-3, 1, 13], [6, 6, 5], sh.with_(seed=640), faces={"down": belly})
-    s4.box([-0.5, 7, 14], [1, 2, 1], cry.with_(seed=641))
+    shard(m, "crystal7", "seg4", [0, 7, 15], [1, 4, 1], cry, tip, [-24, 0, 0], 641)
     tail = m.bone("tail", [0, 4, 18], "seg4")
     tail.box([-2, 2, 18], [4, 4, 4], sh2.with_(seed=650))
     tail.box([-0.5, 3, 22], [1, 2, 3], cry.with_(seed=651))
@@ -539,6 +598,7 @@ def void_borer():
 
 # ================================================================= 공허 거수 (Lv58)
 
+@void_common
 def void_behemoth():
     m = Model("void_behemoth")
     sh = shell(701, seam_band=4, seam_glow=0.75, seam_gap=0.25)
@@ -549,6 +609,7 @@ def void_behemoth():
     maw = core(706, base="#ff4fd8", spots=6)
     cry = crystal(707)
     cry2 = crystal(708, base="#b36cff")
+    tip = crystal(711, base="#e4bcff", glow=0.95)
     claw = bone(709, base=BONE2)
     dark = flat(710, "#140e24")
 
@@ -557,13 +618,12 @@ def void_behemoth():
     body.box([-9, 20, -7], [18, 2, 18], pl)
     body.box([-8, 10, 13], [16, 8, 3], sh2.with_(seed=711))
     # 등의 공허 수정 숲 (뼈마다 조금씩 기울임)
-    crys = [((-2, 22, -2), (4, 11, 4), (0, 0, 0)), ((3, 22, 3), (3, 8, 3), (8, 0, -12)), ((-6, 22, 2), (3, 9, 3), (-6, 0, 14)),
-            ((4, 22, -5), (2, 6, 2), (-10, 0, -16)), ((-7, 22, -5), (2, 6, 2), (-10, 0, 16)), ((-1, 22, 7), (3, 7, 3), (16, 0, 4)),
-            ((-5, 22, 8), (2, 5, 2), (14, 0, 12)), ((4, 22, 9), (2, 5, 2), (14, 0, -12)), ((0, 22, -7), (2, 4, 2), (-18, 0, 0))]
-    for i, (o, sz, rot) in enumerate(crys):
-        cb = m.bone(f"crystal{i}", [o[0] + sz[0] / 2, 22, o[2] + sz[2] / 2], "body", list(rot))
-        cb.box(list(o), list(sz), (cry if i % 2 == 0 else cry2).with_(seed=720 + i))
-        cb.box([o[0] + sz[0] / 2 - 0.5, o[1] + sz[1], o[2] + sz[2] / 2 - 0.5], [1, 2 if sz[1] > 6 else 1, 1], cry2.with_(seed=740 + i, glow=0.9))
+    # (밑동 가운데, 크기, 기울기) — 가운데 큰 것 하나 · 둘레로 벌어지게
+    crys = [((0, 22, 0), (4, 13, 4), (0, 0, 0)), ((5, 22, 4), (3, 9, 3), (10, 0, -20)), ((-5, 22, 3), (3, 10, 3), (-6, 0, 22)),
+            ((5, 22, -4), (2, 7, 2), (-14, 0, -22)), ((-5.5, 22, -4), (2, 7, 2), (-12, 0, 24)), ((0, 22, 8), (3, 8, 3), (22, 0, 4)),
+            ((-4.5, 22, 9), (2, 6, 2), (20, 0, 18)), ((4.5, 22, 9.5), (2, 6, 2), (20, 0, -18)), ((0, 22, -6), (2, 5, 2), (-24, 0, 0))]
+    for i, (c, sz, rot) in enumerate(crys):
+        shard(m, f"crystal{i}", "body", list(c), sz, cry if i % 2 == 0 else cry2, tip, rot, 720 + i * 3)
     # 머리: 이마 판 · 눈 무리 (빛남) · 아래턱 (속이 빛남) · 앞으로 뻗은 엄니 둘
     head = m.bone("head", [0, 14, -9], "body")
     eyes = [("north", 3, 2, EYE, 1.0), ("north", 5, 1, EYE2, 0.9), ("north", 8, 1, EYE2, 0.9), ("north", 10, 2, EYE, 1.0),

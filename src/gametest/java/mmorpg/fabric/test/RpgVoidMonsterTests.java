@@ -125,7 +125,7 @@ public final class RpgVoidMonsterTests {
             JsonObject e = rend.getAsJsonObject("entities").getAsJsonObject("rpg:" + key);
             h.assertTrue(e != null, key + " render entity");
             JsonObject a = e.getAsJsonObject("animations");
-            List<String> need = new ArrayList<>(List.of("idle", "walk", "attack"));
+            List<String> need = new ArrayList<>(List.of("idle", "walk", "attack", "spawn", "die")); // spawn · die: 균열에서 나옴 · 구멍으로 빨려 듦 (다섯 공통)
             need.addAll(special.get(key));
             for (String n : need) {
                 String full = "animation.rpg.monster." + key + "." + n;
@@ -140,14 +140,22 @@ public final class RpgVoidMonsterTests {
         for (int i = 0; i < VOID.size(); i++) {
             String key = VOID.get(i);
             Monsters.Kind k = Monsters.kind(key);
-            RpgMonster m = monster(h, key, 1.5 + (i % 3) * 3, 2, 1.5 + (i / 3) * 4, false);
+            RpgMonster m = monster(h, key, 1.5 + (i % 3) * 2.5, 2, 1.5 + (i / 3) * 3.5, false); // 큰 몸이 시험 자리 barrier 벽에 들지 않게
             spawned.add(m);
             near(h, m.getMaxHealth(), k.hp(), 1e-3, key + " max hp");
             near(h, m.getBbWidth(), k.half() * 2, 1e-3, key + " width");
             near(h, m.getBbHeight(), k.height(), 1e-3, key + " height");
             h.assertTrue(("§eLv." + k.level() + " §f" + k.name()).equals(Monsters.labelOf(m)), key + " label " + Monsters.labelOf(m));
             h.assertTrue(!Monsters.buried(m) && !VoidMonsters.phased(m) && !m.isInvisible(), key + " plain at spawn");
+            // 균열에서 나옴: 동작 spawn (그림만 — 바로 맞고 싸울 수 있음), 무리 void (클라이언트가 사라질 때 보랏빛 알갱이)
+            h.assertTrue(played(m, "spawn") && m.voidKind() && m.entityTags().contains("void"), key + " spawn animation · void family " + m.syncedAnims());
         }
+        // 죽음: 동작 die (끝 자세 유지 — 구멍으로 빨려 듦)
+        RpgMonster last = spawned.get(spawned.size() - 1);
+        last.hurtServer(h.getLevel(), h.getLevel().damageSources().generic(), 1e6F);
+        h.assertTrue(last.isDeadOrDying() && played(last, "die"), "die animation on death " + last.syncedAnims());
+        h.assertTrue(Monsters.kind("frost_giant") != null && !((RpgMonster) RpgEntities.type("rpg:frost_giant").create(h.getLevel(),
+                net.minecraft.world.entity.EntitySpawnReason.COMMAND)).voidKind(), "older monsters are not void");
         // 전리품 팔기 창: 19종 — 마지막 전리품은 넷째 줄 (칸 32)
         h.assertTrue(Shop.sellSlot(18) == 32 && Shop.sellSlot(14) == 28, "sell slots for 19 drops " + Shop.sellSlot(14) + " " + Shop.sellSlot(18));
         ok("void data: order · region · traits · entities · eggs · loot · repeat by level · sounds · animations · textures · spawn · sell slots");
@@ -327,7 +335,7 @@ public final class RpgVoidMonsterTests {
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 300);
         Monsters.Kind k = Monsters.kind("void_jelly");
         VoidMonsters.Orb o = k.traits().orb();
-        RpgMonster m = monster(h, "void_jelly", 7.5, 2, 6.5, false);
+        RpgMonster m = monster(h, "void_jelly", 6.0, 2, 6.0, false); // 눈높이 상자가 barrier 벽 (x 8) 에 들면 숨이 막혀 맞은 것이 무시됨
         float[] hp0 = {-1};
         int[] fired0 = {0};
         int[] burst0 = {0};
@@ -367,7 +375,7 @@ public final class RpgVoidMonsterTests {
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 300);
         Monsters.Kind k = Monsters.kind("void_borer");
         VoidMonsters.Tunnel t = k.traits().tunnel();
-        RpgMonster m = monster(h, "void_borer", 7.5, 2, 6.5, false);
+        RpgMonster m = monster(h, "void_borer", 6.0, 2, 6.0, false);
         float[] hp0 = {-1};
         boolean[] under = {false, false, false, false}; // [땅속, 낮은 몸, 맞지 않음, 이름표 없음]
         double[] dist = {99, 99}; // [땅속에 든 때 거리, 땅속에서 가장 가까운 거리]
@@ -420,7 +428,7 @@ public final class RpgVoidMonsterTests {
         ServerPlayer sp = player(h, 1.5, 2, 1.5, 300);
         Monsters.Kind k = Monsters.kind("void_behemoth");
         VoidMonsters.Spikes s = k.traits().spikes();
-        RpgMonster m = monster(h, "void_behemoth", 7.5, 2, 6.5, false);
+        RpgMonster m = monster(h, "void_behemoth", 6.0, 2, 6.0, false);
         float[] hp0 = {-1};
         int[] fx0 = {0};
         double[] lift = {0};

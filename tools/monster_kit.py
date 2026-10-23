@@ -240,6 +240,8 @@ def paint_face(m, face, w, h, rng):
     """한 면 (w × h) 의 색 [y][x] = (r, g, b, a)"""
     if w <= 0 or h <= 0:
         return []
+    if m.pattern == "crystal":
+        return paint_crystal(m, face, w, h, rng)
     base = m.base
     lf = FACE_LIGHT[face]
     k_face = m.top if lf == "top" else m.bottom if lf == "bottom" else lf
@@ -322,6 +324,46 @@ def paint_face(m, face, w, h, rng):
 
 def glow_alpha(g):
     return 255 if g <= 0 else clamp(255 * (1 - g * 0.75))
+
+
+def paint_crystal(m, face, w, h, rng):
+    """0.32.0 공허 수정 (pattern "crystal" — 깎은 면): 옆면은 위로 갈수록 밝고 왼쪽 모서리가 밝게 빛나며 오른쪽 모서리는 그늘,
+    폭 4 칸 넘는 면은 가운데 심이 빛남 (아래로 옅어짐), 윗면은 밝은 끝 · 아랫면은 어둡게. 얼룩 · 줄무늬 없이 (체크무늬로 보이지 않게).
+    seam = 심 · 모서리 빛 색 (없으면 바탕을 밝게), glow = 몸의 빛"""
+    side = face in ("north", "south", "east", "west")
+    base = m.base
+    hi = mix(base, (255, 255, 255), 0.5)
+    core = m.seam if m.seam is not None else mix(base, (255, 225, 255), 0.65)
+    # 면마다 밝은 모서리를 돌려서 (북 · 동은 왼쪽, 남 · 서는 오른쪽) 둘러봐도 깎은 면처럼
+    lit_left = face in ("north", "east")
+    cells = [[None] * w for _ in range(h)]
+    for y in range(h):
+        t = y / (h - 1) if h > 1 else 0.0  # 0 위 → 1 아래
+        for x in range(w):
+            if side:
+                c = mul(base, (1.2 - 0.45 * t) * (0.97 + 0.06 * rng.random()))
+                a = glow_alpha(m.glow * (1 - 0.35 * t))
+                lit = x == (0 if lit_left else w - 1)
+                shade = w >= 3 and x == (w - 1 if lit_left else 0)
+                if w >= 2 and lit:
+                    c = mix(c, hi, 0.7 - 0.35 * t)
+                    a = glow_alpha(min(1.0, m.glow + 0.35) * (1 - 0.3 * t))
+                elif shade:
+                    c = mul(c, 0.7)
+                    a = glow_alpha(m.glow * 0.4)
+                if w >= 4 and x == w // 2 - (0 if lit_left else 1):
+                    c = mix(c, core, 0.75 * (1 - 0.55 * t))
+                    a = glow_alpha(1.0 - 0.45 * t)
+            elif face == "up":
+                c = mix(base, core, 0.55)
+                a = glow_alpha(min(1.0, m.glow + 0.3))
+            else:
+                c = mul(base, 0.55)
+                a = 255
+            n = rng.randint(-m.noise, m.noise)
+            c = tuple(clamp(v + n) for v in c)
+            cells[y][x] = (c[0], c[1], c[2], a)
+    return cells
 
 
 def paint_glow(m, face, w, h, rng, cells):

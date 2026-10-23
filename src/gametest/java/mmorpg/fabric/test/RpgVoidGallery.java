@@ -302,6 +302,7 @@ public final class RpgVoidGallery implements FabricClientGameTest {
     /** 하나씩 가까이 (비스듬히 서서 카메라를 봄 · 3/4) — 손 · HUD 없이 */
     private void closeups(ClientGameTestContext ctx, TestServerContext server) {
         hideGui(ctx, true);
+        fov(ctx, 45); // 좁은 시야 — 몸이 화면에 크게 (장면이 끝나면 70 으로)
         for (String key : VOID) {
             Monsters.Kind k = Monsters.kind(key);
             double d = Math.max(3.6, k.height() * 1.25 + k.half() + 1.4);
@@ -318,19 +319,34 @@ public final class RpgVoidGallery implements FabricClientGameTest {
             discard(server, id);
             ctx.waitTicks(3);
         }
+        fov(ctx, 70);
         hideGui(ctx, false);
     }
 
-    /** 나타남: 세로 균열이 열리며 (공허 알갱이) 몬스터가 섬 — 추적자 · 거수 */
+    /** 나타남: 몸 뒤에 세로 균열이 열리고 (몸은 아직 없음) → 몸이 균열에서 비집고 나옴 (좁고 작게 → 부풀며 앞으로) → 다 나옴 — 추적자 · 거수 · 도약충 (손 · HUD 없이) */
     private void spawnRift(ClientGameTestContext ctx, TestServerContext server) {
-        teleport(ctx, server, PX, FLOOR, PZ, 180F, -6F);
-        int a = spawn(server, "void_stalker", PX - 1.8, FLOOR, PZ - 5.5, 0F, false);
-        int b = spawn(server, "void_behemoth", PX + 3.0, FLOOR, PZ - 8.0, -20F, false);
-        ctx.waitTicks(3);
+        hideGui(ctx, true);
+        teleport(ctx, server, PX, FLOOR, PZ, 180F, -2F);
+        int a = spawn(server, "void_stalker", PX - 2.2, FLOOR, PZ - 6.0, 15F, false);
+        int b = spawn(server, "void_behemoth", PX + 2.8, FLOOR, PZ - 9.0, -20F, false);
+        int c = spawn(server, "void_leaper", PX + 0.2, FLOOR, PZ - 4.2, 0F, false);
+        boolean anim = server.computeOnServer(s -> {
+            for (int id : List.of(a, b, c)) {
+                RpgMonster m = monster(s, id);
+                if (m == null || m.syncedAnims().stream().noneMatch(p -> p.anim().endsWith(".spawn"))) return false;
+            }
+            return true;
+        });
+        ctx.waitTicks(2);
         shot(ctx, "v_spawn_rift");
-        ctx.waitTicks(8);
+        ctx.waitTicks(5);
         shot(ctx, "v_spawn_rift2");
-        check(a >= 0 && b >= 0, "spawned with rifts");
+        ctx.waitTicks(4);
+        shot(ctx, "v_spawn_rift3");
+        ctx.waitTicks(10);
+        shot(ctx, "v_spawn_rift4");
+        check(a >= 0 && b >= 0 && c >= 0 && anim, "spawned from rifts (spawn animation)");
+        hideGui(ctx, false);
     }
 
     // ------------------------------------------------------------ 특성
@@ -442,13 +458,14 @@ public final class RpgVoidGallery implements FabricClientGameTest {
         shot(ctx, "v_orb_cast");
         int fired0 = server.computeOnServer(s -> VoidMonsters.orbsFired);
         boolean fly = waitFor(ctx, server, 20, s -> VoidMonsters.orbCount() > 0);
+        int fired = server.computeOnServer(s -> VoidMonsters.orbsFired); // 모으는 동안은 아직 쏘지 않음 → 날아간 뒤에 셈
         ctx.waitTicks(6);
         shot(ctx, "v_orb_fly");
         int burst0 = server.computeOnServer(s -> VoidMonsters.orbsBurst);
         boolean burst = waitFor(ctx, server, 40, s -> VoidMonsters.orbsBurst > burst0);
         ctx.waitTicks(1);
         shot(ctx, "v_orb_burst");
-        check(cast && fly && burst && hp(server) < hp0 && fired0 >= 1, "jelly: cast → orb → burst on the player");
+        check(cast && fly && burst && hp(server) < hp0 && fired > fired0, "jelly: cast → orb (" + fired0 + " → " + fired + ") → burst on the player");
         // 1인칭: 날아오는 구체
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         lookAt(ctx, id, 1.6);
@@ -558,13 +575,18 @@ public final class RpgVoidGallery implements FabricClientGameTest {
         attack(ctx, a);
         ctx.waitTicks(3);
         shot(ctx, "v_death");
+        boolean dieAnim = server.computeOnServer(s -> monster(s, a) != null && monster(s, a).syncedAnims().stream().anyMatch(p -> p.anim().endsWith(".die")));
+        ctx.waitTicks(6);
+        shot(ctx, "v_death_shrink");
         lookAt(ctx, b, 1.3);
-        ctx.waitTicks(16); // 공격 쿨다운이 차게
+        ctx.waitTicks(10); // 공격 쿨다운이 차게
         attack(ctx, b);
         ctx.waitTicks(3);
         shot(ctx, "v_death2");
+        ctx.waitTicks(9);
+        shot(ctx, "v_death2_shrink");
         boolean dead = server.computeOnServer(s -> monster(s, a) == null || !monster(s, a).isAlive());
-        check(dead, "void death: leaper died");
+        check(dead && dieAnim, "void death: leaper died (die animation " + dieAnim + ")");
     }
 
     /** 전리품 팔기 창 (19종 — 4줄 · 공허 다섯은 셋째 · 넷째 줄) · 가방의 공허 전리품 */
