@@ -48,14 +48,17 @@ public final class ArmorModels {
                 if (!(stack.getItem() instanceof RpgArmorItem item)) return;
                 PieceModel m = get(item.piece().set(), item.piece().piece());
                 if (m == null) return;
-                ArmorRenderer.submitTransformCopyingModel(contextModel, state, m, state, true, collector, poseStack, RenderTypes.armorCutoutNoCull(m.texture), light,
-                        OverlayTexture.NO_OVERLAY, state.outlineColor);
-                // 0.36.0 공허의 갑옷: 빛나는 그림 (emissive — 분홍 핏줄 · 수정 끝) 을 밝기 최대로 한 번 더 (어두워도 보임). 보스의 빛나는 칸 (BedrockRenderer.GlowLayer) 과
-                // 같은 entityTranslucentEmissive — eyes (더하기) 로는 첫 사진첩의 밤 사진에서 빛이 보이지 않았음
-                if (m.emissive != null) {
-                    ArmorRenderer.submitTransformCopyingModel(contextModel, state, m, state, true, collector, poseStack, RenderTypes.entityTranslucentEmissive(m.emissive),
-                            FULL_BRIGHT, OverlayTexture.NO_OVERLAY, state.outlineColor);
+                if (m.emissive == null) {
+                    ArmorRenderer.submitTransformCopyingModel(contextModel, state, m, state, true, collector, poseStack, RenderTypes.armorCutoutNoCull(m.texture), light,
+                            OverlayTexture.NO_OVERLAY, state.outlineColor);
+                    return;
                 }
+                // 0.36.0 공허의 갑옷 (빛나는 그림 emissive — 분홍 핏줄 · 수정 끝, 어두워도 보임): 보스 (BedrockRenderer — 몸 entityCutout + 빛 GlowLayer) 와 같은 짝.
+                // 바탕을 armorCutoutNoCull 로 그리면 빛 그림 (eyes · entityTranslucentEmissive 모두) 보다 뒤에 그려져 덮음 — 사진첩 밤 사진 두 번 (0.36.0)
+                ArmorRenderer.submitTransformCopyingModel(contextModel, state, m, state, true, collector, poseStack, RenderTypes.entityCutout(m.texture), light,
+                        OverlayTexture.NO_OVERLAY, state.outlineColor);
+                ArmorRenderer.submitTransformCopyingModel(contextModel, state, m, state, true, collector, poseStack, RenderTypes.entityTranslucentEmissive(m.emissive),
+                        FULL_BRIGHT, OverlayTexture.NO_OVERLAY, state.outlineColor);
             }
 
             /** 투구 칸의 아이템 모양 (평면 아이콘) 을 머리에 또 그리지 않음 */
