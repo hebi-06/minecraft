@@ -296,13 +296,13 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         return e.hurtServer((ServerLevel) e.level(), player(s).damageSources().playerAttack(player(s)), amount);
     }
 
-    /** 보스 둘레에 떠 있는 피해 숫자 가운데 mark 가 든 것 */
-    private static String number(MinecraftServer s, Entity boss, String mark) {
+    /** 보스 둘레에 떠 있는 피해 숫자 (글자) */
+    private static List<String> numbers(MinecraftServer s, Entity boss) {
+        List<String> out = new ArrayList<>();
         for (Display.TextDisplay td : level(s).getEntitiesOfClass(Display.TextDisplay.class, boss.getBoundingBox().inflate(8), t -> t.entityTags().contains(DamageNumbers.TAG))) {
-            String t = td.getText().getString();
-            if (t.contains(mark)) return t;
+            out.add(td.getText().getString());
         }
-        return null;
+        return out;
     }
 
     // ------------------------------------------------------------ 신전 짓기
@@ -396,8 +396,8 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         } else ok("pressing the altar opens the challenge form");
         ctx.waitTicks(3);
         String body = ctx.computeOnClient(mc -> mc.gui.screen() instanceof MenuFormScreen m ? m.form().text() : "");
-        check(body.contains("[초월 보스]") && body.contains("패턴을 깨는 법") && body.contains("고급 룬 뽑기권") && body.contains("초월 장비 재료") && body.contains("30분"),
-                "challenge text ([초월 보스] · notes · advanced ticket · transcend materials · 30 min)");
+        check(body.contains("[초월 보스]") && !body.contains("패턴을 깨는 법") && !body.contains("원거리 견제") && body.contains("고급 룬 뽑기권") && body.contains("초월 장비 재료")
+                && body.contains("30분"), "challenge text ([초월 보스] · no notes (0.34.0 hidden) · advanced ticket · transcend materials · 30 min)");
         shot(ctx, "su_form");
         click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(0));
         boolean summoning = server.computeOnServer(s -> enc() != null && "summon".equals(enc().state));
@@ -515,13 +515,13 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         check(countered, "skill in the gold window → counter (pattern cut)");
         ctx.waitTicks(3);
         shot(ctx, "su_counter");
-        // 반격 뒤 3초 동안 노란 "반격" 숫자: 몸 가까이에서 때림
+        // 반격 뒤 3초 동안 받는 피해 ×1.25: 몸 가까이에서 때림 (0.34.0 숫자 앞 "반격" 표시는 숨김 — BOSS_HINTS.marks)
         stand(ctx, server, cx, cz + 10, cx, ALTAR_Y + 1.8, cz);
-        String num = server.computeOnServer(s -> {
+        List<String> nums = server.computeOnServer(s -> {
             serverHit(s, enc().boss, 120F);
-            return number(s, enc().boss, "반격");
+            return numbers(s, enc().boss);
         });
-        check(num != null, "damage number with the yellow 반격 mark (" + num + ")");
+        check(!nums.isEmpty() && nums.stream().noneMatch(t -> t.contains("반격")), "damage number without the 반격 mark (hidden) " + nums);
         ctx.waitTicks(2);
         shot(ctx, "su_counter_num");
         waitUntil(ctx, server, t0 + windup + 40);
@@ -588,14 +588,14 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         boolean bound = server.computeOnServer(s -> mem().binds == 1 && mem().bindUntil > Tasks.now() && player(s).isAlive());
         check(bound, "chains bind the sword (player behind the pillar unhurt)");
         shot(ctx, "su_bind");
-        // 속박 동안 하늘색 "속박" 숫자: 몸 가까이에서
+        // 속박 동안 받는 피해 ×1.3: 몸 가까이에서 (0.34.0 숫자 앞 하늘색 "속박" 표시는 숨김 — BOSS_HINTS.marks)
         Vec3 near = new Vec3(cx + v.x * 10, ALTAR_Y, cz + v.z * 10);
         stand(ctx, server, near.x, near.z, cx, ALTAR_Y + 1.8, cz);
-        String num = server.computeOnServer(s -> {
+        List<String> nums = server.computeOnServer(s -> {
             serverHit(s, enc().boss, 120F);
-            return number(s, enc().boss, "속박");
+            return numbers(s, enc().boss);
         });
-        check(num != null, "damage number with the sky-blue 속박 mark (" + num + ")");
+        check(!nums.isEmpty() && nums.stream().noneMatch(t -> t.contains("속박")), "damage number without the 속박 mark (hidden) " + nums);
         ctx.waitTicks(2);
         shot(ctx, "su_bind_num");
         // 풀리면 기둥이 무너짐 (매단 랜턴 먼저 · 금 간 밑동)
@@ -646,13 +646,13 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         check(groggy, "gauge emptied → collapse (groggy) · crown core");
         ctx.waitTicks(12);
         shot(ctx, "su_groggy");
-        // 빈틈: 금색 숫자
+        // 빈틈 (×1.5): 0.34.0 숫자 앞 금색 "빈틈" 표시는 숨김 (BOSS_HINTS.marks)
         ctx.waitTicks(10);
-        String num = server.computeOnServer(s -> {
+        List<String> nums = server.computeOnServer(s -> {
             serverHit(s, enc().boss, 120F);
-            return number(s, enc().boss, "빈틈");
+            return numbers(s, enc().boss);
         });
-        check(num != null, "damage number with the gold 빈틈 mark (" + num + ")");
+        check(!nums.isEmpty() && nums.stream().noneMatch(t -> t.contains("빈틈")), "damage number without the 빈틈 mark (hidden) " + nums);
         ctx.waitTicks(2);
         shot(ctx, "su_groggy_num");
         // 불꽃 왕관의 핵을 부숨 → 머리 불꽃이 꺼짐
@@ -749,8 +749,10 @@ public final class RpgSurtrGallery implements FabricClientGameTest {
         } else ok("real click kills surtr");
         List<String> board = server.computeOnServer(s -> fight == null ? List.<String>of() : Bosses.damageBoard(fight));
         check(!board.isEmpty() && board.get(0).contains("[딜 순위]") && board.get(0).contains("수르트"), "damage board " + board);
+        // 0.34.0: 처치 뒤 부위 파괴 줄은 숨김 (BOSS_HINTS.chat) — 부순 부위는 셈 (보상 재료)
         List<String> note = server.computeOnServer(s -> fight == null ? List.<String>of() : Bosses.module(KEY).killNote(fight));
-        check(note.size() == 2 && note.get(0).contains("3/3"), "part break note " + note);
+        long broken = server.computeOnServer(s -> fight == null ? 0L : BossSurtr.mem(fight).parts.values().stream().filter(l -> l.broken).count());
+        check(note.isEmpty() && broken == 3, "no part break note, 3 parts broken (" + note + " · " + broken + ")");
         String r = server.computeOnServer(s -> {
             if (altar.cooldownUntil <= System.currentTimeMillis() + 1_700_000) return "no 30 min cooldown";
             int em = RpgGearTests.silver(player(s));

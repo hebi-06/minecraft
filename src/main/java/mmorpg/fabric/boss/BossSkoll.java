@@ -5,7 +5,6 @@ import static mmorpg.fabric.boss.BossKit.bossHit;
 import static mmorpg.fabric.boss.BossKit.bossSize;
 import static mmorpg.fabric.boss.BossKit.disc;
 import static mmorpg.fabric.boss.BossKit.effect;
-import static mmorpg.fabric.boss.BossKit.faceAll;
 import static mmorpg.fabric.boss.BossKit.fanMarks;
 import static mmorpg.fabric.boss.BossKit.fighters;
 import static mmorpg.fabric.boss.BossKit.groundUnder;
@@ -338,8 +337,15 @@ public final class BossSkoll implements BossModule {
         return new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
+        M m = mem(u);
+        if (m == null || !m.told.add(id)) return;
+        BossKit.hintSay(u, text);
+    }
+
+    /** 0.34.0 2페이즈 알림 (패턴 안내를 숨겨도 늘 보임 — 사용자 "공허 각성 같은 2페이지는 냅두고"): explain 과 같이 싸움마다 한 번 */
+    static void announce(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
         say(u, text);
@@ -831,7 +837,7 @@ public final class BossSkoll implements BossModule {
                 "speed", sgn * 60.0, "grow", 0.0, "progress", 1.0, "color", SUN, "alpha", 0.9));
         sound(u, "beacon.activate", b, 0.7, 1.2);
         sound(u, snd(u, "howl"), headAt(u, "sun"), 0.7, 1);
-        faceAll(u, "§6§l태양 바퀴! §f몸 곁이나 주황 부채꼴 사이로", Opt.of("dist", 2.4, "up", 0.45), list);
+        BossKit.hintFaceAll(u, "§6§l태양 바퀴! §f몸 곁이나 주황 부채꼴 사이로", Opt.of("dist", 2.4, "up", 0.45), list);
         explain(u, "wheel", "§6[보스] 태양 바퀴: §f스콜이 해를 불러 몸에서 햇살 줄기 " + n
                 + "개를 뻗어 돌립니다 (주황 부채꼴 = 쓸고 갈 곳, 밝은 줄에서 시작). §e몸 바로 곁(초록 원)이나 부채꼴 사이는 안전 §7(맞으면 불)");
         List<Bosses.Step> steps = new ArrayList<>();
@@ -876,7 +882,7 @@ public final class BossSkoll implements BossModule {
                 boolean landed = bossHit(u, p, d.num("damage"), Opt.of("noSource", true));
                 if (landed) {
                     burn(p, d.num("burn"));
-                    showFaceText(p, "§6§l햇살에 데었습니다", Opt.of("dist", 2.2, "up", 0.35));
+                    BossKit.hintFace(p, "§6§l햇살에 데었습니다", Opt.of("dist", 2.2, "up", 0.35));
                 }
             }
         }
@@ -901,10 +907,10 @@ public final class BossSkoll implements BossModule {
         u.api.anim(u, "howl");
         sound(u, snd(u, "howl"), headAt(u, "moon"), 0.9, 1.2);
         int pounces = (int) d.num("pounces");
-        title(u, "§b§l달빛 사냥감!", "§f하티가 " + pounces + "번 잇따라 덮칩니다 §7— 푸른 원 밖으로 계속 움직이세요", List.of(prey));
+        BossKit.hintTitle(u, "§b§l달빛 사냥감!", "§f하티가 " + pounces + "번 잇따라 덮칩니다 §7— 푸른 원 밖으로 계속 움직이세요", List.of(prey));
         List<ServerPlayer> others = new ArrayList<>();
         for (ServerPlayer p : list) if (!p.getUUID().equals(prey.getUUID())) others.add(p);
-        faceAll(u, "§b" + prey.getName().getString() + "§f님이 사냥감입니다", Opt.of("dist", 2.4, "up", 0.45), others);
+        BossKit.hintFaceAll(u, "§b" + prey.getName().getString() + "§f님이 사냥감입니다", Opt.of("dist", 2.4, "up", 0.45), others);
         explain(u, "hunt", "§b[보스] 달빛 사냥: §f하티가 한 사람을 사냥감으로 정해 " + pounces + "번 잇따라 덮칩니다 (푸른 원). 내려앉은 자리에는 서리가 남아 밟으면 느려지고 아픕니다. §e사냥이 끝나면 "
                 + Js.str(Js.round(d.num("winded") / 20)) + "초 동안 지쳐 받는 피해 +" + Js.str(Js.round(d.num("bonus") * 100)) + "%");
         int lead = 16;
@@ -965,7 +971,7 @@ public final class BossSkoll implements BossModule {
         mem(u).body.want = H.plan.yaw();
         u.api.anim(u, "hunt", null, LEAP, "0");
         play(u.dim, snd(u, "roar"), headAt(u, "moon"), 1.2, 0.7);
-        showFaceText(p, "§b§l덮칩니다! §f(" + (H.n + 1) + "/" + (int) d.num("pounces") + ")", Opt.of("dist", 2.4, "up", 0.45));
+        showFaceText(p, "§b§l" + (H.n + 1) + "/" + (int) d.num("pounces"), Opt.of("dist", 2.4, "up", 0.45));
     }
 
     static void huntHit(Bosses.Unit u, Hunt H) {
@@ -998,7 +1004,7 @@ public final class BossSkoll implements BossModule {
         u.api.anim(u, "winded");
         play(u.dim, snd(u, "pant"), headAt(u), 0.7, 1.2);
         for (String w : new String[] {"sun", "moon"}) dust(u.dim, headAt(u, w), 1.1, FROST, 0.9);
-        faceAll(u, "§b§l지쳤습니다! §f받는 피해 +" + Js.str(Js.round(d.num("bonus") * 100)) + "%", Opt.of("dist", 2.4, "up", 0.45), targets(u));
+        BossKit.hintFaceAll(u, "§b§l지쳤습니다! §f받는 피해 +" + Js.str(Js.round(d.num("bonus") * 100)) + "%", Opt.of("dist", 2.4, "up", 0.45), targets(u));
     }
 
     /** 서리 자국: life 틱 동안 남음, 1초마다 안의 사람: 느림 + 약한 피해 (자국이 겹쳐도 사람마다 1초에 한 번) */
@@ -1076,7 +1082,7 @@ public final class BossSkoll implements BossModule {
         u.api.anim(u, "leap", null, LEAP, "0");
         jump(u, new LeapPlan(new Vec3(E.x, 0, E.z), E, angOf(dirTo(new Vec3(b.x, 0, b.z), E))), leapT, 5);
         sound(u, snd(u, "roar"), headAt(u), 0.7, 1.2);
-        title(u, "§e§l해와 달의 심판", "§f스콜과 하티가 물러나 울부짖습니다", list);
+        BossKit.hintTitle(u, "§e§l해와 달의 심판", "§f스콜과 하티가 물러나 울부짖습니다", list);
         int markAt = leapT + 6;
         List<Bosses.Step> steps = new ArrayList<>();
         steps.add(step(leapT, (x, t) -> judgeLand(x)));
@@ -1120,11 +1126,11 @@ public final class BossSkoll implements BossModule {
             Vec3 l = mk.p.position();
             boolean sun = mk.side.equals("sun");
             SkillFx.beam(u.dim, h, new Vec3(l.x, l.y + 1.4, l.z), sun ? SUN : MOON, Opt.of("half", 0.4, "thick", 0.14, "life", 0.6, "gap", 0.6));
-            title(u, sun ? "§6§l해의 표식" : "§b§l달의 표식", sun ? "§f가운데 원판의 §6금빛 반원(동쪽)§f에 서세요" : "§f가운데 원판의 §b푸른 반원(서쪽)§f에 서세요", List.of(mk.p));
+            BossKit.hintTitle(u, sun ? "§6§l해의 표식" : "§b§l달의 표식", sun ? "§f가운데 원판의 §6금빛 반원(동쪽)§f에 서세요" : "§f가운데 원판의 §b푸른 반원(서쪽)§f에 서세요", List.of(mk.p));
         }
         explain(u, "judge", "§e[보스] 해와 달의 심판: §f사람마다 해(금빛) 또는 달(푸른) 표식이 붙습니다. " + Js.str(Js.round(J.num("windup") / 20))
                 + "초 뒤 §c가운데 원판에서 제 표식 색 반원 위에 서 있지 않으면 즉사 §7(가운데 흰 줄·원판 밖도 즉사, 발밑 고리가 초록이면 안전). 스콜과 하티는 그동안 무적");
-        if (G.second) say(u, "§d[보스] §f두 번째 심판은 " + Js.toFixed(J.num("swapAt") / 20, 1) + "초 뒤 §d표식이 뒤바뀝니다!");
+        if (G.second) BossKit.hintSay(u, "§d[보스] §f두 번째 심판은 " + Js.toFixed(J.num("swapAt") / 20, 1) + "초 뒤 §d표식이 뒤바뀝니다!");
     }
 
     /**
@@ -1143,7 +1149,7 @@ public final class BossSkoll implements BossModule {
             BossKit.teleport(p, at, new Vec3(c.x, c.y + 1.6, c.z));
             dust(u.dim, l, 1.6, MOON, 0.7);
             dust(u.dim, at, 1.6, SUN, 0.7);
-            showFaceText(p, "§e§l심판에 끌려 들어왔습니다", Opt.of("dist", 2.4, "up", 0.45));
+            BossKit.hintFace(p, "§e§l심판에 끌려 들어왔습니다", Opt.of("dist", 2.4, "up", 0.45));
         }
     }
 
@@ -1158,7 +1164,7 @@ public final class BossSkoll implements BossModule {
             if (!ok(mk.p)) continue;
             Vec3 l = mk.p.position();
             SkillFx.beam(u.dim, h, new Vec3(l.x, l.y + 1.4, l.z), DUSK, Opt.of("half", 0.4, "thick", 0.14, "life", 0.6, "gap", 0.6));
-            title(u, "§d§l표식이 뒤바뀝니다!", sideText(mk.side) + sideName(mk.side) + "의 표식 §f→ " + (mk.side.equals("sun") ? "§6금빛 반원(동쪽)" : "§b푸른 반원(서쪽)"),
+            BossKit.hintTitle(u, "§d§l표식이 뒤바뀝니다!", sideText(mk.side) + sideName(mk.side) + "의 표식 §f→ " + (mk.side.equals("sun") ? "§6금빛 반원(동쪽)" : "§b푸른 반원(서쪽)"),
                     List.of(mk.p));
         }
         play(u.dim, "mob.evocation_illager.prepare_wololo", u.center, 0.8, 1.4);
@@ -1199,16 +1205,16 @@ public final class BossSkoll implements BossModule {
             }
         }
         if (left > 0 && left % 20 == 0 && left <= 60) {
-            for (JudgeMark mk : live) showFaceText(mk.p, sideText(mk.side) + "§l" + sideName(mk.side) + "의 심판 " + (left / 20), Opt.of("dist", 2.4, "up", 0.45));
+            for (JudgeMark mk : live) showFaceText(mk.p, sideText(mk.side) + "§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.45));
         }
         // 두 번째 심판: 표식이 뒤바뀌기 3 · 2 · 1초 전
         long toSwap = G.swapAt != null && !G.swapped ? G.swapAt - now : -1;
-        if (toSwap > 0 && toSwap % 20 == 0 && toSwap <= 60) for (JudgeMark mk : live) showFaceText(mk.p, "§d§l표식이 뒤바뀜 " + (toSwap / 20), Opt.of("dist", 2.4, "up", 0.25));
+        if (toSwap > 0 && toSwap % 20 == 0 && toSwap <= 60) for (JudgeMark mk : live) showFaceText(mk.p, "§d§l" + (toSwap / 20), Opt.of("dist", 2.4, "up", 0.25));
         if (k % 10 == 0) {
             for (JudgeMark mk : live) {
                 boolean safe = mk.side.equals(sideOf(u, mk.p));
                 String where = mk.side.equals("sun") ? "§6금빛 반원(동쪽)" : "§b푸른 반원(서쪽)";
-                BossKit.notify(mk.p, safe ? sideText(mk.side) + sideName(mk.side) + "의 표식 §a— 제자리, 안전 §7(" + (long) Math.ceil(left / 20.0) + "초)"
+                BossKit.hintNotify(mk.p, safe ? sideText(mk.side) + sideName(mk.side) + "의 표식 §a— 제자리, 안전 §7(" + (long) Math.ceil(left / 20.0) + "초)"
                         : sideText(mk.side) + sideName(mk.side) + "의 표식 §c— " + where + "§c으로!", 15);
             }
         }
@@ -1233,10 +1239,10 @@ public final class BossSkoll implements BossModule {
         for (JudgeMark mk : G.marks) {
             if (mk.done || !ok(mk.p) || !okTarget(mk.p)) continue;
             if (mk.side.equals(sideOf(u, mk.p))) {
-                showFaceText(mk.p, "§a§l심판을 견뎠습니다", Opt.of("dist", 2.4, "up", 0.45));
+                BossKit.hintFace(mk.p, "§a§l심판을 견뎠습니다", Opt.of("dist", 2.4, "up", 0.45));
                 continue;
             }
-            say(u, "§4[보스] §e" + mk.p.getName().getString() + "§f님이 " + sideText(mk.side) + sideName(mk.side) + "의 심판§f을 받아 쓰러졌습니다");
+            BossKit.hintSay(u, "§4[보스] §e" + mk.p.getName().getString() + "§f님이 " + sideText(mk.side) + sideName(mk.side) + "의 심판§f을 받아 쓰러졌습니다");
             Status.kill(mk.p, u.boss);
         }
         // 울부짖는 모습을 풂 (빈 동작 rest 가 같은 틀을 이어받음)
@@ -1248,7 +1254,7 @@ public final class BossSkoll implements BossModule {
             startPounce(u, leapPlan(u, spot));
             List<ServerPlayer> near = new ArrayList<>();
             for (ServerPlayer p : list) if (hdist(p.position(), spot) <= u.def.obj("pounce").num("radius") + 3) near.add(p);
-            faceAll(u, "§6§l도약! §f원 밖으로 흩어지세요", Opt.of("dist", 2.4, "up", 0.45), near);
+            BossKit.hintFaceAll(u, "§6§l도약! §f원 밖으로 흩어지세요", Opt.of("dist", 2.4, "up", 0.45), near);
         }
     }
 
@@ -1284,7 +1290,7 @@ public final class BossSkoll implements BossModule {
         Vec3 b = bodyOf(u);
         SkillFx.fx(u.dim, "rpg:shock_ring", new Vec3(b.x, u.center.y + 0.1, b.z), Opt.of("dir", Vec3.ZERO, "size", 6.0, "life", 0.8, "color", night ? MOON : SUN, "alpha", 0.9));
         SkillFx.fx(u.dim, "rpg:bash_burst", h, Opt.of("dir", new Vec3(0, 0, 1), "size", 2.5, "life", 0.5, "color", night ? MOON : EMBER, "alpha", 0.95));
-        title(u, night ? "§b§l밤 — 하티가 깨어납니다" : "§6§l낮 — 스콜이 깨어납니다", night ? "§f약점: §e스콜(검은 머리) 쪽 옆구리 §7· 달빛 사냥" : "§f약점: §e하티(흰 머리) 쪽 옆구리 §7· 태양 바퀴",
+        BossKit.hintTitle(u, night ? "§b§l밤 — 하티가 깨어납니다" : "§6§l낮 — 스콜이 깨어납니다", night ? "§f약점: §e스콜(검은 머리) 쪽 옆구리 §7· 달빛 사냥" : "§f약점: §e하티(흰 머리) 쪽 옆구리 §7· 태양 바퀴",
                 targets(u));
         int howl = (int) S.num("howl");
         u.api.cast(u, "howl", howl);
@@ -1309,7 +1315,7 @@ public final class BossSkoll implements BossModule {
             SkillFx.fx(u.dim, "rpg:bash_burst", headAt(u, w), Opt.of("dir", new Vec3(0, 0, 1), "size", 2.5, "life", 0.6, "color", w.equals("sun") ? EMBER : MOON, "alpha", 0.95));
         }
         title(u, "§5§l황혼", "§f스콜과 하티가 함께 깨어났습니다 §7— 약점이 사라집니다", targets(u));
-        explain(u, "dusk", "§5[보스] 황혼: §f두 머리가 모두 깨어나 태양 바퀴와 달빛 사냥을 모두 씁니다. §7약점 옆구리는 사라지고 패턴이 더 자주 나옵니다");
+        announce(u, "dusk", "§5[보스] 황혼: §f두 머리가 모두 깨어나 태양 바퀴와 달빛 사냥을 모두 씁니다. §7약점 옆구리는 사라지고 패턴이 더 자주 나옵니다");
         int howl = (int) D.num("howl");
         u.api.cast(u, "dusk", howl);
         m.next.put("wheel", Math.max(m.next.get("wheel"), now + howl + 40));
@@ -1331,7 +1337,7 @@ public final class BossSkoll implements BossModule {
             seen.add(p.getUUID());
             if (!m.highSince.containsKey(p.getUUID())) {
                 m.highSince.put(p.getUUID(), now);
-                showFaceText(p, "§6§l내려오세요! §f머물면 끌어내립니다", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§6§l내려오세요! §f머물면 끌어내립니다", Opt.of("dist", 2.2, "up", 0.35));
             }
             if (now - m.highSince.get(p.getUUID()) < d.num("grace")) continue;
             if (now - m.high.getOrDefault(p.getUUID(), -1000L) < d.num("cd")) continue;
@@ -1343,7 +1349,7 @@ public final class BossSkoll implements BossModule {
             play(u.dim, snd(u, "swing"), p.position(), 0.8, 1);
             // 때린 엔티티 없이 (게임의 밀어내기는 보스에게서 먼 쪽 = 담장 밖일 수 있음): 가운데 쪽으로만 끌어내림
             bossHit(u, p, d.num("damage"), Opt.of("knock", knock(dir.x * 1.1, dir.z * 1.1, 0.35), "noSource", true));
-            showFaceText(p, "§6§l끌려 내려갑니다", Opt.of("dist", 2.2, "up", 0.35));
+            BossKit.hintFace(p, "§6§l끌려 내려갑니다", Opt.of("dist", 2.2, "up", 0.35));
             explain(u, "high", "§6[보스] §f선돌·성문 위처럼 높은 곳에 " + Js.toFixed(d.num("grace") / 20, 1) + "초 넘게 머물면 스콜과 하티가 뛰어올라 끌어내립니다");
         }
         m.highSince.keySet().removeIf(id -> !seen.contains(id));

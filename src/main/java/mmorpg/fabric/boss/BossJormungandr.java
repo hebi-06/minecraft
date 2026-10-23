@@ -17,12 +17,9 @@ import static mmorpg.fabric.boss.BossKit.play;
 import static mmorpg.fabric.boss.BossKit.random;
 import static mmorpg.fabric.boss.BossKit.rgb;
 import static mmorpg.fabric.boss.BossKit.rnd;
-import static mmorpg.fabric.boss.BossKit.say;
-import static mmorpg.fabric.boss.BossKit.showFaceText;
 import static mmorpg.fabric.boss.BossKit.shuffle;
 import static mmorpg.fabric.boss.BossKit.snd;
 import static mmorpg.fabric.boss.BossKit.sound;
-import static mmorpg.fabric.boss.BossKit.title;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -278,11 +275,11 @@ public final class BossJormungandr implements BossModule {
         return Math.max(lo, Math.min(hi, v));
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
-        say(u, text);
+        BossKit.hintSay(u, text);
     }
 
     /** 머리 (연출용: 엔티티 자리 위) */
@@ -575,7 +572,7 @@ public final class BossJormungandr implements BossModule {
         api.anim(u, "dash");
         sound(u, snd(u, "swing"), headAt(u), 0.6, 1);
         play(u.dim, "mob.breeze.charge", ln.from(), 0.6, 1);
-        showFaceText(t, "§5§l노림! §f보라 길에서 옆으로 비키세요", Opt.of("dist", 2.2, "up", 0.35));
+        BossKit.hintFace(t, "§5§l노림! §f보라 길에서 옆으로 비키세요", Opt.of("dist", 2.2, "up", 0.35));
         explain(u, "dash", "§5[보스] 독니 돌진: §f요르문간드가 보라 길을 따라 섬을 가로질러 돌진합니다. §e길에서 옆으로 비키세요 §7— 맞으면 침묵 (스킬·룬을 못 씀)");
         Set<UUID> hit = new HashSet<>();
         int n = (int) Math.ceil(ln.L() / d.num("speed"));
@@ -628,7 +625,7 @@ public final class BossJormungandr implements BossModule {
             calm(u, p);
             if (landed) {
                 Status.silence(p, (int) d.num("silence"));
-                showFaceText(p, "§5§l침묵! §7독에 혀가 굳었습니다", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§5§l침묵! §7독에 혀가 굳었습니다", Opt.of("dist", 2.2, "up", 0.35));
                 SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(p.getX(), p.getY() + 1, p.getZ()), Opt.of("dir", new Vec3(0, 0, 1), "size", 1.6, "life", 0.35, "color", PURPLE,
                         "alpha", 0.9));
             }
@@ -739,7 +736,7 @@ public final class BossJormungandr implements BossModule {
         u.api.face(u, dirTo(pivotOf(u), u.center));
         u.api.anim(u, "rear");
         sound(u, snd(u, "roar"), headAt(u), 0.7, 1);
-        title(u, "§2§l독해 범람", "§f흰 고리 안으로! §7고리 밖은 독에 잠깁니다", fighters(u));
+        BossKit.hintTitle(u, "§2§l독해 범람", "§f흰 고리 안으로! §7고리 밖은 독에 잠깁니다", fighters(u));
         explain(u, "flood", "§2[보스] 독해 범람: §f해자의 독이 차올라 섬의 흰 고리(반지름 " + Js.str(safe) + "칸) 밖을 모두 덮습니다. §e흰 고리 안으로 모이세요 §7— 독이 빠지면 모인 곳으로 돌진합니다");
         u.api.cast(u, "flood", windup + hold + 10);
         floodMarks(u, windup);
@@ -792,7 +789,7 @@ public final class BossJormungandr implements BossModule {
                 play(u.dim, "bubble.pop", c, 0.6, 0.6);
             }
             long left = F.waveAt() - now;
-            if (left % 20 == 0 && left <= 60) faceAll(u, "§2§l독해 범람 §f" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), fighters(u));
+            if (left % 20 == 0 && left <= 60) faceAll(u, "§2§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), fighters(u));
             return;
         }
         if (now == F.waveAt()) {
@@ -828,7 +825,7 @@ public final class BossJormungandr implements BossModule {
                 for (ServerPlayer p : targets(u)) {
                     if (hdist(p.position(), c) <= edge) continue;
                     bossHit(u, p, d.num("tick"), Opt.of("cause", "magic", "noSource", true));
-                    showFaceText(p, "§2§l독에 잠겼습니다 §7— 흰 고리 안으로", Opt.of("dist", 2.2, "up", 0.35));
+                    BossKit.hintFace(p, "§2§l독에 잠겼습니다 §7— 흰 고리 안으로", Opt.of("dist", 2.2, "up", 0.35));
                 }
             }
             return;
@@ -837,7 +834,7 @@ public final class BossJormungandr implements BossModule {
         // 독이 빠짐 → 곧바로 모인 곳을 가로질러 돌진
         m.next.put("dash", now + 4);
         m.floodDash = true;
-        faceAll(u, "§a§l독이 빠졌습니다 §7— 돌진에 조심", Opt.of("dist", 2.4, "up", 0.45), fighters(u));
+        BossKit.hintFaceAll(u, "§a§l독이 빠졌습니다 §7— 돌진에 조심", Opt.of("dist", 2.4, "up", 0.45), fighters(u));
     }
 
     // ------------------------------------------------------------ 아홉 걸음의 독
@@ -868,8 +865,8 @@ public final class BossJormungandr implements BossModule {
         String steps = Js.str(d.num("steps"));
         for (Mark mk : marks) {
             SkillFx.beam(u.dim, headAt(u), new Vec3(mk.p.getX(), mk.p.getY() + 1.2, mk.p.getZ()), VENOM, Opt.of("half", 0.4, "thick", 0.14, "life", 0.6, "gap", 0.6));
-            title(u, "§2§l아홉 걸음의 독", "§f스스로 §c" + steps + "칸§f을 걸으면 쓰러집니다 §7— 동료가 곁에 서면 독을 빼 줍니다", List.of(mk.p));
-            BossKit.notify(mk.p, "§2아홉 걸음의 독 §f남은 걸음 §a§l" + steps + "§r §7(" + Js.str(Js.round(time / 20.0)) + "초)", 25);
+            BossKit.hintTitle(u, "§2§l아홉 걸음의 독", "§f스스로 §c" + steps + "칸§f을 걸으면 쓰러집니다 §7— 동료가 곁에 서면 독을 빼 줍니다", List.of(mk.p));
+            BossKit.notify(mk.p, "§a§l" + steps, 25);
             play(u.dim, "mob.zombie.unfect", mk.p.position(), 0.8, 1);
         }
         List<String> names = new ArrayList<>();
@@ -880,7 +877,7 @@ public final class BossJormungandr implements BossModule {
             for (Mark mk : marks) if (mk.p.getUUID().equals(p.getUUID())) marked = true;
             if (!marked) others.add(p);
         }
-        title(u, "§2§l" + String.join(", ", names) + "님에게 아홉 걸음의 독!", "§f곁(초록 원)에 서서 독을 빼 주세요", others);
+        BossKit.hintTitle(u, "§2§l" + String.join(", ", names) + "님에게 아홉 걸음의 독!", "§f곁(초록 원)에 서서 독을 빼 주세요", others);
         explain(u, "venom", "§2[보스] 아홉 걸음의 독: §f표식이 붙은 사람이 스스로 " + steps + "칸을 움직이면 쓰러집니다 (즉사, 순간이동 스킬도 셈). §e표식이 붙은 사람은 멈추고, 동료가 곁(초록 원)에 "
                 + Js.toFixed(d.num("need") / 20, 1) + "초 서 있으면 독이 빠집니다 §7(" + Js.str(Js.round(time / 20.0)) + "초 버티면 사라짐)");
         u.api.cast(u, "venom", 30);
@@ -927,7 +924,7 @@ public final class BossJormungandr implements BossModule {
                 splash(u.dim, at, 2.4, VENOM, 0.7);
                 SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(at.x, at.y + 1, at.z), Opt.of("dir", new Vec3(0, 0, 1), "size", 2.4, "life", 0.5, "color", VENOM, "alpha", 0.95));
                 play(u.dim, "mob.zombie.unfect", at, 0.5, 1);
-                say(u, "§2[보스] §e" + p.getName().getString() + "§f님이 아홉 걸음 끝에 쓰러졌습니다");
+                BossKit.hintSay(u, "§2[보스] §e" + p.getName().getString() + "§f님이 아홉 걸음 끝에 쓰러졌습니다");
                 Status.kill(p, u.boss);
                 continue;
             }
@@ -946,7 +943,7 @@ public final class BossJormungandr implements BossModule {
                     for (ServerPlayer q : helpers) {
                         SkillFx.beam(u.dim, new Vec3(p.getX(), p.getY() + 1, p.getZ()), new Vec3(q.getX(), q.getY() + 1, q.getZ()), VENOM, Opt.of("half", 0.25, "thick", 0.08,
                                 "life", 0.25, "gap", 0.4));
-                        BossKit.notify(q, "§a" + p.getName().getString() + "님의 독을 빼는 중 §f" + Js.str(Math.min(99, Js.round((mk.help / need) * 100))) + "%", 10);
+                        BossKit.notify(q, "§a§l" + Js.str(Math.min(99, Js.round((mk.help / need) * 100))) + "%", 10);
                     }
                 }
                 if (mk.help >= need) {
@@ -954,28 +951,27 @@ public final class BossJormungandr implements BossModule {
                     helpers.sort((a, b) -> Double.compare(hdist(a.position(), p.position()), hdist(b.position(), p.position())));
                     ServerPlayer q = helpers.get(0);
                     bossHit(u, q, d.num("helper"), Opt.of("cause", "magic", "noSource", true));
-                    showFaceText(p, "§a§l독이 빠졌습니다!", Opt.of("dist", 2.2, "up", 0.35));
-                    showFaceText(q, "§a§l독을 빼 주었습니다 §7(조금 다침)", Opt.of("dist", 2.2, "up", 0.35));
+                    BossKit.hintFace(p, "§a§l독이 빠졌습니다!", Opt.of("dist", 2.2, "up", 0.35));
+                    BossKit.hintFace(q, "§a§l독을 빼 주었습니다 §7(조금 다침)", Opt.of("dist", 2.2, "up", 0.35));
                     SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(p.getX(), p.getY() + 1, p.getZ()), Opt.of("dir", new Vec3(0, 0, 1), "size", 1.8, "life", 0.4, "color", SAFE,
                             "alpha", 0.9));
                     play(u.dim, "mob.zombie.remedy", p.position(), 1, 1);
-                    say(u, "§a[보스] §e" + q.getName().getString() + "§f님이 §e" + p.getName().getString() + "§f님의 독을 빼 주었습니다");
+                    BossKit.hintSay(u, "§a[보스] §e" + q.getName().getString() + "§f님이 §e" + p.getName().getString() + "§f님의 독을 빼 주었습니다");
                     continue;
                 }
             }
             if (now >= mk.until) {
                 mk.done = true;
-                showFaceText(p, "§a§l독이 사라졌습니다", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§a§l독이 사라졌습니다", Opt.of("dist", 2.2, "up", 0.35));
                 continue;
             }
-            // 표시: 발밑 초록 원 (독을 빼 주는 곳), 남은 걸음 (액션바)
+            // 표시: 발밑 초록 원 (독을 빼 주는 곳), 남은 걸음 (액션바 — 0.34.0 숫자만)
             if ((now - V.t0()) % 10 == 0) disc(u.dim, floorAt(u, p.getX(), p.getZ()), radius, 12, VENOM, Opt.of("fill", false, "alpha", 0.9));
             long shown = (long) Math.ceil(left);
             if (shown != mk.shown || (now - V.t0()) % 10 == 0) {
                 mk.shown = shown;
                 String col = shown <= 3 ? "§c" : shown <= 6 ? "§e" : "§a";
-                String help = mk.help > 0 ? " §7· §a독 빼는 중 " + Js.str(Js.round((mk.help / need) * 100)) + "%" : "";
-                BossKit.notify(p, "§2아홉 걸음의 독 §f남은 걸음 " + col + "§l" + shown + "§r §7(" + (long) Math.ceil((mk.until - now) / 20.0) + "초)" + help, 25);
+                BossKit.notify(p, col + "§l" + shown, 25);
             }
         }
         boolean allDone = true;
@@ -1018,7 +1014,7 @@ public final class BossJormungandr implements BossModule {
         u.api.anim(u, "ring", null, COIL, "0");
         sound(u, snd(u, "roar"), headAt(u), 0.5, 1);
         play(u.dim, "mob.elderguardian.curse", u.center, 0.7, 1);
-        title(u, "§4§l세계를 감는 고리", "§f머리 앞 초록 틈으로 빠져나가세요! §7몸에 닿으면 즉사", fighters(u));
+        BossKit.hintTitle(u, "§4§l세계를 감는 고리", "§f머리 앞 초록 틈으로 빠져나가세요! §7몸에 닿으면 즉사", fighters(u));
         explain(u, "ring", "§4[보스] 세계를 감는 고리: §f요르문간드가 몸으로 필드를 감싸고 조여 옵니다. §e머리 앞 초록 틈으로만 빠져나갈 수 있습니다 §7— 틈 밖에서 몸에 닿거나 끝까지 고리 안에 남으면 즉사");
         // 틈 (안전한 길): 가운데에서 틈 쪽 부채꼴
         fanMarks(u.dim, u.center, new Vec3(Math.cos(g), 0, Math.sin(g)), arenaRadius(u) + 1, d.num("gap") - 6,
@@ -1066,7 +1062,7 @@ public final class BossJormungandr implements BossModule {
         splash(u.dim, at, 2.4, VENOM, 0.6);
         SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(at.x, at.y + 1, at.z), Opt.of("dir", new Vec3(0, 0, 1), "size", 2.6, "life", 0.5, "color", TEAL, "alpha", 0.95));
         play(u.dim, "random.anvil_land", at, 0.5, 0.8);
-        say(u, "§4[보스] §e" + p.getName().getString() + "§f님이 " + why);
+        BossKit.hintSay(u, "§4[보스] §e" + p.getName().getString() + "§f님이 " + why);
         Status.kill(p, u.boss);
     }
 
@@ -1098,7 +1094,7 @@ public final class BossJormungandr implements BossModule {
         if (now < Rg.startAt) {
             rosterTick(u, Rg, R, true);
             long left = Rg.startAt - now;
-            if (left % 20 == 0 && left <= 60) faceAll(u, "§4§l고리가 조여 옵니다 §f" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), fighters(u));
+            if (left % 20 == 0 && left <= 60) faceAll(u, "§4§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), fighters(u));
             return;
         }
         if (now == Rg.startAt) {
@@ -1223,7 +1219,7 @@ public final class BossJormungandr implements BossModule {
             mist(enc.dim, p.position(), 1.2, VENOM, 0.5);
             boolean marked = false;
             if (m.venom != null) for (Mark mk : m.venom.marks()) if (!mk.done && mk.p.getUUID().equals(p.getUUID())) marked = true;
-            if (!marked) BossKit.notify(p, "§2독의 해자 §7— 물에 있으면 1초마다 독 피해", 30);
+            if (!marked) BossKit.hintNotify(p, "§2독의 해자 §7— 물에 있으면 1초마다 독 피해", 30);
             explain(u, "moat", "§2[보스] 독의 해자: §f해자 물에 들어가 있으면 1초마다 독 피해를 받습니다");
         }
     }
@@ -1246,7 +1242,7 @@ public final class BossJormungandr implements BossModule {
             play(enc.dim, "mob.enderdragon.flap", p.position(), 0.7, 1);
             bossHit(u, p, d.num("damage"), Opt.of("knock", knock(dir.x * 1.1, dir.z * 1.1, 0.35)));
             calm(u, p);
-            showFaceText(p, "§6§l꼬리에 맞아 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
+            BossKit.hintFace(p, "§6§l꼬리에 맞아 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
             explain(u, "high", "§6[보스] §f성문·담장 탑 위처럼 높은 곳에 올라서면 요르문간드가 꼬리로 쳐서 떨어뜨립니다");
         }
     }

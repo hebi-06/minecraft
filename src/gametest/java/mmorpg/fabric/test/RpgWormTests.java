@@ -258,7 +258,9 @@ public final class RpgWormTests {
                 h.assertTrue(D.need == 110, "need = helpers × 110 " + D.need);
                 String name = enc.boss.getCustomName() == null ? "" : enc.boss.getCustomName().getString();
                 String bar = enc.boss.bossBar() == null ? "" : enc.boss.bossBar().getName().getString();
-                h.assertTrue(name.contains("구출") && name.contains("0/110") && bar.contains("구출"), "rescue progress on the name · bar: " + name + " / " + bar);
+                // 0.34.0 진행 막대 · 숫자만 ("구출" · 삼켜진 사람 이름은 뺌)
+                h.assertTrue(name.contains("||||||||||") && name.contains("0/110") && bar.contains("0/110") && !name.contains("구출") && !name.contains(p1.getName().getString()),
+                        "rescue progress (bar · numbers only) on the name · bar: " + name + " / " + bar);
                 // 삼켜진 사람이 때린 것은 셈하지 않음
                 hit(p1, enc.boss, 50F);
                 h.assertTrue(D.dealt == 0, "victim's own hit not counted " + D.dealt);
@@ -271,7 +273,7 @@ public final class RpgWormTests {
                     h.assertTrue(enc.mod.targetable(enc, p1), "target again");
                     h.assertTrue(enc.staggerUntil > Tasks.now(), "worm gags (stagger)");
                     String after = enc.boss.getCustomName() == null ? "" : enc.boss.getCustomName().getString();
-                    h.assertFalse(after.contains("구출"), "name restored " + after);
+                    h.assertFalse(after.contains("/110") || after.contains("|"), "name restored " + after);
                     LOG.info("[worm-test] OK devour: swallowed = untargetable · rooted · silenced · blind, own hits not counted, rescue → spit + gag");
                     finish(h, level, a, hold, p1, p2);
                 });

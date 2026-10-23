@@ -278,10 +278,11 @@ public final class RpgYmirTests {
                                 hit(far, b, 40F);
                                 h.assertTrue(Math.abs(hp0 - b.getHealth() - 40 * (1 + C.num("bonus"))) < 1e-3, "kneeling: +50% (" + (hp0 - b.getHealth()) + ")");
                                 Bosses.Hurt hu = Bosses.module(KEY).hurt(enc, far, 10, null);
-                                h.assertTrue(hu != null && BossYmir.OPEN_MARK.equals(hu.mark()) && Math.abs(hu.amount() - 15) < 1e-9, "the number gets the gold 빈틈 mark");
+                                h.assertTrue(hu != null && BossYmir.OPEN_MARK.equals(hu.mark()) && Math.abs(hu.amount() - 15) < 1e-9, "the module still marks 빈틈");
+                                // 0.34.0: 숫자 앞 "빈틈" 표시는 숨김 (BOSS_HINTS.marks)
                                 for (Display.TextDisplay td : level.getEntitiesOfClass(Display.TextDisplay.class, b.getBoundingBox().inflate(6),
                                         d -> d.entityTags().contains(DamageNumbers.TAG) && d.getText().getString().contains("60"))) {
-                                    h.assertTrue(td.getText().getString().contains("빈틈"), "number " + td.getText().getString());
+                                    h.assertTrue(!td.getText().getString().contains("빈틈"), "number without the mark " + td.getText().getString());
                                 }
                                 h.assertTrue(K.g == 0 && !Bosses.module(KEY).farOk(enc, Tasks.now()), "no cracks, no ranged attack while kneeling");
                                 h.runAfterDelay(2, () -> h.assertTrue(b.propInt("rpg:crack") == 3, "rpg:crack 3 (kneeling)"));
@@ -451,7 +452,7 @@ public final class RpgYmirTests {
                         long exhaleAt = G.until;
                         h.assertTrue(G.labels.size() == 4, "a label over each fire " + G.labels.size());
                         for (BossYmir.Label L : G.labels) {
-                            String want = L.f == f0 ? "§6불씨 §f1§7/§f1" : "§6불씨 §f0§7/§f1";
+                            String want = L.f == f0 ? "§6§l1§7/§61" : "§6§l0§7/§61"; // 0.34.0 숫자만
                             h.assertTrue(want.equals(BossYmir.labelText(L)) && Kit.isType(L.e, BossYmir.LABEL_ID), "label " + BossYmir.labelText(L));
                         }
                         // 엔진이 안개를 걷음 (다시 들어옴) → 모듈이 0.5초 안에 다시 씌움

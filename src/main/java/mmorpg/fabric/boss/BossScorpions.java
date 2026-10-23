@@ -12,8 +12,6 @@ import static mmorpg.fabric.boss.BossKit.okTarget;
 import static mmorpg.fabric.boss.BossKit.play;
 import static mmorpg.fabric.boss.BossKit.random;
 import static mmorpg.fabric.boss.BossKit.rnd;
-import static mmorpg.fabric.boss.BossKit.say;
-import static mmorpg.fabric.boss.BossKit.showFaceText;
 import static mmorpg.fabric.boss.BossKit.shuffle;
 import static mmorpg.fabric.boss.BossKit.sound;
 import static mmorpg.fabric.boss.BossKit.title;
@@ -171,11 +169,11 @@ public final class BossScorpions implements BossModule {
         return p.level().getBlockState(BlockPos.containing(p.getX(), p.getY() - 0.3, p.getZ())).isAir();
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
-        say(u, text);
+        BossKit.hintSay(u, text);
     }
 
     /** 몸 가운데 높이 (끈 · 연출용) */
@@ -266,7 +264,7 @@ public final class BossScorpions implements BossModule {
             SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(l.x + (random() - 0.5) * 2, u.center.y + 0.4, l.z + (random() - 0.5) * 2), Opt.of("dir", new Vec3(0, 0, 1),
                     "size", 1.6, "life", 0.45, "color", SAND, "alpha", 0.9));
         }
-        showFaceText(target, "§6§l땅속에서 쫓아옵니다! §e흙먼지를 보세요", Opt.of("dist", 2.2, "up", 0.35));
+        BossKit.hintFace(target, "§6§l땅속에서 쫓아옵니다! §e흙먼지를 보세요", Opt.of("dist", 2.2, "up", 0.35));
         explain(u, "burrow", "§6[보스] 모래 잠행: §f사막 전갈이 땅속으로 사라져(무적) 흙먼지 줄기로 한 사람을 쫓습니다. §e줄기가 멈춘 자리의 원 밖으로 피하세요");
         m.burrow = new Burrow(u, target, floorAt(u, l.x, l.z), now + sink, now + sink + trail);
         // 끝 (튀어나오기) 은 burrowTick 이 틀을 바꿔서: 그때까지 이 마리는 다른 행동 없음
@@ -384,8 +382,8 @@ public final class BossScorpions implements BossModule {
         api.anim(u, "hiss");
         sound(u, "mob.spider.say", u.boss.position(), 0.6, 1);
         String radius = Js.str(d.num("radius"));
-        title(u, "§2§l맹독 표식", "§a" + p.getName().getString() + "§f 곁으로 모이세요! §7(" + radius + "칸 안에서 나눠 받음, 혼자면 즉사)", fighters(u));
-        showFaceText(p, "§2§l맹독 표식! §f동료 곁으로", Opt.of("dist", 2.2, "up", 0.35));
+        BossKit.hintTitle(u, "§2§l맹독 표식", "§a" + p.getName().getString() + "§f 곁으로 모이세요! §7(" + radius + "칸 안에서 나눠 받음, 혼자면 즉사)", fighters(u));
+        BossKit.hintFace(p, "§2§l맹독 표식! §f동료 곁으로", Opt.of("dist", 2.2, "up", 0.35));
         explain(u, "venom", "§2[보스] 맹독 표식: §f" + Js.str(Js.round(time / 20.0)) + "초 뒤 표식이 터집니다. §a표식 둘레 " + radius + "칸 안에 모인 사람끼리 피해를 나눠 받고, §4혼자면 즉사§f합니다");
         api.cast(u, "venom", 24, step(20, (x, t) -> api.hold(x, false)));
     }
@@ -413,7 +411,7 @@ public final class BossScorpions implements BossModule {
         }
         long left = v.at() - now;
         if (left > 0) {
-            if (left % 20 == 0 && left <= 60) faceAll(u, "§2§l맹독 " + (left / 20), Opt.of("dist", 2.4, "up", 0.5), fighters(u));
+            if (left % 20 == 0 && left <= 60) faceAll(u, "§2§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.5), fighters(u));
             return;
         }
         m.venom = null;
@@ -429,8 +427,8 @@ public final class BossScorpions implements BossModule {
         play(u.dim, "mob.slime.big", at, 0.5, 1);
         play(u.dim, "random.explode", at, 1.6, 0.6);
         if (group.size() <= 1) {
-            showFaceText(v.p(), "§4§l즉사 §7— 혼자였습니다", Opt.of("dist", 2.2, "up", 0.3));
-            say(u, "§4[보스] " + v.p().getName().getString() + "님이 맹독 표식을 혼자 받았습니다");
+            BossKit.hintFace(v.p(), "§4§l즉사 §7— 혼자였습니다", Opt.of("dist", 2.2, "up", 0.3));
+            BossKit.hintSay(u, "§4[보스] " + v.p().getName().getString() + "님이 맹독 표식을 혼자 받았습니다");
             Status.kill(v.p(), u.boss);
             return;
         }
@@ -438,7 +436,7 @@ public final class BossScorpions implements BossModule {
         for (ServerPlayer q : group) {
             SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(q.getX(), q.getY() + 1, q.getZ()), Opt.of("dir", new Vec3(0, 0, 1), "size", 1.2, "life", 0.35, "color", POISON,
                     "alpha", 0.9));
-            showFaceText(q, "§2맹독 §f÷" + group.size(), Opt.of("dist", 2.4, "side", 0.5, "up", 0.2));
+            BossKit.hintFace(q, "§2맹독 §f÷" + group.size(), Opt.of("dist", 2.4, "side", 0.5, "up", 0.2));
             bossHit(u, q, each, Opt.of("cause", "magic")); // 마법: 갑옷으로 줄지 않음 (나눠 받는 게 요령)
         }
     }
@@ -527,7 +525,7 @@ public final class BossScorpions implements BossModule {
         api.hold(u, true);
         api.anim(u, "stomp");
         sound(u, "mob.ravager.roar", u.boss.position(), 0.5, 1);
-        title(u, "§6§l대지의 파동", "§e고리가 발밑을 지날 때 점프!", fighters(u));
+        BossKit.hintTitle(u, "§6§l대지의 파동", "§e고리가 발밑을 지날 때 점프!", fighters(u));
         explain(u, "tremor", "§6[보스] 대지의 파동: §f바위 전갈이 " + waves + "번 내려찍으며 땅이 고리 모양으로 퍼집니다. §e고리가 지나가는 순간 땅에 있으면 맞습니다 (점프로 피함)");
         List<Bosses.Step> steps = new ArrayList<>();
         for (int i = 0; i < waves; i++) steps.add(step(first + (long) i * gap, (x, t) -> startWave(x)));
@@ -598,7 +596,7 @@ public final class BossScorpions implements BossModule {
         api.hold(u, true);
         api.anim(u, "roar");
         sound(u, "mob.ravager.roar", u.boss.position(), 0.6, 1);
-        title(u, "§6§l석화의 포효", "§e바위 전갈에게서 눈을 돌리세요!", fighters(u));
+        BossKit.hintTitle(u, "§6§l석화의 포효", "§e바위 전갈에게서 눈을 돌리세요!", fighters(u));
         explain(u, "roar", "§6[보스] 석화의 포효: §f울부짖음이 끝날 때 §e바위 전갈 쪽을 보고 있으면 " + Js.str(Js.round(hold / 20.0)) + "초 석화§f(움직임·스킬 봉인)됩니다. 등을 돌리세요");
         List<Bosses.Step> steps = new ArrayList<>();
         for (int t = 0; t < windup; t += 10) {
@@ -652,7 +650,7 @@ public final class BossScorpions implements BossModule {
             play(u.dim, "mob.elderguardian.curse", p.position(), 1, 0.7);
             stoned.add(p.getName().getString());
         }
-        if (!stoned.isEmpty()) say(u, "§7[보스] 석화: §f" + String.join(", ", stoned));
+        if (!stoned.isEmpty()) BossKit.hintSay(u, "§7[보스] 석화: §f" + String.join(", ", stoned));
     }
 
     /** 석화된 사람: 몸에 돌 조각 (끝나면 뺌) */
@@ -687,7 +685,7 @@ public final class BossScorpions implements BossModule {
         if (!m.bond) return;
         String cut = Js.str(Js.round(S.num("cut") * 100));
         if (!was) {
-            if (!m.told.contains("bond")) title(enc, "§e§l공생", "§f두 전갈이 가까우면 받는 피해 -" + cut + "% §7— 떨어뜨리세요!", fighters(enc));
+            if (!m.told.contains("bond")) BossKit.hintTitle(enc, "§e§l공생", "§f두 전갈이 가까우면 받는 피해 -" + cut + "% §7— 떨어뜨리세요!", fighters(enc));
             explain(a, "bond", "§e[보스] 공생: §f두 전갈이 " + Js.str(S.num("distance")) + "칸 안에 있으면 금빛 끈으로 이어져 둘 다 받는 피해가 " + cut
                     + "% 줄어듭니다. §e파티를 나눠 서쪽(모래)과 동쪽(바위)으로 떨어뜨리세요");
             play(enc.dim, "mob.evocation_illager.cast_spell", enc.center, 1.4, 0.6);
@@ -842,7 +840,7 @@ public final class BossScorpions implements BossModule {
         double cut = u.enc.def.obj("symbiosis").num("cut");
         if (now - m.bondTold.getOrDefault(p.getUUID(), -100L) >= 30) {
             m.bondTold.put(p.getUUID(), now);
-            showFaceText(p, "§e공생 §7피해 -" + Js.str(Js.round(cut * 100)) + "%", Opt.of("dist", 2.4, "side", -0.5, "up", 0.25));
+            BossKit.hintFace(p, "§e공생 §7피해 -" + Js.str(Js.round(cut * 100)) + "%", Opt.of("dist", 2.4, "side", -0.5, "up", 0.25));
         }
         return Bosses.Hurt.of(amount * (1 - cut));
     }

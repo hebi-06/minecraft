@@ -50,7 +50,7 @@ public final class RpgSkollGallery extends RpgDriveGallery {
 
     @Override
     List<String> formWords() {
-        return List.of("Lv.38", "근접 보너스", "태양 불씨", "달 서리", "15분");
+        return List.of("Lv.38", "근접 보너스", "15분");
     }
 
     @Override
@@ -195,7 +195,8 @@ public final class RpgSkollGallery extends RpgDriveGallery {
         float hp1 = server.computeOnServer(s -> enc().boss.getHealth());
         check(hp1 < hp0, "flank hit lands (" + hp0 + " → " + hp1 + ")");
         List<String> nums = numbersNear(server, 7);
-        check(nums.stream().anyMatch(t -> t.contains("약점")), "damage number with the yellow weak mark " + nums);
+        // 0.34.0: 숫자 앞 "약점" 표시는 숨김 (BOSS_HINTS.marks) — 피해 ×1.3 은 그대로
+        check(!nums.isEmpty() && nums.stream().noneMatch(t -> t.contains("약점")), "damage number without the weak mark (hidden) " + nums);
         shot(ctx, "weak");
         ctx.waitTicks(12);
     }
@@ -351,7 +352,8 @@ public final class RpgSkollGallery extends RpgDriveGallery {
         attack(ctx);
         ctx.waitTicks(2);
         List<String> nums = numbersNear(server, 7);
-        check(nums.stream().anyMatch(t -> t.contains("지침")), "damage number with the sky-blue winded mark " + nums);
+        // 0.34.0: 숫자 앞 "지침" 표시는 숨김 (BOSS_HINTS.marks) — 피해 ×1.25 는 그대로
+        check(!nums.isEmpty() && nums.stream().noneMatch(t -> t.contains("지침")), "damage number without the winded mark (hidden) " + nums);
         shot(ctx, "winded");
         server.runCommand("effect clear @a minecraft:slowness");
         server.runOnServer(s -> BossSkoll.mem(enc()).windedUntil = 0);

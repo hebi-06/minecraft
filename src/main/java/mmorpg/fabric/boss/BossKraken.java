@@ -14,12 +14,9 @@ import static mmorpg.fabric.boss.BossKit.okTarget;
 import static mmorpg.fabric.boss.BossKit.play;
 import static mmorpg.fabric.boss.BossKit.random;
 import static mmorpg.fabric.boss.BossKit.rnd;
-import static mmorpg.fabric.boss.BossKit.say;
-import static mmorpg.fabric.boss.BossKit.showFaceText;
 import static mmorpg.fabric.boss.BossKit.shuffle;
 import static mmorpg.fabric.boss.BossKit.snd;
 import static mmorpg.fabric.boss.BossKit.sound;
-import static mmorpg.fabric.boss.BossKit.title;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -214,11 +211,11 @@ public final class BossKraken implements BossModule {
         return new Vec3(Math.cos(a), 0, Math.sin(a));
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
-        say(u, text);
+        BossKit.hintSay(u, text);
     }
 
     /** 몸 가운데 (끈 · 연출용) */
@@ -399,7 +396,7 @@ public final class BossKraken implements BossModule {
             if (!inCone(p, apex, dir, radius, cone)) continue;
             if (!bossHit(u, p, d.num("damage"), Opt.of("effect", BossKit.effect("blindness", (int) d.num("blind"))))) continue;
             Status.silence(p, (int) d.num("silence"));
-            showFaceText(p, "§5§l먹물! §7스킬 봉인", Opt.of("dist", 2.2, "up", 0.35));
+            BossKit.hintFace(p, "§5§l먹물! §7스킬 봉인", Opt.of("dist", 2.2, "up", 0.35));
         }
         for (Vec3 s : spots) {
             if (m != null) m.puddles.add(new Puddle(s, d.num("puddleRadius"), now + (long) d.num("puddleLife")));
@@ -438,7 +435,7 @@ public final class BossKraken implements BossModule {
             bossHit(u, p, d.num("puddleDamage"), Opt.of("cause", "magic"));
             if (now - m.inkTold.getOrDefault(p.getUUID(), -100L) >= 60) {
                 m.inkTold.put(p.getUUID(), now);
-                showFaceText(p, "§5먹물 웅덩이 §7— 빠져나오세요", Opt.of("dist", 2.4, "up", 0.3));
+                BossKit.hintFace(p, "§5먹물 웅덩이 §7— 빠져나오세요", Opt.of("dist", 2.4, "up", 0.3));
             }
         }
     }
@@ -456,7 +453,7 @@ public final class BossKraken implements BossModule {
         m.bigUntil = now + time + 60;
         m.whirl = new Whirl(now, now + time);
         api.anim(u, "spin"); // 동작 길이 = time (build.py): 다섯 바퀴 돌고 끝에 모든 촉수로 내려침
-        title(u, "§3§l소용돌이", "§b바깥으로 달리세요! §7(가운데 " + crush + "칸은 짓눌립니다)", fighters(u));
+        BossKit.hintTitle(u, "§3§l소용돌이", "§b바깥으로 달리세요! §7(가운데 " + crush + "칸은 짓눌립니다)", fighters(u));
         explain(u, "whirl", "§3[보스] 소용돌이: §f" + Js.str(Js.round(time / 20.0)) + "초 동안 가운데로 끌려갑니다. §c끝날 때 가운데 " + crush + "칸 안에 있으면 크게 다칩니다 §f— 바깥으로 달리세요");
         sound(u, "ambient.underwater.enter", c, 0.6, 1);
         sound(u, "mob.elderguardian.curse", c, 0.7, 0.8);
@@ -590,7 +587,7 @@ public final class BossKraken implements BossModule {
         m.bigUntil = now + 60;
         m.adds = new Adds(now, now + 14 + (long) T.num("life"));
         api.anim(u, "summon");
-        title(u, "§3§l촉수 소환", "§b촉수를 모두 베세요! §7(살아 있는 동안 크라켄이 회복)", fighters(u));
+        BossKit.hintTitle(u, "§3§l촉수 소환", "§b촉수를 모두 베세요! §7(살아 있는 동안 크라켄이 회복)", fighters(u));
         explain(u, "adds", "§3[보스] 촉수 소환: §f네 물구덩이의 촉수가 살아 있는 동안 §a크라켄이 회복§f합니다. §e" + Js.str(Js.round(T.num("life") / 20)) + "초 안에 모두 베면 크라켄이 그로기 (받는 피해 +"
                 + Js.str(Js.round(T.num("bonus") * 100)) + "%)");
         sound(u, snd(u, "roar"), mid(u), 0.6, 1);
@@ -704,8 +701,8 @@ public final class BossKraken implements BossModule {
         // 하던 패턴 (물어뜯기 · 먹물) 은 끊음: 비틀거리는 동작 뒤에서 예고 없이 맞지 않게
         u.cast = null;
         u.api.anim(u, "stagger");
-        title(u, "§e§l그로기!", "§f크라켄이 받는 피해 +" + Js.str(Js.round(T.num("bonus") * 100)) + "% §7(" + Js.str(Js.round(T.num("stagger") / 20)) + "초)");
-        say(u, "§e[보스] 촉수를 모두 베었습니다! §f크라켄이 비틀거립니다");
+        BossKit.hintTitle(u, "§e§l그로기!", "§f크라켄이 받는 피해 +" + Js.str(Js.round(T.num("bonus") * 100)) + "% §7(" + Js.str(Js.round(T.num("stagger") / 20)) + "초)");
+        BossKit.hintSay(u, "§e[보스] 촉수를 모두 베었습니다! §f크라켄이 비틀거립니다");
         sound(u, "mob.elderguardian.hit", mid(u), 0.6, 1);
         SkillFx.fx(u.dim, "rpg:shock_ring", new Vec3(u.center.x, u.center.y + 0.1, u.center.z), Opt.of("dir", Vec3.ZERO, "size", 3.0, "life", 0.6, "color", GOLD,
                 "alpha", 0.9));
@@ -723,7 +720,7 @@ public final class BossKraken implements BossModule {
             if (m != null) m.corpses.add(new Corpse(a.e, now + 18));
         }
         play(u.dim, "entity.generic.splash", u.center, 0.6, 1);
-        say(u, "§3[보스] 남은 촉수 " + alive.size() + "개가 물속으로 물러났습니다 §7(크라켄이 회복했습니다)");
+        BossKit.hintSay(u, "§3[보스] 남은 촉수 " + alive.size() + "개가 물속으로 물러났습니다 §7(크라켄이 회복했습니다)");
     }
 
     /** 쓰러지거나 물러난 촉수: 동작이 끝나면 치움 */
@@ -807,7 +804,7 @@ public final class BossKraken implements BossModule {
         m.tide = new Tide(u, dir, now, now + windup, s0, s1);
         api.face(u, new Vec3(-dir.x, 0, -dir.z));
         api.anim(u, "call");
-        title(u, "§9§l해일", "§b" + sideName(dir) + "에서 큰 물결! §e기둥 뒤 노란 자리§f로 숨으세요", Arena.playersIn(u.a, 8));
+        BossKit.hintTitle(u, "§9§l해일", "§b" + sideName(dir) + "에서 큰 물결! §e기둥 뒤 노란 자리§f로 숨으세요", Arena.playersIn(u.a, 8));
         explain(u, "tide", "§9[보스] 해일: §f큰 물결이 필드와 둘레 6칸(성문 밖 가까이)까지 휩쓸고 지나갑니다. §e물결 반대쪽 기둥 뒤(노란 자리)§f에 숨지 않으면 §4즉사§f합니다");
         sound(u, snd(u, "roar"), mid(u), 0.5, 1);
         sound(u, "ambient.underwater.enter", u.center, 0.5, 1);
@@ -860,7 +857,7 @@ public final class BossKraken implements BossModule {
             double k = (now - T.t0) / d.num("windup");
             if ((now - T.t0) % 10 == 0) tideWarn(u, T, k);
             long left = T.crashAt - now;
-            if (left % 20 == 0 && left <= 60) faceAll(u, "§9§l해일 " + (left / 20), Opt.of("dist", 2.4, "up", 0.5), Arena.playersIn(u.a, 8));
+            if (left % 20 == 0 && left <= 60) faceAll(u, "§9§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.5), Arena.playersIn(u.a, 8));
             return;
         }
         long age = now - T.crashAt;
@@ -899,14 +896,14 @@ public final class BossKraken implements BossModule {
             T.hit.add(p.getUUID());
             if (sheltered(u.feat.pillars(), T.dir, p.position(), d.num("depth"), d.num("pad"))) {
                 splash(u.dim, p.position(), 1.2);
-                showFaceText(p, "§b기둥 뒤에서 버텼습니다", Opt.of("dist", 2.4, "up", 0.3));
+                BossKit.hintFace(p, "§b기둥 뒤에서 버텼습니다", Opt.of("dist", 2.4, "up", 0.3));
                 continue;
             }
             splash(u.dim, p.position(), 2.4, DEEP, 0.55);
             SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(p.getX(), p.getY() + 1, p.getZ()), Opt.of("dir", new Vec3(0, 0, 1), "size", 2.4, "life", 0.5, "color", DEEP,
                     "alpha", 0.95));
-            showFaceText(p, "§1§l해일에 휩쓸렸습니다", Opt.of("dist", 2.2, "up", 0.3));
-            say(u, "§9[보스] " + p.getName().getString() + "님이 해일에 휩쓸렸습니다");
+            BossKit.hintFace(p, "§1§l해일에 휩쓸렸습니다", Opt.of("dist", 2.2, "up", 0.3));
+            BossKit.hintSay(u, "§9[보스] " + p.getName().getString() + "님이 해일에 휩쓸렸습니다");
             Status.kill(p, u.boss);
         }
         if (f1 >= T.s1) m.tide = null;
@@ -931,7 +928,7 @@ public final class BossKraken implements BossModule {
             splash(enc.dim, p.position(), 1.6);
             play(enc.dim, "entity.generic.splash", p.position(), 0.7, 1);
             bossHit(u, p, d.num("damage"), Opt.of("knock", knock(dir.x * 1.1, dir.z * 1.1, 0.35)));
-            showFaceText(p, "§b§l촉수가 끌어내립니다", Opt.of("dist", 2.2, "up", 0.35));
+            BossKit.hintFace(p, "§b§l촉수가 끌어내립니다", Opt.of("dist", 2.2, "up", 0.35));
             explain(u, "high", "§b[보스] §f기둥·성문 위처럼 높은 곳에 올라서면 크라켄의 촉수가 끌어내립니다");
         }
     }
@@ -1038,7 +1035,7 @@ public final class BossKraken implements BossModule {
         double bonus = u.def.obj("tentacles").num("bonus");
         if (now - m.staggerTold.getOrDefault(p.getUUID(), -100L) >= 30) {
             m.staggerTold.put(p.getUUID(), now);
-            showFaceText(p, "§e그로기 §f+" + Js.str(Js.round(bonus * 100)) + "%", Opt.of("dist", 2.4, "side", -0.5, "up", 0.25));
+            BossKit.hintFace(p, "§e그로기 §f+" + Js.str(Js.round(bonus * 100)) + "%", Opt.of("dist", 2.4, "side", -0.5, "up", 0.25));
         }
         return Bosses.Hurt.of(amount * (1 + bonus));
     }
@@ -1066,7 +1063,7 @@ public final class BossKraken implements BossModule {
         play(enc.dim, "mob.guardian.death", at, 0.6, 1);
         int left = 0;
         if (m.adds != null) for (Add x : m.adds.list) if (!x.dead) left++;
-        say(enc, "§b[보스] §e" + (p != null ? p.getName().getString() : "누군가") + "§f님이 촉수를 베었습니다 §7(남은 촉수 " + left + ")");
+        BossKit.hintSay(enc, "§b[보스] §e" + (p != null ? p.getName().getString() : "누군가") + "§f님이 촉수를 베었습니다 §7(남은 촉수 " + left + ")");
         m.corpses.add(new Corpse(prop, Tasks.now() + 20));
     }
 

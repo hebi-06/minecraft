@@ -4,7 +4,6 @@ import static mmorpg.fabric.boss.Bosses.step;
 import static mmorpg.fabric.boss.BossKit.bossHit;
 import static mmorpg.fabric.boss.BossKit.bossSize;
 import static mmorpg.fabric.boss.BossKit.disc;
-import static mmorpg.fabric.boss.BossKit.faceAll;
 import static mmorpg.fabric.boss.BossKit.fanMarks;
 import static mmorpg.fabric.boss.BossKit.fighters;
 import static mmorpg.fabric.boss.BossKit.hdist;
@@ -246,11 +245,11 @@ public final class BossVoidKnight implements BossModule {
         return Math.max(4, (int) Js.round(ticks * k));
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
-        say(u, text);
+        BossKit.hintSay(u, text);
     }
 
     static void shakeNear(Bosses.Unit u, Vec3 at, double range, double intensity, double seconds) {
@@ -529,7 +528,7 @@ public final class BossVoidKnight implements BossModule {
         double bonus = u.def.obj("opening").num("bonus");
         if (face) {
             for (ServerPlayer p : fighters(u)) {
-                if (hdist(p.position(), f) <= 16) showFaceText(p, "§d§l빈틈! §f지금 공격", Opt.of("dist", 2.4, "up", 0.45));
+                if (hdist(p.position(), f) <= 16) BossKit.hintFace(p, "§d§l빈틈! §f지금 공격", Opt.of("dist", 2.4, "up", 0.45));
             }
         }
         explain(u, "open", "§d[보스] 빈틈: §f공허 기사는 큰 공격 (내려베기 · 도약 · 회전 · 3연격 · 공허 참) 뒤 잠깐 칼이 박혀 움직이지 못합니다 — 그동안 받는 피해 +"
@@ -589,7 +588,7 @@ public final class BossVoidKnight implements BossModule {
                 w.hit.add(p.getUUID());
                 double[] kk = knockIn(u, p, w.dir.x * 0.8, w.dir.z * 0.8);
                 if (bossHit(u, p, w.damage, Opt.of("noSource", true, "knock", knock(kk[0], kk[1], 0.3)))) {
-                    showFaceText(p, "§d§l공허 검기에 베였습니다", Opt.of("dist", 2.2, "up", 0.35));
+                    BossKit.hintFace(p, "§d§l공허 검기에 베였습니다", Opt.of("dist", 2.2, "up", 0.35));
                 }
             }
         }
@@ -897,7 +896,7 @@ public final class BossVoidKnight implements BossModule {
                     1.0));
             x.dim.sendParticles(ParticleTypes.REVERSE_PORTAL, s.x, s.y + 2, s.z, 30, 0.4, 1.2, 0.4, 0.05);
             sound(x, snd(x, "rift"), s, 0.8, 1);
-            if (!t.isRemoved()) showFaceText(t, "§d§l등 뒤에 균열! §f비키세요", Opt.of("dist", 2.4, "up", 0.45));
+            if (!t.isRemoved()) BossKit.hintFace(t, "§d§l등 뒤에 균열! §f비키세요", Opt.of("dist", 2.4, "up", 0.45));
         }), step(vanish + hidden, (x, n) -> {
             M xm = mem(x);
             Vec3 s = spot[0];
@@ -1102,7 +1101,7 @@ public final class BossVoidKnight implements BossModule {
             RuneKit.rfx2(u.dim, "rays", new Vec3(s.x, s.y + 3.6, s.z), Opt.of("size", 4.0, "life", total / 20.0, "alpha", 0.6, "fade", 0.3), SAFE, LIGHT, new int[] {0, 1},
                     0.7);
         }
-        faceAll(u, "§5§l공허 참! §f빛나는 원 안으로", Opt.of("dist", 2.4, "up", 0.45), list);
+        BossKit.hintFaceAll(u, "§5§l공허 참! §f빛나는 원 안으로", Opt.of("dist", 2.4, "up", 0.45), list);
         explain(u, "cross", "§5[보스] 공허 참: §f공허 기사가 가운데로 뛰어 칼을 하늘로 세우면 (무적) 3초 뒤 필드 전체를 벱니다 — §e금빛 원 " + safe.size()
                 + "곳§f 안만 안전 §7(밖이면 아주 큰 피해)");
         List<Bosses.Step> steps = new ArrayList<>();
@@ -1120,7 +1119,7 @@ public final class BossVoidKnight implements BossModule {
         for (int k = 3; k >= 1; k--) {
             int kk = k;
             steps.add(step(jump + wu - kk * 20, (x, n) -> {
-                for (ServerPlayer p : fighters(x)) showFaceText(p, "§5§l공허 참 §f" + kk, Opt.of("dist", 2.4, "up", 0.45));
+                for (ServerPlayer p : fighters(x)) showFaceText(p, "§5§l" + kk, Opt.of("dist", 2.4, "up", 0.45));
                 play(x.dim, snd(x, "tick"), c, 0.6 + (3 - kk) * 0.2, 1);
             }));
         }
@@ -1141,13 +1140,13 @@ public final class BossVoidKnight implements BossModule {
             boolean in = false;
             for (Vec3 s : safe) if (hdist(p.position(), s) <= sr + 0.3) in = true;
             if (in) {
-                showFaceText(p, "§e§l안전! §d§l빈틈!", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§e§l안전! §d§l빈틈!", Opt.of("dist", 2.2, "up", 0.35));
                 continue;
             }
             Vec3 away = dirTo(c, p.position());
             double[] kk = knockIn(u, p, away.x * 0.5, away.z * 0.5);
             if (bossHit(u, p, C.num("damage"), Opt.of("noSource", true, "knock", knock(kk[0], kk[1], 0.7)))) {
-                showFaceText(p, "§5§l공허 참에 베였습니다", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§5§l공허 참에 베였습니다", Opt.of("dist", 2.2, "up", 0.35));
             }
         }
         // 십자 참격: 가운데를 지나는 두 줄 (안전 원 사이) + 줄을 따라 균열
@@ -1220,12 +1219,12 @@ public final class BossVoidKnight implements BossModule {
         for (Double w : E.numbersOrNull("warn")) {
             long wt = Math.round(w);
             if (left <= wt && left > wt - 20 && m.warned.add(wt)) {
-                say(u, "§5[보스] §f공허 붕괴까지 §d" + clock(wt) + "§f — 넘기면 필드 안 모두 즉사합니다");
+                BossKit.hintSay(u, "§5[보스] §f공허 붕괴까지 §d" + clock(wt) + "§f — 넘기면 필드 안 모두 즉사합니다");
                 play(u.dim, "block.bell.resonate", feetOf(u), 0.6, 1);
             }
         }
         if (left > 0 && left <= 200 && left % 20 == 0) {
-            title(u, "§4§l" + (left / 20), "§5공허 붕괴까지");
+            title(u, "§4§l" + (left / 20), "");
             play(u.dim, snd(u, "tick"), feetOf(u), 0.5, 1.2);
         }
         if (left <= 0 && now >= m.collapseAt) {
@@ -1254,8 +1253,8 @@ public final class BossVoidKnight implements BossModule {
         // 가운데 제단 앞 (제단 블록에 다리가 묻히지 않게 — 가운데를 봄)
         setBody(u, c.x - Math.cos(yaw) * ALTAR_OFF, c.z - Math.sin(yaw) * ALTAR_OFF, yaw);
         u.api.anim(u, "cross_ready", null, ATK, "0");
-        title(u, "§4§l공허 붕괴", "§f제한 시간이 지났습니다");
-        say(u, "§4[보스] 공허 붕괴: §f10분 안에 쓰러뜨리지 못했습니다 — 공허가 필드를 삼킵니다");
+        BossKit.hintTitle(u, "§4§l공허 붕괴", "§f제한 시간이 지났습니다");
+        BossKit.hintSay(u, "§4[보스] 공허 붕괴: §f10분 안에 쓰러뜨리지 못했습니다 — 공허가 필드를 삼킵니다");
         sound(u, snd(u, "collapse"), c, 0.6, 1.5);
         for (ServerPlayer p : fighters(u)) p.addEffect(new MobEffectInstance(MobEffects.DARKNESS, wu + 60, 0, false, false));
         RuneKit.rfx(u.dim, "hole", new Vec3(c.x, c.y + 6, c.z), Opt.of("size", 3.0, "life", wu / 20.0 + 0.6, "cell", 0.0, "spinRate", 180.0, "grow", 4.0, "alpha", 0.95));
@@ -1429,9 +1428,9 @@ public final class BossVoidKnight implements BossModule {
             sound(x, snd(x, "vanish"), at, 0.5, 1);
         }), step(ARRIVE - 4, (x, n) -> {
             x.immune = false;
-            say(x, "§5[보스] 공허 기사: §f한 방이 매우 아픈 대신 칠 때마다 자세를 잡습니다 — 바닥의 §d보라 예고§f를 보고 피하세요. 큰 공격 뒤에는 §d빈틈§f (받는 피해 +"
+            BossKit.hintSay(x, "§5[보스] 공허 기사: §f한 방이 매우 아픈 대신 칠 때마다 자세를 잡습니다 — 바닥의 §d보라 예고§f를 보고 피하세요. 큰 공격 뒤에는 §d빈틈§f (받는 피해 +"
                     + Js.str(Js.round(x.def.obj("opening").num("bonus") * 100)) + "%)");
-            say(x, "§4[보스] 제한 시간 " + clock((long) x.def.obj("enrage").num("limit")) + " §f— 넘기면 §4공허 붕괴§f로 필드 안 모두 즉사합니다 (위 막대)");
+            BossKit.hintSay(x, "§4[보스] 제한 시간 " + clock((long) x.def.obj("enrage").num("limit")) + " §f— 넘기면 §4공허 붕괴§f로 필드 안 모두 즉사합니다 (위 막대)");
         }));
         timerTick(enc, now);
     }

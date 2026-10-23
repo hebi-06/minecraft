@@ -368,8 +368,8 @@ public final class RpgWormGallery implements FabricClientGameTest {
         } else ok("pressing the altar opens the challenge form");
         ctx.waitTicks(3);
         String body = ctx.computeOnClient(mc -> mc.gui.screen() instanceof MenuFormScreen m ? m.form().text() : "");
-        check(body.contains("Lv.25") && body.contains("바위 뱉기") && body.contains("15분") && body.contains("파쇄의 송곳니"),
-                "challenge text (level · far shot · cooldown · boss materials)");
+        check(body.contains("Lv.25") && !body.contains("원거리 견제") && body.contains("15분") && body.contains("파쇄의 송곳니"),
+                "challenge text (level · no far-shot hint (0.34.0) · cooldown · boss materials)");
         shot(ctx, "wm_form");
         click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(0));
         boolean summoning = server.computeOnServer(s -> enc() != null && "summon".equals(enc().state));
@@ -538,7 +538,7 @@ public final class RpgWormGallery implements FabricClientGameTest {
             if (m.devour.victim != player(s)) return "victim " + m.devour.victim;
             if (enc().mod.targetable(enc(), player(s))) return "still a target";
             String bar = enc().boss.bossBar() == null ? "" : enc().boss.bossBar().getName().getString();
-            return bar.contains("구출") ? "ok" : "bar " + bar;
+            return bar.contains("|") && bar.contains("/") && !bar.contains("구출") ? "ok" : "bar " + bar; // 0.34.0 진행 막대 · 숫자만
         });
         check("ok".equals(in), "swallowed: untargetable, rescue progress on the boss bar (" + in + ")");
         shot(ctx, "wm_devour_inside");

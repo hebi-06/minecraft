@@ -395,8 +395,8 @@ public final class RpgYmirGallery implements FabricClientGameTest {
         } else ok("pressing the altar opens the challenge form");
         ctx.waitTicks(3);
         String body = ctx.computeOnClient(mc -> mc.gui.screen() instanceof MenuFormScreen m ? m.form().text() : "");
-        check(body.contains("Lv.40") && body.contains("얼음 창") && body.contains("20분") && body.contains("이미르의 서리 심장") && body.contains("태초의 거인 뼈"),
-                "challenge text (level · ice lance · cooldown · boss materials)");
+        check(body.contains("Lv.40") && !body.contains("원거리 견제") && body.contains("20분") && body.contains("이미르의 서리 심장") && body.contains("태초의 거인 뼈"),
+                "challenge text (level · no far-shot hint (0.34.0) · cooldown · boss materials)");
         shot(ctx, "ym_form");
         click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(0));
         boolean summoning = server.computeOnServer(s -> enc() != null && "summon".equals(enc().state));
@@ -638,25 +638,25 @@ public final class RpgYmirGallery implements FabricClientGameTest {
         camDist(ctx, server, 7);
         ctx.waitTicks(8);
         shot(ctx, "ym_kneel");
-        // 무릎 꿇은 동안 진짜 클릭: 금색 "빈틈" + 근접 보너스 » 숫자
+        // 무릎 꿇은 동안 진짜 클릭: 근접 보너스 » 숫자 (0.34.0 금색 "빈틈" 표시는 숨김 — BOSS_HINTS.marks)
         camera(ctx, CameraType.FIRST_PERSON);
         server.runCommand("title @a clear");
         ctx.waitTicks(22);
         float hp0 = server.computeOnServer(s -> enc().boss.getHealth());
         attack(ctx);
         ctx.waitTicks(2);
-        String num = server.computeOnServer(s -> {
+        List<String> nums = server.computeOnServer(s -> {
             BedrockMob b = enc().boss;
+            List<String> out = new ArrayList<>();
             for (Display.TextDisplay td : level(s).getEntitiesOfClass(Display.TextDisplay.class, new AABB(b.position(), b.position()).inflate(7),
                     t -> t.entityTags().contains(DamageNumbers.TAG))) {
-                String t = td.getText().getString();
-                if (t.contains("빈틈")) return t;
+                out.add(td.getText().getString());
             }
-            return null;
+            return out;
         });
         float hp1 = server.computeOnServer(s -> enc().boss.getHealth());
         check(hp1 < hp0, "a hit while it kneels lands (" + hp0 + " → " + hp1 + ")");
-        check(num != null, "the number reads 빈틈 (" + num + ")");
+        check(!nums.isEmpty() && nums.stream().noneMatch(t -> t.contains("빈틈")), "the number has no 빈틈 mark (hidden) " + nums);
         camera(ctx, CameraType.THIRD_PERSON_BACK);
         camDist(ctx, server, 4.5);
         ctx.waitTicks(1);
@@ -699,9 +699,9 @@ public final class RpgYmirGallery implements FabricClientGameTest {
             if (f == null || !BossYmir.FOG_BREATH.equals(f.id()) || !Bosses.hasBossFog(player(s))) return "no fog on the server " + f;
             String lab = null;
             for (BossYmir.Label L : G.labels) if (L.f == BossYmir.firesOf(enc()).get(0)) lab = BossYmir.labelText(L);
-            return "§6불씨 §f1§7/§f1".equals(lab) ? "ok" : "label " + lab;
+            return "§6§l1§7/§61".equals(lab) ? "ok" : "label " + lab;
         });
-        check("ok".equals(srv), "inhaling: blizzard fog for the player (server), the fire's label 불씨 1/1 (" + srv + ")");
+        check("ok".equals(srv), "inhaling: blizzard fog for the player (server), the fire's label 1/1 — numbers only (" + srv + ")");
         float[] fog = clientFog(ctx);
         check(fog[0] > 0.9 && Math.abs(fog[1] - 3) < 1e-3 && Math.abs(fog[2] - 26) < 1e-3, "blizzard fog on the client: " + fogText(fog));
         shot(ctx, "ym_breath_fog");
@@ -765,9 +765,9 @@ public final class RpgYmirGallery implements FabricClientGameTest {
             boolean blocks = !BossYmir.fireBlockLit(enc(), fs.get(0)) && !BossYmir.fireBlockLit(enc(), fs.get(2));
             String lab = null;
             for (BossYmir.Label L : BossYmir.breathOf(enc()).labels) if (L.f == fs.get(0)) lab = BossYmir.labelText(L);
-            return outs && blocks && "§8꺼진 불".equals(lab) ? "ok" : "fires " + fs.get(0).lit + fs.get(1).lit + fs.get(2).lit + fs.get(3).lit + " label " + lab;
+            return outs && blocks && "".equals(lab) ? "ok" : "fires " + fs.get(0).lit + fs.get(1).lit + fs.get(2).lit + fs.get(3).lit + " label " + lab;
         });
-        check("ok".equals(r), "second breath: two facing fires are put out by ice lances (꺼진 불) — " + r);
+        check("ok".equals(r), "second breath: two facing fires are put out by ice lances (no label on a dead fire) — " + r);
         server.runCommand("title @a clear");
         shot(ctx, "ym_breath2_out");
         long until = server.computeOnServer(s -> BossYmir.breathOf(enc()) == null ? 0L : BossYmir.breathOf(enc()).until);

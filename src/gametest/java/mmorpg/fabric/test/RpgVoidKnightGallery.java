@@ -52,7 +52,7 @@ public final class RpgVoidKnightGallery extends RpgDriveGallery {
 
     @Override
     List<String> formWords() {
-        return List.of("Lv.55", "근접 보너스", "균열 파편", "20분", "제한 시간", "공허 붕괴", "빈틈");
+        return List.of("Lv.55", "근접 보너스", "20분", "제한 시간");
     }
 
     @Override
@@ -233,7 +233,8 @@ public final class RpgVoidKnightGallery extends RpgDriveGallery {
         float hp1 = server.computeOnServer(s -> enc().boss.getHealth());
         check(hp1 < hp0, "hit during the opening lands (" + hp0 + " → " + hp1 + ")");
         List<String> nums = numbersNear(server, 8);
-        check(nums.stream().anyMatch(t -> t.contains("빈틈")), "damage number with the pink opening mark " + nums);
+        // 0.34.0: 숫자 앞 "빈틈" 표시는 숨김 (BOSS_HINTS.marks) — 받는 피해 +30% 는 그대로
+        check(!nums.isEmpty() && nums.stream().noneMatch(t -> t.contains("빈틈")), "damage number without the opening mark (hidden) " + nums);
         shot(ctx, "opening");
         waitUntil(ctx, server, t0 + w + (int) DEF.obj("cleave").num("open") + 14);
         settle(server, cx, z, SOUTH);

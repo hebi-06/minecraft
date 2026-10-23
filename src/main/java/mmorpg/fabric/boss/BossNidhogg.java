@@ -5,7 +5,6 @@ import static mmorpg.fabric.boss.BossKit.bossHit;
 import static mmorpg.fabric.boss.BossKit.bossSize;
 import static mmorpg.fabric.boss.BossKit.disc;
 import static mmorpg.fabric.boss.BossKit.effect;
-import static mmorpg.fabric.boss.BossKit.faceAll;
 import static mmorpg.fabric.boss.BossKit.fanMarks;
 import static mmorpg.fabric.boss.BossKit.fighters;
 import static mmorpg.fabric.boss.BossKit.groundUnder;
@@ -19,12 +18,10 @@ import static mmorpg.fabric.boss.BossKit.play;
 import static mmorpg.fabric.boss.BossKit.random;
 import static mmorpg.fabric.boss.BossKit.rgb;
 import static mmorpg.fabric.boss.BossKit.rnd;
-import static mmorpg.fabric.boss.BossKit.say;
 import static mmorpg.fabric.boss.BossKit.showFaceText;
 import static mmorpg.fabric.boss.BossKit.shuffle;
 import static mmorpg.fabric.boss.BossKit.snd;
 import static mmorpg.fabric.boss.BossKit.sound;
-import static mmorpg.fabric.boss.BossKit.title;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -273,11 +270,11 @@ public final class BossNidhogg implements BossModule {
         return Math.abs(d) <= step ? want : cur + Math.signum(d) * step;
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
-        say(u, text);
+        BossKit.hintSay(u, text);
     }
 
     static void shakeNear(Bosses.Unit u, Vec3 at, double range, double intensity, double seconds) {
@@ -665,7 +662,7 @@ public final class BossNidhogg implements BossModule {
         u.api.anim(u, "gust");
         sound(u, snd(u, "roar"), headAt(u), 0.9, 1);
         play(u.dim, "mob.enderdragon.flap", b, 0.6, 1);
-        faceAll(u, "§f§l날개 밑으로! §7또는 멀리", Opt.of("dist", 2.4, "up", 0.45), mid);
+        BossKit.hintFaceAll(u, "§f§l날개 밑으로! §7또는 멀리", Opt.of("dist", 2.4, "up", 0.45), mid);
         explain(u, "gust", "§f[보스] 날갯짓 폭풍: §f날개를 펴고 바람을 일으킵니다. §e날개 밑(초록 원, " + Js.str(d.num("inner")) + "칸 안)이나 먼 곳(" + Js.str(d.num("outer"))
                 + "칸 밖)은 안전§f, 그 사이에 있으면 날아가며 §5침묵§f(스킬·룬 봉인)");
         u.api.cast(u, "gust", windup + 12, step(windup, (x, n) -> gustHit(x, at)));
@@ -684,7 +681,7 @@ public final class BossNidhogg implements BossModule {
             boolean landed = bossHit(u, p, d.num("damage"), Opt.of("knock", knock(kk[0], kk[1], 0.5)));
             if (landed) {
                 Status.silence(p, (int) d.num("silence"));
-                showFaceText(p, "§5§l침묵! §7바람에 숨이 막혔습니다", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§5§l침묵! §7바람에 숨이 막혔습니다", Opt.of("dist", 2.2, "up", 0.35));
             }
         }
         SkillFx.fx(u.dim, "rpg:tele_wave", new Vec3(at.x, at.y + 0.2, at.z), Opt.of("dir", Vec3.ZERO, "speed", 24.0, "size", 1.0, "life", outer / 24, "color", WIND, "alpha",
@@ -811,7 +808,7 @@ public final class BossNidhogg implements BossModule {
             double a = (i / 10.0) * TAU;
             dust(u.dim, floorAt(u, at.x + Math.cos(a) * 4, at.z + Math.sin(a) * 4), 2.6, DUST, 0.9);
         }
-        title(u, "§5§l니드호그가 날아오릅니다", "§f독의 비를 피하고 §c한곳에 모여 있지 마세요", fighters(u));
+        BossKit.hintTitle(u, "§5§l니드호그가 날아오릅니다", "§f독의 비를 피하고 §c한곳에 모여 있지 마세요", fighters(u));
         explain(u, "flight", "§5[보스] 비상: §f니드호그가 날아올라 필드 위를 돌며 독의 비(초록 원)를 세 번 떨어뜨리고, §c가장 많이 모인 곳§f으로 급강하합니다 §7— 날아 있는 동안 근접 공격은 닿지 않음 (활·완드·멀리 쏘는 스킬은 닿음)");
         u.api.cast(u, "flight", 100000);
     }
@@ -946,7 +943,7 @@ public final class BossNidhogg implements BossModule {
                 sound(u, snd(u, "roar"), headAt(u), 0.7, 1);
                 List<ServerPlayer> near = new ArrayList<>();
                 for (ServerPlayer p : targets(u)) if (hdist(p.position(), t) <= radius + 3) near.add(p);
-                faceAll(u, "§4§l급강하! §f검붉은 원 밖으로", Opt.of("dist", 2.4, "up", 0.45), near);
+                BossKit.hintFaceAll(u, "§4§l급강하! §f검붉은 원 밖으로", Opt.of("dist", 2.4, "up", 0.45), near);
             }
             if (fl.target != null && now >= fl.diveAt - (long) D.num("time")) {
                 fl.stage = "dive";
@@ -1032,7 +1029,7 @@ public final class BossNidhogg implements BossModule {
             SkillFx.beam(u.dim, headAt(u), new Vec3(mk.p.getX(), mk.p.getY() + 1.4, mk.p.getZ()), PURPLE, Opt.of("half", 0.4, "thick", 0.14, "life", 0.6, "gap", 0.6));
         }
         String radius = Js.str(d.num("radius"));
-        title(u, "§4§l독룡의 낙인", "§f서로 §c" + radius + "칸§f 넘게 흩어지세요! §7다른 사람의 원 안 = 즉사", list);
+        BossKit.hintTitle(u, "§4§l독룡의 낙인", "§f서로 §c" + radius + "칸§f 넘게 흩어지세요! §7다른 사람의 원 안 = 즉사", list);
         explain(u, "brand", "§4[보스] 독룡의 낙인: §f모두에게 낙인이 붙고 " + Js.str(Js.round(time / 20.0)) + "초 뒤 터집니다 (반지름 " + radius
                 + "칸). §c다른 사람의 낙인 원 안에 있으면 즉사 §7— 서로 흩어지세요 (원이 붉게 보이면 위험). 원 하나만 맞으면 피해");
         return true;
@@ -1083,12 +1080,12 @@ public final class BossNidhogg implements BossModule {
                 }
             }
             long left = B.until - now;
-            if (left % 20 == 0 && left <= 60) for (BrandMark mk : live) showFaceText(mk.p, "§4§l낙인 " + (left / 20), Opt.of("dist", 2.4, "up", 0.45));
+            if (left % 20 == 0 && left <= 60) for (BrandMark mk : live) showFaceText(mk.p, "§4§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.45));
             if ((now - B.t0) % 10 == 0) {
                 for (BrandMark mk : live) {
                     int near = 0;
                     for (ServerPlayer q : targets(u)) if (!q.getUUID().equals(mk.id) && inBrand(u, q, mk.p.position())) near++;
-                    BossKit.notify(mk.p, near > 0 ? "§4§l독룡의 낙인 §c— 원 안에 " + near + "명! 흩어지세요"
+                    BossKit.hintNotify(mk.p, near > 0 ? "§4§l독룡의 낙인 §c— 원 안에 " + near + "명! 흩어지세요"
                             : "§5독룡의 낙인 §7(" + (long) Math.ceil(left / 20.0) + "초) §a원 안에 아무도 없음", 15);
                 }
             }
@@ -1112,7 +1109,7 @@ public final class BossNidhogg implements BossModule {
             int n = 0;
             for (Vec3 at : blasts) if (inBrand(u, p, at)) n++;
             if (n >= 2) {
-                say(u, "§4[보스] §e" + p.getName().getString() + "§f님이 독룡의 낙인이 겹쳐 쓰러졌습니다");
+                BossKit.hintSay(u, "§4[보스] §e" + p.getName().getString() + "§f님이 독룡의 낙인이 겹쳐 쓰러졌습니다");
                 Status.kill(p, u.boss);
             } else if (n == 1) {
                 bossHit(u, p, d.num("damage"), Opt.of("cause", "magic", "noSource", true));
@@ -1139,7 +1136,7 @@ public final class BossNidhogg implements BossModule {
             // 뿌리를 넘어가는 것은 괜찮음: grace 틱 넘게 높은 곳에 머물면 (처음 올라서면 경고)
             if (!since.containsKey(p.getUUID())) {
                 since.put(p.getUUID(), now);
-                showFaceText(p, "§6§l내려오세요! §f머물면 날개로 칩니다", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§6§l내려오세요! §f머물면 날개로 칩니다", Opt.of("dist", 2.2, "up", 0.35));
             }
             if (now - since.get(p.getUUID()) < d.num("grace")) continue;
             if (now - m.high.getOrDefault(p.getUUID(), -1000L) < d.num("cd")) continue;
@@ -1149,7 +1146,7 @@ public final class BossNidhogg implements BossModule {
             play(enc.dim, "mob.enderdragon.flap", p.position(), 0.7, 1);
             // 때린 엔티티 없이 (게임의 밀어내기는 니드호그에게서 먼 쪽 = 담장 밖일 수 있음): 가운데 쪽으로만 떨어뜨림
             bossHit(u, p, d.num("damage"), Opt.of("knock", knock(dir.x * 1.1, dir.z * 1.1, 0.35), "noSource", true));
-            showFaceText(p, "§6§l날개에 맞아 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
+            BossKit.hintFace(p, "§6§l날개에 맞아 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
             explain(u, "high", "§6[보스] §f뿌리·담장·탑 위처럼 높은 곳에 " + Js.toFixed(d.num("grace") / 20, 1)
                     + "초 넘게 머물면 니드호그가 날개로 쳐서 떨어뜨립니다 (뿌리를 넘어가는 것은 괜찮음)");
         }

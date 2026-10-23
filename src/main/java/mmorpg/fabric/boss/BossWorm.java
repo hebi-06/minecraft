@@ -15,12 +15,10 @@ import static mmorpg.fabric.boss.BossKit.okTarget;
 import static mmorpg.fabric.boss.BossKit.play;
 import static mmorpg.fabric.boss.BossKit.random;
 import static mmorpg.fabric.boss.BossKit.rnd;
-import static mmorpg.fabric.boss.BossKit.say;
 import static mmorpg.fabric.boss.BossKit.showFaceText;
 import static mmorpg.fabric.boss.BossKit.shuffle;
 import static mmorpg.fabric.boss.BossKit.snd;
 import static mmorpg.fabric.boss.BossKit.sound;
-import static mmorpg.fabric.boss.BossKit.title;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -287,11 +285,11 @@ public final class BossWorm implements BossModule {
         return Math.atan2(d.z, d.x);
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
-        say(u, text);
+        BossKit.hintSay(u, text);
     }
 
     /** 몸 가운데 (연출용) */
@@ -618,7 +616,7 @@ public final class BossWorm implements BossModule {
         m.quake = new Quake(u, quakeTiles(u), List.of(new Wave(first, now, now + windup), new Wave(!first, now + windup, now + windup + gap)));
         u.api.anim(u, "quake");
         sound(u, snd(u, "roar"), mid(u), 0.8, 1);
-        title(u, "§6§l대지 분출", first ? "§f어두운 칸이 먼저 솟습니다 §7→ 다음은 밝은 칸" : "§f밝은 칸이 먼저 솟습니다 §7→ 다음은 어두운 칸", fighters(u));
+        BossKit.hintTitle(u, "§6§l대지 분출", first ? "§f어두운 칸이 먼저 솟습니다 §7→ 다음은 밝은 칸" : "§f밝은 칸이 먼저 솟습니다 §7→ 다음은 어두운 칸", fighters(u));
         explain(u, "quake", "§6[보스] 대지 분출: §f바닥 체크무늬의 한쪽 칸이 솟고 곧바로 반대쪽 칸이 솟습니다. §e빛나는 칸에서 벗어나 방금 솟은 칸으로 옮기세요");
         u.api.cast(u, "quake", windup + gap + 14);
         quakeMarks(u, m.quake, 0);
@@ -698,7 +696,7 @@ public final class BossWorm implements BossModule {
         u.api.face(u, dirTo(home, t.position()));
         u.api.anim(u, "rear");
         sound(u, "mob.warden.sniff", mid(u), 1.1, 1);
-        showFaceText(t, "§e§l노림! §f원 밖으로 피하세요", Opt.of("dist", 2.2, "up", 0.35));
+        BossKit.hintFace(t, "§e§l노림! §f원 밖으로 피하세요", Opt.of("dist", 2.2, "up", 0.35));
         explain(u, "devour", "§6[보스] 삼키기: §f노란 원이 한 사람을 따라다니다 붉게 멈추면 거대 웜이 덮칩니다. 원 안의 한 명은 삼켜져 §c속박·침묵·실명 + 계속 피해§f. §e나머지가 웜을 때려 뱉게 하세요");
         u.api.cast(u, "devour", windup + 12);
         return true;
@@ -756,13 +754,13 @@ public final class BossWorm implements BossModule {
         u.api.anim(u, "bulge", null, GUT, "0");
         play(u.dim, "random.eat", spot, 0.6, 1);
         String name = v.getName().getString();
-        title(u, "§4§l삼켜졌습니다", "§7동료가 웜을 때리면 뱉어 냅니다 — 버티세요", List.of(v));
-        title(u, "§e§l" + name + "님이 삼켜졌습니다!", "§f웜에게 피해 " + Js.str(D.need) + "를 주면 뱉어 냅니다", targets(u));
-        say(u, "§6[보스] §e" + name + "§f님이 삼켜졌습니다! §7(웜에게 피해 " + Js.str(D.need) + "를 주면 뱉어 냄, " + Js.str(Js.round(hold / 20.0)) + "초)");
+        BossKit.hintTitle(u, "§4§l삼켜졌습니다", "§7동료가 웜을 때리면 뱉어 냅니다 — 버티세요", List.of(v));
+        BossKit.hintTitle(u, "§e§l" + name + "님이 삼켜졌습니다!", "§f웜에게 피해 " + Js.str(D.need) + "를 주면 뱉어 냅니다", targets(u));
+        BossKit.hintSay(u, "§6[보스] §e" + name + "§f님이 삼켜졌습니다! §7(웜에게 피해 " + Js.str(D.need) + "를 주면 뱉어 냄, " + Js.str(Js.round(hold / 20.0)) + "초)");
         nameTag(u, D);
     }
 
-    /** 이름표 (· 보스 막대) 에 구출 진행 (평소에는 보스 막대와 같은 이름) */
+    /** 이름표 (· 보스 막대) 에 구출 진행 (평소에는 보스 막대와 같은 이름 — 0.34.0 진행 막대 · 숫자만, 이름 · "구출" 글자는 뺌) */
     static void nameTag(Bosses.Unit u, Devour D) {
         String base = bossLabel(u.def.num("level"), u.def.strOr("title", ""), u.def.str("name"));
         if (D == null || D.victim == null) {
@@ -770,7 +768,7 @@ public final class BossWorm implements BossModule {
             return;
         }
         int n = (int) Math.max(0, Math.min(10, Math.floor((D.dealt / D.need) * 10)));
-        label(u, base + " §e" + D.victim.getName().getString() + " 구출 §a" + "|".repeat(n) + "§8" + "|".repeat(10 - n) + " §f"
+        label(u, base + " §a" + "|".repeat(n) + "§8" + "|".repeat(10 - n) + " §f"
                 + Js.str(Math.min(D.need, Js.round(D.dealt))) + "/" + Js.str(D.need));
     }
 
@@ -803,14 +801,14 @@ public final class BossWorm implements BossModule {
             movePlayer(v, new Vec3(out.x, out.y + 0.6, out.z));
             Kit.knockback(v, dir.x * 0.8, dir.z * 0.8, 0.45);
             if (!ok) bossHit(u, v, d.num("fail"), Opt.of("cause", "magic"));
-            showFaceText(v, ok ? "§a§l뱉어 냈습니다!" : "§c§l뱉어 냈습니다 §7(소화되다 나옴)", Opt.of("dist", 2.2, "up", 0.3));
+            BossKit.hintFace(v, ok ? "§a§l뱉어 냈습니다!" : "§c§l뱉어 냈습니다 §7(소화되다 나옴)", Opt.of("dist", 2.2, "up", 0.3));
         }
         if (ok) {
             u.staggerUntil = now + gag;
             u.cast = null;
             u.api.anim(u, "gag");
-            title(u, "§a§l구출!", "§f거대 웜이 구역질합니다 §7(" + Js.str(Js.round(gag / 20.0)) + "초)", targets(u));
-        } else say(u, "§6[보스] §f거대 웜이 §e" + (v != null ? v.getName().getString() : "누군가") + "§f님을 뱉었습니다 §7(구하지 못함)");
+            BossKit.hintTitle(u, "§a§l구출!", "§f거대 웜이 구역질합니다 §7(" + Js.str(Js.round(gag / 20.0)) + "초)", targets(u));
+        } else BossKit.hintSay(u, "§6[보스] §f거대 웜이 §e" + (v != null ? v.getName().getString() : "누군가") + "§f님을 뱉었습니다 §7(구하지 못함)");
     }
 
     /** 삼킨 사람을 놓아 줌 (죽음 · 나감 · 싸움 끝): 뱉는 연출 없이 상태만 풂 */
@@ -870,7 +868,7 @@ public final class BossWorm implements BossModule {
             bossHit(u, v, d.num("dot"), Opt.of("cause", "magic"));
             BossKit.addEffect(v, "blindness", 40, 0, false);
             long left = (long) Math.ceil((D.until - now) / 20.0);
-            showFaceText(v, "§4삼켜졌습니다 §7— 동료가 구해 줄 때까지 §f" + left + "초", Opt.of("dist", 2.2, "up", 0.3));
+            showFaceText(v, "§4§l" + left, Opt.of("dist", 2.2, "up", 0.3));
             play(u.dim, "mob.warden.heartbeat", D.inside, 0.8, 1);
         }
         if (now % 5 == 0 && D.lastShown != (long) Js.round(D.dealt)) {
@@ -893,7 +891,7 @@ public final class BossWorm implements BossModule {
         m.tremor = new Tremor(u, now, now + warn, now + warn + listen);
         dive(u);
         sound(u, "shriek.sculk_shrieker", mid(u), 0.8, 1);
-        title(u, "§3§l진동 감지", "§f움직이지 마세요! §7웅크려 걸으면 들키지 않습니다", fighters(u));
+        BossKit.hintTitle(u, "§3§l진동 감지", "§f움직이지 마세요! §7웅크려 걸으면 들키지 않습니다", fighters(u));
         explain(u, "tremor", "§3[보스] 진동 감지: §f거대 웜이 땅속(무적)에서 " + Js.str(Js.round(listen / 20.0))
                 + "초 동안 발소리를 듣습니다. §c걷거나 뛰면 발밑에서 튀어나와 삼킵니다 (즉사). §e멈추거나 웅크려 걸으세요 §7— 떨어지는 돌은 웅크려 걸어서 피하세요");
         countdown(u, warn);
@@ -903,7 +901,7 @@ public final class BossWorm implements BossModule {
 
     /** 듣기 전 3 · 2 · 1 (듣기까지 남은 틱이 20의 배수이고 3초 이하일 때) */
     static void countdown(Bosses.Unit u, long left) {
-        if (left % 20 == 0 && left <= 60) faceAll(u, "§3§l움직이지 마세요 §f" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), fighters(u));
+        if (left % 20 == 0 && left <= 60) faceAll(u, "§3§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), fighters(u));
     }
 
     /** 들킴: strike 틱 뒤 (앞의 것과 gap 틱 간격) 발밑에서 튀어나와 삼킴 */
@@ -912,7 +910,7 @@ public final class BossWorm implements BossModule {
         T.heard.add(p.getUUID());
         long lastAt = T.queue.isEmpty() ? Long.MIN_VALUE / 4 : T.queue.get(T.queue.size() - 1).at;
         T.queue.add(new Strike(p, Math.max(now + (long) d.num("strike"), lastAt + (long) d.num("gap"))));
-        showFaceText(p, "§4§l들켰습니다!", Opt.of("dist", 2.2, "up", 0.35));
+        BossKit.hintFace(p, "§4§l들켰습니다!", Opt.of("dist", 2.2, "up", 0.35));
         play(u.dim, "mob.warden.listening_angry", p.position(), 1, 1);
         disc(u.dim, floorAt(u, p.getX(), p.getZ()), 2.2, (int) d.num("strike"), RED);
     }
@@ -931,7 +929,7 @@ public final class BossWorm implements BossModule {
         sound(u, "mob.warden.emerge", at, 1.3, 1);
         play(u.dim, "random.eat", at, 0.5, 1);
         shakeNear(u, at, 10, 0.3, 0.5);
-        say(u, "§3[보스] §e" + p.getName().getString() + "§f님이 발소리를 들켜 삼켜졌습니다");
+        BossKit.hintSay(u, "§3[보스] §e" + p.getName().getString() + "§f님이 발소리를 들켜 삼켜졌습니다");
         Status.kill(p, u.boss);
     }
 
@@ -962,7 +960,7 @@ public final class BossWorm implements BossModule {
             List<ServerPlayer> cur = fighters(u);
             if (now == T.listenAt) {
                 sound(u, "mob.warden.listening", u.center, 0.8, 1);
-                faceAll(u, "§b§l듣는 중… §7움직이면 들킵니다", Opt.of("dist", 2.4, "up", 0.45), cur);
+                BossKit.hintFaceAll(u, "§b§l듣는 중… §7움직이면 들킵니다", Opt.of("dist", 2.4, "up", 0.45), cur);
                 // 예고를 본 사람만 들음 (듣는 중에 필드에 들어온 사람은 듣지 않음)
                 T.listeners = new HashSet<>();
                 for (ServerPlayer p : cur) T.listeners.add(p.getUUID());
@@ -990,7 +988,7 @@ public final class BossWorm implements BossModule {
                 if (jumped || rec.acc > grace) heard(u, T, p, now);
                 else if (!rec.warned && rec.acc > grace * 0.4) {
                     rec.warned = true;
-                    showFaceText(p, "§e§l쉿! §7움직이면 들킵니다 — 웅크리세요", Opt.of("dist", 2.2, "up", 0.35));
+                    BossKit.hintFace(p, "§e§l쉿! §7움직이면 들킵니다 — 웅크리세요", Opt.of("dist", 2.2, "up", 0.35));
                 }
             }
             // 떨어지는 돌: 한 사람씩 머리 위 원 → 떨어짐 (웅크려 걸어 나와야 함)
@@ -1044,7 +1042,7 @@ public final class BossWorm implements BossModule {
             T.rise = new Rise(i, floorAt(u, h.x, h.z), now + (long) d.num("emerge"));
             u.api.seat(u, T.rise.at(), null);
             riseMarks(u, T.rise.at(), d.num("radius"), (int) d.num("emerge"));
-            faceAll(u, "§a§l소리를 내도 됩니다", Opt.of("dist", 2.4, "up", 0.45), fighters(u));
+            BossKit.hintFaceAll(u, "§a§l소리를 내도 됩니다", Opt.of("dist", 2.4, "up", 0.45), fighters(u));
             return;
         }
         if (now < T.rise.when()) return;
@@ -1155,7 +1153,7 @@ public final class BossWorm implements BossModule {
             chips(enc.dim, p.position(), 3, 0.3, 5);
             play(enc.dim, "dig.deepslate", p.position(), 0.6, 1);
             bossHit(u, p, d.num("damage"), Opt.of("knock", knock(dir.x * 1.1, dir.z * 1.1, 0.35)));
-            showFaceText(p, "§6§l땅이 울려 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
+            BossKit.hintFace(p, "§6§l땅이 울려 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
             explain(u, "high", "§6[보스] §f성문·담장 탑 위처럼 높은 곳에 올라서면 거대 웜이 땅을 울려 떨어뜨립니다");
         }
     }

@@ -734,6 +734,11 @@ public final class Bosses {
         double left = Math.max(0, h.target.getHealth() - amount);
         if (left > 0) h.target.setHealth((float) left);
         flash(h.target);
+        // 0.34.0 피해 숫자 앞 표시 (빈틈 · 약점 · 지침 · 반격 …) 는 BOSS_HINTS.marks 일 때만 — 가까이 » 는 그대로 (사용자 "빈틈, 약점 같은 것도 빼")
+        if (!mark.isEmpty() && !BossKit.hints("marks")) {
+            mark = "";
+            BossKit.hiddenHints++;
+        }
         feedback(h.target, h.p, amount, h.mark, mark + (h.close ? CLOSE_MARK : ""));
         if (left <= 0) {
             unitDied(enc, u, h.p);
@@ -1425,14 +1430,14 @@ public final class Bosses {
             BossKit.Arc arc = lobArc(from, new Vec3(spot.x, spot.y + 0.3, spot.z), t);
             SkillFx.fx(u.dim, L.shot(), from, Opt.of("dir", arc.dir(), "speed", arc.speed(), "size", L.size(), "life", t, "spin", random() * 360, "color", L.color(),
                     "alpha", 1.0));
-            showFaceText(p, "§e§l" + S.str("name") + "! §f발밑 원 밖으로", Opt.of("dist", 2.4, "up", 0.45));
+            BossKit.hintFace(p, "§e§l" + S.str("name") + "! §f발밑 원 밖으로", Opt.of("dist", 2.4, "up", 0.45));
             enc.farShots.add(new FarShot(u, spot, now + windup, S));
         }
         sound(u, L.sound(), from, 0.9, 1);
         if (!enc.farTold) {
             enc.farTold = true;
             double bonus = BOSS.obj("close").num("bonus");
-            say(enc, "§e[보스] " + S.str("name") + ": §f" + u.def.str("name") + "에게서 " + Js.str(F.num("from")) + "칸 넘게 떨어져 있으면 가장 먼 사람부터 발밑에 원이 뜨고 "
+            BossKit.hintSay(enc, "§e[보스] " + S.str("name") + ": §f" + u.def.str("name") + "에게서 " + Js.str(F.num("from")) + "칸 넘게 떨어져 있으면 가장 먼 사람부터 발밑에 원이 뜨고 "
                     + S.str("name") + "이(가) 날아옵니다 — 원 밖으로" + (bonus > 0 ? " §7(가까이 붙어 싸우면 준 피해 +" + Js.str(Js.round(bonus * 100)) + "%)" : ""));
         }
     }
@@ -1649,8 +1654,8 @@ public final class Bosses {
         if (close.num("bonus") > 0) {
             rules.add("§c근접 보너스: §f보스 몸 " + Js.str(close.num("range")) + "칸 안에서 준 피해 +" + Js.str(Js.round(close.num("bonus") * 100)) + "%");
         }
-        // v2.4.0: 밤에 다른 것을 던지는 보스 (스콜과 하티: far.night)
-        if (far != null) {
+        // v2.4.0: 밤에 다른 것을 던지는 보스 (스콜과 하티: far.night) — 0.34.0 패턴 안내라 BOSS_HINTS.notes 일 때만
+        if (far != null && BossKit.hints("notes")) {
             Obj night = far.objOrNull("night");
             rules.add("§e원거리 견제: §f" + Js.str(far.num("from")) + "칸 넘게 떨어지면 " + far.str("name") + (night != null ? " §7(밤: " + night.str("name") + ")" : ""));
         }
@@ -1659,7 +1664,8 @@ public final class Bosses {
         boolean transcend = "transcend".equals(def.strOrNull("tier"));
         List<Object> notesRaw = def.listOrNull("notes");
         String notes = "";
-        if (notesRaw != null && !notesRaw.isEmpty()) {
+        // 0.34.0: 깨는 법은 BOSS_HINTS.notes 일 때만 (사용자 "패턴을 알려주는 것을 없애고 여러 번의 리트라이를 겪어야 잡을 수 있게")
+        if (notesRaw != null && !notesRaw.isEmpty() && BossKit.hints("notes")) {
             List<String> ns = new ArrayList<>();
             for (Object o : notesRaw) ns.add(String.valueOf(o));
             notes = "\n\n§6§l패턴을 깨는 법§r\n" + String.join("\n", ns);

@@ -201,13 +201,17 @@ public final class RpgSurtrTests {
             FormNet.MenuPayload f = (FormNet.MenuPayload) Forms.last(sp);
             String t = f.text();
             h.assertTrue(f.title().contains("수르트에게 도전") && f.buttons().size() == 2, "title " + f.title());
-            for (String want : List.of("[초월 보스]", "무스펠헤임의 불의 거인", "Lv.50", "초월 장비를 갖춘 4명 파티", "패턴을 깨는 법", "반격", "무력화", "구조물", "부위 파괴", "고급 룬 뽑기권",
-                    "초월 장비 재료", "무스펠의 불꽃 심장", "레바테인 조각", "무스펠의 불덩이", "30분")) {
+            for (String want : List.of("[초월 보스]", "무스펠헤임의 불의 거인", "Lv.50", "초월 장비를 갖춘 4명 파티", "고급 룬 뽑기권",
+                    "초월 장비 재료", "무스펠의 불꽃 심장", "레바테인 조각", "30분")) {
                 h.assertTrue(t.contains(want), "challenge text has " + want + ": " + t);
+            }
+            // 0.34.0 패턴 안내 숨김 (BOSS_HINTS.notes): 깨는 법 · 원거리 견제 줄이 없음
+            for (String not : List.of("패턴을 깨는 법", "원거리 견제", "무력화", "부위 파괴", "무스펠의 불덩이")) {
+                h.assertTrue(!t.contains(not), "challenge text hides " + not + ": " + t);
             }
             Forms.answer(sp, 1, null);
             h.assertTrue(Bosses.encounterAt(a) == null, "cancel = no fight");
-            LOG.info("[surtr-test] OK module · core hit box 3x3.5 · gauge boss bar · challenge form ([초월 보스] · notes · rewards)");
+            LOG.info("[surtr-test] OK module · core hit box 3x3.5 · gauge boss bar · challenge form ([초월 보스] · rewards · no notes)");
         } finally {
             Forms.HEADLESS.remove(sp.getUUID());
             Arena.removeAltar(a);
@@ -354,8 +358,8 @@ public final class RpgSurtrTests {
                         float hp = b.getHealth();
                         h.assertTrue(hit(sp, b, 100F), "hit while groggy");
                         h.assertTrue(Math.abs((hp - b.getHealth()) - 150) < 1e-2, "groggy x1.5 " + (hp - b.getHealth()));
-                        String num = number(level, b, "빈틈");
-                        if (num == null) LOG.warn("[surtr-test] no damage number with 빈틈 (number cap?)");
+                        // 0.34.0: 숫자 앞 "빈틈" 표시는 숨김 (BOSS_HINTS.marks) — ×1.5 는 그대로
+                        h.assertTrue(number(level, b, "빈틈") == null, "no 빈틈 mark on the numbers (hidden)");
                         put(sp, a, crown.getX() - enc.center.x, crown.getZ() - enc.center.z + 6);
                         h.assertTrue(hit(sp, crown, 5000F), "crown core hit");
                         h.assertTrue(m.parts.get("crown").broken && crown.isRemoved(), "crown broken");
@@ -402,8 +406,8 @@ public final class RpgSurtrTests {
                     float hp2 = b.getHealth();
                     h.assertTrue(hit(sp, b, 100F), "melee during the counter bonus");
                     h.assertTrue(Math.abs((hp2 - b.getHealth()) - 125) < 1e-2, "x1.25 " + (hp2 - b.getHealth()));
-                    String num = number(level, b, "반격");
-                    if (num == null) LOG.warn("[surtr-test] no damage number with 반격 (number cap?)");
+                    // 0.34.0: 숫자 앞 "반격" 표시는 숨김 (BOSS_HINTS.marks) — ×1.25 는 그대로
+                    h.assertTrue(number(level, b, "반격") == null, "no 반격 mark on the numbers (hidden)");
                     // 겹치면 가장 큰 것 하나
                     long now = Tasks.now();
                     m.groggyUntil = now + 200;
@@ -669,9 +673,9 @@ public final class RpgSurtrTests {
                     h.assertTrue(board.size() == 3 && board.get(0).contains("[딜 순위]") && board.get(0).contains("수르트") && board.get(0).contains("1,600"), "board " + board);
                     h.assertTrue(board.get(1).contains("1. ") && board.get(1).contains("1,100") && board.get(1).contains("(69%)"), "first " + board.get(1));
                     h.assertTrue(board.get(2).contains("2. ") && board.get(2).contains("500") && board.get(2).contains("(31%)"), "second " + board.get(2));
+                    // 0.34.0: 처치 뒤 부위 파괴 · 반격 · 업화 · 속박 줄은 패턴 이름이 드러나 숨김 (BOSS_HINTS.chat) — 셈은 그대로
                     List<String> note = Bosses.module(KEY).killNote(enc);
-                    h.assertTrue(note.size() == 2 && note.get(0).equals("§6[부위 파괴] §f1/3 §7— 불꽃 왕관 (p2)"), "note " + note);
-                    h.assertTrue(note.get(1).equals("§7반격 2번 · 업화 막음 1/2 · 사슬 속박 1번"), "note " + note.get(1));
+                    h.assertTrue(note != null && note.isEmpty(), "no kill note (pattern names hidden) " + note);
                     int em = RpgGearTests.silver(p1);
                     int adv = RpgGearTests.countIn(p1, RuneItems.ADV_TICKET);
                     int tickets = RpgGearTests.countIn(p1, RuneItems.TICKET);

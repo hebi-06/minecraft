@@ -380,6 +380,8 @@ abstract class RpgDriveGallery implements FabricClientGameTest {
         boolean all = true;
         for (String w : formWords()) all &= body.contains(w);
         check(all, "challenge text " + formWords());
+        // 0.34.0 패턴 안내 숨김 (BOSS_HINTS.notes): 원거리 견제 줄 · 패턴을 깨는 법이 없음
+        check(!body.contains("원거리 견제") && !body.contains("패턴을 깨는 법"), "challenge text has no pattern hints (far shot line · notes)");
         shot(ctx, "form");
         click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(0));
         boolean summoning = server.computeOnServer(s -> enc() != null && "summon".equals(enc().state));

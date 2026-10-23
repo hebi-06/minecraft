@@ -350,7 +350,8 @@ public final class RpgBossGallery implements FabricClientGameTest {
         } else ok("pressing the altar opens the challenge form");
         ctx.waitTicks(3);
         String body = ctx.computeOnClient(mc -> mc.gui.screen() instanceof MenuFormScreen m ? m.form().text() : "");
-        check(body.contains("Lv.10") && body.contains("근접 보너스") && body.contains("불붙은 짚단") && body.contains("10분"), "challenge text (level · close bonus · far shot · cooldown)");
+        check(body.contains("Lv.10") && body.contains("근접 보너스") && !body.contains("원거리 견제") && body.contains("10분"),
+                "challenge text (level · close bonus · no far-shot hint (0.34.0) · cooldown)");
         shot(ctx, "bs_form");
         click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(0));
         boolean summoning = server.computeOnServer(s -> enc() != null && "summon".equals(enc().state));

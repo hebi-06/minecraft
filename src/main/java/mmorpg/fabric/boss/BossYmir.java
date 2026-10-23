@@ -18,7 +18,6 @@ import static mmorpg.fabric.boss.BossKit.play;
 import static mmorpg.fabric.boss.BossKit.random;
 import static mmorpg.fabric.boss.BossKit.rnd;
 import static mmorpg.fabric.boss.BossKit.say;
-import static mmorpg.fabric.boss.BossKit.showFaceText;
 import static mmorpg.fabric.boss.BossKit.snd;
 import static mmorpg.fabric.boss.BossKit.sound;
 import static mmorpg.fabric.boss.BossKit.title;
@@ -301,8 +300,15 @@ public final class BossYmir implements BossModule {
         return new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
+        M m = mem(u);
+        if (m == null || !m.told.add(id)) return;
+        BossKit.hintSay(u, text);
+    }
+
+    /** 0.34.0 2페이즈 알림 (패턴 안내를 숨겨도 늘 보임 — 사용자 "공허 각성 같은 2페이지는 냅두고"): explain 과 같이 싸움마다 한 번 */
+    static void announce(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
         say(u, text);
@@ -816,7 +822,7 @@ public final class BossYmir implements BossModule {
         m.body.want = angOf(lines.get(0).dir);
         u.api.anim(u, "spike");
         sound(u, snd(u, "swing"), bodyOf(u), 0.6, 1);
-        faceAll(u, "§b§l얼음 가시! §f파란 줄 밖으로", Opt.of("dist", 2.4, "up", 0.45), cand);
+        BossKit.hintFaceAll(u, "§b§l얼음 가시! §f파란 줄 밖으로", Opt.of("dist", 2.4, "up", 0.45), cand);
         explain(u, "spikes", "§b[보스] 얼음 가시: §f이미르가 몽둥이를 땅에 박으면 먼 사람들 쪽으로 파란 줄이 뻗고 가시가 차례로 솟습니다 — 줄 밖으로. §7맞으면 빙결 (얼음에 갇혀 못 움직이지만, 그동안 이미르의 다른 공격은 막아 줌)");
         List<Bosses.Step> steps = new ArrayList<>();
         steps.add(step(windup, (x, t) -> play(x.dim, "mace.smash_ground", bodyOf(x), 0.8, 1)));
@@ -878,7 +884,7 @@ public final class BossYmir implements BossModule {
         m.body.want = null;
         u.api.anim(u, "summon");
         sound(u, snd(u, "roar"), headAt(u), 1.2, 0.6);
-        faceAll(u, "§b§l고드름 비! §f발밑 원 밖으로", Opt.of("dist", 2.4, "up", 0.45), people);
+        BossKit.hintFaceAll(u, "§b§l고드름 비! §f발밑 원 밖으로", Opt.of("dist", 2.4, "up", 0.45), people);
         explain(u, "icicles", "§b[보스] 고드름 비: §f이미르가 두 팔을 들면 모두의 발밑과 곳곳에 파란 원이 뜨고 고드름이 떨어집니다 — 원 밖으로 §7(맞으면 느림)");
         int fall = windup - ICICLE_FALL_TICKS;
         u.api.cast(u, "icicles", windup + 8, step(fall, (x, t) -> icicleDrop(x, spots)), step(windup, (x, t) -> icicleHit(x, spots)));
@@ -941,7 +947,7 @@ public final class BossYmir implements BossModule {
             Vec3 r = rightOf(m.body.yaw);
             for (int s : new int[] {1, -1}) shatter(u.dim, new Vec3(b.x + r.x * s * 0.75, u.center.y + 1.2, b.z + r.z * s * 0.75), 1.2, ICE);
             play(u.dim, snd(u, "ice"), b, 0.7, 1);
-            faceAll(u, "§b§l균열 " + stage + "/3", Opt.of("dist", 2.4, "up", 0.6), targets(u));
+            faceAll(u, "§b§l" + stage + "/3", Opt.of("dist", 2.4, "up", 0.6), targets(u));
         }
     }
 
@@ -971,7 +977,7 @@ public final class BossYmir implements BossModule {
         play(u.dim, snd(u, "ice"), b, 0.6, 1);
         String secs = Js.str(Js.round(time / 20.0));
         String bonus = Js.str(Js.round(C.num("bonus") * 100));
-        title(u, "§b§l이미르가 무릎을 꿇었습니다!", "§f" + secs + "초 동안 받는 피해 §e+" + bonus + "% §7(빈틈)", targets(u));
+        BossKit.hintTitle(u, "§b§l이미르가 무릎을 꿇었습니다!", "§f" + secs + "초 동안 받는 피해 §e+" + bonus + "% §7(빈틈)", targets(u));
         explain(u, "kneel", "§b[보스] 균열: §f이미르의 얼음 다리를 가까이에서 때리면 금이 갑니다 (멀리서 때린 것은 " + Js.str(Js.round(C.num("far") * 100)) + "%만). §e금이 가득 차면 무릎을 꿇고 "
                 + secs + "초 동안 공격 없이 받는 피해 +" + bonus + "% §7(피해 숫자 앞 \"빈틈\")");
         u.api.cast(u, "kneel", time + 20, step(time, (x, t) -> rise(x)), step(time + 12, (x, t) -> mem(x).crack.stage = 0));
@@ -1056,7 +1062,7 @@ public final class BossYmir implements BossModule {
             SkillFx.fx(u.dim, "rpg:dust", new Vec3(p.getX(), p.getY() + 1, p.getZ()), Opt.of("size", 1.1, "life", 0.6, "color", EMBER, "alpha", 0.8));
             if (now - m.warmTold.getOrDefault(p.getUUID(), -1000L) >= 100) {
                 m.warmTold.put(p.getUUID(), now);
-                showFaceText(p, "§6따뜻함 §f— 느림이 풀렸습니다", Opt.of("dist", 2.2, "up", 0.1));
+                BossKit.hintFace(p, "§6따뜻함 §f— 느림이 풀렸습니다", Opt.of("dist", 2.2, "up", 0.1));
             }
         }
     }
@@ -1079,7 +1085,7 @@ public final class BossYmir implements BossModule {
             BossKit.teleport(p, at, new Vec3(c.x, c.y + 1.6, c.z));
             dust(u.dim, l, 1.6, FROST, 0.7);
             dust(u.dim, at, 1.6, FROST, 0.7);
-            showFaceText(p, "§b§l눈보라에 끌려 들어왔습니다", Opt.of("dist", 2.4, "up", 0.45));
+            BossKit.hintFace(p, "§b§l눈보라에 끌려 들어왔습니다", Opt.of("dist", 2.4, "up", 0.45));
         }
     }
 
@@ -1098,7 +1104,7 @@ public final class BossYmir implements BossModule {
         int leap = (int) B.num("leap");
         jump(u, c, leap, 4);
         sound(u, snd(u, "roar"), headAt(u), 0.8, 1);
-        title(u, "§b§l니플헤임의 숨결", "§f이미르가 숨을 들이쉽니다 §7— §6불이 켜진 모닥불 곁으로!", list);
+        BossKit.hintTitle(u, "§b§l니플헤임의 숨결", "§f이미르가 숨을 들이쉽니다 §7— §6불이 켜진 모닥불 곁으로!", list);
         int inhale = leap + 6;
         int windup = (int) B.num("windup");
         u.api.cast(u, "breath", inhale + windup + 30, step(leap, (x, t) -> breathLand(x)), step(inhale, (x, t) -> breathInhale(x)),
@@ -1157,7 +1163,7 @@ public final class BossYmir implements BossModule {
         }
         labelTick(u);
         explain(u, "breath", "§b[보스] 니플헤임의 숨결: §f이미르가 숨을 들이쉬는 " + Js.str(Js.round(B.num("windup") / 20)) + "초 안에 §6불이 켜진 무스펠헤임의 모닥불 곁(주황 원)§f으로 — 원 밖은 얼어붙어 즉사. §c불 하나에 싸우는 사람의 절반까지 §7(넘치면 불이 꺼져 곁의 사람도 모두 얼어붙음)");
-        say(u, "§b[보스] §f이번 숨결: 불 하나에 §e" + G.cap + "명§f까지" + (G.second ? " §7· §c이미르가 모닥불 둘을 꺼 버립니다!" : ""));
+        BossKit.hintSay(u, "§b[보스] §f이번 숨결: 불 하나에 §e" + G.cap + "명§f까지" + (G.second ? " §7· §c이미르가 모닥불 둘을 꺼 버립니다!" : ""));
     }
 
     /** 두 번째 숨결: 얼음 창이 닿은 모닥불이 꺼짐 (숨결이 끝나고 relight 틱 뒤 다시 켜짐) */
@@ -1175,7 +1181,7 @@ public final class BossYmir implements BossModule {
         labelTick(u);
     }
 
-    /** 모닥불 위 글자: 켜진 불 = 곁의 사람 수 / 자리, 넘치면 붉게, 꺼진 불 = 꺼짐 */
+    /** 모닥불 위 글자: 켜진 불 = 곁의 사람 수 / 자리, 넘치면 붉게, 꺼진 불 = 글자 없음 */
     static void labelTick(Bosses.Unit u) {
         Breath G = mem(u).breath;
         if (G == null) return;
@@ -1184,9 +1190,10 @@ public final class BossYmir implements BossModule {
             if (L.e == null || L.e.isRemoved()) continue;
             int n = nearFire(u, L.f, list).size();
             String text;
-            if (!L.f.lit) text = "§8꺼진 불";
-            else if (n > G.cap) text = "§c불씨 §f" + n + "§7/§f" + G.cap + " §4넘침!";
-            else text = "§6불씨 §f" + n + "§7/§f" + G.cap;
+            // 0.34.0 숫자만 (꺼진 불은 글자 없음 — "불씨" · "넘침!" · "꺼진 불" 글자는 패턴 안내라 뺌)
+            if (!L.f.lit) text = "";
+            else if (n > G.cap) text = "§c§l" + n + "§7/§c" + G.cap;
+            else text = "§6§l" + n + "§7/§6" + G.cap;
             if (text.equals(L.text)) continue;
             L.text = text;
             if (L.e instanceof BedrockMob b) b.setNameTag(text);
@@ -1251,7 +1258,7 @@ public final class BossYmir implements BossModule {
                 Fire f = fireOf(u, p);
                 int n = f != null ? nearFire(u, f, list).size() : 0;
                 long s = (long) Math.ceil(left / 20.0);
-                BossKit.notify(p, f == null ? "§b얼어붙습니다! §f불이 켜진 모닥불 곁(주황 원)으로 §7(" + s + "초)"
+                BossKit.hintNotify(p, f == null ? "§b얼어붙습니다! §f불이 켜진 모닥불 곁(주황 원)으로 §7(" + s + "초)"
                         : n > G.cap ? "§c불 하나에 " + G.cap + "명까지 §f— 다른 불로! §7(" + n + "명, " + s + "초)" : "§6모닥불 곁 §a— 안전 §7(" + n + "/" + G.cap + ", " + s + "초)", 15);
                 // 눈보라: 이미르 쪽으로 몰아치는 눈 (1초마다, 모바일 파티클 수)
                 if (now % 20 != 0) continue;
@@ -1270,7 +1277,7 @@ public final class BossYmir implements BossModule {
                         "alpha", 0.75));
             }
         }
-        if (left > 0 && left % 20 == 0 && left <= 60) faceAll(u, "§b§l숨결 " + (left / 20), Opt.of("dist", 2.4, "up", 0.45), list);
+        if (left > 0 && left % 20 == 0 && left <= 60) faceAll(u, "§b§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), list);
     }
 
     /** 내쉼: 켜진 모닥불 곁이 아니면 얼어붙음. 곁의 사람이 자리보다 많으면 그 불이 꺼지고 곁의 사람도 모두 얼어붙음 */
@@ -1309,11 +1316,11 @@ public final class BossYmir implements BossModule {
         for (ServerPlayer p : fighters(u)) SkillFx.shake(p, 0.4, 0.8);
         for (ServerPlayer p : list) {
             if (safe.contains(p.getUUID()) && !doomed.contains(p.getUUID())) {
-                showFaceText(p, "§6§l불씨가 지켜 주었습니다", Opt.of("dist", 2.4, "up", 0.45));
+                BossKit.hintFace(p, "§6§l불씨가 지켜 주었습니다", Opt.of("dist", 2.4, "up", 0.45));
                 continue;
             }
             encase(u, p, 20);
-            say(u, "§b[보스] §e" + p.getName().getString() + "§f님이 니플헤임의 숨결에 얼어붙었습니다" + (doomed.contains(p.getUUID()) ? " §7(한 불에 너무 많이 모임)" : ""));
+            BossKit.hintSay(u, "§b[보스] §e" + p.getName().getString() + "§f님이 니플헤임의 숨결에 얼어붙었습니다" + (doomed.contains(p.getUUID()) ? " §7(한 불에 너무 많이 모임)" : ""));
             Status.kill(p, u.boss);
         }
         // 글자 치우기, 꺼진 불은 relight 틱 뒤 다시 켜짐
@@ -1340,7 +1347,7 @@ public final class BossYmir implements BossModule {
         Vec3 b = bodyOf(u);
         SkillFx.fx(u.dim, "rpg:shock_ring", new Vec3(b.x, u.center.y + 0.1, b.z), Opt.of("dir", Vec3.ZERO, "size", 10.0, "life", 1.0, "color", FROST, "alpha", 0.95));
         title(u, "§b§l핌불베트르", "§f끝나지 않는 겨울 — 눈보라가 몰아칩니다", targets(u));
-        explain(u, "winter", "§b[보스] 핌불베트르: §f이미르가 끝나지 않는 겨울을 부릅니다. 눈보라 속에서 패턴이 빨라지고 얼음 가시 줄·고드름이 늘어납니다");
+        announce(u, "winter", "§b[보스] 핌불베트르: §f이미르가 끝나지 않는 겨울을 부릅니다. 눈보라 속에서 패턴이 빨라지고 얼음 가시 줄·고드름이 늘어납니다");
         u.api.cast(u, "winter", 40);
         m.next.put("spikes", Math.max(m.next.get("spikes"), now + 80));
         m.next.put("icicles", Math.max(m.next.get("icicles"), now + 140));
@@ -1389,7 +1396,7 @@ public final class BossYmir implements BossModule {
             if (paused) continue;
             if (!m.highSince.containsKey(id)) {
                 m.highSince.put(id, now);
-                showFaceText(p, "§b§l내려오세요! §f머물면 몽둥이로 칩니다", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§b§l내려오세요! §f머물면 몽둥이로 칩니다", Opt.of("dist", 2.2, "up", 0.35));
             }
             // 치는 것은 높은 곳을 디디고 있거나 그 위에서 뛰는 동안만 (내려가는 중은 아님)
             if (!up || now - m.highSince.get(id) < d.num("grace")) continue;
@@ -1404,7 +1411,7 @@ public final class BossYmir implements BossModule {
             play(u.dim, snd(u, "hit"), p.position(), 1.2, 0.8);
             // 때린 엔티티 없이 (게임의 밀어내기는 보스에게서 먼 쪽 = 벽 밖일 수 있음): 가운데 쪽으로만 끌어내림
             bossHit(u, p, d.num("damage"), Opt.of("knock", knock(dir.x * 1.1, dir.z * 1.1, 0.35), "noSource", true));
-            showFaceText(p, "§b§l얻어맞고 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
+            BossKit.hintFace(p, "§b§l얻어맞고 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
             explain(u, "high", "§b[보스] §f첨탑·성문 기둥 위처럼 높은 곳에 " + Js.toFixed(d.num("grace") / 20, 1) + "초 넘게 머물면 이미르가 몽둥이로 쳐서 떨어뜨립니다");
         }
         m.highSince.keySet().removeIf(id -> !seen.contains(id));

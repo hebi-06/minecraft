@@ -170,13 +170,12 @@ public final class RpgSkollTests {
             float hp1 = b.getHealth();
             h.assertTrue(RpgNidhoggTests.hit(west, b, 100F), "west hit lands");
             h.assertTrue(Math.abs(hp1 - b.getHealth() - 100) < 1e-3, "plain side took 100 " + (hp1 - b.getHealth()));
-            // 숫자 앞 표시: 옆구리 숫자 (130) 에만 노란 약점. 숫자는 서버 전체 상한 (동시에 도는 다른 시험의 숫자와 같이 셈) 등으로 뜨지 않을 수 있어
-            // 뜬 숫자만 봄 (보통은 없음, 드물게 옆구리 숫자만 빠진 적이 있음 — 2026-10-17 CI)
+            // 숫자 앞 표시: 0.34.0 부터 숨김 (BOSS_HINTS.marks — 사용자 "빈틈, 약점 같은 것도 빼"), 받는 피해 ×1.3 과 모듈의 표시 (r.mark) 는 그대로.
+            // 숫자는 서버 전체 상한 (동시에 도는 다른 시험의 숫자와 같이 셈) 등으로 뜨지 않을 수 있어 뜬 숫자만 봄 (2026-10-17 CI)
             List<String> nums = level.getEntitiesOfClass(Display.TextDisplay.class, b.getBoundingBox().inflate(6), d -> d.entityTags().contains(DamageNumbers.TAG))
                     .stream().map(d -> d.getText().getString()).toList();
             LOG.info("[skoll-test] damage numbers near the boss: {}", nums);
-            h.assertTrue(nums.stream().filter(t -> t.contains("130")).allMatch(t -> t.contains("약점"))
-                    && nums.stream().filter(t -> t.contains("100")).noneMatch(t -> t.contains("약점")), "weak mark only on the flank number " + nums);
+            h.assertTrue(nums.stream().noneMatch(t -> t.contains("약점")), "no weak mark on the numbers (hidden) " + nums);
             // 지침 (달빛 사냥이 끝난 뒤): ×1.25
             BossSkoll.mem(enc).windedUntil = Tasks.now() + 40;
             float hp2 = b.getHealth();
@@ -196,7 +195,7 @@ public final class RpgSkollTests {
             BossSkoll.startDusk(enc, Tasks.now());
             Bosses.Hurt r2 = enc.mod.hurt(enc, east, 100, null);
             h.assertTrue(Math.abs(r2.amount() - 100) < 1e-9 && r2.mark().isEmpty(), "dusk: no weak flank " + r2);
-            LOG.info("[skoll-test] OK weak flank x1.3 (약점) · winded x1.25 (지침) · both x1.625 · none at dusk");
+            LOG.info("[skoll-test] OK weak flank x1.3 (약점 — mark hidden on the number) · winded x1.25 (지침) · both x1.625 · none at dusk");
             RpgNidhoggTests.finish(h, level, a, hold, east, west, south);
         });
     }

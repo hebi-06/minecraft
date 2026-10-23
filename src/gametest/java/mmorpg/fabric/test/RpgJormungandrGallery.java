@@ -345,7 +345,8 @@ public final class RpgJormungandrGallery implements FabricClientGameTest {
         } else ok("pressing the altar opens the challenge form");
         ctx.waitTicks(3);
         String body = ctx.computeOnClient(mc -> mc.gui.screen() instanceof MenuFormScreen m ? m.form().text() : "");
-        check(body.contains("Lv.32") && body.contains("독 뱉기") && body.contains("15분") && !body.contains("보스 재료"), "challenge text (level · far shot · cooldown · no boss materials)");
+        check(body.contains("Lv.32") && !body.contains("원거리 견제") && body.contains("15분") && !body.contains("보스 재료"),
+                "challenge text (level · no far-shot hint (0.34.0) · cooldown · no boss materials)");
         shot(ctx, "jm_form");
         click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(0));
         boolean summoning = server.computeOnServer(s -> enc() != null && "summon".equals(enc().state));

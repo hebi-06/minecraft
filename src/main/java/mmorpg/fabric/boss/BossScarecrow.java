@@ -15,12 +15,10 @@ import static mmorpg.fabric.boss.BossKit.okTarget;
 import static mmorpg.fabric.boss.BossKit.play;
 import static mmorpg.fabric.boss.BossKit.random;
 import static mmorpg.fabric.boss.BossKit.rnd;
-import static mmorpg.fabric.boss.BossKit.say;
 import static mmorpg.fabric.boss.BossKit.showFaceText;
 import static mmorpg.fabric.boss.BossKit.shuffle;
 import static mmorpg.fabric.boss.BossKit.snd;
 import static mmorpg.fabric.boss.BossKit.sound;
-import static mmorpg.fabric.boss.BossKit.title;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -284,7 +282,7 @@ public final class BossScarecrow implements BossModule {
         if (tgt == null) return;
         api.anim(enc, "point");
         sound(enc, "mob.evocation_illager.prepare_attack", b, 0.8, 1);
-        showFaceText(tgt, "§6§l짚단 감옥이 노립니다!", Opt.of("dist", 2.2, "up", 0.3));
+        BossKit.hintFace(tgt, "§6§l짚단 감옥이 노립니다!", Opt.of("dist", 2.2, "up", 0.3));
         ServerPlayer target = tgt;
         int hold = (int) d.num("hold");
         // 노린 사람을 따라다니는 금빛 원 (피할 수 없는 기믹: 갇히면 동료가 부숨)
@@ -300,7 +298,7 @@ public final class BossScarecrow implements BossModule {
             Status.root(target, hold, "짚단 감옥");
             M m = mem(e);
             if (m != null) m.cage = new Cage(target, cage, Tasks.now() + hold);
-            say(e, "§6[보스] §e" + target.getName().getString() + "§f님이 짚단 감옥에 갇혔습니다! §7감옥을 부수면 풀려납니다 (" + Js.str(Js.round(hold / 20.0)) + "초)");
+            BossKit.hintSay(e, "§6[보스] §e" + target.getName().getString() + "§f님이 짚단 감옥에 갇혔습니다! §7감옥을 부수면 풀려납니다 (" + Js.str(Js.round(hold / 20.0)) + "초)");
             play(e.dim, "dig.grass", target.position(), 0.7, 1);
         }));
     }
@@ -317,7 +315,7 @@ public final class BossScarecrow implements BossModule {
         }
         if (hp <= 0) {
             // 부서짐: 풀려남
-            say(enc, "§a[보스] " + c.p.getName().getString() + "님이 짚단 감옥에서 풀려났습니다");
+            BossKit.hintSay(enc, "§a[보스] " + c.p.getName().getString() + "님이 짚단 감옥에서 풀려났습니다");
             SkillFx.fx(enc.dim, "rpg:bash_burst", new Vec3(c.p.getX(), c.p.getY() + 1, c.p.getZ()), Opt.of("dir", new Vec3(0, 0, 1), "size", 1.6, "life", 0.35, "color",
                     GOLD, "alpha", 0.9));
             endCage(enc, false);
@@ -325,7 +323,7 @@ public final class BossScarecrow implements BossModule {
         }
         long left = c.until - now;
         if (left > 0) {
-            if (left % 20 == 0) showFaceText(c.p, "§6감옥 §f" + (long) Math.ceil(left / 20.0), Opt.of("dist", 2.2, "up", -0.3));
+            if (left % 20 == 0) showFaceText(c.p, "§6§l" + (long) Math.ceil(left / 20.0), Opt.of("dist", 2.2, "up", -0.3));
             return;
         }
         // 시간 끝: 불타며 큰 피해
@@ -358,8 +356,8 @@ public final class BossScarecrow implements BossModule {
         api.hold(enc, true);
         api.anim(enc, "vanish");
         sound(enc, "mob.evocation_illager.prepare_summon", enc.boss.position(), 0.8, 1);
-        title(enc, "§6§l허수아비들 사이로!", "§e진짜는 어깨에 까마귀가 있습니다");
-        say(enc, "§6[보스] §f허수아비 킹이 숨었습니다! §e진짜(어깨에 까마귀)§f를 찾아 때리세요 §7(가짜를 때리면 침묵, " + Js.str(Js.round(time / 20.0))
+        BossKit.hintTitle(enc, "§6§l허수아비들 사이로!", "§e진짜는 어깨에 까마귀가 있습니다");
+        BossKit.hintSay(enc, "§6[보스] §f허수아비 킹이 숨었습니다! §e진짜(어깨에 까마귀)§f를 찾아 때리세요 §7(가짜를 때리면 침묵, " + Js.str(Js.round(time / 20.0))
                 + "초 안에 못 찾으면 수확의 밤)");
         M m = mem(enc);
         if (m != null) m.decoys = new Decoys(real, spots, now + 12 + time);
@@ -426,7 +424,7 @@ public final class BossScarecrow implements BossModule {
         M m = mem(enc);
         if (m != null) m.staggering = true;
         enc.api.anim(enc, "stagger");
-        say(enc, "§a[보스] §e" + p.getName().getString() + "§f님이 진짜를 찾았습니다! §7허수아비 킹이 비틀거립니다 (받는 피해 +" + Js.str(Js.round(d.num("staggerBonus") * 100))
+        BossKit.hintSay(enc, "§a[보스] §e" + p.getName().getString() + "§f님이 진짜를 찾았습니다! §7허수아비 킹이 비틀거립니다 (받는 피해 +" + Js.str(Js.round(d.num("staggerBonus") * 100))
                 + "%, " + Js.str(Js.round(d.num("stagger") / 20)) + "초)");
         sound(enc, "random.anvil_land", enc.boss.position(), 1.2, 0.8);
     }
@@ -437,7 +435,7 @@ public final class BossScarecrow implements BossModule {
         if (m == null || m.decoys == null) return;
         Obj d = enc.def.obj("decoys");
         clearDecoys(enc);
-        title(enc, "§4§l수확의 밤", "§7진짜를 찾지 못했습니다");
+        BossKit.hintTitle(enc, "§4§l수확의 밤", "§7진짜를 찾지 못했습니다");
         sound(enc, "mob.wither.spawn", enc.center, 1.2, 0.8);
         for (ServerPlayer p : fighters(enc)) {
             SkillFx.fx(enc.dim, "rpg:bash_burst", new Vec3(p.getX(), p.getY() + 1, p.getZ()), Opt.of("dir", new Vec3(0, 0, 1), "size", 1.4, "life", 0.35, "color", CROW,
@@ -460,7 +458,7 @@ public final class BossScarecrow implements BossModule {
         enc.api.dropProp(enc, prop);
         Status.silence(p, (int) d.num("silence"));
         bossHit(enc, p, d.num("wrongDamage"), Opt.of("cause", "magic"));
-        showFaceText(p, "§5§l가짜였습니다!", Opt.of("dist", 2.2, "up", 0.4));
+        BossKit.hintFace(p, "§5§l가짜였습니다!", Opt.of("dist", 2.2, "up", 0.4));
         play(enc.dim, "mob.witch.celebrate", p.position(), 0.8, 1);
     }
 
@@ -479,8 +477,8 @@ public final class BossScarecrow implements BossModule {
         sound(enc, snd(enc, "roar"), enc.center, 0.6, 1);
         List<ServerPlayer> warned = reapWarned(enc);
         String per = Js.str(d.num("perTotem"));
-        title(enc, "§4§l수확의 낫", "§e허수아비 토템 곁 금빛 원으로! §7(한 곳에 " + per + "명까지)", warned);
-        say(enc, "§4[보스] 수확의 낫! §f" + Js.str(Js.round(count / 20.0)) + "초 뒤 금빛 원 밖은 즉사합니다. §7토템 하나에 " + per + "명까지 — 넘치면 그 원도 즉사 (필드 밖으로 달아나도 닿음)",
+        BossKit.hintTitle(enc, "§4§l수확의 낫", "§e허수아비 토템 곁 금빛 원으로! §7(한 곳에 " + per + "명까지)", warned);
+        BossKit.hintSay(enc, "§4[보스] 수확의 낫! §f" + Js.str(Js.round(count / 20.0)) + "초 뒤 금빛 원 밖은 즉사합니다. §7토템 하나에 " + per + "명까지 — 넘치면 그 원도 즉사 (필드 밖으로 달아나도 닿음)",
                 warned);
         List<Bosses.Step> steps = new ArrayList<>();
         for (int t = 0; t < count; t += 10) {
@@ -550,7 +548,7 @@ public final class BossScarecrow implements BossModule {
             List<ServerPlayer> g = groups.get(i);
             if (g.size() > d.num("perTotem")) {
                 doomed.addAll(g);
-                say(enc, "§4[보스] 토템 " + (i + 1) + "에 " + g.size() + "명 — 제물이 넘쳤습니다");
+                BossKit.hintSay(enc, "§4[보스] 토템 " + (i + 1) + "에 " + g.size() + "명 — 제물이 넘쳤습니다");
             }
         }
         // 낫 한 바퀴
@@ -563,7 +561,7 @@ public final class BossScarecrow implements BossModule {
         }
         sound(enc, "mob.wither.break_block", enc.center, 0.7, 1);
         for (ServerPlayer p : doomed) {
-            showFaceText(p, "§4§l즉사", Opt.of("dist", 2.2, "up", 0.3));
+            BossKit.hintFace(p, "§4§l즉사", Opt.of("dist", 2.2, "up", 0.3));
             Status.kill(p, enc.boss);
         }
     }

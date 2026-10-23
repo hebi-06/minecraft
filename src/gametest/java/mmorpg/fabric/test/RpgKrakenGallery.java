@@ -355,8 +355,8 @@ public final class RpgKrakenGallery implements FabricClientGameTest {
         } else ok("pressing the altar opens the challenge form");
         ctx.waitTicks(3);
         String body = ctx.computeOnClient(mc -> mc.gui.screen() instanceof MenuFormScreen m ? m.form().text() : "");
-        check(body.contains("Lv.25") && body.contains("먹물 포탄") && body.contains("칠흑 먹물") && body.contains("심해의 눈") && body.contains("15분"),
-                "challenge text (level · far shot · boss materials · cooldown)");
+        check(body.contains("Lv.25") && !body.contains("원거리 견제") && body.contains("칠흑 먹물") && body.contains("심해의 눈") && body.contains("15분"),
+                "challenge text (level · no far-shot hint (0.34.0) · boss materials · cooldown)");
         shot(ctx, "kr_form");
         click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(0));
         boolean summoning = server.computeOnServer(s -> enc() != null && "summon".equals(enc().state));

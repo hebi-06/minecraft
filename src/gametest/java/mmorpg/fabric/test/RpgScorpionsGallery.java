@@ -369,7 +369,7 @@ public final class RpgScorpionsGallery implements FabricClientGameTest {
         ctx.waitTicks(3);
         String body = ctx.computeOnClient(mc -> mc.gui.screen() instanceof MenuFormScreen m ? m.form().text() : "");
         check(body.contains("Lv.18") && body.contains("함께 나옴") && body.contains("거대 사막 전갈") && body.contains("초거대 바위 전갈") && body.contains("모두 쓰러뜨려야 보상")
-                && body.contains("바위 조각") && body.contains("15분"), "challenge text (level · both units · far shot · cooldown)");
+                && !body.contains("원거리 견제") && body.contains("15분"), "challenge text (level · both units · no far-shot hint (0.34.0) · cooldown)");
         shot(ctx, "sc_form");
         click(ctx, conn, sc -> ((MenuFormScreen) sc).buttonCenter(0));
         boolean summoning = server.computeOnServer(s -> enc() != null && "summon".equals(enc().state) && enc().units.size() == 2);

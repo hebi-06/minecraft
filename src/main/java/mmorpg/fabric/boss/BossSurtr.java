@@ -16,7 +16,6 @@ import static mmorpg.fabric.boss.BossKit.play;
 import static mmorpg.fabric.boss.BossKit.random;
 import static mmorpg.fabric.boss.BossKit.rnd;
 import static mmorpg.fabric.boss.BossKit.say;
-import static mmorpg.fabric.boss.BossKit.showFaceText;
 import static mmorpg.fabric.boss.BossKit.snd;
 import static mmorpg.fabric.boss.BossKit.sound;
 import static mmorpg.fabric.boss.BossKit.title;
@@ -430,8 +429,15 @@ public final class BossSurtr implements BossModule {
         return new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
     }
 
-    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번) */
+    /** 처음 나오는 패턴은 채팅으로 규칙을 알림 (싸움마다 한 번 — 0.34.0 BOSS_HINTS.chat 일 때만 보냄, 알렸다는 표시 told 는 늘 남김) */
     static void explain(Bosses.Unit u, String id, String text) {
+        M m = mem(u);
+        if (m == null || !m.told.add(id)) return;
+        BossKit.hintSay(u, text);
+    }
+
+    /** 0.34.0 2페이즈 알림 (패턴 안내를 숨겨도 늘 보임 — 사용자 "공허 각성 같은 2페이지는 냅두고"): explain 과 같이 싸움마다 한 번 */
+    static void announce(Bosses.Unit u, String id, String text) {
         M m = mem(u);
         if (m == null || !m.told.add(id)) return;
         say(u, text);
@@ -935,8 +941,8 @@ public final class BossSurtr implements BossModule {
         shakeNear(u, at, 30, 0.35, 0.6);
         // 레바테인이 부서지면 불길이 꺼짐
         if (kind.equals("sword")) m.trails = new ArrayList<>();
-        title(u, "§6§l부위 파괴!", "§f" + PART_NAMES.get(kind) + " §7— " + PART_EFFECT.get(kind), fighters(u));
-        say(u, "§6[보스] §e" + (p != null ? p.getName().getString() : "누군가") + "§f님이 " + PART_NAMES.get(kind) + "을(를) 부쉈습니다! §7(" + PART_EFFECT.get(kind) + " · 보상 재료 더)");
+        BossKit.hintTitle(u, "§6§l부위 파괴!", "§f" + PART_NAMES.get(kind) + " §7— " + PART_EFFECT.get(kind), fighters(u));
+        BossKit.hintSay(u, "§6[보스] §e" + (p != null ? p.getName().getString() : "누군가") + "§f님이 " + PART_NAMES.get(kind) + "을(를) 부쉈습니다! §7(" + PART_EFFECT.get(kind) + " · 보상 재료 더)");
     }
 
     // ------------------------------------------------------------ 받는 피해가 늘어난 때 (빈틈 · 속박 · 반격)
@@ -975,7 +981,7 @@ public final class BossSurtr implements BossModule {
         if (show != null) show.run();
         play(u.dim, snd(u, "parry"), at, 0.8, 1);
         play(u.dim, "random.anvil_use", at, 1.6, 0.6);
-        faceAll(u, "§e§l반격! §f스킬·룬으로 수르트를", Opt.of("dist", 2.4, "up", 0.55), fighters(u));
+        BossKit.hintFaceAll(u, "§e§l반격! §f스킬·룬으로 수르트를", Opt.of("dist", 2.4, "up", 0.55), fighters(u));
     }
 
     /** 반격 성공: 하던 패턴을 끊고 비틀거림, time 틱 동안 받는 피해 +bonus */
@@ -999,8 +1005,8 @@ public final class BossSurtr implements BossModule {
         play(u.dim, snd(u, "counter"), at, 0.6, 1);
         play(u.dim, snd(u, "parry"), at, 1.2, 1);
         shakeNear(u, at, 30, 0.3, 0.5);
-        showFaceText(p, "§6§l반격 성공!", Opt.of("dist", 2.4, "up", 0.6));
-        title(u, "§6§l반격!", "§e" + p.getName().getString() + "§f님이 " + (kind.equals("thrust") ? "찌르기" : "횡베기") + "를 받아쳤습니다 §7— " + Js.str(Js.round(C.num("time") / 20))
+        BossKit.hintFace(p, "§6§l반격 성공!", Opt.of("dist", 2.4, "up", 0.6));
+        BossKit.hintTitle(u, "§6§l반격!", "§e" + p.getName().getString() + "§f님이 " + (kind.equals("thrust") ? "찌르기" : "횡베기") + "를 받아쳤습니다 §7— " + Js.str(Js.round(C.num("time") / 20))
                 + "초 동안 받는 피해 +" + Js.str(Js.round(C.num("bonus") * 100)) + "%", fighters(u));
     }
 
@@ -1181,7 +1187,7 @@ public final class BossSurtr implements BossModule {
         dust(u.dim, floorAt(u, c.at.x, c.at.z), 5, new double[] {0.6, 0.6, 0.65}, 1.0);
         play(u.dim, snd(u, "chain"), c.at, 0.6, 1);
         play(u.dim, "random.anvil_land", c.at, 0.5, 0.8);
-        title(u, "§b§l사슬이 레바테인을 붙잡았습니다!", "§f" + Js.str(Js.round(time / 20.0)) + "초 동안 받는 피해 §e+" + Js.str(Js.round(B.num("bonus") * 100)) + "% §7· 레바테인의 핵",
+        BossKit.hintTitle(u, "§b§l사슬이 레바테인을 붙잡았습니다!", "§f" + Js.str(Js.round(time / 20.0)) + "초 동안 받는 피해 §e+" + Js.str(Js.round(B.num("bonus") * 100)) + "% §7· 레바테인의 핵",
                 fighters(u));
         // 칼의 핵: 기둥 바로 앞 (수르트 쪽, 기둥에 묻히지 않게 칼날을 따라 어깨 쪽으로 당김)
         double from = cfg(u, "melee").num("from");
@@ -1414,7 +1420,7 @@ public final class BossSurtr implements BossModule {
         m.body.want = null;
         u.api.anim(u, "summon");
         sound(u, snd(u, "charge"), headAt(u), 0.7, 1);
-        faceAll(u, "§6§l무스펠의 불비! §f발밑 원 밖으로", Opt.of("dist", 2.4, "up", 0.45), people);
+        BossKit.hintFaceAll(u, "§6§l무스펠의 불비! §f발밑 원 밖으로", Opt.of("dist", 2.4, "up", 0.45), people);
         explain(u, "meteors", "§6[보스] 무스펠의 불비: §f수르트가 왼손을 들면 모두의 발밑과 곳곳에 붉은 원 — 메테오가 떨어지기 전에 원 밖으로 §7(왼 건틀릿을 부수면 곳곳의 원이 없어짐)");
         u.api.cast(u, "meteors", windup + 12 + GAP, step(windup - (long) d.num("fall"), (x, n) -> meteorFly(x, spots)), step(windup, (x, n) -> meteorHit(x, spots)));
         return true;
@@ -1503,7 +1509,7 @@ public final class BossSurtr implements BossModule {
                 if (r < prev - 0.3 || r > front + 0.3) continue;
                 g.hit.add(p.getUUID());
                 if (!p.onGround()) {
-                    showFaceText(p, "§a뛰어넘음!", Opt.of("dist", 2.2, "up", 0.2));
+                    BossKit.hintFace(p, "§a뛰어넘음!", Opt.of("dist", 2.2, "up", 0.2));
                     continue;
                 }
                 if (bossHit(u, p, d.num("damage"), Opt.of("noSource", true))) burn(p, d.num("burn"));
@@ -1585,11 +1591,11 @@ public final class BossSurtr implements BossModule {
         hold(u, "channel");
         sound(u, snd(u, "charge"), headAt(u), 0.5, 1);
         play(u.dim, snd(u, "roar"), headAt(u), 0.6, 1);
-        title(u, "§6§l무스펠의 업화", "§f업화가 모이기 전에 §e피해로 업화 막대§f를 깎으세요! §7(" + Js.str(Js.round(time / 20.0)) + "초)", list);
+        BossKit.hintTitle(u, "§6§l무스펠의 업화", "§f업화가 모이기 전에 §e피해로 업화 막대§f를 깎으세요! §7(" + Js.str(Js.round(time / 20.0)) + "초)", list);
         explain(u, "inferno", "§6[보스] 무스펠의 업화 (무력화): §f수르트가 칼을 하늘로 들고 업화를 모읍니다. §e업화 막대를 " + Js.str(Js.round(time / 20.0)) + "초 안에 피해로 다 깎으면 쓰러져 "
                 + Js.str(Js.round(I.num("groggy") / 20)) + "초 동안 받는 피해 +" + Js.str(Js.round(I.num("bonus") * 100))
                 + "% (빈틈), 불꽃 왕관의 핵이 드러납니다. §c못 깎으면 업화 폭발 §7(모두 큰 피해, 수르트 회복)");
-        say(u, "§6[보스] §f이번 업화: §e" + Js.str(need) + "§f 피해 §7(싸우는 사람 " + n + "명" + (broken(m, "crown") ? " · 불꽃 왕관이 부서져 쉬움" : "") + ")");
+        BossKit.hintSay(u, "§6[보스] §f이번 업화: §e" + Js.str(need) + "§f 피해 §7(싸우는 사람 " + n + "명" + (broken(m, "crown") ? " · 불꽃 왕관이 부서져 쉬움" : "") + ")");
         u.api.cast(u, "inferno", time + 10, step(time, (x, t) -> infernoFail(x)));
     }
 
@@ -1635,10 +1641,10 @@ public final class BossSurtr implements BossModule {
         if (now % 10 == 0) {
             long pct = (long) Math.max(0, Math.ceil((G.left / G.need) * 100));
             for (ServerPlayer p : fighters(u)) {
-                BossKit.notify(p, "§6업화 §f" + pct + "% 남음 §7— 수르트를 때려 깎으세요 §8(" + (long) Math.ceil(left / 20.0) + "초)", 15);
+                BossKit.hintNotify(p, "§6업화 §f" + pct + "% 남음 §7— 수르트를 때려 깎으세요 §8(" + (long) Math.ceil(left / 20.0) + "초)", 15);
             }
         }
-        if (left > 0 && left % 20 == 0 && left <= 60) faceAll(u, "§6§l업화 " + (left / 20), Opt.of("dist", 2.4, "up", 0.45), fighters(u));
+        if (left > 0 && left % 20 == 0 && left <= 60) faceAll(u, "§6§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), fighters(u));
         // 몸 둘레로 불꽃이 모임
         if (now % 4 == 0) {
             Vec3 b = bodyOf(u);
@@ -1690,9 +1696,9 @@ public final class BossSurtr implements BossModule {
         landFx(u, floorAt(u, b.x + f.x * 8, b.z + f.z * 8), 12);
         play(u.dim, "random.anvil_land", b, 0.4, 1);
         play(u.dim, snd(u, "roar"), headAt(u), 0.5, 1);
-        title(u, "§6§l수르트가 쓰러졌습니다!", "§f" + Js.str(Js.round(groggy / 20.0)) + "초 동안 받는 피해 §e+" + Js.str(Js.round(I.num("bonus") * 100)) + "% §7(빈틈)"
+        BossKit.hintTitle(u, "§6§l수르트가 쓰러졌습니다!", "§f" + Js.str(Js.round(groggy / 20.0)) + "초 동안 받는 피해 §e+" + Js.str(Js.round(I.num("bonus") * 100)) + "% §7(빈틈)"
                 + (broken(m, "crown") ? "" : " · 불꽃 왕관의 핵"), fighters(u));
-        say(u, "§6[보스] §f업화를 막았습니다! 수르트가 쓰러졌습니다");
+        BossKit.hintSay(u, "§6[보스] §f업화를 막았습니다! 수르트가 쓰러졌습니다");
         expose(u, "crown", new Vec3(b.x + f.x * CROWN_AT, u.center.y, b.z + f.z * CROWN_AT), groggy, null);
         u.api.cast(u, "groggy", groggy + 24 + GAP, step(groggy, (x, n) -> rise(x)));
         m.bigUntil = Math.max(m.bigUntil, now + groggy + 100);
@@ -1730,7 +1736,7 @@ public final class BossSurtr implements BossModule {
         }
         play(u.dim, snd(u, "erupt"), b, 0.5, 1);
         play(u.dim, snd(u, "roar"), headAt(u), 0.7, 1);
-        title(u, "§c§l무스펠의 업화 폭발!", "§f업화를 막지 못했습니다 §7— 수르트가 체력을 " + Js.str(Js.round(I.num("heal") * 100)) + "% 되찾았습니다", fighters(u));
+        BossKit.hintTitle(u, "§c§l무스펠의 업화 폭발!", "§f업화를 막지 못했습니다 §7— 수르트가 체력을 " + Js.str(Js.round(I.num("heal") * 100)) + "% 되찾았습니다", fighters(u));
         m.bigUntil = Math.max(m.bigUntil, Tasks.now() + 120);
     }
 
@@ -1773,7 +1779,7 @@ public final class BossSurtr implements BossModule {
             float[] rot = Kit.lookRotation(new Vec3(at.x, at.y + 1.62, at.z), new Vec3(c.x, c.y + 1.6, c.z));
             if (!p.teleportTo(u.dim, at.x, at.y, at.z, Set.of(), rot[0], rot[1], false)) continue;
             p.setYHeadRot(rot[0]);
-            showFaceText(p, "§c§l불길에 끌려 들어왔습니다", Opt.of("dist", 2.4, "up", 0.45));
+            BossKit.hintFace(p, "§c§l불길에 끌려 들어왔습니다", Opt.of("dist", 2.4, "up", 0.45));
         }
     }
 
@@ -1811,7 +1817,7 @@ public final class BossSurtr implements BossModule {
         int windup = (int) G.num("windup");
         jump(u, spot, leap, 10);
         sound(u, snd(u, "roar"), headAt(u), 0.6, 1);
-        title(u, "§4§l라그나로크", "§f세계를 태우는 불길이 옵니다 §7— §b얼음 결정 뒤로!", list);
+        BossKit.hintTitle(u, "§4§l라그나로크", "§f세계를 태우는 불길이 옵니다 §7— §b얼음 결정 뒤로!", list);
         int raise = leap + 6;
         u.api.cast(u, "ragnarok", raise + windup + 90 + GAP, step(leap, (x, n) -> ragLand(x)), step(raise, (x, n) -> ragRaise(x)), step(raise + windup, (x, n) -> ragRelease(x)));
     }
@@ -1862,7 +1868,7 @@ public final class BossSurtr implements BossModule {
         if (R.second && !R.melted.isEmpty()) {
             int left = 0;
             for (Struct c : m.crystals) if (c.intact) left++;
-            say(u, "§4[보스] §f수르트가 얼음 결정 " + R.melted.size() + "개를 녹여 버립니다! §7(남은 결정 " + left + "개)");
+            BossKit.hintSay(u, "§4[보스] §f수르트가 얼음 결정 " + R.melted.size() + "개를 녹여 버립니다! §7(남은 결정 " + left + "개)");
         }
     }
 
@@ -1926,11 +1932,11 @@ public final class BossSurtr implements BossModule {
             if (now % 10 == 0) {
                 for (ServerPlayer p : list) {
                     long s = (long) Math.ceil(left / 20.0);
-                    BossKit.notify(p, shadowOf(u, p.position(), from) != null ? "§b얼음 결정 그림자 안 §a— 안전 §7(" + s + "초)" : "§c불길이 옵니다! §f수르트 반대쪽 얼음 결정 뒤로 §7(" + s + "초)",
+                    BossKit.hintNotify(p, shadowOf(u, p.position(), from) != null ? "§b얼음 결정 그림자 안 §a— 안전 §7(" + s + "초)" : "§c불길이 옵니다! §f수르트 반대쪽 얼음 결정 뒤로 §7(" + s + "초)",
                             15);
                 }
             }
-            if (left > 0 && left % 20 == 0 && left <= 60) faceAll(u, "§4§l라그나로크 " + (left / 20), Opt.of("dist", 2.4, "up", 0.45), list);
+            if (left > 0 && left % 20 == 0 && left <= 60) faceAll(u, "§4§l" + (left / 20), Opt.of("dist", 2.4, "up", 0.45), list);
             if (now % 20 == 0) {
                 for (ServerPlayer p : list) {
                     SkillFx.fx(u.dim, "rpg:ember", new Vec3(p.getX(), p.getY() + 4, p.getZ()), Opt.of("size", 6.0, "life", 1.0, "speed", 2.0, "color", EMBER, "alpha", 0.8));
@@ -2003,7 +2009,7 @@ public final class BossSurtr implements BossModule {
             if (c != null) {
                 c.used = true;
                 R.saved++;
-                showFaceText(p, "§b§l얼음 결정이 막아 주었습니다", Opt.of("dist", 2.4, "up", 0.45));
+                BossKit.hintFace(p, "§b§l얼음 결정이 막아 주었습니다", Opt.of("dist", 2.4, "up", 0.45));
                 SkillFx.fx(u.dim, "rpg:splash", new Vec3(c.at.x, c.at.y + 3, c.at.z), Opt.of("size", 3.0, "life", 0.6, "color", ICE, "alpha", 0.95));
                 continue;
             }
@@ -2011,10 +2017,10 @@ public final class BossSurtr implements BossModule {
             flame(u.dim, p.position(), 3.5, 0.8, LAVA);
             if (broken(m, "sword")) {
                 if (bossHit(u, p, G.num("brokenDamage"), Opt.of("noSource", true, "cause", "magic"))) burn(p, 4);
-                showFaceText(p, "§c§l불길에 휩쓸렸습니다 §7(레바테인이 부서져 버팀)", Opt.of("dist", 2.4, "up", 0.45));
+                BossKit.hintFace(p, "§c§l불길에 휩쓸렸습니다 §7(레바테인이 부서져 버팀)", Opt.of("dist", 2.4, "up", 0.45));
                 continue;
             }
-            say(u, "§4[보스] §e" + p.getName().getString() + "§f님이 세계를 태우는 불길에 휩쓸렸습니다");
+            BossKit.hintSay(u, "§4[보스] §e" + p.getName().getString() + "§f님이 세계를 태우는 불길에 휩쓸렸습니다");
             Status.kill(p, u.boss);
         }
         if (!done) return;
@@ -2031,7 +2037,7 @@ public final class BossSurtr implements BossModule {
         for (String k : List.of("sweep", "thrust", "meteors", "rings")) m.next.put(k, Math.max(m.next.getOrDefault(k, 0L), now + 60));
         int left = 0;
         for (Struct c : m.crystals) if (c.intact) left++;
-        say(u, "§4[보스] §f라그나로크가 지나갔습니다 §7(남은 얼음 결정 " + left + "개)");
+        BossKit.hintSay(u, "§4[보스] §f라그나로크가 지나갔습니다 §7(남은 얼음 결정 " + left + "개)");
     }
 
     // ------------------------------------------------------------ 신전 구조물 (얼음 결정 · 사슬 기둥: 싸움 중 녹고 부서짐 → 끝나면 되돌림)
@@ -2160,7 +2166,7 @@ public final class BossSurtr implements BossModule {
         SkillFx.fx(u.dim, "rpg:shock_ring", new Vec3(b.x, u.center.y + 0.1, b.z), Opt.of("dir", Vec3.ZERO, "size", 18.0, "life", 1.0, "color", FIRE, "alpha", 0.95));
         SkillFx.fx(u.dim, "rpg:fire_wave", new Vec3(b.x, u.center.y, b.z), Opt.of("speed", 24.0, "size", 1.6, "life", 0.9, "color", LAVA, "alpha", 0.9));
         title(u, "§c§l세계를 태우는 불꽃", "§f수르트의 불길이 거세집니다 — 패턴이 빨라지고 아파집니다", fighters(u));
-        explain(u, "enrage", "§c[보스] 세계를 태우는 불꽃: §f체력 " + Js.str(Js.round(E.num("from") * 100)) + "% 아래에서 수르트의 재사용 대기가 ×" + Js.str(E.num("cd")) + ", 주는 피해가 ×"
+        announce(u, "enrage", "§c[보스] 세계를 태우는 불꽃: §f체력 " + Js.str(Js.round(E.num("from") * 100)) + "% 아래에서 수르트의 재사용 대기가 ×" + Js.str(E.num("cd")) + ", 주는 피해가 ×"
                 + Js.str(E.num("dmg")));
         u.api.cast(u, "enrage", 50);
         m.next.put("meteors", Math.max(m.next.getOrDefault("meteors", 0L), now + 80));
@@ -2187,7 +2193,7 @@ public final class BossSurtr implements BossModule {
             if (paused) continue;
             if (!m.highSince.containsKey(id)) {
                 m.highSince.put(id, now);
-                showFaceText(p, "§c§l내려오세요! §f머물면 불기둥이 솟습니다", Opt.of("dist", 2.2, "up", 0.35));
+                BossKit.hintFace(p, "§c§l내려오세요! §f머물면 불기둥이 솟습니다", Opt.of("dist", 2.2, "up", 0.35));
             }
             if (!up || now - m.highSince.get(id) < d.num("grace")) continue;
             if (now - m.high.getOrDefault(id, -1000L) < d.num("cd")) continue;
@@ -2197,7 +2203,7 @@ public final class BossSurtr implements BossModule {
             SkillFx.fx(u.dim, "rpg:bash_burst", new Vec3(p.getX(), p.getY() + 1, p.getZ()), Opt.of("dir", Z_AXIS, "size", 2.4, "life", 0.4, "color", FIRE, "alpha", 0.95));
             play(u.dim, snd(u, "erupt"), p.position(), 1.2, 0.8);
             if (bossHit(u, p, d.num("damage"), Opt.of("knock", knock(dir.x * 1.1, dir.z * 1.1, 0.35), "noSource", true))) burn(p, 2);
-            showFaceText(p, "§c§l불기둥에 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
+            BossKit.hintFace(p, "§c§l불기둥에 떨어집니다", Opt.of("dist", 2.2, "up", 0.35));
             explain(u, "high", "§6[보스] §f결정·기둥·담장 위처럼 높은 곳에 " + Js.toFixed(d.num("grace") / 20, 1) + "초 넘게 머물면 발밑에서 불기둥이 솟습니다");
         }
         m.highSince.keySet().removeIf(id -> !seen.contains(id));
@@ -2263,7 +2269,7 @@ public final class BossSurtr implements BossModule {
             x.immune = false;
             release(x, "rest");
             List<Object> notes = x.def.listOrNull("notes");
-            say(x, "§c[초월 보스] §f" + x.def.str("name") + ": §7" + (notes != null && !notes.isEmpty() ? "패턴을 깨는 법 — 반격 · 무력화 · 신전 구조물 · 부위 파괴 (도전 창에 정리)" : ""));
+            BossKit.hintSay(x, "§c[초월 보스] §f" + x.def.str("name") + ": §7" + (notes != null && !notes.isEmpty() ? "패턴을 깨는 법 — 반격 · 무력화 · 신전 구조물 · 부위 파괴 (도전 창에 정리)" : ""));
         }));
         enc.api.cast(enc, "arrive", rise + roar + 2, steps);
     }
@@ -2343,11 +2349,11 @@ public final class BossSurtr implements BossModule {
         return out;
     }
 
-    /** 처치 뒤 남기는 줄: 부위 파괴 · 반격 · 업화 · 속박 */
+    /** 처치 뒤 남기는 줄: 부위 파괴 · 반격 · 업화 · 속박 (0.34.0 패턴 이름이 드러나 BOSS_HINTS.chat 일 때만) */
     @Override
     public List<String> killNote(Bosses.Enc enc) {
         M m = mem(enc);
-        if (m == null) return List.of();
+        if (m == null || !BossKit.hints("chat")) return List.of();
         List<String> names = new ArrayList<>();
         for (String k : PART_ORDER) {
             Limb P = part(m, k);

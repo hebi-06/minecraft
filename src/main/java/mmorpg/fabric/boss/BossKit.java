@@ -367,6 +367,60 @@ public final class BossKit {
         if (p != null && !p.isRemoved()) Notify.notify(p, text, hold);
     }
 
+    // ------------------------------------------------------------ 0.34.0 패턴 안내 글자 (설정 BOSS_HINTS)
+    // 사용자: "패턴을 알려주는 채팅이나 타이틀 같은 거를 없애고 카운트만 텍스트로 — 여러 번 리트라이를 겪어야 잡을 수 있게",
+    // "빈틈, 약점 같은 것도 빼고, 공허 각성 같은 2페이즈는 놔두고".
+    // 보스 모듈의 패턴 설명 · 상황 채팅 · 패턴 이름 타이틀 · 눈앞 안내 글자 · 화면 아래 안내는 아래 hint* 로만 보냄 (설정이 false 면 보내지 않음).
+    // 카운트 (숫자만) · 보스 이름 · 소환 · 2페이즈 알림 · 처치 · 보상 알림 · 피해 숫자 · 상태 이상 표시는 늘 보임 (say · title · showFaceText · faceAll · notify 를 그대로 씀).
+    // 피해 숫자 앞 표시 (빈틈 · 약점 · 지침 · 반격 …) 는 엔진 (Bosses.processHit) 이 BOSS_HINTS.marks 일 때만 붙임 (가까이 » 는 그대로).
+
+    /** 숨긴 안내 수 (시험 — 패턴이 안내를 보내려 했는지) */
+    public static int hiddenHints;
+
+    /** 그 종류의 패턴 안내를 보일지: BOSS_HINTS.chat (채팅 · 화면 아래 안내) · title (타이틀) · face (눈앞 글자) · notes (도전 창의 패턴을 깨는 법 · 원거리 견제 줄) · marks (피해 숫자 앞 빈틈 · 약점 …) */
+    public static boolean hints(String kind) {
+        Obj h = mmorpg.core.Rules.get().root().objOrNull("BOSS_HINTS");
+        return h != null && h.truthy(kind);
+    }
+
+    private static boolean hint(String kind) {
+        if (hints(kind)) return true;
+        hiddenHints++;
+        return false;
+    }
+
+    /** 패턴 안내 채팅 (설정 BOSS_HINTS.chat 일 때만) */
+    public static void hintSay(Bosses.Unit enc, String text, List<ServerPlayer> list) {
+        if (hint("chat")) say(enc, text, list);
+    }
+
+    public static void hintSay(Bosses.Unit enc, String text) {
+        hintSay(enc, text, null);
+    }
+
+    /** 패턴 · 페이즈 이름 타이틀 (BOSS_HINTS.title 일 때만) */
+    public static void hintTitle(Bosses.Unit enc, String big, String small, List<ServerPlayer> list) {
+        if (hint("title")) title(enc, big, small, list);
+    }
+
+    public static void hintTitle(Bosses.Unit enc, String big, String small) {
+        hintTitle(enc, big, small, null);
+    }
+
+    /** 눈앞 안내 글자 (피하는 법 · 안전 · 맞았음 — BOSS_HINTS.face 일 때만) */
+    public static void hintFace(ServerPlayer p, String text, Opt o) {
+        if (hint("face")) showFaceText(p, text, o);
+    }
+
+    public static void hintFaceAll(Bosses.Unit enc, String text, Opt o, List<ServerPlayer> list) {
+        if (hint("face")) faceAll(enc, text, o, list);
+    }
+
+    /** 화면 아래 패턴 안내 (BOSS_HINTS.chat 일 때만) */
+    public static void hintNotify(ServerPlayer p, String text, int hold) {
+        if (hint("chat")) notify(p, text, hold);
+    }
+
     /** 그 마리 (없으면 가운데) 에서 소리 (at 이 null 이면 보스 자리) */
     public static void sound(Bosses.Unit enc, String id, Vec3 at, double pitch, double volume) {
         if (id == null) return;

@@ -19,6 +19,7 @@ import mmorpg.fabric.mob.MobData;
 import mmorpg.fabric.npc.NpcData;
 import mmorpg.fabric.rune.RuneItems;
 import mmorpg.fabric.skill.Kit;
+import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.ui.FormNet;
 import mmorpg.fabric.ui.Forms;
@@ -155,7 +156,7 @@ public final class RpgBossTests {
         put(sp, a, 0, 8);
         Arena.onAltarUse.accept(sp, a);
         h.assertTrue(Forms.last(sp) instanceof FormNet.MenuPayload m && m.title().contains("허수아비 킹에게 도전") && m.buttons().size() == 2
-                && m.text().contains("근접 보너스") && m.text().contains("불붙은 짚단"), "challenge form " + Forms.last(sp));
+                && m.text().contains("근접 보너스") && !m.text().contains("원거리 견제") && !m.text().contains("불붙은 짚단"), "challenge form (0.34.0 no far-shot hint) " + Forms.last(sp));
         Forms.answer(sp, 0, null);
         Bosses.Enc enc = Bosses.encounterAt(a);
         h.assertTrue(enc != null && "summon".equals(enc.state) && enc.starter == sp, "summoning " + enc);
@@ -449,6 +450,62 @@ public final class RpgBossTests {
                 h.assertTrue(p1.getHealth() < hp, "hit " + hp + " → " + p1.getHealth());
                 h.assertTrue(p1.getRemainingFireTicks() > 0, "burning");
                 LOG.info("[boss-test] OK far shot (fire): disc → lob → hit + burn");
+                finish(h, level, a, hold, p1);
+            });
+        });
+    }
+
+    /** 플레이어 둘레 (5칸) 에 떠 있는 글자 (피해 숫자 · 눈앞 글자) */
+    private static List<String> textsNear(ServerLevel level, ServerPlayer sp) {
+        List<String> out = new ArrayList<>();
+        for (Display.TextDisplay td : level.getEntitiesOfClass(Display.TextDisplay.class, sp.getBoundingBox().inflate(5), d -> d.entityTags().contains(DamageNumbers.TAG))) {
+            out.add(td.getText().getString());
+        }
+        return out;
+    }
+
+    private static boolean hangul(List<String> texts) {
+        for (String t : texts) if (t.codePoints().anyMatch(c -> c >= 0xAC00 && c <= 0xD7A3)) return true;
+        return false;
+    }
+
+    /**
+     * 0.34.0 패턴 안내 숨김 (설정 BOSS_HINTS — 사용자 "패턴을 알려주는 채팅이나 타이틀을 없애고 카운트만 텍스트로"): 다섯 종류 모두 꺼짐,
+     * hint* 는 보내지 않고 (숨긴 수가 늘어남), 짚단 감옥 · 원거리 견제를 겪어도 눈앞에 글자 (한글) 가 뜨지 않음 — 감옥 카운트는 숫자만
+     */
+    @GameTest(environment = "mmorpg:boss", maxTicks = 200)
+    public void patternHintsHidden(GameTestHelper h) {
+        for (String k : List.of("chat", "title", "face", "notes", "marks")) h.assertFalse(BossKit.hints(k), "BOSS_HINTS." + k + " is off");
+        ServerLevel level = h.getLevel();
+        String[] hold = new String[1];
+        Arena.Altar a = field(level, 8, hold);
+        ServerPlayer p1 = RpgGearTests.player(h);
+        put(p1, a, 0, 12);
+        Bosses.Enc enc = Bosses.summon(a, p1);
+        h.runAfterDelay(64, () -> {
+            freeze(enc, 1000);
+            near(p1, enc.boss, a, 0, 12);
+            int hidden0 = BossKit.hiddenHints;
+            BossKit.hintFace(p1, "§6§l시험 안내", Opt.of("dist", 2.2, "up", 0.3));
+            BossKit.hintFaceAll(enc, "§6§l시험 안내", Opt.of("dist", 2.4, "up", 0.45), List.of(p1));
+            BossKit.hintSay(enc, "§6[보스] 시험 안내");
+            BossKit.hintTitle(enc, "§6§l시험", "§f안내");
+            BossKit.hintNotify(p1, "§6시험 안내", 20);
+            h.assertTrue(BossKit.hiddenHints - hidden0 >= 5, "five hints held back " + (BossKit.hiddenHints - hidden0));
+            h.assertFalse(hangul(textsNear(level, p1)), "no hint text in front of the player " + textsNear(level, p1));
+            // 짚단 감옥: "노립니다!" · 갇힘 채팅 없이, 갇힌 사람에게 숫자만 (3 2 1)
+            BossScarecrow.prison(enc, Tasks.now(), BossKit.fighters(enc));
+            h.assertFalse(hangul(textsNear(level, p1)), "prison aim: no hint text " + textsNear(level, p1));
+            h.runAfterDelay(22, () -> {
+                BossScarecrow.M m = BossScarecrow.mem(enc);
+                h.assertTrue(m.cage != null && m.cage.p == p1 && Status.isRooted(p1), "caged as before (the pattern still works)");
+                h.assertFalse(hangul(textsNear(level, p1)), "caged: numbers only " + textsNear(level, p1));
+                // 원거리 견제: 안내 채팅 · 눈앞 글자 없이 날아옴 (한 번 알렸다는 표시는 그대로)
+                List<ServerPlayer> far = Bosses.farTargets(enc, BossKit.fighters(enc), p -> true);
+                Bosses.farThrow(enc, enc, Tasks.now(), far);
+                h.assertTrue(enc.farTold, "far rule marked told");
+                h.assertFalse(hangul(textsNear(level, p1)), "far shot: no hint text " + textsNear(level, p1));
+                LOG.info("[boss-test] OK pattern hints hidden (BOSS_HINTS all off): hint* held back, prison · far shot show no text, counts are numbers");
                 finish(h, level, a, hold, p1);
             });
         });

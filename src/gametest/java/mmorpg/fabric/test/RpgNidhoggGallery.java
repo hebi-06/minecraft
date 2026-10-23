@@ -57,7 +57,7 @@ public final class RpgNidhoggGallery extends RpgDriveGallery {
 
     @Override
     List<String> formWords() {
-        return List.of("Lv.38", "근접 보너스", "독 가시", "15분");
+        return List.of("Lv.38", "근접 보너스", "15분");
     }
 
     @Override
