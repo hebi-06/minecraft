@@ -180,7 +180,8 @@ public final class RpgHelGallery extends RpgDriveGallery {
     private void looks(ClientGameTestContext ctx, TestServerContext server) {
         camera(ctx, CameraType.FIRST_PERSON);
         double z = z0();
-        look(ctx, server, cx + 2.5, ALTAR_Y, z + 10, cx, ALTAR_Y + 3.0, z);
+        // 앞 (비스듬히 — 가운데 제단 블록이 헬을 가리지 않게)
+        look(ctx, server, cx + 6, ALTAR_Y, z + 9, cx, ALTAR_Y + 3.0, z);
         ctx.waitTicks(10);
         shot(ctx, "hel");
         look(ctx, server, cx + 10, ALTAR_Y, z + 1.5, cx, ALTAR_Y + 3.0, z);
@@ -344,8 +345,9 @@ public final class RpgHelGallery extends RpgDriveGallery {
         settle(server, cx, z, SOUTH);
         double phase = clientProp(ctx, bossId(server), "rpg:phase");
         check(Math.round(phase) == 1, "queen of the dead texture on the client (rpg:phase " + phase + ")");
-        look(ctx, server, cx + 2.5, ALTAR_Y, z + 10, cx, ALTAR_Y + 3.0, z);
-        ctx.waitTicks(10);
+        look(ctx, server, cx + 6, ALTAR_Y, z + 9, cx, ALTAR_Y + 3.0, z);
+        // 각성 타이틀 (3.5초 + 걷힘 1초) 이 걷힌 뒤
+        waitUntil(ctx, server, t0 + 112);
         shot(ctx, "queen");
     }
 
@@ -394,7 +396,8 @@ public final class RpgHelGallery extends RpgDriveGallery {
     private void gate(ClientGameTestContext ctx, TestServerContext server) {
         settle(server, cx, cz, SOUTH);
         server.runCommand("gamemode creative @a");
-        look(ctx, server, cx + 3, ALTAR_Y, cz + 15, cx, ALTAR_Y + 4.5, cz);
+        // 문의 안개 (3 ~ 22칸) 안에서 — 가운데 위의 구멍 · 문양이 보이게
+        look(ctx, server, cx + 3, ALTAR_Y, cz + 10, cx, ALTAR_Y + 4.5, cz);
         ctx.waitTicks(4);
         long[] shift = {0};
         long t0 = server.computeOnServer(s -> {

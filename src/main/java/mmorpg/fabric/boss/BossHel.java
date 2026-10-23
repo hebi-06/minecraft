@@ -428,6 +428,18 @@ public final class BossHel implements BossModule {
         }
     }
 
+    /** 허공의 손톱 자국 셋: 몸 오른쪽 (검은 손) 위에서 왼쪽 아래 앞으로 긁어 내림 — 영혼 빛 (가운데 창백한 심) */
+    static void clawStrokes(Bosses.Unit u, Vec3 apex, Vec3 dir, double reach) {
+        Vec3 side = rightOf(angOf(dir));
+        for (int i = -1; i <= 1; i++) {
+            double o = i * 0.7;
+            Vec3 a = new Vec3(apex.x + dir.x * 1.4 + side.x * (1.6 + o), apex.y + 4.4 + i * 0.2, apex.z + dir.z * 1.4 + side.z * (1.6 + o));
+            Vec3 b = new Vec3(apex.x + dir.x * (reach - 1.0) + side.x * (-1.4 + o), apex.y + 0.3, apex.z + dir.z * (reach - 1.0) + side.z * (-1.4 + o));
+            SkillFx.beam(u.dim, a, b, SOUL, Opt.of("half", 0.32, "thick", 0.16, "life", 0.45, "alpha", 0.95, "fade", 0.6));
+            SkillFx.beam(u.dim, a, b, PALE, Opt.of("half", 0.12, "thick", 0.08, "life", 0.35, "alpha", 1.0, "fade", 0.6));
+        }
+    }
+
     /** 땅에서 솟는 망자의 손: 손바닥 (영혼 빛 · 뼈 심지) 이 솟아오름 · 둘레 뼈 가시 */
     static void deadHand(Bosses.Unit u, Vec3 at, double radius) {
         RuneKit.rfx2(u.dim, "fist", new Vec3(at.x, at.y + 0.6, at.z), Opt.of("dir", new Vec3(0, 1, 0), "speed", 2.4, "size", 2.0, "life", 0.6, "grow", 0.3,
@@ -479,9 +491,7 @@ public final class BossHel implements BossModule {
                 Vec3 away = dirTo(apex, p.position());
                 hit(x, p, d.num("damage"), (dir.x + away.x) * 0.4, (dir.z + away.z) * 0.4, 0.35);
             }
-            Vec3 mid = new Vec3(apex.x + dir.x * reach * 0.45, apex.y + 2.6, apex.z + dir.z * reach * 0.45);
-            SkillFx.arc(x.dim, mid, dir, Opt.of("shape", "heavy", "flip", false, "size", reach * 0.75, "life", 0.35, "speed", 0.0, "spin", 70.0, "color", SOUL,
-                    "aura", PALE));
+            clawStrokes(x, apex, dir, reach);
             clawMarks(x, apex, dir, reach);
             souls(x.dim, new Vec3(apex.x + dir.x * reach * 0.6, apex.y, apex.z + dir.z * reach * 0.6), 1.6, 10);
             sound(x, snd(x, "swing"), apex, 0.6, 1);
@@ -740,13 +750,20 @@ public final class BossHel implements BossModule {
                     double life = (double) flow / 20;
                     double speed = 2 * L / life;
                     for (double o = -half + 0.5; o <= half - 0.4; o += 2.0) {
-                        Vec3 at = new Vec3(mid.x - t.x * L + nrm.x * o, c.y + 1.4, mid.z - t.z * L + nrm.z * o);
-                        SkillFx.fx(x.dim, "rpg:tide_wave", at, Opt.of("dir", t, "speed", speed, "size", 2.2, "thick", 1.8, "life", life, "color", PALE, "alpha", 0.95));
+                        Vec3 at = new Vec3(mid.x - t.x * L + nrm.x * o, c.y + 1.5, mid.z - t.z * L + nrm.z * o);
+                        SkillFx.fx(x.dim, "rpg:tide_wave", at, Opt.of("dir", t, "speed", speed, "size", 2.8, "thick", 2.2, "life", life, "color", SOUL, "alpha", 1.0));
+                        SkillFx.fx(x.dim, "rpg:tide_wave", new Vec3(at.x, at.y + 1.0, at.z), Opt.of("dir", t, "speed", speed, "size", 1.7, "thick", 1.2, "life", life,
+                                "color", PALE, "alpha", 0.95));
                     }
                     sound(x, snd(x, "wave"), mid, 0.6, 1.4);
                 }
                 if (kk % 2 == 0) {
+                    // 물결 앞머리: 띠 폭으로 물보라 셋 · 영혼 · 물방울 (지나가는 자리가 보이게)
                     Vec3 at = new Vec3(mid.x + t.x * front, c.y, mid.z + t.z * front);
+                    for (int e = -1; e <= 1; e++) {
+                        Vec3 f = new Vec3(at.x + nrm.x * e * (half - 1.2), c.y + 1.0, at.z + nrm.z * e * (half - 1.2));
+                        SkillFx.fx(x.dim, "rpg:splash", f, Opt.of("size", 1.7, "life", 0.45, "color", PALE, "alpha", 0.9));
+                    }
                     souls(x.dim, at, half * 0.5, 6);
                     x.dim.sendParticles(ParticleTypes.SPLASH, at.x, at.y + 0.6, at.z, 20, half * 0.5, 0.3, half * 0.5, 0.2);
                 }
@@ -905,9 +922,9 @@ public final class BossHel implements BossModule {
         u.api.anim(u, "roar", null, ATK, null);
         sound(u, snd(u, "roar"), f, 0.7, 1.4);
         // 2페이즈 알림은 늘 보임 (사용자 "공허 각성 같은 2페이지는 냅두고")
-        title(u, "§3§l망자의 여왕", "§f헬의 검은 반쪽이 번집니다 — 선딜레이가 짧아지고 §e걀라르 다리");
-        say(u, "§3[보스] 망자의 여왕: §f헬의 검은 반쪽이 온몸으로 번집니다 — 선딜레이가 짧아지고 패턴이 잦아집니다. §e걀라르 다리§f: 헬이 가운데에서 두 팔을 하늘로 들면 "
-                + "빛나는 금빛 다리 위로!");
+        // 패턴 안내 (걀라르 다리를 깨는 법) 는 넣지 않음 — 0.34.0 방침: 2페이즈 이름 · 모습만 늘 보이고 깨는 법은 BOSS_HINTS 로만 (bridgeAt 의 explain)
+        title(u, "§3§l망자의 여왕", "§f헬의 검은 반쪽이 온몸으로 번집니다");
+        say(u, "§3[보스] 망자의 여왕: §f헬의 검은 반쪽이 온몸으로 번집니다 — 헬이 더 빨라집니다");
         u.api.cast(u, "awaken", roar + 4, step(10, (x, n) -> {
             Vec3 at = feetOf(x);
             RuneKit.novaRing(x.dim, at, 1.0, 16, SOUL, PALE, Opt.of("life", 0.9));
@@ -1083,7 +1100,8 @@ public final class BossHel implements BossModule {
             }
         }
         if (left > 0 && left <= 200 && left % 20 == 0) {
-            title(u, "§4§l" + (left / 20), "");
+            // 숫자마다 1초 남짓 (기본 3.5초면 마지막 "1" 이 헬헤임의 문 위에 남음)
+            for (ServerPlayer p : BossKit.audience(u)) if (!p.isRemoved()) mmorpg.fabric.Notify.title(p, "§4§l" + (left / 20), "", 0, 18, 4);
             play(u.dim, snd(u, "tick"), feetOf(u), 0.5, 1.2);
         }
         if (left <= 0 && now >= m.gateAt) {
