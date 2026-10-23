@@ -417,6 +417,8 @@ public final class RpgVoidKnightTests {
         int T2 = ARRIVED + roar + 12;
         h.runAfterDelay(ARRIVED, () -> {
             freeze(enc, true);
+            // 제단 앞에 나온 기사가 곁의 p1 을 보고 뒤로 뛰는 중일 수 있음 (움직임 중에는 패턴을 고르지 않음) — 가운데에 세움
+            BossVoidKnight.setBody(enc, c.x, c.z, SOUTH);
             BedrockMob b = enc.boss;
             b.setHealth(b.getMaxHealth() * 0.5F + 10);
             RpgNidhoggTests.hit(p1, b, 100F);
