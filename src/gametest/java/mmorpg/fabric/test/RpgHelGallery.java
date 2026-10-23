@@ -167,9 +167,9 @@ public final class RpgHelGallery extends RpgDriveGallery {
         String r = server.computeOnServer(s -> {
             Bosses.Enc e = enc();
             if (!e.immune) return "not immune while arriving";
-            return e.boss.getHealth() == 1400000F ? "ok" : "hp " + e.boss.getHealth();
+            return e.boss.getHealth() == (float) DEF.num("hp") ? "ok" : "hp " + e.boss.getHealth();
         });
-        check("ok".equals(r), "arrives immune with 1400000 hp (" + r + ")");
+        check("ok".equals(r), "arrives immune with " + (long) DEF.num("hp") + " hp (" + r + ")"); // 0.36.0 2,200,000 (규칙 BOSSES.hel.hp)
         waitUntil(ctx, server, t0 + BossHel.ARRIVE + 2);
         freeze(server);
         settle(server, cx, z0(), SOUTH);
