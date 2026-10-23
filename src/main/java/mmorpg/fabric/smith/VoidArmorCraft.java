@@ -234,7 +234,7 @@ public final class VoidArmorCraft {
         }
         Obj t = TYPES.obj(type);
         List<Armor.Piece> pieces = set(type);
-        if (pieces.contains(null)) {
+        if (pieces.stream().anyMatch(java.util.Objects::isNull)) {
             back.run();
             return;
         }
@@ -309,7 +309,8 @@ public final class VoidArmorCraft {
      * 모자라거나 가방이 차면 아무것도 쓰지 않음
      */
     public static String craft(ServerPlayer sp, List<Armor.Piece> pieces) {
-        if (!enabled() || pieces.isEmpty() || pieces.contains(null)) return "§4갑옷을 만들 수 없습니다.§r";
+        // List.of 의 contains(null) 은 NullPointerException — 하나씩 봄
+        if (!enabled() || pieces.isEmpty() || pieces.stream().anyMatch(java.util.Objects::isNull)) return "§4갑옷을 만들 수 없습니다.§r";
         Cost c = cost(pieces);
         List<String> lack = lack(sp, c);
         if (!lack.isEmpty()) return Smith.lackMessage(sp, lack);
