@@ -475,7 +475,7 @@ src/client/            클라이언트: 체력 바 HUD · 스탯 창 · 키 · �
                        룬 뽑기 창 (GachaScreen) · 연출 (GachaShowScreen) · 한정 뽑기 설정 (GachaAdminScreen) · 상태 (ClientGacha) — 0.14.0
                        엔더 창고 상자 탭 (StorageTabs · 상태 ClientStorage — 0.22.0, 바닐라 상자 창에 Fabric 화면 이벤트로 붙임)
                        rpgui/ RPG 창 (0.23.0 — 그리기 RpgUi · 바닐라 창 덮기 RpgScreens + 믹스인 · 캐릭터 정보 패널 CharacterPanel · 상자 단추 ContainerButtons · ClientRpgUi)
-src/gametest/          게임 시험 — 서버 (@GameTest, 가짜 플레이어 · 몹으로 공식 · 연출 · 보스 패턴 · 탈것 · 결투 · 스탯 트리 · 룬 돌파 · 스킬 칸) + 클라이언트 (실제 입력 · 장면 사진 · 무기 · 스킬 · 룬 · 갑옷 · 창 · 길 안내 · 몬스터 · 신전 · 보스 9종 실제 도전 · 세계수 · 탈것 · 결투 (두 번째 플레이어) · 스탯 트리 · 룬 돌파 · 스킬 칸 (실제 키 · 끌어 놓기) · 새 무기 (든 모습 · 평타 · 스킬 12 · 정령왕 · 제작 창) 사진첩) — 모드 jar 에는 안 들어감.
+src/gametest/          게임 시험 — 서버 (@GameTest, 가짜 플레이어 · 몹으로 공식 · 연출 · 보스 패턴 · 탈것 · 결투 · 스탯 트리 · 룬 돌파 · 스킬 칸) + 클라이언트 (실제 입력 · 장면 사진 · 무기 · 스킬 · 룬 · 갑옷 · 창 · 길 안내 · 몬스터 · 신전 · 보스 10종 실제 도전 · 세계수 · 탈것 · 결투 (두 번째 플레이어) · 스탯 트리 · 룬 돌파 · 스킬 칸 (실제 키 · 끌어 놓기) · 새 무기 (든 모습 · 평타 · 스킬 12 · 정령왕 · 제작 창) 사진첩) — 모드 jar 에는 안 들어감.
                        시험 서버는 스탯 트리가 기본으로 꺼져 있음 (TestSetup — 기존 시험의 정해진 피해 · 체력 숫자), 스탯 트리 시험만 켬
 tools/                 rules.json · 비교 케이스 생성 (tools/jsenv/scripts = 애드온 스크립트 사본)
                        weapon_models.py: 애드온 무기 모델 31종 → 자바 아이템 모델 · 손 자세 · 빛 알갱이 자리 (tools/weapon_art = 원본)
