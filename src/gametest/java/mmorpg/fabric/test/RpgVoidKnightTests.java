@@ -86,7 +86,7 @@ public final class RpgVoidKnightTests {
 
     // ------------------------------------------------------------ 시험
 
-    /** 등장: 소환 → 가운데 균열에서 비집고 나옴 (무적 · 틀 arrive) · 체력 450,000 · 엔진 평타 없음 · 공허 붕괴까지 막대 (10분) · 보스 막대 이름 */
+    /** 등장: 소환 → 제단 앞 균열에서 비집고 나옴 (무적 · 틀 arrive) · 체력 450,000 · 엔진 평타 없음 · 공허 붕괴까지 막대 (10분) · 보스 막대 이름 */
     @GameTest(environment = "mmorpg:voidknight", maxTicks = 300)
     public void voidKnightArrives(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -104,7 +104,9 @@ public final class RpgVoidKnightTests {
             BedrockMob b = enc.boss;
             h.assertTrue(b.getMaxHealth() == 450000F && b.getHealth() == 450000F, "hp " + b.getHealth());
             h.assertTrue(enc.cast != null && "arrive".equals(enc.cast.id) && enc.immune, "arrives from the rift (immune)");
-            h.assertTrue(BossKit.hdist(b.position(), c) < 1e-6 && Math.abs(b.getY() - c.y) < 1e-6, "at the center " + b.position());
+            // 제단 앞 (부른 사람 쪽으로 ALTAR_OFF 칸 — 가운데 제단 블록에 다리가 묻히지 않게)
+            Vec3 front = new Vec3(c.x, c.y, c.z + BossVoidKnight.ALTAR_OFF);
+            h.assertTrue(BossKit.hdist(b.position(), front) < 1e-6 && Math.abs(b.getY() - c.y) < 1e-6, "in front of the altar " + b.position());
             h.assertTrue(enc.meleeAt == Long.MAX_VALUE, "engine melee off");
             long left = BossVoidKnight.timeLeft(enc, Tasks.now());
             h.assertTrue(left > 12000 - 10 && left <= 12000, "10 minute limit " + left);
@@ -495,12 +497,14 @@ public final class RpgVoidKnightTests {
             h.assertTrue(BossKit.hdist(x.safe().get(0), new Vec3(c.x + k, c.y, c.z + k)) < 1e-6, "first safe circle at 45° " + x.safe().get(0));
             h.assertTrue(enc.immune, "immune while channelling");
         });
-        h.runAfterDelay(ARRIVED + jump + 2, () -> h.assertTrue(BossKit.hdist(enc.boss.position(), c) < 0.3, "jumped to the center " + enc.boss.position()));
+        // 가운데 제단 앞 · 첫 십자 줄 위 (무작위 0 → 줄은 +x 쪽, 서는 자리는 가운데에서 -x 로 ALTAR_OFF 칸)
+        h.runAfterDelay(ARRIVED + jump + 2, () -> h.assertTrue(BossKit.hdist(enc.boss.position(), new Vec3(c.x - BossVoidKnight.ALTAR_OFF, c.y, c.z)) < 0.3,
+                "jumped next to the center " + enc.boss.position()));
         h.runAfterDelay(ARRIVED + jump + wu + 1, () -> {
             h.assertTrue(p1.getHealth() == hp[0], "inside a safe circle: untouched");
             near(h, hp[1] - p2.getHealth(), C.num("damage"), 1e-3, "outside: cut by the void cross");
             h.assertTrue(!enc.immune && BossVoidKnight.opened(enc, Tasks.now()), "opening after the cross");
-            LOG.info("[voidknight-test] OK void cross: jump to the center (immune) → safe circles at 45° → outside takes {}", C.num("damage"));
+            LOG.info("[voidknight-test] OK void cross: jump next to the center (immune) → safe circles at 45° → outside takes {}", C.num("damage"));
             RpgNidhoggTests.finish(h, level, a, hold, p1, p2);
         });
     }

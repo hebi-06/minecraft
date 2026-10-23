@@ -94,6 +94,10 @@ public final class BossVoidKnight implements BossModule {
     public static final String FOG_COLLAPSE = "rpg:void_collapse";
     /** 등장 (균열에서 비집고 나와 칼을 세움 — 동작 spawn 1.85초) */
     public static final int ARRIVE = 40;
+    /** 휘두르는 동작을 피해보다 이만큼 (틱) 먼저 — 칼이 내려오는 순간에 맞게 (동작 0.1초 + 보내는 시간) */
+    static final int LEAD = 2;
+    /** 가운데 제단 블록에 다리가 묻히지 않게: 가운데에 서는 때 (등장 · 공허 참 · 공허 붕괴) 는 가운데에서 이만큼 비켜 섬 */
+    public static final double ALTAR_OFF = 2.0;
 
     /** 시험 · 사진첩: 다음 pick 에서 이 패턴 (cleave · thrust · leap · spin · blink · combo · awaken · cross · collapse — 쓰면 비움) */
     public static String forceNext;
@@ -510,16 +514,23 @@ public final class BossVoidKnight implements BossModule {
         SkillFx.arc(u.dim, at, dir, Opt.of("shape", "heavy", "flip", flip, "size", size, "life", 0.3, "speed", 0.0, "spin", spin, "color", VIOLET, "aura", PINK));
     }
 
-    /** 빈틈 시작: open 틱 동안 받는 피해 +bonus — 바닥에 보라 고리 (맥박), 가까운 사람에게 "빈틈!" */
+    /** 빈틈 시작: open 틱 동안 받는 피해 +bonus — 바닥에 보라 고리 (맥박), 가까운 사람에게 "빈틈!" (짧게 — 눈앞 글자가 화면 밖으로 넘치지 않게) */
     static void open(Bosses.Unit u, int ticks) {
+        open(u, ticks, true);
+    }
+
+    /** face = false: 눈앞 글자 없이 (공허 참 — "안전!" · "베였습니다" 와 겹치지 않게, 안전한 사람의 글자에 빈틈을 넣음) */
+    static void open(Bosses.Unit u, int ticks, boolean face) {
         M m = mem(u);
         long now = Tasks.now();
         m.openUntil = now + ticks;
         Vec3 f = feetOf(u);
         play(u.dim, snd(u, "open"), f, 0.55, 0.7);
         double bonus = u.def.obj("opening").num("bonus");
-        for (ServerPlayer p : fighters(u)) {
-            if (hdist(p.position(), f) <= 16) showFaceText(p, "§d§l빈틈! §f지금 공격 §7(받는 피해 +" + Js.str(Js.round(bonus * 100)) + "%)", Opt.of("dist", 2.4, "up", 0.45));
+        if (face) {
+            for (ServerPlayer p : fighters(u)) {
+                if (hdist(p.position(), f) <= 16) showFaceText(p, "§d§l빈틈! §f지금 공격", Opt.of("dist", 2.4, "up", 0.45));
+            }
         }
         explain(u, "open", "§d[보스] 빈틈: §f공허 기사는 큰 공격 (내려베기 · 도약 · 회전 · 3연격 · 공허 참) 뒤 잠깐 칼이 박혀 움직이지 못합니다 — 그동안 받는 피해 +"
                 + Js.str(Js.round(bonus * 100)) + "% §7(피해 숫자 앞 분홍 \"빈틈\", 바닥의 보라 고리)");
@@ -616,8 +627,7 @@ public final class BossVoidKnight implements BossModule {
         sound(u, snd(u, "swing"), bodyOf(u), 0.5, 0.8);
         play(u.dim, "block.respawn_anchor.charge", apex, 1.4, 0.5);
         explain(u, "cleave", "§5[보스] 내려베기: §f칼을 머리 위로 들면 앞 부채꼴 (보라) 을 내려칩니다 — 가장 아픈 공격, 부채꼴 밖으로");
-        u.api.cast(u, "cleave", wu + open + 12, step(wu, (x, n) -> {
-            x.api.anim(x, "cleave", null, ATK, "0");
+        u.api.cast(u, "cleave", wu + open + 12, step(wu - LEAD, (x, n) -> x.api.anim(x, "cleave", null, ATK, "0")), step(wu, (x, n) -> {
             hitFan(x, apex, dir, radius, cone, d.num("damage"), 1.0, 0.45);
             Vec3 tip = new Vec3(apex.x + dir.x * radius * 0.6, apex.y, apex.z + dir.z * radius * 0.6);
             slash(x, new Vec3(apex.x + dir.x * radius * 0.45, apex.y + 2.4, apex.z + dir.z * radius * 0.45), dir, radius * 0.7, 90, false);
@@ -747,8 +757,8 @@ public final class BossVoidKnight implements BossModule {
             sound(x, snd(x, "dash"), bp, 0.7, 1);
             SkillFx.fx(x.dim, "rpg:dust", new Vec3(bp.x, bp.y + 0.4, bp.z), Opt.of("size", 2.2, "life", 0.6, "color", DEEP, "alpha", 0.8));
         }));
+        steps.add(step(wu - LEAD, (x, n) -> x.api.anim(x, "slam", null, ATK, "0")));
         steps.add(step(wu, (x, n) -> {
-            x.api.anim(x, "slam", null, ATK, "0");
             for (ServerPlayer p : targets(x)) {
                 if (hdist(p.position(), spot) > radius + 0.3 || Math.abs(p.getY() - spot.y) > 3.5) continue;
                 Vec3 away = dirTo(spot, p.position());
@@ -821,8 +831,7 @@ public final class BossVoidKnight implements BossModule {
         play(u.dim, "block.respawn_anchor.charge", bp, 1.0, 0.6);
         explain(u, "spin", "§5[보스] 회전 베기: §f몸을 비틀어 칼을 옆으로 빼면 몸 둘레 원 (보라) 을 한 바퀴 벱니다 — 원 밖으로 달아나세요"
                 + (m.phase2 ? " §7(각성 뒤: 공허 검기가 사방으로 — 분홍 줄 사이로)" : ""));
-        u.api.cast(u, "spin", wu + open + 14, step(wu, (x, k) -> {
-            x.api.anim(x, "spin", null, ATK, "0");
+        u.api.cast(u, "spin", wu + open + 14, step(wu - LEAD, (x, k) -> x.api.anim(x, "spin", null, ATK, "0")), step(wu, (x, k) -> {
             for (ServerPlayer p : targets(x)) {
                 if (hdist(p.position(), bp) > radius + 0.3 || Math.abs(p.getY() - bp.y) > 3.5) continue;
                 Vec3 away = dirTo(bp, p.position());
@@ -888,7 +897,7 @@ public final class BossVoidKnight implements BossModule {
                     1.0));
             x.dim.sendParticles(ParticleTypes.REVERSE_PORTAL, s.x, s.y + 2, s.z, 30, 0.4, 1.2, 0.4, 0.05);
             sound(x, snd(x, "rift"), s, 0.8, 1);
-            if (!t.isRemoved()) showFaceText(t, "§d§l등 뒤에 균열! §f돌아서 비키세요", Opt.of("dist", 2.4, "up", 0.45));
+            if (!t.isRemoved()) showFaceText(t, "§d§l등 뒤에 균열! §f비키세요", Opt.of("dist", 2.4, "up", 0.45));
         }), step(vanish + hidden, (x, n) -> {
             M xm = mem(x);
             Vec3 s = spot[0];
@@ -909,10 +918,9 @@ public final class BossVoidKnight implements BossModule {
             if (xm.phase2) waveMark(x, ahead(s, dir, reach - 0.5), dir, wu);
             SkillFx.burst(x.dim, new Vec3(s.x, s.y + 2.4, s.z), VIOLET, 2.4, 0.35);
             sound(x, "entity.warden.attack_impact", s, 1.3, 0.7);
-        }), step(vanish + hidden + wu, (x, n) -> {
+        }), step(vanish + hidden + wu - LEAD, (x, n) -> x.api.anim(x, "blink_slash", null, ATK, "0")), step(vanish + hidden + wu, (x, n) -> {
             Vec3 s = spot[0];
             Vec3 dir = aim[0];
-            x.api.anim(x, "blink_slash", null, ATK, "0");
             for (ServerPlayer p : targets(x)) {
                 if (Math.abs(p.getY() - s.y) > 3.5 || !inFan(p.position(), s, dir, reach, cone, 0.5)) continue;
                 double[] kk = knockIn(x, p, dir.x * 0.9, dir.z * 0.9);
@@ -956,8 +964,8 @@ public final class BossVoidKnight implements BossModule {
         // 걸음마다 다음 자리 · 방향 (휘두르는 순간 정함 — 예고는 그때 뜸)
         Vec3[] pos = {p0, null, null};
         Vec3[] dir = {d0, null, null};
-        u.api.cast(u, "combo", w0 + w1 + w2 + open + 14, step(w0, (x, n) -> {
-            x.api.anim(x, "combo1", null, ATK, "0");
+        // 휘두르는 동작은 피해보다 LEAD 틱 먼저, 셋째 자세 (머리 위로) 는 둘째 휘두름이 끝난 뒤 (같은 틱에 틀면 둘째 동작이 보이지 않음)
+        u.api.cast(u, "combo", w0 + w1 + w2 + open + 14, step(w0 - LEAD, (x, n) -> x.api.anim(x, "combo1", null, ATK, "0")), step(w0, (x, n) -> {
             hitFan(x, pos[0], dir[0], reach.get(0), cone.get(0), dmg.get(0), 0.6, 0.3);
             slash(x, new Vec3(pos[0].x + dir[0].x * 2.4, pos[0].y + 2.2, pos[0].z + dir[0].z * 2.4), dir[0], 3.2, 35, false);
             sound(x, snd(x, "swing"), pos[0], 0.9, 1);
@@ -967,8 +975,7 @@ public final class BossVoidKnight implements BossModule {
             dir[1] = dirTo(pos[1], t.isRemoved() ? pos[1].add(dir[0]) : t.position());
             mem(x).body.want = angOf(dir[1]);
             fanMarks(x.dim, pos[1], dir[1], reach.get(1), cone.get(1), w1, MARK);
-        }), step(w0 + w1, (x, n) -> {
-            x.api.anim(x, "combo2", null, ATK, "0");
+        }), step(w0 + w1 - LEAD, (x, n) -> x.api.anim(x, "combo2", null, ATK, "0")), step(w0 + w1, (x, n) -> {
             hitFan(x, pos[1], dir[1], reach.get(1), cone.get(1), dmg.get(1), 0.6, 0.3);
             slash(x, new Vec3(pos[1].x + dir[1].x * 2.4, pos[1].y + 2.2, pos[1].z + dir[1].z * 2.4), dir[1], 3.2, -35, true);
             sound(x, snd(x, "swing"), pos[1], 1.0, 1);
@@ -981,8 +988,7 @@ public final class BossVoidKnight implements BossModule {
             fanMarks(x.dim, pos[2], dir[2], reach.get(2), cone.get(2), w2, MARK);
             if (mem(x).phase2) waveMark(x, ahead(pos[2], dir[2], reach.get(2) - 0.5), dir[2], w2);
             play(x.dim, "block.respawn_anchor.charge", pos[2], 1.4, 0.5);
-        }), step(w0 + w1 + w2, (x, n) -> {
-            x.api.anim(x, "cleave", null, ATK, "0");
+        }), step(w0 + w1 + w2 - LEAD, (x, n) -> x.api.anim(x, "cleave", null, ATK, "0")), step(w0 + w1 + w2, (x, n) -> {
             hitFan(x, pos[2], dir[2], reach.get(2), cone.get(2), dmg.get(2), 1.0, 0.45);
             Vec3 tip = new Vec3(pos[2].x + dir[2].x * reach.get(2) * 0.6, pos[2].y, pos[2].z + dir[2].z * reach.get(2) * 0.6);
             slash(x, new Vec3(pos[2].x + dir[2].x * 2.8, pos[2].y + 2.4, pos[2].z + dir[2].z * 2.8), dir[2], reach.get(2) * 0.7, 90, false);
@@ -1065,6 +1071,8 @@ public final class BossVoidKnight implements BossModule {
         u.immune = true;
         stopDash(u);
         Vec3 c = floorAt(u, u.center.x, u.center.z);
+        // 서는 자리: 첫 십자 줄 위 · 가운데에서 ALTAR_OFF 칸 (제단 블록에 다리가 묻히지 않게) — 가운데를 보며 줄을 따라 내리그음
+        Vec3 stand = new Vec3(c.x - Math.cos(a0) * ALTAR_OFF, c.y, c.z - Math.sin(a0) * ALTAR_OFF);
         u.api.anim(u, "leap_ready", null, ATK, "0");
         sound(u, snd(u, "dash"), feetOf(u), 0.6, 1);
         double R = arenaRadius(u);
@@ -1083,9 +1091,16 @@ public final class BossVoidKnight implements BossModule {
                         0.38, "grow", 1.0));
             }
         }
+        // 안전 원: 금빛 테두리 + 테두리의 작은 빛기둥 여섯 + 머리 위 높은 빛기둥 (원 안에 선 사람의 눈앞을 가리지 않게 — 가운데 빛기둥은 시야를 덮었음)
         for (Vec3 s : safe) {
             disc(u.dim, s, sr, total, SAFE, Opt.of("fill", false, "alpha", 1.0));
-            RuneKit.rfx2(u.dim, "rays", s, Opt.of("size", 5.0, "life", total / 20.0, "alpha", 0.85, "fade", 0.3), SAFE, LIGHT, new int[] {0, 1}, 0.9);
+            for (int i = 0; i < 6; i++) {
+                double a = i * TAU / 6;
+                RuneKit.rfx2(u.dim, "rays", new Vec3(s.x + Math.cos(a) * sr, s.y, s.z + Math.sin(a) * sr), Opt.of("size", 1.4, "life", total / 20.0, "alpha", 0.85, "fade",
+                        0.3), SAFE, LIGHT, new int[] {0, 1}, 0.9);
+            }
+            RuneKit.rfx2(u.dim, "rays", new Vec3(s.x, s.y + 3.6, s.z), Opt.of("size", 4.0, "life", total / 20.0, "alpha", 0.6, "fade", 0.3), SAFE, LIGHT, new int[] {0, 1},
+                    0.7);
         }
         faceAll(u, "§5§l공허 참! §f빛나는 원 안으로", Opt.of("dist", 2.4, "up", 0.45), list);
         explain(u, "cross", "§5[보스] 공허 참: §f공허 기사가 가운데로 뛰어 칼을 하늘로 세우면 (무적) 3초 뒤 필드 전체를 벱니다 — §e금빛 원 " + safe.size()
@@ -1093,7 +1108,7 @@ public final class BossVoidKnight implements BossModule {
         List<Bosses.Step> steps = new ArrayList<>();
         steps.add(step(1, (x, n) -> {
             x.api.anim(x, "leap_air", null, ATK, "0");
-            startMove(x, c, jump, 4, "leap");
+            startMove(x, stand, jump, 4, "leap");
         }));
         steps.add(step(jump, (x, n) -> {
             x.api.anim(x, "cross_ready", null, ATK, "0");
@@ -1109,6 +1124,7 @@ public final class BossVoidKnight implements BossModule {
                 play(x.dim, snd(x, "tick"), c, 0.6 + (3 - kk) * 0.2, 1);
             }));
         }
+        steps.add(step(jump + wu - LEAD, (x, n) -> x.api.anim(x, "cross", null, ATK, "0")));
         steps.add(step(jump + wu, (x, n) -> crossHit(x, c, safe, a0)));
         steps.add(step(jump + wu + open, (x, n) -> x.api.anim(x, "cross_rec", null, ATK, null)));
         u.api.cast(u, "cross", jump + wu + open + 16, steps);
@@ -1121,12 +1137,11 @@ public final class BossVoidKnight implements BossModule {
         double sr = C.num("safe");
         double R = arenaRadius(u);
         u.immune = false;
-        u.api.anim(u, "cross", null, ATK, "0");
         for (ServerPlayer p : targets(u)) {
             boolean in = false;
             for (Vec3 s : safe) if (hdist(p.position(), s) <= sr + 0.3) in = true;
             if (in) {
-                showFaceText(p, "§e§l안전!", Opt.of("dist", 2.2, "up", 0.35));
+                showFaceText(p, "§e§l안전! §d§l빈틈!", Opt.of("dist", 2.2, "up", 0.35));
                 continue;
             }
             Vec3 away = dirTo(c, p.position());
@@ -1152,7 +1167,7 @@ public final class BossVoidKnight implements BossModule {
         sound(u, snd(u, "cross"), c, 0.8, 1.5);
         sound(u, snd(u, "heavy"), c, 0.6, 1);
         shakeNear(u, c, 40, 0.6, 1.0);
-        open(u, (int) C.num("open"));
+        open(u, (int) C.num("open"), false);
     }
 
     // ------------------------------------------------------------ 제한 시간 · 공허 붕괴
@@ -1186,7 +1201,9 @@ public final class BossVoidKnight implements BossModule {
         bar.setColor(left <= 1200 ? BossEvent.BossBarColor.RED : BossEvent.BossBarColor.PURPLE);
         if (now % 10 != 0) return;
         List<ServerPlayer> here = BossKit.audience(u);
-        for (ServerPlayer p : here) if (!bar.getPlayers().contains(p)) bar.addPlayer(p);
+        // 보스 체력 막대 아래에 오게: 체력 막대를 받은 사람에게만 (화면의 보스 막대는 받은 차례로 쌓임)
+        ServerBossEvent hp = ok(u.boss) ? u.boss.bossBar() : null;
+        for (ServerPlayer p : here) if (!bar.getPlayers().contains(p) && (hp == null || hp.getPlayers().contains(p))) bar.addPlayer(p);
         for (ServerPlayer p : List.copyOf(bar.getPlayers())) if (!here.contains(p) || p.isRemoved()) bar.removePlayer(p);
     }
 
@@ -1229,7 +1246,9 @@ public final class BossVoidKnight implements BossModule {
         }
         u.immune = true;
         Vec3 c = floorAt(u, u.center.x, u.center.z);
-        setBody(u, c.x, c.z, m.body.yaw);
+        double yaw = m.body.yaw;
+        // 가운데 제단 앞 (제단 블록에 다리가 묻히지 않게 — 가운데를 봄)
+        setBody(u, c.x - Math.cos(yaw) * ALTAR_OFF, c.z - Math.sin(yaw) * ALTAR_OFF, yaw);
         u.api.anim(u, "cross_ready", null, ATK, "0");
         title(u, "§4§l공허 붕괴", "§f제한 시간이 지났습니다");
         say(u, "§4[보스] 공허 붕괴: §f10분 안에 쓰러뜨리지 못했습니다 — 공허가 필드를 삼킵니다");
@@ -1374,9 +1393,12 @@ public final class BossVoidKnight implements BossModule {
         Vec3 c = enc.center;
         Vec3 p = enc.starter != null && !enc.starter.isRemoved() ? enc.starter.position() : new Vec3(c.x, c.y, c.z + 8);
         M m = new M();
-        m.body.x = c.x;
-        m.body.z = c.z;
-        m.body.yaw = angOf(dirTo(c, p));
+        // 제단 앞 (부른 사람 쪽으로 ALTAR_OFF 칸 — 가운데 제단 블록에 다리가 묻히지 않게) 에서 나와 부른 사람을 봄
+        Vec3 toward = dirTo(c, p);
+        m.body.x = c.x + toward.x * ALTAR_OFF;
+        m.body.z = c.z + toward.z * ALTAR_OFF;
+        m.body.yaw = angOf(toward);
+        Vec3 at = new Vec3(m.body.x, c.y, m.body.z);
         m.t0 = now;
         m.limit = now + (long) d.obj("enrage").num("limit");
         m.collapseAt = m.limit;
@@ -1393,12 +1415,12 @@ public final class BossVoidKnight implements BossModule {
         // 등장: 가운데 균열에서 비집고 나와 칼을 세워 예를 갖춤 (무적)
         enc.immune = true;
         enc.api.anim(enc, "spawn", null, ATK, null);
-        rift(enc.dim, new Vec3(c.x, c.y + 2.6, c.z), 2.6, 1.4);
-        enc.dim.sendParticles(ParticleTypes.PORTAL, c.x, c.y + 2.5, c.z, 80, 1.2, 1.8, 1.2, 0.8);
-        sound(enc, snd(enc, "rift"), c, 0.6, 1.2);
+        rift(enc.dim, new Vec3(at.x, at.y + 2.6, at.z), 2.6, 1.4);
+        enc.dim.sendParticles(ParticleTypes.PORTAL, at.x, at.y + 2.5, at.z, 80, 1.2, 1.8, 1.2, 0.8);
+        sound(enc, snd(enc, "rift"), at, 0.6, 1.2);
         enc.api.cast(enc, "arrive", ARRIVE, step(8, (x, n) -> {
-            SkillFx.burst(x.dim, new Vec3(c.x, c.y + 2.6, c.z), VIOLET, 3.0, 0.5);
-            sound(x, snd(x, "vanish"), c, 0.5, 1);
+            SkillFx.burst(x.dim, new Vec3(at.x, at.y + 2.6, at.z), VIOLET, 3.0, 0.5);
+            sound(x, snd(x, "vanish"), at, 0.5, 1);
         }), step(ARRIVE - 4, (x, n) -> {
             x.immune = false;
             say(x, "§5[보스] 공허 기사: §f한 방이 매우 아픈 대신 칠 때마다 자세를 잡습니다 — 바닥의 §d보라 예고§f를 보고 피하세요. 큰 공격 뒤에는 §d빈틈§f (받는 피해 +"
@@ -1417,6 +1439,8 @@ public final class BossVoidKnight implements BossModule {
         if (!enc.alive || Bosses.encounterAt(enc.a) != enc) return;
         moveTick(u, now);
         waveTick(u, now);
+        // 패턴 · 균열 속에서는 달려듦 자세를 거둠 (rpg_move 의 끝 자세 유지가 공격 자세에 더해져 꺾이지 않게)
+        if (u.cast != null || m.vanished) stopDash(u);
         if (m.move == null) {
             if (u.cast != null || m.vanished) standTick(u);
             else {
