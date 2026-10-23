@@ -1,0 +1,234 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.fw.hel.idle": {
+      "loop": true,
+      "bones": {
+        "skirt": {
+          "rotation": [
+            0,
+            0,
+            "math.sin(q.life_time * 40) * 1.5"
+          ]
+        },
+        "body": {
+          "rotation": [
+            "math.sin(q.life_time * 40) * 1.5",
+            0,
+            0
+          ],
+          "position": [
+            0,
+            "math.sin(q.life_time * 60) * 0.3",
+            0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "q.target_x_rotation * 0.4 + math.sin(q.life_time * 40 + 60) * 3 - 4",
+            "q.target_y_rotation * 0.5 + math.sin(q.life_time * 20) * 8",
+            "math.sin(q.life_time * 25) * 5 + 6"
+          ]
+        },
+        "hairBack": {
+          "rotation": [
+            "math.sin(q.life_time * 45) * 3 + 4",
+            0,
+            "math.sin(q.life_time * 30) * 2"
+          ]
+        },
+        "rightArm": {
+          "rotation": [
+            "math.sin(q.life_time * 40) * 3",
+            0,
+            "math.sin(q.life_time * 40) * 2 + 5"
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            "-math.sin(q.life_time * 40) * 3",
+            0,
+            "-math.sin(q.life_time * 40) * 2 - 5"
+          ]
+        },
+        "mist": {
+          "position": [
+            0,
+            "math.sin(q.life_time * 50) * 0.6",
+            0
+          ],
+          "rotation": [
+            0,
+            "q.life_time * 20",
+            0
+          ]
+        }
+      }
+    },
+    "animation.fw.hel.walk": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            "8 * q.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "skirt": {
+          "rotation": [
+            "(math.cos(q.modified_distance_moved * 20) * 4 - 4) * q.modified_move_speed",
+            0,
+            "math.sin(q.modified_distance_moved * 20) * 3 * q.modified_move_speed"
+          ]
+        },
+        "hairBack": {
+          "rotation": [
+            "20 * q.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "rightArm": {
+          "rotation": [
+            "-math.cos(q.modified_distance_moved * 20) * 10 * q.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 20) * 10 * q.modified_move_speed",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.fw.hel.attack": {
+      "animation_length": 1,
+      "bones": {
+        "rightArm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.35": [
+              -140,
+              0,
+              30
+            ],
+            "0.55": [
+              -20,
+              0,
+              -20
+            ],
+            "1.0": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.35": [
+              -8,
+              20,
+              0
+            ],
+            "0.55": [
+              12,
+              -20,
+              0
+            ],
+            "1.0": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.35": [
+              -10,
+              10,
+              0
+            ],
+            "0.55": [
+              8,
+              -10,
+              0
+            ],
+            "1.0": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "leftArm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.35": [
+              -40,
+              0,
+              -30
+            ],
+            "0.55": [
+              10,
+              0,
+              -10
+            ],
+            "1.0": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "hairBack": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.35": [
+              -10,
+              0,
+              0
+            ],
+            "0.55": [
+              25,
+              0,
+              0
+            ],
+            "1.0": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    }
+  }
+}

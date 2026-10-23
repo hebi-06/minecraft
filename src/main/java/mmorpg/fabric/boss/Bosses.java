@@ -118,7 +118,8 @@ public final class Bosses {
             new BossSkoll(),
             new BossYmir(),
             new BossSurtr(),
-            new BossVoidKnight());
+            new BossVoidKnight(),
+            new BossHel());
 
     /** 보스 키 → 모듈 */
     static final Map<String, BossModule> MODS = new LinkedHashMap<>();
@@ -1327,7 +1328,10 @@ public final class Bosses {
                     "mob.snowgolem.shoot", "random.glass"),
             // v2.5.0 이미르: 얼음 창 (날아가는 쪽으로 길쭉한 창, 떨어진 자리에 얼음 가시가 솟음)
             "ice", new Look("rpg:ice_lance", new double[] {0.72, 0.93, 1.0}, 1.6, new double[] {0.2, 0.5, 1.0}, "ice", new double[] {0.75, 0.93, 1.0},
-                    "mob.irongolem.throw", "random.glass"));
+                    "mob.irongolem.throw", "random.glass"),
+            // 0.35.0 헬: 망자의 창 (영혼 빛 창, 떨어진 자리에 뼈 가시가 솟음 — 어두운 헬헤임 바닥에서 보이게 원은 밝은 청록)
+            "soul", new Look("rpg:ice_lance", new double[] {0.55, 0.95, 1.0}, 1.5, new double[] {0.4, 0.95, 1.0}, "ice", new double[] {0.9, 0.9, 0.82},
+                    "entity.vex.charge", "particle.soul_escape"));
 
     /** 큰 패턴 (모듈 farOk 가 false) 이 끝난 뒤 원거리 견제를 쉬는 틱 */
     public static final long FAR_GRACE = 80;

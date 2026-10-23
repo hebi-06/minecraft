@@ -33,6 +33,7 @@
       "mmorpg.fabric.test.RpgMoreMonsterTests",
       "mmorpg.fabric.test.RpgVoidMonsterTests",
       "mmorpg.fabric.test.RpgVoidKnightTests",
+      "mmorpg.fabric.test.RpgHelTests",
       "mmorpg.fabric.test.RpgTreeTests",
       "mmorpg.fabric.test.RpgMountTests",
       "mmorpg.fabric.test.RpgDuelTests",
@@ -93,6 +94,7 @@
       "mmorpg.fabric.test.RpgJobUpGallery",
       "mmorpg.fabric.test.RpgVoidGallery",
       "mmorpg.fabric.test.RpgVoidKnightGallery",
+      "mmorpg.fabric.test.RpgHelGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

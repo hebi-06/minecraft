@@ -141,18 +141,18 @@ public final class RpgArenaGallery implements FabricClientGameTest {
 
     // ------------------------------------------------------------ 제단 블록 줄
 
-    /** 제단 블록 9종을 한 줄로 놓고 비스듬히 위에서 (텍스처: 위 · 옆) */
+    /** 제단 블록을 모두 한 줄로 (가운데 맞춤) 놓고 비스듬히 위에서 (텍스처: 위 · 옆) */
     private void altarRow(ClientGameTestContext ctx, TestServerContext server, TestSingleplayerContext world) {
         List<String> keys = new ArrayList<>(Arena.BOSSES.keys());
         int z = -70;
         server.runOnServer(s -> {
             ServerLevel level = level(s);
-            for (int i = 0; i < keys.size(); i++) level.setBlock(new BlockPos(-8 + 2 * i, GROUND, z), AltarBlocks.block(keys.get(i)).defaultBlockState(), Block.UPDATE_ALL);
+            for (int i = 0; i < keys.size(); i++) level.setBlock(new BlockPos(-(keys.size() - 1) + 2 * i, GROUND, z), AltarBlocks.block(keys.get(i)).defaultBlockState(), Block.UPDATE_ALL);
         });
         look(ctx, server, 0.5, GROUND + 3.5, z + 8.5, 0.5, GROUND + 0.5, z + 0.5);
         String r = ctx.computeOnClient(mc -> {
             for (int i = 0; i < keys.size(); i++) {
-                BlockState s = mc.level.getBlockState(new BlockPos(-8 + 2 * i, GROUND, z));
+                BlockState s = mc.level.getBlockState(new BlockPos(-(keys.size() - 1) + 2 * i, GROUND, z));
                 if (!(s.getBlock() instanceof AltarBlocks.AltarBlock a) || !a.key.equals(keys.get(i))) return "client sees " + s + " for " + keys.get(i);
             }
             return "ok";

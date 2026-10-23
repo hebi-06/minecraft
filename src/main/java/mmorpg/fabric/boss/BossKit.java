@@ -725,7 +725,10 @@ public final class BossKit {
             "rpg:surtr_ragnarok", fog(6, 48, 0x8A1E0C),
             // 0.33.0 공허 기사: 각성 (보랏빛 먼 안개) · 공허 붕괴 (검게 닫힘)
             "rpg:void_awake", fog(14, 72, 0x2A1846),
-            "rpg:void_collapse", fog(2, 16, 0x0C0614));
+            "rpg:void_collapse", fog(2, 16, 0x0C0614),
+            // 0.35.0 헬: 망자의 여왕 (차가운 청록 먼 안개) · 헬헤임의 문 (검게 닫힘)
+            "rpg:hel_queen", fog(12, 64, 0x1C3440),
+            "rpg:hel_gate", fog(2, 14, 0x05080C));
     /** 씌운 안개가 이만큼 (틱) 뒤 저절로 걷힘 — 싸움이 끝나면 엔진이 일찍 걷음 (1시간) */
     public static final int FOG_TICKS = 20 * 60 * 60;
 

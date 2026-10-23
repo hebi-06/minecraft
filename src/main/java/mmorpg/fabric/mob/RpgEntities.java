@@ -35,8 +35,8 @@ import net.minecraft.world.item.SpawnEggItem;
 public final class RpgEntities {
     private RpgEntities() {}
 
-    /** 자바 최대 체력 상한 (베드락은 상한 없음) */
-    public static final double MAX_HEALTH_CAP = 1_000_000;
+    /** 자바 최대 체력 상한 (베드락은 상한 없음). 0.35.0 헬 (1,400,000) 을 위해 100만 → 1000만 (float 체력 — 1000만에서도 1 단위가 정확함) */
+    public static final double MAX_HEALTH_CAP = 10_000_000;
 
     private static final Map<String, EntityType<? extends BedrockMob>> TYPES = new LinkedHashMap<>();
     private static final Map<String, Item> EGGS = new LinkedHashMap<>();

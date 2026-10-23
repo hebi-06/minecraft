@@ -24,7 +24,7 @@ public final class RpgMobTests {
 
     @GameTest(maxTicks = 20)
     public void mobsRegistered(GameTestHelper h) {
-        h.assertTrue(RpgEntities.types().size() == 41, "types (27 + 9단계 몬스터 8 + 0.32.0 공허 5 + 0.33.0 공허 기사 1) " + RpgEntities.types().size());
+        h.assertTrue(RpgEntities.types().size() == 42, "types (27 + 9단계 몬스터 8 + 0.32.0 공허 5 + 0.33.0 공허 기사 1 + 0.35.0 헬 1) " + RpgEntities.types().size());
         h.assertTrue(RpgEntities.eggs().size() == 19, "eggs (몬스터 6 + 8 + 공허 5) " + RpgEntities.eggs().size());
         for (MobData.Def d : MobData.all().values()) {
             BedrockMob e = spawn(h, d.id());

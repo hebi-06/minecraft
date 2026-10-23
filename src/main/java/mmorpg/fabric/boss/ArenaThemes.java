@@ -1828,6 +1828,116 @@ public final class ArenaThemes {
         return new Plan(stages, f);
     }
 
+    // ------------------------------------------------------------ 헬: 헬헤임 신전 (0.35.0)
+
+    /** 헬헤임 신전: 가운데 섬의 반지름 · 섬을 두른 얼어붙은 굘 강의 바깥 반지름 */
+    public static final double HEL_ISLAND = 9.5;
+    public static final double HEL_RIVER = 12.5;
+
+    /**
+     * 0.35.0 헬: 헬헤임 신전. 가운데 제단 둘레 (깎은 응회암 · 응회암 벽돌 십자), 반은 검고 반은 흰 테 (윤나는 흑암 · 방해석 — 헬의 두 얼굴),
+     * 가운데 섬 (심층암 타일 — 뼈 갈비 여덟 줄, 섬 가장자리 윤나는 심층암), 섬을 두른 얼어붙은 굘 강 (하늘색 색유리 — 밑에 청빙 · 이따금 바다 랜턴, 밟고 싸울 수 있음),
+     * 강을 건너는 성문 네 다리 (윤나는 응회암, 가장자리 금박 흑암 — 걀라르 다리), 바깥 마당 (심층암 타일 · 윤나는 심층암 띠 · 영혼 흙 얼룩), 성문 길 (응회암 벽돌),
+     * 가장자리 심층암 벽돌 · 담장, 성문 4 (심층암 타일 기둥 + 뼈 블록 머리 + 윤나는 심층암 들보 (가운데 깎은 응회암) + 매단 영혼 랜턴),
+     * 담장 위 뼈 첨탑 8개 (뼈 블록 높이 4 ~ 6, 꼭대기 해골), 장식은 담장 쪽 띠에만 (해골 · 켜진 흰 양초 · 영혼 랜턴 — 헬헤임에 닿은 망자들).
+     * 바닥은 어둡게 (영혼 빛 예고 · 금빛 다리가 잘 보이게)
+     */
+    private static Plan helheim(Ctx a) {
+        int R = a.R;
+        int H = a.H;
+        DoubleSupplier rand = seeded(a);
+        int EDGE = R + 2;
+        List<Spot> gates = polars(R + 1, GATE_DEG);
+        Gap onGate = (dx, dz) -> Math.abs(dx) <= 1 || Math.abs(dz) <= 1;
+        Ring ring = ringOf(R, onGate);
+        List<Flank> flanks = flanks(R, ring.cells, 2);
+        List<Put> struct = new ArrayList<>();
+        // 성문: 양쪽 기둥 (심층암 타일 3 + 뼈 블록) + 들보 (가운데 깎은 응회암) + 매단 영혼 랜턴
+        for (Flank f : flanks) {
+            for (int dy = 0; dy <= 2; dy++) struct.add(put(f.dx, dy, f.dz, "minecraft:deepslate_tiles"));
+            struct.add(put(f.dx, 3, f.dz, "minecraft:bone_block", AXIS_Y));
+        }
+        for (int gi = 0; gi < 4; gi++) {
+            Beam b = beam(flanks, gi);
+            int mid = round((b.lo + b.hi) / 2.0);
+            for (int k = b.lo; k <= b.hi; k++) struct.add(put(b.dx(k), 4, b.dz(k), k == mid ? "minecraft:chiseled_tuff" : "minecraft:polished_deepslate"));
+            struct.add(put(b.dx(mid), 3, b.dz(mid), "minecraft:soul_lantern", st("hanging", true)));
+        }
+        // 뼈 첨탑 8개: 담장 고리 위 (성문 사이), 뼈 블록 높이 4 ~ 6, 꼭대기 해골
+        List<SpireAt> spires = new ArrayList<>();
+        for (double deg : STONE_DEG) {
+            Spot q = nearestCell(ring.cells, polar(R + 1, deg));
+            int h = 4 + (int) Math.floor(rand.getAsDouble() * 3);
+            spires.add(new SpireAt(q.dx, q.dz, h));
+            for (int dy = 0; dy < h; dy++) struct.add(put(q.dx, dy, q.dz, "minecraft:bone_block", AXIS_Y));
+            struct.add(put(q.dx, h, q.dz, "minecraft:skeleton_skull", st("facing_direction", 1)));
+        }
+        List<Spot> posts = new ArrayList<>(spotsOf(flanks));
+        for (SpireAt s : spires) posts.add(new Spot(s.dx, s.dz));
+        Painter floor = (dx, dz, r, deg) -> {
+            if (r > EDGE) return null;
+            if (r > R) return p(hash(a, dx, dz, 3) < 0.18 ? "minecraft:soul_soil" : "minecraft:cobbled_deepslate"); // 둑
+            if (r > R - 1) return p("minecraft:deepslate_bricks"); // 가장자리
+            if (r <= 1.5) return p("minecraft:chiseled_tuff");
+            if (r <= 3.5) return p(dx == 0 || dz == 0 ? "minecraft:tuff_bricks" : "minecraft:polished_tuff");
+            if (r <= 4.5) return p(deg >= 90 && deg < 270 ? "minecraft:polished_blackstone" : "minecraft:calcite"); // 헬의 두 얼굴
+            boolean gate = onGate.test(dx, dz);
+            if (r <= HEL_ISLAND) {
+                // 가운데 섬: 뼈 갈비 여덟 줄 (성문 사이로 뻗음) · 섬 가장자리 · 성문 길
+                if (r >= 5.5 && r <= HEL_ISLAND - 1) {
+                    for (int i = 0; i < 8; i++) {
+                        if (angDist(deg * Math.PI / 180, (22.5 + i * 45) * Math.PI / 180) * r <= 0.5) return p("minecraft:bone_block", AXIS_Y);
+                    }
+                }
+                if (gate) return p("minecraft:tuff_bricks");
+                if (r > HEL_ISLAND - 1) return p("minecraft:polished_deepslate");
+                return p(hash(a, dx, dz) < 0.07 ? "minecraft:cracked_deepslate_tiles" : "minecraft:deepslate_tiles");
+            }
+            if (r <= HEL_RIVER) {
+                // 얼어붙은 굘 강 · 성문 다리 (걀라르 다리 — 가장자리 금박 흑암)
+                if (gate) return p(Math.abs(dx) == 1 || Math.abs(dz) == 1 ? "minecraft:gilded_blackstone" : "minecraft:polished_tuff");
+                return p("minecraft:light_blue_stained_glass");
+            }
+            if (gate) return p(hash(a, dx, dz, 2) < 0.15 ? "minecraft:polished_tuff" : "minecraft:tuff_bricks"); // 성문 길
+            if (r <= HEL_RIVER + 1) return p("minecraft:polished_deepslate"); // 강둑
+            double soul = StrictMath.sin(dx * 0.37 + 1.3) + StrictMath.sin(dz * 0.41 + 2.1) + StrictMath.sin((dx - dz) * 0.23 + 0.7);
+            if (soul > 1.9) return p("minecraft:soul_soil"); // 영혼 흙 얼룩
+            double band = (r - HEL_RIVER - 1) / 3.2;
+            if (band - Math.floor(band) < 0.25) return p("minecraft:polished_deepslate"); // 띠 사이 줄
+            return p(hash(a, dx, dz) < 0.07 ? "minecraft:cracked_deepslate_tiles" : "minecraft:deepslate_tiles");
+        };
+        // 강 밑: 청빙 (이따금 바다 랜턴 — 색유리 너머로 차갑게 빛남)
+        Painter riverBed = (dx, dz, r, deg) -> r > HEL_ISLAND && r <= HEL_RIVER && !onGate.test(dx, dz)
+                ? p(hash(a, dx, dz, 5) < 0.09 ? "minecraft:sea_lantern" : "minecraft:blue_ice")
+                : null;
+        // 장식: 담장 쪽 띠 (반지름 R-1.6 ~ R, 성문 길 · 기둥 · 첨탑 둘레 제외) — 해골 · 켜진 흰 양초 · 영혼 랜턴
+        List<Put> deco = new ArrayList<>();
+        Set<Long> taken = new HashSet<>();
+        for (int n = 0, tries = 0; n < 24 && tries < 800; tries++) {
+            double deg = rand.getAsDouble() * 360;
+            Spot q = polar(R - rand.getAsDouble() * 1.2, deg);
+            double r = hypot(q.dx, q.dz);
+            long k = cellKey(q.dx, q.dz);
+            if (taken.contains(k) || r > R || r < R - 1.6 || Math.abs(q.dx) <= 2 || Math.abs(q.dz) <= 2 || nearPost(posts, q.dx, q.dz)) continue;
+            if (ring.cell.test(q.dx + 1, q.dz) || ring.cell.test(q.dx - 1, q.dz) || ring.cell.test(q.dx, q.dz + 1) || ring.cell.test(q.dx, q.dz - 1)) continue;
+            taken.add(k);
+            double pick = rand.getAsDouble();
+            if (pick < 0.4) deco.add(put(q.dx, 0, q.dz, "minecraft:skeleton_skull", st("facing_direction", 1)));
+            else if (pick < 0.75) deco.add(put(q.dx, 0, q.dz, "minecraft:white_candle", st("candles", (int) Math.floor(rand.getAsDouble() * 3), "lit", true)));
+            else deco.add(put(q.dx, 0, q.dz, "minecraft:soul_lantern", st("hanging", false)));
+            n++;
+        }
+        Paint wall = p("minecraft:deepslate_brick_wall");
+        List<Stage> stages = List.of(
+                new Stage("땅 고르기", clearLayers(H, EDGE), List.of(), "dig.stone"),
+                new Stage("기초", List.of(fillLayer(-3, EDGE, p("minecraft:deepslate")), fillLayer(-2, EDGE, p("minecraft:deepslate"))), List.of(), "dig.deepslate"),
+                new Stage("바닥", List.of(new Layer(-2, riverBed), new Layer(-1, floor)), List.of(), "dig.deepslate"),
+                new Stage("담장·뼈 첨탑", List.of(new Layer(0, (dx, dz, r, deg) -> ring.cell.test(dx, dz) ? wall : null)), struct, "block.bone_block.place"),
+                new Stage("장식", List.of(), deco, "block.lantern.place"));
+        Feat f = new Feat(List.of(), List.of(), gates, posts, List.of(), List.of(), null, List.of(), List.of(), spires, List.of(), List.of(), List.of());
+        return new Plan(stages, f);
+    }
+
     // ------------------------------------------------------------ 설계 고르기 · 작업 목록
 
     /** 테마 이름 (설정 BOSSES.<키>.arena.theme) → 설계 */
@@ -1843,6 +1953,7 @@ public final class ArenaThemes {
             case "glacier" -> glacier(a);
             case "muspel" -> muspel(a);
             case "void" -> voidHall(a);
+            case "helheim" -> helheim(a);
             default -> null;
         };
     }

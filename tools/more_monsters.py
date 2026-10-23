@@ -226,6 +226,10 @@ def main():
     import void_knight  # noqa: E402
 
     void_knight.main()
+    # 0.35.0 보스 헬 (자바 판에만 — 사용자 모델 · 동작 · 텍스처 + 제단 · 재료 그림)
+    import hel  # noqa: E402
+
+    hel.main()
 
 
 if __name__ == "__main__":

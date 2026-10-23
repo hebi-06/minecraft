@@ -193,5 +193,15 @@
     "name": "§d균열 대검 조각§r§7 (보스 재료)",
     "glint": true,
     "stack": 64
+  },
+  "rpg:hel_claw": {
+    "name": "§f헬의 손톱§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:dead_mist": {
+    "name": "§b망자의 안개§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
   }
 }
