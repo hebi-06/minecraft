@@ -365,7 +365,7 @@ public final class RpgSurtrTests {
                         h.assertTrue(m.parts.get("crown").broken && crown.isRemoved(), "crown broken");
                         h.runAfterDelay(2, () -> {
                             h.assertTrue(b.propBool("rpg:crown_broken"), "rpg:crown_broken (head flames hidden)");
-                            LOG.info("[surtr-test] OK inferno: gauge 1000 → 500 by damage → collapse (groggy x1.5, mark {}) → crown core → rpg:crown_broken", num);
+                            LOG.info("[surtr-test] OK inferno: gauge 1000 → 500 by damage → collapse (groggy x1.5, mark hidden) → crown core → rpg:crown_broken");
                             finish(h, level, a, hold, sp);
                         });
                     });
@@ -426,7 +426,7 @@ public final class RpgSurtrTests {
                         h.assertTrue(o3 != null && BossSurtr.MARK_COUNTER.equals(o3.mark()), "counter " + o3);
                         m.counterUntil = 0;
                         h.assertTrue(BossSurtr.openBonus(enc, Tasks.now()) == null, "no bonus");
-                        LOG.info("[surtr-test] OK counter: skill in the gold window cuts the sweep → x1.25 ({}); overlapping bonuses → largest only", num);
+                        LOG.info("[surtr-test] OK counter: skill in the gold window cuts the sweep → x1.25 (mark hidden); overlapping bonuses → largest only");
                         finish(h, level, a, hold, sp);
                     });
                 });
