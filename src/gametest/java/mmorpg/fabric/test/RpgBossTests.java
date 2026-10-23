@@ -467,8 +467,9 @@ public final class RpgBossTests {
     /** 한글이 든 글자가 있는지 (상태 이름 "속박!" · "침묵!" 은 뺌 — 상태 표시라 늘 보임, 0.34.0 보스가 건 속박도 패턴 이름 대신 "속박") */
     private static boolean hangul(List<String> texts) {
         for (String t : texts) {
-            if (t.equals("속박!") || t.equals("침묵!")) continue;
-            if (t.codePoints().anyMatch(c -> c >= 0xAC00 && c <= 0xD7A3)) return true;
+            String plain = t.replaceAll("§.", "");
+            if (plain.equals("속박!") || plain.equals("침묵!")) continue;
+            if (plain.codePoints().anyMatch(c -> c >= 0xAC00 && c <= 0xD7A3)) return true;
         }
         return false;
     }

@@ -1564,6 +1564,8 @@ public final class BossSurtr implements BossModule {
         if (e == null) return null;
         u.api.addProp(u.enc, e);
         e.setNameTag("§6무스펠의 업화");
+        // 0.34.0: 막대 이름의 "— 피해로 깎기" 는 깨는 법이라 BOSS_HINTS.title 일 때만 (꺼 두면 이름만)
+        if (!BossKit.hints("title") && e.bossBar() != null) e.bossBar().setName(Component.literal(BedrockText.toJava("§6무스펠의 업화")));
         return e;
     }
 

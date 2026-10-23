@@ -340,6 +340,9 @@ public final class RpgSurtrTests {
             h.assertTrue(inf.need == 1800, "need = max(2, 1 fighter) x 900 = 1800 " + inf.need);
             BedrockMob gauge = inf.gauge;
             h.assertTrue(gauge != null && Kit.isType(gauge, BossSurtr.GAUGE_ID) && gauge.getHealth() == 1000F && gauge.bossBar() != null, "gauge prop with a boss bar");
+            // 0.34.0: 막대 이름은 "무스펠의 업화" 만 (깨는 법 "— 피해로 깎기" 는 숨김)
+            String barName = gauge.bossBar().getName().getString();
+            h.assertTrue(barName.contains("무스펠의 업화") && !barName.contains("깎기"), "gauge bar name without the hint: " + barName);
             h.runAfterDelay(4, () -> {
                 h.assertTrue(b.prop("rpg:heat") >= 0.15 - 1e-6, "heating " + b.prop("rpg:heat"));
                 h.assertTrue(BossSurtr.FOG_INFERNO.equals(m.fogWant), "inferno fog " + m.fogWant);
