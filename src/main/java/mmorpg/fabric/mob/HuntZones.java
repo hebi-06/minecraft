@@ -152,8 +152,8 @@ public final class HuntZones {
         return level.areEntitiesLoaded(ChunkPos.pack(pos)) || level.isPositionEntityTicking(pos);
     }
 
-    /** 몬스터가 돌아다니는 넓이 (가운데 + 네 모서리) 가 다 불러와졌는지 */
-    static boolean areaLoaded(ServerLevel level, Zone z) {
+    /** 몬스터가 돌아다니는 넓이 (가운데 + 네 모서리) 가 다 불러와졌는지 (시험도 씀 — 다 불러와질 때까지 채우지 않음) */
+    public static boolean areaLoaded(ServerLevel level, Zone z) {
         double r = RADIUS + Monsters.MONSTER.num("homeRadius");
         Vec3 c = z.center();
         for (double[] d : new double[][] {{0, 0}, {-r, -r}, {r, -r}, {-r, r}, {r, r}}) {
