@@ -59,12 +59,13 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  * <li>죽음의 손톱: 검은 오른손을 높이 들어 (windup) → 앞 부채꼴을 내리긁음</li>
  * <li>망자의 손: 싸우는 사람 모두의 발밑에 원 → 땅에서 망자의 손이 솟음 (원 밖으로)</li>
- * <li>삶과 죽음의 경계: 필드를 가운데로 가르는 선 — 사람이 더 많은 반쪽이 검은 안개로 차오름 (검은 오른손이 그쪽을 가리킴) → 그 반쪽을 침</li>
+ * <li>삶과 죽음의 경계: 헬을 지나는 선으로 필드를 가름 — 헬의 검은 오른손 쪽이 청록 안개로 차오름 → 그쪽을 침 (방향은 죽음 쪽 사람이 모두 선딜레이 안에 비킬 수 있는 것 중
+ * 사람이 가장 많은 쪽)</li>
  * <li>굘 강의 물결: 필드를 가로지르는 넓은 띠 (사람이 가장 많이 걸치는 자리) → 띠를 따라 물결이 쓸고 지나감 (띠 밖으로)</li>
  * <li>헬의 시선: 가장 먼 사람을 검은 눈으로 따라가며 노림 (줄 예고) → 멈춘 뒤 줄을 따라 광선</li>
  * <li>안개 걸음: 안개로 흩어짐 (무적 · 안 보임) → 누군가의 등 뒤에 안개가 모임 (경고 원) → 나타나 그 사람에게 죽음의 손톱</li>
  * <li>각성 「망자의 여왕」 (체력 phase2.at): 울부짖음 (무적) → 선딜레이 × phase2.windup · 재사용 × phase2.cd, 검은 금이 번진 텍스처 · 차가운 안개,
- * 걀라르 다리: 가운데로 떠올라 두 팔을 하늘로 → 필드를 가로지르는 금빛 다리 (폭 bridge.width) 만 남기고 필드 전체를 침</li>
+ * 걀라르 다리: 가운데로 떠올라 두 팔을 하늘로 → 필드를 가로지르는 금빛 다리 (폭 bridge.width — 모두가 셈 안에 닿을 수 있는 방향) 만 남기고 필드 전체를 침</li>
  * <li>제한 시간 (enrage.limit 틱 — 보스 막대 아래 "헬헤임의 문까지" 막대): 넘기면 헬헤임의 문 — 필드 안 모두 즉사 (every 틱마다 되풀이)</li>
  * </ul>
  * 0.34.0 방침: 패턴 안내 글자는 BossKit.hint* 로만 (설정 BOSS_HINTS — 기본 숨김), 카운트는 숫자만, 2페이즈 알림 (망자의 여왕) 은 늘 보임.
@@ -133,6 +134,7 @@ public final class BossHel implements BossModule {
         public final Set<String> told = new HashSet<>();
         /** 마지막 경계 (죽음 쪽 방향 — 가운데에서) · 강 (띠 방향 · 가운데에서 옆으로 떨어진 거리) · 시선 (방향) · 다리 (방향) */
         public Vec3 lastDivide;
+        public Vec3 lastDivideFrom;
         public double[] lastRiver;
         public Vec3 lastGaze;
         public Vec3 lastBridge;
@@ -536,76 +538,109 @@ public final class BossHel implements BossModule {
 
     // ------------------------------------------------------------ 패턴: 삶과 죽음의 경계
 
+    /** 경계에서 이만큼 (선딜레이 틱당 칸) 안이면 달려서 비킬 수 있다고 봄 (전력 질주 0.28칸/틱 — 알아채는 시간을 빼고) */
+    static final double ESCAPE_PER_TICK = 0.22;
+
+    /**
+     * 경계 방향 고르기: 헬을 지나는 선 (16 방향) 중 죽음 쪽에 선 사람이 모두 선딜레이 안에 비킬 수 있는 (가장 먼 사람이 escape 칸 안) 방향에서
+     * 죽음 쪽 사람이 가장 많은 쪽 (같으면 아무거나). 그런 방향이 없으면 죽음 쪽 가장 먼 사람이 가장 가까운 쪽
+     */
     public static boolean divide(Bosses.Unit u, long now, List<ServerPlayer> list) {
-        // 사람이 더 많은 반쪽 (가운데를 지나는 선 — 16 방향 중, 같으면 아무거나)
-        Vec3 c = u.center;
         List<ServerPlayer> ps = targets(u);
         if (ps.isEmpty()) return false;
+        Vec3 b = feetOf(u);
+        double escape = ESCAPE_PER_TICK * windup(u, u.def.obj("divide").num("windup"));
         int best = -1;
         List<Double> picks = new ArrayList<>();
+        double fallback = 0;
+        double fallbackFar = Double.POSITIVE_INFINITY;
         for (int i = 0; i < 16; i++) {
             double a = i * TAU / 16;
             Vec3 n = dirOf(a);
             int k = 0;
-            for (ServerPlayer p : ps) if ((p.getX() - c.x) * n.x + (p.getZ() - c.z) * n.z > 0.6) k++;
+            double far = 0;
+            for (ServerPlayer p : ps) {
+                double side = (p.getX() - b.x) * n.x + (p.getZ() - b.z) * n.z;
+                if (side < -0.3) continue;
+                k++;
+                far = Math.max(far, side + 0.3);
+            }
+            if (k > 0 && far < fallbackFar) {
+                fallbackFar = far;
+                fallback = a;
+            }
+            if (far > escape) continue;
             if (k > best) {
                 best = k;
                 picks.clear();
             }
             if (k == best) picks.add(a);
         }
-        return divideAt(u, picks.get((int) Math.floor(random() * picks.size()) % picks.size()));
+        double a = best > 0 ? picks.get((int) Math.floor(random() * picks.size()) % picks.size()) : fallback;
+        return divideAt(u, a);
     }
 
-    /** 삶과 죽음의 경계 한 번 (a = 죽음 쪽 방향 — 가운데에서, 그 반쪽을 침) */
+    /** 삶과 죽음의 경계 한 번 (a = 죽음 쪽 방향): 헬을 지나며 그 방향에 수직인 선 — 헬의 검은 오른손 쪽 (a 쪽) 반쪽을 침 */
     public static boolean divideAt(Bosses.Unit u, double a) {
         Obj d = u.def.obj("divide");
         M m = mem(u);
         Vec3 c = floorAt(u, u.center.x, u.center.z);
+        Vec3 b = feetOf(u);
         Vec3 n = dirOf(a);
         Vec3 along = new Vec3(-n.z, 0, n.x);
         double R = arenaRadius(u);
         int wu = windup(u, d.num("windup"));
         m.lastDivide = n;
+        m.lastDivideFrom = b;
         m.body.want = yawRightTo(n);
-        // 예고: 죽음 쪽 반쪽이 청록 안개로 차오름 · 가르는 선 (창백한 빛)
-        areaMarks(u, c, R, wu, DEATH, (x, z) -> x * n.x + z * n.z > GRID * 0.3);
-        lineMarks(u.dim, new Vec3(c.x - along.x * R, c.y, c.z - along.z * R), new Vec3(c.x + along.x * R, c.y, c.z + along.z * R), 0.7, wu, PALE);
+        // 선이 필드 원과 만나는 두 끝 (헬 자리에서 along 쪽으로 s0 ~ s1)
+        double dx = b.x - c.x;
+        double dz = b.z - c.z;
+        double proj = dx * along.x + dz * along.z;
+        double disc = Math.sqrt(Math.max(0, proj * proj - (dx * dx + dz * dz - R * R)));
+        double s0 = -proj - disc;
+        double s1 = -proj + disc;
+        Vec3 e0 = new Vec3(b.x + along.x * s0, c.y, b.z + along.z * s0);
+        Vec3 e1 = new Vec3(b.x + along.x * s1, c.y, b.z + along.z * s1);
+        // 예고: 죽음 쪽 (헬의 검은 오른손 쪽) 이 청록 안개로 차오름 · 가르는 선 (창백한 빛)
+        areaMarks(u, c, R, wu, DEATH, (x, z) -> (c.x + x - b.x) * n.x + (c.z + z - b.z) * n.z > GRID * 0.3);
+        lineMarks(u.dim, e0, e1, 0.7, wu, PALE);
         u.api.anim(u, "divide_ready", null, ATK, "0");
-        sound(u, snd(u, "charge"), feetOf(u), 0.8, 0.8);
-        explain(u, "divide", "§b[보스] 삶과 죽음의 경계: §f헬이 두 팔을 벌리면 필드가 둘로 갈리고 검은 오른손 쪽 반쪽이 청록 안개로 차오릅니다 — 반대쪽 (창백한 쪽) 으로");
+        sound(u, snd(u, "charge"), b, 0.8, 0.8);
+        explain(u, "divide", "§b[보스] 삶과 죽음의 경계: §f헬이 두 팔을 벌리면 헬을 지나는 선으로 필드가 갈리고 검은 오른손 쪽이 청록 안개로 차오릅니다 — 창백한 왼손 쪽으로");
         List<Bosses.Step> steps = new ArrayList<>();
         for (int k = 10; k < wu - 4; k += 10) {
-            int kk = k;
-            steps.add(step(kk, (x, t) -> {
+            steps.add(step(k, (x, t) -> {
                 for (int i = 0; i < 6; i++) {
-                    double s = (random() * 2 - 1) * R * 0.9;
+                    double s = s0 + random() * (s1 - s0);
                     double o = random() * R * 0.8 + 1;
-                    x.dim.sendParticles(ParticleTypes.SQUID_INK, c.x + along.x * s + n.x * o, c.y + 0.4, c.z + along.z * s + n.z * o, 2, 0.4, 0.2, 0.4, 0.01);
+                    double px = b.x + along.x * s + n.x * o;
+                    double pz = b.z + along.z * s + n.z * o;
+                    if (Math.hypot(px - c.x, pz - c.z) > R) continue;
+                    x.dim.sendParticles(ParticleTypes.SQUID_INK, px, c.y + 0.4, pz, 2, 0.4, 0.2, 0.4, 0.01);
                 }
             }));
         }
         steps.add(step(wu - LEAD, (x, t) -> x.api.anim(x, "divide", null, ATK, "0")));
         steps.add(step(wu, (x, t) -> {
             for (ServerPlayer p : targets(x)) {
-                double s = (p.getX() - c.x) * n.x + (p.getZ() - c.z) * n.z;
-                if (s < -0.3) continue;
+                double side = (p.getX() - b.x) * n.x + (p.getZ() - b.z) * n.z;
+                if (side < -0.3) continue;
                 hit(x, p, d.num("damage"), n.x * 0.5, n.z * 0.5, 0.45);
             }
-            for (double s = -R + 2; s <= R - 2; s += 4) {
-                for (double o = 3; o <= R; o += 6) {
-                    if (Math.hypot(s, o) > R) continue;
-                    Vec3 p = new Vec3(c.x + along.x * s + n.x * o, c.y, c.z + along.z * s + n.z * o);
+            for (double s = s0 + 2; s <= s1 - 2; s += 4) {
+                for (double o = 3; o <= 2 * R; o += 6) {
+                    Vec3 p = new Vec3(b.x + along.x * s + n.x * o, c.y, b.z + along.z * s + n.z * o);
+                    if (Math.hypot(p.x - c.x, p.z - c.z) > R - 1) continue;
                     SkillFx.fx(x.dim, "rpg:ground_crack", new Vec3(p.x, p.y + 0.05, p.z), Opt.of("dir", Vec3.ZERO, "spin", random() * 360, "size", 3.6, "life", 1.4, "color",
                             INK, "alpha", 0.9));
                     souls(x.dim, p, 1.2, 4);
                 }
             }
-            SkillFx.beam(x.dim, new Vec3(c.x - along.x * R, c.y + 0.6, c.z - along.z * R), new Vec3(c.x + along.x * R, c.y + 0.6, c.z + along.z * R), PALE, Opt.of("half",
-                    0.5, "thick", 0.3, "life", 0.6, "alpha", 0.95));
-            sound(x, snd(x, "beam"), c, 0.6, 1.2);
-            sound(x, snd(x, "heavy"), feetOf(x), 0.7, 1);
-            shakeNear(x, c, R + 6, 0.45, 0.6);
+            SkillFx.beam(x.dim, new Vec3(e0.x, c.y + 0.6, e0.z), new Vec3(e1.x, c.y + 0.6, e1.z), PALE, Opt.of("half", 0.5, "thick", 0.3, "life", 0.6, "alpha", 0.95));
+            sound(x, snd(x, "beam"), b, 0.6, 1.2);
+            sound(x, snd(x, "heavy"), b, 0.7, 1);
+            shakeNear(x, b, R * 2, 0.45, 0.6);
         }));
         steps.add(step(wu + 12, (x, t) -> x.api.anim(x, "divide_rec", null, ATK, null)));
         u.api.cast(u, "divide", wu + 20, steps);
@@ -615,8 +650,8 @@ public final class BossHel implements BossModule {
     /** 죽음 쪽인지 (마지막 경계 — 시험) */
     public static boolean deathSide(Bosses.Unit u, Vec3 p) {
         M m = mem(u);
-        if (m == null || m.lastDivide == null) return false;
-        return (p.x - u.center.x) * m.lastDivide.x + (p.z - u.center.z) * m.lastDivide.z >= -0.3;
+        if (m == null || m.lastDivide == null || m.lastDivideFrom == null) return false;
+        return (p.x - m.lastDivideFrom.x) * m.lastDivide.x + (p.z - m.lastDivideFrom.z) * m.lastDivide.z >= -0.3;
     }
 
     // ------------------------------------------------------------ 패턴: 굘 강의 물결
@@ -895,8 +930,31 @@ public final class BossHel implements BossModule {
 
     // ------------------------------------------------------------ 걀라르 다리 (각성 뒤)
 
+    /**
+     * 다리 방향 고르기 (12 방향): 모두가 셈 (jump + windup 틱) 안에 다리에 닿을 수 있는 (가장 먼 사람이 escape 칸 안) 방향 중 아무거나,
+     * 그런 방향이 없으면 가장 먼 사람이 가장 가까운 방향
+     */
     public static boolean bridge(Bosses.Unit u, long now, List<ServerPlayer> list) {
-        return bridgeAt(u, random() * Math.PI);
+        Obj B = u.def.obj("bridge");
+        Vec3 c = u.center;
+        double half = B.num("width") / 2;
+        double escape = ESCAPE_PER_TICK * (B.num("jump") + B.num("windup"));
+        List<Double> ok = new ArrayList<>();
+        double best = 0;
+        double bestFar = Double.POSITIVE_INFINITY;
+        double turn = random() * Math.PI / 12;
+        for (int i = 0; i < 12; i++) {
+            double a = turn + i * Math.PI / 12;
+            Vec3 t = dirOf(a);
+            double far = 0;
+            for (ServerPlayer p : targets(u)) far = Math.max(far, Math.abs((p.getX() - c.x) * -t.z + (p.getZ() - c.z) * t.x) - half);
+            if (far <= escape) ok.add(a);
+            if (far < bestFar) {
+                bestFar = far;
+                best = a;
+            }
+        }
+        return bridgeAt(u, ok.isEmpty() ? best : ok.get((int) Math.floor(random() * ok.size()) % ok.size()));
     }
 
     /** 걀라르 다리 한 번 (a = 다리 방향 — 가운데를 지남): 가운데 옆으로 떠 가서 두 팔을 하늘로 → 다리 밖 필드 전체를 침 */
@@ -1129,7 +1187,11 @@ public final class BossHel implements BossModule {
             awaken(u, now);
             return true;
         }
-        if (m.phase2 && now >= m.bridgeAt && bridge(u, now, list)) return true;
+        if (m.phase2 && now >= m.bridgeAt && bridge(u, now, list)) {
+            double[] gap = pair(u.def.obj("phase2"), "gap");
+            m.nextAttack = (u.cast != null ? u.cast.until : now) + rnd((int) gap[0], (int) gap[1]);
+            return true;
+        }
         if (now < m.nextAttack) return false;
         if (now >= m.blinkAt && blink(u, now, list)) {
             double[] gap = pair(m.phase2 ? u.def.obj("phase2") : u.def, "gap");
