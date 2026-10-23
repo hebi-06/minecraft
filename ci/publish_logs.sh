@@ -33,6 +33,8 @@ if [ -d ci-out/shots ]; then
 fi
 # 0.26.0 룬 지속 시간 재기 (RpgRuneTimingTests — 게임 시험 로그가 길어 가운데가 잘리므로 따로)
 grep -h "\[rune-timing\]" ci-out/gametest.txt 2>/dev/null > "$OUT/rune-timing.txt" || true
+# 게임 시험마다 남기는 확인 줄 ([xxx-test] OK …) — 가운데가 잘려도 어느 시험이 지나갔는지 보이게
+grep -h -o -E "\[[a-z0-9-]+-test\] (OK|FAIL).*" ci-out/gametest.txt 2>/dev/null > "$OUT/gametest-checks.txt" || true
 # 오류 줄만 모아서 (컴파일 오류 · 실패한 시험 · 예외)
 grep -n -E "error:|warning: \[|FAILED|Exception|Caused by|GameTest|failed|Failed|FAIL" ci-out/*.txt ci-out/*.log 2>/dev/null | head -n 600 > "$OUT/ERRORS.txt" || true
 # 브랜치: main · wip · mc-* 는 ci-logs, 다른 작업 브랜치는 ci-logs-<브랜치> (동시에 돈 실행이 서로 덮어쓰지 않게)

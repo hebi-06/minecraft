@@ -321,6 +321,8 @@ public final class RpgVoidKnightTests {
             // p1 은 북쪽 (-z) 을 봄 → 등 뒤 = +z 쪽 2.4칸. p2 는 보스 곁 (가장 가까운 사람 — 균열 걸음은 다른 사람을 노림)
             Vec3 cc = Arena.arenaCenter(a);
             p1.snapTo(cc.x, a.y, cc.z + 8, 180F, 0F);
+            // 바라보는 쪽은 머리 방향 (getViewVector — LivingEntity 는 yHeadRot) — snapTo 는 몸 방향만 바꿈
+            p1.setYHeadRot(180F);
             RpgNidhoggTests.put(p2, a, 2, -2);
             p1.setHealth(p1.getMaxHealth());
             fresh(p1);
