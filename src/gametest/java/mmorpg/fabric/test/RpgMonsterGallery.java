@@ -196,7 +196,7 @@ public final class RpgMonsterGallery implements FabricClientGameTest {
         double dist = k.half() + 0.3 + k.reach() - 0.1;
         teleport(ctx, server, PX, FLOOR, PZ, 180F, 0F);
         int id = spawn(server, key, PX, FLOOR, PZ - dist, 0F, false);
-        ctx.waitTicks(6);
+        ctx.waitTicks(k.traits().isVoid() ? 26 : 6); // 0.32.0 공허 몬스터: 균열에서 나오는 동작 (0.8초) · 균열이 닫힌 뒤
         lookAt(ctx, id, Math.max(0.9, Math.min(1.7, k.height() * 0.55)));
         ctx.waitTicks(3);
         float hp0 = playerHp(server);

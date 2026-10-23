@@ -327,7 +327,7 @@ public final class VoidMonsters {
         double size = Math.max(1.0, k.height() * 0.62);
         Vec3 back = V.scale(Kit.facingOf(m), -0.5 * m.getScale());
         Vec3 c = new Vec3(m.getX() + back.x, m.getY() + size * 0.95, m.getZ() + back.z);
-        rift(level, c, size, 1.5, 0.5);
+        rift(level, c, size, 1.1, 0.5); // 몸이 다 나온 (0.8초) 뒤 곧 닫힘
         level.sendParticles(ParticleTypes.PORTAL, c.x, c.y, c.z, 36, size * 0.5, size * 0.6, size * 0.5, 0.6);
         Monsters.play(level, "block.respawn_anchor.charge", c, 1.3, 0.5);
         Monsters.play(level, "block.end_portal_frame.fill", c, 0.6, 0.7);

@@ -308,7 +308,7 @@ public final class RpgVoidGallery implements FabricClientGameTest {
             double d = Math.max(3.6, k.height() * 1.25 + k.half() + 1.4);
             teleport(ctx, server, PX, FLOOR, PZ, 180F, 0F);
             int id = spawn(server, key, PX, FLOOR, PZ - d, -28F, false);
-            ctx.waitTicks(14);
+            ctx.waitTicks(26); // 균열에서 나오는 동작 · 균열이 닫힌 뒤
             lookAtPoint(ctx, new Vec3(PX, FLOOR + Math.max(0.5, k.height() * 0.45), PZ - d));
             ctx.waitTicks(4);
             shot(ctx, "v_" + key);

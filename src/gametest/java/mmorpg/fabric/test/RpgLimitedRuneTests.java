@@ -468,6 +468,12 @@ public final class RpgLimitedRuneTests {
         floor(h);
         ServerPlayer sp = player(h);
         Runes.Rune r = Runes.parseRune("rpg:rune_abyss_transcend");
+        // 조준한 곳 (20칸 앞) 은 이 시험 자리 밖 — 다른 묶음에서 밀려 나온 몹 · 저절로 생긴 몹이 있으면 치우고 (무엇이었는지 남김) 거절을 봄
+        Vec3 aim = RuneKit.groundAim(sp, 20);
+        List<LivingEntity> stray = h.getLevel().getEntitiesOfClass(LivingEntity.class, new net.minecraft.world.phys.AABB(aim, aim).inflate(10, 6, 10),
+                e -> !(e instanceof net.minecraft.world.entity.player.Player));
+        if (!stray.isEmpty()) org.slf4j.LoggerFactory.getLogger("mmorpg-limited-rune-test").warn("[limited-rune-test] stray entities near the abyss aim {}: {}", aim, stray);
+        stray.forEach(e -> e.discard());
         h.assertFalse(RuneCast.castRune(sp, r, false, 0), "no target: refused");
         h.assertTrue(RuneCast.cooldownLeft(sp, r) == 0, "no cooldown when refused");
         h.getLevel().getServer().getPlayerList().remove(sp);
