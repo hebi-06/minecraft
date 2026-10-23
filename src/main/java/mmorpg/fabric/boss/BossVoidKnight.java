@@ -1469,6 +1469,15 @@ public final class BossVoidKnight implements BossModule {
         return m != null && u.cast == null && !m.vanished && now < m.limit;
     }
 
+    /** 원거리 견제 (균열 파편) 를 던지는 곳: 칼끝 높이 — 사용자 동작 attack (칼을 들어 내리침) 을 틂 */
+    @Override
+    public Vec3 farFrom(Bosses.Unit u, Obj style) {
+        if (mem(u) == null || !ok(u.boss)) return null;
+        u.api.anim(u, "attack", null, "rpg_far", null);
+        Vec3 b = bodyOf(u);
+        return new Vec3(b.x, b.y + bossSize(u.def).height() * 0.8, b.z);
+    }
+
     @Override
     public void fogCleared(Bosses.Enc enc, ServerPlayer p) {
         if (enc.mem != null && enc.mem.fog != null) enc.mem.fog.remove(p.getUUID());
@@ -1489,6 +1498,9 @@ public final class BossVoidKnight implements BossModule {
             } catch (RuntimeException e) {
                 // 무시
             }
+            // 다른 틀 (공격 자세 · 달려듦) 을 멈추고 죽음 동작만 (더해져 꺾이지 않게)
+            enc.boss.stopAnimation(ATK);
+            enc.boss.stopAnimation(MOVE);
             enc.api.anim(enc, "die", null, "die", "0");
         }
         Vec3 at = feetOf(enc);

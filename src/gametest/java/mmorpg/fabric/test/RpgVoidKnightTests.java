@@ -185,7 +185,7 @@ public final class RpgVoidKnightTests {
         ServerPlayer p1 = fighter(h, 900);
         ServerPlayer p2 = fighter(h, 900);
         RpgNidhoggTests.put(p1, a, 0, 4);
-        RpgNidhoggTests.put(p2, a, 0, -4);
+        RpgNidhoggTests.put(p2, a, 0, -5);
         Bosses.Enc enc = Bosses.summon(a, p1);
         Vec3 c = Arena.arenaCenter(a);
         Obj d = def().obj("cleave");
@@ -196,7 +196,7 @@ public final class RpgVoidKnightTests {
             freeze(enc, true);
             BossVoidKnight.setBody(enc, c.x, c.z, SOUTH);
             RpgNidhoggTests.put(p1, a, 0, 4);
-            RpgNidhoggTests.put(p2, a, 0, -4);
+            RpgNidhoggTests.put(p2, a, 0, -5);
             p1.setHealth(p1.getMaxHealth());
             p2.setHealth(p2.getMaxHealth());
             fresh(p1);

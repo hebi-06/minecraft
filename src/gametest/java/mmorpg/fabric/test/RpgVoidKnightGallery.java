@@ -176,16 +176,11 @@ public final class RpgVoidKnightGallery extends RpgDriveGallery {
         shot(ctx, "knight_back");
         look(ctx, server, cx, ALTAR_Y, cz + 13, cx, ALTAR_Y + 3.2, cz);
         ctx.waitTicks(12);
-        int bars = ctx.computeOnClient(mc -> {
-            try {
-                java.lang.reflect.Field f = mc.gui.getBossOverlay().getClass().getDeclaredField("events");
-                f.setAccessible(true);
-                return ((java.util.Map<?, ?>) f.get(mc.gui.getBossOverlay())).size();
-            } catch (ReflectiveOperationException | RuntimeException e) {
-                return -1;
-            }
+        boolean timer = server.computeOnServer(s -> {
+            var bar = BossVoidKnight.timerOf(enc());
+            return bar != null && bar.getPlayers().contains(player(s));
         });
-        check(bars == 2 || bars == -1, "two boss bars (hp · collapse timer): " + bars);
+        check(timer, "collapse timer bar shown under the hp bar");
         shot(ctx, "bars");
     }
 
