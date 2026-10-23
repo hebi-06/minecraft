@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "rpg:block/altar/void_knight_top",
+    "bottom": "rpg:block/altar/void_knight_bottom",
+    "side": "rpg:block/altar/void_knight_side"
+  }
+}

@@ -222,6 +222,10 @@ def main():
         d.update(lang)
         write_json(p, d, 2)
     print(f"more monsters: {len(mons)}")
+    # 0.33.0 보스 공허 기사 (자바 판에만 — 사용자 모델 · 동작 · 텍스처 + 제단 · 재료 그림)
+    import void_knight  # noqa: E402
+
+    void_knight.main()
 
 
 if __name__ == "__main__":

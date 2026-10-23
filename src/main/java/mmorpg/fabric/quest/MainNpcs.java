@@ -79,6 +79,12 @@ public final class MainNpcs {
             for (String k : transcend) t.add(bossText(k));
             lines.add("§c초월 보스 제단 (/boss altar · 왕녀의 전설 퀘스트): §f" + String.join(" · ", t));
         }
+        // 0.33.0 공허 보스 (공허 기사 — 40렙 뒤 공허 사냥터 곁): 위 두 줄에 없는 보스
+        List<String> voidBosses = new ArrayList<>();
+        for (String k : R.strings("ALL_BOSS_ORDER")) {
+            if (!R.strings("BOSS_ORDER").contains(k) && !transcend.contains(k)) voidBosses.add(bossText(k));
+        }
+        if (!voidBosses.isEmpty()) lines.add("§d공허 보스 제단 (/boss altar): §f" + String.join(" · ", voidBosses));
         return String.join("\n", lines);
     }
 

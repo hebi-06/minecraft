@@ -423,9 +423,11 @@ public final class BossKit {
         }
     }
 
-    /** 보스 9종 · 엔진 · 상태가 쓰는 베드락 소리 이름 모두 (시험: 모두 자바 소리로 풀리는지) */
+    /** 보스 10종 · 엔진 · 상태가 쓰는 소리 이름 모두 (베드락 이름 · 0.33.0 공허 기사의 자바 이름 — 시험: 모두 자바 소리로 풀리는지) */
     public static final List<String> USED_SOUNDS = List.of("ambient.underwater.enter", "ambient.weather.thunder", "beacon.activate", "block.bell.hit",
-            "block.grindstone.use", "break.amethyst_block", "bubble.down", "bubble.pop", "bucket.empty_lava", "dig.chain", "dig.deepslate", "dig.grass", "dig.sand",
+            "block.bell.resonate", "block.end_portal_frame.fill", "block.note_block.basedrum", "block.respawn_anchor.charge", "block.respawn_anchor.deplete",
+            "entity.breeze.wind_burst", "entity.enderman.teleport", "entity.iron_golem.step", "entity.player.attack.sweep", "entity.warden.attack_impact",
+            "item.mace.smash_ground_heavy", "block.grindstone.use", "break.amethyst_block", "bubble.down", "bubble.pop", "bucket.empty_lava", "dig.chain", "dig.deepslate", "dig.grass", "dig.sand",
             "dig.snow", "dig.stone", "dig.wood", "entity.generic.splash", "extinguish.candle", "fire.fire", "fire.ignite", "hit.chain", "item.trident.riptide_1",
             "item.trident.throw", "mace.heavy_smash_ground", "mace.smash_air", "mace.smash_ground", "mob.bee.sting", "mob.blaze.breathe", "mob.blaze.shoot",
             "mob.breeze.charge", "mob.breeze.inhale", "mob.cat.hiss", "mob.dolphin.swim", "mob.elderguardian.curse", "mob.elderguardian.death",
@@ -661,7 +663,10 @@ public final class BossKit {
             "rpg:ymir_blizzard", fog(3, 26, 0xDCE7F2),
             "rpg:ymir_winter", fog(10, 48, 0xCFDCEA),
             "rpg:surtr_inferno", fog(18, 80, 0xC2541C),
-            "rpg:surtr_ragnarok", fog(6, 48, 0x8A1E0C));
+            "rpg:surtr_ragnarok", fog(6, 48, 0x8A1E0C),
+            // 0.33.0 공허 기사: 각성 (보랏빛 먼 안개) · 공허 붕괴 (검게 닫힘)
+            "rpg:void_awake", fog(14, 72, 0x2A1846),
+            "rpg:void_collapse", fog(2, 16, 0x0C0614));
     /** 씌운 안개가 이만큼 (틱) 뒤 저절로 걷힘 — 싸움이 끝나면 엔진이 일찍 걷음 (1시간) */
     public static final int FOG_TICKS = 20 * 60 * 60;
 

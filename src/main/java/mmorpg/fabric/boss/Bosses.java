@@ -117,7 +117,8 @@ public final class Bosses {
             new BossNidhogg(),
             new BossSkoll(),
             new BossYmir(),
-            new BossSurtr());
+            new BossSurtr(),
+            new BossVoidKnight());
 
     /** 보스 키 → 모듈 */
     static final Map<String, BossModule> MODS = new LinkedHashMap<>();
@@ -422,7 +423,7 @@ public final class Bosses {
         Obj ar = def.obj("arena");
         if (ar.truthy("tick")) enc.area = Ticking.holdArea(dim, center, ar.num("radius") + 4, "f");
         encs.put(a, enc);
-        title(enc, "§6§l" + def.str("name"), "§7" + def.strOr("title", "") + " §8· §fLv." + Js.str(def.num("level")) + " §8· §7권장 3~4명");
+        title(enc, "§6§l" + def.str("name"), "§7" + def.strOr("title", "") + " §8· §fLv." + Js.str(def.num("level")) + " §8· §7권장 " + def.strOr("recommend", "3~4명"));
         say(enc, "§6[보스] §f" + (by != null ? by.getName().getString() : "누군가") + "님이 §6" + def.str("name") + "§f을(를) 깨웠습니다!");
         sound(enc, snd(enc, "summon"), enc.center, 0.8, 1);
         return enc;
@@ -1044,8 +1045,8 @@ public final class Bosses {
             List<String> got = reward(enc, p);
             p.sendSystemMessage(Component.literal(BedrockText.toJava("§6[보스] §f" + name + " 처치! §7보상: §f" + (got.isEmpty() ? "없음" : String.join("§7, §f", got)))));
         }
-        // v2.12.0 초월 보스: 준 피해 순위 + 모듈이 남기는 줄 — 보상을 받은 사람과 필드 둘레의 사람에게
-        if ("transcend".equals(enc.def.strOrNull("tier"))) {
+        // v2.12.0 초월 보스 (0.33.0: 설정 board 인 보스도 — 공허 기사): 준 피해 순위 + 모듈이 남기는 줄 — 보상을 받은 사람과 필드 둘레의 사람에게
+        if ("transcend".equals(enc.def.strOrNull("tier")) || enc.def.truthy("board")) {
             List<String> notes = null;
             try {
                 notes = enc.mod.killNote(enc);
@@ -1623,10 +1624,14 @@ public final class Bosses {
     static MenuForm challengeMenu(ServerPlayer player, Arena.Altar a, Obj def) {
         Obj loot = def.objOrNull("loot");
         Obj mats = R.obj("BOSS_MATERIALS");
-        // 보스 재료 (v2.0.0): 이 보스가 주는 것만
+        // 보스 재료 (v2.0.0): 이 보스가 주는 것만 (0.33.0: 모두 아직 쓰는 곳이 없는 재료 future 면 "준비 중")
         List<String> matList = new ArrayList<>();
+        boolean allFuture = true;
         for (String k : R.strings("BOSS_MATERIAL_ORDER")) {
-            if (loot != null && loot.truthy(k)) matList.add(mats.obj(k).str("color") + mats.obj(k).str("name") + "§7");
+            if (loot != null && loot.truthy(k)) {
+                matList.add(mats.obj(k).str("color") + mats.obj(k).str("name") + "§7");
+                allFuture &= mats.obj(k).truthy("future");
+            }
         }
         // v2.3.0 근접 보너스 · 원거리 견제 안내
         Obj far = def.objOrNull("far");
@@ -1650,16 +1655,17 @@ public final class Bosses {
             rules.add("§e원거리 견제: §f" + Js.str(far.num("from")) + "칸 넘게 떨어지면 " + far.str("name") + (night != null ? " §7(밤: " + night.str("name") + ")" : ""));
         }
         String rule = rules.isEmpty() ? "" : "\n" + String.join(" §8· ", rules);
-        // v2.12.0 초월 보스: 머리말 + 깨는 법 (설정 notes 한 줄씩), 보스 재료 줄은 "초월 장비 재료"
+        // v2.12.0 초월 보스: 머리말 + 깨는 법 (설정 notes 한 줄씩 — 0.33.0 공허 기사처럼 초월이 아닌 보스도 notes 가 있으면), 보스 재료 줄은 "초월 장비 재료"
         boolean transcend = "transcend".equals(def.strOrNull("tier"));
         List<Object> notesRaw = def.listOrNull("notes");
         String notes = "";
-        if (transcend && notesRaw != null && !notesRaw.isEmpty()) {
+        if (notesRaw != null && !notesRaw.isEmpty()) {
             List<String> ns = new ArrayList<>();
             for (Object o : notesRaw) ns.add(String.valueOf(o));
             notes = "\n\n§6§l패턴을 깨는 법§r\n" + String.join("\n", ns);
         }
-        String matNote = matList.isEmpty() ? "" : "\n§7보스 재료: " + String.join(" · ", matList) + " §8(" + (transcend ? "초월 장비 재료" : "대장장이 보스 무기 제작") + ")";
+        String matNote = matList.isEmpty() ? "" : "\n§7보스 재료: " + String.join(" · ", matList) + " §8(" + (transcend ? "초월 장비 재료"
+                : allFuture ? "장비 재료 — 준비 중" : "대장장이 보스 무기 제작") + ")";
         String with = "";
         if (units != null) {
             List<String> names = new ArrayList<>();
@@ -1667,7 +1673,7 @@ public final class Bosses {
             with = "\n§7함께 나옴: §f" + String.join(" §7· §f", names) + " §7(모두 쓰러뜨려야 보상)";
         }
         String body = (transcend ? "§c§l[초월 보스]§r " : "") + "§f" + def.strOr("title", "") + " §7— §fLv." + Js.str(def.num("level")) + with
-                + "\n§7권장: " + (transcend ? "초월 장비를 갖춘 4명 파티" : "3~4명 파티 (혼자서는 사실상 어려움)") + rule + notes
+                + "\n§7권장: " + (transcend ? "초월 장비를 갖춘 4명 파티" : def.strOr("party", "3~4명 파티 (혼자서는 사실상 어려움)")) + rule + notes
                 + "\n\n§7보상: 실버 · §6골드§7 · 경험치 · 룬 뽑기권" + (transcend ? " · 고급 룬 뽑기권" : "") + " · 강화 재료" + matNote
                 + "\n§7잡힌 뒤 " + Js.str(Js.round(def.numOr("cooldown", 600) / 60)) + "분 동안 다시 나오지 않습니다";
         return new MenuForm("§l" + def.str("name") + "에게 도전", body).button("§4도전").button("취소");

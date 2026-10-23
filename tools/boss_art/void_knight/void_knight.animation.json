@@ -1,0 +1,291 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.fw.void_knight.idle": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "position": [
+            0,
+            "math.sin(q.life_time * 40) * 0.3",
+            0
+          ]
+        },
+        "head": {
+          "rotation": [
+            "q.target_x_rotation * 0.4 + math.sin(q.life_time * 40 + 60) * 2",
+            "q.target_y_rotation * 0.5 + math.sin(q.life_time * 20) * 6",
+            0
+          ]
+        },
+        "rightCape": {
+          "rotation": [
+            "math.sin(q.life_time * 45) * 3 + 3",
+            0,
+            "math.sin(q.life_time * 30) * 2"
+          ]
+        },
+        "leftCape": {
+          "rotation": [
+            "math.sin(q.life_time * 45 + 70) * 3 + 3",
+            0,
+            "-math.sin(q.life_time * 30 + 40) * 2"
+          ]
+        },
+        "rightArm": {
+          "rotation": [
+            "math.sin(q.life_time * 40) * 2",
+            0,
+            "math.sin(q.life_time * 40) * 1 + 4"
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            "-math.sin(q.life_time * 40) * 2",
+            0,
+            "-math.sin(q.life_time * 40) * 1 - 4"
+          ]
+        },
+        "sword": {
+          "rotation": [
+            "math.sin(q.life_time * 40 + 90) * 2",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.fw.void_knight.walk": {
+      "loop": true,
+      "bones": {
+        "rightLeg": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 22) * 28 * q.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "leftLeg": {
+          "rotation": [
+            "-math.cos(q.modified_distance_moved * 22) * 28 * q.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "rightArm": {
+          "rotation": [
+            "-math.cos(q.modified_distance_moved * 22) * 10 * q.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "leftArm": {
+          "rotation": [
+            "math.cos(q.modified_distance_moved * 22) * 22 * q.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "body": {
+          "rotation": [
+            0,
+            "math.cos(q.modified_distance_moved * 22) * 5 * q.modified_move_speed",
+            "math.cos(q.modified_distance_moved * 22) * 2 * q.modified_move_speed"
+          ],
+          "position": [
+            0,
+            "math.abs(math.sin(q.modified_distance_moved * 22)) * 0.6 * q.modified_move_speed",
+            0
+          ]
+        },
+        "rightCape": {
+          "rotation": [
+            "(18 + math.cos(q.modified_distance_moved * 22) * 5) * q.modified_move_speed",
+            0,
+            0
+          ]
+        },
+        "leftCape": {
+          "rotation": [
+            "(18 - math.cos(q.modified_distance_moved * 22) * 5) * q.modified_move_speed",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.fw.void_knight.attack": {
+      "animation_length": 1.2,
+      "bones": {
+        "rightArm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -160,
+              0,
+              20
+            ],
+            "0.65": [
+              -10,
+              0,
+              -10
+            ],
+            "1.2": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "sword": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -35,
+              0,
+              0
+            ],
+            "0.65": [
+              55,
+              0,
+              0
+            ],
+            "1.2": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "body": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -10,
+              25,
+              0
+            ],
+            "0.65": [
+              16,
+              -22,
+              0
+            ],
+            "1.2": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "head": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -6,
+              12,
+              0
+            ],
+            "0.65": [
+              8,
+              -8,
+              0
+            ],
+            "1.2": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "leftArm": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -50,
+              0,
+              -30
+            ],
+            "0.65": [
+              20,
+              0,
+              -15
+            ],
+            "1.2": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "rightCape": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -15,
+              0,
+              0
+            ],
+            "0.65": [
+              30,
+              0,
+              0
+            ],
+            "1.2": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "leftCape": {
+          "rotation": {
+            "0.0": [
+              0,
+              0,
+              0
+            ],
+            "0.45": [
+              -10,
+              0,
+              0
+            ],
+            "0.65": [
+              35,
+              0,
+              0
+            ],
+            "1.2": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -124,7 +124,7 @@ public final class RpgBossTests {
 
     // ------------------------------------------------------------ 시험
 
-    /** 소리 이름: 보스 9종 · 엔진 · 상태가 쓰는 베드락 소리 모두 자바 소리로 풀림, 맞는 상자 (감옥 1.6×2.6), 모듈 등록, /boss altar · list */
+    /** 소리 이름: 보스 10종 · 엔진 · 상태가 쓰는 베드락 소리 모두 자바 소리로 풀림, 맞는 상자 (감옥 1.6×2.6), 모듈 등록, /boss altar · list */
     @GameTest(environment = "mmorpg:boss", maxTicks = 20)
     public void soundsHitboxesAndCommand(GameTestHelper h) {
         List<String> missing = new ArrayList<>();

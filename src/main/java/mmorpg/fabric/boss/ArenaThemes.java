@@ -14,7 +14,7 @@ import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 
 /**
- * 보스 필드 신전 9종의 설계 (arena.js 136~1772 줄: harvest · desert · sunken · deep · isle · roots · stones · glacier · muspel, 테마 도우미, planOps).
+ * 보스 필드 신전 10종의 설계 (arena.js 136~1772 줄: harvest · desert · sunken · deep · isle · roots · stones · glacier · muspel, 테마 도우미, planOps — 0.33.0 자바 판에만 void).
  * 마인크래프트 클래스 없이 씀 — 블록은 애드온의 베드락 이름 · 상태 그대로 (자바 블록으로는 {@link ArenaBlocks} 가 바꿈), 그래서 애드온 JS 와 칸마다 대조할 수 있음.
  * <p>
  * 같은 제단 자리 (x, y, z) 면 애드온과 같은 칸에 같은 블록: 씨앗 난수 (seeded) · 칸 난수 (hash) · 무늬 (patch) · 뽑는 차례를 그대로.
@@ -1728,6 +1728,106 @@ public final class ArenaThemes {
         return out;
     }
 
+    // ------------------------------------------------------------ 공허 기사: 공허의 결투장 (0.33.0)
+
+    /** 공허의 결투장 바닥을 가르는 균열 수 */
+    public static final int VOID_CRACKS = 6;
+
+    /**
+     * 0.33.0 공허 기사: 공허의 결투장. 검은 바닥 (심층암 타일 · 윤나는 흑암 — 가운데에서 바깥으로 동심원 띠, 띠 사이 윤나는 심층암 줄),
+     * 바닥을 가르는 공허 균열 여섯 줄 (가운데 결투 원에서 바깥으로 구불구불 — 가운데는 우는 흑요석 (보랏빛), 가장자리는 흑요석),
+     * 가운데 결투 원 (깎은 흑암 · 흑암 벽돌 십자 · 자수정 테 — 가운데가 제단), 성문 네 길 (흑암 벽돌), 가장자리 흑요석 둑 (우는 흑요석 점) + 흑암 벽돌 담장 (높이 1),
+     * 성문 4 (심층암 벽돌 기둥 + 들보 (가운데 우는 흑요석) + 매단 영혼 랜턴), 담장 위 부서진 오벨리스크 8개 (흑요석 · 우는 흑요석 마디, 높이 4 ~ 7, 꼭대기 자수정 송이),
+     * 장식은 담장 쪽 띠에만 (자수정 송이 · 시든 해골 · 켜진 검은 양초 — 먼저 쓰러진 도전자들)
+     */
+    private static Plan voidHall(Ctx a) {
+        int R = a.R;
+        int H = a.H;
+        DoubleSupplier rand = seeded(a);
+        int EDGE = R + 2;
+        List<Spot> gates = polars(R + 1, GATE_DEG);
+        Gap onGate = (dx, dz) -> Math.abs(dx) <= 1 || Math.abs(dz) <= 1;
+        Ring ring = ringOf(R, onGate);
+        List<Flank> flanks = flanks(R, ring.cells, 2);
+        List<Put> struct = new ArrayList<>();
+        // 성문: 양쪽 기둥 (심층암 벽돌 3 + 깎은 심층암) + 들보 (가운데 우는 흑요석) + 매단 영혼 랜턴
+        for (Flank f : flanks) {
+            for (int dy = 0; dy <= 2; dy++) struct.add(put(f.dx, dy, f.dz, "minecraft:deepslate_bricks"));
+            struct.add(put(f.dx, 3, f.dz, "minecraft:chiseled_deepslate"));
+        }
+        for (int gi = 0; gi < 4; gi++) {
+            Beam b = beam(flanks, gi);
+            int mid = round((b.lo + b.hi) / 2.0);
+            for (int k = b.lo; k <= b.hi; k++) struct.add(put(b.dx(k), 4, b.dz(k), k == mid ? "minecraft:crying_obsidian" : "minecraft:polished_blackstone_bricks"));
+            struct.add(put(b.dx(mid), 3, b.dz(mid), "minecraft:soul_lantern", st("hanging", true)));
+        }
+        // 부서진 오벨리스크 8개: 담장 고리 위 (성문 사이), 흑요석 · 우는 흑요석 마디, 높이 4 ~ 7, 꼭대기 자수정 송이
+        List<SpireAt> obelisks = new ArrayList<>();
+        for (double deg : STONE_DEG) {
+            Spot q = nearestCell(ring.cells, polar(R + 1, deg));
+            int h = 4 + (int) Math.floor(rand.getAsDouble() * 4);
+            obelisks.add(new SpireAt(q.dx, q.dz, h));
+            for (int dy = 0; dy < h; dy++) struct.add(put(q.dx, dy, q.dz, dy == h - 1 || dy % 3 == 1 ? "minecraft:crying_obsidian" : "minecraft:obsidian"));
+            struct.add(put(q.dx, h, q.dz, "minecraft:amethyst_cluster"));
+        }
+        List<Spot> posts = new ArrayList<>(spotsOf(flanks));
+        for (SpireAt o : obelisks) posts.add(new Spot(o.dx, o.dz));
+        // 균열 여섯 줄: 가운데 결투 원 밖에서 바깥으로 (각도 · 굽이는 제단 자리마다 정해짐)
+        double[] crackDeg = new double[VOID_CRACKS];
+        double[] crackPh = new double[VOID_CRACKS];
+        for (int i = 0; i < VOID_CRACKS; i++) {
+            crackDeg[i] = i * (360.0 / VOID_CRACKS) + 12 + rand.getAsDouble() * 30;
+            crackPh[i] = rand.getAsDouble() * 6.28;
+        }
+        Painter floor = (dx, dz, r, deg) -> {
+            if (r > EDGE) return null;
+            if (r > R) return p(hash(a, dx, dz, 3) < 0.14 ? "minecraft:crying_obsidian" : "minecraft:obsidian"); // 둑
+            if (r > R - 1) return p("minecraft:polished_blackstone_bricks"); // 가장자리
+            if (r <= 1.5) return p("minecraft:chiseled_polished_blackstone");
+            if (r <= 3.5) return p(dx == 0 || dz == 0 ? "minecraft:polished_blackstone_bricks" : "minecraft:polished_blackstone");
+            if (r <= 4.5) return p("minecraft:amethyst_block"); // 결투 원의 자수정 테
+            for (int i = 0; i < VOID_CRACKS; i++) {
+                double wob = StrictMath.sin(r * 0.55 + crackPh[i]) * 9 + StrictMath.sin(r * 1.7 + crackPh[i] * 2) * 3;
+                double off = Math.abs(angDist((deg + 0) * Math.PI / 180, (crackDeg[i] + wob) * Math.PI / 180)) * r;
+                double w = 0.45 + r * 0.025;
+                if (off <= w) return p(off <= w * 0.55 || r < 9 ? "minecraft:crying_obsidian" : "minecraft:obsidian");
+            }
+            if (onGate.test(dx, dz)) return p(hash(a, dx, dz, 2) < 0.3 ? "minecraft:cracked_polished_blackstone_bricks" : "minecraft:polished_blackstone_bricks"); // 성문 길
+            double band = (r - 4.5) / 3.6;
+            if (band - Math.floor(band) < 0.22) return p("minecraft:polished_deepslate"); // 띠 사이 줄
+            double h = hash(a, dx, dz);
+            if (((int) Math.floor(band)) % 2 == 0) return p(h < 0.07 ? "minecraft:cracked_deepslate_tiles" : "minecraft:deepslate_tiles");
+            return p(h < 0.07 ? "minecraft:cracked_polished_blackstone_bricks" : "minecraft:polished_blackstone");
+        };
+        // 장식: 담장 쪽 띠 (반지름 R-1.6 ~ R, 성문 길 · 기둥 · 오벨리스크 둘레 제외) — 자수정 송이 · 시든 해골 · 켜진 검은 양초
+        List<Put> deco = new ArrayList<>();
+        Set<Long> taken = new HashSet<>();
+        for (int n = 0, tries = 0; n < 24 && tries < 800; tries++) {
+            double deg = rand.getAsDouble() * 360;
+            Spot q = polar(R - rand.getAsDouble() * 1.2, deg);
+            double r = hypot(q.dx, q.dz);
+            long k = cellKey(q.dx, q.dz);
+            if (taken.contains(k) || r > R || r < R - 1.6 || Math.abs(q.dx) <= 2 || Math.abs(q.dz) <= 2 || nearPost(posts, q.dx, q.dz)) continue;
+            // 담장 바로 옆 칸은 빼기 (담장이 장식 쪽으로 이어지지 않게)
+            if (ring.cell.test(q.dx + 1, q.dz) || ring.cell.test(q.dx - 1, q.dz) || ring.cell.test(q.dx, q.dz + 1) || ring.cell.test(q.dx, q.dz - 1)) continue;
+            taken.add(k);
+            double pick = rand.getAsDouble();
+            if (pick < 0.45) deco.add(put(q.dx, 0, q.dz, "minecraft:amethyst_cluster"));
+            else if (pick < 0.65) deco.add(put(q.dx, 0, q.dz, "minecraft:wither_skeleton_skull", st("facing_direction", 1)));
+            else deco.add(put(q.dx, 0, q.dz, "minecraft:black_candle", st("candles", (int) Math.floor(rand.getAsDouble() * 3), "lit", true)));
+            n++;
+        }
+        Paint wall = p("minecraft:polished_blackstone_brick_wall");
+        List<Stage> stages = List.of(
+                new Stage("땅 고르기", clearLayers(H, EDGE), List.of(), "dig.stone"),
+                new Stage("기초", List.of(fillLayer(-3, EDGE, p("minecraft:blackstone")), fillLayer(-2, EDGE, p("minecraft:deepslate"))), List.of(), "dig.deepslate"),
+                new Stage("바닥", List.of(new Layer(-1, floor)), List.of(), "dig.deepslate"),
+                new Stage("담장·오벨리스크", List.of(new Layer(0, (dx, dz, r, deg) -> ring.cell.test(dx, dz) ? wall : null)), struct, "break.amethyst_block"),
+                new Stage("장식", List.of(), deco, "block.lantern.place"));
+        Feat f = new Feat(List.of(), List.of(), gates, posts, List.of(), List.of(), null, List.of(), List.of(), obelisks, List.of(), List.of(), List.of());
+        return new Plan(stages, f);
+    }
+
     // ------------------------------------------------------------ 설계 고르기 · 작업 목록
 
     /** 테마 이름 (설정 BOSSES.<키>.arena.theme) → 설계 */
@@ -1742,6 +1842,7 @@ public final class ArenaThemes {
             case "stones" -> stones(a);
             case "glacier" -> glacier(a);
             case "muspel" -> muspel(a);
+            case "void" -> voidHall(a);
             default -> null;
         };
     }

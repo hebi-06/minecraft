@@ -183,5 +183,15 @@
     "name": "§5공허 수정§r§7 (전리품)",
     "glint": false,
     "stack": 64
+  },
+  "rpg:void_heart": {
+    "name": "§5공허의 심장§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
+  },
+  "rpg:rift_shard": {
+    "name": "§d균열 대검 조각§r§7 (보스 재료)",
+    "glint": true,
+    "stack": 64
   }
 }

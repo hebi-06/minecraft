@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 5단계 게임 시험 (서버) — 보스 제단 · 보스 필드 (arena.js): 제단 블록 9종 등록 (빛 · 부술 수 없음 · 폭발 · 아이템 · 이름), 신전 설계 9종의 블록이
+ * 5단계 게임 시험 (서버) — 보스 제단 · 보스 필드 (arena.js): 제단 블록 10종 등록 (빛 · 부술 수 없음 · 폭발 · 아이템 · 이름 — 0.33.0 공허 기사 포함), 신전 설계 10종의 블록이
  * 모두 자바 블록으로 풀림, 제단을 놓으면 목록에 들어가고 관리자에게 "보스 필드 만들기" 창, 짓기가 끝나면 특징 자리의 블록 (허수아비 킹 토템 짚단 ·
  * 잭오랜턴, 기둥) · 설계와 칸마다 같은지 · 다시 지어도 같은 블록, 필드 보호 (서바이벌은 못 부숨 · 못 놓음 · 도구 · 양동이 · 폭발), 제단이 없어지면
  * 목록에서 빠지고 훅이 불림, 겹치는 제단 · 높이가 맞지 않는 제단은 짓기 거절.
@@ -127,10 +127,10 @@ public final class RpgArenaTests {
 
     // ------------------------------------------------------------ 시험
 
-    /** 제단 블록 9종: 등록 · 빛 10 · 서바이벌에서 부술 수 없음 · 폭발에 안 부서짐 · 아이템 (블록 아이템, /boss altar) · 이름 */
+    /** 제단 블록 10종: 등록 · 빛 10 · 서바이벌에서 부술 수 없음 · 폭발에 안 부서짐 · 아이템 (블록 아이템, /boss altar) · 이름 */
     @GameTest(maxTicks = 20)
     public void altarBlocksRegistered(GameTestHelper h) {
-        h.assertTrue(AltarBlocks.blocks().size() == 9, "9 altars " + AltarBlocks.blocks().keySet());
+        h.assertTrue(AltarBlocks.blocks().size() == 10, "10 altars " + AltarBlocks.blocks().keySet());
         for (String key : Arena.BOSSES.keys()) {
             AltarBlocks.AltarBlock b = AltarBlocks.block(key);
             h.assertTrue(b != null, "altar block " + key);
@@ -147,11 +147,11 @@ public final class RpgArenaTests {
             h.assertTrue(AltarBlocks.keyOf(s).equals(key), "keyOf");
         }
         h.assertTrue(Arena.altarItem("nope", 1).isEmpty(), "unknown key → empty");
-        LOG.info("[arena-test] OK altar blocks 9 registered");
+        LOG.info("[arena-test] OK altar blocks 10 registered");
         h.succeed();
     }
 
-    /** 신전 설계 9종: 블록 · 상태가 모두 자바로 풀림, 같은 자리 = 같은 작업 목록, 상태 대응 몇 가지 */
+    /** 신전 설계 10종: 블록 · 상태가 모두 자바로 풀림, 같은 자리 = 같은 작업 목록, 상태 대응 몇 가지 */
     @GameTest(maxTicks = 20)
     public void designsMapToJavaBlocks(GameTestHelper h) {
         int ops = 0;
