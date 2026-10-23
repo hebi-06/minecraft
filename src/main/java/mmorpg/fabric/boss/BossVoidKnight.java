@@ -1201,9 +1201,13 @@ public final class BossVoidKnight implements BossModule {
         bar.setColor(left <= 1200 ? BossEvent.BossBarColor.RED : BossEvent.BossBarColor.PURPLE);
         if (now % 10 != 0) return;
         List<ServerPlayer> here = BossKit.audience(u);
-        // 보스 체력 막대 아래에 오게: 체력 막대를 받은 사람에게만 (화면의 보스 막대는 받은 차례로 쌓임)
+        // 보스 체력 막대 아래에 오게 (화면의 보스 막대는 받은 차례로 쌓임): 체력 막대를 아직 못 받은 사람에게는 체력 막대를 먼저 보냄
         ServerBossEvent hp = ok(u.boss) ? u.boss.bossBar() : null;
-        for (ServerPlayer p : here) if (!bar.getPlayers().contains(p) && (hp == null || hp.getPlayers().contains(p))) bar.addPlayer(p);
+        for (ServerPlayer p : here) {
+            if (bar.getPlayers().contains(p)) continue;
+            if (hp != null && !hp.getPlayers().contains(p)) hp.addPlayer(p);
+            bar.addPlayer(p);
+        }
         for (ServerPlayer p : List.copyOf(bar.getPlayers())) if (!here.contains(p) || p.isRemoved()) bar.removePlayer(p);
     }
 
