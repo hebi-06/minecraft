@@ -349,6 +349,12 @@ public final class RpgVoidKnightGallery extends RpgDriveGallery {
         shot(ctx, "combo2");
         waitUntil(ctx, server, t0 + w0 + w1 + 8);
         shot(ctx, "combo3_ready");
+        // 셋째는 기사가 바로 앞 (1.8칸) 이라 기사 가슴을 올려다봄 (시선만 — 플레이어는 그 자리, 셋째의 방향은 이미 정해짐)
+        Vec3 kb = server.computeOnServer(s -> enc().boss.position());
+        Vec3 eye = server.computeOnServer(s -> player(s).getEyePosition());
+        double ddx = kb.x - eye.x;
+        double ddz = kb.z - eye.z;
+        ctx.getInput().lookAt((float) Math.toDegrees(Math.atan2(-ddx, ddz)), (float) Math.toDegrees(Math.atan2(-(ALTAR_Y + 2.6 - eye.y), Math.hypot(ddx, ddz))));
         waitUntil(ctx, server, t0 + w0 + w1 + w2 + 1);
         shot(ctx, "combo3");
         camera(ctx, CameraType.FIRST_PERSON);
