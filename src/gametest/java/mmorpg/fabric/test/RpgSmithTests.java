@@ -10,12 +10,14 @@ import mmorpg.fabric.gear.GearItems;
 import mmorpg.fabric.gear.WeaponEnhance;
 import mmorpg.fabric.smith.EnhanceWindow;
 import mmorpg.fabric.smith.Smith;
+import mmorpg.fabric.smith.VoidArmorCraft;
 import mmorpg.fabric.ui.FormNet;
 import mmorpg.fabric.ui.Forms;
 import mmorpg.fabric.ui.Inv;
 import mmorpg.fabric.ui.Slot;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,7 +28,8 @@ import net.minecraft.world.item.Items;
 /**
  * 대장장이 게임 시험 (서버, 클라이언트 없이 창 흐름 — Forms.HEADLESS · Forms.answer): 무기 강화 (성공 · 실패 — +1~+5 그대로, +6 부터 한 단계 하락,
  * 수호 주문서는 실패했을 때만 사라지고 단계 유지 · 재료는 판정 때 소모), 재료가 모자라면 쓰지 않음, 망치질 도중 무기를 옮기면 취소 (재료 그대로),
- * 영웅 무기 레벨 올리기 (30 → 35 · 비용 · 강화 단계 · 모루 이름 유지), 보스 무기 제작 (재료 · 실버 · 별철 광석 소모, 모자라면 아무것도 쓰지 않음).
+ * 영웅 무기 레벨 올리기 (30 → 35 · 비용 · 강화 단계 · 모루 이름 유지), 보스 무기 제작 (재료 · 실버 · 별철 광석 소모, 모자라면 아무것도 쓰지 않음),
+ * 0.36.0 초월 무기 레벨 올리기 (40 → 45 — 골드 + 공허 재료) · 공허의 갑옷 제작 (제작 창 넷째 쪽 — 부위 · 네 부위 한 번에).
  * 강화 성공 여부는 EnhanceWindow.rand 로 정함 — 난수를 바꾸는 시험은 하나 (enhanceOutcomes) 에 모아 차례로 (함께 도는 시험끼리 섞이지 않게).
  */
 public final class RpgSmithTests {
@@ -276,6 +279,75 @@ public final class RpgSmithTests {
         h.assertTrue(body(sp).contains("완료"), "done message: " + body(sp));
         Weapon w45 = RpgCombat.weaponOf(now);
         h.assertTrue(w45 != null && w45.level() == 45 && w45.damage() > w40.damage() && w45.critChance() == w40.critChance(), "45렙: damage up, crit same");
+        finish(h, sp);
+    }
+
+    /**
+     * 0.36.0 공허의 갑옷 제작 (대장장이 제작 창 넷째 쪽): 공허 전리품을 가지면 그 쪽부터 열림 (힘 칸 = 공허 갑옷 그림) → 힘 종류 창 → 투구 확인 창 →
+     * 골드가 1 모자라면 아무것도 쓰지 않음 → 채우면 골드 10 · 독주머니 15 · 칼날 15 · 핵 10 을 내고 투구 → 네 부위 한 번에 (한 벌 비용) → 4부위 →
+     * 돌아가기 → 윗줄 가운데 칸: 영웅 쪽
+     */
+    @GameTest(maxTicks = 40)
+    public void craftVoidArmor(GameTestHelper h) {
+        ServerPlayer sp = RpgGearTests.player(h);
+        Forms.HEADLESS.add(sp.getUUID());
+        h.assertTrue(VoidArmorCraft.enabled() && Smith.CRAFT_PAGES.size() == 4 && Smith.voidPage(3), "void armor page " + Smith.CRAFT_PAGES);
+        VoidArmorCraft.Cost helm = VoidArmorCraft.pieceCost("helmet");
+        VoidArmorCraft.Cost set = VoidArmorCraft.setCost();
+        h.assertTrue(helm.gold() == 10 && set.gold() == 48 && set.items().size() == 3, "costs " + helm + " / " + set);
+        Item leaper = mmorpg.fabric.ui.Icon.itemById("rpg:loot_void_leaper");
+        Item stalker = mmorpg.fabric.ui.Icon.itemById("rpg:loot_void_stalker");
+        Item jelly = mmorpg.fabric.ui.Icon.itemById("rpg:loot_void_jelly");
+        int[] need = {set.items().get("rpg:loot_void_leaper"), set.items().get("rpg:loot_void_stalker"), set.items().get("rpg:loot_void_jelly")};
+        h.assertTrue(need[0] == 70 && need[1] == 70 && need[2] == 55 && helm.items().get("rpg:loot_void_jelly") == 10, "set items " + set.items());
+        // 투구 + 한 벌 몫
+        Item[] mats = {leaper, stalker, jelly};
+        int slot = 18;
+        for (int k = 0; k < 3; k++) {
+            int n = need[k] + helm.items().get(BuiltInRegistries.ITEM.getKey(mats[k]).toString());
+            for (; n > 0; n -= 64) sp.getInventory().setItem(slot++, new ItemStack(mats[k], Math.min(64, n)));
+        }
+        mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.GOLD, helm.gold() - 1);
+        Item helmet = GearItems.byId("rpg:armor_str_l50_transcend_helmet");
+        h.assertTrue(helmet != null, "void helmet item");
+        Smith.smithLoop(sp, "craft", null);
+        FormNet.ChestPayload c = chest(sp);
+        h.assertTrue(c != null && c.title().contains("공허"), "opens on the void armor page: " + (c == null ? null : c.title()));
+        int strSlot = VoidArmorCraft.typeSlot("str");
+        h.assertTrue(c.slots().get(strSlot).icon().item().is(GearItems.byId("rpg:armor_str_l50_transcend_chest")), "str slot = void chest");
+        Forms.answer(sp, strSlot, null);
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("힘 갑옷"), "type window: " + (chest(sp) == null ? null : chest(sp).title()));
+        h.assertTrue(chest(sp).slots().get(10).icon().item().is(helmet), "helmet at 10");
+        // 골드 9 < 10: 그대로
+        Forms.answer(sp, 10, null);
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("공허의 갑옷 제작"), "confirm window");
+        Forms.answer(sp, 11, null);
+        h.assertTrue(body(sp).contains("재료 부족") && body(sp).contains("골드 1"), "lack: " + body(sp));
+        h.assertTrue(RpgGearTests.countIn(sp, helmet) == 0 && RpgGearTests.countIn(sp, leaper) == 85 && RpgGearTests.countIn(sp, jelly) == 65
+                && mmorpg.fabric.economy.Wallet.total(sp, mmorpg.core.Economy.Kind.GOLD) == helm.gold() - 1, "nothing used");
+        // 골드를 채우고 (투구 + 한 벌) 다시
+        mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.GOLD, helm.gold() + set.gold());
+        Forms.answer(sp, 10, null);
+        Forms.answer(sp, 11, null);
+        h.assertTrue(body(sp).contains("완료"), "helmet done: " + body(sp));
+        h.assertTrue(RpgGearTests.countIn(sp, helmet) == 1 && RpgGearTests.countIn(sp, leaper) == 70 && RpgGearTests.countIn(sp, stalker) == 70
+                && RpgGearTests.countIn(sp, jelly) == 55 && mmorpg.fabric.economy.Wallet.total(sp, mmorpg.core.Economy.Kind.GOLD) == set.gold(), "paid helmet cost");
+        // 네 부위 한 번에
+        Forms.answer(sp, VoidArmorCraft.SET_SLOT, null);
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("공허의 갑옷 제작") && chest(sp).body().contains("네 부위"), "set confirm: " + body(sp));
+        Forms.answer(sp, 11, null);
+        h.assertTrue(body(sp).contains("완료"), "set done: " + body(sp));
+        for (String p : mmorpg.core.Armor.PIECE_ORDER) {
+            int n = RpgGearTests.countIn(sp, GearItems.byId("rpg:armor_str_l50_transcend_" + p));
+            h.assertTrue(n == (p.equals("helmet") ? 2 : 1), p + " " + n);
+        }
+        for (Item m : mats) h.assertTrue(RpgGearTests.countIn(sp, m) == 0, "used " + m);
+        h.assertTrue(mmorpg.fabric.economy.Wallet.total(sp, mmorpg.core.Economy.Kind.GOLD) == 0, "gold 0");
+        // 돌아가기 → 공허의 갑옷 쪽 → 윗줄 가운데 칸: 영웅 쪽
+        Forms.answer(sp, VoidArmorCraft.BACK_SLOT, null);
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("공허"), "back to the page");
+        Forms.answer(sp, 4, null);
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("영웅"), "next page: " + (chest(sp) == null ? null : chest(sp).title()));
         finish(h, sp);
     }
 

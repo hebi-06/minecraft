@@ -60,10 +60,11 @@ public final class ArmorMoreTest {
                 }
             }
         }
-        check(n == 240 && ids.size() == 240, "armor count " + n + " ids " + ids.size());
+        check(n == 280 && ids.size() == 280, "armor count " + n + " ids " + ids.size() + " (0.36.0 공허 초월 50렙 40 포함)");
         check(Armor.parseArmor("rpg:armor_strint_l40_common_chest") == null, "unknown type is not armor");
         check(Armor.parseArmor("rpg:armor_intstr_l35_common_chest") == null, "no 35 armor");
-        check(Armor.parseArmor("rpg:armor_intstr_l20_transcend_chest") == null, "transcend only 40");
+        check(Armor.parseArmor("rpg:armor_intstr_l20_transcend_chest") == null, "transcend only 40 · 50");
+        check(Armor.parseArmor("rpg:armor_intstr_l50_transcend_chest") != null && Armor.parseArmor("rpg:armor_intstr_l50_common_chest") == null, "void 50 is transcend only");
 
         // 두 스탯 무기 ↔ 갑옷: 요구 같음 · 포인트 안
         Obj cfg = R.obj("CONFIG");
@@ -115,6 +116,32 @@ public final class ArmorMoreTest {
         check(Armor.armorFrom("dex", 40, "transcend", "chest").setProt() == 22, "emperor dex prot (0.9)");
         check(Armor.armorFrom("int", 40, "transcend", "chest").setProt() == 19, "emperor int prot (0.8)");
         check(Armor.setPrice("intstr", 40) == Armor.setPrice("str", 40), "same price as other types");
+
+        // 0.36.0 공허의 갑옷 (초월 50렙 — 세트 void · 방어 [4, 10, 8, 4] · 세트 보너스 40 · 요구 (50 + 4) × 2.5 = 135)
+        for (String t : order) {
+            Armor.Piece v = Armor.armorFrom(t, 50, "transcend", "chest");
+            Armor.Piece e = Armor.armorFrom(t, 40, "transcend", "chest");
+            check(v != null && v.set().equals("void") && v.setName().equals("공허") && v.title().equals("공허 갑옷"), "void " + t);
+            if (v == null) continue;
+            check(v.name().contains("[초월 50렙]") && e.name().contains("[초월]"), "void name " + v.name());
+            check(v.setProt() > e.setProt(), "void prot " + t + " " + v.setProt() + " vs " + e.setProt());
+            double sum = 0;
+            for (double b : v.setBonus().values()) sum += b;
+            check(sum == (v.setBonus().size() == 1 ? 40 : 48), "void bonus " + t + " " + v.setBonus());
+            double need = 0;
+            for (Weapons.Req q : v.reqs()) need += q.value();
+            check(Math.abs(need - 135) <= 1 && v.reqLevel() == 50, "void reqs " + t + " " + v.reqs());
+        }
+        check(Armor.armorFrom("str", 50, "transcend", "chest").setProt() == 26 && Armor.armorFrom("int", 50, "transcend", "chest").setProt() == 20,
+                "void prot str 26 · int 20 (" + Armor.armorFrom("int", 50, "transcend", "chest").setProt() + ")");
+        Obj va = R.obj("VOID_ARMOR");
+        int gold = 0;
+        for (String p : Armor.PIECE_ORDER) {
+            Obj c = va.obj("cost").obj(p);
+            gold += (int) c.num("gold");
+            check(c.obj("items").keys().size() == 3, "void cost items " + p);
+        }
+        check(gold == 48 && va.num("level") == 50 && va.str("grade").equals("transcend"), "void set gold " + gold);
 
         // 방패 상시 감소 상한 25%
         Obj shield = R.obj("SHIELD");

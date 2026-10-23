@@ -35,7 +35,7 @@ public final class Weapons {
     private static final double CRIT_CAP = R.num("CRIT_CAP");
     /**
      * 0.36.0 초월 무기 레벨 올리기 (Java-only — rules_more.json WEAPON_LEVEL_UP, null with pure rules): 40 → 45 → … → 60렙, 값은 골드 + 재료.
-     * 치명타 · 치명타 배율은 critLevel (40) 의 값에서 멈춤 — 올린 레벨은 기본 피해 (LEVEL_DAMAGE) · 요구 스탯만 바꿈.
+     * 치명타 · 치명타 배율 · 방패 상시 감소 · 막기는 critLevel (40) 의 값에서 멈춤 — 올린 레벨은 기본 피해 (LEVEL_DAMAGE) · 요구 스탯만 바꿈.
      */
     private static final Obj LEVEL_UP = R.root().objOrNull("WEAPON_LEVEL_UP");
     private static final double CRIT_LEVEL = LEVEL_UP == null ? Double.POSITIVE_INFINITY : LEVEL_UP.numOr("critLevel", Double.POSITIVE_INFINITY);
@@ -296,8 +296,9 @@ public final class Weapons {
         double passive = 0;
         double block = 0;
         if (type.equals("shield")) {
-            passive = Math.min(SHIELD.num("passiveCap"), SHIELD.num("passiveBase") + level * SHIELD.num("passivePerLevel") + gi * SHIELD.num("passivePerGrade"));
-            block = Math.min(SHIELD.num("blockCap"), SHIELD.num("blockBase") + level * SHIELD.num("blockPerLevel") + gi * SHIELD.num("blockPerGrade"));
+            // 0.36.0: 올린 초월 방패 (45 ~ 60렙) 의 상시 감소 · 막기는 40렙 값 (치명타와 같은 critLevel)
+            passive = Math.min(SHIELD.num("passiveCap"), SHIELD.num("passiveBase") + critLv * SHIELD.num("passivePerLevel") + gi * SHIELD.num("passivePerGrade"));
+            block = Math.min(SHIELD.num("blockCap"), SHIELD.num("blockBase") + critLv * SHIELD.num("blockPerLevel") + gi * SHIELD.num("blockPerGrade"));
         }
         String key = type + "_l" + level + "_" + g.id();
         String label = look == null ? null : look.strOrNull("label");

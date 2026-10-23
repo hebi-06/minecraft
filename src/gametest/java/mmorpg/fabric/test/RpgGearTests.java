@@ -37,7 +37,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 4단계 게임 시험 (서버): 갑옷 240 (0.12.5 — 두 스탯 무기용 5종 더함) · 재료 등록, 갑옷 방어 · 스탯 보너스 (입으면 실제 스탯 · 최대 체력), 요구 조건이 모자라면 벗겨 가방으로,
+ * 4단계 게임 시험 (서버): 갑옷 280 (0.12.5 — 두 스탯 무기용 5종 더함, 0.36.0 공허 초월 50렙 40) · 재료 등록, 갑옷 방어 · 스탯 보너스 (입으면 실제 스탯 · 최대 체력), 요구 조건이 모자라면 벗겨 가방으로,
  * 무기 강화 단계 (이름 · 피해 배율), 상점 창 흐름 (클라이언트 없이 — 무기 사기 · 전리품 팔기).
  */
 public final class RpgGearTests {
@@ -97,7 +97,7 @@ public final class RpgGearTests {
 
     @GameTest(maxTicks = 20)
     public void gearItemsRegistered(GameTestHelper h) {
-        h.assertTrue(GearItems.armor().size() == 240, "armor " + GearItems.armor().size());
+        h.assertTrue(GearItems.armor().size() == 280, "armor " + GearItems.armor().size() + " (0.36.0 공허 초월 50렙 40 포함)");
         for (RpgArmorItem it : GearItems.armor()) {
             Armor.Piece a = it.piece();
             ItemStack s = new ItemStack(it);
@@ -200,6 +200,42 @@ public final class RpgGearTests {
         sp.setItemSlot(EquipmentSlot.HEAD, armor("int", 40, "transcend", "helmet"));
         ArmorSystem.armorTick(sp);
         h.assertTrue(sp.getItemBySlot(EquipmentSlot.HEAD).isEmpty(), "int helmet taken off");
+        done(h, sp);
+    }
+
+    /**
+     * 0.36.0 공허의 갑옷 (초월 50렙 — 대장장이 제작): 힘 135 를 찍어도 49렙이면 벗겨짐, 50렙이면 입음 — 세트 방어 26 (황제 24 + 2) · 힘 +40 (황제 32),
+     * 이름 "[초월 50렙]"
+     */
+    @GameTest(maxTicks = 20)
+    public void voidArmorSet(GameTestHelper h) {
+        ServerPlayer sp = player(h);
+        Armor.Piece chest = Armor.armorFrom("str", 50, "transcend", "chest");
+        Armor.Piece emperor = Armor.armorFrom("str", 40, "transcend", "chest");
+        h.assertTrue(chest != null && chest.set().equals("void") && chest.reqLevel() == 50 && chest.name().contains("[초월 50렙]"), "void chest " + (chest == null ? null : chest.name()));
+        h.assertTrue(chest.setProt() == 26 && emperor.setProt() == 24 && chest.setBonus().get("str") == 40, "set prot " + chest.setProt() + " · bonus " + chest.setBonus());
+        for (Weapons.Req q : chest.reqs()) RpgPlayers.setStat(sp, q.stat(), (int) Math.ceil(q.value()));
+        h.assertTrue(Stats.get(RpgStats.effective(sp), "str") >= 135, "str 135");
+        sp.setExperienceLevels(49);
+        sp.setItemSlot(EquipmentSlot.CHEST, armor("str", 50, "transcend", "chest"));
+        ArmorSystem.armorTick(sp);
+        h.assertTrue(sp.getItemBySlot(EquipmentSlot.CHEST).isEmpty(), "49렙: taken off");
+        h.assertTrue(countIn(sp, GearItems.byId(chest.id())) == 1, "back in the bag");
+        sp.getInventory().clearContent();
+        sp.setExperienceLevels(50);
+        Map<String, Double> base = Map.copyOf(RpgStats.effective(sp));
+        for (int i = 0; i < 4; i++) sp.setItemSlot(SLOTS[i], armor("str", 50, "transcend", Armor.PIECE_ORDER.get(i)));
+        ArmorSystem.armorTick(sp);
+        for (int i = 0; i < 4; i++) h.assertFalse(sp.getItemBySlot(SLOTS[i]).isEmpty(), "50렙: kept " + SLOTS[i]);
+        double[] prot = {0};
+        for (EquipmentSlot slot : SLOTS) {
+            sp.getItemBySlot(slot).forEachModifier(slot, (attr, mod) -> {
+                if (attr.value() == Attributes.ARMOR.value()) prot[0] += mod.amount();
+            });
+        }
+        h.assertTrue(prot[0] == chest.setProt(), "set armor " + prot[0] + " vs " + chest.setProt());
+        double str = Stats.get(RpgStats.effective(sp), "str");
+        h.assertTrue(str == Stats.get(base, "str") + 40, "str " + str + " vs " + Stats.get(base, "str") + " + 40");
         done(h, sp);
     }
 

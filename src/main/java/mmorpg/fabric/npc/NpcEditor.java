@@ -374,7 +374,7 @@ public final class NpcEditor {
         for (double l : LEVELS) opts.add(Js.str(l) + "렙 무기 상점 (갑옷 · 전리품 팔기)");
         new ModalForm("상점·대장장이·룬술사·교관 설정")
                 .dropdown("lv", "이 NPC를 누르면 여는 상점", opts, lv >= 0 ? LEVELS.indexOf((double) lv) + 1 : 0)
-                .toggle("smith", "대장장이 §7(무기 강화 +1~+10 · 영웅 무기 레벨 30→35→40렙)", NpcData.isSmith(npc))
+                .toggle("smith", "대장장이 §7(무기 강화 +1~+10 · 무기 레벨 영웅 30→40 · 초월 40→60렙 · 제작)", NpcData.isSmith(npc))
                 .toggle("runesmith", "룬술사 §7(룬 갈기 → 룬 조각 → 룬 뽑기권 · 같은 룬 돌파)", NpcData.isRunesmith(npc))
                 .toggle("job", "직업 교관 §7(10렙 전직 · 직업 바꾸기 — 0.27.0)", NpcData.isJobTrainer(npc))
                 .submit("저장")
@@ -832,7 +832,7 @@ public final class NpcEditor {
         d.reward.weapon = "";
         int wt = num(v, "wtype");
         if (wt > 0 && wt - 1 < WEAPON_TYPES.size()) {
-            // 그 등급에 없는 레벨이면 가장 가까운 레벨로 바꾼다 (영웅 30·35·40렙, 초월 40렙, 나머지는 35렙 없음 — 마검 · 12단계 새 무기는 그 종류에 있는 것만)
+            // 그 등급에 없는 레벨이면 가장 가까운 레벨로 바꾼다 (영웅 30·35·40렙, 초월 40 ~ 60렙 (0.36.0), 나머지는 35렙 없음 — 마검 · 12단계 새 무기는 그 종류에 있는 것만)
             String type = WEAPON_TYPES.get(wt - 1);
             List<Grade> grades = R.grades();
             int wg = num(v, "wgrade");

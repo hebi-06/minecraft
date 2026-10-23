@@ -135,7 +135,8 @@ public final class Armor {
         Obj req = t.obj("req");
         for (String s : req.keys()) mults.add(Map.entry(s, req.num(s)));
         List<Weapons.Req> reqs = Weapons.splitReq(Weapons.reqUnit(level, g.index()), mults).stream().filter(r -> r.value() > 0).toList();
-        String levelText = grade.equals("transcend") ? "초월" : Js.str(level) + "렙";
+        // 초월 40렙 (황제) 은 애드온처럼 "초월", 0.36.0 초월 50렙 (공허) 은 "초월 50렙"
+        String levelText = grade.equals("transcend") ? (level == 40 ? "초월" : "초월 " + Js.str(level) + "렙") : Js.str(level) + "렙";
         List<Double> tierProt = tier.numbersOrNull("prot");
         double typeProt = t.num("prot");
         double setProt = 0;

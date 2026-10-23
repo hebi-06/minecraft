@@ -141,7 +141,7 @@ public final class RpgWeaponsMoreTests {
                 }
             }
         }
-        h.assertTrue(n == 80, "80 new weapons (일반 · 희귀 56 + 고귀 · 영웅 · 초월 24), got " + n);
+        h.assertTrue(n == 96, "96 new weapons (일반 · 희귀 56 + 고귀 · 영웅 · 초월 24 + 0.36.0 초월 45 ~ 60렙 16), got " + n);
         // 창: 몹을 칠 수 있는 거리 +1 (아이템 속성 — 손에 들면)
         ItemStack lance = new ItemStack(RpgItems.byId("rpg:lance_l40_transcend"));
         ItemAttributeModifiers mods = lance.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
@@ -225,8 +225,10 @@ public final class RpgWeaponsMoreTests {
         List<Smith.Recipe> noble = Smith.craftPage(Smith.craftRecipes(), 2);
         h.assertTrue(noble.size() == 8, "noble page: 8 weapons, got " + noble.size());
         h.assertTrue(Smith.craftPage(Smith.craftRecipes(), 0).size() == 8 && Smith.craftPage(Smith.craftRecipes(), 1).size() == 9, "hero 8 · transcend 9");
+        // 0.36.0: 넷째 쪽 = 공허의 갑옷 (무기 목록 없이도 건너뛰지 않음)
         h.assertTrue(Smith.nextCraftPage(Smith.craftRecipes(), 0) == 1 && Smith.nextCraftPage(Smith.craftRecipes(), 1) == 2
-                && Smith.nextCraftPage(Smith.craftRecipes(), 2) == 0, "page cycle hero → transcend → noble → hero");
+                && Smith.nextCraftPage(Smith.craftRecipes(), 2) == 3 && Smith.voidPage(3) && Smith.nextCraftPage(Smith.craftRecipes(), 3) == 0,
+                "page cycle hero → transcend → noble → void armor → hero");
         Smith.Recipe r = noble.get(0);
         h.assertTrue(r.ore() == 0 && r.mats().stream().allMatch(m -> m.kind().equals("drop")), "drops only");
         for (Smith.Mat m : r.mats()) sp.getInventory().add(new ItemStack(m.item(), m.count()));

@@ -137,7 +137,7 @@ public final class EnhanceWindow {
         int br = Inv.count(sp, itemOf(BRIGHT));
         int sc = Inv.count(sp, itemOf(SCROLL));
         ChestForm form = new ChestForm("대장장이 §8· §7무기 강화");
-        form.set(TAB_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 올리기로").lore("§7영웅 무기 레벨 제한 올리기 창"));
+        form.set(TAB_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 올리기로").lore("§7영웅 · 초월 무기 레벨 제한 올리기 창"));
         form.set(STONE_SLOT, Slot.of(STONE.str("icon"), STONE.str("color") + "보유 " + STONE.str("name") + " §f" + st).count(st));
         form.set(BRIGHT_SLOT, Slot.of(BRIGHT.str("icon"), BRIGHT.str("color") + "보유 " + BRIGHT.str("name") + " §f" + br).count(br));
         form.set(INFO_SLOT, Slot.of("textures/items/nether_star", "§6무기 강화 §f(+1 ~ +" + MAX + ")")
@@ -145,7 +145,7 @@ public final class EnhanceWindow {
                         "§7+" + ANNOUNCE_FROM + " 이상 성공은 서버 전체 알림")
                 .deco());
         form.set(SCROLL_SLOT, Slot.of(SCROLL.str("icon"), SCROLL.str("color") + "보유 " + SCROLL.str("name") + " §f" + sc).count(sc));
-        form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_sword", "§6보스 무기 제작으로").lore("§7보스 재료로 영웅·초월 무기 만들기"));
+        form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_sword", "§6보스 무기 제작으로").lore("§7보스 재료로 영웅·초월 무기 만들기", "§7공허 전리품으로 공허의 갑옷 만들기"));
         for (int i = 0; i < list.size(); i++) {
             Entry e = list.get(i);
             form.set(FIRST + i, Slot.of(e.item(), slotName(e)).lore(slotLore(e)));

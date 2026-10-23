@@ -95,6 +95,7 @@
       "mmorpg.fabric.test.RpgVoidGallery",
       "mmorpg.fabric.test.RpgVoidKnightGallery",
       "mmorpg.fabric.test.RpgHelGallery",
+      "mmorpg.fabric.test.RpgVoidArmorGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

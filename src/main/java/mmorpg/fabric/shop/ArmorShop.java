@@ -47,7 +47,7 @@ public final class ArmorShop {
     }
 
     /** 칸 → ARMOR_TYPE_ORDER 번호 (종류 칸이 아니면 -1) */
-    static int typeAt(int slot, int count) {
+    public static int typeAt(int slot, int count) {
         int d = slot - SET_FIRST;
         if (d < 0 || d % 9 >= PER_ROW) return -1;
         int i = (d / 9) * PER_ROW + d % 9;

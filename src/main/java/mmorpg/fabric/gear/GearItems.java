@@ -166,6 +166,27 @@ public final class GearItems {
         if (uses.getOrDefault("hero", 0) > 0) parts.add("영웅 " + uses.get("hero"));
         if (uses.getOrDefault("transcend", 0) > 0) parts.add("초월 " + uses.get("transcend"));
         if (!parts.isEmpty()) lines.add("§r§6" + (uses.getOrDefault("noble", 0) > 0 ? "무기 제작 재료: " : "보스 무기 재료: ") + String.join(" · ", parts));
+        // 0.36.0 대장장이: 초월 무기 레벨 올리기 (WEAPON_LEVEL_UP — 올린 뒤 레벨) · 공허의 갑옷 제작 (VOID_ARMOR)
+        String item = d.str("item");
+        Obj up = R.root().objOrNull("WEAPON_LEVEL_UP");
+        if (up != null) {
+            List<String> to = new ArrayList<>();
+            Obj cost = up.obj("cost");
+            for (String lv : cost.keys()) {
+                Obj items = lv.startsWith("_") ? null : cost.obj(lv).objOrNull("items");
+                if (items != null && items.has(item)) to.add(Js.str(Double.parseDouble(lv) + up.num("step")));
+            }
+            if (!to.isEmpty()) lines.add("§r§5초월 무기 레벨 올리기: " + String.join(" · ", to) + "렙");
+        }
+        Obj va = R.root().objOrNull("VOID_ARMOR");
+        if (va != null) {
+            int n = 0;
+            for (String p : va.obj("cost").keys()) {
+                Obj items = p.startsWith("_") ? null : va.obj("cost").obj(p).objOrNull("items");
+                if (items != null && items.has(item)) n += (int) items.num(item);
+            }
+            if (n > 0) lines.add("§r§5공허의 갑옷 재료 §7(한 벌 " + n + "개)");
+        }
         return lines;
     }
 

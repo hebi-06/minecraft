@@ -35,10 +35,10 @@ public final class QuestTalk {
     /** NPC 대화창 한 장에 보이는 퀘스트 수 */
     static final int TALK_PAGE = 3;
     private static final Map<String, Integer> KIND_ORDER = Map.ofEntries(Map.entry("deliver", 0), Map.entry("turnin", 0), Map.entry("offer", 1), Map.entry("progress", 2),
-            Map.entry("wait", 2), Map.entry("more", 3), Map.entry("smith", 4), Map.entry("enhance", 4), Map.entry("shop", 4), Map.entry("armor", 4),
+            Map.entry("wait", 2), Map.entry("more", 3), Map.entry("smith", 4), Map.entry("enhance", 4), Map.entry("craft", 4), Map.entry("shop", 4), Map.entry("armor", 4),
             Map.entry("runesmith", 4), Map.entry("job", 4), Map.entry("jobup", 4), Map.entry("bye", 5));
     /** 대화창의 일거리 칸 (퀘스트가 아닌 것 — 0.27.0 직업 교관 job) */
-    private static final Set<String> SERVICE = Set.of("shop", "armor", "smith", "enhance", "runesmith", "job", "jobup", "bye");
+    private static final Set<String> SERVICE = Set.of("shop", "armor", "smith", "enhance", "craft", "runesmith", "job", "jobup", "bye");
 
     /** 대화창 선택지 하나 (kind: deliver · turnin · offer · progress · wait · more · 일거리) */
     record Option(String kind, Quest q, String text, Icon icon) {}
@@ -65,7 +65,9 @@ public final class QuestTalk {
             }
         }
         if (smith) opts.add(new Option("enhance", null, "§6무기 강화 §7(+1~+10)", Icon.of("textures/items/nether_star")));
-        if (smith) opts.add(new Option("smith", null, "§6영웅 무기 레벨 올리기", Icon.of("textures/items/iron_ingot")));
+        if (smith) opts.add(new Option("smith", null, "§6무기 레벨 올리기 §7(영웅 · 초월)", Icon.of("textures/items/iron_ingot")));
+        // 0.36.0 제작 창 바로 가기 (보스 무기 · 공허의 갑옷 — 창 안에서도 레벨 올리기 창과 오감)
+        if (smith) opts.add(new Option("craft", null, "§6보스 무기 · §5공허의 갑옷 §6제작", Icon.of("textures/items/iron_sword")));
         if (lv >= 0) opts.add(new Option("shop", null, "§b무기 상점 보기", DialogForm.SHOP));
         if (lv >= 0) opts.add(new Option("armor", null, "§b갑옷 상점 보기", Icon.of("textures/items/iron_chestplate")));
         if (runesmith) opts.add(new Option("runesmith", null, "§d룬 갈기 · 돌파 · 뽑기권", Icon.of(R.obj("RUNE_SMITH").str("shardIcon"))));
@@ -208,7 +210,7 @@ public final class QuestTalk {
                     step(t);
                 }
                 case "shop", "armor" -> Store.storeLoop(sp, lv, o.kind().equals("armor") ? "armor" : "weapons", t.done);
-                case "smith", "enhance" -> Smith.smithLoop(sp, o.kind().equals("enhance") ? "enhance" : "smith", t.done);
+                case "smith", "enhance", "craft" -> Smith.smithLoop(sp, o.kind(), t.done);
                 case "runesmith" -> RuneSmith.runesmithLoop(sp, "grind", t.done);
                 case "job" -> mmorpg.fabric.job.JobTrainer.open(sp, t.done); // 0.27.0 전직 · 직업 바꾸기 창
                 case "jobup" -> mmorpg.fabric.job.JobUpgrades.open(sp, t.done); // 0.31.0 직업 스킬 강화 창

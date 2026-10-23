@@ -1,0 +1,326 @@
+{
+  "tw": 128,
+  "th": 128,
+  "parts": {
+    "right_leg": {
+      "pivot": [
+        -1.9,
+        12.0,
+        0.0
+      ],
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "cubes": [
+        {
+          "from": [
+            -2.0,
+            0.0,
+            -2.0
+          ],
+          "size": [
+            4,
+            12,
+            4
+          ],
+          "uv": [
+            0,
+            0
+          ],
+          "inflate": 1.0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -2.5000000000000004,
+            12.0,
+            -4.4
+          ],
+          "size": [
+            1,
+            1,
+            2
+          ],
+          "uv": [
+            44,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -2.5000000000000004,
+            12.0,
+            -5.4
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ],
+          "uv": [
+            80,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -0.5,
+            12.0,
+            -4.4
+          ],
+          "size": [
+            1,
+            1,
+            2
+          ],
+          "uv": [
+            56,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -0.5,
+            12.0,
+            -5.4
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ],
+          "uv": [
+            88,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            1.5,
+            12.0,
+            -4.4
+          ],
+          "size": [
+            1,
+            1,
+            2
+          ],
+          "uv": [
+            68,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            1.5,
+            12.0,
+            -5.4
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ],
+          "uv": [
+            96,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -0.5,
+            10.0,
+            3.0
+          ],
+          "size": [
+            1,
+            2,
+            2
+          ],
+          "uv": [
+            32,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        }
+      ],
+      "children": {}
+    },
+    "left_leg": {
+      "pivot": [
+        1.9,
+        12.0,
+        0.0
+      ],
+      "rot": [
+        0,
+        0,
+        0
+      ],
+      "cubes": [
+        {
+          "from": [
+            -2.0,
+            0.0,
+            -2.0
+          ],
+          "size": [
+            4,
+            12,
+            4
+          ],
+          "uv": [
+            16,
+            0
+          ],
+          "inflate": 1.0,
+          "mirror": false
+        },
+        {
+          "from": [
+            1.5000000000000004,
+            12.0,
+            -4.4
+          ],
+          "size": [
+            1,
+            1,
+            2
+          ],
+          "uv": [
+            50,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            1.5000000000000004,
+            12.0,
+            -5.4
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ],
+          "uv": [
+            84,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -0.5,
+            12.0,
+            -4.4
+          ],
+          "size": [
+            1,
+            1,
+            2
+          ],
+          "uv": [
+            62,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -0.5,
+            12.0,
+            -5.4
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ],
+          "uv": [
+            92,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -2.5,
+            12.0,
+            -4.4
+          ],
+          "size": [
+            1,
+            1,
+            2
+          ],
+          "uv": [
+            74,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -2.5,
+            12.0,
+            -5.4
+          ],
+          "size": [
+            1,
+            1,
+            1
+          ],
+          "uv": [
+            100,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        },
+        {
+          "from": [
+            -0.5,
+            10.0,
+            3.0
+          ],
+          "size": [
+            1,
+            2,
+            2
+          ],
+          "uv": [
+            38,
+            0
+          ],
+          "inflate": 0,
+          "mirror": false
+        }
+      ],
+      "children": {}
+    }
+  },
+  "texture": "mmorpg:textures/entity/armor/void_boots.png",
+  "emissive": "mmorpg:textures/entity/armor/void_boots_glow.png"
+}

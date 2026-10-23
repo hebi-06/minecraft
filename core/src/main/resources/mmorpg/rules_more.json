@@ -513,6 +513,25 @@
     "vitstr": {"name": "체력+힘", "stats": {"vit": 0.6, "str": 0.6}, "prot": 1.1, "req": {"vit": 0.6666666666666666, "str": 0.3333333333333333}, "color": "§4", "badge": [255, 110, 190], "badge2": [235, 64, 52]},
     "intvit": {"name": "마력+체력", "stats": {"int": 0.6, "vit": 0.6}, "prot": 1.0, "req": {"int": 0.6666666666666666, "vit": 0.3333333333333333}, "color": "§b", "badge": [90, 130, 255], "badge2": [255, 110, 190]}
   },
+  "ARMOR_GRADE_LEVELS": {
+    "_comment": "0.36.0 공허의 갑옷 (사용자 — '공허의 갑옷을 추가' · 50렙 한 벌 · 골드 + 공허 재료 · 디자인 견본 ② 공허 갑각): 초월 50렙 한 벌 (갑옷 종류 10 × 부위 4 — 대장장이 제작, VOID_ARMOR). 갑옷 상점 레벨 (ARMOR_LEVELS) 에는 넣지 않음",
+    "transcend": [40, 50]
+  },
+  "ARMOR_TIERS": {
+    "_comment": "0.36.0 공허 (초월 50렙): 방어 [4, 10, 8, 4] (황제 [4, 9, 7, 4] + 2 — 방어 상한 20 은 그대로라 가벼운 갑옷 쪽만 차이), 세트 보너스 40 (황제 32 — 한 스탯 +40 · 두 스탯 24씩), 요구 (50 + 4) × 2.5 = 135",
+    "transcend_50": {"set": "void", "name": "공허", "prot": [4, 10, 8, 4], "bonus": 40}
+  },
+  "VOID_ARMOR": {
+    "_comment": "0.36.0 공허의 갑옷 제작 (대장장이 제작 창의 넷째 쪽 — 영웅 → 초월 → 고귀 → 공허의 갑옷): 갑옷 종류 10 중 하나 → 부위마다 (또는 네 부위 한 번에) 골드 + 공허 몬스터 전리품 (42 · 48 · 52렙 — 공허 독주머니 · 균열 칼날 · 공허 핵). 한 벌 골드 48 · 독주머니 70 · 칼날 70 · 핵 55 (전리품 50% — 약 390마리)",
+    "level": 50,
+    "grade": "transcend",
+    "cost": {
+      "helmet": {"gold": 10, "items": {"rpg:loot_void_leaper": 15, "rpg:loot_void_stalker": 15, "rpg:loot_void_jelly": 10}},
+      "chest": {"gold": 16, "items": {"rpg:loot_void_leaper": 20, "rpg:loot_void_stalker": 25, "rpg:loot_void_jelly": 20}},
+      "legs": {"gold": 14, "items": {"rpg:loot_void_leaper": 20, "rpg:loot_void_stalker": 20, "rpg:loot_void_jelly": 15}},
+      "boots": {"gold": 8, "items": {"rpg:loot_void_leaper": 15, "rpg:loot_void_stalker": 10, "rpg:loot_void_jelly": 10}}
+    }
+  },
   "SHIELD": {
     "_comment": "0.12.5 밸런스: 방패 상시 피해 감소 상한 40% → 25% (40렙 방패 종합 지수 2.95 → 2.41 — 솔로에서 가장 쉬운 선택이던 것을 줄임, 막기는 그대로)",
     "passiveCap": 0.25

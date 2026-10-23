@@ -299,7 +299,8 @@ public final class WeaponsMoreTest {
                 check(w != null && !w.legacy() && w.level() == lvs[i], type + " transcend " + lvs[i]);
                 if (w == null || w40 == null) continue;
                 check(Math.abs(w.damage() - w40.damage() * base[i] / 12) <= 0.1 + 1e-9, type + " " + lvs[i] + " damage " + w.damage() + " (40렙 " + w40.damage() + ")");
-                check(w.critChance() == w40.critChance() && w.critMult() == w40.critMult(), type + " " + lvs[i] + " crit = 40렙");
+                check(w.critChance() == w40.critChance() && w.critMult() == w40.critMult() && w.passive() == w40.passive() && w.block() == w40.block(),
+                        type + " " + lvs[i] + " crit · shield = 40렙");
                 double sum = 0;
                 double sum40 = 0;
                 for (Weapons.Req r : w.reqs()) sum += r.value();
