@@ -725,7 +725,7 @@ public final class NpcEditor {
         b.dropdown("wtype", "무기 보상", wtypes, w != null ? WEAPON_TYPES.indexOf(w.type()) + 1 : 0);
         List<String> wlevels = new ArrayList<>();
         for (double l : ALL_LEVELS) wlevels.add(Js.str(l) + "렙");
-        b.dropdown("wlevel", "무기 레벨 §7(영웅 30·35·40, 초월 40)", wlevels, w != null ? Math.max(0, ALL_LEVELS.indexOf((double) w.level())) : 0);
+        b.dropdown("wlevel", "무기 레벨 §7(영웅 30·35·40, 초월 40 ~ 60)", wlevels, w != null ? Math.max(0, ALL_LEVELS.indexOf((double) w.level())) : 0);
         List<String> grades = new ArrayList<>();
         for (Grade g : R.grades()) grades.add(g.name());
         b.dropdown("wgrade", "무기 등급", grades, w != null ? w.gradeIndex() : 0);

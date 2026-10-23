@@ -539,8 +539,8 @@ public final class JobUpgrades {
         return Icon.sprite("job_skill/" + k.id());
     }
 
-    /** 보유 골드 칸 */
-    static Slot goldSlot(ServerPlayer sp) {
+    /** 보유 골드 칸 (대장장이 레벨 올리기 창도 씀 — 0.36.0) */
+    public static Slot goldSlot(ServerPlayer sp) {
         long g = Wallet.total(sp, Economy.Kind.GOLD);
         return Slot.of(Icon.item(EconomyItems.GOLD_COIN), "§6보유 골드 §f" + Economy.fmt(g)).count(g)
                 .lore("§7지갑 " + Economy.fmt(Wallet.get(sp, Economy.Kind.GOLD)) + " · 가방의 금화 " + Wallet.coins(sp, Economy.Kind.GOLD), "§8골드: 보스 · 퀘스트 보상, 장터")

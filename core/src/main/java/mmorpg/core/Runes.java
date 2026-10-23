@@ -33,8 +33,12 @@ public final class Runes {
     private static final Obj RUNE_SMITH = R.obj("RUNE_SMITH");
     private static final Obj LEVEL_DAMAGE = R.obj("LEVEL_DAMAGE");
     private static final List<String> STAT_ORDER = R.strings("RUNE_STAT_ORDER");
-    /** LEVEL_DAMAGE levels, ascending ({@code Object.keys(LEVEL_DAMAGE).map(Number).sort((a, b) => a - b)}). */
-    private static final double[] LEVEL_KEYS = LEVEL_DAMAGE.keys().stream().mapToDouble(Double::parseDouble).sorted().toArray();
+    /**
+     * LEVEL_DAMAGE levels, ascending ({@code Object.keys(LEVEL_DAMAGE).map(Number).sort((a, b) => a - b)}) — up to RUNE_BASE_MAX_LEVEL when the
+     * rules have it (0.36.0: LEVEL_DAMAGE 45 ~ 60 is for transcend weapons raised past 40 only; the rune / job skill base stays the 40렙 value).
+     */
+    private static final double[] LEVEL_KEYS = LEVEL_DAMAGE.keys().stream().mapToDouble(Double::parseDouble)
+            .filter(l -> l <= R.root().numOr("RUNE_BASE_MAX_LEVEL", Double.POSITIVE_INFINITY)).sorted().toArray();
 
     /** RUNE_FAMILY_ORDER (the draw picks one of these with equal chance). */
     public static final List<String> FAMILY_ORDER = R.strings("RUNE_FAMILY_ORDER");

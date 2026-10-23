@@ -76,8 +76,8 @@ public final class WeaponsMoreTest {
             for (Grade g : Rules.get().grades()) {
                 for (double lv : Rules.get().numbers("ALL_LEVELS")) {
                     boolean basic = (g.id().equals("common") || g.id().equals("rare")) && Rules.get().numbers("LEVELS").contains(lv);
-                    boolean want = basic || (g.id().equals("noble") && (lv == 10 || lv == 20)) || (g.id().equals("hero") && lv >= 30)
-                            || (g.id().equals("transcend") && lv == 40);
+                    boolean want = basic || (g.id().equals("noble") && (lv == 10 || lv == 20)) || (g.id().equals("hero") && lv >= 30 && lv <= 40)
+                            || (g.id().equals("transcend") && lv >= 40 && lv <= 60); // 0.36.0 초월 45 ~ 60렙 (레벨 올리기)
                     Weapon w = Weapons.weaponFrom(type, lv, g.id());
                     check(Weapons.isValidWeapon(lv, g.id(), type) == want, type + " " + g.id() + " " + lv + " valid " + want);
                     check((w != null) == want, type + " " + g.id() + " " + lv + " parses " + want);
@@ -286,6 +286,54 @@ public final class WeaponsMoreTest {
         }
         check(Weapons.weaponFrom("sword", 40, "rare").look() == null, "below hero: type look");
         check(Weapons.slashStyle("nope") == null && Weapons.slashStyle(null) == null, "unknown look");
+
+        // 0.36.0 초월 무기 레벨 올리기 (WEAPON_LEVEL_UP): 40 → 45 → 50 → 55 → 60렙 — 기본 피해 12 → 16 · 요구 스탯 (레벨 + 4) × 2.5 · 치명타는 40렙 값,
+        // 값은 골드 + 재료 (40 → 45 공허 몬스터 전리품 … 55 → 60 헬 재료), 영웅은 그대로 (30 → 35 → 40 · 실버 + 별철 광석), 룬 · 직업 스킬 레벨 기본값은 40렙에서 멈춤
+        check(Weapons.transcendLevelUp(), "transcend level-up rules");
+        double[] lvs = {40, 45, 50, 55, 60};
+        double[] base = {12, 13, 14, 15, 16};
+        for (String type : List.of("sword", "dagger", "axe", "shield", "bow", "wand", "greatsword", "lance", "scythe", "hammer", "scepter")) {
+            Weapon w40 = Weapons.weaponFrom(type, 40, "transcend");
+            for (int i = 0; i < lvs.length; i++) {
+                Weapon w = Weapons.weaponFrom(type, lvs[i], "transcend");
+                check(w != null && !w.legacy() && w.level() == lvs[i], type + " transcend " + lvs[i]);
+                if (w == null || w40 == null) continue;
+                check(Math.abs(w.damage() - w40.damage() * base[i] / 12) <= 0.1 + 1e-9, type + " " + lvs[i] + " damage " + w.damage() + " (40렙 " + w40.damage() + ")");
+                check(w.critChance() == w40.critChance() && w.critMult() == w40.critMult(), type + " " + lvs[i] + " crit = 40렙");
+                double sum = 0;
+                double sum40 = 0;
+                for (Weapons.Req r : w.reqs()) sum += r.value();
+                for (Weapons.Req r : w40.reqs()) sum40 += r.value();
+                check(lvs[i] == 40 ? sum == sum40 : sum > sum40, type + " " + lvs[i] + " reqs grow " + w.reqs());
+                check(w.skills() != null && w.skills().size() == w40.skills().size() && w.title().equals(w40.title()), type + " " + lvs[i] + " skills · name = 40렙");
+                Weapons.SmithStep n = Weapons.nextLevelOf(w);
+                if (lvs[i] == 60) {
+                    check(n == null, type + " 60 is the last level");
+                    continue;
+                }
+                check(n != null && n.to().level() == lvs[i] + 5 && n.emerald() == 0 && n.ore() == 0 && n.gold() > 0 && !n.items().isEmpty(),
+                        type + " " + lvs[i] + " next " + (n == null ? null : n.to().id() + " gold " + n.gold() + " " + n.items()));
+            }
+        }
+        Weapons.SmithStep s40 = Weapons.nextLevelOf(Weapons.weaponFrom("sword", 40, "transcend"));
+        Weapons.SmithStep s55 = Weapons.nextLevelOf(Weapons.weaponFrom("sword", 55, "transcend"));
+        check(s40 != null && s40.gold() == 15 && s40.items().equals(Map.of("rpg:loot_void_leaper", 40, "rpg:loot_void_stalker", 20)), "40 → 45 cost " + (s40 == null ? null : s40.items()));
+        check(s55 != null && s55.gold() == 60 && s55.items().get("rpg:hel_claw") == 10 && s55.items().get("rpg:dead_mist") == 10, "55 → 60 cost (Hel materials)");
+        int goldSum = 0;
+        for (double lv = 40; lv < 60; lv += 5) goldSum += (int) Weapons.nextLevelOf(Weapons.weaponFrom("sword", lv, "transcend")).gold();
+        check(goldSum == 140, "transcend level-up gold total " + goldSum);
+        // 영웅은 그대로, 영웅 40 · 일반 40 은 더 못 올림
+        Weapons.SmithStep h30 = Weapons.nextLevelOf(Weapons.weaponFrom("sword", 30, "hero"));
+        check(h30 != null && h30.to().level() == 35 && h30.emerald() == 64 && h30.ore() == 4 && h30.gold() == 0 && h30.items().isEmpty(), "hero 30 → 35 unchanged");
+        check(Weapons.nextLevelOf(Weapons.weaponFrom("sword", 40, "hero")) == null && Weapons.nextLevelOf(Weapons.weaponFrom("sword", 40, "common")) == null,
+                "hero 40 · common 40 stay");
+        check(Weapons.parseWeapon("rpg:sword_l45_hero") == null || Weapons.parseWeapon("rpg:sword_l45_hero").legacy(), "hero 45 is not a weapon");
+        // 룬 · 직업 스킬의 레벨 기본값은 40렙 값 (12) 에서 멈춤 — 올린 무기의 기본 피해 표 (LEVEL_DAMAGE 45 ~ 60) 를 쓰지 않음
+        check(Runes.runeLevelBase(40) == 12 && Runes.runeLevelBase(45) == 12 && Runes.runeLevelBase(60) == 12 && Runes.runeLevelBase(37.5) == 11.5,
+                "rune level base stops at 40 " + Runes.runeLevelBase(60));
+        // 60렙 초월 칼 (힘 185) 의 평타 한 번 = 40렙 × 16 / 12
+        Weapon s60 = Weapons.weaponFrom("sword", 60, "transcend");
+        check(s60 != null && s60.reqs().size() == 1 && s60.reqs().get(0).value() == 160, "sword 60 reqs " + (s60 == null ? null : s60.reqs()));
 
         System.out.println("WeaponsMoreTest: " + ok + " ok, " + BAD.size() + " failed");
         for (String b : BAD) System.out.println("  FAIL " + b);

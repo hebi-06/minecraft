@@ -267,7 +267,8 @@ public final class RpgGameTests {
     @GameTest
     public void weaponsRegistered(GameTestHelper h) {
         // 151 (애드온) + 12단계 새 무기 80 (창 · 낫 · 전투 망치 · 성스러운 홀 × 일반 · 희귀 0 ~ 40렙 7개씩 · 고귀 10 · 20렙 · 영웅 30 · 35 · 40렙 · 초월 40렙)
-        h.assertTrue(RpgItems.WEAPONS.size() == 231, "231 weapons, got " + RpgItems.WEAPONS.size());
+        // + 0.36.0 초월 45 · 50 · 55 · 60렙 44 (초월 무기 11종 × 4 — 대장장이 레벨 올리기)
+        h.assertTrue(RpgItems.WEAPONS.size() == 275, "275 weapons (0.36.0 초월 45 ~ 60렙 44), got " + RpgItems.WEAPONS.size());
         for (RpgWeaponItem item : RpgItems.WEAPONS) {
             Weapon w = item.weapon();
             h.assertTrue(!w.legacy(), "legacy registered: " + w.id());

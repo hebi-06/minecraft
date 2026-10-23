@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "rpg:item/dagger/dagger_l45_transcend"
+  }
+}

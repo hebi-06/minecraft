@@ -4,6 +4,7 @@ import java.util.List;
 import mmorpg.core.Enhance;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
+import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgItems;
 import mmorpg.fabric.gear.GearItems;
 import mmorpg.fabric.gear.WeaponEnhance;
@@ -227,6 +228,54 @@ public final class RpgSmithTests {
         h.assertTrue(now.get(DataComponents.CUSTOM_NAME) != null && now.get(DataComponents.CUSTOM_NAME).getString().equals("내 검"), "anvil name kept");
         h.assertTrue(Inv.money(sp) == 100 - 64 && RpgGearTests.countIn(sp, ore()) == 6, "paid: " + Inv.money(sp) + " / " + RpgGearTests.countIn(sp, ore()));
         h.assertTrue(body(sp).contains("완료"), "done message: " + body(sp));
+        finish(h, sp);
+    }
+
+    /**
+     * 0.36.0 초월 무기 레벨 올리기 40 → 45: 골드 15 + 공허 독주머니 40 · 균열 칼날 20 — 하나라도 모자라면 그대로, 채우면 내고 45렙 무기 (강화 단계 그대로).
+     * 60렙 초월 무기는 목록에 없음
+     */
+    @GameTest(maxTicks = 40)
+    public void raiseTranscendWeapon(GameTestHelper h) {
+        ServerPlayer sp = RpgGearTests.player(h);
+        Forms.HEADLESS.add(sp.getUUID());
+        Weapon w40 = Weapons.weaponFrom("sword", 40, "transcend");
+        Weapons.SmithStep step = Weapons.nextLevelOf(w40);
+        h.assertTrue(step != null && step.to().level() == 45 && step.gold() == 15 && step.items().size() == 2, "smith step " + (step == null ? null : step.items()));
+        Item leaper = mmorpg.fabric.ui.Icon.itemById("rpg:loot_void_leaper");
+        Item stalker = mmorpg.fabric.ui.Icon.itemById("rpg:loot_void_stalker");
+        h.assertTrue(leaper != null && stalker != null, "void loot items");
+        ItemStack stack = new ItemStack(RpgItems.byId(w40.id()));
+        WeaponEnhance.write(stack, 3);
+        sp.getInventory().setItem(2, stack);
+        sp.getInventory().setItem(5, new ItemStack(RpgItems.byId(Weapons.weaponFrom("sword", 60, "transcend").id())));
+        sp.getInventory().setItem(20, new ItemStack(leaper, 40));
+        sp.getInventory().setItem(21, new ItemStack(stalker, 19));
+        mmorpg.fabric.economy.Wallet.set(sp, mmorpg.core.Economy.Kind.GOLD, 20);
+        List<Smith.Raise> list = Smith.raisable(sp);
+        h.assertTrue(list.size() == 1 && list.get(0).slot() == 2 && list.get(0).goldStep() && list.get(0).gold() == 15, "only the 40렙 sword is raisable: " + list.size());
+        Smith.smithLoop(sp, "smith", null);
+        FormNet.ChestPayload c = chest(sp);
+        h.assertTrue(c != null && c.title().contains("레벨 올리기") && c.slots().get(FIRST).icon().item().is(RpgItems.byId(w40.id())), "raise window");
+        // 균열 칼날 19 < 20: 그대로
+        Forms.answer(sp, FIRST, null);
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("레벨 제한 올리기"), "confirm window");
+        Forms.answer(sp, 11, null);
+        h.assertTrue(body(sp).contains("재료 부족") && body(sp).contains("균열 칼날 1"), "lack: " + body(sp));
+        h.assertTrue(RpgGearTests.countIn(sp, leaper) == 40 && RpgGearTests.countIn(sp, stalker) == 19
+                && mmorpg.fabric.economy.Wallet.total(sp, mmorpg.core.Economy.Kind.GOLD) == 20 && sp.getInventory().getItem(2).is(RpgItems.byId(w40.id())), "nothing changed");
+        // 하나를 더 주고 다시
+        sp.getInventory().setItem(22, new ItemStack(stalker, 1));
+        Forms.answer(sp, FIRST, null);
+        Forms.answer(sp, 11, null);
+        ItemStack now = sp.getInventory().getItem(2);
+        h.assertTrue(now.is(RpgItems.byId(step.to().id())), "raised to 45: " + now);
+        h.assertTrue(WeaponEnhance.of(now) == 3, "enhance kept " + WeaponEnhance.of(now));
+        h.assertTrue(RpgGearTests.countIn(sp, leaper) == 0 && RpgGearTests.countIn(sp, stalker) == 0
+                && mmorpg.fabric.economy.Wallet.total(sp, mmorpg.core.Economy.Kind.GOLD) == 5, "paid gold 15 + materials");
+        h.assertTrue(body(sp).contains("완료"), "done message: " + body(sp));
+        Weapon w45 = RpgCombat.weaponOf(now);
+        h.assertTrue(w45 != null && w45.level() == 45 && w45.damage() > w40.damage() && w45.critChance() == w40.critChance(), "45렙: damage up, crit same");
         finish(h, sp);
     }
 

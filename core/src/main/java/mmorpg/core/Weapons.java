@@ -33,6 +33,12 @@ public final class Weapons {
     private static final Obj BOW = R.obj("BOW");
     private static final Obj SKILLS = R.obj("SKILLS");
     private static final double CRIT_CAP = R.num("CRIT_CAP");
+    /**
+     * 0.36.0 초월 무기 레벨 올리기 (Java-only — rules_more.json WEAPON_LEVEL_UP, null with pure rules): 40 → 45 → … → 60렙, 값은 골드 + 재료.
+     * 치명타 · 치명타 배율은 critLevel (40) 의 값에서 멈춤 — 올린 레벨은 기본 피해 (LEVEL_DAMAGE) · 요구 스탯만 바꿈.
+     */
+    private static final Obj LEVEL_UP = R.root().objOrNull("WEAPON_LEVEL_UP");
+    private static final double CRIT_LEVEL = LEVEL_UP == null ? Double.POSITIVE_INFINITY : LEVEL_UP.numOr("critLevel", Double.POSITIVE_INFINITY);
 
     /**
      * weapons.js ID_RE ({@code matches()} = JS {@code ^…$}): the add-on's seven types, plus the Java-only types of TYPES
@@ -59,8 +65,15 @@ public final class Weapons {
         }
     }
 
-    /** smith.js nextLevelOf: the raised hero weapon and its cost. */
-    public record SmithStep(Weapon to, double emerald, double ore) {}
+    /**
+     * smith.js nextLevelOf: the raised weapon and its cost — 영웅: 실버 (emerald) + 별철 광석 (ore), 0.36.0 초월: 골드 (gold) + 재료 (items —
+     * 아이템 ID → 수, 적힌 차례).
+     */
+    public record SmithStep(Weapon to, double emerald, double ore, double gold, Map<String, Integer> items) {
+        public SmithStep(Weapon to, double emerald, double ore) {
+            this(to, emerald, ore, 0, Map.of());
+        }
+    }
 
     /** The add-on's ID_RE types (in its order), then any other TYPES key (Java-only types — lower-case letters only). */
     private static List<String> typeAlternatives() {
@@ -277,8 +290,9 @@ public final class Weapons {
         if (skills != null) skills = List.copyOf(skills);
         double damage = round1(LEVEL_DAMAGE.num(Js.str(level)) * t.num("damage") * g.mult());
         // 치명타는 무기 종류 · 레벨 · 등급으로만 (스탯은 치명타를 올리지 않음)
-        double critChance = Math.min(CRIT_CAP, t.num("crit") + level * t.num("critPerLevel") + gi * t.num("critPerGrade"));
-        double critMult = Js.round((t.num("critMult") + level * t.num("critMultPerLevel") + gi * t.num("critMultPerGrade")) * 100) / 100;
+        double critLv = Math.min(level, CRIT_LEVEL);
+        double critChance = Math.min(CRIT_CAP, t.num("crit") + critLv * t.num("critPerLevel") + gi * t.num("critPerGrade"));
+        double critMult = Js.round((t.num("critMult") + critLv * t.num("critMultPerLevel") + gi * t.num("critMultPerGrade")) * 100) / 100;
         double passive = 0;
         double block = 0;
         if (type.equals("shield")) {
@@ -466,8 +480,9 @@ public final class Weapons {
 
     // ------------------------------------------------------------------ smith (smith.js)
 
-    /** smith.js nextLevelOf: a current hero weapon raised by SMITH.step levels, or null. */
+    /** smith.js nextLevelOf: a current hero weapon raised by SMITH.step levels (0.36.0: or a transcend weapon by WEAPON_LEVEL_UP.step), or null. */
     public static SmithStep nextLevelOf(Weapon w) {
+        if (w != null && LEVEL_UP != null && !w.legacy() && w.grade().id().equals(LEVEL_UP.strOr("grade", "transcend"))) return nextTranscend(w);
         if (w == null || !w.grade().id().equals("hero") || w.legacy()) return null;
         double next = w.level() + SMITH.num("step");
         if (!isValidWeapon(next, "hero")) return null;
@@ -475,6 +490,25 @@ public final class Weapons {
         if (cost == null) return null;
         Weapon to = weaponFrom(w.type(), next, "hero");
         return to == null ? null : new SmithStep(to, cost.num("emerald"), cost.num("ore"));
+    }
+
+    /** 0.36.0: 초월 무기 한 단계 (WEAPON_LEVEL_UP.cost[지금 레벨] — 골드 + 재료), 마지막 레벨이면 null */
+    private static SmithStep nextTranscend(Weapon w) {
+        double next = w.level() + LEVEL_UP.numOr("step", 5);
+        if (next > LEVEL_UP.numOr("max", 60) || !isValidWeapon(next, w.grade().id(), w.type())) return null;
+        Obj cost = LEVEL_UP.obj("cost").objOrNull(Js.str(w.level()));
+        if (cost == null) return null;
+        Weapon to = weaponFrom(w.type(), next, w.grade().id());
+        if (to == null) return null;
+        Map<String, Integer> items = new java.util.LinkedHashMap<>();
+        Obj it = cost.objOrNull("items");
+        if (it != null) for (String id : it.keys()) items.put(id, (int) it.num(id));
+        return new SmithStep(to, 0, 0, cost.numOr("gold", 0), java.util.Collections.unmodifiableMap(items));
+    }
+
+    /** 0.36.0: 초월 무기 레벨 올리기 규칙이 있는지 (rules_more.json — 순수 규칙에는 없음) */
+    public static boolean transcendLevelUp() {
+        return LEVEL_UP != null;
     }
 
     // ------------------------------------------------------------------ helpers

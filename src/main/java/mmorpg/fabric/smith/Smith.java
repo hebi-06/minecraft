@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import mmorpg.core.Crafting;
+import mmorpg.core.Economy;
 import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
@@ -16,7 +17,9 @@ import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
+import mmorpg.fabric.economy.Wallet;
 import mmorpg.fabric.gear.WeaponEnhance;
+import mmorpg.fabric.job.JobUpgrades;
 import mmorpg.fabric.shop.Shop;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
@@ -41,7 +44,8 @@ import net.minecraft.world.phys.Vec3;
  * 대장장이 (smith.js): 영웅 무기 레벨 올리기 ↔ 무기 강화 (EnhanceWindow — enhance.js) ↔ 보스 무기 제작, 윗줄 양 끝 칸으로 오감.
  * <ul>
  *   <li>레벨 올리기: 영웅 무기의 레벨 제한을 SMITH.step 씩 (30 → 35 → 40). 그 칸의 무기를 다음 레벨 무기 아이템으로 바꾸므로 기본 성능 · 요구 레벨 · 요구 스탯이
- *       그 레벨 기준이 됨 (렙제: 아직 그 레벨이 아니어도 올릴 수 있고 창에 "N렙부터 사용" 을 알림). 비용: 실버 (0.21.0 전에는 에메랄드) + 별철 광석. 강화 단계 · 모루 이름은 그대로 옮김.</li>
+ *       그 레벨 기준이 됨 (렙제: 아직 그 레벨이 아니어도 올릴 수 있고 창에 "N렙부터 사용" 을 알림). 비용: 실버 (0.21.0 전에는 에메랄드) + 별철 광석. 강화 단계 · 모루 이름은 그대로 옮김.
+ *       0.36.0: 초월 무기도 40 → 45 → 50 → 55 → 60렙 (WEAPON_LEVEL_UP — 비용은 골드 + 공허 재료, 같은 창 · 같은 바꿈).</li>
  *   <li>보스 무기 제작: 재료 (여러 보스의 재료 + 일반 몬스터 전리품 — Crafting.craftMaterials) + 실버 + 별철 광석 → 무기 (BOSS_CRAFT). 등급마다 한 쪽
  *       (영웅 30렙 · 초월 40렙 · 12단계 고귀 10 · 20렙 — 새 무기 넷, 전리품 + 실버만), 윗줄 가운데 칸을 누르면 다음 쪽 (영웅 → 초월 → 고귀 → 영웅).
  *       가운데 줄 = 그 쪽의 무기, 아랫줄 = 그 쪽 무기들의 재료 (가진 수). 12단계 새 무기의 영웅 · 초월은 같은 쪽에 더해짐 (CRAFT_MORE).</li>
@@ -178,45 +182,91 @@ public final class Smith {
 
     // ------------------------------------------------------------ 레벨 올리기
 
-    /** 레벨을 올릴 수 있는 영웅 무기 하나 (raisable — 칸 · 아이템 (복사본) · 무기 · 다음 레벨 무기 · 비용) */
-    public record Raise(int slot, ItemStack item, Weapon w, Weapon to, int emerald, int ore) {}
+    /**
+     * 레벨을 올릴 수 있는 무기 하나 (raisable — 칸 · 아이템 (복사본) · 무기 · 다음 레벨 무기 · 비용): 영웅 = 실버 (emerald) + 별철 광석 (ore),
+     * 0.36.0 초월 = 골드 (gold) + 재료 (items — 아이템 ID → 수)
+     */
+    public record Raise(int slot, ItemStack item, Weapon w, Weapon to, int emerald, int ore, int gold, Map<String, Integer> items) {
+        public Raise(int slot, ItemStack item, Weapon w, Weapon to, int emerald, int ore) {
+            this(slot, item, w, to, emerald, ore, 0, Map.of());
+        }
 
-    /** 가방 (핫바부터) 의 영웅 무기 중 레벨을 올릴 수 있는 것 (최대 18개) */
+        /** 골드 + 재료로 올리는 단계 (초월) */
+        public boolean goldStep() {
+            return gold > 0 || !items.isEmpty();
+        }
+    }
+
+    /** 가방 (핫바부터) 의 영웅 · 초월 무기 중 레벨을 올릴 수 있는 것 (최대 18개) */
     public static List<Raise> raisable(ServerPlayer sp) {
         List<Raise> out = new ArrayList<>();
         for (int i = 0; i < Inv.SIZE && out.size() < MAX_LIST; i++) {
             ItemStack item = Inv.get(sp, i);
             Weapon w = RpgCombat.weaponOf(item);
             Weapons.SmithStep n = Weapons.nextLevelOf(w);
-            if (w != null && n != null) out.add(new Raise(i, item.copy(), w, n.to(), (int) n.emerald(), (int) n.ore()));
+            if (w != null && n != null) out.add(new Raise(i, item.copy(), w, n.to(), (int) n.emerald(), (int) n.ore(), (int) n.gold(), n.items()));
         }
         return out;
     }
 
+    /** 초월 단계 재료 하나의 보이는 줄: "공허 핵 12/30" (채웠으면 초록 — dark: 창 본문용 어두운 글자) */
+    static String itemLine(ServerPlayer sp, String id, int need, boolean dark) {
+        JobUpgrades.Mat m = JobUpgrades.mat(id);
+        int have = m.item() == null ? 0 : Inv.count(sp, m.item());
+        String ok = dark ? (have >= need ? "§2" : "§4") : (have >= need ? "§a" : "§7");
+        return ok + m.name() + " " + (dark ? "" : "§f") + Math.min(have, need) + "/" + need;
+    }
+
+    /** 초월 단계의 모자란 것 ["골드 5", "공허 핵 12"] */
+    static List<String> goldStepLack(ServerPlayer sp, Raise e) {
+        List<String> lack = new ArrayList<>();
+        long gold = Wallet.total(sp, Economy.Kind.GOLD);
+        if (gold < e.gold()) lack.add("골드 " + (e.gold() - gold));
+        for (Map.Entry<String, Integer> x : e.items().entrySet()) {
+            JobUpgrades.Mat m = JobUpgrades.mat(x.getKey());
+            int have = m.item() == null ? 0 : Inv.count(sp, m.item());
+            if (have < x.getValue()) lack.add(m.name() + " " + (x.getValue() - have));
+        }
+        return lack;
+    }
+
+    /** 골드 칸 (0.36.0 — 초월 무기 레벨 올리기 값) */
+    static final int GOLD_SLOT = 5;
+
     private static ChestForm raiseForm(ServerPlayer sp, List<Raise> list, String message) {
-        ChestForm form = new ChestForm("대장장이 §8· §7영웅 무기 레벨 올리기");
+        boolean transcend = Weapons.transcendLevelUp();
+        ChestForm form = new ChestForm("대장장이 §8· §7무기 레벨 올리기");
         form.set(TAB_SLOT, Slot.of("textures/items/nether_star", "§6무기 강화로").lore("§7+1 ~ +10 무기 강화 창"));
         // 보유 개수는 그림 위 숫자로 (장식 칸은 숫자가 안 보여서 일반 칸으로, 누르면 새로 그림)
         form.set(EMERALD_SLOT, Shop.balanceSlot(sp));
-        form.set(INFO_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 제한 올리기").lore("§7영웅 무기: 30 → 35 → 40렙", "§7기본 성능·요구 레벨·스탯이", "§7올린 레벨 기준이 됩니다")
-                .deco());
+        form.set(INFO_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 제한 올리기").lore(transcend
+                ? new String[] {"§7영웅 무기: 30 → 35 → 40렙", "§8  (실버 + 별철 광석)", "§7초월 무기: 40 → 45 → 50 → 55 → 60렙", "§8  (골드 + 공허 재료)", "§7기본 성능·요구 레벨·스탯이",
+                        "§7올린 레벨 기준이 됩니다"}
+                : new String[] {"§7영웅 무기: 30 → 35 → 40렙", "§7기본 성능·요구 레벨·스탯이", "§7올린 레벨 기준이 됩니다"}).deco());
+        if (transcend) form.set(GOLD_SLOT, JobUpgrades.goldSlot(sp));
         form.set(ORE_SLOT, oreSlot(sp));
         form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_sword", "§6보스 무기 제작으로").lore("§7보스 재료로 영웅·초월 무기 만들기"));
         for (int i = 0; i < list.size(); i++) {
             Raise e = list.get(i);
             double[] gap = levelGap(sp, e.to());
-            List<String> lore = new ArrayList<>(List.of("§r§7레벨 제한 §f" + e.w().level() + " → " + e.to().level(), "§r§7" + statLine(e.w()), "§r§f→ " + statLine(e.to()),
-                    "§r§a" + costText(e.emerald(), e.ore())));
+            List<String> lore = new ArrayList<>(List.of("§r§7레벨 제한 §f" + e.w().level() + " → " + e.to().level(), "§r§7" + statLine(e.w()), "§r§f→ " + statLine(e.to())));
+            if (e.goldStep()) {
+                long gold = Wallet.total(sp, Economy.Kind.GOLD);
+                lore.add("§r" + (gold >= e.gold() ? "§a" : "§7") + "골드 §f" + Math.min(gold, e.gold()) + "/" + e.gold());
+                for (Map.Entry<String, Integer> x : e.items().entrySet()) lore.add("§r" + itemLine(sp, x.getKey(), x.getValue(), false));
+                lore.add(goldStepLack(sp, e).isEmpty() ? "§r§a올릴 수 있음" : "§r§c재료 부족");
+            } else lore.add("§r§a" + costText(e.emerald(), e.ore()));
             if (gap != null) lore.add("§r§c" + Js.str(gap[0]) + "렙부터 사용 · 최고 " + Js.str(gap[1]) + "렙");
             form.set(FIRST + i, Slot.of(e.item(), e.w().name()).lore(lore));
         }
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        if (list.isEmpty()) lines.add("§8올릴 수 있는 영웅 무기가 없습니다. §0(30·35렙 영웅 무기를 가져오세요)§r");
+        if (list.isEmpty()) lines.add("§8올릴 수 있는 무기가 없습니다. §0(30·35렙 영웅 · 40 ~ 55렙 초월 무기)§r");
         else lines.add("§8무기 칸을 누르면 확인 창이 열립니다.§r");
         Obj cost = SMITH.obj("cost");
-        lines.add("§8비용: 30→35렙 §0" + costText(cost.obj("30").num("emerald"), cost.obj("30").num("ore")) + "§r");
+        lines.add("§8영웅 30→35렙 §0" + costText(cost.obj("30").num("emerald"), cost.obj("30").num("ore")) + "§r");
         lines.add("§8      35→40렙 §0" + costText(cost.obj("35").num("emerald"), cost.obj("35").num("ore")) + "§r");
+        if (transcend) lines.add("§8초월 40→60렙: 골드 + 공허 재료 §0(무기 칸 설명)§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         return form;
@@ -237,7 +287,14 @@ public final class Smith {
         lines.add("§8" + statLine(e.w()) + " §8→ §0" + statLine(e.to()) + "§r");
         lines.add("§8요구 스탯: " + Weapons.reqsText(e.to().reqs(), true) + "§r");
         if (gap != null) lines.add("§4" + Js.str(gap[0]) + "렙부터 사용 가능 §8(지금 최고 " + Js.str(gap[1]) + ")§r"); // 휴대폰 창 한 줄 (180px)
-        lines.add("§8비용: §0" + costText(e.emerald(), e.ore()) + "§8 · 보유 §0" + em + "§8 / §0" + ore + "§r");
+        if (e.goldStep()) {
+            // 재료는 "이름 가진 수/필요" 로 한 줄에 둘씩 (휴대폰 창 한 줄 180px)
+            long gold = Wallet.total(sp, Economy.Kind.GOLD);
+            List<String> mats = new ArrayList<>();
+            mats.add((gold >= e.gold() ? "§2" : "§4") + "골드 " + Economy.fmt(gold) + "/" + e.gold());
+            for (Map.Entry<String, Integer> x : e.items().entrySet()) mats.add(itemLine(sp, x.getKey(), x.getValue(), true));
+            for (int i = 0; i < mats.size(); i += 2) lines.add("§8" + String.join(" §8· ", mats.subList(i, Math.min(mats.size(), i + 2))) + "§r");
+        } else lines.add("§8비용: §0" + costText(e.emerald(), e.ore()) + "§8 · 보유 §0" + em + "§8 / §0" + ore + "§r");
         lines.add("§8왼쪽 초록 칸: 올리기 · 오른쪽 빨간 칸: 취소§r");
         form.body(String.join("\n", lines));
         form.show(sp, sel -> done.accept(sel == 11 ? raise(sp, e) : ""));
@@ -253,7 +310,10 @@ public final class Smith {
         if (cw == null || !cw.id().equals(e.w().id())) return "§4무기가 옮겨져서 취소했습니다. 다시 골라 주세요.§r";
         int em = Inv.money(sp);
         int ore = Inv.count(sp, ore());
-        if (em < e.emerald() || ore < e.ore()) {
+        if (e.goldStep()) {
+            List<String> lack = goldStepLack(sp, e);
+            if (!lack.isEmpty()) return lackMessage(sp, lack);
+        } else if (em < e.emerald() || ore < e.ore()) {
             List<String> lack = new ArrayList<>();
             if (em < e.emerald()) lack.add(Inv.CURRENCY_NAME + " " + (e.emerald() - em));
             if (ore < e.ore()) lack.add(ORE_NAME + " " + (e.ore() - ore));
@@ -265,7 +325,14 @@ public final class Smith {
         Component custom = cur.get(DataComponents.CUSTOM_NAME);
         if (custom != null) next.set(DataComponents.CUSTOM_NAME, custom);
         WeaponEnhance.write(next, WeaponEnhance.of(cur));
-        if (!Inv.pay(sp, e.emerald()) || !Inv.remove(sp, ore(), e.ore())) return "§4결제 오류§r";
+        if (e.goldStep()) {
+            // 모두 있는 것을 위에서 확인했으므로 차례로 냄 (재료 먼저 — 하나라도 실패하면 그 뒤는 내지 않음)
+            for (Map.Entry<String, Integer> x : e.items().entrySet()) {
+                JobUpgrades.Mat m = JobUpgrades.mat(x.getKey());
+                if (m.item() == null || !Inv.remove(sp, m.item(), x.getValue())) return "§4결제 오류§r";
+            }
+            if (e.gold() > 0 && !Wallet.pay(sp, Economy.Kind.GOLD, e.gold())) return "§4결제 오류§r";
+        } else if (!Inv.pay(sp, e.emerald()) || !Inv.remove(sp, ore(), e.ore())) return "§4결제 오류§r";
         Inv.set(sp, e.slot(), next);
         forgeFx(sp, 1.0, 0.8, 1.4, 0.5, 6);
         Notify.notify(sp, "§6레벨 제한 " + e.w().level() + " → " + e.to().level() + ": " + e.to().name() + Weapons.levelNote(e.to(), RpgCombat.reqLevelOf(sp)), 60);
@@ -478,11 +545,11 @@ public final class Smith {
         String icon = !boss ? "textures/items/golden_sword" : page == 0 ? "textures/items/diamond_sword" : "textures/items/netherite_sword";
         form.set(CRAFT_INFO_SLOT, Slot.of(icon, "§6" + what + " §7· §f" + p.label())
                 .lore(boss ? new String[] {"§e누르면 " + other.label() + " 무기 보기", "§7여러 보스의 재료와 일반 몬스터", "§7전리품을 섞어 무기를 만듭니다",
-                        "§7(강화 +0) 영웅 무기는 30렙으로 만들어", "§7레벨 올리기 창에서 40렙까지", "§7초월 무기는 40렙으로 만듦"}
+                        "§7(강화 +0) 영웅 무기는 30렙으로 만들어", "§7레벨 올리기 창에서 40렙까지", "§7초월 무기는 40렙으로 만들어", "§7레벨 올리기 창에서 60렙까지"}
                         : new String[] {"§e누르면 " + other.label() + " 무기 보기", "§7일반 몬스터 전리품과 " + Inv.CURRENCY_NAME + "로", "§7새 무기 (창 · 낫 · 전투 망치 ·", "§7성스러운 홀) 의 고귀 무기를",
                                 "§7만듭니다 (강화 +0)"}));
         form.set(ORE_SLOT, oreSlot(sp));
-        form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 올리기로").lore("§7영웅 무기 레벨 제한 올리기 창"));
+        form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 올리기로").lore("§7영웅 · 초월 무기 레벨 제한 올리기 창"));
         for (int i = 0; i < list.size(); i++) {
             Recipe e = list.get(i);
             boolean ok = craftLack(sp, e).isEmpty();
