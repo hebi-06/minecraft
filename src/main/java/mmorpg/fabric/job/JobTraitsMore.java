@@ -231,7 +231,7 @@ public final class JobTraitsMore {
         double max = RpgHealth.maxOf(sp);
         if (k == null || st.spiritHealed || !JobTraits.stanceOn(sp, k.id()) || !(max > 0) || after >= max * k.num("low", 0.3) || after <= 0) return;
         st.spiritHealed = true;
-        double heal = max * k.num("heal", 0.2);
+        double heal = max * JobUpgrades.num(sp, k, "heal", 0.2); // 0.31.0 강화
         String life = RuneKit.lifeToken(sp);
         RuneKit.later(1, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -371,7 +371,7 @@ public final class JobTraitsMore {
     static double critAdd(ServerPlayer sp, Weapon w, LivingEntity victim) {
         if (w == null || !"bow".equals(w.type()) || !JobTraits.stanceOn(sp, "archer_focus") || jobIf(sp, "archer") == null) return 0;
         Jobs.Skill k = skill(JobSystem.job(sp), "archer_focus");
-        return k == null ? 0.2 : k.num("crit", 0.2);
+        return k == null ? 0.2 : JobUpgrades.num(sp, k, "crit", 0.2); // 0.31.0 강화
     }
 
     /** 공격 간격 배율: 매지션 완드 (마나 과부하) */
@@ -414,7 +414,7 @@ public final class JobTraitsMore {
                     Weapon held = RpgCombat.weaponOf(sp.getMainHandItem());
                     if (held == null || !held.id().equals(w.id())) return;
                     Vec3 hand = RuneKit.bowHand(sp);
-                    RpgCombat.extraArrow(sp, target, w);
+                    RpgCombat.extraArrow(sp, target, w, JobUpgrades.num(sp, k, "extra", 1)); // 0.31.0 강화: 덧쏘기 피해 비율
                     JobFx.arrow(sp.level(), hand, Kit.bodyPoint(target), j, 60, 0.7, Opt.empty());
                     JobFx.wind(sp.level(), V.up(sp.position(), 0.08), 0.9, j, 0.35, Opt.of("alpha", 0.8));
                 });

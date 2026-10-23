@@ -301,7 +301,7 @@ final class GuardianSkills {
      * (태세 동안 8틱마다 — 3인칭 · 다른 사람) · 1인칭 화면 아래 방패 테 · 발밑 고리 · 글자
      */
     static boolean bulwark(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = (int) k.num("dur", 120);
+        int dur = JobUpgrades.ticks(sp, k, "dur", 120); // 0.31.0 강화: 지속
         JobTraits4.bulwarkStart(sp, k, dur);
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);

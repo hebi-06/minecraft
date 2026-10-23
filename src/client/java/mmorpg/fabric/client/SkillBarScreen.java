@@ -296,6 +296,18 @@ public final class SkillBarScreen extends Screen {
                 lines.add(Component.literal(BedrockText.toJava("§8마을의 직업 교관에게서 직업을 고르면 (10렙부터) 직업 스킬이 들어갑니다")));
             } else {
                 lines.add(Component.literal(ClientJobBar.name(hoverJob)).withColor(ClientJobBar.colorA()));
+                // 0.31.0 직업 스킬 강화: 단계 · 별 · 지금 계수 (core Jobs — 스킬 id 로)
+                int up = ClientJobBar.up(hoverJob);
+                mmorpg.core.Jobs.Job jj = mmorpg.core.Jobs.job(ClientJobBar.jobId());
+                mmorpg.core.Jobs.Skill kk = jj == null ? null : jj.skill(ClientJobBar.id(hoverJob));
+                if (kk != null) {
+                    lines.add(Component.literal(BedrockText.toJava("§6" + mmorpg.core.Jobs.upStars(up) + " §e강화 +" + up + " §7— "
+                            + String.join(" · ", mmorpg.core.Jobs.upNow(kk, up)))));
+                    if (up < mmorpg.core.Jobs.upMax()) {
+                        lines.add(Component.literal(BedrockText.toJava("§8다음 +" + (up + 1) + " (" + mmorpg.core.Jobs.upLevel(up + 1) + "렙 · 직업 교관): "
+                                + String.join(" · ", mmorpg.core.Jobs.upLines(kk, up, up + 1)))));
+                    }
+                }
                 String lock = ClientJobBar.lock(hoverJob);
                 if (!lock.isEmpty()) {
                     lines.add(Component.literal(BedrockText.toJava("§c잠김 §7— " + mmorpg.fabric.job.JobSkills.lockText(lock))));

@@ -28,6 +28,10 @@ public final class ClientJobBar {
     private static List<String> names = blank();
     private static List<ItemStack> icons = noIcons();
     private static List<String> locks = blank();
+    /** 0.31.0 칸마다 강화 단계 (0 ~ 5) */
+    private static int[] ups = new int[SIZE];
+    /** 0.31.0 강화 단계가 오른 시각 (칸 배지가 반짝임) */
+    static final long[] UP_AT = new long[SIZE];
     private static boolean received;
     /** 0.27.0 직업 (없으면 "") · 두 빛 (0xRRGGBB) */
     private static String job = "";
@@ -69,6 +73,8 @@ public final class ClientJobBar {
         names = blank();
         icons = noIcons();
         locks = blank();
+        ups = new int[SIZE];
+        java.util.Arrays.fill(UP_AT, 0);
         received = false;
         job = "";
         jobName = "";
@@ -88,15 +94,25 @@ public final class ClientJobBar {
         List<String> nn = blank();
         List<ItemStack> nc = noIcons();
         List<String> nl = blank();
+        int[] nu = new int[SIZE];
         for (int i = 0; i < Math.min(SIZE, p.ids().size()); i++) {
             ni.set(i, p.ids().get(i));
             nn.set(i, i < p.names().size() ? p.names().get(i) : "");
             nc.set(i, i < p.icons().size() ? p.icons().get(i) : ItemStack.EMPTY);
             nl.set(i, i < p.locks().size() ? p.locks().get(i) : "");
+            nu[i] = i < p.ups().size() ? Math.max(0, p.ups().get(i)) : 0;
         }
         // 잠김이 풀린 칸: 준비 연출 (레벨 · 무기를 맞춤)
         long now = Util.getMillis();
         for (int i = 0; i < SIZE; i++) if (received && ni.get(i).equals(ids.get(i)) && !locks.get(i).isEmpty() && nl.get(i).isEmpty()) READY_AT[i] = now;
+        // 0.31.0 강화 단계가 오른 칸: 배지가 반짝임 + 준비 연출
+        for (int i = 0; i < SIZE; i++) {
+            if (received && ni.get(i).equals(ids.get(i)) && nu[i] > ups[i]) {
+                UP_AT[i] = now;
+                READY_AT[i] = now;
+            }
+        }
+        ups = nu;
         ids = ni;
         names = nn;
         icons = nc;
@@ -184,6 +200,11 @@ public final class ClientJobBar {
 
     public static boolean locked(int i) {
         return !empty(i) && !lock(i).isEmpty();
+    }
+
+    /** 0.31.0 칸 i 의 강화 단계 (0 ~ 5) */
+    public static int up(int i) {
+        return i < 0 || i >= SIZE ? 0 : ups[i];
     }
 
     /** 0.27.0 직업 id (없으면 "") */

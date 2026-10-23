@@ -59,6 +59,11 @@ public final class JobSkills {
         default String lock(ServerPlayer sp) {
             return "";
         }
+
+        /** 0.31.0 직업 스킬 강화 단계 (0 ~ 5 — 칸 배지) */
+        default int up(ServerPlayer sp) {
+            return 0;
+        }
     }
 
     /** 0.27.0 칸 위 직업 표시: id · 이름 · 두 빛 (0xRRGGBB) — 직업이 없으면 null */
@@ -74,9 +79,9 @@ public final class JobSkills {
     /** "UUID|스킬 id" → 그 재사용 대기의 전체 틱 (줄일 때 칸의 덮개 비율) */
     private static final Map<String, Integer> TOTALS = new HashMap<>();
 
-    /** 서버 → 클라이언트: 직업 스킬 칸 (늘 SIZE 개 — 빈 칸은 id "", 잠김은 사유 글자) + 직업 (없으면 job "") */
+    /** 서버 → 클라이언트: 직업 스킬 칸 (늘 SIZE 개 — 빈 칸은 id "", 잠김은 사유 글자, 0.31.0 강화 단계) + 직업 (없으면 job "") */
     public record BarPayload(String job, String jobName, int colorA, int colorB, List<String> ids, List<String> names, List<ItemStack> icons,
-            List<String> locks) implements CustomPacketPayload {
+            List<String> locks, List<Integer> ups) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<BarPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("job_bar"));
         public static final StreamCodec<RegistryFriendlyByteBuf, BarPayload> CODEC = CustomPacketPayload.codec(BarPayload::write, BarPayload::read);
 
@@ -90,13 +95,15 @@ public final class JobSkills {
             List<String> names = new ArrayList<>(n);
             List<ItemStack> icons = new ArrayList<>(n);
             List<String> locks = new ArrayList<>(n);
+            List<Integer> ups = new ArrayList<>(n);
             for (int i = 0; i < n; i++) {
                 ids.add(buf.readUtf(64));
                 names.add(buf.readUtf(128));
                 icons.add(ItemStack.OPTIONAL_STREAM_CODEC.decode(buf));
                 locks.add(buf.readUtf(64));
+                ups.add(buf.readVarInt());
             }
-            return new BarPayload(job, jobName, a, b, List.copyOf(ids), List.copyOf(names), List.copyOf(icons), List.copyOf(locks));
+            return new BarPayload(job, jobName, a, b, List.copyOf(ids), List.copyOf(names), List.copyOf(icons), List.copyOf(locks), List.copyOf(ups));
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
@@ -110,6 +117,7 @@ public final class JobSkills {
                 buf.writeUtf(names.get(i), 128);
                 ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, icons.get(i));
                 buf.writeUtf(i < locks.size() ? locks.get(i) : "", 64);
+                buf.writeVarInt(i < ups.size() ? Math.max(0, ups.get(i)) : 0);
             }
         }
 
@@ -150,6 +158,7 @@ public final class JobSkills {
     public static void init() {
         PayloadTypeRegistry.clientboundPlay().register(BarPayload.TYPE, BarPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(GaugePayload.TYPE, GaugePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(JobUpgrades.FxPayload.TYPE, JobUpgrades.FxPayload.CODEC); // 0.31.0 직업 스킬 강화 화면 연출
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> send(handler.player));
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> send(newPlayer));
     }
@@ -286,20 +295,24 @@ public final class JobSkills {
         List<String> names = new ArrayList<>(SIZE);
         List<ItemStack> icons = new ArrayList<>(SIZE);
         List<String> locks = new ArrayList<>(SIZE);
+        List<Integer> ups = new ArrayList<>(SIZE);
         for (int i = 0; i < SIZE; i++) {
             Skill s = skill(sp, i);
             ids.add(s == null ? "" : s.id());
             names.add(s == null ? "" : s.name());
             icons.add(s == null || s.icon() == null ? ItemStack.EMPTY : s.icon().copy());
             String lock = "";
+            int up = 0;
             if (s != null) {
                 try {
                     lock = s.lock(sp);
+                    up = s.up(sp);
                 } catch (RuntimeException e) {
                     Mmorpg.LOG.warn("[mmorpg] job skill lock {}", s.id(), e);
                 }
             }
             locks.add(lock == null ? "" : lock);
+            ups.add(up);
         }
         Header h = null;
         try {
@@ -307,8 +320,8 @@ public final class JobSkills {
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] job header", e);
         }
-        return h == null ? new BarPayload("", "", 0, 0, ids, names, icons, locks)
-                : new BarPayload(h.id(), h.name(), h.colorA(), h.colorB(), ids, names, icons, locks);
+        return h == null ? new BarPayload("", "", 0, 0, ids, names, icons, locks, ups)
+                : new BarPayload(h.id(), h.name(), h.colorA(), h.colorB(), ids, names, icons, locks, ups);
     }
 
     /** 0.27.0 직업 자원 게이지를 클라이언트에 */

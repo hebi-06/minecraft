@@ -22,6 +22,7 @@ import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraits4;
 import mmorpg.fabric.job.JobTraitsMore;
+import mmorpg.fabric.job.JobUpgrades;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.stattree.StatTrees;
 import mmorpg.fabric.ui.FormNet;
@@ -1490,5 +1491,177 @@ public final class RpgJobTests {
             bye(h, ally[0]);
             RpgGearTests.done(h, sp);
         });
+    }
+    // ------------------------------------------------------------ 0.31.0 직업 스킬 강화
+
+    static final String ENV_UP = "mmorpg:job_up";
+    static final String ENV_UP2 = "mmorpg:job_up2";
+
+    /** 아이템 id 의 아이템 (시험 — 없으면 null) */
+    static net.minecraft.world.item.Item item(String id) {
+        return mmorpg.fabric.ui.Icon.itemById(id);
+    }
+
+    /**
+     * 0.31.0 강화 흐름 (창 — Forms.HEADLESS): 교관 창의 강화 단추 → 강화 창 (스킬 다섯) → 확인 창 (43렙 — 강화 칸 흐림 · 까닭) → 재료가 모자라면 안 됨 →
+     * 다 맞추면 모이는 동안 창 없이 묶임 (단계 그대로) → GATHER 틱에 골드 5 · 드라우그 30 · 늑대 30 을 꼭 그만큼 받고 +1 · 화면 연출 · 칸 배지 →
+     * SHOW 틱 뒤 창이 다시 열림 (결과 문구) → +2 는 48렙부터 · 5단계 막힘 · 직업을 바꿔도 남음
+     */
+    @GameTest(environment = ENV_UP, maxTicks = 160)
+    public void upgradeFlow(GameTestHelper h) {
+        ServerPlayer sp = jobPlayer(h, "swordsman", Map.of("str", 50), 43);
+        Forms.HEADLESS.add(sp.getUUID());
+        Jobs.Job j = Jobs.job("swordsman");
+        Jobs.Skill flurry = j.skill(0);
+        net.minecraft.world.item.Item draugr = item("rpg:loot_draugr");
+        net.minecraft.world.item.Item wolf = item("rpg:loot_frost_wolf");
+        h.assertTrue(draugr != null && wolf != null, "loot items exist");
+        Wallet.set(sp, Economy.Kind.GOLD, 0);
+        JobUpgrades.set(sp, flurry.id(), 0);
+        // 교관 창: 오른쪽 위 강화 단추
+        JobTrainer.open(sp, null);
+        FormNet.ChestPayload cards = (FormNet.ChestPayload) Forms.last(sp);
+        h.assertTrue(cards.slots().get(8).name().contains("직업 스킬 강화"), "upgrade button on the trainer window: " + cards.slots().get(8).name());
+        Forms.answer(sp, 8, null);
+        FormNet.ChestPayload list = Forms.last(sp) instanceof FormNet.ChestPayload c ? c : null;
+        h.assertTrue(list != null && list.title().contains("직업 스킬 강화") && list.slots().size() == 27, "upgrade window");
+        for (int i = 0; i < 5; i++) h.assertTrue(list.slots().get(11 + i).name().contains(j.skill(i).name()), "skill slot " + i);
+        // 43렙: 확인 창의 강화 칸 흐림 · 본문에 44렙
+        Forms.answer(sp, 11, null);
+        FormNet.ChestPayload conf = (FormNet.ChestPayload) Forms.last(sp);
+        h.assertTrue(conf.title().contains("스킬 강화 확인") && conf.slots().get(10).kind() == 3, "confirm: OK dim below level 44");
+        h.assertTrue(conf.body().contains("44렙"), "body tells the level: " + conf.body());
+        Forms.answer(sp, 16, null);
+        h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c2 && c2.title().contains("직업 스킬 강화"), "cancel → upgrade window");
+        // 44렙 · 골드 7 · 드라우그 30 · 늑대 29 → 늑대가 모자람 (아무것도 쓰지 않음)
+        sp.setExperienceLevels(44);
+        RpgPlayers.update(sp, RpgData.of(sp).withLvmax(44));
+        Wallet.set(sp, Economy.Kind.GOLD, 7);
+        sp.getInventory().add(new ItemStack(draugr, 30));
+        sp.getInventory().add(new ItemStack(wolf, 29));
+        JobUpgrades.Need n = JobUpgrades.need(sp, flurry);
+        h.assertTrue(n.levelOk() && n.goldOk() && !n.itemsOk() && JobUpgrades.why(n).contains("서리 늑대 가죽"), "wolf pelts short: " + JobUpgrades.why(n));
+        Forms.answer(sp, 11, null);
+        Forms.answer(sp, 10, null);
+        h.assertTrue(JobUpgrades.level(sp, flurry.id()) == 0 && Wallet.get(sp, Economy.Kind.GOLD) == 7 && mmorpg.fabric.ui.Inv.count(sp, draugr) == 30,
+                "short: nothing paid");
+        h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c3 && c3.body().contains("서리 늑대 가죽"), "short: reason in the window");
+        // 늑대 +3 → 됨: 모이는 동안 창 없이 묶임 · 단계 그대로
+        sp.getInventory().add(new ItemStack(wolf, 3));
+        h.assertTrue(JobUpgrades.need(sp, flurry).ok(), "all ready");
+        Forms.answer(sp, 11, null);
+        Forms.answer(sp, 10, null);
+        h.assertTrue(Forms.isOpen(sp) && !Forms.pending(sp) && JobUpgrades.level(sp, flurry.id()) == 0, "gathering: busy, no window, still +0");
+        h.runAfterDelay(JobUpgrades.GATHER + 3, () -> {
+            h.assertTrue(JobUpgrades.level(sp, flurry.id()) == 1, "+1 after gathering: " + JobUpgrades.level(sp, flurry.id()));
+            h.assertTrue(Wallet.get(sp, Economy.Kind.GOLD) == 2, "paid 5 gold: " + Wallet.get(sp, Economy.Kind.GOLD));
+            h.assertTrue(mmorpg.fabric.ui.Inv.count(sp, draugr) == 0 && mmorpg.fabric.ui.Inv.count(sp, wolf) == 2, "paid 30 draugr bones + 30 wolf pelts: "
+                    + mmorpg.fabric.ui.Inv.count(sp, draugr) + " / " + mmorpg.fabric.ui.Inv.count(sp, wolf));
+            JobUpgrades.FxPayload fx = JobUpgrades.lastFx(sp);
+            h.assertTrue(fx != null && fx.level() == 1 && fx.max() == 5 && fx.skill().equals(flurry.id()) && fx.lines().get(0).equals("위력 ×1 → ×1.1"),
+                    "screen effect payload: " + fx);
+            h.assertTrue(JobSkills.payload(sp).ups().get(0) == 1, "slot badge +1");
+            h.assertTrue(!Forms.pending(sp) && Forms.isOpen(sp), "showing: window not back yet");
+        });
+        h.runAfterDelay(JobUpgrades.GATHER + JobUpgrades.SHOW + 6, () -> {
+            FormNet.ChestPayload back = Forms.last(sp) instanceof FormNet.ChestPayload c4 ? c4 : null;
+            h.assertTrue(back != null && back.body().contains("강화: ") && back.slots().get(11).name().contains("+1"), "window back with the result: "
+                    + (back == null ? "none" : back.body()));
+            // +2 는 48렙부터
+            h.assertTrue(JobUpgrades.why(JobUpgrades.need(sp, flurry)).contains("48렙"), "+2 needs 48: " + JobUpgrades.why(JobUpgrades.need(sp, flurry)));
+            // 5단계 막힘 · 창에서 누르면 안내
+            JobUpgrades.set(sp, flurry.id(), 5);
+            h.assertTrue(JobUpgrades.need(sp, flurry).max() && JobUpgrades.why(JobUpgrades.need(sp, flurry)).contains("최대"), "+5 is the max");
+            Forms.answer(sp, 11, null);
+            h.assertTrue(Forms.last(sp) instanceof FormNet.ChestPayload c5 && c5.body().contains("최대"), "max: no confirm window");
+            Forms.answer(sp, -1, null);
+            // 직업을 바꿔도 스킬마다 남음
+            JobSystem.setJob(sp, "warrior");
+            h.assertTrue(JobUpgrades.level(sp, flurry.id()) == 5 && JobSkills.payload(sp).ups().get(0) == 0, "kept after job change (warrior slots +0)");
+            JobSystem.setJob(sp, "swordsman");
+            h.assertTrue(JobSkills.payload(sp).ups().get(0) == 5, "back to swordsman: +5 badge");
+            JobUpgrades.set(sp, flurry.id(), 0);
+            cleanup(sp);
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    /** 0.31.0 강화 피해: 연참 +3 → 위력 ×1.3 (과녁 하나 = P × 지속 보정 × 5 × 1.3), 명경지수 +2 → 두 번째 베기 35% → 42% (평타 × 1.42) */
+    @GameTest(environment = ENV_UP2, maxTicks = 160)
+    public void upgradeDamage(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = jobPlayer(h, "swordsman", Map.of("str", 50), 44);
+        Jobs.Job j = Jobs.job("swordsman");
+        Weapon w = Weapons.weaponFrom("sword", 0, "common");
+        JobUpgrades.set(sp, "swordsman_flurry", 3);
+        JobUpgrades.set(sp, "swordsman_mirror", 2);
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 2.5)));
+        List<Step> steps = new ArrayList<>();
+        steps.add(new Step(1, () -> {
+            home(h, sp);
+            JobTraits.setStacks(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 0), "연참 +3 cast");
+        }));
+        steps.add(new Step(32, () -> {
+            double want = expected(sp, j, j.skill(0), 5) * 1.3;
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "연참 +3 = ×1.3: " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 2));
+            h.assertTrue(JobSkills.press(sp, 3), "명경지수 +2 cast");
+        }));
+        steps.add(new Step(12, () -> {
+            RpgCombat.forceCrit = false;
+            double base = basic(sp, w);
+            sp.attack(z.get(0));
+            RpgCombat.forceCrit = null;
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), base * 1.42), "mirror +2 echo 42%: " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.42);
+        }));
+        chain(h, steps, 0, () -> {
+            JobUpgrades.set(sp, "swordsman_flurry", 0);
+            JobUpgrades.set(sp, "swordsman_mirror", 0);
+            cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    /**
+     * 0.31.0 강화 회복 · 지속 · 값: 치유의 손길 +5 → 나 18% (12 × 1.5), 마나 과부하 +5 → 태세 300틱 (200 × 1.5), 암영 +5 첫 공격 ×3.25 (1 을 넘는 몫만 ×1.5),
+     * 바람 타기 +3 덧쏘기 130%, 강화가 곱하지 않는 값 (맹세 오라) 은 그대로
+     */
+    @GameTest(environment = ENV_UP2, maxTicks = 60)
+    public void upgradeSupport(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = jobPlayer(h, "priest", Map.of("int", 50, "vit", 20), 44);
+        hold(sp, Weapons.weaponFrom("scepter", 0, "common"));
+        JobUpgrades.set(sp, "priest_heal", 5);
+        home(h, sp);
+        Vec3 at = sp.position();
+        sp.snapTo(at.x, at.y, at.z, 180F, 0F); // 아군 없이 → 나
+        sp.setYHeadRot(180F);
+        sp.setHealth(sp.getMaxHealth() * 0.5F);
+        double before = sp.getHealth();
+        h.assertTrue(JobSkills.press(sp, 0), "치유의 손길 +5 cast");
+        h.assertTrue(close(sp.getHealth() - before, RpgHealth.maxOf(sp) * 0.18, 0.01), "heal +5 = 18%: " + (sp.getHealth() - before));
+        // 매지션: 마나 과부하 +5 → 태세 300틱
+        JobSystem.setJob(sp, "mage");
+        hold(sp, Weapons.weaponFrom("wand", 0, "common"));
+        JobUpgrades.set(sp, "mage_overload", 5);
+        h.assertTrue(JobSkills.press(sp, 3), "마나 과부하 +5 cast");
+        h.assertTrue(JobTraits.stanceOn(sp, "mage_overload") && JobTraits.stanceTotal(sp) == 300, "overload +5 lasts 300 ticks: " + JobTraits.stanceTotal(sp));
+        // 값: 암영 첫 공격 (1 을 넘는 몫) · 바람 타기 덧쏘기 · 맹세 오라 (up 키 아님)
+        Jobs.Skill veil = Jobs.job("assassin").skill("assassin_veil");
+        Jobs.Skill wind = Jobs.job("archer").skill("archer_wind");
+        Jobs.Skill oath = Jobs.job("paladin").skill("paladin_oath");
+        JobUpgrades.set(sp, veil.id(), 5);
+        JobUpgrades.set(sp, wind.id(), 3);
+        JobUpgrades.set(sp, oath.id(), 5);
+        h.assertTrue(close(JobUpgrades.num(sp, veil, "first", 2.5), 3.25, 1e-9), "veil +5 first ×3.25");
+        h.assertTrue(close(JobUpgrades.num(sp, wind, "extra", 1), 1.3, 1e-9), "wind +3 extra 130%");
+        h.assertTrue(JobUpgrades.ticks(sp, oath, "dur", 200) == 300 && close(JobUpgrades.num(sp, oath, "aura", 0.15), 0.15, 1e-9), "oath +5: 300 ticks, aura unchanged");
+        for (String id : List.of("priest_heal", "mage_overload", veil.id(), wind.id(), oath.id())) JobUpgrades.set(sp, id, 0);
+        cleanup(sp);
+        RpgGearTests.done(h, sp);
     }
 }

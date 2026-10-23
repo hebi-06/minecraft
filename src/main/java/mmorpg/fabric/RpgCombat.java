@@ -657,6 +657,11 @@ public final class RpgCombat {
      * 쏜 틱 (화살 수명) 뒤에 맞음. 대상이 없거나 사라졌으면 쏘지 않음 — 들어갈 틱 (쏘지 않으면 -1)
      */
     public static int extraArrow(ServerPlayer sp, LivingEntity target, Weapon w) {
+        return extraArrow(sp, target, w, 1);
+    }
+
+    /** 0.31.0 덧쏘기 — 피해 × ratio (바람 타기 강화: 1 → 1.5) */
+    public static int extraArrow(ServerPlayer sp, LivingEntity target, Weapon w, double ratio) {
         if (sp.isRemoved() || target == null || target.isRemoved() || !target.isAlive() || w == null || target.level() != sp.level()) return -1;
         Vec3 head = sp.getEyePosition();
         Vec3 d = bodyPoint(target).subtract(head);
@@ -667,7 +672,7 @@ public final class RpgCombat {
         Fx.sound(sp.level(), head, SoundEvents.ARROW_SHOOT, 1.3, 0.6);
         Fx.arrowFx(sp.level(), path, shot, w);
         int ticks = Math.max(1, (int) Math.round(shot.life() * 20));
-        Tasks.later(ticks, () -> landExtra(sp, target, w, path, 2));
+        Tasks.later(ticks, () -> landExtra(sp, target, w, path, 2, ratio));
         return ticks;
     }
 
@@ -675,20 +680,25 @@ public final class RpgCombat {
      * 0.30.0 덧쏘기가 닿음: 대상이 아직 무적 시간 (바닐라 — 앞 화살 · 다른 피해 뒤 10틱) 이면 끝날 때까지 미룸 (두 번까지). 두 번째 화살은 첫 화살과 꼭 10틱
      * 차이라 틱 순서에 따라 무적 시간에 막혀 버려질 수 있었음 (게임 시험 — 바람 타기 두 발 중 한 발만 들어감)
      */
-    private static void landExtra(ServerPlayer sp, LivingEntity target, Weapon w, Path path, int retry) {
+    private static void landExtra(ServerPlayer sp, LivingEntity target, Weapon w, Path path, int retry, double ratio) {
         int wait = target.damageCooldownTime - 10;
         if (wait > 0 && retry > 0 && !target.isRemoved() && target.isAlive()) {
-            Tasks.later(wait, () -> landExtra(sp, target, w, path, retry - 1));
+            Tasks.later(wait, () -> landExtra(sp, target, w, path, retry - 1, ratio));
             return;
         }
-        rangedHit(sp, target, w, path);
+        rangedHit(sp, target, w, path, ratio);
     }
 
     /** 원거리 명중 (combat.js rangedHit): 활 = 공격 피해 (방어구 적용), 완드 = 마법 피해 (방어 무시) */
     static void rangedHit(ServerPlayer sp, LivingEntity target, Weapon w, Path path) {
+        rangedHit(sp, target, w, path, 1);
+    }
+
+    /** 같은 것 — 피해 × ratio (0.31.0 덧쏘기 강화) */
+    static void rangedHit(ServerPlayer sp, LivingEntity target, Weapon w, Path path, double ratio) {
         if (sp.isRemoved() || target.isRemoved() || !target.isAlive()) return;
         ServerLevel level = sp.level();
-        double dmg = w.damage() * powerOf(sp, w) * basicMultOf(sp, w); // 0.28.0 직업 특성 (궁수 호흡)
+        double dmg = w.damage() * powerOf(sp, w) * basicMultOf(sp, w) * (ratio > 0 ? ratio : 1); // 0.28.0 직업 특성 (궁수 호흡)
         boolean crit = rollCrit(sp, w, target);
         if (crit) dmg *= critMultOf(sp, w);
         WeaponBonus bonus = weaponBonus(sp, target, w, dmg);

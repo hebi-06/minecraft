@@ -18,6 +18,8 @@ import java.util.Map;
  * <li>직업 스킬 피해 = P × 배율 × 지속 보정. P = 레벨 기본값 (룬과 같은 {@link Runes#runeLevelBase} — 최고 레벨) × (1 + 적용 스탯 × perPoint),
  * 적용 스탯 = 직업 stats 의 합 (계수 1 — 40렙 의도한 빌드면 모든 직업이 125 → P 42)</li>
  * <li>지속 보정은 룬 (0.26.0 RUNE_SPREAD) 과 같은 단계 · 보너스 — 스킬마다 t (쓴 때부터 마지막 피해까지의 틱) · zone</li>
+ * <li>0.31.0 직업 스킬 강화 (upgrade): 스킬마다 0 ~ 5단계, 계수 = 1 + 0.1 × 단계 — 위력 P 와 스킬의 up 키 (회복 · 보호막 · 평타 강화 값 · 지속) 에
+ * 곱함. 단계마다 필요한 최고 레벨 · 골드 · 아이템 ({@link #upStep})</li>
  * </ul>
  */
 public final class Jobs {
@@ -97,7 +99,33 @@ public final class Jobs {
         }
     }
 
-    private record Data(int changeLevel, double changeSilver, double perPoint, int[] unlock, List<String> slotRoles, Map<String, Job> jobs) {}
+    /** 0.31.0 강화 재료 하나 (아이템 id — "rpg:loot_troll" · 수) */
+    public record UpItem(String id, int count) {}
+
+    /**
+     * 0.31.0 강화 한 단계 (그 단계로 올리는 값)
+     *
+     * @param to    올라가는 단계 (1 ~ max)
+     * @param level 필요한 최고 레벨
+     * @param gold  골드
+     * @param items 아이템 (가방에서)
+     */
+    public record UpStep(int to, int level, int gold, List<UpItem> items) {}
+
+    /**
+     * 0.31.0 강화가 곱하는 스킬 값 하나 (jobs[].skills[].up)
+     *
+     * @param key   스킬 정의의 값 이름 (heal · shield · echo · dur …)
+     * @param name  창 · 툴팁에 쓰는 이름
+     * @param fmt   글자 모양: pct (0.35 → 35%) · pctp (0.2 → +20%p) · x (0.93 → ×0.93) · sec (틱 160 → 8초)
+     * @param bonus 1 을 넘는 몫만 곱함 (배율 값 — 암영 첫 공격 ×2.5 → 1 + 1.5 × 계수)
+     */
+    public record UpKey(String key, String name, String fmt, boolean bonus) {}
+
+    private record Upgrade(int max, double per, List<UpStep> steps) {}
+
+    private record Data(int changeLevel, double changeSilver, double perPoint, int[] unlock, List<String> slotRoles, Map<String, Job> jobs, Upgrade upgrade,
+            Map<String, List<UpKey>> upKeys) {}
 
     private static final Data DATA = load();
 
@@ -196,6 +224,108 @@ public final class Jobs {
         return k == null ? 0 : power * k.total() * spreadMult(k);
     }
 
+    // ------------------------------------------------------------------ 0.31.0 직업 스킬 강화 (upgrade)
+
+    /** 가장 높은 강화 단계 */
+    public static int upMax() {
+        return DATA.upgrade().max();
+    }
+
+    /** 단계마다 더하는 계수 (0.1 — 룬 돌파 1돌과 같음) */
+    public static double upPer() {
+        return DATA.upgrade().per();
+    }
+
+    /** 단계를 0 ~ max 로 자름 */
+    public static int upClamp(int level) {
+        return Math.max(0, Math.min(upMax(), level));
+    }
+
+    /** 강화 계수 = 1 + per × 단계 (0단계 1 · 5단계 1.5) */
+    public static double upMult(int level) {
+        return 1 + upPer() * upClamp(level);
+    }
+
+    /** 단계 to (1 ~ max) 로 올리는 값 (없으면 null) */
+    public static UpStep upStep(int to) {
+        List<UpStep> steps = DATA.upgrade().steps();
+        return to >= 1 && to <= steps.size() ? steps.get(to - 1) : null;
+    }
+
+    /** 단계 to 에 필요한 최고 레벨 (없는 단계는 Integer.MAX_VALUE) */
+    public static int upLevel(int to) {
+        UpStep s = upStep(to);
+        return s == null ? Integer.MAX_VALUE : s.level();
+    }
+
+    /** 강화가 곱하는 스킬 값들 (없으면 빈 목록 — 그 스킬은 위력 P 로만 세짐) */
+    public static List<UpKey> upKeys(Skill k) {
+        if (k == null) return List.of();
+        List<UpKey> l = DATA.upKeys().get(k.id());
+        return l == null ? List.of() : l;
+    }
+
+    /** 이 값이 강화로 곱해지는지 (아니면 null) */
+    public static UpKey upKey(Skill k, String key) {
+        for (UpKey u : upKeys(k)) if (u.key().equals(key)) return u;
+        return null;
+    }
+
+    /** 강화 단계 level 의 값: 그 스킬의 up 키면 base × 계수 (bonus 면 1 + (base − 1) × 계수), 아니면 base 그대로 */
+    public static double upValue(Skill k, String key, double base, int level) {
+        UpKey u = upKey(k, key);
+        if (u == null || level <= 0) return base;
+        double m = upMult(level);
+        return u.bonus() ? 1 + (base - 1) * m : base * m;
+    }
+
+    /** 위력 (P) 줄을 보이는지: 피해가 있는 스킬 (total > 0) 이거나 up 키가 없는 스킬 (창벽처럼 위력으로만 세짐) */
+    public static boolean upShowsPower(Skill k) {
+        return k != null && (k.total() > 0 || upKeys(k).isEmpty());
+    }
+
+    /** 값 글자 (UpKey.fmt): pct 35% · pctp +20%p · x ×0.93 · sec 8초 */
+    public static String upFormat(UpKey u, double v) {
+        return switch (u.fmt()) {
+            case "pct" -> Js.str(round(v * 100, Math.abs(v) < 0.1 ? 2 : 1)) + "%"; // 10% 아래는 소수 둘째 (성가 1.65%)
+            case "pctp" -> "+" + Js.str(round(v * 100, 1)) + "%p";
+            case "sec" -> Js.str(round(Math.round(v) / 20.0, 2)) + "초";
+            default -> "×" + Js.str(round(v, 2));
+        };
+    }
+
+    /** 단계 from → to 에서 바뀌는 것 ("위력 ×1.2 → ×1.3" · "두 번째 베기 42% → 45.5%") — 피해 스킬은 위력 줄이 먼저 */
+    public static List<String> upLines(Skill k, int from, int to) {
+        List<String> out = new ArrayList<>();
+        if (k == null) return out;
+        if (upShowsPower(k)) out.add("위력 ×" + Js.str(round(upMult(from), 2)) + " → ×" + Js.str(round(upMult(to), 2)));
+        for (UpKey u : upKeys(k)) {
+            double base = k.num(u.key(), 0);
+            out.add(u.name() + " " + upFormat(u, upValue(k, u.key(), base, from)) + " → " + upFormat(u, upValue(k, u.key(), base, to)));
+        }
+        return out;
+    }
+
+    /** 지금 단계의 것 ("위력 ×1.3" · "두 번째 베기 45.5%") */
+    public static List<String> upNow(Skill k, int level) {
+        List<String> out = new ArrayList<>();
+        if (k == null) return out;
+        if (upShowsPower(k)) out.add("위력 ×" + Js.str(round(upMult(level), 2)));
+        for (UpKey u : upKeys(k)) out.add(u.name() + " " + upFormat(u, upValue(k, u.key(), k.num(u.key(), 0), level)));
+        return out;
+    }
+
+    /** 별 (단계만큼 ★, 나머지 ☆ — 다섯 칸) */
+    public static String upStars(int level) {
+        int n = upClamp(level);
+        return "★".repeat(n) + "☆".repeat(Math.max(0, upMax() - n));
+    }
+
+    private static double round(double v, int places) {
+        double p = Math.pow(10, places);
+        return Math.round(v * p + (v >= 0 ? 1e-9 : -1e-9)) / p;
+    }
+
     // ------------------------------------------------------------------ 마검사 「마력 검술」 (특성 magicSword)
 
     /** 마력 검술이 이 무기 종류에 걸리는지 */
@@ -271,6 +401,7 @@ public final class Jobs {
         List<String> roles = new ArrayList<>();
         for (Object o : root.list("slotRoles")) roles.add(String.valueOf(o));
         Map<String, Job> jobs = new LinkedHashMap<>();
+        Map<String, List<UpKey>> upKeys = new LinkedHashMap<>();
         Obj js = root.obj("jobs");
         for (Object idObj : root.list("order")) {
             String id = String.valueOf(idObj);
@@ -292,12 +423,41 @@ public final class Jobs {
             if (ss != null) {
                 for (int i = 0; i < ss.size(); i++) {
                     Obj k = ss.get(i);
-                    skills.add(new Skill(i, k.strOr("id", ""), k.str("name"), k.num("cd"), k.numOr("total", 0), k.strOr("desc", ""), k));
+                    Skill sk = new Skill(i, k.strOr("id", ""), k.str("name"), k.num("cd"), k.numOr("total", 0), k.strOr("desc", ""), k);
+                    skills.add(sk);
+                    List<Obj> up = k.objsOrNull("up");
+                    if (up != null && !sk.id().isEmpty()) {
+                        List<UpKey> keys = new ArrayList<>();
+                        for (Obj u : up) keys.add(new UpKey(u.str("key"), u.str("name"), u.strOr("fmt", "x"), u.truthy("bonus")));
+                        upKeys.put(sk.id(), List.copyOf(keys));
+                    }
                 }
             }
             jobs.put(id, new Job(id, o.str("name"), List.copyOf(weapons), List.copyOf(stats), o.strOrNull("rune"), o.truthy("ready"), o.numOr("scale", 1),
                     o.strOr("role", ""), o.strOr("line", ""), color, trait, List.copyOf(skills)));
         }
-        return new Data((int) root.num("changeLevel"), root.num("changeSilver"), root.num("perPoint"), unlock, List.copyOf(roles), jobs);
+        return new Data((int) root.num("changeLevel"), root.num("changeSilver"), root.num("perPoint"), unlock, List.copyOf(roles), jobs, upgrade(root),
+                Map.copyOf(upKeys));
+    }
+
+    /** 0.31.0 강화 규칙 (jobs.json upgrade — 없으면 강화 없음: max 0) */
+    private static Upgrade upgrade(Obj root) {
+        Obj u = root.objOrNull("upgrade");
+        if (u == null) return new Upgrade(0, 0, List.of());
+        List<Double> levels = u.numbersOrNull("levels");
+        List<Obj> ss = u.objsOrNull("steps");
+        int max = (int) u.num("max");
+        if (levels == null || ss == null || levels.size() != max || ss.size() != max) throw new IllegalStateException("jobs.upgrade needs " + max + " levels · steps");
+        List<UpStep> steps = new ArrayList<>();
+        for (int i = 0; i < max; i++) {
+            Obj s = ss.get(i);
+            List<UpItem> items = new ArrayList<>();
+            for (Object o : s.list("items")) {
+                List<?> pair = (List<?>) o;
+                items.add(new UpItem(String.valueOf(pair.get(0)), ((Number) pair.get(1)).intValue()));
+            }
+            steps.add(new UpStep(i + 1, (int) Math.round(levels.get(i)), (int) s.num("gold"), List.copyOf(items)));
+        }
+        return new Upgrade(max, u.num("per"), List.copyOf(steps));
     }
 }

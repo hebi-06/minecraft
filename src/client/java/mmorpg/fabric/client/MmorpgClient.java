@@ -84,6 +84,7 @@ public final class MmorpgClient implements ClientModInitializer {
         // 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키)
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobSkills.BarPayload.TYPE, (payload, context) -> ClientJobBar.update(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobSkills.GaugePayload.TYPE, (payload, context) -> ClientJobBar.gauge(payload)); // 0.27.0 직업 자원 · 태세
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.job.JobUpgrades.FxPayload.TYPE, (payload, context) -> JobUpgradeHud.start(payload)); // 0.31.0 직업 스킬 강화 연출
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SyncPayload.TYPE, (payload, context) -> {
             ClientRpgState.update(payload);
             if (payload.open()) context.client().gui.setScreen(new StatScreen());
@@ -174,5 +175,6 @@ public final class MmorpgClient implements ClientModInitializer {
         // 화면 번쩍임 (초월 룬): HUD 맨 위
         HudElementRegistry.addLast(Mmorpg.id("ult_edge"), (graphics, delta) -> UltFx.renderEdge(graphics)); // 6돌 초월 룬의 테두리 빛 (8단계)
         HudElementRegistry.addLast(Mmorpg.id("ult_flash"), (graphics, delta) -> UltFx.renderFlash(graphics));
+        HudElementRegistry.addLast(Mmorpg.id("job_up"), (graphics, delta) -> JobUpgradeHud.render(graphics)); // 0.31.0 직업 스킬 강화 성공
     }
 }

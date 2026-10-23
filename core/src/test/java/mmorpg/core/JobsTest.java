@@ -36,6 +36,86 @@ public final class JobsTest {
         return s;
     }
 
+    /**
+     * 0.31.0 직업 스킬 강화: 5단계 · 단계마다 계수 +10% (5단계 ×1.5 = 룬 5돌), 필요 레벨 44 · 48 · 52 · 56 · 60, 값 (골드 · 필드 드랍 · 4 · 5단계 보스 재료 —
+     * 모두 있는 아이템), 스킬마다 up 키 (스킬 정의에 있는 값 · 피해 없는 스킬은 창벽 말고 모두 up 키), 곱한 값 · bonus · 글자, 노가다 어림 (스킬 하나 골드 130 · 필드
+     * 처치 880)
+     */
+    private static void upgrade() {
+        check(Jobs.upMax() == 5 && near(Jobs.upPer(), 0.1), "upgrade 5 steps · +10%");
+        double[] mult = {1, 1.1, 1.2, 1.3, 1.4, 1.5};
+        for (int i = 0; i <= 5; i++) check(near(Jobs.upMult(i), mult[i]), "upMult " + i + " = " + Jobs.upMult(i));
+        check(near(Jobs.upMult(-2), 1) && near(Jobs.upMult(9), 1.5) && Jobs.upClamp(7) == 5, "upMult clamps");
+        check(near(Jobs.upMult(5), RuneBreak.coef(5)), "5단계 = 룬 5돌 계수 " + RuneBreak.coef(5));
+        int[] levels = {44, 48, 52, 56, 60};
+        int[] gold = {5, 10, 20, 35, 60};
+        int goldSum = 0;
+        int dropSum = 0;
+        Set<String> drops = new HashSet<>();
+        for (Object o : Rules.get().obj("MONSTER_DROPS").keys()) drops.add(Rules.get().obj("MONSTER_DROPS").obj(String.valueOf(o)).str("item"));
+        Set<String> boss = new HashSet<>();
+        for (Object o : Rules.get().obj("BOSS_MATERIALS").keys()) boss.add(Rules.get().obj("BOSS_MATERIALS").obj(String.valueOf(o)).str("item"));
+        Map<String, Integer> bossNeed = new java.util.LinkedHashMap<>();
+        for (int to = 1; to <= 5; to++) {
+            Jobs.UpStep s = Jobs.upStep(to);
+            check(s != null && s.to() == to && s.level() == levels[to - 1] && Jobs.upLevel(to) == levels[to - 1], "step " + to + " level " + (s == null ? -1 : s.level()));
+            if (s == null) continue;
+            check(s.gold() == gold[to - 1], "step " + to + " gold " + s.gold());
+            goldSum += s.gold();
+            boolean hasBoss = false;
+            for (Jobs.UpItem it : s.items()) {
+                check(it.count() > 0 && (drops.contains(it.id()) || boss.contains(it.id())), "step " + to + " item exists " + it.id());
+                if (drops.contains(it.id())) dropSum += it.count();
+                if (boss.contains(it.id())) {
+                    hasBoss = true;
+                    bossNeed.merge(it.id(), it.count(), Integer::sum);
+                }
+            }
+            check(hasBoss == (to >= 4), "boss materials only at 4 · 5 (step " + to + ")");
+        }
+        check(Jobs.upStep(0) == null && Jobs.upStep(6) == null && Jobs.upLevel(6) == Integer.MAX_VALUE, "no step 0 · 6");
+        // 노가다 어림 (스킬 하나 0 → 5): 골드 130 · 필드 전리품 440 (50% — 처치 880) · 이미르 재료 4 + 4 · 수르트 재료 3 + 6
+        check(goldSum == 130 && dropSum == 440, "grind per skill: gold " + goldSum + " · drops " + dropSum);
+        check(bossNeed.equals(Map.of("rpg:ymir_heart", 4, "rpg:ymir_bone", 4, "rpg:muspel_heart", 3, "rpg:laevateinn_shard", 6)), "boss materials " + bossNeed);
+
+        // 스킬마다 up 키: 스킬 정의에 있는 값, 피해 없는 스킬 (total 0) 은 창벽 (찌르기가 위력 P) 말고 모두 up 키가 있음
+        int withUp = 0;
+        for (Jobs.Job j : Jobs.all()) {
+            for (Jobs.Skill k : j.skills()) {
+                for (Jobs.UpKey u : Jobs.upKeys(k)) {
+                    check(k.def().has(u.key()) && !u.name().isEmpty() && List.of("pct", "pctp", "x", "sec").contains(u.fmt()), k.id() + " up key " + u.key());
+                }
+                if (!Jobs.upKeys(k).isEmpty()) withUp++;
+                if (k.total() <= 0 && Jobs.upKeys(k).isEmpty()) check(k.id().equals("lancer_wall"), k.id() + " has no damage and no up key");
+                check(!Jobs.upLines(k, 0, 1).isEmpty(), k.id() + " shows what an upgrade does");
+            }
+        }
+        check(withUp == 18, "18 skills with up keys " + withUp);
+
+        Jobs.Job sw = Jobs.job("swordsman");
+        Jobs.Skill mirror = sw.skill("swordsman_mirror");
+        check(near(Jobs.upValue(mirror, "echo", 0.35, 5), 0.525) && near(Jobs.upValue(mirror, "echo", 0.35, 0), 0.35), "mirror echo ×1.5");
+        check(near(Jobs.upValue(mirror, "guard", 0.15, 5), 0.15), "guard is not an up key");
+        Jobs.Skill veil = Jobs.job("assassin").skill("assassin_veil");
+        check(near(Jobs.upValue(veil, "first", 2.5, 5), 3.25) && near(Jobs.upValue(veil, "first", 2.5, 1), 2.65), "veil first: bonus only (1 + 1.5 × m)");
+        Jobs.Skill heal = Jobs.job("priest").skill("priest_heal");
+        check(near(Jobs.upValue(heal, "heal", 0.12, 3), 0.156), "priest heal +30%");
+        Jobs.Skill oath = Jobs.job("paladin").skill("paladin_oath");
+        check(near(Jobs.upValue(oath, "dur", 200, 5), 300) && near(Jobs.upValue(oath, "aura", 0.15, 5), 0.15), "oath duration ×1.5 · aura unchanged");
+
+        // 글자
+        check(Jobs.upLines(sw.skill(0), 2, 3).equals(List.of("위력 ×1.2 → ×1.3")), "flurry lines " + Jobs.upLines(sw.skill(0), 2, 3));
+        check(Jobs.upLines(mirror, 0, 1).equals(List.of("두 번째 베기 35% → 38.5%")), "mirror lines " + Jobs.upLines(mirror, 0, 1));
+        check(Jobs.upLines(veil, 0, 1).equals(List.of("첫 공격 ×2.5 → ×2.65")), "veil lines " + Jobs.upLines(veil, 0, 1));
+        check(Jobs.upLines(oath, 0, 1).equals(List.of("지속 10초 → 11초")), "oath lines " + Jobs.upLines(oath, 0, 1));
+        check(Jobs.upLines(Jobs.job("archer").skill("archer_focus"), 0, 1).equals(List.of("치명타 +20%p → +22%p")), "focus lines");
+        check(Jobs.upLines(Jobs.job("priest").skill("priest_hymn"), 0, 1).equals(List.of("위력 ×1 → ×1.1", "회복 (0.5초마다) 1.5% → 1.65%")),
+                "hymn lines " + Jobs.upLines(Jobs.job("priest").skill("priest_hymn"), 0, 1));
+        check(Jobs.upLines(Jobs.job("lancer").skill("lancer_wall"), 0, 1).equals(List.of("위력 ×1 → ×1.1")), "wall lines (power only)");
+        check(Jobs.upNow(mirror, 2).equals(List.of("두 번째 베기 42%")) && Jobs.upNow(sw.skill(4), 5).equals(List.of("위력 ×1.5")), "now lines");
+        check(Jobs.upStars(3).equals("★★★☆☆") && Jobs.upStars(0).equals("☆☆☆☆☆") && Jobs.upStars(9).equals("★★★★★"), "stars");
+    }
+
     public static void main(String[] args) {
         // 모양: 직업 11 (설계 문서 순서) · 무기 11종이 하나씩 (마검사는 칼 · 마검)
         List<String> ids = List.of("swordsman", "warrior", "spellblade", "mage", "archer", "assassin", "lancer", "reaper", "paladin", "priest", "guardian");
@@ -253,6 +333,8 @@ public final class JobsTest {
         // 글자
         check(Jobs.skillLine(sw.skill(0)).equals("연참 · 6초 · 배율 5") && Jobs.skillLine(sw.skill(3)).equals("명경지수 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
+
+        upgrade();
 
         System.out.println("JobsTest: " + ok + " ok, " + BAD.size() + " failed");
         for (String b : BAD) System.out.println("  FAIL " + b);

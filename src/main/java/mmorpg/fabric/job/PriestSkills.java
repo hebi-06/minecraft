@@ -58,7 +58,7 @@ final class PriestSkills {
         ServerLevel level = sp.level();
         ServerPlayer aimed = JobTraits4.aimAlly(sp, k.num("range", 16));
         ServerPlayer to = aimed != null ? aimed : sp;
-        JobTraits4.heal(to, RpgHealth.maxOf(to) * k.num("heal", 0.12));
+        JobTraits4.heal(to, RpgHealth.maxOf(to) * JobUpgrades.num(sp, k, "heal", 0.12)); // 0.31.0 강화
         Guards.set(to, (int) k.num("guardFor", 60), k.num("guard", 0.1), null, null);
         Vec3 head = V.up(to.position(), to.getBbHeight() + 0.55);
         if (aimed != null) {
@@ -136,7 +136,7 @@ final class PriestSkills {
                 for (ServerPlayer o : JobTraits4.allies(sp, V.lerp(prev, to, 0.5), width + V.len(V.sub(to, prev)) / 2)) {
                     if (!shielded.add(o.getUUID())) continue;
                     double max = RpgHealth.maxOf(o);
-                    RpgHealth.addShield(o, max * k.num("shield", 0.1), (int) k.num("shieldFor", 100), max * k.num("shield", 0.1));
+                    RpgHealth.addShield(o, max * JobUpgrades.num(sp, k, "shield", 0.1), (int) k.num("shieldFor", 100), max * JobUpgrades.num(sp, k, "shield", 0.1)); // 0.31.0 강화
                     JobFx.aegis(d, V.up(o.position(), 1.1), 0.45, j, 0, 0.45, (o == sp ? JobFx.hide1p(sp) : Opt.empty()).with("vel", RuneKit.bodyVel(o)));
                     SkillFx.play(d, "item.armor.equip_gold", o.position(), 1.4, 0.7);
                 }
@@ -156,7 +156,7 @@ final class PriestSkills {
         int pulses = Math.max(1, (int) k.num("pulses", 8));
         int gap = Math.max(1, (int) k.num("gap", 10));
         double r = k.num("radius", 7);
-        double heal = k.num("heal", 0.015);
+        double heal = JobUpgrades.num(sp, k, "heal", 0.015); // 0.31.0 강화
         int slow = (int) k.num("slow", 1);
         String life = RuneKit.lifeToken(sp);
         // 화음 (하프 · 차임) — 펄스마다 한 음씩 올라감
@@ -215,7 +215,7 @@ final class PriestSkills {
             return false;
         }
         int dur = (int) k.num("dur", 200);
-        JobTraits4.stigmaOn(sp, e, dur, k.num("rate", 0.04));
+        JobTraits4.stigmaOn(sp, e, dur, JobUpgrades.num(sp, k, "rate", 0.04)); // 0.31.0 강화
         ServerLevel level = sp.level();
         JobFx.beam(level, tip(sp), Kit.bodyPoint(e), j, 2.0, 0.3, Opt.of("alpha", 0.8));
         JobFx.stigma(level, RuneKit.overHead(e, 0.75), 0.62 + Kit.bodyPad(e) * 0.25, j, 0.8, Opt.of("vel", RuneKit.entVel(e), "grow", -0.3, "fade", 0.3));
@@ -292,7 +292,7 @@ final class PriestSkills {
         RuneKit.shakeAround(level, ground, 16, fin ? 0.3 : 0.18, 0.3);
         SkillFx.play(level, "block.bell.use", bellAt, 0.7 - i * 0.08, 1.0);
         SkillFx.play(level, "block.bell.resonate", bellAt, 1.0, i == 0 ? 0.8 : 0.4);
-        double heal = k.num("heal", 0.15);
+        double heal = JobUpgrades.num(sp, k, "heal", 0.15); // 0.31.0 강화
         int undying = (int) k.num("undying", 120);
         for (ServerPlayer o : JobTraits4.allies(sp, ground, r)) {
             JobTraits4.heal(o, RpgHealth.maxOf(o) * heal);

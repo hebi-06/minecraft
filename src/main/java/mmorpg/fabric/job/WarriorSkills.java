@@ -248,7 +248,7 @@ final class WarriorSkills {
         int dur = (int) k.num("dur", 50);
         double r = k.num("radius", 3.6);
         double hit = k.num("hit", 2.34);
-        double leech = k.num("leech", 0.01);
+        double leech = JobUpgrades.num(sp, k, "leech", 0.01); // 0.31.0 강화
         int leechMax = (int) k.num("leechMax", 5);
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
@@ -305,7 +305,7 @@ final class WarriorSkills {
      * 그림: 몸의 불꽃 (3인칭) · 발밑에서 퍼지는 둥근 베기 둘 · 1인칭 눈앞 고리 · 화면 번쩍임 · 글자, 태세 동안 8틱마다 몸 · 손의 불티 (JobTraits)
      */
     static boolean spirit(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = (int) k.num("dur", 200);
+        int dur = JobUpgrades.ticks(sp, k, "dur", 200); // 0.31.0 강화: 지속
         JobTraits.startStance(sp, k, dur);
         JobTraitsMore.spiritStart(sp, j);
         Guards.set(sp, dur, k.num("guard", 0.2), null, p -> JobTraits.stanceOn(p, k.id()));

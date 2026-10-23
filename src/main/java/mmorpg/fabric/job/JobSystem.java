@@ -84,6 +84,7 @@ public final class JobSystem {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             SENT.remove(handler.player.getUUID());
             JobTraits.forget(handler.player.getUUID());
+            JobUpgrades.forget(handler.player.getUUID());
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> SENT.clear());
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
@@ -196,6 +197,11 @@ public final class JobSystem {
         }
 
         @Override
+        public int up(ServerPlayer sp) {
+            return JobUpgrades.level(sp, k.id());
+        }
+
+        @Override
         public boolean cast(ServerPlayer sp) {
             String lock = lockOf(sp, job, k);
             if (!lock.isEmpty()) {
@@ -210,7 +216,9 @@ public final class JobSystem {
             // 0.30.0 사제 「신앙」: 공격 직업 스킬 (성가 · 새벽의 종) 은 신앙 하나당 위력 × (1 + 10%) — 나가면 모두 씀
             double faith = JobTraits4.castMult(sp, job, k);
             int faithN = JobTraits4.faith(sp);
-            double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain) * boost * faith;
+            // 0.31.0 직업 스킬 강화: 위력 × (1 + 0.1 × 단계) — 모든 타격 (회복 · 보호막 · 태세 값은 JobUpgrades.num 으로 읽는 곳에서)
+            int up = JobUpgrades.level(sp, k.id());
+            double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain) * boost * faith * Jobs.upMult(up);
             NOTES.remove(sp.getUUID());
             JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
             boolean ok = impl.cast(sp, job, k, P);
@@ -224,7 +232,7 @@ public final class JobSystem {
                 String boostText = boost > 1 ? " §6· 창끝 +" + Math.round((boost - 1) * 100) + "%" : "";
                 String faithText = faith > 1 ? " §e· 신앙 ×" + faithN + " +" + Math.round((faith - 1) * 100) + "%" : "";
                 String powerText = k.total() > 0 ? " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + chainText + boostText + faithText + "§7)" : "";
-                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + powerText + (note != null ? " §8· " + note : ""), 24);
+                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + (up > 0 ? " §6+" + up : "") + powerText + (note != null ? " §8· " + note : ""), 24);
             }
             return ok;
         }
@@ -262,14 +270,14 @@ public final class JobSystem {
         for (int i = 0; i < JobSkills.SIZE; i++) {
             JobSkills.Skill s = JobSkills.skill(sp, i);
             b.append('|');
-            if (s != null) b.append(s.id()).append(':').append(s.lock(sp));
+            if (s != null) b.append(s.id()).append(':').append(s.lock(sp)).append('+').append(s.up(sp)); // 0.31.0 강화 단계 (칸 배지)
         }
         return b.toString();
     }
 
     // ------------------------------------------------------------ 명령어 (/job · /직업)
 
-    private static boolean admin(CommandSourceStack s) {
+    static boolean admin(CommandSourceStack s) {
         return s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER);
     }
 
@@ -294,7 +302,8 @@ public final class JobSystem {
                     .then(Commands.literal("menu").requires(JobSystem::admin).executes(c -> {
                         JobTrainer.open(c.getSource().getPlayerOrException(), null);
                         return 1;
-                    })));
+                    }))
+                    .then(JobUpgrades.command())); // 0.31.0 직업 스킬 강화 (/job up)
         }
     }
 
@@ -323,7 +332,8 @@ public final class JobSystem {
             if (k == null) continue;
             String lock = lockOf(sp, j, k);
             String key = "⇧" + "RZVBY".charAt(i);
-            Notify.say(sp, " §e" + key + " §f" + Jobs.skillLine(k) + (lock.isEmpty() ? " §a준비" : " §c잠김 (" + JobSkills.lockText(lock) + ")"));
+            int up = JobUpgrades.level(sp, k.id());
+            Notify.say(sp, " §e" + key + " §f" + Jobs.skillLine(k) + (up > 0 ? " §6+" + up : "") + (lock.isEmpty() ? " §a준비" : " §c잠김 (" + JobSkills.lockText(lock) + ")"));
         }
         return 1;
     }

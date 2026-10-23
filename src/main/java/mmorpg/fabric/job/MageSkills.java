@@ -244,7 +244,7 @@ final class MageSkills {
      * 그림: 몸에서 솟는 남색 빛 · 발밑 둥근 베기 · 완드 끝 구체 · 1인칭 눈앞 고리 · 글자, 태세 동안 8틱마다 완드 끝 구체 · 둘레를 도는 반짝임 (JobTraits)
      */
     static boolean overload(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = (int) k.num("dur", 200);
+        int dur = JobUpgrades.ticks(sp, k, "dur", 200); // 0.31.0 강화: 지속
         JobTraits.startStance(sp, k, dur);
         ServerLevel level = sp.level();
         Vec3 c = sp.position();

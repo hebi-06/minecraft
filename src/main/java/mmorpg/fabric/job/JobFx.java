@@ -316,6 +316,11 @@ final class JobFx {
         return fly(level, "jbolt", BOLT, from, to, speed, size, 0.56, o, outer(j), inner(j));
     }
 
+    /** 0.31.0 색을 정한 마탄 (스킬 강화 — 재료마다 그 색의 빛이 모임): from → to, 닿는 틱 */
+    static int bolt(ServerLevel level, Vec3 from, Vec3 to, double[] glow, double[] core, double speed, double size, Opt o) {
+        return fly(level, "jbolt", BOLT, from, to, speed, size, 0.56, o, glow, core);
+    }
+
     /** 빛의 화살 (rfx_jarrow) 이 from → to: 닿는 틱 */
     static int arrow(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
         return fly(level, "jarrow", ARROW, from, to, speed, size, 0.97, o, outer(j), inner(j));

@@ -211,7 +211,7 @@ final class PaladinSkills {
     private static void chargeEnd(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
-        double frac = k.num("shield", 0.08);
+        double frac = JobUpgrades.num(sp, k, "shield", 0.08); // 0.31.0 강화
         int ticks = (int) k.num("shieldFor", 60);
         for (ServerPlayer o : JobTraits4.allies(sp, c, k.num("allyRadius", 5))) {
             double max = RpgHealth.maxOf(o);
@@ -274,7 +274,7 @@ final class PaladinSkills {
      * 펼쳐지는 빛의 날개 · 몸의 금빛 · 발밑 오라 범위 고리 · 아군마다 빛의 방패 · 1인칭 눈앞 고리 · 글자
      */
     static boolean oath(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = (int) k.num("dur", 200);
+        int dur = JobUpgrades.ticks(sp, k, "dur", 200); // 0.31.0 강화: 지속
         JobTraits.startStance(sp, k, dur);
         RpgCombat.setSteadfast(sp, dur);
         ServerLevel level = sp.level();
@@ -411,7 +411,7 @@ final class PaladinSkills {
 
     /** 빛의 성역: ticks 동안 둘레 radius 칸 — 발밑 금빛 고리 · 솟는 빛 알갱이, 1초마다 아군 (나 포함) 최대 체력 heal 회복 (금빛 십자 · 숫자) */
     private static void sanctuary(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, Vec3 center, double radius, int ticks, String life) {
-        double heal = k.num("heal", 0.02);
+        double heal = JobUpgrades.num(sp, k, "heal", 0.02); // 0.31.0 강화
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         SkillFx.play(sp.level(), "block.beacon.power_select", center, 1.2, 0.8);

@@ -350,7 +350,7 @@ public final class JobTraits3 {
         st.veilHit = Tasks.now();
         veilBreak(sp);
         DamageNumbers.showFace(sp, "§d§l암습", 2.2, 0, 0.1);
-        return k.num("first", 2.5);
+        return JobUpgrades.num(sp, k, "first", 2.5); // 0.31.0 강화 (1 을 넘는 몫)
     }
 
     /** 이번 평타가 암영의 첫 단검 평타인지 (쓰면 지움) */
@@ -383,7 +383,7 @@ public final class JobTraits3 {
         if (st == null || st.firstUntil < Tasks.now() || st.firstUntil == 0) return 1;
         st.firstUntil = -st.firstUntil; // 쓰는 중 (안 들어가면 되돌림)
         Jobs.Skill k = skill(j, "assassin_veil");
-        return k == null ? 2.5 : k.num("first", 2.5);
+        return k == null ? 2.5 : JobUpgrades.num(sp, k, "first", 2.5); // 0.31.0 강화
     }
 
     static void firstHitMissed(ServerPlayer sp) {
@@ -584,7 +584,7 @@ public final class JobTraits3 {
     private static double[] sweepMod(ServerPlayer sp, Weapon w) {
         if (w == null || !"scythe".equals(w.type()) || !JobTraits.stanceOn(sp, "reaper_avatar")) return null;
         Jobs.Skill k = skill(jobIf(sp, "reaper"), "reaper_avatar");
-        return k == null ? null : new double[] {k.num("range", 5), k.num("ratio", 0.6)};
+        return k == null ? null : new double[] {k.num("range", 5), JobUpgrades.num(sp, k, "ratio", 0.6)}; // 0.31.0 강화: 비율
     }
 
     // ------------------------------------------------------------ 무기로 맞힘

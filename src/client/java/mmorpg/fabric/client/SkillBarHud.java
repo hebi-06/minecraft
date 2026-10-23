@@ -173,6 +173,14 @@ public final class SkillBarHud {
             g.text(font, t, cx - tw / 2 + 1, key ? y + s - 9 : cy - 3, left < 1 ? 0xFFFFE066 : 0xFFFFFFFF, true);
         }
         if (!empty) g.blitSprite(RenderPipelines.GUI_TEXTURED, JOB_EDGE, x, y, s, s, (locked || frac > 0 ? 0x70000000 : 0xFF000000) | edge);
+        // 0.31.0 강화 단계가 오른 칸: 금빛 고리가 두 번 퍼짐
+        float upFx = phase(ClientJobBar.UP_AT[i], now, 1100);
+        if (upFx >= 0 && !empty) {
+            for (int w = 0; w < 2; w++) {
+                float p = upFx * 1.6F - w * 0.45F;
+                if (p > 0 && p < 1) ring(g, cx, cy, s * (0.45F + 0.9F * p), 0xFFD24A, 0.95F * (1 - p));
+            }
+        }
         if (cast >= 0) ring(g, cx, cy, s * (0.5F + 0.7F * cast), ClientJobBar.colorB(), 0.9F * (1 - cast));
         if (ready >= 0) ring(g, cx, cy, s * (0.62F + 0.18F * (float) Math.sin(ready * Math.PI)), edge, (float) Math.sin(ready * Math.PI));
         if (cast >= 0 && cast < 0.5F) g.fill(x + 1, y + 1, x + s - 1, y + s - 1, argb(0.75F * (1 - cast * 2), 0xFFFFFF));
@@ -194,6 +202,9 @@ public final class SkillBarHud {
             g.text(font, t, -font.width(t) / 2, 0, col, true);
             g.pose().popMatrix();
         }
+        // 0.31.0 강화 단계 배지 (오른쪽 위 "+3" — 1 ~ 2 하늘색 · 3 ~ 4 보라 · 5 금빛)
+        int up = ClientJobBar.up(i);
+        if (up > 0 && !empty) upBadge(g, font, x + s, y, up, upFx, key ? 0.75F : 0.8F, now);
         if (key) {
             String label = ClientJobBar.keyLabel(i);
             if (!label.isEmpty()) {
@@ -208,6 +219,35 @@ public final class SkillBarHud {
                 g.pose().popMatrix();
             }
         }
+    }
+
+    /** 0.31.0 강화 단계 색 (1 ~ 2 하늘색 · 3 ~ 4 보라 · 5 금빛 — 룬 돌파 배지와 같은 줄) */
+    static int upColor(int up) {
+        return up >= 5 ? 0xFFFFD24A : up >= 3 ? 0xFFD49BFF : 0xFF8FDFFF;
+    }
+
+    /**
+     * 0.31.0 강화 단계 배지: 칸 오른쪽 위 모서리 (right · top) 안쪽에 "+3" (어두운 바탕 · 단계 색 테), 5단계는 금빛이 숨 쉬듯 밝아짐, 막 오르면 (fx 0 ~ 1)
+     * 크게 튀었다 돌아옴
+     */
+    static void upBadge(GuiGraphicsExtractor g, Font font, int right, int top, int up, float fx, float k, long now) {
+        String t = "+" + up;
+        int col = upColor(up);
+        int tw = font.width(t);
+        int bw = tw + 3;
+        int bh = 9;
+        float pop = fx >= 0 && fx < 0.35F ? 1 + 0.6F * (float) Math.sin(fx / 0.35F * Math.PI) : 1;
+        g.pose().pushMatrix();
+        g.pose().translate(right, top);
+        g.pose().scale(k * pop, k * pop);
+        g.fill(-bw - 1, -1, 1, bh, 0xE0140C1E);
+        int edge = up >= 5 ? argb(0.55F + 0.45F * (float) (0.5 + 0.5 * Math.sin(now / 260.0)), col & 0xFFFFFF) : (col & 0xFFFFFF) | 0xC0000000;
+        g.fill(-bw - 1, -1, 1, 0, edge);
+        g.fill(-bw - 1, bh - 1, 1, bh, edge);
+        g.fill(-bw - 1, -1, -bw, bh, edge);
+        g.fill(0, -1, 1, bh, edge);
+        g.text(font, t, -bw + 1, 0, col, true);
+        g.pose().popMatrix();
     }
 
     /** 직업 스킬 아이콘 (GUI 그림 job_skill/&lt;스킬 id&gt; — tools/job_skill_icons.py) */
@@ -468,18 +508,18 @@ public final class SkillBarHud {
     }
 
     /** 0 ~ 1 사이 진행 (since 밀리초 전부터 dur 밀리초 동안 — 범위 밖이면 -1) */
-    private static float phase(long at, long now, int dur) {
+    static float phase(long at, long now, int dur) {
         if (at <= 0) return -1;
         long d = now - at;
         return d < 0 || d > dur ? -1 : d / (float) dur;
     }
 
-    private static int argb(float a, int rgb) {
+    static int argb(float a, int rgb) {
         return (Mth.clamp(Math.round(a * 255), 0, 255) << 24) | (rgb & 0xFFFFFF);
     }
 
     /** 고리 (GLOW 그림 — 가운데 cx, cy · 반지름 r · 색 · 투명도) */
-    private static void ring(GuiGraphicsExtractor g, int cx, int cy, float r, int rgb, float a) {
+    static void ring(GuiGraphicsExtractor g, int cx, int cy, float r, int rgb, float a) {
         if (a <= 0.01F || r < 2) return;
         int ir = Math.round(r);
         g.blitSprite(RenderPipelines.GUI_TEXTURED, GLOW, cx - ir, cy - ir, ir * 2, ir * 2, argb(a, rgb));

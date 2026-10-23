@@ -36,9 +36,9 @@ public final class QuestTalk {
     static final int TALK_PAGE = 3;
     private static final Map<String, Integer> KIND_ORDER = Map.ofEntries(Map.entry("deliver", 0), Map.entry("turnin", 0), Map.entry("offer", 1), Map.entry("progress", 2),
             Map.entry("wait", 2), Map.entry("more", 3), Map.entry("smith", 4), Map.entry("enhance", 4), Map.entry("shop", 4), Map.entry("armor", 4),
-            Map.entry("runesmith", 4), Map.entry("job", 4), Map.entry("bye", 5));
+            Map.entry("runesmith", 4), Map.entry("job", 4), Map.entry("jobup", 4), Map.entry("bye", 5));
     /** 대화창의 일거리 칸 (퀘스트가 아닌 것 — 0.27.0 직업 교관 job) */
-    private static final Set<String> SERVICE = Set.of("shop", "armor", "smith", "enhance", "runesmith", "job", "bye");
+    private static final Set<String> SERVICE = Set.of("shop", "armor", "smith", "enhance", "runesmith", "job", "jobup", "bye");
 
     /** 대화창 선택지 하나 (kind: deliver · turnin · offer · progress · wait · more · 일거리) */
     record Option(String kind, Quest q, String text, Icon icon) {}
@@ -156,6 +156,9 @@ public final class QuestTalk {
             int bye = all.size();
             for (int i = 0; i < all.size(); i++) if (all.get(i).kind().equals("bye")) bye = i;
             all.add(bye, new Option("job", null, mmorpg.fabric.job.JobTrainer.optionText(sp), mmorpg.fabric.ui.Icon.of("textures/items/book_enchanted")));
+            // 0.31.0 직업 스킬 강화 (직업이 있을 때 — 직업 바꾸기 다음)
+            String up = mmorpg.fabric.job.JobTrainer.upOptionText(sp);
+            if (up != null) all.add(bye + 1, new Option("jobup", null, up, mmorpg.fabric.ui.Icon.item(net.minecraft.world.item.Items.NETHER_STAR)));
         }
         List<Option> questOpts = new ArrayList<>();
         for (Option o : all) if (!SERVICE.contains(o.kind())) questOpts.add(o);
@@ -208,6 +211,7 @@ public final class QuestTalk {
                 case "smith", "enhance" -> Smith.smithLoop(sp, o.kind().equals("enhance") ? "enhance" : "smith", t.done);
                 case "runesmith" -> RuneSmith.runesmithLoop(sp, "grind", t.done);
                 case "job" -> mmorpg.fabric.job.JobTrainer.open(sp, t.done); // 0.27.0 전직 · 직업 바꾸기 창
+                case "jobup" -> mmorpg.fabric.job.JobUpgrades.open(sp, t.done); // 0.31.0 직업 스킬 강화 창
                 // 받자마자 끝낼 수 있으면 (전리품을 이미 모아 온 반복 의뢰 등) 대화를 이어 가 바로 보고
                 case "offer" -> offerFlow(sp, t.name, q, ok -> {
                     if (!ok || status(sp, q).equals("ready")) step(t);

@@ -39,6 +39,8 @@ public final class JobTrainer {
     static final int MINE_SLOT = 0;
     static final int BALANCE_SLOT = 4;
     static final int GUIDE_SLOT = 22;
+    /** 0.31.0 직업 스킬 강화 창으로 (직업이 있을 때 — 오른쪽 위) */
+    static final int UP_SLOT = 8;
     /** 직업 카드 칸 (jobs.json order 순서): 가운데 줄 일곱 + 아랫줄 넷 (아랫줄 가운데는 안내) */
     static final int[] CARD_SLOTS = {10, 11, 12, 13, 14, 15, 16, 20, 21, 23, 24};
     /** 확인 창: 전직 · 카드 · 취소 */
@@ -64,6 +66,13 @@ public final class JobTrainer {
     public static String optionText(ServerPlayer sp) {
         Jobs.Job j = JobSystem.job(sp);
         return j == null ? "직업 고르기 (전직)" : "직업 바꾸기 §8(지금 " + j.name() + ")";
+    }
+
+    /** 0.31.0 NPC 대화의 '직업 스킬 강화' 선택지 글자 (직업이 없으면 null — 선택지 없음) */
+    public static String upOptionText(ServerPlayer sp) {
+        Jobs.Job j = JobSystem.job(sp);
+        if (j == null || !j.ready()) return null;
+        return "직업 스킬 강화 §8(" + JobUpgrades.total(sp, j) + "/" + Jobs.upMax() * Jobs.SLOTS + ")";
     }
 
     /** 직업 카드 칸 번호 (jobs.json order 의 i 번째 — 없으면 -1) */
@@ -99,6 +108,10 @@ public final class JobTrainer {
         form.show(sp, sel -> {
             if (sel < 0) {
                 finish(done);
+                return;
+            }
+            if (sel == UP_SLOT && JobSystem.job(sp) != null) {
+                JobUpgrades.open(sp, done); // 0.31.0 직업 스킬 강화
                 return;
             }
             Jobs.Job j = jobAt(sel);
@@ -146,11 +159,13 @@ public final class JobTrainer {
             form.set(CARD_SLOTS[i], s);
         }
         form.set(GUIDE_SLOT, Slot.of(Icon.of("textures/items/book_enchanted"), "§e직업 안내").lore(guideLore(cost)).deco());
+        if (now != null && now.ready()) form.set(UP_SLOT, upButton(sp, now)); // 0.31.0
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
         lines.add(now == null ? "§8직업을 고르면 Shift + 룬 칸 키 (⇧R · ⇧Z · ⇧V · ⇧B · ⇧Y) 로 직업 스킬을 씁니다. 첫 전직은 무료입니다.§r"
                 : "§8지금 직업: §0" + now.name() + "§8. 다른 직업으로 바꾸면 §2" + cost + "§8 " + Inv.CURRENCY_NAME + " (자원 · 태세 · 재사용 대기는 처음부터).§r");
         lines.add("§8카드를 누르면 특성 · 스킬 설명과 확인 창이 열립니다. 흐린 카드는 준비 중인 직업입니다.§r");
+        if (now != null && now.ready()) lines.add("§8오른쪽 위 칸: §6직업 스킬 강화§8 (스킬마다 +" + Jobs.upMax() + " — " + Jobs.upLevel(1) + "렙부터).§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         return form;
@@ -178,6 +193,17 @@ public final class JobTrainer {
         else if (mine) out.add("§a✔ 지금 직업");
         else out.add(cost <= 0 ? "§a▶ 누르면 전직 §7(첫 전직 무료)" : "§e▶ 누르면 직업 바꾸기 §7(" + cost + " " + Inv.CURRENCY_NAME + ")");
         return out;
+    }
+
+    /** 0.31.0 직업 스킬 강화 단추 (그림 = 그 직업 궁극기 아이콘 · 단계 합) */
+    static Slot upButton(ServerPlayer sp, Jobs.Job j) {
+        Jobs.Skill ult = j.skill(Jobs.SLOTS - 1);
+        int sum = JobUpgrades.total(sp, j);
+        Slot s = Slot.of(ult == null ? Icon.of("textures/items/book_enchanted") : JobUpgrades.skillIcon(ult), "§6§l직업 스킬 강화 §r§e" + sum + "§7/" + Jobs.upMax() * Jobs.SLOTS)
+                .lore("§7골드와 전리품 · 보스 재료로", "§7스킬마다 +" + Jobs.upMax() + " 까지 (단계마다 계수 +" + Math.round(Jobs.upPer() * 100) + "%)",
+                        "§8+1 은 " + Jobs.upLevel(1) + "렙부터", "", "§e▶ 누르면 강화 창");
+        if (sum > 0) s.count(sum);
+        return s;
     }
 
     private static List<String> guideLore(int cost) {

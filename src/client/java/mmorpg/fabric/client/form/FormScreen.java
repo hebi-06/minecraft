@@ -31,9 +31,9 @@ public abstract class FormScreen extends Screen {
         this.id = id;
     }
 
-    /** 창 그림 (assets/mmorpg/textures/gui/sprites/ui/이름) */
+    /** 창 그림 (assets/mmorpg/textures/gui/sprites/ui/이름 — 0.31.0 "job_skill/스킬 id" 는 메이플식 직업 스킬 아이콘 그대로) */
     static Identifier ui(String name) {
-        return Mmorpg.id("ui/" + name);
+        return name.startsWith("job_skill/") ? Mmorpg.id(name) : Mmorpg.id("ui/" + name);
     }
 
     static void sprite(GuiGraphicsExtractor g, String name, int x, int y, int w, int h) {

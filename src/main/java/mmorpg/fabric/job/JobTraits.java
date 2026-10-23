@@ -196,6 +196,12 @@ public final class JobTraits {
         sendGauge(sp, true);
     }
 
+    /** 0.31.0 시험용: 지금 태세의 전체 틱 (강화가 늘린 지속 — 없으면 0) */
+    public static int stanceTotal(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        return st == null || st.stance == null || st.stanceUntil <= Tasks.now() ? 0 : st.stanceTotal;
+    }
+
     /** 이 태세가 걸려 있는지 */
     public static boolean stanceOn(ServerPlayer sp, String skillId) {
         State st = STATES.get(sp.getUUID());
@@ -317,7 +323,7 @@ public final class JobTraits {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || !j.id().equals("swordsman")) return null;
         Jobs.Skill k = j.skill("swordsman_mirror");
-        double echo = k == null ? 0.35 : k.num("echo", 0.35);
+        double echo = k == null ? 0.35 : JobUpgrades.num(sp, k, "echo", 0.35); // 0.31.0 강화
         return new RpgCombat.Bonus(dmg * echo, "", KEY_MIRROR, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 
@@ -336,7 +342,7 @@ public final class JobTraits {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || !j.id().equals("spellblade") || !j.usesWeapon(w.type())) return null;
         Jobs.Skill k = j.skill("spellblade_awaken");
-        double add = JobSystem.power(sp, j) * (k == null ? 0.93 : k.num("echo", 0.93)) * mmorpg.fabric.stattree.StatTrees.atkMult(sp);
+        double add = JobSystem.power(sp, j) * (k == null ? 0.93 : JobUpgrades.num(sp, k, "echo", 0.93)) * mmorpg.fabric.stattree.StatTrees.atkMult(sp); // 0.31.0 강화
         return new RpgCombat.Bonus(add, "", KEY_AWAKEN, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 
