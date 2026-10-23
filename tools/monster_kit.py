@@ -46,7 +46,13 @@ class Mat:
     """재질: base 바탕색, pattern 무늬, noise 얼룩 세기, edge 테두리 어둡기 (1 = 없음), glow 빛 (0 ~ 1 — 알파 255·(1-glow·0.75)),
     accent 무늬 색 (없으면 바탕의 어둡고 밝은 색), band 줄 간격, seed"""
 
-    def __init__(self, base, pattern="flat", noise=7, edge=0.84, glow=0.0, accent=None, band=3, seed=0, light=1.0, top=1.1, bottom=0.7):
+    # 0.32.0 공허 몬스터: 바탕 위에 빛나는 무늬 (없으면 그리지 않음 — 예전 몬스터 그림은 그대로)
+    #   seam 이음새 줄 (색 · seam_band 간격 · seam_dir "h" 가로 / "v" 세로 / "grid" · seam_gap 끊김 확률) · veins 핏줄 (수 · vein 색) ·
+    #   spots 반점 (수 · spot 색) · rim 테두리 (색) — 각각 _glow (0 ~ 1) 만큼 빛남 (알파 255·(1-glow·0.75) — 빛나는 칸)
+    EXTRA = {"seam": None, "seam_glow": 0.85, "seam_band": 4, "seam_dir": "h", "seam_gap": 0.15, "veins": 0, "vein": None, "vein_glow": 0.8,
+             "spots": 0, "spot": None, "spot_glow": 0.9, "rim": None, "rim_glow": 0.7}
+
+    def __init__(self, base, pattern="flat", noise=7, edge=0.84, glow=0.0, accent=None, band=3, seed=0, light=1.0, top=1.1, bottom=0.7, **extra):
         self.base = rgb(base)
         self.pattern = pattern
         self.noise = noise
@@ -58,11 +64,19 @@ class Mat:
         self.light = light
         self.top = top
         self.bottom = bottom
+        for k, v in Mat.EXTRA.items():
+            setattr(self, k, v)
+        for k, v in extra.items():
+            if k not in Mat.EXTRA:
+                raise TypeError(f"Mat: 모르는 값 {k}")
+            setattr(self, k, rgb(v) if k in ("seam", "vein", "spot", "rim") and v is not None else v)
 
     def with_(self, **kw):
         m = Mat(self.base, self.pattern, self.noise, self.edge, self.glow, self.accent, self.band, self.seed, self.light, self.top, self.bottom)
+        for k in Mat.EXTRA:
+            setattr(m, k, getattr(self, k))
         for k, v in kw.items():
-            setattr(m, k, rgb(v) if k in ("base", "accent") and v is not None else v)
+            setattr(m, k, rgb(v) if k in ("base", "accent", "seam", "vein", "spot", "rim") and v is not None else v)
         return m
 
 
@@ -300,7 +314,62 @@ def paint_face(m, face, w, h, rng):
                 if x == 0 or y == 0 or x == w - 1 or y == h - 1:
                     out[y][x] = mul(out[y][x], m.edge)
     a = 255 if m.glow <= 0 else clamp(255 * (1 - m.glow * 0.75))
-    return [[(c[0], c[1], c[2], a) for c in row] for row in out]
+    cells = [[(c[0], c[1], c[2], a) for c in row] for row in out]
+    if m.seam is not None or m.veins or m.spots or m.rim is not None:
+        paint_glow(m, face, w, h, rng, cells)
+    return cells
+
+
+def glow_alpha(g):
+    return 255 if g <= 0 else clamp(255 * (1 - g * 0.75))
+
+
+def paint_glow(m, face, w, h, rng, cells):
+    """0.32.0 빛나는 무늬 (공허 몬스터): 이음새 줄 · 핏줄 · 반점 · 테두리 — 칸 색을 바꾸고 알파를 낮춰 빛나게"""
+    def put(x, y, col, g, k=1.0):
+        if 0 <= x < w and 0 <= y < h:
+            c = mul(col, k)
+            cells[y][x] = (c[0], c[1], c[2], glow_alpha(g))
+
+    side = face in ("north", "south", "east", "west")
+    if m.seam is not None and w > 1 and h > 1:
+        band = max(2, int(m.seam_band))
+        horiz = m.seam_dir in ("h", "grid") or not side
+        vert = m.seam_dir in ("v", "grid")
+        if horiz:
+            for y in range(band - 1, h - 1, band):
+                for x in range(w):
+                    if rng.random() >= m.seam_gap:
+                        put(x, y, m.seam, m.seam_glow, 0.85 + 0.15 * rng.random())
+        if vert:
+            for x in range(band - 1, w - 1, band):
+                for y in range(h):
+                    if rng.random() >= m.seam_gap:
+                        put(x, y, m.seam, m.seam_glow, 0.85 + 0.15 * rng.random())
+    if m.veins and w > 2 and h > 2:
+        col = m.vein or m.seam or (255, 80, 220)
+        n = max(1, int(round(m.veins * (w * h) / 64.0)))
+        for _ in range(n):
+            x = rng.randrange(w)
+            y = rng.randrange(h)
+            ln = rng.randint(3, 6)
+            dx, dy = rng.choice(((1, 0), (-1, 0), (0, 1), (0, -1)))
+            for i in range(ln):
+                put(x, y, col, m.vein_glow * (1 - i / (ln + 2)), 1 - 0.08 * i)
+                if rng.random() < 0.4:
+                    dx, dy = rng.choice(((1, 0), (-1, 0), (0, 1), (0, -1)))
+                x += dx
+                y += dy
+    if m.spots:
+        col = m.spot or m.seam or (255, 120, 230)
+        n = max(1, int(round(m.spots * (w * h) / 64.0)))
+        for _ in range(n):
+            put(rng.randrange(w), rng.randrange(h), col, m.spot_glow)
+    if m.rim is not None and w > 2 and h > 2:
+        for y in range(h):
+            for x in range(w):
+                if x == 0 or y == 0 or x == w - 1 or y == h - 1:
+                    put(x, y, m.rim, m.rim_glow, 0.9 + 0.1 * rng.random())
 
 
 def paint_box(px, b, n):

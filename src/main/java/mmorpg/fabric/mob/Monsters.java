@@ -127,13 +127,13 @@ public final class Monsters {
     /** 9단계 웜 유충 매복: 싸우지 않으면 rest 틱 뒤 모래 속으로, 플레이어가 detect 칸 안에 오거나 맞으면 튀어나와 먼저 덤빔 (첫 공격은 emerge 틱 뒤) */
     public record Burrow(double detect, int rest, int emerge) {}
 
-    /** 9단계 서리 늑대 무리 사냥: 처음 맞으면 울부짖고 둘레 radius 칸의 같은 늑대도 때린 사람에게 덤빔 */
-    public record Pack(double radius) {}
+    /** 9단계 서리 늑대 무리 사냥: 처음 맞으면 울부짖고 둘레 radius 칸의 같은 늑대도 때린 사람에게 덤빔 (0.32.0 — 동작 anim · 소리 sound, 공허 도약충은 울음 screech) */
+    public record Pack(double radius, String anim, String sound) {}
 
     /** 몬스터 설정 (monsters.js DEFS 의 값 — 키 포함, 9단계 특성 hop · charge · burrow · pack 은 뒤에) */
     public record Kind(String key, String id, String name, int level, double hp, double attack, int every, int windup, double reach, int lungeEvery,
             double scale, double boxW, double boxH, double[] color, double shell, OnHit onHit, Regen regen, Shock shock, String windupSound,
-            String hitSound, int xp, int xpUntil, double[] emerald, Hop hop, Charge charge, Burrow burrow, Pack pack) {
+            String hitSound, int xp, int xpUntil, double[] emerald, Hop hop, Charge charge, Burrow burrow, Pack pack, VoidMonsters.Traits traits) {
         /** 크기 배율을 곱한 가로 반폭 (monsterSize.half) */
         public double half() {
             return boxW * scale / 2;
@@ -176,7 +176,8 @@ public final class Monsters {
                         charge == null ? null : new Charge(charge.num("range"), (int) charge.num("prep"), charge.num("speed"), (int) charge.num("dash"),
                                 charge.num("width"), charge.num("knock"), charge.num("lift"), charge.numOr("mult", 1)),
                         burrow == null ? null : new Burrow(burrow.num("detect"), (int) burrow.num("rest"), (int) burrow.num("emerge")),
-                        pack == null ? null : new Pack(pack.num("radius"))));
+                        pack == null ? null : new Pack(pack.num("radius"), pack.strOr("anim", "howl"), pack.strOr("sound", "item.goat_horn.sound.0")),
+                        VoidMonsters.parse(o)));
             }
             kinds = Collections.unmodifiableMap(m);
         }
@@ -329,6 +330,9 @@ public final class Monsters {
         /** 0.29.0 미끼 (암살자 잔영): 이 틱까지 그 사람 대신 미끼 자리로 감 (없으면 null) */
         Vec3 decoy;
         long decoyUntil;
+        /** 0.32.0 공허 특성: 진행 중인 것 (VoidMonsters.Run — 없으면 null) · 다음에 쓸 수 있는 틱 */
+        Object voidRun;
+        long nextTrait;
 
         Fight(RpgMonster m, Kind k, ServerPlayer p, long now) {
             this.m = m;
@@ -337,6 +341,7 @@ public final class Monsters {
             this.attackers.put(p.getUUID(), new Attacker(p, now));
             this.nextAttack = now;
             this.nextLunge = now + 6;
+            this.nextTrait = now + 16;
         }
 
         /** 지금 노리는 플레이어 */
@@ -495,6 +500,7 @@ public final class Monsters {
             f.decoyUntil = now + ticks;
             f.windup = null;
             if (f.charge != null) endCharge(f, now, false);
+            if (f.voidRun != null && VoidMonsters.interruptible(f)) VoidMonsters.cancel(f, now);
             f.m.setTarget(null);
             f.m.getNavigation().moveTo(at.x, at.y, at.z, 1.0);
             n++;
@@ -558,12 +564,13 @@ public final class Monsters {
     }
 
     /** 맞힘: 플레이어 가슴 앞 (몬스터 쪽) 에 몬스터 색 할퀴기 참격 + 불꽃 (1인칭에서도 화면 아래쪽에 보임) */
-    private static void impactFx(ServerLevel level, Entity m, Kind k, ServerPlayer p) {
+    static void impactFx(ServerLevel level, Entity m, Kind k, ServerPlayer p) {
         Vec3 chest = V.up(p.position(), 1.2);
         Vec3 toM = V.flat(V.sub(m.position(), p.position()));
         Vec3 at = V.add(chest, toM, 0.7);
         Vec3 v = V.unit(V.sub(chest, eyeish(m, k)));
-        boolean heavy = k.key().equals("troll") || k.key().equals("frost_giant") || k.key().equals("grendel");
+        boolean heavy = k.key().equals("troll") || k.key().equals("frost_giant") || k.key().equals("grendel") || k.key().equals("void_borer")
+                || k.key().equals("void_behemoth") || k.key().equals("void_stalker");
         SkillFx.arc(level, at, v, Opt.of("shape", heavy ? "heavy" : "thin", "flip", Kit.rand() < 0.5, "size", heavy ? 1.45 : 1.0, "life", 0.2, "speed", 1.0,
                 "spin", Kit.rand() * 60 - 30, "color", k.color()));
         SkillFx.sparks(level, at, k.color(), 5, 3);
@@ -713,7 +720,8 @@ public final class Monsters {
             }
             level.sendParticles(ParticleTypes.SNOWFLAKE, at.x, at.y + 0.4, at.z, 30, rr * 0.5, 0.25, rr * 0.5, 0.06);
             play(level, "block.glass.break", at, 0.7, 0.9);
-        } else SkillFx.burst(level, V.up(at, 0.2), new double[] {0.5, 0.42, 0.32}, 1.6, 0.35);
+        } else if ("void".equals(k.shock().fx())) VoidMonsters.shockFx(level, at, k.shock().radius()); // 0.32.0 공허 거수: 분홍 고리 · 빛나는 금 · 수정 조각
+        else SkillFx.burst(level, V.up(at, 0.2), new double[] {0.5, 0.42, 0.32}, 1.6, 0.35);
         double r = k.shock().radius() + 0.5;
         for (ServerPlayer p : new ArrayList<>(level.players())) {
             if (p.position().distanceTo(at) > r) continue;
@@ -801,6 +809,7 @@ public final class Monsters {
     /** 싸움 끝: 기록을 지우고 엔티티가 노리던 이 싸움의 사람을 놓아 줌 (집으로 돌아가게) */
     private static void endFight(Fight f) {
         if (f.charge != null) endCharge(f, Tasks.now(), false);
+        if (f.voidRun != null) VoidMonsters.cancel(f, Tasks.now());
         FIGHTS.remove(f.m.getUUID(), f);
         LivingEntity t = f.m.getTarget();
         if (t instanceof ServerPlayer p && (p == f.player || f.attackers.containsKey(p.getUUID()) || targetState(p, f.m) != State.OK)) f.m.setTarget(null);
@@ -838,6 +847,7 @@ public final class Monsters {
             // 크리에이티브 · 관전 · 쓰러지는 중: 하던 동작은 끊고 기다림 (토템으로 살아나면 이어서), 오래가면 싸움 끝
             f.windup = null;
             if (f.charge != null) endCharge(f, now, false);
+            if (f.voidRun != null) VoidMonsters.cancel(f, now);
             if (f.paused == null) f.paused = now;
             if (now - f.paused > PAUSE_LIMIT) endFight(f);
             return;
@@ -857,22 +867,31 @@ public final class Monsters {
         if (stunned(m)) {
             f.windup = null; // 기절 · 빙결 · 석화: 하던 동작도 끊김
             if (f.charge != null) endCharge(f, now, false);
-            return;
+            if (f.voidRun != null && VoidMonsters.interruptible(f)) VoidMonsters.cancel(f, now); // 0.32.0 공허 특성 준비도 끊김 (땅속 · 균열 속 · 공중은 그대로)
+            if (f.voidRun == null) return;
         }
         if (f.charge != null) {
             chargeStep(f, now);
+            return;
+        }
+        if (f.voidRun != null) {
+            VoidMonsters.step(f, now); // 0.32.0 덮치기 · 균열 이동 · 구체 · 땅굴 · 수정 가시
             return;
         }
         if (f.windup != null) {
             if (now >= f.windup.at()) resolve(f, now);
             return;
         }
+        boolean traits = k.traits() != VoidMonsters.NONE;
+        if (traits) VoidMonsters.hold(f, g, now); // 해파리: 구체를 쏠 거리면 다가오지 않음
         if (now < f.nextAttack) return;
         ServerPlayer p = f.player;
         if (g.gap() <= k.reach() && heightOk(k, g.dy(), 0)) {
             if (canSee(m, k, p)) startAttack(f, now, "melee");
             return;
         }
+        if (traits && VoidMonsters.tryTrait(f, g, now)) return;
+        if (traits && k.traits().orb() != null) return; // 해파리: 달려들지 않음 (구체로 싸움)
         if (now < f.nextLunge || rooted(m) || hidden(p)) return;
         Charge ch = k.charge();
         if (ch != null ? g.gap() <= ch.range() && Math.abs(g.dy()) <= 1.5 : g.gap() <= LUNGE_RANGE && Math.abs(g.dy()) <= LUNGE_HEIGHT) {
@@ -926,7 +945,7 @@ public final class Monsters {
     private static final double[] POISON = {0.45, 0.95, 0.3};
     private static final double[] WITHER = {0.2, 0.17, 0.22};
 
-    private static String anim(Kind k, String name) {
+    static String anim(Kind k, String name) {
         return "animation.rpg.monster." + k.key() + "." + name;
     }
 
@@ -1161,11 +1180,20 @@ public final class Monsters {
     private static int packAlert(RpgMonster m, Kind k, ServerPlayer p, long now) {
         ServerLevel level = (ServerLevel) m.level();
         double r = k.pack().radius();
-        m.playAnimation(anim(k, "howl"));
-        play(level, "item.goat_horn.sound.0", m.position(), 1.25, 1.4); // 울부짖음 (26.3 에는 늑대 울음소리가 없어 뿔피리 — 무리를 부르는 소리)
-        play(level, "entity.wolf.growl", m.position(), 0.8, 1.2);
-        SkillFx.shock(level, m.position(), FROST, r / 2.1, 0.8);
-        level.sendParticles(ParticleTypes.SNOWFLAKE, m.getX(), m.getY() + k.height() * 0.6, m.getZ(), 16, 0.4, 0.3, 0.4, 0.04);
+        boolean voidKind = k.traits().isVoid();
+        double[] col = voidKind ? VoidMonsters.PINK : FROST;
+        m.playAnimation(anim(k, k.pack().anim()));
+        if (voidKind) {
+            // 0.32.0 공허 도약충: 날카로운 울음 · 분홍 고리 · 공허 알갱이
+            play(level, k.pack().sound(), m.position(), 0.6, 1.4);
+            play(level, k.windupSound(), m.position(), 1.4, 1.0);
+            level.sendParticles(ParticleTypes.REVERSE_PORTAL, m.getX(), m.getY() + k.height() * 0.6, m.getZ(), 20, 0.4, 0.3, 0.4, 0.05);
+        } else {
+            play(level, "item.goat_horn.sound.0", m.position(), 1.25, 1.4); // 울부짖음 (26.3 에는 늑대 울음소리가 없어 뿔피리 — 무리를 부르는 소리)
+            play(level, "entity.wolf.growl", m.position(), 0.8, 1.2);
+            level.sendParticles(ParticleTypes.SNOWFLAKE, m.getX(), m.getY() + k.height() * 0.6, m.getZ(), 16, 0.4, 0.3, 0.4, 0.04);
+        }
+        SkillFx.shock(level, m.position(), col, r / 2.1, 0.8);
         int n = 0;
         for (RpgMonster o : level.getEntitiesOfClass(RpgMonster.class, m.getBoundingBox().inflate(r), x -> x != m && kindOf(x) == k)) {
             if (o.position().distanceTo(m.position()) > r || FIGHTS.containsKey(o.getUUID()) || Kit.hasNoHealth(o)) continue;
@@ -1176,8 +1204,8 @@ public final class Monsters {
             int delay = 4 + n * 3;
             Tasks.later(delay, () -> {
                 if (o.isRemoved() || Kit.hasNoHealth(o)) return;
-                o.playAnimation(anim(k, "howl"));
-                SkillFx.shock(level, o.position(), FROST, 0.9, 0.5);
+                o.playAnimation(anim(k, k.pack().anim()));
+                SkillFx.shock(level, o.position(), col, 0.9, 0.5);
             });
             n++;
         }
@@ -1219,8 +1247,11 @@ public final class Monsters {
         FIGHTS.remove(e.getUUID());
         HURT.remove(e.getUUID());
         Vec3 at = V.up(e.position(), k.height() * 0.5);
-        SkillFx.burst(level, at, k.color(), 1.2 + k.half(), 0.35);
-        SkillFx.sparks(level, at, k.color(), 8, 4);
+        if (k.traits().isVoid()) VoidMonsters.deathFx(level, at, k); // 0.32.0 빨려 들어가듯 사라짐
+        else {
+            SkillFx.burst(level, at, k.color(), 1.2 + k.half(), 0.35);
+            SkillFx.sparks(level, at, k.color(), 8, 4);
+        }
         // 잡은 플레이어에게 경험치 (최고 레벨이 xpUntil 이상이면 0) + 전리품. 불에 타 죽으면 10초 안에 마지막으로 때린 사람
         try {
             Loot.lootOnDeath(e, k.key(), Loot.killCredit(e, source), k.height());
@@ -1235,6 +1266,7 @@ public final class Monsters {
             f.attackers.remove(playerId);
             if (f.windup != null && f.windup.target().getUUID().equals(playerId)) f.windup = null;
             if (f.charge != null && f.charge.target.getUUID().equals(playerId)) endCharge(f, Tasks.now(), false);
+            if (f.voidRun != null && f.player != null && f.player.getUUID().equals(playerId)) VoidMonsters.cancel(f, Tasks.now());
             if (f.taunt != null && f.taunt.id().equals(playerId)) f.taunt = null; // 죽은 사람의 도발은 끝
             if (f.player != null && !f.player.getUUID().equals(playerId) && !f.player.isRemoved()) continue;
             Attacker next = null;
@@ -1365,6 +1397,11 @@ public final class Monsters {
             if (f != null && f.charge != null && f.charge.dashing) dashTick(f, now);
         }
         if (k.burrow() != null && (now + m.getId()) % 5 == 0) burrowTick(m, k, now);
+        if (k.traits() != VoidMonsters.NONE) VoidMonsters.tick(m, k, now); // 0.32.0 덮치기 비행 · 땅속 이동 · 공허 알갱이
+        if (VoidMonsters.phased(m)) {
+            if (m.labelText != null || m.label != null) setLabel(m, null); // 균열 속 · 땅속: 이름표 없음 (나오면 아래에서 다시 붙음)
+            return;
+        }
         if (m.buried()) {
             if (m.labelText != null || m.label != null) setLabel(m, null); // 숨은 동안 이름표 없음 (다시 나오면 아래에서 다시 붙음)
             return;
@@ -1411,6 +1448,7 @@ public final class Monsters {
         if (!level.addFreshEntity(m)) return null;
         Kind k = kindOf(m);
         if (k != null) m.setNameTag(monsterLabel(k, 1, 1));
+        if (k != null && k.traits().isVoid()) VoidMonsters.spawnFx(level, m, k); // 0.32.0 균열이 열리며 나타남
         return m;
     }
 
@@ -1499,12 +1537,14 @@ public final class Monsters {
         };
         HuntZones.init();
         MonsterCommands.init();
+        VoidMonsters.init();
     }
 
     /** 시험용: 싸움 · 회복 기록을 지움 */
     public static void clearState() {
         FIGHTS.clear();
         HURT.clear();
+        VoidMonsters.clearState();
     }
 
     /** 다친 몬스터로 기록되어 있는지 (회복 대기 — 시험용) */

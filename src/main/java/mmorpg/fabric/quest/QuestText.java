@@ -202,7 +202,7 @@ public final class QuestText {
     public static String conditionText(Quest q) {
         List<String> parts = new ArrayList<>();
         if (q.main) parts.add(!q.path.isEmpty() ? "메인 퀘스트 · " + MainQuests.MAIN_PATHS.get(q.path).name() : "메인 퀘스트");
-        if (q.side.equals("repeat")) parts.add("반복 의뢰 · 메인 퀘스트 " + q.afterStep + "단계 (그 몬스터 처치) 뒤");
+        if (q.side.equals("repeat")) parts.add(q.afterStep > 0 ? "반복 의뢰 · 메인 퀘스트 " + q.afterStep + "단계 (그 몬스터 처치) 뒤" : "반복 의뢰");
         if (q.side.equals("royal")) parts.add("왕실 퀘스트 · 무기의 길을 고른 뒤");
         if (q.side.equals("legend")) {
             MainQuests.MainPath p = MainQuests.MAIN_PATHS.get(q.path);

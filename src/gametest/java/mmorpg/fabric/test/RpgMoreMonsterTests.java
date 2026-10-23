@@ -88,14 +88,14 @@ public final class RpgMoreMonsterTests {
     // ------------------------------------------------------------ 등록 · 자료
 
     /**
-     * 새 몬스터 8종: 몬스터 순서 14 (레벨 순서 — 사냥 추천이 씀), 지역마다 2종 (지역 NPC 목록에도), 엔티티 · 소환 알 · 전리품 아이템 · 반복 의뢰 (그 몬스터 처치 단계 뒤),
+     * 새 몬스터 8종: 몬스터 순서 19 (0.32.0 공허 다섯 포함 — 레벨 순서 — 사냥 추천이 씀), 지역마다 2종 (지역 NPC 목록에도), 엔티티 · 소환 알 · 전리품 아이템 · 반복 의뢰 (그 몬스터 처치 단계 뒤),
      * 소리 (몬스터 · 특성 연출 모두 자바 소리로 풀림), 그림 (모델 · idle · walk · attack · 특성 동작 · 텍스처), 소환하면 체력 · 크기 · 이름표.
      * 기본 묶음 (서리 늑대가 다른 몬스터 시험과 겹치지 않게)
      */
     @GameTest(maxTicks = 30)
     public void moreMonstersData(GameTestHelper h) {
         List<String> order = Rules.get().strings("MONSTER_ORDER");
-        h.assertTrue(order.size() == 14 && order.containsAll(NEW), "monster order " + order);
+        h.assertTrue(order.size() == 19 && order.containsAll(NEW), "monster order " + order); // 0.32.0 공허 다섯 (RpgVoidMonsterTests) 을 더해 19
         int prev = 0;
         for (String key : order) {
             Monsters.Kind k = Monsters.kind(key);

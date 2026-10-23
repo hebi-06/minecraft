@@ -36,6 +36,12 @@ EGGS = {
     "grendel": ("#7d8a78", "#3a4236"),
     "frost_wolf": ("#c4d8e6", "#9edcff"),
     "frost_giant": ("#7896ae", "#a8e2ff"),
+    # 0.32.0 공허 몬스터
+    "void_leaper": ("#2c2149", "#ff4fd8"),
+    "void_stalker": ("#3a2b60", "#d6cdee"),
+    "void_jelly": ("#2e2152", "#ff8ef0"),
+    "void_borer": ("#2c2150", "#b46cff"),
+    "void_behemoth": ("#1b1430", "#8e4cff"),
 }
 # 늘 트는 동작 (나머지 — attack · 특성 동작 — 는 Monsters 가 playAnimation)
 ANIMATE = ["idle", "walk"]
@@ -106,8 +112,8 @@ def behavior(key, m, cfg):
         "minecraft:behavior.float": {"priority": 0},
     }
     props = {}
-    if m.get("burrow"):
-        # 웜 유충 매복: 숨었는지 (클라이언트도 앎 — 충돌 상자 · 그리기)
+    if m.get("burrow") or m.get("tunnel"):
+        # 웜 유충 매복 · 0.32.0 공허 굴착자 땅굴: 숨었는지 (클라이언트도 앎 — 충돌 상자 · 그리기)
         props["rpg:buried"] = {"type": "bool", "client_sync": True, "default": False}
     return {"group": "monsters", "properties": props, "components": comps, "component_groups": {}, "events": {}}
 

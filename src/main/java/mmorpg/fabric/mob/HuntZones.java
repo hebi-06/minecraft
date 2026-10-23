@@ -203,6 +203,8 @@ public final class HuntZones {
         RpgMonster m = Monsters.spawnAt(level, z.kind(), at, (float) (Kit.rand() * 360 - 180));
         if (m == null) return null;
         m.addTag(z.tag());
+        Monsters.Kind k = Monsters.kindOf(m);
+        if (k != null && k.traits().isVoid()) return m; // 0.32.0 공허 몬스터는 균열이 열리며 나타남 (Monsters.spawnAt)
         SkillFx.vanilla(level, "minecraft:death_explosion_emitter", new Vec3(at.x, at.y + 0.6, at.z));
         SkillFx.play(level, "random.pop", at, 0.6, 0.8);
         return m;

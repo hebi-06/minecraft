@@ -195,5 +195,10 @@
   "entity.rpg.worm_larva": "웜 유충",
   "entity.rpg.grendel": "그렌델",
   "entity.rpg.frost_wolf": "서리 늑대",
-  "entity.rpg.frost_giant": "서리 거인"
+  "entity.rpg.frost_giant": "서리 거인",
+  "entity.rpg.void_leaper": "공허 도약충",
+  "entity.rpg.void_stalker": "공허 추적자",
+  "entity.rpg.void_jelly": "공허 해파리",
+  "entity.rpg.void_borer": "공허 굴착자",
+  "entity.rpg.void_behemoth": "공허 거수"
 }

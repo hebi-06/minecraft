@@ -13,9 +13,11 @@ import java.util.Set;
 /**
  * 9단계 시험 (JUnit 없이 main — check-core.sh): 자바 전용 규칙 덧붙임 (rules_more.json) 과 레벨업 곡선.
  * <ul>
- * <li>덧붙임: 몬스터 14종 (애드온 6 + 새 8) — 순서는 레벨 순, 몬스터마다 설정 · 전리품 · 반복 의뢰, 애드온 6종은 그대로 (rules.json 과 같음)</li>
- * <li>새 몬스터: 지역 (farm · desert · sea · north) 마다 둘, 특성 값 (hop · charge · burrow · pack · onHit · shock · shell), 전리품 아이템 이름이 겹치지 않음</li>
- * <li>레벨마다 경험치를 주는 몬스터가 있음 (내 레벨 + 2 이하 · xpUntil 이 내 레벨보다 큼 — 0 ~ 44)</li>
+ * <li>덧붙임: 몬스터 19종 (애드온 6 + 새 8 + 0.32.0 공허 5) — 순서는 레벨 순, 몬스터마다 설정 · 전리품 · 반복 의뢰, 애드온 6종은 그대로 (rules.json 과 같음)</li>
+ * <li>새 몬스터: 지역 (farm · desert · sea · north) 마다 둘 + 공허 (void) 다섯, 특성 값 (hop · charge · burrow · pack · onHit · shock · shell ·
+ * 공허 leap · blink · orb · tunnel · spikes), 전리품 아이템 이름이 겹치지 않음</li>
+ * <li>0.32.0 공허: 42 · 48 · 52 · 55 · 58렙, 체력 '아주 단단하게' (5,000 ~ 15,000 · 레벨 순), 제 레벨에서 한 레벨에 드는 처치 수 (반복 의뢰 포함) 40 ~ 55, 반복 의뢰는 레벨로 열림</li>
+ * <li>레벨마다 경험치를 주는 몬스터가 있음 (내 레벨 + 2 이하 · xpUntil 이 내 레벨보다 큼 — 0 ~ 59)</li>
  * <li>Leveling: 바닐라 곡선 · ×3 · 0.24.1 갈수록 더 (10렙 뒤로 커져 40렙에서 ×3 더) · 퀘스트 레벨 보상 → 바닐라 경험치</li>
  * <li>Rules.merge: 표는 더하고 목록 · 값은 바꾸고 "_" 는 건너뜀</li>
  * </ul>
@@ -40,6 +42,7 @@ public final class MonstersMoreTest {
         NEW.put("desert", List.of("sand_scorpion", "worm_larva"));
         NEW.put("sea", List.of("crab", "grendel"));
         NEW.put("north", List.of("frost_wolf", "frost_giant"));
+        NEW.put("void", List.of("void_leaper", "void_stalker", "void_jelly", "void_borer", "void_behemoth"));
     }
 
     private static Map<String, Object> resource(String path) throws IOException {
@@ -56,7 +59,7 @@ public final class MonstersMoreTest {
         Obj mons = r.obj("MONSTERS");
         Obj drops = r.obj("MONSTER_DROPS");
         Obj rep = r.obj("REPEAT_QUESTS");
-        check(order.size() == 14, "14 monsters " + order);
+        check(order.size() == 19, "19 monsters " + order);
         check(order.get(0).equals("scarecrow"), "scarecrow first (무기 시험 길 안내)");
         Set<String> all = new HashSet<>(order);
         check(all.size() == order.size(), "unique order");
@@ -109,8 +112,40 @@ public final class MonstersMoreTest {
         check("wither".equals(mons.obj("grendel").obj("onHit").str("effect")), "grendel wither");
         check(mons.obj("frost_wolf").obj("pack").num("radius") > 0, "wolf pack");
         check(mons.obj("frost_giant").obj("shock").num("radius") > 0 && "ice".equals(mons.obj("frost_giant").obj("shock").str("fx")), "giant ice shock");
+        // 0.32.0 공허 다섯: 특성 · 체력 · 처치 수 · 반복 의뢰 레벨
+        int[] voidLv = {42, 48, 52, 55, 58};
+        double prevHp = 0;
+        for (int i = 0; i < 5; i++) {
+            String k = NEW.get("void").get(i);
+            Obj m = mons.obj(k);
+            check(m.num("level") == voidLv[i] && m.truthy("void"), k + " level " + voidLv[i] + " · void");
+            check(m.num("hp") >= 5000 && m.num("hp") <= 15000 && m.num("hp") > prevHp, k + " hp 5,000 ~ 15,000 rising " + m.num("hp"));
+            prevHp = m.num("hp");
+            Obj q = rep.obj(k);
+            double eff = m.num("xp") + q.num("xp") / (q.num("count") * 2);
+            double kills = Leveling.need((int) m.num("level")) / eff;
+            check(kills >= 40 && kills <= 55, k + " kills per level " + kills);
+            check(q.num("minLevel") > 0 && q.num("minLevel") <= m.num("level"), k + " repeat minLevel " + q.numOr("minLevel", 0));
+            check(drops.obj(k).num("price") > drops.obj("frost_giant").num("price"), k + " drop price above frost giant");
+        }
+        Obj leap = mons.obj("void_leaper").obj("leap");
+        check(leap.num("range") > leap.num("min") && leap.num("prep") > 0 && leap.num("air") > 0 && leap.num("radius") > 0 && leap.num("mult") >= 1, "leaper leap");
+        check(mons.obj("void_leaper").obj("pack").num("radius") > 0 && "screech".equals(mons.obj("void_leaper").obj("pack").str("anim")), "leaper swarm");
+        Obj blink = mons.obj("void_stalker").obj("blink");
+        check(blink.num("range") > blink.num("min") && blink.num("vanish") > 0 && blink.num("open") >= 10 && blink.num("strike") > 0 && blink.num("mult") >= 1
+                && blink.num("arc") > 0, "stalker blink (균열이 열린 뒤 0.5초 넘게 — 비킬 틈)");
+        Obj orb = mons.obj("void_jelly").obj("orb");
+        check(orb.num("range") > orb.num("keep") && orb.num("keep") > mons.obj("void_jelly").num("reach") && orb.num("speed") > 0 && orb.num("life") > 0
+                && orb.num("radius") > 0 && orb.num("attack") > 0, "jelly orb");
+        Obj tunnel = mons.obj("void_borer").obj("tunnel");
+        check(tunnel.num("range") > tunnel.num("min") && tunnel.num("dive") > 0 && tunnel.num("speed") > 0 && tunnel.num("max") > 0 && tunnel.num("warn") >= 10
+                && tunnel.num("lift") > 0, "borer tunnel (경고 0.5초 넘게)");
+        Obj spikes = mons.obj("void_behemoth").obj("spikes");
+        check(spikes.num("count") >= 3 && spikes.num("step") > spikes.num("radius") && spikes.num("prep") >= 10 && spikes.num("gap") > 0 && spikes.num("linger") > 0,
+                "behemoth spikes");
+        check("void".equals(mons.obj("void_behemoth").obj("shock").str("fx")), "behemoth void shock");
         // 레벨마다 경험치를 주는 몬스터 (내 레벨 + 2 이하, xpUntil > 내 레벨)
-        for (int lv = 0; lv <= 44; lv++) {
+        for (int lv = 0; lv <= 59; lv++) {
             boolean any = false;
             for (String k : order) {
                 Obj m = mons.obj(k);

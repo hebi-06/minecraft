@@ -206,8 +206,94 @@ def frost_giant(ic):
     return [(4, 6, (210, 245, 255)), (28, 24, (200, 240, 255)), (27, 5, (230, 250, 255))]
 
 
+# ---------------------------------------------------------------- 0.32.0 공허 몬스터 전리품 (검보라 · 분홍 발광)
+
+VOID_DARK = (44, 32, 74)
+VOID_PINK = (255, 92, 222)
+VOID_LIGHT = (255, 214, 250)
+
+
+def void_leaper(ic):
+    # 공허 독주머니: 둥근 분홍 주머니 (안쪽이 밝음 · 빛 핏줄) + 위의 검보라 갑각 마개
+    sac = ic.mask(lambda d: d.ellipse((6, 8, 26, 29), fill=255))
+    ic.fill(sac, (214, 64, 190), light=0.35, dark=0.3, noise=6, seed=80)
+    inner = ic.mask(lambda d: d.ellipse((11, 13, 21, 24), fill=255))
+    ic.fill(inner, (255, 140, 236), light=0.25, dark=0.1, noise=4, seed=81)
+    for pts in (((9, 18), (12, 15), (15, 16)), ((22, 14), (20, 18), (23, 22)), ((13, 26), (16, 23), (19, 26))):
+        ic.line(list(pts), VOID_LIGHT, sac)
+    cap = ic.mask(lambda d: d.polygon([(10, 9), (14, 4), (18, 4), (22, 9), (19, 11), (13, 11)], fill=255))
+    ic.fill(cap, VOID_DARK, light=0.3, dark=0.35, noise=5, seed=82)
+    ic.put(16, 5, (180, 110, 255))
+    ic.put(14, 15, (255, 255, 255))
+    return [(4, 6, VOID_LIGHT), (28, 20, (255, 170, 240)), (27, 4, (255, 220, 250))]
+
+
+def void_stalker(ic):
+    # 균열 칼날: 휘어진 연보라 뼈 칼날 · 분홍 빛 날 · 아래 검보라 손잡이 마디
+    blade = ic.mask(lambda d: d.polygon([(9, 26), (12, 27), (16, 21), (21, 14), (25, 8), (27, 3), (24, 5), (19, 10), (13, 17), (9, 22)], fill=255))
+    ic.fill(blade, (214, 205, 238), light=0.3, dark=0.3, noise=5, seed=90)
+    ic.line([(10, 23), (14, 18), (19, 12), (23, 7), (26, 4)], VOID_PINK, blade)
+    ic.line([(11, 24), (15, 19)], (255, 170, 240), blade)
+    base = ic.mask(lambda d: d.polygon([(5, 25), (11, 22), (14, 27), (9, 31), (4, 29)], fill=255))
+    ic.fill(base, VOID_DARK, noise=6, seed=91)
+    ic.put(8, 27, VOID_PINK)
+    return [(27, 12, VOID_LIGHT), (5, 13, (230, 190, 255))]
+
+
+def void_jelly(ic):
+    # 공허 핵: 빛나는 분홍 구슬 (가운데 흰 빛) · 둘레를 도는 검보라 고리 조각
+    ring = ic.mask(lambda d: (d.ellipse((3, 9, 29, 23), fill=255), d.ellipse((6, 11, 26, 21), fill=0)))
+    ic.fill(ring, VOID_DARK, light=0.35, dark=0.3, noise=5, seed=100)
+    orb = ic.mask(lambda d: d.ellipse((9, 6, 23, 26), fill=255))
+    ic.fill(orb, (238, 74, 214), light=0.4, dark=0.3, noise=5, seed=101)
+    mid = ic.mask(lambda d: d.ellipse((12, 10, 20, 21), fill=255))
+    ic.fill(mid, (255, 160, 240), light=0.2, dark=0.1, noise=3, seed=102)
+    core = ic.mask(lambda d: d.ellipse((14, 13, 18, 18), fill=255))
+    ic.fill(core, (255, 238, 252), light=0.1, dark=0.05, noise=2, seed=103)
+    # 고리 앞쪽 (구슬 아래를 지남)
+    front = ic.mask(lambda d: (d.ellipse((3, 9, 29, 23), fill=255), d.ellipse((6, 11, 26, 21), fill=0), d.rectangle((0, 0, 31, 16), fill=0)))
+    ic.fill(front, (70, 50, 112), light=0.3, dark=0.3, noise=4, seed=104)
+    return [(5, 5, VOID_LIGHT), (27, 26, (255, 180, 245)), (26, 4, (255, 230, 252))]
+
+
+def void_borer(ic):
+    # 굴착자의 턱: 세 갈래 뾰족한 연보라 턱 (드릴 끝) · 분홍 빛 안쪽 · 검보라 뿌리
+    root = ic.mask(lambda d: d.ellipse((5, 18, 19, 30), fill=255))
+    ic.fill(root, VOID_DARK, noise=6, seed=110)
+    for i, poly in enumerate(([(10, 20), (13, 18), (18, 9), (21, 3), (16, 8), (11, 15)],
+                              [(13, 22), (16, 21), (23, 14), (29, 10), (22, 12), (15, 18)],
+                              [(9, 21), (11, 18), (8, 11), (6, 4), (5, 10), (6, 17)])):
+        m = ic.mask(lambda d, p=poly: d.polygon(p, fill=255))
+        ic.fill(m, (206, 196, 234), light=0.3, dark=0.32, noise=5, seed=111 + i)
+    ic.line([(14, 16), (18, 9), (20, 5)], VOID_PINK)
+    ic.line([(16, 19), (22, 14), (27, 11)], VOID_PINK)
+    ic.line([(9, 17), (7, 10)], VOID_PINK)
+    ic.put(12, 23, (255, 150, 240))
+    return [(27, 4, VOID_LIGHT), (28, 22, (230, 190, 255))]
+
+
+def void_behemoth(ic):
+    # 공허 수정: 검보라 수정 다발 (가운데 큰 것 · 양옆) · 안쪽 분홍 빛 줄 · 위 끝이 밝음
+    for i, (poly, base) in enumerate((([(5, 28), (9, 28), (10, 16), (7, 11), (4, 17)], (110, 64, 200)),
+                                      ([(21, 28), (26, 28), (28, 18), (25, 12), (21, 18)], (120, 70, 210)),
+                                      ([(10, 29), (21, 29), (21, 12), (16, 2), (11, 12)], (142, 82, 236)))):
+        m = ic.mask(lambda d, p=poly: d.polygon(p, fill=255))
+        ic.fill(m, base, light=0.4, dark=0.35, noise=5, seed=120 + i)
+    ic.line([(16, 5), (16, 26)], (220, 170, 255))
+    ic.line([(13, 14), (14, 26)], VOID_PINK)
+    ic.line([(19, 14), (18, 25)], (200, 110, 255))
+    ic.line([(25, 15), (24, 26)], (200, 120, 255))
+    ic.line([(7, 14), (7, 26)], (190, 110, 250))
+    ic.put(16, 3, (255, 255, 255))
+    ic.put(15, 4, (250, 230, 255))
+    base = ic.mask(lambda d: d.ellipse((4, 26, 28, 31), fill=255))
+    ic.fill(base, (40, 28, 66), noise=4, seed=124)
+    return [(4, 6, VOID_LIGHT), (28, 8, (230, 200, 255)), (27, 27, (255, 180, 245))]
+
+
 PAINT = {"nisse": nisse, "boar": boar, "sand_scorpion": sand_scorpion, "crab": crab, "worm_larva": worm_larva, "grendel": grendel,
-         "frost_wolf": frost_wolf, "frost_giant": frost_giant}
+         "frost_wolf": frost_wolf, "frost_giant": frost_giant, "void_leaper": void_leaper, "void_stalker": void_stalker, "void_jelly": void_jelly,
+         "void_borer": void_borer, "void_behemoth": void_behemoth}
 
 
 def write_json(path, data, indent=2):

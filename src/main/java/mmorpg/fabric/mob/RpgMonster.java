@@ -119,6 +119,19 @@ public class RpgMonster extends BedrockMob {
         return Component.literal(BedrockText.toJava(nl < 0 ? t : t.substring(0, nl)));
     }
 
+    /** 0.32.0 공허 몬스터: 균열 속 (추적자) · 땅속 (굴착자) 에서는 맞지 않음 */
+    @Override
+    public boolean isInvulnerableTo(ServerLevel level, DamageSource source) {
+        if (VoidMonsters.phased(this) && !source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_INVULNERABILITY)) return true;
+        return super.isInvulnerableTo(level, source);
+    }
+
+    /** 보이지 않는 동안 (균열 속 추적자) 은 조준에도 잡히지 않음 */
+    @Override
+    public boolean isPickable() {
+        return !isInvisible() && super.isPickable();
+    }
+
     /** 플레이어가 준 피해는 껍질만큼 줄여서 (combat.js 의 incoming 훅 — 무기 공식 뒤) */
     @Override
     public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {

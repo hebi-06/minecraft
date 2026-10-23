@@ -231,7 +231,7 @@ public final class Shop {
     private static final int SELL_BACK = 0;
     private static final int SELL_ALL = 8;
     private static final int SELL_FIRST = 10;
-    /** 전리품 칸 (9단계 — 몬스터 14종): 가운데 · 아랫줄의 1 ~ 7 칸 (10 ~ 16 · 19 ~ 25), 풀이 칸은 윗줄 */
+    /** 전리품 칸 (9단계 — 몬스터 14종 · 0.32.0 공허 다섯을 더해 19종): 둘째 줄부터 줄마다 1 ~ 7 칸 (10 ~ 16 · 19 ~ 25 · 28 ~ 34), 풀이 칸은 윗줄 */
     private static final int SELL_COLS = 7;
     private static final int SELL_INFO = 2;
 
@@ -291,7 +291,8 @@ public final class Shop {
         List<Loot> list = sellList(sp);
         int total = 0;
         for (Loot e : list) total += e.n() * e.price();
-        ChestForm form = new ChestForm("전리품 팔기 §8· §7상점");
+        // 0.32.0 전리품 수에 맞춰 줄 수 (윗줄 + 7칸씩 — 19종이면 4줄)
+        ChestForm form = new ChestForm("전리품 팔기 §8· §7상점", 1 + Math.max(2, (list.size() + SELL_COLS - 1) / SELL_COLS));
         form.set(SELL_BACK, Slot.of(Items.IRON_SWORD, "§b무기 상점으로"));
         form.set(BALANCE_SLOT, balanceSlot(sp));
         form.set(SELL_ALL, total > 0
@@ -300,7 +301,7 @@ public final class Shop {
         for (int i = 0; i < list.size(); i++) {
             Loot e = list.get(i);
             Obj m = MONSTERS.obj(e.key());
-            if (sellSlot(i) >= ChestForm.SIZE) break;
+            if (sellSlot(i) >= form.size()) break;
             form.set(sellSlot(i), Slot.of(Icon.item(e.item()), e.d().str("color") + e.d().str("name") + " §7· 1개 " + e.price() + " " + Inv.CURRENCY_NAME).count(e.n())
                     .lore(e.n() > 0 ? "§r§a보유 " + e.n() + "개 → " + e.n() * e.price() + " " + Inv.CURRENCY_NAME : "§r§8가진 것이 없음",
                             "§r§7" + m.str("name") + " (Lv." + Js.str(m.num("level")) + ") 전리품"));

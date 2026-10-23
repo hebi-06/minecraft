@@ -10,7 +10,7 @@
     "_maxLevel": "0.24.2 최고 레벨: 이 레벨에 이르면 경험치가 더 오르지 않음 (경험치 막대는 비움 — 몬스터 · 보스 · 퀘스트 · 경험치 구슬 모두), /xp 로 더 올려도 이 레벨. 레벨을 쓰는 것 (인챈트 · 모루) 은 그대로",
     "maxLevel": 60
   },
-  "MONSTER_ORDER": ["scarecrow", "nisse", "boar", "gulon", "sand_scorpion", "skeljaskrimsli", "crab", "worm_larva", "nix", "grendel", "draugr", "frost_wolf", "troll", "frost_giant"],
+  "MONSTER_ORDER": ["scarecrow", "nisse", "boar", "gulon", "sand_scorpion", "skeljaskrimsli", "crab", "worm_larva", "nix", "grendel", "draugr", "frost_wolf", "troll", "frost_giant", "void_leaper", "void_stalker", "void_jelly", "void_borer", "void_behemoth"],
   "MONSTERS": {
     "nisse": {"name": "니세", "region": "farm", "level": 4, "hp": 36, "attack": 4, "every": 20, "windup": 6, "reach": 1.2, "lungeEvery": 40, "speed": 0.3, "chase": 1.5, "knockResist": 0, "xp": 2, "xpUntil": 11, "emerald": [0.25, 1, 1], "scale": 1, "box": [0.5, 0.95], "color": [0.95, 0.32, 0.26],
       "hop": {"back": 0.42, "up": 0.36, "pause": 16},
@@ -37,7 +37,31 @@
     "frost_giant": {"name": "서리 거인", "region": "north", "level": 39, "hp": 290, "attack": 46, "every": 38, "windup": 12, "reach": 2.8, "lungeEvery": 72, "speed": 0.23, "chase": 1.3, "knockResist": 0.95, "xp": 26, "xpUntil": 46, "emerald": [0.55, 2, 5], "scale": 1.7, "box": [1.1, 2.3], "color": [0.56, 0.86, 1],
       "shock": {"radius": 2.6, "mult": 0.5, "fx": "ice"},
       "onHit": {"effect": "slowness", "seconds": 2, "amplifier": 1},
-      "trait": "이미르의 졸개: 내려치면 둘레 2.6칸 얼음 충격파 (절반), 맞으면 냉기 (구속 II 2초)", "sounds": {"windup": "mob.ravager.roar", "hit": "mob.irongolem.hit"}}
+      "trait": "이미르의 졸개: 내려치면 둘레 2.6칸 얼음 충격파 (절반), 맞으면 냉기 (구속 II 2초)", "sounds": {"windup": "mob.ravager.roar", "hit": "mob.irongolem.hit"}},
+    "_void": "0.32.0 공허 몬스터 (사용자 요청 — 세계관: 신화에 공허가 스며듦, 40렙 뒤 사냥터, 42 · 48 · 52 · 55 · 58렙, 롤 공허 캐릭터 같은 느낌의 오리지널): 체력은 사용자 선택 '아주 단단하게' (40렙 끝 장비 한 마리 약 8 ~ 15초). void = 균열이 열리며 나타남 · 빨려 드는 죽음 · 공허 알갱이. 특성: leap (덮치기 — range 안 min 밖이면 prep 틱 웅크림 · 떨어질 자리 경고 원 → air 틱 안에 떨어지면 둘레 radius 칸 attack × mult · slow [초, 세기]), blink (균열 이동 — vanish 틱 사라짐 → 등 뒤 behind 칸에 균열 open 틱 → 나타나 strike 틱 뒤 십자 베기 × mult · 앞 arc 도 · darkness 초), orb (공허 구체 — keep 칸 밖 range 안이면 charge 틱 모아 쏨 · speed 칸/틱 · life 틱 · 닿거나 다하면 둘레 radius 칸 attack · homing 꺾임), tunnel (땅굴 — dive 틱 파고듦 → 땅속 speed 칸/틱 · 최대 max 틱 (맞지 않음) → 경고 원 warn 틱 → 솟구쳐 둘레 radius 칸 × mult · 띄움 lift), spikes (수정 가시 — prep 틱 일어섬 → 나를 향해 count 개 · step 칸 간격 · gap 틱마다 솟음 · 가시마다 둘레 radius 칸 × mult · 띄움 lift · linger 틱 남음). every = 특성 재사용 (틱), 달려들기 대신 씀",
+    "void_leaper": {"name": "공허 도약충", "region": "void", "level": 42, "hp": 5500, "attack": 30, "every": 24, "windup": 8, "reach": 1.6, "lungeEvery": 40, "speed": 0.31, "chase": 1.5, "knockResist": 0.3, "xp": 32, "xpUntil": 50, "emerald": [0.6, 3, 6], "scale": 1.25, "box": [0.9, 0.8], "color": [0.86, 0.32, 1],
+      "void": true,
+      "pack": {"radius": 10, "anim": "screech", "sound": "entity.silverfish.ambient"},
+      "leap": {"range": 9, "min": 2.5, "every": 80, "prep": 12, "air": 18, "radius": 1.8, "mult": 1.3, "slow": [1.5, 1]},
+      "trait": "공허 무리 · 덮치기: 하나를 치면 둘레 10칸의 도약충도 덤빔, 2.5 ~ 9칸이면 웅크렸다가 덮침 (떨어질 자리에 분홍 원 — 둘레 1.8칸 1.3배 · 구속 II 1.5초)", "sounds": {"windup": "entity.endermite.ambient", "hit": "entity.phantom.bite"}},
+    "void_stalker": {"name": "공허 추적자", "region": "void", "level": 48, "hp": 7000, "attack": 44, "every": 28, "windup": 10, "reach": 2.2, "lungeEvery": 40, "speed": 0.29, "chase": 1.45, "knockResist": 0.5, "xp": 42, "xpUntil": 56, "emerald": [0.6, 4, 7], "scale": 1.2, "box": [0.7, 2.0], "color": [0.76, 0.36, 1],
+      "void": true,
+      "blink": {"range": 14, "min": 3.5, "every": 140, "vanish": 10, "open": 14, "strike": 6, "behind": 1.8, "mult": 1.4, "arc": 110, "darkness": 2.5},
+      "trait": "균열 이동: 3.5 ~ 14칸이면 균열 속으로 사라졌다가 내 등 뒤에 균열을 열고 나와 십자 베기 (1.4배 · 어둠 2.5초) — 균열이 열린 뒤 0.7초 안에 비키면 빗나감", "sounds": {"windup": "entity.evoker.prepare_attack", "hit": "entity.player.attack.sweep"}},
+    "void_jelly": {"name": "공허 해파리", "region": "void", "level": 52, "hp": 7500, "attack": 34, "every": 26, "windup": 9, "reach": 2.2, "lungeEvery": 40, "speed": 0.24, "chase": 1.3, "knockResist": 0.6, "xp": 50, "xpUntil": 60, "emerald": [0.65, 4, 8], "scale": 1.3, "box": [1.1, 2.2], "color": [0.95, 0.38, 0.9],
+      "void": true,
+      "orb": {"range": 13, "keep": 7, "every": 46, "charge": 14, "speed": 0.42, "life": 70, "radius": 2.2, "attack": 48, "homing": 0.06},
+      "onHit": {"effect": "slowness", "seconds": 2, "amplifier": 2},
+      "trait": "공허 구체: 7칸 밖에서는 떠 있는 채 핵이 빛나다 공허 구체를 쏨 (닿으면 둘레 2.2칸이 터짐 — 48), 가까이 오면 촉수로 휘둘러 구속 III 2초", "sounds": {"windup": "entity.glow_squid.squirt", "hit": "entity.phantom.bite"}},
+    "void_borer": {"name": "공허 굴착자", "region": "void", "level": 55, "hp": 10000, "attack": 52, "every": 32, "windup": 11, "reach": 2.4, "lungeEvery": 40, "speed": 0.27, "chase": 1.4, "knockResist": 0.85, "xp": 57, "xpUntil": 63, "emerald": [0.65, 5, 9], "scale": 1.6, "box": [1.2, 1.0], "color": [0.9, 0.32, 0.95],
+      "void": true,
+      "tunnel": {"range": 15, "min": 4, "every": 150, "dive": 12, "speed": 0.34, "max": 70, "warn": 16, "radius": 2.2, "mult": 1.5, "lift": 0.8},
+      "trait": "땅굴 습격: 4 ~ 15칸이면 땅속으로 파고들어 금 간 자국을 남기며 다가옴 (땅속에서는 맞지 않음) → 발밑에 경고 원 0.8초 → 솟구쳐 둘레 2.2칸 1.5배 · 띄움", "sounds": {"windup": "entity.ravager.ambient", "hit": "entity.ravager.attack"}},
+    "void_behemoth": {"name": "공허 거수", "region": "void", "level": 58, "hp": 15000, "attack": 68, "every": 40, "windup": 16, "reach": 2.8, "lungeEvery": 40, "speed": 0.22, "chase": 1.3, "knockResist": 1.0, "xp": 64, "xpUntil": 66, "emerald": [0.7, 6, 11], "scale": 1.6, "box": [1.6, 1.7], "color": [0.72, 0.42, 1],
+      "void": true,
+      "shock": {"radius": 3.0, "mult": 0.5, "fx": "void"},
+      "spikes": {"range": 14, "min": 3, "every": 170, "prep": 18, "count": 7, "step": 1.7, "gap": 3, "radius": 1.3, "mult": 1.1, "lift": 0.6, "linger": 30},
+      "trait": "공허 수정 가시: 3 ~ 14칸이면 크게 일어섰다 내려찍어 나를 향해 수정 가시 일곱이 줄지어 솟음 (가시마다 1.1배 · 띄움), 앞발 내려찍기는 둘레 3칸 충격파 (절반)", "sounds": {"windup": "entity.ravager.roar", "hit": "item.mace.smash_ground_heavy"}}
   },
   "MONSTER_DROPS": {
     "nisse": {"item": "rpg:loot_nisse", "icon": "textures/items/rpg/loot/nisse", "name": "니세의 빨간 모자", "color": "§c", "chance": 0.5, "price": 1, "desc": "장난꾸러기 농장 요정의 작은 털모자", "rgb": [0.95, 0.3, 0.25]},
@@ -47,7 +71,12 @@
     "worm_larva": {"item": "rpg:loot_worm_larva", "icon": "textures/items/rpg/loot/worm_larva", "name": "유충 허물", "color": "§e", "chance": 0.5, "price": 2, "desc": "모래 속에서 벗어 놓은 질긴 허물", "rgb": [0.95, 0.86, 0.56]},
     "grendel": {"item": "rpg:loot_grendel", "icon": "textures/items/rpg/loot/grendel", "name": "그렌델의 발톱", "color": "§7", "chance": 0.5, "price": 3, "desc": "검게 젖은 괴물의 갈고리 발톱", "rgb": [0.62, 0.68, 0.62]},
     "frost_wolf": {"item": "rpg:loot_frost_wolf", "icon": "textures/items/rpg/loot/frost_wolf", "name": "서리 늑대 가죽", "color": "§b", "chance": 0.5, "price": 4, "desc": "서리가 서린 은빛 가죽", "rgb": [0.76, 0.92, 1]},
-    "frost_giant": {"item": "rpg:loot_frost_giant", "icon": "textures/items/rpg/loot/frost_giant", "name": "서리 거인의 핵", "color": "§3", "chance": 0.5, "price": 5, "desc": "얼음 속에서 푸르게 빛나는 심장 조각", "rgb": [0.45, 0.85, 1]}
+    "frost_giant": {"item": "rpg:loot_frost_giant", "icon": "textures/items/rpg/loot/frost_giant", "name": "서리 거인의 핵", "color": "§3", "chance": 0.5, "price": 5, "desc": "얼음 속에서 푸르게 빛나는 심장 조각", "rgb": [0.45, 0.85, 1]},
+    "void_leaper": {"item": "rpg:loot_void_leaper", "icon": "textures/items/rpg/loot/void_leaper", "name": "공허 독주머니", "color": "§d", "chance": 0.5, "price": 6, "desc": "분홍빛 공허가 출렁이는 작은 독주머니", "rgb": [1, 0.35, 0.86]},
+    "void_stalker": {"item": "rpg:loot_void_stalker", "icon": "textures/items/rpg/loot/void_stalker", "name": "균열 칼날", "color": "§5", "chance": 0.5, "price": 7, "desc": "공간을 가르던 휘어진 칼날 조각", "rgb": [0.78, 0.5, 1]},
+    "void_jelly": {"item": "rpg:loot_void_jelly", "icon": "textures/items/rpg/loot/void_jelly", "name": "공허 핵", "color": "§d", "chance": 0.5, "price": 8, "desc": "해파리 몸속에서 맥동하던 작은 공허", "rgb": [1, 0.55, 0.95]},
+    "void_borer": {"item": "rpg:loot_void_borer", "icon": "textures/items/rpg/loot/void_borer", "name": "굴착자의 턱", "color": "§5", "chance": 0.5, "price": 9, "desc": "바위도 갉아 뚫는 세 갈래 턱 조각", "rgb": [0.86, 0.76, 1]},
+    "void_behemoth": {"item": "rpg:loot_void_behemoth", "icon": "textures/items/rpg/loot/void_behemoth", "name": "공허 수정", "color": "§5", "chance": 0.5, "price": 10, "desc": "거수의 등에서 자라던 검보라 수정", "rgb": [0.66, 0.42, 1]}
   },
   "HERO_SKILLS": {
     "_comment": "영웅 무기 스킬 (10단계 — 자바 전용, 무기마다 하나 · 12단계 새 무기 4종 포함). 근접 = 우클릭 (웅크리고 우클릭도), 활 · 완드 = 웅크리고 우클릭 (그냥 누르면 평타). 세기 = 같은 종류 초월 스킬 1 의 약 0.7배 (방패는 피해 배율이 낮아 아이기스와 같은 비율로 큰 수), 재사용 대기 10초. 피해 합 = Skills.skillTotalMult (mult × hits/shots + afterMult). color = [빛, 심지]",
@@ -76,7 +105,12 @@
     "worm_larva": {"count": 10, "emerald": 32, "xp": 70},
     "grendel": {"count": 10, "emerald": 45, "xp": 110},
     "frost_wolf": {"count": 10, "emerald": 55, "xp": 150},
-    "frost_giant": {"count": 10, "emerald": 70, "xp": 260}
+    "frost_giant": {"count": 10, "emerald": 70, "xp": 260},
+    "void_leaper": {"count": 10, "emerald": 80, "xp": 300, "minLevel": 40},
+    "void_stalker": {"count": 10, "emerald": 90, "xp": 400, "minLevel": 46},
+    "void_jelly": {"count": 10, "emerald": 100, "xp": 500, "minLevel": 50},
+    "void_borer": {"count": 10, "emerald": 110, "xp": 560, "minLevel": 53},
+    "void_behemoth": {"count": 10, "emerald": 120, "xp": 640, "minLevel": 56}
   },
   "TYPE_ORDER_MORE": ["lance", "scythe", "hammer", "scepter"],
   "TYPES": {

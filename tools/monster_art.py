@@ -4,7 +4,7 @@
 tools/monster_art.py              tools/monster_art/<키>/ 에 <키>.geo.json · <키>.png · <키>.animation.json (7종 — 그렌델은 클로드 디자인 원본을 복사)
 tools/monster_art.py --preview 그림.png [--pose attack --t 0.3 --walk]   (애드온 미리보기 그리기 — RPG_ADDON)
 
-지역마다 둘 (rules_more.json): 농장 니세 · 광폭 멧돼지, 사막 모래 전갈 · 웜 유충, 바다 집게 게 · 그렌델, 북쪽 서리 늑대 · 서리 거인.
+지역마다 둘 (rules_more.json): 농장 니세 · 광폭 멧돼지, 사막 모래 전갈 · 웜 유충, 바다 집게 게 · 그렌델, 북쪽 서리 늑대 · 서리 거인 (0.32.0 공허 다섯은 monster_art_void.py).
 좌표는 베드락 그대로 (픽셀 · 몬스터는 -z 를 봄 · -x 가 오른쪽). 동작 이름: idle · walk (늘), attack (공격 — Monsters 가 틈),
 특성 동작 hop (니세) · charge_prep · charge (멧돼지) · buried · emerge (웜 유충) · howl (서리 늑대).
 """
@@ -596,6 +596,11 @@ def frost_giant():
 
 MAKERS = {"nisse": nisse, "boar": boar, "sand_scorpion": sand_scorpion, "crab": crab, "worm_larva": worm_larva, "frost_wolf": frost_wolf,
           "frost_giant": frost_giant}
+
+# 0.32.0 공허 몬스터 다섯 (tools/monster_art_void.py)
+import monster_art_void  # noqa: E402
+
+MAKERS.update({k: getattr(monster_art_void, k) for k in ("void_leaper", "void_stalker", "void_jelly", "void_borer", "void_behemoth")})
 
 
 def grendel_copy():

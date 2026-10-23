@@ -158,5 +158,30 @@
     "name": "§3서리 거인의 핵§r§7 (전리품)",
     "glint": false,
     "stack": 64
+  },
+  "rpg:loot_void_leaper": {
+    "name": "§d공허 독주머니§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_void_stalker": {
+    "name": "§5균열 칼날§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_void_jelly": {
+    "name": "§d공허 핵§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_void_borer": {
+    "name": "§5굴착자의 턱§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
+  },
+  "rpg:loot_void_behemoth": {
+    "name": "§5공허 수정§r§7 (전리품)",
+    "glint": false,
+    "stack": 64
   }
 }
