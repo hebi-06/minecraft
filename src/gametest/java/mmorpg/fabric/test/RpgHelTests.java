@@ -43,13 +43,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 0.35.0 게임 시험 (서버) — 헬 (BossHel, Lv.58): 등장 (제단 앞 안개에서 — 무적 · 체력 1,400,000 · 헬헤임의 문까지 막대), 움직임 (떠서 느리게 다가옴 · 붙으면 물러남),
+ * 0.35.0 게임 시험 (서버) — 헬 (BossHel, Lv.58): 등장 (제단 앞 안개에서 — 무적 · 체력 2,200,000 (0.36.0 — 규칙 BOSSES.hel.hp) · 헬헤임의 문까지 막대), 움직임 (떠서 느리게 다가옴 · 붙으면 물러남),
  * 죽음의 손톱 (선딜레이 동안은 안 맞음 → 앞 부채꼴만), 망자의 손 (발밑 원 — 비키면 무사), 삶과 죽음의 경계 (검은 오른손 쪽 반쪽만), 굘 강의 물결 (띠 위를 물결이 쓸고 지나감 —
  * 앞에 선 사람부터), 헬의 시선 (가장 먼 사람을 따라가다 멈춤 → 멈춘 뒤 비키면 무사 · 줄 위 다른 사람은 맞음), 안개 걸음 (안 보임 · 무적 → 등 뒤 → 손톱),
  * 각성 (체력 절반 → 무적 울부짖음 → 선딜레이 ×0.85 · 재사용 ×0.8 · rpg:phase 1 · 걀라르 다리 예약), 걀라르 다리 (다리 위는 무사 · 밖은 피해),
- * 제한 시간 (막대 붉게 → 헬헤임의 문 즉사), 58렙 탱커 두 방 (방패 · 전투 망치는 첫 방을 버티고 둘째에 쓰러짐, 칼은 한 방 — 웅크려 막아도 막기 없음),
+ * 제한 시간 (막대 붉게 → 헬헤임의 문 즉사), 58렙 탱커 두 방 (0.36.0 기준 세팅 — 공허 갑옷 · 55렙 초월 무기: 방패 · 전투 망치는 첫 방을 버티고 둘째에 쓰러짐, 칼은 한 방 — 웅크려 막아도 막기 없음),
  * 처치 (보상 · 보스 재료 · 재사용 30분 · 막대 치움). 필드는 신전 없이 하늘 (y 150) 의 돌 바닥 + 제단. 시험마다 멀리 (x -60_000 - 112 × 번호, z 68_000).
- * 통과하면 [hel-test] OK 줄. 한 방 1,200 을 재려고 싸우는 사람은 체력 스탯 3000 (최대 체력 3,000 남짓).
+ * 통과하면 [hel-test] OK 줄. 한 방 1,300 (0.36.0 — 0.35.0 은 1,200) 을 재려고 싸우는 사람은 체력 스탯 3000 (최대 체력 3,000 남짓).
  */
 public final class RpgHelTests {
     private static final String KEY = "hel";
@@ -60,13 +60,15 @@ public final class RpgHelTests {
     private static final int ARRIVED = 60 + BossHel.ARRIVE + 4;
     private static final double SOUTH = Math.PI / 2;
     private static final int VIT = 3000;
+    /** 0.36.0 기준 세팅의 갑옷 레벨 (공허의 갑옷 — 초월 50렙) */
+    private static final int ARMOR_LEVEL = 50;
     private static final EquipmentSlot[] SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 
     private static Arena.Altar field(ServerLevel level, int slot, String[] hold) {
         return RpgNidhoggTests.field(level, KEY, new BlockPos(-60_000 - slot * 112, 150, 68_000), R, hold);
     }
 
-    /** 체력 스탯을 크게 (한 방 1,200 도 버팀 — 받은 피해를 잼) · 가득 채움 */
+    /** 체력 스탯을 크게 (한 방 1,300 도 버팀 — 받은 피해를 잼) · 가득 채움 */
     private static ServerPlayer fighter(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
         RpgPlayers.setStat(sp, "vit", VIT);
@@ -131,9 +133,9 @@ public final class RpgHelTests {
         for (Weapons.Req q : w.reqs()) need.merge(q.stat(), (int) Math.ceil(q.value()), Math::max);
         List<String> ids = new ArrayList<>();
         for (String piece : Armor.PIECE_ORDER) {
-            Armor.Piece p = Armor.armorFrom(armor, 40, "transcend", piece);
+            Armor.Piece p = Armor.armorFrom(armor, ARMOR_LEVEL, "transcend", piece);
             for (Weapons.Req q : p.reqs()) need.merge(q.stat(), (int) Math.ceil(q.value()), Math::max);
-            ids.add(Armor.armorId(armor, 40, "transcend", piece));
+            ids.add(Armor.armorId(armor, ARMOR_LEVEL, "transcend", piece));
         }
         int used = 0;
         for (Map.Entry<String, Integer> e : need.entrySet()) {
@@ -179,7 +181,8 @@ public final class RpgHelTests {
         h.runAfterDelay(63, () -> {
             h.assertTrue("fight".equals(enc.state) && enc.boss != null, "fight " + enc.state);
             BedrockMob b = enc.boss;
-            h.assertTrue(b.getMaxHealth() == 1400000F && b.getHealth() == 1400000F, "hp " + b.getHealth() + " / " + b.getMaxHealth());
+            float hp = (float) def().num("hp");
+            h.assertTrue(hp == 2200000F && b.getMaxHealth() == hp && b.getHealth() == hp, "hp " + b.getHealth() + " / " + b.getMaxHealth() + " (rules " + hp + ")");
             h.assertTrue(enc.cast != null && "arrive".equals(enc.cast.id) && enc.immune, "rises from the mist (immune)");
             // 제단 앞 (부른 사람 쪽으로 ALTAR_OFF 칸 — 가운데 제단 블록에 묻히지 않게)
             Vec3 front = new Vec3(c.x, c.y, c.z + BossHel.ALTAR_OFF);
@@ -196,7 +199,7 @@ public final class RpgHelTests {
             ServerBossEvent bar = BossHel.timerOf(enc);
             h.assertTrue(bar.getPlayers().contains(p1), "timer bar shown to the fighter");
             h.assertTrue(bar.getName().getString().contains("헬헤임의 문까지") && bar.getColor() == BossEvent.BossBarColor.BLUE, "timer " + bar.getName().getString());
-            LOG.info("[hel-test] OK summon (hp 1400000) rises in front of the altar (immune) → fight, gate timer bar 10:00");
+            LOG.info("[hel-test] OK summon (hp {}) rises in front of the altar (immune) → fight, gate timer bar 10:00", (long) def().num("hp"));
             RpgNidhoggTests.finish(h, level, a, hold, p1);
         });
     }
@@ -237,7 +240,7 @@ public final class RpgHelTests {
         });
     }
 
-    /** 죽음의 손톱: 선딜레이 (40틱) 동안은 안 맞음 → 앞 부채꼴만 1,200 (뒤는 무사) */
+    /** 죽음의 손톱: 선딜레이 (40틱) 동안은 안 맞음 → 앞 부채꼴만 1,300 (뒤는 무사) */
     @GameTest(environment = "mmorpg:hel", maxTicks = 400)
     public void helClawFan(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -270,7 +273,7 @@ public final class RpgHelTests {
         });
     }
 
-    /** 망자의 손: 싸우는 사람 모두의 발밑에 원 → 원을 벗어난 사람은 무사, 남은 사람은 1,200 */
+    /** 망자의 손: 싸우는 사람 모두의 발밑에 원 → 원을 벗어난 사람은 무사, 남은 사람은 1,300 */
     @GameTest(environment = "mmorpg:hel", maxTicks = 400)
     public void helDeadHands(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -303,7 +306,7 @@ public final class RpgHelTests {
         });
     }
 
-    /** 삶과 죽음의 경계: 가운데를 가르는 선 → 검은 오른손이 가리키는 반쪽 (+z) 만 1,200, 반대쪽은 무사 */
+    /** 삶과 죽음의 경계: 가운데를 가르는 선 → 검은 오른손이 가리키는 반쪽 (+z) 만 1,300, 반대쪽은 무사 */
     @GameTest(environment = "mmorpg:hel", maxTicks = 400)
     public void helDivideHalf(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -340,7 +343,7 @@ public final class RpgHelTests {
         });
     }
 
-    /** 굘 강의 물결: 가로지르는 띠 (폭 7) → 물결이 띠를 따라 흘러 앞에 선 사람부터 1,200 (한 번씩) · 띠 밖은 무사 */
+    /** 굘 강의 물결: 가로지르는 띠 (폭 7) → 물결이 띠를 따라 흘러 앞에 선 사람부터 1,300 (한 번씩) · 띠 밖은 무사 */
     @GameTest(environment = "mmorpg:hel", maxTicks = 400)
     public void helRiverFlows(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -381,7 +384,7 @@ public final class RpgHelTests {
         });
     }
 
-    /** 헬의 시선: 가장 먼 사람을 따라가다 멈춤 (windup - lock) → 멈춘 뒤 비킨 그 사람은 무사 · 줄 위에 남은 다른 사람은 1,200 · 줄 밖은 무사 */
+    /** 헬의 시선: 가장 먼 사람을 따라가다 멈춤 (windup - lock) → 멈춘 뒤 비킨 그 사람은 무사 · 줄 위에 남은 다른 사람은 1,300 · 줄 밖은 무사 */
     @GameTest(environment = "mmorpg:hel", maxTicks = 400)
     public void helGazeLocks(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -423,7 +426,7 @@ public final class RpgHelTests {
         });
     }
 
-    /** 안개 걸음: 사라짐 (안 보임 · 무적) → 대상 (가장 가까운 사람이 아닌 쪽) 의 등 뒤 3칸 → 죽음의 손톱 1,200 */
+    /** 안개 걸음: 사라짐 (안 보임 · 무적) → 대상 (가장 가까운 사람이 아닌 쪽) 의 등 뒤 3칸 → 죽음의 손톱 1,300 */
     @GameTest(environment = "mmorpg:hel", maxTicks = 500)
     public void helMistStep(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -505,7 +508,7 @@ public final class RpgHelTests {
         });
     }
 
-    /** 걀라르 다리 (각성 뒤): 가운데 곁으로 떠 감 → 필드를 가로지르는 금빛 다리 위는 무사, 밖은 1,200 */
+    /** 걀라르 다리 (각성 뒤): 가운데 곁으로 떠 감 → 필드를 가로지르는 금빛 다리 위는 무사, 밖은 1,300 */
     @GameTest(environment = "mmorpg:hel", maxTicks = 500)
     public void helGjallarBridge(GameTestHelper h) {
         ServerLevel level = h.getLevel();
@@ -573,17 +576,18 @@ public final class RpgHelTests {
     }
 
     /**
-     * 58렙 탱커 두 방 (사용자 "탱커 같은 애들은 2방에 죽을 정도"): 방패 (체력 몰빵 · 40렙 초월 체력 갑옷 · 웅크려 막아도 막기 없음) 와 전투 망치 (체력 · 힘 갑옷) 는
-     * 첫 손톱을 버티고 둘째에 쓰러짐, 칼 (힘 몰빵) 은 첫 손톱에 쓰러짐. 방패의 깎임 = 1,200 × (1 − 방어 4% × 20) × (1 − 방패 지속 감소)
+     * 58렙 탱커 두 방 (사용자 "탱커 같은 애들은 2방에 죽을 정도" — 0.36.0 기준 세팅: 공허 갑옷 (초월 50렙) · 55렙 초월 무기): 방패 (체력 몰빵 · 공허 체력 갑옷 ·
+     * 웅크려 막아도 막기 없음 — 체력 355 · 한 방 195) 와 전투 망치 (체력 · 힘 공허 갑옷 — 체력 289 · 한 방 260) 는 첫 손톱을 버티고 둘째에 쓰러짐, 칼 (힘 몰빵 — 136) 은
+     * 첫 손톱에 쓰러짐. 방패의 깎임 = 1,300 × (1 − 방어 4% × 20) × (1 − 방패 지속 감소)
      */
     @GameTest(environment = "mmorpg:hel", maxTicks = 500)
     public void helTanksTakeTwoHits(GameTestHelper h) {
         ServerLevel level = h.getLevel();
         String[] hold = new String[1];
         Arena.Altar a = field(level, 11, hold);
-        ServerPlayer tank = level58(h, "rpg:shield_l40_transcend", "vit", "vit");
-        ServerPlayer hammer = level58(h, "rpg:hammer_l40_transcend", "vitstr", "vit");
-        ServerPlayer sword = level58(h, "rpg:sword_l40_transcend", "str", "str");
+        ServerPlayer tank = level58(h, "rpg:shield_l55_transcend", "vit", "vit");
+        ServerPlayer hammer = level58(h, "rpg:hammer_l55_transcend", "vitstr", "vit");
+        ServerPlayer sword = level58(h, "rpg:sword_l55_transcend", "str", "str");
         RpgNidhoggTests.put(tank, a, -1.5, 4);
         RpgNidhoggTests.put(hammer, a, 0, 4.5);
         RpgNidhoggTests.put(sword, a, 1.5, 4);
@@ -605,7 +609,7 @@ public final class RpgHelTests {
             tank.setYHeadRot(180F);
             tank.setShiftKeyDown(true);
             h.assertTrue(tank.getArmorValue() >= 20 && hammer.getArmorValue() >= 20 && sword.getArmorValue() >= 20,
-                    "40 lv transcend armor (armor " + tank.getArmorValue() + " · " + hammer.getArmorValue() + " · " + sword.getArmorValue() + ")");
+                    "void armor (armor " + tank.getArmorValue() + " · " + hammer.getArmorValue() + " · " + sword.getArmorValue() + ")");
             Weapon w = RpgCombat.weaponOf(tank.getMainHandItem());
             h.assertTrue(w != null && "shield".equals(w.type()) && RpgCombat.lackOf(tank, w).isEmpty(), "tank holds a usable shield");
             Obj S = Rules.get().obj("SHIELD");

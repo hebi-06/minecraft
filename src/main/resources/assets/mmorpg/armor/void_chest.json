@@ -35,7 +35,7 @@
         {
           "from": [
             -4.5,
-            -1.0,
+            -1.3999999999999986,
             -3.4
           ],
           "size": [
@@ -255,7 +255,7 @@
             64,
             0
           ],
-          "inflate": 0,
+          "inflate": 0.15,
           "mirror": false
         },
         {
@@ -273,7 +273,7 @@
             32,
             16
           ],
-          "inflate": 0,
+          "inflate": 0.25,
           "mirror": false
         },
         {
@@ -448,7 +448,7 @@
             90,
             0
           ],
-          "inflate": 0,
+          "inflate": 0.15,
           "mirror": false
         },
         {
@@ -466,7 +466,7 @@
             54,
             16
           ],
-          "inflate": 0,
+          "inflate": 0.25,
           "mirror": false
         },
         {

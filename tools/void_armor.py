@@ -208,8 +208,8 @@ def chest(p):
     roots(p, ["body", "rightArm", "leftArm"])
     body = art({"north": CHEST_FRONT}, LEG, segments(PAL, 11))
     add(p, "body", [-4, 12, -2], [8, 12, 4], body, inflate=1.01)
-    # 목 둘레 갑각 고리
-    add(p, "body", [-4.5, 24, -3.4], [9, 1, 7], segments(PAL, 12, every=5))
+    # 목 둘레 갑각 고리 (몸통 윗면 25.01 보다 위로 — 같은 면이면 겹쳐 깜박임)
+    add(p, "body", [-4.5, 24.4, -3.4], [9, 1, 7], segments(PAL, 12, every=5))
     # 등 수정 줄 (등뼈를 따라 셋 — 뒤로 기움)
     p.bone("spine", parent="body", pivot=(0, 18, 3.5), rotation=(-30, 0, 0))
     add(p, "spine", [-1, 20, 3], [2, 4, 2], crystal(13))
@@ -222,9 +222,9 @@ def chest(p):
     # 팔 (마디 갑각)
     arm = segments(PAL, 16)
     both(p, "rightArm", "leftArm", [-8, 12, -2], [4, 12, 4], arm, inflate=1.0)
-    # 어깨 갑각 (두 겹) + 수정 무리
-    both(p, "rightArm", "leftArm", [-9.5, 22, -3.5], [6, 3, 7], segments(PAL, 17, every=3))
-    both(p, "rightArm", "leftArm", [-9.5, 20, -3], [5, 2, 6], segments(PAL, 18, every=2, vein=0.4))
+    # 어깨 갑각 (두 겹) + 수정 무리 — 부풀림으로 팔 갑각 (윗면 25 · 앞뒤 ±3) 과 같은 면에 놓이지 않게 (첫 사진첩: 어깨 아래 겹 앞면이 팔 앞면과 겹쳐 줄무늬로 깜박임)
+    both(p, "rightArm", "leftArm", [-9.5, 22, -3.5], [6, 3, 7], segments(PAL, 17, every=3), inflate=0.15)
+    both(p, "rightArm", "leftArm", [-9.5, 20, -3], [5, 2, 6], segments(PAL, 18, every=2, vein=0.4), inflate=0.25)
     p.bone("rx", parent="rightArm", pivot=(-7, 25, 0), rotation=(0, 0, 28))
     p.bone("lx", parent="leftArm", pivot=(7, 25, 0), rotation=(0, 0, -28))
     both(p, "rx", "lx", [-8.5, 25, -1.5], [2, 6, 2], crystal(19))
@@ -249,7 +249,7 @@ def legs(p):
     both(p, "rightLeg", "leftLeg", [-3.9, 0, -2], [4, 12, 4], segments(PAL, 31), inflate=0.5)
     # 무릎 수정
     both(p, "rightLeg", "leftLeg", [-2.4, 5, -3.2], [1, 2, 1], crystal(32))
-    both(p, "rightLeg", "leftLeg", [-4.4, 4, -3], [5, 1, 1], segments(PAL, 33))
+    both(p, "rightLeg", "leftLeg", [-4.4, 4, -3.3], [5, 1, 1], segments(PAL, 33))  # 신발 앞면 (−3) 보다 앞으로
 
 
 BOOT = ["...."] * 6 + ["HHHH", "PPPP", "mvmm", "HHHH", "PPPP", "kkkk"]
