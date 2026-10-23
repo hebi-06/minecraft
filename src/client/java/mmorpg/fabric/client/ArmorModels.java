@@ -54,7 +54,7 @@ public final class ArmorModels {
                     return;
                 }
                 // 0.36.0 공허의 갑옷 (빛나는 그림 emissive — 분홍 핏줄 · 수정 끝, 어두워도 보임): 보스 (BedrockRenderer — 몸 entityCutout + 빛 GlowLayer) 와 같은 짝.
-                // 바탕을 armorCutoutNoCull 로 그리면 빛 그림 (eyes · entityTranslucentEmissive 모두) 보다 뒤에 그려져 덮음 — 사진첩 밤 사진 두 번 (0.36.0)
+                // 바탕을 armorCutoutNoCull (몸과 겹치지 않게 화면 쪽으로 조금 당겨 그림) 로 그리면 같은 자리의 빛 그림 (eyes · entityTranslucentEmissive 모두) 이 가려짐 — 사진첩 밤 사진 두 번 (0.36.0)
                 ArmorRenderer.submitTransformCopyingModel(contextModel, state, m, state, true, collector, poseStack, RenderTypes.entityCutout(m.texture), light,
                         OverlayTexture.NO_OVERLAY, state.outlineColor);
                 ArmorRenderer.submitTransformCopyingModel(contextModel, state, m, state, true, collector, poseStack, RenderTypes.entityTranslucentEmissive(m.emissive),
