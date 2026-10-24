@@ -9,9 +9,11 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.HumanoidArm;
 import org.joml.Matrix3f;
+import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -267,8 +269,19 @@ public final class MotionRender {
         };
     }
 
+    /** 주 손을 그리기 시작할 때 (submitArmWithItem 처음) 의 자리 — 바닐라가 손 자리까지 옮긴 몫을 재는 기준 */
+    private static final Matrix4f FP_BASE = new Matrix4f();
+    private static boolean fpBaseSet;
+
+    /** submitArmWithItem 처음: 주 손이면 지금 자리를 적어 둠 */
+    public static void firstPersonBase(PoseStack ps, InteractionHand hand) {
+        fpBaseSet = hand == InteractionHand.MAIN_HAND;
+        if (fpBaseSet) FP_BASE.set(ps.last().pose());
+    }
+
     /**
      * 1인칭 무기 (주 손 — 손에 든 아이템 자리 뒤, 휘두르기 대신): 동작 중이면 true.
+     * 바닐라가 손 자리 (0.56, -0.52, -0.72) 밖으로 옮긴 몫 (휘두를 때 흔들림 · 공격 대기 · 바꿔 들 때 내려간 손) 을 무게만큼 되돌리고,
      * 손잡이를 fp 자리만큼 옮기고, 손잡이를 축으로 fp 회전 (방패는 옮기기만 — 겉면이 앞을 봄)
      */
     public static boolean firstPerson(PoseStack ps, HumanoidArm arm) {
@@ -277,6 +290,12 @@ public final class MotionRender {
         Pose p = ClientMotions.localPose(mc.getDeltaTracker().getGameTimeDeltaPartialTick(false), FP);
         if (p == null) return false;
         float w = p.w;
+        if (fpBaseSet) {
+            Vector3f moved = new Matrix4f(FP_BASE).invertAffine().mul(ps.last().pose()).getTranslation(new Vector3f());
+            moved.sub(arm == HumanoidArm.RIGHT ? 0.56F : -0.56F, -0.52F, -0.72F);
+            if (moved.lengthSquared() < 4F) ps.translate(-moved.x * w, -moved.y * w, -moved.z * w);
+            fpBaseSet = false;
+        }
         ps.translate(p.fpX * w, p.fpY * w, p.fpZ * w);
         String type = mc.player.getMainHandItem().getItem() instanceof RpgWeaponItem item && item.weapon() != null ? item.weapon().type() : "";
         if (!type.equals("shield")) {
