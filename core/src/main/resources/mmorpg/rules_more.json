@@ -700,8 +700,7 @@
     "roll": {"ticks": 10, "distance": 4.0, "cooldown": 20, "doubleTap": 6},
     "skills": {
       "gram_charge": "dash", "gram_descent": "leap_slam", "solas_rush": "dash", "solas_halo": "cast",
-      "gungnir_return": "throw_weapon", "gungnir_fall": "cast_up", "aegis_charge": "dash", "aegis_dome": "guard",
-      "artemis_pierce": "shoot", "artemis_moon": "shoot_up", "odin_ravens": "cast", "odin_eye": "cast_up",
+      "gungnir_return": "throw_weapon", "gungnir_fall": "cast_up", "artemis_pierce": "shoot", "artemis_moon": "shoot_up", "odin_ravens": "cast", "odin_eye": "cast_up",
       "tyrfing_fire": "slam", "tyrfing_waking": "cast_up", "kronos_rend": "skill_slash", "kronos_clock": "slam",
       "mjolnir_throw": "throw_weapon", "mjolnir_storm": "cast_up", "apollo_sun": "cast", "apollo_sanctuary": "cast_up",
       "ygg_seed": "throw", "ygg_tree": "slam", "svalinn_charge": "dash", "svalinn_dome": "guard",

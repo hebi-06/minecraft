@@ -258,6 +258,7 @@ public final class Slash {
         }
         SIDE.put(sp.getUUID(), flip);
         slashOnce(sp, w, style, flip, ok, 1, turn);
+        final boolean side = flip;
         ServerLevel level = sp.level();
         Vec3 e = eye(sp);
         SoundEvent miss = SoundEvents.SPEAR_ATTACK.value();
@@ -267,7 +268,7 @@ public final class Slash {
                 // 반대 방향으로 한 번 더 베어 X자
                 Tasks.later((int) style.numOr("second", 2), () -> {
                     if (sp.isRemoved()) return;
-                    slashOnce(sp, w, style, !flip, ok, 0.9);
+                    slashOnce(sp, w, style, !side, ok, 0.9);
                     sound(sp.level(), eye(sp), miss, 1.95, 0.35);
                 });
             }
@@ -281,7 +282,7 @@ public final class Slash {
             case "greatsword" -> {
                 sound(level, e, miss, 0.85, 0.75);
                 if (ok && style.has("rune")) Tasks.later(1, () -> {
-                    if (!sp.isRemoved()) runeSlash(sp, w, style, flip);
+                    if (!sp.isRemoved()) runeSlash(sp, w, style, side);
                 });
             }
             default -> sound(level, e, miss, 1.15, 0.6);
