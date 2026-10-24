@@ -3,12 +3,14 @@
 
 자바 판 (client/motion/MotionPoses · MotionRender) 과 같은 약속:
 - 쓰는 방향 (r, u, f) = 사람 기준 오른쪽 · 위 · 앞 (뿌리 — 몸통 비틀기와 상관없음). 모델 좌표 (x, y, z) = (-r, -u, -f) (픽셀, +y 아래, +z 뒤).
-- 팔: dir = 어깨 → 팔꿈치 방향, blade = 무기 끝 방향, bend = 팔꿈치 굽힘 (도, 앞으로 굽힘 +). 팔 회전은 dir 과 blade (팔에 수직인 몫) 로 정함.
+- 팔: dir = 어깨 → 팔꿈치 방향, blade = 무기 끝 방향, bend = 팔꿈치 굽힘 (도). 팔꿈치가 굽는 쪽 · 팔뚝 비틀기 · 손목은 무기 끝이 blade 를
+  똑바로 보게 풂 (arm_solve — 손목 · 비틀기가 작은 쪽). wrist (도) 는 풀린 손목에 더함.
 - 몸통: [lean 앞으로 숙임, twist 오른쪽으로 비틂, side] — 엉덩이 (0, 12, 0) 를 축으로. 어깨 · 목 자리가 따라감.
 - 다리: [x 뒤로 +, y, z] 뿌리 기준 Euler (ModelPart 와 같은 ZYX), 무릎 굽힘 rk · lk (뒤로 +).
 - 뿌리: root [위 칸, 앞 칸], spin (도 — 위에서 볼 때 왼쪽으로 돎 +), flip (도 — 앞구르기 +, 축 높이 0.55칸).
 
 쓰기:  python3 tools/motion_preview.py [동작 ...] [--out 폴더] [--t 0,0.25,0.5,0.75,1]
+       python3 tools/motion_preview.py --check   (열쇠마다 무기 끝이 blade 와 같은지 · 손목 · 비틀기 크기)
 """
 import json
 import math
@@ -64,22 +66,105 @@ def to_model(a):
     return np.array([-a[0], -a[1], -a[2]], dtype=float)
 
 
-def arm_rotation(arm):
-    """{dir, blade, bend} → (팔 회전 행렬 R (모델), 굽힘 라디안 — 앞으로 굽힘은 로컬 x 축 음의 회전)"""
+NATURAL = math.pi / 2 + BLADE_TILT  # 손목을 꺾지 않았을 때 팔뚝과 무기 사이 각 (130°)
+SEARCH = 144  # 팔꿈치가 굽는 쪽 (위팔 둘레) 을 찾는 칸 수
+COST = (1.0, 0.6, 0.5)  # 손목 · 팔뚝 비틀기 · 위팔 비틀기 (60° 넘는 몫) 의 무게 (자바 MotionPoses 와 같음)
+
+
+def clamp(x, a=-1.0, b=1.0):
+    return max(a, min(b, x))
+
+
+def wrap(a):
+    while a > math.pi:
+        a -= 2 * math.pi
+    while a < -math.pi:
+        a += 2 * math.pi
+    return a
+
+
+def rest_front(Y):
+    """팔을 내린 자세 (앞 = 모델 -z) 를 가장 짧게 돌려 위팔이 Y 를 볼 때의 앞 (위팔 비틀기의 기준)"""
+    u = np.array([0.0, 1.0, 0.0])
+    c = float(np.dot(u, Y))
+    f = np.array([0.0, 0.0, -1.0])
+    if c > 1 - 1e-9:
+        return f
+    if c < -1 + 1e-9:
+        return np.array([0.0, 0.0, 1.0])  # 머리 위로 똑바로: x 축으로 180° (앞이 뒤로)
+    ax = unit(np.cross(u, Y))
+    ang = math.atan2(float(np.linalg.norm(np.cross(u, Y))), c)
+    K = np.array([[0, -ax[2], ax[1]], [ax[2], 0, -ax[0]], [-ax[1], ax[0], 0]])
+    R = np.eye(3) + math.sin(ang) * K + (1 - math.cos(ang)) * K @ K
+    return R @ f
+
+
+def arm_solve(arm):
+    """{dir, blade, bend, wrist} → (위팔 회전 R (모델), 팔꿈치 (로컬 x 회전 — 앞으로 굽힘은 음수), 팔뚝 비틀기 (로컬 y), 손목 (로컬 x)).
+    위팔은 dir, 팔꿈치는 bend 만큼 굽고, 굽는 쪽 (위팔 둘레) · 팔뚝 비틀기 · 손목은 무기 끝이 blade 를 똑바로 보게 정함 —
+    손목 · 비틀기가 작고 위팔이 덜 비틀린 쪽 (COST). wrist (도) 는 손목에 더함 (손으로 고칠 때)"""
     Y = unit(to_model(arm.get("dir", [0, -1, 0])))
     b = unit(to_model(arm.get("blade", [0, 0, 1])))
-    beta = math.radians(arm.get("bend", 0) + arm.get("wrist", 0))
-    bl = rx(-beta) @ np.array([0.0, -math.sin(BLADE_TILT), -math.cos(BLADE_TILT)])
-    s = 1.0 if bl[2] >= 0 else -1.0
-    d = b - np.dot(b, Y) * Y
+    B = math.radians(arm.get("bend", 0))
+    c = clamp(float(np.dot(b, Y)))
+    d = b - c * Y
     if np.linalg.norm(d) < 1e-4:
         d = np.array([0.0, 0.0, -1.0]) - np.dot([0.0, 0.0, -1.0], Y) * Y
         if np.linalg.norm(d) < 1e-4:
             d = np.array([0.0, -1.0, 0.0])
     d = unit(d)
-    Z = d * s
-    X = np.cross(Y, Z)
-    return np.column_stack([X, Y, Z]), -math.radians(arm.get("bend", 0))
+    e = np.cross(Y, d)
+    n0 = rest_front(Y)
+    best = None
+    for i in range(SEARCH):
+        psi = 2 * math.pi * i / SEARCH
+        n = math.cos(psi) * d + math.sin(psi) * e
+        Z = -n
+        X = np.cross(Y, Z)
+        R = np.column_stack([X, Y, Z])
+        bf = (R @ rx(-B)).T @ b
+        roll = math.acos(clamp(float(np.dot(n, n0))))
+        for br in (0, 1):
+            if br == 0:
+                a = math.asin(clamp(bf[1]))
+                tau = math.atan2(-bf[0], -bf[2])
+            else:
+                a = math.pi - math.asin(clamp(bf[1]))
+                tau = math.atan2(bf[0], bf[2])
+            phi = wrap(a + BLADE_TILT)
+            cost = COST[0] * phi * phi + COST[1] * tau * tau + COST[2] * max(0.0, roll - math.radians(60)) ** 2
+            if best is None or cost < best[0] - 1e-9:
+                best = (cost, R, tau, phi)
+    _, R, tau, phi = best
+    return R, -B, tau, wrap(phi + math.radians(arm.get("wrist", 0)))
+
+
+def blade_of(R, bend, tau, phi):
+    """풀린 팔의 무기 끝 방향 (모델)"""
+    v = np.array([0.0, -math.sin(BLADE_TILT), -math.cos(BLADE_TILT)])
+    return R @ rx(bend) @ ry(tau) @ rx(phi) @ v
+
+
+def check():
+    """열쇠마다 무기 끝이 blade 와 같은지 (1° 안) · 손목 · 비틀기 크기"""
+    with open(POSES, encoding="utf8") as f:
+        motions = json.load(f)["motions"]
+    worst = 0.0
+    for name, m in motions.items():
+        for k in m["keys"]:
+            for side in ("ra", "la"):
+                if side not in k:
+                    continue
+                a = k[side]
+                R, bend, tau, phi = arm_solve(dict(a, wrist=0))
+                got = blade_of(R, bend, tau, phi)
+                want = unit(to_model(a.get("blade", [0, 0, 1])))
+                err = math.degrees(math.acos(clamp(float(np.dot(got, want)))))
+                worst = max(worst, err)
+                if side == "ra":
+                    print("%-12s t=%.2f bend %3d  twist %7.1f  wrist %7.1f  err %.3f" % (name, k["t"], a.get("bend", 0), math.degrees(tau), math.degrees(phi), err))
+    print("worst blade error %.4f deg" % worst)
+    return worst < 1.0
 
 
 # ------------------------------------------------------------ 열쇠 자세 풀기
@@ -182,12 +267,10 @@ def evaluate(m, t):
         out[f] = lerp(k0.get(f, 0), k1.get(f, 0), u)
     for f in ("ra", "la"):
         a0, a1 = key_arm(k0, f), key_arm(k1, f)
-        R0, b0 = arm_rotation(a0)
-        R1, b1 = arm_rotation(a1)
+        R0, b0, t0, w0 = arm_solve(a0)
+        R1, b1, t1, w1 = arm_solve(a1)
         q = slerp(quat_of(R0), quat_of(R1), u)
-        w0 = -math.radians(a0.get("wrist", 0))
-        w1 = -math.radians(a1.get("wrist", 0))
-        out[f] = (mat_of(q), lerp(b0, b1, u), lerp(w0, w1, u))
+        out[f] = (mat_of(q), lerp(b0, b1, u), t0 + wrap(t1 - t0) * u, w0 + wrap(w1 - w0) * u)
     fade = m.get("fade", [0.08, 0.2])
     w = 1.0
     if t < fade[0]:
@@ -227,7 +310,7 @@ def build(pose, slim=False, weapon=True):
     polys += [(transform([c[i] for i in q], Rb, neck), (60, 170, 200)) for q in f]
     aw = 3 if slim else 4
     for side, key, col in ((-1, "ra", (225, 180, 140)), (1, "la", (205, 160, 120))):
-        R, bend, wrist = pose[key]
+        R, bend, twist, wrist = pose[key]
         Rn = np.eye(3)
         q = slerp(quat_of(Rn), quat_of(R), w)
         R = mat_of(q)
@@ -246,8 +329,14 @@ def build(pose, slim=False, weapon=True):
         low = [Rj @ (p - J) + J for p in cl]
         polys += [(transform([low[i] for i in qq], R, sh), tuple(int(v * 0.9) for v in col)) for qq in fl]
         if weapon and key == "ra":
-            grip = Rj @ (np.array([cx, 10.0, -2.0]) - J) + J
-            bl = rx(bend + wrist * w) @ np.array([0.0, -math.sin(BLADE_TILT), -math.cos(BLADE_TILT)])
+            # 손: 팔꿈치 → 팔뚝 축 (cx, *, 0) 둘레 비틀기 → 손목 (cx, 9.5, 0) — 자바 MotionRender.hand 와 같은 차례
+            A = np.array([cx, 0.0, 0.0])
+            Wp = np.array([cx, 9.5, 0.0])
+            g = np.array([cx, 10.0, -2.0])
+            g = rx(wrist * w) @ (g - Wp) + Wp
+            g = ry(twist * w) @ (g - A) + A
+            grip = Rj @ (g - J) + J
+            bl = Rj @ ry(twist * w) @ rx(wrist * w) @ np.array([0.0, -math.sin(BLADE_TILT), -math.cos(BLADE_TILT)])
             tip = grip + bl * 20
             back = grip - bl * 4
             # 칼날: 굵기 1 · 너비 2 의 막대
@@ -359,6 +448,8 @@ def main(argv):
     ts = [0.0, 0.2, 0.3, 0.42, 0.55, 0.7, 0.85, 1.0]
     names = []
     i = 0
+    if "--check" in argv:
+        sys.exit(0 if check() else 1)
     while i < len(argv):
         a = argv[i]
         if a == "--out":

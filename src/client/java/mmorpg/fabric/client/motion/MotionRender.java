@@ -193,7 +193,7 @@ public final class MotionRender {
         }
     }
 
-    /** 손 자리 (translateToHand 끝): 팔꿈치를 굽혔으면 팔뚝을 따라 돌리고, 손목만큼 무기를 더 꺾음 (손목 축 = 손 끝 가운데) */
+    /** 손 자리 (translateToHand 끝): 팔꿈치를 굽혔으면 팔뚝을 따라 돌리고, 팔뚝 가운데 축으로 비틀고, 손목 (손 끝 가운데) 만큼 무기를 더 꺾음 */
     public static void hand(HumanoidModel<?> m, HumanoidRenderState state, HumanoidArm arm, PoseStack ps) {
         ModelPart part = arm == HumanoidArm.RIGHT ? m.rightArm : m.leftArm;
         BendablePart b = (BendablePart) (Object) part;
@@ -208,14 +208,26 @@ public final class MotionRender {
         }
         Pose p = of(state);
         if (p == null) return;
-        float wr = (arm == HumanoidArm.RIGHT ? (p.has(Pose.RA) ? p.raWrist : 0) : (p.has(Pose.LA) ? p.laWrist : 0)) * p.w;
-        if (wr == 0) return;
+        boolean right = arm == HumanoidArm.RIGHT;
+        boolean has = p.has(right ? Pose.RA : Pose.LA);
+        float tw = has ? (right ? p.raTwist : p.laTwist) * p.w : 0;
+        float wr = has ? (right ? p.raWrist : p.laWrist) * p.w : 0;
+        if (tw == 0 && wr == 0) return;
         float[] c = b.mmorpg$center();
-        float cx = c != null && !Float.isNaN(c[0]) ? c[0] / 16F : (arm == HumanoidArm.RIGHT ? -1 : 1) / 16F;
-        float wy = 9.5F / 16F;
-        ps.translate(cx, wy, 0);
-        ps.rotate(Axis.XP.rotation(wr));
-        ps.translate(-cx, -wy, 0);
+        boolean known = c != null && !Float.isNaN(c[0]);
+        float cx = known ? c[0] / 16F : (right ? -1 : 1) / 16F;
+        float cz = known ? c[2] / 16F : 0;
+        if (tw != 0) {
+            ps.translate(cx, 0, cz);
+            ps.rotate(Axis.YP.rotation(tw));
+            ps.translate(-cx, 0, -cz);
+        }
+        if (wr != 0) {
+            float wy = 9.5F / 16F;
+            ps.translate(cx, wy, cz);
+            ps.rotate(Axis.XP.rotation(wr));
+            ps.translate(-cx, -wy, -cz);
+        }
     }
 
     // ------------------------------------------------------------ 1인칭

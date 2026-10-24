@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import mmorpg.core.Armor;
 import mmorpg.core.Motions;
+import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgItems;
 import mmorpg.fabric.client.motion.ClientMotions;
@@ -70,6 +71,8 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         {"spin2", "scythe", "0.12,0.4,0.7"},
         {"roll", "sword", "0.14,0.3,0.5"},
     };
+    /** 마네킹을 보는 쪽 {이름, yaw} — 3/4 (오른쪽 앞) · 오른쪽 옆 · 앞 */
+    private static final String[][] VIEWS = {{"34", "-35"}, {"side", "-90"}, {"front", "0"}};
     /** 마네킹 자리 {x, z} — 나 (0.5, 0.5) 에서 북쪽으로 3.5칸 */
     private static final float[][] ROW = {{-1.2F, -3.0F}, {0.5F, -3.0F}, {2.2F, -3.0F}};
     private static final EquipmentSlot[] SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
@@ -98,8 +101,11 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             server.runOnServer(s -> player(s).getInventory().clearContent());
             ctx.waitTicks(20);
             check(MotionPoses.names().equals(Motions.KNOWN), "poses loaded " + MotionPoses.names().size());
+            double err = MotionPoses.worstBladeError();
+            check(err < 1.0, "blade solve worst " + String.format("%.4f", err) + " deg");
             part(ctx, "poses", () -> poses(ctx, server));
             part(ctx, "armor", () -> armor(ctx, server));
+            part(ctx, "fp", () -> firstPerson(ctx, server));
             part(ctx, "attack", () -> attack(ctx, server));
             part(ctx, "roll", () -> roll(ctx, server));
             part(ctx, "skill", () -> skill(ctx, server));
@@ -116,7 +122,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         for (String[] s : SAMPLES) {
             String motion = s[0];
             String[] ts = s[2].split(",");
-            for (String[] view : new String[][] {{"34", "-35"}, {"side", "-90"}}) {
+            for (String[] view : VIEWS) {
                 List<Integer> row = spawn(server, Float.parseFloat(view[1]), s[1], false);
                 ctx.runOnClient(mc -> {
                     for (int i = 0; i < row.size(); i++) ClientMotions.freeze(row.get(i), motion, Float.parseFloat(ts[i]));
@@ -133,8 +139,10 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     // ------------------------------------------------------------ 2. 갑옷도 굽힘
 
     private void armor(ClientGameTestContext ctx, TestServerContext server) {
+        server.runOnServer(s -> player(s).getInventory().clearContent());
+        hideGui(ctx, true);
         String[][] poses = {{"guard", "0.3"}, {"roll", "0.14"}, {"slash_h", "0.3"}};
-        for (String[] view : new String[][] {{"34", "-35"}, {"side", "-90"}, {"front", "0"}}) {
+        for (String[] view : VIEWS) {
             List<Integer> row = spawn(server, Float.parseFloat(view[1]), "sword", true);
             ctx.runOnClient(mc -> {
                 for (int i = 0; i < row.size(); i++) ClientMotions.freeze(row.get(i), poses[i][0], Float.parseFloat(poses[i][1]));
@@ -145,6 +153,35 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
         }
         hideGui(ctx, false);
+        ctx.waitTicks(3);
+    }
+
+    // ------------------------------------------------------------ 2b. 1인칭 (내 자세를 멈춤 — 동작마다 세 순간)
+
+    private void firstPerson(ClientGameTestContext ctx, TestServerContext server) {
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.getInput().lookAt(180F, 5F);
+        int me = ctx.computeOnClient(mc -> mc.player.getId());
+        for (String[] s : SAMPLES) {
+            String motion = s[0];
+            String type = s[1];
+            server.runOnServer(sv -> {
+                ServerPlayer sp = player(sv);
+                sp.getInventory().clearContent();
+                sp.getInventory().setItem(0, weapon(type));
+                sp.getInventory().setSelectedSlot(0);
+            });
+            ctx.waitTicks(3);
+            String[] ts = s[2].split(",");
+            for (int i = 0; i < ts.length; i++) {
+                float t = Float.parseFloat(ts[i]);
+                ctx.runOnClient(mc -> ClientMotions.freeze(me, motion, t));
+                ctx.waitTicks(1);
+                ctx.takeScreenshot(TestScreenshotOptions.of("mo_fp_" + motion + "_" + i).withSize(960, 540));
+            }
+            ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
+        }
+        server.runOnServer(sv -> player(sv).getInventory().clearContent());
         ctx.waitTicks(3);
     }
 
@@ -173,12 +210,18 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             check(srv.equals(want[i] + "#" + (i + 1)), "server step " + i + " " + srv);
             ctx.waitTicks(10); // 허공 공격 뒤 바닐라 공격 대기 (missTime 10)
         }
-        // 3인칭 (앞): 가로 베기 한 번
+        // 3인칭 (앞 · 시야 40 으로 가까이): 연타 셋
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+        ctx.getInput().lookAt(180F, 10F);
+        fov(ctx, 40);
         ctx.waitTicks(30);
-        ctx.getInput().pressKey(o -> o.keyAttack);
-        ctx.waitTicks(4);
-        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_slash_h").withSize(960, 540));
+        for (String m : want) {
+            ctx.getInput().pressKey(o -> o.keyAttack);
+            ctx.waitTicks(4);
+            ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_" + m).withSize(960, 540));
+            ctx.waitTicks(9);
+        }
+        fov(ctx, 70);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.waitTicks(15);
     }
@@ -212,8 +255,9 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.waitTicks(8);
         Vec3 p2 = ctx.computeOnClient(mc -> mc.player.position());
         check(p2.distanceTo(p1) < 0.3, "cooldown: no second roll " + String.format("%.2f", p2.distanceTo(p1)));
-        // 3인칭 (앞에서) 구르기
+        // 3인칭 (앞에서 · 시야 40) 구르기
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+        fov(ctx, 40);
         ctx.waitTicks(25);
         ctx.getInput().pressKey(o -> o.keyShift);
         ctx.waitTicks(2);
@@ -222,6 +266,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_roll").withSize(960, 540));
         ctx.waitTicks(2);
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_roll_late").withSize(960, 540));
+        fov(ctx, 70);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.waitTicks(15);
     }
@@ -235,13 +280,19 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             sp.getInventory().setSelectedSlot(0);
         });
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+        fov(ctx, 40);
         ctx.waitTicks(10);
         int me = ctx.computeOnClient(mc -> mc.player.getId());
         ctx.getInput().pressKey(o -> o.keyUse);
-        ctx.waitTicks(5);
+        ctx.waitTicks(2);
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_0").withSize(960, 540));
+        ctx.waitTicks(2);
         String cur = ctx.computeOnClient(mc -> ClientMotions.current(me));
         check("skill_slash".equals(cur), "weapon skill motion " + cur);
-        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash").withSize(960, 540));
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_1").withSize(960, 540));
+        ctx.waitTicks(3);
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_2").withSize(960, 540));
+        fov(ctx, 70);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.waitTicks(20);
     }
@@ -299,8 +350,19 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         return new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(id)));
     }
 
+    /** 이 종류의 무기 (영웅 40렙 → 없으면 초월 · 고귀 · 희귀 · 일반, 40 · 30 · 20 · 10 · 0렙 차례 — 마검은 영웅이 없음) */
     private static ItemStack weapon(String type) {
-        return new ItemStack(RpgItems.byId(Weapons.weaponFrom(type, 40, "hero").id()));
+        for (String g : List.of("hero", "transcend", "noble", "rare", "common")) {
+            for (int lv : new int[] {40, 30, 20, 10, 0}) {
+                Weapon w = Weapons.weaponFrom(type, lv, g);
+                if (w != null && RpgItems.byId(w.id()) != null) return new ItemStack(RpgItems.byId(w.id()));
+            }
+        }
+        return ItemStack.EMPTY;
+    }
+
+    private static void fov(ClientGameTestContext ctx, int deg) {
+        ctx.runOnClient(mc -> mc.options.fov().set(deg));
     }
 
     private static void hideGui(ClientGameTestContext ctx, boolean hide) {

@@ -31,9 +31,12 @@ public final class Pose {
     public final Quaternionf la = new Quaternionf();
     public float raBend;
     public float laBend;
-    /** 손목 (든 무기만 — 로컬 x 축, 라디안: 무기 끝을 팔뚝 쪽으로 꺾음 +) */
+    /** 손목 (든 무기만 — 팔뚝 비틀기 뒤 로컬 x 축 회전, 라디안) */
     public float raWrist;
     public float laWrist;
+    /** 팔뚝 비틀기 (든 무기만 — 팔꿈치 뒤 로컬 y 축 (팔뚝 가운데) 회전, 라디안) */
+    public float raTwist;
+    public float laTwist;
     public float rlX;
     public float rlY;
     public float rlZ;
@@ -76,6 +79,9 @@ public final class Pose {
         float wr = raWrist;
         raWrist = laWrist;
         laWrist = wr;
+        float tw = raTwist;
+        raTwist = -laTwist;
+        laTwist = -tw;
         float x = rlX;
         float y = rlY;
         float z = rlZ;
