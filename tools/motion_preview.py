@@ -472,11 +472,16 @@ def sheet(name, m, ts, views=("front", "right", "34", "top")):
 # ------------------------------------------------------------ 1인칭 (fp)
 
 FP_BASE = np.array([0.56, -0.52, -0.72])  # 바닐라 1인칭 손 (든 아이템) 자리 — 화면 공간: +x 오른쪽 · +y 위 · -z 앞 (칸)
-FP_LEN = 0.8  # 그림의 무기 길이 (칸 — 대략)
+# 손 자리 → 무기 손잡이 (칼 · 도끼 · 마검 · 창 · 낫 · 망치 · 홀 — tools/weapon_models.py J_P − JAVA_FP_ARM · 자바 MotionRender.GRIP). 회전은 이 점이 축
+FP_GRIP = np.array([0.266, -0.099, -0.655])
+# 1인칭 자세의 무기 끝 · 날 방향 (자바 MotionPoses.FP_REST_BLADE · FP_REST_EDGE — weapon_models.py UPRIGHT_DIR · edge_forward)
+FP_REST_BLADE = np.array([-0.10004, 0.97034, -0.22008])
+FP_REST_EDGE = np.array([-0.35775, -0.24147, -0.90206])
+FP_LEN = 1.1  # 그림의 무기 길이 (칸 — 대략)
 
 
 def fp_rotation(blade, edge=None):
-    """1인칭 회전 (사원수 w, x, y, z): 바닐라 1인칭 무기 (끝 위 · 날 앞) 를 끝 blade · 날 edge 쪽으로 ([r, u, f] — 자바 MotionPoses.fpRotation 과 같음)"""
+    """1인칭 회전 (사원수 w, x, y, z): 1인칭 자세의 무기 (끝 FP_REST_BLADE · 날 FP_REST_EDGE) 를 끝 blade · 날 edge 쪽으로 ([r, u, f] — 자바 MotionPoses.fpRotation 과 같음)"""
     b = unit([blade[0], blade[1], -blade[2]])
     e = np.array([0.0, 0.0, -1.0]) if edge is None else np.array([edge[0], edge[1], -edge[2]], dtype=float)
     e = e - np.dot(e, b) * b
@@ -485,7 +490,8 @@ def fp_rotation(blade, edge=None):
         if np.linalg.norm(e) < 1e-3:
             e = np.array([1.0, 0.0, 0.0]) - b[0] * b
     e = unit(e)
-    b0, e0 = np.array([0.0, 1.0, 0.0]), np.array([0.0, 0.0, -1.0])
+    b0 = unit(FP_REST_BLADE)
+    e0 = unit(FP_REST_EDGE - np.dot(FP_REST_EDGE, b0) * b0)
     R = np.column_stack([b, e, np.cross(b, e)]) @ np.column_stack([b0, e0, np.cross(b0, e0)]).T
     return quat_of(R)
 
@@ -526,7 +532,7 @@ def fp_project(P, W, H, fov=70.0):
 
 
 def fp_sheet(name, m, ts, W=320, H=180):
-    """1인칭 화면 (시야 70 · 16:9) 의 무기 막대: 금빛 점 = 손 (든 자리), 흰 줄 = 무기 (끝 쪽), 빨간 줄 = 날이 볼 쪽"""
+    """1인칭 화면 (시야 70 · 16:9) 의 무기 막대 (칼 손잡이 기준): 금빛 점 = 손잡이, 흰 줄 = 무기 (끝 쪽), 빨간 줄 = 날이 볼 쪽"""
     img = Image.new("RGB", (W * len(ts), H + 16), (20, 20, 26))
     dd = ImageDraw.Draw(img)
     dd.text((4, H + 2), "%s  first person (%d ticks)" % (name, m.get("ticks", 0)), fill=(230, 230, 230))
@@ -536,13 +542,13 @@ def fp_sheet(name, m, ts, W=320, H=180):
         d.line([(W / 2 - 4, H / 2), (W / 2 + 4, H / 2)], fill=(255, 255, 255))
         d.line([(W / 2, H / 2 - 4), (W / 2, H / 2 + 4)], fill=(255, 255, 255))
         p, R = fp_evaluate(m, t)
-        G = FP_BASE + p
-        up = R @ np.array([0.0, 1.0, 0.0])
+        G = FP_BASE + FP_GRIP + p
+        up = R @ unit(FP_REST_BLADE)
         pts = [q for q in (fp_project(G + up * FP_LEN * j / 24, W, H) for j in range(25)) if q]
         if len(pts) > 1:
             d.line(pts, fill=(230, 230, 250), width=5)
         mid = G + up * FP_LEN * 0.5
-        e = [q for q in (fp_project(mid + R @ np.array([0.0, 0.0, -1.0]) * 0.15 * j / 4, W, H) for j in range(5)) if q]
+        e = [q for q in (fp_project(mid + R @ unit(FP_REST_EDGE) * 0.15 * j / 4, W, H) for j in range(5)) if q]
         if len(e) > 1:
             d.line(e, fill=(255, 80, 80), width=2)
         g = fp_project(G, W, H)

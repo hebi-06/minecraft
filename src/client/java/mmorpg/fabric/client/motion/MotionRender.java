@@ -2,6 +2,7 @@ package mmorpg.fabric.client.motion;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import mmorpg.fabric.RpgWeaponItem;
 import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.HumanoidModel;
@@ -245,7 +246,31 @@ public final class MotionRender {
 
     private static final Pose FP2 = new Pose();
 
-    /** 1인칭 무기 (주 손 — 손에 든 아이템 자리 뒤, 휘두르기 대신): 동작 중이면 true */
+    /**
+     * 1인칭 무기 손잡이 자리 (손에 든 아이템 자리 → 손잡이, 화면 공간 칸 · 오른손 — tools/weapon_models.py 의 J_P − JAVA_FP_ARM).
+     * 무기 모델의 1인칭 display 가 손잡이를 손 자리에서 이만큼 떨어뜨려 두므로, 회전은 이 점을 축으로 (아니면 무기가 화면 밖으로 휘둘림)
+     */
+    private static final Vector3f GRIP = new Vector3f(0.266F, -0.099F, -0.655F);
+    private static final Vector3f GRIP_DAGGER = new Vector3f(0.143F, -0.002F, -0.405F);
+    private static final Vector3f GRIP_SHIELD = new Vector3f(0.331F, 0.019F, -0.468F);
+    private static final Vector3f GRIP_WAND = new Vector3f(0.491F, -0.282F, -0.780F);
+    private static final Vector3f GRIP_BOW = new Vector3f(0.612F, 0.204F, -1.155F);
+
+    /** 무기 종류 → 1인칭 손잡이 자리 (칼 · 도끼 · 마검 · 창 · 낫 · 망치 · 홀 · 그 밖은 GRIP) */
+    static Vector3f grip(String type) {
+        return switch (type) {
+            case "dagger" -> GRIP_DAGGER;
+            case "shield" -> GRIP_SHIELD;
+            case "wand" -> GRIP_WAND;
+            case "bow" -> GRIP_BOW;
+            default -> GRIP;
+        };
+    }
+
+    /**
+     * 1인칭 무기 (주 손 — 손에 든 아이템 자리 뒤, 휘두르기 대신): 동작 중이면 true.
+     * 손잡이를 fp 자리만큼 옮기고, 손잡이를 축으로 fp 회전 (방패는 옮기기만 — 겉면이 앞을 봄)
+     */
     public static boolean firstPerson(PoseStack ps, HumanoidArm arm) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || arm != mc.player.getMainArm()) return false;
@@ -253,7 +278,14 @@ public final class MotionRender {
         if (p == null) return false;
         float w = p.w;
         ps.translate(p.fpX * w, p.fpY * w, p.fpZ * w);
-        ps.rotate(new Quaternionf().slerp(p.fpQ, w));
+        String type = mc.player.getMainHandItem().getItem() instanceof RpgWeaponItem item && item.weapon() != null ? item.weapon().type() : "";
+        if (!type.equals("shield")) {
+            Vector3f g = grip(type);
+            float gx = arm == HumanoidArm.RIGHT ? g.x : -g.x;
+            ps.translate(gx, g.y, g.z);
+            ps.rotate(new Quaternionf().slerp(p.fpQ, w));
+            ps.translate(-gx, -g.y, -g.z);
+        }
         return true;
     }
 }

@@ -243,9 +243,13 @@ public final class MotionPoses {
         return k;
     }
 
+    /** 1인칭에서 세워 든 무기 (칼 · 단검 · 도끼 · 마검 · 창 · 낫 · 망치 · 홀 · 완드) 의 끝 · 날 방향 (화면 공간 +x 오른쪽 · +y 위 · -z 앞 — tools/weapon_models.py UPRIGHT_DIR · edge_forward) */
+    static final Vector3f FP_REST_BLADE = new Vector3f(-0.10004F, 0.97034F, -0.22008F);
+    static final Vector3f FP_REST_EDGE = new Vector3f(-0.35775F, -0.24147F, -0.90206F);
+
     /**
-     * 1인칭 회전: 바닐라 1인칭 자세의 무기 (끝이 위 · 날이 앞) 를 끝 blade · 날 edge 쪽으로 (화면 기준 [r 오른쪽, u 위, f 앞] — edge 가 없으면 앞에 가까운 쪽).
-     * tools/motion_preview.py fp_rotation 과 같음
+     * 1인칭 회전: 1인칭 자세의 무기 (끝 FP_REST_BLADE · 날 FP_REST_EDGE) 를 끝 blade · 날 edge 쪽으로 (화면 기준 [r 오른쪽, u 위, f 앞] — edge 가 없으면 앞에 가까운 쪽).
+     * MotionRender.firstPerson 이 무기 손잡이를 축으로 돌림. tools/motion_preview.py fp_rotation 과 같음
      */
     static Quaternionf fpRotation(float[] blade, float[] edge, Quaternionf out) {
         Vector3f b = new Vector3f(blade[0], blade[1], -blade[2]);
@@ -258,8 +262,8 @@ public final class MotionPoses {
             if (e.length() < 1e-3F) e.set(1, 0, 0).fma(-b.x, b);
         }
         e.normalize();
-        Vector3f b0 = new Vector3f(0, 1, 0);
-        Vector3f e0 = new Vector3f(0, 0, -1);
+        Vector3f b0 = new Vector3f(FP_REST_BLADE).normalize();
+        Vector3f e0 = new Vector3f(FP_REST_EDGE).fma(-FP_REST_EDGE.dot(b0), b0).normalize();
         Matrix3f target = new Matrix3f(b, e, new Vector3f(b).cross(e));
         Matrix3f rest = new Matrix3f(b0, e0, new Vector3f(b0).cross(e0));
         return out.setFromNormalized(target.mul(rest.transpose()));
