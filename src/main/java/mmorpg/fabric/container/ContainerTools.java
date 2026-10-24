@@ -179,7 +179,7 @@ public final class ContainerTools {
         return BuiltInRegistries.ITEM.getKey(it).getNamespace().equals("minecraft") ? 4 : 3;
     }
 
-    /** 등급 (0 일반 ~ 4 초월 · 없으면 -1) — 무기 · 갑옷 · 룬 */
+    /** 등급 (0 일반 ~ 4 초월 · 없으면 -1) — 무기 · 갑옷 · 룬 · 0.37.0 아티팩트 */
     public static int grade(ItemStack s) {
         Item it = s.getItem();
         if (it instanceof RpgWeaponItem w) return w.weapon().gradeIndex();
@@ -188,6 +188,7 @@ public final class ContainerTools {
             mmorpg.core.Grade g = Rules.get().grade(r.rune().grade());
             return g == null ? -1 : g.index();
         }
+        if (it instanceof mmorpg.fabric.gear.ArtifactItem a) return a.art().gradeIndex(); // 0.37.0 아티팩트
         return -1;
     }
 
@@ -195,6 +196,7 @@ public final class ContainerTools {
         Item it = s.getItem();
         if (it instanceof RpgWeaponItem w) return w.weapon().level();
         if (it instanceof RpgArmorItem a) return a.piece().level();
+        if (it instanceof mmorpg.fabric.gear.ArtifactItem a) return a.art().level();
         return 0;
     }
 

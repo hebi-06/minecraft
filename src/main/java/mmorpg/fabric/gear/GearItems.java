@@ -36,7 +36,8 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.TooltipDisplay;
 
 /**
- * 갑옷 240 (armor.js — 종류 10 (애드온 5 + 0.12.5 두 스탯 무기용 5 — ARMOR_TYPE_ORDER) × 레벨 · 등급 6 × 부위 4) · 재료 (레이드 재료 4 · 보스 재료 12 · 몬스터 전리품 6 · 룬 조각) · NPC 설정 도구 등록,
+ * 갑옷 240 (armor.js — 종류 10 (애드온 5 + 0.12.5 두 스탯 무기용 5 — ARMOR_TYPE_ORDER) × 레벨 · 등급 6 × 부위 4) · 재료 (레이드 재료 4 · 보스 재료 12 · 몬스터 전리품 6 · 룬 조각) · NPC 설정 도구 ·
+ * 0.37.0 아티팩트 20 ({@link ArtifactItem}) 등록,
  * 크리에이티브 탭 "RPG 장비 · 재료". 재료 이름 · 반짝임 · 쌓임은 애드온 아이템 정의 (assets/mmorpg/materials.json — tools/armor_items.py).
  */
 public final class GearItems {
@@ -117,6 +118,13 @@ public final class GearItems {
         Obj smith = R.obj("RUNE_SMITH");
         material(names, smith.str("shardItem"), () -> strings(smith.list("shardLore")));
         NPC_TOOL = material(names, "rpg:npc_tool", () -> List.of("§r§7NPC 를 누르면 그 NPC 설정 창", "§r§7허공을 누르면 NPC 관리 창 (운영자)"));
+        // 0.37.0 아티팩트 20 (반지 · 목걸이 · 귀걸이 · 팔찌 × 일반 ~ 초월 — 그림은 tools/artifact_icons.py)
+        for (mmorpg.core.Artifacts.Art art : mmorpg.core.Artifacts.all()) {
+            ResourceKey<Item> k = key(art.id());
+            Item.Properties props = new Item.Properties().stacksTo(1).setId(k);
+            if (mmorpg.core.Artifacts.glint(art.grade())) props.component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+            BY_ID.put(art.id(), Registry.register(BuiltInRegistries.ITEM, k, new ArtifactItem(art, props)));
+        }
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB, FabricCreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.mmorpg.gear"))
                 .icon(() -> new ItemStack(BY_ID.getOrDefault("rpg:armor_str_l40_transcend_chest", ARMOR.isEmpty() ? NPC_TOOL : ARMOR.get(0))))
@@ -187,7 +195,20 @@ public final class GearItems {
             }
             if (n > 0) lines.add("§r§5공허의 갑옷 재료 §7(한 벌 " + n + "개)");
         }
+        String art = artifactUse(item);
+        if (!art.isEmpty()) lines.add(art);
         return lines;
+    }
+
+    /** 0.37.0 아티팩트 제작 재료 줄 ("§d아티팩트 재료: 고귀 10개") — 쓰지 않으면 "" */
+    static String artifactUse(String itemId) {
+        List<String> parts = new ArrayList<>();
+        for (mmorpg.core.Grade g : R.grades()) {
+            mmorpg.core.Artifacts.Cost c = mmorpg.core.Artifacts.cost(g.id());
+            Integer n = c == null ? null : c.items().get(itemId);
+            if (n != null && n > 0) parts.add(g.name() + " " + n + "개");
+        }
+        return parts.isEmpty() ? "" : "§r§d아티팩트 재료: " + String.join(" · ", parts) + " §7(하나에 · 대장장이)";
     }
 
     /**
@@ -196,11 +217,18 @@ public final class GearItems {
      */
     static List<String> bossLore(String key) {
         List<String> lore = strings(R.obj("BOSS_MATERIALS").obj(key).list("lore"));
+        String art = artifactUse(R.obj("BOSS_MATERIALS").obj(key).str("item")); // 0.37.0 아티팩트 재료 (이미르 뼈 · 수르트 재료)
         int head = -1;
         for (int i = 0; i < lore.size(); i++) if (lore.get(i).contains("대장장이 보스 무기 제작")) head = i;
-        if (head < 0) return lore;
+        if (head < 0) {
+            if (art.isEmpty()) return lore;
+            List<String> out = new ArrayList<>(lore);
+            out.add(art);
+            return out;
+        }
         List<String> out = new ArrayList<>(lore.subList(0, head + 1));
         out.addAll(Crafting.craftUseLines("boss", key));
+        if (!art.isEmpty()) out.add(art);
         return out;
     }
 

@@ -51,7 +51,8 @@ import net.minecraft.world.phys.Vec3;
  * (나무마다 받은 칸 수를 적어 둠 — 스탯을 되돌렸다 다시 찍어도 다시 주지 않음) · 큰 글자 · 채팅 · 자라는 연출</li>
  * <li>갈래 칸: 열린 뒤 둘 중 하나를 고름 (스탯 트리 창 · /스탯트리). 갈래 초기화 = 그 나무의 고른 갈래를 모두 지움 — 실버 (갈래당 perPick · 0.21.0 전에는 에메랄드)</li>
  * <li>보너스: 공격력 (RpgCombat.powerOf · 룬 피해), 룬 피해, 치명타 확률 (평타 훅 · 스킬), 치명타 피해 (치명타 배율에 더함), 최대 체력
- * (RpgHealth.maxHpOf), 받는 피해 (RpgHealth.onLoss), 이동 속도 (속성 수정자 mmorpg:stat_tree_speed), 재사용 대기 (스킬 · 룬)</li>
+ * (RpgHealth.maxHpOf), 받는 피해 (RpgHealth.onLoss), 이동 속도 (속성 수정자 mmorpg:stat_tree_speed), 재사용 대기 (스킬 · 룬).
+ * 0.37.0 아티팩트 보너스 ({@link #extra}) 도 여기서 더함 (같은 상한)</li>
  * <li>기록: 플레이어 속성 rpg:stat_tree (JSON — 고른 갈래 · 받은 칸). 클라이언트에는 {@link RpgNet.StatTreePayload}</li>
  * </ul>
  * {@link #active}: 스탯 트리를 쓰는 플레이어 (실제 게임 = 모두). 게임 시험은 기존 시험의 정해진 피해 · 체력 숫자를 지키려고 시험이 켠 플레이어만.
@@ -67,6 +68,12 @@ public final class StatTrees {
 
     /** 플레이어 → 보너스 합 (나무 넷 · 상한 적용 — refresh 때 다시) */
     private static final Map<UUID, Map<String, Double>> TOTALS = new HashMap<>();
+
+    /**
+     * 0.37.0 스탯 트리 밖의 보너스 (아티팩트 — ArtifactSystem 이 넣음): 플레이어 → 합 (상한 전). {@link #bonus} 가 나무 합에 더한 뒤 같은 상한.
+     * 스탯 트리를 쓰지 않는 플레이어 (게임 시험) 도 받음
+     */
+    public static java.util.function.Function<ServerPlayer, Map<String, Double>> extra = sp -> Map.of();
 
     public static void init() {
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> refresh(newPlayer, false));
@@ -113,19 +120,35 @@ public final class StatTrees {
 
     // ------------------------------------------------------------ 보너스
 
-    /** 보너스 합 (나무 넷 — 상한 적용, 쓰지 않는 플레이어는 0) */
+    /** 보너스 합 (나무 넷 + 0.37.0 아티팩트 {@link #extra} — 상한 적용, 스탯 트리를 쓰지 않는 플레이어는 아티팩트 몫만) */
     public static double bonus(ServerPlayer sp, String kind) {
         if (sp == null) return 0;
         Map<String, Double> t = TOTALS.get(sp.getUUID());
-        if (t == null) return 0;
-        Double v = t.get(kind);
-        return v == null ? 0 : v;
+        Double v = t == null ? null : t.get(kind);
+        double sum = v == null ? 0 : v;
+        Double e = extra.apply(sp).get(kind);
+        if (e == null || e == 0) return sum;
+        sum += e;
+        Double cap = StatTree.caps().get(kind);
+        return cap == null ? sum : Math.min(sum, cap);
     }
 
-    /** 보너스 합 전부 (없으면 빈 지도) */
+    /** 나무 넷의 보너스 합 전부 (아티팩트 빼고 — 스탯 트리 창 · /스탯트리 info, 없으면 빈 지도) */
     public static Map<String, Double> totals(ServerPlayer sp) {
         Map<String, Double> t = sp == null ? null : TOTALS.get(sp.getUUID());
         return t == null ? Map.of() : t;
+    }
+
+    /** 0.37.0 나무 넷 + 아티팩트 (상한 적용 — 스탯 시트 StatSheet.of) */
+    public static Map<String, Double> allTotals(ServerPlayer sp) {
+        return mmorpg.core.Artifacts.combine(totals(sp), sp == null ? Map.of() : extra.apply(sp));
+    }
+
+    /** 0.37.0 나무 밖 보너스 (아티팩트) 가 바뀐 뒤: 이동 속도 · 최대 체력 다시 */
+    public static void extraChanged(ServerPlayer sp) {
+        if (sp == null || sp.isRemoved()) return;
+        applySpeed(sp);
+        RpgHealth.refreshMax(sp, false);
     }
 
     /** 무기 피해 배율 (평타 · 스킬): 1 + 공격력 % */

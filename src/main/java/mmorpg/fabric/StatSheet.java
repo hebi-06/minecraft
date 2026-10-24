@@ -23,7 +23,7 @@ import net.minecraft.world.item.ItemStack;
  *
  * @param base 찍은 스탯 {str, dex, int, vit, point, lvmax} (요구 스탯 확인)
  * @param eff  실제 스탯 (찍은 스탯 + 장비 보너스 · 룬 버프 — 피해 · 최대 체력 계산)
- * @param tree 스탯 트리 보너스 합 (7단계 — atk · crit · critDmg · hp …, 없으면 빈 지도)
+ * @param tree 스탯 트리 보너스 합 (7단계 — atk · crit · critDmg · hp …, 0.37.0 부터 아티팩트 합까지 — 상한 적용, 없으면 빈 지도)
  * @param job  0.27.0 직업 id (없으면 "") — 마검사 「마력 검술」: 칼의 요구 힘 = 힘 + 마력 · 칼 피해의 힘 = 힘 + 마력 × 0.5 (core.Jobs)
  */
 public record StatSheet(Map<String, Double> base, Map<String, Double> eff, double reqLevel, Map<String, Double> tree, String job) {
@@ -91,7 +91,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
     public static StatSheet of(net.minecraft.server.level.ServerPlayer sp) {
         RpgData d = RpgData.of(sp);
         return of(d.str(), d.dex(), d.intel(), d.vit(), d.point(), d.lvmax(), sp.experienceLevel, RpgStats.bonusOf(sp), RpgStats.buffOf(sp))
-                .withTree(mmorpg.fabric.stattree.StatTrees.totals(sp)).withJob(mmorpg.fabric.job.JobSystem.jobOf(sp));
+                .withTree(mmorpg.fabric.stattree.StatTrees.allTotals(sp)).withJob(mmorpg.fabric.job.JobSystem.jobOf(sp));
     }
 
     /** 소수 둘째 자리까지 (끝의 0은 뺌) */
@@ -161,7 +161,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             String extra = vitBonusText();
             lore.add("§71포인트: 최대 체력 +" + CONFIG.text("HP_PER_VIT") + (extra.isEmpty() ? "" : " · " + extra));
             lore.add("§7레벨 보너스 +" + Js.str(Hp.levelHpOf(lvmax())) + " (레벨당 +" + CONFIG.text("HP_PER_LEVEL") + ")");
-            if (tree("hp") > 0) lore.add("§7스탯 트리 최대 체력 +" + Js.str(tree("hp")));
+            if (tree("hp") > 0) lore.add("§7스탯 트리 · 아티팩트 최대 체력 +" + Js.str(tree("hp")));
             Obj tyrfing = SKILLS.objOrNull("tyrfing");
             lore.add("§7티르빙 스킬 피해 × 최대 체력 ÷ " + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)));
         } else {

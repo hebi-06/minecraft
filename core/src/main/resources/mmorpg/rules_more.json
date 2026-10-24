@@ -566,7 +566,10 @@
     "void_heart": {"item": "rpg:void_heart", "name": "공허의 심장", "color": "§5", "boss": "void_knight", "icon": "textures/items/rpg/void_heart", "lore": ["§r§7공허 기사가 주는 보스 재료", "§r§7갑옷 속에서 아직도 뛰는 보랏빛 심장", "§r§8초월 무기 55렙 올리기 재료 §7(대장장이)"]},
     "rift_shard": {"item": "rpg:rift_shard", "name": "균열 대검 조각", "color": "§d", "boss": "void_knight", "icon": "textures/items/rpg/rift_shard", "lore": ["§r§7공허 기사가 주는 보스 재료", "§r§7차원을 가르던 대검의 부서진 조각", "§r§8초월 무기 55렙 올리기 재료 §7(대장장이)"]},
     "hel_claw": {"item": "rpg:hel_claw", "name": "헬의 손톱", "color": "§f", "boss": "hel", "icon": "textures/items/rpg/hel_claw", "lore": ["§r§7헬이 주는 보스 재료", "§r§7망자를 거두던 검은 손의 창백한 손톱", "§r§8초월 무기 60렙 올리기 재료 §7(대장장이)"]},
-    "dead_mist": {"item": "rpg:dead_mist", "name": "망자의 안개", "color": "§b", "boss": "hel", "icon": "textures/items/rpg/dead_mist", "lore": ["§r§7헬이 주는 보스 재료", "§r§7헬헤임의 차가운 안개를 담은 병 — 속에서 얼굴이 맴돎", "§r§8초월 무기 60렙 올리기 재료 §7(대장장이)"]}
+    "dead_mist": {"item": "rpg:dead_mist", "name": "망자의 안개", "color": "§b", "boss": "hel", "icon": "textures/items/rpg/dead_mist", "lore": ["§r§7헬이 주는 보스 재료", "§r§7헬헤임의 차가운 안개를 담은 병 — 속에서 얼굴이 맴돎", "§r§8초월 무기 60렙 올리기 재료 §7(대장장이)"]},
+    "_muspel": "0.37.0 수르트 재료 (전에는 '초월 장비 재료 (준비 중)' — future): 초월 아티팩트 재료 (ARTIFACTS.cost.transcend). 쓰는 곳 줄은 GearItems.bossLore 가 붙임",
+    "muspel_heart": {"item": "rpg:muspel_heart", "name": "무스펠의 불꽃 심장", "color": "§c", "boss": "surtr", "tier": "transcend", "icon": "textures/items/rpg/muspel_heart", "lore": ["§r§7수르트가 주는 초월 보스 재료", "§r§7꺼지지 않는 거인의 불꽃 심장"]},
+    "laevateinn_shard": {"item": "rpg:laevateinn_shard", "name": "레바테인 조각", "color": "§6", "boss": "surtr", "tier": "transcend", "icon": "textures/items/rpg/laevateinn_shard", "lore": ["§r§7수르트가 주는 초월 보스 재료", "§r§7불꽃 검 레바테인의 부서진 조각"]}
   },
   "BOSSES": {
     "_comment": "0.33.0 공허 기사 (BossVoidKnight · 신전 테마 void — tools/void_knight.py 가 엔티티 · 동작 · 제단 · 재료 그림을 만듦). 사용자: \"한 방 한 방이 센 대신 선딜레이가 있어 피해야 하는 보스, 가만히 있지 않고 돌아다니며 날쌤 · 55렙 · 혼자 15분 · 파티 3~5분 · 10분 안에 못 잡으면 무조건 즉사 (솔로 · 화력 부족은 못 잡게)\". 체력 450,000 = 55렙 지속 피해 828/초 (0.32.0 모델 659/초 × 스탯 1.257) × 붙어 때리는 시간 60% (움직이는 보스 · 피하는 시간) → 혼자 약 15분 · 근접 딜러 직업 (×1.2) 혼자 약 12.6분 · 3명 5분 · 4명 3.8분 · 4명 근접 딜러 3.1분. drive (칸/틱 · 도): turn 몸 돌리기, keep 가운데에서 이만큼 안, near 이만큼 붙으면 뒤로 뜀 (back 칸 · backTicks 틱 · backEvery 틱마다), far 이만큼 멀면 달려듦 (dash), orbit 대상 둘레를 도는 거리 · strafe 옆걸음, flip 도는 쪽을 바꾸는 틱, fast 2페이즈 빠르기 배율. gap 공격 사이 틱 (그동안 움직임). 패턴: every 다시 쓰는 틱, windup 선딜레이 틱 (2페이즈 × phase2.windup), open 빈틈 틱 (받는 피해 + opening.bonus). cross 공허 참 (2페이즈): count 안전 원 · dist 가운데에서 · safe 반지름. enrage: limit 틱 (10분) 지나면 공허 붕괴 (필드 안 모두 즉사 — every 틱마다 되풀이), warn 남은 틱 알림",
@@ -653,5 +656,30 @@
     "free": 1,
     "prices": [["silver", 300], ["gold", 30], ["gold", 60], ["gold", 100]],
     "migrateEnderChest": true
+  },
+  "ARTIFACTS": {
+    "_comment": "0.37.0 아티팩트 (core.Artifacts — 사용자: \"아티팩트 추가 — 반지1 반지2 목걸이 귀걸이 팔찌, 애네도 등급 나눠서, 각 아티팩트마다 올려주는게 다름\" · 고른 것: 종류별 고정 옵션 · 등급 5개 · 등급마다 착용 레벨 · 대장장이 제작 · 따로 아티팩트 창): 종류 넷 × 등급 다섯 = 아이템 20 (rpg:artifact_<종류>_<등급>). slots = 아티팩트 창의 칸 다섯 (반지는 두 칸 — slotNames 는 칸 이름). types.bonus = 옵션 둘 (값은 등급 순서 일반 · 희귀 · 고귀 · 영웅 · 초월 — 같은 등급 같은 종류는 늘 같은 수치). 보너스 종류는 스탯 트리와 같음 (atk 공격력 % · crit 치명타 확률 %p · hp 최대 체력 · def 받는 피해 % 감소 · rune 룬 피해 % · cdr 재사용 대기 % 감소 · critDmg 치명타 피해 % · speed 이동 속도 %): 스탯 트리 보너스에 더한 뒤 같은 상한 (stat_tree.json caps). grades = 착용 레벨 · 이름 앞말 (은 · 청옥 · 자수정 · 황금 · 무스펠의) · glint (반짝임). cost = 등급마다 (모든 종류 같음 — 대장장이 제작 창의 아티팩트 쪽): 실버 (silver) · 골드 (gold) · 재료 (아이템 ID → 수) — 그 레벨에서 잡는 몬스터 전리품 (전리품 50%), 영웅은 + 이미르 재료 · 초월은 + 수르트 재료. 초월 다섯 = 새 기준 (공허 갑옷 · 55렙 +7 · 초월 3돌 2개) 지속 피해 약 +17% (칼 — 공격력 +8 · 치명타 확률 +6%p · 치명타 피해 +12 · 룬 피해 +8 · 재사용 대기 -4%), 영웅 다섯 +12%",
+    "slots": ["ring", "ring", "necklace", "earring", "bracelet"],
+    "slotNames": ["반지 1", "반지 2", "목걸이", "귀걸이", "팔찌"],
+    "grades": {
+      "common": {"level": 10, "prefix": "은"},
+      "rare": {"level": 20, "prefix": "청옥"},
+      "noble": {"level": 30, "prefix": "자수정"},
+      "hero": {"level": 40, "prefix": "황금"},
+      "transcend": {"level": 50, "prefix": "무스펠의", "glint": true}
+    },
+    "types": {
+      "ring": {"name": "반지", "desc": "손가락에 끼는 고리 — 칸 둘", "bonus": {"atk": [1, 1.5, 2, 3, 4], "crit": [0.5, 1, 1.5, 2, 3]}},
+      "necklace": {"name": "목걸이", "desc": "목에 거는 보석", "bonus": {"hp": [8, 14, 22, 30, 40], "def": [1, 1.5, 2, 3, 4]}},
+      "earring": {"name": "귀걸이", "desc": "귀에 다는 마력 방울", "bonus": {"rune": [2, 3, 4.5, 6, 8], "cdr": [1, 1.5, 2, 3, 4]}},
+      "bracelet": {"name": "팔찌", "desc": "손목을 감는 띠", "bonus": {"critDmg": [3, 5, 7, 9, 12], "speed": [1, 1.5, 2, 3, 4]}}
+    },
+    "cost": {
+      "common": {"silver": 20, "items": {"rpg:loot_boar": 6, "rpg:loot_gulon": 6}},
+      "rare": {"silver": 40, "items": {"rpg:loot_crab": 8, "rpg:loot_worm_larva": 8}},
+      "noble": {"silver": 80, "items": {"rpg:loot_grendel": 10, "rpg:loot_draugr": 10}},
+      "hero": {"gold": 3, "items": {"rpg:loot_troll": 12, "rpg:loot_frost_giant": 12, "rpg:ymir_bone": 1}},
+      "transcend": {"gold": 6, "items": {"rpg:loot_void_leaper": 15, "rpg:loot_void_stalker": 15, "rpg:laevateinn_shard": 2, "rpg:muspel_heart": 1}}
+    }
   }
 }

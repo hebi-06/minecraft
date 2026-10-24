@@ -33,6 +33,8 @@ public final class MmorpgClient implements ClientModInitializer {
     public static KeyMapping skillBarKey;
     /** 장식 창 키 (0.13.0 — U) */
     public static KeyMapping cosmeticKey;
+    /** 0.37.0 아티팩트 창 키 (I — O 는 26.x 의 친구 창 키) */
+    public static KeyMapping artifactKey;
     /** 스킬 칸 기본 키: 왼손을 WASD 에 둔 채 닿는 키 중 바닐라가 쓰지 않는 것 (G 는 26.3 의 빠른 동작 키라 Y — CI 화면 시험이 바닐라 키와 겹치지 않는지 확인) */
     public static final int[] SKILL_KEYS = {InputConstants.KEY_R, InputConstants.KEY_Z, InputConstants.KEY_V, InputConstants.KEY_B, InputConstants.KEY_Y,
         InputConstants.KEY_H, InputConstants.KEY_N, InputConstants.KEY_M};
@@ -79,6 +81,10 @@ public final class MmorpgClient implements ClientModInitializer {
         skillKeys = keys;
         skillBarKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.skillbar", InputConstants.Type.KEYBOARD, InputConstants.KEY_J, CATEGORY));
         cosmeticKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.cosmetic", InputConstants.Type.KEYBOARD, InputConstants.KEY_U, CATEGORY));
+        artifactKey = KeyMappingHelper.registerKeyMapping(new KeyMapping("key.mmorpg.artifact", InputConstants.Type.KEYBOARD, InputConstants.KEY_I, CATEGORY));
+        // 0.37.0 아티팩트: 서버가 보낸 칸 다섯 (open 이면 창) · 아티팩트 설명의 지금 레벨
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.artifact.ArtifactNet.SlotsPayload.TYPE, (payload, context) -> ClientArtifacts.update(payload));
+        mmorpg.fabric.gear.ArtifactItem.viewer = () -> ClientRpgState.synced() ? ClientArtifacts.level() : -1;
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.BarPayload.TYPE, (payload, context) -> ClientSkillBar.update(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.CooldownPayload.TYPE, (payload, context) -> ClientSkillBar.cooldown(payload));
         // 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키)
@@ -110,6 +116,7 @@ public final class MmorpgClient implements ClientModInitializer {
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             ClientRpgState.clear();
             ClientSkillBar.clear();
+            ClientArtifacts.clear();
             ClientJobBar.clear();
             ClientCosmetics.clear();
             ClientGacha.clear();
@@ -132,6 +139,11 @@ public final class MmorpgClient implements ClientModInitializer {
             while (cosmeticKey.consumeClick()) {
                 if (client.player == null || client.gui.screen() != null) continue;
                 if (ClientRpgState.synced() || ClientCosmetics.received()) client.gui.setScreen(new CosmeticScreen());
+                else client.player.sendSystemMessage(Component.literal("§c이 서버에는 MMO RPG 모드가 없습니다."));
+            }
+            while (artifactKey.consumeClick()) {
+                if (client.player == null || client.gui.screen() != null) continue;
+                if (ClientRpgState.synced() || ClientArtifacts.received()) client.gui.setScreen(new ArtifactScreen());
                 else client.player.sendSystemMessage(Component.literal("§c이 서버에는 MMO RPG 모드가 없습니다."));
             }
             for (int i = 0; i < skillKeys.length; i++) {

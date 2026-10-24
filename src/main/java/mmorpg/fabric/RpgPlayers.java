@@ -43,6 +43,7 @@ public final class RpgPlayers {
         boolean isNew = !d.started();
         if (isNew) RpgData.set(sp, RpgData.first(sp.experienceLevel));
         // 스탯 트리 (7단계): 보너스 합 (최대 체력 계산 전에) · 이미 자란 칸의 보상 (처음 한 번 — 알림은 2초 뒤)
+        mmorpg.fabric.artifact.ArtifactSystem.invalidate(sp); // 0.37.0 아티팩트 보너스 합도 다시 (처음 물을 때 셈)
         mmorpg.fabric.stattree.StatTrees.refreshOnJoin(sp);
         RpgHealth.onJoin(sp);
         RpgNet.sync(sp, false);
@@ -109,6 +110,7 @@ public final class RpgPlayers {
     /** 데이터 바꿈 → 스탯 트리 (새로 열린 칸 · 보너스) → 최대 체력 다시 (스탯 · 레벨: 늘어난 만큼 체력도) → 클라이언트에 보냄 */
     public static void update(ServerPlayer sp, RpgData d) {
         RpgData.set(sp, d);
+        mmorpg.fabric.artifact.ArtifactSystem.invalidate(sp); // 0.37.0 아티팩트 착용 레벨 (렙제 레벨이 바뀌었을 수 있음)
         mmorpg.fabric.stattree.StatTrees.refresh(sp, true);
         RpgHealth.refreshMax(sp, false);
         RpgNet.sync(sp, false);

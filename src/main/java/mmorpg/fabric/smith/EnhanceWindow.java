@@ -145,7 +145,8 @@ public final class EnhanceWindow {
                         "§7+" + ANNOUNCE_FROM + " 이상 성공은 서버 전체 알림")
                 .deco());
         form.set(SCROLL_SLOT, Slot.of(SCROLL.str("icon"), SCROLL.str("color") + "보유 " + SCROLL.str("name") + " §f" + sc).count(sc));
-        form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_sword", "§6보스 무기 제작으로").lore("§7보스 재료로 영웅·초월 무기 만들기", "§7공허 전리품으로 공허의 갑옷 만들기"));
+        form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_sword", "§6보스 무기 제작으로").lore("§7보스 재료로 영웅·초월 무기 만들기", "§7공허 전리품으로 공허의 갑옷 만들기",
+                "§7전리품 · 보스 재료로 아티팩트 만들기"));
         for (int i = 0; i < list.size(); i++) {
             Entry e = list.get(i);
             form.set(FIRST + i, Slot.of(e.item(), slotName(e)).lore(slotLore(e)));

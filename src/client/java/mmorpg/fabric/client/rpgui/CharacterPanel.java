@@ -32,7 +32,7 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * 0.23.0 캐릭터 정보 패널 (인벤토리 창 왼쪽 — 사용자가 고른 것): 이름 · 레벨 · 경험치 막대, 체력 (막대), 힘 · 민첩 · 마력 · 체력, 기준 무기의 피해 ·
- * 치명타 (스탯 창과 같은 식), 방어, 골드 · 실버, "스탯 창" 단추 (남은 포인트가 있으면 +N). 스탯 줄에 마우스를 올리면 스탯 창과 같은 풀이.
+ * 치명타 (스탯 창과 같은 식), 방어, 골드 · 실버, "스탯" 단추 (남은 포인트가 있으면 +N) · 0.37.0 "아티팩트" 단추 (아티팩트 창). 스탯 줄에 마우스를 올리면 스탯 창과 같은 풀이.
  * 조합법 책이 열리면 (창 왼쪽을 책이 씀) · 화면이 좁으면 숨김. 패널을 누르면 아래로 새지 않음 (든 아이템이 버려지지 않게).
  */
 public final class CharacterPanel extends AbstractWidget {
@@ -42,9 +42,11 @@ public final class CharacterPanel extends AbstractWidget {
     /** 스탯 줄 (위에서) · 줄 높이 */
     static final int STAT_Y = 43;
     static final int STAT_H = 13;
-    /** 단추 (위에서 · 높이) */
+    /** 단추 (위에서 · 높이) — 0.37.0 둘로 나눔: 왼쪽 스탯 창 · 오른쪽 아티팩트 창 (너비 BTN_W · 사이 BTN_GAP) */
     static final int BTN_Y = 146;
     static final int BTN_H = 15;
+    static final int BTN_W = 40;
+    static final int BTN_GAP = 4;
     static final int ICON = 10;
     private static final ItemStack GOLD = new ItemStack(EconomyItems.GOLD_COIN);
     private static final ItemStack SILVER = new ItemStack(EconomyItems.SILVER_COIN);
@@ -76,7 +78,13 @@ public final class CharacterPanel extends AbstractWidget {
     /** 시험용: 스탯 창 단추 가운데 (화면 좌표) */
     public int[] buttonCenter() {
         place();
-        return new int[] {getX() + W / 2, getY() + BTN_Y + BTN_H / 2};
+        return new int[] {getX() + 8 + BTN_W / 2, getY() + BTN_Y + BTN_H / 2};
+    }
+
+    /** 시험용: 0.37.0 아티팩트 창 단추 가운데 (화면 좌표) */
+    public int[] artifactButtonCenter() {
+        place();
+        return new int[] {getX() + 8 + BTN_W + BTN_GAP + BTN_W / 2, getY() + BTN_Y + BTN_H / 2};
     }
 
     /** 시험용: 스탯 줄 i 의 가운데 */
@@ -86,7 +94,12 @@ public final class CharacterPanel extends AbstractWidget {
     }
 
     private boolean inButton(double mx, double my) {
-        return mx >= getX() + 8 && mx < getX() + W - 8 && my >= getY() + BTN_Y && my < getY() + BTN_Y + BTN_H;
+        return mx >= getX() + 8 && mx < getX() + 8 + BTN_W && my >= getY() + BTN_Y && my < getY() + BTN_Y + BTN_H;
+    }
+
+    private boolean inArtifactButton(double mx, double my) {
+        int x = getX() + 8 + BTN_W + BTN_GAP;
+        return mx >= x && mx < x + BTN_W && my >= getY() + BTN_Y && my < getY() + BTN_Y + BTN_H;
     }
 
     private int statAt(double mx, double my) {
@@ -109,6 +122,9 @@ public final class CharacterPanel extends AbstractWidget {
         if (inButton(event.x(), event.y())) {
             playDownSound(Minecraft.getInstance().getSoundManager());
             Minecraft.getInstance().gui.setScreen(new StatScreen());
+        } else if (inArtifactButton(event.x(), event.y())) {
+            playDownSound(Minecraft.getInstance().getSoundManager());
+            Minecraft.getInstance().gui.setScreen(new mmorpg.fabric.client.ArtifactScreen());
         }
         return true; // 패널 위를 누르면 창 밖 누르기 (든 아이템 버리기) 가 되지 않게
     }
@@ -186,13 +202,18 @@ public final class CharacterPanel extends AbstractWidget {
         icon(g, SILVER, x + 52, y + 133);
         g.text(font, shortAmount(ClientWallet.total(Economy.Kind.SILVER)), x + 64, y + 134, 0xFFDCDCE6, true);
 
-        // 스탯 창 단추
+        // 스탯 창 단추 · 0.37.0 아티팩트 창 단추 (둘로 나눔)
         boolean overBtn = inButton(mx, my);
-        RpgUi.button(g, x + 8, y + BTN_Y, W - 16, BTN_H, overBtn, false);
+        RpgUi.button(g, x + 8, y + BTN_Y, BTN_W, BTN_H, overBtn, false);
         int pts = s.point();
         String key = MmorpgClient.statsKey == null ? "K" : MmorpgClient.statsKey.getTranslatedKeyMessage().getString();
-        String label = "스탯 창 §7[" + key + "]" + (pts > 0 ? ((System.currentTimeMillis() / 500) % 2 == 0 ? " §e+" : " §6+") + pts : "");
-        g.text(font, label, x + W / 2 - font.width(label) / 2, y + BTN_Y + 4, RpgUi.GOLD_TEXT, true);
+        String label = "스탯" + (pts > 0 ? ((System.currentTimeMillis() / 500) % 2 == 0 ? " §e+" : " §6+") + pts : " §7[" + key + "]");
+        g.text(font, label, x + 8 + BTN_W / 2 - font.width(label) / 2, y + BTN_Y + 4, RpgUi.GOLD_TEXT, true);
+        boolean overArt = inArtifactButton(mx, my);
+        int ax = x + 8 + BTN_W + BTN_GAP;
+        RpgUi.button(g, ax, y + BTN_Y, BTN_W, BTN_H, overArt, false);
+        String art = "§d아티팩트";
+        g.text(font, art, ax + BTN_W / 2 - font.width(art) / 2, y + BTN_Y + 4, 0xFFFFFFFF, true);
 
         // 풀이
         List<Component> tip = null;
@@ -200,8 +221,20 @@ public final class CharacterPanel extends AbstractWidget {
             tip = new ArrayList<>();
             for (String l : s.tooltip(Stats.STAT_KEYS.get(hover))) tip.add(Component.literal(BedrockText.toJava(l)));
         } else if (overBtn) {
-            tip = List.of(Component.literal("§6§l스탯 창"), Component.literal("§7스탯 찍기 · 스탯 트리 · 장터 · 창고 · 탈것 · 장식 · 뽑기"),
+            tip = List.of(Component.literal("§6§l스탯 창 §7[" + key + "]"), Component.literal("§7스탯 찍기 · 스탯 트리 · 장터 · 창고 · 탈것 · 장식 · 뽑기"),
                     Component.literal(pts > 0 ? "§e남은 포인트 " + pts : "§8남은 포인트 없음"));
+        } else if (overArt) {
+            tip = new ArrayList<>();
+            String akey = MmorpgClient.artifactKey == null ? "I" : MmorpgClient.artifactKey.getTranslatedKeyMessage().getString();
+            tip.add(Component.literal("§d§l아티팩트 창 §7[" + akey + "]"));
+            tip.add(Component.literal("§7반지 둘 · 목걸이 · 귀걸이 · 팔찌 (낀 칸 " + mmorpg.fabric.client.ClientArtifacts.worn() + "/5)"));
+            for (int i = 0; i < 5; i++) {
+                mmorpg.core.Artifacts.Art a = mmorpg.fabric.client.ClientArtifacts.art(i);
+                if (a != null) tip.add(Component.literal(BedrockText.toJava("§7" + mmorpg.core.Artifacts.slotName(i) + ": " + a.coloredName())));
+            }
+            String all = mmorpg.core.StatTree.bonusText(mmorpg.fabric.client.ClientArtifacts.totals());
+            if (!all.isEmpty()) tip.add(Component.literal("§a" + all));
+            tip.add(Component.literal("§8대장장이에게서 제작 · 들고 우클릭해도 낌"));
         } else if (my >= y + 98 && my < y + 130 && mx >= x && mx < x + W) {
             tip = new ArrayList<>();
             tip.add(Component.literal("§6기준 무기 " + (w == null ? "§7없음" : "§f" + BedrockText.toJava(w.name()))));
