@@ -65,7 +65,9 @@ public final class RpgArtifactTests {
             ItemStack st = new ItemStack(it);
             h.assertTrue(st.getMaxStackSize() == 1, "stack 1 " + a.id());
             String shown = net.minecraft.ChatFormatting.stripFormatting(st.getHoverName().getString());
-            h.assertTrue(a.name().equals(shown) && st.getHoverName().getString().startsWith(a.gradeColor().substring(0, 2)), "name " + st.getHoverName().getString());
+            // 등급 색은 베드록 코드 (고귀 §u · 영웅 §v) → 자바 이름에는 바꾼 코드 (§d · §6)
+            String color = mmorpg.fabric.BedrockText.toJava(a.gradeColor()).substring(0, 2);
+            h.assertTrue(a.name().equals(shown) && st.getHoverName().getString().startsWith(color), "name " + st.getHoverName().getString() + " (색 " + color + ")");
             h.assertTrue(st.hasFoil() == a.grade().equals("transcend"), "glint " + a.id());
         }
         h.assertTrue(ArtifactItem.of(new ItemStack(Icon.itemById("rpg:loot_troll"))) == null, "not an artifact");
