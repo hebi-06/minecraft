@@ -253,9 +253,7 @@ public final class MotionRender {
         if (p == null) return false;
         float w = p.w;
         ps.translate(p.fpX * w, p.fpY * w, p.fpZ * w);
-        if (p.fpRY != 0) ps.rotate(Axis.YP.rotation(p.fpRY * w));
-        if (p.fpRX != 0) ps.rotate(Axis.XP.rotation(p.fpRX * w));
-        if (p.fpRZ != 0) ps.rotate(Axis.ZP.rotation(p.fpRZ * w));
+        ps.rotate(new Quaternionf().slerp(p.fpQ, w));
         return true;
     }
 }

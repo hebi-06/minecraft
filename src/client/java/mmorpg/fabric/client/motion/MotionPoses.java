@@ -67,16 +67,14 @@ public final class MotionPoses {
         float flip;
     }
 
-    /** 1인칭 열쇠 */
+    /** 1인칭 열쇠: 손에 든 아이템 자리 (오른쪽 · 위 · 뒤 칸) · 회전 (q — 바닐라 1인칭 자세에서) */
     static final class FpKey {
         float t;
         String ease = "inout";
         float x;
         float y;
         float z;
-        float rx;
-        float ry;
-        float rz;
+        final Quaternionf q = new Quaternionf();
     }
 
     /** 동작 하나 */
@@ -234,14 +232,37 @@ public final class MotionPoses {
         k.t = o.get("t").getAsFloat();
         if (o.has("ease")) k.ease = o.get("ease").getAsString();
         float[] p = floats(o, "p", new float[3]);
-        float[] r = floats(o, "r", new float[3]);
         k.x = p[0];
         k.y = p[1];
         k.z = p[2];
-        k.rx = rad(r[0]);
-        k.ry = rad(r[1]);
-        k.rz = rad(r[2]);
+        if (o.has("blade")) fpRotation(floats(o, "blade", new float[] {0, 1, 0}), o.has("edge") ? floats(o, "edge", new float[3]) : null, k.q);
+        else if (o.has("r")) {
+            float[] r = floats(o, "r", new float[3]);
+            k.q.rotationY(rad(r[1])).rotateX(rad(r[0])).rotateZ(rad(r[2]));
+        }
         return k;
+    }
+
+    /**
+     * 1인칭 회전: 바닐라 1인칭 자세의 무기 (끝이 위 · 날이 앞) 를 끝 blade · 날 edge 쪽으로 (화면 기준 [r 오른쪽, u 위, f 앞] — edge 가 없으면 앞에 가까운 쪽).
+     * tools/motion_preview.py fp_rotation 과 같음
+     */
+    static Quaternionf fpRotation(float[] blade, float[] edge, Quaternionf out) {
+        Vector3f b = new Vector3f(blade[0], blade[1], -blade[2]);
+        if (b.lengthSquared() < 1e-8F) return out.identity();
+        b.normalize();
+        Vector3f e = edge == null ? new Vector3f(0, 0, -1) : new Vector3f(edge[0], edge[1], -edge[2]);
+        e.fma(-e.dot(b), b);
+        if (e.length() < 1e-3F) {
+            e.set(0, 1, 0).fma(-b.y, b);
+            if (e.length() < 1e-3F) e.set(1, 0, 0).fma(-b.x, b);
+        }
+        e.normalize();
+        Vector3f b0 = new Vector3f(0, 1, 0);
+        Vector3f e0 = new Vector3f(0, 0, -1);
+        Matrix3f target = new Matrix3f(b, e, new Vector3f(b).cross(e));
+        Matrix3f rest = new Matrix3f(b0, e0, new Vector3f(b0).cross(e0));
+        return out.setFromNormalized(target.mul(rest.transpose()));
     }
 
     /** 손목을 꺾지 않았을 때 팔뚝과 무기 사이 각 (130°) */
@@ -518,7 +539,8 @@ public final class MotionPoses {
         if (m.fadeOut > 0 && t > 1 - m.fadeOut) w = Math.min(w, ease((1 - t) / m.fadeOut, "inout"));
         out.w = w;
         // 1인칭
-        out.fpX = out.fpY = out.fpZ = out.fpRX = out.fpRY = out.fpRZ = 0;
+        out.fpX = out.fpY = out.fpZ = 0;
+        out.fpQ.identity();
         if (!m.fp.isEmpty()) {
             List<FpKey> fk = m.fp;
             FpKey a = fk.get(0);
@@ -535,9 +557,7 @@ public final class MotionPoses {
             out.fpX = lerp(a.x, b.x, v);
             out.fpY = lerp(a.y, b.y, v);
             out.fpZ = lerp(a.z, b.z, v);
-            out.fpRX = lerp(a.rx, b.rx, v);
-            out.fpRY = lerp(a.ry, b.ry, v);
-            out.fpRZ = lerp(a.rz, b.rz, v);
+            a.q.slerp(b.q, v, out.fpQ);
         }
         if (mirror) out.mirror();
         return out;

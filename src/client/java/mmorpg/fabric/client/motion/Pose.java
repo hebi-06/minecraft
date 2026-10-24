@@ -56,13 +56,11 @@ public final class Pose {
     public float flip;
     /** 든 무기를 숨김 (던지기 · 구르기) */
     public boolean hide;
-    /** 1인칭 무기: 오른쪽 · 위 · 뒤 (칸) · x · y · z (라디안) */
+    /** 1인칭 무기: 오른쪽 · 위 · 뒤 (칸) · 회전 (바닐라 1인칭 자세에서) */
     public float fpX;
     public float fpY;
     public float fpZ;
-    public float fpRX;
-    public float fpRY;
-    public float fpRZ;
+    public final Quaternionf fpQ = new Quaternionf();
     /** 구르기 쪽 (도 — 마인크래프트 yaw) */
     public float yaw;
 
@@ -105,8 +103,7 @@ public final class Pose {
         headY = -headY;
         spin = -spin;
         fpX = -fpX;
-        fpRY = -fpRY;
-        fpRZ = -fpRZ;
+        fpQ.set(fpQ.x, -fpQ.y, -fpQ.z, fpQ.w);
         int p = parts;
         parts = p & ~(RA | LA);
         if ((p & RA) != 0) parts |= LA;

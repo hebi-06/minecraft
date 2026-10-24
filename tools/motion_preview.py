@@ -11,6 +11,7 @@
 
 쓰기:  python3 tools/motion_preview.py [동작 ...] [--out 폴더] [--t 0,0.25,0.5,0.75,1]
        python3 tools/motion_preview.py --check   (열쇠마다 무기 끝이 blade 와 같은지 · 손목 · 비틀기 크기)
+       python3 tools/motion_preview.py --fp [동작 ...]   (1인칭 화면의 무기 — <동작>_fp.png)
 """
 import json
 import math
@@ -468,6 +469,91 @@ def sheet(name, m, ts, views=("front", "right", "34", "top")):
     return img
 
 
+# ------------------------------------------------------------ 1인칭 (fp)
+
+FP_BASE = np.array([0.56, -0.52, -0.72])  # 바닐라 1인칭 손 (든 아이템) 자리 — 화면 공간: +x 오른쪽 · +y 위 · -z 앞 (칸)
+FP_LEN = 0.8  # 그림의 무기 길이 (칸 — 대략)
+
+
+def fp_rotation(blade, edge=None):
+    """1인칭 회전 (사원수 w, x, y, z): 바닐라 1인칭 무기 (끝 위 · 날 앞) 를 끝 blade · 날 edge 쪽으로 ([r, u, f] — 자바 MotionPoses.fpRotation 과 같음)"""
+    b = unit([blade[0], blade[1], -blade[2]])
+    e = np.array([0.0, 0.0, -1.0]) if edge is None else np.array([edge[0], edge[1], -edge[2]], dtype=float)
+    e = e - np.dot(e, b) * b
+    if np.linalg.norm(e) < 1e-3:
+        e = np.array([0.0, 1.0, 0.0]) - b[1] * b
+        if np.linalg.norm(e) < 1e-3:
+            e = np.array([1.0, 0.0, 0.0]) - b[0] * b
+    e = unit(e)
+    b0, e0 = np.array([0.0, 1.0, 0.0]), np.array([0.0, 0.0, -1.0])
+    R = np.column_stack([b, e, np.cross(b, e)]) @ np.column_stack([b0, e0, np.cross(b0, e0)]).T
+    return quat_of(R)
+
+
+def fp_key_rotation(k):
+    if "blade" in k:
+        return fp_rotation(k["blade"], k.get("edge"))
+    if "r" in k:
+        x, y, z = [math.radians(v) for v in k["r"]]
+        return quat_of(ry(y) @ rx(x) @ rz(z))
+    return np.array([1.0, 0.0, 0.0, 0.0])
+
+
+def fp_evaluate(m, t):
+    """1인칭 자리 (p) · 회전 행렬 (무게 w 까지 — 자바 MotionRender.firstPerson 과 같음)"""
+    keys = m.get("fp") or [{"t": 0.0}, {"t": 1.0}]
+    t = max(0.0, min(1.0, t))
+    a, b = keys[0], keys[-1]
+    for i in range(len(keys) - 1):
+        if keys[i]["t"] <= t <= keys[i + 1]["t"]:
+            a, b = keys[i], keys[i + 1]
+            break
+    sp = b["t"] - a["t"]
+    v = ease(0.0 if sp <= 0 else (t - a["t"]) / sp, b.get("ease", "inout"))
+    pa, pb = np.array(a.get("p", [0, 0, 0]), dtype=float), np.array(b.get("p", [0, 0, 0]), dtype=float)
+    q = slerp(fp_key_rotation(a), fp_key_rotation(b), v)
+    w = evaluate(m, t)["w"]
+    q = slerp(np.array([1.0, 0.0, 0.0, 0.0]), q, w)
+    return (pa + (pb - pa) * v) * w, mat_of(q)
+
+
+def fp_project(P, W, H, fov=70.0):
+    z = -P[2]
+    if z < 0.05:
+        return None
+    tv = math.tan(math.radians(fov / 2))
+    return (W / 2 + P[0] / z / (tv * W / H) * W / 2, H / 2 - P[1] / z / tv * H / 2)
+
+
+def fp_sheet(name, m, ts, W=320, H=180):
+    """1인칭 화면 (시야 70 · 16:9) 의 무기 막대: 금빛 점 = 손 (든 자리), 흰 줄 = 무기 (끝 쪽), 빨간 줄 = 날이 볼 쪽"""
+    img = Image.new("RGB", (W * len(ts), H + 16), (20, 20, 26))
+    dd = ImageDraw.Draw(img)
+    dd.text((4, H + 2), "%s  first person (%d ticks)" % (name, m.get("ticks", 0)), fill=(230, 230, 230))
+    for i, t in enumerate(ts):
+        panel = Image.new("RGB", (W, H), (44, 62, 44))
+        d = ImageDraw.Draw(panel)
+        d.line([(W / 2 - 4, H / 2), (W / 2 + 4, H / 2)], fill=(255, 255, 255))
+        d.line([(W / 2, H / 2 - 4), (W / 2, H / 2 + 4)], fill=(255, 255, 255))
+        p, R = fp_evaluate(m, t)
+        G = FP_BASE + p
+        up = R @ np.array([0.0, 1.0, 0.0])
+        pts = [q for q in (fp_project(G + up * FP_LEN * j / 24, W, H) for j in range(25)) if q]
+        if len(pts) > 1:
+            d.line(pts, fill=(230, 230, 250), width=5)
+        mid = G + up * FP_LEN * 0.5
+        e = [q for q in (fp_project(mid + R @ np.array([0.0, 0.0, -1.0]) * 0.15 * j / 4, W, H) for j in range(5)) if q]
+        if len(e) > 1:
+            d.line(e, fill=(255, 80, 80), width=2)
+        g = fp_project(G, W, H)
+        if g:
+            d.ellipse([g[0] - 5, g[1] - 5, g[0] + 5, g[1] + 5], fill=(200, 160, 60))
+        d.rectangle([0, 0, W - 1, H - 1], outline=(90, 90, 90))
+        d.text((4, 3), "t=%.2f" % t, fill=(255, 220, 120))
+        img.paste(panel, (i * W, 0))
+    return img
+
+
 def main(argv):
     out = os.path.join(ROOT, "build/motion_preview")
     ts = [0.0, 0.2, 0.3, 0.42, 0.55, 0.7, 0.85, 1.0]
@@ -487,6 +573,8 @@ def main(argv):
             continue
         names.append(a)
         i += 1
+    fp = "--fp" in names
+    names = [n for n in names if n != "--fp"]
     with open(POSES, encoding="utf8") as f:
         data = json.load(f)
     motions = data["motions"]
@@ -494,8 +582,8 @@ def main(argv):
     for name in names or list(motions):
         if name.startswith("_"):
             continue
-        img = sheet(name, motions[name], ts)
-        p = os.path.join(out, name + ".png")
+        img = fp_sheet(name, motions[name], ts) if fp else sheet(name, motions[name], ts)
+        p = os.path.join(out, name + ("_fp" if fp else "") + ".png")
         img.save(p)
         print(p)
 
