@@ -282,7 +282,7 @@ public final class MotionRender {
     /**
      * 1인칭 무기 (주 손 — 손에 든 아이템 자리 뒤, 휘두르기 대신): 동작 중이면 true.
      * 바닐라가 손 자리 (0.56, -0.52, -0.72) 밖으로 옮긴 몫 (휘두를 때 흔들림 · 공격 대기 · 바꿔 들 때 내려간 손) 을 무게만큼 되돌리고,
-     * 손잡이를 fp 자리만큼 옮기고, 손잡이를 축으로 fp 회전 (방패는 옮기기만 — 겉면이 앞을 봄)
+     * 손잡이를 fp 자리만큼 옮기고, 손잡이를 축으로 fp 회전 (방패는 옮기기만 — 겉면이 앞을 봄, 활은 비틀기 없이 끝 방향만)
      */
     public static boolean firstPerson(PoseStack ps, HumanoidArm arm) {
         Minecraft mc = Minecraft.getInstance();
@@ -300,9 +300,17 @@ public final class MotionRender {
         String type = mc.player.getMainHandItem().getItem() instanceof RpgWeaponItem item && item.weapon() != null ? item.weapon().type() : "";
         if (!type.equals("shield")) {
             Vector3f g = grip(type);
-            float gx = arm == HumanoidArm.RIGHT ? g.x : -g.x;
+            boolean right = arm == HumanoidArm.RIGHT;
+            float gx = right ? g.x : -g.x;
+            Quaternionf q = p.fpQ;
+            if (type.equals("bow")) {
+                // 활은 1인칭 자세가 세운 무기와 달라 (날이 없고 활대가 앞으로 기욺) 비틀기 없이 끝 방향만 돌림 (가장 작은 회전 — 위로 쏘기는 뒤로 젖힘)
+                Vector3f b0 = new Vector3f(right ? MotionPoses.FP_REST_BLADE.x : -MotionPoses.FP_REST_BLADE.x, MotionPoses.FP_REST_BLADE.y,
+                        MotionPoses.FP_REST_BLADE.z).normalize();
+                q = new Quaternionf().rotationTo(b0, p.fpQ.transform(new Vector3f(b0)));
+            }
             ps.translate(gx, g.y, g.z);
-            ps.rotate(new Quaternionf().slerp(p.fpQ, w));
+            ps.rotate(new Quaternionf().slerp(q, w));
             ps.translate(-gx, -g.y, -g.z);
         }
         return true;
