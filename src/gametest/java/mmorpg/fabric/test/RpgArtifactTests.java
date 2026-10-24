@@ -64,7 +64,8 @@ public final class RpgArtifactTests {
             h.assertTrue(it instanceof ArtifactItem ai && ai.art() == a, "registered " + a.id());
             ItemStack st = new ItemStack(it);
             h.assertTrue(st.getMaxStackSize() == 1, "stack 1 " + a.id());
-            h.assertTrue(st.getHoverName().getString().equals(a.name()), "name " + st.getHoverName().getString());
+            String shown = net.minecraft.ChatFormatting.stripFormatting(st.getHoverName().getString());
+            h.assertTrue(a.name().equals(shown) && st.getHoverName().getString().startsWith(a.gradeColor().substring(0, 2)), "name " + st.getHoverName().getString());
             h.assertTrue(st.hasFoil() == a.grade().equals("transcend"), "glint " + a.id());
         }
         h.assertTrue(ArtifactItem.of(new ItemStack(Icon.itemById("rpg:loot_troll"))) == null, "not an artifact");

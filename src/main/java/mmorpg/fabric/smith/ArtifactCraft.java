@@ -169,7 +169,8 @@ public final class ArtifactCraft {
             head.addAll(typeTable(t));
             int slots = Artifacts.slotsFor(t.key()).size();
             head.add("§r§7아티팩트 창 칸 §f" + slots + "개");
-            form.set(row + TYPE_COL, Slot.of(Icon.item(item(Artifacts.art(t.key(), "common"))), "§d§l" + t.name()).lore(head).deco());
+            // 줄 첫 칸 = 종류 풀이 (책 — 바로 옆 일반 칸과 같은 그림이면 헷갈림)
+            form.set(row + TYPE_COL, Slot.of(Icon.item(net.minecraft.world.item.Items.BOOK), "§d§l" + t.name() + " §7풀이").lore(head).deco());
             for (Grade g : R.grades()) {
                 Artifacts.Art a = Artifacts.art(t.key(), g.id());
                 Artifacts.Cost c = Artifacts.cost(g.id());

@@ -208,12 +208,11 @@ public final class CharacterPanel extends AbstractWidget {
         int pts = s.point();
         String key = MmorpgClient.statsKey == null ? "K" : MmorpgClient.statsKey.getTranslatedKeyMessage().getString();
         String label = "스탯" + (pts > 0 ? ((System.currentTimeMillis() / 500) % 2 == 0 ? " §e+" : " §6+") + pts : " §7[" + key + "]");
-        g.text(font, label, x + 8 + BTN_W / 2 - font.width(label) / 2, y + BTN_Y + 4, RpgUi.GOLD_TEXT, true);
+        fitCentered(g, font, label, x + 8 + BTN_W / 2, y + BTN_Y + 4, BTN_W - 4, RpgUi.GOLD_TEXT);
         boolean overArt = inArtifactButton(mx, my);
         int ax = x + 8 + BTN_W + BTN_GAP;
         RpgUi.button(g, ax, y + BTN_Y, BTN_W, BTN_H, overArt, false);
-        String art = "§d아티팩트";
-        g.text(font, art, ax + BTN_W / 2 - font.width(art) / 2, y + BTN_Y + 4, 0xFFFFFFFF, true);
+        fitCentered(g, font, "§d아티팩트", ax + BTN_W / 2, y + BTN_Y + 4, BTN_W - 4, 0xFFFFFFFF);
 
         // 풀이
         List<Component> tip = null;
@@ -252,6 +251,20 @@ public final class CharacterPanel extends AbstractWidget {
                     Component.literal("§8골드 = 장터 · 장식 · 창고, 실버 = 상점 · NPC"));
         }
         if (tip != null) g.setComponentTooltipForNextFrame(font, tip, mx, my);
+    }
+
+    /** 단추 글자를 가운데 cx 에 (넓으면 가로로 줄여 maxW 안에 — 남은 포인트가 세 자리여도 단추 밖으로 넘치지 않게) */
+    private static void fitCentered(GuiGraphicsExtractor g, Font font, String s, int cx, int y, int maxW, int color) {
+        int w = font.width(s);
+        if (w <= maxW) {
+            g.text(font, s, cx - w / 2, y, color, true);
+            return;
+        }
+        g.pose().pushMatrix();
+        g.pose().translate(cx - maxW / 2F, y);
+        g.pose().scale(maxW / (float) w, 1F);
+        g.text(font, s, 0, 0, color, true);
+        g.pose().popMatrix();
     }
 
     private static void row(GuiGraphicsExtractor g, Font font, String label, String value, int x, int y, int valueColor) {
