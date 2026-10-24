@@ -46,9 +46,13 @@ public final class MotionPoses {
         float laWrist;
         float raTwist;
         float laTwist;
-        /** 시험: 쓴 무기 끝 방향 (모델 — 손목을 손으로 더하지 않은 팔만, 아니면 null) */
+        float raDev;
+        float laDev;
+        /** 시험: 쓴 무기 끝 방향 · 겉면 (모델 — 손목을 손으로 더하지 않은 팔만, 아니면 null) */
         Vector3f raWant;
         Vector3f laWant;
+        Vector3f raFace;
+        Vector3f laFace;
         float rlX;
         float rlY;
         float rlZ;
@@ -197,12 +201,16 @@ public final class MotionPoses {
         k.raBend = r[0];
         k.raTwist = r[1];
         k.raWrist = r[2];
-        k.raWant = want(o, "ra");
+        k.raDev = r[3];
+        k.raWant = want(o, "ra", "blade");
+        k.raFace = want(o, "ra", "face");
         float[] l = arm(o, "la", k.la);
         k.laBend = l[0];
         k.laTwist = l[1];
         k.laWrist = l[2];
-        k.laWant = want(o, "la");
+        k.laDev = l[3];
+        k.laWant = want(o, "la", "blade");
+        k.laFace = want(o, "la", "face");
         float[] rl = floats(o, "rl", new float[3]);
         k.rlX = rad(rl[0]);
         k.rlY = rad(rl[1]);
@@ -243,42 +251,56 @@ public final class MotionPoses {
     /** 손목 · 팔뚝 비틀기 · 위팔 비틀기 (60° 넘는 몫) 의 무게 (tools/motion_preview.py COST 와 같음) */
     static final double[] COST = {1.0, 0.6, 0.5};
 
-    /** 팔 열쇠 {dir, blade, bend, wrist} → 위팔 회전 (q 에 넣음) · {팔꿈치 (로컬 x — 앞으로 굽힘은 음수), 팔뚝 비틀기 (로컬 y), 손목 (로컬 x)} 라디안. 없으면 내린 팔 */
+    /** 팔 열쇠 {dir, blade, face, bend, wrist} → 위팔 회전 (q 에 넣음) · {팔꿈치 (로컬 x — 앞으로 굽힘은 음수), 팔뚝 비틀기 (로컬 y), 손목 (로컬 x),
+     *  손목 옆 꺾기 (로컬 z)} 라디안. 없으면 내린 팔 */
     private static float[] arm(JsonObject o, String name, Quaternionf q) {
         float[] dir = {0, -1, 0};
         float[] blade = {0, 0, 1};
+        float[] face = null;
         float bend = 0;
         float wrist = 0;
         if (o.has(name)) {
             JsonObject a = o.getAsJsonObject(name);
             dir = floats(a, "dir", dir);
             blade = floats(a, "blade", blade);
+            if (a.has("face")) face = floats(a, "face", new float[3]);
             bend = a.has("bend") ? a.get("bend").getAsFloat() : 0;
             wrist = a.has("wrist") ? a.get("wrist").getAsFloat() : 0;
         }
-        return armSolve(dir, blade, bend, wrist, q);
+        return armSolve(dir, blade, face, bend, wrist, q);
     }
 
-    /** 시험: 이 팔 열쇠의 무기 끝 방향 (모델 · 단위) — 팔이 없거나 손목을 손으로 더했으면 null */
-    private static Vector3f want(JsonObject o, String name) {
+    /** 시험: 이 팔 열쇠의 무기 끝 (blade) · 겉면 (face) 방향 (모델 · 단위) — 없거나 손목을 손으로 더했으면 null */
+    private static Vector3f want(JsonObject o, String name, String key) {
         if (!o.has(name)) return null;
         JsonObject a = o.getAsJsonObject(name);
         if (a.has("wrist") && a.get("wrist").getAsFloat() != 0) return null;
-        float[] blade = floats(a, "blade", new float[] {0, 0, 1});
-        Vector3f v = new Vector3f(-blade[0], -blade[1], -blade[2]);
+        if (!a.has(key) && !key.equals("blade")) return null;
+        float[] v3 = floats(a, key, new float[] {0, 0, 1});
+        Vector3f v = new Vector3f(-v3[0], -v3[1], -v3[2]);
         return v.lengthSquared() < 1e-8F ? null : v.normalize();
     }
 
-    /** 시험 (사진첩): 모든 열쇠에서 풀린 팔의 무기 끝과 쓴 방향의 가장 큰 차이 (도) */
+    /** 시험 (사진첩): 모든 열쇠에서 풀린 팔의 무기 끝 · 겉면과 쓴 방향의 가장 큰 차이 (도) */
     public static double worstBladeError() {
         double worst = 0;
         for (Motion m : all().values()) {
             for (Key k : m.keys) {
-                if (k.raWant != null) worst = Math.max(worst, angle(bladeOf(k.ra, k.raBend, k.raTwist, k.raWrist), k.raWant));
-                if (k.laWant != null) worst = Math.max(worst, angle(bladeOf(k.la, k.laBend, k.laTwist, k.laWrist), k.laWant));
+                worst = Math.max(worst, error(k.ra, k.raBend, k.raTwist, k.raWrist, k.raDev, k.raWant, k.raFace));
+                worst = Math.max(worst, error(k.la, k.laBend, k.laTwist, k.laWrist, k.laDev, k.laWant, k.laFace));
             }
         }
         return worst;
+    }
+
+    private static double error(Quaternionf q, float bend, float twist, float wrist, float dev, Vector3f want, Vector3f face) {
+        if (want == null) return 0;
+        double e = angle(handOf(q, bend, twist, wrist, dev, new Vector3f(0, (float) -Math.sin(BLADE_TILT), (float) -Math.cos(BLADE_TILT))), want);
+        if (face != null) {
+            Vector3f f = new Vector3f(face).fma(-face.dot(want), want);
+            if (f.length() > 1e-4F) e = Math.max(e, angle(handOf(q, bend, twist, wrist, dev, new Vector3f(FACE_REST)), f.normalize()));
+        }
+        return e;
     }
 
     private static double angle(Vector3f a, Vector3f b) {
@@ -307,12 +329,18 @@ public final class MotionPoses {
         return new Vector3f(0, 0, -1).rotateAxis(ang, ax.x, ax.y, ax.z);
     }
 
+    /** 팔을 내렸을 때 든 무기의 바깥 면 (오른팔 로컬 -x — 몸 바깥쪽) */
+    static final Vector3f FACE_REST = new Vector3f(-1, 0, 0);
+    /** 손목 옆 꺾기 (face 를 맞출 때만) 의 무게 */
+    static final double COST_DEV = 2.0;
+
     /**
      * 방향 (r 오른쪽, u 위, f 앞 — 뿌리 기준) 으로 적은 팔을 풂: 위팔 (로컬 +y) 이 dir, 팔꿈치는 bend 도만큼 굽고, 굽는 쪽 (위팔 둘레) · 팔뚝 비틀기 · 손목은
      * 무기 끝 (팔을 내린 채 앞에서 BLADE_TILT 만큼 위) 이 blade 를 똑바로 보게 정함 — 손목 · 비틀기가 작고 위팔이 덜 비틀린 쪽 (COST).
-     * wrist (도) 는 풀린 손목에 더함. 모델 좌표 = (-r, -u, -f). 돌려줌: {팔꿈치, 팔뚝 비틀기, 손목} (라디안 — 팔꿈치는 앞으로 굽힘이 음수)
+     * face (방패 겉면이 볼 쪽 — null 이면 없음) 가 있으면 무기 겉면 (FACE_REST) 도 맞춤 (손목 옆 꺾기를 더 씀). wrist (도) 는 풀린 손목에 더함.
+     * 모델 좌표 = (-r, -u, -f). 돌려줌: {팔꿈치, 팔뚝 비틀기, 손목, 손목 옆 꺾기} (라디안 — 팔꿈치는 앞으로 굽힘이 음수). tools/motion_preview.py arm_solve 와 같음
      */
-    static float[] armSolve(float[] dir, float[] blade, float bendDeg, float wristDeg, Quaternionf out) {
+    static float[] armSolve(float[] dir, float[] blade, float[] face, float bendDeg, float wristDeg, Quaternionf out) {
         Vector3f y = new Vector3f(-dir[0], -dir[1], -dir[2]);
         if (y.lengthSquared() < 1e-8F) y.set(0, 1, 0);
         y.normalize();
@@ -322,6 +350,19 @@ public final class MotionPoses {
         double bend = Math.toRadians(bendDeg);
         double cb = Math.cos(bend);
         double sb = Math.sin(bend);
+        // 겉면까지 맞출 때: 손 회전 H = [b, f, b×f] · [내린 팔의 무기 끝, 겉면, 끝×겉면]ᵀ
+        Matrix3f h = null;
+        if (face != null) {
+            Vector3f f = new Vector3f(-face[0], -face[1], -face[2]);
+            f.fma(-f.dot(b), b);
+            if (f.length() > 1e-4F) {
+                f.normalize();
+                Vector3f bl0 = new Vector3f(0, (float) -Math.sin(BLADE_TILT), (float) -Math.cos(BLADE_TILT));
+                Matrix3f target = new Matrix3f(b, f, new Vector3f(b).cross(f));
+                Matrix3f rest = new Matrix3f(bl0, FACE_REST, new Vector3f(bl0).cross(FACE_REST));
+                h = target.mul(rest.transpose());
+            }
+        }
         float c = (float) clamp1(b.dot(y));
         Vector3f d = new Vector3f(b).fma(-c, y);
         if (d.length() < 1e-4F) {
@@ -336,49 +377,70 @@ public final class MotionPoses {
         Vector3f bz = new Vector3f();
         double bestTau = 0;
         double bestPhi = 0;
+        double bestChi = 0;
         Vector3f n = new Vector3f();
         Vector3f z = new Vector3f();
         Vector3f x = new Vector3f();
+        Vector3f f1 = new Vector3f();
+        Vector3f f2 = new Vector3f();
+        Matrix3f fm = new Matrix3f();
+        Matrix3f k = new Matrix3f();
+        double[][] cands = new double[2][3];
         for (int i = 0; i < SEARCH; i++) {
             double psi = 2 * Math.PI * i / SEARCH;
             n.set(d).mul((float) Math.cos(psi)).fma((float) Math.sin(psi), e);
             z.set(n).negate();
             y.cross(z, x);
             // 팔뚝 틀 = 위팔 틀 · Rx(-bend): 열 x, cb·y − sb·z, sb·y + cb·z
-            double fx = x.dot(b);
-            double fy = cb * y.dot(b) - sb * z.dot(b);
-            double fz = sb * y.dot(b) + cb * z.dot(b);
+            f1.set(y).mul((float) cb).fma((float) -sb, z);
+            f2.set(y).mul((float) sb).fma((float) cb, z);
             double roll = Math.acos(clamp1(n.dot(n0)));
-            for (int br = 0; br < 2; br++) {
-                double a;
-                double tau;
-                if (br == 0) {
-                    a = Math.asin(clamp1(fy));
-                    tau = Math.atan2(-fx, -fz);
-                } else {
-                    a = Math.PI - Math.asin(clamp1(fy));
-                    tau = Math.atan2(fx, fz);
-                }
-                double phi = wrap(a + BLADE_TILT);
-                double over = Math.max(0, roll - Math.toRadians(60));
-                double cost = COST[0] * phi * phi + COST[1] * tau * tau + COST[2] * over * over;
+            double over = Math.max(0, roll - Math.toRadians(60));
+            if (h == null) {
+                double fx = x.dot(b);
+                double fy = f1.dot(b);
+                double fz = f2.dot(b);
+                double a = Math.asin(clamp1(fy));
+                cands[0][0] = wrap(Math.atan2(-fx, -fz));
+                cands[0][1] = wrap(a + BLADE_TILT);
+                cands[0][2] = 0;
+                a = Math.PI - Math.asin(clamp1(fy));
+                cands[1][0] = wrap(Math.atan2(fx, fz));
+                cands[1][1] = wrap(a + BLADE_TILT);
+                cands[1][2] = 0;
+            } else {
+                // K = Fᵀ · H = Ry(τ) · Rx(φ) · Rz(χ)
+                fm.set(x, f1, f2);
+                fm.transpose(k).mul(h);
+                double phi = Math.asin(clamp1(-k.m21));
+                double tau = Math.atan2(k.m20, k.m22);
+                double chi = Math.atan2(k.m01, k.m11);
+                cands[0][0] = tau;
+                cands[0][1] = phi;
+                cands[0][2] = chi;
+                cands[1][0] = wrap(tau + Math.PI);
+                cands[1][1] = wrap(Math.PI - phi);
+                cands[1][2] = wrap(chi + Math.PI);
+            }
+            for (double[] cd : cands) {
+                double cost = COST[0] * cd[1] * cd[1] + COST[1] * cd[0] * cd[0] + COST_DEV * cd[2] * cd[2] + COST[2] * over * over;
                 if (cost < best - 1e-9) {
                     best = cost;
                     bx.set(x);
                     bz.set(z);
-                    bestTau = tau;
-                    bestPhi = phi;
+                    bestTau = cd[0];
+                    bestPhi = cd[1];
+                    bestChi = cd[2];
                 }
             }
         }
         out.setFromNormalized(new Matrix3f(bx, y, bz));
-        return new float[] {(float) -bend, (float) bestTau, (float) wrap(bestPhi + Math.toRadians(wristDeg))};
+        return new float[] {(float) -bend, (float) bestTau, (float) wrap(bestPhi + Math.toRadians(wristDeg)), (float) bestChi};
     }
 
-    /** 풀린 팔의 무기 끝 방향 (모델 — 시험) */
-    static Vector3f bladeOf(Quaternionf q, float bend, float twist, float wrist) {
-        Vector3f v = new Vector3f(0, (float) -Math.sin(BLADE_TILT), (float) -Math.cos(BLADE_TILT));
-        v.rotateX(wrist).rotateY(twist).rotateX(bend);
+    /** 풀린 팔의 손 회전으로 돌린 방향 (모델 — 시험): 위팔 · Rx(팔꿈치) · Ry(비틀기) · Rx(손목) · Rz(옆 꺾기) · v */
+    static Vector3f handOf(Quaternionf q, float bend, float twist, float wrist, float dev, Vector3f v) {
+        v.rotateZ(dev).rotateX(wrist).rotateY(twist).rotateX(bend);
         return q.transform(v);
     }
 
@@ -436,6 +498,8 @@ public final class MotionPoses {
         out.laWrist = lerpAngle(k0.laWrist, k1.laWrist, u);
         out.raTwist = lerpAngle(k0.raTwist, k1.raTwist, u);
         out.laTwist = lerpAngle(k0.laTwist, k1.laTwist, u);
+        out.raDev = lerpAngle(k0.raDev, k1.raDev, u);
+        out.laDev = lerpAngle(k0.laDev, k1.laDev, u);
         out.rlX = lerp(k0.rlX, k1.rlX, u);
         out.rlY = lerp(k0.rlY, k1.rlY, u);
         out.rlZ = lerp(k0.rlZ, k1.rlZ, u);

@@ -37,6 +37,9 @@ public final class Pose {
     /** 팔뚝 비틀기 (든 무기만 — 팔꿈치 뒤 로컬 y 축 (팔뚝 가운데) 회전, 라디안) */
     public float raTwist;
     public float laTwist;
+    /** 손목 옆 꺾기 (든 무기만 — 손목 뒤 로컬 z 축 회전, 라디안: 방패 겉면을 맞출 때) */
+    public float raDev;
+    public float laDev;
     public float rlX;
     public float rlY;
     public float rlZ;
@@ -82,6 +85,9 @@ public final class Pose {
         float tw = raTwist;
         raTwist = -laTwist;
         laTwist = -tw;
+        float dv = raDev;
+        raDev = -laDev;
+        laDev = -dv;
         float x = rlX;
         float y = rlY;
         float z = rlZ;

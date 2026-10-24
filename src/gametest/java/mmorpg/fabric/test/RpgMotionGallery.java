@@ -69,7 +69,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         {"shoot", "bow", "0.3,0.55,0.62"},
         {"shoot_up", "bow", "0.3,0.55,0.62"},
         {"spin2", "scythe", "0.12,0.4,0.7"},
-        {"roll", "sword", "0.14,0.3,0.5"},
+        {"roll", "sword", "0.22,0.38,0.62"},
     };
     /** 마네킹을 보는 쪽 {이름, yaw} — 3/4 (오른쪽 앞) · 오른쪽 옆 · 앞 */
     private static final String[][] VIEWS = {{"34", "-35"}, {"side", "-90"}, {"front", "0"}};
@@ -141,7 +141,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     private void armor(ClientGameTestContext ctx, TestServerContext server) {
         server.runOnServer(s -> player(s).getInventory().clearContent());
         hideGui(ctx, true);
-        String[][] poses = {{"guard", "0.3"}, {"roll", "0.14"}, {"slash_h", "0.3"}};
+        String[][] poses = {{"guard", "0.3"}, {"roll", "0.12"}, {"slash_h", "0.3"}};
         for (String[] view : VIEWS) {
             List<Integer> row = spawn(server, Float.parseFloat(view[1]), "sword", true);
             ctx.runOnClient(mc -> {

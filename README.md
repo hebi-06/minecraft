@@ -552,7 +552,7 @@ tools/                 rules.json · 비교 케이스 생성 (tools/jsenv/script
                        monster_art_void.py: 0.32.0 공허 몬스터 다섯 (monster_kit 의 빛나는 무늬 · 깎은 수정 면 · 공통 동작 spawn · die)
                        void_knight.py · void_knight_anims.py: 0.33.0 공허 기사 (사용자 모델 · 텍스처 tools/boss_art/void_knight → 엔티티 · 빛나는 칸 · 각성 텍스처 · 사용자 동작 셋 (idle · walk · attack) + 새 동작 32 · 제단 · 재료 그림 — more_monsters.py 가 끝에 부름)
                        artifact_icons.py: 0.37.0 아티팩트 아이콘 20 (32 × 32 임시 그림) · 아이템 정의 · 모델, 아티팩트 창 그림 (빈 칸 모양 · 칸 · 무대)
-                       motion_preview.py: 0.38.0 동작 미리 보기 (poses.json → 앞 · 옆 · 3/4 · 위에서 본 막대 사람 — 게임과 같은 식, build/motion_preview/<동작>.png)
+                       motion_preview.py: 0.38.0 동작 미리 보기 (poses.json → 앞 · 옆 · 3/4 · 위에서 본 상자 사람 + 무기 — 게임과 같은 식, build/motion_preview/<동작>.png · --check 무기 끝 확인)
                        more_monsters.py: tools/monster_art → 엔티티 (행동 · 그리기) · 텍스처 (+ 빛나는 칸) · 소환 알 · 이름 (bedrock_entities.py 가 끝에 부름), loot_icons.py: 새 전리품 8종 · 공허 5종 그림
 ci/                    GitHub Actions 보조 (Fabric 버전 확인 · 화면 시험 묶음 · 로그 올리기)
 ```
@@ -599,10 +599,10 @@ ci/                    GitHub Actions 보조 (Fabric 버전 확인 · 화면 시
 
 - **모양**: `src/main/resources/assets/mmorpg/motion/poses.json` — 동작마다 `ticks` (길이 · 20 = 1초) · `parts` (바닐라 대신 정하는 부위) · 열쇠 자세 `keys` (t 0 ~ 1) · 1인칭 무기 `fp`. 열쇠 값 (맨 위 `_comment` 에도):
   - `body` [앞으로 숙임, 오른쪽으로 비틂, 옆으로 기욺] 도 (엉덩이 축) · `head` [아래로, 옆으로] 도 · `root` [위 칸, 앞 칸] · `spin` 왼쪽으로 돎 도 · `flip` 앞구르기 도
-  - `ra` · `la` 오른팔 · 왼팔: `dir` 어깨 → 팔꿈치 방향 [오른쪽, 위, 앞] · `blade` 무기 끝 방향 · `bend` 팔꿈치 굽힘 도 · `wrist` 손목 도 (무기를 세우거나 눕힘)
+  - `ra` · `la` 오른팔 · 왼팔: `dir` 어깨 → 팔꿈치 방향 [오른쪽, 위, 앞] · `blade` 무기 끝 방향 · `bend` 팔꿈치 굽힘 도 — 팔꿈치가 굽는 쪽 · 팔뚝 비틀기 · 손목은 무기 끝이 `blade` 를 똑바로 보게 저절로 풂 (손목 · 비틀기가 작은 쪽 — `MotionPoses.armSolve`), `wrist` 는 풀린 손목에 더하는 도 (보통은 쓰지 않음)
   - `rl` · `ll` 다리 [x 뒤로 +, y 비틂, z 옆으로] 도 (바닐라 다리 회전) · `rk` · `lk` 무릎 굽힘 도, `ease` 앞 열쇠에서 오는 빠르기 (`inout` · `in` · `out` · `out3` · `linear`)
   - `fp` 열쇠: `p` [오른쪽, 위, 뒤] 칸 · `r` [x, y, z] 도 (바닐라 1인칭 휘두르기 대신), `hide` 무기를 숨기는 t 구간 (던지기), `softLegs` 걸을 때는 다리를 걸음에 맡김 (평타)
-- **미리 보기**: `python3 tools/motion_preview.py [동작 ...]` → `build/motion_preview/<동작>.png` (앞 · 옆 · 3/4 · 위에서 본 막대 사람 — 게임과 같은 식, 무기 끝 · 팔꿈치 · 무릎 표시). 게임 안 모습은 사진첩 `only=motion` (마네킹 셋 = 같은 동작의 세 순간, 3/4 · 옆 — `mo_<동작>_34` · `mo_<동작>_side`)
+- **미리 보기**: `python3 tools/motion_preview.py [동작 ...]` → `build/motion_preview/<동작>.png` (앞 · 옆 · 3/4 · 위에서 본 상자 사람 + 무기 막대 — 게임과 같은 식), `--check` = 열쇠마다 풀린 무기 끝이 `blade` 와 같은지 · 손목 · 비틀기 크기. 게임 안 모습은 사진첩 `only=motion` (마네킹 셋 = 같은 동작의 세 순간, 3/4 · 옆 · 앞 — `mo_<동작>_34` · `_side` · `_front`, 1인칭 세 순간 `mo_fp_<동작>_0 ~ 2`)
 - **차례 · 값**: `core/src/main/resources/mmorpg/rules_more.json` 의 `MOTION` — `combo.<무기 종류>` 평타 동작 차례 · `comboWindow` 다음 단계로 이어지는 틱 (24) · `spin` 회전 베기 둘레 피해 (`ratio` 0.4 · `range` 3칸) · `roll` 구르기 (`ticks` 10 · `distance` 4칸 · `cooldown` 20틱 · `doubleTap` 쉬프트 두 번 간격 6틱) · `skills` 스킬 → 동작 (무기 스킬 id · 직업 스킬 id · `rune:<룬 fn>`)
 - 새 동작을 더하면 `core/src/main/java/mmorpg/core/Motions.java` 의 `KNOWN` 에도 이름을 더함 — `./check-core.sh` 의 `MotionsTest` 가 차례 · 규칙 · 모든 무기 스킬 · 룬 · 직업 스킬에 동작이 있는지 · poses.json 이름과 열쇠 순서를 확인
 - 세로 베기 참격의 기울기: `SLASH.verticalTurn` (`rules.json` 또는 `rules_more.json` 의 `SLASH` — 없으면 -90 = 세로)

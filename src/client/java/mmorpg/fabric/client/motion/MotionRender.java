@@ -193,7 +193,7 @@ public final class MotionRender {
         }
     }
 
-    /** 손 자리 (translateToHand 끝): 팔꿈치를 굽혔으면 팔뚝을 따라 돌리고, 팔뚝 가운데 축으로 비틀고, 손목 (손 끝 가운데) 만큼 무기를 더 꺾음 */
+    /** 손 자리 (translateToHand 끝): 팔꿈치를 굽혔으면 팔뚝을 따라 돌리고, 팔뚝 가운데 축으로 비틀고, 손목 (손 끝 가운데) 에서 무기를 꺾음 (x · 옆 z) */
     public static void hand(HumanoidModel<?> m, HumanoidRenderState state, HumanoidArm arm, PoseStack ps) {
         ModelPart part = arm == HumanoidArm.RIGHT ? m.rightArm : m.leftArm;
         BendablePart b = (BendablePart) (Object) part;
@@ -212,7 +212,8 @@ public final class MotionRender {
         boolean has = p.has(right ? Pose.RA : Pose.LA);
         float tw = has ? (right ? p.raTwist : p.laTwist) * p.w : 0;
         float wr = has ? (right ? p.raWrist : p.laWrist) * p.w : 0;
-        if (tw == 0 && wr == 0) return;
+        float dv = has ? (right ? p.raDev : p.laDev) * p.w : 0;
+        if (tw == 0 && wr == 0 && dv == 0) return;
         float[] c = b.mmorpg$center();
         boolean known = c != null && !Float.isNaN(c[0]);
         float cx = known ? c[0] / 16F : (right ? -1 : 1) / 16F;
@@ -222,10 +223,11 @@ public final class MotionRender {
             ps.rotate(Axis.YP.rotation(tw));
             ps.translate(-cx, 0, -cz);
         }
-        if (wr != 0) {
+        if (wr != 0 || dv != 0) {
             float wy = 9.5F / 16F;
             ps.translate(cx, wy, cz);
-            ps.rotate(Axis.XP.rotation(wr));
+            if (wr != 0) ps.rotate(Axis.XP.rotation(wr));
+            if (dv != 0) ps.rotate(Axis.ZP.rotation(dv));
             ps.translate(-cx, -wy, -cz);
         }
     }
@@ -234,7 +236,16 @@ public final class MotionRender {
 
     private static final Pose FP = new Pose();
 
-    /** 1인칭 무기 (주 손 — 휘두르기 대신): 동작 중이면 true */
+    /** 1인칭: 이 손 (주 손) 에 동작이 있는지 (바닐라 휘두르기를 막을지) */
+    public static boolean firstPersonActive(HumanoidArm arm) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || arm != mc.player.getMainArm()) return false;
+        return ClientMotions.localPose(mc.getDeltaTracker().getGameTimeDeltaPartialTick(false), FP2) != null;
+    }
+
+    private static final Pose FP2 = new Pose();
+
+    /** 1인칭 무기 (주 손 — 손에 든 아이템 자리 뒤, 휘두르기 대신): 동작 중이면 true */
     public static boolean firstPerson(PoseStack ps, HumanoidArm arm) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || arm != mc.player.getMainArm()) return false;
