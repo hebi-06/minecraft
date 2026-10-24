@@ -239,7 +239,7 @@ public final class RpgVoidArmorGallery implements FabricClientGameTest {
             sp.getInventory().setItem(11, new ItemStack(Icon.itemById("rpg:loot_void_stalker"), 33));
             sp.getInventory().setItem(12, new ItemStack(Icon.itemById("rpg:loot_void_jelly"), 18));
             Forms.close(sp);
-            Smith.openCraftPage(sp, Smith.CRAFT_PAGES.size() - 1);
+            Smith.openCraftPage(sp, 3); // 넷째 쪽 = 공허의 갑옷 (0.37.0 다섯째 = 아티팩트)
         });
         if (!waitChest(ctx, "공허")) failures.add("void craft page did not open");
         ctx.takeScreenshot("va_craft_page");

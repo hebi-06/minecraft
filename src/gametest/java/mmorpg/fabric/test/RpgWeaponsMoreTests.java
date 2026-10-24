@@ -225,10 +225,11 @@ public final class RpgWeaponsMoreTests {
         List<Smith.Recipe> noble = Smith.craftPage(Smith.craftRecipes(), 2);
         h.assertTrue(noble.size() == 8, "noble page: 8 weapons, got " + noble.size());
         h.assertTrue(Smith.craftPage(Smith.craftRecipes(), 0).size() == 8 && Smith.craftPage(Smith.craftRecipes(), 1).size() == 9, "hero 8 · transcend 9");
-        // 0.36.0: 넷째 쪽 = 공허의 갑옷 (무기 목록 없이도 건너뛰지 않음)
+        // 0.36.0: 넷째 쪽 = 공허의 갑옷 · 0.37.0 다섯째 쪽 = 아티팩트 (무기 목록 없이도 건너뛰지 않음)
         h.assertTrue(Smith.nextCraftPage(Smith.craftRecipes(), 0) == 1 && Smith.nextCraftPage(Smith.craftRecipes(), 1) == 2
-                && Smith.nextCraftPage(Smith.craftRecipes(), 2) == 3 && Smith.voidPage(3) && Smith.nextCraftPage(Smith.craftRecipes(), 3) == 0,
-                "page cycle hero → transcend → noble → void armor → hero");
+                && Smith.nextCraftPage(Smith.craftRecipes(), 2) == 3 && Smith.voidPage(3) && Smith.nextCraftPage(Smith.craftRecipes(), 3) == 4
+                && Smith.artifactPage(4) && Smith.nextCraftPage(Smith.craftRecipes(), 4) == 0,
+                "page cycle hero → transcend → noble → void armor → artifacts → hero");
         Smith.Recipe r = noble.get(0);
         h.assertTrue(r.ore() == 0 && r.mats().stream().allMatch(m -> m.kind().equals("drop")), "drops only");
         for (Smith.Mat m : r.mats()) sp.getInventory().add(new ItemStack(m.item(), m.count()));

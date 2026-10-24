@@ -50,7 +50,8 @@
       "mmorpg.fabric.test.RpgEconomyTests",
       "mmorpg.fabric.test.RpgStorageTests",
       "mmorpg.fabric.test.RpgContainerToolsTests",
-      "mmorpg.fabric.test.RpgJobTests"
+      "mmorpg.fabric.test.RpgJobTests",
+      "mmorpg.fabric.test.RpgArtifactTests"
     ],
     "fabric-client-gametest": [
       "mmorpg.fabric.test.RpgClientGameTest",
@@ -96,6 +97,7 @@
       "mmorpg.fabric.test.RpgVoidKnightGallery",
       "mmorpg.fabric.test.RpgHelGallery",
       "mmorpg.fabric.test.RpgVoidArmorGallery",
+      "mmorpg.fabric.test.RpgArtifactGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

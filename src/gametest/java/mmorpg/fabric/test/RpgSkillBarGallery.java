@@ -122,6 +122,7 @@ public final class RpgSkillBarGallery implements FabricClientGameTest {
             ours.add(MmorpgClient.skillBarKey);
             ours.add(MmorpgClient.statsKey);
             ours.add(MmorpgClient.cosmeticKey);
+            ours.add(MmorpgClient.artifactKey); // 0.37.0 아티팩트 창 (I — O 는 친구 창)
             for (KeyMapping k : mc.options.keyMappings) {
                 table.append(k.getName()).append('=').append(k.getDefaultKey().getName()).append(' ');
             }

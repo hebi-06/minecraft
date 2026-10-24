@@ -324,7 +324,7 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
 
     private void craft(ClientGameTestContext ctx, TestServerContext server) {
         server.runOnServer(s -> clearHusks(player(s)));
-        String[] names = {"hero", "transcend", "noble", "void"}; // 0.36.0 넷째 쪽 = 공허의 갑옷
+        String[] names = {"hero", "transcend", "noble", "void", "artifact"}; // 0.36.0 넷째 쪽 = 공허의 갑옷 · 0.37.0 다섯째 쪽 = 아티팩트
         for (int page = 0; page < Math.min(names.length, Smith.CRAFT_PAGES.size()); page++) {
             int p = page;
             server.runOnServer(s -> {

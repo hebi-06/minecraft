@@ -214,7 +214,7 @@ public final class ArtifactCraft {
     /** 확인 창 (confirm): 11 만들기 · 13 아티팩트 · 15 취소. 결과 문구를 done 으로 (취소면 "") */
     static void confirm(ServerPlayer sp, Artifacts.Art a, Consumer<String> done) {
         Artifacts.Cost c = Artifacts.cost(a.grade());
-        ChestForm form = new ChestForm("아티팩트 제작");
+        ChestForm form = new ChestForm("아티팩트 만들기");
         form.set(11, Slot.of(Icon.sprite("icon_check"), "§a만들기"));
         form.set(13, Slot.of(Icon.item(item(a)), a.coloredName()).lore(Artifacts.lore(a, RpgCombat.reqLevelOf(sp))));
         form.set(15, Slot.of(Icon.sprite("icon_cross"), "§c취소"));

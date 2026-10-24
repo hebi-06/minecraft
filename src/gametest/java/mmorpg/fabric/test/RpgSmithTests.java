@@ -291,7 +291,7 @@ public final class RpgSmithTests {
     public void craftVoidArmor(GameTestHelper h) {
         ServerPlayer sp = RpgGearTests.player(h);
         Forms.HEADLESS.add(sp.getUUID());
-        h.assertTrue(VoidArmorCraft.enabled() && Smith.CRAFT_PAGES.size() == 4 && Smith.voidPage(3), "void armor page " + Smith.CRAFT_PAGES);
+        h.assertTrue(VoidArmorCraft.enabled() && Smith.CRAFT_PAGES.size() == 5 && Smith.voidPage(3) && Smith.artifactPage(4), "void armor page " + Smith.CRAFT_PAGES);
         VoidArmorCraft.Cost helm = VoidArmorCraft.pieceCost("helmet");
         VoidArmorCraft.Cost set = VoidArmorCraft.setCost();
         h.assertTrue(helm.gold() == 10 && set.gold() == 48 && set.items().size() == 3, "costs " + helm + " / " + set);
@@ -343,11 +343,13 @@ public final class RpgSmithTests {
         }
         for (Item m : mats) h.assertTrue(RpgGearTests.countIn(sp, m) == 0, "used " + m);
         h.assertTrue(mmorpg.fabric.economy.Wallet.total(sp, mmorpg.core.Economy.Kind.GOLD) == 0, "gold 0");
-        // 돌아가기 → 공허의 갑옷 쪽 → 윗줄 가운데 칸: 영웅 쪽
+        // 돌아가기 → 공허의 갑옷 쪽 → 윗줄 가운데 칸: 아티팩트 쪽 (0.37.0) → 영웅 쪽
         Forms.answer(sp, VoidArmorCraft.BACK_SLOT, null);
         h.assertTrue(chest(sp) != null && chest(sp).title().contains("공허"), "back to the page");
         Forms.answer(sp, 4, null);
-        h.assertTrue(chest(sp) != null && chest(sp).title().contains("영웅"), "next page: " + (chest(sp) == null ? null : chest(sp).title()));
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("아티팩트"), "next page: " + (chest(sp) == null ? null : chest(sp).title()));
+        Forms.answer(sp, 4, null);
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("영웅"), "then: " + (chest(sp) == null ? null : chest(sp).title()));
         finish(h, sp);
     }
 
