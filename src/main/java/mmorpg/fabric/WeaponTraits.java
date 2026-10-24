@@ -63,7 +63,9 @@ public final class WeaponTraits {
         double mt = RpgCombat.takenMult.applyAsDouble(victim);
         double base = mt > 0 ? dealt / mt : dealt;
         Obj sweep = t.objOrNull("sweep");
-        if (sweep != null) sweep(sp, victim, w, crit, base, sweep);
+        // 0.38.0 회전 베기 (연타 3단 — 칼 · 마검 · 낫): 둘레 (뒤 · 옆 포함) 의 다른 적에게 맞힌 피해 × MOTION.spin.ratio (낫은 넓게 베기 대신 — 범위 · 비율은 큰 쪽)
+        if (mmorpg.fabric.motion.MotionSystem.spinNow(sp) && mmorpg.core.Motions.combo(w.type()).contains("spin")) spin(sp, victim, w, crit, base, sweep);
+        else if (sweep != null) sweep(sp, victim, w, crit, base, sweep);
         Obj quake = t.objOrNull("quake");
         if (quake != null) quake(sp, victim, crit, base, quake);
         Obj steal = t.objOrNull("lifesteal");
@@ -101,6 +103,52 @@ public final class WeaponTraits {
                 swept.accept(sp, e);
             } catch (RuntimeException err) {
                 Mmorpg.LOG.warn("[mmorpg] swept hook", err);
+            }
+            Vec3 c = Kit.bodyPoint(e);
+            Vec3 u = V.unit(V.sub(c, sp.getEyePosition()));
+            Vec3 front = V.add(c, u, -0.35);
+            SkillFx.burst(level, front, glow, 0.55, 0.2);
+            SkillFx.sparks(level, front, glow, 6, 3);
+        }
+    }
+
+    /** 0.38.0 회전 베기: 둘레 range 칸의 다른 적 (방향 상관없이 — 눈에서 보이는, 가까운 순 MAX_SPLASH 명) */
+    static List<LivingEntity> spinTargets(ServerPlayer sp, LivingEntity victim, double range) {
+        List<LivingEntity> around = new ArrayList<>();
+        for (LivingEntity e : Kit.around(sp, sp.position(), range, 2)) {
+            if (e != victim && Kit.splashFoe(sp, e)) around.add(e);
+        }
+        List<LivingEntity> out = Kit.visibleFrom(sp, sp.getEyePosition(), around);
+        out.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(sp)));
+        return out.size() > MAX_SPLASH ? new ArrayList<>(out.subList(0, MAX_SPLASH)) : out;
+    }
+
+    /** 회전 베기의 {범위, 비율}: MOTION.spin (낫은 넓게 베기 — 사신 현신 포함 — 와 비교해 큰 쪽) */
+    static double[] spinOf(ServerPlayer sp, Weapon w, Obj sweep) {
+        double range = mmorpg.core.Motions.spinRange();
+        double ratio = mmorpg.core.Motions.spinRatio();
+        if (sweep != null) {
+            double[] rr = sweepOf(sp, w, sweep);
+            range = Math.max(range, rr[0]);
+            ratio = Math.max(ratio, rr[1]);
+        }
+        return new double[] {range, ratio};
+    }
+
+    private static void spin(ServerPlayer sp, LivingEntity victim, Weapon w, boolean crit, double dealt, Obj sweep) {
+        ServerLevel level = sp.level();
+        double[] rr = spinOf(sp, w, sweep);
+        double amount = dealt * rr[1];
+        Obj style = Slash.styleOf(w);
+        double[] glow = style != null && style.has("glow") ? Kit.rgb(style.get("glow")) : new double[] {0.9, 0.9, 1};
+        for (LivingEntity e : spinTargets(sp, victim, rr[0])) {
+            if (!Kit.applySkillDamage(sp, e, amount, crit, Kit.Cause.ATTACK, crit ? DamageNumbers.Style.CRIT : DamageNumbers.Style.NORMAL)) continue;
+            if (sweep != null) {
+                try {
+                    swept.accept(sp, e); // 낫: 사신 「혼」 (넓게 베기와 같음)
+                } catch (RuntimeException err) {
+                    Mmorpg.LOG.warn("[mmorpg] swept hook", err);
+                }
             }
             Vec3 c = Kit.bodyPoint(e);
             Vec3 u = V.unit(V.sub(c, sp.getEyePosition()));

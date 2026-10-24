@@ -225,6 +225,7 @@ public final class JobSystem {
             JobTraits3.afterCast(sp, job, k, ok);
             String note = NOTES.remove(sp.getUUID());
             if (ok) {
+                mmorpg.fabric.motion.MotionSystem.skill(sp, k.id()); // 0.38.0 직업 스킬 동작 (MOTION.skills)
                 JobTraitsMore.chainCommit(sp, job, k, chain);
                 if (boost > 1) JobTraits3.castCommit(sp, job);
                 JobTraits4.castCommit(sp, job, k);

@@ -114,6 +114,7 @@ public final class PieceModel extends Model<HumanoidRenderState> {
     /** 사람 모델의 움직임을 받은 뒤 (TransformCopyingModel): 움직이는 뼈만 */
     @Override
     public void setupAnim(HumanoidRenderState s) {
+        mmorpg.fabric.client.motion.MotionRender.bendPieces(root(), s); // 0.38.0 갑옷도 팔꿈치 · 무릎을 따라 굽힘
         if (anims.isEmpty()) return;
         double speed = Math.max(0, Math.min(1, s.walkAnimationSpeed));
         double age = s.ageInTicks;

@@ -110,6 +110,8 @@ public final class MmorpgClient implements ClientModInitializer {
             else context.client().gui.setScreen(new StatTreeScreen(open));
         });
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.ShakePayload.TYPE, (payload, context) -> CameraShake.add(payload.intensity(), payload.seconds()));
+        // 0.38.0 동작 (다른 사람의 평타 · 스킬 · 구르기, 내 스킬)
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.motion.MotionNet.PlayPayload.TYPE, (payload, context) -> mmorpg.fabric.client.motion.ClientMotions.receive(payload));
         // 초월 룬 하늘빛 · 화면 번쩍임
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SkyPayload.TYPE, (payload, context) -> UltFx.sky(payload));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.FlashPayload.TYPE, (payload, context) -> UltFx.flash(payload));
@@ -123,6 +125,7 @@ public final class MmorpgClient implements ClientModInitializer {
             ClientWallet.clear();
             CameraShake.clear();
             UltFx.clear();
+            mmorpg.fabric.client.motion.ClientMotions.clear();
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (statsKey.consumeClick()) {
@@ -161,6 +164,7 @@ public final class MmorpgClient implements ClientModInitializer {
             if (!client.isPaused()) CameraShake.tick();
             WeaponAura.tick(client);
             CosmeticAura.tick(client);
+            mmorpg.fabric.client.motion.ClientMotions.tick(client); // 0.38.0 동작 · 쉬프트 두 번 구르기
         });
         // 체력 줄 자리에 RPG 체력 바 · 갑옷 · 레벨 · 공기, 배고픔 · 갑옷 · 공기 줄 · 바닐라 레벨 숫자는 숨김 (RPG HUD 일 때만)
         HudElementRegistry.replaceElement(VanillaHudElements.HEALTH_BAR, old -> (graphics, delta) -> {

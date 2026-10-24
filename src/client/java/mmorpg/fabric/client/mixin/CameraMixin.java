@@ -20,9 +20,24 @@ public abstract class CameraMixin {
     @Shadow
     protected abstract void setRotation(float yRot, float xRot);
 
+    @Shadow
+    protected abstract void setPosition(net.minecraft.world.phys.Vec3 pos);
+
+    @Shadow
+    public abstract net.minecraft.world.phys.Vec3 position();
+
+    @Shadow
+    public abstract boolean isDetached();
+
     @Inject(method = "alignWithEntity", at = @At("RETURN"))
     private void mmorpg$shake(float partialTick, CallbackInfo ci) {
         float[] o = CameraShake.offset(partialTick);
         if (o != null) this.setRotation(this.yRot + o[0], this.xRot + o[1]);
+        // 0.38.0 구르기 (1인칭): 화면을 낮추고 살짝 내려다봄
+        float[] d = mmorpg.fabric.client.motion.ClientMotions.cameraDip(partialTick);
+        if (d != null && !this.isDetached()) {
+            this.setPosition(this.position().add(0, -d[0], 0));
+            this.setRotation(this.yRot, this.xRot + d[1]);
+        }
     }
 }

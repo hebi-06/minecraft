@@ -158,6 +158,7 @@ public final class Transcend {
             ok = false;
         }
         if (!ok) return false;
+        mmorpg.fabric.motion.MotionSystem.skill(sp, k.str("id")); // 0.38.0 무기 스킬 동작 (MOTION.skills — 돌진 · 던지기 · 내려찍기 …)
         String key = key(sp, k);
         COOLDOWNS.put(key, Tasks.now() + Math.round(k.num("cd") * 20 * mmorpg.fabric.stattree.StatTrees.cdMult(sp))); // 스탯 트리 재사용 대기 (7단계)
         READY_ANNOUNCED.remove(key);

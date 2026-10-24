@@ -65,6 +65,7 @@ public final class Mmorpg implements ModInitializer {
         mmorpg.fabric.nav.Nav.init(); // 길 안내 (퀘스트의 다음 갈 곳 — 화면 화살표 · 바닥 빛)
         mmorpg.fabric.stattree.StatTrees.init(); // 스탯 트리 (7단계 — 스탯을 찍으면 자람 · 갈래 · 보너스 · 뽑기권 · /스탯트리)
         mmorpg.fabric.artifact.ArtifactSystem.init(); // 0.37.0 아티팩트 (반지 둘 · 목걸이 · 귀걸이 · 팔찌 칸 — 보너스는 스탯 트리 합에 더함 · /아티팩트)
+        mmorpg.fabric.motion.MotionSystem.init(); // 0.38.0 동작 (평타 연타 가로 · 세로 · 회전, 스킬 동작, 쉬프트 두 번 구르기 — 모습은 클라이언트)
         mmorpg.fabric.cosmetic.Cosmetics.init(); // 장식 (0.13.0 — 무기 · 갑옷 스킨 · 머리 · 등 장식 · 오라 · 칭호, 갑옷 숨기기 · /장식)
         mmorpg.fabric.gacha.GachaSystem.init(); // 룬 뽑기 (0.14.0 — 뽑기 창 · 1회 · 10회 · 원신식 천장 · 관리자 한정 뽑기 · /뽑기)
         mmorpg.fabric.economy.EconomySystem.init(); // 0.21.0 화폐 (골드 · 실버 지갑) · 유저 장터 · 쓰레기통 · 버린 아이템은 가방으로

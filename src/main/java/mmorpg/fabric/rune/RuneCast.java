@@ -233,6 +233,7 @@ public final class RuneCast {
                 ok = false;
             }
             if (ok) Breakthrough.onCast(sp, r, lv, P); // 6돌 초월: 금빛 각성 · 단계 효과 (한 번 더)
+            if (ok) mmorpg.fabric.motion.MotionSystem.skill(sp, "rune:" + r.def().str("fn")); // 0.38.0 룬 동작 (MOTION.skills — rune:fn)
             return ok;
         };
         long now = Tasks.now();

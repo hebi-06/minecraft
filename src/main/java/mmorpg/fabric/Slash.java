@@ -17,6 +17,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
+import mmorpg.fabric.motion.MotionSystem;
 
 /**
  * 근접 무기 참격 연출 (slash.js 의 자바 판 — 같은 그림 · 크기 · 자리 · 색 · 소리, 수치는 rules.json 의 SLASH).
@@ -71,7 +72,10 @@ public final class Slash {
         Long last = LAST.get(sp.getUUID());
         if (last != null && last == now) return;
         LAST.put(sp.getUUID(), now);
-        swing(sp);
+        // 0.38.0 동작: 이 평타의 연타 단계 (가로 → 세로 → 회전 …) — 둘레 사람들에게 몸 동작을 알리고 참격 방향을 맞춤
+        Weapon held = RpgCombat.weaponOf(sp.getMainHandItem());
+        MotionSystem.Swing m = MotionSystem.swung(sp, held != null && Combat.isMeleeWeapon(held) && RpgCombat.lackOf(sp, held).isEmpty() ? held : null);
+        swing(sp, m);
     }
 
     // ------------------------------------------------------------ 도움
@@ -145,9 +149,15 @@ public final class Slash {
      */
     static void slashAt(ServerLevel level, Vec3 at, Vec3 dir, double dist, Weapon w, Obj style, boolean flip, boolean ok, double scale, double speed,
             RandomSource rnd) {
+        slashAt(level, at, dir, dist, w, style, flip, ok, scale, speed, rnd, 0);
+    }
+
+    /** 같은 것 — 참격 그림을 turn 도 더 돌려서 (0.38.0 세로 베기) */
+    static void slashAt(ServerLevel level, Vec3 at, Vec3 dir, double dist, Weapon w, Obj style, boolean flip, boolean ok, double scale, double speed,
+            RandomSource rnd, double turn) {
         double size = style.num("size") * (ok ? gradeSize(w) : 0.7) * scale;
         String shape = style.str("shape");
-        double spin = jitter(style, rnd);
+        double spin = jitter(style, rnd) + turn;
         double life = style.num("life");
         double[] glow = ok ? rgb(style, "glow") : GREY;
         double[] aura = ok ? aura(w, style) : null;
@@ -163,16 +173,60 @@ public final class Slash {
 
     /** 공격 동작의 참격: 눈앞 가운데 (눈높이보다 SLASH.drop 아래) */
     private static void slashOnce(ServerPlayer sp, Weapon w, Obj style, boolean flip, boolean ok, double scale) {
+        slashOnce(sp, w, style, flip, ok, scale, 0);
+    }
+
+    /** 같은 것 — 그림을 turn 도 더 돌려서 (0.38.0 세로 베기: SLASH.verticalTurn) */
+    private static void slashOnce(ServerPlayer sp, Weapon w, Obj style, boolean flip, boolean ok, double scale, double turn) {
         Vec3 dir = sp.getViewVector(1F);
         Vec3 e = eye(sp);
         Vec3 at = along(new Vec3(e.x, e.y - SLASH.numOr("drop", 0), e.z), dir, style.num("dist"));
-        slashAt(sp.level(), at, dir, style.num("dist"), w, style, flip, ok, scale, style.num("speed"), sp.getRandom());
+        slashAt(sp.level(), at, dir, style.num("dist"), w, style, flip, ok, scale, style.num("speed"), sp.getRandom(), turn);
+    }
+
+    /**
+     * 0.38.0 회전 베기 (연타 3단 — 칼 · 마검 · 낫): 오른쪽에서 앞 → 왼쪽 → 뒤로 몸을 따라 도는 참격 여섯 + 가슴 높이 고리 + 휩쓰는 소리.
+     * 둘레 적의 피해는 WeaponTraits (맞힌 피해 × MOTION.spin.ratio)
+     */
+    private static void spinSwing(ServerPlayer sp, Weapon w, Obj style, boolean ok) {
+        ServerLevel level = sp.level();
+        Vec3 c = sp.position();
+        double yaw = Math.toRadians(sp.getYRot());
+        Vec3 f = new Vec3(-Math.sin(yaw), 0, Math.cos(yaw));
+        Vec3 r = new Vec3(-Math.cos(yaw), 0, -Math.sin(yaw));
+        double[] glow = ok ? rgb(style, "glow") : GREY;
+        double[] aura = ok ? aura(w, style) : null;
+        double radius = Math.max(1.4, mmorpg.core.Motions.spinRange() * 0.62);
+        double size = style.num("size") * (ok ? gradeSize(w) : 0.7) * 1.35;
+        String shape = style.str("shape");
+        for (int j = 0; j < 6; j++) {
+            double a = j * Math.PI / 3; // 0 = 오른쪽, 90° = 앞 (왼쪽으로 돎)
+            Vec3 out = r.scale(Math.cos(a)).add(f.scale(Math.sin(a)));
+            Vec3 tangent = r.scale(-Math.sin(a)).add(f.scale(Math.cos(a)));
+            Vec3 at = c.add(out.scale(radius)).add(0, 1.05, 0);
+            Runnable draw = () -> {
+                if (sp.isRemoved()) return;
+                mmorpg.fabric.skill.SkillFx.arc(sp.level(), at, tangent, mmorpg.fabric.skill.Opt.of("shape", shape, "flip", false, "size", size, "life", 0.24,
+                        "speed", 1.6, "spin", 90.0, "color", glow, "aura", aura));
+            };
+            Tasks.later(1 + j, draw); // 몸이 도는 빠르기에 맞춰 한 틱에 하나씩 (poses.json spin — 0.16 ~ 0.8 동안 한 바퀴)
+        }
+        emit(level, FxSprite.SHOCK_RING, c.add(0, 1.0, 0), Vec3.ZERO, 0, 0, mmorpg.core.Motions.spinRange() * 0.95, 0.32, glow, ok ? 0.75 : 0.4);
+        sound(level, eye(sp), SoundEvents.PLAYER_ATTACK_SWEEP, 0.9, 0.8);
+        Tasks.later(3, () -> {
+            if (!sp.isRemoved()) sound(sp.level(), eye(sp), SoundEvents.SPEAR_ATTACK.value(), 0.8, 0.6);
+        });
     }
 
     // ------------------------------------------------------------ 공격 동작 (slashSwing)
 
     /** 공격 동작 (허공 포함): 손에 든 근접 무기의 참격. ok = 요구 조건 (레벨 · 요구 스탯) 을 채웠는지 */
     public static void swing(ServerPlayer sp) {
+        swing(sp, null);
+    }
+
+    /** 같은 것 — m = 이 평타의 동작 (0.38.0 — 칼 · 마검 · 낫: 가로 베기 오른쪽 → 왼쪽 · 세로 베기 위 → 아래 · 회전 베기 둘레) */
+    public static void swing(ServerPlayer sp, MotionSystem.Swing m) {
         if (!SLASH.truthy("enabled")) return;
         Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
         if (w == null || !Combat.isMeleeWeapon(w)) return;
@@ -188,9 +242,22 @@ public final class Slash {
             thrustSwing(sp, w, style, ok);
             return;
         }
+        String motion = m != null ? m.motion() : "";
+        if (motion.equals("spin")) {
+            SIDE.put(sp.getUUID(), false);
+            slashOnce(sp, w, style, false, ok, 0.9);
+            spinSwing(sp, w, style, ok);
+            return;
+        }
         boolean flip = !SIDE.getOrDefault(sp.getUUID(), false);
+        double turn = 0;
+        if (motion.equals("slash_h")) flip = false; // 가로 베기: 늘 오른쪽 → 왼쪽
+        else if (motion.equals("slash_v")) {
+            flip = false;
+            turn = SLASH.numOr("verticalTurn", -90); // 세로 베기: 그림을 세워 위 → 아래
+        }
         SIDE.put(sp.getUUID(), flip);
-        slashOnce(sp, w, style, flip, ok, 1);
+        slashOnce(sp, w, style, flip, ok, 1, turn);
         ServerLevel level = sp.level();
         Vec3 e = eye(sp);
         SoundEvent miss = SoundEvents.SPEAR_ATTACK.value();

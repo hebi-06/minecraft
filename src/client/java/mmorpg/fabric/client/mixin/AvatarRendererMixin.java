@@ -22,6 +22,13 @@ public abstract class AvatarRendererMixin {
             at = @At("TAIL"))
     private void mmorpg$cosmetics(Avatar entity, AvatarRenderState state, float partialTick, CallbackInfo ci) {
         CosmeticRender.extract(entity, state);
+        mmorpg.fabric.client.motion.MotionRender.extract(entity, state, partialTick); // 0.38.0 동작 자세
+    }
+
+    /** 0.38.0 동작: 몸 전체 — 앞으로 내딛기 · 낮추기 · 회전 베기 · 앞구르기 (바닐라 몸 방향을 정한 뒤) */
+    @Inject(method = "setupRotations(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;FF)V", at = @At("TAIL"))
+    private void mmorpg$motionRoot(AvatarRenderState state, PoseStack pose, float bodyRot, float scale, CallbackInfo ci) {
+        mmorpg.fabric.client.motion.MotionRender.rotate(state, pose);
     }
 
     private static final String NAME_DISPLAY = "submitNameDisplay(Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;"
