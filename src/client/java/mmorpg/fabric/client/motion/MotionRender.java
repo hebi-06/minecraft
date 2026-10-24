@@ -175,7 +175,12 @@ public final class MotionRender {
 
     // ------------------------------------------------------------ 뿌리 · 손
 
+    /** 시험 (사진첩): 이 사람의 모델을 Y 축으로 debugYaw 도 돌려 옆 · 3/4 모습을 찍음 */
+    public static int debugEntity = Integer.MIN_VALUE;
+    public static float debugYaw;
+
     public static void rotate(AvatarRenderState state, PoseStack ps) {
+        if (state.id == debugEntity && debugYaw != 0) ps.rotate(Axis.YP.rotationDegrees(debugYaw));
         Pose p = of(state);
         if (p == null || !p.has(Pose.ROOT)) return;
         float w = p.w;

@@ -1,0 +1,341 @@
+package mmorpg.fabric.test;
+
+import java.util.ArrayList;
+import java.util.List;
+import mmorpg.core.Armor;
+import mmorpg.core.Motions;
+import mmorpg.core.Weapons;
+import mmorpg.fabric.RpgItems;
+import mmorpg.fabric.client.motion.ClientMotions;
+import mmorpg.fabric.client.motion.MotionPoses;
+import mmorpg.fabric.client.motion.MotionRender;
+import mmorpg.fabric.motion.MotionSystem;
+import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
+import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions;
+import net.minecraft.client.CameraType;
+import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityTypes;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.decoration.Mannequin;
+import net.minecraft.world.entity.player.ChatVisiblity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 0.38.0 사진첩 (화면 시험, only=motion): 동작 22 가지를 마네킹 셋 (같은 동작의 세 순간) 에 멈춰 3/4 · 옆에서 찍고 (mo_&lt;동작&gt;_34 · _side),
+ * 공허 갑옷을 입은 마네킹의 팔꿈치 · 무릎 굽힘 (mo_armor_*), 실제 입력: 공격 키 세 번 = 가로 → 세로 → 회전 (클라이언트 · 서버 단계가 같은지 · 1인칭 사진),
+ * 쉬프트 두 번 = 구르기 (앞으로 3칸 넘게 · 재사용 대기 중에는 다시 안 됨 · 1인칭 · 3인칭 사진), 우클릭 무기 스킬 → 서버가 보낸 동작 (skill_slash),
+ * 맨손 1인칭 (굽힘이 남지 않음). 사진 이름 mo_* → ci-logs 의 shots/.
+ */
+@SuppressWarnings("UnstableApiUsage")
+public final class RpgMotionGallery implements FabricClientGameTest {
+    private static final Logger LOG = LoggerFactory.getLogger("mmorpg-motion-gallery");
+    private final List<String> failures = new ArrayList<>();
+
+    /** {동작, 무기 종류, 세 순간} */
+    private static final String[][] SAMPLES = {
+        {"slash_h", "sword", "0.3,0.5,0.68"},
+        {"slash_v", "sword", "0.32,0.52,0.86"},
+        {"spin", "sword", "0.16,0.45,0.8"},
+        {"dagger_x", "dagger", "0.16,0.36,0.72"},
+        {"chop", "axe", "0.36,0.56,0.76"},
+        {"thrust", "lance", "0.3,0.5,0.7"},
+        {"bash", "shield", "0.3,0.5,0.72"},
+        {"smite", "scepter", "0.32,0.55,0.75"},
+        {"skill_slash", "greatsword", "0.3,0.48,0.66"},
+        {"skill_flurry", "sword", "0.26,0.4,0.54"},
+        {"slam", "hammer", "0.4,0.58,0.8"},
+        {"leap_slam", "axe", "0.2,0.45,0.62"},
+        {"dash", "sword", "0.18,0.5,0.75"},
+        {"throw", "dagger", "0.38,0.55,0.75"},
+        {"throw_weapon", "hammer", "0.38,0.55,0.7"},
+        {"cast", "wand", "0.28,0.45,0.8"},
+        {"cast_up", "scepter", "0.3,0.5,0.82"},
+        {"guard", "shield", "0.3,0.5,0.8"},
+        {"shoot", "bow", "0.3,0.55,0.62"},
+        {"shoot_up", "bow", "0.3,0.55,0.62"},
+        {"spin2", "scythe", "0.12,0.4,0.7"},
+        {"roll", "sword", "0.14,0.3,0.5"},
+    };
+    /** 마네킹 자리 {x, z} — 나 (0.5, 0.5) 에서 북쪽으로 3.5칸 */
+    private static final float[][] ROW = {{-1.2F, -3.0F}, {0.5F, -3.0F}, {2.2F, -3.0F}};
+    private static final EquipmentSlot[] SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
+
+    @Override
+    public void runTest(ClientGameTestContext ctx) {
+        if (RpgProdSmoke.active() || !RpgProdSmoke.only("motion")) return;
+        ctx.getInput().resizeWindow(1280, 720);
+        try (TestSingleplayerContext world = ctx.worldBuilder()
+                .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
+                .create()) {
+            TestServerContext server = world.getServer();
+            TestServerConnection conn = world.getConnection();
+            conn.waitForChunksRender();
+            server.runCommand("time set 6000");
+            server.runCommand("weather clear");
+            server.runCommand("gamerule doDaylightCycle false");
+            server.runCommand("gamerule doMobSpawning false");
+            server.runCommand("tp @a 0.5 -60 0.5 180 8");
+            server.runCommand("xp set @a 50 levels");
+            for (String st : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + st + " 150");
+            ctx.runOnClient(mc -> {
+                mc.options.chatVisibility().set(ChatVisiblity.HIDDEN);
+                mc.options.setCameraType(CameraType.FIRST_PERSON);
+            });
+            server.runOnServer(s -> player(s).getInventory().clearContent());
+            ctx.waitTicks(20);
+            check(MotionPoses.names().equals(Motions.KNOWN), "poses loaded " + MotionPoses.names().size());
+            part(ctx, "poses", () -> poses(ctx, server));
+            part(ctx, "armor", () -> armor(ctx, server));
+            part(ctx, "attack", () -> attack(ctx, server));
+            part(ctx, "roll", () -> roll(ctx, server));
+            part(ctx, "skill", () -> skill(ctx, server));
+            part(ctx, "empty", () -> empty(ctx, server));
+        }
+        LOG.info("[motion-gallery] done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
+        if (!failures.isEmpty()) throw new AssertionError("motion gallery: " + String.join(" / ", failures));
+    }
+
+    // ------------------------------------------------------------ 1. 동작 22 (마네킹 셋)
+
+    private void poses(ClientGameTestContext ctx, TestServerContext server) {
+        hideGui(ctx, true);
+        for (String[] s : SAMPLES) {
+            String motion = s[0];
+            String[] ts = s[2].split(",");
+            for (String[] view : new String[][] {{"34", "-35"}, {"side", "-90"}}) {
+                List<Integer> row = spawn(server, Float.parseFloat(view[1]), s[1], false);
+                ctx.runOnClient(mc -> {
+                    for (int i = 0; i < row.size(); i++) ClientMotions.freeze(row.get(i), motion, Float.parseFloat(ts[i]));
+                });
+                ctx.waitTicks(3);
+                ctx.takeScreenshot(TestScreenshotOptions.of("mo_" + motion + "_" + view[0]).withSize(960, 540));
+                check(ctx.computeOnClient(mc -> motion.equals(ClientMotions.current(row.get(0))) && mc.level.getEntity(row.get(0)) != null), "frozen " + motion);
+                discard(server, row);
+                ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
+            }
+        }
+    }
+
+    // ------------------------------------------------------------ 2. 갑옷도 굽힘
+
+    private void armor(ClientGameTestContext ctx, TestServerContext server) {
+        String[][] poses = {{"guard", "0.3"}, {"roll", "0.14"}, {"slash_h", "0.3"}};
+        for (String[] view : new String[][] {{"34", "-35"}, {"side", "-90"}, {"front", "0"}}) {
+            List<Integer> row = spawn(server, Float.parseFloat(view[1]), "sword", true);
+            ctx.runOnClient(mc -> {
+                for (int i = 0; i < row.size(); i++) ClientMotions.freeze(row.get(i), poses[i][0], Float.parseFloat(poses[i][1]));
+            });
+            ctx.waitTicks(3);
+            ctx.takeScreenshot(TestScreenshotOptions.of("mo_armor_" + view[0]).withSize(960, 540));
+            discard(server, row);
+            ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
+        }
+        hideGui(ctx, false);
+        ctx.waitTicks(3);
+    }
+
+    // ------------------------------------------------------------ 3. 공격 키 세 번 (가로 → 세로 → 회전)
+
+    private void attack(ClientGameTestContext ctx, TestServerContext server) {
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            sp.getInventory().setItem(0, weapon("sword"));
+            sp.getInventory().setSelectedSlot(0);
+        });
+        ctx.getInput().lookAt(180F, -35F); // 하늘 (블록을 캐지 않게)
+        ctx.waitTicks(12);
+        int me = ctx.computeOnClient(mc -> mc.player.getId());
+        String[] want = {"slash_h", "slash_v", "spin"};
+        for (int i = 0; i < want.length; i++) {
+            ctx.getInput().pressKey(o -> o.keyAttack);
+            ctx.waitTicks(3);
+            String cur = ctx.computeOnClient(mc -> ClientMotions.current(me));
+            check(want[i].equals(cur), "client motion " + i + " " + cur);
+            ctx.takeScreenshot(TestScreenshotOptions.of("mo_fp_" + want[i]).withSize(960, 540));
+            String srv = server.computeOnServer(s -> {
+                MotionSystem.Swing sw = MotionSystem.last(player(s));
+                return sw == null ? "-" : sw.motion() + "#" + sw.step();
+            });
+            check(srv.equals(want[i] + "#" + (i + 1)), "server step " + i + " " + srv);
+            ctx.waitTicks(10); // 허공 공격 뒤 바닐라 공격 대기 (missTime 10)
+        }
+        // 3인칭 (앞): 가로 베기 한 번
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+        ctx.waitTicks(30);
+        ctx.getInput().pressKey(o -> o.keyAttack);
+        ctx.waitTicks(4);
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_slash_h").withSize(960, 540));
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.waitTicks(15);
+    }
+
+    // ------------------------------------------------------------ 4. 쉬프트 두 번 = 구르기
+
+    private void roll(ClientGameTestContext ctx, TestServerContext server) {
+        server.runCommand("tp @a 0.5 -60 0.5 0 0"); // 남쪽 (+z) 을 봄
+        ctx.getInput().lookAt(0F, 0F);
+        ctx.runOnClient(mc -> ClientMotions.resetRoll());
+        ctx.waitTicks(10);
+        int me = ctx.computeOnClient(mc -> mc.player.getId());
+        Vec3 p0 = ctx.computeOnClient(mc -> mc.player.position());
+        ctx.getInput().pressKey(o -> o.keyShift);
+        ctx.waitTicks(2);
+        ctx.getInput().pressKey(o -> o.keyShift);
+        ctx.waitTicks(3);
+        check("roll".equals(ctx.computeOnClient(mc -> ClientMotions.current(me))), "rolling");
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_fp_roll").withSize(960, 540));
+        ctx.waitTicks(8); // 구른 지 약 12틱 (구르기 10틱 + 남은 미끄러짐)
+        Vec3 p1 = ctx.computeOnClient(mc -> mc.player.position());
+        double moved = p1.z - p0.z;
+        check(moved > 3.0 && moved < 5.0 && Math.abs(p1.x - p0.x) < 0.5, "rolled forward " + String.format("%.2f", moved));
+        check(server.computeOnServer(s -> MotionSystem.lastRoll(player(s)) >= 0), "server saw the roll");
+        long left = ctx.computeOnClient(mc -> ClientMotions.rollCooldownLeft());
+        check(left > 3, "cooldown left " + left);
+        // 재사용 대기 안 (구른 지 약 14틱 < 20): 다시 두 번 눌러도 그대로
+        ctx.getInput().pressKey(o -> o.keyShift);
+        ctx.waitTicks(2);
+        ctx.getInput().pressKey(o -> o.keyShift);
+        ctx.waitTicks(8);
+        Vec3 p2 = ctx.computeOnClient(mc -> mc.player.position());
+        check(p2.distanceTo(p1) < 0.3, "cooldown: no second roll " + String.format("%.2f", p2.distanceTo(p1)));
+        // 3인칭 (앞에서) 구르기
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+        ctx.waitTicks(25);
+        ctx.getInput().pressKey(o -> o.keyShift);
+        ctx.waitTicks(2);
+        ctx.getInput().pressKey(o -> o.keyShift);
+        ctx.waitTicks(4);
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_roll").withSize(960, 540));
+        ctx.waitTicks(2);
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_roll_late").withSize(960, 540));
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.waitTicks(15);
+    }
+
+    // ------------------------------------------------------------ 5. 무기 스킬 (우클릭) → 서버가 보낸 동작
+
+    private void skill(ClientGameTestContext ctx, TestServerContext server) {
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            sp.getInventory().setItem(0, weapon("sword"));
+            sp.getInventory().setSelectedSlot(0);
+        });
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+        ctx.waitTicks(10);
+        int me = ctx.computeOnClient(mc -> mc.player.getId());
+        ctx.getInput().pressKey(o -> o.keyUse);
+        ctx.waitTicks(5);
+        String cur = ctx.computeOnClient(mc -> ClientMotions.current(me));
+        check("skill_slash".equals(cur), "weapon skill motion " + cur);
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash").withSize(960, 540));
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.waitTicks(20);
+    }
+
+    // ------------------------------------------------------------ 6. 맨손 1인칭 (굽힘이 남지 않음)
+
+    private void empty(ClientGameTestContext ctx, TestServerContext server) {
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            sp.getInventory().setItem(0, ItemStack.EMPTY);
+            sp.getInventory().setSelectedSlot(0);
+        });
+        ctx.getInput().lookAt(0F, 10F);
+        ctx.waitTicks(10);
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_fp_empty").withSize(960, 540));
+    }
+
+    // ------------------------------------------------------------ 도움
+
+    /**
+     * 마네킹 셋 (나에게서 북쪽으로 3.5칸) 을 yaw 로 세움 — 몸은 세울 때만 바로 그쪽을 보므로 (가만히 선 사람은 머리만 돌아감) 보는 쪽마다 새로 세움.
+     * yaw 0 = 나를 봄 · -35 = 3/4 · -90 = 오른쪽 옆. 손에 type 무기, armor = 공허 갑옷 (힘 · 초월)
+     */
+    private static List<Integer> spawn(TestServerContext server, float yaw, String type, boolean armor) {
+        return server.computeOnServer(s -> {
+            ServerLevel level = player(s).level();
+            List<Integer> ids = new ArrayList<>();
+            for (float[] a : ROW) {
+                Mannequin m = EntityTypes.MANNEQUIN.create(level, EntitySpawnReason.COMMAND);
+                m.snapTo(a[0], -60, a[1], yaw, 0F);
+                m.setYHeadRot(yaw);
+                m.setYBodyRot(yaw);
+                if (type != null) m.setItemSlot(EquipmentSlot.MAINHAND, weapon(type));
+                if (armor) {
+                    for (int i = 0; i < 4; i++) m.setItemSlot(SLOTS[i], stack(Armor.armorId("str", 50, "transcend", Armor.PIECE_ORDER.get(i))));
+                }
+                level.addFreshEntity(m);
+                ids.add(m.getId());
+            }
+            return ids;
+        });
+    }
+
+    private static void discard(TestServerContext server, List<Integer> ids) {
+        server.runOnServer(s -> {
+            ServerLevel level = player(s).level();
+            for (int id : ids) {
+                Entity e = level.getEntity(id);
+                if (e != null) e.discard();
+            }
+        });
+    }
+
+    private static ItemStack stack(String id) {
+        return new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(id)));
+    }
+
+    private static ItemStack weapon(String type) {
+        return new ItemStack(RpgItems.byId(Weapons.weaponFrom(type, 40, "hero").id()));
+    }
+
+    private static void hideGui(ClientGameTestContext ctx, boolean hide) {
+        ctx.runOnClient(mc -> {
+            if (mc.gui.hud.isHidden() != hide) mc.gui.hud.toggle();
+        });
+    }
+
+    private static ServerPlayer player(MinecraftServer s) {
+        return s.getPlayerList().getPlayers().get(0);
+    }
+
+    private void part(ClientGameTestContext ctx, String name, Runnable run) {
+        try {
+            run.run();
+            LOG.info("[motion-gallery] part {} finished", name);
+        } catch (AssertionError | RuntimeException e) {
+            check(false, "part " + name + " threw " + e);
+            LOG.warn("[motion-gallery] part " + name, e);
+        }
+        try {
+            ctx.runOnClient(mc -> {
+                ClientMotions.unfreezeAll();
+                MotionRender.debugEntity = Integer.MIN_VALUE;
+                if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
+            });
+            ctx.setScreen(() -> null);
+            ctx.waitTicks(3);
+        } catch (AssertionError | RuntimeException e) {
+            LOG.warn("[motion-gallery] reset after " + name, e);
+        }
+    }
+
+    private void check(boolean ok, String what) {
+        LOG.info("[motion-gallery] {} {}", ok ? "OK  " : "FAIL", what);
+        if (!ok) failures.add(what);
+    }
+}

@@ -51,10 +51,10 @@ public final class ClientMotions {
     private static double[] rollSpeeds = new double[0];
     private static long lastTap = -1000;
 
-    // 시험 (사진첩): 이 사람의 자세를 이 동작 · t 로 멈춤
-    private static int frozenEntity = Integer.MIN_VALUE;
-    private static String frozenMotion;
-    private static float frozenT;
+    // 시험 (사진첩): 사람마다 자세를 이 동작 · t 로 멈춤
+    private record Frozen(String motion, float t) {}
+
+    private static final Map<Integer, Frozen> FROZEN = new HashMap<>();
 
     public static void clear() {
         ACTIVE.clear();
@@ -64,7 +64,7 @@ public final class ClientMotions {
         lastSwing = -1000;
         rollStart = -1000;
         lastTap = -1000;
-        frozenEntity = Integer.MIN_VALUE;
+        FROZEN.clear();
     }
 
     public static long ticks() {
@@ -87,7 +87,8 @@ public final class ClientMotions {
 
     /** 이 사람이 지금 하는 동작 이름 (없으면 null) */
     public static String current(int entity) {
-        if (entity == frozenEntity) return frozenMotion;
+        Frozen f = FROZEN.get(entity);
+        if (f != null) return f.motion();
         Active a = ACTIVE.get(entity);
         if (a == null) return null;
         return ticks + 1 - a.start() >= a.ticks() ? null : a.motion();
@@ -95,10 +96,11 @@ public final class ClientMotions {
 
     /** 이 사람의 지금 자세 (out 에 — 없으면 null). left = 주 손이 왼손 */
     public static Pose pose(int entity, boolean left, float partial, Pose out) {
-        if (entity == frozenEntity && frozenMotion != null) {
-            MotionPoses.Motion m = MotionPoses.get(frozenMotion);
+        Frozen f = FROZEN.get(entity);
+        if (f != null) {
+            MotionPoses.Motion m = MotionPoses.get(f.motion());
             if (m == null) return null;
-            MotionPoses.evaluate(m, frozenT, left, out);
+            MotionPoses.evaluate(m, f.t(), left, out);
             out.yaw = Float.NaN;
             return out;
         }
@@ -169,7 +171,7 @@ public final class ClientMotions {
         if (rolling()) return false;
         HitResult hr = mc.hitResult;
         if (hr == null || hr.getType() == HitResult.Type.BLOCK) return true;
-        if (mc.gameMode == null || mc.gameMode.hasMissTime() || p.isHandsBusy() || p.isSpectator()) return true;
+        if (mc.gameMode == null || mc.missTime > 0 || p.isHandsBusy() || p.isSpectator()) return true;
         Weapon w = meleeOf(p);
         if (w == null) return true;
         List<String> combo = Motions.combo(w.type());
@@ -255,9 +257,13 @@ public final class ClientMotions {
 
     /** 이 사람의 자세를 동작 motion 의 t 에 멈춤 (motion null = 풀기) */
     public static void freeze(int entity, String motion, float t) {
-        frozenEntity = motion == null ? Integer.MIN_VALUE : entity;
-        frozenMotion = motion;
-        frozenT = t;
+        if (motion == null) FROZEN.remove(entity);
+        else FROZEN.put(entity, new Frozen(motion, t));
+    }
+
+    /** 멈춘 자세를 모두 풀기 */
+    public static void unfreezeAll() {
+        FROZEN.clear();
     }
 
     /** 시험: 구르기 재사용 대기를 지움 */
