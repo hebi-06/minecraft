@@ -1,0 +1,122 @@
+[monster-test] OK death: xp · loot · emerald · quest kill count · xp cap · no credit
+[monster-test] OK taunt
+[monster-test] OK lunge (resolved lunge, hits 0) · rooted no lunge · stunned no attack
+[monster-test] OK shell -20% · nix/draugr slowness · draugr undead · families
+[monster-test] OK monster damage: bare = attack, armor reduces, shield block = RPG shield reduction 0.25
+[more-monster-test] OK scorpion poison · crab hold + shell · grendel wither
+[more-monster-test] OK frost wolf pack: howl calls 2 · draugr not called · cold bite
+[more-monster-test] OK nisse hop back 1.77 → 3.41 · pause 15
+[monster-test] OK hunt zone: add · refill after respawn · trim farthest · /mob clear keeps zone monsters · list · remove
+[more-monster-test] OK frost giant ice shock: target 46.0 · beside 23.0 · outside 0
+[monster-test] OK weakness -20% · short invisibility blocks lunge · troll shockwave half damage
+[more-monster-test] OK boar charge: prep (still 0.00) → dash → hit ×1.4 · push (-0.85, 0.35, 0.0)
+[more-monster-test] OK worm larva: burrow after rest · low box · no tag · emerge on approach / on hit
+[monster-test] OK attacks only after a hit · windup hit = attack · miss out of reach · creative pause · labels
+[monster-test] OK ranged counter: ring → hit, dodged by leaving the ring
+[monster-test] OK troll regen while fighting · regen after the fight · reloaded hurt monster
+[void-monster-test] OK jelly orb: cast → fly → burst 48.0 · sting slowness III
+[surtr-test] OK module · core hit box 3x3.5 · gauge boss bar · challenge form ([초월 보스] · rewards · no notes)
+[surtr-test] OK kill: board [§6[딜 순위] §f수르트 §7— 모두 §f1,600, §e1. §ftest-mock-player §61,100 §7(69%), §e2. §ftest-mock-player §6500 §7(31%)] · note [] · emerald 64 · adv ticket 1 · heart 3 · shard 3 · hook · legend ready · 30 min
+[surtr-test] OK inferno: gauge 1000 → 500 by damage → collapse (groggy x1.5, mark hidden) → crown core → rpg:crown_broken
+[surtr-test] OK slam: red line hit + burning line → sword core 5000 (part 0, label) → broken: rpg:sword_broken, flames out, +2 shards
+[surtr-test] OK counter: skill in the gold window cuts the sweep → x1.25 (mark hidden); overlapping bonuses → largest only
+[surtr-test] OK summon: rises 36 under the pit (immune) → roar → fight, hp 90000, 10x33, field held, chains · crystals standing
+[surtr-test] OK chain pillar binds the sword (behind = safe, x1.3), crumbles, restored after the fight
+[surtr-test] OK fist (gauntlet core) · stomp · meteors (+burn) · rings (ground hit, jump clears) · thrust (farthest)
+[surtr-test] OK ragnarok: leap (immune) → raise (red fog, heat 0.7) → wave: shadow saves (crystal melts), open = death → restored
+[nidhogg-test] OK summon (hp 25000) → lands from 14 blocks (rpg:fly) → walks 3.90 blocks toward the player (rpg:gait, pose)
+[nidhogg-test] OK killed in flight → grounded, rewards (emerald 37 · branch 2 · root 2 · xp 90) · cooldown
+[nidhogg-test] OK snare: 2 root props + root 50 ticks → sink (rpg_roots) → removed
+[nidhogg-test] OK brand: overlapping = instant death, lone = damage (20.0 → 15.2)
+[nidhogg-test] OK flight: rise → 12 up circle (0.5/tick, rpg:fly 1) → 3 poison rains → dive → land (rpg:fly 0)
+[void-monster-test] OK behemoth spikes: 7 in a line · hit once ×1.1
+[jorm-test] OK kill → emerald 28 · bright 2 · xp 70 · no boss materials · cooldown 15 min
+[jorm-test] OK swim: pivot on the 15.75 circle, 0.18/tick, entity = head = home, sink 1 · curve -5.46 · tail 0, pushed → posed back
+[jorm-test] OK nine steps: friend drains, walking 9 kills (used 11.0)
+[jorm-test] OK ring: gap exit survives, wall exit crushed at the squeeze, ring radius 21.28
+[jorm-test] OK flood: inside the white ring safe, outside hit + poison, dash queued
+[ymir-test] OK kill → emerald 47 · frost heart · giant's bone · xp · kill hook · 20 min cooldown · fires relit · fog lifted
+[ymir-test] OK club slam: the target on the line is hit + slowed, beside / behind safe
+[ymir-test] OK summon → hp 38000, rises from the lake (untouchable), four fires lit, walks (rpg:gait 1, 3.08 blocks)
+[ymir-test] OK ice spikes: hit + frozen, ice prop forms → shatters → gone
+[ymir-test] OK crack: close full · far x0.25 · rpg:crack 1·2·3 · kneel cuts the slam · 빈틈 +50% · rise · lock
+[ymir-test] OK Niflheim's breath: leap (immune) → inhale (fog · labels · fog comes back after the engine clears it) → fireside safe, snow frozen → fog lifted
+[worm-test] OK summon: hp 15000, seated at the center hole, 5 holes, faces the starter
+[worm-test] OK kill → emerald 24 · fang 3 · heart 3 · xp 50 · cooldown 15 min
+[worm-test] OK devour: swallowed = untargetable · rooted · silenced · blind, own hits not counted, rescue → spit + gag
+[worm-test] OK tunnel: immune underground, seat = crowded hole, pushed → back to the new seat, emerge hits
+[worm-test] OK quake: 161 tiles = floor painter, dark first then light
+[worm-test] OK tremor: walker heard → killed, sneaker safe, immune underground
+[skoll-test] OK summon (hp 27000) on the farthest stone (h 5) → leap to the center, day look
+[skoll-test] OK weak flank x1.3 (약점 — mark hidden on the number) · winded x1.25 (지침) · both x1.625 · none at dusk
+[skoll-test] OK killed mid-leap → grounded, rewards (emerald 33 · fang 3 · mane 3 · xp 90) · cooldown
+[skoll-test] OK day → night → dusk (rpg:day · rpg:dusk · texture phase 0 → 1 → 2, far shot ember / frost / alternating)
+[skoll-test] OK judgement: retreat north (immune) → marks → own half survives, other half dies
+[voidknight-test] OK kill → silver 63 · void heart 3 · rift shard 4 · xp · 20 min cooldown · timer removed
+[voidknight-test] OK summon (hp 450000) from the rift (immune) → fight, collapse timer bar 10:00
+[voidknight-test] OK combo 120 · 120 · 240 stepping in (stops 1.80 in front) → opening
+[voidknight-test] OK cleave: windup safe → fan 260 (behind safe) → opening x1.3 for 30 ticks
+[voidknight-test] OK thrust (line only, lunges to the end) · leap (airborne → slam on the circle → opening)
+[voidknight-test] OK void cross: jump next to the center (immune) → safe circles at 45° → outside takes 520.0
+[voidknight-test] OK 10 minute limit: red timer → void collapse → instant death
+[voidknight-test] OK dash (far) → circle at ~4.6 (strafe) → backstep (crowded)
+[voidknight-test] OK awaken at half hp (immune roar) → faster (windup 15 · cd x0.8), void wave reaches 12 blocks
+[voidknight-test] OK spin (ring only) · rift step (invisible + immune → behind the target → slash + darkness)
+[void-monster-test] OK stalker blink dodged
+[void-monster-test] OK stalker blink: vanish (invisible · immune) → rift behind → cross slash ×1.4 · darkness
+[void-monster-test] OK leaper leap: prep → fly (top 2.45) → land ×1.3
+[void-monster-test] OK leaper swarm: screech calls 2
+[arena-test] OK altar blocks 11 registered
+[arena-test] OK designs map to Java blocks (30185 ops)
+[arena-test] OK removed altars leave the list (block check · creative break) + hook
+[arena-test] OK build refused: 다른 보스 제단(허수아비 킹, 41000 150 41000)과 너무 가깝습니다 (필드가 겹쳐 지워짐) / 높이가 맞지 않습니다 (제단을 y -55 ~ 304 사이에 놓아 주세요)
+[more-monster-test] OK data: order · regions · entities · eggs · loot · repeat quests · sounds · animations · textures · spawn
+[arena-test] OK placed altar listed + build question
+[arena-test] OK field protection (break · place · fire · bucket · explosion · creative)
+[arena-test] OK temple built = design (18161 cells), rebuilt the same
+[tree-test] OK plan = addon (fp 3625873582 · 16367 cells), Java blocks
+[tree-test] OK block rules (natural · soft · ground · kept) + code strings
+[tree-test] OK block log saved in parts and read back (palette 45, 70000 cells)
+[tree-test] OK refused: 너무 높은 곳입니다 (꼭대기가 세계 높이 320에 닿음 — y 279 아래를 보세요) / 너무 낮은 곳입니다 (뿌리가 세계 바닥에 닿음) / 물(용암) 속에는 심을 수 없습니다 — 물 밖의 땅을 보세요 / 보스 필드(이미르, 47038 150 47008)와 겹칩니다 / 나무가 자랄 곳이 다 불러와지지 않았습니다
+[tree-test] OK commands /worldtree · /세계수 · /segyesu
+[tree-test] OK survey: open grass fine, refused planks · lava · rock
+[tree-test] OK grown (4476 blocks, cow moved) and undone after a reload — every cell back
+[tree-test] OK /세계수 plant 40 → window at the pushed-out spot → cancel
+[void-monster-test] OK borer tunnel: dive → under (immune) 6.0 → 0.6 → warn → erupt ×1.5
+[void-monster-test] OK void data: order · region · traits · entities · eggs · loot · repeat by level · sounds · animations · textures · spawn · sell slots
+[void-monster-test] OK void repeat quests open by level 40 · 56
+[hel-test] OK summon (hp 2200000) rises in front of the altar (immune) → fight, gate timer bar 10:00
+[hel-test] OK death claw: windup 40 ticks safe → fan 1300.0 (behind safe)
+[hel-test] OK dead hands: a circle under everyone → stayed 1300.0 · stepped out safe
+[hel-test] OK glides 0.07 blocks per tick toward the far player → backs off when crowded (3.28)
+[hel-test] OK gaze: follows the farthest → locks 10 ticks before → the beam (1300.0) misses the one who moved, hits the line
+[hel-test] OK life and death: the dark hand's half 1300.0 · the pale half safe
+[hel-test] OK awaken at half hp (immune roar) → windup 34 · cd x0.8 · phase texture · bridge scheduled
+[hel-test] OK river of Gjoll: the wave sweeps along the band (front first, once each) · outside safe
+[hel-test] OK mist step (invisible + immune → 3.0 behind the target → death claw)
+[hel-test] OK gjallar bridge: floats next to the center → on the bridge safe · off the bridge 1300.0
+[hel-test] OK kill → silver 64 · hel claw 2 · dead mist 4 · xp · 30 min cooldown · timer removed
+[hel-test] OK 10 minute limit: red timer → the gate of helheim → instant death
+[hel-test] OK lv58: shield 355.0 → 159.99995 → dead · hammer 290.0 → 29.999939 → dead · sword dead at once (one claw 1300)
+[scorpions-test] OK one falls → fight goes on, survivor enraged (x1.4 · x0.7 · pulled · fast · rpg:rage) → both down = rewards (emerald 14) · hook · 15 min
+[scorpions-test] OK symbiosis: within 7 blocks -60% (100 → 40), apart = full
+[scorpions-test] OK two units: hp 5000 · 7000, bar · name · home per unit, iframes per unit, melee · cast per unit, leash to own home
+[scorpions-test] OK tremor: ring hits the grounded, the airborne dodge
+[scorpions-test] OK burrow: immune underground → trail → bursts out under the target
+[scorpions-test] OK roar: looking = rooted + silenced, turned away = free
+[scorpions-test] OK venom mark: shared by the pair (both alive, damaged), far shots pause, no other big pattern, alone = death
+[kraken-test] OK kill: emerald 18 · ink 3 · eye 3 · 15 min · tentacles + labels cleared
+[kraken-test] OK tentacles retreat when time runs out (retired · gone · sink → removed)
+[kraken-test] OK tentacles: 4 from the pools (hp 380 · label · rise), heal, close bonus hit, die → gone → removed, all cut = stagger +40%
+[kraken-test] OK stationary: center · faces challenger · no vanilla turning · back within 10 ticks · 16°/tick turn · effect immune
+[kraken-test] OK tide: pillar shadow survives, open = death, sheltered() math
+[boss-test] OK sounds 119 resolve, cage hitbox 1.6x2.6, module, /boss altar
+[boss-test] OK altar → challenge form → summon (60 ticks) → boss hp 7500
+[boss-test] OK kill → rewards (emerald 10 · ticket 1 · stone 4 · ore 2 · xp 20) · kill hook · cooldown
+[boss-test] OK per-player iframes (same tick both · re-hit blocked · stronger = difference · skill separate · close x1.1 · outside blocked)
+[boss-test] OK decoys: wrong = silence, real = stagger (+50%)
+[boss-test] OK pattern hints hidden (BOSS_HINTS all off): hint* held back, far shot · prison show no text, counts are numbers
+[boss-test] OK straw cage: farthest player rooted, cage 1.6x2.6, breaking it frees
+[boss-test] OK far shot (fire): disc → lob → hit + burn
+[boss-test] OK reaping: totem circle safe, outside = instant death
+[boss-test] OK empty field resets after 202 ticks

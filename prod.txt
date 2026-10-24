@@ -1,0 +1,36 @@
+mod jar: build/libs/mmorpg-0.37.0.jar  minecraft 26.3  loader 0.19.5  fabric-api 0.162.0+26.3
+     8256  1980-02-01 00:00   mmorpg/core/Rules.class
+     1623  1980-02-01 00:00   fabric.mod.json
+      424  1980-02-01 00:00   mmorpg.mixins.json
+   119686  1980-02-01 00:00   mmorpg/rules.json
+      696  1980-02-01 00:00   mmorpg.client.mixins.json
+fabric installer 1.1.2
+----- [prod] fabric-api 0.162.0+26.3: log tail
+[13:09:59] [Server thread/INFO]: Starting minecraft server version 26.3
+[13:09:59] [Server thread/INFO]: Loading properties
+[13:09:59] [Server thread/INFO]: Default game type: SURVIVAL
+[13:09:59] [Server thread/INFO]: Generating keypair
+[13:10:00] [Server thread/INFO]: Starting Minecraft server on *:25565
+[13:10:00] [Server thread/WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[13:10:00] [Server thread/WARN]: The server will make no attempt to authenticate usernames. Beware.
+[13:10:00] [Server thread/WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[13:10:00] [Server thread/WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[13:10:00] [Server thread/INFO]: Preparing level "world"
+[13:10:00] [Server thread/INFO]: Selecting global world spawn...
+[13:10:00] [Server thread/INFO]: Loading 0 persistent chunks...
+[13:10:00] [Server thread/INFO]: Preparing spawn area: 100%
+[13:10:00] [Server thread/INFO]: Time elapsed: 493 ms
+[13:10:00] [Server thread/INFO]: Done (0.694s)! For help, type "help"
+[13:10:00] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[13:10:01] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[13:10:01] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[13:10:09] [Server thread/INFO]: System chat: Stopping the server
+[13:10:09] [Server thread/INFO]: Stopping server
+[13:10:09] [Server thread/INFO]: Saving players
+[13:10:09] [Server thread/INFO]: Saving worlds
+[13:10:09] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[13:10:09] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[13:10:09] [Server thread/INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+----- [prod] fabric-api 0.162.0+26.3: errors
+109:[13:09:58] [Worker-Main-1/ERROR]: No key layers in MapLike[{}]
+[prod] fabric-api 0.162.0+26.3: OK
