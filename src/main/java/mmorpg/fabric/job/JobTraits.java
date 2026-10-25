@@ -5,11 +5,13 @@ import java.util.Map;
 import java.util.UUID;
 import mmorpg.core.Combat;
 import mmorpg.core.Jobs;
+import mmorpg.core.SwingLooks;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.motion.SwingLook;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -81,6 +83,19 @@ public final class JobTraits {
         });
         // 죽음 · 차원 이동 · 탈것 부르기: 자원 · 태세 · 각인이 끝남
         RuneKit.onLifeEnded(JobTraits::lifeEnded);
+        // 0.41.0 평타 강화 모습 (사용자 "직업 평타 버프도 포함"): 평타 태세 (명경지수 · 마검 각성 · 사신 현신 — rules_more SWING_LOOK 에 있는 태세) 동안
+        // 그 태세의 궤적 색 · 범위 배율 (사신 현신의 칸은 jobs 의 range — 근접 평타만)
+        SwingLook.addSource((sp, out) -> {
+            State st = STATES.get(sp.getUUID());
+            if (st == null || st.stance.isEmpty() || st.stanceUntil <= Tasks.now()) return;
+            SwingLooks.Look l = SwingLooks.of(st.stance);
+            if (l == null) return;
+            Jobs.Job j = JobSystem.job(sp);
+            Jobs.Skill k = j == null ? null : j.skill(st.stance);
+            double range = k == null ? l.range() : k.num("range", l.range());
+            if (range != l.range()) l = new SwingLooks.Look(l.key(), l.name(), l.scale(), Math.max(0, range), l.glow(), l.aura(), l.weapons());
+            out.add(new SwingLook.Active(l, st.stanceUntil, false));
+        });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             STATES.clear();
             MARKS.clear();
@@ -193,6 +208,21 @@ public final class JobTraits {
             if (reach > 0) a.addOrUpdateTransientModifier(new AttributeModifier(REACH_ID, reach, AttributeModifier.Operation.ADD_VALUE));
             else a.removeModifier(REACH_ID);
         }
+        sendGauge(sp, true);
+    }
+
+    /** 0.41.0 시험용: 직업 jobId 의 태세 스킬 skillId 를 ticks 틱 걺 (스킬을 쓰지 않고 — 사진 · 범위 시험). 없는 스킬이면 false */
+    public static boolean testStance(ServerPlayer sp, String jobId, String skillId, int ticks) {
+        Jobs.Job j = Jobs.job(jobId);
+        Jobs.Skill k = j == null ? null : j.skill(skillId);
+        if (k == null) return false;
+        startStance(sp, k, ticks);
+        return true;
+    }
+
+    /** 0.41.0 시험용: 태세를 조용히 끝냄 (끝난 뒤 처리 없이) */
+    public static void testEndStance(ServerPlayer sp) {
+        endStance(sp);
         sendGauge(sp, true);
     }
 

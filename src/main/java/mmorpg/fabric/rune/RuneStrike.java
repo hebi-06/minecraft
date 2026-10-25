@@ -15,13 +15,16 @@ import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Runes;
+import mmorpg.core.SwingLooks;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
+import mmorpg.fabric.SwingArea;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.motion.SwingLook;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
@@ -39,8 +42,11 @@ import net.minecraft.world.phys.Vec3;
  * ticks 틱 동안 (hits 가 있으면 그 번까지) 평타 (근접 · 활 · 완드) 에 위력 × bonus 를 더함 (평타와 한 번에 — 몹 무적 시간에 막히지 않음, RpgCombat 훅)
  * + 룬마다 덧붙임 (잔상 · 부채꼴 · 흡혈 · 검기). 같은 등급은 처음부터, 다른 등급은 함께 (더한 피해를 더함). 죽음 · 차원 이동이면 끝 (삶 표시).
  * 신체 강화 (RuneBody) 와 함께 쓰는 매 틱 할 일 (buffTick) · 상태 줄 (buffHud) 도 여기서 한 번만 등록.
+ * 0.41.0 (사용자 "평타 강화 스킬은 평타 색이 바뀌고 범위가 더 넓어지는걸로" — 고른 것: 룬마다 다르게 · 휘두를 때마다 1번): 걸린 동안 평타 모습 (SwingLook —
+ * 궤적 색 · 참격 범위 × 룬마다 배율, rules_more SWING_LOOK), '평타 N번' 은 근접 평타를 휘두를 때마다 한 번 (같은 휘두르기의 조준 · 범위 적은 모두 더한 피해를 받고
+ * 덧붙임은 한 번 — 마지막 번의 휘두르기는 범위 적까지 더한 피해), 가르기 부채꼴은 같은 휘두르기에 이미 맞은 적을 다시 베지 않음.
  */
-final class RuneStrike {
+public final class RuneStrike {
     private RuneStrike() {}
 
     /** 더한 피해의 숫자 앞 표시 (mark) · 훅 구분 (family) */
@@ -56,6 +62,8 @@ final class RuneStrike {
         double left;
         final double P;
         final String token;
+        /** 0.41.0 마지막으로 센 휘두르기의 틱 (SwingArea.swingTick — 없으면 -1): 같은 휘두르기의 다른 적은 다시 세지 않음 */
+        long swing = -1;
 
         StrikeBuff(Obj def, String grade, long until, double left, double P, String token) {
             this.def = def;
@@ -88,6 +96,13 @@ final class RuneStrike {
         ServerTickEvents.END_SERVER_TICK.register(RuneStrike::buffTick);
         RuneSystem.onForget(id -> BUFFS.remove(id));
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> BUFFS.clear());
+        // 0.41.0 평타 강화 모습: 걸린 평타 강화마다 그 룬 (fn) 의 모습 — 활 · 완드 평타 색에도
+        SwingLook.addSource((sp, out) -> {
+            for (StrikeBuff st : buffsOf(sp)) {
+                SwingLooks.Look l = SwingLooks.of(st.def.strOrNull("fn"));
+                if (l != null) out.add(new SwingLook.Active(l, st.until, true));
+            }
+        });
     }
 
     /** 룬마다의 빛 색 (k.accent) */
@@ -95,9 +110,12 @@ final class RuneStrike {
         return Kit.rgb(k.get("accent"));
     }
 
-    /** 평타 강화가 아직 있는지: 시간 · 남은 번 · 삶 표시 (죽음 · 차원 이동 · 탈것이면 끝) */
+    /**
+     * 평타 강화가 아직 있는지: 시간 · 남은 번 · 삶 표시 (죽음 · 차원 이동 · 탈것이면 끝). 0.41.0 마지막 번을 쓴 휘두르기는 끝날 때까지 (범위 적이 1틱 뒤에 맞음)
+     */
     private static boolean strikeOn(ServerPlayer sp, StrikeBuff st) {
-        return st.until > Tasks.now() && st.left > 0 && st.token.equals(RuneKit.lifeToken(sp));
+        if (st.until <= Tasks.now() || !st.token.equals(RuneKit.lifeToken(sp))) return false;
+        return st.left > 0 || (st.swing >= 0 && st.swing == SwingArea.swingTick(sp));
     }
 
     /** 지금 걸린 평타 강화 (높은 등급 먼저) */
@@ -295,15 +313,19 @@ final class RuneStrike {
                 break;
             }
         }
+        // 0.41.0 근접 평타는 휘두를 때마다 한 번 (조준한 적 · 범위 적 — 같은 휘두르기), 활 · 완드는 맞힐 때마다
+        long sw = Combat.isMeleeWeapon(w) ? SwingArea.swingTick(sp) : -1;
         for (String g : new ArrayList<>(b.keySet())) {
             StrikeBuff st = b.get(g);
             if (st == null || !strikeOn(sp, st)) continue;
             if (used.contains(g)) {
+                if (sw >= 0 && st.swing == sw) continue; // 같은 휘두르기 — 이미 셈 · 덧붙임
+                st.swing = sw;
                 if (Double.isFinite(st.left)) st.left -= 1;
                 strikeEffect(sp, victim, w, st);
                 if (st.left <= 0) {
-                    b.remove(g);
                     strikeEnd(sp, st, true);
+                    if (sw < 0) b.remove(g); // 휘두르기면 이번 휘두르기가 끝날 때까지 남김 (범위 적도 더한 피해 — buffTick 이 지움)
                 }
             } else if (st.def.truthy("rangedCd") && !Combat.isMeleeWeapon(w) && victim != null && !victim.isRemoved()) {
                 // 연타 (활 · 완드): 맞은 자리에 잔상 고리
@@ -366,9 +388,11 @@ final class RuneStrike {
                 SkillFx.play(level, "item.spear.attack_miss", at, 1.8, 0.4);
             }
             case "cleave" -> {
-                // 부채꼴: 근접 = 내 앞, 활 · 완드 = 맞은 적 뒤 (꿰뚫어 퍼짐)
+                // 부채꼴: 근접 = 내 앞, 활 · 완드 = 맞은 적 뒤 (꿰뚫어 퍼짐). 0.41.0 근접은 같은 휘두르기에 이미 맞은 적 (조준 · 범위) 은 빼고
                 Vec3 c = melee ? sp.position() : valid ? victim.position() : V.add(sp.position(), f, 3);
                 double rad = melee ? k.num("cleave") : k.num("splash");
+                Set<UUID> skip = melee ? new HashSet<>(SwingArea.swingVictims(sp)) : new HashSet<>();
+                if (victim != null) skip.add(victim.getUUID());
                 Vec3 mid = V.up(V.add(c, f, rad * 0.55), 1.0);
                 RuneKit.rfx2(level, "wave", mid, Opt.of("size", rad * 0.62, "life", 0.24, "grow", 0.3, "fade", 0.6), col, white);
                 SkillFx.fx(level, "rpg:light_cut", V.up(V.add(c, f, rad * 0.7), 0.08), Opt.of("dir", V.rightOf(f), "size", rad * 0.55, "thick", 0.22, "life", 0.6,
@@ -377,7 +401,7 @@ final class RuneStrike {
                     if (!RuneKit.sameLife(sp, life)) return;
                     int shown = 0; // 적이 많으면 칼자국은 12마리까지 (모바일 파티클 예산)
                     for (LivingEntity e : RuneKit.coneAround(sp, c, f, rad, k.num("cone"))) {
-                        if (victim != null && e.getUUID().equals(victim.getUUID())) continue;
+                        if (skip.contains(e.getUUID())) continue;
                         if (RuneKit.runeHit(sp, e, st.P, k.num("bonus"), "str") > 0 && shown++ < 12) {
                             Vec3 p = Kit.bodyPoint(e);
                             SkillFx.cutMark(level, p, V.unit(V.sub(p, eye)), -10, 0.08, col, white, 0.9);
@@ -526,9 +550,22 @@ final class RuneStrike {
         List<String> out = new ArrayList<>();
         RuneBody.hud(sp, now, out);
         for (StrikeBuff st : buffsOf(sp)) {
+            if (!(st.left > 0)) continue; // 0.41.0 마지막 번을 쓴 휘두르기가 끝나기를 기다리는 1틱 — 이미 "평타를 모두 썼습니다"
             out.add("§e" + st.def.str("name") + (Double.isFinite(st.left) ? " §f×" + Js.str(st.left) : "") + " §7"
                     + Js.toFixed(Math.max(0, (st.until - now) / 20.0), 1) + "초");
         }
         return String.join(" §8| ", out);
+    }
+
+    /** 시험 · 사진첩: 이 사람의 평타 강화를 모두 지움 (조용히) */
+    public static void testClear(ServerPlayer sp) {
+        BUFFS.remove(sp.getUUID());
+    }
+
+    /** 시험: 이 사람의 그 등급 평타 강화의 남은 번 (걸려 있지 않으면 -1 · 번이 없으면 무한) */
+    public static double testLeft(ServerPlayer sp, String grade) {
+        Map<String, StrikeBuff> b = BUFFS.get(sp.getUUID());
+        StrikeBuff st = b == null ? null : b.get(grade);
+        return st == null || st.until <= Tasks.now() ? -1 : st.left;
     }
 }

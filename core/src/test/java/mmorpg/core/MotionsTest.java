@@ -112,6 +112,8 @@ public final class MotionsTest {
                 "trail layers");
         Obj fpc = trail.obj("fp");
         check(fpc.num("width") > 0 && fpc.num("maxWidth") > 0 && fpc.num("alpha") > 0 && fpc.num("alpha") <= 1, "trail fp band");
+        Obj lk = trail.obj("look"); // 0.41.0 평타 강화 모습이 실린 궤적: 심지 희게 몫 · 1인칭 늘임 몫
+        check(lk.num("core") >= 0 && lk.num("core") <= 1 && lk.num("fp") > 0 && lk.num("fp") <= 1, "trail look");
         for (String k : List.of("fp", "world")) {
             List<Object> nr = trail.obj("near").list(k);
             check(nr.size() == 2 && ((Number) nr.get(0)).doubleValue() >= 0 && ((Number) nr.get(1)).doubleValue() > ((Number) nr.get(0)).doubleValue(), "trail near " + k);
@@ -122,6 +124,28 @@ public final class MotionsTest {
             check(r0 != null && r4 != null && r0 >= 1.4 && r4 <= 4.5, "reach row " + t + " " + r0 + " … " + r4);
         }
         check(Motions.area("cast", "wand") == null && Motions.area("nope", "sword") == null, "no area for skills");
+        // 0.41.0 평타 강화 모습: 평타 강화 룬 다섯 (fn) · 직업 평타 태세 셋, 룬마다 범위 배율 (사용자 — 룬마다 다르게), 사신 현신 5칸
+        check(SwingLooks.enabled(), "swing looks on");
+        Obj strike = Rules.get().obj("RUNES").obj("strike");
+        for (String g : strike.keys()) {
+            String fn = strike.obj(g).str("fn");
+            check(SwingLooks.of(fn) != null, "strike rune look " + g + " " + fn);
+        }
+        Map<String, Double> scales = Map.of("edgeHone", 1.15, "flurry", 1.2, "bloodBlade", 1.3, "cleave", 1.4, "swordGod", 1.5,
+                "swordsman_mirror", 1.2, "spellblade_awaken", 1.3, "reaper_avatar", 1.0);
+        for (Map.Entry<String, Double> e : scales.entrySet()) {
+            SwingLooks.Look l = SwingLooks.of(e.getKey());
+            check(l != null && Math.abs(l.scale() - e.getValue()) < 1e-9 && l.glow() != null && l.aura() != null && SwingLooks.pack(l.glow()) != 0,
+                    "look " + e.getKey() + " " + l);
+        }
+        check(SwingLooks.keys().size() == scales.size(), "look keys " + SwingLooks.keys());
+        SwingLooks.Look av = SwingLooks.of("reaper_avatar");
+        double sb = SwingLooks.baseRange("scythe", 0);
+        check(Math.abs(sb - 3.05) < 1e-9 && Math.abs(av.scaleAt(sb) - 5 / 3.05) < 1e-9 && av.fits("scythe") && !av.fits("sword"), "reaper avatar 5 blocks " + sb);
+        check(SwingLooks.of("cleave").fits("sword") && SwingLooks.of("cleave").fits("bow"), "rune looks fit any weapon");
+        check(!SwingLooks.of("swordsman_mirror").fits("greatsword") && SwingLooks.of("spellblade_awaken").fits("greatsword"), "job look weapons");
+        check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
+        check(SwingLooks.of("nope") == null && SwingLooks.pack(new double[] {0, 0, 0}) == 1 && SwingLooks.pack(new double[] {1, 0.5, 0}) == 0xFF8000, "pack");
         // 스킬 표
         Set<String> want = new HashSet<>();
         Obj root = r.root();

@@ -694,8 +694,23 @@
     "alpha": {"aura": 0.32, "glow": 0.6, "core": 0.95, "rune": 0.9},
     "fp": {"width": 0.6, "maxWidth": 0.6, "alpha": 0.85},
     "near": {"fp": [0.4, 1.2], "world": [0.6, 1.8]},
+    "look": {"_comment": "0.41.0 평타 강화 모습 (SWING_LOOK) 이 실린 궤적: core = 심지 색 (빛 색을 이만큼 희게), fp = 1인칭 무기 끝 늘임 몫 (세계 늘임 × — 1인칭 무기는 눈 바로 앞이라 같은 칸이면 화면을 덮음)", "core": 0.7, "fp": 0.5},
     "from": {"sword": 0.28, "greatsword": 0.24, "scythe": 0.45, "dagger": 0.2, "axe": 0.55, "hammer": 0.6, "scepter": 0.62, "lance": 0.62, "default": 0.35},
     "basic": ["slash_h", "slash_v", "spin", "dagger_x", "chop", "smite"]
+  },
+  "SWING_LOOK": {
+    "_comment": "0.41.0 평타 강화 모습 (사용자 \"평타 강화 스킬은 평타 색이 바뀌고 범위가 더 넓어지는걸로\" → 고른 것: 룬마다 다르게 · 휘두를 때마다 1번 · 직업 평타 버프도 포함). looks 의 key = 평타 강화 룬의 fn (RUNES.strike — 날 세우기 · 연타 · 가르기 · 피의 칼날 · 검신 강림) 또는 직업 평타 태세의 스킬 id (명경지수 · 마검 각성 · 사신 현신). 걸린 동안: 근접 평타 (궤적이 대신하는 평타 — TRAIL.basic) 의 참격 궤적 색이 glow (무기 색 빛 대신) · aura (바깥 기운 — 등급과 상관없이 한 겹) 로 바뀌고, 참격 범위 (MOTION.area — 거리 · 띠 · 줄의 폭, 부채꼴 각도는 그대로) 가 scale 배 (range 가 있으면 그 칸 아래로는 줄지 않음 — 사신 현신 5칸, jobs.json 의 range 를 먼저 씀), 궤적도 그만큼 무기 끝 너머로 이어 그림 (범위 = 궤적). weapons = 그 무기 종류만 (비면 모두). 평타 강화 룬은 활 · 완드 평타 (화살 빛줄기 · 광선 · 맞은 자리) 색도 glow. 여러 개가 걸리면 범위가 가장 넓은 것 하나. 평타 강화 룬의 '평타 N번' 은 휘두를 때마다 1번 (범위로 여럿을 맞혀도 — 더한 피해는 모두에게, 덧붙임 (잔상 · 부채꼴 · 흡혈 · 검기) 은 한 번).",
+    "enabled": true,
+    "looks": {
+      "edgeHone": {"name": "날 세우기", "scale": 1.15, "glow": [1.0, 0.62, 0.22], "aura": [1.0, 0.86, 0.55]},
+      "flurry": {"name": "연타", "scale": 1.2, "glow": [0.3, 1.0, 0.82], "aura": [0.78, 1.0, 0.95]},
+      "bloodBlade": {"name": "피의 칼날", "scale": 1.3, "glow": [1.0, 0.14, 0.2], "aura": [0.55, 0.0, 0.06]},
+      "cleave": {"name": "가르기", "scale": 1.4, "glow": [0.4, 0.46, 1.0], "aura": [0.72, 0.64, 1.0]},
+      "swordGod": {"name": "검신 강림", "scale": 1.5, "glow": [1.0, 0.82, 0.3], "aura": [1.0, 0.97, 0.75]},
+      "swordsman_mirror": {"name": "명경지수", "scale": 1.2, "glow": [0.92, 0.98, 1.0], "aura": [0.35, 0.85, 1.0], "weapons": ["sword"]},
+      "spellblade_awaken": {"name": "마검 각성", "scale": 1.3, "glow": [0.62, 0.34, 1.0], "aura": [0.34, 0.96, 0.95], "weapons": ["sword", "greatsword"]},
+      "reaper_avatar": {"name": "사신 현신", "scale": 1.0, "range": 5, "glow": [0.22, 0.96, 0.86], "aura": [0.06, 0.3, 0.32], "weapons": ["scythe"]}
+    }
   },
   "MOTION": {
     "_comment": "0.38.0 동작 (사용자 요청 \"모션이 더 역동적 — 칼 벨 때 가로 베기 · 세로 베기 · 한 바퀴 돌기 · 쉬프트 두 번 구르기\" + \"무기 스킬 · 돌진 스킬 · 투척 스킬 (던지는 모션)\" → 고른 것: 근접 무기 모두 · 3타 회전은 둘레 적도 맞음 · 구르기 무적 없음 · 재사용 1초). combo = 무기 종류마다 평타 동작 차례 (comboWindow 틱 안에 다음 평타면 다음 단계, 아니면 처음). spin = 회전 베기 (combo 의 spin 단계) 가 둘레 range 칸의 다른 적에게 맞힌 피해 × ratio (낫은 넓게 베기 대신 — 범위 · 비율은 큰 쪽). roll = 쉬프트 두 번 (doubleTap 틱 안) — ticks 동안 distance 칸, cooldown 틱 (무적 없음 · 땅 위에서만). skills = 무기 스킬 id · 직업 스킬 id · rune:룬 fn → 동작 (클라이언트 assets/mmorpg/motion/poses.json 의 이름).",

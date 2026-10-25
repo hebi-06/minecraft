@@ -112,6 +112,7 @@ public final class MmorpgClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.ShakePayload.TYPE, (payload, context) -> CameraShake.add(payload.intensity(), payload.seconds()));
         // 0.38.0 동작 (다른 사람의 평타 · 스킬 · 구르기, 내 스킬)
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.motion.MotionNet.PlayPayload.TYPE, (payload, context) -> mmorpg.fabric.client.motion.ClientMotions.receive(payload));
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.motion.MotionNet.LookPayload.TYPE, (payload, context) -> mmorpg.fabric.client.motion.ClientMotions.receiveLook(payload));
         // 초월 룬 하늘빛 · 화면 번쩍임
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SkyPayload.TYPE, (payload, context) -> UltFx.sky(payload));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.FlashPayload.TYPE, (payload, context) -> UltFx.flash(payload));

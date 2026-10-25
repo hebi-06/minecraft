@@ -655,7 +655,12 @@ public final class RpgCombat {
         Shot shot = arrowShot(path.length());
         Fx.sound(level, head, SoundEvents.ARROW_SHOOT, 1.1, 0.8);
         int ticks = Math.max(1, (int) Math.round(shot.life() * 20));
-        Fx.arrowFx(level, path, shot, w);
+        double[][] prevLook = Fx.pushLook(mmorpg.fabric.motion.SwingLook.shotColors(sp, w)); // 0.41.0 평타 강화 모습 (화살 색)
+        try {
+            Fx.arrowFx(level, path, shot, w);
+        } finally {
+            Fx.popLook(prevLook);
+        }
         if (target != null) {
             LivingEntity t = target;
             int tt = pierce > 0 ? Math.max(1, (int) Math.round(ticks * Math.min(1, dist / Math.max(0.5, drawn)))) : ticks;
@@ -693,7 +698,12 @@ public final class RpgCombat {
         Path path = arrowPath(head, dir, Math.max(0.5, len - 0.3));
         Shot shot = arrowShot(path.length());
         Fx.sound(sp.level(), head, SoundEvents.ARROW_SHOOT, 1.3, 0.6);
-        Fx.arrowFx(sp.level(), path, shot, w);
+        double[][] prevLook = Fx.pushLook(mmorpg.fabric.motion.SwingLook.shotColors(sp, w)); // 0.41.0 평타 강화 모습
+        try {
+            Fx.arrowFx(sp.level(), path, shot, w);
+        } finally {
+            Fx.popLook(prevLook);
+        }
         int ticks = Math.max(1, (int) Math.round(shot.life() * 20));
         Tasks.later(ticks, () -> landExtra(sp, target, w, path, 2, ratio));
         return ticks;
@@ -721,6 +731,8 @@ public final class RpgCombat {
     static void rangedHit(ServerPlayer sp, LivingEntity target, Weapon w, Path path, double ratio) {
         if (sp.isRemoved() || target.isRemoved() || !target.isAlive()) return;
         ServerLevel level = sp.level();
+        // 0.41.0 평타 강화 모습: 맞기 전에 색을 정함 (마지막 번이면 맞은 뒤 평타 강화가 끝나도 맞은 자리는 그 색)
+        double[][] look = mmorpg.fabric.motion.SwingLook.shotColors(sp, w);
         double dmg = w.damage() * powerOf(sp, w) * basicMultOf(sp, w) * (ratio > 0 ? ratio : 1); // 0.28.0 직업 특성 (궁수 호흡)
         boolean crit = rollCrit(sp, w, target);
         if (crit) dmg *= critMultOf(sp, w);
@@ -733,13 +745,18 @@ public final class RpgCombat {
             MARKS.remove(key(target, sp));
             return;
         }
-        if (path != null) {
-            Fx.arrowImpact(level, path.aim(), path.dir(), w);
-            Fx.sound(level, path.aim(), SoundEvents.ARROW_HIT, 1.0, 0.7);
-        } else {
-            Vec3 at = target.getEyePosition();
-            Fx.wandImpact(level, at, w);
-            Fx.sound(level, at, SoundEvents.EXPERIENCE_ORB_PICKUP, 0.6, 0.5);
+        double[][] prevLook = Fx.pushLook(look);
+        try {
+            if (path != null) {
+                Fx.arrowImpact(level, path.aim(), path.dir(), w);
+                Fx.sound(level, path.aim(), SoundEvents.ARROW_HIT, 1.0, 0.7);
+            } else {
+                Vec3 at = target.getEyePosition();
+                Fx.wandImpact(level, at, w);
+                Fx.sound(level, at, SoundEvents.EXPERIENCE_ORB_PICKUP, 0.6, 0.5);
+            }
+        } finally {
+            Fx.popLook(prevLook);
         }
     }
 
@@ -768,7 +785,12 @@ public final class RpgCombat {
             return;
         }
         Vec3[] c = circleAt(sp);
-        Fx.magicCircle(sp.level(), c[0], cast.w(), cast.spin() + t * WAND.obj("circle").num("spinPerTick"), (t + 1) / castTicks);
+        double[][] prevLook = Fx.pushLook(mmorpg.fabric.motion.SwingLook.shotColors(sp, cast.w())); // 0.41.0 평타 강화 모습 (마법진 색)
+        try {
+            Fx.magicCircle(sp.level(), c[0], cast.w(), cast.spin() + t * WAND.obj("circle").num("spinPerTick"), (t + 1) / castTicks);
+        } finally {
+            Fx.popLook(prevLook);
+        }
         Tasks.later(1, () -> castStep(sp, cast));
     }
 
@@ -800,8 +822,13 @@ public final class RpgCombat {
         dir = dist > 1e-6 ? dir.scale(1 / dist) : sp.getViewVector(1F);
         Vec3 end = aim;
         if (pierce > 0) end = head.add(dir.scale(Math.max(dist, mmorpg.fabric.skill.Kit.rayDist(level, head, dir, range))));
-        Fx.circleFlash(level, from, cast.w(), cast.spin() + WAND.num("castTicks") * WAND.obj("circle").num("spinPerTick"));
-        Fx.wandBeam(level, from, end, cast.w());
+        double[][] prevLook = Fx.pushLook(mmorpg.fabric.motion.SwingLook.shotColors(sp, cast.w())); // 0.41.0 평타 강화 모습 (광선 색)
+        try {
+            Fx.circleFlash(level, from, cast.w(), cast.spin() + WAND.num("castTicks") * WAND.obj("circle").num("spinPerTick"));
+            Fx.wandBeam(level, from, end, cast.w());
+        } finally {
+            Fx.popLook(prevLook);
+        }
         Fx.sound(level, head, SoundEvents.EVOKER_CAST_SPELL, 1.5, 0.6);
         if (target != null) rangedHit(sp, target, cast.w(), null);
         if (pierce > 0) {

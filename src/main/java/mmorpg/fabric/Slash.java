@@ -122,8 +122,9 @@ public final class Slash {
         return Fx.gradeSize(w.gradeIndex());
     }
 
-    /** 등급 기운 색 (영웅 · 초월만 — 무기 모양 style 에 aura 가 있으면 그 색: 세계수의 도끼 금빛) */
+    /** 등급 기운 색 (영웅 · 초월만 — 무기 모양 style 에 aura 가 있으면 그 색: 세계수의 도끼 금빛). 0.41.0 평타 강화 모습이면 등급과 상관없이 그 기운 (lookAura) */
     private static double[] aura(Weapon w, Obj style) {
+        if (style != null && style.has("lookAura")) return rgb(style, "lookAura");
         List<Object> a = SLASH.list("gradeAura");
         Object c = w.gradeIndex() >= 0 && w.gradeIndex() < a.size() ? a.get(w.gradeIndex()) : null;
         if (!(c instanceof List<?> l)) return null;
@@ -269,7 +270,7 @@ public final class Slash {
         if (!SLASH.truthy("enabled")) return;
         Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
         if (w == null || !Combat.isMeleeWeapon(w)) return;
-        Obj style = styleOf(w);
+        Obj style = mmorpg.fabric.motion.SwingLook.styleFor(sp, w, styleOf(w)); // 0.41.0 평타 강화 모습 (창 찌르기 · 방패 밀치기 색)
         if (style == null) return;
         boolean ok = RpgCombat.lackOf(sp, w).isEmpty();
         String motion = m != null ? m.motion() : "";
@@ -420,7 +421,7 @@ public final class Slash {
     public static void hit(ServerPlayer attacker, LivingEntity victim, Weapon w, boolean crit) {
         if (!SLASH.truthy("enabled") || !Combat.isMeleeWeapon(w) || victim.isRemoved()) return;
         if (!(victim.level() instanceof ServerLevel level)) return;
-        Obj style = styleOf(w);
+        Obj style = mmorpg.fabric.motion.SwingLook.styleFor(attacker, w, styleOf(w)); // 0.41.0 평타 강화 모습 (맞힘 · 치명타 색)
         Vec3 head = victim.getEyePosition();
         Vec3 mid = new Vec3(head.x, head.y - 0.45, head.z);
         Vec3 dir = attacker.getViewVector(1F);

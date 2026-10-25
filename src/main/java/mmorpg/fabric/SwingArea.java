@@ -25,7 +25,8 @@ import net.minecraft.world.phys.Vec3;
  *   <li>조준한 적 (공격 패킷 → Player#attack) 은 바닐라 공격으로 한 번, 범위의 다른 적은 1틱 뒤 (같은 틱에 온 공격 · 휘두르기 패킷을 다 받은 뒤) — 같은 적이 두 번 맞지 않음</li>
  *   <li>맞는 적: 적대 무리 · 결투 상대 (Kit.splashFoe), 눈에서 보이는, 가까운 순 MOTION.area.max 명. 범위는 휘두를 때의 눈 · 보는 방향 기준 (회전은 발 기준 둘레)</li>
  *   <li>한 번 휘두를 때 한 번만: 전투 망치 지진 (처음 맞은 적 둘레 — 범위로 맞은 적은 빼고), 홀 흡혈 상한 (최대 체력 × cap)</li>
- *   <li>사신 현신 (낫 — WeaponTraits.sweepMod) 은 낫 범위의 거리를 늘림</li>
+ *   <li>사신 현신 (낫 — WeaponTraits.sweepMod) 은 낫 범위의 거리를 늘림 — 0.41.0 부터 평타 강화 모습 (SwingLook — 평타 강화 룬 · 직업 평타 태세) 이
+ *       범위를 넓힘 (사신 현신 5칸도 여기서, SWING_LOOK 을 끄면 예전 넓히기)</li>
  * </ul>
  * MOTION.area.enabled 를 끄면 예전대로 (회전 베기 · 낫 넓게 베기만 다른 적에게 40% — WeaponTraits).
  */
@@ -122,7 +123,9 @@ public final class SwingArea {
     static List<LivingEntity> targets(ServerPlayer sp, Weapon w, String motion, Entity primary) {
         Motions.Area a = Motions.area(motion, w.type(), w.gradeIndex());
         if (a == null) return List.of();
-        a = widen(sp, w, a);
+        // 0.41.0 평타 강화 모습 (평타 강화 룬 · 직업 평타 태세 — 사신 현신 5칸 포함): 범위 × 배율. 꺼져 있으면 예전 사신 현신 넓히기
+        Motions.Area wide = mmorpg.fabric.motion.SwingLook.widen(sp, w, a);
+        a = wide != a ? wide : widen(sp, w, a);
         Vec3 eye = sp.getEyePosition();
         Vec3 feet = sp.position();
         // 보는 방향 = 몸의 yaw · pitch (플레이어는 머리와 같음 — 머리 회전 yHeadRot 이 따로 노는 가짜 플레이어 · 시험에서도 같게)
@@ -198,6 +201,21 @@ public final class SwingArea {
     static void addHealed(ServerPlayer sp, double amount) {
         Swing s = current(sp);
         if (s != null) s.healed += amount;
+    }
+
+    /** 0.41.0 지금 휘두르기의 틱 (휘두른 틱 · 범위 피해가 나가는 다음 틱까지 — 없으면 -1): 평타 강화의 '평타 N번' 을 휘두를 때마다 한 번 셈 */
+    public static long swingTick(ServerPlayer sp) {
+        Swing s = current(sp);
+        return s == null ? -1 : s.tick;
+    }
+
+    /** 0.41.0 이번 휘두르기로 맞는 적 (조준한 적 + 범위 — 없으면 빈): 가르기 부채꼴이 같은 휘두르기에 맞은 적을 다시 베지 않게 */
+    public static Set<UUID> swingVictims(ServerPlayer sp) {
+        Swing s = current(sp);
+        if (s == null) return Set.of();
+        Set<UUID> out = new HashSet<>(s.inArea);
+        if (s.primary != null) out.add(s.primary);
+        return out;
     }
 
     // ------------------------------------------------------------ 시험

@@ -15,6 +15,7 @@ import mmorpg.core.Weapons;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgWeaponItem;
 import mmorpg.fabric.client.ClientCosmetics;
+import mmorpg.fabric.motion.MotionNet;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientAvatarEntity;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -47,6 +48,9 @@ import org.joml.Vector3f;
  *   <li>사진첩 (ClientMotions.freeze): 멈춘 순간까지의 궤적을 그 순간에 멈춰 그림</li>
  * </ul>
  * 방패 · 활 · 완드 · 맨손은 궤적 없음. 요구 조건이 모자라면 동작이 없어 궤적도 없음 (서버의 회색 참격).
+ * 0.41.0 평타 강화 모습 (MotionNet.Look — 평타 강화 룬 · 직업 평타 태세, rules_more SWING_LOOK): 빛 · 기운을 모습 색으로 (심지는 빛을 TRAIL.look.core 만큼 희게,
+ * 기운은 등급과 상관없이), 무기 끝을 손잡이 → 끝 방향으로 늘여 빛의 바깥 가장자리가 넓어진 참격 범위만큼 더 나감 ((배율 − 1) × 범위 ÷ glowTo 칸 — 0.40.0 부터
+ * 범위 거리 = 빛의 바깥 가장자리), 1인칭은 그 TRAIL.look.fp 몫 (띠 너비 상한도 같은 비율로).
  */
 public final class BladeTrails {
     private BladeTrails() {}
@@ -88,6 +92,9 @@ public final class BladeTrails {
         float nearFp1 = 1.2F;
         float nearWorld0 = 0.6F;
         float nearWorld1 = 1.8F;
+        /** 0.41.0 평타 강화 모습: 심지 = 빛을 이만큼 희게 · 1인칭 늘임 몫 (세계 늘임 ×) */
+        float lookCore = 0.7F;
+        float lookFp = 0.5F;
     }
 
     private static Cfg cfg;
@@ -130,6 +137,11 @@ public final class BladeTrails {
                         c.nearWorld1 = Math.max(c.nearWorld0 + 0.01F, ((Number) l.get(1)).floatValue());
                     }
                 }
+                Obj lk = t.objOrNull("look");
+                if (lk != null) {
+                    c.lookCore = (float) Mth.clamp(lk.numOr("core", c.lookCore), 0, 1);
+                    c.lookFp = (float) Math.max(0, lk.numOr("fp", c.lookFp));
+                }
                 Obj a = t.objOrNull("alpha");
                 if (a != null) {
                     c.aAura = (float) a.numOr("aura", c.aAura);
@@ -154,8 +166,10 @@ public final class BladeTrails {
 
     // ------------------------------------------------------------ 무기
 
-    /** 궤적을 그리는 무기 하나: 무기 점 · 손잡이 쪽 시작 (from) · 색 (ARGB 의 RGB — 없으면 0) */
-    record Spec(WeaponBlades.Blade blade, float from, int glow, int core, int aura, int rune) {}
+    /**
+     * 궤적을 그리는 무기 하나: 무기 점 · 손잡이 쪽 시작 (from) · 색 (ARGB 의 RGB — 없으면 0) · 0.41.0 평타 강화 모습의 무기 끝 늘임 (세계 칸 · 1인칭 칸 — 없으면 0)
+     */
+    record Spec(WeaponBlades.Blade blade, float from, int glow, int core, int aura, int rune, float ext, float extFp) {}
 
     /** 무기 종류 · 등급 → 디자인 (보통 = 종류_lv0, 나머지 = 종류_등급_lv0 — tools/weapon_models.py 와 같은 규칙) */
     static String designOf(Weapon w) {
@@ -181,6 +195,11 @@ public final class BladeTrails {
 
     /** 이 사람이 든 무기의 궤적 (근접 무기 · 방패 아님 · 무기 점이 있음 — 아니면 null) */
     static Spec specOf(Avatar a) {
+        return specOf(a, null, null);
+    }
+
+    /** 같은 것 — 0.41.0 평타 강화 모습 look (null · NONE = 없음) 으로 동작 motion 을 휘두를 때 (색 · 무기 끝 늘임) */
+    static Spec specOf(Avatar a, String motion, MotionNet.Look look) {
         ItemStack stack = a.getMainHandItem();
         if (!(stack.getItem() instanceof RpgWeaponItem item)) return null;
         Weapon w = item.weapon();
@@ -202,7 +221,28 @@ public final class BladeTrails {
             aura = null;
         }
         double[] rune = style != null && style.has("rune") ? rgb(style.list("rune")) : null;
-        return new Spec(b, from, pack(glow), pack(core), aura == null ? 0 : pack(aura), rune == null ? 0 : pack(rune));
+        float ext = 0;
+        float extFp = 0;
+        if (look != null && !look.none()) {
+            if (look.glow() != 0) {
+                glow = unpack(look.glow());
+                core = whiten(glow, c.lookCore);
+                rune = null; // 모습 색만 (마검의 안쪽 하늘빛 줄은 뺌)
+            }
+            if (look.aura() != 0) aura = unpack(look.aura());
+            mmorpg.core.Motions.Area area = motion == null ? null : mmorpg.core.Motions.area(motion, w.type(), w.gradeIndex());
+            double k = area == null ? 1 : look.scaleAt(area.range());
+            if (k > 1 + 1e-6) {
+                ext = (float) ((k - 1) * area.range() / c.glowTo);
+                extFp = ext * c.lookFp;
+            }
+        }
+        return new Spec(b, from, pack(glow), pack(core), aura == null ? 0 : pack(aura), rune == null ? 0 : pack(rune), ext, extFp);
+    }
+
+    /** 0xRRGGBB → RGB (0 ~ 1) */
+    private static double[] unpack(int v) {
+        return new double[] {((v >> 16) & 0xFF) / 255.0, ((v >> 8) & 0xFF) / 255.0, (v & 0xFF) / 255.0};
     }
 
     private static double[] rgb(List<?> c) {
@@ -323,8 +363,9 @@ public final class BladeTrails {
                     if (tr != null) WORLD_FADING.add(tr);
                     WORLD.remove(id);
                     if (!shown(av)) continue;
-                    Spec spec = specOf(av);
+                    Spec spec = specOf(av, a.motion(), a.look());
                     if (spec == null) continue;
+                    noteSpec(spec, a.look());
                     tr = new Trail(id, a.start(), a.motion(), a.ticks(), spec);
                     WORLD.put(id, tr);
                 }
@@ -338,7 +379,7 @@ public final class BladeTrails {
                 MotionPoses.Motion m = MotionPoses.get(e.getValue().motion());
                 if (m == null || m.trail.length == 0) continue;
                 if (!(level.getEntity(id) instanceof Avatar av) || av.isRemoved() || (av == camEnt && fpCam) || !shown(av)) continue;
-                Spec spec = specOf(av);
+                Spec spec = specOf(av, m.name, frozenLook);
                 if (spec == null) continue;
                 Trail tr = new Trail(id, 0, m.name, m.ticks, spec);
                 tr.fixed = e.getValue().t() * m.ticks;
@@ -474,7 +515,22 @@ public final class BladeTrails {
         out[3] = x + V.x;
         out[4] = y + V.y;
         out[5] = z + V.z;
+        extend(out, tr.spec.ext());
         return true;
+    }
+
+    /** 0.41.0 평타 강화 모습: 무기 끝을 손잡이 → 끝 방향으로 ext 칸 더 (궤적 = 넓어진 범위). out = {손잡이 xyz, 끝 xyz} */
+    static void extend(double[] out, float ext) {
+        if (!(ext > 0)) return;
+        double dx = out[3] - out[0];
+        double dy = out[4] - out[1];
+        double dz = out[5] - out[2];
+        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        if (len < 1e-6) return;
+        double k = ext / len;
+        out[3] += dx * k;
+        out[4] += dy * k;
+        out[5] += dz * k;
     }
 
     /** 가는 팔 모델 (스킨 모양 slim — 팔 3픽셀): 어깨 높이 · 손 자리 · 팔 가운데가 넓은 팔과 다름 (thirdPerson) */
@@ -565,7 +621,7 @@ public final class BladeTrails {
             Trail frozen = null;
             if (fz != null) {
                 MotionPoses.Motion m = MotionPoses.get(fz.motion());
-                Spec spec = m == null || m.trail.length == 0 ? null : specOf(me);
+                Spec spec = m == null || m.trail.length == 0 ? null : specOf(me, m.name, frozenLook);
                 if (spec != null) {
                     frozen = new Trail(me.getId(), 0, m.name, m.ticks, spec);
                     frozen.fixed = fz.t() * m.ticks;
@@ -577,7 +633,8 @@ public final class BladeTrails {
                 if (m != null && m.trail.length > 0) {
                     if (fp == null || fp.start != a.start() || !fp.motion.equals(a.motion())) {
                         if (fp != null) fpFading = fp;
-                        Spec spec = specOf(me);
+                        Spec spec = specOf(me, a.motion(), a.look());
+                        if (spec != null) noteSpec(spec, a.look());
                         fp = spec == null ? null : new Trail(me.getId(), a.start(), a.motion(), a.ticks(), spec);
                     }
                     if (fp != null) {
@@ -626,6 +683,7 @@ public final class BladeTrails {
         out[3] = V.x;
         out[4] = V.y;
         out[5] = V.z;
+        extend(out, tr.spec.extFp());
         return true;
     }
 
@@ -719,7 +777,7 @@ public final class BladeTrails {
         float outer = s.aura() != 0 ? Math.max(aura[0], glow[0]) : glow[0];
         float inner = Math.min(core[1], Math.min(glow[1], s.aura() != 0 ? aura[1] : 1F));
         if (s.rune() != 0) inner = Math.min(inner, rune[1]);
-        double[][] fr = frames(pts, screen, side, from, c);
+        double[][] fr = frames(pts, screen, side, from, c, screen ? capScale(s) : 1);
         float n0 = screen ? c.nearFp0 : c.nearWorld0;
         float n1 = screen ? c.nearFp1 : c.nearWorld1;
         float am = screen ? c.fpAlpha : 1F;
@@ -744,7 +802,7 @@ public final class BladeTrails {
      * 옆 = 화면에서 끝이 가는 길에 직각 (길 × 끝 쪽 시선 — 왼손은 거울). 구간마다 끝이 가장 빨리 움직이는 점의 옆을 기준으로 앞 · 뒤로 이어 가며 같은 쪽을
      * 유지 (휘두름 끝에서 끝이 거의 멈추거나 조금 되돌아와도 띠가 뒤집히지 않게 — 그런 점 (가장 빠른 점의 10% 아래) 은 이웃의 옆)
      */
-    static double[][] frames(List<Sample> pts, boolean screen, float side, float from, Cfg c) {
+    static double[][] frames(List<Sample> pts, boolean screen, float side, float from, Cfg c, double capK) {
         int n = pts.size();
         double[][] fr = new double[n][];
         if (!screen) {
@@ -802,12 +860,23 @@ public final class BladeTrails {
             double dy = p.ty - p.gy;
             double dz = p.tz - p.gz;
             double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
-            double w = Math.min(len * c.fpWidth, c.fpMaxWidth / Math.max(0.05, 1 - from));
+            double w = Math.min(len * c.fpWidth, c.fpMaxWidth * capK / Math.max(0.05, 1 - from));
             double[] v = nv[i];
             // f = 1 → 끝 · f = from → 끝 + 옆 × (1 - from) × w
             fr[i] = new double[] {p.tx + v[0] * w, p.ty + v[1] * w, p.tz + v[2] * w, -v[0] * w, -v[1] * w, -v[2] * w};
         }
         return fr;
+    }
+
+    /** 0.41.0 1인칭 띠 너비 상한 배율: 무기 끝을 늘인 만큼 (무기 길이 + 늘임) ÷ 무기 길이 (늘임이 없으면 1) */
+    static double capScale(Spec s) {
+        if (!(s.extFp() > 0)) return 1;
+        WeaponBlades.Blade b = s.blade();
+        double dx = b.fpTipX() - b.fpGripX();
+        double dy = b.fpTipY() - b.fpGripY();
+        double dz = b.fpTipZ() - b.fpGripZ();
+        double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        return len < 1e-6 ? 1 : (len + s.extFp()) / len;
     }
 
     /** 이웃 (prev) 과 같은 쪽의 옆: 못 구했거나 느린 점이면 이웃 그대로, 반대쪽이면 뒤집음 */
@@ -890,6 +959,20 @@ public final class BladeTrails {
     }
 
     // ------------------------------------------------------------ 시험 (사진첩 — 렌더가 실제로 그린 무기 자리와 BladeTrails 의 계산을 비교)
+
+    /** 0.41.0 시험 · 사진첩: 멈춘 자세 (ClientMotions.freeze) 의 궤적에 입힐 평타 강화 모습 (null = 없음) */
+    public static MotionNet.Look frozenLook;
+    /** 0.41.0 시험: 마지막으로 시작한 모습 실린 궤적의 빛 색 · 무기 끝 늘임 (세계 · 1인칭 — 모습이 없던 궤적은 적지 않음) */
+    public static int lastLookGlow;
+    public static float lastLookExt;
+    public static float lastLookExtFp;
+
+    private static void noteSpec(Spec spec, MotionNet.Look look) {
+        if (look == null || look.none()) return;
+        lastLookGlow = spec.glow();
+        lastLookExt = spec.ext();
+        lastLookExtFp = spec.extFp();
+    }
 
     /** 시험: 이 사람 (id) 의 주 손 무기를 그릴 때 그 자리를 적어 둠 */
     public static int captureEntity = Integer.MIN_VALUE;

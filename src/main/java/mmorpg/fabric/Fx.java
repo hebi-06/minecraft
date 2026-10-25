@@ -92,9 +92,24 @@ public final class Fx {
      * 그 밖에는 등급 색 (cfg = BOW · WAND 의 color)
      */
     static double[][] shotColors(Obj cfg, Weapon w) {
+        if (lookColors != null) return lookColors; // 0.41.0 평타 강화 모습
         Obj s = w.look() == null ? null : Weapons.slashStyle(w.look());
         if (s == null || !s.has("glow")) return new double[][] {gradeRgb(cfg, w.gradeIndex()), null};
         return new double[][] {rgbOf(s, "glow"), s.has("core") ? rgbOf(s, "core") : null};
+    }
+
+    /** 0.41.0 평타 강화 모습 (평타 강화 룬이 걸린 활 · 완드 평타 — SwingLook.shotColors): 이 값이 있는 동안 shotColors 대신 이 색 {빛, 심지} */
+    private static double[][] lookColors;
+
+    /** 0.41.0 이제부터 그리는 활 · 완드 평타의 색을 cs 로 (null = 무기 · 등급 색) — 돌려준 앞 값으로 {@link #popLook} (try/finally). 서버 스레드 하나라 정적 값으로 충분 */
+    static double[][] pushLook(double[][] cs) {
+        double[][] prev = lookColors;
+        lookColors = cs;
+        return prev;
+    }
+
+    static void popLook(double[][] prev) {
+        lookColors = prev;
     }
 
     /** 이펙트 하나를 그 자리 둘레 (늘 보이게) 에 보냄 */

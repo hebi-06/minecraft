@@ -35,9 +35,12 @@ public final class MotionSystem {
     private static final Map<UUID, Long> ROLLED = new HashMap<>();
     /** 시험: 마지막으로 보낸 동작 (사람 → 이름) */
     private static final Map<UUID, String> SENT = new HashMap<>();
+    /** 시험: 마지막으로 보낸 동작의 평타 강화 모습 (0.41.0) */
+    private static final Map<UUID, MotionNet.Look> SENT_LOOK = new HashMap<>();
 
     public static void init() {
         MotionNet.register();
+        SwingLook.init();
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forget(handler.player.getUUID()));
     }
 
@@ -46,6 +49,8 @@ public final class MotionSystem {
         PENDING.remove(id);
         ROLLED.remove(id);
         SENT.remove(id);
+        SENT_LOOK.remove(id);
+        SwingLook.forget(id);
     }
 
     // ------------------------------------------------------------ 클라이언트 요청
@@ -82,7 +87,7 @@ public final class MotionSystem {
         }
         Swing s = new Swing(combo.get(step - 1), step, now);
         LAST.put(id, s);
-        broadcast(sp, s.motion(), sp.getYRot(), fromClient);
+        broadcast(sp, s.motion(), sp.getYRot(), fromClient, SwingLook.forSwing(sp, s.motion()));
         return s;
     }
 
@@ -136,8 +141,14 @@ public final class MotionSystem {
 
     /** 둘레 (그 사람을 보는 사람들) 에 동작을 알림. exceptSelf = 쓴 사람은 이미 그리는 중 (클라이언트가 먼저 시작) */
     static void broadcast(ServerPlayer sp, String motion, float yaw, boolean exceptSelf) {
+        broadcast(sp, motion, yaw, exceptSelf, MotionNet.Look.NONE);
+    }
+
+    /** 같은 것 — 0.41.0 평타 강화 모습과 함께 (평타만) */
+    static void broadcast(ServerPlayer sp, String motion, float yaw, boolean exceptSelf, MotionNet.Look look) {
         SENT.put(sp.getUUID(), motion);
-        MotionNet.PlayPayload p = new MotionNet.PlayPayload(sp.getId(), motion, yaw);
+        SENT_LOOK.put(sp.getUUID(), look != null ? look : MotionNet.Look.NONE);
+        MotionNet.PlayPayload p = new MotionNet.PlayPayload(sp.getId(), motion, yaw, look != null ? look : MotionNet.Look.NONE);
         for (ServerPlayer o : PlayerLookup.tracking(sp)) {
             if (o != sp) MotionNet.send(o, p);
         }
@@ -147,6 +158,12 @@ public final class MotionSystem {
     /** 시험: 이 사람의 마지막 동작 알림 (없으면 null) */
     public static String lastSent(ServerPlayer sp) {
         return sp == null ? null : SENT.get(sp.getUUID());
+    }
+
+    /** 시험: 이 사람의 마지막 동작 알림에 실린 평타 강화 모습 (없으면 NONE) */
+    public static MotionNet.Look lastSentLook(ServerPlayer sp) {
+        MotionNet.Look l = sp == null ? null : SENT_LOOK.get(sp.getUUID());
+        return l == null ? MotionNet.Look.NONE : l;
     }
 
     /** 시험: 클라이언트 요청처럼 (ReqPayload) */

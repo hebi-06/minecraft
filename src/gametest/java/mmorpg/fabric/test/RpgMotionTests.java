@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import mmorpg.core.Motions;
 import mmorpg.core.Runes;
+import mmorpg.core.SwingLooks;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgCombat;
@@ -12,8 +13,12 @@ import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.Slash;
 import mmorpg.fabric.SwingArea;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.job.JobTraits;
+import mmorpg.fabric.motion.MotionNet;
 import mmorpg.fabric.motion.MotionSystem;
+import mmorpg.fabric.motion.SwingLook;
 import mmorpg.fabric.rune.RuneCast;
+import mmorpg.fabric.rune.RuneStrike;
 import mmorpg.fabric.skill.Transcend;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
@@ -39,6 +44,8 @@ import net.minecraft.world.phys.Vec3;
  * 0.39.0 참격 범위 피해 (가로 베기 = 앞 부채꼴 — 옆 · 뒤는 안 맞음, 회전 베기 = 둘레, 낫은 120°, 허공을 베어도 범위 안 적은 100%, 조준한 적은 한 번만),
  * 평타 사이 (네트워크 입력 — 8틱 안 두 번째는 받지 않음, 같은 누름의 공격 패킷 하나는 받음), 공격 대기 없음 (충전과 상관없이 · 바로 다시 쳐도 온전한 피해).
  * 0.40.0 참격 궤적: 범위 거리 = 무기 궤적이 닿는 곳 (칼 희귀 2.3칸 · 낫 고귀 3.3칸 — MOTION.area.reach), 가로 베기 160°.
+ * 0.41.0 평타 강화 모습: 평타 강화 룬 · 직업 평타 태세가 범위를 넓힘 (날 세우기 × 1.15 · 사신 현신 5칸), '평타 N번' 은 휘두를 때마다 1번 (마지막 번의 범위 적도),
+ * 가르기 부채꼴은 같은 휘두르기에 맞은 적을 다시 베지 않음, 평타 알림에 모습, 활 · 완드 색은 평타 강화 룬만.
  */
 public final class RpgMotionTests {
     static final String ENV = "mmorpg:motion";
@@ -278,6 +285,152 @@ public final class RpgMotionTests {
             // 1틱 뒤 다시 (몹의 연속 피해 막기 시간 안) — 예전에는 막히거나 차이만
             sp.attack(a);
             h.assertTrue(oneHit(TestDummies.dealt(a) - first[0], sp, w), "second hit 1 tick later also full " + (TestDummies.dealt(a) - first[0]));
+            done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 0.41.0 평타 강화 모습 (범위 · 휘두를 때마다 1번 · 둘레에 알림)
+
+    /** 평타 한 번 + 더한 피해 add (치명타면 평타만 × 치명타 배율 — 더한 피해는 치명타 뒤에 더함) */
+    private static boolean oneHitPlus(double v, ServerPlayer sp, Weapon w, double add) {
+        double f = full(sp, w);
+        return near(v, f + add) || near(v, f * w.critMult() + add);
+    }
+
+    /**
+     * 날 세우기 (평타 강화 — 범위 × 1.15 · 평타 3번): 걸기 전에는 2.8칸 적이 범위 밖 → 걸면 안, 한 번 휘둘러 셋을 맞혀도 1번만 씀 (더한 피해는 셋 모두),
+     * 마지막 번의 휘두르기는 범위 적 (1틱 뒤) 도 더한 피해, 다 쓰면 모습 · 범위가 돌아옴. 평타 동작 알림에 모습 (빛 색 · 배율) 이 실림
+     */
+    @GameTest(environment = ENV, maxTicks = 100)
+    public void strikeLookWidensAndCountsPerSwing(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon w = Weapons.weaponFrom("sword", 20, "rare");
+        hold(sp, w);
+        Husk a = dummy(h, 1.5, 2, 3.5); // 앞 2칸 (조준)
+        Husk e = dummy(h, 3.0, 2, 3.5); // 앞 왼쪽 2.5칸 — 보통 범위 안
+        Husk g = dummy(h, 1.5, 2, 4.3); // 앞 2.8칸 — 보통 (2.3 + 몸 반폭 0.3) 밖, × 1.15 (2.645 + 0.3) 안
+        List<Husk> all = List.of(a, e, g);
+        RpgCombat.forceCrit = false;
+        Runes.Rune r = Runes.parseRune("rpg:rune_strike_common");
+        double[] bonus = new double[1];
+        double[] seen = new double[3];
+        Runnable mark = () -> {
+            for (int i = 0; i < 3; i++) seen[i] = TestDummies.dealt(all.get(i));
+        };
+        java.util.function.IntToDoubleFunction got = i -> TestDummies.dealt(all.get(i)) - seen[i];
+        h.runAfterDelay(2, () -> {
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == g), "no buff: 2.8 out of reach");
+            h.assertTrue(SwingLook.testKey(sp) == null, "no look yet");
+            h.assertTrue(RuneCast.castRune(sp, r, false), "cast 날 세우기");
+            bonus[0] = RuneCast.power(sp, "strike") * r.def().num("bonus");
+            h.assertTrue("edgeHone".equals(SwingLook.testKey(sp)), "look " + SwingLook.testKey(sp));
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == g), "buff: 2.8 within x1.15");
+            h.assertTrue(RuneStrike.testLeft(sp, "common") == 3, "3 left " + RuneStrike.testLeft(sp, "common"));
+            MotionSystem.testRequest(sp, "basic", 1, 0);
+            sp.attack(a);
+            MotionNet.Look sent = MotionSystem.lastSentLook(sp);
+            h.assertTrue(sent.glow() == SwingLooks.pack(SwingLooks.of("edgeHone").glow()) && Math.abs(sent.scale() - 1.15F) < 1e-6,
+                    "look sent with the swing " + sent);
+        });
+        h.runAfterDelay(4, () -> {
+            for (int i = 0; i < 3; i++) {
+                h.assertTrue(oneHitPlus(got.applyAsDouble(i), sp, w, bonus[0]), "swing 1: basic + strike on each (" + i + ") " + got.applyAsDouble(i) + " vs "
+                        + (full(sp, w) + bonus[0]));
+            }
+            h.assertTrue(SwingArea.lastCount(sp) == 2, "two area victims " + SwingArea.lastCount(sp));
+            h.assertTrue(RuneStrike.testLeft(sp, "common") == 2, "one swing (3 enemies) = one use → 2 left: " + RuneStrike.testLeft(sp, "common"));
+            mark.run();
+            MotionSystem.testRequest(sp, "basic", 1, 0);
+            sp.attack(a);
+        });
+        h.runAfterDelay(6, () -> {
+            h.assertTrue(RuneStrike.testLeft(sp, "common") == 1, "swing 2 → 1 left: " + RuneStrike.testLeft(sp, "common"));
+            h.assertTrue(oneHitPlus(got.applyAsDouble(2), sp, w, bonus[0]), "swing 2: far one still in reach " + got.applyAsDouble(2));
+            mark.run();
+        });
+        h.runAfterDelay(14, () -> {
+            MotionSystem.testRequest(sp, "basic", 1, 0);
+            sp.attack(a); // 마지막 번
+            h.assertTrue(RuneStrike.testLeft(sp, "common") == 0, "last use: 0 (kept until the swing's area lands) " + RuneStrike.testLeft(sp, "common"));
+        });
+        h.runAfterDelay(16, () -> {
+            for (int i = 0; i < 3; i++) {
+                h.assertTrue(oneHitPlus(got.applyAsDouble(i), sp, w, bonus[0]), "last swing: area victims get the strike too (" + i + ") " + got.applyAsDouble(i));
+            }
+            mark.run();
+        });
+        h.runAfterDelay(20, () -> {
+            h.assertTrue(RuneStrike.testLeft(sp, "common") == -1 && SwingLook.testKey(sp) == null, "used up → gone " + RuneStrike.testLeft(sp, "common"));
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == g), "reach back to normal");
+            MotionSystem.testRequest(sp, "basic", 1, 0);
+            sp.attack(a);
+            h.assertTrue(MotionSystem.lastSentLook(sp).none(), "no look on a plain swing " + MotionSystem.lastSentLook(sp));
+        });
+        h.runAfterDelay(22, () -> {
+            h.assertTrue(oneHit(got.applyAsDouble(0), sp, w) && oneHit(got.applyAsDouble(1), sp, w) && got.applyAsDouble(2) == 0,
+                    "plain swing: no strike, far one untouched " + got.applyAsDouble(0) + " " + got.applyAsDouble(1) + " " + got.applyAsDouble(2));
+            done(h, sp);
+        });
+    }
+
+    /** 가르기 (범위 × 1.4 · 부채꼴 반지름 4): 같은 휘두르기에 맞은 적 (조준 · 범위) 은 부채꼴이 다시 베지 않음, 범위 밖 부채꼴 안의 적만 부채꼴 피해 */
+    @GameTest(environment = ENV, maxTicks = 60)
+    public void cleaveConeSkipsSwingVictims(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon w = Weapons.weaponFrom("sword", 20, "rare");
+        hold(sp, w);
+        Husk a = dummy(h, 1.5, 2, 3.5); // 조준
+        Husk e = dummy(h, 3.0, 2, 3.5); // 범위
+        Husk f = dummy(h, 1.5, 2, 5.3); // 앞 3.8칸 — 범위 (2.3 × 1.4 = 3.22 + 0.3) 밖, 가르기 부채꼴 (반지름 4) 안
+        RpgCombat.forceCrit = false;
+        Runes.Rune r = Runes.parseRune("rpg:rune_strike_noble");
+        double[] bonus = new double[1];
+        h.runAfterDelay(2, () -> {
+            h.assertTrue(RuneCast.castRune(sp, r, false), "cast 가르기");
+            bonus[0] = RuneCast.power(sp, "strike") * r.def().num("bonus");
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == f), "3.8 beyond the widened reach");
+            MotionSystem.testRequest(sp, "basic", 1, 0);
+            sp.attack(a);
+        });
+        h.runAfterDelay(6, () -> {
+            h.assertTrue(oneHitPlus(TestDummies.dealt(a), sp, w, bonus[0]), "aimed: one hit + strike (no cone) " + TestDummies.dealt(a) + " vs " + (full(sp, w) + bonus[0]));
+            h.assertTrue(oneHitPlus(TestDummies.dealt(e), sp, w, bonus[0]), "area: one hit + strike (no cone) " + TestDummies.dealt(e));
+            h.assertTrue(TestDummies.dealt(f) > 0 && !oneHitPlus(TestDummies.dealt(f), sp, w, bonus[0]), "cone only beyond the area " + TestDummies.dealt(f));
+            h.assertTrue(RuneStrike.testLeft(sp, "noble") == r.def().num("hits") - 1, "one swing = one use " + RuneStrike.testLeft(sp, "noble"));
+            RuneStrike.testClear(sp);
+            done(h, sp);
+        });
+    }
+
+    /** 직업 평타 태세: 사신 현신 (낫 — 범위 5칸), 명경지수 (칼만), 활 · 완드 색은 평타 강화 룬만 */
+    @GameTest(environment = ENV, maxTicks = 40)
+    public void jobStanceLooks(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon scythe = Weapons.weaponFrom("scythe", 20, "noble");
+        hold(sp, scythe);
+        Husk far = dummy(h, 1.5, 2, 6.0); // 앞 4.5칸 — 낫 고귀 3.3 밖, 사신 현신 5칸 안
+        h.runAfterDelay(2, () -> {
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == far), "scythe 3.3: 4.5 out of reach");
+            h.assertTrue(JobTraits.testStance(sp, "reaper", "reaper_avatar", 100), "reaper avatar on");
+            h.assertTrue("reaper_avatar".equals(SwingLook.testKey(sp)), "look " + SwingLook.testKey(sp));
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == far), "reaper avatar: 5 blocks");
+            h.assertTrue(SwingLook.shotColors(sp, scythe) == null, "job looks: melee only");
+            hold(sp, Weapons.weaponFrom("sword", 20, "rare"));
+            h.assertTrue(SwingLook.testKey(sp) == null, "reaper look: scythe only");
+            h.assertTrue(JobTraits.testStance(sp, "swordsman", "swordsman_mirror", 100) && "swordsman_mirror".equals(SwingLook.testKey(sp)),
+                    "mirror look " + SwingLook.testKey(sp));
+            Weapon bow = Weapons.weaponFrom("bow", 20, "rare");
+            hold(sp, bow);
+            h.assertTrue(SwingLook.testKey(sp) == null && SwingLook.shotColors(sp, bow) == null, "mirror: not on a bow");
+            h.assertTrue(RuneCast.castRune(sp, Runes.parseRune("rpg:rune_strike_noble"), false), "cast 가르기 (bow)");
+            double[][] cs = SwingLook.shotColors(sp, bow);
+            h.assertTrue(cs != null && SwingLooks.pack(cs[0]) == SwingLooks.pack(SwingLooks.of("cleave").glow()), "strike rune colors the bow shot");
+            JobTraits.testEndStance(sp);
+            RuneStrike.testClear(sp);
+            h.assertTrue(SwingLook.testKey(sp) == null, "cleared");
             done(h, sp);
         });
     }

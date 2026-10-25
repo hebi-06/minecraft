@@ -22,7 +22,7 @@ import net.minecraft.world.phys.Vec3;
  *   <li>내 평타: 공격 키 (Minecraft.startAttack 처음) 에 연타 단계를 정해 서버에 먼저 보내고 (참격 방향이 같게), 실제로 휘두를 때 (swing) 동작 시작 — 블록을 캘 때는 없음.
  *       0.39.0 공격 대기 대신 평타 사이 (MOTION.interval 틱): 앞 평타에서 그만큼 지나기 전에 누르면 기억해 두었다가 (선입력) 지나는 틱에 그때 누른 것처럼 나감 —
  *       매번 온전한 피해, 여러 번 눌러도 하나만</li>
- *   <li>다른 사람 · 스킬: 서버의 PlayPayload</li>
+ *   <li>다른 사람 · 스킬: 서버의 PlayPayload (0.41.0 평타면 평타 강화 모습도 — 내 평타는 서버가 미리 알린 LookPayload 의 모습)</li>
  *   <li>구르기: 쉬프트를 doubleTap 틱 안에 두 번 — 움직이는 쪽 (가만히면 앞) 으로 ticks 틱 동안 distance 칸 (틱마다 빠르기를 정함), 재사용 대기 cooldown 틱,
  *       땅 위 · 탈것 · 물 · 겉날개 · 비행 아닐 때만, 구르는 동안 공격 없음 (무적 없음 — 서버는 둘레에 모습만 알림)</li>
  * </ul>
@@ -30,8 +30,8 @@ import net.minecraft.world.phys.Vec3;
 public final class ClientMotions {
     private ClientMotions() {}
 
-    /** 하는 중인 동작 (start = 시작 시각 — 클라이언트 틱) */
-    record Active(String motion, double start, float yaw, int ticks) {}
+    /** 하는 중인 동작 (start = 시작 시각 — 클라이언트 틱, look = 0.41.0 평타 강화 모습 — 없으면 NONE) */
+    record Active(String motion, double start, float yaw, int ticks, MotionNet.Look look) {}
 
     private static final Map<Integer, Active> ACTIVE = new HashMap<>();
     /** 세계에 있는 동안 센 클라이언트 틱 */
@@ -47,6 +47,9 @@ public final class ClientMotions {
     private static String lastType = "";
     /** 0.39.0 선입력: 평타 사이가 지나기 전에 누른 틱 (없으면 -1) */
     private static long buffered = -1;
+    /** 0.41.0 내 평타 강화 모습 (서버 LookPayload — 바뀔 때마다) · 끝나는 클라이언트 틱 */
+    private static MotionNet.Look selfLook = MotionNet.Look.NONE;
+    private static long selfLookUntil = -1;
 
     // 구르기
     private static long rollStart = -1000;
@@ -69,6 +72,8 @@ public final class ClientMotions {
         buffered = -1;
         rollStart = -1000;
         lastTap = -1000;
+        selfLook = MotionNet.Look.NONE;
+        selfLookUntil = -1;
         FROZEN.clear();
     }
 
@@ -90,14 +95,48 @@ public final class ClientMotions {
 
     /** 동작 시작 (지금 틱이 끝나는 때부터 — 렌더의 다음 프레임이 t = 0) */
     public static void start(int entity, String motion, float yaw) {
+        start(entity, motion, yaw, MotionNet.Look.NONE);
+    }
+
+    /** 같은 것 — 0.41.0 평타 강화 모습과 함께 (궤적 색 · 길이) */
+    public static void start(int entity, String motion, float yaw, MotionNet.Look look) {
         MotionPoses.Motion m = MotionPoses.get(motion);
         if (m == null) return;
-        ACTIVE.put(entity, new Active(motion, ticks + 1, yaw, Math.max(1, m.ticks)));
+        ACTIVE.put(entity, new Active(motion, ticks + 1, yaw, Math.max(1, m.ticks), look != null ? look : MotionNet.Look.NONE));
     }
 
     /** 서버가 알린 동작 */
     public static void receive(MotionNet.PlayPayload p) {
-        start(p.entity(), p.motion(), p.yaw());
+        start(p.entity(), p.motion(), p.yaw(), p.look());
+    }
+
+    /** 0.41.0 서버가 알린 내 평타 강화 모습 (NONE = 끝남) — ticks 동안 (끝나면 서버가 다시 알림 · 늦으면 여기서도 끝) */
+    public static void receiveLook(MotionNet.LookPayload p) {
+        MotionNet.Look l = p.look();
+        if (l == null || l.none() || p.ticks() <= 0) {
+            selfLook = MotionNet.Look.NONE;
+            selfLookUntil = -1;
+        } else {
+            selfLook = l;
+            selfLookUntil = ticks + p.ticks() + 2;
+        }
+    }
+
+    /** 0.41.0 내가 지금 평타 motion 을 휘두르면 실을 모습 (궤적이 대신하는 평타만 — 없으면 NONE) */
+    static MotionNet.Look selfLookFor(String motion) {
+        if (selfLook.none() || ticks >= selfLookUntil || motion == null || !Motions.trailBasic(motion)) return MotionNet.Look.NONE;
+        return selfLook;
+    }
+
+    /** 시험: 내 평타 강화 모습 (서버가 알린 것 — 끝났으면 NONE) */
+    public static MotionNet.Look selfLook() {
+        return ticks >= selfLookUntil ? MotionNet.Look.NONE : selfLook;
+    }
+
+    /** 시험: 이 사람이 지금 하는 동작에 실린 모습 (없으면 NONE) */
+    public static MotionNet.Look lookOf(int entity) {
+        Active a = ACTIVE.get(entity);
+        return a == null || a.look() == null ? MotionNet.Look.NONE : a.look();
     }
 
     /** 이 사람이 지금 하는 동작 이름 (없으면 null) */
@@ -211,7 +250,8 @@ public final class ClientMotions {
         if (!inAttack || pendingStep <= 0) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || e != mc.player) return;
-        start(e.getId(), pendingCombo.get(pendingStep - 1), 0);
+        String motion = pendingCombo.get(pendingStep - 1);
+        start(e.getId(), motion, 0, selfLookFor(motion)); // 0.41.0 평타 강화 모습 (서버가 미리 알린 것)
         lastStep = pendingStep;
         lastSwing = ticks;
         lastType = pendingType;

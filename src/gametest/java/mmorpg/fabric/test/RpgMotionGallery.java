@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import mmorpg.core.Armor;
 import mmorpg.core.Motions;
+import mmorpg.core.SwingLooks;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgItems;
@@ -11,7 +12,9 @@ import mmorpg.fabric.client.motion.BladeTrails;
 import mmorpg.fabric.client.motion.ClientMotions;
 import mmorpg.fabric.client.motion.MotionPoses;
 import mmorpg.fabric.client.motion.MotionRender;
+import mmorpg.fabric.motion.MotionNet;
 import mmorpg.fabric.motion.MotionSystem;
+import mmorpg.fabric.motion.SwingLook;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerConnection;
@@ -41,7 +44,8 @@ import org.slf4j.LoggerFactory;
  * 공허 갑옷을 입은 마네킹의 팔꿈치 · 무릎 굽힘 (mo_armor_*), 실제 입력: 공격 키 세 번 = 가로 → 세로 → 회전 (클라이언트 · 서버 단계가 같은지 · 1인칭 사진),
  * 쉬프트 두 번 = 구르기 (앞으로 3칸 넘게 · 재사용 대기 중에는 다시 안 됨 · 1인칭 · 3인칭 사진), 우클릭 무기 스킬 → 서버가 보낸 동작 (skill_slash),
  * 맨손 1인칭 (굽힘이 남지 않음). 0.40.0 참격 궤적: 렌더가 그린 무기 자리 = BladeTrails 계산 (3인칭 마네킹 · 1인칭), 실제로 눌러 찍은 궤적 (mo_trail_tp_* · mo_trail_fp_*) —
- * 멈춘 사진 (mo_&lt;동작&gt;_* · mo_fp_*) 에도 그 순간까지의 궤적. 사진 이름 mo_* → ci-logs 의 shots/.
+ * 멈춘 사진 (mo_&lt;동작&gt;_* · mo_fp_*) 에도 그 순간까지의 궤적. 0.41.0 평타 강화 모습: 멈춘 마네킹의 가로 베기 궤적을 모습마다 (mo_look_&lt;key&gt;),
+ * 가르기 · 사신 현신을 걸고 실제로 평타 (mo_look_tp_* · tb_* · fp_* — 서버가 알린 모습 = 궤적 색 · 무기 끝 늘임). 사진 이름 mo_* → ci-logs 의 shots/.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgMotionGallery implements FabricClientGameTest {
@@ -111,6 +115,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             part(ctx, "attack", () -> attack(ctx, server));
             part(ctx, "trail", () -> trail(ctx, server));
             part(ctx, "area", () -> area(ctx, server));
+            part(ctx, "look", () -> looks(ctx, server));
             part(ctx, "roll", () -> roll(ctx, server));
             part(ctx, "skill", () -> skill(ctx, server));
             part(ctx, "empty", () -> empty(ctx, server));
@@ -450,6 +455,105 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.waitTicks(3);
     }
 
+    // ------------------------------------------------------------ 3-3. 0.41.0 평타 강화 모습 (궤적 색 · 무기 끝 너머로 늘임)
+
+    /** {모습 key (none = 없음), 무기 종류} — 멈춘 마네킹 (3/4 · 가로 베기) 궤적 사진 mo_look_&lt;key&gt; */
+    private static final String[][] LOOK_STILLS = {
+        {"none", "sword"}, {"edgeHone", "sword"}, {"flurry", "sword"}, {"cleave", "sword"}, {"bloodBlade", "sword"}, {"swordGod", "sword"},
+        {"swordsman_mirror", "sword"}, {"spellblade_awaken", "greatsword"}, {"none", "scythe"}, {"reaper_avatar", "scythe"},
+    };
+
+    private static MotionNet.Look netLook(String key) {
+        SwingLooks.Look l = SwingLooks.of(key);
+        return l == null ? null : new MotionNet.Look(SwingLooks.pack(l.glow()), SwingLooks.pack(l.aura()), (float) l.scale(), (float) l.range());
+    }
+
+    private void looks(ClientGameTestContext ctx, TestServerContext server) {
+        server.runCommand("tp @a 0.5 -60 0.5 180 8");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.getInput().lookAt(180F, 8F);
+        hideGui(ctx, true);
+        // (1) 멈춘 마네킹 하나 (가운데): 같은 가로 베기 순간에 모습마다
+        for (String[] lk : LOOK_STILLS) {
+            List<Integer> row = spawn(server, -35F, lk[1], false);
+            discard(server, List.of(row.get(0), row.get(2)));
+            int id = row.get(1);
+            MotionNet.Look look = lk[0].equals("none") ? null : netLook(lk[0]);
+            check(lk[0].equals("none") || look != null, "look " + lk[0]);
+            ctx.runOnClient(mc -> {
+                BladeTrails.frozenLook = look;
+                ClientMotions.freeze(id, "slash_h", 0.72F);
+            });
+            ctx.waitTicks(3);
+            ctx.takeScreenshot(TestScreenshotOptions.of("mo_look_" + lk[0] + (lk[0].equals("none") ? "_" + lk[1] : "")).withSize(960, 540));
+            ctx.runOnClient(mc -> {
+                ClientMotions.unfreezeAll();
+                BladeTrails.frozenLook = null;
+            });
+            discard(server, List.of(id));
+        }
+        // (2) 실제로: 가르기 (평타 강화 룬) 를 걸고 평타 — 서버가 알린 내 모습 → 궤적 색 · 늘임 (3인칭 앞 · 뒤 · 1인칭)
+        int me = ctx.computeOnClient(mc -> mc.player.getId());
+        server.runCommand("tp @a 0.5 -60 0.5 180 0");
+        server.runOnServer(sv -> {
+            ServerPlayer sp = player(sv);
+            sp.getInventory().setItem(0, weaponOf("sword", "rare"));
+            sp.getInventory().setSelectedSlot(0);
+        });
+        ctx.waitTicks(Motions.comboWindow() + 4);
+        check(server.computeOnServer(sv -> mmorpg.fabric.rune.RuneCast.castRune(player(sv), mmorpg.core.Runes.parseRune("rpg:rune_strike_noble"), false)), "cast 가르기");
+        ctx.waitTicks(4);
+        check("cleave".equals(server.computeOnServer(sv -> SwingLook.testKey(player(sv)))), "server look cleave");
+        int want = SwingLooks.pack(SwingLooks.of("cleave").glow());
+        check(ctx.computeOnClient(mc -> ClientMotions.selfLook().glow()) == want, "client got my look " + Integer.toHexString(ctx.computeOnClient(mc -> ClientMotions.selfLook().glow())));
+        swingShots(ctx, me, "cleave", want);
+        server.runOnServer(sv -> mmorpg.fabric.rune.RuneStrike.testClear(player(sv)));
+        ctx.waitTicks(4);
+        check(ctx.computeOnClient(mc -> ClientMotions.selfLook().none()), "look ended on the client");
+        // (3) 직업 태세: 사신 현신 (낫 — 5칸)
+        server.runOnServer(sv -> {
+            ServerPlayer sp = player(sv);
+            sp.getInventory().setItem(0, weaponOf("scythe", "hero"));
+            sp.getInventory().setSelectedSlot(0);
+            mmorpg.fabric.job.JobTraits.testStance(sp, "reaper", "reaper_avatar", 400);
+        });
+        ctx.waitTicks(Motions.comboWindow() + 4);
+        int wantR = SwingLooks.pack(SwingLooks.of("reaper_avatar").glow());
+        check(ctx.computeOnClient(mc -> ClientMotions.selfLook().glow()) == wantR, "client got the reaper look");
+        swingShots(ctx, me, "reaper_avatar", wantR);
+        server.runOnServer(sv -> {
+            ServerPlayer sp = player(sv);
+            mmorpg.fabric.job.JobTraits.testEndStance(sp);
+            sp.getInventory().clearContent();
+        });
+        fov(ctx, 70);
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        hideGui(ctx, false);
+        ctx.waitTicks(10);
+    }
+
+    /** 모습이 실린 평타 한 번씩 (3인칭 앞 · 뒤 · 1인칭): 궤적 색 = 모습 · 무기 끝 늘임, 사진 mo_look_&lt;tp|tb|fp&gt;_&lt;key&gt; */
+    private void swingShots(ClientGameTestContext ctx, int me, String key, int want) {
+        for (CameraType cam : new CameraType[] {CameraType.THIRD_PERSON_FRONT, CameraType.THIRD_PERSON_BACK, CameraType.FIRST_PERSON}) {
+            boolean tp = cam != CameraType.FIRST_PERSON;
+            String tag = cam == CameraType.THIRD_PERSON_FRONT ? "tp_" : cam == CameraType.THIRD_PERSON_BACK ? "tb_" : "fp_";
+            hideGui(ctx, tp);
+            ctx.runOnClient(mc -> mc.options.setCameraType(cam));
+            fov(ctx, cam == CameraType.THIRD_PERSON_FRONT ? 50 : 70);
+            ctx.getInput().lookAt(180F, tp ? 8F : 0F);
+            ctx.waitTicks(Motions.comboWindow() + 4); // 연타가 처음부터 (가로 베기)
+            ctx.getInput().pressKey(o -> o.keyAttack);
+            ctx.waitTicks(5);
+            MotionNet.Look l = ctx.computeOnClient(mc -> ClientMotions.lookOf(me));
+            check(l.glow() == want, "swing carries the look " + key + " " + Integer.toHexString(l.glow()));
+            check(ctx.computeOnClient(mc -> BladeTrails.lastLookGlow) == want, "trail glow = look " + key);
+            float ext = ctx.computeOnClient(mc -> tp ? BladeTrails.lastLookExt : BladeTrails.lastLookExtFp);
+            check(ext > 0.2F, "blade tip extended " + key + " " + ext);
+            ctx.takeScreenshot(TestScreenshotOptions.of("mo_look_" + tag + key).withSize(960, 540));
+            ctx.waitTicks(Motions.attackInterval() + 1);
+        }
+    }
+
     // ------------------------------------------------------------ 4. 쉬프트 두 번 = 구르기
 
     private void roll(ClientGameTestContext ctx, TestServerContext server) {
@@ -622,6 +726,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
                 MotionRender.debugEntity = Integer.MIN_VALUE;
                 BladeTrails.captureEntity = Integer.MIN_VALUE;
                 BladeTrails.captureFp = false;
+                BladeTrails.frozenLook = null;
                 if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
             });
             ctx.setScreen(() -> null);
