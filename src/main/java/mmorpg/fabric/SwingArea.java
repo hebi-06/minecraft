@@ -125,7 +125,8 @@ public final class SwingArea {
         a = widen(sp, w, a);
         Vec3 eye = sp.getEyePosition();
         Vec3 feet = sp.position();
-        Vec3 f = sp.getViewVector(1F).normalize();
+        // 보는 방향 = 몸의 yaw · pitch (플레이어는 머리와 같음 — 머리 회전 yHeadRot 이 따로 노는 가짜 플레이어 · 시험에서도 같게)
+        Vec3 f = Vec3.directionFromRotation(sp.getXRot(), sp.getYRot()).normalize();
         Vec3 r = f.cross(new Vec3(0, 1, 0));
         if (r.lengthSqr() < 1e-4) r = Kit.facingOf(sp).cross(new Vec3(0, 1, 0));
         r = r.normalize();

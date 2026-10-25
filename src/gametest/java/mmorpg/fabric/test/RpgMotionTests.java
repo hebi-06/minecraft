@@ -54,6 +54,7 @@ public final class RpgMotionTests {
         sp.setGameMode(GameType.SURVIVAL);
         Vec3 at = h.absoluteVec(new Vec3(1.5, 2, 1.5));
         sp.snapTo(at.x, at.y, at.z, 0F, 0F);
+        sp.setYHeadRot(0F);
         RpgPlayers.onJoin(sp);
         MotionSystem.forget(sp.getUUID());
         return sp;
