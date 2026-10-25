@@ -28,12 +28,13 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * 0.37.0 아티팩트 창 (기본 I 키 · 인벤토리 패널의 "아티팩트" 단추 · /아티팩트 — 사용자가 고른 "따로 아티팩트 창: 키 하나로 여는 전용 창에 칸 5개 · 합계 옵션"):
+ * 0.37.0 장신구 창 (0.43.0 이름 바꿈 — 옛 "아티팩트". I 키 창의 "장신구" 탭 · 인벤토리 패널의 장신구 단추 · /장신구 — 사용자가 고른 "따로 창: 키 하나로 여는 전용 창에
+ * 칸 5개 · 합계 옵션"):
  * <ul>
  * <li>왼쪽 무대: 내 모습 (마우스를 따라 봄) · 마법진 · 둘레에 칸 다섯 — 왼쪽 귀걸이 · 목걸이 · 팔찌, 오른쪽 반지 1 · 반지 2. 빈 칸은 그 종류의 흐린 모양,
  * 낀 칸은 등급 색 테 (영웅 · 초월은 숨 쉬는 빛 · 도는 빛 한 점), 착용 레벨이 모자라면 빨갛게.</li>
  * <li>오른쪽: 합계 옵션 여덟 줄 (공격력 · 치명타 확률 · 치명타 피해 · 룬 피해 · 재사용 대기 · 최대 체력 · 받는 피해 · 이동 속도 — 바뀐 줄은 잠깐 초록 빛).</li>
- * <li>아래: 가방의 아티팩트 (인벤토리 · 왼손) — 누르면 맞는 칸에 (반지는 빈 반지 칸, 둘 다 차 있으면 낮은 등급과 바꿈), 칸에 끌어 놓기,
+ * <li>아래: 가방의 장신구 (인벤토리 · 왼손) — 누르면 맞는 칸에 (반지는 빈 반지 칸, 둘 다 차 있으면 낮은 등급과 바꿈), 칸에 끌어 놓기,
  * 칸끼리 끌기 = 반지 1 ↔ 반지 2, 칸 오른쪽 클릭 · 무대 밖으로 끌기 = 빼기. 실제로 옮기는 것은 서버 (ArtifactSystem) — 받은 칸으로 다시 그림.</li>
  * </ul>
  * 게임은 멈추지 않음.
@@ -55,7 +56,7 @@ public final class ArtifactScreen extends Screen {
     static final int LINE_H = 9;
     /** 합계 옵션 줄 순서 (공격 → 방어 · 이동) */
     static final List<String> KINDS = List.of("atk", "crit", "critDmg", "rune", "cdr", "hp", "def", "speed");
-    /** 가방의 아티팩트 칸 */
+    /** 가방의 장신구 칸 */
     static final int CELL = 20;
     static final int COLS = 9;
     static final int ROWS = 3;
@@ -87,6 +88,7 @@ public final class ArtifactScreen extends Screen {
     protected void init() {
         left = (width - W) / 2;
         top = Math.max(0, (height - H) / 2);
+        GearTabs.last = GearTabs.ACCESSORIES;
         ClientArtifacts.send("sync", 0, 0);
     }
 
@@ -118,9 +120,14 @@ public final class ArtifactScreen extends Screen {
         return top + GRID_Y;
     }
 
-    /** 가방의 아티팩트 (그리드 순서 n) 가운데 (시험용) */
+    /** 가방의 장신구 (그리드 순서 n) 가운데 (시험용) */
     public int[] gridCenter(int n) {
         return new int[] {gridX() + (n % COLS) * CELL + CELL / 2, gridY() + (n / COLS) * CELL + CELL / 2};
+    }
+
+    /** 0.43.0 탭 i (0 장신구 · 1 아티팩트) 가운데 (시험용) */
+    public int[] tabCenter(int i) {
+        return GearTabs.center(font, left, top, i);
     }
 
     /** 무대 가운데 (시험용 — 사람 그림) */
@@ -147,7 +154,7 @@ public final class ArtifactScreen extends Screen {
         return mx >= left + STAGE_X && mx < left + STAGE_X + STAGE_W && my >= top + STAGE_Y && my < top + STAGE_Y + STAGE_H;
     }
 
-    /** 가방의 아티팩트 (그리드 순서): 가방 칸 번호 (0 ~ 35 · 왼손 40) — 높은 등급 · 반지 → 팔찌 순 */
+    /** 가방의 장신구 (그리드 순서): 가방 칸 번호 (0 ~ 35 · 왼손 40) — 높은 등급 · 반지 → 팔찌 순 */
     public List<Integer> bagSlots() {
         List<Integer> out = new ArrayList<>();
         LocalPlayer p = minecraft == null ? null : minecraft.player;
@@ -170,7 +177,7 @@ public final class ArtifactScreen extends Screen {
         return out;
     }
 
-    /** 마우스 아래 가방의 아티팩트 → 가방 칸 번호 (-1 없음) */
+    /** 마우스 아래 가방의 장신구 → 가방 칸 번호 (-1 없음) */
     private int invAt(double mx, double my, List<Integer> list) {
         for (int n = 0; n < Math.min(list.size(), COLS * ROWS); n++) {
             int x = gridX() + (n % COLS) * CELL;
@@ -185,7 +192,7 @@ public final class ArtifactScreen extends Screen {
         return p == null ? ItemStack.EMPTY : p.getInventory().getItem(slot);
     }
 
-    /** 이 아티팩트가 저절로 들어갈 칸 (서버 ArtifactSystem.autoSlot 과 같음 — 빈 칸, 아니면 등급이 가장 낮은 칸) */
+    /** 이 장신구가 저절로 들어갈 칸 (서버 ArtifactSystem.autoSlot 과 같음 — 빈 칸, 아니면 등급이 가장 낮은 칸) */
     static int autoSlot(Artifacts.Art a) {
         List<Integer> where = Artifacts.slotsFor(a.type());
         if (where.isEmpty()) return -1;
@@ -218,7 +225,7 @@ public final class ArtifactScreen extends Screen {
         long now = Util.getMillis();
         double level = ClientArtifacts.level();
         RpgHud.sprite(g, BG, left, top, W, H);
-        g.text(font, "§d§l아티팩트", left + 12, top + 11, 0xFFFFFFFF, true);
+        GearTabs.draw(g, font, left, top, GearTabs.ACCESSORIES, mx, my); // 0.43.0 탭: 장신구 | 아티팩트
         String head = "§7낀 칸 §f" + ClientArtifacts.worn() + "§7/" + ClientArtifacts.SIZE + "  §8[" + keyName() + "]";
         g.text(font, head, left + W - 12 - font.width(head), top + 11, 0xFFFFFFFF, true);
         g.fill(left + 10, top + 26, left + W - 10, top + 27, 0x90C8A050);
@@ -272,7 +279,7 @@ public final class ArtifactScreen extends Screen {
             g.text(font, val, sx + SUM_W - 5 - font.width(val), ly, 0xFFFFFFFF, true);
         }
 
-        // 가방의 아티팩트
+        // 가방의 장신구
         List<Integer> bag = bagSlots();
         int gy = gridY();
         g.fill(left + 10, top + 121, left + W - 10, top + 122, 0x60C8A050);
@@ -481,6 +488,11 @@ public final class ArtifactScreen extends Screen {
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         double mx = event.x();
         double my = event.y();
+        int tab = GearTabs.at(font, left, top, mx, my);
+        if (tab >= 0) {
+            GearTabs.select(tab, GearTabs.ACCESSORIES);
+            return true;
+        }
         List<Integer> bag = bagSlots();
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             int s = slotAt(mx, my);
@@ -555,7 +567,7 @@ public final class ArtifactScreen extends Screen {
         return super.keyPressed(event);
     }
 
-    /** 가방 칸 inv 의 아티팩트를 칸 slot 에 (종류 · 레벨을 먼저 봄 — 맞지 않으면 알림만) */
+    /** 가방 칸 inv 의 장신구를 칸 slot 에 (종류 · 레벨을 먼저 봄 — 맞지 않으면 알림만) */
     private void equipTo(int inv, int slot) {
         Artifacts.Art a = ArtifactItem.of(invItem(inv));
         if (a == null) return;

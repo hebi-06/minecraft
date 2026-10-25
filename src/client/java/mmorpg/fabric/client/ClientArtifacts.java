@@ -17,7 +17,7 @@ import net.minecraft.util.Util;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * 0.37.0 아티팩트 클라이언트 상태: 서버가 보낸 칸 다섯 · 칸마다 연출 시각 (낌 · 뺌), 보너스 합 (core Artifacts — 서버와 같은 식: 칸 종류 · 착용 레벨).
+ * 0.37.0 장신구 (옛 아티팩트 — 0.43.0 이름 바꿈) 클라이언트 상태: 서버가 보낸 칸 다섯 · 칸마다 연출 시각 (낌 · 뺌), 보너스 합 (core Artifacts — 서버와 같은 식: 칸 종류 · 착용 레벨).
  * 스탯 시트 (ClientRpgState.sheet) 가 스탯 트리 합에 더해 씀 (피해 · 치명타 · 최대 체력 · 룬 툴팁 숫자).
  */
 public final class ClientArtifacts {
@@ -86,6 +86,7 @@ public final class ClientArtifacts {
             mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.ARMOR_EQUIP_GENERIC.value(), 0.8F, 0.7F));
         }
         if (p.open() && mc.player != null) {
+            GearTabs.last = GearTabs.ACCESSORIES;
             if (!(mc.gui.screen() instanceof ArtifactScreen)) mc.gui.setScreen(new ArtifactScreen());
         }
     }
@@ -127,9 +128,16 @@ public final class ClientArtifacts {
         return out;
     }
 
-    /** 아티팩트 보너스 합 (상한 전 — 서버 ArtifactSystem.totals 와 같은 식) */
+    /** 칸 순서의 강화 단계 (0.43.0) */
+    static List<Integer> enhances() {
+        List<Integer> out = new ArrayList<>(SIZE);
+        for (ItemStack s : slots) out.add(mmorpg.fabric.gear.WeaponEnhance.of(s));
+        return out;
+    }
+
+    /** 장신구 보너스 합 (상한 전 — 서버 ArtifactSystem.totals 와 같은 식: 0.43.0 강화 +N 은 옵션 × (1 + ENHANCE_GEAR.bonus)) */
     public static Map<String, Double> totals() {
-        return Artifacts.totals(ids(), level());
+        return Artifacts.totals(ids(), enhances(), level());
     }
 
     /** 서버에 창의 일 (equip · unequip · move · sync) */

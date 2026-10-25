@@ -36,7 +36,7 @@ import net.minecraft.world.item.ItemStack;
  *   <li>강화 단계는 무기와 같은 아이템 구성 요소 (WeaponEnhance — 이름 "+N" · 설명은 아이템 쪽이 그림)</li>
  * </ul>
  * 창 (큰 상자 9 × 6): 윗줄 [레벨 올리기로] · [무기 강화로] · 강화석 · 빛나는 강화석 · 안내 · 수호 주문서 · [보스 무기 제작으로],
- * 둘째 줄 판 아홉 칸, 셋째 줄 낀 장신구 다섯 칸, 아래 세 줄 가방의 것 (최대 27개). 성공 판정의 난수는 {@link EnhanceWindow#rand} (무기와 같은 것).
+ * 둘째 줄 판 아홉 칸, 셋째 줄 낀 장신구 다섯 칸, 아래 세 줄 가방의 것 (최대 27개). 성공 판정의 난수는 {@link #rand} (무기 강화 시험과 섞이지 않게 따로).
  */
 public final class GearEnhance {
     private GearEnhance() {}
@@ -56,6 +56,9 @@ public final class GearEnhance {
     static final int BOARD = 2000;
 
     private static final int MAX = EnhanceWindow.MAX;
+
+    /** 강화 성공 판정의 난수 (0 이상 1 미만 — 이 값이 성공 확률보다 작으면 성공. 시험이 정할 수 있게 — 무기 강화와 따로) */
+    public static java.util.function.DoubleSupplier rand = Math::random;
 
     /** 강화할 것 하나: 자리 · 아이템 (그 때의 복사본) · 장신구 또는 아티팩트 (하나만) · 강화 단계 · 판 칸이면 고른 스탯 줄 (아니면 null) */
     public record Entry(int loc, ItemStack item, Artifacts.Art art, Relics.Relic relic, int n, String stat) {
@@ -338,7 +341,7 @@ public final class GearEnhance {
                 || (c.bright() > 0 && !Inv.remove(sp, EnhanceWindow.itemOf(EnhanceWindow.BRIGHT), (int) c.bright()))) {
             return "§4재료를 쓰지 못했습니다§r";
         }
-        boolean ok = EnhanceWindow.rand.getAsDouble() < c.rate();
+        boolean ok = rand.getAsDouble() < c.rate();
         int n = e.n();
         if (ok) n = e.n() + 1;
         else if (c.down() && !guard) n = e.n() - 1;

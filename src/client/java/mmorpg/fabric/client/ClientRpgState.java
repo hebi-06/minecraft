@@ -124,8 +124,10 @@ public final class ClientRpgState {
         int level = mc.player == null ? 0 : mc.player.experienceLevel;
         RpgNet.SyncPayload p = last;
         if (p == null) return StatSheet.of(0, 0, 0, 0, 0, 0, level);
-        // 0.37.0 스탯 트리 합 + 아티팩트 합 (상한 — 서버 StatTrees.allTotals 와 같음)
-        java.util.Map<String, Double> tree = mmorpg.core.Artifacts.combine(treeOn ? treeTotals : java.util.Map.of(), ClientArtifacts.totals());
+        // 0.37.0 스탯 트리 합 + 장신구 합 + 0.43.0 아티팩트 판 합 (상한 — 서버 StatTrees.allTotals 와 같음: extra = 장신구 + 아티팩트)
+        java.util.Map<String, Double> extra = new java.util.LinkedHashMap<>(ClientArtifacts.totals());
+        for (java.util.Map.Entry<String, Double> e : ClientRelics.totals().entrySet()) extra.merge(e.getKey(), e.getValue(), Double::sum);
+        java.util.Map<String, Double> tree = mmorpg.core.Artifacts.combine(treeOn ? treeTotals : java.util.Map.of(), extra);
         return StatSheet.of(p.str(), p.dex(), p.intel(), p.vit(), p.point(), p.lvmax(), level, p.bonus(), p.buff()).withTree(tree)
                 .withJob(ClientJobBar.jobId()); // 0.27.0 마검사 「마력 검술」
     }

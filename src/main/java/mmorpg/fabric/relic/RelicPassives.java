@@ -551,6 +551,11 @@ public final class RelicPassives {
         HORN.remove(sp.getUUID());
     }
 
+    /** 시험: 이 사람의 나팔의 가호만 지움 (셈 · 재사용 대기는 그대로) */
+    public static void testClearHorn(ServerPlayer sp) {
+        if (sp != null) HORN.remove(sp.getUUID());
+    }
+
     /** 시험: 이 적의 묶임을 지움 */
     public static void testUnbind(LivingEntity e) {
         if (e != null) BINDS.remove(e.getUUID());

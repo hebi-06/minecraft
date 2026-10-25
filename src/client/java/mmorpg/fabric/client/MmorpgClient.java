@@ -85,6 +85,9 @@ public final class MmorpgClient implements ClientModInitializer {
         // 0.37.0 아티팩트: 서버가 보낸 칸 다섯 (open 이면 창) · 아티팩트 설명의 지금 레벨
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.artifact.ArtifactNet.SlotsPayload.TYPE, (payload, context) -> ClientArtifacts.update(payload));
         mmorpg.fabric.gear.ArtifactItem.viewer = () -> ClientRpgState.synced() ? ClientArtifacts.level() : -1;
+        // 0.43.0 아티팩트 판: 서버가 보낸 칸 아홉 · 고른 스탯 줄 (open 이면 판 창) · 아티팩트 설명의 지금 레벨
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.relic.RelicNet.BoardPayload.TYPE, (payload, context) -> ClientRelics.update(payload));
+        mmorpg.fabric.gear.RelicItem.viewer = () -> ClientRpgState.synced() ? ClientArtifacts.level() : -1;
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.BarPayload.TYPE, (payload, context) -> ClientSkillBar.update(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.rune.SkillBarNet.CooldownPayload.TYPE, (payload, context) -> ClientSkillBar.cooldown(payload));
         // 0.26.0 직업 스킬 칸 5 (Shift + 룬 칸 1 ~ 5 의 키)
@@ -120,6 +123,7 @@ public final class MmorpgClient implements ClientModInitializer {
             ClientRpgState.clear();
             ClientSkillBar.clear();
             ClientArtifacts.clear();
+            ClientRelics.clear();
             ClientJobBar.clear();
             ClientCosmetics.clear();
             ClientGacha.clear();
@@ -148,7 +152,8 @@ public final class MmorpgClient implements ClientModInitializer {
             }
             while (artifactKey.consumeClick()) {
                 if (client.player == null || client.gui.screen() != null) continue;
-                if (ClientRpgState.synced() || ClientArtifacts.received()) client.gui.setScreen(new ArtifactScreen());
+                // 0.43.0 마지막에 본 탭 (장신구 · 아티팩트)
+                if (ClientRpgState.synced() || ClientArtifacts.received() || ClientRelics.received()) client.gui.setScreen(GearTabs.lastScreen());
                 else client.player.sendSystemMessage(Component.literal("§c이 서버에는 MMO RPG 모드가 없습니다."));
             }
             for (int i = 0; i < skillKeys.length; i++) {

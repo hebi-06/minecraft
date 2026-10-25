@@ -32,7 +32,8 @@ import net.minecraft.world.item.ItemStack;
 
 /**
  * 0.23.0 캐릭터 정보 패널 (인벤토리 창 왼쪽 — 사용자가 고른 것): 이름 · 레벨 · 경험치 막대, 체력 (막대), 힘 · 민첩 · 마력 · 체력, 기준 무기의 피해 ·
- * 치명타 (스탯 창과 같은 식), 방어, 골드 · 실버, "스탯" 단추 (남은 포인트가 있으면 +N) · 0.37.0 "아티팩트" 단추 (아티팩트 창). 스탯 줄에 마우스를 올리면 스탯 창과 같은 풀이.
+ * 치명타 (스탯 창과 같은 식), 방어, 골드 · 실버, "스탯" 단추 (남은 포인트가 있으면 +N) · 0.43.0 그림 단추 둘 (반지 = 장신구 창 · 유물 = 아티팩트 판 —
+ * 0.37.0 "아티팩트" 단추 자리를 나눔). 스탯 줄에 마우스를 올리면 스탯 창과 같은 풀이.
  * 조합법 책이 열리면 (창 왼쪽을 책이 씀) · 화면이 좁으면 숨김. 패널을 누르면 아래로 새지 않음 (든 아이템이 버려지지 않게).
  */
 public final class CharacterPanel extends AbstractWidget {
@@ -47,7 +48,11 @@ public final class CharacterPanel extends AbstractWidget {
     static final int BTN_H = 15;
     static final int BTN_W = 40;
     static final int BTN_GAP = 4;
+    /** 0.43.0 둘째 단추 자리 (BTN_W) 를 그림 단추 둘로 (장신구 · 아티팩트 — 사이 2) */
+    static final int ICON_BTN_W = (BTN_W - 2) / 2;
     static final int ICON = 10;
+    private static ItemStack accessoryIcon;
+    private static ItemStack relicIcon;
     private static final ItemStack GOLD = new ItemStack(EconomyItems.GOLD_COIN);
     private static final ItemStack SILVER = new ItemStack(EconomyItems.SILVER_COIN);
 
@@ -81,10 +86,33 @@ public final class CharacterPanel extends AbstractWidget {
         return new int[] {getX() + 8 + BTN_W / 2, getY() + BTN_Y + BTN_H / 2};
     }
 
-    /** 시험용: 0.37.0 아티팩트 창 단추 가운데 (화면 좌표) */
+    /** 아티팩트 판 단추가 있는지 (규칙에 아티팩트가 있을 때 — 없으면 장신구 단추가 자리를 다 씀) */
+    private static boolean relicButton() {
+        return mmorpg.core.Relics.enabled();
+    }
+
+    private int accX() {
+        return getX() + 8 + BTN_W + BTN_GAP;
+    }
+
+    private int accW() {
+        return relicButton() ? ICON_BTN_W : BTN_W;
+    }
+
+    private int relicX() {
+        return accX() + ICON_BTN_W + 2;
+    }
+
+    /** 시험용: 장신구 창 단추 가운데 (화면 좌표 — 0.37.0 아티팩트 단추 자리의 왼쪽 반) */
     public int[] artifactButtonCenter() {
         place();
-        return new int[] {getX() + 8 + BTN_W + BTN_GAP + BTN_W / 2, getY() + BTN_Y + BTN_H / 2};
+        return new int[] {accX() + accW() / 2, getY() + BTN_Y + BTN_H / 2};
+    }
+
+    /** 시험용: 0.43.0 아티팩트 판 단추 가운데 (화면 좌표) */
+    public int[] relicButtonCenter() {
+        place();
+        return new int[] {relicX() + ICON_BTN_W / 2, getY() + BTN_Y + BTN_H / 2};
     }
 
     /** 시험용: 스탯 줄 i 의 가운데 */
@@ -98,8 +126,30 @@ public final class CharacterPanel extends AbstractWidget {
     }
 
     private boolean inArtifactButton(double mx, double my) {
-        int x = getX() + 8 + BTN_W + BTN_GAP;
-        return mx >= x && mx < x + BTN_W && my >= getY() + BTN_Y && my < getY() + BTN_Y + BTN_H;
+        int x = accX();
+        return mx >= x && mx < x + accW() && my >= getY() + BTN_Y && my < getY() + BTN_Y + BTN_H;
+    }
+
+    private boolean inRelicButton(double mx, double my) {
+        if (!relicButton()) return false;
+        int x = relicX();
+        return mx >= x && mx < x + ICON_BTN_W && my >= getY() + BTN_Y && my < getY() + BTN_Y + BTN_H;
+    }
+
+    private static ItemStack accessoryIcon() {
+        if (accessoryIcon == null) {
+            net.minecraft.world.item.Item it = mmorpg.fabric.ui.Icon.itemById("rpg:artifact_ring_noble");
+            accessoryIcon = it == null ? ItemStack.EMPTY : new ItemStack(it);
+        }
+        return accessoryIcon;
+    }
+
+    private static ItemStack relicIcon() {
+        if (relicIcon == null) {
+            net.minecraft.world.item.Item it = mmorpg.fabric.ui.Icon.itemById(mmorpg.core.Relics.id("draupnir", "hero"));
+            relicIcon = it == null ? ItemStack.EMPTY : new ItemStack(it);
+        }
+        return relicIcon;
     }
 
     private int statAt(double mx, double my) {
@@ -124,7 +174,12 @@ public final class CharacterPanel extends AbstractWidget {
             Minecraft.getInstance().gui.setScreen(new StatScreen());
         } else if (inArtifactButton(event.x(), event.y())) {
             playDownSound(Minecraft.getInstance().getSoundManager());
+            mmorpg.fabric.client.GearTabs.last = mmorpg.fabric.client.GearTabs.ACCESSORIES;
             Minecraft.getInstance().gui.setScreen(new mmorpg.fabric.client.ArtifactScreen());
+        } else if (inRelicButton(event.x(), event.y())) {
+            playDownSound(Minecraft.getInstance().getSoundManager());
+            mmorpg.fabric.client.GearTabs.last = mmorpg.fabric.client.GearTabs.RELICS;
+            Minecraft.getInstance().gui.setScreen(new mmorpg.fabric.client.RelicScreen());
         }
         return true; // 패널 위를 누르면 창 밖 누르기 (든 아이템 버리기) 가 되지 않게
     }
@@ -202,7 +257,7 @@ public final class CharacterPanel extends AbstractWidget {
         icon(g, SILVER, x + 52, y + 133);
         g.text(font, shortAmount(ClientWallet.total(Economy.Kind.SILVER)), x + 64, y + 134, 0xFFDCDCE6, true);
 
-        // 스탯 창 단추 · 0.37.0 아티팩트 창 단추 (둘로 나눔)
+        // 스탯 창 단추 · 0.43.0 장신구 · 아티팩트 그림 단추 (0.37.0 아티팩트 단추 자리를 둘로)
         boolean overBtn = inButton(mx, my);
         RpgUi.button(g, x + 8, y + BTN_Y, BTN_W, BTN_H, overBtn, false);
         int pts = s.point();
@@ -210,9 +265,16 @@ public final class CharacterPanel extends AbstractWidget {
         String label = "스탯" + (pts > 0 ? ((System.currentTimeMillis() / 500) % 2 == 0 ? " §e+" : " §6+") + pts : " §7[" + key + "]");
         fitCentered(g, font, label, x + 8 + BTN_W / 2, y + BTN_Y + 4, BTN_W - 4, RpgUi.GOLD_TEXT);
         boolean overArt = inArtifactButton(mx, my);
-        int ax = x + 8 + BTN_W + BTN_GAP;
-        RpgUi.button(g, ax, y + BTN_Y, BTN_W, BTN_H, overArt, false);
-        fitCentered(g, font, "§d아티팩트", ax + BTN_W / 2, y + BTN_Y + 4, BTN_W - 4, 0xFFFFFFFF);
+        boolean overRelic = inRelicButton(mx, my);
+        int ax = accX();
+        RpgUi.button(g, ax, y + BTN_Y, accW(), BTN_H, overArt, false);
+        if (relicButton()) {
+            buttonIcon(g, accessoryIcon(), ax, y + BTN_Y, accW());
+            RpgUi.button(g, relicX(), y + BTN_Y, ICON_BTN_W, BTN_H, overRelic, false);
+            buttonIcon(g, relicIcon(), relicX(), y + BTN_Y, ICON_BTN_W);
+        } else {
+            fitCentered(g, font, "§d장신구", ax + BTN_W / 2, y + BTN_Y + 4, BTN_W - 4, 0xFFFFFFFF);
+        }
 
         // 풀이
         List<Component> tip = null;
@@ -225,15 +287,30 @@ public final class CharacterPanel extends AbstractWidget {
         } else if (overArt) {
             tip = new ArrayList<>();
             String akey = MmorpgClient.artifactKey == null ? "I" : MmorpgClient.artifactKey.getTranslatedKeyMessage().getString();
-            tip.add(Component.literal("§d§l아티팩트 창 §7[" + akey + "]"));
+            tip.add(Component.literal("§d§l장신구 창 §7[" + akey + "]"));
             tip.add(Component.literal("§7반지 둘 · 목걸이 · 귀걸이 · 팔찌 (낀 칸 " + mmorpg.fabric.client.ClientArtifacts.worn() + "/5)"));
             for (int i = 0; i < 5; i++) {
                 mmorpg.core.Artifacts.Art a = mmorpg.fabric.client.ClientArtifacts.art(i);
-                if (a != null) tip.add(Component.literal(BedrockText.toJava("§7" + mmorpg.core.Artifacts.slotName(i) + ": " + a.coloredName())));
+                int en = mmorpg.fabric.gear.WeaponEnhance.of(mmorpg.fabric.client.ClientArtifacts.get(i));
+                if (a != null) tip.add(Component.literal(BedrockText.toJava("§7" + mmorpg.core.Artifacts.slotName(i) + ": " + (en > 0 ? a.gradeColor() + "+" + en + " " + a.name() : a.coloredName()))));
             }
             String all = mmorpg.core.StatTree.bonusText(mmorpg.fabric.client.ClientArtifacts.totals());
             if (!all.isEmpty()) tip.add(Component.literal("§a" + all));
             tip.add(Component.literal("§8대장장이에게서 제작 · 들고 우클릭해도 낌"));
+        } else if (overRelic) {
+            tip = new ArrayList<>();
+            String akey = MmorpgClient.artifactKey == null ? "I" : MmorpgClient.artifactKey.getTranslatedKeyMessage().getString();
+            mmorpg.core.Relics.Board b = mmorpg.fabric.client.ClientRelics.board();
+            tip.add(Component.literal("§6§l아티팩트 판 §7[" + akey + "]"));
+            tip.add(Component.literal("§7꽂은 칸 " + b.filled() + "/" + mmorpg.fabric.client.ClientRelics.SIZE + " · 패시브 " + b.active()));
+            for (String k : mmorpg.core.Relics.types()) {
+                int t = b.tier(k);
+                if (t > 0) tip.add(Component.literal(BedrockText.toJava("§e「" + mmorpg.core.Relics.type(k).passive().name() + "」 §6" + t + "단계 §7" + mmorpg.core.Relics.type(k).name())));
+            }
+            String all = mmorpg.core.StatTree.bonusText(b.totals());
+            if (!all.isEmpty()) tip.add(Component.literal("§a" + all));
+            tip.add(Component.literal("§8같은 계열 이웃 " + mmorpg.core.Relics.tiersText() + " = 패시브 1 · 2 · 3단계"));
+            tip.add(Component.literal("§8보스 · 몬스터에게서 얻음 · 들고 우클릭해도 꽂힘"));
         } else if (my >= y + 98 && my < y + 130 && mx >= x && mx < x + W) {
             tip = new ArrayList<>();
             tip.add(Component.literal("§6기준 무기 " + (w == null ? "§7없음" : "§f" + BedrockText.toJava(w.name()))));
@@ -270,6 +347,16 @@ public final class CharacterPanel extends AbstractWidget {
     private static void row(GuiGraphicsExtractor g, Font font, String label, String value, int x, int y, int valueColor) {
         g.text(font, label, x + 9, y, 0xFFB8B8C8, true);
         g.text(font, value, x + W - 9 - font.width(value), y, valueColor, true);
+    }
+
+    /** 단추 가운데 아이템 그림 (12 × 12 — 16 의 3/4) */
+    private static void buttonIcon(GuiGraphicsExtractor g, ItemStack stack, int x, int y, int w) {
+        if (stack.isEmpty()) return;
+        g.pose().pushMatrix();
+        g.pose().translate(x + (w - 12) / 2F, y + (BTN_H - 12) / 2F);
+        g.pose().scale(0.75F, 0.75F);
+        g.item(stack, 0, 0);
+        g.pose().popMatrix();
     }
 
     /** 동전 그림 (아이템 10 × 10 — 16 의 5/8) */

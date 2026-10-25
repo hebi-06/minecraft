@@ -52,6 +52,7 @@
       "mmorpg.fabric.test.RpgContainerToolsTests",
       "mmorpg.fabric.test.RpgJobTests",
       "mmorpg.fabric.test.RpgArtifactTests",
+      "mmorpg.fabric.test.RpgRelicTests",
       "mmorpg.fabric.test.RpgMotionTests"
     ],
     "fabric-client-gametest": [
@@ -99,6 +100,7 @@
       "mmorpg.fabric.test.RpgHelGallery",
       "mmorpg.fabric.test.RpgVoidArmorGallery",
       "mmorpg.fabric.test.RpgArtifactGallery",
+      "mmorpg.fabric.test.RpgRelicGallery",
       "mmorpg.fabric.test.RpgMotionGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
