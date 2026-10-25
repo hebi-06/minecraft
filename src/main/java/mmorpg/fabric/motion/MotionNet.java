@@ -127,7 +127,7 @@ public final class MotionNet {
         return sp != null && !sp.isRemoved() && ServerPlayNetworking.canSend(sp, PlayPayload.TYPE);
     }
 
-    static void send(ServerPlayer to, PlayPayload p) {
+    public static void send(ServerPlayer to, PlayPayload p) {
         if (canSend(to)) ServerPlayNetworking.send(to, p);
     }
 

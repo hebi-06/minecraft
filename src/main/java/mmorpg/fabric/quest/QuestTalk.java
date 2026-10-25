@@ -178,7 +178,7 @@ public final class QuestTalk {
         // 인사말도 퀘스트도 없는 상점 · 대장장이 · 룬술사 NPC 는 바로 그 창을 엶 (둘 이상이면 대화창에서 고름)
         int services = (lv >= 0 ? 1 : 0) + (smith ? 1 : 0) + (runesmith ? 1 : 0) + (job ? 1 : 0);
         if (t.first && greet.isEmpty() && !hasQuest && services == 1) {
-            if (smith) Smith.smithLoop(sp, "enhance", t.done); // 대장장이는 강화 창부터
+            if (smith) Smith.smithLoop(sp, t.npc, "enhance", t.done); // 대장장이는 강화 창부터
             else if (runesmith) RuneSmith.runesmithLoop(sp, "grind", t.done);
             else if (job) mmorpg.fabric.job.JobTrainer.open(sp, t.done); // 0.27.0 직업 교관: 전직 창부터
             else Store.storeLoop(sp, lv, "weapons", t.done);
@@ -214,7 +214,7 @@ public final class QuestTalk {
                     step(t);
                 }
                 case "shop", "armor" -> Store.storeLoop(sp, lv, o.kind().equals("armor") ? "armor" : "weapons", t.done);
-                case "smith", "enhance", "craft", "artifact" -> Smith.smithLoop(sp, o.kind(), t.done);
+                case "smith", "enhance", "craft", "artifact" -> Smith.smithLoop(sp, t.npc, o.kind(), t.done);
                 case "runesmith" -> RuneSmith.runesmithLoop(sp, "grind", t.done);
                 case "job" -> mmorpg.fabric.job.JobTrainer.open(sp, t.done); // 0.27.0 전직 · 직업 바꾸기 창
                 case "jobup" -> mmorpg.fabric.job.JobUpgrades.open(sp, t.done); // 0.31.0 직업 스킬 강화 창

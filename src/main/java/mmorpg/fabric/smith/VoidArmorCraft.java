@@ -309,6 +309,11 @@ public final class VoidArmorCraft {
      * 모자라거나 가방이 차면 아무것도 쓰지 않음
      */
     public static String craft(ServerPlayer sp, List<Armor.Piece> pieces) {
+        return craft(sp, pieces, false);
+    }
+
+    /** 같은 것 — quiet 면 연출 · 알림 없이 (0.44.0 대장장이 전용 창) */
+    public static String craft(ServerPlayer sp, List<Armor.Piece> pieces, boolean quiet) {
         // List.of 의 contains(null) 은 NullPointerException — 하나씩 봄
         if (!enabled() || pieces.isEmpty() || pieces.stream().anyMatch(java.util.Objects::isNull)) return "§4갑옷을 만들 수 없습니다.§r";
         Cost c = cost(pieces);
@@ -335,12 +340,14 @@ public final class VoidArmorCraft {
         }
         if (c.gold() > 0 && !Wallet.pay(sp, Economy.Kind.GOLD, c.gold())) return "§4결제 오류§r";
         for (ItemStack it : items) Inv.give(sp, it);
-        craftFx(sp);
         Armor.Piece a = pieces.get(0);
         boolean one = pieces.size() == 1;
-        List<String> wear = ArmorShop.lack(sp, a);
-        String what = one ? a.name() : a.setName() + " 세트 §7· " + a.typeName();
-        Notify.notify(sp, "§5공허의 갑옷 제작: " + what + (wear.isEmpty() ? "" : " §7(입으려면 " + String.join(" · ", wear) + ")"), 60);
+        if (!quiet) {
+            craftFx(sp);
+            List<String> wear = ArmorShop.lack(sp, a);
+            String what = one ? a.name() : a.setName() + " 세트 §7· " + a.typeName();
+            Notify.notify(sp, "§5공허의 갑옷 제작: " + what + (wear.isEmpty() ? "" : " §7(입으려면 " + String.join(" · ", wear) + ")"), 60);
+        }
         return "§2완료: " + (one ? a.darkName() : "§0" + a.setName() + " 세트§8 · " + a.typeName() + " (네 부위)") + "§r";
     }
 

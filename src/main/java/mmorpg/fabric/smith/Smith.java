@@ -81,6 +81,7 @@ public final class Smith {
 
     public static void init() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
+        SmithUi.init(); // 0.44.0 대장장이 전용 창 (패킷 · 접속 끊김)
     }
 
     // ------------------------------------------------------------ 명령어 · 흐름
@@ -116,7 +117,20 @@ public final class Smith {
 
     /** 대장장이 창 (흐름 안에서 — 예: NPC 대화에서). start: "smith" · "enhance" · "craft" · "artifact" (0.37.0 제작 창의 아티팩트 쪽), 끝나면 done (null 이면 없음) */
     public static void smithLoop(ServerPlayer sp, String start, Runnable done) {
-        go(sp, start == null ? "smith" : start, 0, done);
+        smithLoop(sp, null, start, done);
+    }
+
+    /**
+     * 같은 것 — npc = 대장장이 NPC (0.44.0: 모드 클라이언트면 대장장이 전용 창 {@link SmithUi} — 창의 대장장이 패널 · 세상의 그 NPC 가 망치질.
+     * 모드가 없거나 시험 · 사진첩이 legacy 로 고르면 예전 상자 창)
+     */
+    public static void smithLoop(ServerPlayer sp, net.minecraft.world.entity.Entity npc, String start, Runnable done) {
+        String st = start == null ? "smith" : start;
+        if (SmithUi.usable(sp)) {
+            SmithUi.open(sp, npc, st, done);
+            return;
+        }
+        go(sp, st, 0, done);
     }
 
     private static void go(ServerPlayer sp, String next, int i, Runnable done) {
@@ -308,6 +322,11 @@ public final class Smith {
      * (강화 단계 · 모루 이름은 새 무기로 옮김)
      */
     public static String raise(ServerPlayer sp, Raise e) {
+        return raise(sp, e, false);
+    }
+
+    /** 같은 것 — quiet 면 눈앞 연출 · 알림 없이 (0.44.0 대장장이 전용 창: 창의 대장장이 패널이 보여 줌) */
+    public static String raise(ServerPlayer sp, Raise e, boolean quiet) {
         ItemStack cur = Inv.get(sp, e.slot());
         Weapon cw = RpgCombat.weaponOf(cur);
         if (cw == null || !cw.id().equals(e.w().id())) return "§4무기가 옮겨져서 취소했습니다. 다시 골라 주세요.§r";
@@ -337,8 +356,10 @@ public final class Smith {
             if (e.gold() > 0 && !Wallet.pay(sp, Economy.Kind.GOLD, e.gold())) return "§4결제 오류§r";
         } else if (!Inv.pay(sp, e.emerald()) || !Inv.remove(sp, ore(), e.ore())) return "§4결제 오류§r";
         Inv.set(sp, e.slot(), next);
-        forgeFx(sp, 1.0, 0.8, 1.4, 0.5, 6);
-        Notify.notify(sp, "§6레벨 제한 " + e.w().level() + " → " + e.to().level() + ": " + e.to().name() + Weapons.levelNote(e.to(), RpgCombat.reqLevelOf(sp)), 60);
+        if (!quiet) {
+            forgeFx(sp, 1.0, 0.8, 1.4, 0.5, 6);
+            Notify.notify(sp, "§6레벨 제한 " + e.w().level() + " → " + e.to().level() + ": " + e.to().name() + Weapons.levelNote(e.to(), RpgCombat.reqLevelOf(sp)), 60);
+        }
         return "§2완료: " + e.to().darkName() + " §8(" + statLine(e.to()) + ")§r";
     }
 
@@ -672,6 +693,11 @@ public final class Smith {
      * 모자라면 아무것도 쓰지 않음
      */
     public static String craft(ServerPlayer sp, Recipe e) {
+        return craft(sp, e, false);
+    }
+
+    /** 같은 것 — quiet 면 눈앞 연출 · 알림 없이 (0.44.0 대장장이 전용 창) */
+    public static String craft(ServerPlayer sp, Recipe e, boolean quiet) {
         List<String> lack = craftLack(sp, e);
         if (!lack.isEmpty()) return lackMessage(sp, lack);
         ItemStack item = Shop.weaponItem(e.w());
@@ -680,8 +706,10 @@ public final class Smith {
         for (Mat m : e.mats()) if (!Inv.remove(sp, m.item(), m.count())) return "§4결제 오류§r";
         if (!Inv.pay(sp, e.emerald()) || !Inv.remove(sp, ore(), e.ore())) return "§4결제 오류§r";
         Inv.give(sp, item);
-        forgeFx(sp, 0.9, 0.9, 1.2, 0.6, 8);
-        Notify.notify(sp, "§6" + (e.grade().equals("noble") ? "무기 제작: " : "보스 무기 제작: ") + e.w().name() + Weapons.levelNote(e.w(), RpgCombat.reqLevelOf(sp)), 60);
+        if (!quiet) {
+            forgeFx(sp, 0.9, 0.9, 1.2, 0.6, 8);
+            Notify.notify(sp, "§6" + (e.grade().equals("noble") ? "무기 제작: " : "보스 무기 제작: ") + e.w().name() + Weapons.levelNote(e.w(), RpgCombat.reqLevelOf(sp)), 60);
+        }
         return "§2완료: " + e.w().darkName() + " §8(" + statLine(e.w()) + ")§r";
     }
 

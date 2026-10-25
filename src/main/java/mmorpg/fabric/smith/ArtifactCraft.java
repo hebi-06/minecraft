@@ -238,6 +238,11 @@ public final class ArtifactCraft {
      * 모자라거나 가방이 차면 아무것도 쓰지 않음
      */
     public static String craft(ServerPlayer sp, Artifacts.Art a) {
+        return craft(sp, a, false);
+    }
+
+    /** 같은 것 — quiet 면 연출 · 알림 없이 (0.44.0 대장장이 전용 창) */
+    public static String craft(ServerPlayer sp, Artifacts.Art a, boolean quiet) {
         if (!enabled() || a == null) return "§4장신구를 만들 수 없습니다.§r";
         Artifacts.Cost c = Artifacts.cost(a.grade());
         List<String> lack = lack(sp, c);
@@ -259,10 +264,12 @@ public final class ArtifactCraft {
         if (c.silver() > 0 && !Inv.pay(sp, c.silver())) return "§4결제 오류§r";
         if (c.gold() > 0 && !Wallet.pay(sp, Economy.Kind.GOLD, c.gold())) return "§4결제 오류§r";
         Inv.give(sp, it);
-        craftFx(sp, a);
-        double lv = RpgCombat.reqLevelOf(sp);
-        Notify.notify(sp, "§d장신구 제작: " + a.coloredName() + " §a" + Artifacts.optionText(a)
-                + (Artifacts.usable(a, lv) ? " §7(I 키 · 들고 우클릭으로 끼기)" : " §c(" + a.level() + "렙부터)"), 70);
+        if (!quiet) {
+            craftFx(sp, a);
+            double lv = RpgCombat.reqLevelOf(sp);
+            Notify.notify(sp, "§d장신구 제작: " + a.coloredName() + " §a" + Artifacts.optionText(a)
+                    + (Artifacts.usable(a, lv) ? " §7(I 키 · 들고 우클릭으로 끼기)" : " §c(" + a.level() + "렙부터)"), 70);
+        }
         return "§2완료: " + a.darkName() + " §8(" + Artifacts.optionText(a) + ")§r";
     }
 

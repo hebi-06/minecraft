@@ -331,15 +331,15 @@ public final class GearEnhance {
         });
     }
 
-    /** 망치질이 끝난 순간: 그 자리의 것 · 재료를 다시 보고 재료를 받고 판정 → 복사본에 단계를 적어 그 자리에 다시 놓음. 결과 문구 */
-    static String judge(ServerPlayer sp, Entry e, Enhance.Cost c, boolean guard) {
+    /** 망치질이 끝난 순간 (연출 · 제목 없이 — 0.44.0 judgeQuiet): 그 자리의 것 · 재료를 다시 보고 재료를 받고 판정 → 복사본에 단계를 적어 그 자리에 다시 놓음 */
+    static EnhanceWindow.Outcome judgeQuiet(ServerPlayer sp, Entry e, Enhance.Cost c, boolean guard) {
         ItemStack cur = at(sp, e.loc());
-        if (!same(cur, e)) return "§4강화 중에 옮겨서 취소했습니다. 재료는 쓰지 않았습니다.§r";
+        if (!same(cur, e)) return new EnhanceWindow.Outcome("error", e.n(), e.n(), "§4강화 중에 옮겨서 취소했습니다. 재료는 쓰지 않았습니다.§r");
         String short1 = EnhanceWindow.shortage(sp, c, guard);
-        if (short1 != null) return short1;
+        if (short1 != null) return new EnhanceWindow.Outcome("error", e.n(), e.n(), short1);
         if (!Inv.remove(sp, EnhanceWindow.itemOf(EnhanceWindow.STONE), (int) c.stone())
                 || (c.bright() > 0 && !Inv.remove(sp, EnhanceWindow.itemOf(EnhanceWindow.BRIGHT), (int) c.bright()))) {
-            return "§4재료를 쓰지 못했습니다§r";
+            return new EnhanceWindow.Outcome("error", e.n(), e.n(), "§4재료를 쓰지 못했습니다§r");
         }
         boolean ok = rand.getAsDouble() < c.rate();
         int n = e.n();
@@ -349,25 +349,41 @@ public final class GearEnhance {
         ItemStack now = cur.copy(); // (판 · 장신구 칸의 것은 고치지 않음 — 복사본에 적어 다시 놓음)
         WeaponEnhance.write(now, n);
         put(sp, e.loc(), now);
-        String name = e.gradeColor() + e.title();
-        String bonus = "효과 +" + EnhanceWindow.pct(Enhance.gearBonus(n));
         if (ok) {
-            EnhanceWindow.successFx(sp, n);
-            Notify.title(sp, "§6§l+" + n + " 강화 성공!", "§r" + name + "§r §7" + bonus);
-            if (n >= EnhanceWindow.ANNOUNCE_FROM) EnhanceWindow.announce(sp, e.gradeColor(), e.gradeName(), e.title(), n);
-            return "§2§l성공! §r" + e.darkName(n) + "§8 (" + e.effect(n) + ")" + (guard ? " · 주문서는 쓰지 않았습니다" : "") + "§r";
+            return new EnhanceWindow.Outcome("success", e.n(), n,
+                    "§2§l성공! §r" + e.darkName(n) + "§8 (" + e.effect(n) + ")" + (guard ? " · 주문서는 쓰지 않았습니다" : "") + "§r");
         }
-        EnhanceWindow.failFx(sp, n < e.n(), guard);
-        if (n < e.n()) {
-            Notify.title(sp, "§c강화 실패", "§c+" + e.n() + " → +" + n);
-            return "§4실패: 한 단계 떨어졌습니다 (+" + e.n() + " → +" + n + ")§r";
+        if (n < e.n()) return new EnhanceWindow.Outcome("down", e.n(), n, "§4실패: 한 단계 떨어졌습니다 (+" + e.n() + " → +" + n + ")§r");
+        if (guard) return new EnhanceWindow.Outcome("guard", e.n(), n, "§6실패: " + EnhanceWindow.SCROLL.str("name") + "가 지켜 주어 +" + n + " 그대로입니다§r");
+        return new EnhanceWindow.Outcome("keep", e.n(), n, "§8실패: +" + n + " 그대로입니다§r");
+    }
+
+    /** 망치질이 끝난 순간 (상자 창): 판정 + 눈앞 연출 · 제목 · 높은 단계 알림. 결과 문구 */
+    static String judge(ServerPlayer sp, Entry e, Enhance.Cost c, boolean guard) {
+        EnhanceWindow.Outcome o = judgeQuiet(sp, e, c, guard);
+        String name = e.gradeColor() + e.title();
+        int n = o.after();
+        switch (o.kind()) {
+            case "success" -> {
+                EnhanceWindow.successFx(sp, n);
+                Notify.title(sp, "§6§l+" + n + " 강화 성공!", "§r" + name + "§r §7효과 +" + EnhanceWindow.pct(Enhance.gearBonus(n)));
+                if (n >= EnhanceWindow.ANNOUNCE_FROM) EnhanceWindow.announce(sp, e.gradeColor(), e.gradeName(), e.title(), n);
+            }
+            case "down" -> {
+                EnhanceWindow.failFx(sp, true, false);
+                Notify.title(sp, "§c강화 실패", "§c+" + e.n() + " → +" + n);
+            }
+            case "guard" -> {
+                EnhanceWindow.failFx(sp, false, true);
+                Notify.title(sp, "§e강화 실패", "§e" + EnhanceWindow.SCROLL.str("name") + "가 지켜 주었습니다 (+" + n + ")");
+            }
+            case "keep" -> {
+                EnhanceWindow.failFx(sp, false, false);
+                Notify.title(sp, "§7강화 실패", "§7+" + n + " 그대로");
+            }
+            default -> {}
         }
-        if (guard) {
-            Notify.title(sp, "§e강화 실패", "§e" + EnhanceWindow.SCROLL.str("name") + "가 지켜 주었습니다 (+" + n + ")");
-            return "§6실패: " + EnhanceWindow.SCROLL.str("name") + "가 지켜 주어 +" + n + " 그대로입니다§r";
-        }
-        Notify.title(sp, "§7강화 실패", "§7+" + n + " 그대로");
-        return "§8실패: +" + n + " 그대로입니다§r";
+        return o.text();
     }
 
     /** 장신구 · 아티팩트 강화 창 반복. next: "smith" = 레벨 올리기 창으로, "craft" = 보스 무기 제작 창으로, null = 닫음 (무기 강화 탭은 이 안에서 오감) */

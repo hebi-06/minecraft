@@ -120,7 +120,7 @@ public final class EnhanceWindow {
     }
 
     /** 무기 칸 이름 (강화했으면 "+N 이름") */
-    private static String slotName(Entry e) {
+    static String slotName(Entry e) {
         return e.n() > 0 ? "§r" + e.w().grade().color() + "+" + e.n() + " " + e.w().title() : e.w().name();
     }
 
@@ -259,7 +259,7 @@ public final class EnhanceWindow {
     }
 
     /** 높은 단계 성공: 서버 모두에게 채팅 알림 + 폭죽 소리, 강화한 사람 눈앞 하늘에 폭죽 (최고 강화면 7발, 아니면 4발) */
-    private static void announce(ServerPlayer sp, Weapon w, int n) {
+    static void announce(ServerPlayer sp, Weapon w, int n) {
         announce(sp, w.grade().color(), w.grade().name(), w.title(), n);
     }
 
@@ -334,8 +334,15 @@ public final class EnhanceWindow {
         return "§4재료 부족: " + String.join(", ", lack) + " 더 필요§r";
     }
 
+    /** 그 칸의 RPG 무기 (없으면 null — 0.44.0 대장장이 전용 창이 다시 찾음) */
+    static Entry entryAt(ServerPlayer sp, int slot) {
+        ItemStack item = Inv.get(sp, slot);
+        Weapon w = RpgCombat.weaponOf(item);
+        return w == null ? null : new Entry(slot, item.copy(), w, WeaponEnhance.of(item));
+    }
+
     /** 그 칸의 아이템이 고른 무기 그대로인지 (같은 무기 · 같은 강화 단계) */
-    private static boolean same(ItemStack now, Entry e) {
+    static boolean same(ItemStack now, Entry e) {
         Weapon w = RpgCombat.weaponOf(now);
         return w != null && w.id().equals(e.w().id()) && WeaponEnhance.of(now) == e.n();
     }
@@ -370,13 +377,25 @@ public final class EnhanceWindow {
         });
     }
 
-    /** 망치질이 끝난 순간 (enhanceOnce 뒷부분): 무기 · 재료를 다시 보고 재료를 받고 판정. 결과 문구 */
-    private static String judge(ServerPlayer sp, Entry e, Enhance.Cost c, boolean guard) {
+    /**
+     * 강화 판정의 결과 (0.44.0 — 대장장이 전용 창과 상자 창이 함께 씀): kind = success (성공) · keep (실패 — 그대로) · guard (실패 — 수호 주문서가 지킴) ·
+     * down (실패 — 한 단계 하락) · error (옮겨짐 · 재료 부족 — 아무것도 쓰지 않음), before → after = 강화 단계, text = 창 본문 문구
+     */
+    public record Outcome(String kind, int before, int after, String text) {
+        public boolean ok() {
+            return kind.equals("success");
+        }
+    }
+
+    /** 망치질이 끝난 순간 (연출 · 제목 없이 — judgeQuiet): 무기 · 재료를 다시 보고 재료를 받고 판정 */
+    static Outcome judgeQuiet(ServerPlayer sp, Entry e, Enhance.Cost c, boolean guard) {
         ItemStack now = Inv.get(sp, e.slot());
-        if (!same(now, e)) return "§4강화 중에 무기를 옮겨서 취소했습니다. 재료는 쓰지 않았습니다.§r";
+        if (!same(now, e)) return new Outcome("error", e.n(), e.n(), "§4강화 중에 무기를 옮겨서 취소했습니다. 재료는 쓰지 않았습니다.§r");
         String short1 = shortage(sp, c, guard);
-        if (short1 != null) return short1;
-        if (!Inv.remove(sp, itemOf(STONE), (int) c.stone()) || (c.bright() > 0 && !Inv.remove(sp, itemOf(BRIGHT), (int) c.bright()))) return "§4재료를 쓰지 못했습니다§r";
+        if (short1 != null) return new Outcome("error", e.n(), e.n(), short1);
+        if (!Inv.remove(sp, itemOf(STONE), (int) c.stone()) || (c.bright() > 0 && !Inv.remove(sp, itemOf(BRIGHT), (int) c.bright()))) {
+            return new Outcome("error", e.n(), e.n(), "§4재료를 쓰지 못했습니다§r");
+        }
         boolean ok = rand.getAsDouble() < c.rate();
         int n = e.n();
         if (ok) n = e.n() + 1;
@@ -384,24 +403,41 @@ public final class EnhanceWindow {
         if (!ok && guard && !Inv.remove(sp, itemOf(SCROLL), 1)) n = e.n() - 1; // (위에서 확인했으므로 없는 일)
         WeaponEnhance.write(now, n);
         Inv.set(sp, e.slot(), now);
-        String name = e.w().grade().color() + e.w().title();
         if (ok) {
-            successFx(sp, n);
-            Notify.title(sp, "§6§l+" + n + " 강화 성공!", "§r" + name + "§r §7피해 +" + pct(Enhance.enhanceBonus(n)));
-            if (n >= ANNOUNCE_FROM) announce(sp, e.w(), n);
-            return "§2§l성공! §r§0+" + n + " " + e.w().darkName() + "§8 (피해 +" + pct(Enhance.enhanceBonus(n)) + ")" + (guard ? " · 주문서는 쓰지 않았습니다" : "") + "§r";
+            return new Outcome("success", e.n(), n,
+                    "§2§l성공! §r§0+" + n + " " + e.w().darkName() + "§8 (피해 +" + pct(Enhance.enhanceBonus(n)) + ")" + (guard ? " · 주문서는 쓰지 않았습니다" : "") + "§r");
         }
-        failFx(sp, n < e.n(), guard);
-        if (n < e.n()) {
-            Notify.title(sp, "§c강화 실패", "§c+" + e.n() + " → +" + n);
-            return "§4실패: 한 단계 떨어졌습니다 (+" + e.n() + " → +" + n + ")§r";
+        if (n < e.n()) return new Outcome("down", e.n(), n, "§4실패: 한 단계 떨어졌습니다 (+" + e.n() + " → +" + n + ")§r");
+        if (guard) return new Outcome("guard", e.n(), n, "§6실패: " + SCROLL.str("name") + "가 지켜 주어 +" + n + " 그대로입니다§r");
+        return new Outcome("keep", e.n(), n, "§8실패: +" + n + " 그대로입니다§r");
+    }
+
+    /** 망치질이 끝난 순간 (enhanceOnce 뒷부분 — 상자 창): 판정 + 눈앞 연출 · 제목 · 높은 단계 알림. 결과 문구 */
+    private static String judge(ServerPlayer sp, Entry e, Enhance.Cost c, boolean guard) {
+        Outcome o = judgeQuiet(sp, e, c, guard);
+        String name = e.w().grade().color() + e.w().title();
+        int n = o.after();
+        switch (o.kind()) {
+            case "success" -> {
+                successFx(sp, n);
+                Notify.title(sp, "§6§l+" + n + " 강화 성공!", "§r" + name + "§r §7피해 +" + pct(Enhance.enhanceBonus(n)));
+                if (n >= ANNOUNCE_FROM) announce(sp, e.w(), n);
+            }
+            case "down" -> {
+                failFx(sp, true, false);
+                Notify.title(sp, "§c강화 실패", "§c+" + e.n() + " → +" + n);
+            }
+            case "guard" -> {
+                failFx(sp, false, true);
+                Notify.title(sp, "§e강화 실패", "§e" + SCROLL.str("name") + "가 지켜 주었습니다 (+" + n + ")");
+            }
+            case "keep" -> {
+                failFx(sp, false, false);
+                Notify.title(sp, "§7강화 실패", "§7+" + n + " 그대로");
+            }
+            default -> {}
         }
-        if (guard) {
-            Notify.title(sp, "§e강화 실패", "§e" + SCROLL.str("name") + "가 지켜 주었습니다 (+" + n + ")");
-            return "§6실패: " + SCROLL.str("name") + "가 지켜 주어 +" + n + " 그대로입니다§r";
-        }
-        Notify.title(sp, "§7강화 실패", "§7+" + n + " 그대로");
-        return "§8실패: +" + n + " 그대로입니다§r";
+        return o.text();
     }
 
     /**
