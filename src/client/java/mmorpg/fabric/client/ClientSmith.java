@@ -34,6 +34,8 @@ public final class ClientSmith {
     static int seenSeq;
     static SmithNet.Result result;
     static long resultAt = -1;
+    /** 0.45.0 시험 (사진첩): 멈춘 일의 시각 (0 ~ 1 — 음수면 멈추지 않음). {@link #preview} 가 정함 */
+    static double frozen = -1;
 
     static void clear() {
         view = null;
@@ -43,6 +45,7 @@ public final class ClientSmith {
         seenSeq = 0;
         result = null;
         resultAt = -1;
+        frozen = -1;
     }
 
     /** 서버가 보낸 창: open 이면 창을 엶 (열려 있으면 그대로 바꿈). 새 결과면 소리 · 연출 */
@@ -66,6 +69,7 @@ public final class ClientSmith {
 
     /** 일 시작: 창 패널 · 세상의 NPC (모루 · 받침 · 사는 사람 쪽을 보며) 동작 */
     static void work(SmithNet.WorkPayload p) {
+        frozen = -1;
         long start = ClientMotions.ticks() + 1;
         String motion = p.motion() == null || p.motion().isEmpty() ? SmithUi.MOTION : p.motion();
         String fx = p.fx() == null || p.fx().isEmpty() ? "forge" : p.fx();
@@ -81,12 +85,57 @@ public final class ClientSmith {
         return work;
     }
 
-    /** 망치질 진행 (0 ~ 1 — 없으면 -1) */
+    /** 일 진행 (0 ~ 1 — 없으면 -1, 미리 보기로 멈췄으면 그 시각) */
     public static double progress(float partial) {
         Work w = work;
         if (w == null) return -1;
+        if (frozen >= 0) return frozen;
         double t = (ClientMotions.ticks() + partial - w.start()) / w.ticks();
         return t < 0 || t > 1 ? (t > 1 ? 1 : 0) : t;
+    }
+
+    /**
+     * 닿은 바로 뒤의 번쩍임 (1 → 0 — 220 밀리초, 없으면 0). 미리 보기로 멈췄으면 그 시각에서 마지막으로 닿은 뒤 지난 틱으로 (4.4틱 = 220 밀리초)
+     */
+    public static float pulse(long now) {
+        Work w = work;
+        if (w != null && frozen >= 0) {
+            double el = frozen * w.ticks();
+            double last = -1;
+            for (int t : w.impacts()) if (t <= el + 1e-6) last = t;
+            return last < 0 ? 0F : (float) Math.max(0, 1 - (el - last) / 4.4);
+        }
+        long dt = now - hitAt;
+        return hitAt > 0 && dt < 220 ? 1F - dt / 220F : 0F;
+    }
+
+    /**
+     * 시험 (사진첩 — 패널 연출을 한 순간씩 찍음): 서버 없이 이 일을 시각 t (0 ~ 1) 에 멈춰 보여 줌 — 그때까지 닿은 것은 닿은 것으로 (불꽃 · 조각이 튀는 것도
+     * 지금부터). t 가 음수면 멈춤을 풀고 일을 지움
+     */
+    public static void preview(String fx, String motion, ItemStack item, int ticks, List<Integer> impacts, int grade, double t) {
+        Minecraft mc = Minecraft.getInstance();
+        if (t < 0) {
+            frozen = -1;
+            work = null;
+            fired = 0;
+            return;
+        }
+        Work w = work;
+        boolean back = frozen >= 0 && t < frozen;
+        if (w == null || back || !w.key().equals("preview") || !w.fx().equals(fx) || !ItemStack.isSameItemSameComponents(w.item(), item)) {
+            w = new Work(-1, "preview", item, Math.max(1, ticks), List.copyOf(impacts), grade, ClientMotions.ticks(), motion, fx);
+            work = w;
+            fired = 0;
+            result = null;
+            resultAt = -1;
+        }
+        frozen = Math.max(0, Math.min(0.999, t));
+        double el = frozen * w.ticks();
+        while (fired < w.impacts().size() && el >= w.impacts().get(fired)) {
+            hit(mc, fired, fired == w.impacts().size() - 1);
+            fired++;
+        }
     }
 
     /** 시험: 마지막 창 · 결과 */
@@ -106,7 +155,7 @@ public final class ClientSmith {
     /** 클라이언트 틱: 망치가 닿는 틱이면 모루 소리 · 창의 불꽃 */
     static void tick(Minecraft mc) {
         Work w = work;
-        if (w == null) return;
+        if (w == null || frozen >= 0) return;
         long el = ClientMotions.ticks() - w.start();
         while (fired < w.impacts().size() && el >= w.impacts().get(fired)) {
             hit(mc, fired, fired == w.impacts().size() - 1);

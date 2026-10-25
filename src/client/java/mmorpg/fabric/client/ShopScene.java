@@ -79,6 +79,11 @@ final class ShopScene extends WorkScene {
     }
 
     @Override
+    String costLabel(String tab) {
+        return tab.equals("sell") ? "팔 것" : "값";
+    }
+
+    @Override
     float resultX() {
         return GOODS_X;
     }

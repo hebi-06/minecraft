@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import mmorpg.fabric.BedrockText;
-import mmorpg.fabric.client.motion.ClientMotions;
 import mmorpg.fabric.client.motion.MotionPoses;
 import mmorpg.fabric.client.motion.MotionRender;
 import mmorpg.fabric.client.motion.Pose;
@@ -407,7 +406,8 @@ public final class SmithScreen extends Screen {
         g.fill(closeRect[0], closeRect[1], closeRect[0] + 12, closeRect[1] + 12, ch ? 0xC0602020 : 0x80000000);
         g.outline(closeRect[0], closeRect[1], 12, 12, 0xA0C8A050);
         g.text(font, "×", closeRect[0] + 3, closeRect[1] + 2, ch ? 0xFFFFFFFF : 0xFFD0C090, false);
-        String who = v.npcName().isEmpty() ? "§6" + role(v) : "§6" + role(v) + " §f" + v.npcName();
+        // 가게 이름 · NPC 이름 (이름에 가게 이름이 들어 있으면 이름만 — "룬술사 룬술사 미르" 처럼 겹치지 않게)
+        String who = v.npcName().isEmpty() ? "§6" + role(v) : v.npcName().contains(role(v)) ? "§f" + v.npcName() : "§6" + role(v) + " §f" + v.npcName();
         String jw = j(who);
         int nx = Math.max(x + 6, W - 26 - font.width(jw));
         fit(g, jw, nx, TAB_Y + 4, W - 26 - nx, 0xFFFFFFFF);
@@ -634,11 +634,14 @@ public final class SmithScreen extends Screen {
             RpgUi.bar(g, bx, y + 2, bw, 5, (float) e.rate(), rgb);
             y += 12;
         }
-        // 효과 줄
+        // 효과 줄 (길면 " · " 에서 끊어 여러 줄 — 줄여서 납작해지지 않게)
+        outer:
         for (String l : e.lines()) {
-            if (y + 10 > bottom - 22) break;
-            fit(g, j(l), x, y, w, 0xFFFFFFFF);
-            y += 10;
+            for (String part : wrap(j(l), w, 3)) {
+                if (y + 10 > bottom - 22) break outer;
+                fit(g, part, x, y, w, 0xFFFFFFFF);
+                y += 10;
+            }
         }
         // 고를 것 (공허의 갑옷 부위 · 한 벌)
         List<SmithNet.Cost> costs = e.costs();
@@ -679,7 +682,7 @@ public final class SmithScreen extends Screen {
         }
         // 재료
         if (!costs.isEmpty() && y + 10 < bottom) {
-            g.text(font, "재료", x, y, RpgUi.GOLD_TEXT, true);
+            g.text(font, scene.costLabel(v.tab()), x, y, RpgUi.GOLD_TEXT, true);
             y += 10;
             boolean two = costs.size() > 3;
             int cw = two ? (w - 2) / 2 : w;
@@ -850,8 +853,8 @@ public final class SmithScreen extends Screen {
         double t = 0;
         String motion = sc.idleMotion();
         if (w != null) {
-            t = (ClientMotions.ticks() + partial - w.start()) / w.ticks();
-            if (t < 0 || t >= 1) t = 0;
+            t = ClientSmith.progress(partial);
+            if (t <= 0 || t >= 1) t = 0;
             else motion = w.motion();
         }
         MotionPoses.Motion m = loop(motion, sc);

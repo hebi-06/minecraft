@@ -458,7 +458,7 @@ public final class ShopUi {
         if (!(npc.level() instanceof ServerLevel level)) return null;
         float yaw = Kit.lookRotation(npc.position(), new Vec3(sp.getX(), npc.getY(), sp.getZ()))[0];
         Vec3 f = Vec3.directionFromRotation(0, yaw);
-        Vec3 at = npc.position().add(f.x * 0.75, 1.05, f.z * 0.75);
+        Vec3 at = npc.position().add(f.x * 0.8, 1.12, f.z * 0.8);
         return p.fx().equals("sell") ? new Selling(sp, level, yaw, at, p) : new Handing(sp, level, yaw, at, p);
     }
 
@@ -493,13 +493,13 @@ public final class ShopUi {
         @Override
         public void impact(int i, boolean last) {
             if (i == 0) {
-                goods = Workshop.floatItem(level, at, p.shown(), 0.5, p.ticks() + 30);
-                level.sendParticles(ParticleTypes.POOF, at.x, at.y - 0.15, at.z, 3, 0.15, 0.02, 0.15, 0.01);
+                goods = Workshop.floatItem(level, at, p.shown(), 0.6, p.ticks() + 30);
+                level.sendParticles(ParticleTypes.CRIT, at.x, at.y - 0.1, at.z, 4, 0.12, 0.02, 0.12, 0.05);
                 Workshop.playExcept(level, sp, "entity.item_frame.add_item", at, 0.9, 0.8);
             }
             if (last) {
                 off = toBuyer(sp, at);
-                Workshop.moveItem(goods, off, 0.35, 5);
+                Workshop.moveItem(goods, off, 0.4, 5);
                 SkillFx.sparks(level, at, GOLD, 6, 2);
                 Workshop.playExcept(level, sp, "random.orb", at, 1.3, 0.6);
                 Workshop.playExcept(level, sp, "block.chain.place", at, 1.6, 0.5);

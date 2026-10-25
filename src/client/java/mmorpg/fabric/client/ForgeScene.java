@@ -173,9 +173,9 @@ final class ForgeScene extends WorkScene {
     /** 패널 앞 (대장장이 위): 망치가 닿은 번쩍임 · 고리 · 불꽃 */
     @Override
     void front(SmithScreen s, GuiGraphicsExtractor g, SmithNet.ViewPayload v, int x0, int y0, long now, float partial) {
-        long dt = now - ClientSmith.hitAt;
-        if (ClientSmith.hitAt > 0 && dt < 260) {
-            float k = dt / 260F;
+        float pz = ClientSmith.pulse(now);
+        if (pz > 0) {
+            float k = 1F - pz;
             GachaArt.sprite(g, GachaArt.GLOW, x0 + HIT_X, y0 + HIT_Y, 22F + 26F * k, 0F, GachaArt.argb((int) (230 * (1 - k)), 0xFFE6A0));
             GachaArt.sprite(g, GachaArt.RING, x0 + HIT_X, y0 + HIT_Y, 8F + 34F * k, 0F, GachaArt.argb((int) (190 * (1 - k)), 0xFFC860));
         }

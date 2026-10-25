@@ -87,6 +87,11 @@ final class RuneScene extends WorkScene {
     }
 
     @Override
+    String costLabel(String tab) {
+        return tab.equals("tickets") ? "값" : "재료";
+    }
+
+    @Override
     float resultX() {
         return RUNE_X;
     }
@@ -185,8 +190,7 @@ final class RuneScene extends WorkScene {
         if (working) {
             int hits = ClientSmith.hits();
             int n = w.impacts().size();
-            long dt = now - ClientSmith.hitAt;
-            float pulse = ClientSmith.hitAt > 0 && dt < 220 ? 1F - dt / 220F : 0F;
+            float pulse = ClientSmith.pulse(now);
             switch (w.fx()) {
                 case "merge" -> {
                     // 둘이 양쪽에서 다가옴 (첫 부딪힘까지) → 튕김 → 다시 → 합침

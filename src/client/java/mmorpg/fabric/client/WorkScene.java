@@ -66,6 +66,11 @@ abstract class WorkScene {
     /** 큰 단추 글 (일하는 중 — fx 마다) */
     abstract String busyLabel(String fx);
 
+    /** 상세의 재료 줄 머리 (탭마다 — 사기는 "값", 팔기는 "팔 것") */
+    String costLabel(String tab) {
+        return "재료";
+    }
+
     /** 결과 연출의 가운데 (패널 기준) */
     abstract float resultX();
 

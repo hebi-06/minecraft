@@ -113,6 +113,7 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
             part(ctx, "runeWorld", () -> runeWorld(ctx, server, conn));
             part(ctx, "shop", () -> shop(ctx, server, conn));
             part(ctx, "shopWorld", () -> shopWorld(ctx, server, conn));
+            part(ctx, "phases", () -> phases(ctx, server, conn));
             part(ctx, "compact", () -> compact(ctx, server, conn));
             ctx.setScreen(() -> null);
         }
@@ -229,7 +230,8 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
 
     private void runeWorld(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         server.runCommand("title @a clear");
-        server.runCommand("tp @a 2.6 -60 1.0 40 12");
+        // 북쪽에서: 왼쪽 룬술사 · 오른쪽 마법 부여대 (나란히)
+        server.runCommand("tp @a 1.0 -60 0.7 0 10");
         ctx.waitTicks(5);
         ensureOpen(ctx, conn, runeId);
         click(ctx, conn, s -> s.tabCenter(0));
@@ -239,7 +241,7 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
         ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
         ctx.waitTicks(2);
         check(ctx.computeOnClient(mc -> mc.gui.screen() == null), "ESC closes while working");
-        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(1.0, -59.0, 3.2)));
+        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(1.0, -59.0, 3.5)));
         worldHit(ctx, 1, "rw_world_hit1");
         worldHit(ctx, 2, "rw_world_hit2");
         worldHit(ctx, 3, "rw_world_hit3");
@@ -256,7 +258,7 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
         row(ctx, conn, vit);
         act(ctx, conn);
         ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
-        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(1.0, -59.0, 3.2)));
+        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(1.0, -59.0, 3.5)));
         ctx.waitTicks(8);
         ctx.takeScreenshot(TestScreenshotOptions.of("rw_world_merge_close").withSize(960, 540));
         worldHit(ctx, 2, "rw_world_merge_hit2");
@@ -373,7 +375,50 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
         ctx.waitTicks(5);
     }
 
-    // ------------------------------------------------------------ 5. 좁은 화면
+    // ------------------------------------------------------------ 5. 패널 연출을 한 순간씩 (ClientSmith.preview — 서버 없이 그 시각에 멈춤)
+
+    private void phases(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        server.runCommand("title @a clear");
+        server.runCommand("tp @a 0.5 -60 0.5 0 0");
+        ctx.waitTicks(5);
+        ensureOpen(ctx, conn, runeId);
+        RuneSmithUi.Timing g = RuneSmithUi.GRIND_WORK;
+        phase(ctx, "rp_grind", "grind", g.motion(), RuneItems.stack("int", "transcend"), g.ticks(), g.impacts(), 4, 0.12, 0.27, 0.34, 0.47, 0.6, 0.85, 0.95);
+        RuneSmithUi.Timing m = RuneSmithUi.MERGE_WORK;
+        phase(ctx, "rp_merge", "merge", m.motion(), Breakthrough.stack("int", "transcend", 2), m.ticks(), m.impacts(), 4, 0.1, 0.3, 0.45, 0.51, 0.62, 0.78, 0.9);
+        RuneSmithUi.Timing t = RuneSmithUi.TICKET_WORK;
+        phase(ctx, "rp_ticket", "ticket", t.motion(), RuneItems.ticket(5, false), t.ticks(), t.impacts(), 2, 0.2, 0.6, 0.86);
+        ctx.setScreen(() -> null);
+        ctx.waitTicks(3);
+        server.runCommand("tp @a 8.5 -60 0.6 0 0");
+        ctx.waitTicks(5);
+        ensureOpen(ctx, conn, shopId);
+        ShopUi.Timing b = ShopUi.BUY_WORK;
+        ItemStack sword = new ItemStack(RpgItems.byId(Weapons.weaponFrom("sword", 10, "rare").id()));
+        phase(ctx, "sp_buy", "buy", b.motion(), sword, b.ticks(), b.impacts(), 1, 0.08, 0.18, 0.3, 0.38, 0.46, 0.58, 0.71, 0.8, 0.92);
+        ShopUi.Timing sl = ShopUi.SELL_WORK;
+        phase(ctx, "sp_sell", "sell", sl.motion(), new ItemStack(GearItems.byId("rpg:loot_troll"), 10), sl.ticks(), sl.impacts(), 0, 0.15, 0.36, 0.45, 0.56,
+                0.76, 0.9);
+        ctx.setScreen(() -> null);
+        ctx.waitTicks(3);
+        server.runCommand("tp @a 0.5 -60 0.5 0 0");
+        ctx.waitTicks(3);
+    }
+
+    /** 일 하나를 시각 ts 마다 멈춰 찍음 (이름_t시각) */
+    private void phase(ClientGameTestContext ctx, String prefix, String fx, String motion, ItemStack item, int ticks, List<Integer> impacts, int grade, double... ts) {
+        away(ctx);
+        for (double t : ts) {
+            ctx.runOnClient(mc -> ClientSmith.preview(fx, motion, item, ticks, impacts, grade, t));
+            ctx.waitTicks(2);
+            ctx.runOnClient(mc -> mc.gui.toastManager().clear());
+            ctx.takeScreenshot(prefix + "_t" + Math.round(t * 100));
+        }
+        ctx.runOnClient(mc -> ClientSmith.preview(fx, motion, item, ticks, impacts, grade, -1));
+        ctx.waitTicks(2);
+    }
+
+    // ------------------------------------------------------------ 6. 좁은 화면
 
     private void compact(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         ctx.getInput().resizeWindow(1024, 768);
