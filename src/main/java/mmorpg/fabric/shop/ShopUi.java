@@ -146,7 +146,8 @@ public final class ShopUi {
                     Obj tier = ArmorShop.TIERS.objOrNull("common_" + lv);
                     yield lv + "렙 " + (tier != null ? tier.str("name") : "") + " 갑옷";
                 }
-                case SELL -> "가진 전리품";
+                // 목록 수는 줄 수 (가진 것 + 그 밖) — 머리는 "전리품" (가진 것은 무리 머리가 따로 말함)
+                case SELL -> "전리품";
                 default -> Math.max(0, s.level) + "렙 무기";
             };
         }

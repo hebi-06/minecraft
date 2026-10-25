@@ -31,12 +31,14 @@ import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.entity.player.ChatVisiblity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -359,13 +361,18 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
         click(ctx, conn, s -> s.tabCenter(0));
         String axe = "w:" + Weapons.weaponFrom("axe", 10, "common").id();
         row(ctx, conn, axe);
+        int shown = itemsNear(ctx, SHOP_AT, 2.5);
         act(ctx, conn);
         ctx.waitTicks(2);
         ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
         ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, SHOP_AT.add(0, 1.2, -0.6)));
         ctx.waitTicks(4);
         ctx.takeScreenshot(TestScreenshotOptions.of("sw_world_reach").withSize(960, 540));
-        worldHit(ctx, 1, "sw_world_hit1");
+        // 물건 (서버의 첫 닿음에 생김) 이 이 화면에 보일 때까지 — CI 서버가 밀리면 화면의 닿은 수보다 늦음
+        for (int i = 0; i < 80 && itemsNear(ctx, SHOP_AT, 2.5) <= shown; i++) ctx.waitTicks(1);
+        check(itemsNear(ctx, SHOP_AT, 2.5) > shown, "world: goods shown in front of the merchant");
+        ctx.waitTicks(5);
+        ctx.takeScreenshot(TestScreenshotOptions.of("sw_world_hit1").withSize(960, 540));
         worldHit(ctx, 2, "sw_world_hit2");
         ctx.waitTicks(3);
         ctx.takeScreenshot(TestScreenshotOptions.of("sw_world_hand").withSize(960, 540));
@@ -525,6 +532,11 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
     }
 
     /** n 번째로 닿은 바로 뒤 (세상 — 960 × 540) */
+    /** 이 화면 (클라이언트) 의 떠 있는 아이템 수 (at 둘레 r 칸) */
+    private static int itemsNear(ClientGameTestContext ctx, Vec3 at, double r) {
+        return ctx.computeOnClient(mc -> mc.level == null ? 0 : mc.level.getEntitiesOfClass(Display.ItemDisplay.class, new AABB(at, at).inflate(r)).size());
+    }
+
     private void worldHit(ClientGameTestContext ctx, int n, String name) {
         waitHits(ctx, n);
         ctx.takeScreenshot(TestScreenshotOptions.of(name).withSize(960, 540));
