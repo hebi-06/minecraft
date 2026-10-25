@@ -116,6 +116,9 @@ public final class MmorpgClient implements ClientModInitializer {
         // 0.38.0 동작 (다른 사람의 평타 · 스킬 · 구르기, 내 스킬)
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.motion.MotionNet.PlayPayload.TYPE, (payload, context) -> mmorpg.fabric.client.motion.ClientMotions.receive(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.motion.MotionNet.LookPayload.TYPE, (payload, context) -> mmorpg.fabric.client.motion.ClientMotions.receiveLook(payload));
+        // 0.44.0 대장장이 전용 창 (open 이면 창) · 망치질 (창 패널 · 세상의 대장장이 NPC)
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.smith.SmithNet.ViewPayload.TYPE, (payload, context) -> ClientSmith.view(payload, context.client()));
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.smith.SmithNet.WorkPayload.TYPE, (payload, context) -> ClientSmith.work(payload));
         // 초월 룬 하늘빛 · 화면 번쩍임
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SkyPayload.TYPE, (payload, context) -> UltFx.sky(payload));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.FlashPayload.TYPE, (payload, context) -> UltFx.flash(payload));
@@ -132,6 +135,7 @@ public final class MmorpgClient implements ClientModInitializer {
             UltFx.clear();
             mmorpg.fabric.client.motion.ClientMotions.clear();
             mmorpg.fabric.client.motion.BladeTrails.clear(); // 0.40.0 참격 궤적
+            ClientSmith.clear(); // 0.44.0 대장장이 전용 창
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (statsKey.consumeClick()) {
@@ -171,6 +175,7 @@ public final class MmorpgClient implements ClientModInitializer {
             if (!client.isPaused()) CameraShake.tick();
             WeaponAura.tick(client);
             CosmeticAura.tick(client);
+            ClientSmith.tick(client); // 0.44.0 망치가 닿는 틱 (모루 소리 · 창의 불꽃)
             mmorpg.fabric.client.motion.ClientMotions.tick(client); // 0.38.0 동작 · 쉬프트 두 번 구르기
         });
         // 체력 줄 자리에 RPG 체력 바 · 갑옷 · 레벨 · 공기, 배고픔 · 갑옷 · 공기 줄 · 바닐라 레벨 숫자는 숨김 (RPG HUD 일 때만)

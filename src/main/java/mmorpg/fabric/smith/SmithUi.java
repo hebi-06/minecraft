@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import mmorpg.core.Armor;
 import mmorpg.core.Artifacts;
 import mmorpg.core.Economy;
@@ -67,7 +66,7 @@ import org.joml.Quaternionf;
  *   <li>단추를 누르면 창을 닫지 않고 망치질 ({@link #TICKS} — 창의 대장장이 패널 · 세상의 대장장이 NPC 가 같은 동작, 망치가 닿을 때 불꽃 · 소리) 이 끝난
  *       뒤 결과를 정함 (재료는 그때 받음 — 도중에 나가거나 죽으면 아무것도 쓰지 않음). 결과는 창에 (닫았으면 화면 제목)</li>
  *   <li>세상: NPC 둘레 {@link #ANVIL_RANGE} 칸에 모루가 있으면 그쪽을 보고 그 위를 침, 없으면 몸 앞에 잠깐 모루 (표시 엔티티) 를 놓음</li>
- *   <li>모드가 없는 클라이언트 · 시험의 가짜 플레이어는 예전 상자 창 ({@link Smith#smithLoop}) — {@link #force} · {@link #legacy} 로 시험이 고름</li>
+ *   <li>모드가 없는 클라이언트 · 시험의 가짜 플레이어는 예전 상자 창 ({@link Smith#smithLoop}) — {@link #FORCE} · {@link #legacy} 로 시험이 고름</li>
  * </ul>
  */
 public final class SmithUi {
@@ -92,12 +91,11 @@ public final class SmithUi {
     public static final String CRAFT = "craft";
     public static final String GEAR = "gear";
 
-    /** 시험: 클라이언트 없이도 새 창 흐름 (보내는 것은 {@link #sink} 로) */
-    public static boolean force = false;
+    /** 시험: 이 사람들은 클라이언트 없이도 새 창 흐름 (보내는 것은 {@link #SENT} 에 쌓임 — 함께 도는 다른 시험과 섞이지 않게 사람마다) */
+    public static final java.util.Set<UUID> FORCE = new java.util.HashSet<>();
+    public static final Map<UUID, List<CustomPacketPayload>> SENT = new HashMap<>();
     /** 사진첩: 예전 상자 창으로 (모드 클라이언트도) */
     public static boolean legacy = false;
-    /** 시험: 보내는 패킷 (null 이면 클라이언트로) */
-    public static BiConsumer<ServerPlayer, CustomPacketPayload> sink = null;
 
     private static final double[] GOLD = {1.0, 0.82, 0.3};
     private static final double[] WHITE = {1, 1, 1};
@@ -165,9 +163,9 @@ public final class SmithUi {
         });
     }
 
-    /** 새 창을 쓸지 (모드 클라이언트 — 시험은 force, 사진첩은 legacy 로 예전 창) */
+    /** 새 창을 쓸지 (모드 클라이언트 — 시험은 FORCE, 사진첩은 legacy 로 예전 창) */
     public static boolean usable(ServerPlayer sp) {
-        return !legacy && (force || SmithNet.canSend(sp));
+        return !legacy && (FORCE.contains(sp.getUUID()) || SmithNet.canSend(sp));
     }
 
     /** 창이 열려 있는지 (시험) */
@@ -603,7 +601,7 @@ public final class SmithUi {
     }
 
     private static void out(ServerPlayer sp, CustomPacketPayload p) {
-        if (sink != null) sink.accept(sp, p);
+        if (FORCE.contains(sp.getUUID())) SENT.computeIfAbsent(sp.getUUID(), k -> new ArrayList<>()).add(p);
         else if (SmithNet.canSend(sp)) ServerPlayNetworking.send(sp, p);
     }
 

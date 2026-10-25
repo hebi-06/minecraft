@@ -289,6 +289,7 @@ public final class RpgVoidArmorGallery implements FabricClientGameTest {
             sp.getInventory().setItem(10, new ItemStack(Icon.itemById("rpg:loot_void_stalker"), 20));
             Wallet.set(sp, Economy.Kind.GOLD, 20);
             Forms.close(sp);
+            mmorpg.fabric.smith.SmithUi.legacy = true; // 0.44.0: 예전 상자 창 (모드가 없는 클라이언트의 흐름) 을 찍음
             Smith.smithLoop(sp, "smith", null);
         });
         if (!waitChest(ctx, "레벨 올리기")) failures.add("raise window did not open");
@@ -303,7 +304,10 @@ public final class RpgVoidArmorGallery implements FabricClientGameTest {
         ctx.takeScreenshot("va_raise_done");
         boolean raised = server.computeOnServer(s -> player(s).getInventory().getItem(1).is(RpgItems.byId(Weapons.weaponFrom("sword", 45, "transcend").id())));
         if (!raised) failures.add("sword 40 → 45 not raised");
-        server.runOnServer(s -> Forms.close(player(s)));
+        server.runOnServer(s -> {
+            mmorpg.fabric.smith.SmithUi.legacy = false;
+            Forms.close(player(s));
+        });
         ctx.setScreen(() -> null);
         ctx.waitTicks(5);
         LOG.info("[voidarmor-gallery] raise raised={}", raised);

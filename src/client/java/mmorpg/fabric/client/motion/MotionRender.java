@@ -12,6 +12,11 @@ import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
@@ -49,7 +54,7 @@ public final class MotionRender {
         state.setData(KEY, p == null ? NONE : p);
         if (p == null) return;
         if (!Float.isNaN(p.yaw)) {
-            // 구르기: 몸 · 머리가 구르는 쪽을 봄
+            // 구르기 · 0.44.0 대장장이 망치질: 몸 · 머리가 그쪽을 봄 (머리 숙임은 동작의 head 열쇠)
             state.bodyRot = p.yaw;
             state.yRot = 0;
             state.xRot = 0;
@@ -58,6 +63,32 @@ public final class MotionRender {
             if (state.mainArm == HumanoidArm.LEFT) state.leftHandItemState.clear();
             else state.rightHandItemState.clear();
         }
+        // 0.44.0 동작이 드는 아이템 (대장장이 망치 — 주 손에 든 것 대신)
+        if (p.hold != null && p.w > 0) holdIn(entity, state, p.hold);
+    }
+
+    private static final java.util.Map<String, ItemStack> HOLD = new java.util.HashMap<>();
+
+    /** item_model id 의 아이템 (막대기에 모델만 바꿈 — 그리기용, 없으면 EMPTY) */
+    public static ItemStack holdStack(String model) {
+        return HOLD.computeIfAbsent(model, k -> {
+            Identifier id = Identifier.tryParse(k);
+            if (id == null) return ItemStack.EMPTY;
+            ItemStack s = new ItemStack(Items.STICK);
+            s.set(DataComponents.ITEM_MODEL, id);
+            return s;
+        });
+    }
+
+    /** 주 손에 이 모델의 아이템을 들림 (렌더 상태만) */
+    public static void holdIn(Avatar entity, AvatarRenderState state, String model) {
+        ItemStack s = holdStack(model);
+        if (s.isEmpty()) return;
+        boolean left = state.mainArm == HumanoidArm.LEFT;
+        Minecraft.getInstance().getItemModelResolver().updateForLiving(left ? state.leftHandItemState : state.rightHandItemState, s,
+                left ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, entity);
+        if (left) state.leftArmPose = HumanoidModel.ArmPose.ITEM;
+        else state.rightArmPose = HumanoidModel.ArmPose.ITEM;
     }
 
     static Pose of(HumanoidRenderState state) {

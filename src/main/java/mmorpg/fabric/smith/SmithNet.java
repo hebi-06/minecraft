@@ -302,7 +302,7 @@ public final class SmithNet {
         ServerPlayNetworking.registerGlobalReceiver(ActionPayload.TYPE, (p, context) -> SmithUi.action(context.player(), p.action(), p.key(), p.a(), p.b()));
     }
 
-    /** 대장장이 전용 창을 쓸 수 있는 클라이언트인지 (시험은 {@link SmithUi#force}) */
+    /** 대장장이 전용 창을 쓸 수 있는 클라이언트인지 (시험은 {@link SmithUi#FORCE}) */
     public static boolean canSend(ServerPlayer sp) {
         return sp != null && !sp.isRemoved() && ServerPlayNetworking.canSend(sp, ViewPayload.TYPE);
     }

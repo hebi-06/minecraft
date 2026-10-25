@@ -297,6 +297,7 @@ public final class RpgRelicGallery implements FabricClientGameTest {
             sp.getInventory().setItem(31, new ItemStack(GearItems.byId("rpg:bright_stone"), 16));
             Forms.close(sp);
             GearEnhance.rand = () -> 0.0;
+            mmorpg.fabric.smith.SmithUi.legacy = true; // 0.44.0: 예전 상자 창 (모드가 없는 클라이언트의 흐름) 을 찍음
             Smith.smithLoop(sp, "enhance", null);
         });
         try {
@@ -324,6 +325,7 @@ public final class RpgRelicGallery implements FabricClientGameTest {
         } finally {
             server.runOnServer(s -> {
                 GearEnhance.rand = Math::random;
+                mmorpg.fabric.smith.SmithUi.legacy = false;
                 Forms.close(player(s));
             });
         }

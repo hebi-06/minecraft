@@ -8,7 +8,7 @@
 출력: GITHUB_OUTPUT 줄 'groups=<JSON 목록>' — 항목 {name, only, prod}
 사진첩 키: client weapon particle skill rune gear form nav mob arena boss monster tree
           scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree runebreak mob9 hero skillbar weapons12 cosmetic gacha limited market storage rpgui
-          glacier pairs job jobup void voidknight hel voidarmor artifact motion relic
+          glacier pairs job jobup void voidknight hel voidarmor artifact motion relic smith
 """
 import json
 import sys
@@ -24,7 +24,7 @@ DEFAULT = [
     ("ns", "nidhogg,skoll,pairs", False),
     ("ys", "ymir,surtr,void", False),
     ("six", "mount,pvp,stattree,runebreak,hel,motion", False),
-    ("hero", "hero,skillbar,gacha,limited,rpgui,glacier,job", False),
+    ("hero", "hero,skillbar,gacha,limited,rpgui,glacier,job,smith", False),
     ("w12", "weapons12,cosmetic,market,storage,jobup,voidarmor,artifact,relic", False),
 ]
 

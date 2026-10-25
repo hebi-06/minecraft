@@ -101,9 +101,20 @@ public final class MotionPoses {
         final float tilt;
         /** 0.40.0 참격 궤적을 남기는 t 구간들 ({시작, 끝} — 없으면 궤적 없음) */
         public final float[][] trail;
+        /** 0.44.0 동작 동안 주 손에 드는 아이템 모델 (item_model id — 대장장이 망치 rpg:smith_hammer, 없으면 null) */
+        public final String hold;
+        /** 0.44.0 몸 · 머리를 서버가 알린 쪽 (yaw — 대장장이: 모루 쪽) 으로 */
+        public final boolean faceYaw;
+        /** 0.44.0 망치가 닿는 t (0 ~ 1 — 없으면 빈 배열) */
+        public final float[] impacts;
 
         Motion(String name, int ticks, int parts, boolean softLegs, float fadeIn, float fadeOut, float hideFrom, float hideTo, List<Key> keys, List<FpKey> fp,
                 float tilt, float[][] trail) {
+            this(name, ticks, parts, softLegs, fadeIn, fadeOut, hideFrom, hideTo, keys, fp, tilt, trail, null, false, new float[0]);
+        }
+
+        Motion(String name, int ticks, int parts, boolean softLegs, float fadeIn, float fadeOut, float hideFrom, float hideTo, List<Key> keys, List<FpKey> fp,
+                float tilt, float[][] trail, String hold, boolean faceYaw, float[] impacts) {
             this.name = name;
             this.ticks = ticks;
             this.parts = parts;
@@ -116,6 +127,9 @@ public final class MotionPoses {
             this.fp = fp;
             this.tilt = tilt;
             this.trail = trail;
+            this.hold = hold;
+            this.faceYaw = faceYaw;
+            this.impacts = impacts;
         }
     }
 
@@ -200,8 +214,16 @@ public final class MotionPoses {
                 if (to > from) trail.add(new float[] {Math.max(0, from), Math.min(1, to)});
             }
         }
+        String hold = o.has("hold") ? o.get("hold").getAsString() : null;
+        boolean faceYaw = o.has("faceYaw") && o.get("faceYaw").getAsBoolean();
+        float[] impacts = new float[0];
+        if (o.has("impacts")) {
+            JsonArray a = o.getAsJsonArray("impacts");
+            impacts = new float[a.size()];
+            for (int i = 0; i < a.size(); i++) impacts[i] = a.get(i).getAsFloat();
+        }
         return new Motion(name, ticks, parts, soft, fade[0], fade[1], hide[0], hide[1], List.copyOf(keys), List.copyOf(fp), tilt,
-                trail.toArray(new float[0][]));
+                trail.toArray(new float[0][]), hold, faceYaw, impacts);
     }
 
     private static float[] floats(JsonObject o, String k, float[] dflt) {
@@ -602,6 +624,7 @@ public final class MotionPoses {
         out.spin = lerp(k0.spin, k1.spin, u);
         out.flip = lerp(k0.flip, k1.flip, u);
         out.hide = m.hideFrom >= 0 && t >= m.hideFrom && t <= m.hideTo;
+        out.hold = m.hold;
         float w = 1;
         if (m.fadeIn > 0 && t < m.fadeIn) w = ease(t / m.fadeIn, "inout");
         if (m.fadeOut > 0 && t > 1 - m.fadeOut) w = Math.min(w, ease((1 - t) / m.fadeOut, "inout"));

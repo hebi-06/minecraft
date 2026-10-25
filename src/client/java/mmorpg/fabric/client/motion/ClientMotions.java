@@ -168,7 +168,8 @@ public final class ClientMotions {
         MotionPoses.Motion m = MotionPoses.get(a.motion());
         if (m == null) return null;
         MotionPoses.evaluate(m, (float) Math.max(0, t), left, out);
-        out.yaw = a.motion().equals("roll") ? a.yaw() : Float.NaN;
+        // 구르기 · 0.44.0 대장장이 망치질 (faceYaw — 모루 쪽): 몸이 서버가 알린 쪽을 봄 (NaN 이면 그대로)
+        out.yaw = a.motion().equals("roll") || m.faceYaw ? a.yaw() : Float.NaN;
         return out;
     }
 
