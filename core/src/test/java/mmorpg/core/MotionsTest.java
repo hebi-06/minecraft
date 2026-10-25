@@ -33,8 +33,8 @@ public final class MotionsTest {
         for (String t : List.of("sword", "greatsword", "scythe")) check(Motions.combo(t).equals(three), "combo " + t + " " + Motions.combo(t));
         check(Motions.combo("dagger").equals(List.of("dagger_x")), "dagger");
         check(Motions.combo("axe").equals(List.of("chop")) && Motions.combo("hammer").equals(List.of("chop")), "axe · hammer chop");
-        check(Motions.combo("lance").equals(List.of("thrust")) && Motions.combo("shield").equals(List.of("bash")) && Motions.combo("scepter").equals(List.of("smite")),
-                "lance · shield · scepter");
+        check(Motions.combo("lance").equals(List.of("thrust", "lance_sweep")) && Motions.combo("shield").equals(List.of("bash"))
+                && Motions.combo("scepter").equals(List.of("smite")), "lance (0.42.0 찌르기 → 가로 휘두르기) · shield · scepter");
         check(Motions.combo("bow").isEmpty() && Motions.combo("wand").isEmpty() && Motions.combo(null).isEmpty(), "ranged none");
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
             for (String m : Motions.combo(t)) check(Motions.KNOWN.contains(m), "known " + m);
@@ -94,7 +94,15 @@ public final class MotionsTest {
         check(Math.abs(sc.angle() - 160) < 1e-9 && Math.abs(sc.range() - 3.05) < 1e-9 && sc.range() > h.range(), "scythe arc 160° · 3.05 (longer than a sword) " + sc);
         Motions.Area dx = Motions.area("dagger_x", "dagger");
         check(Math.abs(dx.angle() - 120) < 1e-9 && Math.abs(dx.range() - 1.5) < 1e-9, "dagger X 120° · 1.5 " + dx);
-        check(Math.abs(Motions.area("thrust", "lance", 4).range() - 4.0) < 1e-9 && Motions.reach("lance", 0) == null, "no reach row → shapes range (lance 4)");
+        // 0.42.0 창: 찌르기는 줄 4칸 그대로 (fixed — reach 표를 쓰지 않음), 가로 휘두르기는 궤적이 닿는 곳 (보통 3.45 · 초월 3.9) · 앞 160°
+        for (int g = 0; g <= 4; g++) check(Math.abs(Motions.area("thrust", "lance", g).range() - 4.0) < 1e-9, "lance thrust fixed 4 (grade " + g + ")");
+        Motions.Area ls = Motions.area("lance_sweep", "lance");
+        check(ls.shape().equals("arc") && Math.abs(ls.angle() - 160) < 1e-9 && Math.abs(ls.range() - 3.45) < 1e-9
+                && Math.abs(Motions.area("lance_sweep", "lance", 4).range() - 3.9) < 1e-9, "lance sweep arc 160° · 3.45 · 3.9 " + ls);
+        check(Motions.inArea(ls, 1.0, -3.0, 0, 0.3) && Motions.inArea(ls, 1.0, 3.0, 0, 0.3) && !Motions.inArea(Motions.area("thrust", "lance"), 1.0, 3.0, 0, 0.3),
+                "lance sweep reaches both sides (thrust line does not)");
+        check(!Motions.inArea(ls, -1.2, 0, -0.6, 0.3) && Motions.inArea(Motions.area("thrust", "lance"), 3.9, 0.3, 0, 0.3) && !Motions.inArea(ls, 3.9, 0, 0, 0.3),
+                "lance sweep: not behind · thrust reaches further ahead (4 vs 3.45)");
         Motions.Area v2 = Motions.area("slash_v", "sword");
         check(Motions.inArea(v2, 2.5, 0.5, 1.2, 0.3) && !Motions.inArea(v2, 2.5, 1.5, 0, 0.3), "band narrow sideways · tall");
         Motions.Area ln = Motions.area("thrust", "lance");
@@ -103,7 +111,7 @@ public final class MotionsTest {
         check(Motions.inArea(rg, -1.8, 1, 0.5, 0.3) && !Motions.inArea(rg, 0, 0, 4.5, 0.3) && !Motions.inArea(rg, 3.5, 0, 0.5, 0.3), "ring around · not far · not high");
         // 0.40.0 참격 궤적 규칙: 평타 여섯은 궤적이 참격을 대신 (창 찌르기 · 방패 밀치기는 예전 참격)
         check(Motions.trailEnabled(), "trail on");
-        for (String m : List.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "smite")) check(Motions.trailBasic(m), "trail basic " + m);
+        for (String m : List.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "smite", "lance_sweep")) check(Motions.trailBasic(m), "trail basic " + m);
         check(!Motions.trailBasic("thrust") && !Motions.trailBasic("bash") && !Motions.trailBasic("cast") && !Motions.trailBasic(null), "no trail for thrust · bash");
         // 그리기 설정 (클라이언트 BladeTrails 가 읽음): 겹 몫 0 ~ 1 · 1인칭 너비 · 가까이 옅어짐 [가까운, 먼]
         Obj trail = Rules.get().root().obj("TRAIL");
@@ -118,7 +126,7 @@ public final class MotionsTest {
             List<Object> nr = trail.obj("near").list(k);
             check(nr.size() == 2 && ((Number) nr.get(0)).doubleValue() >= 0 && ((Number) nr.get(1)).doubleValue() > ((Number) nr.get(0)).doubleValue(), "trail near " + k);
         }
-        for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "scepter")) {
+        for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "scepter", "lance")) {
             Double r0 = Motions.reach(t, 0);
             Double r4 = Motions.reach(t, 4);
             check(r0 != null && r4 != null && r0 >= 1.4 && r4 <= 4.5, "reach row " + t + " " + r0 + " … " + r4);

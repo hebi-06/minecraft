@@ -44,6 +44,7 @@ import net.minecraft.world.phys.Vec3;
  * 0.39.0 참격 범위 피해 (가로 베기 = 앞 부채꼴 — 옆 · 뒤는 안 맞음, 회전 베기 = 둘레, 낫은 120°, 허공을 베어도 범위 안 적은 100%, 조준한 적은 한 번만),
  * 평타 사이 (네트워크 입력 — 8틱 안 두 번째는 받지 않음, 같은 누름의 공격 패킷 하나는 받음), 공격 대기 없음 (충전과 상관없이 · 바로 다시 쳐도 온전한 피해).
  * 0.40.0 참격 궤적: 범위 거리 = 무기 궤적이 닿는 곳 (칼 희귀 2.3칸 · 낫 고귀 3.3칸 — MOTION.area.reach), 가로 베기 160°.
+ * 0.42.0 창 연타: 찌르기 (앞 줄 4칸) → 가로 휘두르기 (앞 160° · 궤적이 닿는 곳).
  * 0.41.0 평타 강화 모습: 평타 강화 룬 · 직업 평타 태세가 범위를 넓힘 (날 세우기 × 1.15 · 사신 현신 5칸), '평타 N번' 은 휘두를 때마다 1번 (마지막 번의 범위 적도),
  * 가르기 부채꼴은 같은 휘두르기에 맞은 적을 다시 베지 않음, 평타 알림에 모습, 활 · 완드 색은 평타 강화 룬만.
  */
@@ -285,6 +286,54 @@ public final class RpgMotionTests {
             // 1틱 뒤 다시 (몹의 연속 피해 막기 시간 안) — 예전에는 막히거나 차이만
             sp.attack(a);
             h.assertTrue(oneHit(TestDummies.dealt(a) - first[0], sp, w), "second hit 1 tick later also full " + (TestDummies.dealt(a) - first[0]));
+            done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 0.42.0 창: 찌르기 → 가로 휘두르기
+
+    /**
+     * 창 연타 = 찌르기 → 가로 휘두르기 (2타 번갈아). 찌르기는 앞 줄 4칸 (옆 적은 못 맞힘 · 4.1칸 앞 적은 맞음), 가로 휘두르기는 앞 160° · 궤적이 닿는 3.55칸
+     * (희귀 — 옆 3칸 적은 맞음 · 4.1칸 앞 적은 못 맞힘)
+     */
+    @GameTest(environment = ENV, maxTicks = 60)
+    public void lanceThrustThenSweep(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        Weapon w = Weapons.weaponFrom("lance", 20, "rare");
+        hold(sp, w);
+        Husk a = dummy(h, 1.5, 2, 3.5); // 앞 2칸 (조준)
+        Husk side = dummy(h, 4.5, 2, 2.5); // 앞 1칸 · 왼쪽 3칸 — 휘두르기만
+        Husk far = dummy(h, 1.5, 2, 5.6); // 앞 4.1칸 — 찌르기만
+        RpgCombat.forceCrit = false;
+        double[] seen = new double[2];
+        h.runAfterDelay(2, () -> {
+            h.assertTrue(Motions.combo("lance").equals(List.of("thrust", "lance_sweep")), "lance combo " + Motions.combo("lance"));
+            List<net.minecraft.world.entity.LivingEntity> th = SwingArea.testTargets(sp, "thrust");
+            List<net.minecraft.world.entity.LivingEntity> sw = SwingArea.testTargets(sp, "lance_sweep");
+            h.assertTrue(th.contains(far) && !th.contains(side), "thrust: the line ahead (far yes · side no)");
+            h.assertTrue(sw.contains(side) && !sw.contains(far), "sweep: the arc (side yes · far no)");
+            MotionSystem.testRequest(sp, "basic", 1, 0);
+            sp.attack(a);
+            h.assertTrue("thrust".equals(MotionSystem.lastSent(sp)), "1st = thrust " + MotionSystem.lastSent(sp));
+        });
+        h.runAfterDelay(4, () -> {
+            h.assertTrue(oneHit(TestDummies.dealt(far), sp, w) && TestDummies.dealt(side) == 0, "thrust: far 100% · side 0 — " + TestDummies.dealt(far) + " / "
+                    + TestDummies.dealt(side));
+            seen[0] = TestDummies.dealt(far);
+            seen[1] = TestDummies.dealt(side);
+            // 다음 평타 (연타 안) = 가로 휘두르기 (서버가 정함 — 클라이언트 단계 없이)
+            MotionSystem.Swing s2 = MotionSystem.swung(sp, w);
+            h.assertTrue(s2 != null && s2.motion().equals("lance_sweep") && s2.step() == 2, "2nd = sweep " + s2);
+            MotionSystem.Swing s3 = MotionSystem.swung(sp, w);
+            h.assertTrue(s3 != null && s3.motion().equals("thrust") && s3.step() == 1, "3rd = thrust again " + s3);
+            MotionSystem.testRequest(sp, "basic", 2, 0);
+            sp.attack(a);
+            h.assertTrue("lance_sweep".equals(MotionSystem.lastSent(sp)), "sweep sent " + MotionSystem.lastSent(sp));
+        });
+        h.runAfterDelay(6, () -> {
+            h.assertTrue(oneHit(TestDummies.dealt(side) - seen[1], sp, w), "sweep: side 100% " + (TestDummies.dealt(side) - seen[1]));
+            h.assertTrue(TestDummies.dealt(far) == seen[0], "sweep: far untouched " + (TestDummies.dealt(far) - seen[0]));
             done(h, sp);
         });
     }

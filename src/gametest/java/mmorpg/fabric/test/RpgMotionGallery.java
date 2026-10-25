@@ -60,6 +60,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         {"dagger_x", "dagger", "0.16,0.36,0.72"},
         {"chop", "axe", "0.36,0.56,0.76"},
         {"thrust", "lance", "0.3,0.5,0.7"},
+        {"lance_sweep", "lance", "0.3,0.46,0.62"},
         {"bash", "shield", "0.3,0.5,0.72"},
         {"smite", "scepter", "0.32,0.55,0.75"},
         {"skill_slash", "greatsword", "0.3,0.48,0.66"},
@@ -265,6 +266,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         {"dagger", "rare", "dagger_x:5"},
         {"axe", "rare", "chop:6"},
         {"scepter", "rare", "smite:6"},
+        {"lance", "rare", "thrust:4", "lance_sweep:5"}, // 0.42.0 창: 찌르기 (빛줄기 — 궤적 없음) → 가로 휘두르기
     };
 
     private void trail(ClientGameTestContext ctx, TestServerContext server) {
@@ -272,7 +274,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         // (1) 렌더가 실제로 그린 무기 자리 = BladeTrails 의 계산 (3인칭: 마네킹을 멈춰 · 1인칭: 내 자세를 멈춰)
         hideGui(ctx, true);
         String[][] cases = {{"slash_h", "sword", "0.5"}, {"slash_v", "sword", "0.45"}, {"spin", "sword", "0.45"}, {"chop", "axe", "0.5"},
-            {"dagger_x", "dagger", "0.3"}, {"smite", "scepter", "0.55"}, {"skill_flurry", "sword", "0.5"}};
+            {"dagger_x", "dagger", "0.3"}, {"smite", "scepter", "0.55"}, {"skill_flurry", "sword", "0.5"}, {"lance_sweep", "lance", "0.5"}};
         double worst = 0;
         for (String[] c : cases) {
             List<Integer> row = spawn(server, -35F, c[1], false);
@@ -364,7 +366,8 @@ public final class RpgMotionGallery implements FabricClientGameTest {
                     String cur = ctx.computeOnClient(mc -> ClientMotions.current(me));
                     check(mt[0].equals(cur), "trail swing " + row[0] + " " + mt[0] + " (" + cur + ")");
                     int samples = ctx.computeOnClient(mc -> tp ? BladeTrails.lastWorldSamples : BladeTrails.lastFpSamples);
-                    check(samples >= 6, (tp ? "3rd" : "1st") + " person trail samples " + row[0] + " " + mt[0] + " " + samples);
+                    if (Motions.trailBasic(mt[0])) check(samples >= 6, (tp ? "3rd" : "1st") + " person trail samples " + row[0] + " " + mt[0] + " " + samples);
+                    else check(samples == 0, (tp ? "3rd" : "1st") + " person no trail for " + mt[0] + " " + samples); // 창 찌르기 — 예전 빛줄기
                     ctx.takeScreenshot(TestScreenshotOptions.of("mo_trail_" + tag + row[0] + "_" + mt[0]).withSize(960, 540));
                     ctx.waitTicks(Motions.attackInterval() + 1 - wait);
                 }

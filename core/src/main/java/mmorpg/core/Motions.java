@@ -14,8 +14,8 @@ public final class Motions {
     private Motions() {}
 
     /** 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인) */
-    public static final Set<String> KNOWN = Set.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "thrust", "bash", "smite", "skill_slash", "skill_flurry",
-            "slam", "leap_slam", "dash", "throw", "throw_weapon", "cast", "cast_up", "guard", "shoot", "shoot_up", "spin2", "roll");
+    public static final Set<String> KNOWN = Set.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "thrust", "lance_sweep", "bash", "smite", "skill_slash",
+            "skill_flurry", "slam", "leap_slam", "dash", "throw", "throw_weapon", "cast", "cast_up", "guard", "shoot", "shoot_up", "spin2", "roll");
 
     private static Obj cfg() {
         return Rules.get().obj("MOTION");
@@ -85,7 +85,8 @@ public final class Motions {
 
     /**
      * 이 동작 · 무기 종류 · 등급 (0 보통 ~ 4 초월) 의 참격 범위: shapes 의 모양 · 폭 (scale 배율), 거리는 0.40.0 reach 표 (무기 종류마다 등급별 — 참격 궤적이
-     * 닿는 거리) 가 있으면 그것, 없으면 shapes 의 range × scale. 없는 동작이면 null
+     * 닿는 거리) 가 있으면 그것, 없으면 shapes 의 range × scale. 0.42.0 shapes 에 fixed 가 있으면 reach 표를 쓰지 않음 (창 찌르기 — 궤적이 없는 동작은
+     * 그 range 그대로, 같은 창의 가로 휘두르기는 reach). 없는 동작이면 null
      */
     public static Area area(String motion, String weaponType, int grade) {
         Obj shapes = areaCfg().objOrNull("shapes");
@@ -94,7 +95,7 @@ public final class Motions {
         Obj sc = areaCfg().objOrNull("scale");
         double k = sc != null && weaponType != null ? sc.numOr(weaponType, 1) : 1;
         double range = a.num("range") * k;
-        Double r = reach(weaponType, grade);
+        Double r = a.truthy("fixed") ? null : reach(weaponType, grade);
         if (r != null) range = r;
         return new Area(a.str("shape"), range, Math.min(360, a.numOr("angle", 0) * k), a.numOr("width", 0) * k, a.numOr("height", 2));
     }

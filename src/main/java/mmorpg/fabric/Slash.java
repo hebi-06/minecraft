@@ -262,7 +262,7 @@ public final class Slash {
 
     /**
      * 같은 것 — m = 이 평타의 동작 (0.38.0 — 칼 · 마검 · 낫: 가로 베기 오른쪽 → 왼쪽 · 세로 베기 위 → 아래 · 회전 베기 둘레).
-     * 0.40.0 참격 궤적: 궤적이 있는 평타 동작 (rules_more TRAIL.basic — 칼 · 마검 · 낫 · 단검 · 도끼 · 전투 망치 · 홀) 은 클라이언트가 무기가 지나간 자리에 띠를 그리므로
+     * 0.40.0 참격 궤적: 궤적이 있는 평타 동작 (rules_more TRAIL.basic — 칼 · 마검 · 낫 · 단검 · 도끼 · 전투 망치 · 홀 · 0.42.0 창 가로 휘두르기) 은 클라이언트가 무기가 지나간 자리에 띠를 그리므로
      * 눈앞 초승달 참격 (회전 베기의 둘레 참격 · 고리, 단검 둘째 베기, 마검 룬 베기, 홀의 고리) 은 그리지 않고 소리 · 홀 빛 십자만. 창 찌르기 · 방패 밀치기 ·
      * 요구 조건이 모자란 회색 참격 (동작 없음) 은 그대로
      */
@@ -282,7 +282,11 @@ public final class Slash {
             return;
         }
         if (style.truthy("thrust")) {
-            thrustSwing(sp, w, style, ok);
+            // 0.42.0 창 가로 휘두르기 (궤적이 그림): 휘두르는 소리만 — 찌르기는 예전 빛줄기
+            if (trail) {
+                sound(sp.level(), eye(sp), SoundEvents.PLAYER_ATTACK_SWEEP, 0.8, 0.75);
+                sound(sp.level(), eye(sp), SoundEvents.SPEAR_ATTACK.value(), 0.75, 0.5);
+            } else thrustSwing(sp, w, style, ok);
             return;
         }
         if (motion.equals("spin")) {

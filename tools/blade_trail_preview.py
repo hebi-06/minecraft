@@ -105,7 +105,7 @@ def area_outline(motion, wtype, grade):
     shp = area["shapes"].get(motion)
     if not shp:
         return None
-    reach = area.get("reach", {}).get(wtype)
+    reach = None if shp.get("fixed") else area.get("reach", {}).get(wtype)  # 0.42.0 fixed (창 찌르기) 는 reach 표를 쓰지 않음
     rng = reach[GRADES.index(grade)] if reach else shp["range"] * area.get("scale", {}).get(wtype, 1.0)
     eye = np.array([0.0, EYE, 0.0])
     if shp["shape"] == "arc":

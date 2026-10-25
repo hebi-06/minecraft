@@ -696,7 +696,7 @@
     "near": {"fp": [0.4, 1.2], "world": [0.6, 1.8]},
     "look": {"_comment": "0.41.0 평타 강화 모습 (SWING_LOOK) 이 실린 궤적: core = 심지 색 (빛 색을 이만큼 희게), fp = 1인칭 무기 끝 늘임 몫 (세계 늘임 × — 1인칭 무기는 눈 바로 앞이라 같은 칸이면 화면을 덮음)", "core": 0.45, "fp": 0.5},
     "from": {"sword": 0.28, "greatsword": 0.24, "scythe": 0.45, "dagger": 0.2, "axe": 0.55, "hammer": 0.6, "scepter": 0.62, "lance": 0.62, "default": 0.35},
-    "basic": ["slash_h", "slash_v", "spin", "dagger_x", "chop", "smite"]
+    "basic": ["slash_h", "slash_v", "spin", "dagger_x", "chop", "smite", "lance_sweep"]
   },
   "SWING_LOOK": {
     "_comment": "0.41.0 평타 강화 모습 (사용자 \"평타 강화 스킬은 평타 색이 바뀌고 범위가 더 넓어지는걸로\" → 고른 것: 룬마다 다르게 · 휘두를 때마다 1번 · 직업 평타 버프도 포함). looks 의 key = 평타 강화 룬의 fn (RUNES.strike — 날 세우기 · 연타 · 가르기 · 피의 칼날 · 검신 강림) 또는 직업 평타 태세의 스킬 id (명경지수 · 마검 각성 · 사신 현신). 걸린 동안: 근접 평타 (궤적이 대신하는 평타 — TRAIL.basic) 의 참격 궤적 색이 glow (무기 색 빛 대신) · aura (바깥 기운 — 등급과 상관없이 한 겹) 로 바뀌고, 참격 범위 (MOTION.area — 거리 · 띠 · 줄의 폭, 부채꼴 각도는 그대로) 가 scale 배 (range 가 있으면 그 칸 아래로는 줄지 않음 — 사신 현신 5칸, jobs.json 의 range 를 먼저 씀), 궤적도 그만큼 무기 끝 너머로 이어 그림 (범위 = 궤적). weapons = 그 무기 종류만 (비면 모두). 평타 강화 룬은 활 · 완드 평타 (화살 빛줄기 · 광선 · 맞은 자리) 색도 glow. 여러 개가 걸리면 범위가 가장 넓은 것 하나. 평타 강화 룬의 '평타 N번' 은 휘두를 때마다 1번 (범위로 여럿을 맞혀도 — 더한 피해는 모두에게, 덧붙임 (잔상 · 부채꼴 · 흡혈 · 검기) 은 한 번).",
@@ -721,7 +721,7 @@
       "dagger": ["dagger_x"],
       "axe": ["chop"],
       "hammer": ["chop"],
-      "lance": ["thrust"],
+      "lance": ["thrust", "lance_sweep"],
       "shield": ["bash"],
       "scepter": ["smite"]
     },
@@ -738,7 +738,8 @@
         "spin": {"shape": "ring", "range": 3.0, "height": 3.0},
         "dagger_x": {"shape": "arc", "range": 2.8, "angle": 120, "height": 2.4},
         "chop": {"shape": "band", "range": 3.0, "width": 1.8, "height": 3.2},
-        "thrust": {"shape": "line", "range": 4.0, "width": 1.2},
+        "thrust": {"shape": "line", "range": 4.0, "width": 1.2, "fixed": true},
+        "lance_sweep": {"shape": "arc", "range": 3.4, "angle": 160, "height": 2.2},
         "bash": {"shape": "arc", "range": 2.6, "angle": 100, "height": 2.4},
         "smite": {"shape": "band", "range": 3.0, "width": 1.8, "height": 3.2}
       },
@@ -751,7 +752,8 @@
         "dagger": [1.5, 1.5, 1.5, 1.6, 2.8],
         "axe": [1.9, 1.9, 1.9, 1.95, 2.75],
         "hammer": [2.05, 2.1, 2.15, 2.4, 2.0],
-        "scepter": [2.7, 2.65, 2.8, 2.8, 3.3]
+        "scepter": [2.7, 2.65, 2.8, 2.8, 3.3],
+        "lance": [3.45, 3.55, 3.55, 3.65, 3.9]
       }
     },
     "spin": {"ratio": 0.4, "range": 3.0},
