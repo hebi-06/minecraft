@@ -126,6 +126,7 @@ public final class MmorpgClient implements ClientModInitializer {
             CameraShake.clear();
             UltFx.clear();
             mmorpg.fabric.client.motion.ClientMotions.clear();
+            mmorpg.fabric.client.motion.BladeTrails.clear(); // 0.40.0 참격 궤적
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (statsKey.consumeClick()) {

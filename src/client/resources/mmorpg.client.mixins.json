@@ -17,6 +17,7 @@
     "HumanoidModelMixin",
     "InventoryScreenMixin",
     "ItemModelResolverMixin",
+    "LevelRendererMixin",
     "MinecraftInvoker",
     "MinecraftMixin",
     "ModelPartMixin",

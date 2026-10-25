@@ -313,6 +313,7 @@ public final class MotionRender {
             ps.rotate(new Quaternionf().slerp(q, w));
             ps.translate(-gx, -g.y, -g.z);
         }
+        if (BladeTrails.captureFp) BladeTrails.captureFirstPerson(FP_BASE, ps.last().pose(), arm == HumanoidArm.LEFT); // 0.40.0 시험
         return true;
     }
 }

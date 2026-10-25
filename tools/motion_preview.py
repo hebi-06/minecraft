@@ -24,7 +24,7 @@ from PIL import Image, ImageDraw
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
 
-BLADE_TILT = math.radians(40)  # 팔을 내린 채 든 무기가 앞에서 위로 들린 각 (자바 MotionPoses.BLADE_TILT 와 같음)
+BLADE_TILT = math.radians(40)  # 팔을 내린 채 든 무기가 앞에서 위로 들린 각 — 동작에 "tilt" 가 없을 때 (자바 MotionPoses.BLADE_TILT 와 같음, 근접 무기 모델은 30° — 참격 궤적 동작은 "tilt": 30)
 HIP = np.array([0.0, 12.0, 0.0])
 FLIP_PIVOT = 0.55
 
@@ -67,7 +67,6 @@ def to_model(a):
     return np.array([-a[0], -a[1], -a[2]], dtype=float)
 
 
-NATURAL = math.pi / 2 + BLADE_TILT  # 손목을 꺾지 않았을 때 팔뚝과 무기 사이 각 (130°)
 SEARCH = 144  # 팔꿈치가 굽는 쪽 (위팔 둘레) 을 찾는 칸 수
 COST = (1.0, 0.6, 0.5)  # 손목 · 팔뚝 비틀기 · 위팔 비틀기 (60° 넘는 몫) 의 무게 (자바 MotionPoses 와 같음)
 
@@ -102,13 +101,21 @@ def rest_front(Y):
 
 FACE_REST = np.array([-1.0, 0.0, 0.0])  # 팔을 내렸을 때 든 무기의 바깥 면 (오른팔 로컬 -x — 몸 바깥쪽)
 COST_DEV = 2.0  # 손목 옆 꺾기 (face 를 맞출 때만) 의 무게
+CONT = 0.6  # 0.40.0 잇는 열쇠 (tools/motion_arcs.py 가 넣은 "gen" 열쇠): 앞 열쇠의 위팔 · 손 회전에서 벗어난 각² 의 무게 (팔이 갑자기 뒤집히지 않게)
 
 
-def arm_solve(arm):
+def rot_angle(A, B):
+    """두 회전 행렬 사이 각 (라디안)"""
+    return math.acos(clamp((float(np.trace(A @ B.T)) - 1) / 2))
+
+
+def arm_solve(arm, tilt=None, prev=None):
     """{dir, blade, bend, face, wrist} → (위팔 회전 R (모델), 팔꿈치 (로컬 x 회전 — 앞으로 굽힘은 음수), 팔뚝 비틀기 (로컬 y), 손목 (로컬 x), 손목 옆 꺾기 (로컬 z)).
     위팔은 dir, 팔꿈치는 bend 만큼 굽고, 굽는 쪽 (위팔 둘레) · 팔뚝 비틀기 · 손목은 무기 끝이 blade 를 똑바로 보게 정함 —
     손목 · 비틀기가 작고 위팔이 덜 비틀린 쪽 (COST). face (방패 겉면이 볼 쪽) 가 있으면 무기 겉면도 맞춤 (손목 옆 꺾기를 더 씀).
-    wrist (도) 는 손목에 더함 (손으로 고칠 때)"""
+    wrist (도) 는 손목에 더함 (손으로 고칠 때). tilt = 팔을 내린 채 든 무기가 위로 들린 각 (라디안 — 동작의 "tilt", 없으면 BLADE_TILT).
+    prev = (앞 열쇠의 위팔 R, 손 회전) — 있으면 그것에서 벗어난 각² × CONT 를 더함 (잇는 열쇠)"""
+    tilt = BLADE_TILT if tilt is None else tilt
     Y = unit(to_model(arm.get("dir", [0, -1, 0])))
     b = unit(to_model(arm.get("blade", [0, 0, 1])))
     B = math.radians(arm.get("bend", 0))
@@ -118,7 +125,7 @@ def arm_solve(arm):
         f = f - np.dot(f, b) * b
         if np.linalg.norm(f) > 1e-4:
             f = unit(f)
-            bl0 = np.array([0.0, -math.sin(BLADE_TILT), -math.cos(BLADE_TILT)])
+            bl0 = np.array([0.0, -math.sin(tilt), -math.cos(tilt)])
             H = np.column_stack([b, f, np.cross(b, f)]) @ np.column_stack([bl0, FACE_REST, np.cross(bl0, FACE_REST)]).T
     c = clamp(float(np.dot(b, Y)))
     d = b - c * Y
@@ -143,9 +150,9 @@ def arm_solve(arm):
             bf = F.T @ b
             cands = []
             a = math.asin(clamp(bf[1]))
-            cands.append((wrap(math.atan2(-bf[0], -bf[2])), wrap(a + BLADE_TILT), 0.0))
+            cands.append((wrap(math.atan2(-bf[0], -bf[2])), wrap(a + tilt), 0.0))
             a = math.pi - math.asin(clamp(bf[1]))
-            cands.append((wrap(math.atan2(bf[0], bf[2])), wrap(a + BLADE_TILT), 0.0))
+            cands.append((wrap(math.atan2(bf[0], bf[2])), wrap(a + tilt), 0.0))
         else:
             K = F.T @ H
             phi = math.asin(clamp(-K[1][2]))
@@ -154,6 +161,9 @@ def arm_solve(arm):
             cands = [(tau, phi, chi), (wrap(tau + math.pi), wrap(math.pi - phi), wrap(chi + math.pi))]
         for tau, phi, chi in cands:
             cost = COST[0] * phi * phi + COST[1] * tau * tau + COST_DEV * chi * chi + COST[2] * over * over
+            if prev is not None:
+                Hc = F @ ry(tau) @ rx(phi) @ rz(chi)
+                cost += CONT * (rot_angle(R, prev[0]) ** 2 + rot_angle(Hc, prev[1]) ** 2)
             if best is None or cost < best[0] - 1e-9:
                 best = (cost, R, tau, phi, chi)
     _, R, tau, phi, chi = best
@@ -171,14 +181,16 @@ def check():
         motions = json.load(f)["motions"]
     worst = 0.0
     for name, m in motions.items():
-        for k in m["keys"]:
+        tilt = motion_tilt(m)
+        sol = solved(m)
+        for i, k in enumerate(m["keys"]):
             for side in ("ra", "la"):
-                if side not in k:
+                if side not in k or k[side].get("wrist", 0):
                     continue
                 a = k[side]
-                R, bend, tau, phi, chi = arm_solve(dict(a, wrist=0))
+                R, bend, tau, phi, chi = sol[i][side]
                 Hm = hand_of(R, bend, tau, phi, chi)
-                got = Hm @ np.array([0.0, -math.sin(BLADE_TILT), -math.cos(BLADE_TILT)])
+                got = Hm @ np.array([0.0, -math.sin(tilt), -math.cos(tilt)])
                 want = unit(to_model(a.get("blade", [0, 0, 1])))
                 err = math.degrees(math.acos(clamp(float(np.dot(got, want)))))
                 if "face" in a:
@@ -274,15 +286,48 @@ def lerp_list(a, b, u):
     return [lerp(x, y, u) for x, y in zip(a, b)]
 
 
+def motion_tilt(m):
+    """동작의 무기 기울기 (라디안 — "tilt" 도, 없으면 BLADE_TILT · 자바 MotionPoses.Motion.tilt)"""
+    return math.radians(m["tilt"]) if "tilt" in m else BLADE_TILT
+
+
+_SOLVED = {}
+
+
+def solved(m):
+    """동작의 열쇠마다 풀린 팔 {"ra": (R, 팔꿈치, 비틀기, 손목, 옆 꺾기), "la": …} — 차례로 풀어 잇는 열쇠 ("gen") 는 앞 열쇠에 이어지게 (자바 MotionPoses.parse 와 같음)"""
+    key = id(m)
+    if key in _SOLVED and _SOLVED[key][0] is m:
+        return _SOLVED[key][1]
+    tilt = motion_tilt(m)
+    out = []
+    prev = None
+    for k in m["keys"]:
+        cur = {}
+        for f in ("ra", "la"):
+            hint = None
+            if k.get("gen") and prev is not None:
+                R, bend, tau, phi, chi = prev[f]
+                hint = (R, hand_of(R, bend, tau, phi, chi))
+            cur[f] = arm_solve(key_arm(k, f), tilt, hint)
+        out.append(cur)
+        prev = cur
+    _SOLVED[key] = (m, out)
+    return out
+
+
 def evaluate(m, t):
     """동작 m 의 t (0~1) 자세 (자바 MotionPoses.evaluate 와 같음)"""
     keys = m["keys"]
+    tilt = motion_tilt(m)
+    sol = solved(m)
     t = max(0.0, min(1.0, t))
-    k0, k1 = keys[0], keys[-1]
+    i0, i1 = 0, len(keys) - 1
     for i in range(len(keys) - 1):
         if keys[i]["t"] <= t <= keys[i + 1]["t"]:
-            k0, k1 = keys[i], keys[i + 1]
+            i0, i1 = i, i + 1
             break
+    k0, k1 = keys[i0], keys[i1]
     span = k1["t"] - k0["t"]
     u = 0.0 if span <= 0 else (t - k0["t"]) / span
     u = ease(u, k1.get("ease", "inout"))
@@ -292,9 +337,8 @@ def evaluate(m, t):
     for f in ("rk", "lk", "spin", "flip"):
         out[f] = lerp(k0.get(f, 0), k1.get(f, 0), u)
     for f in ("ra", "la"):
-        a0, a1 = key_arm(k0, f), key_arm(k1, f)
-        R0, b0, t0, w0, c0 = arm_solve(a0)
-        R1, b1, t1, w1, c1 = arm_solve(a1)
+        R0, b0, t0, w0, c0 = sol[i0][f]
+        R1, b1, t1, w1, c1 = sol[i1][f]
         q = slerp(quat_of(R0), quat_of(R1), u)
         out[f] = (mat_of(q), lerp(b0, b1, u), t0 + wrap(t1 - t0) * u, w0 + wrap(w1 - w0) * u, c0 + wrap(c1 - c0) * u)
     fade = m.get("fade", [0.08, 0.2])
@@ -304,6 +348,7 @@ def evaluate(m, t):
     if t > 1 - fade[1]:
         w = min(w, ease((1 - t) / fade[1], "inout"))
     out["w"] = w
+    out["tilt"] = tilt
     return out
 
 
@@ -362,7 +407,8 @@ def build(pose, slim=False, weapon=True):
             g = rx(wrist * w) @ rz(dev * w) @ (g - Wp) + Wp
             g = ry(twist * w) @ (g - A) + A
             grip = Rj @ (g - J) + J
-            bl = Rj @ ry(twist * w) @ rx(wrist * w) @ rz(dev * w) @ np.array([0.0, -math.sin(BLADE_TILT), -math.cos(BLADE_TILT)])
+            tl = pose.get("tilt", BLADE_TILT)
+            bl = Rj @ ry(twist * w) @ rx(wrist * w) @ rz(dev * w) @ np.array([0.0, -math.sin(tl), -math.cos(tl)])
             tip = grip + bl * 20
             back = grip - bl * 4
             # 칼날: 굵기 1 · 너비 2 의 막대

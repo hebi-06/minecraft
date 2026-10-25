@@ -66,29 +66,50 @@ public final class MotionsTest {
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
             for (String m : Motions.combo(t)) {
                 Motions.Area a = Motions.area(m, t);
-                check(a != null && List.of("arc", "band", "line", "ring").contains(a.shape()) && a.range() >= 2.5 && a.range() <= 5, "area " + t + " " + m + " " + a);
+                check(a != null && List.of("arc", "band", "line", "ring").contains(a.shape()) && a.range() >= 1.4 && a.range() <= 5, "area " + t + " " + m + " " + a);
                 if (a == null) continue;
-                // 바로 앞 2칸 (눈높이보다 조금 아래 — 좀비 가운데) 은 늘 맞음, 바로 뒤 2칸은 회전만
-                check(Motions.inArea(a, 2, 0, -0.6, 0.3), "front hit " + m);
-                check(Motions.inArea(a, -2, 0, -0.6, 0.3) == a.shape().equals("ring"), "behind only ring " + m);
+                // 바로 앞 1.2칸 (눈높이보다 조금 아래 — 좀비 가운데) 은 늘 맞음, 바로 뒤 1.2칸은 회전만 (0.40.0: 단검 · 도끼 궤적은 1.5 ~ 1.9칸)
+                check(Motions.inArea(a, 1.2, 0, -0.6, 0.3), "front hit " + m);
+                check(Motions.inArea(a, -1.2, 0, -0.6, 0.3) == a.shape().equals("ring"), "behind only ring " + m);
                 check(!Motions.inArea(a, a.range() + 1.0, 0, 0, 0.3), "past range " + m);
             }
         }
+        // 0.40.0 가로 베기: 궤적이 덮는 앞쪽 160° · 거리는 칼 궤적이 닿는 곳 (보통 2.3 · 초월 3.45 — reach 표)
         Motions.Area h = Motions.area("slash_h", "sword");
-        check(Math.abs(h.angle() - 100) < 1e-9 && Math.abs(h.range() - 3) < 1e-9, "sword arc 100° · 3");
-        double s50 = Math.sin(Math.toRadians(45)) * 2.5;
-        double c50 = Math.cos(Math.toRadians(45)) * 2.5;
-        check(Motions.inArea(h, c50, s50, 0, 0), "arc 45° side in");
-        check(!Motions.inArea(h, 0.3, 2.5, 0, 0), "arc 83° side out");
-        check(Motions.inArea(h, 0.3, 2.5, 0, 0.6) == (Math.atan2(2.5, 0.3) <= Math.toRadians(50) + Math.asin(0.6 / Math.hypot(0.3, 2.5))), "arc pad widens");
+        check(Math.abs(h.angle() - 160) < 1e-9 && Math.abs(h.range() - 2.3) < 1e-9, "sword arc 160° · 2.3 " + h);
+        double s45 = Math.sin(Math.toRadians(45)) * 2.0;
+        double c45 = Math.cos(Math.toRadians(45)) * 2.0;
+        check(Motions.inArea(h, c45, s45, 0, 0), "arc 45° side in");
+        double s75 = Math.sin(Math.toRadians(75)) * 2.0;
+        double c75 = Math.cos(Math.toRadians(75)) * 2.0;
+        check(Motions.inArea(h, c75, s75, 0, 0), "arc 75° side in");
+        check(!Motions.inArea(h, 0.17, 1.95, 0, 0), "arc 85° side out");
+        check(Motions.inArea(h, 0.17, 1.95, 0, 0.6) == (Math.atan2(1.95, 0.17) <= Math.toRadians(80) + Math.asin(0.6 / Math.hypot(0.17, 1.95))), "arc pad widens");
+        check(!Motions.inArea(h, 2.5, 0, 0, 0.1), "sword arc ends at 2.3 (+ body)");
+        Motions.Area top = Motions.area("slash_h", "sword", 4);
+        check(Math.abs(top.range() - 3.45) < 1e-9 && Motions.inArea(top, 3.0, 0, 0, 0.3), "transcend sword reaches 3.45 " + top);
+        check(Math.abs(Motions.area("slash_h", "sword", 9).range() - 3.45) < 1e-9 && Math.abs(Motions.area("slash_h", "sword", -1).range() - 2.3) < 1e-9,
+                "grade outside the table → nearest");
         Motions.Area sc = Motions.area("slash_h", "scythe");
-        check(Math.abs(sc.angle() - 120) < 1e-9 && Math.abs(sc.range() - 3.6) < 1e-9, "scythe arc 120° · 3.6 " + sc);
+        check(Math.abs(sc.angle() - 160) < 1e-9 && Math.abs(sc.range() - 3.05) < 1e-9 && sc.range() > h.range(), "scythe arc 160° · 3.05 (longer than a sword) " + sc);
+        Motions.Area dx = Motions.area("dagger_x", "dagger");
+        check(Math.abs(dx.angle() - 120) < 1e-9 && Math.abs(dx.range() - 1.5) < 1e-9, "dagger X 120° · 1.5 " + dx);
+        check(Math.abs(Motions.area("thrust", "lance", 4).range() - 4.0) < 1e-9 && Motions.reach("lance", 0) == null, "no reach row → shapes range (lance 4)");
         Motions.Area v2 = Motions.area("slash_v", "sword");
         check(Motions.inArea(v2, 2.5, 0.5, 1.2, 0.3) && !Motions.inArea(v2, 2.5, 1.5, 0, 0.3), "band narrow sideways · tall");
         Motions.Area ln = Motions.area("thrust", "lance");
         check(Motions.inArea(ln, 3.9, 0.3, 0, 0.3) && !Motions.inArea(ln, 2, 1.2, 0, 0.3), "line long · thin");
         Motions.Area rg = Motions.area("spin", "sword");
-        check(Motions.inArea(rg, -2.5, 1, 0.5, 0.3) && !Motions.inArea(rg, 0, 0, 4.5, 0.3) && !Motions.inArea(rg, 3.5, 0, 0.5, 0.3), "ring around · not far · not high");
+        check(Motions.inArea(rg, -1.8, 1, 0.5, 0.3) && !Motions.inArea(rg, 0, 0, 4.5, 0.3) && !Motions.inArea(rg, 3.5, 0, 0.5, 0.3), "ring around · not far · not high");
+        // 0.40.0 참격 궤적 규칙: 평타 여섯은 궤적이 참격을 대신 (창 찌르기 · 방패 밀치기는 예전 참격)
+        check(Motions.trailEnabled(), "trail on");
+        for (String m : List.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "smite")) check(Motions.trailBasic(m), "trail basic " + m);
+        check(!Motions.trailBasic("thrust") && !Motions.trailBasic("bash") && !Motions.trailBasic("cast") && !Motions.trailBasic(null), "no trail for thrust · bash");
+        for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "scepter")) {
+            Double r0 = Motions.reach(t, 0);
+            Double r4 = Motions.reach(t, 4);
+            check(r0 != null && r4 != null && r0 >= 1.4 && r4 <= 4.5, "reach row " + t + " " + r0 + " … " + r4);
+        }
         check(Motions.area("cast", "wand") == null && Motions.area("nope", "sword") == null, "no area for skills");
         // 스킬 표
         Set<String> want = new HashSet<>();

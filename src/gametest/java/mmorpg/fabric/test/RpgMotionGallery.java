@@ -7,6 +7,7 @@ import mmorpg.core.Motions;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.RpgItems;
+import mmorpg.fabric.client.motion.BladeTrails;
 import mmorpg.fabric.client.motion.ClientMotions;
 import mmorpg.fabric.client.motion.MotionPoses;
 import mmorpg.fabric.client.motion.MotionRender;
@@ -39,7 +40,8 @@ import org.slf4j.LoggerFactory;
  * 0.38.0 사진첩 (화면 시험, only=motion): 동작 22 가지를 마네킹 셋 (같은 동작의 세 순간) 에 멈춰 3/4 · 옆에서 찍고 (mo_&lt;동작&gt;_34 · _side),
  * 공허 갑옷을 입은 마네킹의 팔꿈치 · 무릎 굽힘 (mo_armor_*), 실제 입력: 공격 키 세 번 = 가로 → 세로 → 회전 (클라이언트 · 서버 단계가 같은지 · 1인칭 사진),
  * 쉬프트 두 번 = 구르기 (앞으로 3칸 넘게 · 재사용 대기 중에는 다시 안 됨 · 1인칭 · 3인칭 사진), 우클릭 무기 스킬 → 서버가 보낸 동작 (skill_slash),
- * 맨손 1인칭 (굽힘이 남지 않음). 사진 이름 mo_* → ci-logs 의 shots/.
+ * 맨손 1인칭 (굽힘이 남지 않음). 0.40.0 참격 궤적: 렌더가 그린 무기 자리 = BladeTrails 계산 (3인칭 마네킹 · 1인칭), 실제로 눌러 찍은 궤적 (mo_trail_tp_* · mo_trail_fp_*) —
+ * 멈춘 사진 (mo_&lt;동작&gt;_* · mo_fp_*) 에도 그 순간까지의 궤적. 사진 이름 mo_* → ci-logs 의 shots/.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgMotionGallery implements FabricClientGameTest {
@@ -107,6 +109,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             part(ctx, "armor", () -> armor(ctx, server));
             part(ctx, "fp", () -> firstPerson(ctx, server));
             part(ctx, "attack", () -> attack(ctx, server));
+            part(ctx, "trail", () -> trail(ctx, server));
             part(ctx, "area", () -> area(ctx, server));
             part(ctx, "roll", () -> roll(ctx, server));
             part(ctx, "skill", () -> skill(ctx, server));
@@ -245,6 +248,122 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         fov(ctx, 70);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.waitTicks(15);
+    }
+
+    // ------------------------------------------------------------ 3-1. 0.40.0 참격 궤적 (칼이 지나간 자리에 띠)
+
+    /** {종류, 등급, 동작 · 찍는 틱 …} — 평타를 실제로 눌러 그 동작이 진행된 틱에 찍음 (칼은 연타 셋) */
+    private static final String[][] TRAILS = {
+        {"sword", "rare", "slash_h:5", "slash_v:5", "spin:6"},
+        {"scythe", "hero", "slash_h:5"},
+        {"greatsword", "transcend", "slash_h:5"},
+        {"dagger", "rare", "dagger_x:5"},
+        {"axe", "rare", "chop:6"},
+        {"scepter", "rare", "smite:6"},
+    };
+
+    private void trail(ClientGameTestContext ctx, TestServerContext server) {
+        server.runCommand("tp @a 0.5 -60 0.5 180 0"); // 북쪽 (-z) 을 봄
+        // (1) 렌더가 실제로 그린 무기 자리 = BladeTrails 의 계산 (3인칭: 마네킹을 멈춰 · 1인칭: 내 자세를 멈춰)
+        hideGui(ctx, true);
+        String[][] cases = {{"slash_h", "sword", "0.5"}, {"slash_v", "sword", "0.45"}, {"spin", "sword", "0.45"}, {"chop", "axe", "0.5"},
+            {"dagger_x", "dagger", "0.3"}, {"smite", "scepter", "0.55"}, {"skill_flurry", "sword", "0.5"}};
+        double worst = 0;
+        for (String[] c : cases) {
+            List<Integer> row = spawn(server, -35F, c[1], false);
+            int id = row.get(1);
+            float t = Float.parseFloat(c[2]);
+            ctx.runOnClient(mc -> {
+                ClientMotions.freeze(id, c[0], t);
+                BladeTrails.captured = null;
+                BladeTrails.captureEntity = id;
+            });
+            ctx.waitTicks(3);
+            double[] got = ctx.computeOnClient(mc -> BladeTrails.captured);
+            double[] want = ctx.computeOnClient(mc -> BladeTrails.testWorldBlade(id));
+            ctx.runOnClient(mc -> BladeTrails.captureEntity = Integer.MIN_VALUE);
+            check(got != null && want != null, "captured " + c[0]);
+            if (got != null && want != null) {
+                double dg = dist(got, want, 0);
+                double dt = dist(got, want, 3);
+                worst = Math.max(worst, Math.max(dg, dt));
+                check(dg < 0.05 && dt < 0.08, String.format("3rd person blade = render %s %s grip %.3f tip %.3f", c[0], c[1], dg, dt));
+            }
+            discard(server, row);
+            ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
+        }
+        LOG.info("[motion-gallery] trail kinematics worst {}", String.format("%.4f", worst));
+        int me = ctx.computeOnClient(mc -> mc.player.getId());
+        hideGui(ctx, false); // 1인칭 손은 화면 표시가 켜져 있어야 그려짐
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        for (String[] c : cases) {
+            String type = c[1];
+            server.runOnServer(sv -> {
+                ServerPlayer sp = player(sv);
+                sp.getInventory().setItem(0, weapon(type));
+                sp.getInventory().setSelectedSlot(0);
+            });
+            ctx.waitTicks(2);
+            float t = Float.parseFloat(c[2]);
+            ctx.runOnClient(mc -> {
+                ClientMotions.freeze(me, c[0], t);
+                BladeTrails.capturedFp = null;
+                BladeTrails.captureFp = true;
+            });
+            ctx.waitTicks(3);
+            double[] got = ctx.computeOnClient(mc -> BladeTrails.capturedFp);
+            double[] want = ctx.computeOnClient(mc -> BladeTrails.testFirstPersonBlade());
+            ctx.runOnClient(mc -> {
+                BladeTrails.captureFp = false;
+                ClientMotions.unfreezeAll();
+            });
+            check(got != null && want != null, "captured 1st person " + c[0]);
+            if (got != null && want != null) {
+                double dg = dist(got, want, 0);
+                double dt = dist(got, want, 3);
+                check(dg < 0.03 && dt < 0.05, String.format("1st person blade = render %s %s grip %.3f tip %.3f", c[0], type, dg, dt));
+            }
+        }
+        // (2) 실제로 눌러 찍음: 3인칭 (앞 · 시야 50) · 1인칭 — 칼은 가로 → 세로 → 회전
+        for (CameraType cam : new CameraType[] {CameraType.THIRD_PERSON_FRONT, CameraType.FIRST_PERSON}) {
+            boolean tp = cam != CameraType.FIRST_PERSON;
+            hideGui(ctx, tp);
+            ctx.runOnClient(mc -> mc.options.setCameraType(cam));
+            fov(ctx, tp ? 50 : 70);
+            ctx.getInput().lookAt(180F, tp ? 8F : 0F);
+            for (String[] row : TRAILS) {
+                server.runOnServer(sv -> {
+                    ServerPlayer sp = player(sv);
+                    sp.getInventory().setItem(0, weaponOf(row[0], row[1]));
+                    sp.getInventory().setSelectedSlot(0);
+                });
+                ctx.waitTicks(Motions.comboWindow() + 4); // 연타가 처음부터
+                for (int i = 2; i < row.length; i++) {
+                    String[] mt = row[i].split(":");
+                    int wait = Integer.parseInt(mt[1]);
+                    ctx.getInput().pressKey(o -> o.keyAttack);
+                    ctx.waitTicks(wait);
+                    String cur = ctx.computeOnClient(mc -> ClientMotions.current(me));
+                    check(mt[0].equals(cur), "trail swing " + row[0] + " " + mt[0] + " (" + cur + ")");
+                    int samples = ctx.computeOnClient(mc -> tp ? BladeTrails.lastWorldSamples : BladeTrails.lastFpSamples);
+                    check(samples >= 6, (tp ? "3rd" : "1st") + " person trail samples " + row[0] + " " + mt[0] + " " + samples);
+                    ctx.takeScreenshot(TestScreenshotOptions.of("mo_trail_" + (tp ? "tp_" : "fp_") + row[0] + "_" + mt[0]).withSize(960, 540));
+                    ctx.waitTicks(Motions.attackInterval() + 1 - wait);
+                }
+            }
+        }
+        fov(ctx, 70);
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        hideGui(ctx, false);
+        server.runOnServer(sv -> player(sv).getInventory().clearContent());
+        ctx.waitTicks(10);
+    }
+
+    private static double dist(double[] a, double[] b, int o) {
+        double dx = a[o] - b[o];
+        double dy = a[o + 1] - b[o + 1];
+        double dz = a[o + 2] - b[o + 2];
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
     // ------------------------------------------------------------ 3-2. 0.39.0 허공을 베어도 참격 범위 안 적에게 피해
@@ -418,6 +537,15 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         return new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(id)));
     }
 
+    /** 이 종류 · 등급의 무기 (40 · 30 · 20 · 10 · 0렙 차례 — 없으면 weapon(type)) */
+    private static ItemStack weaponOf(String type, String grade) {
+        for (int lv : new int[] {40, 30, 20, 10, 0}) {
+            Weapon w = Weapons.weaponFrom(type, lv, grade);
+            if (w != null && RpgItems.byId(w.id()) != null) return new ItemStack(RpgItems.byId(w.id()));
+        }
+        return weapon(type);
+    }
+
     /** 이 종류의 무기 (영웅 40렙 → 없으면 초월 · 고귀 · 희귀 · 일반, 40 · 30 · 20 · 10 · 0렙 차례 — 마검은 영웅이 없음) */
     private static ItemStack weapon(String type) {
         for (String g : List.of("hero", "transcend", "noble", "rare", "common")) {
@@ -455,6 +583,8 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             ctx.runOnClient(mc -> {
                 ClientMotions.unfreezeAll();
                 MotionRender.debugEntity = Integer.MIN_VALUE;
+                BladeTrails.captureEntity = Integer.MIN_VALUE;
+                BladeTrails.captureFp = false;
                 if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
             });
             ctx.setScreen(() -> null);

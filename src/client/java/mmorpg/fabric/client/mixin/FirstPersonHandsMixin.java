@@ -27,6 +27,13 @@ public abstract class FirstPersonHandsMixin {
         MotionRender.firstPersonBase(pose, hand);
     }
 
+    /** 0.40.0 참격 궤적: 주 손을 그린 뒤 (손을 그리기 시작한 자리로 돌아온 pose) 1인칭 궤적 띠 — BladeTrails.submitFirstPerson */
+    @Inject(method = "submitArmWithItem", at = @At("TAIL"))
+    private void mmorpg$bladeTrail(PlayerRenderState player, FirstPersonHandsAndItemsRenderState state, float partial, float pitch, InteractionHand hand,
+            float attack, ItemStack stack, float equip, PoseStack pose, SubmitNodeCollector collector, int light, CallbackInfo ci) {
+        if (hand == InteractionHand.MAIN_HAND) mmorpg.fabric.client.motion.BladeTrails.submitFirstPerson(pose, collector);
+    }
+
     @Inject(method = "applyItemArmTransform(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/world/entity/HumanoidArm;F)V", at = @At("TAIL"))
     private void mmorpg$motion(PoseStack pose, HumanoidArm arm, float equip, CallbackInfo ci) {
         MotionRender.firstPerson(pose, arm);

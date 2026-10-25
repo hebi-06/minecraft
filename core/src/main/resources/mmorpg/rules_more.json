@@ -682,6 +682,18 @@
       "transcend": {"gold": 6, "items": {"rpg:loot_void_leaper": 15, "rpg:loot_void_stalker": 15, "rpg:laevateinn_shard": 2, "rpg:muspel_heart": 1}}
     }
   },
+  "TRAIL": {
+    "_comment": "0.40.0 참격 궤적 (사용자 \"참격 이펙트도 바꾸자 모션에 맞게 칼이 지나간 곳에 참격이 남게\" — 사진처럼 흰 초승달 띠). 근접 무기 (방패 빼고) 를 든 사람이 궤적 구간이 있는 동작 (클라이언트 assets/mmorpg/motion/poses.json trail — 가로 · 세로 · 회전 베기 · X자 · 내려찍기 · 내려치기 · 검기 베기 · 연속 베기 · 내려찍기 (스킬) · 도약 내려찍기 · 두 바퀴 회전) 을 하는 동안 무기 손잡이 쪽 (from — 손잡이 → 무기 끝 몫) 에서 무기 끝까지 지나간 자리에 띠가 남고 life 틱 동안 옅어지며 좁아짐 (taper — 오래된 끝의 너비 몫). 겹: 등급 기운 (영웅 · 초월) · 무기 색 빛 (무기 끝 너머 glowTo 까지) · 흰 심지 · 마검 룬. alpha = 겹마다 불투명도. 틱 사이도 maxStep 틱마다 (무기 끝이 maxMove 칸 넘게 움직이면 더 잘게) 찍음. basic = 서버가 예전 눈앞 초승달 참격을 그리지 않는 평타 동작 (궤적이 대신 — 소리 · 맞힌 연출 · 요구 조건이 모자랄 때 회색 참격은 그대로). 모양 · 거리 미리 보기: python3 tools/blade_trail_preview.py.",
+    "enabled": true,
+    "life": 6,
+    "maxStep": 0.25,
+    "maxMove": 0.12,
+    "taper": 0.12,
+    "glowTo": 1.12,
+    "alpha": {"aura": 0.42, "glow": 0.7, "core": 0.95, "rune": 0.9},
+    "from": {"sword": 0.28, "greatsword": 0.24, "scythe": 0.45, "dagger": 0.2, "axe": 0.55, "hammer": 0.6, "scepter": 0.62, "lance": 0.62, "default": 0.35},
+    "basic": ["slash_h", "slash_v", "spin", "dagger_x", "chop", "smite"]
+  },
   "MOTION": {
     "_comment": "0.38.0 동작 (사용자 요청 \"모션이 더 역동적 — 칼 벨 때 가로 베기 · 세로 베기 · 한 바퀴 돌기 · 쉬프트 두 번 구르기\" + \"무기 스킬 · 돌진 스킬 · 투척 스킬 (던지는 모션)\" → 고른 것: 근접 무기 모두 · 3타 회전은 둘레 적도 맞음 · 구르기 무적 없음 · 재사용 1초). combo = 무기 종류마다 평타 동작 차례 (comboWindow 틱 안에 다음 평타면 다음 단계, 아니면 처음). spin = 회전 베기 (combo 의 spin 단계) 가 둘레 range 칸의 다른 적에게 맞힌 피해 × ratio (낫은 넓게 베기 대신 — 범위 · 비율은 큰 쪽). roll = 쉬프트 두 번 (doubleTap 틱 안) — ticks 동안 distance 칸, cooldown 틱 (무적 없음 · 땅 위에서만). skills = 무기 스킬 id · 직업 스킬 id · rune:룬 fn → 동작 (클라이언트 assets/mmorpg/motion/poses.json 의 이름).",
     "combo": {
@@ -699,20 +711,30 @@
     "interval": 10,
     "intervalSlack": 2,
     "area": {
-      "_comment": "0.39.0 참격 범위 피해 (사용자 \"허공을 때려도 이펙트가 나오는데 해당 이펙트 범위만큼 피해가 들어가게\" → 고른 것: 범위 안 모두 100%). 평타를 휘두를 때마다 (허공 포함) 동작마다의 범위 안 적 (적대 무리 · 결투 상대, 눈에서 보이는, 가까운 순 max 명) 에게 평타 피해 그대로 — 조준한 적은 바닐라 공격으로 한 번, 나머지는 1틱 뒤. 회전 베기 · 낫 넓게 베기 (40%) 는 이것으로 바뀜 (enabled 를 끄면 예전대로). 범위는 눈 기준 (보는 방향 — 앞 · 오른쪽 · 위), ring 은 발 기준 둘레. arc = 앞 부채꼴 (range 칸 · angle 도 · 위아래 height 칸), band = 앞 띠 (폭 width · 높이 height), line = 앞 줄 (굵기 width), ring = 둘레 (높이 height). scale = 무기 종류마다 range · angle · width 배율 (낫 1.2 → 부채꼴 120° — 예전 넓게 베기와 같은 폭). interval = 평타 사이 틱 (공격 대기 대신: 이보다 빨리 누르면 선입력 — 앞 동작이 끝나는 순간 나감, 매번 100%), intervalSlack = 서버가 받는 여유 틱.",
+      "_comment": "0.39.0 참격 범위 피해 (사용자 \"허공을 때려도 이펙트가 나오는데 해당 이펙트 범위만큼 피해가 들어가게\" → 고른 것: 범위 안 모두 100%). 평타를 휘두를 때마다 (허공 포함) 동작마다의 범위 안 적 (적대 무리 · 결투 상대, 눈에서 보이는, 가까운 순 max 명) 에게 평타 피해 그대로 — 조준한 적은 바닐라 공격으로 한 번, 나머지는 1틱 뒤. 회전 베기 · 낫 넓게 베기 (40%) 는 이것으로 바뀜 (enabled 를 끄면 예전대로). 범위는 눈 기준 (보는 방향 — 앞 · 오른쪽 · 위), ring 은 발 기준 둘레. arc = 앞 부채꼴 (range 칸 · angle 도 · 위아래 height 칸), band = 앞 띠 (폭 width · 높이 height), line = 앞 줄 (굵기 width), ring = 둘레 (높이 height). scale = 무기 종류마다 range · angle · width 배율 (0.39.0 낫 1.2 · 마검 1.05 — 0.40.0 부터 비움: 거리는 reach, 폭은 궤적이 덮는 앞쪽 — 가로 베기 160° · X자 120°). interval = 평타 사이 틱 (공격 대기 대신: 이보다 빨리 누르면 선입력 — 앞 동작이 끝나는 순간 나감, 매번 100%), intervalSlack = 서버가 받는 여유 틱.",
       "enabled": true,
       "max": 6,
       "shapes": {
-        "slash_h": {"shape": "arc", "range": 3.0, "angle": 100, "height": 2.2},
+        "slash_h": {"shape": "arc", "range": 3.0, "angle": 160, "height": 2.2},
         "slash_v": {"shape": "band", "range": 3.0, "width": 1.4, "height": 3.2},
         "spin": {"shape": "ring", "range": 3.0, "height": 3.0},
-        "dagger_x": {"shape": "arc", "range": 2.8, "angle": 90, "height": 2.4},
+        "dagger_x": {"shape": "arc", "range": 2.8, "angle": 120, "height": 2.4},
         "chop": {"shape": "band", "range": 3.0, "width": 1.8, "height": 3.2},
         "thrust": {"shape": "line", "range": 4.0, "width": 1.2},
         "bash": {"shape": "arc", "range": 2.6, "angle": 100, "height": 2.4},
         "smite": {"shape": "band", "range": 3.0, "width": 1.8, "height": 3.2}
       },
-      "scale": {"scythe": 1.2, "greatsword": 1.05}
+      "scale": {},
+      "_reach": "0.40.0 참격 궤적 (사용자 \"모션에 맞게 칼이 지나간 곳에 참격이 남게\"): 참격이 무기가 지나간 띠가 되어, 범위 피해의 거리도 그 띠가 닿는 곳 (무기 색 빛의 바깥 가장자리 — 눈에서 수평 거리) 으로. 무기 종류마다 [보통, 희귀, 고귀, 영웅, 초월] 칸 (무기 모델 길이 — python3 tools/blade_trail_preview.py --reach). 표에 없는 종류 (창 · 방패) 는 shapes 의 range × scale. 가로 베기 부채꼴 160° · X자 120° 도 궤적이 덮는 앞쪽 폭.",
+      "reach": {
+        "sword": [2.3, 2.3, 2.35, 2.7, 3.45],
+        "greatsword": [4.1, 4.1, 4.1, 4.1, 4.1],
+        "scythe": [3.05, 3.1, 3.3, 3.2, 3.55],
+        "dagger": [1.5, 1.5, 1.5, 1.6, 2.8],
+        "axe": [1.9, 1.9, 1.9, 1.95, 2.75],
+        "hammer": [2.05, 2.1, 2.15, 2.4, 2.0],
+        "scepter": [2.7, 2.65, 2.8, 2.8, 3.3]
+      }
     },
     "spin": {"ratio": 0.4, "range": 3.0},
     "roll": {"ticks": 10, "distance": 4.0, "cooldown": 20, "doubleTap": 6},

@@ -120,7 +120,7 @@ public final class SwingArea {
 
     /** 범위 안 적 (조준한 적 빼고 — 눈에서 보이는, 가까운 순 MOTION.area.max 명) */
     static List<LivingEntity> targets(ServerPlayer sp, Weapon w, String motion, Entity primary) {
-        Motions.Area a = Motions.area(motion, w.type());
+        Motions.Area a = Motions.area(motion, w.type(), w.gradeIndex());
         if (a == null) return List.of();
         a = widen(sp, w, a);
         Vec3 eye = sp.getEyePosition();

@@ -26,7 +26,10 @@ import org.joml.Vector3f;
 public final class MotionPoses {
     private MotionPoses() {}
 
-    /** 팔을 내린 채 든 무기가 앞에서 위로 들린 각 (tools/motion_preview.py BLADE_TILT) */
+    /**
+     * 팔을 내린 채 든 무기가 앞에서 위로 들린 각 (tools/motion_preview.py BLADE_TILT) — 동작에 "tilt" 가 없을 때.
+     * 0.40.0: 근접 무기 모델의 실제 각은 30° (tools/weapon_blades.py — 무기 축) 라 참격 궤적이 있는 동작은 "tilt": 30 (무기 끝이 쓴 blade 를 똑바로 봄)
+     */
     static final float BLADE_TILT = (float) Math.toRadians(40);
 
     /** 열쇠 하나 */
@@ -53,6 +56,11 @@ public final class MotionPoses {
         Vector3f laWant;
         Vector3f raFace;
         Vector3f laFace;
+        /** 0.40.0 잇는 열쇠 ("gen" — tools/motion_arcs.py) 가 이어 갈 풀린 팔: 위팔 회전 · 손 회전 (모델) */
+        final Matrix3f raUpper = new Matrix3f();
+        final Matrix3f raHand = new Matrix3f();
+        final Matrix3f laUpper = new Matrix3f();
+        final Matrix3f laHand = new Matrix3f();
         float rlX;
         float rlY;
         float rlZ;
@@ -89,8 +97,13 @@ public final class MotionPoses {
         final float hideTo;
         final List<Key> keys;
         final List<FpKey> fp;
+        /** 팔을 내린 채 든 무기가 위로 들린 각 (라디안 — 팔 풀기의 기준) */
+        final float tilt;
+        /** 0.40.0 참격 궤적을 남기는 t 구간들 ({시작, 끝} — 없으면 궤적 없음) */
+        public final float[][] trail;
 
-        Motion(String name, int ticks, int parts, boolean softLegs, float fadeIn, float fadeOut, float hideFrom, float hideTo, List<Key> keys, List<FpKey> fp) {
+        Motion(String name, int ticks, int parts, boolean softLegs, float fadeIn, float fadeOut, float hideFrom, float hideTo, List<Key> keys, List<FpKey> fp,
+                float tilt, float[][] trail) {
             this.name = name;
             this.ticks = ticks;
             this.parts = parts;
@@ -101,6 +114,8 @@ public final class MotionPoses {
             this.hideTo = hideTo;
             this.keys = keys;
             this.fp = fp;
+            this.tilt = tilt;
+            this.trail = trail;
         }
     }
 
@@ -164,12 +179,29 @@ public final class MotionPoses {
         } else parts = Pose.BODY | Pose.RA | Pose.LA | Pose.LEGS | Pose.ROOT;
         float[] fade = floats(o, "fade", new float[] {0.08F, 0.2F});
         float[] hide = floats(o, "hide", new float[] {-1, -1});
+        float tilt = o.has("tilt") ? rad(o.get("tilt").getAsFloat()) : BLADE_TILT;
         List<Key> keys = new ArrayList<>();
-        for (JsonElement k : o.getAsJsonArray("keys")) keys.add(key(k.getAsJsonObject()));
+        Key prev = null;
+        for (JsonElement k : o.getAsJsonArray("keys")) {
+            JsonObject ko = k.getAsJsonObject();
+            Key cur = key(ko, tilt, ko.has("gen") && ko.get("gen").getAsBoolean() ? prev : null);
+            keys.add(cur);
+            prev = cur;
+        }
         List<FpKey> fp = new ArrayList<>();
         if (o.has("fp")) for (JsonElement k : o.getAsJsonArray("fp")) fp.add(fpKey(k.getAsJsonObject()));
         boolean soft = o.has("softLegs") && o.get("softLegs").getAsBoolean();
-        return new Motion(name, ticks, parts, soft, fade[0], fade[1], hide[0], hide[1], List.copyOf(keys), List.copyOf(fp));
+        List<float[]> trail = new ArrayList<>();
+        if (o.has("trail")) {
+            for (JsonElement w : o.getAsJsonArray("trail")) {
+                JsonArray a = w.getAsJsonArray();
+                float from = a.get(0).getAsFloat();
+                float to = a.get(1).getAsFloat();
+                if (to > from) trail.add(new float[] {Math.max(0, from), Math.min(1, to)});
+            }
+        }
+        return new Motion(name, ticks, parts, soft, fade[0], fade[1], hide[0], hide[1], List.copyOf(keys), List.copyOf(fp), tilt,
+                trail.toArray(new float[0][]));
     }
 
     private static float[] floats(JsonObject o, String k, float[] dflt) {
@@ -184,7 +216,8 @@ public final class MotionPoses {
         return (float) Math.toRadians(deg);
     }
 
-    private static Key key(JsonObject o) {
+    /** 열쇠 하나 (prev = 잇는 열쇠면 앞 열쇠 — 팔이 그 자세에서 이어지게 풂, 아니면 null) */
+    private static Key key(JsonObject o, float tilt, Key prev) {
         Key k = new Key();
         k.t = o.get("t").getAsFloat();
         if (o.has("ease")) k.ease = o.get("ease").getAsString();
@@ -195,14 +228,16 @@ public final class MotionPoses {
         float[] head = floats(o, "head", new float[2]);
         k.headX = rad(head[0]);
         k.headY = rad(head[1]);
-        float[] r = arm(o, "ra", k.ra);
+        float[] r = arm(o, "ra", k.ra, tilt, prev == null ? null : prev.raUpper, prev == null ? null : prev.raHand);
+        frames(k.ra, r, k.raUpper, k.raHand);
         k.raBend = r[0];
         k.raTwist = r[1];
         k.raWrist = r[2];
         k.raDev = r[3];
         k.raWant = want(o, "ra", "blade");
         k.raFace = want(o, "ra", "face");
-        float[] l = arm(o, "la", k.la);
+        float[] l = arm(o, "la", k.la, tilt, prev == null ? null : prev.laUpper, prev == null ? null : prev.laHand);
+        frames(k.la, l, k.laUpper, k.laHand);
         k.laBend = l[0];
         k.laTwist = l[1];
         k.laWrist = l[2];
@@ -269,8 +304,6 @@ public final class MotionPoses {
         return out.setFromNormalized(target.mul(rest.transpose()));
     }
 
-    /** 손목을 꺾지 않았을 때 팔뚝과 무기 사이 각 (130°) */
-    static final double NATURAL = Math.PI / 2 + BLADE_TILT;
     /** 팔꿈치가 굽는 쪽 (위팔 둘레) 을 찾는 칸 수 */
     static final int SEARCH = 144;
     /** 손목 · 팔뚝 비틀기 · 위팔 비틀기 (60° 넘는 몫) 의 무게 (tools/motion_preview.py COST 와 같음) */
@@ -278,7 +311,13 @@ public final class MotionPoses {
 
     /** 팔 열쇠 {dir, blade, face, bend, wrist} → 위팔 회전 (q 에 넣음) · {팔꿈치 (로컬 x — 앞으로 굽힘은 음수), 팔뚝 비틀기 (로컬 y), 손목 (로컬 x),
      *  손목 옆 꺾기 (로컬 z)} 라디안. 없으면 내린 팔 */
-    private static float[] arm(JsonObject o, String name, Quaternionf q) {
+    /** 풀린 팔 (위팔 q · {팔꿈치, 비틀기, 손목, 옆 꺾기}) → 위팔 회전 · 손 회전 (handOf 와 같은 차례) */
+    private static void frames(Quaternionf q, float[] s, Matrix3f upper, Matrix3f hand) {
+        upper.set(q);
+        hand.set(q).rotateX(s[0]).rotateY(s[1]).rotateX(s[2]).rotateZ(s[3]);
+    }
+
+    private static float[] arm(JsonObject o, String name, Quaternionf q, float tilt, Matrix3f prevUpper, Matrix3f prevHand) {
         float[] dir = {0, -1, 0};
         float[] blade = {0, 0, 1};
         float[] face = null;
@@ -292,7 +331,7 @@ public final class MotionPoses {
             bend = a.has("bend") ? a.get("bend").getAsFloat() : 0;
             wrist = a.has("wrist") ? a.get("wrist").getAsFloat() : 0;
         }
-        return armSolve(dir, blade, face, bend, wrist, q);
+        return armSolve(dir, blade, face, bend, wrist, tilt, prevUpper, prevHand, q);
     }
 
     /** 시험: 이 팔 열쇠의 무기 끝 (blade) · 겉면 (face) 방향 (모델 · 단위) — 없거나 손목을 손으로 더했으면 null */
@@ -311,16 +350,16 @@ public final class MotionPoses {
         double worst = 0;
         for (Motion m : all().values()) {
             for (Key k : m.keys) {
-                worst = Math.max(worst, error(k.ra, k.raBend, k.raTwist, k.raWrist, k.raDev, k.raWant, k.raFace));
-                worst = Math.max(worst, error(k.la, k.laBend, k.laTwist, k.laWrist, k.laDev, k.laWant, k.laFace));
+                worst = Math.max(worst, error(k.ra, k.raBend, k.raTwist, k.raWrist, k.raDev, k.raWant, k.raFace, m.tilt));
+                worst = Math.max(worst, error(k.la, k.laBend, k.laTwist, k.laWrist, k.laDev, k.laWant, k.laFace, m.tilt));
             }
         }
         return worst;
     }
 
-    private static double error(Quaternionf q, float bend, float twist, float wrist, float dev, Vector3f want, Vector3f face) {
+    private static double error(Quaternionf q, float bend, float twist, float wrist, float dev, Vector3f want, Vector3f face, float tilt) {
         if (want == null) return 0;
-        double e = angle(handOf(q, bend, twist, wrist, dev, new Vector3f(0, (float) -Math.sin(BLADE_TILT), (float) -Math.cos(BLADE_TILT))), want);
+        double e = angle(handOf(q, bend, twist, wrist, dev, new Vector3f(0, (float) -Math.sin(tilt), (float) -Math.cos(tilt))), want);
         if (face != null) {
             Vector3f f = new Vector3f(face).fma(-face.dot(want), want);
             if (f.length() > 1e-4F) e = Math.max(e, angle(handOf(q, bend, twist, wrist, dev, new Vector3f(FACE_REST)), f.normalize()));
@@ -358,14 +397,25 @@ public final class MotionPoses {
     static final Vector3f FACE_REST = new Vector3f(-1, 0, 0);
     /** 손목 옆 꺾기 (face 를 맞출 때만) 의 무게 */
     static final double COST_DEV = 2.0;
+    /** 0.40.0 잇는 열쇠 ("gen"): 앞 열쇠의 위팔 · 손 회전에서 벗어난 각² 의 무게 (팔이 갑자기 뒤집히지 않게 — tools/motion_preview.py CONT) */
+    static final double CONT = 0.6;
+
+    /** 두 회전 행렬 사이 각 (라디안) */
+    static double rotAngle(Matrix3f a, Matrix3f b) {
+        double tr = a.m00 * b.m00 + a.m01 * b.m01 + a.m02 * b.m02 + a.m10 * b.m10 + a.m11 * b.m11 + a.m12 * b.m12 + a.m20 * b.m20 + a.m21 * b.m21
+                + a.m22 * b.m22;
+        return Math.acos(clamp1((tr - 1) / 2));
+    }
 
     /**
      * 방향 (r 오른쪽, u 위, f 앞 — 뿌리 기준) 으로 적은 팔을 풂: 위팔 (로컬 +y) 이 dir, 팔꿈치는 bend 도만큼 굽고, 굽는 쪽 (위팔 둘레) · 팔뚝 비틀기 · 손목은
-     * 무기 끝 (팔을 내린 채 앞에서 BLADE_TILT 만큼 위) 이 blade 를 똑바로 보게 정함 — 손목 · 비틀기가 작고 위팔이 덜 비틀린 쪽 (COST).
+     * 무기 끝 (팔을 내린 채 앞에서 tilt 만큼 위 — 동작의 "tilt", 없으면 BLADE_TILT) 이 blade 를 똑바로 보게 정함 — 손목 · 비틀기가 작고 위팔이 덜 비틀린 쪽 (COST).
      * face (방패 겉면이 볼 쪽 — null 이면 없음) 가 있으면 무기 겉면 (FACE_REST) 도 맞춤 (손목 옆 꺾기를 더 씀). wrist (도) 는 풀린 손목에 더함.
-     * 모델 좌표 = (-r, -u, -f). 돌려줌: {팔꿈치, 팔뚝 비틀기, 손목, 손목 옆 꺾기} (라디안 — 팔꿈치는 앞으로 굽힘이 음수). tools/motion_preview.py arm_solve 와 같음
+     * 모델 좌표 = (-r, -u, -f). 돌려줌: {팔꿈치, 팔뚝 비틀기, 손목, 손목 옆 꺾기} (라디안 — 팔꿈치는 앞으로 굽힘이 음수). tools/motion_preview.py arm_solve 와 같음.
+     * prevUpper · prevHand (잇는 열쇠 — 앞 열쇠의 위팔 · 손 회전, 아니면 null): 거기서 벗어난 각² × CONT 를 더함
      */
-    static float[] armSolve(float[] dir, float[] blade, float[] face, float bendDeg, float wristDeg, Quaternionf out) {
+    static float[] armSolve(float[] dir, float[] blade, float[] face, float bendDeg, float wristDeg, float tilt, Matrix3f prevUpper, Matrix3f prevHand,
+            Quaternionf out) {
         Vector3f y = new Vector3f(-dir[0], -dir[1], -dir[2]);
         if (y.lengthSquared() < 1e-8F) y.set(0, 1, 0);
         y.normalize();
@@ -382,7 +432,7 @@ public final class MotionPoses {
             f.fma(-f.dot(b), b);
             if (f.length() > 1e-4F) {
                 f.normalize();
-                Vector3f bl0 = new Vector3f(0, (float) -Math.sin(BLADE_TILT), (float) -Math.cos(BLADE_TILT));
+                Vector3f bl0 = new Vector3f(0, (float) -Math.sin(tilt), (float) -Math.cos(tilt));
                 Matrix3f target = new Matrix3f(b, f, new Vector3f(b).cross(f));
                 Matrix3f rest = new Matrix3f(bl0, FACE_REST, new Vector3f(bl0).cross(FACE_REST));
                 h = target.mul(rest.transpose());
@@ -410,6 +460,8 @@ public final class MotionPoses {
         Vector3f f2 = new Vector3f();
         Matrix3f fm = new Matrix3f();
         Matrix3f k = new Matrix3f();
+        Matrix3f rc = new Matrix3f();
+        Matrix3f hc = new Matrix3f();
         double[][] cands = new double[2][3];
         for (int i = 0; i < SEARCH; i++) {
             double psi = 2 * Math.PI * i / SEARCH;
@@ -427,11 +479,11 @@ public final class MotionPoses {
                 double fz = f2.dot(b);
                 double a = Math.asin(clamp1(fy));
                 cands[0][0] = wrap(Math.atan2(-fx, -fz));
-                cands[0][1] = wrap(a + BLADE_TILT);
+                cands[0][1] = wrap(a + tilt);
                 cands[0][2] = 0;
                 a = Math.PI - Math.asin(clamp1(fy));
                 cands[1][0] = wrap(Math.atan2(fx, fz));
-                cands[1][1] = wrap(a + BLADE_TILT);
+                cands[1][1] = wrap(a + tilt);
                 cands[1][2] = 0;
             } else {
                 // K = Fᵀ · H = Ry(τ) · Rx(φ) · Rz(χ)
@@ -447,8 +499,20 @@ public final class MotionPoses {
                 cands[1][1] = wrap(Math.PI - phi);
                 cands[1][2] = wrap(chi + Math.PI);
             }
+            double upperOff = 0;
+            if (prevUpper != null) {
+                rc.set(x, y, z);
+                fm.set(x, f1, f2);
+                double au = rotAngle(rc, prevUpper);
+                upperOff = au * au;
+            }
             for (double[] cd : cands) {
                 double cost = COST[0] * cd[1] * cd[1] + COST[1] * cd[0] * cd[0] + COST_DEV * cd[2] * cd[2] + COST[2] * over * over;
+                if (prevUpper != null && prevHand != null) {
+                    hc.set(fm).rotateY((float) cd[0]).rotateX((float) cd[1]).rotateZ((float) cd[2]);
+                    double ah = rotAngle(hc, prevHand);
+                    cost += CONT * (upperOff + ah * ah);
+                }
                 if (cost < best - 1e-9) {
                     best = cost;
                     bx.set(x);

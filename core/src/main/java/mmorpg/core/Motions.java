@@ -78,14 +78,55 @@ public final class Motions {
      */
     public record Area(String shape, double range, double angle, double width, double height) {}
 
-    /** 이 동작 · 무기 종류의 참격 범위 (무기 종류 배율 scale 를 range · angle · width 에 곱함). 없는 동작이면 null */
+    /** 이 동작 · 무기 종류의 참격 범위 (무기 종류 배율 scale 를 range · angle · width 에 곱함 — 등급 모름: reach 표는 보통 등급). 없는 동작이면 null */
     public static Area area(String motion, String weaponType) {
+        return area(motion, weaponType, 0);
+    }
+
+    /**
+     * 이 동작 · 무기 종류 · 등급 (0 보통 ~ 4 초월) 의 참격 범위: shapes 의 모양 · 폭 (scale 배율), 거리는 0.40.0 reach 표 (무기 종류마다 등급별 — 참격 궤적이
+     * 닿는 거리) 가 있으면 그것, 없으면 shapes 의 range × scale. 없는 동작이면 null
+     */
+    public static Area area(String motion, String weaponType, int grade) {
         Obj shapes = areaCfg().objOrNull("shapes");
         if (shapes == null || motion == null || !shapes.has(motion)) return null;
         Obj a = shapes.obj(motion);
         Obj sc = areaCfg().objOrNull("scale");
         double k = sc != null && weaponType != null ? sc.numOr(weaponType, 1) : 1;
-        return new Area(a.str("shape"), a.num("range") * k, Math.min(360, a.numOr("angle", 0) * k), a.numOr("width", 0) * k, a.numOr("height", 2));
+        double range = a.num("range") * k;
+        Double r = reach(weaponType, grade);
+        if (r != null) range = r;
+        return new Area(a.str("shape"), range, Math.min(360, a.numOr("angle", 0) * k), a.numOr("width", 0) * k, a.numOr("height", 2));
+    }
+
+    /** 0.40.0 참격 궤적이 닿는 거리 (MOTION.area.reach — 무기 종류마다 [보통 … 초월], 등급이 표 밖이면 가장 가까운 칸). 없으면 null */
+    public static Double reach(String weaponType, int grade) {
+        Obj r = areaCfg().objOrNull("reach");
+        if (r == null || weaponType == null || !r.has(weaponType)) return null;
+        java.util.List<Object> row = r.list(weaponType);
+        if (row.isEmpty()) return null;
+        int i = Math.max(0, Math.min(row.size() - 1, grade));
+        return ((Number) row.get(i)).doubleValue();
+    }
+
+    // ------------------------------------------------------------ 0.40.0 참격 궤적 (rules_more TRAIL — 그리기는 클라이언트 BladeTrails)
+
+    private static Obj trailCfg() {
+        return Rules.get().root().objOrNull("TRAIL");
+    }
+
+    /** 참격 궤적을 쓰는지 */
+    public static boolean trailEnabled() {
+        Obj t = trailCfg();
+        return t != null && t.truthy("enabled");
+    }
+
+    /** 이 평타 동작은 궤적이 참격을 대신하는지 (서버가 예전 눈앞 초승달 참격을 그리지 않음) */
+    public static boolean trailBasic(String motion) {
+        Obj t = trailCfg();
+        if (t == null || motion == null || !t.truthy("enabled") || !t.has("basic")) return false;
+        for (Object o : t.list("basic")) if (motion.equals(String.valueOf(o))) return true;
+        return false;
     }
 
     /**

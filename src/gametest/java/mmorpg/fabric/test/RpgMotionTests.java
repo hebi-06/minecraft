@@ -38,6 +38,7 @@ import net.minecraft.world.phys.Vec3;
  * 원거리 무기는 없음), 구르기 (재사용 대기 · 날기 중 막힘 · 둘레에 알림), 스킬 동작 (무기 스킬 · 룬 → MOTION.skills 의 동작을 알림).
  * 0.39.0 참격 범위 피해 (가로 베기 = 앞 부채꼴 — 옆 · 뒤는 안 맞음, 회전 베기 = 둘레, 낫은 120°, 허공을 베어도 범위 안 적은 100%, 조준한 적은 한 번만),
  * 평타 사이 (네트워크 입력 — 8틱 안 두 번째는 받지 않음, 같은 누름의 공격 패킷 하나는 받음), 공격 대기 없음 (충전과 상관없이 · 바로 다시 쳐도 온전한 피해).
+ * 0.40.0 참격 궤적: 범위 거리 = 무기 궤적이 닿는 곳 (칼 희귀 2.3칸 · 낫 고귀 3.3칸 — MOTION.area.reach), 가로 베기 160°.
  */
 public final class RpgMotionTests {
     static final String ENV = "mmorpg:motion";
@@ -197,7 +198,7 @@ public final class RpgMotionTests {
         Weapon w = Weapons.weaponFrom("scythe", 20, "noble");
         hold(sp, w);
         Husk a = dummy(h, 1.5, 2, 3.5);
-        Husk b = dummy(h, 4.2, 2, 3.0); // 앞 왼쪽 약 61° · 3.1칸 — 칼 부채꼴 (±50°) 밖, 낫 (±60° · 3.6칸 + 몸 폭) 안
+        Husk b = dummy(h, 4.2, 2, 3.0); // 앞 왼쪽 약 61° · 3.1칸 — 칼 궤적 (희귀 2.3칸 + 몸 폭) 밖, 낫 궤적 (고귀 3.3칸) 안
         Husk c = dummy(h, 1.5, 2, 0.6); // 뒤
         RpgCombat.forceCrit = false;
         double[] main = new double[1];
@@ -208,8 +209,12 @@ public final class RpgMotionTests {
             h.assertTrue(main[0] > 0, "scythe aimed hit " + main[0]);
         });
         h.runAfterDelay(4, () -> {
-            h.assertTrue(oneHit(TestDummies.dealt(b), sp, w), "scythe arc 120°: wide side 100% " + TestDummies.dealt(b) + " vs " + full(sp, w));
+            h.assertTrue(oneHit(TestDummies.dealt(b), sp, w), "scythe reach 3.3: far side 100% " + TestDummies.dealt(b) + " vs " + full(sp, w));
             h.assertTrue(TestDummies.dealt(c) == 0, "scythe: behind not hit");
+            // 같은 자리의 적은 칼 (희귀 — 궤적 2.3칸) 로는 범위 밖
+            hold(sp, Weapons.weaponFrom("sword", 20, "rare"));
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == b), "sword (2.3) does not reach it");
+            h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == a), "sword reaches the front one");
             done(h, sp);
         });
     }

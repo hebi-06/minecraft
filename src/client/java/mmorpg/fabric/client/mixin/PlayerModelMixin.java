@@ -18,5 +18,6 @@ public abstract class PlayerModelMixin {
             at = @At("TAIL"))
     private void mmorpg$hand(AvatarRenderState state, HumanoidArm arm, PoseStack pose, CallbackInfo ci) {
         MotionRender.hand((HumanoidModel<?>) (Object) this, state, arm, pose);
+        if (mmorpg.fabric.client.motion.BladeTrails.captureEntity == state.id) mmorpg.fabric.client.motion.BladeTrails.captureHand(state, arm, pose); // 0.40.0 시험
     }
 }

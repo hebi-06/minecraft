@@ -56,7 +56,7 @@ public final class ClientMotions {
     private static long lastTap = -1000;
 
     // 시험 (사진첩): 사람마다 자세를 이 동작 · t 로 멈춤
-    private record Frozen(String motion, float t) {}
+    record Frozen(String motion, float t) {}
 
     private static final Map<Integer, Frozen> FROZEN = new HashMap<>();
 
@@ -74,6 +74,16 @@ public final class ClientMotions {
 
     public static long ticks() {
         return ticks;
+    }
+
+    /** 0.40.0 참격 궤적: 지금 하는 동작들 (사람 id → 동작 — 읽기만) */
+    static Map<Integer, Active> activeMap() {
+        return ACTIVE;
+    }
+
+    /** 0.40.0 참격 궤적: 자세를 멈춘 사람들 (사진첩 — id → 동작 · t, 읽기만) */
+    static Map<Integer, Frozen> frozenMap() {
+        return FROZEN;
     }
 
     // ------------------------------------------------------------ 시작 · 지금 자세
