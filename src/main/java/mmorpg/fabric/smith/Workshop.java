@@ -28,6 +28,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -473,6 +474,8 @@ public final class Workshop {
         if (stack == null || stack.isEmpty()) return null;
         Display.ItemDisplay d = FxDisplays.item(level, at, stack.copyWithCount(1), at(Vec3.ZERO, 0.01), life, FxDisplays.light(15, 15));
         if (d == null) return null;
+        // 가방 그림 (gui) 으로: RPG 무기는 손 · none 에서 3D 모델이라 정면에서 보면 옆모습 (가는 막대) — gui 는 아이콘 그대로 보는 사람 쪽
+        d.setItemTransform(ItemDisplayContext.GUI);
         d.setBillboardConstraints(Display.BillboardConstraints.CENTER);
         Tasks.later(2, () -> FxDisplays.move(d, at(Vec3.ZERO, scale), 3));
         return d;

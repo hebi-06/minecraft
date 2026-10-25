@@ -32,6 +32,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
@@ -384,7 +385,9 @@ public final class RpgWorkshopUiTests {
                 double flat = Math.hypot(p.x - base.x, p.z - base.z);
                 h.assertTrue(Math.abs(p.y - (base.y + 1.12)) < 0.01 && Math.abs(flat - 0.8) < 0.01 && p.distanceTo(sp.position()) < base.distanceTo(sp.position()),
                         "in front of the merchant (buyer side) at counter height " + p);
-                h.assertTrue(g.get(0).getBillboardConstraints() == Display.BillboardConstraints.CENTER, "faces the viewer");
+                // 보는 사람 쪽 · 가방 그림 (무기의 3D 모델은 정면에서 가는 막대로 보여서)
+                h.assertTrue(g.get(0).getBillboardConstraints() == Display.BillboardConstraints.CENTER && g.get(0).getItemTransform() == ItemDisplayContext.GUI,
+                        "faces the viewer as its icon");
                 h.runAfterDelay(ShopUi.BUY_WORK.ticks() - hit0 + 6, () -> {
                     h.assertTrue(floating(level, npc, dagger).isEmpty(), "goods gone after the hand-over");
                     Workshop.action(sp, "close", "", 0, 0);

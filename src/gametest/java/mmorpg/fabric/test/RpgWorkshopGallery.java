@@ -366,14 +366,12 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
         ctx.waitTicks(2);
         ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
         ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, SHOP_AT.add(0, 1.2, -0.6)));
-        ctx.waitTicks(4);
-        ctx.takeScreenshot(TestScreenshotOptions.of("sw_world_reach").withSize(960, 540));
-        // 물건 (서버의 첫 닿음에 생김) 이 이 화면에 보일 때까지 — CI 서버가 밀리면 화면의 닿은 수보다 늦음
+        // 물건 (서버의 첫 닿음에 생김) 이 이 화면에 보일 때까지 기다려 찍음 — 그 전에 다른 사진을 찍지 않음 (사진 한 장이 클라이언트를 오래 멈추는 동안
+        // 서버는 계속 가서, 앞 사진이 있으면 물건이 이미 건너간 뒤가 됨 — CI)
         for (int i = 0; i < 80 && itemsNear(ctx, SHOP_AT, 2.5) <= shown; i++) ctx.waitTicks(1);
         check(itemsNear(ctx, SHOP_AT, 2.5) > shown, "world: goods shown in front of the merchant");
-        ctx.waitTicks(5);
-        ctx.takeScreenshot(TestScreenshotOptions.of("sw_world_hit1").withSize(960, 540));
-        worldHit(ctx, 2, "sw_world_hit2");
+        ctx.waitTicks(4);
+        ctx.takeScreenshot(TestScreenshotOptions.of("sw_world_goods").withSize(960, 540));
         ctx.waitTicks(3);
         ctx.takeScreenshot(TestScreenshotOptions.of("sw_world_hand").withSize(960, 540));
         ctx.waitTicks(ShopUi.BUY_WORK.ticks());
