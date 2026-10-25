@@ -555,13 +555,26 @@ public final class Kit {
      * (grad = {0xRRGGBB, 0xRRGGBB} — DamageNumbers.feedback)
      */
     public static boolean applyJobDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad) {
-        return applyDamage(sp, target, amount, crit, cause, style, grad, 1, 0);
+        return applyDamage(sp, target, amount * skillMultOf(sp), crit, cause, style, grad, 1, 0);
+    }
+
+    /** 0.43.0 무기 스킬 · 직업 스킬 피해 배율 (아티팩트 야른그레이프르 「쇠장갑」 — RelicPassives, 1 = 그대로): skillHit · applyJobDamage 에 곱함 (룬 · 평타는 아님) */
+    public static java.util.function.ToDoubleFunction<ServerPlayer> skillMult = p -> 1;
+
+    static double skillMultOf(ServerPlayer sp) {
+        try {
+            double k = skillMult.applyAsDouble(sp);
+            return k > 0 ? k : 1;
+        } catch (RuntimeException e) {
+            mmorpg.fabric.Mmorpg.LOG.warn("[mmorpg] skill mult", e);
+            return 1;
+        }
     }
 
     /** 0.28.0 빠른 연타: 피해 한 번 (amount) 을 split 줄의 숫자로 (gap 틱마다 한 줄 — 메이플식 쌓이는 숫자, RpgCombat.jobMark) */
     public static boolean applyJobDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad, int split,
             int gap) {
-        return applyDamage(sp, target, amount, crit, cause, style, grad, split, gap);
+        return applyDamage(sp, target, amount * skillMultOf(sp), crit, cause, style, grad, split, gap);
     }
 
     private static boolean applyDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad) {
@@ -612,7 +625,7 @@ public final class Kit {
         boolean crit = o.truthy("sure")
                 || (RpgCombat.forceCrit != null ? RpgCombat.forceCrit
                         : ThreadLocalRandom.current().nextDouble() < Math.min(CRIT_CAP, w.critChance() + o.num("critBonus", 0) + mmorpg.fabric.stattree.StatTrees.critAdd(sp)));
-        double dmg = w.damage() * mult * RpgCombat.powerOf(sp, w) * (crit ? RpgCombat.critMultOf(sp, w) : 1);
+        double dmg = w.damage() * mult * RpgCombat.powerOf(sp, w) * (crit ? RpgCombat.critMultOf(sp, w) : 1) * skillMultOf(sp); // 0.43.0 쇠장갑
         Cause cause = o.get("cause") instanceof Cause c ? c : mmorpg.core.Weapons.isMagicType(w.type()) ? Cause.MAGIC : Cause.ATTACK; // 완드 · 성스러운 홀 (12단계)
         DamageNumbers.Style style = o.get("style") instanceof DamageNumbers.Style s ? s
                 : o.truthy("spell") ? (crit ? DamageNumbers.Style.SPELLCRIT : DamageNumbers.Style.SPELL) : null;

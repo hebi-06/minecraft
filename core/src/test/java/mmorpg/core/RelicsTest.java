@@ -182,6 +182,12 @@ public final class RelicsTest {
         Relics.Board high = Relics.evaluate(lv, 50);
         check(high.tier("megingjord") == 1 && high.links().size() == 2, "at 50 all three join");
         near(high.totals().get("rune"), 2.4 * 1.08 + 3.2, "rune sum");
+        // 순풍 (스키드블라드니르 adds speed): 켜지면 이동 속도를 합에 더함 — 민첩 3칸 (스키드 · 야른 · 걀라) 1단계 +3%
+        Relics.Board wind = Relics.evaluate(board("skidbladnir", "jarngreipr", "gjallarhorn", null, null, null, null, null, null), 60);
+        check(wind.tier("skidbladnir") == 1, "wind tier 1 " + wind.tiers());
+        near(wind.totals().getOrDefault("speed", 0.0), 3, "wind speed +3");
+        Relics.Board calm = Relics.evaluate(board("skidbladnir", null, "gjallarhorn", null, null, null, null, null, null), 60);
+        check(!calm.totals().containsKey("speed"), "no tier → no speed");
         // 맞지 않는 스탯 키는 첫 줄 (공격력)
         Relics.Board bad = Relics.evaluate(List.of(new Relics.Cell(Relics.id("mimir", "rare"), "str", 0)), 60);
         near(bad.totals().get("atk"), 0.6, "bad stat → atk");

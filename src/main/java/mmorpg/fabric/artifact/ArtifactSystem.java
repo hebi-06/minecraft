@@ -146,7 +146,7 @@ public final class ArtifactSystem {
         if (sp == null || TYPE == null) return Map.of();
         Map<String, Double> t = TOTALS.get(sp.getUUID());
         if (t != null) return t;
-        t = Map.copyOf(Artifacts.totals(ids(sp), RpgCombat.reqLevelOf(sp)));
+        t = Map.copyOf(Artifacts.totals(ids(sp), enhances(sp), RpgCombat.reqLevelOf(sp))); // 0.43.0 강화 (+N — 옵션 × (1 + ENHANCE_GEAR.bonus))
         TOTALS.put(sp.getUUID(), t);
         return t;
     }
@@ -158,6 +158,13 @@ public final class ArtifactSystem {
             Artifacts.Art a = ArtifactItem.of(s);
             out.add(a == null ? null : a.id());
         }
+        return out;
+    }
+
+    /** 칸 순서의 강화 단계 (0.43.0) */
+    static List<Integer> enhances(ServerPlayer sp) {
+        List<Integer> out = new ArrayList<>(SIZE);
+        for (ItemStack s : slots(sp)) out.add(mmorpg.fabric.gear.WeaponEnhance.of(s));
         return out;
     }
 
@@ -203,7 +210,7 @@ public final class ArtifactSystem {
         Inventory pinv = sp.getInventory();
         ItemStack it = pinv.getItem(inv);
         Artifacts.Art a = ArtifactItem.of(it);
-        if (a == null) return fail(sp, "§c아티팩트만 낄 수 있습니다");
+        if (a == null) return fail(sp, "§c장신구만 낄 수 있습니다");
         int to = slot < 0 ? autoSlot(sp, a) : slot;
         if (to < 0 || to >= SIZE) return fail(sp, "§c잘못된 칸입니다");
         if (!Artifacts.fits(to, a)) {
@@ -226,7 +233,8 @@ public final class ArtifactSystem {
         sp.setAttached(TYPE, Data.of(list));
         changed(sp);
         equipFx(sp, a);
-        Notify.notify(sp, a.coloredName() + " §7→ §d" + Artifacts.slotName(to) + " §a" + Artifacts.optionText(a), 50);
+        int en = mmorpg.fabric.gear.WeaponEnhance.of(one);
+        Notify.notify(sp, (en > 0 ? a.gradeColor() + "+" + en + " " + a.name() : a.coloredName()) + " §7→ §d" + Artifacts.slotName(to) + " §a" + Artifacts.optionText(a, en), 50);
         return null;
     }
 
@@ -344,12 +352,14 @@ public final class ArtifactSystem {
 
     /** 채팅 요약: 칸마다 낀 것 · 합계 */
     public static void chatSummary(ServerPlayer sp) {
-        Notify.say(sp, "§d§l아티팩트 §r§7(낀 칸 " + worn(sp) + "/" + SIZE + ")");
+        Notify.say(sp, "§d§l장신구 §r§7(낀 칸 " + worn(sp) + "/" + SIZE + ")");
         double lv = RpgCombat.reqLevelOf(sp);
         for (int i = 0; i < SIZE; i++) {
             Artifacts.Art a = art(sp, i);
+            int en = mmorpg.fabric.gear.WeaponEnhance.of(get(sp, i));
             String line = a == null ? "§8비어 있음"
-                    : a.coloredName() + " §7— " + (Artifacts.usable(a, lv) ? "§a" + Artifacts.optionText(a) : "§c" + a.level() + "렙부터 (보너스 없음)");
+                    : (en > 0 ? a.gradeColor() + "+" + en + " " + a.name() : a.coloredName()) + " §7— "
+                            + (Artifacts.usable(a, lv) ? "§a" + Artifacts.optionText(a, en) : "§c" + a.level() + "렙부터 (보너스 없음)");
             sp.sendSystemMessage(net.minecraft.network.chat.Component.literal(mmorpg.fabric.BedrockText.toJava("§7" + Artifacts.slotName(i) + ": " + line)));
         }
         String all = StatTree.bonusText(totals(sp));
@@ -357,7 +367,7 @@ public final class ArtifactSystem {
     }
 
     static void register(CommandDispatcher<CommandSourceStack> d) {
-        for (String name : List.of("artifact", "아티팩트")) {
+        for (String name : List.of("accessory", "장신구")) { // 0.43.0 이름 바꿈 — /아티팩트 는 새 아티팩트 판 (RelicSystem)
             d.register(Commands.literal(name)
                     .executes(c -> {
                         open(c.getSource().getPlayerOrException());

@@ -99,11 +99,27 @@ public final class RuneKit {
      * 룬 피해 한 번 (P × mult). 실제로 깎인 체력 (0 = 안 들어감). 피해 종류: 마력 (stat int) = 마법, 나머지 = 공격 (cause 로 바꿈).
      * style = 숫자 모양 (기본 노랑 RUNE, 마검사의 마력은 보라 SPELL)
      */
+    /** 0.43.0 룬 피해 한 번의 배율 · 숫자 모양 (null = 그대로) — 아티팩트 미미르의 샘 「지혜의 일격」 (RelicPassives) */
+    public record HitMod(double mult, DamageNumbers.Style style) {
+        public static final HitMod NONE = new HitMod(1, null);
+    }
+
+    public static java.util.function.BiFunction<ServerPlayer, LivingEntity, HitMod> runeHitMod = (p, e) -> HitMod.NONE;
+
     public static double runeHit(ServerPlayer sp, LivingEntity target, double P, double mult, String stat, Kit.Cause cause, DamageNumbers.Style style) {
         if (!Kit.canHit(sp, target)) return 0;
         if (target instanceof Player p && !RUNE.truthy("hitPlayers") && !(p instanceof ServerPlayer o && Kit.duelPartner.test(sp, o))) return 0;
+        HitMod mod = HitMod.NONE;
+        try {
+            HitMod m = runeHitMod.apply(sp, target);
+            if (m != null && m.mult() > 0) mod = m;
+        } catch (RuntimeException e) {
+            mmorpg.fabric.Mmorpg.LOG.warn("[mmorpg] rune hit mod", e);
+        }
+        if (mod.style() != null) style = mod.style();
         double dmg = P * mult * mmorpg.fabric.stattree.StatTrees.runeMult(sp) // 스탯 트리 공격력 + 룬 피해 (7단계)
-                * RpgCombat.dealtMult.applyAsDouble(sp); // 0.19.0 세계수의 가호
+                * RpgCombat.dealtMult.applyAsDouble(sp) // 0.19.0 세계수의 가호
+                * mod.mult(); // 0.43.0 아티팩트 (지혜의 일격)
         Kit.Cause c = cause != null ? cause : "int".equals(stat) ? Kit.Cause.MAGIC : Kit.Cause.ATTACK;
         float before = target.getHealth();
         if (!Kit.applySkillDamage(sp, target, dmg, false, c, style != null ? style : DamageNumbers.Style.RUNE)) return 0;

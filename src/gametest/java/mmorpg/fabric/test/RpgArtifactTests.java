@@ -180,11 +180,11 @@ public final class RpgArtifactTests {
         ServerPlayer sp = RpgGearTests.player(h);
         Forms.HEADLESS.add(sp.getUUID());
         try {
-            h.assertTrue(Smith.artifactPageIndex() == Smith.CRAFT_PAGES.size() - 1 && Smith.CRAFT_PAGES.get(Smith.artifactPageIndex()).label().equals("아티팩트"),
+            h.assertTrue(Smith.artifactPageIndex() == Smith.CRAFT_PAGES.size() - 1 && Smith.CRAFT_PAGES.get(Smith.artifactPageIndex()).label().equals("장신구"),
                     "artifact page last " + Smith.CRAFT_PAGES);
             Smith.smithLoop(sp, "artifact", null);
             FormNet.ChestPayload c = chest(sp);
-            h.assertTrue(c != null && c.title().contains("아티팩트") && c.slots().size() == 54, "page (6 rows): " + (c == null ? null : c.title()));
+            h.assertTrue(c != null && c.title().contains("장신구") && c.slots().size() == 54, "page (6 rows): " + (c == null ? null : c.title()));
             for (String t : Artifacts.types()) {
                 for (String g : List.of("common", "rare", "noble", "hero", "transcend")) {
                     int s = ArtifactCraft.slotOf(t, g);
@@ -193,7 +193,7 @@ public final class RpgArtifactTests {
             }
             int ring = ArtifactCraft.slotOf("ring", "common");
             Forms.answer(sp, ring, null);
-            h.assertTrue(chest(sp) != null && chest(sp).title().contains("아티팩트 만들기") && body(sp).contains("공격력 +1%"), "confirm: " + body(sp));
+            h.assertTrue(chest(sp) != null && chest(sp).title().contains("장신구 만들기") && body(sp).contains("공격력 +1%"), "confirm: " + body(sp));
             Forms.answer(sp, 11, null);
             h.assertTrue(body(sp).contains("재료 부족") && body(sp).contains("실버 20") && body(sp).contains("멧돼지 엄니 6"), "lack: " + body(sp));
             Item tusk = Icon.itemById("rpg:loot_boar");

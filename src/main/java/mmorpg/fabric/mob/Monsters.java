@@ -1254,7 +1254,9 @@ public final class Monsters {
         }
         // 잡은 플레이어에게 경험치 (최고 레벨이 xpUntil 이상이면 0) + 전리품. 불에 타 죽으면 10초 안에 마지막으로 때린 사람
         try {
-            Loot.lootOnDeath(e, k.key(), Loot.killCredit(e, source), k.height());
+            ServerPlayer killer = Loot.killCredit(e, source);
+            Loot.lootOnDeath(e, k.key(), killer, k.height());
+            mmorpg.fabric.relic.RelicSystem.dropForMonster(killer, k.level(), k.name()); // 0.43.0 아티팩트 (몬스터 레벨 구간마다 확률)
         } catch (RuntimeException err) {
             Mmorpg.LOG.warn("[mmorpg] monster loot", err);
         }

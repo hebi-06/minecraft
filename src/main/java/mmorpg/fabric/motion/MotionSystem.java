@@ -125,10 +125,18 @@ public final class MotionSystem {
         return t == null || Tasks.now() - t >= Motions.rollCooldown() - 2;
     }
 
+    /** 0.43.0 구르기가 나감 (아티팩트 스키드블라드니르 「순풍」 — RelicPassives) */
+    public static java.util.function.Consumer<ServerPlayer> onRoll = p -> {};
+
     static void roll(ServerPlayer sp, float yaw) {
         if (!canRoll(sp)) return;
         ROLLED.put(sp.getUUID(), Tasks.now());
         broadcast(sp, "roll", yaw, true);
+        try {
+            onRoll.accept(sp);
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] roll hook", e);
+        }
     }
 
     /** 마지막 구르기 틱 (시험 — 없으면 -1) */

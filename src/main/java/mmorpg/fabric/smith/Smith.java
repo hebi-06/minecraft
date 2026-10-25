@@ -248,7 +248,7 @@ public final class Smith {
         if (transcend) form.set(GOLD_SLOT, JobUpgrades.goldSlot(sp));
         form.set(ORE_SLOT, oreSlot(sp));
         form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_sword", "§6보스 무기 제작으로").lore("§7보스 재료로 영웅·초월 무기 만들기", "§7공허 전리품으로 공허의 갑옷 만들기",
-                "§7전리품 · 보스 재료로 아티팩트 만들기"));
+                "§7전리품 · 보스 재료로 장신구 만들기"));
         for (int i = 0; i < list.size(); i++) {
             Raise e = list.get(i);
             double[] gap = levelGap(sp, e.to());
@@ -409,7 +409,7 @@ public final class Smith {
     private static List<CraftPage> craftPages() {
         List<CraftPage> out = new ArrayList<>(List.of(new CraftPage("hero", "영웅 30렙"), new CraftPage("transcend", "초월 40렙"), new CraftPage("noble", "고귀 10·20렙")));
         if (VoidArmorCraft.enabled()) out.add(new CraftPage(VOID_PAGE, "공허의 갑옷"));
-        if (ArtifactCraft.enabled()) out.add(new CraftPage(ARTIFACT_PAGE, "아티팩트"));
+        if (ArtifactCraft.enabled()) out.add(new CraftPage(ARTIFACT_PAGE, "장신구"));
         return List.copyOf(out);
     }
 
@@ -704,7 +704,7 @@ public final class Smith {
         int nextPage = nextCraftPage(craftRecipes(), page);
         if (artifactPage(page)) {
             // 0.37.0 아티팩트 쪽: 아티팩트 칸 → 확인 창 (ArtifactCraft.confirm — 끝나면 이 쪽으로), 아랫줄 왼쪽 = 아티팩트 창 (클라이언트 창 — 이 창은 닫음)
-            ArtifactCraft.pageForm(sp, message, "대장장이 §8· §7아티팩트 제작", CRAFT_PAGES.get(nextPage).label()).show(sp, sel -> {
+            ArtifactCraft.pageForm(sp, message, "대장장이 §8· §7장신구 제작", CRAFT_PAGES.get(nextPage).label()).show(sp, sel -> {
                 if (sel < 0) next.accept(null);
                 else if (sel == TAB_SLOT) next.accept("enhance");
                 else if (sel == CRAFT_TAB_SLOT) next.accept("smith");

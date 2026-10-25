@@ -906,6 +906,7 @@ public final class Bosses {
         for (String k : R.strings("BOSS_MATERIAL_ORDER")) {
             giveLoot(got, p, GearItems.byId(mats.obj(k).str("item")), rollRange(L.numbersOrNull(k)) + more.apply(k), mats.obj(k).str("name"));
         }
+        got.addAll(mmorpg.fabric.relic.RelicSystem.dropForBoss(p, enc.key)); // 0.43.0 아티팩트 (RELICS.drops.bosses — 사람마다)
         double xp = L.numOr("xp", 0);
         // 0.24.2 최고 레벨 (60) 이면 경험치 없음 (줄도 빼고)
         if (xp > 0 && !mmorpg.core.Leveling.atMax(p.experienceLevel)) {

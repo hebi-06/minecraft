@@ -161,7 +161,7 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
             String extra = vitBonusText();
             lore.add("§71포인트: 최대 체력 +" + CONFIG.text("HP_PER_VIT") + (extra.isEmpty() ? "" : " · " + extra));
             lore.add("§7레벨 보너스 +" + Js.str(Hp.levelHpOf(lvmax())) + " (레벨당 +" + CONFIG.text("HP_PER_LEVEL") + ")");
-            if (tree("hp") > 0) lore.add("§7스탯 트리 · 아티팩트 최대 체력 +" + Js.str(tree("hp")));
+            if (tree("hp") > 0) lore.add("§7스탯 트리 · 장신구 · 아티팩트 최대 체력 +" + Js.str(tree("hp")));
             Obj tyrfing = SKILLS.objOrNull("tyrfing");
             lore.add("§7티르빙 스킬 피해 × 최대 체력 ÷ " + Js.str(tyrfing == null ? 100 : tyrfing.numOr("hpBase", 100)));
         } else {

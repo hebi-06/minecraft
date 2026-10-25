@@ -153,9 +153,9 @@ public final class ArtifactCraft {
         form.set(Smith.TAB_SLOT, Slot.of("textures/items/nether_star", "§6무기 강화로").lore("§7+1 ~ +10 무기 강화 창"));
         form.set(SILVER_SLOT, Shop.balanceSlot(sp));
         Artifacts.Art sample = Artifacts.art("ring", "hero");
-        form.set(Smith.CRAFT_INFO_SLOT, Slot.of(Icon.item(item(sample)), "§d아티팩트 제작")
+        form.set(Smith.CRAFT_INFO_SLOT, Slot.of(Icon.item(item(sample)), "§d장신구 제작")
                 .lore("§e누르면 " + nextLabel + " 보기", "§7반지 · 목걸이 · 귀걸이 · 팔찌를", "§7등급마다 (일반 ~ 초월) 만듭니다", "§7같은 등급이면 재료가 같음",
-                        "§7끼기: 아티팩트 창 (I 키)"));
+                        "§7끼기: 장신구 창 (I 키)"));
         form.set(GOLD_SLOT, JobUpgrades.goldSlot(sp));
         form.set(Smith.CRAFT_TAB_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 올리기로").lore("§7영웅 · 초월 무기 레벨 제한 올리기 창"));
         double lv = RpgCombat.reqLevelOf(sp);
@@ -168,7 +168,7 @@ public final class ArtifactCraft {
             head.add("§r§7옵션 (일반 → 초월):");
             head.addAll(typeTable(t));
             int slots = Artifacts.slotsFor(t.key()).size();
-            head.add("§r§7아티팩트 창 칸 §f" + slots + "개");
+            head.add("§r§7장신구 창 칸 §f" + slots + "개");
             // 줄 첫 칸 = 종류 풀이 (책 — 바로 옆 일반 칸과 같은 그림이면 헷갈림)
             form.set(row + TYPE_COL, Slot.of(Icon.item(net.minecraft.world.item.Items.BOOK), "§d§l" + t.name() + " §7풀이").lore(head).deco());
             for (Grade g : R.grades()) {
@@ -182,7 +182,7 @@ public final class ArtifactCraft {
             }
         }
         // 아랫줄: 아티팩트 창 · 등급마다 재료 요약 (그림 = 첫 재료, 숫자 = 가진 수)
-        form.set(OPEN_SLOT, Slot.of(Icon.item(item(Artifacts.art("necklace", "transcend"))), "§d아티팩트 창 열기")
+        form.set(OPEN_SLOT, Slot.of(Icon.item(item(Artifacts.art("necklace", "transcend"))), "§d장신구 창 열기")
                 .lore("§7낀 칸 " + ArtifactSystem.worn(sp) + "/" + ArtifactSystem.SIZE, "§7합계: §a" + orNone(StatTree.bonusText(ArtifactSystem.totals(sp))), "§8I 키로도 열림"));
         for (Grade g : R.grades()) {
             Artifacts.Cost c = Artifacts.cost(g.id());
@@ -198,9 +198,9 @@ public final class ArtifactCraft {
         }
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
-        lines.add("§8아티팩트 칸을 누르면 확인 창이 열립니다. 윗줄 가운데 칸: " + nextLabel + " 쪽.§r");
+        lines.add("§8장신구 칸을 누르면 확인 창이 열립니다. 윗줄 가운데 칸: " + nextLabel + " 쪽.§r");
         lines.add("§8재료: 몬스터 전리품 + 실버 (일반 ~ 고귀) · 골드 + 보스 재료 (영웅 · 초월).§r");
-        lines.add("§8아랫줄: 등급마다 재료 (가진 수) · 왼쪽 칸 = 아티팩트 창.§r");
+        lines.add("§8아랫줄: 등급마다 재료 (가진 수) · 왼쪽 칸 = 장신구 창.§r");
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         return form;
@@ -215,7 +215,7 @@ public final class ArtifactCraft {
     /** 확인 창 (confirm): 11 만들기 · 13 아티팩트 · 15 취소. 결과 문구를 done 으로 (취소면 "") */
     static void confirm(ServerPlayer sp, Artifacts.Art a, Consumer<String> done) {
         Artifacts.Cost c = Artifacts.cost(a.grade());
-        ChestForm form = new ChestForm("아티팩트 만들기");
+        ChestForm form = new ChestForm("장신구 만들기");
         form.set(11, Slot.of(Icon.sprite("icon_check"), "§a만들기"));
         form.set(13, Slot.of(Icon.item(item(a)), a.coloredName()).lore(Artifacts.lore(a, RpgCombat.reqLevelOf(sp))));
         form.set(15, Slot.of(Icon.sprite("icon_cross"), "§c취소"));
@@ -238,12 +238,12 @@ public final class ArtifactCraft {
      * 모자라거나 가방이 차면 아무것도 쓰지 않음
      */
     public static String craft(ServerPlayer sp, Artifacts.Art a) {
-        if (!enabled() || a == null) return "§4아티팩트를 만들 수 없습니다.§r";
+        if (!enabled() || a == null) return "§4장신구를 만들 수 없습니다.§r";
         Artifacts.Cost c = Artifacts.cost(a.grade());
         List<String> lack = lack(sp, c);
         if (!lack.isEmpty()) return Smith.lackMessage(sp, lack);
         ItemStack it = item(a);
-        if (it.isEmpty()) return "§4아티팩트를 만들 수 없습니다.§r";
+        if (it.isEmpty()) return "§4장신구를 만들 수 없습니다.§r";
         List<Inv.Take> takes = new ArrayList<>();
         for (Map.Entry<String, Integer> x : c.items().entrySet()) {
             JobUpgrades.Mat m = JobUpgrades.mat(x.getKey());
@@ -261,7 +261,7 @@ public final class ArtifactCraft {
         Inv.give(sp, it);
         craftFx(sp, a);
         double lv = RpgCombat.reqLevelOf(sp);
-        Notify.notify(sp, "§d아티팩트 제작: " + a.coloredName() + " §a" + Artifacts.optionText(a)
+        Notify.notify(sp, "§d장신구 제작: " + a.coloredName() + " §a" + Artifacts.optionText(a)
                 + (Artifacts.usable(a, lv) ? " §7(I 키 · 들고 우클릭으로 끼기)" : " §c(" + a.level() + "렙부터)"), 70);
         return "§2완료: " + a.darkName() + " §8(" + Artifacts.optionText(a) + ")§r";
     }

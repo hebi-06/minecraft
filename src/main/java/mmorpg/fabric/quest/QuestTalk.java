@@ -70,7 +70,7 @@ public final class QuestTalk {
         if (smith) opts.add(new Option("craft", null, "§6보스 무기 · §5공허의 갑옷 §6제작", Icon.of("textures/items/iron_sword")));
         // 0.37.0 아티팩트 제작 바로 가기 (제작 창의 아티팩트 쪽)
         if (smith && Smith.artifactPageIndex() >= 0) {
-            opts.add(new Option("artifact", null, "§d아티팩트 제작 §7(반지 · 목걸이 · 귀걸이 · 팔찌)", Icon.item(mmorpg.core.Artifacts.id("ring", "hero"))));
+            opts.add(new Option("artifact", null, "§d장신구 제작 §7(반지 · 목걸이 · 귀걸이 · 팔찌)", Icon.item(mmorpg.core.Artifacts.id("ring", "hero"))));
         }
         if (lv >= 0) opts.add(new Option("shop", null, "§b무기 상점 보기", DialogForm.SHOP));
         if (lv >= 0) opts.add(new Option("armor", null, "§b갑옷 상점 보기", Icon.of("textures/items/iron_chestplate")));

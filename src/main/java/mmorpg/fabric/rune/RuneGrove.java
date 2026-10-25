@@ -51,7 +51,7 @@ import org.joml.Vector3f;
  * </ul>
  * 하늘빛 · 번쩍임 (3돌부터): 하늘의 활의 새벽빛 (ULT_ALIAS worldTreeGrace → skyBow).
  */
-final class RuneGrove {
+public final class RuneGrove {
     private RuneGrove() {}
 
     static final String FN = "worldTreeGrace";
@@ -150,7 +150,7 @@ final class RuneGrove {
     }
 
     /** 가하는 피해 배율 (가호가 없으면 1) */
-    static double dealtMult(ServerPlayer sp) {
+    public static double dealtMult(ServerPlayer sp) {
         Grace g = active(sp);
         return g == null ? 1 : 1 + g.up();
     }

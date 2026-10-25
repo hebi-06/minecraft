@@ -45,7 +45,7 @@ import net.minecraft.world.phys.Vec3;
  * </ul>
  * 하늘빛 · 번쩍임 (3돌부터): 블랙홀의 공허 하늘 (ULT_ALIAS abyssBrand → blackHole). 조준한 곳 반지름 안에 적이 없으면 재사용 대기 없이 거절.
  */
-final class RuneAbyss {
+public final class RuneAbyss {
     private RuneAbyss() {}
 
     static final String FN = "abyssBrand";
@@ -126,7 +126,7 @@ final class RuneAbyss {
     }
 
     /** 플레이어가 준 피해에 곱하는 배율 (낙인이 없으면 1) */
-    static double takenMult(LivingEntity e) {
+    public static double takenMult(LivingEntity e) {
         Brand b = active(e);
         return b == null ? 1 : 1 + b.up();
     }

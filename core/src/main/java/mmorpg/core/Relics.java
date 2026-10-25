@@ -487,6 +487,17 @@ public final class Relics {
             String stat = isLine(c.stat()) ? c.stat() : defaultLine();
             totals.merge(stat, lineValue(stat, rel[i].gradeIndex(), c.enhance()), Double::sum);
         }
+        // 켜진 패시브의 스탯 몫 (passive.adds — 순풍의 이동 속도): 줄 합에 더함 (같은 상한)
+        for (Map.Entry<String, Integer> e : tiers.entrySet()) {
+            if (e.getValue() <= 0) continue;
+            Type t = type(e.getKey());
+            Obj adds = t == null ? null : t.passive().def().objOrNull("adds");
+            if (adds == null) continue;
+            for (String kind : adds.keys()) {
+                if (kind.startsWith("_") || StatTree.kind(kind) == null) continue;
+                totals.merge(kind, t.passive().value(adds.str(kind), e.getValue()), Double::sum);
+            }
+        }
         return new Board(Collections.unmodifiableList(cs), usable, Collections.unmodifiableList(links), Collections.unmodifiableList(groups), cellTier,
                 Collections.unmodifiableMap(tiers), Collections.unmodifiableMap(totals));
     }

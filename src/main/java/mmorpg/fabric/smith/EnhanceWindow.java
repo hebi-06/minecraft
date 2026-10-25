@@ -50,21 +50,23 @@ public final class EnhanceWindow {
 
     private static final Rules R = Rules.get();
     private static final Obj ENHANCE = R.obj("ENHANCE");
-    private static final Obj STONE = R.obj("RAID_MATERIALS").obj("stone");
-    private static final Obj BRIGHT = R.obj("RAID_MATERIALS").obj("bright");
-    private static final Obj SCROLL = R.obj("RAID_MATERIALS").obj("scroll");
+    static final Obj STONE = R.obj("RAID_MATERIALS").obj("stone");
+    static final Obj BRIGHT = R.obj("RAID_MATERIALS").obj("bright");
+    static final Obj SCROLL = R.obj("RAID_MATERIALS").obj("scroll");
 
     /** 망치질 연출 틱 (ENHANCE.animTicks — 이 동안 창 없이 연출만) */
     public static final int ANIM_TICKS = (int) ENHANCE.num("animTicks");
     /** 최대 강화 (ENHANCE.max) */
     public static final int MAX = (int) Enhance.MAX;
-    private static final int DOWN_FROM = (int) ENHANCE.num("downFrom");
-    private static final int ANNOUNCE_FROM = (int) ENHANCE.num("announceFrom");
+    static final int DOWN_FROM = (int) ENHANCE.num("downFrom");
+    static final int ANNOUNCE_FROM = (int) ENHANCE.num("announceFrom");
 
     /** 강화 성공 판정의 난수 (0 이상 1 미만 — 이 값이 성공 확률보다 작으면 성공. 시험이 정할 수 있게) */
     public static DoubleSupplier rand = Math::random;
 
     static final int TAB_SLOT = 0;
+    /** 0.43.0 장신구 · 아티팩트 강화 탭 (무기 강화 창 ↔ 장신구 · 아티팩트 강화 창) */
+    static final int GEAR_TAB_SLOT = 1;
     static final int CRAFT_TAB_SLOT = 8;
     static final int STONE_SLOT = 2;
     static final int BRIGHT_SLOT = 3;
@@ -85,11 +87,11 @@ public final class EnhanceWindow {
     /** 가방의 RPG 무기 하나 (enhanceable — 칸 · 아이템 (그 때의 복사본) · 무기 · 강화 단계) */
     public record Entry(int slot, ItemStack item, Weapon w, int n) {}
 
-    private static Item itemOf(Obj m) {
+    static Item itemOf(Obj m) {
         return Icon.itemById(m.str("item"));
     }
 
-    private static String pct(double x) {
+    static String pct(double x) {
         return Js.str(Js.round(x * 100)) + "%";
     }
 
@@ -104,7 +106,7 @@ public final class EnhanceWindow {
         return out;
     }
 
-    private static String costText(Enhance.Cost c, boolean dark) {
+    static String costText(Enhance.Cost c, boolean dark) {
         String v = dark ? "§0" : "§f";
         String l = dark ? "§8" : "§7";
         List<String> parts = new ArrayList<>();
@@ -113,7 +115,7 @@ public final class EnhanceWindow {
         return String.join(" · ", parts);
     }
 
-    private static String failText(Enhance.Cost c) {
+    static String failText(Enhance.Cost c) {
         return c.down() ? "실패하면 한 단계 떨어짐 (수호 주문서로 방지)" : "실패해도 그대로";
     }
 
@@ -138,6 +140,9 @@ public final class EnhanceWindow {
         int sc = Inv.count(sp, itemOf(SCROLL));
         ChestForm form = new ChestForm("대장장이 §8· §7무기 강화");
         form.set(TAB_SLOT, Slot.of("textures/items/iron_ingot", "§6레벨 올리기로").lore("§7영웅 · 초월 무기 레벨 제한 올리기 창"));
+        if (Enhance.gearEnabled()) {
+            form.set(GEAR_TAB_SLOT, Slot.of(Icon.item(GearEnhance.icon()), "§d장신구 · 아티팩트 강화로").lore("§7낀 장신구 · 판의 아티팩트 · 가방의 것", "§7옵션 · 스탯 줄 +4 ~ +50%"));
+        }
         form.set(STONE_SLOT, Slot.of(STONE.str("icon"), STONE.str("color") + "보유 " + STONE.str("name") + " §f" + st).count(st));
         form.set(BRIGHT_SLOT, Slot.of(BRIGHT.str("icon"), BRIGHT.str("color") + "보유 " + BRIGHT.str("name") + " §f" + br).count(br));
         form.set(INFO_SLOT, Slot.of("textures/items/nether_star", "§6무기 강화 §f(+1 ~ +" + MAX + ")")
@@ -146,7 +151,7 @@ public final class EnhanceWindow {
                 .deco());
         form.set(SCROLL_SLOT, Slot.of(SCROLL.str("icon"), SCROLL.str("color") + "보유 " + SCROLL.str("name") + " §f" + sc).count(sc));
         form.set(CRAFT_TAB_SLOT, Slot.of("textures/items/iron_sword", "§6보스 무기 제작으로").lore("§7보스 재료로 영웅·초월 무기 만들기", "§7공허 전리품으로 공허의 갑옷 만들기",
-                "§7전리품 · 보스 재료로 아티팩트 만들기"));
+                "§7전리품 · 보스 재료로 장신구 만들기"));
         for (int i = 0; i < list.size(); i++) {
             Entry e = list.get(i);
             form.set(FIRST + i, Slot.of(e.item(), slotName(e)).lore(slotLore(e)));
@@ -204,7 +209,11 @@ public final class EnhanceWindow {
 
     /** 망치질 연출 (animTicks 동안): 눈앞 마법진이 한 칸씩 그려지고 불꽃이 모이며 모루 소리 3번 */
     private static void hammerFx(ServerPlayer sp, Entry e) {
-        int gi = e.w().gradeIndex();
+        hammerFx(sp, e.w().gradeIndex());
+    }
+
+    /** 망치질 연출 (등급 순번 gi) — 0.43.0 장신구 · 아티팩트 강화도 */
+    static void hammerFx(ServerPlayer sp, int gi) {
         double[] color = gi >= 0 && gi < HAMMER.length ? HAMMER[gi] : GOLD;
         int T = ANIM_TICKS;
         for (int t = 0; t < T; t += 2) {
@@ -234,7 +243,7 @@ public final class EnhanceWindow {
     }
 
     /** 성공: 마법진 섬광 · 금빛 폭발 · 고리 · 불꽃 · 바닥 룬 · 토템 반짝이 · 레벨 업 소리 */
-    private static void successFx(ServerPlayer sp, int n) {
+    static void successFx(ServerPlayer sp, int n) {
         ServerLevel level = sp.level();
         Altar al = altarOf(sp);
         SkillFx.fx(level, "rpg:magic_circle_flash", al.at(), Opt.of("size", 0.9 + n * 0.04, "life", 0.55, "spin", Kit.rand() * 360, "progress", 1.0, "color", GOLD,
@@ -251,10 +260,15 @@ public final class EnhanceWindow {
 
     /** 높은 단계 성공: 서버 모두에게 채팅 알림 + 폭죽 소리, 강화한 사람 눈앞 하늘에 폭죽 (최고 강화면 7발, 아니면 4발) */
     private static void announce(ServerPlayer sp, Weapon w, int n) {
+        announce(sp, w.grade().color(), w.grade().name(), w.title(), n);
+    }
+
+    /** 높은 단계 성공 알림 (등급 색 · 등급 이름 · 이름 — 0.43.0 장신구 · 아티팩트도) */
+    static void announce(ServerPlayer sp, String gradeColor, String gradeName, String title, int n) {
         String top = n >= MAX ? " §d§l(최고 강화!)" : "";
         MinecraftServer server = sp.level().getServer();
-        server.getPlayerList().broadcastSystemMessage(Component.literal(BedrockText.toJava("§6§l[강화] §r§f" + sp.getName().getString() + "님이 " + w.grade().color()
-                + w.grade().name() + " 등급§r §f[" + w.title() + "] §e§l" + n + "강§r§f을 성공하였습니다!" + top)), false);
+        server.getPlayerList().broadcastSystemMessage(Component.literal(BedrockText.toJava("§6§l[강화] §r§f" + sp.getName().getString() + "님이 " + gradeColor
+                + gradeName + " 등급§r §f[" + title + "] §e§l" + n + "강§r§f을 성공하였습니다!" + top)), false);
         for (ServerPlayer pl : server.getPlayerList().getPlayers()) {
             SkillFx.playFor(pl, n >= MAX ? "firework.large_blast" : "firework.blast", 1.0, 0.8);
             if (pl != sp) SkillFx.playFor(pl, "firework.twinkle", 1.2, 0.5);
@@ -283,7 +297,7 @@ public final class EnhanceWindow {
     }
 
     /** 실패: 연기 (떨어지면 붉은 폭발 · 모루 깨지는 소리), 수호 주문서가 지켰으면 금빛 고리 · 방패 소리 */
-    private static void failFx(ServerPlayer sp, boolean down, boolean guarded) {
+    static void failFx(ServerPlayer sp, boolean down, boolean guarded) {
         ServerLevel level = sp.level();
         Altar al = altarOf(sp);
         SkillFx.burst(level, al.at(), down ? RED : SMOKE, 1.0, 0.35);
@@ -301,7 +315,7 @@ public final class EnhanceWindow {
     // ------------------------------------------------------------ 강화
 
     /** 재료가 모자란 것 ["강화석 2", …] (없으면 빈 목록 — lacking). useScroll 이면 수호 주문서 1장도 */
-    private static List<String> lacking(ServerPlayer sp, Enhance.Cost c, boolean useScroll) {
+    static List<String> lacking(ServerPlayer sp, Enhance.Cost c, boolean useScroll) {
         List<String> out = new ArrayList<>();
         int st = Inv.count(sp, itemOf(STONE));
         int br = Inv.count(sp, itemOf(BRIGHT));
@@ -312,7 +326,7 @@ public final class EnhanceWindow {
     }
 
     /** 재료가 모자라면 낮은 소리 + 알림, 창 본문 문구 (충분하면 null — shortage) */
-    private static String shortage(ServerPlayer sp, Enhance.Cost c, boolean guard) {
+    static String shortage(ServerPlayer sp, Enhance.Cost c, boolean guard) {
         List<String> lack = lacking(sp, c, guard);
         if (lack.isEmpty()) return null;
         SkillFx.playFor(sp, "note.bass", 0.6, 1);
@@ -397,7 +411,7 @@ public final class EnhanceWindow {
         step(sp, "", 0, next);
     }
 
-    private static void step(ServerPlayer sp, String message, int guard, Consumer<String> next) {
+    static void step(ServerPlayer sp, String message, int guard, Consumer<String> next) {
         if (guard >= 200) {
             next.accept(null);
             return;
@@ -407,6 +421,7 @@ public final class EnhanceWindow {
             if (sel < 0) next.accept(null);
             else if (sel == TAB_SLOT) next.accept("smith");
             else if (sel == CRAFT_TAB_SLOT) next.accept("craft");
+            else if (sel == GEAR_TAB_SLOT && Enhance.gearEnabled()) GearEnhance.step(sp, "", guard + 1, next);
             else {
                 int i = sel - FIRST;
                 Entry e = i >= 0 && i < list.size() ? list.get(i) : null;

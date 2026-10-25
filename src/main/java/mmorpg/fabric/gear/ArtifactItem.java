@@ -42,7 +42,8 @@ public final class ArtifactItem extends Item {
 
     @Override
     public Component getName(ItemStack stack) {
-        return Component.literal(BedrockText.toJava(art.coloredName()));
+        int n = WeaponEnhance.of(stack); // 0.43.0 장신구 강화 (+N)
+        return Component.literal(BedrockText.toJava(n > 0 ? art.gradeColor() + "+" + n + " " + art.name() : art.coloredName()));
     }
 
     @Override
@@ -53,8 +54,8 @@ public final class ArtifactItem extends Item {
         } catch (RuntimeException e) {
             lv = -1;
         }
-        for (String line : Artifacts.lore(art, lv)) tooltip.accept(Component.literal(BedrockText.toJava(line)));
-        tooltip.accept(Component.literal(BedrockText.toJava("§r§8우클릭: 끼기 · I 키: 아티팩트 창")));
+        for (String line : Artifacts.lore(art, WeaponEnhance.of(stack), lv)) tooltip.accept(Component.literal(BedrockText.toJava(line)));
+        tooltip.accept(Component.literal(BedrockText.toJava("§r§8우클릭: 끼기 · I 키: 장신구 창")));
     }
 
     @Override

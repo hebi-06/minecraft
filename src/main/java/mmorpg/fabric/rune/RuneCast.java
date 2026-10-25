@@ -180,6 +180,9 @@ public final class RuneCast {
         clearItemCooldown(sp, r);
     }
 
+    /** 0.43.0 룬이 나감 (효과가 성공한 뒤 — 아티팩트 패시브) */
+    public static java.util.function.BiConsumer<ServerPlayer, Runes.Rune> onCast = (p, r) -> {};
+
     /** 룬 쓰기 (돌파 0돌 — 시험 · 명령) */
     public static boolean castRune(ServerPlayer sp, Runes.Rune r, boolean quick) {
         return castRune(sp, r, quick, 0);
@@ -233,6 +236,13 @@ public final class RuneCast {
                 ok = false;
             }
             if (ok) Breakthrough.onCast(sp, r, lv, P); // 6돌 초월: 금빛 각성 · 단계 효과 (한 번 더)
+            if (ok) {
+                try {
+                    onCast.accept(sp, r); // 0.43.0 아티팩트 브리싱가멘 「여신의 축복」 (RelicPassives)
+                } catch (RuntimeException e) {
+                    Mmorpg.LOG.warn("[mmorpg] rune cast hook", e);
+                }
+            }
             if (ok) mmorpg.fabric.motion.MotionSystem.skill(sp, "rune:" + r.def().str("fn")); // 0.38.0 룬 동작 (MOTION.skills — rune:fn)
             return ok;
         };

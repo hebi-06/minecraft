@@ -188,7 +188,8 @@ public final class ContainerTools {
             mmorpg.core.Grade g = Rules.get().grade(r.rune().grade());
             return g == null ? -1 : g.index();
         }
-        if (it instanceof mmorpg.fabric.gear.ArtifactItem a) return a.art().gradeIndex(); // 0.37.0 아티팩트
+        if (it instanceof mmorpg.fabric.gear.ArtifactItem a) return a.art().gradeIndex(); // 0.37.0 장신구
+        if (it instanceof mmorpg.fabric.gear.RelicItem r) return r.relic().gradeIndex(); // 0.43.0 아티팩트
         return -1;
     }
 
@@ -197,6 +198,7 @@ public final class ContainerTools {
         if (it instanceof RpgWeaponItem w) return w.weapon().level();
         if (it instanceof RpgArmorItem a) return a.piece().level();
         if (it instanceof mmorpg.fabric.gear.ArtifactItem a) return a.art().level();
+        if (it instanceof mmorpg.fabric.gear.RelicItem r) return r.relic().level();
         return 0;
     }
 

@@ -267,7 +267,7 @@ public final class RpgArtifactGallery implements FabricClientGameTest {
             Forms.close(sp);
             Smith.openCraftPage(sp, Smith.artifactPageIndex());
         });
-        if (!waitChest(ctx, "아티팩트")) failures.add("artifact craft page did not open");
+        if (!waitChest(ctx, "장신구")) failures.add("artifact craft page did not open");
         ctx.takeScreenshot("af_craft_page");
         hoverSlot(ctx, ArtifactCraft.slotOf("ring", "rare"));
         ctx.takeScreenshot("af_craft_tip");
@@ -275,7 +275,7 @@ public final class RpgArtifactGallery implements FabricClientGameTest {
         ctx.takeScreenshot("af_craft_mats");
         int before = server.computeOnServer(s -> RpgGearTests.countIn(player(s), GearItems.byId(Artifacts.id("ring", "rare"))));
         clickSlot(ctx, ArtifactCraft.slotOf("ring", "rare"));
-        if (!waitChest(ctx, "아티팩트 만들기")) failures.add("confirm window did not open");
+        if (!waitChest(ctx, "장신구 만들기")) failures.add("confirm window did not open");
         ctx.takeScreenshot("af_craft_confirm");
         clickSlot(ctx, 11);
         if (!waitChest(ctx, "대장장이")) failures.add("back to the artifact page");
@@ -285,7 +285,7 @@ public final class RpgArtifactGallery implements FabricClientGameTest {
         check(got, "rare ring crafted");
         // 영웅 (골드 · 재료 모자람) → 재료 부족
         clickSlot(ctx, ArtifactCraft.slotOf("bracelet", "hero"));
-        if (waitChest(ctx, "아티팩트 만들기")) {
+        if (waitChest(ctx, "장신구 만들기")) {
             clickSlot(ctx, 11);
             waitChest(ctx, "대장장이");
             ctx.takeScreenshot("af_craft_lack");

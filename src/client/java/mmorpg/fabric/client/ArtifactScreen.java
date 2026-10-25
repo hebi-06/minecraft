@@ -80,7 +80,7 @@ public final class ArtifactScreen extends Screen {
     private final long openedAt = Util.getMillis();
 
     public ArtifactScreen() {
-        super(Component.literal("아티팩트"));
+        super(Component.literal("장신구"));
     }
 
     @Override
@@ -276,7 +276,7 @@ public final class ArtifactScreen extends Screen {
         List<Integer> bag = bagSlots();
         int gy = gridY();
         g.fill(left + 10, top + 121, left + W - 10, top + 122, 0x60C8A050);
-        g.text(font, "§e가진 아티팩트 §7(" + bag.size() + "개 · 가방)", left + 12, top + 126, 0xFFFFFFFF, true);
+        g.text(font, "§e가진 장신구 §7(" + bag.size() + "개 · 가방)", left + 12, top + 126, 0xFFFFFFFF, true);
         String how = "§8누르면 맞는 칸 · 끌어 놓기";
         g.text(font, how, left + W - 12 - font.width(how), top + 126, 0xFFFFFFFF, true);
         int hoverInv = dragging ? -1 : invAt(mx, my, bag);
@@ -297,7 +297,7 @@ public final class ArtifactScreen extends Screen {
                 small(g, "§c" + a.level(), x + CELL - 2, y + 1, true);
             }
         }
-        if (bag.isEmpty()) g.text(font, "§8가방에 아티팩트가 없습니다 — 대장장이에게서 제작", gridX() + 4, gy + 6, 0xFFFFFFFF, true);
+        if (bag.isEmpty()) g.text(font, "§8가방에 장신구가 없습니다 — 대장장이에게서 제작", gridX() + 4, gy + 6, 0xFFFFFFFF, true);
         if (bag.size() > COLS * ROWS) g.text(font, "§8…", gridX() + COLS * CELL + 2, gy + ROWS * CELL - 9, 0xFFFFFFFF, true);
 
         // 도움말 · 알림

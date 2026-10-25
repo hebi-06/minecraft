@@ -347,7 +347,7 @@ public final class RpgSmithTests {
         Forms.answer(sp, VoidArmorCraft.BACK_SLOT, null);
         h.assertTrue(chest(sp) != null && chest(sp).title().contains("공허"), "back to the page");
         Forms.answer(sp, 4, null);
-        h.assertTrue(chest(sp) != null && chest(sp).title().contains("아티팩트"), "next page: " + (chest(sp) == null ? null : chest(sp).title()));
+        h.assertTrue(chest(sp) != null && chest(sp).title().contains("장신구"), "next page: " + (chest(sp) == null ? null : chest(sp).title()));
         Forms.answer(sp, 4, null);
         h.assertTrue(chest(sp) != null && chest(sp).title().contains("영웅"), "then: " + (chest(sp) == null ? null : chest(sp).title()));
         finish(h, sp);

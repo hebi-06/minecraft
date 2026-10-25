@@ -89,7 +89,26 @@ public final class DamageNumbers {
         IRON("§f§l", "", "!", 1.95F),
         // 0.27.0 직업 스킬: 직업 색 두 빛 그라데이션 (글자마다 RGB — Mark.grad, 없으면 흰 굵게), 궁극기 마지막 타는 1.4배 크기 + "!"
         JOB("§f§l", "", "", 1.6F),
-        JOB_BIG("§f§l", "", "!", 2.25F);
+        JOB_BIG("§f§l", "", "!", 2.25F),
+        // 0.43.0 아티팩트 패시브: 메긴교르드 두 배의 힘 (평타에 더한 몫 — 금빛 굵게 !) · 드라우프니르 금고리 (금빛 · 노랑 번갈아 굵게) · 미미르의 샘 지혜의 일격 (하늘빛 ✦)
+        MIGHT("§6§l", "", "!", 1.85F),
+        RING("§e§l", "", "", 1.8F) {
+            @Override
+            public String format(String n) {
+                StringBuilder b = new StringBuilder();
+                int k = 0;
+                for (int i = 0; i < n.length(); i++) {
+                    char ch = n.charAt(i);
+                    if (Character.isWhitespace(ch)) {
+                        b.append(ch);
+                        continue;
+                    }
+                    b.append(k++ % 2 == 0 ? "§6" : "§e").append("§l").append(ch);
+                }
+                return b + "§6§l◎";
+            }
+        },
+        WISDOM("§b§l", "✦", "", 1.8F);
 
         final String codes;
         final String before;

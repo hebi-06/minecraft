@@ -125,6 +125,13 @@ public final class GearItems {
             if (mmorpg.core.Artifacts.glint(art.grade())) props.component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
             BY_ID.put(art.id(), Registry.register(BuiltInRegistries.ITEM, k, new ArtifactItem(art, props)));
         }
+        // 0.43.0 아티팩트 50 (신화 유물 열 × 일반 ~ 초월 — 그림은 tools/relic_icons.py)
+        for (mmorpg.core.Relics.Relic relic : mmorpg.core.Relics.all()) {
+            ResourceKey<Item> k = key(relic.id());
+            Item.Properties props = new Item.Properties().stacksTo(1).setId(k);
+            if (mmorpg.core.Relics.glint(relic.grade())) props.component(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+            BY_ID.put(relic.id(), Registry.register(BuiltInRegistries.ITEM, k, new RelicItem(relic, props)));
+        }
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB, FabricCreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.mmorpg.gear"))
                 .icon(() -> new ItemStack(BY_ID.getOrDefault("rpg:armor_str_l40_transcend_chest", ARMOR.isEmpty() ? NPC_TOOL : ARMOR.get(0))))
@@ -208,7 +215,7 @@ public final class GearItems {
             Integer n = c == null ? null : c.items().get(itemId);
             if (n != null && n > 0) parts.add(g.name() + " " + n + "개");
         }
-        return parts.isEmpty() ? "" : "§r§d아티팩트 재료: " + String.join(" · ", parts) + " §7(하나에 · 대장장이)";
+        return parts.isEmpty() ? "" : "§r§d장신구 재료: " + String.join(" · ", parts) + " §7(하나에 · 대장장이)";
     }
 
     /**
