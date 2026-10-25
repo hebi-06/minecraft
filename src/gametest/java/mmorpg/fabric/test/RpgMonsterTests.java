@@ -410,17 +410,18 @@ public final class RpgMonsterTests {
             h.assertTrue(gained >= step - 1e-3 && Math.abs(gained / step - Math.round(gained / step)) < 1e-3, "troll regen 3%/s while fighting: +" + gained);
         });
         // 이름표는 몬스터 틱에 맞춰짐 (재생은 1초마다 한꺼번에 — 몬스터가 틱을 돌면 바로 뒤 틱에 이름표가 따라감). 0.34.0: 시험 서버는 틱을 쉬지 않고 돌려서
-        // 트롤 청크가 엔티티 틱을 돌기까지 몇 틱이 더 걸릴 수 있음 (CI 에서 한 번 떨어짐) → 100 ~ 150틱 사이에 한 번이라도 지금 체력의 이름표면 됨
+        // 트롤 청크가 엔티티 틱을 돌기까지 몇 틱이 더 걸릴 수 있음 (CI 에서 한 번 떨어짐) → 100 ~ 200틱 사이에 한 번이라도 지금 체력의 이름표면 됨
+        // (0.44.0: CI 에서 150틱까지 이름표가 처음 그대로인 적이 한 번 더 있어 넓힘)
         boolean[] synced = {false};
         String[] seen = {null};
-        for (int t = 100; t <= 150; t++) {
+        for (int t = 100; t <= 200; t++) {
             h.runAfterDelay(t, () -> {
                 if (synced[0]) return;
                 seen[0] = Monsters.labelOf(troll);
                 synced[0] = Monsters.monsterLabel(Monsters.kind("troll"), troll.getHealth(), 230).equals(seen[0]);
             });
         }
-        h.runAfterDelay(160, () -> {
+        h.runAfterDelay(205, () -> {
             h.assertTrue(synced[0], "bar follows regen " + seen[0] + " (health " + troll.getHealth() + ")");
             h.assertTrue(crow.getHealth() >= 13F - 1e-3, "scarecrow regen 10%/s after 6s " + crow.getHealth());
             ok("troll regen while fighting · regen after the fight · reloaded hurt monster");
