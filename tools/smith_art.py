@@ -3,13 +3,15 @@
 
   python3 tools/smith_art.py            # 모두 씀
   python3 tools/smith_art.py --preview  # 패널 (배경 + 모루) 미리 보기를 scratch 그림으로 (확인용 — 경로를 인자로)
+  python3 tools/smith_art.py --layout   # 망치질의 망치가 닿는 패널 자리 · 모루 윗면 (SmithScreen 의 HIT · ANVIL 과 맞는지)
+  python3 tools/smith_art.py --panel 그림.png  # 패널 미리 보기 (상자 사람 + 망치 — 쉬는 자세 · 들기 · 내려침 · 마지막 들기)
 
 만들어지는 것
 - src/main/resources/assets/rpg/items/smith_hammer.json             아이템 정의 (rpg:smith_hammer — 동작 smith_hammer 의 hold, ItemStack 의 item_model)
 - src/main/resources/assets/rpg/models/item/fx/smith_hammer.json    모델 (elements — 나무 자루 · 가죽 손잡이 · 쇠 머리 · 강철 치는 면 · 뾰족한 뒤)
 - src/main/resources/assets/rpg/textures/item/fx/smith_hammer.png   텍스처 64×64 (UV 0 ~ 16 = 그림 전체 — 1 UV = 4 픽셀)
 - src/main/resources/assets/mmorpg/textures/gui/sprites/smith/backdrop.png   창 왼쪽 패널 배경 112×194 (돌벽 · 화덕 · 연장 걸이 · 바닥)
-- src/main/resources/assets/mmorpg/textures/gui/sprites/smith/anvil.png      모루 48×40 (옆모습 · 나무 받침)
+- src/main/resources/assets/mmorpg/textures/gui/sprites/smith/anvil.png      모루 58×48 (옆모습 — 1칸 높이 = 패널의 대장장이 1칸)
 
 망치 모델 좌표 (자바 아이템 모델 — 한 블록 = 16): 자루 = +y (손 → 머리), 머리의 긴 쪽 = z, 치는 면 = -z (북쪽 면 — 동작 smith_hammer 가 내려칠 때
 아래를 봄: tools/motion_preview.py 로 잰 손 회전), 3인칭 표시는 무기 망치 (hammer_lv0) 와 같음 (기울기 30° — 동작의 "tilt": 30).
@@ -355,7 +357,11 @@ def backdrop():
 
 # ------------------------------------------------------------ 창 패널: 모루
 
-AW, AH = 48, 40
+# 모루 58×48 (옆모습 — 왼쪽 네모 뒤꿈치 · 오른쪽 뿔): 윗면이 TOP 줄, 받침 바닥이 TOP + 43 줄 → 높이 44 = 패널의 대장장이 1칸 (SmithScreen.FIG) —
+# 세상의 모루 (1칸) 와 같은 비율이라 망치질 (smith_hammer) 의 망치가 윗면에 닿음. 허리 가운데 = x WAIST_X
+AW, AH = 58, 48
+TOP = 2
+WAIST_X = 24.5
 
 
 def anvil():
@@ -367,81 +373,190 @@ def anvil():
             img[y, x, :3] = c
             img[y, x, 3] = a
 
-    dark = np.array((26, 27, 32), float)
-    mid = np.array((52, 54, 62), float)
-    lite = np.array((92, 96, 108), float)
-    top = np.array((150, 156, 170), float)
+    dark = np.array((22, 23, 28), float)
+    mid = np.array((56, 58, 68), float)
+    lite = np.array((104, 108, 122), float)
+    top = np.array((168, 174, 188), float)
     warm = np.array((255, 150, 70), float)
 
-    def shade(x, y, x0, x1, y0, y1):
-        # 위는 밝게 · 아래 어둡게 · 오른쪽 (화덕 쪽) 가장자리에 따뜻한 빛
+    def body(x, y, x0, x1, y0, y1, k0=1.15, k1=0.5):
+        # 위는 밝게 · 아래 어둡게, 오른쪽 (화덕 쪽) 가장자리에 따뜻한 빛 · 왼쪽 가장자리 어둡게, 두드린 자국 (작은 얼룩)
         k = (y - y0) / max(1, y1 - y0)
-        c = mid * (1.15 - 0.45 * k)
+        c = mid * (k0 - (k0 - k1) * k)
         if x >= x1 - 2:
-            c = c * 0.7 + warm * 0.3
+            c = c * 0.65 + warm * 0.35
+        elif x >= x1 - 4:
+            c = c * 0.85 + warm * 0.12
         if x <= x0 + 1:
-            c = c * 0.8
-        return c
+            c = c * 0.72
+        return c * (0.94 + 0.12 * rng.random())
 
-    # 윗면 (판 + 오른쪽으로 뾰족한 뿔 · 왼쪽 네모 뒤꿈치)
-    y0, y1 = 6, 13
+    # 윗면 판 (TOP ~ TOP+13): 뒤꿈치 x 2 ~ 44, 뿔 44 ~ 56 (아래가 둥글게 깎여 끝으로 좁아짐)
+    y0, y1 = TOP, TOP + 13
     for y in range(y0, y1):
-        for x in range(4, 47):
-            if x > 36:
-                # 뿔: 아래가 둥글게 깎여 끝으로 좁아짐
-                tip = (x - 36) / 11
-                bottom = y0 + (y1 - y0) * (1 - tip ** 0.8) * 1.0
-                if y > bottom or y < y0 + tip * 2.5:
+        for x in range(2, 56):
+            if x >= 44:
+                tip = (x - 44) / 12
+                if y > y0 + (y1 - y0) * (1 - tip ** 0.75) or y < y0 + tip * 3.0:
                     continue
-            px(x, y, shade(x, y, 4, 47, y0, y1))
-    for x in range(4, 37):
+            px(x, y, body(x, y, 2, 56, y0, y1, 1.2, 0.75))
+    for x in range(2, 45):
         px(x, y0, top)
-        px(x, y0 + 1, lite)
-    for x in range(37, 47):
-        tip = (x - 36) / 11
-        yt = y0 + tip * 2.5
-        if yt <= y0 + (y1 - y0) * (1 - tip ** 0.8):
-            px(x, int(math.ceil(yt)), top)
+        px(x, y0 + 1, lite * 1.1)
+    for x in range(45, 56):
+        tip = (x - 44) / 12
+        yt = int(math.ceil(y0 + tip * 3.0))
+        if yt <= y0 + (y1 - y0) * (1 - tip ** 0.75):
+            px(x, yt, top)
+    for x in range(2, 45):
+        px(x, y1 - 1, dark)
     # 판의 구멍 (네모 · 둥근)
-    px(10, y0, dark)
-    px(11, y0, dark)
-    px(14, y0, dark)
-    # 허리 (안으로 들어감)
-    for y in range(13, 25):
-        k = (y - 13) / 12
-        inset = 7 * math.sin(k * math.pi) ** 0.7
-        xa, xb = int(round(13 + inset)), int(round(36 - inset))
+    for x, y, c in ((8, y0, dark), (9, y0, dark), (8, y0 + 1, dark * 1.5), (9, y0 + 1, dark * 1.5), (13, y0, dark), (13, y0 + 1, dark * 1.5)):
+        px(x, y, c)
+    for y in range(y0, y1):
+        px(2, y, dark)
+    # 허리 (TOP+13 ~ TOP+29): 안으로 오목하게
+    w0, w1 = y1, TOP + 29
+    for y in range(w0, w1):
+        k = (y - w0) / (w1 - w0)
+        inset = 8 * math.sin(k * math.pi) ** 0.8
+        xa, xb = int(round(10 + inset)), int(round(39 - inset))
         for x in range(xa, xb):
-            px(x, y, shade(x, y, xa, xb, 13, 25) * 0.92)
+            px(x, y, body(x, y, xa, xb, w0, w1, 0.95, 0.7))
         px(xa, y, dark)
-    # 받침 (아래로 퍼짐)
-    for y in range(25, 31):
-        k = (y - 25) / 5
-        xa, xb = int(round(13 - 4 * k)), int(round(36 + 4 * k))
+        px(xb - 1, y, body(xb - 1, y, xa, xb, w0, w1) * 0.8)
+    # 받침 (TOP+29 ~ TOP+43): 아래로 퍼짐
+    b0, b1 = w1, TOP + 43
+    for y in range(b0, b1):
+        k = (y - b0) / (b1 - b0)
+        spread = 7 * k ** 1.3
+        xa, xb = int(round(10 - spread)), int(round(39 + spread))
         for x in range(xa, xb):
-            px(x, y, shade(x, y, xa, xb, 25, 31))
+            px(x, y, body(x, y, xa, xb, b0, b1, 0.9, 0.55))
         px(xa, y, dark)
-    for x in range(9, 41):
-        px(x, 30, dark)
-    # 나무 받침 (그루터기 — 나무껍질 · 위 나이테 선)
-    bark = [0.8 + 0.25 * rng.random() for _ in range(AW)]
-    for y in range(31, 40):
-        for x in range(11, 39):
-            # 세로 나무껍질 결 (기둥마다 밝기 · 사이사이 어두운 홈) · 아래로 어둡게
-            c = np.array((104, 70, 42), float) * bark[x] * (1 - 0.04 * (y - 31))
-            if x % 4 == 0 or (x % 4 == 1 and rng.random() < 0.3):
-                c *= 0.66
-            if x in (11, 38):
-                c = np.array((54, 36, 22), float)
-            px(x, y, c)
-    for x in range(11, 39):
-        px(x, 31, (150, 112, 70))
-    # 그림자 (바닥)
-    for x in range(8, 42):
-        a = int(110 * (1 - abs(x - 25) / 18))
-        if img[39, x, 3] == 0:
-            px(x, 39, (0, 0, 0), max(0, a))
+    for x in range(3, 46):
+        if img[b1 - 1, x, 3] > 0:
+            px(x, b1 - 1, dark)
+    for x in range(10, 39):
+        px(x, b0, lite * 0.9)
+    # 바닥 그림자
+    for y in (b1, b1 + 1):
+        for x in range(AW):
+            d = abs(x - 25) / 26
+            a = int((120 if y == b1 else 60) * max(0.0, 1 - d ** 2))
+            if img[y, x, 3] == 0 and a > 0:
+                px(x, y, (0, 0, 0), a)
     return Image.fromarray(np.clip(img, 0, 255).astype(np.uint8), "RGBA")
+
+
+# ------------------------------------------------------------ 창 패널: 대장장이 자리 (SmithScreen 상수 맞추기)
+
+# SmithScreen 과 같은 값: 대장장이 발 (패널 기준) · 1칸 크기 · 몸 방향 · 카메라 기울기, 모루 자리
+PANEL = {"SMITH_X": 32, "FEET_Y": 168, "FIG": 44.0, "FACE": -70.0, "CAM": -8.0, "ANVIL_X": 55, "ANVIL_Y": 125}
+# 망치 모델의 치는 면 · 머리 가운데 · 손잡이 (모델 좌표)
+HAMMER_FACE = (8.0, 19.2, 3.6)
+HAMMER_HEAD = (8.0, 19.2, 8.1)
+HAMMER_GRIP = (8.0, 9.1, 8.0)
+
+
+def _mp():
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import motion_preview
+    return motion_preview
+
+
+def hammer_point(pose, item, mp):
+    """망치 모델의 점 (모델 px) → 사람 공간 (칸: 오른쪽 · 위 · 앞 — 발 가운데 기준). 바닐라 ItemInHandLayer (오른손 · X -90 · Y 180 ·
+    (1, 2, -10)/16) + 3인칭 표시 (회전 [30, 0, 0] · 이동) + 동작의 팔 (MotionRender.hand — motion_preview.build 와 같은 차례) + 사람 크기 15/16"""
+    disp = hammer_model()["display"]["thirdperson_righthand"]
+    v = np.asarray(item, float) / 16.0 - 0.5
+    v = mp.rx(math.radians(disp["rotation"][0])) @ v + np.array(disp["translation"]) / 16.0 + np.array([1 / 16.0, 0.125, -0.625])
+    a = np.array([-v[0], -v[2], -v[1]]) * 16.0  # 팔 기준 (어깨 축 · 모델 px)
+    w = pose["w"]
+    body = [math.radians(x) * w for x in pose["body"]]
+    Rb = mp.zyx(*body)
+    R, bend, twist, wrist, dev = pose["ra"]
+    R = mp.mat_of(mp.slerp(mp.quat_of(np.eye(3)), mp.quat_of(R), w))
+    sh = mp.HIP + Rb @ (np.array([-5.0, 2.0, 0.0]) - mp.HIP)
+    J, A, Wp = np.array([-1.0, 4.0, 0.0]), np.array([-1.0, 0.0, 0.0]), np.array([-1.0, 9.5, 0.0])
+    g = mp.rx(wrist * w) @ mp.rz(dev * w) @ (a - Wp) + Wp
+    g = mp.ry(twist * w) @ (g - A) + A
+    g = mp.rx(bend * w) @ (g - J) + J
+    m = R @ g + sh
+    o = np.array([-m[0] / 16.0, 1.501 - m[1] / 16.0, m[2] / 16.0]) * 0.9375 + np.array([0.0, pose["root"][0] * w, -pose["root"][1] * w])
+    return np.array([o[0], o[1], -o[2]])
+
+
+def to_panel(p, layout=PANEL):
+    """사람 공간 (오른쪽 · 위 · 앞) → 패널 좌표: SmithScreen.drawSmith 의 그림 (몸 방향 180 + FACE · Z 180° · X CAM 기울기 · 1칸 = FIG)"""
+    mp = _mp()
+    o = np.array([p[0], p[1], -p[2]])
+    q = mp.rx(math.radians(layout["CAM"])) @ (mp.ry(math.radians(-layout["FACE"])) @ o)
+    return layout["SMITH_X"] - layout["FIG"] * q[0], layout["FEET_Y"] - layout["FIG"] * q[1]
+
+
+def panel_layout(layout=PANEL):
+    """망치질의 망치 치는 면이 닿는 패널 자리 (내려친 열쇠마다) · 모루 윗면 · 허리 가운데 — SmithScreen 의 HIT · ANVIL 과 맞는지"""
+    mp = _mp()
+    with open(os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json"), encoding="utf-8") as f:
+        m = json.load(f)["motions"]["smith_hammer"]
+    hits = []
+    for t in m.get("impacts", []):
+        pose = mp.evaluate(m, t)
+        world = hammer_point(pose, HAMMER_FACE, mp)
+        hits.append((t, world, to_panel(world, layout)))
+    top = (layout["ANVIL_X"] + WAIST_X, layout["ANVIL_Y"] + TOP)
+    return hits, top
+
+
+def panel_preview(out, ts=(0.0, 0.1, 0.2, 0.24, 0.27, 0.33, 0.77, 0.87)):
+    """패널 미리 보기: 배경 + 모루 + 상자 사람 (motion_preview) + 망치 (상자) — 시각마다 (확인용)"""
+    from PIL import ImageDraw
+    mp = _mp()
+    with open(os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json"), encoding="utf-8") as f:
+        m = json.load(f)["motions"]["smith_hammer"]
+    rest = dict(m["keys"][1])
+    loop = dict(m, keys=[dict(rest, t=0.0)] + m["keys"][1:-1] + [dict(rest, t=1.0)], fade=[0, 0])
+    k = 4
+    frames = []
+    for t in ts:
+        img = backdrop().convert("RGBA")
+        img.alpha_composite(anvil(), (PANEL["ANVIL_X"], PANEL["ANVIL_Y"]))
+        img = img.resize((BW * k, BH * k), Image.NEAREST)
+        d = ImageDraw.Draw(img)
+        pose = mp.evaluate(loop, t)
+        polys = [([(-p[0] / 16.0, 1.501 - p[1] / 16.0, p[2] / 16.0) for p in pts], col) for pts, col in mp.build(pose, weapon=False)]
+        w = pose["w"]
+        for el in hammer_model()["elements"]:
+            f0, t0 = el["from"], el["to"]
+            c = [(x, y, z) for x in (f0[0], t0[0]) for y in (f0[1], t0[1]) for z in (f0[2], t0[2])]
+            pts = [hammer_point(pose, q, mp) for q in c]
+            col = (200, 206, 220) if el["name"] == "face" else (120, 84, 50) if el["name"] in ("handle", "grip") else (88, 92, 104)
+            for q in ((0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)):
+                polys.append(("H", [pts[i] for i in q], col))
+        items = []
+        for poly in polys:
+            if poly[0] == "H":
+                _, pts, col = poly
+                ws = [np.array([p[0], p[1], -p[2]]) for p in pts]
+            else:
+                pts, col = poly
+                ws = [np.array(p) * 0.9375 + np.array([0.0, pose["root"][0] * w, -pose["root"][1] * w]) for p in pts]
+            sc = [to_panel((q[0], q[1], -q[2])) for q in ws]
+            depth = sum((mp.rx(math.radians(PANEL["CAM"])) @ (mp.ry(math.radians(-PANEL["FACE"])) @ q))[2] for q in ws) / len(ws)
+            items.append((depth, sc, col))
+        items.sort(key=lambda x: -x[0])
+        for _, sc, col in items:
+            d.polygon([(x * k, y * k) for x, y in sc], fill=tuple(col) + (255,), outline=(20, 20, 24, 255))
+        d.text((4, 4), "t=%.2f" % t, fill=(255, 230, 120, 255))
+        frames.append(img)
+    sheet = Image.new("RGBA", (sum(f.width for f in frames), frames[0].height), (0, 0, 0, 255))
+    x = 0
+    for f in frames:
+        sheet.paste(f, (x, 0))
+        x += f.width
+    sheet.save(out)
+    print("panel preview →", out)
 
 
 # ------------------------------------------------------------ 쓰기
@@ -454,11 +569,21 @@ def write_json(path, data):
 
 
 def main(argv):
+    if "--layout" in argv:
+        hits, top = panel_layout()
+        for t, world, (x, y) in hits:
+            print("impact t=%.2f  hammer face (right, up, fwd) = (%.3f, %.3f, %.3f)  panel = (%.1f, %.1f)" % (t, world[0], world[1], world[2], x, y))
+        print("anvil top (waist centre) panel = (%.1f, %d)" % top)
+        return
+    if "--panel" in argv:
+        i = argv.index("--panel")
+        panel_preview(argv[i + 1] if i + 1 < len(argv) else "smith_panel.png")
+        return
     if "--preview" in argv:
         out = argv[argv.index("--preview") + 1] if argv.index("--preview") + 1 < len(argv) else "smith_preview.png"
         bg = backdrop().convert("RGBA")
         an = anvil()
-        bg.alpha_composite(an, (64, 126))
+        bg.alpha_composite(an, (PANEL["ANVIL_X"], PANEL["ANVIL_Y"]))
         bg = bg.resize((BW * 4, BH * 4), Image.NEAREST)
         tex = hammer_texture().resize((TEX * 4, TEX * 4), Image.NEAREST)
         sheet = Image.new("RGBA", (BW * 4 + TEX * 4 + 16, BH * 4), (20, 20, 24, 255))

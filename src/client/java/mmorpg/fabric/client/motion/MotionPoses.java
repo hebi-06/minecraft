@@ -73,6 +73,62 @@ public final class MotionPoses {
         float fwd;
         float spin;
         float flip;
+
+        /** 같은 자세 · 다른 t (0.44.0 창 패널의 쉬는 자세 — {@link #restLoop}) */
+        Key copyAt(float at) {
+            Key k = new Key();
+            k.t = at;
+            k.ease = ease;
+            k.lean = lean;
+            k.twist = twist;
+            k.side = side;
+            k.headX = headX;
+            k.headY = headY;
+            k.ra.set(ra);
+            k.la.set(la);
+            k.raBend = raBend;
+            k.laBend = laBend;
+            k.raWrist = raWrist;
+            k.laWrist = laWrist;
+            k.raTwist = raTwist;
+            k.laTwist = laTwist;
+            k.raDev = raDev;
+            k.laDev = laDev;
+            k.raWant = raWant;
+            k.laWant = laWant;
+            k.raFace = raFace;
+            k.laFace = laFace;
+            k.raUpper.set(raUpper);
+            k.raHand.set(raHand);
+            k.laUpper.set(laUpper);
+            k.laHand.set(laHand);
+            k.rlX = rlX;
+            k.rlY = rlY;
+            k.rlZ = rlZ;
+            k.llX = llX;
+            k.llY = llY;
+            k.llZ = llZ;
+            k.rk = rk;
+            k.lk = lk;
+            k.up = up;
+            k.fwd = fwd;
+            k.spin = spin;
+            k.flip = flip;
+            return k;
+        }
+    }
+
+    /**
+     * 0.44.0 쉬는 자세에서 시작해 쉬는 자세로 끝나는 같은 동작 (대장장이 창 패널: 망치질 사이에도 망치를 모루 위에 든 채 — 바닐라 자세로 돌아가지 않음).
+     * 첫 · 마지막 열쇠를 rest 번째 열쇠 (t 만 0 · 1) 로 바꾸고 들어오고 나가는 무게 (fade) 를 없앰. t = 0 이 쉬는 자세
+     */
+    public static Motion restLoop(Motion m, int rest) {
+        if (m == null || rest <= 0 || rest >= m.keys.size() - 1) return m;
+        List<Key> keys = new ArrayList<>(m.keys);
+        keys.set(0, m.keys.get(rest).copyAt(0F));
+        keys.set(keys.size() - 1, m.keys.get(rest).copyAt(1F));
+        return new Motion(m.name, m.ticks, m.parts, m.softLegs, 0F, 0F, m.hideFrom, m.hideTo, List.copyOf(keys), m.fp, m.tilt, m.trail, m.hold,
+                m.faceYaw, m.impacts);
     }
 
     /** 1인칭 열쇠: 손에 든 아이템 자리 (오른쪽 · 위 · 뒤 칸) · 회전 (q — 바닐라 1인칭 자세에서) */
@@ -625,6 +681,7 @@ public final class MotionPoses {
         out.flip = lerp(k0.flip, k1.flip, u);
         out.hide = m.hideFrom >= 0 && t >= m.hideFrom && t <= m.hideTo;
         out.hold = m.hold;
+        out.faceYaw = m.faceYaw;
         float w = 1;
         if (m.fadeIn > 0 && t < m.fadeIn) w = ease(t / m.fadeIn, "inout");
         if (m.fadeOut > 0 && t > 1 - m.fadeOut) w = Math.min(w, ease((1 - t) / m.fadeOut, "inout"));

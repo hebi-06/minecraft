@@ -53,8 +53,14 @@ public final class MotionRender {
         }
         state.setData(KEY, p == null ? NONE : p);
         if (p == null) return;
-        if (!Float.isNaN(p.yaw)) {
-            // 구르기 · 0.44.0 대장장이 망치질: 몸 · 머리가 그쪽을 봄 (머리 숙임은 동작의 head 열쇠)
+        if (!Float.isNaN(p.yaw) && p.faceYaw) {
+            // 0.44.0 대장장이 망치질: 몸이 모루 쪽으로 돌아섬 (들어오고 나갈 때 무게만큼 — 바로 돌지 않게), 머리는 몸 쪽 (숙임은 동작의 head 열쇠)
+            float w = Math.max(0F, Math.min(1F, p.w));
+            state.bodyRot += net.minecraft.util.Mth.wrapDegrees(p.yaw - state.bodyRot) * w;
+            state.yRot *= 1F - w;
+            state.xRot *= 1F - w;
+        } else if (!Float.isNaN(p.yaw)) {
+            // 구르기: 몸 · 머리가 구르는 쪽을 봄
             state.bodyRot = p.yaw;
             state.yRot = 0;
             state.xRot = 0;

@@ -5,7 +5,7 @@ tools/rpg_ui_art.py  →  src/main/resources/assets/mmorpg/textures/gui/sprites/
 
 - frame (32 × 32, 테두리 8): 검은 바깥선 · 짙은 금 · 금 (위 · 왼쪽 밝게, 아래 · 오른쪽 어둡게) · 안쪽 짙은 선 · 옅은 안쪽 선, 네 모서리 금 마름모 (가운데 붉은 보석).
   가운데는 비움 — 창 바탕 (남색 세로 그라데이션) 은 코드가 칠함 (RpgUi.panel).
-- frame_small (16 × 16, 테두리 4): 모서리 장식 없는 금테 (상자 탭 · 작은 창).
+- frame_small (16 × 16, 테두리 5 — 그림의 테는 4줄, 5번째 투명 줄까지 테두리로 잡아 타일 이음매가 보이지 않게): 모서리 장식 없는 금테 (상자 탭 · 작은 창).
 - slot (18 × 18): 어두운 파인 칸 (위 · 왼쪽 짙게, 아래 · 오른쪽 밝게).
 - model_bg (49 × 70): 인벤토리 사람 그림 칸 — 가운데가 밝은 남빛 · 금 테 · 발밑 금빛.
 - arrow (16 × 13): 제작 화살표 (금).
@@ -235,7 +235,9 @@ def icon_stack():
 
 def main():
     save(bevel_frame(32, 5, True), "frame", nine=8)
-    save(bevel_frame(16, 0, False), "frame_small", nine=4)
+    # 테두리 5: 안쪽 금 테 (4번째 줄) 다음 줄 (투명) 까지 테두리로 — 가운데를 타일로 늘어놓을 때 이음매에서 안쪽 테 색이 새어 세로 · 가로 줄로 보이지 않게
+    # (0.44.0 — 큰 창 (대장장이 상세) 에서 8칸마다 금빛 줄이 보였음)
+    save(bevel_frame(16, 0, False), "frame_small", nine=5)
     save(slot(), "slot")
     save(model_bg(), "model_bg")
     save(arrow(), "arrow")

@@ -46,6 +46,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
@@ -65,7 +66,8 @@ import org.joml.Quaternionf;
  *       ArtifactCraft — quiet: 눈앞 연출 · 알림 없이)</li>
  *   <li>단추를 누르면 창을 닫지 않고 망치질 ({@link #TICKS} — 창의 대장장이 패널 · 세상의 대장장이 NPC 가 같은 동작, 망치가 닿을 때 불꽃 · 소리) 이 끝난
  *       뒤 결과를 정함 (재료는 그때 받음 — 도중에 나가거나 죽으면 아무것도 쓰지 않음). 결과는 창에 (닫았으면 화면 제목)</li>
- *   <li>세상: NPC 둘레 {@link #ANVIL_RANGE} 칸에 모루가 있으면 그쪽을 보고 그 위를 침, 없으면 몸 앞에 잠깐 모루 (표시 엔티티) 를 놓음</li>
+ *   <li>세상: NPC 둘레 {@link #ANVIL_RANGE} 칸에 모루가 있으면 그쪽을 보고 그 윗면을 침, 없으면 옆으로 돌아서서 그 앞에 잠깐 모루 (표시 엔티티 — 1칸)
+ *       를 놓음</li>
  *   <li>모드가 없는 클라이언트 · 시험의 가짜 플레이어는 예전 상자 창 ({@link Smith#smithLoop}) — {@link #FORCE} · {@link #legacy} 로 시험이 고름</li>
  * </ul>
  */
@@ -82,9 +84,13 @@ public final class SmithUi {
     public static final List<Integer> IMPACTS = impacts();
     /** NPC 둘레에서 모루를 찾는 칸 */
     public static final double ANVIL_RANGE = CONF != null ? CONF.numOr("anvilRange", 2) : 2;
-    /** 모루가 없을 때 몸 앞에 놓는 모루 (표시 엔티티) 의 크기 · 몸에서의 거리 */
-    static final double TEMP_SCALE = 0.8;
-    static final double TEMP_DIST = 0.95;
+    /**
+     * 망치가 닿는 자리: 몸 앞 REACH 칸 · 높이 1칸 (poses.json smith_hammer 의 내려친 열쇠 — 망치 치는 면이 앞 1.15 · 높이 0.94 ~ 0.97 칸, 세상의
+     * 모루 (1칸) 윗면). 둘레 모루가 있으면 그 점을 모루 윗면 안으로 잡아 불꽃을 냄
+     */
+    static final double REACH = 1.15;
+    /** 모루가 없을 때 옆에 놓는 모루 (표시 엔티티) 의 크기 — 진짜 모루와 같은 1칸 (망치가 윗면에 닿게) */
+    static final double TEMP_SCALE = 1.0;
 
     public static final String ENHANCE = "enhance";
     public static final String RAISE = "raise";
@@ -480,22 +486,34 @@ public final class SmithUi {
     }
 
     /**
-     * 세상에서 칠 자리: 둘레 모루가 있으면 그 윗면 (NPC 쪽 가장자리) · 그쪽 yaw, 없으면 몸 방향 그대로 (몸 앞 TEMP_DIST 칸에 잠깐 모루 — 윗면 높이
-     * TEMP_SCALE)
+     * 세상에서 칠 자리: 둘레 모루가 있으면 그쪽 yaw · 망치가 닿는 점 (몸 앞 REACH 칸) 을 모루 윗면 안으로. 없으면 옆으로 돌아서서 (보던 사람에게
+     * 옆모습 — 사람과 대장장이 사이를 막지 않게: 오른쪽, 막혔으면 왼쪽) 그 앞 REACH 칸에 잠깐 모루
      */
     static Spot spot(Entity npc) {
         BlockPos a = anvilNear(npc);
         if (a != null) {
-            Vec3 top = new Vec3(a.getX() + 0.5, a.getY() + 1.02, a.getZ() + 0.5);
-            Vec3 to = V.flat(npc.position().subtract(top));
-            Vec3 hit = to.lengthSqr() < 1e-6 ? top : V.add(top, to.normalize(), 0.18);
             float yaw = Kit.lookRotation(npc.position(), new Vec3(a.getX() + 0.5, npc.getY(), a.getZ() + 0.5))[0];
-            return new Spot(hit, yaw, false);
+            Vec3 f = Vec3.directionFromRotation(0, yaw);
+            double x = Mth.clamp(npc.getX() + f.x * REACH, a.getX() + 0.12, a.getX() + 0.88);
+            double z = Mth.clamp(npc.getZ() + f.z * REACH, a.getZ() + 0.12, a.getZ() + 0.88);
+            return new Spot(new Vec3(x, a.getY() + 1.02, z), yaw, false);
         }
-        float yaw = npc.getYRot();
+        float yaw = sideYaw(npc);
         Vec3 f = Vec3.directionFromRotation(0, yaw);
-        Vec3 c = npc.position().add(f.x * TEMP_DIST, 0, f.z * TEMP_DIST);
-        return new Spot(new Vec3(c.x - f.x * 0.12, c.y + TEMP_SCALE + 0.02, c.z - f.z * 0.12), yaw, true);
+        Vec3 c = npc.position().add(f.x * REACH, 0, f.z * REACH);
+        return new Spot(new Vec3(c.x, c.y + TEMP_SCALE + 0.02, c.z), yaw, true);
+    }
+
+    /** 모루가 없을 때 돌아설 쪽: 몸의 오른쪽 (yaw + 90), 그 자리가 막혔으면 왼쪽 (둘 다 막혔으면 오른쪽) */
+    static float sideYaw(Entity npc) {
+        for (float turn : new float[] {90F, -90F}) {
+            float yaw = Mth.wrapDegrees(npc.getYRot() + turn);
+            Vec3 f = Vec3.directionFromRotation(0, yaw);
+            BlockPos p = BlockPos.containing(npc.getX() + f.x * REACH, npc.getY() + 0.5, npc.getZ() + f.z * REACH);
+            if (npc.level().getBlockState(p).getCollisionShape(npc.level(), p).isEmpty()
+                    && npc.level().getBlockState(p.above()).getCollisionShape(npc.level(), p.above()).isEmpty()) return yaw;
+        }
+        return Mth.wrapDegrees(npc.getYRot() + 90F);
     }
 
     /** 몸 앞에 잠깐 모루 (있으면 그대로 — 치우기를 미룸): 0 → TEMP_SCALE 로 커지며 나타남 · 연기 */
@@ -508,7 +526,7 @@ public final class SmithUi {
             return;
         }
         Vec3 f = Vec3.directionFromRotation(0, yaw);
-        Vec3 c = npc.position().add(f.x * TEMP_DIST, 0, f.z * TEMP_DIST);
+        Vec3 c = npc.position().add(f.x * REACH, 0, f.z * REACH);
         // 모루의 긴 쪽이 대장장이 앞을 가로지르게 (놓을 때처럼 — 바라보는 쪽의 시계 방향)
         Direction facing = Direction.fromYRot(yaw).getClockWise();
         t.d = FxDisplays.block(level, c, Blocks.ANVIL.defaultBlockState().setValue(AnvilBlock.FACING, facing), anvilTransform(0.01), 6000, null);

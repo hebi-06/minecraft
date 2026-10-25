@@ -170,7 +170,7 @@ public final class RpgSmithUiTests {
         finish(h, sp);
     }
 
-    /** NPC 와 모루: 둘레 모루 쪽을 봄 (yaw) · 잠깐 모루 없음 → 모루를 치우면 몸 방향 그대로 · 몸 앞에 잠깐 모루 (망치질 뒤 사라짐) */
+    /** NPC 와 모루: 둘레 모루 쪽을 봄 (yaw) · 잠깐 모루 없음 → 모루를 치우면 옆으로 돌아서서 (90°) 그 앞에 잠깐 모루 (망치질 뒤 사라짐) */
     @GameTest(maxTicks = 200)
     public void npcAndAnvil(GameTestHelper h) {
         ServerPlayer sp = forced(h);
@@ -194,7 +194,9 @@ public final class RpgSmithUiTests {
             level.setBlockAndUpdate(anvil, Blocks.AIR.defaultBlockState());
             SmithUi.action(sp, "do", "w:0", 0, 0);
             SmithNet.WorkPayload w2 = lastWork(sp);
-            h.assertTrue(w2 != null && w2 != w1 && Math.abs(Mth.wrapDegrees(w2.yaw() - npc.getYRot())) < 0.5F, "no anvil: body yaw " + (w2 == null ? null : w2.yaw()));
+            // 모루가 없으면 옆으로 돌아섬 (보던 사람에게 옆모습 — 오른쪽 · 막혔으면 왼쪽)
+            h.assertTrue(w2 != null && w2 != w1 && Math.abs(Math.abs(Mth.wrapDegrees(w2.yaw() - npc.getYRot())) - 90F) < 0.5F,
+                    "no anvil: turns sideways " + (w2 == null ? null : w2.yaw()) + " vs body " + npc.getYRot());
             h.assertTrue(SmithUi.tempAnvil(npc) != null, "temporary anvil placed");
             h.runAfterDelay(SmithUi.TICKS + 40, () -> {
                 h.assertTrue(SmithUi.tempAnvil(npc) == null, "temporary anvil removed after the hammering");

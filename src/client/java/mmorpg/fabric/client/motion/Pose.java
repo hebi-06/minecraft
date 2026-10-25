@@ -58,6 +58,8 @@ public final class Pose {
     public boolean hide;
     /** 0.44.0 주 손에 대신 드는 아이템 모델 (item_model id — 대장장이 망치, 없으면 null) */
     public String hold;
+    /** 0.44.0 몸이 yaw 쪽으로 돌아섬 (무게만큼 — 대장장이 망치질: 모루 쪽) */
+    public boolean faceYaw;
     /** 1인칭 무기: 오른쪽 · 위 · 뒤 (칸) · 회전 (바닐라 1인칭 자세에서) */
     public float fpX;
     public float fpY;

@@ -30,7 +30,6 @@ import net.minecraft.util.Util;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
-import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -75,18 +74,24 @@ public final class SmithScreen extends Screen {
     static final int DY = 26;
     static final int DW = 136;
     static final int DH = 194;
-    // 패널 안 자리 (패널 기준)
-    static final int SMITH_X = 40;
-    static final int FEET_Y = 160;
+    // 패널 안 자리 (패널 기준). 대장장이는 1칸 = FIG 로, 모루는 1칸 높이 (세상의 모루와 같은 비율) — 망치질 (poses.json smith_hammer) 의 망치 치는 면이
+    // 이 카메라로 모루 윗면 (HIT) 에 닿게 맞춤 (tools/smith_art.py 의 panel_layout 과 같은 계산)
+    static final int SMITH_X = 32;
+    static final int FEET_Y = 168;
     static final float FIG = 44F;
-    /** 대장장이 몸 방향 (정면 = 0 — 오른쪽 모루를 봄) */
-    static final float FACE = -58F;
-    static final int ANVIL_X = 62;
-    static final int ANVIL_Y = 124;
-    static final int ITEM_X = 83;
-    static final int ITEM_Y = 126;
-    static final int HIT_X = 80;
-    static final int HIT_Y = 129;
+    /** 대장장이 몸 방향 (정면 = 0 — 음수면 오른쪽 모루 쪽으로 돎) */
+    static final float FACE = -70F;
+    /** 카메라 기울기 (도 — 음수 = 조금 위에서 내려다봄: 모루 윗면 · 바닥이 보이는 배경 그림과 맞춤) */
+    static final float CAM = -8F;
+    static final int ANVIL_X = 55;
+    static final int ANVIL_Y = 125;
+    static final int ANVIL_W = 58;
+    static final int ANVIL_H = 48;
+    /** 모루 윗면의 망치가 닿는 곳 · 올린 것이 놓이는 곳 */
+    static final int HIT_X = 79;
+    static final int HIT_Y = 127;
+    static final int ITEM_X = 79;
+    static final int ITEM_Y = 125;
     static final int FORGE_X = 80;
     static final int FORGE_Y = 106;
 
@@ -342,6 +347,32 @@ public final class SmithScreen extends Screen {
         return BedrockText.toJava(s == null ? "" : s);
     }
 
+    /** 글자를 maxW 안에 (넓으면 가로로 줄임 — 자리가 너무 좁으면 그리지 않음) */
+    private void fit(GuiGraphicsExtractor g, String s, int x, int y, int maxW, int argb) {
+        if (maxW < 6 || s == null || s.isEmpty()) return;
+        GachaArt.textFit(g, font, s, x, y, maxW, argb);
+    }
+
+    /** 글자를 너비 w 안의 줄로 (" · " 에서 끊음 — 많아야 max 줄, 남는 것은 마지막 줄에 붙음: fit 이 줄임). 끊은 줄 앞 색은 다음 줄로 이어짐 */
+    private List<String> wrap(String s, int w, int max) {
+        List<String> out = new ArrayList<>();
+        if (max <= 1 || font.width(s) <= w) {
+            out.add(s);
+            return out;
+        }
+        String cur = "";
+        for (String part : s.split(" · ")) {
+            String next = cur.isEmpty() ? part : cur + " · " + part;
+            if (!cur.isEmpty() && font.width(next) > w && out.size() < max - 1) {
+                out.add(cur);
+                int c = cur.lastIndexOf('§');
+                cur = (c >= 0 && c + 1 < cur.length() ? cur.substring(c, c + 2) : "") + part;
+            } else cur = next;
+        }
+        out.add(cur);
+        return out;
+    }
+
     private static boolean in(int[] r, int x, int y) {
         return r != null && x >= r[0] && x < r[0] + r[2] && y >= r[1] && y < r[1] + r[3];
     }
@@ -381,7 +412,7 @@ public final class SmithScreen extends Screen {
         String who = v.npcName().isEmpty() ? "§6대장장이" : "§6대장장이 §f" + v.npcName();
         String jw = j(who);
         int nx = Math.max(x + 6, W - 26 - font.width(jw));
-        GachaArt.textFit(g, font, jw, nx, TAB_Y + 4, W - 26 - nx, 0xFFFFFFFF);
+        fit(g, jw, nx, TAB_Y + 4, W - 26 - nx, 0xFFFFFFFF);
     }
 
     // ---- 목록
@@ -448,7 +479,7 @@ public final class SmithScreen extends Screen {
             g.text(font, "▶", pageNext[0] + 4, pageNext[1] + 2, v.busy() ? 0xFF6A6A78 : RpgUi.GOLD_TEXT, false);
             String label = j("§6" + v.pages().get(page) + " §8" + (page + 1) + "/" + v.pages().size());
             int lw = Math.min(LW - 40, font.width(label));
-            GachaArt.textFit(g, font, label, LX + (LW - lw) / 2, LY + 4, LW - 40, 0xFFFFFFFF);
+            fit(g, label, LX + (LW - lw) / 2, LY + 4, LW - 40, 0xFFFFFFFF);
         } else {
             String title = switch (v.tab()) {
                 case SmithUi.RAISE -> "올릴 무기";
@@ -494,8 +525,8 @@ public final class SmithScreen extends Screen {
             // 이름 · 아래 줄 (오른쪽 배지 자리만큼 줄임)
             String badge = j(badge(e));
             int bw = badge.isEmpty() ? 0 : font.width(badge) + 4;
-            GachaArt.textFit(g, font, j(e.name()), r[0] + 21, y + 2, r[2] - 23 - bw, e.state() == 1 ? 0xFFA0A0A8 : 0xFFFFFFFF);
-            GachaArt.textFit(g, font, j("§7" + e.sub()), r[0] + 21, y + 11, r[2] - 23, 0xFFFFFFFF);
+            fit(g, j(e.name()), r[0] + 21, y + 2, r[2] - 23 - bw, e.state() == 1 ? 0xFFA0A0A8 : 0xFFFFFFFF);
+            fit(g, j("§7" + e.sub()), r[0] + 21, y + 11, r[2] - 23, 0xFFFFFFFF);
             if (!badge.isEmpty()) g.text(font, badge, r[0] + r[2] - 2 - font.width(badge), y + 2, 0xFFFFFFFF, true);
             if (e.state() == 1) g.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], 0x30000000);
             if (hover) {
@@ -511,7 +542,7 @@ public final class SmithScreen extends Screen {
             int ty = LIST_TOP + 30;
             for (String part : v.empty().split("\n")) {
                 String t = j(part);
-                GachaArt.textFit(g, font, t, LX + Math.max(4, (LW - font.width(t)) / 2), ty, LW - 8, 0xFFFFFFFF);
+                fit(g, t, LX + Math.max(4, (LW - font.width(t)) / 2), ty, LW - 8, 0xFFFFFFFF);
                 ty += 11;
             }
         }
@@ -543,7 +574,7 @@ public final class SmithScreen extends Screen {
             g.item(r.icon(), 0, 0);
             g.pose().popMatrix();
             String c = compact(r.count());
-            GachaArt.textFit(g, font, c, x + 14, ry + 5, cw - 15, r.count() > 0 ? 0xFFE8E0C8 : 0xFF8A8A96);
+            fit(g, c, x + 14, ry + 5, cw - 15, r.count() > 0 ? 0xFFE8E0C8 : 0xFF8A8A96);
             if (in(rr, mx, my)) tip = List.of(lit("§f" + r.name() + " §7" + mmorpg.core.Economy.fmt(r.count())));
         }
         return tip;
@@ -584,8 +615,8 @@ public final class SmithScreen extends Screen {
         RpgUi.slot(g, DX + 5, DY + 5, 26);
         RpgUi.gradeUnder(g, e.icon(), DX + 6, DY + 6, 24, now);
         GachaArt.item(g, e.icon(), DX + 18, DY + 18, 1.4F);
-        GachaArt.textFit(g, font, j(e.name()), DX + 35, DY + 7, DW - 41, 0xFFFFFFFF);
-        GachaArt.textFit(g, font, j("§7" + e.sub()), DX + 35, DY + 18, DW - 41, 0xFFFFFFFF);
+        fit(g, j(e.name()), DX + 35, DY + 7, DW - 41, 0xFFFFFFFF);
+        fit(g, j("§7" + e.sub()), DX + 35, DY + 18, DW - 41, 0xFFFFFFFF);
         RpgUi.sep(g, DX + 4, DX + DW - 4, DY + 34);
         int y = DY + 38;
         int bottom = DY + DH - 30; // 단추 위
@@ -608,7 +639,7 @@ public final class SmithScreen extends Screen {
         // 효과 줄
         for (String l : e.lines()) {
             if (y + 10 > bottom - 22) break;
-            GachaArt.textFit(g, font, j(l), x, y, w, 0xFFFFFFFF);
+            fit(g, j(l), x, y, w, 0xFFFFFFFF);
             y += 10;
         }
         // 고를 것 (공허의 갑옷 부위 · 한 벌)
@@ -628,7 +659,7 @@ public final class SmithScreen extends Screen {
                 g.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], on ? 0xC0806030 : h ? 0x60FFFFFF : 0x60000000);
                 g.outline(r[0], r[1], r[2], r[3], on ? 0xFFD6AA50 : 0x80C8A050);
                 String lb = j((vr.can() ? (on ? "§f" : "§e") : "§7") + vr.label());
-                GachaArt.textFit(g, font, lb, r[0] + Math.max(1, (bw - font.width(lb)) / 2), y + 3, bw - 2, 0xFFFFFFFF);
+                fit(g, lb, r[0] + Math.max(1, (bw - font.width(lb)) / 2), y + 3, bw - 2, 0xFFFFFFFF);
                 if (h) tip = List.of(lit("§f" + vr.label() + (vr.can() ? " §a만들 수 있음" : " §c재료 부족")));
             }
             y += 16;
@@ -668,8 +699,8 @@ public final class SmithScreen extends Screen {
                 String num = (c.enough() ? "§a" : "§c") + compact(c.have()) + "§7/" + compact(c.need());
                 String jn = j(num);
                 int nw = font.width(jn);
-                if (!two) GachaArt.textFit(g, font, j("§7" + c.name()), cx + 12, cy + 1, cw - 14 - nw, 0xFFFFFFFF);
-                GachaArt.textFit(g, font, jn, two ? cx + 12 : cx + cw - nw, cy + 1, two ? cw - 13 : nw, 0xFFFFFFFF);
+                if (!two) fit(g, j("§7" + c.name()), cx + 12, cy + 1, cw - 14 - nw, 0xFFFFFFFF);
+                fit(g, jn, two ? cx + 12 : cx + cw - nw, cy + 1, two ? cw - 13 : nw, 0xFFFFFFFF);
                 if (in(r, mx, my)) tip = List.of(lit("§f" + c.name()), lit("§7가진 수 " + (c.enough() ? "§a" : "§c") + mmorpg.core.Economy.fmt(c.have()) + " §7/ 필요 §f"
                         + mmorpg.core.Economy.fmt(c.need())));
             }
@@ -677,7 +708,7 @@ public final class SmithScreen extends Screen {
         }
         // 실패
         if (!e.fail().isEmpty() && y + 10 <= bottom) {
-            GachaArt.textFit(g, font, j(e.fail()), x, y, w, 0xFFFFFFFF);
+            fit(g, j(e.fail()), x, y, w, 0xFFFFFFFF);
             y += 10;
         }
         // 수호 주문서 (하락 위험이 있을 때)
@@ -689,13 +720,21 @@ public final class SmithScreen extends Screen {
             g.outline(x, y + 1, 9, 9, has ? 0xFFD6AA50 : 0xFF55556A);
             if (on) g.text(font, "✔", x + 1, y + 1, 0xFF7CE07C, false);
             String t = j((has ? "§f" : "§8") + "수호 주문서 쓰기 §7(" + e.scroll() + ")");
-            GachaArt.textFit(g, font, t, x + 13, y + 2, w - 13, 0xFFFFFFFF);
+            fit(g, t, x + 13, y + 2, w - 13, 0xFFFFFFFF);
             if (in(scrollRect, mx, my)) tip = List.of(lit("§6수호 주문서"), lit("§7실패해도 단계가 떨어지지 않음"), lit("§7(실패했을 때만 사라짐)"));
             y += 12;
         }
         // 알림 (서버 · 모자람)
         String msg = !v.message().isEmpty() ? v.message() : note;
-        if (msg != null && !msg.isEmpty()) GachaArt.textFit(g, font, j(msg), x, DY + DH - 40, w, 0xFFFFFFFF);
+        if (msg != null && !msg.isEmpty()) {
+            // 길면 두 줄 (" · " 에서 끊음 — 모자란 재료가 많을 때 글자가 납작해지지 않게)
+            List<String> ls = wrap(j(msg), w, 2);
+            int ny = Math.max(y + 1, DY + DH - 40 - 10 * (ls.size() - 1));
+            for (String l : ls) {
+                fit(g, l, x, ny, w, 0xFFFFFFFF);
+                ny += 10;
+            }
+        }
         // 큰 단추
         actionRect = new int[] {DX + 6, DY + DH - 28, DW - 12, 22};
         boolean busy = v.busy() || ClientSmith.work != null && ClientSmith.progress(0) < 1;
@@ -750,7 +789,7 @@ public final class SmithScreen extends Screen {
             g.fill(x0 + Math.round(px), y0 + Math.round(py), x0 + Math.round(px) + 1, y0 + Math.round(py) + 1, GachaArt.argb(alpha, p.rgb()));
         }
         // 모루
-        g.blitSprite(RenderPipelines.GUI_TEXTURED, ANVIL, x0 + ANVIL_X, y0 + ANVIL_Y, 48, 40);
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, ANVIL, x0 + ANVIL_X, y0 + ANVIL_Y, ANVIL_W, ANVIL_H);
         // 모루 위의 것: 망치질 중 = 올린 것 (달굼 빛), 결과 = 결과 아이템, 아니면 고른 것
         ClientSmith.Work w = ClientSmith.work;
         SmithNet.Result r = ClientSmith.result;
@@ -769,12 +808,28 @@ public final class SmithScreen extends Screen {
                 if (r.kind().equals("down")) dx = (float) Math.sin(p * 60) * 2.5F * Math.max(0, 1 - p * 2);
             }
             g.pose().pushMatrix();
-            g.pose().translate(x0 + ITEM_X + dx, y0 + ITEM_Y);
-            g.pose().rotate((float) (Math.PI / 4));
-            g.pose().scale(pop, pop * 0.62F);
-            g.item(item, -8, -8);
+            if (lying(item)) {
+                // 무기 (그림이 왼쪽 위 끝 → 오른쪽 아래 손잡이): 모루 위에 눕힘 — 끝이 오른쪽 (뿔 쪽) · 손잡이가 대장장이 쪽,
+                // 돌린 뒤 위에서 비스듬히 본 만큼 납작하게 (돌리기 → 줄이기 차례: 줄이기를 먼저 곱함)
+                g.pose().translate(x0 + ITEM_X + dx, y0 + ITEM_Y);
+                g.pose().scale(pop, pop * 0.55F);
+                g.pose().rotate((float) (Math.PI * 0.75));
+                g.item(item, -8, -8);
+            } else {
+                // 그 밖 (갑옷 · 장신구 · 아티팩트 · 활 · 방패): 모루 위에 세워 둠 (조금 작게 — 아래가 윗면에 닿음)
+                float sc = 0.75F * pop;
+                g.pose().translate(x0 + ITEM_X + dx, y0 + HIT_Y - 8F * sc);
+                g.pose().scale(sc, sc);
+                g.item(item, -8, -8);
+            }
             g.pose().popMatrix();
         }
+    }
+
+    /** 모루 위에 눕혀 놓는 것: RPG 무기 중 그림이 대각선인 것 (활 · 방패는 세움) */
+    private static boolean lying(ItemStack s) {
+        String type = CosmeticRender.weaponType(s);
+        return !type.isEmpty() && !type.equals("bow") && !type.equals("shield");
     }
 
     /** 대장장이 (3D — 그 NPC 의 모습, 없으면 기본 마네킹): 망치질 중이면 smith_hammer 자세, 늘 대장장이 망치를 듦 */
@@ -797,7 +852,7 @@ public final class SmithScreen extends Screen {
             as.setData(MotionRender.KEY, p != null ? p : MotionRender.NONE);
             as.bodyRot = 180F + FACE;
             as.yRot = 0F;
-            as.xRot = p == null ? 8F : 0F;
+            as.xRot = p == null ? 20F : 0F;
             as.walkAnimationPos = 0F;
             as.walkAnimationSpeed = 0F;
             as.isCrouching = false;
@@ -814,22 +869,39 @@ public final class SmithScreen extends Screen {
         float cy = (by0 + by1) / 2F;
         float tx = (ox + (SX + SMITH_X + sh[0]) * s - cx) / scale;
         float ty = (oy + (SY + FEET_Y + sh[1]) * s - cy) / scale;
-        Quaternionf cam = new Quaternionf().rotateX((float) Math.toRadians(6));
+        Quaternionf cam = new Quaternionf().rotateX((float) Math.toRadians(CAM));
         Quaternionf rot = new Quaternionf().rotateZ((float) Math.PI).mul(cam);
         g.entity(st, scale, new Vector3f(tx, ty, 0F), rot, cam, bx0, by0, bx1, by1);
     }
 
-    /** 창 패널의 자세 (ClientSmith 의 망치질 — 세상의 NPC 와 같은 시각) */
+    private static MotionPoses.Motion panelBase;
+    private static MotionPoses.Motion panelMotion;
+
+    /**
+     * 창 패널의 자세: 망치질 중이면 ClientSmith 의 시각 (세상의 NPC 와 같은 동작), 아니면 쉬는 자세 — 망치질의 첫 자세 (망치를 모루 위에 든 채
+     * 모루를 내려다봄) 에서 숨쉬듯 조금 움직임. 망치질은 쉬는 자세에서 시작해 쉬는 자세로 끝남 ({@link MotionPoses#restLoop})
+     */
     private static Pose panelPose(float partial) {
+        MotionPoses.Motion base = MotionPoses.get(SmithUi.MOTION);
+        if (base == null) return null;
+        if (panelBase != base) {
+            panelBase = base;
+            panelMotion = MotionPoses.restLoop(base, 1);
+        }
+        double t = 0;
         ClientSmith.Work w = ClientSmith.work;
-        if (w == null) return null;
-        MotionPoses.Motion m = MotionPoses.get(SmithUi.MOTION);
-        if (m == null) return null;
-        double t = (ClientMotions.ticks() + partial - w.start()) / w.ticks();
-        if (t < 0 || t >= 1) return null;
-        Pose p = MotionPoses.evaluate(m, (float) t, false, new Pose());
+        if (w != null) {
+            t = (ClientMotions.ticks() + partial - w.start()) / w.ticks();
+            if (t < 0 || t >= 1) t = 0;
+        }
+        Pose p = MotionPoses.evaluate(panelMotion, (float) t, false, new Pose());
         p.yaw = Float.NaN;
         p.hold = null;
+        if (t == 0) {
+            double sec = Util.getMillis() / 1000.0;
+            p.lean += (float) (0.025 * Math.sin(sec * 1.7));
+            p.headX += (float) (0.03 * Math.sin(sec * 1.7 + 0.8));
+        }
         return p;
     }
 
@@ -879,7 +951,7 @@ public final class SmithScreen extends Screen {
         int nw = Math.min(SW - 12, font.width(name));
         int ny = SY + SH - 18;
         g.fill(SX + (SW - nw) / 2 - 4, ny - 2, SX + (SW + nw) / 2 + 4, ny + 10, 0x90000000);
-        GachaArt.textFit(g, font, name, SX + (SW - nw) / 2, ny, SW - 12, 0xFFFFFFFF);
+        fit(g, name, SX + (SW - nw) / 2, ny, SW - 12, 0xFFFFFFFF);
         // 테
         g.outline(SX, SY, SW, SH, 0xC0C8A050);
         g.outline(SX + 1, SY + 1, SW - 2, SH - 2, 0x60000000);
@@ -930,7 +1002,7 @@ public final class SmithScreen extends Screen {
         GachaArt.textCentered(g, font, title, SX + SW / 2F, SY + 9, ts, GachaArt.argb(alpha, 0xFFFFFF));
         String text = j(r.text());
         int tw = Math.min(SW - 10, font.width(text));
-        GachaArt.textFit(g, font, text, SX + (SW - tw) / 2, SY + 22, SW - 10, GachaArt.argb(alpha, 0xFFFFFF));
+        fit(g, text, SX + (SW - tw) / 2, SY + 22, SW - 10, GachaArt.argb(alpha, 0xFFFFFF));
     }
 
     /** 대장간 소리 (가끔 불 타닥 — 작게) */
