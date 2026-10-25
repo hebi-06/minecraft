@@ -1084,9 +1084,9 @@ public final class RpgJobTests {
         }));
         steps.add(new Step(2, () -> {
             double main = avatarMain[0];
-            double x = TestDummies.dealt(z.get(1));
+            double far = TestDummies.dealt(z.get(1));
             double cm = w.critMult(); // 함께 도는 시험이 forceCrit 를 풀 수 있어 치명타 차이는 둘 다 맞는 것으로
-            h.assertTrue(near(x, main) || near(x, main * cm) || near(x * cm, main), "avatar area 100% at 4.5 blocks: " + x + " vs " + main);
+            h.assertTrue(near(far, main) || near(far, main * cm) || near(far * cm, main), "avatar area 100% at 4.5 blocks: " + far + " vs " + main);
             RpgCombat.forceCrit = null;
             JobSystem.setJob(sp, "reaper");
             for (Husk x : z) x.discard();
