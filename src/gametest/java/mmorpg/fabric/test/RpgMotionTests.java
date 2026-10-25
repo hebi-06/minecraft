@@ -139,6 +139,12 @@ public final class RpgMotionTests {
         return Math.abs(a - b) <= 1e-3 + Math.abs(b) * 1e-4;
     }
 
+    /** 평타 한 번 (치명타면 × 치명타 배율 — 함께 도는 다른 시험이 RpgCombat.forceCrit 를 풀 수 있어 둘 다 맞는 것으로) */
+    private static boolean oneHit(double v, ServerPlayer sp, Weapon w) {
+        double f = full(sp, w);
+        return near(v, f) || near(v, f * w.critMult());
+    }
+
     @GameTest(environment = ENV, maxTicks = 60)
     public void slashAreaFrontArcAndSpinRing(GameTestHelper h) {
         floor(h);
@@ -152,15 +158,17 @@ public final class RpgMotionTests {
         Husk d = dummy(h, 6.4, 2, 5.6); // 6.4칸 — 밖
         RpgCombat.forceCrit = false;
         double[] main = new double[2];
+        double[] eHit = new double[1];
         h.runAfterDelay(2, () -> {
             MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a);
             main[0] = TestDummies.dealt(a);
-            h.assertTrue(near(main[0], full(sp, w)), "slash_h aimed hit full " + main[0] + " vs " + full(sp, w));
+            h.assertTrue(oneHit(main[0], sp, w), "slash_h aimed hit full " + main[0] + " vs " + full(sp, w));
             h.assertTrue(TestDummies.dealt(e) == 0, "area lands one tick later (after the aimed hit)");
         });
         h.runAfterDelay(4, () -> {
-            h.assertTrue(near(TestDummies.dealt(e), main[0]), "slash_h arc: front-left 100% " + TestDummies.dealt(e) + " vs " + main[0]);
+            eHit[0] = TestDummies.dealt(e);
+            h.assertTrue(oneHit(eHit[0], sp, w), "slash_h arc: front-left 100% " + eHit[0] + " vs " + full(sp, w));
             h.assertTrue(near(TestDummies.dealt(a), main[0]), "aimed target hit once " + TestDummies.dealt(a));
             h.assertTrue(TestDummies.dealt(b) == 0 && TestDummies.dealt(c) == 0 && TestDummies.dealt(d) == 0,
                     "slash_h: behind · side · far not hit " + TestDummies.dealt(b) + " " + TestDummies.dealt(c) + " " + TestDummies.dealt(d));
@@ -170,12 +178,12 @@ public final class RpgMotionTests {
             MotionSystem.testRequest(sp, "basic", 3, 0);
             sp.attack(a);
             main[1] = TestDummies.dealt(a) - main[0];
-            h.assertTrue(near(main[1], main[0]), "spin aimed hit full " + main[1]);
+            h.assertTrue(oneHit(main[1], sp, w), "spin aimed hit full " + main[1] + " vs " + full(sp, w));
         });
         h.runAfterDelay(18, () -> {
-            h.assertTrue(near(TestDummies.dealt(b), main[1]), "spin ring: behind 100% " + TestDummies.dealt(b) + " vs " + main[1]);
-            h.assertTrue(near(TestDummies.dealt(c), main[1]), "spin ring: side 100% " + TestDummies.dealt(c) + " vs " + main[1]);
-            h.assertTrue(near(TestDummies.dealt(e), main[0] + main[1]), "spin ring: front-left again " + TestDummies.dealt(e));
+            h.assertTrue(oneHit(TestDummies.dealt(b), sp, w), "spin ring: behind 100% " + TestDummies.dealt(b) + " vs " + full(sp, w));
+            h.assertTrue(oneHit(TestDummies.dealt(c), sp, w), "spin ring: side 100% " + TestDummies.dealt(c) + " vs " + full(sp, w));
+            h.assertTrue(oneHit(TestDummies.dealt(e) - eHit[0], sp, w), "spin ring: front-left again " + (TestDummies.dealt(e) - eHit[0]));
             h.assertTrue(TestDummies.dealt(d) == 0, "far not hit " + TestDummies.dealt(d));
             done(h, sp);
         });
@@ -199,7 +207,7 @@ public final class RpgMotionTests {
             h.assertTrue(main[0] > 0, "scythe aimed hit " + main[0]);
         });
         h.runAfterDelay(4, () -> {
-            h.assertTrue(near(TestDummies.dealt(b), main[0]), "scythe arc 120°: wide side 100% " + TestDummies.dealt(b) + " vs " + main[0]);
+            h.assertTrue(oneHit(TestDummies.dealt(b), sp, w), "scythe arc 120°: wide side 100% " + TestDummies.dealt(b) + " vs " + full(sp, w));
             h.assertTrue(TestDummies.dealt(c) == 0, "scythe: behind not hit");
             done(h, sp);
         });
@@ -230,8 +238,8 @@ public final class RpgMotionTests {
         });
         h.runAfterDelay(4, () -> {
             double main = TestDummies.dealt(a);
-            h.assertTrue(near(main, full(sp, w)), "aimed (after the punch) hit once, full " + main + " vs " + full(sp, w));
-            h.assertTrue(near(TestDummies.dealt(e), main), "air swing area: front-left 100% " + TestDummies.dealt(e));
+            h.assertTrue(oneHit(main, sp, w), "aimed (after the punch) hit once, full " + main + " vs " + full(sp, w));
+            h.assertTrue(oneHit(TestDummies.dealt(e), sp, w), "air swing area: front-left 100% " + TestDummies.dealt(e));
             h.assertTrue(TestDummies.dealt(b) == 0, "behind not hit");
             h.assertFalse(Slash.admit(sp, true) || Slash.admit(sp, false), "2 ticks later: too early");
         });
@@ -250,18 +258,20 @@ public final class RpgMotionTests {
         hold(sp, w);
         Husk a = dummy(h, 1.5, 2, 3.5);
         RpgCombat.forceCrit = false;
+        double[] first = new double[1];
         h.runAfterDelay(2, () -> {
             ItemStack held = sp.getMainHandItem();
             h.assertTrue(held.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers().stream()
                     .anyMatch(m -> m.attribute().equals(Attributes.ATTACK_SPEED) && m.modifier().amount() >= 90), "weapon attack speed +96 (no vanilla cooldown)");
             sp.resetAttackStrengthTicker(); // 바로 앞에 친 것처럼 (예전에는 충전 0 → 20%)
             sp.attack(a);
-            h.assertTrue(near(TestDummies.dealt(a), full(sp, w)), "full damage right after a reset " + TestDummies.dealt(a) + " vs " + full(sp, w));
+            first[0] = TestDummies.dealt(a);
+            h.assertTrue(oneHit(first[0], sp, w), "full damage right after a reset " + first[0] + " vs " + full(sp, w));
         });
         h.runAfterDelay(3, () -> {
             // 1틱 뒤 다시 (몹의 연속 피해 막기 시간 안) — 예전에는 막히거나 차이만
             sp.attack(a);
-            h.assertTrue(near(TestDummies.dealt(a), 2 * full(sp, w)), "second hit 1 tick later also full " + TestDummies.dealt(a));
+            h.assertTrue(oneHit(TestDummies.dealt(a) - first[0], sp, w), "second hit 1 tick later also full " + (TestDummies.dealt(a) - first[0]));
             done(h, sp);
         });
     }

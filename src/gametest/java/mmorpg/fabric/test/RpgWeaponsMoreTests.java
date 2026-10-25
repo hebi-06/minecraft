@@ -173,7 +173,10 @@ public final class RpgWeaponsMoreTests {
             h.assertTrue(main[0] > 0, "main hit " + main[0]);
         });
         h.runAfterDelay(4, () -> {
-            h.assertTrue(Math.abs(TestDummies.dealt(b) - main[0]) < 1e-3, "slash area 100% " + TestDummies.dealt(b) + " vs " + main[0]);
+            double x = TestDummies.dealt(b);
+            double cm = w.critMult(); // 함께 도는 시험이 forceCrit 를 풀 수 있어 치명타 차이는 둘 다 맞는 것으로
+            h.assertTrue(Math.abs(x - main[0]) < 1e-3 || Math.abs(x - main[0] * cm) < 1e-3 || Math.abs(x * cm - main[0]) < 1e-3,
+                    "slash area 100% " + x + " vs " + main[0]);
             h.assertTrue(TestDummies.dealt(c) == 0, "behind not hit " + TestDummies.dealt(c));
             h.assertTrue(Math.abs(TestDummies.dealt(a) - main[0]) < 1e-3, "aimed hit once");
             done(h, sp);

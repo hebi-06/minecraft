@@ -129,8 +129,7 @@ public final class RpgRuneTests {
         Runes.Rune r = Runes.parseRune("rpg:rune_strike_common");
         h.assertTrue(RuneCast.castRune(sp, r, false), "cast");
         double bonus = RuneCast.power(sp, "strike") * r.def().num("bonus");
-        float s = sp.getAttackStrengthScale(0.5F);
-        double base = w.damage() * Combat.powerMultiplier(RpgStats.effective(sp), w, 0) * (0.2 + s * s * 0.8);
+        double base = w.damage() * Combat.powerMultiplier(RpgStats.effective(sp), w, 0); // 0.39.0: 공격 대기 충전 없이 온전한 피해
         sp.attack(z);
         double dealt = TestDummies.dealt(z);
         h.assertTrue(Math.abs(dealt - (base + bonus)) < 1e-3 || Math.abs(dealt - (base * w.critMult() + bonus)) < 1e-3,

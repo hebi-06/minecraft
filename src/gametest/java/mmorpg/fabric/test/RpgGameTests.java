@@ -289,12 +289,12 @@ public final class RpgGameTests {
         meetReqs(sp, w, 10);
         sp.setItemInHand(InteractionHand.MAIN_HAND, stackOf(w));
         Zombie z = dummy(h, 1.5, 2, 3.5);
-        float s = sp.getAttackStrengthScale(0.5F);
+        sp.resetAttackStrengthTicker(); // 0.39.0: 공격 대기 충전과 상관없이 온전한 피해
         RpgCombat.forceCrit = false;
         sp.attack(z);
         RpgCombat.forceCrit = null;
-        double expected = w.damage() * Combat.powerMultiplier(RpgData.of(sp).effective(), w, 0) * (0.2 + s * s * 0.8);
-        near(h, 500 - z.getHealth(), expected, 1e-3, "melee damage (strength " + s + ")");
+        double expected = w.damage() * Combat.powerMultiplier(RpgData.of(sp).effective(), w, 0);
+        near(h, 500 - z.getHealth(), expected, 1e-3, "melee damage (full, no attack-charge scaling)");
         List<Display.TextDisplay> nums = numbersNear(h, z.getEyePosition());
         h.assertTrue(!nums.isEmpty(), "damage number shown");
         String want = DamageNumbers.number(expected);
@@ -303,11 +303,10 @@ public final class RpgGameTests {
         z.setInvulnerableTime(0);
         z.damageCooldownTime = 0;
         float hp0 = z.getHealth();
-        float s2 = sp.getAttackStrengthScale(0.5F);
         RpgCombat.forceCrit = true;
         sp.attack(z);
         RpgCombat.forceCrit = null;
-        double crit = w.damage() * Combat.powerMultiplier(RpgData.of(sp).effective(), w, 0) * (0.2 + s2 * s2 * 0.8) * w.critMult();
+        double crit = w.damage() * Combat.powerMultiplier(RpgData.of(sp).effective(), w, 0) * w.critMult();
         near(h, hp0 - z.getHealth(), crit, 1e-3, "crit damage (numbers " + numbersNear(h, z.getEyePosition()).stream().map(RpgGameTests::textOf).toList() + ")");
         String wantCrit = DamageNumbers.number(crit) + "!";
         h.assertTrue(numbersNear(h, z.getEyePosition()).stream().anyMatch(e -> textOf(e).contains(wantCrit)), "crit number " + wantCrit);
