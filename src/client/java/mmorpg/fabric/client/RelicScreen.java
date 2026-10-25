@@ -382,9 +382,9 @@ public final class RelicScreen extends Screen {
         // 도움말 · 알림
         int hy = top + H - 28;
         g.fill(left + 10, hy - 3, left + W - 10, hy - 2, 0x60C8A050);
-        g.text(font, "§7칸 누르기 = 스탯 줄 고르기 §8· §7칸끼리 끌기 = 자리 바꾸기", left + 12, hy, 0xFFFFFFFF, true);
+        fitText(g, "§7칸 누르기 = 스탯 줄 고르기 §8· §7칸끼리 끌기 = 자리 바꾸기 §8· §7밖으로 = 빼기", left + 12, hy, W - 24);
         boolean noteOn = !note.isEmpty() && now - noteAt < 2600;
-        g.text(font, noteOn ? note : "§7같은 계열 이웃 " + Relics.tiersText() + " = 패시브 1 · 2 · 3단계 §8(밖으로 끌기 = 빼기)", left + 12, hy + 11, 0xFFFFFFFF, true);
+        fitText(g, noteOn ? note : "§7같은 계열 이웃 " + Relics.tiersText() + " = 패시브 1 · 2 · 3단계", left + 12, hy + 11, W - 24);
 
         // 끄는 그림
         if (dragging && dragFrom >= 0) {
@@ -503,9 +503,11 @@ public final class RelicScreen extends Screen {
             g.pose().popMatrix();
             statDots(g, r, x + 3, y + 3);
             int t = b.cellTier()[i];
+            if (t > 0) g.fill(x + S - 3 - t * 4, y + 1, x + S - 2, y + 6, 0xC0000000); // 단계 점 받침 (어두운 띠)
             for (int j = 0; j < t; j++) {
-                int dx = x + S - 5 - j * 3;
-                g.fill(dx, y + 3, dx + 2, y + 5, 0xFF000000 | GOLD);
+                int dx = x + S - 6 - j * 4;
+                g.fill(dx, y + 2, dx + 3, y + 5, 0xFF000000 | GOLD);
+                g.fill(dx, y + 2, dx + 1, y + 3, 0xFFFFF6C8); // 왼쪽 위 빛
             }
             int en = ClientRelics.enhance(i);
             if (en > 0) small(g, "§e+" + en, x + 3, y + S - 7, false);
