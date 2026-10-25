@@ -29,6 +29,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -356,5 +357,58 @@ public final class RpgWorkshopUiTests {
                 });
             });
         });
+    }
+
+    /**
+     * 세상의 물건 (표시 엔티티 — 둘레 사람이 보는 것): 상인은 첫 닿음에 산 물건이 몸 앞 (사는 사람 쪽 0.8칸 · 계산대 높이 1.12) 에 떠서 → 건넨 뒤 사라짐,
+     * 룬술사는 가는 룬이 일하는 동안 떠 있다가 끝나면 사라짐 (화면 사진첩은 CI 서버가 밀리면 시각이 어긋나서 — 여기서 틱으로 확인)
+     */
+    @GameTest(maxTicks = 120)
+    public void worldGoodsShown(GameTestHelper h) {
+        ServerPlayer sp = forced(h);
+        ServerLevel level = h.getLevel();
+        Vec3 at = h.absoluteVec(new Vec3(1.5, 2, 4.5)); // 사는 사람 (1.5, 2, 1.5) 의 3칸 남쪽
+        Mannequin npc = NpcData.spawnAt(level, at, sp.position());
+        Wallet.set(sp, Economy.Kind.SILVER, 999_999);
+        Item dagger = RpgItems.byId(Weapons.weaponFrom("dagger", 10, "common").id());
+        Store.storeLoop(sp, npc, 10, "weapons", null);
+        Workshop.action(sp, "do", "w:" + Weapons.weaponFrom("dagger", 10, "common").id(), 0, 0);
+        Vec3 base = npc.position(); // 일을 시작할 때의 NPC 자리 (세상 연출의 기준)
+        int hit0 = ShopUi.BUY_WORK.impacts().get(0);
+        h.runAfterDelay(hit0 - 3, () -> {
+            h.assertTrue(floating(level, npc, dagger).isEmpty(), "nothing before the first impact");
+            h.runAfterDelay(5, () -> {
+                List<Display.ItemDisplay> g = floating(level, npc, dagger);
+                h.assertTrue(g.size() == 1, "goods appear at the first impact (" + g.size() + ")");
+                Vec3 p = g.get(0).position();
+                double flat = Math.hypot(p.x - base.x, p.z - base.z);
+                h.assertTrue(Math.abs(p.y - (base.y + 1.12)) < 0.01 && Math.abs(flat - 0.8) < 0.01 && p.distanceTo(sp.position()) < base.distanceTo(sp.position()),
+                        "in front of the merchant (buyer side) at counter height " + p);
+                h.assertTrue(g.get(0).getBillboardConstraints() == Display.BillboardConstraints.CENTER, "faces the viewer");
+                h.runAfterDelay(ShopUi.BUY_WORK.ticks() - hit0 + 6, () -> {
+                    h.assertTrue(floating(level, npc, dagger).isEmpty(), "goods gone after the hand-over");
+                    Workshop.action(sp, "close", "", 0, 0);
+                    // 룬술사: 가는 룬이 일하는 동안 떠 있음 → 끝나면 사라짐
+                    sp.getInventory().setItem(20, RuneItems.stack("str", "rare"));
+                    sp.getInventory().setItem(21, RuneItems.stack("str", "rare"));
+                    Item rune = rune("str", "rare");
+                    RuneSmith.runesmithLoop(sp, npc, "grind", null);
+                    Workshop.action(sp, "do", "r:21:rpg:rune_str_rare:0", 0, 0);
+                    h.runAfterDelay(3, () -> {
+                        h.assertTrue(floating(level, npc, rune).size() == 1, "rune floats while ground");
+                        h.runAfterDelay(RuneSmithUi.GRIND_WORK.ticks() + 4, () -> {
+                            h.assertTrue(floating(level, npc, rune).isEmpty(), "rune gone after grinding");
+                            npc.discard();
+                            finish(h, sp);
+                        });
+                    });
+                });
+            });
+        });
+    }
+
+    /** NPC 둘레 (2.5칸) 의 떠 있는 아이템 중 item 인 것 */
+    private static List<Display.ItemDisplay> floating(ServerLevel level, Mannequin npc, Item item) {
+        return level.getEntitiesOfClass(Display.ItemDisplay.class, npc.getBoundingBox().inflate(2.5), d -> d.getItemStack().is(item));
     }
 }
