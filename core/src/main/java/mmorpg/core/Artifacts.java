@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 0.37.0 아티팩트 (자바 전용 규칙 덧붙임 — rules_more.json ARTIFACTS, 사용자: "아티팩트 추가 — 반지1 반지2 목걸이 귀걸이 팔찌, 등급 나눠서,
- * 각 아티팩트마다 올려주는게 다름"):
+ * 0.37.0 아티팩트 → 0.43.0 부터 이름만 "장신구" (자바 전용 규칙 덧붙임 — rules_more.json ARTIFACTS · 아이템 ID rpg:artifact_… 그대로,
+ * 새 아티팩트는 {@link Relics}). 사용자: "아티팩트 추가 — 반지1 반지2 목걸이 귀걸이 팔찌, 등급 나눠서, 각 아티팩트마다 올려주는게 다름":
  * <ul>
  * <li>종류 넷 (반지 · 목걸이 · 귀걸이 · 팔찌) × 등급 다섯 (일반 ~ 초월 — GRADES 순서) = 아이템 20, ID {@code rpg:artifact_<종류>_<등급>}.</li>
  * <li>칸 다섯 (slots — 반지 1 · 반지 2 · 목걸이 · 귀걸이 · 팔찌): 칸마다 그 종류만.</li>
@@ -231,13 +231,29 @@ public final class Artifacts {
      * 칸들 (칸 순서의 아이템 ID — 빈 칸은 null · "") 의 보너스 합: 칸의 종류가 맞고 착용 레벨이 되는 것만 (상한 없음 — {@link #combine} 이 적용)
      */
     public static Map<String, Double> totals(List<String> slotIds, double level) {
+        return totals(slotIds, null, level);
+    }
+
+    /** 같은 것 — 0.43.0 칸마다 강화 단계 (enhance — 칸 순서, null 이면 모두 0): 옵션 × (1 + {@link Enhance#gearBonus}) */
+    public static Map<String, Double> totals(List<String> slotIds, List<Integer> enhance, double level) {
         Map<String, Double> out = new LinkedHashMap<>();
         if (slotIds == null) return out;
         for (int i = 0; i < Math.min(slotIds.size(), size()); i++) {
             Art a = byId(slotIds.get(i));
             if (!fits(i, a) || !usable(a, level)) continue;
-            for (Map.Entry<String, Double> e : a.bonus().entrySet()) out.merge(e.getKey(), e.getValue(), Double::sum);
+            int n = enhance == null || i >= enhance.size() || enhance.get(i) == null ? 0 : enhance.get(i);
+            double k = 1 + Enhance.gearBonus(n);
+            for (Map.Entry<String, Double> e : a.bonus().entrySet()) out.merge(e.getKey(), e.getValue() * k, Double::sum);
         }
+        return out;
+    }
+
+    /** 강화 단계 n 의 옵션 (보너스 종류 → 값 × (1 + gearBonus)) */
+    public static Map<String, Double> bonusAt(Art a, int n) {
+        Map<String, Double> out = new LinkedHashMap<>();
+        if (a == null) return out;
+        double k = 1 + Enhance.gearBonus(n);
+        for (Map.Entry<String, Double> e : a.bonus().entrySet()) out.put(e.getKey(), e.getValue() * k);
         return out;
     }
 
@@ -254,30 +270,44 @@ public final class Artifacts {
 
     /** 옵션 줄 ["공격력 +4%", "치명타 확률 +3%p"] */
     public static List<String> optionLines(Art a) {
+        return optionLines(a, 0);
+    }
+
+    /** 같은 것 — 0.43.0 강화 단계 n 의 값 */
+    public static List<String> optionLines(Art a, int n) {
         List<String> out = new ArrayList<>();
         if (a == null) return out;
-        for (Map.Entry<String, Double> e : a.bonus().entrySet()) out.add(StatTree.bonusText(e.getKey(), e.getValue()));
+        for (Map.Entry<String, Double> e : bonusAt(a, n).entrySet()) out.add(StatTree.bonusText(e.getKey(), e.getValue()));
         return out;
     }
 
     /** 옵션 한 줄 ("공격력 +4% · 치명타 확률 +3%p") */
     public static String optionText(Art a) {
-        return String.join(" · ", optionLines(a));
+        return optionText(a, 0);
+    }
+
+    public static String optionText(Art a, int n) {
+        return String.join(" · ", optionLines(a, n));
     }
 
     /**
      * 아이템 설명 (§r 로 시작 — 아이템 · 상자 창 칸 공용): 종류 · 칸, 등급 · 착용 레벨 (level &lt; 0 = 모름 → 레벨 비교 없음), 옵션, 설명
      */
     public static List<String> lore(Art a, double level) {
+        return lore(a, 0, level);
+    }
+
+    /** 같은 것 — 0.43.0 강화 단계 n (이름 줄 · 옵션 값) */
+    public static List<String> lore(Art a, int n, double level) {
         List<String> out = new ArrayList<>();
         if (a == null) return out;
         Type t = type(a.type());
         List<Integer> where = slotsFor(a.type());
-        out.add("§r§d아티팩트 §7· " + a.typeName() + (where.size() > 1 ? " §8(칸 " + where.size() + "개)" : ""));
+        out.add("§r§d장신구 §7· " + a.typeName() + (where.size() > 1 ? " §8(칸 " + where.size() + "개)" : ""));
         boolean ok = level < 0 || usable(a, level);
         out.add("§r" + a.gradeColor() + a.gradeName() + " §r§7· " + (ok ? "§7" : "§c") + "착용 " + a.level() + "렙"
-                + (ok || level < 0 ? "" : " §8(지금 " + Js.str(Math.floor(level)) + ")"));
-        for (String line : optionLines(a)) out.add("§r§a" + line);
+                + (ok || level < 0 ? "" : " §8(지금 " + Js.str(Math.floor(level)) + ")") + (n > 0 ? " §7· §e강화 +" + n : ""));
+        for (String line : optionLines(a, n)) out.add("§r§a" + line);
         if (t != null && !t.desc().isEmpty()) out.add("§r§8" + t.desc());
         return out;
     }

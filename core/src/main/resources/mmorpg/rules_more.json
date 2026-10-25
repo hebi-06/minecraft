@@ -682,6 +682,76 @@
       "transcend": {"gold": 6, "items": {"rpg:loot_void_leaper": 15, "rpg:loot_void_stalker": 15, "rpg:laevateinn_shard": 2, "rpg:muspel_heart": 1}}
     }
   },
+  "ENHANCE_GEAR": {
+    "_comment": "0.43.0 장신구 · 아티팩트 강화 (사용자: \"아티팩트랑 장신구도 강화가 가능함\") — 대장장이 강화 창의 \"장신구 · 아티팩트\" 탭 (가방 · 낀 장신구 칸 · 아티팩트 판 칸). 단계 · 성공 확률 · 재료 · 실패 하락 · 수호 주문서 · 알림은 무기 강화 (rules.json ENHANCE) 그대로 — 재료 × costScale (올림). 효과: 장신구 옵션 둘 · 아티팩트 스탯 줄 × (1 + bonus[단계]) — 아티팩트 패시브는 강화와 무관 (연결 단계만). 아이템 구성 요소는 무기와 같은 mmorpg:enhance (0 ~ 10).",
+    "bonus": [0, 0.04, 0.08, 0.12, 0.17, 0.22, 0.28, 0.34, 0.40, 0.45, 0.50],
+    "costScale": 1
+  },
+  "RELICS": {
+    "_comment": "0.43.0 아티팩트 (core.Relics — 0.37.0 아티팩트 (ARTIFACTS) 는 이름만 '장신구'. 사용자: \"아티팩트는 본인이 어떻게 설계 할지에 따라서 해당 스탯들이 달라지게, 총 10종류, 꽂기만 하면 스탯을 본인이 고를 수 있음, 잘 연결되면 패시브\" · 고른 것: 판 위 이웃 연결 · 보조 스탯 8종 · 신화 유물 열 · 보스 · 몬스터 드랍). 판 size × size 칸 (3 × 3 = 9) — 칸마다 아티팩트 하나 (같은 종류 여러 칸 가능) · 칸마다 스탯 줄 하나 (lines 의 8종 중 고름 — 언제든 무료로 바꿈, 값 = 꽂은 아티팩트의 등급 × 강화 ENHANCE_GEAR). 아티팩트마다 계열 (stats — 힘 · 민첩 · 체력 · 마력 하나 또는 둘): 위아래 · 옆 이웃이 같은 계열이면 선이 이어지고, 한 계열로 이어진 묶음 (칸 수) 이 tiers (3 · 5 · 7) 이상이면 그 묶음 안 아티팩트의 패시브가 1 · 2 · 3단계 (두 계열이면 큰 쪽, 같은 종류가 여러 칸이면 가장 높은 단계 하나). 착용 레벨이 모자란 칸은 스탯 · 연결 · 패시브 모두 없음. 패시브 값은 [1단계, 2단계, 3단계] (퍼센트는 % 숫자, Sec 는 초). 드랍: drops.monsters (몬스터 레벨 구간마다 [등급, 확률] — 잡은 사람 하나) · drops.bosses (보스마다 [등급, 확률] — 보상을 받는 사람마다, 확률 1 = 반드시), 종류는 order 중 같은 확률.",
+    "board": {"size": 3, "tiers": [3, 5, 7]},
+    "statColors": {"str": "FF5A5A", "dex": "5CE65C", "vit": "F070F0", "int": "6A8CFF"},
+    "grades": {
+      "common": {"level": 10},
+      "rare": {"level": 20},
+      "noble": {"level": 30},
+      "hero": {"level": 40},
+      "transcend": {"level": 50, "glint": true}
+    },
+    "lines": {
+      "atk": [0.4, 0.6, 0.9, 1.2, 1.5],
+      "crit": [0.4, 0.6, 0.9, 1.2, 1.5],
+      "critDmg": [2, 3, 4.5, 6, 8],
+      "rune": [0.8, 1.2, 1.8, 2.4, 3.2],
+      "cdr": [0.5, 0.8, 1.2, 1.6, 2],
+      "hp": [4, 6, 9, 12, 16],
+      "def": [0.4, 0.6, 0.9, 1.2, 1.5],
+      "speed": [0.6, 0.9, 1.4, 1.8, 2.5]
+    },
+    "order": ["megingjord", "skidbladnir", "idunn", "mimir", "jarngreipr", "aegishjalmr", "draupnir", "gjallarhorn", "gleipnir", "brisingamen"],
+    "types": {
+      "megingjord": {"name": "메긴교르드", "title": "힘의 허리띠", "stats": ["str"], "desc": "두르면 힘이 두 배가 된다는 천둥신의 허리띠",
+        "passive": {"name": "두 배의 힘", "text": "평타 {every}번째마다 그 평타 피해 ×{mult}", "every": 5, "mult": [1.2, 1.35, 1.5]}},
+      "skidbladnir": {"name": "스키드블라드니르", "title": "접히는 배", "stats": ["dex"], "desc": "늘 순풍을 받고 주머니에 접혀 들어가는 배",
+        "passive": {"name": "순풍", "text": "이동 속도 +{speed}% · 구른 뒤 {afterSec}초 동안 가하는 피해 +{dealt}%", "speed": [3, 5, 8], "afterSec": 2, "dealt": [4, 7, 10]}},
+      "idunn": {"name": "이둔의 사과", "title": "젊음의 사과", "stats": ["vit"], "desc": "신들의 젊음을 지키는 황금 사과",
+        "passive": {"name": "젊음의 사과", "text": "체력이 {below}% 아래로 떨어지면 최대 체력 {heal}% 회복 ({cooldownSec}초에 한 번)", "below": 35, "heal": [10, 15, 20], "cooldownSec": 60}},
+      "mimir": {"name": "미미르의 샘", "title": "지혜의 샘", "stats": ["int"], "desc": "눈 하나와 바꾼 지혜가 고인 샘",
+        "passive": {"name": "지혜의 일격", "text": "룬 피해가 {chance}% 확률로 ×{mult}", "chance": [8, 14, 20], "mult": 1.5}},
+      "jarngreipr": {"name": "야른그레이프르", "title": "쇠장갑", "stats": ["str", "dex"], "desc": "망치를 쥐고 던지게 해 준 쇠장갑",
+        "passive": {"name": "쇠장갑", "text": "무기 스킬 · 직업 스킬 피해 +{skill}%", "skill": [5, 9, 13]}},
+      "aegishjalmr": {"name": "에기스햘름", "title": "공포의 투구", "stats": ["str", "vit"], "desc": "보는 이에게 두려움을 심는 투구",
+        "passive": {"name": "공포", "text": "{range}칸 안 적이 나에게 주는 피해 −{cut}%", "range": 4, "cut": [5, 8, 12]}},
+      "draupnir": {"name": "드라우프니르", "title": "불어나는 반지", "stats": ["str", "int"], "desc": "아홉째 밤마다 여덟 개의 금반지를 떨구는 반지",
+        "passive": {"name": "아홉째 밤", "text": "평타 {every}번째마다 금고리 {rings}개 — 둘레 {radius}칸에 위력 ×{mult}씩", "every": 9, "rings": 8, "radius": 3, "mult": [0.15, 0.25, 0.35]}},
+      "gjallarhorn": {"name": "걀라르호른", "title": "울리는 뿔피리", "stats": ["dex", "vit"], "desc": "마지막 싸움을 알리는 파수꾼의 뿔피리",
+        "passive": {"name": "파수꾼의 나팔", "text": "{cooldownSec}초마다 울림 — {radius}칸 안 아군 {durationSec}초 동안 가하는 피해 +{dealt}% · 받는 피해 −{cut}%", "cooldownSec": 40, "radius": 12, "durationSec": 10, "dealt": [5, 8, 12], "cut": [3, 5, 8]}},
+      "gleipnir": {"name": "글레이프니르", "title": "보이지 않는 끈", "stats": ["dex", "int"], "desc": "늑대를 묶은 여섯 가지 없는 것으로 꼰 끈",
+        "passive": {"name": "묶는 끈", "text": "평타로 맞힌 적을 {durationSec}초 묶음 (느림 — 보스 제외) · 묶인 적이 받는 피해 +{taken}% (같은 적 {againSec}초에 한 번)", "durationSec": 3, "againSec": 6, "slow": 1, "taken": [3, 5, 8]}},
+      "brisingamen": {"name": "브리싱가멘", "title": "불꽃 목걸이", "stats": ["vit", "int"], "desc": "난쟁이 넷이 빚은 불꽃 같은 목걸이",
+        "passive": {"name": "여신의 축복", "text": "룬을 쓰면 보호막 (최대 체력 {shield}% · {durationSec}초)", "shield": [3, 5, 7], "durationSec": 5}}
+    },
+    "drops": {
+      "monsters": [
+        {"minLevel": 4, "maxLevel": 19, "rolls": [["common", 0.01]]},
+        {"minLevel": 20, "maxLevel": 39, "rolls": [["rare", 0.008]]},
+        {"minLevel": 40, "maxLevel": 99, "rolls": [["noble", 0.008], ["hero", 0.002]]}
+      ],
+      "bosses": {
+        "scarecrow_king": [["common", 1]],
+        "scorpions": [["common", 1], ["rare", 0.3]],
+        "kraken": [["rare", 1]],
+        "great_worm": [["rare", 1]],
+        "jormungandr": [["rare", 1], ["noble", 0.4]],
+        "nidhogg": [["noble", 1]],
+        "skoll_hati": [["noble", 1]],
+        "ymir": [["noble", 1], ["hero", 0.4]],
+        "surtr": [["hero", 1], ["transcend", 0.25]],
+        "void_knight": [["hero", 1], ["transcend", 0.5]],
+        "hel": [["transcend", 1], ["transcend", 0.3]]
+      }
+    }
+  },
   "TRAIL": {
     "_comment": "0.40.0 참격 궤적 (사용자 \"참격 이펙트도 바꾸자 모션에 맞게 칼이 지나간 곳에 참격이 남게\" — 사진처럼 흰 초승달 띠). 근접 무기 (방패 빼고) 를 든 사람이 궤적 구간이 있는 동작 (클라이언트 assets/mmorpg/motion/poses.json trail — 가로 · 세로 · 회전 베기 · X자 · 내려찍기 · 내려치기 · 검기 베기 · 연속 베기 · 내려찍기 (스킬) · 도약 내려찍기 · 두 바퀴 회전) 을 하는 동안 무기 손잡이 쪽 (from — 손잡이 → 무기 끝 몫) 에서 무기 끝까지 지나간 자리에 띠가 남고 life 틱 동안 옅어지며 좁아짐 (taper — 오래된 끝의 너비 몫). 겹: 등급 기운 (영웅 · 초월 — glowTo 너머 layers.auraOut ~ 안 auraIn) · 무기 색 빛 (무기 끝 너머 glowTo ~ 안 layers.glowIn — from ~ 무기 끝 사이 몫) · 흰 심지 (from ~ 무기 끝) · 마검 룬. alpha = 겹마다 불투명도. fp = 내 1인칭 띠 (무기가 카메라를 축으로 돌아 실제 띠는 옆으로 보이므로 — 무기 끝이 지나간 화면 길을 바깥 가장자리로 두고 화면에서 길에 직각으로 무기 길이 × width (최대 maxWidth 칸) 만큼 넓힘, alpha = 불투명 배율). near = 카메라에서 이 거리 (칸) 안은 옅어짐 [0 이 되는 거리, 다 보이는 거리] — fp 내 1인칭 띠 · world 세계 띠 (1인칭 화면 가까이를 지나는 남의 궤적). 틱 사이도 maxStep 틱마다 (무기 끝이 maxMove 칸 넘게 움직이면 더 잘게) 찍음. basic = 서버가 예전 눈앞 초승달 참격을 그리지 않는 평타 동작 (궤적이 대신 — 소리 · 맞힌 연출 · 요구 조건이 모자랄 때 회색 참격은 그대로). 모양 · 거리 미리 보기: python3 tools/blade_trail_preview.py.",
     "enabled": true,

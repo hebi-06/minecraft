@@ -32,6 +32,32 @@ public final class Enhance {
         return new Cost(s.num("rate"), Math.ceil(s.num("stone") * k - 1e-9), Math.ceil(s.num("bright") * k - 1e-9), n + 1 >= ENHANCE.num("downFrom"));
     }
 
+    // ------------------------------------------------------------------ 0.43.0 장신구 · 아티팩트 강화 (rules_more ENHANCE_GEAR — 자바 전용)
+
+    private static final Obj GEAR = Rules.get().root().objOrNull("ENHANCE_GEAR");
+    private static final List<Double> GEAR_BONUS = GEAR == null ? List.of() : GEAR.numbersOrNull("bonus");
+
+    /** 장신구 · 아티팩트 강화를 쓰는지 (순수 규칙에는 없음) */
+    public static boolean gearEnabled() {
+        return GEAR != null && !GEAR_BONUS.isEmpty();
+    }
+
+    /** 장신구 옵션 · 아티팩트 스탯 줄의 강화 배율 몫 (단계 n — 0 ~ max, 없으면 0): 값 × (1 + gearBonus) */
+    public static double gearBonus(double n) {
+        if (GEAR_BONUS.isEmpty()) return 0;
+        int i = (int) Math.max(0, Math.min(Math.min(MAX, GEAR_BONUS.size() - 1), Math.floor(Double.isNaN(n) ? 0 : n)));
+        return GEAR_BONUS.get(i);
+    }
+
+    /** 장신구 · 아티팩트 강화 한 번 (n → n + 1): 무기와 같은 확률 · 하락, 재료 × ENHANCE_GEAR.costScale (올림). 없는 단계면 null */
+    public static Cost gearCost(double n, String gradeId) {
+        Cost c = enhanceCost(n, gradeId);
+        if (c == null) return null;
+        double k = GEAR == null ? 1 : GEAR.numOr("costScale", 1);
+        if (k == 1) return c;
+        return new Cost(c.rate(), Math.ceil(c.stone() * k - 1e-9), Math.ceil(c.bright() * k - 1e-9), c.down());
+    }
+
     /**
      * weapons.js enhanceOf, given the item's stored "rpg:enhance" value: a positive number floored and
      * capped at 10, anything else 0.
