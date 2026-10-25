@@ -5,6 +5,7 @@
 (v = 0 무기 끝 쪽 바깥 가장자리 → v = 1 손잡이 쪽 안 가장자리). 흰색 그림 + 알파 (색은 꼭짓점 색으로 입힘), 흐리게 늘림 (blur).
 - blade_trail_core: 바깥 가장자리가 또렷하고 밝은 흰 띠 → 안쪽으로 부드럽게 옅어짐 (사진처럼 넓은 흰 띠) + 바람결 줄 (v 마다 조금씩 다른 밝기)
 - blade_trail_glow: 넓고 부드러운 빛 (무기 색) — 바깥으로 조금 넘침
+맨 위 · 아래 한 줄은 늘 투명 (BladeTrails 가 겹마다 같은 사각형에 v 만 달리 붙여 그 밖은 가장자리 줄이 늘어나므로).
 
   python3 tools/trail_textures.py
 """
@@ -45,7 +46,8 @@ def write(name, fn):
     px = im.load()
     for y in range(H):
         v = (y + 0.5) / H
-        a = round(fn(v) * 255)
+        # 맨 위 · 아래 줄은 투명: 한 사각형에 여러 겹을 그려 v 가 0 ~ 1 밖으로 나가면 (clamp) 이 줄이 늘어남
+        a = 0 if y in (0, H - 1) else round(fn(v) * 255)
         for x in range(W):
             px[x, y] = (255, 255, 255, a)
     os.makedirs(OUT, exist_ok=True)

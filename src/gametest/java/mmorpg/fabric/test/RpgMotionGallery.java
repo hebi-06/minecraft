@@ -281,18 +281,30 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             ctx.waitTicks(3);
             double[] got = ctx.computeOnClient(mc -> BladeTrails.captured);
             double[] want = ctx.computeOnClient(mc -> BladeTrails.testWorldBlade(id));
+            String model = ctx.computeOnClient(mc -> mc.level.getEntity(id) instanceof net.minecraft.client.entity.ClientAvatarEntity av
+                    ? String.valueOf(av.getSkin().model()) : "-");
             ctx.runOnClient(mc -> BladeTrails.captureEntity = Integer.MIN_VALUE);
             check(got != null && want != null, "captured " + c[0]);
             if (got != null && want != null) {
                 double dg = dist(got, want, 0);
                 double dt = dist(got, want, 3);
                 worst = Math.max(worst, Math.max(dg, dt));
-                check(dg < 0.05 && dt < 0.08, String.format("3rd person blade = render %s %s grip %.3f tip %.3f", c[0], c[1], dg, dt));
+                check(dg < 0.02 && dt < 0.03, String.format("3rd person blade = render %s %s (%s) grip %.3f tip %.3f", c[0], c[1], model, dg, dt));
             }
             discard(server, row);
             ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
         }
-        LOG.info("[motion-gallery] trail kinematics worst {}", String.format("%.4f", worst));
+        LOG.info("[motion-gallery] trail kinematics worst {} (my model {})", String.format("%.4f", worst),
+                ctx.computeOnClient(mc -> mc.player == null ? "-" : String.valueOf(mc.player.getSkin().model())));
+        // 그리는 방식 (렌더 타입의 파이프라인 — 깊이 쓰기 · 깊이 시험 · 면 버리기 · 섞기): 로그로 남겨 둠
+        ctx.runOnClient(mc -> {
+            net.minecraft.resources.Identifier tex = mmorpg.fabric.Mmorpg.id("textures/fx/blade_trail_core.png");
+            LOG.info("[motion-gallery] pipeline {}", pipeline("text", net.minecraft.client.renderer.rendertype.RenderTypes.text(tex)));
+            LOG.info("[motion-gallery] pipeline {}", pipeline("eyes", net.minecraft.client.renderer.rendertype.RenderTypes.eyes(tex)));
+            LOG.info("[motion-gallery] pipeline {}", pipeline("entityTranslucentEmissive", net.minecraft.client.renderer.rendertype.RenderTypes.entityTranslucentEmissive(tex)));
+            LOG.info("[motion-gallery] pipeline {}", pipeline("beaconBeam", net.minecraft.client.renderer.rendertype.RenderTypes.beaconBeam(tex, true)));
+            LOG.info("[motion-gallery] pipeline {}", pipeline("itemTranslucent", net.minecraft.client.renderer.rendertype.RenderTypes.itemTranslucent(tex)));
+        });
         int me = ctx.computeOnClient(mc -> mc.player.getId());
         hideGui(ctx, false); // 1인칭 손은 화면 표시가 켜져 있어야 그려짐
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
@@ -324,12 +336,13 @@ public final class RpgMotionGallery implements FabricClientGameTest {
                 check(dg < 0.03 && dt < 0.05, String.format("1st person blade = render %s %s grip %.3f tip %.3f", c[0], type, dg, dt));
             }
         }
-        // (2) 실제로 눌러 찍음: 3인칭 (앞 · 시야 50) · 1인칭 — 칼은 가로 → 세로 → 회전
-        for (CameraType cam : new CameraType[] {CameraType.THIRD_PERSON_FRONT, CameraType.FIRST_PERSON}) {
+        // (2) 실제로 눌러 찍음: 3인칭 앞 (시야 50) · 3인칭 뒤 (보통 3인칭 — 시야 70) · 1인칭 — 칼은 가로 → 세로 → 회전
+        for (CameraType cam : new CameraType[] {CameraType.THIRD_PERSON_FRONT, CameraType.THIRD_PERSON_BACK, CameraType.FIRST_PERSON}) {
             boolean tp = cam != CameraType.FIRST_PERSON;
+            String tag = cam == CameraType.THIRD_PERSON_FRONT ? "tp_" : cam == CameraType.THIRD_PERSON_BACK ? "tb_" : "fp_";
             hideGui(ctx, tp);
             ctx.runOnClient(mc -> mc.options.setCameraType(cam));
-            fov(ctx, tp ? 50 : 70);
+            fov(ctx, cam == CameraType.THIRD_PERSON_FRONT ? 50 : 70);
             ctx.getInput().lookAt(180F, tp ? 8F : 0F);
             for (String[] row : TRAILS) {
                 server.runOnServer(sv -> {
@@ -347,7 +360,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
                     check(mt[0].equals(cur), "trail swing " + row[0] + " " + mt[0] + " (" + cur + ")");
                     int samples = ctx.computeOnClient(mc -> tp ? BladeTrails.lastWorldSamples : BladeTrails.lastFpSamples);
                     check(samples >= 6, (tp ? "3rd" : "1st") + " person trail samples " + row[0] + " " + mt[0] + " " + samples);
-                    ctx.takeScreenshot(TestScreenshotOptions.of("mo_trail_" + (tp ? "tp_" : "fp_") + row[0] + "_" + mt[0]).withSize(960, 540));
+                    ctx.takeScreenshot(TestScreenshotOptions.of("mo_trail_" + tag + row[0] + "_" + mt[0]).withSize(960, 540));
                     ctx.waitTicks(Motions.attackInterval() + 1 - wait);
                 }
             }
@@ -357,6 +370,25 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         hideGui(ctx, false);
         server.runOnServer(sv -> player(sv).getInventory().clearContent());
         ctx.waitTicks(10);
+    }
+
+    /** 렌더 타입의 파이프라인 값 (필드 이름 = 값 — 깊이 쓰기 · 깊이 시험 · 면 버리기 · 섞기 …, 시그니처 목록에 없는 것을 로그로 봄) */
+    private static String pipeline(String name, net.minecraft.client.renderer.rendertype.RenderType t) {
+        StringBuilder sb = new StringBuilder(name).append(" →");
+        try {
+            Object p = t.pipeline();
+            for (Class<?> k = p.getClass(); k != null && k != Object.class; k = k.getSuperclass()) {
+                for (java.lang.reflect.Field f : k.getDeclaredFields()) {
+                    if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+                    f.setAccessible(true);
+                    String v = String.valueOf(f.get(p));
+                    sb.append(' ').append(f.getName()).append('=').append(v.length() > 80 ? v.substring(0, 80) + "…" : v);
+                }
+            }
+        } catch (ReflectiveOperationException | RuntimeException e) {
+            sb.append(" (").append(e).append(')');
+        }
+        return sb.toString();
     }
 
     private static double dist(double[] a, double[] b, int o) {
@@ -370,6 +402,11 @@ public final class RpgMotionGallery implements FabricClientGameTest {
 
     private void area(ClientGameTestContext ctx, TestServerContext server) {
         server.runCommand("tp @a 0.5 -60 0.5 180 0"); // 북쪽 (-z) 을 봄
+        server.runOnServer(sv -> {
+            ServerPlayer sp = player(sv);
+            sp.getInventory().setItem(0, weapon("sword")); // 앞 부분 (궤적) 이 가방을 비움
+            sp.getInventory().setSelectedSlot(0);
+        });
         ctx.getInput().lookAt(180F, 0F);
         ctx.waitTicks(25); // 앞 평타에서 충분히 지남
         // 앞 오른쪽 비스듬히 (약 37° · 2.5칸 — 조준선 밖) 과 뒤 (1.5칸)

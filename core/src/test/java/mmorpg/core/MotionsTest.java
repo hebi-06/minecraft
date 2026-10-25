@@ -105,6 +105,17 @@ public final class MotionsTest {
         check(Motions.trailEnabled(), "trail on");
         for (String m : List.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "smite")) check(Motions.trailBasic(m), "trail basic " + m);
         check(!Motions.trailBasic("thrust") && !Motions.trailBasic("bash") && !Motions.trailBasic("cast") && !Motions.trailBasic(null), "no trail for thrust · bash");
+        // 그리기 설정 (클라이언트 BladeTrails 가 읽음): 겹 몫 0 ~ 1 · 1인칭 너비 · 가까이 옅어짐 [가까운, 먼]
+        Obj trail = Rules.get().root().obj("TRAIL");
+        Obj ly = trail.obj("layers");
+        check(ly.num("glowIn") >= 0 && ly.num("glowIn") < 1 && ly.num("auraIn") >= 0 && ly.num("auraIn") < 1 && ly.num("auraOut") >= 0 && trail.num("glowTo") >= 1,
+                "trail layers");
+        Obj fpc = trail.obj("fp");
+        check(fpc.num("width") > 0 && fpc.num("maxWidth") > 0 && fpc.num("alpha") > 0 && fpc.num("alpha") <= 1, "trail fp band");
+        for (String k : List.of("fp", "world")) {
+            List<Object> nr = trail.obj("near").list(k);
+            check(nr.size() == 2 && ((Number) nr.get(0)).doubleValue() >= 0 && ((Number) nr.get(1)).doubleValue() > ((Number) nr.get(0)).doubleValue(), "trail near " + k);
+        }
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "scepter")) {
             Double r0 = Motions.reach(t, 0);
             Double r4 = Motions.reach(t, 4);

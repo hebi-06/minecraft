@@ -51,15 +51,18 @@ def hand_point(p, bend, tw, wr, dv, cx=-1.0):
     return J + mp.rx(bend) @ (q - J)
 
 
-def body_point(pose, arm_blocks):
-    """오른팔 공간 (블록) 의 무기 점 → 우리 공간 (발 원점 · +x 오른쪽 · +y 위 · -z 앞, 블록)"""
+def body_point(pose, arm_blocks, slim=False):
+    """오른팔 공간 (블록) 의 무기 점 → 우리 공간 (발 원점 · +x 오른쪽 · +y 위 · -z 앞, 블록). slim = 가는 팔 (어깨 높이 2.5 · 손 자리 x +0.5 · 팔 가운데 -0.5)"""
     w = pose["w"]
     R, bend, tw, wr, dv = pose["ra"]
     Ra = mp.mat_of(mp.slerp(mp.quat_of(np.eye(3)), mp.quat_of(R), w))
     lean, twist, side = [math.radians(v) * w for v in pose["body"]]
+    base = np.array([-5.0, 2.5 if slim else 2.0, 0.0])
     sh = mp.HIP + mp.zyx(lean, twist, side) @ (np.array([-5.0, 2.0, 0.0]) - mp.HIP)
-    sh = np.array([-5.0, 2.0, 0.0]) + (sh - np.array([-5.0, 2.0, 0.0])) * w
-    h = hand_point(np.asarray(arm_blocks, float) * 16, bend * w, tw * w, wr * w, dv * w)
+    sh = base + (sh - base) * w
+    if slim:
+        sh = sh + np.array([0.5, 0.0, 0.0])
+    h = hand_point(np.asarray(arm_blocks, float) * 16, bend * w, tw * w, wr * w, dv * w, cx=-0.5 if slim else -1.0)
     model = sh / 16.0 + Ra @ (h / 16.0)
     o = MODEL_SCALE * (np.diag([-1.0, -1.0, 1.0]) @ (model + np.array([0.0, -1.501, 0.0])))
     o = o - np.array([0.0, mp.FLIP_PIVOT, 0.0])

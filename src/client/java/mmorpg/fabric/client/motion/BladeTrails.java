@@ -16,6 +16,7 @@ import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgWeaponItem;
 import mmorpg.fabric.client.ClientCosmetics;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.entity.ClientAvatarEntity;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderType;
@@ -26,6 +27,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Avatar;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.player.PlayerModelType;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Quaternionf;
@@ -67,12 +69,25 @@ public final class BladeTrails {
         float maxMove = 0.12F;
         float taper = 0.12F;
         float glowTo = 1.12F;
-        float aAura = 0.42F;
-        float aGlow = 0.7F;
+        /** 빛 겹의 안 가장자리 (from ~ 무기 끝 사이 몫) · 기운 겹의 바깥 (glowTo 너머) · 안 (몫) */
+        float glowIn = 0.35F;
+        float auraOut = 0.07F;
+        float auraIn = 0.55F;
+        float aAura = 0.32F;
+        float aGlow = 0.6F;
         float aCore = 0.95F;
         float aRune = 0.9F;
         final Map<String, Float> from = new HashMap<>();
         float fromDefault = 0.35F;
+        /** 1인칭 띠: 너비 (무기 길이 × width — 최대 maxWidth 칸) · 불투명 배율 */
+        float fpWidth = 0.6F;
+        float fpMaxWidth = 0.6F;
+        float fpAlpha = 0.85F;
+        /** 카메라 가까이 옅어짐 (칸 — 이 거리 아래 0 · 위 1): 1인칭 띠 · 세계 띠 */
+        float nearFp0 = 0.4F;
+        float nearFp1 = 1.2F;
+        float nearWorld0 = 0.6F;
+        float nearWorld1 = 1.8F;
     }
 
     private static Cfg cfg;
@@ -90,6 +105,31 @@ public final class BladeTrails {
                 c.maxMove = (float) Math.max(0.02, t.numOr("maxMove", c.maxMove));
                 c.taper = (float) Mth.clamp(t.numOr("taper", c.taper), 0, 1);
                 c.glowTo = (float) Math.max(1, t.numOr("glowTo", c.glowTo));
+                Obj ly = t.objOrNull("layers");
+                if (ly != null) {
+                    c.glowIn = (float) Mth.clamp(ly.numOr("glowIn", c.glowIn), 0, 1);
+                    c.auraOut = (float) Math.max(0, ly.numOr("auraOut", c.auraOut));
+                    c.auraIn = (float) Mth.clamp(ly.numOr("auraIn", c.auraIn), 0, 1);
+                }
+                Obj fpc = t.objOrNull("fp");
+                if (fpc != null) {
+                    c.fpWidth = (float) Math.max(0.05, fpc.numOr("width", c.fpWidth));
+                    c.fpMaxWidth = (float) Math.max(0.05, fpc.numOr("maxWidth", c.fpMaxWidth));
+                    c.fpAlpha = (float) Mth.clamp(fpc.numOr("alpha", c.fpAlpha), 0, 1);
+                }
+                Obj near = t.objOrNull("near");
+                if (near != null) {
+                    if (near.has("fp")) {
+                        List<Object> l = near.list("fp");
+                        c.nearFp0 = ((Number) l.get(0)).floatValue();
+                        c.nearFp1 = Math.max(c.nearFp0 + 0.01F, ((Number) l.get(1)).floatValue());
+                    }
+                    if (near.has("world")) {
+                        List<Object> l = near.list("world");
+                        c.nearWorld0 = ((Number) l.get(0)).floatValue();
+                        c.nearWorld1 = Math.max(c.nearWorld0 + 0.01F, ((Number) l.get(1)).floatValue());
+                    }
+                }
                 Obj a = t.objOrNull("alpha");
                 if (a != null) {
                     c.aAura = (float) a.numOr("aura", c.aAura);
@@ -318,8 +358,8 @@ public final class BladeTrails {
             lastWorldTrails = all.size() + frozen.size();
             lastWorldSamples = n;
             Mesh mesh = new Mesh();
-            for (Trail tr : all) build(mesh, tr, now - tr.start, cam.x, cam.y, cam.z);
-            for (Trail tr : frozen) build(mesh, tr, tr.fixed, cam.x, cam.y, cam.z);
+            for (Trail tr : all) build(mesh, tr, now - tr.start, cam.x, cam.y, cam.z, false, 1);
+            for (Trail tr : frozen) build(mesh, tr, tr.fixed, cam.x, cam.y, cam.z, false, 1);
             mesh.submit(ps, collector);
         } catch (RuntimeException err) {
             Mmorpg.LOG.warn("[mmorpg] blade trails", err);
@@ -421,19 +461,25 @@ public final class BladeTrails {
         float scale = av.getScale();
         boolean crouch = av.isCrouching();
         if (crouch) y -= scale * 2.0 / 16.0;
+        boolean slim = slim(av);
         WeaponBlades.Blade b = tr.spec.blade();
         float debugYaw = av.getId() == MotionRender.debugEntity ? MotionRender.debugYaw : 0;
-        thirdPerson(POSE, left, crouch, b.gripX(), b.gripY(), b.gripZ(), V);
+        thirdPerson(POSE, left, crouch, slim, b.gripX(), b.gripY(), b.gripZ(), V);
         toWorld(V, yaw, debugYaw, scale);
         out[0] = x + V.x;
         out[1] = y + V.y;
         out[2] = z + V.z;
-        thirdPerson(POSE, left, crouch, b.tipX(), b.tipY(), b.tipZ(), V);
+        thirdPerson(POSE, left, crouch, slim, b.tipX(), b.tipY(), b.tipZ(), V);
         toWorld(V, yaw, debugYaw, scale);
         out[3] = x + V.x;
         out[4] = y + V.y;
         out[5] = z + V.z;
         return true;
+    }
+
+    /** 가는 팔 모델 (스킨 모양 slim — 팔 3픽셀): 어깨 높이 · 손 자리 · 팔 가운데가 넓은 팔과 다름 (thirdPerson) */
+    static boolean slim(Avatar av) {
+        return av instanceof ClientAvatarEntity c && c.getSkin() != null && c.getSkin().model() == PlayerModelType.SLIM;
     }
 
     /** 우리 공간 (발 원점 · +x 오른쪽 · +y 위 · -z 앞) → 세계 방향 (몸 방향 · 크기): LivingEntityRenderer 의 Y 180 - 몸 방향 */
@@ -445,9 +491,11 @@ public final class BladeTrails {
     /**
      * 3인칭 무기 점 하나: 오른팔 공간 (블록 — 팔 축 기준 · 팔 회전 전, x 왼쪽 · y 아래 · z 뒤 — 왼손은 x 를 뒤집어 씀) → 우리 공간 (발 원점 · +x 오른쪽 · +y 위 ·
      * -z 앞, 블록 — 몸 방향 · 크기 전). 차례: 손 (MotionRender.hand — 손목 · 옆 꺾기 → 팔뚝 비틀기 → 팔꿈치) → 위팔 회전 · 어깨 자리
-     * (MotionRender.applyModel — 몸통을 엉덩이 축으로 돌린 어깨) → 모델 (0.9375 · 뒤집기 · 1.501 내림) → 뿌리 (앞구르기 · 회전 · 내딛기)
+     * (MotionRender.applyModel — 몸통을 엉덩이 축으로 돌린 어깨) → 모델 (0.9375 · 뒤집기 · 1.501 내림) → 뿌리 (앞구르기 · 회전 · 내딛기).
+     * 가는 팔 (slim): 바닐라 어깨 높이 2.5 (넓은 팔 2), PlayerModel.translateToHand 가 팔 자리를 x 로 0.5 옮긴 채 손을 잡음, 팔 상자 가운데 (팔꿈치 ·
+     * 비틀기 · 손목 축 — BendablePart 의 상자 가운데) ∓0.5 (넓은 팔 ∓1)
      */
-    static void thirdPerson(Pose p, boolean left, boolean crouch, float ax, float ay, float az, Vector3f out) {
+    static void thirdPerson(Pose p, boolean left, boolean crouch, boolean slim, float ax, float ay, float az, Vector3f out) {
         boolean right = !left;
         float w = p.w;
         boolean hasArm = p.has(right ? Pose.RA : Pose.LA);
@@ -455,7 +503,8 @@ public final class BladeTrails {
         float tw = hasArm ? (right ? p.raTwist : p.laTwist) * w : 0;
         float wr = hasArm ? (right ? p.raWrist : p.laWrist) * w : 0;
         float dv = hasArm ? (right ? p.raDev : p.laDev) * w : 0;
-        float cx = right ? -1 : 1; // 팔 상자 가운데 (넓은 팔)
+        float half = slim ? 0.5F : 1F;
+        float cx = right ? -half : half; // 팔 상자 가운데
         // 무기 점 (픽셀)
         Vector3f v = out.set(right ? ax * 16 : -ax * 16, ay * 16, az * 16);
         // 손목 (cx, 9.5, 0): Rx(손목) · Rz(옆 꺾기)
@@ -469,7 +518,8 @@ public final class BladeTrails {
         q.transform(v);
         // 어깨 자리
         float sx = right ? -5 : 5;
-        float sy = crouch ? 5.2F : 2F;
+        float base = slim ? 2.5F : 2F; // 바닐라 어깨 높이
+        float sy = crouch ? base + 3.2F : base;
         float sz = 0;
         if (p.has(Pose.BODY) && !crouch) {
             Vector3f s = new Vector3f(sx, 2, 0).sub(HIP).rotateX(p.lean * w).rotateY(p.twist * w).rotateZ(p.side * w);
@@ -479,6 +529,7 @@ public final class BladeTrails {
             sy = sy + (s.y - sy) * w;
             sz = sz + (s.z - sz) * w;
         }
+        if (slim) sx += right ? 0.5F : -0.5F; // translateToHand: 가는 팔은 팔 자리를 옮긴 채 손을 잡음
         // 모델 (블록): 어깨 + 팔 공간
         float mx = sx / 16F + v.x / 16F;
         float my = sy / 16F + v.y / 16F;
@@ -537,18 +588,19 @@ public final class BladeTrails {
             }
             if (fp != null && expire(fp, now - fp.start) && now - fp.start > fp.ticks + 1) fp = null;
             if (fpFading != null && expire(fpFading, now - fpFading.start)) fpFading = null;
+            float side = me.getMainArm() == HumanoidArm.LEFT ? -1 : 1;
             Mesh mesh = new Mesh();
             int n = 0;
             if (frozen != null) {
-                build(mesh, frozen, frozen.fixed, 0, 0, 0);
+                build(mesh, frozen, frozen.fixed, 0, 0, 0, true, side);
                 n += frozen.samples.size();
             } else {
                 if (fp != null) {
-                    build(mesh, fp, now - fp.start, 0, 0, 0);
+                    build(mesh, fp, now - fp.start, 0, 0, 0, true, side);
                     n += fp.samples.size();
                 }
                 if (fpFading != null) {
-                    build(mesh, fpFading, now - fpFading.start, 0, 0, 0);
+                    build(mesh, fpFading, now - fpFading.start, 0, 0, 0, true, side);
                     n += fpFading.samples.size();
                 }
             }
@@ -644,9 +696,14 @@ public final class BladeTrails {
 
     /**
      * 궤적 하나를 띠로: 점마다 나이 k (0 = 지금 · 1 = 수명 끝) 로 옅어지고 (1 - k)^1.3, 안쪽 가장자리가 바깥 쪽으로 좁아짐 (taper + (1 - taper)(1 - k)^0.6).
-     * 겹: 기운 (등급 · 바깥으로 넓게) · 빛 (무기 끝 너머 glowTo) · 심지 (무기 끝 ~ from) · 룬 (마검 — 안쪽 가는 줄). local = 지금 (동작 시작부터 틱), o = 그리는 기준
+     * 겹: 기운 (등급 — glowTo 너머 auraOut ~ 안 auraIn) · 빛 (무기 색 — 무기 끝 너머 glowTo ~ 안 glowIn) · 심지 (무기 끝 ~ from) · 룬 (마검 — 안쪽 가는 줄).
+     * 몫 f 의 자리 = 손잡이 + (무기 끝 - 손잡이) × f. local = 지금 (동작 시작부터 틱), o = 그리는 기준 (세계는 카메라 — 카메라 가까이는 옅어짐).
+     * 겹마다 같은 사각형 (가장 넓은 겹의 바깥 ~ 안 — 깊이가 똑같아 겹끼리 깜빡이지 않음) 에 그림 자리 (v) 만 달리 붙임: 그 겹의 바깥 = v 0 · 좁힌 안 = v 1,
+     * 그 밖은 그림 가장자리 (투명한 맨 끝 줄) 로 늘어남 (clamp).
+     * screen (내 1인칭): 무기가 카메라를 축으로 돌아 실제 띠는 옆으로 보여 (선 하나) — 무기 끝이 지나간 화면 길을 바깥 가장자리로 두고 화면에서 그 길에 직각
+     * (길 방향 × 카메라 → 끝 쪽 시선) 으로 무기 길이 × fpWidth (최대 fpMaxWidth 칸) 만큼 넓힌 띠 (사진처럼 보이는 초승달). side = 주 손 (왼손 -1 — 거울 동작)
      */
-    static void build(Mesh mesh, Trail tr, double local, double ox, double oy, double oz) {
+    static void build(Mesh mesh, Trail tr, double local, double ox, double oy, double oz, boolean screen, float side) {
         List<Sample> pts = new ArrayList<>(tr.samples);
         if (tr.head != null) pts.add(tr.head);
         if (pts.size() < 2) return;
@@ -654,6 +711,18 @@ public final class BladeTrails {
         Spec s = tr.spec;
         float from = s.from();
         float g = c.glowTo;
+        // 겹: {바깥, 안} (손잡이 → 무기 끝 몫)
+        float[] aura = {g + c.auraOut, from + (1 - from) * c.auraIn};
+        float[] glow = {g, from + (1 - from) * c.glowIn};
+        float[] core = {1F, from};
+        float[] rune = {from + (1 - from) * 0.58F, from + (1 - from) * 0.34F};
+        float outer = s.aura() != 0 ? Math.max(aura[0], glow[0]) : glow[0];
+        float inner = Math.min(core[1], Math.min(glow[1], s.aura() != 0 ? aura[1] : 1F));
+        if (s.rune() != 0) inner = Math.min(inner, rune[1]);
+        double[][] fr = frames(pts, screen, side, from, c);
+        float n0 = screen ? c.nearFp0 : c.nearWorld0;
+        float n1 = screen ? c.nearFp1 : c.nearWorld1;
+        float am = screen ? c.fpAlpha : 1F;
         for (int i = 0; i + 1 < pts.size(); i++) {
             Sample a = pts.get(i);
             Sample b = pts.get(i + 1);
@@ -661,47 +730,158 @@ public final class BladeTrails {
             float ka = (float) Mth.clamp((local - a.t) / c.life, 0, 1);
             float kb = (float) Mth.clamp((local - b.t) / c.life, 0, 1);
             if (ka >= 1 && kb >= 1) continue;
-            if (s.aura() != 0) band(mesh.aura, a, b, ka, kb, g + 0.14F, from + (1 - from) * 0.2F, s.aura(), c.aAura, c, ox, oy, oz);
-            band(mesh.glow, a, b, ka, kb, g, from * 0.85F, s.glow(), c.aGlow, c, ox, oy, oz);
-            band(mesh.core, a, b, ka, kb, 1F, from, s.core(), c.aCore, c, ox, oy, oz);
-            if (s.rune() != 0) band(mesh.rune, a, b, ka, kb, from + (1 - from) * 0.58F, from + (1 - from) * 0.34F, s.rune(), c.aRune, c, ox, oy, oz);
+            Quad q = new Quad(fr[i], fr[i + 1], outer, inner, ox, oy, oz, n0, n1, screen);
+            if (q.hidden()) continue;
+            if (s.aura() != 0) band(mesh.aura, q, ka, kb, aura, outer, inner, s.aura(), c.aAura * am, c);
+            band(mesh.glow, q, ka, kb, glow, outer, inner, s.glow(), c.aGlow * am, c);
+            band(mesh.core, q, ka, kb, core, outer, inner, s.core(), c.aCore * am, c);
+            if (s.rune() != 0) band(mesh.rune, q, ka, kb, rune, outer, inner, s.rune(), c.aRune * am, c);
         }
     }
 
-    /** 점 a → b 사이 띠 한 칸 (바깥 = 손잡이 → 무기 끝 outF, 안 = inF — 나이만큼 바깥으로 좁아짐) */
-    private static void band(Layer l, Sample a, Sample b, float ka, float kb, float outF, float inF, int rgb, float alpha, Cfg c, double ox, double oy,
-            double oz) {
+    /**
+     * 점마다 띠의 바탕 (몫 f 의 자리 = 바탕 + 방향 × f — {바탕 xyz, 방향 xyz}): 세계 = 손잡이 · 무기 끝 - 손잡이, 1인칭 화면 띠 = 끝 + 옆 × 너비 · -옆 × 너비.
+     * 옆 = 화면에서 끝이 가는 길에 직각 (길 × 끝 쪽 시선 — 왼손은 거울). 구간마다 끝이 가장 빨리 움직이는 점의 옆을 기준으로 앞 · 뒤로 이어 가며 같은 쪽을
+     * 유지 (휘두름 끝에서 끝이 거의 멈추거나 조금 되돌아와도 띠가 뒤집히지 않게 — 그런 점 (가장 빠른 점의 10% 아래) 은 이웃의 옆)
+     */
+    static double[][] frames(List<Sample> pts, boolean screen, float side, float from, Cfg c) {
+        int n = pts.size();
+        double[][] fr = new double[n][];
+        if (!screen) {
+            for (int i = 0; i < n; i++) {
+                Sample p = pts.get(i);
+                fr[i] = new double[] {p.gx, p.gy, p.gz, p.tx - p.gx, p.ty - p.gy, p.tz - p.gz};
+            }
+            return fr;
+        }
+        double[][] raw = new double[n][];
+        double[] speed = new double[n];
+        for (int i = 0; i < n; i++) {
+            Sample p = pts.get(i);
+            // 같은 구간 안의 앞 · 뒤 점으로 끝이 가는 방향
+            int i0 = p.start ? i : Math.max(0, i - 1);
+            int i1 = i + 1 < n && !pts.get(i + 1).start ? i + 1 : i;
+            Sample s0 = pts.get(i0);
+            Sample s1 = pts.get(i1);
+            double tx = s1.tx - s0.tx;
+            double ty = s1.ty - s0.ty;
+            double tz = s1.tz - s0.tz;
+            double dt = Math.max(1e-4, s1.t - s0.t);
+            speed[i] = Math.sqrt(tx * tx + ty * ty + tz * tz) / dt;
+            double rl = Math.sqrt(p.tx * p.tx + p.ty * p.ty + p.tz * p.tz);
+            if (rl < 1e-6) continue;
+            double rx = p.tx / rl;
+            double ry = p.ty / rl;
+            double rz = p.tz / rl;
+            double nx = (ty * rz - tz * ry) * side;
+            double ny = (tz * rx - tx * rz) * side;
+            double nz = (tx * ry - ty * rx) * side;
+            double nl = Math.sqrt(nx * nx + ny * ny + nz * nz);
+            if (nl > 1e-7) raw[i] = new double[] {nx / nl, ny / nl, nz / nl};
+        }
+        double[][] nv = new double[n][];
+        int ws = 0;
+        for (int i = 1; i <= n; i++) {
+            if (i < n && !pts.get(i).start) continue;
+            // 구간 [ws, i): 가장 빠른 점에서 앞 · 뒤로
+            int k = -1;
+            for (int j = ws; j < i; j++) if (raw[j] != null && (k < 0 || speed[j] > speed[k])) k = j;
+            if (k < 0) {
+                for (int j = ws; j < i; j++) nv[j] = new double[] {0, -1, 0};
+            } else {
+                double lim = speed[k] * 0.1;
+                nv[k] = raw[k];
+                for (int j = k + 1; j < i; j++) nv[j] = follow(raw[j], speed[j] < lim, nv[j - 1]);
+                for (int j = k - 1; j >= ws; j--) nv[j] = follow(raw[j], speed[j] < lim, nv[j + 1]);
+            }
+            ws = i;
+        }
+        for (int i = 0; i < n; i++) {
+            Sample p = pts.get(i);
+            double dx = p.tx - p.gx;
+            double dy = p.ty - p.gy;
+            double dz = p.tz - p.gz;
+            double len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            double w = Math.min(len * c.fpWidth, c.fpMaxWidth / Math.max(0.05, 1 - from));
+            double[] v = nv[i];
+            // f = 1 → 끝 · f = from → 끝 + 옆 × (1 - from) × w
+            fr[i] = new double[] {p.tx + v[0] * w, p.ty + v[1] * w, p.tz + v[2] * w, -v[0] * w, -v[1] * w, -v[2] * w};
+        }
+        return fr;
+    }
+
+    /** 이웃 (prev) 과 같은 쪽의 옆: 못 구했거나 느린 점이면 이웃 그대로, 반대쪽이면 뒤집음 */
+    private static double[] follow(double[] raw, boolean slow, double[] prev) {
+        if (raw == null || slow) return prev;
+        if (raw[0] * prev[0] + raw[1] * prev[1] + raw[2] * prev[2] < 0) return new double[] {-raw[0], -raw[1], -raw[2]};
+        return raw;
+    }
+
+    /**
+     * 띠 한 칸의 네 귀퉁이 (그리는 기준 자리): a 바깥 · b 바깥 · b 안 · a 안 + 귀퉁이마다 옅어짐 (0 ~ 1 — 카메라 가까이, 1인칭은 시선에서 60° 넘게 벗어난 쪽도:
+     * 몸 둘레를 도는 궤적이 화면 가장자리 · 아래를 덮지 않게)
+     */
+    record Quad(float[] p, float[] fade) {
+        Quad(double[] a, double[] b, float outer, float inner, double ox, double oy, double oz, float n0, float n1, boolean screen) {
+            this(new float[12], new float[4]);
+            double[][] fr = {a, b, b, a};
+            float[] fs = {outer, outer, inner, inner};
+            for (int i = 0; i < 4; i++) {
+                double[] q = fr[i];
+                float x = (float) (q[0] + q[3] * fs[i] - ox);
+                float y = (float) (q[1] + q[4] * fs[i] - oy);
+                float z = (float) (q[2] + q[5] * fs[i] - oz);
+                p[i * 3] = x;
+                p[i * 3 + 1] = y;
+                p[i * 3 + 2] = z;
+                float d = (float) Math.sqrt(x * x + y * y + z * z);
+                float k = Mth.clamp((d - n0) / (n1 - n0), 0, 1);
+                float f = k * k * (3 - 2 * k);
+                if (screen && d > 1e-4F) {
+                    float e = Mth.clamp((-z / d - 0.17F) / (0.5F - 0.17F), 0, 1); // 시선과의 cos — 80° 에서 0 · 60° 에서 1
+                    f *= e * e * (3 - 2 * e);
+                }
+                fade[i] = f;
+            }
+        }
+
+        /** 네 귀퉁이 모두 카메라에 붙어 보이지 않음 */
+        boolean hidden() {
+            return fade[0] <= 0.004F && fade[1] <= 0.004F && fade[2] <= 0.004F && fade[3] <= 0.004F;
+        }
+    }
+
+    /**
+     * 겹 하나 (layer = {바깥, 안} 몫): 같은 사각형 q (바깥 outer · 안 inner) 에 그 겹의 그림 자리 — 몫 f 의 v = (f - 바깥) / ((안 - 바깥) × 좁힘),
+     * 나이로 옅어짐 · 귀퉁이마다 카메라 가까이 옅어짐. 앞뒤 두 면 (같은 대각선 — 비틀린 사각형도 앞뒤가 같은 두 삼각형)
+     */
+    private static void band(Layer l, Quad q, float ka, float kb, float[] layer, float outer, float inner, int rgb, float alpha, Cfg c) {
         float aa = alpha * (float) Math.pow(1 - ka, 1.3);
         float ab = alpha * (float) Math.pow(1 - kb, 1.3);
         if (aa <= 0.004F && ab <= 0.004F) return;
         float wa = c.taper + (1 - c.taper) * (float) Math.pow(1 - ka, 0.6);
         float wb = c.taper + (1 - c.taper) * (float) Math.pow(1 - kb, 0.6);
-        // 바깥 · 안 (나이로 좁힌) 자리
-        double[] ao = at(a, outF);
-        double[] bo = at(b, outF);
-        double[] ai = at(a, outF + (inF - outF) * wa);
-        double[] bi = at(b, outF + (inF - outF) * wb);
-        int ca = argb(aa, rgb);
-        int cb = argb(ab, rgb);
-        float x0 = (float) (ao[0] - ox), y0 = (float) (ao[1] - oy), z0 = (float) (ao[2] - oz);
-        float x1 = (float) (bo[0] - ox), y1 = (float) (bo[1] - oy), z1 = (float) (bo[2] - oz);
-        float x2 = (float) (bi[0] - ox), y2 = (float) (bi[1] - oy), z2 = (float) (bi[2] - oz);
-        float x3 = (float) (ai[0] - ox), y3 = (float) (ai[1] - oy), z3 = (float) (ai[2] - oz);
-        // 앞면
-        l.add(x0, y0, z0, ka, 0, ca);
-        l.add(x1, y1, z1, kb, 0, cb);
-        l.add(x2, y2, z2, kb, 1, cb);
-        l.add(x3, y3, z3, ka, 1, ca);
-        // 뒷면
-        l.add(x3, y3, z3, ka, 1, ca);
-        l.add(x2, y2, z2, kb, 1, cb);
-        l.add(x1, y1, z1, kb, 0, cb);
-        l.add(x0, y0, z0, ka, 0, ca);
-    }
-
-    /** 점의 손잡이 → 무기 끝 f 자리 */
-    private static double[] at(Sample s, float f) {
-        return new double[] {s.gx + (s.tx - s.gx) * f, s.gy + (s.ty - s.gy) * f, s.gz + (s.tz - s.gz) * f};
+        float span = layer[1] - layer[0];
+        float voA = (outer - layer[0]) / (span * wa);
+        float viA = (inner - layer[0]) / (span * wa);
+        float voB = (outer - layer[0]) / (span * wb);
+        float viB = (inner - layer[0]) / (span * wb);
+        float[] p = q.p();
+        float[] f = q.fade();
+        int c0 = argb(aa * f[0], rgb);
+        int c1 = argb(ab * f[1], rgb);
+        int c2 = argb(ab * f[2], rgb);
+        int c3 = argb(aa * f[3], rgb);
+        // 앞면 (a 바깥 → b 바깥 → b 안 → a 안 — 삼각형 0 1 2 · 2 3 0)
+        l.add(p[0], p[1], p[2], ka, voA, c0);
+        l.add(p[3], p[4], p[5], kb, voB, c1);
+        l.add(p[6], p[7], p[8], kb, viB, c2);
+        l.add(p[9], p[10], p[11], ka, viA, c3);
+        // 뒷면 (b 안 → b 바깥 → a 바깥 → a 안 — 삼각형 2 1 0 · 0 3 2: 같은 대각선 a 바깥 ~ b 안)
+        l.add(p[6], p[7], p[8], kb, viB, c2);
+        l.add(p[3], p[4], p[5], kb, voB, c1);
+        l.add(p[0], p[1], p[2], ka, voA, c0);
+        l.add(p[9], p[10], p[11], ka, viA, c3);
     }
 
     private static int argb(float a, int rgb) {

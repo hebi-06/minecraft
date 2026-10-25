@@ -683,14 +683,17 @@
     }
   },
   "TRAIL": {
-    "_comment": "0.40.0 참격 궤적 (사용자 \"참격 이펙트도 바꾸자 모션에 맞게 칼이 지나간 곳에 참격이 남게\" — 사진처럼 흰 초승달 띠). 근접 무기 (방패 빼고) 를 든 사람이 궤적 구간이 있는 동작 (클라이언트 assets/mmorpg/motion/poses.json trail — 가로 · 세로 · 회전 베기 · X자 · 내려찍기 · 내려치기 · 검기 베기 · 연속 베기 · 내려찍기 (스킬) · 도약 내려찍기 · 두 바퀴 회전) 을 하는 동안 무기 손잡이 쪽 (from — 손잡이 → 무기 끝 몫) 에서 무기 끝까지 지나간 자리에 띠가 남고 life 틱 동안 옅어지며 좁아짐 (taper — 오래된 끝의 너비 몫). 겹: 등급 기운 (영웅 · 초월) · 무기 색 빛 (무기 끝 너머 glowTo 까지) · 흰 심지 · 마검 룬. alpha = 겹마다 불투명도. 틱 사이도 maxStep 틱마다 (무기 끝이 maxMove 칸 넘게 움직이면 더 잘게) 찍음. basic = 서버가 예전 눈앞 초승달 참격을 그리지 않는 평타 동작 (궤적이 대신 — 소리 · 맞힌 연출 · 요구 조건이 모자랄 때 회색 참격은 그대로). 모양 · 거리 미리 보기: python3 tools/blade_trail_preview.py.",
+    "_comment": "0.40.0 참격 궤적 (사용자 \"참격 이펙트도 바꾸자 모션에 맞게 칼이 지나간 곳에 참격이 남게\" — 사진처럼 흰 초승달 띠). 근접 무기 (방패 빼고) 를 든 사람이 궤적 구간이 있는 동작 (클라이언트 assets/mmorpg/motion/poses.json trail — 가로 · 세로 · 회전 베기 · X자 · 내려찍기 · 내려치기 · 검기 베기 · 연속 베기 · 내려찍기 (스킬) · 도약 내려찍기 · 두 바퀴 회전) 을 하는 동안 무기 손잡이 쪽 (from — 손잡이 → 무기 끝 몫) 에서 무기 끝까지 지나간 자리에 띠가 남고 life 틱 동안 옅어지며 좁아짐 (taper — 오래된 끝의 너비 몫). 겹: 등급 기운 (영웅 · 초월 — glowTo 너머 layers.auraOut ~ 안 auraIn) · 무기 색 빛 (무기 끝 너머 glowTo ~ 안 layers.glowIn — from ~ 무기 끝 사이 몫) · 흰 심지 (from ~ 무기 끝) · 마검 룬. alpha = 겹마다 불투명도. fp = 내 1인칭 띠 (무기가 카메라를 축으로 돌아 실제 띠는 옆으로 보이므로 — 무기 끝이 지나간 화면 길을 바깥 가장자리로 두고 화면에서 길에 직각으로 무기 길이 × width (최대 maxWidth 칸) 만큼 넓힘, alpha = 불투명 배율). near = 카메라에서 이 거리 (칸) 안은 옅어짐 [0 이 되는 거리, 다 보이는 거리] — fp 내 1인칭 띠 · world 세계 띠 (1인칭 화면 가까이를 지나는 남의 궤적). 틱 사이도 maxStep 틱마다 (무기 끝이 maxMove 칸 넘게 움직이면 더 잘게) 찍음. basic = 서버가 예전 눈앞 초승달 참격을 그리지 않는 평타 동작 (궤적이 대신 — 소리 · 맞힌 연출 · 요구 조건이 모자랄 때 회색 참격은 그대로). 모양 · 거리 미리 보기: python3 tools/blade_trail_preview.py.",
     "enabled": true,
     "life": 6,
     "maxStep": 0.25,
     "maxMove": 0.12,
     "taper": 0.12,
     "glowTo": 1.12,
-    "alpha": {"aura": 0.42, "glow": 0.7, "core": 0.95, "rune": 0.9},
+    "layers": {"glowIn": 0.35, "auraOut": 0.07, "auraIn": 0.55},
+    "alpha": {"aura": 0.32, "glow": 0.6, "core": 0.95, "rune": 0.9},
+    "fp": {"width": 0.6, "maxWidth": 0.6, "alpha": 0.85},
+    "near": {"fp": [0.4, 1.2], "world": [0.6, 1.8]},
     "from": {"sword": 0.28, "greatsword": 0.24, "scythe": 0.45, "dagger": 0.2, "axe": 0.55, "hammer": 0.6, "scepter": 0.62, "lance": 0.62, "default": 0.35},
     "basic": ["slash_h", "slash_v", "spin", "dagger_x", "chop", "smite"]
   },
