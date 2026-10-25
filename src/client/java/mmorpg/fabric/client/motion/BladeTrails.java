@@ -48,7 +48,7 @@ import org.joml.Vector3f;
  *   <li>사진첩 (ClientMotions.freeze): 멈춘 순간까지의 궤적을 그 순간에 멈춰 그림</li>
  * </ul>
  * 방패 · 활 · 완드 · 맨손은 궤적 없음. 요구 조건이 모자라면 동작이 없어 궤적도 없음 (서버의 회색 참격).
- * 0.41.0 평타 강화 모습 (MotionNet.Look — 평타 강화 룬 · 직업 평타 태세, rules_more SWING_LOOK): 빛 · 기운을 모습 색으로 (심지는 빛을 TRAIL.look.core 만큼 희게,
+ * 0.41.0 평타 강화 모습 (MotionNet.Look — 평타 강화 룬 · 직업 평타 태세, rules_more SWING_LOOK): 빛 · 기운을 모습 색으로 (심지도 빛 색을 TRAIL.look.core 만큼 희게 — 흰 심지면 색이 묻힘,
  * 기운은 등급과 상관없이), 무기 끝을 손잡이 → 끝 방향으로 늘여 빛의 바깥 가장자리가 넓어진 참격 범위만큼 더 나감 ((배율 − 1) × 범위 ÷ glowTo 칸 — 0.40.0 부터
  * 범위 거리 = 빛의 바깥 가장자리), 1인칭은 그 TRAIL.look.fp 몫 (띠 너비 상한도 같은 비율로).
  */
@@ -93,7 +93,7 @@ public final class BladeTrails {
         float nearWorld0 = 0.6F;
         float nearWorld1 = 1.8F;
         /** 0.41.0 평타 강화 모습: 심지 = 빛을 이만큼 희게 · 1인칭 늘임 몫 (세계 늘임 ×) */
-        float lookCore = 0.7F;
+        float lookCore = 0.45F;
         float lookFp = 0.5F;
     }
 

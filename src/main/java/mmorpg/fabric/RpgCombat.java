@@ -287,8 +287,10 @@ public final class RpgCombat {
     /** 평타 피해 dmg 에 더할 것 (combat.js weaponBonus — 없으면 null) */
     static WeaponBonus weaponBonus(ServerPlayer attacker, LivingEntity victim, Weapon w, double dmg) {
         if (BONUS_HOOKS.isEmpty() && SCALED_BONUS_HOOKS.isEmpty()) return null;
+        // 무적 시간 안의 평타에는 더하지 않음 — 활 · 완드만: 근접 평타는 0.39.0 부터 몹의 연속 피해 막기 시간이 없고 (beforeAttack · areaHit) 평타 사이를
+        // 서버가 막으므로 (Slash.admit 8틱 · 한 휘두르기에 적마다 한 번) 0.41.0 부터 늘 더함 (예전에는 8 ~ 9틱 만에 온 평타가 더한 피해 · 평타 강화 번 수를 빠뜨림)
         Long landed = BONUS_LANDED.get(key(victim, attacker));
-        if (landed != null && Tasks.now() - landed < BONUS_GAP) return null; // 무적 시간 안의 평타에는 더하지 않음
+        if (landed != null && !Combat.isMeleeWeapon(w) && Tasks.now() - landed < BONUS_GAP) return null;
         double add = 0;
         StringBuilder mk = new StringBuilder();
         List<Bonus> parts = new ArrayList<>();

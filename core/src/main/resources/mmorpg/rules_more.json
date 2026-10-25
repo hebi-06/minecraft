@@ -694,7 +694,7 @@
     "alpha": {"aura": 0.32, "glow": 0.6, "core": 0.95, "rune": 0.9},
     "fp": {"width": 0.6, "maxWidth": 0.6, "alpha": 0.85},
     "near": {"fp": [0.4, 1.2], "world": [0.6, 1.8]},
-    "look": {"_comment": "0.41.0 평타 강화 모습 (SWING_LOOK) 이 실린 궤적: core = 심지 색 (빛 색을 이만큼 희게), fp = 1인칭 무기 끝 늘임 몫 (세계 늘임 × — 1인칭 무기는 눈 바로 앞이라 같은 칸이면 화면을 덮음)", "core": 0.7, "fp": 0.5},
+    "look": {"_comment": "0.41.0 평타 강화 모습 (SWING_LOOK) 이 실린 궤적: core = 심지 색 (빛 색을 이만큼 희게), fp = 1인칭 무기 끝 늘임 몫 (세계 늘임 × — 1인칭 무기는 눈 바로 앞이라 같은 칸이면 화면을 덮음)", "core": 0.45, "fp": 0.5},
     "from": {"sword": 0.28, "greatsword": 0.24, "scythe": 0.45, "dagger": 0.2, "axe": 0.55, "hammer": 0.6, "scepter": 0.62, "lance": 0.62, "default": 0.35},
     "basic": ["slash_h", "slash_v", "spin", "dagger_x", "chop", "smite"]
   },
@@ -704,12 +704,12 @@
     "looks": {
       "edgeHone": {"name": "날 세우기", "scale": 1.15, "glow": [1.0, 0.62, 0.22], "aura": [1.0, 0.86, 0.55]},
       "flurry": {"name": "연타", "scale": 1.2, "glow": [0.3, 1.0, 0.82], "aura": [0.78, 1.0, 0.95]},
-      "bloodBlade": {"name": "피의 칼날", "scale": 1.3, "glow": [1.0, 0.14, 0.2], "aura": [0.55, 0.0, 0.06]},
+      "bloodBlade": {"name": "피의 칼날", "scale": 1.3, "glow": [1.0, 0.14, 0.2], "aura": [0.8, 0.04, 0.12]},
       "cleave": {"name": "가르기", "scale": 1.4, "glow": [0.4, 0.46, 1.0], "aura": [0.72, 0.64, 1.0]},
       "swordGod": {"name": "검신 강림", "scale": 1.5, "glow": [1.0, 0.82, 0.3], "aura": [1.0, 0.97, 0.75]},
       "swordsman_mirror": {"name": "명경지수", "scale": 1.2, "glow": [0.92, 0.98, 1.0], "aura": [0.35, 0.85, 1.0], "weapons": ["sword"]},
       "spellblade_awaken": {"name": "마검 각성", "scale": 1.3, "glow": [0.62, 0.34, 1.0], "aura": [0.34, 0.96, 0.95], "weapons": ["sword", "greatsword"]},
-      "reaper_avatar": {"name": "사신 현신", "scale": 1.0, "range": 5, "glow": [0.22, 0.96, 0.86], "aura": [0.06, 0.3, 0.32], "weapons": ["scythe"]}
+      "reaper_avatar": {"name": "사신 현신", "scale": 1.0, "range": 5, "glow": [0.22, 0.96, 0.86], "aura": [0.08, 0.5, 0.52], "weapons": ["scythe"]}
     }
   },
   "MOTION": {

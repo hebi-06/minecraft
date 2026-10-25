@@ -469,7 +469,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     }
 
     private void looks(ClientGameTestContext ctx, TestServerContext server) {
-        server.runCommand("tp @a 0.5 -60 0.5 180 8");
+        server.runCommand("tp @a 0.5 -60 3.5 180 8"); // 마네킹 (북쪽 3칸) 에서 6.5칸 — 넓어진 궤적이 화면에 다 들게
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.getInput().lookAt(180F, 8F);
         hideGui(ctx, true);
