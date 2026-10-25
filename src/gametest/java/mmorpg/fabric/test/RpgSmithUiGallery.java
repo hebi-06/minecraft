@@ -51,9 +51,11 @@ import org.slf4j.LoggerFactory;
 public final class RpgSmithUiGallery implements FabricClientGameTest {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-smith-gallery");
     private static final Vec3 NPC_AT = new Vec3(0.5, -60, 3.5);
-    private static final BlockPos ANVIL = new BlockPos(2, -60, 3);
+    private static final BlockPos ANVIL = new BlockPos(1, -60, 3);
     private final List<String> failures = new ArrayList<>();
     private int npcId = -1;
+    /** 큰 단추를 누르기 전의 망치질 (닿은 수는 새 망치질의 것만 셈 — 앞 망치질의 수가 남아 있음) */
+    private ClientSmith.Work before;
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
@@ -76,7 +78,7 @@ public final class RpgSmithUiGallery implements FabricClientGameTest {
                 mc.options.chatVisibility().set(ChatVisiblity.HIDDEN);
                 mc.options.setCameraType(CameraType.FIRST_PERSON);
             });
-            // 대장간: 대장장이 NPC (남쪽 3칸 — 북쪽 = 사람을 봄) · 동쪽에 모루, 서쪽에 용광로 · 모닥불
+            // 대장간: 대장장이 NPC (남쪽 3칸 — 북쪽 = 사람을 봄) · 바로 동쪽에 모루, 서쪽에 용광로 · 등불
             npcId = server.computeOnServer(s -> {
                 ServerPlayer sp = player(s);
                 var level = sp.level();
@@ -163,15 +165,15 @@ public final class RpgSmithUiGallery implements FabricClientGameTest {
         hover(ctx, s -> s.scrollCenter());
         shot(ctx, "sm_scroll_tip");
         int stones = server.computeOnServer(s -> RpgGearTests.countIn(player(s), GearItems.byId("rpg:enhance_stone")));
-        click(ctx, conn, s -> s.actionCenter());
+        act(ctx, conn);
         away(ctx);
         check(ctx.computeOnClient(mc -> ClientSmith.work() != null && ClientMotions.current(npcId) != null), "work started (panel · world npc motion)");
         // 망치가 닿는 순간마다 (클라이언트가 센 수) · 그 사이 든 망치
         hitShot(ctx, 1, "sm_hammer_hit1");
-        ctx.waitTicks(5);
+        ctx.waitTicks(3);
         shot(ctx, "sm_hammer_raise");
         hitShot(ctx, 2, "sm_hammer_hit2");
-        ctx.waitTicks(6);
+        ctx.waitTicks(4);
         shot(ctx, "sm_hammer_raise3");
         hitShot(ctx, 3, "sm_hammer_hit3");
         ctx.waitTicks(SmithUi.TICKS - SmithUi.IMPACTS.get(2) + 2);
@@ -233,12 +235,12 @@ public final class RpgSmithUiGallery implements FabricClientGameTest {
     // ------------------------------------------------------------ 4. 창을 닫고 세상에서 본 망치질 (모루 쪽 · 불꽃 · 끝나면 화면 제목)
 
     private void worldView(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
-        // 북쪽 (NPC 와 모루 사이 앞 — 2.7칸: 누를 수 있는 거리) 에서 옆모습: 왼쪽 모루 · 오른쪽 대장장이
-        server.runCommand("tp @a 1.5 -60 0.8 0 8");
+        // 북쪽 (NPC 와 모루 사이 앞 — 2.7칸: 누를 수 있는 거리) 에서 옆모습: 왼쪽 모루 · 오른쪽 대장장이 (첫 번째는 ESC 하는 사이 지나갈 수 있어 두 번째 · 세 번째)
+        server.runCommand("tp @a 1.0 -60 0.8 0 8");
         ctx.waitTicks(5);
         ensureOpen(ctx, conn);
         click(ctx, conn, s -> s.rowCenter("w:3"));
-        click(ctx, conn, s -> s.actionCenter());
+        act(ctx, conn);
         ctx.waitTicks(2);
         ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
         ctx.waitTicks(2);
@@ -246,23 +248,24 @@ public final class RpgSmithUiGallery implements FabricClientGameTest {
         boolean busy = server.computeOnServer(s -> SmithUi.busy(player(s)));
         check(busy, "server keeps hammering after closing");
         // 모루와 NPC 가운데를 봄
-        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(1.5, -59.0, 3.4)));
-        worldHit(ctx, 1, "sm_world_hit1");
-        ctx.waitTicks(6);
+        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(1.0, -59.0, 3.5)));
+        worldHit(ctx, 2, "sm_world_hit2");
+        ctx.waitTicks(4);
         ctx.takeScreenshot(TestScreenshotOptions.of("sm_world_raise").withSize(960, 540));
         worldHit(ctx, 3, "sm_world_hit3");
         ctx.waitTicks(SmithUi.TICKS - SmithUi.IMPACTS.get(2) + 6);
         ctx.takeScreenshot(TestScreenshotOptions.of("sm_world_title").withSize(960, 540));
         boolean open = server.computeOnServer(s -> SmithUi.isOpen(player(s)) || SmithUi.busy(player(s)));
         check(!open, "session ended after the result");
-        // 남쪽 (반대편) 에서: 다시 망치질 (창을 닫고) — 망치를 든 오른팔이 이쪽
-        server.runCommand("tp @a 1.5 -60 6.0 180 8");
+        // 남쪽 (반대편) 에서: 다시 망치질 (창을 닫고) — 망치를 든 오른팔이 이쪽 (앞 결과의 화면 제목은 지움)
+        server.runCommand("title @a clear");
+        server.runCommand("tp @a 1.0 -60 6.0 180 8");
         ctx.waitTicks(5);
         ensureOpen(ctx, conn);
         click(ctx, conn, s -> s.rowCenter("w:4"));
-        click(ctx, conn, s -> s.actionCenter());
+        act(ctx, conn);
         ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
-        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(1.5, -59.0, 3.4)));
+        ctx.runOnClient(mc -> mc.player.lookAt(EntityAnchorArgument.Anchor.EYES, new Vec3(1.0, -59.0, 3.5)));
         ctx.waitTicks(SmithUi.IMPACTS.get(1) - 6);
         ctx.takeScreenshot(TestScreenshotOptions.of("sm_world_south_raise").withSize(960, 540));
         worldHit(ctx, 2, "sm_world_south_hit2");
@@ -274,12 +277,13 @@ public final class RpgSmithUiGallery implements FabricClientGameTest {
     // ------------------------------------------------------------ 5. 모루가 없을 때 (잠깐 놓는 모루 — 끝나면 사라짐)
 
     private void tempAnvil(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        server.runCommand("title @a clear");
         server.runOnServer(s -> player(s).level().setBlockAndUpdate(ANVIL, Blocks.AIR.defaultBlockState()));
         server.runCommand("tp @a 2.5 -60 1.5 50 15");
         ctx.waitTicks(5);
         ensureOpen(ctx, conn);
         click(ctx, conn, s -> s.rowCenter("w:4"));
-        click(ctx, conn, s -> s.actionCenter());
+        act(ctx, conn);
         ctx.getInput().pressKey(InputConstants.KEY_ESCAPE);
         worldHit(ctx, 1, "sm_temp_anvil");
         boolean placed = server.computeOnServer(s -> SmithUi.tempAnvil(npc(s)) != null);
@@ -398,9 +402,16 @@ public final class RpgSmithUiGallery implements FabricClientGameTest {
         ctx.takeScreenshot(TestScreenshotOptions.of(name).withSize(960, 540));
     }
 
+    /** 큰 단추 (누르기 전 망치질을 기억 — 닿은 수는 새 망치질부터) */
+    private void act(ClientGameTestContext ctx, TestServerConnection conn) {
+        before = ctx.computeOnClient(mc -> ClientSmith.work());
+        click(ctx, conn, s -> s.actionCenter());
+    }
+
     private void waitHits(ClientGameTestContext ctx, int n) {
+        ClientSmith.Work old = before;
         try {
-            ctx.waitFor(mc -> ClientSmith.hits() >= n, 60);
+            ctx.waitFor(mc -> ClientSmith.work() != null && ClientSmith.work() != old && ClientSmith.hits() >= n, 80);
         } catch (AssertionError | RuntimeException e) {
             check(false, "hammer hit " + n + " not seen (" + ctx.computeOnClient(mc -> ClientSmith.hits()) + ")");
         }

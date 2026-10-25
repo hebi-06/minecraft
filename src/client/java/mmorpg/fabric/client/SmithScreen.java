@@ -812,7 +812,7 @@ public final class SmithScreen extends Screen {
                 // 무기 (그림이 왼쪽 위 끝 → 오른쪽 아래 손잡이): 모루 위에 눕힘 — 끝이 오른쪽 (뿔 쪽) · 손잡이가 대장장이 쪽,
                 // 돌린 뒤 위에서 비스듬히 본 만큼 납작하게 (돌리기 → 줄이기 차례: 줄이기를 먼저 곱함)
                 g.pose().translate(x0 + ITEM_X + dx, y0 + ITEM_Y);
-                g.pose().scale(pop, pop * 0.55F);
+                g.pose().scale(pop * 1.15F, pop * 0.8F);
                 g.pose().rotate((float) (Math.PI * 0.75));
                 g.item(item, -8, -8);
             } else {

@@ -177,7 +177,7 @@ public final class RpgSmithUiTests {
         ServerLevel level = h.getLevel();
         Vec3 at = h.absoluteVec(new Vec3(2.5, 2, 2.5));
         Mannequin npc = NpcData.spawnAt(level, at, at.add(0, 0, 3)); // 남쪽 (+z) 을 봄
-        BlockPos anvil = h.absolutePos(new BlockPos(4, 2, 2)); // 동쪽 1.5칸
+        BlockPos anvil = h.absolutePos(new BlockPos(3, 2, 2)); // 바로 동쪽 (가운데끼리 1칸)
         level.setBlockAndUpdate(anvil, Blocks.ANVIL.defaultBlockState());
         Weapon w = Weapons.weaponFrom("dagger", 10, "rare");
         sp.getInventory().setItem(0, new ItemStack(RpgItems.byId(w.id())));

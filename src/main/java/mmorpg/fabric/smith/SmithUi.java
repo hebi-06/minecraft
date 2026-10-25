@@ -66,8 +66,8 @@ import org.joml.Quaternionf;
  *       ArtifactCraft — quiet: 눈앞 연출 · 알림 없이)</li>
  *   <li>단추를 누르면 창을 닫지 않고 망치질 ({@link #TICKS} — 창의 대장장이 패널 · 세상의 대장장이 NPC 가 같은 동작, 망치가 닿을 때 불꽃 · 소리) 이 끝난
  *       뒤 결과를 정함 (재료는 그때 받음 — 도중에 나가거나 죽으면 아무것도 쓰지 않음). 결과는 창에 (닫았으면 화면 제목)</li>
- *   <li>세상: NPC 둘레 {@link #ANVIL_RANGE} 칸에 모루가 있으면 그쪽을 보고 그 윗면을 침, 없으면 옆으로 돌아서서 그 앞에 잠깐 모루 (표시 엔티티 — 1칸)
- *       를 놓음</li>
+ *   <li>세상: NPC 바로 옆 ({@link #ANVIL_RANGE} 칸 — 곧은 · 대각선) 에 모루가 있으면 그쪽을 보고 그 윗면을 침, 없으면 옆으로 돌아서서 그 앞에 잠깐 모루
+ *       (표시 엔티티 — 1칸) 를 놓음</li>
  *   <li>모드가 없는 클라이언트 · 시험의 가짜 플레이어는 예전 상자 창 ({@link Smith#smithLoop}) — {@link #FORCE} · {@link #legacy} 로 시험이 고름</li>
  * </ul>
  */
@@ -82,8 +82,8 @@ public final class SmithUi {
     public static final int TICKS = CONF != null ? (int) CONF.numOr("ticks", 30) : 30;
     /** 망치가 모루에 닿는 틱 */
     public static final List<Integer> IMPACTS = impacts();
-    /** NPC 둘레에서 모루를 찾는 칸 */
-    public static final double ANVIL_RANGE = CONF != null ? CONF.numOr("anvilRange", 2) : 2;
+    /** 대장장이가 쓰는 모루까지의 거리 (NPC 와 모루 가운데끼리 — 바로 옆 1 · 대각선 1.41: 망치가 닿는 앞 REACH 칸이 모루 윗면에 들어가는 거리) */
+    public static final double ANVIL_RANGE = CONF != null ? CONF.numOr("anvilRange", 1.75) : 1.75;
     /**
      * 망치가 닿는 자리: 몸 앞 REACH 칸 · 높이 1칸 (poses.json smith_hammer 의 내려친 열쇠 — 망치 치는 면이 앞 1.15 · 높이 0.94 ~ 0.97 칸, 세상의
      * 모루 (1칸) 윗면). 둘레 모루가 있으면 그 점을 모루 윗면 안으로 잡아 불꽃을 냄
@@ -462,7 +462,7 @@ public final class SmithUi {
 
     // ------------------------------------------------------------ 세상 연출 (대장장이 NPC)
 
-    /** NPC 둘레 (ANVIL_RANGE 칸 · 발 높이 -1 ~ +1) 의 가장 가까운 모루 (없으면 null) */
+    /** NPC 바로 옆 (가운데끼리 ANVIL_RANGE 칸 안 · 발 높이 -1 ~ +1) 의 가장 가까운 모루 (없으면 null) */
     static BlockPos anvilNear(Entity npc) {
         if (!(npc.level() instanceof ServerLevel level)) return null;
         BlockPos base = npc.blockPosition();
@@ -475,7 +475,7 @@ public final class SmithUi {
                     BlockPos p = base.offset(dx, dy, dz);
                     if (!(level.getBlockState(p).getBlock() instanceof AnvilBlock)) continue;
                     double d = npc.position().distanceToSqr(p.getX() + 0.5, npc.getY(), p.getZ() + 0.5);
-                    if (d <= (ANVIL_RANGE + 0.5) * (ANVIL_RANGE + 0.5) && d < bd) {
+                    if (d <= ANVIL_RANGE * ANVIL_RANGE && d < bd) {
                         bd = d;
                         best = p;
                     }
