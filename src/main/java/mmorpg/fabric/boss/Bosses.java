@@ -538,8 +538,13 @@ public final class Bosses {
 
     /** 플레이어마다 무적 시간 (마리 · 소품마다 따로): 그 사이 더 센 공격은 차이만큼 (바닐라와 같은 규칙을 사람마다 따로). 막히면 0 */
     static double throughIframes(Map<String, Iframe> map, String id, double amount, long now) {
+        return throughIframes(map, id, amount, now, BOSS.num("iframes"));
+    }
+
+    /** 같은 것 — 무적 시간 window 틱 (0.39.0 근접 평타는 평타 사이 Motions.serverInterval: 공격 대기 없이 매번 온전한 피해, 같은 휘두르기는 한 번) */
+    static double throughIframes(Map<String, Iframe> map, String id, double amount, long now, double window) {
         Iframe last = map.get(id);
-        if (last != null && now - last.tick < BOSS.num("iframes")) {
+        if (last != null && now - last.tick < window) {
             if (amount <= last.amount) return 0;
             double diff = amount - last.amount;
             last.amount = amount;
@@ -575,13 +580,16 @@ public final class Bosses {
         RpgCombat.Mark mark = RpgCombat.takeMark(e, p);
         boolean skill = mark != null && mark.style() != null;
         String ch = skill ? p.getUUID() + "|skill" : p.getUUID().toString();
+        // 0.39.0 근접 평타 (공격 대기 없음 — 평타 사이는 서버가 serverInterval 로 막음): 무적 시간을 그만큼으로 (서버 틱이 어긋나 8 ~ 9틱 뒤에 온 평타도 온전히)
+        double window = mark != null && mark.melee() && mark.style() == null ? Math.min(BOSS.num("iframes"), mmorpg.core.Motions.serverInterval())
+                : BOSS.num("iframes");
         Unit u = unitById.get(e.getUUID());
         if (u == null) {
             PropInfo info = propInfo.get(e.getUUID());
             if (info != null) {
                 // 맞는 소품 (촉수 등): 보스처럼 무적 시간 · 필드 밖 막기, 체력은 엔진이
                 if (!"fight".equals(enc.state) || info.dead) return false;
-                double amount = hitFromOutside(enc, p, now) ? 0 : throughIframes(info.iframes, ch, damage, now);
+                double amount = hitFromOutside(enc, p, now) ? 0 : throughIframes(info.iframes, ch, damage, now, window);
                 if (amount <= 0) return false;
                 boolean close = BOSS.obj("close").num("bonus") > 0 && isClose(e, null, p, info.textHeight > 0 ? info.textHeight : 3);
                 processHit(new Hit(enc, null, e, p, amount * (close ? 1 + BOSS.obj("close").num("bonus") : 1), src, true, info, close, close, skill, mark), now);
@@ -593,7 +601,7 @@ public final class Bosses {
         }
         if (!"fight".equals(enc.state) || !u.alive) return false;
         if (hitFromOutside(enc, p, now)) return false;
-        double amount = throughIframes(u.iframes, ch, damage, now);
+        double amount = throughIframes(u.iframes, ch, damage, now, window);
         if (amount <= 0) return false; // 막힌 공격은 맞은 것으로 치지 않음 (스킬의 흡혈 등)
         // 근접 보너스 (v2.3.0): 몸 가까이에서 준 피해는 더 셈 (무적 시간은 원래 피해로 셈). near = 보너스와 상관없이 몸 가까이에서 때렸는지 (v2.5.0)
         boolean near = isClose(e, u.def, p, 3);

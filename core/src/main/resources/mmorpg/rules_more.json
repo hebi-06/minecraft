@@ -696,6 +696,24 @@
       "scepter": ["smite"]
     },
     "comboWindow": 24,
+    "interval": 10,
+    "intervalSlack": 2,
+    "area": {
+      "_comment": "0.39.0 참격 범위 피해 (사용자 \"허공을 때려도 이펙트가 나오는데 해당 이펙트 범위만큼 피해가 들어가게\" → 고른 것: 범위 안 모두 100%). 평타를 휘두를 때마다 (허공 포함) 동작마다의 범위 안 적 (적대 무리 · 결투 상대, 눈에서 보이는, 가까운 순 max 명) 에게 평타 피해 그대로 — 조준한 적은 바닐라 공격으로 한 번, 나머지는 1틱 뒤. 회전 베기 · 낫 넓게 베기 (40%) 는 이것으로 바뀜 (enabled 를 끄면 예전대로). 범위는 눈 기준 (보는 방향 — 앞 · 오른쪽 · 위), ring 은 발 기준 둘레. arc = 앞 부채꼴 (range 칸 · angle 도 · 위아래 height 칸), band = 앞 띠 (폭 width · 높이 height), line = 앞 줄 (굵기 width), ring = 둘레 (높이 height). scale = 무기 종류마다 range · angle · width 배율 (낫 1.2 → 부채꼴 120° — 예전 넓게 베기와 같은 폭). interval = 평타 사이 틱 (공격 대기 대신: 이보다 빨리 누르면 선입력 — 앞 동작이 끝나는 순간 나감, 매번 100%), intervalSlack = 서버가 받는 여유 틱.",
+      "enabled": true,
+      "max": 6,
+      "shapes": {
+        "slash_h": {"shape": "arc", "range": 3.0, "angle": 100, "height": 2.2},
+        "slash_v": {"shape": "band", "range": 3.0, "width": 1.4, "height": 3.2},
+        "spin": {"shape": "ring", "range": 3.0, "height": 3.0},
+        "dagger_x": {"shape": "arc", "range": 2.8, "angle": 90, "height": 2.4},
+        "chop": {"shape": "band", "range": 3.0, "width": 1.8, "height": 3.2},
+        "thrust": {"shape": "line", "range": 4.0, "width": 1.2},
+        "bash": {"shape": "arc", "range": 2.6, "angle": 100, "height": 2.4},
+        "smite": {"shape": "band", "range": 3.0, "width": 1.8, "height": 3.2}
+      },
+      "scale": {"scythe": 1.2, "greatsword": 1.05}
+    },
     "spin": {"ratio": 0.4, "range": 3.0},
     "roll": {"ticks": 10, "distance": 4.0, "cooldown": 20, "doubleTap": 6},
     "skills": {

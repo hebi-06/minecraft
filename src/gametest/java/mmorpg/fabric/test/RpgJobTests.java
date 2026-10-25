@@ -1073,14 +1073,19 @@ public final class RpgJobTests {
             sp.attack(z.get(0));
             h.assertTrue(TestDummies.dealt(z.get(1)) == 0, "no avatar: 4.5 blocks is outside the 3-block sweep");
         }));
-        // 사신 현신: 넓게 베기 5칸 · 60%
+        // 사신 현신: 낫 범위 5칸 (0.39.0 — 참격 범위 피해라 100%, 1틱 뒤)
+        double[] avatarMain = new double[1];
         steps.add(new Step(14, () -> {
             h.assertTrue(JobSkills.press(sp, 3), "사신 현신 cast");
             h.assertTrue(JobTraits.stanceOn(sp, "reaper_avatar"), "avatar stance");
             mark[1] = TestDummies.dealt(z.get(0));
             sp.attack(z.get(0));
-            double main = TestDummies.dealt(z.get(0)) - mark[1];
-            h.assertTrue(main > 0 && near(TestDummies.dealt(z.get(1)), main * 0.6), "avatar sweep 60% at 4.5 blocks: " + TestDummies.dealt(z.get(1)) + " vs " + main * 0.6);
+            avatarMain[0] = TestDummies.dealt(z.get(0)) - mark[1];
+            h.assertTrue(avatarMain[0] > 0, "avatar main hit " + avatarMain[0]);
+        }));
+        steps.add(new Step(2, () -> {
+            double main = avatarMain[0];
+            h.assertTrue(near(TestDummies.dealt(z.get(1)), main), "avatar area 100% at 4.5 blocks: " + TestDummies.dealt(z.get(1)) + " vs " + main);
             RpgCombat.forceCrit = null;
             JobSystem.setJob(sp, "reaper");
             for (Husk x : z) x.discard();

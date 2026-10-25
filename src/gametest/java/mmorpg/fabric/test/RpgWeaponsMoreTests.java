@@ -155,6 +155,7 @@ public final class RpgWeaponsMoreTests {
 
     // ------------------------------------------------------------ 기본 공격 특징
 
+    /** 0.39.0: 낫의 넓게 베기 (40%) 는 참격 범위 피해 (앞 120° · 100% — SwingArea) 로 바뀜 (1틱 뒤) */
     @GameTest(environment = ENV, maxTicks = 30)
     public void scytheSweepHitsOthersInFront(GameTestHelper h) {
         floor(h);
@@ -162,16 +163,19 @@ public final class RpgWeaponsMoreTests {
         Weapon w = weapon("scythe", 20, "noble");
         hold(sp, w);
         Husk a = dummy(h, 1.5, 2, 3.5); // 맞힌 적 (앞 2칸)
-        Husk b = dummy(h, 3.0, 2, 3.5); // 앞 비스듬히 (약 37°) — 넓게 베기
+        Husk b = dummy(h, 3.0, 2, 3.5); // 앞 비스듬히 (약 37°) — 참격 범위
         Husk c = dummy(h, 1.5, 2, 0.6); // 뒤 — 안 맞음 (시험 자리 가장자리의 barrier 벽에 눈이 걸려 숨 막힘 피해를 받지 않게 0.6)
         RpgCombat.forceCrit = false;
+        double[] main = new double[1];
         h.runAfterDelay(2, () -> {
             sp.attack(a);
-            Obj sweep = w.typeDef().obj("sweep");
-            double main = TestDummies.dealt(a);
-            h.assertTrue(main > 0, "main hit " + main);
-            h.assertTrue(Math.abs(TestDummies.dealt(b) - main * sweep.num("ratio")) < 1e-3, "sweep " + TestDummies.dealt(b) + " vs " + main * sweep.num("ratio"));
+            main[0] = TestDummies.dealt(a);
+            h.assertTrue(main[0] > 0, "main hit " + main[0]);
+        });
+        h.runAfterDelay(4, () -> {
+            h.assertTrue(Math.abs(TestDummies.dealt(b) - main[0]) < 1e-3, "slash area 100% " + TestDummies.dealt(b) + " vs " + main[0]);
             h.assertTrue(TestDummies.dealt(c) == 0, "behind not hit " + TestDummies.dealt(c));
+            h.assertTrue(Math.abs(TestDummies.dealt(a) - main[0]) < 1e-3, "aimed hit once");
             done(h, sp);
         });
     }

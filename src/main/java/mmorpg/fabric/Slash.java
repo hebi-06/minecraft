@@ -52,30 +52,56 @@ public final class Slash {
     static void forget(UUID id) {
         SIDE.remove(id);
         LAST.remove(id);
+        SwingArea.forget(id);
     }
 
-    /** 휘두르기 패킷 (허공 · 블록 · 몹을 누를 때마다): 블록을 캐는 동작은 빼고 참격 */
+    /** 휘두르기 패킷 (허공 · 블록 · 몹을 누를 때마다): 블록을 캐는 동작은 빼고 참격 (0.39.0 — 평타 사이가 지나지 않았으면 없음) */
     public static void onPunch(ServerPlayer sp) {
         if (sp.pick(sp.blockInteractionRange(), 1F, false) instanceof net.minecraft.world.phys.BlockHitResult b
                 && b.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) return;
-        once(sp);
+        if (!admit(sp, false)) return;
+        once(sp, null);
     }
 
-    /** 몹을 침 (Player#attack 처음): 참격 (요구 조건이 모자라 공격이 막혀도 회색으로) */
-    public static void onAttack(ServerPlayer sp) {
-        once(sp);
+    /**
+     * 몹을 침 (Player#attack 처음): 참격 (요구 조건이 모자라 공격이 막혀도 회색으로). 0.39.0: 같은 틱에 휘두르기 패킷이 먼저 와서 이미 휘둘렀으면
+     * 조준한 적을 그 휘두르기에 붙임 (범위 피해에서 빠짐)
+     */
+    public static void onAttack(ServerPlayer sp, Entity target) {
+        once(sp, target);
     }
 
-    private static void once(ServerPlayer sp) {
+    /**
+     * 0.39.0 네트워크 공격 입력 (공격 패킷 · 허공 휘두르기 패킷) 을 받는지 — 공격 대기 대신 평타 사이 (MOTION.interval — 서버는 intervalSlack 여유):
+     * 근접 무기 평타가 지난 휘두르기에서 Motions.serverInterval 틱이 안 지났으면 받지 않음 (빨리 누른 입력은 모드 클라이언트가 선입력으로 미뤄 보냄).
+     * 같은 틱의 공격 패킷 · 휘두르기 패킷은 한 번 누름 — 공격 패킷은 그 휘두르기에 하나만. 직접 부른 Player#attack (스킬 · 시험) 은 여기를 거치지 않음
+     */
+    public static boolean admit(ServerPlayer sp, boolean attack) {
+        Weapon held = RpgCombat.weaponOf(sp.getMainHandItem());
+        if (held == null || !Combat.isMeleeWeapon(held) || mmorpg.core.Motions.combo(held.type()).isEmpty()) return true;
+        MotionSystem.Swing last = MotionSystem.last(sp);
+        long now = Tasks.now();
+        if (last == null || now < last.tick() || now - last.tick() >= mmorpg.core.Motions.serverInterval()) return true;
+        if (now == last.tick()) return attack && !SwingArea.hasPrimary(sp); // 같은 누름: 휘두르기 패킷이 먼저 왔으면 공격 패킷 하나는 받음
+        return false;
+    }
+
+    private static void once(ServerPlayer sp, Entity primary) {
         if (mmorpg.fabric.mount.Riding.blocked(sp, "attack")) return; // 탈것에 탄 동안 참격 없음 (피해도 막힘)
         long now = Tasks.now();
         Long last = LAST.get(sp.getUUID());
-        if (last != null && last == now) return;
+        if (last != null && last == now) {
+            SwingArea.primary(sp, primary); // 같은 누름의 공격 패킷 (휘두르기 패킷이 먼저 옴)
+            return;
+        }
         LAST.put(sp.getUUID(), now);
         // 0.38.0 동작: 이 평타의 연타 단계 (가로 → 세로 → 회전 …) — 둘레 사람들에게 몸 동작을 알리고 참격 방향을 맞춤
         Weapon held = RpgCombat.weaponOf(sp.getMainHandItem());
-        MotionSystem.Swing m = MotionSystem.swung(sp, held != null && Combat.isMeleeWeapon(held) && RpgCombat.lackOf(sp, held).isEmpty() ? held : null);
+        boolean ok = held != null && Combat.isMeleeWeapon(held) && RpgCombat.lackOf(sp, held).isEmpty();
+        MotionSystem.Swing m = MotionSystem.swung(sp, ok ? held : null);
         swing(sp, m);
+        // 0.39.0 참격 범위 피해: 범위 안 다른 적에게 평타 한 번씩 (1틱 뒤)
+        if (ok) SwingArea.begin(sp, held, m, primary);
     }
 
     // ------------------------------------------------------------ 도움

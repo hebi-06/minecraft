@@ -480,27 +480,50 @@ public final class RpgCombat {
             return true;
         }
         if (w.type().equals("shield")) LAST_BASH.put(sp.getUUID(), Tasks.now());
+        // 0.39.0 매번 온전한 피해: 몹의 연속 피해 막기 시간 (10틱 안 두 번째 피해는 차이만) 을 평타에는 없앰 — 평타 사이는 MOTION.interval 로 정함
+        if (target instanceof LivingEntity le) le.damageCooldownTime = 0;
         return false;
     }
 
+    /** 근접 평타 한 번의 피해 (평타 공식 · 치명타 · 더한 몫) */
+    record Melee(double dmg, boolean crit, WeaponBonus bonus) {}
+
     /**
-     * 근접 무기 평타 피해 (combat.js adjustOutgoing): 무기 공격력 × 스탯 배율 × 치명타 배율.
-     * 자바의 공격 쿨타임은 그대로 (덜 찬 공격은 0.2 + 0.8 × 충전² — 바닐라와 같음).
+     * 근접 무기 평타 한 번 (combat.js adjustOutgoing): 무기 공격력 × 스탯 배율 × 평타 배율 × 맞을 적을 아는 배율 × 치명타 배율 + 더한 몫 (마검 부여 · 평타 강화 룬).
+     * 0.39.0: 공격 대기 (바닐라 충전 0.2 + 0.8 × 충전²) 없이 늘 온전한 피해 — 평타 사이는 MOTION.interval (Slash.admit · 클라이언트 선입력)
      */
-    public static float meleeDamage(Player p, Entity target, float vanilla, float strength) {
-        if (!(p instanceof ServerPlayer sp) || target == null) return vanilla;
-        Weapon w = weaponOf(p.getMainHandItem());
-        if (w == null || !Combat.isMeleeWeapon(w)) return vanilla;
-        double s = Math.max(0, Math.min(1, strength));
-        LivingEntity victim = target instanceof LivingEntity le ? le : null;
+    static Melee melee(ServerPlayer sp, Weapon w, LivingEntity victim) {
         // 0.28.0 직업 특성 (전사 분노) · 0.29.0 맞을 적을 아는 배율 (창끝 · 암영 첫 공격 — 치명타 확정은 rollCrit 의 sureCrit)
-        double dmg = w.damage() * powerOf(sp, w) * (0.2 + s * s * 0.8) * basicMultOf(sp, w) * meleeMultOf(sp, w, victim);
+        double dmg = w.damage() * powerOf(sp, w) * basicMultOf(sp, w) * meleeMultOf(sp, w, victim);
         boolean crit = rollCrit(sp, w, victim);
         if (crit) dmg *= critMultOf(sp, w);
         WeaponBonus bonus = victim != null ? weaponBonus(sp, victim, w, dmg) : null; // 마검 부여 · 평타 강화 룬
         if (bonus != null) dmg += bonus.add();
-        mark(target, sp, crit, w, true, bonus);
-        return (float) dmg;
+        return new Melee(dmg, crit, bonus);
+    }
+
+    /** 근접 무기 평타 피해 (Player#attack 의 바닐라 피해를 바꿈). strength (바닐라 충전) 는 0.39.0 부터 쓰지 않음 */
+    public static float meleeDamage(Player p, Entity target, float vanilla, float strength) {
+        if (!(p instanceof ServerPlayer sp) || target == null) return vanilla;
+        Weapon w = weaponOf(p.getMainHandItem());
+        if (w == null || !Combat.isMeleeWeapon(w)) return vanilla;
+        Melee m = melee(sp, w, target instanceof LivingEntity le ? le : null);
+        mark(target, sp, m.crit(), w, true, m.bonus());
+        return (float) m.dmg();
+    }
+
+    /**
+     * 0.39.0 참격 범위로 맞은 적 (조준한 적 말고 — SwingArea): 평타 한 번 그대로 (평타 공식 · 치명타 · 더한 몫 · 숫자 · 맞힘 연출 · 무기 특징 · 직업 훅 —
+     * 근접 평타 표시 mark 를 거쳐 DamageNumbers 가 바닐라 공격과 같이 처리), 몹의 연속 피해 막기 시간 없이. 실제로 들어갔는지
+     */
+    public static boolean areaHit(ServerPlayer sp, LivingEntity victim, Weapon w) {
+        if (!(victim.level() instanceof net.minecraft.server.level.ServerLevel level) || victim.isRemoved() || !victim.isAlive()) return false;
+        Melee m = melee(sp, w, victim);
+        mark(victim, sp, m.crit(), w, true, m.bonus());
+        victim.damageCooldownTime = 0;
+        boolean hurt = victim.hurtServer(level, sp.damageSources().playerAttack(sp), (float) m.dmg());
+        if (!hurt) dropMark(victim, sp);
+        return hurt;
     }
 
     // ------------------------------------------------------------ 방패 (combat.js shieldReduction)

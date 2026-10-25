@@ -19,7 +19,9 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 0.38.0 동작 (클라이언트): 사람마다 지금 하는 동작 (시작 시각 · 이름 · 구르기 쪽).
  * <ul>
- *   <li>내 평타: 공격 키 (Minecraft.startAttack 처음) 에 연타 단계를 정해 서버에 먼저 보내고 (참격 방향이 같게), 실제로 휘두를 때 (swing) 동작 시작 — 블록을 캘 때는 없음</li>
+ *   <li>내 평타: 공격 키 (Minecraft.startAttack 처음) 에 연타 단계를 정해 서버에 먼저 보내고 (참격 방향이 같게), 실제로 휘두를 때 (swing) 동작 시작 — 블록을 캘 때는 없음.
+ *       0.39.0 공격 대기 대신 평타 사이 (MOTION.interval 틱): 앞 평타에서 그만큼 지나기 전에 누르면 기억해 두었다가 (선입력) 지나는 틱에 그때 누른 것처럼 나감 —
+ *       매번 온전한 피해, 여러 번 눌러도 하나만</li>
  *   <li>다른 사람 · 스킬: 서버의 PlayPayload</li>
  *   <li>구르기: 쉬프트를 doubleTap 틱 안에 두 번 — 움직이는 쪽 (가만히면 앞) 으로 ticks 틱 동안 distance 칸 (틱마다 빠르기를 정함), 재사용 대기 cooldown 틱,
  *       땅 위 · 탈것 · 물 · 겉날개 · 비행 아닐 때만, 구르는 동안 공격 없음 (무적 없음 — 서버는 둘레에 모습만 알림)</li>
@@ -43,6 +45,8 @@ public final class ClientMotions {
     private static int lastStep;
     private static long lastSwing = -1000;
     private static String lastType = "";
+    /** 0.39.0 선입력: 평타 사이가 지나기 전에 누른 틱 (없으면 -1) */
+    private static long buffered = -1;
 
     // 구르기
     private static long rollStart = -1000;
@@ -62,6 +66,7 @@ public final class ClientMotions {
         pendingStep = 0;
         lastStep = 0;
         lastSwing = -1000;
+        buffered = -1;
         rollStart = -1000;
         lastTap = -1000;
         FROZEN.clear();
@@ -147,6 +152,7 @@ public final class ClientMotions {
             Vec3 v = p.getDeltaMovement();
             p.setDeltaMovement(rollX * rollSpeeds[(int) i], v.y, rollZ * rollSpeeds[(int) i]);
         }
+        fireBuffered(mc);
         ticks++;
         if (ticks % 40 == 0) ACTIVE.entrySet().removeIf(e -> ticks + 1 - e.getValue().start() > e.getValue().ticks() + 2);
     }
@@ -171,11 +177,17 @@ public final class ClientMotions {
         if (rolling()) return false;
         HitResult hr = mc.hitResult;
         if (hr == null || hr.getType() == HitResult.Type.BLOCK) return true;
-        if (mc.gameMode == null || mc.missTime > 0 || p.isHandsBusy() || p.isSpectator()) return true;
+        if (mc.gameMode == null || p.isHandsBusy() || p.isSpectator()) return true;
         Weapon w = meleeOf(p);
         if (w == null) return true;
         List<String> combo = Motions.combo(w.type());
         if (combo.isEmpty()) return true;
+        // 0.39.0 평타 사이 (공격 대기 대신): 앞 평타 동작이 끝나기 전 (또는 허공을 친 뒤 바닐라 대기) 에 누르면 선입력 — 지나는 틱에 fireBuffered 가 나감
+        if (ticks - lastSwing < Motions.attackInterval() || mc.missTime > 0) {
+            buffered = ticks;
+            return false;
+        }
+        buffered = -1;
         int step = Motions.nextStep(lastType.equals(w.type()) ? lastStep : 0, lastSwing, ticks, combo.size());
         pendingStep = step;
         pendingCombo = combo;
@@ -199,6 +211,30 @@ public final class ClientMotions {
     public static void attackEnd() {
         inAttack = false;
         pendingStep = 0;
+    }
+
+    /**
+     * 선입력 (틱 끝): 평타 사이가 지났으면 미뤄 둔 공격 키를 그때 누른 것처럼 (Minecraft.startAttack — 지금 조준한 몹 · 허공).
+     * 한 평타 사이보다 오래된 것 · 창이 열림 · 근접 무기를 내려놓음 · 블록을 조준함이면 버림
+     */
+    static void fireBuffered(Minecraft mc) {
+        if (buffered < 0) return;
+        LocalPlayer p = mc.player;
+        int gap = Motions.attackInterval();
+        if (p == null || mc.gui.screen() != null || ticks - buffered > gap || meleeOf(p) == null || rolling()) {
+            buffered = -1;
+            return;
+        }
+        if (ticks - lastSwing < gap || mc.missTime > 0) return;
+        buffered = -1;
+        HitResult hr = mc.hitResult;
+        if (hr == null || hr.getType() == HitResult.Type.BLOCK) return;
+        ((mmorpg.fabric.client.mixin.MinecraftInvoker) mc).mmorpg$startAttack();
+    }
+
+    /** 시험: 선입력이 있는지 */
+    public static boolean hasBuffered() {
+        return buffered >= 0;
     }
 
     public static boolean inAttack() {

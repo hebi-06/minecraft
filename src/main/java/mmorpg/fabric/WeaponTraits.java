@@ -24,6 +24,8 @@ import net.minecraft.world.phys.Vec3;
  *   <li>창 reach 는 아이템 속성 (RpgWeaponItem) 이라 여기 없음</li>
  * </ul>
  * 번진 피해는 평타 공식을 다시 거치지 않음 (스킬 피해처럼 그대로 · 숫자는 평타 색 — 치명타였으면 금색) 이라 다시 번지지 않음.
+ * 0.39.0 참격 범위 피해 (SwingArea — MOTION.area.enabled): 범위 안 적은 모두 평타 한 번 그대로 맞으므로 낫 넓게 베기 · 회전 베기 (40%) 는 없음,
+ * 전투 망치 지진은 한 번 휘두를 때 처음 맞은 적에서만 (범위로 맞은 적은 빼고), 홀 흡혈 상한은 한 번 휘두를 때마다.
  */
 public final class WeaponTraits {
     private WeaponTraits() {}
@@ -63,11 +65,14 @@ public final class WeaponTraits {
         double mt = RpgCombat.takenMult.applyAsDouble(victim);
         double base = mt > 0 ? dealt / mt : dealt;
         Obj sweep = t.objOrNull("sweep");
-        // 0.38.0 회전 베기 (연타 3단 — 칼 · 마검 · 낫): 둘레 (뒤 · 옆 포함) 의 다른 적에게 맞힌 피해 × MOTION.spin.ratio (낫은 넓게 베기 대신 — 범위 · 비율은 큰 쪽)
-        if (mmorpg.fabric.motion.MotionSystem.spinNow(sp) && mmorpg.core.Motions.combo(w.type()).contains("spin")) spin(sp, victim, w, crit, base, sweep);
-        else if (sweep != null) sweep(sp, victim, w, crit, base, sweep);
+        if (!mmorpg.core.Motions.areaEnabled()) {
+            // 0.38.0 회전 베기 (연타 3단 — 칼 · 마검 · 낫): 둘레 (뒤 · 옆 포함) 의 다른 적에게 맞힌 피해 × MOTION.spin.ratio (낫은 넓게 베기 대신 — 범위 · 비율은 큰 쪽).
+            // 0.39.0 참격 범위 피해를 켜면 범위 안 모두 100% 라 없음
+            if (mmorpg.fabric.motion.MotionSystem.spinNow(sp) && mmorpg.core.Motions.combo(w.type()).contains("spin")) spin(sp, victim, w, crit, base, sweep);
+            else if (sweep != null) sweep(sp, victim, w, crit, base, sweep);
+        }
         Obj quake = t.objOrNull("quake");
-        if (quake != null) quake(sp, victim, crit, base, quake);
+        if (quake != null && SwingArea.claimQuake(sp)) quake(sp, victim, crit, base, quake);
         Obj steal = t.objOrNull("lifesteal");
         if (steal != null) lifesteal(sp, dealt, steal);
     }
@@ -161,7 +166,9 @@ public final class WeaponTraits {
     /** 전투 망치: 맞힌 적 둘레의 다른 적 */
     static List<LivingEntity> quakeTargets(ServerPlayer sp, LivingEntity victim, Obj quake) {
         List<LivingEntity> out = new ArrayList<>();
-        for (LivingEntity e : Kit.around(sp, victim.position(), quake.num("radius"), 1.5)) if (e != victim && Kit.splashFoe(sp, e)) out.add(e);
+        for (LivingEntity e : Kit.around(sp, victim.position(), quake.num("radius"), 1.5)) {
+            if (e != victim && Kit.splashFoe(sp, e) && !SwingArea.inSwing(sp, e)) out.add(e); // 0.39.0 이번 휘두르기의 범위로 맞는 적은 빼고
+        }
         out.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(victim)));
         return out.size() > MAX_SPLASH ? new ArrayList<>(out.subList(0, MAX_SPLASH)) : out;
     }
@@ -182,10 +189,13 @@ public final class WeaponTraits {
     /** 0.30.0 홀 흡혈이 넘침 (체력이 가득이라 다 못 받은 몫 — 사제 「신앙」: 둘레의 다친 아군에게): (홀을 든 사람, 넘친 양) */
     public static java.util.function.BiConsumer<ServerPlayer, Double> stealOverflow = (sp, extra) -> {};
 
-    /** 성스러운 홀: 준 피해의 rate (한 번에 최대 체력 × cap 까지) — 실제로 회복한 양 */
+    /** 성스러운 홀: 준 피해의 rate (한 번 휘두를 때 최대 체력 × cap 까지 — 0.39.0 범위로 여럿을 맞혀도 합해서) — 실제로 회복한 양 */
     static double lifesteal(ServerPlayer sp, double dealt, Obj steal) {
         if (!sp.isAlive() || sp.getHealth() <= 0) return 0;
-        double want = Math.min(dealt * steal.num("rate"), RpgHealth.maxOf(sp) * steal.num("cap"));
+        double room = RpgHealth.maxOf(sp) * steal.num("cap") - SwingArea.healed(sp);
+        double want = Math.min(dealt * steal.num("rate"), Math.max(0, room));
+        if (!(want > 0)) return 0;
+        SwingArea.addHealed(sp, want);
         double healed = RpgHealth.healBy(sp, want);
         if (healed >= 0.05) DamageNumbers.show(sp, healed, DamageNumbers.Style.HEAL, "", 0);
         if (want - healed >= 0.05) {

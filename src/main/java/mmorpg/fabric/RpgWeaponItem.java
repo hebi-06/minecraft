@@ -30,6 +30,12 @@ import net.minecraft.world.level.Level;
  * 영웅 무기 (스킬 하나 — 10단계): 근접은 우클릭, 활 · 완드는 웅크리고 우클릭 (그냥 누르면 바로 평타).
  */
 public final class RpgWeaponItem extends Item {
+    /**
+     * 0.39.0 공격 속도 +96 (바닐라 4 → 100번/초 — 공격 대기가 0.2틱): 바닐라 공격 대기 (화면 가운데 칼 그림 · 덜 찬 공격 약함 · 손이 내려감) 를 없앰.
+     * 근접 평타 사이는 MOTION.interval (클라이언트 선입력 · 서버 Slash.admit), 활 · 완드는 RpgCombat.fireRanged 의 재사용 대기 그대로
+     */
+    static final double NO_COOLDOWN = 96.0;
+
     /** 창의 사거리 (ENTITY_INTERACTION_RANGE) 속성 이름 */
     public static final net.minecraft.resources.Identifier REACH_ID = Mmorpg.id("weapon_reach");
 
@@ -47,7 +53,7 @@ public final class RpgWeaponItem extends Item {
         ItemAttributeModifiers.Builder b = ItemAttributeModifiers.builder()
                 .add(Attributes.ATTACK_DAMAGE, new AttributeModifier(BASE_ATTACK_DAMAGE_ID, damage, AttributeModifier.Operation.ADD_VALUE),
                         EquipmentSlotGroup.MAINHAND, ItemAttributeModifiers.Display.hidden())
-                .add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_ID, -2.0, AttributeModifier.Operation.ADD_VALUE),
+                .add(Attributes.ATTACK_SPEED, new AttributeModifier(BASE_ATTACK_SPEED_ID, NO_COOLDOWN, AttributeModifier.Operation.ADD_VALUE),
                         EquipmentSlotGroup.MAINHAND, ItemAttributeModifiers.Display.hidden());
         // 창 (12단계): 몹을 칠 수 있는 거리 +reach 칸 (설명은 애드온 식 설명 줄 — Weapons.traitLines)
         double reach = Combat.isMeleeWeapon(w) ? w.typeDef().numOr("reach", 0) : 0;

@@ -107,6 +107,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             part(ctx, "armor", () -> armor(ctx, server));
             part(ctx, "fp", () -> firstPerson(ctx, server));
             part(ctx, "attack", () -> attack(ctx, server));
+            part(ctx, "area", () -> area(ctx, server));
             part(ctx, "roll", () -> roll(ctx, server));
             part(ctx, "skill", () -> skill(ctx, server));
             part(ctx, "empty", () -> empty(ctx, server));
@@ -210,6 +211,26 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             check(srv.equals(want[i] + "#" + (i + 1)), "server step " + i + " " + srv);
             ctx.waitTicks(10); // 허공 공격 뒤 바닐라 공격 대기 (missTime 10)
         }
+        // 0.39.0 선입력: 2틱 간격으로 두 번 누르면 둘째는 미뤄 두었다가 평타 사이 (10틱) 가 지나는 틱에 나감 (2단으로 이어짐)
+        ctx.waitTicks(Motions.comboWindow() + 2);
+        ctx.getInput().pressKey(o -> o.keyAttack);
+        ctx.waitTicks(2);
+        long firstSwing = server.computeOnServer(s -> {
+            MotionSystem.Swing sw = MotionSystem.last(player(s));
+            return sw == null ? -1L : sw.tick();
+        });
+        ctx.getInput().pressKey(o -> o.keyAttack);
+        ctx.waitTicks(1);
+        check(ctx.computeOnClient(mc -> ClientMotions.hasBuffered()), "early press buffered (not sent)");
+        check(ctx.computeOnClient(mc -> ClientMotions.lastStep()) == 1, "still step 1 while buffered");
+        ctx.waitTicks(Motions.attackInterval());
+        check(!ctx.computeOnClient(mc -> ClientMotions.hasBuffered()) && ctx.computeOnClient(mc -> ClientMotions.lastStep()) == 2, "buffered press fired as step 2");
+        String buf = server.computeOnServer(s -> {
+            MotionSystem.Swing sw = MotionSystem.last(player(s));
+            return sw == null ? "-" : sw.step() + "@" + (sw.tick() - firstSwing);
+        });
+        check(buf.startsWith("2@") && Math.abs(Integer.parseInt(buf.substring(2)) - Motions.attackInterval()) <= 2, "server: step 2 one interval later " + buf);
+        ctx.waitTicks(12);
         // 3인칭 (앞 · 시야 40 으로 가까이): 연타 셋
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
         ctx.getInput().lookAt(180F, 10F);
@@ -224,6 +245,53 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         fov(ctx, 70);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.waitTicks(15);
+    }
+
+    // ------------------------------------------------------------ 3-2. 0.39.0 허공을 베어도 참격 범위 안 적에게 피해
+
+    private void area(ClientGameTestContext ctx, TestServerContext server) {
+        server.runCommand("tp @a 0.5 -60 0.5 180 0"); // 북쪽 (-z) 을 봄
+        ctx.getInput().lookAt(180F, 0F);
+        ctx.waitTicks(25); // 앞 평타에서 충분히 지남
+        // 앞 오른쪽 비스듬히 (약 37° · 2.5칸 — 조준선 밖) 과 뒤 (1.5칸)
+        List<Integer> ids = server.computeOnServer(s -> {
+            ServerLevel level = player(s).level();
+            List<Integer> out = new ArrayList<>();
+            for (double[] at : new double[][] {{2.0, -1.5}, {0.5, 2.0}}) {
+                net.minecraft.world.entity.monster.zombie.Husk m = EntityTypes.HUSK.create(level, EntitySpawnReason.COMMAND);
+                m.snapTo(at[0], -60, at[1], 0F, 0F);
+                m.setNoAi(true);
+                m.setPersistenceRequired();
+                level.addFreshEntity(m);
+                out.add(m.getId());
+            }
+            return out;
+        });
+        ctx.waitTicks(3);
+        float[] hp0 = server.computeOnServer(s -> {
+            ServerLevel level = player(s).level();
+            return new float[] {((net.minecraft.world.entity.LivingEntity) level.getEntity(ids.get(0))).getHealth(),
+                    ((net.minecraft.world.entity.LivingEntity) level.getEntity(ids.get(1))).getHealth()};
+        });
+        check(ctx.computeOnClient(mc -> mc.hitResult == null || mc.hitResult.getType() == net.minecraft.world.phys.HitResult.Type.MISS), "aiming at the air");
+        ctx.getInput().pressKey(o -> o.keyAttack);
+        ctx.waitTicks(4);
+        String r = server.computeOnServer(s -> {
+            ServerLevel level = player(s).level();
+            Entity a = level.getEntity(ids.get(0));
+            Entity b = level.getEntity(ids.get(1));
+            float ha = a instanceof net.minecraft.world.entity.LivingEntity la && la.isAlive() ? la.getHealth() : 0F;
+            float hb = b instanceof net.minecraft.world.entity.LivingEntity lb && lb.isAlive() ? lb.getHealth() : 0F;
+            return ha + "/" + hp0[0] + " " + hb + "/" + hp0[1] + " n=" + mmorpg.fabric.SwingArea.lastCount(player(s));
+        });
+        String[] parts = r.split(" ");
+        float ha = Float.parseFloat(parts[0].split("/")[0]);
+        float hb = Float.parseFloat(parts[1].split("/")[0]);
+        check(ha < hp0[0], "air swing: front-right husk damaged " + r);
+        check(hb == hp0[1], "air swing: husk behind untouched " + r);
+        ctx.takeScreenshot(TestScreenshotOptions.of("mo_area_air").withSize(960, 540));
+        discard(server, ids);
+        ctx.waitTicks(3);
     }
 
     // ------------------------------------------------------------ 4. 쉬프트 두 번 = 구르기

@@ -45,6 +45,79 @@ public final class Motions {
         return lastStep % size + 1;
     }
 
+    // ------------------------------------------------------------ 0.39.0 평타 사이 · 참격 범위
+
+    /** 평타 사이 틱 (공격 대기 대신 — 이보다 빨리 누르면 선입력: 앞 동작이 끝나는 순간 나감, 매번 온전한 피해) */
+    public static int attackInterval() {
+        return Math.max(1, (int) cfg().numOr("interval", 10));
+    }
+
+    /** 서버가 받는 평타 사이 틱 (클라이언트 · 서버 틱이 조금 어긋나도 받게 intervalSlack 만큼 여유) */
+    public static int serverInterval() {
+        return Math.max(1, attackInterval() - (int) cfg().numOr("intervalSlack", 2));
+    }
+
+    private static Obj areaCfg() {
+        Obj a = cfg().objOrNull("area");
+        return a != null ? a : new Obj(new java.util.LinkedHashMap<>(), "MOTION.area");
+    }
+
+    /** 참격 범위 피해를 쓰는지 (끄면 예전대로 — 회전 베기 · 낫 넓게 베기만 다른 적에게) */
+    public static boolean areaEnabled() {
+        return areaCfg().truthy("enabled");
+    }
+
+    /** 한 번 휘두를 때 범위로 맞는 적 수 상한 (조준한 적 빼고) */
+    public static int areaMax() {
+        return (int) areaCfg().numOr("max", 6);
+    }
+
+    /**
+     * 참격 범위: shape = arc (앞 부채꼴) · band (앞 띠) · line (앞 줄) · ring (둘레), range 칸, angle 도 (arc), width 칸 (band · line), height 칸
+     * (arc · band 는 보는 방향 기준 위아래 폭, ring 은 발에서 위로)
+     */
+    public record Area(String shape, double range, double angle, double width, double height) {}
+
+    /** 이 동작 · 무기 종류의 참격 범위 (무기 종류 배율 scale 를 range · angle · width 에 곱함). 없는 동작이면 null */
+    public static Area area(String motion, String weaponType) {
+        Obj shapes = areaCfg().objOrNull("shapes");
+        if (shapes == null || motion == null || !shapes.has(motion)) return null;
+        Obj a = shapes.obj(motion);
+        Obj sc = areaCfg().objOrNull("scale");
+        double k = sc != null && weaponType != null ? sc.numOr(weaponType, 1) : 1;
+        return new Area(a.str("shape"), a.num("range") * k, Math.min(360, a.numOr("angle", 0) * k), a.numOr("width", 0) * k, a.numOr("height", 2));
+    }
+
+    /**
+     * 점이 범위 안인지 (순수 계산 — 시험 가능): arc · band · line 은 눈 기준 보는 방향의 앞 fwd · 오른쪽 lat · 위 up (칸),
+     * ring 은 발 기준 가로 (fwd · lat) · 높이 up. pad = 맞는 쪽 몸의 반폭 (그만큼 넓혀 셈)
+     */
+    public static boolean inArea(Area a, double fwd, double lat, double up, double pad) {
+        if (a == null) return false;
+        double p = Math.max(0, pad);
+        switch (a.shape()) {
+            case "arc" -> {
+                double d = Math.hypot(fwd, lat);
+                if (d - p > a.range() || fwd < -p || Math.abs(up) > a.height() / 2 + p) return false;
+                if (d <= p) return true;
+                double half = Math.toRadians(a.angle() / 2) + Math.asin(Math.min(1, p / d));
+                return Math.abs(Math.atan2(lat, fwd)) <= half;
+            }
+            case "band" -> {
+                return fwd >= -p && fwd <= a.range() + p && Math.abs(lat) <= a.width() / 2 + p && Math.abs(up) <= a.height() / 2 + p;
+            }
+            case "line" -> {
+                return fwd >= -p && fwd <= a.range() + p && Math.hypot(lat, up) <= a.width() / 2 + p;
+            }
+            case "ring" -> {
+                return Math.hypot(fwd, lat) - p <= a.range() && up >= -1 - p && up <= a.height() + p;
+            }
+            default -> {
+                return false;
+            }
+        }
+    }
+
     /** 회전 베기가 둘레 적에게 주는 몫 (맞힌 피해 ×) */
     public static double spinRatio() {
         return cfg().obj("spin").numOr("ratio", 0.4);

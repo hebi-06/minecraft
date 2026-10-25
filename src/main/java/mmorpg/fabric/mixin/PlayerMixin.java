@@ -20,8 +20,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * 플레이어 공격 · 받는 피해.
- * - attack 처음: 공격 충전 정도와 대상을 기억, 참격 연출, 활 · 완드는 쏘고 취소, 요구 조건이 모자란 근접 무기는 취소
- * - attack 의 대상.hurtOrSimulate(…, 피해): RPG 평타 공식으로 바꿈
+ * - attack 처음: 대상을 기억, 참격 연출 (0.39.0 — 같은 휘두르기의 범위 피해에서 조준한 적을 뺌), 활 · 완드는 쏘고 취소, 요구 조건이 모자란 근접 무기는 취소
+ * - attack 의 대상.hurtOrSimulate(…, 피해): RPG 평타 공식으로 바꿈 (0.39.0 — 공격 대기 충전과 상관없이 온전한 피해)
  * - actuallyHurt 의 setHealth: 방패 감소 · 죽지 않는 피해 (RPG 체력 규칙)
  * - getXpNeededForNextLevel: 레벨업에 필요한 경험치 = 바닐라 × 3 (9단계) × 10렙 뒤로 점점 커지는 배율 (0.24.1 — 40렙에서 3) — 규칙 코어 Leveling, rules_more.json LEVELING
  * - giveExperiencePoints · giveExperienceLevels: 최고 레벨 (0.24.2 — 60) 에서 멈춤 (그 뒤 경험치는 오르지 않음)
@@ -29,22 +29,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Player.class)
 public abstract class PlayerMixin {
     @Unique
-    private float mmorpg$strength = 1F;
-    @Unique
     private Entity mmorpg$target;
 
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void mmorpg$beforeAttack(Entity target, CallbackInfo ci) {
         Player self = (Player) (Object) this;
-        this.mmorpg$strength = self.getAttackStrengthScale(0.5F);
         this.mmorpg$target = target;
-        if (self instanceof ServerPlayer sp) Slash.onAttack(sp);
+        if (self instanceof ServerPlayer sp) Slash.onAttack(sp, target);
         if (RpgCombat.beforeAttack(self, target)) ci.cancel();
     }
 
     @ModifyArg(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;hurtOrSimulate(Lnet/minecraft/world/damagesource/DamageSource;F)Z"), index = 1)
     private float mmorpg$meleeDamage(float amount) {
-        return RpgCombat.meleeDamage((Player) (Object) this, this.mmorpg$target, amount, this.mmorpg$strength);
+        return RpgCombat.meleeDamage((Player) (Object) this, this.mmorpg$target, amount, 1F);
     }
 
     @WrapOperation(method = "actuallyHurt", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;setHealth(F)V"))
