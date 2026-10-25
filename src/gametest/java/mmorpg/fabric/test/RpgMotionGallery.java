@@ -469,9 +469,11 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     }
 
     private void looks(ClientGameTestContext ctx, TestServerContext server) {
-        server.runCommand("tp @a 0.5 -60 3.5 180 8"); // 마네킹 (북쪽 3칸) 에서 6.5칸 — 넓어진 궤적이 화면에 다 들게
+        // 마네킹 (북쪽 3칸) 에서 6.5칸 · 3칸 높은 자리 (돌 기둥) 에서 비스듬히 내려다봄 — 넓어진 궤적 (둥근 띠) 이 화면에 다 들고 모양이 보이게
+        server.runCommand("fill 0 -60 3 0 -58 3 minecraft:stone");
+        server.runCommand("tp @a 0.5 -57 3.5 180 27");
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
-        ctx.getInput().lookAt(180F, 8F);
+        ctx.getInput().lookAt(180F, 27F);
         hideGui(ctx, true);
         // (1) 멈춘 마네킹 하나 (가운데): 같은 가로 베기 순간에 모습마다
         for (String[] lk : LOOK_STILLS) {
@@ -495,6 +497,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         // (2) 실제로: 가르기 (평타 강화 룬) 를 걸고 평타 — 서버가 알린 내 모습 → 궤적 색 · 늘임 (3인칭 앞 · 뒤 · 1인칭)
         int me = ctx.computeOnClient(mc -> mc.player.getId());
         server.runCommand("tp @a 0.5 -60 0.5 180 0");
+        server.runCommand("fill 0 -60 3 0 -58 3 minecraft:air");
         server.runOnServer(sv -> {
             ServerPlayer sp = player(sv);
             sp.getInventory().setItem(0, weaponOf("sword", "rare"));
