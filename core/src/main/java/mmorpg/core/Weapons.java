@@ -389,7 +389,10 @@ public final class Weapons {
         if (enh > 0) {
             double bonus = Enhance.enhanceBonus(enh);
             lines.add("§r" + L + label + " " + V + Js.str(round1(w.damage() * (1 + bonus))) + L + " (기본 " + Js.str(w.damage()) + ")");
-            lines.add("§r§6강화 +" + Js.str(enh) + L + " · 피해 +" + Js.str(Js.round(bonus * 100)) + "%");
+            // 0.44.1 (자바 전용 — 사용자 "피해 +N% 이것도 공격력 N 이렇게"): 강화 몫을 % 대신 더해진 공격력으로 (대조 시험의 애드온 글자는 그대로)
+            String up = Rules.hasMore() ? label + " +" + Js.str(round1(round1(w.damage() * (1 + bonus)) - w.damage()))
+                    : "피해 +" + Js.str(Js.round(bonus * 100)) + "%";
+            lines.add("§r§6강화 +" + Js.str(enh) + L + " · " + up);
         } else {
             lines.add("§r" + L + label + " " + V + Js.str(w.damage()));
         }

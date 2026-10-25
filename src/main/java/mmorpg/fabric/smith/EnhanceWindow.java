@@ -95,6 +95,20 @@ public final class EnhanceWindow {
         return Js.str(Js.round(x * 100)) + "%";
     }
 
+    /** 0.44.1 강화가 반영된 공격력 (무기 공격력 × (1 + 강화 몫) — 무기 설명 · 스탯 창과 같은 값, 소수 한 자리) */
+    public static double attack(Weapon w, int n) {
+        return Weapons.round1(w.damage() * (1 + Enhance.enhanceBonus(n)));
+    }
+
+    /**
+     * 0.44.1 강화 표시 (사용자: "강화 할때 피해 +N% 이것도 공격력 N 이렇게 바꾸자 직관적으로 쎄진다는 느낌이 안든다"): 피해 % 대신 강화가 반영된 공격력 —
+     * "공격력 25.1", 바뀌면 "공격력 25.1 → 26.4" (L 글자 색 · V 앞 값 색 · A 뒤 값 색)
+     */
+    public static String attackText(Weapon w, int from, int to, String L, String V, String A) {
+        String s = L + "공격력 " + V + Js.str(attack(w, from));
+        return from == to ? s : s + L + " → " + A + Js.str(attack(w, to));
+    }
+
     /** 가방 (핫바부터) 의 RPG 무기 (최대 18개 — enhanceable) */
     public static List<Entry> enhanceable(ServerPlayer sp) {
         List<Entry> out = new ArrayList<>();
@@ -126,11 +140,11 @@ public final class EnhanceWindow {
 
     /** 무기 칸 설명 */
     private static List<String> slotLore(Entry e) {
-        if (e.n() >= MAX) return List.of("§r§6최대 강화 +" + MAX, "§r§7피해 +" + pct(Enhance.enhanceBonus(e.n())));
+        if (e.n() >= MAX) return List.of("§r§6최대 강화 +" + MAX, "§r" + attackText(e.w(), e.n(), e.n(), "§7", "§f", "§f"));
         Enhance.Cost c = Enhance.enhanceCost(e.n(), e.w().grade().id());
         if (c == null) return List.of();
         return List.of("§r§7강화 §f+" + e.n() + " → +" + (e.n() + 1) + "§7 · 성공 §a" + pct(c.rate()),
-                "§r§7피해 +" + pct(Enhance.enhanceBonus(e.n())) + " → §f+" + pct(Enhance.enhanceBonus(e.n() + 1)), "§r§7재료: " + costText(c, false),
+                "§r" + attackText(e.w(), e.n(), e.n() + 1, "§7", "§f", "§a"), "§r§7재료: " + costText(c, false),
                 "§r" + (c.down() ? "§c" : "§8") + failText(c));
     }
 
@@ -188,7 +202,7 @@ public final class EnhanceWindow {
         form.fillEmpty();
         List<String> lines = List.of(
                 (e.n() > 0 ? "§0+" + e.n() + " " : "") + e.w().darkName() + " §8→ §0§l+" + (e.n() + 1) + "§r",
-                "§8성공 확률 §2§l" + pct(c.rate()) + "§r§8 · 피해 +" + pct(Enhance.enhanceBonus(e.n())) + " → §0+" + pct(Enhance.enhanceBonus(e.n() + 1)) + "§r",
+                "§8성공 확률 §2§l" + pct(c.rate()) + "§r§8 · " + attackText(e.w(), e.n(), e.n() + 1, "§8", "§0", "§2§l") + "§r",
                 "§8재료 " + costText(c, true) + " §8(보유 §0" + st + "§8" + (c.bright() > 0 ? " / §0" + br : "") + "§8)§r",
                 (c.down() ? "§4" : "§8") + failText(c) + "§r",
                 "§8초록 칸: 강화" + (scroll ? " · 주문서 칸: 하락 방지" : "") + " · 빨간 칸: 취소§r");
@@ -405,7 +419,8 @@ public final class EnhanceWindow {
         Inv.set(sp, e.slot(), now);
         if (ok) {
             return new Outcome("success", e.n(), n,
-                    "§2§l성공! §r§0+" + n + " " + e.w().darkName() + "§8 (피해 +" + pct(Enhance.enhanceBonus(n)) + ")" + (guard ? " · 주문서는 쓰지 않았습니다" : "") + "§r");
+                    "§2§l성공! §r§0+" + n + " " + e.w().darkName() + "§8 (" + attackText(e.w(), e.n(), n, "§8", "§0", "§2") + "§8)" + (guard ? " · 주문서는 쓰지 않았습니다" : "")
+                            + "§r");
         }
         if (n < e.n()) return new Outcome("down", e.n(), n, "§4실패: 한 단계 떨어졌습니다 (+" + e.n() + " → +" + n + ")§r");
         if (guard) return new Outcome("guard", e.n(), n, "§6실패: " + SCROLL.str("name") + "가 지켜 주어 +" + n + " 그대로입니다§r");
@@ -420,12 +435,12 @@ public final class EnhanceWindow {
         switch (o.kind()) {
             case "success" -> {
                 successFx(sp, n);
-                Notify.title(sp, "§6§l+" + n + " 강화 성공!", "§r" + name + "§r §7피해 +" + pct(Enhance.enhanceBonus(n)));
+                Notify.title(sp, "§6§l+" + n + " 강화 성공!", "§r" + name + "§r " + attackText(e.w(), e.n(), n, "§7", "§f", "§a"));
                 if (n >= ANNOUNCE_FROM) announce(sp, e.w(), n);
             }
             case "down" -> {
                 failFx(sp, true, false);
-                Notify.title(sp, "§c강화 실패", "§c+" + e.n() + " → +" + n);
+                Notify.title(sp, "§c강화 실패", "§c+" + e.n() + " → +" + n + " §7· " + attackText(e.w(), e.n(), n, "§7", "§f", "§c"));
             }
             case "guard" -> {
                 failFx(sp, false, true);

@@ -160,8 +160,19 @@ public final class Smith {
 
     /** 칸 설명 · 본문의 성능 한 줄: "공격력 30 · 치명타 12.5%" (방패는 감소) */
     static String statLine(Weapon w) {
-        if (w.type().equals("shield")) return "공격력 " + Js.str(w.damage()) + " · 감소 " + Js.str(Js.round(w.passive() * 1000) / 10) + "%";
-        return "공격력 " + Js.str(w.damage()) + " · 치명타 " + Js.str(Js.round(w.critChance() * 1000) / 10) + "%";
+        return statLine(w, 0);
+    }
+
+    /** 성능 한 줄 — 강화 enh 단계가 반영된 공격력 (0.44.1 — 레벨 올리기는 강화 단계를 옮기므로 강화 창과 같은 공격력) */
+    static String statLine(Weapon w, int enh) {
+        String atk = Js.str(enh > 0 ? EnhanceWindow.attack(w, enh) : w.damage());
+        if (w.type().equals("shield")) return "공격력 " + atk + " · 감소 " + Js.str(Js.round(w.passive() * 1000) / 10) + "%";
+        return "공격력 " + atk + " · 치명타 " + Js.str(Js.round(w.critChance() * 1000) / 10) + "%";
+    }
+
+    /** 올릴 무기의 강화 단계 (그대로 옮겨짐) */
+    static int enhOf(Raise e) {
+        return WeaponEnhance.of(e.item());
     }
 
     /** 렙제: 이 무기를 아직 쓸 수 없으면 {무기 레벨, 지금 최고 레벨}, 아니면 null (levelGap) */
@@ -266,7 +277,8 @@ public final class Smith {
         for (int i = 0; i < list.size(); i++) {
             Raise e = list.get(i);
             double[] gap = levelGap(sp, e.to());
-            List<String> lore = new ArrayList<>(List.of("§r§7레벨 제한 §f" + e.w().level() + " → " + e.to().level(), "§r§7" + statLine(e.w()), "§r§f→ " + statLine(e.to())));
+            List<String> lore = new ArrayList<>(List.of("§r§7레벨 제한 §f" + e.w().level() + " → " + e.to().level(), "§r§7" + statLine(e.w(), enhOf(e)),
+                    "§r§f→ " + statLine(e.to(), enhOf(e))));
             if (e.goldStep()) {
                 long gold = Wallet.total(sp, Economy.Kind.GOLD);
                 lore.add("§r" + (gold >= e.gold() ? "§a" : "§7") + "골드 §f" + Math.min(gold, e.gold()) + "/" + e.gold());
@@ -301,7 +313,7 @@ public final class Smith {
         double[] gap = levelGap(sp, e.to());
         List<String> lines = new ArrayList<>();
         lines.add(e.w().darkName() + " §8→ §0" + e.to().level() + "렙§r");
-        lines.add("§8" + statLine(e.w()) + " §8→ §0" + statLine(e.to()) + "§r");
+        lines.add("§8" + statLine(e.w(), enhOf(e)) + " §8→ §0" + statLine(e.to(), enhOf(e)) + "§r");
         lines.add("§8요구 스탯: " + Weapons.reqsText(e.to().reqs(), true) + "§r");
         if (gap != null) lines.add("§4" + Js.str(gap[0]) + "렙부터 사용 가능 §8(지금 최고 " + Js.str(gap[1]) + ")§r"); // 휴대폰 창 한 줄 (180px)
         if (e.goldStep()) {
@@ -360,7 +372,7 @@ public final class Smith {
             forgeFx(sp, 1.0, 0.8, 1.4, 0.5, 6);
             Notify.notify(sp, "§6레벨 제한 " + e.w().level() + " → " + e.to().level() + ": " + e.to().name() + Weapons.levelNote(e.to(), RpgCombat.reqLevelOf(sp)), 60);
         }
-        return "§2완료: " + e.to().darkName() + " §8(" + statLine(e.to()) + ")§r";
+        return "§2완료: " + e.to().darkName() + " §8(" + statLine(e.to(), enhOf(e)) + ")§r";
     }
 
     /** 레벨 올리기 창 반복 (raiseLoop). next: "enhance" = 강화 창으로, "craft" = 보스 무기 제작 창으로, null = 닫음 */

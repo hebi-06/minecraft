@@ -5,6 +5,7 @@ import java.util.Map;
 import mmorpg.core.Artifacts;
 import mmorpg.core.Enhance;
 import mmorpg.core.Grade;
+import mmorpg.core.Js;
 import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
@@ -13,6 +14,7 @@ import mmorpg.fabric.gear.GearItems;
 import mmorpg.fabric.gear.WeaponEnhance;
 import mmorpg.fabric.npc.NpcData;
 import mmorpg.fabric.skill.Kit;
+import mmorpg.fabric.smith.EnhanceWindow;
 import mmorpg.fabric.smith.Smith;
 import mmorpg.fabric.smith.SmithNet;
 import mmorpg.fabric.smith.SmithUi;
@@ -101,6 +103,10 @@ public final class RpgSmithUiTests {
         Enhance.Cost c = Enhance.enhanceCost(0, "common");
         h.assertTrue(e != null && e.can() && e.state() == 0 && e.from().equals("+0") && e.to().equals("+1") && Math.abs(e.rate() - c.rate()) < 1e-9, "weapon row " + e);
         h.assertTrue(e.costs().size() == 1 && e.costs().get(0).have() == 64 && e.costs().get(0).need() == 1 && e.scroll() == -1, "stone 64 / 1 · no scroll at +0");
+        // 0.44.1 강화 효과는 피해 % 대신 강화가 반영된 공격력 (지금 → 성공하면)
+        String atk = String.join(" ", e.lines());
+        h.assertTrue(atk.contains("공격력") && atk.contains(Js.str(EnhanceWindow.attack(w, 0))) && atk.contains(Js.str(EnhanceWindow.attack(w, 1))) && !atk.contains("%"),
+                "attack line " + atk);
         h.assertTrue(v.res().size() == 3 && v.res().get(0).count() == 64, "resources row (stones)");
         SmithUi.action(sp, "do", "w:0", 0, 0);
         SmithNet.WorkPayload work = lastWork(sp);
@@ -118,6 +124,7 @@ public final class RpgSmithUiTests {
             int lv = WeaponEnhance.of(sp.getInventory().getItem(0));
             h.assertTrue(r.seq() == 1 && (r.kind().equals("success") && lv == 1 || r.kind().equals("keep") && lv == 0), "result " + r.kind() + " level " + lv);
             h.assertTrue(r.item().is(RpgItems.byId(w.id())) && WeaponEnhance.of(r.item()) == lv, "result item = the weapon now");
+            h.assertTrue(r.text().contains("공격력 ") && r.text().contains(Js.str(EnhanceWindow.attack(w, lv))) && !r.text().contains("%"), "result text " + r.text());
             h.assertTrue(RpgGearTests.countIn(sp, stone()) == 63, "one stone used: " + RpgGearTests.countIn(sp, stone()));
             SmithNet.ViewPayload after = lastView(sp);
             h.assertTrue(!after.busy() && after.result().seq() == 1 && !after.open() && !SmithUi.busy(sp), "view after");

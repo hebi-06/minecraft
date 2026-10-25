@@ -372,7 +372,9 @@ public final class SmithUi {
                     Job job = seq -> {
                         EnhanceWindow.Outcome o = EnhanceWindow.judgeQuiet(sp, e, c, guard);
                         if (o.ok() && o.after() >= EnhanceWindow.ANNOUNCE_FROM) EnhanceWindow.announce(sp, e.w(), o.after());
-                        return enhanceResult(seq, key, o, name, "피해 +" + EnhanceWindow.pct(Enhance.enhanceBonus(o.after())), Inv.get(sp, e.slot()).copy());
+                        // 0.44.1 강화가 반영된 공격력 (오르면 초록 · 떨어지면 빨강 · 그대로면 한 값)
+                        String eff = EnhanceWindow.attackText(e.w(), o.before(), o.after(), "§7", "§f", o.kind().equals("down") ? "§c" : "§a");
+                        return enhanceResult(seq, key, o, name, eff, Inv.get(sp, e.slot()).copy());
                     };
                     return new Prepared(job, e.item(), e.w().gradeIndex(), null);
                 }
@@ -752,12 +754,13 @@ public final class SmithUi {
             String sub = (i < 9 ? "단축 칸 " + (i + 1) : "가방") + " §8· §7" + e.w().typeLabel() + " " + e.w().level() + "렙";
             Enhance.Cost c = Enhance.enhanceCost(e.n(), e.w().grade().id());
             if (e.n() >= EnhanceWindow.MAX || c == null) {
-                out.add(new SmithNet.Entry(key, e.item(), name, "+" + e.n(), 2, "", sub, "+" + e.n(), "", List.of("§7피해 §a+" + EnhanceWindow.pct(Enhance.enhanceBonus(e.n()))),
+                out.add(new SmithNet.Entry(key, e.item(), name, "+" + e.n(), 2, "", sub, "+" + e.n(), "", List.of(EnhanceWindow.attackText(e.w(), e.n(), e.n(), "§7", "§a", "§a")),
                         -1, List.of(), "", -1, "강화", false, "§6최대 강화 +" + EnhanceWindow.MAX, List.of()));
                 continue;
             }
             List<String> lack = EnhanceWindow.lacking(sp, c, false);
-            List<String> lines = List.of("§7피해 §f+" + EnhanceWindow.pct(Enhance.enhanceBonus(e.n())) + " §7→ §a+" + EnhanceWindow.pct(Enhance.enhanceBonus(e.n() + 1)));
+            // 0.44.1 피해 % 대신 강화가 반영된 공격력 (지금 → 성공하면)
+            List<String> lines = List.of(EnhanceWindow.attackText(e.w(), e.n(), e.n() + 1, "§7", "§f", "§a"));
             out.add(new SmithNet.Entry(key, e.item(), name, "+" + e.n(), lack.isEmpty() ? 0 : 1, "", sub, "+" + e.n(), "+" + (e.n() + 1), lines, c.rate(),
                     enhanceCosts(sp, c), failLine(c), c.down() ? scrolls(sp) : -1, "강화", lack.isEmpty(), lackNote(lack), List.of()));
         }
@@ -818,7 +821,8 @@ public final class SmithUi {
             }
             double[] gap = Smith.levelGap(sp, e.to());
             String note = !lack.isEmpty() ? lackNote(lack) : gapNote(gap);
-            List<String> lines = List.of("§7" + Smith.statLine(e.w()), "§a→ " + Smith.statLine(e.to()), "§7요구 " + Weapons.reqsText(e.to().reqs(), false));
+            int enh = Smith.enhOf(e);
+            List<String> lines = List.of("§7" + Smith.statLine(e.w(), enh), "§a→ " + Smith.statLine(e.to(), enh), "§7요구 " + Weapons.reqsText(e.to().reqs(), false));
             int state = !lack.isEmpty() ? 1 : gap != null ? 3 : 0;
             out.add(new SmithNet.Entry("r:" + e.slot(), e.item(), "§r" + e.w().name(), e.w().level() + "→" + e.to().level(), state, "",
                     (e.slot() < 9 ? "단축 칸 " + (e.slot() + 1) : "가방") + " §8· §7" + e.w().typeLabel(), e.w().level() + "렙", e.to().level() + "렙", lines, -1, costs,

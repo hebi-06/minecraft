@@ -151,6 +151,15 @@ public final class WeaponsMoreTest {
             check(lore.stream().anyMatch(l -> l.contains(trait)), type + " trait line " + trait);
             check(lore.stream().anyMatch(l -> l.contains("마법 피해")) == type.equals("scepter"), type + " magic line");
         }
+        // 0.44.1 강화 줄 (자바 전용): 피해 % 대신 더해진 공격력 — "공격력 26.4 (기본 20.6)" · "강화 +7 · 공격력 +5.8"
+        if (Rules.hasMore()) {
+            Weapon hs = Weapons.weaponFrom("sword", 35, "hero");
+            List<String> enhLore = Weapons.weaponInfo(hs, false, 7);
+            double eff = Weapons.round1(hs.damage() * (1 + Enhance.enhanceBonus(7)));
+            String plus = Js.str(Weapons.round1(eff - hs.damage()));
+            check(enhLore.stream().anyMatch(l -> l.contains("공격력 §f" + Js.str(eff))), "enhanced attack line " + enhLore);
+            check(enhLore.stream().anyMatch(l -> l.contains("강화 +7") && l.contains("공격력 +" + plus) && !l.contains("%")), "enhance line shows attack +" + plus + " " + enhLore);
+        }
         // 평균 평타: 창 · 낫은 칼 · 단검과 ±8%, 망치는 방패와 도끼 사이, 홀은 완드의 0.7배 이상
         double sword = avgHit(gram);
         double dagger = avgHit(Weapons.weaponFrom("dagger", 40, "transcend"));
