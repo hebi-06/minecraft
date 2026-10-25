@@ -123,10 +123,18 @@ public final class MotionPoses {
      * 첫 · 마지막 열쇠를 rest 번째 열쇠 (t 만 0 · 1) 로 바꾸고 들어오고 나가는 무게 (fade) 를 없앰. t = 0 이 쉬는 자세
      */
     public static Motion restLoop(Motion m, int rest) {
-        if (m == null || rest <= 0 || rest >= m.keys.size() - 1) return m;
+        return restLoop(m, m, rest);
+    }
+
+    /**
+     * 0.45.0 같은 것 — 쉬는 자세를 다른 동작 (idle) 의 열쇠 rest 로 (가게 창 패널: 룬술사 · 상인은 일마다 동작이 달라도 같은 쉬는 자세에서 시작해 거기로
+     * 끝남)
+     */
+    public static Motion restLoop(Motion m, Motion idle, int rest) {
+        if (m == null || idle == null || rest <= 0 || rest >= idle.keys.size() - 1) return m;
         List<Key> keys = new ArrayList<>(m.keys);
-        keys.set(0, m.keys.get(rest).copyAt(0F));
-        keys.set(keys.size() - 1, m.keys.get(rest).copyAt(1F));
+        keys.set(0, idle.keys.get(rest).copyAt(0F));
+        keys.set(keys.size() - 1, idle.keys.get(rest).copyAt(1F));
         return new Motion(m.name, m.ticks, m.parts, m.softLegs, 0F, 0F, m.hideFrom, m.hideTo, List.copyOf(keys), m.fp, m.tilt, m.trail, m.hold,
                 m.faceYaw, m.impacts);
     }

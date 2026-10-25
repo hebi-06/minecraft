@@ -12,11 +12,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 
 /**
- * 0.44.0 대장장이 전용 창 패킷 (모드가 없는 클라이언트에는 보내지 않음 — 예전 상자 창).
+ * 0.44.0 대장장이 전용 창 패킷 (모드가 없는 클라이언트에는 보내지 않음 — 예전 상자 창). 0.45.0 부터 룬술사 · 상인 창도 같은 패킷
+ * ({@link Workshop} — 창의 kind 로 가게를 가름).
  * <ul>
  *   <li>서버 → 클라이언트 {@link ViewPayload}: 탭 하나의 목록 · 칸마다 상세 (변화 · 성공 확률 · 재료 가진 수/필요 · 실패 · 단추) · 재료 줄 · 알림 ·
  *       마지막 결과 (open = 창을 엶)</li>
- *   <li>서버 → 클라이언트 {@link WorkPayload}: 망치질 시작 (대장장이 NPC · 모루에 올린 것 · 틱 · 망치가 닿는 틱 — 창 패널과 세상의 NPC 동작)</li>
+ *   <li>서버 → 클라이언트 {@link WorkPayload}: 일 시작 (NPC · 패널에 올린 것 · 틱 · 닿는 틱 · 동작 · 연출 종류 — 창 패널과 세상의 NPC 동작)</li>
  *   <li>클라이언트 → 서버 {@link ActionPayload}: tab (key = 탭) · page (a = 제작 쪽) · do (key = 칸, a = 고른 것 — 공허의 갑옷 부위, b = 1 이면 수호 주문서) ·
  *       sync · close</li>
  * </ul>
@@ -24,7 +25,7 @@ import net.minecraft.world.item.ItemStack;
 public final class SmithNet {
     private SmithNet() {}
 
-    static final int MAX_ENTRIES = 80;
+    public static final int MAX_ENTRIES = 80;
     static final int MAX_LINES = 12;
     static final int MAX_COSTS = 12;
     static final int MAX_VARIANTS = 8;
@@ -47,13 +48,20 @@ public final class SmithNet {
         }
     }
 
-    /** 고를 것 하나 (공허의 갑옷 부위 · 한 벌): 이름 · 그림 · 재료 · 만들 수 있는지 · 알림 줄 */
-    public record Variant(String label, ItemStack icon, List<Cost> costs, boolean can, String note) {
+    /**
+     * 고를 것 하나 (공허의 갑옷 부위 · 한 벌 · 0.45.0 뽑기권 1장 · 5장 · 갑옷 부위 · 전리품 개수): 이름 · 그림 · 재료 · 할 수 있는지 · 알림 줄 ·
+     * info = 고르면 보이는 한 줄 (0.45.0 — 받는 실버 같은 것, 없으면 "")
+     */
+    public record Variant(String label, ItemStack icon, List<Cost> costs, boolean can, String note, String info) {
+        public Variant(String label, ItemStack icon, List<Cost> costs, boolean can, String note) {
+            this(label, icon, costs, can, note, "");
+        }
+
         static Variant read(RegistryFriendlyByteBuf buf) {
             String label = buf.readUtf(32);
             ItemStack icon = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
             List<Cost> costs = readCosts(buf);
-            return new Variant(label, icon, costs, buf.readBoolean(), buf.readUtf(128));
+            return new Variant(label, icon, costs, buf.readBoolean(), buf.readUtf(128), buf.readUtf(128));
         }
 
         void write(RegistryFriendlyByteBuf buf) {
@@ -62,16 +70,29 @@ public final class SmithNet {
             writeCosts(buf, costs);
             buf.writeBoolean(can);
             buf.writeUtf(note == null ? "" : note, 128);
+            buf.writeUtf(info == null ? "" : info, 128);
         }
     }
 
     /**
      * 목록 칸 하나 (key = 할 일의 열쇠 — 서버가 다시 찾음). state: 0 됨 · 1 재료 부족 · 2 할 수 없음 (최대 강화) · 3 됨 (주의 — 레벨이 모자람).
      * group = 이 칸부터 새 묶음이면 묶음 이름 (아니면 ""). from → to = 큰 변화 글 ("+6" → "+7"), rate = 성공 확률 (없으면 -1), scroll = 수호 주문서
-     * 가진 수 (하락 위험이 없으면 -1), action = 단추 글, can = 단추를 누를 수 있는지, note = 알림 줄, variants = 고를 것 (있으면 재료는 고른 것의 것).
+     * 가진 수 (하락 위험이 없으면 -1), action = 단추 글, can = 단추를 누를 수 있는지, note = 알림 줄, variants = 고를 것 (있으면 재료는 고른 것의 것),
+     * confirm = 두 번 눌러야 하는 칸의 경고 (0.45.0 — 하나뿐인 룬 갈기 같은 것: 처음 누르면 이 글 · 단추가 "한 번 더", 없으면 "").
      */
     public record Entry(String key, ItemStack icon, String name, String badge, int state, String group, String sub, String from, String to,
-            List<String> lines, double rate, List<Cost> costs, String fail, int scroll, String action, boolean can, String note, List<Variant> variants) {
+            List<String> lines, double rate, List<Cost> costs, String fail, int scroll, String action, boolean can, String note, List<Variant> variants,
+            String confirm) {
+        public Entry(String key, ItemStack icon, String name, String badge, int state, String group, String sub, String from, String to, List<String> lines,
+                double rate, List<Cost> costs, String fail, int scroll, String action, boolean can, String note, List<Variant> variants) {
+            this(key, icon, name, badge, state, group, sub, from, to, lines, rate, costs, fail, scroll, action, can, note, variants, "");
+        }
+
+        /** 같은 칸에 두 번 누름 경고를 붙임 */
+        public Entry withConfirm(String text) {
+            return new Entry(key, icon, name, badge, state, group, sub, from, to, lines, rate, costs, fail, scroll, action, can, note, variants, text == null ? "" : text);
+        }
+
         static Entry read(RegistryFriendlyByteBuf buf) {
             String key = buf.readUtf(64);
             ItemStack icon = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
@@ -95,7 +116,9 @@ public final class SmithNet {
             int nv = Math.min(MAX_VARIANTS, buf.readVarInt());
             List<Variant> variants = new ArrayList<>(nv);
             for (int i = 0; i < nv; i++) variants.add(Variant.read(buf));
-            return new Entry(key, icon, name, badge, state, group, sub, from, to, List.copyOf(lines), rate, costs, fail, scroll, action, can, note, List.copyOf(variants));
+            String confirm = buf.readUtf(128);
+            return new Entry(key, icon, name, badge, state, group, sub, from, to, List.copyOf(lines), rate, costs, fail, scroll, action, can, note, List.copyOf(variants),
+                    confirm);
         }
 
         void write(RegistryFriendlyByteBuf buf) {
@@ -123,6 +146,7 @@ public final class SmithNet {
             int nv = Math.min(MAX_VARIANTS, vs.size());
             buf.writeVarInt(nv);
             for (int i = 0; i < nv; i++) vs.get(i).write(buf);
+            buf.writeUtf(nz(confirm), 128);
         }
     }
 
@@ -135,11 +159,12 @@ public final class SmithNet {
     }
 
     /**
-     * 서버 → 클라이언트: 대장장이 창 (open = 엶). npc = 대장장이 NPC 엔티티 번호 (-1 = 없음 — 명령어로 연 창), tab · tabs = 지금 탭 · 보이는 탭,
-     * page · pages = 제작 쪽, entries = 목록, res = 재료 줄, message = 알림 줄, empty = 목록이 비었을 때 글, result = 마지막 결과, busy = 망치질 중
+     * 서버 → 클라이언트: 가게 창 (open = 엶). npc = 그 가게 NPC 엔티티 번호 (-1 = 없음 — 명령어로 연 창), tab · tabs = 지금 탭 · 보이는 탭,
+     * page · pages = 지금 탭의 쪽 (없으면 빈 목록), entries = 목록, res = 재료 줄, message = 알림 줄, empty = 목록이 비었을 때 글, result = 마지막 결과,
+     * busy = 일하는 중. 0.45.0: kind = 가게 (smith · runesmith · shop — 패널 장면), role = 창 위 이름, tabNames = 탭 글 (tabs 와 같은 차례), listTitle = 목록 머리
      */
     public record ViewPayload(boolean open, int npc, String npcName, String tab, List<String> tabs, int page, List<String> pages, List<Entry> entries, List<Res> res,
-            String message, String empty, Result result, boolean busy) implements CustomPacketPayload {
+            String message, String empty, Result result, boolean busy, String kind, String role, List<String> tabNames, String listTitle) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ViewPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("smith_view"));
         public static final StreamCodec<RegistryFriendlyByteBuf, ViewPayload> CODEC = CustomPacketPayload.codec(ViewPayload::write, ViewPayload::read);
 
@@ -161,7 +186,12 @@ public final class SmithNet {
             String empty = buf.readUtf(256);
             Result result = new Result(buf.readVarInt(), buf.readUtf(16), buf.readUtf(64), buf.readUtf(128), buf.readUtf(256), ItemStack.OPTIONAL_STREAM_CODEC.decode(buf));
             boolean busy = buf.readBoolean();
-            return new ViewPayload(open, npc, npcName, tab, tabs, page, pages, List.copyOf(entries), List.copyOf(res), message, empty, result, busy);
+            String kind = buf.readUtf(16);
+            String role = buf.readUtf(32);
+            List<String> tabNames = readStrings(buf, 8, 32);
+            String listTitle = buf.readUtf(64);
+            return new ViewPayload(open, npc, npcName, tab, tabs, page, pages, List.copyOf(entries), List.copyOf(res), message, empty, result, busy, kind, role, tabNames,
+                    listTitle);
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
@@ -194,6 +224,10 @@ public final class SmithNet {
             buf.writeUtf(nz(r.text()), 256);
             ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, r.item() == null ? ItemStack.EMPTY : r.item());
             buf.writeBoolean(busy);
+            buf.writeUtf(nz(kind), 16);
+            buf.writeUtf(nz(role), 32);
+            writeStrings(buf, tabNames, 8, 32);
+            buf.writeUtf(nz(listTitle), 64);
         }
 
         @Override
@@ -203,10 +237,12 @@ public final class SmithNet {
     }
 
     /**
-     * 서버 → 클라이언트: 망치질 시작. npc = 대장장이 (-1 = 없음), key = 그 칸, item = 모루에 올린 것, ticks = 망치질 틱, impacts = 망치가 닿는 틱,
-     * grade = 불꽃 색 (등급 순번 — 0 일반 ~ 4 초월), yaw = 모루 쪽 (NaN = 몸 방향 그대로)
+     * 서버 → 클라이언트: 일 시작. npc = 그 가게 NPC (-1 = 없음), key = 그 칸, item = 패널에 올린 것, ticks = 동작 틱, impacts = 닿는 틱,
+     * grade = 빛 색 (등급 순번 — 0 일반 ~ 4 초월), yaw = NPC 가 볼 쪽 (NaN = 몸 방향 그대로). 0.45.0: motion = NPC 동작 (poses.json),
+     * fx = 패널 · 소리 종류 (forge 망치질 · grind 룬 갈기 · merge 돌파 · ticket 뽑기권 · buy 사기 · sell 팔기)
      */
-    public record WorkPayload(int npc, String key, ItemStack item, int ticks, List<Integer> impacts, int grade, float yaw) implements CustomPacketPayload {
+    public record WorkPayload(int npc, String key, ItemStack item, int ticks, List<Integer> impacts, int grade, float yaw, String motion, String fx)
+            implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<WorkPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("smith_work"));
         public static final StreamCodec<RegistryFriendlyByteBuf, WorkPayload> CODEC = CustomPacketPayload.codec(WorkPayload::write, WorkPayload::read);
 
@@ -218,7 +254,9 @@ public final class SmithNet {
             int n = Math.min(16, buf.readVarInt());
             List<Integer> impacts = new ArrayList<>(n);
             for (int i = 0; i < n; i++) impacts.add(buf.readVarInt());
-            return new WorkPayload(npc, key, item, ticks, List.copyOf(impacts), buf.readVarInt(), buf.readFloat());
+            int grade = buf.readVarInt();
+            float yaw = buf.readFloat();
+            return new WorkPayload(npc, key, item, ticks, List.copyOf(impacts), grade, yaw, buf.readUtf(32), buf.readUtf(16));
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
@@ -232,6 +270,8 @@ public final class SmithNet {
             for (int i = 0; i < n; i++) buf.writeVarInt(Math.max(0, im.get(i)));
             buf.writeVarInt(Math.max(0, grade));
             buf.writeFloat(yaw);
+            buf.writeUtf(nz(motion), 32);
+            buf.writeUtf(nz(fx), 16);
         }
 
         @Override
@@ -240,7 +280,7 @@ public final class SmithNet {
         }
     }
 
-    /** 클라이언트 → 서버: action = tab (key) · page (a) · do (key, a = 고른 것, b = 1 이면 수호 주문서) · sync · close */
+    /** 클라이언트 → 서버: action = tab (key) · page (a) · do (key, a = 고른 것, b = 1 이면 수호 주문서) · sync · close (열린 가게 창 — {@link Workshop}) */
     public record ActionPayload(String action, String key, int a, int b) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<ActionPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("smith_action"));
         public static final StreamCodec<RegistryFriendlyByteBuf, ActionPayload> CODEC = CustomPacketPayload.codec(ActionPayload::write, ActionPayload::read);
@@ -294,15 +334,15 @@ public final class SmithNet {
         for (int i = 0; i < n; i++) buf.writeUtf(nz(ls.get(i)), len);
     }
 
-    /** Smith.init */
+    /** Workshop.init */
     static void register() {
         PayloadTypeRegistry.clientboundPlay().register(ViewPayload.TYPE, ViewPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(WorkPayload.TYPE, WorkPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ActionPayload.TYPE, ActionPayload.CODEC);
-        ServerPlayNetworking.registerGlobalReceiver(ActionPayload.TYPE, (p, context) -> SmithUi.action(context.player(), p.action(), p.key(), p.a(), p.b()));
+        ServerPlayNetworking.registerGlobalReceiver(ActionPayload.TYPE, (p, context) -> Workshop.action(context.player(), p.action(), p.key(), p.a(), p.b()));
     }
 
-    /** 대장장이 전용 창을 쓸 수 있는 클라이언트인지 (시험은 {@link SmithUi#FORCE}) */
+    /** 가게 전용 창을 쓸 수 있는 클라이언트인지 (시험은 {@link Workshop#FORCE}) */
     public static boolean canSend(ServerPlayer sp) {
         return sp != null && !sp.isRemoved() && ServerPlayNetworking.canSend(sp, ViewPayload.TYPE);
     }

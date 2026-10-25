@@ -16,7 +16,7 @@ public final class Motions {
     /** 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인) */
     public static final Set<String> KNOWN = Set.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "thrust", "lance_sweep", "bash", "smite", "skill_slash",
             "skill_flurry", "slam", "leap_slam", "dash", "throw", "throw_weapon", "cast", "cast_up", "guard", "shoot", "shoot_up", "spin2", "roll",
-            "smith_hammer");
+            "smith_hammer", "rune_channel", "rune_merge", "shop_hand", "shop_count");
 
     private static Obj cfg() {
         return Rules.get().obj("MOTION");

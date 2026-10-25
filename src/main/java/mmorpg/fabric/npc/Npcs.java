@@ -136,8 +136,8 @@ public final class Npcs {
         int services = (lv >= 0 ? 1 : 0) + (smith ? 1 : 0) + (runesmith ? 1 : 0);
         if (greet.isEmpty() && services == 1) {
             if (smith) Smith.smithLoop(sp, npc, "enhance", null);
-            else if (runesmith) RuneSmith.runesmithLoop(sp, "grind", null);
-            else Store.storeLoop(sp, lv, "weapons", null);
+            else if (runesmith) RuneSmith.runesmithLoop(sp, npc, "grind", null);
+            else Store.storeLoop(sp, npc, lv, "weapons", null);
             return;
         }
         DialogForm.showPages(sp, name, greet, "…", last -> {
@@ -160,9 +160,9 @@ public final class Npcs {
             d.show(sp, sel -> {
                 String k = sel >= 0 && sel < kinds.size() ? kinds.get(sel) : "";
                 switch (k) {
-                    case "shop" -> Store.storeLoop(sp, lv, "weapons", null);
+                    case "shop" -> Store.storeLoop(sp, npc, lv, "weapons", null);
                     case "smith" -> Smith.smithLoop(sp, npc, "enhance", null);
-                    case "runesmith" -> RuneSmith.runesmithLoop(sp, "grind", null);
+                    case "runesmith" -> RuneSmith.runesmithLoop(sp, npc, "grind", null);
                     default -> {}
                 }
             });

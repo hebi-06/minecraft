@@ -344,6 +344,7 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
 
     private void shop(ClientGameTestContext ctx, TestServerContext server) {
         server.runCommand("give @a minecraft:emerald 64");
+        mmorpg.fabric.shop.ShopUi.legacy = true; // 0.45.0: 예전 상자 창의 새 무기 쪽을 찍음
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             Forms.close(sp);
@@ -358,6 +359,7 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
         // 새 무기 칸 하나 (희귀 전투 망치) 에 마우스를 올려 설명
         hoverSlot(ctx, mmorpg.fabric.shop.Shop.firstSlot(1, 1) + 2);
         ctx.takeScreenshot("wm_shop_page2_tooltip");
+        mmorpg.fabric.shop.ShopUi.legacy = false;
         server.runOnServer(s -> Forms.close(player(s)));
         ctx.setScreen(() -> null);
         ctx.waitTicks(5);

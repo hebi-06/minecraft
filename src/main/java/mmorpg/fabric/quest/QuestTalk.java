@@ -179,9 +179,9 @@ public final class QuestTalk {
         int services = (lv >= 0 ? 1 : 0) + (smith ? 1 : 0) + (runesmith ? 1 : 0) + (job ? 1 : 0);
         if (t.first && greet.isEmpty() && !hasQuest && services == 1) {
             if (smith) Smith.smithLoop(sp, t.npc, "enhance", t.done); // 대장장이는 강화 창부터
-            else if (runesmith) RuneSmith.runesmithLoop(sp, "grind", t.done);
+            else if (runesmith) RuneSmith.runesmithLoop(sp, t.npc, "grind", t.done);
             else if (job) mmorpg.fabric.job.JobTrainer.open(sp, t.done); // 0.27.0 직업 교관: 전직 창부터
-            else Store.storeLoop(sp, lv, "weapons", t.done);
+            else Store.storeLoop(sp, t.npc, lv, "weapons", t.done);
             return;
         }
         String fallback = smith ? "무기를 벼려 주지. 강화석이나 별철 광석은 챙겨 왔나?"
@@ -213,9 +213,9 @@ public final class QuestTalk {
                     t.page++;
                     step(t);
                 }
-                case "shop", "armor" -> Store.storeLoop(sp, lv, o.kind().equals("armor") ? "armor" : "weapons", t.done);
+                case "shop", "armor" -> Store.storeLoop(sp, t.npc, lv, o.kind().equals("armor") ? "armor" : "weapons", t.done);
                 case "smith", "enhance", "craft", "artifact" -> Smith.smithLoop(sp, t.npc, o.kind(), t.done);
-                case "runesmith" -> RuneSmith.runesmithLoop(sp, "grind", t.done);
+                case "runesmith" -> RuneSmith.runesmithLoop(sp, t.npc, "grind", t.done);
                 case "job" -> mmorpg.fabric.job.JobTrainer.open(sp, t.done); // 0.27.0 전직 · 직업 바꾸기 창
                 case "jobup" -> mmorpg.fabric.job.JobUpgrades.open(sp, t.done); // 0.31.0 직업 스킬 강화 창
                 // 받자마자 끝낼 수 있으면 (전리품을 이미 모아 온 반복 의뢰 등) 대화를 이어 가 바로 보고

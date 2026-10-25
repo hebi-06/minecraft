@@ -58,7 +58,7 @@ public final class RuneSmith {
     private static final Obj SMITH = Rules.get().obj("RUNE_SMITH");
     private static final Obj RUNE = RuneKit.RUNE;
     private static final List<String> GRADE_ORDER = Runes.GRADE_ORDER;
-    private static final Map<String, String> GRADE_NAME = Map.of("common", "일반", "rare", "희귀", "noble", "고귀", "hero", "영웅", "transcend", "초월");
+    static final Map<String, String> GRADE_NAME = Map.of("common", "일반", "rare", "희귀", "noble", "고귀", "hero", "영웅", "transcend", "초월");
 
     /** 다른 창으로 (윗줄 왼쪽 — 갈기 창: 뽑기권으로, 뽑기권 · 돌파 창: 갈기로) */
     public static final int TAB = 0;
@@ -162,7 +162,7 @@ public final class RuneSmith {
         return out;
     }
 
-    private static int sumShards(List<RuneSlot> list) {
+    static int sumShards(List<RuneSlot> list) {
         int s = 0;
         for (RuneSlot e : list) s += grindValue(e.r(), e.level());
         return s;
@@ -199,13 +199,17 @@ public final class RuneSmith {
         DamageNumbers.showFace(sp, "§d§l+" + shards + " " + shardName(), 2.0, 0.5, -0.3);
     }
 
+    /** 간 결과: 룬 수 · 받은 조각 · 가장 높은 등급 · 처음 간 룬의 이름 (0.45.0 룬술사 창의 결과 글) */
+    public record Ground(int count, int shards, String top, String firstName) {}
+
     /**
-     * 룬 갈기: 고른 칸의 룬을 가져가고 조각을 줌 (칸에 그 룬이 그대로 있을 때만). 결과 문구 (창 본문용 — grindRunes)
+     * 룬 갈기 (연출 · 알림 없이 — 0.45.0 룬술사 창): 고른 칸의 룬을 가져가고 조각을 줌 (칸에 그 룬이 그대로 있을 때만). 하나도 못 갈았으면 null
      */
-    public static String grindRunes(ServerPlayer sp, List<Pick> picks) {
+    public static Ground grind(ServerPlayer sp, List<Pick> picks) {
         int shards = 0;
         int count = 0;
         String top = "common";
+        String first = "";
         for (Pick p : picks) {
             if (p.slot() < 0 || p.slot() >= Inv.SIZE) continue;
             ItemStack it = Inv.get(sp, p.slot());
@@ -218,17 +222,27 @@ public final class RuneSmith {
             Inv.set(sp, p.slot(), ItemStack.EMPTY);
             shards += v * k;
             count += k;
+            if (first.isEmpty()) first = r.gradeColor() + r.def().str("name") + Breakthrough.nameTag(Breakthrough.of(it));
             if (GRADE_ORDER.indexOf(r.grade()) > GRADE_ORDER.indexOf(top)) top = r.grade();
         }
-        if (count == 0) {
+        if (count == 0) return null;
+        sp.getInventory().setChanged();
+        for (int left = shards; left > 0; left -= 64) Inv.give(sp, createShardItem(Math.min(64, left)));
+        return new Ground(count, shards, top, first);
+    }
+
+    /**
+     * 룬 갈기: 고른 칸의 룬을 가져가고 조각을 줌 (칸에 그 룬이 그대로 있을 때만). 결과 문구 (창 본문용 — grindRunes)
+     */
+    public static String grindRunes(ServerPlayer sp, List<Pick> picks) {
+        Ground g = grind(sp, picks);
+        if (g == null) {
             SkillFx.playFor(sp, "note.bass", 0.6, 1);
             return "§4룬이 옮겨져서 취소했습니다. 다시 골라 주세요.§r";
         }
-        sp.getInventory().setChanged();
-        for (int left = shards; left > 0; left -= 64) Inv.give(sp, createShardItem(Math.min(64, left)));
-        grindFx(sp, top, shards);
-        Notify.notify(sp, "§d룬 " + count + "개를 갈았습니다 §7→ §d" + shardName() + " +" + shards, 50);
-        return "§2룬 " + count + "개 → §5" + shardName() + " +" + shards + "§r";
+        grindFx(sp, g.top(), g.shards());
+        Notify.notify(sp, "§d룬 " + g.count() + "개를 갈았습니다 §7→ §d" + shardName() + " +" + g.shards(), 50);
+        return "§2룬 " + g.count() + "개 → §5" + shardName() + " +" + g.shards() + "§r";
     }
 
     // ------------------------------------------------------------ 뽑기권
@@ -265,9 +279,34 @@ public final class RuneSmith {
         return buyTicket(sp, t, n);
     }
 
+    /** 한정 룬 뽑기권인지 */
+    static boolean limited(TicketInfo t) {
+        return RuneItems.LIMITED_TICKET != null && t.id().equals(mmorpg.core.Gacha.ticket().str("item"));
+    }
+
+    /** 뽑기권 n 장 (아이템 — 없으면 EMPTY) */
+    public static ItemStack ticketStack(TicketInfo t, int n) {
+        return limited(t) ? new ItemStack(RuneItems.LIMITED_TICKET, Math.max(1, Math.min(64, n))) : RuneItems.ticket(n, t.adv());
+    }
+
+    /**
+     * 뽑기권 사기 (연출 · 알림 없이 — 0.45.0 룬술사 창): 조각을 가져가고 뽑기권 n 장. 되면 null, 아니면 까닭 (밝은 창 글 — "§4…")
+     */
+    public static String buyTicketQuiet(ServerPlayer sp, TicketInfo t, int n) {
+        int cost = t.price() * n;
+        int have = Inv.count(sp, shardItem());
+        if (n <= 0 || have < cost) return "§4" + shardName() + " 부족: 필요 " + cost + ", 보유 " + have + "§r";
+        ItemStack item = ticketStack(t, n);
+        if (item.isEmpty()) return "§4뽑기권을 만들 수 없습니다.§r";
+        if (!Inv.fitsAfter(sp, List.of(new Inv.Take(shardItem(), cost)), List.of(item))) return Inv.bagFull(sp); // 땅에 떨어지지 않게
+        if (!Inv.remove(sp, shardItem(), cost)) return "§4결제 오류§r";
+        Inv.give(sp, item);
+        return null;
+    }
+
     private static String buyTicket(ServerPlayer sp, TicketInfo t, int n) {
         boolean adv = t.adv();
-        boolean limited = RuneItems.LIMITED_TICKET != null && t.id().equals(mmorpg.core.Gacha.ticket().str("item"));
+        boolean limited = limited(t);
         int cost = t.price() * n;
         int have = Inv.count(sp, shardItem());
         if (n <= 0 || have < cost) {
@@ -275,11 +314,8 @@ public final class RuneSmith {
             Notify.notify(sp, "§c" + shardName() + " 부족 §7(필요 " + cost + ", 보유 " + have + ")", 40);
             return "§4" + shardName() + " 부족: 필요 " + cost + ", 보유 " + have + "§r";
         }
-        ItemStack item = limited ? new ItemStack(RuneItems.LIMITED_TICKET, Math.max(1, Math.min(64, n))) : RuneItems.ticket(n, adv);
-        if (item.isEmpty()) return "§4뽑기권을 만들 수 없습니다.§r";
-        if (!Inv.fitsAfter(sp, List.of(new Inv.Take(shardItem(), cost)), List.of(item))) return Inv.bagFull(sp); // 땅에 떨어지지 않게
-        if (!Inv.remove(sp, shardItem(), cost)) return "§4결제 오류§r";
-        Inv.give(sp, item);
+        String err = buyTicketQuiet(sp, t, n);
+        if (err != null) return err;
         ServerLevel level = sp.level();
         Vec3 at = faceAt(sp);
         double[] col = limited ? RED : adv ? GOLD : PURPLE;
@@ -417,7 +453,7 @@ public final class RuneSmith {
     // ------------------------------------------------------------ 창: 돌파 (8단계)
 
     /** 룬 아이템 그림 (돌파 단계 배지까지 — 창의 칸에 그대로) */
-    private static Icon runeStack(Runes.Rune r, int level) {
+    static Icon runeStack(Runes.Rune r, int level) {
         ItemStack s = Breakthrough.stack(r.family(), r.grade(), level);
         return s.isEmpty() ? Icon.of(runeIcon(r)) : Icon.item(s);
     }
@@ -428,14 +464,14 @@ public final class RuneSmith {
                 "§7초월 룬은 " + tiersText() + "돌에 강화");
     }
 
-    private static String tiersText() {
+    static String tiersText() {
         List<String> t = new ArrayList<>();
         for (int x : RuneBreak.tiers()) t.add(String.valueOf(x));
         return String.join(" · ", t);
     }
 
     /** 돌파 한 칸의 풀이: 재료 · 계수 · (초월) 이번에 여는 단계 */
-    private static List<String> mergeLore(Breakthrough.Merge m) {
+    static List<String> mergeLore(Breakthrough.Merge m) {
         Runes.Rune r = m.target().r();
         List<String> lore = new ArrayList<>();
         Breakthrough.Held mat = m.material();
@@ -641,7 +677,20 @@ public final class RuneSmith {
 
     /** 룬술사 창 (룬 갈기 ↔ 돌파 ↔ 뽑기권 — 흐름 안에서, 예: NPC 대화). start: "grind" · "break" · "tickets", 끝나면 done (null 이면 없음) */
     public static void runesmithLoop(ServerPlayer sp, String start, Runnable done) {
-        go(sp, start == null ? "grind" : start, 0, done);
+        runesmithLoop(sp, null, start, done);
+    }
+
+    /**
+     * 같은 것 — npc = 룬술사 NPC (0.45.0: 모드 클라이언트면 룬술사 전용 창 {@link RuneSmithUi} — 창의 룬술사 패널 · 세상의 그 NPC 가 룬을 다룸.
+     * 모드가 없거나 시험 · 사진첩이 legacy 로 고르면 예전 상자 창)
+     */
+    public static void runesmithLoop(ServerPlayer sp, net.minecraft.world.entity.Entity npc, String start, Runnable done) {
+        String st = start == null ? "grind" : start;
+        if (RuneSmithUi.usable(sp)) {
+            RuneSmithUi.open(sp, npc, st, done);
+            return;
+        }
+        go(sp, st, 0, done);
     }
 
     private static void go(ServerPlayer sp, String next, int i, Runnable done) {

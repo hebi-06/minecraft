@@ -37,9 +37,9 @@ public final class Shop {
     private Shop() {}
 
     private static final Rules R = Rules.get();
-    private static final Obj SHOP = R.obj("SHOP");
+    static final Obj SHOP = R.obj("SHOP");
     private static final Obj DROPS = R.obj("MONSTER_DROPS");
-    private static final Obj MONSTERS = R.obj("MONSTERS");
+    static final Obj MONSTERS = R.obj("MONSTERS");
 
     static final int BALANCE_SLOT = 4;
     /** 전리품 팔기 창으로 (무기 · 갑옷 상점 같은 자리) */
@@ -177,6 +177,19 @@ public final class Shop {
         form.show(sp, sel -> done.accept(sel == 11 ? purchase(sp, w) : ""));
     }
 
+    /** 구매 (연출 · 알림 없이 — 0.45.0 상인 창): 되면 null, 아니면 까닭 (밝은 창 글 — "§4…") */
+    public static String purchaseQuiet(ServerPlayer sp, Weapon w) {
+        int price = (int) Weapons.shopPrice(w);
+        int bal = Inv.money(sp);
+        if (bal < price) return "§4" + Inv.CURRENCY_NAME + " 부족: 필요 " + price + ", 보유 " + bal + "§r";
+        ItemStack item = weaponItem(w);
+        if (item.isEmpty()) return "§4아이템을 만들 수 없습니다.§r";
+        if (!Inv.fitsAfter(sp, Inv.payTakes(sp, price), List.of(item))) return Inv.bagFull(sp);
+        if (!Inv.pay(sp, price)) return "§4결제 오류§r";
+        Inv.give(sp, item);
+        return null;
+    }
+
     /** 구매 처리 (shop.js purchase). 결과 문구 */
     static String purchase(ServerPlayer sp, Weapon w) {
         int price = (int) Weapons.shopPrice(w);
@@ -186,11 +199,8 @@ public final class Shop {
             Notify.notify(sp, "§c" + Inv.CURRENCY_NAME + " 부족 §7(필요 " + price + ", 보유 " + bal + ")", 40);
             return "§4" + Inv.CURRENCY_NAME + " 부족: 필요 " + price + ", 보유 " + bal + "§r";
         }
-        ItemStack item = weaponItem(w);
-        if (item.isEmpty()) return "§4아이템을 만들 수 없습니다.§r";
-        if (!Inv.fitsAfter(sp, Inv.payTakes(sp, price), List.of(item))) return Inv.bagFull(sp);
-        if (!Inv.pay(sp, price)) return "§4결제 오류§r";
-        Inv.give(sp, item);
+        String err = purchaseQuiet(sp, w);
+        if (err != null) return err;
         SkillFx.playFor(sp, "random.orb", 1.2, 1);
         SkillFx.playFor(sp, "mob.villager.yes", 1, 0.7);
         happy(sp);
@@ -312,6 +322,30 @@ public final class Shop {
         if (message != null && !message.isEmpty()) lines.add(message);
         form.body(String.join("\n", lines));
         return new SellBuilt(form, list);
+    }
+
+    /** 판 결과: 받은 실버 · 판 것 ("늑대 가죽 3" — 전리품마다) · 판 개수 */
+    public record Sold(int got, List<String> lines, int count) {}
+
+    /** 판매 (연출 · 알림 없이 — 0.45.0 상인 창): 전리품을 가져가고 실버를 줌. 판 것이 없으면 null */
+    public static Sold sellQuiet(ServerPlayer sp, Map<String, Integer> what) {
+        Map<String, Integer> want = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> w : what.entrySet()) if (DROPS.objOrNull(w.getKey()) != null) want.merge(w.getKey(), Math.max(0, w.getValue()), Integer::sum);
+        List<String> lines = new ArrayList<>();
+        int got = 0;
+        int count = 0;
+        for (Map.Entry<String, Integer> e : want.entrySet()) {
+            Obj d = DROPS.obj(e.getKey());
+            Item item = Icon.itemById(d.str("item"));
+            int n = Math.min(e.getValue(), Inv.count(sp, item));
+            if (n <= 0 || !Inv.remove(sp, item, n)) continue;
+            got += n * (int) d.num("price");
+            count += n;
+            lines.add(d.str("name") + " " + n);
+        }
+        if (got <= 0) return null;
+        Inv.earn(sp, got);
+        return new Sold(got, List.copyOf(lines), count);
     }
 
     /**

@@ -88,6 +88,9 @@ public final class RpgFormGallery implements FabricClientGameTest {
             String gui = ctx.computeOnClient(mc -> mc.getWindow().getScreenWidth() + "x" + mc.getWindow().getScreenHeight() + " → gui "
                     + mc.getWindow().getGuiScaledWidth() + "x" + mc.getWindow().getGuiScaledHeight() + " scale " + mc.getWindow().getGuiScale());
             LOG.info("[form-gallery] window {}", gui);
+            // 0.45.0: 상인 · 룬술사는 모드 클라이언트면 전용 창 — 이 사진첩은 예전 상자 창 · 대화창을 찍음 (모드가 없는 클라이언트의 흐름)
+            mmorpg.fabric.shop.ShopUi.legacy = true;
+            mmorpg.fabric.rune.RuneSmithUi.legacy = true;
             part(ctx, "shop", () -> shop(ctx, server, conn));
             part(ctx, "chest", () -> chestExtras(ctx, server, conn));
             part(ctx, "npc", () -> npc(ctx, server, conn));
@@ -96,6 +99,9 @@ public final class RpgFormGallery implements FabricClientGameTest {
             part(ctx, "modal", () -> modal(ctx, server, conn));
             part(ctx, "editor", () -> editor(ctx, server, conn));
             ctx.setScreen(() -> null);
+        } finally {
+            mmorpg.fabric.shop.ShopUi.legacy = false;
+            mmorpg.fabric.rune.RuneSmithUi.legacy = false;
         }
         LOG.info("[form-gallery] done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
     }

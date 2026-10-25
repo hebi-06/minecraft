@@ -264,14 +264,29 @@ public final class Breakthrough {
             return err;
         }
         sp.getInventory().setChanged();
-        mergeFx(sp, m.target().r(), m.target().level(), m.result());
+        mergeFx(sp, m.target().r(), m.target().level(), m.result(), true);
         Runes.Rune r = m.target().r();
         Notify.notify(sp, "§b돌파! " + r.gradeColor() + r.def().str("name") + " §e" + RuneBreak.tag(m.result()) + " §7(계수 " + RuneBreak.coefText(m.result()) + ")", 50);
         return "§2돌파: " + r.def().str("name") + " " + m.target().level() + "돌 → §5" + m.result() + "돌§2 (계수 " + RuneBreak.coefText(m.result()) + ")§r";
     }
 
-    /** 모두 돌파 (planAll 차례대로 — 칸이 바뀌어 하나라도 안 되면 거기서 멈춤). 결과 문구 */
-    public static String mergeAll(ServerPlayer sp, List<Merge> plan) {
+    /**
+     * 합치기 (연출 · 알림 없이 — 0.45.0 룬술사 창): 되면 null, 아니면 까닭 ("§4…"). 초월 룬이 3 · 6돌에 이르면 그 단계를 열어 보임 ({@link #tierFx} —
+     * 이 사람의 하늘빛 · 번쩍임 · 제목 · 채팅)
+     */
+    public static String mergeQuiet(ServerPlayer sp, Merge m) {
+        String err = apply(sp, m);
+        if (err != null) return err;
+        sp.getInventory().setChanged();
+        tierLater(sp, m.target().r(), m.target().level(), m.result());
+        return null;
+    }
+
+    /** 모두 돌파의 결과: 합친 수 · 연출할 룬 (초월 먼저 → 높은 단계) 과 그 처음 · 끝 단계 · 룬마다 "이름 N돌" */
+    public record MergedAll(int done, Runes.Rune top, int from, int to, List<String> parts) {}
+
+    /** 모두 돌파 (연출 · 알림 없이 — 0.45.0 룬술사 창, planAll 차례대로 — 칸이 바뀌어 하나라도 안 되면 거기서 멈춤). 하나도 못 했으면 null */
+    public static MergedAll mergeAllQuiet(ServerPlayer sp, List<Merge> plan) {
         int done = 0;
         Map<String, int[]> best = new LinkedHashMap<>(); // 룬 ID → {처음, 끝} 단계
         Map<String, Runes.Rune> runes = new LinkedHashMap<>();
@@ -294,17 +309,25 @@ public final class Breakthrough {
                 topFt = ft;
             }
         }
-        if (done == 0) {
+        if (done == 0) return null;
+        sp.getInventory().setChanged();
+        List<String> parts = new ArrayList<>();
+        for (Map.Entry<String, int[]> e : best.entrySet()) parts.add(runes.get(e.getKey()).def().str("name") + " " + e.getValue()[1] + "돌");
+        return new MergedAll(done, top, topFt[0], topFt[1], List.copyOf(parts));
+    }
+
+    /** 모두 돌파 (planAll 차례대로 — 칸이 바뀌어 하나라도 안 되면 거기서 멈춤). 결과 문구 */
+    public static String mergeAll(ServerPlayer sp, List<Merge> plan) {
+        MergedAll a = mergeAllQuiet(sp, plan);
+        if (a == null) {
             SkillFx.playFor(sp, "note.bass", 0.6, 1);
             return "§4룬이 옮겨져서 취소했습니다. 다시 골라 주세요.§r";
         }
-        sp.getInventory().setChanged();
-        mergeFx(sp, top, topFt[0], topFt[1]);
-        List<String> parts = new ArrayList<>();
-        for (Map.Entry<String, int[]> e : best.entrySet()) parts.add(runes.get(e.getKey()).def().str("name") + " " + e.getValue()[1] + "돌");
+        mergeFx(sp, a.top(), a.from(), a.to(), true);
+        List<String> parts = a.parts();
         String list = String.join(" · ", parts.subList(0, Math.min(3, parts.size()))) + (parts.size() > 3 ? " 외 " + (parts.size() - 3) : "");
-        Notify.notify(sp, "§b돌파 " + done + "번 §7(" + list + ")", 60);
-        return "§2돌파 " + done + "번: §5" + list + "§r";
+        Notify.notify(sp, "§b돌파 " + a.done() + "번 §7(" + list + ")", 60);
+        return "§2돌파 " + a.done() + "번: §5" + list + "§r";
     }
 
     /** 합치기 하나를 가방에 (칸 확인) — 실패 문구, 되면 null. 연출 없음 */
@@ -342,7 +365,7 @@ public final class Breakthrough {
      * 합치기 연출: 눈앞 양쪽에서 두 룬의 빛 (등급 색 작은 마법진 + 빛 알갱이) 이 가운데로 모임 → 6틱 뒤 번쩍 (큰 마법진 · 빛 · 고리) + "돌파! ★★★☆☆☆".
      * 초월 룬이 3 · 6돌에 이르면 그 단계를 열어 보임 (tierFx)
      */
-    static void mergeFx(ServerPlayer sp, Runes.Rune r, int from, int to) {
+    static void mergeFx(ServerPlayer sp, Runes.Rune r, int from, int to, boolean tier) {
         if (r == null || sp.isRemoved()) return;
         ServerLevel level = sp.level();
         Vec3 f = V.flat(sp.getViewVector(1F));
@@ -375,12 +398,16 @@ public final class Breakthrough {
             if (to >= RuneBreak.max()) SkillFx.play(lv, "random.levelup", sp.position(), 1.0, 0.7);
             DamageNumbers.showFace(sp, "§b§l돌파! §e" + RuneBreak.stars(to), 2.0, 0, 0.55);
         });
-        if (RuneBreak.tiered(r)) {
-            int crossed = 0; // 이번에 넘은 가장 높은 단계 (0 → 6 이면 6만 보여 줌)
-            for (int t : RuneBreak.tiers()) if (from < t && to >= t) crossed = t;
-            int tier = crossed;
-            if (tier > 0) RuneKit.later(10, () -> tierFx(sp, r, tier));
-        }
+        if (tier) tierLater(sp, r, from, to);
+    }
+
+    /** 초월 룬이 from → to 로 3 · 6돌을 넘었으면 10틱 뒤 그 단계를 열어 보임 (0 → 6 이면 6만) */
+    static void tierLater(ServerPlayer sp, Runes.Rune r, int from, int to) {
+        if (r == null || !RuneBreak.tiered(r)) return;
+        int crossed = 0; // 이번에 넘은 가장 높은 단계 (0 → 6 이면 6만 보여 줌)
+        for (int t : RuneBreak.tiers()) if (from < t && to >= t) crossed = t;
+        int tier = crossed;
+        if (tier > 0) RuneKit.later(10, () -> tierFx(sp, r, tier));
     }
 
     /**

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import mmorpg.fabric.BedrockText;
-import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.client.motion.ClientMotions;
 import mmorpg.fabric.client.motion.MotionPoses;
 import mmorpg.fabric.client.motion.MotionRender;
@@ -19,12 +18,10 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.model.HumanoidModel;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.util.Util;
 import net.minecraft.world.entity.Avatar;
@@ -37,6 +34,9 @@ import org.joml.Vector3f;
 /**
  * 0.44.0 대장장이 전용 창 (사용자: "대장장이 ui 수정 좀 하자 좀 난잡함, 강화나 장비를 만들때 망치 두드리는 소리가 나고 대장장이가 망치를 두드리는 애니메이션"
  * → 고른 것: 새 전용 창 · 창 옆 패널 + 세상 NPC). 계산 · 판정은 서버 (SmithUi — 이 창은 받은 목록을 그리고 누른 것을 보냄).
+ * 0.45.0: 룬술사 · 상인 창도 이 창 (사용자: "룬술사랑 상인 같은 애들도 이렇게 바꾸자") — 서버 Workshop 이 보낸 가게 (kind) 에 따라 왼쪽 패널의 장면만
+ * 다름 ({@link WorkScene}: 대장간 {@link ForgeScene} · 룬 공방 {@link RuneScene} · 가게 {@link ShopScene}), 탭 글 · 창 위 이름 · 목록 머리는 서버가 보냄.
+ * 두 번 눌러야 하는 칸 (Entry.confirm — 하나뿐인 룬 갈기 같은 것) 은 처음 누르면 경고 · 단추가 "한 번 더".
  * <ul>
  *   <li>위: 탭 (강화 · 레벨 올리기 · 제작 · 장신구 · 아티팩트) · 대장장이 이름 · [×]</li>
  *   <li>왼쪽 패널: 대장간 (돌벽 · 화덕 불 · 불씨) 에 대장장이 (그 NPC 의 모습 — 3D) 와 모루 (고른 것이 올라감). 망치질: 대장장이가 세 번 내려침 (세상의 그 NPC 도
@@ -74,34 +74,17 @@ public final class SmithScreen extends Screen {
     static final int DY = 26;
     static final int DW = 136;
     static final int DH = 194;
-    // 패널 안 자리 (패널 기준). 대장장이는 1칸 = FIG 로, 모루는 1칸 높이 (세상의 모루와 같은 비율) — 망치질 (poses.json smith_hammer) 의 망치 치는 면이
-    // 이 카메라로 모루 윗면 (HIT) 에 닿게 맞춤 (tools/smith_art.py 의 panel_layout 과 같은 계산)
-    static final int SMITH_X = 32;
-    static final int FEET_Y = 168;
-    static final float FIG = 44F;
-    /** 대장장이 몸 방향 (정면 = 0 — 음수면 오른쪽 모루 쪽으로 돎) */
-    static final float FACE = -70F;
-    /** 카메라 기울기 (도 — 음수 = 조금 위에서 내려다봄: 모루 윗면 · 바닥이 보이는 배경 그림과 맞춤) */
-    static final float CAM = -8F;
-    static final int ANVIL_X = 55;
-    static final int ANVIL_Y = 125;
-    static final int ANVIL_W = 58;
-    static final int ANVIL_H = 48;
-    /** 모루 윗면의 망치가 닿는 곳 · 올린 것이 놓이는 곳 */
-    static final int HIT_X = 79;
-    static final int HIT_Y = 127;
-    static final int ITEM_X = 79;
-    static final int ITEM_Y = 125;
-    static final int FORGE_X = 80;
-    static final int FORGE_Y = 106;
-
-    static final Identifier BACKDROP = Mmorpg.id("smith/backdrop");
-    static final Identifier ANVIL = Mmorpg.id("smith/anvil");
-    static final String HAMMER = "rpg:smith_hammer";
+    /** NPC 가 없을 때의 마네킹 · 패널 장면 */
     /** 결과 연출 길이 (밀리초) */
     static final long RESULT_MS = 2600;
 
     private float s = 1F;
+    /** 왼쪽 패널의 장면 (가게마다) · 그 가게 */
+    private WorkScene scene = new ForgeScene();
+    private String sceneKind = "smith";
+    /** 두 번 눌러야 하는 칸: 처음 누른 칸 · 그때 (밀리초) */
+    private String armedKey = "";
+    private long armedAt;
     private float ox;
     private float oy;
     /** 고른 칸 열쇠 · 공허의 갑옷 부위 (-1 = 아직) · 수호 주문서 쓰기 */
@@ -130,16 +113,6 @@ public final class SmithScreen extends Screen {
     private final List<int[]> rowRects = new ArrayList<>();
     private final List<String> rowKeys = new ArrayList<>();
 
-    // 연출
-    private record Spark(float x, float y, float vx, float vy, long born, int life, int rgb, float size) {}
-
-    private final List<Spark> sparks = new ArrayList<>();
-    private final List<Spark> embers = new ArrayList<>();
-    private long nextEmber;
-    private long shakeUntil;
-    private final Random rnd = new Random();
-    private long nextCrackle;
-
     public SmithScreen() {
         super(Component.literal("대장장이"));
     }
@@ -150,7 +123,27 @@ public final class SmithScreen extends Screen {
         ox = (width - W * s) / 2F;
         oy = (height - H * s) / 2F;
         SmithNet.ViewPayload v = ClientSmith.view;
-        if (v != null) pickDefault(v);
+        if (v != null) {
+            useScene(v.kind());
+            pickDefault(v);
+        }
+    }
+
+    /** 가게 (kind) 의 장면으로 (바뀌었을 때만) */
+    private void useScene(String kind) {
+        String k = kind == null || kind.isEmpty() ? "smith" : kind;
+        if (k.equals(sceneKind)) return;
+        sceneKind = k;
+        scene = switch (k) {
+            case "runesmith" -> new RuneScene();
+            case "shop" -> new ShopScene();
+            default -> new ForgeScene();
+        };
+    }
+
+    /** 지금 장면 (시험) */
+    public String sceneKind() {
+        return sceneKind;
     }
 
     @Override
@@ -162,11 +155,13 @@ public final class SmithScreen extends Screen {
 
     /** 서버가 보낸 새 창 (탭이 바뀌면 목록 처음 — 고른 칸은 같은 열쇠가 있으면 그대로) */
     void onView(SmithNet.ViewPayload before, SmithNet.ViewPayload v) {
-        if (before == null || !before.tab().equals(v.tab()) || before.page() != v.page()) {
+        if (before == null || !before.kind().equals(v.kind()) || !before.tab().equals(v.tab()) || before.page() != v.page()) {
             first = 0;
             selKey = "";
             variant = -1;
+            armedKey = "";
         }
+        useScene(v.kind());
         pickDefault(v);
     }
 
@@ -203,20 +198,14 @@ public final class SmithScreen extends Screen {
         return null;
     }
 
-    /** 망치가 닿음 (ClientSmith — 틱): 불꽃 · 번쩍임 · 흔들림 */
+    /** 닿음 (ClientSmith — 틱): 장면의 불꽃 · 조각 · 은화 · 흔들림 */
     void onHit(int i, boolean last) {
-        long now = Util.getMillis();
-        ClientSmith.Work w = ClientSmith.work;
-        int rgb = RpgUi.gradeRgb(w == null ? 0 : w.grade());
-        int n = last ? 24 : 15;
-        for (int k = 0; k < n; k++) {
-            double a = Math.toRadians(-170 + rnd.nextDouble() * 160);
-            float sp = 35F + rnd.nextFloat() * (last ? 95F : 70F);
-            int col = rnd.nextFloat() < 0.55F ? 0xFFE6A0 : rnd.nextFloat() < 0.5F ? 0xFF9A3C : rgb;
-            sparks.add(new Spark(HIT_X + (rnd.nextFloat() - 0.5F) * 3, HIT_Y, (float) Math.cos(a) * sp, (float) Math.sin(a) * sp, now,
-                    280 + rnd.nextInt(last ? 420 : 300), col, rnd.nextFloat() < 0.3F ? 2F : 1F));
-        }
-        shakeUntil = now + (last ? 170 : 110);
+        scene.onHit(i, last, ClientSmith.work);
+    }
+
+    /** 고른 칸 (장면이 패널에 올림 — 없으면 null) */
+    SmithNet.Entry selectedEntry() {
+        return entry(ClientSmith.view, selKey);
     }
 
     // ------------------------------------------------------------ 자리 (시험 — GUI 좌표)
@@ -316,23 +305,24 @@ public final class SmithScreen extends Screen {
         drawTabs(g, v, lmx, lmy);
         tip = merge(tip, drawList(g, v, lmx, lmy, now));
         tip = merge(tip, drawDetail(g, v, sel, lmx, lmy, now));
-        int[] shake = shake(now);
-        drawSceneBack(g, v, sel, shake, now);
+        int[] shake = scene.shake(now);
+        scene.back(this, g, v, sel, SX + shake[0], SY + shake[1], now, partial);
         g.pose().popMatrix();
 
-        // ---- 대장장이 (3D — 그림 상자는 GUI 좌표: 같은 층의 다른 그림 위에 그려짐)
+        // ---- NPC (3D — 그림 상자는 GUI 좌표: 같은 층의 다른 그림 위에 그려짐)
         drawSmith(g, partial, shake);
 
-        // ---- 다음 층: 불꽃 · 결과 연출 · 이름표 (대장장이 위)
+        // ---- 다음 층: 장면 앞 (불꽃 · 조각 · 계산대) · 결과 연출 · 이름표 (NPC 위)
         g.nextStratum();
         g.pose().pushMatrix();
         g.pose().translate(ox, oy);
         g.pose().scale(s, s);
+        scene.front(this, g, v, SX + shake[0], SY + shake[1], now, partial);
         drawSceneFront(g, v, shake, now);
         g.pose().popMatrix();
 
         if (tip != null && !tip.isEmpty()) g.setTooltipForNextFrame(font, tip, Optional.empty(), mx, my);
-        ambience(now);
+        scene.ambience(now);
     }
 
     private static List<Component> merge(List<Component> a, List<Component> b) {
@@ -377,7 +367,10 @@ public final class SmithScreen extends Screen {
         return r != null && x >= r[0] && x < r[0] + r[2] && y >= r[1] && y < r[1] + r[3];
     }
 
-    private static String tabLabel(String tab) {
+    /** 탭 글 (서버가 보낸 글 — 없으면 대장장이 탭 이름) */
+    private static String tabLabel(SmithNet.ViewPayload v, int i) {
+        if (i < v.tabNames().size() && !v.tabNames().get(i).isEmpty()) return v.tabNames().get(i);
+        String tab = v.tabs().get(i);
         return switch (tab) {
             case SmithUi.ENHANCE -> "강화";
             case SmithUi.RAISE -> "레벨 올리기";
@@ -387,11 +380,17 @@ public final class SmithScreen extends Screen {
         };
     }
 
+    /** 창 위 · 이름표의 가게 이름 ("대장장이" · "룬술사" · "상인") */
+    private String role(SmithNet.ViewPayload v) {
+        return v.role().isEmpty() ? scene.roleName() : v.role();
+    }
+
     private void drawTabs(GuiGraphicsExtractor g, SmithNet.ViewPayload v, int mx, int my) {
         tabRects.clear();
         int x = TAB_X;
-        for (String t : v.tabs()) {
-            String label = tabLabel(t);
+        for (int ti = 0; ti < v.tabs().size(); ti++) {
+            String t = v.tabs().get(ti);
+            String label = tabLabel(v, ti);
             int w = font.width(label) + 16;
             int[] r = {x, TAB_Y, w, TAB_H};
             tabRects.add(r);
@@ -409,7 +408,7 @@ public final class SmithScreen extends Screen {
         g.fill(closeRect[0], closeRect[1], closeRect[0] + 12, closeRect[1] + 12, ch ? 0xC0602020 : 0x80000000);
         g.outline(closeRect[0], closeRect[1], 12, 12, 0xA0C8A050);
         g.text(font, "×", closeRect[0] + 3, closeRect[1] + 2, ch ? 0xFFFFFFFF : 0xFFD0C090, false);
-        String who = v.npcName().isEmpty() ? "§6대장장이" : "§6대장장이 §f" + v.npcName();
+        String who = v.npcName().isEmpty() ? "§6" + role(v) : "§6" + role(v) + " §f" + v.npcName();
         String jw = j(who);
         int nx = Math.max(x + 6, W - 26 - font.width(jw));
         fit(g, jw, nx, TAB_Y + 4, W - 26 - nx, 0xFFFFFFFF);
@@ -466,7 +465,7 @@ public final class SmithScreen extends Screen {
         // 머리 줄: 제목 · 개수 (제작은 ◀ 쪽 ▶)
         pagePrev = null;
         pageNext = null;
-        if (v.tab().equals(SmithUi.CRAFT) && !v.pages().isEmpty()) {
+        if (!v.pages().isEmpty()) {
             int page = Math.max(0, Math.min(v.pages().size() - 1, v.page()));
             pagePrev = new int[] {LX + 3, LY + 2, 14, 12};
             pageNext = new int[] {LX + LW - 17, LY + 2, 14, 12};
@@ -481,12 +480,12 @@ public final class SmithScreen extends Screen {
             int lw = Math.min(LW - 40, font.width(label));
             fit(g, label, LX + (LW - lw) / 2, LY + 4, LW - 40, 0xFFFFFFFF);
         } else {
-            String title = switch (v.tab()) {
+            String title = !v.listTitle().isEmpty() ? v.listTitle() : switch (v.tab()) {
                 case SmithUi.RAISE -> "올릴 무기";
                 case SmithUi.GEAR -> "장신구 · 아티팩트";
                 default -> "가방의 무기";
             };
-            g.text(font, title, LX + 5, LY + 4, RpgUi.GOLD_TEXT, true);
+            fit(g, j("§6" + title), LX + 5, LY + 4, LW - 24, RpgUi.GOLD_TEXT);
             String n = String.valueOf(v.entries().size());
             g.text(font, n, LX + LW - 5 - font.width(n), LY + 4, 0xFF9A9AAA, true);
         }
@@ -668,10 +667,15 @@ public final class SmithScreen extends Screen {
                 costs = vr.costs();
                 can = vr.can();
                 note = vr.note();
+                // 0.45.0 고른 것의 한 줄 (받는 실버 · 방어 같은 것)
+                if (!vr.info().isEmpty() && y + 10 < bottom) {
+                    fit(g, j(vr.info()), x, y, w, 0xFFFFFFFF);
+                    y += 11;
+                }
             } else {
                 costs = List.of();
                 can = false;
-                note = "§e만들 것을 고르세요";
+                note = "§e고를 것을 고르세요";
             }
         }
         // 재료
@@ -724,8 +728,9 @@ public final class SmithScreen extends Screen {
             if (in(scrollRect, mx, my)) tip = List.of(lit("§6수호 주문서"), lit("§7실패해도 단계가 떨어지지 않음"), lit("§7(실패했을 때만 사라짐)"));
             y += 12;
         }
-        // 알림 (서버 · 모자람)
-        String msg = !v.message().isEmpty() ? v.message() : note;
+        // 알림 (서버 · 모자람 · 두 번 눌러야 하는 칸의 경고)
+        boolean armed = armed(e);
+        String msg = armed ? e.confirm() : !v.message().isEmpty() ? v.message() : note;
         if (msg != null && !msg.isEmpty()) {
             // 길면 두 줄 (" · " 에서 끊음 — 모자란 재료가 많을 때 글자가 납작해지지 않게)
             List<String> ls = wrap(j(msg), w, 2);
@@ -746,93 +751,22 @@ public final class SmithScreen extends Screen {
             int fw = (int) Math.round((actionRect[2] - 6) * t);
             g.fill(actionRect[0] + 3, actionRect[1] + actionRect[3] - 5, actionRect[0] + 3 + fw, actionRect[1] + actionRect[3] - 3, 0xFFFFC860);
         }
-        String label = busy ? "망치질 중…" : e.action();
-        int lc = enabled ? 0xFFFFE8B0 : busy ? 0xFFE8C070 : 0xFF7A7A88;
+        ClientSmith.Work wk = ClientSmith.work;
+        String label = busy ? scene.busyLabel(wk != null ? wk.fx() : "") : armed ? "한 번 더 눌러 " + e.action() : e.action();
+        int lc = enabled ? (armed ? 0xFFFF9A7A : 0xFFFFE8B0) : busy ? 0xFFE8C070 : 0xFF7A7A88;
+        if (armed && enabled) {
+            // 경고 테 (깜빡임)
+            int a = (int) (120 + 100 * Math.sin(now / 120.0));
+            g.outline(actionRect[0] + 1, actionRect[1] + 1, actionRect[2] - 2, actionRect[3] - 2, GachaArt.argb(a, 0xFF6040));
+        }
         GachaArt.textCentered(g, font, label, actionRect[0] + actionRect[2] / 2F, actionRect[1] + 7, 1F, lc);
         if (!enabled && !busy) g.fill(actionRect[0] + 2, actionRect[1] + 2, actionRect[0] + actionRect[2] - 2, actionRect[1] + actionRect[3] - 2, 0x50000000);
         return tip;
     }
 
-    // ---- 대장간 패널
+    // ---- 왼쪽 패널 (장면은 WorkScene — 여기는 NPC · 결과 연출 · 이름표 · 테)
 
-    /** 흔들림 (망치가 닿은 바로 뒤 — 창 기준 {dx, dy}) */
-    private int[] shake(long now) {
-        if (now >= shakeUntil) return new int[] {0, 0};
-        float k = (shakeUntil - now) / 170F;
-        return new int[] {Math.round((rnd.nextFloat() - 0.5F) * 3F * k), Math.round((rnd.nextFloat() - 0.5F) * 2.4F * k)};
-    }
-
-    /** 패널 뒤 (대장장이보다 아래): 배경 · 화덕 빛 · 불씨 · 모루 · 모루 위의 것 · 달군 빛 */
-    private void drawSceneBack(GuiGraphicsExtractor g, SmithNet.ViewPayload v, SmithNet.Entry sel, int[] sh, long now) {
-        int x0 = SX + sh[0];
-        int y0 = SY + sh[1];
-        g.blitSprite(RenderPipelines.GUI_TEXTURED, BACKDROP, x0, y0, SW, SH);
-        // 화덕 불 (깜빡임)
-        double fl = 0.5 + 0.25 * Math.sin(now / 130.0) + 0.25 * Math.sin(now / 47.0 + 1.3);
-        GachaArt.sprite(g, GachaArt.GLOW, x0 + FORGE_X, y0 + FORGE_Y, 54F + (float) fl * 6F, 0F, GachaArt.argb((int) (90 + 70 * fl), 0xFF9A3C));
-        GachaArt.sprite(g, GachaArt.GLOW, x0 + FORGE_X, y0 + FORGE_Y + 6, 26F, 0F, GachaArt.argb((int) (120 + 60 * fl), 0xFFE08A));
-        // 불씨 (화덕 입에서 위로)
-        if (nextEmber < now - 1000) nextEmber = now;
-        while (nextEmber <= now) {
-            embers.add(new Spark(FORGE_X - 10 + rnd.nextFloat() * 20, FORGE_Y - 8, (rnd.nextFloat() - 0.5F) * 10F, -12F - rnd.nextFloat() * 12F, nextEmber,
-                    1100 + rnd.nextInt(900), rnd.nextFloat() < 0.5F ? 0xFFC860 : 0xFF8A30, 1F));
-            nextEmber += 120 + rnd.nextInt(160);
-        }
-        embers.removeIf(p -> now - p.born() > p.life());
-        for (Spark p : embers) {
-            float t = (now - p.born()) / 1000F;
-            float px = p.x() + p.vx() * t + (float) Math.sin(t * 5 + p.born() % 7) * 2F;
-            float py = p.y() + p.vy() * t;
-            float a = 1F - (now - p.born()) / (float) p.life();
-            if (py < 12) continue;
-            int alpha = (int) (255 * a * (0.6 + 0.4 * Math.sin(now / 60.0 + p.born())));
-            g.fill(x0 + Math.round(px), y0 + Math.round(py), x0 + Math.round(px) + 1, y0 + Math.round(py) + 1, GachaArt.argb(alpha, p.rgb()));
-        }
-        // 모루
-        g.blitSprite(RenderPipelines.GUI_TEXTURED, ANVIL, x0 + ANVIL_X, y0 + ANVIL_Y, ANVIL_W, ANVIL_H);
-        // 모루 위의 것: 망치질 중 = 올린 것 (달굼 빛), 결과 = 결과 아이템, 아니면 고른 것
-        ClientSmith.Work w = ClientSmith.work;
-        SmithNet.Result r = ClientSmith.result;
-        boolean showResult = r != null && now - ClientSmith.resultAt < RESULT_MS;
-        ItemStack item = w != null && ClientSmith.progress(0) < 1 ? w.item() : showResult && !r.item().isEmpty() ? r.item() : sel != null ? sel.icon() : ItemStack.EMPTY;
-        double prog = w != null ? Math.max(0, ClientSmith.progress(minecraft.getDeltaTracker().getGameTimeDeltaPartialTick(false))) : 0;
-        if (w != null && prog < 1) {
-            GachaArt.sprite(g, GachaArt.GLOW, x0 + ITEM_X, y0 + ITEM_Y + 2, 30F, 0F, GachaArt.argb((int) (60 + 150 * prog), 0xFF7A28));
-        }
-        if (!item.isEmpty()) {
-            float pop = 1F;
-            float dx = 0;
-            if (showResult) {
-                float p = (now - ClientSmith.resultAt) / 1000F;
-                if (r.kind().equals("success") || r.kind().equals("done")) pop = 1F + 0.5F * (float) Math.max(0, Math.sin(Math.min(1, p / 0.35F) * Math.PI)) * Math.max(0, 1 - p);
-                if (r.kind().equals("down")) dx = (float) Math.sin(p * 60) * 2.5F * Math.max(0, 1 - p * 2);
-            }
-            g.pose().pushMatrix();
-            if (lying(item)) {
-                // 무기 (그림이 왼쪽 위 끝 → 오른쪽 아래 손잡이): 모루 위에 눕힘 — 끝이 오른쪽 (뿔 쪽) · 손잡이가 대장장이 쪽,
-                // 돌린 뒤 위에서 비스듬히 본 만큼 납작하게 (돌리기 → 줄이기 차례: 줄이기를 먼저 곱함)
-                g.pose().translate(x0 + ITEM_X + dx, y0 + ITEM_Y);
-                g.pose().scale(pop * 1.15F, pop * 0.8F);
-                g.pose().rotate((float) (Math.PI * 0.75));
-                g.item(item, -8, -8);
-            } else {
-                // 그 밖 (갑옷 · 장신구 · 아티팩트 · 활 · 방패): 모루 위에 세워 둠 (조금 작게 — 아래가 윗면에 닿음)
-                float sc = 0.75F * pop;
-                g.pose().translate(x0 + ITEM_X + dx, y0 + HIT_Y - 8F * sc);
-                g.pose().scale(sc, sc);
-                g.item(item, -8, -8);
-            }
-            g.pose().popMatrix();
-        }
-    }
-
-    /** 모루 위에 눕혀 놓는 것: RPG 무기 중 그림이 대각선인 것 (활 · 방패는 세움) */
-    private static boolean lying(ItemStack s) {
-        String type = CosmeticRender.weaponType(s);
-        return !type.isEmpty() && !type.equals("bow") && !type.equals("shield");
-    }
-
-    /** 대장장이 (3D — 그 NPC 의 모습, 없으면 기본 마네킹): 망치질 중이면 smith_hammer 자세, 늘 대장장이 망치를 듦 */
+    /** NPC (3D — 그 NPC 의 모습, 없으면 기본 마네킹): 장면의 자리 · 몸 방향 · 쉬는 자세 (일하는 중이면 그 일의 동작) · 든 것 */
     private void drawSmith(GuiGraphicsExtractor g, float partial, int[] sh) {
         Avatar a = smith();
         if (a == null) return;
@@ -848,53 +782,82 @@ public final class SmithScreen extends Screen {
         st.nameTag = null;
         st.scoreText = null;
         if (st instanceof AvatarRenderState as) {
-            Pose p = panelPose(partial);
+            Pose p = panelPose(scene, partial);
             as.setData(MotionRender.KEY, p != null ? p : MotionRender.NONE);
-            as.bodyRot = 180F + FACE;
+            as.bodyRot = 180F + scene.face();
             as.yRot = 0F;
             as.xRot = p == null ? 20F : 0F;
             as.walkAnimationPos = 0F;
             as.walkAnimationSpeed = 0F;
             as.isCrouching = false;
-            MotionRender.holdIn(a, as, HAMMER);
-            as.rightHandItemStack = MotionRender.holdStack(HAMMER);
-            as.rightArmPose = HumanoidModel.ArmPose.ITEM;
+            // 든 것: 일하는 동안 장면이 정한 것 (상인이 꺼낸 물건) → 늘 드는 것 (대장장이 망치) → 빈손
+            ClientSmith.Work w = ClientSmith.work;
+            double t = w != null ? ClientSmith.progress(partial) : -1;
+            ItemStack inHand = w != null && t >= 0 && t < 1 ? scene.handItem(w, t) : null;
+            if (inHand != null && !inHand.isEmpty()) {
+                minecraft.getItemModelResolver().updateForLiving(as.rightHandItemState, inHand, net.minecraft.world.item.ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, a);
+                as.rightHandItemStack = inHand;
+                as.rightArmPose = HumanoidModel.ArmPose.ITEM;
+            } else if (scene.hold() != null) {
+                MotionRender.holdIn(a, as, scene.hold());
+                as.rightHandItemStack = MotionRender.holdStack(scene.hold());
+                as.rightArmPose = HumanoidModel.ArmPose.ITEM;
+            } else {
+                as.rightHandItemState.clear();
+                as.leftHandItemState.clear();
+                as.rightHandItemStack = ItemStack.EMPTY;
+                as.leftHandItemStack = ItemStack.EMPTY;
+                as.rightArmPose = HumanoidModel.ArmPose.EMPTY;
+                as.leftArmPose = HumanoidModel.ArmPose.EMPTY;
+            }
         }
         int bx0 = gx(SX + 2 + sh[0]);
         int by0 = gy(SY + 2 + sh[1]);
         int bx1 = gx(SX + SW - 2 + sh[0]);
         int by1 = gy(SY + SH - 2 + sh[1]);
-        float scale = FIG * s;
+        float scale = scene.fig() * s;
         float cx = (bx0 + bx1) / 2F;
         float cy = (by0 + by1) / 2F;
-        float tx = (ox + (SX + SMITH_X + sh[0]) * s - cx) / scale;
-        float ty = (oy + (SY + FEET_Y + sh[1]) * s - cy) / scale;
-        Quaternionf cam = new Quaternionf().rotateX((float) Math.toRadians(CAM));
+        float tx = (ox + (SX + scene.npcX() + sh[0]) * s - cx) / scale;
+        float ty = (oy + (SY + scene.feetY() + sh[1]) * s - cy) / scale;
+        Quaternionf cam = new Quaternionf().rotateX((float) Math.toRadians(scene.cam()));
         Quaternionf rot = new Quaternionf().rotateZ((float) Math.PI).mul(cam);
         g.entity(st, scale, new Vector3f(tx, ty, 0F), rot, cam, bx0, by0, bx1, by1);
     }
 
-    private static MotionPoses.Motion panelBase;
-    private static MotionPoses.Motion panelMotion;
+    /** 쉬는 자세 · 일의 동작 (동작 이름 → 쉬는 자세에서 시작해 거기로 끝나게 고친 것 — 장면 · 동작이 바뀔 때만 다시 만듦) */
+    private static final java.util.Map<String, MotionPoses.Motion> LOOPS = new java.util.HashMap<>();
+    private static MotionPoses.Motion idleBase;
+
+    private static MotionPoses.Motion loop(String motion, WorkScene sc) {
+        MotionPoses.Motion idle = MotionPoses.get(sc.idleMotion());
+        MotionPoses.Motion m = MotionPoses.get(motion);
+        if (idle == null || m == null) return null;
+        if (idleBase != idle) {
+            // 동작을 다시 읽었으면 (자원 다시 불러오기) 처음부터
+            idleBase = idle;
+            LOOPS.clear();
+        }
+        return LOOPS.computeIfAbsent(sc.idleMotion() + "|" + motion, k -> MotionPoses.restLoop(m, idle, sc.idleKey()));
+    }
 
     /**
-     * 창 패널의 자세: 망치질 중이면 ClientSmith 의 시각 (세상의 NPC 와 같은 동작), 아니면 쉬는 자세 — 망치질의 첫 자세 (망치를 모루 위에 든 채
-     * 모루를 내려다봄) 에서 숨쉬듯 조금 움직임. 망치질은 쉬는 자세에서 시작해 쉬는 자세로 끝남 ({@link MotionPoses#restLoop})
+     * 창 패널의 자세: 일하는 중이면 ClientSmith 의 시각 (세상의 NPC 와 같은 동작), 아니면 쉬는 자세 — 장면의 쉬는 열쇠 (대장장이: 망치를 모루 위에 든 채,
+     * 룬술사: 받침 위 룬에 손을 뻗음, 상인: 계산대에 손을 얹음) 에서 숨쉬듯 조금 움직임. 일은 쉬는 자세에서 시작해 쉬는 자세로 끝남
+     * ({@link MotionPoses#restLoop})
      */
-    private static Pose panelPose(float partial) {
-        MotionPoses.Motion base = MotionPoses.get(SmithUi.MOTION);
-        if (base == null) return null;
-        if (panelBase != base) {
-            panelBase = base;
-            panelMotion = MotionPoses.restLoop(base, 1);
-        }
-        double t = 0;
+    private static Pose panelPose(WorkScene sc, float partial) {
         ClientSmith.Work w = ClientSmith.work;
+        double t = 0;
+        String motion = sc.idleMotion();
         if (w != null) {
             t = (ClientMotions.ticks() + partial - w.start()) / w.ticks();
             if (t < 0 || t >= 1) t = 0;
+            else motion = w.motion();
         }
-        Pose p = MotionPoses.evaluate(panelMotion, (float) t, false, new Pose());
+        MotionPoses.Motion m = loop(motion, sc);
+        if (m == null) return null;
+        Pose p = MotionPoses.evaluate(m, (float) t, false, new Pose());
         p.yaw = Float.NaN;
         p.hold = null;
         if (t == 0) {
@@ -913,41 +876,14 @@ public final class SmithScreen extends Screen {
         return dummy;
     }
 
-    /** 패널 앞 (대장장이 위): 불꽃 · 번쩍임 · 결과 연출 · 이름표 · 테 */
+    /** 패널 앞 (NPC 위 · 장면 앞 그림 위): 결과 연출 · 이름표 · 테 */
     private void drawSceneFront(GuiGraphicsExtractor g, SmithNet.ViewPayload v, int[] sh, long now) {
         int x0 = SX + sh[0];
         int y0 = SY + sh[1];
-        // 망치가 닿은 번쩍임 · 고리
-        long dt = now - ClientSmith.hitAt;
-        if (ClientSmith.hitAt > 0 && dt < 260) {
-            float k = dt / 260F;
-            GachaArt.sprite(g, GachaArt.GLOW, x0 + HIT_X, y0 + HIT_Y, 22F + 26F * k, 0F, GachaArt.argb((int) (230 * (1 - k)), 0xFFE6A0));
-            GachaArt.sprite(g, GachaArt.RING, x0 + HIT_X, y0 + HIT_Y, 8F + 34F * k, 0F, GachaArt.argb((int) (190 * (1 - k)), 0xFFC860));
-        }
-        // 불꽃 (튀어 오르다 떨어짐 — 패널 밖은 그리지 않음)
-        sparks.removeIf(p -> now - p.born() > p.life());
-        for (Spark p : sparks) {
-            float t = (now - p.born()) / 1000F;
-            float px = p.x() + p.vx() * t;
-            float py = p.y() + p.vy() * t + 0.5F * 190F * t * t;
-            if (px < 2 || px > SW - 2 || py < 2 || py > SH - 2) continue;
-            float a = 1F - (now - p.born()) / (float) p.life();
-            float vx = p.vx();
-            float vy = p.vy() + 190F * t;
-            float ang = (float) Math.atan2(vy, vx);
-            float len = Math.min(5F, 1.5F + (float) Math.hypot(vx, vy) / 40F);
-            int col = GachaArt.mix(p.rgb(), 0xFF3010, Math.min(1, (now - p.born()) / (double) p.life() * 1.2));
-            g.pose().pushMatrix();
-            g.pose().translate(x0 + px, y0 + py);
-            g.pose().rotate(ang);
-            g.fill(Math.round(-len), 0, 0, Math.max(1, Math.round(p.size())), GachaArt.argb((int) (255 * a), col));
-            g.pose().popMatrix();
-        }
-        // 결과 연출
         SmithNet.Result r = ClientSmith.result;
         if (r != null && now - ClientSmith.resultAt < RESULT_MS) drawResult(g, r, x0, y0, now - ClientSmith.resultAt);
         // 이름표 (아래)
-        String name = j(v.npcName().isEmpty() ? "§6대장장이" : "§6" + v.npcName());
+        String name = j(v.npcName().isEmpty() ? "§6" + role(v) : "§6" + v.npcName());
         int nw = Math.min(SW - 12, font.width(name));
         int ny = SY + SH - 18;
         g.fill(SX + (SW - nw) / 2 - 4, ny - 2, SX + (SW + nw) / 2 + 4, ny + 10, 0x90000000);
@@ -957,15 +893,17 @@ public final class SmithScreen extends Screen {
         g.outline(SX + 1, SY + 1, SW - 2, SH - 2, 0x60000000);
     }
 
+    /** 결과 연출 (장면의 결과 자리 — 성공 · 됨 금빛 햇살 · 하락 붉은 빛 · 그대로 연기 · 주문서 금빛 고리) · 위 띠의 글 */
     private void drawResult(GuiGraphicsExtractor g, SmithNet.Result r, int x0, int y0, long ms) {
         float p = ms / (float) RESULT_MS;
         float fade = p < 0.75F ? 1F : (1F - p) / 0.25F;
         float k = ms / 1000F;
-        int ix = x0 + ITEM_X;
-        int iy = y0 + ITEM_Y;
+        float ix = x0 + scene.resultX();
+        float iy = y0 + scene.resultY();
         switch (r.kind()) {
             case "success", "done" -> {
-                GachaArt.sprite(g, GachaArt.RAYS, ix, iy, 70F + 10F * (float) Math.sin(k * 3), k * 0.9F, GachaArt.argb((int) (150 * fade), 0xFFD24A));
+                int ray = sceneKind.equals("runesmith") ? (r.kind().equals("success") ? 0x78E8FF : 0xC896FF) : 0xFFD24A;
+                GachaArt.sprite(g, GachaArt.RAYS, ix, iy, 70F + 10F * (float) Math.sin(k * 3), k * 0.9F, GachaArt.argb((int) (150 * fade), ray));
                 GachaArt.sprite(g, GachaArt.GLOW, ix, iy, 44F, 0F, GachaArt.argb((int) (170 * fade), 0xFFE6A0));
                 Random rr = new Random(r.seq() * 31L);
                 for (int i = 0; i < 7; i++) {
@@ -980,7 +918,7 @@ public final class SmithScreen extends Screen {
                 if (ms < 450) g.fill(SX, SY, SX + SW, SY + SH, GachaArt.argb((int) (130 * (1 - ms / 450F)), 0xD02020));
                 GachaArt.sprite(g, GachaArt.GLOW, ix, iy, 40F, 0F, GachaArt.argb((int) (150 * fade), 0xFF3020));
             }
-            case "keep" -> {
+            case "keep", "error" -> {
                 for (int i = 0; i < 3; i++) {
                     float q = Math.min(1F, k * 0.8F + i * 0.12F);
                     GachaArt.sprite(g, GachaArt.GLOW, ix + (i - 1) * 8, iy - 6 - q * 26F, 16F + q * 18F, 0F, GachaArt.argb((int) (150 * (1 - q) * fade), 0x9A9AA6));
@@ -1003,13 +941,6 @@ public final class SmithScreen extends Screen {
         String text = j(r.text());
         int tw = Math.min(SW - 10, font.width(text));
         fit(g, text, SX + (SW - tw) / 2, SY + 22, SW - 10, GachaArt.argb(alpha, 0xFFFFFF));
-    }
-
-    /** 대장간 소리 (가끔 불 타닥 — 작게) */
-    private void ambience(long now) {
-        if (now < nextCrackle) return;
-        if (nextCrackle > 0) ClientSmith.sound(SoundEvents.CAMPFIRE_CRACKLE, 0.85F + rnd.nextFloat() * 0.3F, 0.16F);
-        nextCrackle = now + 1400 + rnd.nextInt(2200);
     }
 
     // ------------------------------------------------------------ 입력
@@ -1123,7 +1054,12 @@ public final class SmithScreen extends Screen {
         return super.keyPressed(event);
     }
 
-    /** 큰 단추: 서버에 할 일 (공허의 갑옷 = 고른 부위, 수호 주문서 = 하락 위험 · 가졌을 때) */
+    /** 두 번 눌러야 하는 칸을 한 번 눌러 둔 상태인지 (4초 안 · 같은 칸 · 같은 고를 것) */
+    private boolean armed(SmithNet.Entry e) {
+        return e != null && !e.confirm().isEmpty() && armedKey.equals(e.key() + "#" + variant) && Util.getMillis() - armedAt < 4000;
+    }
+
+    /** 큰 단추: 서버에 할 일 (고를 것 = 공허의 갑옷 부위 · 뽑기권 장 수 · 전리품 개수, 수호 주문서 = 하락 위험 · 가졌을 때). 두 번 눌러야 하는 칸은 처음엔 경고만 */
     private void act(SmithNet.ViewPayload v, SmithNet.Entry e) {
         if (e == null || v.busy() || ClientSmith.work != null && ClientSmith.progress(0) < 1) return;
         boolean can = e.variants().isEmpty() ? e.can() : variant >= 0 && variant < e.variants().size() && e.variants().get(variant).can();
@@ -1131,6 +1067,13 @@ public final class SmithScreen extends Screen {
             minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS.value(), 0.7F, 0.5F));
             return;
         }
+        if (!e.confirm().isEmpty() && !armed(e)) {
+            armedKey = e.key() + "#" + variant;
+            armedAt = Util.getMillis();
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_PLING.value(), 0.8F, 0.6F));
+            return;
+        }
+        armedKey = "";
         click();
         ClientSmith.send("do", e.key(), e.variants().isEmpty() ? 0 : variant, e.scroll() > 0 && useScroll ? 1 : 0);
     }

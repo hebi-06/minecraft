@@ -30,9 +30,9 @@ public final class ArmorShop {
     private ArmorShop() {}
 
     private static final Rules R = Rules.get();
-    private static final Obj TYPES = R.obj("ARMOR_TYPES");
-    private static final Obj TIERS = R.obj("ARMOR_TIERS");
-    private static final double SET_DISCOUNT = R.obj("ARMOR_SHOP").num("setDiscount");
+    static final Obj TYPES = R.obj("ARMOR_TYPES");
+    static final Obj TIERS = R.obj("ARMOR_TIERS");
+    static final double SET_DISCOUNT = R.obj("ARMOR_SHOP").num("setDiscount");
 
     private static final int WEAPON_TAB = 0;
     private static final int BALANCE_SLOT = 4;
@@ -157,14 +157,10 @@ public final class ArmorShop {
         });
     }
 
-    /** 구매 처리 (armor.js buy). 결과 문구 */
-    public static String buy(ServerPlayer sp, List<Armor.Piece> list, int price) {
+    /** 구매 (연출 · 알림 없이 — 0.45.0 상인 창): 되면 null, 아니면 까닭 (밝은 창 글 — "§4…") */
+    public static String buyQuiet(ServerPlayer sp, List<Armor.Piece> list, int price) {
         int bal = Inv.money(sp);
-        if (bal < price) {
-            Shop.angry(sp);
-            Notify.notify(sp, "§c" + Inv.CURRENCY_NAME + " 부족 §7(필요 " + price + ", 보유 " + bal + ")", 40);
-            return "§4" + Inv.CURRENCY_NAME + " 부족: 필요 " + price + ", 보유 " + bal + "§r";
-        }
+        if (bal < price) return "§4" + Inv.CURRENCY_NAME + " 부족: 필요 " + price + ", 보유 " + bal + "§r";
         List<ItemStack> items = new ArrayList<>();
         for (Armor.Piece a : list) {
             ItemStack it = armorItem(a);
@@ -174,6 +170,19 @@ public final class ArmorShop {
         if (!Inv.fitsAfter(sp, Inv.payTakes(sp, price), items)) return Inv.bagFull(sp);
         if (!Inv.pay(sp, price)) return "§4결제 오류§r";
         for (ItemStack it : items) Inv.give(sp, it);
+        return null;
+    }
+
+    /** 구매 처리 (armor.js buy). 결과 문구 */
+    public static String buy(ServerPlayer sp, List<Armor.Piece> list, int price) {
+        int bal = Inv.money(sp);
+        if (bal < price) {
+            Shop.angry(sp);
+            Notify.notify(sp, "§c" + Inv.CURRENCY_NAME + " 부족 §7(필요 " + price + ", 보유 " + bal + ")", 40);
+            return "§4" + Inv.CURRENCY_NAME + " 부족: 필요 " + price + ", 보유 " + bal + "§r";
+        }
+        String err = buyQuiet(sp, list, price);
+        if (err != null) return err;
         SkillFx.playFor(sp, "armor.equip_iron", 1.1, 1);
         SkillFx.playFor(sp, "random.orb", 1.2, 0.6);
         Shop.happy(sp);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import mmorpg.core.Armor;
 import mmorpg.core.Artifacts;
@@ -17,7 +18,6 @@ import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
 import mmorpg.core.Weapons;
 import mmorpg.fabric.FxDisplays;
-import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.artifact.ArtifactSystem;
@@ -26,8 +26,6 @@ import mmorpg.fabric.economy.Wallet;
 import mmorpg.fabric.gear.ArtifactItem;
 import mmorpg.fabric.gear.RelicItem;
 import mmorpg.fabric.job.JobUpgrades;
-import mmorpg.fabric.motion.MotionNet;
-import mmorpg.fabric.npc.NpcData;
 import mmorpg.fabric.relic.RelicSystem;
 import mmorpg.fabric.shop.ArmorShop;
 import mmorpg.fabric.shop.Shop;
@@ -35,17 +33,12 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
 import mmorpg.fabric.ui.Inv;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.entity.Entity;
@@ -70,6 +63,8 @@ import org.joml.Quaternionf;
  *       (표시 엔티티 — 1칸) 를 놓음</li>
  *   <li>모드가 없는 클라이언트 · 시험의 가짜 플레이어는 예전 상자 창 ({@link Smith#smithLoop}) — {@link #FORCE} · {@link #legacy} 로 시험이 고름</li>
  * </ul>
+ * 0.45.0: 창의 흐름 (열기 · 탭 · 일 · 판정 · 보내기) 은 룬술사 · 상인 창과 함께 쓰는 {@link Workshop} 으로 옮김 — 여기는 대장장이 가게 ({@link #KIND}:
+ * 탭 · 목록 · 할 일 · 세상의 모루 연출) 와 예전 이름 (시험이 씀).
  */
 public final class SmithUi {
     private SmithUi() {}
@@ -97,11 +92,13 @@ public final class SmithUi {
     public static final String CRAFT = "craft";
     public static final String GEAR = "gear";
 
-    /** 시험: 이 사람들은 클라이언트 없이도 새 창 흐름 (보내는 것은 {@link #SENT} 에 쌓임 — 함께 도는 다른 시험과 섞이지 않게 사람마다) */
-    public static final java.util.Set<UUID> FORCE = new java.util.HashSet<>();
-    public static final Map<UUID, List<CustomPacketPayload>> SENT = new HashMap<>();
+    /** 시험: 이 사람들은 클라이언트 없이도 새 창 흐름 (보내는 것은 {@link #SENT} 에 쌓임 — {@link Workshop#FORCE} 와 같은 것) */
+    public static final Set<UUID> FORCE = Workshop.FORCE;
+    public static final Map<UUID, List<CustomPacketPayload>> SENT = Workshop.SENT;
     /** 사진첩: 예전 상자 창으로 (모드 클라이언트도) */
     public static boolean legacy = false;
+    /** 대장장이 가게 (Workshop) */
+    public static final Workshop.Kind KIND = new Forge();
 
     private static final double[] GOLD = {1.0, 0.82, 0.3};
     private static final double[] WHITE = {1, 1, 1};
@@ -118,34 +115,13 @@ public final class SmithUi {
         return List.copyOf(out);
     }
 
-    /** 할 일 하나 (누른 순간에 고른 것 · 비용을 잡아 둠 — 망치질이 끝나면 run: 다시 확인하고 재료를 받고 결과) */
-    interface Job {
-        SmithNet.Result run(int seq);
-    }
-
-    /** 누른 칸의 할 일 (job · 모루에 올릴 것 · 불꽃 색) 또는 못 하는 까닭 (error) */
-    record Prepared(Job job, ItemStack shown, int grade, String error) {
-        static Prepared fail(String error) {
-            return new Prepared(null, ItemStack.EMPTY, 0, error);
-        }
+    /** 대장장이의 할 일: 모루에 올릴 것 · 불꽃 색 (등급) · 망치질 (TICKS · IMPACTS) */
+    private static Workshop.Prepared forge(Workshop.Job job, ItemStack shown, int grade) {
+        return new Workshop.Prepared(job, shown, grade, null, "forge", MOTION, TICKS, IMPACTS);
     }
 
     /** 세상에서 망치가 닿는 자리 · 모루 쪽 (yaw — 마인크래프트 각도) · 잠깐 놓는 모루인지 */
     record Spot(Vec3 hit, float yaw, boolean temp) {}
-
-    /** 한 사람의 창 상태 */
-    static final class Session {
-        Entity npc;
-        String tab = ENHANCE;
-        int page = -1;
-        boolean open = true;
-        Runnable done;
-        boolean busy;
-        String message = "";
-        SmithNet.Result result = SmithNet.Result.NONE;
-        int seq;
-        String workKey = "";
-    }
 
     /** 몸 앞에 잠깐 놓은 모루 (NPC 엔티티 번호마다 — gen 이 바뀌면 치우기를 미룸) */
     private static final class TempAnvil {
@@ -153,43 +129,32 @@ public final class SmithUi {
         int gen;
     }
 
-    private static final Map<UUID, Session> SESSIONS = new HashMap<>();
     private static final Map<Integer, TempAnvil> ANVILS = new HashMap<>();
-    /** 시험: 대장장이 NPC (엔티티 번호) 가 마지막으로 망치질을 시작한 틱 */
-    private static final Map<Integer, Long> NPC_WORK = new HashMap<>();
 
     /** Smith.init */
     static void init() {
-        SmithNet.register();
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> SESSIONS.remove(handler.player.getUUID()));
-        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            SESSIONS.clear();
-            ANVILS.clear();
-            NPC_WORK.clear();
-        });
+        Workshop.init();
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server -> ANVILS.clear());
     }
 
     /** 새 창을 쓸지 (모드 클라이언트 — 시험은 FORCE, 사진첩은 legacy 로 예전 창) */
     public static boolean usable(ServerPlayer sp) {
-        return !legacy && (FORCE.contains(sp.getUUID()) || SmithNet.canSend(sp));
+        return Workshop.usable(sp, KIND);
     }
 
     /** 창이 열려 있는지 (시험) */
     public static boolean isOpen(ServerPlayer sp) {
-        Session s = SESSIONS.get(sp.getUUID());
-        return s != null && s.open;
+        return Workshop.isOpen(sp);
     }
 
     /** 망치질 중인지 (시험) */
     public static boolean busy(ServerPlayer sp) {
-        Session s = SESSIONS.get(sp.getUUID());
-        return s != null && s.busy;
+        return Workshop.busy(sp);
     }
 
     /** 시험: 그 NPC 가 마지막으로 망치질을 시작한 틱 (없으면 -1) */
     public static long npcWorkTick(Entity npc) {
-        Long t = npc == null ? null : NPC_WORK.get(npc.getId());
-        return t == null ? -1 : t;
+        return Workshop.npcWorkTick(npc);
     }
 
     /** 시험: 그 NPC 앞에 잠깐 놓은 모루 (없으면 null) */
@@ -198,75 +163,19 @@ public final class SmithUi {
         return a == null || a.d == null || a.d.isRemoved() ? null : a.d;
     }
 
-    // ------------------------------------------------------------ 열기 · 닫기
+    // ------------------------------------------------------------ 열기 · 창의 일 (Workshop)
 
     /**
      * 대장장이 창을 엶. npc = 대장장이 NPC (없으면 null — 명령어), start: enhance · smith (= 레벨 올리기) · craft · artifact (제작의 장신구 쪽) · gear,
      * done = 창을 닫으면 (null 이면 없음)
      */
     public static void open(ServerPlayer sp, Entity npc, String start, Runnable done) {
-        Session old = SESSIONS.get(sp.getUUID());
-        if (old != null && old.busy) {
-            // 망치질 중에 다시 열면 같은 창 (결과는 그 창으로)
-            old.open = true;
-            if (npc != null) old.npc = npc;
-            send(sp, old, true);
-            return;
-        }
-        Session s = new Session();
-        s.npc = npc;
-        s.done = done;
-        switch (start == null ? ENHANCE : start) {
-            case "smith", RAISE -> s.tab = RAISE;
-            case CRAFT -> s.tab = CRAFT;
-            case "artifact" -> {
-                s.tab = CRAFT;
-                s.page = Math.max(0, Smith.artifactPageIndex());
-            }
-            case GEAR -> s.tab = Enhance.gearEnabled() ? GEAR : ENHANCE;
-            default -> s.tab = ENHANCE;
-        }
-        if (s.tab.equals(CRAFT) && s.page < 0) s.page = Smith.firstCraftPage(sp, Smith.craftRecipes());
-        SESSIONS.put(sp.getUUID(), s);
-        send(sp, s, true);
+        Workshop.open(sp, KIND, npc, start, -1, done);
     }
 
     /** 창의 일 (클라이언트 → 서버): tab · page · do · sync · close */
     public static void action(ServerPlayer sp, String action, String key, int a, int b) {
-        Session s = SESSIONS.get(sp.getUUID());
-        if (s == null) return;
-        switch (action == null ? "" : action) {
-            case "tab" -> {
-                if (s.busy || !tabs().contains(key)) return;
-                s.tab = key;
-                s.message = "";
-                if (s.tab.equals(CRAFT) && s.page < 0) s.page = Smith.firstCraftPage(sp, Smith.craftRecipes());
-                send(sp, s, false);
-            }
-            case "page" -> {
-                if (s.busy) return;
-                s.page = Math.max(0, Math.min(Smith.CRAFT_PAGES.size() - 1, a));
-                s.message = "";
-                send(sp, s, false);
-            }
-            case "do" -> start(sp, s, key, a, b == 1);
-            case "sync" -> {
-                s.open = true;
-                send(sp, s, false);
-            }
-            case "close" -> {
-                s.open = false;
-                if (!s.busy) close(sp, s);
-            }
-            default -> {}
-        }
-    }
-
-    private static void close(ServerPlayer sp, Session s) {
-        if (SESSIONS.get(sp.getUUID()) == s) SESSIONS.remove(sp.getUUID());
-        Runnable d = s.done;
-        s.done = null;
-        if (d != null) d.run();
+        Workshop.action(sp, action, key, a, b);
     }
 
     /** 보이는 탭 (장신구 · 아티팩트 강화는 규칙에 있을 때) */
@@ -276,177 +185,214 @@ public final class SmithUi {
         return out;
     }
 
-    /** 살아 있는 대장장이 NPC (같은 세계 · 16칸 안 — 아니면 null) */
-    static Entity npcOf(ServerPlayer sp, Session s) {
-        Entity n = s.npc;
-        if (n == null || n.isRemoved() || !n.isAlive() || n.level() != sp.level() || n.distanceToSqr(sp) > 16 * 16) return null;
-        return n;
+    /** 대장장이 가게 (Workshop.Kind) */
+    private static final class Forge implements Workshop.Kind {
+        @Override
+        public String id() {
+            return "smith";
+        }
+
+        @Override
+        public String role() {
+            return "대장장이";
+        }
+
+        @Override
+        public boolean legacy() {
+            return legacy;
+        }
+
+        @Override
+        public List<String> tabs(ServerPlayer sp, Workshop.Session s) {
+            return SmithUi.tabs();
+        }
+
+        @Override
+        public String tabName(String tab) {
+            return switch (tab) {
+                case ENHANCE -> "강화";
+                case RAISE -> "레벨 올리기";
+                case CRAFT -> "제작";
+                case GEAR -> "장신구 · 아티팩트";
+                default -> tab;
+            };
+        }
+
+        @Override
+        public void begin(ServerPlayer sp, Workshop.Session s, String start) {
+            switch (start == null ? ENHANCE : start) {
+                case "smith", RAISE -> s.tab = RAISE;
+                case CRAFT -> s.tab = CRAFT;
+                case "artifact" -> {
+                    s.tab = CRAFT;
+                    s.page = Math.max(0, Smith.artifactPageIndex());
+                }
+                case GEAR -> s.tab = Enhance.gearEnabled() ? GEAR : ENHANCE;
+                default -> s.tab = ENHANCE;
+            }
+            onTab(sp, s);
+        }
+
+        @Override
+        public void onTab(ServerPlayer sp, Workshop.Session s) {
+            if (s.tab.equals(CRAFT) && s.page < 0) s.page = Smith.firstCraftPage(sp, Smith.craftRecipes());
+        }
+
+        @Override
+        public List<String> pages(ServerPlayer sp, Workshop.Session s) {
+            List<String> pages = new ArrayList<>();
+            if (s.tab.equals(CRAFT)) for (Smith.CraftPage p : Smith.CRAFT_PAGES) pages.add(p.label());
+            return pages;
+        }
+
+        @Override
+        public String listTitle(ServerPlayer sp, Workshop.Session s) {
+            return switch (s.tab) {
+                case RAISE -> "올릴 무기";
+                case GEAR -> "장신구 · 아티팩트";
+                default -> "가방의 무기";
+            };
+        }
+
+        @Override
+        public List<SmithNet.Entry> entries(ServerPlayer sp, Workshop.Session s) {
+            return SmithUi.entries(sp, s);
+        }
+
+        @Override
+        public List<SmithNet.Res> res(ServerPlayer sp, Workshop.Session s) {
+            return SmithUi.res(sp, s.tab);
+        }
+
+        @Override
+        public String emptyText(ServerPlayer sp, Workshop.Session s) {
+            return SmithUi.emptyText(s);
+        }
+
+        @Override
+        public Workshop.Prepared prepare(ServerPlayer sp, Workshop.Session s, String key, int variant, boolean flag) {
+            return SmithUi.prepare(sp, key, variant, flag);
+        }
+
+        /** 세상: 둘레 모루 (없으면 옆으로 돌아서서 잠깐 모루) 를 보고 망치질 — 닿을 때 불꽃 · 소리, 끝에 결과 연출 · 잠깐 모루를 치움 */
+        @Override
+        public Workshop.Show show(ServerPlayer sp, Workshop.Session s, Entity npc, Workshop.Prepared p) {
+            Spot spot = spot(npc);
+            if (spot.temp()) placeTempAnvil(npc, spot.yaw());
+            int grade = p.grade();
+            return new Workshop.Show() {
+                @Override
+                public float yaw() {
+                    return spot.yaw();
+                }
+
+                @Override
+                public void impact(int i, boolean last) {
+                    strikeFx(sp, npc, spot.hit(), grade);
+                }
+
+                @Override
+                public void end(SmithNet.Result r) {
+                    releaseTempAnvil(npc);
+                    if (r != null) resultFx(sp, npc, spot.hit(), r.kind());
+                }
+            };
+        }
     }
 
     // ------------------------------------------------------------ 망치질
 
-    /** 망치질 시작: 칸을 다시 찾고 (재료가 있는지) → 창 패널 · 세상 NPC 동작 → TICKS 뒤 판정 */
-    static void start(ServerPlayer sp, Session s, String key, int variant, boolean scroll) {
-        if (s.busy) return;
-        SmithNet.Entry e = find(entries(sp, s), key);
-        if (e == null) {
-            s.message = "§c목록이 바뀌었습니다 — 다시 골라 주세요";
-            send(sp, s, false);
-            return;
-        }
-        boolean can = e.can();
-        String note = e.note();
-        if (!e.variants().isEmpty()) {
-            if (variant < 0 || variant >= e.variants().size()) {
-                s.message = "§c만들 것을 골라 주세요";
-                send(sp, s, false);
-                return;
-            }
-            can = e.variants().get(variant).can();
-            note = e.variants().get(variant).note();
-        }
-        if (!can) {
-            refuse(sp, s, note != null && !note.isEmpty() ? note : "§c재료가 모자랍니다");
-            return;
-        }
-        Prepared p = prepare(sp, key, variant, scroll);
-        if (p.error() != null) {
-            refuse(sp, s, p.error());
-            return;
-        }
-        s.busy = true;
-        s.workKey = key;
-        s.message = "";
-        Entity npc = npcOf(sp, s);
-        Spot spot = npc != null ? spot(npc) : null;
-        float yaw = spot != null ? spot.yaw() : Float.NaN;
-        out(sp, new SmithNet.WorkPayload(npc != null ? npc.getId() : -1, key, p.shown().copy(), TICKS, IMPACTS, p.grade(), yaw));
-        send(sp, s, false);
-        if (npc != null) {
-            NPC_WORK.put(npc.getId(), Tasks.now());
-            MotionNet.PlayPayload mp = new MotionNet.PlayPayload(npc.getId(), MOTION, yaw);
-            for (ServerPlayer o : PlayerLookup.tracking(npc)) if (o != sp) MotionNet.send(o, mp);
-            if (spot.temp()) placeTempAnvil(npc, yaw);
-            for (int t : IMPACTS) Tasks.later(t, () -> strikeFx(sp, npc, spot.hit(), p.grade()));
-        }
-        Tasks.later(TICKS, () -> finish(sp, s, p.job(), npc, spot));
-    }
-
-    private static void refuse(ServerPlayer sp, Session s, String message) {
-        SkillFx.playFor(sp, "note.bass", 0.6, 1);
-        s.message = message;
-        send(sp, s, false);
-    }
-
-    /** 망치질이 끝난 순간: 판정 · 결과 (창 · 세상 연출) */
-    private static void finish(ServerPlayer sp, Session s, Job job, Entity npc, Spot spot) {
-        s.busy = false;
-        if (npc != null) releaseTempAnvil(npc);
-        if (sp.isRemoved() || sp.isDeadOrDying()) {
-            if (SESSIONS.get(sp.getUUID()) == s) SESSIONS.remove(sp.getUUID());
-            return;
-        }
-        SmithNet.Result r = job.run(++s.seq);
-        s.result = r;
-        if (npc != null && !npc.isRemoved() && spot != null) resultFx(sp, npc, spot.hit(), r.kind());
-        if (s.open && SESSIONS.get(sp.getUUID()) == s) send(sp, s, false);
-        else {
-            Notify.title(sp, r.title(), r.text());
-            close(sp, s);
-        }
-    }
-
     /** 열쇠 (창의 칸) 의 할 일을 준비 (그 순간의 무기 · 비용을 잡아 둠). 열쇠: w:칸 · g:자리 · r:칸 · c:제작 번호 · v:갑옷 종류 · a:종류:등급 */
-    static Prepared prepare(ServerPlayer sp, String key, int variant, boolean scroll) {
+    static Workshop.Prepared prepare(ServerPlayer sp, String key, int variant, boolean scroll) {
         String[] k = key == null ? new String[0] : key.split(":");
         try {
             switch (k.length > 0 ? k[0] : "") {
                 case "w" -> {
                     EnhanceWindow.Entry e = EnhanceWindow.entryAt(sp, Integer.parseInt(k[1]));
-                    if (e == null) return Prepared.fail("§c무기가 옮겨졌습니다 — 다시 골라 주세요");
+                    if (e == null) return Workshop.Prepared.fail("§c무기가 옮겨졌습니다 — 다시 골라 주세요");
                     Enhance.Cost c = Enhance.enhanceCost(e.n(), e.w().grade().id());
-                    if (c == null) return Prepared.fail("§6이미 최대 강화 +" + EnhanceWindow.MAX + "입니다");
+                    if (c == null) return Workshop.Prepared.fail("§6이미 최대 강화 +" + EnhanceWindow.MAX + "입니다");
                     boolean guard = scroll && c.down();
-                    if (guard && scrolls(sp) < 1) return Prepared.fail("§c" + EnhanceWindow.SCROLL.str("name") + "가 없습니다");
+                    if (guard && scrolls(sp) < 1) return Workshop.Prepared.fail("§c" + EnhanceWindow.SCROLL.str("name") + "가 없습니다");
                     String name = e.w().grade().color() + e.w().title();
-                    Job job = seq -> {
+                    Workshop.Job job = seq -> {
                         EnhanceWindow.Outcome o = EnhanceWindow.judgeQuiet(sp, e, c, guard);
                         if (o.ok() && o.after() >= EnhanceWindow.ANNOUNCE_FROM) EnhanceWindow.announce(sp, e.w(), o.after());
                         // 0.44.1 강화가 반영된 공격력 (오르면 초록 · 떨어지면 빨강 · 그대로면 한 값)
                         String eff = EnhanceWindow.attackText(e.w(), o.before(), o.after(), "§7", "§f", o.kind().equals("down") ? "§c" : "§a");
                         return enhanceResult(seq, key, o, name, eff, Inv.get(sp, e.slot()).copy());
                     };
-                    return new Prepared(job, e.item(), e.w().gradeIndex(), null);
+                    return forge(job, e.item(), e.w().gradeIndex());
                 }
                 case "g" -> {
                     int loc = Integer.parseInt(k[1]);
                     GearEnhance.Entry e = GearEnhance.entryAt(sp, loc);
-                    if (e == null) return Prepared.fail("§c옮겨졌습니다 — 다시 골라 주세요");
+                    if (e == null) return Workshop.Prepared.fail("§c옮겨졌습니다 — 다시 골라 주세요");
                     Enhance.Cost c = Enhance.gearCost(e.n(), e.grade());
-                    if (c == null) return Prepared.fail("§6이미 최대 강화 +" + EnhanceWindow.MAX + "입니다");
+                    if (c == null) return Workshop.Prepared.fail("§6이미 최대 강화 +" + EnhanceWindow.MAX + "입니다");
                     boolean guard = scroll && c.down();
-                    if (guard && scrolls(sp) < 1) return Prepared.fail("§c" + EnhanceWindow.SCROLL.str("name") + "가 없습니다");
-                    Job job = seq -> {
+                    if (guard && scrolls(sp) < 1) return Workshop.Prepared.fail("§c" + EnhanceWindow.SCROLL.str("name") + "가 없습니다");
+                    Workshop.Job job = seq -> {
                         EnhanceWindow.Outcome o = GearEnhance.judgeQuiet(sp, e, c, guard);
                         if (o.ok() && o.after() >= EnhanceWindow.ANNOUNCE_FROM) EnhanceWindow.announce(sp, e.gradeColor(), e.gradeName(), e.title(), o.after());
                         return enhanceResult(seq, key, o, e.gradeColor() + e.title(), e.effect(o.after()), GearEnhance.at(sp, loc).copy());
                     };
-                    return new Prepared(job, e.item(), e.gradeIndex(), null);
+                    return forge(job, e.item(), e.gradeIndex());
                 }
                 case "r" -> {
                     int slot = Integer.parseInt(k[1]);
                     Smith.Raise e = null;
                     for (Smith.Raise x : Smith.raisable(sp)) if (x.slot() == slot) e = x;
-                    if (e == null) return Prepared.fail("§c무기가 옮겨졌습니다 — 다시 골라 주세요");
+                    if (e == null) return Workshop.Prepared.fail("§c무기가 옮겨졌습니다 — 다시 골라 주세요");
                     Smith.Raise raise = e;
-                    Job job = seq -> {
+                    Workshop.Job job = seq -> {
                         String text = Smith.raise(sp, raise, true);
                         boolean ok = text.startsWith("§2");
                         return new SmithNet.Result(seq, ok ? "done" : "error", key, ok ? "§6§l레벨 제한 " + raise.w().level() + " → " + raise.to().level() : "§c올리지 못했습니다",
                                 onDark(text), Inv.get(sp, slot).copy());
                     };
-                    return new Prepared(job, e.item(), e.w().gradeIndex(), null);
+                    return forge(job, e.item(), e.w().gradeIndex());
                 }
                 case "c" -> {
                     int i = Integer.parseInt(k[1]);
                     List<Smith.Recipe> all = Smith.craftRecipes();
-                    if (i < 0 || i >= all.size()) return Prepared.fail("§c만들 수 없습니다");
+                    if (i < 0 || i >= all.size()) return Workshop.Prepared.fail("§c만들 수 없습니다");
                     Smith.Recipe e = all.get(i);
-                    Job job = seq -> {
+                    Workshop.Job job = seq -> {
                         String text = Smith.craft(sp, e, true);
                         boolean ok = text.startsWith("§2");
                         return new SmithNet.Result(seq, ok ? "done" : "error", key, ok ? "§6§l제작 완료" : "§c만들지 못했습니다", onDark(text), Shop.weaponItem(e.w()));
                     };
-                    return new Prepared(job, Shop.weaponItem(e.w()), e.w().gradeIndex(), null);
+                    return forge(job, Shop.weaponItem(e.w()), e.w().gradeIndex());
                 }
                 case "v" -> {
                     List<Armor.Piece> set = VoidArmorCraft.enabled() ? VoidArmorCraft.set(k[1]) : List.of();
-                    if (set.isEmpty() || set.stream().anyMatch(java.util.Objects::isNull)) return Prepared.fail("§c만들 수 없습니다");
+                    if (set.isEmpty() || set.stream().anyMatch(java.util.Objects::isNull)) return Workshop.Prepared.fail("§c만들 수 없습니다");
                     List<Armor.Piece> pieces = variant >= 0 && variant < set.size() ? List.of(set.get(variant)) : set;
                     Armor.Piece shown = pieces.get(Math.min(1, pieces.size() - 1));
-                    Job job = seq -> {
+                    Workshop.Job job = seq -> {
                         String text = VoidArmorCraft.craft(sp, pieces, true);
                         boolean ok = text.startsWith("§2");
                         return new SmithNet.Result(seq, ok ? "done" : "error", key, ok ? "§5§l공허의 갑옷 제작" : "§c만들지 못했습니다", onDark(text), ArmorShop.armorItem(shown));
                     };
-                    return new Prepared(job, ArmorShop.armorItem(shown), shown.gradeIndex(), null);
+                    return forge(job, ArmorShop.armorItem(shown), shown.gradeIndex());
                 }
                 case "a" -> {
                     Artifacts.Art a = ArtifactCraft.enabled() ? Artifacts.art(k[1], k[2]) : null;
-                    if (a == null) return Prepared.fail("§c만들 수 없습니다");
-                    Job job = seq -> {
+                    if (a == null) return Workshop.Prepared.fail("§c만들 수 없습니다");
+                    Workshop.Job job = seq -> {
                         String text = ArtifactCraft.craft(sp, a, true);
                         boolean ok = text.startsWith("§2");
                         return new SmithNet.Result(seq, ok ? "done" : "error", key, ok ? "§d§l장신구 제작" : "§c만들지 못했습니다", onDark(text), ArtifactCraft.item(a));
                     };
-                    return new Prepared(job, ArtifactCraft.item(a), a.gradeIndex(), null);
+                    return forge(job, ArtifactCraft.item(a), a.gradeIndex());
                 }
                 default -> {
-                    return Prepared.fail("§c알 수 없는 칸");
+                    return Workshop.Prepared.fail("§c알 수 없는 칸");
                 }
             }
         } catch (RuntimeException err) {
-            return Prepared.fail("§c알 수 없는 칸");
+            return Workshop.Prepared.fail("§c알 수 없는 칸");
         }
     }
 
@@ -466,25 +412,7 @@ public final class SmithUi {
 
     /** NPC 바로 옆 (가운데끼리 ANVIL_RANGE 칸 안 · 발 높이 -1 ~ +1) 의 가장 가까운 모루 (없으면 null) */
     static BlockPos anvilNear(Entity npc) {
-        if (!(npc.level() instanceof ServerLevel level)) return null;
-        BlockPos base = npc.blockPosition();
-        int r = (int) Math.ceil(ANVIL_RANGE);
-        BlockPos best = null;
-        double bd = Double.MAX_VALUE;
-        for (int dy = -1; dy <= 1; dy++) {
-            for (int dx = -r; dx <= r; dx++) {
-                for (int dz = -r; dz <= r; dz++) {
-                    BlockPos p = base.offset(dx, dy, dz);
-                    if (!(level.getBlockState(p).getBlock() instanceof AnvilBlock)) continue;
-                    double d = npc.position().distanceToSqr(p.getX() + 0.5, npc.getY(), p.getZ() + 0.5);
-                    if (d <= ANVIL_RANGE * ANVIL_RANGE && d < bd) {
-                        bd = d;
-                        best = p;
-                    }
-                }
-            }
-        }
-        return best;
+        return Workshop.blockNear(npc, ANVIL_RANGE, st -> st.getBlock() instanceof AnvilBlock);
     }
 
     /**
@@ -508,14 +436,7 @@ public final class SmithUi {
 
     /** 모루가 없을 때 돌아설 쪽: 몸의 오른쪽 (yaw + 90), 그 자리가 막혔으면 왼쪽 (둘 다 막혔으면 오른쪽) */
     static float sideYaw(Entity npc) {
-        for (float turn : new float[] {90F, -90F}) {
-            float yaw = Mth.wrapDegrees(npc.getYRot() + turn);
-            Vec3 f = Vec3.directionFromRotation(0, yaw);
-            BlockPos p = BlockPos.containing(npc.getX() + f.x * REACH, npc.getY() + 0.5, npc.getZ() + f.z * REACH);
-            if (npc.level().getBlockState(p).getCollisionShape(npc.level(), p).isEmpty()
-                    && npc.level().getBlockState(p.above()).getCollisionShape(npc.level(), p.above()).isEmpty()) return yaw;
-        }
-        return Mth.wrapDegrees(npc.getYRot() + 90F);
+        return Workshop.sideYaw(npc, REACH);
     }
 
     /** 몸 앞에 잠깐 모루 (있으면 그대로 — 치우기를 미룸): 0 → TEMP_SCALE 로 커지며 나타남 · 연기 */
@@ -603,59 +524,32 @@ public final class SmithUi {
 
     /** 그 사람만 빼고 들리는 소리 (일하는 사람은 창에서 듣는 소리와 겹치지 않게) */
     static void playExcept(ServerLevel level, ServerPlayer except, String bedrock, Vec3 at, double pitch, double volume) {
-        SoundEvent s = SkillFx.sound(bedrock);
-        if (s != null) level.playSound(except, at.x, at.y, at.z, s, SoundSource.NEUTRAL, (float) volume, (float) pitch);
+        Workshop.playExcept(level, except, bedrock, at, pitch, volume);
     }
 
     // ------------------------------------------------------------ 보기 (탭마다 목록 · 상세)
 
-    /** 창을 클라이언트에 */
-    static void send(ServerPlayer sp, Session s, boolean open) {
-        Entity npc = npcOf(sp, s);
-        String npcName = npc != null ? plain(NpcData.name(npc)) : "";
-        List<String> pages = new ArrayList<>();
-        if (s.tab.equals(CRAFT)) for (Smith.CraftPage p : Smith.CRAFT_PAGES) pages.add(p.label());
-        List<SmithNet.Entry> list = entries(sp, s);
-        out(sp, new SmithNet.ViewPayload(open, npc != null ? npc.getId() : -1, npcName, s.tab, tabs(), Math.max(0, s.page), pages, list, res(sp, s.tab), s.message,
-                list.isEmpty() ? emptyText(s) : "", s.result, s.busy));
-    }
-
-    private static void out(ServerPlayer sp, CustomPacketPayload p) {
-        if (FORCE.contains(sp.getUUID())) SENT.computeIfAbsent(sp.getUUID(), k -> new ArrayList<>()).add(p);
-        else if (SmithNet.canSend(sp)) ServerPlayNetworking.send(sp, p);
-    }
-
     /** 시험: 지금 탭의 목록 (서버가 보낼 것과 같음) */
     public static List<SmithNet.Entry> testEntries(ServerPlayer sp) {
-        Session s = SESSIONS.get(sp.getUUID());
-        return s == null ? List.of() : entries(sp, s);
+        return Workshop.testEntries(sp);
     }
 
     /** 시험: 지금 탭 */
     public static String testTab(ServerPlayer sp) {
-        Session s = SESSIONS.get(sp.getUUID());
-        return s == null ? null : s.tab;
+        return Workshop.testTab(sp);
     }
 
     /** 시험: 마지막 결과 */
     public static SmithNet.Result testResult(ServerPlayer sp) {
-        Session s = SESSIONS.get(sp.getUUID());
-        return s == null ? SmithNet.Result.NONE : s.result;
+        return Workshop.testResult(sp);
     }
 
     /** 시험: 알림 줄 */
     public static String testMessage(ServerPlayer sp) {
-        Session s = SESSIONS.get(sp.getUUID());
-        return s == null ? "" : s.message;
+        return Workshop.testMessage(sp);
     }
 
-    static SmithNet.Entry find(List<SmithNet.Entry> list, String key) {
-        if (key == null) return null;
-        for (SmithNet.Entry e : list) if (e.key().equals(key)) return e;
-        return null;
-    }
-
-    private static String emptyText(Session s) {
+    private static String emptyText(Workshop.Session s) {
         return switch (s.tab) {
             case ENHANCE -> "§7강화할 RPG 무기가 없습니다\n§8무기를 가방에 넣고 오세요";
             case RAISE -> "§7레벨을 올릴 무기가 없습니다\n§8영웅 30 · 35렙 · 초월 40 ~ 55렙 무기";
@@ -664,7 +558,7 @@ public final class SmithUi {
         };
     }
 
-    static List<SmithNet.Entry> entries(ServerPlayer sp, Session s) {
+    static List<SmithNet.Entry> entries(ServerPlayer sp, Workshop.Session s) {
         return switch (s.tab) {
             case RAISE -> raiseEntries(sp);
             case CRAFT -> craftEntries(sp, Math.max(0, s.page));
@@ -736,7 +630,7 @@ public final class SmithUi {
     }
 
     private static String lackNote(List<String> lack) {
-        return lack.isEmpty() ? "" : "§c" + String.join(" · ", lack) + " 더 필요";
+        return Workshop.lackNote(lack);
     }
 
     private static String gapNote(double[] gap) {
@@ -947,31 +841,6 @@ public final class SmithUi {
 
     /** 밝은 상자 창용 짙은 색 (§0 · §8 · §2 · §4 …) → 어두운 창용 */
     static String onDark(String s) {
-        if (s == null) return "";
-        StringBuilder b = new StringBuilder(s.length());
-        for (int i = 0; i < s.length(); i++) {
-            char ch = s.charAt(i);
-            if (ch == '§' && i + 1 < s.length()) {
-                char c = s.charAt(i + 1);
-                char to = switch (c) {
-                    case '0' -> 'f';
-                    case '8' -> '7';
-                    case '2' -> 'a';
-                    case '4' -> 'c';
-                    case '1' -> '9';
-                    case '5' -> 'd';
-                    case '3' -> 'b';
-                    default -> c;
-                };
-                b.append('§').append(to);
-                i++;
-            } else b.append(ch);
-        }
-        return b.toString();
-    }
-
-    /** 색 글자 없이 */
-    static String plain(String s) {
-        return s == null ? "" : s.replaceAll("§.", "");
+        return Workshop.onDark(s);
     }
 }

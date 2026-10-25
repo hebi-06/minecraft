@@ -202,8 +202,9 @@ public final class MotionsTest {
         check(motions.keySet().equals(Motions.KNOWN), "poses.json names " + motions.keySet());
         for (Map.Entry<String, Object> e : motions.entrySet()) {
             Map<String, Object> m = (Map<String, Object>) e.getValue();
-            // 0.44.0 대장장이 망치질 (smith_hammer — 세 번 침) 만 길게
-            int maxTicks = e.getKey().equals("smith_hammer") ? 40 : 20;
+            // 0.44.0 대장장이 망치질 (smith_hammer — 세 번 침) · 0.45.0 가게 동작 (룬술사 rune_* · 상인 shop_*) 만 길게
+            boolean work = e.getKey().equals("smith_hammer") || e.getKey().startsWith("rune_") || e.getKey().startsWith("shop_");
+            int maxTicks = work ? 40 : 20;
             check(((Number) m.get("ticks")).intValue() >= 6 && ((Number) m.get("ticks")).intValue() <= maxTicks, e.getKey() + " ticks");
             for (String part : List.of("keys", "fp")) {
                 List<Object> keys = (List<Object>) m.get(part);

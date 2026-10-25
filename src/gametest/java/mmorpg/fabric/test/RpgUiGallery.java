@@ -320,6 +320,7 @@ public final class RpgUiGallery implements FabricClientGameTest {
     }
 
     private void forms(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        mmorpg.fabric.shop.ShopUi.legacy = true; // 0.45.0: 예전 상자 창 (모드가 없는 클라이언트의 흐름) 을 찍음
         server.runOnServer(s -> Store.openStore(player(s), 40, "weapons"));
         if (waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("무기 상점"), "weapon shop")) {
             away(ctx);
@@ -327,6 +328,7 @@ public final class RpgUiGallery implements FabricClientGameTest {
             hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(10));
             shot(ctx, "ui_shop_hover");
         }
+        mmorpg.fabric.shop.ShopUi.legacy = false;
         ctx.setScreen(() -> null);
         ctx.waitTicks(5);
         server.runOnServer(s -> RpgNet.statAction(player(s), "market"));

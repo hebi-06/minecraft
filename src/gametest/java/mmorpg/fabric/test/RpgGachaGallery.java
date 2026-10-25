@@ -58,6 +58,7 @@ public final class RpgGachaGallery implements FabricClientGameTest {
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active() || !RpgProdSmoke.only("gacha")) return;
         ctx.getInput().resizeWindow(1280, 720);
+        mmorpg.fabric.rune.RuneSmithUi.legacy = true; // 0.45.0: 룬술사는 모드 클라이언트면 전용 창 — 이 사진첩은 예전 상자 창을 찍음 (모드가 없는 클라이언트의 흐름)
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
                 .create()) {
@@ -93,6 +94,8 @@ public final class RpgGachaGallery implements FabricClientGameTest {
             part(ctx, "close", () -> closeLimited(ctx, server, conn));
             server.runOnServer(s -> Props.setWorld(s, GachaSystem.LIMITED_DATA, null));
             ctx.setScreen(() -> null);
+        } finally {
+            mmorpg.fabric.rune.RuneSmithUi.legacy = false;
         }
         LOG.info("[gacha-gallery] done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
     }
