@@ -306,7 +306,8 @@ public final class ShopUi {
             for (int i = 0; i < parts.size() && lines.size() < 5; i += 2) lines.add(String.join(" §8· ", parts.subList(i, Math.min(parts.size(), i + 2))));
             if (parts.size() > 10) lines.add("§8외 " + (parts.size() - 10) + "종");
             out.add(new SmithNet.Entry("all", new ItemStack(Items.BUNDLE), "§a모두 팔기", "+" + Economy.fmt(total), 0, "한 번에", parts.size() + "종 · 가진 전리품 전부",
-                    "+" + Economy.fmt(total) + " " + Inv.CURRENCY_NAME, "", List.copyOf(lines), -1, List.of(), "", -1, "모두 팔기", true, "", List.of()));
+                    "+" + Economy.fmt(total) + " " + Inv.CURRENCY_NAME, "", List.copyOf(lines), -1, List.of(), "", -1, "모두 팔기", true, "", List.of())
+                    .withConfirm("§e가진 전리품 " + parts.size() + "종을 모두 팝니다 — 한 번 더 누르세요"));
         }
         boolean firstHave = true;
         boolean firstNone = true;

@@ -333,6 +333,9 @@ public final class RpgWorkshopGallery implements FabricClientGameTest {
         int trolls = server.computeOnServer(s -> RpgGearTests.countIn(player(s), GearItems.byId("rpg:loot_troll")));
         check(trolls == 4, "10 trolls sold (" + trolls + " left)");
         row(ctx, conn, "all");
+        click(ctx, conn, s -> s.actionCenter());
+        away(ctx);
+        shot(ctx, "sw_sell_all_confirm");
         act(ctx, conn);
         away(ctx);
         waitResult(ctx, conn);

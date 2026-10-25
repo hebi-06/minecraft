@@ -289,7 +289,8 @@ public final class RpgWorkshopUiTests {
         SmithNet.Entry all = entry(v, "all");
         SmithNet.Entry t = entry(v, "l:troll");
         SmithNet.Entry n = entry(v, "l:nix");
-        h.assertTrue(v.tab().equals(ShopUi.SELL) && all != null && v.entries().get(0) == all && all.badge().equals("+" + Economy.fmt(12L * pt + 3L * pn)), "sell all row " + all);
+        h.assertTrue(v.tab().equals(ShopUi.SELL) && all != null && v.entries().get(0) == all && all.badge().equals("+" + Economy.fmt(12L * pt + 3L * pn))
+                && !all.confirm().isEmpty(), "sell all row (two presses) " + all);
         h.assertTrue(t != null && t.variants().size() == 3 && t.variants().get(1).label().equals("10개") && t.variants().get(2).label().equals("모두 12"), "troll choices " + t);
         h.assertTrue(n != null && n.variants().size() == 2 && n.variants().get(1).label().equals("모두 3"), "nix choices " + n);
         Workshop.action(sp, "do", "l:troll", 1, 0);
