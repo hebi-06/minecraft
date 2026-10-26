@@ -243,7 +243,7 @@ public final class RuneCast {
                     Mmorpg.LOG.warn("[mmorpg] rune cast hook", e);
                 }
             }
-            if (ok) mmorpg.fabric.motion.MotionSystem.skill(sp, "rune:" + r.def().str("fn")); // 0.38.0 룬 동작 (MOTION.skills — rune:fn)
+            if (ok) mmorpg.fabric.motion.MotionSystem.rune(sp, r.def().str("fn"), r.grade()); // 0.38.0 룬 동작 (MOTION.skills — 0.46.0 룬마다 실제 행동: rune:fn · rune:fn:등급)
             return ok;
         };
         long now = Tasks.now();

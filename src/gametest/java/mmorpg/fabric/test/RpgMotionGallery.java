@@ -78,6 +78,36 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         {"spin2", "scythe", "0.12,0.4,0.7"},
         {"roll", "sword", "0.22,0.38,0.62"},
     };
+    /**
+     * 0.46.0 룬 동작 (사용자 "룬 쓸때 권왕 같은 애들은 실제로 펀치 모션 … 연막탄이면 실제로 연막 날리는거 같은 모션으로 … 나머지 룬 전부") —
+     * 손 모습마다 (주먹 · 무기 · 던진 무기 · 소품 · 바꿔 듦 · 왼손 소품 · 마법) 고른 것 {동작, 무기 종류, 세 순간 (틱)}
+     */
+    private static final String[][] RUNE_SAMPLES = {
+        {"rn_chain_fist", "sword", "1.5,11,31"},
+        {"rn_hundred_fists", "sword", "9,10,50.5"},
+        {"rn_flying_kick", "sword", "3.5,8.5,13"},
+        {"rn_palm_blast", "sword", "5,10.5,15"},
+        {"rn_golem_summon", "sword", "3,11,16"},
+        {"rn_magma_slam", "hammer", "0.6,1.3,6"},
+        {"rn_whirlwind", "greatsword", "0.6,7,31"},
+        {"rn_spellblade_release", "greatsword", "1.5,14,26"},
+        {"rn_quick_draw", "sword", "0.6,1.6,8"},
+        {"rn_blood_whirl", "scythe", "2,7,41"},
+        {"rn_axe_boomerang", "axe", "0.5,8,22.5"},
+        {"rn_smoke_bomb", "dagger", "0.6,1.0,6"},
+        {"rn_poison_stars", "dagger", "0.5,1.2,4"},
+        {"rn_judge_hammer", "scepter", "0.6,1.6,4"},
+        {"rn_lava_bombs", "hammer", "0.6,1.0,9.5"},
+        {"rn_hunt_net", "bow", "0.5,1.3,6"},
+        {"rn_chain_hook", "sword", "0.5,1.0,5.5"},
+        {"rn_steel_trap", "bow", "0.5,1.2,8.6"},
+        {"rn_fireball", "wand", "0.5,1.4,6"},
+        {"rn_meteor", "wand", "5,16,31"},
+        {"rn_thunder_spear", "wand", "10,20.6,25"},
+        {"rn_gravity_reverse", "wand", "3,20,24.5"},
+        {"rn_spirit_water", "wand", "3,6,9"},
+        {"rn_heaven_eye", "wand", "5,25,50"},
+    };
     /** 마네킹을 보는 쪽 {이름, yaw} — 3/4 (오른쪽 앞) · 오른쪽 옆 · 앞 */
     private static final String[][] VIEWS = {{"34", "-35"}, {"side", "-90"}, {"front", "0"}};
     /** 마네킹 자리 {x, z} — 나 (0.5, 0.5) 에서 북쪽으로 3.5칸 */
@@ -120,6 +150,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             part(ctx, "roll", () -> roll(ctx, server));
             part(ctx, "skill", () -> skill(ctx, server));
             part(ctx, "empty", () -> empty(ctx, server));
+            part(ctx, "runes", () -> runes(ctx, server));
         }
         LOG.info("[motion-gallery] done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
         if (!failures.isEmpty()) throw new AssertionError("motion gallery: " + String.join(" / ", failures));
@@ -642,6 +673,82 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.getInput().lookAt(0F, 10F);
         ctx.waitTicks(10);
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_fp_empty").withSize(960, 540));
+    }
+
+    // ------------------------------------------------------------ 0.46.0 룬 동작 (3인칭 마네킹 셋 · 1인칭 세 순간)
+
+    private void runes(ClientGameTestContext ctx, TestServerContext server) {
+        hideGui(ctx, true);
+        int frozen = 0;
+        for (String[] s : RUNE_SAMPLES) {
+            String motion = s[0];
+            MotionPoses.Motion mo = MotionPoses.get(motion);
+            check(mo != null, "rune motion " + motion);
+            if (mo == null) continue;
+            String[] ts = s[2].split(",");
+            List<Integer> row = spawn(server, -35F, s[1], false);
+            ctx.runOnClient(mc -> {
+                for (int i = 0; i < row.size(); i++) ClientMotions.freeze(row.get(i), motion, Float.parseFloat(ts[i]) / mo.ticks);
+            });
+            ctx.waitTicks(3);
+            ctx.takeScreenshot(TestScreenshotOptions.of("mo_rn_" + motion.substring(3) + "_34").withSize(960, 540));
+            if (ctx.computeOnClient(mc -> motion.equals(ClientMotions.current(row.get(0))))) frozen++;
+            discard(server, row);
+            ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
+        }
+        check(frozen == RUNE_SAMPLES.length, "rune motions frozen on mannequins " + frozen);
+        // 1인칭: 내 자세를 멈춤 — 맨손 (주먹) · 소품 · 무기가 그 순간에 맞는지 (MotionRender 가 그리는 길)
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.getInput().lookAt(180F, 5F);
+        int me = ctx.computeOnClient(mc -> mc.player.getId());
+        for (String[] s : RUNE_SAMPLES) {
+            String motion = s[0];
+            MotionPoses.Motion mo = MotionPoses.get(motion);
+            if (mo == null) continue;
+            server.runOnServer(sv -> {
+                ServerPlayer sp = player(sv);
+                sp.getInventory().clearContent();
+                sp.getInventory().setItem(0, weapon(s[1]));
+                sp.getInventory().setSelectedSlot(0);
+            });
+            ctx.waitTicks(3);
+            String[] ts = s[2].split(",");
+            for (int i = 0; i < ts.length; i++) {
+                float t = Float.parseFloat(ts[i]) / mo.ticks;
+                ctx.runOnClient(mc -> ClientMotions.freeze(me, motion, t));
+                ctx.waitTicks(1);
+                ctx.takeScreenshot(TestScreenshotOptions.of("mo_rn_fp_" + motion.substring(3) + "_" + i).withSize(960, 540));
+            }
+            ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
+        }
+        // 손 모습: 주먹 동작은 두 손 맨손, 연막탄은 던지는 동안만 소품 (그 뒤 무기), 망치는 던진 뒤 빈손, 던진 도끼는 날아가는 동안 빈손
+        check(handsAt(ctx, me, "rn_chain_fist", 1.5F, true, true, false), "chain fist: both hands bare");
+        check(handsAt(ctx, me, "rn_smoke_bomb", 0.6F, false, false, true), "smoke bomb: prop in hand while throwing");
+        check(handsAt(ctx, me, "rn_smoke_bomb", 6F, false, false, false), "smoke bomb: weapon back after the throw");
+        check(handsAt(ctx, me, "rn_judge_hammer", 4F, true, false, false), "judge hammer: bare hand after the throw");
+        check(handsAt(ctx, me, "rn_axe_boomerang", 8F, true, false, false) && handsAt(ctx, me, "rn_axe_boomerang", 24F, false, false, false),
+                "axe boomerang: bare while the axe flies · weapon after the catch");
+        check(handsAt(ctx, me, "rn_poison_stars", 0.6F, false, false, false) && handsAt(ctx, me, "rn_poison_stars", 4F, false, true, false),
+                "poison stars: left-hand shuriken then bare left hand");
+        check(handsAt(ctx, me, "rn_fireball", 1.4F, false, true, false), "fireball: wand stays, left hand bare");
+        ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
+        hideGui(ctx, false);
+        server.runOnServer(sv -> player(sv).getInventory().clearContent());
+        ctx.waitTicks(3);
+    }
+
+    /** 내 자세를 motion 의 tick 에 멈췄을 때 주 손 · 왼손이 맨손인지, 주 손에 소품을 드는지 */
+    private static boolean handsAt(ClientGameTestContext ctx, int me, String motion, float tick, boolean mainBare, boolean offBare, boolean prop) {
+        return ctx.computeOnClient(mc -> {
+            MotionPoses.Motion mo = MotionPoses.get(motion);
+            if (mo == null) return false;
+            ClientMotions.freeze(me, motion, tick / mo.ticks);
+            mmorpg.fabric.client.motion.Pose p = ClientMotions.localPose(0F, new mmorpg.fabric.client.motion.Pose());
+            boolean ok = p != null && p.mainBare() == mainBare && p.offBare() == offBare && p.propNow() == prop
+                    && MotionRender.firstPersonBare(net.minecraft.world.InteractionHand.MAIN_HAND) == mainBare;
+            ClientMotions.freeze(me, null, 0F);
+            return ok;
+        });
     }
 
     // ------------------------------------------------------------ 도움

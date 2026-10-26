@@ -203,8 +203,40 @@ public final class ClientMotions {
             p.setDeltaMovement(rollX * rollSpeeds[(int) i], v.y, rollZ * rollSpeeds[(int) i]);
         }
         fireBuffered(mc);
+        rearm(p);
         ticks++;
         if (ticks % 40 == 0) ACTIVE.entrySet().removeIf(e -> ticks + 1 - e.getValue().start() > e.getValue().ticks() + 2);
+    }
+
+    // ------------------------------------------------------------ 0.46.0 룬 동작 뒤 무기를 다시 듦
+
+    private static final Pose REARM = new Pose();
+    /** 앞 틱에 1인칭 주 손 · 왼손이 무기 대신 맨손 · 소품이었는지 */
+    private static boolean mainAway;
+    private static boolean offAway;
+    /** 시험: 다시 든 횟수 (주 손) */
+    private static int rearmed;
+
+    /**
+     * 룬 동작이 맨손 (주먹 · 던진 뒤 빈손) · 소품 (연막탄 · 망치 …) 으로 쓰던 손을 무기에 돌려줄 때 (동작이 끝남 · 소품 구간이 끝남) 바닐라 바꿔 들기처럼
+     * 무기가 화면 아래에서 올라오게 (FirstPersonHandsAndItems.itemUsed) — 갑자기 손에 나타나지 않게
+     */
+    static void rearm(LocalPlayer p) {
+        Pose lp = pose(p.getId(), p.getMainArm() == HumanoidArm.LEFT, 0F, REARM);
+        boolean main = lp != null && (lp.mainBare() || lp.propNow());
+        boolean off = lp != null && lp.offMode != MotionPoses.WEAPON;
+        if (mainAway && !main) {
+            p.firstPersonHandsAndItems().itemUsed(net.minecraft.world.InteractionHand.MAIN_HAND);
+            rearmed++;
+        }
+        if (offAway && !off) p.firstPersonHandsAndItems().itemUsed(net.minecraft.world.InteractionHand.OFF_HAND);
+        mainAway = main;
+        offAway = off;
+    }
+
+    /** 시험: 룬 동작 뒤 주 손 무기를 다시 든 횟수 */
+    public static int rearmed() {
+        return rearmed;
     }
 
     // ------------------------------------------------------------ 내 평타

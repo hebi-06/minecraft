@@ -67,6 +67,34 @@ public final class Pose {
     public final Quaternionf fpQ = new Quaternionf();
     /** 구르기 쪽 (도 — 마인크래프트 yaw) */
     public float yaw;
+    /** 0.46.0 룬 동작의 손: 주 손 · 왼손 모습 (MotionPoses.WEAPON · FIST · PROP) */
+    public int mainMode;
+    public int offMode;
+    /** 주 손 소품 (hold) 이 지금 보이는지 */
+    public boolean holdNow;
+    /** 왼손 소품 모델 (item_model id — 없으면 null) · 지금 보이는지 */
+    public String holdOff;
+    public boolean holdOffNow;
+    /** 1인칭 왼손 (맨팔 · 소품): 오른쪽 · 위 · 뒤 (칸) · 회전 — 왼손 기준 (거울은 MotionRender 가 함) */
+    public float fpoX;
+    public float fpoY;
+    public float fpoZ;
+    public final Quaternionf fpoQ = new Quaternionf();
+
+    /** 0.46.0 주 손을 맨손으로 그리는지 (주먹 · 소품 구간 밖 · 던진 무기가 손을 떠난 동안) */
+    public boolean mainBare() {
+        return mainMode == MotionPoses.FIST || mainMode == MotionPoses.PROP && !holdNow || mainMode == MotionPoses.THROWN && hide;
+    }
+
+    /** 0.46.0 주 손에 지금 소품을 드는지 (소품 · 바꿔 듦의 holdAt 구간) */
+    public boolean propNow() {
+        return (mainMode == MotionPoses.PROP || mainMode == MotionPoses.SWAP) && holdNow;
+    }
+
+    /** 0.46.0 왼손을 맨손으로 그리는지 */
+    public boolean offBare() {
+        return offMode == MotionPoses.FIST || offMode == MotionPoses.PROP && !holdOffNow;
+    }
 
     public boolean has(int part) {
         return (parts & part) != 0;
@@ -108,6 +136,8 @@ public final class Pose {
         spin = -spin;
         fpX = -fpX;
         fpQ.set(fpQ.x, -fpQ.y, -fpQ.z, fpQ.w);
+        fpoX = -fpoX;
+        fpoQ.set(fpoQ.x, -fpoQ.y, -fpoQ.z, fpoQ.w);
         int p = parts;
         parts = p & ~(RA | LA);
         if ((p & RA) != 0) parts |= LA;

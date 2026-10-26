@@ -203,7 +203,8 @@ def densify(name, m):
                 k["ease"] = k["genEase"]
             del k["genEase"]
     out = []
-    specs = {round(t, 4): (arm, via) for t, arm, via in ARCS.get(name, [])}
+    # 0.46.0 룬 동작 (tools/rune_motions.py) 은 베는 길을 동작 안의 "arcs" 에 적음 ([[t, 팔, via], …])
+    specs = {round(t, 4): (arm, via) for t, arm, via in ARCS.get(name, m.get("arcs", []))}
     for i, k in enumerate(keys):
         spec = specs.get(round(k["t"], 4))
         if spec is not None and i > 0:
@@ -229,21 +230,24 @@ def densify(name, m):
 # ------------------------------------------------------------ 쓰기 (poses.json 과 같은 모양)
 
 
+# 줄마다 열쇠 하나로 쓰는 목록 (차례대로 — 0.46.0 fpo: 1인칭 왼손)
+LISTS = ("keys", "fp", "fpo")
+
+
 def fmt(data):
     out = ["{", '  "_comment": ' + json.dumps(data["_comment"], ensure_ascii=False) + ",", '  "motions": {']
     names = list(data["motions"].keys())
     for ni, name in enumerate(names):
         m = data["motions"][name]
         out.append("    " + json.dumps(name) + ": {")
-        head = {k: v for k, v in m.items() if k not in ("keys", "fp")}
+        head = {k: v for k, v in m.items() if k not in LISTS}
         out.append("      " + ", ".join(json.dumps(k) + ": " + json.dumps(v, ensure_ascii=False) for k, v in head.items()) + ",")
-        for part in ("keys", "fp"):
-            if part not in m:
-                continue
+        parts = [p for p in LISTS if p in m]
+        for pi, part in enumerate(parts):
             out.append("      " + json.dumps(part) + ": [")
             for i, k in enumerate(m[part]):
                 out.append("        " + json.dumps(k, ensure_ascii=False) + ("," if i < len(m[part]) - 1 else ""))
-            out.append("      ]" + ("" if part == "fp" or "fp" not in m else ","))
+            out.append("      ]" + ("," if pi < len(parts) - 1 else ""))
         out.append("    }" + ("," if ni < len(names) - 1 else ""))
     out += ["  }", "}"]
     return "\n".join(out) + "\n"

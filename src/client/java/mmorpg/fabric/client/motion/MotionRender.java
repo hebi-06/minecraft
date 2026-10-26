@@ -65,12 +65,19 @@ public final class MotionRender {
             state.yRot = 0;
             state.xRot = 0;
         }
-        if (p.hide) {
-            if (state.mainArm == HumanoidArm.LEFT) state.leftHandItemState.clear();
+        boolean leftMain = state.mainArm == HumanoidArm.LEFT;
+        // 0.46.0 룬 동작의 손: 맨손 (주먹 · 손바닥) 이면 든 것을 숨기고, 소품 구간이면 그 소품을 듦
+        if (p.hide || p.mainBare()) {
+            if (leftMain) state.leftHandItemState.clear();
             else state.rightHandItemState.clear();
         }
-        // 0.44.0 동작이 드는 아이템 (대장장이 망치 — 주 손에 든 것 대신)
-        if (p.hold != null && p.w > 0) holdIn(entity, state, p.hold);
+        if (p.offBare()) {
+            if (leftMain) state.rightHandItemState.clear();
+            else state.leftHandItemState.clear();
+        }
+        // 0.44.0 동작이 드는 아이템 (대장장이 망치 — 주 손에 든 것 대신), 0.46.0 소품 (연막탄 · 표창 · 덫 …) 은 그 t 구간에만
+        if (p.hold != null && p.w > 0 && (p.mainMode == MotionPoses.WEAPON || p.propNow())) holdIn(entity, state, p.hold, true);
+        if (p.holdOff != null && p.w > 0 && p.offMode == MotionPoses.PROP && p.holdOffNow) holdIn(entity, state, p.holdOff, false);
     }
 
     private static final java.util.Map<String, ItemStack> HOLD = new java.util.HashMap<>();
@@ -88,9 +95,14 @@ public final class MotionRender {
 
     /** 주 손에 이 모델의 아이템을 들림 (렌더 상태만) */
     public static void holdIn(Avatar entity, AvatarRenderState state, String model) {
+        holdIn(entity, state, model, true);
+    }
+
+    /** 0.46.0 주 손 (main) · 왼손 (아니면) 에 이 모델의 아이템을 들림 (렌더 상태만) */
+    public static void holdIn(Avatar entity, AvatarRenderState state, String model, boolean main) {
         ItemStack s = holdStack(model);
         if (s.isEmpty()) return;
-        boolean left = state.mainArm == HumanoidArm.LEFT;
+        boolean left = (state.mainArm == HumanoidArm.LEFT) == main;
         Minecraft.getInstance().getItemModelResolver().updateForLiving(left ? state.leftHandItemState : state.rightHandItemState, s,
                 left ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, entity);
         if (left) state.leftArmPose = HumanoidModel.ArmPose.ITEM;
@@ -224,7 +236,9 @@ public final class MotionRender {
         Pose p = of(state);
         if (p == null || !p.has(Pose.ROOT)) return;
         float w = p.w;
-        if (p.up != 0 || p.fwd != 0) ps.translate(0, p.up * w, -p.fwd * w);
+        // 0.46.0 걸으면 다리를 바닐라 걸음에 맡기는 동작 (softLegs) 은 몸을 낮춘 몫도 같이 줄임 (무릎 꿇기 · 웅크림이 걸으며 땅에 묻히지 않게)
+        float wu = p.softLegs && p.up < 0 ? w * (1 - Math.min(1, state.walkAnimationSpeed * 2.5F)) : w;
+        if (p.up != 0 || p.fwd != 0) ps.translate(0, p.up * wu, -p.fwd * w);
         if (p.spin != 0) ps.rotate(Axis.YP.rotation(p.spin));
         if (p.flip != 0) {
             ps.translate(0, FLIP_PIVOT, 0);
@@ -323,7 +337,15 @@ public final class MotionRender {
      */
     public static boolean firstPerson(PoseStack ps, HumanoidArm arm) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || arm != mc.player.getMainArm()) return false;
+        if (mc.player == null) return false;
+        if (arm != mc.player.getMainArm()) {
+            // 0.46.0 왼손 소품 (바닐라 아이템 길로 그림 — firstPersonProps 가 바꿔 넣음): fpo 만큼 옮기고 손 자리에서 돌림
+            Pose p = ClientMotions.localPose(mc.getDeltaTracker().getGameTimeDeltaPartialTick(false), FP);
+            if (p == null || p.offMode != MotionPoses.PROP || !p.holdOffNow) return false;
+            ps.translate(p.fpoX * p.w, p.fpoY * p.w, p.fpoZ * p.w);
+            ps.rotate(new Quaternionf().slerp(p.fpoQ, p.w));
+            return true;
+        }
         Pose p = ClientMotions.localPose(mc.getDeltaTracker().getGameTimeDeltaPartialTick(false), FP);
         if (p == null) return false;
         float w = p.w;
@@ -334,6 +356,11 @@ public final class MotionRender {
             fpBaseSet = false;
         }
         ps.translate(p.fpX * w, p.fpY * w, p.fpZ * w);
+        if (p.propNow()) {
+            // 0.46.0 소품 (바닐라 아이템처럼 손 자리에 듦): 손 자리를 축으로 돌림
+            ps.rotate(new Quaternionf().slerp(p.fpQ, w));
+            return true;
+        }
         String type = mc.player.getMainHandItem().getItem() instanceof RpgWeaponItem item && item.weapon() != null ? item.weapon().type() : "";
         if (!type.equals("shield")) {
             Vector3f g = grip(type);
@@ -352,5 +379,81 @@ public final class MotionRender {
         }
         if (BladeTrails.captureFp) BladeTrails.captureFirstPerson(FP_BASE, ps.last().pose(), arm == HumanoidArm.LEFT); // 0.40.0 시험
         return true;
+    }
+
+    // ------------------------------------------------------------ 0.46.0 1인칭 맨손 · 소품 (룬 동작)
+
+    private static final Pose FP3 = new Pose();
+    private static final Pose FP4 = new Pose();
+    /** 바닐라 1인칭 맨팔의 어깨 자리 (renderPlayerArm 의 옮김 · 회전을 따라간 팔 위 끝 — 오른팔 기준, tools/hands_preview.py) — 맨팔 회전의 축 */
+    private static final Vector3f ARM_BASE = new Vector3f(0.49F, -0.83F, -0.53F);
+    /** 들어오고 나갈 때 맨팔이 화면 아래에서 올라오는 몫 (칸) */
+    private static final float ARM_RISE = 0.55F;
+
+    /** 1인칭 손 하나를 맨팔로 그려야 하는지 (주먹 · 손바닥 · 소품 구간 밖) — 지금 동작이 없으면 false */
+    public static boolean firstPersonBare(InteractionHand hand) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return false;
+        Pose p = ClientMotions.localPose(mc.getDeltaTracker().getGameTimeDeltaPartialTick(false), FP3);
+        if (p == null) return false;
+        return hand == InteractionHand.MAIN_HAND ? p.mainBare() : p.offBare();
+    }
+
+    /**
+     * 1인칭 맨팔 (submitArmWithItem 처음 — true 면 바닐라 대신 그렸음): 룬 동작이 이 손을 맨손으로 쓰면 바닐라 맨팔 (renderPlayerArm) 을 fp (주 손) · fpo (왼손)
+     * 만큼 옮기고 맨팔 자리를 축으로 돌려 그림 — 들어오고 나갈 때는 화면 아래에서 올라오고 내려감. 든 무기 · 왼손 아이템은 그리지 않음
+     */
+    public static boolean firstPersonHands(Object renderer, net.minecraft.client.renderer.state.level.PlayerRenderState player, InteractionHand hand, PoseStack ps,
+            net.minecraft.client.renderer.SubmitNodeCollector collector, int light) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) return false;
+        Pose p = ClientMotions.localPose(mc.getDeltaTracker().getGameTimeDeltaPartialTick(false), FP3);
+        if (p == null) return false;
+        boolean main = hand == InteractionHand.MAIN_HAND;
+        if (!(main ? p.mainBare() : p.offBare())) return false;
+        if (mc.player.isInvisible()) return true;
+        HumanoidArm arm = main ? mc.player.getMainArm() : mc.player.getMainArm().getOpposite();
+        float side = arm == HumanoidArm.RIGHT ? 1F : -1F;
+        float w = p.w;
+        float x = main ? p.fpX : p.fpoX;
+        float y = main ? p.fpY : p.fpoY;
+        float z = main ? p.fpZ : p.fpoZ;
+        Quaternionf q = main ? p.fpQ : p.fpoQ;
+        ps.pushPose();
+        ps.translate(x * w, y * w - ARM_RISE * (1F - w), z * w);
+        ps.translate(side * ARM_BASE.x, ARM_BASE.y, ARM_BASE.z);
+        ps.rotate(new Quaternionf().slerp(q, w));
+        ps.translate(-side * ARM_BASE.x, -ARM_BASE.y, -ARM_BASE.z);
+        ((mmorpg.fabric.client.mixin.FirstPersonArmInvoker) renderer).mmorpg$renderPlayerArm(ps, collector, light, 0F, 0F, arm, player);
+        ps.popPose();
+        return true;
+    }
+
+    /**
+     * 1인칭 소품 (FirstPersonHandsAndItems.extractRenderState 끝): 룬 동작의 소품 구간이면 주 손 · 왼손의 그릴 아이템을 그 소품으로 바꿈 (렌더 상태만 —
+     * 들고 있는 아이템 · 바꿔 들기 애니메이션은 그대로). 움직임은 applyItemArmTransform 끝의 {@link #firstPerson} (fp · fpo)
+     */
+    public static void firstPersonProps(net.minecraft.client.player.LocalPlayer player, float partial,
+            net.minecraft.client.renderer.state.level.FirstPersonHandsAndItemsRenderState state) {
+        if (player == null) return;
+        boolean leftMain = player.getMainArm() == HumanoidArm.LEFT;
+        Pose p = ClientMotions.pose(player.getId(), leftMain, partial, FP4);
+        if (p == null) return;
+        if (p.propNow() && p.hold != null) {
+            ItemStack s = holdStack(p.hold);
+            if (!s.isEmpty()) {
+                state.mainHandItem = s;
+                Minecraft.getInstance().getItemModelResolver().updateForLiving(state.mainHandRenderState, s,
+                        leftMain ? ItemDisplayContext.FIRST_PERSON_LEFT_HAND : ItemDisplayContext.FIRST_PERSON_RIGHT_HAND, player);
+            }
+        }
+        if (p.offMode == MotionPoses.PROP && p.holdOffNow && p.holdOff != null) {
+            ItemStack s = holdStack(p.holdOff);
+            if (!s.isEmpty()) {
+                state.offHandItem = s;
+                Minecraft.getInstance().getItemModelResolver().updateForLiving(state.offHandRenderState, s,
+                        leftMain ? ItemDisplayContext.FIRST_PERSON_RIGHT_HAND : ItemDisplayContext.FIRST_PERSON_LEFT_HAND, player);
+            }
+        }
     }
 }

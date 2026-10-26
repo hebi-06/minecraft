@@ -532,7 +532,33 @@ public final class RpgMotionTests {
             h.assertTrue(r != null, "rune");
             h.assertTrue(RuneCast.castRune(sp, r, false, 0), "rune cast");
             h.assertTrue(Motions.skillMotion("rune:" + r.def().str("fn")).equals(MotionSystem.lastSent(sp)), "rune motion " + MotionSystem.lastSent(sp));
+            h.assertTrue("rn_ground_slam".equals(MotionSystem.lastSent(sp)), "0.46.0 rune's own motion " + MotionSystem.lastSent(sp));
             done(h, sp);
         });
+    }
+
+    /**
+     * 0.46.0 룬마다 그 룬만의 동작 (사용자 "룬 쓸때 권왕 같은 애들은 실제로 펀치 모션 … 연막탄이면 실제로 연막 날리는거 같은 모션으로 … 나머지 룬 전부"):
+     * 주먹 (연환권) · 소품 (연막 · 사슬 갈고리) · 등급마다 다른 정령 (물의 정령) · 두 손 내려찍기 (마검 해방) — 룬을 쓰면 그 동작이 나감
+     */
+    @GameTest(environment = ENV, maxTicks = 80)
+    public void runeMotionsPerRune(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        hold(sp, Weapons.weaponFrom("sword", 40, "hero"));
+        dummy(h, 1.5, 2, 4.5);
+        String[][] cases = {{"rpg:rune_monk_common", "rn_chain_fist"}, {"rpg:rune_assassin_noble", "rn_smoke_bomb"}, {"rpg:rune_spirit_rare", "rn_spirit_water"},
+            {"rpg:rune_spellblade_transcend", "rn_spellblade_release"}, {"rpg:rune_gladiator_common", "rn_chain_hook"}, {"rpg:rune_int_common", "rn_fireball"}};
+        for (int i = 0; i < cases.length; i++) {
+            String[] c = cases[i];
+            h.runAfterDelay(2 + i * 8, () -> {
+                Runes.Rune r = Runes.parseRune(c[0]);
+                h.assertTrue(r != null, "rune " + c[0]);
+                h.assertTrue(c[1].equals(Motions.runeSkillMotion(r.def().str("fn"), r.grade())), c[0] + " table " + Motions.runeSkillMotion(r.def().str("fn"), r.grade()));
+                h.assertTrue(RuneCast.castRune(sp, r, false, 0), "cast " + c[0]);
+                h.assertTrue(c[1].equals(MotionSystem.lastSent(sp)), c[0] + " motion " + MotionSystem.lastSent(sp));
+            });
+        }
+        h.runAfterDelay(4 + cases.length * 8, () -> done(h, sp));
     }
 }

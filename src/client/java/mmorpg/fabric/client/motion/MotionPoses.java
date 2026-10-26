@@ -136,7 +136,7 @@ public final class MotionPoses {
         keys.set(0, idle.keys.get(rest).copyAt(0F));
         keys.set(keys.size() - 1, idle.keys.get(rest).copyAt(1F));
         return new Motion(m.name, m.ticks, m.parts, m.softLegs, 0F, 0F, m.hideFrom, m.hideTo, List.copyOf(keys), m.fp, m.tilt, m.trail, m.hold,
-                m.faceYaw, m.impacts);
+                m.faceYaw, m.impacts, m.hands);
     }
 
     /** 1인칭 열쇠: 손에 든 아이템 자리 (오른쪽 · 위 · 뒤 칸) · 회전 (q — 바닐라 1인칭 자세에서) */
@@ -171,6 +171,8 @@ public final class MotionPoses {
         public final boolean faceYaw;
         /** 0.44.0 망치가 닿는 t (0 ~ 1 — 없으면 빈 배열) */
         public final float[] impacts;
+        /** 0.46.0 손 모습 (룬 동작 — 맨손 주먹 · 소품 · 왼손 1인칭, 없으면 {@link Hands#NONE}) */
+        public final Hands hands;
 
         Motion(String name, int ticks, int parts, boolean softLegs, float fadeIn, float fadeOut, float hideFrom, float hideTo, List<Key> keys, List<FpKey> fp,
                 float tilt, float[][] trail) {
@@ -179,6 +181,11 @@ public final class MotionPoses {
 
         Motion(String name, int ticks, int parts, boolean softLegs, float fadeIn, float fadeOut, float hideFrom, float hideTo, List<Key> keys, List<FpKey> fp,
                 float tilt, float[][] trail, String hold, boolean faceYaw, float[] impacts) {
+            this(name, ticks, parts, softLegs, fadeIn, fadeOut, hideFrom, hideTo, keys, fp, tilt, trail, hold, faceYaw, impacts, Hands.NONE);
+        }
+
+        Motion(String name, int ticks, int parts, boolean softLegs, float fadeIn, float fadeOut, float hideFrom, float hideTo, List<Key> keys, List<FpKey> fp,
+                float tilt, float[][] trail, String hold, boolean faceYaw, float[] impacts, Hands hands) {
             this.name = name;
             this.ticks = ticks;
             this.parts = parts;
@@ -194,7 +201,57 @@ public final class MotionPoses {
             this.hold = hold;
             this.faceYaw = faceYaw;
             this.impacts = impacts;
+            this.hands = hands == null ? Hands.NONE : hands;
         }
+    }
+
+    /** 0.46.0 손 모습: 무기 (바닐라 · 1인칭은 fp 열쇠로 무기를 움직임) */
+    public static final int WEAPON = 0;
+    /** 맨손 (무기 · 왼손 아이템을 숨기고 1인칭은 맨팔 — 주먹 · 손바닥) */
+    public static final int FIST = 1;
+    /** 소품 (hold · holdOff 모델을 그 t 구간에만 손에 듦 — 그 밖은 맨손) */
+    public static final int PROP = 2;
+    /** 던진 무기 (무기 그대로 — 숨김 구간 (hide) 에만 맨손: 1인칭은 빈손을 fp 열쇠대로, 3인칭은 빈손) */
+    public static final int THROWN = 3;
+    /** 바꿔 듦 (무기 그대로 — holdAt 구간에만 무기 대신 소품: 연막탄을 꺼내 던지고 다시 무기) */
+    public static final int SWAP = 4;
+
+    /**
+     * 0.46.0 룬 동작의 손: main = 주 손 (WEAPON · FIST · PROP · THROWN · SWAP), off = 왼손 (WEAPON = 바닐라 그대로 · FIST · PROP), holdAt = 주 손 소품이 보이는 t 구간,
+     * holdOff · holdOffAt = 왼손 소품 · 구간, fpo = 1인칭 왼손 열쇠 (맨팔 · 소품 — 주 손은 fp)
+     */
+    public record Hands(int main, int off, float[] holdAt, String holdOff, float[] holdOffAt, List<FpKey> fpo) {
+        public static final Hands NONE = new Hands(WEAPON, WEAPON, new float[] {0, 1}, null, new float[] {0, 1}, List.of());
+
+        public boolean any() {
+            return main != WEAPON || off != WEAPON;
+        }
+    }
+
+    /** 소품이 보이는 t 구간들 ([시작, 끝, 시작, 끝 …] — 없으면 [0, 1]: 늘) */
+    private static float[] windows(JsonObject o, String k) {
+        if (!o.has(k)) return new float[] {0, 1};
+        JsonArray a = o.getAsJsonArray(k);
+        float[] out = new float[a.size() / 2 * 2];
+        for (int i = 0; i < out.length; i++) out[i] = a.get(i).getAsFloat();
+        return out.length == 0 ? new float[] {0, 1} : out;
+    }
+
+    /** t 가 구간들 중 하나에 드는지 */
+    static boolean inWindows(float[] w, float t) {
+        for (int i = 0; i + 1 < w.length; i += 2) if (t >= w[i] && t <= w[i + 1]) return true;
+        return false;
+    }
+
+    private static int handMode(JsonObject o, String k) {
+        if (o == null || !o.has(k)) return WEAPON;
+        return switch (o.get(k).getAsString()) {
+            case "fist" -> FIST;
+            case "prop" -> PROP;
+            case "thrown" -> THROWN;
+            case "swap" -> SWAP;
+            default -> WEAPON;
+        };
     }
 
     private static Map<String, Motion> MOTIONS;
@@ -286,8 +343,17 @@ public final class MotionPoses {
             impacts = new float[a.size()];
             for (int i = 0; i < a.size(); i++) impacts[i] = a.get(i).getAsFloat();
         }
+        // 0.46.0 손 (룬 동작): "hands": {"main": fist · prop, "off": fist · prop}, holdAt · holdOff · holdOffAt, 1인칭 왼손 "fpo"
+        Hands hands = Hands.NONE;
+        if (o.has("hands") || o.has("fpo") || o.has("holdOff")) {
+            JsonObject h = o.has("hands") ? o.getAsJsonObject("hands") : null;
+            List<FpKey> fpo = new ArrayList<>();
+            if (o.has("fpo")) for (JsonElement k : o.getAsJsonArray("fpo")) fpo.add(fpKey(k.getAsJsonObject()));
+            hands = new Hands(handMode(h, "main"), handMode(h, "off"), windows(o, "holdAt"), o.has("holdOff") ? o.get("holdOff").getAsString() : null,
+                    windows(o, "holdOffAt"), List.copyOf(fpo));
+        }
         return new Motion(name, ticks, parts, soft, fade[0], fade[1], hide[0], hide[1], List.copyOf(keys), List.copyOf(fp), tilt,
-                trail.toArray(new float[0][]), hold, faceYaw, impacts);
+                trail.toArray(new float[0][]), hold, faceYaw, impacts, hands);
     }
 
     private static float[] floats(JsonObject o, String k, float[] dflt) {
@@ -695,27 +761,45 @@ public final class MotionPoses {
         if (m.fadeOut > 0 && t > 1 - m.fadeOut) w = Math.min(w, ease((1 - t) / m.fadeOut, "inout"));
         out.w = w;
         // 1인칭
-        out.fpX = out.fpY = out.fpZ = 0;
-        out.fpQ.identity();
-        if (!m.fp.isEmpty()) {
-            List<FpKey> fk = m.fp;
-            FpKey a = fk.get(0);
-            FpKey b = fk.get(fk.size() - 1);
-            for (int i = 0; i < fk.size() - 1; i++) {
-                if (fk.get(i).t <= t && t <= fk.get(i + 1).t) {
-                    a = fk.get(i);
-                    b = fk.get(i + 1);
-                    break;
-                }
-            }
-            float sp = b.t - a.t;
-            float v = ease(sp <= 0 ? 0 : (t - a.t) / sp, b.ease);
-            out.fpX = lerp(a.x, b.x, v);
-            out.fpY = lerp(a.y, b.y, v);
-            out.fpZ = lerp(a.z, b.z, v);
-            a.q.slerp(b.q, v, out.fpQ);
-        }
+        float[] fpv = new float[3];
+        fpAt(m.fp, t, fpv, out.fpQ);
+        out.fpX = fpv[0];
+        out.fpY = fpv[1];
+        out.fpZ = fpv[2];
+        // 0.46.0 손 (룬 동작): 주 손 · 왼손 모습, 소품이 보이는지, 1인칭 왼손
+        Hands h = m.hands;
+        out.mainMode = h.main();
+        out.offMode = h.off();
+        out.holdNow = m.hold != null && inWindows(h.holdAt(), t);
+        out.holdOff = h.holdOff();
+        out.holdOffNow = h.holdOff() != null && inWindows(h.holdOffAt(), t);
+        fpAt(h.fpo(), t, fpv, out.fpoQ);
+        out.fpoX = fpv[0];
+        out.fpoY = fpv[1];
+        out.fpoZ = fpv[2];
         if (mirror) out.mirror();
         return out;
+    }
+
+    /** 1인칭 열쇠들의 t 자리 (xyz · 회전 — 없으면 0 · 회전 없음) */
+    private static void fpAt(List<FpKey> fk, float t, float[] xyz, Quaternionf q) {
+        xyz[0] = xyz[1] = xyz[2] = 0;
+        q.identity();
+        if (fk.isEmpty()) return;
+        FpKey a = fk.get(0);
+        FpKey b = fk.get(fk.size() - 1);
+        for (int i = 0; i < fk.size() - 1; i++) {
+            if (fk.get(i).t <= t && t <= fk.get(i + 1).t) {
+                a = fk.get(i);
+                b = fk.get(i + 1);
+                break;
+            }
+        }
+        float sp = b.t - a.t;
+        float v = ease(sp <= 0 ? 0 : (t - a.t) / sp, b.ease);
+        xyz[0] = lerp(a.x, b.x, v);
+        xyz[1] = lerp(a.y, b.y, v);
+        xyz[2] = lerp(a.z, b.z, v);
+        a.q.slerp(b.q, v, q);
     }
 }

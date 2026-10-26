@@ -13,10 +13,32 @@ import java.util.Set;
 public final class Motions {
     private Motions() {}
 
-    /** 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인) */
-    public static final Set<String> KNOWN = Set.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "thrust", "lance_sweep", "bash", "smite", "skill_slash",
+    /** 평타 · 무기 스킬 · 직업 스킬 · 가게 동작 이름 (poses.json 에 손으로 쓴 것) */
+    public static final Set<String> BASE = Set.of("slash_h", "slash_v", "spin", "dagger_x", "chop", "thrust", "lance_sweep", "bash", "smite", "skill_slash",
             "skill_flurry", "slam", "leap_slam", "dash", "throw", "throw_weapon", "cast", "cast_up", "guard", "shoot", "shoot_up", "spin2", "roll",
             "smith_hammer", "rune_channel", "rune_merge", "shop_hand", "shop_count");
+
+    /**
+     * 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인): BASE + 0.46.0 룬 동작 (rules_more MOTION.runeMotions — tools/rune_motions.py 가 poses.json 과 함께
+     * 씀, 이름은 rn_ 로 시작)
+     */
+    public static final Set<String> KNOWN = known();
+
+    private static Set<String> known() {
+        java.util.Set<String> out = new java.util.LinkedHashSet<>(BASE);
+        try {
+            Obj c = Rules.get().obj("MOTION");
+            if (c.has("runeMotions")) for (Object o : c.list("runeMotions")) out.add(String.valueOf(o));
+        } catch (RuntimeException e) {
+            // 규칙을 못 읽으면 BASE 만 (스킬 동작 없이 — 시험이 잡음)
+        }
+        return Collections.unmodifiableSet(out);
+    }
+
+    /** 0.46.0 룬 동작 이름 (rn_ — 길이 상한이 평타보다 김) */
+    public static boolean runeMotion(String name) {
+        return name != null && name.startsWith("rn_");
+    }
 
     private static Obj cfg() {
         return Rules.get().obj("MOTION");
@@ -214,6 +236,15 @@ public final class Motions {
         if (s == null || key == null) return null;
         String m = s.strOrNull(key);
         return m != null && KNOWN.contains(m) ? m : null;
+    }
+
+    /**
+     * 0.46.0 룬 → 동작: 등급마다 다른 열쇠 ("rune:" + fn + ":" + 등급 — 정령 소환처럼 fn 하나를 여러 등급이 쓰면) 가 있으면 그것, 없으면 "rune:" + fn. 없으면 null
+     */
+    public static String runeSkillMotion(String fn, String grade) {
+        if (fn == null) return null;
+        String m = grade == null ? null : skillMotion("rune:" + fn + ":" + grade);
+        return m != null ? m : skillMotion("rune:" + fn);
     }
 
     /** 스킬 표의 열쇠 전부 (시험) */

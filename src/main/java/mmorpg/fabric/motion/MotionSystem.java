@@ -114,6 +114,16 @@ public final class MotionSystem {
         }
     }
 
+    /** 0.46.0 룬이 나감: 그 룬의 동작 (등급마다 다르면 rune:fn:등급 — 정령 소환, 아니면 rune:fn) 을 쓴 사람과 둘레에 */
+    public static void rune(ServerPlayer sp, String fn, String grade) {
+        try {
+            String m = Motions.runeSkillMotion(fn, grade);
+            if (m != null && sp != null && !sp.isRemoved()) broadcast(sp, m, sp.getYRot(), false);
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] rune motion {} {}", fn, grade, e);
+        }
+    }
+
     // ------------------------------------------------------------ 구르기
 
     /** 구를 수 있는지 (서버 확인 — 클라이언트도 같은 조건) */

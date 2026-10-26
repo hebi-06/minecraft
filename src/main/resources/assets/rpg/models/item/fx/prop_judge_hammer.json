@@ -1,0 +1,6 @@
+{
+ "parent": "minecraft:item/handheld",
+ "textures": {
+  "layer0": "rpg:item/fx/prop_judge_hammer"
+ }
+}

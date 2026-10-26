@@ -27,6 +27,13 @@ public abstract class FirstPersonHandsMixin {
         MotionRender.firstPersonBase(pose, hand);
     }
 
+    /** 0.46.0 룬 동작의 맨손 (주먹 · 손바닥 · 소품 구간 밖): 바닐라 대신 맨팔을 동작대로 그림 (든 무기 · 왼손 아이템은 그리지 않음) */
+    @Inject(method = "submitArmWithItem", at = @At("HEAD"), cancellable = true)
+    private void mmorpg$bareHands(PlayerRenderState player, FirstPersonHandsAndItemsRenderState state, float partial, float pitch, InteractionHand hand,
+            float attack, ItemStack stack, float equip, PoseStack pose, SubmitNodeCollector collector, int light, CallbackInfo ci) {
+        if (MotionRender.firstPersonHands(this, player, hand, pose, collector, light)) ci.cancel();
+    }
+
     /** 0.40.0 참격 궤적: 주 손을 그린 뒤 (손을 그리기 시작한 자리로 돌아온 pose) 1인칭 궤적 띠 — BladeTrails.submitFirstPerson */
     @Inject(method = "submitArmWithItem", at = @At("TAIL"))
     private void mmorpg$bladeTrail(PlayerRenderState player, FirstPersonHandsAndItemsRenderState state, float partial, float pitch, InteractionHand hand,

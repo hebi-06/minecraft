@@ -505,9 +505,11 @@ def sheet(name, m, ts, views=("front", "right", "34", "top")):
     img = Image.new("RGB", (cell * len(ts), cell * len(views) + 18), (20, 20, 26))
     d = ImageDraw.Draw(img)
     d.text((4, 2), "%s  (%d ticks)" % (name, m.get("ticks", 0)), fill=(230, 230, 230))
+    main = m.get("hands", {}).get("main", "weapon")  # 0.46.0 룬 동작: 맨손 · 소품이면 무기를 그리지 않음
+    hide = m.get("hide", [-1, -1])
     for i, t in enumerate(ts):
         pose = evaluate(m, t)
-        polys = to_ours(build(pose), pose)
+        polys = to_ours(build(pose, weapon=main in ("weapon", "thrown", "swap") and not (hide[0] <= t <= hide[1])), pose)
         for j, v in enumerate(views):
             im = render(polys, v, cell)
             img.paste(im, (i * cell, 18 + j * cell))

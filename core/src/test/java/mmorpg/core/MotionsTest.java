@@ -25,6 +25,70 @@ public final class MotionsTest {
         else BAD.add(what);
     }
 
+    /** 룬 동작 수 · 왼손 맨손 (fpo) 인 것 · 소품을 드는 것 */
+    private static final int[] RUNE_SHAPES = new int[3];
+
+    /**
+     * 0.46.0 룬 동작 (rn_) 의 꼴: 손 (hands — main · off) 이 아는 값, 왼손을 맨손 · 소품으로 쓰면 1인칭 왼팔 열쇠 (fpo — t 0 → 1 · 오름차순),
+     * 소품 (hold · holdOff) 은 그 아이템 정의 (assets/rpg/items) 가 있고 보이는 구간 (holdAt · holdOffAt — 짝수 개 · 0 ~ 1 · 오름차순) 이 맞음,
+     * 몸을 돌리는 동작 (spin) 은 끝 열쇠가 360° 의 배수 (돌아선 채 끝나지 않게)
+     */
+    @SuppressWarnings("unchecked")
+    private static void runeShape(String name, Map<String, Object> m) {
+        RUNE_SHAPES[0]++;
+        Map<String, Object> hands = m.get("hands") instanceof Map<?, ?> h ? (Map<String, Object>) h : Map.of();
+        String main = String.valueOf(hands.getOrDefault("main", "weapon"));
+        String off = String.valueOf(hands.getOrDefault("off", "weapon"));
+        check(List.of("weapon", "fist", "prop", "thrown", "swap").contains(main) && List.of("weapon", "fist", "prop").contains(off), name + " hands " + hands);
+        if (!off.equals("weapon")) {
+            RUNE_SHAPES[1]++;
+            List<Object> fpo = (List<Object>) m.get("fpo");
+            check(fpo != null && fpo.size() >= 3, name + " fpo (off-hand " + off + ")");
+            if (fpo != null) {
+                double last = -1;
+                for (Object k : fpo) {
+                    double t = ((Number) ((Map<String, Object>) k).get("t")).doubleValue();
+                    check(t >= last && t >= 0 && t <= 1, name + " fpo t order " + t);
+                    last = t;
+                }
+                check(last == 1, name + " fpo ends at 1");
+            }
+        }
+        for (String[] pr : new String[][] {{"hold", "holdAt", main}, {"holdOff", "holdOffAt", off}}) {
+            boolean usesProp = pr[2].equals("prop") || pr[2].equals("swap");
+            Object model = m.get(pr[0]);
+            if (!usesProp) {
+                check(model == null || pr[0].equals("hold"), name + " " + pr[0] + " without a prop hand");
+                continue;
+            }
+            RUNE_SHAPES[2]++;
+            check(model instanceof String, name + " " + pr[0] + " model");
+            if (model instanceof String id && id.startsWith("rpg:")) {
+                check(Files.exists(Path.of("src/main/resources/assets/rpg/items/" + id.substring(4) + ".json")), name + " prop item " + id);
+            }
+            List<Object> win = (List<Object>) m.get(pr[1]);
+            check(win != null && !win.isEmpty() && win.size() % 2 == 0, name + " " + pr[1] + " pairs");
+            if (win != null) {
+                double last = -1;
+                for (Object o : win) {
+                    double t = ((Number) o).doubleValue();
+                    check(t >= last && t >= 0 && t <= 1, name + " " + pr[1] + " order " + t);
+                    last = t;
+                }
+            }
+        }
+        List<Object> keys = (List<Object>) m.get("keys");
+        if (keys != null && !keys.isEmpty()) {
+            boolean spins = false;
+            for (Object k : keys) spins |= ((Map<String, Object>) k).containsKey("spin");
+            if (spins) {
+                Object end = ((Map<String, Object>) keys.get(keys.size() - 1)).get("spin");
+                double deg = end instanceof Number n ? n.doubleValue() : 0;
+                check(Math.abs(deg % 360) < 1e-6, name + " spin ends facing forward " + deg);
+            }
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public static void main(String[] argv) throws Exception {
         Rules r = Rules.get();
@@ -191,7 +255,35 @@ public final class MotionsTest {
         check(fns.size() >= 120, "rune fns " + fns.size());
         check(jobs >= 55, "job skills " + jobs);
         for (String k : want) check(Motions.skillMotion(k) != null, "skill motion " + k);
-        for (String k : Motions.skillKeys()) check(want.contains(k), "no stray key " + k);
+        // 0.46.0 등급마다 다른 룬 동작 열쇠 (rune:fn:등급 — 정령 소환): fn 이 있는 룬 · 그 등급이 있어야 함
+        Set<String> gradeKeys = new HashSet<>();
+        for (String fam : runes.keys()) {
+            if (fam.startsWith("_") || !(runes.get(fam) instanceof Map<?, ?> grades)) continue;
+            for (Map.Entry<?, ?> g : grades.entrySet()) {
+                if (g.getValue() instanceof Map<?, ?> d && d.get("fn") instanceof String fn) gradeKeys.add("rune:" + fn + ":" + g.getKey());
+            }
+        }
+        for (String k : Motions.skillKeys()) check(want.contains(k) || gradeKeys.contains(k), "no stray key " + k);
+        // 0.46.0 룬마다 그 룬만의 동작 (rn_ — 룬이 하는 행동: 주먹 · 던지기 · 베기 · 부르기 …), 등급 열쇠가 있으면 그 등급의 것
+        int runeDefs = 0;
+        Set<String> runeMotions = new HashSet<>();
+        for (String fam : runes.keys()) {
+            if (fam.startsWith("_") || !(runes.get(fam) instanceof Map<?, ?> grades)) continue;
+            for (Map.Entry<?, ?> g : grades.entrySet()) {
+                if (!(g.getValue() instanceof Map<?, ?> d) || !(d.get("fn") instanceof String fn)) continue;
+                runeDefs++;
+                String mo = Motions.runeSkillMotion(fn, String.valueOf(g.getKey()));
+                check(mo != null && Motions.runeMotion(mo), "rune motion " + fam + "." + g.getKey() + " " + fn + " → " + mo);
+                if (mo != null) runeMotions.add(mo);
+            }
+        }
+        check(runeDefs >= 120 && runeMotions.size() >= 115, "rune motions " + runeDefs + " defs · " + runeMotions.size() + " motions");
+        check("rn_chain_fist".equals(Motions.runeSkillMotion("chainFist", "common")) && "rn_smoke_bomb".equals(Motions.runeSkillMotion("smokeBomb", "noble"))
+                && "rn_spirit_water".equals(Motions.runeSkillMotion("summonSpirits", "rare"))
+                && "rn_spirit_earth".equals(Motions.runeSkillMotion("summonSpirits", "hero"))
+                && "rn_spirit_fire".equals(Motions.runeSkillMotion("summonSpirits", "nope"))
+                && "rn_spellblade_release".equals(Motions.runeSkillMotion("spellbladeRelease", "transcend")), "rune motion picks (grade key · fallback)");
+        check(Motions.runeSkillMotion("nothing", "common") == null && Motions.runeSkillMotion(null, "common") == null, "unknown rune → null");
         check(Motions.skillMotion("mjolnir_throw").equals("throw_weapon") && Motions.skillMotion("gaebolg_pierce").equals("throw_weapon"), "spear · hammer throws");
         check(Motions.skillMotion("gram_charge").equals("dash") && Motions.skillMotion("warrior_charge").equals("dash"), "dashes");
         check(Motions.skillMotion("nothing") == null, "unknown → null");
@@ -202,9 +294,10 @@ public final class MotionsTest {
         check(motions.keySet().equals(Motions.KNOWN), "poses.json names " + motions.keySet());
         for (Map.Entry<String, Object> e : motions.entrySet()) {
             Map<String, Object> m = (Map<String, Object>) e.getValue();
-            // 0.44.0 대장장이 망치질 (smith_hammer — 세 번 침) · 0.45.0 가게 동작 (룬술사 rune_* · 상인 shop_*) 만 길게
+            // 0.44.0 대장장이 망치질 (smith_hammer — 세 번 침) · 0.45.0 가게 동작 (룬술사 rune_* · 상인 shop_*) 만 길게, 0.46.0 룬 동작 (rn_) 은 3.2초까지
             boolean work = e.getKey().equals("smith_hammer") || e.getKey().startsWith("rune_") || e.getKey().startsWith("shop_");
-            int maxTicks = work ? 40 : 20;
+            int maxTicks = Motions.runeMotion(e.getKey()) ? 64 : work ? 40 : 20;
+            if (Motions.runeMotion(e.getKey())) runeShape(e.getKey(), m);
             check(((Number) m.get("ticks")).intValue() >= 6 && ((Number) m.get("ticks")).intValue() <= maxTicks, e.getKey() + " ticks");
             for (String part : List.of("keys", "fp")) {
                 List<Object> keys = (List<Object>) m.get(part);
@@ -219,6 +312,7 @@ public final class MotionsTest {
                 check(((Number) ((Map<String, Object>) keys.get(0)).get("t")).doubleValue() == 0 && last == 1, e.getKey() + " " + part + " 0 → 1");
             }
         }
+        check(RUNE_SHAPES[0] >= 115 && RUNE_SHAPES[1] >= 60 && RUNE_SHAPES[2] >= 5, "rune shapes (motions · off-hand bare · props) " + java.util.Arrays.toString(RUNE_SHAPES));
         System.out.println("[motions-test] checks ok " + ok + ", bad " + BAD.size());
         for (String b : BAD) System.out.println("  BAD " + b);
         if (!BAD.isEmpty()) System.exit(1);
