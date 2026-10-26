@@ -77,7 +77,7 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
 
     // ------------------------------------------------------------ 1. 한 줄 (낮 · 가까이 · 밤 · 직업 색)
 
-    private void spawnLine(TestServerContext server, double dist, double spin, double[][] colors) {
+    private void spawnLine(TestServerContext server, double dist, double spin, double[][][] colors) {
         server.runOnServer(s -> {
             ServerLevel level = s.overworld();
             double eye = -60 + 1.62;
