@@ -275,6 +275,13 @@ final class ArcherSkills {
 
     // ------------------------------------------------------------ 관천일시
 
+    /** 0.47.0 눕힌 빛의 활 자리: 몸 앞 BOW_AHEAD 칸 · 높이 (눈 0.75칸 아래 — 1인칭에서 내려다봄) */
+    private static final double BOW_AHEAD = 2.2;
+
+    private static double bowY(ServerPlayer sp) {
+        return sp.getEyeHeight() - 0.75;
+    }
+
     /**
      * 관천일시: 새벽빛 하늘 → draw 틱 동안 눈앞에 커지는 빛의 활 (시위를 당김 · 빛이 모여 듦) → 거대한 빛의 화살 한 발 (speed 칸/초) — 앞 range 칸 (막힌 블록까지) 일직선 폭 width
      * 관통 (shot — 큰 숫자, 화살이 닿는 틱에) → 화살이 지나간 자리에 남은 잔상 afterimages 개가 burstDelay 틱 뒤부터 가까운 쪽부터 한 틱에 하나씩 터짐 (맞은 적마다 그 자리의 잔상 하나 —
@@ -293,10 +300,12 @@ final class ArcherSkills {
         JobFx.ring(level0, V.up(c0, 0.06), 3.0, j, false, draw / 20.0 + 0.2, Opt.of("alpha", 0.8));
         SkillFx.play(level0, "crossbow.loading.start", c0, 0.7, 1.0);
         SkillFx.play(level0, "beacon.power", c0, 1.6, 0.8);
-        // 0.47.0 입체: 눈앞 2.3칸의 빛의 활 (위가 오른쪽으로 조금 기욺 — 주인을 따라감) 이 커지며 시위가 반 → 끝까지 당겨지고 빛의 화살이 걸림
-        int bowId = JobFx3d.spawn(level0, "light_bow", new Vec3(0, sp.getEyeHeight() - 0.15, 2.3), j, Opt.of("follow", (double) sp.getId(), "dir", new Vec3(Math.sin(
-                Math.toRadians(20)), Math.cos(Math.toRadians(20)), 0), "face", new Vec3(0, 0, 1), "scale", 1.35, "grow", 0.5, "life", draw / 20.0 + 0.4, "anim", "draw",
-                "animSpeed", 20.0 / Math.max(4, draw), "pop", 0.25, "fadeOut", 0.3, "glowAlpha", 0.5, "shine", 0.3));
+        // 0.47.0 입체: 가슴 앞 2.2칸에 눕힌 빛의 활 (팔이 좌우 · 쏘는 쪽이 앞으로 20° 들림 — 주인을 따라감) 이 커지며 시위가 반 → 끝까지 당겨지고 빛의 화살이 걸림.
+        // 사진첩: 세운 활은 1인칭 · 3인칭 모두 뒤에서 보아 활대 옆선 한 줄로만 보였음 → 눕혀 위에서 내려다보면 휜 활대 · 당긴 시위 · 화살이 다 보임
+        double pitch = Math.toRadians(20);
+        int bowId = JobFx3d.spawn(level0, "light_bow", new Vec3(0, bowY(sp), BOW_AHEAD), j, Opt.of("follow", (double) sp.getId(), "dir", new Vec3(1, 0, 0),
+                "face", new Vec3(0, Math.sin(pitch), Math.cos(pitch)), "scale", 1.1, "grow", 0.35, "life", draw / 20.0 + 0.4, "anim", "draw", "animSpeed", 20.0 / Math
+                        .max(4, draw), "pop", 0.25, "fadeOut", 0.3, "glowAlpha", 0.5, "shine", 0.3));
         JobFx3d.guard(sp, life, new int[] {bowId}, draw + 8);
         RuneKit.later(draw, () -> mmorpg.fabric.Fx3d.anim(sp.level(), bowId, "loose", false, sp.position())); // 놓음: 시위가 돌아오며 떨림
         // 시위를 당김: 둘레에서 빛이 모여 듦 (활은 입체)
@@ -307,8 +316,8 @@ final class ArcherSkills {
                 ServerLevel level = sp.level();
                 double q = (tt + 2.0) / draw;
                 Vec3 look = sp.getViewVector(1F);
-                // 눈앞 2.3칸 — 시위를 당길수록 커져 화면을 채움 (1인칭) · 3인칭에서는 몸 앞
-                Vec3 at = V.add(V.add(sp.getEyePosition(), look, 2.3), JobFx.screenUp(look), -0.1);
+                // 활 자리 (가슴 앞 2.2칸) 로 양옆 위에서 빛이 모여 듦
+                Vec3 at = V.up(V.add(sp.position(), Kit.facingOf(sp), BOW_AHEAD), bowY(sp));
                 for (int sd : new int[] {-1, 1}) {
                     Vec3 a = V.add(V.add(at, V.rightOf(V.flat(look)), sd * (2.4 - q * 1.6)), V.UP, 1.2 - q);
                     SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.unit(V.sub(at, a)), "speed", 4.0, "size", 0.16, "grow", 0.5, "life", 0.25, "color", core,
@@ -335,7 +344,7 @@ final class ArcherSkills {
         int n = Math.max(1, (int) k.num("afterimages", 20));
         int burstDelay = (int) k.num("burstDelay", 12);
         // 놓은 활 (번쩍) · 거대한 빛의 화살 · 지나가는 길의 굵은 광선 (1인칭에서는 눈 가까이를 뺌) · 번쩍임 · 흔들림
-        Vec3 bowAt = V.add(V.add(sp.getEyePosition(), look, 2.3), JobFx.screenUp(look), -0.1);
+        Vec3 bowAt = V.up(V.add(sp.position(), Kit.facingOf(sp), BOW_AHEAD), bowY(sp));
         JobFx.burst(level, bowAt, 0.9, j, 0.25, Opt.of("alpha", 0.8)); // 0.47.0 놓은 활 (입체 — loose) 의 번쩍
         JobFx.arrow(level, V.add(from, look, 1.6), end, j, speed, 2.4, Opt.empty());
         // 광선은 활을 든 손에서 (1인칭: 오른쪽 아래에서 과녁 쪽으로 뻗는 줄로 보임 — 눈에서 곧장 나가면 점으로만 보임)

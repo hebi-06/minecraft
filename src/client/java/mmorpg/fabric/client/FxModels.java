@@ -199,6 +199,10 @@ public final class FxModels {
         double[] moveTo;
         double moveStart = -1;
         float moveDur;
+        /** 옮기는 빠르기 (Fx3d ease — 0 = 고르게 · 3 = 부드럽게 시작해 멈춤) */
+        int moveEase = 3;
+        /** 시험: 지난 그림의 세계 자리 (쥔 곳) · 모델 +Y */
+        double[] probe;
         /** 0.47.0 움직임을 바꾼 때 (태어난 뒤 초 — F_ANIM) */
         float animT0;
     }
@@ -243,12 +247,14 @@ public final class FxModels {
             double t = now();
             for (Inst i : LIVE) {
                 if (i.id != p.id()) continue;
+                // 지금 그려지는 자리에서 떠남 (옮기는 중이면 그 길 위 — 0.47.0 사진첩: 잇따라 옮기면 처음 자리에서 다시 떠나 구체 · 방패가 손에 머물렀음)
                 float[] pos = new float[6];
-                localPos(i, (t - i.born) / 20.0 - i.v[41], pos);
+                posAt(i, t, pos);
                 i.moveFrom = new double[] {pos[0], pos[1], pos[2]};
                 i.moveTo = new double[] {p.x(), p.y(), p.z()};
                 i.moveStart = t;
                 i.moveDur = Math.max(0.01F, p.v()[21]);
+                i.moveEase = (int) p.v()[22];
                 moved++;
             }
             return;
@@ -273,6 +279,12 @@ public final class FxModels {
 
     public static void clear() {
         LIVE.clear();
+    }
+
+    /** 시험: 번호 id 의 지난 그림의 세계 자리 (쥔 곳) · 모델 +Y {x, y, z, yx, yy, yz} — 아직 안 그렸으면 null */
+    public static double[] probe(int id) {
+        for (Inst i : LIVE) if (i.id == id && i.probe != null) return i.probe.clone();
+        return null;
     }
 
     /** 시험: 지금 떠 있는 모델 수 (이름이 null 이면 모두) */
@@ -401,6 +413,32 @@ public final class FxModels {
         out[5] = v[11] + v[14] * tf;
     }
 
+    /** now (틱) 의 자리 · 가는 쪽 (옮기는 중이면 옮기는 길 위 — 그릴 때 · 다음 옮기기의 떠나는 자리) */
+    static void posAt(Inst in, double now, float[] out) {
+        localPos(in, (now - in.born) / 20.0 - in.v[41], out);
+        if (in.moveStart < 0) return;
+        float k = Mth.clamp((float) ((now - in.moveStart) / 20.0 / in.moveDur), 0F, 1F);
+        float e = ease(in.moveEase, k);
+        out[3] = (float) (in.moveTo[0] - in.moveFrom[0]);
+        out[4] = (float) (in.moveTo[1] - in.moveFrom[1]);
+        out[5] = (float) (in.moveTo[2] - in.moveFrom[2]);
+        out[0] = (float) (in.moveFrom[0] + (in.moveTo[0] - in.moveFrom[0]) * e);
+        out[1] = (float) (in.moveFrom[1] + (in.moveTo[1] - in.moveFrom[1]) * e);
+        out[2] = (float) (in.moveFrom[2] + (in.moveTo[2] - in.moveFrom[2]) * e);
+    }
+
+    /** v 를 축 ax (단위) 둘레로 th 라디안 돌림 (로드리게스) */
+    private static void rotateAbout(Vector3f v, Vector3f ax, float th) {
+        if (v.lengthSquared() < 1e-10F) return;
+        float c = Mth.cos(th);
+        float s = Mth.sin(th);
+        float d = v.dot(ax);
+        float cx = ax.y * v.z - ax.z * v.y;
+        float cy = ax.z * v.x - ax.x * v.z;
+        float cz = ax.x * v.y - ax.y * v.x;
+        v.set(v.x * c + cx * s + ax.x * d * (1 - c), v.y * c + cy * s + ax.y * d * (1 - c), v.z * c + cz * s + ax.z * d * (1 - c));
+    }
+
     /** LevelRenderer.submitEntities 끝: 떠 있는 모델을 모두 그림 (카메라 기준 자리) */
     public static void submitWorld(PoseStack ps, SubmitNodeCollector collector) {
         if (LIVE.isEmpty()) {
@@ -471,19 +509,9 @@ public final class FxModels {
             }
             float tf = (float) t;
             float tn = Mth.clamp(tf / Math.max(0.01F, life), 0F, 1F);
-            // 자리 (주인 기준이면 [오른쪽, 위, 앞]) · 가는 쪽
+            // 자리 (주인 기준이면 [오른쪽, 위, 앞]) · 가는 쪽 (옮기는 중이면 그 길 위)
             float[] lp = new float[6];
-            localPos(in, t, lp);
-            if (in.moveStart >= 0) {
-                float k = Mth.clamp((float) ((now - in.moveStart) / 20.0 / in.moveDur), 0F, 1F);
-                float e = k * k * (3 - 2 * k);
-                lp[3] = (float) (in.moveTo[0] - in.moveFrom[0]);
-                lp[4] = (float) (in.moveTo[1] - in.moveFrom[1]);
-                lp[5] = (float) (in.moveTo[2] - in.moveFrom[2]);
-                lp[0] = (float) (in.moveFrom[0] + (in.moveTo[0] - in.moveFrom[0]) * e);
-                lp[1] = (float) (in.moveFrom[1] + (in.moveTo[1] - in.moveFrom[1]) * e);
-                lp[2] = (float) (in.moveFrom[2] + (in.moveTo[2] - in.moveFrom[2]) * e);
-            }
+            posAt(in, now, lp);
             float lx = lp[0];
             float ly = lp[1];
             float lz = lp[2];
@@ -496,6 +524,16 @@ public final class FxModels {
             Vector3f dir = new Vector3f(v[0], v[1], v[2]);
             Vector3f face = new Vector3f(v[3], v[4], v[5]);
             Vector3f tan = new Vector3f(gx, gy, gz);
+            // 휘두름: dir · face 를 축 둘레로 (주인 기준이면 그 틀에서 — 세계로 옮기기 전)
+            if (v[52] > 0) {
+                Vector3f ax = new Vector3f(v[48], v[49], v[50]);
+                if (ax.lengthSquared() > 1e-8F) {
+                    ax.normalize();
+                    float th = v[51] * ease((int) v[53], tf / v[52]) * Mth.DEG_TO_RAD;
+                    rotateAbout(dir, ax, th);
+                    rotateAbout(face, ax, th);
+                }
+            }
             if ((in.flags & Fx3d.F_FOLLOW) != 0) {
                 Entity o = level.getEntity(in.owner);
                 if (o != null && !o.isRemoved()) {
@@ -526,6 +564,13 @@ public final class FxModels {
             Vector3f Y = ((in.flags & Fx3d.F_ALIGN) != 0 && tan.lengthSquared() > 1e-6F) ? new Vector3f(tan) : new Vector3f(dir);
             if (Y.lengthSquared() < 1e-8F) Y.set(0, 1, 0);
             Y.normalize();
+            if (in.probe == null) in.probe = new double[6];
+            in.probe[0] = wx;
+            in.probe[1] = wy;
+            in.probe[2] = wz;
+            in.probe[3] = Y.x;
+            in.probe[4] = Y.y;
+            in.probe[5] = Y.z;
             Vector3f Z;
             if ((in.flags & Fx3d.F_FACE_CAM) != 0) Z = new Vector3f((float) -dx, (float) -dy, (float) -dz);
             else if (face.lengthSquared() > 1e-6F) Z = new Vector3f(face);
@@ -558,6 +603,8 @@ public final class FxModels {
             if (v[30] > 0) a *= Mth.clamp((life - tf) / v[30], 0F, 1F);
             if (a <= 0.004F || s <= 0.001F) continue;
             M.identity().translate((float) dx, (float) dy, (float) dz).mul(new Matrix4f().set(R)).scale(s);
+            // 쥔 곳 (모델 칸): 이 점이 자리에 놓이고 이 점을 중심으로 돎
+            if (v[54] != 0 || v[55] != 0 || v[56] != 0) M.translate(-v[54], -v[55], -v[56]);
             // 재질 색
             float cr = v[31];
             float cg = v[32];

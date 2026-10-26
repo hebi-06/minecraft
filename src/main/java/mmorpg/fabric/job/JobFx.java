@@ -586,7 +586,9 @@ final class JobFx {
             double scale = size * 2.67 / JobFx3d.MAUL_LEN;
             Vec3 head = V.up(at, -(size * 2.67 / 2) + 0.3 * scale);
             Vec3 vel = o.has("speed") ? V.scale(o.vec("dir", V.DOWN), o.num("speed", 0)) : null;
-            JobFx3d.spawn(level, "maul", head, j, JobFx3d.carry(o).with("dir", V.DOWN, "faceCam", 1.0, "scale", scale, "life", life, "vel", vel, "grow", o.numOrNull("grow"),
+            // lean: 머리 쪽 (+Y) — 자루가 비스듬히 솟게 (1인칭 앞에 떨어지는 망치의 자루가 화면 가운데를 가리지 않게)
+            JobFx3d.spawn(level, "maul", head, j, JobFx3d.carry(o).with("dir", o.vec("lean", V.DOWN), "faceCam", 1.0, "scale", scale, "life", life, "vel", vel, "grow", o
+                    .numOrNull("grow"),
                     "fadeOut", Math.min(life, o.num("fade", 0.2) * life + 0.05), "glowAlpha", 0.55, "shine", 0.35));
             o = o.with("alpha", o.num("alpha", 1) * 0.45, "coreAlpha", o.num("alpha", 1) * 0.4);
         }

@@ -241,7 +241,7 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
         ctx.waitTicks(16);
         ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_orbit_later").withSize(1280, 720));
         ctx.runOnClient(mc -> FxModels.clear());
-        // 쫓아가는 구체 (move): 왼쪽에서 오른쪽 앞으로 옮김
+        // 쫓아가는 구체 (move): 왼쪽에서 오른쪽 앞으로 옮김 → 옮기는 중에 다시 옮김 (0.47.0 사진첩: 잇따라 옮기면 처음 자리에서 다시 떠났음 — 지금 자리에서 떠나야 함)
         int moved0 = ctx.computeOnClient(mc -> FxModels.moved);
         int[] orb = new int[1];
         server.runOnServer(s -> orb[0] = Fx3d.spawn(s.overworld(), "arcane_orb", new Vec3(-2.0, eye, -3.5), Opt.of("life", 3.0, "color", SKY, "glow", SKY_CORE,
@@ -251,7 +251,41 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
         server.runOnServer(s -> Fx3d.move(s.overworld(), orb[0], new Vec3(2.5, eye + 0.4, -4.5), 0.5));
         ctx.waitTicks(14);
         ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_move_1").withSize(1280, 720));
-        check(ctx.computeOnClient(mc -> FxModels.moved) - moved0 == 1, "moved " + (ctx.computeOnClient(mc -> FxModels.moved) - moved0));
+        server.runOnServer(s -> Fx3d.move(s.overworld(), orb[0], new Vec3(0.5, eye + 1.2, -5.5), 0.3, null));
+        ctx.waitTicks(3);
+        double[] mid = ctx.computeOnClient(mc -> FxModels.probe(orb[0]));
+        check(mid != null && mid[0] > 0.0, "chained move starts from where it is " + (mid == null ? "null" : String.format(java.util.Locale.ROOT, "x %.2f", mid[0])));
+        ctx.waitTicks(10);
+        double[] end = ctx.computeOnClient(mc -> FxModels.probe(orb[0]));
+        check(end != null && Math.abs(end[0] - 0.5) < 0.08 && Math.abs(end[1] - (eye + 1.2)) < 0.08 && Math.abs(end[2] + 5.5) < 0.08, "chained move ends at the new place "
+                + (end == null ? "null" : String.format(java.util.Locale.ROOT, "%.2f %.2f %.2f", end[0], end[1], end[2])));
+        check(ctx.computeOnClient(mc -> FxModels.moved) - moved0 == 2, "moved " + (ctx.computeOnClient(mc -> FxModels.moved) - moved0));
+        ctx.runOnClient(mc -> FxModels.clear());
+        // 휘두름 (arc · grip): 머리 위 왼쪽에서 자루 끝을 쥐고 뒤 (카메라 쪽) 로 젖혔다가 앞 아래로 150° 내리치는 도끼 (넓은 면이 카메라 쪽) · 왼쪽 위에서 오른쪽으로
+        // 휘두르는 검 (끝 보석 위를 쥠). 사람은 북쪽 (−z) 을 봄
+        int[] swung = new int[2];
+        server.runOnServer(s -> {
+            ServerLevel level = s.overworld();
+            swung[0] = Fx3d.spawn(level, "phantom_axe", new Vec3(-1.2, eye + 1.4, -2.0), Opt.of("dir", new Vec3(0, 0.82, 0.57), "arcAxis", new Vec3(1, 0, 0), "arc",
+                    -150.0, "arcTime", 0.35, "arcEase", "in", "grip", new Vec3(0, -0.66, 0), "faceCam", 1.0, "life", 1.6, "color", JOB_COLORS[0][0], "glow",
+                    JOB_COLORS[0][1], "scale", 1.6, "shine", 0.3));
+            swung[1] = Fx3d.spawn(level, "phantom_sword", new Vec3(1.8, eye - 0.8, -3.5), Opt.of("dir", new Vec3(-0.42, 0.9, 0), "arcAxis", new Vec3(0, 0, 1), "arc",
+                    -130.0, "arcTime", 0.3, "arcEase", "out", "grip", new Vec3(0, -0.3, 0), "faceCam", 1.0, "life", 1.6, "color", JOB_COLORS[1][0], "glow",
+                    JOB_COLORS[1][1], "scale", 1.5, "shine", 0.3));
+        });
+        ctx.waitTicks(6);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_swing_0").withSize(1280, 720));
+        ctx.waitTicks(10);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_swing_1").withSize(1280, 720));
+        double[] axe = ctx.computeOnClient(mc -> FxModels.probe(swung[0]));
+        // (0, 0.82, 0.57) — +y 에서 +z 쪽 34.8° — 를 +X 축 둘레로 −150° → −115.2°: +Y = (0, cos, sin) ≈ (0, −0.43, −0.90) (앞 = 북쪽 아래), 쥔 곳은 그대로
+        check(axe != null && axe[4] < -0.3 && axe[4] > -0.55 && axe[5] < -0.8 && Math.abs(axe[0] + 1.2) < 0.02 && Math.abs(axe[1] - (eye + 1.4)) < 0.02,
+                "axe swung down around the grip " + (axe == null ? "null" : String.format(java.util.Locale.ROOT, "at %.2f %.2f %.2f · +Y %.2f %.2f %.2f", axe[0], axe[1],
+                        axe[2], axe[3], axe[4], axe[5])));
+        double[] sword = ctx.computeOnClient(mc -> FxModels.probe(swung[1]));
+        // (−0.42, 0.9) — +x 에서 115° — 를 +Z 축 둘레로 −130° → −15°: +Y ≈ (0.97, −0.26, 0) (오른쪽 = 동쪽, 조금 아래)
+        check(sword != null && sword[3] > 0.9 && sword[4] < 0 && sword[4] > -0.45, "sword swung right " + (sword == null ? "null" : String.format(java.util.Locale.ROOT,
+                "+Y %.2f %.2f %.2f", sword[3], sword[4], sword[5])));
         ctx.runOnClient(mc -> FxModels.clear());
         // 명계의 문 (열림 → 소용돌이 되풀이 → 닫힘) · 땅에서 솟는 손 다섯 (움켜쥠) · 떨어지는 대망치 · 흔들리는 종
         int sw0 = ctx.computeOnClient(mc -> FxModels.animSwitched);

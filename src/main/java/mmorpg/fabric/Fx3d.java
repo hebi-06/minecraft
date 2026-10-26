@@ -21,7 +21,8 @@ import net.minecraft.world.phys.Vec3;
  * pop (초 — 튀어나오듯 커짐) · shrink (초 — 끝에서 작아짐). 빛 — alpha · fadeIn · fadeOut (초), color (빛깔) · glow (속빛 · 빛 무리) · glowAlpha · shine (몸에
  * 더하는 빛). 그 밖 — life (초), delay (초 — 그만큼 늦게 나타남), anim · animSpeed · animPhase · loop (모델의 움직임), view (1 = 주인이 1인칭이면 숨김 ·
  * 2 = 주인의 1인칭에만) · owner. 0.47.0 도는 길 — orbit (반지름 — at · follow 기준이 가운데) · orbitSpeed (도/초) · orbitAngle · bob · bobHz · orbitGrow,
- * 옮기기 move (쫓아가는 구체 — 지금 자리에서 새 자리로), 움직임 바꾸기 anim (문이 열림 → 소용돌이 → 닫힘).
+ * 옮기기 move (쫓아가는 구체 — 지금 자리에서 새 자리로), 움직임 바꾸기 anim (문이 열림 → 소용돌이 → 닫힘), 휘두름 arc · arcAxis · arcTime · arcEase (dir · face 를
+ * 세계 축 둘레로 돌림 — 내리치는 도끼 · 휘두르는 거대한 검, faceCam 과 같이 쓰면 넓은 면이 늘 보임), 쥔 곳 grip (모델 칸 — 이 점을 중심으로 돎).
  */
 public final class Fx3d {
     private Fx3d() {}
@@ -63,7 +64,17 @@ public final class Fx3d {
     static final int BOB = 45;
     static final int BOB_HZ = 46;
     static final int ORBIT_GROW = 47;
-    public static final int VALUES = 48;
+    /**
+     * 0.47.0 휘두름 (arc — 사진첩: 앞으로 내리치는 칼 · 도끼가 1 · 3인칭 모두 칼날의 옆선으로만 보였음): dir · face 를 arcAxis 둘레로 arcTime 초에 arc 도 (arcEase)
+     * 돌림 — 세계 (follow 면 주인 기준) 축이라 보는 사람마다 같은 자리를 지남, faceCam 과 같이 쓰면 넓은 면이 늘 보는 사람 쪽
+     */
+    static final int ARC_AXIS = 48;
+    static final int ARC_DEG = 51;
+    static final int ARC_TIME = 52;
+    static final int ARC_EASE = 53;
+    /** 0.47.0 쥔 곳 (grip — 모델 칸): 이 점이 at 에 놓이고 이 점을 중심으로 돎 (칼 · 도끼를 자루 끝을 쥐고 휘두름 — 0 이면 모델의 가운데) */
+    static final int GRIP = 54;
+    public static final int VALUES = 57;
 
     // 표시 (Payload.flags)
     public static final int F_FOLLOW = 1;
@@ -209,6 +220,14 @@ public final class Fx3d {
         // 위아래 흔들림 (떠 있는 책 · 구체 · 종 — 도는 길이 아니어도)
         v[BOB] = (float) o.num("bob", 0);
         v[BOB_HZ] = (float) o.num("bobHz", 1);
+        // 휘두름 (arcAxis 둘레로 arc 도 — arcTime 초) · 쥔 곳
+        if (o.has("arc")) {
+            put(v, ARC_AXIS, o.vec("arcAxis", new Vec3(0, 1, 0)));
+            v[ARC_DEG] = (float) o.num("arc", 0);
+            v[ARC_TIME] = (float) Math.max(0.01, o.num("arcTime", life));
+            v[ARC_EASE] = ease(o.str("arcEase", null));
+        }
+        put(v, GRIP, o.vec("grip", Vec3.ZERO));
         int flags = 0;
         if (orbit) flags |= F_ORBIT;
         int owner = (int) o.num("owner", o.num("follow", 0));
@@ -232,11 +251,20 @@ public final class Fx3d {
         return id;
     }
 
-    /** 띄운 모델을 지금 자리에서 to 로 seconds 초에 옮김 (곧게 · 처음 자리 움직임 대신) */
+    /** 띄운 모델을 지금 자리에서 to 로 seconds 초에 옮김 (곧게 · 처음 자리 움직임 대신 — 부드럽게 시작해 부드럽게 멈춤) */
     public static void move(ServerLevel level, int id, Vec3 to, double seconds) {
+        move(level, id, to, seconds, "inout");
+    }
+
+    /**
+     * 옮기기 (ease — null 이면 고른 빠르기: 쫓아가는 구체 · 튕기는 방패처럼 잇따라 옮길 때). 0.47.0 사진첩: 잇따라 옮기면 처음 자리에서 다시 떠나던 것을 고침 — 지금 그려지는
+     * 자리 (옮기는 중이면 그 길 위) 에서 떠남
+     */
+    public static void move(ServerLevel level, int id, Vec3 to, double seconds, String ease) {
         if (level == null || id == 0) return;
         float[] v = new float[VALUES];
         v[TRAVEL] = (float) Math.max(0.01, seconds);
+        v[EASE] = ease(ease);
         send(level, to, new Payload(id, "", "", to.x, to.y, to.z, 0, F_MOVE, v));
     }
 

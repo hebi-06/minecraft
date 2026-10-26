@@ -372,16 +372,18 @@ final class SpellbladeSkills {
         Vec3 f = Kit.facingOf(sp);
         Vec3 right = V.rightOf(f);
         Vec3 eye = sp.getEyePosition();
-        Vec3 hilt = V.up(V.add(sp.position(), f, 1.8), 0.6);
+        // 0.47.0 사진첩: 코등이를 축으로 돌던 검은 손잡이가 1인칭 눈앞을 가렸음 → 끝 보석 바로 위를 쥐고 (몸 앞 2.2칸 · 낮게) 돎
+        Vec3 pommel = V.up(V.add(sp.position(), f, 2.2), 0.25);
         // 베는 면의 두 축: 가로 = (위 → 오른쪽), 세로 = (위 → 앞), 대각 = (위 → 오른쪽 아래 비스듬히)
         Vec3 sweep = switch (i % 3) {
             case 0 -> right;
             case 1 -> f;
             default -> V.unit(V.add(right, f, 0.6));
         };
-        // 0.47.0 입체: 거대한 검이 위에서 sweep 쪽으로 휘둘러짐 (−25° → 105°, 4틱) → 다시 세워 들고 다음 베기까지 (주인을 따라감)
+        // 0.47.0 입체: 거대한 검이 위에서 sweep 쪽으로 휘둘러짐 (−25° → 105°, 4틱 — 처음에 빠르게, 넓은 면이 보는 사람 쪽) → 다시 세워 들고 다음 베기까지 (주인을 따라감)
         Vec3 sw = V.unit(V.sub(sweep, V.scale(V.UP, V.dot(sweep, V.UP))));
-        JobFx3d.swing(level, "phantom_sword", hilt, V.UP, sw, -25, 105, 0.2, 0.12, 3.4, j, Opt.of("shine", 0.45, "glowAlpha", 0.6));
+        JobFx3d.swing(level, "phantom_sword", pommel, V.UP, sw, -25, 105, 0.2, 0.14, 3.4, JobFx3d.SWORD_GRIP, j, Opt.of("shine", 0.45, "glowAlpha", 0.6, "arcEase",
+                "out"));
         RuneKit.later(5, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(0, 0.4, 2.6), j, Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, 1), "scale",

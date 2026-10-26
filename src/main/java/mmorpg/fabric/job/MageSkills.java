@@ -198,7 +198,7 @@ final class MageSkills {
                     pos[0] = V.add(pos[0], V.scale(d, 1 / Math.max(1e-6, len)), step);
                     travelled[0] += step;
                 }
-                if (tt % 3 == 0) mmorpg.fabric.Fx3d.move(sp.level(), orbId, pos[0], 0.15);
+                if (tt % 3 == 0) mmorpg.fabric.Fx3d.move(sp.level(), orbId, pos[0], 0.15, null); // 고른 빠르기 (잇따라 옮김)
                 if (tt % 2 == 0) JobFx.orb(sp.level(), pos[0], 0.36, j, 0.14, Opt.of("fade", 0.1, "flat", 1.0, "alpha", 0.55, "coreAlpha", 0.45));
                 if (tt % 6 == 0) SkillFx.fx(sp.level(), "rpg:arrow_spark", pos[0], Opt.of("dir", V.unit(new Vec3(Kit.rand() - 0.5, 0.6, Kit.rand() - 0.5)), "speed", 1.5,
                         "size", 0.12, "grow", 0.6, "life", 0.35, "color", core, "alpha", 1.0));

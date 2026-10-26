@@ -171,29 +171,37 @@ final class JobFx3d {
 
     // ------------------------------------------------------------ 휘두름
 
+    /** 쥔 곳 (모델 칸 — 이 점을 중심으로 휘두름): 환영 검은 끝 보석 바로 위 · 환영 도끼는 자루 끝 */
+    static final Vec3 SWORD_GRIP = new Vec3(0, -0.3, 0);
+    static final Vec3 AXE_GRIP = new Vec3(0, -0.66, 0);
+    /** 환영 도끼: 쥔 곳에서 머리 가운데까지 (모델 칸) */
+    static final double AXE_REACH = 1.1;
+
     /**
-     * 휘두름: pivot (손잡이) 에서 up 쪽으로 선 모델 (+Y) 을 up → sweep 평면에서 a0 → a1 도 (0 = up, 90 = sweep) 로 secs 초에 돌리고 (sweep 쪽으로 — 날이 앞서게),
-     * 끝 각에서 hold 초 머무름 (흐려지며). up · sweep 은 서로 수직인 단위. 번호 {휘두르는 것, 머무는 것}
+     * 휘두름: 쥔 곳 (grip — 모델 칸) 을 pivot 에 두고 모델 +Y 를 up → sweep 평면에서 a0 → a1 도 (0 = up, 90 = sweep) 로 secs 초에 돌리고 (arcEase — 기본
+     * "in": 처음엔 천천히, 끝에서 빠르게 — 무겁게 내리침), 끝 각에서 hold 초 머무름 (흐려지며). up · sweep 은 서로 수직인 단위. 번호.
+     * <p>
+     * 0.47.0 사진첩: 몸 앞으로 내리치는 칼 · 도끼는 휘두르는 면이 보는 쪽을 품어 1 · 3인칭 모두 칼날의 옆선으로만 보였고, 자루 가운데를 축으로 돌아 자루 끝이 1인칭 눈앞을
+     * 가렸음 → 자루 끝을 쥐고 돌며 넓은 면이 늘 보는 사람 쪽 (faceCam — 0 이면 날 (+X) 이 앞서는 실제 방향)
      */
-    static int[] swing(ServerLevel level, String model, Vec3 pivot, Vec3 up, Vec3 sweep, double a0, double a1, double secs, double hold, double scale, Jobs.Job j,
-            Opt o) {
-        Vec3 axis = V.unit(V.cross(sweep, up)); // 모델 +Z (넓은 면) — 이 축 둘레로 돌면 +Y 가 up → sweep 쪽으로 감
+    static int swing(ServerLevel level, String model, Vec3 pivot, Vec3 up, Vec3 sweep, double a0, double a1, double secs, double hold, double scale, Vec3 grip,
+            Jobs.Job j, Opt o) {
+        Vec3 axis = V.unit(V.cross(up, sweep)); // 이 축 둘레로 + 돌리면 up → sweep
         double r0 = Math.toRadians(a0);
-        double r1 = Math.toRadians(a1);
         Vec3 d0 = V.add(V.scale(up, Math.cos(r0)), sweep, Math.sin(r0));
-        Vec3 d1 = V.add(V.scale(up, Math.cos(r1)), sweep, Math.sin(r1));
         double t = Math.max(0.05, secs);
-        Opt b = carry(o).with("scale", scale, "glowAlpha", o.num("glowAlpha", 0.5), "shine", o.num("shine", 0.25));
-        int a = spawn(level, model, pivot, j, b.with("dir", d0, "face", axis, "spin", -(a1 - a0) / t, "spinAxis", "z", "life", t, "fadeOut", 0.0, "fadeIn", 0.03));
-        int h = hold > 0 ? spawn(level, model, pivot, j, b.with("dir", d1, "face", axis, "life", hold, "fadeOut", hold * 0.8, "delay", t)) : 0;
-        return new int[] {a, h};
+        double h = Math.max(0, hold);
+        return spawn(level, model, pivot, j, carry(o).with("dir", d0, "face", V.unit(V.cross(sweep, up)), "arcAxis", axis, "arc", a1 - a0, "arcTime", t, "arcEase", o.str(
+                "arcEase", "in"), "grip", grip, "faceCam", o.num("faceCam", 1), "scale", scale, "life", t + h, "fadeIn", 0.03, "fadeOut", Math.max(0.05, h * 0.8), "pop",
+                o.numOrNull("pop"), "glowAlpha", o.num("glowAlpha", 0.5), "shine", o.num("shine", 0.25)));
     }
 
     // ------------------------------------------------------------ 둘레를 도는 것
 
     /**
      * 주인 둘레를 도는 모델 n 개 (follow + orbit — 주인 기준 [오른쪽, 위, 앞] 칸의 center 둘레 반지름 radius, rate 도/초): radial 이면 모델 +Y 가 바깥 (도끼 ·
-     * 칼끝이 바깥으로 — 주인 기준 둘레는 세계에서 거울이라 돌림 = +rate), 아니면 가는 쪽 (align). 번호들
+     * 칼끝이 바깥으로 — 둘레의 각을 따라 같은 틀에서 돌림 (arc = −rate × 수명: 로드리게스 + 돌림은 각이 줄어드는 쪽) · 넓은 면은 보는 사람 쪽 (0.47.0 사진첩: 날이 누운
+     * 도끼는 3인칭에서 납작한 판으로 보였음)), 아니면 가는 쪽 (align). 번호들
      */
     static int[] orbitOwner(ServerPlayer sp, String model, int n, Vec3 center, double radius, double rate, boolean radial, double life, double scale, Jobs.Job j,
             Opt o) {
@@ -204,7 +212,8 @@ final class JobFx3d {
             Opt b = carry(o).with("follow", (double) sp.getId(), "orbit", radius, "orbitSpeed", rate, "orbitAngle", ang, "life", life, "scale", scale, "fadeIn",
                     o.num("fadeIn", 0.15), "fadeOut", o.num("fadeOut", 0.2), "glowAlpha", o.num("glowAlpha", 0.45), "shine", o.num("shine", 0.2), "bob", o.num("bob", 0),
                     "bobHz", o.num("bobHz", 1));
-            if (radial) b = b.with("dir", new Vec3(Math.cos(rad), 0, Math.sin(rad)), "face", V.UP, "spin", rate, "spinAxis", "up");
+            if (radial) b = b.with("dir", new Vec3(Math.cos(rad), 0, Math.sin(rad)), "arcAxis", V.UP, "arc", -rate * life, "arcTime", life, "arcEase", "linear",
+                    "faceCam", o.num("faceCam", 1));
             else b = b.with("align", 1.0, "faceCam", o.num("faceCam", 1));
             ids[i] = spawn(sp.level(), model, center, j, b);
         }

@@ -256,7 +256,7 @@ final class GuardianSkills {
     /** 0.47.0 입체 방패를 from → to 로 옮김 (speed 칸/초): 닿는 틱 */
     private static int shieldTo(ServerLevel level, int id, Vec3 from, Vec3 to, double speed) {
         double secs = Math.max(0.05, V.len(V.sub(to, from)) / Math.max(1, speed));
-        mmorpg.fabric.Fx3d.move(level, id, to, secs);
+        mmorpg.fabric.Fx3d.move(level, id, to, secs, null); // 고른 빠르기 (적에서 적으로 잇따라 — 지금 그려지는 자리에서 떠남)
         return Math.max(1, (int) Math.round(secs * 20));
     }
 

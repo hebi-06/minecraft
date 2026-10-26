@@ -78,10 +78,20 @@ final class WarriorSkills {
         RuneKit.Hand h = RuneKit.handOf(sp);
         // 들어 올림: 머리 위로 크게 그리는 반원 · 손의 불티 (분노를 쓰면 불꽃이 터짐 + 글자)
         JobFx.slash(sp, j, 1.9, -0.75, 1.15, 180.0, windup / 20.0 + 0.08);
-        // 0.47.0 입체: 몸 앞의 거대한 환영 도끼가 머리 위에서 앞 땅으로 내리찍힘 (날이 앞 — windup 틱 뒤 땅에 닿아 잠깐 박혀 있음)
+        // 0.47.0 입체: 머리 위의 거대한 환영 도끼가 자루 끝 (머리 위 오른쪽 — 1인칭에서 자루가 화면 가운데를 가리지 않게) 을 축으로 크게 돌아 앞 땅을 내리찍음 (windup 틱 뒤
+        // 머리가 내려찍는 자리에 닿아 잠깐 박혀 있음 · 넓은 면이 보는 사람 쪽). 사진첩: 몸 앞 자루 가운데를 축으로 돌던 도끼는 1인칭에서 자루가 화면을 세로로 가르고
+        // 3인칭에서는 날의 옆선으로만 보였음
         Vec3 f0 = V.flat(sp.getViewVector(1F));
-        JobFx3d.swing(level0, "phantom_axe", V.up(V.add(sp.position(), f0, 1.3), 1.15), V.UP, f0, -25, 100, windup / 20.0 + 0.04, 0.4, rage ? 2.8 : 2.5, j,
-                Opt.of("shine", rage ? 0.5 : 0.35, "glowAlpha", 0.55));
+        Vec3 r0 = V.rightOf(f0);
+        Vec3 grip = V.add(V.add(V.up(sp.position(), 2.6), f0, 0.6), r0, 0.85);
+        Vec3 head = V.add(V.add(V.up(sp.position(), 0.35), f0, k.num("ahead", 2.0) + 0.6), r0, 0.25);
+        Vec3 reach = V.sub(head, grip);
+        Vec3 sweep0 = V.flat(reach);
+        double horiz = Math.max(1e-3, Math.hypot(reach.x, reach.z));
+        double endDeg = Math.toDegrees(Math.atan2(horiz, reach.y));
+        double axeScale = V.len(reach) / JobFx3d.AXE_REACH * (rage ? 1.08 : 1.0);
+        JobFx3d.swing(level0, "phantom_axe", grip, V.UP, sweep0, -35, endDeg, windup / 20.0 + 0.04, 0.45, axeScale, JobFx3d.AXE_GRIP, j, Opt.of("shine", rage ? 0.5
+                : 0.35, "glowAlpha", 0.55, "pop", 0.1));
         SkillFx.fx(level0, "rpg:arrow_spark", V.up(h.hand(), 0.2), Opt.of("dir", V.UP, "speed", 2.4, "size", 0.14, "grow", 0.8, "life", 0.3, "color", JobKit.glow(j),
                 "alpha", 1.0));
         if (rage) {
@@ -369,15 +379,25 @@ final class WarriorSkills {
                 if (RuneKit.sameLife(sp, life)) leap(sp, j, k, P, ii, leapTicks, last, life);
             });
         }
-        // 0.47.0 입체: 대폭발 6틱 전 하늘에서 거대한 환영 도끼가 날부터 떨어져 마지막 착지 자리에 박힘
+        // 0.47.0 입체: 대폭발 6틱 전 오른쪽 위 하늘에서 거대한 환영 도끼가 비스듬히 날아와 앞 3칸 땅에 날부터 박힘 (자루가 오른쪽 위로 솟음 · 넓은 면이 앞뒤 — 1인칭에서
+        // 화면 가운데를 가리지 않고 1 · 3인칭 모두 도끼 모양이 보임). 사진첩: 몸 자리에 곧게 떨어진 도끼는 1인칭에서 자루만 화면을 세로로 가르고 3인칭에서는 몸을 꿰뚫는 기둥
         RuneKit.later(finalAt - 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel level = sp.level();
             Vec3 at = last[0];
-            double sc = 4.2;
-            Vec3 stick = V.up(at, 0.75 * sc * 0.45 + 0.1);
-            JobFx3d.spawn(sp.level(), "phantom_axe", V.up(stick, 14), j, Opt.of("to", stick, "ctrl", V.up(stick, 7), "travel", 0.3, "ease", "in", "dir", V.DOWN, "face",
-                    Kit.facingOf(sp), "scale", sc, "life", 0.85, "fadeIn", 0.05, "fadeOut", 0.35, "glowAlpha", 0.6, "shine", 0.5));
-            SkillFx.play(sp.level(), "item.trident.riptide_3", at, 0.6, 0.8);
+            Vec3 f = Kit.facingOf(sp);
+            Vec3 r = V.rightOf(f);
+            double sc = 4.0;
+            Vec3 g = V.add(at, f, 3.0);
+            Vec3 ground = new Vec3(g.x, RuneKit.groundAt(level, g, at.y), g.z);
+            // 모델 +Y (머리 쪽) = 왼쪽 아래 · +X (날) = 오른쪽 아래 · +Z = 앞 — 날 끝 가운데 (0.41, 0.45) 가 땅 0.5칸 아래
+            Vec3 y = V.unit(V.add(V.scale(V.DOWN, 0.8), r, -0.6));
+            Vec3 x = V.unit(V.add(V.scale(V.DOWN, 0.6), r, 0.8));
+            Vec3 stick = V.sub(V.up(ground, -0.5), V.add(V.scale(x, 0.41 * sc), y, 0.45 * sc));
+            Vec3 from = V.add(stick, y, -12);
+            JobFx3d.spawn(level, "phantom_axe", from, j, Opt.of("to", stick, "ctrl", V.lerp(from, stick, 0.5), "travel", 0.3, "ease", "in", "dir", y, "face", f, "scale",
+                    sc, "life", 0.85, "fadeIn", 0.05, "fadeOut", 0.35, "glowAlpha", 0.6, "shine", 0.5));
+            SkillFx.play(level, "item.trident.riptide_3", at, 0.6, 0.8);
         });
         RuneKit.later(finalAt, () -> {
             if (RuneKit.sameLife(sp, life)) finalBlast(sp, j, k, P, last[0], glow, core, life);

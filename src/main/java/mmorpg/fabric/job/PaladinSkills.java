@@ -355,7 +355,8 @@ final class PaladinSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 double size = ii == last ? 2.2 : 1.9;
                 double half = size * 2.67 / 2;
-                JobFx.maul(sp.level(), V.up(center, half + 10), size, j, 0.3, Opt.of("dir", V.DOWN, "speed", 10 / 0.3, "alpha", 0.95, "fade", 0.05));
+                JobFx.maul(sp.level(), V.up(center, half + 10), size, j, 0.3, Opt.of("dir", V.DOWN, "speed", 10 / 0.3, "alpha", 0.95, "fade", 0.05, "lean", maulLean(
+                        sp)));
                 SkillFx.play(sp.level(), "item.trident.thunder", center, 0.9 + ii * 0.1, 0.5);
             });
             RuneKit.later(at, () -> {
@@ -369,11 +370,19 @@ final class PaladinSkills {
         return true;
     }
 
+    /**
+     * 0.47.0 천뢰의 대망치의 기울기 (망치 머리 쪽 — 자루가 오른쪽 위로 22° 비스듬히 솟음): 사진첩에서 앞 3칸에 곧게 선 자루가 1인칭 화면 가운데를 세로로 갈랐음
+     */
+    private static Vec3 maulLean(ServerPlayer sp) {
+        double a = Math.toRadians(22);
+        return V.add(V.scale(V.DOWN, Math.cos(a)), V.rightOf(Kit.facingOf(sp)), -Math.sin(a));
+    }
+
     /** 대망치가 내리침: 망치 · 큰 벼락 · 둘레 벼락 · 번개 고리 · 땅의 금 · 1인칭 큰 베기 — 둘레 radius 칸 (mult — 마법) */
     private static void slam(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 center, double radius, double mult, int i, boolean fin, String life) {
         ServerLevel level = sp.level();
         double size = fin ? 2.2 : 1.9;
-        JobFx.maul(level, V.up(center, size * 2.67 / 2), size, j, 0.3, Opt.of("alpha", 0.9, "fade", 0.6, "grow", 0.1));
+        JobFx.maul(level, V.up(center, size * 2.67 / 2), size, j, 0.3, Opt.of("alpha", 0.9, "fade", 0.6, "grow", 0.1, "lean", maulLean(sp)));
         JobFx.thunder(level, center, fin ? 16 : 13, j, 0.5, Opt.empty());
         Vec3 me = sp.position();
         for (int b = 0; b < (fin ? 6 : 4); b++) {
