@@ -361,10 +361,12 @@ final class SpellbladeSkills {
             RuneKit.later(rise + i * gap, () -> {
                 if (RuneKit.sameLife(sp, life)) giantSlash(sp, j, P, slashes.get(ii), ii, range, half, glow, core, life, marked);
             });
+            JobKit.motionLater(sp, "spellblade_ult:slash" + (i % 3), rise + i * gap - 1, life); // 0.47.0 가로 · 세로 · 대각 베기 동작
         }
         RuneKit.later(thrustTick, () -> {
             if (RuneKit.sameLife(sp, life)) thrust(sp, j, k, P, range, glow, core, life);
         });
+        JobKit.motionLater(sp, "spellblade_ult:thrust", thrustTick - 4, life); // 0.47.0 당겼다가 깊게 찌르는 동작 (4틱 뒤 닿음)
         return true;
     }
 

@@ -561,4 +561,41 @@ public final class RpgMotionTests {
         }
         h.runAfterDelay(4 + cases.length * 8, () -> done(h, sp));
     }
+
+    /**
+     * 0.47.0 직업 스킬마다 그 스킬만의 동작 (jb_ — 사용자 "직업 스킬부터"): 파쇄격을 쓰면 jb_warrior_crush, 돌격은 jb_warrior_charge 로 달리다가 들이받은 뒤
+     * 내려찍는 틱에 서버가 단계 동작 (warrior_charge:slam → jb_warrior_charge_slam) 을 다시 보냄
+     */
+    @GameTest(environment = ENV, maxTicks = 80)
+    public void jobMotionsPerSkill(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h);
+        sp.setExperienceLevels(40);
+        RpgPlayers.update(sp, mmorpg.fabric.RpgData.of(sp).withLvmax(40));
+        RpgPlayers.setStat(sp, "str", 50);
+        hold(sp, Weapons.weaponFrom("axe", 0, "common"));
+        mmorpg.fabric.job.JobSystem.setJob(sp, "warrior");
+        h.runAfterDelay(2, () -> {
+            h.assertTrue("jb_warrior_crush".equals(Motions.skillMotion("warrior_crush")), "table " + Motions.skillMotion("warrior_crush"));
+            h.assertTrue(mmorpg.fabric.job.JobSkills.press(sp, 0), "crush cast");
+            h.assertTrue("jb_warrior_crush".equals(MotionSystem.lastSent(sp)), "crush motion " + MotionSystem.lastSent(sp));
+        });
+        h.runAfterDelay(24, () -> {
+            Vec3 at = h.absoluteVec(new Vec3(1.5, 2, 1.5));
+            sp.snapTo(at.x, at.y, at.z, 0F, 0F);
+            sp.setYHeadRot(0F);
+            dummy(h, 1.5, 2, 5.0);
+        });
+        h.runAfterDelay(26, () -> {
+            mmorpg.fabric.job.JobKit.PHASES.clear();
+            h.assertTrue(mmorpg.fabric.job.JobSkills.press(sp, 1), "charge cast");
+            h.assertTrue("jb_warrior_charge".equals(MotionSystem.lastSent(sp)), "charge motion " + MotionSystem.lastSent(sp));
+        });
+        h.runAfterDelay(46, () -> {
+            h.assertTrue(mmorpg.fabric.job.JobKit.PHASES.contains("warrior_charge:slam"), "charge slam phase " + mmorpg.fabric.job.JobKit.PHASES);
+            h.assertTrue("jb_warrior_charge_slam".equals(MotionSystem.lastSent(sp)), "charge slam motion " + MotionSystem.lastSent(sp));
+            mmorpg.fabric.job.JobSystem.setJob(sp, null);
+            done(h, sp);
+        });
+    }
 }

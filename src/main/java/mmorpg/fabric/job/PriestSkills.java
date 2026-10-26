@@ -275,6 +275,7 @@ final class PriestSkills {
             RuneKit.later(at, () -> {
                 if (RuneKit.sameLife(sp, life)) toll(sp, j, k, P, ground, bellAt, bell1p, r, ii, ii == rings - 1, life);
             });
+            JobKit.motionLater(sp, "priest_ult:toll", at - 4, life); // 0.47.0 홀을 들어 종을 치듯 내리치는 동작 (4틱 뒤 울림)
         }
         return true;
     }

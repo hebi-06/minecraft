@@ -144,4 +144,25 @@ public final class JobKit {
     public static void sound(ServerPlayer sp, String name, double pitch, double volume) {
         SkillFx.play(sp.level(), name, sp.position(), pitch, volume);
     }
+
+    /** 시험: 보낸 단계 동작 열쇠 (마지막 32개) */
+    public static final java.util.Deque<String> PHASES = new java.util.ArrayDeque<>();
+
+    /**
+     * 0.47.0 직업 스킬 동작의 단계 (스킬 id:단계 — rules_more MOTION.skills, tools/job_motions.py): 지금 그 단계 동작을 쓴 사람과 둘레에 보냄
+     * (궁극기의 물결 · 돌진 끝의 내려찍기 · 돌아온 방패를 받음 — 때가 바뀌거나 긴 스킬도 효과와 같은 틱에)
+     */
+    public static void motion(ServerPlayer sp, String key) {
+        if (sp == null || sp.isRemoved()) return;
+        mmorpg.fabric.motion.MotionSystem.skill(sp, key);
+        PHASES.addLast(key);
+        while (PHASES.size() > 32) PHASES.removeFirst();
+    }
+
+    /** 단계 동작을 ticks 틱 뒤에 (같은 목숨일 때만 — 0 이하면 지금) */
+    public static void motionLater(ServerPlayer sp, String key, int ticks, String life) {
+        RuneKit.later(Math.max(0, ticks), () -> {
+            if (RuneKit.sameLife(sp, life)) motion(sp, key);
+        });
+    }
 }

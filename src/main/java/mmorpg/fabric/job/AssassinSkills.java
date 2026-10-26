@@ -354,6 +354,7 @@ final class AssassinSkills {
             RuneKit.later(i * every, () -> {
                 if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) return;
                 blinkSlash(sp, j, e, ii);
+                if (ii > 0) JobKit.motion(sp, "assassin_ult:slash" + (ii % 2)); // 0.47.0 X 자 · 되돌려 긋기 (번갈아 — 첫 베기는 쓸 때의 동작)
             });
         }
         // 피해: 같은 적을 every × n 틱 간격으로 — 적이 하나면 두 베기를 한 번에 (숫자 두 줄, every 틱 간격)
@@ -384,7 +385,9 @@ final class AssassinSkills {
             RuneKit.shadeClone(sp, d, prev, Kit.facingOf(sp), 1, JobKit.core(j), glow, Opt.of("life", 0.45, "fade", 0.6, "alpha", 0.8));
             JobFx.smoke(d, V.up(home, 0.9), 0.9, j, 0.5, JobFx.hide1p(sp));
             SkillFx.play(d, "entity.enderman.teleport", home, 1.2, 0.6);
+            JobKit.motion(sp, "assassin_ult:home"); // 0.47.0 단검을 털고 거꾸로 쥐어 내리는 동작
         });
+        JobKit.motionLater(sp, "assassin_ult:final", finalAt - 3, life); // 0.47.0 단검을 허리로 탁 거두는 동작 (3틱 뒤 터짐)
         // 벤 자국이 한꺼번에 터짐
         RuneKit.later(finalAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;

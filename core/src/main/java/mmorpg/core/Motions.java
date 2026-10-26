@@ -20,7 +20,7 @@ public final class Motions {
 
     /**
      * 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인): BASE + 0.46.0 룬 동작 (rules_more MOTION.runeMotions — tools/rune_motions.py 가 poses.json 과 함께
-     * 씀, 이름은 rn_ 로 시작)
+     * 씀, 이름은 rn_ 로 시작) + 0.47.0 직업 스킬 동작 (MOTION.jobMotions — tools/job_motions.py, jb_)
      */
     public static final Set<String> KNOWN = known();
 
@@ -28,7 +28,7 @@ public final class Motions {
         java.util.Set<String> out = new java.util.LinkedHashSet<>(BASE);
         try {
             Obj c = Rules.get().obj("MOTION");
-            if (c.has("runeMotions")) for (Object o : c.list("runeMotions")) out.add(String.valueOf(o));
+            for (String key : List.of("runeMotions", "jobMotions")) if (c.has(key)) for (Object o : c.list(key)) out.add(String.valueOf(o));
         } catch (RuntimeException e) {
             // 규칙을 못 읽으면 BASE 만 (스킬 동작 없이 — 시험이 잡음)
         }
@@ -38,6 +38,11 @@ public final class Motions {
     /** 0.46.0 룬 동작 이름 (rn_ — 길이 상한이 평타보다 김) */
     public static boolean runeMotion(String name) {
         return name != null && name.startsWith("rn_");
+    }
+
+    /** 0.47.0 직업 스킬 동작 이름 (jb_ — 궁극기는 5초까지) */
+    public static boolean jobMotion(String name) {
+        return name != null && name.startsWith("jb_");
     }
 
     private static Obj cfg() {

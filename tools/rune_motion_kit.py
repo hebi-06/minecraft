@@ -11,15 +11,22 @@ import os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
 
-PREFIX = "rn_"
+PREFIX = "rn_"  # 0.47.0 도구마다 (룬 rn_ · 직업 스킬 jb_ — tools/job_motions.py 가 바꿈)
 MOTIONS = []  # 동작들 (정의 차례)
-TABLE = {}  # rune:fn (또는 rune:fn:등급) → 동작 이름
+TABLE = {}  # rune:fn (또는 rune:fn:등급) → 동작 이름 (직업 스킬은 스킬 id · id:단계)
 
 
 def use(motion, *keys):
     """이 동작을 룬 열쇠들 (fn 또는 fn:등급) 에"""
     for k in keys:
         TABLE["rune:" + k] = motion.name
+    return motion
+
+
+def use_skill(motion, *keys):
+    """0.47.0 이 동작을 스킬 열쇠들 (직업 스킬 id 또는 id:단계 — 서버가 그 단계에 다시 보냄) 에"""
+    for k in keys:
+        TABLE[k] = motion.name
     return motion
 
 
@@ -288,6 +295,8 @@ CUE = {
     "shoot": (0.3, 0.62, 0.85, 0.85),
     "shoot_up": (0.3, 0.62, 0.85, 0.85),
     "bash": (0.3, 0.5, 0.72, 0.72),
+    "cast": (0.28, 0.45, 0.8, 0.8),  # 0.47.0 직업 스킬 — 내밀기
+    "cast_up": (0.3, 0.5, 0.82, 0.82),
 }
 
 
@@ -410,31 +419,170 @@ def fp_mirror_x(p):
 FP_SPIN_OFF_R = dict(p=fp_mirror_x((-3.0, 0.25, 0.55)), blade=(0.5, 0.0, -0.85))  # 1인칭 회전: 화면 밖 오른쪽 뒤 (뒤쪽 반 바퀴 동안 여기에)
 
 
-def fp_spin_pass(m, tk):
-    """1인칭: tk 에 무기가 화면 가운데를 지나 왼쪽 → 오른쪽으로 쓸고 나감 (평타 회전 베기 spin 의 1인칭을 화면 거울로)"""
-    m.fp(tk - 3.0, fp_mirror_x((1.4, 0.25, 0.55)), None, (-0.5, 0.0, -0.85), None, "linear")  # 화면 밖 (왼쪽 뒤)
-    m.fp(tk - 2.1, fp_mirror_x((0.548, 0.394, 0.225)), None, (-0.807, 0.174, -0.565), (-0.565, 0, 0.807), "linear")
-    m.fp(tk - 0.6, fp_mirror_x((0.045, 0.409, 0.125)), None, (-0.637, 0.139, 0.759), (0.759, 0, 0.637), "in")
-    m.fp(tk + 0.6, fp_mirror_x((-1.085, 0.364, 0.075)), None, (0.936, 0.087, 0.341), (0.341, 0, -0.936), "linear")  # tk 에 화면 가운데
-    m.fp(tk + 1.6, fp_mirror_x((-2.028, 0.329, 0.225)), None, (0.766, 0, -0.643), (-0.643, 0, -0.766), "linear")
-    m.fp(tk + 2.4, FP_SPIN_OFF_R["p"], None, FP_SPIN_OFF_R["blade"], None, "linear")  # 화면 밖 (오른쪽 뒤)
+def _dp(p, dp):
+    return tuple(a + b for a, b in zip(p, dp)) if dp else p
 
 
-def spin_right(m, passes, end_tick, wind_tick=None, fwd=None):
-    """passes = 무기가 앞을 지나는 틱 (바퀴마다), end_tick = 마지막 바퀴가 느려지며 멈추는 틱 (무기는 오른쪽 앞), fwd = 도는 동안의 자세 (없으면 SPIN_FWD_R)"""
+def fp_spin_pass(m, tk, dp=None):
+    """1인칭: tk 에 무기가 화면 가운데를 지나 왼쪽 → 오른쪽으로 쓸고 나감 (평타 회전 베기 spin 의 1인칭을 화면 거울로). dp = 모두 더 옮김 (머리 위로 돌리면 위로)"""
+    m.fp(tk - 3.0, _dp(fp_mirror_x((1.4, 0.25, 0.55)), dp), None, (-0.5, 0.0, -0.85), None, "linear")  # 화면 밖 (왼쪽 뒤)
+    m.fp(tk - 2.1, _dp(fp_mirror_x((0.548, 0.394, 0.225)), dp), None, (-0.807, 0.174, -0.565), (-0.565, 0, 0.807), "linear")
+    m.fp(tk - 0.6, _dp(fp_mirror_x((0.045, 0.409, 0.125)), dp), None, (-0.637, 0.139, 0.759), (0.759, 0, 0.637), "in")
+    m.fp(tk + 0.6, _dp(fp_mirror_x((-1.085, 0.364, 0.075)), dp), None, (0.936, 0.087, 0.341), (0.341, 0, -0.936), "linear")  # tk 에 화면 가운데
+    m.fp(tk + 1.6, _dp(fp_mirror_x((-2.028, 0.329, 0.225)), dp), None, (0.766, 0, -0.643), (-0.643, 0, -0.766), "linear")
+    m.fp(tk + 2.4, _dp(FP_SPIN_OFF_R["p"], dp), None, FP_SPIN_OFF_R["blade"], None, "linear")  # 화면 밖 (오른쪽 뒤)
+
+
+def spin_right(m, passes, end_tick, wind_tick=None, fwd=None, spin0=0, fp_dp=None, end_pose=None):
+    """passes = 무기가 앞을 지나는 틱 (바퀴마다), end_tick = 마지막 바퀴가 느려지며 멈추는 틱 (무기는 오른쪽 앞), fwd = 도는 동안의 자세 (없으면 SPIN_FWD_R).
+    0.47.0 spin0 = 시작 각 (앞 회전에 이어서 — 360 의 배수), fp_dp = 1인칭 무기를 모두 더 옮김, end_pose = 멈춘 자세"""
     first = passes[0]
-    keyp(m, wind_tick if wind_tick is not None else max(0.3, first - 1.8), SPIN_WIND_R)
+    keyp(m, wind_tick if wind_tick is not None else max(0.3, first - 1.8), P(SPIN_WIND_R, spin=spin0) if spin0 else SPIN_WIND_R)
     for i, tk in enumerate(passes):
-        keyp(m, tk, P(fwd or SPIN_FWD_R, spin=-360 * i), "in" if i == 0 else "linear")
+        keyp(m, tk, P(fwd or SPIN_FWD_R, spin=spin0 - 360 * i), "in" if i == 0 else "linear")
     n = len(passes)
-    keyp(m, end_tick, P(SPIN_END_R, spin=-360 * n), "out")
-    m.keys[1.0] = {"spin": -360 * n}
-    m.set(tilt=30, trail=[[m.t(max(0.3, first - 1.2)), m.t(end_tick - 1)]])
+    keyp(m, end_tick, P(end_pose or SPIN_END_R, spin=spin0 - 360 * n), "out")
+    m.keys[1.0] = {"spin": spin0 - 360 * n}
+    tr = m.head.setdefault("trail", [])
+    tr.append([m.t(max(0.3, first - 1.2)), m.t(end_tick - 1)])
+    m.set(tilt=30)
     for i, tk in enumerate(passes):
         if i > 0:  # 뒤쪽 반 바퀴: 화면 밖 오른쪽에 머물다가 다음 바퀴 바로 전에 화면 밖 왼쪽으로 (화면을 거꾸로 가로지르지 않게)
-            m.fp(tk - 3.05, FP_SPIN_OFF_R["p"], None, FP_SPIN_OFF_R["blade"], None, "linear")
-        fp_spin_pass(m, tk)
+            m.fp(tk - 3.05, _dp(FP_SPIN_OFF_R["p"], fp_dp), None, FP_SPIN_OFF_R["blade"], None, "linear")
+        fp_spin_pass(m, tk, fp_dp)
     fpw(m, end_tick, FPW_LOW, "out")
+
+
+# 0.47.0 왼쪽으로 도는 회전 베기 (바로 베기 — 무기가 오른쪽에서 앞을 지나 왼쪽으로, 위에서 보아 반시계): 평타 회전 spin2 의 자세 · 1인칭 그대로
+SPIN_WIND_L = P(body=[6, 34, 0], ra=arm([0.55, 0.15, -0.65], 55, [-0.2, 0, -1]), la=arm([-0.35, -0.4, 0.7], 50), rk=26, lk=26, rl=[-6, 0, 0], ll=[8, 0, 0],
+                root=[-0.12, 0])  # 몸을 오른쪽으로 감고 무기를 오른쪽 뒤에
+SPIN_FWD_L = P(body=[8, -4, 0], ra=arm([1, 0.08, 0.12], 8, [0.25, 0, 1]), la=arm([-0.9, -0.25, -0.2], 30), rk=26, lk=26, rl=[-6, 0, 0], ll=[8, 0, 0],
+               root=[-0.12, 0])
+SPIN_END_L = P(body=[8, -20, 0], ra=arm([-0.4, 0.0, 0.85], 18, [-0.8, -0.1, 0.4]), la=arm([-0.6, -0.7, -0.2], 30), rk=20, lk=20, root=[-0.08, 0])
+FP_SPIN_OFF_L = dict(p=(-3.0, 0.25, 0.55), blade=(-0.5, 0.0, -0.85))  # 1인칭 왼쪽 회전: 화면 밖 왼쪽 뒤
+
+
+def fp_spin_pass_left(m, tk, dp=None):
+    """1인칭: tk 에 무기가 화면 가운데를 지나 오른쪽 → 왼쪽으로 쓸고 나감 (평타 회전 spin2 의 1인칭 그대로)"""
+    m.fp(tk - 3.0, _dp((1.4, 0.25, 0.55), dp), None, (0.5, 0.0, -0.85), None, "linear")  # 화면 밖 (오른쪽 뒤)
+    m.fp(tk - 2.1, _dp((0.548, 0.394, 0.225), dp), None, (0.807, 0.174, -0.565), (0.565, 0, 0.807), "linear")
+    m.fp(tk - 0.6, _dp((0.045, 0.409, 0.125), dp), None, (0.637, 0.139, 0.759), (-0.759, 0, 0.637), "in")
+    m.fp(tk + 0.6, _dp((-1.085, 0.364, 0.075), dp), None, (-0.936, 0.087, 0.341), (-0.341, 0, -0.936), "linear")
+    m.fp(tk + 1.6, _dp((-2.028, 0.329, 0.225), dp), None, (-0.766, 0, -0.643), (0.643, 0, -0.766), "linear")
+    m.fp(tk + 2.4, _dp(FP_SPIN_OFF_L["p"], dp), None, FP_SPIN_OFF_L["blade"], None, "linear")
+
+
+def spin_left(m, passes, end_tick, wind_tick=None, fwd=None, spin0=0, fp_dp=None, end_pose=None):
+    """spin_right 의 거울: 몸이 왼쪽으로 (spin +) 돌며 바퀴마다 무기가 오른쪽에서 앞을 지남"""
+    first = passes[0]
+    keyp(m, wind_tick if wind_tick is not None else max(0.3, first - 1.8), P(SPIN_WIND_L, spin=spin0) if spin0 else SPIN_WIND_L)
+    for i, tk in enumerate(passes):
+        keyp(m, tk, P(fwd or SPIN_FWD_L, spin=spin0 + 360 * i), "in" if i == 0 else "linear")
+    n = len(passes)
+    keyp(m, end_tick, P(end_pose or SPIN_END_L, spin=spin0 + 360 * n), "out")
+    m.keys[1.0] = {"spin": spin0 + 360 * n}
+    tr = m.head.setdefault("trail", [])
+    tr.append([m.t(max(0.3, first - 1.2)), m.t(end_tick - 1)])
+    m.set(tilt=30)
+    for i, tk in enumerate(passes):
+        if i > 0:
+            m.fp(tk - 3.05, _dp(FP_SPIN_OFF_L["p"], fp_dp), None, FP_SPIN_OFF_L["blade"], None, "linear")
+        fp_spin_pass_left(m, tk, fp_dp)
+    fpw(m, end_tick, FPW_LOW, "out")
+
+
+# ------------------------------------------------------------ 0.47.0 되돌려 베기 (왼쪽 → 오른쪽 가로 — 1인칭은 바로 베기 skill_slash 의 화면 거울)
+
+BACK_WIND = P(body=[6, -44, 0], ra=arm([-0.6882, 0.2294, 0.6882], 70, [-0.8575, 0.1009, -0.5044]), la=arm([-0.25, -0.6, 0.5], 40), rl=[10, 0, 0],
+              ll=[-16, 0, 0], rk=18, lk=20)  # 몸을 왼쪽으로 감고 무기를 왼쪽 뒤로
+BACK_HIT = P(body=[12, 18, 0], ra=arm([0.3556, 0.0, 0.9346], 6, [0.8608, -0.0506, 0.5064]), la=arm([-0.5, -0.6, 0.1], 35), rl=[8, 0, 0], ll=[-20, 0, 0],
+             rk=16, lk=24, root=[-0.06, 0.14])
+BACK_END = P(body=[12, 40, 0], ra=arm([0.9048, 0.0, 0.4258], 18, [0.8575, -0.1009, -0.5044]), la=arm([-0.5, -0.6, 0.1], 35), rl=[8, 0, 0], ll=[-20, 0, 0],
+             rk=14, lk=24, root=[-0.06, 0.1])
+# 1인칭 (skill_slash 의 열쇠를 화면 거울로)
+FP_BACK = [((0.548, 0.458, 0.225), (0.76, 0.375, -0.532), (0.532, 0.0, 0.76)), ((0.045, 0.479, 0.125), (0.629, 0.208, 0.749), (-0.749, 0.0, 0.629)),
+           ((-0.955, 0.401, 0.075), (-0.897, 0.139, 0.419), (-0.419, 0.0, -0.897)), ((-2.086, 0.329, 0.225), (-0.866, 0.0, -0.5), (0.5, 0.0, -0.866))]
+
+
+def fp_flip(v):
+    return (-v[0], v[1], v[2])
+
+
+def backhand(m, wind_tick, hit_tick, end_tick=None, wind=None, hit=None, end=None, low=0.0):
+    """되돌려 베기: wind_tick 에 왼쪽 뒤로 감았다가 hit_tick 에 앞을 지나 오른쪽으로 (low = 무기 끝을 그만큼 아래로 — 비스듬히)"""
+    if end_tick is None:
+        end_tick = hit_tick + (hit_tick - wind_tick) * 0.9
+    h = P(hit or BACK_HIT)
+    if low:
+        h["ra"] = arm(h["ra"]["dir"], h["ra"]["bend"], [h["ra"]["blade"][0], h["ra"]["blade"][1] - low, h["ra"]["blade"][2]])
+    keyp(m, wind_tick, wind or BACK_WIND)
+    keyp(m, hit_tick, h, "linear")
+    keyp(m, end_tick, end or BACK_END, "out")
+    m.arc(hit_tick, "ra", (0.05, -low * 0.5, 1))
+    m.head.setdefault("trail", []).append([m.t(wind_tick + (hit_tick - wind_tick) * 0.3), m.t(end_tick)])
+    m.set(tilt=30)
+    span = hit_tick - wind_tick
+    for k, (p, b, e) in zip((0.0, 0.45, 1.0, 1.6), FP_BACK):
+        m.fp(wind_tick + span * k, fp_mirror_x(p), None, fp_flip(b), fp_flip(e), "in" if k == 0.45 else ("linear" if k else None))
+    return m
+
+
+def write_motion_block(src, motion):
+    """rules_more.json 의 MOTION 안 "skills" 덩이 · "runeMotions" · "jobMotions" 목록을 고쳐 씀 (다른 곳은 그대로 — 한 줄에 여럿 쓴 모양을 지킴).
+    차례: skills (룬이 아닌 열쇠 4개씩 → 룬 열쇠 3개씩) · runeMotions · jobMotions (룬 · 직업 도구가 같은 꼴로 씀)"""
+    i = src.index('"MOTION"')
+    j = src.index("{", i)
+    k = _match_close(src, j, "{", "}")
+    block = src[j:k + 1]
+    for key in ('"runeMotions"', '"jobMotions"'):
+        if key in block:
+            a = block.index(key)
+            b = _match_close(block, block.index("[", a), "[", "]")
+            c = block.rfind(",", 0, a)
+            block = block[:c] + block[b + 1:]
+    a = block.index('"skills"')
+    sb = block.index("{", a)
+    se = _match_close(block, sb, "{", "}")
+    ind = "      "
+    plain = [json.dumps(k2, ensure_ascii=False) + ": " + json.dumps(v, ensure_ascii=False) for k2, v in motion["skills"].items() if not k2.startswith("rune:")]
+    runes = [json.dumps(k2, ensure_ascii=False) + ": " + json.dumps(v, ensure_ascii=False) for k2, v in motion["skills"].items() if k2.startswith("rune:")]
+    body = "{\n" + _pack(plain, 4, ind) + (",\n" + _pack(runes, 3, ind) if runes else "") + "\n    }"
+    tail = ""
+    for key in ("runeMotions", "jobMotions"):
+        if motion.get(key):
+            names = [json.dumps(n) for n in motion[key]]
+            tail += ',\n    "%s": [\n' % key + _pack(names, 6, ind) + "\n    ]"
+    block = block[:sb] + body + tail + block[se + 1:]
+    return src[:j] + block + src[k + 1:]
+
+
+def _match_close(src, j, open_c, close_c):
+    """src[j] = 여는 괄호 → 맞는 닫는 괄호 자리 (문자열 안은 건너뜀)"""
+    depth = 0
+    k = j
+    while True:
+        c = src[k]
+        if c == open_c:
+            depth += 1
+        elif c == close_c:
+            depth -= 1
+            if depth == 0:
+                return k
+        elif c == '"':
+            k += 1
+            while src[k] != '"':
+                if src[k] == "\\":
+                    k += 1
+                k += 1
+        k += 1
+
+
+def _pack(items, per, indent):
+    """항목들을 한 줄에 per 개씩 (쉼표로 이음)"""
+    lines = []
+    for i in range(0, len(items), per):
+        lines.append(indent + ", ".join(items[i:i + per]))
+    return ",\n".join(lines)
 
 
 

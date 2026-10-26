@@ -431,6 +431,7 @@ final class LancerSkills {
                 }
                 SkillFx.play(d, "item.trident.throw", V.add(c0, f, 6), 1.4 + ww * 0.1, 0.6);
             });
+            JobKit.motionLater(sp, "lancer_ult:wave", at - fall - 1, life); // 0.47.0 빈손을 휘둘러 창비를 쏟아지게 하는 동작
             // 피해: 닿는 틱에 적마다 per 자루 (한 번에 · 숫자 per 줄)
             RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
@@ -444,7 +445,8 @@ final class LancerSkills {
                 SkillFx.play(d, "item.trident.hit_ground", V.add(c0, f, 7), 0.9, 0.8);
             });
         }
-        // 진짜 창: 큰 빛의 창이 조준한 곳으로 내리꽂힘 → 폭발
+        // 진짜 창: 큰 빛의 창이 조준한 곳으로 내리꽂힘 → 폭발 (0.47.0 동작: 빈손을 들었다가 꽂히는 순간 주먹을 쥐어 당김 — 창이 손으로 돌아옴)
+        JobKit.motionLater(sp, "lancer_ult:final", finalAt - 7, life);
         RuneKit.later(finalAt - 7, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();

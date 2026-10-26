@@ -20,7 +20,8 @@ import net.minecraft.world.phys.Vec3;
  * align (움직이는 쪽을 봄), faceCam (넓은 면이 보는 사람 쪽), spin (도/초) · spinAxis ("y" · "x" · "z" · "up"). 크기 — scale · grow (끝에서 1 + grow 배) ·
  * pop (초 — 튀어나오듯 커짐) · shrink (초 — 끝에서 작아짐). 빛 — alpha · fadeIn · fadeOut (초), color (빛깔) · glow (속빛 · 빛 무리) · glowAlpha · shine (몸에
  * 더하는 빛). 그 밖 — life (초), delay (초 — 그만큼 늦게 나타남), anim · animSpeed · animPhase · loop (모델의 움직임), view (1 = 주인이 1인칭이면 숨김 ·
- * 2 = 주인의 1인칭에만) · owner.
+ * 2 = 주인의 1인칭에만) · owner. 0.47.0 도는 길 — orbit (반지름 — at · follow 기준이 가운데) · orbitSpeed (도/초) · orbitAngle · bob · bobHz · orbitGrow,
+ * 옮기기 move (쫓아가는 구체 — 지금 자리에서 새 자리로), 움직임 바꾸기 anim (문이 열림 → 소용돌이 → 닫힘).
  */
 public final class Fx3d {
     private Fx3d() {}
@@ -55,7 +56,14 @@ public final class Fx3d {
     static final int ANIM_SPEED = 39;
     static final int ANIM_PHASE = 40;
     static final int DELAY = 41;
-    public static final int VALUES = 42;
+    /** 0.47.0 도는 길 (orbit — at 이 가운데): 반지름 · 도/초 · 처음 각 · 위아래 흔들림 칸 · 흔들림 Hz · 반지름이 느는 칸/초 */
+    static final int ORBIT_R = 42;
+    static final int ORBIT_W = 43;
+    static final int ORBIT_A = 44;
+    static final int BOB = 45;
+    static final int BOB_HZ = 46;
+    static final int ORBIT_GROW = 47;
+    public static final int VALUES = 48;
 
     // 표시 (Payload.flags)
     public static final int F_FOLLOW = 1;
@@ -66,6 +74,12 @@ public final class Fx3d {
     /** 보는 사람 걸러내기 (2비트): 1 = 주인이 1인칭이면 숨김 · 2 = 주인의 1인칭에만 */
     public static final int VIEW_SHIFT = 5;
     public static final int F_KILL = 128;
+    /** 0.47.0 도는 길 (at 둘레를 orbit 반지름으로 — follow 면 주인 기준) */
+    public static final int F_ORBIT = 256;
+    /** 0.47.0 옮기기 (id 의 모델을 지금 자리에서 at 으로 travel 초에 — 쫓아가는 구체) */
+    public static final int F_MOVE = 512;
+    /** 0.47.0 움직임 바꾸기 (id 의 모델 — anim 을 처음부터, F_LOOP 면 되풀이): 문이 열림 → 소용돌이 → 닫힘 */
+    public static final int F_ANIM = 1024;
 
     private static final AtomicInteger NEXT = new AtomicInteger(1);
     /** 시험: 보낸 모델 수 · 마지막 이름 */
@@ -181,11 +195,22 @@ public final class Fx3d {
         put(v, COLOR, o.color("color", new double[] {1, 1, 1}));
         put(v, GLOW, o.color("glow", o.color("color", new double[] {1, 1, 1})));
         v[GLOW_ALPHA] = (float) o.num("glowAlpha", 0.55);
-        v[SHINE] = (float) o.num("shine", 0.25);
+        v[SHINE] = (float) o.num("shine", 0);
         v[ANIM_SPEED] = (float) o.num("animSpeed", 1);
         v[ANIM_PHASE] = (float) o.num("animPhase", 0);
         v[DELAY] = (float) o.num("delay", 0);
+        boolean orbit = o.has("orbit");
+        if (orbit) {
+            v[ORBIT_R] = (float) o.num("orbit", 1);
+            v[ORBIT_W] = (float) o.num("orbitSpeed", 180);
+            v[ORBIT_A] = (float) o.num("orbitAngle", 0);
+            v[ORBIT_GROW] = (float) o.num("orbitGrow", 0);
+        }
+        // 위아래 흔들림 (떠 있는 책 · 구체 · 종 — 도는 길이 아니어도)
+        v[BOB] = (float) o.num("bob", 0);
+        v[BOB_HZ] = (float) o.num("bobHz", 1);
         int flags = 0;
+        if (orbit) flags |= F_ORBIT;
         int owner = (int) o.num("owner", o.num("follow", 0));
         if (o.has("follow")) flags |= F_FOLLOW;
         if (path) flags |= F_PATH;
@@ -205,6 +230,20 @@ public final class Fx3d {
         sent++;
         lastModel = model;
         return id;
+    }
+
+    /** 띄운 모델을 지금 자리에서 to 로 seconds 초에 옮김 (곧게 · 처음 자리 움직임 대신) */
+    public static void move(ServerLevel level, int id, Vec3 to, double seconds) {
+        if (level == null || id == 0) return;
+        float[] v = new float[VALUES];
+        v[TRAVEL] = (float) Math.max(0.01, seconds);
+        send(level, to, new Payload(id, "", "", to.x, to.y, to.z, 0, F_MOVE, v));
+    }
+
+    /** 띄운 모델의 움직임 (모델 안의 anim) 을 바꿈 — 처음부터, loop 면 되풀이 */
+    public static void anim(ServerLevel level, int id, String anim, boolean loop, Vec3 near) {
+        if (level == null || id == 0) return;
+        send(level, near, new Payload(id, "", anim == null ? "" : anim, near.x, near.y, near.z, 0, F_ANIM | (loop ? F_LOOP : 0), new float[VALUES]));
     }
 
     /** 띄운 모델을 fade 초 동안 흐리게 하며 지움 */

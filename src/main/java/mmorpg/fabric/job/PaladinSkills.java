@@ -357,6 +357,7 @@ final class PaladinSkills {
             RuneKit.later(at, () -> {
                 if (RuneKit.sameLife(sp, life)) slam(sp, j, k, P, center, radius, mult, ii, ii == last, life);
             });
+            JobKit.motionLater(sp, "paladin_ult:smash", at - 3, life); // 0.47.0 대망치와 함께 내리치는 동작 (3틱 뒤 닿음)
         }
         RuneKit.later(endAt + 4, () -> {
             if (RuneKit.sameLife(sp, life)) sanctuary(sp, j, k, center, radius, sanct, life);

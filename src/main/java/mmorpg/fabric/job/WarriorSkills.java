@@ -224,6 +224,7 @@ final class WarriorSkills {
     /** 끝: 짧게 내려찍음 — 몸 앞 둘레 slamRadius 칸 (들이받은 적 포함), 밀리는 적은 앞으로 날아감 */
     private static void chargeSlam(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 f, String life) {
         if (!RuneKit.sameLife(sp, life)) return;
+        JobKit.motion(sp, "warrior_charge:slam"); // 0.47.0 멈춰 서며 짧게 내려찍는 동작 (들이받은 때에 따라 3 ~ 9틱)
         Vec3 ground = groundAhead(sp, f, 1.2);
         double r = k.num("slamRadius", 2.6);
         JobFx.slash(sp, j, 2.2, 0.2, 1.6, 100.0, 0.2);
@@ -363,6 +364,7 @@ final class WarriorSkills {
         RuneKit.later(finalAt, () -> {
             if (RuneKit.sameLife(sp, life)) finalBlast(sp, j, k, P, last[0], glow, core, life);
         });
+        JobKit.motionLater(sp, "warrior_ult:final", finalAt - 6, life); // 0.47.0 도끼를 들어 포효했다가 대폭발 때 내려찍는 동작
         return true;
     }
 
@@ -416,6 +418,7 @@ final class WarriorSkills {
 
     /** 뛰어 내려찍기 한 번: leapTicks 틱 동안 포물선 (한 틱에 한 마디 — 노린 적 쪽으로 시선이 돌아감) → 착지 둘레 landRadius 칸 (leap) */
     private static void leap(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, int i, int leapTicks, Vec3[] last, String life) {
+        if (i > 0) JobKit.motion(sp, "warrior_ult:leap"); // 0.47.0 도약마다 웅크림 → 도끼를 들고 뜀 → 내려찍는 동작 (첫 도약은 쓸 때의 동작)
         Vec3 from = sp.position();
         Landing landing = landingFor(sp, k, i);
         Vec3 to = landing.spot();

@@ -33,11 +33,15 @@ PREFIX = "rn_"
 def write(check=False):
     src = open(POSES, encoding="utf-8").read()
     data = json.loads(src)
-    ms = {k: v for k, v in data["motions"].items() if not k.startswith(PREFIX)}
+    # 차례: 손으로 쓴 동작 → 룬 (rn_) → 직업 스킬 (jb_ — tools/job_motions.py) — 두 도구가 같은 꼴로 씀
+    ms = {k: v for k, v in data["motions"].items() if not k.startswith(PREFIX) and not k.startswith("jb_")}
     for mo in MOTIONS:
         m = mo.build()
         motion_arcs.densify(mo.name, m)
         ms[mo.name] = m
+    for k, v in data["motions"].items():
+        if k.startswith("jb_"):
+            ms[k] = v
     data["motions"] = ms
     out = motion_arcs.fmt(data)
     rules_src = open(RULES, encoding="utf-8").read()
@@ -51,7 +55,7 @@ def write(check=False):
     new_motion["runeMotions"] = names
     new_motion["skills"] = skills
     if new_motion != motion:
-        rules_out = replace_motion(rules_src, new_motion)
+        rules_out = K.write_motion_block(rules_src, new_motion)
     if check:
         bad = []
         if out != src:
@@ -69,60 +73,6 @@ def write(check=False):
         open(RULES, "w", encoding="utf-8").write(rules_out)
     print("wrote %d rune motions · %d rune keys" % (len(names), len(TABLE)))
     return 0
-
-
-def match_close(src, j, open_c, close_c):
-    """src[j] = 여는 괄호 → 맞는 닫는 괄호 자리 (문자열 안은 건너뜀)"""
-    depth = 0
-    k = j
-    while True:
-        c = src[k]
-        if c == open_c:
-            depth += 1
-        elif c == close_c:
-            depth -= 1
-            if depth == 0:
-                return k
-        elif c == '"':
-            k += 1
-            while src[k] != '"':
-                if src[k] == "\\":
-                    k += 1
-                k += 1
-        k += 1
-
-
-def pack(items, per, indent):
-    """항목들을 한 줄에 per 개씩 (쉼표로 이음)"""
-    lines = []
-    for i in range(0, len(items), per):
-        lines.append(indent + ", ".join(items[i:i + per]))
-    return ",\n".join(lines)
-
-
-def replace_motion(src, motion):
-    """rules_more.json 의 MOTION 안 "skills" 덩이 · "runeMotions" 목록만 고쳐 씀 (다른 곳은 그대로 — 한 줄에 여럿 쓴 모양을 지킴)"""
-    i = src.index('"MOTION"')
-    j = src.index("{", i)
-    k = match_close(src, j, "{", "}")
-    block = src[j:k + 1]
-    # 있던 runeMotions 를 지움 (앞 쉼표 · 줄까지)
-    if '"runeMotions"' in block:
-        a = block.index('"runeMotions"')
-        b = match_close(block, block.index("[", a), "[", "]")
-        c = block.rfind(",", 0, a)
-        block = block[:c] + block[b + 1:]
-    a = block.index('"skills"')
-    sb = block.index("{", a)
-    se = match_close(block, sb, "{", "}")
-    ind = "      "
-    plain = [json.dumps(k2, ensure_ascii=False) + ": " + json.dumps(v, ensure_ascii=False) for k2, v in motion["skills"].items() if not k2.startswith("rune:")]
-    runes = [json.dumps(k2, ensure_ascii=False) + ": " + json.dumps(v, ensure_ascii=False) for k2, v in motion["skills"].items() if k2.startswith("rune:")]
-    body = "{\n" + pack(plain, 4, ind) + (",\n" + pack(runes, 3, ind) if runes else "") + "\n    }"
-    names = [json.dumps(n) for n in motion["runeMotions"]]
-    rm = ',\n    "runeMotions": [\n' + pack(names, 6, ind) + "\n    ]"
-    block = block[:sb] + body + rm + block[se + 1:]
-    return src[:j] + block + src[k + 1:]
 
 
 def listing():

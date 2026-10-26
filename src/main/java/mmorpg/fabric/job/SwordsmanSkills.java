@@ -360,13 +360,16 @@ final class SwordsmanSkills {
             RuneKit.later(rise + v * every, () -> {
                 if (RuneKit.sameLife(sp, life)) volley(sp, j, P, volleyMult, per, left, radius, targets, vv, glow, core, life);
             });
+            JobKit.motionLater(sp, "swordsman_ult:volley", rise + v * every - 1, life); // 0.47.0 칼끝을 튕겨 환영 검을 날려 보내는 동작
         }
         RuneKit.later(lastVolley + 2, () -> {
             if (RuneKit.sameLife(sp, life)) gatherFx(sp, gather - 2, glow, core, life);
         });
+        JobKit.motionLater(sp, "swordsman_ult:gather", lastVolley + 2, life); // 0.47.0 두 손으로 칼을 들어 기를 모으는 동작
         RuneKit.later(finalAt, () -> {
             if (RuneKit.sameLife(sp, life)) finalCut(sp, j, k, P, glow, core, life);
         });
+        JobKit.motionLater(sp, "swordsman_ult:final", finalAt - 1, life); // 0.47.0 크게 되돌려 베는 일섬 (1틱 뒤 닿음)
         return true;
     }
 

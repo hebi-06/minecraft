@@ -322,10 +322,12 @@ final class MageSkills {
                 left[0] = Math.max(0, left[0] - per);
                 spellWave(sp, j, k, P, center, bookAt, radius, per, ww, life);
             });
+            JobKit.motionLater(sp, "mage_ult:wave", rise + w * gap - 1, life); // 0.47.0 완드를 휘둘러 책장을 떨어뜨리는 동작
         }
         RuneKit.later(finalAt, () -> {
             if (RuneKit.sameLife(sp, life)) closeBook(sp, j, k, P, center, bookAt, radius, glow, core, life);
         });
+        JobKit.motionLater(sp, "mage_ult:close", finalAt - 4, life); // 0.47.0 두 팔을 맞부딪쳐 책을 닫는 동작 (4틱 뒤)
         return true;
     }
 

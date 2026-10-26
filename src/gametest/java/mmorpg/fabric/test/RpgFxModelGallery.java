@@ -23,20 +23,34 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 0.47.0 입체 효과 물체 사진첩 (화면 시험, only=fx3d): 모델을 눈높이에 한 줄로 띄워 천천히 돌리며 찍음 (낮 · 가까이 · 밤 · 직업 색), 움직임 (곡선 길을 날아가는 검 ·
- * 떨어지는 창 · 도는 비수 · 몸 뒤를 따라가는 검 반원 — 3인칭) — 사진 fx_* → ci-logs 의 shots/. 확인: 받은 수 · 그린 수 · 사각형 수 · 지우기.
+ * 떨어지는 창 · 도는 비수 · 몸 뒤를 따라가는 검 반원 — 3인칭), 장면 (금서 둘레를 도는 책장 · 쫓아가는 구체 · 열리고 닫히는 명계의 문 · 솟는 손 · 몸 둘레를 도는 도끼)
+ * — 사진 fx_* → ci-logs 의 shots/. 확인: 받은 수 · 그린 수 · 사각형 수 · 지우기 · 옮기기 · 움직임 바꾸기.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgFxModelGallery implements FabricClientGameTest {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-fx3d-gallery");
     private final List<String> failures = new ArrayList<>();
 
-    /** {모델, 크기, 가운데까지 (모델 +Y 칸 — 눈높이에 가운데가 오게)} */
+    /** {모델, 크기, 가운데까지 (모델 +Y 칸 — 눈높이에 가운데가 오게), 움직임 (되풀이 — 없으면 "")}: 앞 줄 (작은 것) */
     static final Object[][] LINEUP = {
-        {"phantom_sword", 1.0, 0.48},
-        {"spear", 0.62, 0.05},
-        {"dagger", 1.4, 0.14},
-        {"light_arrow", 1.3, 0.03},
-        {"buckler", 1.0, 0.0},
+        {"phantom_sword", 1.0, 0.48, ""},
+        {"spear", 0.62, 0.05, ""},
+        {"dagger", 1.4, 0.14, ""},
+        {"light_arrow", 1.3, 0.03, ""},
+        {"buckler", 1.0, 0.0, ""},
+        {"mana_bolt", 1.6, 0.0, ""},
+        {"arcane_orb", 1.0, 0.0, "spin"},
+        {"page", 2.2, 0.0, ""},
+    };
+    /** 뒤 줄 (큰 것 — 금서 · 대망치 · 종 · 문 · 손 · 도끼 · 연 방패) */
+    static final Object[][] LINEUP_B = {
+        {"grimoire", 0.9, 0.0, "flip"},
+        {"maul", 0.55, -0.95, ""},
+        {"bell", 0.62, -0.62, "swing"},
+        {"gate", 0.42, 1.72, "swirl"},
+        {"bone_hand", 1.1, -0.35, "grasp"},
+        {"phantom_axe", 1.0, 0.0, ""},
+        {"aegis", 0.75, -0.1, ""},
     };
     private static final double[] SKY = {0.42, 0.78, 1.0};
     private static final double[] SKY_CORE = {0.84, 0.95, 1.0};
@@ -70,6 +84,7 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
             ctx.waitTicks(20);
             part(ctx, "lineup", () -> lineup(ctx, server));
             part(ctx, "motion", () -> motion(ctx, server));
+            part(ctx, "scenes", () -> scenes(ctx, server));
         }
         LOG.info("[fx3d-gallery] done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
         if (!failures.isEmpty()) throw new AssertionError("fx3d gallery: " + String.join(" / ", failures));
@@ -77,58 +92,67 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
 
     // ------------------------------------------------------------ 1. 한 줄 (낮 · 가까이 · 밤 · 직업 색)
 
-    private void spawnLine(TestServerContext server, double dist, double spin, double[][][] colors) {
+    private void spawnLine(TestServerContext server, Object[][] line, double dist, double gap, double spin, double[][][] colors) {
         server.runOnServer(s -> {
             ServerLevel level = s.overworld();
             double eye = -60 + 1.62;
-            int n = LINEUP.length;
+            int n = line.length;
             for (int i = 0; i < n; i++) {
-                String name = (String) LINEUP[i][0];
-                double scale = ((Number) LINEUP[i][1]).doubleValue();
-                double mid = ((Number) LINEUP[i][2]).doubleValue();
-                double x = 0.5 + (i - (n - 1) / 2.0) * 1.15 * Math.min(1, dist / 3.5);
+                String name = (String) line[i][0];
+                double scale = ((Number) line[i][1]).doubleValue();
+                double mid = ((Number) line[i][2]).doubleValue();
+                String anim = (String) line[i][3];
+                double x = 0.5 + (i - (n - 1) / 2.0) * gap * Math.min(1, dist / 3.5);
                 double[] glow = colors != null ? colors[i % colors.length][0] : SKY;
                 double[] core = colors != null ? colors[i % colors.length][1] : SKY_CORE;
                 Fx3d.spawn(level, name, new Vec3(x, eye - mid * scale, 0.5 - dist), Opt.of("dir", new Vec3(0, 1, 0), "face", new Vec3(0, 0, 1), "spin", spin, "spinAxis",
-                        "up", "scale", scale, "life", 6.0, "color", glow, "glow", core, "pop", 0.3));
+                        "up", "scale", scale, "life", 6.0, "color", glow, "glow", core, "pop", 0.3, "shine", colors != null ? 0.35 : 0.0, "anim", anim, "loop",
+                        anim.isEmpty() ? 0.0 : 1.0, "animSpeed", 0.6));
             }
         });
     }
 
-    private void lineup(ClientGameTestContext ctx, TestServerContext server) {
+    private void lineShots(ClientGameTestContext ctx, TestServerContext server, Object[][] line, String tag, double dist, double gap, boolean close, boolean night) {
         int before = ctx.computeOnClient(mc -> FxModels.received);
-        spawnLine(server, 3.5, 30, null);
+        spawnLine(server, line, dist, gap, 30, null);
         ctx.waitTicks(16);
-        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_day").withSize(1280, 720));
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_day" + tag).withSize(1280, 720));
         int got = ctx.computeOnClient(mc -> FxModels.received) - before;
-        check(got == LINEUP.length, "received " + got + " / " + LINEUP.length);
-        check(ctx.computeOnClient(mc -> FxModels.lastDrawn) == LINEUP.length, "drawn " + ctx.computeOnClient(mc -> FxModels.lastDrawn));
-        check(ctx.computeOnClient(mc -> FxModels.lastQuads) > 300, "quads " + ctx.computeOnClient(mc -> FxModels.lastQuads));
+        check(got == line.length, tag + " received " + got + " / " + line.length);
+        check(ctx.computeOnClient(mc -> FxModels.lastDrawn) == line.length, tag + " drawn " + ctx.computeOnClient(mc -> FxModels.lastDrawn));
+        check(ctx.computeOnClient(mc -> FxModels.lastQuads) > 300, tag + " quads " + ctx.computeOnClient(mc -> FxModels.lastQuads));
         ctx.waitTicks(30);
-        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_day_turned").withSize(1280, 720));
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_day_turned" + tag).withSize(1280, 720));
         ctx.runOnClient(mc -> FxModels.clear());
-        // 가까이 (2칸 — 조금 내려다봄)
-        spawnLine(server, 2.0, 0, null);
-        server.runCommand("tp @a 0.5 -60 0.5 200 12");
-        ctx.waitTicks(10);
-        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_close").withSize(1280, 720));
-        ctx.runOnClient(mc -> FxModels.clear());
-        server.runCommand("tp @a 0.5 -60 0.5 180 0");
-        // 밤
-        server.runCommand("time set 18000");
-        spawnLine(server, 3.5, 30, null);
+        if (close) {
+            // 가까이 (2칸 — 조금 내려다봄)
+            spawnLine(server, line, 2.0, gap, 0, null);
+            server.runCommand("tp @a 0.5 -60 0.5 200 12");
+            ctx.waitTicks(10);
+            ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_close" + tag).withSize(1280, 720));
+            ctx.runOnClient(mc -> FxModels.clear());
+            server.runCommand("tp @a 0.5 -60 0.5 180 0");
+        }
+        if (night) {
+            server.runCommand("time set 18000");
+            spawnLine(server, line, dist, gap, 30, null);
+            ctx.waitTicks(16);
+            ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_night" + tag).withSize(1280, 720));
+            ctx.runOnClient(mc -> FxModels.clear());
+            server.runCommand("time set 6000");
+        }
+        // 직업 색 (더한 빛 0.35)
+        spawnLine(server, line, dist, gap, 30, JOB_COLORS);
         ctx.waitTicks(16);
-        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_night").withSize(1280, 720));
-        ctx.runOnClient(mc -> FxModels.clear());
-        server.runCommand("time set 6000");
-        // 직업 색
-        spawnLine(server, 3.5, 30, JOB_COLORS);
-        ctx.waitTicks(16);
-        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_colors").withSize(1280, 720));
-        // 지우기 (0.2초에 흐려짐)
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_colors" + tag).withSize(1280, 720));
         int live = ctx.computeOnClient(mc -> FxModels.live(null));
-        check(live == LINEUP.length, "live " + live);
+        check(live == line.length, tag + " live " + live);
         ctx.runOnClient(mc -> FxModels.clear());
+    }
+
+    private void lineup(ClientGameTestContext ctx, TestServerContext server) {
+        lineShots(ctx, server, LINEUP, "", 4.2, 1.05, true, false);
+        lineShots(ctx, server, LINEUP_B, "_b", 5.0, 1.25, false, true);
     }
 
     // ------------------------------------------------------------ 2. 움직임
@@ -147,7 +171,7 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
             Fx3d.spawn(level, "spear", new Vec3(-1.5, eye + 6, -7), Opt.of("vel", new Vec3(0.4, -9, 0.6), "align", 1.0, "faceCam", 1.0, "life", 0.75, "color",
                     JOB_COLORS[3][0], "glow", JOB_COLORS[3][1]));
             for (int k = 0; k < 2; k++) {
-                Fx3d.spawn(level, "dagger", new Vec3(-1.0 + k * 3, eye, -3.0), Opt.of("dir", new Vec3(1, 0, 0), "face", new Vec3(0, 1, 0), "spin", 900.0, "spinAxis", "z",
+                Fx3d.spawn(level, "dagger", new Vec3(-1.0 + k * 3, eye, -3.0), Opt.of("dir", new Vec3(1, 0, 0), "face", new Vec3(0, 0.5, 1), "spin", 900.0, "spinAxis", "z",
                         "life", 1.5, "color", JOB_COLORS[2][0], "glow", JOB_COLORS[2][1], "scale", 1.6));
             }
             Fx3d.spawn(level, "buckler", new Vec3(0.5, eye - 0.9, -3.0), Opt.of("dir", new Vec3(0, 0, 1), "face", new Vec3(0, 1, 0.25), "spin", 720.0, "spinAxis", "z",
@@ -193,6 +217,89 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
             mc.options.setCameraType(CameraType.FIRST_PERSON);
         });
         server.runCommand("tp @a 0.5 -60 0.5 180 0");
+    }
+
+    // ------------------------------------------------------------ 3. 장면 (도는 길 · 옮기기 · 움직임 바꾸기)
+
+    private void scenes(ClientGameTestContext ctx, TestServerContext server) {
+        double eye = -60 + 1.62;
+        // 금서 둘레를 도는 책장 여덟 (orbit) — 금서는 책장을 넘김 (flip 되풀이)
+        server.runOnServer(s -> {
+            ServerLevel level = s.overworld();
+            Vec3 c = new Vec3(0.5, eye, -3.0);
+            Fx3d.spawn(level, "grimoire", c, Opt.of("dir", new Vec3(0, 1, 0), "face", new Vec3(0, 0.35, 1), "life", 3.0, "color", JOB_COLORS[1][0], "glow",
+                    JOB_COLORS[1][1], "anim", "flip", "loop", 1.0, "scale", 0.8, "pop", 0.25, "bob", 0.08));
+            for (int k = 0; k < 8; k++) {
+                Fx3d.spawn(level, "page", c, Opt.of("orbit", 1.3, "orbitSpeed", 80.0, "orbitAngle", k * 45.0, "bob", 0.12, "bobHz", 0.7, "faceCam", 1.0, "life", 3.0,
+                        "color", JOB_COLORS[1][0], "glow", JOB_COLORS[1][1], "scale", 1.3, "fadeIn", 0.3, "spin", 40.0, "spinAxis", "y"));
+            }
+        });
+        ctx.waitTicks(14);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_orbit").withSize(1280, 720));
+        check(ctx.computeOnClient(mc -> FxModels.live("page")) == 8, "orbit pages " + ctx.computeOnClient(mc -> FxModels.live("page")));
+        ctx.waitTicks(16);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_orbit_later").withSize(1280, 720));
+        ctx.runOnClient(mc -> FxModels.clear());
+        // 쫓아가는 구체 (move): 왼쪽에서 오른쪽 앞으로 옮김
+        int moved0 = ctx.computeOnClient(mc -> FxModels.moved);
+        int[] orb = new int[1];
+        server.runOnServer(s -> orb[0] = Fx3d.spawn(s.overworld(), "arcane_orb", new Vec3(-2.0, eye, -3.5), Opt.of("life", 3.0, "color", SKY, "glow", SKY_CORE,
+                "anim", "spin", "loop", 1.0, "scale", 0.6, "faceCam", 1.0)));
+        ctx.waitTicks(8);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_move_0").withSize(1280, 720));
+        server.runOnServer(s -> Fx3d.move(s.overworld(), orb[0], new Vec3(2.5, eye + 0.4, -4.5), 0.5));
+        ctx.waitTicks(14);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_move_1").withSize(1280, 720));
+        check(ctx.computeOnClient(mc -> FxModels.moved) - moved0 == 1, "moved " + (ctx.computeOnClient(mc -> FxModels.moved) - moved0));
+        ctx.runOnClient(mc -> FxModels.clear());
+        // 명계의 문 (열림 → 소용돌이 되풀이 → 닫힘) · 땅에서 솟는 손 다섯 (움켜쥠) · 떨어지는 대망치 · 흔들리는 종
+        int sw0 = ctx.computeOnClient(mc -> FxModels.animSwitched);
+        int[] gate = new int[1];
+        server.runOnServer(s -> {
+            ServerLevel level = s.overworld();
+            gate[0] = Fx3d.spawn(level, "gate", new Vec3(0.5, -60, -6.0), Opt.of("dir", new Vec3(0, 1, 0), "face", new Vec3(0, 0, 1), "life", 4.0, "color",
+                    JOB_COLORS[4][0], "glow", JOB_COLORS[4][1], "anim", "open", "scale", 0.9, "pop", 0.3, "glowAlpha", 0.7));
+            for (int k = 0; k < 5; k++) {
+                double x = -2.5 + k * 1.25;
+                Fx3d.spawn(level, "bone_hand", new Vec3(x, -61.4, -3.2), Opt.of("to", new Vec3(x, -60 + 0.2, -3.2), "travel", 0.45, "ease", "out3", "dir",
+                        new Vec3(0, 1, 0), "face", new Vec3(0, 0, 1), "life", 2.5, "color", JOB_COLORS[4][0], "glow", JOB_COLORS[4][1], "anim", "grasp", "animSpeed",
+                        0.8, "delay", k * 0.06, "scale", 1.1));
+            }
+            Fx3d.spawn(level, "maul", new Vec3(-3.2, eye + 5, -5.0), Opt.of("to", new Vec3(-3.2, -60 + 0.4, -5.0), "travel", 0.5, "ease", "in", "dir", new Vec3(0, -1, 0),
+                    "face", new Vec3(0, 0, 1), "life", 2.0, "color", JOB_COLORS[3][0], "glow", JOB_COLORS[3][1], "scale", 0.7));
+            Fx3d.spawn(level, "bell", new Vec3(3.6, eye + 2.2, -5.0), Opt.of("dir", new Vec3(0, 1, 0), "face", new Vec3(0, 0, 1), "life", 3.0, "color",
+                    JOB_COLORS[3][0], "glow", JOB_COLORS[3][1], "anim", "swing", "loop", 1.0, "scale", 0.8, "shine", 0.2));
+        });
+        ctx.waitTicks(12);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_gate_open").withSize(1280, 720));
+        server.runOnServer(s -> Fx3d.anim(s.overworld(), gate[0], "swirl", true, new Vec3(0.5, -60, -6.0)));
+        ctx.waitTicks(10);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_gate_swirl").withSize(1280, 720));
+        server.runOnServer(s -> Fx3d.anim(s.overworld(), gate[0], "close", false, new Vec3(0.5, -60, -6.0)));
+        ctx.waitTicks(8);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_gate_close").withSize(1280, 720));
+        check(ctx.computeOnClient(mc -> FxModels.animSwitched) - sw0 == 2, "anim switched " + (ctx.computeOnClient(mc -> FxModels.animSwitched) - sw0));
+        check(ctx.computeOnClient(mc -> FxModels.live("bone_hand")) == 5, "hands " + ctx.computeOnClient(mc -> FxModels.live("bone_hand")));
+        ctx.runOnClient(mc -> FxModels.clear());
+        // 3인칭: 몸 둘레를 도는 환영 도끼 넷 (follow + orbit) · 앞의 연 방패
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            ServerLevel level = sp.level();
+            for (int k = 0; k < 4; k++) {
+                Fx3d.spawn(level, "phantom_axe", new Vec3(0, 1.0, 0), Opt.of("follow", (double) sp.getId(), "orbit", 1.6, "orbitSpeed", 300.0, "orbitAngle", k * 90.0,
+                        "align", 1.0, "face", new Vec3(0, 1, 0), "life", 2.0, "color", JOB_COLORS[0][0], "glow", JOB_COLORS[0][1], "scale", 1.1, "fadeIn", 0.15));
+            }
+            Fx3d.spawn(level, "aegis", new Vec3(0, 1.1, 1.3), Opt.of("follow", (double) sp.getId(), "dir", new Vec3(0, 1, 0), "face", new Vec3(0, 0, 1), "life", 2.0,
+                    "color", JOB_COLORS[3][0], "glow", JOB_COLORS[3][1], "scale", 1.3, "pop", 0.25, "shine", 0.2));
+        });
+        ctx.waitTicks(10);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_scene_axes").withSize(1280, 720));
+        check(ctx.computeOnClient(mc -> FxModels.live("phantom_axe")) == 4, "axes " + ctx.computeOnClient(mc -> FxModels.live("phantom_axe")));
+        ctx.runOnClient(mc -> {
+            FxModels.clear();
+            mc.options.setCameraType(CameraType.FIRST_PERSON);
+        });
     }
 
     // ------------------------------------------------------------ 도움

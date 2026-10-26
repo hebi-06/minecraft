@@ -290,7 +290,9 @@ final class GuardianSkills {
         Vec3 hand = V.up(V.add(h.hand(), h.f(), 0.3), 0.1);
         int t = JobFx.bucklerFly(sp.level(), from, hand, speed, 0.42, j, Opt.of("fade", 0.3));
         RuneKit.later(t, () -> {
-            if (!sp.isRemoved()) SkillFx.play(sp.level(), "item.trident.return", sp.position(), 1.2, 0.8);
+            if (sp.isRemoved()) return;
+            SkillFx.play(sp.level(), "item.trident.return", sp.position(), 1.2, 0.8);
+            JobKit.motion(sp, "guardian_throw:catch"); // 0.47.0 돌아온 방패를 받는 동작 (던진 뒤로 빈손)
         });
     }
 

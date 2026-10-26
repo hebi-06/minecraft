@@ -263,7 +263,27 @@ public final class MotionsTest {
                 if (g.getValue() instanceof Map<?, ?> d && d.get("fn") instanceof String fn) gradeKeys.add("rune:" + fn + ":" + g.getKey());
             }
         }
-        for (String k : Motions.skillKeys()) check(want.contains(k) || gradeKeys.contains(k), "no stray key " + k);
+        // 0.47.0 직업 스킬 단계 열쇠 (스킬 id:단계 — 서버가 그 순간에 다시 보냄 JobKit.motion): 그 직업 스킬이 있어야 함 · 직업 스킬 동작 (jb_)
+        Set<String> jobIds = new HashSet<>();
+        for (Jobs.Job j : Jobs.all()) for (Jobs.Skill k : j.skills()) jobIds.add(k.id());
+        int phases = 0;
+        for (String k : Motions.skillKeys()) {
+            if (k.contains(":") && !k.startsWith("rune:")) {
+                phases++;
+                check(jobIds.contains(k.substring(0, k.indexOf(':'))) && Motions.jobMotion(Motions.skillMotion(k)), "job phase key " + k + " → " + Motions.skillMotion(k));
+                continue;
+            }
+            check(want.contains(k) || gradeKeys.contains(k), "no stray key " + k);
+        }
+        check(phases >= 18, "job phase keys " + phases);
+        // 0.47.0 직업 스킬마다 그 스킬만의 동작 (jb_)
+        Set<String> jobMotionNames = new HashSet<>();
+        for (String id : jobIds) {
+            String mo = Motions.skillMotion(id);
+            check(Motions.jobMotion(mo), "job motion " + id + " → " + mo);
+            if (mo != null) jobMotionNames.add(mo);
+        }
+        check(jobMotionNames.size() >= 55, "job motions " + jobMotionNames.size());
         // 0.46.0 룬마다 그 룬만의 동작 (rn_ — 룬이 하는 행동: 주먹 · 던지기 · 베기 · 부르기 …), 등급 열쇠가 있으면 그 등급의 것
         int runeDefs = 0;
         Set<String> runeMotions = new HashSet<>();
@@ -285,7 +305,9 @@ public final class MotionsTest {
                 && "rn_spellblade_release".equals(Motions.runeSkillMotion("spellbladeRelease", "transcend")), "rune motion picks (grade key · fallback)");
         check(Motions.runeSkillMotion("nothing", "common") == null && Motions.runeSkillMotion(null, "common") == null, "unknown rune → null");
         check(Motions.skillMotion("mjolnir_throw").equals("throw_weapon") && Motions.skillMotion("gaebolg_pierce").equals("throw_weapon"), "spear · hammer throws");
-        check(Motions.skillMotion("gram_charge").equals("dash") && Motions.skillMotion("warrior_charge").equals("dash"), "dashes");
+        check(Motions.skillMotion("gram_charge").equals("dash") && Motions.skillMotion("warrior_charge").equals("jb_warrior_charge")
+                && Motions.skillMotion("warrior_charge:slam").equals("jb_warrior_charge_slam") && Motions.skillMotion("guardian_throw:catch").equals("jb_guardian_throw_catch"),
+                "dashes (0.47.0 직업 스킬은 jb_ — 돌격 끝의 내려찍기 · 방패를 받음은 단계 열쇠)");
         check(Motions.skillMotion("nothing") == null, "unknown → null");
         // poses.json 과 같은 이름
         Path poses = Path.of("src/main/resources/assets/mmorpg/motion/poses.json");
@@ -296,8 +318,9 @@ public final class MotionsTest {
             Map<String, Object> m = (Map<String, Object>) e.getValue();
             // 0.44.0 대장장이 망치질 (smith_hammer — 세 번 침) · 0.45.0 가게 동작 (룬술사 rune_* · 상인 shop_*) 만 길게, 0.46.0 룬 동작 (rn_) 은 3.2초까지
             boolean work = e.getKey().equals("smith_hammer") || e.getKey().startsWith("rune_") || e.getKey().startsWith("shop_");
-            int maxTicks = Motions.runeMotion(e.getKey()) ? 64 : work ? 40 : 20;
-            if (Motions.runeMotion(e.getKey())) runeShape(e.getKey(), m);
+            // 0.47.0 직업 스킬 동작 (jb_) 은 5초까지 (성가 · 방패 투척처럼 길게 이어지는 것)
+            int maxTicks = Motions.runeMotion(e.getKey()) ? 64 : Motions.jobMotion(e.getKey()) ? 100 : work ? 40 : 20;
+            if (Motions.runeMotion(e.getKey()) || Motions.jobMotion(e.getKey())) runeShape(e.getKey(), m);
             check(((Number) m.get("ticks")).intValue() >= 6 && ((Number) m.get("ticks")).intValue() <= maxTicks, e.getKey() + " ticks");
             for (String part : List.of("keys", "fp")) {
                 List<Object> keys = (List<Object>) m.get(part);
@@ -312,7 +335,8 @@ public final class MotionsTest {
                 check(((Number) ((Map<String, Object>) keys.get(0)).get("t")).doubleValue() == 0 && last == 1, e.getKey() + " " + part + " 0 → 1");
             }
         }
-        check(RUNE_SHAPES[0] >= 115 && RUNE_SHAPES[1] >= 60 && RUNE_SHAPES[2] >= 5, "rune shapes (motions · off-hand bare · props) " + java.util.Arrays.toString(RUNE_SHAPES));
+        check(RUNE_SHAPES[0] >= 115 + 70 && RUNE_SHAPES[1] >= 60 + 20 && RUNE_SHAPES[2] >= 5, "rune · job shapes (motions · off-hand bare · props) "
+                + java.util.Arrays.toString(RUNE_SHAPES));
         System.out.println("[motions-test] checks ok " + ok + ", bad " + BAD.size());
         for (String b : BAD) System.out.println("  BAD " + b);
         if (!BAD.isEmpty()) System.exit(1);

@@ -51,7 +51,18 @@ public final class FxModels {
     private FxModels() {}
 
     private static final int LIGHT = 0xF000F0;
-    private static final Identifier HALO = Mmorpg.id("textures/fx/model/halo.png");
+    /** 빛 무리 부채꼴 조각 수 · 각 */
+    private static final int FAN = 12;
+    private static final float[] FAN_COS = new float[FAN + 1];
+    private static final float[] FAN_SIN = new float[FAN + 1];
+
+    static {
+        for (int k = 0; k <= FAN; k++) {
+            double a = Math.PI * 2 * k / FAN;
+            FAN_COS[k] = (float) Math.cos(a);
+            FAN_SIN[k] = (float) Math.sin(a);
+        }
+    }
     /** 그리는 거리 (칸) · 한꺼번에 둘 수 있는 수 */
     private static final double RANGE = 112;
     private static final int MAX = 700;
@@ -183,6 +194,13 @@ public final class FxModels {
         float killFade;
         Vec3 lastBase;
         float lastYaw;
+        /** 0.47.0 옮기기 (F_MOVE): 그때의 자리 → 새 자리 (세계 · follow 면 주인 기준), 시작 (틱) · 걸리는 초 */
+        double[] moveFrom;
+        double[] moveTo;
+        double moveStart = -1;
+        float moveDur;
+        /** 0.47.0 움직임을 바꾼 때 (태어난 뒤 초 — F_ANIM) */
+        float animT0;
     }
 
     private static final List<Inst> LIVE = new ArrayList<>();
@@ -190,6 +208,9 @@ public final class FxModels {
     public static int received;
     public static int lastDrawn;
     public static int lastQuads;
+    /** 시험: 옮기기 · 움직임 바꾸기를 받은 모델 수 */
+    public static int moved;
+    public static int animSwitched;
 
     private static double now() {
         return ClientMotions.ticks();
@@ -204,6 +225,31 @@ public final class FxModels {
                     i.killAt = t;
                     i.killFade = p.v()[30];
                 }
+            }
+            return;
+        }
+        if ((p.flags() & Fx3d.F_ANIM) != 0) {
+            double t = now();
+            for (Inst i : LIVE) {
+                if (i.id != p.id()) continue;
+                i.anim = p.anim().isEmpty() ? null : i.m.anims.get(p.anim());
+                i.animT0 = (float) Math.max(0, (t - i.born) / 20.0 - i.v[41]);
+                i.flags = (i.flags & ~Fx3d.F_LOOP) | (p.flags() & Fx3d.F_LOOP);
+                animSwitched++;
+            }
+            return;
+        }
+        if ((p.flags() & Fx3d.F_MOVE) != 0) {
+            double t = now();
+            for (Inst i : LIVE) {
+                if (i.id != p.id()) continue;
+                float[] pos = new float[6];
+                localPos(i, (t - i.born) / 20.0 - i.v[41], pos);
+                i.moveFrom = new double[] {pos[0], pos[1], pos[2]};
+                i.moveTo = new double[] {p.x(), p.y(), p.z()};
+                i.moveStart = t;
+                i.moveDur = Math.max(0.01F, p.v()[21]);
+                moved++;
             }
             return;
         }
@@ -307,6 +353,54 @@ public final class FxModels {
         return out;
     }
 
+    /**
+     * t 초의 자리 (follow 면 주인 기준 [오른쪽, 위, 앞] — 세계 자리는 그리는 쪽에서) 와 가는 쪽: out = {x, y, z, 가는 쪽 x, y, z}.
+     * 곧게 (vel · acc) · 곡선 길 (at → ctrl → to) · 도는 길 (at 둘레 — 반지름 · 도/초 · 처음 각 · 흔들림 · 반지름이 늚)
+     */
+    /** 위아래 흔들림 (bob 칸 · bobHz) — 도는 길이 아닐 때 */
+    private static float bobAt(float[] v, float tf) {
+        return v[45] != 0 ? v[45] * Mth.sin((float) (Math.PI * 2) * v[46] * tf) : 0F;
+    }
+
+    static void localPos(Inst in, double t, float[] out) {
+        float[] v = in.v;
+        float tf = (float) Math.max(0, t);
+        if ((in.flags & Fx3d.F_ORBIT) != 0) {
+            float r = v[42] + v[47] * tf;
+            float a = (v[44] + v[43] * tf) * Mth.DEG_TO_RAD;
+            float bob = v[45] != 0 ? v[45] * Mth.sin((float) (Math.PI * 2) * v[46] * tf + a) : 0F;
+            float ca = Mth.cos(a);
+            float sa = Mth.sin(a);
+            out[0] = (float) (in.x + ca * r);
+            out[1] = (float) (in.y + bob);
+            out[2] = (float) (in.z + sa * r);
+            float sg = v[43] >= 0 ? 1F : -1F;
+            out[3] = -sa * sg;
+            out[4] = 0;
+            out[5] = ca * sg;
+            return;
+        }
+        if ((in.flags & Fx3d.F_PATH) != 0) {
+            float e = ease((int) v[22], tf / Math.max(0.01F, v[21]));
+            float a = (1 - e) * (1 - e);
+            float b = 2 * (1 - e) * e;
+            float c = e * e;
+            out[0] = (float) (a * in.x + b * v[18] + c * v[15]);
+            out[1] = (float) (a * in.y + b * v[19] + c * v[16] + bobAt(v, tf));
+            out[2] = (float) (a * in.z + b * v[20] + c * v[17]);
+            out[3] = (float) (2 * (1 - e) * (v[18] - in.x) + 2 * e * (v[15] - v[18]));
+            out[4] = (float) (2 * (1 - e) * (v[19] - in.y) + 2 * e * (v[16] - v[19]));
+            out[5] = (float) (2 * (1 - e) * (v[20] - in.z) + 2 * e * (v[17] - v[20]));
+            return;
+        }
+        out[0] = (float) (in.x + v[9] * tf + 0.5 * v[12] * tf * tf);
+        out[1] = (float) (in.y + v[10] * tf + 0.5 * v[13] * tf * tf + bobAt(v, tf));
+        out[2] = (float) (in.z + v[11] * tf + 0.5 * v[14] * tf * tf);
+        out[3] = v[9] + v[12] * tf;
+        out[4] = v[10] + v[13] * tf;
+        out[5] = v[11] + v[14] * tf;
+    }
+
     /** LevelRenderer.submitEntities 끝: 떠 있는 모델을 모두 그림 (카메라 기준 자리) */
     public static void submitWorld(PoseStack ps, SubmitNodeCollector collector) {
         if (LIVE.isEmpty()) {
@@ -377,32 +471,25 @@ public final class FxModels {
             }
             float tf = (float) t;
             float tn = Mth.clamp(tf / Math.max(0.01F, life), 0F, 1F);
-            // 자리 (주인 기준이면 [오른쪽, 위, 앞])
-            float lx;
-            float ly;
-            float lz;
-            float gx;
-            float gy;
-            float gz;
-            if ((in.flags & Fx3d.F_PATH) != 0) {
-                float e = ease((int) v[22], tf / Math.max(0.01F, v[21]));
-                float a = (1 - e) * (1 - e);
-                float b = 2 * (1 - e) * e;
-                float c = e * e;
-                lx = (float) (a * in.x + b * v[18] + c * v[15]);
-                ly = (float) (a * in.y + b * v[19] + c * v[16]);
-                lz = (float) (a * in.z + b * v[20] + c * v[17]);
-                gx = (float) (2 * (1 - e) * (v[18] - in.x) + 2 * e * (v[15] - v[18]));
-                gy = (float) (2 * (1 - e) * (v[19] - in.y) + 2 * e * (v[16] - v[19]));
-                gz = (float) (2 * (1 - e) * (v[20] - in.z) + 2 * e * (v[17] - v[20]));
-            } else {
-                lx = (float) (in.x + v[9] * t + 0.5 * v[12] * t * t);
-                ly = (float) (in.y + v[10] * t + 0.5 * v[13] * t * t);
-                lz = (float) (in.z + v[11] * t + 0.5 * v[14] * t * t);
-                gx = v[9] + v[12] * tf;
-                gy = v[10] + v[13] * tf;
-                gz = v[11] + v[14] * tf;
+            // 자리 (주인 기준이면 [오른쪽, 위, 앞]) · 가는 쪽
+            float[] lp = new float[6];
+            localPos(in, t, lp);
+            if (in.moveStart >= 0) {
+                float k = Mth.clamp((float) ((now - in.moveStart) / 20.0 / in.moveDur), 0F, 1F);
+                float e = k * k * (3 - 2 * k);
+                lp[3] = (float) (in.moveTo[0] - in.moveFrom[0]);
+                lp[4] = (float) (in.moveTo[1] - in.moveFrom[1]);
+                lp[5] = (float) (in.moveTo[2] - in.moveFrom[2]);
+                lp[0] = (float) (in.moveFrom[0] + (in.moveTo[0] - in.moveFrom[0]) * e);
+                lp[1] = (float) (in.moveFrom[1] + (in.moveTo[1] - in.moveFrom[1]) * e);
+                lp[2] = (float) (in.moveFrom[2] + (in.moveTo[2] - in.moveFrom[2]) * e);
             }
+            float lx = lp[0];
+            float ly = lp[1];
+            float lz = lp[2];
+            float gx = lp[3];
+            float gy = lp[4];
+            float gz = lp[5];
             double wx;
             double wy;
             double wz;
@@ -487,10 +574,10 @@ public final class FxModels {
             Buf body = bodies.computeIfAbsent(in.m.tex, k -> new Buf());
             float shine = v[38] * a;
             Buf sh = shine > 0.004F ? shines.computeIfAbsent(in.m.tex, k -> new Buf()) : null;
-            int shineCol = argb(1F, hr * shine, hg * shine, hb * shine);
+            int shineCol = argb(Math.min(1F, shine), hr, hg, hb);
             float animU = 0;
             if (in.anim != null) {
-                float u = (tf * v[39] + v[40]) / in.anim.len;
+                float u = ((tf - in.animT0) * v[39] + v[40]) / in.anim.len;
                 animU = (in.flags & Fx3d.F_LOOP) != 0 ? u - Mth.floor(u) : Mth.clamp(u, 0F, 1F);
             }
             for (Part p : in.m.parts) {
@@ -527,23 +614,26 @@ public final class FxModels {
                 }
                 quads += nq;
             }
-            // 빛 무리 (카메라를 보는 둥근 빛 — 더하기)
+            // 빛 무리 (카메라를 보는 둥근 빛 — 번개 그리기 (더하기): 가운데 = 속빛 · 짙기 ga, 가장자리로 투명 — 조각 FAN 개의 부채꼴)
             float ga = v[37] * a;
             if (ga > 0.004F) {
-                int hc = argb(1F, hr * ga, hg * ga, hb * ga);
+                int center = argb(Math.min(1F, ga), hr, hg, hb);
+                int edge = argb(0F, hr, hg, hb);
                 for (float[] g : in.m.glow) {
                     M.transformPosition(g[0], g[1], g[2], tmp);
                     float r = g[3] * s;
-                    float rx = camRight.x * r;
-                    float ry = camRight.y * r;
-                    float rz = camRight.z * r;
-                    float ux = camUp.x * r;
-                    float uy = camUp.y * r;
-                    float uz = camUp.z * r;
-                    halos.add(tmp.x - rx - ux, tmp.y - ry - uy, tmp.z - rz - uz, 0, 1, 0, 1, 0, hc);
-                    halos.add(tmp.x + rx - ux, tmp.y + ry - uy, tmp.z + rz - uz, 1, 1, 0, 1, 0, hc);
-                    halos.add(tmp.x + rx + ux, tmp.y + ry + uy, tmp.z + rz + uz, 1, 0, 0, 1, 0, hc);
-                    halos.add(tmp.x - rx + ux, tmp.y - ry + uy, tmp.z - rz + uz, 0, 0, 0, 1, 0, hc);
+                    for (int k = 0; k < FAN; k++) {
+                        float c0 = FAN_COS[k] * r;
+                        float s0 = FAN_SIN[k] * r;
+                        float c1 = FAN_COS[k + 1] * r;
+                        float s1 = FAN_SIN[k + 1] * r;
+                        halos.add(tmp.x, tmp.y, tmp.z, 0.5F, 0.5F, 0, 1, 0, center);
+                        halos.add(tmp.x + camRight.x * c0 + camUp.x * s0, tmp.y + camRight.y * c0 + camUp.y * s0, tmp.z + camRight.z * c0 + camUp.z * s0, 0, 0, 0,
+                                1, 0, edge);
+                        halos.add(tmp.x + camRight.x * c1 + camUp.x * s1, tmp.y + camRight.y * c1 + camUp.y * s1, tmp.z + camRight.z * c1 + camUp.z * s1, 0, 0, 0,
+                                1, 0, edge);
+                        halos.add(tmp.x, tmp.y, tmp.z, 0.5F, 0.5F, 0, 1, 0, center);
+                    }
                 }
             }
             drawn++;
@@ -551,8 +641,9 @@ public final class FxModels {
         lastDrawn = drawn;
         lastQuads = quads;
         for (Map.Entry<Identifier, Buf> e : bodies.entrySet()) put(ps, collector, RenderTypes.entityTranslucent(e.getKey()), e.getValue());
-        for (Map.Entry<Identifier, Buf> e : shines.entrySet()) put(ps, collector, RenderTypes.eyes(e.getKey()), e.getValue());
-        put(ps, collector, RenderTypes.eyes(HALO), halos);
+        // 더한 빛: 몸을 속빛 쪽으로 shine 만큼 (밝기 최대 반투명 — 0.47.0 사진첩: eyes 는 더하기가 아니라 몸을 어둡게 덮었음)
+        for (Map.Entry<Identifier, Buf> e : shines.entrySet()) put(ps, collector, RenderTypes.entityTranslucentEmissive(e.getKey()), e.getValue());
+        put(ps, collector, RenderTypes.lightning(), halos);
     }
 
     /** 주인 기준 [오른쪽, 위, 앞] → 세계 (보는 쪽 sin · cos) */

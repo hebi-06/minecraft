@@ -330,9 +330,10 @@ final class ReaperSkills {
             SkillFx.play(d, "particle.soul_escape", ground, 0.5, 1.0);
             SkillFx.play(d, "entity.warden.dig", ground, 1.2, 0.6);
         });
-        // 빨아냄: 둘레의 적마다 drain · 혼 +1 · 적 → 문으로 혼불
+        // 빨아냄: 둘레의 적마다 drain · 혼 +1 · 적 → 문으로 혼불 (0.47.0 동작: 왼손을 움켜쥐어 끌어당김 — 1틱 전에)
         for (int i = 0; i < drains; i++) {
             int ii = i;
+            JobKit.motionLater(sp, "reaper_ult:drain", first + i * gap - 1, life);
             RuneKit.later(first + i * gap, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
@@ -352,6 +353,7 @@ final class ReaperSkills {
             JobFx.gate(d, gateAt, gs, j, 2, (finalAt - lastDrain - 6) / 20.0 + 0.1, gateO.with("fade", 0.15));
             SkillFx.play(d, "block.respawn_anchor.charge", ground, 0.6, 1.0);
         });
+        JobKit.motionLater(sp, "reaper_ult:close", finalAt - 4, life); // 0.47.0 낫을 크게 휘둘러 문을 닫는 동작 (4틱 뒤)
         RuneKit.later(finalAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
