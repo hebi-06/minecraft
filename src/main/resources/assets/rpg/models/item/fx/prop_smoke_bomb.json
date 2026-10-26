@@ -2,5 +2,41 @@
  "parent": "minecraft:item/generated",
  "textures": {
   "layer0": "rpg:item/fx/prop_smoke_bomb"
+ },
+ "display": {
+  "firstperson_righthand": {
+   "rotation": [
+    0,
+    -20,
+    8
+   ],
+   "translation": [
+    0,
+    3.2,
+    0
+   ],
+   "scale": [
+    0.72,
+    0.72,
+    0.72
+   ]
+  },
+  "firstperson_lefthand": {
+   "rotation": [
+    0,
+    20,
+    -8
+   ],
+   "translation": [
+    0,
+    3.2,
+    0
+   ],
+   "scale": [
+    0.72,
+    0.72,
+    0.72
+   ]
+  }
  }
 }

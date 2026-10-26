@@ -227,7 +227,7 @@ m = Motion("judge_hammer", 14, "심판의 망치 — 금빛 망치를 머리 뒤
 m.set(hands={"main": "prop"}, hold="rpg:prop_judge_hammer")
 graft(m, "throw", 0.3, 3.2, t_from=0.38, t_to=0.75, fp=False)
 m.set(holdAt=[0.0, m.t(1.75)])
-m.fp(0.3, (0.05, 0.35, 0.25), (50, 0, 0))  # 망치를 머리 뒤로 젖힘
+m.fp(0.3, (0.05, 0.35, 0.25), (50, 0, 0))  # 망치를 머리 뒤로 젖힘 (손에 드는 꼴 — 도구처럼)
 m.fp(1.7, (-0.1, 0.2, -0.45), (-40, 0, 0), ease="out3")  # 앞으로 내던짐
 fpr(m, 1.8, nudge(FP_JAB2, (0, -0.05, 0), (-5, 0, 0)))  # 던진 빈손
 fpr(m, 6, FP_LOW)

@@ -678,8 +678,10 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     // ------------------------------------------------------------ 0.46.0 룬 동작 (3인칭 마네킹 셋 · 1인칭 세 순간)
 
     private void runes(ClientGameTestContext ctx, TestServerContext server) {
-        // 마네킹은 북쪽 (나 → 3칸) — 앞 부분 (empty) 이 남쪽을 보게 돌려 두었으므로 다시 북쪽을 봄
+        // 마네킹은 북쪽 (처음 자리 → 3칸) — 앞 부분 (구르기 · 스킬) 에서 자리를 옮기고 남쪽을 보게 돌려 두었으므로 처음 자리로 돌아와 북쪽을 봄
+        server.runCommand("tp @a 0.5 -60 0.5 180 8");
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.waitTicks(5);
         ctx.getInput().lookAt(180F, 8F);
         hideGui(ctx, true);
         int frozen = 0;

@@ -223,7 +223,14 @@ def write():
         img = fn()
         img.save(os.path.join(tex, "prop_" + name + ".png"))
         with open(os.path.join(mod, "prop_" + name + ".json"), "w", encoding="utf-8") as f:
-            json.dump({"parent": "minecraft:item/" + parent, "textures": {"layer0": "rpg:item/fx/prop_" + name}}, f, indent=1)
+            model = {"parent": "minecraft:item/" + parent, "textures": {"layer0": "rpg:item/fx/prop_" + name}}
+            if parent == "generated":
+                # 1인칭: 납작한 그림이 화면을 거의 마주 보게 (바닐라 generated 는 옆으로 돌려 들어 공 · 표창이 가늘게 보임 — 게임 사진)
+                model["display"] = {
+                    "firstperson_righthand": {"rotation": [0, -20, 8], "translation": [0, 3.2, 0], "scale": [0.72, 0.72, 0.72]},
+                    "firstperson_lefthand": {"rotation": [0, 20, -8], "translation": [0, 3.2, 0], "scale": [0.72, 0.72, 0.72]},
+                }
+            json.dump(model, f, indent=1)
             f.write("\n")
         with open(os.path.join(itm, "prop_" + name + ".json"), "w", encoding="utf-8") as f:
             json.dump({"model": {"type": "minecraft:model", "model": "rpg:item/fx/prop_" + name}}, f, indent=1)
