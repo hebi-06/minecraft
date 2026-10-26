@@ -43,7 +43,8 @@ import org.joml.Vector3f;
  *       짙은 속빛 × 그림의 밝기</li>
  *   <li>더한 빛 (shine): 같은 면을 속빛으로 한 번 더 더함 (빛나는 물체) · 빛 무리 (모델의 glow 점 — 카메라를 보는 둥근 빛, 더하기 섞기)</li>
  *   <li>움직임: 곧게 (vel · acc) 또는 곡선 길 (at → ctrl → to, travel 초 · ease), follow 면 주인 기준 [오른쪽, 위, 앞] (주인의 보는 쪽을 따라 돎).
- *       방향: dir (모델 +Y) · face (모델 +Z) · roll · align (가는 쪽) · faceCam (넓은 면이 카메라 쪽) · spin (축 y · x · z · 세계 위)</li>
+ *       방향: dir (모델 +Y) · face (모델 +Z) · roll · align (가는 쪽) · faceCam (넓은 면이 카메라 쪽) · spin (축 y · x · z · 세계 위) · 휘두름 arc (dir · face 를
+ *       세계 · 주인 기준 축 둘레로 — 보는 사람마다 같은 길) · 쥔 곳 grip (모델 칸 — 이 점이 자리에 놓이고 이 점을 중심으로 돎). 옮기기는 지금 그려지는 자리에서 떠남</li>
  *   <li>크기 pop (튀어나옴) · grow · shrink, 투명 fadeIn · fadeOut, 모델 움직임 (부분마다 돌림 · 옮김 · 크기 열쇠 — 책장 · 문짝 · 종 흔들림)</li>
  * </ul>
  */
