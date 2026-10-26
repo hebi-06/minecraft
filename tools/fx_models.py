@@ -676,6 +676,19 @@ def p_swirl(u, v, rnd):
     return min(1.0, lum) + noise(rnd, 0.02), 1
 
 
+def p_vortex(u, v, rnd):
+    """소용돌이 팔 셋 (밝은 줄 — 사이는 비침): 가운데 밝은 눈 · 가장자리로 옅어짐"""
+    x, y = u - 0.5, v - 0.5
+    r = math.hypot(x, y) * 2
+    if r > 1:
+        return 0.0, 0
+    a = math.atan2(y, x)
+    k = (a / (2 * math.pi) * 3 + r * 1.5) % 1
+    streak = max(0.0, 1 - abs(k - 0.5) * 2) ** 3
+    alpha = min(1.0, streak * 1.3 + (0.9 if r < 0.14 else 0.0) + 0.12) * (1 - r ** 4)
+    return 0.72 + 0.28 * streak + noise(rnd, 0.02), alpha
+
+
 def p_bone(u, v, rnd):
     return 0.86 + 0.08 * math.sin(v * 9 + u * 3) + noise(rnd, 0.03), 1
 
@@ -832,7 +845,7 @@ def grimoire():
                                                        "scale": [[0, 1], [0.9, 1], [0.95, 0.01], [1, 0.01]]}}}
     m.anims["close"] = {"len": 0.4, "tracks": {"cover_l": {"rot": [[0, 0, 0, 0], [1, 0, -82, 0]]}, "cover_r": {"rot": [[0, 0, 0, 0], [1, 0, 82, 0]]},
                                                 "leaf": {"scale": [[0, 0.01], [1, 0.01]]}}}
-    m.add_glow(0, 0, 0.1, 0.9).add_glow(-0.3, 0.1, 0.1, 0.35).add_glow(0.3, -0.1, 0.1, 0.35)
+    m.add_glow(0, 0, 0.12, 0.6).add_glow(-0.3, 0.1, 0.12, 0.25).add_glow(0.3, -0.1, 0.12, 0.25)
     return m
 
 
@@ -925,6 +938,7 @@ def gate():
     stone = a.swatch("stone", p_stone)
     stone2 = a.swatch("stone2", p_stone, lum=0.6)
     swirl = a.swatch("swirl", p_swirl, 2, 2)
+    vortex = a.swatch("vortex", p_vortex, 2, 2)
     rune = a.swatch("rune", p_rune_band, 2, 1)
     door = a.swatch("door", p_cover)
     for x in (-1.15, 1.15):
@@ -941,10 +955,9 @@ def gate():
         c = v3(1.15 * math.cos(am), 2.7 + 0.75 * math.sin(am), 0)
         m.box(c, (0.42, 1.15 * (a1 - a0) * 1.05 + 0.02, 0.48), DARK, stone, rot=rot_z(math.degrees(am)))
     m.box((0, 3.48, 0), (0.36, 0.36, 0.56), WHITE, rune)  # 쐐기돌 (빛나는 룬)
-    # 소용돌이 판 (아치 안 — 두 면)
+    # 문 안 (아치 안쪽 모양 — 어두운 명계 · 두 면) + 그 앞의 도는 소용돌이 (팔 사이는 비침)
     m.part("portal", (0, 1.6, 0))
     u0, v0, u1, v1 = swirl
-    # 아치 안쪽 모양 (아래 네모 + 위 반타원 — 아치 돌의 안쪽 가장자리) 을 가운데에서 부채꼴로
     rim_pts = [(-0.94, 0.05), (0.94, 0.05)] + [(0.94 * math.cos(math.pi * k / 12), 2.7 + 0.54 * math.sin(math.pi * k / 12)) for k in range(13)]
     rim_pts.append((-0.94, 0.05))
     ymin, ymax = 0.05, 3.24
@@ -958,6 +971,22 @@ def gate():
             continue
         tri = [v3(0, cy, -0.02), v3(xa, ya, -0.02), v3(xb, yb, -0.02)]
         uvs = [puv(0, cy), puv(xa, ya), puv(xb, yb)]
+        m.quad(tri + [tri[-1]], uvs + [uvs[-1]], SHADOW, double=True)
+    vx0, vy0, vx1, vy1 = vortex
+    vc = (0.0, 1.75)
+    vr = 0.86
+    m.part("vortex", (vc[0], vc[1], 0.0))
+    seg = 24
+    for k in range(seg):
+        a0, a1 = 2 * math.pi * k / seg, 2 * math.pi * (k + 1) / seg
+        pa = (vc[0] + vr * math.cos(a0), vc[1] + vr * math.sin(a0))
+        pb = (vc[0] + vr * math.cos(a1), vc[1] + vr * math.sin(a1))
+
+        def vuv(x, y):
+            return (vx0 + (vx1 - vx0) * (0.5 + (x - vc[0]) / (2 * vr)), vy0 + (vy1 - vy0) * (0.5 - (y - vc[1]) / (2 * vr)))
+
+        tri = [v3(vc[0], vc[1], 0.0), v3(pa[0], pa[1], 0.0), v3(pb[0], pb[1], 0.0)]
+        uvs = [vuv(*vc), vuv(*pa), vuv(*pb)]
         m.quad(tri + [tri[-1]], uvs + [uvs[-1]], GLOW, double=True)
     # 문짝 (기둥 안쪽을 축으로)
     for side, name in ((-1, "door_l"), (1, "door_r")):
@@ -965,12 +994,14 @@ def gate():
         m.box((side * 0.47, 1.62, 0.05), (0.92, 3.1, 0.08), SHADOW, door)
         m.box((side * 0.47, 1.62, 0.1), (0.06, 2.6, 0.02), GLOW, rune)
     m.anims["open"] = {"len": 0.5, "tracks": {"door_l": {"rot": [[0, 0, 0, 0], [1, 0, 100, 0]]}, "door_r": {"rot": [[0, 0, 0, 0], [1, 0, -100, 0]]},
-                                               "portal": {"scale": [[0, 0.01], [0.3, 0.3], [1, 1]]}}}
+                                               "portal": {"scale": [[0, 0.01], [0.3, 0.3], [1, 1]]},
+                                               "vortex": {"rot": [[0, 0, 0, 0], [1, 0, 0, -200]], "scale": [[0, 0.01], [0.4, 0.2], [1, 1]]}}}
     m.anims["close"] = {"len": 0.5, "tracks": {"door_l": {"rot": [[0, 0, 100, 0], [1, 0, 0, 0]]}, "door_r": {"rot": [[0, 0, -100, 0], [1, 0, 0, 0]]},
-                                                "portal": {"scale": [[0, 1], [0.8, 0.2], [1, 0.01]]}}}
-    m.anims["swirl"] = {"len": 1.0, "tracks": {"door_l": {"rot": [[0, 0, 100, 0], [1, 0, 100, 0]]}, "door_r": {"rot": [[0, 0, -100, 0], [1, 0, -100, 0]]},
-                                                "portal": {"rot": [[0, 0, 0, 0], [0.5, 0, 0, 180], [1, 0, 0, 360]], "scale": [[0, 1], [0.5, 0.94], [1, 1]]}}}
-    m.add_glow(0, 1.7, 0.1, 1.4).add_glow(-1.15, 2.66, 0.2, 0.35).add_glow(1.15, 2.66, 0.2, 0.35).add_glow(0, 3.48, 0.2, 0.4)
+                                                "portal": {"scale": [[0, 1], [0.8, 0.2], [1, 0.01]]},
+                                                "vortex": {"rot": [[0, 0, 0, 0], [1, 0, 0, -300]], "scale": [[0, 1], [0.6, 0.15], [1, 0.01]]}}}
+    m.anims["swirl"] = {"len": 1.2, "tracks": {"door_l": {"rot": [[0, 0, 100, 0], [1, 0, 100, 0]]}, "door_r": {"rot": [[0, 0, -100, 0], [1, 0, -100, 0]]},
+                                                "vortex": {"rot": [[0, 0, 0, 0], [0.5, 0, 0, -180], [1, 0, 0, -360]], "scale": [[0, 1], [0.5, 0.92], [1, 1]]}}}
+    m.add_glow(0, 1.75, 0.1, 0.95).add_glow(-1.15, 2.66, 0.2, 0.3).add_glow(1.15, 2.66, 0.2, 0.3).add_glow(0, 3.48, 0.2, 0.35)
     return m
 
 
@@ -1073,6 +1104,91 @@ def aegis():
     return m
 
 
+@model
+def light_bow():
+    """빛의 활 (손잡이가 원점, 위 +Y · 쏘는 쪽 +Z — 시위는 −Z 쪽): 앞으로 휜 팔 둘 (끝이 조금 되휨) · 금빛 손잡이 · 시위 (string — 쉴 때 곧게),
+    당긴 시위 둘 (drawn_half · drawn — 깍지 자리로 V 자), 걸린 빛의 화살 (arrow). 움직임 draw (쉼 → 반 → 끝까지 · 화살이 나타남) · loose (놓음 — 시위가 돌아옴) ·
+    rest (쉬는 시위만 — 움직임 없이 띄우면 시위 셋이 다 보이므로 늘 움직임과 함께)"""
+    m = Model("light_bow")
+    a = m.atlas
+    limb = a.swatch("limb", p_rune_band, 2, 1)
+    grip = a.swatch("grip", p_grip)
+    gold = a.swatch("gold", p_metal, lum=0.9)
+    gem = a.swatch("gem", p_gem)
+    edge = a.swatch("edge", p_edge)
+    TIP_Y, TIP_Z = 1.1, -0.22
+
+    def limb_pt(t, sgn):
+        y = sgn * (0.12 + 0.98 * t)
+        z = -0.3 * t * t
+        if t > 0.86:
+            q = (t - 0.86) / 0.14
+            z += 0.08 * q * q * (3 - 2 * q)
+        return v3(0, y, z)
+
+    for sgn in (1, -1):
+        rings = []
+        N = 12
+        for k in range(N + 1):
+            t = k / N
+            p = limb_pt(t, sgn)
+            p2 = limb_pt(min(1, t + 0.02), sgn) - limb_pt(max(0, t - 0.02), sgn)
+            tan = unit(p2)
+            nrm = unit(np.cross(tan, v3(1, 0, 0)))
+            w = 0.07 - 0.035 * t
+            th = 0.04 - 0.012 * t
+            ring = [p + v3(w, 0, 0) + nrm * th, p + v3(-w, 0, 0) + nrm * th, p + v3(-w, 0, 0) - nrm * th, p + v3(w, 0, 0) - nrm * th]
+            rings.append(ring if sgn > 0 else ring[::-1])
+        m.loft(rings, [TINT, GLOW, TINT, GLOW], limb, cap0=False, cap1=True, mat_cap=WHITE)
+        # 끝의 빛 보석
+        tip = limb_pt(1.0, sgn)
+        m.lathe([(0.0, -0.05), (0.04, -0.02), (0.05, 0.0), (0.04, 0.02), (0.0, 0.05)], 8, WHITE, gem, center=tuple(tip))
+    # 손잡이 (금빛 감개 · 가운데 보석)
+    m.loft([(-0.16, octagon(0.055)), (0.16, octagon(0.055))], GOLD, grip)
+    for y in (-0.17, 0.17):
+        m.loft([(y - 0.025, octagon(0.07)), (y + 0.025, octagon(0.07))], WHITE, gold)
+    m.lathe([(0.0, -0.06), (0.05, -0.03), (0.06, 0.0), (0.05, 0.03), (0.0, 0.06)], 8, GLOW, gem, center=(0, 0, 0.06), axis_rot=rot_x(90))
+
+    def cord(p0, p1, r=0.012, mat=WHITE):
+        p0, p1 = v3(p0), v3(p1)
+        ax = unit(p1 - p0)
+        side = unit(np.cross(ax, v3(1, 0, 0))) if abs(ax[0]) < 0.95 else v3(0, 1, 0)
+        up = np.cross(side, ax)
+        rings = []
+        for p in (p0, p1):
+            rings.append([p + side * (r * math.cos(math.pi / 2 * k)) + up * (r * math.sin(math.pi / 2 * k)) for k in range(4)])
+        m.loft(rings, mat, edge, cap0=False, cap1=False)
+
+    top = v3(0, TIP_Y, TIP_Z)
+    bot = v3(0, -TIP_Y, TIP_Z)
+    m.part("string", (0, 0, TIP_Z))
+    cord(top, bot)
+    for name, nz in (("drawn_half", -0.55), ("drawn", -0.88)):
+        m.part(name, (0, 0, nz))
+        cord(top, (0, 0, nz))
+        cord((0, 0, nz), bot)
+    # 걸린 빛의 화살 (깍지 −0.88 → 촉 0.42)
+    m.part("arrow", (0, 0, -0.88))
+    m.loft([[v3(px, pz, z) for px, pz in octagon(0.018)] for z in (-0.88, 0.3)], GLOW, edge, cap0=True, cap1=False)
+    m.loft([[v3(px * 0.06 / 0.05, pz * 0.06 / 0.05, 0.3) for px, pz in octagon(0.05)], [v3(px * 0.03 / 0.05, pz * 0.03 / 0.05, 0.38) for px, pz in octagon(0.05)],
+            [v3(0, 0, 0.46)] * 8], WHITE, gem, cap0=True, cap1=False)
+    m.part("main")
+    m.anims["draw"] = {"len": 1.0, "tracks": {
+        "string": {"scale": [[0, 1], [0.3, 1], [0.31, 0.01], [1, 0.01]]},
+        "drawn_half": {"scale": [[0, 0.01], [0.3, 0.01], [0.31, 1], [0.62, 1], [0.63, 0.01], [1, 0.01]]},
+        "drawn": {"scale": [[0, 0.01], [0.62, 0.01], [0.63, 1], [1, 1]]},
+        "arrow": {"scale": [[0, 0.01], [0.3, 0.01], [0.45, 1], [1, 1]], "pos": [[0, 0, 0, 0.33], [0.62, 0, 0, 0.33], [0.63, 0, 0, 0], [1, 0, 0, 0]]}}}
+    m.anims["rest"] = {"len": 1.0, "tracks": {"string": {"scale": [[0, 1], [1, 1]]}, "drawn_half": {"scale": [[0, 0.01], [1, 0.01]]},
+                                               "drawn": {"scale": [[0, 0.01], [1, 0.01]]}, "arrow": {"scale": [[0, 0.01], [1, 0.01]]}}}
+    m.anims["loose"] = {"len": 0.35, "tracks": {
+        "string": {"scale": [[0, 0.01], [0.05, 1], [1, 1]], "rot": [[0, 0, 0, 0], [0.15, 9, 0, 0], [0.3, -6, 0, 0], [0.5, 3, 0, 0], [1, 0, 0, 0]]},
+        "drawn_half": {"scale": [[0, 0.01], [1, 0.01]]},
+        "drawn": {"scale": [[0, 1], [0.04, 0.01], [1, 0.01]]},
+        "arrow": {"scale": [[0, 0.01], [1, 0.01]]}}}
+    m.add_glow(0, 0.75, -0.15, 0.3).add_glow(0, -0.75, -0.15, 0.3).add_glow(0, 0, 0, 0.35).add_glow(0, 1.1, -0.22, 0.18).add_glow(0, -1.1, -0.22, 0.18)
+    return m
+
+
 # ------------------------------------------------------------ 미리 보기 (소프트웨어 래스터 — 면마다 그림 가운데 색 · 빛 방향 그늘)
 
 
@@ -1115,7 +1231,7 @@ def preview(m, path, size=360, anim=None, u=1.0):
     """여러 방향에서 본 그림: 깊이 버퍼 · 그림의 밝기 (uv 를 꼭짓점 사이로 이어서) · 빛 방향 그늘. anim = 움직임 이름 (u = 0 ~ 1 의 자리)"""
     views = [("front", rot_x(0)), ("side", rot_y(-90)), ("3/4", rot_x(-20) @ rot_y(-35)), ("top", rot_x(-90))]
     data = m.data()
-    tex = np.asarray(m.atlas.img.convert("RGB"), dtype=float) / 255.0
+    tex = np.asarray(m.atlas.img.convert("RGBA"), dtype=float) / 255.0
     th, tw = tex.shape[:2]
     tracks = (data.get("anims", {}).get(anim, {}) or {}).get("tracks", {}) if anim else {}
     quads = []
@@ -1175,6 +1291,7 @@ def preview(m, path, size=360, anim=None, u=1.0):
                 tu = np.clip(((w0 * u0_ + w1 * u1_ + w2 * u2_) * tw).astype(int), 0, tw - 1)
                 tv = np.clip(((w0 * v0_ + w1 * v1_ + w2 * v2_) * th).astype(int), 0, th - 1)
                 lum = tex[tv, tu, 0]
+                win = win & (tex[tv, tu, 3] > 0.35)  # 비치는 곳 (소용돌이 팔 사이) 은 그리지 않음
                 col = np.clip(base[None, None, :] * (lum * sh)[:, :, None], 0, 1)
                 cb = cbuf[by0:by1 + 1, bx0:bx1 + 1]
                 cb[win] = col[win]

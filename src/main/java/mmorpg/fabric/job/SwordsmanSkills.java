@@ -267,6 +267,9 @@ final class SwordsmanSkills {
             JobFx.ring(level, V.up(c, 1.0), r0, j, i % 2 == 1, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
             JobFx.ring(level, V.up(c, 0.06), r0 * 0.92, j, i % 2 == 1, 0.42, Opt.of("alpha", 0.55, "coreAlpha", 0.45));
             JobFx.slash(sp, j, 2.5, 0.5, 1.9 + 0.3 * q, i % 2 == 0 ? 0.0 : 180.0, 0.26);
+            // 0.47.0 입체: 허리 높이에서 몸과 같이 한 바퀴 도는 환영 검 둘 (칼끝이 바깥 — 첫 바퀴는 오른쪽으로, 둘째는 왼쪽으로)
+            JobFx3d.orbitOwner(sp, "phantom_sword", 2, new Vec3(0, 1.0, 0), 0.75, i % 2 == 0 ? -1150 : 1150, true, 0.32, 1.1 + 0.25 * q, j, Opt.of("angle", Kit.rand()
+                    * 360, "fadeIn", 0.03, "fadeOut", 0.1, "shine", 0.3));
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.9 + i * 0.15, 1.0);
             SkillFx.play(level, "item.spear.attack_miss", c, 1.0 + i * 0.2, 0.8);
             double mult = hits.get(i) * bonus;
@@ -303,6 +306,11 @@ final class SwordsmanSkills {
             });
         }
         JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
+        // 0.47.0 입체: 태세 동안 몸 둘레를 천천히 도는 환영 검 둘 (가슴 높이 · 칼끝이 가는 쪽 — 1인칭에서는 숨김)
+        int[] ids = JobFx3d.orbitOwner(sp, "phantom_sword", 2, new Vec3(0, 1.15, 0), 1.15, 75, false, dur / 20.0, 0.62, j, Opt.of("view", 1.0, "owner", (double) sp
+                .getId(), "bob", 0.12, "bobHz", 0.6, "fadeIn", 0.3, "fadeOut", 0.5, "alpha", 0.9));
+        JobFx3d.hold(sp, "swordsman_mirror", ids);
+        JobFx3d.guard(sp, life, ids, dur);
         DamageNumbers.showFace(sp, "§b§l명경지수", 2.4, 0, 0.2);
         SkillFx.play(level, "block.amethyst_block.resonate", c, 1.4, 1.0);
         SkillFx.play(level, "item.trident.return", c, 1.2, 0.8);
@@ -345,25 +353,26 @@ final class SwordsmanSkills {
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", c0, 1.2, 0.9);
         SkillFx.play(level0, "beacon.power", c0, 1.5, 0.8);
         SkillFx.play(level0, "block.bell.resonate", c0, 1.2, 0.8);
-        // 환영 검 반원 (3틱마다 다시 그림 — 솟는 동안 아래에서 올라옴, 날아간 만큼 줄어듦)
-        for (int t = 0; t <= lastVolley; t += 3) {
+        // 0.47.0 환영 검 반원 (입체 — 주인을 따라감): 머리 뒤 두 겹 반원으로 아래에서 솟아오름 (rise 틱), 일제 사격마다 per 자루가 그 자리에서 날아감
+        Halo halo = halo(sp, j, swords, rise, (lastVolley + 4) / 20.0);
+        JobFx3d.guard(sp, life, halo.ids, finalAt);
+        for (int t = 0; t < rise; t += 6) {
             int tt = t;
             RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life) || left[0] <= 0) return;
-                double q = Math.min(1, (tt + 3.0) / Math.max(1, rise));
-                drawHalo(sp, left[0], q, glow, core);
-                if (tt < rise && tt % 6 == 0) SkillFx.play(sp.level(), "block.bell.hit", sp.position(), 1.0 + q, 0.35);
+                if (RuneKit.sameLife(sp, life)) SkillFx.play(sp.level(), "block.bell.hit", sp.position(), 1.0 + (tt + 3.0) / Math.max(1, rise), 0.35);
             });
         }
         for (int v = 0; v < volleys; v++) {
             int vv = v;
             RuneKit.later(rise + v * every, () -> {
-                if (RuneKit.sameLife(sp, life)) volley(sp, j, P, volleyMult, per, left, radius, targets, vv, glow, core, life);
+                if (RuneKit.sameLife(sp, life)) volley(sp, j, P, volleyMult, per, left, radius, targets, vv, glow, core, life, halo);
             });
             JobKit.motionLater(sp, "swordsman_ult:volley", rise + v * every - 1, life); // 0.47.0 칼끝을 튕겨 환영 검을 날려 보내는 동작
         }
         RuneKit.later(lastVolley + 2, () -> {
-            if (RuneKit.sameLife(sp, life)) gatherFx(sp, gather - 2, glow, core, life);
+            if (!RuneKit.sameLife(sp, life)) return;
+            JobFx3d.killAll(sp.level(), halo.ids, sp.position(), 0.15); // 남은 반원의 검 (일제 사격이 다 못 쓴 것)
+            gatherFx(sp, j, gather - 2, glow, core, life);
         });
         JobKit.motionLater(sp, "swordsman_ult:gather", lastVolley + 2, life); // 0.47.0 두 손으로 칼을 들어 기를 모으는 동작
         RuneKit.later(finalAt, () -> {
@@ -373,28 +382,50 @@ final class SwordsmanSkills {
         return true;
     }
 
-    /** 환영 검 반원 (머리 뒤 · 위 — 칼끝이 바깥으로): 바깥 겹 (반지름 2.5) 이 조금 더 많음, q (0 ~ 1) = 솟은 정도 */
-    private static void drawHalo(ServerPlayer sp, int n, double q, double[] glow, double[] core) {
-        ServerLevel level = sp.level();
-        Vec3 f = Kit.facingOf(sp);
-        Vec3 right = V.rightOf(f);
-        Vec3 center = V.up(V.add(sp.getEyePosition(), f, -0.8), 0.5 - (1 - q) * 1.6);
-        Vec3 vel = RuneKit.bodyVel(sp);
+    /** 0.47.0 입체 환영 검 반원: 검마다 번호 · 주인 기준 자리 [오른쪽, 위, 앞] · 칼끝 쪽, 날려 보낼 차례 (바깥 · 안 겹을 양끝에서 번갈아 — 반원이 고르게 줄어듦) */
+    record Halo(int[] ids, Vec3[] local, Vec3[] radial, int[] order, int[] next) {}
+
+    /** 환영 검 반원 (머리 뒤 · 위 — 칼끝이 바깥으로): 바깥 겹 (반지름 2.5) 이 조금 더 많음, 아래에서 rise 틱에 솟아오름 */
+    private static Halo halo(ServerPlayer sp, Jobs.Job j, int n, int rise, double life) {
+        Vec3 center = new Vec3(0, sp.getEyeHeight() + 0.5, -0.8);
         int outer = Math.min(n, (n + 1) / 2 + n / 8);
+        int[] ids = new int[n];
+        Vec3[] local = new Vec3[n];
+        Vec3[] radial = new Vec3[n];
+        List<double[]> order = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             boolean out = i < outer;
             int m = out ? outer : n - outer;
             int idx = out ? i : i - outer;
             double th = Math.toRadians(-80 + 160.0 * (m <= 1 ? 0.5 : (double) idx / (m - 1)));
-            Vec3 radial = V.add(V.scale(right, Math.sin(th)), V.UP, Math.cos(th));
-            Vec3 at = V.add(center, radial, out ? 2.5 : 1.7);
-            RuneKit.rfx2(level, "sword", at, Opt.of("dir", radial, "size", out ? 0.75 : 0.6, "life", 0.17, "alpha", 0.5 + 0.45 * q, "vel", vel), glow, core);
+            Vec3 rd = new Vec3(Math.sin(th), Math.cos(th), 0);
+            Vec3 at = V.add(center, rd, out ? 2.5 : 1.7);
+            local[i] = at;
+            radial[i] = rd;
+            // 양끝에서 가운데로 (바깥 · 안 겹을 비율로 섞음)
+            int fromEnd = Math.min(idx, m - 1 - idx);
+            order.add(new double[] {(fromEnd * 2 + (idx > (m - 1) / 2.0 ? 1 : 0)) / (double) Math.max(1, m), out ? 0 : 1, i});
+            ids[i] = JobFx3d.spawn(sp.level(), "phantom_sword", V.add(at, V.UP, -1.6), j, Opt.of("follow", (double) sp.getId(), "to", at, "ctrl", V.add(at, V.UP, -0.4),
+                    "travel", Math.max(0.2, rise / 20.0 * (0.7 + 0.3 * (double) idx / Math.max(1, m))), "ease", "out3", "dir", rd, "face", new Vec3(0, 0, 1), "life", life,
+                    "scale", out ? 0.78 : 0.64, "fadeIn", 0.25, "fadeOut", 0.15, "glowAlpha", 0.45, "shine", 0.25));
         }
+        order.sort((x, y) -> x[0] != y[0] ? Double.compare(x[0], y[0]) : Double.compare(x[1], y[1]));
+        int[] ord = new int[n];
+        for (int k = 0; k < n; k++) ord[k] = (int) order.get(k)[2];
+        return new Halo(ids, local, radial, ord, new int[] {0});
+    }
+
+    /** 반원의 검 k 의 지금 세계 자리 (칼끝) */
+    private static Vec3 haloTip(ServerPlayer sp, Halo h, int k) {
+        Vec3 f = Kit.facingOf(sp);
+        Vec3 r = V.rightOf(f);
+        Vec3 l = V.add(h.local()[k], h.radial()[k], JobFx3d.SWORD_TIP * 0.7);
+        return V.add(V.add(V.add(sp.position(), r, l.x), V.UP, l.y), f, l.z);
     }
 
     /** 한 번의 일제 사격: 둘레 radius 칸의 보이는 적 (가까운 순 max 명) 마다 검 per 자루 (그림은 앞 둘 per · 다음 둘 2 · 나머지 1 자루) */
     private static void volley(ServerPlayer sp, Jobs.Job j, double P, double mult, int per, int[] left, double radius, int max, int v, double[] glow, double[] core,
-            String life) {
+            String life, Halo halo) {
         ServerLevel level = sp.level();
         Vec3 eye = sp.getEyePosition();
         Vec3 f = Kit.facingOf(sp);
@@ -403,6 +434,14 @@ final class SwordsmanSkills {
         List<LivingEntity> list = Kit.visibleFrom(sp, eye, JobKit.near(sp, radius, 32));
         if (list.size() > max) list = new ArrayList<>(list.subList(0, max));
         left[0] = Math.max(0, left[0] - per);
+        // 0.47.0 반원에서 per 자루가 빠져 날아감 (그 검의 칼끝 자리에서 — 반원의 검은 지움)
+        List<Vec3> starts = new ArrayList<>();
+        for (int s = 0; s < per && halo.next()[0] < halo.order().length; s++) {
+            int k = halo.order()[halo.next()[0]++];
+            starts.add(haloTip(sp, halo, k));
+            JobFx3d.kill(level, halo.ids()[k], sp.position(), 0.0);
+        }
+        if (starts.isEmpty()) starts.add(origin);
         SkillFx.play(level, "item.trident.throw", eye, 1.2 + v * 0.08, 0.9);
         SkillFx.play(level, "block.bell.hit", eye, 1.4 + v * 0.06, 0.35);
         if (list.isEmpty()) {
@@ -411,7 +450,7 @@ final class SwordsmanSkills {
                 double a = Kit.rand() * Math.PI * 2;
                 Vec3 g = V.add(sp.position(), new Vec3(Math.cos(a), 0, Math.sin(a)), 3 + Kit.rand() * 3);
                 Vec3 ground = new Vec3(g.x, RuneKit.groundAt(level, g, sp.getY()), g.z);
-                int t = fly(level, V.add(origin, right, (s - (per - 1) / 2.0) * 0.7), V.up(ground, 0.3), glow, core);
+                int t = fly(level, j, starts.get(s % starts.size()), V.up(ground, 0.3), glow, core, 0.6);
                 RuneKit.later(t, () -> {
                     JobFx.ring(level, V.up(ground, 0.05), 0.7, j, false, 0.3, Opt.empty());
                     JobFx.burst(level, V.up(ground, 0.35), 0.55, j, 0.3, Opt.empty());
@@ -425,9 +464,9 @@ final class SwordsmanSkills {
             int nShow = i < 2 ? per : i < 4 ? Math.min(2, per) : 1;
             int first = 0;
             for (int s = 0; s < nShow; s++) {
-                Vec3 from = V.add(V.add(origin, right, (s - (nShow - 1) / 2.0) * 0.9 + (i % 2 == 0 ? 0.3 : -0.3)), V.UP, (s % 2) * 0.5);
+                Vec3 from = V.add(starts.get((i * 2 + s) % starts.size()), right, (s / starts.size()) * 0.5);
                 Vec3 aim = V.add(to, new Vec3((Kit.rand() - 0.5) * 0.4, (Kit.rand() - 0.5) * 0.5, (Kit.rand() - 0.5) * 0.4));
-                int t = fly(level, from, aim, glow, core);
+                int t = fly(level, j, from, aim, glow, core, 0.3);
                 if (s == 0) first = t;
             }
             JobKit.strike(sp, e, j, P, mult, false, false, life, first, d -> {
@@ -436,20 +475,23 @@ final class SwordsmanSkills {
         }
     }
 
-    /** 날아가는 환영 검 (rpg:rfx_sword — 칼끝이 가는 쪽) + 옅은 빛줄기. 도착까지 틱 */
-    private static int fly(ServerLevel level, Vec3 from, Vec3 to, double[] glow, double[] core) {
+    /** 날아가는 환영 검 (0.47.0 입체 — 칼끝이 가는 쪽, 조금 휘어 날아가 hold 초 꽂혀 있음) + 옅은 빛줄기. 도착까지 틱 */
+    private static int fly(ServerLevel level, Jobs.Job j, Vec3 from, Vec3 to, double[] glow, double[] core, double hold) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.1) return 0;
         double life = Math.max(0.1, len / FLY_SPEED);
-        Vec3 u = V.unit(d);
-        RuneKit.rfx2(level, "sword", from, Opt.of("dir", u, "speed", len / life, "size", 0.75, "life", life), glow, core);
+        JobFx3d.fly(level, "phantom_sword", from, to, JobFx3d.SWORD_TIP, 0.8, life, hold, j, Opt.of("ctrl", V.up(V.lerp(from, to, 0.5), Math.min(1.2, len * 0.12)),
+                "ease", "in", "shine", 0.3, "fadeOut", 0.15));
         RuneKit.streak(level, from, to, core, 0.06, life + 0.1, 0.6, 0);
         return Math.max(1, (int) Math.round(life * 20));
     }
 
-    /** 모임: 둘레 열두 곳에서 검이 눈앞으로 날아와 모이고 (ticks 틱), 그 자리에 거대한 검이 커짐 */
-    private static void gatherFx(ServerPlayer sp, int ticks, double[] glow, double[] core, String life) {
+    /**
+     * 모임: 둘레 열두 곳에서 검이 눈앞으로 날아와 모이고 (ticks 틱), 그 자리에 거대한 검이 커짐 (0.47.0 입체 — 눈앞 2.6칸에 칼끝을 위로 세운 검이 주인을 따라가며 커짐,
+     * 일섬 때 내리침)
+     */
+    private static void gatherFx(ServerPlayer sp, Jobs.Job j, int ticks, double[] glow, double[] core, String life) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         Vec3 point = V.up(V.add(sp.position(), f, 2.6), 1.6);
@@ -457,20 +499,24 @@ final class SwordsmanSkills {
         for (int i = 0; i < 12; i++) {
             double a = i / 12.0 * Math.PI * 2;
             Vec3 from = V.up(V.add(sp.position(), new Vec3(Math.cos(a), 0, Math.sin(a)), 4.5), 1.0 + (i % 3) * 0.9);
-            Vec3 d = V.sub(point, from);
-            RuneKit.rfx2(level, "sword", from, Opt.of("dir", V.unit(d), "speed", V.len(d) / flyLife, "size", 0.7, "life", flyLife, "alpha", 0.9), glow, core);
+            JobFx3d.fly(level, "phantom_sword", from, point, JobFx3d.SWORD_TIP, 0.7, flyLife, 0, j, Opt.of("ease", "in", "shine", 0.3, "fadeOut", 0.12, "delay", (i % 4)
+                    * 0.03));
         }
         SkillFx.play(level, "block.beacon.power_select", sp.position(), 1.4, 0.8);
-        for (int t = (int) Math.round(ticks * 0.5); t < ticks; t += 2) {
+        int start = (int) Math.round(ticks * 0.5);
+        double grow = Math.max(0.05, (ticks - start + 1) / 20.0);
+        RuneKit.later(start, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            // 거대한 검 (코등이가 눈앞 2.6칸 · 높이 0.6 — 칼끝이 위): 0.7 → 2.9 배로 커짐, 넓은 면이 주인 쪽
+            JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(0, 0.6, 2.6), j, Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, 1), "scale",
+                    0.7, "grow", 2.9 / 0.7 - 1, "life", grow, "fadeIn", 0.1, "fadeOut", 0.0, "glowAlpha", 0.6, "shine", 0.4));
+        });
+        for (int t = start; t < ticks; t += 4) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 ff = Kit.facingOf(sp);
-                Vec3 hilt = V.up(V.add(sp.position(), ff, 2.6), 0.6);
-                double q = (tt + 2.0) / ticks;
-                double ls = 1.2 + q * 3.4;
-                RuneKit.rfx2(sp.level(), "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), glow, WHITE);
-                if (tt % 4 == 0) SkillFx.play(sp.level(), "block.bell.hit", hilt, 1.3 + q * 0.6, 0.35);
+                Vec3 hilt = V.up(V.add(sp.position(), Kit.facingOf(sp), 2.6), 0.6);
+                SkillFx.play(sp.level(), "block.bell.hit", hilt, 1.3 + (tt + 2.0) / ticks * 0.6, 0.35);
             });
         }
     }
@@ -484,6 +530,8 @@ final class SwordsmanSkills {
         double half = k.num("finalWidth", 3.2) / 2;
         Vec3 eye = sp.getEyePosition();
         double speed = 40;
+        // 0.47.0 입체: 모인 거대한 검이 위에서 앞으로 내리쳐 땅에 박힘 (코등이 = 몸 앞 1칸 · 가슴 높이, 넓은 면은 옆 — 1인칭에서는 칼날의 옆선)
+        JobFx3d.swing(level, "phantom_sword", V.up(V.add(sp.position(), f, 1.0), 1.3), V.UP, f, -15, 106, 0.16, 0.5, 2.9, j, Opt.of("shine", 0.45, "glowAlpha", 0.6));
         // 거대한 베기 (눈앞) + 그 베기가 앞으로 날아감 + 화면을 가로지르는 일섬 (1인칭) · 지나는 길의 일섬 (3인칭 · 다른 사람) + 앞으로 뻗는 긴 빛줄기
         JobFx.slash(sp, j, 2.6, 0.25, 3.0, 4.0, 0.42);
         JobFx.two(level, "jslash", JobFx.SLASH, V.add(from, f, 2.4), Math.max(0.15, (len - 2.4) / speed) + 0.12, Opt.of("dir", f, "speed", speed, "size", half * 1.6,

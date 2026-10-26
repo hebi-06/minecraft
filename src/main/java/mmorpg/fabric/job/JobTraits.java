@@ -262,6 +262,7 @@ public final class JobTraits {
         JobTraitsMore.stanceEnded(sp, id);
         JobTraits3.stanceEnded(sp, id);
         JobTraits4.stanceEnded(sp, id);
+        JobFx3d.drop(sp, id, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
         sendGauge(sp, true);
     }
 
@@ -447,6 +448,7 @@ public final class JobTraits {
                 JobTraitsMore.stanceEnded(sp, ended); // 마나 과부하 → 이동 느려짐
                 JobTraits3.stanceEnded(sp, ended); // 0.29.0 암영 → 이동 빨라짐 · 투명이 풀림
                 JobTraits4.stanceEnded(sp, ended); // 0.30.0 철옹성 → 이동 수정치를 뗌
+                JobFx3d.drop(sp, ended, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
             if (j.id().equals("swordsman") && st.stacks > 0 && !stanceOn(st, "swordsman_mirror")) {

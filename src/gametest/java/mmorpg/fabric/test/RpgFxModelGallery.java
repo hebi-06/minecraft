@@ -51,6 +51,7 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
         {"bone_hand", 1.1, -0.35, "grasp"},
         {"phantom_axe", 1.0, 0.0, ""},
         {"aegis", 0.75, -0.1, ""},
+        {"light_bow", 0.85, 0.0, "draw"},
     };
     private static final double[] SKY = {0.42, 0.78, 1.0};
     private static final double[] SKY_CORE = {0.84, 0.95, 1.0};
@@ -152,7 +153,7 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
 
     private void lineup(ClientGameTestContext ctx, TestServerContext server) {
         lineShots(ctx, server, LINEUP, "", 4.2, 1.05, true, false);
-        lineShots(ctx, server, LINEUP_B, "_b", 5.0, 1.25, false, true);
+        lineShots(ctx, server, LINEUP_B, "_b", 5.4, 1.2, false, true);
     }
 
     // ------------------------------------------------------------ 2. 움직임

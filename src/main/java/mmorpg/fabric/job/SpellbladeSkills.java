@@ -230,22 +230,10 @@ final class SpellbladeSkills {
         JobFx.eyeRing(sp, j, 2.4, 0.9, 0.45);
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", c, 1.4, 0.8);
         SkillFx.play(level, "beacon.activate", c, 1.7, 0.6);
-        // 도는 검 (2틱마다 — 칼날이 도는 쪽으로 누움, 눈 가까이는 흐리게)
-        for (int t = 0; t <= dur; t += 2) {
-            int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 eye = sp.getEyePosition();
-                for (int i = 0; i < swords; i++) {
-                    double a = tt * 0.21 + (double) i / swords * Math.PI * 2;
-                    Vec3 rd = new Vec3(Math.cos(a), 0, Math.sin(a));
-                    Vec3 at = V.up(V.add(c, rd, r * 0.9), 1.0 + 0.25 * Math.sin(a * 2 + tt * 0.3));
-                    Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
-                    boolean near = V.len(V.sub(at, eye)) < 2.2;
-                    RuneKit.rfx2(level, "sword", at, Opt.of("dir", tan, "size", 0.8, "life", 0.12, "alpha", near ? 0.35 : 0.95), glow, core);
-                }
-            });
-        }
+        // 0.47.0 입체: 원을 따라 도는 마력 검 (칼끝이 도는 쪽 · 넓은 면이 보는 사람 쪽 — 쓴 자리에 남음), 위아래로 너울거림
+        int[] ids = JobFx3d.orbitAt(level, "phantom_sword", swords, V.up(c, 1.0), r * 0.9, Math.toDegrees(0.21 * 20), dur / 20.0 + 0.1, 0.9, glow, core, Opt.of("bob",
+                0.25, "bobHz", 0.9, "fadeIn", 0.25, "fadeOut", 0.3, "shine", 0.3));
+        JobFx3d.guard(sp, life, ids, dur);
         SkillFx.every(laps, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             boolean magic = i % 2 == 1;
@@ -295,6 +283,11 @@ final class SpellbladeSkills {
             });
         }
         JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
+        // 0.47.0 입체: 태세 동안 몸 둘레를 도는 마력 검 셋 (허리 ~ 머리 — 칼끝이 가는 쪽, 1인칭에서는 숨김)
+        int[] ids = JobFx3d.orbitOwner(sp, "phantom_sword", 3, new Vec3(0, 1.2, 0), 1.2, 110, false, dur / 20.0, 0.6, j, Opt.of("view", 1.0, "owner", (double) sp
+                .getId(), "bob", 0.3, "bobHz", 0.5, "fadeIn", 0.3, "fadeOut", 0.5, "alpha", 0.92));
+        JobFx3d.hold(sp, "spellblade_awaken", ids);
+        JobFx3d.guard(sp, life, ids, dur);
         Ult.flash(level, c, glow, Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
         DamageNumbers.showFace(sp, "§d§l마검 각성", 2.4, 0, 0.2);
         SkillFx.play(level, "beacon.activate", c, 1.5, 0.8);
@@ -334,8 +327,12 @@ final class SpellbladeSkills {
         JobFx.eyeRing(sp, j, 2.6, 1.1, 0.5);
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", c0, 1.0, 1.0);
         SkillFx.play(level0, "beacon.power", c0, 1.2, 0.8);
-        // 솟아오르는 거대한 마력 검 (눈앞 2.6칸, 칼끝 위) + 빨려 드는 빛 → 베기 사이에도 들고 있음
-        for (int t = 0; t < thrustTick; t += 2) {
+        // 0.47.0 입체: 솟아오르는 거대한 마력 검 (눈앞 2.6칸, 칼끝 위 — 주인을 따라가며 rise 틱에 0.9 → 3.4 배) → 베기 사이에도 들고 있음 (heldSword)
+        JobFx3d.spawn(level0, "phantom_sword", new Vec3(0, 0.4, 2.6), j, Opt.of("follow", (double) sp.getId(), "to", new Vec3(0, 0.4, 2.6), "ctrl", new Vec3(0, 0.2, 2.6),
+                "travel", rise / 20.0, "dir", V.UP, "face", new Vec3(0, 0, 1), "scale", 0.9, "grow", 3.4 / 0.9 - 1, "life", rise / 20.0, "fadeIn", 0.2, "fadeOut", 0.0,
+                "glowAlpha", 0.6, "shine", 0.35));
+        // 빨려 드는 빛 (솟는 동안)
+        for (int t = 0; t < rise; t += 2) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
@@ -343,9 +340,6 @@ final class SpellbladeSkills {
                 Vec3 f = Kit.facingOf(sp);
                 double q = Math.min(1, (tt + 2.0) / rise);
                 Vec3 hilt = V.up(V.add(sp.position(), f, 2.6), 0.4);
-                double ls = 1.5 + q * 4.5;
-                boolean slashing = tt >= rise && (tt - rise) % gap < 4 && tt < rise + slashes.size() * gap;
-                if (!slashing) RuneKit.rfx2(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), glow, core);
                 if (tt < rise) {
                     for (int sd : new int[] {-1, 1}) {
                         Vec3 a = V.add(V.up(hilt, 1 + q * 2.5), V.rightOf(f), sd * (2.6 - q * 1.6));
@@ -358,8 +352,9 @@ final class SpellbladeSkills {
         }
         for (int i = 0; i < slashes.size(); i++) {
             int ii = i;
+            int next = i + 1 < slashes.size() ? gap : after;
             RuneKit.later(rise + i * gap, () -> {
-                if (RuneKit.sameLife(sp, life)) giantSlash(sp, j, P, slashes.get(ii), ii, range, half, glow, core, life, marked);
+                if (RuneKit.sameLife(sp, life)) giantSlash(sp, j, P, slashes.get(ii), ii, range, half, glow, core, life, marked, next);
             });
             JobKit.motionLater(sp, "spellblade_ult:slash" + (i % 3), rise + i * gap - 1, life); // 0.47.0 가로 · 세로 · 대각 베기 동작
         }
@@ -372,7 +367,7 @@ final class SpellbladeSkills {
 
     /** 거대한 검의 베기 하나 (i = 0 가로 · 1 세로 · 2 대각): 검이 휘둘러지는 세 장 · 거대한 검기 · 화면을 가르는 빛, 앞 range 칸 · 폭 half × 2 의 적 */
     private static void giantSlash(ServerPlayer sp, Jobs.Job j, double P, double mult, int i, double range, double half, double[] glow, double[] core, String life,
-            Set<UUID> marked) {
+            Set<UUID> marked, int untilNext) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         Vec3 right = V.rightOf(f);
@@ -384,15 +379,14 @@ final class SpellbladeSkills {
             case 1 -> f;
             default -> V.unit(V.add(right, f, 0.6));
         };
-        double[] tilt = {20, 55, 90};
-        for (int s = 0; s < tilt.length; s++) {
-            double deg = tilt[s];
-            RuneKit.later(s, () -> {
-                double a = Math.toRadians(deg);
-                Vec3 dir = V.unit(V.add(V.scale(V.UP, Math.cos(a)), sweep, Math.sin(a)));
-                RuneKit.rfx2(level, "sword", V.add(hilt, dir, 3.0), Opt.of("dir", dir, "size", 3.0, "life", 0.08), glow, core);
-            });
-        }
+        // 0.47.0 입체: 거대한 검이 위에서 sweep 쪽으로 휘둘러짐 (−25° → 105°, 4틱) → 다시 세워 들고 다음 베기까지 (주인을 따라감)
+        Vec3 sw = V.unit(V.sub(sweep, V.scale(V.UP, V.dot(sweep, V.UP))));
+        JobFx3d.swing(level, "phantom_sword", hilt, V.UP, sw, -25, 105, 0.2, 0.12, 3.4, j, Opt.of("shine", 0.45, "glowAlpha", 0.6));
+        RuneKit.later(5, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(0, 0.4, 2.6), j, Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, 1), "scale",
+                    3.4, "life", Math.max(0.1, (untilNext - 5) / 20.0), "pop", 0.12, "fadeIn", 0.05, "fadeOut", 0.0, "glowAlpha", 0.6, "shine", 0.35));
+        });
         Vec3 cutDir = switch (i % 3) {
             case 0 -> right;
             case 1 -> V.UP;
@@ -433,7 +427,10 @@ final class SpellbladeSkills {
         Vec3 hilt = V.up(V.add(sp.position(), f, 1.8), 1.0);
         Vec3 dv = V.unit(V.sub(point, hilt));
         double lv0 = Math.max(1, V.len(V.sub(point, hilt)));
-        RuneKit.rfx2(level, "sword", V.add(hilt, dv, lv0 / 2), Opt.of("dir", dv, "size", lv0 / 2 + 0.6, "life", 0.5, "fade", 0.5), glow, core);
+        // 0.47.0 입체: 거대한 검이 몸 쪽에서 앞으로 뻗어 칼끝이 폭발 자리에 닿음 (0.1초) → 0.4초 머물며 흐려짐
+        double sc = Math.max(1.0, lv0 / JobFx3d.SWORD_TIP);
+        JobFx3d.spawn(level, "phantom_sword", V.add(hilt, dv, -1.6), j, Opt.of("to", hilt, "ctrl", V.add(hilt, dv, -0.8), "travel", 0.1, "ease", "out3", "dir", dv, "face",
+                V.UP, "scale", sc, "life", 0.5, "fadeOut", 0.4, "glowAlpha", 0.65, "shine", 0.5));
         RuneKit.flyStreak(level, hilt, point, 60, glow, core, 1.2, 0.45);
         // 폭발: 큰 터짐 · 둘레 둥근 베기 둘 (거꾸로) · 빛기둥 · 번쩍임
         JobFx.burst(level, point, 2.6, j, 0.45, Opt.empty());

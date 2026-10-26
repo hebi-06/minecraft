@@ -78,6 +78,10 @@ final class WarriorSkills {
         RuneKit.Hand h = RuneKit.handOf(sp);
         // 들어 올림: 머리 위로 크게 그리는 반원 · 손의 불티 (분노를 쓰면 불꽃이 터짐 + 글자)
         JobFx.slash(sp, j, 1.9, -0.75, 1.15, 180.0, windup / 20.0 + 0.08);
+        // 0.47.0 입체: 몸 앞의 거대한 환영 도끼가 머리 위에서 앞 땅으로 내리찍힘 (날이 앞 — windup 틱 뒤 땅에 닿아 잠깐 박혀 있음)
+        Vec3 f0 = V.flat(sp.getViewVector(1F));
+        JobFx3d.swing(level0, "phantom_axe", V.up(V.add(sp.position(), f0, 1.3), 1.15), V.UP, f0, -25, 100, windup / 20.0 + 0.04, 0.4, rage ? 2.8 : 2.5, j,
+                Opt.of("shine", rage ? 0.5 : 0.35, "glowAlpha", 0.55));
         SkillFx.fx(level0, "rpg:arrow_spark", V.up(h.hand(), 0.2), Opt.of("dir", V.UP, "speed", 2.4, "size", 0.14, "grow", 0.8, "life", 0.3, "color", JobKit.glow(j),
                 "alpha", 1.0));
         if (rage) {
@@ -253,6 +257,10 @@ final class WarriorSkills {
         int leechMax = (int) k.num("leechMax", 5);
         String life = RuneKit.lifeToken(sp);
         double[] glow = JobKit.glow(j);
+        // 0.47.0 입체: 몸 둘레를 도는 환영 도끼 셋 (허리 높이 · 날이 바깥 — 오른쪽으로 도는 몸과 같이)
+        int[] axes = JobFx3d.orbitOwner(sp, "phantom_axe", 3, new Vec3(0, 1.0, 0), r * 0.32, -900, true, dur / 20.0 + 0.05, 1.45, j, Opt.of("fadeIn", 0.12,
+                "fadeOut", 0.2, "shine", 0.35, "glowAlpha", 0.5));
+        JobFx3d.guard(sp, life, axes, dur);
         SkillFx.play(sp.level(), "mob.breeze.whirl", sp.position(), 0.8, 1.0);
         SkillFx.play(sp.level(), "mob.ravager.roar", sp.position(), 1.4, 0.5);
         for (int t = 0; t <= dur; t += 2) {
@@ -361,6 +369,16 @@ final class WarriorSkills {
                 if (RuneKit.sameLife(sp, life)) leap(sp, j, k, P, ii, leapTicks, last, life);
             });
         }
+        // 0.47.0 입체: 대폭발 6틱 전 하늘에서 거대한 환영 도끼가 날부터 떨어져 마지막 착지 자리에 박힘
+        RuneKit.later(finalAt - 6, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 at = last[0];
+            double sc = 4.2;
+            Vec3 stick = V.up(at, 0.75 * sc * 0.45 + 0.1);
+            JobFx3d.spawn(sp.level(), "phantom_axe", V.up(stick, 14), j, Opt.of("to", stick, "ctrl", V.up(stick, 7), "travel", 0.3, "ease", "in", "dir", V.DOWN, "face",
+                    Kit.facingOf(sp), "scale", sc, "life", 0.85, "fadeIn", 0.05, "fadeOut", 0.35, "glowAlpha", 0.6, "shine", 0.5));
+            SkillFx.play(sp.level(), "item.trident.riptide_3", at, 0.6, 0.8);
+        });
         RuneKit.later(finalAt, () -> {
             if (RuneKit.sameLife(sp, life)) finalBlast(sp, j, k, P, last[0], glow, core, life);
         });

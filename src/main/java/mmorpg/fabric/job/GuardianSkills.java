@@ -216,11 +216,15 @@ final class GuardianSkills {
         LivingEntity first = Kit.pickTarget(sp, range, 15);
         SkillFx.play(level, "item.trident.throw", sp.position(), 0.8, 1.0);
         SkillFx.play(level, "entity.player.attack.sweep", sp.position(), 1.4, 0.5);
+        // 0.47.0 입체: 원반처럼 눕혀 도는 둥근 방패 하나가 적에서 적으로 튕기다 손으로 돌아옴 (Fx3d.move — 한 몸으로)
+        int[] shield = {JobFx3d.spawn(level, "buckler", from, j, Opt.of("dir", Kit.facingOf(sp), "face", V.UP, "spin", 1080.0, "spinAxis", "z", "scale", 0.6, "life",
+                8.0, "glowAlpha", 0.5, "shine", 0.25, "fadeIn", 0.04))};
         if (first == null) {
             Vec3 to = V.add(sp.getEyePosition(), sp.getViewVector(1F), range * 0.8);
-            int t = JobFx.bucklerFly(level, from, to, speed, 0.42, j, Opt.empty());
+            int t = shieldTo(level, shield[0], from, to, speed);
             RuneKit.later(t, () -> {
-                if (RuneKit.sameLife(sp, life)) comeBack(sp, j, to, speed);
+                if (RuneKit.sameLife(sp, life)) comeBack(sp, j, to, speed, shield[0]);
+                else JobFx3d.kill(sp.level(), shield[0], to, 0.1);
             });
             return true;
         }
@@ -245,25 +249,35 @@ final class GuardianSkills {
             seen.add(next.getUUID());
             cur = next;
         }
-        hop(sp, j, k, P, chain, 0, from, speed, life);
+        hop(sp, j, k, P, chain, 0, from, speed, life, shield[0]);
         return true;
     }
 
+    /** 0.47.0 입체 방패를 from → to 로 옮김 (speed 칸/초): 닿는 틱 */
+    private static int shieldTo(ServerLevel level, int id, Vec3 from, Vec3 to, double speed) {
+        double secs = Math.max(0.05, V.len(V.sub(to, from)) / Math.max(1, speed));
+        mmorpg.fabric.Fx3d.move(level, id, to, secs);
+        return Math.max(1, (int) Math.round(secs * 20));
+    }
+
     /** 다음 적으로 날아감 (i 번째) — 닿으면 hit · 도발 · 다음, 다 맞히면 돌아옴 */
-    private static void hop(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, List<LivingEntity> chain, int i, Vec3 from, double speed, String life) {
-        if (!RuneKit.sameLife(sp, life)) return;
+    private static void hop(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, List<LivingEntity> chain, int i, Vec3 from, double speed, String life, int shield) {
+        if (!RuneKit.sameLife(sp, life)) {
+            JobFx3d.kill(sp.level(), shield, from, 0.1);
+            return;
+        }
         ServerLevel level = sp.level();
         if (i >= chain.size()) {
-            comeBack(sp, j, from, speed);
+            comeBack(sp, j, from, speed, shield);
             return;
         }
         LivingEntity e = chain.get(i);
         if (e.isRemoved() || !e.isAlive() || e.level() != level) {
-            hop(sp, j, k, P, chain, i + 1, from, speed, life);
+            hop(sp, j, k, P, chain, i + 1, from, speed, life, shield);
             return;
         }
         Vec3 to = Kit.bodyPoint(e);
-        int t = JobFx.bucklerFly(level, from, to, speed, 0.42, j, Opt.empty());
+        int t = shieldTo(level, shield, from, to, speed);
         RuneKit.later(t, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
@@ -279,17 +293,18 @@ final class GuardianSkills {
             SkillFx.sparks(lv, at, JobKit.glow(j), 6, 4);
             SkillFx.play(lv, "item.shield.block", at, 1.1 + i * 0.06, 0.8);
             SkillFx.play(lv, "entity.zombie.attack_iron_door", at, 1.6, 0.35);
-            hop(sp, j, k, P, chain, i + 1, at, speed, life);
+            hop(sp, j, k, P, chain, i + 1, at, speed, life, shield);
         });
     }
 
     /** 손으로 돌아옴 */
-    private static void comeBack(ServerPlayer sp, Jobs.Job j, Vec3 from, double speed) {
+    private static void comeBack(ServerPlayer sp, Jobs.Job j, Vec3 from, double speed, int shield) {
         if (sp.isRemoved()) return;
         RuneKit.Hand h = RuneKit.handOf(sp);
         Vec3 hand = V.up(V.add(h.hand(), h.f(), 0.3), 0.1);
-        int t = JobFx.bucklerFly(sp.level(), from, hand, speed, 0.42, j, Opt.of("fade", 0.3));
+        int t = shieldTo(sp.level(), shield, from, hand, speed);
         RuneKit.later(t, () -> {
+            JobFx3d.kill(sp.level(), shield, hand, 0.12);
             if (sp.isRemoved()) return;
             SkillFx.play(sp.level(), "item.trident.return", sp.position(), 1.2, 0.8);
             JobKit.motion(sp, "guardian_throw:catch"); // 0.47.0 돌아온 방패를 받는 동작 (던진 뒤로 빈손)
@@ -308,6 +323,13 @@ final class GuardianSkills {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         JobFx.aegis(level, V.up(V.add(sp.position(), f, 0.95), 1.05), 0.62, j, 0, 0.3, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "solo", 3.0));
+        // 0.47.0 입체: 태세 동안 몸 앞에 선 연 모양 빛의 방패 (주인을 따라감 — 1인칭에서는 숨김, 끝나면 JobTraits4.stanceEnded 가 지움)
+        double as = 0.62 * 2.67 / JobFx3d.AEGIS_H;
+        int aegisId = JobFx3d.spawn(level, "aegis", new Vec3(0, 1.05 + 0.1 * as, 0.95), j, Opt.of("follow", (double) sp.getId(), "view", 1.0, "owner", (double) sp
+                .getId(), "dir", V.UP, "face", new Vec3(0, 0, 1), "scale", as, "life", dur / 20.0, "pop", 0.25, "fadeOut", 0.25, "glowAlpha", 0.45, "shine", 0.3,
+                "alpha", 0.9, "bob", 0.04, "bobHz", 0.7));
+        JobFx3d.hold(sp, "guardian_bulwark", new int[] {aegisId});
+        JobFx3d.guard(sp, RuneKit.lifeToken(sp), new int[] {aegisId}, dur);
         JobFx.ring(level, V.up(sp.position(), 0.06), 2.2, j, false, 0.4, Opt.empty());
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.45);
         JobFx.aura(sp, j, 2.6, 0.8, 0.8);

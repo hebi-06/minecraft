@@ -730,7 +730,7 @@ public final class JobTraits3 {
             for (int i = -1; i <= 1; i++) {
                 Vec3 base = V.add(V.up(sp.position(), 1.1), r, i * 0.55);
                 JobFx.spear(level, V.add(base, f, 1.9), V.unit(V.add(f, r, i * 0.25)), 0.75, 0, 0.42, j, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha",
-                        0.8));
+                        0.8, "flat", 1.0));
             }
             Vec3 look = sp.getViewVector(1F);
             for (int i = -1; i <= 1; i++) {

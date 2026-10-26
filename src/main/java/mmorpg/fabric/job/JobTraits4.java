@@ -754,10 +754,10 @@ public final class JobTraits4 {
             return true;
         }
         if (stance.equals("guardian_bulwark")) {
-            // 앞의 큰 빛의 방패 (3인칭 · 다른 사람 — 주인마다 하나) · 1인칭 화면 아래 옅은 방패 테
+            // 앞의 큰 빛의 방패 (3인칭 · 다른 사람 — 주인마다 하나, 0.47.0 몸은 입체 방패 · 이 그림은 옅은 빛) · 1인칭 화면 아래 옅은 방패 테
             Vec3 f = Kit.facingOf(sp);
-            JobFx.aegis(level, V.up(V.add(sp.position(), f, 0.95), 1.05), 0.62, j, 1, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.55, "coreAlpha",
-                    0.7, "solo", 3.0));
+            JobFx.aegis(level, V.up(V.add(sp.position(), f, 0.95), 1.05), 0.62, j, 1, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.3, "coreAlpha",
+                    0.4, "solo", 3.0));
             Vec3 look = sp.getViewVector(1F);
             JobFx.aegis(level, V.add(V.add(sp.getEyePosition(), look, 2.2), JobFx.screenUp(look), -1.05), 0.42, j, 1, 0.6, JobFx.only1p(sp).with("vel",
                     RuneKit.bodyVel(sp), "alpha", 0.35, "coreAlpha", 0.45, "solo", 4.0));
@@ -770,6 +770,7 @@ public final class JobTraits4 {
     static void stanceEnded(ServerPlayer sp, String id) {
         if (id.equals("guardian_bulwark")) {
             speedMod(sp, 0);
+            JobFx3d.drop(sp, "guardian_bulwark", 0.15); // 0.47.0 입체 방패도 사라짐
             Jobs.Job j = jobIf(sp, "guardian");
             if (j != null) {
                 JobFx.aegis(sp.level(), V.up(V.add(sp.position(), Kit.facingOf(sp), 0.95), 1.05), 0.62, j, 2, 0.35, JobFx.hide1p(sp).with("alpha", 0.7));

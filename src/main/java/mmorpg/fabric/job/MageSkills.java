@@ -183,6 +183,9 @@ final class MageSkills {
         SkillFx.play(sp.level(), "beacon.activate", pos[0], 1.8, 0.6);
         SkillFx.play(sp.level(), "mob.evocation_illager.cast_spell", pos[0], 1.3, 0.6);
         JobFx.burst(sp.level(), pos[0], 0.4, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
+        // 0.47.0 입체: 도는 고리 둘을 두른 비전 구체 하나가 쫓아감 (3틱마다 새 자리로 옮김 — Fx3d.move) · 2D 구체는 옅은 빛
+        int orbId = JobFx3d.spawn(sp.level(), "arcane_orb", pos[0], j, Opt.of("scale", 1.05, "life", dur / 20.0 + 0.15, "anim", "spin", "loop", 1.0, "pop", 0.25,
+                "fadeOut", 0.1, "glowAlpha", 0.55, "shine", 0.25));
         for (int t = 1; t <= dur; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
@@ -195,7 +198,8 @@ final class MageSkills {
                     pos[0] = V.add(pos[0], V.scale(d, 1 / Math.max(1e-6, len)), step);
                     travelled[0] += step;
                 }
-                if (tt % 2 == 0) JobFx.orb(sp.level(), pos[0], 0.36, j, 0.14, Opt.of("fade", 0.1));
+                if (tt % 3 == 0) mmorpg.fabric.Fx3d.move(sp.level(), orbId, pos[0], 0.15);
+                if (tt % 2 == 0) JobFx.orb(sp.level(), pos[0], 0.36, j, 0.14, Opt.of("fade", 0.1, "flat", 1.0, "alpha", 0.55, "coreAlpha", 0.45));
                 if (tt % 6 == 0) SkillFx.fx(sp.level(), "rpg:arrow_spark", pos[0], Opt.of("dir", V.unit(new Vec3(Kit.rand() - 0.5, 0.6, Kit.rand() - 0.5)), "speed", 1.5,
                         "size", 0.12, "grow", 0.6, "life", 0.35, "color", core, "alpha", 1.0));
             });
@@ -221,6 +225,7 @@ final class MageSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             Vec3 c = pos[0];
+            JobFx3d.kill(level, orbId, c, 0.08);
             JobFx.burst(level, c, radius * 0.6, j, 0.42, Opt.empty());
             JobFx.ringFacing(level, c, radius * 0.7, j, V.unit(V.sub(sp.getEyePosition(), c)), 0.4, Opt.empty());
             JobFx.ring(level, new Vec3(c.x, RuneKit.groundAt(level, c, c.y - 1.5) + 0.06, c.z), radius, j, false, 0.4, Opt.empty());
@@ -290,42 +295,50 @@ final class MageSkills {
         SkillFx.play(level0, "item.book.page_turn", sp.position(), 0.8, 1.0);
         SkillFx.play(level0, "beacon.power", center, 1.3, 0.9);
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", center, 1.1, 0.9);
-        // 펼쳐진 금서 (6틱마다 다시 — 책장이 넘어감, 처음엔 아래에서 솟아오름) · 맴도는 책장
+        // 0.47.0 입체: 펼쳐진 금서 (아래에서 솟아오르며 커짐 — 시전자 쪽으로 조금 눕혀 책장이 넘어감) · 둘레를 맴도는 책장 (불 · 얼음 · 번개 빛)
         int[] left = {Math.max(1, (int) k.num("pages", 12))};
-        for (int t = 0; t < finalAt - 4; t += 6) {
-            int tt = t;
+        Vec3 toMe = V.len(V.sub(sp.position(), bookAt)) > 0.1 ? V.flat(V.sub(sp.position(), bookAt)) : V.scale(Kit.facingOf(sp), -1);
+        double tilt = Math.toRadians(35);
+        Vec3 bookFace = V.unit(V.add(V.scale(toMe, Math.cos(tilt)), V.UP, Math.sin(tilt)));
+        Vec3 bookUp = V.unit(V.add(V.scale(V.UP, Math.cos(tilt)), toMe, -Math.sin(tilt)));
+        int bookId = JobFx3d.spawn(level0, "grimoire", V.up(bookAt, -1.6), j, Opt.of("to", bookAt, "ctrl", V.up(bookAt, -0.5), "travel", rise / 20.0, "ease", "out3",
+                "dir", bookUp, "face", bookFace, "scale", 2.1, "pop", rise / 20.0, "life", finalAt / 20.0 + 0.55, "anim", "flip", "loop", 1.0, "animSpeed", 0.8,
+                "fadeIn", 0.2, "fadeOut", 0.3, "glowAlpha", 0.4, "shine", 0.2, "bob", 0.12, "bobHz", 0.5));
+        for (int t = 0; t < finalAt - 4; t += 12) {
             RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                double q = Math.min(1, (tt + 6.0) / rise);
-                JobFx.book(sp.level(), V.up(bookAt, -1.6 * (1 - q)), 1.2 + 0.6 * q, j, 0.36, false, Opt.of("alpha", 0.6 + 0.4 * q));
-                if (tt % 12 == 0) SkillFx.play(sp.level(), "item.book.page_turn", bookAt, 1.2, 0.6);
+                if (RuneKit.sameLife(sp, life)) SkillFx.play(sp.level(), "item.book.page_turn", bookAt, 1.2, 0.6);
             });
         }
-        for (int t = 0; t < finalAt; t += 3) {
-            int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                int n = left[0];
-                for (int i = 0; i < n; i++) {
-                    double a = tt * 0.12 + (double) i / n * Math.PI * 2;
-                    double rr = radius * (0.55 + 0.25 * Math.sin(i * 1.7 + tt * 0.05));
-                    Vec3 p = new Vec3(center.x + Math.cos(a) * rr, bookAt.y - 1.2 + Math.sin(a * 2 + i) * 0.6, center.z + Math.sin(a) * rr);
-                    double[][] col = SPELLS[i % 3];
-                    JobFx.page(sp.level(), p, 0.32, mix(col[0], glow, 0.4), WHITE, 0.17, Opt.of("fade", 0.1, "alpha", 0.95));
-                }
-            });
+        int pages = left[0];
+        int[] pageIds = new int[pages];
+        Vec3 ring = new Vec3(center.x, bookAt.y - 1.2, center.z);
+        for (int i = 0; i < pages; i++) {
+            double[][] col = SPELLS[i % 3];
+            double rr = radius * (0.55 + 0.25 * Math.sin(i * 1.7));
+            pageIds[i] = JobFx3d.spawn(level0, "page", ring, mix(col[0], glow, 0.4), col[1], Opt.of("orbit", rr, "orbitSpeed", Math.toDegrees(0.12 * 20), "orbitAngle",
+                    360.0 * i / pages, "bob", 0.55, "bobHz", 0.45, "dir", V.UP, "faceCam", 1.0, "scale", 2.2, "life", finalAt / 20.0, "fadeIn", 0.3, "fadeOut", 0.2,
+                    "delay", Math.min(rise / 20.0, 0.05 * i), "glowAlpha", 0.5, "shine", 0.25));
         }
+        JobFx3d.guard(sp, life, pageIds, finalAt);
+        JobFx3d.guard(sp, life, new int[] {bookId}, finalAt);
         for (int w = 0; w < waves; w++) {
             int ww = w;
             RuneKit.later(rise + w * gap, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                left[0] = Math.max(0, left[0] - per);
+                // 0.47.0 맴돌던 책장 per 장이 사라지며 주문이 됨 (빛 터짐)
+                for (int p = 0; p < per && left[0] > 0; p++) {
+                    left[0]--;
+                    int idx = (ww * per + p) % pages;
+                    JobFx3d.kill(sp.level(), pageIds[idx], ring, 0.12);
+                }
                 spellWave(sp, j, k, P, center, bookAt, radius, per, ww, life);
             });
             JobKit.motionLater(sp, "mage_ult:wave", rise + w * gap - 1, life); // 0.47.0 완드를 휘둘러 책장을 떨어뜨리는 동작
         }
         RuneKit.later(finalAt, () -> {
-            if (RuneKit.sameLife(sp, life)) closeBook(sp, j, k, P, center, bookAt, radius, glow, core, life);
+            if (!RuneKit.sameLife(sp, life)) return;
+            mmorpg.fabric.Fx3d.anim(sp.level(), bookId, "close", false, bookAt); // 0.47.0 금서가 탁 닫힘 (0.4초)
+            closeBook(sp, j, k, P, center, bookAt, radius, glow, core, life);
         });
         JobKit.motionLater(sp, "mage_ult:close", finalAt - 4, life); // 0.47.0 두 팔을 맞부딪쳐 책을 닫는 동작 (4틱 뒤)
         return true;
@@ -397,7 +410,7 @@ final class MageSkills {
     private static void closeBook(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 center, Vec3 bookAt, double radius, double[] glow, double[] core,
             String life) {
         ServerLevel level = sp.level();
-        JobFx.book(level, bookAt, 1.8, j, 0.3, true, Opt.empty());
+        JobFx.burst(level, bookAt, 1.4, j, 0.3, Opt.of("alpha", 0.8)); // 0.47.0 닫히는 금서는 입체 (anim close) — 닫힐 때의 빛
         RuneKit.later(4, () -> {
             for (int i = 0; i < 3; i++) {
                 int ii = i;

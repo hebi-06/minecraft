@@ -222,12 +222,14 @@ final class AssassinSkills {
         Vec3 o0 = V.up(c0, h0);
         Vec3 f = Kit.facingOf(sp);
         Vec3[] ends = new Vec3[count];
+        int[] ids = new int[count];
         Set<UUID> outHit = new HashSet<>();
         for (int i = 0; i < count; i++) {
             Vec3 d = V.turnY(f, i * 360.0 / count);
             double len = Math.max(1.0, RuneKit.rayLength(level, o0, d, range));
             ends[i] = V.add(o0, d, len);
-            JobFx.dagger(level, V.add(o0, d, 0.5), ends[i], flight, 0.42, j, Opt.empty());
+            // 0.47.0 입체: 앞뒤로 구르는 비수 하나가 나가서 (flight) 멈춰 돌다가 (hold) 되돌아옴 (Fx3d.move) — 한 몸으로
+            ids[i] = JobFx3d.daggerFly(level, V.add(o0, d, 0.5), ends[i], flight, 0.42 * 2.25, (flight * 2 + hold) / 20.0 + 0.1, j, Opt.empty());
             for (Kit.LineHit lh : Kit.lineHits(sp, o0, d, len, half)) {
                 LivingEntity e = lh.e();
                 if (!outHit.add(e.getUUID())) continue;
@@ -243,23 +245,23 @@ final class AssassinSkills {
         JobFx.ring(level, o0, 1.4, j, false, 0.3, JobFx.hide1p(sp));
         SkillFx.play(level, "item.trident.throw", c0, 1.6, 0.8);
         SkillFx.play(level, "item.trident.throw", c0, 1.9, 0.6);
-        // 멈춤: 날 끝에서 도는 채로 hold 틱
-        RuneKit.later(flight, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            for (Vec3 end : ends) JobFx.dagger(sp.level(), end, end, hold + 1, 0.42, j, Opt.of("fade", 0.05));
-        });
+        // 멈춤: 날 끝에서 도는 채로 hold 틱 (입체 비수가 그 자리에서 계속 구름)
         // 되돌아옴: 지금 자리로 (길 위의 적마다 back)
         RuneKit.later(flight + hold, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
             Vec3 me = V.up(sp.position(), h0);
             Set<UUID> backHit = new HashSet<>();
-            for (Vec3 from : ends) {
+            for (int i = 0; i < ends.length; i++) {
+                Vec3 from = ends[i];
                 Vec3 dv = V.sub(me, from);
                 double len = V.len(dv);
-                if (len < 0.6) continue;
+                if (len < 0.6) {
+                    JobFx3d.kill(d, ids[i], from, 0.05);
+                    continue;
+                }
                 Vec3 u = V.scale(dv, 1 / len);
-                JobFx.dagger(d, from, V.add(me, u, -0.5), flight, 0.42, j, Opt.empty());
+                mmorpg.fabric.Fx3d.move(d, ids[i], V.add(me, u, -0.5), flight / 20.0);
                 for (Kit.LineHit lh : Kit.lineHits(sp, from, u, len, half)) {
                     LivingEntity e = lh.e();
                     if (!backHit.add(e.getUUID())) continue;
@@ -272,8 +274,9 @@ final class AssassinSkills {
             }
             SkillFx.play(d, "item.trident.return", sp.position(), 1.4, 0.8);
         });
-        // 잡음: 손 앞 작은 터짐 · 꽃잎
+        // 잡음: 손 앞 작은 터짐 · 꽃잎 (입체 비수는 사라짐)
         RuneKit.later(flight * 2 + hold, () -> {
+            JobFx3d.killAll(sp.level(), ids, sp.position(), 0.05);
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.Hand h = RuneKit.handOf(sp);
             JobFx.burst(sp.level(), V.up(V.add(h.hand(), h.f(), 0.5), 0.3), 0.32, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
@@ -441,6 +444,14 @@ final class AssassinSkills {
         // 벰: 적 몸의 엇갈린 베기 · 1인칭 눈앞 베기 · 꽃잎
         Vec3 at = Kit.bodyPoint(e);
         JobFx.cross(level, at, 0.9 + Kit.bodyPad(e) * 0.5, j, 0.28, Opt.of("vel", RuneKit.entVel(e)));
+        // 0.47.0 입체: 환영 비수 둘이 X 자로 적 몸을 꿰뚫고 지나감 (0.15초)
+        Vec3 side = V.rightOf(V.flat(V.sub(e.position(), now)));
+        double pad = 1.1 + Kit.bodyPad(e);
+        for (int sd = -1; sd <= 1; sd += 2) {
+            Vec3 a0 = V.add(V.add(at, side, sd * pad), V.UP, pad * 0.8);
+            Vec3 a1 = V.add(V.add(at, side, -sd * pad), V.UP, -pad * 0.8);
+            JobFx3d.fly(level, "dagger", a0, a1, 0.5, 1.5, 0.15, 0.05, j, Opt.of("shine", 0.4, "fadeOut", 0.05, "delay", sd > 0 ? 0.0 : 0.04));
+        }
         JobFx.slash(sp, j, 1.9, 0.25, 1.35, i % 2 == 0 ? 25.0 : 205.0, 0.2);
         JobFx.petals(level, at, 4, 3.0, 0.13, j, 0.6, Opt.empty());
         JobFx.speed(sp, j, 0.12, 0.7);

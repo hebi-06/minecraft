@@ -278,13 +278,17 @@ final class ReaperSkills {
         Vec3 gateGround = new Vec3(behind.x, RuneKit.groundAt(level0, behind, ground.y), behind.z);
         double gs = 3.0 * RuneKit.nearK(sp, V.up(gateGround, 3.0), 10, 0.65);
         Vec3 gateAt = V.up(gateGround, gs);
-        // 문 그림은 주인마다 하나만 (solo — 다시 그릴 때 겹친 두 장이 짙어지며 깜빡이지 않게, 솟음 → 열림 → 닫힘도 바로 바뀜)
-        Opt gateO = Opt.of("owner", (double) sp.getId(), "solo", 2.0);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         Ult.sky(level0, sp.position(), "rpg:ult_void", finalAt + 25);
-        // 문이 솟음: 땅의 연기 · 둥근 베기 · 문 (솟는 장)
-        JobFx.gate(level0, gateAt, gs, j, 0, first / 20.0 + 0.1, gateO.with("fade", 0.05));
+        // 0.47.0 입체 명계의 문: 땅에서 솟으며 문짝이 열림 (first 틱) → 소용돌이가 돎 → 닫힘 (Fx3d.anim) → 땅으로 가라앉음. 문은 시전자 쪽을 봄
+        Vec3 gateFace = V.len(away) > 0.3 ? V.scale(V.unit(away), -1) : V.scale(Kit.facingOf(sp), -1);
+        double gScale = gs * 2 / JobFx3d.GATE_H;
+        int gateId = JobFx3d.spawn(level0, "gate", V.up(gateGround, -JobFx3d.GATE_H * gScale * 0.9), j, Opt.of("to", gateGround, "ctrl", V.up(gateGround, -0.3), "travel",
+                Math.max(0.2, first / 20.0), "ease", "out3", "dir", V.UP, "face", gateFace, "scale", gScale, "life", finalAt / 20.0 + 0.6, "anim", "open", "animSpeed",
+                0.5 / Math.max(0.2, first / 20.0), "fadeIn", 0.15, "fadeOut", 0.35, "glowAlpha", 0.4, "shine", 0.15));
+        JobFx3d.guard(sp, life, new int[] {gateId}, finalAt + 10);
+        RuneKit.later(first, () -> mmorpg.fabric.Fx3d.anim(sp.level(), gateId, "swirl", true, gateGround));
         JobFx.smoke(level0, V.up(ground, 0.4), 2.4, j, 0.9, Opt.empty());
         JobFx.ring(level0, V.up(ground, 0.08), r, j, false, 0.5, Opt.of("alpha", 0.8));
         JobFx.slash(sp, j, 2.2, 0.0, 1.8, 275.0, 0.25);
@@ -296,8 +300,6 @@ final class ReaperSkills {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel d = sp.level();
-                // 소용돌이가 이어 돎 · 수명은 다시 그리는 간격 (0.5초) 의 두 배 (solo 라 겹치지 않음 — 서버가 밀려 다음 그림이 늦어도 비지 않게: 사진에서 문이 빈 틱이 있었음)
-                JobFx.gate(d, gateAt, gs, j, 1, 1.0, gateO.with("fade", 0.05, "phase", (mmorpg.fabric.Tasks.now() * 8 / 20.0) % 3));
                 JobFx.smoke(d, V.up(ground, 0.3), 2.0, j, 0.6, Opt.of("alpha", 0.6));
                 for (int i = 0; i < 3; i++) {
                     double a = Kit.rand() * Math.PI * 2;
@@ -318,13 +320,13 @@ final class ReaperSkills {
                 double s = 0.32 + Kit.bodyPad(e) * 0.2;
                 for (int h = -1; h <= 1; h += 2) {
                     Vec3 at = V.add(g, side, h * (0.35 + Kit.bodyPad(e)));
-                    for (int t = 0; t < root; t += 12) {
-                        int tt = t;
-                        RuneKit.later(t, () -> {
-                            if (e.isRemoved() || !e.isAlive()) return;
-                            JobFx.hand(d, at, s, j, tt == 0 ? 0.6 : 0.65, Opt.of("alpha", 0.9));
-                        });
-                    }
+                    // 0.47.0 입체 망자의 손: 땅에서 솟아 (0.3초) 적 쪽으로 움켜쥐고 root 틱 붙잡음 (손바닥이 적 쪽)
+                    double sc = s * 4.2;
+                    Vec3 palm = V.flat(V.sub(e.position(), at));
+                    JobFx3d.spawn(d, "bone_hand", V.up(at, -1.3 * sc), j, Opt.of("to", V.up(at, 0.15 * sc), "ctrl", V.up(at, -0.2 * sc), "travel", 0.3, "ease", "out3",
+                            "dir", V.unit(V.add(V.UP, palm, 0.25)), "face", palm, "scale", sc, "life", root / 20.0, "anim", "grasp", "animSpeed", 1.4, "fadeIn", 0.1,
+                            "fadeOut", 0.35, "glowAlpha", 0.45, "shine", 0.2, "delay", (h + 1) * 0.04));
+                    JobFx.hand(d, at, s, j, 0.6, Opt.of("alpha", 0.45, "coreAlpha", 0.35)); // 솟는 빛 (2D 손은 옅게 한 번)
                 }
             }
             SkillFx.play(d, "particle.soul_escape", ground, 0.5, 1.0);
@@ -346,13 +348,14 @@ final class ReaperSkills {
                 SkillFx.play(d, "particle.soul_escape", ground, 0.8 + ii * 0.08, 0.8);
             });
         }
-        // 닫힘 → 큰 피해
+        // 닫힘 → 큰 피해 (0.47.0 입체 문의 문짝이 닫히고 소용돌이가 빨려 듦 → 터진 뒤 땅으로 가라앉음)
         RuneKit.later(lastDrain + 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            JobFx.gate(d, gateAt, gs, j, 2, (finalAt - lastDrain - 6) / 20.0 + 0.1, gateO.with("fade", 0.15));
+            mmorpg.fabric.Fx3d.anim(d, gateId, "close", false, gateGround);
             SkillFx.play(d, "block.respawn_anchor.charge", ground, 0.6, 1.0);
         });
+        RuneKit.later(finalAt + 2, () -> mmorpg.fabric.Fx3d.move(sp.level(), gateId, V.up(gateGround, -JobFx3d.GATE_H * gScale), 0.55));
         JobKit.motionLater(sp, "reaper_ult:close", finalAt - 4, life); // 0.47.0 낫을 크게 휘둘러 문을 닫는 동작 (4틱 뒤)
         RuneKit.later(finalAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;

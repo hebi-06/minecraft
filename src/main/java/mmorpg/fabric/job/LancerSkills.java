@@ -225,6 +225,15 @@ final class LancerSkills {
         double r = k.num("radius", 5);
         int dur = spins * gap;
         String life = RuneKit.lifeToken(sp);
+        // 0.47.0 입체: 허리 높이에서 크게 도는 빛의 창 (날 끝 반지름 r — 몸이 가운데) · 머리 위에서 돌리는 창 (1인칭에서는 숨김)
+        double rate = 1260;
+        int big = JobFx3d.spawn(sp.level(), "spear", new Vec3(0, 1.0, 0), j, Opt.of("follow", (double) sp.getId(), "dir", new Vec3(1, 0, 0), "face", V.UP, "spin",
+                rate, "spinAxis", "up", "scale", r * 0.92 * 2 / JobFx3d.SPEAR_LEN, "life", dur / 20.0 + 0.1, "fadeIn", 0.06, "fadeOut", 0.15, "glowAlpha", 0.45, "shine",
+                0.3, "alpha", 0.95));
+        int top = JobFx3d.spawn(sp.level(), "spear", new Vec3(0, 2.45, 0), j, Opt.of("follow", (double) sp.getId(), "view", 1.0, "owner", (double) sp.getId(), "dir",
+                new Vec3(0, 0, 1), "face", V.UP, "spin", rate, "spinAxis", "up", "scale", 0.82, "life", dur / 20.0 + 0.1, "fadeIn", 0.06, "fadeOut", 0.15, "glowAlpha",
+                0.45, "shine", 0.3));
+        JobFx3d.guard(sp, life, new int[] {big, top}, dur + 4);
         SkillFx.play(sp.level(), "mob.breeze.whirl", sp.position(), 1.1, 1.0);
         SkillFx.play(sp.level(), "item.trident.riptide_1", sp.position(), 0.9, 0.7);
         for (int t = 0; t <= dur; t += 2) {
@@ -290,6 +299,16 @@ final class LancerSkills {
         }
         JobFx.ring(level, V.up(sp.position(), 0.06), 1.8, j, false, 0.4, JobFx.hide1p(sp));
         JobFx.eyeRing(sp, j, 2.4, 0.9, 0.45);
+        // 0.47.0 입체: 태세 동안 몸 앞에 세운 빛의 창 셋 (가슴 높이 — 주인을 따라감, 1인칭에서는 숨김)
+        int[] wallIds = new int[3];
+        for (int i = -1; i <= 1; i++) {
+            Vec3 dirL = V.unit(new Vec3(i * 0.25, 0.05, 1));
+            wallIds[i + 1] = JobFx3d.spawn(level, "spear", new Vec3(i * 0.55, 1.1, 1.9 - JobFx3d.SPEAR_TIP * 0.53), j, Opt.of("follow", (double) sp.getId(), "view", 1.0,
+                    "owner", (double) sp.getId(), "dir", dirL, "face", V.UP, "scale", 0.53, "life", dur / 20.0, "pop", 0.2, "fadeOut", 0.3, "glowAlpha", 0.45, "shine",
+                    0.25, "alpha", 0.92));
+        }
+        JobFx3d.hold(sp, "lancer_wall", wallIds);
+        JobFx3d.guard(sp, life, wallIds, dur);
         mmorpg.fabric.DamageNumbers.showFace(sp, "§6§l창벽 §7— 정면 피해 −" + Math.round(k.num("guard", 0.3) * 100) + "%", 2.4, 0, -0.3);
         SkillFx.play(level, "item.armor.equip_iron", sp.position(), 0.9, 1.0);
         SkillFx.play(level, "item.trident.riptide_1", sp.position(), 0.7, 0.6);
@@ -450,7 +469,7 @@ final class LancerSkills {
         RuneKit.later(finalAt - 7, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            JobFx.spearFly(d, V.add(V.up(ground, 16), back, 3), V.up(ground, 0.3), j, 50, 2.6, Opt.empty());
+            JobFx.spearFly(d, V.add(V.up(ground, 16), back, 3), V.up(ground, 0.3), j, 50, 2.6, Opt.of("stick", 0.8));
             JobFx.ring(d, V.up(ground, 0.08), fr, j, false, 0.35, Opt.of("alpha", 0.7));
             SkillFx.play(d, "item.trident.riptide_3", ground, 0.7, 1.0);
         });

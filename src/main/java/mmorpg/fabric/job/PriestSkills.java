@@ -256,11 +256,20 @@ final class PriestSkills {
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
         DamageNumbers.showFace(sp, "§e§l새벽의 종", 2.6, 0, 0.35);
         SkillFx.play(level0, "block.beacon.activate", c0, 1.0, 0.8);
-        // 종이 내려옴 (위에서 first − 4 틱 동안 — 흔들리기 전의 가만한 장면)
+        // 0.47.0 입체 큰 종: 위에서 내려와 (first − 4 틱) 매달려 있다가 울릴 때마다 흔들림 (Fx3d.anim swing — 추가 늦게 따라 침). 3인칭 · 다른 사람에게는 앞 3칸 위의 큰 종,
+        // 시전자 1인칭에는 눈앞 위쪽의 작은 종 (2D 와 같은 자리)
         int down = Math.max(4, first - 4);
-        JobFx.bellStill(level0, V.up(bellAt, 4), bellSize, GOLD, DAWN, down / 20.0, JobFx.hide1p(sp).with("dir", V.DOWN, "speed", 4 / (down / 20.0), "fade", 0.02));
-        JobFx.bellStill(level0, V.up(bell1p, 0.8), size1p, GOLD, DAWN, down / 20.0, JobFx.only1p(sp).with("dir", V.DOWN, "speed", 0.8 / (down / 20.0), "fade",
-                0.02));
+        Vec3 top = V.up(bellAt, bellSize);
+        Vec3 top1 = V.up(bell1p, size1p);
+        Vec3 bellFace = V.scale(f, -1);
+        double life3 = (endAt + 18) / 20.0;
+        int bellId = JobFx3d.spawn(level0, "bell", V.up(top, 4), GOLD, DAWN, JobFx.hide1p(sp).with("to", top, "ctrl", V.up(top, 1.2), "travel", down / 20.0, "ease",
+                "out3", "dir", V.UP, "face", bellFace, "scale", bellSize * 2 / JobFx3d.BELL_H, "life", life3, "fadeIn", 0.2, "fadeOut", 0.4, "glowAlpha", 0.5, "shine",
+                0.3));
+        int bell1Id = JobFx3d.spawn(level0, "bell", V.up(top1, 0.8), GOLD, DAWN, JobFx.only1p(sp).with("to", top1, "ctrl", V.up(top1, 0.25), "travel", down / 20.0,
+                "ease", "out3", "dir", V.UP, "face", bellFace, "scale", size1p * 2 / JobFx3d.BELL_H, "life", life3, "fadeIn", 0.2, "fadeOut", 0.4, "glowAlpha", 0.45,
+                "shine", 0.3));
+        JobFx3d.guard(sp, life, new int[] {bellId, bell1Id}, endAt + 18);
         RuneKit.godRays(sp, level0, ground, 2.5, 4, GOLD, DAWN, Opt.of("h", 10.0, "life", 1.0, "alpha", 0.6, "skipNear", true));
         for (int i = 0; i < rings; i++) {
             int ii = i;
@@ -269,8 +278,11 @@ final class PriestSkills {
             RuneKit.later(at - 4, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 double swing = ii == rings - 1 ? 0.9 : gap / 20.0 + 0.05;
-                JobFx.bell(sp.level(), bellAt, bellSize, GOLD, DAWN, swing, JobFx.hide1p(sp).with("fade", 0.15));
-                JobFx.bell(sp.level(), bell1p, size1p, GOLD, DAWN, swing, JobFx.only1p(sp).with("fade", 0.15));
+                mmorpg.fabric.Fx3d.anim(sp.level(), bellId, "swing", false, bellAt);
+                mmorpg.fabric.Fx3d.anim(sp.level(), bell1Id, "swing", false, bell1p);
+                // 2D 종은 소리 물결 빛으로 옅게
+                JobFx.bell(sp.level(), bellAt, bellSize, GOLD, DAWN, swing, JobFx.hide1p(sp).with("fade", 0.15, "alpha", 0.32, "coreAlpha", 0.28));
+                JobFx.bell(sp.level(), bell1p, size1p, GOLD, DAWN, swing, JobFx.only1p(sp).with("fade", 0.15, "alpha", 0.32, "coreAlpha", 0.28));
             });
             RuneKit.later(at, () -> {
                 if (RuneKit.sameLife(sp, life)) toll(sp, j, k, P, ground, bellAt, bell1p, r, ii, ii == rings - 1, life);

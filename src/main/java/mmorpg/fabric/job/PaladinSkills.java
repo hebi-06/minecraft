@@ -72,6 +72,10 @@ final class PaladinSkills {
         int judge = (int) k.num("judge", 2);
         JobFx.slash(sp, j, 2.3, 0.1, 2.0, 95.0, 0.22);
         Vec3 g = groundAhead(sp, c, f, 1.6);
+        // 0.47.0 입체: 번개 대망치가 위에서 앞 땅으로 내려꽂힘 (머리가 아래 · 0.1초) → 잠깐 박혀 있다 흐려짐
+        double ms = 0.85;
+        JobFx3d.spawn(level, "maul", V.up(g, 3.5), j, Opt.of("to", V.up(g, 0.3 * ms), "ctrl", V.up(g, 1.8), "travel", 0.1, "ease", "in", "dir", V.DOWN, "face",
+                V.scale(f, -1), "scale", ms, "life", 0.5, "fadeOut", 0.3, "glowAlpha", 0.55, "shine", 0.4));
         JobFx.smash(level, V.up(g, 0.05), 1.8, j, 0.5, Opt.empty());
         for (int i = 0; i < 5; i++) {
             Vec3 d = V.turnY(f, (i / 4.0 - 0.5) * arc * 0.8);
