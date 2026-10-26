@@ -85,6 +85,8 @@ public final class RpgRuneTimingTests {
         long t0;
         int first = -1;
         int last = -1;
+        /** 0.46.0 피해가 늘어난 틱들 (룬 동작의 타격 시각을 맞추는 자료 — 로그 hits) */
+        final List<Integer> hits = new ArrayList<>();
         double prev;
         double want;
         boolean cast;
@@ -128,6 +130,7 @@ public final class RpgRuneTimingTests {
                 p.t0 = now;
                 p.first = -1;
                 p.last = -1;
+                p.hits.clear();
                 p.prev = 0;
                 p.measuring = true;
                 throw h.assertionException("measuring");
@@ -137,13 +140,14 @@ public final class RpgRuneTimingTests {
             if (d > p.prev + 1e-9) {
                 if (p.first < 0) p.first = t;
                 p.last = t;
+                if (p.hits.size() < 80) p.hits.add(t);
                 p.prev = d;
             }
             boolean done = t >= MAX || (p.first >= 0 && t - p.last >= QUIET) || (p.first < 0 && t >= NONE) || !p.cast && t >= 5;
             if (!done) throw h.assertionException("measuring " + t);
             Runes.Rune r = p.runes.get(p.idx);
-            LOG.info("[rune-timing] {} {} {} cast={} first={} last={} dealt={} want={}", family, r.grade(), r.def().strOrNull("fn"), p.cast, p.first, p.last,
-                    String.format(Locale.ROOT, "%.1f", p.prev), String.format(Locale.ROOT, "%.1f", p.want));
+            LOG.info("[rune-timing] {} {} {} cast={} first={} last={} dealt={} want={} hits={}", family, r.grade(), r.def().strOrNull("fn"), p.cast, p.first,
+                    p.last, String.format(Locale.ROOT, "%.1f", p.prev), String.format(Locale.ROOT, "%.1f", p.want), p.hits);
             // 지속 보정 표와 맞는지
             mmorpg.core.Obj e = Runes.spreadEntry(r);
             String id = family + "." + r.grade();
