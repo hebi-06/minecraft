@@ -289,6 +289,7 @@ public final class RpgNet {
         PayloadTypeRegistry.clientboundPlay().register(FlashPayload.TYPE, FlashPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MountPayload.TYPE, MountPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(StatTreePayload.TYPE, StatTreePayload.CODEC);
+        Fx3d.init(); // 0.47.0 입체 효과 물체
         PayloadTypeRegistry.serverboundPlay().register(SpendPayload.TYPE, SpendPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(StatActionPayload.TYPE, StatActionPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(StatTreeActionPayload.TYPE, StatTreeActionPayload.CODEC);

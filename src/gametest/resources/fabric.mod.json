@@ -106,6 +106,7 @@
       "mmorpg.fabric.test.RpgMotionGallery",
       "mmorpg.fabric.test.RpgSmithUiGallery",
       "mmorpg.fabric.test.RpgWorkshopGallery",
+      "mmorpg.fabric.test.RpgFxModelGallery",
       "mmorpg.fabric.test.RpgProdSmoke"
     ]
   },

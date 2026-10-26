@@ -122,6 +122,8 @@ public final class MmorpgClient implements ClientModInitializer {
         // 초월 룬 하늘빛 · 화면 번쩍임
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.SkyPayload.TYPE, (payload, context) -> UltFx.sky(payload));
         ClientPlayNetworking.registerGlobalReceiver(RpgNet.FlashPayload.TYPE, (payload, context) -> UltFx.flash(payload));
+        // 0.47.0 입체 효과 물체 (직업 스킬의 환영 검 · 창 · 비수 · 화살 · 방패 …)
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.Fx3d.Payload.TYPE, (payload, context) -> FxModels.receive(payload));
         ClientPlayConnectionEvents.DISCONNECT.register((listener, client) -> {
             ClientRpgState.clear();
             ClientSkillBar.clear();
@@ -135,6 +137,7 @@ public final class MmorpgClient implements ClientModInitializer {
             UltFx.clear();
             mmorpg.fabric.client.motion.ClientMotions.clear();
             mmorpg.fabric.client.motion.BladeTrails.clear(); // 0.40.0 참격 궤적
+            FxModels.clear(); // 0.47.0 입체 효과 물체
             ClientSmith.clear(); // 0.44.0 대장장이 전용 창
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
