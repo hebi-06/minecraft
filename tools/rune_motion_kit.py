@@ -407,6 +407,9 @@ def fp_mirror_x(p):
     return (-p[0] - 2 * FP_GRIP_X, p[1], p[2])
 
 
+FP_SPIN_OFF_R = dict(p=fp_mirror_x((-3.0, 0.25, 0.55)), blade=(0.5, 0.0, -0.85))  # 1인칭 회전: 화면 밖 오른쪽 뒤 (뒤쪽 반 바퀴 동안 여기에)
+
+
 def fp_spin_pass(m, tk):
     """1인칭: tk 에 무기가 화면 가운데를 지나 왼쪽 → 오른쪽으로 쓸고 나감 (평타 회전 베기 spin 의 1인칭을 화면 거울로)"""
     m.fp(tk - 3.0, fp_mirror_x((1.4, 0.25, 0.55)), None, (-0.5, 0.0, -0.85), None, "linear")  # 화면 밖 (왼쪽 뒤)
@@ -414,7 +417,7 @@ def fp_spin_pass(m, tk):
     m.fp(tk - 0.6, fp_mirror_x((0.045, 0.409, 0.125)), None, (-0.637, 0.139, 0.759), (0.759, 0, 0.637), "in")
     m.fp(tk + 0.6, fp_mirror_x((-1.085, 0.364, 0.075)), None, (0.936, 0.087, 0.341), (0.341, 0, -0.936), "linear")  # tk 에 화면 가운데
     m.fp(tk + 1.6, fp_mirror_x((-2.028, 0.329, 0.225)), None, (0.766, 0, -0.643), (-0.643, 0, -0.766), "linear")
-    m.fp(tk + 2.4, fp_mirror_x((-3.0, 0.25, 0.55)), None, (0.5, 0.0, -0.85), None, "linear")  # 화면 밖 (오른쪽 뒤)
+    m.fp(tk + 2.4, FP_SPIN_OFF_R["p"], None, FP_SPIN_OFF_R["blade"], None, "linear")  # 화면 밖 (오른쪽 뒤)
 
 
 def spin_right(m, passes, end_tick, wind_tick=None, fwd=None):
@@ -427,7 +430,9 @@ def spin_right(m, passes, end_tick, wind_tick=None, fwd=None):
     keyp(m, end_tick, P(SPIN_END_R, spin=-360 * n), "out")
     m.keys[1.0] = {"spin": -360 * n}
     m.set(tilt=30, trail=[[m.t(max(0.3, first - 1.2)), m.t(end_tick - 1)]])
-    for tk in passes:
+    for i, tk in enumerate(passes):
+        if i > 0:  # 뒤쪽 반 바퀴: 화면 밖 오른쪽에 머물다가 다음 바퀴 바로 전에 화면 밖 왼쪽으로 (화면을 거꾸로 가로지르지 않게)
+            m.fp(tk - 3.05, FP_SPIN_OFF_R["p"], None, FP_SPIN_OFF_R["blade"], None, "linear")
         fp_spin_pass(m, tk)
     fpw(m, end_tick, FPW_LOW, "out")
 
@@ -495,7 +500,8 @@ def charge_slam(m, slam_tick, grip_tick=1.5, raise_tick=4.5):
         fpw(m, tick, FPW_UP, dp=(0.1 + sgn * 0.02, -0.1 + 0.04 * s, 0.05 * s))
         fpl(m, tick, nudge(FPL_RAISE2H, (sgn * 0.02, 0.02 * s, 0)))
     strike(m, "slam", wind, slam_tick)
-    fpl(m, wind, nudge(FPL_RAISE2H, (0, 0.05, 0.1)))
+    fpl(m, wind, nudge(FPL_RAISE2H, (0.05, 0.1, 0.0), (8, 0, 0)))  # 머리 뒤로 젖힘 (왼팔이 화면 위 밖으로)
+    fpl(m, slam_tick - 1.1, ((0.18, 0.12, 0.05), (45, -15, 0)))  # 내려오는 왼팔은 화면 왼쪽 가장자리로 (눈앞을 가로막지 않게)
     fpl(m, slam_tick, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
     fpl(m, slam_tick + 4, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
     return m

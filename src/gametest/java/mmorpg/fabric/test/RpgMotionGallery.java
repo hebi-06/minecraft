@@ -678,6 +678,9 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     // ------------------------------------------------------------ 0.46.0 룬 동작 (3인칭 마네킹 셋 · 1인칭 세 순간)
 
     private void runes(ClientGameTestContext ctx, TestServerContext server) {
+        // 마네킹은 북쪽 (나 → 3칸) — 앞 부분 (empty) 이 남쪽을 보게 돌려 두었으므로 다시 북쪽을 봄
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.getInput().lookAt(180F, 8F);
         hideGui(ctx, true);
         int frozen = 0;
         for (String[] s : RUNE_SAMPLES) {
@@ -697,7 +700,8 @@ public final class RpgMotionGallery implements FabricClientGameTest {
             ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
         }
         check(frozen == RUNE_SAMPLES.length, "rune motions frozen on mannequins " + frozen);
-        // 1인칭: 내 자세를 멈춤 — 맨손 (주먹) · 소품 · 무기가 그 순간에 맞는지 (MotionRender 가 그리는 길)
+        // 1인칭: 내 자세를 멈춤 — 맨손 (주먹) · 소품 · 무기가 그 순간에 맞는지 (MotionRender 가 그리는 길). 화면 글을 숨기면 (F1) 손도 그리지 않으므로 켬
+        hideGui(ctx, false);
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.getInput().lookAt(180F, 5F);
         int me = ctx.computeOnClient(mc -> mc.player.getId());
@@ -732,7 +736,6 @@ public final class RpgMotionGallery implements FabricClientGameTest {
                 "poison stars: left-hand shuriken then bare left hand");
         check(handsAt(ctx, me, "rn_fireball", 1.4F, false, true, false), "fireball: wand stays, left hand bare");
         ctx.runOnClient(mc -> ClientMotions.unfreezeAll());
-        hideGui(ctx, false);
         server.runOnServer(sv -> player(sv).getInventory().clearContent());
         ctx.waitTicks(3);
     }
