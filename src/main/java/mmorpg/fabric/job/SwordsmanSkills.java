@@ -487,21 +487,30 @@ final class SwordsmanSkills {
         return Math.max(1, (int) Math.round(life * 20));
     }
 
-    /** 0.47.0 모인 거대한 검 (주인 기준 앞 칸 · 크기 · 떠 있을 때 코등이 높이 — 칼끝이 땅 0.9칸 위 · 박혔을 때 코등이 높이 — 칼끝이 땅 1.1칸 아래) */
-    private static final double GIANT_AHEAD = 3.0;
-    private static final double GIANT_SCALE = 2.9;
+    /**
+     * 0.47.0 모인 거대한 검 (주인 기준 앞 칸 · 오른쪽 칸 · 크기 · 떠 있을 때 코등이 높이 — 칼끝이 땅 0.9칸 위 · 박혔을 때 코등이 높이 — 칼끝이 땅 1.1칸 아래). 사진첩: 앞 3칸
+     * 가운데에 꽂힌 검은 1인칭에서 과녁 몸 뒤에 (코등이만 보임) · 3인칭에서 내 몸 뒤에 가려졌음 → 앞 오른쪽 (1인칭 조준점 옆 · 3인칭 몸 옆)
+     */
+    private static final double GIANT_AHEAD = 2.7;
+    private static final double GIANT_RIGHT = 1.15;
+    private static final double GIANT_SCALE = 3.2;
     private static final double GIANT_HOVER = JobFx3d.SWORD_TIP * GIANT_SCALE + 0.9;
     private static final double GIANT_STUCK = JobFx3d.SWORD_TIP * GIANT_SCALE - 1.1;
 
+    /** 거대한 검이 박히는 땅 자리 (앞 GIANT_AHEAD · 오른쪽 GIANT_RIGHT) */
+    private static Vec3 giantAt(ServerPlayer sp, Vec3 f) {
+        return V.add(V.add(sp.position(), f, GIANT_AHEAD), V.rightOf(f), GIANT_RIGHT);
+    }
+
     /**
-     * 모임: 둘레 열두 곳에서 검이 눈앞으로 날아와 모이고 (ticks 틱), 그 자리에 거대한 검이 커짐 → 일섬 3틱 전 땅에 꽂힘. 0.47.0 입체 — 눈앞 3칸 위에 칼끝을 아래로 한 검이
-     * 떠서 (주인을 따라감 · 넓은 면이 보는 사람 쪽) 0.7 → 2.9 배로 커지며 칼끝이 땅 쪽으로 내려오고, 일섬 때 내리꽂혀 박힘 (사진첩: 앞으로 내리치던 검은 1인칭에서 손잡이가
+     * 모임: 둘레 열두 곳에서 검이 눈앞으로 날아와 모이고 (ticks 틱), 그 자리에 거대한 검이 커짐 → 일섬 3틱 전 땅에 꽂힘. 0.47.0 입체 — 앞 오른쪽 위에 칼끝을 아래로 한 검이
+     * 떠서 (주인을 따라감 · 넓은 면이 보는 사람 쪽) 0.7 → 3.2 배로 커지며 칼끝이 땅 쪽으로 내려오고, 일섬 때 내리꽂혀 박힘 (사진첩: 앞으로 내리치던 검은 1인칭에서 손잡이가
      * 화면을 덮고 3인칭에서는 칼날의 옆선으로만 보였음)
      */
     private static void gatherFx(ServerPlayer sp, Jobs.Job j, int ticks, double[] glow, double[] core, String life) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
-        Vec3 point = V.up(V.add(sp.position(), f, GIANT_AHEAD), 2.8);
+        Vec3 point = V.up(giantAt(sp, f), 3.0);
         double flyLife = Math.max(0.2, ticks * 0.6 / 20);
         for (int i = 0; i < 12; i++) {
             double a = i / 12.0 * Math.PI * 2;
@@ -516,22 +525,22 @@ final class SwordsmanSkills {
         double owner = sp.getId();
         RuneKit.later(start, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            // 떠 있는 거대한 검 (칼끝이 아래): 코등이 높이 GIANT_HOVER 에서 0.7 → 2.9 배로 커짐 (칼끝이 내려옴)
-            JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(0, GIANT_HOVER, GIANT_AHEAD), j, Opt.of("follow", owner, "dir", V.DOWN, "faceCam", 1.0, "scale", 0.7,
+            // 떠 있는 거대한 검 (칼끝이 아래): 코등이 높이 GIANT_HOVER 에서 0.7 → 3.2 배로 커짐 (칼끝이 내려옴)
+            JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(GIANT_RIGHT, GIANT_HOVER, GIANT_AHEAD), j, Opt.of("follow", owner, "dir", V.DOWN, "faceCam", 1.0, "scale", 0.7,
                     "grow", GIANT_SCALE / 0.7 - 1, "life", grow, "fadeIn", 0.1, "fadeOut", 0.0, "glowAlpha", 0.6, "shine", 0.4));
         });
         RuneKit.later(plungeAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             // 내리꽂힘 (3틱 — 점점 빠르게) → 박힌 채 흐려짐
-            JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(0, GIANT_HOVER, GIANT_AHEAD), j, Opt.of("follow", owner, "to", new Vec3(0, GIANT_STUCK, GIANT_AHEAD),
-                    "ctrl", new Vec3(0, (GIANT_HOVER + GIANT_STUCK) / 2, GIANT_AHEAD), "travel", 0.15, "ease", "in", "dir", V.DOWN, "faceCam", 1.0, "scale", GIANT_SCALE,
-                    "life", 0.8, "fadeOut", 0.45, "glowAlpha", 0.65, "shine", 0.5));
+            JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(GIANT_RIGHT, GIANT_HOVER, GIANT_AHEAD), j, Opt.of("follow", owner, "to", new Vec3(GIANT_RIGHT,
+                    GIANT_STUCK, GIANT_AHEAD), "ctrl", new Vec3(GIANT_RIGHT, (GIANT_HOVER + GIANT_STUCK) / 2, GIANT_AHEAD), "travel", 0.15, "ease", "in", "dir", V.DOWN,
+                    "faceCam", 1.0, "scale", GIANT_SCALE, "life", 1.0, "fadeOut", 0.5, "glowAlpha", 0.65, "shine", 0.5));
         });
         for (int t = start; t < ticks; t += 4) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 at = V.up(V.add(sp.position(), Kit.facingOf(sp), GIANT_AHEAD), 2.0);
+                Vec3 at = V.up(giantAt(sp, Kit.facingOf(sp)), 2.0);
                 SkillFx.play(sp.level(), "block.bell.hit", at, 1.3 + (tt + 2.0) / ticks * 0.6, 0.35);
             });
         }
@@ -546,8 +555,8 @@ final class SwordsmanSkills {
         double half = k.num("finalWidth", 3.2) / 2;
         Vec3 eye = sp.getEyePosition();
         double speed = 40;
-        // (0.47.0 입체 거대한 검은 모임 (gatherFx) 에서 3틱 전에 내리꽂혀 지금 앞 3칸 땅에 박힘) 박힌 자리의 땅 터짐
-        Vec3 stuck = V.add(sp.position(), f, GIANT_AHEAD);
+        // (0.47.0 입체 거대한 검은 모임 (gatherFx) 에서 3틱 전에 내리꽂혀 지금 앞 오른쪽 땅에 박힘) 박힌 자리의 땅 터짐
+        Vec3 stuck = giantAt(sp, f);
         Vec3 stuckGround = new Vec3(stuck.x, RuneKit.groundAt(level, stuck, sp.getY()), stuck.z);
         JobFx.smash(level, V.up(stuckGround, 0.05), 2.2, j, 0.55, Opt.empty());
         RuneKit.rockBurst(level, V.up(stuckGround, 0.2), 8, 4.5, 0.18);

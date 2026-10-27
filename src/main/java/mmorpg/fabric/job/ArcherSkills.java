@@ -275,11 +275,18 @@ final class ArcherSkills {
 
     // ------------------------------------------------------------ 관천일시
 
-    /** 0.47.0 눕힌 빛의 활 자리: 몸 앞 BOW_AHEAD 칸 · 높이 (눈 0.75칸 아래 — 1인칭에서 내려다봄) */
-    private static final double BOW_AHEAD = 2.2;
+    /**
+     * 0.47.0 눕힌 빛의 활 자리: 몸 앞 BOW_AHEAD 칸 · 높이 (눈 0.4칸 아래 — 1인칭에서 내려다봄). 사진첩: 눈 0.75칸 아래 · 2.2칸 앞은 1인칭 화면 아래 체력 줄 · 핫바에
+     * 활의 반이 가렸고, 3인칭에서는 거의 옆선으로 보였음 → 조금 높이 · 멀리 · 더 크게, 쏘는 쪽을 30° 들어 위에서 활 모양이 보이게. 3인칭 (내 3인칭 · 다른 사람) 에는
+     * 더 큰 활 (팔이 몸 양옆으로 나옴 — BOW_3P)
+     */
+    private static final double BOW_AHEAD = 2.6;
+    private static final double BOW_PITCH = 30;
+    /** 3인칭 활: 앞 칸 · 눈 아래 칸 · 크기 (1인칭 활은 1.3) */
+    private static final double[] BOW_3P = {2.4, 0.3, 1.9};
 
     private static double bowY(ServerPlayer sp) {
-        return sp.getEyeHeight() - 0.75;
+        return sp.getEyeHeight() - 0.4;
     }
 
     /**
@@ -300,14 +307,19 @@ final class ArcherSkills {
         JobFx.ring(level0, V.up(c0, 0.06), 3.0, j, false, draw / 20.0 + 0.2, Opt.of("alpha", 0.8));
         SkillFx.play(level0, "crossbow.loading.start", c0, 0.7, 1.0);
         SkillFx.play(level0, "beacon.power", c0, 1.6, 0.8);
-        // 0.47.0 입체: 가슴 앞 2.2칸에 눕힌 빛의 활 (팔이 좌우 · 쏘는 쪽이 앞으로 20° 들림 — 주인을 따라감) 이 커지며 시위가 반 → 끝까지 당겨지고 빛의 화살이 걸림.
+        // 0.47.0 입체: 가슴 앞 2.6칸에 눕힌 빛의 활 (팔이 좌우 · 쏘는 쪽이 앞으로 30° 들림 — 주인을 따라감) 이 커지며 시위가 반 → 끝까지 당겨지고 빛의 화살이 걸림.
         // 사진첩: 세운 활은 1인칭 · 3인칭 모두 뒤에서 보아 활대 옆선 한 줄로만 보였음 → 눕혀 위에서 내려다보면 휜 활대 · 당긴 시위 · 화살이 다 보임
-        double pitch = Math.toRadians(20);
-        int bowId = JobFx3d.spawn(level0, "light_bow", new Vec3(0, bowY(sp), BOW_AHEAD), j, Opt.of("follow", (double) sp.getId(), "dir", new Vec3(1, 0, 0),
-                "face", new Vec3(0, Math.sin(pitch), Math.cos(pitch)), "scale", 1.1, "grow", 0.35, "life", draw / 20.0 + 0.4, "anim", "draw", "animSpeed", 20.0 / Math
-                        .max(4, draw), "pop", 0.25, "fadeOut", 0.3, "glowAlpha", 0.5, "shine", 0.3));
-        JobFx3d.guard(sp, life, new int[] {bowId}, draw + 8);
-        RuneKit.later(draw, () -> mmorpg.fabric.Fx3d.anim(sp.level(), bowId, "loose", false, sp.position())); // 놓음: 시위가 돌아오며 떨림
+        double pitch = Math.toRadians(BOW_PITCH);
+        Opt bow = Opt.of("follow", (double) sp.getId(), "dir", new Vec3(1, 0, 0), "face", new Vec3(0, Math.sin(pitch), Math.cos(pitch)), "life", draw / 20.0 + 0.4,
+                "anim", "draw", "animSpeed", 20.0 / Math.max(4, draw), "pop", 0.25, "fadeOut", 0.3, "glowAlpha", 0.5, "shine", 0.3);
+        int[] bowIds = {
+            JobFx3d.spawn(level0, "light_bow", new Vec3(0, bowY(sp), BOW_AHEAD), j, bow.with("scale", 1.3, "grow", 0.35, "view", 2.0)), // 내 1인칭
+            JobFx3d.spawn(level0, "light_bow", new Vec3(0, sp.getEyeHeight() - BOW_3P[1], BOW_3P[0]), j, bow.with("scale", BOW_3P[2], "grow", 0.3, "view", 1.0)), // 3인칭
+        };
+        JobFx3d.guard(sp, life, bowIds, draw + 8);
+        RuneKit.later(draw, () -> {
+            for (int id : bowIds) mmorpg.fabric.Fx3d.anim(sp.level(), id, "loose", false, sp.position()); // 놓음: 시위가 돌아오며 떨림
+        });
         // 시위를 당김: 둘레에서 빛이 모여 듦 (활은 입체)
         for (int t = 0; t < draw; t += 2) {
             int tt = t;
