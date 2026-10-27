@@ -382,7 +382,7 @@ final class WarriorSkills {
         // 0.47.0 입체: 대폭발 6틱 전 오른쪽 위 하늘에서 거대한 환영 도끼가 비스듬히 날아와 앞 오른쪽 땅에 날부터 박힘 (자루가 오른쪽 위로 솟음 · 넓은 면이 앞뒤 — 1인칭에서
         // 화면 가운데를 가리지 않고 1 · 3인칭 모두 도끼 모양이 보임). 사진첩: 몸 자리에 곧게 떨어진 도끼는 1인칭에서 자루만 화면을 세로로 가르고 3인칭에서는 몸을 꿰뚫는 기둥,
         // 앞 3칸 가운데에 박힌 도끼는 1인칭에서 과녁 몸 뒤 · 3인칭에서 내 몸 뒤에 가려졌음 → 날 끝이 앞 2.8칸 · 오른쪽 1.6칸 (도끼 머리는 오른쪽 0.3칸 — 날이 오른쪽 아래로
-        // 박힘), 대폭발의 번쩍임 뒤에도 보이게 1.2초
+        // 박힘), 대폭발의 번쩍임 뒤에도 보이게 1.5초
         RuneKit.later(finalAt - 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
@@ -398,7 +398,7 @@ final class WarriorSkills {
             Vec3 stick = V.sub(V.up(ground, -0.5), V.add(V.scale(x, 0.41 * sc), y, 0.45 * sc));
             Vec3 from = V.add(stick, y, -12);
             JobFx3d.spawn(level, "phantom_axe", from, j, Opt.of("to", stick, "ctrl", V.lerp(from, stick, 0.5), "travel", 0.3, "ease", "in", "dir", y, "face", f, "scale",
-                    sc, "life", 1.2, "fadeIn", 0.05, "fadeOut", 0.45, "glowAlpha", 0.6, "shine", 0.5));
+                    sc, "life", 1.5, "fadeIn", 0.05, "fadeOut", 0.5, "glowAlpha", 0.6, "shine", 0.5));
             SkillFx.play(level, "item.trident.riptide_3", at, 0.6, 0.8);
         });
         RuneKit.later(finalAt, () -> {

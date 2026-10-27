@@ -531,10 +531,10 @@ final class SwordsmanSkills {
         });
         RuneKit.later(plungeAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            // 내리꽂힘 (3틱 — 점점 빠르게) → 박힌 채 흐려짐
+            // 내리꽂힘 (3틱 — 점점 빠르게) → 박힌 채 1초쯤 남았다가 흐려짐 (일섬의 번쩍임 뒤에도 보이게)
             JobFx3d.spawn(sp.level(), "phantom_sword", new Vec3(GIANT_RIGHT, GIANT_HOVER, GIANT_AHEAD), j, Opt.of("follow", owner, "to", new Vec3(GIANT_RIGHT,
                     GIANT_STUCK, GIANT_AHEAD), "ctrl", new Vec3(GIANT_RIGHT, (GIANT_HOVER + GIANT_STUCK) / 2, GIANT_AHEAD), "travel", 0.15, "ease", "in", "dir", V.DOWN,
-                    "faceCam", 1.0, "scale", GIANT_SCALE, "life", 1.0, "fadeOut", 0.5, "glowAlpha", 0.65, "shine", 0.5));
+                    "faceCam", 1.0, "scale", GIANT_SCALE, "life", 1.25, "fadeOut", 0.5, "glowAlpha", 0.65, "shine", 0.5));
         });
         for (int t = start; t < ticks; t += 4) {
             int tt = t;
