@@ -643,7 +643,7 @@ public final class FxModels {
                 }
                 ps.pushPose();
                 ps.translate((float) dx, (float) dy, (float) dz);
-                ps.mulPose(new Quaternionf().setFromNormalized(R));
+                ps.rotate(new Quaternionf().setFromNormalized(R));
                 ps.scale(s, s, s);
                 ps.translate(-v[54], -v[55], -v[56]);
                 in.itemState.submit(ps, collector, LIGHT, OverlayTexture.NO_OVERLAY, 0);
