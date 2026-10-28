@@ -528,13 +528,13 @@ def backhand(m, wind_tick, hit_tick, end_tick=None, wind=None, hit=None, end=Non
 
 
 def write_motion_block(src, motion):
-    """rules_more.json 의 MOTION 안 "skills" 덩이 · "runeMotions" · "jobMotions" 목록을 고쳐 씀 (다른 곳은 그대로 — 한 줄에 여럿 쓴 모양을 지킴).
-    차례: skills (룬이 아닌 열쇠 4개씩 → 룬 열쇠 3개씩) · runeMotions · jobMotions (룬 · 직업 도구가 같은 꼴로 씀)"""
+    """rules_more.json 의 MOTION 안 "skills" 덩이 · "runeMotions" · "jobMotions" · "weaponMotions" 목록을 고쳐 씀 (다른 곳은 그대로 — 한 줄에 여럿 쓴 모양을 지킴).
+    차례: skills (룬이 아닌 열쇠 4개씩 → 룬 열쇠 3개씩) · runeMotions · jobMotions · weaponMotions (룬 · 직업 · 무기 스킬 도구가 같은 꼴로 씀)"""
     i = src.index('"MOTION"')
     j = src.index("{", i)
     k = _match_close(src, j, "{", "}")
     block = src[j:k + 1]
-    for key in ('"runeMotions"', '"jobMotions"'):
+    for key in ('"runeMotions"', '"jobMotions"', '"weaponMotions"'):
         if key in block:
             a = block.index(key)
             b = _match_close(block, block.index("[", a), "[", "]")
@@ -548,7 +548,7 @@ def write_motion_block(src, motion):
     runes = [json.dumps(k2, ensure_ascii=False) + ": " + json.dumps(v, ensure_ascii=False) for k2, v in motion["skills"].items() if k2.startswith("rune:")]
     body = "{\n" + _pack(plain, 4, ind) + (",\n" + _pack(runes, 3, ind) if runes else "") + "\n    }"
     tail = ""
-    for key in ("runeMotions", "jobMotions"):
+    for key in ("runeMotions", "jobMotions", "weaponMotions"):
         if motion.get(key):
             names = [json.dumps(n) for n in motion[key]]
             tail += ',\n    "%s": [\n' % key + _pack(names, 6, ind) + "\n    ]"

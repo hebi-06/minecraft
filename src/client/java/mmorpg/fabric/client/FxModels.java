@@ -232,6 +232,8 @@ public final class FxModels {
     }
 
     private static final List<Inst> LIVE = new ArrayList<>();
+    /** 0.48.0 무기 모델 (item:) 을 효과 모델의 축에 맞춤: Y 축 −90° (아이템 X → Z, 아이템 −Z → +X) */
+    private static final Quaternionf ITEM_TURN = new Quaternionf().rotationY(-Mth.HALF_PI);
     /** 시험: 받은 모델 수 · 지난 그림에서 그린 모델 수 · 사각형 수 */
     public static int received;
     public static int lastDrawn;
@@ -629,6 +631,12 @@ public final class FxModels {
             if (v[30] > 0) a *= Mth.clamp((life - tf) / v[30], 0F, 1F);
             if (a <= 0.004F || s <= 0.001F) continue;
             M.identity().translate((float) dx, (float) dy, (float) dz).mul(new Matrix4f().set(R)).scale(s);
+            // 0.48.0 모델 축마다 늘임 (빛기둥 · 불기둥의 높이)
+            float sx = 1 + v[58];
+            float sy = 1 + v[59];
+            float sz = 1 + v[60];
+            boolean stretched = sx != 1 || sy != 1 || sz != 1;
+            if (stretched) M.scale(Math.max(0.001F, sx), Math.max(0.001F, sy), Math.max(0.001F, sz));
             // 쥔 곳 (모델 칸): 이 점이 자리에 놓이고 이 점을 중심으로 돎
             if (v[54] != 0 || v[55] != 0 || v[56] != 0) M.translate(-v[54], -v[55], -v[56]);
             if (in.m.item != null) {
@@ -641,11 +649,17 @@ public final class FxModels {
                     if (o instanceof LivingEntity le) stack = CosmeticRender.skinned(stack, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, le);
                     mc.getItemModelResolver().updateForTopItem(in.itemState, stack, ItemDisplayContext.NONE, level, null, in.id);
                 }
+                // 흐려질 때 (투명 대신) 60% 까지 작아졌다가 사라짐 — 툭 꺼지지 않게
+                float ks = a >= 0.65F ? 1F : 0.6F + 0.4F * Mth.clamp((a - 0.3F) / 0.35F, 0F, 1F);
                 ps.pushPose();
                 ps.translate((float) dx, (float) dy, (float) dz);
                 ps.rotate(new Quaternionf().setFromNormalized(R));
-                ps.scale(s, s, s);
+                ps.scale(s * ks, s * ks, s * ks);
+                if (stretched) ps.scale(Math.max(0.001F, sx), Math.max(0.001F, sy), Math.max(0.001F, sz));
                 ps.translate(-v[54], -v[55], -v[56]);
+                // 아이템 모델은 넓은 면이 ±X · 치는 쪽 (날 · 망치 면) 이 -Z (무기 디자인 팩) → 효과 모델과 같게 넓은 면 = ±Z (face · faceCam),
+                // 치는 쪽 = +X 로 돌림 (Y 축 −90°)
+                ps.rotate(ITEM_TURN);
                 in.itemState.submit(ps, collector, LIGHT, OverlayTexture.NO_OVERLAY, 0);
                 ps.popPose();
                 float ga = v[37] * a;

@@ -77,6 +77,15 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
         {"chain", 0.8, 0.0, ""},
         {"storm_cloud", 0.7, 0.5, "rumble"},
     };
+    /** 0.48.0 둘째 묶음 (불기둥 · 빛기둥 · 검기 · 얼음 껍질 · 그림자 분신 · 바람 정령) — 다섯째 줄 */
+    static final Object[][] LINEUP_E = {
+        {"flame", 1.3, 0.0, "flicker"},
+        {"pillar", 0.9, 0.0, "spin"},
+        {"crescent_wave", 0.9, 0.0, ""},
+        {"ice_shell", 0.9, 0.0, ""},
+        {"shade", 0.85, 0.0, "cross"},
+        {"sylph", 1.8, 0.0, "flap"},
+    };
     /** 0.48.0 무기 모델 (item: — 사용자 무기 디자인의 아이템 3D 모델) */
     static final String[] WEAPONS = {"rpg:sword_l40_transcend", "rpg:greatsword_l40_transcend", "rpg:lance_l40_transcend", "rpg:hammer_l40_transcend",
         "rpg:scythe_l40_transcend", "rpg:axe_l40_transcend", "rpg:lance_l30_hero"};
@@ -183,6 +192,7 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
         lineShots(ctx, server, LINEUP_B, "_b", 5.4, 1.2, false, true);
         lineShots(ctx, server, LINEUP_C, "_c", 5.0, 1.1, true, true);
         lineShots(ctx, server, LINEUP_D, "_d", 6.2, 1.35, false, true);
+        lineShots(ctx, server, LINEUP_E, "_e", 4.6, 1.3, true, true);
         weaponLine(ctx, server);
     }
 

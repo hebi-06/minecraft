@@ -20,7 +20,8 @@ public final class Motions {
 
     /**
      * 동작 이름 전부 (poses.json 과 같아야 함 — 시험이 확인): BASE + 0.46.0 룬 동작 (rules_more MOTION.runeMotions — tools/rune_motions.py 가 poses.json 과 함께
-     * 씀, 이름은 rn_ 로 시작) + 0.47.0 직업 스킬 동작 (MOTION.jobMotions — tools/job_motions.py, jb_)
+     * 씀, 이름은 rn_ 로 시작) + 0.47.0 직업 스킬 동작 (MOTION.jobMotions — tools/job_motions.py, jb_) + 0.48.0 무기 스킬 동작 (MOTION.weaponMotions —
+     * tools/weapon_motions.py, wp_)
      */
     public static final Set<String> KNOWN = known();
 
@@ -28,7 +29,7 @@ public final class Motions {
         java.util.Set<String> out = new java.util.LinkedHashSet<>(BASE);
         try {
             Obj c = Rules.get().obj("MOTION");
-            for (String key : List.of("runeMotions", "jobMotions")) if (c.has(key)) for (Object o : c.list(key)) out.add(String.valueOf(o));
+            for (String key : List.of("runeMotions", "jobMotions", "weaponMotions")) if (c.has(key)) for (Object o : c.list(key)) out.add(String.valueOf(o));
         } catch (RuntimeException e) {
             // 규칙을 못 읽으면 BASE 만 (스킬 동작 없이 — 시험이 잡음)
         }
@@ -43,6 +44,11 @@ public final class Motions {
     /** 0.47.0 직업 스킬 동작 이름 (jb_ — 궁극기는 5초까지) */
     public static boolean jobMotion(String name) {
         return name != null && name.startsWith("jb_");
+    }
+
+    /** 0.48.0 무기 스킬 동작 이름 (wp_ — 긴 초월 스킬은 5초까지, 때가 바뀌는 끝은 단계 열쇠로 다시 보냄) */
+    public static boolean weaponMotion(String name) {
+        return name != null && name.startsWith("wp_");
     }
 
     private static Obj cfg() {

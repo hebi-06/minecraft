@@ -33,15 +33,17 @@ PREFIX = "rn_"
 def write(check=False):
     src = open(POSES, encoding="utf-8").read()
     data = json.loads(src)
-    # 차례: 손으로 쓴 동작 → 룬 (rn_) → 직업 스킬 (jb_ — tools/job_motions.py) — 두 도구가 같은 꼴로 씀
-    ms = {k: v for k, v in data["motions"].items() if not k.startswith(PREFIX) and not k.startswith("jb_")}
+    # 차례: 손으로 쓴 동작 → 룬 (rn_) → 직업 스킬 (jb_ — tools/job_motions.py) → 무기 스킬 (wp_ — tools/weapon_motions.py) — 세 도구가 같은 꼴로 씀
+    later = ("jb_", "wp_")
+    ms = {k: v for k, v in data["motions"].items() if not k.startswith(PREFIX) and not k.startswith(later)}
     for mo in MOTIONS:
         m = mo.build()
         motion_arcs.densify(mo.name, m)
         ms[mo.name] = m
-    for k, v in data["motions"].items():
-        if k.startswith("jb_"):
-            ms[k] = v
+    for pre in later:
+        for k, v in data["motions"].items():
+            if k.startswith(pre):
+                ms[k] = v
     data["motions"] = ms
     out = motion_arcs.fmt(data)
     rules_src = open(RULES, encoding="utf-8").read()

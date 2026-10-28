@@ -24,6 +24,7 @@ import net.minecraft.world.phys.Vec3;
  * 옮기기 move (쫓아가는 구체 — 지금 자리에서 새 자리로), 움직임 바꾸기 anim (문이 열림 → 소용돌이 → 닫힘), 휘두름 arc · arcAxis · arcTime · arcEase (dir · face 를
  * 세계 축 둘레로 돌림 — 내리치는 도끼 · 휘두르는 거대한 검, faceCam 과 같이 쓰면 넓은 면이 늘 보임), 쥔 곳 grip (모델 칸 — 이 점을 중심으로 돎).
  * 0.48.0 무기 모델 — 이름이 item:&lt;아이템 ID&gt; 이면 사용자 무기 디자인의 아이템 3D 모델 (던진 묠니르 · 떨어지는 궁니르 …, 주인의 무기 스킨) — glowR (가운데 빛 무리).
+ * stretch (모델 축마다 늘임 [x, y, z] — 빛기둥 · 불기둥을 높이만 길게).
  */
 public final class Fx3d {
     private Fx3d() {}
@@ -77,7 +78,9 @@ public final class Fx3d {
     static final int GRIP = 54;
     /** 0.48.0 무기 모델 (item:) 의 가운데 빛 무리 반지름 (모델 칸 — glowR, 0 = 없음) */
     static final int GLOW_R = 57;
-    public static final int VALUES = 58;
+    /** 0.48.0 모델 축마다 늘임 − 1 (stretch — 빛기둥 · 불기둥: 0 이면 그대로) */
+    static final int STRETCH = 58;
+    public static final int VALUES = 61;
 
     // 표시 (Payload.flags)
     public static final int F_FOLLOW = 1;
@@ -232,6 +235,8 @@ public final class Fx3d {
         }
         put(v, GRIP, o.vec("grip", Vec3.ZERO));
         v[GLOW_R] = (float) o.num("glowR", 0);
+        Vec3 st = o.vec("stretch", null);
+        if (st != null) put(v, STRETCH, st.subtract(1, 1, 1));
         int flags = 0;
         if (orbit) flags |= F_ORBIT;
         int owner = (int) o.num("owner", o.num("follow", 0));

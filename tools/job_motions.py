@@ -55,12 +55,15 @@ def write(check=False):
             K.fpl(mo, 0.3, K.FP_LOW)
     src = open(POSES, encoding="utf-8").read()
     data = json.loads(src)
-    # 차례: 손으로 쓴 동작 → 룬 (rn_) → 직업 스킬 (jb_) — 룬 도구와 같은 꼴
-    ms = {k: v for k, v in data["motions"].items() if not k.startswith(PREFIX)}
+    # 차례: 손으로 쓴 동작 → 룬 (rn_) → 직업 스킬 (jb_) → 무기 스킬 (wp_ — tools/weapon_motions.py) — 룬 · 무기 스킬 도구와 같은 꼴
+    ms = {k: v for k, v in data["motions"].items() if not k.startswith(PREFIX) and not k.startswith("wp_")}
     for mo in K.MOTIONS:
         m = mo.build()
         motion_arcs.densify(mo.name, m)
         ms[mo.name] = m
+    for k, v in data["motions"].items():
+        if k.startswith("wp_"):
+            ms[k] = v
     data["motions"] = ms
     out = motion_arcs.fmt(data)
     rules_src = open(RULES, encoding="utf-8").read()

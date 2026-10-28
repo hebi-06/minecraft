@@ -711,6 +711,33 @@ public final class Kit {
         return !sp.isRemoved() && sp.isAlive() && !sp.isDeadOrDying() && lifeOf(sp).equals(token);
     }
 
+    // ------------------------------------------------------------ 0.48.0 무기 스킬 동작의 단계
+
+    /** 시험: 보낸 무기 스킬 단계 동작 열쇠 (마지막 32개) */
+    public static final java.util.Deque<String> PHASES = new java.util.ArrayDeque<>();
+
+    /**
+     * 0.48.0 무기 스킬 동작의 단계 (스킬 id:단계 — rules_more MOTION.skills, tools/weapon_motions.py): 지금 그 단계 동작을 쓴 사람과 둘레에 보냄
+     * (용익 강하의 내려꽂기 · 돌아온 창을 받음 · 자정의 거대한 낫 — 때가 바뀌거나 긴 스킬도 효과와 같은 틱에)
+     */
+    public static void motion(ServerPlayer sp, String key) {
+        if (sp == null || sp.isRemoved()) return;
+        mmorpg.fabric.motion.MotionSystem.skill(sp, key);
+        PHASES.addLast(key);
+        while (PHASES.size() > 32) PHASES.removeFirst();
+    }
+
+    /** 단계 동작을 ticks 틱 뒤에 (같은 목숨일 때만 — 0 이하면 지금) */
+    public static void motionLater(ServerPlayer sp, String key, int ticks, String life) {
+        if (ticks <= 0) {
+            if (sameLife(sp, life)) motion(sp, key);
+            return;
+        }
+        Tasks.later(ticks, () -> {
+            if (sameLife(sp, life)) motion(sp, key);
+        });
+    }
+
     // ------------------------------------------------------------ 낙하 피해 막기 · 화면 흔들림
 
     private static final Map<UUID, Long> NO_FALL = new HashMap<>();

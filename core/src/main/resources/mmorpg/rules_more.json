@@ -868,14 +868,19 @@
     "spin": {"ratio": 0.4, "range": 3.0},
     "roll": {"ticks": 10, "distance": 4.0, "cooldown": 20, "doubleTap": 6},
     "skills": {
-      "gram_charge": "dash", "gram_descent": "leap_slam", "solas_rush": "dash", "solas_halo": "cast",
-      "gungnir_return": "throw_weapon", "gungnir_fall": "cast_up", "artemis_pierce": "shoot", "artemis_moon": "shoot_up",
-      "odin_ravens": "cast", "odin_eye": "cast_up", "tyrfing_fire": "slam", "tyrfing_waking": "cast_up",
-      "kronos_rend": "skill_slash", "kronos_clock": "slam", "mjolnir_throw": "throw_weapon", "mjolnir_storm": "cast_up",
-      "apollo_sun": "cast", "apollo_sanctuary": "cast_up", "ygg_seed": "throw", "ygg_tree": "slam",
-      "svalinn_charge": "dash", "svalinn_dome": "guard", "balmung_wave": "skill_slash", "shadow_ambush": "dash",
-      "earth_fissure": "slam", "durand_smite": "bash", "elf_volley": "shoot", "lich_harvest": "cast",
-      "gaebolg_pierce": "throw_weapon", "harpe_spin": "spin2", "dagda_smash": "slam", "caduceus_serpents": "cast",
+      "gram_charge": "wp_gram_charge", "gram_descent": "wp_gram_descent", "gram_descent:dive": "wp_gram_descent_dive", "solas_rush": "wp_solas_rush",
+      "solas_halo": "wp_solas_halo", "solas_halo:cross": "wp_solas_halo_cross", "solas_halo:pillar": "wp_solas_halo_pillar", "ygg_seed": "wp_ygg_seed",
+      "ygg_seed:bloom": "wp_ygg_seed_bloom", "ygg_tree": "wp_ygg_tree", "svalinn_charge": "wp_svalinn_charge", "svalinn_charge:freeze": "wp_svalinn_charge_freeze",
+      "svalinn_dome": "wp_svalinn_dome", "svalinn_dome:fold": "wp_svalinn_dome_fold", "artemis_pierce": "wp_artemis_pierce", "artemis_moon": "wp_artemis_moon",
+      "artemis_moon:final": "wp_artemis_moon_final", "odin_ravens": "wp_odin_ravens", "odin_ravens:return": "wp_odin_ravens_return", "odin_eye": "wp_odin_eye",
+      "odin_eye:close": "wp_odin_eye_close", "tyrfing_fire": "wp_tyrfing_fire", "tyrfing_waking": "wp_tyrfing_waking", "gungnir_return": "wp_gungnir_return",
+      "gungnir_return:catch": "wp_gungnir_return_catch", "gungnir_fall": "wp_gungnir_fall", "kronos_rend": "wp_kronos_rend", "kronos_rend:shatter": "wp_kronos_rend_shatter",
+      "kronos_clock": "wp_kronos_clock", "kronos_clock:midnight": "wp_kronos_clock_midnight", "mjolnir_throw": "wp_mjolnir_throw", "mjolnir_throw:catch": "wp_mjolnir_throw_catch",
+      "mjolnir_storm": "wp_mjolnir_storm", "mjolnir_storm:pillar": "wp_mjolnir_storm_pillar", "apollo_sun": "wp_apollo_sun", "apollo_sun:burst": "wp_apollo_sun_burst",
+      "apollo_sanctuary": "wp_apollo_sanctuary", "apollo_sanctuary:fall": "wp_apollo_sanctuary_fall", "balmung_wave": "wp_balmung_wave", "shadow_ambush": "wp_shadow_ambush",
+      "earth_fissure": "wp_earth_fissure", "earth_fissure:erupt": "wp_earth_fissure_erupt", "durand_smite": "wp_durand_smite", "elf_volley": "wp_elf_volley",
+      "elf_volley:shot": "wp_elf_volley_shot", "lich_harvest": "wp_lich_harvest", "gaebolg_pierce": "wp_gaebolg_pierce", "gaebolg_pierce:thorns": "wp_gaebolg_pierce_thorns",
+      "harpe_spin": "wp_harpe_spin", "dagda_smash": "wp_dagda_smash", "caduceus_serpents": "wp_caduceus_serpents", "caduceus_serpents:return": "wp_caduceus_serpents_return",
       "swordsman_flurry": "jb_swordsman_flurry", "swordsman_flash": "jb_swordsman_flash", "swordsman_moon": "jb_swordsman_moon", "swordsman_mirror": "jb_swordsman_mirror",
       "swordsman_ult": "jb_swordsman_ult", "swordsman_ult:final": "jb_swordsman_ult_final", "swordsman_ult:gather": "jb_swordsman_ult_gather", "swordsman_ult:volley": "jb_swordsman_ult_volley",
       "warrior_crush": "jb_warrior_crush", "warrior_charge": "jb_warrior_charge", "warrior_charge:slam": "jb_warrior_charge_slam", "warrior_whirl": "jb_warrior_whirl",
@@ -976,6 +981,17 @@
       "jb_paladin_quake", "jb_paladin_oath", "jb_paladin_ult", "jb_paladin_ult_smash", "jb_priest_heal", "jb_priest_step",
       "jb_priest_hymn", "jb_priest_stigma", "jb_priest_ult", "jb_priest_ult_toll", "jb_guardian_bash", "jb_guardian_rush",
       "jb_guardian_throw", "jb_guardian_throw_catch", "jb_guardian_bulwark", "jb_guardian_ult"
+    ],
+    "weaponMotions": [
+      "wp_gram_charge", "wp_gram_descent", "wp_gram_descent_dive", "wp_solas_rush", "wp_solas_halo", "wp_solas_halo_pillar",
+      "wp_solas_halo_cross", "wp_ygg_seed", "wp_ygg_seed_bloom", "wp_ygg_tree", "wp_svalinn_charge", "wp_svalinn_charge_freeze",
+      "wp_svalinn_dome", "wp_svalinn_dome_fold", "wp_artemis_pierce", "wp_artemis_moon", "wp_artemis_moon_final", "wp_odin_ravens",
+      "wp_odin_ravens_return", "wp_odin_eye", "wp_odin_eye_close", "wp_tyrfing_fire", "wp_tyrfing_waking", "wp_gungnir_return",
+      "wp_gungnir_return_catch", "wp_gungnir_fall", "wp_kronos_rend", "wp_kronos_rend_shatter", "wp_kronos_clock", "wp_kronos_clock_midnight",
+      "wp_mjolnir_throw", "wp_mjolnir_throw_catch", "wp_mjolnir_storm", "wp_mjolnir_storm_pillar", "wp_apollo_sun", "wp_apollo_sun_burst",
+      "wp_apollo_sanctuary", "wp_apollo_sanctuary_fall", "wp_balmung_wave", "wp_shadow_ambush", "wp_earth_fissure", "wp_earth_fissure_erupt",
+      "wp_durand_smite", "wp_elf_volley", "wp_elf_volley_shot", "wp_lich_harvest", "wp_gaebolg_pierce", "wp_gaebolg_pierce_thorns",
+      "wp_harpe_spin", "wp_dagda_smash", "wp_caduceus_serpents", "wp_caduceus_serpents_return"
     ]
   }
 }

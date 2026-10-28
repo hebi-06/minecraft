@@ -23,7 +23,9 @@ import net.minecraft.world.phys.Vec3;
  *   <li>무기 모델 (item:&lt;무기 ID&gt; — 사용자 무기 디자인의 아이템 3D 모델 그대로, 주인의 무기 스킨): 던진 묠니르 · 궁니르 · 게 불그, 떨어지는 거대한
  *       궁니르 · 크로노스의 낫 … 크기 · 끝 자리는 mmorpg/weapon_bounds.json (tools/weapon_bounds.py)</li>
  * </ul>
- * 무기 모델 좌표: +Y = 무기 끝 (칼끝 · 창끝 · 망치 머리), 가운데 (0, 0, 0) = 모델 상자 가운데. 손에 든 것과 같은 크기 = hand 배.
+ * 무기 모델 좌표 (클라이언트가 효과 모델의 축에 맞춰 돌림): +Y = 무기 끝 (칼끝 · 창끝 · 망치 머리), ±Z = 넓은 면 (face · faceCam 이 보이는 면),
+ * +X = 치는 쪽 (날 · 도끼날 · 낫날 · 망치 면 — 휘두를 때 앞서 감), 가운데 (0, 0, 0) = 모델 상자 가운데. 손에 든 것과 같은 크기 = hand 배.
+ * 도끼 · 낫처럼 한쪽만 날이면 faceCam 대신 face 를 정해 줌 (faceCam 은 보는 쪽에 따라 +X 가 뒤집힘).
  */
 final class WeaponFx3d {
     private WeaponFx3d() {}

@@ -1,7 +1,7 @@
 """0.48.0 무기 스킬의 입체 효과 물체 (사용자 "효과 물체를 입체 모델로" — 무기 스킬 차례): tools/fx_models.py 가 add(fx) 로 부름.
 
 까마귀 (후긴과 무닌) · 오딘의 눈 · 작은 태양 · 일식 · 달 · 세계수 · 뿌리 · 씨앗 · 가시덤불 · 꽃 · 불꽃 날개 · 시계판 · 뱀 · 바위 가시 · 망령 기사 · 얼음 돔 ·
-사슬 · 혼 · 먹구름. 축 (fx_models.py 와 같음): +Y = 길이 (부리 · 끝), +Z = 넓은 면 (등 · 앞면), +X = 오른쪽.
+사슬 · 혼 · 먹구름 · 불기둥 · 빛기둥 · 검기 · 얼음 껍질 · 그림자 분신 · 바람 정령. 축 (fx_models.py 와 같음): +Y = 길이 (부리 · 끝), +Z = 넓은 면 (등 · 앞면), +X = 오른쪽.
 """
 import math
 
@@ -14,7 +14,7 @@ def add(mod):
     global fx
     fx = mod
     for f in (raven, odin_eye, sun, eclipse, moon, world_tree, root, seed, thorns, flower, fire_wings, clock, serpent, rock_spike, ghost_knight, hex_dome, chain,
-              soul, storm_cloud):
+              soul, storm_cloud, flame, pillar, crescent_wave, ice_shell, shade, sylph):
         fx.MODELS[f.__name__] = f
 
 
@@ -1023,4 +1023,293 @@ def storm_cloud():
     m.anims["rumble"] = {"len": 1.0, "tracks": {"flash": {"scale": [[0, 0.3], [0.12, 1.3], [0.25, 0.4], [0.55, 0.3], [0.62, 1.1], [0.7, 0.3], [1, 0.3]]},
                                                  "body": {"scale": [[0, 1], [0.5, 1.03], [1, 1]]}}}
     m.add_glow(0.1, 0.3, 0.05, 0.9)
+    return m
+
+
+# ------------------------------------------------------------ 0.48.0 둘째 묶음: 불기둥 · 빛기둥 · 검기 · 얼음 껍질 · 그림자 분신 · 바람 정령
+
+
+def p_flame(u, v, rnd):
+    """불꽃 혀 (v = 0 끝 → 1 밑동, u = 폭): 밑이 넓고 끝이 뾰족 · 가장자리가 일렁임 · 가운데가 밝음"""
+    w = 0.08 + 0.92 * (v ** 0.7)
+    wob = 0.08 * math.sin(v * 17 + u * 3) + 0.05 * math.sin(v * 31)
+    c = abs(u - 0.5) * 2
+    if c > w + wob:
+        return 0.0, 0
+    k = c / max(0.05, w + wob)
+    lum = 1.0 - 0.45 * k ** 1.5 + fx.noise(rnd, 0.03)
+    a = min(1.0, (1 - k) * 2.4) * min(1.0, 0.35 + v * 1.6)
+    return lum, a
+
+
+def p_streak(u, v, rnd):
+    """빛기둥 결 (v = 0 위 → 1 아래, u = 둘레): 세로 빛살 · 위로 갈수록 투명"""
+    s = 0.55 + 0.45 * abs(math.sin(u * math.pi * 9 + math.sin(v * 7) * 0.6))
+    a = (0.25 + 0.55 * s) * min(1.0, 0.15 + v * 1.3)
+    return 0.8 + 0.2 * s + fx.noise(rnd, 0.02), a
+
+
+def p_wave(u, v, rnd):
+    """검기 (u = 둘레, v = 안 → 바깥): 바깥 날로 갈수록 밝고 불투명 · 결"""
+    s = 0.5 + 0.5 * math.sin(u * 40 + v * 3)
+    return 0.72 + 0.2 * v + 0.08 * s + fx.noise(rnd, 0.02), 0.55 + 0.45 * v
+
+
+def p_ice(u, v, rnd):
+    """얼음 결정 면 (u, v): 비스듬한 빛줄기 · 안쪽 금"""
+    streak = 0.25 if abs((u * 2.2 + v * 1.1) % 1 - 0.5) < 0.06 else 0.0
+    crack = 0.18 if abs((u * 4.0 - v * 2.7 + math.sin(v * 9) * 0.2) % 1 - 0.5) < 0.02 else 0.0
+    return 0.72 + streak + crack + 0.12 * (1 - v) + fx.noise(rnd, 0.025), 0.82
+
+
+def p_shade(u, v, rnd):
+    """그림자 몸 (거의 검고 결이 흐름)"""
+    return 0.55 + 0.25 * math.sin(u * 13 + v * 21) * math.sin(v * 9) + fx.noise(rnd, 0.05), 1
+
+
+def p_cloak(u, v, rnd):
+    """그림자 옷자락 (아래 v=1 로 갈수록 투명 · 찢긴 끝)"""
+    tear = 0.5 + 0.5 * math.sin(u * 2 * math.pi * 7 + 1.3)
+    a = max(0.0, 1 - v * (1.05 + 0.5 * tear))
+    return 0.55 + 0.2 * math.sin(u * 17 + v * 4) + fx.noise(rnd, 0.04), a
+
+
+def p_leaf(u, v, rnd):
+    """잎 (가운데 잎맥 · 끝이 뾰족)"""
+    c = abs(u - 0.5) * 2
+    w = math.sin(math.pi * min(1.0, v * 1.05)) ** 0.8
+    if c > w:
+        return 0.0, 0
+    vein = 0.2 if c < 0.06 else 0.0
+    return 0.7 + vein + 0.1 * (1 - c) + fx.noise(rnd, 0.03), 1
+
+
+def ribbon(m, path, widths, normal_fn, uv, mat, flip_v=True):
+    """곡선을 따라가는 두 면 띠 (점마다 폭 · 옆 방향 = normal_fn(i, 점, 접선)) — uv: 위 (끝) 가 v0"""
+    u0, v0, u1, v1 = uv
+    n = len(path)
+    pts = [v3(p) for p in path]
+    for i in range(n - 1):
+        a, b = pts[i], pts[i + 1]
+        ta = unit(pts[min(n - 1, i + 1)] - pts[max(0, i - 1)])
+        tb = unit(pts[min(n - 1, i + 2)] - pts[i])
+        sa = unit(normal_fn(i, a, ta)) * widths[i] / 2
+        sb = unit(normal_fn(i + 1, b, tb)) * widths[i + 1] / 2
+        va = v1 - (v1 - v0) * i / (n - 1) if flip_v else v0 + (v1 - v0) * i / (n - 1)
+        vb = v1 - (v1 - v0) * (i + 1) / (n - 1) if flip_v else v0 + (v1 - v0) * (i + 1) / (n - 1)
+        m.quad([a - sa, a + sa, b + sb, b - sb], [(u0, va), (u1, va), (u1, vb), (u0, vb)], mat, double=True)
+
+
+def p_fire(u, v, rnd):
+    """불꽃 몸 (v = 0 위 → 1 밑, u = 둘레): 세로로 일렁이는 결 · 위로 갈수록 투명"""
+    s = 0.5 + 0.5 * math.sin(u * math.pi * 2 * 4 + v * 7 + math.sin(u * 13) * 0.8)
+    a = min(1.0, max(0.0, v * 1.5 - 0.1)) * (0.45 + 0.4 * s)
+    return 0.8 + 0.2 * s + fx.noise(rnd, 0.03), a
+
+
+def flame():
+    """불기둥 (밑 가운데가 원점, 위 +Y — 높이 1 · 폭 약 0.7): 흰 심지 (뾰족한 관 — 위로 갈수록 투명) · 빛깔 몸 (비틀린 관) · 둘레에 비틀려 솟는 불꽃 혀 일곱
+    (tongues — flicker 로 일렁임 · rise 로 솟음). stretch 로 높이만 길게 (불기둥 · 용암 분수)"""
+    m = fx.Model("flame", tex=64, cell=32)
+    a = m.atlas
+    tongue = a.swatch("tongue", p_flame)
+    fire = a.swatch("fire", p_fire)
+    qs = [i / 6 for i in range(7)]
+    path = [v3(0.02 * math.sin(q * 5), q * 0.55, 0.02 * math.cos(q * 4)) for q in qs]
+    tube(m, path, [0.09 * (1 - q) ** 0.7 if q < 1 else 0.0 for q in qs], 7, fx.WHITE, fire, cap0=False, cap1=False)
+    qs = [i / 8 for i in range(9)]
+    path = [v3(0.04 * math.sin(q * 6 + 1), q * 0.82, 0.04 * math.cos(q * 5)) for q in qs]
+    tube(m, path, [0.17 * math.sin(math.pi * min(1, 0.4 + q * 0.6)) ** 0.9 if q < 1 else 0.0 for q in qs], 8, fx.GLOW, fire, cap0=False, cap1=False)
+    m.part("tongues", (0, 0, 0))
+    for k in range(7):
+        th0 = 2 * math.pi * k / 7
+        h = 0.7 + 0.32 * ((k * 3) % 7) / 6
+        twist = 1.3 + 0.35 * (k % 3)
+        pts = []
+        for i in range(9):
+            q = i / 8
+            r = 0.13 + 0.12 * math.sin(math.pi * q * 0.8) - 0.1 * q
+            th = th0 + twist * q
+            pts.append(v3(r * math.cos(th), h * q, r * math.sin(th)))
+        widths = [0.42 * (1 - q) ** 0.65 + 0.02 for q in qs]
+
+        def side(i, p, t, th0=th0, twist=twist):
+            th = th0 + twist * i / 8
+            return v3(-math.sin(th), 0, math.cos(th))
+        ribbon(m, pts, widths, side, tongue, fx.GLOW if k % 2 == 0 else fx.TINT)
+    m.part("main")
+    m.anims["flicker"] = {"len": 0.6, "tracks": {"tongues": {"rot": [[0, 0, 0, 0], [0.5, 0, 40, 0], [1, 0, 80, 0]], "scale": [[0, 1], [0.3, 1.08], [0.7, 0.94],
+                                                                                                                         [1, 1]]}}}
+    m.anims["rise"] = {"len": 0.25, "tracks": {"tongues": {"scale": [[0, 0.1], [0.7, 1.15], [1, 1]]}}}
+    m.add_glow(0, 0.25, 0, 0.45).add_glow(0, 0.6, 0, 0.3)
+    return m
+
+
+def pillar():
+    """빛기둥 (밑 가운데가 원점, 위 +Y — 높이 1 · 반지름 0.5): 빛깔 겉 (세로 빛살 · 위로 갈수록 투명 — 안팎 두 면) · 흰 심지 · 밑 테 · 떠 도는 고리 셋 (rings — spin).
+    stretch 로 높이만 길게 (하늘에서 내리꽂는 빛 · 성역)"""
+    m = fx.Model("pillar", tex=64, cell=32)
+    a = m.atlas
+    streak = a.swatch("streak", p_streak)
+    core = a.swatch("core", p_streak)
+    rim = a.swatch("rim", fx.p_rim)
+    n = 16
+    for r, mat, uv in ((0.5, fx.GLOW, streak), (0.17, fx.WHITE, core)):
+        rings = [[v3(r * math.cos(2 * math.pi * k / n), y, r * math.sin(2 * math.pi * k / n)) for k in range(n)] for y in (0.0, 0.5, 1.0)]
+        m.loft(rings, mat, uv, cap0=False, cap1=False, smooth=True)
+        m.loft(rings[::-1], mat, uv, cap0=False, cap1=False, smooth=True)
+    m.torus(0.56, 0.04, 20, 4, fx.GLOW, rim, center=(0, 0.02, 0))
+    m.part("rings", (0, 0, 0))
+    for y, r in ((0.22, 0.66), (0.5, 0.62), (0.78, 0.58)):
+        m.torus(r, 0.018, 22, 3, fx.WHITE, rim, center=(0, y, 0))
+    m.part("main")
+    m.anims["spin"] = {"len": 1.5, "tracks": {"rings": {"rot": [[0, 0, 0, 0], [0.5, 0, 180, 0], [1, 0, 360, 0]]}}}
+    m.anims["rise"] = {"len": 0.3, "tracks": {"rings": {"scale": [[0, 0.2], [0.7, 1.2], [1, 1]]}}}
+    m.add_glow(0, 0.05, 0, 0.7).add_glow(0, 0.5, 0, 0.5)
+    return m
+
+
+def crescent_wave():
+    """검기 (가운데가 원점, 나아가는 쪽 +Y — 볼록한 쪽이 앞, 너비 2 (±1) · 두께 0.12): 빛깔 초승달 띠 (바깥 날 흰빛) + 흰 심지 띠 + 뒤로 끌리는 빛 꼬리 셋.
+    face (+Z) 를 위로 두면 땅과 나란히 날아감"""
+    m = fx.Model("crescent_wave", tex=64, cell=32)
+    a = m.atlas
+    face = a.swatch("face", p_wave)
+    edge = a.swatch("edge", fx.p_edge)
+    trail = a.swatch("trail", p_flame)
+    # 반지름 1 의 원에서 20° ~ 160° — 가운데를 원점 가까이 (cy = -0.62)
+    fx.arc_band(m, 0.7, 1.0, 18, 162, 20, -0.06, 0.06, fx.GLOW, fx.WHITE, face, edge, cy=-0.62, tip=0.85)
+    fx.arc_band(m, 0.84, 0.97, 30, 150, 16, -0.075, 0.075, fx.WHITE, fx.WHITE, edge, edge, cy=-0.62, tip=0.7)
+    # 꼬리: 날의 가운데 · 양옆에서 뒤로 (−Y) 가늘어지는 빛 띠 (두 면 — 위아래)
+    for ang, ln, w in ((90, 0.5, 0.16), (62, 0.34, 0.1), (118, 0.34, 0.1)):
+        t = math.radians(ang)
+        p0 = v3(0.86 * math.cos(t), 0.86 * math.sin(t) - 0.62, 0)
+        d = unit(v3(math.cos(t), math.sin(t), 0))
+        u0, v0, u1, v1 = trail
+        s = v3(-d[1], d[0], 0) * w / 2
+        p1 = p0 - d * ln
+        m.quad([p1 - s * 0.2, p1 + s * 0.2, p0 + s, p0 - s], [(u0, v0), (u1, v0), (u1, v1), (u0, v1)], fx.GLOW, double=True)
+    m.add_glow(0, 0.3, 0, 0.6).add_glow(-0.6, 0.0, 0, 0.35).add_glow(0.6, 0.0, 0, 0.35)
+    return m
+
+
+def ice_shell():
+    """얼음 껍질 (밑 가운데가 원점, 위 +Y — 적 하나를 감싸는 높이 약 1.7 · 반지름 0.5): 바깥으로 기울어 솟은 육각 결정 아홉 + 작은 결정 다섯 (빛깔 얼음 ·
+    끝 흰빛) — crystals (form 으로 솟음 · crack 으로 떨림)"""
+    m = fx.Model("ice_shell", tex=64, cell=32)
+    a = m.atlas
+    ice = a.swatch("ice", p_ice)
+    tip = a.swatch("tip", fx.p_edge)
+    m.part("crystals", (0, 0, 0))
+    for k in range(9):
+        th = 2 * math.pi * k / 9 + 0.2
+        d = v3(math.cos(th), 0, math.sin(th))
+        h = 1.15 + 0.45 * ((k * 4) % 7) / 6
+        base = d * 0.42
+        top = d * (0.52 + 0.1 * (k % 2)) + v3(0, h, 0) - d * 0.18
+        r = 0.11 + 0.03 * (k % 3)
+        pts = [base, base + (top - base) * 0.78, top]
+        tube(m, pts, [r, r * 0.9, 0.0], 6, fx.TINT, ice, cap1=False, smooth=False)
+        spike(m, top - (top - base) * 0.06, top + unit(top - base) * 0.1, r * 0.35, 6, fx.WHITE, tip, segs=1)
+    for k in range(5):
+        th = 2 * math.pi * k / 5 + 0.9
+        d = v3(math.cos(th), 0, math.sin(th))
+        base = d * 0.62
+        top = d * 0.9 + v3(0, 0.45 + 0.12 * (k % 2), 0)
+        tube(m, [base, base + (top - base) * 0.7, top], [0.08, 0.07, 0.0], 6, fx.TINT, ice, cap1=False, smooth=False)
+    m.part("main")
+    m.anims["form"] = {"len": 0.25, "tracks": {"crystals": {"scale": [[0, 0.1], [0.7, 1.06], [1, 1]]}}}
+    m.anims["crack"] = {"len": 0.3, "tracks": {"crystals": {"rot": [[0, 0, 0, 0], [0.25, 2, 4, -2], [0.5, -2, -3, 2], [0.75, 2, 2, -1], [1, 0, 0, 0]]}}}
+    m.add_glow(0, 0.9, 0, 0.55)
+    return m
+
+
+def shade():
+    """그림자 분신 (발밑 가운데가 원점, 위 +Y — 키 1.8, 앞 +Z — 오른쪽이 −X): 두건 쓴 날렵한 몸 (그림자 · 결) · 찢긴 옷자락 (아래로 갈수록 투명) ·
+    두건 속 빛나는 눈 (속빛) · 양손의 단검 (날 흰빛). 팔 arm_r (어깨 (−0.24, 1.42)) · arm_l (어깨 (0.24, 1.42)): lunge (오른손 찌르기) · cross (두 팔로 X 베기)"""
+    m = fx.Model("shade", tex=64, cell=32)
+    a = m.atlas
+    body = a.swatch("body", p_shade)
+    cloak = a.swatch("cloak", p_cloak)
+    eye = a.swatch("eye", fx.p_gem)
+    edge = a.swatch("edge", fx.p_edge)
+    # 다리 (앞뒤로 벌린 자세)
+    for s, fwd in ((-1, 0.12), (1, -0.1)):
+        tube(m, [v3(s * 0.1, 0.95, 0), v3(s * 0.12, 0.5, fwd * 0.6), v3(s * 0.12, 0.05, fwd)], [0.08, 0.065, 0.05], 6, fx.SHADOW, body)
+    # 몸통 (허리 → 어깨 — 조금 앞으로 숙임)
+    torso = [(0.9, 0.17, 0.12, 0.0), (1.15, 0.2, 0.13, 0.03), (1.4, 0.24, 0.14, 0.06), (1.5, 0.16, 0.12, 0.07)]
+    m.loft([[v3(x, y, z + dz) for x, z in ellipse(rx, rz, 10)] for y, rx, rz, dz in torso], fx.SHADOW, body, smooth=True)
+    # 옷자락 (허리에서 뒤 아래로 펄럭임 — 두 면)
+    rings = []
+    for y, r, back in ((1.0, 0.2, 0.0), (0.7, 0.26, 0.1), (0.4, 0.3, 0.22), (0.12, 0.32, 0.36)):
+        rings.append([v3(r * math.cos(math.pi * (0.15 + 0.7 * k / 9)), y, -back - r * 0.6 * math.sin(math.pi * (0.15 + 0.7 * k / 9))) for k in range(10)])
+    m.loft(rings, fx.SHADOW, cloak, close=False, cap0=False, cap1=False, smooth=True)
+    m.loft(rings[::-1], fx.SHADOW, cloak, close=False, cap0=False, cap1=False, smooth=True)
+    # 두건 머리 (앞으로 뾰족) · 눈 둘
+    m.loft([[v3(x, y, z + 0.08) for x, z in ellipse(rx, rz, 8)] for y, rx, rz in ((1.5, 0.12, 0.12), (1.62, 0.14, 0.15), (1.76, 0.13, 0.14), (1.86, 0.06, 0.08))],
+           fx.SHADOW, body, smooth=True)
+    for s in (-1, 1):
+        m.box((s * 0.05, 1.68, 0.225), (0.05, 0.022, 0.02), fx.GLOW, eye)
+    # 팔 + 단검 (어깨 축)
+    for name, s in (("arm_r", -1), ("arm_l", 1)):
+        m.part(name, (s * 0.24, 1.42, 0.05))
+        sh = v3(s * 0.24, 1.42, 0.05)
+        hand = v3(s * 0.3, 1.1, 0.3)
+        tube(m, [sh, v3(s * 0.3, 1.25, 0.16), hand], [0.06, 0.055, 0.045], 6, fx.SHADOW, body)
+        # 단검 (손에서 앞 위로 — 날 흰빛 · 속빛 테)
+        tip_ = hand + v3(0, 0.08, 0.42)
+        spike(m, hand + v3(0, 0.02, 0.05), tip_, 0.045, 4, fx.WHITE, edge, segs=2)
+        m.box(tuple(hand + v3(0, 0.02, 0.04)), (0.12, 0.03, 0.03), fx.GLOW, eye)
+    m.part("main")
+    m.anims["lunge"] = {"len": 0.4, "tracks": {"arm_r": {"rot": [[0, -60, 0, 0], [0.45, 20, 0, 0], [1, 10, 0, 0]]},
+                                               "arm_l": {"rot": [[0, 20, 0, 0], [1, 30, 0, 10]]}}}
+    m.anims["cross"] = {"len": 0.45, "tracks": {"arm_r": {"rot": [[0, -90, 0, 40], [0.5, 10, 0, -30], [1, 20, 0, -45]]},
+                                                "arm_l": {"rot": [[0, -90, 0, -40], [0.5, 10, 0, 30], [1, 20, 0, 45]]}}}
+    m.add_glow(0, 1.68, 0.2, 0.22).add_glow(0, 1.1, 0.1, 0.4)
+    return m
+
+
+def sylph():
+    """바람 정령 (가운데가 원점, 위 +Y — 키 약 0.6, 앞 +Z): 가녀린 몸 (빛깔) · 빛나는 머리 (흰빛) · 뒤로 흩날리는 잎 머리칼 · 잎 치마 ·
+    등의 날개 두 쌍 (wing_r · wing_l — 비치는 막, flap 으로 날갯짓)"""
+    m = fx.Model("sylph", tex=64, cell=32)
+    a = m.atlas
+    skin = a.swatch("skin", fx.p_flat, lum=0.92, k=0.03)
+    leaf = a.swatch("leaf", p_leaf)
+    wing = a.swatch("wing", p_membrane)
+    glow = a.swatch("glow", fx.p_gem)
+    # 몸 (허리가 가는 돌림체)
+    m.lathe([(0.0, -0.32), (0.03, -0.3), (0.05, -0.12), (0.035, 0.0), (0.06, 0.1), (0.045, 0.16), (0.0, 0.18)], 8, fx.TINT, skin)
+    sphere(m, (0, 0.25, 0.01), 0.075, fx.WHITE, glow, segs=10, rings=6)
+    # 잎 머리칼 (머리 뒤로 흩날림)
+    for k in range(5):
+        th = -0.6 + 1.2 * k / 4
+        base = v3(0.05 * math.sin(th), 0.29, -0.03)
+        d = unit(v3(math.sin(th) * 0.5, 0.25, -1))
+        u0, v0, u1, v1 = leaf
+        s = unit(np.cross(d, v3(0, 1, 0))) * 0.035
+        tip_ = base + d * (0.2 + 0.04 * (k % 2))
+        m.quad([base - s, base + s, tip_ + s * 0.2, tip_ - s * 0.2], [(u0, v1), (u1, v1), (u1, v0), (u0, v0)], fx.GLOW, double=True)
+    # 잎 치마 (허리에서 아래로 여섯 장)
+    for k in range(6):
+        th = 2 * math.pi * k / 6
+        d = v3(math.cos(th), 0, math.sin(th))
+        top = d * 0.045 + v3(0, -0.02, 0)
+        bot = d * 0.13 + v3(0, -0.2, 0)
+        s = v3(-d[2], 0, d[0]) * 0.05
+        u0, v0, u1, v1 = leaf
+        m.quad([bot - s, bot + s, top + s * 0.4, top - s * 0.4], [(u0, v1), (u1, v1), (u1, v0), (u0, v0)], fx.TINT, double=True)
+    # 날개 두 쌍 (등 −Z 에서 옆 · 위로 — 위 날개가 크고 아래 날개는 작음)
+    for name, s in (("wing_r", -1), ("wing_l", 1)):
+        m.part(name, (s * 0.02, 0.1, -0.05))
+        for up, ln, wd in ((1, 0.34, 0.16), (-1, 0.22, 0.11)):
+            root_ = v3(s * 0.02, 0.1 + 0.02 * up, -0.05)
+            tip_ = root_ + v3(s * ln, up * ln * 0.55, -0.08)
+            mid = (root_ + tip_) / 2 + v3(0, up * wd * 0.6, -0.02)
+            mid2 = (root_ + tip_) / 2 - v3(0, up * wd * 0.35, 0)
+            quad2(m, [root_, mid2, tip_, mid], wing, fx.GLOW)
+    m.part("main")
+    m.anims["flap"] = {"len": 0.3, "tracks": {"wing_r": {"rot": [[0, 0, -35, 0], [0.5, 0, 25, 0], [1, 0, -35, 0]]},
+                                              "wing_l": {"rot": [[0, 0, 35, 0], [0.5, 0, -25, 0], [1, 0, 35, 0]]}}}
+    m.add_glow(0, 0.25, 0, 0.2).add_glow(0, 0.0, 0, 0.3)
     return m
