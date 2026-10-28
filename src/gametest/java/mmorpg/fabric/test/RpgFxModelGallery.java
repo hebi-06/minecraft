@@ -53,6 +53,33 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
         {"aegis", 0.75, -0.1, ""},
         {"light_bow", 0.85, 0.0, "draw"},
     };
+    /** 0.48.0 무기 스킬의 효과 물체 (tools/fx_models_weapon.py) — 셋째 줄 · 넷째 줄 */
+    static final Object[][] LINEUP_C = {
+        {"raven", 1.0, 0.0, "flap"},
+        {"odin_eye", 1.0, 0.0, "glare"},
+        {"sun", 0.8, 0.0, "spin"},
+        {"eclipse", 0.8, 0.0, "pulse"},
+        {"moon", 0.9, 0.0, "spin"},
+        {"seed", 2.2, 0.0, "spin"},
+        {"flower", 2.0, 0.1, "bloom"},
+        {"thorns", 1.0, 0.6, ""},
+        {"rock_spike", 0.9, 0.6, ""},
+        {"soul", 1.6, 0.0, "wail"},
+    };
+    static final Object[][] LINEUP_D = {
+        {"world_tree", 0.55, 1.6, "sway"},
+        {"root", 0.9, 0.0, ""},
+        {"fire_wings", 0.8, 0.3, "flap"},
+        {"clock", 0.7, 0.0, "tick"},
+        {"serpent", 1.2, 0.0, "hiss"},
+        {"ghost_knight", 0.85, 1.0, "slash"},
+        {"hex_dome", 0.9, 0.4, ""},
+        {"chain", 0.8, 0.0, ""},
+        {"storm_cloud", 0.7, 0.5, "rumble"},
+    };
+    /** 0.48.0 무기 모델 (item: — 사용자 무기 디자인의 아이템 3D 모델) */
+    static final String[] WEAPONS = {"rpg:sword_l40_transcend", "rpg:greatsword_l40_transcend", "rpg:lance_l40_transcend", "rpg:hammer_l40_transcend",
+        "rpg:scythe_l40_transcend", "rpg:axe_l40_transcend", "rpg:lance_l30_hero"};
     private static final double[] SKY = {0.42, 0.78, 1.0};
     private static final double[] SKY_CORE = {0.84, 0.95, 1.0};
     /** 직업 색 몇 (전사 · 마검사 · 암살자 · 성기사 · 사신) {빛깔, 속빛} */
@@ -154,6 +181,35 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
     private void lineup(ClientGameTestContext ctx, TestServerContext server) {
         lineShots(ctx, server, LINEUP, "", 4.2, 1.05, true, false);
         lineShots(ctx, server, LINEUP_B, "_b", 5.4, 1.2, false, true);
+        lineShots(ctx, server, LINEUP_C, "_c", 5.0, 1.1, true, true);
+        lineShots(ctx, server, LINEUP_D, "_d", 6.2, 1.35, false, true);
+        weaponLine(ctx, server);
+    }
+
+    /** 0.48.0 무기 모델 한 줄 (item: — 손에 든 크기 × 0.8, 천천히 돎): 받은 수 · 그린 무기 모델 수 */
+    private void weaponLine(ClientGameTestContext ctx, TestServerContext server) {
+        int before = ctx.computeOnClient(mc -> FxModels.received);
+        int items0 = ctx.computeOnClient(mc -> FxModels.itemsDrawn);
+        server.runOnServer(s -> {
+            ServerLevel level = s.overworld();
+            double eye = -60 + 1.62;
+            int n = WEAPONS.length;
+            for (int i = 0; i < n; i++) {
+                double x = 0.5 + (i - (n - 1) / 2.0) * 0.95;
+                Fx3d.spawn(level, "item:" + WEAPONS[i], new Vec3(x, eye, -4.0), Opt.of("dir", new Vec3(0, 1, 0), "face", new Vec3(0, 0, 1), "spin", 35.0, "spinAxis",
+                        "up", "scale", 0.75, "life", 6.0, "color", JOB_COLORS[i % JOB_COLORS.length][0], "glow", JOB_COLORS[i % JOB_COLORS.length][1], "glowR", 0.6,
+                        "glowAlpha", 0.35, "pop", 0.3));
+            }
+        });
+        ctx.waitTicks(16);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_weapons").withSize(1280, 720));
+        int got = ctx.computeOnClient(mc -> FxModels.received) - before;
+        check(got == WEAPONS.length, "weapons received " + got + " / " + WEAPONS.length);
+        int drawn = ctx.computeOnClient(mc -> FxModels.itemsDrawn) - items0;
+        check(drawn >= WEAPONS.length, "weapon models drawn " + drawn);
+        ctx.waitTicks(30);
+        ctx.takeScreenshot(TestScreenshotOptions.of("fx_lineup_weapons_turned").withSize(1280, 720));
+        ctx.runOnClient(mc -> FxModels.clear());
     }
 
     // ------------------------------------------------------------ 2. 움직임

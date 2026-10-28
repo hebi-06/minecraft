@@ -23,6 +23,7 @@ import net.minecraft.world.phys.Vec3;
  * 2 = 주인의 1인칭에만) · owner. 0.47.0 도는 길 — orbit (반지름 — at · follow 기준이 가운데) · orbitSpeed (도/초) · orbitAngle · bob · bobHz · orbitGrow,
  * 옮기기 move (쫓아가는 구체 — 지금 자리에서 새 자리로), 움직임 바꾸기 anim (문이 열림 → 소용돌이 → 닫힘), 휘두름 arc · arcAxis · arcTime · arcEase (dir · face 를
  * 세계 축 둘레로 돌림 — 내리치는 도끼 · 휘두르는 거대한 검, faceCam 과 같이 쓰면 넓은 면이 늘 보임), 쥔 곳 grip (모델 칸 — 이 점을 중심으로 돎).
+ * 0.48.0 무기 모델 — 이름이 item:&lt;아이템 ID&gt; 이면 사용자 무기 디자인의 아이템 3D 모델 (던진 묠니르 · 떨어지는 궁니르 …, 주인의 무기 스킨) — glowR (가운데 빛 무리).
  */
 public final class Fx3d {
     private Fx3d() {}
@@ -74,7 +75,9 @@ public final class Fx3d {
     static final int ARC_EASE = 53;
     /** 0.47.0 쥔 곳 (grip — 모델 칸): 이 점이 at 에 놓이고 이 점을 중심으로 돎 (칼 · 도끼를 자루 끝을 쥐고 휘두름 — 0 이면 모델의 가운데) */
     static final int GRIP = 54;
-    public static final int VALUES = 57;
+    /** 0.48.0 무기 모델 (item:) 의 가운데 빛 무리 반지름 (모델 칸 — glowR, 0 = 없음) */
+    static final int GLOW_R = 57;
+    public static final int VALUES = 58;
 
     // 표시 (Payload.flags)
     public static final int F_FOLLOW = 1;
@@ -228,6 +231,7 @@ public final class Fx3d {
             v[ARC_EASE] = ease(o.str("arcEase", null));
         }
         put(v, GRIP, o.vec("grip", Vec3.ZERO));
+        v[GLOW_R] = (float) o.num("glowR", 0);
         int flags = 0;
         if (orbit) flags |= F_ORBIT;
         int owner = (int) o.num("owner", o.num("follow", 0));

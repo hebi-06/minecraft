@@ -1304,6 +1304,13 @@ def preview(m, path, size=360, anim=None, u=1.0):
     return path
 
 
+# ------------------------------------------------------------ 0.48.0 무기 스킬의 효과 물체 (tools/fx_models_weapon.py)
+
+import fx_models_weapon  # noqa: E402
+
+fx_models_weapon.add(sys.modules[__name__])
+
+
 # ------------------------------------------------------------ 쓰기
 
 

@@ -24,11 +24,16 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -99,6 +104,8 @@ public final class FxModels {
         final List<Part> parts = new ArrayList<>();
         float[][] glow = new float[0][];
         final Map<String, Anim> anims = new HashMap<>();
+        /** 0.48.0 무기 모델 (item:&lt;아이템 ID&gt;): 사용자 무기 디자인의 아이템 3D 모델을 그대로 (사각형 · 그림 대신) */
+        ItemStack item;
     }
 
     private static final Map<String, Model> MODELS = new HashMap<>();
@@ -108,6 +115,20 @@ public final class FxModels {
     static Model model(String name) {
         Model m = MODELS.get(name);
         if (m != null || MISSING.contains(name)) return m;
+        if (name.startsWith("item:")) {
+            // 0.48.0 무기 모델: 아이템 (rpg:hammer_l40_transcend …) 의 3D 모델 — 손 · 땅 자세 없이 (ItemDisplayContext.NONE) 그림
+            Identifier rl = Identifier.tryParse(name.substring(5));
+            if (rl == null || !BuiltInRegistries.ITEM.containsKey(rl)) {
+                MISSING.add(name);
+                Mmorpg.LOG.warn("[mmorpg] fx item model {}: unknown item", name);
+                return null;
+            }
+            m = new Model();
+            m.name = name;
+            m.item = new ItemStack(BuiltInRegistries.ITEM.getValue(rl));
+            MODELS.put(name, m);
+            return m;
+        }
         String path = "/assets/mmorpg/fxmodel/" + name + ".json";
         try (InputStream in = FxModels.class.getResourceAsStream(path)) {
             if (in == null) throw new IllegalStateException("missing " + path);
@@ -206,6 +227,8 @@ public final class FxModels {
         double[] probe;
         /** 0.47.0 움직임을 바꾼 때 (태어난 뒤 초 — F_ANIM) */
         float animT0;
+        /** 0.48.0 무기 모델의 그릴 준비 (처음 그릴 때 — 주인의 무기 스킨을 입힘) */
+        ItemStackRenderState itemState;
     }
 
     private static final List<Inst> LIVE = new ArrayList<>();
@@ -216,6 +239,8 @@ public final class FxModels {
     /** 시험: 옮기기 · 움직임 바꾸기를 받은 모델 수 */
     public static int moved;
     public static int animSwitched;
+    /** 시험: 0.48.0 그린 무기 모델 (item:) 수 (모두 합) */
+    public static int itemsDrawn;
 
     private static double now() {
         return ClientMotions.ticks();
@@ -606,6 +631,46 @@ public final class FxModels {
             M.identity().translate((float) dx, (float) dy, (float) dz).mul(new Matrix4f().set(R)).scale(s);
             // 쥔 곳 (모델 칸): 이 점이 자리에 놓이고 이 점을 중심으로 돎
             if (v[54] != 0 || v[55] != 0 || v[56] != 0) M.translate(-v[54], -v[55], -v[56]);
+            if (in.m.item != null) {
+                // 0.48.0 무기 모델: 아이템 그리기 (밝기 최대 — 투명으로 흐려지지 않으므로 거의 사라질 때 감춤) + 가운데 빛 무리 (glowAlpha · 반지름 v[57])
+                if (a < 0.3F) continue;
+                if (in.itemState == null) {
+                    in.itemState = new ItemStackRenderState();
+                    ItemStack stack = in.m.item;
+                    Entity o = level.getEntity(in.owner);
+                    if (o instanceof LivingEntity le) stack = CosmeticRender.skinned(stack, ItemDisplayContext.THIRD_PERSON_RIGHT_HAND, le);
+                    mc.getItemModelResolver().updateForTopItem(in.itemState, stack, ItemDisplayContext.NONE, level, null, in.id);
+                }
+                ps.pushPose();
+                ps.translate((float) dx, (float) dy, (float) dz);
+                ps.mulPose(new Quaternionf().setFromNormalized(R));
+                ps.scale(s, s, s);
+                ps.translate(-v[54], -v[55], -v[56]);
+                in.itemState.submit(ps, collector, LIGHT, OverlayTexture.NO_OVERLAY, 0);
+                ps.popPose();
+                float ga = v[37] * a;
+                if (ga > 0.004F && v[57] > 0) {
+                    M.transformPosition(0, 0, 0, tmp);
+                    float r = v[57] * s;
+                    int center = argb(Math.min(1F, ga), v[34], v[35], v[36]);
+                    int edge = argb(0F, v[34], v[35], v[36]);
+                    for (int k = 0; k < FAN; k++) {
+                        float c0 = FAN_COS[k] * r;
+                        float s0 = FAN_SIN[k] * r;
+                        float c1 = FAN_COS[k + 1] * r;
+                        float s1 = FAN_SIN[k + 1] * r;
+                        halos.add(tmp.x, tmp.y, tmp.z, 0.5F, 0.5F, 0, 1, 0, center);
+                        halos.add(tmp.x + camRight.x * c0 + camUp.x * s0, tmp.y + camRight.y * c0 + camUp.y * s0, tmp.z + camRight.z * c0 + camUp.z * s0, 0, 0, 0, 1,
+                                0, edge);
+                        halos.add(tmp.x + camRight.x * c1 + camUp.x * s1, tmp.y + camRight.y * c1 + camUp.y * s1, tmp.z + camRight.z * c1 + camUp.z * s1, 0, 0, 0, 1,
+                                0, edge);
+                        halos.add(tmp.x, tmp.y, tmp.z, 0.5F, 0.5F, 0, 1, 0, center);
+                    }
+                }
+                drawn++;
+                itemsDrawn++;
+                continue;
+            }
             // 재질 색
             float cr = v[31];
             float cg = v[32];

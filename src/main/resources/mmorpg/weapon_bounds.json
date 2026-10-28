@@ -1,0 +1,4009 @@
+{
+ "_comment": "0.48.0 무기 입체 모델의 크기 (서버가 무기 스킬의 입체 효과 물체 — 던진 묠니르 · 떨어지는 궁니르 · 거대한 크로노스의 낫 … — 를 놓을 때 씀):",
+ "weapons": {
+  "rpg:axe_l0_common": {
+   "min": [
+    -0.0733,
+    -0.6801,
+    -0.3283
+   ],
+   "max": [
+    0.0733,
+    0.6801,
+    0.3283
+   ],
+   "hand": 1.0,
+   "design": "axe_lv0"
+  },
+  "rpg:axe_l0_noble": {
+   "min": [
+    -0.0743,
+    -0.669,
+    -0.3504
+   ],
+   "max": [
+    0.0743,
+    0.669,
+    0.3504
+   ],
+   "hand": 1.0,
+   "design": "axe_noble_lv0"
+  },
+  "rpg:axe_l0_rare": {
+   "min": [
+    -0.0703,
+    -0.6815,
+    -0.3245
+   ],
+   "max": [
+    0.0703,
+    0.6815,
+    0.3262
+   ],
+   "hand": 1.0,
+   "design": "axe_rare_lv0"
+  },
+  "rpg:axe_l10_common": {
+   "min": [
+    -0.0733,
+    -0.6801,
+    -0.3283
+   ],
+   "max": [
+    0.0733,
+    0.6801,
+    0.3283
+   ],
+   "hand": 1.0,
+   "design": "axe_lv0"
+  },
+  "rpg:axe_l10_noble": {
+   "min": [
+    -0.0743,
+    -0.669,
+    -0.3504
+   ],
+   "max": [
+    0.0743,
+    0.669,
+    0.3504
+   ],
+   "hand": 1.0,
+   "design": "axe_noble_lv0"
+  },
+  "rpg:axe_l10_rare": {
+   "min": [
+    -0.0703,
+    -0.6815,
+    -0.3245
+   ],
+   "max": [
+    0.0703,
+    0.6815,
+    0.3262
+   ],
+   "hand": 1.0,
+   "design": "axe_rare_lv0"
+  },
+  "rpg:axe_l15_common": {
+   "min": [
+    -0.0733,
+    -0.6801,
+    -0.3283
+   ],
+   "max": [
+    0.0733,
+    0.6801,
+    0.3283
+   ],
+   "hand": 1.0,
+   "design": "axe_lv0"
+  },
+  "rpg:axe_l15_noble": {
+   "min": [
+    -0.0743,
+    -0.669,
+    -0.3504
+   ],
+   "max": [
+    0.0743,
+    0.669,
+    0.3504
+   ],
+   "hand": 1.0,
+   "design": "axe_noble_lv0"
+  },
+  "rpg:axe_l15_rare": {
+   "min": [
+    -0.0703,
+    -0.6815,
+    -0.3245
+   ],
+   "max": [
+    0.0703,
+    0.6815,
+    0.3262
+   ],
+   "hand": 1.0,
+   "design": "axe_rare_lv0"
+  },
+  "rpg:axe_l20_common": {
+   "min": [
+    -0.0733,
+    -0.6801,
+    -0.3283
+   ],
+   "max": [
+    0.0733,
+    0.6801,
+    0.3283
+   ],
+   "hand": 1.0,
+   "design": "axe_lv0"
+  },
+  "rpg:axe_l20_noble": {
+   "min": [
+    -0.0743,
+    -0.669,
+    -0.3504
+   ],
+   "max": [
+    0.0743,
+    0.669,
+    0.3504
+   ],
+   "hand": 1.0,
+   "design": "axe_noble_lv0"
+  },
+  "rpg:axe_l20_rare": {
+   "min": [
+    -0.0703,
+    -0.6815,
+    -0.3245
+   ],
+   "max": [
+    0.0703,
+    0.6815,
+    0.3262
+   ],
+   "hand": 1.0,
+   "design": "axe_rare_lv0"
+  },
+  "rpg:axe_l30_common": {
+   "min": [
+    -0.0733,
+    -0.6801,
+    -0.3283
+   ],
+   "max": [
+    0.0733,
+    0.6801,
+    0.3283
+   ],
+   "hand": 1.0,
+   "design": "axe_lv0"
+  },
+  "rpg:axe_l30_hero": {
+   "min": [
+    -0.0817,
+    -0.7385,
+    -0.4566
+   ],
+   "max": [
+    0.0817,
+    0.7385,
+    0.4566
+   ],
+   "hand": 1.0,
+   "design": "axe_hero_lv0"
+  },
+  "rpg:axe_l30_noble": {
+   "min": [
+    -0.0743,
+    -0.669,
+    -0.3504
+   ],
+   "max": [
+    0.0743,
+    0.669,
+    0.3504
+   ],
+   "hand": 1.0,
+   "design": "axe_noble_lv0"
+  },
+  "rpg:axe_l30_rare": {
+   "min": [
+    -0.0703,
+    -0.6815,
+    -0.3245
+   ],
+   "max": [
+    0.0703,
+    0.6815,
+    0.3262
+   ],
+   "hand": 1.0,
+   "design": "axe_rare_lv0"
+  },
+  "rpg:axe_l35_hero": {
+   "min": [
+    -0.0817,
+    -0.7385,
+    -0.4566
+   ],
+   "max": [
+    0.0817,
+    0.7385,
+    0.4566
+   ],
+   "hand": 1.0,
+   "design": "axe_hero_lv0"
+  },
+  "rpg:axe_l40_common": {
+   "min": [
+    -0.0733,
+    -0.6801,
+    -0.3283
+   ],
+   "max": [
+    0.0733,
+    0.6801,
+    0.3283
+   ],
+   "hand": 1.0,
+   "design": "axe_lv0"
+  },
+  "rpg:axe_l40_hero": {
+   "min": [
+    -0.0817,
+    -0.7385,
+    -0.4566
+   ],
+   "max": [
+    0.0817,
+    0.7385,
+    0.4566
+   ],
+   "hand": 1.0,
+   "design": "axe_hero_lv0"
+  },
+  "rpg:axe_l40_noble": {
+   "min": [
+    -0.0743,
+    -0.669,
+    -0.3504
+   ],
+   "max": [
+    0.0743,
+    0.669,
+    0.3504
+   ],
+   "hand": 1.0,
+   "design": "axe_noble_lv0"
+  },
+  "rpg:axe_l40_rare": {
+   "min": [
+    -0.0703,
+    -0.6815,
+    -0.3245
+   ],
+   "max": [
+    0.0703,
+    0.6815,
+    0.3262
+   ],
+   "hand": 1.0,
+   "design": "axe_rare_lv0"
+  },
+  "rpg:axe_l40_transcend": {
+   "min": [
+    -0.202,
+    -1.4844,
+    -0.5504
+   ],
+   "max": [
+    0.2011,
+    1.4844,
+    0.551
+   ],
+   "hand": 1.1132,
+   "design": "axe_transcend_lv0"
+  },
+  "rpg:axe_l45_transcend": {
+   "min": [
+    -0.202,
+    -1.4844,
+    -0.5504
+   ],
+   "max": [
+    0.2011,
+    1.4844,
+    0.551
+   ],
+   "hand": 1.1132,
+   "design": "axe_transcend_lv0"
+  },
+  "rpg:axe_l50_transcend": {
+   "min": [
+    -0.202,
+    -1.4844,
+    -0.5504
+   ],
+   "max": [
+    0.2011,
+    1.4844,
+    0.551
+   ],
+   "hand": 1.1132,
+   "design": "axe_transcend_lv0"
+  },
+  "rpg:axe_l55_transcend": {
+   "min": [
+    -0.202,
+    -1.4844,
+    -0.5504
+   ],
+   "max": [
+    0.2011,
+    1.4844,
+    0.551
+   ],
+   "hand": 1.1132,
+   "design": "axe_transcend_lv0"
+  },
+  "rpg:axe_l5_common": {
+   "min": [
+    -0.0733,
+    -0.6801,
+    -0.3283
+   ],
+   "max": [
+    0.0733,
+    0.6801,
+    0.3283
+   ],
+   "hand": 1.0,
+   "design": "axe_lv0"
+  },
+  "rpg:axe_l5_noble": {
+   "min": [
+    -0.0743,
+    -0.669,
+    -0.3504
+   ],
+   "max": [
+    0.0743,
+    0.669,
+    0.3504
+   ],
+   "hand": 1.0,
+   "design": "axe_noble_lv0"
+  },
+  "rpg:axe_l5_rare": {
+   "min": [
+    -0.0703,
+    -0.6815,
+    -0.3245
+   ],
+   "max": [
+    0.0703,
+    0.6815,
+    0.3262
+   ],
+   "hand": 1.0,
+   "design": "axe_rare_lv0"
+  },
+  "rpg:axe_l60_transcend": {
+   "min": [
+    -0.202,
+    -1.4844,
+    -0.5504
+   ],
+   "max": [
+    0.2011,
+    1.4844,
+    0.551
+   ],
+   "hand": 1.1132,
+   "design": "axe_transcend_lv0"
+  },
+  "rpg:bow_l0_common": {
+   "min": [
+    -0.0472,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0472,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_lv0"
+  },
+  "rpg:bow_l0_noble": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_noble_lv0"
+  },
+  "rpg:bow_l0_rare": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_rare_lv0"
+  },
+  "rpg:bow_l10_common": {
+   "min": [
+    -0.0472,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0472,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_lv0"
+  },
+  "rpg:bow_l10_noble": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_noble_lv0"
+  },
+  "rpg:bow_l10_rare": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_rare_lv0"
+  },
+  "rpg:bow_l15_common": {
+   "min": [
+    -0.0472,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0472,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_lv0"
+  },
+  "rpg:bow_l15_noble": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_noble_lv0"
+  },
+  "rpg:bow_l15_rare": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_rare_lv0"
+  },
+  "rpg:bow_l20_common": {
+   "min": [
+    -0.0472,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0472,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_lv0"
+  },
+  "rpg:bow_l20_noble": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_noble_lv0"
+  },
+  "rpg:bow_l20_rare": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_rare_lv0"
+  },
+  "rpg:bow_l30_common": {
+   "min": [
+    -0.0472,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0472,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_lv0"
+  },
+  "rpg:bow_l30_hero": {
+   "min": [
+    -0.0522,
+    -0.7567,
+    -0.165
+   ],
+   "max": [
+    0.0522,
+    0.7567,
+    0.1516
+   ],
+   "hand": 1.0,
+   "design": "bow_hero_lv0"
+  },
+  "rpg:bow_l30_noble": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_noble_lv0"
+  },
+  "rpg:bow_l30_rare": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_rare_lv0"
+  },
+  "rpg:bow_l35_hero": {
+   "min": [
+    -0.0522,
+    -0.7567,
+    -0.165
+   ],
+   "max": [
+    0.0522,
+    0.7567,
+    0.1516
+   ],
+   "hand": 1.0,
+   "design": "bow_hero_lv0"
+  },
+  "rpg:bow_l40_common": {
+   "min": [
+    -0.0472,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0472,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_lv0"
+  },
+  "rpg:bow_l40_hero": {
+   "min": [
+    -0.0522,
+    -0.7567,
+    -0.165
+   ],
+   "max": [
+    0.0522,
+    0.7567,
+    0.1516
+   ],
+   "hand": 1.0,
+   "design": "bow_hero_lv0"
+  },
+  "rpg:bow_l40_noble": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_noble_lv0"
+  },
+  "rpg:bow_l40_rare": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_rare_lv0"
+  },
+  "rpg:bow_l40_transcend": {
+   "min": [
+    -0.0703,
+    -1.2077,
+    -0.7956
+   ],
+   "max": [
+    0.0703,
+    1.2077,
+    0.7956
+   ],
+   "hand": 1.0,
+   "design": "bow_transcend_lv0"
+  },
+  "rpg:bow_l45_transcend": {
+   "min": [
+    -0.0703,
+    -1.2077,
+    -0.7956
+   ],
+   "max": [
+    0.0703,
+    1.2077,
+    0.7956
+   ],
+   "hand": 1.0,
+   "design": "bow_transcend_lv0"
+  },
+  "rpg:bow_l50_transcend": {
+   "min": [
+    -0.0703,
+    -1.2077,
+    -0.7956
+   ],
+   "max": [
+    0.0703,
+    1.2077,
+    0.7956
+   ],
+   "hand": 1.0,
+   "design": "bow_transcend_lv0"
+  },
+  "rpg:bow_l55_transcend": {
+   "min": [
+    -0.0703,
+    -1.2077,
+    -0.7956
+   ],
+   "max": [
+    0.0703,
+    1.2077,
+    0.7956
+   ],
+   "hand": 1.0,
+   "design": "bow_transcend_lv0"
+  },
+  "rpg:bow_l5_common": {
+   "min": [
+    -0.0472,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0472,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_lv0"
+  },
+  "rpg:bow_l5_noble": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_noble_lv0"
+  },
+  "rpg:bow_l5_rare": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_rare_lv0"
+  },
+  "rpg:bow_l60_transcend": {
+   "min": [
+    -0.0703,
+    -1.2077,
+    -0.7956
+   ],
+   "max": [
+    0.0703,
+    1.2077,
+    0.7956
+   ],
+   "hand": 1.0,
+   "design": "bow_transcend_lv0"
+  },
+  "rpg:cosmetic_abyss_greatsword": {
+   "min": [
+    -0.1302,
+    -1.4844,
+    -0.5469
+   ],
+   "max": [
+    0.1302,
+    1.4844,
+    0.5469
+   ],
+   "hand": 1.1933,
+   "design": "greatsword_skin_abyss"
+  },
+  "rpg:cosmetic_coral_hammer": {
+   "min": [
+    -0.2075,
+    -1.2669,
+    -0.3131
+   ],
+   "max": [
+    0.2075,
+    1.2669,
+    0.3131
+   ],
+   "hand": 1.0,
+   "design": "hammer_skin_coral"
+  },
+  "rpg:cosmetic_dawn_scepter": {
+   "min": [
+    -0.1251,
+    -1.4557,
+    -0.2955
+   ],
+   "max": [
+    0.1251,
+    1.5036,
+    0.2955
+   ],
+   "hand": 1.0,
+   "design": "scepter_skin_dawn"
+  },
+  "rpg:cosmetic_dusk_lance": {
+   "min": [
+    -0.0739,
+    -1.4844,
+    -0.2736
+   ],
+   "max": [
+    0.0739,
+    1.4844,
+    0.2736
+   ],
+   "hand": 1.4115,
+   "design": "lance_skin_dusk"
+  },
+  "rpg:cosmetic_frost_bow": {
+   "min": [
+    -0.0522,
+    -0.7563,
+    -0.1416
+   ],
+   "max": [
+    0.0522,
+    0.7563,
+    0.1416
+   ],
+   "hand": 1.0,
+   "design": "bow_skin_frost"
+  },
+  "rpg:cosmetic_jade_shield": {
+   "min": [
+    -0.1327,
+    -0.5127,
+    -0.3123
+   ],
+   "max": [
+    0.1327,
+    0.5127,
+    0.3123
+   ],
+   "hand": 1.0,
+   "design": "shield_skin_jade"
+  },
+  "rpg:cosmetic_lava_axe": {
+   "min": [
+    -0.0743,
+    -0.669,
+    -0.3504
+   ],
+   "max": [
+    0.0743,
+    0.669,
+    0.3504
+   ],
+   "hand": 1.0,
+   "design": "axe_skin_lava"
+  },
+  "rpg:cosmetic_obsidian_dagger": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_skin_obsidian"
+  },
+  "rpg:cosmetic_sakura_sword": {
+   "min": [
+    -0.0475,
+    -0.8007,
+    -0.2201
+   ],
+   "max": [
+    0.0475,
+    0.8007,
+    0.2201
+   ],
+   "hand": 1.0,
+   "design": "sword_skin_sakura"
+  },
+  "rpg:cosmetic_starlight_wand": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_skin_starlight"
+  },
+  "rpg:cosmetic_wraith_scythe": {
+   "min": [
+    -0.0785,
+    -1.4844,
+    -0.5616
+   ],
+   "max": [
+    0.0785,
+    1.4844,
+    0.516
+   ],
+   "hand": 1.2479,
+   "design": "scythe_skin_wraith"
+  },
+  "rpg:dagger_l0_common": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_lv0"
+  },
+  "rpg:dagger_l0_noble": {
+   "min": [
+    -0.0433,
+    -0.4994,
+    -0.158
+   ],
+   "max": [
+    0.0433,
+    0.4994,
+    0.158
+   ],
+   "hand": 1.0,
+   "design": "dagger_noble_lv0"
+  },
+  "rpg:dagger_l0_rare": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_rare_lv0"
+  },
+  "rpg:dagger_l10_common": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_lv0"
+  },
+  "rpg:dagger_l10_noble": {
+   "min": [
+    -0.0433,
+    -0.4994,
+    -0.158
+   ],
+   "max": [
+    0.0433,
+    0.4994,
+    0.158
+   ],
+   "hand": 1.0,
+   "design": "dagger_noble_lv0"
+  },
+  "rpg:dagger_l10_rare": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_rare_lv0"
+  },
+  "rpg:dagger_l15_common": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_lv0"
+  },
+  "rpg:dagger_l15_noble": {
+   "min": [
+    -0.0433,
+    -0.4994,
+    -0.158
+   ],
+   "max": [
+    0.0433,
+    0.4994,
+    0.158
+   ],
+   "hand": 1.0,
+   "design": "dagger_noble_lv0"
+  },
+  "rpg:dagger_l15_rare": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_rare_lv0"
+  },
+  "rpg:dagger_l20_common": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_lv0"
+  },
+  "rpg:dagger_l20_noble": {
+   "min": [
+    -0.0433,
+    -0.4994,
+    -0.158
+   ],
+   "max": [
+    0.0433,
+    0.4994,
+    0.158
+   ],
+   "hand": 1.0,
+   "design": "dagger_noble_lv0"
+  },
+  "rpg:dagger_l20_rare": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_rare_lv0"
+  },
+  "rpg:dagger_l30_common": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_lv0"
+  },
+  "rpg:dagger_l30_hero": {
+   "min": [
+    -0.0428,
+    -0.5672,
+    -0.2375
+   ],
+   "max": [
+    0.0428,
+    0.5575,
+    0.2006
+   ],
+   "hand": 1.0,
+   "design": "dagger_hero_lv0"
+  },
+  "rpg:dagger_l30_noble": {
+   "min": [
+    -0.0433,
+    -0.4994,
+    -0.158
+   ],
+   "max": [
+    0.0433,
+    0.4994,
+    0.158
+   ],
+   "hand": 1.0,
+   "design": "dagger_noble_lv0"
+  },
+  "rpg:dagger_l30_rare": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_rare_lv0"
+  },
+  "rpg:dagger_l35_hero": {
+   "min": [
+    -0.0428,
+    -0.5672,
+    -0.2375
+   ],
+   "max": [
+    0.0428,
+    0.5575,
+    0.2006
+   ],
+   "hand": 1.0,
+   "design": "dagger_hero_lv0"
+  },
+  "rpg:dagger_l40_common": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_lv0"
+  },
+  "rpg:dagger_l40_hero": {
+   "min": [
+    -0.0428,
+    -0.5672,
+    -0.2375
+   ],
+   "max": [
+    0.0428,
+    0.5575,
+    0.2006
+   ],
+   "hand": 1.0,
+   "design": "dagger_hero_lv0"
+  },
+  "rpg:dagger_l40_noble": {
+   "min": [
+    -0.0433,
+    -0.4994,
+    -0.158
+   ],
+   "max": [
+    0.0433,
+    0.4994,
+    0.158
+   ],
+   "hand": 1.0,
+   "design": "dagger_noble_lv0"
+  },
+  "rpg:dagger_l40_rare": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_rare_lv0"
+  },
+  "rpg:dagger_l40_transcend": {
+   "min": [
+    -0.0601,
+    -1.281,
+    -0.3068
+   ],
+   "max": [
+    0.0601,
+    1.2499,
+    0.4891
+   ],
+   "hand": 1.0,
+   "design": "dagger_transcend_lv0"
+  },
+  "rpg:dagger_l45_transcend": {
+   "min": [
+    -0.0601,
+    -1.281,
+    -0.3068
+   ],
+   "max": [
+    0.0601,
+    1.2499,
+    0.4891
+   ],
+   "hand": 1.0,
+   "design": "dagger_transcend_lv0"
+  },
+  "rpg:dagger_l50_transcend": {
+   "min": [
+    -0.0601,
+    -1.281,
+    -0.3068
+   ],
+   "max": [
+    0.0601,
+    1.2499,
+    0.4891
+   ],
+   "hand": 1.0,
+   "design": "dagger_transcend_lv0"
+  },
+  "rpg:dagger_l55_transcend": {
+   "min": [
+    -0.0601,
+    -1.281,
+    -0.3068
+   ],
+   "max": [
+    0.0601,
+    1.2499,
+    0.4891
+   ],
+   "hand": 1.0,
+   "design": "dagger_transcend_lv0"
+  },
+  "rpg:dagger_l5_common": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_lv0"
+  },
+  "rpg:dagger_l5_noble": {
+   "min": [
+    -0.0433,
+    -0.4994,
+    -0.158
+   ],
+   "max": [
+    0.0433,
+    0.4994,
+    0.158
+   ],
+   "hand": 1.0,
+   "design": "dagger_noble_lv0"
+  },
+  "rpg:dagger_l5_rare": {
+   "min": [
+    -0.0409,
+    -0.4711,
+    -0.149
+   ],
+   "max": [
+    0.0409,
+    0.4711,
+    0.149
+   ],
+   "hand": 1.0,
+   "design": "dagger_rare_lv0"
+  },
+  "rpg:dagger_l60_transcend": {
+   "min": [
+    -0.0601,
+    -1.281,
+    -0.3068
+   ],
+   "max": [
+    0.0601,
+    1.2499,
+    0.4891
+   ],
+   "hand": 1.0,
+   "design": "dagger_transcend_lv0"
+  },
+  "rpg:greatsword_l40_transcend": {
+   "min": [
+    -0.1302,
+    -1.4844,
+    -0.5469
+   ],
+   "max": [
+    0.1302,
+    1.4844,
+    0.5469
+   ],
+   "hand": 1.1933,
+   "design": "greatsword_transcend_lv0"
+  },
+  "rpg:greatsword_l45_transcend": {
+   "min": [
+    -0.1302,
+    -1.4844,
+    -0.5469
+   ],
+   "max": [
+    0.1302,
+    1.4844,
+    0.5469
+   ],
+   "hand": 1.1933,
+   "design": "greatsword_transcend_lv0"
+  },
+  "rpg:greatsword_l50_transcend": {
+   "min": [
+    -0.1302,
+    -1.4844,
+    -0.5469
+   ],
+   "max": [
+    0.1302,
+    1.4844,
+    0.5469
+   ],
+   "hand": 1.1933,
+   "design": "greatsword_transcend_lv0"
+  },
+  "rpg:greatsword_l55_transcend": {
+   "min": [
+    -0.1302,
+    -1.4844,
+    -0.5469
+   ],
+   "max": [
+    0.1302,
+    1.4844,
+    0.5469
+   ],
+   "hand": 1.1933,
+   "design": "greatsword_transcend_lv0"
+  },
+  "rpg:greatsword_l60_transcend": {
+   "min": [
+    -0.1302,
+    -1.4844,
+    -0.5469
+   ],
+   "max": [
+    0.1302,
+    1.4844,
+    0.5469
+   ],
+   "hand": 1.1933,
+   "design": "greatsword_transcend_lv0"
+  },
+  "rpg:hammer_l0_common": {
+   "min": [
+    -0.1869,
+    -1.1801,
+    -0.3005
+   ],
+   "max": [
+    0.1869,
+    1.1801,
+    0.3005
+   ],
+   "hand": 1.0,
+   "design": "hammer_lv0"
+  },
+  "rpg:hammer_l0_rare": {
+   "min": [
+    -0.2023,
+    -1.2507,
+    -0.3016
+   ],
+   "max": [
+    0.2023,
+    1.2507,
+    0.3016
+   ],
+   "hand": 1.0,
+   "design": "hammer_rare_lv0"
+  },
+  "rpg:hammer_l10_common": {
+   "min": [
+    -0.1869,
+    -1.1801,
+    -0.3005
+   ],
+   "max": [
+    0.1869,
+    1.1801,
+    0.3005
+   ],
+   "hand": 1.0,
+   "design": "hammer_lv0"
+  },
+  "rpg:hammer_l10_noble": {
+   "min": [
+    -0.2075,
+    -1.2669,
+    -0.3131
+   ],
+   "max": [
+    0.2075,
+    1.2669,
+    0.3131
+   ],
+   "hand": 1.0,
+   "design": "hammer_noble_lv0"
+  },
+  "rpg:hammer_l10_rare": {
+   "min": [
+    -0.2023,
+    -1.2507,
+    -0.3016
+   ],
+   "max": [
+    0.2023,
+    1.2507,
+    0.3016
+   ],
+   "hand": 1.0,
+   "design": "hammer_rare_lv0"
+  },
+  "rpg:hammer_l15_common": {
+   "min": [
+    -0.1869,
+    -1.1801,
+    -0.3005
+   ],
+   "max": [
+    0.1869,
+    1.1801,
+    0.3005
+   ],
+   "hand": 1.0,
+   "design": "hammer_lv0"
+  },
+  "rpg:hammer_l15_rare": {
+   "min": [
+    -0.2023,
+    -1.2507,
+    -0.3016
+   ],
+   "max": [
+    0.2023,
+    1.2507,
+    0.3016
+   ],
+   "hand": 1.0,
+   "design": "hammer_rare_lv0"
+  },
+  "rpg:hammer_l20_common": {
+   "min": [
+    -0.1869,
+    -1.1801,
+    -0.3005
+   ],
+   "max": [
+    0.1869,
+    1.1801,
+    0.3005
+   ],
+   "hand": 1.0,
+   "design": "hammer_lv0"
+  },
+  "rpg:hammer_l20_noble": {
+   "min": [
+    -0.2075,
+    -1.2669,
+    -0.3131
+   ],
+   "max": [
+    0.2075,
+    1.2669,
+    0.3131
+   ],
+   "hand": 1.0,
+   "design": "hammer_noble_lv0"
+  },
+  "rpg:hammer_l20_rare": {
+   "min": [
+    -0.2023,
+    -1.2507,
+    -0.3016
+   ],
+   "max": [
+    0.2023,
+    1.2507,
+    0.3016
+   ],
+   "hand": 1.0,
+   "design": "hammer_rare_lv0"
+  },
+  "rpg:hammer_l30_common": {
+   "min": [
+    -0.1869,
+    -1.1801,
+    -0.3005
+   ],
+   "max": [
+    0.1869,
+    1.1801,
+    0.3005
+   ],
+   "hand": 1.0,
+   "design": "hammer_lv0"
+  },
+  "rpg:hammer_l30_hero": {
+   "min": [
+    -0.21,
+    -1.3946,
+    -0.1892
+   ],
+   "max": [
+    0.21,
+    1.3946,
+    0.1892
+   ],
+   "hand": 1.0,
+   "design": "hammer_hero_lv0"
+  },
+  "rpg:hammer_l30_rare": {
+   "min": [
+    -0.2023,
+    -1.2507,
+    -0.3016
+   ],
+   "max": [
+    0.2023,
+    1.2507,
+    0.3016
+   ],
+   "hand": 1.0,
+   "design": "hammer_rare_lv0"
+  },
+  "rpg:hammer_l35_hero": {
+   "min": [
+    -0.21,
+    -1.3946,
+    -0.1892
+   ],
+   "max": [
+    0.21,
+    1.3946,
+    0.1892
+   ],
+   "hand": 1.0,
+   "design": "hammer_hero_lv0"
+  },
+  "rpg:hammer_l40_common": {
+   "min": [
+    -0.1869,
+    -1.1801,
+    -0.3005
+   ],
+   "max": [
+    0.1869,
+    1.1801,
+    0.3005
+   ],
+   "hand": 1.0,
+   "design": "hammer_lv0"
+  },
+  "rpg:hammer_l40_hero": {
+   "min": [
+    -0.21,
+    -1.3946,
+    -0.1892
+   ],
+   "max": [
+    0.21,
+    1.3946,
+    0.1892
+   ],
+   "hand": 1.0,
+   "design": "hammer_hero_lv0"
+  },
+  "rpg:hammer_l40_rare": {
+   "min": [
+    -0.2023,
+    -1.2507,
+    -0.3016
+   ],
+   "max": [
+    0.2023,
+    1.2507,
+    0.3016
+   ],
+   "hand": 1.0,
+   "design": "hammer_rare_lv0"
+  },
+  "rpg:hammer_l40_transcend": {
+   "min": [
+    -0.1975,
+    -1.0676,
+    -0.5583
+   ],
+   "max": [
+    0.1975,
+    1.0676,
+    0.5583
+   ],
+   "hand": 1.0,
+   "design": "hammer_transcend_lv0"
+  },
+  "rpg:hammer_l45_transcend": {
+   "min": [
+    -0.1975,
+    -1.0676,
+    -0.5583
+   ],
+   "max": [
+    0.1975,
+    1.0676,
+    0.5583
+   ],
+   "hand": 1.0,
+   "design": "hammer_transcend_lv0"
+  },
+  "rpg:hammer_l50_transcend": {
+   "min": [
+    -0.1975,
+    -1.0676,
+    -0.5583
+   ],
+   "max": [
+    0.1975,
+    1.0676,
+    0.5583
+   ],
+   "hand": 1.0,
+   "design": "hammer_transcend_lv0"
+  },
+  "rpg:hammer_l55_transcend": {
+   "min": [
+    -0.1975,
+    -1.0676,
+    -0.5583
+   ],
+   "max": [
+    0.1975,
+    1.0676,
+    0.5583
+   ],
+   "hand": 1.0,
+   "design": "hammer_transcend_lv0"
+  },
+  "rpg:hammer_l5_common": {
+   "min": [
+    -0.1869,
+    -1.1801,
+    -0.3005
+   ],
+   "max": [
+    0.1869,
+    1.1801,
+    0.3005
+   ],
+   "hand": 1.0,
+   "design": "hammer_lv0"
+  },
+  "rpg:hammer_l5_rare": {
+   "min": [
+    -0.2023,
+    -1.2507,
+    -0.3016
+   ],
+   "max": [
+    0.2023,
+    1.2507,
+    0.3016
+   ],
+   "hand": 1.0,
+   "design": "hammer_rare_lv0"
+  },
+  "rpg:hammer_l60_transcend": {
+   "min": [
+    -0.1975,
+    -1.0676,
+    -0.5583
+   ],
+   "max": [
+    0.1975,
+    1.0676,
+    0.5583
+   ],
+   "hand": 1.0,
+   "design": "hammer_transcend_lv0"
+  },
+  "rpg:lance_l0_common": {
+   "min": [
+    -0.0672,
+    -1.4844,
+    -0.1088
+   ],
+   "max": [
+    0.0672,
+    1.4844,
+    0.1088
+   ],
+   "hand": 1.3464,
+   "design": "lance_lv0"
+  },
+  "rpg:lance_l0_rare": {
+   "min": [
+    -0.0695,
+    -1.4844,
+    -0.1832
+   ],
+   "max": [
+    0.0695,
+    1.4844,
+    0.1832
+   ],
+   "hand": 1.4094,
+   "design": "lance_rare_lv0"
+  },
+  "rpg:lance_l10_common": {
+   "min": [
+    -0.0672,
+    -1.4844,
+    -0.1088
+   ],
+   "max": [
+    0.0672,
+    1.4844,
+    0.1088
+   ],
+   "hand": 1.3464,
+   "design": "lance_lv0"
+  },
+  "rpg:lance_l10_noble": {
+   "min": [
+    -0.0739,
+    -1.4844,
+    -0.2736
+   ],
+   "max": [
+    0.0739,
+    1.4844,
+    0.2736
+   ],
+   "hand": 1.4115,
+   "design": "lance_noble_lv0"
+  },
+  "rpg:lance_l10_rare": {
+   "min": [
+    -0.0695,
+    -1.4844,
+    -0.1832
+   ],
+   "max": [
+    0.0695,
+    1.4844,
+    0.1832
+   ],
+   "hand": 1.4094,
+   "design": "lance_rare_lv0"
+  },
+  "rpg:lance_l15_common": {
+   "min": [
+    -0.0672,
+    -1.4844,
+    -0.1088
+   ],
+   "max": [
+    0.0672,
+    1.4844,
+    0.1088
+   ],
+   "hand": 1.3464,
+   "design": "lance_lv0"
+  },
+  "rpg:lance_l15_rare": {
+   "min": [
+    -0.0695,
+    -1.4844,
+    -0.1832
+   ],
+   "max": [
+    0.0695,
+    1.4844,
+    0.1832
+   ],
+   "hand": 1.4094,
+   "design": "lance_rare_lv0"
+  },
+  "rpg:lance_l20_common": {
+   "min": [
+    -0.0672,
+    -1.4844,
+    -0.1088
+   ],
+   "max": [
+    0.0672,
+    1.4844,
+    0.1088
+   ],
+   "hand": 1.3464,
+   "design": "lance_lv0"
+  },
+  "rpg:lance_l20_noble": {
+   "min": [
+    -0.0739,
+    -1.4844,
+    -0.2736
+   ],
+   "max": [
+    0.0739,
+    1.4844,
+    0.2736
+   ],
+   "hand": 1.4115,
+   "design": "lance_noble_lv0"
+  },
+  "rpg:lance_l20_rare": {
+   "min": [
+    -0.0695,
+    -1.4844,
+    -0.1832
+   ],
+   "max": [
+    0.0695,
+    1.4844,
+    0.1832
+   ],
+   "hand": 1.4094,
+   "design": "lance_rare_lv0"
+  },
+  "rpg:lance_l30_common": {
+   "min": [
+    -0.0672,
+    -1.4844,
+    -0.1088
+   ],
+   "max": [
+    0.0672,
+    1.4844,
+    0.1088
+   ],
+   "hand": 1.3464,
+   "design": "lance_lv0"
+  },
+  "rpg:lance_l30_hero": {
+   "min": [
+    -0.1235,
+    -1.4844,
+    -0.1396
+   ],
+   "max": [
+    0.1235,
+    1.4844,
+    0.1396
+   ],
+   "hand": 1.4654,
+   "design": "lance_hero_lv0"
+  },
+  "rpg:lance_l30_rare": {
+   "min": [
+    -0.0695,
+    -1.4844,
+    -0.1832
+   ],
+   "max": [
+    0.0695,
+    1.4844,
+    0.1832
+   ],
+   "hand": 1.4094,
+   "design": "lance_rare_lv0"
+  },
+  "rpg:lance_l35_hero": {
+   "min": [
+    -0.1235,
+    -1.4844,
+    -0.1396
+   ],
+   "max": [
+    0.1235,
+    1.4844,
+    0.1396
+   ],
+   "hand": 1.4654,
+   "design": "lance_hero_lv0"
+  },
+  "rpg:lance_l40_common": {
+   "min": [
+    -0.0672,
+    -1.4844,
+    -0.1088
+   ],
+   "max": [
+    0.0672,
+    1.4844,
+    0.1088
+   ],
+   "hand": 1.3464,
+   "design": "lance_lv0"
+  },
+  "rpg:lance_l40_hero": {
+   "min": [
+    -0.1235,
+    -1.4844,
+    -0.1396
+   ],
+   "max": [
+    0.1235,
+    1.4844,
+    0.1396
+   ],
+   "hand": 1.4654,
+   "design": "lance_hero_lv0"
+  },
+  "rpg:lance_l40_rare": {
+   "min": [
+    -0.0695,
+    -1.4844,
+    -0.1832
+   ],
+   "max": [
+    0.0695,
+    1.4844,
+    0.1832
+   ],
+   "hand": 1.4094,
+   "design": "lance_rare_lv0"
+  },
+  "rpg:lance_l40_transcend": {
+   "min": [
+    -0.1062,
+    -1.4844,
+    -0.1625
+   ],
+   "max": [
+    0.1062,
+    1.4844,
+    0.1625
+   ],
+   "hand": 1.4098,
+   "design": "lance_transcend_lv0"
+  },
+  "rpg:lance_l45_transcend": {
+   "min": [
+    -0.1062,
+    -1.4844,
+    -0.1625
+   ],
+   "max": [
+    0.1062,
+    1.4844,
+    0.1625
+   ],
+   "hand": 1.4098,
+   "design": "lance_transcend_lv0"
+  },
+  "rpg:lance_l50_transcend": {
+   "min": [
+    -0.1062,
+    -1.4844,
+    -0.1625
+   ],
+   "max": [
+    0.1062,
+    1.4844,
+    0.1625
+   ],
+   "hand": 1.4098,
+   "design": "lance_transcend_lv0"
+  },
+  "rpg:lance_l55_transcend": {
+   "min": [
+    -0.1062,
+    -1.4844,
+    -0.1625
+   ],
+   "max": [
+    0.1062,
+    1.4844,
+    0.1625
+   ],
+   "hand": 1.4098,
+   "design": "lance_transcend_lv0"
+  },
+  "rpg:lance_l5_common": {
+   "min": [
+    -0.0672,
+    -1.4844,
+    -0.1088
+   ],
+   "max": [
+    0.0672,
+    1.4844,
+    0.1088
+   ],
+   "hand": 1.3464,
+   "design": "lance_lv0"
+  },
+  "rpg:lance_l5_rare": {
+   "min": [
+    -0.0695,
+    -1.4844,
+    -0.1832
+   ],
+   "max": [
+    0.0695,
+    1.4844,
+    0.1832
+   ],
+   "hand": 1.4094,
+   "design": "lance_rare_lv0"
+  },
+  "rpg:lance_l60_transcend": {
+   "min": [
+    -0.1062,
+    -1.4844,
+    -0.1625
+   ],
+   "max": [
+    0.1062,
+    1.4844,
+    0.1625
+   ],
+   "hand": 1.4098,
+   "design": "lance_transcend_lv0"
+  },
+  "rpg:scepter_l0_common": {
+   "min": [
+    -0.0693,
+    -1.3178,
+    -0.1909
+   ],
+   "max": [
+    0.0693,
+    1.3178,
+    0.1909
+   ],
+   "hand": 1.0,
+   "design": "scepter_lv0"
+  },
+  "rpg:scepter_l0_rare": {
+   "min": [
+    -0.192,
+    -1.3535,
+    -0.0879
+   ],
+   "max": [
+    0.1824,
+    1.3535,
+    0.0879
+   ],
+   "hand": 1.0,
+   "design": "scepter_rare_lv0"
+  },
+  "rpg:scepter_l10_common": {
+   "min": [
+    -0.0693,
+    -1.3178,
+    -0.1909
+   ],
+   "max": [
+    0.0693,
+    1.3178,
+    0.1909
+   ],
+   "hand": 1.0,
+   "design": "scepter_lv0"
+  },
+  "rpg:scepter_l10_noble": {
+   "min": [
+    -0.1251,
+    -1.4557,
+    -0.2955
+   ],
+   "max": [
+    0.1251,
+    1.5036,
+    0.2955
+   ],
+   "hand": 1.0,
+   "design": "scepter_noble_lv0"
+  },
+  "rpg:scepter_l10_rare": {
+   "min": [
+    -0.192,
+    -1.3535,
+    -0.0879
+   ],
+   "max": [
+    0.1824,
+    1.3535,
+    0.0879
+   ],
+   "hand": 1.0,
+   "design": "scepter_rare_lv0"
+  },
+  "rpg:scepter_l15_common": {
+   "min": [
+    -0.0693,
+    -1.3178,
+    -0.1909
+   ],
+   "max": [
+    0.0693,
+    1.3178,
+    0.1909
+   ],
+   "hand": 1.0,
+   "design": "scepter_lv0"
+  },
+  "rpg:scepter_l15_rare": {
+   "min": [
+    -0.192,
+    -1.3535,
+    -0.0879
+   ],
+   "max": [
+    0.1824,
+    1.3535,
+    0.0879
+   ],
+   "hand": 1.0,
+   "design": "scepter_rare_lv0"
+  },
+  "rpg:scepter_l20_common": {
+   "min": [
+    -0.0693,
+    -1.3178,
+    -0.1909
+   ],
+   "max": [
+    0.0693,
+    1.3178,
+    0.1909
+   ],
+   "hand": 1.0,
+   "design": "scepter_lv0"
+  },
+  "rpg:scepter_l20_noble": {
+   "min": [
+    -0.1251,
+    -1.4557,
+    -0.2955
+   ],
+   "max": [
+    0.1251,
+    1.5036,
+    0.2955
+   ],
+   "hand": 1.0,
+   "design": "scepter_noble_lv0"
+  },
+  "rpg:scepter_l20_rare": {
+   "min": [
+    -0.192,
+    -1.3535,
+    -0.0879
+   ],
+   "max": [
+    0.1824,
+    1.3535,
+    0.0879
+   ],
+   "hand": 1.0,
+   "design": "scepter_rare_lv0"
+  },
+  "rpg:scepter_l30_common": {
+   "min": [
+    -0.0693,
+    -1.3178,
+    -0.1909
+   ],
+   "max": [
+    0.0693,
+    1.3178,
+    0.1909
+   ],
+   "hand": 1.0,
+   "design": "scepter_lv0"
+  },
+  "rpg:scepter_l30_hero": {
+   "min": [
+    -0.1328,
+    -1.4175,
+    -0.2989
+   ],
+   "max": [
+    0.1328,
+    1.4319,
+    0.2989
+   ],
+   "hand": 1.0,
+   "design": "scepter_hero_lv0"
+  },
+  "rpg:scepter_l30_rare": {
+   "min": [
+    -0.192,
+    -1.3535,
+    -0.0879
+   ],
+   "max": [
+    0.1824,
+    1.3535,
+    0.0879
+   ],
+   "hand": 1.0,
+   "design": "scepter_rare_lv0"
+  },
+  "rpg:scepter_l35_hero": {
+   "min": [
+    -0.1328,
+    -1.4175,
+    -0.2989
+   ],
+   "max": [
+    0.1328,
+    1.4319,
+    0.2989
+   ],
+   "hand": 1.0,
+   "design": "scepter_hero_lv0"
+  },
+  "rpg:scepter_l40_common": {
+   "min": [
+    -0.0693,
+    -1.3178,
+    -0.1909
+   ],
+   "max": [
+    0.0693,
+    1.3178,
+    0.1909
+   ],
+   "hand": 1.0,
+   "design": "scepter_lv0"
+  },
+  "rpg:scepter_l40_hero": {
+   "min": [
+    -0.1328,
+    -1.4175,
+    -0.2989
+   ],
+   "max": [
+    0.1328,
+    1.4319,
+    0.2989
+   ],
+   "hand": 1.0,
+   "design": "scepter_hero_lv0"
+  },
+  "rpg:scepter_l40_rare": {
+   "min": [
+    -0.192,
+    -1.3535,
+    -0.0879
+   ],
+   "max": [
+    0.1824,
+    1.3535,
+    0.0879
+   ],
+   "hand": 1.0,
+   "design": "scepter_rare_lv0"
+  },
+  "rpg:scepter_l40_transcend": {
+   "min": [
+    -0.1073,
+    -1.4844,
+    -0.3101
+   ],
+   "max": [
+    0.1073,
+    1.4844,
+    0.3101
+   ],
+   "hand": 1.2349,
+   "design": "scepter_transcend_lv0"
+  },
+  "rpg:scepter_l45_transcend": {
+   "min": [
+    -0.1073,
+    -1.4844,
+    -0.3101
+   ],
+   "max": [
+    0.1073,
+    1.4844,
+    0.3101
+   ],
+   "hand": 1.2349,
+   "design": "scepter_transcend_lv0"
+  },
+  "rpg:scepter_l50_transcend": {
+   "min": [
+    -0.1073,
+    -1.4844,
+    -0.3101
+   ],
+   "max": [
+    0.1073,
+    1.4844,
+    0.3101
+   ],
+   "hand": 1.2349,
+   "design": "scepter_transcend_lv0"
+  },
+  "rpg:scepter_l55_transcend": {
+   "min": [
+    -0.1073,
+    -1.4844,
+    -0.3101
+   ],
+   "max": [
+    0.1073,
+    1.4844,
+    0.3101
+   ],
+   "hand": 1.2349,
+   "design": "scepter_transcend_lv0"
+  },
+  "rpg:scepter_l5_common": {
+   "min": [
+    -0.0693,
+    -1.3178,
+    -0.1909
+   ],
+   "max": [
+    0.0693,
+    1.3178,
+    0.1909
+   ],
+   "hand": 1.0,
+   "design": "scepter_lv0"
+  },
+  "rpg:scepter_l5_rare": {
+   "min": [
+    -0.192,
+    -1.3535,
+    -0.0879
+   ],
+   "max": [
+    0.1824,
+    1.3535,
+    0.0879
+   ],
+   "hand": 1.0,
+   "design": "scepter_rare_lv0"
+  },
+  "rpg:scepter_l60_transcend": {
+   "min": [
+    -0.1073,
+    -1.4844,
+    -0.3101
+   ],
+   "max": [
+    0.1073,
+    1.4844,
+    0.3101
+   ],
+   "hand": 1.2349,
+   "design": "scepter_transcend_lv0"
+  },
+  "rpg:scythe_l0_common": {
+   "min": [
+    -0.0777,
+    -1.4844,
+    -0.6201
+   ],
+   "max": [
+    0.0777,
+    1.4844,
+    0.5851
+   ],
+   "hand": 1.0643,
+   "design": "scythe_lv0"
+  },
+  "rpg:scythe_l0_rare": {
+   "min": [
+    -0.0828,
+    -1.4844,
+    -0.6287
+   ],
+   "max": [
+    0.0828,
+    1.4844,
+    0.589
+   ],
+   "hand": 1.1359,
+   "design": "scythe_rare_lv0"
+  },
+  "rpg:scythe_l10_common": {
+   "min": [
+    -0.0777,
+    -1.4844,
+    -0.6201
+   ],
+   "max": [
+    0.0777,
+    1.4844,
+    0.5851
+   ],
+   "hand": 1.0643,
+   "design": "scythe_lv0"
+  },
+  "rpg:scythe_l10_noble": {
+   "min": [
+    -0.0785,
+    -1.4844,
+    -0.5616
+   ],
+   "max": [
+    0.0785,
+    1.4844,
+    0.516
+   ],
+   "hand": 1.2479,
+   "design": "scythe_noble_lv0"
+  },
+  "rpg:scythe_l10_rare": {
+   "min": [
+    -0.0828,
+    -1.4844,
+    -0.6287
+   ],
+   "max": [
+    0.0828,
+    1.4844,
+    0.589
+   ],
+   "hand": 1.1359,
+   "design": "scythe_rare_lv0"
+  },
+  "rpg:scythe_l15_common": {
+   "min": [
+    -0.0777,
+    -1.4844,
+    -0.6201
+   ],
+   "max": [
+    0.0777,
+    1.4844,
+    0.5851
+   ],
+   "hand": 1.0643,
+   "design": "scythe_lv0"
+  },
+  "rpg:scythe_l15_rare": {
+   "min": [
+    -0.0828,
+    -1.4844,
+    -0.6287
+   ],
+   "max": [
+    0.0828,
+    1.4844,
+    0.589
+   ],
+   "hand": 1.1359,
+   "design": "scythe_rare_lv0"
+  },
+  "rpg:scythe_l20_common": {
+   "min": [
+    -0.0777,
+    -1.4844,
+    -0.6201
+   ],
+   "max": [
+    0.0777,
+    1.4844,
+    0.5851
+   ],
+   "hand": 1.0643,
+   "design": "scythe_lv0"
+  },
+  "rpg:scythe_l20_noble": {
+   "min": [
+    -0.0785,
+    -1.4844,
+    -0.5616
+   ],
+   "max": [
+    0.0785,
+    1.4844,
+    0.516
+   ],
+   "hand": 1.2479,
+   "design": "scythe_noble_lv0"
+  },
+  "rpg:scythe_l20_rare": {
+   "min": [
+    -0.0828,
+    -1.4844,
+    -0.6287
+   ],
+   "max": [
+    0.0828,
+    1.4844,
+    0.589
+   ],
+   "hand": 1.1359,
+   "design": "scythe_rare_lv0"
+  },
+  "rpg:scythe_l30_common": {
+   "min": [
+    -0.0777,
+    -1.4844,
+    -0.6201
+   ],
+   "max": [
+    0.0777,
+    1.4844,
+    0.5851
+   ],
+   "hand": 1.0643,
+   "design": "scythe_lv0"
+  },
+  "rpg:scythe_l30_hero": {
+   "min": [
+    -0.0737,
+    -1.4844,
+    -0.2119
+   ],
+   "max": [
+    0.0737,
+    1.4844,
+    0.2092
+   ],
+   "hand": 1.1163,
+   "design": "scythe_hero_lv0"
+  },
+  "rpg:scythe_l30_rare": {
+   "min": [
+    -0.0828,
+    -1.4844,
+    -0.6287
+   ],
+   "max": [
+    0.0828,
+    1.4844,
+    0.589
+   ],
+   "hand": 1.1359,
+   "design": "scythe_rare_lv0"
+  },
+  "rpg:scythe_l35_hero": {
+   "min": [
+    -0.0737,
+    -1.4844,
+    -0.2119
+   ],
+   "max": [
+    0.0737,
+    1.4844,
+    0.2092
+   ],
+   "hand": 1.1163,
+   "design": "scythe_hero_lv0"
+  },
+  "rpg:scythe_l40_common": {
+   "min": [
+    -0.0777,
+    -1.4844,
+    -0.6201
+   ],
+   "max": [
+    0.0777,
+    1.4844,
+    0.5851
+   ],
+   "hand": 1.0643,
+   "design": "scythe_lv0"
+  },
+  "rpg:scythe_l40_hero": {
+   "min": [
+    -0.0737,
+    -1.4844,
+    -0.2119
+   ],
+   "max": [
+    0.0737,
+    1.4844,
+    0.2092
+   ],
+   "hand": 1.1163,
+   "design": "scythe_hero_lv0"
+  },
+  "rpg:scythe_l40_rare": {
+   "min": [
+    -0.0828,
+    -1.4844,
+    -0.6287
+   ],
+   "max": [
+    0.0828,
+    1.4844,
+    0.589
+   ],
+   "hand": 1.1359,
+   "design": "scythe_rare_lv0"
+  },
+  "rpg:scythe_l40_transcend": {
+   "min": [
+    -0.1185,
+    -1.4844,
+    -1.0591
+   ],
+   "max": [
+    0.1185,
+    1.5367,
+    0.9888
+   ],
+   "hand": 1.3715,
+   "design": "scythe_transcend_lv0"
+  },
+  "rpg:scythe_l45_transcend": {
+   "min": [
+    -0.1185,
+    -1.4844,
+    -1.0591
+   ],
+   "max": [
+    0.1185,
+    1.5367,
+    0.9888
+   ],
+   "hand": 1.3715,
+   "design": "scythe_transcend_lv0"
+  },
+  "rpg:scythe_l50_transcend": {
+   "min": [
+    -0.1185,
+    -1.4844,
+    -1.0591
+   ],
+   "max": [
+    0.1185,
+    1.5367,
+    0.9888
+   ],
+   "hand": 1.3715,
+   "design": "scythe_transcend_lv0"
+  },
+  "rpg:scythe_l55_transcend": {
+   "min": [
+    -0.1185,
+    -1.4844,
+    -1.0591
+   ],
+   "max": [
+    0.1185,
+    1.5367,
+    0.9888
+   ],
+   "hand": 1.3715,
+   "design": "scythe_transcend_lv0"
+  },
+  "rpg:scythe_l5_common": {
+   "min": [
+    -0.0777,
+    -1.4844,
+    -0.6201
+   ],
+   "max": [
+    0.0777,
+    1.4844,
+    0.5851
+   ],
+   "hand": 1.0643,
+   "design": "scythe_lv0"
+  },
+  "rpg:scythe_l5_rare": {
+   "min": [
+    -0.0828,
+    -1.4844,
+    -0.6287
+   ],
+   "max": [
+    0.0828,
+    1.4844,
+    0.589
+   ],
+   "hand": 1.1359,
+   "design": "scythe_rare_lv0"
+  },
+  "rpg:scythe_l60_transcend": {
+   "min": [
+    -0.1185,
+    -1.4844,
+    -1.0591
+   ],
+   "max": [
+    0.1185,
+    1.5367,
+    0.9888
+   ],
+   "hand": 1.3715,
+   "design": "scythe_transcend_lv0"
+  },
+  "rpg:shield_l0_common": {
+   "min": [
+    -0.1334,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1334,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_lv0"
+  },
+  "rpg:shield_l0_noble": {
+   "min": [
+    -0.1327,
+    -0.5127,
+    -0.3123
+   ],
+   "max": [
+    0.1327,
+    0.5127,
+    0.3123
+   ],
+   "hand": 1.0,
+   "design": "shield_noble_lv0"
+  },
+  "rpg:shield_l0_rare": {
+   "min": [
+    -0.1361,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1361,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_rare_lv0"
+  },
+  "rpg:shield_l10_common": {
+   "min": [
+    -0.1334,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1334,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_lv0"
+  },
+  "rpg:shield_l10_noble": {
+   "min": [
+    -0.1327,
+    -0.5127,
+    -0.3123
+   ],
+   "max": [
+    0.1327,
+    0.5127,
+    0.3123
+   ],
+   "hand": 1.0,
+   "design": "shield_noble_lv0"
+  },
+  "rpg:shield_l10_rare": {
+   "min": [
+    -0.1361,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1361,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_rare_lv0"
+  },
+  "rpg:shield_l15_common": {
+   "min": [
+    -0.1334,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1334,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_lv0"
+  },
+  "rpg:shield_l15_noble": {
+   "min": [
+    -0.1327,
+    -0.5127,
+    -0.3123
+   ],
+   "max": [
+    0.1327,
+    0.5127,
+    0.3123
+   ],
+   "hand": 1.0,
+   "design": "shield_noble_lv0"
+  },
+  "rpg:shield_l15_rare": {
+   "min": [
+    -0.1361,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1361,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_rare_lv0"
+  },
+  "rpg:shield_l20_common": {
+   "min": [
+    -0.1334,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1334,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_lv0"
+  },
+  "rpg:shield_l20_noble": {
+   "min": [
+    -0.1327,
+    -0.5127,
+    -0.3123
+   ],
+   "max": [
+    0.1327,
+    0.5127,
+    0.3123
+   ],
+   "hand": 1.0,
+   "design": "shield_noble_lv0"
+  },
+  "rpg:shield_l20_rare": {
+   "min": [
+    -0.1361,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1361,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_rare_lv0"
+  },
+  "rpg:shield_l30_common": {
+   "min": [
+    -0.1334,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1334,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_lv0"
+  },
+  "rpg:shield_l30_hero": {
+   "min": [
+    -0.1191,
+    -0.5359,
+    -0.3521
+   ],
+   "max": [
+    0.1191,
+    0.5359,
+    0.3521
+   ],
+   "hand": 1.0,
+   "design": "shield_hero_lv0"
+  },
+  "rpg:shield_l30_noble": {
+   "min": [
+    -0.1327,
+    -0.5127,
+    -0.3123
+   ],
+   "max": [
+    0.1327,
+    0.5127,
+    0.3123
+   ],
+   "hand": 1.0,
+   "design": "shield_noble_lv0"
+  },
+  "rpg:shield_l30_rare": {
+   "min": [
+    -0.1361,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1361,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_rare_lv0"
+  },
+  "rpg:shield_l35_hero": {
+   "min": [
+    -0.1191,
+    -0.5359,
+    -0.3521
+   ],
+   "max": [
+    0.1191,
+    0.5359,
+    0.3521
+   ],
+   "hand": 1.0,
+   "design": "shield_hero_lv0"
+  },
+  "rpg:shield_l40_common": {
+   "min": [
+    -0.1334,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1334,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_lv0"
+  },
+  "rpg:shield_l40_hero": {
+   "min": [
+    -0.1191,
+    -0.5359,
+    -0.3521
+   ],
+   "max": [
+    0.1191,
+    0.5359,
+    0.3521
+   ],
+   "hand": 1.0,
+   "design": "shield_hero_lv0"
+  },
+  "rpg:shield_l40_noble": {
+   "min": [
+    -0.1327,
+    -0.5127,
+    -0.3123
+   ],
+   "max": [
+    0.1327,
+    0.5127,
+    0.3123
+   ],
+   "hand": 1.0,
+   "design": "shield_noble_lv0"
+  },
+  "rpg:shield_l40_rare": {
+   "min": [
+    -0.1361,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1361,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_rare_lv0"
+  },
+  "rpg:shield_l40_transcend": {
+   "min": [
+    -0.1247,
+    -0.6683,
+    -0.3433
+   ],
+   "max": [
+    0.1247,
+    0.6683,
+    0.3433
+   ],
+   "hand": 1.0,
+   "design": "shield_transcend_lv0"
+  },
+  "rpg:shield_l45_transcend": {
+   "min": [
+    -0.1247,
+    -0.6683,
+    -0.3433
+   ],
+   "max": [
+    0.1247,
+    0.6683,
+    0.3433
+   ],
+   "hand": 1.0,
+   "design": "shield_transcend_lv0"
+  },
+  "rpg:shield_l50_transcend": {
+   "min": [
+    -0.1247,
+    -0.6683,
+    -0.3433
+   ],
+   "max": [
+    0.1247,
+    0.6683,
+    0.3433
+   ],
+   "hand": 1.0,
+   "design": "shield_transcend_lv0"
+  },
+  "rpg:shield_l55_transcend": {
+   "min": [
+    -0.1247,
+    -0.6683,
+    -0.3433
+   ],
+   "max": [
+    0.1247,
+    0.6683,
+    0.3433
+   ],
+   "hand": 1.0,
+   "design": "shield_transcend_lv0"
+  },
+  "rpg:shield_l5_common": {
+   "min": [
+    -0.1334,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1334,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_lv0"
+  },
+  "rpg:shield_l5_noble": {
+   "min": [
+    -0.1327,
+    -0.5127,
+    -0.3123
+   ],
+   "max": [
+    0.1327,
+    0.5127,
+    0.3123
+   ],
+   "hand": 1.0,
+   "design": "shield_noble_lv0"
+  },
+  "rpg:shield_l5_rare": {
+   "min": [
+    -0.1361,
+    -0.5036,
+    -0.3267
+   ],
+   "max": [
+    0.1361,
+    0.5036,
+    0.3267
+   ],
+   "hand": 1.0,
+   "design": "shield_rare_lv0"
+  },
+  "rpg:shield_l60_transcend": {
+   "min": [
+    -0.1247,
+    -0.6683,
+    -0.3433
+   ],
+   "max": [
+    0.1247,
+    0.6683,
+    0.3433
+   ],
+   "hand": 1.0,
+   "design": "shield_transcend_lv0"
+  },
+  "rpg:sword_l0_common": {
+   "min": [
+    -0.0377,
+    -0.7743,
+    -0.2051
+   ],
+   "max": [
+    0.0377,
+    0.7743,
+    0.2051
+   ],
+   "hand": 1.0,
+   "design": "sword_lv0"
+  },
+  "rpg:sword_l0_noble": {
+   "min": [
+    -0.0475,
+    -0.8007,
+    -0.2201
+   ],
+   "max": [
+    0.0475,
+    0.8007,
+    0.2201
+   ],
+   "hand": 1.0,
+   "design": "sword_noble_lv0"
+  },
+  "rpg:sword_l0_rare": {
+   "min": [
+    -0.0438,
+    -0.7734,
+    -0.2084
+   ],
+   "max": [
+    0.0438,
+    0.7734,
+    0.2084
+   ],
+   "hand": 1.0,
+   "design": "sword_rare_lv0"
+  },
+  "rpg:sword_l10_common": {
+   "min": [
+    -0.0377,
+    -0.7743,
+    -0.2051
+   ],
+   "max": [
+    0.0377,
+    0.7743,
+    0.2051
+   ],
+   "hand": 1.0,
+   "design": "sword_lv0"
+  },
+  "rpg:sword_l10_noble": {
+   "min": [
+    -0.0475,
+    -0.8007,
+    -0.2201
+   ],
+   "max": [
+    0.0475,
+    0.8007,
+    0.2201
+   ],
+   "hand": 1.0,
+   "design": "sword_noble_lv0"
+  },
+  "rpg:sword_l10_rare": {
+   "min": [
+    -0.0438,
+    -0.7734,
+    -0.2084
+   ],
+   "max": [
+    0.0438,
+    0.7734,
+    0.2084
+   ],
+   "hand": 1.0,
+   "design": "sword_rare_lv0"
+  },
+  "rpg:sword_l15_common": {
+   "min": [
+    -0.0377,
+    -0.7743,
+    -0.2051
+   ],
+   "max": [
+    0.0377,
+    0.7743,
+    0.2051
+   ],
+   "hand": 1.0,
+   "design": "sword_lv0"
+  },
+  "rpg:sword_l15_noble": {
+   "min": [
+    -0.0475,
+    -0.8007,
+    -0.2201
+   ],
+   "max": [
+    0.0475,
+    0.8007,
+    0.2201
+   ],
+   "hand": 1.0,
+   "design": "sword_noble_lv0"
+  },
+  "rpg:sword_l15_rare": {
+   "min": [
+    -0.0438,
+    -0.7734,
+    -0.2084
+   ],
+   "max": [
+    0.0438,
+    0.7734,
+    0.2084
+   ],
+   "hand": 1.0,
+   "design": "sword_rare_lv0"
+  },
+  "rpg:sword_l20_common": {
+   "min": [
+    -0.0377,
+    -0.7743,
+    -0.2051
+   ],
+   "max": [
+    0.0377,
+    0.7743,
+    0.2051
+   ],
+   "hand": 1.0,
+   "design": "sword_lv0"
+  },
+  "rpg:sword_l20_noble": {
+   "min": [
+    -0.0475,
+    -0.8007,
+    -0.2201
+   ],
+   "max": [
+    0.0475,
+    0.8007,
+    0.2201
+   ],
+   "hand": 1.0,
+   "design": "sword_noble_lv0"
+  },
+  "rpg:sword_l20_rare": {
+   "min": [
+    -0.0438,
+    -0.7734,
+    -0.2084
+   ],
+   "max": [
+    0.0438,
+    0.7734,
+    0.2084
+   ],
+   "hand": 1.0,
+   "design": "sword_rare_lv0"
+  },
+  "rpg:sword_l30_common": {
+   "min": [
+    -0.0377,
+    -0.7743,
+    -0.2051
+   ],
+   "max": [
+    0.0377,
+    0.7743,
+    0.2051
+   ],
+   "hand": 1.0,
+   "design": "sword_lv0"
+  },
+  "rpg:sword_l30_hero": {
+   "min": [
+    -0.059,
+    -0.9979,
+    -0.2468
+   ],
+   "max": [
+    0.059,
+    0.9979,
+    0.2468
+   ],
+   "hand": 1.0,
+   "design": "sword_hero_lv0"
+  },
+  "rpg:sword_l30_noble": {
+   "min": [
+    -0.0475,
+    -0.8007,
+    -0.2201
+   ],
+   "max": [
+    0.0475,
+    0.8007,
+    0.2201
+   ],
+   "hand": 1.0,
+   "design": "sword_noble_lv0"
+  },
+  "rpg:sword_l30_rare": {
+   "min": [
+    -0.0438,
+    -0.7734,
+    -0.2084
+   ],
+   "max": [
+    0.0438,
+    0.7734,
+    0.2084
+   ],
+   "hand": 1.0,
+   "design": "sword_rare_lv0"
+  },
+  "rpg:sword_l35_hero": {
+   "min": [
+    -0.059,
+    -0.9979,
+    -0.2468
+   ],
+   "max": [
+    0.059,
+    0.9979,
+    0.2468
+   ],
+   "hand": 1.0,
+   "design": "sword_hero_lv0"
+  },
+  "rpg:sword_l40_common": {
+   "min": [
+    -0.0377,
+    -0.7743,
+    -0.2051
+   ],
+   "max": [
+    0.0377,
+    0.7743,
+    0.2051
+   ],
+   "hand": 1.0,
+   "design": "sword_lv0"
+  },
+  "rpg:sword_l40_hero": {
+   "min": [
+    -0.059,
+    -0.9979,
+    -0.2468
+   ],
+   "max": [
+    0.059,
+    0.9979,
+    0.2468
+   ],
+   "hand": 1.0,
+   "design": "sword_hero_lv0"
+  },
+  "rpg:sword_l40_noble": {
+   "min": [
+    -0.0475,
+    -0.8007,
+    -0.2201
+   ],
+   "max": [
+    0.0475,
+    0.8007,
+    0.2201
+   ],
+   "hand": 1.0,
+   "design": "sword_noble_lv0"
+  },
+  "rpg:sword_l40_rare": {
+   "min": [
+    -0.0438,
+    -0.7734,
+    -0.2084
+   ],
+   "max": [
+    0.0438,
+    0.7734,
+    0.2084
+   ],
+   "hand": 1.0,
+   "design": "sword_rare_lv0"
+  },
+  "rpg:sword_l40_transcend": {
+   "min": [
+    -0.0847,
+    -1.4844,
+    -0.4784
+   ],
+   "max": [
+    0.0847,
+    1.4844,
+    0.4675
+   ],
+   "hand": 1.0783,
+   "design": "sword_transcend_lv0"
+  },
+  "rpg:sword_l45_transcend": {
+   "min": [
+    -0.0847,
+    -1.4844,
+    -0.4784
+   ],
+   "max": [
+    0.0847,
+    1.4844,
+    0.4675
+   ],
+   "hand": 1.0783,
+   "design": "sword_transcend_lv0"
+  },
+  "rpg:sword_l50_transcend": {
+   "min": [
+    -0.0847,
+    -1.4844,
+    -0.4784
+   ],
+   "max": [
+    0.0847,
+    1.4844,
+    0.4675
+   ],
+   "hand": 1.0783,
+   "design": "sword_transcend_lv0"
+  },
+  "rpg:sword_l55_transcend": {
+   "min": [
+    -0.0847,
+    -1.4844,
+    -0.4784
+   ],
+   "max": [
+    0.0847,
+    1.4844,
+    0.4675
+   ],
+   "hand": 1.0783,
+   "design": "sword_transcend_lv0"
+  },
+  "rpg:sword_l5_common": {
+   "min": [
+    -0.0377,
+    -0.7743,
+    -0.2051
+   ],
+   "max": [
+    0.0377,
+    0.7743,
+    0.2051
+   ],
+   "hand": 1.0,
+   "design": "sword_lv0"
+  },
+  "rpg:sword_l5_noble": {
+   "min": [
+    -0.0475,
+    -0.8007,
+    -0.2201
+   ],
+   "max": [
+    0.0475,
+    0.8007,
+    0.2201
+   ],
+   "hand": 1.0,
+   "design": "sword_noble_lv0"
+  },
+  "rpg:sword_l5_rare": {
+   "min": [
+    -0.0438,
+    -0.7734,
+    -0.2084
+   ],
+   "max": [
+    0.0438,
+    0.7734,
+    0.2084
+   ],
+   "hand": 1.0,
+   "design": "sword_rare_lv0"
+  },
+  "rpg:sword_l60_transcend": {
+   "min": [
+    -0.0847,
+    -1.4844,
+    -0.4784
+   ],
+   "max": [
+    0.0847,
+    1.4844,
+    0.4675
+   ],
+   "hand": 1.0783,
+   "design": "sword_transcend_lv0"
+  },
+  "rpg:wand_l0_common": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_lv0"
+  },
+  "rpg:wand_l0_noble": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_noble_lv0"
+  },
+  "rpg:wand_l0_rare": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_rare_lv0"
+  },
+  "rpg:wand_l10_common": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_lv0"
+  },
+  "rpg:wand_l10_noble": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_noble_lv0"
+  },
+  "rpg:wand_l10_rare": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_rare_lv0"
+  },
+  "rpg:wand_l15_common": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_lv0"
+  },
+  "rpg:wand_l15_noble": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_noble_lv0"
+  },
+  "rpg:wand_l15_rare": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_rare_lv0"
+  },
+  "rpg:wand_l20_common": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_lv0"
+  },
+  "rpg:wand_l20_noble": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_noble_lv0"
+  },
+  "rpg:wand_l20_rare": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_rare_lv0"
+  },
+  "rpg:wand_l30_common": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_lv0"
+  },
+  "rpg:wand_l30_hero": {
+   "min": [
+    -0.2373,
+    -1.0388,
+    -0.1134
+   ],
+   "max": [
+    0.2373,
+    1.0388,
+    0.1134
+   ],
+   "hand": 1.0,
+   "design": "staff_hero_lv0"
+  },
+  "rpg:wand_l30_noble": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_noble_lv0"
+  },
+  "rpg:wand_l30_rare": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_rare_lv0"
+  },
+  "rpg:wand_l35_hero": {
+   "min": [
+    -0.2373,
+    -1.0388,
+    -0.1134
+   ],
+   "max": [
+    0.2373,
+    1.0388,
+    0.1134
+   ],
+   "hand": 1.0,
+   "design": "staff_hero_lv0"
+  },
+  "rpg:wand_l40_common": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_lv0"
+  },
+  "rpg:wand_l40_hero": {
+   "min": [
+    -0.2373,
+    -1.0388,
+    -0.1134
+   ],
+   "max": [
+    0.2373,
+    1.0388,
+    0.1134
+   ],
+   "hand": 1.0,
+   "design": "staff_hero_lv0"
+  },
+  "rpg:wand_l40_noble": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_noble_lv0"
+  },
+  "rpg:wand_l40_rare": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_rare_lv0"
+  },
+  "rpg:wand_l40_transcend": {
+   "min": [
+    -0.3602,
+    -1.4844,
+    -0.2992
+   ],
+   "max": [
+    0.3602,
+    1.4844,
+    0.2992
+   ],
+   "hand": 1.198,
+   "design": "staff_transcend_lv0"
+  },
+  "rpg:wand_l45_transcend": {
+   "min": [
+    -0.3602,
+    -1.4844,
+    -0.2992
+   ],
+   "max": [
+    0.3602,
+    1.4844,
+    0.2992
+   ],
+   "hand": 1.198,
+   "design": "staff_transcend_lv0"
+  },
+  "rpg:wand_l50_transcend": {
+   "min": [
+    -0.3602,
+    -1.4844,
+    -0.2992
+   ],
+   "max": [
+    0.3602,
+    1.4844,
+    0.2992
+   ],
+   "hand": 1.198,
+   "design": "staff_transcend_lv0"
+  },
+  "rpg:wand_l55_transcend": {
+   "min": [
+    -0.3602,
+    -1.4844,
+    -0.2992
+   ],
+   "max": [
+    0.3602,
+    1.4844,
+    0.2992
+   ],
+   "hand": 1.198,
+   "design": "staff_transcend_lv0"
+  },
+  "rpg:wand_l5_common": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_lv0"
+  },
+  "rpg:wand_l5_noble": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_noble_lv0"
+  },
+  "rpg:wand_l5_rare": {
+   "min": [
+    -0.1433,
+    -1.0657,
+    -0.094
+   ],
+   "max": [
+    0.1433,
+    1.0657,
+    0.094
+   ],
+   "hand": 1.0,
+   "design": "staff_rare_lv0"
+  },
+  "rpg:wand_l60_transcend": {
+   "min": [
+    -0.3602,
+    -1.4844,
+    -0.2992
+   ],
+   "max": [
+    0.3602,
+    1.4844,
+    0.2992
+   ],
+   "hand": 1.198,
+   "design": "staff_transcend_lv0"
+  }
+ }
+}
