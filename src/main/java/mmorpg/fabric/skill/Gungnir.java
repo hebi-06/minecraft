@@ -311,10 +311,10 @@ final class Gungnir {
                         int gone = (int) Math.ceil(segLen / st.per);
                         Tasks.later(Math.max(1, gone), () -> WeaponFx3d.kill(level, back3d[0], segEnd, 0.03));
                     }
-                } else if (back3d[0] != 0) {
-                    WeaponFx3d.kill(level, back3d[0], st.c, 0.03);
                     SkillFx.fx(level, "rpg:arrow_spark", st.c, Opt.of("dir", st.u, "speed", st.per * 20, "size", 0.7, "grow", 1.0,
                             "life", segLen / (st.per * 20) + 0.03, "color", GN_BOLT, "alpha", 0.7));
+                } else if (back3d[0] != 0) {
+                    WeaponFx3d.kill(level, back3d[0], st.c, 0.03);
                 }
                 if (i == 0) SkillFx.play(level, "item.trident.return", st.c, 0.9, 0.9);
             }
