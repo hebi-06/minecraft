@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
 import net.minecraft.server.level.ServerLevel;
@@ -20,6 +21,9 @@ import net.minecraft.world.phys.Vec3;
 final class Caduceus {
     private Caduceus() {}
 
+    /** 입체 뱀 크기 (모델 길이 1.4 × — 약 2칸) */
+    static final double SNAKE = 1.45;
+
     static void register() {
         Transcend.register("caduceus_serpents", Caduceus::serpents);
     }
@@ -27,7 +31,7 @@ final class Caduceus {
     /** 빛의 뱀 (빛 + 심지, 꿈틀거림): at 에서 dir 쪽으로 speed 칸/초 */
     static void serpent(ServerLevel level, Vec3 at, Vec3 dir, double size, double life, double speed, double[] glow, double[] core) {
         Opt o = Opt.of("dir", dir, "size", size, "life", life, "speed", speed, "frames", 4.0, "fps", 12.0, "loop", true, "phase", Kit.rand() * 4, "fade", 0.25,
-                "alpha", 1.0);
+                "alpha", 0.4); // 0.48.0: 입체 뱀 밑의 빛 무리로 옅게
         RuneKit.rfx(level, "serpent", at, o.with("color", glow, "cell", 0.0));
         RuneKit.rfx(level, "serpent", V.add(at, dir, -0.02), o.with("color", core, "cell", 4.0));
     }
@@ -68,7 +72,11 @@ final class Caduceus {
         Vec3 staff = V.add(V.add(V.up(sp.getEyePosition(), 0.1), f, 0.9), V.rightOf(f), 0.35);
         // 지팡이의 날개 (rfx_wings) 와 금빛 · 은빛 번쩍임
         RuneKit.rfx2(level, "wings", staff, Opt.of("dir", V.unit(V.sub(sp.getEyePosition(), staff)), "size", 0.9, "life", 0.4, "grow", 0.3, "fade", 0.6, "alpha",
-                0.9), gold[0], gold[1], new int[] {0, RuneKit.WINGS_CORE}, null);
+                0.45), gold[0], gold[1], new int[] {0, RuneKit.WINGS_CORE}, null);
+        // 0.48.0 입체: 홀 끝에서 금빛 날개가 활짝 펼쳐졌다가 접힘 (작게 — 1인칭 화면 오른쪽 위)
+        int wings0 = WeaponFx3d.fx(level, "fire_wings", V.add(staff, f, 0.3), gold[0], gold[1], Opt.of("dir", V.UP, "face", V.scale(f, -1), "scale", 0.42, "anim",
+                "spread", "life", 0.55, "glowAlpha", 0.55, "shine", 0.4, "fadeOut", 0.2));
+        Tasks.later(6, () -> Fx3d.anim(level, wings0, "fold", false, staff));
         SkillFx.sparks(level, staff, gold[0], 5, 3);
         SkillFx.sparks(level, staff, silver[0], 5, 3);
         SkillFx.play(level, "mob.evocation_illager.cast_spell", staff, 1.4, 0.7);
@@ -77,6 +85,11 @@ final class Caduceus {
         int hits = (int) k.num("hits");
         int gap = (int) k.num("gap");
         double speed = k.num("speed");
+        int end = 2 * 3 + (hits - 1) * gap + 10;
+        // 0.48.0 입체 뱀 둘 (금빛 · 은빛 — 비늘 몸 · 흰 눈 · 벌어지는 턱): 홀에서 날아가 묾 → 적 둘레로 물러나 쉭쉭거림 → 다시 덤벼 묾 → 끝에 돌아옴
+        int[] snake = new int[2];
+        int[] gen = new int[2]; // 뱀마다 지금 하는 일 (새로 덤비면 앞의 물러나기 · 쉭쉭거림은 그만둠)
+        Kit.motionLater(sp, "caduceus_serpents:return", end, life); // 두 팔을 벌려 돌아오는 뱀을 맞이함
         for (int i = 0; i < hits; i++) {
             final int ii = i;
             final int s = i % 2; // 뱀 (0 금빛 · 1 은빛)
@@ -91,6 +104,32 @@ final class Caduceus {
                 Vec3 d = V.unit(V.sub(to, from));
                 int ticks = ii < 2 ? fly : 4;
                 serpent(level, from, d, ii < 2 ? 2.1 : 1.7, ticks / 20.0 + 0.1, V.len(V.sub(to, from)) / (ticks / 20.0) * 0.9, cols[s][0], cols[s][1]);
+                // 입체 뱀: 머리 끝이 몸 겉에 닿을 자리 (가운데 − 머리 길이)
+                Vec3 bite = V.add(to, d, -(0.45 * SNAKE + Math.min(0.35, Kit.bodyPad(t) * 0.5)));
+                int g = ++gen[s];
+                if (ii < 2) {
+                    snake[s] = WeaponFx3d.fx(level, "serpent", from, cols[s][0], cols[s][1], Opt.of("to", bite, "travel", ticks / 20.0, "ease", "in", "dir", d, "align",
+                            1.0, "scale", SNAKE, "life", (end - at + 14) / 20.0, "pop", 0.08, "glowAlpha", 0.55, "shine", 0.3, "fadeOut", 0.15));
+                    WeaponFx3d.guard(sp, life, new int[] {snake[s]}, end - at + 14);
+                } else {
+                    Fx3d.move(level, snake[s], bite, ticks / 20.0, "in");
+                }
+                Tasks.later(ticks, () -> {
+                    if (gen[s] == g) Fx3d.anim(level, snake[s], "bite", false, to);
+                });
+                // 문 뒤: 다음에 덤빌 자리 (적 둘레 ±120°) 로 물러나 그 적을 보며 쉭쉭거림
+                int next = ii + 2;
+                Tasks.later(ticks + 3, () -> {
+                    if (!ok.getAsBoolean() || gen[s] != g) return;
+                    Vec3 body = Kit.fallen(t) ? to : Kit.bodyPoint(t);
+                    Vec3 rest = V.add(body, V.turnY(f, next % 2 == 0 ? 120 : -120), 1.6);
+                    Fx3d.move(level, snake[s], rest, 0.3, "out");
+                    Tasks.later(7, () -> {
+                        if (gen[s] != g) return;
+                        Fx3d.move(level, snake[s], V.add(rest, V.unit(V.sub(body, rest)), 0.08), 0.15, "inout");
+                        Fx3d.anim(level, snake[s], "hiss", true, rest);
+                    });
+                });
                 trail(level, from, to, ticks, cols[s][0], cols[s][1]);
                 RuneKit.streak(level, from, to, cols[s][0], 0.12, 0.35, 0.7, 0.0);
                 Tasks.later(ticks, () -> {
@@ -114,7 +153,6 @@ final class Caduceus {
             });
         }
         // 다 물면 돌아오며 회복 (마지막 문 틱 뒤 — 늦게 들어온 문 것도 HeroKit.Heal 이 이어서 회복)
-        int end = 2 * 3 + (hits - 1) * gap + 10;
         Tasks.later(end, () -> {
             if (!ok.getAsBoolean()) return;
             for (int s = 0; s < 2; s++) {
@@ -124,14 +162,25 @@ final class Caduceus {
                 Vec3 d = V.unit(V.sub(to, from));
                 serpent(level, from, d, 1.4, 0.35, V.len(V.sub(to, from)) / 0.35, cols[s][0], cols[s][1]);
                 trail(level, from, to, 7, cols[s][0], cols[s][1]);
+                // 입체 뱀이 내 가슴 앞으로 날아와 스며듦 (양옆 — 1인칭 눈 앞을 가리지 않게)
+                Vec3 home = V.add(V.add(V.up(sp.position(), 1.0), Kit.facingOf(sp), 0.5), V.rightOf(Kit.facingOf(sp)), s == 0 ? 0.6 : -0.6);
+                int id = snake[s];
+                gen[s]++;
+                Fx3d.move(level, id, home, 0.35, "inout");
+                Fx3d.anim(level, id, "hiss", true, home);
+                Tasks.later(7, () -> WeaponFx3d.kill(level, id, home, 0.15));
             }
             Tasks.later(7, () -> {
                 if (!ok.getAsBoolean()) return;
                 double healed = heal.open();
                 RuneKit.selfCue(sp, gold[0], gold[1], true);
                 Vec3 back = V.up(V.add(sp.position(), Kit.facingOf(sp), -0.35), 1.3);
-                RuneKit.rfx2(level, "wings", back, Opt.of("dir", V.scale(Kit.facingOf(sp), -1), "size", 1.6, "life", 0.5, "grow", 0.2, "fade", 0.6, "alpha", 0.6),
+                RuneKit.rfx2(level, "wings", back, Opt.of("dir", V.scale(Kit.facingOf(sp), -1), "size", 1.6, "life", 0.5, "grow", 0.2, "fade", 0.6, "alpha", 0.3),
                         gold[0], gold[1], new int[] {0, RuneKit.WINGS_CORE}, null);
+                // 0.48.0 입체: 등에서 금빛 날개가 펼쳐져 한 번 날갯짓 (축복 — 쓴 사람의 1인칭에서는 숨김)
+                int wings = WeaponFx3d.fx(level, "fire_wings", new Vec3(0, 1.25, -0.38), gold[0], gold[1], Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face",
+                        new Vec3(0, 0, -1), "scale", 1.25, "anim", "spread", "life", 0.9, "view", 1.0, "glowAlpha", 0.5, "shine", 0.35, "fadeOut", 0.3));
+                Tasks.later(9, () -> Fx3d.anim(level, wings, "flap", false, back));
                 if (healed > 0) SkillFx.play(level, "beacon.power", sp.position(), 1.7, 0.5);
             });
         });

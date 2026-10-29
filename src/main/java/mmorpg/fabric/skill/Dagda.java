@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
 import net.minecraft.server.level.ServerLevel;
@@ -40,7 +41,16 @@ final class Dagda {
         SkillFx.play(level, "mob.ravager.roar", sp.position(), 1.5, 0.4);
         SkillFx.play(level, "mace.smash_air", sp.position(), 0.6, 0.8);
         HeroKit.Heal heal = new HeroKit.Heal(sp, k.num("heal"), k.num("healCap"));
-        HeroKit.at((int) k.num("windup"), () -> {
+        // 0.48.0 입체: 내 곤봉 디자인이 커져 머리 뒤 높이에서 천천히 → 빠르게 앞 ahead 칸의 땅으로 내리찍힘 (windup 틱째 닿음 — 쓴 사람의 1인칭에서는 숨김:
+        // 눈 바로 위를 지나는 자루가 화면을 가르지 않게, 1인칭은 내 손의 곤봉 동작이 보임)
+        int windup = (int) k.num("windup");
+        Vec3 pivot = V.up(V.add(sp.position(), f0, -0.4), 2.4);
+        Vec3 hitAt = V.add(sp.position(), f0, k.num("ahead"));
+        WeaponFx3d.Bounds bd = WeaponFx3d.bounds(w);
+        double size = V.len(V.sub(hitAt, pivot)) / Math.max(0.5, bd.length() * bd.hand());
+        WeaponFx3d.swingItem(level, sp, w, pivot, V.unit(V.add(V.UP, f0, -0.45)), V.unit(V.sub(hitAt, pivot)), windup / 20.0, 0.3, size, true, Opt.of("view", 1.0,
+                "glow", glow, "glowAlpha", 0.6, "shine", 0.3, "fadeOut", 0.2));
+        HeroKit.at(windup, () -> {
             if (!ok.getAsBoolean()) return;
             Vec3 f = Kit.facingOf(sp);
             Vec3 c = V.add(sp.position(), f, k.num("ahead"));
@@ -99,6 +109,20 @@ final class Dagda {
             SkillFx.shake(sp, 0.2, 0.2);
         }
         SkillFx.shock(level, c, first ? glow : dark, r * (first ? 0.9 : 1.1), 0.45);
+        if (first) {
+            // 0.48.0 입체: 내려친 자리 둘레로 바위 가시 여덟이 솟았다가 꺼짐 (틈에 생명의 초록빛)
+            for (int j = 0; j < 8; j++) {
+                Vec3 at = V.add(c, V.turnY(new Vec3(1, 0, 0), j * 45 + Kit.rand() * 20), r * (0.45 + Kit.rand() * 0.15));
+                int id = WeaponFx3d.fx(level, "rock_spike", at, dark, glow, Opt.of("dir", V.UP, "face", V.turnY(new Vec3(0, 0, 1), Kit.rand() * 360), "scale", 0.7
+                        + Kit.rand() * 0.25, "anim", "rise", "life", 1.0, "glowAlpha", 0.45, "shine", 0.1, "fadeOut", 0.2));
+                Tasks.later(12, () -> Fx3d.anim(level, id, "sink", false, at));
+            }
+        } else {
+            // 0.48.0 입체 여진: 가운데에서 생명의 빛기둥 + 활짝 피는 꽃 (생과 사 — 거둔 생명이 돌아옴)
+            WeaponFx3d.pillar(level, c, r * 0.22, 3.2, 0.55, glow, core, Opt.of("grow", 0.4));
+            WeaponFx3d.fx(level, "flower", V.up(c, 0.05), glow, core, Opt.of("dir", V.UP, "face", new Vec3(0, 0, 1), "scale", r * 0.55, "anim", "bloom", "life", 1.1,
+                    "glowAlpha", 0.55, "shine", 0.35, "fadeOut", 0.4));
+        }
         RuneKit.novaRing(level, c, r * 0.3, first ? 2.4 : 3.0, first ? glow : dark, core, Opt.of("life", 0.45));
         SkillFx.fx(level, "rpg:dust", V.up(c, 0.5), Opt.of("size", r * 0.8, "life", 0.8, "color", new double[] {0.55, 0.45, 0.32}, "alpha", 0.75));
         RuneKit.zonePulse(level, c, first ? glow : dark, r, 0.4);

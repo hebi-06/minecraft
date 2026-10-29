@@ -37,11 +37,18 @@ final class Harpe {
         int gap = (int) k.num("gap");
         double radius = k.num("radius");
         Map<UUID, LivingEntity> branded = new LinkedHashMap<>();
+        Map<UUID, Integer> brands = new LinkedHashMap<>();
+        WeaponFx3d.Bounds bd = WeaponFx3d.bounds(w);
+        double reachK = radius * 0.95 / Math.max(0.5, bd.length() * bd.hand()); // 낫 끝이 둘레 0.95 × radius 에 닿는 크기
         for (int i = 0; i < hits; i++) {
             final int ii = i;
             HeroKit.at(i * gap, () -> {
                 if (!ok.getAsBoolean()) return;
                 Vec3 c = sp.position();
+                // 0.48.0 입체: 내 낫 디자인이 커져 자루 끝을 몸에 두고 오른쪽으로 한 바퀴 휩씀 (낫날이 앞서 감 — 허리 높이)
+                Vec3 r0 = V.turnY(Kit.facingOf(sp), -70 - ii * 25);
+                WeaponFx3d.weapon(level, sp, w, V.up(c, 0.95), Opt.of("dir", r0, "face", V.UP, "grip", bd.butt(), "arcAxis", V.UP, "arc", -360.0, "arcTime", 0.32,
+                        "size", reachK, "life", 0.4, "fadeIn", 0.02, "fadeOut", 0.1, "glow", glow, "glowAlpha", 0.55, "shine", 0.3));
                 // 몸 둘레의 초승달 여덟 (돌아가는 쪽으로 — 바퀴마다 반대로 기울임)
                 for (int j = 0; j < 8; j++) {
                     double a = j / 8.0 * Math.PI * 2 + ii * 0.4;
@@ -69,8 +76,16 @@ final class Harpe {
                                 Kit.rand() * 50 - 25, "color", glow));
                         SkillFx.sparks(level, b, core, 4, 4);
                         // 초승달 낙인 (머리 위 — 터질 때까지)
-                        if (ii == 0) RuneKit.crescent(level, RuneKit.overHead(e, 0.45), V.unit(V.sub(sp.getEyePosition(), b)), 0.55, glow, core, -30, 0.05
-                                + (k.num("delay") + gap) / 20.0);
+                        if (ii == 0) {
+                            double hold = 0.05 + (k.num("delay") + gap) / 20.0;
+                            RuneKit.crescent(level, RuneKit.overHead(e, 0.45), V.unit(V.sub(sp.getEyePosition(), b)), 0.55, glow, core, -30, hold);
+                            // 0.48.0 입체 낙인: 머리 위에서 천천히 도는 작은 달 (초승달 날을 두름 — 적을 따라감)
+                            if (!brands.containsKey(e.getUUID())) {
+                                brands.put(e.getUUID(), WeaponFx3d.fx(level, "moon", new Vec3(0, e.getBbHeight() + 0.6, 0), glow, core, Opt.of("follow", (double) e
+                                        .getId(), "dir", V.UP, "faceCam", 1.0, "scale", 0.42, "anim", "spin", "loop", 1.0, "animSpeed", 3.0, "life", hold + 0.4,
+                                        "pop", 0.12, "glowAlpha", 0.6, "shine", 0.35, "fadeOut", 0.15)));
+                            }
+                        }
                     });
                 }
             });
@@ -84,6 +99,10 @@ final class Harpe {
                 SkillFx.play(level, "random.glass", sp.position(), 1.4, 0.5);
                 SkillFx.play(level, "chime.amethyst_block", sp.position(), 0.9, 1.0);
             }
+            for (Map.Entry<UUID, Integer> x : brands.entrySet()) {
+                LivingEntity e = branded.get(x.getKey());
+                WeaponFx3d.kill(level, x.getValue(), e != null ? e.position() : sp.position(), 0.08);
+            }
             for (LivingEntity e : list) {
                 if (!Kit.canHit(sp, e)) continue;
                 Kit.hitAt(sp, e, Kit.reserveHit(sp, e, now), ok, () -> {
@@ -91,6 +110,16 @@ final class Harpe {
                     Vec3 b = HeroKit.body(e, sp.position());
                     Vec3 v = V.unit(V.sub(b, sp.getEyePosition()));
                     double near = HeroKit.near(sp.getEyePosition(), b, 0.45);
+                    // 0.48.0 입체: 낙인이 초승달 둘로 갈라지며 X 로 퍼짐 (보는 사람 쪽 면)
+                    Vec3 rr = V.cross(v, V.UP);
+                    rr = V.len(rr) > 1e-3 ? V.unit(rr) : new Vec3(1, 0, 0);
+                    Vec3 uu = V.unit(V.cross(rr, v));
+                    for (int s2 : new int[] {-1, 1}) {
+                        Vec3 d2 = V.unit(V.add(uu, rr, s2 * 0.8));
+                        WeaponFx3d.fx(level, "crescent_wave", V.add(V.add(b, v, -0.4), d2, -0.2 * near), glow, core, Opt.of("dir", d2, "face", V.scale(v, -1),
+                                "scale", 0.75 * near, "grow", 0.6, "vel", V.scale(d2, 2.2 * near), "life", 0.28, "pop", 0.04, "fadeOut", 0.15, "glowAlpha", 0.7,
+                                "shine", 0.5));
+                    }
                     RuneKit.crescent(level, V.add(b, v, -0.4), v, 1.3 * near, glow, core, 30, 0.3);
                     SkillFx.cutMark(level, V.add(b, v, -0.4), v, 35, 0.05, glow, core, 1.2 * near);
                     SkillFx.cutMark(level, V.add(b, v, -0.4), v, -35, 0.05, glow, core, 1.2 * near);

@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
 import net.minecraft.server.level.ServerLevel;
@@ -51,6 +52,7 @@ final class GaeBolg {
 
     private static void fly(ServerPlayer sp, Weapon w, Obj k, BooleanSupplier ok, double[] glow, double[] core) {
         ServerLevel level = sp.level();
+        String life = Kit.lifeOf(sp);
         Vec3 f = Kit.facingOf(sp);
         Vec3 view = sp.getViewVector(1F);
         double look = Math.asin(Math.max(-1, Math.min(1, view.y)));
@@ -64,7 +66,15 @@ final class GaeBolg {
         int steps = Math.max(1, (int) Math.ceil(len / speed));
         // 던짐: 붉은 창 (모델 그림) 이 끝까지 같은 빠르기로 + 핏빛 꼬리
         double start = Math.min(1.8, len);
-        if (len > 1) HeroKit.relicSpear(level, V.add(from, dir, start), dir, 2.6, Math.max(0.05, (len - start) / (speed * 20)) + 0.05, speed * 20, RELIC_CELL, 1.0);
+        boolean wall = len < k.num("range") - 0.6;
+        int delay = (int) k.num("delay");
+        if (len > 1) {
+            double flyS = Math.max(0.05, (len - start) / (speed * 20));
+            HeroKit.relicSpear(level, V.add(from, dir, start), dir, 2.6, flyS + 0.05, speed * 20, RELIC_CELL, 0.35);
+            // 0.48.0 입체: 내 창 디자인이 붉게 빛나며 돌아 날아감 (창끝이 앞) — 벽에 막히면 꽂힌 채 가시가 터질 때까지
+            WeaponFx3d.flyItem(level, sp, w, V.add(from, dir, start), V.add(from, dir, len + 0.3), flyS, wall ? (delay + 4) / 20.0 : 0.03, 1.15, Opt.of("roll", 720.0,
+                    "glow", glow, "glowAlpha", 0.6, "shine", 0.25, "fadeOut", wall ? 0.15 : 0.03));
+        }
         SkillFx.play(level, "item.trident.throw", from, 0.7, 1.0);
         SkillFx.play(level, "entity.player.attack.sweep", from, 0.6, 0.6);
         SkillFx.shake(sp, 0.1, 0.1);
@@ -101,7 +111,8 @@ final class GaeBolg {
             Vec3 burstAt = heart[0] != null && !heart[0].isRemoved() ? Kit.bodyPoint(heart[0]) : at;
             if (heart[0] == null) SkillFx.play(level, "item.trident.hit_ground", at, 0.7, 0.8);
             LivingEntity h0 = heart[0];
-            Tasks.later((int) k.num("delay"), () -> {
+            Kit.motionLater(sp, "gaebolg_pierce:thorns", Math.max(0, delay - 1), life); // 0.48.0 주먹을 움켜쥐어 당김 (1틱째 = 가시)
+            Tasks.later(delay, () -> {
                 if (ok.getAsBoolean()) thorns(sp, w, k, ok, h0 != null && !h0.isRemoved() ? Kit.bodyPoint(h0) : burstAt, glow, core);
             });
             return false;
@@ -127,6 +138,13 @@ final class GaeBolg {
             RuneKit.iceCrystal(sp, level, at, 0.55 * near, glow, Opt.of("life", 0.6, "alpha", 0.95, "spin", Kit.rand() * 360));
         }
         RuneKit.rfx2(level, "flare", c, Opt.of("size", 1.6 * near, "life", 0.35, "grow", 0.4, "fade", 0.6, "spin", Kit.rand() * 90), glow, core, new int[] {0, 1}, null);
+        // 0.48.0 입체: 몸 가운데에서 핏빛 가시덤불이 위아래로 터져 나왔다가 꺼짐
+        for (int j = 0; j < 2; j++) {
+            Vec3 d = j == 0 ? V.UP : V.DOWN;
+            int id = WeaponFx3d.fx(level, "thorns", c, glow, core, Opt.of("dir", d, "face", V.turnY(new Vec3(0, 0, 1), Kit.rand() * 360), "scale", (j == 0 ? 1.5
+                    : 1.1) * near, "anim", "burst", "life", 0.85, "glowAlpha", 0.6, "shine", 0.3, "fadeOut", 0.2));
+            Tasks.later(9, () -> Fx3d.anim(level, id, "sink", false, c));
+        }
         SkillFx.burst(level, c, glow, 1.3 * near, 0.35);
         RuneKit.zonePulse(level, V.up(c, -0.9), glow, r, 0.35);
         SkillFx.play(level, "break.amethyst_cluster", c, 0.6, 1.0);
@@ -139,6 +157,11 @@ final class GaeBolg {
                 RuneKit.effect(e, "slowness", (int) k.num("slow"), 0);
                 Vec3 b = HeroKit.body(e, c);
                 SkillFx.sparks(level, b, glow, 4, 4);
+                // 0.48.0 입체: 둘레 적의 발밑에서도 가시가 솟아 묶음
+                int id = WeaponFx3d.fx(level, "thorns", e.position(), glow, core, Opt.of("dir", V.UP, "face", V.turnY(new Vec3(0, 0, 1), Kit.rand() * 360), "scale",
+                        0.75 + Kit.bodyPad(e), "anim", "burst", "life", 1.0, "glowAlpha", 0.5, "shine", 0.2, "fadeOut", 0.2));
+                Vec3 at = e.position();
+                Tasks.later(12, () -> Fx3d.anim(level, id, "sink", false, at));
             });
         }
     }
