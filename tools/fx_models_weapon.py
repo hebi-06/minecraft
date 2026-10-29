@@ -775,116 +775,110 @@ def flower():
     return m
 
 
-def p_fire_membrane(u, v, rnd):
-    """불꽃 날개 막 (u = 손가락 사이 — 0 · 1 이 뼈 쪽, v = 손목 0 → 뒷가장자리 1): 뼈 · 손목 가까이 밝고 진함, 뒷가장자리로 갈수록 일렁이는 불꽃 결로
-    비치고 끝은 불꽃 혀처럼 듬성듬성 투명"""
-    bone = min(u, 1 - u)
-    flick = 0.5 + 0.5 * math.sin(u * 31 + v * 9 + math.sin(v * 13 + u * 7) * 1.5)
-    streak = 0.5 + 0.5 * math.sin(u * 47 - v * 5 + math.sin(v * 11) * 0.8)
-    lum = 0.74 + 0.16 * (1 - v) + 0.12 * streak * v + 0.14 * max(0.0, 1 - bone * 9) + fx.noise(rnd, 0.03)
-    a = (0.92 - 0.5 * v ** 1.25) * (0.72 + 0.28 * flick)
-    if v > 0.84:
-        edge = (v - 0.84) / 0.16
-        lick = 0.45 + 0.45 * abs(math.sin(u * math.pi * 5 + math.sin(u * 19) * 0.7))
-        if edge > lick:
-            a = 0.0
-    return min(1.0, lum), max(0.0, min(1.0, a))
+WING_ART = "src/main/resources/assets/mmorpg/textures/particle/addon/rpg/fx/fire_wing.png"
+WING_FRAME, WING_X0, WING_Y0, WING_W, WING_H = 3, 96, 24, 84, 76  # 모바일 날개 그림 (8장 중 넷째 — 활짝 편 V) 의 오른쪽 날개
+WING_ROOT = (0, 50)  # 그 그림 안의 어깨 (두 날개가 만나는 V 밑) 자리 (픽셀)
+WING_K = 0.025  # 그림 1픽셀 = 모델 0.025칸 (그람 크기 1.45 에서 날개 둘 너비 약 6.3칸 — 모바일 그림 크기와 비슷)
+_WING = {}
 
 
-def patch(m, fn, ns, nt, uv, mat, double=True):
-    """곡면 조각 (fn(s, t) → 점, s · t 는 0 ~ 1): u = t, v = s (s = 0 이 그림 위 v0)"""
-    u0, v0, u1, v1 = uv
-    P = [[v3(fn(i / ns, j / nt)) for j in range(nt + 1)] for i in range(ns + 1)]
-    for i in range(ns):
-        for j in range(nt):
-            ps = [P[i][j], P[i][j + 1], P[i + 1][j + 1], P[i + 1][j]]
-            uvs = [(u0 + (u1 - u0) * j / nt, v0 + (v1 - v0) * i / ns), (u0 + (u1 - u0) * (j + 1) / nt, v0 + (v1 - v0) * i / ns),
-                   (u0 + (u1 - u0) * (j + 1) / nt, v0 + (v1 - v0) * (i + 1) / ns), (u0 + (u1 - u0) * j / nt, v0 + (v1 - v0) * (i + 1) / ns)]
-            if np.linalg.norm(ps[0] - ps[1]) < 1e-7:  # 한 점으로 모인 줄 (손목): 세모
-                ps = [ps[0], ps[2], ps[3], ps[3]]
-                uvs = [uvs[0], uvs[2], uvs[3], uvs[3]]
-            m.quad(ps, uvs, mat, double=double)
+def wing_art():
+    """모바일 (애드온) 불꽃 날개 그림의 오른쪽 날개 (RGBA 0 ~ 1 — 알파를 곱한 색으로도 둠: 부드럽게 읽을 때 가장자리가 검게 물들지 않게)"""
+    if "arr" not in _WING:
+        from PIL import Image
+        im = Image.open(fx.os.path.join(fx.ROOT, WING_ART)).convert("RGBA")
+        y = WING_FRAME * 128
+        arr = np.asarray(im.crop((WING_X0, y + WING_Y0, WING_X0 + WING_W, y + WING_Y0 + WING_H)), dtype=float) / 255.0
+        pre = arr.copy()
+        pre[:, :, :3] *= arr[:, :, 3:4]
+        _WING["arr"], _WING["pre"] = arr, pre
+    return _WING["arr"], _WING["pre"]
 
 
-def bez(a, c, b, t):
-    return (1 - t) ** 2 * a + 2 * (1 - t) * t * c + t ** 2 * b
+def wing_sample(u, v):
+    """그림 자리 (u · v 0 ~ 1) 의 색 (R, G, B, A — 알파를 곱해 섞은 뒤 다시 나눔)"""
+    arr, pre = wing_art()
+    h, w = arr.shape[:2]
+    x, y = u * (w - 1), v * (h - 1)
+    x0, y0 = int(math.floor(x)), int(math.floor(y))
+    x1, y1 = min(w - 1, x0 + 1), min(h - 1, y0 + 1)
+    fx_, fy = x - x0, y - y0
+    c = pre[y0, x0] * (1 - fx_) * (1 - fy) + pre[y0, x1] * fx_ * (1 - fy) + pre[y1, x0] * (1 - fx_) * fy + pre[y1, x1] * fx_ * fy
+    a = c[3]
+    if a < 1e-4:
+        return 0.0, 0.0, 0.0, 0.0
+    return c[0] / a, c[1] / a, c[2] / a, a
+
+
+def p_wing_art(u, v, rnd, layer="body"):
+    """모바일 날개 그림을 두 겹으로 나눔 — 빛깔 (body: 붉은 주황 — 그림 전체, 밝기 = 빨강) · 속빛 (glow: 연노랑 — 노란 정도 g 만큼 비침).
+    겹쳐 그리면 빛깔 × (1 − g) + 속빛 × g 로 그림의 밑동 연노랑 → 주황 → 끝 붉은 주황이 돌아옴 (색은 스킬이 정함: 그람 불꽃 · 카두케우스 금빛)"""
+    r, g_, _b, a = wing_sample(u, v)
+    if a <= 0:
+        return 0.0, 0.0
+    g = min(1.0, max(0.0, (g_ / max(r, 1e-3) - 0.3) / 0.58))
+    return min(1.0, r * 1.02), a * (g if layer == "glow" else 1.0)
 
 
 def fire_wings():
-    """불꽃 날개 (용의 날개 둘 — 등 가운데가 원점, 위 +Y, 뒤 +Z, 날개 ±X): 굽은 팔뼈 · 길게 휜 손가락뼈 넷 (속빛 — 끝 흰 발톱) · 사이의 막 (빛깔 불꽃 막 —
-    뼈 가까이 진하고 뒷가장자리로 비쳐 일렁임, 바람을 받아 뒤로 부풂, 뒷가장자리는 안으로 패인 물결) · 뒷가장자리에서 타오르는 불꽃 혀. 0.48.0 다시 만듦
-    (사용자 "그람 날개 … 어색하다" — 예전: 납작한 판 · 짧은 손가락). wing_r · wing_l (어깨 축 — spread (접힘 → 펼침) · flap (되풀이) · dive · fold)"""
-    m = fx.Model("fire_wings", tex=128, cell=32)
+    """불꽃 날개 — 모바일 (애드온) 그람 날개 그림을 입체로 (사용자 "그람 날개는 모바일때 날개가 더 좋긴 한데" · "2d랑 3d랑 적절하게 섞으면 예쁠거 같은데"):
+    등 가운데가 원점, 위 +Y, 뒤 +Z, 날개 ±X. 날개마다 그 그림 (깃털이 부채처럼 퍼진 V — 밑동 연노랑 · 끝 붉은 주황 · 윗가장자리 작은 불꽃) 을 어깨에 매단
+    휜 판 (바깥으로 갈수록 뒤로 젖혀짐 · 위아래 끝이 조금 뒤로 — 옆에서도 두께가 보임) 에 붙이고, 색은 두 겹 (빛깔 · 속빛 — 앞뒤 어느 쪽에서 보아도 속빛이
+    위에 오게 세 장). 옆에서 얇게 보이는 것은 그람이 날개 끝 · 팔에 띄우는 작은 불꽃 (모바일 판의 tips — 카메라를 보는 그림) 이 채움.
+    wing_r · wing_l (어깨 축 — spread (접힘 → 펼침) · flap (되풀이) · dive · fold). 0.48.1 둘째 (첫째는 용의 날개 막 — 사용자가 모바일 날개를 고름)"""
+    m = fx.Model("fire_wings", tex=512, cell=32)
     m.emissive = True
     a = m.atlas
-    mem = a.swatch("mem", p_fire_membrane, 2, 2)
-    bone = a.swatch("bone", fx.p_bone)
-    edge = a.swatch("edge", fx.p_edge)
-    flame = a.swatch("flame", p_flame, 1, 2)
-    back = v3(0, 0, 1)
+    body_uv = a.swatch("wing_body", p_wing_art, 8, 8, layer="body")
+    glow_uv = a.swatch("wing_glow", p_wing_art, 8, 8, layer="glow")
+    arr, _pre = wing_art()
+    ah, aw = arr.shape[:2]
+    rx, ry = WING_ROOT
+    k = WING_K
+    span = (aw - rx) * k
+    cols, rows = 10, 7
+
+    def model_pt(side, px, py):
+        x = 0.08 + (px - rx) * k
+        y = 0.06 + (ry - py) * k
+        t = min(1.0, max(0.0, x / (0.08 + span)))
+        yn = (y - 0.35) / 0.95
+        z = 0.04 + 0.24 * t * t + 0.05 * yn * yn
+        return v3(side * x, y, z)
+
+    def uv_at(uv, px, py):
+        u0, v0, u1, v1 = uv
+        return (u0 + (u1 - u0) * px / (aw - 1), v0 + (v1 - v0) * py / (ah - 1))
+
+    def cell_empty(px0, py0, px1, py1):
+        reg = arr[int(py0):int(math.ceil(py1)) + 1, int(px0):int(math.ceil(px1)) + 1, 3]
+        return reg.size == 0 or reg.max() < 0.04
+
     for side, part in ((1, "wing_r"), (-1, "wing_l")):
-        X = lambda p, side=side: v3(side * p[0], p[1], p[2])
-        S, E, W = X((0.14, 0.1, 0.04)), X((0.6, 0.52, 0.14)), X((1.06, 0.74, 0.2))
-        tips = [X((1.48, 1.18, 0.26)), X((2.02, 0.84, 0.32)), X((2.02, 0.22, 0.34)), X((1.64, -0.36, 0.3))]
-        F5 = X((0.24, -0.6, 0.1))
-        m.part(part, tuple(S))
-        tube(m, [S, (S + E) / 2 + v3(0, 0.04, -0.02), E, W], [0.065, 0.055, 0.05, 0.04], 6, fx.GLOW, bone)
-        for k, F in enumerate(tips):
-            c = (W + F) / 2 + v3(0, 0.07, 0.07)
-            tube(m, [W, bez(W, c, F, 0.33), bez(W, c, F, 0.66), F], [0.036, 0.028, 0.02, 0.008], 5, fx.GLOW, bone)
-            spike(m, F, F + unit(F - c) * 0.14, 0.022, 4, fx.WHITE, edge, segs=2)
-        spike(m, W, W + v3(side * 0.04, 0.24, 0.02), 0.03, 4, fx.WHITE, edge, segs=2)
-
-        def fan(A, B, W=W):
-            mid = (A + B) / 2
-            C = mid + (W - mid) * 0.3
-
-            def P(s_, t_):
-                e = bez(A, C, B, t_)
-                return W + (e - W) * s_ + back * 0.13 * math.sin(math.pi * s_) * math.sin(math.pi * t_)
-            return P, (lambda t_: bez(A, C, B, t_)), C
-
-        panels = []
-        for k in range(3):
-            P, edge_fn, C = fan(tips[k], tips[k + 1])
-            patch(m, P, 5, 6, mem, fx.TINT, double=False)
-            panels.append((edge_fn, W))
-        # 몸 쪽 막 (손목 · 마지막 손가락 → 몸): 네 귀퉁이 W · F4 · F5 · S, 뒷가장자리 F4 → F5 는 안으로 패임
-        A, B = tips[3], F5
-        Cm = (A + B) / 2 + ((W + S) / 2 - (A + B) / 2) * 0.28
-
-        def body_patch(s_, t_, A=A, B=B, Cm=Cm, S=S, W=W):
-            root = W + (S - W) * t_
-            e = bez(A, Cm, B, t_)
-            return root + (e - root) * s_ + back * 0.12 * math.sin(math.pi * s_) * math.sin(math.pi * t_)
-        patch(m, body_patch, 5, 6, mem, fx.TINT, double=False)
-        panels.append(((lambda t_, A=A, B=B, Cm=Cm: bez(A, Cm, B, t_)), (W + S) / 2))
-        # 뒷가장자리에서 타오르는 불꽃 혀 (물결마다 셋 — 바깥 · 조금 뒤로)
-        n = 0
-        for edge_fn, ref in panels:
-            for t_ in (0.22, 0.5, 0.78):
-                p = edge_fn(t_)
-                tng = unit(edge_fn(min(1, t_ + 0.05)) - edge_fn(max(0, t_ - 0.05)))
-                out = unit(p - ref)
-                tongue(m, p - out * 0.06, unit(out + back * 0.35 + v3(0, -0.15, 0)), tng, 0.26 + 0.12 * ((n * 3) % 4) / 3, 0.17, flame,
-                       fx.TINT if n % 2 else fx.GLOW, bend=0.05 * (1 if n % 2 else -1), double=False)
-                n += 1
-        # 손가락 끝 불꽃
-        for k, F in enumerate(tips):
-            c = (W + F) / 2 + v3(0, 0.07, 0.07)
-            d = unit(F - c)
-            tongue(m, F - d * 0.05, d + back * 0.2, unit(np.cross(d, back)) if np.linalg.norm(np.cross(d, back)) > 1e-6 else v3(0, 1, 0), 0.3, 0.16, flame,
-                   fx.GLOW, bend=0.04, double=False)
+        m.part(part, tuple(model_pt(side, rx, ry)))
+        # 세 장: 앞 (−Z 쪽) 속빛 · 빛깔 · 뒤 (+Z — 등 뒤에서 보는 쪽) 속빛. 만든 차례 = 등 뒤에서 볼 때 먼 것부터
+        for layer, uv, mat, dz in (("glow_f", glow_uv, fx.GLOW, -0.012), ("body", body_uv, fx.TINT, 0.0), ("glow_b", glow_uv, fx.GLOW, 0.012)):
+            for j in range(rows):
+                for i in range(cols):
+                    px0, px1 = (aw - 1) * i / cols, (aw - 1) * (i + 1) / cols
+                    py0, py1 = (ah - 1) * j / rows, (ah - 1) * (j + 1) / rows
+                    if cell_empty(px0, py0, px1, py1):
+                        continue
+                    corners = [(px0, py0), (px0, py1), (px1, py1), (px1, py0)]  # 등 뒤 (+Z) 에서 볼 때 반시계 (오른쪽 날개)
+                    if side < 0:
+                        corners = corners[::-1]
+                    ps = [model_pt(side, px, py) + v3(0, 0, dz) for px, py in corners]
+                    m.quad(ps, [uv_at(uv, px, py) for px, py in corners], mat, [v3(0, 0, 1)] * 4)
     m.part("main")
     m.anims["spread"] = {"len": 0.45, "tracks": {"wing_r": {"rot": [[0, 0, -70, 55], [0.75, 0, 4, -6], [1, 0, 0, 0]], "scale": [[0, 0.5], [1, 1]]},
                                                   "wing_l": {"rot": [[0, 0, 70, -55], [0.75, 0, -4, 6], [1, 0, 0, 0]], "scale": [[0, 0.5], [1, 1]]}}}
-    m.anims["flap"] = {"len": 0.6, "tracks": {"wing_r": {"rot": [[0, 0, 4, 20], [0.45, 0, -14, -26], [1, 0, 4, 20]]},
-                                               "wing_l": {"rot": [[0, 0, -4, -20], [0.45, 0, 14, 26], [1, 0, -4, -20]]}}}
-    m.anims["dive"] = {"len": 0.25, "tracks": {"wing_r": {"rot": [[0, 0, 0, 0], [1, 0, -40, 38]]}, "wing_l": {"rot": [[0, 0, 0, 0], [1, 0, 40, -38]]}}}
+    m.anims["flap"] = {"len": 0.6, "tracks": {"wing_r": {"rot": [[0, 0, 4, 18], [0.45, 0, -12, -24], [1, 0, 4, 18]]},
+                                               "wing_l": {"rot": [[0, 0, -4, -18], [0.45, 0, 12, 24], [1, 0, -4, -18]]}}}
+    m.anims["dive"] = {"len": 0.25, "tracks": {"wing_r": {"rot": [[0, 0, 0, 0], [1, 0, -40, 34]]}, "wing_l": {"rot": [[0, 0, 0, 0], [1, 0, 40, -34]]}}}
     m.anims["fold"] = {"len": 0.4, "tracks": {"wing_r": {"rot": [[0, 0, 0, 0], [1, 0, -70, 55]], "scale": [[0, 1], [1, 0.5]]},
                                                "wing_l": {"rot": [[0, 0, 0, 0], [1, 0, 70, -55]], "scale": [[0, 1], [1, 0.5]]}}}
-    # 빛 무리는 부분 움직임을 따라가지 않음 (모델 전체 자리에 고정) — 날갯짓에 덜 움직이는 어깨 가까이
-    m.add_glow(0.55, 0.48, 0.12, 0.4).add_glow(-0.55, 0.48, 0.12, 0.4).add_glow(0, 0.15, 0.05, 0.34)
+    # 빛 무리는 부분 움직임을 따라가지 않음 (모델 전체 자리에 고정) — 날갯짓에 덜 움직이는 어깨 가까이 · 등 가운데
+    m.add_glow(0.62, 0.55, 0.14, 0.45).add_glow(-0.62, 0.55, 0.14, 0.45).add_glow(0, 0.2, 0.06, 0.38)
     return m
 
 

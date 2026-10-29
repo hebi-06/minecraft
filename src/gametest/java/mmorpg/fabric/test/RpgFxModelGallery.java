@@ -90,6 +90,8 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
      * 0.48.0 모델 초상 (사용자 "다른 모델링도 모아서 보여줘"): 모델마다 하나씩 실제 쓰는 색으로 화면 가운데에 — {모델, 크기, 가운데까지 (모델 +Y 칸), 움직임,
      * 빛깔 rgb, 속빛 rgb, 거리 칸}. 사진 fx_portrait_NN_모델
      */
+    /** 0.48.1 스킬에서 늘 보는 사람 쪽을 보는 모델 (faceCam) — 초상도 그렇게 */
+    static final java.util.Set<String> FACE_CAM = java.util.Set.of("sun", "eclipse");
     static final Object[][] PORTRAITS = {
         {"phantom_sword", 1.0, 0.48, "", new double[] {0.42, 0.78, 1.0}, new double[] {0.84, 0.95, 1.0}, 2.1},
         {"spear", 0.62, 0.05, "", new double[] {1.0, 0.82, 0.3}, new double[] {1.0, 0.97, 0.78}, 2.0},
@@ -119,7 +121,7 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
         {"soul", 1.6, 0.0, "wail", new double[] {0.32, 0.92, 0.74}, new double[] {0.82, 1.0, 0.94}, 1.7},
         {"world_tree", 0.55, 1.6, "sway", new double[] {0.38, 0.84, 0.52}, new double[] {0.84, 1.0, 0.86}, 2.9},
         {"root", 0.9, 0.0, "", new double[] {0.52, 0.37, 0.2}, new double[] {0.84, 1.0, 0.86}, 2.0},
-        {"fire_wings", 0.8, 0.3, "flap", new double[] {1.0, 0.45, 0.08}, new double[] {1.0, 0.62, 0.2}, 2.6},
+        {"fire_wings", 0.8, 0.3, "flap", new double[] {1.0, 0.3, 0.06}, new double[] {1.0, 0.88, 0.5}, 2.6},
         {"clock", 0.7, 0.0, "tick", new double[] {0.62, 0.32, 1.0}, new double[] {0.92, 0.8, 1.0}, 1.9},
         {"serpent", 1.2, 0.0, "hiss", new double[] {1.0, 0.76, 0.24}, new double[] {1.0, 0.95, 0.78}, 1.8},
         {"ghost_knight", 0.85, 1.0, "slash", new double[] {0.58, 0.42, 0.95}, new double[] {0.74, 0.76, 1.0}, 2.5},
@@ -188,11 +190,14 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
             double[] color = (double[]) p[4];
             double[] glow = (double[]) p[5];
             double dist = ((Number) p[6]).doubleValue();
+            // 해 · 일식은 스킬에서 늘 보는 사람 쪽을 봄 (faceCam — 판을 겹친 모델: 돌려 보면 빛 무리 면이 판을 가르는 것이 보이지만 게임에서는 생기지 않음)
+            boolean faceCam = FACE_CAM.contains(name);
             server.runOnServer(s -> {
                 double eye = -60 + 1.62;
-                Fx3d.spawn(s.overworld(), name, new Vec3(0.5, eye - mid * scale, 0.5 - dist), Opt.of("dir", new Vec3(0, 1, 0), "face", new Vec3(0.35, 0, 1), "spin",
-                        20.0, "spinAxis", "up", "scale", scale, "life", 3.0, "color", color, "glow", glow, "pop", 0.15, "shine", 0.2, "anim", anim, "loop",
-                        anim.isEmpty() ? 0.0 : 1.0, "animSpeed", 0.6));
+                Opt o = Opt.of("dir", new Vec3(0, 1, 0), "scale", scale, "life", 3.0, "color", color, "glow", glow, "pop", 0.15, "shine", 0.2, "anim", anim, "loop",
+                        anim.isEmpty() ? 0.0 : 1.0, "animSpeed", 0.6);
+                o = faceCam ? o.with("faceCam", 1.0) : o.with("face", new Vec3(0.35, 0, 1)).with("spin", 20.0).with("spinAxis", "up");
+                Fx3d.spawn(s.overworld(), name, new Vec3(0.5, eye - mid * scale, 0.5 - dist), o);
             });
             ctx.waitTicks(14);
             ctx.takeScreenshot(TestScreenshotOptions.of(String.format(java.util.Locale.ROOT, "fx_portrait_%02d_%s", i, name)).withSize(960, 540));

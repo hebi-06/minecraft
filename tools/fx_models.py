@@ -108,10 +108,43 @@ class Atlas:
                 lum, a = painter(x / (pw - 1), y / (ph - 1), rnd, **kw)
                 g = int(max(0, min(1, lum)) * 255 + 0.5)
                 self.px[x0 + x, y0 + y] = (g, g, g, int(max(0, min(1, a)) * 255 + 0.5))
+        self._bleed(x0, y0, pw, ph)
         s = float(self.size)
         uv = ((x0 + 0.5) / s, (y0 + 0.5) / s, (x0 + pw - 0.5) / s, (y0 + ph - 0.5) / s)
         self.named[name] = uv
         return uv
+
+
+    def _bleed(self, x0, y0, pw, ph, passes=8):
+        """비친 곳 (알파 0) 의 밝기를 이웃 그림의 밝기로 채움 (칸 안에서만): 게임은 그림을 부드럽게 (blur) 읽어 가장자리에서 이웃 칸과 섞음 — 비친 곳이
+        검으면 반투명 가장자리가 검게 물듦 (0.48.1 사진첩: 불꽃 · 빛살 테두리가 갈색 · 회색). 알파는 그대로"""
+        reg = np.array(self.img.crop((x0, y0, x0 + pw, y0 + ph)), dtype=float)
+        lum, a = reg[:, :, 0], reg[:, :, 3]
+        filled = a > 0
+        if filled.all() or not filled.any():
+            return
+        lum = np.where(filled, lum, 0.0)
+        for _ in range(passes):
+            if filled.all():
+                break
+            pad_l = np.pad(lum * filled, 1)
+            pad_f = np.pad(filled.astype(float), 1)
+            acc = np.zeros_like(lum)
+            cnt = np.zeros_like(lum)
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    if dy == 0 and dx == 0:
+                        continue
+                    acc += pad_l[1 + dy:1 + dy + ph, 1 + dx:1 + dx + pw]
+                    cnt += pad_f[1 + dy:1 + dy + ph, 1 + dx:1 + dx + pw]
+            new = (~filled) & (cnt > 0)
+            lum[new] = acc[new] / cnt[new]
+            filled = filled | new
+        if not filled.all():
+            lum[~filled] = lum[filled].mean()
+        g = np.clip(lum + 0.5, 0, 255).astype(np.uint8)
+        out = np.dstack([g, g, g, reg[:, :, 3].astype(np.uint8)])
+        self.img.paste(Image.fromarray(out, "RGBA"), (x0, y0))
 
 
 def noise(rnd, k=0.06):

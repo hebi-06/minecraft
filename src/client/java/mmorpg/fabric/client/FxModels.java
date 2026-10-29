@@ -515,6 +515,7 @@ public final class FxModels {
         Matrix3f RP = new Matrix3f();
         Vector3f tmp = new Vector3f();
         Vector3f nrm = new Vector3f();
+        float[] qv = new float[12];
         float[] col = new float[30];
         Iterator<Inst> it = LIVE.iterator();
         while (it.hasNext()) {
@@ -737,11 +738,29 @@ public final class FxModels {
                     int m = Mth.clamp(p.mat[q], 0, 9);
                     int c = argb(a, col[m * 3], col[m * 3 + 1], col[m * 3 + 2]);
                     int base = q * 32;
+                    if (in.m.emissive) {
+                        // 스스로 빛남: 모든 면을 가장 밝게. 게임은 카메라 반대쪽을 보는 면 (뒷면) 을 빛 방향을 뒤집어 비춤 (면마다 빛 —
+                        // 0.48.1 사진첩: 뒷면이 보이는 불꽃 · 날개 한쪽이 갈색으로 어두움) → 앞면은 위 (0, 1, 0), 뒷면은 아래 (0, -1, 0) 를 법선으로
+                        // (뒤집힌 빛에서도 위를 보는 면처럼 가장 밝음). 자리는 카메라 기준 (카메라 = 원점)
+                        for (int k = 0; k < 4; k++) {
+                            int o = base + k * 8;
+                            MP.transformPosition(p.v[o], p.v[o + 1], p.v[o + 2], tmp);
+                            qv[k * 3] = tmp.x;
+                            qv[k * 3 + 1] = tmp.y;
+                            qv[k * 3 + 2] = tmp.z;
+                        }
+                        float ny = facesCamera(qv) ? 1F : -1F;
+                        for (int k = 0; k < 4; k++) {
+                            int o = base + k * 8;
+                            body.add(qv[k * 3], qv[k * 3 + 1], qv[k * 3 + 2], p.v[o + 3], p.v[o + 4], 0F, ny, 0F, c);
+                            if (sh != null) sh.add(qv[k * 3], qv[k * 3 + 1], qv[k * 3 + 2], p.v[o + 3], p.v[o + 4], 0F, ny, 0F, shineCol);
+                        }
+                        continue;
+                    }
                     for (int k = 0; k < 4; k++) {
                         int o = base + k * 8;
                         MP.transformPosition(p.v[o], p.v[o + 1], p.v[o + 2], tmp);
-                        if (in.m.emissive) nrm.set(0F, 1F, 0F); // 스스로 빛남: 모든 면이 위를 보는 면처럼 가장 밝게
-                        else RP.transform(p.v[o + 5], p.v[o + 6], p.v[o + 7], nrm);
+                        RP.transform(p.v[o + 5], p.v[o + 6], p.v[o + 7], nrm);
                         body.add(tmp.x, tmp.y, tmp.z, p.v[o + 3], p.v[o + 4], nrm.x, nrm.y, nrm.z, c);
                         if (sh != null) sh.add(tmp.x, tmp.y, tmp.z, p.v[o + 3], p.v[o + 4], nrm.x, nrm.y, nrm.z, shineCol);
                     }
@@ -778,6 +797,20 @@ public final class FxModels {
         // 더한 빛: 몸을 속빛 쪽으로 shine 만큼 (밝기 최대 반투명 — 0.47.0 사진첩: eyes 는 더하기가 아니라 몸을 어둡게 덮었음)
         for (Map.Entry<Identifier, Buf> e : shines.entrySet()) put(ps, collector, RenderTypes.entityTranslucentEmissive(e.getKey()), e.getValue());
         put(ps, collector, RenderTypes.lightning(), halos);
+    }
+
+    /**
+     * 카메라 기준 자리 (카메라 = 원점) 의 사각형 q (꼭짓점 넷 × xyz) 가 카메라 쪽을 보는지 (앞면 — 꼭짓점이 카메라에서 보아 반시계):
+     * 두 세모 (0 1 2 · 0 2 3) 의 법선 합 · (카메라 − 꼭짓점 0)
+     */
+    static boolean facesCamera(float[] q) {
+        float ax = q[3] - q[0], ay = q[4] - q[1], az = q[5] - q[2];
+        float bx = q[6] - q[0], by = q[7] - q[1], bz = q[8] - q[2];
+        float cx = q[9] - q[0], cy = q[10] - q[1], cz = q[11] - q[2];
+        float nx = (ay * bz - az * by) + (by * cz - bz * cy);
+        float ny = (az * bx - ax * bz) + (bz * cx - bx * cz);
+        float nz = (ax * by - ay * bx) + (bx * cy - by * cx);
+        return -(nx * q[0] + ny * q[1] + nz * q[2]) >= 0F;
     }
 
     /** 주인 기준 [오른쪽, 위, 앞] → 세계 (보는 쪽 sin · cos) */

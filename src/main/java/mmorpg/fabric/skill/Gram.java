@@ -32,6 +32,9 @@ final class Gram {
     static final double[] G_EMBER = {1.0, 0.62, 0.2};
     static final double[] G_DEEP = {0.85, 0.12, 0.1}; // 칼날 밑동 · 용 날밑의 짙은 붉은빛 (0.12.8 — 무기 디자인 색)
     static final double[] G_ASH = {0.16, 0.08, 0.06};
+    /** 0.48.1 입체 불꽃 날개 (모바일 날개 그림을 입체로 — 깃털 끝 붉은 주황 · 밑동 연노랑) */
+    static final double[] G_WING = {1.0, 0.3, 0.06};
+    static final double[] G_WING_CORE = {1.0, 0.88, 0.5};
 
     static void register() {
         Transcend.register("gram_charge", Gram::charge);
@@ -75,15 +78,15 @@ final class Gram {
     }
 
     /**
-     * 불꽃 날개 (rpg:fire_wing — 등 뒤, 보는 방향에 수직인 면 한 장, 너비 2 × size 칸): frame 0~3 펼침 · 4~7 날갯짓. 0.48.0 입체 날개 (fire_wings) 가 몸 —
-     * 이 그림은 빛 무리로 옅게 (0.4).
+     * 불꽃 날개 (rpg:fire_wing — 등 뒤, 보는 방향에 수직인 면 한 장, 너비 2 × size 칸): frame 0~3 펼침 · 4~7 날갯짓. 입체 날개 (fire_wings —
+     * 0.48.1 부터 이 그림 그대로를 어깨에 매단 휜 판) 가 몸 — 이 그림은 둘레의 옅은 잔상으로 (0.18).
      * tips: 날개 끝 · 팔에 작은 불꽃 (옆에서 보면 그림이 얇아서)
      */
     static void fireWings(ServerPlayer sp, int frame, double life, boolean tips, double size) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         Vec3 at = V.up(V.add(sp.position(), f, -0.42), 1.3);
-        SkillFx.fx(level, "rpg:fire_wing", at, Opt.of("dir", f, "size", size, "life", life, "progress", (frame + 0.5) / 8, "color", SkillFx.WHITE, "alpha", 0.4));
+        SkillFx.fx(level, "rpg:fire_wing", at, Opt.of("dir", f, "size", size, "life", life, "progress", (frame + 0.5) / 8, "color", SkillFx.WHITE, "alpha", 0.18));
         if (!tips) return;
         Vec3 side = V.rightOf(f);
         double lift = frame == 4 ? 0.9 : frame == 6 ? -0.2 : 0.45;
@@ -418,9 +421,10 @@ final class Gram {
         SkillFx.play(level, "mob.enderdragon.flap", c0, 1.4, 0.8);
         SkillFx.play(level, "mob.blaze.shoot", c0, 1.0, 0.7);
         SkillFx.play(level, "fire.ignite", c0, 1.2, 0.8);
-        // 0.48.0 입체 불꽃 날개 (등 뒤 — 나를 따라감, 내 1인칭에서는 숨김): 펼침 → 8틱부터 날갯짓 → 내려꽂을 때 접음 → 땅에서 활짝 (impact)
+        // 0.48.0 입체 불꽃 날개 (등 뒤 — 나를 따라감, 내 1인칭에서는 숨김): 펼침 → 8틱부터 날갯짓 → 내려꽂을 때 접음 → 땅에서 활짝 (impact).
+        // 0.48.1: 모바일 날개 그림을 입체로 (색 = 깃털 끝 붉은 주황 · 밑동 연노랑, 더한 빛 shine 은 옅게 — 속빛이 깃털 끝까지 덮으면 노랗게 바램)
         int wings = Fx3d.spawn(level, "fire_wings", new Vec3(0, 1.25, -0.38), Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, -1),
-                "scale", 1.45, "life", (landAt + 14) / 20.0, "anim", "spread", "color", G_FIRE, "glow", G_EMBER, "view", 1.0, "glowAlpha", 0.45, "shine", 0.4,
+                "scale", 1.45, "life", (landAt + 14) / 20.0, "anim", "spread", "color", G_WING, "glow", G_WING_CORE, "view", 1.0, "glowAlpha", 0.45, "shine", 0.12,
                 "fadeIn", 0.05, "fadeOut", 0.3, "pop", 0.15));
         st.wings = wings;
         Tasks.later(8, () -> {
