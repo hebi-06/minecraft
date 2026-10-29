@@ -445,70 +445,156 @@ def odin_eye():
     return m
 
 
+def p_sun_surface(u, v, rnd):
+    """해 겉 (쌀알 무늬 — 밝고 고르게, 조금 끓음)"""
+    cells = math.sin(u * 61 + math.sin(v * 37) * 1.7) * math.sin(v * 53 + math.sin(u * 29) * 1.3)
+    return 0.9 + 0.1 * cells + fx.noise(rnd, 0.02), 1
+
+
+def p_corona(u, v, rnd, strong=False):
+    """해무리 (u = 둘레, v = 안 0 → 바깥 1): 바깥으로 갈수록 투명 · 둘레로 일렁이는 빛살 결"""
+    streak = 0.5 + 0.5 * math.sin(u * math.pi * 2 * 13 + math.sin(u * math.pi * 2 * 5) * 2.0)
+    fade = (1 - v) ** (1.1 if strong else 1.7)
+    base = 0.8 if strong else 0.55
+    return 0.85 + 0.15 * streak + fx.noise(rnd, 0.02), fade * (base + (1 - base) * streak)
+
+
+def p_ray_soft(u, v, rnd):
+    """빛살 (u = 폭 — 가운데가 밝음, v = 끝 0 → 밑동 1): 가장자리와 끝으로 흐려짐"""
+    c = abs(u - 0.5) * 2
+    return 1.0 - 0.2 * c, max(0.0, 1 - c ** 1.4) * (v ** 1.3)
+
+
+def annulus(m, r0, r1, z, segs, uv, mat, double=True):
+    """납작한 고리 (XY 판 · 높이 z): u = 둘레, v = 안 (r0) → 바깥 (r1)"""
+    u0, v0, u1, v1 = uv
+    for k in range(segs):
+        a0, a1 = 2 * math.pi * k / segs, 2 * math.pi * (k + 1) / segs
+        ps = [v3(r0 * math.cos(a0), r0 * math.sin(a0), z), v3(r1 * math.cos(a0), r1 * math.sin(a0), z), v3(r1 * math.cos(a1), r1 * math.sin(a1), z),
+              v3(r0 * math.cos(a1), r0 * math.sin(a1), z)]
+        uvs = [(u0 + (u1 - u0) * k / segs, v0), (u0 + (u1 - u0) * k / segs, v1), (u0 + (u1 - u0) * (k + 1) / segs, v1), (u0 + (u1 - u0) * (k + 1) / segs, v0)]
+        m.quad(ps, uvs, mat, [v3(0, 0, 1)] * 4, double=double)
+
+
+def tongue(m, base, d, side, length, width, uv, mat, bend=0.0, segs=4, double=True):
+    """불꽃 혀 · 빛살 띠 (base 에서 d 쪽으로 length — 옆 side 쪽 폭 width, bend = 끝이 옆으로 휘는 칸): 그림 v 는 끝 0 → 밑동 1 (p_flame · p_ray_soft)"""
+    u0, v0, u1, v1 = uv
+    d, side = unit(v3(d)), unit(v3(side))
+    pts = [v3(base) + d * length * (i / segs) + side * bend * (i / segs) ** 2 for i in range(segs + 1)]
+    for i in range(segs):
+        a, b = pts[i], pts[i + 1]
+        va, vb = v1 - (v1 - v0) * i / segs, v1 - (v1 - v0) * (i + 1) / segs
+        w = side * width / 2
+        m.quad([a - w, a + w, b + w, b - w], [(u0, va), (u1, va), (u1, vb), (u0, vb)], mat, double=double)
+
+
 def sun():
-    """작은 태양: 가운데가 원점, 반지름 0.5 (끓는 겉 — 속빛 · 흰빛) · 앞 판의 빛살 두 겹 (rays · rays2 — 엇갈려 돎, faceCam 으로 늘 보는 사람 쪽) ·
-    고리 둘 (ring — 비스듬히 돎). 움직임 spin (되풀이) · burst (빛살이 길어지며 커짐)"""
-    m = fx.Model("sun", tex=128, cell=32)
+    """작은 태양 (가운데가 원점 — faceCam 으로 앞 +Z 가 늘 보는 사람 쪽): 빛나는 해 (반지름 0.42 — 쌀알 무늬, 스스로 빛남) · 둘레에서 일렁이며 솟는 불꽃 혀
+    열넷 (flares) · 해무리 두 겹 (corona — 바깥으로 흐려짐) · 부드러운 빛살 두 겹 (rays · rays2 — 엇갈려 돎). 0.48.0 다시 만듦 (사용자 "구체 모델링이 어색하다" —
+    예전: 각진 공 · 토성 같은 고리 둘 · 뻣뻣한 가시). 움직임 spin (되풀이) · burst (빛살 · 불꽃이 길어지며 커짐). 먼 판부터 (빛살 → 해무리 → 불꽃 → 해) 그려 겹침이 맞음"""
+    m = fx.Model("sun", tex=256, cell=32)
+    m.emissive = True
     a = m.atlas
-    surf = a.swatch("surf", p_sun, 2, 2)
-    ray = a.swatch("ray", p_ray, 1, 2)
-    rim = a.swatch("rim", fx.p_rim)
+    surf = a.swatch("surf", p_sun_surface, 4, 4)
+    corona = a.swatch("corona", p_corona, 8, 2)
+    corona2 = a.swatch("corona2", p_corona, 8, 2, strong=True)
+    ray = a.swatch("ray", p_ray_soft, 2, 4)
+    flame = a.swatch("flame", p_flame, 2, 4)
+    m.part("rays", (0, 0, 0))
+    for k in range(8):
+        th = 2 * math.pi * k / 8
+        d, side = v3(math.cos(th), math.sin(th), 0), v3(-math.sin(th), math.cos(th), 0)
+        tongue(m, d * 0.3 + v3(0, 0, -0.09), d, side, 1.1 if k % 2 == 0 else 0.82, 0.2, ray, fx.TINT, segs=2, double=False)
+    m.part("rays2", (0, 0, 0))
+    for k in range(8):
+        th = 2 * math.pi * (k + 0.5) / 8
+        d, side = v3(math.cos(th), math.sin(th), 0), v3(-math.sin(th), math.cos(th), 0)
+        tongue(m, d * 0.3 + v3(0, 0, -0.08), d, side, 0.65, 0.13, ray, fx.GLOW, segs=2, double=False)
+    m.part("corona", (0, 0, 0))
+    annulus(m, 0.36, 1.02, -0.06, 48, corona, fx.GLOW, double=False)
+    annulus(m, 0.36, 0.66, -0.05, 48, corona2, fx.TINT, double=False)
+    m.part("flares", (0, 0, 0))
+    for k in range(14):
+        th = 2 * math.pi * k / 14 + 0.11 * math.sin(k * 2.3)
+        d, side = v3(math.cos(th), math.sin(th), 0), v3(-math.sin(th), math.cos(th), 0)
+        ln = 0.3 + 0.14 * ((k * 5) % 7) / 6
+        tongue(m, d * 0.33 + v3(0, 0, -0.03), d, side, ln, 0.24 if k % 2 == 0 else 0.19, flame, fx.TINT if k % 2 == 0 else fx.GLOW,
+               bend=(0.07 if k % 3 else -0.06), double=False)
     m.part("core", (0, 0, 0))
-    sphere(m, (0, 0, 0), 0.5, fx.GLOW, surf, segs=16, rings=10)
-    sphere(m, (0, 0, 0), 0.42, fx.WHITE, surf, segs=12, rings=8)  # 안 (흰빛 — 겉 사이로)
-    # 빛살: 앞 (+Z — faceCam 이면 늘 보는 사람 쪽) 판에 열여섯 (길고 짧게 번갈아) + 뒤 겹 열여섯 (rays2 — 엇갈려 거꾸로 돎)
-    u0, v0, u1, v1 = ray
-    for part, n, z, ln0, ln1, w0, off in (("rays", 16, 0.02, 0.62, 0.36, 0.11, 0.0), ("rays2", 16, -0.02, 0.45, 0.28, 0.07, math.pi / 16)):
-        m.part(part, (0, 0, 0))
-        for k in range(n):
-            ang = 2 * math.pi * k / n + off
-            d = v3(math.cos(ang), math.sin(ang), 0)
-            w = v3(-d[1], d[0], 0) * w0
-            ln = ln0 if k % 2 == 0 else ln1
-            base = d * 0.4 + v3(0, 0, z)
-            tip = d * (0.5 + ln) + v3(0, 0, z)
-            m.quad([base - w, base + w, tip + w * 0.06, tip - w * 0.06], [(u0, v1), (u1, v1), (u1, v0), (u0, v0)], fx.TINT if part == "rays" else fx.GLOW,
-                   double=True)
-    # 고리 둘 (비스듬히)
-    m.part("ring", (0, 0, 0))
-    m.torus(0.78, 0.025, 32, 5, fx.GLOW, rim, axis_rot=fx.rot_z(24))
-    m.torus(0.7, 0.02, 32, 5, fx.TINT, rim, axis_rot=fx.rot_x(70) @ fx.rot_z(-30))
+    sphere(m, (0, 0, 0), 0.42, fx.GLOW, surf, segs=22, rings=14)
     m.part("main")
-    m.anims["spin"] = {"len": 4.0, "tracks": {"rays": {"rot": [[0, 0, 0, 0], [0.5, 0, 0, 180], [1, 0, 0, 360]]},
-                                               "rays2": {"rot": [[0, 0, 0, 0], [0.5, 0, 0, -180], [1, 0, 0, -360]],
-                                                         "scale": [[0, 1], [0.25, 1.12], [0.5, 1], [0.75, 1.12], [1, 1]]},
-                                               "ring": {"rot": [[0, 0, 0, 0], [0.5, 0, -180, 0], [1, 0, -360, 0]]},
-                                               "core": {"scale": [[0, 1], [0.25, 1.05], [0.5, 1], [0.75, 1.05], [1, 1]]}}}
-    m.anims["burst"] = {"len": 0.4, "tracks": {"rays": {"scale": [[0, 1], [0.6, 1.8], [1, 2.2]], "rot": [[0, 0, 0, 0], [1, 0, 0, 60]]},
-                                                "rays2": {"scale": [[0, 1], [0.6, 2.0], [1, 2.5]], "rot": [[0, 0, 0, 0], [1, 0, 0, -60]]},
-                                                "core": {"scale": [[0, 1], [0.5, 1.4], [1, 1.6]]}, "ring": {"scale": [[0, 1], [1, 2.4]]}}}
-    m.add_glow(0, 0, 0, 1.1).add_glow(0, 0, 0, 0.55)
+    m.anims["spin"] = {"len": 4.0, "tracks": {"rays": {"rot": [[0, 0, 0, 0], [0.5, 0, 0, 90], [1, 0, 0, 180]]},
+                                               "rays2": {"rot": [[0, 0, 0, 0], [0.5, 0, 0, -90], [1, 0, 0, -180]],
+                                                         "scale": [[0, 1], [0.25, 1.15], [0.5, 1], [0.75, 1.15], [1, 1]]},
+                                               "flares": {"rot": [[0, 0, 0, 0], [0.5, 0, 0, 12], [1, 0, 0, 0]],
+                                                          "scale": [[0, 1], [0.2, 1.08], [0.45, 0.96], [0.7, 1.07], [1, 1]]},
+                                               "corona": {"rot": [[0, 0, 0, 0], [1, 0, 0, -40]], "scale": [[0, 1], [0.5, 1.05], [1, 1]]},
+                                               "core": {"scale": [[0, 1], [0.5, 1.025], [1, 1]]}}}
+    m.anims["burst"] = {"len": 0.4, "tracks": {"rays": {"scale": [[0, 1], [0.6, 1.9], [1, 2.3]], "rot": [[0, 0, 0, 0], [1, 0, 0, 30]]},
+                                                "rays2": {"scale": [[0, 1], [0.6, 2.1], [1, 2.6]], "rot": [[0, 0, 0, 0], [1, 0, 0, -30]]},
+                                                "flares": {"scale": [[0, 1], [0.5, 1.6], [1, 2.0]], "rot": [[0, 0, 0, 0], [1, 0, 0, 25]]},
+                                                "corona": {"scale": [[0, 1], [1, 2.1]]}, "core": {"scale": [[0, 1], [0.5, 1.3], [1, 1.45]]}}}
+    m.add_glow(0, 0, 0, 1.2).add_glow(0, 0, 0, 0.6)
     return m
 
 
+def disc(m, r, z, segs, uv, mat, double=True):
+    """납작한 원판 (XY 판 · 높이 z — 앞 +Z 를 봄, 그림은 원판 좌표)"""
+    u0, v0, u1, v1 = uv
+    uvf = lambda p: (u0 + (u1 - u0) * (0.5 + 0.5 * p[0] / r), v0 + (v1 - v0) * (0.5 - 0.5 * p[1] / r))
+    c = v3(0, 0, z)
+    for k in range(segs):
+        a0, a1 = 2 * math.pi * k / segs, 2 * math.pi * (k + 1) / segs
+        p0, p1 = v3(r * math.cos(a0), r * math.sin(a0), z), v3(r * math.cos(a1), r * math.sin(a1), z)
+        m.quad([c, p0, p1, p1], [uvf(c), uvf(p0), uvf(p1), uvf(p1)], mat, [v3(0, 0, 1)] * 4, double=double)
+
+
+def p_moon_shadow(u, v, rnd):
+    """해를 가린 달 그림자 (원판 좌표 u · v): 가운데는 아주 어둡고 가장자리로 조금 밝음 (해 빛이 둘레를 비춤)"""
+    r = math.hypot(u - 0.5, v - 0.5) * 2
+    return 0.55 + 0.45 * max(0.0, r - 0.6) / 0.4 + fx.noise(rnd, 0.03), 1
+
+
 def eclipse():
-    """일식 (해를 가린 얼음 돔 위): 가운데 어두운 원판 (그림자 — 앞 +Z) · 그 둘레로 새어 나오는 빛 고리 (속빛) · 빛살 여덟 (rays). 움직임 reveal (원판이
-    작아지며 해가 드러남)"""
-    m = fx.Model("eclipse", tex=64, cell=32)
+    """일식 (가운데가 원점 — faceCam 으로 앞 +Z 가 늘 보는 사람 쪽): 해를 가린 검은 원판 (달 그림자 — 납작) · 원판 가장자리에서 새어 나오는 흰 테 (다이아몬드
+    고리 — 한쪽에 빛 방울) · 해무리 두 겹 (corona — 바깥으로 흐려짐) · 부드러운 빛살 두 겹 (rays). 0.48.0 다시 만듦 (사용자 "스발린 구체 … 어색하다" —
+    예전: 검은 공 · 고리 · 가시). 움직임 pulse (되풀이 — 해무리가 숨 쉼) · reveal (원판이 작아지며 해가 드러남)"""
+    m = fx.Model("eclipse", tex=256, cell=32)
+    m.emissive = True
     a = m.atlas
-    flat = a.swatch("flat", fx.p_flat, lum=0.95)
-    ray = a.swatch("ray", p_ray, 1, 1)
-    Rz = fx.rot_x(90)
-    m.part("disc", (0, 0, 0))
-    sphere(m, (0, 0, 0.02), 0.5, fx.SHADOW, flat, segs=16, rings=8, ry=0.5, axis_rot=Rz)
-    m.part("corona", (0, 0, 0))
-    m.torus(0.53, 0.05, 32, 6, fx.GLOW, flat, axis_rot=Rz)
-    m.torus(0.6, 0.025, 32, 5, fx.WHITE, flat, axis_rot=Rz)
-    u0, v0, u1, v1 = ray
+    corona = a.swatch("corona", p_corona, 8, 2)
+    corona2 = a.swatch("corona2", p_corona, 8, 2, strong=True)
+    ray = a.swatch("ray", p_ray_soft, 2, 4)
+    shadow = a.swatch("shadow", p_moon_shadow, 2, 2)
+    rim = a.swatch("rim", fx.p_flat, lum=1.0, k=0.02)
+    flame = a.swatch("flame", p_flame, 2, 4)
+    m.part("rays", (0, 0, 0))
     for k in range(8):
-        ang = 2 * math.pi * k / 8 + math.pi / 8
-        d = v3(math.cos(ang), math.sin(ang), 0)
-        w = v3(-d[1], d[0], 0) * 0.07
-        m.quad([d * 0.55 - w, d * 0.55 + w, d * 1.15 + w * 0.1, d * 1.15 - w * 0.1], [(u0, v1), (u1, v1), (u1, v0), (u0, v0)], fx.TINT, double=True)
+        th = 2 * math.pi * k / 8 + math.pi / 8
+        d, side = v3(math.cos(th), math.sin(th), 0), v3(-math.sin(th), math.cos(th), 0)
+        tongue(m, d * 0.3 + v3(0, 0, -0.09), d, side, 1.15 if k % 2 == 0 else 0.85, 0.18, ray, fx.TINT, segs=2, double=False)
+    for k in range(8):
+        th = 2 * math.pi * k / 8
+        d, side = v3(math.cos(th), math.sin(th), 0), v3(-math.sin(th), math.cos(th), 0)
+        tongue(m, d * 0.3 + v3(0, 0, -0.08), d, side, 0.62, 0.12, ray, fx.GLOW, segs=2, double=False)
+    m.part("corona", (0, 0, 0))
+    annulus(m, 0.4, 1.1, -0.06, 64, corona, fx.TINT, double=False)
+    annulus(m, 0.44, 0.78, -0.05, 64, corona2, fx.GLOW, double=False)
+    m.part("rim", (0, 0, 0))
+    annulus(m, 0.47, 0.535, 0.0, 64, rim, fx.WHITE, double=False)
+    # 다이아몬드 고리의 빛 방울 (오른쪽 위 — 짧은 불꽃 혀 둘)
+    bead = v3(math.cos(0.8), math.sin(0.8), 0) * 0.5
+    d = unit(bead)
+    tongue(m, bead - d * 0.05 + v3(0, 0, 0.01), d, v3(-d[1], d[0], 0), 0.26, 0.2, flame, fx.WHITE, double=False)
+    tongue(m, bead - d * 0.05 + v3(0, 0, 0.012), v3(-d[1], d[0], 0), d, 0.16, 0.12, flame, fx.GLOW, double=False)
+    m.part("disc", (0, 0, 0))
+    disc(m, 0.48, 0.02, 48, shadow, fx.SHADOW, double=False)
     m.part("main")
-    m.anims["reveal"] = {"len": 0.5, "tracks": {"disc": {"scale": [[0, 1], [0.6, 0.55], [1, 0.01]]}, "corona": {"scale": [[0, 1], [1, 1.8]]}}}
-    m.anims["pulse"] = {"len": 1.0, "tracks": {"corona": {"scale": [[0, 1], [0.5, 1.08], [1, 1]], "rot": [[0, 0, 0, 0], [1, 0, 0, 45]]}}}
-    m.add_glow(0, 0, -0.05, 0.85)
+    m.anims["reveal"] = {"len": 0.5, "tracks": {"disc": {"scale": [[0, 1], [0.6, 0.55], [1, 0.01]]}, "rim": {"scale": [[0, 1], [0.6, 0.6], [1, 0.01]]},
+                                                 "corona": {"scale": [[0, 1], [1, 1.8]]}, "rays": {"scale": [[0, 1], [1, 1.6]]}}}
+    m.anims["pulse"] = {"len": 1.0, "tracks": {"corona": {"scale": [[0, 1], [0.5, 1.07], [1, 1]], "rot": [[0, 0, 0, 0], [1, 0, 0, 20]]},
+                                                "rays": {"rot": [[0, 0, 0, 0], [1, 0, 0, -12]], "scale": [[0, 1], [0.5, 1.06], [1, 1]]}}}
+    m.add_glow(0, 0, -0.05, 0.95)
     return m
 
 
@@ -689,55 +775,116 @@ def flower():
     return m
 
 
+def p_fire_membrane(u, v, rnd):
+    """불꽃 날개 막 (u = 손가락 사이 — 0 · 1 이 뼈 쪽, v = 손목 0 → 뒷가장자리 1): 뼈 · 손목 가까이 밝고 진함, 뒷가장자리로 갈수록 일렁이는 불꽃 결로
+    비치고 끝은 불꽃 혀처럼 듬성듬성 투명"""
+    bone = min(u, 1 - u)
+    flick = 0.5 + 0.5 * math.sin(u * 31 + v * 9 + math.sin(v * 13 + u * 7) * 1.5)
+    streak = 0.5 + 0.5 * math.sin(u * 47 - v * 5 + math.sin(v * 11) * 0.8)
+    lum = 0.74 + 0.16 * (1 - v) + 0.12 * streak * v + 0.14 * max(0.0, 1 - bone * 9) + fx.noise(rnd, 0.03)
+    a = (0.92 - 0.5 * v ** 1.25) * (0.72 + 0.28 * flick)
+    if v > 0.84:
+        edge = (v - 0.84) / 0.16
+        lick = 0.45 + 0.45 * abs(math.sin(u * math.pi * 5 + math.sin(u * 19) * 0.7))
+        if edge > lick:
+            a = 0.0
+    return min(1.0, lum), max(0.0, min(1.0, a))
+
+
+def patch(m, fn, ns, nt, uv, mat, double=True):
+    """곡면 조각 (fn(s, t) → 점, s · t 는 0 ~ 1): u = t, v = s (s = 0 이 그림 위 v0)"""
+    u0, v0, u1, v1 = uv
+    P = [[v3(fn(i / ns, j / nt)) for j in range(nt + 1)] for i in range(ns + 1)]
+    for i in range(ns):
+        for j in range(nt):
+            ps = [P[i][j], P[i][j + 1], P[i + 1][j + 1], P[i + 1][j]]
+            uvs = [(u0 + (u1 - u0) * j / nt, v0 + (v1 - v0) * i / ns), (u0 + (u1 - u0) * (j + 1) / nt, v0 + (v1 - v0) * i / ns),
+                   (u0 + (u1 - u0) * (j + 1) / nt, v0 + (v1 - v0) * (i + 1) / ns), (u0 + (u1 - u0) * j / nt, v0 + (v1 - v0) * (i + 1) / ns)]
+            if np.linalg.norm(ps[0] - ps[1]) < 1e-7:  # 한 점으로 모인 줄 (손목): 세모
+                ps = [ps[0], ps[2], ps[3], ps[3]]
+                uvs = [uvs[0], uvs[2], uvs[3], uvs[3]]
+            m.quad(ps, uvs, mat, double=double)
+
+
+def bez(a, c, b, t):
+    return (1 - t) ** 2 * a + 2 * (1 - t) * t * c + t ** 2 * b
+
+
 def fire_wings():
-    """불꽃 날개 (용의 날개 둘 — 등 가운데가 원점, 위 +Y, 뒤 +Z, 날개 ±X): 팔뼈 · 손가락뼈 넷 · 사이의 막 (빛깔 — 비침, 핏줄) · 뼈 끝 발톱 (흰빛).
-    wing_r · wing_l (어깨 ±0.12 — 움직임 spread (접힘 → 펼침) · flap (되풀이) · fold)"""
+    """불꽃 날개 (용의 날개 둘 — 등 가운데가 원점, 위 +Y, 뒤 +Z, 날개 ±X): 굽은 팔뼈 · 길게 휜 손가락뼈 넷 (속빛 — 끝 흰 발톱) · 사이의 막 (빛깔 불꽃 막 —
+    뼈 가까이 진하고 뒷가장자리로 비쳐 일렁임, 바람을 받아 뒤로 부풂, 뒷가장자리는 안으로 패인 물결) · 뒷가장자리에서 타오르는 불꽃 혀. 0.48.0 다시 만듦
+    (사용자 "그람 날개 … 어색하다" — 예전: 납작한 판 · 짧은 손가락). wing_r · wing_l (어깨 축 — spread (접힘 → 펼침) · flap (되풀이) · dive · fold)"""
     m = fx.Model("fire_wings", tex=128, cell=32)
-    m.emissive = True  # 불꽃 날개 (금빛 날개) — 0.48.0 사진첩: 아래에서 보면 그늘져 갈색으로 보임
+    m.emissive = True
     a = m.atlas
-    mem = a.swatch("mem", p_membrane, 2, 2)
+    mem = a.swatch("mem", p_fire_membrane, 2, 2)
     bone = a.swatch("bone", fx.p_bone)
     edge = a.swatch("edge", fx.p_edge)
+    flame = a.swatch("flame", p_flame, 1, 2)
+    back = v3(0, 0, 1)
     for side, part in ((1, "wing_r"), (-1, "wing_l")):
-        sh = v3(side * 0.12, 0.05, 0.08)
-        m.part(part, tuple(sh))
-        elbow = sh + v3(side * 0.55, 0.42, 0.1)
-        wrist = sh + v3(side * 1.05, 0.62, 0.12)
-        tube(m, [sh, elbow, wrist], [0.06, 0.045, 0.035], 5, fx.GLOW, bone)
-        fingers = []
-        for k, (dx, dy) in enumerate(((0.75, 0.38), (0.95, -0.05), (0.85, -0.5), (0.6, -0.85))):
-            tipp = wrist + v3(side * dx, dy, 0.08 - 0.03 * k)
-            tube(m, [wrist, (wrist + tipp) / 2 + v3(0, 0.05, 0.02), tipp], [0.03, 0.022, 0.0], 4, fx.GLOW, bone)
-            fingers.append(tipp)
-        # 막: 손목 → 손가락 사이 · 마지막 손가락 → 몸 (팔 아래)
-        chain_pts = [sh + v3(0, -0.55, 0.0)] + [elbow]
-        u0, v0, u1, v1 = mem
-        tips = [wrist + v3(side * 0.75, 0.38, 0.08)] + fingers[1:]
-        poly = [wrist] + fingers  # 손목 둘레 부채꼴
-        for i in range(len(fingers) - 1):
-            p0, p1 = fingers[i], fingers[i + 1]
-            mid0 = wrist + (p0 - wrist) * 0.55
-            mid1 = wrist + (p1 - wrist) * 0.55
-            # 손가락 사이 막 (끝이 안쪽으로 패임)
-            inner = (p0 + p1) / 2 + (wrist - (p0 + p1) / 2) * 0.28
-            m.quad([wrist, mid0, inner, mid1] if side > 0 else [wrist, mid1, inner, mid0],
-                   [(u0, v0), (u1, v0), (u1, v1), (u0, v1)], fx.TINT, double=True)
-            m.quad([mid0, p0, inner, inner] if side > 0 else [mid0, inner, p0, p0], [(u0, v0), (u1, v0), (u1, v1), (u1, v1)], fx.TINT, double=True)
-            m.quad([mid1, inner, p1, p1] if side > 0 else [mid1, p1, inner, inner], [(u0, v0), (u1, v0), (u1, v1), (u1, v1)], fx.TINT, double=True)
-        # 팔 아래 막 (몸 쪽)
-        last = fingers[-1]
-        body_low = sh + v3(side * 0.05, -0.6, 0.0)
-        m.quad([sh, elbow, wrist, last] if side > 0 else [sh, last, wrist, elbow], [(u0, v0), (u1, v0), (u1, v1), (u0, v1)], fx.TINT, double=True)
-        m.quad([sh, last, body_low, body_low] if side > 0 else [sh, body_low, last, last], [(u0, v0), (u1, v0), (u1, v1), (u1, v1)], fx.TINT, double=True)
-        # 손목 발톱 (흰빛)
-        spike(m, wrist, wrist + v3(side * 0.05, 0.22, 0.02), 0.03, 4, fx.WHITE, edge, segs=2)
+        X = lambda p, side=side: v3(side * p[0], p[1], p[2])
+        S, E, W = X((0.14, 0.1, 0.04)), X((0.6, 0.52, 0.14)), X((1.06, 0.74, 0.2))
+        tips = [X((1.48, 1.18, 0.26)), X((2.02, 0.84, 0.32)), X((2.02, 0.22, 0.34)), X((1.64, -0.36, 0.3))]
+        F5 = X((0.24, -0.6, 0.1))
+        m.part(part, tuple(S))
+        tube(m, [S, (S + E) / 2 + v3(0, 0.04, -0.02), E, W], [0.065, 0.055, 0.05, 0.04], 6, fx.GLOW, bone)
+        for k, F in enumerate(tips):
+            c = (W + F) / 2 + v3(0, 0.07, 0.07)
+            tube(m, [W, bez(W, c, F, 0.33), bez(W, c, F, 0.66), F], [0.036, 0.028, 0.02, 0.008], 5, fx.GLOW, bone)
+            spike(m, F, F + unit(F - c) * 0.14, 0.022, 4, fx.WHITE, edge, segs=2)
+        spike(m, W, W + v3(side * 0.04, 0.24, 0.02), 0.03, 4, fx.WHITE, edge, segs=2)
+
+        def fan(A, B, W=W):
+            mid = (A + B) / 2
+            C = mid + (W - mid) * 0.3
+
+            def P(s_, t_):
+                e = bez(A, C, B, t_)
+                return W + (e - W) * s_ + back * 0.13 * math.sin(math.pi * s_) * math.sin(math.pi * t_)
+            return P, (lambda t_: bez(A, C, B, t_)), C
+
+        panels = []
+        for k in range(3):
+            P, edge_fn, C = fan(tips[k], tips[k + 1])
+            patch(m, P, 5, 6, mem, fx.TINT, double=False)
+            panels.append((edge_fn, W))
+        # 몸 쪽 막 (손목 · 마지막 손가락 → 몸): 네 귀퉁이 W · F4 · F5 · S, 뒷가장자리 F4 → F5 는 안으로 패임
+        A, B = tips[3], F5
+        Cm = (A + B) / 2 + ((W + S) / 2 - (A + B) / 2) * 0.28
+
+        def body_patch(s_, t_, A=A, B=B, Cm=Cm, S=S, W=W):
+            root = W + (S - W) * t_
+            e = bez(A, Cm, B, t_)
+            return root + (e - root) * s_ + back * 0.12 * math.sin(math.pi * s_) * math.sin(math.pi * t_)
+        patch(m, body_patch, 5, 6, mem, fx.TINT, double=False)
+        panels.append(((lambda t_, A=A, B=B, Cm=Cm: bez(A, Cm, B, t_)), (W + S) / 2))
+        # 뒷가장자리에서 타오르는 불꽃 혀 (물결마다 셋 — 바깥 · 조금 뒤로)
+        n = 0
+        for edge_fn, ref in panels:
+            for t_ in (0.22, 0.5, 0.78):
+                p = edge_fn(t_)
+                tng = unit(edge_fn(min(1, t_ + 0.05)) - edge_fn(max(0, t_ - 0.05)))
+                out = unit(p - ref)
+                tongue(m, p - out * 0.06, unit(out + back * 0.35 + v3(0, -0.15, 0)), tng, 0.26 + 0.12 * ((n * 3) % 4) / 3, 0.17, flame,
+                       fx.TINT if n % 2 else fx.GLOW, bend=0.05 * (1 if n % 2 else -1), double=False)
+                n += 1
+        # 손가락 끝 불꽃
+        for k, F in enumerate(tips):
+            c = (W + F) / 2 + v3(0, 0.07, 0.07)
+            d = unit(F - c)
+            tongue(m, F - d * 0.05, d + back * 0.2, unit(np.cross(d, back)) if np.linalg.norm(np.cross(d, back)) > 1e-6 else v3(0, 1, 0), 0.3, 0.16, flame,
+                   fx.GLOW, bend=0.04, double=False)
     m.part("main")
-    m.anims["spread"] = {"len": 0.45, "tracks": {"wing_r": {"rot": [[0, 0, -70, 55], [1, 0, 0, 0]], "scale": [[0, 0.5], [1, 1]]},
-                                                  "wing_l": {"rot": [[0, 0, 70, -55], [1, 0, 0, 0]], "scale": [[0, 0.5], [1, 1]]}}}
-    m.anims["flap"] = {"len": 0.6, "tracks": {"wing_r": {"rot": [[0, 0, 0, 18], [0.5, 0, -10, -26], [1, 0, 0, 18]]},
-                                               "wing_l": {"rot": [[0, 0, 0, -18], [0.5, 0, 10, 26], [1, 0, 0, -18]]}}}
-    m.anims["dive"] = {"len": 0.25, "tracks": {"wing_r": {"rot": [[0, 0, 0, 0], [1, 0, -35, 40]]}, "wing_l": {"rot": [[0, 0, 0, 0], [1, 0, 35, -40]]}}}
-    m.add_glow(0.9, 0.55, 0.1, 0.5).add_glow(-0.9, 0.55, 0.1, 0.5).add_glow(1.5, 0.3, 0.1, 0.35).add_glow(-1.5, 0.3, 0.1, 0.35).add_glow(0, 0.1, 0.05, 0.3)
+    m.anims["spread"] = {"len": 0.45, "tracks": {"wing_r": {"rot": [[0, 0, -70, 55], [0.75, 0, 4, -6], [1, 0, 0, 0]], "scale": [[0, 0.5], [1, 1]]},
+                                                  "wing_l": {"rot": [[0, 0, 70, -55], [0.75, 0, -4, 6], [1, 0, 0, 0]], "scale": [[0, 0.5], [1, 1]]}}}
+    m.anims["flap"] = {"len": 0.6, "tracks": {"wing_r": {"rot": [[0, 0, 4, 20], [0.45, 0, -14, -26], [1, 0, 4, 20]]},
+                                               "wing_l": {"rot": [[0, 0, -4, -20], [0.45, 0, 14, 26], [1, 0, -4, -20]]}}}
+    m.anims["dive"] = {"len": 0.25, "tracks": {"wing_r": {"rot": [[0, 0, 0, 0], [1, 0, -40, 38]]}, "wing_l": {"rot": [[0, 0, 0, 0], [1, 0, 40, -38]]}}}
+    m.anims["fold"] = {"len": 0.4, "tracks": {"wing_r": {"rot": [[0, 0, 0, 0], [1, 0, -70, 55]], "scale": [[0, 1], [1, 0.5]]},
+                                               "wing_l": {"rot": [[0, 0, 0, 0], [1, 0, 70, -55]], "scale": [[0, 1], [1, 0.5]]}}}
+    # 빛 무리는 부분 움직임을 따라가지 않음 (모델 전체 자리에 고정) — 날갯짓에 덜 움직이는 어깨 가까이
+    m.add_glow(0.55, 0.48, 0.12, 0.4).add_glow(-0.55, 0.48, 0.12, 0.4).add_glow(0, 0.15, 0.05, 0.34)
     return m
 
 
@@ -1008,22 +1155,147 @@ def soul():
     return m
 
 
+def p_cloud_puff(u, v, rnd):
+    """먹구름 덩이 겉 (부드럽게 뭉친 결)"""
+    s = math.sin(u * 23 + math.sin(v * 11) * 2.2) * math.sin(v * 19 + u * 7)
+    return 0.82 + 0.13 * s + fx.noise(rnd, 0.04), 1
+
+
+def p_rain(u, v, rnd):
+    """빗줄기 막 (u = 폭, v = 위 0 → 아래 1): 가는 세로 줄 · 아래로 흐려짐"""
+    line = abs(math.sin(u * math.pi * 11 + math.sin(u * 37) * 0.6)) ** 6
+    return 0.95, (0.06 + 0.34 * line) * (1 - v) ** 1.5
+
+
+def puff(m, center, r, ry, uv, seed, floor_y, mat_top, mat_bot, segs=12, rings=8, lump=0.13, skip_lat=None):
+    """부푼 구름 덩이 (울퉁불퉁한 납작 공 — 밑은 floor_y 에서 평평): 아래쪽 띠는 mat_bot (어둡게). 면이 적은 덩이 (segs ≤ 9) 는 울퉁불퉁 결도 성기게
+    (면보다 촘촘한 결은 각져 보임). skip_lat (라디안): 그보다 아래 띠는 만들지 않음 (다른 덩이 속에 묻혀 안 보이는 밑 — 면 수 줄임)"""
+    rnd = np.random.RandomState(seed)
+    ph = rnd.rand(4) * 6.283
+    f1, f2 = (2, 3) if segs <= 9 else (3, 5)
+    c = v3(center)
+    V, N = [], []
+    for j in range(rings + 1):
+        lat = -math.pi / 2 + math.pi * j / rings
+        rowp, rown = [], []
+        for k in range(segs):
+            lon = 2 * math.pi * k / segs
+            d = v3(math.cos(lat) * math.cos(lon), math.sin(lat), math.cos(lat) * math.sin(lon))
+            n_ = 1 + lump * (0.6 * math.sin(f1 * lon + ph[0]) * math.cos(2 * lat + ph[1]) + 0.4 * math.sin(f2 * lon + ph[2] + 2 * lat))
+            p = c + v3(d[0] * r * n_, d[1] * ry * n_, d[2] * r * n_)
+            flat = p[1] < floor_y
+            if flat:
+                p[1] = floor_y
+            rowp.append(p)
+            rown.append(v3(0, -1, 0) if flat else unit(v3(d[0] / r, d[1] / ry, d[2] / r)))
+        V.append(rowp)
+        N.append(rown)
+    u0, v0, u1, v1 = uv
+    for j in range(rings):
+        lat = -math.pi / 2 + math.pi * (j + 0.5) / rings
+        if skip_lat is not None and lat < skip_lat:
+            continue
+        mat = mat_bot if lat < -0.2 else mat_top
+        for k in range(segs):
+            k2 = (k + 1) % segs
+            ps = [V[j][k], V[j][k2], V[j + 1][k2], V[j + 1][k]]
+            if np.linalg.norm(ps[0] - ps[1]) < 1e-7 and np.linalg.norm(ps[2] - ps[3]) < 1e-7:
+                continue
+            ns = [N[j][k], N[j][k2], N[j + 1][k2], N[j + 1][k]]
+            uvs = [(u0 + (u1 - u0) * k / segs, v1 - (v1 - v0) * j / rings), (u0 + (u1 - u0) * (k + 1) / segs, v1 - (v1 - v0) * j / rings),
+                   (u0 + (u1 - u0) * (k + 1) / segs, v1 - (v1 - v0) * (j + 1) / rings), (u0 + (u1 - u0) * k / segs, v1 - (v1 - v0) * (j + 1) / rings)]
+            fn = np.cross(ps[1] - ps[0], ps[2] - ps[0]) + np.cross(ps[2] - ps[0], ps[3] - ps[0])
+            if np.dot(fn, ns[0] + ns[1] + ns[2] + ns[3]) < 0:
+                ps, ns, uvs = ps[::-1], ns[::-1], uvs[::-1]
+            m.quad(ps, uvs, mat, ns)
+
+
+def p_glow_spot(u, v, rnd):
+    """둥근 빛 (원판 좌표 u · v): 가운데가 밝고 가장자리로 부드럽게 투명"""
+    r = math.hypot(u - 0.5, v - 0.5) * 2
+    return 1.0, max(0.0, 1 - r) ** 1.4
+
+
+def disc_y(m, r, y, segs, uv, mat):
+    """바닥에 누운 원판 (높이 y · 양면): 그림은 원판 좌표"""
+    u0, v0, u1, v1 = uv
+    uvf = lambda p: (u0 + (u1 - u0) * (0.5 + 0.5 * p[0] / r), v0 + (v1 - v0) * (0.5 + 0.5 * p[2] / r))
+    c = v3(0, y, 0)
+    for k in range(segs):
+        a0, a1 = 2 * math.pi * k / segs, 2 * math.pi * (k + 1) / segs
+        p0, p1 = v3(r * math.cos(a0), y, r * math.sin(a0)), v3(r * math.cos(a1), y, r * math.sin(a1))
+        m.quad([c, p1, p0, p0], [uvf(c), uvf(p1), uvf(p0), uvf(p0)], mat, [v3(0, -1, 0)] * 4, double=True)
+
+
+def cloud_floor(m, rx, rz, y, segs, uv, mat, seed):
+    """구름 바닥 (높이 y 에 누운 울퉁불퉁한 타원판 — 아래를 봄): 덩이 사이 틈으로 하늘이 비치지 않게 밑을 한 판으로 덮음"""
+    rnd = np.random.RandomState(seed)
+    ph = rnd.rand(3) * 6.283
+    u0, v0, u1, v1 = uv
+    c = v3(0, y, 0)
+    pts = []
+    for k in range(segs):
+        th = 2 * math.pi * k / segs
+        w = 1 + 0.07 * math.sin(5 * th + ph[0]) + 0.05 * math.sin(8 * th + ph[1]) + 0.03 * math.sin(13 * th + ph[2])
+        pts.append(v3(rx * w * math.cos(th), y, rz * w * math.sin(th)))
+    uvf = lambda p: (u0 + (u1 - u0) * (0.5 + 0.5 * p[0] / rx), v0 + (v1 - v0) * (0.5 + 0.5 * p[2] / rz))
+    for k in range(segs):
+        p0, p1 = pts[k], pts[(k + 1) % segs]
+        m.quad([c, p0, p1, p1], [uvf(c), uvf(p0), uvf(p1), uvf(p1)], mat, [v3(0, -1, 0)] * 4)
+
+
 def storm_cloud():
-    """먹구름 (가운데 밑이 원점, 위 +Y — 너비 2.4): 부푼 덩이 아홉 (그림자 · 짙은 빛깔 — 아래는 어둡게) · 속에서 번쩍이는 빛 (flash — 속빛 덩이, 되풀이로 커졌다 작아짐)"""
-    m = fx.Model("storm_cloud", tex=64, cell=32)
+    """먹구름 (밑 가운데가 원점, 위 +Y — 너비 약 2.8 · 깊이 2): 울퉁불퉁 납작하게 부푼 덩이 열여덟 (빛깔 — 밑은 평평한 구름 바닥, 빛을 덜 받아 어두움) ·
+    밑의 빗줄기 막 (rain — 아래로 흐려짐) · 번개 (flash — 구름 바닥에서 아래로 갈라지는 빛줄기 셋과 번쩍 밝아지는 바닥, rumble 로 두 번 번쩍). 0.48.0 다시 만듦
+    (사용자 "구체 모델링이 어색하다" — 예전: 동그란 공 아홉을 뭉침)"""
+    m = fx.Model("storm_cloud", tex=128, cell=32)
     a = m.atlas
-    cloud = a.swatch("cloud", p_cloud, 2, 2)
-    m.part("body", (0, 0.3, 0))
-    blobs = [(0, 0.45, 0, 0.62, 0.42), (0.75, 0.35, 0.15, 0.5, 0.34), (-0.7, 0.38, -0.1, 0.52, 0.36), (0.3, 0.32, -0.6, 0.48, 0.32), (-0.25, 0.3, 0.6, 0.46, 0.3),
-             (1.15, 0.25, -0.35, 0.36, 0.26), (-1.1, 0.25, 0.4, 0.38, 0.26), (0.55, 0.6, 0.45, 0.4, 0.3), (-0.5, 0.62, -0.5, 0.38, 0.28)]
-    for i, (x, y, z, r, ry) in enumerate(blobs):
-        sphere(m, (x, y, z), r, fx.SHADOW if i % 3 else fx.DARK, cloud, segs=10, rings=6, ry=ry)
-    m.part("flash", (0.1, 0.35, 0.05))
-    sphere(m, (0.1, 0.35, 0.05), 0.35, fx.GLOW, cloud, segs=8, rings=6, ry=0.25)
+    skin = a.swatch("skin", p_cloud_puff, 2, 2)
+    rain = a.swatch("rain", p_rain, 2, 1)
+    glowu = a.swatch("glow", fx.p_flat, lum=1.0, k=0.02)
+    spot = a.swatch("spot", p_glow_spot, 2, 2)
+    floor_y = 0.12
+    m.part("body", (0, 0.4, 0))
+    puffs = [((0.0, 0.62, 0.0), 0.66, 0.5), ((0.35, 0.98, 0.12), 0.38, 0.3), ((-0.42, 0.94, -0.1), 0.36, 0.28), ((0.05, 1.04, -0.34), 0.3, 0.24)]
+    for k in range(6):
+        th = 2 * math.pi * k / 6 + 0.3
+        puffs.append(((math.cos(th) * 0.78 * 1.35, 0.5 + 0.06 * (k % 2), math.sin(th) * 0.78), 0.47 - 0.04 * (k % 3), 0.36))
+    for k in range(8):
+        th = 2 * math.pi * k / 8 + 0.1
+        puffs.append(((math.cos(th) * 1.08 * 1.3, 0.34 + 0.04 * (k % 3), math.sin(th) * 1.08 * 0.95), 0.34 - 0.03 * (k % 2), 0.26))
+    # 면 수 (한 번에 여럿 — 묠니르 폭풍은 일곱 덩이): 가운데 12×8 · 위 셋 10×7 (가운데 덩이에 묻힌 밑 두 띠는 뺌) · 둘레 여섯 10×6 · 바깥 여덟 10×5
+    # (아래에서 보면 바깥 덩이 둘레가 테두리 — 8각이면 모가 보임).
+    # 밑바닥 높이를 덩이마다 조금씩 (0.004) 달리 — 같은 판에 겹친 면이 깜빡이지 않게 (아래에서 올려다보는 쪽이 바닥).
+    # 밑도 빛깔 (어두운 DARK 면 아래에서 올려다볼 때 검은 구멍처럼 보임) — 아래를 보는 면은 빛을 덜 받아 저절로 어두움 (위 1 · 옆 0.5 · 밑 0.4)
+    for i, (cen, r, ry) in enumerate(puffs):
+        segs, rings, skip = (12, 8, None) if i == 0 else (10, 7, -0.7) if i < 4 else (10, 6, None) if i < 10 else (10, 5, None)
+        puff(m, cen, r, ry, skin, 11 + i, floor_y - 0.004 * (i % 7), fx.TINT, fx.TINT, segs=segs, rings=rings, skip_lat=skip)
+    # 한 판 바닥 (덩이 바닥들보다 조금 밑 — 아래에서 보면 이어진 먹구름 밑면)
+    cloud_floor(m, 1.32, 0.98, floor_y - 0.03, 30, skin, fx.TINT, 9)
+    m.part("rain", (0, 0, 0))
+    for k in range(7):
+        th = 2 * math.pi * k / 7 + 0.4
+        c = v3(math.cos(th) * 0.75, 0, math.sin(th) * 0.55)
+        side = v3(-math.sin(th + 0.7), 0, math.cos(th + 0.7)) * 0.42
+        top, bot = floor_y + 0.02, -0.62 - 0.12 * (k % 3)
+        quad2(m, [c - side + v3(0, bot, 0), c + side + v3(0, bot, 0), c + side + v3(0, top, 0), c - side + v3(0, top, 0)], rain, fx.TINT)
+    m.part("flash", (0, floor_y, 0))
+    rnd = np.random.RandomState(5)
+    for b in range(3):
+        th = 2 * math.pi * b / 3 + 0.5
+        p = v3(math.cos(th) * 0.45, floor_y, math.sin(th) * 0.35)
+        pts = [p]
+        for i in range(5):
+            p = p + v3((rnd.rand() - 0.5) * 0.28, -0.2 - 0.06 * rnd.rand(), (rnd.rand() - 0.5) * 0.28)
+            pts.append(p)
+        tube(m, pts, [0.03, 0.026, 0.022, 0.018, 0.012, 0.0], 4, fx.GLOW, glowu, smooth=False)
+    # 번개에 밝아지는 구름 바닥 (바닥 바로 밑의 둥근 빛 — 가운데가 밝고 가장자리로 흐려짐, 아래에서 보임)
+    disc_y(m, 0.66, floor_y - 0.04, 24, spot, fx.GLOW)
     m.part("main")
-    m.anims["rumble"] = {"len": 1.0, "tracks": {"flash": {"scale": [[0, 0.3], [0.12, 1.3], [0.25, 0.4], [0.55, 0.3], [0.62, 1.1], [0.7, 0.3], [1, 0.3]]},
-                                                 "body": {"scale": [[0, 1], [0.5, 1.03], [1, 1]]}}}
-    m.add_glow(0.1, 0.3, 0.05, 0.9)
+    blink = [[0, 0.001], [0.09, 0.001], [0.1, 1], [0.17, 1], [0.19, 0.001], [0.6, 0.001], [0.61, 1], [0.66, 1], [0.68, 0.001], [1, 0.001]]
+    m.anims["rumble"] = {"len": 1.0, "tracks": {"flash": {"scale": blink}, "body": {"scale": [[0, 1], [0.5, 1.025], [1, 1]]},
+                                                 "rain": {"pos": [[0, 0, 0, 0], [0.5, 0, -0.06, 0], [1, 0, 0, 0]]}}}
+    m.add_glow(0, 0.02, 0, 0.8)
     return m
 
 
