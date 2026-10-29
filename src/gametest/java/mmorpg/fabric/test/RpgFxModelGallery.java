@@ -86,6 +86,53 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
         {"shade", 0.85, 0.0, "cross"},
         {"sylph", 1.8, 0.0, "flap"},
     };
+    /**
+     * 0.48.0 모델 초상 (사용자 "다른 모델링도 모아서 보여줘"): 모델마다 하나씩 실제 쓰는 색으로 화면 가운데에 — {모델, 크기, 가운데까지 (모델 +Y 칸), 움직임,
+     * 빛깔 rgb, 속빛 rgb, 거리 칸}. 사진 fx_portrait_NN_모델
+     */
+    static final Object[][] PORTRAITS = {
+        {"phantom_sword", 1.0, 0.48, "", new double[] {0.42, 0.78, 1.0}, new double[] {0.84, 0.95, 1.0}, 2.1},
+        {"spear", 0.62, 0.05, "", new double[] {1.0, 0.82, 0.3}, new double[] {1.0, 0.97, 0.78}, 2.0},
+        {"dagger", 1.4, 0.14, "", new double[] {0.78, 0.3, 1.0}, new double[] {1.0, 0.75, 0.95}, 1.3},
+        {"light_arrow", 1.3, 0.03, "", new double[] {0.42, 0.94, 0.74}, new double[] {0.86, 1.0, 0.95}, 1.7},
+        {"buckler", 1.0, 0.0, "", new double[] {1.0, 0.82, 0.3}, new double[] {1.0, 0.97, 0.78}, 1.5},
+        {"mana_bolt", 1.6, 0.0, "", new double[] {0.62, 0.38, 1.0}, new double[] {0.78, 1.0, 0.98}, 1.2},
+        {"arcane_orb", 1.0, 0.0, "spin", new double[] {0.62, 0.38, 1.0}, new double[] {0.78, 1.0, 0.98}, 1.5},
+        {"page", 2.2, 0.0, "", new double[] {1.0, 0.82, 0.3}, new double[] {1.0, 0.97, 0.78}, 1.4},
+        {"grimoire", 0.9, 0.0, "flip", new double[] {0.62, 0.38, 1.0}, new double[] {0.78, 1.0, 0.98}, 1.6},
+        {"maul", 0.55, -0.95, "", new double[] {1.0, 0.82, 0.3}, new double[] {1.0, 0.97, 0.78}, 2.6},
+        {"bell", 0.62, -0.62, "swing", new double[] {1.0, 0.82, 0.3}, new double[] {1.0, 0.97, 0.78}, 2.0},
+        {"gate", 0.42, 1.72, "swirl", new double[] {0.35, 0.95, 0.62}, new double[] {0.85, 1.0, 0.9}, 2.8},
+        {"bone_hand", 1.1, -0.35, "grasp", new double[] {0.86, 0.84, 0.74}, new double[] {0.35, 0.95, 0.62}, 1.7},
+        {"phantom_axe", 1.0, 0.0, "", new double[] {1.0, 0.36, 0.2}, new double[] {1.0, 0.82, 0.55}, 2.2},
+        {"aegis", 0.75, -0.1, "", new double[] {1.0, 0.82, 0.3}, new double[] {1.0, 0.97, 0.78}, 1.8},
+        {"light_bow", 0.85, 0.0, "draw", new double[] {0.42, 0.94, 0.74}, new double[] {0.86, 1.0, 0.95}, 2.0},
+        {"raven", 1.0, 0.0, "flap", new double[] {0.2, 0.18, 0.27}, new double[] {1.0, 0.82, 0.35}, 1.8},
+        {"odin_eye", 1.0, 0.0, "glare", new double[] {1.0, 0.82, 0.35}, new double[] {1.0, 0.96, 0.8}, 2.4},
+        {"sun", 0.8, 0.0, "spin", new double[] {1.0, 0.7, 0.2}, new double[] {1.0, 0.94, 0.72}, 2.2},
+        {"eclipse", 0.8, 0.0, "pulse", new double[] {0.3, 0.66, 1.0}, new double[] {0.8, 0.93, 1.0}, 2.2},
+        {"moon", 0.9, 0.0, "spin", new double[] {0.7, 0.82, 1.0}, new double[] {0.95, 0.97, 1.0}, 1.9},
+        {"seed", 2.2, 0.0, "spin", new double[] {0.38, 0.84, 0.52}, new double[] {0.84, 1.0, 0.86}, 1.4},
+        {"flower", 2.0, 0.1, "bloom", new double[] {0.38, 0.84, 0.52}, new double[] {0.84, 1.0, 0.86}, 1.6},
+        {"thorns", 1.0, 0.6, "", new double[] {0.38, 0.84, 0.52}, new double[] {0.84, 1.0, 0.86}, 1.8},
+        {"rock_spike", 0.9, 0.6, "", new double[] {0.52, 0.38, 0.26}, new double[] {1.0, 0.54, 0.16}, 1.8},
+        {"soul", 1.6, 0.0, "wail", new double[] {0.32, 0.92, 0.74}, new double[] {0.82, 1.0, 0.94}, 1.7},
+        {"world_tree", 0.55, 1.6, "sway", new double[] {0.38, 0.84, 0.52}, new double[] {0.84, 1.0, 0.86}, 2.9},
+        {"root", 0.9, 0.0, "", new double[] {0.52, 0.37, 0.2}, new double[] {0.84, 1.0, 0.86}, 2.0},
+        {"fire_wings", 0.8, 0.3, "flap", new double[] {1.0, 0.45, 0.08}, new double[] {1.0, 0.62, 0.2}, 2.6},
+        {"clock", 0.7, 0.0, "tick", new double[] {0.62, 0.32, 1.0}, new double[] {0.92, 0.8, 1.0}, 1.9},
+        {"serpent", 1.2, 0.0, "hiss", new double[] {1.0, 0.76, 0.24}, new double[] {1.0, 0.95, 0.78}, 1.8},
+        {"ghost_knight", 0.85, 1.0, "slash", new double[] {0.58, 0.42, 0.95}, new double[] {0.74, 0.76, 1.0}, 2.5},
+        {"hex_dome", 0.9, 0.4, "", new double[] {0.3, 0.66, 1.0}, new double[] {0.8, 0.93, 1.0}, 2.4},
+        {"chain", 0.8, 0.0, "", new double[] {0.32, 0.92, 0.74}, new double[] {0.82, 1.0, 0.94}, 2.0},
+        {"storm_cloud", 0.7, 0.5, "rumble", new double[] {0.18, 0.24, 0.32}, new double[] {0.3, 0.8, 0.98}, 2.3},
+        {"flame", 1.3, 0.5, "flicker", new double[] {1.0, 0.45, 0.08}, new double[] {1.0, 0.62, 0.2}, 1.7},
+        {"pillar", 0.9, 0.5, "spin", new double[] {1.0, 0.76, 0.26}, new double[] {1.0, 0.97, 0.86}, 2.0},
+        {"crescent_wave", 0.9, 0.0, "", new double[] {0.32, 0.8, 0.98}, new double[] {0.86, 0.97, 1.0}, 2.0},
+        {"ice_shell", 0.9, 0.85, "", new double[] {0.3, 0.66, 1.0}, new double[] {0.8, 0.93, 1.0}, 2.1},
+        {"shade", 0.85, 0.9, "cross", new double[] {0.66, 0.38, 1.0}, new double[] {0.88, 0.78, 1.0}, 2.4},
+        {"sylph", 1.8, 0.0, "flap", new double[] {0.42, 0.94, 0.74}, new double[] {0.86, 1.0, 0.95}, 1.6},
+    };
     /** 0.48.0 무기 모델 (item: — 사용자 무기 디자인의 아이템 3D 모델) */
     static final String[] WEAPONS = {"rpg:sword_l40_transcend", "rpg:greatsword_l40_transcend", "rpg:lance_l40_transcend", "rpg:hammer_l40_transcend",
         "rpg:scythe_l40_transcend", "rpg:axe_l40_transcend", "rpg:lance_l30_hero"};
@@ -119,12 +166,40 @@ public final class RpgFxModelGallery implements FabricClientGameTest {
             });
             server.runOnServer(s -> player(s).getInventory().clearContent());
             ctx.waitTicks(20);
+            part(ctx, "portraits", () -> portraits(ctx, server));
             part(ctx, "lineup", () -> lineup(ctx, server));
             part(ctx, "motion", () -> motion(ctx, server));
             part(ctx, "scenes", () -> scenes(ctx, server));
         }
         LOG.info("[fx3d-gallery] done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
         if (!failures.isEmpty()) throw new AssertionError("fx3d gallery: " + String.join(" / ", failures));
+    }
+
+    // ------------------------------------------------------------ 0. 모델 초상 (하나씩 — 실제 쓰는 색)
+
+    private void portraits(ClientGameTestContext ctx, TestServerContext server) {
+        int before = ctx.computeOnClient(mc -> FxModels.received);
+        for (int i = 0; i < PORTRAITS.length; i++) {
+            Object[] p = PORTRAITS[i];
+            String name = (String) p[0];
+            double scale = ((Number) p[1]).doubleValue();
+            double mid = ((Number) p[2]).doubleValue();
+            String anim = (String) p[3];
+            double[] color = (double[]) p[4];
+            double[] glow = (double[]) p[5];
+            double dist = ((Number) p[6]).doubleValue();
+            server.runOnServer(s -> {
+                double eye = -60 + 1.62;
+                Fx3d.spawn(s.overworld(), name, new Vec3(0.5, eye - mid * scale, 0.5 - dist), Opt.of("dir", new Vec3(0, 1, 0), "face", new Vec3(0.35, 0, 1), "spin",
+                        20.0, "spinAxis", "up", "scale", scale, "life", 3.0, "color", color, "glow", glow, "pop", 0.15, "shine", 0.2, "anim", anim, "loop",
+                        anim.isEmpty() ? 0.0 : 1.0, "animSpeed", 0.6));
+            });
+            ctx.waitTicks(14);
+            ctx.takeScreenshot(TestScreenshotOptions.of(String.format(java.util.Locale.ROOT, "fx_portrait_%02d_%s", i, name)).withSize(960, 540));
+            ctx.runOnClient(mc -> FxModels.clear());
+        }
+        int got = ctx.computeOnClient(mc -> FxModels.received) - before;
+        check(got == PORTRAITS.length, "portraits received " + got + " / " + PORTRAITS.length);
     }
 
     // ------------------------------------------------------------ 1. 한 줄 (낮 · 가까이 · 밤 · 직업 색)
