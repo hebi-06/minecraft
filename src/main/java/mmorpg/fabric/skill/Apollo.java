@@ -4,6 +4,7 @@ import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
@@ -51,20 +52,26 @@ final class Apollo {
         double speed = k.num("speed");
         int fly = Math.max(2, (int) Math.ceil(V.len(V.sub(at, staff)) / speed));
         Vec3 u = V.unit(V.sub(at, staff));
-        sunFx(level, staff, 0.4, 0.3, glow, core, 1.0);
-        RuneKit.rfx(level, "sun", staff, Opt.of("size", 0.6, "life", fly / 20.0 + 0.05, "speed", V.len(V.sub(at, staff)) / (fly / 20.0), "dir", u, "color", glow,
-                "alpha", 0.95, "cell", 0.0, "spinRate", 90.0));
-        RuneKit.streak(level, staff, at, glow, 0.12, fly / 20.0 + 0.2, 0.8, 0);
-        SkillFx.play(level, "mob.blaze.shoot", staff, 0.8, 0.8);
-        SkillFx.play(level, "beacon.power", staff, 1.3, 0.6);
         int pulses = (int) k.num("pulses");
         int gap = (int) k.num("gap");
         double r = k.num("radius");
         int burn = (int) Math.max(1, Math.round(pulses * gap / 20.0 * 20));
+        int burstAt = fly + pulses * gap;
+        sunFx(level, staff, 0.4, 0.3, glow, core, 1.0);
+        RuneKit.rfx(level, "sun", staff, Opt.of("size", 0.6, "life", fly / 20.0 + 0.05, "speed", V.len(V.sub(at, staff)) / (fly / 20.0), "dir", u, "color", glow,
+                "alpha", 0.4, "cell", 0.0, "spinRate", 90.0));
+        RuneKit.streak(level, staff, at, glow, 0.12, fly / 20.0 + 0.2, 0.8, 0);
+        // 0.48.0 입체: 홀 끝에서 작은 태양 (끓는 겉 · 도는 빛살 · 고리) 이 커지며 날아가 조준한 곳 위에 떠서 돎 → 끝에 빛살이 터지며 사라짐
+        int sun3d = WeaponFx3d.fx(level, "sun", staff, glow, core, Opt.of("to", at, "travel", fly / 20.0, "ease", "out", "dir", V.UP, "faceCam", 1.0, "scale", 1.1,
+                "pop", fly / 20.0, "life", burstAt / 20.0 + 0.6, "anim", "spin", "loop", 1.0, "animSpeed", 2.0, "glowAlpha", 0.6, "shine", 0.5, "fadeOut", 0.3));
+        WeaponFx3d.guard(sp, life, new int[] {sun3d}, burstAt + 12);
+        Kit.motionLater(sp, "apollo_sun:burst", Math.max(1, burstAt - 2), life); // 0.48.0 내민 왼손을 움켜쥐어 태양을 터뜨림 (2틱째 쥠 = 터짐)
+        SkillFx.play(level, "mob.blaze.shoot", staff, 0.8, 0.8);
+        SkillFx.play(level, "beacon.power", staff, 1.3, 0.6);
         Tasks.later(fly, () -> {
             if (!ok.getAsBoolean()) return;
             // 떠 있는 해 (빛 · 심지 · 빛살) + 땅에 비친 햇빛
-            sunFx(level, at, 1.8, burn / 20.0 + 0.2, glow, core, 0.95);
+            sunFx(level, at, 1.8, burn / 20.0 + 0.2, glow, core, 0.4);
             RuneKit.rfx(level, "rays", V.up(at, -1.5), Opt.of("size", 1.8, "life", burn / 20.0 + 0.2, "fade", 0.3, "color", glow, "alpha", 0.6, "cell", 0.0));
             RuneKit.domainSigil(level, aim, r, "holy", glow, core, Opt.of("life", burn / 20.0 + 0.3, "spinRate", 45.0, "alpha", 0.7));
             SkillFx.play(level, "fire.ignite", at, 0.7, 1.0);
@@ -79,7 +86,8 @@ final class Apollo {
                     double a = j / 4.0 * Math.PI * 2 + pp * 0.7;
                     Vec3 g = new Vec3(aim.x + Math.cos(a) * r * 0.6, aim.y, aim.z + Math.sin(a) * r * 0.6);
                     RuneKit.streak(level, at, V.up(g, 0.2), glow, 0.1, 0.25, 0.8, 0);
-                    SkillFx.fx(level, "rpg:fire_wall", g, Opt.of("size", 0.8, "life", 0.4, "color", glow, "alpha", 0.9, "spin", Kit.rand() * 360));
+                    SkillFx.fx(level, "rpg:fire_wall", g, Opt.of("size", 0.8, "life", 0.4, "color", glow, "alpha", 0.6, "spin", Kit.rand() * 360));
+                    WeaponFx3d.flame(level, g, 0.7, 1.5, 0.45, glow, core, Opt.of()); // 0.48.0 입체 불꽃 (햇빛이 닿은 땅)
                 }
                 SkillFx.play(level, "fire.fire", at, 0.9, 1.0);
                 long now = Tasks.now();
@@ -92,14 +100,22 @@ final class Apollo {
                 }
             });
         }
-        Tasks.later(fly + pulses * gap, () -> {
+        Tasks.later(burstAt, () -> {
             if (!ok.getAsBoolean()) return;
             double br = k.num("burst");
-            sunFx(level, at, 2.6, 0.3, core, core, 1.0);
+            // 0.48.0 입체: 태양의 빛살이 길어지며 터짐 · 땅에 불꽃 고리
+            Fx3d.anim(level, sun3d, "burst", false, at);
+            WeaponFx3d.kill(level, sun3d, at, 0.35);
+            for (int j = 0; j < 8; j++) {
+                double a = j / 8.0 * Math.PI * 2 + 0.2;
+                WeaponFx3d.flame(level, new Vec3(aim.x + Math.cos(a) * br * 0.55, aim.y, aim.z + Math.sin(a) * br * 0.55), 0.95, 2.3, 0.6, glow, core, Opt.of());
+            }
+            WeaponFx3d.flame(level, aim, 1.8, 3.2, 0.5, glow, core, Opt.of());
+            sunFx(level, at, 2.6, 0.3, core, core, 0.7);
             RuneKit.novaRing(level, aim, br * 0.4, 1.6, glow, core, Opt.of("life", 0.45));
             RuneKit.skyFlare(level, at, 3.0, glow, core, Opt.of("life", 0.45));
             SkillFx.burst(level, at, glow, 2.0, 0.35);
-            SkillFx.fx(level, "rpg:fire_wall", aim, Opt.of("size", br * 1.3, "life", 0.6, "color", glow, "alpha", 0.95, "spin", Kit.rand() * 360));
+            SkillFx.fx(level, "rpg:fire_wall", aim, Opt.of("size", br * 1.3, "life", 0.6, "color", glow, "alpha", 0.75, "spin", Kit.rand() * 360));
             SkillFx.play(level, "random.explode", at, 1.1, 0.9);
             SkillFx.play(level, "firework.large_blast", at, 0.8, 0.8);
             long now = Tasks.now();
@@ -139,7 +155,16 @@ final class Apollo {
         RuneKit.domainSigil(level, c, r, "holy", glow, core, Opt.of("life", secs + 0.4, "spinRate", 18.0, "alpha", 0.85, "grow", 0.05));
         RuneKit.domainSigil(level, V.up(c, 0.02), r * 0.55, "arcane", glow, core, Opt.of("life", secs + 0.4, "spinRate", -30.0, "alpha", 0.6));
         double sky = Math.max(4, Math.min(9, Kit.skyRoom(level, V.up(c, 1), 9, true)));
-        sunFx(level, V.up(c, sky), 3.2, secs + 0.3, glow, core, 0.9);
+        sunFx(level, V.up(c, sky), 3.2, Math.max(0.2, (total - 4) / 20.0), glow, core, 0.4);
+        // 0.48.0 입체: 하늘의 큰 태양 (빛살 두 겹이 엇갈려 돎) — 끝 4틱 전에 머리 위로 내려와 (홀을 내리그음 :fall) 터짐
+        Vec3 low = V.up(c, Math.min(sky, 4.5));
+        int sun3d = WeaponFx3d.fx(level, "sun", V.up(c, sky), glow, core, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 2.6, "pop", 0.5, "life", secs + 0.8, "anim",
+                "spin", "loop", 1.0, "glowAlpha", 0.6, "shine", 0.5, "fadeOut", 0.3));
+        WeaponFx3d.guard(sp, life, new int[] {sun3d}, total + 12);
+        Kit.motionLater(sp, "apollo_sanctuary:fall", Math.max(1, total - 4), life);
+        Tasks.later(Math.max(1, total - 4), () -> {
+            if (ok.getAsBoolean()) Fx3d.move(level, sun3d, low, 0.2, "in");
+        });
         RuneKit.godRays(sp, level, c, r, 8, glow, core, Opt.of("h", 12.0, "life", 1.0, "alpha", 0.75));
         SkillFx.play(level, "beacon.activate", c, 1.0, 1.0);
         SkillFx.play(level, "block.bell.hit", c, 0.8, 0.8);
@@ -154,8 +179,9 @@ final class Apollo {
                     for (int j = 0; j < 3; j++) {
                         double a = Kit.rand() * Math.PI * 2;
                         double rr = r * Math.sqrt(Kit.rand());
-                        RuneKit.rfx(level, "rays", new Vec3(c.x + Math.cos(a) * rr, c.y, c.z + Math.sin(a) * rr), Opt.of("size", 2.2, "life", 0.5, "fade", 0.6, "color",
-                                glow, "alpha", 0.7, "cell", 0.0));
+                        Vec3 spot = new Vec3(c.x + Math.cos(a) * rr, c.y, c.z + Math.sin(a) * rr);
+                        RuneKit.rfx(level, "rays", spot, Opt.of("size", 2.2, "life", 0.5, "fade", 0.6, "color", glow, "alpha", 0.5, "cell", 0.0));
+                        WeaponFx3d.pillar(level, spot, 0.3, 4.5, 0.5, glow, core, Opt.of("alpha", 0.8)); // 0.48.0 입체 햇빛 기둥
                     }
                 }
                 // 안의 플레이어: 회복 · 피해 감소 (성역 안에서만)
@@ -171,7 +197,8 @@ final class Apollo {
                     Kit.hitAt(sp, e, Kit.reserveHit(sp, e, now), ok, () -> {
                         if (Kit.skillHit(sp, e, w, k.num("pulseMult")) <= 0) return;
                         Vec3 b = HeroKit.body(e, c);
-                        RuneKit.rfx(level, "rays", e.position(), Opt.of("size", 1.4, "life", 0.3, "fade", 0.6, "color", glow, "alpha", 0.8, "cell", 0.0));
+                        RuneKit.rfx(level, "rays", e.position(), Opt.of("size", 1.4, "life", 0.3, "fade", 0.6, "color", glow, "alpha", 0.6, "cell", 0.0));
+                        WeaponFx3d.pillar(level, e.position(), 0.35, Math.max(2.4, e.getBbHeight() + 1.2), 0.35, glow, core, Opt.of("alpha", 0.85));
                         SkillFx.sparks(level, b, glow, 3, 3);
                     });
                 }
@@ -179,17 +206,25 @@ final class Apollo {
             });
         }
         Tasks.later(total, () -> {
-            if (!ok.getAsBoolean()) return;
+            if (!ok.getAsBoolean()) {
+                WeaponFx3d.kill(level, sun3d, c, 0.2);
+                return;
+            }
             Vec3 top = V.up(c, sky);
+            // 0.48.0 입체: 내려온 태양이 터짐 (빛살이 길어지며) · 그 아래 빛기둥 · 성역 둘레 불기둥 여덟
+            Fx3d.anim(level, sun3d, "burst", false, low);
+            WeaponFx3d.kill(level, sun3d, low, 0.4);
+            WeaponFx3d.pillar(level, c, 1.0, Math.min(sky, 4.5), 0.45, glow, core, Opt.of("grow", 0.5));
             SkillFx.beamAway(level, sp.getEyePosition(), top, V.up(c, 0.5), glow, Opt.of("half", 0.7, "thick", 0.7, "life", 0.4, "gap", 1.0));
             // 태양 폭발: 해는 머리 위에서 터지고 (쓴 사람의 눈을 덮지 않게) 성역 둘레에 불기둥 고리 · 땅의 고리 — 1인칭에서는 앞의 불기둥 · 고리가 보임
-            sunFx(level, V.up(c, Math.min(sky, 4.5)), 3.4, 0.35, core, core, 1.0);
+            sunFx(level, low, 3.4, 0.35, core, core, 0.7);
             RuneKit.novaRing(level, c, r * 0.3, 2.4, glow, core, Opt.of("life", 0.55));
             RuneKit.novaRing(level, c, r * 0.2, 3.2, core, core, Opt.of("life", 0.45));
             for (int j = 0; j < 8; j++) {
                 double a = j / 8.0 * Math.PI * 2;
                 Vec3 at = new Vec3(c.x + Math.cos(a) * r * 0.6, c.y, c.z + Math.sin(a) * r * 0.6);
-                SkillFx.fx(level, "rpg:fire_wall", at, Opt.of("size", r * 0.5, "life", 0.6, "color", glow, "alpha", 0.95, "spin", Kit.rand() * 360));
+                SkillFx.fx(level, "rpg:fire_wall", at, Opt.of("size", r * 0.5, "life", 0.6, "color", glow, "alpha", 0.7, "spin", Kit.rand() * 360));
+                WeaponFx3d.flame(level, at, r * 0.17, 3.0, 0.7, glow, core, Opt.of());
             }
             SkillFx.play(level, "random.explode", c, 0.9, 1.0);
             SkillFx.play(level, "firework.large_blast", c, 0.7, 0.9);

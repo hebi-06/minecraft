@@ -16,6 +16,7 @@ import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
@@ -192,7 +193,10 @@ final class Gungnir {
             Vec3 vc0 = V.add(hand, dir, 2.4);
             double vTravel = Math.max(0, V.len(V.sub(cEnd, vc0)));
             double vOut = vTravel / (outT / 20.0);
-            spearFx(level, vc0, dir, half, outT / 20.0, Opt.of("move", dir, "speed", vOut));
+            spearFx(level, vc0, dir, half, outT / 20.0, Opt.of("move", dir, "speed", vOut, "alpha", 0.45));
+            // 0.48.0 입체: 내 창 디자인 그대로 날아감 (창끝이 앞 — 구르며), 끝에서 사라지고 머무는 동안은 도는 창
+            WeaponFx3d.flyItem(level, sp, w, V.add(vc0, dir, half), V.add(cEnd, dir, half), outT / 20.0, 0.02, 1.0, Opt.of("roll", 900.0, "glow", GN_BOLT,
+                    "glowAlpha", 0.55, "fadeOut", 0.02));
             SkillFx.fx(level, "rpg:arrow_spark", V.add(vc0, dir, half * 0.8), Opt.of("dir", dir, "speed", vOut, "size", 0.75, "grow", 1.0,
                     "life", outT / 20.0 + 0.05, "color", GN_BOLT, "alpha", 0.75));
             SkillFx.fx(level, "rpg:arrow_spark", V.add(vc0, dir, half * 0.8), Opt.of("dir", dir, "speed", vOut, "size", 0.35, "grow", 1.0,
@@ -233,6 +237,9 @@ final class Gungnir {
                 if (!ok.getAsBoolean()) return;
                 double dEye = V.len(V.sub(cEnd, sp.getEyePosition()));
                 spinFx(level, cEnd, half * Math.min(1, Math.max(0.35, (dEye - 1.5) / 4.5)), hover / 20.0 + 0.02, Kit.rand() * 360, 360 / (hover / 20.0));
+                // 0.48.0 입체: 끝에서 보는 사람을 향해 한 바퀴 도는 창 (가까우면 작게)
+                WeaponFx3d.weapon(level, sp, w, cEnd, Opt.of("dir", dir, "faceCam", 1.0, "spin", 360 / (hover / 20.0), "spinAxis", "z", "size",
+                        Math.min(1, Math.max(0.35, (dEye - 1.5) / 4.5)), "life", hover / 20.0 + 0.02, "glow", GN_BOLT, "glowAlpha", 0.6, "fadeOut", 0.02));
                 SkillFx.shock(level, V.up(cEnd, -0.3), GN_BOLT, 1.2, 0.35);
                 SkillFx.play(level, "item.trident.thunder", cEnd, 1.6, 0.5);
             });
@@ -261,7 +268,11 @@ final class Gungnir {
         Set<UUID> backHit = new HashSet<>();
         List<Hook> hooked = new ArrayList<>();
         Back st = new Back(cEnd, dir, speed);
+        int[] back3d = {0};
         Consumer<Vec3> finish = handNow -> {
+            // 0.48.0 손에 돌아옴: 받는 동작 · 입체 창은 손에 들어감 (사라짐)
+            WeaponFx3d.kill(level, back3d[0], handNow, 0.05);
+            Kit.motion(sp, "gungnir_return:catch");
             // 손에 돌아옴: 손 앞의 작은 번쩍임 · 불꽃 (1인칭 화면 가운데를 덮지 않게 — 오른손 쪽 아래, 1.1칸 앞)
             Vec3 f = Kit.facingOf(sp);
             SkillFx.burst(level, V.add(V.up(handNow, -0.1), f, 1.1), GN_WHITE, 0.35, 0.16);
@@ -288,7 +299,20 @@ final class Gungnir {
                 // 그림: 이 3틱 동안 곧게 (창끝은 바깥 = 움직이는 쪽과 반대) + 가운데의 빛. 손에 거의 왔으면 (2.6칸 안) 그리지 않음 — 창이 눈을 지나가지 않게
                 if (shown && dist > 2.6) {
                     double segLen = Math.min(st.per * segT, dist - 2.6); // 손 2.6칸 앞에서 사라짐
-                    spearFx(level, st.c, V.scale(st.u, -1), half, segLen / (st.per * 20) + 0.001, Opt.of("move", st.u, "speed", st.per * 20));
+                    spearFx(level, st.c, V.scale(st.u, -1), half, segLen / (st.per * 20) + 0.001, Opt.of("move", st.u, "speed", st.per * 20, "alpha", 0.45));
+                    // 0.48.0 입체 창: 처음 구간에 나타나 구간마다 다음 자리로 옮김 (창끝은 바깥 — 손 쪽이 자루)
+                    Vec3 segEnd = V.add(st.c, st.u, segLen);
+                    if (back3d[0] == 0) {
+                        back3d[0] = WeaponFx3d.weapon(level, sp, w, st.c, Opt.of("dir", V.scale(st.u, -1), "faceCam", 1.0, "life", 3.0, "glow", GN_BOLT,
+                                "glowAlpha", 0.55, "fadeOut", 0.05));
+                    }
+                    Fx3d.move(level, back3d[0], segEnd, segLen / (st.per * 20) + 0.001, "linear");
+                    if (segLen < st.per * segT - 1e-3) {
+                        int gone = (int) Math.ceil(segLen / st.per);
+                        Tasks.later(Math.max(1, gone), () -> WeaponFx3d.kill(level, back3d[0], segEnd, 0.03));
+                    }
+                } else if (back3d[0] != 0) {
+                    WeaponFx3d.kill(level, back3d[0], st.c, 0.03);
                     SkillFx.fx(level, "rpg:arrow_spark", st.c, Opt.of("dir", st.u, "speed", st.per * 20, "size", 0.7, "grow", 1.0,
                             "life", segLen / (st.per * 20) + 0.03, "color", GN_BOLT, "alpha", 0.7));
                 }
@@ -436,7 +460,17 @@ final class Gungnir {
         Vec3 hand = V.add(V.up(sp.getEyePosition(), -0.2), V.rightOf(f), 0.3);
         // 던짐: 눈앞 1.2칸에서 하늘로 솟는 창 (눈을 스치지 않게) + 천둥
         Vec3 rise = V.add(hand, f, 1.2);
-        spearFx(level, V.up(rise, 2.6), V.UP, k.num("half"), 0.5, Opt.of("move", V.UP, "speed", 64.0));
+        spearFx(level, V.up(rise, 2.6), V.UP, k.num("half"), 0.5, Opt.of("move", V.UP, "speed", 64.0, "alpha", 0.45));
+        // 0.48.0 입체: 내 창이 하늘로 솟구쳐 사라짐 (창끝이 위)
+        WeaponFx3d.flyItem(level, sp, w, V.up(rise, 1.2), V.up(rise, 16), 0.25, 0.0, 1.0, Opt.of("roll", 720.0, "glow", GN_BOLT, "glowAlpha", 0.5, "fadeOut",
+                0.06));
+        // 0.48.0 입체 먹구름 (조준한 곳 위 — 세 덩이가 꿈틀거림, 창이 꽂힌 뒤 흩어짐)
+        for (int c = 0; c < 3; c++) {
+            Vec3 cp = V.up(V.add(spot, V.turnY(f, c * 120 + 30), c == 0 ? 0 : 2.2), cloud + 0.4 * c);
+            Fx3d.spawn(level, "storm_cloud", cp, Opt.of("dir", V.UP, "face", V.turnY(f, c * 120), "scale", c == 0 ? 2.2 : 1.6, "life", (delay + 14) / 20.0,
+                    "color", GN_CLOUD, "glow", GN_BOLT, "anim", "rumble", "loop", 1.0, "animPhase", c * 0.3, "glowAlpha", 0.3, "shine", 0.15, "pop", 0.4,
+                    "fadeOut", 0.5));
+        }
         SkillFx.beam(level, V.up(rise, 1.8), V.up(rise, 14), glow, Opt.of("half", 0.5, "thick", 0.2, "life", 0.35, "sweep", 0.2, "gap", 0.8));
         SkillFx.play(level, "item.trident.throw", hand, 0.6, 1.0);
         SkillFx.play(level, "item.trident.riptide_3", sp.position(), 0.7, 0.6);
@@ -468,7 +502,13 @@ final class Gungnir {
         // 낙하: 하늘에서 거대한 창이 fallT 틱 동안 곧게 떨어짐 (뒤에 빛줄기)
         Tasks.later(delay - fallT, () -> {
             if (!ok.getAsBoolean()) return;
-            spearParts(level, V.up(center, drop), V.DOWN, half, fallT / 20.0, Opt.of("move", V.DOWN, "speed", drop / (fallT / 20.0)));
+            spearParts(level, V.up(center, drop), V.DOWN, half, fallT / 20.0, Opt.of("move", V.DOWN, "speed", drop / (fallT / 20.0), "alpha", 0.45));
+            // 0.48.0 입체 거대한 궁니르 (내 창 디자인 — 길이 spearLen): 하늘에서 곧게 내리꽂혀 (창끝이 땅에 박힘) 머물다 흩어짐
+            WeaponFx3d.Bounds gb = WeaponFx3d.bounds(w);
+            double gsize = spearLen / Math.max(0.5, gb.length() * gb.hand());
+            Vec3 tipEnd = V.up(spot, -spearLen * sink);
+            WeaponFx3d.flyItem(level, sp, w, V.up(tipEnd, drop), tipEnd, fallT / 20.0, k.num("stay") / 20 + k.num("fade") / 20, gsize, Opt.of("glow", GN_BOLT,
+                    "glowAlpha", 0.6, "glowR", spearLen * 0.18, "fadeOut", k.num("fade") / 20));
             if (drop > 2) {
                 SkillFx.beam(level, V.up(spot, drop + spearLen * 0.9), V.up(spot, spearLen * 0.8), GN_BOLT, Opt.of("half", 1.2, "thick", 1.4, "life", 0.3,
                         "sweep", fallT / 20.0, "gap", 2.0, "alpha", 0.55));
@@ -500,7 +540,7 @@ final class Gungnir {
         Tasks.later(delay, () -> {
             if (!ok.getAsBoolean()) return;
             landed[0] = true;
-            spearParts(level, center, V.DOWN, half, k.num("stay") / 20, Opt.empty());
+            spearParts(level, center, V.DOWN, half, k.num("stay") / 20, Opt.of("alpha", 0.45));
             // 먹구름에서 창으로 번개 (창대 가운데쯤 — 먹구름보다 창이 길면 창대에)
             double strike = Math.min(cloud - 0.5, spearLen * (1 - sink) * 0.55);
             if (cloud > 2.5) {

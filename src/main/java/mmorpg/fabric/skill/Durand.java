@@ -37,7 +37,11 @@ final class Durand {
         Vec3 eye = sp.getEyePosition();
         // 빛의 방패: 눈앞 2칸에서 앞으로 밀려나며 커짐 + 내리치는 금빛 초승달 + 앞으로 퍼지는 빛의 물결
         RuneKit.rfx2(level, "shield", V.add(V.up(eye, -0.35), f, 2.0), Opt.of("dir", f, "size", 0.9, "life", 0.4, "speed", 3.5, "grow", 0.45, "fade", 0.55,
-                "alpha", 0.9), glow, core, new int[] {0, 1}, null);
+                "alpha", 0.4), glow, core, new int[] {0, 1}, null);
+        // 0.48.0 입체: 내 방패 디자인이 빛의 방패가 되어 눈앞에서 앞으로 밀려나며 커짐 (앞면이 앞)
+        Vec3 sh0 = V.add(V.up(eye, -0.45), f, 2.0);
+        WeaponFx3d.weapon(level, sp, w, sh0, Opt.of("to", V.add(sh0, f, 1.4), "travel", 0.2, "ease", "out", "dir", V.UP, "face", f, "size", 1.7, "grow", 0.35,
+                "life", 0.42, "pop", 0.05, "glow", glow, "glowAlpha", 0.6, "shine", 0.35, "fadeOut", 0.2));
         SkillFx.arc(level, V.add(V.up(eye, -0.3), f, 2.1), V.unit(V.add(f, V.DOWN, 0.5)), Opt.of("shape", "heavy", "flip", false, "size", 1.5, "life", 0.2,
                 "speed", 1.2, "color", glow, "aura", core, "spin", 80.0));
         RuneKit.rfx2(level, "wave", V.add(V.up(pos, 0.9), f, 2.3), Opt.of("dir", f, "size", 3.4, "life", 0.3, "speed", 9.0, "fade", 0.6, "alpha", 0.85), glow, core,
@@ -74,10 +78,22 @@ final class Durand {
         SkillFx.burst(level, V.up(pos, 0.1), glow, 0.8, 0.3); // 발밑 (1인칭 화면 아래 — 몸 높이의 큰 빛은 화면을 덮음)
         SkillFx.play(level, "beacon.power", pos, 1.6, 0.6);
         int[] glint = RuneKit.RFX.get("glint");
+        // 0.48.0 입체: 보호막이 걸린 동안 내 방패 디자인 셋이 작게 몸을 돎 (쓴 사람의 1인칭에서는 숨김 — 화면 아래를 가리지 않게)
+        int[] guards = new int[3];
+        for (int j = 0; j < 3; j++) {
+            guards[j] = WeaponFx3d.weapon(level, sp, w, new Vec3(0, 1.0, 0), Opt.of("follow", (double) sp.getId(), "orbit", 0.95, "orbitSpeed", 150.0, "orbitAngle",
+                    j * 120.0, "bob", 0.08, "bobHz", 0.8, "dir", V.UP, "faceCam", 1.0, "size", 0.42, "life", guard / 20.0, "pop", 0.15, "view", 1.0, "glow", glow,
+                    "glowAlpha", 0.5, "shine", 0.3, "fadeOut", 0.25));
+        }
+        WeaponFx3d.guard(sp, life, guards, guard);
         for (int t = 0; t < guard; t += 5) {
             final int tt = t;
             HeroKit.at(t, () -> {
-                if (!ok.getAsBoolean() || Guards.of(sp) == null) return;
+                if (!ok.getAsBoolean()) return;
+                if (Guards.of(sp) == null) {
+                    WeaponFx3d.killAll(level, guards, sp.position(), 0.15); // 보호막이 먼저 풀림
+                    return;
+                }
                 Vec3 feet = sp.position();
                 // 몸을 도는 금빛 반짝임 셋 (1인칭 화면 아래 · 3인칭 몸 둘레 — 보호막이 걸린 동안)
                 for (int j = 0; j < 3; j++) {
@@ -129,5 +145,7 @@ final class Durand {
         SkillFx.shock(level, feet, glow, 0.9, 0.4);
         SkillFx.burst(level, V.up(feet, 0.8), glow, 1.0, 0.3);
         SkillFx.sparks(level, V.up(feet, 0.8), core, 6, 4);
+        // 0.48.0 입체 빛기둥 (하늘에서 발밑까지 — 고리가 돌며 내려앉음)
+        WeaponFx3d.pillar(level, feet, 0.6, room, 0.55, glow, core, Opt.of("anim", "rise", "loop", 0.0, "grow", 0.15));
     }
 }

@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
@@ -34,6 +35,8 @@ final class LichStaff {
     static final double[] GRAVE = {0.05, 0.2, 0.16};
     /** 망자의 원 문양 (rpg:rfx_sigil — 비전) */
     static final int ARCANE = RuneKit.SIGIL.get("arcane");
+    /** 망자의 손 뼈 빛 */
+    static final double[] BONE = {0.86, 0.84, 0.74};
 
     static void register() {
         Transcend.register("lich_harvest", LichStaff::harvest);
@@ -172,10 +175,12 @@ final class LichStaff {
         return true;
     }
 
-    /** 영혼불 (rpg:rfx_aura — 흰 불꽃 4장을 영혼빛으로, 발 고정): size 반 크기, life 초, phase = 장 어긋남 */
+    /** 영혼불 (rpg:rfx_aura — 흰 불꽃 4장을 영혼빛으로, 발 고정 + 0.48.0 입체 불꽃): size 반 크기, life 초, phase = 장 어긋남 */
     static void soulFire(ServerLevel level, Vec3 at, double size, double life, double[] glow, int phase) {
         RuneKit.rfx(level, "aura", at, Opt.of("size", size, "life", life, "frames", 4.0, "fps", 12.0, "loop", true, "phase", (double) phase, "fade", 0.4, "color",
-                glow, "alpha", 0.85, "cell", 0.0));
+                glow, "alpha", 0.45, "cell", 0.0));
+        double[] pale = {0.7 + 0.3 * glow[0], 0.7 + 0.3 * glow[1], 0.7 + 0.3 * glow[2]};
+        WeaponFx3d.flame(level, at, size * 0.95, size * 2.3, life, glow, pale, Opt.of("alpha", 0.9));
     }
 
     /**
@@ -194,10 +199,19 @@ final class LichStaff {
             Vec3 d = V.sub(b, a);
             double len = V.len(d);
             if (len < 0.4) continue;
-            RuneKit.rfx2(level, "chain", V.add(a, d, 0.5), Opt.of("dir", V.unit(d), "size", len / 2, "life", (hold + 2) / 20.0, "fade", 0.25, "alpha", 0.9), glow,
+            RuneKit.rfx2(level, "chain", V.add(a, d, 0.5), Opt.of("dir", V.unit(d), "size", len / 2, "life", (hold + 2) / 20.0, "fade", 0.25, "alpha", 0.45), glow,
                     core, new int[] {0, 1}, null);
+            // 0.48.0 입체 사슬 (엇갈린 고리 · 끝 갈고리가 적의 몸에)
+            WeaponFx3d.fx(level, "chain", V.add(a, d, 0.5), glow, core, Opt.of("dir", V.unit(d), "roll", a0, "scale", len / 2, "life", (hold + 2) / 20.0, "pop", 0.08,
+                    "fadeOut", 0.2, "glowAlpha", 0.5, "shine", 0.3));
             SkillFx.burst(level, a, glow, 0.35, 0.25);
         }
+        // 0.48.0 입체: 발밑 땅에서 망자의 손이 솟아 발목을 움켜쥠 (손바닥이 원 가운데 쪽)
+        Vec3 feet = e.position();
+        Vec3 inward = centered ? new Vec3(0, 0, 1) : V.scale(toward, -1);
+        WeaponFx3d.fx(level, "bone_hand", V.up(feet, -1.0), BONE, glow, Opt.of("to", V.up(V.add(feet, inward, -0.35), 0.05), "travel", 0.15, "ease", "out", "dir",
+                V.UP, "face", inward, "scale", 1.6 + Kit.bodyPad(e), "anim", "grasp", "life", (hold + 2) / 20.0, "fadeOut", 0.2, "glowAlpha", 0.45, "shine",
+                0.15));
     }
 
     /** 뜯겨 나오는 영혼: 몸에서 빠져나오는 영혼빛 그림자 (위로 떠오름) + 폭발 */
@@ -206,7 +220,7 @@ final class LichStaff {
         Vec3 feet = e.isRemoved() ? new Vec3(from.x, from.y - 0.9, from.z) : e.position();
         // 몸 겉면 (눈 쪽으로 0.45칸) 에서 떠오름 — 맞아서 붉어진 몸에 가려지지 않게
         Vec3 v = V.flat(V.sub(feet, sp.getEyePosition()));
-        RuneKit.shadeClone(sp, level, V.add(feet, v, -0.45), Kit.facingOf(e), 0, glow, core, Opt.of("size", 1.0, "life", 0.55, "fade", 0.7, "alpha", 0.85, "grow",
+        RuneKit.shadeClone(sp, level, V.add(feet, v, -0.45), Kit.facingOf(e), 0, glow, core, Opt.of("size", 1.0, "life", 0.55, "fade", 0.7, "alpha", 0.45, "grow",
                 0.15, "vel", new Vec3(0, 1.8, 0)));
         SkillFx.burst(level, from, glow, 0.9, 0.3);
         SkillFx.sparks(level, from, core, 5, 3);
@@ -218,8 +232,14 @@ final class LichStaff {
         String life = Kit.lifeOf(sp);
         Vec3 lift = V.up(from, 1.5);
         Vec3[] prev = {from};
+        // 0.48.0 입체 혼 (둥근 머리 · 흩어지는 꼬리 — 머리가 앞, 울부짖으며 휘어 날아옴)
+        int soul = WeaponFx3d.fx(level, "soul", from, glow, core, Opt.of("dir", V.UP, "align", 1.0, "scale", 1.5, "anim", "wail", "loop", 1.0, "life", back / 20.0
+                + 0.6, "pop", 0.1, "glowAlpha", 0.6, "shine", 0.35, "fadeOut", 0.15));
         Kit.ticks(t -> {
-            if (!Kit.sameLife(sp, life)) return false;
+            if (!Kit.sameLife(sp, life)) {
+                WeaponFx3d.kill(level, soul, prev[0], 0.1);
+                return false;
+            }
             double u = Math.min(1, (t + 1) / (double) back);
             Vec3 to = V.up(V.add(sp.position(), Kit.facingOf(sp), 0.6), 0.6);
             Vec3 ctrl = V.lerp(lift, V.up(to, 1.2), 0.5);
@@ -228,6 +248,8 @@ final class LichStaff {
             SkillFx.fx(level, "rpg:arrow_spark", p, Opt.of("dir", V.UP, "size", 0.26 * nk, "grow", 0.6, "life", 0.12, "color", glow, "alpha", 1.0));
             Gram.streakLine(level, prev[0], p, glow, 0.14, 0.3, 0.8, 0);
             Gram.streakLine(level, prev[0], p, core, 0.05, 0.22, 1.0, 0);
+            if (u < 1) Fx3d.move(level, soul, p, 0.05, "linear");
+            else WeaponFx3d.kill(level, soul, p, 0.12); // 내 몸에 스며듦
             prev[0] = p;
             return u < 1;
         });

@@ -10,6 +10,7 @@ import java.util.function.DoubleConsumer;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
@@ -65,6 +66,18 @@ final class Yggdrasil {
         double s = size * RuneKit.nearK(sp, V.up(at, size), o.num("full", 4), 0.35);
         RuneKit.rfx2(level, "thorn", at, Opt.of("size", s, "life", o.num("life", 0.9), "grow", o.num("grow", 0.25), "fade", o.num("fade", 0.35), "cell", v,
                 "alpha", o.num("alpha", 1)), o.color("wood", WOOD), glow, new int[] {0, THORN_CORE}, null);
+    }
+
+    /**
+     * 0.48.0 입체 가시덤불 (thorns — 밑이 at, 높이 1.3 × scale): 나무 빛 몸 · 결의 빛 (glow) — 솟아 (burst) life 초 머물다 가라앉음 (sink).
+     * 카메라에 가까우면 작게 (1인칭 화면을 덮지 않게)
+     */
+    static int thorns3d(ServerPlayer sp, ServerLevel level, Vec3 at, double scale, double life, double[] glow) {
+        double s = scale * RuneKit.nearK(sp, V.up(at, scale), 4, 0.35);
+        int id = Fx3d.spawn(level, "thorns", at, Opt.of("dir", V.UP, "face", V.turnY(new Vec3(0, 0, 1), Kit.rand() * 360), "scale", s, "life", life + 0.4,
+                "color", WOOD, "glow", glow, "anim", "burst", "glowAlpha", 0.35, "shine", 0.2, "fadeOut", 0.3));
+        Tasks.later((int) Math.round(life * 20), () -> Fx3d.anim(level, id, "sink", false, at));
+        return id;
     }
 
     /** 쓴 사람 발밑 가로 CLEAR 칸 안 (둘레에 흩뿌리는 가시를 여기에는 돋우지 않음 — 1인칭 화면을 가시가 덮지 않게) */
@@ -134,9 +147,14 @@ final class Yggdrasil {
         int bind = (int) k.num("bind");
         int slow = (int) k.num("slow");
         Vec3 f = Kit.facingOf(sp);
-        Vec3 from = V.add(V.add(V.up(sp.getEyePosition(), -0.35), V.rightOf(f), 0.35), f, 1.0);
+        // 0.48.0 왼손으로 던짐 (오른손은 도끼 — wp_ygg_seed)
+        Vec3 from = V.add(V.add(V.up(sp.getEyePosition(), -0.35), V.rightOf(f), -0.35), f, 1.0);
         Vec3 to = V.up(spot, 0.3);
         double arc = Math.max(1.2, Math.min(4.5, V.len(V.sub(to, from)) * 0.3));
+        // 0.48.0 입체 씨앗 (잎 달린 빛나는 씨앗 — 돌며 같은 포물선: 조절점 = 가운데 + 위 2 × 솟는 높이)
+        Fx3d.spawn(level, "seed", from, Opt.of("to", to, "ctrl", V.up(V.lerp(from, to, 0.5), arc * 2), "travel", fly / 20.0, "life", fly / 20.0 + 0.05,
+                "dir", V.UP, "faceCam", 1.0, "scale", 1.5, "spin", 540.0, "spinAxis", "x", "color", LEAF, "glow", core, "glowAlpha", 0.6, "shine", 0.4,
+                "anim", "spin", "loop", 1.0));
         SkillFx.play(level, "entity.snowball.throw", from, 0.6, 1.0);
         SkillFx.play(level, "block.azalea_leaves.break", from, 1.2, 0.8);
         // 날아감: 틱마다 그 자리에 씨앗 빛 (빛 + 심지) + 잎 한 장
@@ -154,14 +172,17 @@ final class Yggdrasil {
         double hold = bind / 20.0;
         Tasks.later(fly, () -> {
             if (!ok.getAsBoolean()) return;
-            thorn(sp, level, spot, 1.35, glow, Opt.of("v", 2.0, "life", hold + 0.25, "grow", 0.12, "full", 5.0));
+            thorn(sp, level, spot, 1.35, glow, Opt.of("v", 2.0, "life", hold + 0.25, "grow", 0.12, "full", 5.0, "alpha", 0.5));
+            thorns3d(sp, level, spot, 2.0, hold + 0.1, glow); // 0.48.0 입체 가시덤불 (높이 약 2.6칸)
             double a0 = Kit.rand() * Math.PI * 2;
             for (int i = 0; i < 8; i++) {
                 double a = a0 + i / 8.0 * Math.PI * 2 + Kit.rand() * 0.3;
                 double rr = radius * (0.4 + Kit.rand() * 0.55);
                 Vec3 q = new Vec3(spot.x + Math.cos(a) * rr, spot.y, spot.z + Math.sin(a) * rr);
                 if (nearCaster(sp, q)) continue;
-                thorn(sp, level, q, 0.65 + Kit.rand() * 0.45, glow, Opt.of("life", hold + 0.1, "grow", 0.15));
+                double sz = 0.65 + Kit.rand() * 0.45;
+                thorn(sp, level, q, sz, glow, Opt.of("life", hold + 0.1, "grow", 0.15, "alpha", 0.5));
+                thorns3d(sp, level, q, sz * 1.0, hold, glow);
             }
             SkillFx.rune(level, V.up(spot, 0.05), Opt.of("size", radius, "life", hold, "color", glow, "alpha", 0.75, "rate", 40.0));
             SkillFx.shock(level, spot, glow, radius / 2.6, 0.4);
@@ -178,14 +199,25 @@ final class Yggdrasil {
                     bound.put(e.getUUID(), e);
                     bind(e, bind, slow);
                     Vec3 feet = e.position();
-                    thorn(sp, level, feet, 0.55 + Kit.bodyPad(e), glow, Opt.of("v", 1.0, "life", hold, "grow", 0.08, "full", 3.0));
+                    thorn(sp, level, feet, 0.55 + Kit.bodyPad(e), glow, Opt.of("v", 1.0, "life", hold, "grow", 0.08, "full", 3.0, "alpha", 0.5));
+                    thorns3d(sp, level, feet, 0.7 + Kit.bodyPad(e), hold - 0.1, glow); // 묶인 적의 발밑 가시 (입체)
                     SkillFx.ring(level, V.up(feet, 0.35), V.UP, glow, 0.55 + Kit.bodyPad(e), 0.35, 0);
                 });
             }
         });
         // 꽃이 핌: 땅에 활짝 핀 빛의 꽃 + 가운데 위의 꽃 (보는 사람 쪽) · 꽃잎 · 번쩍임 → 둘레 적이 터짐
+        Kit.motionLater(sp, "ygg_seed:bloom", fly + bind - 2, life); // 0.48.0 왼손을 펴 꽃을 피워 올림
         Tasks.later(fly + bind, () -> {
             if (!ok.getAsBoolean()) return;
+            // 0.48.0 입체 빛의 꽃: 땅 가운데에 큰 꽃이 피어남 (꽃잎 여덟 — 봉오리 → 활짝) · 묶였던 적마다 작은 꽃
+            Fx3d.spawn(level, "flower", V.up(spot, 0.05), Opt.of("dir", V.UP, "face", V.turnY(new Vec3(0, 0, 1), Kit.rand() * 360), "scale", radius * 1.25,
+                    "life", 0.95, "color", PETAL, "glow", WHITE, "anim", "bloom", "animSpeed", 1.4, "glowAlpha", 0.5, "shine", 0.5, "fadeOut", 0.35));
+            for (LivingEntity e : bound.values()) {
+                if (e.isRemoved()) continue;
+                Fx3d.spawn(level, "flower", V.up(e.position(), 0.05), Opt.of("dir", V.UP, "face", V.turnY(new Vec3(0, 0, 1), Kit.rand() * 360), "scale",
+                        2.0 + Kit.bodyPad(e), "life", 0.7, "color", PETAL, "glow", WHITE, "anim", "bloom", "animSpeed", 1.8, "glowAlpha", 0.4, "shine", 0.4,
+                        "fadeOut", 0.3));
+            }
             RuneKit.rfx(level, "bloomflat", V.up(spot, 0.09), Opt.of("dir", V.UP, "size", radius * 0.9, "life", 0.9, "frames", 4.0, "fps", 12.0, "fade", 0.45,
                     "spin", Kit.rand() * 360));
             Vec3 mid = V.up(spot, 1.3);
@@ -266,6 +298,14 @@ final class Yggdrasil {
                 if (!ok.getAsBoolean()) return;
                 Vec3 p = V.add(start, V.sub(spot, start), (jj + 1.0) / run);
                 rootStep(sp, level, p, glow, core, 0.7);
+                // 0.48.0 입체 뿌리: 앞 칸 → 이 칸으로 땅 위를 기어 자람 (root — 길이 2 × scale, 끝이 +Y), 나무가 솟을 때까지 남음
+                Vec3 q = V.add(start, V.sub(spot, start), (double) jj / run);
+                Vec3 d = V.sub(p, q);
+                double len = V.len(d);
+                if (len > 0.2) {
+                    Fx3d.spawn(level, "root", V.up(q, 0.08), Opt.of("dir", V.unit(d), "face", V.UP, "scale", len / 1.9, "life", (delay - jj) / 20.0 + 1.0,
+                            "color", WOOD, "glow", glow, "anim", "grow", "animSpeed", 2.5, "glowAlpha", 0.35, "shine", 0.15, "fadeOut", 0.4));
+                }
                 if (jj % 3 == 0) SkillFx.play(level, "block.roots.break", p, 0.8 + 0.05 * jj, 0.6);
             });
         }
@@ -320,7 +360,13 @@ final class Yggdrasil {
             if (!ok.getAsBoolean()) return;
             grown[0] = true;
             double life0 = (stay + fade) / 20.0;
-            RuneKit.rfx(level, "yggdrasil", center, Opt.of("size", half, "life", life0, "frames", 4.0, "fps", 80.0 / grow, "fade", fade / (double) (stay + fade)));
+            RuneKit.rfx(level, "yggdrasil", center, Opt.of("size", half, "life", life0, "frames", 4.0, "fps", 80.0 / grow, "fade", fade / (double) (stay + fade),
+                    "alpha", 0.3));
+            // 0.48.0 입체 세계수 (밑동이 원점 — 높이 3.3 × scale): 땅에서 솟아 자람 (grow) → 바람에 흔들림 (sway) → 끝에 흐려짐
+            int tree3d = Fx3d.spawn(level, "world_tree", spot, Opt.of("dir", V.UP, "face", V.flat(V.sub(sp.position(), spot)).lengthSqr() > 1e-6
+                    ? V.flat(V.sub(sp.position(), spot)) : new Vec3(0, 0, 1), "scale", height / 3.3, "life", life0, "color", LEAF, "glow", core, "anim", "grow",
+                    "animSpeed", 20.0 / grow / 1.0, "glowAlpha", 0.45, "shine", 0.3, "fadeOut", fade / 20.0));
+            Tasks.later(grow, () -> Fx3d.anim(level, tree3d, "sway", true, spot));
             SkillFx.burst(level, V.up(spot, 0.8), core, 4.0, 0.4);
             SkillFx.burst(level, V.up(spot, height * 0.5), glow, 3.0, 0.35);
             SkillFx.shock(level, spot, glow, radius / 2.1, 0.55);
@@ -343,7 +389,8 @@ final class Yggdrasil {
                     struck.put(e.getUUID(), e);
                     addHeal.accept(got);
                     SkillFx.burst(level, Kit.bodyAt0(e, eye), core, 0.9, 0.25);
-                    thorn(sp, level, e.position(), 0.7 + Kit.bodyPad(e), glow, Opt.of("v", 2.0, "life", boundFor / 20.0, "grow", 0.1, "full", 3.0));
+                    thorn(sp, level, e.position(), 0.7 + Kit.bodyPad(e), glow, Opt.of("v", 2.0, "life", boundFor / 20.0, "grow", 0.1, "full", 3.0, "alpha", 0.5));
+                    thorns3d(sp, level, e.position(), 0.8 + Kit.bodyPad(e), boundFor / 20.0 - 0.2, glow);
                     if (!Aegis.bossLike(e) && !e.isRemoved()) Kit.knockback(e, 0, 0, 0.45);
                     bind(e, boundFor, slow);
                 });
@@ -360,7 +407,9 @@ final class Yggdrasil {
                     double dist = radius * (0.3 + 0.3 * rr) + Kit.rand() * 0.4;
                     Vec3 p = new Vec3(spot.x + Math.cos(a) * dist, spot.y, spot.z + Math.sin(a) * dist);
                     if (nearCaster(sp, p)) continue;
-                    thorn(sp, level, p, 0.9 - 0.15 * rr + Kit.rand() * 0.3, glow, Opt.of("life", 1.2, "grow", 0.25, "full", 3.0));
+                    double sz = 0.9 - 0.15 * rr + Kit.rand() * 0.3;
+                    thorn(sp, level, p, sz, glow, Opt.of("life", 1.2, "grow", 0.25, "full", 3.0, "alpha", 0.5));
+                    if (j % 2 == rr % 2) thorns3d(sp, level, p, sz * 1.1, 0.9, glow); // 0.48.0 입체 가시 (고리마다 반)
                 }
             });
         }

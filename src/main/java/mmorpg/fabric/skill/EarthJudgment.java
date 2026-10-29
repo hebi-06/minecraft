@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
 import net.minecraft.server.level.ServerLevel;
@@ -68,6 +69,9 @@ final class EarthJudgment {
         // 내리침: 내려치는 초승달 · 땅 금 · 고리 · 튀는 돌 · 쿵
         SkillFx.arc(level, V.add(V.up(sp.getEyePosition(), -0.3), f, 2.2), V.unit(V.add(f, V.DOWN, 0.9)), Opt.of("shape", "heavy", "flip", false, "size", 1.4,
                 "life", 0.18, "speed", 1.6, "color", glow, "aura", core, "spin", 90.0));
+        // 0.48.0 입체: 내 도끼 디자인이 커져 머리 위에서 앞 땅으로 내리찍힘 (도끼날 면이 옆 — 쓴 사람의 1인칭에서는 숨김: 눈앞을 가리지 않게)
+        WeaponFx3d.swingItem(level, sp, w, V.up(V.add(start, f, 0.3), 1.35), V.unit(V.add(V.UP, f, -0.25)), V.unit(V.add(V.sub(p0, V.up(V.add(start, f, 0.3), 1.35)),
+                V.DOWN, 0.2)), 0.08, 0.2, 1.6, false, Opt.of("view", 1.0, "glow", glow, "glowAlpha", 0.6, "fadeOut", 0.12));
         SkillFx.burst(level, V.up(p0, 0.3), glow, 1.1, 0.3);
         SkillFx.shock(level, p0, rock, 1.3, 0.45);
         SkillFx.fx(level, "rpg:ground_crack", V.up(p0, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 2.6, "life", 1.6, "color", ASH, "alpha", 0.9));
@@ -79,13 +83,16 @@ final class EarthJudgment {
         Map<UUID, LivingEntity> struck = new LinkedHashMap<>();
         double width = k.num("width");
         int n = path.size();
+        // 용암 분출 (균열이 다 뻗고 delay 틱 뒤 — 앞쪽으로 세 칸에 한 틱씩)
+        int eruptAt = (n - 1) + (int) k.num("delay");
+        Kit.motionLater(sp, "earth_fissure:erupt", Math.max(1, eruptAt - 2), life); // 0.48.0 도끼를 하늘로 치켜들고 포효 (2틱째 = 분출)
         for (int i = 0; i < n; i++) {
             final int ii = i;
             HeroKit.at(i, () -> {
                 if (!ok.getAsBoolean()) return;
                 Vec3 p = path.get(ii);
                 Vec3 prev = ii == 0 ? V.add(p, f, -Math.min(first, 1.0)) : path.get(ii - 1);
-                crackStep(sp, p, f, ii, rock, glow, core);
+                crackStep(sp, p, f, ii, rock, glow, core, Math.max(4, eruptAt + 8 + ii / 3 - ii));
                 // 이번 칸까지 지나간 구간 (내리친 자리는 둘레도) 의 적
                 Vec3 d = V.sub(p, prev);
                 double len = Math.max(0.3, V.len(d));
@@ -105,8 +112,6 @@ final class EarthJudgment {
                 }
             });
         }
-        // 용암 분출 (균열이 다 뻗고 delay 틱 뒤 — 앞쪽으로 세 칸에 한 틱씩)
-        int eruptAt = (n - 1) + (int) k.num("delay");
         for (int i = 0; i < n; i++) {
             final int ii = i;
             HeroKit.at(eruptAt + i / 3, () -> {
@@ -129,7 +134,9 @@ final class EarthJudgment {
                 Kit.hitAt(sp, e, Kit.reserveHit(sp, e, t0), ok, () -> {
                     if (Kit.skillHit(sp, e, w, k.num("afterMult")) <= 0) return;
                     Vec3 at = e.isRemoved() ? a : e.position();
-                    Gram.flame(level, at, 1.5 * RuneKit.nearK(sp, V.up(at, 0.8), 4, 0.4), 0.5, glow);
+                    double nk = RuneKit.nearK(sp, V.up(at, 0.8), 4, 0.4);
+                    Gram.flame(level, at, 1.5 * nk, 0.5, glow, 0.55);
+                    WeaponFx3d.flame(level, at, 0.85 * nk, 2.2 * nk, 0.55, glow, core, Opt.of()); // 0.48.0 입체 불기둥 (맞은 적의 발밑)
                     Gram.embers(level, at, 1.0, 0.5, 3);
                 });
             }
@@ -137,18 +144,27 @@ final class EarthJudgment {
         return true;
     }
 
-    /** 균열 한 칸: 그을린 땅 + 빛나는 금 + 바위 가시 둘 (좌우 번갈아) + 튀는 돌 · 소리 (두 칸마다) */
-    static void crackStep(ServerPlayer sp, Vec3 p, Vec3 f, int i, double[] rock, double[] glow, double[] core) {
+    /**
+     * 균열 한 칸: 그을린 땅 + 빛나는 금 + 바위 가시 둘 (좌우 번갈아 — 0.48.0 입체: 땅에서 솟았다가 sinkIn 틱 뒤 꺼짐) + 튀는 돌 · 소리 (두 칸마다)
+     */
+    static void crackStep(ServerPlayer sp, Vec3 p, Vec3 f, int i, double[] rock, double[] glow, double[] core, int sinkIn) {
         ServerLevel level = sp.level();
         Vec3 side = V.rightOf(f);
         SkillFx.fx(level, "rpg:ground_crack", V.up(p, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 1.7, "life", 1.6, "color", ASH, "alpha", 0.85));
         RuneKit.rfx2(level, "crack", V.up(p, 0.07), Opt.of("dir", V.UP, "size", 0.9, "life", 1.5, "fade", 0.4, "spin", Kit.rand() * 360, "cell", 0.0), glow, core,
                 new int[] {0, 1}, null);
         double s = i % 2 == 0 ? 1 : -1;
-        RuneKit.rockSpike(sp, level, V.add(p, side, s * (0.35 + Kit.rand() * 0.2)), 0.75 + Kit.rand() * 0.25, glow, Opt.of("rock", rock, "life", 0.9, "grow", 0.25,
-                "full", 3.0));
-        RuneKit.rockSpike(sp, level, V.add(p, side, -s * (0.2 + Kit.rand() * 0.25)), 0.5 + Kit.rand() * 0.2, glow, Opt.of("rock", rock, "life", 0.8, "grow", 0.2,
-                "full", 3.0));
+        // 입체 바위 가시 (모난 기둥 셋 · 틈의 용암 줄 — 1인칭 눈 가까이는 작게)
+        double nk = RuneKit.nearK(sp, V.up(p, 1.0), 3.0, 0.35);
+        double life = sinkIn / 20.0 + 0.45;
+        for (int j = 0; j < 2; j++) {
+            double off = j == 0 ? s * (0.35 + Kit.rand() * 0.2) : -s * (0.2 + Kit.rand() * 0.25);
+            double sc = (j == 0 ? 0.8 + Kit.rand() * 0.25 : 0.5 + Kit.rand() * 0.2) * nk;
+            Vec3 at = V.add(p, side, off);
+            int id = WeaponFx3d.fx(level, "rock_spike", at, rock, glow, Opt.of("dir", V.UP, "face", V.turnY(f, Kit.rand() * 360), "scale", sc, "life", life, "anim",
+                    "rise", "glowAlpha", 0.45, "shine", 0.1, "fadeOut", 0.2));
+            Tasks.later(sinkIn, () -> Fx3d.anim(level, id, "sink", false, at));
+        }
         if (i % 2 == 0) {
             RuneKit.rockBurst(level, V.up(p, 0.2), 2, 5, 0.22);
             SkillFx.play(level, "dig.stone", p, 0.6 + Kit.rand() * 0.2, 1.0);
@@ -161,8 +177,10 @@ final class EarthJudgment {
         ServerLevel level = sp.level();
         boolean big = i % 3 == 0;
         double nk = RuneKit.nearK(sp, V.up(p, 1.0), 4.5, 0.35);
-        Gram.flame(level, p, (big ? 2.4 : 1.8) * nk, 0.55, glow);
-        if (big) Gram.flame(level, V.up(p, 0.1), 1.4 * nk, 0.45, core);
+        Gram.flame(level, p, (big ? 2.4 : 1.8) * nk, 0.55, glow, 0.55);
+        if (big) Gram.flame(level, V.up(p, 0.1), 1.4 * nk, 0.45, core, 0.55);
+        // 0.48.0 입체 용암 기둥 (갈라진 틈에서 솟는 불기둥 — 셋에 하나는 크게)
+        WeaponFx3d.flame(level, p, (big ? 1.05 : 0.75) * nk, (big ? 3.2 : 2.1) * nk, 0.6, glow, core, Opt.of());
         Gram.embers(level, p, 1.2, 0.6, 3.5);
         SkillFx.burst(level, V.up(p, 0.4), glow, (big ? 1.1 : 0.8) * nk, 0.25);
         if (big) SkillFx.sparks(level, V.up(p, 0.6), core, 5, 4);

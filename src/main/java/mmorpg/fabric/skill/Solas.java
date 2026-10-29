@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
@@ -149,8 +150,10 @@ public final class Solas {
 
     /** 발밑에서 솟는 빛기둥 (금빛 빛 + 흰 심지) + 발밑 고리. size 1 = 높이 약 3칸. withCore = 흰 심지 (가까우면 뺌) */
     static void lightPillar(ServerLevel level, Vec3 feet, double[] glow, double size, boolean withCore) {
+        // 0.48.0 입체 빛기둥 (고리가 돎 — 높이 약 3.4칸 × size)
+        WeaponFx3d.pillar(level, feet, 0.42 * size, 3.4 * size, 0.5, glow, SOL_WHITE, Opt.empty());
         SkillFx.fx(level, "rpg:arrow_shot", V.up(feet, 1.5 * size), Opt.of("dir", V.UP, "speed", 0.0, "size", 1.6 * size, "thick", 0.5 * size, "life", 0.42,
-                "color", glow, "alpha", 0.85));
+                "color", glow, "alpha", 0.6));
         if (withCore) {
             SkillFx.fx(level, "rpg:arrow_shot", V.up(feet, 1.5 * size), Opt.of("dir", V.UP, "speed", 0.0, "size", 1.5 * size, "thick", 0.2 * size, "life", 0.34,
                     "color", SOL_WHITE, "alpha", 1.0));
@@ -349,6 +352,8 @@ public final class Solas {
                 SkillFx.arc(level, V.add(look, v, -0.2), v, Opt.of("shape", "arc", "flip", ii % 2 == 1, "size", 1.9 * near, "life", 0.24, "speed", 1.2,
                         "spin", (ii % 2 == 1 ? -1 : 1) * 40.0, "color", glow, "aura", SOL_SHADE));
                 int angle = ii % 2 == 1 ? -38 : 38;
+                // 0.48.0 내 단검 (빛이 된 칼날 — 금빛 빛 무리) 이 그 자국대로 몸을 가르며 지나감
+                WeaponFx3d.cutThrough(level, sp, w, look, v, angle, 0.75, 0.08, 0.06, Opt.of("glow", SOL_LIGHT, "glowAlpha", 0.55, "fadeOut", 0.06));
                 SkillFx.cutMark(level, look, v, angle, 0.2, glow, core, near);
                 SkillFx.sparks(level, look, core, 5, 4);
                 SkillFx.play(level, "item.enchant.lunge" + (ii % 3 + 1), look, 1.1 + 0.08 * ii, 1.0);
@@ -481,6 +486,9 @@ public final class Solas {
         Vec3 last;
         final int launch;
         int flight;
+        /** 0.48.0 입체 빛의 검 (머리 위 반원 · 날아가 꽂힌 것 — Fx3d 번호) */
+        int halo3d;
+        int fly3d;
 
         Sword(int i, LivingEntity e, Vec3 last, int launch) {
             this.i = i;
@@ -498,15 +506,27 @@ public final class Solas {
         Vec3 at;
         final double half;
         final long since;
+        /** 0.48.0 입체 빛의 검 (Fx3d 번호 — 적을 따라 옮김) */
+        final int fx;
 
-        Stuck(LivingEntity e, Vec3 rel, Vec3 dir, Vec3 at, double half, long since) {
+        Stuck(LivingEntity e, Vec3 rel, Vec3 dir, Vec3 at, double half, long since, int fx) {
             this.e = e;
             this.rel = rel;
             this.dir = dir;
             this.at = at;
             this.half = half;
             this.since = since;
+            this.fx = fx;
         }
+    }
+
+    /** 0.48.0 입체 빛의 검 (phantom_sword — 코등이가 원점, 길이 1.67) 의 크기 · 원점: 가운데 center · 칼끝 dir · 반 길이 half 에 맞춤 */
+    static double swordScale(double half) {
+        return 2 * half / 1.67;
+    }
+
+    static Vec3 swordOrigin(Vec3 center, Vec3 dir, double half) {
+        return V.add(center, dir, -0.48 * swordScale(half));
     }
 
     /**
@@ -573,8 +593,15 @@ public final class Solas {
                 Runnable draw = () -> {
                     if (!ok.getAsBoolean()) return;
                     Slot h = haloAt(sp, s.i, n, fit, ring);
-                    swordFx(level, h.pos(), h.ray(), half, Math.min(3, s.launch - tt) / 20.0 + 0.02);
+                    swordFx(level, h.pos(), h.ray(), half, Math.min(3, s.launch - tt) / 20.0 + 0.02, Opt.of("alpha", 0.35));
                     if (tt != appear) return;
+                    // 0.48.0 입체 빛의 검: 머리 위 반원의 제자리 (나를 따라감 — 주인 기준 [오른쪽, 위, 앞]), 칼끝이 바깥 (햇살처럼)
+                    double th = ((double) s.i / Math.max(1, n - 1)) * Math.PI;
+                    Vec3 ray = new Vec3(Math.cos(th), Math.sin(th), 0);
+                    Vec3 c = new Vec3(0, sp.getEyeHeight() + 1.1 * fit, -0.3);
+                    s.halo3d = Fx3d.spawn(level, "phantom_sword", swordOrigin(V.add(c, ray, ring), ray, half), Opt.of("follow", (double) sp.getId(), "dir", ray,
+                            "face", new Vec3(0, 0, 1), "scale", swordScale(half), "life", (s.launch - appear) / 20.0 + 0.1, "color", glow, "glow", SOL_LIGHT,
+                            "pop", 0.12, "glowAlpha", 0.5, "shine", 0.5));
                     SkillFx.burst(level, h.pos(), SOL_LIGHT, 0.5 * fit, 0.18);
                     SkillFx.play(level, "chime.amethyst_block", h.pos(), 1.0 + s.i * 0.08, 0.8);
                     // 1인칭: 화면 위쪽으로 떨어지는 금빛 알갱이 (검은 머리 위라 화면 밖)
@@ -622,14 +649,21 @@ public final class Solas {
                 Vec3 u = V.unit(V.add(v0, V.DOWN, g * ts));
                 s.flight = flight;
                 swordArcFx(level, p, v0, half, ts, g);
+                // 0.48.0 입체 빛의 검: 머리 위의 것은 사라지고 같은 포물선 (2차 곡선 — 조절점 = 처음 + 처음 속도 × T/2) 으로 날아가 꽂힌 채 남음 (빛기둥 때 흩어짐)
+                WeaponFx3d.kill(level, s.halo3d, p, 0.05);
+                Vec3 d0 = V.unit(v0);
+                Vec3 o0 = swordOrigin(p, d0, half);
+                Vec3 o1 = swordOrigin(end, u, half);
+                s.fly3d = Fx3d.spawn(level, "phantom_sword", o0, Opt.of("to", o1, "ctrl", V.add(o0, v0, ts / 2), "travel", ts, "align", 1.0, "face", V.UP, "faceCam",
+                        1.0, "scale", swordScale(half), "life", ts + 4.0, "color", glow, "glow", SOL_LIGHT, "glowAlpha", 0.5, "shine", 0.5, "fadeOut", 0.2));
                 SkillFx.play(level, "item.trident.throw", p, 1.5 + 0.05 * s.i, 0.6);
                 // 꽂힘
                 Vec3 tip = end;
                 Tasks.later(flight, () -> {
                     if (!ok.getAsBoolean()) return;
                     LivingEntity e = s.e;
-                    stuck.add(new Stuck(e, V.sub(tip, Kit.bodyAt0(e, aim)), u, tip, half, Tasks.now()));
-                    swordFx(level, tip, u, half, 0.22);
+                    stuck.add(new Stuck(e, V.sub(tip, Kit.bodyAt0(e, aim)), u, tip, half, Tasks.now(), s.fly3d));
+                    swordFx(level, tip, u, half, 0.22, Opt.of("alpha", 0.4));
                     SkillFx.burst(level, aim, SOL_LIGHT, 0.8, 0.22);
                     SkillFx.sparks(level, aim, glow, 5, 5);
                     SkillFx.play(level, "item.trident.hit", aim, 1.4, 0.9);
@@ -655,11 +689,15 @@ public final class Solas {
                     for (Stuck x : stuck) {
                         if (x.e.isRemoved() || Tasks.now() - x.since < 3) continue; // 막 꽂힌 검은 그대로 (같은 자리에 두 장 겹치지 않게)
                         x.at = V.add(Kit.bodyAt0(x.e, x.at), x.rel);
-                        swordFx(level, x.at, x.dir, x.half, Math.min(0.22, (pillarIn - tt) / 20.0 + 0.02));
+                        swordFx(level, x.at, x.dir, x.half, Math.min(0.22, (pillarIn - tt) / 20.0 + 0.02), Opt.of("alpha", 0.4));
+                        if (x.fx != 0) Fx3d.move(level, x.fx, swordOrigin(x.at, x.dir, x.half), 0.18); // 0.48.0 입체 검도 적을 따라감
                     }
                 });
             }
             Tasks.later(pillarIn, () -> pillars(sp, w, k, ok, spot, glow, core, stabbed, stuck));
+            // 0.48.0 단계 동작: 왼손으로 움켜쥐어 빛기둥 (2틱 전) → 단검으로 허공에 X (X 참격 2틱 전)
+            Kit.motionLater(sp, "solas_halo:pillar", pillarIn - 2, life);
+            Kit.motionLater(sp, "solas_halo:cross", pillarIn + (int) k.num("cross") - 2, life);
         });
         return true;
     }
@@ -672,6 +710,7 @@ public final class Solas {
         for (Stuck x : stuck) {
             if (!x.e.isRemoved()) x.at = V.add(Kit.bodyAt0(x.e, x.at), x.rel);
             swordFx(level, x.at, x.dir, x.half, 0.4, Opt.of("progress", 2.0));
+            WeaponFx3d.kill(level, x.fx, x.at, 0.25); // 0.48.0 입체 검은 빛기둥 속으로 흩어짐
         }
         long t0 = Tasks.now();
         for (LivingEntity e : stabbed.values()) {

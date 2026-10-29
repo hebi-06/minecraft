@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
@@ -74,14 +75,15 @@ final class Gram {
     }
 
     /**
-     * 불꽃 날개 (rpg:fire_wing — 등 뒤, 보는 방향에 수직인 면 한 장, 너비 2 × size 칸): frame 0~3 펼침 · 4~7 날갯짓.
+     * 불꽃 날개 (rpg:fire_wing — 등 뒤, 보는 방향에 수직인 면 한 장, 너비 2 × size 칸): frame 0~3 펼침 · 4~7 날갯짓. 0.48.0 입체 날개 (fire_wings) 가 몸 —
+     * 이 그림은 빛 무리로 옅게 (0.4).
      * tips: 날개 끝 · 팔에 작은 불꽃 (옆에서 보면 그림이 얇아서)
      */
     static void fireWings(ServerPlayer sp, int frame, double life, boolean tips, double size) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         Vec3 at = V.up(V.add(sp.position(), f, -0.42), 1.3);
-        SkillFx.fx(level, "rpg:fire_wing", at, Opt.of("dir", f, "size", size, "life", life, "progress", (frame + 0.5) / 8, "color", SkillFx.WHITE, "alpha", 0.97));
+        SkillFx.fx(level, "rpg:fire_wing", at, Opt.of("dir", f, "size", size, "life", life, "progress", (frame + 0.5) / 8, "color", SkillFx.WHITE, "alpha", 0.4));
         if (!tips) return;
         Vec3 side = V.rightOf(f);
         double lift = frame == 4 ? 0.9 : frame == 6 ? -0.2 : 0.45;
@@ -118,6 +120,21 @@ final class Gram {
     }
 
     // ------------------------------------------------------------ 스킬 1 화룡 돌진
+
+    /**
+     * 0.48.0 불꽃 환영 검 (내 칼 디자인 그대로 — 손에 든 크기): 가슴 앞 (발 at 에서 앞 0.6 · 위 1.25) 을 쥔 곳으로 대각선으로 베어 내림.
+     * side 1 = 오른쪽 위 → 왼쪽 아래, −1 = 왼쪽 위 → 오른쪽 아래. 지나는 길에 불티
+     */
+    static void xCut(ServerPlayer sp, Weapon w, Vec3 at, Vec3 f, int side) {
+        ServerLevel level = sp.level();
+        Vec3 r = V.rightOf(f);
+        Vec3 piv = V.up(V.add(at, f, 0.6), 1.25);
+        Vec3 d0 = V.unit(V.add(V.add(V.scale(V.UP, 0.75), r, 0.5 * side), f, 0.45));
+        Vec3 d1 = V.unit(V.add(V.add(V.scale(V.UP, -0.55), r, -0.5 * side), f, 0.65));
+        WeaponFx3d.swingItem(level, sp, w, piv, d0, d1, 0.12, 0.1, 1.0, true, Opt.of("glow", G_EMBER, "glowAlpha", 0.55));
+        Vec3 mid = V.add(piv, V.unit(V.add(d0, d1)), 1.9);
+        embers(level, mid, 1.4, 0.4, 2.5);
+    }
 
     /**
      * 화룡 돌진: 보는 쪽으로 dash 칸 돌진 — 땅을 따라 (한 칸 오르내림), 벽 · 낭떠러지 · 물 · 용암 · 불 앞에서 멈춤.
@@ -188,6 +205,11 @@ final class Gram {
                         "color", G_EMBER, "aura", Kit.aura(), "spin", 22.0));
             }
         });
+        // 0.48.0 불꽃 환영 검 (내 칼 디자인 — 빛 무리는 불빛): 가슴 앞에서 X 자로 두 번 베어 내림 (0 = 오른쪽 위 → 왼쪽 아래, 2 = 왼쪽 위 → 오른쪽 아래)
+        xCut(sp, w, at, f, 1);
+        Tasks.later(2, () -> {
+            if (ok.getAsBoolean()) xCut(sp, w, sp.position(), f, -1);
+        });
         SkillFx.play(level, "item.trident.riptide_3", start, 1.1, 0.9);
         SkillFx.play(level, "mob.blaze.shoot", at, 0.9, 0.8);
         SkillFx.play(level, "fire.ignite", at, 1.0, 0.9);
@@ -225,7 +247,8 @@ final class Gram {
             int t = (int) Math.max(1, delay - 4 + Math.round(((double) i / Math.max(1, n)) * 4));
             Tasks.later(t, () -> {
                 if (!ok.getAsBoolean()) return;
-                flame(level, p, 2.4, 0.55, G_DEEP);
+                flame(level, p, 2.4, 0.55, G_DEEP, 0.6);
+                WeaponFx3d.flame(level, p, 0.9, 2.3, 0.55, G_FIRE, G_EMBER, Opt.empty()); // 0.48.0 입체 불기둥
                 SkillFx.burst(level, V.up(p, 0.6), G_FIRE, 0.7, 0.22);
             });
         }
@@ -234,8 +257,13 @@ final class Gram {
             if (!ok.getAsBoolean()) return;
             SkillFx.burst(level, V.up(center, 0.9), G_FIRE, 2.4, 0.4);
             zonePulse(level, center, G_FIRE, burst, 0.5);
-            for (int j = 0; j < 7; j++) flame(level, V.add(center, V.turnY(f, j * (360.0 / 7) + 10), 1.9), 2.3, 0.6, j % 2 == 1 ? G_DEEP : G_FIRE);
-            flame(level, center, 3.0, 0.55, G_FIRE);
+            for (int j = 0; j < 7; j++) {
+                Vec3 q = V.add(center, V.turnY(f, j * (360.0 / 7) + 10), 1.9);
+                flame(level, q, 2.3, 0.6, j % 2 == 1 ? G_DEEP : G_FIRE, 0.6);
+                WeaponFx3d.flame(level, q, 1.0, 2.2 + 0.4 * (j % 2), 0.6, j % 2 == 1 ? G_DEEP : G_FIRE, G_EMBER, Opt.empty()); // 0.48.0 둘레 불기둥
+            }
+            flame(level, center, 3.0, 0.55, G_FIRE, 0.6);
+            WeaponFx3d.flame(level, center, 2.0, 3.4, 0.65, G_FIRE, G_EMBER, Opt.empty()); // 0.48.0 가운데 큰 불기둥
             scorch(level, center, burst * 1.4, 1.2);
             embers(level, center, 3.5, 0.8, 3);
             SkillFx.sparks(level, V.up(center, 0.6), core, 10, 5);
@@ -312,6 +340,8 @@ final class Gram {
         Vec3 last;
         boolean broken;
         boolean slow;
+        /** 0.48.0 입체 불꽃 날개 (Fx3d 번호) */
+        int wings;
 
         Flight(Vec3 last) {
             this.last = last;
@@ -363,6 +393,7 @@ final class Gram {
             st.broken = true;
             dropSlow.run();
             Vec3 l = sp.position();
+            WeaponFx3d.kill(level, st.wings, l, 0.2);
             SkillFx.burst(level, V.up(l, 0.9), G_ASH, 1.0, 0.3);
             embers(level, l, 1.2, 0.5, 1);
             SkillFx.play(level, "random.fizz", l, 0.9, 0.8);
@@ -387,6 +418,14 @@ final class Gram {
         SkillFx.play(level, "mob.enderdragon.flap", c0, 1.4, 0.8);
         SkillFx.play(level, "mob.blaze.shoot", c0, 1.0, 0.7);
         SkillFx.play(level, "fire.ignite", c0, 1.2, 0.8);
+        // 0.48.0 입체 불꽃 날개 (등 뒤 — 나를 따라감, 내 1인칭에서는 숨김): 펼침 → 8틱부터 날갯짓 → 내려꽂을 때 접음 → 땅에서 활짝 (impact)
+        int wings = Fx3d.spawn(level, "fire_wings", new Vec3(0, 1.25, -0.38), Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, -1),
+                "scale", 1.45, "life", (landAt + 14) / 20.0, "anim", "spread", "color", G_FIRE, "glow", G_EMBER, "view", 1.0, "glowAlpha", 0.45, "shine", 0.4,
+                "fadeIn", 0.05, "fadeOut", 0.3, "pop", 0.15));
+        st.wings = wings;
+        Tasks.later(8, () -> {
+            if (ok.getAsBoolean() && !st.broken) Fx3d.anim(level, wings, "flap", true, sp.position());
+        });
         // 날개: 지금 자리에 (따라 움직임) — 떠오르는 0~9틱은 매 틱, 그 뒤 2틱마다. 0~6틱 펼침, 머무는 동안 날갯짓.
         // 1인칭 (날개는 등 뒤라 화면 밖): 펼칠 때 화면 양 끝에 불꽃 초승달 · 머무는 동안 눈앞으로 떨어지는 불꽃 깃털
         for (int t = 0; t < diveAt; t++) {
@@ -450,6 +489,13 @@ final class Gram {
                 return;
             }
             Vec3 fd = V.sub(land, from);
+            // 0.48.0 내려꽂는 동작 (칼끝을 아래로 — 무릎 꿇어 땅에 꽂음) · 입체 날개를 접음 · 내 칼이 거대해져 내려앉을 곳 앞에 하늘에서 내리꽂힘
+            Kit.motion(sp, "gram_descent:dive");
+            Fx3d.anim(level, st.wings, "dive", false, from);
+            Vec3 fl = Kit.facingOf(sp);
+            Vec3 plant = V.add(land, fl, 1.5);
+            WeaponFx3d.flyItem(level, sp, w, V.up(plant, 10), V.up(plant, -0.45), (dive - 1) / 20.0, (k.num("delay") + 4) / 20.0, 1.5,
+                    Opt.of("glow", G_EMBER, "glowAlpha", 0.6, "fadeOut", 0.3));
             // 떨어지는 길: 굵은 불빛 줄기 + 흰 심지. 내려치는 초승달은 내려앉을 곳 앞
             streakLine(level, V.up(from, 1.0), V.up(land, 1.0), G_FIRE, 0.7, 0.3, 0.9, 0);
             streakLine(level, V.up(from, 1.0), V.up(land, 1.0), core, 0.22, 0.25, 1, 0);
@@ -481,6 +527,7 @@ final class Gram {
                             return;
                         }
                     }
+                    Fx3d.anim(level, st.wings, "spread", false, sp.position());
                     impact(sp, w, k, ok);
                 };
                 if (i == 1) step.run();
@@ -509,10 +556,17 @@ final class Gram {
         scorch(level, c, r * 1.6, 1.6);
         fireWings(sp, 6, 0.3, false, 4.2); // 내려친 날개 (3인칭)
         // 둘레 불기둥 두 겹 (안쪽 0.6 · 바깥 0.95 × 반지름, 바깥은 2틱 늦게)
-        for (int j = 0; j < 8; j++) flame(level, V.add(c, V.turnY(f, j * 45 + 22.5), r * 0.6), 1.8, 0.7, j % 2 == 1 ? G_DEEP : G_FIRE);
+        for (int j = 0; j < 8; j++) {
+            Vec3 q = V.add(c, V.turnY(f, j * 45 + 22.5), r * 0.6);
+            flame(level, q, 1.8, 0.7, j % 2 == 1 ? G_DEEP : G_FIRE, 0.6);
+            WeaponFx3d.flame(level, q, 1.0, 2.2, 0.7, j % 2 == 1 ? G_DEEP : G_FIRE, G_EMBER, Opt.empty()); // 0.48.0 입체 불기둥 (안쪽)
+        }
         for (int j = 0; j < 8; j++) {
             Vec3 d = V.turnY(f, j * 45);
-            Tasks.later(2, () -> flame(level, V.add(c, d, r * 0.95), 1.4, 0.6, G_FIRE));
+            Tasks.later(2, () -> {
+                flame(level, V.add(c, d, r * 0.95), 1.4, 0.6, G_FIRE, 0.6);
+                WeaponFx3d.flame(level, V.add(c, d, r * 0.95), 0.85, 1.8, 0.6, G_FIRE, G_EMBER, Opt.empty()); // 바깥
+            });
         }
         embers(level, c, r * 1.2, 1.0, 3.5);
         SkillFx.sparks(level, V.up(c, 0.5), core, 12, 6);
@@ -542,7 +596,10 @@ final class Gram {
                 Vec3 d = V.turnY(f, j * 36 + 18);
                 double ring = r * (0.8 + 0.15 * (j % 2));
                 double[] color = j % 2 == 1 ? G_DEEP : G_FIRE;
-                Tasks.later(j % 3, () -> flame(level, V.add(c, d, ring), 1.3, 0.5, color));
+                Tasks.later(j % 3, () -> {
+                    flame(level, V.add(c, d, ring), 1.3, 0.5, color, 0.6);
+                    WeaponFx3d.flame(level, V.add(c, d, ring), 0.9, 2.4, 0.5, color, G_EMBER, Opt.empty()); // 0.48.0 불꽃 고리 (입체)
+                });
             }
             SkillFx.play(level, "mob.blaze.shoot", c, 1.0, 0.5);
             SkillFx.play(level, "fire.fire", c, 1.0, 0.8);

@@ -16,6 +16,7 @@ import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
@@ -288,6 +289,17 @@ final class Tyrfing {
         SkillFx.play(level, "mace.smash_ground", tip, 0.9, 1.0);
         SkillFx.play(level, "particle.soul_escape", tip, 0.8, 1.2);
         SkillFx.shake(sp, 0.08, 0.1);
+        // 0.48.0 환영 대검 (내 대검 디자인 — 무덤불 빛): 칼끝을 앞 아래로 땅에 대고 기둥 줄을 따라 끌며 나아감 (첫 기둥 → 끝 기둥, 기둥마다 한 틱)
+        {
+            WeaponFx3d.Bounds b = WeaponFx3d.bounds(w);
+            double sc = b.hand() * 0.9;
+            Vec3 dd = V.unit(V.add(f, V.DOWN, 1.15));
+            Vec3 a0 = V.add(posts.get(0).p(), dd, -b.max().y * sc);
+            Vec3 a1 = V.add(posts.get(posts.size() - 1).p(), dd, -b.max().y * sc);
+            double secs = Math.max(0.1, posts.size() / 20.0);
+            WeaponFx3d.weapon(level, sp, w, V.add(start, dd, -b.max().y * sc + 1.2), Opt.of("to", a1, "ctrl", a0, "travel", secs + lead / 20.0, "dir", dd, "faceCam",
+                    1.0, "size", 0.9, "life", secs + lead / 20.0 + 0.25, "glow", TY_FIRE, "glowAlpha", 0.55, "fadeOut", 0.2, "fadeIn", 0.05));
+        }
         for (int j = 0; j < posts.size(); j++) {
             Post p = posts.get(j);
             int at = lead + j;
@@ -301,7 +313,10 @@ final class Tyrfing {
                 double h = Math.min(2.6, TY_NEAR_K * de);
                 if (de >= TY_NEAR) {
                     // 터질 때까지 세게 탐 (사라지기 시작하는 65% 가 터지는 틱 즈음)
-                    tyrFireFx(level, p.p(), h, (burstAt - at) / 20.0 + 0.45, SkillFx.WHITE, tyNearAlpha(de));
+                    tyrFireFx(level, p.p(), h, (burstAt - at) / 20.0 + 0.45, SkillFx.WHITE, tyNearAlpha(de) * 0.55);
+                    // 0.48.0 입체 무덤불 (보랏빛 유령 불꽃 — 터질 때까지 일렁임)
+                    WeaponFx3d.flame(level, p.p(), Math.min(1.0, 0.35 * de), h, (burstAt - at) / 20.0 + 0.3, TY_FIRE, TY_GHOST, Opt.of("alpha",
+                            tyNearAlpha(de)));
                     // 바깥쪽 작은 불혀 (0 · 3 · 6 — 좌우 번갈아)
                     if (jj % 3 == 0 && p.o() != 0) {
                         tyrFireFx(level, V.add(p.p(), side, Math.signum(p.o()) * 0.5), h * 0.6, (burstAt - at) / 20.0 + 0.4, SkillFx.WHITE, tyNearAlpha(de));
@@ -330,7 +345,12 @@ final class Tyrfing {
             if (!ok.getAsBoolean()) return;
             for (Post p : posts) {
                 double de = viewDist(sp, V.up(p.p(), 1.2));
-                if (de >= TY_NEAR) tyrFireFx(level, p.p(), Math.min(4.2, TY_NEAR_K * 1.3 * de), 0.4, SkillFx.WHITE, tyNearAlpha(de));
+                if (de >= TY_NEAR) {
+                    tyrFireFx(level, p.p(), Math.min(4.2, TY_NEAR_K * 1.3 * de), 0.4, SkillFx.WHITE, tyNearAlpha(de) * 0.55);
+                    // 0.48.0 입체 무덤불이 높이 솟아 터짐
+                    WeaponFx3d.flame(level, p.p(), Math.min(1.4, 0.45 * de), Math.min(4.2, TY_NEAR_K * 1.3 * de), 0.45, TY_DEEP, TY_GHOST, Opt.of("alpha",
+                            tyNearAlpha(de), "grow", 0.3));
+                }
                 SkillFx.burst(level, V.up(p.p(), 1.0), TY_GHOST, Math.min(1.2, 0.3 * de), 0.3);
                 SkillFx.shock(level, p.p(), TY_FIRE, Math.min(1.4, 0.4 * de), 0.4);
                 SkillFx.fx(level, "rpg:arrow_spark", V.up(p.p(), 0.5), Opt.of("dir", V.UP, "speed", 3 + Kit.rand() * 2, "size", 0.15, "life", 0.6,
@@ -541,8 +561,29 @@ final class Tyrfing {
                 if (rel.x * tc.f().x + rel.z * tc.f().z < 0) camD = Math.max(camD, 2); // 카메라 뒤는 보이지 않음 (흐림만)
             }
             if (eyeD < 2 || camD < 2) return;
-            tyrWarriorFx(level, p.at(), Opt.of("size", size, "life", (to - from) / 20.0 + 0.05, "alpha", Math.min(eyeD, camD) < 3 ? 0.55 : 1.0).with(o));
+            tyrWarriorFx(level, p.at(), Opt.of("size", size, "life", (to - from) / 20.0 + 0.05, "alpha", Math.min(eyeD, camD) < 3 ? 0.25 : 0.4).with(o));
         };
+        // 0.48.0 입체 망령 기사 (ghost_knight — 키 2 × scale, 가운데를 봄): 땅에서 솟아 (rise) 떠 있다가 (float) 차례 · 다 같이 벰 (slash) → 터질 때 흩어짐
+        int[] knights = new int[n];
+        double ks = size * 0.88;
+        for (Warrior p : posts) {
+            int s1 = first + p.i() * step;
+            Vec3 face = new Vec3(-p.u().x, 0, -p.u().z);
+            Runnable spawnK = () -> {
+                if (!ok.getAsBoolean()) return;
+                knights[p.i()] = Fx3d.spawn(level, "ghost_knight", V.up(p.at(), -1.4), Opt.of("to", p.at(), "travel", riseLen / 20.0, "ease", "out", "dir", V.UP,
+                        "face", face, "scale", ks, "life", (fin - p.rise()) / 20.0 + 0.4, "color", TY_GHOST, "glow", TY_FIRE, "anim", "raise", "animSpeed",
+                        0.6 / Math.max(0.1, riseLen / 20.0), "glowAlpha", 0.45, "shine", 0.35, "alpha", 0.92, "fadeOut", 0.35));
+            };
+            if (p.rise() == 0) spawnK.run();
+            else Tasks.later(p.rise(), spawnK);
+            Tasks.later(p.rise() + riseLen, () -> Fx3d.anim(level, knights[p.i()], "float", true, p.at()));
+            for (int ts : new int[] {s1, second}) {
+                Tasks.later(Math.max(1, ts - 2), () -> Fx3d.anim(level, knights[p.i()], "slash", false, p.at()));
+                Tasks.later(ts + 9, () -> Fx3d.anim(level, knights[p.i()], "float", true, p.at()));
+            }
+            Tasks.later(fin, () -> WeaponFx3d.kill(level, knights[p.i()], p.at(), 0.4));
+        }
         // 틱마다 할 일 (전사 토막: 솟음 → 섬 → 벰 → 섬 → 벰 → 섬 → 흩어짐)
         Map<Integer, List<Runnable>> events = new HashMap<>();
         for (Warrior p : posts) {

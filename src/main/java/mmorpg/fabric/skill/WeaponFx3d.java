@@ -152,6 +152,75 @@ final class WeaponFx3d {
         return Fx3d.spawn(level, model, pivot, merge(b, o));
     }
 
+    /**
+     * 무기 모델 휘두름 (사용자 무기 디자인): 자루 끝 (쥔 곳) 을 pivot 에 두고 무기 끝을 d0 → d1 방향으로 (큰 원 — 짧은 쪽) secs 초에 돌리고 hold 초 머무름.
+     * 치는 쪽 (+X — 날 · 도끼날) 이 앞서 감. faceCam 이면 넓은 면이 보는 사람 쪽 (칼 · 망치처럼 양쪽이 같은 무기), 아니면 휘두르는 면에 수직 (도끼 · 낫). size = 손에 든 크기의 배
+     */
+    static int swingItem(ServerLevel level, ServerPlayer sp, Weapon w, Vec3 pivot, Vec3 d0, Vec3 d1, double secs, double hold, double size, boolean faceCam,
+            Opt o) {
+        Bounds b = bounds(w);
+        Vec3 u = V.unit(d0);
+        Vec3 e = V.unit(d1);
+        double c = Math.max(-1, Math.min(1, V.dot(u, e)));
+        Vec3 s = V.sub(e, V.scale(u, c));
+        if (V.len(s) < 1e-4) s = V.rightOf(V.flat(u).lengthSqr() > 1e-6 ? V.unit(V.flat(u)) : new Vec3(0, 0, 1));
+        s = V.unit(s);
+        double ang = Math.toDegrees(Math.acos(c));
+        Opt base = merge(look(w), Opt.of("owner", (double) sp.getId(), "glowR", b.length() * 0.3, "glowAlpha", 0.45, "faceCam", faceCam ? 1.0 : 0.0));
+        return swing(level, item(w), pivot, u, s, 0, ang, secs, hold, b.hand() * size, b.butt(), merge(base, o));
+    }
+
+    /**
+     * 무기 모델이 곧게 날아감 (던진 창 · 떨어지는 거대한 검): 무기 끝이 secs 초에 to 에 닿고 hold 초 머무름 (끝이 가는 쪽 — align). size = 손에 든 크기의 배,
+     * spin (도/초 — 망치처럼 앞으로 구르며) 은 o 로
+     */
+    static int flyItem(ServerLevel level, ServerPlayer sp, Weapon w, Vec3 from, Vec3 to, double secs, double hold, double size, Opt o) {
+        Bounds b = bounds(w);
+        double scale = b.hand() * size;
+        Opt base = merge(look(w), Opt.of("owner", (double) sp.getId(), "glowR", b.length() * 0.3, "glowAlpha", 0.45, "shine", 0.0));
+        return fly(level, item(w), from, to, b.max().y, scale, secs, hold, merge(base, o));
+    }
+
+    /**
+     * 무기 모델이 몸을 가르며 지나감 (빛이 된 칼날 — 섬광 난무의 한 번 벰): 보는 쪽 view 에 수직인 면에서, 화면 기울기 angle 도 (0 = 위에서 아래로 곧게,
+     * + = 오른쪽 위 → 왼쪽 아래) 로 center 를 지나도록 쥔 곳을 앞쪽 (view 반대쪽) 에 두고 휘두름. size = 손에 든 크기의 배
+     */
+    static int cutThrough(ServerLevel level, ServerPlayer sp, Weapon w, Vec3 center, Vec3 view, double angle, double size, double secs, double hold, Opt o) {
+        Bounds b = bounds(w);
+        double len = b.length() * b.hand() * size;
+        Vec3 v = V.len(view) > 1e-4 ? V.unit(view) : new Vec3(0, 0, 1);
+        Vec3 right = V.cross(v, V.UP);
+        right = V.len(right) < 1e-4 ? new Vec3(1, 0, 0) : V.unit(right);
+        Vec3 up = V.unit(V.cross(right, v));
+        double a = Math.toRadians(angle);
+        Vec3 line = V.add(V.scale(up, Math.cos(a)), right, Math.sin(a)); // 베는 줄 (위쪽 끝 방향)
+        double reach = len * 0.62;
+        Vec3 pivot = V.add(center, v, -reach);
+        Vec3 d0 = V.unit(V.add(V.scale(v, reach), line, reach * 0.85));
+        Vec3 d1 = V.unit(V.add(V.scale(v, reach), line, -reach * 0.85));
+        return swingItem(level, sp, w, pivot, d0, d1, secs, hold, size, true, o);
+    }
+
+    /**
+     * 입체 불기둥 (flame — 밑동이 at, 일렁임): 폭 width · 높이 height 칸, life 초 (끝 0.2초에 사그라듦). 빛깔 color · 속빛 core
+     */
+    static int flame(ServerLevel level, Vec3 at, double width, double height, double life, double[] color, double[] core, Opt o) {
+        double scale = Math.max(0.05, width / 0.62);
+        Opt b = Opt.of("dir", V.UP, "faceCam", 1.0, "scale", scale, "stretch", new Vec3(1, Math.max(0.3, height / scale), 1), "life", life, "color", color,
+                "glow", core, "anim", "flicker", "loop", 1.0, "animSpeed", 0.8 + Kit.rand() * 0.5, "animPhase", Kit.rand(), "pop", 0.1, "fadeOut",
+                Math.min(0.25, life * 0.4), "glowAlpha", 0.55, "shine", 0.45);
+        return Fx3d.spawn(level, "flame", at, merge(b, o));
+    }
+
+    /** 입체 빛기둥 (pillar — 밑이 at): 반지름 radius · 높이 height 칸, life 초. 빛깔 color · 속빛 core (고리가 돎) */
+    static int pillar(ServerLevel level, Vec3 at, double radius, double height, double life, double[] color, double[] core, Opt o) {
+        double scale = Math.max(0.05, radius / 0.5);
+        Opt b = Opt.of("dir", V.UP, "face", new Vec3(0, 0, 1), "scale", scale, "stretch", new Vec3(1, Math.max(0.3, height / scale), 1), "life", life, "color",
+                color, "glow", core, "anim", "spin", "loop", 1.0, "pop", 0.08, "fadeIn", 0.03, "fadeOut", Math.min(0.3, life * 0.5), "glowAlpha", 0.6, "shine",
+                0.55);
+        return Fx3d.spawn(level, "pillar", at, merge(b, o));
+    }
+
     static void kill(ServerLevel level, int id, Vec3 near, double fade) {
         if (id != 0) Fx3d.kill(level, id, near, fade);
     }

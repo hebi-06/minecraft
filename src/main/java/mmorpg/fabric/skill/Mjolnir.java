@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
 import net.minecraft.server.level.ServerLevel;
@@ -34,8 +35,13 @@ final class Mjolnir {
 
     /** 도는 망치 그림 (at 에서 vel 칸/초로 움직이며 life 초) */
     static void hammer(ServerLevel level, Vec3 at, Vec3 vel, double size, double life) {
+        hammer(level, at, vel, size, life, 1.0);
+    }
+
+    /** 도는 망치 그림 (불투명도 alpha — 0.48.0: 입체 망치 밑의 빛 무리로 옅게) */
+    static void hammer(ServerLevel level, Vec3 at, Vec3 vel, double size, double life, double alpha) {
         RuneKit.rfx(level, "relicspin", at, Opt.of("size", size, "life", life, "spin", Kit.rand() * 360, "spinRate", -1080.0, "cell", (double) RELIC_SPIN_CELL,
-                "alpha", 1.0, "fade", 0.15, "vel", vel));
+                "alpha", alpha, "fade", 0.15, "vel", vel));
     }
 
     /** 하늘에서 at 으로 떨어지는 번개 한 줄기 (지그재그 빛줄기 두 겹 + rfx_bolt + 맞은 자리 고리 · 불꽃) */
@@ -74,7 +80,10 @@ final class Mjolnir {
         double len = Math.max(1, Kit.rayDist(level, from, dir, k.num("range")) - 0.5);
         double speed = k.num("speed");
         int out = Math.max(1, (int) Math.ceil(len / speed));
-        hammer(level, V.add(from, dir, 0.6), V.scale(dir, speed * 20), 1.5, out / 20.0 + 0.05);
+        hammer(level, V.add(from, dir, 0.6), V.scale(dir, speed * 20), 1.5, out / 20.0 + 0.05, 0.35);
+        // 0.48.0 입체: 내 망치 디자인이 앞으로 구르며 날아감 (머리가 앞 — 자루 끝을 축으로 돌지 않고 가운데로 돎)
+        WeaponFx3d.weapon(level, sp, w, V.add(from, dir, 0.6), Opt.of("to", V.add(from, dir, len), "travel", out / 20.0, "dir", dir, "face", V.UP, "spin", -1080.0,
+                "spinAxis", "x", "size", 1.3, "life", out / 20.0 + 0.02, "glow", glow, "glowAlpha", 0.55, "fadeOut", 0.02));
         SkillFx.play(level, "item.trident.throw", from, 0.6, 1.0);
         SkillFx.play(level, "item.trident.riptide_2", from, 0.8, 0.6);
         Set<UUID> struck = new HashSet<>();
@@ -109,8 +118,13 @@ final class Mjolnir {
     private static void hover(ServerPlayer sp, Weapon w, Obj k, BooleanSupplier ok, Vec3 at, double[] glow, double[] core) {
         ServerLevel level = sp.level();
         int hoverT = (int) k.num("hover");
-        hammer(level, at, Vec3.ZERO, 1.6, hoverT / 20.0 + 0.05);
-        RuneKit.rfx(level, "cloud", V.up(at, 5.5), Opt.of("size", 4.0, "life", (hoverT + 10) / 20.0, "color", CLOUD, "alpha", 0.75, "fade", 0.4, "cell", 0.0));
+        hammer(level, at, Vec3.ZERO, 1.6, hoverT / 20.0 + 0.05, 0.35);
+        RuneKit.rfx(level, "cloud", V.up(at, 5.5), Opt.of("size", 4.0, "life", (hoverT + 10) / 20.0, "color", CLOUD, "alpha", 0.45, "fade", 0.4, "cell", 0.0));
+        // 0.48.0 입체: 끝에서 보는 사람 쪽으로 도는 망치 · 그 위 먹구름 (꿈틀거리며 번쩍임)
+        WeaponFx3d.weapon(level, sp, w, at, Opt.of("dir", V.UP, "faceCam", 1.0, "spin", -900.0, "spinAxis", "z", "size", 1.3, "life", hoverT / 20.0 + 0.02,
+                "glow", glow, "glowAlpha", 0.6, "fadeOut", 0.02));
+        Fx3d.spawn(level, "storm_cloud", V.up(at, 5.5), Opt.of("dir", V.UP, "face", Kit.facingOf(sp), "scale", 1.7, "life", (hoverT + 12) / 20.0, "color", CLOUD,
+                "glow", glow, "anim", "rumble", "loop", 1.0, "glowAlpha", 0.35, "shine", 0.15, "pop", 0.2, "fadeOut", 0.4));
         for (int i = 0; i < 3; i++) {
             int ii = i;
             Tasks.later(i * 2, () -> {
@@ -153,15 +167,27 @@ final class Mjolnir {
         double per = k.num("back");
         Set<UUID> struck = new HashSet<>();
         Vec3[] cur = {start};
+        // 0.48.0 입체: 돌아오는 망치 (손 쪽으로 구르며 — 틱마다 다음 자리로, 손 2칸 안이면 사라짐)
+        Vec3 home = V.flat(V.sub(sp.getEyePosition(), start));
+        Vec3 hd = V.len(home) > 1e-3 ? V.unit(home) : Kit.facingOf(sp);
+        int ham = WeaponFx3d.weapon(level, sp, w, start, Opt.of("dir", hd, "face", V.UP, "spin", -1080.0, "spinAxis", "x", "size", 1.3, "life", 6.0, "glow", glow,
+                "glowAlpha", 0.55, "fadeOut", 0.03));
         Kit.ticks(t -> {
-            if (!ok.getAsBoolean() || t > 120) return false;
+            if (!ok.getAsBoolean() || t > 120) {
+                WeaponFx3d.kill(level, ham, cur[0], 0.05);
+                return false;
+            }
             Vec3 hand = V.add(V.up(sp.getEyePosition(), -0.35), V.rightOf(Kit.facingOf(sp)), 0.3);
             Vec3 d = V.sub(hand, cur[0]);
             double left = V.len(d);
-            if (left > 64) return false; // 손이 멀리 순간이동: 바로 손에
+            if (left > 64) {
+                WeaponFx3d.kill(level, ham, cur[0], 0.05);
+                Kit.motion(sp, "mjolnir_throw:catch");
+                return false; // 손이 멀리 순간이동: 바로 손에
+            }
             Vec3 u = left > 1e-6 ? V.scale(d, 1 / left) : Vec3.ZERO;
             double step = Math.min(per, left);
-            if (t % 3 == 0) hammer(level, cur[0], V.scale(u, per * 20), 1.3, Math.min(0.2, left / (per * 20)));
+            if (t % 3 == 0) hammer(level, cur[0], V.scale(u, per * 20), 1.3, Math.min(0.2, left / (per * 20)), 0.35);
             for (Kit.LineHit h : Kit.lineHits(sp, cur[0], u, Math.max(0.05, step), k.num("width"))) {
                 LivingEntity e = h.e();
                 if (!struck.add(e.getUUID())) continue;
@@ -174,7 +200,11 @@ final class Mjolnir {
             }
             if (t % 2 == 0) RuneKit.zap(level, cur[0], V.add(cur[0], u, Math.min(1.5, left)), glow, core, 0.1, 0.15);
             cur[0] = V.add(cur[0], u, step);
+            if (left - step > 2.0) Fx3d.move(level, ham, cur[0], 0.05, "linear");
+            else WeaponFx3d.kill(level, ham, cur[0], 0.03);
             if (left > per + 0.4) return true;
+            // 0.48.0 손에 돌아옴: 받는 동작
+            Kit.motion(sp, "mjolnir_throw:catch");
             // 손에 돌아옴: 번쩍 + 소리
             SkillFx.burst(level, hand, glow, 0.6, 0.2);
             SkillFx.play(level, "item.trident.return", hand, 0.8, 0.9);
@@ -206,7 +236,7 @@ final class Mjolnir {
         int total = windup + hits * gap + 6;
         // 망치를 들어 올림: 손 위로 번개가 모이고 하늘로 빛줄기
         Vec3 over = V.up(sp.getEyePosition(), 0.9);
-        hammer(level, over, Vec3.ZERO, 1.2, windup / 20.0);
+        hammer(level, over, Vec3.ZERO, 1.2, windup / 20.0, 0.5);
         RuneKit.zap(level, over, V.up(c, sky), glow, core, 0.18, windup / 20.0);
         RuneKit.selfCue(sp, glow, core, true);
         SkillFx.play(level, "item.trident.thunder", c, 0.7, 1.0);
@@ -216,9 +246,15 @@ final class Mjolnir {
             double a = i / 7.0 * Math.PI * 2;
             double rr = i == 0 ? 0 : r * 0.62;
             Vec3 at = new Vec3(c.x + Math.cos(a) * rr, c.y + sky, c.z + Math.sin(a) * rr);
-            RuneKit.rfx(level, "cloud", at, Opt.of("size", r * 0.8, "life", total / 20.0 + 0.6, "color", CLOUD, "alpha", 0.8, "fade", 0.25, "cell", (double) (i % 4),
+            RuneKit.rfx(level, "cloud", at, Opt.of("size", r * 0.8, "life", total / 20.0 + 0.6, "color", CLOUD, "alpha", 0.45, "fade", 0.25, "cell", (double) (i % 4),
                     "grow", 0.15));
+            // 0.48.0 입체 먹구름 (꿈틀거리며 속에서 번쩍임)
+            Fx3d.spawn(level, "storm_cloud", V.up(at, 0.4 * (i % 2)), Opt.of("dir", V.UP, "face", V.turnY(new Vec3(0, 0, 1), i * 51.0), "scale", i == 0 ? r * 0.5
+                    : r * 0.4, "life", total / 20.0 + 0.6, "color", CLOUD, "glow", glow, "anim", "rumble", "loop", 1.0, "animPhase", i * 0.13, "glowAlpha", 0.3,
+                    "shine", 0.12, "pop", 0.5, "fadeOut", 0.5));
         }
+        // 0.48.0 끝 동작 (기둥 16틱 전 — 본 동작이 끝나는 때): 치켜든 망치에 번개를 모으다가 두 손으로 발밑을 내리찍음 (16틱째 = 기둥)
+        Kit.motionLater(sp, "mjolnir_storm:pillar", Math.max(1, total - 16), life);
         RuneKit.domainSigil(level, c, r, "arcane", glow, core, Opt.of("life", total / 20.0, "spinRate", 20.0, "alpha", 0.5));
         for (int i = 0; i < hits; i++) {
             final int ii = i;
@@ -257,6 +293,8 @@ final class Mjolnir {
                 Vec3 at = i == 0 ? p : new Vec3(p.x + Math.cos(a) * 1.2, p.y, p.z + Math.sin(a) * 1.2);
                 strike(sp, at, glow, core, i == 0 ? 2.4 : 1.4);
             }
+            // 0.48.0 입체 번개 기둥 (하늘까지 — 고리가 돎)
+            WeaponFx3d.pillar(level, p, 1.5, Math.max(8, sky + 4), 0.6, glow, core, Opt.of("grow", 0.25));
             RuneKit.novaRing(level, p, pr * 0.3, 2.6, glow, core, Opt.of("life", 0.5));
             RuneKit.novaRing(level, p, pr * 0.2, 3.5, core, core, Opt.of("life", 0.4));
             RuneKit.glowCrack(level, p, pr, glow, core, Opt.of("life", 1.4));

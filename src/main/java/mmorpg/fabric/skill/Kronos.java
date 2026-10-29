@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
 import net.minecraft.server.level.ServerLevel;
@@ -54,9 +55,12 @@ final class Kronos {
         Vec3 over = RuneKit.overHead(e, 0.6);
         Vec3 toEye = V.unit(V.sub(eye, over));
         double near = HeroKit.near(eye, over, 0.5);
-        clockPart(level, DIAL, over, toEye, 0.75 * near, 0, 0, ticks / 20.0, glow, core, 0.9);
-        clockPart(level, MINUTE, V.add(over, toEye, 0.02), toEye, 0.75 * near, 0, -720, ticks / 20.0, gold, core, 1.0);
-        clockPart(level, HOUR, V.add(over, toEye, 0.03), toEye, 0.75 * near, 90, -120, ticks / 20.0, gold, core, 1.0);
+        clockPart(level, DIAL, over, toEye, 0.75 * near, 0, 0, ticks / 20.0, glow, core, 0.45);
+        clockPart(level, MINUTE, V.add(over, toEye, 0.02), toEye, 0.75 * near, 0, -720, ticks / 20.0, gold, core, 0.5);
+        clockPart(level, HOUR, V.add(over, toEye, 0.03), toEye, 0.75 * near, 90, -120, ticks / 20.0, gold, core, 0.5);
+        // 0.48.0 입체 시계 (머리 위 — 보는 사람 쪽, 바늘이 빠르게 돎)
+        Fx3d.spawn(level, "clock", over, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 0.62 * near, "life", ticks / 20.0, "color", glow, "glow", gold, "anim",
+                "tick", "loop", 1.0, "animSpeed", 6.0, "glowAlpha", 0.35, "shine", 0.3, "pop", 0.1, "fadeOut", 0.15));
         if (heavy) return;
         Kit.ticks(t -> {
             if (!ok.getAsBoolean() || e.isRemoved() || !e.isAlive() || t >= ticks) return false;
@@ -84,12 +88,18 @@ final class Kronos {
         Vec3 pos = sp.position();
         // 등 뒤에 솟는 거대한 낫 (돌며 앞으로 넘어옴)
         Vec3 back = V.up(V.add(pos, f, -1.2), 2.6);
-        RuneKit.rfx(level, "relicspin", back, Opt.of("size", 4.2, "life", 0.45, "spin", 120.0, "spinRate", -520.0, "cell", (double) RELIC_SPIN_CELL, "alpha", 0.9,
+        RuneKit.rfx(level, "relicspin", back, Opt.of("size", 4.2, "life", 0.45, "spin", 120.0, "spinRate", -520.0, "cell", (double) RELIC_SPIN_CELL, "alpha", 0.4,
                 "fade", 0.4));
+        // 0.48.0 입체: 내 낫 디자인이 거대해져 등 뒤에서 돌며 솟음 (windup 틱) → 앞을 휩쓸어 가름 (sweep)
+        int windup = (int) k.num("windup");
+        int behind = WeaponFx3d.weapon(level, sp, w, back, Opt.of("dir", V.UP, "faceCam", 1.0, "spin", -520.0, "spinAxis", "z", "size", 2.0, "life",
+                windup / 20.0 + 0.05, "glow", glow, "glowAlpha", 0.5, "pop", 0.12));
+        Kit.motionLater(sp, "kronos_rend:shatter", windup + (int) k.num("stop") - 2, life); // 손가락을 튕겨 멈춘 시간을 깨뜨림 (터지기 2틱 전)
         clockPart(level, GEAR, V.up(pos, 0.08), V.UP, 2.4, 0, 180, 0.6, glow, core, 0.7);
         SkillFx.play(level, "block.bell.hit", pos, 0.6, 0.9);
         SkillFx.play(level, "item.trident.riptide_3", pos, 0.7, 0.6);
-        HeroKit.at((int) k.num("windup"), () -> {
+        HeroKit.at(windup, () -> {
+            WeaponFx3d.kill(level, behind, back, 0.03);
             if (ok.getAsBoolean()) sweep(sp, w, k, ok, glow, core, gold);
         });
         return true;
@@ -101,6 +111,9 @@ final class Kronos {
         Vec3 pos = sp.position();
         Vec3 eye = sp.getEyePosition();
         double range = k.num("range");
+        // 0.48.0 입체 거대한 낫 (내 낫 디자인 — 손에 든 크기 × 2): 가슴 높이에서 오른쪽 → 앞 → 왼쪽으로 170° 휩쓸고 잠깐 머묾 (날이 앞서 감 — 면에 수직)
+        WeaponFx3d.swingItem(level, sp, w, V.up(pos, 1.15), V.add(V.turnY(f, 85), V.UP, 0.12), V.add(V.turnY(f, -85), V.UP, -0.05), 0.16, 0.18, 2.0, false,
+                Opt.of("glow", glow, "glowAlpha", 0.55, "fadeOut", 0.15));
         // 앞을 가르는 거대한 초승달 셋 (가운데 · 양옆), 바닥을 쓸고 가는 금빛 물결
         for (int i = -1; i <= 1; i++) {
             Vec3 d = V.turnY(f, i * 45);
@@ -173,9 +186,13 @@ final class Kronos {
         double secs = total / 20.0 + 0.4;
         Vec3 ground = V.up(c, 0.07);
         // 시계판 (빛 + 심지) · 바깥 금빛 톱니 (천천히 거꾸로) · 시침 (천천히) — 바늘 (분침) 은 틱마다 새로 그림
-        clockPart(level, DIAL, ground, V.UP, r * 1.05, 0, 0, secs + 0.6, glow, core, 0.9);
-        clockPart(level, GEAR, V.up(ground, -0.01), V.UP, r * 1.2, 0, -25, secs + 0.6, gold, core, 0.55);
-        clockPart(level, HOUR, V.up(ground, 0.02), V.UP, r * 1.05, 0, 30.0 / (total / 20.0), secs, gold, core, 1.0);
+        clockPart(level, DIAL, ground, V.UP, r * 1.05, 0, 0, secs + 0.6, glow, core, 0.45);
+        clockPart(level, GEAR, V.up(ground, -0.01), V.UP, r * 1.2, 0, -25, secs + 0.6, gold, core, 0.4);
+        clockPart(level, HOUR, V.up(ground, 0.02), V.UP, r * 1.05, 0, 30.0 / (total / 20.0), secs, gold, core, 0.5);
+        // 0.48.0 입체 시계판 (판 · 금빛 테 · 톱니 · 시침 · 분침 — 땅에 누움, 12 시가 북쪽): 분침이 total 틱에 한 바퀴 (tick) → 자정에 두 바늘이 겹침 (midnight)
+        int dial3d = Fx3d.spawn(level, "clock", V.up(c, 0.12), Opt.of("dir", new Vec3(0, 0, -1), "face", V.UP, "scale", r * 1.05, "life", secs + 0.7, "color", glow,
+                "glow", gold, "anim", "tick", "animSpeed", 3.0 / Math.max(0.5, 12 * tick / 20.0), "glowAlpha", 0.3, "shine", 0.25, "pop", 0.25, "fadeOut", 0.4));
+        Kit.motionLater(sp, "kronos_clock:midnight", total, life); // 자정: 낫을 하늘로 치켜들었다가 내려찍음 (fall 틱 뒤 가름)
         RuneKit.zonePulse(level, c, glow, r, 0.6);
         SkillFx.play(level, "block.bell.hit", c, 0.5, 1.0);
         SkillFx.play(level, "beacon.activate", c, 0.7, 0.8);
@@ -222,7 +239,11 @@ final class Kronos {
             double room = Math.max(4, Math.min(12, Kit.skyRoom(level, V.up(drop, 0.5), 12, true)));
             Vec3 top = V.up(drop, room);
             RuneKit.rfx(level, "relicspin", top, Opt.of("size", r * 1.1, "life", fall / 20.0 + 0.15, "spin", 0.0, "spinRate", 720.0, "cell", (double) RELIC_SPIN_CELL,
-                    "alpha", 0.95, "fade", 0.2, "vel", new Vec3(0, -(room - 2.2) / (fall / 20.0), 0)));
+                    "alpha", 0.4, "fade", 0.2, "vel", new Vec3(0, -(room - 2.2) / (fall / 20.0), 0)));
+            // 0.48.0 입체: 시계판의 두 바늘이 12 시로 겹침 · 내 낫이 거대해져 보는 사람 쪽으로 돌며 하늘에서 내려옴 (fall 틱)
+            Fx3d.anim(level, dial3d, "midnight", false, c);
+            WeaponFx3d.weapon(level, sp, w, top, Opt.of("to", V.up(drop, 2.2), "travel", fall / 20.0, "ease", "in", "dir", V.UP, "faceCam", 1.0, "spin", 720.0,
+                    "spinAxis", "z", "size", 2.6, "life", fall / 20.0 + 0.1, "glow", glow, "glowAlpha", 0.6, "fadeOut", 0.08));
             SkillFx.beam(level, top, V.up(drop, 1), gold, Opt.of("half", 0.5, "thick", 0.4, "life", fall / 20.0 + 0.2, "gap", 1.0));
             SkillFx.play(level, "block.bell.hit", c, 0.4, 1.0);
             SkillFx.play(level, "mob.warden.sonic_charge", c, 0.8, 0.7);
@@ -236,6 +257,10 @@ final class Kronos {
                         "spin", 0.0, "color", glow, "aura", gold));
             }
             RuneKit.glowCrack(level, c, r * 1.1, glow, core, Opt.of("life", 1.2, "v", 1.0));
+            // 0.48.0 입체: 거대한 낫이 위에서 앞 아래로 내리찍어 시계판을 가름 (보는 사람 쪽 — 판이 깨지며 흩어짐)
+            WeaponFx3d.swingItem(level, sp, w, V.up(drop, 5.5), V.add(V.UP, f, -0.3), V.add(V.DOWN, f, 0.45), 0.12, 0.25, 2.6, true, Opt.of("glow", glow,
+                    "glowAlpha", 0.6, "fadeOut", 0.2));
+            WeaponFx3d.kill(level, dial3d, c, 0.35);
             RuneKit.rfx2(level, "flare", V.up(drop, 1.2), Opt.of("size", 2.6, "life", 0.35, "grow", 0.5, "fade", 0.6, "spin", 45.0), glow, core, new int[] {0, 1},
                     null);
             RuneKit.novaRing(level, c, r * 0.5, 1.4, glow, core, Opt.of("life", 0.5));

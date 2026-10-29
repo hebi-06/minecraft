@@ -15,6 +15,7 @@ import java.util.function.DoubleUnaryOperator;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
@@ -35,6 +36,8 @@ final class Odin {
     static final double[] OD_WHITE = {1.0, 0.97, 0.86}; // 흰 금빛
     /** 빛의 까마귀 반 크기 (칸) — 그림 192점 = 2 × 반 크기 (날개 폭 약 160점 → 약 1.7칸) */
     static final double OD_RAVEN = 1.0;
+    /** 0.48.0 입체 까마귀의 깃 (검은 보랏빛 — 금빛 빛 무리) */
+    static final double[] RAVEN_BODY = {0.2, 0.18, 0.27};
     /** 까마귀를 그리지 않는 눈 둘레 (칸) — 1인칭 화면을 덮지 않게 */
     static final double OD_RAVEN_NEAR = 2.5;
     /** 까마귀가 돌아오는 가장 빠른 빠르기 (틱당 칸) — 멀리서 쪼고 돌아올 때 순간이동처럼 보이지 않게 돌아오는 틱을 늦춤 */
@@ -76,7 +79,7 @@ final class Odin {
     static void ravenFx(ServerLevel level, Vec3 at, Vec3 dir, Vec3 vel, double phase, double size, double life) {
         double speed = V.len(vel);
         SkillFx.fx(level, "rpg:odin_raven", at, Opt.of("dir", dir, "size", size, "life", life, "speed", speed, "spin", phase, "color", SkillFx.WHITE,
-                "alpha", 1.0, "move", speed > 1e-6 ? V.unit(vel) : dir));
+                "alpha", 0.4, "move", speed > 1e-6 ? V.unit(vel) : dir)); // 0.48.0 입체 까마귀가 몸 — 그림은 빛으로 옅게
     }
 
     /** 안수즈 룬 표식 (rpg:odin_mark — 보는 사람을 향함): size 반 크기, life 초. o: grow (커지는 몫) · color · alpha */
@@ -96,8 +99,8 @@ final class Odin {
 
     /** 오딘의 눈 (rpg:odin_eye — 보는 사람을 향함): 처음 wax 초 동안 뜸, close 초부터 fade 초 동안 감음, 감은 뒤 번쩍이며 남은 수명 동안 사라짐 */
     static void odinEyeFx(ServerLevel level, Vec3 at, double size, double life, double wax, double close, double fade) {
-        SkillFx.fx(level, "rpg:odin_eye", at, Opt.of("size", size, "life", life, "color", SkillFx.WHITE, "alpha", 1.0, "wax", wax, "close", close,
-                "fade", fade));
+        SkillFx.fx(level, "rpg:odin_eye", at, Opt.of("size", size, "life", life, "color", SkillFx.WHITE, "alpha", 0.45, "wax", wax, "close", close,
+                "fade", fade)); // 0.48.0 입체 눈 (odin_eye) 이 몸 — 그림은 빛으로 옅게
     }
 
     /** 2차 베지에 곡선 위의 점 (p0 → 조절점 c → p1, v 0~1) */
@@ -296,6 +299,8 @@ final class Odin {
         final int sgn;
         Leg leg;
         Vec3 dir;
+        /** 0.48.0 입체 까마귀 (raven — 검은 깃 · 금빛 빛 무리, 틱마다 다음 자리로 옮김) */
+        int fx;
 
         Raven(int rv) {
             this.rv = rv;
@@ -337,6 +342,8 @@ final class Odin {
         double lastPeck = -100;
         /** 돌아와 흩어지는 틱 (쪼음을 다 잡으면 정함) */
         double T = Double.POSITIVE_INFINITY;
+        /** 0.48.0 돌아오는 단계 동작을 보냈는지 */
+        boolean returnSent;
         /** 쪼인 적: id → 적 번호 · 쪼인 수 (처음 쪼인 순) */
         final Map<UUID, Marked> marked = new LinkedHashMap<>();
         /** 돌아올 자리의 높이: 눈높이에서 1칸 위 (낮은 굴이면 쓸 때 앞 천장 아래 0.6칸까지) */
@@ -555,6 +562,13 @@ final class Odin {
             Vec3 at = fl.at();
             Vec3 dir = fl.dir();
             double de = V.len(V.sub(at, eye));
+            // 0.48.0 입체 까마귀: 눈 2칸 밖에서 처음 나타나 (1인칭 화면을 덮지 않게) 틱마다 다음 자리로 옮김 — 나는 쪽을 보고 (align) 등이 위 (face)
+            if (r.fx == 0 && de >= 2.0) {
+                r.fx = Fx3d.spawn(level, "raven", at, Opt.of("align", 1.0, "dir", dir, "face", V.UP, "scale", 0.85, "life", 30.0, "color", RAVEN_BODY, "glow",
+                        OD_GOLD, "anim", "flap", "loop", 1.0, "animPhase", r.rv * 0.5, "glowAlpha", 0.35, "shine", 0.2, "pop", 0.1));
+            } else if (r.fx != 0) {
+                Fx3d.move(level, r.fx, fl.next(), 0.05, "linear");
+            }
             if (de < OD_RAVEN_NEAR) return;
             // 그림 방향: 나는 쪽을 내 화면 면에 눕힘 (나는 쪽 그대로면 멀어지거나 다가올 때 날개 끝만 보이는 얇은 줄이 됨)
             double dv = V.dot(dir, view);
@@ -573,6 +587,7 @@ final class Odin {
         void scatter(Vec3 eye) {
             for (Raven r : ravens) {
                 Vec3 h = home(r.rv);
+                WeaponFx3d.kill(level, r.fx, h, 0.15); // 0.48.0 입체 까마귀가 빛으로 흩어짐
                 SkillFx.burst(level, h, glow, 0.35, 0.22);
                 SkillFx.sparks(level, h, OD_GOLD, 4, 3);
             }
@@ -604,7 +619,10 @@ final class Odin {
 
         /** 매 틱 (t = 0, 1, …): 계속하면 true (돌아와 흩어지거나 · 쓰러지거나 · 30초가 지나면 멈춤) */
         boolean step(int t) {
-            if (!ok.getAsBoolean() || t > 600) return false;
+            if (!ok.getAsBoolean() || t > 600) {
+                for (Raven r : ravens) WeaponFx3d.kill(level, r.fx, sp.position(), 0.15);
+                return false;
+            }
             Vec3 eye = sp.getEyePosition();
             Vec3 view = sp.getViewVector(1F);
             // 끝 자리가 한 틱에 2칸 넘게 옮겨짐 (그 적이 순간이동 · 날려 감, 내가 순간이동 · 확 돌아섬): 옮겨지기 전 끝으로 잰 지금 자리에서 다시 날아감 (까마귀가 튀지 않게)
@@ -630,6 +648,11 @@ final class Odin {
                     double ms = nearSize(0.32 + 0.06 * m.n, V.len(V.sub(at, eye)));
                     if (ms > 0) odinMarkFx(level, at, ms, 0.3, Opt.of("alpha", 0.9));
                 }
+            }
+            // 0.48.0 단계 동작: 돌아올 때 왼 팔뚝을 내밀어 받았다가 휘둘러 흩뿌림 (흩어지기 8틱 전)
+            if (!returnSent && t >= T - 8) {
+                returnSent = true;
+                Kit.motion(sp, "odin_ravens:return");
             }
             if (t < T) return true;
             scatter(eye);
@@ -827,6 +850,12 @@ final class Odin {
         double mult = k.num("mult");
         double afterMult = k.num("afterMult");
         odinEyeFx(level, eyeC, size, (fin + 10) / 20, open / 20, close / 20, 6 / 20.0);
+        // 0.48.0 입체 오딘의 눈 (흰자 · 금빛 눈동자 · 눈꺼풀 · 고리 테두리 · 빛살 — 보는 사람 쪽): 뜸 (open) → 노려봄 (glare) → 감음 (close)
+        int eye3d = Fx3d.spawn(level, "odin_eye", eyeC, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", size * 0.92, "life", (fin + 10) / 20, "color", glow, "glow",
+                OD_GOLD, "anim", "open", "animSpeed", 0.5 / Math.max(0.05, open / 20), "glowAlpha", 0.45, "shine", 0.35, "pop", 0.2, "fadeOut", 0.5));
+        Tasks.later((int) open, () -> Fx3d.anim(level, eye3d, "glare", true, eyeC));
+        Tasks.later((int) close, () -> Fx3d.anim(level, eye3d, "close", false, eyeC));
+        Kit.motionLater(sp, "odin_eye:close", (int) close, life); // 왼손으로 움켜쥐어 감기고 지팡이를 내리침 (폭발 6틱 전)
         SkillFx.rune(level, spot, Opt.of("size", radius, "life", (fin + 6) / 20, "color", glow, "alpha", 0.75, "rate", 20.0));
         // 눈 아래 땅까지 곧게 내리는 옅은 빛
         SkillFx.beam(level, V.up(eyeC, -OD_RING * size), V.up(col, 0.15), OD_GOLD, Opt.of("half", 0.9, "thick", 0.9, "life", fin / 20, "gap", 1.6,

@@ -15,6 +15,7 @@ import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
@@ -344,6 +345,9 @@ public final class Aegis {
         final Obj k;
         final ServerLevel level;
         final BooleanSupplier ok;
+        /** 0.48.0 쓸 때의 목숨 (단계 동작) · 입체 방패 (내 방패 디자인이 커져 앞에 섬 — Fx3d 번호) */
+        final String life;
+        int shield3d;
         final Vec3 start;
         final Vec3 f;
         final Vec3 side;
@@ -374,6 +378,7 @@ public final class Aegis {
             this.k = k;
             this.level = sp.level();
             String life = Kit.lifeOf(sp);
+            this.life = life;
             this.ok = () -> Kit.sameLife(sp, life);
             this.start = sp.position();
             this.f = Kit.facingOf(sp);
@@ -516,7 +521,10 @@ public final class Aegis {
             shieldFx(level, sa, AE_SHIELD, 0.4, Opt.of("progress", 0));
             Tasks.later(8, () -> {
                 if (ok.getAsBoolean()) shieldFx(level, sa, AE_SHIELD, 0.3, Opt.of("progress", 2));
+                WeaponFx3d.kill(level, shield3d, sa, 0.25);
             });
+            // 0.48.0 멈춤 동작: 방패로 밀쳐 세운 채 서리를 뿜고 → 20틱에 방패를 내질러 얼음을 깨뜨림 (쓴 틱에 멈췄으면 무기 스킬 동작 다음 틱에)
+            Kit.motionLater(sp, "svalinn_charge:freeze", 1, life);
             for (double[] ey : AE_EYES) {
                 Vec3 at = V.add(V.add(sa, side, ey[0] * AE_SHIELD), V.UP, ey[1] * AE_SHIELD);
                 SkillFx.fx(level, "rpg:arrow_spark", V.add(at, f, 0.05), Opt.of("dir", f, "size", 0.3, "grow", 4, "life", 0.3, "color", AE_EYE, "alpha", 1));
@@ -547,6 +555,13 @@ public final class Aegis {
                     continue;
                 }
                 petrify(e, stone);
+                // 0.48.0 입체 얼음 껍질: 몸을 감싸는 얼음 결정 (솟아 굳음 → 깨지기 6틱 전부터 떨림 → 깨질 때 흩어짐)
+                double hk = Math.max(1.0, e.getBbHeight() / 1.7);
+                double wk = Math.max(1.0, (e.getBbWidth() + 0.3) / 1.0);
+                int ice = Fx3d.spawn(level, "ice_shell", e.position(), Opt.of("dir", V.UP, "face", V.turnY(new Vec3(0, 0, 1), Kit.rand() * 360), "scale",
+                        Math.max(hk, wk), "life", stone / 20.0 + 0.05, "color", AE_STONE, "glow", AE_WHITE, "anim", "form", "glowAlpha", 0.4, "shine", 0.35,
+                        "fadeOut", 0.06));
+                Tasks.later(Math.max(1, stone - 6), () -> Fx3d.anim(level, ice, "crack", true, e.position()));
                 // 발밑 얼음 결정 (얼어붙은 동안)
                 RuneKit.iceCrystal(sp, level, e.position(), 0.55 + Kit.bodyPad(e), AE_EYE, Opt.of("life", stone / 20.0, "grow", 0.1, "fade", 0.25, "full", 3.0));
                 for (int part = 0; part < 3; part++) {
@@ -593,6 +608,9 @@ public final class Aegis {
         }
 
         void start() {
+            // 0.48.0 입체 방패: 내 방패 디자인이 1.5배로 커져 몸 앞 (가슴 높이) 에 섬 — 나를 따라감 (내 1인칭에서는 숨김 — 빛의 방패 그림이 보임), 멈춘 뒤 8틱에 흩어짐
+            shield3d = WeaponFx3d.weapon(level, sp, w, new Vec3(0, 0.98, 1.05), Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, 1), "size",
+                    1.5, "life", 2.5, "view", 1.0, "glow", AE_EYE, "glowAlpha", 0.5, "fadeIn", 0.05, "pop", 0.1));
             // 출발: 방패를 들어 올리는 소리 + 발밑 고리
             SkillFx.shock(level, from, glow, 1.3, 0.35);
             SkillFx.play(level, "item.shield.block", start, 0.8, 1.0);
@@ -799,6 +817,13 @@ public final class Aegis {
         Tasks.later(12, () -> {
             if (ok.getAsBoolean()) shieldFx(level, planted, 0.85, 0.35, Opt.of("progress", 2));
         });
+        // 0.48.0 입체: 내 방패 디자인이 앞 땅에 꽂혀 돔이 접힐 때까지 섬 (내 1인칭에서는 숨김 — 앞을 가리지 않게) · 얼음 육각 돔 (반지름 r — 솟음 → 접힘)
+        int planted3d = WeaponFx3d.weapon(level, sp, w, V.add(V.up(c, 0.62), f, plantAt), Opt.of("dir", V.UP, "face", f, "size", 1.1, "life", ticks / 20.0 + 0.1,
+                "view", 1.0, "glow", glow, "glowAlpha", 0.55, "pop", 0.08));
+        int dome3d = Fx3d.spawn(level, "hex_dome", c, Opt.of("dir", V.UP, "face", f, "scale", r, "life", (ticks + fold) / 20.0, "color", glow, "glow", core,
+                "anim", "rise", "glowAlpha", 0.25, "shine", 0.15, "fadeOut", 0.1));
+        // 0.48.0 단계 동작: 접힐 때 웅크렸다가 돌아온 방패를 하늘로 치켜듦 (해가 드러남)
+        Kit.motionLater(sp, "svalinn_dome:fold", ticks, life);
         SkillFx.rune(level, c, Opt.of("size", r, "life", (ticks + fold) / 20.0, "color", glow, "alpha", 0.7, "rate", 20));
         SkillFx.shock(level, c, glow, r / RING_GROW, 0.5);
         SkillFx.shock(level, c, core, r * 0.55 / RING_GROW, 0.4);
@@ -823,7 +848,11 @@ public final class Aegis {
         Vec3 sun = V.add(eye0, sunU, sunD);
         double sunK = sunD / sunFar;
         double spinRate = 8.0;
-        RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", ticks / 20.0, "frames", 2.0, "fps", 5.0, "loop", 1.0, "spinRate", spinRate));
+        RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", ticks / 20.0, "frames", 2.0, "fps", 5.0, "loop", 1.0, "spinRate", spinRate,
+                "alpha", 0.45));
+        // 0.48.0 입체 일식 (해를 가린 원판 · 새어 나오는 빛 고리 · 빛살 — 일렁임): 해가 드러날 때 원판이 작아짐 (reveal)
+        int eclipse3d = Fx3d.spawn(level, "eclipse", sun, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", ECLIPSE * sunK * 1.8, "life", (ticks + burstT) / 20.0 + 0.5,
+                "color", glow, "glow", core, "anim", "pulse", "loop", 1.0, "glowAlpha", 0.45, "shine", 0.3, "fadeOut", 0.3));
         for (LivingEntity e : enemiesIn(sp, c, r, 0)) {
             Kit.hitAt(sp, e, Kit.reserveHit(sp, e, Tasks.now()), ok, () -> {
                 if (Kit.skillHit(sp, e, w, k.num("mult")) > 0) slowAndTaunt(sp, level, e, k, true);
@@ -839,7 +868,7 @@ public final class Aegis {
                 if (!ok.getAsBoolean()) return;
                 for (Vec3 u : ring) {
                     hexFx(level, V.add(c, u, r), Opt.of("dir", V.scale(u, -1), "size", 0.62, "life", (ticks + fold - jj) / 20.0, "fold", (ticks - jj) / 20.0,
-                            "reach", r - 1.8, "alpha", 0.5, "color", glow));
+                            "reach", r - 1.8, "alpha", 0.3, "color", glow));
                 }
             };
             if (j == 0) draw.run();
@@ -860,6 +889,9 @@ public final class Aegis {
         // 접힘: 땅의 룬 둘이 육각 칸과 함께 0.4초 동안 가운데로 말려 듦 (바깥으로 퍼지는 고리가 아니라 안으로) · 소리 + 돔 안의 적을 가운데로 끌어당기며 벰
         Map<UUID, LivingEntity> folded = new LinkedHashMap<>(); // 접힐 때 맞은 적 (밀려났어도 터질 때 맞음)
         Tasks.later(ticks, () -> {
+            // 0.48.0 입체: 돔이 접힘 · 꽂힌 방패가 손으로 돌아감 (흩어짐)
+            Fx3d.anim(level, dome3d, "fold", false, c);
+            WeaponFx3d.kill(level, planted3d, c, 0.15);
             if (!ok.getAsBoolean()) return;
             // 다이아몬드 고리: 접히는 동안 해의 테 한쪽이 번쩍 (곧 드러남 — 돌던 각도 그대로 이어서)
             RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", burstT / 20.0, "cell", 2.0, "spin", spinRate * ticks / 20.0, "spinRate",
@@ -884,6 +916,10 @@ public final class Aegis {
             // 가려졌던 해가 드러남: 일식 자리에서 해가 활활 커짐 (빛살은 조금 뒤에 — 같은 자리 그림 둘이 겹쳐 깜빡이지 않게)
             RuneKit.rfx2(level, "sun", V.add(sun, sunU, 0.2), Opt.of("size", ECLIPSE * 1.55 * sunK, "life", 0.6, "grow", 0.8, "fade", 0.5, "spin", Kit.rand() * 90), flame,
                     flameCore);
+            // 0.48.0 입체: 일식 원판이 작아지며 (reveal) 해가 드러나 활활 커짐 (sun — 빛살이 길어짐)
+            Fx3d.anim(level, eclipse3d, "reveal", false, sun);
+            Fx3d.spawn(level, "sun", V.add(sun, sunU, 0.15), Opt.of("dir", V.UP, "faceCam", 1.0, "scale", ECLIPSE * sunK * 2.4, "life", 0.75, "color", flame,
+                    "glow", flameCore, "anim", "burst", "glowAlpha", 0.7, "shine", 0.6, "pop", 0.12, "grow", 0.5, "fadeOut", 0.35));
             RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", 0.9, "cell", 3.0, "spin", spinRate * (ticks + burstT) / 20.0, "spinRate",
                     spinRate, "grow", 0.35, "fade", 0.55));
             // 가운데 번쩍임은 돔 가운데 가슴 높이 — 내 눈이 그 3칸 안이면 (가운데에 선 채로) 보는 쪽 앞 (벽 앞까지 2.2칸) 에 작게

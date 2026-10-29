@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
@@ -88,6 +89,8 @@ final class ElfBow {
             next = launch + gap;
             end = Math.max(end, arrive);
             arrow(sp, w, k, ok, e, i, (int) (launch - now), flight, arrive, glow, core);
+            // 0.48.0 내 다음 화살 (짝수 번째 — 첫 발은 스킬 동작): 시위를 재빨리 당겨 쏘는 동작 (2틱째 놓음 = 쏨)
+            if (i > 0 && i % 2 == 0) Kit.motionLater(sp, "elf_volley:shot", Math.max(1, (int) (launch - now) - 2), life);
         }
         // 정령: 나타나 화살을 다 쏠 때까지 (매 3틱 다시 그림 — 나를 따라감)
         // 나타남: 정령 둘레에 작은 반짝임 · 나뭇잎 (눈 앞 1칸 남짓 — 큰 빛은 1인칭 화면을 가림)
@@ -96,6 +99,11 @@ final class ElfBow {
         SkillFx.play(level, "mob.allay.idle", s0, 1.3, 0.9);
         SkillFx.play(level, "chime.amethyst_block", s0, 1.6, 0.8);
         int stay = (int) (end - now) + 8;
+        // 0.48.0 입체 바람 정령: 내 왼쪽 위에서 날갯짓하며 따라옴 (화살을 다 쏠 때까지)
+        int sylph = WeaponFx3d.fx(level, "sylph", new Vec3(-0.7, 1.72, 1.0), glow, core, Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0.35,
+                0, 1), "scale", 0.95, "anim", "flap", "loop", 1.0, "bob", 0.06, "bobHz", 1.2, "life", stay / 20.0, "pop", 0.2, "fadeOut", 0.3, "glowAlpha", 0.55,
+                "shine", 0.3));
+        WeaponFx3d.guard(sp, life, new int[] {sylph}, stay);
         for (int t = 0; t < stay; t += 3) {
             final int tt = t;
             HeroKit.at(t, () -> {
@@ -103,7 +111,7 @@ final class ElfBow {
                 Vec3 at = sylphAt(sp);
                 double fade = tt + 3 >= stay ? 0.8 : 0;
                 RuneKit.rfx(level, "spirit", at, Opt.of("size", 0.32, "life", 0.2, "cell", (double) SYLPH, "frames", 4.0, "fps", 12.0, "loop", true, "phase",
-                        tt * 0.6, "alpha", 0.95, "fade", fade));
+                        tt * 0.6, "alpha", 0.3, "fade", fade));
                 if (tt % 6 == 0) {
                     RuneKit.rfx2(level, "prop", V.add(at, new Vec3(Kit.rand() - 0.5, -0.1, Kit.rand() - 0.5), 0.4), Opt.of("dir", V.DOWN, "speed", 0.8, "size", 0.12,
                             "life", 0.8, "spin", Kit.rand() * 360, "spinRate", 200.0, "fade", 0.5), LEAF, core, FEATHER, null);
@@ -132,8 +140,14 @@ final class ElfBow {
             Vec3[] prev = {from};
             SkillFx.play(level, "random.bow", from, bySylph ? 1.7 : 1.25, bySylph ? 0.6 : 0.9);
             SkillFx.fx(level, "rpg:arrow_spark", from, Opt.of("dir", f, "size", 0.2, "grow", 2.5, "life", 0.15, "color", glow, "alpha", 1.0));
+            // 0.48.0 입체 빛 화살 (틱마다 휘는 길의 다음 자리로 — 가는 쪽을 봄)
+            int fx = WeaponFx3d.fx(level, "light_arrow", from, glow, core, Opt.of("dir", f, "align", 1.0, "scale", 0.75, "life", flight / 20.0 + 0.6, "fadeIn", 0.03,
+                    "glowAlpha", 0.6, "shine", 0.4, "fadeOut", 0.1));
             Kit.ticks(t -> {
-                if (!ok.getAsBoolean()) return false;
+                if (!ok.getAsBoolean()) {
+                    WeaponFx3d.kill(level, fx, prev[0], 0.05);
+                    return false;
+                }
                 if (!Kit.fallen(e)) last[0] = Kit.bodyPoint(e);
                 double u = Math.min(1, (t + 1) / (double) flight);
                 Vec3 to = last[0];
@@ -148,6 +162,8 @@ final class ElfBow {
                     RuneKit.rfx2(level, "prop", p, Opt.of("dir", V.DOWN, "speed", 0.6, "size", 0.1, "life", 0.6, "spin", Kit.rand() * 360, "spinRate", 260.0,
                             "fade", 0.5), LEAF, core, FEATHER, null);
                 }
+                Fx3d.move(level, fx, V.add(p, tan, -0.25), 0.05, "linear");
+                if (u >= 1) Tasks.later(1, () -> WeaponFx3d.kill(level, fx, p, 0.12)); // 꽂힘: 잠깐 박혀 있다가 흩어짐
                 prev[0] = p;
                 return u < 1;
             });

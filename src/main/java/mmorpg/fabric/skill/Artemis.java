@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.Tasks;
@@ -72,13 +73,13 @@ final class Artemis {
 
     /** 빛의 은활 (rpg:artemis_bow — 보는 사람을 향해 섬, 아래를 겨눔): at = 가운데, size = 반 크기 (칸), life 초 — 마지막 fade 초 동안 흩어짐 */
     static void bowFx(ServerLevel level, Vec3 at, double size, double life, double fade) {
-        SkillFx.fx(level, "rpg:artemis_bow", at, Opt.of("size", size, "life", life, "spin", Math.floor(Kit.rand() * 4), "color", SkillFx.WHITE, "alpha", 1.0,
-                "fade", fade));
+        SkillFx.fx(level, "rpg:artemis_bow", at, Opt.of("size", size, "life", life, "spin", Math.floor(Kit.rand() * 4), "color", SkillFx.WHITE, "alpha", 0.35,
+                "fade", fade)); // 0.48.0 입체 은활 (light_bow) 이 몸 — 그림은 빛으로 옅게
     }
 
     /** 만월 (rpg:artemis_moon — 보는 사람을 향함): at = 가운데, size = 반 크기 (칸), 처음 wax 초 동안 차오름, 마지막 fade 초 동안 번쩍인 뒤 흩어짐 */
     static void moonFx(ServerLevel level, Vec3 at, double size, double life, double wax, double fade) {
-        SkillFx.fx(level, "rpg:artemis_moon", at, Opt.of("size", size, "life", life, "color", AR_MOON_TINT, "alpha", 1.0, "wax", wax, "fade", fade));
+        SkillFx.fx(level, "rpg:artemis_moon", at, Opt.of("size", size, "life", life, "color", AR_MOON_TINT, "alpha", 0.45, "wax", wax, "fade", fade));
     }
 
     /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게 — skills.js beamAway) */
@@ -213,6 +214,9 @@ final class Artemis {
         // 모음: 손 앞에서 초승달이 차오름 (커지며 돎) + 둘레에서 빛 알갱이가 손으로 모여듦
         SkillFx.play(level, "crossbow.loading.start", sp.position(), 1.0, 0.8);
         SkillFx.play(level, "resonate.amethyst_block", sp.position(), 0.9, 1.2);
+        // 0.48.0 입체: 시위에 메긴 거대한 달빛 화살 (나를 따라감 — 다른 사람 · 3인칭에만, 내 1인칭은 손 앞의 초승달) — 모으는 동안 커짐
+        Fx3d.spawn(level, "light_arrow", new Vec3(0.28, 1.42, 2.1), Opt.of("follow", (double) sp.getId(), "dir", new Vec3(0, 0, 1), "faceCam", 1.0, "scale", 0.9,
+                "grow", 2.1, "life", charge / 20.0 + 0.02, "color", glow, "glow", AR_WHITE, "view", 1.0, "glowAlpha", 0.5, "shine", 0.5, "fadeIn", 0.06));
         for (int t = 0; t < charge; t++) {
             final int tt = t;
             Runnable draw = () -> {
@@ -298,7 +302,11 @@ final class Artemis {
         if (shown) {
             double vSpeed = (vreach - tip0) / (outT / 20.0);
             Vec3 tip = V.add(hand, vdir, tip0);
-            arrowFx(level, V.add(hand, vdir, tip0 - half), vdir, half, outT / 20.0, Opt.of("move", vdir, "speed", vSpeed));
+            arrowFx(level, V.add(hand, vdir, tip0 - half), vdir, half, outT / 20.0, Opt.of("move", vdir, "speed", vSpeed, "alpha", 0.5));
+            // 0.48.0 입체 거대한 달빛 화살 (light_arrow — 길이 2 × half): 같은 때 끝에 닿음, 벽이면 박혀 갈라질 때 흩어짐
+            int arrow3d = WeaponFx3d.fly(level, "light_arrow", tip, end, 0.62, half * 2 / 1.2, outT / 20.0, wall ? (delay + 2) / 20.0 : 0.05,
+                    Opt.of("color", glow, "glow", AR_WHITE, "roll", 540.0, "glowAlpha", 0.55, "shine", 0.5, "fadeOut", 0.12));
+            if (wall) Tasks.later(outT + delay, () -> WeaponFx3d.kill(level, arrow3d, end, 0.15));
             SkillFx.fx(level, "rpg:arrow_spark", tip, Opt.of("dir", vdir, "speed", vSpeed, "size", 1.0, "grow", 1.0, "life", outT / 20.0 + 0.05, "color", glow,
                     "alpha", 0.7));
             SkillFx.fx(level, "rpg:arrow_spark", tip, Opt.of("dir", vdir, "speed", vSpeed, "size", 0.45, "grow", 1.0, "life", outT / 20.0 + 0.05, "color", AR_WHITE,
@@ -343,7 +351,7 @@ final class Artemis {
         Tasks.later(outT, () -> {
             if (!ok.getAsBoolean()) return;
             if (wall) {
-                if (shown) arrowFx(level, stuck, vdir, half, delay / 20.0 + 0.05);
+                if (shown) arrowFx(level, stuck, vdir, half, delay / 20.0 + 0.05, Opt.of("alpha", 0.45));
                 double de = V.len(V.sub(end, sp.getEyePosition()));
                 if (de >= 1.6) {
                     double sz = Math.min(1, Math.max(0.3, (de - 0.8) / 2.5));
@@ -364,6 +372,12 @@ final class Artemis {
                 double de = V.len(V.sub(at, eyeNow));
                 if (de < 2.2) continue;
                 boolean odd = j % 2 == 1;
+                // 0.48.0 입체 초승달 (crescent_wave — 길을 가로질러 서서 돎, 앞쪽일수록 늦게)
+                if (j % 2 == 0) {
+                    Fx3d.spawn(level, "crescent_wave", at, Opt.of("dir", V.UP, "face", vdir, "scale", Math.min(1.3, 0.4 + de * 0.1), "spin", odd ? 480.0 : -480.0,
+                            "spinAxis", "z", "life", 0.32, "delay", (s / vreach) * 0.15, "color", odd ? AR_WHITE : AR_MOON, "glow", AR_WHITE, "pop", 0.08, "grow",
+                            0.5, "fadeOut", 0.15, "glowAlpha", 0.4, "shine", 0.5));
+                }
                 crescentFx(level, at, Math.min(1.3, 0.35 + de * 0.12), 0.35, odd ? AR_WHITE : AR_MOON, Opt.of("spin", odd ? 40.0 : -40.0, "rate",
                         odd ? 300.0 : -300.0, "grow", 0.5, "delay", (s / vreach) * 0.15));
             }
@@ -454,6 +468,14 @@ final class Artemis {
         // 나타남: 만월 (rise 틱 동안 차오름 → final 에 번쩍 · 흩어짐) + 빛의 은활 (final 2틱 전부터 흩어짐) + 땅의 은빛 룬 + 달빛 기둥 + 소리
         moonFx(level, moonC, moonSize, (fin + 12) / 20.0, rise / 20.0, 0.6);
         bowFx(level, bowC, s, (fin + 8) / 20.0, 0.5);
+        // 0.48.0 입체: 빛의 은활 (light_bow — 손잡이가 줌통, 활 팔이 가로 · 아래를 겨눔) · 만월 (moon — 구덩이 · 초승달 날 · 별, 천천히 돎)
+        Vec3 sideB = V.rightOf(away);
+        int bow3d = Fx3d.spawn(level, "light_bow", rest, Opt.of("dir", sideB, "face", V.DOWN, "scale", 0.78 * s, "life", (fin + 6) / 20.0, "color", glow, "glow",
+                AR_WHITE, "anim", "rest", "loop", 1.0, "glowAlpha", 0.5, "shine", 0.45, "pop", 0.2, "fadeOut", 0.4));
+        int moon3d = Fx3d.spawn(level, "moon", moonC, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 1.25 * moonSize, "life", (fin + 12) / 20.0, "color", AR_MOON,
+                "glow", AR_WHITE, "anim", "spin", "loop", 1.0, "glowAlpha", 0.5, "shine", 0.35, "pop", rise / 20.0, "fadeOut", 0.6));
+        // 단계 동작: 하늘의 은활과 함께 시위를 끝까지 당겼다가 놓음 (거대한 화살을 메기는 때)
+        Kit.motionLater(sp, "artemis_moon:final", fin - 8, life);
         // 처음부터 시위에 메긴 은빛 화살 (꼬리가 시위, 촉이 아래 — 아래를 겨눈 활로 보이게) — 거대한 화살을 메길 때 사라짐
         arrowFx(level, V.up(nock, -0.45 * s), V.DOWN, 0.45 * s, (fin - 8) / 20.0);
         SkillFx.rune(level, spot, Opt.of("size", radius, "life", (fin + 6) / 20.0, "color", glow, "alpha", 0.75, "rate", 25.0));
@@ -480,6 +502,11 @@ final class Artemis {
                     Vec3 d = V.sub(b, rest);
                     double dl = V.len(d);
                     Vec3 u = dl > 1e-3 ? V.unit(d) : V.DOWN;
+                    if (dl >= 0.6 && j < 6) {
+                        // 0.48.0 입체 빛의 화살: 줌통에서 몸으로 (3틱) → 꽂힌 채 0.4초
+                        WeaponFx3d.fly(level, "light_arrow", V.add(rest, u, 0.6), b, 0.62, 0.9, 0.15, 0.4, Opt.of("color", glow, "glow", AR_WHITE, "glowAlpha",
+                                0.35, "shine", 0.45, "fadeOut", 0.15));
+                    }
                     if (dl >= 0.6) {
                         double fly = Math.max(0, dl - 1.2) / 0.15;
                         SkillFx.fx(level, "rpg:arrow_shot", V.add(rest, u, 0.6), Opt.of("dir", u, "speed", fly, "size", 0.6, "thick", 0.22, "life", 0.15,
@@ -510,6 +537,8 @@ final class Artemis {
                     Vec3 u = V.unit(d);
                     SkillFx.fx(level, "rpg:arrow_shot", V.add(rest, u, 0.6), Opt.of("dir", u, "speed", Math.max(0, V.len(d) - 1.2) / 0.15, "size", 0.5,
                             "thick", 0.18, "life", 0.15, "color", j % 2 == 1 ? glow : core, "alpha", 0.9));
+                    WeaponFx3d.fly(level, "light_arrow", V.add(rest, u, 0.6), V.add(tgt, u, 0.25), 0.62, 0.8, 0.15, 0.7, Opt.of("color", glow, "glow", AR_WHITE,
+                            "glowAlpha", 0.3, "shine", 0.4, "fadeOut", 0.2)); // 0.48.0 땅에 꽂히는 입체 화살
                     Tasks.later(3, () -> {
                         if (ok.getAsBoolean()) arrowFx(level, V.add(tgt, u, -0.3), u, 0.4, 0.8);
                     });
@@ -519,9 +548,15 @@ final class Artemis {
         // 거대한 화살: 시위에 메김 (꼬리가 시위, 촉이 아래) → 4틱 동안 당김 (위로) → 쏨: 4틱에 땅으로 (굵은 달빛 줄기)
         double gHalf = 0.62 * s;
         double pull = 0.25 * s;
+        int[] giant = {0};
         Tasks.later(fin - 8, () -> {
             if (!ok.getAsBoolean()) return;
-            arrowFx(level, V.up(nock, -gHalf), V.DOWN, gHalf, 0.2, Opt.of("move", V.UP, "speed", pull / 0.2));
+            arrowFx(level, V.up(nock, -gHalf), V.DOWN, gHalf, 0.2, Opt.of("move", V.UP, "speed", pull / 0.2, "alpha", 0.45));
+            // 0.48.0 입체: 은활의 시위를 끝까지 당김 (draw) · 거대한 달빛 화살을 메겨 위로 당김
+            Fx3d.anim(level, bow3d, "draw", false, bowC);
+            Vec3 c0 = V.up(nock, -gHalf);
+            giant[0] = Fx3d.spawn(level, "light_arrow", c0, Opt.of("to", V.up(c0, pull), "travel", 0.2, "dir", V.DOWN, "faceCam", 1.0, "scale", gHalf * 2 / 1.2,
+                    "life", 1.6, "color", glow, "glow", AR_WHITE, "glowAlpha", 0.6, "shine", 0.5, "fadeOut", 0.3));
             crescentFx(level, rest, 0.35 * s, 0.4, AR_MOON, Opt.of("spin", 0.0, "rate", 400.0, "grow", 0.6));
             SkillFx.play(level, "crossbow.loading.middle", bowC, 1.4, 0.8);
             SkillFx.play(level, "beacon.power", bowC, 1.2, 1.2);
@@ -530,7 +565,10 @@ final class Artemis {
             if (!ok.getAsBoolean()) return;
             Vec3 c = V.up(nock, -gHalf + pull);
             double drop = c.y - (spot.y + gHalf * 0.7); // 촉의 30% 가 땅에 박힘
-            arrowFx(level, c, V.DOWN, gHalf, 0.2, Opt.of("move", V.DOWN, "speed", Math.max(0, drop) / 0.2));
+            arrowFx(level, c, V.DOWN, gHalf, 0.2, Opt.of("move", V.DOWN, "speed", Math.max(0, drop) / 0.2, "alpha", 0.45));
+            // 0.48.0 입체: 시위를 놓음 (loose) → 거대한 화살이 내리꽂힘 (점점 빨리)
+            Fx3d.anim(level, bow3d, "loose", false, bowC);
+            Fx3d.move(level, giant[0], V.up(spot, gHalf * 0.7), 0.2, "in");
             SkillFx.beam(level, rest, V.up(spot, 0.2), AR_WHITE, Opt.of("half", 0.6, "thick", 0.35, "life", 0.3, "sweep", 0.2, "gap", 1.2, "alpha", 0.9));
             SkillFx.beam(level, rest, V.up(spot, 0.2), glow, Opt.of("half", 0.7, "thick", 0.8, "life", 0.35, "sweep", 0.2, "gap", 1.6, "alpha", 0.6));
             SkillFx.play(level, "crossbow.shoot", bowC, 1.6, 0.7);
@@ -540,8 +578,19 @@ final class Artemis {
         Tasks.later(fin, () -> {
             if (!ok.getAsBoolean()) return;
             Vec3 center = V.up(spot, gHalf * 0.7);
-            arrowFx(level, center, V.DOWN, gHalf, 0.6);
-            Tasks.later(12, () -> arrowFx(level, center, V.DOWN, gHalf, 0.4, Opt.of("progress", 2.0)));
+            arrowFx(level, center, V.DOWN, gHalf, 0.6, Opt.of("alpha", 0.45));
+            Tasks.later(12, () -> {
+                arrowFx(level, center, V.DOWN, gHalf, 0.4, Opt.of("progress", 2.0));
+                WeaponFx3d.kill(level, giant[0], center, 0.3); // 0.48.0 박힌 입체 화살이 흩어짐
+            });
+            WeaponFx3d.kill(level, moon3d, moonC, 0.6); // 만월이 번쩍인 뒤 흩어짐
+            // 0.48.0 입체 초승달 고리 여덟: 가운데에서 바깥으로 퍼지며 돎 (볼록한 쪽이 바깥)
+            for (int j = 0; j < 8; j++) {
+                Vec3 d = V.turnY(away, j * 45.0);
+                Fx3d.spawn(level, "crescent_wave", V.up(V.add(spot, d, 0.8), 0.9), Opt.of("dir", d, "face", V.UP, "vel", V.scale(d, radius * 1.4), "scale", 1.1,
+                        "life", 0.4, "color", j % 2 == 1 ? AR_WHITE : AR_MOON, "glow", AR_WHITE, "pop", 0.06, "grow", 0.6, "fadeOut", 0.18, "glowAlpha", 0.4,
+                        "shine", 0.5));
+            }
             SkillFx.burst(level, V.up(spot, 1.0), AR_WHITE, 3.0, 0.35);
             SkillFx.burst(level, V.up(spot, 1.6), glow, 4.2, 0.45);
             SkillFx.shock(level, spot, glow, radius / 1.8, 0.5);
