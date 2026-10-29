@@ -69,9 +69,12 @@ final class EarthJudgment {
         // 내리침: 내려치는 초승달 · 땅 금 · 고리 · 튀는 돌 · 쿵
         SkillFx.arc(level, V.add(V.up(sp.getEyePosition(), -0.3), f, 2.2), V.unit(V.add(f, V.DOWN, 0.9)), Opt.of("shape", "heavy", "flip", false, "size", 1.4,
                 "life", 0.18, "speed", 1.6, "color", glow, "aura", core, "spin", 90.0));
-        // 0.48.0 입체: 내 도끼 디자인이 커져 머리 위에서 앞 땅으로 내리찍힘 (도끼날 면이 옆 — 쓴 사람의 1인칭에서는 숨김: 눈앞을 가리지 않게)
-        WeaponFx3d.swingItem(level, sp, w, V.up(V.add(start, f, 0.3), 1.35), V.unit(V.add(V.UP, f, -0.25)), V.unit(V.add(V.sub(p0, V.up(V.add(start, f, 0.3), 1.35)),
-                V.DOWN, 0.2)), 0.08, 0.2, 1.6, false, Opt.of("view", 1.0, "glow", glow, "glowAlpha", 0.6, "fadeOut", 0.12));
+        // 0.48.0 입체: 내 도끼 디자인이 커져 머리 위에서 앞 땅으로 내리찍힘 (도끼날 면이 옆 — 쓴 사람의 1인칭에서는 숨김: 눈앞을 가리지 않게.
+        // 오른쪽 어깨 쪽으로 비켜 — 사진첩: 몸 바로 앞이면 뒤에서 보는 3인칭에서 몸에 가려짐)
+        Vec3 axePivot = V.up(V.add(V.add(start, f, 0.3), V.rightOf(f), 0.55), 1.35);
+        Vec3 axeHit = V.add(p0, V.rightOf(f), 0.35);
+        WeaponFx3d.swingItem(level, sp, w, axePivot, V.unit(V.add(V.UP, f, -0.25)), V.unit(V.add(V.sub(axeHit, axePivot), V.DOWN, 0.2)), 0.08, 0.3, 1.6, false,
+                Opt.of("view", 1.0, "glow", glow, "glowAlpha", 0.6, "fadeOut", 0.15));
         SkillFx.burst(level, V.up(p0, 0.3), glow, 1.1, 0.3);
         SkillFx.shock(level, p0, rock, 1.3, 0.45);
         SkillFx.fx(level, "rpg:ground_crack", V.up(p0, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 2.6, "life", 1.6, "color", ASH, "alpha", 0.9));

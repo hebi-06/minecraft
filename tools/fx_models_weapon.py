@@ -693,6 +693,7 @@ def fire_wings():
     """불꽃 날개 (용의 날개 둘 — 등 가운데가 원점, 위 +Y, 뒤 +Z, 날개 ±X): 팔뼈 · 손가락뼈 넷 · 사이의 막 (빛깔 — 비침, 핏줄) · 뼈 끝 발톱 (흰빛).
     wing_r · wing_l (어깨 ±0.12 — 움직임 spread (접힘 → 펼침) · flap (되풀이) · fold)"""
     m = fx.Model("fire_wings", tex=128, cell=32)
+    m.emissive = True  # 불꽃 날개 (금빛 날개) — 0.48.0 사진첩: 아래에서 보면 그늘져 갈색으로 보임
     a = m.atlas
     mem = a.swatch("mem", p_membrane, 2, 2)
     bone = a.swatch("bone", fx.p_bone)
@@ -1043,10 +1044,15 @@ def p_flame(u, v, rnd):
 
 
 def p_streak(u, v, rnd):
-    """빛기둥 결 (v = 0 위 → 1 아래, u = 둘레): 세로 빛살 · 위로 갈수록 투명"""
-    s = 0.55 + 0.45 * abs(math.sin(u * math.pi * 9 + math.sin(v * 7) * 0.6))
-    a = (0.25 + 0.55 * s) * min(1.0, 0.15 + v * 1.3)
-    return 0.8 + 0.2 * s + fx.noise(rnd, 0.02), a
+    """빛기둥 결 (v = 0 위 → 1 아래, u = 둘레): 가는 세로 빛살 (빛살 사이는 거의 투명) · 위로 갈수록 투명 — 0.48.0 사진첩: 대리석 기둥처럼 보여 옅게"""
+    s = abs(math.sin(u * math.pi * 9 + math.sin(v * 7) * 0.6)) ** 3
+    a = (0.06 + 0.3 * s) * min(1.0, 0.1 + v * 1.2) ** 1.4
+    return 0.9 + 0.1 * s + fx.noise(rnd, 0.02), a
+
+
+def p_beam_core(u, v, rnd):
+    """빛기둥 심지 (v = 0 위 → 1 아래): 밝고 반투명 · 위로 갈수록 투명"""
+    return 1.0, (0.18 + 0.2 * abs(math.sin(u * math.pi * 3))) * min(1.0, 0.1 + v * 1.2) ** 1.2
 
 
 def p_wave(u, v, rnd):
@@ -1111,6 +1117,7 @@ def flame():
     """불기둥 (밑 가운데가 원점, 위 +Y — 높이 1 · 폭 약 0.7): 흰 심지 (뾰족한 관 — 위로 갈수록 투명) · 빛깔 몸 (비틀린 관) · 둘레에 비틀려 솟는 불꽃 혀 일곱
     (tongues — flicker 로 일렁임 · rise 로 솟음). stretch 로 높이만 길게 (불기둥 · 용암 분수)"""
     m = fx.Model("flame", tex=64, cell=32)
+    m.emissive = True
     a = m.atlas
     tongue = a.swatch("tongue", p_flame)
     fire = a.swatch("fire", p_fire)
@@ -1149,9 +1156,10 @@ def pillar():
     """빛기둥 (밑 가운데가 원점, 위 +Y — 높이 1 · 반지름 0.5): 빛깔 겉 (세로 빛살 · 위로 갈수록 투명 — 안팎 두 면) · 흰 심지 · 밑 테 · 떠 도는 고리 셋 (rings — spin).
     stretch 로 높이만 길게 (하늘에서 내리꽂는 빛 · 성역)"""
     m = fx.Model("pillar", tex=64, cell=32)
+    m.emissive = True
     a = m.atlas
     streak = a.swatch("streak", p_streak)
-    core = a.swatch("core", p_streak)
+    core = a.swatch("core", p_beam_core)
     rim = a.swatch("rim", fx.p_rim)
     n = 16
     for r, mat, uv in ((0.5, fx.GLOW, streak), (0.17, fx.WHITE, core)):
@@ -1173,6 +1181,7 @@ def crescent_wave():
     """검기 (가운데가 원점, 나아가는 쪽 +Y — 볼록한 쪽이 앞, 너비 2 (±1) · 두께 0.12): 빛깔 초승달 띠 (바깥 날 흰빛) + 흰 심지 띠 + 뒤로 끌리는 빛 꼬리 셋.
     face (+Z) 를 위로 두면 땅과 나란히 날아감"""
     m = fx.Model("crescent_wave", tex=64, cell=32)
+    m.emissive = True
     a = m.atlas
     face = a.swatch("face", p_wave)
     edge = a.swatch("edge", fx.p_edge)

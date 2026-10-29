@@ -502,11 +502,12 @@ final class Gungnir {
         // 낙하: 하늘에서 거대한 창이 fallT 틱 동안 곧게 떨어짐 (뒤에 빛줄기)
         Tasks.later(delay - fallT, () -> {
             if (!ok.getAsBoolean()) return;
-            spearParts(level, V.up(center, drop), V.DOWN, half, fallT / 20.0, Opt.of("move", V.DOWN, "speed", drop / (fallT / 20.0), "alpha", 0.45));
-            // 0.48.0 입체 거대한 궁니르 (내 창 디자인 — 길이 spearLen): 하늘에서 곧게 내리꽂혀 (창끝이 땅에 박힘) 머물다 흩어짐
+            spearParts(level, V.up(center, drop), V.DOWN, half, fallT / 20.0, Opt.of("move", V.DOWN, "speed", drop / (fallT / 20.0), "alpha", 0.22));
+            // 0.48.0 입체 거대한 궁니르 (내 창 디자인 — 길이 spearLen): 하늘에서 곧게 내리꽂혀 (창끝이 땅에 박힘) 머물다 흩어짐.
+            // 창날이 땅 위에 보이게 1.2칸만 박음 (사진첩: 길이의 sink 몫만큼 박으면 창날이 땅속 — 가는 자루만 보였음)
             WeaponFx3d.Bounds gb = WeaponFx3d.bounds(w);
             double gsize = spearLen / Math.max(0.5, gb.length() * gb.hand());
-            Vec3 tipEnd = V.up(spot, -spearLen * sink);
+            Vec3 tipEnd = V.up(spot, -Math.min(1.2, spearLen * sink));
             WeaponFx3d.flyItem(level, sp, w, V.up(tipEnd, drop), tipEnd, fallT / 20.0, k.num("stay") / 20 + k.num("fade") / 20, gsize, Opt.of("glow", GN_BOLT,
                     "glowAlpha", 0.6, "glowR", spearLen * 0.18, "fadeOut", k.num("fade") / 20));
             if (drop > 2) {
@@ -540,7 +541,7 @@ final class Gungnir {
         Tasks.later(delay, () -> {
             if (!ok.getAsBoolean()) return;
             landed[0] = true;
-            spearParts(level, center, V.DOWN, half, k.num("stay") / 20, Opt.of("alpha", 0.45));
+            spearParts(level, center, V.DOWN, half, k.num("stay") / 20, Opt.of("alpha", 0.22));
             // 먹구름에서 창으로 번개 (창대 가운데쯤 — 먹구름보다 창이 길면 창대에)
             double strike = Math.min(cloud - 0.5, spearLen * (1 - sink) * 0.55);
             if (cloud > 2.5) {

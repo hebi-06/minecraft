@@ -119,7 +119,7 @@ final class Dagda {
             }
         } else {
             // 0.48.0 입체 여진: 가운데에서 생명의 빛기둥 + 활짝 피는 꽃 (생과 사 — 거둔 생명이 돌아옴)
-            WeaponFx3d.pillar(level, c, r * 0.22, 3.2, 0.55, glow, core, Opt.of("grow", 0.4));
+            WeaponFx3d.pillar(level, c, r * 0.14, 3.2, 0.55, glow, core, Opt.of("grow", 0.4));
             WeaponFx3d.fx(level, "flower", V.up(c, 0.05), glow, core, Opt.of("dir", V.UP, "face", new Vec3(0, 0, 1), "scale", r * 0.55, "anim", "bloom", "life", 1.1,
                     "glowAlpha", 0.55, "shine", 0.35, "fadeOut", 0.4));
         }

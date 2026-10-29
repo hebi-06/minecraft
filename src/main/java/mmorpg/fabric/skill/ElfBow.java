@@ -100,10 +100,14 @@ final class ElfBow {
         SkillFx.play(level, "chime.amethyst_block", s0, 1.6, 0.8);
         int stay = (int) (end - now) + 8;
         // 0.48.0 입체 바람 정령: 내 왼쪽 위에서 날갯짓하며 따라옴 (화살을 다 쏠 때까지)
+        // (쓴 사람의 1인칭은 작게 — 눈앞 1칸 남짓이라 크면 화면 왼쪽 위를 덮음 · 사진첩: view 2 는 그 사람의 1인칭에만, view 1 은 그 밖 모두)
         int sylph = WeaponFx3d.fx(level, "sylph", new Vec3(-0.7, 1.72, 1.0), glow, core, Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0.35,
                 0, 1), "scale", 0.95, "anim", "flap", "loop", 1.0, "bob", 0.06, "bobHz", 1.2, "life", stay / 20.0, "pop", 0.2, "fadeOut", 0.3, "glowAlpha", 0.55,
-                "shine", 0.3));
-        WeaponFx3d.guard(sp, life, new int[] {sylph}, stay);
+                "shine", 0.3, "view", 1.0));
+        int sylphFp = WeaponFx3d.fx(level, "sylph", new Vec3(-0.75, 1.82, 1.3), glow, core, Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0.35,
+                0, 1), "scale", 0.42, "anim", "flap", "loop", 1.0, "bob", 0.03, "bobHz", 1.2, "life", stay / 20.0, "pop", 0.2, "fadeOut", 0.3, "glowAlpha", 0.45,
+                "shine", 0.3, "view", 2.0));
+        WeaponFx3d.guard(sp, life, new int[] {sylph, sylphFp}, stay);
         for (int t = 0; t < stay; t += 3) {
             final int tt = t;
             HeroKit.at(t, () -> {

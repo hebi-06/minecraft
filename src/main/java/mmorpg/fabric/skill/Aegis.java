@@ -918,8 +918,12 @@ public final class Aegis {
                     flameCore);
             // 0.48.0 입체: 일식 원판이 작아지며 (reveal) 해가 드러나 활활 커짐 (sun — 빛살이 길어짐)
             Fx3d.anim(level, eclipse3d, "reveal", false, sun);
-            Fx3d.spawn(level, "sun", V.add(sun, sunU, 0.15), Opt.of("dir", V.UP, "faceCam", 1.0, "scale", ECLIPSE * sunK * 2.4, "life", 0.75, "color", flame,
-                    "glow", flameCore, "anim", "burst", "glowAlpha", 0.7, "shine", 0.6, "pop", 0.12, "grow", 0.5, "fadeOut", 0.35));
+            // (쓴 사람의 1인칭은 작게 — 사진첩: 화면 가운데 위를 흰 공이 크게 덮음. view 2 = 그 사람의 1인칭에만 · view 1 = 그 밖 모두)
+            for (int fp = 0; fp < 2; fp++) {
+                Fx3d.spawn(level, "sun", V.add(sun, sunU, 0.15), Opt.of("dir", V.UP, "faceCam", 1.0, "scale", ECLIPSE * sunK * (fp == 0 ? 2.4 : 1.3), "life", 0.75,
+                        "color", flameCore, "glow", flame, "anim", "burst", "glowAlpha", 0.7, "shine", 0.6, "pop", 0.12, "grow", 0.5, "fadeOut", 0.35, "owner",
+                        (double) sp.getId(), "view", fp == 0 ? 1.0 : 2.0));
+            }
             RuneKit.rfx(level, "eclipse", sun, Opt.of("size", ECLIPSE * sunK, "life", 0.9, "cell", 3.0, "spin", spinRate * (ticks + burstT) / 20.0, "spinRate",
                     spinRate, "grow", 0.35, "fade", 0.55));
             // 가운데 번쩍임은 돔 가운데 가슴 높이 — 내 눈이 그 3칸 안이면 (가운데에 선 채로) 보는 쪽 앞 (벽 앞까지 2.2칸) 에 작게

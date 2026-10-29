@@ -214,7 +214,7 @@ final class Apollo {
             // 0.48.0 입체: 내려온 태양이 터짐 (빛살이 길어지며) · 그 아래 빛기둥 · 성역 둘레 불기둥 여덟
             Fx3d.anim(level, sun3d, "burst", false, low);
             WeaponFx3d.kill(level, sun3d, low, 0.4);
-            WeaponFx3d.pillar(level, c, 1.0, Math.min(sky, 4.5), 0.45, glow, core, Opt.of("grow", 0.5));
+            WeaponFx3d.pillar(level, c, 1.0, Math.min(sky, 4.5), 0.45, glow, core, Opt.of("grow", 0.5, "owner", (double) sp.getId(), "view", 1.0)); // 가운데 선 사람의 1인칭은 숨김
             SkillFx.beamAway(level, sp.getEyePosition(), top, V.up(c, 0.5), glow, Opt.of("half", 0.7, "thick", 0.7, "life", 0.4, "gap", 1.0));
             // 태양 폭발: 해는 머리 위에서 터지고 (쓴 사람의 눈을 덮지 않게) 성역 둘레에 불기둥 고리 · 땅의 고리 — 1인칭에서는 앞의 불기둥 · 고리가 보임
             sunFx(level, low, 3.4, 0.35, core, core, 0.7);

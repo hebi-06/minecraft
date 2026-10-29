@@ -21,8 +21,8 @@ import net.minecraft.world.phys.Vec3;
 final class Caduceus {
     private Caduceus() {}
 
-    /** 입체 뱀 크기 (모델 길이 1.4 × — 약 2칸) */
-    static final double SNAKE = 1.45;
+    /** 입체 뱀 크기 (모델 길이 약 1.25 × — 약 3칸, 0.48.0 사진첩: 1.45 배는 7칸 앞에서 가는 줄로만 보였음) */
+    static final double SNAKE = 2.5;
 
     static void register() {
         Transcend.register("caduceus_serpents", Caduceus::serpents);
@@ -73,9 +73,9 @@ final class Caduceus {
         // 지팡이의 날개 (rfx_wings) 와 금빛 · 은빛 번쩍임
         RuneKit.rfx2(level, "wings", staff, Opt.of("dir", V.unit(V.sub(sp.getEyePosition(), staff)), "size", 0.9, "life", 0.4, "grow", 0.3, "fade", 0.6, "alpha",
                 0.45), gold[0], gold[1], new int[] {0, RuneKit.WINGS_CORE}, null);
-        // 0.48.0 입체: 홀 끝에서 금빛 날개가 활짝 펼쳐졌다가 접힘 (작게 — 1인칭 화면 오른쪽 위)
+        // 0.48.0 입체: 홀 끝에서 금빛 날개가 활짝 펼쳐졌다가 접힘 (3인칭 · 다른 사람 — 쓴 사람의 1인칭은 2D 날개: 눈앞 1칸이라 입체는 화면 위를 덮음)
         int wings0 = WeaponFx3d.fx(level, "fire_wings", V.add(staff, f, 0.3), gold[0], gold[1], Opt.of("dir", V.UP, "face", V.scale(f, -1), "scale", 0.42, "anim",
-                "spread", "life", 0.55, "glowAlpha", 0.55, "shine", 0.4, "fadeOut", 0.2));
+                "spread", "life", 0.55, "glowAlpha", 0.55, "shine", 0.4, "fadeOut", 0.2, "owner", (double) sp.getId(), "view", 1.0));
         Tasks.later(6, () -> Fx3d.anim(level, wings0, "fold", false, staff));
         SkillFx.sparks(level, staff, gold[0], 5, 3);
         SkillFx.sparks(level, staff, silver[0], 5, 3);
@@ -99,7 +99,7 @@ final class Caduceus {
             int at = ii < 2 ? ii * 3 : 2 * 3 + (ii - 1) * gap;
             Tasks.later(at, () -> {
                 if (!ok.getAsBoolean() || !Kit.canHit(sp, t)) return;
-                Vec3 from = ii < 2 ? staff : V.add(Kit.bodyPoint(t), V.turnY(f, (ii % 2 == 0 ? 120 : -120)), 1.6);
+                Vec3 from = ii < 2 ? staff : V.add(V.up(Kit.bodyPoint(t), 0.6), V.turnY(f, (ii % 2 == 0 ? 120 : -120)), 2.4);
                 Vec3 to = Kit.bodyPoint(t);
                 Vec3 d = V.unit(V.sub(to, from));
                 int ticks = ii < 2 ? fly : 4;
@@ -122,7 +122,7 @@ final class Caduceus {
                 Tasks.later(ticks + 3, () -> {
                     if (!ok.getAsBoolean() || gen[s] != g) return;
                     Vec3 body = Kit.fallen(t) ? to : Kit.bodyPoint(t);
-                    Vec3 rest = V.add(body, V.turnY(f, next % 2 == 0 ? 120 : -120), 1.6);
+                    Vec3 rest = V.add(V.up(body, 0.6), V.turnY(f, next % 2 == 0 ? 120 : -120), 2.4);
                     Fx3d.move(level, snake[s], rest, 0.3, "out");
                     Tasks.later(7, () -> {
                         if (gen[s] != g) return;

@@ -83,15 +83,16 @@ final class Balmung {
                     "fade", 0.2));
             RuneKit.rfx(level, "wave", V.add(p0, dir, 0.05), Opt.of("dir", dir, "size", size * 0.95, "life", flightS + 0.06, "speed", vel, "color", core, "alpha",
                     0.5, "cell", 1.0, "fade", 0.2));
-            // 0.48.0 입체 검기: 땅과 나란한 푸른 초승달 (볼록한 날이 앞 — 오른쪽이 조금 들림) + 뒤따르는 잔상 하나
+            // 0.48.0 입체 검기: 비스듬히 누운 푸른 초승달 (볼록한 날이 앞 — 오른쪽이 30° 들림: 사진첩 — 땅과 나란하면 뒤에서 보는 1 · 3인칭에서 가는 줄로만 보였음)
+            // + 뒤따르는 잔상 하나
             Vec3 up = V.sub(V.UP, V.scale(dir, dir.y));
             up = V.len(up) > 1e-3 ? V.unit(up) : V.UP;
             Vec3 end = V.add(from, dir, len);
             double ws = size * 0.85;
-            WeaponFx3d.fx(level, "crescent_wave", p0, glow, core, Opt.of("to", end, "travel", flightS, "dir", dir, "face", up, "roll", -10.0, "scale", ws, "life",
+            WeaponFx3d.fx(level, "crescent_wave", p0, glow, core, Opt.of("to", end, "travel", flightS, "dir", dir, "face", up, "roll", -30.0, "scale", ws, "life",
                     flightS + 0.08, "pop", 0.06, "fadeOut", 0.1, "glowAlpha", 0.65, "shine", 0.45));
             WeaponFx3d.fx(level, "crescent_wave", V.add(p0, dir, -0.6), glow, glow, Opt.of("to", V.add(end, dir, -0.6), "travel", flightS, "dir", dir, "face", up,
-                    "roll", -10.0, "scale", ws * 0.82, "life", flightS + 0.06, "delay", 0.05, "alpha", 0.45, "fadeOut", 0.1, "glowAlpha", 0.35, "shine", 0.2));
+                    "roll", -30.0, "scale", ws * 0.82, "life", flightS + 0.06, "delay", 0.05, "alpha", 0.45, "fadeOut", 0.1, "glowAlpha", 0.35, "shine", 0.2));
         }
         Vec3 side = V.rightOf(f);
         int steps = Math.max(1, (int) Math.ceil(len / speed));

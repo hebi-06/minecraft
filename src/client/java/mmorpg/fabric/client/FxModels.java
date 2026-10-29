@@ -106,6 +106,11 @@ public final class FxModels {
         final Map<String, Anim> anims = new HashMap<>();
         /** 0.48.0 무기 모델 (item:&lt;아이템 ID&gt;): 사용자 무기 디자인의 아이템 3D 모델을 그대로 (사각형 · 그림 대신) */
         ItemStack item;
+        /**
+         * 0.48.0 스스로 빛나는 모델 (빛기둥 · 불기둥 · 검기 · 불꽃 날개 — 모델 JSON "emissive"): 면마다 빛을 받는 정도가 달라 대리석 기둥 · 토막 난 띠처럼
+         * 보이던 것 (사진첩) — 모든 면을 위를 보는 면처럼 (가장 밝게 · 고르게) 그림
+         */
+        boolean emissive;
     }
 
     private static final Map<String, Model> MODELS = new HashMap<>();
@@ -160,6 +165,7 @@ public final class FxModels {
         m.tex = Mmorpg.id(tex.startsWith("mmorpg:") ? tex.substring(7) : tex);
         JsonArray glow = o.getAsJsonArray("glow");
         if (glow != null) m.glow = keys(glow);
+        m.emissive = o.has("emissive") && o.get("emissive").getAsBoolean();
         for (JsonElement pe : o.getAsJsonArray("parts")) {
             JsonObject po = pe.getAsJsonObject();
             Part p = new Part();
@@ -734,7 +740,8 @@ public final class FxModels {
                     for (int k = 0; k < 4; k++) {
                         int o = base + k * 8;
                         MP.transformPosition(p.v[o], p.v[o + 1], p.v[o + 2], tmp);
-                        RP.transform(p.v[o + 5], p.v[o + 6], p.v[o + 7], nrm);
+                        if (in.m.emissive) nrm.set(0F, 1F, 0F); // 스스로 빛남: 모든 면이 위를 보는 면처럼 가장 밝게
+                        else RP.transform(p.v[o + 5], p.v[o + 6], p.v[o + 7], nrm);
                         body.add(tmp.x, tmp.y, tmp.z, p.v[o + 3], p.v[o + 4], nrm.x, nrm.y, nrm.z, c);
                         if (sh != null) sh.add(tmp.x, tmp.y, tmp.z, p.v[o + 3], p.v[o + 4], nrm.x, nrm.y, nrm.z, shineCol);
                     }

@@ -293,8 +293,8 @@ final class Mjolnir {
                 Vec3 at = i == 0 ? p : new Vec3(p.x + Math.cos(a) * 1.2, p.y, p.z + Math.sin(a) * 1.2);
                 strike(sp, at, glow, core, i == 0 ? 2.4 : 1.4);
             }
-            // 0.48.0 입체 번개 기둥 (하늘까지 — 고리가 돎)
-            WeaponFx3d.pillar(level, p, 1.5, Math.max(8, sky + 4), 0.6, glow, core, Opt.of("grow", 0.25));
+            // 0.48.0 입체 번개 기둥 (하늘까지 — 고리가 돎. 쓴 사람이 기둥 안에 서 있어 그 사람의 1인칭에서는 숨김 — 사진첩: 화면이 하얗게 덮임)
+            WeaponFx3d.pillar(level, p, 1.5, Math.max(8, sky + 4), 0.6, glow, core, Opt.of("grow", 0.25, "owner", (double) sp.getId(), "view", 1.0));
             RuneKit.novaRing(level, p, pr * 0.3, 2.6, glow, core, Opt.of("life", 0.5));
             RuneKit.novaRing(level, p, pr * 0.2, 3.5, core, core, Opt.of("life", 0.4));
             RuneKit.glowCrack(level, p, pr, glow, core, Opt.of("life", 1.4));

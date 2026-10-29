@@ -215,6 +215,7 @@ class Model:
         self.cur = None
         self.glow = []
         self.anims = {}
+        self.emissive = False  # 0.48.0 스스로 빛남 (빛기둥 · 불기둥 · 검기 · 불꽃 날개 — 모든 면을 고르게 가장 밝게)
         self.part("main")
 
     def part(self, name, pivot=(0, 0, 0)):
@@ -412,6 +413,8 @@ class Model:
 
     def data(self):
         out = {"tex": "mmorpg:textures/fx/model/%s.png" % self.name, "glow": self.glow, "parts": self.parts}
+        if self.emissive:
+            out["emissive"] = True
         if self.anims:
             out["anims"] = self.anims
         return out

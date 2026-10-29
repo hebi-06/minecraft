@@ -653,7 +653,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_0").withSize(960, 540));
         ctx.waitTicks(2);
         String cur = ctx.computeOnClient(mc -> ClientMotions.current(me));
-        check("skill_slash".equals(cur), "weapon skill motion " + cur);
+        check("wp_balmung_wave".equals(cur), "weapon skill motion " + cur); // 0.48.0 무기 스킬마다 그 스킬만의 동작 (예전 공통 skill_slash)
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_1").withSize(960, 540));
         ctx.waitTicks(3);
         ctx.takeScreenshot(TestScreenshotOptions.of("mo_tp_skill_slash_2").withSize(960, 540));
