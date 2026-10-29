@@ -446,9 +446,9 @@ def odin_eye():
 
 
 def p_sun_surface(u, v, rnd):
-    """해 겉 (쌀알 무늬 — 밝고 고르게, 조금 끓음)"""
+    """해 겉 (쌀알 무늬 — 아주 옅게: 0.48.1 사진첩에서 진한 무늬는 빛나는 해가 아니라 대리석 공처럼 보임)"""
     cells = math.sin(u * 61 + math.sin(v * 37) * 1.7) * math.sin(v * 53 + math.sin(u * 29) * 1.3)
-    return 0.9 + 0.1 * cells + fx.noise(rnd, 0.02), 1
+    return 0.97 + 0.03 * cells + fx.noise(rnd, 0.01), 1
 
 
 def p_corona(u, v, rnd, strong=False):
@@ -534,7 +534,8 @@ def sun():
                                                 "rays2": {"scale": [[0, 1], [0.6, 2.1], [1, 2.6]], "rot": [[0, 0, 0, 0], [1, 0, 0, -30]]},
                                                 "flares": {"scale": [[0, 1], [0.5, 1.6], [1, 2.0]], "rot": [[0, 0, 0, 0], [1, 0, 0, 25]]},
                                                 "corona": {"scale": [[0, 1], [1, 2.1]]}, "core": {"scale": [[0, 1], [0.5, 1.3], [1, 1.45]]}}}
-    m.add_glow(0, 0, 0, 1.2).add_glow(0, 0, 0, 0.6)
+    # 빛 무리는 해 앞 (+Z 0.45 — 해의 앞면보다 앞): 게임은 빛 무리를 깊이로 가림 — 해 가운데에 두면 해 앞면에 가려져 해만 빛 무리 없이 탁하게 보임
+    m.add_glow(0, 0, 0.45, 1.2).add_glow(0, 0, 0.45, 0.6)
     return m
 
 
