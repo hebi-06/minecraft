@@ -108,8 +108,11 @@ final class Caduceus {
                 Vec3 bite = V.add(to, d, -(0.45 * SNAKE + Math.min(0.35, Kit.bodyPad(t) * 0.5)));
                 int g = ++gen[s];
                 if (ii < 2) {
-                    snake[s] = WeaponFx3d.fx(level, "serpent", from, cols[s][0], cols[s][1], Opt.of("to", bite, "travel", ticks / 20.0, "ease", "in", "dir", d, "align",
-                            1.0, "scale", SNAKE, "life", (end - at + 14) / 20.0, "pop", 0.08, "glowAlpha", 0.55, "shine", 0.3, "fadeOut", 0.15));
+                    // 홀 앞 2칸에서 작게 나타나 커지며 날아감 (사진첩: 홀 끝에서 큰 뱀이 나타나 1인칭 화면 위를 덮었음)
+                    Vec3 start = V.add(from, d, Math.min(2.2, V.len(V.sub(bite, from)) * 0.4));
+                    snake[s] = WeaponFx3d.fx(level, "serpent", start, cols[s][0], cols[s][1], Opt.of("to", bite, "travel", ticks / 20.0, "ease", "in", "dir", d,
+                            "align", 1.0, "scale", SNAKE, "life", (end - at + 14) / 20.0, "pop", Math.max(0.1, ticks / 40.0), "glowAlpha", 0.55, "shine", 0.3,
+                            "fadeOut", 0.15));
                     WeaponFx3d.guard(sp, life, new int[] {snake[s]}, end - at + 14);
                 } else {
                     Fx3d.move(level, snake[s], bite, ticks / 20.0, "in");

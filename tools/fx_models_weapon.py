@@ -1050,6 +1050,11 @@ def p_streak(u, v, rnd):
     return 0.9 + 0.1 * s + fx.noise(rnd, 0.02), a
 
 
+def p_beam_rim(u, v, rnd):
+    """빛기둥 밑 테 · 떠 도는 고리 (반투명 — 사진첩: 불투명한 밑 테가 크림빛 도넛처럼 보였음)"""
+    return 1.0, 0.45 + 0.15 * abs(math.sin(u * math.pi * 8))
+
+
 def p_beam_core(u, v, rnd):
     """빛기둥 심지 (v = 0 위 → 1 아래): 밝고 반투명 · 위로 갈수록 투명"""
     return 1.0, (0.18 + 0.2 * abs(math.sin(u * math.pi * 3))) * min(1.0, 0.1 + v * 1.2) ** 1.2
@@ -1160,7 +1165,7 @@ def pillar():
     a = m.atlas
     streak = a.swatch("streak", p_streak)
     core = a.swatch("core", p_beam_core)
-    rim = a.swatch("rim", fx.p_rim)
+    rim = a.swatch("rim", p_beam_rim)
     n = 16
     for r, mat, uv in ((0.5, fx.GLOW, streak), (0.17, fx.WHITE, core)):
         rings = [[v3(r * math.cos(2 * math.pi * k / n), y, r * math.sin(2 * math.pi * k / n)) for k in range(n)] for y in (0.0, 0.5, 1.0)]
