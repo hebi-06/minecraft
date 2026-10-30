@@ -190,9 +190,12 @@ public final class RpgRuneGallery implements FabricClientGameTest {
     private void film(ClientGameTestContext ctx, TestServerContext server, Runes.Rune r, RpgFilm f) {
         String id = r.family() + "_" + r.grade();
         String only = Runes.weaponOnly(r.family());
-        server.runCommand("item replace entity @a hotbar.0 with " + (only != null ? Weapons.weaponId(only, 40, "common") : "air"));
+        // 평타 강화 룬 (날 세우기 · 연타 · 가르기 · 피의 칼날 · 검신 강림): 칼을 들고 과녁 앞 (2.5칸) 에 서서 쓴 뒤 평타 넷 — 강화된 평타가 영상에 보이게
+        boolean strike = r.family().equals("strike");
+        String weapon = only != null ? Weapons.weaponId(only, 40, "common") : strike ? Weapons.weaponId("sword", 40, "common") : "air";
+        server.runCommand("item replace entity @a hotbar.0 with " + weapon);
         server.runCommand("time set 6000");
-        server.runCommand("tp @a 0.5 -60 0.5 0 8");
+        server.runCommand(strike ? "tp @a 0.5 -60 3.0 0 8" : "tp @a 0.5 -60 0.5 0 8");
         server.runOnServer(s -> {
             ServerPlayer sp = player(s);
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
@@ -206,6 +209,8 @@ public final class RpgRuneGallery implements FabricClientGameTest {
             sp.removeAllEffects();
             RpgHealth.healFull(sp);
             spawnHusks(sp.level());
+            // 평타 강화 룬: 앞 양옆 둘 (z 2.2) 은 뺌 — 과녁 앞에 선 몸을 카메라 쪽에서 가림
+            if (strike) for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> h.getZ() < 3.5)) h.discard();
             SkillBar.set(sp, 0, RuneItems.stack(r.family(), r.grade()));
         });
         ctx.waitTicks(12);
@@ -214,6 +219,13 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         f.begin(server, id, r.def().str("name"), r.famName() + " 계열 · " + r.gradeName() + " 룬", 3.0);
         f.frames(4);
         f.press(MmorpgClient.skillKeys[0]);
+        if (strike) {
+            f.frames(6);
+            for (int i = 0; i < 4; i++) {
+                f.click(com.mojang.blaze3d.platform.InputConstants.MOUSE_BUTTON_LEFT);
+                f.frames(11);
+            }
+        }
         java.util.function.DoubleSupplier dealt = () -> server.computeOnServer(s -> {
             double sum = 0;
             ServerLevel level = player(s).level();
