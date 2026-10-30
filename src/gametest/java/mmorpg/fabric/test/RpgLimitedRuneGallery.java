@@ -95,7 +95,7 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             server.runOnServer(s -> installBuffer());
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             if (film) {
-                RpgFilm f = new RpgFilm(ctx).view(9.0, 3.4, 2.6).follow(0.35);
+                RpgFilm f = new RpgFilm(ctx).view(9.0, 4.2, 2.6).angle(105).follow(0.6);
                 for (String family : List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier")) film(ctx, server, family, f);
                 LOG.info("[limited-gallery] film done, {} failed", failures.size());
                 if (!failures.isEmpty()) throw new AssertionError("limited film: " + String.join(" / ", failures));
@@ -184,7 +184,8 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             SkillBar.set(sp, 0, Breakthrough.stack(family, "transcend", 0));
         });
         ctx.waitTicks(14);
-        f.begin(server, family + "_transcend", r.def().str("name"), "한정 초월 룬 · 0돌", 6.0);
+        // 보는 곳: 몸과 과녁 무리 (z 5 ~ 9) 사이 — 멀리 선 룬 (z -7) 도 과녁 쪽 효과가 화면 가운데에
+        f.begin(server, family + "_transcend", r.def().str("name"), "한정 초월 룬 · 0돌", Math.max(3.0, Math.min(8.0, (7.0 - meZ) * 0.55)));
         f.frames(4);
         f.press(MmorpgClient.skillKeys[0]);
         java.util.function.DoubleSupplier dealt = () -> server.computeOnServer(s -> {

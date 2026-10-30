@@ -36,13 +36,12 @@ import org.slf4j.LoggerFactory;
  */
 final class RpgFilm {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-film");
-    /** 카메라: 보는 쪽에서 왼쪽으로 125° (왼쪽 뒤) · dist 칸 · 발보다 height 칸 위, 보는 곳 = 몸 앞 ahead 칸 · lookY 칸 높이 (view 로 바꿈) */
-    private static final double ANGLE = Math.toRadians(125);
+    /** 카메라: 보는 쪽에서 왼쪽으로 angle (기본 125° — 왼쪽 뒤) · dist 칸 · 발보다 height 칸 위, 보는 곳 = 몸 앞 ahead 칸 · lookY 칸 높이 (view · angle 로 바꿈) */
+    private double angle = Math.toRadians(125);
     private double dist = 6.0;
     private double height = 2.1;
     private double lookY = 1.0;
-    /** 카메라 자리가 몸을 따라가는 몫 (1 = 그대로 따라감; 룬 영상은 0.35 — 과녁을 뚫고 지나가는 돌진에서 카메라가 과녁 무리 사이로 들어가 가리지 않게,
-     * 보는 곳은 늘 몸을 따라감) */
+    /** 카메라 자리가 몸을 따라가는 몫 (1 = 그대로 따라감; 룬 영상은 0.6 — 보는 곳은 늘 몸을 따라감) */
     private double follow = 1.0;
     private static int clips;
     /** 사진 크기 (창 크기) */
@@ -83,6 +82,12 @@ final class RpgFilm {
         this.dist = dist;
         this.height = height;
         this.lookY = lookY;
+        return this;
+    }
+
+    /** 카메라 방향: 보는 쪽에서 왼쪽으로 몇 도 (90 = 바로 옆, 180 = 바로 뒤) */
+    RpgFilm angle(double deg) {
+        this.angle = Math.toRadians(deg);
         return this;
     }
 
@@ -147,8 +152,8 @@ final class RpgFilm {
             double by = sy + (p.getY() - sy) * 0.6;
             double lx = fz;
             double lz = -fx;
-            double ox = Math.cos(ANGLE) * fx + Math.sin(ANGLE) * lx;
-            double oz = Math.cos(ANGLE) * fz + Math.sin(ANGLE) * lz;
+            double ox = Math.cos(angle) * fx + Math.sin(angle) * lx;
+            double oz = Math.cos(angle) * fz + Math.sin(angle) * lz;
             double cx = sx + (p.getX() - sx) * follow + ox * dist;
             double cy = by + height;
             double cz = sz + (p.getZ() - sz) * follow + oz * dist;

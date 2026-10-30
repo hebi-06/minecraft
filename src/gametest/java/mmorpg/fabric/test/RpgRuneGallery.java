@@ -83,7 +83,7 @@ public final class RpgRuneGallery implements FabricClientGameTest {
             for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             if (filmPart > 0) {
-                RpgFilm f = new RpgFilm(ctx).follow(0.35);
+                RpgFilm f = new RpgFilm(ctx).angle(105).follow(0.6);
                 List<String> fams = Runes.FAMILY_ORDER.stream().filter(x -> !Runes.PAIR_FAMILIES.contains(x)).toList();
                 int from = (filmPart - 1) * 6;
                 for (String family : fams.subList(Math.min(from, fams.size()), Math.min(from + 6, fams.size()))) {
@@ -210,7 +210,7 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         });
         ctx.waitTicks(12);
         boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
-        f.view(big ? 7.6 : 6.2, big ? 2.9 : 2.2, big ? 1.9 : 1.1);
+        f.view(big ? 7.6 : 7.0, big ? 4.2 : 3.6, big ? 1.9 : 1.1); // 0.48.2 룬 영상: 옆 뒤 (105°) 에서 높게 — 과녁을 뚫고 지나간 몸이 과녁 무리에 가리지 않게 (머리 위로 봄)
         f.begin(server, id, r.def().str("name"), r.famName() + " 계열 · " + r.gradeName() + " 룬", 3.0);
         f.frames(4);
         f.press(MmorpgClient.skillKeys[0]);
