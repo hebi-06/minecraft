@@ -144,9 +144,9 @@ final class RpgFilm {
         ticks.add(t);
         long after = now();
         if (after == t) ctx.waitTick();
-        else if (after - t >= 2 && rate > 2) {
-            // 그림이 무거워 (해 · 성역 · 먹구름 …) 한 장에 두 틱이 흐름 → 남은 장면은 더 느리게 (영상의 빠르기는 틱대로라 그대로)
-            rate = 2;
+        else if (after - t >= 2 && rate > 1) {
+            // 그림이 무거워 (해 · 성역 · 먹구름 …) 한 장에 두 틱이 흐름 → 남은 장면은 더 느리게 (4 → 2 → 1, 영상의 빠르기는 틱대로라 그대로)
+            rate = rate > 2 ? 2 : 1;
             server.runCommand("tick rate " + rate);
         }
     }
