@@ -31,6 +31,12 @@ public abstract class CameraMixin {
 
     @Inject(method = "alignWithEntity", at = @At("RETURN"))
     private void mmorpg$shake(float partialTick, CallbackInfo ci) {
+        // 0.48.2 스킬 영상 카메라 (화면 시험만 — 정한 자리 · 방향, 흔들림은 그 위에 더함)
+        double[] film = mmorpg.fabric.client.FilmCamera.pose();
+        if (film != null) {
+            this.setPosition(new net.minecraft.world.phys.Vec3(film[0], film[1], film[2]));
+            this.setRotation((float) film[3], (float) film[4]);
+        }
         float[] o = CameraShake.offset(partialTick);
         if (o != null) this.setRotation(this.yRot + o[0], this.xRot + o[1]);
         // 0.38.0 구르기 (1인칭): 화면을 낮추고 살짝 내려다봄

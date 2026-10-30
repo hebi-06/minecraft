@@ -162,7 +162,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
-        if (RpgProdSmoke.active() || !RpgProdSmoke.only("job")) return;
+        if (RpgProdSmoke.active()) return;
+        boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")); // 0.48.2 스킬 영상
+        if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -184,6 +186,13 @@ public final class RpgJobGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             home(server);
             ctx.waitTicks(10);
+            if (film) {
+                film(ctx, server, conn);
+                ctx.setScreen(() -> null);
+                LOG.info("[job-gallery] film done, {} failed checks{}", failures.size(), failures.isEmpty() ? "" : ": " + String.join(" / ", failures));
+                if (!failures.isEmpty()) throw new AssertionError("job film: " + String.join(" / ", failures));
+                return;
+            }
             part(ctx, "trainer", () -> trainer(ctx, server, conn));
             part(ctx, "hud", () -> hud(ctx, server, conn));
             part(ctx, "swordsman", () -> skills(ctx, server, conn, "swordsman", CASES));
@@ -326,23 +335,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 Jobs.Skill k = j.skill(c.slot());
                 int[] shots = third ? c.shots3p() : c.shots();
                 home(server);
-                server.runOnServer(s -> {
-                    ServerPlayer sp = player(s);
-                    JobSystem.setJob(sp, job); // 0.29.0 앞 칸의 태세를 지움 (창벽 자동 찌르기 · 사신 현신 그림자가 궁극기 사진에 남았음)
-                    JobSkills.resetCooldowns(sp);
-                    RuneCast.resetCooldowns(sp);
-                    RpgHealth.healFull(sp);
-                    if (k.id().equals("swordsman_flurry")) JobTraits.setStacks(sp, 3); // 검기
-                    if (k.id().equals("warrior_crush")) JobTraitsMore.setRage(sp, 60); // 분노 30 을 씀
-                    if (k.id().equals("archer_rapid")) JobTraitsMore.setBreath(sp, 3); // 4발
-                    JobTraitsMore.setChain(sp, 0);
-                    spawnHusks(sp.level());
-                    if (k.id().equals("assassin_bloom") || k.id().equals("assassin_ult")) markHusks(sp, 5); // 낙화 · 흑야: 표식 가득
-                    if (k.id().equals("reaper_burst")) JobTraits3.setSouls(sp, 10); // 혼 가득 → 큰 폭발
-                    if (k.id().equals("paladin_smite")) judgeHusks(sp, 3); // 심판 3 + 2 → 벼락 · 기절 별
-                    if (k.id().equals("priest_hymn") || k.id().equals("priest_ult")) JobTraits4.setFaith(sp, 3); // 신앙 3 → +30%
-                    if (k.id().equals("guardian_bash")) JobTraits4.setCounter(sp, 30); // 반격 게이지가 첫 타에
-                });
+                server.runOnServer(s -> prepare(player(s), job, k.id()));
                 // 0.29.0 과녁 사이를 지나가는 스킬 (잔영 · 장대 도약 · 망령 걸음) 은 3인칭을 앞에서 — 뒤 카메라는 지나간 뒤 과녁 몸 안에 들어감
                 CameraType cam3 = FRONT_3P.contains(k.id()) ? CameraType.THIRD_PERSON_FRONT : CameraType.THIRD_PERSON_BACK;
                 ctx.runOnClient(mc -> mc.options.setCameraType(third ? cam3 : CameraType.FIRST_PERSON));
@@ -406,6 +399,108 @@ public final class RpgJobGallery implements FabricClientGameTest {
         }
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         server.runOnServer(s -> JobSystem.setJob(player(s), job)); // 태세 · 자원 지움
+        ctx.waitTicks(5);
+    }
+
+    /** 스킬 하나 쓰기 전 (서버): 직업 다시 (앞 칸의 태세 지움) · 재사용 대기 · 체력 · 자원 · 과녁 · 표식 */
+    private static void prepare(ServerPlayer sp, String job, String id) {
+        JobSystem.setJob(sp, job); // 0.29.0 앞 칸의 태세를 지움 (창벽 자동 찌르기 · 사신 현신 그림자가 궁극기 사진에 남았음)
+        JobSkills.resetCooldowns(sp);
+        RuneCast.resetCooldowns(sp);
+        RpgHealth.healFull(sp);
+        if (id.equals("swordsman_flurry")) JobTraits.setStacks(sp, 3); // 검기
+        if (id.equals("warrior_crush")) JobTraitsMore.setRage(sp, 60); // 분노 30 을 씀
+        if (id.equals("archer_rapid")) JobTraitsMore.setBreath(sp, 3); // 4발
+        JobTraitsMore.setChain(sp, 0);
+        spawnHusks(sp.level());
+        if (id.equals("assassin_bloom") || id.equals("assassin_ult")) markHusks(sp, 5); // 낙화 · 흑야: 표식 가득
+        if (id.equals("reaper_burst")) JobTraits3.setSouls(sp, 10); // 혼 가득 → 큰 폭발
+        if (id.equals("paladin_smite")) judgeHusks(sp, 3); // 심판 3 + 2 → 벼락 · 기절 별
+        if (id.equals("priest_hymn") || id.equals("priest_ult")) JobTraits4.setFaith(sp, 3); // 신앙 3 → +30%
+        if (id.equals("guardian_bash")) JobTraits4.setCounter(sp, 30); // 반격 게이지가 첫 타에
+    }
+
+    // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3)
+
+    /** 영상 묶음마다 직업 (넷 · 넷 · 셋) */
+    private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
+        {"paladin", "priest", "guardian"}};
+
+    private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        RpgFilm f = new RpgFilm(ctx);
+        for (int g = 0; g < FILM_JOBS.length; g++) {
+            if (!RpgFilm.listed("filmjob" + (g + 1))) continue;
+            for (String job : FILM_JOBS[g]) {
+                part(ctx, "film " + job, () -> {
+                    switch (job) {
+                        case "swordsman" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> JobTraits.setStacks(sp, 5));
+                        case "spellblade" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 3, sp -> {});
+                        case "warrior" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
+                        case "mage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 3, sp -> JobTraitsMore.setChain(sp, 2));
+                        case "archer" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 5, sp -> JobTraitsMore.setBreath(sp, 3));
+                        case "assassin" -> newJob(ctx, server, conn, job, "rpg:dagger_l40_hero", 5, sp -> markHusks(sp, 3));
+                        case "lancer" -> newJob(ctx, server, conn, job, "rpg:lance_l40_hero", 1, sp -> JobTraits3.setMomentum(sp, true));
+                        case "reaper" -> newJob(ctx, server, conn, job, "rpg:scythe_l40_hero", 10, sp -> JobTraits3.setSouls(sp, 6));
+                        case "paladin" -> newJob(ctx, server, conn, job, "rpg:hammer_l40_hero", 5, sp -> judgeHusks(sp, 3));
+                        case "priest" -> newJob(ctx, server, conn, job, "rpg:scepter_l40_hero", 5, sp -> JobTraits4.setFaith(sp, 3));
+                        default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
+                                sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
+                    }
+                    filmSkills(ctx, server, job, casesOf(job), f);
+                });
+            }
+        }
+        server.runOnServer(s -> JobSystem.setJob(player(s), null));
+    }
+
+    private static Case[] casesOf(String job) {
+        return switch (job) {
+            case "swordsman" -> CASES;
+            case "spellblade" -> CASES_SB;
+            case "warrior" -> CASES_WA;
+            case "mage" -> CASES_MG;
+            case "archer" -> CASES_AR;
+            case "assassin" -> CASES_AS;
+            case "lancer" -> CASES_LA;
+            case "reaper" -> CASES_RE;
+            case "paladin" -> CASES_PA;
+            case "priest" -> CASES_PR;
+            default -> CASES_GU;
+        };
+    }
+
+    /** 직업 스킬 다섯을 같은 입력 (Shift + 칸 키) 으로 쓰고 틱마다 한 장 — 태세 · 강화는 뒤에 평타까지 */
+    private void filmSkills(ClientGameTestContext ctx, TestServerContext server, String job, Case[] cases, RpgFilm f) {
+        Jobs.Job j = Jobs.job(job);
+        for (Case c : cases) {
+            Jobs.Skill k = j.skill(c.slot());
+            home(server);
+            server.runOnServer(s -> prepare(player(s), job, k.id()));
+            ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
+            ctx.waitTicks(12);
+            f.begin(k.id(), k.name(), j.name() + " · 스킬 " + (c.slot() + 1) + (c.slot() == 4 ? " (궁극기)" : ""), 2.5);
+            f.frames(4);
+            ctx.getInput().holdKey(o -> o.keyShift);
+            f.frames(2);
+            ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
+            f.cast();
+            ctx.getInput().releaseKey(o -> o.keyShift);
+            f.until(c.total());
+            if (c.stance() || c.buff()) {
+                boolean ranged = job.equals("archer") || job.equals("mage");
+                ctx.getInput().pressMouse(ranged ? InputConstants.MOUSE_BUTTON_RIGHT : InputConstants.MOUSE_BUTTON_LEFT);
+                f.frames(c.hitAt() + 10);
+            }
+            double dealt = server.computeOnServer(s -> {
+                double sum = 0;
+                for (Husk h : player(s).level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) sum += TestDummies.dealt(h);
+                return sum;
+            });
+            f.end(dealt);
+            boolean cast = server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), k.id()) > 0);
+            check(cast, k.id() + " (film) cast");
+        }
+        server.runOnServer(s -> JobSystem.setJob(player(s), job));
         ctx.waitTicks(5);
     }
 

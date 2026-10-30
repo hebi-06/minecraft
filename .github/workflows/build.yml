@@ -160,6 +160,11 @@ jobs:
           kill $WATCH 2>/dev/null
           set -e
           for f in build/run/clientGameTest/screenshots/*.png; do [ -f "$f" ] && cp "$f" "ci-out/shots/${N}_$(basename "$f")"; done
+          # 0.48.2 스킬 영상 (only=film,…): 틱마다 찍은 사진 → 스킬마다 mp4 (ci/films.py — ci-out/films, 사진은 지움)
+          if [ -d build/run/clientGameTest/films ]; then
+            sudo apt-get install -y -qq ffmpeg > /dev/null
+            python3 ci/films.py build/run/clientGameTest/films ci-out/films "${N}_" | tee ci-out/films-$N.txt || true
+          fi
           cp build/run/clientGameTest/logs/latest.log ci-out/client-$N-latest.log 2>/dev/null || true
           ls -la ci-out/shots
           grep -h -E "\[[a-z-]+(-test|-gallery)\] (done|FAIL|stopped)" ci-out/client-$N.txt ci-out/client-$N-latest.log 2>/dev/null | sort -u > ci-out/client-checks-$N.txt || true

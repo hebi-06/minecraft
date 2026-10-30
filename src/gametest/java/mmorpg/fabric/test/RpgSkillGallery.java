@@ -75,7 +75,10 @@ public final class RpgSkillGallery implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
-        if (RpgProdSmoke.active() || !RpgProdSmoke.only("skill")) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만 · 고른 시험만 (MMORPG_ONLY)
+        if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
+        boolean film = RpgFilm.on() && RpgFilm.listed("filmsk"); // 0.48.2 스킬 영상 (only=film,filmsk) — 사진 대신 틱마다
+        if (!film && (RpgFilm.on() || !RpgProdSmoke.only("skill"))) return; // 고른 시험만 (MMORPG_ONLY)
+        RpgFilm f = film ? new RpgFilm(ctx) : null;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -102,6 +105,10 @@ public final class RpgSkillGallery implements FabricClientGameTest {
                     ctx.getInput().pressKey(options -> options.keyHotbarSlots[sel]);
                     slot++;
                     lastType = c.type();
+                }
+                if (f != null) {
+                    film(ctx, server, c, f);
+                    continue;
                 }
                 run(ctx, server, c, false);
                 if (c.index() == 1) run(ctx, server, c, true);
@@ -173,6 +180,53 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         LOG.info("[skill-gallery] {} {} cast={} dealt={}", id, third ? "3p" : "1p", cast, String.format(Locale.ROOT, "%.1f", dealt));
         if (!cast) failures.add(id + (third ? " (3p)" : "") + " not cast");
         else if (!(dealt > 0)) failures.add(id + (third ? " (3p)" : "") + " dealt no damage");
+    }
+
+    /** 0.48.2 스킬 영상: 같은 입력 · 과녁으로 쓰고 틱마다 한 장 (RpgFilm) */
+    private void film(ClientGameTestContext ctx, TestServerContext server, Case c, RpgFilm f) {
+        Weapon w = Weapons.parseWeapon("rpg:" + c.type() + "_l40_transcend");
+        Obj k = w.skills().get(c.index());
+        String id = k.str("id");
+        server.runCommand("time set 6000");
+        server.runCommand("tp @a 0.5 -60 0.5 0 10");
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
+            Transcend.resetCooldowns(sp);
+            RpgHealth.healFull(sp);
+            spawnHusks(sp.level(), c.ring() ? RING : TARGETS);
+        });
+        ctx.waitTicks(12);
+        boolean ranged = c.type().equals("bow") || c.type().equals("wand");
+        boolean sneak = ranged ? c.index() == 0 : c.index() == 1;
+        boolean hold = ranged && c.index() == 1;
+        String how = hold ? "길게 우클릭" : sneak ? "웅크리고 우클릭" : "우클릭";
+        f.begin(id, k.str("name"), w.name() + " · 초월 스킬 " + (c.index() + 1) + " (" + how + ")", c.ring() ? 1.5 : 4.0);
+        f.frames(4);
+        if (sneak) {
+            ctx.getInput().holdShift();
+            f.frames(3);
+        }
+        if (hold) {
+            long from = f.mark();
+            ctx.getInput().holdKey(options -> options.keyUse);
+            f.cast();
+            f.untilSince(from, Transcend.HOLD_TICKS + 2);
+            ctx.getInput().releaseKey(options -> options.keyUse);
+        } else {
+            ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+            f.cast();
+        }
+        if (sneak) ctx.getInput().releaseShift();
+        f.until(c.total() + (hold ? Transcend.HOLD_TICKS : 0));
+        double dealt = server.computeOnServer(s -> {
+            double sum = 0;
+            ServerLevel level = player(s).level();
+            for (Husk h : level.getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 7, 0.5, -60, 7).inflate(40), h -> true)) sum += TestDummies.dealt(h);
+            return sum;
+        });
+        f.end(dealt);
+        if (!(dealt > 0)) failures.add(id + " (film) dealt no damage");
     }
 
     private static ServerPlayer player(MinecraftServer s) {

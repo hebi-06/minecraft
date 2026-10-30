@@ -66,7 +66,9 @@ public final class RpgHeroSkillGallery implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
-        if (RpgProdSmoke.active() || !RpgProdSmoke.only("hero")) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만 · 고른 시험만 (MMORPG_ONLY)
+        if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
+        boolean film = RpgFilm.on() && RpgFilm.listed("filmhero"); // 0.48.2 스킬 영상 (only=film,filmhero) — 사진 대신 틱마다
+        if (!film && (RpgFilm.on() || !RpgProdSmoke.only("hero"))) return; // 고른 시험만 (MMORPG_ONLY)
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -86,13 +88,18 @@ public final class RpgHeroSkillGallery implements FabricClientGameTest {
             for (int i = 0; i < CASES.length; i++) {
                 server.runCommand("item replace entity @a hotbar." + i + " with rpg:" + CASES[i].type() + "_l40_hero");
             }
+            RpgFilm f = film ? new RpgFilm(ctx) : null;
             for (int i = 0; i < CASES.length; i++) {
                 int sel = i;
                 ctx.getInput().pressKey(options -> options.keyHotbarSlots[sel]);
+                if (f != null) {
+                    film(ctx, server, CASES[i], f);
+                    continue;
+                }
                 run(ctx, server, CASES[i], false);
                 run(ctx, server, CASES[i], true);
             }
-            tooltips(ctx, server);
+            if (f == null) tooltips(ctx, server);
         }
         LOG.info("[hero-gallery] done, {} failed", failures.size());
         if (!failures.isEmpty()) throw new AssertionError("hero skill gallery: " + String.join(" / ", failures));
@@ -151,6 +158,43 @@ public final class RpgHeroSkillGallery implements FabricClientGameTest {
         else if (!(dealt > 0)) failures.add(tag + " dealt no damage");
         if (cast && id.equals("shadow_ambush") && !(zMax - z0 > 4)) failures.add(tag + " did not move the player on the client (" + (zMax - z0) + ")");
         if (cast && id.equals("lich_harvest") && !(hp1 > hp0)) failures.add(tag + " did not heal (" + hp0 + " → " + hp1 + ")");
+    }
+
+    /** 0.48.2 스킬 영상: 같은 입력 · 과녁으로 쓰고 틱마다 한 장 (RpgFilm) */
+    private void film(ClientGameTestContext ctx, TestServerContext server, Case c, RpgFilm f) {
+        Weapon w = Weapons.parseWeapon("rpg:" + c.type() + "_l40_hero");
+        Obj k = w.skills().get(0);
+        String id = k.str("id");
+        server.runCommand("time set 6000");
+        server.runCommand("tp @a 0.5 -60 0.5 0 10");
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
+            Transcend.resetCooldowns(sp);
+            RpgHealth.healFull(sp);
+            if (c.type().equals("wand")) sp.setHealth(sp.getMaxHealth() * 0.6F);
+            spawnHusks(sp.level(), c.near() ? NEAR : TARGETS);
+        });
+        ctx.waitTicks(12);
+        boolean ranged = c.type().equals("bow") || c.type().equals("wand");
+        f.begin(id, k.str("name"), w.name() + " · 영웅 스킬 (" + (ranged ? "웅크리고 우클릭" : "우클릭") + ")", c.near() ? 2.0 : 4.0);
+        f.frames(4);
+        if (ranged) {
+            ctx.getInput().holdShift();
+            f.frames(3);
+        }
+        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        f.cast();
+        if (ranged) ctx.getInput().releaseShift();
+        f.until(c.total());
+        double dealt = server.computeOnServer(s -> {
+            double sum = 0;
+            ServerLevel level = player(s).level();
+            for (Husk h : level.getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 5, 0.5, -60, 5).inflate(40), h -> true)) sum += TestDummies.dealt(h);
+            return sum;
+        });
+        f.end(dealt);
+        if (!(dealt > 0)) failures.add(id + " (film) dealt no damage");
     }
 
     /** 가방을 열고 영웅 칼 (칸 0) · 완드 (칸 5) 의 설명 사진 (스킬 줄) */

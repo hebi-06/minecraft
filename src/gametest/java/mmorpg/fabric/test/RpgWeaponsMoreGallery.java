@@ -92,7 +92,9 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
-        if (RpgProdSmoke.active() || !RpgProdSmoke.only("weapons12")) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만 · 고른 시험만 (MMORPG_ONLY)
+        if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
+        boolean film = RpgFilm.on() && RpgFilm.listed("filmw12"); // 0.48.2 스킬 영상 (only=film,filmw12) — 사진 대신 틱마다
+        if (!film && (RpgFilm.on() || !RpgProdSmoke.only("weapons12"))) return; // 고른 시험만 (MMORPG_ONLY)
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -109,6 +111,13 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
             });
             ctx.waitTicks(10);
             for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
+            if (film) {
+                RpgFilm f = new RpgFilm(ctx);
+                for (Case c : CASES) film(ctx, server, c, f);
+                LOG.info("[weapons12-gallery] film done, {} failed", failures.size());
+                if (!failures.isEmpty()) throw new AssertionError("weapons12 film: " + String.join(" / ", failures));
+                return;
+            }
             holds(ctx, server);
             inventory(ctx, server);
             basics(ctx, server);
@@ -281,6 +290,42 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
         if (!cast) failures.add(tag + " not cast");
         else if (!(dealt > 0)) failures.add(tag + " dealt no damage");
         if (cast && (id.equals("dagda_smash") || id.equals("caduceus_serpents") || id.equals("apollo_sanctuary")) && !(hp1 > hp0)) failures.add(tag + " did not heal");
+    }
+
+    /** 0.48.2 스킬 영상: 같은 입력 · 과녁으로 쓰고 틱마다 한 장 (RpgFilm) */
+    private void film(ClientGameTestContext ctx, TestServerContext server, Case c, RpgFilm f) {
+        Weapon w = Weapons.parseWeapon("rpg:" + c.weapon());
+        Obj k = w.skills().get(c.index());
+        String id = k.str("id");
+        server.runCommand("time set 6000");
+        server.runCommand("tp @a 0.5 -60 0.5 0 10");
+        server.runCommand("item replace entity @a hotbar.0 with rpg:" + c.weapon());
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            clearHusks(sp);
+            Transcend.resetCooldowns(sp);
+            Guards.clear(sp.getUUID());
+            RpgHealth.healFull(sp);
+            if (id.equals("dagda_smash") || id.equals("caduceus_serpents") || id.equals("apollo_sanctuary")) sp.setHealth(sp.getMaxHealth() * 0.5F);
+            spawnHusks(sp.level(), c.near() ? NEAR : FAR);
+        });
+        ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
+        ctx.waitTicks(12);
+        boolean hero = c.weapon().endsWith("_hero");
+        String how = c.index() == 1 ? "웅크리고 우클릭" : "우클릭";
+        f.begin(id, k.str("name"), w.name() + " · " + (hero ? "영웅 스킬" : "초월 스킬 " + (c.index() + 1)) + " (" + how + ")", c.near() ? 2.0 : 4.0);
+        f.frames(4);
+        if (c.index() == 1) {
+            ctx.getInput().holdShift();
+            f.frames(3);
+        }
+        ctx.runOnClient(mc -> mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND));
+        f.cast();
+        if (c.index() == 1) ctx.getInput().releaseShift();
+        f.until(c.total());
+        double dealt = dealtAll(server);
+        f.end(dealt);
+        if (!(dealt > 0)) failures.add(id + " (film) dealt no damage");
     }
 
     // ------------------------------------------------------------ 정령왕 강림

@@ -31,6 +31,11 @@ if [ -d ci-out/shots ]; then
   mkdir -p "$OUT/shots"
   cp ci-out/shots/* "$OUT/shots/" 2>/dev/null || true
 fi
+# 0.48.2 스킬 영상 (only=film,… — ci/films.py 의 mp4 · manifest)
+if [ -d ci-out/films ]; then
+  mkdir -p "$OUT/films"
+  cp ci-out/films/* "$OUT/films/" 2>/dev/null || true
+fi
 # 0.26.0 룬 지속 시간 재기 (RpgRuneTimingTests — 게임 시험 로그가 길어 가운데가 잘리므로 따로)
 grep -h "\[rune-timing\]" ci-out/gametest.txt 2>/dev/null > "$OUT/rune-timing.txt" || true
 # 게임 시험마다 남기는 확인 줄 ([xxx-test] OK …) — 가운데가 잘려도 어느 시험이 지나갔는지 보이게
