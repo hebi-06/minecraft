@@ -41,6 +41,9 @@ final class RpgFilm {
     private double dist = 6.0;
     private double height = 2.1;
     private double lookY = 1.0;
+    /** 카메라 자리가 몸을 따라가는 몫 (1 = 그대로 따라감; 룬 영상은 0.35 — 과녁을 뚫고 지나가는 돌진에서 카메라가 과녁 무리 사이로 들어가 가리지 않게,
+     * 보는 곳은 늘 몸을 따라감) */
+    private double follow = 1.0;
     private static int clips;
     /** 사진 크기 (창 크기) */
     private static final int W = 1280;
@@ -64,7 +67,9 @@ final class RpgFilm {
     private final List<Long> ticks = new ArrayList<>();
     private final Map<String, Object> info = new LinkedHashMap<>();
     private long castTick = -1;
+    private double sx;
     private double sy;
+    private double sz;
     private double fx;
     private double fz;
     private double ahead;
@@ -78,6 +83,12 @@ final class RpgFilm {
         this.dist = dist;
         this.height = height;
         this.lookY = lookY;
+        return this;
+    }
+
+    /** 카메라 자리가 몸을 따라가는 몫 (0 ~ 1) */
+    RpgFilm follow(double k) {
+        this.follow = k;
         return this;
     }
 
@@ -119,7 +130,9 @@ final class RpgFilm {
             mc.gui.toastManager().clear();
             Player p = mc.player;
             float yaw = p.getYRot() * (float) (Math.PI / 180);
+            sx = p.getX();
             sy = p.getY();
+            sz = p.getZ();
             fx = -Math.sin(yaw);
             fz = Math.cos(yaw);
         });
@@ -127,7 +140,7 @@ final class RpgFilm {
         ctx.waitTicks(2); // 새 창 크기 · 영화 카메라로 한 번 그려 둠 (첫 장이 3인칭 카메라 · 작은 창이 아니게)
     }
 
-    /** 카메라를 지금 몸 자리에 맞춤 (가로는 그대로 따라감 · 높이는 60% 만 — 솟구치는 스킬에서 땅이 다 빠지지 않게) */
+    /** 카메라를 지금 몸 자리에 맞춤 (가로는 follow 몫만큼 따라감 · 높이는 60% 만 — 솟구치는 스킬에서 땅이 다 빠지지 않게; 보는 곳은 몸 그대로) */
     private void place() {
         ctx.runOnClient(mc -> {
             Player p = mc.player;
@@ -136,9 +149,9 @@ final class RpgFilm {
             double lz = -fx;
             double ox = Math.cos(ANGLE) * fx + Math.sin(ANGLE) * lx;
             double oz = Math.cos(ANGLE) * fz + Math.sin(ANGLE) * lz;
-            double cx = p.getX() + ox * dist;
+            double cx = sx + (p.getX() - sx) * follow + ox * dist;
             double cy = by + height;
-            double cz = p.getZ() + oz * dist;
+            double cz = sz + (p.getZ() - sz) * follow + oz * dist;
             double dx = p.getX() + fx * ahead - cx;
             double dy = by + lookY - cy;
             double dz = p.getZ() + fz * ahead - cz;

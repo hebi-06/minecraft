@@ -89,7 +89,7 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
             ctx.waitTicks(10);
             for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
-            RpgFilm f = film ? new RpgFilm(ctx) : null;
+            RpgFilm f = film ? new RpgFilm(ctx).follow(0.35) : null;
             for (String family : Runes.PAIR_FAMILIES) {
                 for (String grade : Runes.GRADE_ORDER) {
                     Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));

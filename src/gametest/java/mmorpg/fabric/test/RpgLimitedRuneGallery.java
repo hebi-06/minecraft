@@ -95,7 +95,7 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             server.runOnServer(s -> installBuffer());
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             if (film) {
-                RpgFilm f = new RpgFilm(ctx).view(9.0, 3.4, 2.6);
+                RpgFilm f = new RpgFilm(ctx).view(9.0, 3.4, 2.6).follow(0.35);
                 for (String family : List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier")) film(ctx, server, family, f);
                 LOG.info("[limited-gallery] film done, {} failed", failures.size());
                 if (!failures.isEmpty()) throw new AssertionError("limited film: " + String.join(" / ", failures));

@@ -83,7 +83,7 @@ public final class RpgRuneGallery implements FabricClientGameTest {
             for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             if (filmPart > 0) {
-                RpgFilm f = new RpgFilm(ctx);
+                RpgFilm f = new RpgFilm(ctx).follow(0.35);
                 List<String> fams = Runes.FAMILY_ORDER.stream().filter(x -> !Runes.PAIR_FAMILIES.contains(x)).toList();
                 int from = (filmPart - 1) * 6;
                 for (String family : fams.subList(Math.min(from, fams.size()), Math.min(from + 6, fams.size()))) {
