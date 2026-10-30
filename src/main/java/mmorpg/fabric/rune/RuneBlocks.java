@@ -38,9 +38,9 @@ final class RuneBlocks {
     static final BlockState BLACK = Blocks.COAL_BLOCK.defaultBlockState();
     static final BlockState OBSIDIAN = Blocks.OBSIDIAN.defaultBlockState();
     /** 구름 밝기 (눈 블록 — 위 덩이 밝게 · 몸 회색 · 밑 어둡게) */
-    static final Brightness CLOUD_TOP = new Brightness(10, 13);
-    static final Brightness CLOUD_MID = new Brightness(5, 8);
-    static final Brightness CLOUD_LOW = new Brightness(2, 4);
+    static final Brightness CLOUD_TOP = new Brightness(15, 15);
+    static final Brightness CLOUD_MID = new Brightness(10, 12);
+    static final Brightness CLOUD_LOW = new Brightness(4, 6);
     static final BlockState AMETHYST = Blocks.AMETHYST_BLOCK.defaultBlockState();
     static final BlockState CRYING = Blocks.CRYING_OBSIDIAN.defaultBlockState();
 
@@ -197,15 +197,20 @@ final class RuneBlocks {
 
     // ------------------------------------------------------------ 먹구름
 
-    /** 마인크래프트 구름처럼 납작한 덩이 다섯 + 밑판 (눈 블록 — 위는 밝게 · 몸은 회색 · 밑은 어둡게 비춤) — 밑 가운데가 원점, 너비 W */
+    /**
+     * 뭉게구름 (밑 가운데가 원점, 너비 W): 눈 블록 덩이 여덟 — 넓은 밑덩이 위에 크고 작은 덩이가 들쭉날쭉 쌓임 (마인크래프트 구름처럼 각진 모양). 밝기로 결을 냄:
+     * 위 덩이는 희게 · 몸은 밝은 회색 · 밑판은 어두운 회색 (먹구름 밑)
+     */
     static PairKit.Rig cloud(ServerLevel level, Vec3 base, int life, Vec3 offset, Quaternionf rot, double scale, double W) {
         PairKit.Rig g = rig(level, base, life, offset, rot, scale);
-        g.add(0, WHITE, new Vec3(0, 0.09, 0), new Vec3(W + 0.1, 0.18, 0.62 * W + 0.1), null, CLOUD_LOW);
-        g.add(0, WHITE, new Vec3(0, 0.6, 0), new Vec3(W, 0.85, 0.62 * W), null, CLOUD_MID);
-        g.add(0, WHITE, new Vec3(-0.12 * W, 1.3, 0.05 * W), new Vec3(0.55 * W, 0.7, 0.42 * W), null, CLOUD_TOP);
-        g.add(0, WHITE, new Vec3(0.24 * W, 1.18, -0.1 * W), new Vec3(0.38 * W, 0.5, 0.34 * W), null, CLOUD_TOP);
-        g.add(0, WHITE, new Vec3(0.5 * W, 0.62, 0.08 * W), new Vec3(0.32 * W, 0.62, 0.4 * W), null, CLOUD_MID);
-        g.add(0, WHITE, new Vec3(-0.52 * W, 0.55, -0.06 * W), new Vec3(0.28 * W, 0.5, 0.36 * W), null, CLOUD_MID);
+        double D = 0.6 * W;
+        g.add(0, WHITE, new Vec3(0, 0.12, 0), new Vec3(W * 0.92, 0.24, D * 0.9), null, CLOUD_LOW);
+        g.add(0, WHITE, new Vec3(0, 0.7, 0), new Vec3(W, 0.95, D), null, CLOUD_MID);
+        double[][] lumps = {{-0.18, 1.55, 0.04, 0.42, 0.95, 0.62}, {0.16, 1.4, -0.08, 0.36, 0.75, 0.55}, {0.36, 1.12, 0.1, 0.26, 0.55, 0.5},
+            {-0.4, 1.15, -0.05, 0.24, 0.5, 0.48}, {0.0, 2.05, 0.0, 0.24, 0.5, 0.36}, {-0.5, 0.75, 0.12, 0.16, 0.8, 0.7}};
+        for (double[] l : lumps) {
+            g.add(0, WHITE, new Vec3(l[0] * W, l[1], l[2] * W), new Vec3(l[3] * W, l[4], l[5] * D), null, l[1] > 1.3 ? CLOUD_TOP : CLOUD_MID);
+        }
         return g;
     }
 
@@ -320,9 +325,10 @@ final class RuneBlocks {
         return g;
     }
 
-    /** 날갯짓: lift 도 (+ = 날개 끝이 위로) */
+    /** 날갯짓: lift 도 (+ = 날개 끝이 위로) · 날개는 뒤로 30° 젖힘 (V 자 — 옆에서도 날개 면이 보임) */
     static Quaternionf[] flap(double lift) {
+        Vec3 y = new Vec3(0, 1, 0);
         Vec3 z = new Vec3(0, 0, 1);
-        return new Quaternionf[] {new Quaternionf(), PairKit.about(z, -lift), PairKit.about(z, lift)};
+        return new Quaternionf[] {new Quaternionf(), PairKit.about(y, -30).mul(PairKit.about(z, -lift)), PairKit.about(y, 30).mul(PairKit.about(z, lift))};
     }
 }

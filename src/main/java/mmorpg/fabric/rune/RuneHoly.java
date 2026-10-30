@@ -374,7 +374,7 @@ final class RuneHoly {
         // 금 블록 뼈 · 흰 양털 깃털 다섯 · 석영 속깃 셋, 폭 2.6) 이 등 뒤에서 펼쳐짐 → 2틱마다 몸을 따라가며 날갯짓 (1.2초 주기) → 끝에 접고 오그라듦.
         // 죽으면 부서져 흩어짐. 2D 날개 그림은 이 블록 날개가 대신함 (깃털 · 후광 · 빛기둥 2D 는 그대로)
         Vec3 f0 = Kit.facingOf(sp);
-        PairKit.Rig wings = RuneBlocks.wings(level0, c0, total + 12, V.sub(V.add(V.up(c0, 1.3), f0, -0.42), c0), PairKit.facing(f0), 0.35, 2.6);
+        PairKit.Rig wings = RuneBlocks.wings(level0, c0, total + 12, V.sub(V.add(V.up(c0, 1.45), f0, -0.42), c0), PairKit.facing(f0), 0.35, 2.6);
         RuneKit.later(total, () -> wings.pose(wings.offset, wings.rot, 0.05, 8, RuneBlocks.flap(-35)));
         boolean[] gone = {false};
         for (int t = 0; t < total; t += 2) {
@@ -391,8 +391,8 @@ final class RuneHoly {
                 if (tt >= 2 && level == level0) {
                     boolean folding = tt >= total - 8;
                     double lift = folding ? -35 : tt < 8 ? 0 : 16 * Math.sin((tt - 8) * Math.PI / 12.0);
-                    double sc = folding ? 0.6 : Math.min(0.85, 0.35 + tt * 0.1);
-                    wings.pose(V.sub(V.add(V.up(c, 1.3), f, -0.42), c0), PairKit.facing(f), sc, 2, RuneBlocks.flap(lift));
+                    double sc = folding ? 0.6 : Math.min(1.0, 0.35 + tt * 0.11);
+                    wings.pose(V.sub(V.add(V.up(c, 1.45), f, -0.42), c0), PairKit.facing(f), sc, 2, RuneBlocks.flap(lift));
                 }
                 if (tt % 6 != 0) return;
                 if (tt % 12 == 0) SkillFx.rune(level, V.up(c, 2.35), Opt.of("size", 0.4, "life", 0.65, "color", glow, "alpha", 0.95, "rate", 120.0)); // 후광

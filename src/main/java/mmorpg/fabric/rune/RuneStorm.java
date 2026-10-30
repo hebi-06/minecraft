@@ -350,7 +350,7 @@ final class RuneStorm {
             Vec3 cp = V.add(storm, V.rightOf(f0), sd * 4.5);
             org.joml.Quaternionf cq = RuneBlocks.faceTo(cp, c0);
             PairKit.Rig cl = RuneBlocks.cloud(level, cp, (int) charge + 26, Vec3.ZERO, cq, 0.3, 5.2);
-            RuneKit.later(2, () -> cl.pose(Vec3.ZERO, cq, 1, 6));
+            RuneKit.later(2, () -> cl.pose(Vec3.ZERO, cq, 1.2, 6));
             RuneKit.later((int) charge + 14, () -> cl.pose(new Vec3(0, 0.8, 0), cq, 0.15, 10));
         }
         RuneKit.domainSigil(level, c0, 5, "blade", glow, white, Opt.of("life", (charge + 2) / 20, "spinRate", 120.0, "grow", 0.3, "alpha", 0.8, "fade", 0.15));
