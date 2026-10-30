@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Runes;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -600,17 +601,10 @@ final class RuneGravity {
         RuneKit.later(charge, () -> {
             if (RuneKit.sameLife(sp, life)) RuneKit.ultFlashFor(sp, level, g, "blackHole", "dark", Opt.of("time", new double[] {0.05, 0.05, 0.5}));
         });
-        // 0.48.2 초월 룬 손보기 (사용자 "골렘 소환 같은 느낌이면 좋을거 같은데 너무 3d에 매끈매끈 한거보다"): 핵 = 블록으로 쌓은 블랙홀 (RuneBlocks.hole —
-        // 검은 콘크리트 핵 (그늘) · 도는 자수정 · 우는 흑요석 고리 · 둘레를 도는 조각) 이 시전자 쪽을 보며 charge 틱에 걸쳐 커짐 → 고리가 돎 → 붕괴 때 안으로 꺼짐.
-        // 모바일 블랙홀 그림 (rfx_hole) 은 빨려 드는 소용돌이 겹만 남겨 둘레에서 돎 (블록 + 2D)
-        org.joml.Quaternionf holeFace = RuneBlocks.faceTo(hole, sp.position());
-        PairKit.Rig core3 = RuneBlocks.hole(level, hole, charge + T + 10, Vec3.ZERO, holeFace, 0.15, 0.95 * sc);
-        RuneKit.later(2, () -> core3.pose(Vec3.ZERO, holeFace, 1, Math.max(1, charge - 2), RuneBlocks.spin(0)));
-        for (int t = charge; t < charge + T; t += 3) {
-            final int tt = t;
-            RuneKit.later(t, () -> core3.swing(RuneBlocks.SPIN, RuneBlocks.spin((tt - charge + 3) * 10.0)[RuneBlocks.SPIN], 3));
-        }
-        RuneKit.later(charge + T, () -> core3.pose(Vec3.ZERO, holeFace, 0.05, 6, RuneBlocks.spin(T * 10.0 + 90)));
+        // 0.48.2 초월 룬 손보기: 핵 = 입체 일식 (eclipse — 빛을 삼킨 검은 원판 · 새어 나오는 테 · 해무리, 0.48.1 스발린과 같은 모델) 을 보랏빛으로:
+        // charge 틱에 걸쳐 커지며 나타나 끝까지 맥동 → 붕괴 때 사라짐. 모바일 블랙홀 그림 (rfx_hole) 은 빨려 드는 소용돌이 겹만 남겨 둘레에서 돎 (2D + 3D)
+        Fx3d.spawn(level, "eclipse", hole, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 1.7 * sc, "life", (charge + T) / 20.0 + 0.05, "color", glow, "glow", core,
+                "anim", "pulse", "loop", 1.0, "glowAlpha", 0.5, "shine", 0.3, "pop", charge / 20.0));
         for (int t = 0; t < charge; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
@@ -656,8 +650,9 @@ final class RuneGravity {
         }
         // v2.27.0 뒤쪽 하늘의 검은 일식 (블랙홀 그림을 크게 — 원반 + 핵): 붕괴 때 섬광으로 터짐
         Vec3 eclipse = RuneKit.skyPoint(sp, g, 8, 21, 6, 22);
-        RuneKit.rfx(level, "hole", eclipse, Opt.of("size", 3.6, "life", (charge + T + 2) / 20.0, "cell", 0.0, "spinRate", 50.0, "alpha", 0.85, "fade", 0.1));
-        RuneKit.rfx(level, "hole", eclipse, Opt.of("size", 3.6, "life", (charge + T + 2) / 20.0, "cell", (double) RuneKit.HOLE_CORE, "alpha", 0.95, "fade", 0.1));
+        Fx3d.spawn(level, "eclipse", eclipse, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 3.4, "life", (charge + T + 2) / 20.0, "color", glow, "glow", core, "anim",
+                "pulse", "loop", 1.0, "animPhase", 0.4, "glowAlpha", 0.45, "shine", 0.3, "pop", 0.4, "fadeOut", 0.1));
+        RuneKit.rfx(level, "hole", eclipse, Opt.of("size", 3.6, "life", (charge + T + 2) / 20.0, "cell", 0.0, "spinRate", 50.0, "alpha", 0.6, "fade", 0.1));
         RuneKit.later(charge + T, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             // 붕괴: 원반이 안으로 꺼지며 (커졌다 사라짐) 터짐

@@ -8,6 +8,7 @@ import mmorpg.core.Obj;
 import mmorpg.core.RuneBreak;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.skill.Kit;
@@ -559,12 +560,12 @@ final class RuneLimited {
         SkillFx.play(level, "beacon.power", sp.position(), 1.5, 0.9);
         SkillFx.play(level, "mob.elderguardian.curse", a0, 1.6, 0.4);
         SkillFx.rune(level, sp.position(), Opt.of("size", 1.4, "life", charge / 20.0, "color", SUN, "alpha", 0.9, "rate", 140.0, "progress", 1.0));
-        // 0.48.2 초월 룬 손보기 (사용자 "골렘 소환 같은 느낌이면 좋을거 같은데 너무 3d에 매끈매끈 한거보다"): 하늘의 눈 = 블록으로 쌓은 눈 (RuneBlocks.eye —
-        // 금 블록 테 · 흰 콘크리트 눈알 · 버섯불 홍채 · 검은 동공 · 석영 눈꺼풀 둘) 이 시전자 쪽을 보며 charge 틱에 걸쳐 커지며 눈꺼풀을 뜸 → 광선 동안 조준을 따라
-        // 옮김 (때릴 때 조금 커짐) → 끝에 감고 오그라듦. 모바일 눈 그림 (rfx_skyeye — 금빛 눈 문양) 은 옅게 겹쳐 둘레 문양으로 (블록 + 2D)
+        // 0.48.2 초월 룬 손보기: 하늘의 눈 = 입체 눈 (odin_eye — 눈알 · 눈꺼풀 · 금빛 테 · 빛살, 0.48.0 오딘과 같은 모델) 이 charge 틱에 걸쳐 뜨고
+        // 광선 동안 노려보며 (glare) 조준을 따라 옮김 → 끝에 감음. 모바일 눈 그림 (rfx_skyeye — 금빛 눈 문양) 은 옅게 겹쳐 둘레 문양으로 (2D + 3D)
         double h0 = skyHeight(sp, a0, 6, hMax);
-        Vec3 eye0 = V.up(a0, h0);
-        PairKit.Rig eyeR = RuneBlocks.eye(level, eye0, end + 16, Vec3.ZERO, RuneBlocks.faceTo(eye0, sp.position()), 0.3, 3.4 * eyeScale(h0) * 0.8);
+        int eye3d = Fx3d.spawn(level, "odin_eye", V.up(a0, h0), Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 3.4 * eyeScale(h0) * 0.85, "life", end / 20.0 + 0.7,
+                "color", SUN, "glow", SUN_CORE, "anim", "open", "animSpeed", 0.5 / Math.max(0.05, charge / 20.0), "glowAlpha", 0.45, "shine", 0.35, "pop", 0.25,
+                "fadeOut", 0.5));
         Vec3[] p = {a0};
         Kit.ticks(t -> {
             if (!RuneKit.sameLife(sp, life)) return false;
@@ -576,9 +577,8 @@ final class RuneLimited {
                 // 눈을 뜸 (감음 → 반쯤 → 뜸) · 조준한 곳에 금빛 고리
                 if (t % 2 == 0) {
                     int frame = t < charge / 3 ? 0 : t < charge * 2 / 3 ? 1 : 2;
-                    if (t >= 2) eyeR.pose(V.sub(eyeAt, eye0), RuneBlocks.faceTo(eyeAt, sp.position()), Math.min(1, 0.3 + 1.4 * t / (double) charge), 2,
-                            RuneBlocks.lids((double) t / charge));
-                    eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), frame, 0.12, 0.35);
+                    Fx3d.move(level, eye3d, eyeAt, 0.1, null);
+                    eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), frame, 0.12, 0.5);
                     RuneKit.domainSigil(level, eyeAt, 4.6 * eyeScale(h), "arcane", SUN, SUN_CORE, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "life", 0.12, "spin", t * 4.0,
                             "alpha", 0.6, "fade", 0.2));
                 }
@@ -600,9 +600,10 @@ final class RuneLimited {
             eyeAt = V.up(cur, h);
             int bt = t - charge;
             boolean pulse = bt % gap == 0 && bt / gap < hits;
+            if (bt == 0) Fx3d.anim(level, eye3d, "glare", true, eyeAt);
             if (t % 2 == 0 || pulse) {
-                eyeR.pose(V.sub(eyeAt, eye0), RuneBlocks.faceTo(eyeAt, sp.position()), pulse ? 1.1 : 1, 2, RuneBlocks.lids(1));
-                eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), pulse ? 3 : 2, 0.12, 0.35);
+                Fx3d.move(level, eye3d, eyeAt, 0.1, null);
+                eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), pulse ? 3 : 2, 0.12, 0.5);
                 RuneKit.domainSigil(level, eyeAt, 4.6 * eyeScale(h), "arcane", SUN, SUN_CORE, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "life", 0.12, "spin", t * 4.0,
                         "alpha", 0.6, "fade", 0.2));
                 Vec3 top = V.up(cur, h - 0.8);
@@ -627,10 +628,7 @@ final class RuneLimited {
                 }
             }
             if (t == end) {
-                Vec3 eyeOff = V.sub(eyeAt, eye0);
-                org.joml.Quaternionf q = RuneBlocks.faceTo(eyeAt, sp.position());
-                eyeR.pose(eyeOff, q, 1, 6, RuneBlocks.lids(0));
-                RuneKit.later(7, () -> eyeR.pose(eyeOff, q, 0.05, 8, RuneBlocks.lids(0)));
+                Fx3d.anim(level, eye3d, "close", false, eyeAt);
                 finish(sp, level, cur, h, radius, P, k, life, tally, fin);
             }
             return true;

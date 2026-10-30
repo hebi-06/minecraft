@@ -9,6 +9,7 @@ import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.FxDisplays;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
@@ -254,11 +255,14 @@ public final class RuneGrove {
         LAST.put(sp.getUUID(), cast);
         RuneKit.ultSkyFor(sp, level, c, FN, standEnd + 10, null);
 
-        // ---- 세계수 (아이템 표시 — 밑동이 땅에 붙게 모델 가운데를 1.5s 위로): 씨앗 크기로 생겨 돌며 자람 (2 ~ 2 + GROW 틱) → 서 있음 → 오그라듦
-        ItemStack stack = new ItemStack(Items.PAPER);
-        stack.set(DataComponents.ITEM_MODEL, TREE_MODEL);
-        Display.ItemDisplay tree = FxDisplays.item(level, base, stack, treeAt(0.06, rot + TWIST), standEnd + FADE + 4, LIGHT);
-        RuneKit.later(2, () -> FxDisplays.move(tree, treeAt(s, rot), GROW));
+        // ---- 세계수: 0.48.2 초월 룬 손보기 — 블록 모양 아이템 표시 (rpg:fx_worldtree) 대신 입체 세계수 (world_tree — 0.48.0 위그드라실과 같은 모델:
+        // 밑동이 원점 · 높이 3.3, 줄기 · 가지의 빛나는 룬 줄 = 속빛, 잎 무리 = 빛깔). 키는 예전과 같게 (3 × 크기 칸): 줄기가 솟고 잎이 피어남 (GROW 틱) → 서서
+        // 잎이 흔들림 → 끝에 오그라들며 사라짐 (FADE 틱)
+        Vec3 toMe = V.flat(V.sub(c, base));
+        int tree = Fx3d.spawn(level, "world_tree", base, Opt.of("dir", V.UP, "face", toMe.lengthSqr() > 1e-6 ? V.unit(toMe) : new Vec3(0, 0, 1), "scale",
+                3.0 * s / 3.3, "life", (standEnd + FADE) / 20.0, "color", LEAF, "glow", GOLD, "anim", "grow", "animSpeed", 20.0 / GROW, "glowAlpha", 0.45, "shine",
+                0.3, "shrink", FADE / 20.0, "fadeOut", FADE / 20.0));
+        RuneKit.later(GROW + 2, () -> Fx3d.anim(level, tree, "sway", true, base));
 
         // ---- 쓸 때: 발밑 룬 · 가호의 땅 (영역 문양 — 반지름 radius) · 시전자 → 나무 빛 뿌리 · 밑동에서 사방으로 뿌리 · 씨앗 빛 · 소리
         SkillFx.rune(level, c, Opt.of("size", 1.5, "life", (charge + 4) / 20.0, "color", JADE, "alpha", 0.9, "rate", 110.0, "progress", 1.0));
@@ -284,13 +288,14 @@ public final class RuneGrove {
         // ---- 자람 · 서 있음 (매 틱) → 오그라들며 흩어짐. 시전자가 쓰러지거나 차원을 옮기면 나무는 바로 흩어짐 (이미 받은 가호는 그대로)
         Kit.ticks(t -> {
             if (!RuneKit.sameLife(sp, life)) {
-                fade(level, tree, base, s, rot);
+                Fx3d.kill(level, tree, base, 0.5);
+                fade(level, base, s);
                 return false;
             }
             if (t < charge) grow(level, base, s, t, charge);
             else if (t < standEnd) stand(sp, level, base, s, rot, t - charge, fin, c, radius);
             if (t >= standEnd) {
-                fade(level, tree, base, s, rot);
+                fade(level, base, s); // 나무는 남은 삶 (FADE 틱) 동안 오그라들며 사라짐 (shrink · fadeOut)
                 return false;
             }
             return true;
@@ -441,9 +446,7 @@ public final class RuneGrove {
     }
 
     /** 오그라들며 흩어짐 (FADE 틱 — 돌며 작아짐, 잎 지붕에서 잎 · 금빛이 흩날림) → 지움 */
-    private static void fade(ServerLevel level, Display.ItemDisplay tree, Vec3 base, double s, float rot) {
-        FxDisplays.move(tree, treeAt(s * 0.08, rot - 1.2F), FADE);
-        RuneKit.later(FADE + 1, () -> FxDisplays.remove(tree));
+    private static void fade(ServerLevel level, Vec3 base, double s) {
         Vec3 crown = V.up(base, CANOPY_Y * s);
         leaves(level, crown, 18, LEAF, 3.2, 1.2, 1.4, 0.16);
         leaves(level, crown, 10, GOLD, 2.6, 1.8, 1.2, 0.13);
