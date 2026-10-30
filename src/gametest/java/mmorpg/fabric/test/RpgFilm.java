@@ -216,7 +216,23 @@ final class RpgFilm {
                 String.format(Locale.ROOT, "%.1f", dealt));
         server.runCommand("tick rate 20");
         ctx.waitTicks(2);
+        // 남은 것 치움 (0.48.2 룬 영상: 계열 몇 개를 지나면 장면마다 사진이 1초 넘게 걸림 — 앞 룬이 남긴 글자 · 물체 · 그림이 쌓임):
+        // 플레이어 · 과녁 (허스크 — 다음 장면이 새로 세움) 밖의 존재 · 클라이언트 그림 · 입체 효과 물체
+        int left = server.computeOnServer(s -> {
+            List<net.minecraft.world.entity.Entity> gone = new ArrayList<>();
+            for (net.minecraft.server.level.ServerLevel level : s.getAllLevels()) {
+                for (net.minecraft.world.entity.Entity e : level.getAllEntities()) {
+                    if (e instanceof net.minecraft.world.entity.player.Player || e instanceof net.minecraft.world.entity.monster.zombie.Husk) continue;
+                    gone.add(e);
+                }
+            }
+            for (net.minecraft.world.entity.Entity e : gone) e.discard();
+            return gone.size();
+        });
+        if (left > 0) LOG.info("[film] {} cleared {} leftover entities", dir.getFileName(), left);
         ctx.runOnClient(mc -> {
+            mc.particleEngine.clearParticles();
+            mmorpg.fabric.client.FxModels.clear();
             FilmCamera.clear();
             if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
             mc.options.setCameraType(CameraType.FIRST_PERSON);
