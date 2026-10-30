@@ -435,6 +435,11 @@ public final class RuneKit {
 
     /** 색을 입히는 그림의 빛 + 심지 두 장 (cells = {빛 칸, 심지 칸} — o.cell 은 둘에 더함). coreAlpha = 심지만 다른 불투명도 (null = 같게) */
     public static void rfx2(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core, int[] cells, Double coreAlpha) {
+        // 0.48.2 날아가는 초승달 참격 (wave + speed) 은 참격 판으로 — 불룩한 날이 날아가는 쪽, 판은 눕힘 (spin = 날아가는 쪽 둘레로 기욺)
+        if ("wave".equals(name) && cells == null && o.num("speed", 0) > 0 && o.has("dir")) {
+            waveCard(level, at, o.vec("dir", V_UP), V_UP, o.with("roll", o.num("spin", 0)), glow, core);
+            return;
+        }
         int[] c = cells != null ? cells : RFX.getOrDefault(name, new int[] {0, 1});
         double cell = o.num("cell", 0);
         double solo = o.num("solo", 0); // 0.29.0 주인마다 하나만 — 빛 · 심지가 서로를 지우지 않게 번호를 나눔
@@ -444,6 +449,20 @@ public final class RuneKit {
 
     public static void rfx2(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core) {
         rfx2(level, name, at, o, glow, core, null, null);
+    }
+
+    /**
+     * 0.48.2 참격 판 (사용자 "평타 때리면 그뒤에 참격 이펙트 나오는데 그거 방향대로 나가면 좋겠는데" · "참격이 위쪽을 보고 있음 정면을 보면서 나가면 좋겠는데"):
+     * 초승달 참격 그림 (모바일 rfx_wave 그대로 — 2D 그림) 을 카메라를 보는 파티클 대신 세상의 면에 놓인 판 (fxmodel slash_wave) 으로 그림 — 초승달의 불룩한 날이
+     * 날아가는 쪽 (dir) 을 보고, 판의 면 = face (위 = 가로로 눕힘 · 옆 = 세로로 세움 — 평타의 휘두르는 면), roll = 날아가는 쪽 둘레로 더 기울임 (도).
+     * o: speed (칸/초) · size (rfx 의 size — 너비 2 × size) · life · grow · alpha · fade (끝에서 사라지는 몫)
+     */
+    public static void waveCard(ServerLevel level, Vec3 at, Vec3 dir, Vec3 face, Opt o, double[] glow, double[] core) {
+        Vec3 d = V.unit(dir);
+        double life = Math.max(0.05, o.num("life", 0.3));
+        mmorpg.fabric.Fx3d.spawn(level, "slash_wave", at, Opt.of("dir", d, "face", face, "roll", o.num("roll", 0), "vel", V.scale(d, o.num("speed", 0)), "scale",
+                o.num("size", 1), "life", life, "grow", o.num("grow", 0), "alpha", o.num("alpha", 1), "fadeIn", 0.04, "fadeOut",
+                Math.max(0.05, o.num("fade", 0.2) * life), "color", glow, "glow", core, "glowAlpha", 0.0, "shine", 0.2));
     }
 
     /** 그림까지 거리: 1인칭 눈과 3인칭 카메라 (보는 쪽 뒤 4.5칸 · 위 1칸 근사) 중 가까운 쪽 */

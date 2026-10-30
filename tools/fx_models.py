@@ -1346,6 +1346,12 @@ import fx_models_weapon  # noqa: E402
 
 fx_models_weapon.add(sys.modules[__name__])
 
+# ------------------------------------------------------------ 0.48.2 2D 그림 판 (tools/fx_models_card.py — 참격 판)
+
+import fx_models_card  # noqa: E402
+
+fx_models_card.add(sys.modules[__name__])
+
 
 # ------------------------------------------------------------ 쓰기
 

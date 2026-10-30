@@ -24,6 +24,7 @@ import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.SwingArea;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.motion.MotionSystem;
 import mmorpg.fabric.motion.SwingLook;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -342,6 +343,21 @@ public final class RuneStrike {
         if (Notify.actionbarFree(sp)) Notify.notify(sp, "§7" + st.def.str("name") + (used ? " 평타를 모두 썼습니다" : " 시간이 끝났습니다"), 16);
     }
 
+    /**
+     * 0.48.2 이번 평타의 휘두르는 면 (참격 판의 면 — 사용자 "평타 때리면 그뒤에 참격 이펙트 나오는데 그거 방향대로 나가면 좋겠는데"): 세로 베기 · 내려찍기 · 찌르기 =
+     * 옆 (판을 세움), X 베기 = 비스듬히 (틱마다 번갈아), 그 밖 (가로 베기 · 회전 · 휩쓸기 · 밀치기) = 위 (판을 눕힘)
+     */
+    private static Vec3 swingFace(ServerPlayer sp, Vec3 f) {
+        MotionSystem.Swing s = MotionSystem.last(sp);
+        String m = s == null ? "" : s.motion();
+        Vec3 side = V.rightOf(f);
+        return switch (m) {
+            case "slash_v", "chop", "smite", "thrust" -> side;
+            case "dagger_x" -> V.unit(V.add(V.UP, side, (s.tick() & 1) == 0 ? 1.0 : -1.0));
+            default -> V.UP;
+        };
+    }
+
     /** 평타 강화 룬마다 맞힌 뒤 덧붙임 */
     private static void strikeEffect(ServerPlayer sp, LivingEntity victim, Weapon w, StrikeBuff st) {
         Obj k = st.def;
@@ -394,8 +410,9 @@ public final class RuneStrike {
                 double rad = melee ? k.num("cleave") : k.num("splash");
                 Set<UUID> skip = melee ? new HashSet<>(SwingArea.swingVictims(sp)) : new HashSet<>();
                 if (victim != null) skip.add(victim.getUUID());
-                Vec3 mid = V.up(V.add(c, f, rad * 0.55), 1.0);
-                RuneKit.rfx2(level, "wave", mid, Opt.of("size", rad * 0.62, "life", 0.24, "grow", 0.3, "fade", 0.6), col, white);
+                // 0.48.2 참격 판: 휘두른 면 그대로 앞으로 나가는 초승달 (불룩한 날이 앞 — 근접은 이번 평타의 면, 활 · 완드는 눕힘)
+                RuneKit.waveCard(level, V.up(V.add(c, f, melee ? 0.9 : 0.3), 1.0), f, melee ? swingFace(sp, f) : V.UP, Opt.of("speed", rad / 0.3, "size", rad * 0.55,
+                        "life", 0.3, "grow", 0.35, "fade", 0.6), col, white);
                 SkillFx.fx(level, "rpg:light_cut", V.up(V.add(c, f, rad * 0.7), 0.08), Opt.of("dir", V.rightOf(f), "size", rad * 0.55, "thick", 0.22, "life", 0.6,
                         "delay", 0.35, "color", col, "alpha", 0.9));
                 RuneKit.later(1, () -> {
@@ -437,12 +454,13 @@ public final class RuneStrike {
                 double width = k.num("width");
                 double cross = k.numOr("cross", 0);
                 double waveBonus = k.num("bonus") * (cross > 0 ? cross : 1);
+                Vec3 face = melee ? swingFace(sp, f) : V.UP; // 0.48.2 참격 판: 이번 평타의 휘두른 면 (가로 = 눕힘 · 세로 = 세움)
                 for (double ang : cross > 0 ? new double[] {-16, 16} : new double[] {0}) {
                     Vec3 dir = ang == 0 ? dir0 : V.turnY(dir0, ang);
                     double len = Math.max(1, RuneKit.rayLength(level, from, dir, k.num("wave")));
                     double s0 = Math.min(1.2, len * 0.5);
-                    RuneKit.rfx2(level, "wave", V.add(from, dir, s0), Opt.of("dir", dir, "speed", speed, "size", width, "life", Math.max(0.05, (len - s0) / speed),
-                            "fade", 0.2), col, white);
+                    RuneKit.waveCard(level, V.add(from, dir, s0), dir, face, Opt.of("speed", speed, "size", width, "life", Math.max(0.05, (len - s0) / speed), "fade",
+                            0.2), col, white);
                     SkillFx.fx(level, "rpg:light_cut", V.add(from, dir, len / 2), Opt.of("dir", dir, "size", len / 2, "thick", 0.16, "life", 0.35, "delay", 0.15,
                             "color", col, "alpha", 0.8));
                     List<Kit.LineHit> targets = new ArrayList<>();
