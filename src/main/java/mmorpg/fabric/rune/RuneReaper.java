@@ -398,8 +398,9 @@ final class RuneReaper {
         // 0.48.2 초월 룬 손보기: 달 = 입체 만월 (moon — 반지름 0.5 · 둘레를 감은 초승달 날) 하나가 아래에서 솟으며 커짐 → 떠 있음 (천천히 돎) → 떨어짐.
         // 모바일 달 그림 (rfx_moon) 은 빛깔 겹 (붉은 달빛) 만 옅게 겹쳐 붉은 달무리로 (2D + 3D)
         int moonCell = RuneKit.RFX.getOrDefault("moon", new int[] {0, 1})[0];
+        // 흰 달 몸을 붉게: 더한 빛 (shine — 같은 면을 속빛으로 한 번 더) 을 짙은 붉은빛으로 세게 · 달무리도 붉게
         int moon3d = Fx3d.spawn(level0, "moon", V.up(moonAt, -4), Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 7.4, "life", total / 20.0 + 0.05, "color", glow,
-                "glow", core, "anim", "spin", "loop", 1.0, "glowAlpha", 0.55, "shine", 0.4, "pop", delay / 20.0));
+                "glow", new double[] {0.95, 0.12, 0.12}, "anim", "spin", "loop", 1.0, "glowAlpha", 0.6, "shine", 0.62, "pop", delay / 20.0));
         Fx3d.move(level0, moon3d, moonAt, delay / 20.0, "out");
         // 달이 떠오름 (아래에서 솟으며 커짐 — 2틱마다 붉은 달빛 한 장)
         for (int t = 0; t < delay; t += 2) {

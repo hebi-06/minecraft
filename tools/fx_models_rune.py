@@ -100,7 +100,7 @@ def card(model, art, uv, mat, pt, cols, rows, dz=0.0, flip=False, normal=(0, 0, 
 def angel_wings():
     """천사 날개 — 모바일 대천사 강림의 날개 그림 (rfx_wings 첫 칸: 부채처럼 펼친 흰 깃털 한 쌍, 깃대 줄 · 둘레의 부드러운 빛) 을 입체로.
     등 가운데가 원점, 위 +Y, 뒤 +Z, 날개 ±X (한 날개 약 2.3 — 대천사 강림의 2D 날개 크기). 날개마다 그 그림의 오른쪽 반을 어깨에 매단 휜 판 (바깥으로 갈수록
-    뒤로 젖혀짐 · 위아래 끝이 조금 뒤로) 에 붙이고 왼쪽은 거울. 색은 두 겹 (빛깔 = 깃털 몸, 속빛 = 둘레의 빛 · 밝은 깃털 — 앞뒤 세 장).
+    뒤로 약 26° 젖혀짐 — 옆에서도 날개 면이 보이게 · 위아래 끝이 조금 뒤로) 에 붙이고 왼쪽은 거울. 색은 두 겹 (빛깔 = 깃털 몸, 속빛 = 둘레의 빛 · 밝은 깃털 — 앞뒤 세 장).
     wing_r · wing_l (어깨 축) 움직임 spread · flap · fold — fire_wings 와 같은 이름"""
     m = fx.Model("angel_wings", tex=512, cell=32)
     m.emissive = True
@@ -120,7 +120,8 @@ def angel_wings():
             y = 0.06 + (root[1] - py) * k
             t = min(1.0, max(0.0, x / (0.06 + span)))
             yn = y / 1.3
-            z = 0.04 + 0.26 * t * t + 0.06 * yn * yn
+            # 바깥으로 갈수록 뒤로 (약 26° — 옆 · 비스듬히에서도 날개 면이 보이게) + 끝이 조금 더 휨 · 위아래 끝도 조금 뒤로
+            z = 0.04 + 0.45 * x + 0.12 * t * t + 0.06 * yn * yn
             return v3(side * x, y, z)
         return f
 
