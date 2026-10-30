@@ -227,7 +227,7 @@ final class RuneStr {
         double[] core = cs[1];
         double[] gold = {1.0, 0.8, 0.35};
         double[] white = RuneKit.WHITE;
-        double len = 9; // 검 길이 (칸)
+        double len = 10.5; // 검 길이 (칸) — 0.48.2 2D 강화: 9 → 10.5
         int delay = (int) k.num("delay");
         double radius = k.num("radius");
         // 떠 있는 검 가운데 높이 (땅 위): 가까이 겨누면 낮게 (1인칭에서 칼끝이 보이게 — 12칸이면 11.4, 최대 18)
@@ -249,17 +249,8 @@ final class RuneStr {
         SkillFx.fx(level, "rpg:arrow_shot", V.up(g, 14), Opt.of("dir", V.UP, "speed", 0.0, "size", 14.0, "thick", 0.12, "life", delay / 20.0, "color", gold,
                 "alpha", 0.6));
         double hover = (delay - drop) / 20.0;
-        // 0.48.2 초월 룬 손보기 (사용자 "초월 31종 먼저" → "골렘 소환 같은 느낌이면 좋을거 같은데 너무 3d에 매끈매끈 한거보다"): 하늘의 검 = 블록으로 짠 검
-        // (RuneBlocks.sword — 석영 칼날 · 버섯불 홈 · 금 코등이 · 짙은 참나무 손잡이, 길이 len) 이 나타나 천천히 내려옴 → 떨어져 꽂힘 → 남았다가 부서져 무너짐.
-        // 모바일 검 그림 (rfx_sword) 은 빛깔 겹만 옅게 같은 길로 (검 둘레의 빛)
-        Vec3 face = V.flat(V.sub(sp.position(), g));
-        int glowCell = RuneKit.RFX.getOrDefault("sword", new int[] {0, 1})[0];
-        PairKit.Rig sword = RuneBlocks.sword(level, g, delay + 33 + 14, new Vec3(0, sky + 1.5, 0), RuneBlocks.tipDown(face), len, RuneBlocks.QUARTZ,
-                RuneBlocks.SHROOM, RuneBlocks.GOLD, RuneBlocks.DARK_OAK, RuneBlocks.GOLD);
-        RuneKit.later(2, () -> sword.pose(new Vec3(0, sky, 0), RuneBlocks.tipDown(face), 1, Math.max(1, delay - drop - 2)));
-        RuneKit.later(delay + 33, () -> RuneBlocks.shatter(sword, 12, 1.2, 3.0, g.y, 0.45));
-        RuneKit.rfx(level, "sword", V.up(g, sky + 1.5), Opt.of("dir", V.DOWN, "size", len / 2, "life", hover + 0.05, "speed", 1.5 / hover, "color", glow,
-                "cell", (double) glowCell, "alpha", 0.4));
+        // + 1틱: 떨어지는 검이 나타나는 동안 겹침 (깜빡임 없게)
+        RuneBoost.rfx2a(level, "sword", V.up(g, sky + 1.5), Opt.of("dir", V.DOWN, "size", len / 2, "life", hover + 0.05, "speed", 1.5 / hover), glow, white);
         SkillFx.fx(level, "rpg:magic_circle_flash", V.up(g, sky + len / 2 + 1.6), Opt.of("size", 2.2, "life", 0.6, "spin", Kit.rand() * 360, "progress", 1.0,
                 "color", gold, "alpha", 0.9));
         SkillFx.play(level, "beacon.power", g, 0.6, 1);
@@ -274,9 +265,7 @@ final class RuneStr {
         // 떨어짐: 하늘 자리 → 칼끝이 땅속 1.5칸 (가운데 = 땅 + L/2 - 1.5)
         double rest = len / 2 - 1.5;
         Tasks.later(delay - drop, () -> {
-            sword.pose(new Vec3(0, rest, 0), RuneBlocks.tipDown(face), 1, drop);
-            RuneKit.rfx(level, "sword", V.up(g, sky), Opt.of("dir", V.DOWN, "size", len / 2, "life", drop / 20.0, "speed", (sky - rest) / (drop / 20.0), "color", glow,
-                    "cell", (double) glowCell, "alpha", 0.45));
+            RuneBoost.rfx2a(level, "sword", V.up(g, sky), Opt.of("dir", V.DOWN, "size", len / 2, "life", drop / 20.0, "speed", (sky - rest) / (drop / 20.0)), glow, white);
             for (double s = 2; s < sky - rest; s += 3) {
                 double d = (s / (sky - rest)) * (drop / 20.0);
                 SkillFx.fx(level, "rpg:arrow_trail", V.up(g, sky - s + len / 2), Opt.of("dir", V.DOWN, "size", 1.6, "thick", 0.9, "life", d + 0.3, "delay", d,
@@ -285,13 +274,13 @@ final class RuneStr {
             SkillFx.play(level, "item.trident.riptide_3", g, 0.6, 1);
         });
         // 꽂힌 검 (1.65초, 마지막 40% 동안 사라짐): 떨어지는 검이 끝나기 1틱 전에 나타남 (깜빡임 없게)
-        Tasks.later(delay - 1, () -> RuneKit.rfx(level, "sword", V.up(g, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.65, "fade", 0.4, "color", glow,
-                "cell", (double) glowCell, "alpha", 0.4)));
+        Tasks.later(delay - 1, () -> RuneBoost.rfx2a(level, "sword", V.up(g, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.65, "fade", 0.4), glow, white));
         Tasks.later(delay, () -> {
             if (sp.isRemoved()) return;
             Vec3 mid = V.up(g, 1.0);
             // 발동: 화면 번쩍임 · 갈라진 하늘의 섬광 → 충격 고리 · 문양이 번쩍 (1틱 뒤) → 빛나는 금 (2틱 뒤 — 이 틱의 파티클 예산)
             RuneKit.ultFlashFor(sp, level, g, "heavenFall", "flash", Opt.empty());
+            RuneBoost.impact(level, g, glow, gold, radius); // 0.48.2 2D 강화: 터짐 (번쩍임 · 고리 · 충격파 · 빛살 · 불티)
             RuneKit.skyFlare(level, rift, 4.6, gold, white, Opt.of("life", 0.6));
             RuneKit.later(1, () -> {
                 RuneKit.novaRing(level, g, 2.2, 3.2, gold, white, Opt.of("life", 0.5));

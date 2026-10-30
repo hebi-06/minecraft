@@ -399,15 +399,15 @@ final class RuneReaper {
             final int tt = t;
             RuneKit.later(t, () -> {
                 double q = tt / (double) delay;
-                RuneKit.rfx2(level0, "moon", V.up(moonAt, -4 * (1 - q)), Opt.of("size", 2.2 + 3.0 * q, "life", 0.16, "spin", -20.0, "alpha", 0.6 + 0.4 * q), glow,
-                        core);
+                RuneBoost.rfx2a(level0, "moon", V.up(moonAt, -4 * (1 - q)), Opt.of("size", (2.2 + 3.0 * q) * 1.15, "life", 0.16, "spin", -20.0, "alpha",
+                        0.6 + 0.4 * q), glow, core);
             });
         }
         // 떠 있는 달 (비가 끝날 때까지) + 달무리
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            RuneKit.rfx2(level0, "moon", moonAt, Opt.of("size", 5.2, "life", (fallAt - delay) / 20.0, "spin", -20.0, "spinRate", 4.0, "alpha", 1.0, "fade", 0.1),
-                    glow, core);
+            RuneBoost.rfx2a(level0, "moon", moonAt, Opt.of("size", 6.0, "life", (fallAt - delay) / 20.0, "spin", -20.0, "spinRate", 4.0, "alpha", 1.0, "fade",
+                    0.1), glow, core);
             RuneKit.skyFlare(level0, moonAt, 4.2, BLOOD, glow, Opt.of("life", (fallAt - delay) / 20.0));
             SkillFx.play(level0, "mob.warden.heartbeat", g, 0.7, 1.0);
         });
@@ -454,8 +454,8 @@ final class RuneReaper {
         RuneKit.later(fallAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 d = V.sub(V.up(g, 1.0), moonAt);
-            RuneKit.rfx2(level0, "moon", moonAt, Opt.of("dir", V.unit(d), "speed", V.len(d) / (FALL / 20.0), "size", 5.2, "life", FALL / 20.0, "grow", 0.3,
-                    "spin", -20.0), glow, core);
+            RuneBoost.rfx2a(level0, "moon", moonAt, Opt.of("dir", V.unit(d), "speed", V.len(d) / (FALL / 20.0), "size", 6.0, "life", FALL / 20.0, "grow",
+                    0.3, "spin", -20.0), glow, core);
             SkillFx.play(level0, "mob.enderdragon.flap", moonAt, 0.5, 1.0);
             SkillFx.play(level0, "mob.wither.shoot", g, 0.5, 1.0);
         });
@@ -464,6 +464,7 @@ final class RuneReaper {
             ServerLevel level = sp.level();
             if (level != level0) return;
             RuneKit.ultFlashFor(sp, level, g, "crimsonMoon", "flash", Opt.empty());
+            RuneBoost.impact(level, g, glow, core, radius * 1.1); // 0.48.2 2D 강화: 달이 떨어진 자리의 터짐
             RuneKit.crescent(level, V.up(g, 0.1), V.UP, radius * 1.25, glow, core, Kit.rand() * 360, 0.7);
             RuneKit.novaRing(level, g, 1.5, radius * 0.9, glow, BLOOD, Opt.of("life", 0.6));
             RuneKit.glowCrack(level, g, radius, glow, BLOOD, Opt.of("life", 1.4));

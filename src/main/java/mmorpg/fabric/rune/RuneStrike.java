@@ -229,22 +229,12 @@ public final class RuneStrike {
         Vec3 at = new Vec3(g.x, gy, g.z);
         double[] col = accent(k);
         double[] white = RuneKit.WHITE;
-        double len = 7;
+        double len = 8; // 0.48.2 2D 강화: 7 → 8
         double rest = len / 2 - 1.2;
-        // 0.48.2 초월 룬 손보기 (사용자 "골렘 소환 같은 느낌이면 좋을거 같은데 너무 3d에 매끈매끈 한거보다"): 떨어져 꽂히는 검 = 블록으로 짠 금빛 검
-        // (RuneBlocks.sword — 금 칼날 · 석영 홈 · 발광석 머리) 이 0.3초에 떨어져 꽂힘 → 1.45초 뒤 부서져 무너짐. 모바일 검 그림은 빛깔 겹만 옅게 (검 둘레의 빛)
-        Vec3 face = V.flat(V.sub(sp.position(), at));
-        int glowCell = RuneKit.RFX.getOrDefault("sword", new int[] {0, 1})[0];
-        PairKit.Rig sword = RuneBlocks.sword(level, at, 6 + 29 + 14, new Vec3(0, 15, 0), RuneBlocks.tipDown(face), len, RuneBlocks.GOLD, RuneBlocks.QUARTZ,
-                RuneBlocks.GOLD, RuneBlocks.DARK_OAK, RuneBlocks.GLOWSTONE);
-        RuneKit.later(2, () -> sword.pose(new Vec3(0, rest, 0), RuneBlocks.tipDown(face), 1, 4));
-        RuneKit.later(6 + 29, () -> RuneBlocks.shatter(sword, 12, 1.0, 2.5, at.y, 0.45));
-        RuneKit.rfx(level, "sword", V.up(at, 15), Opt.of("dir", V.DOWN, "size", len / 2, "life", 0.3, "speed", (15 - rest) / 0.3, "color", col, "cell",
-                (double) glowCell, "alpha", 0.45));
+        RuneBoost.rfx2a(level, "sword", V.up(at, 15), Opt.of("dir", V.DOWN, "size", len / 2, "life", 0.3, "speed", (15 - rest) / 0.3), col, white);
         SkillFx.fx(level, "rpg:arrow_shot", V.up(at, 12), Opt.of("dir", V.UP, "speed", 0.0, "size", 12.0, "thick", 0.12, "life", 0.3, "color", col, "alpha", 0.7));
-        // 꽂힌 검의 빛: 떨어지는 빛이 끝나기 1틱 전 (깜빡임 없게)
-        RuneKit.later(5, () -> RuneKit.rfx(level, "sword", V.up(at, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.45, "fade", 0.45, "color", col, "cell",
-                (double) glowCell, "alpha", 0.4)));
+        // 꽂힌 검: 떨어지는 검이 끝나기 1틱 전 (깜빡임 없게)
+        RuneKit.later(5, () -> RuneBoost.rfx2a(level, "sword", V.up(at, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.45, "fade", 0.45), col, white));
         RuneKit.later(6, () -> {
             RuneKit.rfx(level, "prop", V.up(at, rest + len / 2 - 0.3), Opt.of("size", 1.6, "life", 0.45, "cell", GLINT, "color", white, "grow", 0.6, "fade", 0.6));
             for (int i = 0; i < 3; i++) {
@@ -257,6 +247,7 @@ public final class RuneStrike {
                         "color", col, "alpha", 0.95));
             }
             SkillFx.sparks(level, V.up(at, 0.6), col, 12, 6);
+            RuneBoost.impact(level, at, col, white, 3.6); // 0.48.2 2D 강화: 꽂히는 순간의 터짐
             SkillFx.play(level, "item.trident.thunder", at, 1.0, 0.8);
             SkillFx.play(level, "mace.heavy_smash_ground", at, 0.8, 0.8);
             RuneKit.shakeAround(level, at, 10, 0.25, 0.25);

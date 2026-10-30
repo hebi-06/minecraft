@@ -531,6 +531,9 @@ final class RuneLimited {
 
     /** 눈 그림 (rpg:rfx_skyeye — 미리 칠한 색, 시전자 눈 쪽을 봄): frame 0 감음 · 1 반쯤 · 2 뜸 · 3 빛남 */
     static void eyeFx(ServerPlayer sp, ServerLevel level, Vec3 at, double size, int frame, double life, double alpha) {
+        // 0.48.2 2D 강화: 같은 눈을 1.35배 · 옅게 뒤에 한 장 더 (후광)
+        RuneKit.rfx(level, "skyeye", at, Opt.of("dir", RuneKit.towardEye(sp, at), "size", size * 1.35, "life", life, "cell", (double) frame, "alpha", alpha * 0.35,
+                "fade", 0.2));
         RuneKit.rfx(level, "skyeye", at, Opt.of("dir", RuneKit.towardEye(sp, at), "size", size, "life", life, "cell", (double) frame, "alpha", alpha, "fade", 0.2));
     }
 
@@ -645,6 +648,7 @@ final class RuneLimited {
         double es = eyeScale(h);
         double sc = RuneKit.nearK(sp, V.up(c, 1), 8, 0.4);
         RuneKit.ultFlashFor(sp, level, c, "heavenEye", "flash", Opt.empty());
+        RuneBoost.impact(level, c, SUN, SUN_CORE, radius); // 0.48.2 2D 강화
         RuneKit.streak(level, V.up(c, h - 0.8), V.up(c, 0.1), SUN_CORE, 1.4, 0.3, 1.0, 0);
         RuneKit.novaRing(level, c, radius * 0.4, 2.2, SUN, SUN_CORE, Opt.of("life", 0.6));
         RuneKit.later(2, () -> RuneKit.novaRing(level, c, radius * 0.25, 3.0, SUN_CORE, WHITE, Opt.of("life", 0.5)));

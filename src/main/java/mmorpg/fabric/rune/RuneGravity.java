@@ -606,6 +606,8 @@ final class RuneGravity {
                 if (!RuneKit.sameLife(sp, life)) return;
                 double q = (tt + 2.0) / charge;
                 double s = (0.35 + q * 1.55) * sc;
+                RuneBoost.aura(level, "hole", hole, Opt.of("size", s, "life", 0.14, "spin", -holeSpin(tt), "spinRate", -160.0, "alpha", 0.6 + 0.4 * q), glow, 1.4,
+                        0.4); // 0.48.2 2D 강화: 거꾸로 도는 큰 소용돌이 (후광)
                 RuneKit.rfx(level, "hole", hole, Opt.of("size", s, "life", 0.14, "cell", 0.0, "spin", holeSpin(tt), "spinRate", 240.0, "alpha", 0.6 + 0.4 * q));
                 RuneKit.rfx(level, "hole", hole, Opt.of("size", s, "life", 0.14, "cell", (double) RuneKit.HOLE_CORE));
                 inwardSparks(level, hole, 3.5, 3, 0.35, tt % 4 != 0 ? core : glow, 2);
@@ -617,6 +619,7 @@ final class RuneGravity {
             RuneKit.later(charge + t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 if (tt % 4 == 0) {
+                    RuneBoost.aura(level, "hole", hole, Opt.of("size", 1.9 * sc, "life", 0.24, "spin", -holeSpin(charge + tt), "spinRate", -160.0), glow, 1.4, 0.4);
                     RuneKit.rfx(level, "hole", hole, Opt.of("size", 1.9 * sc, "life", 0.24, "cell", 0.0, "spin", holeSpin(charge + tt), "spinRate", 240.0));
                     RuneKit.rfx(level, "hole", hole, Opt.of("size", 1.9 * sc, "life", 0.24, "cell", (double) RuneKit.HOLE_CORE));
                 }
@@ -653,6 +656,7 @@ final class RuneGravity {
             // 붕괴: 원반이 안으로 꺼지며 (커졌다 사라짐) 터짐
             RuneKit.rfx(level, "hole", hole, Opt.of("size", 2.2 * sc, "life", 0.3, "cell", 0.0, "spin", holeSpin(charge + T), "spinRate", 900.0, "grow", -0.9));
             collapseFx(level, hole, g, radius, 1, sc);
+            RuneBoost.impact(level, g, glow, core, radius); // 0.48.2 2D 강화: 붕괴의 터짐
             SkillFx.play(level, "mob.warden.sonic_boom", g, 1.0, 0.8);
             SkillFx.play(level, "random.explode", g, 0.8, 0.9);
             RuneKit.shakeAround(level, g, 24, 0.5, 0.5);

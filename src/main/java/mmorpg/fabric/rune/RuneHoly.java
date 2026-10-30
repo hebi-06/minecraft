@@ -354,6 +354,7 @@ final class RuneHoly {
         SkillFx.burst(level0, V.up(c0, 1.2), glow, 2.4, 0.45);
         SkillFx.rune(level0, c0, Opt.of("size", 3.0, "life", 1.2, "color", glow, "alpha", 0.9, "rate", 40.0, "grow", 0.3));
         RuneKit.selfCue(sp, glow, core, true);
+        RuneBoost.bloom(level0, c0, glow, core, 6.0); // 0.48.2 2D 강화: 강림하는 순간의 빛
         SkillFx.play(level0, "random.totem", c0, 1.3, 0.7);
         SkillFx.play(level0, "beacon.activate", c0, 0.9, 1);
         SkillFx.play(level0, "mob.allay.idle", c0, 0.8, 1);
@@ -370,30 +371,17 @@ final class RuneHoly {
         });
         int alive = RuneKit.deathToken(sp); // 죽으면 끝 (날개 · 회복 · 보호막 · 피해 — 차원 이동 · 탈것 부르기로는 끝나지 않음)
         int[] feather = RuneKit.RFX.get("feather");
-        // 0.48.2 초월 룬 손보기 (사용자 "골렘 소환 같은 느낌이면 좋을거 같은데 너무 3d에 매끈매끈 한거보다"): 날개 = 블록으로 짠 날개 한 쌍 (RuneBlocks.wings —
-        // 금 블록 뼈 · 흰 양털 깃털 다섯 · 석영 속깃 셋, 폭 2.6) 이 등 뒤에서 펼쳐짐 → 2틱마다 몸을 따라가며 날갯짓 (1.2초 주기) → 끝에 접고 오그라듦.
-        // 죽으면 부서져 흩어짐. 2D 날개 그림은 이 블록 날개가 대신함 (깃털 · 후광 · 빛기둥 2D 는 그대로)
-        Vec3 f0 = Kit.facingOf(sp);
-        PairKit.Rig wings = RuneBlocks.wings(level0, c0, total + 12, V.sub(V.add(V.up(c0, 1.45), f0, -0.42), c0), PairKit.facing(f0), 0.35, 2.6);
-        RuneKit.later(total, () -> wings.pose(wings.offset, wings.rot, 0.05, 8, RuneBlocks.flap(-35)));
-        boolean[] gone = {false};
         for (int t = 0; t < total; t += 2) {
             final int tt = t;
             RuneKit.later(tt, () -> {
-                if (!RuneKit.aliveSince(sp, alive)) {
-                    if (!gone[0]) RuneBlocks.shatter(wings, 8, 0.6, 1.5, sp.getY(), 0.3);
-                    gone[0] = true;
-                    return;
-                }
+                if (!RuneKit.aliveSince(sp, alive)) return;
                 ServerLevel level = sp.level();
                 Vec3 c = sp.position();
                 Vec3 f = Kit.facingOf(sp);
-                if (tt >= 2 && level == level0) {
-                    boolean folding = tt >= total - 8;
-                    double lift = folding ? -35 : tt < 8 ? 0 : 16 * Math.sin((tt - 8) * Math.PI / 12.0);
-                    double sc = folding ? 0.6 : Math.min(1.0, 0.35 + tt * 0.11);
-                    wings.pose(V.sub(V.add(V.up(c, 1.45), f, -0.42), c0), PairKit.facing(f), sc, 2, RuneBlocks.flap(lift));
-                }
+                // 날개: 등 뒤 0.5칸 · 어깨 높이, 날갯짓 (12틱마다 위 · 아래). 2틱마다 짧게 다시 그림 (몸을 따라옴 — 돌거나 뒷걸음질해도 눈앞을 오래 가리지 않게)
+                Opt wo = Opt.of("dir", f, "size", 2.6, "life", RuneKit.BODY_LIFE, "cell", (double) ((tt / 12) % 2), "vel", RuneKit.bodyVel(sp));
+                RuneBoost.aura(level, "wings", V.up(V.add(c, f, -0.55), 1.4), wo, wingCol, 1.35, 0.4); // 0.48.2 2D 강화: 날개 후광 (2.3 → 2.6)
+                RuneKit.rfx2(level, "wings", V.up(V.add(c, f, -0.5), 1.4), wo, wingCol, RuneKit.WHITE, new int[] {0, RuneKit.WINGS_CORE}, 0.85);
                 if (tt % 6 != 0) return;
                 if (tt % 12 == 0) SkillFx.rune(level, V.up(c, 2.35), Opt.of("size", 0.4, "life", 0.65, "color", glow, "alpha", 0.95, "rate", 120.0)); // 후광
                 // 눈앞에 천천히 떨어지는 금빛 깃털 (1인칭)

@@ -298,7 +298,9 @@ public final class RuneGrove {
 
         // ---- 가호 (charge 틱): 잎 지붕이 피어 빛줄기가 반지름 안 아군 (나 포함) 에게 닿음
         RuneKit.later(charge, () -> {
-            if (RuneKit.sameLife(sp, life)) bless(sp, level, cast, c, base, s, rot, radius, ticks, up, cut, fin);
+            if (!RuneKit.sameLife(sp, life)) return;
+            RuneBoost.bloom(level, base, JADE, CREAM, Math.max(4.0, radius * 0.6)); // 0.48.2 2D 강화: 잎 지붕이 피는 순간의 빛
+            bless(sp, level, cast, c, base, s, rot, radius, ticks, up, cut, fin);
         });
         return true;
     }
