@@ -4,6 +4,7 @@ ci-logs 의 films/ 에 스킬마다 mp4 (1280×720 · 20fps — 틱마다 한 �
 이 도구가 그것을 받아 이름을 얹고 (왼쪽 위 이름 · 무기 / 직업 · 입력, 오른쪽 위 순번) 무기 스킬 · 직업 스킬 영상 둘로 이음.
 
   CI: only = film,filmsk;film,filmw12,filmhero;film,filmjob1;film,filmjob2;film,filmjob3
+      룬: only = film,filmrune1;film,filmrune2;film,filmrune3;film,filmpair;film,filmlimited  (→ --only runes --crf 26)
   git fetch origin +ci-logs:refs/remotes/origin/ci-logs
   python3 tools/skill_film.py                       # → build/film/weapon_skills.mp4 · job_skills.mp4 · runes.mp4 (있는 것만)
   python3 tools/skill_film.py --src 폴더 --out 폴더  # 이미 받은 films 폴더
@@ -24,6 +25,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 W, H, FPS = 1280, 720, 20
 ENC = ["-c:v", "libx264", "-preset", "medium", "-crf", "24", "-r", str(FPS), "-pix_fmt", "yuv420p", "-profile:v", "high", "-g", "40", "-an"]
+CRF_AT = ENC.index("-crf") + 1
 TYPES = ["sword", "dagger", "axe", "shield", "bow", "wand", "greatsword", "lance", "scythe", "hammer", "scepter"]
 TYPE_KO = {"sword": "칼", "dagger": "단검", "axe": "도끼", "shield": "방패", "bow": "활", "wand": "완드", "greatsword": "대검", "lance": "창", "scythe": "낫",
            "hammer": "망치", "scepter": "홀"}
@@ -140,7 +142,11 @@ def main():
     ap.add_argument("--src")
     ap.add_argument("--out", default=os.path.join(ROOT, "build/film"))
     ap.add_argument("--version", default="")
+    ap.add_argument("--crf", type=int, default=24, help="화질 (클수록 작은 파일 — 룬 123종은 26)")
+    ap.add_argument("--only", default="", help="weapon_skills · job_skills · runes 중 만들 것 (쉼표, 비면 모두)")
     a = ap.parse_args()
+    ENC[CRF_AT] = str(a.crf)
+    want = set(x for x in a.only.split(",") if x)
     os.makedirs(a.out, exist_ok=True)
     src = a.src
     if not src:
@@ -174,8 +180,8 @@ def main():
              ["직업마다 스킬 1 ~ 5 (5 = 궁극기)", "실제 속도 (20틱/초) · 카메라는 몸 왼쪽 뒤 3/4 에서 따라감", "태세 · 강화 스킬은 뒤에 평타까지"] + ver),
             ("runes", runes, "룬 %d종" % len(runes),
              ["계열마다 일반 → 희귀 → 고귀 → 영웅 → 초월, 끝에 한정 초월 룬 (0돌)", "실제 속도 (20틱/초) · 마지막 피해 뒤 약 1초에서 끊음",
-              "카메라는 몸 왼쪽 뒤 3/4 에서 따라감 (영웅 · 초월은 더 멀리)"] + ver)):
-        if not items:
+              "카메라는 몸 옆 뒤 (105°) 높은 곳에서 몸을 60% 따라감 (영웅 · 초월은 더 멀리)"] + ver)):
+        if not items or (want and name not in want):
             continue
         parts = []
         card = os.path.join(work, name + "_card.png")
