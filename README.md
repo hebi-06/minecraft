@@ -964,3 +964,12 @@ ci/                    GitHub Actions 보조 (Fabric 버전 확인 · 화면 시
 각 단계 로그와 화면 시험 사진은 `ci-logs` 브랜치에 올라갑니다 (`SUMMARY.txt` · `ERRORS.txt` · 단계별 로그 · 묶음마다 `client-checks-<묶음>.txt` · `shots/`). 빌드 · 게임 시험 로그는 `ci-logs-build` 브랜치에도 (build 일이 바로 올림).
 
 직접 빌드: JDK 25 + Node 22 가 있는 PC 에서 `./check-core.sh && ./gradlew build` (build 가 서버 게임 시험을 함께 돌림), 화면 시험은 `./gradlew runClientGameTest`.
+
+**스킬 영상 (0.48.2 — 사용자 "스킬들 모아서 나한테 보여줘 모델링하고 모션이 어떤지 봐야겠어")**: CI 를 수동으로 돌릴 때 only 를
+`film,filmsk;film,filmw12,filmhero;film,filmjob1;film,filmjob2;film,filmjob3` 로 주면 무기 스킬 32종 (`filmsk` 초월 칼 ~ 대검 · `filmw12` 창 · 낫 · 망치 · 홀 · `filmhero` 영웅) ·
+직업 스킬 55종 (`filmjob1` 검사 · 마검사 · 전사 · 매지션, `filmjob2` 궁수 · 암살자 · 창술사 · 사신, `filmjob3` 성기사 · 사제 · 수호기사) 을 사진첩과 같은 입력 · 과녁으로 쓰며
+틱마다 한 장씩 찍음 (`RpgFilm` — 영화 카메라 `FilmCamera`: 몸 왼쪽 뒤 3/4 에서 몸을 따라감 · HUD 숨김, 무기 스킬은 하늘의 효과가 들어오게 더 멀리 · 높이).
+사진 한 장이 다 될 때까지 게임이 흐르므로 찍는 동안은 게임을 느리게 (`/tick rate 4`, 무거운 장면은 2) 하고 사진마다 그 틱을 적어 둠 → CI 가 스킬마다 mp4
+(`ci/films.py` — 틱 간격대로, 20fps) 를 `ci-logs` 의 `films/` 에 올림 → `git fetch origin +ci-logs:refs/remotes/origin/ci-logs` 뒤
+`python3 tools/skill_film.py --version 0.48.1` 이 이름 (왼쪽 위 스킬 이름 · 무기 / 직업 · 입력, 오른쪽 위 순번) 을 얹고 `build/film/weapon_skills.mp4` · `job_skills.mp4` 로 이음
+(무기 = 칼 · 단검 · 도끼 · 방패 · 활 · 완드 · 대검 · 창 · 낫 · 망치 · 홀 순, 무기마다 영웅 → 초월 1 · 2 / 직업 = jobs.json 의 order, 스킬 1 ~ 5).

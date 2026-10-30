@@ -42,6 +42,8 @@ final class RpgFilm {
 
     private final ClientGameTestContext ctx;
     private TestServerContext server;
+    /** 지금 틱 빠르기 (그림이 무거운 스킬은 사진 한 장에 두 틱이 흐르면 2 로 내림) */
+    private int rate = SLOW_RATE;
     private Path dir;
     private final List<Long> ticks = new ArrayList<>();
     private final Map<String, Object> info = new LinkedHashMap<>();
@@ -103,7 +105,8 @@ final class RpgFilm {
             fx = -Math.sin(yaw);
             fz = Math.cos(yaw);
         });
-        server.runCommand("tick rate " + SLOW_RATE);
+        rate = SLOW_RATE;
+        server.runCommand("tick rate " + rate);
         ctx.waitTicks(2); // 클라이언트가 틱 빠르기를 받음
     }
 
@@ -139,7 +142,13 @@ final class RpgFilm {
         ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "f%04d", ticks.size())).disableCounterPrefix().withSize(1280, 720)
                 .withDestinationDir(dir));
         ticks.add(t);
-        if (now() == t) ctx.waitTick();
+        long after = now();
+        if (after == t) ctx.waitTick();
+        else if (after - t >= 2 && rate > 2) {
+            // 그림이 무거워 (해 · 성역 · 먹구름 …) 한 장에 두 틱이 흐름 → 남은 장면은 더 느리게 (영상의 빠르기는 틱대로라 그대로)
+            rate = 2;
+            server.runCommand("tick rate " + rate);
+        }
     }
 
     void frames(int n) {
