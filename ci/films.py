@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """0.48.2 스킬 영상: 화면 시험 (only=film,…) 이 찍은 films/<번호>_<스킬>/f0000.png … + manifest.json → mp4 하나씩.
 
-사진은 찍는 동안 게임이 한 틱 이상 흐를 수 있어 (Fabric — 사진이 다 될 때까지 틱을 돌림) manifest 의 사진마다 틱 간격대로 길이를 줌
+사진은 한 틱에 한 장 (RpgFilm — 앞 틱 뒤 그림을 읽음) 이지만 manifest 의 사진마다 틱 간격대로 길이를 줌 (틱이 건너뛰면 그만큼 길게)
 (한 틱 = 0.05초 → 20fps 로 고르게). 사진은 지움 (CI 디스크).
 
   python3 ci/films.py <films 폴더> <내보낼 폴더> [이름 앞머리]

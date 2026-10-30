@@ -10,12 +10,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import mmorpg.fabric.client.FilmCamera;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
-import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.CameraType;
+import net.minecraft.client.Screenshot;
 import net.minecraft.world.entity.player.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +28,11 @@ import org.slf4j.LoggerFactory;
  * filmhero · filmjob1 ~ 3) 가 있으면 그 사진첩이 스킬마다 사진을 틱마다 한 장씩 (영화 카메라 — 몸 왼쪽 뒤 3/4 에서 몸과 과녁을 함께, 몸을 따라감 · HUD 숨김) 찍어
  * films/&lt;번호&gt;_&lt;스킬&gt;/f0000.png … 와 manifest.json (스킬 · 이름 · 사진마다 틱 · 쓴 틱 · 들어간 피해) 에 둠 → CI (ci/films.py) 가 mp4 로,
  * tools/skill_film.py 가 이름을 얹어 영상 하나로.
- * <p>사진은 찍는 동안 게임이 한 틱 이상 흐름 (Fabric — 사진이 다 될 때까지 틱을 돌림): 사진마다 그 틱을 적어 두고 영상은 틱 간격대로 (한 틱 = 0.05초).
- * 찍는 동안은 게임을 느리게 (/tick rate 4 — 틱 사이에 그림이 여러 번 그려져 사진이 첫 틱 안에 끝남: 20틱/초 그대로면 사진 한 장에 두 틱씩 흘러 10fps 였음),
- * 끝나면 20 으로.
+ * <p>사진: 창을 1280×720 으로 두고, 틱마다 바로 앞 틱 뒤에 그려진 화면 (main render target) 을 읽어 (Screenshot.takeScreenshot — GPU 에서 읽힌 그림은
+ * 렌더 스레드가 다음 그림 때 넘겨줌) 따로 도는 쓰기 스레드가 PNG 로 쓰고 닫음 → 한 틱에 한 장, 게임은 20틱/초 그대로.
+ * (예전: Fabric 의 takeScreenshot 은 사진마다 창 크기를 바꿔 (854×480 → 1280×720 → 되돌림) 새로 그리고, 다 읽힐 때까지 틱을 돌려 한 장에 두 틱이 흘렀고 —
+ * 게임을 /tick rate 4 · 2 · 1 로 늦춰 맞춤 — 읽은 그림을 닫지 않아 (한 장 3.7MB) 계열 몇 개를 지나면 사진 한 장이 1초 넘게 걸렸음.)
+ * 사진마다 그 틱을 적어 두고 영상은 틱 간격대로 (한 틱 = 0.05초).
  */
 final class RpgFilm {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-film");
@@ -37,13 +42,24 @@ final class RpgFilm {
     private double height = 2.1;
     private double lookY = 1.0;
     private static int clips;
-    /** 찍는 동안의 틱 빠르기 (틱/초) */
-    private static final int SLOW_RATE = 4;
+    /** 사진 크기 (창 크기) */
+    private static final int W = 1280;
+    private static final int H = 720;
+    /** PNG 쓰기 (렌더 스레드 밖 — 게임 루프를 막지 않게) */
+    private static final ExecutorService SAVE = Executors.newFixedThreadPool(3, r -> {
+        Thread t = new Thread(r, "mmorpg-film-save");
+        t.setDaemon(true);
+        return t;
+    });
 
     private final ClientGameTestContext ctx;
     private TestServerContext server;
-    /** 지금 틱 빠르기 (그림이 무거운 스킬은 사진 한 장에 두 틱이 흐르면 2 로 내림) */
-    private int rate = SLOW_RATE;
+    /** GPU 에서 읽는 중인 사진 수 (렌더 스레드가 다음 그림 때 넘겨줌) */
+    private final AtomicInteger reading = new AtomicInteger();
+    /** 파일로 쓰는 중인 사진 수 (쓰기 스레드) */
+    private final AtomicInteger saving = new AtomicInteger();
+    /** 영상 앞의 창 크기 (끝나면 되돌림) */
+    private int[] prevSize;
     private Path dir;
     private final List<Long> ticks = new ArrayList<>();
     private final Map<String, Object> info = new LinkedHashMap<>();
@@ -95,6 +111,8 @@ final class RpgFilm {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        prevSize = ctx.computeOnClient(mc -> new int[] {mc.getWindow().getScreenWidth(), mc.getWindow().getScreenHeight()});
+        ctx.getInput().resizeWindow(W, H);
         ctx.runOnClient(mc -> {
             if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle();
             mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
@@ -105,9 +123,8 @@ final class RpgFilm {
             fx = -Math.sin(yaw);
             fz = Math.cos(yaw);
         });
-        rate = SLOW_RATE;
-        server.runCommand("tick rate " + rate);
-        ctx.waitTicks(2); // 클라이언트가 틱 빠르기를 받음
+        place();
+        ctx.waitTicks(2); // 새 창 크기 · 영화 카메라로 한 번 그려 둠 (첫 장이 3인칭 카메라 · 작은 창이 아니게)
     }
 
     /** 카메라를 지금 몸 자리에 맞춤 (가로는 그대로 따라감 · 높이는 60% 만 — 솟구치는 스킬에서 땅이 다 빠지지 않게) */
@@ -135,19 +152,36 @@ final class RpgFilm {
         return ctx.computeOnClient(mc -> mc.level == null ? 0L : mc.level.getGameTime());
     }
 
-    /** 한 장 (그 틱을 적음) — 사진이 틱을 돌리지 않았으면 한 틱 기다림 */
+    /** 한 장: 바로 앞 틱 뒤에 그려진 화면을 읽어 씀 (그 틱을 적음) → 다음 그림의 카메라 → 한 틱 */
     void frame() {
-        place();
         long t = now();
-        ctx.takeScreenshot(TestScreenshotOptions.of(String.format(Locale.ROOT, "f%04d", ticks.size())).disableCounterPrefix().withSize(1280, 720)
-                .withDestinationDir(dir));
+        Path file = dir.resolve(String.format(Locale.ROOT, "f%04d.png", ticks.size()));
+        // 쓰기가 밀리면 기다림 (시험 스레드만 — 게임은 이 동안 멈춰 있고 쓰기 스레드는 따로 돎; 렌더 스레드를 기다리는 읽기는 세지 않음)
+        for (int i = 0; i < 4000 && saving.get() > 24; i++) sleep(5);
+        reading.incrementAndGet();
+        ctx.runOnClient(mc -> Screenshot.takeScreenshot(mc.gameRenderer.mainRenderTarget(), image -> {
+            saving.incrementAndGet();
+            reading.decrementAndGet();
+            SAVE.execute(() -> {
+                try (image) {
+                    image.writeToFile(file);
+                } catch (IOException e) {
+                    LOG.warn("[film] save " + file, e);
+                } finally {
+                    saving.decrementAndGet();
+                }
+            });
+        }));
         ticks.add(t);
-        long after = now();
-        if (after == t) ctx.waitTick();
-        else if (after - t >= 2 && rate > 1) {
-            // 그림이 무거워 (해 · 성역 · 먹구름 …) 한 장에 두 틱이 흐름 → 남은 장면은 더 느리게 (4 → 2 → 1, 영상의 빠르기는 틱대로라 그대로)
-            rate = rate > 2 ? 2 : 1;
-            server.runCommand("tick rate " + rate);
+        place();
+        ctx.waitTick();
+    }
+
+    private static void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -214,8 +248,9 @@ final class RpgFilm {
         }
         LOG.info("[film] {} frames={} ticks={} dealt={}", dir.getFileName(), ticks.size(), ticks.isEmpty() ? 0 : ticks.get(ticks.size() - 1) - ticks.get(0),
                 String.format(Locale.ROOT, "%.1f", dealt));
-        server.runCommand("tick rate 20");
-        ctx.waitTicks(2);
+        for (int i = 0; i < 100 && reading.get() > 0; i++) ctx.waitTick(); // GPU 읽기가 다 넘어올 때까지 (렌더 스레드)
+        for (int i = 0; i < 12000 && saving.get() > 0; i++) sleep(5); // 쓰기가 다 끝날 때까지
+        if (reading.get() + saving.get() > 0) LOG.warn("[film] {} unsaved frames: reading={} saving={}", dir.getFileName(), reading.get(), saving.get());
         // 남은 것 치움 (0.48.2 룬 영상: 계열 몇 개를 지나면 장면마다 사진이 1초 넘게 걸림 — 앞 룬이 남긴 글자 · 물체 · 그림이 쌓임):
         // 플레이어 · 과녁 (허스크 — 다음 장면이 새로 세움) 밖의 존재 · 클라이언트 그림 · 입체 효과 물체
         int left = server.computeOnServer(s -> {
@@ -237,5 +272,6 @@ final class RpgFilm {
             if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();
             mc.options.setCameraType(CameraType.FIRST_PERSON);
         });
+        if (prevSize != null) ctx.getInput().resizeWindow(prevSize[0], prevSize[1]);
     }
 }
