@@ -627,10 +627,10 @@ final class RuneLimited {
                 }
             }
             if (t == end) {
-                Vec3 off = V.sub(eyeAt, eye0);
+                Vec3 eyeOff = V.sub(eyeAt, eye0);
                 org.joml.Quaternionf q = RuneBlocks.faceTo(eyeAt, sp.position());
-                eyeR.pose(off, q, 1, 6, RuneBlocks.lids(0));
-                RuneKit.later(7, () -> eyeR.pose(off, q, 0.05, 8, RuneBlocks.lids(0)));
+                eyeR.pose(eyeOff, q, 1, 6, RuneBlocks.lids(0));
+                RuneKit.later(7, () -> eyeR.pose(eyeOff, q, 0.05, 8, RuneBlocks.lids(0)));
                 finish(sp, level, cur, h, radius, P, k, life, tally, fin);
             }
             return true;

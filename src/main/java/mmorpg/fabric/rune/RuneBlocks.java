@@ -33,15 +33,16 @@ final class RuneBlocks {
     static final BlockState PRISM_BRICKS = Blocks.PRISMARINE_BRICKS.defaultBlockState();
     static final BlockState SEA_LANTERN = Blocks.SEA_LANTERN.defaultBlockState();
     static final BlockState DIAMOND = Blocks.DIAMOND_BLOCK.defaultBlockState();
-    static final BlockState WOOL_WHITE = Blocks.WHITE_WOOL.defaultBlockState();
-    static final BlockState WOOL_LIGHT = Blocks.LIGHT_GRAY_WOOL.defaultBlockState();
-    static final BlockState WOOL_GRAY = Blocks.GRAY_WOOL.defaultBlockState();
-    static final BlockState CONCRETE_GRAY = Blocks.GRAY_CONCRETE.defaultBlockState();
-    static final BlockState WHITE = Blocks.WHITE_CONCRETE.defaultBlockState();
-    static final BlockState BLACK = Blocks.BLACK_CONCRETE.defaultBlockState();
+    // 26.3 의 물들인 블록 (양털 · 콘크리트) 은 색 묶음 (DYED_…) 이라 이름이 바뀌어 — 흰 것은 눈 블록, 검은 것은 석탄 블록 · 흑요석, 회색 구름은 눈 블록을 어둡게 비춤
+    static final BlockState WHITE = Blocks.SNOW_BLOCK.defaultBlockState();
+    static final BlockState BLACK = Blocks.COAL_BLOCK.defaultBlockState();
+    static final BlockState OBSIDIAN = Blocks.OBSIDIAN.defaultBlockState();
+    /** 구름 밝기 (눈 블록 — 위 덩이 밝게 · 몸 회색 · 밑 어둡게) */
+    static final Brightness CLOUD_TOP = new Brightness(10, 13);
+    static final Brightness CLOUD_MID = new Brightness(5, 8);
+    static final Brightness CLOUD_LOW = new Brightness(2, 4);
     static final BlockState AMETHYST = Blocks.AMETHYST_BLOCK.defaultBlockState();
     static final BlockState CRYING = Blocks.CRYING_OBSIDIAN.defaultBlockState();
-    static final BlockState SNOW = Blocks.SNOW_BLOCK.defaultBlockState();
 
     // ------------------------------------------------------------ 모양 도움
 
@@ -196,15 +197,15 @@ final class RuneBlocks {
 
     // ------------------------------------------------------------ 먹구름
 
-    /** 마인크래프트 구름처럼 납작한 덩이 넷 (양털) + 어두운 밑판 (회색 콘크리트) — 밑 가운데가 원점, 너비 W */
+    /** 마인크래프트 구름처럼 납작한 덩이 다섯 + 밑판 (눈 블록 — 위는 밝게 · 몸은 회색 · 밑은 어둡게 비춤) — 밑 가운데가 원점, 너비 W */
     static PairKit.Rig cloud(ServerLevel level, Vec3 base, int life, Vec3 offset, Quaternionf rot, double scale, double W) {
         PairKit.Rig g = rig(level, base, life, offset, rot, scale);
-        g.add(0, CONCRETE_GRAY, new Vec3(0, 0.09, 0), new Vec3(W + 0.1, 0.18, 0.62 * W + 0.1), null, PairKit.LIT);
-        g.add(0, WOOL_GRAY, new Vec3(0, 0.6, 0), new Vec3(W, 0.85, 0.62 * W), null, PairKit.LIT);
-        g.add(0, WOOL_LIGHT, new Vec3(-0.12 * W, 1.3, 0.05 * W), new Vec3(0.55 * W, 0.7, 0.42 * W), null, PairKit.LIT);
-        g.add(0, WOOL_LIGHT, new Vec3(0.24 * W, 1.18, -0.1 * W), new Vec3(0.38 * W, 0.5, 0.34 * W), null, PairKit.LIT);
-        g.add(0, WOOL_GRAY, new Vec3(0.5 * W, 0.62, 0.08 * W), new Vec3(0.32 * W, 0.62, 0.4 * W), null, PairKit.LIT);
-        g.add(0, WOOL_GRAY, new Vec3(-0.52 * W, 0.55, -0.06 * W), new Vec3(0.28 * W, 0.5, 0.36 * W), null, PairKit.LIT);
+        g.add(0, WHITE, new Vec3(0, 0.09, 0), new Vec3(W + 0.1, 0.18, 0.62 * W + 0.1), null, CLOUD_LOW);
+        g.add(0, WHITE, new Vec3(0, 0.6, 0), new Vec3(W, 0.85, 0.62 * W), null, CLOUD_MID);
+        g.add(0, WHITE, new Vec3(-0.12 * W, 1.3, 0.05 * W), new Vec3(0.55 * W, 0.7, 0.42 * W), null, CLOUD_TOP);
+        g.add(0, WHITE, new Vec3(0.24 * W, 1.18, -0.1 * W), new Vec3(0.38 * W, 0.5, 0.34 * W), null, CLOUD_TOP);
+        g.add(0, WHITE, new Vec3(0.5 * W, 0.62, 0.08 * W), new Vec3(0.32 * W, 0.62, 0.4 * W), null, CLOUD_MID);
+        g.add(0, WHITE, new Vec3(-0.52 * W, 0.55, -0.06 * W), new Vec3(0.28 * W, 0.5, 0.36 * W), null, CLOUD_MID);
         return g;
     }
 
@@ -229,7 +230,7 @@ final class RuneBlocks {
     static final int LID_BOT = 2;
 
     /**
-     * 하늘의 눈 (가운데가 원점, 앞 +Z — 반지름 R): 금 블록 테 (픽셀 고리) · 흰 눈알 (흰 콘크리트 — 납작한 타원) · 주황 홍채 (버섯불) · 검은 동공 ·
+     * 하늘의 눈 (가운데가 원점, 앞 +Z — 반지름 R): 금 블록 테 (픽셀 고리) · 흰 눈알 (눈 블록 — 납작한 타원) · 주황 홍채 (버섯불) · 검은 동공 (석탄 블록) ·
      * 눈꺼풀 둘 (매끄러운 석영 — 처음에는 감음, 위 · 아래 끝을 축으로 뒤로 젖혀 뜸: open / close)
      */
     static PairKit.Rig eye(ServerLevel level, Vec3 base, int life, Vec3 offset, Quaternionf rot, double scale, double R) {
@@ -256,13 +257,13 @@ final class RuneBlocks {
 
     static final int SPIN = 1;
 
-    /** 블랙홀 (가운데가 원점, 앞 +Z — 핵 반지름 R): 검은 핵 (검은 콘크리트 — 그늘) · 도는 고리 둘 (자수정 · 우는 흑요석) · 둘레를 도는 조각 여섯 */
+    /** 블랙홀 (가운데가 원점, 앞 +Z — 핵 반지름 R): 검은 핵 (흑요석 — 그늘) · 도는 고리 둘 (자수정 · 우는 흑요석) · 둘레를 도는 조각 여섯 */
     static PairKit.Rig hole(ServerLevel level, Vec3 base, int life, Vec3 offset, Quaternionf rot, double scale, double R) {
         PairKit.Rig g = rig(level, base, life, offset, rot, scale);
         g.group(Vec3.ZERO);
         ring(g, SPIN, new Vec3(0, 0, -0.05), R * 1.8, R * 1.18, R / 3.2, 0.26, AMETHYST, PairKit.GLOW);
         ring(g, SPIN, new Vec3(0, 0, 0.02), R * 1.18, R * 0.98, R / 4, 0.3, CRYING, PairKit.GLOW);
-        disc(g, 0, new Vec3(0, 0, 0.06), R, R, R / 5, 0.5, BLACK, DARK);
+        disc(g, 0, new Vec3(0, 0, 0.06), R, R, R / 5, 0.5, OBSIDIAN, DARK);
         for (int i = 0; i < 6; i++) {
             double a = i * Math.PI / 3;
             double rr = R * (2.15 + 0.2 * (i % 2));
@@ -284,7 +285,7 @@ final class RuneBlocks {
 
     /**
      * 날개 한 쌍 (등 가운데가 원점, 뒤 = -Z 쪽에 붙임 — 날개 폭 span): 어깨에서 바깥 위로 뻗은 뼈 (금 블록) · 뼈를 따라 아래 바깥으로 부채처럼 늘어선 깃털 다섯
-     * (흰 양털 — 바깥일수록 길고 옆으로 누움) · 안쪽 짧은 깃털 셋 (석영 — 밝기 15). 날개마다 어깨 축으로 도는 무리 (WING_R · WING_L — 날갯짓)
+     * (눈 블록 — 바깥일수록 길고 옆으로 누움) · 안쪽 짧은 깃털 셋 (석영 — 밝기 15). 날개마다 어깨 축으로 도는 무리 (WING_R · WING_L — 날갯짓)
      */
     static PairKit.Rig wings(ServerLevel level, Vec3 base, int life, Vec3 offset, Quaternionf rot, double scale, double span) {
         PairKit.Rig g = rig(level, base, life, offset, rot, scale);
@@ -304,7 +305,7 @@ final class RuneBlocks {
                 double len = span * (0.5 + 0.3 * k);
                 Vec3 d = new Vec3(side * Math.sin(Math.toRadians(ang)), -Math.cos(Math.toRadians(ang)), 0);
                 Vec3 c = V.add(root, d, len / 2);
-                g.add(grp, WOOL_WHITE, new Vec3(c.x, c.y, -0.02 * i), new Vec3(0.34, len, 0.1), PairKit.about(new Vec3(0, 0, 1), side * ang), PairKit.LIT);
+                g.add(grp, WHITE, new Vec3(c.x, c.y, -0.02 * i), new Vec3(0.34, len, 0.1), PairKit.about(new Vec3(0, 0, 1), side * ang), PairKit.LIT);
             }
             for (int i = 0; i < 3; i++) {
                 double k = i / 2.0;
