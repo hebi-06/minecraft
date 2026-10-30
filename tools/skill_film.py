@@ -4,7 +4,7 @@ ci-logs 의 films/ 에 스킬마다 mp4 (1280×720 · 20fps — 틱마다 한 �
 이 도구가 그것을 받아 이름을 얹고 (왼쪽 위 이름 · 무기 / 직업 · 입력, 오른쪽 위 순번) 무기 스킬 · 직업 스킬 영상 둘로 이음.
 
   CI: only = film,filmsk;film,filmw12,filmhero;film,filmjob1;film,filmjob2;film,filmjob3
-      룬: only = film,filmrune1;film,filmrune2;film,filmrune3;film,filmpair;film,filmlimited  (→ --only runes --crf 26)
+      룬: only = film,filmrune1;film,filmrune2;film,filmrune3;film,filmpair;film,filmlimited  (→ --only runes --crf 28)
   git fetch origin +ci-logs:refs/remotes/origin/ci-logs
   python3 tools/skill_film.py                       # → build/film/weapon_skills.mp4 · job_skills.mp4 · runes.mp4 (있는 것만)
   python3 tools/skill_film.py --src 폴더 --out 폴더  # 이미 받은 films 폴더
@@ -24,7 +24,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 W, H, FPS = 1280, 720, 20
-ENC = ["-c:v", "libx264", "-preset", "medium", "-crf", "24", "-r", str(FPS), "-pix_fmt", "yuv420p", "-profile:v", "high", "-g", "40", "-an"]
+ENC = ["-c:v", "libx264", "-preset", "medium", "-crf", "24", "-r", str(FPS), "-pix_fmt", "yuv420p", "-profile:v", "high", "-g", "120", "-an"]
 CRF_AT = ENC.index("-crf") + 1
 TYPES = ["sword", "dagger", "axe", "shield", "bow", "wand", "greatsword", "lance", "scythe", "hammer", "scepter"]
 TYPE_KO = {"sword": "칼", "dagger": "단검", "axe": "도끼", "shield": "방패", "bow": "활", "wand": "완드", "greatsword": "대검", "lance": "창", "scythe": "낫",
@@ -142,7 +142,7 @@ def main():
     ap.add_argument("--src")
     ap.add_argument("--out", default=os.path.join(ROOT, "build/film"))
     ap.add_argument("--version", default="")
-    ap.add_argument("--crf", type=int, default=24, help="화질 (클수록 작은 파일 — 룬 123종은 26)")
+    ap.add_argument("--crf", type=int, default=24, help="화질 (클수록 작은 파일 — 룬 123종은 28: 8분 · 약 50MB)")
     ap.add_argument("--only", default="", help="weapon_skills · job_skills · runes 중 만들 것 (쉼표, 비면 모두)")
     a = ap.parse_args()
     ENC[CRF_AT] = str(a.crf)
