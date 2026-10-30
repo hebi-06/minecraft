@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.Map;
 import mmorpg.fabric.client.FilmCamera;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.CameraType;
@@ -25,16 +26,22 @@ import org.slf4j.LoggerFactory;
  * films/&lt;번호&gt;_&lt;스킬&gt;/f0000.png … 와 manifest.json (스킬 · 이름 · 사진마다 틱 · 쓴 틱 · 들어간 피해) 에 둠 → CI (ci/films.py) 가 mp4 로,
  * tools/skill_film.py 가 이름을 얹어 영상 하나로.
  * <p>사진은 찍는 동안 게임이 한 틱 이상 흐름 (Fabric — 사진이 다 될 때까지 틱을 돌림): 사진마다 그 틱을 적어 두고 영상은 틱 간격대로 (한 틱 = 0.05초).
+ * 찍는 동안은 게임을 느리게 (/tick rate 4 — 틱 사이에 그림이 여러 번 그려져 사진이 첫 틱 안에 끝남: 20틱/초 그대로면 사진 한 장에 두 틱씩 흘러 10fps 였음),
+ * 끝나면 20 으로.
  */
 final class RpgFilm {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-film");
-    /** 카메라: 보는 쪽에서 왼쪽으로 125° (왼쪽 뒤) · 6칸 · 발보다 2.1칸 위, 보는 곳 = 몸 앞 ahead 칸 · 1칸 높이 */
+    /** 카메라: 보는 쪽에서 왼쪽으로 125° (왼쪽 뒤) · dist 칸 · 발보다 height 칸 위, 보는 곳 = 몸 앞 ahead 칸 · lookY 칸 높이 (view 로 바꿈) */
     private static final double ANGLE = Math.toRadians(125);
-    private static final double DIST = 6.0;
-    private static final double HEIGHT = 2.1;
+    private double dist = 6.0;
+    private double height = 2.1;
+    private double lookY = 1.0;
     private static int clips;
+    /** 찍는 동안의 틱 빠르기 (틱/초) */
+    private static final int SLOW_RATE = 4;
 
     private final ClientGameTestContext ctx;
+    private TestServerContext server;
     private Path dir;
     private final List<Long> ticks = new ArrayList<>();
     private final Map<String, Object> info = new LinkedHashMap<>();
@@ -46,6 +53,14 @@ final class RpgFilm {
 
     RpgFilm(ClientGameTestContext ctx) {
         this.ctx = ctx;
+    }
+
+    /** 카메라 거리 · 높이 · 보는 높이 (무기 스킬은 넓게 — 하늘의 먹구름 · 해 · 떨어지는 창이 들어오게) */
+    RpgFilm view(double dist, double height, double lookY) {
+        this.dist = dist;
+        this.height = height;
+        this.lookY = lookY;
+        return this;
     }
 
     /** only 에 film 이 있는지 (영상 실행 — 다른 사진은 찍지 않음) */
@@ -62,7 +77,8 @@ final class RpgFilm {
     }
 
     /** 영상 하나 시작: 지금 플레이어 자리 · 보는 쪽이 카메라의 기준 (스킬을 쓰기 전에 부름) */
-    void begin(String id, String title, String sub, double ahead) {
+    void begin(TestServerContext server, String id, String title, String sub, double ahead) {
+        this.server = server;
         clips++;
         this.ahead = ahead;
         ticks.clear();
@@ -87,6 +103,8 @@ final class RpgFilm {
             fx = -Math.sin(yaw);
             fz = Math.cos(yaw);
         });
+        server.runCommand("tick rate " + SLOW_RATE);
+        ctx.waitTicks(2); // 클라이언트가 틱 빠르기를 받음
     }
 
     /** 카메라를 지금 몸 자리에 맞춤 (가로는 그대로 따라감 · 높이는 60% 만 — 솟구치는 스킬에서 땅이 다 빠지지 않게) */
@@ -98,11 +116,11 @@ final class RpgFilm {
             double lz = -fx;
             double ox = Math.cos(ANGLE) * fx + Math.sin(ANGLE) * lx;
             double oz = Math.cos(ANGLE) * fz + Math.sin(ANGLE) * lz;
-            double cx = p.getX() + ox * DIST;
-            double cy = by + HEIGHT;
-            double cz = p.getZ() + oz * DIST;
+            double cx = p.getX() + ox * dist;
+            double cy = by + height;
+            double cz = p.getZ() + oz * dist;
             double dx = p.getX() + fx * ahead - cx;
-            double dy = by + 1.0 - cy;
+            double dy = by + lookY - cy;
             double dz = p.getZ() + fz * ahead - cz;
             float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
             float pitch = (float) -Math.toDegrees(Math.atan2(dy, Math.hypot(dx, dz)));
@@ -165,6 +183,8 @@ final class RpgFilm {
         }
         LOG.info("[film] {} frames={} ticks={} dealt={}", dir.getFileName(), ticks.size(), ticks.isEmpty() ? 0 : ticks.get(ticks.size() - 1) - ticks.get(0),
                 String.format(Locale.ROOT, "%.1f", dealt));
+        server.runCommand("tick rate 20");
+        ctx.waitTicks(2);
         ctx.runOnClient(mc -> {
             FilmCamera.clear();
             if (mc.gui.hud.isHidden()) mc.gui.hud.toggle();

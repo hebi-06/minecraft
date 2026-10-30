@@ -478,7 +478,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             server.runOnServer(s -> prepare(player(s), job, k.id()));
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
             ctx.waitTicks(12);
-            f.begin(k.id(), k.name(), j.name() + " · 스킬 " + (c.slot() + 1) + (c.slot() == 4 ? " (궁극기)" : ""), 2.5);
+            f.begin(server, k.id(), k.name(), j.name() + " · 스킬 " + (c.slot() + 1) + (c.slot() == 4 ? " (궁극기)" : ""), 2.5);
             f.frames(4);
             ctx.getInput().holdKey(o -> o.keyShift);
             f.frames(2);

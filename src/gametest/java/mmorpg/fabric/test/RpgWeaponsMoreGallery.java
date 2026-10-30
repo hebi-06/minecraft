@@ -112,7 +112,7 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
             ctx.waitTicks(10);
             for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
             if (film) {
-                RpgFilm f = new RpgFilm(ctx);
+                RpgFilm f = new RpgFilm(ctx).view(7.6, 2.9, 1.9);
                 for (Case c : CASES) film(ctx, server, c, f);
                 LOG.info("[weapons12-gallery] film done, {} failed", failures.size());
                 if (!failures.isEmpty()) throw new AssertionError("weapons12 film: " + String.join(" / ", failures));
@@ -313,7 +313,7 @@ public final class RpgWeaponsMoreGallery implements FabricClientGameTest {
         ctx.waitTicks(12);
         boolean hero = c.weapon().endsWith("_hero");
         String how = c.index() == 1 ? "웅크리고 우클릭" : "우클릭";
-        f.begin(id, k.str("name"), w.name() + " · " + (hero ? "영웅 스킬" : "초월 스킬 " + (c.index() + 1)) + " (" + how + ")", c.near() ? 2.0 : 4.0);
+        f.begin(server, id, k.str("name"), w.name() + " · " + (hero ? "영웅 스킬" : "초월 스킬 " + (c.index() + 1)) + " (" + how + ")", c.near() ? 2.0 : 4.0);
         f.frames(4);
         if (c.index() == 1) {
             ctx.getInput().holdShift();

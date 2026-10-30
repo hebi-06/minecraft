@@ -88,7 +88,7 @@ public final class RpgHeroSkillGallery implements FabricClientGameTest {
             for (int i = 0; i < CASES.length; i++) {
                 server.runCommand("item replace entity @a hotbar." + i + " with rpg:" + CASES[i].type() + "_l40_hero");
             }
-            RpgFilm f = film ? new RpgFilm(ctx) : null;
+            RpgFilm f = film ? new RpgFilm(ctx).view(7.6, 2.9, 1.9) : null;
             for (int i = 0; i < CASES.length; i++) {
                 int sel = i;
                 ctx.getInput().pressKey(options -> options.keyHotbarSlots[sel]);
@@ -177,7 +177,7 @@ public final class RpgHeroSkillGallery implements FabricClientGameTest {
         });
         ctx.waitTicks(12);
         boolean ranged = c.type().equals("bow") || c.type().equals("wand");
-        f.begin(id, k.str("name"), w.name() + " · 영웅 스킬 (" + (ranged ? "웅크리고 우클릭" : "우클릭") + ")", c.near() ? 2.0 : 4.0);
+        f.begin(server, id, k.str("name"), w.name() + " · 영웅 스킬 (" + (ranged ? "웅크리고 우클릭" : "우클릭") + ")", c.near() ? 2.0 : 4.0);
         f.frames(4);
         if (ranged) {
             ctx.getInput().holdShift();

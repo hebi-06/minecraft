@@ -78,7 +78,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
         boolean film = RpgFilm.on() && RpgFilm.listed("filmsk"); // 0.48.2 스킬 영상 (only=film,filmsk) — 사진 대신 틱마다
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("skill"))) return; // 고른 시험만 (MMORPG_ONLY)
-        RpgFilm f = film ? new RpgFilm(ctx) : null;
+        RpgFilm f = film ? new RpgFilm(ctx).view(7.6, 2.9, 1.9) : null;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -201,7 +201,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         boolean sneak = ranged ? c.index() == 0 : c.index() == 1;
         boolean hold = ranged && c.index() == 1;
         String how = hold ? "길게 우클릭" : sneak ? "웅크리고 우클릭" : "우클릭";
-        f.begin(id, k.str("name"), w.name() + " · 초월 스킬 " + (c.index() + 1) + " (" + how + ")", c.ring() ? 1.5 : 4.0);
+        f.begin(server, id, k.str("name"), w.name() + " · 초월 스킬 " + (c.index() + 1) + " (" + how + ")", c.ring() ? 1.5 : 4.0);
         f.frames(4);
         if (sneak) {
             ctx.getInput().holdShift();
