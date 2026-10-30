@@ -293,8 +293,6 @@ public final class RpgLimitedRuneTests {
             d0[0] = TestDummies.dealt(z);
             h.assertTrue(d0[0] > 0, "rune hit before");
             h.assertTrue(RuneCast.castRune(sp, r, false, 0), "grace cast");
-            // 0.48.2 세계수 = 입체 세계수 (world_tree — 블록 아이템 표시 대신)
-            h.assertTrue("world_tree".equals(mmorpg.fabric.Fx3d.lastModel), "world tree 3d " + mmorpg.fabric.Fx3d.lastModel);
         });
         h.runAfterDelay(3 + charge + 2, () -> {
             near(h, RpgCombat.dealtMult.applyAsDouble(sp), 1.2, 1e-9, "caster dealt ×1.2");
@@ -306,6 +304,7 @@ public final class RpgLimitedRuneTests {
             double[] g = graceOf(sp);
             h.assertTrue(g != null && (int) g[0] == 2, "members 2: " + (g == null ? "none" : (int) g[0]));
             near(h, g[1] - Tasks.now(), ticks - 2, 3, "grace lasts " + ticks + " ticks");
+            h.assertTrue(FxDisplays.activeCount() >= 1, "world tree display");
         });
         h.runAfterDelay(34, () -> {
             // 룬 피해 1.2배 (첫 피해에서 32틱 — 몹 무적 시간 밖)
@@ -349,10 +348,7 @@ public final class RpgLimitedRuneTests {
         for (int i = 0; i < 4; i++) RpgPlayers.setStat(sp, keys[i], st[i]);
         Runes.Rune r = Runes.parseRune("rpg:rune_yggdrasil_transcend");
         int charge = (int) r.def().num("charge");
-        h.runAfterDelay(2, () -> {
-            h.assertTrue(RuneCast.castRune(sp, r, false, 6), "grace 6 cast");
-            h.assertTrue("world_tree".equals(mmorpg.fabric.Fx3d.lastModel), "world tree 3d (6) " + mmorpg.fabric.Fx3d.lastModel);
-        });
+        h.runAfterDelay(2, () -> h.assertTrue(RuneCast.castRune(sp, r, false, 6), "grace 6 cast"));
         h.runAfterDelay(3 + charge + 2, () -> {
             near(h, RpgCombat.dealtMult.applyAsDouble(sp), 1.32, 1e-9, "caster ×1.32");
             near(h, RpgCombat.dealtMult.applyAsDouble(ally), 1.32, 1e-9, "ally at 10 (radius 12) ×1.32");
@@ -360,6 +356,7 @@ public final class RpgLimitedRuneTests {
             near(h, RpgCombat.dealtMult.applyAsDouble(far), 1, 1e-9, "outside 12");
             double[] g = graceOf(sp);
             near(h, g[1] - Tasks.now(), 320 - 2, 3, "16 s");
+            h.assertTrue(FxDisplays.activeCount() >= 1, "world tree display");
             for (ServerPlayer p : List.of(sp, ally, far)) h.getLevel().getServer().getPlayerList().remove(p);
             h.succeed();
         });

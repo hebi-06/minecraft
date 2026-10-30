@@ -8,7 +8,6 @@ import mmorpg.core.Obj;
 import mmorpg.core.RuneBreak;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
-import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.skill.Kit;
@@ -560,12 +559,6 @@ final class RuneLimited {
         SkillFx.play(level, "beacon.power", sp.position(), 1.5, 0.9);
         SkillFx.play(level, "mob.elderguardian.curse", a0, 1.6, 0.4);
         SkillFx.rune(level, sp.position(), Opt.of("size", 1.4, "life", charge / 20.0, "color", SUN, "alpha", 0.9, "rate", 140.0, "progress", 1.0));
-        // 0.48.2 초월 룬 손보기: 하늘의 눈 = 입체 눈 (odin_eye — 눈알 · 눈꺼풀 · 금빛 테 · 빛살, 0.48.0 오딘과 같은 모델) 이 charge 틱에 걸쳐 뜨고
-        // 광선 동안 노려보며 (glare) 조준을 따라 옮김 → 끝에 감음. 모바일 눈 그림 (rfx_skyeye — 금빛 눈 문양) 은 옅게 겹쳐 둘레 문양으로 (2D + 3D)
-        double h0 = skyHeight(sp, a0, 6, hMax);
-        int eye3d = Fx3d.spawn(level, "odin_eye", V.up(a0, h0), Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 3.4 * eyeScale(h0) * 0.85, "life", end / 20.0 + 0.7,
-                "color", SUN, "glow", SUN_CORE, "anim", "open", "animSpeed", 0.5 / Math.max(0.05, charge / 20.0), "glowAlpha", 0.45, "shine", 0.35, "pop", 0.25,
-                "fadeOut", 0.5));
         Vec3[] p = {a0};
         Kit.ticks(t -> {
             if (!RuneKit.sameLife(sp, life)) return false;
@@ -577,8 +570,7 @@ final class RuneLimited {
                 // 눈을 뜸 (감음 → 반쯤 → 뜸) · 조준한 곳에 금빛 고리
                 if (t % 2 == 0) {
                     int frame = t < charge / 3 ? 0 : t < charge * 2 / 3 ? 1 : 2;
-                    Fx3d.move(level, eye3d, eyeAt, 0.1, null);
-                    eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), frame, 0.12, 0.5);
+                    eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), frame, 0.12, 0.95);
                     RuneKit.domainSigil(level, eyeAt, 4.6 * eyeScale(h), "arcane", SUN, SUN_CORE, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "life", 0.12, "spin", t * 4.0,
                             "alpha", 0.6, "fade", 0.2));
                 }
@@ -600,10 +592,8 @@ final class RuneLimited {
             eyeAt = V.up(cur, h);
             int bt = t - charge;
             boolean pulse = bt % gap == 0 && bt / gap < hits;
-            if (bt == 0) Fx3d.anim(level, eye3d, "glare", true, eyeAt);
             if (t % 2 == 0 || pulse) {
-                Fx3d.move(level, eye3d, eyeAt, 0.1, null);
-                eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), pulse ? 3 : 2, 0.12, 0.5);
+                eyeFx(sp, level, eyeAt, 3.4 * eyeScale(h), pulse ? 3 : 2, 0.12, 0.95);
                 RuneKit.domainSigil(level, eyeAt, 4.6 * eyeScale(h), "arcane", SUN, SUN_CORE, Opt.of("dir", RuneKit.towardEye(sp, eyeAt), "life", 0.12, "spin", t * 4.0,
                         "alpha", 0.6, "fade", 0.2));
                 Vec3 top = V.up(cur, h - 0.8);
@@ -627,10 +617,7 @@ final class RuneLimited {
                     hit(sp, life, e, P, k.num("mult"), DamageNumbers.Style.SOLAR, tally, x -> RuneKit.burn(x, k.num("fire")));
                 }
             }
-            if (t == end) {
-                Fx3d.anim(level, eye3d, "close", false, eyeAt);
-                finish(sp, level, cur, h, radius, P, k, life, tally, fin);
-            }
+            if (t == end) finish(sp, level, cur, h, radius, P, k, life, tally, fin);
             return true;
         });
         return true;
