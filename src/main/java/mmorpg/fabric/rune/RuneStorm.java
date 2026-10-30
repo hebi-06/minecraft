@@ -11,6 +11,7 @@ import java.util.UUID;
 import java.util.function.DoubleFunction;
 import mmorpg.core.Obj;
 import mmorpg.core.Runes;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.skill.Kit;
@@ -310,6 +311,10 @@ final class RuneStorm {
         double[] white = RuneKit.WHITE;
         double charge = k.num("charge");
         int stunTicks = (int) k.num("stun");
+        // 0.48.2 초월 룬 손보기: 창 = 입체 빛의 창 (spear — 가운데가 원점, 창끝 +Y 1.45 · 자루 끝 -1.25). 모으는 동안 눈앞 위에 떠서 몸을 따라가며 커짐
+        // (주인 기준 [오른쪽, 위, 앞]) → 던지면 날아가는 창. 모바일 창 그림 (rfx_spear) 은 빛깔 겹만 옅게 겹쳐 번개 빛으로 (2D + 3D)
+        int held3d = Fx3d.spawn(level, "spear", new Vec3(0, sp.getEyeHeight() + 0.62, 1.5), Opt.of("follow", (double) sp.getId(), "dir", V.unit(new Vec3(0, 0.12, 1)),
+                "faceCam", 1.0, "scale", 1.05, "life", charge / 20.0 + 0.1, "pop", charge / 20.0 * 0.8, "color", glow, "glow", white, "glowAlpha", 0.55, "shine", 0.45));
         for (int t = 0; t < charge; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
@@ -317,7 +322,8 @@ final class RuneStorm {
                 Vec3 view = sp.getViewVector(1F);
                 Vec3 at = spearAt(sp);
                 double grow = 0.4 + 0.6 * (tt / charge);
-                RuneKit.rfx2(level, "spear", at, Opt.of("dir", view, "size", 1.25 * grow, "life", 0.14, "cell", (double) ((tt / 2) % 4)), glow, white, SPEAR, null);
+                RuneKit.rfx(level, "spear", at, Opt.of("dir", view, "size", 1.25 * grow, "life", 0.14, "cell", (double) (SPEAR[0] + (tt / 2) % 4), "color", glow,
+                        "alpha", 0.5));
                 SkillFx.fx(level, "rpg:magic_circle", V.add(at, view, -1.8), Opt.of("size", 0.5 + 0.5 * grow, "life", 0.14, "spin", tt * 18.0, "progress",
                         Math.min(1, (tt + 2) / charge), "color", glow, "alpha", 0.9)); // 창 뒤 · 눈 뒤 (1인칭 화면을 가리지 않음)
                 double a = Kit.rand() * Math.PI * 2;
@@ -332,9 +338,11 @@ final class RuneStorm {
         Vec3 f0 = V.flat(sp.getViewVector(1F));
         RuneKit.ultSkyFor(sp, level, c0, "thunderSpear", (int) charge + 44, null);
         Vec3 storm = RuneKit.skyPoint(sp, V.add(c0, f0, 10), 6, 20, 6, 22);
+        // 먹구름 둘 = 입체 먹구름 (storm_cloud — 0.48.0 궁니르 · 묠니르와 같은 모델, 보랏빛 번개가 두 번씩 번쩍)
         for (int sd : new int[] {-1, 1}) {
-            RuneKit.rfx(level, "cloud", V.add(storm, V.rightOf(f0), sd * 4.5), Opt.of("size", 5.2, "life", (charge + 24) / 20, "grow", 0.2, "cell", sd > 0 ? 1.0 : 2.0,
-                    "color", new double[] {0.3, 0.24, 0.46}, "alpha", 0.85, "fade", 0.35));
+            Fx3d.spawn(level, "storm_cloud", V.add(storm, V.rightOf(f0), sd * 4.5), Opt.of("dir", V.UP, "face", V.turnY(f0, sd * 60.0), "scale", 2.1,
+                    "life", (charge + 24) / 20, "color", new double[] {0.3, 0.24, 0.46}, "glow", glow, "anim", "rumble", "loop", 1.0, "animPhase", sd > 0 ? 0.3 : 0.0,
+                    "glowAlpha", 0.3, "shine", 0.15, "pop", 0.4, "fadeOut", 0.5));
         }
         RuneKit.domainSigil(level, c0, 5, "blade", glow, white, Opt.of("life", (charge + 2) / 20, "spinRate", 120.0, "grow", 0.3, "alpha", 0.8, "fade", 0.15));
         for (int i = 0; i < 3; i++) {
@@ -357,8 +365,13 @@ final class RuneStorm {
             Vec3 shown = V.up(from, 0.25);
             // 창 크기 · 길의 번개 굵기는 폭 width 를 따라 (기본 1.6칸 → 1.35 · 0.12 — 8단계 6돌은 폭이 넓어져 창도 큼)
             double wk = k.num("width") / 1.6;
-            RuneKit.rfx2(level, "spear", V.add(shown, view, 1.2), Opt.of("dir", view, "speed", speed, "size", 1.35 * wk, "life", Math.max(0.05, (len - 1.2) / speed),
-                    "cell", Math.floor(Kit.rand() * 4)), glow, white, SPEAR, null);
+            Fx3d.kill(level, held3d, sp.position(), 0.05);
+            Vec3 s0 = V.add(shown, view, 1.2);
+            double fly = Math.max(0.05, (len - 1.2) / speed);
+            Fx3d.spawn(level, "spear", s0, Opt.of("to", V.add(s0, view, len - 1.2), "ctrl", V.add(s0, view, (len - 1.2) / 2), "travel", fly, "align", 1.0, "faceCam",
+                    1.0, "scale", 1.1 * wk, "life", fly + 0.05, "color", glow, "glow", white, "glowAlpha", 0.6, "shine", 0.5));
+            RuneKit.rfx(level, "spear", s0, Opt.of("dir", view, "speed", speed, "size", 1.35 * wk, "life", fly, "cell", (double) (SPEAR[0] + (int) Math.floor(Kit.rand() * 4)),
+                    "color", glow, "alpha", 0.5));
             for (double s = 0; s < len; s += 4) {
                 final double ss = s;
                 RuneKit.later(Math.round((s / speed) * 20), () -> SkillFx.bolt(level, V.add(from, view, ss), V.add(from, view, Math.min(len, ss + 4)), glow,

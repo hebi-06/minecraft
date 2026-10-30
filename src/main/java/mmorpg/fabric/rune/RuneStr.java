@@ -5,6 +5,7 @@ import java.util.Set;
 import java.util.UUID;
 import mmorpg.core.Obj;
 import mmorpg.core.Runes;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -249,8 +250,16 @@ final class RuneStr {
         SkillFx.fx(level, "rpg:arrow_shot", V.up(g, 14), Opt.of("dir", V.UP, "speed", 0.0, "size", 14.0, "thick", 0.12, "life", delay / 20.0, "color", gold,
                 "alpha", 0.6));
         double hover = (delay - drop) / 20.0;
-        // + 1틱: 떨어지는 검이 나타나는 동안 겹침 (깜빡임 없게)
-        RuneKit.rfx2(level, "sword", V.up(g, sky + 1.5), Opt.of("dir", V.DOWN, "size", len / 2, "life", hover + 0.05, "speed", 1.5 / hover), glow, white);
+        // 0.48.2 초월 룬 손보기 (사용자 "초월 31종 먼저"): 하늘의 검 = 입체 환영검 (phantom_sword — 코등이가 원점, 칼끝 +Y, 길이 1.675 → len 칸) 하나가
+        // 나타나 천천히 내려옴 → 떨어져 꽂힘 → 남았다 사라짐. 모바일 검 그림 (rfx_sword) 은 빛깔 겹만 옅게 같은 길로 — 입체 검 둘레의 빛 (2D + 3D)
+        double sc = len / 1.675;
+        double hilt = 0.4825 * sc; // 검 가운데 → 코등이 (칼끝이 아래라 위로)
+        int glowCell = RuneKit.RFX.getOrDefault("sword", new int[] {0, 1})[0];
+        int sword3d = Fx3d.spawn(level, "phantom_sword", V.up(g, sky + 1.5 + hilt), Opt.of("dir", V.DOWN, "faceCam", 1.0, "scale", sc, "life", delay / 20.0 + 1.65,
+                "color", glow, "glow", gold, "glowAlpha", 0.55, "shine", 0.45, "pop", 0.3, "fadeOut", 0.66));
+        Fx3d.move(level, sword3d, V.up(g, sky + hilt), hover, null);
+        RuneKit.rfx(level, "sword", V.up(g, sky + 1.5), Opt.of("dir", V.DOWN, "size", len / 2, "life", hover + 0.05, "speed", 1.5 / hover, "color", glow,
+                "cell", (double) glowCell, "alpha", 0.4));
         SkillFx.fx(level, "rpg:magic_circle_flash", V.up(g, sky + len / 2 + 1.6), Opt.of("size", 2.2, "life", 0.6, "spin", Kit.rand() * 360, "progress", 1.0,
                 "color", gold, "alpha", 0.9));
         SkillFx.play(level, "beacon.power", g, 0.6, 1);
@@ -265,7 +274,9 @@ final class RuneStr {
         // 떨어짐: 하늘 자리 → 칼끝이 땅속 1.5칸 (가운데 = 땅 + L/2 - 1.5)
         double rest = len / 2 - 1.5;
         Tasks.later(delay - drop, () -> {
-            RuneKit.rfx2(level, "sword", V.up(g, sky), Opt.of("dir", V.DOWN, "size", len / 2, "life", drop / 20.0, "speed", (sky - rest) / (drop / 20.0)), glow, white);
+            Fx3d.move(level, sword3d, V.up(g, rest + hilt), drop / 20.0, null);
+            RuneKit.rfx(level, "sword", V.up(g, sky), Opt.of("dir", V.DOWN, "size", len / 2, "life", drop / 20.0, "speed", (sky - rest) / (drop / 20.0), "color", glow,
+                    "cell", (double) glowCell, "alpha", 0.45));
             for (double s = 2; s < sky - rest; s += 3) {
                 double d = (s / (sky - rest)) * (drop / 20.0);
                 SkillFx.fx(level, "rpg:arrow_trail", V.up(g, sky - s + len / 2), Opt.of("dir", V.DOWN, "size", 1.6, "thick", 0.9, "life", d + 0.3, "delay", d,
@@ -274,7 +285,8 @@ final class RuneStr {
             SkillFx.play(level, "item.trident.riptide_3", g, 0.6, 1);
         });
         // 꽂힌 검 (1.65초, 마지막 40% 동안 사라짐): 떨어지는 검이 끝나기 1틱 전에 나타남 (깜빡임 없게)
-        Tasks.later(delay - 1, () -> RuneKit.rfx2(level, "sword", V.up(g, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.65, "fade", 0.4), glow, white));
+        Tasks.later(delay - 1, () -> RuneKit.rfx(level, "sword", V.up(g, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.65, "fade", 0.4, "color", glow,
+                "cell", (double) glowCell, "alpha", 0.4)));
         Tasks.later(delay, () -> {
             if (sp.isRemoved()) return;
             Vec3 mid = V.up(g, 1.0);

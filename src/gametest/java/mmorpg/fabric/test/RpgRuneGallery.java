@@ -64,7 +64,9 @@ public final class RpgRuneGallery implements FabricClientGameTest {
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
         // 0.48.2 룬 영상 (only=film,filmrune1 · 2 · 3 — 계열 여섯 · 여섯 · 다섯): 사진 대신 틱마다
-        int filmPart = RpgFilm.on() ? (RpgFilm.listed("filmrune1") ? 1 : RpgFilm.listed("filmrune2") ? 2 : RpgFilm.listed("filmrune3") ? 3 : 0) : 0;
+        // 초월만 (only=film,filmtr — 0.48.2 초월 룬 손보기: 단일 스탯 17 · 두 스탯 6 · 한정 8 의 초월을 한 번에)
+        boolean trOnly = RpgFilm.on() && RpgFilm.listed("filmtr");
+        int filmPart = RpgFilm.on() ? (trOnly ? 9 : RpgFilm.listed("filmrune1") ? 1 : RpgFilm.listed("filmrune2") ? 2 : RpgFilm.listed("filmrune3") ? 3 : 0) : 0;
         if (filmPart == 0 && (RpgFilm.on() || !RpgProdSmoke.only("rune"))) return; // 고른 시험만 (MMORPG_ONLY)
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -86,8 +88,8 @@ public final class RpgRuneGallery implements FabricClientGameTest {
                 RpgFilm f = new RpgFilm(ctx).angle(105).follow(0.6);
                 List<String> fams = Runes.FAMILY_ORDER.stream().filter(x -> !Runes.PAIR_FAMILIES.contains(x)).toList();
                 int from = (filmPart - 1) * 6;
-                for (String family : fams.subList(Math.min(from, fams.size()), Math.min(from + 6, fams.size()))) {
-                    for (String grade : Runes.GRADE_ORDER) {
+                for (String family : trOnly ? fams : fams.subList(Math.min(from, fams.size()), Math.min(from + 6, fams.size()))) {
+                    for (String grade : trOnly ? List.of("transcend") : Runes.GRADE_ORDER) {
                         Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));
                         if (r != null) film(ctx, server, r, f);
                     }

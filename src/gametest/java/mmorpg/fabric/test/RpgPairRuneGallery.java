@@ -71,7 +71,8 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
     @Override
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active()) return;
-        boolean film = RpgFilm.on() && RpgFilm.listed("filmpair"); // 0.48.2 룬 영상 (only=film,filmpair) — 사진 대신 틱마다
+        boolean film = RpgFilm.on() && (RpgFilm.listed("filmpair") || RpgFilm.listed("filmtr")); // 0.48.2 룬 영상 (only=film,filmpair · 초월만 filmtr) — 사진 대신 틱마다
+        boolean trOnly = film && !RpgFilm.listed("filmpair");
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("pairs"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -91,7 +92,7 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
             RpgFilm f = film ? new RpgFilm(ctx).angle(105).follow(0.6) : null;
             for (String family : Runes.PAIR_FAMILIES) {
-                for (String grade : Runes.GRADE_ORDER) {
+                for (String grade : trOnly ? List.of("transcend") : Runes.GRADE_ORDER) {
                     Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));
                     if (r == null) {
                         failures.add(family + "_" + grade + " missing");

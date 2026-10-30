@@ -8,6 +8,7 @@ import java.util.UUID;
 import mmorpg.core.Obj;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
@@ -370,16 +371,25 @@ final class RuneHoly {
         });
         int alive = RuneKit.deathToken(sp); // 죽으면 끝 (날개 · 회복 · 보호막 · 피해 — 차원 이동 · 탈것 부르기로는 끝나지 않음)
         int[] feather = RuneKit.RFX.get("feather");
+        // 0.48.2 초월 룬 손보기: 날개 = 입체 천사 날개 (angel_wings — 모바일 대천사 날개 그림 rfx_wings 를 휜 판 둘에 붙인 것, tools/fx_models_rune.py).
+        // 등 뒤에 붙어 몸을 따라감 (내 1인칭에서는 숨김): 펼침 → 날갯짓 (되풀이) → 끝에 접음. 2D 날개 그림은 이 모델이 대신함
+        int wings3d = Fx3d.spawn(level0, "angel_wings", new Vec3(0, 1.3, -0.42), Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, -1),
+                "scale", 1.0, "life", total / 20.0 + 0.3, "anim", "spread", "color", wingCol, "glow", RuneKit.WHITE, "view", 1.0, "glowAlpha", 0.35, "shine", 0.25,
+                "fadeIn", 0.05, "fadeOut", 0.4, "pop", 0.2));
+        RuneKit.later(9, () -> Fx3d.anim(level0, wings3d, "flap", true, sp.position()));
+        RuneKit.later(Math.max(10, total - 8), () -> Fx3d.anim(level0, wings3d, "fold", false, sp.position()));
+        boolean[] gone = {false};
         for (int t = 0; t < total; t += 2) {
             final int tt = t;
             RuneKit.later(tt, () -> {
-                if (!RuneKit.aliveSince(sp, alive)) return;
+                if (!RuneKit.aliveSince(sp, alive)) {
+                    if (!gone[0]) Fx3d.kill(level0, wings3d, c0, 0.2);
+                    gone[0] = true;
+                    return;
+                }
                 ServerLevel level = sp.level();
                 Vec3 c = sp.position();
                 Vec3 f = Kit.facingOf(sp);
-                // 날개: 등 뒤 0.5칸 · 어깨 높이, 날갯짓 (12틱마다 위 · 아래). 2틱마다 짧게 다시 그림 (몸을 따라옴 — 돌거나 뒷걸음질해도 눈앞을 오래 가리지 않게)
-                RuneKit.rfx2(level, "wings", V.up(V.add(c, f, -0.5), 1.4), Opt.of("dir", f, "size", 2.3, "life", RuneKit.BODY_LIFE, "cell", (double) ((tt / 12) % 2),
-                        "vel", RuneKit.bodyVel(sp)), wingCol, RuneKit.WHITE, new int[] {0, RuneKit.WINGS_CORE}, 0.85);
                 if (tt % 6 != 0) return;
                 if (tt % 12 == 0) SkillFx.rune(level, V.up(c, 2.35), Opt.of("size", 0.4, "life", 0.65, "color", glow, "alpha", 0.95, "rate", 120.0)); // 후광
                 // 눈앞에 천천히 떨어지는 금빛 깃털 (1인칭)

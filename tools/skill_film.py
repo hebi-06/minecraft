@@ -178,8 +178,9 @@ def main():
              ["무기마다 영웅 스킬 → 초월 스킬 1 · 2", "실제 속도 (20틱/초) · 카메라는 몸 왼쪽 뒤 3/4 에서 따라감", "과녁: 쓰러지지 않는 허스크 · 스탯 150"] + ver),
             ("job_skills", jobs, "직업 스킬 %d종" % len(jobs),
              ["직업마다 스킬 1 ~ 5 (5 = 궁극기)", "실제 속도 (20틱/초) · 카메라는 몸 왼쪽 뒤 3/4 에서 따라감", "태세 · 강화 스킬은 뒤에 평타까지"] + ver),
-            ("runes", runes, "룬 %d종" % len(runes),
-             ["계열마다 일반 → 희귀 → 고귀 → 영웅 → 초월, 끝에 한정 초월 룬 (0돌)", "실제 속도 (20틱/초) · 마지막 피해 뒤 약 1초에서 끊음",
+            ("runes", runes, ("초월 룬 %d종" if runes and all(c[0]["id"].endswith("_transcend") for c in runes) else "룬 %d종") % len(runes),
+             ["계열 순서대로 초월 룬, 끝에 한정 초월 룬 (0돌)" if runes and all(c[0]["id"].endswith("_transcend") for c in runes)
+              else "계열마다 일반 → 희귀 → 고귀 → 영웅 → 초월, 끝에 한정 초월 룬 (0돌)", "실제 속도 (20틱/초) · 마지막 피해 뒤 약 1초에서 끊음",
               "카메라는 몸 옆 뒤 (105°) 높은 곳에서 몸을 60% 따라감 (영웅 · 초월은 더 멀리)"] + ver)):
         if not items or (want and name not in want):
             continue

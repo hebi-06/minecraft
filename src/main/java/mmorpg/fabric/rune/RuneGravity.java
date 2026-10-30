@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import mmorpg.core.Obj;
 import mmorpg.core.Rules;
 import mmorpg.core.Runes;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -600,14 +601,17 @@ final class RuneGravity {
         RuneKit.later(charge, () -> {
             if (RuneKit.sameLife(sp, life)) RuneKit.ultFlashFor(sp, level, g, "blackHole", "dark", Opt.of("time", new double[] {0.05, 0.05, 0.5}));
         });
+        // 0.48.2 초월 룬 손보기: 핵 = 입체 일식 (eclipse — 빛을 삼킨 검은 원판 · 새어 나오는 테 · 해무리, 0.48.1 스발린과 같은 모델) 을 보랏빛으로:
+        // charge 틱에 걸쳐 커지며 나타나 끝까지 맥동 → 붕괴 때 사라짐. 모바일 블랙홀 그림 (rfx_hole) 은 빨려 드는 소용돌이 겹만 남겨 둘레에서 돎 (2D + 3D)
+        Fx3d.spawn(level, "eclipse", hole, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 1.7 * sc, "life", (charge + T) / 20.0 + 0.05, "color", glow, "glow", core,
+                "anim", "pulse", "loop", 1.0, "glowAlpha", 0.5, "shine", 0.3, "pop", charge / 20.0));
         for (int t = 0; t < charge; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 double q = (tt + 2.0) / charge;
                 double s = (0.35 + q * 1.55) * sc;
-                RuneKit.rfx(level, "hole", hole, Opt.of("size", s, "life", 0.14, "cell", 0.0, "spin", holeSpin(tt), "spinRate", 240.0, "alpha", 0.6 + 0.4 * q));
-                RuneKit.rfx(level, "hole", hole, Opt.of("size", s, "life", 0.14, "cell", (double) RuneKit.HOLE_CORE));
+                RuneKit.rfx(level, "hole", hole, Opt.of("size", s, "life", 0.14, "cell", 0.0, "spin", holeSpin(tt), "spinRate", 240.0, "alpha", 0.45 + 0.35 * q));
                 inwardSparks(level, hole, 3.5, 3, 0.35, tt % 4 != 0 ? core : glow, 2);
                 SkillFx.rune(level, g, Opt.of("size", radius * 0.8, "life", 0.14, "color", glow, "alpha", 0.9, "progress", q, "rate", 0.0, "spin", -tt * 4.0));
             });
@@ -617,8 +621,8 @@ final class RuneGravity {
             RuneKit.later(charge + t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 if (tt % 4 == 0) {
-                    RuneKit.rfx(level, "hole", hole, Opt.of("size", 1.9 * sc, "life", 0.24, "cell", 0.0, "spin", holeSpin(charge + tt), "spinRate", 240.0));
-                    RuneKit.rfx(level, "hole", hole, Opt.of("size", 1.9 * sc, "life", 0.24, "cell", (double) RuneKit.HOLE_CORE));
+                    RuneKit.rfx(level, "hole", hole, Opt.of("size", 1.9 * sc, "life", 0.24, "cell", 0.0, "spin", holeSpin(charge + tt), "spinRate", 240.0, "alpha",
+                            0.8));
                 }
                 inwardSparks(level, hole, radius, 3, 0.7, tt % 4 != 0 ? core : glow, 3);
                 if (tt % 6 == 0) SkillFx.fx(level, "rpg:whirlpool", V.up(g, 0.1), Opt.of("dir", V.ZERO, "size", radius, "life", 0.5, "spin", tt * 10.0,
@@ -646,8 +650,9 @@ final class RuneGravity {
         }
         // v2.27.0 뒤쪽 하늘의 검은 일식 (블랙홀 그림을 크게 — 원반 + 핵): 붕괴 때 섬광으로 터짐
         Vec3 eclipse = RuneKit.skyPoint(sp, g, 8, 21, 6, 22);
-        RuneKit.rfx(level, "hole", eclipse, Opt.of("size", 3.6, "life", (charge + T + 2) / 20.0, "cell", 0.0, "spinRate", 50.0, "alpha", 0.85, "fade", 0.1));
-        RuneKit.rfx(level, "hole", eclipse, Opt.of("size", 3.6, "life", (charge + T + 2) / 20.0, "cell", (double) RuneKit.HOLE_CORE, "alpha", 0.95, "fade", 0.1));
+        Fx3d.spawn(level, "eclipse", eclipse, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 3.4, "life", (charge + T + 2) / 20.0, "color", glow, "glow", core, "anim",
+                "pulse", "loop", 1.0, "animPhase", 0.4, "glowAlpha", 0.45, "shine", 0.3, "pop", 0.4, "fadeOut", 0.1));
+        RuneKit.rfx(level, "hole", eclipse, Opt.of("size", 3.6, "life", (charge + T + 2) / 20.0, "cell", 0.0, "spinRate", 50.0, "alpha", 0.6, "fade", 0.1));
         RuneKit.later(charge + T, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             // 붕괴: 원반이 안으로 꺼지며 (커졌다 사라짐) 터짐

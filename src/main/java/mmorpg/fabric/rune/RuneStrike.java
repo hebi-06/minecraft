@@ -18,6 +18,7 @@ import mmorpg.core.Runes;
 import mmorpg.core.SwingLooks;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
@@ -231,10 +232,20 @@ public final class RuneStrike {
         double[] white = RuneKit.WHITE;
         double len = 7;
         double rest = len / 2 - 1.2;
-        RuneKit.rfx2(level, "sword", V.up(at, 15), Opt.of("dir", V.DOWN, "size", len / 2, "life", 0.3, "speed", (15 - rest) / 0.3), col, white);
+        // 0.48.2 초월 룬 손보기: 떨어져 꽂히는 검 = 입체 환영검 (phantom_sword — 코등이가 원점, 길이 1.675 → len 칸, 천붕과 같은 모델) 을 금빛으로.
+        // 모바일 검 그림 (rfx_sword) 은 빛깔 겹만 옅게 같은 길로 (검 둘레의 빛)
+        double sc = len / 1.675;
+        double hilt = 0.4825 * sc;
+        int glowCell = RuneKit.RFX.getOrDefault("sword", new int[] {0, 1})[0];
+        int sword3d = Fx3d.spawn(level, "phantom_sword", V.up(at, 15 + hilt), Opt.of("dir", V.DOWN, "faceCam", 1.0, "scale", sc, "life", 0.3 + 1.45, "color", col,
+                "glow", white, "glowAlpha", 0.55, "shine", 0.5, "fadeOut", 0.65));
+        Fx3d.move(level, sword3d, V.up(at, rest + hilt), 0.3, null);
+        RuneKit.rfx(level, "sword", V.up(at, 15), Opt.of("dir", V.DOWN, "size", len / 2, "life", 0.3, "speed", (15 - rest) / 0.3, "color", col, "cell",
+                (double) glowCell, "alpha", 0.45));
         SkillFx.fx(level, "rpg:arrow_shot", V.up(at, 12), Opt.of("dir", V.UP, "speed", 0.0, "size", 12.0, "thick", 0.12, "life", 0.3, "color", col, "alpha", 0.7));
-        // 꽂힌 검: 떨어지는 검이 끝나기 1틱 전 (깜빡임 없게)
-        RuneKit.later(5, () -> RuneKit.rfx2(level, "sword", V.up(at, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.45, "fade", 0.45), col, white));
+        // 꽂힌 검의 빛: 떨어지는 빛이 끝나기 1틱 전 (깜빡임 없게)
+        RuneKit.later(5, () -> RuneKit.rfx(level, "sword", V.up(at, rest), Opt.of("dir", V.DOWN, "size", len / 2, "life", 1.45, "fade", 0.45, "color", col, "cell",
+                (double) glowCell, "alpha", 0.4)));
         RuneKit.later(6, () -> {
             RuneKit.rfx(level, "prop", V.up(at, rest + len / 2 - 0.3), Opt.of("size", 1.6, "life", 0.45, "cell", GLINT, "color", white, "grow", 0.6, "fade", 0.6));
             for (int i = 0; i < 3; i++) {

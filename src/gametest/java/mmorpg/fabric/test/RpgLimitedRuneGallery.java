@@ -74,7 +74,7 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
     @Override
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active()) return;
-        boolean film = RpgFilm.on() && RpgFilm.listed("filmlimited"); // 0.48.2 룬 영상 (only=film,filmlimited) — 사진 대신 틱마다
+        boolean film = RpgFilm.on() && (RpgFilm.listed("filmlimited") || RpgFilm.listed("filmtr")); // 0.48.2 룬 영상 (only=film,filmlimited · 초월만 filmtr) — 사진 대신 틱마다
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("limited"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
