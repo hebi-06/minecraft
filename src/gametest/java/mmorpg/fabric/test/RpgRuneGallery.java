@@ -213,8 +213,7 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         f.view(big ? 7.6 : 6.2, big ? 2.9 : 2.2, big ? 1.9 : 1.1);
         f.begin(server, id, r.def().str("name"), r.famName() + " 계열 · " + r.gradeName() + " 룬", 3.0);
         f.frames(4);
-        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
-        f.cast();
+        f.press(MmorpgClient.skillKeys[0]);
         java.util.function.DoubleSupplier dealt = () -> server.computeOnServer(s -> {
             double sum = 0;
             ServerLevel level = player(s).level();

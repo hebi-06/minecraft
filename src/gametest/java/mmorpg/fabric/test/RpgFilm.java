@@ -207,6 +207,14 @@ final class RpgFilm {
         castTick = now();
     }
 
+    /** 키를 한 번 누름 (Fabric pressKey 와 같음 — 누르고 떼고 한 틱; 그 틱도 한 장 찍어 쓰는 순간에 사진이 빠지지 않게) · 쓴 때를 적음 */
+    void press(net.minecraft.client.KeyMapping key) {
+        ctx.getInput().holdKey(key);
+        ctx.getInput().releaseKey(key);
+        cast();
+        frame();
+    }
+
     /** 지금 틱 (입력을 누르고 기다리는 길게 누르기 — since 와 함께) */
     long mark() {
         return now();

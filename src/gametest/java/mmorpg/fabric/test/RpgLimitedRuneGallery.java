@@ -186,8 +186,7 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         ctx.waitTicks(14);
         f.begin(server, family + "_transcend", r.def().str("name"), "한정 초월 룬 · 0돌", 6.0);
         f.frames(4);
-        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
-        f.cast();
+        f.press(MmorpgClient.skillKeys[0]);
         java.util.function.DoubleSupplier dealt = () -> server.computeOnServer(s -> {
             double sum = 0;
             for (Husk h : player(s).level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 6, 0.5, -60, 6).inflate(40), h -> true)) sum += TestDummies.dealt(h);
