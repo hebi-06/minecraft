@@ -8,7 +8,6 @@ import java.util.UUID;
 import mmorpg.core.Obj;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
-import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
@@ -395,12 +394,13 @@ final class RuneReaper {
         SkillFx.play(level0, "mob.enderdragon.growl", g, 0.6, 0.8);
         SkillFx.shake(sp, 0.15, 0.4);
         Vec3 moonAt = RuneKit.skyPoint(sp, g, 6, 24, 9, 20);
-        // 0.48.2 초월 룬 손보기: 달 = 입체 만월 (moon — 반지름 0.5 · 둘레를 감은 초승달 날) 하나가 아래에서 솟으며 커짐 → 떠 있음 (천천히 돎) → 떨어짐.
-        // 모바일 달 그림 (rfx_moon) 은 빛깔 겹 (붉은 달빛) 만 옅게 겹쳐 붉은 달무리로 (2D + 3D)
+        // 0.48.2 초월 룬 손보기 (사용자 "골렘 소환 같은 느낌이면 좋을거 같은데 너무 3d에 매끈매끈 한거보다"): 달 = 블록으로 쌓은 붉은 달 (RuneBlocks.moon —
+        // 네더 사마귀 블록 픽셀 원판 · 붉은 네더 벽돌 구덩이 · 레드스톤 테, 반지름 3.4) 이 시전자 쪽을 보며 아래에서 솟아 커짐 → 떠 있음 → 떨어져 부서짐.
+        // 모바일 달 그림 (rfx_moon) 은 빛깔 겹 (붉은 달빛) 만 옅게 겹쳐 붉은 달무리로 (블록 + 2D 빛)
         int moonCell = RuneKit.RFX.getOrDefault("moon", new int[] {0, 1})[0];
-        int moon3d = Fx3d.spawn(level0, "moon", V.up(moonAt, -4), Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 7.4, "life", total / 20.0 + 0.05, "color", glow,
-                "glow", core, "anim", "spin", "loop", 1.0, "glowAlpha", 0.55, "shine", 0.4, "pop", delay / 20.0));
-        Fx3d.move(level0, moon3d, moonAt, delay / 20.0, "out");
+        org.joml.Quaternionf moonFace = RuneBlocks.faceTo(moonAt, sp.position());
+        PairKit.Rig moon = RuneBlocks.moon(level0, moonAt, total + 16, new Vec3(0, -4, 0), moonFace, 0.25, 3.4);
+        RuneKit.later(2, () -> moon.pose(Vec3.ZERO, moonFace, 1, Math.max(1, delay - 2)));
         // 달이 떠오름 (아래에서 솟으며 커짐 — 2틱마다 붉은 달빛 한 장)
         for (int t = 0; t < delay; t += 2) {
             final int tt = t;
@@ -461,13 +461,14 @@ final class RuneReaper {
         RuneKit.later(fallAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 d = V.sub(V.up(g, 1.0), moonAt);
-            Fx3d.move(level0, moon3d, V.up(g, 1.0), FALL / 20.0, null);
+            moon.pose(V.sub(V.up(g, 1.0), moonAt), moonFace, 1.15, FALL);
             RuneKit.rfx(level0, "moon", moonAt, Opt.of("dir", V.unit(d), "speed", V.len(d) / (FALL / 20.0), "size", 5.2, "life", FALL / 20.0, "grow", 0.3,
                     "spin", -20.0, "alpha", 0.6, "color", glow, "cell", (double) moonCell));
             SkillFx.play(level0, "mob.enderdragon.flap", moonAt, 0.5, 1.0);
             SkillFx.play(level0, "mob.wither.shoot", g, 0.5, 1.0);
         });
         RuneKit.later(total, () -> {
+            RuneBlocks.shatter(moon, 14, 3.0, 2.0, g.y, 0.4); // 달이 땅에 부딪혀 부서짐
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             if (level != level0) return;

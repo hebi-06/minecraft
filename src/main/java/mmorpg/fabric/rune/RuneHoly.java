@@ -8,7 +8,6 @@ import java.util.UUID;
 import mmorpg.core.Obj;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
-import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.RpgStats;
@@ -371,25 +370,30 @@ final class RuneHoly {
         });
         int alive = RuneKit.deathToken(sp); // 죽으면 끝 (날개 · 회복 · 보호막 · 피해 — 차원 이동 · 탈것 부르기로는 끝나지 않음)
         int[] feather = RuneKit.RFX.get("feather");
-        // 0.48.2 초월 룬 손보기: 날개 = 입체 천사 날개 (angel_wings — 모바일 대천사 날개 그림 rfx_wings 를 휜 판 둘에 붙인 것, tools/fx_models_rune.py).
-        // 등 뒤에 붙어 몸을 따라감 (내 1인칭에서는 숨김): 펼침 → 날갯짓 (되풀이) → 끝에 접음. 2D 날개 그림은 이 모델이 대신함
-        int wings3d = Fx3d.spawn(level0, "angel_wings", new Vec3(0, 1.3, -0.42), Opt.of("follow", (double) sp.getId(), "dir", V.UP, "face", new Vec3(0, 0, -1),
-                "scale", 1.0, "life", total / 20.0 + 0.3, "anim", "spread", "color", wingCol, "glow", RuneKit.WHITE, "view", 1.0, "glowAlpha", 0.35, "shine", 0.25,
-                "fadeIn", 0.05, "fadeOut", 0.4, "pop", 0.2));
-        RuneKit.later(9, () -> Fx3d.anim(level0, wings3d, "flap", true, sp.position()));
-        RuneKit.later(Math.max(10, total - 8), () -> Fx3d.anim(level0, wings3d, "fold", false, sp.position()));
+        // 0.48.2 초월 룬 손보기 (사용자 "골렘 소환 같은 느낌이면 좋을거 같은데 너무 3d에 매끈매끈 한거보다"): 날개 = 블록으로 짠 날개 한 쌍 (RuneBlocks.wings —
+        // 금 블록 뼈 · 흰 양털 깃털 다섯 · 석영 속깃 셋, 폭 2.6) 이 등 뒤에서 펼쳐짐 → 2틱마다 몸을 따라가며 날갯짓 (1.2초 주기) → 끝에 접고 오그라듦.
+        // 죽으면 부서져 흩어짐. 2D 날개 그림은 이 블록 날개가 대신함 (깃털 · 후광 · 빛기둥 2D 는 그대로)
+        Vec3 f0 = Kit.facingOf(sp);
+        PairKit.Rig wings = RuneBlocks.wings(level0, c0, total + 12, V.sub(V.add(V.up(c0, 1.3), f0, -0.42), c0), PairKit.facing(f0), 0.35, 2.6);
+        RuneKit.later(total, () -> wings.pose(wings.offset, wings.rot, 0.05, 8, RuneBlocks.flap(-35)));
         boolean[] gone = {false};
         for (int t = 0; t < total; t += 2) {
             final int tt = t;
             RuneKit.later(tt, () -> {
                 if (!RuneKit.aliveSince(sp, alive)) {
-                    if (!gone[0]) Fx3d.kill(level0, wings3d, c0, 0.2);
+                    if (!gone[0]) RuneBlocks.shatter(wings, 8, 0.6, 1.5, sp.getY(), 0.3);
                     gone[0] = true;
                     return;
                 }
                 ServerLevel level = sp.level();
                 Vec3 c = sp.position();
                 Vec3 f = Kit.facingOf(sp);
+                if (tt >= 2 && level == level0) {
+                    boolean folding = tt >= total - 8;
+                    double lift = folding ? -35 : tt < 8 ? 0 : 16 * Math.sin((tt - 8) * Math.PI / 12.0);
+                    double sc = folding ? 0.6 : Math.min(0.85, 0.35 + tt * 0.1);
+                    wings.pose(V.sub(V.add(V.up(c, 1.3), f, -0.42), c0), PairKit.facing(f), sc, 2, RuneBlocks.flap(lift));
+                }
                 if (tt % 6 != 0) return;
                 if (tt % 12 == 0) SkillFx.rune(level, V.up(c, 2.35), Opt.of("size", 0.4, "life", 0.65, "color", glow, "alpha", 0.95, "rate", 120.0)); // 후광
                 // 눈앞에 천천히 떨어지는 금빛 깃털 (1인칭)

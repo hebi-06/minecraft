@@ -1346,12 +1346,6 @@ import fx_models_weapon  # noqa: E402
 
 fx_models_weapon.add(sys.modules[__name__])
 
-# ------------------------------------------------------------ 0.48.2 초월 룬의 효과 물체 (tools/fx_models_rune.py — 모바일 룬 그림을 입체로)
-
-import fx_models_rune  # noqa: E402
-
-fx_models_rune.add(sys.modules[__name__])
-
 
 # ------------------------------------------------------------ 쓰기
 

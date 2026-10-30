@@ -18,7 +18,6 @@ import mmorpg.core.Runes;
 import mmorpg.core.SwingLooks;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
-import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
@@ -232,14 +231,14 @@ public final class RuneStrike {
         double[] white = RuneKit.WHITE;
         double len = 7;
         double rest = len / 2 - 1.2;
-        // 0.48.2 초월 룬 손보기: 떨어져 꽂히는 검 = 입체 환영검 (phantom_sword — 코등이가 원점, 길이 1.675 → len 칸, 천붕과 같은 모델) 을 금빛으로.
-        // 모바일 검 그림 (rfx_sword) 은 빛깔 겹만 옅게 같은 길로 (검 둘레의 빛)
-        double sc = len / 1.675;
-        double hilt = 0.4825 * sc;
+        // 0.48.2 초월 룬 손보기 (사용자 "골렘 소환 같은 느낌이면 좋을거 같은데 너무 3d에 매끈매끈 한거보다"): 떨어져 꽂히는 검 = 블록으로 짠 금빛 검
+        // (RuneBlocks.sword — 금 칼날 · 석영 홈 · 발광석 머리) 이 0.3초에 떨어져 꽂힘 → 1.45초 뒤 부서져 무너짐. 모바일 검 그림은 빛깔 겹만 옅게 (검 둘레의 빛)
+        Vec3 face = V.flat(V.sub(sp.position(), at));
         int glowCell = RuneKit.RFX.getOrDefault("sword", new int[] {0, 1})[0];
-        int sword3d = Fx3d.spawn(level, "phantom_sword", V.up(at, 15 + hilt), Opt.of("dir", V.DOWN, "faceCam", 1.0, "scale", sc, "life", 0.3 + 1.45, "color", col,
-                "glow", white, "glowAlpha", 0.55, "shine", 0.5, "fadeOut", 0.65));
-        Fx3d.move(level, sword3d, V.up(at, rest + hilt), 0.3, null);
+        PairKit.Rig sword = RuneBlocks.sword(level, at, 6 + 29 + 14, new Vec3(0, 15, 0), RuneBlocks.tipDown(face), len, RuneBlocks.GOLD, RuneBlocks.QUARTZ,
+                RuneBlocks.GOLD, RuneBlocks.DARK_OAK, RuneBlocks.GLOWSTONE);
+        RuneKit.later(2, () -> sword.pose(new Vec3(0, rest, 0), RuneBlocks.tipDown(face), 1, 4));
+        RuneKit.later(6 + 29, () -> RuneBlocks.shatter(sword, 12, 1.0, 2.5, at.y, 0.45));
         RuneKit.rfx(level, "sword", V.up(at, 15), Opt.of("dir", V.DOWN, "size", len / 2, "life", 0.3, "speed", (15 - rest) / 0.3, "color", col, "cell",
                 (double) glowCell, "alpha", 0.45));
         SkillFx.fx(level, "rpg:arrow_shot", V.up(at, 12), Opt.of("dir", V.UP, "speed", 0.0, "size", 12.0, "thick", 0.12, "life", 0.3, "color", col, "alpha", 0.7));
