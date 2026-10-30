@@ -14,6 +14,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -59,6 +60,12 @@ def job_order():
         for si, s in enumerate(jobs["jobs"][j]["skills"]):
             order[s["id"]] = (ji, si, j)
     return order
+
+
+def clean(text):
+    """마인크래프트 글자 꾸밈 (§c · §l …) 과 무기 이름 뒤 레벨 ([40렙]) 을 뺌"""
+    text = re.sub(r"§.", "", text or "")
+    return re.sub(r"\s*\[\d+렙\]", "", text).strip()
 
 
 def overlay_png(path, title, sub, idx):
@@ -165,7 +172,7 @@ def main():
         scene_card(card, 2.4, parts[-1])
         for i, (m, mp4) in enumerate(items):
             ov = os.path.join(work, "%s_%03d.png" % (name, i + 1))
-            overlay_png(ov, m.get("title", m["id"]), m.get("sub", ""), "%d / %d" % (i + 1, len(items)))
+            overlay_png(ov, clean(m.get("title", m["id"])), clean(m.get("sub", "")), "%d / %d" % (i + 1, len(items)))
             parts.append(os.path.join(work, "%s_%03d.mp4" % (name, i + 1)))
             scene_clip(mp4, ov, parts[-1])
             print(name, i + 1, m["id"], m.get("title"))
