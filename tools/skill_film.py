@@ -5,7 +5,7 @@ ci-logs 의 films/ 에 스킬마다 mp4 (1280×720 · 20fps — 틱마다 한 �
 
   CI: only = film,filmsk;film,filmw12,filmhero;film,filmjob1;film,filmjob2;film,filmjob3
   git fetch origin +ci-logs:refs/remotes/origin/ci-logs
-  python3 tools/skill_film.py                       # → build/film/weapon_skills.mp4 · job_skills.mp4
+  python3 tools/skill_film.py                       # → build/film/weapon_skills.mp4 · job_skills.mp4 · runes.mp4 (있는 것만)
   python3 tools/skill_film.py --src 폴더 --out 폴더  # 이미 받은 films 폴더
 
 순서: 무기 = 칼 · 단검 · 도끼 · 방패 · 활 · 완드 · 대검 · 창 · 낫 · 망치 · 홀 (무기마다 영웅 → 초월 1 · 2), 직업 = jobs.json 의 order (스킬 1 ~ 5).
@@ -66,6 +66,14 @@ def clean(text):
     """마인크래프트 글자 꾸밈 (§c · §l …) 과 무기 이름 뒤 레벨 ([40렙]) 을 뺌"""
     text = re.sub(r"§.", "", text or "")
     return re.sub(r"\s*\[\d+렙\]", "", text).strip()
+
+
+def rune_order():
+    """룬 id (계열_등급) → (계열 순서, 등급 순서): rules_more 의 RUNE_FAMILY_ORDER (단일 · 두 스탯 계열) 다음 한정 초월 룬 (RUNE_LIMITED_ORDER)"""
+    more = json.load(open(os.path.join(ROOT, "core/src/main/resources/mmorpg/rules_more.json"), encoding="utf-8"))
+    fams = list(more.get("RUNE_FAMILY_ORDER", [])) + [f for f in more.get("RUNE_LIMITED_ORDER", []) if f not in more.get("RUNE_FAMILY_ORDER", [])]
+    grades = ["common", "rare", "noble", "hero", "transcend"]
+    return {"%s_%s" % (f, g): (fi, gi) for fi, f in enumerate(fams) for gi, g in enumerate(grades)}
 
 
 def overlay_png(path, title, sub, idx):
@@ -149,10 +157,11 @@ def main():
         mp4 = js[:-5] + ".mp4"
         if os.path.exists(mp4):
             clips.append((json.load(open(js, encoding="utf-8")), mp4))
-    wo, jo = weapon_order(), job_order()
+    wo, jo, ro = weapon_order(), job_order(), rune_order()
     weapons = sorted([c for c in clips if c[0]["id"] in wo], key=lambda c: wo[c[0]["id"]][:2])
     jobs = sorted([c for c in clips if c[0]["id"] in jo], key=lambda c: jo[c[0]["id"]][:2])
-    other = [c[0]["id"] for c in clips if c[0]["id"] not in wo and c[0]["id"] not in jo]
+    runes = sorted([c for c in clips if c[0]["id"] in ro], key=lambda c: ro[c[0]["id"]])
+    other = [c[0]["id"] for c in clips if c[0]["id"] not in wo and c[0]["id"] not in jo and c[0]["id"] not in ro]
     if other:
         print("unknown clips:", other)
     work = os.path.join(a.out, "scenes")
@@ -162,7 +171,10 @@ def main():
             ("weapon_skills", weapons, "무기 스킬 %d종" % len(weapons),
              ["무기마다 영웅 스킬 → 초월 스킬 1 · 2", "실제 속도 (20틱/초) · 카메라는 몸 왼쪽 뒤 3/4 에서 따라감", "과녁: 쓰러지지 않는 허스크 · 스탯 150"] + ver),
             ("job_skills", jobs, "직업 스킬 %d종" % len(jobs),
-             ["직업마다 스킬 1 ~ 5 (5 = 궁극기)", "실제 속도 (20틱/초) · 카메라는 몸 왼쪽 뒤 3/4 에서 따라감", "태세 · 강화 스킬은 뒤에 평타까지"] + ver)):
+             ["직업마다 스킬 1 ~ 5 (5 = 궁극기)", "실제 속도 (20틱/초) · 카메라는 몸 왼쪽 뒤 3/4 에서 따라감", "태세 · 강화 스킬은 뒤에 평타까지"] + ver),
+            ("runes", runes, "룬 %d종" % len(runes),
+             ["계열마다 일반 → 희귀 → 고귀 → 영웅 → 초월, 끝에 한정 초월 룬 (0돌)", "실제 속도 (20틱/초) · 마지막 피해 뒤 약 1초에서 끊음",
+              "카메라는 몸 왼쪽 뒤 3/4 에서 따라감 (영웅 · 초월은 더 멀리)"] + ver)):
         if not items:
             continue
         parts = []

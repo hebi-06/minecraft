@@ -62,7 +62,10 @@ public final class RpgRuneGallery implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
-        if (RpgProdSmoke.active() || !RpgProdSmoke.only("rune")) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만 · 고른 시험만 (MMORPG_ONLY)
+        if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
+        // 0.48.2 룬 영상 (only=film,filmrune1 · 2 · 3 — 계열 여섯 · 여섯 · 다섯): 사진 대신 틱마다
+        int filmPart = RpgFilm.on() ? (RpgFilm.listed("filmrune1") ? 1 : RpgFilm.listed("filmrune2") ? 2 : RpgFilm.listed("filmrune3") ? 3 : 0) : 0;
+        if (filmPart == 0 && (RpgFilm.on() || !RpgProdSmoke.only("rune"))) return; // 고른 시험만 (MMORPG_ONLY)
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -79,6 +82,20 @@ public final class RpgRuneGallery implements FabricClientGameTest {
             ctx.waitTicks(10);
             for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
+            if (filmPart > 0) {
+                RpgFilm f = new RpgFilm(ctx);
+                List<String> fams = Runes.FAMILY_ORDER.stream().filter(x -> !Runes.PAIR_FAMILIES.contains(x)).toList();
+                int from = (filmPart - 1) * 6;
+                for (String family : fams.subList(Math.min(from, fams.size()), Math.min(from + 6, fams.size()))) {
+                    for (String grade : Runes.GRADE_ORDER) {
+                        Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));
+                        if (r != null) film(ctx, server, r, f);
+                    }
+                }
+                LOG.info("[rune-gallery] film done, {} failed", failures.size());
+                if (!failures.isEmpty()) throw new AssertionError("rune film: " + String.join(" / ", failures));
+                return;
+            }
             lockedCheck(ctx, server);
             for (String family : Runes.FAMILY_ORDER) {
                 if (Runes.PAIR_FAMILIES.contains(family)) continue; // 0.25.0 두 스탯 계열은 RpgPairRuneGallery (사진첩 키 pairs)
@@ -167,6 +184,48 @@ public final class RpgRuneGallery implements FabricClientGameTest {
         LOG.info("[rune-gallery] {} {} {} cast={} dealt={}", id, fn, third ? "3p" : "1p", cast, String.format(Locale.ROOT, "%.1f", dealt));
         if (!cast) failures.add(id + (third ? " (3p)" : "") + " not cast");
         else if (!(dealt > 0) && !SUPPORT.contains(fn)) failures.add(id + (third ? " (3p)" : "") + " dealt no damage");
+    }
+
+    /** 0.48.2 룬 영상: 같은 입력 · 과녁으로 쓰고 틱마다 한 장 — 새 피해가 22틱 없으면 끝 (RpgFilm) */
+    private void film(ClientGameTestContext ctx, TestServerContext server, Runes.Rune r, RpgFilm f) {
+        String id = r.family() + "_" + r.grade();
+        String only = Runes.weaponOnly(r.family());
+        server.runCommand("item replace entity @a hotbar.0 with " + (only != null ? Weapons.weaponId(only, 40, "common") : "air"));
+        server.runCommand("time set 6000");
+        server.runCommand("tp @a 0.5 -60 0.5 0 8");
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
+            RuneCast.resetCooldowns(sp);
+            RuneSystem.forget(sp.getUUID());
+            lives++;
+            for (int i = 0; i < lives; i++) RuneKit.lifeEnded(sp.getUUID());
+            RpgStats.setBuff(sp, 0);
+            Guards.clear(sp.getUUID());
+            Status.clear(sp);
+            sp.removeAllEffects();
+            RpgHealth.healFull(sp);
+            spawnHusks(sp.level());
+            SkillBar.set(sp, 0, RuneItems.stack(r.family(), r.grade()));
+        });
+        ctx.waitTicks(12);
+        boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
+        f.view(big ? 7.6 : 6.2, big ? 2.9 : 2.2, big ? 1.9 : 1.1);
+        f.begin(server, id, r.def().str("name"), r.famName() + " 계열 · " + r.gradeName() + " 룬", 3.0);
+        f.frames(4);
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        f.cast();
+        java.util.function.DoubleSupplier dealt = () -> server.computeOnServer(s -> {
+            double sum = 0;
+            ServerLevel level = player(s).level();
+            for (Husk h : level.getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 5, 0.5, -60, 5).inflate(40), h -> true)) sum += TestDummies.dealt(h);
+            return sum;
+        });
+        f.untilQuiet(dealt, big ? 50 : 34, 22, 160);
+        double d = dealt.getAsDouble();
+        f.end(d);
+        boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
+        if (!cast) failures.add(id + " (film) not cast");
     }
 
     /** 0.27.0 사신 룬을 맨손으로 누름 (낫 조건을 뺌 — 사용자 "사신의 룬 조건인 낫을 없애고"): 쓰임 (재사용 대기 시작) · 스킬 칸이 잠김 표시가 아님 (사진 rn_reaper_bare) */

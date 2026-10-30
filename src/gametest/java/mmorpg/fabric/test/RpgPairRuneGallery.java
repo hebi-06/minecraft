@@ -70,7 +70,9 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
-        if (RpgProdSmoke.active() || !RpgProdSmoke.only("pairs")) return;
+        if (RpgProdSmoke.active()) return;
+        boolean film = RpgFilm.on() && RpgFilm.listed("filmpair"); // 0.48.2 룬 영상 (only=film,filmpair) — 사진 대신 틱마다
+        if (!film && (RpgFilm.on() || !RpgProdSmoke.only("pairs"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -87,11 +89,16 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
             ctx.waitTicks(10);
             for (String s : List.of("str", "dex", "int", "vit")) server.runCommand("execute as @a run rpg set " + s + " 150");
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
+            RpgFilm f = film ? new RpgFilm(ctx) : null;
             for (String family : Runes.PAIR_FAMILIES) {
                 for (String grade : Runes.GRADE_ORDER) {
                     Runes.Rune r = Runes.parseRune(Runes.runeId(family, grade));
                     if (r == null) {
                         failures.add(family + "_" + grade + " missing");
+                        continue;
+                    }
+                    if (f != null) {
+                        film(ctx, server, r, f);
                         continue;
                     }
                     run(ctx, server, r, false);
@@ -117,6 +124,46 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
             case "rare" -> 60;
             default -> 50;
         };
+    }
+
+    /** 0.48.2 룬 영상: 같은 입력 · 과녁으로 쓰고 틱마다 한 장 — 새 피해가 22틱 없으면 끝 (화상까지, RpgFilm) */
+    private void film(ClientGameTestContext ctx, TestServerContext server, Runes.Rune r, RpgFilm f) {
+        String id = r.family() + "_" + r.grade();
+        server.runCommand("item replace entity @a hotbar.0 with air");
+        server.runCommand("time set 6000");
+        server.runCommand("tp @a 0.5 -60 0.5 0 8");
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
+            RuneCast.resetCooldowns(sp);
+            RuneSystem.forget(sp.getUUID());
+            lives++;
+            for (int i = 0; i < lives; i++) RuneKit.lifeEnded(sp.getUUID());
+            RpgStats.setBuff(sp, 0);
+            Guards.clear(sp.getUUID());
+            Status.clear(sp);
+            sp.removeAllEffects();
+            RpgHealth.healFull(sp);
+            spawnHusks(sp.level());
+            SkillBar.set(sp, 0, RuneItems.stack(r.family(), r.grade()));
+        });
+        ctx.waitTicks(12);
+        boolean big = r.grade().equals("hero") || r.grade().equals("transcend");
+        f.view(big ? 7.6 : 6.2, big ? 2.9 : 2.2, big ? 1.9 : 1.1);
+        f.begin(server, id, r.def().str("name"), r.famName() + " 계열 · " + r.gradeName() + " 룬", 3.0);
+        f.frames(4);
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        f.cast();
+        java.util.function.DoubleSupplier dealt = () -> server.computeOnServer(s -> {
+            double sum = 0;
+            ServerLevel level = player(s).level();
+            for (Husk h : level.getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 5, 0.5, -60, 5).inflate(40), h -> true)) sum += TestDummies.dealt(h);
+            return sum;
+        });
+        f.untilQuiet(dealt, big ? 50 : 34, 22, 160);
+        f.end(dealt.getAsDouble());
+        boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
+        if (!cast) failures.add(id + " (film) not cast");
     }
 
     /** 룬 하나를 실제 입력으로 쓰고 사진 · 피해 기록 */

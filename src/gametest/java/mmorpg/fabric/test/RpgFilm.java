@@ -176,6 +176,28 @@ final class RpgFilm {
         untilSince(castTick < 0 ? now() : castTick, n);
     }
 
+    /**
+     * 0.48.2 룬 영상: 쓴 뒤 min 틱은 꼭 찍고, 그 뒤 quiet 틱 동안 새 피해가 없으면 끝 (최대 max — 버프 · 회복 룬은 min 에서 끝).
+     * dealt = 지금까지 과녁에 들어간 피해 합 (서버에서 읽음)
+     */
+    void untilQuiet(java.util.function.DoubleSupplier dealt, int min, int quiet, int max) {
+        long from = castTick < 0 ? now() : castTick;
+        double last = dealt.getAsDouble();
+        long changed = from;
+        int guard = 0;
+        while (guard++ < 600) {
+            long t = now();
+            if (t - from >= max) break;
+            if (t - from >= min && t - changed >= quiet) break;
+            frame();
+            double d = dealt.getAsDouble();
+            if (d > last + 1e-6) {
+                last = d;
+                changed = now();
+            }
+        }
+    }
+
     void put(String k, Object v) {
         info.put(k, v);
     }

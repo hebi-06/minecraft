@@ -73,7 +73,9 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
-        if (RpgProdSmoke.active() || !RpgProdSmoke.only("limited")) return;
+        if (RpgProdSmoke.active()) return;
+        boolean film = RpgFilm.on() && RpgFilm.listed("filmlimited"); // 0.48.2 룬 영상 (only=film,filmlimited) — 사진 대신 틱마다
+        if (!film && (RpgFilm.on() || !RpgProdSmoke.only("limited"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -92,6 +94,13 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
             for (String s : List.of("str 31", "dex 31", "vit 31", "int 32")) server.runCommand("execute as @a run rpg set " + s);
             server.runOnServer(s -> installBuffer());
             ctx.getInput().pressKey(options -> options.keyHotbarSlots[0]);
+            if (film) {
+                RpgFilm f = new RpgFilm(ctx).view(9.0, 3.4, 2.6);
+                for (String family : List.of("arcana", "dipper", "skyeye", "endless", "terra", "yggdrasil", "abyss", "glacier")) film(ctx, server, family, f);
+                LOG.info("[limited-gallery] film done, {} failed", failures.size());
+                if (!failures.isEmpty()) throw new AssertionError("limited film: " + String.join(" / ", failures));
+                return;
+            }
             // 만상귀일: 구슬이 몸 둘레 → 조준한 곳 위 → 빛줄기 넷 (16 · 26 · 36 · 46틱 쯤 — 스탯 고르게) → 모임 (64) → 귀일 폭발 (70) → 끝 (글자 없음)
             run(ctx, server, "arcana", 0, false, new int[] {8, 26, 36, 56, 66, 72, 82, 98}, null, false);
             run(ctx, server, "arcana", 6, true, new int[] {30, 72, 80, 90, 100, 114}, null, false);
@@ -146,6 +155,49 @@ public final class RpgLimitedRuneGallery implements FabricClientGameTest {
         }
         LOG.info("[limited-gallery] done, {} failed", failures.size());
         if (!failures.isEmpty()) throw new AssertionError("limited rune gallery: " + String.join(" / ", failures));
+    }
+
+    /** 0.48.2 룬 영상: 한정 초월 룬 (0돌) 하나를 같은 입력으로 쓰고 틱마다 한 장 — 새 피해가 30틱 없으면 끝 (RpgFilm) */
+    private void film(ClientGameTestContext ctx, TestServerContext server, String family, RpgFilm f) {
+        Runes.Rune r = Runes.parseRune(Runes.runeId(family, "transcend"));
+        if (r == null) {
+            failures.add(family + " no rune (film)");
+            return;
+        }
+        double meZ = family.equals("endless") ? 1.5 : family.equals("terra") ? -3.0 : ME_Z;
+        server.runCommand("item replace entity @a hotbar.0 with air");
+        server.runCommand("time set 6000");
+        server.runCommand(String.format(Locale.ROOT, "tp @a 0.5 -60 %.1f 0 4", meZ));
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(48), h -> true)) h.discard();
+            RuneCast.resetCooldowns(sp);
+            RuneSystem.forget(sp.getUUID());
+            lives++;
+            for (int i = 0; i < lives; i++) RuneKit.lifeEnded(sp.getUUID());
+            RpgStats.setBuff(sp, 0);
+            Guards.clear(sp.getUUID());
+            Status.clear(sp);
+            sp.removeAllEffects();
+            RpgHealth.healFull(sp);
+            spawnHusks(sp.level());
+            SkillBar.set(sp, 0, Breakthrough.stack(family, "transcend", 0));
+        });
+        ctx.waitTicks(14);
+        f.begin(server, family + "_transcend", r.def().str("name"), "한정 초월 룬 · 0돌", 6.0);
+        f.frames(4);
+        ctx.getInput().pressKey(MmorpgClient.skillKeys[0]);
+        f.cast();
+        java.util.function.DoubleSupplier dealt = () -> server.computeOnServer(s -> {
+            double sum = 0;
+            for (Husk h : player(s).level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 6, 0.5, -60, 6).inflate(40), h -> true)) sum += TestDummies.dealt(h);
+            return sum;
+        });
+        f.untilQuiet(dealt, 110, 30, 240);
+        f.end(dealt.getAsDouble());
+        boolean cast = server.computeOnServer(s -> RuneCast.cooldownLeft(player(s), r) > 0);
+        if (!cast) failures.add(family + " (film) not cast");
+        ctx.waitTicks(60); // 앞 룬의 하늘빛이 걷히게
     }
 
     /** 룬 하나를 실제 입력으로 쓰고 사진 · 피해 기록. move = "turn" 이면 30틱부터 2틱마다 몸을 1° 씩 오른쪽으로 */
