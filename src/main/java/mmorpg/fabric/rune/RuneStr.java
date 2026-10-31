@@ -38,7 +38,7 @@ final class RuneStr {
         double[][] cs = RuneKit.colorOf("str");
         double[] glow = cs[0];
         double[] core = cs[1];
-        SkillFx.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.6), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.2, "life", 0.26, "speed", 2.0,
+        RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.6), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.2, "life", 0.26, "speed", 2.0,
                 "spin", -8.0, "color", glow, "aura", new double[] {1.0, 0.72, 0.3}));
         SkillFx.play(level, "mace.smash_air", sp.position(), 0.8, 0.8);
         Tasks.later(2, () -> {
@@ -81,7 +81,7 @@ final class RuneStr {
                 Vec3 at = new Vec3(c.x + Math.cos(a) * 2.2, c.y + 1.0, c.z + Math.sin(a) * 2.2);
                 Opt o = Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", 2.0 + i * 0.2, "life", 0.28, "speed", 2.5, "spin", 90.0, "color", glow, "aura",
                         j % 2 == 1 ? core : null);
-                Runnable draw = () -> SkillFx.arc(level, at, dir, o);
+                Runnable draw = () -> RuneKit.arc(level, at, dir, o);
                 if (j < 2) draw.run();
                 else Tasks.later(j / 2, draw);
             }
@@ -119,7 +119,7 @@ final class RuneStr {
         Set<UUID> hit = new HashSet<>();
         SkillFx.play(level, "mace.heavy_smash_ground", start, 0.8, 1);
         SkillFx.shake(sp, 0.2, 0.25);
-        SkillFx.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.5), -0.3), f, Opt.of("shape", "heavy", "flip", true, "size", 2.0, "life", 0.24, "speed", 2.0,
+        RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.5), -0.3), f, Opt.of("shape", "heavy", "flip", true, "size", 2.0, "life", 0.24, "speed", 2.0,
                 "spin", 6.0, "color", glow, "aura", core));
         Vec3 side = V.rightOf(f);
         int length = (int) k.num("length");

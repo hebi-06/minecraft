@@ -280,7 +280,7 @@ final class RuneGladiator {
                 Vec3 dir = new Vec3(Math.cos(a + Math.PI / 2), 0, Math.sin(a + Math.PI / 2));
                 Vec3 at = new Vec3(c.x + Math.cos(a) * radius * 0.7, c.y + 1.0, c.z + Math.sin(a) * radius * 0.7);
                 boolean ahead = V.dot(V.flat(V.sub(at, c)), Kit.facingOf(sp)) > 0.6;
-                SkillFx.arc(level, at, dir, Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", 1.6, "life", 0.22, "speed", 2.0, "spin", i % 2 == 0 ? 30.0 : -30.0,
+                RuneKit.arc(level, at, dir, Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", 1.6, "life", 0.22, "speed", 2.0, "spin", i % 2 == 0 ? 30.0 : -30.0,
                         "color", STEEL, "aura", j % 2 == 0 ? DARK : null, "alpha", ahead ? 0.4 : 0.9));
             }
             RuneKit.zonePulse(level, c, STEEL, radius, 0.35);

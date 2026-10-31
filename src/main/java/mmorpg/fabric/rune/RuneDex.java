@@ -66,11 +66,11 @@ final class RuneDex {
             if (dist * qs[j] < 0.4) continue;
             RuneKit.shadeClone(sp, level, V.add(start, f, dist * qs[j]), f, 1, CLONE, glow, Opt.of("life", 0.3 + j * 0.08, "alpha", 0.4 + j * 0.2, "fade", 0.7));
         }
-        SkillFx.arc(level, V.up(V.add(start, f, 1.2), 1.1), f, Opt.of("shape", "thin", "flip", false, "size", 1.6, "life", 0.24, "speed", 4.0, "spin", -20.0,
+        RuneKit.arc(level, V.up(V.add(start, f, 1.2), 1.1), f, Opt.of("shape", "thin", "flip", false, "size", 1.6, "life", 0.24, "speed", 4.0, "spin", -20.0,
                 "color", glow, "aura", core));
         SkillFx.sparks(level, V.up(start, 0.5), glow, 6, 4);
         if (dist > 0.2) Kit.moveTo(sp, end); // 못 옮기면 (막힌 자리) 제자리에서 벰
-        RuneKit.rfx2(level, "wave", V.up(V.add(end, f, 1.9), 1.0), Opt.of("size", 1.2, "life", 0.22, "grow", 0.3, "fade", 0.6, "spin", -15.0), glow, core);
+        RuneKit.waveCard(level, V.up(V.add(end, f, 1.9), 1.0), f, V.UP, Opt.of("size", 1.2, "life", 0.22, "grow", 0.3, "fade", 0.6, "roll", 15.0), glow, core);
         SkillFx.play(level, "item.trident.riptide_1", start, 1.4, 0.8);
         SkillFx.play(level, "mob.enderdragon.flap", start, 1.8, 0.5);
         int n = 0;
@@ -138,7 +138,7 @@ final class RuneDex {
                 });
             }
         }
-        SkillFx.arc(level, V.up(V.add(head, f, 1.2), -0.2), f, Opt.of("shape", "thin", "flip", false, "size", 1.6, "life", 0.2, "speed", 4.0, "spin", 90.0,
+        RuneKit.arc(level, V.up(V.add(head, f, 1.2), -0.2), f, Opt.of("shape", "thin", "flip", false, "size", 1.6, "life", 0.2, "speed", 4.0, "spin", 90.0,
                 "color", glow));
         SkillFx.play(level, "random.bow", head, 1.8, 0.8);
         SkillFx.play(level, "item.trident.throw", head, 1.5, 0.7);
@@ -240,7 +240,7 @@ final class RuneDex {
                     boolean ahead = V.dot(V.flat(V.sub(at, c)), fc) > 0.4; // 1인칭 화면 앞을 지나는 칼은 흐리게
                     RuneKit.rfx2(level, "sword", at, Opt.of("dir", tang, "size", 0.5, "life", 0.17, "alpha", ahead ? 0.45 : 0.95, "vel", vel), glow, core);
                     if (j == 0) {
-                        SkillFx.arc(level, at, tang, Opt.of("shape", "thin", "flip", false, "size", 1.8, "life", 0.2, "speed", 3.0, "spin", 90.0, "color", glow,
+                        RuneKit.arc(level, at, tang, Opt.of("shape", "thin", "flip", false, "size", 1.8, "life", 0.2, "speed", 3.0, "spin", 90.0, "color", glow,
                                 "core", true));
                     }
                 }

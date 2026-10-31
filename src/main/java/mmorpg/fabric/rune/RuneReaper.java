@@ -132,7 +132,7 @@ final class RuneReaper {
         double speed = k.num("speed");
         int ticks = Math.max(1, (int) Math.round(len / speed * 20));
         // 낫을 가로로 휘두름 (왼쪽 → 오른쪽) + 핏빛 기운
-        SkillFx.arc(level, V.up(V.add(eye, f, 1.3), -0.25), f, Opt.of("shape", "heavy", "flip", true, "size", 2.2, "life", 0.22, "speed", 2.0, "spin", 12.0, "color",
+        RuneKit.arc(level, V.up(V.add(eye, f, 1.3), -0.25), f, Opt.of("shape", "heavy", "flip", true, "size", 2.2, "life", 0.22, "speed", 2.0, "spin", 12.0, "color",
                 glow, "aura", BLOOD));
         // 날아가는 초승달 (손 앞 1.2칸부터 — 1인칭 화면을 덮지 않게) + 뒤를 잇는 얇은 초승달
         RuneKit.rfx2(level, "wave", V.add(from, d, 1.2), Opt.of("dir", d, "speed", speed, "size", 1.9, "life", Math.max(0.05, (len - 1.2) / speed), "fade", 0.2,
@@ -185,9 +185,9 @@ final class RuneReaper {
             Vec3 f = V.flat(sp.getViewVector(1F));
             boolean back = i % 2 == 1;
             // 거대한 낫질 (두 겹) + 앞의 핏빛 초승달이 휩쓸며 커짐
-            SkillFx.arc(level, V.up(V.add(c, f, 1.7), 1.15), f, Opt.of("shape", "heavy", "flip", back, "size", 3.8, "life", 0.3, "speed", 1.5, "spin",
+            RuneKit.arc(level, V.up(V.add(c, f, 1.7), 1.15), f, Opt.of("shape", "heavy", "flip", back, "size", 3.8, "life", 0.3, "speed", 1.5, "spin",
                     back ? 70.0 : -70.0, "color", glow, "aura", BLOOD));
-            RuneKit.later(1, () -> SkillFx.arc(level, V.up(V.add(c, f, 2.2), 0.9), f, Opt.of("shape", "arc", "flip", back, "size", 3.0, "life", 0.24, "speed",
+            RuneKit.later(1, () -> RuneKit.arc(level, V.up(V.add(c, f, 2.2), 0.9), f, Opt.of("shape", "arc", "flip", back, "size", 3.0, "life", 0.24, "speed",
                     2.0, "spin", back ? 90.0 : -90.0, "color", BLOOD, "core", false, "alpha", 0.75)));
             Vec3 wv = V.up(V.add(c, f, 2.6), 1.0);
             RuneKit.rfx2(level, "wave", wv, Opt.of("dir", f, "speed", 5.0, "size", 2.8 * RuneKit.nearK(sp, wv, 3, 0.6), "life", 0.3, "grow", 0.35, "fade", 0.5,
@@ -244,7 +244,7 @@ final class RuneReaper {
                 Vec3 at = new Vec3(c.x + Math.cos(a) * radius * 0.62, c.y + 1.0, c.z + Math.sin(a) * radius * 0.62);
                 boolean ahead = V.dot(V.flat(V.sub(at, c)), Kit.facingOf(sp)) > 0.6;
                 int jj = j;
-                RuneKit.later(jj / 2, () -> SkillFx.arc(level, at, dir, Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", 2.0, "life", 0.26, "speed", 2.4,
+                RuneKit.later(jj / 2, () -> RuneKit.arc(level, at, dir, Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", 2.0, "life", 0.26, "speed", 2.4,
                         "spin", i % 2 == 0 ? 30.0 : -30.0, "color", glow, "aura", jj % 2 == 0 ? BLOOD : null, "alpha", ahead ? 0.5 : 1.0)));
             }
             // 도는 핏빛 초승달 (몸 둘레 — 3틱 동안)
@@ -257,14 +257,14 @@ final class RuneReaper {
                         double a = i * 1.3 + ss * 0.7 + j * Math.PI * 2 / 3;
                         Vec3 pos = new Vec3(cc.x + Math.cos(a) * radius * 0.7, cc.y + 1.1, cc.z + Math.sin(a) * radius * 0.7);
                         boolean ahead = V.dot(V.flat(V.sub(pos, cc)), Kit.facingOf(sp)) > 0.6;
-                        RuneKit.rfx2(sp.level(), "wave", pos, Opt.of("dir", new Vec3(-Math.sin(a), 0, Math.cos(a)), "size", 1.1, "life", 0.14, "spin", (double) (ss * 40),
+                        RuneKit.waveCard(sp.level(), pos, new Vec3(-Math.sin(a), 0, Math.cos(a)), V.UP, Opt.of("size", 1.1, "life", 0.14, "roll", (double) (-ss * 40),
                                 "alpha", ahead ? 0.45 : 0.95), glow, core);
                     }
                 });
             }
             SkillFx.fx(level, "rpg:whirlpool", V.up(c, 0.1), Opt.of("dir", V.ZERO, "size", radius * 0.95, "life", 0.45, "spin", i * 90.0, "speed", -560.0,
                     "color", BLOOD, "alpha", 0.6));
-            RuneKit.crescent(level, V.up(c, 0.08), V.UP, radius * 1.05, glow, core, i * 110.0, 0.4);
+            RuneKit.groundCrescent(level, V.up(c, 0.08), radius * 1.05, glow, core, i * 110.0, 0.4);
             drops(level, V.up(c, 0.6), 10, radius * 0.4);
             SkillFx.play(level, "entity.player.attack.sweep", c, 0.75 + i * 0.1, 0.9);
             for (LivingEntity e : Kit.around(sp, c, radius, 2.5)) {
@@ -303,7 +303,7 @@ final class RuneReaper {
         int delay = (int) k.num("delay");
         Vec3 eye = sp.getEyePosition();
         Vec3 f = V.flat(sp.getViewVector(1F));
-        SkillFx.arc(level, V.up(V.add(eye, f, 1.3), -0.2), f, Opt.of("shape", "heavy", "flip", false, "size", 2.4, "life", 0.24, "speed", 2.5, "spin", -40.0,
+        RuneKit.arc(level, V.up(V.add(eye, f, 1.3), -0.2), f, Opt.of("shape", "heavy", "flip", false, "size", 2.4, "life", 0.24, "speed", 2.5, "spin", -40.0,
                 "color", glow, "aura", BLOOD));
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", sp.position(), 0.7, 0.8);
         SkillFx.play(level, "item.trident.throw", sp.position(), 0.5, 0.8);
@@ -454,8 +454,10 @@ final class RuneReaper {
         RuneKit.later(fallAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 d = V.sub(V.up(g, 1.0), moonAt);
+            // 0.48.2 (사용자 "적월 … 참격이 정면을 안보고 있음"): 떠 있던 기울기 (-20° + 4°/초) 에서 떨어지는 동안 불룩한 날을 아래 (90°) 로 돌림 — 날이 땅을 보며 박힘
+            double s0 = -20.0 + 4.0 * (fallAt - delay) / 20.0;
             RuneBoost.rfx2a(level0, "moon", moonAt, Opt.of("dir", V.unit(d), "speed", V.len(d) / (FALL / 20.0), "size", 6.0, "life", FALL / 20.0, "grow",
-                    0.3, "spin", -20.0), glow, core);
+                    0.3, "spin", s0, "spinRate", (90.0 - s0) / (FALL / 20.0)), glow, core);
             SkillFx.play(level0, "mob.enderdragon.flap", moonAt, 0.5, 1.0);
             SkillFx.play(level0, "mob.wither.shoot", g, 0.5, 1.0);
         });
@@ -465,7 +467,7 @@ final class RuneReaper {
             if (level != level0) return;
             RuneKit.ultFlashFor(sp, level, g, "crimsonMoon", "flash", Opt.empty());
             RuneBoost.impact(level, g, glow, core, radius * 1.1); // 0.48.2 2D 강화: 달이 떨어진 자리의 터짐
-            RuneKit.crescent(level, V.up(g, 0.1), V.UP, radius * 1.25, glow, core, Kit.rand() * 360, 0.7);
+            RuneKit.groundCrescent(level, V.up(g, 0.1), radius * 1.25, glow, core, Kit.rand() * 360, 0.7);
             RuneKit.novaRing(level, g, 1.5, radius * 0.9, glow, BLOOD, Opt.of("life", 0.6));
             RuneKit.glowCrack(level, g, radius, glow, BLOOD, Opt.of("life", 1.4));
             SkillFx.fx(level, "rpg:ground_crack", V.up(g, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.1, "life", 1.5, "color", BLOOD,

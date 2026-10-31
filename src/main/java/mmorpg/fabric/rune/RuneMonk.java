@@ -267,7 +267,7 @@ final class RuneMonk {
                 double off = 2.4 + Math.abs(j) * 0.3;
                 SkillFx.fx(level, "rpg:light_cut", V.add(V.up(c, 0.08), dj, range * 0.5), Opt.of("dir", dj, "size", range * 0.45, "thick", 0.35, "life", 0.7, "delay",
                         0.45, "color", GOLD, "alpha", 0.9));
-                RuneKit.later(Math.abs(j), () -> SkillFx.arc(level, V.add(V.up(c, 1.1), dj, off), dj, Opt.of("shape", "arc", "size", 2.0, "life", 0.24, "speed",
+                RuneKit.later(Math.abs(j), () -> RuneKit.arc(level, V.add(V.up(c, 1.1), dj, off), dj, Opt.of("shape", "arc", "size", 2.0, "life", 0.24, "speed",
                         range * 1.2, "spin", 90.0, "color", GOLD, "aura", EMBER, "alpha", 0.85)));
             }
             SkillFx.fx(level, "rpg:shock_ring", V.up(V.add(c, f, 2.0), 0.08), Opt.of("dir", V.ZERO, "size", range * 0.35, "life", 0.45, "color", GOLD, "alpha", 0.9));

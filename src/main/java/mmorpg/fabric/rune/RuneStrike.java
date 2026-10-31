@@ -175,10 +175,10 @@ public final class RuneStrike {
         Vec3 head = sp.getEyePosition();
         Vec3 f = V.flat(sp.getViewVector(1F));
         double[] col = accent(k);
-        SkillFx.arc(level, V.up(V.add(head, f, 1.6), -0.3), f, Opt.of("shape", "thin", "flip", false, "size", 1.6, "life", 0.18, "speed", 4.0, "spin", -20.0,
+        RuneKit.arc(level, V.up(V.add(head, f, 1.6), -0.3), f, Opt.of("shape", "thin", "flip", false, "size", 1.6, "life", 0.18, "speed", 4.0, "spin", -20.0,
                 "color", col, "core", true));
         RuneKit.later(2, () -> {
-            if (!sp.isRemoved()) SkillFx.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.7), -0.35), f, Opt.of("shape", "thin", "flip", true, "size", 1.6,
+            if (!sp.isRemoved()) RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.7), -0.35), f, Opt.of("shape", "thin", "flip", true, "size", 1.6,
                     "life", 0.18, "speed", 4.0, "spin", 20.0, "color", col, "core", true));
         });
         SkillFx.play(level, "mob.breeze.whirl", sp.position(), 1.6, 0.6);
@@ -191,7 +191,8 @@ public final class RuneStrike {
         strikeCast(sp, k);
         ServerLevel level = sp.level();
         Vec3 f = V.flat(sp.getViewVector(1F));
-        RuneKit.rfx2(level, "wave", V.up(V.add(sp.position(), f, 2.4), 1.0), Opt.of("size", 1.8, "life", 0.28, "grow", 0.4, "fade", 0.6), accent(k), RuneKit.WHITE);
+        RuneKit.waveCard(level, V.up(V.add(sp.position(), f, 2.4), 1.0), f, V.UP, Opt.of("size", 1.8, "life", 0.28, "grow", 0.4, "fade", 0.6), accent(k),
+                RuneKit.WHITE);
         SkillFx.play(level, "item.spear.attack_miss", sp.position(), 0.9, 0.8);
         SkillFx.play(level, "random.anvil_use", sp.position(), 1.4, 0.3);
         return true;
@@ -324,7 +325,12 @@ public final class RuneStrike {
                 if (sw >= 0 && st.swing == sw) continue; // 같은 휘두르기 — 이미 셈 · 덧붙임
                 st.swing = sw;
                 if (Double.isFinite(st.left)) st.left -= 1;
-                strikeEffect(sp, victim, w, st);
+                int own = RuneKit.enter(sp); // 0.48.2 참격 판의 1인칭 나눔
+                try {
+                    strikeEffect(sp, victim, w, st);
+                } finally {
+                    RuneKit.leave(own);
+                }
                 if (st.left <= 0) {
                     strikeEnd(sp, st, true);
                     if (sw < 0) b.remove(g); // 휘두르기면 이번 휘두르기가 끝날 때까지 남김 (범위 적도 더한 피해 — buffTick 이 지움)

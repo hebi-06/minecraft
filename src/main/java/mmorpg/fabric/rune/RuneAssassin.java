@@ -258,7 +258,7 @@ final class RuneAssassin {
                 });
             }
         }
-        SkillFx.arc(level, V.up(V.add(head, f, 1.2), -0.2), f, Opt.of("shape", "thin", "flip", true, "size", 1.4, "life", 0.2, "speed", 4.0, "spin", 80.0,
+        RuneKit.arc(level, V.up(V.add(head, f, 1.2), -0.2), f, Opt.of("shape", "thin", "flip", true, "size", 1.4, "life", 0.2, "speed", 4.0, "spin", 80.0,
                 "color", glow));
         SkillFx.play(level, "item.trident.throw", head, 1.8, 0.7);
         SkillFx.play(level, "random.bow", head, 2.0, 0.5);

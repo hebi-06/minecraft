@@ -54,7 +54,7 @@ final class RuneBlade {
                 "spin", 20.0, "color", RuneKit.WHITE, "grow", 0.8, "fade", 0.6));
         SkillFx.fx(level, "rpg:light_cut", V.up(V.add(head, f, 2.0), -0.25), Opt.of("dir", V.rightOf(f), "size", 2.8, "thick", 0.2, "life", 0.32, "delay", 0.04,
                 "color", core, "alpha", 1.0));
-        SkillFx.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "arc", "flip", false, "size", 2.7, "life", 0.24, "speed", 3.0, "spin", -6.0,
+        RuneKit.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "arc", "flip", false, "size", 2.7, "life", 0.24, "speed", 3.0, "spin", -6.0,
                 "color", glow, "aura", core));
         RuneKit.rfx2(level, "wave", V.up(V.add(head, f, 2.3), -0.35), Opt.of("dir", f, "speed", 6.0, "size", 1.5, "life", 0.22, "grow", 0.35, "fade", 0.6, "spin", 4.0,
                 "alpha", 0.9), glow, RuneKit.WHITE);
@@ -103,7 +103,8 @@ final class RuneBlade {
         double life = Math.max(0.05, (len - s0) / speed);
         RuneKit.rfx2(level, "wave", V.add(from, dir, s0), Opt.of("dir", dir, "speed", speed, "size", k.num("width") * 0.8, "life", life, "fade", 0.15, "spin", -8.0),
                 glow, RuneKit.WHITE);
-        RuneKit.crescent(level, V.add(from, dir, 1.0), dir, 1.7, glow, core); // 휘두르는 순간
+        RuneKit.arc(level, V.add(from, dir, 1.0), dir, Opt.of("shape", "heavy", "flip", false, "size", 1.7, "life", 0.16, "speed", 0.0, "spin", -90.0, "color",
+                glow, "aura", core)); // 휘두르는 순간
         for (int s = 2; s < len; s += 2) {
             double delay = (s / len) * (len / speed);
             SkillFx.fx(level, "rpg:light_cut", V.add(from, dir, s), Opt.of("dir", dir, "size", 1.1, "thick", 0.16, "life", delay + 0.3, "delay", delay, "color",
@@ -177,7 +178,7 @@ final class RuneBlade {
                                 0.95 * RuneKit.nearK(pl, V.up(toFeet, 1), 3.5, 0.55)));
                     }
                 });
-                SkillFx.arc(d, V.add(eye, v, 1.3), v, Opt.of("shape", "thin", "flip", countered.size() % 2 == 0, "size", 2.0, "life", 0.2, "speed", 3.0, "spin", 35.0,
+                RuneKit.arcFor(pl, d, V.add(eye, v, 1.3), v, Opt.of("shape", "thin", "flip", countered.size() % 2 == 0, "size", 2.0, "life", 0.2, "speed", 3.0, "spin", 35.0,
                         "color", glow, "aura", core));
                 SkillFx.sparks(d, at, core, 8, 5);
             }
@@ -211,7 +212,7 @@ final class RuneBlade {
             ServerLevel d = sp.level();
             Vec3 eye = sp.getEyePosition();
             Vec3 f = V.flat(sp.getViewVector(1F));
-            SkillFx.arc(d, V.up(V.add(eye, f, 1.5), -0.3), f, Opt.of("shape", "arc", "flip", true, "size", 2.8, "life", 0.26, "speed", 3.0, "spin", 8.0, "color", glow,
+            RuneKit.arc(d, V.up(V.add(eye, f, 1.5), -0.3), f, Opt.of("shape", "arc", "flip", true, "size", 2.8, "life", 0.26, "speed", 3.0, "spin", 8.0, "color", glow,
                     "aura", core));
             RuneKit.rfx2(d, "wave", V.up(V.add(eye, f, 2.4), -0.4), Opt.of("dir", f, "speed", 5.0, "size", 1.6, "life", 0.24, "grow", 0.3, "fade", 0.6, "spin", -4.0),
                     glow, RuneKit.WHITE);
@@ -247,7 +248,7 @@ final class RuneBlade {
             List<LivingEntity> list;
             if (i < hits - 1) {
                 boolean vertical = i % 2 == 1;
-                SkillFx.arc(level, V.up(V.add(eye, f, 1.5), -0.3), f, Opt.of("shape", vertical ? "thin" : "arc", "flip", vertical, "size", vertical ? 2.4 : 2.6, "life",
+                RuneKit.arc(level, V.up(V.add(eye, f, 1.5), -0.3), f, Opt.of("shape", vertical ? "thin" : "arc", "flip", vertical, "size", vertical ? 2.4 : 2.6, "life",
                         0.24, "speed", 3.0, "spin", vertical ? 84.0 : -6.0, "color", glow, "aura", core));
                 RuneKit.rfx2(level, "wave", V.up(V.add(eye, f, 2.4), vertical ? -0.1 : -0.4), Opt.of("dir", f, "speed", 5.0, "size", vertical ? 1.3 : 1.5, "life", 0.22,
                         "grow", 0.3, "fade", 0.6, "spin", vertical ? 90.0 : -4.0), glow, RuneKit.WHITE);
@@ -324,7 +325,7 @@ final class RuneBlade {
                 Vec3 eye = sp.getEyePosition();
                 Vec3 f = V.flat(sp.getViewVector(1F));
                 double q = tt / charge;
-                RuneKit.rfx2(level, "wave", V.up(V.add(eye, f, 2.5), -0.2), Opt.of("size", 0.7 + q * 1.7, "life", 0.13, "alpha", 0.6 + 0.4 * q), glow, white);
+                RuneKit.waveCard(level, V.up(V.add(eye, f, 2.5), -0.2), f, V.UP, Opt.of("size", 0.7 + q * 1.7, "life", 0.13, "alpha", 0.6 + 0.4 * q), glow, white);
                 Vec3 side = V.rightOf(f);
                 for (int s : new int[] {-1, 1}) {
                     Vec3 a = V.add(V.up(V.add(eye, f, 2.4), -0.15), side, s * (2.4 - q * 1.6));

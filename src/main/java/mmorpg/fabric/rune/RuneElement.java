@@ -159,7 +159,7 @@ final class RuneElement {
         double[][] cs = colorOf("fire");
         double[] glow = cs[0];
         double[] core = cs[1];
-        SkillFx.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.9, "life", 0.28, "speed", 3.0, "spin", -6.0,
+        RuneKit.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.9, "life", 0.28, "speed", 3.0, "spin", -6.0,
                 "color", core, "aura", glow));
         elementWave(sp, "fire", false, 1.65);
         SkillFx.fx(level, "rpg:light_cut", V.up(V.add(head, f, 2.0), -0.25), Opt.of("dir", V.rightOf(f), "size", 2.6, "thick", 0.2, "life", 0.32, "delay", 0.04,
@@ -250,7 +250,7 @@ final class RuneElement {
         double[][] cs = colorOf("thunder");
         double[] glow = cs[0];
         double[] core = cs[1];
-        SkillFx.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "arc", "flip", true, "size", 2.9, "life", 0.24, "speed", 3.0, "spin", 8.0,
+        RuneKit.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "arc", "flip", true, "size", 2.9, "life", 0.24, "speed", 3.0, "spin", 8.0,
                 "color", core, "aura", glow));
         elementWave(sp, "thunder", false, 1.6);
         // 칼날을 따라 튀는 전기
@@ -303,7 +303,7 @@ final class RuneElement {
             double[] core = cs[1];
             if (!el.equals("thunder")) {
                 boolean vertical = el.equals("ice");
-                SkillFx.arc(level, V.up(V.add(eye, f, 1.5), -0.3), f, Opt.of("shape", vertical ? "thin" : "heavy", "flip", vertical, "size", vertical ? 2.5 : 2.8,
+                RuneKit.arc(level, V.up(V.add(eye, f, 1.5), -0.3), f, Opt.of("shape", vertical ? "thin" : "heavy", "flip", vertical, "size", vertical ? 2.5 : 2.8,
                         "life", 0.26, "speed", 3.0, "spin", vertical ? 84.0 : -6.0, "color", core, "aura", glow));
                 elementWave(sp, el, vertical, vertical ? 1.35 : 1.6);
                 if (el.equals("fire")) {
@@ -442,7 +442,7 @@ final class RuneElement {
                         0, 1, glow, core, Opt.of("h", 13.0, "life", 0.6, "skipNear", true)));
                 for (Kit.LineHit h : RuneKit.lineTargets(sp, from, d, len, width)) plan.add(new Planned(h.e(), el, d, Math.max(0, Math.round(h.t() / speed * 20))));
             }
-            SkillFx.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.6), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 3.6, "life", 0.3, "speed", 4.0,
+            RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.6), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 3.6, "life", 0.3, "speed", 4.0,
                     "spin", -4.0, "color", RuneKit.WHITE, "aura", colorOf("fire")[0]));
             SkillFx.play(level, "item.trident.thunder", from, 1.3, 0.8);
             SkillFx.play(level, "firework.large_blast", from, 1.0, 0.8);

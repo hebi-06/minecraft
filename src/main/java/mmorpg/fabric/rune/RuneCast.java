@@ -229,11 +229,14 @@ public final class RuneCast {
         BooleanSupplier run = () -> {
             Breakthrough.noteCast(sp, r, lv); // 콤보로 늦게 나가도 이 단계
             boolean ok;
+            int own = RuneKit.enter(sp); // 0.48.2 참격 판의 1인칭 나눔 (Tasks.later · SkillFx.every 가 이어 줌)
             try {
                 ok = fn.cast(sp, r, P, r.def());
             } catch (RuntimeException e) {
                 Mmorpg.LOG.warn("[mmorpg] rune {}", r.id(), e);
                 ok = false;
+            } finally {
+                RuneKit.leave(own);
             }
             if (ok) Breakthrough.onCast(sp, r, lv, P); // 6돌 초월: 금빛 각성 · 단계 효과 (한 번 더)
             if (ok) {

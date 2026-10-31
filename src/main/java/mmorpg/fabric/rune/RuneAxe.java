@@ -79,7 +79,7 @@ final class RuneAxe {
         double width = k.num("width");
         int out = Math.max(1, (int) Math.round(len / speed * 20));
         int back0 = out + (int) k.num("hover"); // 돌아오기 시작하는 틱
-        SkillFx.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.2), -0.2), f, Opt.of("shape", "heavy", "flip", true, "size", 1.5, "life", 0.2, "speed", 3.0,
+        RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.2), -0.2), f, Opt.of("shape", "heavy", "flip", true, "size", 1.5, "life", 0.2, "speed", 3.0,
                 "spin", 30.0, "color", glow, "aura", core));
         SkillFx.play(level, "item.trident.throw", sp.position(), 0.7, 1);
         SkillFx.play(level, "mob.breeze.whirl", sp.position(), 1.3, 0.6);
@@ -157,9 +157,9 @@ final class RuneAxe {
                         "alpha", 0.95), glow, core, AXE, null);
             });
         }
-        SkillFx.arc(level, V.up(V.add(head, f, 1.6), -0.1), f, Opt.of("shape", "heavy", "flip", false, "size", 2.4, "life", 0.26, "speed", 2.0, "spin", -80.0,
+        RuneKit.arc(level, V.up(V.add(head, f, 1.6), -0.1), f, Opt.of("shape", "heavy", "flip", false, "size", 2.4, "life", 0.26, "speed", 2.0, "spin", -80.0,
                 "color", glow, "aura", core));
-        RuneKit.later(2, () -> SkillFx.arc(level, V.up(V.add(head, f, 1.9), -0.4), f, Opt.of("shape", "heavy", "flip", true, "size", 2.0, "life", 0.22, "speed",
+        RuneKit.later(2, () -> RuneKit.arc(level, V.up(V.add(head, f, 1.9), -0.4), f, Opt.of("shape", "heavy", "flip", true, "size", 2.0, "life", 0.22, "speed",
                 2.0, "spin", -100.0, "color", BLOOD, "core", false, "alpha", 0.7)));
         SkillFx.play(level, "mace.smash_air", c, 0.7, 0.9);
         RuneKit.later(2, () -> {
@@ -271,7 +271,7 @@ final class RuneAxe {
             Vec3 axeAt = V.up(V.add(c, f, 1.7), 0.9);
             RuneKit.rfx2(level, "prop", axeAt, Opt.of("size", 1.15 * RuneKit.nearK(sp, axeAt, 3, 0.55), "life", 0.45, "spin", 180.0, "fade", 0.5, "alpha", 0.95),
                     glow, core, AXE, null);
-            SkillFx.arc(level, V.up(V.add(c, f, 1.6), 1.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.6, "life", 0.24, "speed", 1.0, "spin", -90.0,
+            RuneKit.arc(level, V.up(V.add(c, f, 1.6), 1.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.6, "life", 0.24, "speed", 1.0, "spin", -90.0,
                     "color", glow, "aura", core));
             SkillFx.burst(level, V.up(c, 0.5), glow, 2.2, 0.35);
             RuneKit.zonePulse(level, c, glow, radius, 0.5);
@@ -333,7 +333,7 @@ final class RuneAxe {
             // 내려찍는 거대한 도끼 + 땅이 갈라짐
             RuneKit.rfx2(level, "prop", V.up(g, 3.4), Opt.of("dir", V.DOWN, "speed", 26.0, "size", 1.4, "life", 0.1, "spin", 180.0), low ? BLOOD : glow, core, AXE,
                     null); // 도끼날이 아래 (그림은 날이 위)
-            SkillFx.arc(level, V.up(V.add(g, f, -0.4), 1.4), f, Opt.of("shape", "heavy", "flip", false, "size", 2.6, "life", 0.26, "speed", 1.0, "spin", -95.0,
+            RuneKit.arc(level, V.up(V.add(g, f, -0.4), 1.4), f, Opt.of("shape", "heavy", "flip", false, "size", 2.6, "life", 0.26, "speed", 1.0, "spin", -95.0,
                     "color", low ? BLOOD : glow, "aura", core));
             SkillFx.burst(level, at, low ? BLOOD : glow, low ? 2.6 : 1.8, 0.35);
             RuneKit.zonePulse(level, g, glow, 2.4, 0.45);
@@ -422,7 +422,7 @@ final class RuneAxe {
                 double a = (j / 2.0) * Math.PI * 2 + i * 0.8;
                 Vec3 dir = new Vec3(Math.cos(a + Math.PI / 2), 0, Math.sin(a + Math.PI / 2));
                 Vec3 at = new Vec3(c.x + Math.cos(a) * 2.3, c.y + 0.9, c.z + Math.sin(a) * 2.3);
-                SkillFx.arc(level, at, dir, Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", 2.2, "life", 0.26, "speed", 2.5, "spin", 90.0, "color", glow,
+                RuneKit.arc(level, at, dir, Opt.of("shape", "heavy", "flip", i % 2 == 1, "size", 2.2, "life", 0.26, "speed", 2.5, "spin", 90.0, "color", glow,
                         "aura", j == 1 ? BLOOD : null));
             }
             RuneKit.zonePulse(level, c, glow, radius, 0.4);

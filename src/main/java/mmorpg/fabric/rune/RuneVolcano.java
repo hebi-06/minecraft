@@ -185,7 +185,7 @@ final class RuneVolcano {
         Vec3 f = Kit.facingOf(sp);
         double radius = k.num("radius");
         double cone = k.num("cone");
-        SkillFx.arc(level, V.up(V.add(c, f, 2.4), 0.7), f, Opt.of("shape", "heavy", "flip", false, "size", 1.5, "life", 0.2, "speed", 1.0, "spin", -90.0, "alpha", 0.8, "color",
+        RuneKit.arc(level, V.up(V.add(c, f, 2.4), 0.7), f, Opt.of("shape", "heavy", "flip", false, "size", 1.5, "life", 0.2, "speed", 1.0, "spin", -90.0, "alpha", 0.8, "color",
                 LAVA, "aura", CHAR));
         Vec3 hit = V.add(c, f, 1.4);
         SkillFx.fx(level, "rpg:ground_crack", V.up(hit, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.1, "life", 1.4, "color", LAVA,

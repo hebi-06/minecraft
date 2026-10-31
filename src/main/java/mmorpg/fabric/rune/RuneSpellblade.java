@@ -73,7 +73,7 @@ final class RuneSpellblade {
         double[][] cs = RuneKit.colorOf("spellblade");
         double[] glow = cs[0];
         double[] core = cs[1];
-        SkillFx.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "arc", "flip", false, "size", 2.7, "life", 0.24, "speed", 3.0, "spin", -6.0,
+        RuneKit.arc(level, V.up(V.add(head, f, 1.4), -0.3), f, Opt.of("shape", "arc", "flip", false, "size", 2.7, "life", 0.24, "speed", 3.0, "spin", -6.0,
                 "color", core, "aura", glow));
         RuneKit.rfx2(level, "wave", V.up(V.add(head, f, 2.3), -0.35), Opt.of("dir", f, "speed", 6.0, "size", 1.45, "life", 0.22, "grow", 0.35, "fade", 0.6,
                 "spin", 4.0, "alpha", 0.9), glow, core);
@@ -222,7 +222,7 @@ final class RuneSpellblade {
         Vec3 from = V.up(start, 1.0);
         double width = k.num("width");
         List<Kit.LineHit> path = RuneKit.lineTargets(sp, from, f, len, width);
-        SkillFx.arc(level, V.up(V.add(start, f, 1.2), 1.1), f, Opt.of("shape", "thin", "flip", false, "size", 1.8, "life", 0.24, "speed", 5.0, "spin", -15.0,
+        RuneKit.arc(level, V.up(V.add(start, f, 1.2), 1.1), f, Opt.of("shape", "thin", "flip", false, "size", 1.8, "life", 0.24, "speed", 5.0, "spin", -15.0,
                 "color", core, "aura", glow));
         SkillFx.burst(level, from, glow, 1.1, 0.25);
         SkillFx.sparks(level, from, core, 6, 5);
@@ -231,7 +231,7 @@ final class RuneSpellblade {
         boolean turnBack = dist > 0.2 && !path.isEmpty();
         if (dist > 0.2) RuneKit.moveTo(sp, end, turnBack ? V.up(V.add(start, f, len * 0.45), 1.0) : null);
         Vec3 g = turnBack ? V.scale(f, -1) : f; // 도착해서 보는 쪽
-        SkillFx.arc(level, V.up(V.add(end, g, 0.8), 1.1), g, Opt.of("shape", "thin", "flip", true, "size", 2.0, "life", 0.26, "speed", 3.0, "spin", 20.0,
+        RuneKit.arc(level, V.up(V.add(end, g, 0.8), 1.1), g, Opt.of("shape", "thin", "flip", true, "size", 2.0, "life", 0.26, "speed", 3.0, "spin", 20.0,
                 "color", core, "aura", glow));
         SkillFx.ring(level, V.add(V.up(end, 1.5), g, 0.9), g, glow, 1.0, 0.3, 2.5);
         int cutN = 0;
@@ -399,7 +399,7 @@ final class RuneSpellblade {
             ServerLevel level = sp.level();
             Vec3 eye = sp.getEyePosition();
             Vec3 f = V.flat(sp.getViewVector(1F));
-            RuneKit.rfx2(level, "wave", V.up(V.add(eye, f, 2.8), -0.4), Opt.of("size", 3.3, "life", 0.3, "grow", 0.25, "fade", 0.5), glow, core);
+            RuneKit.waveCard(level, V.up(V.add(eye, f, 2.8), -0.4), f, V.UP, Opt.of("size", 3.3, "life", 0.3, "grow", 0.25, "fade", 0.5), glow, core);
             SkillFx.fx(level, "rpg:light_cut", V.up(V.add(eye, f, 3.2), -0.4), Opt.of("dir", V.rightOf(f), "size", 4.8, "thick", 0.3, "life", 0.4, "delay", 0.05,
                     "color", glow, "alpha", 1.0));
             SkillFx.play(level, "item.trident.thunder", eye, 1.4, 0.8);
@@ -599,7 +599,8 @@ final class RuneSpellblade {
         int ticks = Math.max(1, (int) Math.round(len / speed * 20));
         for (int t = 0; t <= ticks; t += 2) {
             Vec3 at = V.add(start, dir, Math.min(len, t / 20.0 * speed));
-            RuneKit.later(t, () -> RuneKit.crescent(level, at, dir, 1.25, glow, core, -90, 0.14));
+            RuneKit.later(t, () -> RuneKit.arc(level, at, dir, Opt.of("shape", "heavy", "flip", false, "size", 1.25, "life", 0.14, "speed", 0.0, "spin", -90.0,
+                    "color", glow, "aura", core)));
         }
         RuneKit.flyStreak(level, start, end, speed, glow, core, 0.6, 0.18);
         if (victim != null && !victim.isRemoved()) {

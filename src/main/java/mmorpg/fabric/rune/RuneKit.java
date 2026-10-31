@@ -221,6 +221,18 @@ public final class RuneKit {
         else Tasks.later((int) Math.round(t), fn);
     }
 
+    /**
+     * 0.48.2 지금 효과를 내는 룬의 주인 (Tasks.owner — RuneCast 가 쓰는 동안 정하고 Tasks.later · SkillFx.every 가 이어 줌): 참격 판 · 휘두른 자국 판은 주인이
+     * 1인칭이면 숨기고 원래 파티클 (카메라를 보는 그림) 을 주인의 1인칭에만 — 눈 바로 앞에 눕힌 판은 1인칭에서 가는 줄로 보임. 돌려준 값을 leave 에
+     */
+    public static int enter(ServerPlayer sp) {
+        return Tasks.owner(sp == null || sp.isRemoved() ? 0 : sp.getId());
+    }
+
+    public static void leave(int prev) {
+        Tasks.owner(prev);
+    }
+
     /** 언데드인지 (좀비 · 스켈레톤 · 팬텀 등) — 성기사 신성 피해 RUNE.undeadBonus 배 */
     public static boolean isUndead(Entity e) {
         return Kit.hasFamily(e, "undead");
@@ -435,11 +447,17 @@ public final class RuneKit {
 
     /** 색을 입히는 그림의 빛 + 심지 두 장 (cells = {빛 칸, 심지 칸} — o.cell 은 둘에 더함). coreAlpha = 심지만 다른 불투명도 (null = 같게) */
     public static void rfx2(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core, int[] cells, Double coreAlpha) {
-        // 0.48.2 날아가는 초승달 참격 (wave + speed) 은 참격 판으로 — 불룩한 날이 날아가는 쪽, 판은 눕힘 (spin = 날아가는 쪽 둘레로 기욺)
-        if ("wave".equals(name) && cells == null && o.num("speed", 0) > 0 && o.has("dir")) {
-            waveCard(level, at, o.vec("dir", V_UP), V_UP, o.with("roll", o.num("spin", 0)), glow, core);
+        // 0.48.2 날아가는 초승달 참격 (wave + speed) 은 참격 판으로 — 불룩한 날이 날아가는 쪽, 판은 눕힘 (spin = 화면의 기울기 → 날아가는 쪽 둘레로 기욺)
+        if ("wave".equals(name) && (cells == null || cells.length == 2 && cells[0] == 0 && cells[1] == 1) && coreAlpha == null && o.num("speed", 0) > 0
+                && o.has("dir")) {
+            waveCard(level, at, o.vec("dir", V_UP), V_UP, o.with("roll", -o.num("spin", 0)), glow, core);
             return;
         }
+        rfx2fx(level, name, at, o, glow, core, cells, coreAlpha);
+    }
+
+    /** rfx2 의 파티클 두 장 (참격 판으로 바꾸지 않음) */
+    private static void rfx2fx(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core, int[] cells, Double coreAlpha) {
         int[] c = cells != null ? cells : RFX.getOrDefault(name, new int[] {0, 1});
         double cell = o.num("cell", 0);
         double solo = o.num("solo", 0); // 0.29.0 주인마다 하나만 — 빛 · 심지가 서로를 지우지 않게 번호를 나눔
@@ -458,11 +476,105 @@ public final class RuneKit {
      * o: speed (칸/초) · size (rfx 의 size — 너비 2 × size) · life · grow · alpha · fade (끝에서 사라지는 몫)
      */
     public static void waveCard(ServerLevel level, Vec3 at, Vec3 dir, Vec3 face, Opt o, double[] glow, double[] core) {
-        Vec3 d = V.unit(dir);
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V_UP;
         double life = Math.max(0.05, o.num("life", 0.3));
-        mmorpg.fabric.Fx3d.spawn(level, "slash_wave", at, Opt.of("dir", d, "face", face, "roll", o.num("roll", 0), "vel", V.scale(d, o.num("speed", 0)), "scale",
-                o.num("size", 1), "life", life, "grow", o.num("grow", 0), "alpha", o.num("alpha", 1), "fadeIn", 0.04, "fadeOut",
-                Math.max(0.05, o.num("fade", 0.2) * life), "color", glow, "glow", core, "glowAlpha", 0.0, "shine", 0.2));
+        Opt card = Opt.of("dir", d, "face", face, "roll", o.num("roll", 0), "vel", V.scale(d, o.num("speed", 0)), "scale", o.num("size", 1), "life", life,
+                "grow", o.num("grow", 0), "alpha", o.num("alpha", 1), "fadeIn", 0.04, "fadeOut", Math.max(0.05, o.num("fade", 0.2) * life), "color", glow, "glow",
+                core, "glowAlpha", 0.0, "shine", 0.2);
+        int own = Tasks.owner();
+        if (own != 0) {
+            card = card.with("view", 1.0, "owner", (double) own);
+            // 주인의 1인칭: 원래 파티클 (카메라를 보는 초승달 — 판의 기울기를 화면의 돌림으로)
+            rfx2fx(level, "wave", at, Opt.of("dir", d, "speed", o.num("speed", 0), "size", o.num("size", 1), "life", life, "grow", o.num("grow", 0), "fade",
+                    o.num("fade", 0.2), "alpha", o.num("alpha", 1), "spin", screenSpin(d, face, o.num("roll", 0)), "view", 2.0, "owner", (double) own), glow,
+                    core, null, null);
+        }
+        mmorpg.fabric.Fx3d.spawn(level, "slash_wave", at, card);
+    }
+
+    /**
+     * 판 (Fx3d: 모델 +Y = d, +Z = face 를 d 에 수직으로 · d 둘레로 roll 도 — client R.rotateY(roll)) 을 주인의 눈 (d 쪽을 봄) 에서 본 기울기 → 카메라를 보는
+     * 파티클의 spin (도 — 화면에서 반시계). 면이 위에서 오른쪽으로 θ 기울면 판의 넓은 축은 화면의 오른쪽에서 아래로 θ → spin = -θ
+     */
+    static double screenSpin(Vec3 d, Vec3 face, double roll) {
+        Vec3 r = V.cross(d, V_UP);
+        if (V.len(r) < 1e-4) return -roll;
+        r = V.unit(r);
+        Vec3 u = V.cross(r, d);
+        double th = Math.toDegrees(Math.atan2(V.dot(face, r), V.dot(face, u))) + roll;
+        return -th;
+    }
+
+    /** 휘두름 그림 (SkillFx.arc 의 shape) 의 불룩한 쪽 (r 그림, 위에서 반시계 도 — tools/fx_models_card.py SLASH_SHAPES 와 같음) */
+    private static final Map<String, Double> ARC_BULGE = Map.of("arc", 0.0, "heavy", 90.0, "thin", 45.0);
+    /** 휘두른 자국 판의 크기 (파티클 size 의 몫 — 파티클은 1인칭 눈앞 화면을 채우게 커서, 세상에 놓으면 몸보다 너무 큼) */
+    private static final double ARC_CARD = 0.7;
+
+    /**
+     * 0.48.2 휘두른 자국 (사용자 "다른 참격이 나가는 것들도 저렇게 바꿔줘 … 참격이 정면을 안보고 있음"): SkillFx.arc 와 같은 값 (shape · flip · size · life ·
+     * speed · spin · color · aura · core · alpha) 을 카메라를 보는 파티클 대신 세상에 놓인 판 (fxmodel slash_&lt;shape&gt; — 모바일 휘두름 그림 다섯 칸 그대로) 으로.
+     * 판의 위 (불룩한 날) = dir, 판의 면 = 주인의 눈에서 본 화면의 기울기 (spin) 를 dir 둘레로 옮긴 것 — spin 0 의 가로 휘두름은 눕고, 세로 휘두름은 섬.
+     * 주인의 1인칭에는 원래 파티클 (view 2)
+     */
+    public static void arc(ServerLevel level, Vec3 at, Vec3 dir, Opt o) {
+        String shape = o.str("shape", "arc");
+        double size = o.num("size", 0);
+        if (size <= 0 || !ARC_BULGE.containsKey(shape)) {
+            SkillFx.arc(level, at, dir, o);
+            return;
+        }
+        int own = Tasks.owner();
+        if (own != 0) SkillFx.arc(level, at, dir, o.with("view", 2.0, "owner", (double) own));
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V_UP;
+        double spin = o.num("spin", 0);
+        double beta = ARC_BULGE.get(shape);
+        double roll = o.truthy("flip") ? 180 + beta - spin : -(beta + spin);
+        double life = Math.max(0.05, o.num("life", 0.3));
+        double a = o.num("alpha", 1);
+        double[] color = o.color("color", WHITE);
+        // 파티클의 움직임 (speed 칸/초, drag 5) 과 같은 거리를 점점 느리게
+        Vec3 to = V.add(at, d, o.num("speed", 0) / 5.0 * (1 - Math.exp(-5 * life)));
+        Opt base = Opt.of("dir", d, "face", V_UP, "roll", roll, "scale", size * ARC_CARD, "life", life, "grow", 0.25, "to", to, "travel", life, "ease", "out",
+                "anim", "play", "animSpeed", 1.0 / life, "fadeIn", 0.0, "fadeOut", life * 0.3, "glowAlpha", 0.0);
+        if (own != 0) base = base.with("view", 1.0, "owner", (double) own);
+        double[] aura = o.color("aura", null);
+        if (aura != null) mmorpg.fabric.Fx3d.spawn(level, "slash_" + shape + "_soft", at, base.with("scale", size * ARC_CARD * 1.03, "color", aura, "glow", aura,
+                "alpha", 0.8 * a));
+        boolean core = !(o.get("core") instanceof Boolean b && !b);
+        mmorpg.fabric.Fx3d.spawn(level, core ? "slash_" + shape : "slash_" + shape + "_soft", at, base.with("color", color, "glow", whiten(color, 0.8), "alpha",
+                0.95 * a, "shine", core ? 0.15 : 0.0));
+    }
+
+    /** arc 를 주인 sp 로 (룬을 쓰는 중이 아닌 때 — 반격 같은 맞을 때의 되받아침) */
+    public static void arcFor(ServerPlayer sp, ServerLevel level, Vec3 at, Vec3 dir, Opt o) {
+        int prev = enter(sp);
+        try {
+            arc(level, at, dir, o);
+        } finally {
+            leave(prev);
+        }
+    }
+
+    /** 0.48.2 땅에 눕힌 초승달 자국 (crescent 의 땅 판 — 불룩한 쪽이 수평 angle 도): 크게 내리친 · 휩쓴 자리 */
+    public static void groundCrescent(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double angle, double life) {
+        Vec3 d = turn(new Vec3(1, 0, 0), angle);
+        int own = Tasks.owner();
+        if (own != 0) crescentFx(level, at, V_UP, size, glow, core, angle, life, 2.0, own);
+        double lf = Math.max(0.05, life);
+        Opt base = Opt.of("dir", d, "face", V_UP, "scale", size * ARC_CARD, "life", lf, "grow", 0.25, "anim", "play", "animSpeed", 1.0 / lf, "fadeIn", 0.0,
+                "fadeOut", lf * 0.3, "glowAlpha", 0.0);
+        if (own != 0) base = base.with("view", 1.0, "owner", (double) own);
+        mmorpg.fabric.Fx3d.spawn(level, "slash_heavy_soft", at, base.with("scale", size * ARC_CARD * 1.03, "color", core, "glow", core, "alpha", 0.8));
+        mmorpg.fabric.Fx3d.spawn(level, "slash_heavy", at, base.with("color", glow, "glow", whiten(glow, 0.8), "alpha", 0.95, "shine", 0.15));
+    }
+
+    private static void crescentFx(ServerLevel level, Vec3 at, Vec3 dir, double size, double[] glow, double[] core, double spin, double life, double view, int own) {
+        SkillFx.arc(level, at, dir, Opt.of("shape", "heavy", "flip", false, "size", size, "life", life, "speed", 0.0, "spin", spin, "color", glow, "aura", core,
+                "view", view, "owner", (double) own));
+    }
+
+    static double[] whiten(double[] c, double t) {
+        return new double[] {c[0] + (1 - c[0]) * t, c[1] + (1 - c[1]) * t, c[2] + (1 - c[2]) * t};
     }
 
     /** 그림까지 거리: 1인칭 눈과 3인칭 카메라 (보는 쪽 뒤 4.5칸 · 위 1칸 근사) 중 가까운 쪽 */
