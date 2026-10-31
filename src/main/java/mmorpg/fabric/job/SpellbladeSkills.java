@@ -234,6 +234,17 @@ final class SpellbladeSkills {
             mmorpg.fabric.skill.Guards.set(sp, (int) k.num("guardFor", dur), k.num("guard", 0.2), null, null);
             DamageNumbers.showFace(sp, "§d§l룬 결계 §7— 받는 피해 −" + Math.round(k.num("guard", 0.2) * 100) + "%", 2.4, 0, -0.3);
         }
+        // 0.50.0 푸타르크 (사용자 "직업 고유 연출" — 룬 글자 띠 rfx_jrunes): 발밑 큰 고리 (검무의 범위) 와 몸 둘레 작은 고리 (룬 결계) 가 거꾸로 돌며 깜빡임
+        for (int t = 0; t < dur; t += 10) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel lv = sp.level();
+                JobFx.runeRing(lv, V.up(c, 0.14), r * 0.98, j, 10, tt * 4.5, 0.55, Opt.of("alpha", 0.85));
+                if (k.num("guard", 0) > 0) JobFx.runeRing(lv, V.up(sp.position(), 1.1), 1.25, j, 6, -tt * 9.0, 0.55, JobFx.hide1p(sp).with("alpha", 0.9, "vel",
+                        RuneKit.bodyVel(sp)));
+            });
+        }
         // 자리: 발밑에서 도는 둥근 베기 (벨 때마다 다시 — 거꾸로 번갈아) · 1인칭 눈앞 고리
         JobFx.ring(level, V.up(c, 0.06), r, j, false, gap / 20.0 + 0.2, Opt.of("alpha", 0.8));
         JobFx.eyeRing(sp, j, 2.4, 0.9, 0.45);

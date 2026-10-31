@@ -33,7 +33,7 @@ final class JobFx {
     static final double[] WHITE = RuneKit.WHITE;
     /**
      * 0.50.0 (사용자 "3d로 되어있는 애들 2d로 다시 바꾸자 대신 엄청 고퀄로 다듬어야 함"): 효과 물체 (마탄 · 화살 · 구체 · 비수 · 창 · 망치 · 방패 …) 는 모두 2D
-     * 그림 (0.47.0 입체 모델은 쓰지 않음 — 사신의 니플헤임의 문 · 망자의 손만 입체)
+     * — 파티클 그림 (이 파일의 함수 — v2 그림) 과, 0.47.0 입체 모델 자리에는 같은 크기의 2D 그림 판 (JobFx3d.CARDS — 사신의 니플헤임의 문 · 망자의 손만 입체)
      */
     static final boolean FLAT = true;
     static final int SLASH = 8;
@@ -86,6 +86,25 @@ final class JobFx {
     static final int CHAIN = 4;
     static final int BUCKLER = 4;
     static final int AEGIS = 6;
+    /**
+     * 0.50.0 v2 그림 (tools/job_fx_art_v2.py — 사용자 "3d로 되어있는 애들 2d로 다시 바꾸자 대신 엄청 고퀄로 다듬어야 함": 입체로 바꿨던 물체를 더 곱게 다시 그린
+     * 2D) 의 장 수. 크기 (size) 는 v1 과 같은 뜻이 되게 각 함수에서 몸 범위의 비로 맞춤
+     */
+    static final int BOLT2 = 4;
+    static final int ARROW2 = 4;
+    static final int SPEAR2 = 4;
+    static final int DAGGER2 = 8;
+    static final int MAUL2 = 4;
+    static final int BELL2 = 8;
+    static final int BUCKLER2 = 8;
+    static final int AEGIS2 = 6;
+    static final int STAR = 8;
+    static final int TOME = 12;
+    static final int BOW2 = 8;
+    static final int HITS = 6;
+    /** rfx_jhits 의 직업 줄 차례 (줄 i: 빛 칸 i × 12 + 0 ~ 5 · 심지 i × 12 + 6 ~ 11) */
+    private static final java.util.List<String> HIT_ROWS = java.util.List.of("swordsman", "warrior", "spellblade", "mage", "archer", "assassin", "lancer",
+            "reaper", "paladin", "priest", "guardian");
     /** 그림 칸의 고리 반지름 = 사각형 반 크기 × 0.88 (tools/job_fx_art.py ring_frame R = 칸의 0.44) */
     private static final double RING_R = 0.88;
 
@@ -215,7 +234,13 @@ final class JobFx {
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
         Vec3 b = Kit.bodyPoint(e);
-        two(level, "jhit", HIT, b, 0.3, Opt.of("size", size, "spin", Kit.rand() * 360, "fade", 0.2), outer(j), inner(j));
+        // 0.50.0 직업마다 다른 맞은 자리 (rfx_jhits — 사용자 "직업 고유 연출": 검사 십자 섬광 · 전사 금 간 충격 · 마검사 룬 고리 · 매지션 별빛 · 궁수 꽂힌 깃 ·
+        // 암살자 꽃잎 · 창술사 꿰뚫은 빛 · 사신 혼 · 성기사 번개 · 사제 빛 십자 · 수호기사 방패 문장 — 처음 두 장 번쩍 → 흩어짐)
+        int row = j == null ? -1 : HIT_ROWS.indexOf(j.id());
+        // 사신 (혼이 위로 솟음) 은 돌리지 않음, 나머지는 조금씩 기울임
+        double tilt = "reaper".equals(j.id()) ? 0 : Kit.rand() * 40 - 20;
+        if (row >= 0) two(level, "jhits", HITS, row * 12, b, 0.32, Opt.of("size", size * 0.9, "spin", tilt, "fade", 0.25), outer(j), inner(j));
+        else two(level, "jhit", HIT, b, 0.3, Opt.of("size", size, "spin", Kit.rand() * 360, "fade", 0.2), outer(j), inner(j));
         // 0.47.0 더 화려하게: 맞은 자리의 짧은 번쩍 (터짐 작은 장) · 튀는 불티 (직업 빛)
         two(level, "jburst", BURST, b, 0.2, Opt.of("size", size * 0.55, "spin", Kit.rand() * 360, "alpha", 0.75, "coreAlpha", 0.9, "fade", 0.3), outer(j), inner(j));
         mmorpg.fabric.skill.SkillFx.sparks(level, b, inner(j), 5, 3.5 + scale);
@@ -407,31 +432,22 @@ final class JobFx {
         return bolt(level, from, to, outer(j), inner(j), speed, size, o);
     }
 
-    /** 0.31.0 색을 정한 마탄 (스킬 강화 — 재료마다 그 색의 빛이 모임): from → to, 닿는 틱 */
+    /**
+     * 0.31.0 색을 정한 마탄 (스킬 강화 — 재료마다 그 색의 빛이 모임): from → to, 닿는 틱. 0.50.0 v2 별 마탄 (rfx_jbolt2 — 도는 네 뿔 별 머리 · 가늘어지는
+     * 꼬리 · 반짝임, 머리 = 길이의 0.58): v1 과 같은 길이 (× 1.09)
+     */
     static int bolt(ServerLevel level, Vec3 from, Vec3 to, double[] glow, double[] core, double speed, double size, Opt o) {
-        if (FLAT || o.truthy("flat")) return fly(level, "jbolt", BOLT, from, to, speed, size, 0.56, o, glow, core);
-        // 0.47.0 입체: 결정 마탄 (몸) + 2D 마탄은 옅은 빛
-        JobFx3d.boltFly(level, from, to, speed, size * 2.4, glow, core, o);
-        return fly(level, "jbolt", BOLT, from, to, speed, size, 0.56, o.with("alpha", o.num("alpha", 1) * 0.55, "coreAlpha", o.num("alpha", 1) * 0.45), glow, core);
+        return fly(level, "jbolt2", BOLT2, from, to, speed, size * 1.09, 0.58, o, glow, core);
     }
 
-    /** 빛의 화살 (rfx_jarrow) 이 from → to: 닿는 틱 */
+    /** 빛의 화살 (0.50.0 v2 바람 화살 rfx_jarrow2 — 잎 촉 · 살대 · 깃 셋 · 살대를 감아 도는 바람 띠 둘) 이 from → to: 닿는 틱 */
     static int arrow(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
-        if (FLAT || o.truthy("flat")) return fly(level, "jarrow", ARROW, from, to, speed, size, 0.97, o, outer(j), inner(j));
-        // 0.47.0 입체: 빛의 화살 (몸 — 촉이 to 에 닿음) + 2D 화살은 옅은 빛줄기
-        JobFx3d.arrowFly(level, from, to, speed, size * 1.67, o.num("stick", 0), j, JobFx3d.carry(o));
-        return fly(level, "jarrow", ARROW, from, to, speed, size, 0.97, o.with("alpha", o.num("alpha", 1) * 0.5, "coreAlpha", o.num("alpha", 1) * 0.4), outer(j),
-                inner(j));
+        return fly(level, "jarrow2", ARROW2, from, to, speed, size, 0.97, o, outer(j), inner(j));
     }
 
     /** 멈춰 있는 빛의 화살 (잔상 — 촉이 tip, 방향 dir) */
     static void arrowAt(ServerLevel level, Vec3 tip, Vec3 dir, double size, double life, Jobs.Job j, Opt o) {
-        if (!FLAT && !o.truthy("flat")) {
-            // 0.47.0 입체: 꽂힌 빛의 화살 + 2D 는 옅은 빛
-            JobFx3d.stuck(level, "light_arrow", tip, dir, JobFx3d.ARROW_TIP, size * 1.67, life, j, o);
-            o = o.with("alpha", o.num("alpha", 1) * 0.45, "coreAlpha", o.num("alpha", 1) * 0.35);
-        }
-        loop(level, "jarrow", ARROW, V.add(tip, dir, -size * 0.97), life, 10, o.with("dir", dir, "size", size), outer(j), inner(j));
+        loop(level, "jarrow2", ARROW2, V.add(tip, dir, -size * 0.97), life, 10, o.with("dir", dir, "size", size), outer(j), inner(j));
     }
 
     /** 깨지는 거울 (rfx_jshatter — 카메라를 봄): 금이 퍼지고 조각이 흩어짐 (반지름 약 size 칸) */
@@ -439,15 +455,12 @@ final class JobFx {
         two(level, "jshatter", SHATTER, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
-    /** 마력 구체 (rfx_jorb — 카메라를 봄, 이어 돌림): 구 반지름 radius 칸 (= 반 크기 × 0.6) */
+    /**
+     * 마력 구체 → 0.50.0 v2 떠도는 별 (rfx_jstar — 구 안의 빛나는 별 · 서로 다른 빠르기로 도는 기운 고리 둘 · 도는 반짝임, 카메라를 봄, 이어 돌림): 구 반지름
+     * radius 칸 (v1 rfx_jorb 의 반 크기 × 0.6 과 같은 전체 크기 — × 1.17)
+     */
     static void orb(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
-        if (!FLAT && !o.truthy("flat") && radius >= 0.14) {
-            // 0.47.0 입체: 비전 구체 (도는 고리 둘) + 2D 구체는 옅은 빛
-            JobFx3d.spawn(level, "arcane_orb", at, j, JobFx3d.carry(o).with("scale", radius / JobFx3d.ORB_R * 0.8, "life", life, "anim", "spin", "loop", 1.0, "pop",
-                    Math.min(0.2, life * 0.4), "fadeOut", Math.min(0.2, life * 0.5), "glowAlpha", 0.5, "shine", 0.2, "vel", o.vec("vel", null), "animPhase", Kit.rand()));
-            o = o.with("alpha", o.num("alpha", 1) * 0.6, "coreAlpha", o.num("alpha", 1) * 0.5);
-        }
-        loop(level, "jorb", ORB, at, life, 12, o.with("size", radius / 0.6), outer(j), inner(j));
+        loop(level, "jstar", STAR, at, life, 12, o.with("size", radius / 0.6 * 1.17), outer(j), inner(j));
     }
 
     /**
@@ -467,10 +480,14 @@ final class JobFx {
         }
     }
 
-    /** 펼쳐진 책 (rfx_jbook — 카메라를 봄): 책장이 넘어감 (0 ~ 5 이어 돌림) · closing 이면 닫힘 (6 ~ 7). 책 너비 약 size × 1.44 칸 */
+    /**
+     * 펼쳐진 책 (0.50.0 v2 마도서 rfx_jtome — 카메라를 봄): 책장이 넘어가며 별이 떠오름 (3 ~ 8 이어 돌림) · closing 이면 닫히며 번쩍 (9 ~ 11). 책 너비 약
+     * size × 1.44 칸 (v1 과 같게 × 0.95)
+     */
     static void book(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, boolean closing, Opt o) {
-        if (closing) cells(level, "jbook", BOOK, 6, 2, at, life, 0, false, o.with("size", size), outer(j), inner(j));
-        else cells(level, "jbook", BOOK, 0, 6, at, life, 9, true, o.with("size", size), outer(j), inner(j));
+        Opt b = o.with("size", size * 0.95);
+        if (closing) cells(level, "jtome", TOME, 9, 3, at, life, 0, false, b, outer(j), inner(j));
+        else cells(level, "jtome", TOME, 3, 6, at, life, 9, true, b, outer(j), inner(j));
     }
 
     /** 날리는 책장 (rfx_jpage — 이어 돌림) */
@@ -478,10 +495,21 @@ final class JobFx {
         loop(level, "jpage", PAGE, at, life, 10, o.with("size", size), glow, core);
     }
 
-    /** 빛의 활 (rfx_jbow — 카메라를 봄, 뒤에서 본 활): cell 0 ~ 3 = 당긴 정도, 4 ~ 5 = 놓음. 활 높이 약 size × 1.72 칸 */
+    /**
+     * 빛의 활 (0.50.0 v2 리커브 활 rfx_jbow2 — 시위를 당기며 빛이 모임 0 ~ 5 · 놓음 6 ~ 7, 옆에서 본 활을 눕혀 (spin −90 — 화살이 화면 위 = 앞, 궁극기의 활 판과 같은
+     * 모습)): cell · count 는 v1 (0 ~ 3 = 당긴 정도, 4 ~ 5 = 놓음) 의 칸 — v2 칸으로 옮김. 활 길이 약 size × 1.72 칸
+     */
     static void bow(ServerLevel level, Vec3 at, double size, Jobs.Job j, int cell, int count, double life, Opt o) {
-        cells(level, "jbow", BOW, Math.max(0, Math.min(BOW - 1, cell)), Math.max(1, Math.min(BOW - cell, count)), at, life, 0, false, o.with("size", size), outer(j),
-                inner(j));
+        int c0 = Math.max(0, Math.min(BOW - 1, cell));
+        int c1 = Math.max(c0, Math.min(BOW - 1, cell + Math.max(1, count) - 1));
+        int a = bow2(c0);
+        int b = bow2(c1);
+        cells(level, "jbow2", BOW2, a, b - a + 1, at, life, 0, false, o.with("size", size, "spin", o.num("spin", -90)), outer(j), inner(j));
+    }
+
+    /** v1 활 칸 → v2 칸 (당김 0 ~ 3 → 0 ~ 5 · 놓음 4 ~ 5 → 6 ~ 7) */
+    private static int bow2(int c) {
+        return c <= 3 ? (int) Math.round(c * 5 / 3.0) : 6 + Math.min(1, c - 4);
     }
 
     /** 과녁 (rfx_jtarget — 면이 normal 쪽): 바깥 고리 반지름 radius 칸 (= 반 크기 × 0.84). stage 0 = 조여 들어옴 (0 ~ 3) · 1 = 맞춰진 채 깜빡임 (3 ~ 5 이어 돌림) */
@@ -518,18 +546,14 @@ final class JobFx {
         }
     }
 
-    /** 도는 비수 (rfx_jdagger — 카메라를 봄, 화면에서 팽이처럼 돎): from → to 를 ticks 틱에. 비수 길이 약 size × 1.6 칸 */
+    /** 도는 비수 (rfx_jdagger2 — 카메라를 봄, 화면에서 팽이처럼 돎): from → to 를 ticks 틱에. 비수 길이 약 size × 1.6 칸 */
     static void dagger(ServerLevel level, Vec3 from, Vec3 to, int ticks, double size, Jobs.Job j, Opt o) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         double life = Math.max(0.05, ticks / 20.0);
-        if (!FLAT && !o.truthy("flat")) {
-            // 0.47.0 입체: 앞뒤로 구르는 비수 (2D 그림 대신)
-            JobFx3d.daggerFly(level, from, to, ticks, size * 2.25, life, j, o);
-            return;
-        }
-        loop(level, "jdagger", DAGGER, from, life, 16, o.with("dir", len > 1e-3 ? V.scale(d, 1 / len) : V.UP, "speed", len / life, "size", size, "spin",
-                Kit.rand() * 360, "spinRate", o.num("spinRate", 1260), "fade", o.num("fade", 0.1)), outer(j), inner(j));
+        // 0.50.0 v2 휜 단검 (rfx_jdagger2 — 여덟 장이 한 바퀴 · 가는 원 꼬리): 장이 돌림 (24장/초 = 초당 세 바퀴 — 그림을 더 돌리지 않음)
+        loop(level, "jdagger2", DAGGER2, from, life, o.num("fps", 24), o.with("dir", len > 1e-3 ? V.scale(d, 1 / len) : V.UP, "speed", len / life, "size", size * 1.1,
+                "spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 0), "fade", o.num("fade", 0.1)), outer(j), inner(j));
     }
 
     /** 그림자 연기 (rfx_jsmoke — 카메라를 봄): 뭉게뭉게 퍼지며 사라짐 (반지름 약 size 칸). 색 = 짙은 빛 · 그보다 옅은 빛 (어두운 연기는 섞는 그림이라 어둡게 보임) */
@@ -560,22 +584,13 @@ final class JobFx {
 
     /** 빛의 창 (rfx_jspear — 방향으로 누움, 오른쪽이 창끝): 창끝 tip 이 dir (단위) 쪽으로 speed 칸/초 (0 = 멈춤). 길이 = size × 2 */
     static void spear(ServerLevel level, Vec3 tip, Vec3 dir, double size, double speed, double life, Jobs.Job j, Opt o) {
-        if (!FLAT && !o.truthy("flat")) {
-            // 0.47.0 입체: 빛의 창 (창끝 tip · 움직이면 dir 쪽으로 speed) + 2D 창은 옅은 빛
-            Vec3 vel = V.add(o.vec("vel", V.ZERO), dir, speed);
-            JobFx3d.stuck(level, "spear", tip, dir, JobFx3d.SPEAR_TIP, size * 0.71, life, j, o.with("vel", V.len(vel) > 1e-3 ? vel : null, "fade", o.num("fade", 0.25)));
-            o = o.with("alpha", o.num("alpha", 1) * 0.45, "coreAlpha", o.num("alpha", 1) * 0.35);
-        }
-        loop(level, "jspear", SPEAR, V.add(tip, dir, -size * 0.96), life, 14, o.with("dir", dir, "size", size, "speed", speed), outer(j), inner(j));
+        // 0.50.0 v2 긴 창 (rfx_jspear2 — 잎 창날 · 작은 가름쇠 · 감은 손잡이 · 흐르는 빛, 창끝 = 길이의 0.98)
+        loop(level, "jspear2", SPEAR2, V.add(tip, dir, -size * 0.98), life, 14, o.with("dir", dir, "size", size, "speed", speed), outer(j), inner(j));
     }
 
     /** 날아가는 빛의 창 from → to (창끝이 to 에 닿음): 닿는 틱 */
     static int spearFly(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
-        if (FLAT || o.truthy("flat")) return fly(level, "jspear", SPEAR, from, to, speed, size, 0.96, o, outer(j), inner(j));
-        // 0.47.0 입체: 날아가 꽂히는 빛의 창 (stick 초 머무름) + 2D 창은 옅은 빛줄기
-        JobFx3d.spearFly(level, from, to, speed, size * 0.71, o.num("stick", 0.25), j, JobFx3d.carry(o));
-        return fly(level, "jspear", SPEAR, from, to, speed, size, 0.96, o.with("alpha", o.num("alpha", 1) * 0.45, "coreAlpha", o.num("alpha", 1) * 0.35), outer(j),
-                inner(j));
+        return fly(level, "jspear2", SPEAR2, from, to, speed, size, 0.98, o, outer(j), inner(j));
     }
 
     /** 혼불 (rfx_jsoul — 카메라를 봄, 이어 돌림): 흔들리는 혼의 불꽃 (높이 약 size × 2 칸) */
@@ -635,20 +650,10 @@ final class JobFx {
                 inner(j));
     }
 
-    /** 번개 대망치 (rfx_jmaul — 세워 카메라 쪽으로 돎, 이어 돌림 · 머리가 아래, 그림 192 × 256): 가운데 at · 높이 약 size × 2.67 칸 */
+    /** 번개 대망치 (rfx_jmaul2 — 세워 카메라 쪽으로 돎, 이어 돌림 · 머리가 아래): 가운데 at · 높이 약 size × 2.67 칸 */
     static void maul(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        if (!FLAT && !o.truthy("flat")) {
-            // 0.47.0 입체: 번개 대망치 (머리가 아래 — 그림 아래 끝의 머리 가운데가 모델 가운데) + 2D 망치는 번개 빛으로 옅게
-            double scale = size * 2.67 / JobFx3d.MAUL_LEN;
-            Vec3 head = V.up(at, -(size * 2.67 / 2) + 0.3 * scale);
-            Vec3 vel = o.has("speed") ? V.scale(o.vec("dir", V.DOWN), o.num("speed", 0)) : null;
-            // lean: 머리 쪽 (+Y) — 자루가 비스듬히 솟게 (1인칭 앞에 떨어지는 망치의 자루가 화면 가운데를 가리지 않게)
-            JobFx3d.spawn(level, "maul", head, j, JobFx3d.carry(o).with("dir", o.vec("lean", V.DOWN), "faceCam", 1.0, "scale", scale, "life", life, "vel", vel, "grow", o
-                    .numOrNull("grow"),
-                    "fadeOut", Math.min(life, o.num("fade", 0.2) * life + 0.05), "glowAlpha", 0.55, "shine", 0.35));
-            o = o.with("alpha", o.num("alpha", 1) * 0.45, "coreAlpha", o.num("alpha", 1) * 0.4);
-        }
-        loop(level, "jmaul", MAUL, at, life, 12, o.with("size", size), outer(j), inner(j));
+        // 0.50.0 v2 대망치 (rfx_jmaul2 — 머리를 기어 다니는 번개 · 빛나는 룬 띠, 그림 256 × 384): v1 과 같은 높이 (× 0.88)
+        loop(level, "jmaul2", MAUL2, at, life, 12, o.with("size", size * 0.88), outer(j), inner(j));
     }
 
     /**
@@ -695,15 +700,18 @@ final class JobFx {
         loop(level, "jstigma", STIGMA, at, life, 8, o.with("size", size), outer(j), inner(j));
     }
 
-    /** 큰 종 (rfx_jbell — 세워 카메라 쪽으로 돎): 한 번 흔들리며 울림 (소리 물결) · 가운데 at · 높이 약 size × 2 칸 */
+    /** 큰 종 (0.50.0 v2 장식 종 rfx_jbell2 — 세워 카메라 쪽으로 돎): 왼쪽 → 가운데 → 오른쪽 → 가운데로 흔들리며 울림 (아래로 퍼지는 소리 고리) · 가운데 at · 높이 약 size × 2 칸 */
     static void bell(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
-        two(level, "jbell", BELL, at, life, o.with("size", size), glow, core);
+        two(level, "jbell2", BELL2, at, life, o.with("size", size * 0.91), glow, core);
     }
 
-    /** 가만히 매달린 종 (rfx_jbell 첫 장 — 내려오는 동안) */
+    /** 가만히 매달린 종 (rfx_jbell2 의 가운데 장 — 내려오는 동안) */
     static void bellStill(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
-        cells(level, "jbell", BELL, 0, 1, at, life, 1, false, o.with("size", size), glow, core);
+        cells(level, "jbell2", BELL2, BELL_STILL, 1, at, life, 1, false, o.with("size", size * 0.91), glow, core);
     }
+
+    /** rfx_jbell2 에서 종이 똑바로 선 장 */
+    static final int BELL_STILL = 2;
 
     /** 빛의 사슬 (rfx_jchain — 방향으로 누움, 이어 돌림 · 그림 256 × 32): from → to 를 seg 칸 조각으로 (굵기 = 조각 길이 / 8) */
     static void chain(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double seg, double life, Opt o) {
@@ -719,43 +727,115 @@ final class JobFx {
         }
     }
 
-    /** 둥근 방패 (rfx_jbuckler — 카메라를 봄, 이어 돌림 · 화면에서 팽이처럼 돎): 반지름 약 size × 0.9 칸 */
+    /** 둥근 방패 (0.50.0 v2 rfx_jbuckler2 — 카메라를 봄, 앞면이 타원으로 눌렸다 펴지며 도는 여덟 장 + 화면에서 팽이처럼 돎): 반지름 약 size × 0.9 칸 */
     static void buckler(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        loop(level, "jbuckler", BUCKLER, at, life, 16, o.with("size", size, "spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 1080)), outer(j), inner(j));
+        loop(level, "jbuckler2", BUCKLER2, at, life, 20, o.with("size", size, "spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 720)), outer(j), inner(j));
     }
 
     /** 날아가는 방패 from → to (speed 칸/초): 닿는 틱 */
     static int bucklerFly(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Jobs.Job j, Opt o) {
-        if (FLAT || o.truthy("flat")) return fly(level, "jbuckler", BUCKLER, from, to, speed, size, 0, o.with("spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 1080)),
-                outer(j), inner(j));
-        // 0.47.0 입체: 원반처럼 눕혀 도는 둥근 방패 (2D 그림 대신)
-        Vec3 d = V.sub(to, from);
-        double len = V.len(d);
-        double secs = Math.max(0.05, len / Math.max(1, speed));
-        Vec3 u = len < 1e-3 ? new Vec3(1, 0, 0) : V.scale(d, 1 / len);
-        JobFx3d.spawn(level, "buckler", from, j, JobFx3d.carry(o).with("to", to, "ctrl", V.lerp(from, to, 0.5), "travel", secs, "life", secs + 0.02, "dir", u, "face",
-                V.UP, "spin", o.num("spinRate", 1080), "spinAxis", "z", "scale", size * 0.9 / JobFx3d.BUCKLER_R * 0.75, "glowAlpha", 0.5, "shine", 0.25, "fadeOut",
-                o.num("fade", 0.05) * secs));
-        return Math.max(1, (int) Math.round(secs * 20));
+        return fly(level, "jbuckler2", BUCKLER2, from, to, speed, size, 0, o.with("spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 720)), outer(j), inner(j));
     }
 
     /**
-     * 빛의 방패 (rfx_jaegis — 세워 카메라 쪽으로 돎, 그림 192 × 256 · 긴 연 모양): stage 0 = 나타남 (0 ~ 1) · 1 = 버팀 (2 ~ 3 이어 돌림) · 2 = 금이 가며 사라짐
-     * (4 ~ 5). 가운데 at · 높이 약 size × 2.67 칸
+     * 빛의 방패 (rfx_jaegis2 — 세워 카메라 쪽으로 돎, 긴 연 모양): stage 0 = 나타남 · 1 = 버팀 (이어 돌림) · 2 = 금이 가며 사라짐. 가운데 at · 높이 약 size × 2.67 칸
      */
     static void aegis(ServerLevel level, Vec3 at, double size, Jobs.Job j, int stage, double life, Opt o) {
-        if (stage < 2 && !FLAT && !o.truthy("flat") && !o.has("solo")) {
-            // 0.47.0 입체: 연 모양 빛의 방패 (보는 사람 쪽 — 그림처럼) + 2D 방패는 옅은 빛
-            double scale = size * 2.67 / JobFx3d.AEGIS_H;
-            JobFx3d.spawn(level, "aegis", V.up(at, 0.1 * scale), j, JobFx3d.carry(o).with("dir", V.UP, "faceCam", 1.0, "scale", scale, "life", life, "pop",
-                    stage == 0 ? Math.min(0.15, life * 0.5) : null, "vel", o.vec("vel", null), "fadeOut", Math.min(0.2, life * 0.5), "glowAlpha", 0.5, "shine", 0.3));
-            o = o.with("alpha", o.num("alpha", 1) * 0.4, "coreAlpha", o.num("alpha", 1) * 0.35);
-        }
-        Opt b = o.with("size", size);
+        // 0.50.0 v2 연 모양 문장 방패 (rfx_jaegis2 — 날개 달린 별 문장, 0 ~ 2 빛 줄에서 나타남 · 3 ~ 5 버팀 (빛이 지나감)): v1 과 같은 높이 (× 1.18).
+        // 사라짐 (stage 2) 은 v2 에 깨지는 장이 없어 버팀 마지막 장이 흐려지며 깨지는 거울 (rfx_jshatter) 이 겹침
+        Opt b = o.with("size", size * 1.18);
         switch (stage) {
-            case 0 -> cells(level, "jaegis", AEGIS, 0, 2, at, life, 0, false, b, outer(j), inner(j));
-            case 1 -> cells(level, "jaegis", AEGIS, 2, 2, at, life, 6, true, b, outer(j), inner(j));
-            default -> cells(level, "jaegis", AEGIS, 4, 2, at, life, 0, false, b, outer(j), inner(j));
+            case 0 -> cells(level, "jaegis2", AEGIS2, 0, 3, at, life, 0, false, b, outer(j), inner(j));
+            case 1 -> cells(level, "jaegis2", AEGIS2, 3, 3, at, life, 6, true, b, outer(j), inner(j));
+            default -> {
+                cells(level, "jaegis2", AEGIS2, 5, 1, at, life, 0, false, b.with("fade", 0.9), outer(j), inner(j));
+                shatter(level, at, size * 1.3, j, life, o.with("alpha", o.num("alpha", 1) * 0.85));
+            }
         }
+    }
+
+    // ------------------------------------------------------------ 0.50.0 직업 고유 그림 (tools/job_fx_art_v2.py — 사용자 "직업 고유 연출")
+
+    static final int VALWING = 6;
+    static final int ECLIPSE = 8;
+    static final int ROSE = 8;
+    static final int FROST = 6;
+    static final int RUNES = 4;
+    static final int FEATHER = 8;
+    static final int WALL = 4;
+
+    /**
+     * 발키리의 날개 (rfx_jvalwing — 세워 카메라 쪽으로 돎, 이어 돌림 · 천천히 날갯짓): 등 뒤 (몸에서 뒤로 0.35칸 · 위로 1.3칸) · 너비 약 size × 2 칸, ticks 동안
+     * 4틱마다 다시 그림 (주인마다 하나 — solo, 몸을 따라감). 1인칭에서는 숨김 (등 뒤라 눈앞을 가리지 않게)
+     */
+    static void valWings(ServerPlayer sp, Jobs.Job j, double size, int ticks, double alpha) {
+        String life = RuneKit.lifeToken(sp);
+        double phase = Kit.rand() * VALWING;
+        for (int t = 0; t < Math.max(1, ticks); t += 4) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 f = Kit.facingOf(sp);
+                Vec3 at = V.up(V.add(sp.position(), f, -0.35), 1.3);
+                double fade = tt + 4 >= ticks ? 0.6 : 0.0;
+                cells(sp.level(), "jvalwing", VALWING, 0, VALWING, at, 0.3, 8, true, hide1p(sp).with("size", size * (tt == 0 ? 0.85 : 1.0), "vel", RuneKit.bodyVel(sp),
+                        "solo", 37.0, "phase", phase + tt * 8 / 20.0, "alpha", alpha, "fade", fade), outer(j), inner(j));
+            });
+        }
+    }
+
+    /** 검은 해 (rfx_jeclipse — 카메라를 봄): 커지며 나타남 (0 ~ 3) 뒤 일렁이는 코로나가 맥동 (4 ~ 7 이어 돌림). 지름 약 size × 1.6 칸 */
+    static void eclipse(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        double grow = Math.min(0.5, life * 0.3);
+        cells(level, "jeclipse", ECLIPSE, 0, 4, at, grow, 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
+        RuneKit.later(Math.max(1, (int) Math.round(grow * 20) - 1), () -> cells(level, "jeclipse", ECLIPSE, 4, 4, at, Math.max(0.1, life - grow), 8, true,
+                o.with("size", size, "fade", o.num("fade", 0.25)), outer(j), inner(j)));
+    }
+
+    /** 검은 장미 (rfx_jrose — 카메라를 봄): 피어나 (0 ~ 4) 꽃잎이 흩어짐 (5 ~ 7). 지름 약 size × 1.5 칸 */
+    static void rose(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        two(level, "jrose", ROSE, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 30 - 15, "fade", o.num("fade", 0.2)),
+                outer(j), inner(j));
+    }
+
+    /** 얼음 결정 표시 (rfx_jfrost — 카메라를 봄): 자라나 (빙결) 금이 가며 깨짐 — 몸 가운데 · 몸 크기에 맞춤, ticks 동안. 색 = 얼음 빛 (glow · core) */
+    static void frost(LivingEntity e, double[] glow, double[] core, int ticks) {
+        if (!(e.level() instanceof ServerLevel level)) return;
+        double size = 0.75 + Kit.bodyPad(e) * 0.8 + e.getBbHeight() * 0.15;
+        two(level, "jfrost", FROST, Kit.bodyPoint(e), Math.max(0.2, ticks / 20.0), Opt.of("size", size, "spin", Kit.rand() * 30 - 15, "fade", 0.2, "vel",
+                RuneKit.entVel(e)), glow, core);
+    }
+
+    /**
+     * 룬 고리 (rfx_jrunes — 방향으로 눕는 각진 글자 띠, 이어 돌림 · 차례로 깜빡임): center 둘레 반지름 radius 칸의 수평 고리를 n 조각의 띠로 (조각마다 고리를 따라
+     * 누움 — 보는 사람 쪽으로 돎). turn = 고리를 돌리는 각 (도 — 조각 자리)
+     */
+    static void runeRing(ServerLevel level, Vec3 center, double radius, Jobs.Job j, int n, double turn, double life, Opt o) {
+        int m = Math.max(3, n);
+        double half = Math.PI * radius / m * 1.02;
+        for (int i = 0; i < m; i++) {
+            double a = Math.toRadians(turn) + i * 2 * Math.PI / m;
+            Vec3 at = new Vec3(center.x + Math.cos(a) * radius, center.y, center.z + Math.sin(a) * radius);
+            Vec3 tan = new Vec3(-Math.sin(a), 0, Math.cos(a));
+            cells(level, "jrunes", RUNES, 0, RUNES, at, life, 8, true, o.with("dir", tan, "size", half, "phase", (double) (i % RUNES)), outer(j), inner(j));
+        }
+    }
+
+    /** 떠다니는 깃털 n 개 (rfx_jfeather — 카메라를 봄, 이어 돌림 · 뒤집힘): at 둘레 spread 칸에서 천천히 내려앉음 (크기 약 size 칸) */
+    static void feathers(ServerLevel level, Vec3 at, int n, double spread, double size, Jobs.Job j, double life, Opt o) {
+        for (int i = 0; i < n; i++) {
+            Vec3 p = V.add(at, new Vec3((Kit.rand() - 0.5) * 2 * spread, (Kit.rand() - 0.3) * spread, (Kit.rand() - 0.5) * 2 * spread));
+            Vec3 vel = new Vec3((Kit.rand() - 0.5) * 0.6, -0.35 - Kit.rand() * 0.35, (Kit.rand() - 0.5) * 0.6);
+            cells(level, "jfeather", FEATHER, 0, FEATHER, p, life * (0.8 + Kit.rand() * 0.4), 10, true, o.with("size", size * (0.8 + Kit.rand() * 0.4), "vel", vel,
+                    "spin", Kit.rand() * 360, "fade", o.num("fade", 0.4)), outer(j), inner(j));
+        }
+    }
+
+    /** 땅에서 솟는 돌 성벽 (rfx_jwall — 세워 카메라 쪽으로 돎): 낮음 → 다 솟음 (0 ~ 3, rise 초) 뒤 그대로 (금은 빛 줄). 땅 ground 에 아래 끝 · 높이 약 size × 2 칸 */
+    static void wall(ServerLevel level, Vec3 ground, double size, Jobs.Job j, double rise, double life, Opt o) {
+        Vec3 at = V.up(ground, size);
+        cells(level, "jwall", WALL, 0, WALL, at, Math.max(0.05, rise), 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
+        RuneKit.later(Math.max(1, (int) Math.round(rise * 20) - 1), () -> cells(level, "jwall", WALL, WALL - 1, 1, at, Math.max(0.1, life - rise), 1, false,
+                o.with("size", size, "fade", o.num("fade", 0.3)), outer(j), inner(j)));
     }
 }

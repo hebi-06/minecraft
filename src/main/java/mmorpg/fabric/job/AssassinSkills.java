@@ -75,6 +75,8 @@ final class AssassinSkills {
             JobMove.run(sp, JobMove.to(0, 2, JobMove.at(near), JobMove.OUT), JobMove.hold(2, out), JobMove.to(out, out + 4, JobMove.at(start), JobMove.OUT));
         }
         JobKit.strikeSplit(sp, e, j, P, mult, lines, gap, false, full, life, 0, null);
+        // 0.50.0 검은 장미 (사용자 "직업 고유 연출"): 대상의 몸에서 장미가 피어나 (표식이 많을수록 크게) 마지막 연격에 꽃잎으로 흩어짐
+        JobFx.rose(level, Kit.bodyPoint(e), 0.55 + Kit.bodyPad(e) * 0.4 + 0.08 * n, j, Math.max(0.45, (lines - 1) * gap / 20.0 + 0.35), Opt.of("vel", RuneKit.entVel(e)));
         // 1인칭: 눈앞에서 빠르게 엇갈려 긋는 두 베기
         JobFx.slash(sp, j, 1.8, 0.3, 1.15, 20.0, 0.18);
         RuneKit.later(gap, () -> {
@@ -354,6 +356,9 @@ final class AssassinSkills {
         Ult.sky(level0, home, "rpg:ult_night", finalAt + 25);
         Kit.noFall(sp, finalAt + 30);
         RpgCombat.setSteadfast(sp, finalAt + 10);
+        // 0.50.0 일식의 밤 (사용자 "직업 고유 연출"): 하늘에 검은 해가 떠올라 (커지며 나타남 → 코로나가 맥동) 마무리까지 — 앞 위 하늘, 모두에게 보임
+        Vec3 sunAt = V.up(V.add(home, Kit.facingOf(sp), 7), 9);
+        JobFx.eclipse(level0, sunAt, 3.2, j, finalAt / 20.0 + 0.8, Opt.of("alpha", 0.95));
         // 시작: 그림자 연기 · 꽃잎 소용돌이 · 어두운 번쩍임 · 1인칭 눈앞 고리
         JobFx.smoke(level0, V.up(home, 1.0), 1.6, j, 0.8, JobFx.hide1p(sp));
         JobFx.petals(level0, V.up(home, 1.2), 14, 3.0, 0.14, j, 0.9, Opt.empty());

@@ -412,6 +412,8 @@ final class GuardianSkills {
             RuneKit.later(3 + i % 3, () -> {
                 RuneKit.rockBurst(level, V.up(g, 0.3), 3, 3.5, 0.18);
                 SkillFx.fx(level, "rpg:dust", V.up(g, 0.6), Opt.of("size", 1.5, "life", 0.8, "color", DUST, "alpha", 0.5));
+                // 0.50.0 (사용자 "직업 고유 연출"): 땅에서 솟는 돌 성벽 그림 (rfx_jwall — 금은 빛 줄) 이 블록 성벽과 같이 솟았다 흐려짐
+                JobFx.wall(level, g, 1.4, j, 0.4, 0.75, Opt.of("alpha", 0.9));
             });
         }
         RuneKit.shakeAround(level, c, 14, 0.35, 0.5);

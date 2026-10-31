@@ -1352,6 +1352,12 @@ import fx_models_card  # noqa: E402
 
 fx_models_card.add(sys.modules[__name__])
 
+# ------------------------------------------------------------ 0.50.0 2D 물체 판 (tools/fx_models_card2d.py — 직업 스킬의 입체 물체 대신)
+
+import fx_models_card2d  # noqa: E402
+
+fx_models_card2d.add(sys.modules[__name__])
+
 
 # ------------------------------------------------------------ 쓰기
 

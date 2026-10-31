@@ -289,6 +289,9 @@ final class SwordsmanSkills {
                 if (given[0] || !RuneKit.sameLife(sp, life)) return;
                 given[0] = true;
                 mmorpg.fabric.rune.RuneMarks.empower(sp, k.num("buff", 0.1), (int) k.num("buffTicks", 80), "발키리의 가호", JobFx.outer(j), JobFx.inner(j));
+                // 발키리의 날개 (가호 동안 등 뒤 — 1인칭에서는 숨김) · 내려앉는 깃털
+                JobFx.valWings(sp, j, 0.95, (int) k.num("buffTicks", 80), 0.72);
+                JobFx.feathers(sp.level(), V.up(sp.position(), 2.2), 6, 1.0, 0.17, j, 1.5, JobFx.hide1p(sp));
             };
             int[] pending = {targets.size()};
             for (LivingEntity e : targets) {
@@ -379,6 +382,9 @@ final class SwordsmanSkills {
         int dive = (int) k.num("dive", 7);
         JobMove.run(sp, JobMove.to(0, rise, JobMove.up(sp, k.num("lift", 4)), JobMove.OUT), JobMove.hold(rise, finalAt - dive - 1),
                 JobMove.to(finalAt - dive - 1, finalAt - 1, JobMove.landAhead(sp, k.num("diveDist", 8), c0.y), JobMove.IN));
+        // 0.50.0 발할라 (사용자 "직업 고유 연출"): 솟아오르는 동안 · 떠 있는 동안 등 뒤에 발키리의 날개가 펼쳐지고 깃털이 흩날림 (급강하 때 접힘)
+        JobFx.valWings(sp, j, 1.35, finalAt - dive, 0.95);
+        JobFx.feathers(level0, V.up(c0, 2.5), 10, 1.6, 0.2, j, 1.8, Opt.empty());
         // 0.47.0 환영 검 반원 (입체 — 주인을 따라감): 머리 뒤 두 겹 반원으로 아래에서 솟아오름 (rise 틱), 일제 사격마다 per 자루가 그 자리에서 날아감
         Halo halo = halo(sp, j, swords, rise, (lastVolley + 4) / 20.0);
         JobFx3d.guard(sp, life, halo.ids, finalAt);

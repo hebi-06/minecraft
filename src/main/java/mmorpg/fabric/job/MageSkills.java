@@ -395,6 +395,8 @@ final class MageSkills {
                 if (ice && k.num("freeze", 0) > 0) {
                     if (mmorpg.fabric.boss.Bosses.isBossEntity(e)) RuneKit.effect(e, "slowness", (int) k.num("freeze", 10) * 3, 1);
                     else RuneKit.stun(e, (int) k.num("freeze", 10), SPELLS[1][1], RuneKit.fxQuota("jobFreeze", 6));
+                    // 얼음 결정 (rfx_jfrost — 자라나 금이 가며 깨짐) 이 몸을 덮음
+                    if (RuneKit.fxQuota("jobFrost", 6)) JobFx.frost(e, SPELLS[1][0], SPELLS[1][1], (int) k.num("freeze", 10) + 8);
                 }
             });
         }

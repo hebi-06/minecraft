@@ -580,9 +580,9 @@ public final class RpgMotionTests {
             int sent0 = mmorpg.fabric.Fx3d.sent;
             h.assertTrue(mmorpg.fabric.job.JobSkills.press(sp, 0), "crush cast");
             h.assertTrue("jb_warrior_crush".equals(MotionSystem.lastSent(sp)), "crush motion " + MotionSystem.lastSent(sp));
-            // 0.47.0 입체 효과 물체: 내리찍는 환영 도끼 (자루 끝을 쥐고 휘둘러 박혀 있음 — 한 몸)
-            h.assertTrue(mmorpg.fabric.Fx3d.sent >= sent0 + 1 && "phantom_axe".equals(mmorpg.fabric.Fx3d.lastModel), "crush 3d axe " + (mmorpg.fabric.Fx3d.sent - sent0)
-                    + " " + mmorpg.fabric.Fx3d.lastModel);
+            // 0.47.0 효과 물체: 내리찍는 환영 도끼 (자루 끝을 쥐고 휘둘러 박혀 있음 — 한 몸) — 0.50.0 부터 같은 자리의 2D 도끼 판 (card_axe)
+            h.assertTrue(mmorpg.fabric.Fx3d.sent >= sent0 + 1 && "card_axe".equals(mmorpg.fabric.Fx3d.lastModel), "crush 2d axe card " + (mmorpg.fabric.Fx3d.sent
+                    - sent0) + " " + mmorpg.fabric.Fx3d.lastModel);
         });
         h.runAfterDelay(24, () -> {
             Vec3 at = h.absoluteVec(new Vec3(1.5, 2, 1.5));

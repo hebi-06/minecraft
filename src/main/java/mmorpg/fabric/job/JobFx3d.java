@@ -78,12 +78,62 @@ final class JobFx3d {
 
     /** 모델 하나 (직업 색): 번호 */
     static int spawn(ServerLevel level, String model, Vec3 at, Jobs.Job j, Opt o) {
-        return Fx3d.spawn(level, model, at, merge(look(j), o));
+        return put(level, model, at, merge(look(j), o));
     }
 
     /** 모델 하나 (색을 정함) */
     static int spawn(ServerLevel level, String model, Vec3 at, double[] color, double[] glow, Opt o) {
-        return Fx3d.spawn(level, model, at, merge(Opt.of("color", color, "glow", glow), o));
+        return put(level, model, at, merge(Opt.of("color", color, "glow", glow), o));
+    }
+
+    // ------------------------------------------------------------ 0.50.0 2D 판
+
+    /**
+     * 0.50.0 (사용자 "직업 스킬들 중에서 지금 사신 궁 제외 3d로 되어있는 애들 2d로 다시 바꾸자 대신 엄청 고퀄로 다듬어야 함"): 입체 모델 → 같은 크기 · 같은 쥔 곳의
+     * 2D 그림 판 (tools/fx_models_card2d.py — v2 그림 두 겹). 사신의 니플헤임의 문 (gate) · 망자의 손 (bone_hand) 은 입체 그대로
+     */
+    static final Map<String, String> CARDS = Map.ofEntries(Map.entry("phantom_sword", "card_sword"), Map.entry("phantom_axe", "card_axe"),
+            Map.entry("spear", "card_spear"), Map.entry("light_arrow", "card_arrow"), Map.entry("dagger", "card_dagger"), Map.entry("mana_bolt", "card_bolt"),
+            Map.entry("arcane_orb", "card_orb"), Map.entry("grimoire", "card_tome"), Map.entry("page", "card_page"), Map.entry("maul", "card_maul"),
+            Map.entry("bell", "card_bell"), Map.entry("buckler", "card_buckler"), Map.entry("aegis", "card_aegis"), Map.entry("light_bow", "card_bow"));
+    /** 판의 움직임 이름 (tools/fx_models_card2d.py 와 같게 — 없는 이름 · 안 부른 것은 idle) */
+    static final Map<String, java.util.Set<String>> CARD_ANIMS = Map.ofEntries(anims("card_sword", "idle"), anims("card_greatsword", "idle"),
+            anims("card_spear", "idle"), anims("card_arrow", "idle"), anims("card_bolt", "idle"), anims("card_orb", "idle", "spin"),
+            anims("card_tome", "idle", "open", "flip", "close"), anims("card_page", "idle"), anims("card_maul", "idle"), anims("card_bell", "idle", "swing"),
+            anims("card_aegis", "idle", "appear"), anims("card_bow", "idle", "rest", "draw", "loose"));
+
+    private static Map.Entry<String, java.util.Set<String>> anims(String card, String... names) {
+        return Map.entry(card, java.util.Set.of(names));
+    }
+
+    /** idle 빠르기 (바퀴/초 — 장 수 ÷ 장/초): 날의 빛이 흐르는 칼 · 창 · 화살 · 마탄, 도는 별 · 책장 · 망치 번개 · 방패 빛 */
+    static final Map<String, Double> CARD_IDLE = Map.of("card_sword", 2.5, "card_greatsword", 1.6, "card_spear", 2.5, "card_arrow", 3.0, "card_bolt", 3.5,
+            "card_orb", 1.25, "card_tome", 1.4, "card_page", 2.5, "card_maul", 2.5, "card_aegis", 1.5);
+    /** 이만큼 (끝 크기 — scale × (1 + grow)) 넘게 큰 환영 검은 대검 그림 (룬 새김이 맥동하는 큰 날) */
+    static final double GREAT = 2.0;
+
+    /** 모델 하나를 띄움 — 2D 판이 있으면 판으로 (JobFx.FLAT) */
+    private static int put(ServerLevel level, String model, Vec3 at, Opt o) {
+        String card = JobFx.FLAT ? CARDS.get(model) : null;
+        if (card == null) return Fx3d.spawn(level, model, at, o);
+        if ("card_sword".equals(card) && o.num("scale", 1) * (1 + o.num("grow", 0)) >= GREAT) card = "card_greatsword";
+        return Fx3d.spawn(level, card, at, cardOpt(card, o));
+    }
+
+    /**
+     * 판의 값: 넓은 면이 늘 보는 사람 쪽 (faceCam — 판은 제 축 둘레로만 돌아 카메라를 봄). 제 축 · 옆 축 둘레로 도는 것 (roll · spin y · x) 은 판을 옆선으로 만들어
+     * 뺌, 판 안에서 도는 것 (spin z — 구르는 비수 · 도는 방패) 과 세계 위 둘레 (spin up — 도는 창: 축이 돌고 면은 보는 사람 쪽) 는 그대로. 더한 빛 (shine) 은
+     * 반 (그림에 빛 겹이 있음), 빛 무리 점은 없음. 움직임: 부른 이름이 판에 있으면 그것, 아니면 idle (이어 돌림 · 장마다 다른 때에서 시작)
+     */
+    static Opt cardOpt(String card, Opt o) {
+        Opt r = o.with("faceCam", 1.0, "roll", 0.0, "shine", o.num("shine", 0) * 0.5, "glowAlpha", 0.0);
+        String axis = o.str("spinAxis", "y");
+        if (!"z".equals(axis) && !"up".equals(axis)) r = r.with("spin", 0.0);
+        java.util.Set<String> names = CARD_ANIMS.getOrDefault(card, java.util.Set.of());
+        String anim = o.str("anim", null);
+        if (anim != null && names.contains(anim)) return r;
+        if (names.contains("idle")) return r.with("anim", "idle", "loop", 1.0, "animSpeed", CARD_IDLE.getOrDefault(card, 2.0), "animPhase", mmorpg.fabric.skill.Kit.rand());
+        return r.with("anim", null, "loop", null);
     }
 
     /** 몸통 가로 · 세로 방향에 수직인 수평 방향 (날아가는 쪽 u 기준 — 비수가 앞뒤로 구르는 축) */

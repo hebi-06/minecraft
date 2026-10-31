@@ -559,6 +559,15 @@ public final class FxModels {
             Vector3f dir = new Vector3f(v[0], v[1], v[2]);
             Vector3f face = new Vector3f(v[3], v[4], v[5]);
             Vector3f tan = new Vector3f(gx, gy, gz);
+            // 0.50.0 2D 판 (card_*): 넓은 면이 카메라 쪽 (faceCam) 인 채 세계 위 둘레로 돎 (spin up — 도는 창) → 축 (dir · face) 을 먼저 돌리고 면은 그 축 둘레로
+            // 카메라를 봄 (뒤에서 틀 전체를 돌리면 판이 옆선이 됨)
+            boolean camSpinUp = (in.flags & Fx3d.F_FACE_CAM) != 0 && (int) v[8] == 3 && v[7] != 0;
+            if (camSpinUp) {
+                float su = v[7] * tf * Mth.DEG_TO_RAD;
+                Vector3f up = new Vector3f(0, 1, 0);
+                rotateAbout(dir, up, su);
+                rotateAbout(face, up, su);
+            }
             // 휘두름: dir · face 를 축 둘레로 (주인 기준이면 그 틀에서 — 세계로 옮기기 전)
             if (v[52] > 0) {
                 Vector3f ax = new Vector3f(v[48], v[49], v[50]);
@@ -619,7 +628,7 @@ public final class FxModels {
             Vector3f X = new Vector3f(Y).cross(Z).normalize();
             R.set(X, Y, Z);
             if (v[6] != 0) R.rotateY(v[6] * Mth.DEG_TO_RAD);
-            float spin = v[7] * tf * Mth.DEG_TO_RAD;
+            float spin = camSpinUp ? 0F : v[7] * tf * Mth.DEG_TO_RAD;
             if (spin != 0) {
                 switch ((int) v[8]) {
                     case 1 -> R.rotateX(spin);
