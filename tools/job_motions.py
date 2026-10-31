@@ -42,8 +42,77 @@ def is_job_key(k, ids):
     return k in ids or (":" in k and k.split(":")[0] in ids)
 
 
+# 0.50.0 몸 움직임 (JobMove — 사용자 "플레이어 모션들이 역동적인게 내가 좋아하는 느낌"): 몸이 뜨거나 미끄러지는 동안의 다리. 동작 → [(시작 틱, 끝 틱, 꼴)] —
+# 그 사이 열쇠의 다리 (rl · ll · rk · lk · root) 를 꼴로 덮고 양끝에 열쇠를 더함. 이 표에 있는 동작은 softLegs 를 끔 (몸이 옮겨지는 동안 걸음 다리가 나오지 않게)
+AIR_LEGS = {
+    "tuck": dict(rl=[-56, 0, 8], rk=96, ll=[-28, 0, -8], lk=82, root=[0.0, 0]),  # 뛰어올라 무릎을 당김
+    "hop": dict(rl=[-34, 0, 6], rk=62, ll=[-12, 0, -6], lk=44, root=[0.0, 0]),  # 짧은 뜀
+    "float": dict(rl=[-6, 0, 3], rk=16, ll=[8, 0, -3], lk=28, root=[0.0, 0]),  # 떠 있음 (발끝이 아래)
+    "land": dict(rl=[-30, 0, 10], rk=62, ll=[-22, 0, -10], lk=56, root=[-0.2, 0]),  # 내려앉으며 웅크림
+}
+AIR = {
+    "jb_swordsman_moon": [(2, 15, "tuck")],
+    "jb_swordsman_ult": [(3, 20, "tuck")],
+    "jb_swordsman_ult_volley": [(0, 10, "tuck")],
+    "jb_swordsman_ult_gather": [(0, 9, "tuck"), (12, 14, "land")],
+    "jb_warrior_crush": [(1, 5, "tuck"), (6, 9, "land")],
+    "jb_spellblade_arcslash": [],
+    "jb_spellblade_runedance": [(4, 34, "float")],
+    "jb_spellblade_ult": [(3, 22, "tuck")],
+    "jb_spellblade_ult_slash0": [(0, 12, "tuck")],
+    "jb_spellblade_ult_slash1": [(0, 12, "tuck")],
+    "jb_spellblade_ult_slash2": [(0, 12, "tuck")],
+    "jb_spellblade_ult_thrust": [(0, 3, "tuck")],
+    "jb_mage_bolts": [],
+    "jb_mage_ult": [(3, 22, "float")],
+    "jb_mage_ult_wave": [(0, 10, "float")],
+    "jb_mage_ult_close": [(0, 8, "float")],
+    "jb_archer_rapid": [(1, 6, "hop")],
+    "jb_archer_rain": [(1, 9, "tuck")],
+    "jb_archer_ult": [(2, 24, "tuck"), (26, 31, "land")],
+    "jb_assassin_bloom": [],
+    "jb_assassin_daggers": [(1, 10, "tuck")],
+    "jb_lancer_triple": [],
+    "jb_lancer_cyclone": [(2, 15, "tuck")],
+    "jb_lancer_ult": [(2, 20, "tuck")],
+    "jb_reaper_reap": [],
+    "jb_reaper_burst": [(1, 6, "tuck"), (8, 12, "land")],
+    "jb_reaper_ult": [(2, 14, "float")],
+    "jb_reaper_ult_drain": [(0, 10, "float")],
+    "jb_reaper_ult_close": [(0, 2, "float")],
+    "jb_paladin_smite": [(1, 5, "tuck"), (6, 9, "land")],
+    "jb_paladin_quake": [(2, 8, "hop"), (12, 18, "hop")],
+    "jb_paladin_ult": [(3, 18, "tuck")],
+    "jb_paladin_ult_smash": [(0, 3, "tuck")],
+    "jb_priest_ult": [(3, 18, "float")],
+    "jb_priest_ult_toll": [(0, 16, "float")],
+    "jb_guardian_bash": [],
+    "jb_guardian_ult": [(1, 9, "tuck"), (10, 14, "land")],
+}
+
+
+def air_legs():
+    """AIR 표를 동작 열쇠에 덮음 (0.50.0)"""
+    by = {mo.name: mo for mo in K.MOTIONS}
+    for name, spans in AIR.items():
+        mo = by.get(name)
+        if mo is None:
+            raise SystemExit("AIR: 없는 동작 " + name)
+        mo.head["softLegs"] = False
+        for a, b, style in spans:
+            legs = AIR_LEGS[style]
+            ta, tb = mo.t(a), mo.t(b)
+            for t in (ta, tb):
+                mo.keys.setdefault(t, {})
+            for t, pose in mo.keys.items():
+                if ta - 1e-9 <= t <= tb + 1e-9:
+                    for k, v in legs.items():
+                        pose[k] = list(v) if isinstance(v, list) else v
+
+
 def write(check=False):
     ids = job_skill_ids()
+    air_legs()
     missing = [i for i in ids if i not in K.TABLE]
     stray = [k for k in K.TABLE if not is_job_key(k, ids)]
     if missing or stray:
