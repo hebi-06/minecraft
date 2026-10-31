@@ -31,6 +31,11 @@ final class JobFx {
     private JobFx() {}
 
     static final double[] WHITE = RuneKit.WHITE;
+    /**
+     * 0.50.0 (사용자 "3d로 되어있는 애들 2d로 다시 바꾸자 대신 엄청 고퀄로 다듬어야 함"): 효과 물체 (마탄 · 화살 · 구체 · 비수 · 창 · 망치 · 방패 …) 는 모두 2D
+     * 그림 (0.47.0 입체 모델은 쓰지 않음 — 사신의 니플헤임의 문 · 망자의 손만 입체)
+     */
+    static final boolean FLAT = true;
     static final int SLASH = 8;
     static final int HIT = 6;
     static final int RING = 8;
@@ -404,7 +409,7 @@ final class JobFx {
 
     /** 0.31.0 색을 정한 마탄 (스킬 강화 — 재료마다 그 색의 빛이 모임): from → to, 닿는 틱 */
     static int bolt(ServerLevel level, Vec3 from, Vec3 to, double[] glow, double[] core, double speed, double size, Opt o) {
-        if (o.truthy("flat")) return fly(level, "jbolt", BOLT, from, to, speed, size, 0.56, o, glow, core);
+        if (FLAT || o.truthy("flat")) return fly(level, "jbolt", BOLT, from, to, speed, size, 0.56, o, glow, core);
         // 0.47.0 입체: 결정 마탄 (몸) + 2D 마탄은 옅은 빛
         JobFx3d.boltFly(level, from, to, speed, size * 2.4, glow, core, o);
         return fly(level, "jbolt", BOLT, from, to, speed, size, 0.56, o.with("alpha", o.num("alpha", 1) * 0.55, "coreAlpha", o.num("alpha", 1) * 0.45), glow, core);
@@ -412,7 +417,7 @@ final class JobFx {
 
     /** 빛의 화살 (rfx_jarrow) 이 from → to: 닿는 틱 */
     static int arrow(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
-        if (o.truthy("flat")) return fly(level, "jarrow", ARROW, from, to, speed, size, 0.97, o, outer(j), inner(j));
+        if (FLAT || o.truthy("flat")) return fly(level, "jarrow", ARROW, from, to, speed, size, 0.97, o, outer(j), inner(j));
         // 0.47.0 입체: 빛의 화살 (몸 — 촉이 to 에 닿음) + 2D 화살은 옅은 빛줄기
         JobFx3d.arrowFly(level, from, to, speed, size * 1.67, o.num("stick", 0), j, JobFx3d.carry(o));
         return fly(level, "jarrow", ARROW, from, to, speed, size, 0.97, o.with("alpha", o.num("alpha", 1) * 0.5, "coreAlpha", o.num("alpha", 1) * 0.4), outer(j),
@@ -421,7 +426,7 @@ final class JobFx {
 
     /** 멈춰 있는 빛의 화살 (잔상 — 촉이 tip, 방향 dir) */
     static void arrowAt(ServerLevel level, Vec3 tip, Vec3 dir, double size, double life, Jobs.Job j, Opt o) {
-        if (!o.truthy("flat")) {
+        if (!FLAT && !o.truthy("flat")) {
             // 0.47.0 입체: 꽂힌 빛의 화살 + 2D 는 옅은 빛
             JobFx3d.stuck(level, "light_arrow", tip, dir, JobFx3d.ARROW_TIP, size * 1.67, life, j, o);
             o = o.with("alpha", o.num("alpha", 1) * 0.45, "coreAlpha", o.num("alpha", 1) * 0.35);
@@ -436,7 +441,7 @@ final class JobFx {
 
     /** 마력 구체 (rfx_jorb — 카메라를 봄, 이어 돌림): 구 반지름 radius 칸 (= 반 크기 × 0.6) */
     static void orb(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
-        if (!o.truthy("flat") && radius >= 0.14) {
+        if (!FLAT && !o.truthy("flat") && radius >= 0.14) {
             // 0.47.0 입체: 비전 구체 (도는 고리 둘) + 2D 구체는 옅은 빛
             JobFx3d.spawn(level, "arcane_orb", at, j, JobFx3d.carry(o).with("scale", radius / JobFx3d.ORB_R * 0.8, "life", life, "anim", "spin", "loop", 1.0, "pop",
                     Math.min(0.2, life * 0.4), "fadeOut", Math.min(0.2, life * 0.5), "glowAlpha", 0.5, "shine", 0.2, "vel", o.vec("vel", null), "animPhase", Kit.rand()));
@@ -518,7 +523,7 @@ final class JobFx {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         double life = Math.max(0.05, ticks / 20.0);
-        if (!o.truthy("flat")) {
+        if (!FLAT && !o.truthy("flat")) {
             // 0.47.0 입체: 앞뒤로 구르는 비수 (2D 그림 대신)
             JobFx3d.daggerFly(level, from, to, ticks, size * 2.25, life, j, o);
             return;
@@ -555,7 +560,7 @@ final class JobFx {
 
     /** 빛의 창 (rfx_jspear — 방향으로 누움, 오른쪽이 창끝): 창끝 tip 이 dir (단위) 쪽으로 speed 칸/초 (0 = 멈춤). 길이 = size × 2 */
     static void spear(ServerLevel level, Vec3 tip, Vec3 dir, double size, double speed, double life, Jobs.Job j, Opt o) {
-        if (!o.truthy("flat")) {
+        if (!FLAT && !o.truthy("flat")) {
             // 0.47.0 입체: 빛의 창 (창끝 tip · 움직이면 dir 쪽으로 speed) + 2D 창은 옅은 빛
             Vec3 vel = V.add(o.vec("vel", V.ZERO), dir, speed);
             JobFx3d.stuck(level, "spear", tip, dir, JobFx3d.SPEAR_TIP, size * 0.71, life, j, o.with("vel", V.len(vel) > 1e-3 ? vel : null, "fade", o.num("fade", 0.25)));
@@ -566,7 +571,7 @@ final class JobFx {
 
     /** 날아가는 빛의 창 from → to (창끝이 to 에 닿음): 닿는 틱 */
     static int spearFly(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
-        if (o.truthy("flat")) return fly(level, "jspear", SPEAR, from, to, speed, size, 0.96, o, outer(j), inner(j));
+        if (FLAT || o.truthy("flat")) return fly(level, "jspear", SPEAR, from, to, speed, size, 0.96, o, outer(j), inner(j));
         // 0.47.0 입체: 날아가 꽂히는 빛의 창 (stick 초 머무름) + 2D 창은 옅은 빛줄기
         JobFx3d.spearFly(level, from, to, speed, size * 0.71, o.num("stick", 0.25), j, JobFx3d.carry(o));
         return fly(level, "jspear", SPEAR, from, to, speed, size, 0.96, o.with("alpha", o.num("alpha", 1) * 0.45, "coreAlpha", o.num("alpha", 1) * 0.35), outer(j),
@@ -632,7 +637,7 @@ final class JobFx {
 
     /** 번개 대망치 (rfx_jmaul — 세워 카메라 쪽으로 돎, 이어 돌림 · 머리가 아래, 그림 192 × 256): 가운데 at · 높이 약 size × 2.67 칸 */
     static void maul(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        if (!o.truthy("flat")) {
+        if (!FLAT && !o.truthy("flat")) {
             // 0.47.0 입체: 번개 대망치 (머리가 아래 — 그림 아래 끝의 머리 가운데가 모델 가운데) + 2D 망치는 번개 빛으로 옅게
             double scale = size * 2.67 / JobFx3d.MAUL_LEN;
             Vec3 head = V.up(at, -(size * 2.67 / 2) + 0.3 * scale);
@@ -721,7 +726,7 @@ final class JobFx {
 
     /** 날아가는 방패 from → to (speed 칸/초): 닿는 틱 */
     static int bucklerFly(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Jobs.Job j, Opt o) {
-        if (o.truthy("flat")) return fly(level, "jbuckler", BUCKLER, from, to, speed, size, 0, o.with("spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 1080)),
+        if (FLAT || o.truthy("flat")) return fly(level, "jbuckler", BUCKLER, from, to, speed, size, 0, o.with("spin", Kit.rand() * 360, "spinRate", o.num("spinRate", 1080)),
                 outer(j), inner(j));
         // 0.47.0 입체: 원반처럼 눕혀 도는 둥근 방패 (2D 그림 대신)
         Vec3 d = V.sub(to, from);
@@ -739,7 +744,7 @@ final class JobFx {
      * (4 ~ 5). 가운데 at · 높이 약 size × 2.67 칸
      */
     static void aegis(ServerLevel level, Vec3 at, double size, Jobs.Job j, int stage, double life, Opt o) {
-        if (stage < 2 && !o.truthy("flat") && !o.has("solo")) {
+        if (stage < 2 && !FLAT && !o.truthy("flat") && !o.has("solo")) {
             // 0.47.0 입체: 연 모양 빛의 방패 (보는 사람 쪽 — 그림처럼) + 2D 방패는 옅은 빛
             double scale = size * 2.67 / JobFx3d.AEGIS_H;
             JobFx3d.spawn(level, "aegis", V.up(at, 0.1 * scale), j, JobFx3d.carry(o).with("dir", V.UP, "faceCam", 1.0, "scale", scale, "life", life, "pop",
