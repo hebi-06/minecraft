@@ -619,6 +619,8 @@ final class RuneTide {
                 for (LivingEntity e : ts) {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                         if (RuneKit.fxQuota("leviathanHit", 6)) soak(level, e, 1.1);
+                        // 0.49.0 휘감김: 조이는 동안 root 틱 묶음 (보스는 느려짐 — PairKit.root)
+                        if (k.numOr("root", 0) > 0) PairKit.root(e, (int) k.num("root"));
                     });
                 }
             });
@@ -676,7 +678,7 @@ final class RuneTide {
             SkillFx.play(level, "random.explode", aim, 0.6, 0.7);
             for (LivingEntity e : Kit.around(sp, aim, radius, 5)) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.SURGE, life, dmg -> {
-                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.6, 0.45);
+                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.5, 0.4);
                     if (RuneKit.fxQuota("leviathanCrush", 8)) soak(level, e, 1.4);
                 });
             }

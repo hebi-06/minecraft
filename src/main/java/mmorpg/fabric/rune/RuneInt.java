@@ -125,7 +125,9 @@ final class RuneInt {
         List<LivingEntity> frozen = new ArrayList<>();
         for (LivingEntity e : Kit.around(sp, c, radius)) {
             if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
-                RuneKit.effect(e, "slowness", (int) k.num("slowTicks"), (int) k.num("slowAmp"));
+                // 0.49.0 빙결: 보스가 아니면 freeze 틱 얼어붙음 (기절 — 머리 위 얼음 룬), 보스는 둔화
+                if (k.numOr("freeze", 0) > 0 && !mmorpg.fabric.boss.Bosses.isBossEntity(e)) RuneKit.stun(e, (int) k.num("freeze"), glow, frozen.size() < 8);
+                else RuneKit.effect(e, "slowness", (int) k.num("slowTicks"), (int) k.num("slowAmp"));
                 if (frozen.size() < 20) SkillFx.burst(level, Kit.bodyPoint(e), glow, 0.7, 0.3); // 번쩍임은 20명까지 (파티클 예산)
                 frozen.add(e);
             }

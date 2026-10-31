@@ -125,55 +125,49 @@ final class RuneGolem {
         g.pose(off, new Quaternionf(face).mul(PairKit.about(x, lean)), scale, ticks, new Quaternionf(), PairKit.about(x, armL), PairKit.about(x, armR));
     }
 
-    // ------------------------------------------------------------ 일반: 바위 주먹
+    // ------------------------------------------------------------ 일반: 바위 도약 (0.49.0 바위 주먹 → 도약)
 
     /**
-     * 바위 주먹: 앞 range 칸 · cone 도의 가장 가까운 적 발밑에 비취빛 룬 · 갈라짐 → 땅에서 돌 주먹 (블록 표시 — 아래팔 · 비취빛 룬 띠 · 주먹 · 마디) 이 솟구쳐
-     * 둘레 radius 칸의 적을 올려침 (위력 × mult, 띄움 lift — 보스 제외) → 주먹이 부서져 무너짐. 대상이 없으면 쓰지 않음
+     * 0.49.0 바위 도약 (바위 주먹 → 도약 — 사용자 "도약 스킬 같은것도 많이"): 몸을 바위로 굳혀 (몸 둘레에 돌 부스러기 · 비취빛 룬 띠) 조준한 곳 (range 칸) 으로
+     * air 틱 동안 뛰어오름 → 착지하며 땅을 내리찍음: 비취빛 갈라짐 · 바위 가시 고리 · 튀는 돌 · 돌먼지 기둥, 둘레 radius 칸의 적 (위력 × mult, 띄움 lift — 보스 제외)
      */
     static boolean stoneFist(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
-        List<LivingEntity> ts = RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 1);
-        if (ts.isEmpty()) return PairKit.noTarget(sp, k);
         ServerLevel level = sp.level();
         String life = RuneKit.lifeToken(sp);
-        LivingEntity t0 = ts.get(0);
-        Vec3 g = PairKit.onGround(level, t0.position());
-        Vec3 f = V.flat(V.sub(g, sp.position()));
+        Vec3 start = sp.position();
+        Vec3 land = RuneKit.leapLand(sp, k.num("range"), 1.0);
+        int air = (int) k.num("air");
         double radius = k.num("radius");
-        SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.5, "color", JADE, "alpha", 0.9, "rate", 220.0, "progress", 1.0));
-        RuneKit.glowCrack(level, g, radius * 0.9, JADE, CORE, Opt.of("life", 1.3, "v", 1.0));
-        debris(level, V.up(g, 0.1), 16, radius * 0.3, COBBLE);
-        SkillFx.play(level, "block.deepslate.break", g, 0.7, 1.0);
-        SkillFx.play(level, "mob.evocation_illager.cast_spell", sp.position(), 1.4, 0.5);
-        Quaternionf face = PairKit.facing(f);
-        PairKit.Rig fist = new PairKit.Rig(level, g, 30);
-        fist.offset = new Vec3(0, -3.6, 0);
-        fist.rot = face;
-        fist.add(BRICKS, new Vec3(0, 1.05, 0), 0.95, 2.1, 0.95, PairKit.LIT);
-        fist.add(RUNE, new Vec3(0, 1.85, 0), 1.06, 0.22, 1.06, PairKit.GLOW);
-        fist.add(MOSSY, new Vec3(0, 2.6, 0.06), 1.4, 1.05, 1.3, PairKit.LIT);
-        fist.add(COBBLE, new Vec3(0.62, 2.4, 0.42), 0.36, 0.62, 0.4, PairKit.LIT);
-        for (int i = 0; i < 4; i++) fist.add(i % 2 == 0 ? COBBLE : CRACKED, new Vec3(-0.48 + i * 0.32, 3.15, 0.32), 0.28, 0.24, 0.42, PairKit.LIT);
-        RuneKit.later(4, () -> fist.pose(new Vec3(0, -0.3, 0), new Quaternionf(face).mul(PairKit.about(new Vec3(1, 0, 0), 10)), 1.0, 3));
-        RuneKit.later(7, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            RuneKit.rockBurst(level, V.up(g, 0.5), 6, 6, 0.24);
-            SkillFx.burst(level, V.up(g, 1.6), JADE, 1.6, 0.3);
-            RuneKit.zonePulse(level, g, JADE, radius, 0.4);
-            level.sendParticles(new BlockParticleOption(ParticleTypes.DUST_PILLAR, STONE), g.x, g.y + 0.1, g.z, 16, 0.5, 0.1, 0.5, 0.3);
-            SkillFx.play(level, "entity.iron_golem.attack", g, 0.7, 1.0);
-            SkillFx.play(level, "mace.smash_ground", g, 0.9, 0.8);
+        // 바위로 굳는 몸: 돌 부스러기 · 비취빛 띠 (뛰기 전 · 나는 동안)
+        debris(level, V.up(start, 1.0), 14, 0.45, COBBLE);
+        SkillFx.play(level, "block.deepslate.place", start, 0.7, 1.0);
+        SkillFx.play(level, "entity.iron_golem.step", start, 0.8, 1.0);
+        for (int t = 0; t < air; t += 2) {
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 c = V.up(sp.position(), 0.9);
+                debris(level, c, 4, 0.35, Kit.rand() < 0.5 ? COBBLE : MOSSY_COBBLE);
+                RuneKit.bodyAura(sp, JADE, Opt.of("n", 3.0, "size", 0.8, "alpha", 0.55));
+            });
+        }
+        RuneKit.leap(sp, land, 2.2 + V.hdist(land, start) * 0.12, air, JADE, CORE, () -> {
+            Vec3 g = PairKit.onGround(level, sp.position());
+            SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.5, "color", JADE, "alpha", 0.9, "rate", 220.0, "progress", 1.0));
+            slamFx(sp, level, g, radius, 1.0);
+            RuneKit.rockBurst(level, V.up(g, 0.5), 7, 6, 0.26);
+            SkillFx.burst(level, V.up(g, 0.8), JADE, 1.8, 0.3);
+            RuneKit.zonePulse(level, g, JADE, radius, 0.45);
+            debris(level, V.up(g, 0.2), 22, radius * 0.35, COBBLE);
+            level.sendParticles(new BlockParticleOption(ParticleTypes.DUST_PILLAR, STONE), g.x, g.y + 0.1, g.z, 18, 0.6, 0.1, 0.6, 0.3);
+            SkillFx.play(level, "entity.iron_golem.attack", g, 0.6, 1.0);
+            SkillFx.play(level, "mace.heavy_smash_ground", g, 0.9, 1.0);
+            RuneKit.shakeAround(level, g, 8, 0.25, 0.22);
             for (LivingEntity e : Kit.around(sp, g, radius, 3)) {
                 PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
-                    if (!PairKit.boss(e)) Kit.knockback(e, f.x * 0.15, f.z * 0.15, k.num("lift"));
+                    if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, k.num("lift"));
                     SkillFx.fx(level, "rpg:slash_x", Kit.bodyPoint(e), Opt.of("dir", V.UP, "size", 1.0, "life", 0.22, "color", JADE, "alpha", 1.0));
                 });
             }
-        });
-        RuneKit.later(17, () -> {
-            fist.crumble(6, 0.2, 2.2, 0.55);
-            debris(level, V.up(g, 1.4), 24, 0.6, COBBLE);
-            SkillFx.play(level, "block.stone.break", g, 0.7, 1.0);
         });
         return true;
     }
@@ -408,7 +402,8 @@ final class RuneGolem {
     // ------------------------------------------------------------ 영웅: 골렘 소환
 
     /**
-     * 골렘 소환: 조준한 곳 (range 칸) 옆에 비취빛 룬 · 갈라짐 → 돌 골렘 (블록 표시 — 키 4.4칸, 가슴 · 눈 · 주먹에 빛나는 룬) 이 delay 틱 동안 땅에서 솟음 →
+     * 골렘 소환: 조준한 곳 (range 칸) 옆에 비취빛 룬 · 갈라짐 → 돌 골렘 (블록 표시 — 키 4.4칸, 가슴 · 눈 · 주먹에 빛나는 룬) 이 delay 틱 동안 땅에서 솟음
+     * (0.49.0 깨어나며 둘레 taunt 칸의 적을 끌어모음 — 도발) →
      * gap 틱마다 hits 번 두 주먹을 들었다 내려쳐 둘레 radius 칸의 적 (위력 × mult) → 골렘이 무너지며 한 번 더 (위력 × crush)
      */
     static boolean golemSummon(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -443,6 +438,21 @@ final class RuneGolem {
             SkillFx.play(level, "entity.iron_golem.step", c, 0.5, 1.0);
             SkillFx.play(level, "mob.irongolem.repair", c, 0.6, 0.8);
             RuneKit.shakeAround(level, c, 10, 0.2, 0.3);
+            // 0.49.0 도발: 깨어난 골렘이 울부짖어 둘레 taunt 칸의 적을 내려칠 자리로 끌어모음 (보스 제외) — 비취빛 고리 · 끌려오는 돌먼지 줄기
+            double tr = k.numOr("taunt", 0);
+            if (tr > 0 && RuneKit.sameLife(sp, life)) {
+                Vec3 slam = PairKit.onGround(level, V.add(c, face, 2.3));
+                RuneKit.zonePulse(level, slam, JADE, tr, 0.5);
+                SkillFx.play(level, "entity.ravager.roar", c, 0.7, 0.9);
+                int n = 0;
+                for (LivingEntity e : Kit.around(sp, slam, tr, 3)) {
+                    if (PairKit.boss(e)) continue;
+                    Vec3 d = V.flat(V.sub(slam, e.position()));
+                    double dist = V.hdist(slam, e.position());
+                    Kit.knockback(e, d.x * Math.min(0.9, dist * 0.2), d.z * Math.min(0.9, dist * 0.2), 0.15);
+                    if (n++ < 8) RuneKit.streak(level, V.up(e.position(), 0.5), V.up(V.lerp(e.position(), slam, 0.7), 0.5), JADE, 0.24, 0.3, 0.85, 0);
+                }
+            }
         });
         for (int i = 0; i < hits; i++) {
             final int hitAt = delay + i * gap;
@@ -582,7 +592,9 @@ final class RuneGolem {
             SkillFx.play(level, "block.deepslate_bricks.break", aim, 0.4, 1.0);
             for (LivingEntity e : Kit.around(sp, aim, radius, 4)) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.RUBBLE, life, dmg -> {
-                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.3, 0.6);
+                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.3, 0.45);
+                    // 0.49.0 대지 붕괴에 맞은 적 stun 틱 기절 (머리 위 비취빛 룬)
+                    if (k.numOr("stun", 0) > 0) RuneKit.stun(e, (int) k.num("stun"), JADE, RuneKit.fxQuota("colossusStun", 10));
                     if (RuneKit.fxQuota("colossusCrush", 8)) debris(level, Kit.bodyPoint(e), 14, 0.4, CRACKED);
                 });
             }

@@ -198,6 +198,8 @@ final class RuneHunter {
                 for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                         if (RuneKit.fxQuota("falcon", 3)) claw(level, Kit.bodyPoint(e), 0.7);
+                        // 0.49.0 사냥감 표식: vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
+                        RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), WILD, CORE, RuneKit.fxQuota("falconMark", 6));
                     });
                 }
                 // 다시 날아오름
@@ -353,6 +355,8 @@ final class RuneHunter {
                         if (e.isRemoved()) continue;
                         PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                             if (RuneKit.fxQuota("wolf", 4)) claw(level, Kit.bodyPoint(e), 0.75);
+                            // 0.49.0 물어뜯긴 적은 slowTicks 동안 둔화
+                            if (k.numOr("slowTicks", 0) > 0) RuneKit.effect(e, "slowness", (int) k.num("slowTicks"), (int) k.numOr("slowAmp", 1));
                         });
                     }
                     SkillFx.play(level, "mob.phantom.bite", c, 0.9, 0.7);
@@ -461,6 +465,8 @@ final class RuneHunter {
                 for (LivingEntity e : ts) {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                         if (RuneKit.fxQuota("beastClaw", 6)) claw(level, Kit.bodyPoint(e), 0.8);
+                        // 0.49.0 사냥감 표식: vulnTicks 동안 받는 피해 + vuln (짓밟기까지)
+                        RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), WILD, CORE, RuneKit.fxQuota("beastMark", 8));
                     });
                 }
             });
@@ -494,7 +500,7 @@ final class RuneHunter {
             SkillFx.play(level, "entity.ravager.roar", aim, 0.6, 1.0);
             for (LivingEntity e : Kit.around(sp, aim, radius, 5)) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.FERAL, life, dmg -> {
-                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.4, 0.6);
+                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.4, 0.5);
                     if (RuneKit.fxQuota("beastCrush", 8)) claw(level, Kit.bodyPoint(e), 1.0);
                 });
             }

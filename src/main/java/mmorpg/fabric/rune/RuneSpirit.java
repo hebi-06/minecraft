@@ -515,7 +515,12 @@ final class RuneSpirit {
                     SkillFx.play(level, "mace.heavy_smash_ground", g, 0.9, 0.9);
                     for (LivingEntity e : spiritFoesAround(sp, g, radius)) {
                         spiritDamage(sp, e, P, mult, x -> {
-                            RuneKit.effect(x, "slowness", (int) d.num("slowTicks"), 1);
+                            // 0.49.0 땅의 정령: 바위 가시가 root 틱 묶음 (보스는 느려짐 — PairKit.root), 정령왕의 노움은 그대로 느려짐
+                            if (s.k.numOr("root", 0) > 0) {
+                                PairKit.root(x, (int) s.k.num("root"));
+                                if (RuneKit.fxQuota("gnomeRoot", 6)) SkillFx.fx(level, "rpg:ice_spike", x.position(), Opt.of("size", 0.9, "life", s.k.num("root") / 20.0,
+                                        "spin", Kit.rand() * 30 - 15, "color", new double[] {0.66, 0.58, 0.5}, "alpha", 1.0));
+                            } else RuneKit.effect(x, "slowness", (int) d.num("slowTicks"), 1);
                             RuneKit.knock(x, V.UP, 0, 0.3);
                         }, s);
                     }

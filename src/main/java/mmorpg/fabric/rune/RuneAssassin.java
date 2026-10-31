@@ -132,8 +132,9 @@ final class RuneAssassin {
     }
 
     /**
-     * 배후 일격: 대상 뒤로 순간이동해 찌름 — v2.25.0 떠난 자리에 그림자 잔상 (rpg:rfx_shade), 대상 옆에서 그림자 분신이 함께 찌르고,
-     * 오른손에서 빛의 단검 (rpg:rfx_sword 작게) 이 몸을 꿰뚫음 (가까운 적의 X 는 작게)
+     * 배후 일격 (0.49.0 순간 이동 → 도약): 대상 너머로 air 틱 동안 뛰어올라 (몸이 대상 머리 위로 포물선) 등 뒤에 내려앉으며 찌름 — 떠난 자리에 그림자 잔상
+     * (rpg:rfx_shade), 대상 옆에서 그림자 분신이 함께 찌르고, 오른손에서 빛의 단검 (rpg:rfx_sword 작게) 이 몸을 꿰뚫음 (가까운 적의 X 는 작게).
+     * 등 뒤에 설 자리가 없으면 그 자리에서 뛰었다 내려앉으며 찌름
      */
     static boolean backstab(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         LivingEntity target = Kit.pickTarget(sp, k.num("range"), k.num("cone"));
@@ -146,16 +147,25 @@ final class RuneAssassin {
         double[][] cs = RuneKit.colorOf("assassin");
         double[] glow = cs[0];
         double[] core = cs[1];
-        Vec3 dest = behindSpot(level, target, from);
+        Vec3 spot = behindSpot(level, target, from);
+        Vec3 dest = spot != null ? spot : from;
         shadowPuff(level, from, glow);
         SkillFx.play(level, "mob.endermen.portal", from, 1.5, 0.7);
-        if (dest != null) {
-            // 떠난 자리의 그림자 잔상 (대상 쪽을 봄)
-            RuneKit.shadeClone(sp, level, from, V.flat(V.sub(target.position(), from)), 0, CLONE, glow, Opt.of("life", 0.45, "fade", 0.7, "alpha", 0.7));
-            SkillFx.beam(level, V.up(from, 1), V.up(dest, 1), SHADE, Opt.of("half", 0.3, "thick", 0.28, "life", 0.3, "alpha", 0.75));
-            RuneKit.moveTo(sp, dest, target.getEyePosition()); // 못 옮기면 그 자리에서 찌름
-            shadowPuff(level, dest, glow);
-        }
+        // 떠난 자리의 그림자 잔상 (대상 쪽을 봄)
+        RuneKit.shadeClone(sp, level, from, V.flat(V.sub(target.position(), from)), 0, CLONE, glow, Opt.of("life", 0.45, "fade", 0.7, "alpha", 0.7));
+        double peak = Math.max(1.4, target.getBbHeight() + 0.6 - Math.max(0, dest.y - from.y) * 0.5);
+        RuneKit.leap(sp, dest, peak, (int) k.num("air"), SHADE, glow, () -> {
+            if (target.isRemoved()) return;
+            RuneKit.moveTo(sp, sp.position(), target.getEyePosition()); // 내려앉으며 대상을 봄
+            shadowPuff(level, sp.position(), glow);
+            stab(sp, r, P, k, target, glow, core);
+        });
+        return true;
+    }
+
+    /** 배후 일격의 찌르기 (빛의 단검 · 그림자 분신 · X) */
+    private static void stab(ServerPlayer sp, Runes.Rune r, double P, Obj k, LivingEntity target, double[] glow, double[] core) {
+        ServerLevel level = sp.level();
         Vec3 eye = sp.getEyePosition();
         Vec3 at = Kit.bodyPoint(target);
         Vec3 v = V.unit(V.sub(at, eye));
@@ -183,7 +193,6 @@ final class RuneAssassin {
             SkillFx.sparks(level, V.add(at, v, -0.5), core, 7, 5);
             SkillFx.play(level, "game.player.attack.critical", at, 1.3, 0.9);
         }
-        return true;
     }
 
     /**
@@ -429,6 +438,8 @@ final class RuneAssassin {
                             "alpha", 1.0));
                     SkillFx.burst(level, V.add(at, v, -0.5), SHADE, 1.2 * xs, 0.3);
                     SkillFx.play(level, "game.player.attack.critical", at, 1.0, 1);
+                    // 0.49.0 표식: 마지막 베기에 맞은 적 vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
+                    RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, true);
                 }
             }
             SkillFx.play(level, last ? "item.trident.hit" : "game.player.attack.strong", at, 1.2 + i * 0.12, 0.7);

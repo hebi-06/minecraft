@@ -138,86 +138,51 @@ final class RuneGladiator {
         return true;
     }
 
-    // ------------------------------------------------------------ 희귀: 방패 돌진
+    // ------------------------------------------------------------ 희귀: 방패 강하 (0.49.0 방패 돌진 → 도약)
 
     /**
-     * 방패 돌진: 받는 피해 감소 (reduce, ticks 틱) · 방패 (rpg:rfx_shield) 를 앞세워 앞으로 range 칸 (벽 앞까지) 돌진 — 처음 부딪힌 적 앞에서 멈추며 부딪힌 적 ·
-     * 앞의 적 (위력 × mult, 밀쳐냄 knock) → 방패로 땅을 내려찍음: 부딪힌 적 · 둘레 radius 칸의 적 (위력 × crush)
+     * 0.49.0 방패 강하 (방패 돌진 → 도약 — 사용자 "도약 스킬 같은것도 많이"): 받는 피해 감소 (reduce, ticks 틱) · 방패 (rpg:rfx_shield) 를 머리 위로 들고
+     * 조준한 곳 (range 칸) 으로 air 틱 동안 뛰어오름 → 방패를 내리꽂으며 착지: 둘레 radius 칸의 적 (위력 × mult, 밀쳐냄 knock — 보스 제외) · 강철 충격파 · 갈라짐
      */
     static boolean shieldRush(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         String life = RuneKit.lifeToken(sp);
         Vec3 start = sp.position();
-        Vec3 f = Kit.facingOf(sp);
-        double can = RuneKit.dashDistance(sp, f, k.num("range"), 0.4, 1.4);
-        LivingEntity first = null;
-        double stop = can;
-        for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(start, 1.0), f, can + 1.0, k.num("width"))) {
-            first = h.e();
-            stop = Math.max(0, Math.min(can, h.t() - 1.7 - Kit.bodyPad(h.e())));
-            break;
-        }
-        final LivingEntity rammed = first;
-        final double reach = stop;
-        int dash = Math.max(1, (int) Math.ceil(reach / 2.5));
+        Vec3 land = RuneKit.leapLand(sp, k.num("range"), 1.0);
+        Vec3 f = V.hdist(land, start) > 0.3 ? V.flat(V.sub(land, start)) : Kit.facingOf(sp);
+        int air = (int) k.num("air");
         Guards.set(sp, (int) k.num("ticks"), k.num("reduce"), null, null);
-        Kit.noFall(sp, 30);
         SkillFx.play(level, "item.shield.block", start, 0.8, 1.0);
         SkillFx.play(level, "mob.ravager.stun", start, 1.4, 0.5);
-        for (int t = 0; t <= dash; t++) {
+        // 머리 위로 든 방패 (몸을 따라감 — 내려올 때 앞으로 기울어짐)
+        for (int t = 0; t < air; t += 2) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                if (tt > 0) {
-                    Vec3 p = V.add(start, f, reach * tt / dash);
-                    RuneKit.moveTo(sp, new Vec3(p.x, RuneKit.groundAt(level, p, start.y), p.z), null);
-                }
                 Vec3 c = sp.position();
-                RuneKit.shieldEmblem(sp, level, V.add(V.up(c, 1.1), f, 1.3), 0.8, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.12, "core", CORE));
-                SkillFx.particle(level, ParticleTypes.CLOUD, V.up(c, 0.1), 3, 0.3, 0.02);
-                RuneKit.streak(level, V.up(V.add(c, f, -1.2), 0.9), V.up(c, 0.9), STEEL, 0.3, 0.25);
+                Vec3 at = V.add(V.up(c, 2.4 - 0.8 * tt / air), f, 0.4 + 0.6 * tt / air);
+                RuneKit.shieldEmblem(sp, level, at, 0.75, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.14, "core", CORE));
             });
         }
-        // 부딪힘
-        RuneKit.later(dash + 1, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
+        RuneKit.leap(sp, land, 2.0 + V.hdist(land, start) * 0.12, air, STEEL, CORE, () -> {
             Vec3 c = sp.position();
-            Vec3 front = V.add(V.up(c, 1.0), f, 1.3);
-            RuneKit.shieldEmblem(sp, level, front, 1.1, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.3, "grow", 0.4, "core", CORE));
-            SkillFx.ring(level, front, f, CORE, 0.9, 0.3, 3.0);
-            clang(level, V.add(front, f, 0.3), 1.0);
-            SkillFx.play(level, "entity.goat.ram_impact", c, 0.8, 1.0);
-            SkillFx.play(level, "block.anvil.land", c, 1.4, 0.4);
-            List<LivingEntity> got = new ArrayList<>();
-            if (rammed != null && !rammed.isRemoved()) got.add(rammed);
-            for (LivingEntity e : RuneKit.coneAround(sp, c, f, 2.8, 100)) if (!got.contains(e)) got.add(e);
-            for (LivingEntity e : got) {
-                PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
-                    clang(level, Kit.bodyPoint(e), 0.8);
-                    if (!PairKit.boss(e)) RuneKit.knock(e, f, k.num("knock"), 0.25);
-                });
-            }
-        });
-        // 내려찍기
-        RuneKit.later(dash + 11, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            Vec3 c = sp.position();
-            Vec3 at = PairKit.onGround(level, V.add(c, f, 1.2));
+            Vec3 at = PairKit.onGround(level, V.add(c, f, 1.0));
             double radius = k.num("radius");
-            RuneKit.shieldEmblem(sp, level, V.up(at, 0.6), 0.9, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.25, "core", CORE));
-            RuneKit.zonePulse(level, at, STEEL, radius, 0.4);
+            RuneKit.shieldEmblem(sp, level, V.up(at, 0.6), 1.1, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.3, "grow", 0.4, "core", CORE));
+            RuneKit.novaRing(level, V.up(c, 0.05), 0.6, radius * 0.95, STEEL, CORE, Opt.of("life", 0.4));
+            RuneKit.zonePulse(level, c, STEEL, radius, 0.4);
             RuneKit.glowCrack(level, at, radius * 0.8, STEEL, CORE, Opt.of("life", 1.0));
-            RuneKit.rockBurst(level, V.up(at, 0.3), 5, 4, 0.2);
-            RuneKit.shakeAround(level, at, 8, 0.25, 0.25);
-            SkillFx.play(level, "mace.smash_ground", at, 0.9, 1.0);
-            SkillFx.play(level, "item.shield.block", at, 0.6, 1.0);
-            Map<UUID, LivingEntity> got = new LinkedHashMap<>();
-            if (rammed != null && !rammed.isRemoved()) got.put(rammed.getUUID(), rammed);
-            for (LivingEntity e : Kit.around(sp, at, radius, 3)) got.putIfAbsent(e.getUUID(), e);
-            for (LivingEntity e : got.values()) {
-                PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.IRON, life, dmg -> {
-                    clang(level, Kit.bodyPoint(e), 0.9);
-                    if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, 0.3);
+            RuneKit.rockBurst(level, V.up(at, 0.3), 6, 5, 0.22);
+            clang(level, V.up(at, 0.5), 1.1);
+            SkillFx.particle(level, ParticleTypes.CLOUD, V.up(c, 0.1), 10, 0.8, 0.05);
+            RuneKit.shakeAround(level, at, 8, 0.3, 0.25);
+            SkillFx.play(level, "mace.heavy_smash_ground", at, 0.9, 1.0);
+            SkillFx.play(level, "entity.goat.ram_impact", c, 0.8, 1.0);
+            SkillFx.play(level, "block.anvil.land", c, 1.3, 0.5);
+            for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
+                PairKit.hit(sp, r, e, P, k.num("mult"), DamageNumbers.Style.IRON, life, dmg -> {
+                    clang(level, Kit.bodyPoint(e), 0.8);
+                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), c), k.num("knock"), 0.3);
                 });
             }
         });
@@ -570,7 +535,7 @@ final class RuneGladiator {
             SkillFx.play(level, "random.explode", aim, 0.6, 0.8);
             for (LivingEntity e : Kit.around(sp, aim, radius, 5)) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.IRON, life, dmg -> {
-                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.35, 0.6);
+                    if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.35, 0.5);
                     if (RuneKit.fxQuota("warChainCrush", 8)) clang(level, Kit.bodyPoint(e), 1.1);
                 });
             }

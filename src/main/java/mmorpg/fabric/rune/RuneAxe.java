@@ -126,7 +126,13 @@ final class RuneAxe {
                 });
             }
             RuneKit.later(backTicks, () -> {
-                if (!sp.isRemoved()) SkillFx.play(level, "item.trident.return", sp.position(), 0.9, 1);
+                if (sp.isRemoved()) return;
+                SkillFx.play(level, "item.trident.return", sp.position(), 0.9, 1);
+                // 0.49.0 분노: 돌아온 도끼를 받으면 buffTicks 동안 가하는 피해 + buff (몸에 핏빛 기운 · 상태 줄)
+                if (k.numOr("buff", 0) > 0) {
+                    RuneMarks.empower(sp, k.num("buff"), (int) k.num("buffTicks"), "분노", BLOOD, glow);
+                    SkillFx.play(level, "mob.ravager.roar", sp.position(), 1.4, 0.45);
+                }
             });
         });
         return true;
@@ -211,60 +217,32 @@ final class RuneAxe {
         return true;
     }
 
-    /** 도약 곡선 위 u (0 ~ 1) 의 자리 (발에서 1칸 위 — 가운데가 peak 칸 솟음) */
-    private static Vec3 leapPos(Vec3 start, Vec3 land, double peak, double u) {
-        return new Vec3(start.x + (land.x - start.x) * u, start.y + (land.y - start.y) * u + 4 * peak * u * (1 - u) + 1.0, start.z + (land.z - start.z) * u);
-    }
-
     /**
-     * 도약 찍기: 조준한 곳 (range 칸, 막히면 벽 앞) 으로 뛰어올라 내려찍음 (반지름 radius, 띄우고 둔화) — 뛰기 전 머리 위로 든 거대한 도끼
-     * (rpg:rfx_prop 도끼) → 내려찍으면 앞에 도끼가 박히고 땅이 갈라지며 둘레에 바위 가시가 솟음
+     * 도약 찍기 (0.49.0 — 몸이 포물선으로 날아가는 도약 RuneKit.leap · 둔화 → 방어 깨짐): 조준한 곳 (range 칸, 막히면 벽 앞) 으로 air 틱 동안 뛰어올라
+     * 내려찍음 (반지름 radius, 조금 띄움 · 맞은 적 vulnTicks 동안 받는 피해 + vuln) — 뛰는 동안 머리 위로 든 거대한 도끼 (rpg:rfx_prop 도끼) →
+     * 내려찍으면 앞에 도끼가 박히고 땅이 갈라지며 둘레에 바위 가시가 솟음
      */
     static boolean leapSlam(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 start = sp.position();
-        double range = k.num("range");
-        Vec3 g = RuneKit.groundAim(sp, range);
-        double dist0 = Math.min(range, Math.hypot(g.x - start.x, g.z - start.z));
-        Vec3 f = dist0 > 0.2 ? V.flat(V.sub(g, start)) : V.flat(sp.getViewVector(1F));
-        double want = Math.max(0, dist0 - 1.0); // 조준한 곳 바로 앞에 착지 (몹과 겹치지 않게)
-        double can = RuneKit.dashDistance(sp, f, want, 1.2, 2.2); // 한 칸 턱은 뛰어넘음
-        double reach = can >= want - 0.3 ? want : can;
-        // 착지는 그 아래의 단단한 땅 (나는 몹을 조준해도 공중에 서지 않게, 물 · 용암 · 허공이면 제자리에서 찍음)
-        double top = Math.max(g.y, start.y) + 1.6;
-        Double gy = reach > 0.3 ? RuneKit.solidGround(level, new Vec3(start.x + f.x * reach, top, start.z + f.z * reach), top - start.y + 8) : null;
-        boolean leap = gy != null;
-        Vec3 land = new Vec3(start.x + f.x * reach, leap ? gy.doubleValue() : start.y, start.z + f.z * reach);
+        Vec3 land = RuneKit.leapLand(sp, k.num("range"), 1.0);
+        Vec3 f = V.hdist(land, start) > 0.3 ? V.flat(V.sub(land, start)) : V.flat(sp.getViewVector(1F));
         double[][] cs = RuneKit.colorOf("axe");
         double[] glow = cs[0];
         double[] core = cs[1];
-        int air = 4; // 공중에 있는 틱
-        double peak = 2.0 + want * 0.15;
-        if (leap) {
-            for (int i = 0; i < 8; i++) {
-                RuneKit.streak(level, leapPos(start, land, peak, i / 8.0), leapPos(start, land, peak, (i + 1) / 8.0), glow, 0.32, 0.35, 0.95,
-                        (i / 8.0) * air / 20);
-            }
-        }
-        // 머리 위로 든 도끼 (뛰어오르기 전까지 머리 1.3칸 위 · 조금 뒤, 날이 뒤로 젖혀짐 — 몸은 마지막 틱에 옮겨짐)
+        int air = (int) k.num("air");
+        // 머리 위로 든 도끼 (몸을 따라감 — 날이 뒤로 젖혀짐)
         for (int t = 0; t < air; t++) {
             final int tt = t;
             RuneKit.later(t, () -> {
                 if (sp.isRemoved()) return;
                 Vec3 at = V.add(V.up(sp.position(), 2.9), f, -0.3);
-                RuneKit.rfx2(level, "prop", at, Opt.of("size", 0.8, "life", 0.1, "spin", 20.0 + tt * 8, "alpha", 0.95, "vel", RuneKit.bodyVel(sp)), glow, core,
+                RuneKit.rfx2(level, "prop", at, Opt.of("size", 0.8, "life", 0.1, "spin", 20.0 + tt * 12, "alpha", 0.95, "vel", RuneKit.bodyVel(sp)), glow, core,
                         AXE, null);
             });
         }
-        RuneKit.zonePulse(level, start, new double[] {0.6, 0.5, 0.4}, 1.6, 0.35);
-        SkillFx.sparks(level, V.up(start, 0.2), new double[] {0.7, 0.6, 0.5}, 8, 3);
         SkillFx.play(level, "mob.enderdragon.flap", start, 1.2, 0.7);
-        SkillFx.play(level, "mob.breeze.jump", start, 0.8, 1);
-        RuneKit.later(air - 1, () -> {
-            if (!sp.isRemoved() && leap) RuneKit.moveTo(sp, land, null);
-        });
-        RuneKit.later(air, () -> {
-            if (sp.isRemoved()) return;
+        RuneKit.leap(sp, land, 2.0 + V.hdist(land, start) * 0.15, air, glow, core, () -> {
             Vec3 c = sp.position();
             double radius = k.num("radius");
             // 내리찍은 도끼: 앞 1.7칸에 날이 아래로 박힘 (0.45초)
@@ -290,10 +268,11 @@ final class RuneAxe {
             SkillFx.play(level, "mace.heavy_smash_ground", c, 0.8, 1);
             SkillFx.play(level, "random.explode", c, 0.9, 0.5);
             RuneKit.shakeAround(level, c, 10, 0.3, 0.25);
+            int marks = 0;
             for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                     RuneKit.knock(e, V.sub(e.position(), c), 0.4, k.num("lift"));
-                    RuneKit.effect(e, "slowness", (int) k.num("slowTicks"), 1);
+                    RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), BLOOD, core, marks++ < 8);
                 }
             }
         });

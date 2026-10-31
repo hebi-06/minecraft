@@ -39,10 +39,33 @@ final class RuneBlade {
     }
 
     /**
-     * 발도 일섬: 칼을 뽑으며 앞을 한 번에 벰 — 칼을 뽑는 번쩍임 (rpg:rfx_prop 반짝임) + 앞으로 퍼지는 가로 초승달 검기 (rpg:rfx_wave),
-     * 칼을 거두면 (6틱 뒤) 베인 적에게 늦게 베인 자국이 한 번 더 그어짐
+     * 0.49.0 도약 발도 (발도 일섬 → 도약): 조준한 곳 (leap 칸) 으로 air 틱 동안 낮게 뛰어들며 (칼집에 손을 얹은 빛) 내려앉는 순간 칼을 뽑아 앞을 한 번에 벰
+     * (range 칸 · cone 도) — 칼을 뽑는 번쩍임 (rpg:rfx_prop 반짝임) + 앞으로 퍼지는 가로 초승달 검기 (rpg:rfx_wave), 칼을 거두면 (6틱 뒤) 베인 적에게
+     * 늦게 베인 자국이 한 번 더 그어짐
      */
     static boolean quickDraw(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
+        ServerLevel level = sp.level();
+        double[][] cs = RuneKit.colorOf("blade");
+        Vec3 start = sp.position();
+        Vec3 land = RuneKit.leapLand(sp, k.num("leap"), 1.6);
+        int air = (int) k.num("air");
+        Vec3 f0 = V.hdist(land, start) > 0.3 ? V.flat(V.sub(land, start)) : V.flat(sp.getViewVector(1F));
+        // 칼집에 손을 얹은 빛 (뛰는 동안 허리 오른쪽)
+        for (int t = 0; t < air; t += 2) {
+            RuneKit.later(t, () -> {
+                if (sp.isRemoved()) return;
+                Vec3 at = V.up(V.add(sp.position(), V.rightOf(f0), 0.45), 0.95);
+                RuneKit.rfx(level, "prop", at, Opt.of("size", 0.22, "life", 0.12, "cell", (double) RuneKit.RFX.get("glint")[0], "spin", 20.0, "color", cs[1],
+                        "alpha", 0.9, "vel", RuneKit.bodyVel(sp)));
+            });
+        }
+        SkillFx.play(level, "item.armor.equip_chain", start, 1.4, 0.8);
+        RuneKit.leap(sp, land, 1.1 + V.hdist(land, start) * 0.06, air, cs[0], cs[1], () -> drawCut(sp, r, P, k));
+        return true;
+    }
+
+    /** 발도: 칼을 뽑으며 앞을 한 번에 벰 (도약 발도의 착지) */
+    private static void drawCut(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 head = sp.getEyePosition();
         Vec3 f = V.flat(sp.getViewVector(1F));
@@ -81,7 +104,6 @@ final class RuneBlade {
                 SkillFx.cutMark(level, at, V.unit(V.sub(at, eye)), 172, 0.06, RuneKit.WHITE, core, 1.2);
             }
         });
-        return true;
     }
 
     /**
@@ -232,7 +254,7 @@ final class RuneBlade {
 
     /**
      * 삼단베기: gap 틱마다 가로 베기 → 세로 베기 (앞 cone 도 · range 칸) → 찌르기 (앞 thrust 칸 직선) — 베기마다 가로 · 세로 초승달 검기 (rpg:rfx_wave),
-     * 찌르기는 빛의 칼 (rpg:rfx_sword) 이 앞으로 뻗어 나감
+     * 찌르기는 빛의 칼 (rpg:rfx_sword) 이 앞으로 뻗어 나감. 0.49.0 찌르기까지 마치면 검세 (가하는 피해 + buff, buffTicks 틱)
      */
     static boolean tripleCut(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         double[][] cs = RuneKit.colorOf("blade");
@@ -275,6 +297,8 @@ final class RuneBlade {
                     n++;
                 }
             }
+            // 0.49.0 검세: 찌르기까지 마치면 buffTicks 동안 가하는 피해 + buff (몸에 검기 · 상태 줄)
+            if (i == hits - 1 && k.numOr("buff", 0) > 0) RuneMarks.empower(sp, k.num("buff"), (int) k.num("buffTicks"), "검세", glow, core);
         });
         return true;
     }

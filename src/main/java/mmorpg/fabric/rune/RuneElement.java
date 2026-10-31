@@ -277,7 +277,11 @@ final class RuneElement {
                         RuneKit.WHITE, new int[] {0, RuneKit.BOLT_CORE}, null);
                 if (fd > 0) RuneKit.later(fd, strike);
                 else strike.run();
-                if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) elementHitFx(level, e, "thunder", fd);
+                if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) {
+                    elementHitFx(level, e, "thunder", fd);
+                    // 0.49.0 감전: vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식 — 번개빛)
+                    RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, idx < 8);
+                }
                 thunderChain(sp, e, P, k.num("chainMult"), k.num("chain"), hit, null, fd);
             }
             if (!cut.isEmpty()) SkillFx.play(level, "ambient.weather.lightning.impact", sp.position(), 1.4, 0.4);

@@ -1,10 +1,7 @@
 package mmorpg.fabric.rune;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import mmorpg.core.Obj;
 import mmorpg.core.Runes;
 import mmorpg.fabric.DamageNumbers;
@@ -115,9 +112,11 @@ final class RuneMonk {
                 PairKit.hit(sp, r, e, P, last ? k.num("crush") : k.num("mult"), last ? DamageNumbers.Style.IMPACT : null, life, dmg -> {
                     Vec3 b = Kit.bodyPoint(e);
                     if (RuneKit.fxQuota("chainFist", 4)) impact(level, V.add(b, V.unit(V.sub(sp.getEyePosition(), b)), 0.3), (last ? 0.6 : 0.4) * RuneKit.nearK(sp, b, 4, 0.5));
-                    if (last && !PairKit.boss(e)) RuneKit.knock(e, f, k.num("knock"), 0.3);
+                    if (last && !PairKit.boss(e)) RuneKit.knock(e, f, k.numOr("knock", 0), 0.15);
                 });
             }
+            // 0.49.0 기: 장풍까지 마치면 buffTicks 동안 가하는 피해 + buff (몸에 금빛 기운 · 상태 줄)
+            if (last && k.numOr("buff", 0) > 0 && RuneKit.sameLife(sp, life)) RuneMarks.empower(sp, k.num("buff"), (int) k.num("buffTicks"), "기", GOLD, EMBER);
         });
         return true;
     }
@@ -125,94 +124,68 @@ final class RuneMonk {
     // ------------------------------------------------------------ 희귀: 비각
 
     /**
-     * 비각: 앞으로 range 칸 (벽 앞까지) 날아차기로 돌진 — 금빛 잔상 · 기의 줄기, 처음 부딪힌 적 앞에서 멈추며 걷어참 (위력 × mult) → 뛰어올라 내려찍음 —
-     * 걷어찬 적 · 둘레 radius 칸의 적 (위력 × crush, 땅의 갈라짐 · 충격 고리). 떨어짐 피해 없음
+     * 0.49.0 비각 (돌진 → 도약 — 사용자 "도약 스킬 같은것도 많이"): 조준한 곳 (range 칸) 으로 air 틱 동안 뛰어올라 (금빛 잔상 · 앞으로 뻗은 발의 기 줄기) 내려오며
+     * 날아차기 — 앞 kick 칸 부채꼴의 적 (위력 × mult) → 반동으로 살짝 떠올랐다가 10틱 뒤 내려찍기 (둘레 radius 칸 · 위력 × crush)
      */
     static boolean flyingKick(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         String life = RuneKit.lifeToken(sp);
         Vec3 start = sp.position();
-        Vec3 f = Kit.facingOf(sp);
-        double range = k.num("range");
-        double can = RuneKit.dashDistance(sp, f, range, 0.4, 1.4);
-        LivingEntity first = null;
-        double stop = can;
-        for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(start, 1.0), f, can + 1.0, k.num("width"))) {
-            first = h.e();
-            stop = Math.max(0, Math.min(can, h.t() - 1.7 - Kit.bodyPad(h.e())));
-            break;
-        }
-        final LivingEntity kicked = first;
-        final double reach = stop;
-        int dash = Math.max(1, (int) Math.ceil(reach / 3.0));
-        Kit.noFall(sp, 40);
-        // 잔상 · 기의 줄기
+        Vec3 land = RuneKit.leapLand(sp, k.num("range"), 1.3);
+        Vec3 f = V.hdist(land, start) > 0.3 ? V.flat(V.sub(land, start)) : V.flat(sp.getViewVector(1F));
+        int air = (int) k.num("air");
+        // 떠나는 자리의 잔상 · 나는 동안 잔상과 앞으로 뻗은 발의 기
         RuneKit.shadeClone(sp, level, start, f, 1, GOLD, CORE, Opt.of("life", 0.35, "alpha", 0.8));
-        for (int i = 0; i < 6; i++) {
-            Vec3 a = V.up(V.add(start, f, reach * i / 6.0), 0.9);
-            Vec3 b = V.up(V.add(start, f, reach * (i + 1) / 6.0), 0.9);
-            RuneKit.streak(level, a, b, GOLD, 0.34, 0.35, 0.95, i / 6.0 * dash / 20.0);
-        }
-        SkillFx.play(level, "mob.breeze.jump", start, 1.2, 0.8);
-        SkillFx.play(level, "item.enchant.lunge2", start, 1.0, 0.8);
-        for (int t = 1; t <= dash; t++) {
-            final double s = reach * t / dash;
-            final int tt = t;
+        for (int t = 2; t < air; t += 2) {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 p = V.add(start, f, s);
-                RuneKit.moveTo(sp, new Vec3(p.x, RuneKit.groundAt(level, p, start.y), p.z), null);
-                if (tt < dash) RuneKit.shadeClone(sp, level, sp.position(), f, 1, GOLD, CORE, Opt.of("life", 0.25, "alpha", 0.6));
+                Vec3 p = sp.position();
+                RuneKit.shadeClone(sp, level, p, f, 1, GOLD, CORE, Opt.of("life", 0.25, "alpha", 0.55));
+                Vec3 foot = V.add(V.up(p, 0.7), f, 0.9);
+                RuneKit.streak(level, foot, V.add(foot, f, 1.2), EMBER, 0.3, 0.15, 0.95, 0);
             });
         }
-        // 걷어참
-        RuneKit.later(dash + 1, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
+        SkillFx.play(level, "item.enchant.lunge2", start, 1.0, 0.8);
+        RuneKit.leap(sp, land, 1.9 + V.hdist(land, start) * 0.1, air, GOLD, EMBER, () -> {
             Vec3 c = sp.position();
-            Vec3 foot = V.add(V.up(c, 1.0), f, 1.2);
+            Vec3 foot = V.add(V.up(c, 0.9), f, 1.2);
             punch(level, V.add(V.up(c, 0.9), f, 0.3), f, 0.8, 10.0, 0.14, GOLD, CORE);
             impact(level, foot, 0.85);
             SkillFx.arc(level, foot, f, Opt.of("shape", "heavy", "flip", true, "size", 1.8, "life", 0.2, "speed", 2.0, "spin", 60.0, "color", GOLD, "aura", EMBER));
             SkillFx.play(level, "entity.player.attack.strong", c, 0.8, 1.0);
             SkillFx.play(level, "entity.goat.ram_impact", c, 1.2, 0.8);
-            List<LivingEntity> got = new ArrayList<>();
-            if (kicked != null && !kicked.isRemoved()) got.add(kicked);
-            for (LivingEntity e : RuneKit.coneAround(sp, c, f, 2.6, 90)) if (!got.contains(e)) got.add(e);
-            for (LivingEntity e : got) {
+            for (LivingEntity e : RuneKit.coneAround(sp, c, f, k.num("kick"), 100)) {
                 PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                     impact(level, Kit.bodyPoint(e), 0.7);
                     if (!PairKit.boss(e)) Kit.knockback(e, f.x * 0.2, f.z * 0.2, 0.25);
                 });
             }
-            Kit.launch(sp, 0, 0.55, 0);
-        });
-        // 뛰어올랐다 내려찍음
-        RuneKit.later(dash + 8, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            Kit.launch(sp, 0, -1.3, 0);
-            RuneKit.streak(level, V.up(sp.position(), 1.6), V.up(sp.position(), 0.2), GOLD, 0.4, 0.2);
-        });
-        RuneKit.later(dash + 11, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            Vec3 c = PairKit.onGround(level, sp.position());
-            double radius = k.num("radius");
-            RuneKit.zonePulse(level, c, GOLD, radius, 0.45);
-            RuneKit.novaRing(level, c, 0.6, radius * 0.9, GOLD, CORE, Opt.of("life", 0.4));
-            RuneKit.glowCrack(level, c, radius * 0.8, GOLD, CORE, Opt.of("life", 1.0));
-            RuneKit.rockBurst(level, V.up(c, 0.3), 5, 4, 0.2);
-            SkillFx.particle(level, ParticleTypes.CRIT, V.up(c, 0.4), 20, radius * 0.3, 0.5);
-            RuneKit.shakeAround(level, c, 8, 0.25, 0.25);
-            SkillFx.play(level, "mace.smash_ground", c, 1.0, 1.0);
-            SkillFx.play(level, "entity.player.attack.crit", c, 0.8, 1.0);
-            Map<UUID, LivingEntity> got = new LinkedHashMap<>();
-            if (kicked != null && !kicked.isRemoved()) got.put(kicked.getUUID(), kicked);
-            for (LivingEntity e : Kit.around(sp, c, radius, 3)) got.putIfAbsent(e.getUUID(), e);
-            for (LivingEntity e : got.values()) {
-                PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.IMPACT, life, dmg -> {
-                    impact(level, Kit.bodyPoint(e), 0.8);
-                    if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, 0.35);
-                });
-            }
+            Kit.noFall(sp, 30);
+            Kit.launch(sp, 0, 0.45, 0); // 반동으로 살짝 떠오름
+            RuneKit.later(7, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Kit.launch(sp, 0, -1.2, 0);
+                RuneKit.streak(level, V.up(sp.position(), 1.6), V.up(sp.position(), 0.2), GOLD, 0.4, 0.2);
+            });
+            RuneKit.later(10, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 g = PairKit.onGround(level, sp.position());
+                double radius = k.num("radius");
+                RuneKit.zonePulse(level, g, GOLD, radius, 0.45);
+                RuneKit.novaRing(level, g, 0.6, radius * 0.9, GOLD, CORE, Opt.of("life", 0.4));
+                RuneKit.glowCrack(level, g, radius * 0.8, GOLD, CORE, Opt.of("life", 1.0));
+                RuneKit.rockBurst(level, V.up(g, 0.3), 5, 4, 0.2);
+                SkillFx.particle(level, ParticleTypes.CRIT, V.up(g, 0.4), 20, radius * 0.3, 0.5);
+                RuneKit.shakeAround(level, g, 8, 0.25, 0.25);
+                SkillFx.play(level, "mace.smash_ground", g, 1.0, 1.0);
+                SkillFx.play(level, "entity.player.attack.crit", g, 0.8, 1.0);
+                for (LivingEntity e : Kit.around(sp, g, radius, 3)) {
+                    PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.IMPACT, life, dmg -> {
+                        impact(level, Kit.bodyPoint(e), 0.8);
+                        if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, 0.35);
+                    });
+                }
+            });
         });
         return true;
     }
@@ -354,7 +327,9 @@ final class RuneMonk {
             for (LivingEntity e : RuneKit.coneAround(sp, c, f, radius, cone)) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.IMPACT, life, dmg -> {
                     impact(level, Kit.bodyPoint(e), 1.0);
-                    if (!PairKit.boss(e)) RuneKit.knock(e, f, k.num("knock"), 0.35);
+                    if (!PairKit.boss(e)) RuneKit.knock(e, f, k.numOr("knock", 0), 0.2);
+                    // 0.49.0 마지막 일격에 stun 틱 기절 (머리 위 금빛 룬)
+                    if (k.numOr("stun", 0) > 0) RuneKit.stun(e, (int) k.num("stun"), GOLD, RuneKit.fxQuota("hundredStun", 8));
                 });
             }
         });

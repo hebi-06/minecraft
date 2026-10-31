@@ -173,48 +173,64 @@ final class RuneVolcano {
         return new Vec3(from.x + v.x * s, from.y + v.y * s - PairKit.GRAVITY * s * s / 2, from.z + v.z * s);
     }
 
-    // ------------------------------------------------------------ 일반: 용암 강타
+    // ------------------------------------------------------------ 일반: 화산 도약 (0.49.0 용암 강타 → 도약)
 
     /**
-     * 용암 강타: 땅을 내리쳐 앞 radius 칸 · cone 도에 용암이 갈라져 튐 (갈라진 땅 · 불길 · 튀는 용암) — 맞은 적 (위력 × mult) 은 화상 (dotGap 틱 뒤부터)
+     * 0.49.0 화산 도약 (용암 강타 → 도약 — 사용자 "도약 스킬 같은것도 많이"): 발밑에서 용암을 끌어올려 조준한 곳 (range 칸) 으로 air 틱 동안 뛰어오름 (지나간 길에
+     * 불티 · 떨어지는 용암 방울) → 착지하며 내리침: 둘레 radius 칸에 용암이 갈라져 튐 (갈라진 땅 · 불길 · 튀는 용암) — 맞은 적 (위력 × mult) 은 화상 (dotGap 틱 뒤부터)
      */
     static boolean magmaSlam(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         String life = RuneKit.lifeToken(sp);
-        Vec3 c = sp.position();
-        Vec3 f = Kit.facingOf(sp);
+        Vec3 start = sp.position();
+        Vec3 land = RuneKit.leapLand(sp, k.num("range"), 1.0);
+        int air = (int) k.num("air");
         double radius = k.num("radius");
-        double cone = k.num("cone");
-        RuneKit.arc(level, V.up(V.add(c, f, 2.4), 0.7), f, Opt.of("shape", "heavy", "flip", false, "size", 1.5, "life", 0.2, "speed", 1.0, "spin", -90.0, "alpha", 0.8, "color",
-                LAVA, "aura", CHAR));
-        Vec3 hit = V.add(c, f, 1.4);
-        SkillFx.fx(level, "rpg:ground_crack", V.up(hit, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.1, "life", 1.4, "color", LAVA,
-                "alpha", 0.95));
-        RuneKit.glowCrack(level, hit, radius * 0.9, LAVA, CORE, Opt.of("life", 1.4, "v", 1.0));
-        for (int j = -2; j <= 2; j++) {
-            Vec3 dj = RuneKit.turn(f, j * cone / 5.5);
-            for (int s = 1; s <= 2; s++) {
-                Vec3 p = V.add(c, dj, radius * (0.35 + 0.3 * s));
-                final int ss = s;
-                if (!PairKit.nearCam(sp, V.up(p, 0.8), 2.0)) RuneKit.later(ss, () -> SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 1.1 + 0.3 * ss, "life", 0.6,
-                        "color", LAVA, "alpha", 0.92, "spin", Kit.rand() * 360)));
-            }
-            SkillFx.fx(level, "rpg:light_cut", V.add(V.up(c, 0.06), dj, radius * 0.55), Opt.of("dir", dj, "size", radius * 0.45, "thick", 0.3, "life", 0.9, "delay",
-                    0.6, "color", LAVA, "alpha", 0.9));
-        }
-        splatter(level, V.up(hit, 0.3), 10, 6);
-        SkillFx.burst(level, V.up(V.add(c, f, 2.4), 0.4), LAVA, 0.9, 0.25);
-        RuneKit.shakeAround(level, c, 8, 0.2, 0.2);
-        SkillFx.play(level, "mace.smash_ground", c, 0.8, 1.0);
-        SkillFx.play(level, "item.bucket.empty_lava", c, 0.8, 1.0);
-        SkillFx.play(level, "fire.ignite", c, 0.8, 0.8);
-        for (LivingEntity e : RuneKit.coneAround(sp, c, f, radius, cone)) {
-            PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
-                flames(level, e);
-                SkillFx.burst(level, Kit.bodyPoint(e), LAVA, 0.9, 0.22);
+        // 뛰는 자리: 용암이 솟구침
+        RuneKit.glowCrack(level, start, 1.4, LAVA, CORE, Opt.of("life", 0.9, "v", 1.0));
+        splatter(level, V.up(start, 0.2), 8, 4);
+        SkillFx.play(level, "item.bucket.empty_lava", start, 0.9, 1.0);
+        SkillFx.play(level, "fire.ignite", start, 0.7, 0.8);
+        for (int t = 1; t < air; t += 2) {
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 p = V.up(sp.position(), 0.4);
+                SkillFx.particle(level, ParticleTypes.FLAME, p, 3, 0.25, 0.02);
+                SkillFx.particle(level, ParticleTypes.FALLING_LAVA, p, 2, 0.2, 0.0);
             });
-            burn(sp, r, e, P, k, (int) Math.max(10, k.numOr("dotGap", 20)), life);
         }
+        RuneKit.leap(sp, land, 2.2 + V.hdist(land, start) * 0.12, air, LAVA, CORE, () -> {
+            Vec3 c = sp.position();
+            Vec3 f = Kit.facingOf(sp);
+            RuneKit.arc(level, V.up(V.add(c, f, 1.6), 0.7), f, Opt.of("shape", "heavy", "flip", false, "size", 1.6, "life", 0.2, "speed", 1.0, "spin", -90.0, "alpha",
+                    0.8, "color", LAVA, "aura", CHAR));
+            SkillFx.fx(level, "rpg:ground_crack", V.up(c, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.2, "life", 1.4, "color", LAVA,
+                    "alpha", 0.95));
+            RuneKit.glowCrack(level, c, radius * 0.9, LAVA, CORE, Opt.of("life", 1.4, "v", 1.0));
+            for (int j = 0; j < 8; j++) {
+                Vec3 dj = RuneKit.turn(f, j * 45 + 22.5);
+                Vec3 p = V.add(c, dj, radius * 0.7);
+                final int jj = j;
+                if (!PairKit.nearCam(sp, V.up(p, 0.8), 2.0)) RuneKit.later(1 + jj % 2, () -> SkillFx.fx(level, "rpg:fire_wall", p, Opt.of("size", 1.3, "life", 0.6,
+                        "color", LAVA, "alpha", 0.92, "spin", Kit.rand() * 360)));
+                SkillFx.fx(level, "rpg:light_cut", V.add(V.up(c, 0.06), dj, radius * 0.5), Opt.of("dir", dj, "size", radius * 0.45, "thick", 0.3, "life", 0.9, "delay",
+                        0.6, "color", LAVA, "alpha", 0.9));
+            }
+            splatter(level, V.up(c, 0.3), 14, 7);
+            SkillFx.burst(level, V.up(c, 0.5), LAVA, 1.4, 0.3);
+            RuneKit.zonePulse(level, c, LAVA, radius, 0.45);
+            RuneKit.shakeAround(level, c, 8, 0.25, 0.22);
+            SkillFx.play(level, "mace.heavy_smash_ground", c, 0.8, 1.0);
+            SkillFx.play(level, "item.bucket.empty_lava", c, 0.8, 1.0);
+            SkillFx.play(level, "fire.ignite", c, 0.8, 0.8);
+            for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
+                PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
+                    flames(level, e);
+                    SkillFx.burst(level, Kit.bodyPoint(e), LAVA, 0.9, 0.22);
+                });
+                burn(sp, r, e, P, k, (int) Math.max(10, k.numOr("dotGap", 20)), life);
+            }
+        });
         return true;
     }
 
@@ -328,7 +344,7 @@ final class RuneVolcano {
 
     /**
      * 마그마 대지: 조준한 곳 (range 칸) 의 땅이 가운데부터 녹아 반지름 radius 칸의 마그마 대지 (블록 표시 마그마 판 · 갈라진 용암빛) 가 됨 — 녹을 때 안의 적
-     * (위력 × mult) → 대지 위의 적은 dotGap 틱마다 화상 (위력 × dot, dots 번 — 대분출 틱은 비움) → delay 틱 뒤 대분출 (용암 기둥 다섯 · 폭발 — 위력 × crush, 띄움)
+     * (위력 × mult · 0.49.0 녹은 갑옷: vulnTicks 동안 받는 피해 + vuln) → 대지 위의 적은 dotGap 틱마다 화상 (위력 × dot, dots 번 — 대분출 틱은 비움) → delay 틱 뒤 대분출 (용암 기둥 다섯 · 폭발 — 위력 × crush, 띄움)
      */
     static boolean magmaField(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
@@ -371,8 +387,13 @@ final class RuneVolcano {
         // 녹아내림
         splatter(level, V.up(g, 0.3), 12, 5);
         RuneKit.zonePulse(level, g, LAVA, radius, 0.5);
+        int[] marks = {0};
         for (LivingEntity e : Kit.around(sp, g, radius, 3)) {
-            PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> flames(level, e));
+            PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
+                flames(level, e);
+                // 0.49.0 녹은 갑옷: vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식 — 대분출까지)
+                RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), LAVA, CORE, marks[0]++ < 8);
+            });
         }
         // 대지의 숨 (용암 거품 · 불길 · 연기)
         for (int t = 4; t < end; t += 4) {
@@ -424,7 +445,7 @@ final class RuneVolcano {
             for (LivingEntity e : Kit.around(sp, g, radius, 3)) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.ERUPT, life, dmg -> {
                     flames(level, e);
-                    if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, 0.6);
+                    if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, 0.5);
                 });
             }
         });
@@ -580,7 +601,7 @@ final class RuneVolcano {
             for (LivingEntity e : Kit.around(sp, aim, radius, 5)) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.ERUPT, life, dmg -> {
                     flames(level, e);
-                    if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, 0.7);
+                    if (!PairKit.boss(e)) Kit.knockback(e, 0, 0, 0.5);
                 });
                 burn(sp, r, e, P, k, burnFrom, life);
             }

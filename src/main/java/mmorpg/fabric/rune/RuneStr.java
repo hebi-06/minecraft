@@ -30,7 +30,7 @@ final class RuneStr {
         RuneCast.register("heavenFall", RuneStr::heavenFall);
     }
 
-    /** 대지 강타: 앞쪽 땅을 내려쳐 충격파 — 땅이 갈라지고 둘레에 바위 가시가 솟으며 돌이 튐 */
+    /** 대지 강타: 앞쪽 땅을 내려쳐 충격파 — 땅이 갈라지고 둘레에 바위 가시가 솟으며 돌이 튐. 0.49.0 맞은 적 stun 틱 기절 (머리 위 룬) */
     static boolean groundSlam(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 f = V.flat(sp.getViewVector(1F));
@@ -57,14 +57,19 @@ final class RuneStr {
             SkillFx.play(level, "mace.smash_ground", c, 0.9, 1);
             SkillFx.play(level, "dig.stone", c, 0.6, 1);
             SkillFx.shake(sp, 0.15, 0.15);
+            int stun = (int) k.numOr("stun", 0); // 0.49.0 기절 0.5초
+            int marks = 0;
             for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
-                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneKit.knock(e, V.sub(e.position(), c), 0.3, k.num("lift"));
+                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
+                    RuneKit.knock(e, V.sub(e.position(), c), 0.3, k.num("lift"));
+                    if (stun > 0) RuneKit.stun(e, stun, glow, marks++ < 8);
+                }
             }
         });
         return true;
     }
 
-    /** 회오리 베기: 제자리에서 gap 틱마다 hits 번 휘몰아치며 주위를 벰 (조금 끌어당김) — 둘레에 흙먼지 회오리 셋 · 땅의 소용돌이 · 휩쓸려 도는 돌 */
+    /** 회오리 베기: 제자리에서 gap 틱마다 hits 번 휘몰아치며 주위를 벰 (0.49.0 안쪽으로 pull 만큼 끌어당김) — 둘레에 흙먼지 회오리 셋 · 땅의 소용돌이 · 휩쓸려 도는 돌 */
     static boolean whirlwind(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         double[][] cs = RuneKit.colorOf("str");
         double[] glow = cs[0];
@@ -101,14 +106,20 @@ final class RuneStr {
             SkillFx.play(level, "item.trident.riptide_" + Math.min(3, i + 1), c, 1.0, 0.8);
             SkillFx.play(level, "mace.smash_air", c, 0.9 + 0.1 * i, 0.7);
             SkillFx.play(level, "mob.breeze.whirl", c, 0.8, 0.6);
+            double pull = k.numOr("pull", 0.15); // 0.49.0 끌어당김 (안쪽으로)
+            int lines = 0;
             for (LivingEntity e : Kit.around(sp, c, radius)) {
-                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneKit.knock(e, V.sub(c, e.position()), 0.15, 0.1);
+                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
+                    RuneKit.knock(e, V.sub(c, e.position()), pull, 0.08);
+                    // 끌려오는 흙먼지 줄기 (적 → 몸)
+                    if (lines++ < 6) RuneKit.streak(level, V.up(e.position(), 0.6), V.up(V.lerp(e.position(), c, 0.6), 0.6), dust, 0.22, 0.25, 0.85, 0);
+                }
             }
         });
         return true;
     }
 
-    /** 대지 균열: 앞으로 length 칸 땅이 갈라지며 바위가 솟구침 (선 가까이 width 칸 안의 적) — 바위 가시 · 갈라진 땅 · 끝에서 바위가 터짐 */
+    /** 대지 균열: 앞으로 length 칸 땅이 갈라지며 바위가 솟구침 (선 가까이 width 칸 안의 적) — 바위 가시 · 갈라진 땅 · 끝에서 바위가 터짐. 0.49.0 맞은 적 방어 깨짐 (받는 피해 + vuln) */
     static boolean fissure(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
         Vec3 start = sp.position();
@@ -144,7 +155,11 @@ final class RuneStr {
                 if (ss % 3 == 0) SkillFx.play(level, "mace.smash_ground", p, 0.8 + ss * 0.02, 0.8);
                 for (LivingEntity e : Kit.around(sp, p, width, 3)) {
                     if (!hit.add(e.getUUID())) continue;
-                    if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneKit.knock(e, f, 0.2, k.num("lift"));
+                    if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
+                        RuneKit.knock(e, f, 0.2, k.num("lift"));
+                        // 0.49.0 방어 깨짐: vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
+                        RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, hit.size() <= 8);
+                    }
                 }
                 if (ss == length) {
                     RuneKit.zonePulse(level, p, glow, width * 1.8, 0.45);
@@ -159,38 +174,41 @@ final class RuneStr {
     }
 
     /**
-     * 거인의 일격: 앞쪽에 붉은 룬이 그려지고 (delay) 하늘에서 거대한 망치 (rpg:rfx_prop 망치 — 머리가 아래) 가 내려찍음 →
-     * 망치가 박힌 채 남고 땅이 크게 갈라지며 둘레에 바위 가시가 솟고 돌이 튐
+     * 0.49.0 거인의 도약 (거인의 일격 → 도약 — 사용자 "도약 스킬 같은것도 많이"): 조준한 곳 (range 칸) 으로 air 틱 동안 뛰어오름 — 머리 위로 든 거대한 망치
+     * (rpg:rfx_prop 망치), 내려찍을 자리에 붉은 룬 → 착지하며 몸 앞을 내려찍음: 망치가 박힌 채 남고 땅이 크게 갈라지며 바위 가시 · 돌
+     * (반지름 radius · 위력 × mult · 기절 stun 틱 · 조금 띄움 lift)
      */
     static boolean titanSmash(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
-        Vec3 f = V.flat(sp.getViewVector(1F));
-        Vec3 c = V.add(sp.position(), f, k.num("dist"));
+        Vec3 start = sp.position();
+        Vec3 land = RuneKit.leapLand(sp, k.num("range"), 1.4);
+        Vec3 f = V.hdist(land, start) > 0.3 ? V.flat(V.sub(land, start)) : V.flat(sp.getViewVector(1F));
         double[][] cs = RuneKit.colorOf("str");
         double[] glow = cs[0];
         double[] core = cs[1];
-        int delay = (int) k.num("delay");
+        int air = (int) k.num("air");
         double radius = k.num("radius");
-        for (int t = 0; t < delay; t += 2) {
-            final int tt = t;
-            RuneKit.later(t, () -> SkillFx.rune(level, c, Opt.of("size", radius * 0.9, "life", 0.14, "color", glow, "alpha", 0.9, "progress", (tt + 2.0) / delay,
-                    "rate", 0.0, "spin", tt * 4.0)));
-        }
-        SkillFx.play(level, "mob.ravager.roar", sp.position(), 1.2, 0.8);
-        double fall = delay / 20.0;
-        double h0 = 9;
-        double size = 2.2 * RuneKit.nearK(sp, V.up(c, 2), 5, 0.5);
-        double rest = size * 0.72; // 망치 가운데 높이 (머리가 땅에 닿음)
+        int stun = (int) k.numOr("stun", 0);
         int[] hammer = RuneKit.RFX.get("hammer");
-        // 떨어지는 망치는 박힌 망치가 나타나는 틱 (delay − 1) 에 박힐 자리에 닿음 (두 망치가 겹침 — 하나가 위에 떠 보이지 않게)
-        RuneKit.rfx2(level, "prop", V.up(c, h0), Opt.of("dir", V.DOWN, "speed", (h0 - rest) / Math.max(0.05, fall - 0.05), "size", size, "life", fall, "spin", 180.0),
-                glow, core, hammer, null);
-        SkillFx.fx(level, "rpg:arrow_shot", V.up(c, 6), Opt.of("dir", V.UP, "speed", 0.0, "size", 6.0, "thick", 0.1, "life", fall, "color", glow, "alpha", 0.6)); // 떨어질 자리의 가는 빛
-        // 박힌 망치 (1틱 먼저 — 깜빡임 없게)
-        Tasks.later(delay - 1, () -> RuneKit.rfx2(level, "prop", V.up(c, rest), Opt.of("size", size, "life", 0.75, "spin", 180.0, "fade", 0.5), glow, core, hammer,
-                null));
-        Tasks.later(delay, () -> {
-            if (sp.isRemoved()) return;
+        Vec3 aim = V.add(land, f, 1.6); // 망치가 박히는 자리 (착지한 몸 앞)
+        for (int t = 0; t < air; t += 2) {
+            final int tt = t;
+            RuneKit.later(t, () -> {
+                SkillFx.rune(level, aim, Opt.of("size", radius * 0.9, "life", 0.14, "color", glow, "alpha", 0.9, "progress", (tt + 2.0) / air, "rate", 0.0,
+                        "spin", tt * 4.0));
+                if (sp.isRemoved()) return;
+                // 머리 위로 든 거대한 망치 (몸을 따라감 — 뒤로 젖혀졌다 내려올 때 앞으로)
+                Vec3 at = V.add(V.up(sp.position(), 3.1), f, -0.4 + 0.3 * tt / air);
+                RuneKit.rfx2(level, "prop", at, Opt.of("size", 1.1, "life", 0.12, "spin", 20.0 + tt * 6, "alpha", 0.95, "vel", RuneKit.bodyVel(sp)), glow, core,
+                        hammer, null);
+            });
+        }
+        SkillFx.play(level, "mob.ravager.roar", start, 1.2, 0.8);
+        RuneKit.leap(sp, land, 2.6 + V.hdist(land, start) * 0.15, air, glow, core, () -> {
+            Vec3 c = V.add(sp.position(), f, 1.6);
+            double size = 2.0 * RuneKit.nearK(sp, V.up(c, 2), 5, 0.5);
+            double rest = size * 0.72; // 망치 가운데 높이 (머리가 땅에 닿음)
+            RuneKit.rfx2(level, "prop", V.up(c, rest), Opt.of("size", size, "life", 0.75, "spin", 180.0, "fade", 0.5), glow, core, hammer, null);
             SkillFx.burst(level, V.up(c, 0.6), glow, 3.0, 0.4);
             SkillFx.burst(level, V.up(c, 0.6), core, 1.6, 0.3);
             SkillFx.shock(level, c, glow, 2.0, 0.35);
@@ -207,8 +225,12 @@ final class RuneStr {
             SkillFx.play(level, "random.explode", c, 0.8, 0.7);
             SkillFx.play(level, "item.trident.thunder", c, 0.6, 0.6);
             RuneKit.shakeAround(level, c, 12, 0.35, 0.3);
+            int marks = 0;
             for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
-                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneKit.knock(e, V.sub(e.position(), c), 0.6, k.num("lift"));
+                if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
+                    RuneKit.knock(e, V.sub(e.position(), c), 0.4, k.num("lift"));
+                    if (stun > 0) RuneKit.stun(e, stun, glow, marks++ < 10);
+                }
             }
         });
         return true;

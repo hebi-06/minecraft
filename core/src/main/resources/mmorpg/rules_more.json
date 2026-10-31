@@ -252,6 +252,62 @@
   ],
   "RUNES": {
     "_comment": "12단계: 정령사 초월 룬 '정령왕의 부름' → '정령왕 강림' (spiritKing — 네 정령 공격 mult × hits, 합체한 정령왕의 원소 마무리 넷 elemMult, 원소 붕괴 burstMult: 합 ×32 그대로). 계열 표는 통째로 바뀌므로 다른 등급은 애드온 그대로 옮겨 둠. 0.12.6: 사신 계열 (reaper — 사용자 요청 '사신의 룬 추가해서 낫 전용 룬') 을 더함: 낫을 든 동안만 씀 (RUNE_FAMILIES.reaper.weapon), 피의 초승달 컨셉 (핏빛 초승달 · 출혈 · 흡혈), 배율 합은 다른 계열과 같은 등급 기준 (4 · 7 · 12 · 20 · 32 — 출혈 dot × dots 포함) 0.16.0: 한정 초월 룬 셋 (사용자 요청 '한정 초월 룬 — 총 스탯의 합으로 계수') — 계열 arcana · dipper · skyeye 는 초월 하나씩 (RUNE_LIMITED_ORDER, 일반 · 고급 · 스탯 뽑기권에는 나오지 않고 한정 뽑기의 초월 픽업으로만). 배율 합 34 (사용자 요청 '5% ~ 12% 더 쎄게' — 다른 초월 32 보다 6.25% 위: 만상귀일 구슬 17 (스탯 비율로 나눔) + 귀일 폭발 crush 17 · 칠성 강림 별빛 2 × 7 + 별 낙하 crush 20 · 천공의 눈 광선 3 × 6 + 마무리 폭발 crush 16 — 돌파는 rune_break.json: 3돌 42 · 6돌 55, 처음 설계 32 · 38 ~ 39.2 · 49.4 ~ 50 보다 6 ~ 11%), 재사용 대기 36초. height 는 하늘 그림의 가장 높은 자리 (시전자와 겨눈 곳 거리 × 0.42 — 칠성 5칸 · 천공 6칸 이상, 1인칭 화면 위쪽 안에 들게). 0.17.0: 넷째 한정 초월 룬 무간참역 (endless — 사용자 요청 '무수한 참격 공격' 영역 룬, 이름 · 모습은 오리지널): 쓴 자리 반지름 radius 칸 영역, charge 틱 전개 → gap 틱마다 영역 안 모든 적 베기 mult × hits → finish 틱 뒤 마무리 일섬 crush (배율 합 2 × 10 + 14 = 34 — 다른 한정과 같음). 0.18.0: 다섯째 대지 가르기 (terra — 앞쪽 직선 대검 내려치기 crush + 여진 mult × hits). 0.19.0: 여섯째 한정 룬 세계수의 가호 (yggdrasil — 사용자 요청 '버프 계열 한정 룬 — 가하는 피해 증가 · 받는 피해 감소'): 피해 없음 (배율 합 0), charge 틱 뒤 쓴 자리 반지름 radius 칸 안 아군 (나 포함 — 결투 상대 빼고) 에게 ticks 틱 동안 가하는 피해 × (1 + 가호) · 받는 피해 × (1 − 가호, 다른 피해 감소와는 가장 센 것 하나), 가호 = graceUp (받는 피해는 graceCut) + min(gracePer × 네 스탯의 합, graceCap) — 넷 모두 돌파 계수를 곱함 (rune_break.json scaleKeys: 40렙 125포인트 0돌 20% · 3돌 26% · 6돌 32%). tree = 세계수 환영의 표시 크기 · dist · side = 나무 밑동 자리 (시전자 앞 · 왼쪽 칸 — 사진 검토: 바로 앞 8칸이면 줄기가 1인칭 화면 가운데의 적을 가리고 잎 지붕은 화면 위 밖, 앞 10 · 왼쪽 5.5칸이면 잎 지붕 위가 조금 잘림 → 앞 12 · 왼쪽 6칸 (6돌 큰 나무는 15 · 7.5칸)). 0.20.0: 일곱째 한정 룬 심연의 낙인 (abyss — 사용자가 고름: 추천 유틸 중 적 약화, 세계수의 가호와 곱연산): 피해 없음, 조준한 곳 (range 칸) 반지름 radius 칸 안 적 (보스 포함 · 플레이어 빼고) 에 charge 틱 뒤 ticks 틱 동안 낙인 — 모든 플레이어에게 받는 피해 × (1 + 낙인) · 그 적이 플레이어에게 주는 피해 × (1 − 낙인), 낙인 = brandUp (주는 피해는 brandCut) + min(brandPer × 네 스탯의 합, brandCap) × 돌파 계수 (scaleKeys — 40렙 125포인트 0돌 20% · 3돌 26% · 6돌 32%). 가호 · 다른 피해 감소와는 곱 (다른 층), 낙인끼리는 센 것 하나",
+    "spellblade": {
+      "common": {"fn": "arcaneCut", "name": "마력 베기", "desc": "앞을 베고 그 자리에 마력 폭발", "use": "근접 전방·검+마력", "mult": 2, "hits": 2, "gap": 10, "range": 4.2, "cone": 110, "imbue": 0.35, "span": 10},
+      "rare": {"fn": "manaBlaster", "name": "마나 블라스터", "desc": "조준점을 따라가는 마력 광선 3초", "use": "지속 관통 광선 7타", "kind": "magic", "mult": 1, "hits": 7, "gap": 10, "range": 16, "width": 0.9, "imbue": 0.6, "span": 62},
+      "noble": {"fn": "riftSlash", "name": "차원 베기", "desc": "돌진해 베고 갈라진 자리가 폭발", "use": "돌진·직선 2타", "mult": 6, "hits": 2, "dist": 8, "width": 1.6, "delay": 12, "imbue": 1, "span": 12},
+      "hero": {"fn": "orbitBlades", "name": "마검 결계", "desc": "마력 검 넷이 4초 동안 주위를 벰", "use": "주위 지속 8타", "mult": 2.5, "hits": 8, "gap": 10, "radius": 3.6, "swords": 4, "orbit": 2, "imbue": 1.7, "span": 70},
+      "transcend": {"fn": "spellbladeRelease", "name": "마검 해방", "desc": "거대한 마력 검으로 십자 베기", "use": "전방 대형 십자 2타 · 마력 약화 (받는 피해 +10%)", "mult": 16, "hits": 2, "charge": 16, "gap": 10, "range": 9, "cone": 150, "length": 12, "width": 2.4, "cross": 3, "imbue": 2.7, "span": 26, "vuln": 0.1, "vulnTicks": 120}
+    },
+    "int": {
+      "common": {"fn": "fireball", "name": "화염구", "desc": "불덩이를 날려 폭발", "use": "원거리 폭발·불", "mult": 4, "range": 20, "speed": 24, "radius": 2.2, "fire": 3},
+      "rare": {"fn": "frostNova", "name": "서리 폭발", "desc": "주위를 얼려 피해 · 빙결", "use": "주위 광역 · 빙결 1초 (보스는 둔화)", "mult": 7, "radius": 4.2, "slowTicks": 60, "slowAmp": 1, "freeze": 20},
+      "noble": {"fn": "fireStorm", "name": "화염 폭풍", "desc": "조준한 곳에 불기둥 소용돌이", "use": "지속 광역·끌어당김", "mult": 2, "hits": 6, "gap": 10, "range": 18, "radius": 3.2, "pull": 0.25},
+      "hero": {"fn": "blizzard", "name": "블리자드", "desc": "조준한 곳에 눈보라 4초", "use": "지속 광역·둔화", "mult": 2.5, "hits": 8, "gap": 10, "range": 18, "radius": 5, "slowTicks": 40, "slowAmp": 2},
+      "transcend": {"fn": "meteor", "name": "메테오", "desc": "조준한 곳에 운석 낙하", "use": "원거리 대형 광역·불", "mult": 32, "range": 24, "radius": 6, "delay": 30, "fire": 5, "lift": 0.9}
+    },
+    "element": {
+      "common": {"fn": "flameSlash", "name": "화염 베기", "desc": "불꽃 검으로 앞을 베어 불태움", "use": "근접 전방·불", "kind": "sword", "el": "fire", "mult": 4, "range": 4.2, "cone": 120, "fire": 4},
+      "rare": {"fn": "frostThrust", "name": "서리 일섬", "desc": "찌른 줄에 얼음 가시가 솟음", "use": "직선 2타·얼음", "el": "ice", "mult": 3.5, "hits": 2, "gap": 10, "range": 7, "width": 1.3, "slowTicks": 60, "slowAmp": 1},
+      "noble": {"fn": "thunderSlash", "name": "뇌광 베기", "desc": "벤 적에게 번개가 떨어져 튐 · 감전", "use": "근접 전방·번개 연쇄 · 감전 (받는 피해 +10%)", "el": "thunder", "mult": 6, "hits": 2, "gap": 10, "range": 4.5, "cone": 120, "chain": 6, "chainMult": 6, "vuln": 0.1, "vulnTicks": 100},
+      "hero": {"fn": "triElement", "name": "삼원소 연격", "desc": "불·얼음·번개로 세 번 연속 공격", "use": "전방 3연타·세 원소", "el": "all", "mult": 6.67, "hits": 3, "gap": 10, "range": 4.2, "cone": 110, "thrust": 6.5, "fire": 3, "slowTicks": 40, "slowAmp": 1, "chain": 4, "chainMult": 3.33},
+      "transcend": {"fn": "elementRelease", "name": "원소 해방", "desc": "세 원소 검기를 부채꼴로 날림", "use": "부채꼴 관통·세 원소", "kind": "magic", "el": "all", "mult": 32, "charge": 16, "range": 18, "width": 2, "spread": 22, "speed": 30, "fire": 5, "slowTicks": 60, "slowAmp": 2, "chain": 6, "chainMult": 16}
+    },
+    "dex": {
+      "common": {"fn": "galeSlash", "name": "질풍 베기", "desc": "앞으로 돌진하며 베기", "use": "돌진·이동", "mult": 4, "dash": 5, "width": 1.3},
+      "rare": {"fn": "bladeFan", "name": "칼날 부채", "desc": "칼날 7개를 부채꼴로 던짐", "use": "부채꼴 원거리", "mult": 7, "blades": 7, "spread": 50, "range": 10},
+      "noble": {"fn": "shadowRaid", "name": "그림자 습격", "desc": "분신이 적 4명을 기습 · 표식", "use": "다중 대상 · 표식 (받는 피해 +10%)", "mult": 12, "targets": 4, "range": 9, "cone": 70, "gap": 4, "vuln": 0.1, "vulnTicks": 100},
+      "hero": {"fn": "bladeStorm", "name": "칼바람 폭풍", "desc": "칼바람을 두르고 주위를 벰", "use": "주위 5타·이동 속도", "mult": 4, "hits": 5, "gap": 10, "radius": 3.5, "speedTicks": 50},
+      "transcend": {"fn": "shadowless", "name": "무영검", "desc": "적을 멈추고 칼자국 폭발", "use": "다수 제압·폭발", "mult": 32, "range": 12, "cone": 140, "freeze": 30, "cuts": 8, "delay": 26, "maxTargets": 8}
+    },
+    "blade": {
+      "common": {"fn": "quickDraw", "name": "도약 발도", "desc": "앞으로 뛰어들며 칼을 뽑아 벰", "use": "도약 · 근접 전방 광역", "mult": 4, "leap": 7, "air": 8, "range": 4.2, "cone": 120},
+      "rare": {"fn": "swordWave", "name": "검기 날리기", "desc": "초승달 검기가 날아가며 관통", "use": "직선 원거리 관통", "mult": 7, "range": 14, "width": 1.6, "speed": 26},
+      "noble": {"fn": "counterStance", "name": "반격 자세", "desc": "막는 자세, 때린 적을 바로 반격", "use": "반격·피해 감소", "mult": 12, "ticks": 50, "reduce": 0.5, "range": 4.5, "cone": 120},
+      "hero": {"fn": "tripleCut", "name": "삼단베기", "desc": "가로·세로 베기 뒤 찌르기 · 검세", "use": "전방 3연타 · 검세 (가하는 피해 +10%)", "mult": 6.67, "hits": 3, "gap": 10, "range": 4.2, "cone": 110, "thrust": 6.5, "buff": 0.1, "buffTicks": 120},
+      "transcend": {"fn": "heavenSplit", "name": "천지개벽", "desc": "검기를 모아 거대한 검기 발사", "use": "직선 대형 관통", "mult": 32, "charge": 20, "range": 18, "width": 2.6, "speed": 30, "knock": 1}
+    },
+    "assassin": {
+      "common": {"fn": "backstab", "name": "배후 일격", "desc": "대상 너머로 뛰어올라 등 뒤에서 찌름", "use": "도약 · 단일 강타 · 표식", "mult": 4, "range": 8, "cone": 25, "span": 6, "air": 6},
+      "rare": {"fn": "poisonStars", "name": "독 표창", "desc": "표창 3개, 맞은 적은 1초 중독", "use": "원거리·지속 피해", "mult": 4, "dot": 1.5, "dots": 2, "dotGap": 10, "stars": 3, "spread": 30, "range": 14, "speed": 30, "span": 30},
+      "noble": {"fn": "smokeBomb", "name": "연막", "desc": "연막 속 적을 3번 베고 몸을 숨김", "use": "주위 제압·은신", "mult": 4, "hits": 3, "gap": 10, "radius": 4, "hide": 60, "slowTicks": 60, "span": 20},
+      "hero": {"fn": "shadowFlurry", "name": "그림자 난도질", "desc": "대상에 달라붙어 5번 난도질 · 마지막에 표식", "use": "단일 5타 · 표식 (받는 피해 +10%)", "mult": 4, "hits": 5, "gap": 10, "range": 7, "cone": 30, "span": 40, "vuln": 0.1, "vulnTicks": 100},
+      "transcend": {"fn": "moonAssassin", "name": "월광 암살", "desc": "달빛 표식 뒤 등 뒤에서 X 베기", "use": "원거리 단일·주위", "mult": 32, "range": 14, "cone": 20, "delay": 20, "splash": 3, "splashMult": 16, "span": 20}
+    },
+    "axe": {
+      "common": {"fn": "axeBoomerang", "name": "회전 도끼", "desc": "도끼를 던져 왕복하며 벰 · 받으면 분노", "use": "직선 왕복 2타 · 분노 (가하는 피해 +10%)", "mult": 2, "hits": 2, "range": 10, "width": 1.5, "speed": 28, "hover": 10, "buff": 0.1, "buffTicks": 120},
+      "rare": {"fn": "bloodCleave", "name": "피의 도끼질", "desc": "앞을 찍고 맞힌 적마다 체력 회복", "use": "근접 광역·흡혈", "mult": 7, "radius": 3.5, "cone": 110, "heal": 0.04, "healMax": 5},
+      "noble": {"fn": "leapSlam", "name": "도약 찍기", "desc": "조준한 곳으로 뛰어 내려찍기 · 방어 깨짐", "use": "도약 · 광역 · 방어 깨짐 (받는 피해 +10%)", "mult": 12, "range": 9, "radius": 3.5, "lift": 0.5, "air": 6, "vuln": 0.1, "vulnTicks": 100},
+      "hero": {"fn": "execute", "name": "처형", "desc": "한 대상 강타, 약하면 1.5배", "use": "단일 마무리", "mult": 20, "range": 5, "cone": 30, "below": 0.35, "bonus": 1.5, "delay": 8},
+      "transcend": {"fn": "berserker", "name": "광전사의 혼", "desc": "6초 광폭화, 주위 난타·흡혈", "use": "난전·흡혈·피해 감소", "mult": 5.33, "hits": 6, "gap": 20, "radius": 4, "reduce": 0.25, "heal": 0.02, "healMax": 5}
+    },
+    "str": {
+      "common": {"fn": "groundSlam", "name": "대지 강타", "desc": "앞쪽 땅을 내려쳐 충격파 · 기절", "use": "근접 광역 · 기절 0.5초", "mult": 4, "dist": 2.2, "radius": 2.8, "lift": 0.35, "stun": 10},
+      "rare": {"fn": "whirlwind", "name": "회오리 베기", "desc": "제자리에서 3번 휘몰아치며 둘레 적을 끌어당김", "use": "주위 3타 · 끌어당김", "mult": 2.35, "hits": 3, "gap": 10, "radius": 3.5, "pull": 0.45},
+      "noble": {"fn": "fissure", "name": "대지 균열", "desc": "앞으로 땅이 갈라지며 솟구침 · 방어 깨짐", "use": "직선 관통 · 띄움 · 방어 깨짐 (받는 피해 +10%)", "mult": 12, "length": 9, "width": 1.4, "lift": 0.6, "vuln": 0.1, "vulnTicks": 100},
+      "hero": {"fn": "titanSmash", "name": "거인의 도약", "desc": "뛰어올라 거대한 망치로 내려찍음", "use": "도약 · 광역 내려찍기 · 기절 1초", "mult": 20, "range": 9, "radius": 5, "air": 12, "stun": 20, "lift": 0.3},
+      "transcend": {"fn": "heavenFall", "name": "천붕", "desc": "하늘에서 거대한 검이 떨어짐", "use": "원거리 대형 광역·둔화", "mult": 32, "range": 22, "radius": 6, "delay": 24, "lift": 1}
+    },
     "holy": {
       "common": {"fn": "lightBarrier", "name": "빛의 보호막", "desc": "나와 아군에게 보호막", "use": "보호막·아군 보호", "mult": 2.5, "radius": 5, "hitRadius": 3, "shield": 0.15, "ticks": 160},
       "rare": {"fn": "purify", "name": "정화의 빛", "desc": "회복하고 나쁜 효과 제거", "use": "회복·정화", "mult": 4, "heal": 0.1, "radius": 8, "hitRadius": 4},
@@ -261,16 +317,16 @@
     },
     "spirit": {
       "common": {"fn": "summonSpirits", "name": "불의 정령", "desc": "샐러맨더가 불덩이를 던짐", "use": "소환 · 원거리 폭발 4번", "spirits": ["salamander"], "mult": 1, "hits": 4, "gap": 12, "first": 8, "ticks": 60, "range": 12},
-      "rare": {"fn": "summonSpirits", "name": "물의 정령", "desc": "운디네가 물줄기를 쏨", "use": "소환 · 밀치는 물줄기 3번", "spirits": ["undine"], "mult": 2.33, "hits": 3, "gap": 20, "first": 8, "ticks": 70, "range": 11},
+      "rare": {"fn": "summonSpirits", "name": "물의 정령", "desc": "운디네가 물줄기를 쏨 · 밀쳐냄", "use": "소환 · 밀치는 물줄기 3번", "spirits": ["undine"], "mult": 2.33, "hits": 3, "gap": 20, "first": 8, "ticks": 70, "range": 11},
       "noble": {"fn": "summonSpirits", "name": "바람의 정령", "desc": "실프가 적을 꿰뚫으며 돌진", "use": "소환 · 관통 돌진 4번", "spirits": ["sylph"], "mult": 3, "hits": 4, "gap": 18, "first": 8, "ticks": 80, "range": 12},
-      "hero": {"fn": "summonSpirits", "name": "땅의 정령", "desc": "노움이 바위 가시를 솟게 함", "use": "소환 · 범위 가시 4번", "spirits": ["gnome"], "mult": 5, "hits": 4, "gap": 20, "first": 10, "ticks": 90, "range": 12},
+      "hero": {"fn": "summonSpirits", "name": "땅의 정령", "desc": "노움이 바위 가시를 솟게 함 · 묶음", "use": "소환 · 범위 가시 4번 · 묶음 1초", "spirits": ["gnome"], "mult": 5, "hits": 4, "gap": 20, "first": 10, "ticks": 90, "range": 12, "root": 20},
       "transcend": {"fn": "spiritKing", "name": "정령왕 강림", "desc": "네 정령이 합쳐져 거대한 정령왕이 강림함", "use": "정령 공격 넷 → 원소 마무리 넷 → 원소 붕괴", "spirits": ["salamander", "undine", "sylph", "gnome"], "mult": 2.5, "hits": 4, "elemMult": 3.5, "burstMult": 8, "range": 16, "radius": 6, "first": 4, "stagger": 5, "gap": 6, "ticks": 34, "elemGap": 10, "burstDelay": 16, "pull": 0.45, "knock": 1, "slowTicks": 40, "fire": 3, "stun": 0}
     },
     "reaper": {
       "common": {"fn": "bloodCrescent", "name": "피의 초승달", "desc": "핏빛 초승달을 날려 꿰뚫고 출혈", "use": "직선 관통 · 출혈", "mult": 2.5, "dot": 0.5, "dots": 3, "dotGap": 20, "range": 14, "width": 1.6, "speed": 28},
       "rare": {"fn": "bloodHarvest", "name": "핏빛 수확", "desc": "낫을 두 번 휘둘러 베고 피를 거둠", "use": "전방 광역 2타 · 흡혈", "mult": 3.5, "hits": 2, "gap": 10, "radius": 4.5, "cone": 150, "heal": 0.02, "healMax": 5},
-      "noble": {"fn": "bloodWhirl", "name": "피의 회오리", "desc": "핏빛 초승달을 두르고 돌며 벰", "use": "주위 4타 · 출혈", "mult": 2.4, "hits": 4, "gap": 10, "radius": 4, "dot": 0.6, "dots": 4, "dotGap": 20},
-      "hero": {"fn": "bloodBrand", "name": "피의 낙인", "desc": "초승달 낙인을 새기고 터뜨림", "use": "낙인 · 폭발 · 출혈 · 흡혈", "mult": 14, "dot": 1.5, "dots": 4, "dotGap": 20, "targets": 5, "range": 12, "cone": 70, "delay": 20, "heal": 0.03, "healMax": 5},
+      "noble": {"fn": "bloodWhirl", "name": "피의 회오리", "desc": "뛰어들어 핏빛 초승달을 두르고 돌며 벰", "use": "도약 · 주위 4타 · 출혈", "mult": 2.4, "hits": 4, "gap": 10, "radius": 4, "dot": 0.6, "dots": 4, "dotGap": 20, "leap": 8, "air": 10},
+      "hero": {"fn": "bloodBrand", "name": "피의 낙인", "desc": "초승달 낙인을 새기고 터뜨림", "use": "낙인 약화 · 폭발 · 출혈 · 흡혈", "mult": 14, "dot": 1.5, "dots": 4, "dotGap": 20, "targets": 5, "range": 12, "cone": 70, "delay": 20, "heal": 0.03, "healMax": 5, "vuln": 0.1, "vulnTicks": 100},
       "transcend": {"fn": "crimsonMoon", "name": "적월 강림", "desc": "핏빛 달이 떠올라 칼날을 퍼붓고 떨어짐", "use": "원거리 광역 연타 · 추락 · 흡혈", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "dotGap": 20, "range": 20, "radius": 7, "delay": 16, "heal": 0.05, "healMax": 5}
     },
     "tide": {
@@ -278,39 +334,39 @@
       "rare": {"fn": "healingRain", "name": "치유의 비", "desc": "비구름을 불러 적을 때리고 나를 치유", "use": "원거리 광역 4번 · 회복", "mult": 1.75, "hits": 4, "gap": 12, "range": 16, "radius": 4, "delay": 10, "heal": 0.025, "multName": "빗줄기 ", "flow": ["조준한 곳 반지름 {radius}칸 비구름 · {t:gap}마다", "빗줄기마다 나와 구름 아래 아군 회복"]},
       "noble": {"fn": "maelstrom", "name": "소용돌이 감옥", "desc": "소용돌이에 적을 가두고 물기둥으로 터뜨림", "use": "원거리 광역 · 끌어당김 6번 · 물기둥", "mult": 1.5, "hits": 6, "gap": 10, "crush": 3, "range": 16, "radius": 4.5, "pull": 0.32, "slowTicks": 70, "slowAmp": 2, "multName": "소용돌이 ", "crushName": "물기둥", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 가운데로 끌어당김", "끝에 물기둥이 솟아 터짐"]},
       "hero": {"fn": "tidalWave", "name": "해일", "desc": "거대한 파도를 일으켜 앞을 휩쓺", "use": "전방 광역 · 밀어냄 · 파도 부서짐", "mult": 14, "crush": 6, "length": 16, "width": 5, "span": 10, "speed": 12, "radius": 3.5, "knock": 0.9, "multName": "해일 ", "crushName": "파도 부서짐", "flow": ["앞으로 {length}칸 · 폭 {span}칸 파도가 밀려감", "휩쓸린 적은 끝에서 부서지는 파도에 한 번 더"]},
-      "transcend": {"fn": "leviathan", "name": "심해의 군주", "desc": "심해에서 거대한 바다뱀이 솟아 휘감고 내리꽂힘", "use": "원거리 광역 · 휘감기 연타 · 대해일", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 20, "multName": "휘감기 ", "crushName": "대해일", "flow": ["조준한 곳 반지름 {radius}칸 소용돌이 · {t:gap}마다 휘감음", "끝에 바다뱀이 내리꽂혀 대해일"]}
+      "transcend": {"fn": "leviathan", "name": "심해의 군주", "desc": "심해의 바다뱀이 솟아 휘감고 (묶음) 내리꽂힘", "use": "원거리 광역 · 휘감기 연타 · 대해일 · 묶음", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 20, "multName": "휘감기 ", "crushName": "대해일", "flow": ["조준한 곳 반지름 {radius}칸 소용돌이 · {t:gap}마다 휘감음", "끝에 바다뱀이 내리꽂혀 대해일"], "root": 14}
     },
     "golem": {
-      "common": {"fn": "stoneFist", "name": "바위 주먹", "desc": "땅에서 돌 주먹이 솟아 적을 올려침", "use": "원거리 · 띄움", "mult": 4, "range": 14, "cone": 40, "radius": 2, "lift": 0.75, "flow": ["겨눈 적 (앞 {range}칸) 발밑에서 주먹 · 둘레 {radius}칸"]},
+      "common": {"fn": "stoneFist", "name": "바위 도약", "desc": "몸을 바위로 굳혀 뛰어내려 찍음", "use": "도약 · 착지 광역 · 띄움", "mult": 4, "range": 9, "radius": 3, "air": 10, "lift": 0.75, "flow": ["조준한 곳 (앞 {range}칸) 으로 도약 · 착지 둘레 {radius}칸"]},
       "rare": {"fn": "stoneWard", "name": "돌의 수호", "desc": "돌기둥을 세워 둘레를 치고 몸을 지킴", "use": "주위 2타 · 보호막", "mult": 3.5, "hits": 2, "gap": 20, "radius": 4, "shield": 0.12, "ticks": 120, "multName": "돌기둥 ", "flow": ["내 둘레 {radius}칸 돌기둥 넷 · 솟을 때와 무너질 때"]},
       "noble": {"fn": "petrify", "name": "석화 결계", "desc": "룬 결계로 적을 돌로 굳히고 깨뜨림", "use": "원거리 광역 · 기절 · 깨뜨림", "mult": 4, "crush": 8, "range": 15, "radius": 4, "delay": 24, "stun": 40, "multName": "결계 ", "crushName": "깨뜨림", "flow": ["조준한 곳 반지름 {radius}칸 결계 → {t:delay} 뒤 돌로 굳음", "굳은 적은 깨지며 한 번 더 (보스는 굳지 않음)"]},
-      "hero": {"fn": "golemSummon", "name": "골렘 소환", "desc": "룬 골렘을 깨워 적을 내려치게 함", "use": "소환 · 내려치기 3번 · 붕괴", "mult": 5, "hits": 3, "gap": 20, "crush": 5, "range": 10, "radius": 3.5, "delay": 16, "multName": "내려치기 ", "crushName": "붕괴", "flow": ["앞 {range}칸에 골렘 · {t:gap}마다 둘레 {radius}칸 내려침", "끝에 골렘이 무너지며 한 번 더"]},
-      "transcend": {"fn": "colossus", "name": "거신 강림", "desc": "땅을 가르고 거대한 룬 거신이 솟아 내리찍음", "use": "원거리 광역 · 주먹 연타 · 대지 붕괴", "mult": 3.5, "hits": 4, "gap": 16, "crush": 18, "range": 20, "radius": 7, "delay": 28, "multName": "주먹 ", "crushName": "대지 붕괴", "flow": ["조준한 곳 반지름 {radius}칸 · 거신이 솟아 {t:gap}마다 주먹", "끝에 두 주먹으로 대지를 내려침"]}
+      "hero": {"fn": "golemSummon", "name": "골렘 소환", "desc": "룬 골렘을 깨워 적을 끌어모으고 내려치게 함", "use": "소환 · 도발 (끌어모음) · 내려치기 3번 · 붕괴", "mult": 5, "hits": 3, "gap": 20, "crush": 5, "range": 10, "radius": 3.5, "delay": 16, "multName": "내려치기 ", "crushName": "붕괴", "flow": ["앞 {range}칸에 골렘 · 깨어나며 둘레 {taunt}칸 끌어모음", "{t:gap}마다 둘레 {radius}칸 내려침 · 끝에 무너지며 한 번 더"], "taunt": 6},
+      "transcend": {"fn": "colossus", "name": "거신 강림", "desc": "땅을 가르고 거대한 룬 거신이 솟아 내리찍음", "use": "원거리 광역 · 주먹 연타 · 대지 붕괴 · 기절 1초", "mult": 3.5, "hits": 4, "gap": 16, "crush": 18, "range": 20, "radius": 7, "delay": 28, "multName": "주먹 ", "crushName": "대지 붕괴", "flow": ["조준한 곳 반지름 {radius}칸 · 거신이 솟아 {t:gap}마다 주먹", "끝에 두 주먹으로 대지를 내려침"], "stun": 20}
     },
     "monk": {
-      "common": {"fn": "chainFist", "name": "연환권", "desc": "주먹을 세 번 내지르고 장풍으로 마무리", "use": "전방 3타 · 장풍", "mult": 1, "hits": 3, "gap": 10, "crush": 1, "radius": 3.6, "cone": 110, "knock": 0.55, "multName": "주먹 ", "crushName": "장풍", "flow": ["앞 {radius}칸 · {t:gap}마다 주먹 셋 → 장풍"]},
-      "rare": {"fn": "flyingKick", "name": "비각", "desc": "날아차기로 돌진해 처음 맞은 적을 차고 내려찍음", "use": "돌진 · 착지 충격", "mult": 4, "crush": 3, "range": 8, "width": 1.4, "radius": 2.6, "multName": "날아차기 ", "crushName": "내려찍기", "flow": ["앞 {range}칸 돌진 · 처음 맞은 적에서 멈춤", "내려찍기 둘레 {radius}칸"]},
+      "common": {"fn": "chainFist", "name": "연환권", "desc": "주먹을 세 번 내지르고 장풍으로 마무리 · 기", "use": "전방 3타 · 장풍 · 기 (가하는 피해 +10%)", "mult": 1, "hits": 3, "gap": 10, "crush": 1, "radius": 3.6, "cone": 110, "knock": 0.15, "multName": "주먹 ", "crushName": "장풍", "flow": ["앞 {radius}칸 · {t:gap}마다 주먹 셋 → 장풍", "장풍까지 마치면 기 {t:buffTicks}"], "buff": 0.1, "buffTicks": 120},
+      "rare": {"fn": "flyingKick", "name": "비각", "desc": "뛰어올라 날아차기로 내려찍음", "use": "도약 · 날아차기 · 착지 충격", "mult": 4, "crush": 3, "range": 8, "air": 8, "kick": 2.8, "radius": 2.6, "multName": "날아차기 ", "crushName": "내려찍기", "flow": ["조준한 곳 (앞 {range}칸) 으로 도약 · 날아차기 앞 {kick}칸", "0.5초 뒤 내려찍기 둘레 {radius}칸"]},
       "noble": {"fn": "palmBlast", "name": "붕권", "desc": "기를 모아 거대한 장풍을 내지름", "use": "전방 광역 · 밀쳐냄", "mult": 12, "range": 8, "cone": 70, "delay": 10, "knock": 1.4, "flow": ["{t:delay} 기를 모아 앞 {range}칸 부채꼴 ({cone}도)"]},
-      "hero": {"fn": "hundredFists", "name": "백열권", "desc": "수많은 주먹을 퍼붓고 마지막 일격", "use": "전방 연타 · 마무리", "mult": 3.2, "hits": 5, "gap": 10, "crush": 4, "radius": 4.5, "cone": 120, "knock": 0.8, "multName": "주먹 ", "crushName": "마지막 일격", "flow": ["앞 {radius}칸 · 주먹 비 ({t:gap}마다 피해)", "마지막 일격에 밀쳐냄"]},
+      "hero": {"fn": "hundredFists", "name": "백열권", "desc": "수많은 주먹을 퍼붓고 마지막 일격", "use": "전방 연타 · 마무리 · 기절 1초", "mult": 3.2, "hits": 5, "gap": 10, "crush": 4, "radius": 4.5, "cone": 120, "knock": 0.3, "multName": "주먹 ", "crushName": "마지막 일격", "flow": ["앞 {radius}칸 · 주먹 비 ({t:gap}마다 피해)", "마지막 일격에 기절"], "stun": 20},
       "transcend": {"fn": "heavenFist", "name": "천권 강림", "desc": "하늘에 맺힌 기의 주먹이 쏟아지고 거대한 주먹이 내리꽂힘", "use": "원거리 광역 · 주먹 비 · 거대한 주먹", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 6.5, "delay": 20, "multName": "주먹 ", "crushName": "거대한 주먹", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 주먹", "끝에 하늘의 거대한 주먹"]}
     },
     "hunter": {
       "common": {"fn": "steelTrap", "name": "강철 덫", "desc": "덫을 던져 적을 물고 묶음", "use": "원거리 · 묶음", "mult": 4, "range": 13, "radius": 2.2, "root": 30, "flow": ["조준한 곳에 덫 · 둘레 {radius}칸 적을 묾"]},
-      "rare": {"fn": "falconStrike", "name": "매의 습격", "desc": "영혼의 매가 적에게 거듭 내리꽂힘", "use": "원거리 단일 4번", "mult": 1.75, "hits": 4, "gap": 10, "range": 16, "cone": 60, "radius": 1.6, "multName": "급강하 ", "flow": ["겨눈 적에게 {t:gap}마다 급강하 (둘레 {radius}칸)"]},
+      "rare": {"fn": "falconStrike", "name": "매의 습격", "desc": "영혼의 매가 적에게 거듭 내리꽂힘 · 사냥감 표식", "use": "원거리 단일 4번 · 사냥감 표식 (받는 피해 +10%)", "mult": 1.75, "hits": 4, "gap": 10, "range": 16, "cone": 60, "radius": 1.6, "multName": "급강하 ", "flow": ["겨눈 적에게 {t:gap}마다 급강하 (둘레 {radius}칸)"], "vuln": 0.1, "vulnTicks": 100},
       "noble": {"fn": "huntNet", "name": "사냥 그물", "desc": "그물을 던져 적을 묶고 조여 벰", "use": "원거리 광역 · 묶음 · 조이기 3번", "mult": 4, "hits": 3, "gap": 12, "range": 13, "radius": 3.2, "root": 50, "multName": "조이기 ", "flow": ["조준한 곳 반지름 {radius}칸 그물 · {t:gap}마다 조임"]},
-      "hero": {"fn": "wolfPack", "name": "늑대 무리", "desc": "영혼의 늑대들이 달려들어 물어뜯음", "use": "전방 광역 · 물기 5번 · 울부짖음", "mult": 3, "hits": 5, "gap": 10, "crush": 5, "range": 12, "cone": 80, "radius": 3.5, "multName": "물기 ", "crushName": "울부짖음", "flow": ["앞 {range}칸 부채꼴 적에게 늑대 다섯 · {t:gap}마다", "끝에 울부짖음 (물린 적 · 둘레 {radius}칸)"]},
-      "transcend": {"fn": "beastKing", "name": "야수왕 강림", "desc": "거대한 영혼의 야수왕이 내려와 할퀴고 짓밟음", "use": "원거리 광역 · 할퀴기 연타 · 짓밟기", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 20, "multName": "할퀴기 ", "crushName": "짓밟기", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 할퀴기", "끝에 야수왕이 짓밟음"]}
+      "hero": {"fn": "wolfPack", "name": "늑대 무리", "desc": "영혼의 늑대들이 달려들어 물어뜯음", "use": "전방 광역 · 물기 5번 · 울부짖음 · 둔화", "mult": 3, "hits": 5, "gap": 10, "crush": 5, "range": 12, "cone": 80, "radius": 3.5, "multName": "물기 ", "crushName": "울부짖음", "flow": ["앞 {range}칸 부채꼴 적에게 늑대 다섯 · {t:gap}마다", "끝에 울부짖음 (물린 적 · 둘레 {radius}칸)"], "slowTicks": 40, "slowAmp": 1},
+      "transcend": {"fn": "beastKing", "name": "야수왕 강림", "desc": "거대한 영혼의 야수왕이 내려와 할퀴고 짓밟음", "use": "원거리 광역 · 할퀴기 연타 · 짓밟기 · 사냥감 표식 (받는 피해 +10%)", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 20, "multName": "할퀴기 ", "crushName": "짓밟기", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 할퀴기", "끝에 야수왕이 짓밟음"], "vuln": 0.1, "vulnTicks": 120}
     },
     "volcano": {
-      "common": {"fn": "magmaSlam", "name": "용암 강타", "desc": "땅을 내리쳐 용암을 튀김", "use": "전방 광역 · 화상", "mult": 2.5, "dot": 0.5, "dots": 3, "dotGap": 20, "radius": 3.6, "cone": 120, "dotName": "화상", "flow": ["앞 {radius}칸 부채꼴 · 화상 {t:dotGap}마다"]},
+      "common": {"fn": "magmaSlam", "name": "화산 도약", "desc": "용암을 끌고 뛰어올라 내리침", "use": "도약 · 착지 광역 · 화상", "mult": 2.5, "dot": 0.5, "dots": 3, "dotGap": 20, "range": 9, "air": 10, "radius": 3.4, "dotName": "화상", "flow": ["조준한 곳 (앞 {range}칸) 으로 도약 · 착지 둘레 {radius}칸", "화상 {t:dotGap}마다"]},
       "rare": {"fn": "lavaBombs", "name": "화산탄", "desc": "불타는 화산탄 셋을 던져 터뜨림", "use": "원거리 광역 3번 · 화상", "mult": 2, "hits": 3, "gap": 10, "dot": 0.5, "dots": 2, "dotGap": 20, "range": 16, "radius": 2.8, "dotName": "화상", "multName": "화산탄 ", "flow": ["조준한 곳으로 화산탄 셋 · {t:gap}마다 반지름 {radius}칸 폭발"]},
       "noble": {"fn": "magmaGeyser", "name": "용암 분출", "desc": "땅을 갈라 용암 기둥을 연달아 솟구치게 함", "use": "원거리 광역 · 분출 4번 · 화상", "mult": 2.5, "hits": 4, "gap": 10, "dot": 0.5, "dots": 4, "dotGap": 20, "range": 15, "radius": 3, "lift": 0.35, "dotName": "화상", "multName": "분출 ", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 용암 기둥"]},
-      "hero": {"fn": "magmaField", "name": "마그마 대지", "desc": "땅을 용암으로 녹이고 크게 분출시킴", "use": "원거리 광역 · 화상 지대 · 대분출", "mult": 4, "crush": 10, "dot": 1, "dots": 6, "dotGap": 10, "range": 16, "radius": 4.5, "delay": 40, "dotName": "화상", "multName": "녹아내림 ", "crushName": "대분출", "flow": ["조준한 곳 {radius}칸이 녹아 {t:dotGap}마다 화상", "{t:delay} 뒤 대분출"]},
+      "hero": {"fn": "magmaField", "name": "마그마 대지", "desc": "땅을 용암으로 녹이고 크게 분출시킴 · 녹은 갑옷", "use": "원거리 광역 · 화상 지대 · 녹은 갑옷 (받는 피해 +10%) · 대분출", "mult": 4, "crush": 10, "dot": 1, "dots": 6, "dotGap": 10, "range": 16, "radius": 4.5, "delay": 40, "dotName": "화상", "multName": "녹아내림 ", "crushName": "대분출", "flow": ["조준한 곳 {radius}칸이 녹아 {t:dotGap}마다 화상", "{t:delay} 뒤 대분출"], "vuln": 0.1, "vulnTicks": 100},
       "transcend": {"fn": "grandEruption", "name": "대분화", "desc": "땅에서 화산이 솟아 화산탄을 퍼붓고 크게 터짐", "use": "원거리 광역 · 화산탄 비 · 대분화", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 24, "dotGap": 20, "dotName": "화상", "multName": "화산탄 ", "crushName": "대분화", "flow": ["조준한 곳에 화산 · {t:gap}마다 화산탄 (반지름 {radius}칸)", "끝에 대분화"]}
     },
     "gladiator": {
       "common": {"fn": "chainHook", "name": "사슬 갈고리", "desc": "사슬 갈고리를 던져 적을 끌어옴", "use": "원거리 단일 · 끌어당김", "mult": 4, "range": 14, "cone": 30, "pull": 1, "flow": ["겨눈 적 (앞 {range}칸) 을 내 앞으로 끌어옴 (보스 제외)"]},
-      "rare": {"fn": "shieldRush", "name": "방패 돌진", "desc": "방패를 앞세워 돌진하고 부딪힌 자리를 내려찍음", "use": "돌진 · 밀쳐냄 · 받는 피해 감소", "mult": 5, "crush": 2, "range": 8, "width": 1.6, "radius": 2.6, "reduce": 0.3, "ticks": 40, "knock": 0.8, "multName": "돌진 ", "crushName": "내려찍기", "flow": ["앞 {range}칸 돌진 · 처음 부딪힌 적에서 멈춤", "돌진하는 동안 받는 피해 감소"]},
+      "rare": {"fn": "shieldRush", "name": "방패 강하", "desc": "방패를 들고 뛰어올라 내려찍음", "use": "도약 · 착지 광역 · 밀쳐냄 · 받는 피해 감소", "mult": 7, "range": 8, "air": 8, "radius": 3, "reduce": 0.3, "ticks": 40, "knock": 0.8, "flow": ["조준한 곳 (앞 {range}칸) 으로 도약 · 착지 둘레 {radius}칸", "{t:ticks} 동안 받는 피해 감소"]},
       "noble": {"fn": "chainWhirl", "name": "사슬 회전", "desc": "사슬을 휘둘러 둘레를 치고 끌어모음", "use": "주위 4타 · 끌어당김 · 받는 피해 감소", "mult": 2.5, "hits": 4, "gap": 10, "crush": 2, "radius": 4.5, "reduce": 0.25, "ticks": 50, "pull": 0.4, "multName": "사슬 ", "crushName": "끌어모음", "flow": ["둘레 {radius}칸 · {t:gap}마다 사슬", "끝에 사슬로 끌어모아 한 번 더"]},
       "hero": {"fn": "arenaDomain", "name": "투기장", "desc": "사슬 울타리로 투기장을 세우고 사슬로 내려침", "use": "주위 영역 · 가둠 · 내려치기 4번 · 받는 피해 감소", "mult": 4, "hits": 4, "gap": 20, "crush": 4, "radius": 6, "reduce": 0.2, "ticks": 90, "multName": "내려치기 ", "crushName": "마무리", "flow": ["반지름 {radius}칸 투기장 {t:ticks} · 적은 못 나감", "{t:gap}마다 안의 적을 사슬로 내려침"]},
       "transcend": {"fn": "warChains", "name": "투신의 사슬", "desc": "거대한 사슬이 솟아 적을 묶고 조인 뒤 거대한 철퇴가 내리꽂힘", "use": "원거리 광역 · 묶음 · 조이기 연타 · 철퇴", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 16, "root": 40, "multName": "조이기 ", "crushName": "철퇴", "flow": ["조준한 곳 반지름 {radius}칸 · 사슬이 솟아 묶고 {t:gap}마다 조임", "끝에 거대한 철퇴"]}
@@ -334,7 +390,7 @@
       "transcend": {"fn": "abyssBrand", "name": "심연의 낙인", "desc": "심연의 사슬로 적을 묶고 낙인을 새김", "use": "적 약화 · 받는 피해 증가 · 주는 피해 감소", "brandUp": 0.1, "brandCut": 0.1, "brandPer": 0.0008, "brandCap": 0.12, "ticks": 200, "radius": 6, "range": 20, "charge": 14}
     },
     "glacier": {
-      "transcend": {"fn": "glacierField", "name": "만년빙하", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.6}
+      "transcend": {"fn": "glacierField", "name": "만년빙하", "desc": "얼음 필드를 펼쳐 발밑에서 거대한 얼음을 솟게 함", "use": "원거리 얼음 필드 · 거대한 얼음 연타 · 빙결 · 빙하 붕괴", "mult": 3, "hits": 8, "crush": 10, "radius": 6, "range": 20, "charge": 16, "gap": 14, "finish": 14, "chill": 3, "frost": 40, "lift": 0.5}
     },
     "skyeye": {
       "transcend": {"fn": "heavenEye", "name": "천공의 눈", "desc": "하늘의 눈이 바라보는 곳을 광선으로 태움", "use": "조종하는 광선 · 6연타 · 마무리 폭발", "mult": 3, "hits": 6, "crush": 16, "range": 24, "width": 2.5, "speed": 6, "charge": 20, "gap": 10, "radius": 5, "height": 10, "fire": 3}
@@ -486,7 +542,7 @@
       "golem.hero": {"t": 70, "w": 16, "zone": true, "u": ["taunt"]},
       "golem.transcend": {"t": 92, "w": 28, "zone": true, "u": ["stun1"]},
       "monk.common": {"t": 31, "u": ["buff10"]},
-      "monk.rare": {"t": 10, "w": 8, "u": ["leap"]},
+      "monk.rare": {"t": 18, "w": 8, "u": ["leap"]},
       "monk.noble": {"t": 10, "w": 10, "u": ["knock"]},
       "monk.hero": {"t": 51, "u": ["stun1"]},
       "monk.transcend": {"t": 86, "w": 24, "zone": true, "u": ["knock"]},

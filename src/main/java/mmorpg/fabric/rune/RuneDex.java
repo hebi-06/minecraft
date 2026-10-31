@@ -204,7 +204,8 @@ final class RuneDex {
                     SkillFx.cutMark(level, at, v, -40, 0.18, glow, core, 1.1 * xs);
                     SkillFx.sparks(level, at, core, 5, 5);
                     SkillFx.play(level, "game.player.attack.critical", at, 1.3, 0.8);
-                    RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat());
+                    // 0.49.0 표식: 기습당한 적 vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
+                    if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, true);
                 });
             });
         }
