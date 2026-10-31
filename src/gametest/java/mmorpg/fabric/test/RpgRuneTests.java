@@ -128,7 +128,7 @@ public final class RpgRuneTests {
         Husk z = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, 3.5F));
         Runes.Rune r = Runes.parseRune("rpg:rune_strike_common");
         h.assertTrue(RuneCast.castRune(sp, r, false), "cast");
-        double bonus = RuneCast.power(sp, "strike") * r.def().num("bonus");
+        double bonus = RuneCast.power(sp, "strike") * r.def().num("bonus") * Runes.damageScale(r); // 0.50.0 범위 보정 (평타에 덧붙임 — 날 세우기 단일 +15% · 가르기 좁은 범위 +8%)
         double base = w.damage() * Combat.powerMultiplier(RpgStats.effective(sp), w, 0); // 0.39.0: 공격 대기 충전 없이 온전한 피해
         sp.attack(z);
         double dealt = TestDummies.dealt(z);

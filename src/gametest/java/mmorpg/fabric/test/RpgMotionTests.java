@@ -372,7 +372,7 @@ public final class RpgMotionTests {
             h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == g), "no buff: 2.8 out of reach");
             h.assertTrue(SwingLook.testKey(sp) == null, "no look yet");
             h.assertTrue(RuneCast.castRune(sp, r, false), "cast 날 세우기");
-            bonus[0] = RuneCast.power(sp, "strike") * r.def().num("bonus");
+            bonus[0] = RuneCast.power(sp, "strike") * r.def().num("bonus") * Runes.damageScale(r); // 0.50.0 범위 보정 (평타에 덧붙임 — 날 세우기 단일 +15% · 가르기 좁은 범위 +8%)
             h.assertTrue("edgeHone".equals(SwingLook.testKey(sp)), "look " + SwingLook.testKey(sp));
             h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().anyMatch(x -> x == g), "buff: 2.8 within x1.15");
             h.assertTrue(RuneStrike.testLeft(sp, "common") == 3, "3 left " + RuneStrike.testLeft(sp, "common"));
@@ -438,7 +438,7 @@ public final class RpgMotionTests {
         double[] bonus = new double[1];
         h.runAfterDelay(2, () -> {
             h.assertTrue(RuneCast.castRune(sp, r, false), "cast 가르기");
-            bonus[0] = RuneCast.power(sp, "strike") * r.def().num("bonus");
+            bonus[0] = RuneCast.power(sp, "strike") * r.def().num("bonus") * Runes.damageScale(r); // 0.50.0 범위 보정 (평타에 덧붙임 — 날 세우기 단일 +15% · 가르기 좁은 범위 +8%)
             h.assertTrue(SwingArea.testTargets(sp, "slash_h").stream().noneMatch(x -> x == f), "3.8 beyond the widened reach");
             MotionSystem.testRequest(sp, "basic", 1, 0);
             sp.attack(a);
