@@ -111,6 +111,11 @@ public final class FxModels {
          * 보이던 것 (사진첩) — 모든 면을 위를 보는 면처럼 (가장 밝게 · 고르게) 그림
          */
         boolean emissive;
+        /**
+         * 0.50.0 옆모습 2D 판 (빛의 뱀 — 모델 JSON "upright"): 넓은 면이 카메라 쪽 (faceCam) 이면 보는 쪽에 따라 판의 +X (뱀의 등) 가 아래로 가 배가 위로
+         * 보임 → +X 가 세계 아래쪽이면 좌우를 뒤집어 그림 (2D 그림을 뒤집는 것과 같음 — 등이 늘 위)
+         */
+        boolean upright;
     }
 
     private static final Map<String, Model> MODELS = new HashMap<>();
@@ -166,6 +171,7 @@ public final class FxModels {
         JsonArray glow = o.getAsJsonArray("glow");
         if (glow != null) m.glow = keys(glow);
         m.emissive = o.has("emissive") && o.get("emissive").getAsBoolean();
+        m.upright = o.has("upright") && o.get("upright").getAsBoolean();
         for (JsonElement pe : o.getAsJsonArray("parts")) {
             JsonObject po = pe.getAsJsonObject();
             Part p = new Part();
@@ -626,6 +632,7 @@ public final class FxModels {
             }
             Z.normalize();
             Vector3f X = new Vector3f(Y).cross(Z).normalize();
+            if (in.m.upright && X.y < 0) X.negate(); // 0.50.0 옆모습 판: 등 (+X) 이 늘 위 — 좌우를 뒤집어 그림
             R.set(X, Y, Z);
             if (v[6] != 0) R.rotateY(v[6] * Mth.DEG_TO_RAD);
             float spin = camSpinUp ? 0F : v[7] * tf * Mth.DEG_TO_RAD;

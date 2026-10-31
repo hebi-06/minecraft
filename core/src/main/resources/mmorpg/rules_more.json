@@ -95,7 +95,7 @@
     "lance": {"id": "gaebolg_pierce", "name": "심장 꿰뚫기", "desc": "붉은 창을 던져 16칸을 꿰뚫음", "desc2": "맞은 적 몸에서 가시가 터짐 (둘레 2.5칸 · 구속)", "cd": 10, "mult": 2.85, "afterMult": 3.1, "range": 16, "width": 1.2, "speed": 2.4, "windup": 4, "pitch": 25, "radius": 2.5, "delay": 6, "slow": 40, "color": [[0.92, 0.14, 0.2], [1, 0.78, 0.74]]},
     "scythe": {"id": "harpe_spin", "name": "초승달 회전베기", "desc": "낫을 크게 두 바퀴 휘둘러 둘레 4칸을 벰", "desc2": "벤 적의 초승달 낙인이 0.75초 뒤 터짐", "cd": 10, "mult": 1.85, "hits": 2, "afterMult": 2.6, "radius": 4, "gap": 10, "delay": 15, "color": [[0.66, 0.54, 1], [0.92, 0.88, 1]]},
     "hammer": {"id": "dagda_smash", "name": "생과 사의 일격", "desc": "곤봉으로 땅을 내려쳐 둘레 4.5칸 충격파", "desc2": "0.5초 뒤 여진 · 준 피해의 15% 회복", "cd": 10, "mult": 5.8, "afterMult": 3.9, "radius": 4.5, "ahead": 1.5, "windup": 6, "delay": 10, "lift": 0.45, "heal": 0.15, "healCap": 0.1, "color": [[0.3, 0.84, 0.46], [0.8, 1, 0.85]], "dark": [0.8, 0.52, 0.24]},
-    "scepter": {"id": "caduceus_serpents", "name": "쌍뱀의 축복", "desc": "금빛 · 은빛 뱀이 적을 쫓아 두 번씩 묾", "desc2": "돌아오며 준 피해의 10% 회복 (마법 피해)", "cd": 10, "mult": 1.96, "hits": 4, "range": 16, "cone": 60, "speed": 0.9, "gap": 10, "heal": 0.1, "healCap": 0.08, "color": [[1, 0.76, 0.24], [1, 0.95, 0.78]], "silver": [[0.8, 0.86, 0.95], [0.96, 0.98, 1]]}
+    "scepter": {"id": "caduceus_serpents", "name": "쌍뱀의 축복", "desc": "금빛 · 은빛 뱀이 적을 쫓아 두 번씩 묾", "desc2": "돌아오며 준 피해의 10% 회복 (마법 피해)", "cd": 10, "mult": 1.96, "hits": 4, "range": 16, "cone": 60, "speed": 0.9, "gap": 10, "heal": 0.1, "healCap": 0.08, "color": [[1, 0.76, 0.24], [1, 0.95, 0.78]], "silver": [[0.4, 0.5, 0.84], [0.96, 0.98, 1]]}
   },
   "REPEAT_QUESTS": {
     "nisse": {"count": 8, "emerald": 10, "xp": 16},

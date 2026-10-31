@@ -28,8 +28,8 @@ final class Artemis {
     /** 달빛 (은빛 푸른) */
     static final double[] AR_MOON = {0.7, 0.8, 1.0}; // 은활의 푸른 달빛 (0.12.8 — 무기 디자인 색)
     static final double[] AR_WHITE = {1, 1, 1};
-    /** 만월 그림 색: 조금 푸르게 (앞의 흰 활과 구별) */
-    static final double[] AR_MOON_TINT = {0.86, 0.9, 1.0};
+    /** 만월 판의 빛 (0.50.0 2D 만월 — 바다 · 달무리 · 빛살: 낮 하늘 (푸른 하늘과 같은 빛은 묻힘) 에서도 보이게 짙은 달빛 파랑, 심지는 흰빛) */
+    static final double[] AR_MOON_DEEP = {0.42, 0.56, 1.0};
     /** 빛의 은활 그림에서 시위 · 줌통의 높이 (가운데 기준, 반 크기 = 1 — build.py artemis_bow_base: 320점 그림의 시위 줄 · 줌통) */
     static final double AR_STRING_Y = 0.053;
     static final double AR_GRIP_Y = -0.546;
@@ -75,11 +75,6 @@ final class Artemis {
     static void bowFx(ServerLevel level, Vec3 at, double size, double life, double fade) {
         SkillFx.fx(level, "rpg:artemis_bow", at, Opt.of("size", size, "life", life, "spin", Math.floor(Kit.rand() * 4), "color", SkillFx.WHITE, "alpha", 0.35,
                 "fade", fade)); // 0.48.0 입체 은활 (light_bow) 이 몸 — 그림은 빛으로 옅게
-    }
-
-    /** 만월 (rpg:artemis_moon — 보는 사람을 향함): at = 가운데, size = 반 크기 (칸), 처음 wax 초 동안 차오름, 마지막 fade 초 동안 번쩍인 뒤 흩어짐 */
-    static void moonFx(ServerLevel level, Vec3 at, double size, double life, double wax, double fade) {
-        SkillFx.fx(level, "rpg:artemis_moon", at, Opt.of("size", size, "life", life, "color", AR_MOON_TINT, "alpha", 0.45, "wax", wax, "fade", fade));
     }
 
     /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게 — skills.js beamAway) */
@@ -466,14 +461,18 @@ final class Artemis {
         double back = Math.max(-0.3, Math.min(0.8, Kit.rayDist(level, V.up(bowC, 0.25 * s), away, 1.1) - 0.3));
         Vec3 moonC = V.add(V.up(bowC, 0.25 * s), away, back);
         // 나타남: 만월 (rise 틱 동안 차오름 → final 에 번쩍 · 흩어짐) + 빛의 은활 (final 2틱 전부터 흩어짐) + 땅의 은빛 룬 + 달빛 기둥 + 소리
-        moonFx(level, moonC, moonSize, (fin + 12) / 20.0, rise / 20.0, 0.6);
         bowFx(level, bowC, s, (fin + 8) / 20.0, 0.5);
-        // 0.48.0 입체: 빛의 은활 (light_bow — 손잡이가 줌통, 활 팔이 가로 · 아래를 겨눔) · 만월 (moon — 구덩이 · 초승달 날 · 별, 천천히 돎)
+        // 0.48.0 입체: 빛의 은활 (light_bow — 손잡이가 줌통, 활 팔이 가로 · 아래를 겨눔)
         Vec3 sideB = V.rightOf(away);
         int bow3d = Fx3d.spawn(level, "light_bow", rest, Opt.of("dir", sideB, "face", V.DOWN, "scale", 0.78 * s, "life", (fin + 6) / 20.0, "color", glow, "glow",
                 AR_WHITE, "anim", "rest", "loop", 1.0, "glowAlpha", 0.5, "shine", 0.45, "pop", 0.2, "fadeOut", 0.4));
-        int moon3d = Fx3d.spawn(level, "moon", moonC, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 1.25 * moonSize, "life", (fin + 12) / 20.0, "color", AR_MOON,
-                "glow", AR_WHITE, "anim", "spin", "loop", 1.0, "glowAlpha", 0.5, "shine", 0.35, "pop", rise / 20.0, "fadeOut", 0.6));
+        // 0.50.0 (사용자 "아르테미스의 은활 궁에 있는 달이 별로임 차라리 2d"): 입체 만월 (회색 구 · 초승달 날) · 옅은 달 그림 대신 2D 만월 판 (card_moon —
+        // tools/weapon_fx_art_v2.py rfx_wmoon: 바다 · 구덩이 · 빛살 구덩이 · 밝은 테 · 초승달 빛 · 달무리 · 반짝임). 원판 반지름 = 달 그림 (AR_MOON_DISK) 과 같게
+        // (판 원판 0.5 × scale), 넓은 면이 보는 사람 쪽. 움직임: wax 초승달 → 보름달 (rise 동안) → idle 빛남 (달무리 맥동 · 도는 빛살) → burst (final — 번쩍 → 빛 고리로 흩어짐)
+        int moon3d = Fx3d.spawn(level, "card_moon", moonC, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 2 * AR_MOON_DISK * moonSize, "life", (fin + 12) / 20.0,
+                "color", AR_MOON_DEEP, "glow", AR_WHITE, "anim", "wax", "animSpeed", Math.max(0.5, Math.min(2.0, 0.8 / Math.max(0.05, rise / 20.0))), "shine", 0.15,
+                "pop", 0.15, "fadeOut", 0.6));
+        Tasks.later(rise, () -> Fx3d.anim(level, moon3d, "idle", true, moonC));
         // 단계 동작: 하늘의 은활과 함께 시위를 끝까지 당겼다가 놓음 (거대한 화살을 메기는 때)
         Kit.motionLater(sp, "artemis_moon:final", fin - 8, life);
         // 처음부터 시위에 메긴 은빛 화살 (꼬리가 시위, 촉이 아래 — 아래를 겨눈 활로 보이게) — 거대한 화살을 메길 때 사라짐
@@ -583,7 +582,8 @@ final class Artemis {
                 arrowFx(level, center, V.DOWN, gHalf, 0.4, Opt.of("progress", 2.0));
                 WeaponFx3d.kill(level, giant[0], center, 0.3); // 0.48.0 박힌 입체 화살이 흩어짐
             });
-            WeaponFx3d.kill(level, moon3d, moonC, 0.6); // 만월이 번쩍인 뒤 흩어짐
+            Fx3d.anim(level, moon3d, "burst", false, moonC); // 만월이 번쩍인 뒤 빛 고리로 흩어짐
+            WeaponFx3d.kill(level, moon3d, moonC, 0.6);
             // 0.48.0 입체 초승달 고리 여덟: 가운데에서 바깥으로 퍼지며 돎 (볼록한 쪽이 바깥)
             for (int j = 0; j < 8; j++) {
                 Vec3 d = V.turnY(away, j * 45.0);

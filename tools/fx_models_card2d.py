@@ -51,6 +51,16 @@ SPECS = {
                              "close": ([9, 10, 11], False, 0.4)}),
     "card_page": dict(png="rfx_jpage2", cell=(64, 64), frames=4, use=[0, 1, 2, 3], rot=0, box=(-0.16, 0.16, -0.22, 0.22), fit="max",
                       anims={"idle": ([0, 1, 2, 3], True)}),
+    # ---- 0.50.0 무기 스킬 (tools/weapon_fx_art_v2.py — 사용자 "쌍뱀의 축복 뱀이 너무 저퀄임 2d 바꾸거나 해갸 할듯 아르테미스의 은활 궁에 있는 달이 별로임
+    # 차라리 2d"): 그림의 자리를 모델 칸에 바로 놓음 (map = (칸 점당 모델 칸, 모델 (0, 0) 의 그림 x, y) — 맞춤 · box 대신). 움직임 길이 = 초 (animSpeed 1)
+    # 빛의 뱀 (머리가 위 · 옆모습 — 등 = 그림 오른쪽): 주둥이 끝 (96, 30) = y 0.45 · 곧게 편 꼬리 끝 y 500 = -0.85 (입체 뱀과 같은 자리 — 무는 자리 그대로).
+    # upright = 등 (모델 +X) 이 늘 세계 위쪽 (보는 쪽에 따라 판이 뒤집혀 배가 위로 보이지 않게 — 클라이언트가 좌우를 뒤집어 그림)
+    "card_serpent": dict(png="rfx_wserpent", cell=(192, 512), frames=16, use=list(range(16)), rot=0, map=(1.3 / 470, 96.0, 30.0 + 0.45 * 470 / 1.3),
+                         upright=True, anims={"idle": ([0, 1, 2, 3, 4, 5], True, 0.6), "strike": ([6, 7, 8], False, 0.24), "bite": ([9, 10, 11], False, 0.3),
+                                              "hiss": ([12, 13, 14, 15], True, 0.8)}),
+    # 만월: 원판 반지름 82 = 0.5 (입체 만월과 같은 크기) — wax 차오름 (한 번) → idle 빛남 (이어 돌림) → burst 번쩍 · 흩어짐 (한 번)
+    "card_moon": dict(png="rfx_wmoon", cell=(256, 256), frames=16, use=list(range(16)), rot=0, map=(0.5 / 82, 128.0, 128.0),
+                      anims={"wax": ([0, 1, 2, 3, 4], False, 0.8), "idle": ([5, 6, 7, 8, 9, 10, 11, 12], True, 1.6), "burst": ([13, 14, 15], False, 0.45)}),
 }
 
 # 그림이 아직 없을 수 있는 판 (tools/job_fx_art_v2.py 가 다 그린 뒤에 SPECS 로 옮김)
@@ -178,13 +188,14 @@ def card(name, spec):
         cells = [list(_trim(g, c, spec["trim"])) for g, c in cells]
     m = fx.Model(name, tex=_atlas_size(spec, cells), cell=16)
     m.emissive = True
+    m.upright = bool(spec.get("upright"))
     # 몸 (빛 > 0.5 — 모든 장을 합친 것) 의 범위 → 모델 칸
     union = np.zeros_like(cells[0][0])
     for g, c in cells:
         union = np.maximum(union, np.maximum(g, c * 0.0 + (c > 0.2) * 1.0))
     ys, xs = np.nonzero(union > 0.5)
     sx0, sx1, sy0, sy1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
-    bx0, bx1, by0, by1 = spec["box"]
+    bx0, bx1, by0, by1 = spec.get("box", (-0.5, 0.5, -0.5, 0.5))
     fit = spec.get("fit", "y")
     if fit == "y":
         k = (by1 - by0) / (sy1 - sy0)
@@ -199,7 +210,11 @@ def card(name, spec):
         top = (by0 + by1) / 2 + (sy0 + sy1) / 2 * k
     # 가로: 가운데 줄 → (bx0 + bx1) / 2 (대칭) · 도끼 자루 → 0
     axis = spec.get("axis")
-    if axis == "handle":
+    if spec.get("map"):
+        # 그림 자리를 그대로: 그림 점 (ox, oy) 가 모델 (0, 0), 칸 점 하나 = k 모델 칸
+        k, ox_, oy_ = spec["map"]
+        top, left = oy_ * k, -ox_ * k
+    elif axis == "handle":
         lo = union[int(sy0 + (sy1 - sy0) * 0.75):sy1]
         yy, xx = np.nonzero(lo > 0.5)
         line = xx.mean()

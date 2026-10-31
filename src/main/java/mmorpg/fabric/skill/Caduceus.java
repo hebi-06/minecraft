@@ -15,25 +15,24 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 카두케우스 (영웅 성스러운 홀 — 12단계, 자바 전용): 쌍뱀의 축복. 수치는 HERO_SKILLS.scepter, 색은 금빛 뱀 (color) · 은빛 뱀 (silver).
  * 지팡이에서 날개가 번쩍이며 빛의 뱀 둘이 나와 앞 cone° · range 칸의 적 (조준한 적 먼저 — 둘이면 하나씩) 을 쫓아 hits 번 번갈아 묾 (gap 틱마다 — mult,
- * 마법 피해) → 다 물면 내게 돌아오며 준 피해의 heal 만큼 회복 (한 번에 최대 체력의 healCap 까지). 그림: rpg:rfx_serpent (꿈틀거리는 빛의 뱀).
+ * 마법 피해) → 다 물면 내게 돌아오며 준 피해의 heal 만큼 회복 (한 번에 최대 체력의 healCap 까지). 뱀: 2D 빛의 뱀 판 (card_serpent —
+ * tools/weapon_fx_art_v2.py rfx_wserpent: 옆모습 독사 머리 · S 자 몸 · 마름모 무늬, 꿈틀거림 · 덤빔 · 묾 · 쉭쉭거림).
  * 겨눌 적이 없으면 쓰지 않음 (재사용 대기 없음 — 정령의 연사와 같음)
  */
 final class Caduceus {
     private Caduceus() {}
 
-    /** 입체 뱀 크기 (모델 길이 약 1.25 × — 약 3칸, 0.48.0 사진첩: 1.45 배는 7칸 앞에서 가는 줄로만 보였음) */
+    /** 뱀 크기 (판 길이 1.3 × — 약 3.25칸, 0.48.0 사진첩: 1.45 배는 7칸 앞에서 가는 줄로만 보였음) */
     static final double SNAKE = 2.5;
+    /**
+     * 0.50.0 (사용자 "쌍뱀의 축복 뱀이 너무 저퀄임 2d 바꾸거나 해갸 할듯"): 입체 뱀 (serpent — 비늘 관 · 뭉툭한 머리) 대신 2D 빛의 뱀 판. 주둥이 끝이 판의 y 0.45
+     * (입체 뱀과 같은 자리 — 무는 자리 그대로), 넓은 면이 보는 사람 쪽 (faceCam) · 등이 늘 위 (upright — 클라이언트가 좌우를 뒤집음). 움직임 (초 — animSpeed 1):
+     * idle 꿈틀거림 0.6 (이어 돌림) · strike 덤비며 입을 쩍 벌림 0.24 · bite 닫히며 번쩍 → 움츠림 0.3 · hiss 쉭쉭거림 0.8 (이어 돌림)
+     */
+    static final String CARD = "card_serpent";
 
     static void register() {
         Transcend.register("caduceus_serpents", Caduceus::serpents);
-    }
-
-    /** 빛의 뱀 (빛 + 심지, 꿈틀거림): at 에서 dir 쪽으로 speed 칸/초 */
-    static void serpent(ServerLevel level, Vec3 at, Vec3 dir, double size, double life, double speed, double[] glow, double[] core) {
-        Opt o = Opt.of("dir", dir, "size", size, "life", life, "speed", speed, "frames", 4.0, "fps", 12.0, "loop", true, "phase", Kit.rand() * 4, "fade", 0.25,
-                "alpha", 0.4); // 0.48.0: 입체 뱀 밑의 빛 무리로 옅게
-        RuneKit.rfx(level, "serpent", at, o.with("color", glow, "cell", 0.0));
-        RuneKit.rfx(level, "serpent", V.add(at, dir, -0.02), o.with("color", core, "cell", 4.0));
     }
 
     /**
@@ -64,7 +63,8 @@ final class Caduceus {
         String life = Kit.lifeOf(sp);
         BooleanSupplier ok = () -> Kit.sameLife(sp, life);
         double[][] gold = HeroKit.colors(k);
-        double[][] silver = new double[][] {HeroKit.rgbOr(k, "silverGlow", new double[] {0.8, 0.86, 0.95}), new double[] {0.96, 0.98, 1}};
+        // 은빛 뱀: 빛 = 강철빛 파랑 (0.50.0 — 2D 판의 몸이 낮 하늘에서도 보이게) · 심지 = 흰 은빛
+        double[][] silver = new double[][] {HeroKit.rgbOr(k, "silverGlow", new double[] {0.4, 0.5, 0.84}), new double[] {0.96, 0.98, 1}};
         Object sv = k.has("silver") ? k.get("silver") : null;
         if (sv instanceof List<?> l && l.size() == 2) silver = new double[][] {Kit.rgb(l.get(0)), Kit.rgb(l.get(1))};
         double[][][] cols = {gold, silver};
@@ -86,7 +86,7 @@ final class Caduceus {
         int gap = (int) k.num("gap");
         double speed = k.num("speed");
         int end = 2 * 3 + (hits - 1) * gap + 10;
-        // 0.48.0 입체 뱀 둘 (금빛 · 은빛 — 비늘 몸 · 흰 눈 · 벌어지는 턱): 홀에서 날아가 묾 → 적 둘레로 물러나 쉭쉭거림 → 다시 덤벼 묾 → 끝에 돌아옴
+        // 뱀 둘 (금빛 · 은빛 — 0.50.0 2D 빛의 뱀 판): 홀에서 휘어 날아가 묾 → 적 둘레로 물러나 쉭쉭거림 → 다시 덤벼 묾 → 끝에 돌아옴
         int[] snake = new int[2];
         int[] gen = new int[2]; // 뱀마다 지금 하는 일 (새로 덤비면 앞의 물러나기 · 쉭쉭거림은 그만둠)
         Kit.motionLater(sp, "caduceus_serpents:return", end, life); // 두 팔을 벌려 돌아오는 뱀을 맞이함
@@ -103,20 +103,27 @@ final class Caduceus {
                 Vec3 to = Kit.bodyPoint(t);
                 Vec3 d = V.unit(V.sub(to, from));
                 int ticks = ii < 2 ? fly : 4;
-                serpent(level, from, d, ii < 2 ? 2.1 : 1.7, ticks / 20.0 + 0.1, V.len(V.sub(to, from)) / (ticks / 20.0) * 0.9, cols[s][0], cols[s][1]);
-                // 입체 뱀: 머리 끝이 몸 겉에 닿을 자리 (가운데 − 머리 길이)
+                // 뱀: 주둥이 끝이 몸 겉에 닿을 자리 (가운데 − 머리 길이)
                 Vec3 bite = V.add(to, d, -(0.45 * SNAKE + Math.min(0.35, Kit.bodyPad(t) * 0.5)));
                 int g = ++gen[s];
                 if (ii < 2) {
-                    // 홀 앞 2칸에서 작게 나타나 커지며 날아감 (사진첩: 홀 끝에서 큰 뱀이 나타나 1인칭 화면 위를 덮었음)
+                    // 홀 앞 2칸에서 작게 나타나 커지며 날아감 (사진첩: 홀 끝에서 큰 뱀이 나타나 1인칭 화면 위를 덮었음). 0.50.0: 금빛은 오른쪽 · 은빛은 왼쪽으로
+                    // 부풀어 휘어 날아감 (곧게 날면 1인칭에서 판이 옆선으로만 보임 — 가는 쪽을 보며 (align) 휘니 옆모습이 보임)
                     Vec3 start = V.add(from, d, Math.min(2.2, V.len(V.sub(bite, from)) * 0.4));
-                    snake[s] = WeaponFx3d.fx(level, "serpent", start, cols[s][0], cols[s][1], Opt.of("to", bite, "travel", ticks / 20.0, "ease", "in", "dir", d,
-                            "align", 1.0, "scale", SNAKE, "life", (end - at + 14) / 20.0, "pop", Math.max(0.1, ticks / 40.0), "glowAlpha", 0.55, "shine", 0.3,
-                            "fadeOut", 0.15));
+                    double span = V.len(V.sub(bite, start));
+                    Vec3 ctrl = V.add(V.add(V.lerp(start, bite, 0.5), V.rightOf(f), (s == 0 ? 1 : -1) * Math.min(2.4, span * 0.32)), V.UP, Math.min(0.8,
+                            span * 0.08));
+                    snake[s] = WeaponFx3d.fx(level, CARD, start, cols[s][0], cols[s][1], Opt.of("to", bite, "ctrl", ctrl, "travel", ticks / 20.0, "ease", "in", "dir",
+                            d, "align", 1.0, "faceCam", 1.0, "scale", SNAKE, "life", (end - at + 14) / 20.0, "pop", Math.max(0.1, ticks / 40.0), "anim", "idle",
+                            "loop", 1.0, "animSpeed", 1.0, "shine", 0.12, "fadeOut", 0.15));
                     WeaponFx3d.guard(sp, life, new int[] {snake[s]}, end - at + 14);
                 } else {
                     Fx3d.move(level, snake[s], bite, ticks / 20.0, "in");
                 }
+                // 덤빔: 닿기 0.25초 전부터 입을 쩍 벌림 (송곳니) → 닿으면 닫히며 묾
+                Tasks.later(Math.max(0, ticks - 5), () -> {
+                    if (gen[s] == g) Fx3d.anim(level, snake[s], "strike", false, to);
+                });
                 Tasks.later(ticks, () -> {
                     if (gen[s] == g) Fx3d.anim(level, snake[s], "bite", false, to);
                 });
@@ -127,6 +134,7 @@ final class Caduceus {
                     Vec3 body = Kit.fallen(t) ? to : Kit.bodyPoint(t);
                     Vec3 rest = V.add(V.up(body, 0.6), V.turnY(f, next % 2 == 0 ? 120 : -120), 2.4);
                     Fx3d.move(level, snake[s], rest, 0.3, "out");
+                    Fx3d.anim(level, snake[s], "idle", true, rest);
                     Tasks.later(7, () -> {
                         if (gen[s] != g) return;
                         Fx3d.move(level, snake[s], V.add(rest, V.unit(V.sub(body, rest)), 0.08), 0.15, "inout");
@@ -162,15 +170,13 @@ final class Caduceus {
                 LivingEntity t = targets.get(Math.min(targets.size() - 1, s));
                 Vec3 from = t.isRemoved() ? V.add(sp.position(), f, 4) : Kit.bodyPoint(t);
                 Vec3 to = V.up(sp.position(), 1.1);
-                Vec3 d = V.unit(V.sub(to, from));
-                serpent(level, from, d, 1.4, 0.35, V.len(V.sub(to, from)) / 0.35, cols[s][0], cols[s][1]);
                 trail(level, from, to, 7, cols[s][0], cols[s][1]);
-                // 입체 뱀이 내 가슴 앞으로 날아와 스며듦 (양옆 — 1인칭 눈 앞을 가리지 않게)
+                // 뱀이 꿈틀거리며 내 가슴 앞으로 날아와 스며듦 (양옆 — 1인칭 눈 앞을 가리지 않게)
                 Vec3 home = V.add(V.add(V.up(sp.position(), 1.0), Kit.facingOf(sp), 0.5), V.rightOf(Kit.facingOf(sp)), s == 0 ? 0.6 : -0.6);
                 int id = snake[s];
                 gen[s]++;
                 Fx3d.move(level, id, home, 0.35, "inout");
-                Fx3d.anim(level, id, "hiss", true, home);
+                Fx3d.anim(level, id, "idle", true, home);
                 Tasks.later(7, () -> WeaponFx3d.kill(level, id, home, 0.15));
             }
             Tasks.later(7, () -> {
