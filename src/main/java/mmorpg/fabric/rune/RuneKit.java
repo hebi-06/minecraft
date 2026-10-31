@@ -489,7 +489,18 @@ public final class RuneKit {
                     o.num("fade", 0.2), "alpha", o.num("alpha", 1), "spin", screenSpin(d, face, o.num("roll", 0)), "view", 2.0, "owner", (double) own), glow,
                     core, null, null);
         }
-        mmorpg.fabric.Fx3d.spawn(level, "slash_wave", at, card);
+        mmorpg.fabric.Fx3d.spawn(level, "slash_wave", at, faceCamIfFlat(card, d, face, o.num("roll", 0)));
+    }
+
+    /**
+     * 0.48.2 누운 판은 보는 사람마다 앞 축 (d) 둘레로 돌려 넓은 면을 보임 (faceCam — 첫 영상: 가로로 눕힌 초승달이 옆 카메라에서 가는 줄로만 보였음, 피의 초승달 ·
+     * 검기 날리기 · 천지개벽). 옆에서는 세운 초승달 "(" 이 날을 앞으로, 뒤 위 (3인칭) 에서는 눕힌 초승달. 판의 면이 위에서 60° 넘게 기운 것 (세로 베기 — 평타의
+     * 세로 · 내려찍기, 세운 휘두름) 은 그 면 그대로. 뒤집힌 그림 (면이 아래) 은 roll 180 으로 거울 그대로
+     */
+    static Opt faceCamIfFlat(Opt card, Vec3 d, Vec3 face, double roll) {
+        double c = Math.cos(Math.toRadians(-screenSpin(d, face, roll)));
+        if (Math.abs(c) < 0.5) return card;
+        return card.with("faceCam", true, "face", null, "roll", c >= 0 ? 0.0 : 180.0);
     }
 
     /**
@@ -537,6 +548,7 @@ public final class RuneKit {
         Opt base = Opt.of("dir", d, "face", V_UP, "roll", roll, "scale", size * ARC_CARD, "life", life, "grow", 0.25, "to", to, "travel", life, "ease", "out",
                 "anim", "play", "animSpeed", 1.0 / life, "fadeIn", 0.0, "fadeOut", life * 0.3, "glowAlpha", 0.0);
         if (own != 0) base = base.with("view", 1.0, "owner", (double) own);
+        base = faceCamIfFlat(base, d, V_UP, roll);
         double[] aura = o.color("aura", null);
         if (aura != null) mmorpg.fabric.Fx3d.spawn(level, "slash_" + shape + "_soft", at, base.with("scale", size * ARC_CARD * 1.03, "color", aura, "glow", aura,
                 "alpha", 0.8 * a));
