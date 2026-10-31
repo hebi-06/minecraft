@@ -484,6 +484,7 @@ public final class RuneTip {
             if (d.truthy("statUp")) e.add("모든 스탯 +" + pct(d.num("statUp")) + "%");
             if (d.truthy("steadfast")) e.add("보스 기술에 밀려나지 않음");
         }
+        if (d.truthy("air")) e.add("도약 " + sec(d.num("air"))); // 0.49.0 도약 (나는 시간 = 선딜)
         if (!element && !spirit && d.truthy("fire")) e.add("불붙음 " + d.text("fire") + "초");
         if (d.truthy("stun")) e.add("기절 " + sec(d.num("stun")));
         if (!element && !gravity && !spirit && d.truthy("slowTicks")) e.add("구속 " + roman(d.numOr("slowAmp", 0)) + " " + sec(d.num("slowTicks")));
@@ -498,6 +499,10 @@ public final class RuneTip {
         double targets = d.numOr("maxTargets", d.numOr("targets", 0));
         if (targets > 0 && !"bloodBrand".equals(c.fn())) e.add("최대 " + n(targets) + "명");
         if (d.truthy("reduce")) e.add("받는 피해 -" + pct(d.num("reduce")) + "%" + (!buff && d.truthy("ticks") ? " (" + sec(d.num("ticks")) + ")" : ""));
+        // 0.49.0 유틸: 받는 피해 증가 표식 · 가하는 피해 증가 · 끌어모음
+        if (d.truthy("vuln")) e.add("적 받는 피해 +" + pct(d.num("vuln")) + "% (" + sec(d.numOr("vulnTicks", 0)) + ")");
+        if (d.truthy("buff")) e.add("가하는 피해 +" + pct(d.num("buff")) + "% (" + sec(d.numOr("buffTicks", 0)) + ")");
+        if (d.truthy("taunt")) e.add("둘레 " + d.text("taunt") + "칸 끌어모음");
         return e;
     }
 

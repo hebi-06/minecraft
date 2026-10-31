@@ -246,7 +246,17 @@ public final class RuneCast {
                     Mmorpg.LOG.warn("[mmorpg] rune cast hook", e);
                 }
             }
-            if (ok) mmorpg.fabric.motion.MotionSystem.rune(sp, r.def().str("fn"), r.grade()); // 0.38.0 룬 동작 (MOTION.skills — 0.46.0 룬마다 실제 행동: rune:fn · rune:fn:등급)
+            if (ok) {
+                // 0.38.0 룬 동작 (MOTION.skills — 0.46.0 룬마다 실제 행동: rune:fn · rune:fn:등급). 0.49.0 도약 룬은 motionAt 틱 뒤 (내려찍는 동작이 착지에 맞게)
+                int at = (int) r.def().numOr("motionAt", 0);
+                if (at <= 0) mmorpg.fabric.motion.MotionSystem.rune(sp, r.def().str("fn"), r.grade());
+                else {
+                    String life = RuneKit.lifeToken(sp);
+                    RuneKit.later(at, () -> {
+                        if (RuneKit.sameLife(sp, life)) mmorpg.fabric.motion.MotionSystem.rune(sp, r.def().str("fn"), r.grade());
+                    });
+                }
+            }
             return ok;
         };
         long now = Tasks.now();
