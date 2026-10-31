@@ -152,8 +152,8 @@ def slash_job():
         g, c = k, JOB_FRAMES + k
         gbox = ((g % 4) * 256, (g // 4) * 128, (g % 4) * 256 + 256, (g // 4) * 128 + 128)
         cbox = ((c % 4) * 256, (c // 4) * 128, (c % 4) * 256 + 256, (c // 4) * 128 + 128)
-        guv = m.atlas.swatch("g%d" % k, _alpha_painter(sampler("rfx_jslash.png", gbox)), 16, 8)
-        cuv = m.atlas.swatch("c%d" % k, _alpha_painter(sampler("rfx_jslash.png", cbox)), 16, 8)
+        guv = m.atlas.swatch("g%d" % k, _alpha_painter(sampler("rfx_jslash2.png", gbox)), 16, 8)
+        cuv = m.atlas.swatch("c%d" % k, _alpha_painter(sampler("rfx_jslash2.png", cbox)), 16, 8)
         flat(m, cuv, fx.GLOW, 2.0, 1.0, -0.01, 180.0)
         flat(m, guv, fx.TINT, 2.0, 1.0, 0.0, 180.0)
         flat(m, cuv, fx.GLOW, 2.0, 1.0, 0.01, 180.0)

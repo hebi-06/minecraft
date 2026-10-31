@@ -173,9 +173,9 @@ final class JobFx {
         Vec3 look = sp.getViewVector(1F);
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), screenUp(look), -down);
         Opt own = only1p(sp);
-        two(sp.level(), "jslash", SLASH, at, life, own.with("size", size, "spin", tilt, "vel", RuneKit.bodyVel(sp), "fade", 0.15), outer(j), inner(j));
+        two(sp.level(), "jslash2", SLASH, at, life, own.with("size", size, "spin", tilt, "vel", RuneKit.bodyVel(sp), "fade", 0.15), outer(j), inner(j));
         // 0.47.0 더 화려하게: 조금 크고 조금 기운 잔상 한 겹 (옅게 — 두 겹의 칼빛)
-        two(sp.level(), "jslash", SLASH, V.add(at, look, 0.15), life * 0.9, own.with("size", size * 1.14, "spin", tilt + 7, "vel", RuneKit.bodyVel(sp), "fade", 0.2,
+        two(sp.level(), "jslash2", SLASH, V.add(at, look, 0.15), life * 0.9, own.with("size", size * 1.14, "spin", tilt + 7, "vel", RuneKit.bodyVel(sp), "fade", 0.2,
                 "alpha", 0.42, "coreAlpha", 0.3), outer(j), inner(j));
         // 0.50.0 3인칭 · 다른 사람: 카메라를 보는 그림 대신 세상에 놓인 참격 판 (휘두른 면 — 불룩한 날이 보는 쪽 · 가로 휘두름은 누운 판)
         slashCard(sp.level(), at, look, tilt, size * CARD, life, RuneKit.bodyVel(sp), j, hide1p(sp));
@@ -206,7 +206,7 @@ final class JobFx {
     static void wave(ServerPlayer sp, Jobs.Job j, Vec3 at, Vec3 dir, double speed, double life, Opt o) {
         ServerLevel level = sp.level();
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
-        two(level, "jslash", SLASH, at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));
+        two(level, "jslash2", SLASH, at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));
         slashCard(level, at, d, o.num("spin", 0), o.num("size", 1) * CARD * 1.1, life, V.scale(d, speed), j, hide1p(sp));
     }
 
@@ -242,7 +242,7 @@ final class JobFx {
         if (row >= 0) two(level, "jhits", HITS, row * 12, b, 0.32, Opt.of("size", size * 0.9, "spin", tilt, "fade", 0.25), outer(j), inner(j));
         else two(level, "jhit", HIT, b, 0.3, Opt.of("size", size, "spin", Kit.rand() * 360, "fade", 0.2), outer(j), inner(j));
         // 0.47.0 더 화려하게: 맞은 자리의 짧은 번쩍 (터짐 작은 장) · 튀는 불티 (직업 빛)
-        two(level, "jburst", BURST, b, 0.2, Opt.of("size", size * 0.55, "spin", Kit.rand() * 360, "alpha", 0.75, "coreAlpha", 0.9, "fade", 0.3), outer(j), inner(j));
+        two(level, "jburst2", BURST, b, 0.2, Opt.of("size", size * 0.55, "spin", Kit.rand() * 360, "alpha", 0.75, "coreAlpha", 0.9, "fade", 0.3), outer(j), inner(j));
         mmorpg.fabric.skill.SkillFx.sparks(level, b, inner(j), 5, 3.5 + scale);
     }
 
@@ -251,16 +251,16 @@ final class JobFx {
      * 보이지 않음). o: alpha · coreAlpha · fade · view · owner · grow · vel
      */
     static void ring(ServerLevel level, Vec3 center, double radius, Jobs.Job j, boolean reverse, double life, Opt o) {
-        two(level, "jring", RING, reverse ? 2 * RING : 0, center, life, o.with("dir", V.UP, "size", radius / RING_R, "spin", o.num("spin", 0)), outer(j), inner(j));
+        two(level, "jring2", RING, reverse ? 2 * RING : 0, center, life, o.with("dir", V.UP, "size", radius / RING_R, "spin", o.num("spin", 0)), outer(j), inner(j));
         // 0.47.0 더 화려하게: 조금 바깥의 옅은 잔상 고리 (거꾸로 — 겹친 두 바퀴)
         double a = o.num("alpha", 1);
-        two(level, "jring", RING, reverse ? 0 : 2 * RING, V.up(center, 0.02), life * 0.9, o.with("dir", V.UP, "size", radius * 1.07 / RING_R, "spin", o.num("spin", 0) + 40,
+        two(level, "jring2", RING, reverse ? 0 : 2 * RING, V.up(center, 0.02), life * 0.9, o.with("dir", V.UP, "size", radius * 1.07 / RING_R, "spin", o.num("spin", 0) + 40,
                 "alpha", a * 0.38, "coreAlpha", a * 0.28), outer(j), inner(j));
     }
 
     /** 세운 둥근 베기 (rfx_jring 을 normal 쪽을 보게 — 보는 사람 쪽을 보게 두면 눈앞 고리 · 적 둘레 고리) */
     static void ringFacing(ServerLevel level, Vec3 center, double radius, Jobs.Job j, Vec3 normal, double life, Opt o) {
-        two(level, "jring", RING, center, life, o.with("dir", normal, "size", radius / RING_R, "spin", o.num("spin", 0)), outer(j), inner(j));
+        two(level, "jring2", RING, center, life, o.with("dir", normal, "size", radius / RING_R, "spin", o.num("spin", 0)), outer(j), inner(j));
     }
 
     /** 1인칭 눈앞 고리 (시전자의 1인칭에만 — 태세 · 각성 신호): 눈앞 ahead 칸에 반지름 radius 칸, 화면을 보고 시계 방향으로 한 바퀴 */
@@ -333,10 +333,10 @@ final class JobFx {
 
     /** 터짐 (rfx_jburst — 카메라를 봄) */
     static void burst(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jburst", BURST, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        two(level, "jburst2", BURST, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
         // 0.47.0 더 화려하게: 크게 번지는 옅은 빛 한 겹 · (큰 터짐은) 불티
         double a = o.num("alpha", 1);
-        two(level, "jburst", BURST, at, life * 1.15, o.with("size", size * 1.4, "spin", Kit.rand() * 360, "alpha", a * 0.32, "coreAlpha", a * 0.22, "fade", 0.4), outer(j),
+        two(level, "jburst2", BURST, at, life * 1.15, o.with("size", size * 1.4, "spin", Kit.rand() * 360, "alpha", a * 0.32, "coreAlpha", a * 0.22, "fade", 0.4), outer(j),
                 inner(j));
         if (size >= 0.6 && o.num("view", 0) == 0) mmorpg.fabric.skill.SkillFx.sparks(level, at, inner(j), (int) Math.min(10, 3 + size * 3), 3 + size * 1.5);
     }
@@ -374,7 +374,7 @@ final class JobFx {
 
     /** 땅에 눕는 내려찍기 (rfx_jsmash): 충격 고리 반지름 radius 칸 (그림 고리 끝 = 반 크기 × 0.92) · 금 · 튀는 돌조각 */
     static void smash(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
-        two(level, "jsmash", SMASH, at, life, o.with("dir", V.UP, "size", radius / 0.92, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        two(level, "jsmash2", SMASH, at, life, o.with("dir", V.UP, "size", radius / 0.92, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
         // 0.47.0 더 화려하게: 땅을 따라 퍼지는 충격파 · 튀는 불티
         mmorpg.fabric.skill.SkillFx.shock(level, at, inner(j), radius * 0.9, life * 0.8);
         mmorpg.fabric.skill.SkillFx.sparks(level, V.up(at, 0.2), outer(j), (int) Math.min(12, 4 + radius * 1.5), 3.5 + radius * 0.5);
@@ -389,7 +389,7 @@ final class JobFx {
 
     /** 땅 (또는 허리 높이) 에 눕는 회전 칼날 (rfx_jwhirl — 이어 돌림): 칼날 반지름 radius 칸 (= 반 크기 × 0.8) */
     static void whirl(ServerLevel level, Vec3 center, double radius, Jobs.Job j, double life, Opt o) {
-        loop(level, "jwhirl", WHIRL, center, life, o.num("fps", 30), o.with("dir", V.UP, "size", radius / 0.8), outer(j), inner(j));
+        loop(level, "jwhirl2", WHIRL, center, life, o.num("fps", 30), o.with("dir", V.UP, "size", radius / 0.8), outer(j), inner(j));
     }
 
     /** 몸에서 솟는 회오리 (rfx_jtwister — 세워 카메라 쪽으로 돎, 이어 돌림): 높이 약 height 칸 — 시전자 1인칭에서는 숨김 */
@@ -579,7 +579,7 @@ final class JobFx {
 
     /** 도는 창 (rfx_jspin — 면이 normal 쪽, 이어 돌림): 양끝 창날이 도는 원판 — 날 끝 반지름 radius 칸 (= 반 크기 × 0.86) */
     static void spin(ServerLevel level, Vec3 center, double radius, Jobs.Job j, Vec3 normal, double life, Opt o) {
-        loop(level, "jspin", SPIN, center, life, o.num("fps", 28), o.with("dir", normal, "size", radius / 0.86), outer(j), inner(j));
+        loop(level, "jspin2", SPIN, center, life, o.num("fps", 28), o.with("dir", normal, "size", radius / 0.86), outer(j), inner(j));
     }
 
     /** 빛의 창 (rfx_jspear — 방향으로 누움, 오른쪽이 창끝): 창끝 tip 이 dir (단위) 쪽으로 speed 칸/초 (0 = 멈춤). 길이 = size × 2 */
