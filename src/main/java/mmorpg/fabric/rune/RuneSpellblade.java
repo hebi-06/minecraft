@@ -558,7 +558,12 @@ final class RuneSpellblade {
             st.left -= 1;
             if (st.left <= 0) IMBUES.remove(sp.getUUID());
         }
-        arcaneWave(sp, victim, part.add());
+        int own = RuneKit.enter(sp); // 0.48.2 참격 판의 1인칭 나눔 (평타 뒤 — 룬을 쓰는 중이 아님)
+        try {
+            arcaneWave(sp, victim, part.add());
+        } finally {
+            RuneKit.leave(own);
+        }
         int left = st != null ? Math.max(0, st.left) : 0;
         Notify.notify(sp, left > 0 ? imbueGems(left) + " §7마검 부여 남은 평타 " + left + "번" : "§7마검 부여를 모두 썼습니다", 16);
     }
