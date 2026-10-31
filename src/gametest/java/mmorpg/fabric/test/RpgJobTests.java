@@ -1066,10 +1066,10 @@ public final class RpgJobTests {
             h.assertTrue(JobSkills.press(sp, 2), "혼백 폭발 cast");
             h.assertTrue(JobTraits3.souls(sp) == 0, "souls used");
         }));
-        // 혼백 폭발: 혼 8 → 8 × 1.4
-        steps.add(new Step(8, () -> {
+        // 망자의 비명 (0.50.0 ← 혼백 폭발): 영혼 8 → 8 × 1.4 — 떠올랐다 내려찍는 틱 (slamAt 9) 에 터짐
+        steps.add(new Step(14, () -> {
             double want = expected(sp, j, j.skill(2), 8 * 1.4);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "혼백 폭발 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "망자의 비명 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2));
@@ -1414,6 +1414,7 @@ public final class RpgJobTests {
                     "bulwark stance, −40% speed, steadfast");
             h.assertTrue(close(RpgCombat.blockMod.block(sp, w, 0.9), 1.0, 1e-9) && close(RpgCombat.blockMod.block(sp, w, 0.0), 0.6, 1e-9)
                     && RpgCombat.blockMod.block(sp, w, -0.8) == 0, "bulwark block: front 1.0 · side 0.6 · back 0");
+            home(h, sp); // 0.50.0 방패 일격이 앞으로 1.5칸 내디딤 → 옆 과녁이 뒤쪽이 되지 않게 제자리로
             z.add(dummyAt(h, 2, 0));
             sp.setShiftKeyDown(true);
             double side = RpgCombat.shieldReduction(sp, sp.damageSources().mobAttack(z.get(1)));

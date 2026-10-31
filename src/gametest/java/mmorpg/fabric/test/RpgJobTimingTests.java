@@ -43,7 +43,8 @@ public final class RpgJobTimingTests {
     private static final int NONE = 200;
     private static final int MAX = 400;
     /** 과녁 거리 (앞 칸 — 없으면 2.5): 멀리 내려앉는 스킬 */
-    private static final Map<String, Double> AHEAD = Map.of("lancer_vault", 7.0, "spellblade_blink", 6.0, "mage_phase", 1.2);
+    // 0.50.0 시험 1: 장대 도약 과녁을 7칸에 두었더니 시험 자리 둘레 barrier 벽 속 (바닥 8×8) 이라 숨막힘 피해가 10틱마다 들어갔음 → 5.5칸
+    private static final Map<String, Double> AHEAD = Map.of("lancer_vault", 5.5, "spellblade_blink", 6.0, "mage_phase", 1.2);
 
     private static Husk dummy(GameTestHelper h, double ahead) {
         Husk m = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, (float) (1.5 + ahead)));
@@ -125,7 +126,7 @@ public final class RpgJobTimingTests {
                 throw h.assertionException("measuring");
             }
             int t = (int) (now - p.t0);
-            double d = TestDummies.dealt(p.z);
+            double d = TestDummies.dealtBy(p.z);
             if (d > p.prev + 1e-9) {
                 if (p.first < 0) p.first = t;
                 p.last = t;

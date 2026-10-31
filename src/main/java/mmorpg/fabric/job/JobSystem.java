@@ -221,7 +221,10 @@ public final class JobSystem {
             double P = power(sp, job) * Jobs.damageScale(k) * JobTraitsMore.chainMult(job, chain) * boost * faith * Jobs.upMult(up);
             NOTES.remove(sp.getUUID());
             JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
+            int move0 = JobMove.gen(sp);
             boolean ok = impl.cast(sp, job, k, P);
+            // 0.50.0 새 스킬이 나가면 앞 스킬의 몸 움직임 (JobMove) 은 그만 — 새 스킬이 제 움직임을 시작했으면 이미 바뀜 (순간 이동 · 돌진이 끌려 돌아가지 않게)
+            if (ok && JobMove.gen(sp) == move0) JobMove.cancel(sp);
             JobTraits3.afterCast(sp, job, k, ok);
             String note = NOTES.remove(sp.getUUID());
             if (ok) {

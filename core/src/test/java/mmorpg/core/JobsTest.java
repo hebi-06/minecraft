@@ -268,7 +268,8 @@ public final class JobsTest {
         check("short".equals(Jobs.spreadKind(pa.skill(0))) && Jobs.spreadKind(pa.skill(1)) == null && "short".equals(Jobs.spreadKind(pa.skill(2)))
                 && "long".equals(Jobs.spreadKind(pa.skill(4))), "paladin spread");
         check("zone".equals(Jobs.spreadKind(pr.skill(2))) && "long".equals(Jobs.spreadKind(pr.skill(4))), "priest spread");
-        check(Jobs.spreadKind(gu.skill(0)) == null && Jobs.spreadKind(gu.skill(1)) == null && "short".equals(Jobs.spreadKind(gu.skill(2)))
+        // 0.50.0 직업 시간 시험: 파수꾼의 방패는 한 적에 한 번에 들어감 (튕겨 가는 것은 다른 적 — 룬과 같이 한 적 기준) → 한방
+        check(Jobs.spreadKind(gu.skill(0)) == null && Jobs.spreadKind(gu.skill(1)) == null && Jobs.spreadKind(gu.skill(2)) == null
                 && "zoneLong".equals(Jobs.spreadKind(gu.skill(4))) && near(Jobs.spreadMult(gu.skill(4)), 1.15), "guardian spread");
         check(pa.trait().max() == 5 && pa.trait().def().num("judgeFor") == 200 && pa.trait().def().num("stun") == 20 && near(pa.trait().def().num("aura"), 0.05)
                 && pa.trait().def().num("auraRadius") == 6 && near(pa.trait().def().num("bossTaken"), 0.08), "심판 5 · 10초 · 기절 1초 · 오라 5% · 6칸 · 보스 +8%");
@@ -334,7 +335,7 @@ public final class JobsTest {
         check(tyr.reqs().size() == 2 && tyr.reqs().get(0).value() == 74 && tyr.reqs().get(1).value() == 36, "tyrfing requirement unchanged " + tyr.reqs());
 
         // 글자
-        check(Jobs.skillLine(sw.skill(0)).equals("은빛 연격 · 6초 · 배율 5.25") && Jobs.skillLine(sw.skill(3)).equals("에인헤랴르 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(Jobs.skillLine(sw.skill(0)).equals("은빛 연격 · 6초 · 배율 5.21") && Jobs.skillLine(sw.skill(3)).equals("에인헤랴르 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
 
         upgrade();
@@ -373,10 +374,10 @@ public final class JobsTest {
             check(n > 0.9 && n < 1.6, j.id() + " norm " + n);
         }
         check(names == 55, "55 skill names " + names);
-        // 하나씩: 발할라 (선딜 0.8초 +16% · 지속 66틱 +10% · 유틸 없음)
+        // 하나씩: 발할라 (선딜 19틱 — 0.50.0 시간 시험: 솟아올라 첫 일제 사격 — +19% · 지속 63틱 +10% → 1.309 → 상한 ×1.3 · 유틸 없음)
         Jobs.Skill valhalla = sw.skill(4);
-        check(valhalla.name().equals("발할라") && Jobs.windupTicks(valhalla) == 16 && "long".equals(Jobs.timeKind(valhalla)), "발할라 windup · long");
-        check(near(Jobs.timeMult(valhalla), 1.16 * 1.1) && near(Jobs.utilCost(valhalla), 0), "발할라 time 1.276");
+        check(valhalla.name().equals("발할라") && Jobs.windupTicks(valhalla) == 19 && "long".equals(Jobs.timeKind(valhalla)), "발할라 windup · long");
+        check(near(Jobs.timeMult(valhalla), 1.3) && Jobs.timeCapped(valhalla) && near(Jobs.utilCost(valhalla), 0), "발할라 time 1.3 (cap)");
         // 섬광 질주: 돌진 −10% · 다음 평타 치명 (피해 — 값 없음)
         check(Jobs.utils(sw.skill(1)).equals(List.of("blink", "crit")) && near(Jobs.utilCost(sw.skill(1)), 0.10), "섬광 질주 util 10%");
         // 만월 베기: 발키리의 가호 (가하는 피해 +10%) −15%

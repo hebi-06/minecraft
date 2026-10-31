@@ -18,6 +18,8 @@ final class TestDummies {
     static final String TAG = "mmorpg_test_dummy";
     static final float HP = 1024F;
     private static final Map<UUID, Double> DEALT = new ConcurrentHashMap<>();
+    /** 0.50.0 때린 이가 있는 피해만 (벽 속 숨막힘 · 떨어짐 등 주변 피해 빼고 — 직업 시간 시험이 스킬의 타격 틱만 재게) */
+    private static final Map<UUID, Double> BY = new ConcurrentHashMap<>();
     private static boolean installed;
 
     /** 서버 스레드에서 한 번 (여러 번 불러도 됨) */
@@ -27,6 +29,7 @@ final class TestDummies {
         ServerLivingEntityEvents.AFTER_DAMAGE.register((e, source, base, taken, blocked) -> {
             if (!e.entityTags().contains(TAG)) return;
             DEALT.merge(e.getUUID(), (double) taken, Double::sum);
+            if (source.getEntity() != null) BY.merge(e.getUUID(), (double) taken, Double::sum);
             e.setHealth(e.getMaxHealth());
         });
         ServerLivingEntityEvents.ALLOW_DEATH.register((e, source, amount) -> {
@@ -54,7 +57,13 @@ final class TestDummies {
         return DEALT.getOrDefault(e.getUUID(), 0.0);
     }
 
+    /** 이 과녁이 때린 이가 있는 피해로 받은 합 (주변 피해 빼고) */
+    static double dealtBy(LivingEntity e) {
+        return BY.getOrDefault(e.getUUID(), 0.0);
+    }
+
     static void reset() {
         DEALT.clear();
+        BY.clear();
     }
 }

@@ -278,15 +278,28 @@ final class SwordsmanSkills {
             SkillFx.play(level, "item.spear.attack_miss", c, 1.0 + i * 0.2, 0.8);
             double mult = hits.get(i) * bonus;
             int[] cnt = {0};
-            for (LivingEntity e : Kit.around(sp, c, radius, 2.5)) {
-                cut[0] = true;
+            List<LivingEntity> targets = Kit.around(sp, c, radius, 2.5);
+            if (!targets.isEmpty()) cut[0] = true;
+            // 0.50.0 발키리의 가호: 마지막 바퀴까지 하나라도 베면 buffTicks 동안 가하는 피해 + buff (몸의 기운 · 상태 줄 — 만월 베기 자신에는 안 걸림).
+            // 마지막 바퀴의 타격이 모두 들어간 뒤에 검 (적의 무적 시간 때문에 미뤄진 타격이 가호를 받지 않게 — 0.50.0 시험: 둘째 바퀴가 ×1.1 로 들어갔음),
+            // 빗나간 타격이 있으면 (알림이 안 옴) 12틱 뒤
+            boolean last = i == n - 1 && cut[0] && k.num("buff", 0) > 0;
+            boolean[] given = {false};
+            Runnable bless = () -> {
+                if (given[0] || !RuneKit.sameLife(sp, life)) return;
+                given[0] = true;
+                mmorpg.fabric.rune.RuneMarks.empower(sp, k.num("buff", 0.1), (int) k.num("buffTicks", 80), "발키리의 가호", JobFx.outer(j), JobFx.inner(j));
+            };
+            int[] pending = {targets.size()};
+            for (LivingEntity e : targets) {
                 JobKit.strike(sp, e, j, P, mult, false, false, life, 0, d -> {
                     if (cnt[0]++ < 8) JobFx.hit(e, j, 1.1);
+                    if (last && --pending[0] <= 0) bless.run();
                 });
             }
-            // 0.50.0 발키리의 가호: 마지막 바퀴까지 하나라도 베면 buffTicks 동안 가하는 피해 + buff (몸의 기운 · 상태 줄 — 만월 베기 자신에는 안 걸림)
-            if (i == n - 1 && cut[0] && k.num("buff", 0) > 0) {
-                mmorpg.fabric.rune.RuneMarks.empower(sp, k.num("buff", 0.1), (int) k.num("buffTicks", 80), "발키리의 가호", JobFx.outer(j), JobFx.inner(j));
+            if (last) {
+                if (targets.isEmpty()) bless.run();
+                else RuneKit.later(12, bless);
             }
         });
         return true;
