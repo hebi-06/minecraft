@@ -320,7 +320,10 @@ public final class RpgJobTests {
 
     // ------------------------------------------------------------ 검사
 
-    /** 검사 스킬 다섯 (차례로 — 과녁 하나씩): 연참 (검세 3 → 검기) · 섬보 (지나가며 · 다음 평타 치명타) · 원월참 (검세 하나 +8%) · 명경지수 (두 번 베기 · −15%) · 천검난무 */
+    /**
+     * 검사 스킬 다섯 (차례로 — 과녁 하나씩): 연참 (검세 3 → 검기) · 섬보 (지나가며 · 다음 평타 치명타) · 원월참 (검세 하나 +8%) · 명경지수 (두 번 베기 · −15%) ·
+     * 라그나로크 (0.50.0 — 과녁 앞으로 돌진해 네 베기 · 내리꽂음 5 × 4 + 20)
+     */
     @GameTest(environment = ENV_SW, maxTicks = 420)
     public void swordsmanSkills(GameTestHelper h) {
         floor(h);
@@ -389,16 +392,22 @@ public final class RpgJobTests {
             RpgCombat.forceCrit = null;
             h.assertTrue(near(TestDummies.dealt(z.get(0)), base * 1.35), "mirror echo " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.35);
         }));
-        // 천검난무: 4 × 6 + 16
+        // 라그나로크: 앞 과녁 쪽으로 돌진 (1.5칸 앞에서 멈춤) → 네 베기 5 × 4 → 내리꽂음 20
+        double[] start = {0};
         steps.add(new Step(12, () -> {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 3));
-            h.assertTrue(JobSkills.press(sp, 4), "천검난무 cast");
+            start[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 4), "라그나로크 cast");
         }));
-        steps.add(new Step(110, () -> {
+        steps.add(new Step(8, () -> {
+            double moved = sp.position().z - start[0];
+            h.assertTrue(moved > 0.5 && moved < 1.8, "라그나로크 rushed to the target: " + moved);
+        }));
+        steps.add(new Step(60, () -> {
             double want = expected(sp, j, j.skill(4), 40);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "천검난무 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "라그나로크 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         chain(h, steps, 0, () -> {
             cleanup(sp);
@@ -804,7 +813,8 @@ public final class RpgJobTests {
     }
 
     /**
-     * 암살자: 표식 (단검 평타 +1 · 등 뒤 치명타 +25%p) → 낙화 (표식 5 → 0.5 + 0.85 × 5) · 잔영 (분신이 닿으면 터짐 2.85) · 귀환 비수 (갈 때 · 올 때 4.275 × 2) · 암영
+     * 암살자: 표식 (단검 평타 +1 · 등 뒤 치명타 +25%p) → 낙화 (표식 5 → 0.5 + 0.85 × 5) · 잔영 (분신이 닿으면 터짐 2.85) · 요르문간드의 독니 (0.50.0 — S 자로 지나가며
+     * 벰 4.55 · 표식 +2 → 독 1 × 4) · 암영
      * (투명 · 첫 단검 평타 치명타 확정 × 2.5 · 풀리면 이동 +30% / 직업 스킬 첫 타 × 2.5) · 흑야 (3 × 6 + 20)
      */
     @GameTest(environment = ENV_AS, maxTicks = 460)
@@ -858,12 +868,19 @@ public final class RpgJobTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 3));
-            h.assertTrue(JobSkills.press(sp, 2), "귀환 비수 cast");
+            want0[1] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 2), "요르문간드의 독니 cast");
         }));
-        // 귀환 비수: 갈 때 · 올 때 한 번씩
-        steps.add(new Step(30, () -> {
+        // 요르문간드의 독니: 지나가며 한 번 벰 (표식 +2) → 0.5초마다 독 넷
+        steps.add(new Step(9, () -> {
+            double cut = expected(sp, j, j.skill(2), 4.55);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), cut), "독니 cut " + TestDummies.dealt(z.get(0)) + " vs " + cut);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 2, "독니 marks +2: " + JobTraits3.marks(sp, z.get(0)));
+            h.assertTrue(sp.position().z - want0[1] > 3, "slithered past the target: " + (sp.position().z - want0[1]));
+        }));
+        steps.add(new Step(43, () -> {
             double want = expected(sp, j, j.skill(2), 8.55);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "귀환 비수 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "요르문간드의 독니 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2));

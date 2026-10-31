@@ -179,15 +179,14 @@ public final class JobsTest {
         check(near(sum(sw.skill(0), "hits"), 5) && near(sw.skill(0).total(), 5), "연참 1.2 + 1.2 + 2.6");
         check(near(sw.skill(1).num("mult", 0), 3), "섬보 3");
         check(near(sum(sw.skill(2), "hits"), 9), "원월참 4.5 × 2");
-        check(near(sw.skill(4).num("swords", 0) * sw.skill(4).num("sword", 0) + sw.skill(4).num("final", 0), 40), "천검난무 1 × 24 + 16");
+        check(near(sum(sw.skill(4), "beats") + sw.skill(4).num("final", 0), 40) && sw.skill(4).def().list("beats").size() == 4, "라그나로크 5 × 4 + 20");
         check(near(sb.skill(0).num("slash", 0) + sb.skill(0).num("burst", 0), 8.5), "비전 참격 3.8 + 4.7");
         check(near(sb.skill(1).num("path", 0) + sb.skill(1).num("blast", 0), 5.1), "마력 도약 2.55 + 2.55");
-        check(near(sw.skill(4).num("swords", 0) / sw.skill(4).num("volleys", 1), 4), "천검난무 4자루씩");
         // 같은 적을 여러 번 치는 스킬은 무적 시간 (10틱) 만큼 띄움
         check(sw.skill(0).num("gap", 0) >= 10 && sw.skill(2).num("gap", 0) >= 10 && sw.skill(4).num("every", 0) >= 10 && sb.skill(0).num("delay", 0) >= 10
                 && sb.skill(1).num("delay", 0) >= 10 && sb.skill(2).num("gap", 0) >= 10 && sb.skill(4).num("gap", 0) >= 10 && sb.skill(4).num("after", 0) >= 10, "i-frame spacing");
-        // 천검난무: 마지막 꽂힘 (검이 날아가는 데 6틱까지) 과 일섬 사이도 10틱 넘게
-        check(sw.skill(4).num("gather", 0) >= 16, "천검난무 모임 16틱 (날아감 6 + 무적 10)");
+        // 라그나로크: 마지막 베기와 내리꽂음 사이도 10틱 넘게 (뛰어오름은 그 안 — 내리꽂는 틱에 땅)
+        check(sw.skill(4).num("finalDelay", 0) >= 10 && sw.skill(4).num("hopTicks", 0) < sw.skill(4).num("finalDelay", 0), "라그나로크 내리꽂음 14틱 뒤");
         check(near(sb.skill(2).num("lap", 0) * sb.skill(2).num("laps", 0), 15.3), "룬 검무 5.1 × 3");
         check(near(sum(sb.skill(4), "slashes") + sb.skill(4).num("thrust", 0), 68), "비전 거검 11 × 3 + 35");
         check(near(sb.skill(3).num("echo", 0) * sb.skill(3).num("dur", 0) / 10 / 30, 0.744), "마검 각성 0.93 × 24 / 30초 = 0.744 P/초 (검사 명경지수 × 1.7)");
@@ -217,7 +216,8 @@ public final class JobsTest {
         check(Jobs.spreadKind(ar.skill(0)) == null && "zone".equals(Jobs.spreadKind(ar.skill(2))) && "long".equals(Jobs.spreadKind(ar.skill(4))), "archer spread");
         // 0.29.0 암살자 · 창술사 · 사신: 부분 합 = 배율 합 (설계 문서의 소수 한 자리 대신 틀 × 세기 그대로 — 4.75 · 2.85 · 8.55 / 7.25 · 4.35 · 13.05 / 6.25 · 3.75)
         check(near(as.skill(0).num("base", 0) + as.skill(0).num("per", 0) * as.trait().max(), 4.75), "낙화 0.5 + 0.85 × 표식 5");
-        check(near(as.skill(1).num("blast", 0), 2.85) && near(as.skill(2).num("out", 0) + as.skill(2).num("back", 0), 8.55), "잔영 2.85 · 귀환 비수 4.275 × 2");
+        check(near(as.skill(1).num("blast", 0), 2.85) && near(as.skill(2).num("cut", 0) + as.skill(2).num("venom", 0) * as.skill(2).num("ticks", 0), 8.55),
+                "잔영 2.85 · 요르문간드의 독니 4.55 + 1 × 4");
         check(near(as.skill(4).num("slash", 0) * as.skill(4).num("slashes", 0) + as.skill(4).num("final", 0), 38), "흑야 3 × 6 + 20");
         check(near(sum(la.skill(0), "hits"), 7.25) && la.skill(0).def().list("hits").size() == 3, "삼연창 2 + 2 + 3.25");
         check(near(la.skill(1).num("slam", 0), 4.35) && near(la.skill(2).num("spin", 0) * la.skill(2).num("spins", 0), 13.05), "장대 도약 4.35 · 선회창 6.525 × 2");
@@ -228,14 +228,13 @@ public final class JobsTest {
         check(near(re.skill(2).num("base", 0) * (1 + re.skill(2).num("per", 0) * 8), 11.2) && near(re.skill(2).num("base", 0) * (1 + re.skill(2).num("per", 0) * 10), 12),
                 "혼백 폭발 8 × (1 + 5% × 혼) — 혼 8 = 11.2 · 10 = 12");
         check(near(re.skill(4).num("drain", 0) * re.skill(4).num("drains", 0) + re.skill(4).num("final", 0), 50), "황천문 3 × 6 + 32");
-        // 같은 적을 여러 번 치는 것은 10틱 넘게 (흑야는 두 번 벨 때마다 한 번에 — every × 2, 비수가 돌아오는 길은 JobKit 이 무적 시간 뒤로 미룸)
-        check(as.skill(4).num("every", 0) * 2 >= 10 && as.skill(4).num("finalDelay", 0) >= 10 && as.skill(2).num("hold", 0) + as.skill(2).num("flight", 0) >= 10,
-                "assassin i-frame spacing");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (흑야는 두 번 벨 때마다 한 번에 — every × 2, 독니의 독은 벤 뒤 every 틱마다)
+        check(as.skill(4).num("every", 0) * 2 >= 10 && as.skill(4).num("finalDelay", 0) >= 10 && as.skill(2).num("every", 0) >= 10, "assassin i-frame spacing");
         check(la.skill(0).num("gap", 0) * 2 >= 10 && la.skill(2).num("gap", 0) >= 10 && la.skill(3).num("every", 0) >= 10 && la.skill(4).num("gap", 0) >= 10
                 && la.skill(4).num("finalDelay", 0) >= 10, "lancer i-frame spacing");
         check(re.skill(0).num("gap", 0) >= 10 && re.skill(4).num("gap", 0) >= 10 && re.skill(4).num("finalDelay", 0) >= 10, "reaper i-frame spacing");
-        // 지속 보정: 잔영 (2초 안에 터짐) · 귀환 비수 · 흑야 → short, 천창유성 · 황천문 (장판) → zone, 나머지 한방
-        check(Jobs.spreadKind(as.skill(0)) == null && "short".equals(Jobs.spreadKind(as.skill(1))) && "short".equals(Jobs.spreadKind(as.skill(2)))
+        // 지속 보정: 잔영 (2초 안에 터짐) · 흑야 → short, 요르문간드의 독니 (독이 2초) → long, 천창유성 · 황천문 (장판) → zone, 나머지 한방
+        check(Jobs.spreadKind(as.skill(0)) == null && "short".equals(Jobs.spreadKind(as.skill(1))) && "long".equals(Jobs.spreadKind(as.skill(2)))
                 && "short".equals(Jobs.spreadKind(as.skill(4))), "assassin spread");
         check(Jobs.spreadKind(la.skill(0)) == null && Jobs.spreadKind(la.skill(1)) == null && Jobs.spreadKind(la.skill(2)) == null
                 && "zone".equals(Jobs.spreadKind(la.skill(4))), "lancer spread");
@@ -302,10 +301,10 @@ public final class JobsTest {
         check(near(Jobs.power(sw, Map.of("str", 30.0, "dex", 99.0, "lvmax", 10.0)), 9.6), "swordsman lv10 P 9.6 (dex not counted)");
         check(near(Jobs.applied(sb, Map.of("int", 74.0, "str", 51.0, "dex", 10.0)), 125), "applied = int + str");
 
-        // 지속 보정 (룬과 같은 단계): 연참 t 12 → +5% · 천검난무 t 78 → +10% · 룬 검무 장판 → +10% · 나머지 한방
+        // 지속 보정 (룬과 같은 단계): 연참 t 12 → +5% · 라그나로크 t 50 → +10% · 룬 검무 장판 → +10% · 나머지 한방
         check("short".equals(Jobs.spreadKind(sw.skill(0))) && near(Jobs.spreadMult(sw.skill(0)), 1.05), "연참 short");
         check(Jobs.spreadKind(sw.skill(1)) == null && Jobs.spreadKind(sw.skill(2)) == null && Jobs.spreadKind(sw.skill(3)) == null, "섬보 · 원월참 · 명경지수 instant");
-        check("long".equals(Jobs.spreadKind(sw.skill(4))) && near(Jobs.spreadMult(sw.skill(4)), 1.1), "천검난무 long");
+        check("long".equals(Jobs.spreadKind(sw.skill(4))) && near(Jobs.spreadMult(sw.skill(4)), 1.1), "라그나로크 long");
         check(Jobs.spreadKind(sb.skill(0)) == null && Jobs.spreadKind(sb.skill(1)) == null, "비전 참격 · 마력 도약 instant");
         check("zone".equals(Jobs.spreadKind(sb.skill(2))) && near(Jobs.spreadMult(sb.skill(2)), 1.1), "룬 검무 zone");
         check("long".equals(Jobs.spreadKind(sb.skill(4))), "비전 거검 long");
@@ -335,7 +334,7 @@ public final class JobsTest {
         check(tyr.reqs().size() == 2 && tyr.reqs().get(0).value() == 74 && tyr.reqs().get(1).value() == 36, "tyrfing requirement unchanged " + tyr.reqs());
 
         // 글자
-        check(Jobs.skillLine(sw.skill(0)).equals("은빛 연격 · 6초 · 배율 5.21") && Jobs.skillLine(sw.skill(3)).equals("에인헤랴르 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(Jobs.skillLine(sw.skill(0)).equals("은빛 연격 · 6초 · 배율 5.41") && Jobs.skillLine(sw.skill(3)).equals("에인헤랴르 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
 
         upgrade();
@@ -374,10 +373,14 @@ public final class JobsTest {
             check(n > 0.9 && n < 1.6, j.id() + " norm " + n);
         }
         check(names == 55, "55 skill names " + names);
-        // 하나씩: 발할라 (선딜 19틱 — 0.50.0 시간 시험: 솟아올라 첫 일제 사격 — +19% · 지속 63틱 +10% → 1.309 → 상한 ×1.3 · 유틸 없음)
-        Jobs.Skill valhalla = sw.skill(4);
-        check(valhalla.name().equals("발할라") && Jobs.windupTicks(valhalla) == 19 && "long".equals(Jobs.timeKind(valhalla)), "발할라 windup · long");
-        check(near(Jobs.timeMult(valhalla), 1.3) && Jobs.timeCapped(valhalla) && near(Jobs.utilCost(valhalla), 0), "발할라 time 1.3 (cap)");
+        // 하나씩: 라그나로크 (0.50.0 발할라를 바꿈 — 선딜 6틱: 돌진해 첫 베기 +6% · 지속 44틱 +10% → ×1.166 · 유틸 없음)
+        Jobs.Skill ragnarok = sw.skill(4);
+        check(ragnarok.name().equals("라그나로크") && Jobs.windupTicks(ragnarok) == 6 && "long".equals(Jobs.timeKind(ragnarok)), "라그나로크 windup · long");
+        check(near(Jobs.timeMult(ragnarok), 1.06 * 1.1) && !Jobs.timeCapped(ragnarok) && near(Jobs.utilCost(ragnarok), 0), "라그나로크 time 1.166");
+        // 요르문간드의 독니: S 자로 휘감아 지나감 (순간 이동 값 −10%) · 독 2초 (지속 43틱 +10%)
+        Jobs.Skill fang = Jobs.job("assassin").skill(2);
+        check(fang.name().equals("요르문간드의 독니") && Jobs.utils(fang).equals(List.of("blink")) && near(Jobs.utilCost(fang), 0.10) && near(Jobs.timeMult(fang), 1.1),
+                "요르문간드의 독니 blink 10% · long");
         // 섬광 질주: 돌진 −10% · 다음 평타 치명 (피해 — 값 없음)
         check(Jobs.utils(sw.skill(1)).equals(List.of("blink", "crit")) && near(Jobs.utilCost(sw.skill(1)), 0.10), "섬광 질주 util 10%");
         // 만월 베기: 발키리의 가호 (가하는 피해 +10%) −15%

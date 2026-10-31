@@ -4,7 +4,7 @@ import rune_motion_kit as K
 from rune_motion_kit import (A_CROSS, A_HIP, A_PALM, A_PRAY, A_RAISE, A_SPREAD_DOWN, A_SPREAD_UP, BACK_END, BACK_HIT, BACK_WIND, CALL, FP_CHAMBER, FP_CROSS,
                              FP_GATHER_L, FP_GROUND, FP_LOW, FP_PALM, FP_PUSH_OUT, FP_RAISE, FP_SPREAD_UP, FPL_GRIP2H, FPL_RAISE2H, FPW_BACK, FPW_DOWN, FPW_FWD,
                              FPW_LOW, FPW_SKY, FPW_SPREAD, FPW_UP, GRIP2H, L, LEGS_FIGHT, LEGS_LUNGE, LEGS_WIDE, P, RA_POINT, RA_SKY, RA_UPRIGHT, RAISE2H, W_HIGH2,
-                             W_READY, W_SKY, arm, backhand, bent, fpl, fpw, keyp, nudge, off_bare, spin_left, spin_right, strike, use_skill)
+                             W_READY, W_SKY, arm, backhand, bent, fpl, fpw, keyp, nudge, off_bare, spin_left, spin_right, strike, use_skill, charge_slam)
 
 Motion = K.Motion
 
@@ -67,39 +67,48 @@ fpw(m, 15, dict(p=(-0.18, 0.36, 0.05), blade=(0.04, 1, 0.08)))
 fpw(m, 19, FPW_SPREAD, "out")
 use_skill(m, "swordsman_mirror")
 
-# 천검난무 (효과: 0 ~ 16 머리 뒤로 환영 검 24자루가 솟음 → 16 · 26 · … · 66 에 네 자루씩 날아감 → 68 ~ 82 눈앞에 모여 거대한 검 → 82 일섬)
-m = Motion("swordsman_ult", 20, "천검난무 — 칼과 왼손을 하늘로 들어 환영 검을 부름 → 칼끝으로 앞을 겨눔", fade=(0.04, 0.08))
-keyp(m, 3, CALL, "out3")
-keyp(m, 12, P(CALL, head=[-30, 0]))
-keyp(m, 16, P(body=[6, -12, 0], ra=RA_POINT, la=L(A_HIP), **LEGS_FIGHT), "out3")
-fpw(m, 3, FPW_SKY, "out3")
-fpw(m, 12, FPW_SKY)
-fpw(m, 16, FPW_FWD, "out3")
+# 라그나로크 (0.50.0 — 발할라를 바꿈 · 사용자 "검사 몸 쓰는 직업인데 갑자기 하늘 날아서 마법마냥 쏘는게 마음에 안듬". 효과: 0 ~ 6 앞의 적에게 돌진 →
+# 6 바로 베기 (오른쪽 → 왼쪽) · 16 되돌려 베기 (왼쪽 → 오른쪽) · 26 한 바퀴 (오른쪽으로) · 36 올려 베기 → 41 ~ 50 두 손으로 머리 위로 들고 제자리에서 뛰어
+# 50 에 땅에 내리꽂음 (몸의 뜀은 JobMove — 다리는 job_motions.AIR))
+RUSH = P(body=[30, -14, 0], head=[-16, 0], ra=arm([0.5, -0.5, -0.55], 25, [0.4, -0.2, -0.9]), la=arm([-0.3, -0.35, 0.7], 40), rl=[-38, 0, 0], ll=[30, 0, 0],
+         rk=48, lk=26, root=[-0.16, 0.25])  # 몸을 숙여 내달림 (칼은 오른쪽 뒤로 끌림)
+RISE_WIND = P(body=[22, -34, 0], head=[-8, 0], ra=arm([0.4, -0.8, -0.3], 18, [0.3, -0.5, -0.8]), la=arm([-0.5, -0.45, 0.5], 35), rl=[24, 0, 4], ll=[-30, 0, -2],
+              rk=44, lk=50, root=[-0.24, 0.1])  # 낮게 웅크려 칼을 오른쪽 뒤 아래로
+RISE_HIT = P(body=[-10, 8, 0], head=[-16, 0], ra=arm([0.05, 0.75, 0.66], 6, [0.02, 0.97, 0.25]), la=arm([-0.6, -0.45, 0.15], 30), rl=[8, 0, 2], ll=[-14, 0, -2],
+             rk=8, lk=14, root=[0.02, 0.2])  # 몸을 펴며 아래에서 위로 쳐올림
+RISE_END = P(body=[-14, 12, 0], head=[-22, 0], ra=arm([0.02, 0.96, 0.25], 10, [0.0, 0.85, -0.5]), la=arm([-0.6, -0.5, 0.0], 30), rl=[6, 0, 2], ll=[-10, 0, -2],
+             rk=6, lk=10, root=[0.02, 0.18])
+PLANT = P(body=[34, 0, 0], head=[-10, 0], ra=arm([0.0, -0.6, 0.8], 10, [0.0, -0.95, 0.3]), la=bent([0.0, -0.62, 0.78], 20, (0, 0, 1)), rl=[-24, 0, 6],
+          ll=[16, 0, -6], rk=40, lk=30, root=[-0.24, 0.15])  # 땅에 내리꽂은 칼을 두 손으로 누른 채 버팀
+m = Motion("swordsman_ult", 62, "라그나로크 — 몸을 숙여 내달려 오른쪽에서 크게 베고 되돌려 베고 한 바퀴 돌아 베고 아래에서 쳐올린 뒤, 두 손으로 칼을 머리 위로 들고 뛰어 땅에 "
+           "내리꽂음", fade=(0.03, 0.1))
+keyp(m, 0.6, RUSH, "out3")
+keyp(m, 4.0, P(RUSH, body=[32, -16, 0]))
+strike(m, "slash_h", 4.6, 6.2)
+keyp(m, 11, P(W_READY, body=[10, -4, 0], **LEGS_LUNGE))
+backhand(m, 14.2, 16.2, 18.6)
+keyp(m, 21, P(W_READY, body=[10, 6, 0], **LEGS_FIGHT))
+spin_right(m, [26.2], 30.0, wind_tick=24.0)
+keyp(m, 33.6, RISE_WIND, "out3")
+keyp(m, 36.2, RISE_HIT, "linear")
+keyp(m, 38.4, RISE_END, "out")
+m.arc(36.2, "ra", (0.15, -0.1, 1))
+m.head.setdefault("trail", []).append([m.t(34.4), m.t(38.2)])
+charge_slam(m, 50.0, grip_tick=39.6, raise_tick=42.0)
+keyp(m, 54, PLANT)
+keyp(m, 58, P(PLANT, body=[30, 0, 0], root=[-0.22, 0.12]))
+keyp(m, 61, P(W_READY, body=[8, 6, 0]))
+fpw(m, 0.6, FPW_BACK, "out3")
+fpw(m, 4.0, FPW_BACK)
+fpw(m, 11, FPW_LOW)
+fpw(m, 21, FPW_LOW)
+fpw(m, 33.6, dict(p=(0.35, -0.5, 0.15), blade=(0.35, -0.55, -0.75)), "out3")
+fpw(m, 36.2, dict(p=(-0.25, 0.55, -0.15), blade=(0.0, 1, 0.15)), "linear")
+fpw(m, 38.4, FPW_UP)
+fpw(m, 54, FPW_DOWN)
+fpw(m, 58, FPW_DOWN)
+fpw(m, 61, FPW_LOW)
 use_skill(m, "swordsman_ult")
-m = Motion("swordsman_ult_volley", 10, "천검난무 — 칼끝을 적 쪽으로 튕겨 환영 검을 날려 보냄 (한 물결)", fade=(0.05, 0.1))
-keyp(m, 0.4, P(body=[2, -10, 0], ra=arm([0.1, 0.3, 0.9], 40, [0, 0.8, 0.5]), la=L(A_HIP), **LEGS_FIGHT))
-keyp(m, 1.4, P(body=[8, -14, 0], ra=arm([-0.04, 0.12, 1], 0, [0, 0.12, 1]), la=L(A_HIP), **LEGS_FIGHT), "out3")
-keyp(m, 8, P(body=[6, -12, 0], ra=RA_POINT, la=L(A_HIP), **LEGS_FIGHT))
-fpw(m, 0.4, dict(p=(-0.35, 0.45, 0.0), blade=(0, 0.8, 0.5)))
-fpw(m, 1.4, FPW_FWD, "out3")
-fpw(m, 8, FPW_FWD)
-use_skill(m, "swordsman_ult:volley")
-m = Motion("swordsman_ult_gather", 14, "천검난무 — 흩어진 검이 모이는 동안 두 손으로 칼을 머리 위로 들어 기를 모음", fade=(0.05, 0.05))
-off_bare(m)
-keyp(m, 3, RAISE2H, "out3")
-keyp(m, 8, P(RAISE2H, body=[-12, 0, 1], rk=20, lk=20, root=[-0.07, 0]))
-keyp(m, 12, P(RAISE2H, body=[-14, 0, -1], rk=24, lk=24, root=[-0.09, 0]))
-fpw(m, 3, FPW_UP, "out3", dp=(0.1, -0.1, 0))
-fpw(m, 12, FPW_UP, dp=(0.12, -0.06, 0.05))
-fpl(m, 3, FPL_RAISE2H, "out3")
-fpl(m, 12, nudge(FPL_RAISE2H, (0.02, 0.02, 0)))
-use_skill(m, "swordsman_ult:gather")
-m = Motion("swordsman_ult_final", 16, "천검난무 — 거대한 검과 함께 크게 되돌려 베어 앞을 가름 (일섬)", fade=(0.03, 0.12))
-backhand(m, 0.1, 1.3, 3.6, wind=P(BACK_WIND, body=[0, -66, 0], ra=arm([-0.75, 0.45, 0.45], 60, [-0.75, 0.4, -0.5]), rk=30, lk=34, root=[-0.16, 0]),
-         hit=P(BACK_HIT, body=[18, 26, 0], rl=[26, 0, 4], ll=[-38, 0, -2], rk=12, lk=40, root=[-0.12, 0.45]),
-         end=P(BACK_END, body=[16, 54, 0], rl=[24, 0, 4], ll=[-36, 0, -2], rk=12, lk=38, root=[-0.12, 0.38]))
-keyp(m, 10, P(BACK_END, body=[14, 50, 0], rl=[24, 0, 4], ll=[-36, 0, -2], rk=12, lk=38, root=[-0.12, 0.38]))
-use_skill(m, "swordsman_ult:final")
 
 # ------------------------------------------------------------ 전사 (도끼 — 붉은 불꽃)
 

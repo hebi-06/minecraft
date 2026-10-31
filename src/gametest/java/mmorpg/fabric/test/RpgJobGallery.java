@@ -79,7 +79,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(1, new int[] {1, 3, 8}, new int[] {2, 6}, 16, false),
         new Case(2, new int[] {2, 12}, new int[] {2, 12}, 22, false),
         new Case(3, new int[] {4, 20}, new int[] {6}, 24, true),
-        new Case(4, new int[] {8, 20, 40, 66, 83, 86, 90}, new int[] {20, 60, 83}, 100, false),
+        new Case(4, new int[] {4, 7, 17, 27, 37, 46, 51, 56}, new int[] {7, 27, 51}, 66, false), // 0.50.0 라그나로크: 돌진 · 네 베기 · 내리꽂음
     };
     private static final Case[] CASES_SB = {
         new Case(0, new int[] {2, 6, 12}, new int[] {3, 12}, 22, false),
@@ -116,7 +116,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     private static final Case[] CASES_AS = {
         new Case(0, new int[] {2, 6, 12}, new int[] {3, 10}, 20, false),
         new Case(1, new int[] {2, 6, 14, 30, 42}, new int[] {4, 20, 42}, 50, false),
-        new Case(2, new int[] {3, 8, 14, 20}, new int[] {6, 16}, 26, false),
+        new Case(2, new int[] {2, 4, 7, 10, 24}, new int[] {4, 8}, 50, false), // 0.50.0 요르문간드의 독니: S 자로 지나감 (8틱) · 독 넷 (0.5초마다)
         new Case(3, new int[] {4, 16}, new int[] {6}, 24, false, true, 4),
         new Case(4, new int[] {3, 8, 18, 28, 34, 41, 46}, new int[] {10, 30, 42}, 58, false),
     };

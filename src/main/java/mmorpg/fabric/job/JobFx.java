@@ -200,7 +200,7 @@ final class JobFx {
     }
 
     /**
-     * 0.50.0 날아가는 검기 (연참 검기 · 발할라 마지막 일섬 · 룬 베기 검기): 시전자 1인칭에는 지금 그림 (카메라를 보는 rfx_jslash — dir · speed 로 날아감),
+     * 0.50.0 날아가는 검기 (연참 검기 · 룬 베기 검기): 시전자 1인칭에는 지금 그림 (카메라를 보는 rfx_jslash — dir · speed 로 날아감),
      * 3인칭 · 다른 사람에게는 날아가는 참격 판 (불룩한 날이 날아가는 쪽 — 룬 0.48.2 와 같음). o = 파티클 값 (size · spin · grow · alpha · fade …)
      */
     static void wave(ServerPlayer sp, Jobs.Job j, Vec3 at, Vec3 dir, double speed, double life, Opt o) {

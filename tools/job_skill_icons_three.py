@@ -188,27 +188,39 @@ def assassin_shade(A, B):
 
 
 def assassin_daggers(A, B):
-    # 가운데에서 여덟 쪽으로 날아가는 비수 · 돌아오는 둥근 화살표
-    blades = mask()
-    for i in range(8):
-        a = math.radians(i * 45 + 22.5)
-        ux, uy = math.cos(a), math.sin(a)
-        px, py = -uy, ux
-        r0, r1 = 7.0, 14.5
-        cx, cy = 16.0, 16.0
-        poly(blades, [(cx + ux * r1, cy + uy * r1), (cx + ux * (r0 + 2.0) + px * 1.3, cy + uy * (r0 + 2.0) + py * 1.3), (cx + ux * r0, cy + uy * r0),
-                      (cx + ux * (r0 + 2.0) - px * 1.3, cy + uy * (r0 + 2.0) - py * 1.3)])
-    arc = mask()
+    # 0.50.0 요르문간드의 독니 (여덟 칼날을 바꿈 — 단검을 쥐고 S 자로 휘감아 지나가며 베고 독을 남김): 아래왼쪽에서 단검 쪽으로 S 자로 굽이치는 자홍 자국 (뱀처럼 —
+    # 끝으로 갈수록 굵음) · 위오른쪽으로 찌르는 단검 · 칼날에서 떨어지는 초록 독 방울 셋
+    venom, venom_hi = (88, 214, 64), (196, 255, 150)
+    x0, y0, x1, y1 = 3.0, 29.5, 16.4, 16.2
+    dx, dy = x1 - x0, y1 - y0
+    L = math.hypot(dx, dy)
+    nx, ny = -dy / L, dx / L
     pts = []
-    for i in range(20):
-        t = i / 19
-        a = math.radians(-60 + 250 * t)
-        pts.append((16.0 + math.cos(a) * 4.6, 16.0 + math.sin(a) * 4.6))
-    line(arc, pts, 1.3)
-    ex, ey = pts[-1]
-    poly(arc, [(ex + 2.6, ey - 0.6), (ex - 0.6, ey - 2.6), (ex - 1.2, ey + 1.6)])
-    subject = stack(layer(blades, WHITE, mix(STEEL, A, 0.4), WHITE, STEEL_LO, axis=(0.7, 0.7)), layer(arc, mix(A, WHITE, 0.4), A))
-    return finish(subject, [glow(blades, A, 1.5, 0.9), glow(arc, A, 1.4, 0.9)], assassin_back(A, B))
+    for i in range(61):
+        u = i / 60
+        k = 3.0 * math.sin(2 * math.pi * u) * (0.4 + 0.6 * u)
+        pts.append((x0 + dx * u + nx * k, y0 + dy * u + ny * k, 1.2 + 0.9 * u))
+    a_side, b_side = [], []
+    for i, (x, y, w) in enumerate(pts):
+        xa, ya, _ = pts[max(0, i - 1)]
+        xb, yb, _ = pts[min(len(pts) - 1, i + 1)]
+        tx, ty = xb - xa, yb - ya
+        tl = math.hypot(tx, ty) or 1
+        px, py = -ty / tl, tx / tl
+        a_side.append((x - px * w, y - py * w))
+        b_side.append((x + px * w, y + py * w))
+    trail = mask()
+    poly(trail, a_side + b_side[::-1])
+    dag = sword_layers((30.2, 1.8), (16.8, 15.6), blade=3.2, guard=6.4, blade_cols=(STEEL_HI, mix(STEEL, venom, 0.35), WHITE, STEEL_LO))
+    drops = mask()
+    for (cx, cy, r) in ((25.2, 12.6, 1.5), (28.6, 17.6, 1.25), (22.6, 19.2, 1.05)):
+        disc(drops, cx, cy + r * 0.35, r)
+        poly(drops, [(cx - r * 0.82, cy + r * 0.1), (cx, cy - r * 1.8), (cx + r * 0.82, cy + r * 0.1)])
+    shine = mask()
+    star(shine, 29.6, 2.4, 3.0, 0.22)
+    subject = stack(layer(trail, mix(A, WHITE, 0.35), mix(B, A, 0.4), WHITE, mix(B, DARK, 0.3), axis=(0.7, -0.7)), *dag,
+                    layer(drops, venom_hi, venom, WHITE, mix(venom, DARK, 0.4)), layer(shine, WHITE, WHITE))
+    return finish(subject, [glow(trail, A, 1.6, 0.9), glow(drops, venom, 1.3, 1.0)], assassin_back(A, B))
 
 
 def assassin_veil(A, B):

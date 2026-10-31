@@ -52,9 +52,7 @@ AIR_LEGS = {
 }
 AIR = {
     "jb_swordsman_moon": [(2, 15, "tuck")],
-    "jb_swordsman_ult": [(3, 20, "tuck")],
-    "jb_swordsman_ult_volley": [(0, 10, "tuck")],
-    "jb_swordsman_ult_gather": [(0, 9, "tuck"), (12, 14, "land")],
+    "jb_swordsman_ult": [(42, 49, "tuck"), (50, 55, "land")],
     "jb_warrior_crush": [(1, 5, "tuck"), (6, 9, "land")],
     "jb_spellblade_arcslash": [],
     "jb_spellblade_runedance": [(4, 34, "float")],
@@ -71,7 +69,6 @@ AIR = {
     "jb_archer_rain": [(1, 9, "tuck")],
     "jb_archer_ult": [(2, 24, "tuck"), (26, 31, "land")],
     "jb_assassin_bloom": [],
-    "jb_assassin_daggers": [(1, 10, "tuck")],
     "jb_lancer_triple": [],
     "jb_lancer_cyclone": [(2, 15, "tuck")],
     "jb_lancer_ult": [(2, 20, "tuck")],

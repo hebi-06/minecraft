@@ -37,9 +37,9 @@
         {"id": "swordsman_mirror", "name": "에인헤랴르", "cd": 30, "dur": 160, "echo": 0.35, "echoDelay": 4, "guard": 0.15,
           "up": [{"key": "echo", "name": "두 번째 베기", "fmt": "pct"}],
           "desc": "8초 태세: 칼 평타가 두 번 베기 (두 번째 35%) · 투지가 사라지지 않음 · 받는 피해 −15%"},
-        {"id": "swordsman_ult", "name": "발할라", "cd": 60, "total": 40, "swords": 24, "volleys": 6, "sword": 1, "radius": 10, "targets": 8, "final": 16, "finalRange": 12,
-          "finalWidth": 3.2, "rise": 16, "every": 10, "gather": 16, "t": 82, "w": 19,
-          "desc": "등 뒤에 환영 검 24자루 → 둘레 10칸 적에게 0.5초마다 4자루씩 꽂힘 (4 × 6) → 한데 모여 앞을 가르는 일섬 (16)"}
+        {"id": "swordsman_ult", "name": "라그나로크", "cd": 60, "total": 40, "dash": 7, "step": 3, "rush": 6, "beats": [5, 5, 5, 5], "every": 10, "radius": 4.5,
+          "hop": 0.8, "hopTicks": 9, "finalDelay": 14, "final": 20, "finalRadius": 5, "finalRange": 10, "finalWidth": 3, "t": 50, "w": 6,
+          "desc": "앞 7칸 안의 가장 가까운 적에게 돌진 → 그 자리에서 0.5초마다 베기 · 되돌려 베기 · 회전 베기 · 올려 베기 (둘레 4.5칸 — 5 × 4) → 뛰어올라 칼을 땅에 내리꽂아 둘레 5칸 · 앞 10칸을 가름 (20)"}
       ]
     },
     "warrior": {
@@ -144,9 +144,9 @@
           "desc": "겨눈 적 (5칸) 의 표식을 모두 터뜨림 — 기본 0.5 + 표식 하나당 0.85 (표식 5 = 4.75), 꽃잎처럼 흩어지는 자주 베기"},
         {"id": "assassin_shade", "name": "로키의 환영", "cd": 12, "total": 2.85, "blast": 2.85, "dist": 6, "steps": 3, "life": 40, "touch": 1.4, "radius": 3, "taunt": 6, "t": 40, "w": 0, "u": ["blink", "taunt"],
           "desc": "보는 쪽 6칸 순간 이동 — 원래 자리에 환영 2초 (둘레 6칸 적이 환영을 노림), 적이 닿거나 2초가 지나면 터짐 (둘레 3칸 2.85)"},
-        {"id": "assassin_daggers", "name": "여덟 칼날", "cd": 15, "total": 8.55, "out": 4.275, "back": 4.275, "count": 8, "range": 8, "flight": 8, "hold": 4,
-          "width": 1.4, "t": 17,
-          "desc": "둘레 8방향으로 비수 (8칸) → 되돌아옴 — 갈 때 · 올 때 적마다 한 번씩 (4.275 × 2)"},
+        {"id": "assassin_daggers", "name": "요르문간드의 독니", "cd": 15, "total": 8.55, "dist": 8, "sway": 1.5, "steps": 8, "width": 2.6, "cut": 4.55, "marks": 2,
+          "venom": 1, "ticks": 4, "every": 10, "t": 43, "u": ["blink"],
+          "desc": "독을 바른 단검을 쥐고 앞 8칸을 뱀처럼 S자로 휘감아 지나가며 닿는 적마다 벰 (4.55 · 표식 +2) → 독이 0.5초마다 4번 (1 × 4)"},
         {"id": "assassin_veil", "name": "밤의 장막", "cd": 30, "dur": 120, "first": 2.5, "speedFor": 60, "speed": 0.3,
           "up": [{"key": "first", "name": "첫 공격", "fmt": "x", "bonus": true}],
           "desc": "6초 은신 (몹이 노리지 않음 · 다른 사람에게 투명) — 은신 중 첫 공격 (평타 · 직업 스킬의 첫 타 하나) 치명타 확정 · 피해 ×2.5, 공격하면 풀림. 풀린 뒤 3초 이동 속도 +30%"},

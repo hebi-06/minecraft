@@ -317,22 +317,33 @@ def swordsman_mirror(A, B):
 
 
 def swordsman_ult(A, B):
-    # 하늘에서 쏟아지는 칼날: 가운데 큰 칼 (끝이 아래) + 비스듬히 떨어지는 칼날 다섯 (흰 쐐기 · 뒤에 짧은 빛줄기), 아래에 닿는 빛
-    blades = mask()
-    trails = mask()
-    for (x, y, L) in ((6.5, 13.0, 9.0), (25.5, 11.0, 9.0), (5.0, 27.5, 8.0), (27.5, 26.5, 8.0), (11.0, 6.5, 6.0)):
-        ux, uy = 0.42, -0.91  # 끝 (아래왼쪽) → 뒤 (위오른쪽)
-        px, py = -uy, ux
-        poly(blades, [(x, y), (x + ux * L + px * 1.1, y + uy * L + py * 1.1), (x + ux * L - px * 1.1, y + uy * L - py * 1.1)])
-        line(trails, [(x + ux * (L + 0.8), y + uy * (L + 0.8)), (x + ux * (L + 4.5), y + uy * (L + 4.5))], 0.8)
-    big = sword_layers((16.0, 29.5), (16.0, 3.0), blade=4.0, guard=10.0)
+    # 0.50.0 라그나로크 (발할라를 바꿈 — 몸으로 돌진해 베고 땅을 가름): 땅에 내리꽂힌 큰 칼 (가운데 — 칼끝이 아래 땅) · 칼끝에서 좌우로 갈라지는 땅 (빛나는 금과 가지) ·
+    # 양옆으로 퍼지는 충격 초승달 · 튀어 오르는 돌 넷
+    crack = mask()
+    path = [(1.0, 25.2), (4.6, 23.8), (7.8, 26.2), (11.4, 24.4), (16.0, 26.8), (20.6, 24.4), (24.2, 26.2), (27.4, 23.8), (31.0, 25.2)]
+    for i in range(len(path) - 1):
+        a, b = path[i], path[i + 1]
+        w = 1.9 - abs((a[0] + b[0]) / 2 - 16.0) / 16.0 * 1.2
+        line(crack, [a, b], w)
+    for pts in (((7.8, 26.2), (6.4, 29.6), (4.6, 31.0)), ((24.2, 26.2), (25.6, 29.6), (27.4, 31.0)), ((16.0, 26.8), (15.4, 29.4), (16.6, 31.5))):
+        line(crack, list(pts), 1.0)
+    core = mask()
+    for i in range(len(path) - 1):
+        line(core, [path[i], path[i + 1]], 0.55)
+    arcs = mask()
+    crescent(arcs, 16.0, 27.5, 13.2, 2.4, 196, 246)
+    crescent(arcs, 16.0, 27.5, 13.2, 2.4, 294, 344)
+    rocks = mask()
+    for (cx, cy, r) in ((5.6, 17.6, 1.7), (26.4, 16.6, 1.9), (9.8, 11.6, 1.1), (22.6, 10.4, 1.0)):
+        poly(rocks, [(cx - r, cy), (cx - r * 0.3, cy - r), (cx + r, cy - r * 0.4), (cx + r * 0.6, cy + r * 0.8), (cx - r * 0.5, cy + r * 0.7)])
+    sw = sword_layers((16.0, 27.6), (16.0, 2.4), blade=4.2, guard=10.4)
     spark = mask()
-    star(spark, 16.0, 29.0, 4.6, 0.2)
-    burst = mask()
-    disc(burst, 16, 29, 6.5)
-    subject = stack(layer(trails, mix(A, B, 0.5), B), layer(blades, WHITE, A, WHITE, mix(B, (0, 0, 0), 0.3), axis=(0, -1)), *big,
+    star(spark, 16.0, 26.6, 4.8, 0.18)
+    dark = mix(B, (0, 0, 0), 0.7)
+    subject = stack(layer(arcs, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.35)), layer(rocks, (156, 146, 132), (92, 84, 76), (204, 194, 178), (60, 54, 48)),
+                    layer(crack, mix(B, WHITE, 0.3), dark, mix(B, WHITE, 0.6), mix(dark, (0, 0, 0), 0.3)), layer(core, WHITE, mix(A, WHITE, 0.5)), *sw,
                     layer(spark, WHITE, WHITE))
-    return finish(subject, [glow(burst, B, 2.0, 0.8), glow(blades, B, 1.0, 0.8)],
+    return finish(subject, [glow(ImageChops.lighter(crack, spark), B, 1.8, 1.0), glow(arcs, B, 1.2, 0.8)],
                   backdrop(mix(B, (8, 10, 30), 0.84), mix(A, (30, 40, 70), 0.35)))
 
 
