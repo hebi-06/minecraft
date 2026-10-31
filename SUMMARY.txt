@@ -1,0 +1,11 @@
+run: 41170290802  attempt: 1
+commit: 46901e0a7573a5a9f4372e24bae593bd7c745c72
+versions: success
+core: success
+build: success
+prod: success
+gametest: success
+client g1 (film,filmjob1): success
+client g2 (film,filmjob2): success
+client g3 (film,filmjob3): success
+client (all groups): success
