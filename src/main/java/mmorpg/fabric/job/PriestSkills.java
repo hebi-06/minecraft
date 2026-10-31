@@ -222,6 +222,8 @@ final class PriestSkills {
         JobFx.beam(level, tip(sp), Kit.bodyPoint(e), j, 2.0, 0.3, Opt.of("alpha", 0.8));
         JobFx.stigma(level, RuneKit.overHead(e, 0.75), 0.62 + Kit.bodyPad(e) * 0.25, j, 0.8, Opt.of("vel", RuneKit.entVel(e), "grow", -0.3, "fade", 0.3));
         JobFx.burst(level, Kit.bodyPoint(e), 0.9 + Kit.bodyPad(e) * 0.4, j, 0.35, Opt.empty());
+        // 0.50.0 프레이야의 매 깃옷 (사용자 "직업 고유 연출"): 표식이 찍힌 적 머리 위에서 금빛 깃털이 흩날려 내려앉음
+        JobFx.feathers(level, RuneKit.overHead(e, 0.9), 5, 0.6 + Kit.bodyPad(e) * 0.3, 0.17, j, 1.2, Opt.empty());
         DamageNumbers.showAt(level, V.up(e.getEyePosition(), 1.25), "§e§l프레이야의 표식");
         SkillFx.play(level, "block.respawn_anchor.charge", Kit.bodyPoint(e), 1.4, 0.7);
         SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 1.2, 0.6);

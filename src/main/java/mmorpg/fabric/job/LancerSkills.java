@@ -185,6 +185,8 @@ final class LancerSkills {
                 Kit.moveTo(sp, p); // 막히면 그 자리 (다음 마디에서 다시)
                 ServerLevel d = sp.level();
                 if (ss % 2 == 0) JobFx.dash(d, V.up(prev, 0.9), V.up(sp.position(), 0.9), j, 0.25, JobFx.hide1p(sp).with("alpha", 0.8));
+                // 0.50.0 독수리 강하 (사용자 "직업 고유 연출"): 솟구친 몸 뒤로 독수리 깃털이 흩날림 (1인칭에서는 숨김)
+                if (ss % 3 == 1) JobFx.feathers(d, V.up(prev, 1.2), 2, 0.4, 0.17, j, 0.9, JobFx.hide1p(sp));
                 if (t > 0.5) JobFx.speed(sp, j, 0.1, 0.7);
                 if (ss == ticks) vaultSlam(sp, j, k, P, sp.position(), life);
             });
