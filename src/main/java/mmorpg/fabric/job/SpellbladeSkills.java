@@ -339,7 +339,7 @@ final class SpellbladeSkills {
         // 0.50.0 동작 (사용자 "역동적으로"): 거검과 함께 솟아올라 (rise 틱 · lift 칸) 공중에서 세 번 베고, 찌르기 직전에 조준한 쪽으로 내리꽂힘 (착지 → 찌르기)
         int dive = (int) k.num("dive", 6);
         JobMove.run(sp, JobMove.to(0, rise, JobMove.up(sp, k.num("lift", 3)), JobMove.OUT), JobMove.hold(rise, thrustTick - dive - 1),
-                JobMove.to(thrustTick - dive - 1, thrustTick - 1, JobMove.landAhead(sp, k.num("diveDist", 4), c0.y), JobMove.IN));
+                JobMove.to(thrustTick - dive - 1, thrustTick - 1, JobMove.landAhead(sp, k.num("diveDist", 2), c0.y), JobMove.IN));
         // 0.47.0 입체: 솟아오르는 거대한 마력 검 (눈앞 2.6칸, 칼끝 위 — 주인을 따라가며 rise 틱에 0.9 → 3.4 배) → 베기 사이에도 들고 있음 (heldSword)
         JobFx3d.spawn(level0, "phantom_sword", new Vec3(0, 0.4, 2.6), j, Opt.of("follow", (double) sp.getId(), "to", new Vec3(0, 0.4, 2.6), "ctrl", new Vec3(0, 0.2, 2.6),
                 "travel", rise / 20.0, "dir", V.UP, "face", new Vec3(0, 0, 1), "scale", 0.9, "grow", 3.4 / 0.9 - 1, "life", rise / 20.0, "fadeIn", 0.2, "fadeOut", 0.0,
@@ -372,7 +372,7 @@ final class SpellbladeSkills {
             JobKit.motionLater(sp, "spellblade_ult:slash" + (i % 3), rise + i * gap - 1, life); // 0.47.0 가로 · 세로 · 대각 베기 동작
         }
         RuneKit.later(thrustTick, () -> {
-            if (RuneKit.sameLife(sp, life)) thrust(sp, j, k, P, range, glow, core, life);
+            if (RuneKit.sameLife(sp, life)) thrust(sp, j, k, P, range, glow, core, life, c0);
         });
         JobKit.motionLater(sp, "spellblade_ult:thrust", thrustTick - 4, life); // 0.47.0 당겼다가 깊게 찌르는 동작 (4틱 뒤 닿음)
         return true;
@@ -429,11 +429,12 @@ final class SpellbladeSkills {
     }
 
     /** 찌르기 폭발 + 각인 터뜨림 (비전 거검 마지막) */
-    private static void thrust(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double range, double[] glow, double[] core, String life) {
+    private static void thrust(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double range, double[] glow, double[] core, String life, Vec3 c0) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
-        Vec3 from = V.up(sp.position(), 1.0);
-        double reach = Math.max(1, RuneKit.rayLength(level, from, f, k.num("thrustAt", 6)));
+        // 0.50.0 찌르기는 쓴 자리 (c0) 에서 앞으로 — 내리꽂힌 거리 (diveDist) 만큼 더 멀리 (내려앉은 자리 뒤의 적도 찌르는 길에 들게)
+        Vec3 from = new Vec3(c0.x, Math.min(c0.y, sp.getY()) + 1.0, c0.z);
+        double reach = Math.max(1, RuneKit.rayLength(level, from, f, k.num("thrustAt", 6) + k.num("diveDist", 2)));
         Vec3 point = V.add(from, f, reach);
         Vec3 ground = new Vec3(point.x, RuneKit.groundAt(level, point, sp.getY()), point.z);
         double radius = k.num("thrustRadius", 4);

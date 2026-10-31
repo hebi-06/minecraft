@@ -389,7 +389,7 @@ final class SwordsmanSkills {
         });
         JobKit.motionLater(sp, "swordsman_ult:gather", lastVolley + 2, life); // 0.47.0 두 손으로 칼을 들어 기를 모으는 동작
         RuneKit.later(finalAt, () -> {
-            if (RuneKit.sameLife(sp, life)) finalCut(sp, j, k, P, glow, core, life);
+            if (RuneKit.sameLife(sp, life)) finalCut(sp, j, k, P, glow, core, life, c0);
         });
         JobKit.motionLater(sp, "swordsman_ult:final", finalAt - 1, life); // 0.47.0 크게 되돌려 베는 일섬 (1틱 뒤 닿음)
         return true;
@@ -560,10 +560,11 @@ final class SwordsmanSkills {
     }
 
     /** 일섬: 거대한 검기가 앞 finalRange 칸을 가름 (폭 finalWidth) — 눈앞 거대한 베기 · 날아가는 검기 · 화면을 가로지르는 일섬 · 번쩍임 · 하늘이 갈라짐 · 땅이 갈라져 빛남, 큰 숫자 */
-    private static void finalCut(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double[] glow, double[] core, String life) {
+    private static void finalCut(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double[] glow, double[] core, String life, Vec3 c0) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
-        Vec3 from = V.up(V.add(sp.position(), f, 0.8), 1.2);
+        // 0.50.0 일섬은 쓴 자리 (c0 — 급강하가 시작된 하늘 아래) 에서 앞으로: 급강하로 지나온 길 · 그 앞의 적을 벰 (내려앉은 자리 뒤의 적을 놓치지 않게)
+        Vec3 from = V.up(V.add(new Vec3(c0.x, Math.min(c0.y, sp.getY()), c0.z), f, 0.8), 1.2);
         double len = Math.max(1, RuneKit.rayLength(level, from, f, k.num("finalRange", 12)));
         double half = k.num("finalWidth", 3.2) / 2;
         Vec3 eye = sp.getEyePosition();
