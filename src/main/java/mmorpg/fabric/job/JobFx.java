@@ -766,20 +766,26 @@ final class JobFx {
 
     /**
      * 발키리의 날개 (rfx_jvalwing — 세워 카메라 쪽으로 돎, 이어 돌림 · 천천히 날갯짓): 등 뒤 (몸에서 뒤로 0.35칸 · 위로 1.3칸) · 너비 약 size × 2 칸, ticks 동안
-     * 4틱마다 다시 그림 (주인마다 하나 — solo, 몸을 따라감). 1인칭에서는 숨김 (등 뒤라 눈앞을 가리지 않게)
+     * 2틱마다 다시 그림 (주인마다 하나 — solo). 몸을 매 틱 옮기는 동작 (JobMove — 몸의 속도는 0) 중에도 따라가게 지난 자리에서 잰 빠르기로 움직임 (0.50.0 영상: 솟아오르는
+     * 동안 날개가 다리 아래에 남았음). 1인칭에서는 숨김 (등 뒤라 눈앞을 가리지 않게)
      */
     static void valWings(ServerPlayer sp, Jobs.Job j, double size, int ticks, double alpha) {
         String life = RuneKit.lifeToken(sp);
         double phase = Kit.rand() * VALWING;
-        for (int t = 0; t < Math.max(1, ticks); t += 4) {
+        Vec3[] last = {null};
+        int step = 2;
+        for (int t = 0; t < Math.max(1, ticks); t += step) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 Vec3 f = Kit.facingOf(sp);
-                Vec3 at = V.up(V.add(sp.position(), f, -0.35), 1.3);
-                double fade = tt + 4 >= ticks ? 0.6 : 0.0;
-                cells(sp.level(), "jvalwing", VALWING, 0, VALWING, at, 0.3, 8, true, hide1p(sp).with("size", size * (tt == 0 ? 0.85 : 1.0), "vel", RuneKit.bodyVel(sp),
-                        "solo", 37.0, "phase", phase + tt * 8 / 20.0, "alpha", alpha, "fade", fade), outer(j), inner(j));
+                Vec3 p = sp.position();
+                Vec3 vel = last[0] == null ? RuneKit.bodyVel(sp) : V.scale(V.sub(p, last[0]), 20.0 / step);
+                last[0] = p;
+                Vec3 at = V.up(V.add(p, f, -0.35), 1.3);
+                double fade = tt + step >= ticks ? 0.6 : 0.0;
+                cells(sp.level(), "jvalwing", VALWING, 0, VALWING, at, 0.2, 8, true, hide1p(sp).with("size", size * (tt == 0 ? 0.85 : 1.0), "vel", vel, "solo", 37.0,
+                        "phase", phase + tt * 8 / 20.0, "alpha", alpha, "fade", fade), outer(j), inner(j));
             });
         }
     }
