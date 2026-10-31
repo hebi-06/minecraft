@@ -64,6 +64,8 @@ public final class RuneScaleTest {
         int runes = 0;
         int ruled = 0;
         int leaps = 0;
+        int singles = 0;
+        int narrows = 0;
         for (String fam : Runes.ALL_FAMILIES) {
             for (int gi = 0; gi < Runes.GRADE_ORDER.size(); gi++) {
                 String g = Runes.GRADE_ORDER.get(gi);
@@ -80,7 +82,14 @@ public final class RuneScaleTest {
                 check(Runes.utilCost(r) <= 0.6 + 1e-9, id + " util ≤ 60%");
                 double tm = Runes.timeMult(r);
                 check(tm >= 1 - 1e-9 && tm <= 1.3 + 1e-9, id + " time mult in [1, 1.3] " + tm);
-                near(Runes.damageScale(r), (1 - Runes.utilCost(r)) * tm, id + " scale = util × time");
+                // 0.50.0 범위 보정: a = single (+15%) · narrow (+8%) · 없음 (1)
+                String a = Runes.areaKind(r);
+                check(a == null || a.equals("single") || a.equals("narrow"), id + " area kind " + a);
+                if (a != null && a.equals("single")) singles++;
+                if (a != null && a.equals("narrow")) narrows++;
+                double am = a == null ? 1 : a.equals("single") ? 1.15 : 1.08;
+                near(Runes.areaMult(r), am, id + " area mult");
+                near(Runes.damageScale(r), (1 - Runes.utilCost(r)) * tm * am, id + " scale = util × time × area");
                 if (KEEP.contains(id)) {
                     check(Runes.utils(r).isEmpty(), id + " keep: no util cost");
                     continue;
@@ -94,12 +103,18 @@ public final class RuneScaleTest {
         }
         check(runes == 123, "123 runes " + runes);
         check(ruled == 102, "102 runes under the rule " + ruled);
-        check(leaps == 6, "6 leap runes " + leaps); // 0.49.0 도약 다섯은 0.48.2 로 되돌림 (피의 회오리 · 방패 돌진 · 용암 강타 · 발도 일섬 · 배후 일격)
+        check(leaps == 6, "6 leap runes " + leaps);
+        check(singles == 10 && narrows == 35, "area kinds 10 single · 35 narrow: " + singles + " · " + narrows);
+        Obj area = Rules.get().obj("RUNE_SPREAD").obj("area");
+        near(area.obj("single").num("bonus"), 0.15, "single +15%");
+        near(area.obj("narrow").num("bonus"), 0.08, "narrow +8%");
+        check(Runes.areaName("single").equals("단일") && Runes.areaName("narrow").equals("좁은 범위") && Runes.areaName(null) == null, "area names"); // 0.49.0 도약 다섯은 0.48.2 로 되돌림 (피의 회오리 · 방패 돌진 · 용암 강타 · 발도 일섬 · 배후 일격)
 
         // 하나씩
         Runes.Rune slam = rune("str", "common");
         near(Runes.utilCost(slam), 0.05, "ground slam stun 0.5s");
-        near(Runes.damageScale(slam), 0.95, "ground slam scale");
+        check("narrow".equals(Runes.areaKind(slam)), "ground slam narrow (radius 2.8)");
+        near(Runes.damageScale(slam), 0.95 * 1.08, "ground slam scale");
         Runes.Rune titan = rune("str", "hero");
         check(Runes.utils(titan).equals(List.of("leap", "stun1")), "titan leap utils " + Runes.utils(titan));
         check(Runes.windupTicks(titan) == 12, "titan leap windup 12 ticks");
@@ -114,13 +129,18 @@ public final class RuneScaleTest {
         near(Runes.damageScale(berserk), 0.8 * 1.15, "berserker scale");
         Runes.Rune counter = rune("blade", "noble");
         check(Runes.windupTicks(counter) == 0 && "long".equals(Runes.spreadKind(counter)), "counter stance: no windup (reactive), long");
-        near(Runes.damageScale(counter), 0.9 * 1.1, "counter stance scale");
+        near(Runes.damageScale(counter), 0.9 * 1.1 * 1.08, "counter stance scale (narrow cone)");
         Runes.Rune glacier = rune("glacier", "transcend");
         check(Runes.timeCapped(glacier) && "zoneLong".equals(Runes.spreadKind(glacier)), "glacier capped");
         near(Runes.damageScale(glacier), 0.8 * 1.3, "glacier scale");
         Runes.Rune blood = rune("strike", "hero");
         check(Runes.utils(blood).equals(List.of("lifesteal")), "blood blade lifesteal");
-        near(Runes.damageScale(blood), 0.9, "blood blade: util only, no time");
+        near(Runes.damageScale(blood), 0.9 * 1.15, "blood blade: util · single, no time");
+        Runes.Rune snipe = rune("bow", "hero");
+        check("single".equals(Runes.areaKind(snipe)) && Runes.areaKind(titan) == null && Runes.areaKind(meteor) == null, "snipe single · titan · meteor wide");
+        near(Runes.damageScale(snipe), 0.95 * 1.17 * 1.15, "snipe scale");
+        Runes.Rune hone = rune("strike", "common");
+        near(Runes.damageScale(hone), 1.15, "edge hone: single only");
         Runes.Rune wall = rune("vit", "hero");
         check(Runes.utils(wall).isEmpty() && "zoneLong".equals(Runes.spreadKind(wall)), "bulwark: support (no util), zoneLong");
         near(Runes.damageScale(wall), 1.15, "bulwark scale");

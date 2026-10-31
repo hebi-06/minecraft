@@ -195,15 +195,29 @@ public final class RuneTip {
 
     /**
      * 0.49.0 피해 보정 줄 (위의 총 피해에 든 것): 유틸 값 ("유틸 −20% 포함 (도약 · 기절 1초)") · 시간 보정 ("시간 보정 +24% 포함 (선딜 1.2초)" — 0.26.0 지속 보정 +
-     * 선딜). 둘 다면 한 줄 ("유틸 −5% · 시간 보정 +30% 포함" — 유틸 · 선딜 · 장판은 흐름 · 효과 줄에 있음). 피해 없는 룬 · 보정 없는 룬은 없음. 평타 강화는 유틸 줄만
+     * 선딜). 둘 다면 한 줄 ("유틸 −5% · 시간 보정 +30% 포함" — 유틸 · 선딜 · 장판은 흐름 · 효과 줄에 있음). 0.50.0 범위 보정 ("범위 보정 +15% 포함 (단일)" —
+     * 다른 보정과 함께면 한 줄 "유틸 −5% · 시간 보정 +17% · 단일 +15% 포함"). 피해 없는 룬 · 보정 없는 룬은 없음. 평타 강화는 유틸 · 범위 줄만
      */
     private static List<String> scaleLines(Ctx c) {
         if (!dealsDamage(c)) return List.of();
         Runes.Rune r = c.r();
         double cost = Runes.utilCost(r);
         double time = c.strike() ? 1 : Runes.timeMult(r);
+        double area = Runes.areaMult(r);
         boolean util = cost > 1e-9;
         boolean timed = time > 1 + 1e-9;
+        boolean wide = !(area > 1 + 1e-9);
+        String areaName = wide ? null : Runes.areaName(Runes.areaKind(r));
+        // 0.50.0 범위 보정 (단일 +15% · 좁은 범위 +8%): 다른 보정과 함께면 한 줄 ("유틸 −10% · 시간 보정 +24% · 좁은 범위 +8% 포함" — 35자),
+        // 혼자면 "범위 보정 +15% 포함 (단일)"
+        if (!wide && (util || timed)) {
+            StringBuilder b = new StringBuilder("§r" + L);
+            if (util) b.append("유틸 ").append(N).append("−").append(pct(cost)).append("%").append(L).append(" · ");
+            if (timed) b.append("시간 보정 ").append(N).append("+").append(pct(time - 1)).append("%").append(L).append(" · ");
+            b.append(areaName).append(" ").append(N).append("+").append(pct(area - 1)).append("%").append(L).append(" 포함");
+            return List.of(b.toString());
+        }
+        if (!wide) return noteLine("범위 보정 ", "+" + pct(area - 1) + "%", areaName);
         if (util && timed) return List.of("§r" + L + "유틸 " + N + "−" + pct(cost) + "%" + L + " · 시간 보정 " + N + "+" + pct(time - 1) + "%" + L + " 포함");
         if (util) {
             List<String> names = new ArrayList<>();

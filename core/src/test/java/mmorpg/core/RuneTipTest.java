@@ -113,6 +113,11 @@ public final class RuneTipTest {
                     boolean timeLine = all.contains("시간 보정 +" + Js.str(Math.round((Runes.timeMult(r) - 1) * 100)) + "%");
                     check(timeLine == (Runes.timeMult(r) > 1 + 1e-9 && !strike && total > 0), id + " time line " + Runes.timeMult(r) + " in " + all);
                     check(!all.contains("지속 보정 +"), id + " no 0.26.0 spread line");
+                    // 0.50.0 범위 보정 줄 (단일 +15% · 좁은 범위 +8% — 혼자면 "범위 보정 +15% 포함 (단일)", 다른 보정과 함께면 "… · 단일 +15% 포함")
+                    double am = Runes.areaMult(r);
+                    String ap = "+" + Js.str(Math.round((am - 1) * 100)) + "%";
+                    boolean areaLine = am > 1 + 1e-9 && (all.contains(Runes.areaName(Runes.areaKind(r)) + " " + ap) || all.contains("범위 보정 " + ap));
+                    check(areaLine == (am > 1 + 1e-9 && (strike || total > 0)), id + " area line " + Runes.areaKind(r) + " in " + all);
                     if (strike && d.truthy("bonus")) check(all.contains("평타마다 +" + RuneTip.fmt(P * RuneBreak.coef(lv) * d.num("bonus"))), id + " strike bonus");
                     if (body && total > 0) check(all.contains("쓸 때 충격파 " + RuneTip.fmt(P * RuneBreak.coef(lv) * total)), id + " body shockwave");
                     // 초월: 3 · 6돌 줄 (그 단계의 총 피해)
@@ -235,8 +240,9 @@ public final class RuneTipTest {
         check(an.contains("◈ 보호막 ") && an.contains("(최대 " + RuneTip.fmt(131 * 0.25) + ")") && an.contains("신성 피해 · 언데드 ×1.5"), "archangel: " + an);
         // 피의 칼날 (평타 강화): 평타마다 + · 합
         String bb = joined(RuneTip.lines(rune("strike", "hero"), 0, new RuneTip.Viewer(stats(125, 0, 0, 0), 1, 250)));
-        check(bb.contains("⚔ 평타마다 +63.1 (12번 합 +758)") && bb.contains("유틸 −10% 포함 (흡혈)") && bb.indexOf("유틸 −10%") > bb.indexOf("⚔ 평타마다")
-                && bb.contains("적용 = 가장 높은 스탯 × 1.0"), "blood blade (0.49.0 평타 흡혈 −10%): " + bb);
+        // 0.50.0 범위 보정: 평타에 덧붙임 = 단일 +15% (63.1 × 1.15 = 72.6) — 유틸과 한 줄
+        check(bb.contains("⚔ 평타마다 +72.6 (12번 합 +871)") && bb.contains("유틸 −10% · 단일 +15% 포함") && bb.indexOf("유틸 −10%") > bb.indexOf("⚔ 평타마다")
+                && bb.contains("적용 = 가장 높은 스탯 × 1.0"), "blood blade (0.49.0 평타 흡혈 −10% · 0.50.0 단일 +15%): " + bb);
         // 신체 강화 일반: 효과 한 줄 · 피해 없음 → 기준 줄은 내 스탯만
         String fs = joined(RuneTip.lines(rune("body", "common"), 0, new RuneTip.Viewer(even, 1, 131)));
         check(fs.contains("지속 5초 · 이동 속도 II · 받는 피해 -15%") && fs.contains(RuneTip.BASIS_SELF), "fighting spirit: " + fs);

@@ -326,15 +326,30 @@ public final class Jobs {
     }
 
     /**
-     * 피해 배율 = (1 − 유틸 값 합) × 시간 보정 × 직업 맞춤 — 직업 스킬을 쓸 때 위력 P 에 곱함 (툴팁의 과녁 하나 피해도). 배율 합이 없는 스킬 (태세 ·
+     * 0.50.0 범위 단계 (jobs.json 스킬의 a — 룬과 같은 표 RUNE_SPREAD.area): single 한 적만 · narrow 맞는 넓이 30칸² 이하 · null 그보다 넓음.
+     * 배율 합이 없는 스킬은 null
+     */
+    public static String areaKind(Skill k) {
+        if (k == null || k.total() <= 0) return null;
+        return k.def().strOrNull("a");
+    }
+
+    /** 범위 보정 (단일 +15% · 좁은 범위 +8% — 없으면 1) */
+    public static double areaMult(Skill k) {
+        return SPREAD == null ? 1 : Runes.areaMult(areaKind(k));
+    }
+
+    /**
+     * 피해 배율 = (1 − 유틸 값 합) × 시간 보정 × 직업 맞춤 × 범위 보정 — 직업 스킬을 쓸 때 위력 P 에 곱함 (툴팁의 과녁 하나 피해도). 범위 보정은 직업 맞춤
+     * 밖 (사용자 "그 스킬만 오름" — 단일 · 좁은 스킬이 많은 직업은 초당 피해가 오름, 직업 맞춤은 범위 보정 없이 셈). 배율 합이 없는 스킬 (태세 ·
      * 회복 · 보호막) · 대조 시험이면 1
      */
     public static double damageScale(Skill k) {
         if (SPREAD == null || k == null || k.total() <= 0) return 1;
-        return (1 - utilCost(k)) * timeMult(k) * jobNorm(jobOf(k));
+        return (1 - utilCost(k)) * timeMult(k) * jobNorm(jobOf(k)) * areaMult(k);
     }
 
-    /** 툴팁 한 줄 ("유틸 −25% · 시간 +10% · 직업 맞춤 ×1.48 포함") — 피해 배율이 1 이면 null */
+    /** 툴팁 한 줄 ("유틸 −25% · 시간 +10% · 단일 +15% · 직업 맞춤 ×1.48 포함") — 피해 배율이 1 이면 null */
     public static String scaleNote(Skill k) {
         if (SPREAD == null || k == null || k.total() <= 0) return null;
         List<String> parts = new ArrayList<>();
@@ -342,6 +357,8 @@ public final class Jobs {
         if (c > 1e-9) parts.add("유틸 −" + Math.round(c * 100) + "%");
         double t = timeMult(k);
         if (t > 1 + 1e-9) parts.add("시간 +" + Math.round((t - 1) * 100) + "%");
+        double a = areaMult(k);
+        if (a > 1 + 1e-9) parts.add(Runes.areaName(areaKind(k)) + " +" + Math.round((a - 1) * 100) + "%");
         double n = jobNorm(jobOf(k));
         if (Math.abs(n - 1) > 0.005) parts.add("직업 맞춤 ×" + Js.str(Math.round(n * 100) / 100.0));
         return parts.isEmpty() ? null : String.join(" · ", parts) + " 포함";

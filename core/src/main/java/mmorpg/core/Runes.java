@@ -395,12 +395,42 @@ public final class Runes {
         return Math.min(SPREAD.numOr("utilMax", 1), sum);
     }
 
+    // ------------------------------------------------------------------ 0.50.0 범위 보정 (사용자 "범위가 작거나 단일 공격인 애들은 계수를 좀 더 주자")
+
     /**
-     * 피해 배율 = (1 − 유틸 값 합) × 시간 보정. 피해에만 (룬을 쓸 때 위력 P 에 곱함 · 툴팁의 총 피해도) — 재사용 대기 · 회복 · 보호막은 그대로.
+     * 범위 단계 (RUNE_SPREAD.runes 의 a — 직업 스킬은 jobs.json 의 a): single = 한 적만 침 (겨눈 적 · 처음 맞은 적 · 평타에 덧붙임), narrow = 맞는 넓이
+     * area.narrow.max 칸² 이하 (줄 · 좁은 부채꼴 · 둘레 3칸 안팎 — 설계표의 넓이), 없으면 null (그보다 넓음 — 보정 없음)
+     */
+    public static String areaKind(Rune r) {
+        Obj e = spreadEntry(r);
+        return e == null ? null : e.strOrNull("a");
+    }
+
+    /** 범위 보정 = 1 + 단계의 bonus (단일 +15% · 좁은 범위 +8%) — 단계가 없거나 대조 시험이면 1 */
+    public static double areaMult(Rune r) {
+        return areaMult(areaKind(r));
+    }
+
+    /** 범위 단계 kind 의 배율 (룬 · 직업 스킬이 같은 표 RUNE_SPREAD.area) */
+    public static double areaMult(String kind) {
+        Obj a = kind == null || SPREAD == null ? null : SPREAD.objOrNull("area");
+        Obj k = a == null ? null : a.objOrNull(kind);
+        return k == null ? 1 : 1 + k.num("bonus");
+    }
+
+    /** 범위 단계 이름 ("단일" · "좁은 범위") — 없으면 null */
+    public static String areaName(String kind) {
+        Obj a = kind == null || SPREAD == null ? null : SPREAD.objOrNull("area");
+        Obj k = a == null ? null : a.objOrNull(kind);
+        return k == null ? null : k.str("name");
+    }
+
+    /**
+     * 피해 배율 = (1 − 유틸 값 합) × 시간 보정 × 범위 보정. 피해에만 (룬을 쓸 때 위력 P 에 곱함 · 툴팁의 총 피해도) — 재사용 대기 · 회복 · 보호막은 그대로.
      * 대조 시험 (표 없음) 이면 1
      */
     public static double damageScale(Rune r) {
-        return (1 - utilCost(r)) * timeMult(r);
+        return (1 - utilCost(r)) * timeMult(r) * areaMult(r);
     }
 
     // ------------------------------------------------------------------ draw and grinding

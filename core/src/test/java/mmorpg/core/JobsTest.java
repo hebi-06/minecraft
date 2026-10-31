@@ -338,7 +338,7 @@ public final class JobsTest {
         check(tyr.reqs().size() == 2 && tyr.reqs().get(0).value() == 74 && tyr.reqs().get(1).value() == 36, "tyrfing requirement unchanged " + tyr.reqs());
 
         // 글자
-        check(Jobs.skillLine(sw.skill(0)).equals("은빛 연격 · 6초 · 배율 5.41") && Jobs.skillLine(sw.skill(3)).equals("에인헤랴르 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(Jobs.skillLine(sw.skill(0)).equals("은빛 연격 · 6초 · 배율 5.84") && Jobs.skillLine(sw.skill(3)).equals("에인헤랴르 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
 
         upgrade();
@@ -367,12 +367,17 @@ public final class JobsTest {
                     continue;
                 }
                 check(k.def().has("t"), k.id() + " damage skill has t");
-                check(near(Jobs.damageScale(k), (1 - Jobs.utilCost(k)) * tm * Jobs.jobNorm(j)), k.id() + " scale = util × time × norm");
+                // 0.50.0 범위 보정: a = single (+15%) · narrow (+8%) · 없음 — 직업 맞춤 밖에서 곱함
+                String a = Jobs.areaKind(k);
+                check(a == null || a.equals("single") || a.equals("narrow"), k.id() + " area kind " + a);
+                double am = a == null ? 1 : a.equals("single") ? 1.15 : 1.08;
+                check(near(Jobs.areaMult(k), am), k.id() + " area mult " + Jobs.areaMult(k));
+                check(near(Jobs.damageScale(k), (1 - Jobs.utilCost(k)) * tm * Jobs.jobNorm(j) * am), k.id() + " scale = util × time × norm × area");
                 check(Jobs.jobOf(k) == j, k.id() + " job");
                 was += k.total() * Jobs.spreadMult(k) / k.cd();
-                now += k.total() * Jobs.damageScale(k) / k.cd();
+                now += k.total() * Jobs.damageScale(k) / Jobs.areaMult(k) / k.cd();
             }
-            check(near(was, now), j.id() + " job damage per second kept " + was + " → " + now);
+            check(near(was, now), j.id() + " job damage per second kept (without the area bonus) " + was + " → " + now);
             double n = Jobs.jobNorm(j);
             check(n > 0.9 && n < 1.6, j.id() + " norm " + n);
         }
@@ -404,5 +409,27 @@ public final class JobsTest {
         check(near(Jobs.utilCost(pr.skill(0)), 0) && near(Jobs.damageScale(pr.skill(0)), 1), "heal (no damage) scale 1");
         check(Jobs.utilName("stun07").equals("기절 0.7초") && near(utils.obj("undying").num("cost"), 0.2), "job utils in the table");
         check(sb.skill(2).name().equals("푸타르크 검무") && near(Jobs.utilCost(sb.skill(2)), 0.10), "푸타르크 검무 룬 결계 10%");
+        // 0.50.0 범위 보정 (단일 +15% · 좁은 범위 +8% — 직업 맞춤 밖): 단일 셋 (별빛 마탄 · 질풍 연사 · 검은 장미) · 좁은 범위 18 · 나머지 그대로
+        Jobs.Job mg = Jobs.job("mage");
+        Jobs.Job ar = Jobs.job("archer");
+        Jobs.Job as = Jobs.job("assassin");
+        Jobs.Job la = Jobs.job("lancer");
+        check("single".equals(Jobs.areaKind(mg.skill(0))) && "single".equals(Jobs.areaKind(ar.skill(0))) && "single".equals(Jobs.areaKind(as.skill(0))),
+                "단일: 별빛 마탄 · 질풍 연사 · 검은 장미");
+        check("narrow".equals(Jobs.areaKind(la.skill(4))) && "narrow".equals(Jobs.areaKind(sw.skill(1))) && Jobs.areaKind(sw.skill(2)) == null
+                && Jobs.areaKind(sw.skill(4)) == null && Jobs.areaKind(ar.skill(4)) == null, "좁은 범위: 흐레스벨그의 발톱 · 섬광 질주 / 만월 베기 · 라그나로크 · 솔의 화살 그대로");
+        int singles = 0, narrows = 0;
+        for (Jobs.Job j : Jobs.all()) {
+            for (Jobs.Skill k : j.skills()) {
+                if ("single".equals(Jobs.areaKind(k))) singles++;
+                if ("narrow".equals(Jobs.areaKind(k))) narrows++;
+                if (k.total() <= 0) check(Jobs.areaKind(k) == null && !k.def().has("a"), k.id() + " no damage → no area");
+            }
+        }
+        check(singles == 3 && narrows == 18, "area kinds 3 single · 18 narrow: " + singles + " · " + narrows);
+        String bolts = Jobs.scaleNote(mg.skill(0));
+        check(bolts != null && bolts.contains("단일 +15%"), "별빛 마탄 note " + bolts);
+        String claw = Jobs.scaleNote(la.skill(4));
+        check(claw != null && claw.contains("좁은 범위 +8%") && claw.contains("시간 +17%"), "흐레스벨그의 발톱 note " + claw);
     }
 }
