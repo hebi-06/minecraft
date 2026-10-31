@@ -1,0 +1,1 @@
+[16:47:23] [Test thread/INFO] (mmorpg-rune-gallery) [rune-gallery] done, 0 failed

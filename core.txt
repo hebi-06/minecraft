@@ -1,0 +1,108 @@
+[1/4] rules.json
+rules.json: 상수 71개 (함수 22개 제외) → /home/runner/work/minecraft/minecraft/core/src/main/resources/mmorpg/rules.json
+[2/4] parity.json
+parity.json: 케이스 28530개 (함수 81개, JS 예외 케이스 78개) → /home/runner/work/minecraft/minecraft/core/src/test/resources/parity.json
+[3/4] javac
+[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · RuneScaleTest · EconomyTest · StorageTest · JobsTest · ArtifactsTest · MotionsTest · RelicsTest
+parity.json: 28530 cases, 81 functions
+  function                        pass   fail
+  JSON.parse                        81      0
+  armor.armorFrom                   60      0
+  armor.armorInfo                  240      0
+  armor.armorLack                  480      0
+  armor.armorLevelFor               59      0
+  armor.armorPrice                 120      0
+  armor.armorReqText               120      0
+  armor.bonusText                  248      0
+  armor.parseArmor                 549      0
+  armor.setPrice                    45      0
+  combat.critChanceOf              964      0
+  combat.isMeleeWeapon             242      0
+  combat.powerMultiplier           600      0
+  combat.reqText                   941      0
+  combat.statMultiplier           1200      0
+  config.altarId                    18      0
+  config.armorId                   136      0
+  config.bossId                     18      0
+  config.bossUnitKeys               18      0
+  config.craftMaterials             12      0
+  config.craftUseLines              23      0
+  config.damagePerPoint              6      0
+  config.damageScaling               9      0
+  config.enhanceBonus               38      0
+  config.enhanceCost               102      0
+  config.gradeLevelsText             7      0
+  config.isValidWeapon            1330      0
+  config.monsterId                  18      0
+  config.nearestGradeLevel         372      0
+  config.reqUnit                   343      0
+  config.requiredStat              616      0
+  config.requiredStats            1840      0
+  config.runeId                    102      0
+  config.skillTotalMult             95      0
+  config.splitReq                  780      0
+  config.tyrfingHpFactor            12      0
+  config.unitHomeRadius             62      0
+  duel.duelDamage                  400      0
+  hp.healBy                        250      0
+  hp.hpNumber                       26      0
+  hp.levelHpOf                      84      0
+  hp.maxHpOf                       250      0
+  hp.onPlayerHealBefore            250      0
+  hp.payHp                         250      0
+  hp.refreshMaxHp                  500      0
+  hp.revive                        125      0
+  hp.saveHp                        250      0
+  js.Math.round                    528      0
+  js.String                       2053      0
+  js.toFixed                       320      0
+  runes.gradeWeights                 2      0
+  runes.mixBonus                   300      0
+  runes.parseRune                   89      0
+  runes.rollRune                   486      0
+  runes.runeLevelBase              116      0
+  runes.runeLore                   160      0
+  runes.runePower                  800      0
+  runes.runeStat                  2400      0
+  runes.runeStatLabel              600      0
+  runes.runeTotalMult              116      0
+  runes.supportScale               480      0
+  runes.utf8Length                  13      0
+  runesmith.grindValue              88      0
+  smith.nextLevelOf                242      0
+  stats.checkLevelUp               150      0
+  stats.getStatsCached             400      0
+  stats.reqLevelOf                 150      0
+  weapons.currentWeapon            241      0
+  weapons.enhanceOf                 15      0
+  weapons.enhancedName             102      0
+  weapons.levelNote                921      0
+  weapons.needsLevel               242      0
+  weapons.parseWeapon              589      0
+  weapons.pct                       16      0
+  weapons.reqsText                  60      0
+  weapons.round1                    16      0
+  weapons.shopPrice                241      0
+  weapons.skillLines                14      0
+  weapons.weaponFrom               120      0
+  weapons.weaponInfo               723      0
+  weapons.weaponLack              1446      0
+RESULT: PASS (28530/28530 cases passed, 0 problems)
+MolangTest: 1109 ok, 5 parse-only, 0 bad
+StatTreeTest: 257 ok, 0 failed
+RuneBreakTest: 1731 ok, 0 failed
+MonstersMoreTest: 449 ok, 0 failed
+HeroSkillsTest: 245 ok, 0 failed
+WeaponsMoreTest: 1401 ok, 0 failed
+ArmorMoreTest: 1038 ok, 0 bad
+RunesMoreTest: 465 ok, 0 bad
+GachaTest: 78 ok, 0 bad
+LimitedRunesTest: 21015 ok, 0 bad
+RuneTipTest: 34863 ok, 0 bad (lines max 20 · width max 36)
+RuneScaleTest: 990 ok, 0 bad
+EconomyTest: 63 ok, 0 bad
+StorageTest: 22 ok, 0 failed
+JobsTest: 1088 ok, 0 failed
+[artifacts-test] checks ok 174, bad 0
+[motions-test] checks ok 9552, bad 0
+RelicsTest: 410 ok, 0 bad
