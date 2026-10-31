@@ -22,8 +22,8 @@ import net.minecraft.world.phys.Vec3;
 final class Caduceus {
     private Caduceus() {}
 
-    /** 뱀 크기 (판 길이 1.3 × — 약 3.25칸, 0.48.0 사진첩: 1.45 배는 7칸 앞에서 가는 줄로만 보였음) */
-    static final double SNAKE = 2.5;
+    /** 뱀 크기 (판 길이 1.3 × — 약 3.6칸, 0.48.0 사진첩: 1.45 배는 7칸 앞에서 가는 줄로만 보였음 · 0.50.0 사진첩: 2.5 배 2D 뱀도 3인칭 8칸에서 가늚) */
+    static final double SNAKE = 2.8;
     /**
      * 0.50.0 (사용자 "쌍뱀의 축복 뱀이 너무 저퀄임 2d 바꾸거나 해갸 할듯"): 입체 뱀 (serpent — 비늘 관 · 뭉툭한 머리) 대신 2D 빛의 뱀 판. 주둥이 끝이 판의 y 0.45
      * (입체 뱀과 같은 자리 — 무는 자리 그대로), 넓은 면이 보는 사람 쪽 (faceCam) · 등이 늘 위 (upright — 클라이언트가 좌우를 뒤집음). 움직임 (초 — animSpeed 1):
@@ -133,7 +133,8 @@ final class Caduceus {
                     if (!ok.getAsBoolean() || gen[s] != g) return;
                     Vec3 body = Kit.fallen(t) ? to : Kit.bodyPoint(t);
                     Vec3 rest = V.add(V.up(body, 0.6), V.turnY(f, next % 2 == 0 ? 120 : -120), 2.4);
-                    Fx3d.move(level, snake[s], rest, 0.3, "out");
+                    // 0.50.0: 적을 본 채 뒷걸음 (뒤로 옮기기 — 사진첩: 머리부터 돌아 달아났다가 다시 돌아섰음)
+                    Fx3d.moveBack(level, snake[s], rest, 0.3, "out");
                     Fx3d.anim(level, snake[s], "idle", true, rest);
                     Tasks.later(7, () -> {
                         if (gen[s] != g) return;

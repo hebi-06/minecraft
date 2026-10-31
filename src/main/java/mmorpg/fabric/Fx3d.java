@@ -97,6 +97,8 @@ public final class Fx3d {
     public static final int F_MOVE = 512;
     /** 0.47.0 움직임 바꾸기 (id 의 모델 — anim 을 처음부터, F_LOOP 면 되풀이): 문이 열림 → 소용돌이 → 닫힘 */
     public static final int F_ANIM = 1024;
+    /** 0.50.0 뒤로 옮기기 (F_MOVE 와 함께): 가는 쪽을 보는 모델 (align) 이 옮기는 동안 떠난 쪽을 봄 — 물고 물러나는 뱀이 적을 보며 뒷걸음 */
+    public static final int F_BACK = 2048;
 
     private static final AtomicInteger NEXT = new AtomicInteger(1);
     /** 시험: 보낸 모델 수 · 마지막 이름 */
@@ -275,6 +277,15 @@ public final class Fx3d {
         v[TRAVEL] = (float) Math.max(0.01, seconds);
         v[EASE] = ease(ease);
         send(level, to, new Payload(id, "", "", to.x, to.y, to.z, 0, F_MOVE, v));
+    }
+
+    /** 뒤로 옮기기 (0.50.0): move 와 같지만 가는 쪽을 보는 모델 (align) 이 떠난 쪽을 봄 — 물고 물러나는 뱀이 적을 본 채 뒷걸음 (머리부터 돌아 달아나지 않음) */
+    public static void moveBack(ServerLevel level, int id, Vec3 to, double seconds, String ease) {
+        if (level == null || id == 0) return;
+        float[] v = new float[VALUES];
+        v[TRAVEL] = (float) Math.max(0.01, seconds);
+        v[EASE] = ease(ease);
+        send(level, to, new Payload(id, "", "", to.x, to.y, to.z, 0, F_MOVE | F_BACK, v));
     }
 
     /** 띄운 모델의 움직임 (모델 안의 anim) 을 바꿈 — 처음부터, loop 면 되풀이 */

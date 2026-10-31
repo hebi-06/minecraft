@@ -235,6 +235,8 @@ public final class FxModels {
         float moveDur;
         /** 옮기는 빠르기 (Fx3d ease — 0 = 고르게 · 3 = 부드럽게 시작해 멈춤) */
         int moveEase = 3;
+        /** 0.50.0 뒤로 옮기기 (F_BACK): 가는 쪽을 보는 모델 (align) 이 떠난 쪽을 봄 (물러나는 뱀이 적을 보며 뒷걸음) */
+        boolean moveBack;
         /** 시험: 지난 그림의 세계 자리 (쥔 곳) · 모델 +Y */
         double[] probe;
         /** 0.47.0 움직임을 바꾼 때 (태어난 뒤 초 — F_ANIM) */
@@ -295,6 +297,7 @@ public final class FxModels {
                 i.moveStart = t;
                 i.moveDur = Math.max(0.01F, p.v()[21]);
                 i.moveEase = (int) p.v()[22];
+                i.moveBack = (p.flags() & Fx3d.F_BACK) != 0;
                 moved++;
             }
             return;
@@ -459,9 +462,10 @@ public final class FxModels {
         if (in.moveStart < 0) return;
         float k = Mth.clamp((float) ((now - in.moveStart) / 20.0 / in.moveDur), 0F, 1F);
         float e = ease(in.moveEase, k);
-        out[3] = (float) (in.moveTo[0] - in.moveFrom[0]);
-        out[4] = (float) (in.moveTo[1] - in.moveFrom[1]);
-        out[5] = (float) (in.moveTo[2] - in.moveFrom[2]);
+        float sg = in.moveBack ? -1F : 1F; // 뒤로 옮기기: 떠난 쪽을 봄
+        out[3] = sg * (float) (in.moveTo[0] - in.moveFrom[0]);
+        out[4] = sg * (float) (in.moveTo[1] - in.moveFrom[1]);
+        out[5] = sg * (float) (in.moveTo[2] - in.moveFrom[2]);
         out[0] = (float) (in.moveFrom[0] + (in.moveTo[0] - in.moveFrom[0]) * e);
         out[1] = (float) (in.moveFrom[1] + (in.moveTo[1] - in.moveFrom[1]) * e);
         out[2] = (float) (in.moveFrom[2] + (in.moveTo[2] - in.moveFrom[2]) * e);
