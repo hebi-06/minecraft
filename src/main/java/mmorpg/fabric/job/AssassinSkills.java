@@ -279,12 +279,13 @@ final class AssassinSkills {
         Kit.noFall(sp, path.size() + 20);
         // 출발: 단검에 독이 번쩍 (손 앞 초록 방울) · 발밑 그림자 연기 · 쉿 소리
         RuneKit.Hand h0 = RuneKit.handOf(sp);
-        venomDrops(level, V.up(V.add(h0.hand(), h0.f(), 0.5), 0.2), 5, 1.6);
+        venomDrops(level, V.up(V.add(h0.hand(), h0.f(), 0.5), 0.2), 5, 1.6, JobFx.hide1p(sp));
         JobFx.smoke(level, V.up(start, 0.4), 0.9, j, 0.5, JobFx.hide1p(sp));
         JobFx.slash(sp, j, 1.8, 0.35, 1.2, 20.0, 0.18);
         SkillFx.play(level, "entity.cat.hiss", start, 0.6, 0.7);
         SkillFx.play(level, "entity.player.attack.sweep", start, 1.6, 0.6);
         Set<UUID> cutDone = new HashSet<>();
+        List<LivingEntity> cut0 = new ArrayList<>();
         int n = path.size();
         boolean[] stopped = {false};
         for (int s = 0; s < n; s++) {
@@ -313,6 +314,7 @@ final class AssassinSkills {
                 for (Kit.LineHit lh : RuneKit.lineTargets(sp, V.up(from, 0.9), dir, len, half)) {
                     LivingEntity e = lh.e();
                     if (!cutDone.add(e.getUUID())) continue;
+                    cut0.add(e);
                     bite(sp, j, P, e, cut, venom, ticks, every, marks, dir, life);
                 }
                 if (ss == n - 1) {
@@ -321,8 +323,36 @@ final class AssassinSkills {
                     JobFx.smoke(d, V.up(to, 0.5), 0.85, j, 0.5, JobFx.hide1p(sp).with("alpha", 0.8));
                     JobFx.petals(d, V.up(to, 1.0), 6, 2.2, 0.12, j, 0.6, Opt.empty());
                     RuneKit.Hand h = RuneKit.handOf(sp);
-                    venomDrops(d, V.up(V.add(h.hand(), h.f(), 0.5), 0.2), 4, 1.2);
+                    venomDrops(d, V.up(V.add(h.hand(), h.f(), 0.5), 0.2), 4, 1.2, JobFx.hide1p(sp));
                 }
+            });
+        }
+        // 끝: 벤 적들이 등 뒤 (100° 넘게) 면 3틱에 그쪽으로 돌아섬 — 꿰뚫고 지나가 등 뒤를 잡음 (단검 평타 등 뒤 치명타 · 검은 장미로 이어짐 · 독 숫자가 보이게)
+        float[] turn = {Float.NaN, 0, 0, 0};
+        for (int t = 1; t <= 3; t++) {
+            int tt = t;
+            RuneKit.later(n + tt, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                if (tt == 1) {
+                    Vec3 sum = Vec3.ZERO;
+                    int m = 0;
+                    for (LivingEntity e : cut0) {
+                        if (e.isRemoved() || !e.isAlive()) continue;
+                        sum = V.add(sum, Kit.bodyPoint(e));
+                        m++;
+                    }
+                    if (m == 0) return;
+                    float[] rot = Kit.lookRotation(sp.getEyePosition(), V.scale(sum, 1.0 / m));
+                    float dy = net.minecraft.util.Mth.wrapDegrees(rot[0] - sp.getYRot());
+                    if (Math.abs(dy) < 100) return;
+                    turn[0] = sp.getYRot();
+                    turn[1] = dy;
+                    turn[2] = sp.getXRot();
+                    turn[3] = Math.max(-20F, Math.min(35F, rot[1]));
+                }
+                if (Float.isNaN(turn[0])) return;
+                float k = tt / 3F;
+                Kit.moveTo(sp, sp.position(), turn[0] + turn[1] * k, turn[2] + (turn[3] - turn[2]) * k);
             });
         }
         return true;
@@ -338,8 +368,8 @@ final class AssassinSkills {
             Vec3 b = Kit.bodyPoint(e);
             JobFx.cross(lv, b, 0.75 + Kit.bodyPad(e) * 0.4, j, 0.26, Opt.of("vel", RuneKit.entVel(e)));
             JobFx.hit(e, j, 1.1);
-            venomDrops(lv, b, 6, 2.4);
-            JobFx.smoke(lv, b, 0.55 + Kit.bodyPad(e) * 0.3, VENOM, VENOM_CORE, 0.5, Opt.of("alpha", 0.75, "vel", RuneKit.entVel(e)));
+            venomDrops(lv, b, 7, 2.6, Opt.empty());
+            JobFx.smoke(lv, b, 0.8 + Kit.bodyPad(e) * 0.4, VENOM, VENOM_CORE, 0.55, Opt.of("alpha", 0.85, "vel", RuneKit.entVel(e)));
             SkillFx.play(lv, "entity.cat.hiss", b, 1.1, 0.45);
         });
         for (int t = 1; t <= ticks; t++) {
@@ -347,19 +377,20 @@ final class AssassinSkills {
             JobKit.strike(sp, e, j, P, venom, false, false, life, t * every, d -> {
                 if (!(e.level() instanceof ServerLevel lv) || !RuneKit.fxQuota("jobAsVenom", 8)) return;
                 Vec3 b = Kit.bodyPoint(e);
-                JobFx.smoke(lv, b, 0.45 + Kit.bodyPad(e) * 0.3 + (lastTick ? 0.15 : 0), VENOM, VENOM_CORE, 0.45, Opt.of("alpha", 0.7, "vel", RuneKit.entVel(e)));
-                venomDrops(lv, V.up(b, 0.2), lastTick ? 5 : 3, 1.4);
+                JobFx.smoke(lv, b, 0.7 + Kit.bodyPad(e) * 0.35 + (lastTick ? 0.2 : 0), VENOM, VENOM_CORE, 0.5, Opt.of("alpha", 0.8, "vel", RuneKit.entVel(e)));
+                SkillFx.sparks(lv, b, VENOM_CORE, lastTick ? 6 : 4, 1.8);
+                venomDrops(lv, V.up(b, 0.2), lastTick ? 6 : 4, 1.6, Opt.empty());
                 SkillFx.play(lv, "block.brewing_stand.brew", b, 1.6, 0.35);
             });
         }
     }
 
-    /** 독 방울 n 개 (rpg:drop — 초록, 조금 위로 튀었다 떨어짐) */
-    private static void venomDrops(ServerLevel level, Vec3 at, int n, double speed) {
+    /** 독 방울 n 개 (rpg:drop — 초록, 조금 위로 튀었다 떨어짐). view = 보는 사람 걸러내기 (손 앞 방울은 1인칭에서 숨김 — 눈 바로 앞이라 화면을 덮음) */
+    private static void venomDrops(ServerLevel level, Vec3 at, int n, double speed, Opt view) {
         for (int i = 0; i < n; i++) {
             double a = Kit.rand() * Math.PI * 2;
-            SkillFx.fx(level, "rpg:drop", at, Opt.of("dir", V.unit(new Vec3(Math.cos(a), 0.6 + Kit.rand() * 0.8, Math.sin(a))), "speed", speed * (0.6 + Kit.rand()
-                    * 0.6), "size", 0.13 + Kit.rand() * 0.07, "life", 0.5 + Kit.rand() * 0.2, "color", Kit.rand() < 0.5 ? VENOM : VENOM_CORE, "alpha", 0.95));
+            SkillFx.fx(level, "rpg:drop", at, view.with("dir", V.unit(new Vec3(Math.cos(a), 0.6 + Kit.rand() * 0.8, Math.sin(a))), "speed", speed * (0.6 + Kit.rand()
+                    * 0.6), "size", 0.18 + Kit.rand() * 0.1, "life", 0.5 + Kit.rand() * 0.2, "color", Kit.rand() < 0.5 ? VENOM : VENOM_CORE, "alpha", 0.95));
         }
     }
 

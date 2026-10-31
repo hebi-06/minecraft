@@ -401,10 +401,10 @@ final class SwordsmanSkills {
         if (held) JobMove.run(sp, JobMove.hold(0, hop0), JobMove.hop(hop0, finalAt, from -> from, k.num("hop", 0.8)));
         else JobMove.run(sp, JobMove.to(0, rush, JobMove.at(stop), JobMove.OUT), JobMove.hold(rush, hop0), JobMove.hop(hop0, finalAt, from -> from, k.num("hop",
                 0.8)));
-        // 발동: 발을 굴러 땅이 울림 (작은 땅 터짐 · 흙먼지) · 몸에서 솟는 빛 · 1인칭 눈앞 고리
+        // 발동: 발을 굴러 땅이 울림 (작은 땅 터짐 · 흙먼지) · 짧게 솟는 투지 (0.4초 — 몸의 동작을 가리지 않게 길게 두지 않음) · 1인칭 눈앞 고리
         JobFx.smash(level0, V.up(c0, 0.05), 1.6, j, 0.35, Opt.of("alpha", 0.8));
         SkillFx.sparks(level0, V.up(c0, 0.2), DUST, 10, 3.5);
-        JobFx.aura(sp, j, 2.6, (finalAt + 6) / 20.0, 0.75);
+        JobFx.aura(sp, j, 2.4, 0.4, 0.6);
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.4);
         SkillFx.play(level0, "mob.ravager.roar", c0, 1.4, 0.55);
         SkillFx.play(level0, "item.trident.riptide_1", c0, 1.1, 0.8);
@@ -435,10 +435,11 @@ final class SwordsmanSkills {
                 if (RuneKit.sameLife(sp, life)) beat(sp, j, P, mult, ii, radius, life);
             });
         }
-        // 내리꽂기 준비: 칼을 두 손으로 머리 위로 (칼끝 반짝임 · 바람 소리)
+        // 내리꽂기 준비: 칼을 두 손으로 머리 위로 (칼끝 반짝임 · 짧게 솟는 투지 · 바람 소리)
         RuneKit.later(hop0, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
+            JobFx.aura(sp, j, 2.6, (hopTicks + 3) / 20.0, 0.6);
             RuneKit.rfx(d, "prop", V.up(sp.position(), 3.1), Opt.of("size", 0.32, "life", 0.4, "cell", (double) RuneKit.RFX.get("glint")[0], "spin", 20.0, "spinRate",
                     240.0, "color", WHITE, "grow", 0.6, "fade", 0.5, "view", 1.0, "owner", (double) sp.getId()));
             SkillFx.sparks(d, V.up(sp.position(), 0.2), DUST, 6, 2.5);
@@ -525,11 +526,12 @@ final class SwordsmanSkills {
             RuneKit.later(at, () -> {
                 Vec3 mid = V.add(g, f, (a0 + a1) / 2);
                 Vec3 m = new Vec3(mid.x, RuneKit.groundAt(level, mid, g.y), mid.z);
-                double size = (a1 - a0) / 2 * 1.05;
-                Opt base = Opt.of("dir", V.UP, "size", size, "life", 1.5, "fade", 0.35, "spin", spin + (Kit.rand() < 0.5 ? 180 : 0));
+                double size = (a1 - a0) / 2 * 1.25;
+                Opt base = Opt.of("dir", V.UP, "size", size, "life", 2.0, "fade", 0.35, "spin", spin + (Kit.rand() < 0.5 ? 180 : 0));
                 RuneKit.rfx(level, "fissure", V.up(m, 0.035), base.with("cell", 0.0, "color", RIFT, "alpha", 0.92));
-                RuneKit.rfx(level, "fissure", V.up(m, 0.055), base.with("cell", 1.0, "color", glow, "alpha", 0.9));
+                RuneKit.rfx(level, "fissure", V.up(m, 0.055), base.with("cell", 1.0, "color", glow, "alpha", 0.95));
                 RuneKit.rfx(level, "fissure", V.up(m, 0.075), base.with("cell", 2.0, "color", WHITE, "alpha", 1.0));
+                RuneKit.glowCrack(level, m, 1.5, glow, WHITE, Opt.of("life", 1.6, "v", a0 % 5 < 2.5 ? 1.0 : 0.0));
                 RuneKit.rockBurst(level, V.up(m, 0.15), 3, 3.0, 0.15);
                 SkillFx.sparks(level, V.up(m, 0.15), DUST, 4, 2.5);
             });
