@@ -387,9 +387,12 @@ final class SwordsmanSkills {
             RuneKit.moveTo(sp, c0, V.up(first.position(), first.getBbHeight() * 0.6));
         }
         boolean held = Status.isRooted(sp) || Kit.ridingAny(sp);
-        double free = held || want < 0.3 ? 0 : Kit.reachFlat(level0, c0, f, want);
-        List<Kit.Spot> spots = free > 0.3 ? Kit.dashSpots(level0, c0, f, free) : List.of();
-        Vec3 stop = spots.isEmpty() ? c0 : spots.get(spots.size() - 1).p();
+        // 뛰는 중에 쓰면 발밑 땅 (6칸 안) 에서 — 돌진하며 내려앉음 (땅에서 싸우는 궁극기 · 공중에 떠 있지 않게)
+        Double gy0 = RuneKit.solidGround(level0, V.up(c0, 0.1), 6);
+        Vec3 base = gy0 != null && c0.y - gy0 > 0.05 ? new Vec3(c0.x, gy0, c0.z) : c0;
+        double free = held || want < 0.3 ? 0 : Kit.reachFlat(level0, base, f, want);
+        List<Kit.Spot> spots = free > 0.3 ? Kit.dashSpots(level0, base, f, free) : List.of();
+        Vec3 stop = spots.isEmpty() ? base : spots.get(spots.size() - 1).p();
         Ult.sky(level0, c0, "rpg:ult_blade", finalAt + 25);
         RpgCombat.setSteadfast(sp, finalAt + 10);
         Kit.noFall(sp, finalAt + 30);

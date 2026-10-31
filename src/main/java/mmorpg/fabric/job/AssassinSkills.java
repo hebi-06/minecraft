@@ -245,15 +245,18 @@ final class AssassinSkills {
         Vec3 side = roomL > roomR + 0.25 ? V.scale(r, -1) : r;
         // S 자 길: 마디마다 설 자리 (한 칸 안의 오르내림 · 발목 · 머리 높이가 막히지 않는 데까지 — 옆이 막히면 덜 휘고, 그래도 막히면 그 앞에서 멈춤)
         List<Vec3> path = new ArrayList<>();
-        Vec3 prev = start;
+        // 뛰는 중에 쓰면 발밑 땅 (3칸 안) 높이에서 — 첫 마디에 내려앉음
+        Double gy0 = RuneKit.solidGround(level, V.up(start, 0.1), 3);
+        Vec3 prev = gy0 != null && start.y - gy0 > 0.05 ? new Vec3(start.x, gy0, start.z) : start;
         for (int s = 1; s <= steps; s++) {
             double u = (double) s / steps;
             Vec3 p = null;
             for (double bend : new double[] {1, 0.5, 0}) {
                 Vec3 q = V.add(V.add(start, f, dist * u), side, sway * bend * Math.sin(2 * Math.PI * u));
                 p = Kit.standSpot(level, new Vec3(q.x, prev.y + 1.1, q.z), 2.2);
-                if (p != null && p.y <= prev.y + 1.05 && p.y >= prev.y - 1.1 && Kit.clearPath(level, V.up(prev, 0.6), V.up(p, 0.6))
-                        && Kit.clearPath(level, V.up(prev, 1.5), V.up(p, 1.5)) && level.noCollision(sp, sp.getBoundingBox().move(p.x - sp.getX(), p.y - sp.getY(), p.z - sp.getZ()))) break;
+                Vec3 from = path.isEmpty() ? start : prev;
+                if (p != null && p.y <= prev.y + 1.05 && p.y >= prev.y - 1.1 && Kit.clearPath(level, V.up(from, 0.6), V.up(p, 0.6))
+                        && Kit.clearPath(level, V.up(from, 1.5), V.up(p, 1.5)) && level.noCollision(sp, sp.getBoundingBox().move(p.x - sp.getX(), p.y - sp.getY(), p.z - sp.getZ()))) break;
                 p = null;
             }
             if (p == null) break;
