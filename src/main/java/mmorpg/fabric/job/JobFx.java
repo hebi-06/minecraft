@@ -186,9 +186,28 @@ final class JobFx {
         slashCard(level, at, d, o.num("spin", 0), o.num("size", 1) * CARD * 1.1, life, V.scale(d, speed), j, hide1p(sp));
     }
 
+    /**
+     * 0.50.0 직업 고유 타격음 (사용자 "직업 고유 연출"): 검사 맑은 칼 소리 · 전사 둔탁한 쿵 · 마검사 울림 · 매지션 맑은 팅 · 궁수 꽂힘 · 암살자 짧은 샥 ·
+     * 창술사 꿰뚫음 · 사신 낮은 혼 소리 · 성기사 천둥 · 사제 종 · 수호기사 금속 — {소리, 높이, 크기}
+     */
+    private static final java.util.Map<String, Object[]> HIT_SOUND = java.util.Map.ofEntries(
+            java.util.Map.entry("swordsman", new Object[] {"block.amethyst_block.hit", 1.9, 0.5}),
+            java.util.Map.entry("warrior", new Object[] {"mace.smash_ground", 0.85, 0.35}),
+            java.util.Map.entry("spellblade", new Object[] {"block.amethyst_block.resonate", 1.3, 0.45}),
+            java.util.Map.entry("mage", new Object[] {"block.amethyst_block.chime", 1.7, 0.5}),
+            java.util.Map.entry("archer", new Object[] {"entity.arrow.hit", 1.25, 0.45}),
+            java.util.Map.entry("assassin", new Object[] {"entity.player.attack.sweep", 1.8, 0.35}),
+            java.util.Map.entry("lancer", new Object[] {"item.trident.hit", 1.15, 0.45}),
+            java.util.Map.entry("reaper", new Object[] {"particle.soul_escape", 0.8, 0.5}),
+            java.util.Map.entry("paladin", new Object[] {"item.trident.thunder", 1.8, 0.12}),
+            java.util.Map.entry("priest", new Object[] {"block.bell.hit", 1.9, 0.3}),
+            java.util.Map.entry("guardian", new Object[] {"item.shield.block", 1.35, 0.4}));
+
     /** 맞은 자리 (rfx_jhit): 몸 가운데 · 몸 크기에 맞춤 · 아무렇게나 기욺 */
     static void hit(LivingEntity e, Jobs.Job j, double scale) {
         if (!(e.level() instanceof ServerLevel level)) return;
+        Object[] snd = j == null ? null : HIT_SOUND.get(j.id());
+        if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
         Vec3 b = Kit.bodyPoint(e);
         two(level, "jhit", HIT, b, 0.3, Opt.of("size", size, "spin", Kit.rand() * 360, "fade", 0.2), outer(j), inner(j));
