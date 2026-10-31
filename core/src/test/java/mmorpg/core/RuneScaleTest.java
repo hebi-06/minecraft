@@ -94,7 +94,7 @@ public final class RuneScaleTest {
         }
         check(runes == 123, "123 runes " + runes);
         check(ruled == 102, "102 runes under the rule " + ruled);
-        check(leaps == 11, "11 leap runes " + leaps);
+        check(leaps == 6, "6 leap runes " + leaps); // 0.49.0 도약 다섯은 0.48.2 로 되돌림 (피의 회오리 · 방패 돌진 · 용암 강타 · 발도 일섬 · 배후 일격)
 
         // 하나씩
         Runes.Rune slam = rune("str", "common");

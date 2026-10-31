@@ -219,35 +219,10 @@ final class RuneReaper {
     // ------------------------------------------------------------ 고귀: 피의 회오리
 
     /**
-     * 0.49.0 피의 회오리 (제자리 회오리 → 도약): 조준한 곳 (leap 칸) 으로 air 틱 동안 뛰어들어 (핏빛 꼬리 · 몸에 두른 초승달) 내려앉으며 회오리 —
-     * 핏빛 초승달 여섯을 몸에 두르고 hits 번 (gap 틱 간격) 돌며 둘레 radius 칸을 벰 (위력 × mult) — 몸 둘레의 초승달 참격 · 바닥 핏빛 소용돌이 ·
+     * 피의 회오리: 핏빛 초승달 여섯을 몸에 두르고 hits 번 (gap 틱 간격) 돌며 둘레 radius 칸을 벰 (위력 × mult) — 몸 둘레의 초승달 참격 · 바닥 핏빛 소용돌이 ·
      * 바닥의 초승달 고리. 처음 벤 적마다 출혈 (회오리가 끝난 뒤부터)
      */
     static boolean bloodWhirl(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
-        double[][] cs = RuneKit.colorOf("reaper");
-        ServerLevel level = sp.level();
-        Vec3 start = sp.position();
-        Vec3 land = RuneKit.leapLand(sp, k.num("leap"), 0.8);
-        int air = (int) k.num("air");
-        String life = RuneKit.lifeToken(sp);
-        for (int t = 1; t < air; t += 2) {
-            final int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 c = sp.position();
-                double a = tt * 0.9;
-                Vec3 at = new Vec3(c.x + Math.cos(a) * 1.2, c.y + 1.0, c.z + Math.sin(a) * 1.2);
-                RuneKit.waveCard(level, at, new Vec3(-Math.sin(a), 0, Math.cos(a)), V.UP, Opt.of("size", 0.9, "life", 0.12, "alpha", 0.85), cs[0], cs[1]);
-                drops(level, V.up(c, 0.8), 3, 0.3);
-            });
-        }
-        SkillFx.play(level, "mob.phantom.swoop", start, 1.2, 0.8);
-        RuneKit.leap(sp, land, 1.8 + V.hdist(land, start) * 0.1, air, BLOOD, cs[1], () -> whirl(sp, r, P, k));
-        return true;
-    }
-
-    /** 피의 회오리의 회오리 (착지한 자리에서) */
-    private static void whirl(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         double[][] cs = RuneKit.colorOf("reaper");
         double[] glow = cs[0];
         double[] core = cs[1];
@@ -305,6 +280,7 @@ final class RuneReaper {
                 SkillFx.play(level, "mob.phantom.bite", c, 0.7, 0.8);
             }
         });
+        return true;
     }
 
     // ------------------------------------------------------------ 영웅: 피의 낙인

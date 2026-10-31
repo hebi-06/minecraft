@@ -288,14 +288,14 @@
       "transcend": {"fn": "shadowless", "name": "무영검", "desc": "적을 멈추고 칼자국 폭발", "use": "다수 제압·폭발", "mult": 32, "range": 12, "cone": 140, "freeze": 30, "cuts": 8, "delay": 26, "maxTargets": 8}
     },
     "blade": {
-      "common": {"fn": "quickDraw", "name": "도약 발도", "desc": "앞으로 뛰어들며 칼을 뽑아 벰", "use": "도약 · 근접 전방 광역", "mult": 4, "leap": 7, "air": 8, "range": 4.2, "cone": 120, "motionAt": 6},
+      "common": {"fn": "quickDraw", "name": "발도 일섬", "desc": "칼을 뽑으며 앞을 한 번에 벰", "use": "근접 전방 광역", "mult": 4, "range": 4.2, "cone": 120},
       "rare": {"fn": "swordWave", "name": "검기 날리기", "desc": "초승달 검기가 날아가며 관통", "use": "직선 원거리 관통", "mult": 7, "range": 14, "width": 1.6, "speed": 26},
       "noble": {"fn": "counterStance", "name": "반격 자세", "desc": "막는 자세, 때린 적을 바로 반격", "use": "반격·피해 감소", "mult": 12, "ticks": 50, "reduce": 0.5, "range": 4.5, "cone": 120},
       "hero": {"fn": "tripleCut", "name": "삼단베기", "desc": "가로·세로 베기 뒤 찌르기 · 검세", "use": "전방 3연타 · 검세 (가하는 피해 +10%)", "mult": 6.67, "hits": 3, "gap": 10, "range": 4.2, "cone": 110, "thrust": 6.5, "buff": 0.1, "buffTicks": 120},
       "transcend": {"fn": "heavenSplit", "name": "천지개벽", "desc": "검기를 모아 거대한 검기 발사", "use": "직선 대형 관통", "mult": 32, "charge": 20, "range": 18, "width": 2.6, "speed": 30, "knock": 1}
     },
     "assassin": {
-      "common": {"fn": "backstab", "name": "배후 일격", "desc": "대상 너머로 뛰어올라 등 뒤에서 찌름", "use": "도약 · 단일 강타 · 표식", "mult": 4, "range": 8, "cone": 25, "span": 6, "air": 6, "motionAt": 4},
+      "common": {"fn": "backstab", "name": "배후 일격", "desc": "대상 뒤로 순간이동해 찌름", "use": "접근·단일", "mult": 4, "range": 8, "cone": 25, "span": 0},
       "rare": {"fn": "poisonStars", "name": "독 표창", "desc": "표창 3개, 맞은 적은 1초 중독", "use": "원거리·지속 피해", "mult": 4, "dot": 1.5, "dots": 2, "dotGap": 10, "stars": 3, "spread": 30, "range": 14, "speed": 30, "span": 30},
       "noble": {"fn": "smokeBomb", "name": "연막", "desc": "연막 속 적을 3번 베고 몸을 숨김", "use": "주위 제압·은신", "mult": 4, "hits": 3, "gap": 10, "radius": 4, "hide": 60, "slowTicks": 60, "span": 20},
       "hero": {"fn": "shadowFlurry", "name": "그림자 난도질", "desc": "대상에 달라붙어 5번 난도질 · 마지막에 표식", "use": "단일 5타 · 표식 (받는 피해 +10%)", "mult": 4, "hits": 5, "gap": 10, "range": 7, "cone": 30, "span": 40, "vuln": 0.1, "vulnTicks": 100},
@@ -332,7 +332,7 @@
     "reaper": {
       "common": {"fn": "bloodCrescent", "name": "피의 초승달", "desc": "핏빛 초승달을 날려 꿰뚫고 출혈", "use": "직선 관통 · 출혈", "mult": 2.5, "dot": 0.5, "dots": 3, "dotGap": 20, "range": 14, "width": 1.6, "speed": 28},
       "rare": {"fn": "bloodHarvest", "name": "핏빛 수확", "desc": "낫을 두 번 휘둘러 베고 피를 거둠", "use": "전방 광역 2타 · 흡혈", "mult": 3.5, "hits": 2, "gap": 10, "radius": 4.5, "cone": 150, "heal": 0.02, "healMax": 5},
-      "noble": {"fn": "bloodWhirl", "name": "피의 회오리", "desc": "뛰어들어 핏빛 초승달을 두르고 돌며 벰", "use": "도약 · 주위 4타 · 출혈", "mult": 2.4, "hits": 4, "gap": 10, "radius": 4, "dot": 0.6, "dots": 4, "dotGap": 20, "leap": 8, "air": 10, "motionAt": 10},
+      "noble": {"fn": "bloodWhirl", "name": "피의 회오리", "desc": "핏빛 초승달을 두르고 돌며 벰", "use": "주위 4타 · 출혈", "mult": 2.4, "hits": 4, "gap": 10, "radius": 4, "dot": 0.6, "dots": 4, "dotGap": 20},
       "hero": {"fn": "bloodBrand", "name": "피의 낙인", "desc": "초승달 낙인을 새기고 터뜨림", "use": "낙인 약화 · 폭발 · 출혈 · 흡혈", "mult": 14, "dot": 1.5, "dots": 4, "dotGap": 20, "targets": 5, "range": 12, "cone": 70, "delay": 20, "heal": 0.03, "healMax": 5, "vuln": 0.1, "vulnTicks": 100},
       "transcend": {"fn": "crimsonMoon", "name": "적월 강림", "desc": "핏빛 달이 떠올라 칼날을 퍼붓고 떨어짐", "use": "원거리 광역 연타 · 추락 · 흡혈", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "dotGap": 20, "range": 20, "radius": 7, "delay": 16, "heal": 0.05, "healMax": 5}
     },
@@ -365,7 +365,7 @@
       "transcend": {"fn": "beastKing", "name": "야수왕 강림", "desc": "거대한 영혼의 야수왕이 내려와 할퀴고 짓밟음", "use": "원거리 광역 · 할퀴기 연타 · 짓밟기 · 사냥감 표식 (받는 피해 +10%)", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 20, "multName": "할퀴기 ", "crushName": "짓밟기", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 할퀴기", "끝에 야수왕이 짓밟음"], "vuln": 0.1, "vulnTicks": 120}
     },
     "volcano": {
-      "common": {"fn": "magmaSlam", "name": "화산 도약", "desc": "용암을 끌고 뛰어올라 내리침", "use": "도약 · 착지 광역 · 화상", "mult": 2.5, "dot": 0.5, "dots": 3, "dotGap": 20, "range": 9, "air": 10, "radius": 3.4, "dotName": "화상", "flow": ["조준한 곳 (앞 {range}칸) 으로 도약 · 착지 둘레 {radius}칸", "화상 {t:dotGap}마다"], "motionAt": 8},
+      "common": {"fn": "magmaSlam", "name": "용암 강타", "desc": "땅을 내리쳐 용암을 튀김", "use": "전방 광역 · 화상", "mult": 2.5, "dot": 0.5, "dots": 3, "dotGap": 20, "radius": 3.6, "cone": 120, "dotName": "화상", "flow": ["앞 {radius}칸 부채꼴 · 화상 {t:dotGap}마다"]},
       "rare": {"fn": "lavaBombs", "name": "화산탄", "desc": "불타는 화산탄 셋을 던져 터뜨림", "use": "원거리 광역 3번 · 화상", "mult": 2, "hits": 3, "gap": 10, "dot": 0.5, "dots": 2, "dotGap": 20, "range": 16, "radius": 2.8, "dotName": "화상", "multName": "화산탄 ", "flow": ["조준한 곳으로 화산탄 셋 · {t:gap}마다 반지름 {radius}칸 폭발"]},
       "noble": {"fn": "magmaGeyser", "name": "용암 분출", "desc": "땅을 갈라 용암 기둥을 연달아 솟구치게 함", "use": "원거리 광역 · 분출 4번 · 화상", "mult": 2.5, "hits": 4, "gap": 10, "dot": 0.5, "dots": 4, "dotGap": 20, "range": 15, "radius": 3, "lift": 0.35, "dotName": "화상", "multName": "분출 ", "flow": ["조준한 곳 반지름 {radius}칸 · {t:gap}마다 용암 기둥"]},
       "hero": {"fn": "magmaField", "name": "마그마 대지", "desc": "땅을 용암으로 녹이고 크게 분출시킴 · 녹은 갑옷", "use": "원거리 광역 · 화상 지대 · 녹은 갑옷 (받는 피해 +10%) · 대분출", "mult": 4, "crush": 10, "dot": 1, "dots": 6, "dotGap": 10, "range": 16, "radius": 4.5, "delay": 40, "dotName": "화상", "multName": "녹아내림 ", "crushName": "대분출", "flow": ["조준한 곳 {radius}칸이 녹아 {t:dotGap}마다 화상", "{t:delay} 뒤 대분출"], "vuln": 0.1, "vulnTicks": 100},
@@ -373,7 +373,7 @@
     },
     "gladiator": {
       "common": {"fn": "chainHook", "name": "사슬 갈고리", "desc": "사슬 갈고리를 던져 적을 끌어옴", "use": "원거리 단일 · 끌어당김", "mult": 4, "range": 14, "cone": 30, "pull": 1, "flow": ["겨눈 적 (앞 {range}칸) 을 내 앞으로 끌어옴 (보스 제외)"]},
-      "rare": {"fn": "shieldRush", "name": "방패 강하", "desc": "방패를 들고 뛰어올라 내려찍음", "use": "도약 · 착지 광역 · 밀쳐냄 · 받는 피해 감소", "mult": 7, "range": 8, "air": 8, "radius": 3, "reduce": 0.3, "ticks": 40, "knock": 0.8, "flow": ["조준한 곳 (앞 {range}칸) 으로 도약 · 착지 둘레 {radius}칸", "{t:ticks} 동안 받는 피해 감소"]},
+      "rare": {"fn": "shieldRush", "name": "방패 돌진", "desc": "방패를 앞세워 돌진하고 부딪힌 자리를 내려찍음", "use": "돌진 · 밀쳐냄 · 받는 피해 감소", "mult": 5, "crush": 2, "range": 8, "width": 1.6, "radius": 2.6, "reduce": 0.3, "ticks": 40, "knock": 0.8, "multName": "돌진 ", "crushName": "내려찍기", "flow": ["앞 {range}칸 돌진 · 처음 부딪힌 적에서 멈춤", "돌진하는 동안 받는 피해 감소"]},
       "noble": {"fn": "chainWhirl", "name": "사슬 회전", "desc": "사슬을 휘둘러 둘레를 치고 끌어모음", "use": "주위 4타 · 끌어당김 · 받는 피해 감소", "mult": 2.5, "hits": 4, "gap": 10, "crush": 2, "radius": 4.5, "reduce": 0.25, "ticks": 50, "pull": 0.4, "multName": "사슬 ", "crushName": "끌어모음", "flow": ["둘레 {radius}칸 · {t:gap}마다 사슬", "끝에 사슬로 끌어모아 한 번 더"]},
       "hero": {"fn": "arenaDomain", "name": "투기장", "desc": "사슬 울타리로 투기장을 세우고 사슬로 내려침", "use": "주위 영역 · 가둠 · 내려치기 4번 · 받는 피해 감소", "mult": 4, "hits": 4, "gap": 20, "crush": 4, "radius": 6, "reduce": 0.2, "ticks": 90, "multName": "내려치기 ", "crushName": "마무리", "flow": ["반지름 {radius}칸 투기장 {t:ticks} · 적은 못 나감", "{t:gap}마다 안의 적을 사슬로 내려침"]},
       "transcend": {"fn": "warChains", "name": "투신의 사슬", "desc": "거대한 사슬이 솟아 적을 묶고 조인 뒤 거대한 철퇴가 내리꽂힘", "use": "원거리 광역 · 묶음 · 조이기 연타 · 철퇴", "mult": 3, "hits": 6, "gap": 10, "crush": 14, "range": 20, "radius": 7, "delay": 16, "root": 40, "multName": "조이기 ", "crushName": "철퇴", "flow": ["조준한 곳 반지름 {radius}칸 · 사슬이 솟아 묶고 {t:gap}마다 조임", "끝에 거대한 철퇴"]}
@@ -503,12 +503,12 @@
       "storm.noble": {"t": 10, "w": 10, "u": ["stun25"]},
       "storm.hero": {"t": 71, "zone": true},
       "storm.transcend": {"t": 21, "w": 21, "u": ["stun1"]},
-      "assassin.common": {"t": 6, "w": 6, "u": ["leap"]},
+      "assassin.common": {"t": 1, "u": ["blink"]},
       "assassin.rare": {"t": 22},
       "assassin.noble": {"t": 21, "zone": true, "u": ["hide", "slow"]},
       "assassin.hero": {"t": 41, "u": ["vuln10"]},
       "assassin.transcend": {"t": 20, "w": 20},
-      "blade.common": {"t": 8, "w": 8, "u": ["leap"]},
+      "blade.common": {"t": 1},
       "blade.rare": {"t": 2},
       "blade.noble": {"t": 50, "w": 0, "u": ["reduce"]},
       "blade.hero": {"t": 21, "u": ["buff10"]},
@@ -535,7 +535,7 @@
       "gravity.transcend": {"t": 76, "w": 16, "zone": true, "u": ["pull"]},
       "reaper.common": {"t": 62},
       "reaper.rare": {"t": 11, "u": ["lifesteal"]},
-      "reaper.noble": {"t": 120, "w": 10, "u": ["leap"]},
+      "reaper.noble": {"t": 110},
       "reaper.hero": {"t": 100, "w": 20, "u": ["vuln10", "lifesteal"]},
       "reaper.transcend": {"t": 86, "w": 20, "zone": true, "u": ["lifesteal"]},
       "tide.common": {"t": 1, "u": ["knock"]},
@@ -558,13 +558,13 @@
       "hunter.noble": {"t": 30, "w": 6, "u": ["root"]},
       "hunter.hero": {"t": 53, "u": ["slow"]},
       "hunter.transcend": {"t": 84, "w": 20, "zone": true, "u": ["vuln10"]},
-      "volcano.common": {"t": 70, "w": 10, "u": ["leap"]},
+      "volcano.common": {"t": 60},
       "volcano.rare": {"t": 68, "w": 8},
       "volcano.noble": {"t": 116, "w": 6, "zone": true},
       "volcano.hero": {"t": 71, "zone": true, "u": ["vuln10"]},
       "volcano.transcend": {"t": 90, "w": 24, "zone": true},
       "gladiator.common": {"t": 3, "u": ["pull"]},
-      "gladiator.rare": {"t": 8, "w": 8, "u": ["leap", "knock", "reduce"]},
+      "gladiator.rare": {"t": 12, "u": ["blink", "knock", "reduce"]},
       "gladiator.noble": {"t": 41, "zone": true, "u": ["pull", "reduce"]},
       "gladiator.hero": {"t": 84, "w": 10, "zone": true, "u": ["taunt", "reduce"]},
       "gladiator.transcend": {"t": 82, "w": 16, "zone": true, "u": ["root"]},

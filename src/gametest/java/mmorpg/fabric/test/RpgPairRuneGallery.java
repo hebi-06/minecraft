@@ -58,9 +58,9 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
             Map.entry("hundredFists", new int[] {10, 52}), Map.entry("heavenFist", new int[] {12, 40, 84, 88}),
             Map.entry("steelTrap", new int[] {5, 9}), Map.entry("falconStrike", new int[] {4, 14}), Map.entry("huntNet", new int[] {4, 8, 31}),
             Map.entry("wolfPack", new int[] {4, 23, 54}), Map.entry("beastKing", new int[] {12, 41, 85}),
-            Map.entry("magmaSlam", new int[] {5, 11}), Map.entry("lavaBombs", new int[] {6, 9, 16, 20, 29}), Map.entry("magmaGeyser", new int[] {8, 28}),
+            Map.entry("magmaSlam", new int[] {3}), Map.entry("lavaBombs", new int[] {6, 9, 16, 20, 29}), Map.entry("magmaGeyser", new int[] {8, 28}),
             Map.entry("magmaField", new int[] {8, 30, 42}), Map.entry("grandEruption", new int[] {14, 40, 92, 100}),
-            Map.entry("chainHook", new int[] {3, 6}), Map.entry("shieldRush", new int[] {4, 9}), Map.entry("chainWhirl", new int[] {12, 41}),
+            Map.entry("chainHook", new int[] {3, 6}), Map.entry("shieldRush", new int[] {2, 13}), Map.entry("chainWhirl", new int[] {12, 41}),
             Map.entry("arenaDomain", new int[] {12, 50, 86}), Map.entry("warChains", new int[] {10, 30, 80, 84}));
     private static final Map<String, int[]> SHOTS_3P = Map.of("leviathan", new int[] {26, 88}, "colossus", new int[] {44, 92}, "heavenFist", new int[] {30, 88},
             "beastKing", new int[] {30, 86}, "grandEruption", new int[] {50, 93}, "warChains", new int[] {40, 84});
