@@ -264,8 +264,8 @@ public final class JobsTest {
         // 수호 돌입 · 방패 치기 · 투척 · 성채는 같은 적을 한 번만
         check(near(pa.skill(4).num("first", 0) + pa.skill(4).num("gap", 0) * 2, pa.skill(4).num("t", 0)) && near(pr.skill(4).num("first", 0) + pr.skill(4).num("gap", 0) * 2,
                 pr.skill(4).num("t", 0)), "궁극기 t = 첫 타 + 간격 × 2");
-        // 지속 보정: 뇌진 · 방패 투척 → short, 천뢰의 대망치 · 새벽의 종 → long, 성가 → zone, 성채 (8초 뒤 무너짐) → zoneLong, 나머지 한방
-        check(Jobs.spreadKind(pa.skill(0)) == null && Jobs.spreadKind(pa.skill(1)) == null && "short".equals(Jobs.spreadKind(pa.skill(2)))
+        // 지속 보정: 벼락 강타 (0.50.0 뛰어올라 내려침 — 벼락까지 16틱) · 뇌진 · 방패 투척 → short, 천뢰의 대망치 · 새벽의 종 → long, 성가 → zone, 성채 (8초 뒤 무너짐) → zoneLong, 나머지 한방
+        check("short".equals(Jobs.spreadKind(pa.skill(0))) && Jobs.spreadKind(pa.skill(1)) == null && "short".equals(Jobs.spreadKind(pa.skill(2)))
                 && "long".equals(Jobs.spreadKind(pa.skill(4))), "paladin spread");
         check("zone".equals(Jobs.spreadKind(pr.skill(2))) && "long".equals(Jobs.spreadKind(pr.skill(4))), "priest spread");
         check(Jobs.spreadKind(gu.skill(0)) == null && Jobs.spreadKind(gu.skill(1)) == null && "short".equals(Jobs.spreadKind(gu.skill(2)))

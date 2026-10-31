@@ -83,8 +83,11 @@ final class WarriorSkills {
         // 1인칭에서 자루가 화면을 세로로 가르고 3인칭에서는 날의 옆선으로만 보였음
         Vec3 f0 = V.flat(sp.getViewVector(1F));
         Vec3 r0 = V.rightOf(f0);
-        Vec3 grip = V.add(V.add(V.up(sp.position(), 2.6), f0, 0.6), r0, 1.15);
-        Vec3 head = V.add(V.add(V.up(sp.position(), 0.35), f0, k.num("ahead", 2.0) + 0.6), r0, 0.6);
+        // 0.50.0 동작: 앞으로 뛰어올라 (lunge 칸 · windup 틱) 내려찍음 — 도끼 · 내려찍는 자리는 착지 자리 기준
+        Vec3 land = JobMove.landAhead(sp, k.num("lunge", 2.0), sp.getY()).apply(sp.position());
+        JobMove.run(sp, JobMove.hop(0, windup, JobMove.at(land), k.num("hop", 1.1)));
+        Vec3 grip = V.add(V.add(V.up(land, 2.6), f0, 0.6), r0, 1.15);
+        Vec3 head = V.add(V.add(V.up(land, 0.35), f0, k.num("ahead", 2.0) + 0.6), r0, 0.6);
         Vec3 reach = V.sub(head, grip);
         Vec3 sweep0 = V.flat(reach);
         double horiz = Math.max(1e-3, Math.hypot(reach.x, reach.z));

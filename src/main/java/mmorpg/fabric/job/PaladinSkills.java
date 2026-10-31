@@ -63,6 +63,17 @@ final class PaladinSkills {
      */
     static boolean smite(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 제자리에서 뛰어올라 (hop 칸) 내려앉으며 망치로 내려침 (hopT 틱 — 충격파 · 벼락은 그 뒤)
+        int hopT = (int) k.num("hopT", 6);
+        JobMove.run(sp, JobMove.hop(0, hopT, from -> from, k.num("hop", 0.9)));
+        RuneKit.later(hopT, () -> {
+            if (RuneKit.sameLife(sp, life)) smiteLand(sp, j, k, P, life);
+        });
+        return true;
+    }
+
+    /** 벼락 강타의 내려침 (착지 틱): 앞 부채꼴 충격파 → delay 틱 뒤 맞은 자리에 벼락 */
+    private static void smiteLand(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, String life) {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         Vec3 f = Kit.facingOf(sp);
@@ -109,7 +120,6 @@ final class PaladinSkills {
                 JobKit.strike(sp, e, j, P, k.num("bolt", 2.5), true, false, life, 0, null);
             }
         });
-        return true;
     }
 
     // ------------------------------------------------------------ 신념의 돌진
@@ -238,6 +248,10 @@ final class PaladinSkills {
         int judge = (int) k.num("judge", 1);
         double lift = k.num("lift", 0.35);
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 내려칠 때마다 작게 뛰어 (hop 칸) 다음 내려침에 착지
+        JobMove.Seg[] hops = new JobMove.Seg[Math.max(0, radii.size() - 1)];
+        for (int i = 0; i < hops.length; i++) hops[i] = JobMove.hop(i * gap, (i + 1) * gap, from -> from, k.num("hop", 0.8));
+        JobMove.run(sp, hops);
         for (int i = 0; i < radii.size(); i++) {
             int ii = i;
             double r = ((Number) radii.get(i)).doubleValue();
@@ -317,6 +331,9 @@ final class PaladinSkills {
         String life = RuneKit.lifeToken(sp);
         ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
+        // 0.50.0 동작 (사용자 "역동적으로"): 토르의 힘을 받아 높이 뛰어올라 (lift 칸) 첫 내려침에 착지 → 다시 뛰어 두 번 더 (내려치는 자리는 앞 3칸 그대로)
+        JobMove.run(sp, JobMove.hop(0, first, from -> from, k.num("lift", 3.0)), JobMove.hop(first, first + gap, from -> from, k.num("hop", 1.6)),
+                JobMove.hop(first + gap, first + 2 * gap, from -> from, k.num("hop", 1.6)));
         Vec3 f = Kit.facingOf(sp);
         Vec3 center = groundAhead(sp, c0, f, 3.0);
         Ult.sky(level0, c0, "rpg:ult_storm", endAt + sanct + 20);

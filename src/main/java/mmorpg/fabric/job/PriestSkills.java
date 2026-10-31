@@ -159,6 +159,8 @@ final class PriestSkills {
         double heal = JobUpgrades.num(sp, k, "heal", 0.015); // 0.31.0 강화
         int slow = (int) k.num("slow", 1);
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 노래하며 천천히 떠오름 (공중 부양 → 천천히 떨어짐 — 움직일 수 있음)
+        JobMove.floatUp(sp, (int) k.num("floatRise", 7), pulses * gap - 7, 1);
         // 화음 (하프 · 차임) — 펄스마다 한 음씩 올라감
         double[] pitch = {0.7, 0.84, 1.0, 0.94, 1.12, 1.26, 1.06, 1.5};
         JobFx.aura(sp, j, 2.6, (pulses * gap) / 20.0, 0.6);
@@ -241,6 +243,10 @@ final class PriestSkills {
         String life = RuneKit.lifeToken(sp);
         ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
+        // 0.50.0 동작 (사용자 "역동적으로"): 종 아래로 떠올라 (lift 칸) 울림마다 빛을 내리고, 마지막 울림 뒤 내려앉음
+        int endToll = first + (rings - 1) * gap;
+        JobMove.run(sp, JobMove.to(0, 12, JobMove.up(sp, k.num("lift", 2.0)), JobMove.OUT), JobMove.hold(12, endToll + 4), JobMove.to(endToll + 4, endToll + 12,
+                JobMove.down(sp, c0.y), JobMove.INOUT));
         Vec3 f = Kit.facingOf(sp);
         Vec3 ground = PaladinSkills.groundAhead(sp, c0, f, 3.0);
         Vec3 bellAt = V.up(ground, 4.6);

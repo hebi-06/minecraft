@@ -257,15 +257,19 @@ final class SwordsmanSkills {
         SkillFx.play(level0, "entity.player.attack.sweep", sp.position(), 0.8, 1.0);
         int n = hits.size();
         boolean[] cut = {false};
+        double ground = sp.getY();
+        // 0.50.0 동작: 제자리에서 뛰어올라 (hop 칸) 공중에서 두 바퀴 돌며 벰 → 착지 (사용자 "역동적으로")
+        JobMove.run(sp, JobMove.hop(0, gap + 6, from -> from, k.num("hop", 0.8)));
         SkillFx.every(n, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
             Vec3 c = sp.position();
+            Vec3 cg = new Vec3(c.x, ground, c.z); // 땅 (뛰어오른 동안에도 땅 고리는 땅에)
             double q = n <= 1 ? 1 : (double) i / (n - 1);
             double r0 = radius * (0.6 + 0.4 * q);
             // 허리 높이에서 한 바퀴 도는 둥근 베기 (눕힌 그림 — 1인칭에서는 눈 아래로 둘러 보임) + 땅의 옅은 고리 + 눈앞 큰 베기 (도는 쪽)
             JobFx.ring(level, V.up(c, 1.0), r0, j, i % 2 == 1, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
-            JobFx.ring(level, V.up(c, 0.06), r0 * 0.92, j, i % 2 == 1, 0.42, Opt.of("alpha", 0.55, "coreAlpha", 0.45));
+            JobFx.ring(level, V.up(cg, 0.06), r0 * 0.92, j, i % 2 == 1, 0.42, Opt.of("alpha", 0.55, "coreAlpha", 0.45));
             JobFx.slash(sp, j, 2.5, 0.5, 1.9 + 0.3 * q, i % 2 == 0 ? 0.0 : 180.0, 0.26);
             // 0.47.0 입체: 허리 높이에서 몸과 같이 한 바퀴 도는 환영 검 둘 (칼끝이 바깥 — 첫 바퀴는 오른쪽으로, 둘째는 왼쪽으로)
             JobFx3d.orbitOwner(sp, "phantom_sword", 2, new Vec3(0, 1.0, 0), 0.75, i % 2 == 0 ? -1150 : 1150, true, 0.32, 1.1 + 0.25 * q, j, Opt.of("angle", Kit.rand()
@@ -358,6 +362,10 @@ final class SwordsmanSkills {
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", c0, 1.2, 0.9);
         SkillFx.play(level0, "beacon.power", c0, 1.5, 0.8);
         SkillFx.play(level0, "block.bell.resonate", c0, 1.2, 0.8);
+        // 0.50.0 동작 (사용자 "검사 궁 같은걸 더 역동적으로"): 검을 따라 솟아올라 (rise 틱 · lift 칸) 일제 사격 · 모임 동안 떠 있다가 일섬 직전에 앞으로 급강하해 착지
+        int dive = (int) k.num("dive", 7);
+        JobMove.run(sp, JobMove.to(0, rise, JobMove.up(sp, k.num("lift", 4)), JobMove.OUT), JobMove.hold(rise, finalAt - dive - 1),
+                JobMove.to(finalAt - dive - 1, finalAt - 1, JobMove.landAhead(sp, k.num("diveDist", 8), c0.y), JobMove.IN));
         // 0.47.0 환영 검 반원 (입체 — 주인을 따라감): 머리 뒤 두 겹 반원으로 아래에서 솟아오름 (rise 틱), 일제 사격마다 per 자루가 그 자리에서 날아감
         Halo halo = halo(sp, j, swords, rise, (lastVolley + 4) / 20.0);
         JobFx3d.guard(sp, life, halo.ids, finalAt);

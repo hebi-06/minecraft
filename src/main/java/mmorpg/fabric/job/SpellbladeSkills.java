@@ -65,6 +65,8 @@ final class SpellbladeSkills {
         double reach = k.num("reach", 5);
         double burstR = k.num("burstRadius", 2.4);
         Set<UUID> marked = new HashSet<>();
+        // 0.50.0 동작: 베며 앞으로 미끄러짐 (slide 칸 · 4틱 — 베는 자리 · 룬 폭발은 쓴 자리 기준 그대로)
+        JobMove.run(sp, JobMove.to(0, 4, JobMove.ahead(sp, k.num("slide", 2), 0), JobMove.OUT));
         // 칼에 두른 마력 (손의 칼빛) → 눈앞 큰 베기 · 그 베기가 앞으로 퍼져 날아감
         RuneKit.Hand h = RuneKit.handOf(sp);
         RuneKit.rfx2(level, "sword", V.up(h.hand(), 0.3), Opt.of("dir", V.UP, "size", 0.55, "life", 0.18, "alpha", 0.8, "vel", RuneKit.bodyVel(sp)), glow, core);
@@ -224,6 +226,9 @@ final class SpellbladeSkills {
         double[] core = JobKit.core(j);
         String life = RuneKit.lifeToken(sp);
         Set<UUID> marked = new HashSet<>();
+        // 0.50.0 동작: 칼을 세우고 떠올라 (lift 칸 · 6틱) 검무 동안 떠 있다가 내려앉음 (둘레 피해는 쓴 자리 기준 그대로)
+        JobMove.run(sp, JobMove.to(0, 6, JobMove.up(sp, k.num("lift", 1)), JobMove.OUT), JobMove.hold(6, dur), JobMove.to(dur, dur + 6, JobMove.down(sp, c.y),
+                JobMove.IN));
         // 0.50.0 룬 결계: 검무 동안 (guardFor 틱) 받는 피해 − guard
         if (k.num("guard", 0) > 0) {
             mmorpg.fabric.skill.Guards.set(sp, (int) k.num("guardFor", dur), k.num("guard", 0.2), null, null);
@@ -331,6 +336,10 @@ final class SpellbladeSkills {
         JobFx.eyeRing(sp, j, 2.6, 1.1, 0.5);
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", c0, 1.0, 1.0);
         SkillFx.play(level0, "beacon.power", c0, 1.2, 0.8);
+        // 0.50.0 동작 (사용자 "역동적으로"): 거검과 함께 솟아올라 (rise 틱 · lift 칸) 공중에서 세 번 베고, 찌르기 직전에 조준한 쪽으로 내리꽂힘 (착지 → 찌르기)
+        int dive = (int) k.num("dive", 6);
+        JobMove.run(sp, JobMove.to(0, rise, JobMove.up(sp, k.num("lift", 3)), JobMove.OUT), JobMove.hold(rise, thrustTick - dive - 1),
+                JobMove.to(thrustTick - dive - 1, thrustTick - 1, JobMove.landAhead(sp, k.num("diveDist", 4), c0.y), JobMove.IN));
         // 0.47.0 입체: 솟아오르는 거대한 마력 검 (눈앞 2.6칸, 칼끝 위 — 주인을 따라가며 rise 틱에 0.9 → 3.4 배) → 베기 사이에도 들고 있음 (heldSword)
         JobFx3d.spawn(level0, "phantom_sword", new Vec3(0, 0.4, 2.6), j, Opt.of("follow", (double) sp.getId(), "to", new Vec3(0, 0.4, 2.6), "ctrl", new Vec3(0, 0.2, 2.6),
                 "travel", rise / 20.0, "dir", V.UP, "face", new Vec3(0, 0, 1), "scale", 0.9, "grow", 3.4 / 0.9 - 1, "life", rise / 20.0, "fadeIn", 0.2, "fadeOut", 0.0,
@@ -358,7 +367,7 @@ final class SpellbladeSkills {
             int ii = i;
             int next = i + 1 < slashes.size() ? gap : after;
             RuneKit.later(rise + i * gap, () -> {
-                if (RuneKit.sameLife(sp, life)) giantSlash(sp, j, P, slashes.get(ii), ii, range, half, glow, core, life, marked, next);
+                if (RuneKit.sameLife(sp, life)) giantSlash(sp, j, P, slashes.get(ii), ii, range, half, glow, core, life, marked, next, c0.y);
             });
             JobKit.motionLater(sp, "spellblade_ult:slash" + (i % 3), rise + i * gap - 1, life); // 0.47.0 가로 · 세로 · 대각 베기 동작
         }
@@ -371,7 +380,7 @@ final class SpellbladeSkills {
 
     /** 거대한 검의 베기 하나 (i = 0 가로 · 1 세로 · 2 대각): 검이 휘둘러지는 세 장 · 거대한 검기 · 화면을 가르는 빛, 앞 range 칸 · 폭 half × 2 의 적 */
     private static void giantSlash(ServerPlayer sp, Jobs.Job j, double P, double mult, int i, double range, double half, double[] glow, double[] core, String life,
-            Set<UUID> marked, int untilNext) {
+            Set<UUID> marked, int untilNext, double groundY) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         Vec3 right = V.rightOf(f);
@@ -407,7 +416,7 @@ final class SpellbladeSkills {
         SkillFx.play(level, "item.trident.thunder", eye, 1.3 + i * 0.15, 0.6);
         SkillFx.play(level, "item.spear.attack_miss", eye, 0.8 + i * 0.1, 1.0);
         RuneKit.shakeAround(level, sp.position(), 10, 0.15, 0.2);
-        Vec3 from = V.up(sp.position(), 1.0);
+        Vec3 from = new Vec3(sp.getX(), groundY + 1.0, sp.getZ()); // 0.50.0 공중에서 베어도 땅 높이의 줄 (떠 있는 동안에도 땅의 적을 벰)
         double len = Math.max(1, RuneKit.rayLength(level, from, f, range));
         int[] cnt = {0};
         for (Kit.LineHit h : RuneKit.lineTargets(sp, from, f, len, half)) {

@@ -74,6 +74,10 @@ final class LancerSkills {
         String life = RuneKit.lifeToken(sp);
         Vec3 f = Kit.facingOf(sp);
         ServerLevel level0 = sp.level();
+        // 0.50.0 동작: 찌를 때마다 앞으로 내딛음 (step 칸씩 · 세 번)
+        double step = k.num("step", 0.7);
+        JobMove.run(sp, JobMove.to(0, 2, JobMove.ahead(sp, step, 0), JobMove.OUT), JobMove.to(gap, gap + 2, JobMove.ahead(sp, step, 0), JobMove.OUT),
+                JobMove.to(gap * 2, gap * 2 + 2, JobMove.ahead(sp, step, 0), JobMove.OUT));
         // 첫째 · 둘째: 피해는 한 번에 (같은 적을 5틱 만에 두 번 치면 무적 시간에 막힘) · 숫자 두 줄
         int[] cnt = {0};
         for (Kit.LineHit lh : Kit.lineHits(sp, chest(sp), f, reach, k.num("width", 1.2) / 2)) {
@@ -225,6 +229,9 @@ final class LancerSkills {
         double r = k.num("radius", 5);
         int dur = spins * gap;
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 뛰어올라 (hop 칸) 공중에서 창을 두 바퀴 돌리고 착지
+        double ground = sp.getY();
+        JobMove.run(sp, JobMove.hop(0, (int) k.num("gap", 10) + 6, from -> from, k.num("hop", 1.5)));
         // 0.47.0 입체: 허리 높이에서 크게 도는 빛의 창 (날 끝 반지름 r — 몸이 가운데) · 머리 위에서 돌리는 창 (1인칭에서는 숨김)
         double rate = 1260;
         int big = JobFx3d.spawn(sp.level(), "spear", new Vec3(0, 1.0, 0), j, Opt.of("follow", (double) sp.getId(), "dir", new Vec3(1, 0, 0), "face", V.UP, "spin",
@@ -258,9 +265,10 @@ final class LancerSkills {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
                 Vec3 c = sp.position();
-                JobFx.ring(level, V.up(c, 0.1), r, j, ii % 2 == 1, 0.35, Opt.empty());
+                Vec3 cg = new Vec3(c.x, ground, c.z); // 0.50.0 뛰어오른 동안에도 고리는 땅에
+                JobFx.ring(level, V.up(cg, 0.1), r, j, ii % 2 == 1, 0.35, Opt.empty());
                 if (lastSpin && spins > 1) {
-                    RuneKit.later(3, () -> JobFx.ring(level, V.up(c, 0.12), r * 0.6, j, true, 0.3, Opt.of("alpha", 0.85)));
+                    RuneKit.later(3, () -> JobFx.ring(level, V.up(cg, 0.12), r * 0.6, j, true, 0.3, Opt.of("alpha", 0.85)));
                     SkillFx.play(level, "entity.player.attack.knockback", c, 0.7, 1.0);
                 }
                 int[] cnt = {0};
@@ -406,6 +414,9 @@ final class LancerSkills {
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         Ult.sky(level0, c0, "rpg:ult_gold", finalAt + 25);
+        // 0.50.0 동작 (사용자 "역동적으로"): 높이 뛰어올라 (lift 칸) 정점에서 창을 던지고 내려앉음 — 창비는 쓴 자리 기준 그대로
+        JobMove.run(sp, JobMove.to(0, 8, JobMove.up(sp, k.num("lift", 3.5)), JobMove.OUT), JobMove.hold(8, 13), JobMove.to(13, 21, JobMove.down(sp, c0.y),
+                JobMove.IN));
         RpgCombat.setSteadfast(sp, 12);
         // 던짐: 손에서 하늘로 솟는 빛의 창 · 1인칭 위로 긋는 베기 · 몸의 빛
         Vec3 hand = RuneKit.handOf(sp).hand();

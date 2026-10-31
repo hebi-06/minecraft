@@ -61,6 +61,8 @@ final class GuardianSkills {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 앞으로 내딛으며 (step 칸) 방패로 침
+        JobMove.run(sp, JobMove.to(0, 3, JobMove.ahead(sp, k.num("step", 1.5), 0), JobMove.OUT));
         JobFx.aegis(level, shieldFront(sp, 1.2), 0.5, j, 0, 0.22, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
         Vec3 look = sp.getViewVector(1F);
         JobFx.aegis(level, V.add(V.add(sp.getEyePosition(), look, 2.1), JobFx.screenUp(look), -0.45), 0.42, j, 0, 0.22, JobFx.only1p(sp).with("vel",
@@ -359,6 +361,8 @@ final class GuardianSkills {
         double r = k.num("radius", 7);
         int dur = (int) k.num("dur", 160);
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작 (사용자 "역동적으로"): 뛰어올라 (hop 칸) 방패로 땅을 내리치며 성벽을 세움
+        JobMove.run(sp, JobMove.hop(0, (int) k.num("hopT", 10), from -> from, k.num("hop", 2.0)));
         JobTraits4.fortStart(sp, c, r, dur, k.num("guard", 0.35));
         Ult.sky(level, c, "rpg:ult_still", dur + 20);
         JobFx.aura(sp, j, 3.0, 0.9, 1.0);

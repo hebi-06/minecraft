@@ -65,6 +65,15 @@ final class AssassinSkills {
         double mult = k.num("base", 0.5) + k.num("per", 0.85) * n;
         boolean full = n >= max;
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 대상에게 파고들어 (앞 1.4칸까지 · 2틱) 베고 원래 자리로 빠짐
+        Vec3 start = sp.position();
+        Vec3 toward = V.flat(V.sub(e.position(), start));
+        double in = Math.hypot(e.getX() - start.x, e.getZ() - start.z) - 1.4 - Kit.bodyPad(e);
+        if (in > 0.4) {
+            int out = (lines - 1) * gap + 3;
+            Vec3 near = V.add(start, toward, Math.min(in, RuneKit.dashDistance(sp, toward, in, 0.3, 1.5)));
+            JobMove.run(sp, JobMove.to(0, 2, JobMove.at(near), JobMove.OUT), JobMove.hold(2, out), JobMove.to(out, out + 4, JobMove.at(start), JobMove.OUT));
+        }
         JobKit.strikeSplit(sp, e, j, P, mult, lines, gap, false, full, life, 0, null);
         // 1인칭: 눈앞에서 빠르게 엇갈려 긋는 두 베기
         JobFx.slash(sp, j, 1.8, 0.3, 1.15, 20.0, 0.18);
@@ -219,6 +228,8 @@ final class AssassinSkills {
         double h0 = 1.0;
         String life = RuneKit.lifeToken(sp);
         Vec3 c0 = sp.position();
+        // 0.50.0 동작: 제자리에서 뛰어 공중제비를 돌며 사방으로 던짐 (hop 칸 — 비수는 쓴 자리에서)
+        JobMove.run(sp, JobMove.hop(0, 10, from -> from, k.num("hop", 1.0)));
         Vec3 o0 = V.up(c0, h0);
         Vec3 f = Kit.facingOf(sp);
         Vec3[] ends = new Vec3[count];

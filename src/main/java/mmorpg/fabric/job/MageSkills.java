@@ -58,6 +58,9 @@ final class MageSkills {
      * 마탄 연사: 겨눈 적 (range 칸 · 없으면 쓰지 않음) 에게 every 틱마다 마탄 bolts 발 (완드 끝 번쩍 — 조금씩 갈라져 날아가 꽂힘). 피해는 첫 마탄이 닿을 때 한 번 (bolt × bolts —
      * 숫자 bolts 줄이 마탄이 닿을 때마다 한 줄씩)
      */
+    /** 0.50.0 별빛 마탄의 미끄러지는 쪽 (사람마다 번갈아) */
+    private static final java.util.Map<java.util.UUID, Boolean> SIDE = new java.util.concurrent.ConcurrentHashMap<>();
+
     static boolean bolts(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         LivingEntity target = Kit.pickTarget(sp, k.num("range", 20), 12);
         if (target == null) {
@@ -69,6 +72,9 @@ final class MageSkills {
         double mult = k.num("bolt", 1.4) * n;
         String life = RuneKit.lifeToken(sp);
         double speed = 26;
+        // 0.50.0 동작: 쏘며 옆으로 미끄러짐 (slide 칸 — 쓸 때마다 오른쪽 ↔ 왼쪽)
+        boolean right = SIDE.merge(sp.getUUID(), true, (a, b) -> !a);
+        JobMove.run(sp, JobMove.to(0, n * every + 2, JobMove.side(sp, right ? k.num("slide", 1.5) : -k.num("slide", 1.5)), JobMove.OUT));
         for (int i = 0; i < n; i++) {
             int ii = i;
             RuneKit.later(i * every, () -> {
@@ -291,6 +297,10 @@ final class MageSkills {
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
         Ult.sky(level0, sp.position(), "rpg:ult_night", finalAt + 30);
+        // 0.50.0 동작 (공중 부양): 떠올라 (lift 칸 · 12틱) 주문을 내리는 동안 떠 있다가 책이 닫힐 때 내려앉음
+        double ground0 = sp.getY();
+        JobMove.run(sp, JobMove.to(0, 12, JobMove.up(sp, k.num("lift", 2.5)), JobMove.OUT), JobMove.hold(12, finalAt), JobMove.to(finalAt, finalAt + 8,
+                JobMove.down(sp, ground0), JobMove.INOUT));
         JobFx.aura(sp, j, 2.8, rise / 20.0 + 0.4, 0.9);
         JobFx.eyeRing(sp, j, 2.6, 1.1, 0.5);
         JobFx.ring(level0, V.up(center, 0.06), radius, j, false, rise / 20.0 + 0.3, Opt.of("alpha", 0.7));

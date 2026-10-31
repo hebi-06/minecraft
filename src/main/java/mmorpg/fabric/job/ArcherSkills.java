@@ -59,6 +59,8 @@ final class ArcherSkills {
         int every = Math.max(1, (int) k.num("every", 3));
         double mult = k.num("arrow", 2.5) * n;
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 쏘며 뒤로 짧게 뜀 (back 칸) — 화살은 손에서 그대로
+        JobMove.run(sp, JobMove.hop(0, Math.max(6, (n - 1) * every + 3), JobMove.ahead(sp, -k.num("back", 1.5), 0), 0.5));
         if (n > (int) k.num("arrows", 3)) JobSystem.note(sp, "§a호흡 " + breath + " §7→ " + n + "발");
         for (int i = 0; i < n; i++) {
             int ii = i;
@@ -188,6 +190,8 @@ final class ArcherSkills {
         int end = first + (waves - 1) * gap;
         String life = RuneKit.lifeToken(sp);
         java.util.Set<java.util.UUID> rooted = new java.util.HashSet<>(); // 0.50.0 발 묶기 — 적마다 한 번
+        // 0.50.0 동작: 제자리에서 뛰어올라 (hop 칸) 하늘로 쏨
+        JobMove.run(sp, JobMove.hop(0, 10, from -> from, k.num("hop", 1.0)));
         // 위로 쏘아 올림 (손 앞 활 · 하늘로 빛의 화살 셋) · 바닥 과녁
         JobFx.bow(level0, bowAt(sp, 0.5), 0.5, j, 1, 5, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
         for (int i = 0; i < 3; i++) {
@@ -310,6 +314,11 @@ final class ArcherSkills {
         double[] core = JobKit.core(j);
         int total = draw + (int) k.num("burstDelay", 12) + (int) k.num("afterimages", 20) + 10;
         Ult.sky(level0, c0, "rpg:ult_dawn", total + 30);
+        // 0.50.0 동작 (사용자 "역동적으로"): 뒤로 뛰어올라 (back 칸 · lift 칸) 공중에서 시위를 당기고, 쏘는 반동으로 뒤로 밀리며 내려앉음
+        JobMove.run(sp, JobMove.to(0, 8, from -> V.up(JobMove.ahead(sp, -k.num("back", 2.5), 0).apply(from), k.num("lift", 1.5)), JobMove.OUT),
+                JobMove.hold(8, draw), JobMove.to(draw, draw + 8, from -> JobMove.landAhead(sp, -0.0, c0.y).apply(JobMove.ahead(sp, -1.5, 0).apply(from)),
+                        JobMove.IN));
+        ULT_GROUND.put(sp.getUUID(), c0.y);
         JobFx.aura(sp, j, 2.8, draw / 20.0 + 0.3, 0.9);
         JobFx.ring(level0, V.up(c0, 0.06), 3.0, j, false, draw / 20.0 + 0.2, Opt.of("alpha", 0.8));
         SkillFx.play(level0, "crossbow.loading.start", c0, 0.7, 1.0);
@@ -352,10 +361,15 @@ final class ArcherSkills {
     }
 
     /** 놓음: 거대한 빛의 화살 · 빛줄기 · 번쩍임 — 길 위의 적 (shot), 잔상이 차례로 터짐 (after) */
+    /** 0.50.0 솔의 화살을 쓴 때의 땅 높이 (공중에서 쏴도 빛줄기는 쓴 때의 눈 높이 — 땅의 적을 그대로 꿰뚫음) */
+    private static final java.util.Map<java.util.UUID, Double> ULT_GROUND = new java.util.concurrent.ConcurrentHashMap<>();
+
     private static void release(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double[] glow, double[] core, String life) {
         ServerLevel level = sp.level();
         Vec3 look = sp.getViewVector(1F);
-        Vec3 from = V.add(sp.getEyePosition(), look, 0.8);
+        Double g = ULT_GROUND.remove(sp.getUUID());
+        Vec3 eye0 = g == null ? sp.getEyePosition() : new Vec3(sp.getX(), Math.min(sp.getEyeY(), g + sp.getEyeHeight()), sp.getZ());
+        Vec3 from = V.add(eye0, look, 0.8);
         double len = Math.max(2, RuneKit.rayLength(level, from, look, k.num("range", 40)));
         Vec3 end = V.add(from, look, len);
         double speed = k.num("speed", 80);

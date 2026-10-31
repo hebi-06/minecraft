@@ -53,6 +53,8 @@ final class ReaperSkills {
         // 땅 마찰로 줄어드는 속도 — 처음 속도 × 약 2.2 칸을 미끄러짐
         double pullVel = k.num("pull", 1.3) / 2.2;
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 휘두르며 앞으로 미끄러짐 (slide 칸)
+        JobMove.run(sp, JobMove.to(0, (swings - 1) * gap + 3, JobMove.ahead(sp, k.num("slide", 1.5), 0), JobMove.OUT));
         for (int i = 0; i < swings; i++) {
             int ii = i;
             RuneKit.later(i * gap, () -> {
@@ -197,7 +199,11 @@ final class ReaperSkills {
             JobFx.soulFly(level, from, V.up(c, 1.1), 11, i < n ? 0.17 : 0.11, j, Opt.empty());
         }
         SkillFx.play(level, "particle.soul_escape", c, 0.6, 1.0);
-        RuneKit.later(3, () -> {
+        // 0.50.0 동작: 영혼을 모으며 떠올랐다 (lift 칸) 내리꽂으며 폭발 (slamAt 틱 — 내려앉은 자리)
+        int slamAt = (int) k.num("slamAt", 9);
+        JobMove.run(sp, JobMove.to(0, slamAt - 3, JobMove.up(sp, k.num("lift", 1.5)), JobMove.OUT), JobMove.to(slamAt - 3, slamAt, JobMove.down(sp, c.y),
+                JobMove.IN));
+        RuneKit.later(slamAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
             Vec3 p = sp.position();
@@ -271,6 +277,10 @@ final class ReaperSkills {
         int lastDrain = first + (drains - 1) * gap;
         int finalAt = lastDrain + (int) k.num("finalDelay", 15);
         String life = RuneKit.lifeToken(sp);
+        // 0.50.0 동작: 낫을 치켜들고 떠올라 (lift 칸) 문이 열린 동안 떠 있다가, 문이 닫힐 때 내려침
+        double ground0 = sp.getY();
+        JobMove.run(sp, JobMove.to(0, 8, JobMove.up(sp, k.num("lift", 1.0)), JobMove.OUT), JobMove.hold(8, finalAt - 3), JobMove.to(finalAt - 3, finalAt + 1,
+                JobMove.down(sp, ground0), JobMove.IN));
         // 문은 조준한 곳 뒤 (시전자에서 먼 쪽으로 2.5칸) 에 서고 시전자 눈에 가까우면 작게 — 낫은 가까이서 쓰는 무기라 눈앞 4칸에 높이 6칸 문이 서면
         // 화면을 다 덮었음 (사진 검토). 손 · 빨아냄 · 큰 피해는 그대로 조준한 곳 둘레
         Vec3 away = V.flat(V.sub(ground, sp.position()));
