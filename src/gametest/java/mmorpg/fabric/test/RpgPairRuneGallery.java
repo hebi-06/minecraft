@@ -215,7 +215,7 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
             }
             return new double[] {sum, first};
         });
-        double P = server.computeOnServer(s -> RuneCast.power(player(s), r.family())) * Runes.spreadMult(r); // 0.26.0 지속 보정
+        double P = server.computeOnServer(s -> RuneCast.power(player(s), r.family())) * Runes.damageScale(r); // 0.26.0 지속 보정
         int displays = server.computeOnServer(s -> mmorpg.fabric.FxDisplays.spawned) - displays0;
         LOG.info("[pair-gallery] {} {} {} cast={} dealt={} maxOne={} (P×total {}) displays={}", id, fn, third ? "3p" : "1p", cast,
                 String.format(Locale.ROOT, "%.1f", dealt[0]), String.format(Locale.ROOT, "%.1f", dealt[1]),

@@ -26,7 +26,7 @@ import net.minecraft.server.level.ServerPlayer;
  * 룬 쓰기 (runes.js "쓰기" · 재사용 대기 표시): 룬 효과 표 (RUNE_FN — 계열마다 register), 재사용 대기 (가방 아이콘의 쓸기 표시 · 스킬 칸에도 — SkillBarNet),
  * 콤보 (암살자 계열이 넣음) · 쓴 뒤 할 일 (마검사 계열의 마검 부여), 화면 하단 상태 줄 (룬 이름 · 준비 · 적용 스탯 · 보호막 · 덧붙임).
  * 룬은 요구 스탯 없음. 위력 P = 룬 위력 (runePower — 실제 스탯) × 콤보 배율 × 돌파 계수 (8단계 — 룬 아이템의 돌파 단계, Breakthrough)
- * × 지속 보정 (0.26.0 — 시간이 걸리거나 장판인 룬 +5 ~ 15%, Runes.spreadMult).
+ * × 피해 배율 (0.49.0 — 유틸 값 · 선딜 · 지속 보정, Runes.damageScale).
  * 자바 판 (11단계): 룬은 스킬 칸 (SkillBar) 에서 키로만 씀 — 들고 우클릭 · 칸을 고르면 바로 쓰기 (애드온의 터치) 는 없음.
  */
 public final class RuneCast {
@@ -224,8 +224,8 @@ public final class RuneCast {
         Breakthrough.noteCast(sp, r, lv); // 이 룬의 돌파 단계 (화면 색 연출 · 알림)
         Combo cb = r.family().equals(COMBO_FAMILY) ? combo : null;
         Plan plan = cb == null ? null : cb.plan(sp, r);
-        // 0.26.0 지속 보정: 시간이 걸리거나 장판인 룬은 위력 × (1 + 5 ~ 15%) — Runes.spreadMult (RUNE_SPREAD)
-        double P = power(sp, r.family()) * (plan == null ? 1 : plan.mult()) * mmorpg.core.RuneBreak.coef(lv) * Runes.spreadMult(r);
+        // 0.49.0 피해 배율: (1 − 유틸 값) × 시간 보정 (선딜 · 지속 — 0.26.0 지속 보정을 넓힘) — Runes.damageScale (RUNE_SPREAD)
+        double P = power(sp, r.family()) * (plan == null ? 1 : plan.mult()) * mmorpg.core.RuneBreak.coef(lv) * Runes.damageScale(r);
         BooleanSupplier run = () -> {
             Breakthrough.noteCast(sp, r, lv); // 콤보로 늦게 나가도 이 단계
             boolean ok;

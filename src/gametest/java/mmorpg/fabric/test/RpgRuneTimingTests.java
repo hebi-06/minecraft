@@ -30,10 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 0.26.0 룬 지속 보정 (사용자 "풀딜을 다 때릴려면 시간이 걸리거나 장판기인 애들은 한방 딜 애들보다 조금 더 쎄게"): 계열마다 다섯 등급 (한정은 초월 하나) 을
+ * 0.26.0 룬 지속 보정 · 0.49.0 선딜 보정 (사용자 "풀딜을 다 때릴려면 시간이 걸리거나 장판기인 애들은 한방 딜 애들보다 조금 더 쎄게" · "선딜레이가 있으면 조금 더 쎄게"): 계열마다 다섯 등급 (한정은 초월 하나) 을
  * 차례로 앞 3칸 과녁 하나에 써서, 쓴 틱부터 첫 피해 · 마지막 피해까지의 틱을 잼 (과녁이 밀려나지 않게 밀쳐냄 저항 1). 결과는 로그 [rune-timing]
- * (CI 의 rune-timing.txt). 확인: 지속 보정 표 (RUNE_SPREAD) 에 있는 룬은 피해가 들어가고 (위력 × 총 배율 × 지속 보정 — 다 맞았으면), 다 맞은 룬의
- * 마지막 피해 틱 = 표의 t (±3틱 — 몇 타가 빗나간 룬은 t + 3 안), 표에 없는 룬은 피해가 없음 (평타 강화 · 버프).
+ * (CI 의 rune-timing.txt). 확인: 표 (RUNE_SPREAD) 에 t 가 있는 룬은 피해가 들어가고 (위력 × 총 배율 × 피해 배율 (유틸 값 · 시간 보정) — 다 맞았으면), 다 맞은 룬의
+ * 마지막 피해 틱 = 표의 t (±3틱 — 몇 타가 빗나간 룬은 t + 3 안), 첫 피해 틱 = 표의 w (선딜 — ±3틱, w 가 없으면 8틱 안), t 가 없는 룬은 피해가 없음 (평타 강화 · 버프).
  */
 public final class RpgRuneTimingTests {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-rune-timing");
@@ -125,7 +125,7 @@ public final class RpgRuneTimingTests {
                 p.z = dummy(h);
                 clearStrays(h, p.z);
                 sp.lookAt(EntityAnchorArgument.Anchor.EYES, p.z.getEyePosition());
-                p.want = RuneCast.power(sp, family) * Runes.runeTotalMult(r.def()) * Runes.spreadMult(r);
+                p.want = RuneCast.power(sp, family) * Runes.runeTotalMult(r.def()) * Runes.damageScale(r);
                 p.cast = RuneCast.castRune(sp, r, false, 0);
                 p.t0 = now;
                 p.first = -1;
@@ -155,11 +155,17 @@ public final class RpgRuneTimingTests {
             if (!p.cast) p.failures.add(id + " not cast");
             else if (e == null) {
                 if (p.prev > 0) p.failures.add(id + " deals damage (" + Math.round(p.prev) + ") but has no RUNE_SPREAD entry");
+            } else if (!e.has("t")) {
+                if (p.prev > 0) p.failures.add(id + " deals damage (" + Math.round(p.prev) + ") but RUNE_SPREAD has no t");
             } else {
                 int want = (int) e.num("t");
+                // 0.49.0 선딜 (첫 피해까지 — 표의 w, 6틱 미만은 0): 표에 w 가 있으면 첫 피해 = w (±3틱), 없으면 첫 피해가 8틱 안
+                int w = (int) e.numOr("w", 0);
                 if (!(p.prev > 0)) p.failures.add(id + " no damage");
                 else if (full && Math.abs(p.last - want) > 3) p.failures.add(id + " last " + p.last + " vs t " + want);
                 else if (!full && p.last > want + 3) p.failures.add(id + " (partial) last " + p.last + " > t " + want);
+                if (p.prev > 0 && w > 0 && Math.abs(p.first - w) > 3) p.failures.add(id + " first " + p.first + " vs w " + w);
+                if (p.prev > 0 && w == 0 && p.first >= 8) p.failures.add(id + " first " + p.first + " but no w (windup)");
                 if (p.prev > p.want * 1.01 + 1e-6 && !"holy".equals(family)) p.failures.add(id + " dealt " + Math.round(p.prev) + " > want " + Math.round(p.want)); // 성기사: 언데드 ×1.5
             }
             p.z.discard();

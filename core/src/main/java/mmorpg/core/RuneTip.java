@@ -75,8 +75,8 @@ public final class RuneTip {
         double scale = Double.NaN;
         double applied = Double.NaN;
         if (viewer != null && viewer.stats() != null) {
-            // 0.26.0 지속 보정 (시간이 걸리거나 장판인 룬 — 쓸 때 위력에 곱하는 것과 같음)
-            pBase = Runes.runePower(viewer.stats(), r.family()) * (viewer.runeMult() > 0 ? viewer.runeMult() : 1) * Runes.spreadMult(r);
+            // 0.49.0 유틸 값 · 시간 보정 (쓸 때 위력에 곱하는 것과 같음 — Runes.damageScale)
+            pBase = Runes.runePower(viewer.stats(), r.family()) * (viewer.runeMult() > 0 ? viewer.runeMult() : 1) * Runes.damageScale(r);
             scale = Runes.supportScale(viewer.stats(), r.family());
             applied = Runes.runeStat(viewer.stats(), r.family()).value();
             if (viewer.maxHp() > 0) maxHp = viewer.maxHp();
@@ -86,10 +86,10 @@ public final class RuneTip {
         out.add(head(r));
         out.add("§r" + L + d.text("desc"));
         out.addAll(damage(c));
-        String spread = spreadLine(c);
-        if (spread != null) out.add(spread);
+        if (!c.strike()) out.addAll(scaleLines(c));
         out.addAll(support(c));
         out.addAll(flow(c));
+        if (c.strike()) out.addAll(scaleLines(c)); // 평타 강화: 평타마다 피해 줄 다음
         for (String l : wrap(effects(c), LINE_MAX)) out.add("§r" + L + l);
         out.addAll(coefLines(r));
         String summary = RuneBreak.summaryLine(lv, false);
@@ -124,7 +124,7 @@ public final class RuneTip {
 
     /** 피해: 단계 lv 의 위력 × mult (스탯을 모르면 "위력×mult") */
     private static String dmg(Ctx c, double mult, int lv) {
-        if (Double.isNaN(c.pBase())) return "위력×" + Js.str(Math.round(mult * Runes.spreadMult(c.r()) * 100) / 100.0);
+        if (Double.isNaN(c.pBase())) return "위력×" + Js.str(Math.round(mult * Runes.damageScale(c.r()) * 100) / 100.0);
         return fmt(c.pBase() * RuneBreak.coef(lv) * mult);
     }
 
@@ -193,17 +193,47 @@ public final class RuneTip {
         return out;
     }
 
-    /** 0.26.0 지속 보정 줄 ("지속 보정 +10% 포함 (장판)" — 위의 총 피해에 든 것) — 한방 · 피해 없는 룬은 null */
-    private static String spreadLine(Ctx c) {
-        String k = Runes.spreadKind(c.r());
-        if (k == null || !dealsDamage(c) || c.strike()) return null;
-        String why = switch (k) {
-            case "short" -> "다 맞는 데 2초 안";
-            case "long" -> "다 맞는 데 2초 넘게";
-            case "zone" -> "장판";
-            default -> "장판 · 4초 넘게";
-        };
-        return "§r" + L + "지속 보정 " + N + "+" + pct(Runes.spreadMult(c.r()) - 1) + "%" + L + " 포함" + D + " (" + why + ")";
+    /**
+     * 0.49.0 피해 보정 줄 (위의 총 피해에 든 것): 유틸 값 ("유틸 −20% 포함 (도약 · 기절 1초)") · 시간 보정 ("시간 보정 +24% 포함 (선딜 1.2초)" — 0.26.0 지속 보정 +
+     * 선딜). 둘 다면 한 줄 ("유틸 −5% · 시간 보정 +30% 포함" — 유틸 · 선딜 · 장판은 흐름 · 효과 줄에 있음). 피해 없는 룬 · 보정 없는 룬은 없음. 평타 강화는 유틸 줄만
+     */
+    private static List<String> scaleLines(Ctx c) {
+        if (!dealsDamage(c)) return List.of();
+        Runes.Rune r = c.r();
+        double cost = Runes.utilCost(r);
+        double time = c.strike() ? 1 : Runes.timeMult(r);
+        boolean util = cost > 1e-9;
+        boolean timed = time > 1 + 1e-9;
+        if (util && timed) return List.of("§r" + L + "유틸 " + N + "−" + pct(cost) + "%" + L + " · 시간 보정 " + N + "+" + pct(time - 1) + "%" + L + " 포함");
+        if (util) {
+            List<String> names = new ArrayList<>();
+            for (String k : Runes.utils(r)) names.add(Runes.utilName(k));
+            return noteLine("유틸 ", "−" + pct(cost) + "%", String.join(" · ", names));
+        }
+        if (!timed) return List.of();
+        List<String> why = new ArrayList<>();
+        int w = Runes.windupTicks(r);
+        if (w > 0) why.add("선딜 " + sec(w));
+        String k = Runes.spreadKind(r);
+        if (k != null) {
+            why.add(switch (k) {
+                case "short" -> "다 맞는 데 2초 안";
+                case "long" -> "다 맞는 데 2초 넘게";
+                case "zone" -> "장판";
+                default -> "장판 · 4초 넘게";
+            });
+        }
+        if (Runes.timeCapped(r)) why.add("최대");
+        return noteLine("시간 보정 ", "+" + pct(time - 1) + "%", String.join(" · ", why));
+    }
+
+    /** "이름 값 포함 (까닭)" — 길면 까닭을 다음 줄로 */
+    private static List<String> noteLine(String name, String value, String why) {
+        String head = "§r" + L + name + N + value + L + " 포함";
+        if (why.isEmpty()) return List.of(head);
+        String one = head + D + " (" + why + ")";
+        if (plain(one).length() <= LINE_MAX + 4) return List.of(one);
+        return List.of(head, "§r" + D + "  (" + why + ")");
     }
 
     /** 총 피해 나눔 조각 ("칼날 126 × 6번", "달 추락 588") — 한 번에 다 들어가면 빈 목록 */

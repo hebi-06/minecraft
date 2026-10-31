@@ -34,6 +34,7 @@ public final class RuneSystem {
     public static void init() {
         RuneData.init();
         RuneKit.init();
+        RuneMarks.init(); // 0.49.0 룬 유틸 표식 (받는 피해 증가 · 가하는 피해 증가)
         Ult.init();
         RuneCast.init();
         SkillBar.init(); // 스킬 칸 (11단계 — 룬을 올려 키로 씀 · 저장 · 패킷)

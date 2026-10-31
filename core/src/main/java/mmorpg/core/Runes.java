@@ -313,38 +313,94 @@ public final class Runes {
         return mult * def.numOr("hits", 1) + def.numOr("dot", 0) * def.numOr("dots", 0) + def.numOr("crush", 0);
     }
 
-    // ------------------------------------------------------------------ 0.26.0 지속 보정
+    // ------------------------------------------------------------------ 0.49.0 유틸 값 · 시간 보정 (0.26.0 지속 보정을 넓힘)
 
     /**
-     * 0.26.0 지속 보정 (RUNE_SPREAD — rules_more.json, 사용자 "풀딜을 다 때릴려면 시간이 걸리거나 장판기인 애들은 한방 딜 애들보다 조금 더 쎄게"):
-     * 룬 (계열.등급) 마다 쓴 때부터 마지막 피해까지의 틱 t (0돌 · 과녁 하나 — RpgRuneTimingTests 로 잰 것) · 장판 zone (자리 · 내 둘레에 남아 여러 번 치는
-     * 것 — 적이 벗어날 수 있음). 한정 룬도 같음 (사용자 "같이 적용")
+     * 0.49.0 룬 재설계 (RUNE_SPREAD — rules_more.json): 룬 (계열.등급) 마다 쓴 때부터 마지막 피해까지의 틱 t · 첫 피해까지의 틱 w (선딜) · 장판 zone ·
+     * 유틸 u (기절 · 끌당 · 흡혈 · 받는 피해 증가 … — 같은 등급의 순수 딜 룬 대비 깎는 몫). 0.26.0 지속 보정 (사용자 "풀딜을 다 때릴려면 시간이 걸리거나
+     * 장판기인 애들은 한방 딜 애들보다 조금 더 쎄게") 에 0.49.0 선딜 보정 · 유틸 값을 더함. 대조 시험 (rules.json 만) 이면 없음 — 모두 1
      */
     private static final Obj SPREAD = R.root().has("RUNE_SPREAD") ? R.obj("RUNE_SPREAD") : null;
 
-    /** 지속 보정 표 (룬 계열.등급 → {t, zone}) — 없으면 null */
+    /** 시간 보정 · 유틸 표 (룬 계열.등급 → {t, w, zone, u}) — 없으면 null */
     public static Obj spreadEntry(Rune r) {
         if (SPREAD == null || r == null) return null;
         return SPREAD.obj("runes").objOrNull(r.family() + "." + r.grade());
     }
 
+    /** 선딜 틱 (쓴 때부터 첫 피해까지 — windup.min 틱 미만은 0, 표에 없으면 0) */
+    public static int windupTicks(Rune r) {
+        Obj e = spreadEntry(r);
+        if (e == null || !e.has("t")) return 0;
+        double w = e.numOr("w", 0);
+        return w >= SPREAD.obj("windup").num("min") ? (int) w : 0;
+    }
+
+    /** 선딜 보정 (틱마다 windup.perTick — 0.5초 +10%, 최대 windup.max) */
+    public static double windupBonus(Rune r) {
+        Obj wu = SPREAD == null ? null : SPREAD.obj("windup");
+        return wu == null ? 0 : Math.min(wu.num("max"), windupTicks(r) * wu.num("perTick"));
+    }
+
     /**
-     * 지속 보정 단계 (null = 한방 — t 가 instant 틱 안): short (t 가 short 틱 안 — 연타 · 늦게 맞는 한 방) · long (그보다 김) · zone (장판) ·
-     * zoneLong (zoneLong 틱 넘는 장판)
+     * 지속 보정 단계 (첫 피해부터 마지막 피해까지 d = t − w — null = 한방 · d 가 instant 틱 안 · 표에 t 없음): short (d 가 short 틱 안 — 연타 ·
+     * 늦게 맞는 한 방) · long (그보다 김) · zone (장판) · zoneLong (d 가 zoneLong 틱 넘는 장판)
      */
     public static String spreadKind(Rune r) {
         Obj e = spreadEntry(r);
-        if (e == null) return null;
-        double t = e.num("t");
-        if (e.truthy("zone")) return t > SPREAD.num("zoneLong") ? "zoneLong" : "zone";
-        if (t <= SPREAD.num("instant")) return null;
-        return t > SPREAD.num("short") ? "long" : "short";
+        if (e == null || !e.has("t")) return null;
+        double d = Math.max(0, e.num("t") - windupTicks(r));
+        if (e.truthy("zone")) return d > SPREAD.num("zoneLong") ? "zoneLong" : "zone";
+        if (d <= SPREAD.num("instant")) return null;
+        return d > SPREAD.num("short") ? "long" : "short";
     }
 
-    /** 지속 보정 배율 (1 + 단계의 bonus — 한방이면 1). 피해에만 (룬을 쓸 때 위력 P 에 곱함 · 툴팁의 총 피해도) */
-    public static double spreadMult(Rune r) {
+    /** 지속 보정 (단계의 bonus — 한방이면 0) */
+    public static double spreadBonus(Rune r) {
         String k = spreadKind(r);
-        return k == null ? 1 : 1 + SPREAD.obj("bonus").num(k);
+        return k == null ? 0 : SPREAD.obj("bonus").num(k);
+    }
+
+    /** 시간 보정 배율 = min(cap, (1 + 선딜) × (1 + 지속)) — 표에 없으면 1 */
+    public static double timeMult(Rune r) {
+        if (SPREAD == null) return 1;
+        return Math.min(SPREAD.numOr("cap", Double.POSITIVE_INFINITY), (1 + windupBonus(r)) * (1 + spreadBonus(r)));
+    }
+
+    /** 시간 보정이 상한에 닿았는지 */
+    public static boolean timeCapped(Rune r) {
+        return SPREAD != null && SPREAD.has("cap") && (1 + windupBonus(r)) * (1 + spreadBonus(r)) > SPREAD.num("cap") + 1e-9;
+    }
+
+    /** 이 룬의 유틸 (RUNE_SPREAD.utils 의 이름 — 표 순서) */
+    public static List<String> utils(Rune r) {
+        Obj e = spreadEntry(r);
+        if (e == null || !e.has("u")) return List.of();
+        List<String> out = new ArrayList<>();
+        for (Object o : e.list("u")) out.add(String.valueOf(o));
+        return List.copyOf(out);
+    }
+
+    /** 유틸 이름 ("기절 1초") */
+    public static String utilName(String key) {
+        Obj u = SPREAD == null ? null : SPREAD.obj("utils").objOrNull(key);
+        return u == null ? key : u.str("name");
+    }
+
+    /** 유틸 값 합 (깎는 몫 — 최대 utilMax) */
+    public static double utilCost(Rune r) {
+        if (SPREAD == null) return 0;
+        double sum = 0;
+        for (String k : utils(r)) sum += SPREAD.obj("utils").obj(k).num("cost");
+        return Math.min(SPREAD.numOr("utilMax", 1), sum);
+    }
+
+    /**
+     * 피해 배율 = (1 − 유틸 값 합) × 시간 보정. 피해에만 (룬을 쓸 때 위력 P 에 곱함 · 툴팁의 총 피해도) — 재사용 대기 · 회복 · 보호막은 그대로.
+     * 대조 시험 (표 없음) 이면 1
+     */
+    public static double damageScale(Rune r) {
+        return (1 - utilCost(r)) * timeMult(r);
     }
 
     // ------------------------------------------------------------------ draw and grinding

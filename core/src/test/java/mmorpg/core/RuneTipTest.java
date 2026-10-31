@@ -101,16 +101,18 @@ public final class RuneTipTest {
                     Obj d = RuneBreak.def(r, lv);
                     boolean strike = fam.equals(Rules.get().obj("RUNE_STRIKE").str("family"));
                     boolean body = fam.equals(Rules.get().obj("RUNE_BODY").str("family"));
-                    double P = Runes.runePower(even, fam) * treeMult * Runes.spreadMult(r); // 0.26.0 지속 보정 (툴팁 숫자에 들어감)
+                    double P = Runes.runePower(even, fam) * treeMult * Runes.damageScale(r); // 0.49.0 유틸 값 · 시간 보정 (툴팁 숫자에 들어감)
                     double total = Runes.runeTotalMult(d);
                     if (!strike && !body && total > 0) {
                         String want = "총 피해 " + RuneTip.fmt(P * RuneBreak.coef(lv) * total);
                         check(p.stream().anyMatch(l -> l.startsWith("⚔ " + want)), id + " total '" + want + "' in " + all);
                     }
-                    // 0.26.0 지속 보정 줄 (시간이 걸리거나 장판인 피해 룬만)
-                    String sk = Runes.spreadKind(r);
-                    boolean spreadLine = all.contains("지속 보정 +");
-                    check(spreadLine == (sk != null && !strike && total > 0), id + " spread line " + sk + " in " + all);
+                    // 0.49.0 피해 보정 줄: 유틸 값 (유틸이 있는 피해 룬 · 평타 강화) · 시간 보정 (선딜 · 지속 — 피해 룬만, 평타 강화 없음)
+                    boolean utilLine = all.contains("유틸 −" + Js.str(Math.round(Runes.utilCost(r) * 100)) + "%");
+                    check(utilLine == (Runes.utilCost(r) > 1e-9 && (strike || total > 0)), id + " util line " + Runes.utils(r) + " in " + all);
+                    boolean timeLine = all.contains("시간 보정 +" + Js.str(Math.round((Runes.timeMult(r) - 1) * 100)) + "%");
+                    check(timeLine == (Runes.timeMult(r) > 1 + 1e-9 && !strike && total > 0), id + " time line " + Runes.timeMult(r) + " in " + all);
+                    check(!all.contains("지속 보정 +"), id + " no 0.26.0 spread line");
                     if (strike && d.truthy("bonus")) check(all.contains("평타마다 +" + RuneTip.fmt(P * RuneBreak.coef(lv) * d.num("bonus"))), id + " strike bonus");
                     if (body && total > 0) check(all.contains("쓸 때 충격파 " + RuneTip.fmt(P * RuneBreak.coef(lv) * total)), id + " body shockwave");
                     // 초월: 3 · 6돌 줄 (그 단계의 총 피해)
@@ -136,9 +138,10 @@ public final class RuneTipTest {
         // 0.24.0 만년빙하: 얼음 3 × 8 + 빙하 붕괴 10 (P 42 → 126 × 8번 + 420 — 나눔이 길어 다음 줄), 필드 · 빙결 줄, 3 · 6돌 (필드 · 얼음 수 · 빙결)
         List<String> gl = plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
         String glj = String.join("\n", gl);
-        double gS = Runes.spreadMult(rune("glacier", "transcend")); // 0.26.0 지속 보정 (장판 · 4초 넘게 +15%)
-        check(near(gS, 1.15) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS)) && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
-                && gl.contains("지속 보정 +15% 포함 (장판 · 4초 넘게)") && gl.contains("조준한 곳 반지름 6칸 얼음 필드 · 0.7초마다")
+        double gS = Runes.damageScale(rune("glacier", "transcend")); // 0.49.0 빙결 2초 −20% × 시간 보정 (선딜 0.85초 · 장판 · 4초 넘게 → 최대 ×1.3)
+        check(near(gS, 0.8 * 1.3) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS)) && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
+                && gl.contains("유틸 −20% · 시간 보정 +30% 포함")
+                && gl.contains("조준한 곳 반지름 6칸 얼음 필드 · 0.7초마다")
                 && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초 (보스는 얼지 않음)") && gl.get(0).equals("재사용 36초 · 한정")
                 && glj.contains("띄움"), "glacier: " + gl);
         check(glj.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 42 * gS)) && glj.contains("얼음 필드 6 → 7칸") && glj.contains("거대한 얼음 8 → 10번")
@@ -178,8 +181,9 @@ public final class RuneTipTest {
         RuneTip.Viewer vm = new RuneTip.Viewer(mage, 1, 250);
         Runes.Rune meteor = rune("int", "transcend");
         String m0 = joined(RuneTip.lines(meteor, 0, vm));
-        double mS = Runes.spreadMult(meteor); // 0.26.0 지속 보정 (1.5초 뒤 떨어짐 — 2초 안 +5%)
-        check(near(mS, 1.05) && m0.contains("⚔ 총 피해 " + RuneTip.fmt(1344 * mS)) && m0.contains("지속 보정 +5% 포함 (다 맞는 데 2초 안)") && m0.contains("불붙음 5초 · 띄움")
+        double mS = Runes.damageScale(meteor); // 0.49.0 띄움 −5% × 선딜 1.5초 +30% (한 방이라 지속 0)
+        check(near(mS, 0.95 * 1.3) && m0.contains("⚔ 총 피해 " + RuneTip.fmt(1344 * mS)) && m0.contains("유틸 −5% · 시간 보정 +30% 포함")
+                && m0.contains("불붙음 5초 · 띄움")
                 && m0.contains("마력 계수 1.0 · 다른 스탯 0.85"), "meteor 0: " + m0);
         check(m0.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 32 * mS) + " · 운석 범위 6 → 7.5칸") && m0.contains("떨어진 자리 3초 불바다 (1초마다 " + RuneTip.fmt(42 * 1.3 * 2 * mS) + ")"),
                 "meteor tier 3 numbers: " + m0);
@@ -188,16 +192,16 @@ public final class RuneTipTest {
         check(m6.contains("⚔ 총 피해 " + RuneTip.fmt(2688 * mS)) && m6.contains("돌파 ★★★★★★ 6/6 · 계수 ×1.6") && m6.contains("기절 1초"), "meteor 6: " + m6);
         // 천붕 6돌: 한 번 더 (60% — 천붕은 6돌에도 배율 32, 범위 · 사거리만 바뀜)
         String hf = joined(RuneTip.lines(rune("str", "transcend"), 6, new RuneTip.Viewer(stats(125, 0, 0, 0), 1, 250)));
-        check(hf.contains("◆ 검이 한 번 더 떨어짐 (지금 겨눈 곳 · " + RuneTip.fmt(42 * 1.6 * 32 * 0.6 * Runes.spreadMult(rune("str", "transcend"))) + ")"), "heavenFall echo: " + hf);
+        check(hf.contains("◆ 검이 한 번 더 떨어짐 (지금 겨눈 곳 · " + RuneTip.fmt(42 * 1.6 * 32 * 0.6 * Runes.damageScale(rune("str", "transcend"))) + ")"), "heavenFall echo: " + hf);
         // 만상귀일 (네 스탯 31 · 31 · 31 · 32 = 125 → P 42): 구슬 17 + 폭발 17
         String ar = joined(RuneTip.lines(rune("arcana", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
-        double aS = Runes.spreadMult(rune("arcana", "transcend")); // 0.26.0 지속 보정 (장판 +10%)
-        check(near(aS, 1.1) && ar.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * aS) + " (구슬 " + RuneTip.fmt(714 * aS) + " + 귀일 폭발 " + RuneTip.fmt(714 * aS) + ")")
-                && ar.contains("지속 보정 +10% 포함 (장판)") && ar.contains("재사용 36초 · 한정") && ar.contains("적용 = 네 스탯의 합 × 1.0"), "arcana: " + ar);
+        double aS = Runes.damageScale(rune("arcana", "transcend")); // 0.49.0 띄움 −5% × (선딜 1.2초 · 장판 → 최대 ×1.3)
+        check(near(aS, 0.95 * 1.3) && ar.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * aS) + " (구슬 " + RuneTip.fmt(714 * aS) + " + 귀일 폭발 " + RuneTip.fmt(714 * aS) + ")")
+                && ar.contains("유틸 −5% · 시간 보정 +30% 포함") && ar.contains("재사용 36초 · 한정") && ar.contains("적용 = 네 스탯의 합 × 1.0"), "arcana: " + ar);
         // 0.17.0 무간참역: 베기 2 × 10 + 마무리 일섬 14 (P 42 → 84 × 10번 + 588 — 나눔이 길어 다음 줄), 영역 줄, 6돌 기절
         List<String> en = plain(RuneTip.lines(rune("endless", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
-        double eS = Runes.spreadMult(rune("endless", "transcend")); // 0.26.0 지속 보정 (장판 · 4초 넘게 +15%)
-        check(near(eS, 1.15) && en.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * eS)) && en.contains("  베기 " + RuneTip.fmt(84 * eS) + " × 10번 + 마무리 일섬 " + RuneTip.fmt(588 * eS))
+        double eS = Runes.damageScale(rune("endless", "transcend")); // 0.49.0 유틸 없음 × (선딜 0.8초 · 장판 · 4초 넘게 → 최대 ×1.3)
+        check(near(eS, 1.3) && en.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * eS)) && en.contains("  베기 " + RuneTip.fmt(84 * eS) + " × 10번 + 마무리 일섬 " + RuneTip.fmt(588 * eS))
                 && en.contains("영역 반지름 8칸 · 0.5초마다 영역 안 모든 적")
                 && en.get(0).equals("재사용 36초 · 한정"), "endless: " + en);
         String en6 = joined(RuneTip.lines(rune("endless", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
@@ -205,8 +209,8 @@ public final class RuneTipTest {
         // 0.18.0 대지 가르기: 대검 16 (먼저) + 여진 3 × 6 (P 42 → 672 + 126 × 6번), 균열 줄 (앞으로 14칸 · 폭 5칸), 6돌 20칸 · 폭 7칸 · 기절
         List<String> te = plain(RuneTip.lines(rune("terra", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
         String tej = String.join("\n", te);
-        double tS = Runes.spreadMult(rune("terra", "transcend")); // 0.26.0 지속 보정 (장판 · 4초 넘게 +15%)
-        check(near(tS, 1.15) && tej.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * tS)) && tej.contains("대검 " + RuneTip.fmt(672 * tS) + " + 여진 " + RuneTip.fmt(126 * tS) + " × 6번")
+        double tS = Runes.damageScale(rune("terra", "transcend")); // 0.49.0 띄움 −5% × (선딜 1.2초 · 장판 → 최대 ×1.3)
+        check(near(tS, 0.95 * 1.3) && tej.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * tS)) && tej.contains("대검 " + RuneTip.fmt(672 * tS) + " + 여진 " + RuneTip.fmt(126 * tS) + " × 6번")
                 && te.contains("앞으로 14칸 균열 (폭 5칸) 안 모든 적")
                 && te.contains("대검이 내려친 뒤 0.5초마다 여진") && te.get(0).equals("재사용 36초 · 한정") && tej.contains("띄움"), "terra: " + te);
         String te6 = joined(RuneTip.lines(rune("terra", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
@@ -231,7 +235,8 @@ public final class RuneTipTest {
         check(an.contains("◈ 보호막 ") && an.contains("(최대 " + RuneTip.fmt(131 * 0.25) + ")") && an.contains("신성 피해 · 언데드 ×1.5"), "archangel: " + an);
         // 피의 칼날 (평타 강화): 평타마다 + · 합
         String bb = joined(RuneTip.lines(rune("strike", "hero"), 0, new RuneTip.Viewer(stats(125, 0, 0, 0), 1, 250)));
-        check(bb.contains("⚔ 평타마다 +70.1 (12번 합 +842)") && bb.contains("적용 = 가장 높은 스탯 × 1.0"), "blood blade: " + bb);
+        check(bb.contains("⚔ 평타마다 +63.1 (12번 합 +758)") && bb.contains("유틸 −10% 포함 (흡혈)") && bb.indexOf("유틸 −10%") > bb.indexOf("⚔ 평타마다")
+                && bb.contains("적용 = 가장 높은 스탯 × 1.0"), "blood blade (0.49.0 평타 흡혈 −10%): " + bb);
         // 신체 강화 일반: 효과 한 줄 · 피해 없음 → 기준 줄은 내 스탯만
         String fs = joined(RuneTip.lines(rune("body", "common"), 0, new RuneTip.Viewer(even, 1, 131)));
         check(fs.contains("지속 5초 · 이동 속도 II · 받는 피해 -15%") && fs.contains(RuneTip.BASIS_SELF), "fighting spirit: " + fs);
@@ -243,7 +248,8 @@ public final class RuneTipTest {
 
         // 스탯을 모를 때: 위력×N · 비율
         String n0 = joined(RuneTip.lines(meteor, 0, null));
-        check(n0.contains("총 피해 위력×33.6") && n0.contains("지속 보정 +5% 포함") && !n0.contains(RuneTip.BASIS), "no viewer meteor (32 × 지속 보정 1.05): " + n0);
+        check(n0.contains("총 피해 위력×39.52") && n0.contains("유틸 −5% · 시간 보정 +30% 포함") && !n0.contains(RuneTip.BASIS),
+                "no viewer meteor (32 × 띄움 0.95 × 시간 보정 1.3): " + n0);
         String ns = joined(RuneTip.lines(spring, 0, null));
         check(ns.contains("회복 최대 체력 14%+"), "no viewer spring: " + ns);
 

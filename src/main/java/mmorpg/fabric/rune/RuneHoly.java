@@ -249,82 +249,116 @@ final class RuneHoly {
     }
 
     /**
-     * 천벌: 조준한 곳 (range 칸) 에 금빛 룬 (delay 틱) → 하늘에서 빛기둥. 반지름 radius 적 신성 피해, 안의 아군 회복 —
-     * 룬이 그려지는 동안 하늘 (5칸 위) 에 빛의 문장 (rpg:rfx_sun) 이 커지며 열리고 → 굵은 빛기둥이 내리꽂힘 · 문장이 번쩍 · 금빛 깃털이 흩날림
+     * 0.49.0 심판의 도약 (천벌 → 도약 — 사용자 "도약 스킬 같은것도 많이"): 조준한 곳 (range 칸) 으로 air 틱 동안 뛰어오름 — 머리 위로 든 금빛 망치,
+     * 착지할 곳 하늘에 문장이 커짐 → 착지하며 망치로 내려찍음 (반지름 radius · 위력 × mult 신성 피해) → pillar 틱 뒤 그 자리에 빛기둥 (위력 × crush ·
+     * 아군 회복 heal — 예전 천벌의 빛기둥). 언데드 ×1.5 (holyHit)
      */
     static boolean divineSmite(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
         ServerLevel level = sp.level();
-        Vec3 g = RuneKit.groundAim(sp, k.num("range"));
         double[][] cs = RuneKit.colorOf("holy");
         double[] glow = cs[0];
         double[] core = cs[1];
         double[] gold = {1.0, 0.86, 0.45};
-        double sky = 5; // 문장 높이 (1인칭에서 땅을 겨눠도 화면 위쪽에 보이게)
-        double sk = RuneKit.nearK(sp, V.up(g, sky), 5, 0.4); // 가까이 겨누면 작게
-        double delay = k.num("delay");
+        int[] hammer = RuneKit.RFX.get("hammer");
+        Vec3 start = sp.position();
+        Vec3 land = RuneKit.leapLand(sp, k.num("range"), 1.0);
+        Vec3 f = V.hdist(land, start) > 0.3 ? V.flat(V.sub(land, start)) : V.flat(sp.getViewVector(1F));
+        int air = (int) k.num("air");
+        int pillar = (int) k.num("pillar");
         double radius = k.num("radius");
-        for (int t = 0; t < delay; t += 2) {
+        double sky = 5; // 문장 높이
+        double sk = RuneKit.nearK(sp, V.up(land, sky), 5, 0.4);
+        // 하늘의 문장 (착지할 곳 위 — 날아가는 동안 커짐) · 땅의 문양
+        for (int t = 0; t < air; t += 2) {
             final int tt = t;
             RuneKit.later(tt, () -> {
-                SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.14, "color", glow, "alpha", 0.9, "progress", Math.min(1, (tt + 2) / delay), "rate", 0.0,
+                SkillFx.rune(level, land, Opt.of("size", radius, "life", 0.14, "color", glow, "alpha", 0.85, "progress", Math.min(1, (tt + 2.0) / air), "rate", 0.0,
                         "spin", tt * 6.0));
-                // 하늘의 문장: 0.6 → 2.2 로 커짐 (2틱마다 다시 그림)
-                RuneKit.rfx2(level, "sun", V.up(g, sky), Opt.of("size", (0.9 + 2.4 * (tt + 2) / delay) * sk, "life", 0.14, "spin", tt * 8.0, "alpha",
-                        0.6 + 0.4 * tt / delay), glow, RuneKit.WHITE);
+                RuneKit.rfx2(level, "sun", V.up(land, sky), Opt.of("size", (0.8 + 2.0 * (tt + 2.0) / air) * sk, "life", 0.14, "spin", tt * 8.0, "alpha",
+                        0.55 + 0.4 * tt / air), glow, RuneKit.WHITE);
+                // 머리 위로 든 금빛 망치 (몸을 따라감 — 날이 뒤로 젖혀짐)
+                if (!sp.isRemoved()) {
+                    Vec3 at = V.add(V.up(sp.position(), 2.9), f, -0.3);
+                    RuneKit.rfx2(level, "prop", at, Opt.of("size", 0.85, "life", 0.12, "spin", 30.0 + tt * 6, "alpha", 0.95, "vel", RuneKit.bodyVel(sp)), gold,
+                            RuneKit.WHITE, hammer, null);
+                }
             });
         }
-        SkillFx.fx(level, "rpg:arrow_shot", V.up(g, sky / 2), Opt.of("dir", V.UP, "speed", 0.0, "size", sky / 2, "thick", 0.1, "life", delay / 20, "color", core,
-                "alpha", 0.7));
-        SkillFx.play(level, "beacon.power", g, 1.2, 1);
-        RuneKit.later(delay, () -> {
-            if (sp.isRemoved()) return;
-            // 가까이 겨누면 기둥을 가늘게 (1인칭 · 3인칭 카메라가 기둥 안에 들지 않게)
-            double th = RuneKit.nearK(sp, V.up(g, 1.6), 1 + radius * 0.55 + 1.5, 0.3);
-            Vec3 mid = V.up(g, sky / 2 + 0.5);
-            double half = sky / 2 + 0.5;
-            SkillFx.fx(level, "rpg:arrow_shot", mid, Opt.of("dir", V.UP, "speed", 0.0, "size", half, "thick", radius * 0.6 * th, "life", 0.6, "color", glow,
-                    "alpha", 0.85));
-            SkillFx.fx(level, "rpg:arrow_shot", mid, Opt.of("dir", V.UP, "speed", 0.0, "size", half, "thick", radius * 0.28 * th, "life", 0.55, "color", gold,
-                    "alpha", 0.9));
-            SkillFx.fx(level, "rpg:arrow_shot", mid, Opt.of("dir", V.UP, "speed", 0.0, "size", half, "thick", 0.6 * th, "life", 0.5, "color", RuneKit.WHITE,
-                    "alpha", 1.0));
-            RuneKit.rfx2(level, "sun", V.up(g, sky), Opt.of("size", 3.9 * sk, "life", 0.6, "grow", 0.3, "fade", 0.6, "spinRate", 90.0), glow, RuneKit.WHITE);
-            SkillFx.burst(level, V.up(g, 1), glow, 3.0, 0.4);
-            SkillFx.burst(level, V.up(g, 1), RuneKit.WHITE, 1.6, 0.3);
-            RuneKit.zonePulse(level, g, glow, radius, 0.5);
-            RuneKit.zonePulse(level, g, core, radius * 0.6, 0.35);
-            for (int i = 0; i < 8; i++) {
-                Vec3 d = RuneKit.turn(new Vec3(1, 0, 0), i * 45 + Kit.rand() * 10);
-                SkillFx.fx(level, "rpg:light_cut", V.add(V.up(g, 0.08), d, 1.8), Opt.of("dir", d, "size", 1.6, "thick", 0.34, "life", 0.9, "delay", 0.6,
-                        "color", glow, "alpha", 0.95));
+        SkillFx.play(level, "beacon.power", land, 1.4, 0.8);
+        RuneKit.leap(sp, land, 2.4 + V.hdist(land, start) * 0.12, air, glow, gold, () -> {
+            Vec3 c = sp.position();
+            // 내려찍은 망치: 앞에 머리가 박힘 · 금빛 충격파 · 빛의 금
+            Vec3 at = V.up(V.add(c, f, 1.5), 0.8);
+            RuneKit.rfx2(level, "prop", at, Opt.of("size", 1.2 * RuneKit.nearK(sp, at, 3, 0.55), "life", 0.45, "spin", 180.0, "fade", 0.5, "alpha", 0.95), gold,
+                    RuneKit.WHITE, hammer, null);
+            RuneKit.arc(level, V.up(V.add(c, f, 1.4), 1.3), f, Opt.of("shape", "heavy", "flip", false, "size", 2.4, "life", 0.22, "speed", 1.0, "spin", -90.0,
+                    "color", gold, "aura", glow));
+            SkillFx.burst(level, V.up(c, 0.6), gold, 2.2, 0.35);
+            RuneKit.novaRing(level, V.up(c, 0.05), 0.6, radius * 0.95, glow, core, Opt.of("life", 0.4));
+            RuneKit.zonePulse(level, c, glow, radius, 0.45);
+            RuneKit.glowCrack(level, c, radius * 0.8, gold, RuneKit.WHITE, Opt.of("life", 1.0));
+            for (int i = 0; i < 6; i++) {
+                Vec3 d = RuneKit.turn(f, i * 60 + Kit.rand() * 14);
+                SkillFx.fx(level, "rpg:light_cut", V.add(V.up(c, 0.08), d, 1.4), Opt.of("dir", d, "size", 1.3, "thick", 0.32, "life", 0.8, "delay", 0.5,
+                        "color", gold, "alpha", 0.95));
             }
-            // 금빛 깃털이 흩날리며 내려옴 (2틱 뒤 — 내리꽂히는 틱의 파티클 예산)
-            RuneKit.later(2, () -> {
-                for (int i = 0; i < 8; i++) {
-                    double a = (i / 8.0) * Math.PI * 2 + Kit.rand() * 0.5;
-                    double rr = 0.8 + Kit.rand() * radius * 0.8;
-                    Vec3 p = new Vec3(g.x + Math.cos(a) * rr, g.y + 2.6 + Kit.rand() * 1.8, g.z + Math.sin(a) * rr);
-                    RuneKit.rfx2(level, "prop", p, Opt.of("dir", V.DOWN, "speed", 0.9, "size", 0.2, "life", 1.5, "spin", Kit.rand() * 360, "spinRate", 80.0, "fade",
-                            0.35), gold, RuneKit.WHITE, RuneKit.RFX.get("feather"), 0.6);
-                }
-            });
-            SkillFx.sparks(level, V.up(g, 1), core, 10, 6);
-            SkillFx.play(level, "item.trident.thunder", g, 1.4, 0.6);
-            SkillFx.play(level, "beacon.activate", g, 1.2, 1);
-            RuneKit.shakeAround(level, g, 12, 0.2, 0.2);
-            for (LivingEntity e : Kit.around(sp, g, radius, 4)) {
-                if (RuneKit.holyHit(sp, e, P, k.num("mult")) > 0) SkillFx.burst(level, Kit.bodyPoint(e), glow, 0.8, 0.24);
-            }
-            double scaleS = supportScale(sp, r);
-            for (ServerPlayer pl : RuneKit.playersAround(level, g, radius, sp)) {
-                double healed = RpgHealth.healBy(pl, RpgHealth.maxOf(pl) * k.num("heal") * scaleS);
-                if (healed > 0) {
-                    DamageNumbers.show(pl, healed, DamageNumbers.Style.HEAL, "", 0);
-                    RuneKit.selfCue(pl, glow, core, false);
+            SkillFx.sparks(level, V.up(c, 0.5), core, 10, 5);
+            SkillFx.play(level, "mace.heavy_smash_ground", c, 1.0, 1.0);
+            SkillFx.play(level, "item.trident.thunder", c, 1.6, 0.4);
+            RuneKit.shakeAround(level, c, 10, 0.3, 0.25);
+            int shown = 0;
+            for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
+                if (RuneKit.holyHit(sp, e, P, k.num("mult")) > 0) {
+                    RuneKit.knock(e, V.sub(e.position(), c), 0.3, 0.25);
+                    if (shown++ < 8) SkillFx.burst(level, Kit.bodyPoint(e), gold, 0.7, 0.22);
                 }
             }
+            RuneKit.later(pillar, () -> pillar(sp, r, P, k, c, glow, core, gold, sky, sk));
         });
         return true;
+    }
+
+    /** 심판의 도약 끝: 하늘에서 빛기둥이 내리꽂힘 (위력 × crush · 아군 회복 heal) — 금빛 깃털이 흩날림 */
+    private static void pillar(ServerPlayer sp, Runes.Rune r, double P, Obj k, Vec3 g, double[] glow, double[] core, double[] gold, double sky, double sk) {
+        if (sp.isRemoved()) return;
+        ServerLevel level = sp.level();
+        double radius = k.num("radius");
+        // 가까이 서 있으면 기둥을 가늘게 (1인칭 · 3인칭 카메라가 기둥 안에 들지 않게)
+        double th = RuneKit.nearK(sp, V.up(g, 1.6), 1 + radius * 0.55 + 1.5, 0.3);
+        Vec3 mid = V.up(g, sky / 2 + 0.5);
+        double half = sky / 2 + 0.5;
+        SkillFx.fx(level, "rpg:arrow_shot", mid, Opt.of("dir", V.UP, "speed", 0.0, "size", half, "thick", radius * 0.6 * th, "life", 0.6, "color", glow, "alpha", 0.85));
+        SkillFx.fx(level, "rpg:arrow_shot", mid, Opt.of("dir", V.UP, "speed", 0.0, "size", half, "thick", radius * 0.28 * th, "life", 0.55, "color", gold, "alpha", 0.9));
+        SkillFx.fx(level, "rpg:arrow_shot", mid, Opt.of("dir", V.UP, "speed", 0.0, "size", half, "thick", 0.6 * th, "life", 0.5, "color", RuneKit.WHITE, "alpha", 1.0));
+        RuneKit.rfx2(level, "sun", V.up(g, sky), Opt.of("size", 3.4 * sk, "life", 0.6, "grow", 0.3, "fade", 0.6, "spinRate", 90.0), glow, RuneKit.WHITE);
+        SkillFx.burst(level, V.up(g, 1), glow, 3.0, 0.4);
+        SkillFx.burst(level, V.up(g, 1), RuneKit.WHITE, 1.6, 0.3);
+        RuneKit.zonePulse(level, g, glow, radius, 0.5);
+        RuneKit.zonePulse(level, g, core, radius * 0.6, 0.35);
+        RuneKit.later(2, () -> {
+            for (int i = 0; i < 8; i++) {
+                double a = (i / 8.0) * Math.PI * 2 + Kit.rand() * 0.5;
+                double rr = 0.8 + Kit.rand() * radius * 0.8;
+                Vec3 p = new Vec3(g.x + Math.cos(a) * rr, g.y + 2.6 + Kit.rand() * 1.8, g.z + Math.sin(a) * rr);
+                RuneKit.rfx2(level, "prop", p, Opt.of("dir", V.DOWN, "speed", 0.9, "size", 0.2, "life", 1.5, "spin", Kit.rand() * 360, "spinRate", 80.0, "fade", 0.35),
+                        gold, RuneKit.WHITE, RuneKit.RFX.get("feather"), 0.6);
+            }
+        });
+        SkillFx.sparks(level, V.up(g, 1), core, 10, 6);
+        SkillFx.play(level, "item.trident.thunder", g, 1.4, 0.6);
+        SkillFx.play(level, "beacon.activate", g, 1.2, 1);
+        RuneKit.shakeAround(level, g, 12, 0.2, 0.2);
+        for (LivingEntity e : Kit.around(sp, g, radius, 4)) {
+            if (RuneKit.holyHit(sp, e, P, k.num("crush")) > 0) SkillFx.burst(level, Kit.bodyPoint(e), glow, 0.8, 0.24);
+        }
+        double scaleS = supportScale(sp, r);
+        for (ServerPlayer pl : RuneKit.playersAround(level, g, radius, sp)) {
+            double healed = RpgHealth.healBy(pl, RpgHealth.maxOf(pl) * k.num("heal") * scaleS);
+            if (healed > 0) {
+                DamageNumbers.show(pl, healed, DamageNumbers.Style.HEAL, "", 0);
+                RuneKit.selfCue(pl, glow, core, false);
+            }
+        }
     }
 
     /**

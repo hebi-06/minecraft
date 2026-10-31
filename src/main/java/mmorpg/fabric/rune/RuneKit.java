@@ -287,6 +287,70 @@ public final class RuneKit {
         return Kit.moveTo(e, at, rot[0], rot[1]);
     }
 
+    // ------------------------------------------------------------ 0.49.0 도약 (몸이 포물선으로 날아감)
+
+    /** 도약 곡선 위 u (0 ~ 1) 의 발 자리 (가운데가 peak 칸 솟음) */
+    public static Vec3 leapPoint(Vec3 start, Vec3 land, double peak, double u) {
+        return new Vec3(start.x + (land.x - start.x) * u, start.y + (land.y - start.y) * u + 4 * peak * u * (1 - u), start.z + (land.z - start.z) * u);
+    }
+
+    /**
+     * 도약 착지 자리 (발): 조준한 곳 (range 칸 안 — 몹을 조준하면 그 몹) 의 gap 칸 앞, 그 아래의 단단한 땅. 한 칸 턱은 넘고 막히면 벽 앞,
+     * 물 · 용암 · 허공이거나 0.3칸도 못 가면 제자리 (도끼 도약 찍기의 착지 규칙)
+     */
+    public static Vec3 leapLand(ServerPlayer sp, double range, double gap) {
+        ServerLevel level = sp.level();
+        Vec3 start = sp.position();
+        Vec3 g = groundAim(sp, range);
+        double dist0 = Math.min(range, Math.hypot(g.x - start.x, g.z - start.z));
+        Vec3 f = dist0 > 0.2 ? V.flat(V.sub(g, start)) : V.flat(sp.getViewVector(1F));
+        double want = Math.max(0, dist0 - gap);
+        double can = dashDistance(sp, f, want, 1.2, 2.2);
+        double reach = can >= want - 0.3 ? want : can;
+        double top = Math.max(g.y, start.y) + 1.6;
+        Double gy = reach > 0.3 ? solidGround(level, new Vec3(start.x + f.x * reach, top, start.z + f.z * reach), top - start.y + 8) : null;
+        if (gy == null) return start;
+        return new Vec3(start.x + f.x * reach, gy.doubleValue(), start.z + f.z * reach);
+    }
+
+    /**
+     * 0.49.0 도약 (사용자 "도약 스킬 같은것도 많이 만들고 싶음"): 지금 자리 → land 를 air 틱 동안 포물선 (가운데 peak 칸) 으로 매 틱 옮김 — 몸이 실제로 날아감
+     * (1인칭 화면도 따라감). 뛰는 자리에 먼지 · 바람 소리, 지나간 길에 빛줄기 (glow · 심지 core), 떨어짐 피해 없음. 길이 막히면 그 자리에서 멈춤.
+     * air 틱에 onLand (죽거나 차원이 바뀌면 부르지 않음 — 착지 자리는 sp.position()). 선딜 = air 틱 (첫 피해가 착지)
+     */
+    public static void leap(ServerPlayer sp, Vec3 land, double peak, int air, double[] glow, double[] core, Runnable onLand) {
+        ServerLevel level = sp.level();
+        String life = lifeToken(sp);
+        Vec3 start = sp.position();
+        boolean[] stuck = {false};
+        int n = Math.max(1, air);
+        Kit.noFall(sp, n + 30);
+        zonePulse(level, start, new double[] {0.62, 0.55, 0.46}, 1.4, 0.3);
+        SkillFx.sparks(level, V.up(start, 0.2), new double[] {0.72, 0.64, 0.54}, 6, 3);
+        SkillFx.play(level, "entity.breeze.jump", start, 0.9, 0.9);
+        SkillFx.play(level, "entity.player.attack.sweep", start, 0.6, 0.5);
+        for (int t = 1; t <= n; t++) {
+            final int tt = t;
+            later(t, () -> {
+                if (!sameLife(sp, life) || stuck[0]) return;
+                Vec3 a = leapPoint(start, land, peak, (tt - 1) / (double) n);
+                Vec3 b = leapPoint(start, land, peak, tt / (double) n);
+                if (!Kit.moveTo(sp, b)) {
+                    stuck[0] = true;
+                    return;
+                }
+                Kit.noFall(sp, 20);
+                streak(level, V.up(a, 1.0), V.up(b, 1.0), glow, 0.34, 0.32, 0.9, 0);
+                if (tt % 2 == 0) streak(level, V.up(a, 0.55), V.up(b, 0.55), core, 0.16, 0.24, 0.9, 0);
+            });
+        }
+        later(n, () -> {
+            if (!sameLife(sp, life)) return;
+            Kit.launch(sp, 0, -0.08, 0); // 착지 (위로 남은 속도를 지움)
+            onLand.run();
+        });
+    }
+
     /** 결투 중인 사람을 도울 수 있는지 (6단계 결투에서 정함 — 그 전에는 늘 됨) */
     public static java.util.function.BiPredicate<ServerPlayer, ServerPlayer> canAssist = (a, b) -> true;
 
