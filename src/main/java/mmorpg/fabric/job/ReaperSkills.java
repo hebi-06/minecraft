@@ -220,7 +220,7 @@ final class ReaperSkills {
                 });
             }
         });
-        JobSystem.note(sp, "§3혼 " + n + " §7→ +" + Math.round(k.num("per", 0.05) * n * 100) + "%" + (full ? " §3(가득)" : ""));
+        JobSystem.note(sp, "§3영혼 " + n + " §7→ +" + Math.round(k.num("per", 0.05) * n * 100) + "%" + (full ? " §3(가득)" : ""));
         return true;
     }
 
@@ -245,7 +245,7 @@ final class ReaperSkills {
         }
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.5);
         Ult.flash(level, c, JobKit.glow(j), Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
-        DamageNumbers.showFace(sp, "§3§l사신 현신 §7— 넓게 베기 " + mmorpg.core.Js.str(k.num("range", 5)) + "칸 · " + Math.round(JobUpgrades.num(sp, k, "ratio", 0.6) * 100) + "%", 2.4, 0,
+        DamageNumbers.showFace(sp, "§3§l" + k.name() + " §7— 넓게 베기 " + mmorpg.core.Js.str(k.num("range", 5)) + "칸 · " + Math.round(JobUpgrades.num(sp, k, "ratio", 0.6) * 100) + "%", 2.4, 0,
                 -0.3);
         SkillFx.play(level, "mob.warden.emerge", c, 1.4, 0.6);
         SkillFx.play(level, "particle.soul_escape", c, 0.6, 1.0);

@@ -118,8 +118,7 @@ final class SwordsmanSkills {
         double s0 = Math.min(1.8, len);
         JobFx.slash(sp, j, 2.0, 0.3, 2.3, TILT[2], 0.24);
         double fl = Math.max(0.12, (len - s0) / speed) + 0.1;
-        JobFx.two(level, "jslash", JobFx.SLASH, V.add(from, dir, s0), fl, Opt.of("dir", dir, "speed", speed, "size", 1.8, "spin", TILT[2], "fade", 0.2),
-                JobFx.outer(j), JobFx.inner(j));
+        JobFx.wave(sp, j, V.add(from, dir, s0), dir, speed, fl, Opt.of("size", 1.8, "spin", TILT[2], "fade", 0.2)); // 0.50.0 3인칭 · 다른 사람은 날아가는 참격 판
         SkillFx.play(level, "item.trident.throw", from, 1.3, 0.9);
         SkillFx.play(level, "item.spear.attack_miss", from, 1.6, 0.7);
         Set<UUID> done = new HashSet<>();
@@ -252,11 +251,12 @@ final class SwordsmanSkills {
         ServerLevel level0 = sp.level();
         if (used > 0) {
             // 검세를 씀: 글자 (1인칭) · 몸에서 솟는 빛 (3인칭 · 다른 사람)
-            DamageNumbers.showFace(sp, "§b§l검세 ×" + used + " §r§7+" + Math.round(per * used * 100) + "%", 2.4, 0.9, -0.3);
+            DamageNumbers.showFace(sp, "§b§l" + j.trait().name() + " ×" + used + " §r§7+" + Math.round(per * used * 100) + "%", 2.4, 0.9, -0.3);
             JobFx.aura(sp, j, 2.4, (gap + 10) / 20.0, Math.min(0.95, 0.5 + 0.1 * used));
         }
         SkillFx.play(level0, "entity.player.attack.sweep", sp.position(), 0.8, 1.0);
         int n = hits.size();
+        boolean[] cut = {false};
         SkillFx.every(n, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
@@ -275,9 +275,14 @@ final class SwordsmanSkills {
             double mult = hits.get(i) * bonus;
             int[] cnt = {0};
             for (LivingEntity e : Kit.around(sp, c, radius, 2.5)) {
+                cut[0] = true;
                 JobKit.strike(sp, e, j, P, mult, false, false, life, 0, d -> {
                     if (cnt[0]++ < 8) JobFx.hit(e, j, 1.1);
                 });
+            }
+            // 0.50.0 발키리의 가호: 마지막 바퀴까지 하나라도 베면 buffTicks 동안 가하는 피해 + buff (몸의 기운 · 상태 줄 — 만월 베기 자신에는 안 걸림)
+            if (i == n - 1 && cut[0] && k.num("buff", 0) > 0) {
+                mmorpg.fabric.rune.RuneMarks.empower(sp, k.num("buff", 0.1), (int) k.num("buffTicks", 80), "발키리의 가호", JobFx.outer(j), JobFx.inner(j));
             }
         });
         return true;
@@ -311,7 +316,7 @@ final class SwordsmanSkills {
                 .getId(), "bob", 0.12, "bobHz", 0.6, "fadeIn", 0.3, "fadeOut", 0.5, "alpha", 0.9));
         JobFx3d.hold(sp, "swordsman_mirror", ids);
         JobFx3d.guard(sp, life, ids, dur);
-        DamageNumbers.showFace(sp, "§b§l명경지수", 2.4, 0, 0.2);
+        DamageNumbers.showFace(sp, "§b§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "block.amethyst_block.resonate", c, 1.4, 1.0);
         SkillFx.play(level, "item.trident.return", c, 1.2, 0.8);
         SkillFx.play(level, "block.bell.resonate", c, 1.6, 0.5);
@@ -562,8 +567,7 @@ final class SwordsmanSkills {
         RuneKit.rockBurst(level, V.up(stuckGround, 0.2), 8, 4.5, 0.18);
         // 거대한 베기 (눈앞) + 그 베기가 앞으로 날아감 + 화면을 가로지르는 일섬 (1인칭) · 지나는 길의 일섬 (3인칭 · 다른 사람) + 앞으로 뻗는 긴 빛줄기
         JobFx.slash(sp, j, 2.6, 0.25, 3.0, 4.0, 0.42);
-        JobFx.two(level, "jslash", JobFx.SLASH, V.add(from, f, 2.4), Math.max(0.15, (len - 2.4) / speed) + 0.12, Opt.of("dir", f, "speed", speed, "size", half * 1.6,
-                "spin", 4.0, "fade", 0.2), JobFx.outer(j), JobFx.inner(j));
+        JobFx.wave(sp, j, V.add(from, f, 2.4), f, speed, Math.max(0.15, (len - 2.4) / speed) + 0.12, Opt.of("size", half * 1.6, "spin", 4.0, "fade", 0.2)); // 0.50.0 참격 판
         Vec3 look = sp.getViewVector(1F);
         Vec3 mid = V.add(V.add(eye, look, 3.0), JobFx.screenUp(look), -0.3);
         Vec3 r = V.rightOf(f);

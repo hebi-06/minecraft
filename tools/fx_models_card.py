@@ -5,6 +5,7 @@ add(fx) 로 부름.
 (Fx3d 의 dir · face · roll 로 돌림). 축 (fx_models.py 와 같음): +Y = 그림의 위, +Z = 판의 면, +X = 오른쪽.
 
   참격 판 (slash_wave) — rfx_wave: 초승달의 불룩한 날이 +Y. 날아가는 쪽을 dir 로 주면 날이 앞을 보며 나감 (룬 · 평타 강화의 검기)
+  직업 참격 판 (slash_job — 0.50.0) — rfx_jslash 여덟 장: 직업의 눈앞 큰 베기 · 날아가는 검기 (불룩한 날 +Y)
   휘두른 자국 판 (slash_arc · slash_heavy · slash_thin + _soft) — 휘두름 그림 (slash_<모양>_r_glow · _core · _aura, 5칸 넘김): 불룩한 쪽을 +Y 로
     돌려 붙임 (arc 0° · heavy 90° · thin 45° — r 그림의 불룩한 쪽, 위에서 반시계). 칸마다 부분 f0 ~ f4, 움직임 play (len 1 — 칸을 차례로 켬:
     animSpeed = 1 / 삶). _soft = 바깥 빛 (aura) 한 겹만 (빛깔 하나)
@@ -31,7 +32,7 @@ FRAMES = 5
 def add(mod):
     global fx
     fx = mod
-    fns = [slash_wave]
+    fns = [slash_wave, slash_job]
     for shape in SLASH_SHAPES:
         fns.append(_slash_fn(shape, False))
         fns.append(_slash_fn(shape, True))
@@ -126,15 +127,39 @@ def _alpha_painter(smp):
     return paint
 
 
-def _steps(k):
-    """칸 k 의 크기 열쇠 (0 ~ 1 중 k/5 ~ (k+1)/5 에만 1 — 파티클 넘김 그림 stretch 와 같게 삶을 다섯으로 나눔)"""
-    a, b = k / FRAMES, (k + 1) / FRAMES
+def _steps(k, frames=FRAMES):
+    """칸 k 의 크기 열쇠 (0 ~ 1 중 k/n ~ (k+1)/n 에만 1 — 파티클 넘김 그림 stretch 와 같게 삶을 n 으로 나눔)"""
+    a, b = k / frames, (k + 1) / frames
     e = 0.002
     if k == 0:
         return [[0, 1], [b - e, 1], [b, 0], [1, 0]]
-    if k == FRAMES - 1:
+    if k == frames - 1:
         return [[0, 0], [a - e, 0], [a, 1], [1, 1]]
     return [[0, 0], [a - e, 0], [a, 1], [b - e, 1], [b, 0], [1, 0]]
+
+
+JOB_FRAMES = 8
+
+
+def slash_job():
+    """0.50.0 직업 참격 판 (사용자 "참격 방향 잡혀있는지 확인하고" — 직업의 눈앞 큰 베기 · 날아가는 검기가 카메라를 보던 것): 직업 큰 베기 그림
+    (rfx_jslash — 256×128 칸, 빛 0 ~ 7 · 심지 8 ~ 15, 4칸씩 줄) 여덟 장을 부분 f0 ~ f7 에 — 빛 (TINT, 직업 겉빛) + 심지 (GLOW 앞 · 뒤 두 장, 직업 속빛).
+    그림의 초승달은 아래로 불룩 → 180° 돌려 불룩한 날이 +Y (휘두르는 · 날아가는 쪽). 판 크기 = 파티클 size 1 (너비 2 · 높이 1), 움직임 play"""
+    m = fx.Model("slash_job", tex=1024, cell=16)
+    m.emissive = True
+    for k in range(JOB_FRAMES):
+        m.part("f%d" % k)
+        g, c = k, JOB_FRAMES + k
+        gbox = ((g % 4) * 256, (g // 4) * 128, (g % 4) * 256 + 256, (g // 4) * 128 + 128)
+        cbox = ((c % 4) * 256, (c // 4) * 128, (c % 4) * 256 + 256, (c // 4) * 128 + 128)
+        guv = m.atlas.swatch("g%d" % k, _alpha_painter(sampler("rfx_jslash.png", gbox)), 16, 8)
+        cuv = m.atlas.swatch("c%d" % k, _alpha_painter(sampler("rfx_jslash.png", cbox)), 16, 8)
+        flat(m, cuv, fx.GLOW, 2.0, 1.0, -0.01, 180.0)
+        flat(m, guv, fx.TINT, 2.0, 1.0, 0.0, 180.0)
+        flat(m, cuv, fx.GLOW, 2.0, 1.0, 0.01, 180.0)
+    m.part("main")
+    m.anims["play"] = {"len": 1.0, "tracks": {"f%d" % k: {"scale": _steps(k, JOB_FRAMES)} for k in range(JOB_FRAMES)}}
+    return m
 
 
 def slash_card(shape, soft):

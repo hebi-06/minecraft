@@ -305,7 +305,7 @@ final class AssassinSkills {
         JobFx.eyeRing(sp, j, 2.4, 0.9, 0.45);
         Vec3 look = sp.getViewVector(1F);
         JobFx.smoke(level, V.add(sp.getEyePosition(), look, 1.8), 0.9, j, 0.45, JobFx.only1p(sp).with("alpha", 0.6));
-        DamageNumbers.showFace(sp, "§5§l암영 §7— 첫 공격 ×" + Js.str(Math.round(JobUpgrades.num(sp, k, "first", 2.5) * 100) / 100.0) + " 치명타", 2.4, 0, -0.3);
+        DamageNumbers.showFace(sp, "§5§l" + k.name() + " §7— 첫 공격 ×" + Js.str(Math.round(JobUpgrades.num(sp, k, "first", 2.5) * 100) / 100.0) + " 치명타", 2.4, 0, -0.3);
         SkillFx.play(level, "entity.enderman.teleport", c, 0.7, 0.7);
         SkillFx.play(level, "mob.phantom.flap", c, 0.8, 0.6);
         return true;

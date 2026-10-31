@@ -38,6 +38,7 @@ if [ -d ci-out/films ]; then
 fi
 # 0.26.0 룬 지속 시간 재기 (RpgRuneTimingTests — 게임 시험 로그가 길어 가운데가 잘리므로 따로)
 grep -h "\[rune-timing\]" ci-out/gametest.txt 2>/dev/null > "$OUT/rune-timing.txt" || true
+grep -h "\[job-timing\]" ci-out/gametest.txt 2>/dev/null > "$OUT/job-timing.txt" || true
 # 게임 시험마다 남기는 확인 줄 ([xxx-test] OK …) — 가운데가 잘려도 어느 시험이 지나갔는지 보이게
 grep -h -o -E "\[[a-z0-9-]+-test\] (OK|FAIL).*" ci-out/gametest.txt 2>/dev/null > "$OUT/gametest-checks.txt" || true
 # 오류 줄만 모아서 (컴파일 오류 · 실패한 시험 · 예외)

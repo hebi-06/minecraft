@@ -561,7 +561,7 @@ public final class RuneKit {
      * 검기 날리기 · 천지개벽). 옆에서는 세운 초승달 "(" 이 날을 앞으로, 뒤 위 (3인칭) 에서는 눕힌 초승달. 판의 면이 위에서 60° 넘게 기운 것 (세로 베기 — 평타의
      * 세로 · 내려찍기, 세운 휘두름) 은 그 면 그대로. 뒤집힌 그림 (면이 아래) 은 roll 180 으로 거울 그대로
      */
-    static Opt faceCamIfFlat(Opt card, Vec3 d, Vec3 face, double roll) {
+    public static Opt faceCamIfFlat(Opt card, Vec3 d, Vec3 face, double roll) {
         double c = Math.cos(Math.toRadians(-screenSpin(d, face, roll)));
         if (Math.abs(c) < 0.5) return card;
         return card.with("faceCam", true, "face", null, "roll", c >= 0 ? 0.0 : 180.0);

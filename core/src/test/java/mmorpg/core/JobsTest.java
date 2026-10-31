@@ -308,7 +308,10 @@ public final class JobsTest {
         check(Jobs.spreadKind(sb.skill(0)) == null && Jobs.spreadKind(sb.skill(1)) == null, "비전 참격 · 마력 도약 instant");
         check("zone".equals(Jobs.spreadKind(sb.skill(2))) && near(Jobs.spreadMult(sb.skill(2)), 1.1), "룬 검무 zone");
         check("long".equals(Jobs.spreadKind(sb.skill(4))), "비전 거검 long");
-        check(near(Jobs.totalDamage(sw.skill(0), 42), 42 * 5 * 1.05) && near(Jobs.totalDamage(sb.skill(4), 42), 42 * 68 * 1.1), "total damage = P × 배율 × 지속 보정");
+        // 0.50.0 피해 배율 = (1 − 유틸) × 시간 보정 (선딜 · 첫 피해부터의 지속) × 직업 맞춤 (직업의 초당 피해 그대로)
+        check(near(Jobs.totalDamage(sw.skill(0), 42), 42 * 5 * Jobs.damageScale(sw.skill(0))) && near(Jobs.totalDamage(sb.skill(4), 42), 42 * 68 * Jobs.damageScale(sb.skill(4))),
+                "total damage = P × 배율 × 피해 배율");
+        jobScale(sw, sb, pa, pr, gu);
 
         // 마검사 「마력 검술」: 칼의 힘 요구 = 힘 + 마력 (40렙 초월 칼 110 ≤ 125), 칼 평타 배율 = 1 + (힘 + 마력 × 0.5) × 2% = 2.76 (검사 3.5 의 79%)
         Map<String, Double> s64 = Map.of("int", 74.0, "str", 51.0, "lvmax", 40.0);
@@ -331,7 +334,7 @@ public final class JobsTest {
         check(tyr.reqs().size() == 2 && tyr.reqs().get(0).value() == 74 && tyr.reqs().get(1).value() == 36, "tyrfing requirement unchanged " + tyr.reqs());
 
         // 글자
-        check(Jobs.skillLine(sw.skill(0)).equals("연참 · 6초 · 배율 5") && Jobs.skillLine(sw.skill(3)).equals("명경지수 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(Jobs.skillLine(sw.skill(0)).equals("은빛 연격 · 6초 · 배율 5.25") && Jobs.skillLine(sw.skill(3)).equals("에인헤랴르 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
 
         upgrade();
@@ -339,5 +342,59 @@ public final class JobsTest {
         System.out.println("JobsTest: " + ok + " ok, " + BAD.size() + " failed");
         for (String b : BAD) System.out.println("  FAIL " + b);
         if (!BAD.isEmpty()) System.exit(1);
+    }
+
+    /** 0.50.0 직업 스킬 재설계: 유틸 값 · 시간 보정 (룬과 같은 표) · 직업 맞춤 */
+    static void jobScale(Jobs.Job sw, Jobs.Job sb, Jobs.Job pa, Jobs.Job pr, Jobs.Job gu) {
+        Obj utils = Rules.get().obj("RUNE_SPREAD").obj("utils");
+        int names = 0;
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (Jobs.Job j : Jobs.all()) {
+            double was = 0, now = 0;
+            for (Jobs.Skill k : j.skills()) {
+                check(seen.add(k.name()), "skill name unique " + k.name());
+                names++;
+                for (String u : Jobs.utils(k)) check(utils.has(u), k.id() + " util " + u + " known");
+                check(Jobs.utilCost(k) <= 0.6 + 1e-9, k.id() + " util ≤ 60%");
+                double tm = Jobs.timeMult(k);
+                check(tm >= 1 - 1e-9 && tm <= 1.3 + 1e-9, k.id() + " time mult in [1, 1.3] " + tm);
+                if (k.total() <= 0) {
+                    check(near(Jobs.damageScale(k), 1) && Jobs.scaleNote(k) == null, k.id() + " no damage → scale 1");
+                    continue;
+                }
+                check(k.def().has("t"), k.id() + " damage skill has t");
+                check(near(Jobs.damageScale(k), (1 - Jobs.utilCost(k)) * tm * Jobs.jobNorm(j)), k.id() + " scale = util × time × norm");
+                check(Jobs.jobOf(k) == j, k.id() + " job");
+                was += k.total() * Jobs.spreadMult(k) / k.cd();
+                now += k.total() * Jobs.damageScale(k) / k.cd();
+            }
+            check(near(was, now), j.id() + " job damage per second kept " + was + " → " + now);
+            double n = Jobs.jobNorm(j);
+            check(n > 0.9 && n < 1.6, j.id() + " norm " + n);
+        }
+        check(names == 55, "55 skill names " + names);
+        // 하나씩: 발할라 (선딜 0.8초 +16% · 지속 66틱 +10% · 유틸 없음)
+        Jobs.Skill valhalla = sw.skill(4);
+        check(valhalla.name().equals("발할라") && Jobs.windupTicks(valhalla) == 16 && "long".equals(Jobs.timeKind(valhalla)), "발할라 windup · long");
+        check(near(Jobs.timeMult(valhalla), 1.16 * 1.1) && near(Jobs.utilCost(valhalla), 0), "발할라 time 1.276");
+        // 섬광 질주: 돌진 −10% · 다음 평타 치명 (피해 — 값 없음)
+        check(Jobs.utils(sw.skill(1)).equals(List.of("blink", "crit")) && near(Jobs.utilCost(sw.skill(1)), 0.10), "섬광 질주 util 10%");
+        // 만월 베기: 발키리의 가호 (가하는 피해 +10%) −15%
+        check(Jobs.utils(sw.skill(2)).equals(List.of("buff10")) && near(Jobs.utilCost(sw.skill(2)), 0.15), "만월 베기 buff 15%");
+        // 천둥 수레: 돌진 · 기절 0.5초 · 보호막 −30% / 토르의 진노: 기절 1.5초 · 아군 회복 −35% · 선딜 1초
+        check(near(Jobs.utilCost(pa.skill(1)), 0.30) && near(Jobs.utilCost(pa.skill(4)), 0.35) && Jobs.windupTicks(pa.skill(4)) == 20, "paladin utils");
+        // 아스가르드 성벽: 8초 뒤 무너짐 → 선딜 +30% (상한) · 지속 0 → 장판 +10% → 상한 ×1.3
+        Jobs.Skill wall = gu.skill(4);
+        check(Jobs.windupTicks(wall) == 160 && near(Jobs.windupBonus(wall), 0.3) && "zone".equals(Jobs.timeKind(wall)) && near(Jobs.timeMult(wall), 1.3)
+                && Jobs.timeCapped(wall), "성채 windup cap");
+        // 직업 맞춤: 사제는 피해 스킬 둘 다 유틸이 무거워 ×1.48
+        check(near(Math.round(Jobs.jobNorm(pr) * 100) / 100.0, 1.48), "priest norm 1.48 " + Jobs.jobNorm(pr));
+        String note = Jobs.scaleNote(pr.skill(2));
+        check(note != null && note.contains("유틸 −25%") && note.contains("시간 +10%") && note.contains("직업 맞춤 ×1.48"), "스칼드의 노래 note " + note);
+        check(Jobs.skillLine(sw.skill(0)).startsWith("은빛 연격 · 6초 · 배율 "), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(sw.trait().name().equals("투지") && Jobs.job("reaper").trait().name().equals("영혼"), "trait names 투지 · 영혼");
+        check(near(Jobs.utilCost(pr.skill(0)), 0) && near(Jobs.damageScale(pr.skill(0)), 1), "heal (no damage) scale 1");
+        check(Jobs.utilName("stun07").equals("기절 0.7초") && near(utils.obj("undying").num("cost"), 0.2), "job utils in the table");
+        check(sb.skill(2).name().equals("푸타르크 검무") && near(Jobs.utilCost(sb.skill(2)), 0.10), "푸타르크 검무 룬 결계 10%");
     }
 }

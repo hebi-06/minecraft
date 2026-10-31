@@ -200,11 +200,14 @@ public final class Jobs {
         return Runes.runeLevelBase(Stats.get(s, "lvmax")) * (1 + applied(j, s) * perPoint());
     }
 
-    // ------------------------------------------------------------------ 0.26.0 지속 보정 (룬과 같은 규칙)
+    // ------------------------------------------------------------------ 0.26.0 지속 보정 (룬과 같은 규칙 — 0.50.0 부터 직업 맞춤의 기준)
 
     private static final Obj SPREAD = Rules.get().root().has("RUNE_SPREAD") ? Rules.get().obj("RUNE_SPREAD") : null;
 
-    /** 지속 보정 단계 (null = 한방 · 표에 t 없음): short · long · zone · zoneLong — {@link Runes#spreadKind} 와 같은 단계 */
+    /**
+     * 0.26.0 지속 보정 단계 (쓴 때부터 마지막 피해까지 t — null = 한방 · 표에 t 없음): short · long · zone · zoneLong. 0.50.0 부터 피해에는
+     * {@link #damageScale} (선딜 · 첫 피해부터의 지속 · 유틸 · 직업 맞춤) 을 쓰고, 이 값은 직업 맞춤의 기준 (지금의 초당 피해) 으로만 씀
+     */
     public static String spreadKind(Skill k) {
         if (SPREAD == null || k == null || !k.def().has("t")) return null;
         double t = k.def().num("t");
@@ -219,9 +222,129 @@ public final class Jobs {
         return kind == null ? 1 : 1 + SPREAD.obj("bonus").num(kind);
     }
 
-    /** 한 번 쓸 때 과녁 하나의 피해 (P × 배율 합 × 지속 보정 — 조건 보너스 빼고) */
+    /** 한 번 쓸 때 과녁 하나의 피해 (P × 배율 합 × 피해 배율 {@link #damageScale} — 조건 보너스 빼고) */
     public static double totalDamage(Skill k, double power) {
-        return k == null ? 0 : power * k.total() * spreadMult(k);
+        return k == null ? 0 : power * k.total() * damageScale(k);
+    }
+
+    // ------------------------------------------------------------------ 0.50.0 유틸 값 · 시간 보정 · 직업 맞춤 (룬 0.49.0 과 같은 값)
+
+    /*
+     * 0.50.0 직업 스킬 재설계 (사용자 "룬에서 계수 바꿨던 거처럼 유틸에 따라서 계수 바꾸는걸 똑같이", 고른 것: 직업 안에서 나눔): 스킬마다 jobs.json 의
+     * t (쓴 때부터 마지막 피해까지의 틱) · w (첫 피해까지 — 선딜) · zone · u (유틸 — RUNE_SPREAD.utils 의 이름). 피해 배율 = (1 − 유틸 값 합) × 시간 보정
+     * × 직업 맞춤. 직업 맞춤 = 직업의 초당 피해 (쿨마다 세기 — 피해 스킬만) 를 0.26.0 지속 보정 때와 같게 두는 값: 유틸이 무거운 스킬은 덜, 가벼운
+     * 스킬은 더. 태세 · 회복 · 보호막만 하는 스킬 (배율 합 0) 은 1. 대조 시험 (rules.json 만 — RUNE_SPREAD 없음) 이면 모두 1
+     */
+
+    /** 선딜 틱 (쓴 때부터 첫 피해까지 — windup.min 틱 미만은 0, t 가 없으면 0) */
+    public static int windupTicks(Skill k) {
+        if (SPREAD == null || k == null || !k.def().has("t")) return 0;
+        double w = k.def().numOr("w", 0);
+        return w >= SPREAD.obj("windup").num("min") ? (int) w : 0;
+    }
+
+    /** 선딜 보정 (틱마다 windup.perTick — 0.5초 +10%, 최대 windup.max) */
+    public static double windupBonus(Skill k) {
+        return SPREAD == null ? 0 : Math.min(SPREAD.obj("windup").num("max"), windupTicks(k) * SPREAD.obj("windup").num("perTick"));
+    }
+
+    /** 0.50.0 지속 단계 (첫 피해부터 마지막 피해까지 d = t − w — null = 한방): short · long · zone · zoneLong ({@link Runes#spreadKind} 와 같음) */
+    public static String timeKind(Skill k) {
+        if (SPREAD == null || k == null || !k.def().has("t")) return null;
+        double d = Math.max(0, k.def().num("t") - windupTicks(k));
+        if (k.def().truthy("zone")) return d > SPREAD.num("zoneLong") ? "zoneLong" : "zone";
+        if (d <= SPREAD.num("instant")) return null;
+        return d > SPREAD.num("short") ? "long" : "short";
+    }
+
+    /** 지속 보정 (단계의 bonus — 한방이면 0) */
+    public static double timeBonus(Skill k) {
+        String kind = timeKind(k);
+        return kind == null ? 0 : SPREAD.obj("bonus").num(kind);
+    }
+
+    /** 시간 보정 = min(cap, (1 + 선딜) × (1 + 지속)) — 표가 없으면 1 */
+    public static double timeMult(Skill k) {
+        if (SPREAD == null) return 1;
+        return Math.min(SPREAD.numOr("cap", Double.POSITIVE_INFINITY), (1 + windupBonus(k)) * (1 + timeBonus(k)));
+    }
+
+    /** 시간 보정이 상한에 닿았는지 */
+    public static boolean timeCapped(Skill k) {
+        return SPREAD != null && SPREAD.has("cap") && (1 + windupBonus(k)) * (1 + timeBonus(k)) > SPREAD.num("cap") + 1e-9;
+    }
+
+    /** 스킬의 유틸 (RUNE_SPREAD.utils 의 이름 — 적은 순서) */
+    public static List<String> utils(Skill k) {
+        if (k == null || !k.def().has("u")) return List.of();
+        List<String> out = new ArrayList<>();
+        for (Object o : k.def().list("u")) out.add(String.valueOf(o));
+        return List.copyOf(out);
+    }
+
+    /** 유틸 값 합 (깎는 몫 — 최대 utilMax). 배율 합이 없는 스킬 (태세 · 지원) 은 0 */
+    public static double utilCost(Skill k) {
+        if (SPREAD == null || k == null || k.total() <= 0) return 0;
+        double sum = 0;
+        for (String u : utils(k)) sum += SPREAD.obj("utils").obj(u).num("cost");
+        return Math.min(SPREAD.numOr("utilMax", 1), sum);
+    }
+
+    /** 유틸 이름 ("기절 0.7초") */
+    public static String utilName(String key) {
+        Obj u = SPREAD == null ? null : SPREAD.obj("utils").objOrNull(key);
+        return u == null ? key : u.str("name");
+    }
+
+    private static final Map<String, Double> NORM = norms();
+
+    /** 직업마다 직업 맞춤 = Σ (배율 합 × 0.26.0 지속 보정 ÷ 쿨) ÷ Σ (배율 합 × (1 − 유틸) × 시간 보정 ÷ 쿨) — 피해 스킬만 */
+    private static Map<String, Double> norms() {
+        Map<String, Double> out = new LinkedHashMap<>();
+        for (Job j : DATA.jobs().values()) {
+            double was = 0, now = 0;
+            for (Skill k : j.skills()) {
+                if (k.total() <= 0 || k.cd() <= 0) continue;
+                was += k.total() * spreadMult(k) / k.cd();
+                now += k.total() * (1 - utilCost(k)) * timeMult(k) / k.cd();
+            }
+            out.put(j.id(), SPREAD == null || now <= 0 ? 1.0 : was / now);
+        }
+        return Map.copyOf(out);
+    }
+
+    /** 직업 맞춤 (직업의 초당 피해를 지금 그대로 두는 값 — 직업이 없으면 1) */
+    public static double jobNorm(Job j) {
+        return j == null ? 1 : NORM.getOrDefault(j.id(), 1.0);
+    }
+
+    /** 이 스킬의 직업 (없으면 null) */
+    public static Job jobOf(Skill k) {
+        if (k == null) return null;
+        for (Job j : DATA.jobs().values()) if (j.skills().contains(k)) return j;
+        return null;
+    }
+
+    /**
+     * 피해 배율 = (1 − 유틸 값 합) × 시간 보정 × 직업 맞춤 — 직업 스킬을 쓸 때 위력 P 에 곱함 (툴팁의 과녁 하나 피해도). 배율 합이 없는 스킬 (태세 ·
+     * 회복 · 보호막) · 대조 시험이면 1
+     */
+    public static double damageScale(Skill k) {
+        if (SPREAD == null || k == null || k.total() <= 0) return 1;
+        return (1 - utilCost(k)) * timeMult(k) * jobNorm(jobOf(k));
+    }
+
+    /** 툴팁 한 줄 ("유틸 −25% · 시간 +10% · 직업 맞춤 ×1.48 포함") — 피해 배율이 1 이면 null */
+    public static String scaleNote(Skill k) {
+        if (SPREAD == null || k == null || k.total() <= 0) return null;
+        List<String> parts = new ArrayList<>();
+        double c = utilCost(k);
+        if (c > 1e-9) parts.add("유틸 −" + Math.round(c * 100) + "%");
+        double t = timeMult(k);
+        if (t > 1 + 1e-9) parts.add("시간 +" + Math.round((t - 1) * 100) + "%");
+        double n = jobNorm(jobOf(k));
+        if (Math.abs(n - 1) > 0.005) parts.add("직업 맞춤 ×" + Js.str(Math.round(n * 100) / 100.0));
+        return parts.isEmpty() ? null : String.join(" · ", parts) + " 포함";
     }
 
     // ------------------------------------------------------------------ 0.31.0 직업 스킬 강화 (upgrade)
@@ -376,10 +499,10 @@ public final class Jobs {
         return (int) Math.round(Math.max(0, Math.min(1, v)) * 255);
     }
 
-    /** 스킬 한 줄 ("연참 · 6초 · 배율 5") */
+    /** 스킬 한 줄 ("은빛 연격 · 6초 · 배율 5.25" — 0.50.0 배율 = 배율 합 × 피해 배율) */
     public static String skillLine(Skill k) {
         StringBuilder b = new StringBuilder(k.name()).append(" · ").append(Js.str(k.cd())).append("초");
-        if (k.total() > 0) b.append(" · 배율 ").append(Js.str(k.total()));
+        if (k.total() > 0) b.append(" · 배율 ").append(Js.str(Math.round(k.total() * damageScale(k) * 100) / 100.0));
         return b.toString();
     }
 

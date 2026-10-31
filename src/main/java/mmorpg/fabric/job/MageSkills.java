@@ -216,6 +216,8 @@ final class MageSkills {
                     JobKit.strike(sp, e, j, P, k.num("pulse", 1.4), true, false, life, 0, x -> {
                         if (RuneKit.fxQuota("jobOrb", 6)) JobFx.hit(e, j, 0.8);
                     });
+                    // 0.50.0 둔화: 별 둘레의 적은 slow 틱 느려짐 (줄기마다 다시)
+                    if (k.num("slow", 0) > 0) RuneKit.effect(e, "slowness", (int) k.num("slow", 30), 1);
                 }
                 JobFx.burst(level, c, 0.55, j, 0.22, Opt.empty());
                 SkillFx.play(level, "block.amethyst_block.chime", c, 1.5, 0.7);
@@ -258,7 +260,7 @@ final class MageSkills {
         JobFx.orb(level, wandTip(sp), 0.2, j, 0.6, Opt.of("vel", RuneKit.bodyVel(sp)));
         JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
         SkillFx.sparks(level, V.up(c, 1.0), JobKit.core(j), 12, 4);
-        DamageNumbers.showFace(sp, "§9§l마나 과부하", 2.4, 0, 0.2);
+        DamageNumbers.showFace(sp, "§9§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "beacon.power", c, 1.6, 0.8);
         SkillFx.play(level, "mob.warden.sonic_charge", c, 1.6, 0.5);
         return true;
@@ -355,6 +357,7 @@ final class MageSkills {
         foes.sort(java.util.Comparator.comparingDouble(e -> e.position().distanceToSqr(center)));
         Map<UUID, Integer> count = new LinkedHashMap<>();
         Map<UUID, LivingEntity> byId = new LinkedHashMap<>();
+        java.util.Set<UUID> iced = new java.util.HashSet<>();
         for (int p = 0; p < per; p++) {
             int kind = (w * per + p) % 3;
             Vec3 from = V.add(bookAt, new Vec3(Math.cos(p * 2.1 + w) * 1.4, -0.4, Math.sin(p * 2.1 + w) * 1.4), 1);
@@ -366,6 +369,7 @@ final class MageSkills {
             } else {
                 LivingEntity e = foes.get((w * per + p) % foes.size());
                 count.merge(e.getUUID(), 1, Integer::sum);
+                if (kind == 1) iced.add(e.getUUID());
                 byId.put(e.getUUID(), e);
                 to = Kit.bodyPoint(e);
             }
@@ -374,8 +378,14 @@ final class MageSkills {
         for (var en : count.entrySet()) {
             LivingEntity e = byId.get(en.getKey());
             int n = en.getValue();
+            boolean ice = iced.contains(e.getUUID());
             JobKit.strikeSplit(sp, e, j, P, k.num("page", 3) * n, n, 2, true, false, life, 6, x -> {
                 if (RuneKit.fxQuota("jobBook", 6)) JobFx.hit(e, j, 1.1);
+                // 0.50.0 빙결: 얼음 주문에 맞은 적은 freeze 틱 얼어붙음 (기절 — 머리 위 얼음 룬), 보스는 둔화
+                if (ice && k.num("freeze", 0) > 0) {
+                    if (mmorpg.fabric.boss.Bosses.isBossEntity(e)) RuneKit.effect(e, "slowness", (int) k.num("freeze", 10) * 3, 1);
+                    else RuneKit.stun(e, (int) k.num("freeze", 10), SPELLS[1][1], RuneKit.fxQuota("jobFreeze", 6));
+                }
             });
         }
     }

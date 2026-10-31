@@ -208,7 +208,7 @@ public final class JobSystem {
                 Notify.notify(sp, "§c" + k.name() + " §7— " + JobSkills.lockText(lock), 30);
                 return false;
             }
-            // 0.26.0 지속 보정: 시간이 걸리거나 장판인 스킬은 위력 × (1 + 5 ~ 15%) — 룬과 같은 단계 (Jobs.spreadMult)
+            // 0.50.0 피해 배율 (Jobs.damageScale — 룬 0.49.0 과 같은 유틸 값 · 시간 보정 × 직업 맞춤: 직업의 초당 피해는 그대로, 유틸이 무거운 스킬은 덜)
             // 0.28.0 매지션 「주문 연쇄」: 4초 안에 다른 직업 스킬이면 위력 × (1 + 연쇄 × 12%)
             int chain = JobTraitsMore.chainNext(sp, job, k);
             // 0.29.0 창술사 「창끝」: 앞으로 움직이며 창 평타를 맞히면 5초 안의 다음 직업 스킬 위력 × (1 + 10%)
@@ -218,7 +218,7 @@ public final class JobSystem {
             int faithN = JobTraits4.faith(sp);
             // 0.31.0 직업 스킬 강화: 위력 × (1 + 0.1 × 단계) — 모든 타격 (회복 · 보호막 · 태세 값은 JobUpgrades.num 으로 읽는 곳에서)
             int up = JobUpgrades.level(sp, k.id());
-            double P = power(sp, job) * Jobs.spreadMult(k) * JobTraitsMore.chainMult(job, chain) * boost * faith * Jobs.upMult(up);
+            double P = power(sp, job) * Jobs.damageScale(k) * JobTraitsMore.chainMult(job, chain) * boost * faith * Jobs.upMult(up);
             NOTES.remove(sp.getUUID());
             JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
             boolean ok = impl.cast(sp, job, k, P);

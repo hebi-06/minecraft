@@ -47,6 +47,7 @@
       "mmorpg.fabric.test.RpgLimitedRuneTests",
       "mmorpg.fabric.test.RpgPairRuneTests",
       "mmorpg.fabric.test.RpgRuneTimingTests",
+      "mmorpg.fabric.test.RpgJobTimingTests",
       "mmorpg.fabric.test.RpgEconomyTests",
       "mmorpg.fabric.test.RpgStorageTests",
       "mmorpg.fabric.test.RpgContainerToolsTests",

@@ -333,7 +333,7 @@ final class GuardianSkills {
         JobFx.ring(level, V.up(sp.position(), 0.06), 2.2, j, false, 0.4, Opt.empty());
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.45);
         JobFx.aura(sp, j, 2.6, 0.8, 0.8);
-        DamageNumbers.showFace(sp, "§b§l철옹성", 2.4, 0, 0.2);
+        DamageNumbers.showFace(sp, "§b§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "item.shield.block", sp.position(), 0.6, 1.0);
         SkillFx.play(level, "block.iron_door.close", sp.position(), 0.7, 0.8);
         SkillFx.play(level, "entity.iron_golem.repair", sp.position(), 0.8, 0.8);
@@ -363,7 +363,7 @@ final class GuardianSkills {
         Ult.sky(level, c, "rpg:ult_still", dur + 20);
         JobFx.aura(sp, j, 3.0, 0.9, 1.0);
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
-        DamageNumbers.showFace(sp, "§b§l성채", 2.6, 0, 0.35);
+        DamageNumbers.showFace(sp, "§b§l" + k.name(), 2.6, 0, 0.35);
         SkillFx.play(level, "entity.iron_golem.repair", c, 0.6, 1.0);
         SkillFx.play(level, "block.deepslate_bricks.place", c, 0.6, 1.0);
         List<Brick> bricks = new ArrayList<>();

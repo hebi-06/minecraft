@@ -69,8 +69,7 @@ final class SpellbladeSkills {
         RuneKit.Hand h = RuneKit.handOf(sp);
         RuneKit.rfx2(level, "sword", V.up(h.hand(), 0.3), Opt.of("dir", V.UP, "size", 0.55, "life", 0.18, "alpha", 0.8, "vel", RuneKit.bodyVel(sp)), glow, core);
         JobFx.slash(sp, j, 2.2, 0.35, 1.9, -8.0, 0.26);
-        JobFx.two(level, "jslash", JobFx.SLASH, V.up(V.add(eye, f, 3.0), -0.4), 0.26, Opt.of("dir", f, "speed", 8.0, "size", 1.7, "grow", 0.35, "spin", -8.0,
-                "alpha", 0.75, "fade", 0.3), JobFx.outer(j), JobFx.inner(j));
+        JobFx.wave(sp, j, V.up(V.add(eye, f, 3.0), -0.4), f, 8.0, 0.26, Opt.of("size", 1.7, "grow", 0.35, "spin", -8.0, "alpha", 0.75, "fade", 0.3)); // 0.50.0 참격 판
         SkillFx.play(level, "item.spear.attack_miss", eye, 1.15, 0.9);
         SkillFx.play(level, "mob.evocation_illager.cast_spell", eye, 1.7, 0.45);
         List<LivingEntity> cut = RuneKit.coneTargets(sp, reach, k.num("arc", 100), 10);
@@ -225,6 +224,11 @@ final class SpellbladeSkills {
         double[] core = JobKit.core(j);
         String life = RuneKit.lifeToken(sp);
         Set<UUID> marked = new HashSet<>();
+        // 0.50.0 룬 결계: 검무 동안 (guardFor 틱) 받는 피해 − guard
+        if (k.num("guard", 0) > 0) {
+            mmorpg.fabric.skill.Guards.set(sp, (int) k.num("guardFor", dur), k.num("guard", 0.2), null, null);
+            DamageNumbers.showFace(sp, "§d§l룬 결계 §7— 받는 피해 −" + Math.round(k.num("guard", 0.2) * 100) + "%", 2.4, 0, -0.3);
+        }
         // 자리: 발밑에서 도는 둥근 베기 (벨 때마다 다시 — 거꾸로 번갈아) · 1인칭 눈앞 고리
         JobFx.ring(level, V.up(c, 0.06), r, j, false, gap / 20.0 + 0.2, Opt.of("alpha", 0.8));
         JobFx.eyeRing(sp, j, 2.4, 0.9, 0.45);
@@ -289,7 +293,7 @@ final class SpellbladeSkills {
         JobFx3d.hold(sp, "spellblade_awaken", ids);
         JobFx3d.guard(sp, life, ids, dur);
         Ult.flash(level, c, glow, Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
-        DamageNumbers.showFace(sp, "§d§l마검 각성", 2.4, 0, 0.2);
+        DamageNumbers.showFace(sp, "§d§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "beacon.activate", c, 1.5, 0.8);
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", c, 1.6, 0.6);
         SkillFx.play(level, "block.amethyst_block.resonate", c, 0.9, 1.0);
@@ -453,7 +457,7 @@ final class SpellbladeSkills {
         for (LivingEntity e : hit.values()) {
             int marks = JobTraits.takeAllMarks(sp, e);
             JobKit.strike(sp, e, j, P, mult + markBurst * marks, true, true, life, 0, d -> {
-                RuneKit.knock(e, V.sub(e.position(), ground), 0.4, 0.45);
+                if (JobKit.pushable(e)) RuneKit.knock(e, V.sub(e.position(), ground), k.num("knock", 0.8), 0.45); // 0.50.0 밀쳐냄 (유틸 −5%)
                 if (marks > 0 && e.level() instanceof ServerLevel lv) markBlast(sp, lv, e, marks, j);
             });
         }

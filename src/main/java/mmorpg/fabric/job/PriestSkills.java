@@ -80,7 +80,7 @@ final class PriestSkills {
         }
         SkillFx.play(level, "block.amethyst_block.chime", to.position(), 1.5, 0.9);
         SkillFx.play(level, "block.beacon.power_select", to.position(), 1.8, 0.4);
-        if (aimed != null) Notify.notify(aimed, "§a" + sp.getName().getString() + " §7님의 §a치유의 손길", 30);
+        if (aimed != null) Notify.notify(aimed, "§a" + sp.getName().getString() + " §7님의 §a" + k.name(), 30);
         return true;
     }
 
@@ -220,7 +220,7 @@ final class PriestSkills {
         JobFx.beam(level, tip(sp), Kit.bodyPoint(e), j, 2.0, 0.3, Opt.of("alpha", 0.8));
         JobFx.stigma(level, RuneKit.overHead(e, 0.75), 0.62 + Kit.bodyPad(e) * 0.25, j, 0.8, Opt.of("vel", RuneKit.entVel(e), "grow", -0.3, "fade", 0.3));
         JobFx.burst(level, Kit.bodyPoint(e), 0.9 + Kit.bodyPad(e) * 0.4, j, 0.35, Opt.empty());
-        DamageNumbers.showAt(level, V.up(e.getEyePosition(), 1.25), "§e§l성흔");
+        DamageNumbers.showAt(level, V.up(e.getEyePosition(), 1.25), "§e§l프레이야의 표식");
         SkillFx.play(level, "block.respawn_anchor.charge", Kit.bodyPoint(e), 1.4, 0.7);
         SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 1.2, 0.6);
         return true;
@@ -254,7 +254,7 @@ final class PriestSkills {
         Ult.sky(level0, c0, "rpg:ult_heaven", endAt + 30);
         JobFx.aura(sp, j, 3.0, 0.9, 1.0);
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
-        DamageNumbers.showFace(sp, "§e§l새벽의 종", 2.6, 0, 0.35);
+        DamageNumbers.showFace(sp, "§e§l" + k.name(), 2.6, 0, 0.35);
         SkillFx.play(level0, "block.beacon.activate", c0, 1.0, 0.8);
         // 0.47.0 입체 큰 종: 위에서 내려와 (first − 4 틱) 매달려 있다가 울릴 때마다 흔들림 (Fx3d.anim swing — 추가 늦게 따라 침). 3인칭 · 다른 사람에게는 앞 3칸 위의 큰 종,
         // 시전자 1인칭에는 눈앞 위쪽의 작은 종 (2D 와 같은 자리)

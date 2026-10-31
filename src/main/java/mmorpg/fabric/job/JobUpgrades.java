@@ -582,6 +582,8 @@ public final class JobUpgrades {
         out.add("§6" + Jobs.upStars(lv) + " §e+" + lv + " §8/ " + Jobs.upMax());
         out.add("§7지금: §f" + String.join(" §8· §f", Jobs.upNow(k, lv)));
         if (k.total() > 0) out.add("§7⚔ 과녁 하나 §f" + Economy.fmt(Math.round(Jobs.totalDamage(k, P) * Jobs.upMult(lv))) + " §8(지금 스탯)");
+        String note = Jobs.scaleNote(k); // 0.50.0 유틸 · 시간 · 직업 맞춤
+        if (note != null) out.add("§8" + note);
         out.add("");
         Need n = need(sp, k);
         if (n.max()) {

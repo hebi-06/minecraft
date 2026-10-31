@@ -242,7 +242,7 @@ public final class JobTraitsMore {
             JobFx.ring(level, V.up(sp.position(), 0.06), 2.6, j, false, 0.5, Opt.empty());
             JobFx.eyeRing(sp, j, 2.4, 1.0, 0.5);
             SkillFx.sparks(level, V.up(sp.position(), 1.0), JobKit.glow(j), 14, 5);
-            DamageNumbers.showFace(sp, "§6§l투혼 — 다시 일어섬", 2.4, 0, 0.2);
+            DamageNumbers.showFace(sp, "§6§l" + k.name() + " — 다시 일어섬", 2.4, 0, 0.2);
             SkillFx.play(level, "random.totem", sp.position(), 1.3, 0.6);
             SkillFx.play(level, "mob.ravager.roar", sp.position(), 1.2, 0.8);
         });

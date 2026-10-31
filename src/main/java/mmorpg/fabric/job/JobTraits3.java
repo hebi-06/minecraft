@@ -535,7 +535,7 @@ public final class JobTraits3 {
             JobFx.soul(level, V.up(sp.position(), 1.2), 0.45, j, 0.5, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
             JobFx.eyeRing(sp, j, 2.4, 0.7, 0.4);
             SkillFx.play(level, "particle.soul_escape", sp.position(), 0.8, 1.0);
-            Notify.notify(sp, "§3§l혼 가득 §7— 이동 +" + Math.round(st.souls * trait(j, "speedPer", 0.01) * 100) + "% · 흡혈 "
+            Notify.notify(sp, "§3§l영혼 가득 §7— 이동 +" + Math.round(st.souls * trait(j, "speedPer", 0.01) * 100) + "% · 흡혈 "
                     + Math.round(st.souls * trait(j, "leechPer", 0.001) * 1000) / 10.0 + "%", 30);
         }
         JobTraits.sendGauge(sp, false);

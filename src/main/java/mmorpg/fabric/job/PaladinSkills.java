@@ -294,7 +294,7 @@ final class PaladinSkills {
             JobFx.aegis(level, V.up(o.position(), 1.1), 0.42, j, 0, 0.45, Opt.of("vel", RuneKit.bodyVel(o)));
         }
         Ult.flash(level, c, JobKit.glow(j), Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
-        DamageNumbers.showFace(sp, "§6§l수호의 맹세", 2.4, 0, 0.2);
+        DamageNumbers.showFace(sp, "§6§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "block.beacon.activate", c, 1.2, 0.8);
         SkillFx.play(level, "block.bell.use", c, 0.9, 0.6);
         return true;
@@ -323,7 +323,7 @@ final class PaladinSkills {
         RpgCombat.setSteadfast(sp, endAt + 10);
         JobFx.aura(sp, j, 3.0, 0.9, 1.0);
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
-        DamageNumbers.showFace(sp, "§6§l천뢰의 대망치", 2.6, 0, 0.35);
+        DamageNumbers.showFace(sp, "§6§l" + k.name(), 2.6, 0, 0.35);
         SkillFx.play(level0, "entity.lightning_bolt.thunder", center, 0.6, 0.6);
         SkillFx.play(level0, "block.beacon.activate", c0, 0.8, 0.8);
         // 먹구름: 가운데 위 10 ~ 12칸에 짙은 구름이 모이고 그 속에서 번개가 번쩍임

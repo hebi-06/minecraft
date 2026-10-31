@@ -187,6 +187,7 @@ final class ArcherSkills {
         int per = Math.max(1, (int) k.num("per", 2));
         int end = first + (waves - 1) * gap;
         String life = RuneKit.lifeToken(sp);
+        java.util.Set<java.util.UUID> rooted = new java.util.HashSet<>(); // 0.50.0 발 묶기 — 적마다 한 번
         // 위로 쏘아 올림 (손 앞 활 · 하늘로 빛의 화살 셋) · 바닥 과녁
         JobFx.bow(level0, bowAt(sp, 0.5), 0.5, j, 1, 5, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
         for (int i = 0; i < 3; i++) {
@@ -241,8 +242,14 @@ final class ArcherSkills {
             RuneKit.later(first + w * gap, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 for (LivingEntity e : Kit.around(sp, center, r, 4)) {
+                    boolean pin = rooted.add(e.getUUID());
                     JobKit.strikeSplit(sp, e, j, P, k.num("wave", 2.7), per, 2, false, false, life, 0, d -> {
                         if (RuneKit.fxQuota("jobRain", 6)) JobFx.hit(e, j, 0.9);
+                        // 0.50.0 발 묶기: 처음 맞은 적은 발밑에 꽂힌 화살에 root 틱 묶임 (보스는 둔화)
+                        if (pin && k.num("root", 0) > 0) {
+                            boolean boss = mmorpg.fabric.boss.Bosses.isBossEntity(e);
+                            RuneKit.effect(e, "slowness", (int) k.num("root", 20), boss ? 1 : 10);
+                        }
                     });
                 }
             });
@@ -267,7 +274,7 @@ final class ArcherSkills {
         JobFx.ring(level, V.up(c, 0.06), 2.0, j, false, 0.45, Opt.empty());
         JobFx.target(level, V.add(sp.getEyePosition(), look, 3.2), 0.85, j, V.scale(look, -1), 0, 0.35, JobFx.only1p(sp).with("vel", RuneKit.bodyVel(sp)));
         JobFx.target(level, V.add(V.up(c, 1.0), V.flat(look), 1.0), 0.7, j, V.scale(V.flat(look), -1), 0, 0.4, JobFx.hide1p(sp));
-        DamageNumbers.showFace(sp, "§a§l정조준", 2.4, 0, 0.2);
+        DamageNumbers.showFace(sp, "§a§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "crossbow.loading.end", c, 1.2, 0.9);
         SkillFx.play(level, "block.amethyst_block.resonate", c, 1.6, 0.6);
         return true;

@@ -103,9 +103,9 @@ public final class RpgJobTests {
         return TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, (float) (1.5 + ahead)));
     }
 
-    /** 스킬 하나의 기대 피해: 위력 P × 지속 보정 × 배율 × 스탯 트리 공격력 × 가호 */
+    /** 스킬 하나의 기대 피해: 위력 P × 피해 배율 (0.50.0 유틸 · 시간 · 직업 맞춤) × 배율 × 스탯 트리 공격력 × 가호 */
     static double expected(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double mult) {
-        return JobSystem.power(sp, j) * Jobs.spreadMult(k) * mult * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+        return JobSystem.power(sp, j) * Jobs.damageScale(k) * mult * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
     }
 
     static boolean near(double a, double b) {
@@ -184,7 +184,7 @@ public final class RpgJobTests {
                     "paladin with a sword: slot locked to the hammer — " + (JobSkills.skill(sp, 0) == null ? "null" : JobSkills.skill(sp, 0).lock(sp)));
             JobSystem.setJob(sp, "swordsman");
             JobSkills.Skill s0 = JobSkills.skill(sp, 0);
-            h.assertTrue(s0 != null && s0.name().equals("연참") && s0.lock(sp).isEmpty(), "swordsman slot 1 = 연참, usable");
+            h.assertTrue(s0 != null && s0.name().equals("은빛 연격") && s0.lock(sp).isEmpty(), "swordsman slot 1 = 은빛 연격, usable");
             h.assertTrue(s0.cooldown() == JobSystem.cooldownTicks(sp, Jobs.job("swordsman").skill(0)), "cooldown from rules (× stat tree)");
             h.assertTrue(JobSkills.payload(sp).job().equals("swordsman") && JobSkills.payload(sp).colorA() == Jobs.rgb(Jobs.job("swordsman").color()[0]),
                     "bar payload carries the job and its color");
@@ -212,7 +212,7 @@ public final class RpgJobTests {
             JobSystem.setJob(sp, "spellblade");
             h.assertTrue(JobTraits.stacks(sp) == 0 && JobSkills.cooldownLeft(sp, "swordsman_mirror") == 0 && !JobTraits.stanceOn(sp, "swordsman_mirror"),
                     "job change clears stacks, stance, cooldowns");
-            h.assertTrue(JobSkills.skill(sp, 0).name().equals("비전 참격"), "spellblade slot 1");
+            h.assertTrue(JobSkills.skill(sp, 0).name().equals("룬 베기"), "spellblade slot 1");
         } finally {
             cleanup(sp);
         }
@@ -358,17 +358,23 @@ public final class RpgJobTests {
             h.assertTrue(near(TestDummies.dealt(z.get(0)), crit), "basic after 섬보 is a crit " + TestDummies.dealt(z.get(0)) + " vs " + crit);
             h.assertTrue(JobTraits.stacks(sp) == 1, "sword hit → 1 stack");
         }));
-        // 원월참: 검세 1 → +8%
+        // 만월 베기 (0.50.0 ← 원월참): 투지 1 → +8%, 마지막 바퀴 뒤 발키리의 가호 (가하는 피해 +10% · 4초 — 만월 베기 자신에는 안 걸림)
+        double[] moonWant = {0, 1};
         steps.add(new Step(12, () -> {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2.5));
-            h.assertTrue(JobSkills.press(sp, 2), "원월참 cast");
-            h.assertTrue(JobTraits.stacks(sp) == 0, "원월참 used the stack");
+            moonWant[0] = expected(sp, j, j.skill(2), 9 * (1 + 0.08));
+            moonWant[1] = RpgCombat.dealtMult.applyAsDouble(sp);
+            h.assertTrue(JobSkills.press(sp, 2), "만월 베기 cast");
+            h.assertTrue(JobTraits.stacks(sp) == 0, "만월 베기 used the stack");
         }));
         steps.add(new Step(16, () -> {
-            double want = expected(sp, j, j.skill(2), 9 * (1 + 0.08));
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "원월참 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            double want = moonWant[0];
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "만월 베기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(mmorpg.fabric.rune.RuneMarks.empowerLeft(sp) > 0 && Math.abs(RpgCombat.dealtMult.applyAsDouble(sp) - moonWant[1] * 1.1) < 1e-6,
+                    "발키리의 가호: dealt +10% " + RpgCombat.dealtMult.applyAsDouble(sp));
+            mmorpg.fabric.rune.RuneMarks.testClear(); // 가호를 지움 (다음 단계의 기대 피해가 가호 없이)
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2));

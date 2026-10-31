@@ -148,10 +148,42 @@ final class JobFx {
     static void slash(ServerPlayer sp, Jobs.Job j, double ahead, double down, double size, double tilt, double life) {
         Vec3 look = sp.getViewVector(1F);
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), screenUp(look), -down);
-        two(sp.level(), "jslash", SLASH, at, life, Opt.of("size", size, "spin", tilt, "vel", RuneKit.bodyVel(sp), "fade", 0.15), outer(j), inner(j));
+        Opt own = only1p(sp);
+        two(sp.level(), "jslash", SLASH, at, life, own.with("size", size, "spin", tilt, "vel", RuneKit.bodyVel(sp), "fade", 0.15), outer(j), inner(j));
         // 0.47.0 더 화려하게: 조금 크고 조금 기운 잔상 한 겹 (옅게 — 두 겹의 칼빛)
-        two(sp.level(), "jslash", SLASH, V.add(at, look, 0.15), life * 0.9, Opt.of("size", size * 1.14, "spin", tilt + 7, "vel", RuneKit.bodyVel(sp), "fade", 0.2, "alpha",
-                0.42, "coreAlpha", 0.3), outer(j), inner(j));
+        two(sp.level(), "jslash", SLASH, V.add(at, look, 0.15), life * 0.9, own.with("size", size * 1.14, "spin", tilt + 7, "vel", RuneKit.bodyVel(sp), "fade", 0.2,
+                "alpha", 0.42, "coreAlpha", 0.3), outer(j), inner(j));
+        // 0.50.0 3인칭 · 다른 사람: 카메라를 보는 그림 대신 세상에 놓인 참격 판 (휘두른 면 — 불룩한 날이 보는 쪽 · 가로 휘두름은 누운 판)
+        slashCard(sp.level(), at, look, tilt, size * CARD, life, RuneKit.bodyVel(sp), j, hide1p(sp));
+    }
+
+    /** 참격 판의 크기 (파티클 size 의 몫 — 파티클은 1인칭 눈앞 화면을 채우게 커서, 세상에 놓으면 몸보다 너무 큼 · 룬 ARC_CARD 와 같은 뜻) */
+    static final double CARD = 0.75;
+
+    /**
+     * 0.50.0 직업 참격 판 (사용자 "참격 방향 잡혀있는지 확인하고" — fxmodel slash_job: rfx_jslash 여덟 장을 붙인 판, 불룩한 날 = 판의 +Y): 불룩한 날이 dir 쪽,
+     * 판의 면 = 화면에서 기운 각 tilt (JobFx.slash 와 같은 뜻 — 0 = 가로 휘두름) 를 dir 둘레로 옮긴 것 → 가로 휘두름은 누운 판 (보는 사람마다 dir 둘레로 돌아
+     * 넓은 면을 보임 — RuneKit.faceCamIfFlat), 세로 휘두름은 선 판. vel = 같이 움직임 (칸/초). view = 보는 사람 걸러내기 (hide1p · only1p)
+     */
+    static void slashCard(ServerLevel level, Vec3 at, Vec3 dir, double tilt, double size, double life, Vec3 vel, Jobs.Job j, Opt view) {
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
+        double lf = Math.max(0.05, life);
+        double roll = -tilt;
+        Opt card = Opt.of("dir", d, "face", V.UP, "roll", roll, "scale", size, "life", lf, "grow", 0.15, "vel", vel, "anim", "play", "animSpeed", 1.0 / lf,
+                "fadeIn", 0.0, "fadeOut", lf * 0.3, "glowAlpha", 0.0, "color", outer(j), "glow", inner(j), "alpha", 0.95, "shine", 0.15, "view", view.num("view", 0),
+                "owner", view.num("owner", 0));
+        mmorpg.fabric.Fx3d.spawn(level, "slash_job", at, RuneKit.faceCamIfFlat(card, d, V.UP, roll));
+    }
+
+    /**
+     * 0.50.0 날아가는 검기 (연참 검기 · 발할라 마지막 일섬 · 룬 베기 검기): 시전자 1인칭에는 지금 그림 (카메라를 보는 rfx_jslash — dir · speed 로 날아감),
+     * 3인칭 · 다른 사람에게는 날아가는 참격 판 (불룩한 날이 날아가는 쪽 — 룬 0.48.2 와 같음). o = 파티클 값 (size · spin · grow · alpha · fade …)
+     */
+    static void wave(ServerPlayer sp, Jobs.Job j, Vec3 at, Vec3 dir, double speed, double life, Opt o) {
+        ServerLevel level = sp.level();
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
+        two(level, "jslash", SLASH, at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));
+        slashCard(level, at, d, o.num("spin", 0), o.num("size", 1) * CARD * 1.1, life, V.scale(d, speed), j, hide1p(sp));
     }
 
     /** 맞은 자리 (rfx_jhit): 몸 가운데 · 몸 크기에 맞춤 · 아무렇게나 기욺 */

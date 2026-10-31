@@ -339,7 +339,7 @@ final class WarriorSkills {
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.5);
         SkillFx.sparks(level, V.up(c, 1.0), JobKit.glow(j), 14, 5);
         Ult.flash(level, c, JobKit.glow(j), Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
-        DamageNumbers.showFace(sp, "§6§l투혼", 2.4, 0, 0.2);
+        DamageNumbers.showFace(sp, "§6§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "mob.ravager.roar", c, 1.0, 1.0);
         SkillFx.play(level, "fire.ignite", c, 0.7, 1.0);
         SkillFx.play(level, "beacon.activate", c, 1.2, 0.6);
@@ -530,7 +530,7 @@ final class WarriorSkills {
         SkillFx.play(level, "firework.large_blast", at, 0.9, 0.8);
         for (LivingEntity e : Kit.around(sp, at, r, 3.0)) {
             JobKit.strike(sp, e, j, P, k.num("final", 24), false, true, life, 0, x -> {
-                if (JobKit.pushable(e)) RuneKit.knock(e, V.sub(e.position(), at), 0.5, 0.55);
+                if (JobKit.pushable(e)) RuneKit.knock(e, V.sub(e.position(), at), k.num("knock", 0.8), 0.55); // 0.50.0 밀쳐냄 (유틸 −5%)
                 if (RuneKit.fxQuota("jobLeapFinal", 6)) JobFx.hit(e, j, 1.6);
             });
         }
