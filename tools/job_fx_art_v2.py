@@ -430,36 +430,45 @@ def label(img, text, xy):
 
 
 def preview_sprite(sp, folder):
+    """그림마다 한 장: 장면 전부 (빛 = 색 A · 심지 = 색 B · 어두운 바탕) + 한 장면 2배. 직업 줄이 있으면 (rfx_jhits) 줄마다 그 직업 색"""
     gap = 6
-    rows_src = []
-    if sp.layout is None:
-        rows_src.append((sp.job, sp.glows, sp.cores))
-    else:
-        for job, g, c in zip(JOBS, sp.glows, sp.cores):
-            rows_src.append((job, g, c))
+    bgc = tuple(int(v * 255) for v in BG)
+    rows_src = [(sp.job, sp.glows, sp.cores)] if sp.layout is None else list(zip(JOBS, sp.glows, sp.cores))
     cw, ch = sp.cw, sp.ch
-    per_row = sp.frames if sp.layout is not None else max(1, min(sp.frames, (2048 // (cw + gap))))
-    zf = sp.zoom if sp.zoom is not None else 0
+    zf = sp.zoom or 0
     blocks = []
     for job, gl, co in rows_src:
         ca, cb = COLORS[job]
         n = len(gl)
+        if sp.layout is not None:
+            per_row = n
+        else:
+            per_row = max(1, min(n, 1100 // (cw + gap)))
         rr = (n + per_row - 1) // per_row
-        W = per_row * (cw + gap) + gap
-        H = rr * (ch + gap + 12) + gap
-        zoom = tint_comp(gl[zf], co[zf], ca, cb).resize((cw * 2, ch * 2), Image.NEAREST if cw <= 64 else Image.BICUBIC)
-        block = Image.new("RGB", (W + zoom.size[0] + gap * 2, max(H, zoom.size[1] + gap * 2 + 12)), tuple(int(v * 255) for v in BG))
+        gw = per_row * (cw + gap) + gap
+        gh = rr * (ch + gap + 12) + gap
+        zoom = tint_comp(gl[zf], co[zf], ca, cb).resize((cw * 2, ch * 2), Image.BICUBIC)
+        side = sp.layout is not None
+        if side:
+            bw, bh = gw + zoom.size[0] + gap * 2, max(gh, zoom.size[1] + gap * 2 + 12)
+        else:
+            bw, bh = max(gw, zoom.size[0] + gap * 2), gh + zoom.size[1] + gap + 14
+        block = Image.new("RGB", (bw, bh), bgc)
         for i in range(n):
             r, k = divmod(i, per_row)
             x, y = gap + k * (cw + gap), gap + r * (ch + gap + 12) + 12
             block.paste(tint_comp(gl[i], co[i], ca, cb), (x, y))
             label(block, f"{i}", (x + 2, y - 11))
-        block.paste(zoom, (W + gap, gap + 12))
-        label(block, f"{job}  zoom 2x of frame {zf}", (W + gap, 1))
+        if side:
+            block.paste(zoom, (gw + gap, gap + 12))
+            label(block, f"{job} - frame {zf} x2", (gw + gap, 1))
+        else:
+            block.paste(zoom, (gap, gh + 12))
+            label(block, f"{job} - frame {zf} x2", (gap, gh))
         blocks.append(block)
     W = max(b.size[0] for b in blocks)
     H = sum(b.size[1] for b in blocks) + 16
-    out = Image.new("RGB", (W, H), tuple(int(v * 255) for v in BG))
+    out = Image.new("RGB", (W, H), bgc)
     label(out, f"{sp.name}  {sp.facing}  {cw}x{ch}  x{sp.frames}", (4, 2))
     y = 16
     for b in blocks:
@@ -515,58 +524,48 @@ def rim_of(mask_ss, width, ss=SS):
 
 def sword_geom(W=256, H=64):
     cy = H / 2
-    g = {}
+    g = {"cy": cy}
     tip = W - 7.0
-    b0 = 61.0
+    b0 = 60.0
     bl = tip - b0
-
-    def hw(x):  # 날 반폭
-        t = (x - b0) / bl
-        base = 6.6 - 1.5 * t
-        k = smooth(0.80, 1.0, t)
-        return base * (1 - k) + 0.0 * k if t < 1 else 0.0
-
     top, bot = [], []
     n = 90
     for i in range(n + 1):
         t = i / n
         x = b0 + bl * t
         if t > 0.8:
-            # 끝: 바깥으로 살짝 볼록하게 뾰족
             u = (t - 0.8) / 0.2
-            w = (6.6 - 1.5 * 0.8) * (1 - u ** 1.35) ** 0.85
+            w = (6.4 - 1.4 * 0.8) * (1 - u ** 1.35) ** 0.85
         else:
-            w = 6.6 - 1.5 * t
+            w = 6.4 - 1.4 * t
         top.append((x, cy - w))
         bot.append((x, cy + w))
     g["blade"] = top + bot[::-1]
     g["blade_top"], g["blade_bot"] = top, bot
-    g["b0"], g["tip"], g["cy"] = b0, tip, cy
-    # 날 뿌리 (리카소 — 조금 좁은 목)
-    g["ricasso"] = [(b0 - 3, cy - 5.0), (b0 + 6, cy - 6.4), (b0 + 6, cy + 6.4), (b0 - 3, cy + 5.0)]
-    # 코등이: 가운데가 두툼하고 양끝이 칼끝 쪽으로 휘며 뾰족
-    gx = 55.0
-    guard = []
+    g["b0"], g["tip"] = b0, tip
+    gx = 54.5
+    g["gx"] = gx
+    # 코등이 가운데 덩이 (둥근 네모) · 날 위로 덮는 뾰족 판 (랑겟)
+    blk = []
+    for i in range(24):
+        a = i / 24 * TAU
+        blk.append((gx + 4.2 * np.sign(math.cos(a)) * abs(math.cos(a)) ** 0.5, cy + 7.2 * np.sign(math.sin(a)) * abs(math.sin(a)) ** 0.5))
+    g["block"] = blk
+    g["langet"] = [(gx + 2, cy - 5.6), (gx + 9.5, cy - 3.4), (gx + 15.5, cy), (gx + 9.5, cy + 3.4), (gx + 2, cy + 5.6)]
+    # 코등이 날개 (가운데에서 바깥 · 칼끝 쪽으로 휘며 가늘어짐) + 끝 구슬
+    quil = []
+    fin = []
     for side in (-1, 1):
         pts = []
-        for i in range(15):
-            t = i / 14
-            y = cy + side * (4 + 17 * t)
-            x = gx + 5.5 * t ** 2.2
-            w = 3.6 * (1 - 0.65 * t)
-            pts.append((x, y, w))
-        guard.append(pts)
-    up, dn = guard[0], guard[1]
-    left = [(x - w, y) for x, y, w in up[::-1]] + [(gx - 3.6, cy)] + [(x - w, y) for x, y, w in dn]
-    right = [(x + w, y) for x, y, w in dn[::-1]] + [(gx + 3.6, cy)] + [(x + w, y) for x, y, w in up]
-    tip_dn = (dn[-1][0] + 3.2, dn[-1][1] + 2.2)
-    tip_up = (up[-1][0] + 3.2, up[-1][1] - 2.2)
-    g["guard"] = [tip_up] + left + [tip_dn] + right
-    g["guard_spine"] = [(x, y) for x, y, _ in up[::-1]] + [(gx, cy)] + [(x, y) for x, y, _ in dn]
-    g["guard_tips"] = [tip_up, tip_dn]
-    g["gx"] = gx
+        for i in range(16):
+            t = i / 15
+            pts.append((gx + 1.0 + 7.5 * t ** 2.4, cy + side * (5.5 + 16.0 * t)))
+        quil.append(taper_poly(pts, lambda t: 2.9 * (1 - 0.62 * t)))
+        fin.append((pts[-1][0] + 0.6, pts[-1][1] + side * 1.6))
+        g["qspine%d" % (side + 1)] = pts
+    g["quil"], g["fin"] = quil, fin
     # 손잡이 (가운데가 조금 부푼 원통)
-    g0, g1 = 21.0, 51.5
+    g0, g1 = 21.0, 50.5
     gt, gb = [], []
     for i in range(21):
         t = i / 20
@@ -576,12 +575,30 @@ def sword_geom(W=256, H=64):
         gb.append((x, cy + w))
     g["grip"] = gt + gb[::-1]
     g["grip_x"] = (g0, g1)
-    # 자루 끝: 목 고리 + 다이아몬드 보석 자루 끝
-    g["collar"] = [(g0 - 3.5, cy - 4.2), (g0 + 1.0, cy - 4.2), (g0 + 1.0, cy + 4.2), (g0 - 3.5, cy + 4.2)]
-    px = 11.5
-    g["pommel"] = [(px - 7.0, cy), (px, cy - 6.6), (px + 6.5, cy), (px, cy + 6.6)]
+    g["collar"] = [(g0 - 3.5, cy - 4.4), (g0 + 0.8, cy - 4.4), (g0 + 0.8, cy + 4.4), (g0 - 3.5, cy + 4.4)]
+    g["collar2"] = [(g1 - 0.5, cy - 4.0), (g1 + 2.5, cy - 4.6), (g1 + 2.5, cy + 4.6), (g1 - 0.5, cy + 4.0)]
+    px = 11.0
     g["px"] = px
+    g["pommel"] = [(px - 6.8, cy), (px - 1.0, cy - 6.4), (px + 1.2, cy - 6.4), (px + 6.8, cy), (px + 1.2, cy + 6.4), (px - 1.0, cy + 6.4)]
+    g["spike"] = [(px - 6.0, cy - 1.4), (px - 9.8, cy), (px - 6.0, cy + 1.4)]
     return g
+
+
+def blade_shade(pad, mask, cy, x0, x1, half, groove=True, light=0.0):
+    """날 (가로) 의 빛 몸 · 심지: 위 비탈은 밝고 아래 비탈은 어둡게, 가운데 홈, 날 줄"""
+    X, Y = pad.grid()
+    v = (Y - cy) / np.maximum(0.5, half(X))  # -1 (위 날) ~ 1 (아래 날)
+    upper = clamp01(-v)
+    body = mask * (0.66 + 0.3 * upper ** 0.7 - 0.1 * clamp01(v))
+    core = np.zeros_like(mask)
+    if groove:
+        gl = (X > x0 + 2) * (X < x0 + (x1 - x0) * 0.68)
+        gw = 1.15
+        gz = np.exp(-0.5 * ((Y - cy) / gw) ** 2) * gl
+        body = body * (1 - 0.42 * gz)
+    # 위 비탈: 부드러운 빛 (심지 쪽 색으로 기욺)
+    core = np.maximum(core, mask * upper ** 1.4 * (0.34 + light))
+    return body, core
 
 
 def sword_frame(f, frames=4, W=256, H=64):
@@ -590,74 +607,79 @@ def sword_frame(f, frames=4, W=256, H=64):
     X, Y = pad.grid()
     cy = g["cy"]
     b0, tip = g["b0"], g["tip"]
-    blade = pad.poly(g["blade"])
-    ric = pad.poly(g["ricasso"])
-    guard = pad.poly(g["guard"])
-    grip = pad.poly(g["grip"])
-    collar = pad.poly(g["collar"])
-    pommel = pad.poly(g["pommel"])
-    sil = np.maximum.reduce([blade, ric, guard, grip, collar, pommel])
-    # ---- 빛 몸: 날은 밝게 · 손잡이는 조금 어둡게, 날 가운데 홈 둘레가 살짝 꺼짐 (입체감)
-    nd = np.abs(Y - cy)
-    groove = 1 - 0.28 * np.exp(-0.5 * ((nd - 1.9) / 0.9) ** 2) * (X > b0 + 4) * (X < b0 + (tip - b0) * 0.66)
-    body = np.maximum.reduce([blade * 0.92 * groove, ric * 0.9, guard * 0.9, grip * 0.72, collar * 0.86, pommel * 0.9])
-    # ---- 심지
-    core = np.zeros_like(sil)
-    # 날: 가장자리 빛 (안쪽으로 그러데이션) + 또렷한 날 줄
-    bl_mask = np.maximum(blade, ric)
-    d_in = inner_dist(bl_mask)
-    edge = clamp01(1 - d_in / 2.6) ** 1.6 * (bl_mask > 0.5)
-    core = np.maximum(core, edge * 0.78)
-    for pts in (g["blade_top"], g["blade_bot"]):
-        core = np.maximum(core, pad.stroke(pts, 0.55, a0=0.95, a1=1.0) * bl_mask)
-    # 가운데 홈 (빛 줄 — 칼끝 쪽으로 가늘어지며 사라짐)
-    fl_end = b0 + (tip - b0) * 0.68
-    core = np.maximum(core, pad.stroke([(b0 + 3, cy), (fl_end, cy)], 1.25, 0.5, a0=0.95, a1=0.55))
-    # 날 끝 쪽 능선 (가운데 줄이 칼끝까지 가늘게)
-    core = np.maximum(core, pad.stroke([(fl_end - 6, cy), (tip - 1.5, cy)], 0.5, 0.25, a0=0.35, a1=0.75))
-    # 코등이: 테 · 가운데 줄 · 보석
-    core = np.maximum(core, rim_of(guard, 1.1) * 0.85)
-    core = np.maximum(core, pad.stroke(g["guard_spine"], 0.7, a0=0.55) * guard)
     gx = g["gx"]
-    gem = pad.poly([(gx - 3.4, cy), (gx, cy - 4.4), (gx + 3.4, cy), (gx, cy + 4.4)])
-    core = np.maximum(core, gem * 0.55 + pad.poly([(gx - 1.6, cy - 0.4), (gx, cy - 3.2), (gx + 0.9, cy - 0.6)]) * 0.45)
-    core = np.maximum(core, rim_of(gem, 0.8) * 1.0)
-    for tx, ty in g["guard_tips"]:
-        core = np.maximum(core, pad.disc_field(tx, ty, 1.1))
-    # 손잡이: 감은 끈 (비스듬한 줄) · 테
+    blade = pad.poly(g["blade"])
+    block = pad.poly(g["block"])
+    langet = pad.poly(g["langet"])
+    quil = pad.polys(g["quil"])
+    fins = np.maximum.reduce([pad.disc_field(x, y, 1.9) for x, y in g["fin"]])
+    guard = np.maximum.reduce([block, quil, fins])
+    grip = pad.poly(g["grip"])
+    collar = np.maximum(pad.poly(g["collar"]), pad.poly(g["collar2"]))
+    pommel = np.maximum(pad.poly(g["pommel"]), pad.poly(g["spike"]))
+
+    def half(x):
+        t = np.clip((x - b0) / (tip - b0), 0, 1)
+        return np.where(t > 0.8, (6.4 - 1.12) * (1 - np.clip((t - 0.8) / 0.2, 0, 1) ** 1.35) ** 0.85, 6.4 - 1.4 * t)
+
+    bbody, bcore = blade_shade(pad, blade, cy, b0, tip, half)
+    # ---- 빛 몸
+    body = np.maximum.reduce([bbody, guard * 0.86, langet * 0.92, grip * 0.66, collar * 0.84, pommel * 0.86])
+    body = np.where(langet > 0.5, langet * 0.92, body)
+    # ---- 심지
+    core = bcore * (1 - langet)
+    d_in = inner_dist(blade)
+    edge = clamp01(1 - d_in / 2.2) ** 1.5 * (blade > 0.5)
+    core = np.maximum(core, edge * 0.82 * (1 - langet))
+    for pts in (g["blade_top"], g["blade_bot"]):
+        core = np.maximum(core, pad.stroke(pts, 0.5, a0=1.0) * blade)
+    # 홈: 아래 벽에 빛 줄 · 홈 끝에서 칼끝까지 가는 능선
+    fl_end = b0 + (tip - b0) * 0.68
+    core = np.maximum(core, pad.stroke([(b0 + 12, cy + 1.25), (fl_end, cy + 0.9)], 0.75, 0.3, a0=0.95, a1=0.6))
+    core = np.maximum(core, pad.stroke([(b0 + 12, cy - 1.35), (fl_end, cy - 1.0)], 0.45, 0.2, a0=0.5, a1=0.25))
+    core = np.maximum(core, pad.stroke([(fl_end - 4, cy), (tip - 2, cy)], 0.55, 0.2, a0=0.3, a1=0.8))
+    # 코등이: 테 · 날개 등줄 · 랑겟 테 · 보석
+    core = np.maximum(core, rim_of(guard, 1.0) * 0.9)
+    for k in (0, 2):
+        core = np.maximum(core, pad.stroke(g["qspine%d" % k], 0.6, 0.3, a0=0.65, a1=0.3) * quil)
+    core = np.maximum(core, rim_of(langet, 0.9) * 0.95)
+    core = np.maximum(core, langet * clamp01((cy - Y) / 5) * 0.45)
+    gem = pad.poly([(gx - 2.8, cy), (gx, cy - 4.2), (gx + 2.8, cy), (gx, cy + 4.2)])
+    core = np.maximum(core, gem * (0.5 + 0.45 * clamp01((cy - Y + 1) / 4)))
+    core = np.maximum(core, rim_of(gem, 0.7))
+    for x, y in g["fin"]:
+        core = np.maximum(core, pad.disc_field(x - 0.4, y - 0.5, 0.9) * 0.95)
+    # 손잡이: 감은 끈 · 테
     g0, g1 = g["grip_x"]
-    wraps = np.zeros_like(sil)
-    k = 0
-    x = g0 + 1.5
+    wraps = np.zeros_like(blade)
+    x = g0 + 1.2
     while x < g1 - 1:
-        wraps = np.maximum(wraps, pad.stroke([(x, cy - 4.0), (x + 3.2, cy + 4.0)], 0.7, a0=0.75))
-        x += 3.6
-        k += 1
-    core = np.maximum(core, wraps * grip)
-    core = np.maximum(core, rim_of(grip, 0.8) * 0.6)
+        wraps = np.maximum(wraps, pad.stroke([(x, cy - 4.0), (x + 3.0, cy + 4.0)], 0.75, a0=0.8))
+        x += 3.4
+    core = np.maximum(core, wraps * grip * (0.55 + 0.45 * clamp01((cy - Y + 3) / 6)))
+    core = np.maximum(core, rim_of(grip, 0.7) * 0.5)
     core = np.maximum(core, rim_of(collar, 0.9) * 0.85)
-    # 자루 끝 보석: 면 (위쪽 면이 밝음) · 테
+    # 자루 끝 보석: 면 (위 왼쪽 면이 밝음) · 테
     px = g["px"]
-    pm = pommel
-    face = pad.poly([(px - 7.0, cy), (px, cy - 6.6), (px + 1.0, cy - 0.4)]) * 0.62
-    face = np.maximum(face, pad.poly([(px, cy - 6.6), (px + 6.5, cy), (px + 1.0, cy - 0.4)]) * 0.4)
-    core = np.maximum(core, face * pm)
-    core = np.maximum(core, rim_of(pm, 0.9) * 0.95)
-    # ---- 날을 따라 흐르는 빛 (비스듬한 띠 · 날 길이마다 되풀이 → 이어 돌림)
-    L = tip - b0 + 40
-    sx = b0 - 20 + L * (f + 0.5) / frames
-    swp = np.zeros_like(sil)
+    face = pad.poly([(px - 6.8, cy), (px - 1.0, cy - 6.4), (px + 0.2, cy - 0.5)]) * 0.7
+    face = np.maximum(face, pad.poly([(px - 1.0, cy - 6.4), (px + 1.2, cy - 6.4), (px + 6.8, cy), (px + 0.2, cy - 0.5)]) * 0.42)
+    face = np.maximum(face, pad.poly([(px - 6.8, cy), (px + 0.2, cy - 0.5), (px - 1.0, cy + 6.4)]) * 0.18)
+    core = np.maximum(core, face * pommel)
+    core = np.maximum(core, rim_of(pommel, 0.85) * 0.95)
+    # ---- 날을 따라 흐르는 빛 (비스듬한 띠 · 되풀이 → 이어 돌림)
+    L = tip - b0 + 48
+    sx = b0 - 24 + L * (f + 0.5) / frames
+    swp = np.zeros_like(blade)
     for kk in (-1, 0, 1):
-        c0 = sx + kk * L
-        u = (X - c0) + (Y - cy) * 0.9
-        swp = np.maximum(swp, np.exp(-0.5 * (u / 7.5) ** 2))
-    core = np.maximum(core, swp * 0.88 * np.maximum(bl_mask, guard * 0.7))
+        u = (X - (sx + kk * L)) + (Y - cy) * 0.85
+        swp = np.maximum(swp, np.exp(-0.5 * (u / 6.5) ** 2) + 0.35 * np.exp(-0.5 * ((u + 14) / 2.2) ** 2))
+    core = np.maximum(core, clamp01(swp) * 0.9 * np.maximum(blade, np.maximum(guard, langet) * 0.6))
     # 반짝임: 칼끝 (장마다 크기 · 돌기가 다름) · 코등이 보석
-    tw = [1.0, 0.55, 0.8, 0.4][f]
-    core = np.maximum(core, sparkle(pad, tip - 6, cy - 1.5, 6.5 + 4.0 * tw, 0.95, rot=0.2 * f))
-    core = np.maximum(core, sparkle(pad, gx, cy - 1.0, 4.0 + 3.0 * (1 - tw), 0.85, diag=0.0))
+    tw = [1.0, 0.5, 0.78, 0.35][f]
+    core = np.maximum(core, sparkle(pad, tip - 5, cy - 1.0, 5.5 + 4.5 * tw, 1.0, rot=0.18 * f))
+    core = np.maximum(core, sparkle(pad, gx + 0.3, cy - 1.2, 3.5 + 3.0 * (1 - tw), 0.9, diag=0.0))
     core1 = pad.down(core)
-    glow1 = obj_glow(pad, body, core1, halo=((1.2, 0.5), (3.0, 0.38), (6.5, 0.22)), body_k=1.0, core_bloom=((1.5, 0.35), (4.0, 0.25)))
+    glow1 = obj_glow(pad, body, core1, halo=((1.2, 0.5), (3.0, 0.36), (6.5, 0.2)), body_k=1.0, core_bloom=((1.5, 0.3), (4.0, 0.22)))
     return glow1, core1
 
 

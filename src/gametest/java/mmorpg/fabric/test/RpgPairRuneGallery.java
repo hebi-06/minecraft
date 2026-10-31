@@ -224,7 +224,9 @@ public final class RpgPairRuneGallery implements FabricClientGameTest {
         if (!cast) failures.add(id + (third ? " (3p)" : "") + " not cast");
         else if (!(dealt[0] > 0)) failures.add(id + (third ? " (3p)" : "") + " dealt no damage");
         // 가장 많이 맞은 과녁 하나 = P × 총 배율 (같은 적을 여러 번 · 화상 · 마무리가 모두 들어감 — 실제 입력 · 클라이언트에서도)
-        else if (Math.abs(dealt[1] - want) > want * 0.01) failures.add(id + (third ? " (3p)" : "") + " one target " + Math.round(dealt[1]) + " vs " + Math.round(want));
+        // 0.49.0 받는 피해 증가 표식을 스스로 건 룬 (마그마 대지의 녹은 갑옷 등): 표식 뒤 타격이 + vuln 만큼 더 들어감 (RpgPairRuneTests 와 같은 범위)
+        else if (dealt[1] < want * 0.99 || dealt[1] > want * (1 + r.def().numOr("vuln", 0)) + want * 0.01)
+            failures.add(id + (third ? " (3p)" : "") + " one target " + Math.round(dealt[1]) + " vs " + Math.round(want));
     }
 
     private static ServerPlayer player(MinecraftServer s) {
