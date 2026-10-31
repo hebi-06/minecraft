@@ -351,8 +351,8 @@ final class AssassinSkills {
                     turn[3] = Math.max(-20F, Math.min(35F, rot[1]));
                 }
                 if (Float.isNaN(turn[0])) return;
-                float k = tt / 3F;
-                Kit.moveTo(sp, sp.position(), turn[0] + turn[1] * k, turn[2] + (turn[3] - turn[2]) * k);
+                float frac = tt / 3F;
+                Kit.moveTo(sp, sp.position(), turn[0] + turn[1] * frac, turn[2] + (turn[3] - turn[2]) * frac);
             });
         }
         return true;
