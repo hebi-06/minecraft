@@ -408,8 +408,6 @@ final class RuneSpellblade {
             RuneKit.skyFlare(level, skyAt, 3.4, glow, core, Opt.of("life", 0.45));
             for (LivingEntity e : RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 16)) {
                 if (RuneKit.swordHit(sp, e, P, k.num("mult")) <= 0) continue;
-                // 0.49.0 마력 약화: vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식 — 십자 폭발 피해부터)
-                RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, RuneKit.fxQuota("releaseVuln", 8));
                 Vec3 at = Kit.bodyPoint(e);
                 // 적이 많으면 앞 8명만 (파티클 예산)
                 if (RuneKit.fxQuota("spellbladeCut", 8)) SkillFx.cutMark(level, at, V.unit(V.sub(at, eye)), -4, 0.12, core, RuneKit.WHITE, 1.3);
@@ -477,6 +475,7 @@ final class RuneSpellblade {
                 LivingEntity e = h.e();
                 if (!hit.add(e.getUUID())) continue;
                 if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) {
+                    // 0.49.0 마력 약화: 십자 폭발에 맞은 적 vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
                     RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, RuneKit.fxQuota("releaseVuln", 8));
                     RuneKit.knock(e, V.UP, 0, 0.45);
                     if (k.numOr("stun", 0) > 0) RuneKit.stun(e, (int) k.num("stun"), glow, RuneKit.fxQuota("releaseStun", 8)); // 8단계 6돌: 기절

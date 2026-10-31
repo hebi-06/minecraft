@@ -199,7 +199,7 @@ final class RuneHunter {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                         if (RuneKit.fxQuota("falcon", 3)) claw(level, Kit.bodyPoint(e), 0.7);
                         // 0.49.0 사냥감 표식: vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
-                        RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), WILD, CORE, RuneKit.fxQuota("falconMark", 6));
+                        if (ii == hits - 1) RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), WILD, CORE, RuneKit.fxQuota("falconMark", 6)); // 마지막 급강하에
                     });
                 }
                 // 다시 날아오름
@@ -465,8 +465,6 @@ final class RuneHunter {
                 for (LivingEntity e : ts) {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                         if (RuneKit.fxQuota("beastClaw", 6)) claw(level, Kit.bodyPoint(e), 0.8);
-                        // 0.49.0 사냥감 표식: vulnTicks 동안 받는 피해 + vuln (짓밟기까지)
-                        RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), WILD, CORE, RuneKit.fxQuota("beastMark", 8));
                     });
                 }
             });
@@ -502,6 +500,8 @@ final class RuneHunter {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.FERAL, life, dmg -> {
                     if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), aim), 0.4, 0.5);
                     if (RuneKit.fxQuota("beastCrush", 8)) claw(level, Kit.bodyPoint(e), 1.0);
+                    // 0.49.0 사냥감 표식: 짓밟힌 적 vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
+                    RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), WILD, CORE, RuneKit.fxQuota("beastMark", 8));
                 });
             }
         });

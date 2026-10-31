@@ -128,7 +128,7 @@ final class RuneBow {
     }
 
     /**
-     * 도약 사격: 뒤로 back 칸 뛰고 (벽 앞까지) 앞쪽 cone 도 · range 칸의 적 arrows 명에게 한 발씩 (대상이 없어도 뜀) —
+     * 도약 사격: 뒤로 back 칸 뛰고 (벽 앞까지 — 0.49.0 air 틱 동안 포물선으로 날아감) 앞쪽 cone 도 · range 칸의 적 arrows 명에게 한 발씩 (대상이 없어도 뜀) —
      * 뛰는 자리에 바람 회오리 · 바람 줄기, 화살은 빛의 화살 그림
      */
     static boolean backstep(ServerPlayer sp, Runes.Rune r, double P, Obj k) {
@@ -158,7 +158,8 @@ final class RuneBow {
         }
         SkillFx.play(level, "mob.breeze.jump", start, 1.1, 1);
         SkillFx.play(level, "mob.enderdragon.flap", start, 1.6, 0.5);
-        if (dist > 0.2) RuneKit.moveTo(sp, end, null);
+        // 0.49.0 뒤로 뛰는 몸이 포물선으로 날아감 (다른 도약 룬과 같은 RuneKit.leap) — 쏘는 화살은 나는 동안 (2틱부터)
+        RuneKit.leap(sp, dist > 0.2 ? end : start, 1.3, (int) k.numOr("air", 6), glow, core, () -> SkillFx.play(level, "entity.player.big_fall", sp.position(), 1.4, 0.4));
         RuneKit.later(2, () -> {
             if (sp.isRemoved()) return;
             List<LivingEntity> list = RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), (int) k.num("arrows"));

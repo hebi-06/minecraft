@@ -161,7 +161,7 @@ public final class RpgLimitedRuneTests {
             sp.lookAt(EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
             double sum = 0;
             for (int i = 0; i < 4; i++) sum += stats[i];
-            double P = RuneCast.power(sp, family) * RuneBreak.coef(breakLevel) * Runes.damageScale(r); // 0.26.0 지속 보정 (한정 룬도)
+            double P = RuneCast.power(sp, family) * RuneBreak.coef(breakLevel) * Runes.damageScale(r); // 0.49.0 피해 배율 (유틸 값 · 시간 보정 — 한정 룬도)
             // 적용 스탯 = 네 스탯의 합 (찍은 스탯 — 시험 서버는 갑옷 · 버프 없음)
             h.assertTrue(Math.abs(RuneCast.applied(sp, family).value() - sum) < 1e-6, family + " applied = total " + RuneCast.applied(sp, family).value() + " vs " + sum);
             h.assertTrue(RuneCast.castRune(sp, r, false, breakLevel), family + " cast");

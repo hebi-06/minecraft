@@ -483,7 +483,7 @@ public final class RpgWeaponsMoreTests {
         h.assertTrue(r != null && r.def().str("fn").equals("spiritKing"), "spirit king rune");
         h.runAfterDelay(2, () -> {
             sp.lookAt(EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
-            double P = RuneCast.power(sp, "spirit") * mmorpg.core.RuneBreak.coef(breakLevel) * Runes.damageScale(r); // 0.26.0 지속 보정
+            double P = RuneCast.power(sp, "spirit") * mmorpg.core.RuneBreak.coef(breakLevel) * Runes.damageScale(r); // 0.49.0 피해 배율 (유틸 값 · 시간 보정)
             h.assertTrue(RuneCast.castRune(sp, r, false, breakLevel), "cast");
             h.runAfterDelay(130, () -> {
                 double dealt = TestDummies.dealt(z);

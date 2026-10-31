@@ -81,12 +81,15 @@ public final class RpgPairRuneTests {
             clearStrays(h, z);
             sp.lookAt(EntityAnchorArgument.Anchor.EYES, z.getEyePosition());
             h.assertTrue(Math.abs(RuneCast.applied(sp, family).value() - 180) < 1e-6, family + " applied = 120 + 120 × 0.5: " + RuneCast.applied(sp, family).value());
-            double P = RuneCast.power(sp, family) * RuneBreak.coef(breakLevel) * Runes.damageScale(r); // 0.26.0 지속 보정
+            double P = RuneCast.power(sp, family) * RuneBreak.coef(breakLevel) * Runes.damageScale(r); // 0.49.0 피해 배율 (유틸 값 · 시간 보정)
             double total = Runes.runeTotalMult(RuneBreak.def(r, breakLevel));
             h.assertTrue(RuneCast.castRune(sp, r, false, breakLevel), family + " " + grade + " cast");
             h.runAfterDelay(wait, () -> {
                 double dealt = TestDummies.dealt(z);
-                h.assertTrue(Math.abs(dealt - total * P) < 1e-2 * P, family + " " + grade + " " + breakLevel + " dealt " + dealt + " vs " + total + " × " + P);
+                // 0.49.0 받는 피해 증가 표식을 스스로 건 룬 (마그마 대지의 녹은 갑옷 등): 표식 뒤 타격이 + vuln 만큼 더 들어감 (그 사이)
+                double vuln = RuneBreak.def(r, breakLevel).numOr("vuln", 0);
+                h.assertTrue(dealt > total * P - 1e-2 * P && dealt < total * P * (1 + vuln) + 1e-2 * P,
+                        family + " " + grade + " " + breakLevel + " dealt " + dealt + " vs " + total + " × " + P + (vuln > 0 ? " (+ vuln " + vuln + ")" : ""));
                 h.getLevel().getServer().getPlayerList().remove(sp);
                 h.succeed();
             });

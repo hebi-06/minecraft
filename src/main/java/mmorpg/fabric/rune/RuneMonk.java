@@ -108,15 +108,23 @@ final class RuneMonk {
                 SkillFx.play(level, "wind_charge.burst", c, 0.9, 0.9);
                 SkillFx.play(level, "entity.player.attack.knockback", c, 0.7, 1.0);
             }
-            for (LivingEntity e : RuneKit.nearestTo(RuneKit.coneAround(sp, c, f, radius, cone), c)) {
+            // 0.49.0 기: 장풍까지 마치면 buffTicks 동안 가하는 피해 + buff (몸에 금빛 기운 · 상태 줄) — 장풍이 맞은 뒤 (맞은 적이 없으면 바로)
+            boolean[] ki = {false};
+            Runnable gainKi = () -> {
+                if (ki[0] || !last || !(k.numOr("buff", 0) > 0) || !RuneKit.sameLife(sp, life)) return;
+                ki[0] = true;
+                RuneMarks.empower(sp, k.num("buff"), (int) k.num("buffTicks"), "기", GOLD, EMBER);
+            };
+            List<LivingEntity> fists = RuneKit.nearestTo(RuneKit.coneAround(sp, c, f, radius, cone), c);
+            for (LivingEntity e : fists) {
                 PairKit.hit(sp, r, e, P, last ? k.num("crush") : k.num("mult"), last ? DamageNumbers.Style.IMPACT : null, life, dmg -> {
                     Vec3 b = Kit.bodyPoint(e);
                     if (RuneKit.fxQuota("chainFist", 4)) impact(level, V.add(b, V.unit(V.sub(sp.getEyePosition(), b)), 0.3), (last ? 0.6 : 0.4) * RuneKit.nearK(sp, b, 4, 0.5));
                     if (last && !PairKit.boss(e)) RuneKit.knock(e, f, k.numOr("knock", 0), 0.15);
+                    if (last) RuneKit.later(1, gainKi);
                 });
             }
-            // 0.49.0 기: 장풍까지 마치면 buffTicks 동안 가하는 피해 + buff (몸에 금빛 기운 · 상태 줄)
-            if (last && k.numOr("buff", 0) > 0 && RuneKit.sameLife(sp, life)) RuneMarks.empower(sp, k.num("buff"), (int) k.num("buffTicks"), "기", GOLD, EMBER);
+            if (last && fists.isEmpty()) gainKi.run();
         });
         return true;
     }

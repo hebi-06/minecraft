@@ -161,7 +161,8 @@ public final class RpgRuneTests {
         h.assertTrue(calls[0] == 1 && RuneCast.cooldownLeft(sp, r) == 0 && !sp.getCooldowns().isOnCooldown(stack), "no cooldown when cancelled");
         target[0] = true;
         h.assertTrue(RuneCast.castRune(sp, r, false), "cast");
-        h.assertTrue(Math.abs(power[0] - RuneCast.power(sp, "str")) < 1e-9 && power[0] > 0, "power " + power[0]);
+        // 0.49.0 위력 P = 룬 위력 × 피해 배율 (그 룬 자리 — 대지 강타: 기절 0.5초 −5%)
+        h.assertTrue(Math.abs(power[0] - RuneCast.power(sp, "str") * Runes.damageScale(r)) < 1e-9 && power[0] > 0, "power " + power[0]);
         h.assertTrue(RuneCast.cooldownLeft(sp, r) == Math.round(base.cd() * 20), "cooldown " + RuneCast.cooldownLeft(sp, r));
         h.assertTrue(sp.getCooldowns().isOnCooldown(stack), "hotbar sweep");
         h.assertFalse(RuneCast.castRune(sp, r, false), "blocked by cooldown");

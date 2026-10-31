@@ -122,6 +122,7 @@ public final class RpgRuneTimingTests {
                 sp.removeAllEffects();
                 RpgHealth.healFull(sp);
                 RuneCast.resetCooldowns(sp);
+                mmorpg.fabric.rune.RuneMarks.testClear(); // 0.49.0 앞 룬의 가하는 피해 증가 (분노 · 검세 · 기) 가 다음 룬에 남지 않게
                 p.z = dummy(h);
                 clearStrays(h, p.z);
                 sp.lookAt(EntityAnchorArgument.Anchor.EYES, p.z.getEyePosition());
@@ -151,7 +152,9 @@ public final class RpgRuneTimingTests {
             // 지속 보정 표와 맞는지
             mmorpg.core.Obj e = Runes.spreadEntry(r);
             String id = family + "." + r.grade();
-            boolean full = p.want > 0 && Math.abs(p.prev - p.want) < p.want * 0.01;
+            // 0.49.0 받는 피해 증가 표식을 스스로 건 룬 (피의 낙인 · 마그마 대지 — 낙인 · 녹은 뒤 타격) 은 뒤 타격이 + vuln 만큼 더 들어감
+            double vuln = r.def().numOr("vuln", 0);
+            boolean full = p.want > 0 && p.prev >= p.want * 0.99 && p.prev <= p.want * (1 + vuln) * 1.01;
             if (!p.cast) p.failures.add(id + " not cast");
             else if (e == null) {
                 if (p.prev > 0) p.failures.add(id + " deals damage (" + Math.round(p.prev) + ") but has no RUNE_SPREAD entry");
@@ -165,8 +168,8 @@ public final class RpgRuneTimingTests {
                 else if (full && Math.abs(p.last - want) > 3) p.failures.add(id + " last " + p.last + " vs t " + want);
                 else if (!full && p.last > want + 3) p.failures.add(id + " (partial) last " + p.last + " > t " + want);
                 if (p.prev > 0 && w > 0 && Math.abs(p.first - w) > 3) p.failures.add(id + " first " + p.first + " vs w " + w);
-                if (p.prev > 0 && w == 0 && p.first >= 8) p.failures.add(id + " first " + p.first + " but no w (windup)");
-                if (p.prev > p.want * 1.01 + 1e-6 && !"holy".equals(family)) p.failures.add(id + " dealt " + Math.round(p.prev) + " > want " + Math.round(p.want)); // 성기사: 언데드 ×1.5
+                if (p.prev > 0 && !e.has("w") && p.first >= 8) p.failures.add(id + " first " + p.first + " but no w (windup)"); // w 0 을 적은 룬 (반격 자세) 은 빼고
+                if (p.prev > p.want * (1 + vuln) * 1.01 + 1e-6 && !"holy".equals(family)) p.failures.add(id + " dealt " + Math.round(p.prev) + " > want " + Math.round(p.want)); // 성기사: 언데드 ×1.5
             }
             p.z.discard();
             p.idx++;
