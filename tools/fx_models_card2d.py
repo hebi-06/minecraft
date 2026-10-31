@@ -49,7 +49,7 @@ SPECS = {
     "card_tome": dict(png="rfx_jtome", cell=(256, 256), frames=12, use=list(range(12)), rot=0, box=(-0.58, 0.58, -0.42, 0.42), fit="x", scale=0.75,
                       anims={"idle": ([3, 4, 5, 6, 7, 8], True), "open": ([0, 1, 2], False, 0.4), "flip": ([3, 4, 5, 6, 7, 8], True),
                              "close": ([9, 10, 11], False, 0.4)}),
-    "card_page": dict(png="rfx_jpage", cell=(64, 64), frames=4, use=[0, 1, 2, 3], rot=0, box=(-0.16, 0.16, -0.22, 0.22), fit="max",
+    "card_page": dict(png="rfx_jpage2", cell=(64, 64), frames=4, use=[0, 1, 2, 3], rot=0, box=(-0.16, 0.16, -0.22, 0.22), fit="max",
                       anims={"idle": ([0, 1, 2, 3], True)}),
 }
 

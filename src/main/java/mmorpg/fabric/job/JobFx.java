@@ -286,8 +286,8 @@ final class JobFx {
         Opt o = only1p(sp).with("size", 1.35, "loop", 1.0, "alpha", alpha, "fade", 0.4, "spin", Kit.rand() * 360, "vel", vel);
         Opt base = o.with("life", life, "frames", (double) SPEED, "fps", 24.0);
         Vec3 at = V.add(sp.getEyePosition(), look, 1.4);
-        RuneKit.rfx(sp.level(), "jspeed", at, base.with("color", outer(j), "cell", 0.0));
-        RuneKit.rfx(sp.level(), "jspeed", at, base.with("color", inner(j), "cell", (double) SPEED, "alpha", alpha * 0.9));
+        RuneKit.rfx(sp.level(), "jspeed2", at, base.with("color", outer(j), "cell", 0.0));
+        RuneKit.rfx(sp.level(), "jspeed2", at, base.with("color", inner(j), "cell", (double) SPEED, "alpha", alpha * 0.9));
     }
 
     /** 0.29.0 1인칭 화면 네 귀퉁이의 옅은 연기 (시전자의 1인칭에만 — 암영 은신 · 망령 걸음): 눈앞 1.3칸, vel (칸/초) 로 같이 움직임 */
@@ -308,7 +308,7 @@ final class JobFx {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.2) return;
-        two(level, "jdash", DASH, V.lerp(from, to, 0.5), life, o.with("dir", V.scale(d, 1 / len), "size", len / 2), outer(j), inner(j));
+        two(level, "jdash2", DASH, V.lerp(from, to, 0.5), life, o.with("dir", V.scale(d, 1 / len), "size", len / 2), outer(j), inner(j));
         streakSparks(level, from, to, j, o);
     }
 
@@ -327,7 +327,7 @@ final class JobFx {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.2) return;
-        two(level, "jline", LINE, V.lerp(from, to, 0.5), life, o.with("dir", V.scale(d, 1 / len), "size", len / 2), outer(j), inner(j));
+        two(level, "jline2", LINE, V.lerp(from, to, 0.5), life, o.with("dir", V.scale(d, 1 / len), "size", len / 2), outer(j), inner(j));
         streakSparks(level, from, to, j, o);
     }
 
@@ -348,8 +348,8 @@ final class JobFx {
         Opt o = hide1p(sp).with("size", height * 0.3, "loop", 1.0, "alpha", alpha, "coreAlpha", alpha * 0.8, "vel", RuneKit.bodyVel(sp), "fade", 0.3);
         double fps = AURA / 0.45; // 한 바퀴 0.45초
         Opt base = o.with("life", life, "frames", (double) AURA, "fps", fps);
-        RuneKit.rfx(sp.level(), "jaura", c, base.with("color", outer(j), "cell", 0.0));
-        RuneKit.rfx(sp.level(), "jaura", c, base.with("color", inner(j), "cell", (double) AURA, "alpha", alpha * 0.8));
+        RuneKit.rfx(sp.level(), "jaura2", c, base.with("color", outer(j), "cell", 0.0));
+        RuneKit.rfx(sp.level(), "jaura2", c, base.with("color", inner(j), "cell", (double) AURA, "alpha", alpha * 0.8));
     }
 
     // ------------------------------------------------------------ 0.28.0 전사 · 매지션 · 궁수 그림
@@ -383,7 +383,7 @@ final class JobFx {
     /** 방어 깨짐 (rfx_jbreak — 카메라를 봄): 머리 위에 방패가 갈라짐 */
     static void breakMark(LivingEntity e, Jobs.Job j, double size, double life, double alpha) {
         if (!(e.level() instanceof ServerLevel level)) return;
-        two(level, "jbreak", BREAK, RuneKit.overHead(e, 0.55 + size * 0.4), life, Opt.of("size", size, "alpha", alpha, "vel", RuneKit.entVel(e), "fade", 0.3), outer(j),
+        two(level, "jbreak2", BREAK, RuneKit.overHead(e, 0.55 + size * 0.4), life, Opt.of("size", size, "alpha", alpha, "vel", RuneKit.entVel(e), "fade", 0.3), outer(j),
                 inner(j));
     }
 
@@ -395,20 +395,20 @@ final class JobFx {
     /** 몸에서 솟는 회오리 (rfx_jtwister — 세워 카메라 쪽으로 돎, 이어 돌림): 높이 약 height 칸 — 시전자 1인칭에서는 숨김 */
     static void twister(ServerPlayer sp, Jobs.Job j, double height, double life, double alpha) {
         Vec3 c = V.up(sp.position(), height * 0.6 - 0.2);
-        loop(sp.level(), "jtwister", TWISTER, c, life, 22, hide1p(sp).with("size", height * 0.34, "alpha", alpha, "coreAlpha", alpha * 0.85, "vel", RuneKit.bodyVel(sp),
+        loop(sp.level(), "jtwister2", TWISTER, c, life, 22, hide1p(sp).with("size", height * 0.34, "alpha", alpha, "coreAlpha", alpha * 0.85, "vel", RuneKit.bodyVel(sp),
                 "fade", 0.3), outer(j), inner(j));
     }
 
     /** 불꽃 꼬리 (rfx_jcomet — 머리가 앞): 머리 head 가 dir 쪽 (단위) 으로 speed 칸/초. 길이 = size × 2 */
     static void comet(ServerLevel level, Vec3 head, Vec3 dir, double size, double speed, double life, Jobs.Job j, Opt o) {
         Vec3 c = V.add(head, dir, -size * 0.64);
-        loop(level, "jcomet", COMET, c, life, 16, o.with("dir", dir, "size", size, "speed", speed), outer(j), inner(j));
+        loop(level, "jcomet2", COMET, c, life, 16, o.with("dir", dir, "size", size, "speed", speed), outer(j), inner(j));
     }
 
     /** 같은 것 — 색을 정함 (금서의 불 · 얼음 주문) */
     static void comet(ServerLevel level, Vec3 head, Vec3 dir, double size, double speed, double life, double[] glow, double[] core, Opt o) {
         Vec3 c = V.add(head, dir, -size * 0.64);
-        loop(level, "jcomet", COMET, c, life, 16, o.with("dir", dir, "size", size, "speed", speed), glow, core);
+        loop(level, "jcomet2", COMET, c, life, 16, o.with("dir", dir, "size", size, "speed", speed), glow, core);
     }
 
     /** 날아가는 그림 (머리가 앞 — 마탄 · 빛의 화살): 머리가 from 근처에서 나와 to 에 닿음. headAt = 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1). 닿는 틱 */
@@ -452,7 +452,7 @@ final class JobFx {
 
     /** 깨지는 거울 (rfx_jshatter — 카메라를 봄): 금이 퍼지고 조각이 흩어짐 (반지름 약 size 칸) */
     static void shatter(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jshatter", SHATTER, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        two(level, "jshatter2", SHATTER, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
     /**
@@ -476,7 +476,7 @@ final class JobFx {
         double step = len / n;
         for (int i = 0; i < n; i++) {
             Vec3 c = V.add(from, u, step * (i + 0.5));
-            two(level, "jbeam", BEAM, c, life, o.with("dir", u, "size", Math.max(step * 0.62, seg / 2)), outer(j), inner(j));
+            two(level, "jbeam2", BEAM, c, life, o.with("dir", u, "size", Math.max(step * 0.62, seg / 2)), outer(j), inner(j));
         }
     }
 
@@ -492,7 +492,7 @@ final class JobFx {
 
     /** 날리는 책장 (rfx_jpage — 이어 돌림) */
     static void page(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
-        loop(level, "jpage", PAGE, at, life, 10, o.with("size", size), glow, core);
+        loop(level, "jpage2", PAGE, at, life, 10, o.with("size", size), glow, core);
     }
 
     /**
@@ -515,25 +515,25 @@ final class JobFx {
     /** 과녁 (rfx_jtarget — 면이 normal 쪽): 바깥 고리 반지름 radius 칸 (= 반 크기 × 0.84). stage 0 = 조여 들어옴 (0 ~ 3) · 1 = 맞춰진 채 깜빡임 (3 ~ 5 이어 돌림) */
     static void target(ServerLevel level, Vec3 at, double radius, Jobs.Job j, Vec3 normal, int stage, double life, Opt o) {
         Opt b = o.with("dir", normal, "size", radius / 0.84);
-        if (stage == 0) cells(level, "jtarget", TARGET, 0, 4, at, life, 0, false, b, outer(j), inner(j));
-        else cells(level, "jtarget", TARGET, 3, 3, at, life, 8, true, b, outer(j), inner(j));
+        if (stage == 0) cells(level, "jtarget2", TARGET, 0, 4, at, life, 0, false, b, outer(j), inner(j));
+        else cells(level, "jtarget2", TARGET, 3, 3, at, life, 8, true, b, outer(j), inner(j));
     }
 
     /** 땅에 눕는 바람 고리 (rfx_jwind): 바깥 반지름 약 radius 칸 */
     static void wind(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
-        two(level, "jwind", WIND, at, life, o.with("dir", V.UP, "size", radius, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        two(level, "jwind2", WIND, at, life, o.with("dir", V.UP, "size", radius, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
     // ------------------------------------------------------------ 0.29.0 암살자 · 창술사 · 사신 그림
 
     /** 꽃 (rfx_jpetal 0 ~ 3 — 카메라를 봄, 이어 돌림): 다섯 꽃잎 (표식 · 낙화). 꽃 지름 약 size × 1.6 칸 */
     static void blossom(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        cells(level, "jpetal", PETAL, 0, 4, at, life, 8, true, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        cells(level, "jpetal2", PETAL, 0, 4, at, life, 8, true, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
     /** 꽃잎 하나 (rfx_jpetal 4 ~ 7 — 카메라를 봄, 팔랑임): dir (단위) 쪽으로 speed 칸/초 */
     static void petal(ServerLevel level, Vec3 at, Vec3 dir, double speed, double size, Jobs.Job j, double life, Opt o) {
-        cells(level, "jpetal", PETAL, 4, 4, at, life, 10, true, o.with("dir", dir, "speed", speed, "size", size, "spin", Kit.rand() * 360, "spinRate",
+        cells(level, "jpetal2", PETAL, 4, 4, at, life, 10, true, o.with("dir", dir, "speed", speed, "size", size, "spin", Kit.rand() * 360, "spinRate",
                 (Kit.rand() - 0.5) * 500), outer(j), inner(j));
     }
 
@@ -558,7 +558,7 @@ final class JobFx {
 
     /** 그림자 연기 (rfx_jsmoke — 카메라를 봄): 뭉게뭉게 퍼지며 사라짐 (반지름 약 size 칸). 색 = 짙은 빛 · 그보다 옅은 빛 (어두운 연기는 섞는 그림이라 어둡게 보임) */
     static void smoke(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
-        two(level, "jsmoke", SMOKE, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360, "fade", o.num("fade", 0.45)), glow, core);
+        two(level, "jsmoke2", SMOKE, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360, "fade", o.num("fade", 0.45)), glow, core);
     }
 
     /** 직업의 짙은 연기 (어두운 둘째 빛 · 그 반쯤) */
@@ -569,12 +569,12 @@ final class JobFx {
 
     /** 엇갈린 두 베기 (rfx_jcross — 카메라를 봄): X 자로 그어졌다 사라짐 (반 크기 size) */
     static void cross(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jcross", CROSS, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        two(level, "jcross2", CROSS, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
     /** 찌르기 번쩍 (rfx_jstab — 카메라를 봄): 길쭉한 창끝 빛 · 가로 충격 줄 · 퍼지는 고리 (반 크기 size) */
     static void stab(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jstab", STAB, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : (Kit.rand() - 0.5) * 50), outer(j), inner(j));
+        two(level, "jstab2", STAB, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : (Kit.rand() - 0.5) * 50), outer(j), inner(j));
     }
 
     /** 도는 창 (rfx_jspin — 면이 normal 쪽, 이어 돌림): 양끝 창날이 도는 원판 — 날 끝 반지름 radius 칸 (= 반 크기 × 0.86) */
@@ -595,7 +595,7 @@ final class JobFx {
 
     /** 혼불 (rfx_jsoul — 카메라를 봄, 이어 돌림): 흔들리는 혼의 불꽃 (높이 약 size × 2 칸) */
     static void soul(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        loop(level, "jsoul", SOUL, at, life, 12, o.with("size", size), outer(j), inner(j));
+        loop(level, "jsoul2", SOUL, at, life, 12, o.with("size", size), outer(j), inner(j));
     }
 
     /** 날아가는 혼불 from → to (speed 칸/초): 닿는 틱 */
@@ -610,23 +610,23 @@ final class JobFx {
 
     /** 사신 그림자 (rfx_jreaper — 세워 카메라 쪽으로 돎): stage 0 = 서서 흔들림 (0 ~ 3 이어 돌림) · 1 = 낫을 휘두름 (4 ~ 7). 높이 약 size × 2.67 칸 (at = 가운데) */
     static void reaper(ServerLevel level, Vec3 at, double size, Jobs.Job j, int stage, double life, Opt o) {
-        if (stage == 0) cells(level, "jreaper", REAPER, 0, 4, at, life, 6, true, o.with("size", size), outer(j), inner(j));
-        else cells(level, "jreaper", REAPER, 4, 4, at, life, 0, false, o.with("size", size), outer(j), inner(j));
+        if (stage == 0) cells(level, "jreaper2", REAPER, 0, 4, at, life, 6, true, o.with("size", size), outer(j), inner(j));
+        else cells(level, "jreaper2", REAPER, 4, 4, at, life, 0, false, o.with("size", size), outer(j), inner(j));
     }
 
     /** 명계의 문 (rfx_jgate — 세워 카메라 쪽으로 돎): stage 0 = 솟음 (0 ~ 2) · 1 = 열린 채 소용돌이 (3 ~ 5 이어 돌림) · 2 = 닫힘 (6 ~ 7). 높이 약 size × 2 칸 (at = 가운데) */
     static void gate(ServerLevel level, Vec3 at, double size, Jobs.Job j, int stage, double life, Opt o) {
         Opt b = o.with("size", size);
         switch (stage) {
-            case 0 -> cells(level, "jgate", GATE, 0, 3, at, life, 0, false, b, outer(j), inner(j));
-            case 1 -> cells(level, "jgate", GATE, 3, 3, at, life, 8, true, b, outer(j), inner(j));
-            default -> cells(level, "jgate", GATE, 6, 2, at, life, 0, false, b, outer(j), inner(j));
+            case 0 -> cells(level, "jgate2", GATE, 0, 3, at, life, 0, false, b, outer(j), inner(j));
+            case 1 -> cells(level, "jgate2", GATE, 3, 3, at, life, 8, true, b, outer(j), inner(j));
+            default -> cells(level, "jgate2", GATE, 6, 2, at, life, 0, false, b, outer(j), inner(j));
         }
     }
 
     /** 망자의 손 (rfx_jhand — 세워 카메라 쪽으로 돎): 땅 ground 에서 솟아 움켜쥠 (높이 약 size × 4 칸 — 그림 아래 끝이 땅) */
     static void hand(ServerLevel level, Vec3 ground, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jhand", HAND, V.up(ground, size * 2), life, o.with("size", size), outer(j), inner(j));
+        two(level, "jhand2", HAND, V.up(ground, size * 2), life, o.with("size", size), outer(j), inner(j));
     }
 
     // ------------------------------------------------------------ 0.30.0 성기사 · 사제 · 수호기사 그림
@@ -636,17 +636,17 @@ final class JobFx {
      * 가지가 갈라져 깜빡이며 사라짐
      */
     static void thunder(ServerLevel level, Vec3 ground, double height, Jobs.Job j, double life, Opt o) {
-        two(level, "jthunder", THUNDER, V.up(ground, height / 2), life, o.with("size", height / 8), outer(j), inner(j));
+        two(level, "jthunder2", THUNDER, V.up(ground, height / 2), life, o.with("size", height / 8), outer(j), inner(j));
     }
 
     /** 같은 것 — 색을 정함 */
     static void thunder(ServerLevel level, Vec3 ground, double height, double[] glow, double[] core, double life, Opt o) {
-        two(level, "jthunder", THUNDER, V.up(ground, height / 2), life, o.with("size", height / 8), glow, core);
+        two(level, "jthunder2", THUNDER, V.up(ground, height / 2), life, o.with("size", height / 8), glow, core);
     }
 
     /** 땅에 눕는 번개 고리 (rfx_jvolt — 면이 위): 고리 반지름 radius 칸 (= 반 크기 × 0.8) — 나타나 지직거리다 사라짐 (안쪽 무늬 없음) */
     static void volt(ServerLevel level, Vec3 center, double radius, Jobs.Job j, double life, Opt o) {
-        two(level, "jvolt", VOLT, center, life, o.with("dir", V.UP, "size", radius / 0.8, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j),
+        two(level, "jvolt2", VOLT, center, life, o.with("dir", V.UP, "size", radius / 0.8, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j),
                 inner(j));
     }
 
@@ -662,42 +662,42 @@ final class JobFx {
      * solo 가 있으면 앞 장은 solo + 16
      */
     static void wing(ServerLevel level, Vec3 at, Vec3 facing, double size, Jobs.Job j, double life, Opt o) {
-        loop(level, "jwing", WING, at, life, 5, o.with("dir", V.scale(facing, -1), "size", size), outer(j), inner(j));
+        loop(level, "jwing2", WING, at, life, 5, o.with("dir", V.scale(facing, -1), "size", size), outer(j), inner(j));
         double solo = o.num("solo", 0);
-        loop(level, "jwing", WING, at, life, 5, o.with("dir", facing, "size", size, "solo", solo > 0 ? solo + 16 : null), outer(j), inner(j));
+        loop(level, "jwing2", WING, at, life, 5, o.with("dir", facing, "size", size, "solo", solo > 0 ? solo + 16 : null), outer(j), inner(j));
     }
 
     /** 기절 별 (rfx_jstun — 카메라를 봄, 이어 돌림): 머리 위를 도는 별 다섯 (너비 약 몸 + 0.8칸) — ticks 동안 */
     static void stunStars(LivingEntity e, Jobs.Job j, int ticks) {
         if (!(e.level() instanceof ServerLevel level) || ticks <= 0) return;
         double size = 0.45 + Kit.bodyPad(e) * 0.4;
-        loop(level, "jstun", STUN, RuneKit.overHead(e, 0.32), ticks / 20.0, 14, Opt.of("size", size, "vel", RuneKit.entVel(e), "fade", 0.12, "alpha", 0.95),
+        loop(level, "jstun2", STUN, RuneKit.overHead(e, 0.32), ticks / 20.0, 14, Opt.of("size", size, "vel", RuneKit.entVel(e), "fade", 0.12, "alpha", 0.95),
                 new double[] {1, 0.86, 0.3}, new double[] {1, 1, 0.82});
     }
 
     /** 심판 표시 (rfx_jjudge — 카메라를 봄, 깜빡임): 작은 번개 문장 (반 크기 size) */
     static void judgePip(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        loop(level, "jjudge", JUDGE, at, life, 10, o.with("size", size), outer(j), inner(j));
+        loop(level, "jjudge2", JUDGE, at, life, 10, o.with("size", size), outer(j), inner(j));
     }
 
     /** 회복 십자 (rfx_jheal — 카메라를 봄): 십자 빛이 피어나 조금 떠오르며 사라짐 (반 크기 size) */
     static void healCross(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        two(level, "jheal", HEAL, at, life, o.with("size", size), outer(j), inner(j));
+        two(level, "jheal2", HEAL, at, life, o.with("size", size), outer(j), inner(j));
     }
 
     /** 같은 것 — 색을 정함 (성기사의 성역 · 맹세 회복은 금빛) */
     static void healCross(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
-        two(level, "jheal", HEAL, at, life, o.with("size", size), glow, core);
+        two(level, "jheal2", HEAL, at, life, o.with("size", size), glow, core);
     }
 
     /** 음표 (rfx_jnote — 카메라를 봄, kind 0 ~ 3 중 한 장): o 의 dir · speed 로 떠감 (높이 약 size × 2) */
     static void note(ServerLevel level, Vec3 at, int kind, double size, Jobs.Job j, double life, Opt o) {
-        cells(level, "jnote", NOTE, Math.floorMod(kind, NOTE), 1, at, life, 1, false, o.with("size", size), outer(j), inner(j));
+        cells(level, "jnote2", NOTE, Math.floorMod(kind, NOTE), 1, at, life, 1, false, o.with("size", size), outer(j), inner(j));
     }
 
     /** 성흔 (rfx_jstigma — 카메라를 봄, 이어 돌림): 빛나는 십자가와 빛살 (반 크기 size) */
     static void stigma(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
-        loop(level, "jstigma", STIGMA, at, life, 8, o.with("size", size), outer(j), inner(j));
+        loop(level, "jstigma2", STIGMA, at, life, 8, o.with("size", size), outer(j), inner(j));
     }
 
     /** 큰 종 (0.50.0 v2 장식 종 rfx_jbell2 — 세워 카메라 쪽으로 돎): 왼쪽 → 가운데 → 오른쪽 → 가운데로 흔들리며 울림 (아래로 퍼지는 소리 고리) · 가운데 at · 높이 약 size × 2 칸 */
@@ -723,7 +723,7 @@ final class JobFx {
         double step = len / n;
         for (int i = 0; i < n; i++) {
             Vec3 c = V.add(from, u, step * (i + 0.5));
-            loop(level, "jchain", CHAIN, c, life, 10, o.with("dir", u, "size", step / 2 * 1.04), outer(j), inner(j));
+            loop(level, "jchain2", CHAIN, c, life, 10, o.with("dir", u, "size", step / 2 * 1.04), outer(j), inner(j));
         }
     }
 
