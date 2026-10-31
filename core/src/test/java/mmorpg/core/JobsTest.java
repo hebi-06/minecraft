@@ -221,8 +221,8 @@ public final class JobsTest {
         check(near(as.skill(4).num("slash", 0) * as.skill(4).num("slashes", 0) + as.skill(4).num("final", 0), 38), "흑야 3 × 6 + 20");
         check(near(sum(la.skill(0), "hits"), 7.25) && la.skill(0).def().list("hits").size() == 3, "삼연창 2 + 2 + 3.25");
         check(near(la.skill(1).num("slam", 0), 4.35) && near(la.skill(2).num("spin", 0) * la.skill(2).num("spins", 0), 13.05), "장대 도약 4.35 · 선회창 6.525 × 2");
-        check(near(la.skill(4).num("spear", 0) * la.skill(4).num("spears", 0) + la.skill(4).num("final", 0), 58)
-                && near(la.skill(4).num("spears", 0) % la.skill(4).num("waves", 1), 0), "천창유성 2 × 20 + 18 (물결마다 같은 수)");
+        check(near(la.skill(4).num("thrust", 0) * la.skill(4).num("thrusts", 0) * la.skill(4).num("waves", 0) + la.skill(4).num("final", 0), 58),
+                "흐레스벨그의 발톱 1.75 × 4 × 4 + 30");
         check(near(la.skill(3).num("thrust", 0) * la.skill(3).num("dur", 0) / la.skill(3).num("every", 1) / 30, 0.5867, 1e-3), "창벽 1.1 × 16 / 30초 ≈ 0.58 P/초 (검사 태세 0.4 × 1.45)");
         check(near(re.skill(0).num("swing", 0) * re.skill(0).num("swings", 0), 6.25) && near(re.skill(1).num("hit", 0), 3.75), "갈퀴 베기 3.125 × 2 · 망령 걸음 3.75");
         check(near(re.skill(2).num("base", 0) * (1 + re.skill(2).num("per", 0) * 8), 11.2) && near(re.skill(2).num("base", 0) * (1 + re.skill(2).num("per", 0) * 10), 12),
@@ -232,12 +232,16 @@ public final class JobsTest {
         check(as.skill(4).num("every", 0) * 2 >= 10 && as.skill(4).num("finalDelay", 0) >= 10 && as.skill(2).num("every", 0) >= 10, "assassin i-frame spacing");
         check(la.skill(0).num("gap", 0) * 2 >= 10 && la.skill(2).num("gap", 0) >= 10 && la.skill(3).num("every", 0) >= 10 && la.skill(4).num("gap", 0) >= 10
                 && la.skill(4).num("finalDelay", 0) >= 10, "lancer i-frame spacing");
+        // 흐레스벨그의 발톱: 뒤로 뜀 (4틱) · 돌진 (dashTicks) 이 마지막 물결과 꿰뚫음 사이 (finalDelay) 안 — 꿰뚫는 틱 = t
+        check(la.skill(4).num("dashTicks", 0) + 6 <= la.skill(4).num("finalDelay", 0)
+                && near(la.skill(4).num("first", 0) + (la.skill(4).num("waves", 0) - 1) * la.skill(4).num("gap", 0) + la.skill(4).num("finalDelay", 0), la.skill(4).num("t", 0))
+                && near(la.skill(4).num("first", 0), la.skill(4).num("w", 0)), "흐레스벨그의 발톱 timeline (first = w · last = t)");
         check(re.skill(0).num("gap", 0) >= 10 && re.skill(4).num("gap", 0) >= 10 && re.skill(4).num("finalDelay", 0) >= 10, "reaper i-frame spacing");
-        // 지속 보정: 잔영 (2초 안에 터짐) · 흑야 → short, 요르문간드의 독니 (독이 2초) → long, 천창유성 · 황천문 (장판) → zone, 나머지 한방
+        // 지속 보정: 잔영 (2초 안에 터짐) · 흑야 → short, 요르문간드의 독니 (독이 2초) · 흐레스벨그의 발톱 (2.5초) → long, 황천문 (장판) → zone, 나머지 한방
         check(Jobs.spreadKind(as.skill(0)) == null && "short".equals(Jobs.spreadKind(as.skill(1))) && "long".equals(Jobs.spreadKind(as.skill(2)))
                 && "short".equals(Jobs.spreadKind(as.skill(4))), "assassin spread");
         check(Jobs.spreadKind(la.skill(0)) == null && Jobs.spreadKind(la.skill(1)) == null && Jobs.spreadKind(la.skill(2)) == null
-                && "zone".equals(Jobs.spreadKind(la.skill(4))), "lancer spread");
+                && "long".equals(Jobs.spreadKind(la.skill(4))), "lancer spread");
         check(Jobs.spreadKind(re.skill(0)) == null && Jobs.spreadKind(re.skill(1)) == null && Jobs.spreadKind(re.skill(2)) == null
                 && "zone".equals(Jobs.spreadKind(re.skill(4))), "reaper spread");
         check(as.trait().max() == 5 && near(as.trait().def().num("back"), 0.25) && as.trait().def().num("backArc") == 120, "표식 5 · 등 뒤 +25%p · 120°");

@@ -930,7 +930,7 @@ public final class RpgJobTests {
 
     /**
      * 창술사: 창끝 (사거리 끝 1칸 안 평타 +15% · 기세 → 다음 직업 스킬 +10%) → 삼연창 (2 + 2 + 3.25) · 장대 도약 (4.35) · 선회창 (6.525 × 2) · 창벽 (0.5초마다 1.1 ·
-     * 정면 −30%) · 천창유성 (2 × 20 + 18 — 장판)
+     * 정면 −30%) · 흐레스벨그의 발톱 (1.75 × 4 × 4 + 30 — 그 자리에서 찌르기 폭풍 → 뒤로 뛰었다가 과녁 앞까지 돌진해 꿰뚫음)
      */
     @GameTest(environment = ENV_LA, maxTicks = 440)
     public void lancerSkills(GameTestHelper h) {
@@ -1012,11 +1012,21 @@ public final class RpgJobTests {
             z.clear();
             home(h, sp);
             z.add(dummy(h, 5));
-            h.assertTrue(JobSkills.press(sp, 4), "천창유성 cast");
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 4), "흐레스벨그의 발톱 cast");
         }));
-        steps.add(new Step(80, () -> {
+        // 흐레스벨그의 발톱: 찌르기 폭풍 동안 그 자리에 버팀 → 뒤로 뛰었다가 과녁 1.3칸 앞 (몸 가장자리 기준) 까지 돌진 (50틱에 꿰뚫음)
+        steps.add(new Step(30, () -> {
+            double moved = Math.abs(sp.position().z - mark[0]);
+            h.assertTrue(moved < 0.3, "흐레스벨그의 발톱 held in place during the storm: " + moved);
+        }));
+        steps.add(new Step(22, () -> {
+            double moved = sp.position().z - mark[0];
+            h.assertTrue(moved > 2 && moved < 4.2, "흐레스벨그의 발톱 charged to the target: " + moved);
+        }));
+        steps.add(new Step(28, () -> {
             double want = expected(sp, j, j.skill(4), 58);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "천창유성 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "흐레스벨그의 발톱 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         chain(h, steps, 0, () -> {
             cleanup(sp);

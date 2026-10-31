@@ -125,7 +125,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(1, new int[] {3, 7, 11, 14}, new int[] {5, 11}, 22, false),
         new Case(2, new int[] {2, 8, 14}, new int[] {4, 12}, 24, false),
         new Case(3, new int[] {4, 12, 22}, new int[] {6, 22}, 30, true),
-        new Case(4, new int[] {4, 12, 18, 24, 34, 52, 60, 66, 70}, new int[] {12, 24, 50, 66}, 80, false),
+        new Case(4, new int[] {4, 8, 17, 27, 37, 43, 48, 51, 55}, new int[] {9, 27, 47, 51}, 66, false), // 0.50.0 흐레스벨그의 발톱: 찌르기 폭풍 넷 · 뒤로 뜀 · 돌진 · 꿰뚫음
     };
     private static final Case[] CASES_RE = {
         new Case(0, new int[] {2, 6, 12, 16}, new int[] {3, 13}, 22, false),

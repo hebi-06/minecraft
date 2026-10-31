@@ -171,9 +171,10 @@
           "desc": "창을 머리 위로 돌려 둘레 5칸 2바퀴 베기 (6.525 × 2), 두 번째에 밀쳐냄"},
         {"id": "lancer_wall", "name": "창의 장벽", "cd": 30, "dur": 160, "every": 10, "thrust": 1.1, "reach": 4, "arc": 100, "guard": 0.3, "front": 120, "slow": 0,
           "desc": "8초 태세: 앞 4칸 (100°) 에 들어온 적을 0.5초마다 자동으로 찌름 (1.1) · 정면 (120°) 에서 받는 피해 −30% · 천천히 움직임"},
-        {"id": "lancer_ult", "name": "천 개의 창", "cd": 60, "total": 58, "spear": 2, "spears": 20, "waves": 4, "gap": 10, "first": 20, "range": 18, "arc": 90,
-          "final": 18, "finalDelay": 15, "finalRadius": 5, "t": 65, "w": 20, "u": ["knock"], "knock": 0.9, "zone": true,
-          "desc": "창을 하늘로 던지면 수백 자루로 갈라져 앞 18칸 부채꼴 (90°) 에 2초 동안 쏟아짐 (2 × 20 — 0.5초마다 다섯 자루씩) → 진짜 창이 조준한 곳에 떨어져 폭발 (둘레 5칸 18 · 밀쳐냄 — 보스 제외)"}
+        {"id": "lancer_ult", "name": "흐레스벨그의 발톱", "cd": 60, "total": 58, "thrust": 1.75, "thrusts": 4, "waves": 4, "gap": 10, "first": 6, "reach": 7, "arc": 70,
+          "back": 1.5, "dash": 6, "dashTicks": 5, "finalDelay": 14, "final": 30, "pierce": 8, "pierceWidth": 2.6, "near": 5, "nearArc": 60, "knock": 0.9, "t": 50, "w": 6,
+          "u": ["knock"],
+          "desc": "창을 겨누고 그 자리에 버텨 0.5초마다 앞 7칸 (70°) 을 순식간에 네 번씩 찌름 (1.75 × 4 · 4번) → 뒤로 뛰며 창을 당겼다가 적 앞까지 돌진해 온 힘으로 꿰뚫음 (앞 8칸 · 30 · 밀쳐냄 — 보스 제외)"}
       ]
     },
     "reaper": {

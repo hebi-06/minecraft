@@ -359,19 +359,26 @@ def lancer_wall(A, B):
 
 
 def lancer_ult(A, B):
-    # 하늘에서 쏟아지는 빛의 창 (위왼쪽 → 아래오른쪽) · 앞의 큰 창 · 땅의 번쩍
-    layers, glows = [], []
-    for (x, y, L, s) in ((8.0, 10.0, 9.0, 0.7), (16.0, 6.5, 9.0, 0.7), (24.0, 9.0, 8.0, 0.65), (12.0, 18.5, 8.0, 0.6), (27.5, 17.5, 7.0, 0.6)):
-        ls, bl = spear_layers(A, B, (x - L * 0.45, y - L * 0.9), (x, y), head=3.6 * s / 0.7, hw=1.3 * s / 0.7, shaft=0.9)
-        layers += ls
-        glows.append(glow(bl, B, 1.0, 0.7))
-    big, bigb = spear_layers(A, B, (11.0, 1.0), (19.0, 25.5), head=7.0, hw=2.6, shaft=1.7)
-    hit = mask()
-    star(hit, 19.5, 26.5, 7.0, 0.14, 0)
-    ground = mask()
-    poly(ground, [(1.0, 28.5), (31.0, 28.5), (31.0, 29.8), (1.0, 29.8)])
-    subject = stack(layer(ground, mix(A, (60, 40, 20), 0.6), mix(A, DARK, 0.6)), *layers, *big, layer(hit, WHITE, B))
-    return finish(subject, glows + [glow(bigb, A, 1.8, 1.0), glow(hit, A, 2.0, 1.0)], lancer_back(A, B))
+    # 0.50.0 흐레스벨그의 발톱 (천 개의 창을 바꿈 — 제 창으로 찌르기 폭풍 → 돌진해 꿰뚫음): 왼쪽 아래 → 오른쪽 위로 내지른 큰 창 · 창끝에서 앞으로 벌어지는 원뿔 충격
+    # (겹친 호 둘) · 창 양옆의 찌르기 줄 넷 (폭풍) · 창끝 반짝임
+    ox, oy = 3.0, 29.0
+    tip = (19.0, 13.0)
+    L = math.hypot(tip[0] - ox, tip[1] - oy)
+    ux, uy = (tip[0] - ox) / L, (tip[1] - oy) / L
+    px, py = -uy, ux
+    base = math.degrees(math.atan2(uy, ux))
+    cone = mask()
+    crescent(cone, tip[0] - ux * 1.5, tip[1] - uy * 1.5, 5.4, 1.5, base - 78, base + 78)
+    crescent(cone, tip[0] - ux * 1.5, tip[1] - uy * 1.5, 9.6, 1.5, base - 62, base + 62)
+    jabs = mask()
+    for (off, d0, d1) in ((-4.2, 9.0, 16.5), (4.2, 9.0, 16.5), (-7.4, 5.5, 11.5), (7.4, 5.5, 11.5)):
+        line(jabs, [(ox + px * off + ux * d0, oy + py * off + uy * d0), (ox + px * off + ux * d1, oy + py * off + uy * d1)], 0.9)
+    main, mainb = spear_layers(A, B, (ox, oy), tip, head=7.6, hw=2.8, shaft=1.7)
+    sp = mask()
+    star(sp, tip[0] + ux * 0.4, tip[1] + uy * 0.4, 3.0, 0.2, 45)
+    subject = stack(layer(jabs, mix(A, WHITE, 0.55), A, None, None, axis=(ux, uy)), layer(cone, WHITE, mix(B, A, 0.4), WHITE, mix(A, DARK, 0.3), axis=(ux, uy)),
+                    *main, layer(sp, WHITE, B))
+    return finish(subject, [glow(cone, A, 1.6, 0.9), glow(mainb, A, 1.8, 1.0), glow(sp, A, 1.6, 1.0)], lancer_back(A, B))
 
 
 # ------------------------------------------------------------ 사신 (빛: 청록 → 짙은 청록)

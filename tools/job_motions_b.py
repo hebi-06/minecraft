@@ -216,42 +216,49 @@ fpw(m, 18, FPW_FWD, dp=(0.05, -0.15, 0))
 fpw(m, 22, FPW_LOW)
 use_skill(m, "lancer_wall")
 
-# 천창유성 (효과: 0 에 창을 하늘로 던짐 → 10 에 하늘에서 갈라짐 → 20 · 30 · 40 · 50 에 쏟아짐 → 65 진짜 창이 떨어져 폭발). 물결은 서버가 1틱 전에 :wave,
-# 진짜 창은 7틱 전에 :final (창이 손을 떠난 동안 빈손 — thrown)
-m = Motion("lancer_ult", 22, "천창유성 — 창을 등 뒤로 당겼다가 하늘 높이 던지고 빈손을 하늘로 뻗음", fade=(0.03, 0.05))
-m.set(hands={"main": "thrown"})
-keyp(m, 0.8, P(body=[-14, 30, 0], head=[-20, 0], ra=arm([0.45, 0.35, -0.8], 70, [0.2, 0.9, -0.3]), la=arm([-0.2, 0.6, 0.75], 10), rl=[18, 0, 0],
-               ll=[-24, 0, 0], rk=20, lk=16), "out3")
-keyp(m, 2.2, P(body=[-22, -10, 0], head=[-34, 0], ra=arm([0.08, 0.98, 0.15], 4, [0, 1, 0.1]), la=arm([-0.4, -0.4, 0.5], 20), rl=[14, 0, 0], ll=[-22, 0, 0],
-               rk=12, lk=18), "out3")
-keyp(m, 8, P(CALL, ra=arm([0.12, 1, 0.08], 5)))
-keyp(m, 20, P(CALL, ra=arm([0.12, 1, 0.08], 5), head=[-34, 0]))
-m.set(hide=[m.t(2.1), 1.0])
-fpw(m, 0.8, FPW_DRAWN, "out3")
-fpr(m, 2.4, FP_RAISE, "out3")
-fpr(m, 20, FP_RAISE)
+# 흐레스벨그의 발톱 (0.50.0 — 천 개의 창을 바꿈. 효과: 0 에 발을 구르고 겨눔 → 6 · 16 · 26 · 36 에 찌르기 폭풍의 물결 (그 사이 매 틱 찌르기 그림) → 41 에 뒤로
+# 뛰며 창을 깊이 당김 → 45 ~ 50 앞으로 돌진 → 50 에 온 힘으로 꿰뚫음). 몸은 그 자리에서 2.5틱마다 한 번씩 창을 내지름 (방향을 조금씩 바꿔 — 부채꼴 안 여기저기)
+STORM_LA = arm([-0.35, -0.5, -0.3], 30)  # 왼손은 옆으로 빼 둠 (오른손 한 손 찌르기)
+STORM_LEGS = dict(rl=[22, 0, 6], ll=[-30, 0, -4], rk=30, lk=44)  # 왼발을 내딛고 낮게 버팀
+STORM_PULL = P(body=[12, 18, 0], head=[-6, -12], ra=arm([0.3, -0.3, -0.55], 85, [0.0, 0.03, 1]), la=STORM_LA, root=[-0.2, 0.05], **STORM_LEGS)  # 창을 허리로 당김
+STORM_DIRS = ((0.0, 0.04), (0.16, 0.14), (-0.14, -0.06), (0.1, -0.12), (-0.18, 0.12), (0.06, 0.2), (0.18, -0.04))  # 찌르는 쪽 (오른쪽 · 위)
+FPW_PULL = dict(p=(-0.27, 0.2, 0.45), blade=(-0.12, 0.05, 0.99), edge=(0, -1, 0))
+COIL = P(body=[6, 34, 0], head=[-4, -26], ra=arm([0.45, -0.1, -0.85], 70, [0.05, 0.05, 1]), la=arm([-0.2, -0.2, 0.95], 20), rl=[30, 0, 8], ll=[-20, 0, -6],
+         rk=60, lk=50, root=[-0.32, -0.1])  # 몸을 비틀어 창을 깊이 당김 (창끝은 앞)
+CHARGE = P(body=[30, 8, 0], head=[-26, -6], ra=arm([0.25, -0.35, 0.3], 60, [0.02, 0.03, 1]), la=arm([-0.1, -0.3, 0.95], 30), rl=[30, 0, 6], ll=[-40, 0, -4],
+           rk=20, lk=40, root=[-0.15, 0.3])  # 창을 옆구리에 끼고 숙여 내달림
+PIERCE = P(body=[22, -22, 0], head=[-14, 16], ra=arm([0.02, 0.06, 1], 0, [0.0, 0.03, 1]), la=arm([-0.45, -0.45, -0.55], 25), rl=[30, 0, 6], ll=[-44, 0, -4],
+           rk=16, lk=56, root=[-0.3, 0.4])  # 크게 내디디며 온 힘으로 내지름
+m = Motion("lancer_ult", 62, "흐레스벨그의 발톱 — 낮게 버티고 창을 쉴 새 없이 내질러 앞을 찌르기 폭풍으로 덮은 뒤, 뒤로 뛰며 창을 깊이 당겼다가 앞으로 돌진해 온 힘으로 "
+           "꿰뚫음", fade=(0.03, 0.1))
+keyp(m, 0.8, P(STORM_PULL, body=[10, 22, 0]), "out3")
+fpw(m, 0.8, FPW_PULL, "out3")
+t = 5.0
+i = 0
+while t < 38.0:
+    dx, dy = STORM_DIRS[i % len(STORM_DIRS)]
+    keyp(m, t, STORM_PULL, "in")
+    keyp(m, t + 1.0, P(body=[16, -14 - dx * 30, 0], head=[-8 - dy * 20, 8 + dx * 30], ra=arm([dx, dy, 1], 2, [dx, dy, 1]), la=STORM_LA, root=[-0.2, 0.22],
+                       rl=[24, 0, 6], ll=[-34, 0, -4], rk=26, lk=46), "out3")
+    fpw(m, t, FPW_PULL, "in")
+    fpw(m, t + 1.0, dict(p=(-0.61 + dx * 0.6, 0.33 + dy * 0.6, -0.33), blade=(-0.12 + dx, 0.05 + dy, 0.99), edge=(0, -1, 0)), "out3")
+    t += 2.5
+    i += 1
+keyp(m, 40.6, COIL, "out3")
+keyp(m, 44.6, P(COIL, body=[10, 30, 0]))
+keyp(m, 46.2, CHARGE, "out3")
+keyp(m, 48.8, P(CHARGE, body=[32, 10, 0], root=[-0.18, 0.32]))
+keyp(m, 50.0, PIERCE, "out3")
+keyp(m, 55.0, P(PIERCE, body=[20, -20, 0], root=[-0.28, 0.38]))
+keyp(m, 60.0, P(W_READY, body=[8, 6, 0]))
+fpw(m, 40.6, dict(p=(0.05, 0.05, 0.6), blade=(-0.1, 0.05, 1), edge=(0, -1, 0)), "out3")
+fpw(m, 44.6, dict(p=(0.08, 0.02, 0.62), blade=(-0.1, 0.05, 1), edge=(0, -1, 0)))
+fpw(m, 46.2, dict(p=(-0.35, 0.05, -0.1), blade=(-0.1, 0.02, 1), edge=(0, -1, 0)), "out3")
+fpw(m, 48.8, dict(p=(-0.33, 0.02, 0.05), blade=(-0.1, 0.02, 1), edge=(0, -1, 0)))
+fpw(m, 50.0, dict(p=(-0.64, 0.32, -0.5), blade=(-0.12, 0.05, 0.99), edge=(0, -1, 0)), "out3")
+fpw(m, 55.0, dict(p=(-0.62, 0.3, -0.45), blade=(-0.12, 0.05, 0.99), edge=(0, -1, 0)))
+fpw(m, 60.0, FPW_LOW)
 use_skill(m, "lancer_ult")
-m = Motion("lancer_ult_wave", 10, "천창유성 — 빈손을 하늘에서 앞 땅으로 휘둘러 창비를 쏟아지게 함 (한 물결)", fade=(0.05, 0.1))
-m.set(hands={"main": "thrown"}, hide=[0.0, 1.0])
-keyp(m, 0.4, P(CALL, ra=arm([0.12, 1, 0.08], 5)))
-keyp(m, 1.6, P(body=[8, -10, 0], head=[-10, 0], ra=arm([0.05, 0.1, 1], 2), la=L(A_HIP), **LEGS_FIGHT), "out3")
-keyp(m, 8, P(body=[6, -10, 0], head=[-14, 0], ra=arm([0.05, 0.15, 1], 4), la=L(A_HIP), **LEGS_FIGHT))
-fpr(m, 0.4, FP_RAISE)
-fpr(m, 1.6, nudge(FP_PALM, (0, 0.05, -0.05)), "out3")
-fpr(m, 8, FP_PALM)
-use_skill(m, "lancer_ult:wave")
-m = Motion("lancer_ult_final", 18, "천창유성 끝 — 빈손을 하늘로 들어 진짜 창을 부르고 내리꽂히는 순간 주먹을 쥐어 당김 → 창이 손으로 돌아옴", fade=(0.03, 0.1))
-m.set(hands={"main": "thrown"}, hide=[0.0, m.t(10.5)])
-keyp(m, 2, P(CALL, ra=arm([0.12, 1, 0.08], 5)), "out3")
-keyp(m, 6.4, P(CALL, ra=arm([0.12, 1, 0.08], 5), head=[-30, 0]))
-keyp(m, 7.4, P(body=[16, -6, 0], head=[0, 0], ra=bent([0.3, -0.4, 0.4], 120, (0, 0.3, 1)), la=L(A_HIP), **LEGS_FIGHT), "in")
-keyp(m, 12, P(W_READY, body=[8, 0, 0]), "out")
-fpr(m, 2, FP_RAISE, "out3")
-fpr(m, 6.4, FP_RAISE)
-fpr(m, 7.4, nudge(FP_PALM_UP, (0.05, -0.25, 0.15), (-30, 0, 0)), "in")
-m.fp(10.6, (0.0, -0.5, 0.1), None, (0.1, 0.7, 0.7))
-fpw(m, 13, FPW_LOW, "out")
-use_skill(m, "lancer_ult:final")
 
 # ------------------------------------------------------------ 사신 (낫 — 청록 · 짙은 청록)
 

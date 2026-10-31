@@ -71,7 +71,7 @@ AIR = {
     "jb_assassin_bloom": [],
     "jb_lancer_triple": [],
     "jb_lancer_cyclone": [(2, 15, "tuck")],
-    "jb_lancer_ult": [(2, 20, "tuck")],
+    "jb_lancer_ult": [(41, 45, "hop")],
     "jb_reaper_reap": [],
     "jb_reaper_burst": [(1, 6, "tuck"), (8, 12, "land")],
     "jb_reaper_ult": [(2, 14, "float")],
