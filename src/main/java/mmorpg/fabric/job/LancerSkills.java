@@ -378,7 +378,7 @@ final class LancerSkills {
      * 흐레스벨그의 발톱 (0.50.0 — 사용자 "창술사 궁 바꾸자": 창을 하늘로 던져 수백 자루로 갈라지던 천 개의 창 대신 제 창 · 몸으로 — 검사 라그나로크와 같은 기준):
      * 앞 (100°) 의 가장 가까운 보이는 적을 바라보고 (뛰는 중이면 발밑 땅에 내려서서) 그 자리에 버팀 → first 틱부터 gap 틱마다 (waves 번) 앞 reach 칸 (arc°) 에
      * 찌르기 폭풍 — 적마다 thrust × thrusts (한 번에 · 숫자 thrusts 줄, 2틱 간격) → 뒤로 짧게 뛰며 (back 칸) 창을 깊이 당김 → dashTicks 틱에 앞으로 돌진 (보는 쪽
-     * 줄 위 첫 적의 1.3칸 앞 — 없으면 dash 칸, 벽 · 낭떠러지 앞까지) → 마지막 물결 finalDelay 틱 뒤 온 힘으로 꿰뚫음 ({@link #pierce}).
+     * 줄 위 첫 적의 1.7칸 앞 — 없으면 dash 칸, 벽 · 낭떠러지 앞까지) → 마지막 물결 finalDelay 틱 뒤 온 힘으로 꿰뚫음 ({@link #pierce}).
      * 그림: 매 틱 몸에서 앞 부채꼴로 뻗는 찌르기 한두 번 (일섬 · 창끝 번쩍 · 잠깐 남는 창 잔상 — 반쯤은 맞는 적의 몸으로), 1인칭 눈앞 창끝 번쩍, 몸 앞의 세운 바람 고리,
      * 독수리 깃털, 돌진의 찌르는 그림자 분신 · 줄기 · 흙먼지. 던지는 창 · 하늘에서 떨어지는 창은 없음. 같은 적은 10틱 넘게 띄움 (gap · finalDelay — JobsTest)
      */
@@ -445,7 +445,7 @@ final class LancerSkills {
                     JobKit.strikeSplit(sp, e, j, P, thrust * thrusts, thrusts, 2, false, false, life, 0, x -> stormHitFx(sp, e, j, thrusts));
                 }
                 Vec3 f = Kit.facingOf(sp);
-                JobFx.ringFacing(d, V.add(chest(sp), f, 2.6), 1.3, j, V.scale(f, -1), 0.3, Opt.of("alpha", 0.9));
+                JobFx.ringFacing(d, V.add(chest(sp), f, 3.0), 1.05, j, V.scale(f, -1), 0.3, Opt.of("alpha", 0.85));
                 JobFx.wind(d, V.up(sp.position(), 0.08), 1.8, j, 0.35, Opt.of("alpha", 0.7));
                 SkillFx.sparks(d, V.up(sp.position(), 0.15), DUST, 4, 2.2);
                 SkillFx.play(d, "item.trident.hit", sp.position(), 1.1 + ww * 0.08, 0.7);
@@ -506,13 +506,13 @@ final class LancerSkills {
         return spots.isEmpty() ? from : spots.get(spots.size() - 1).p();
     }
 
-    /** 돌진할 곳: 보는 쪽 (수평) 줄 위 첫 적의 1.3칸 앞 (몸 가장자리 기준 — 없으면 dash 칸), 벽 · 낭떠러지 · 물 앞까지 */
+    /** 돌진할 곳: 보는 쪽 (수평) 줄 위 첫 적의 1.7칸 앞 (몸 가장자리 기준 — 1인칭 화면을 그 몸이 다 덮지 않게, 없으면 dash 칸), 벽 · 낭떠러지 · 물 앞까지 */
     private static Vec3 chargeStop(ServerPlayer sp, Vec3 from, double dash) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         double want = dash;
         List<Kit.LineHit> line = Kit.lineHits(sp, V.up(from, 1.15), f, dash + 2.5, 0.9);
-        if (!line.isEmpty()) want = Math.min(dash, Math.max(0, line.get(0).t() - 1.3));
+        if (!line.isEmpty()) want = Math.min(dash, Math.max(0, line.get(0).t() - 1.7));
         double free = want < 0.3 ? 0 : Kit.reachFlat(level, from, f, want);
         List<Kit.Spot> spots = free > 0.3 ? Kit.dashSpots(level, from, f, free) : List.of();
         return spots.isEmpty() ? from : spots.get(spots.size() - 1).p();
@@ -543,7 +543,7 @@ final class LancerSkills {
         Vec3 near = V.add(V.add(V.add(sp.getEyePosition(), look, 1.8 + Kit.rand() * 1.4), V.rightOf(V.flat(look)), (Kit.rand() - 0.5) * 1.2), JobFx.screenUp(look),
                 -0.35 + Kit.rand() * 0.5);
         JobFx.stab(level, near, 0.3 + Kit.rand() * 0.12, j, 0.14, JobFx.only1p(sp).with("vel", RuneKit.bodyVel(sp)));
-        if (tick % 4 == 0) JobFx.ringFacing(level, V.add(chest, f, 1.6 + Kit.rand() * 0.6), 0.75 + Kit.rand() * 0.3, j, V.scale(f, -1), 0.22, Opt.of("alpha", 0.8));
+        if (tick % 4 == 0) JobFx.ringFacing(level, V.add(chest, f, 2.0 + Kit.rand() * 0.6), 0.6 + Kit.rand() * 0.25, j, V.scale(f, -1), 0.22, Opt.of("alpha", 0.75));
         if (tick % 6 == 3) JobFx.feathers(level, V.up(sp.position(), 1.3), 2, 0.6, 0.17, j, 0.9, JobFx.hide1p(sp));
         if (tick % 2 == 0) SkillFx.play(level, "item.spear.attack_miss", sp.position(), 1.25 + Kit.rand() * 0.5, 0.55);
     }
@@ -575,24 +575,29 @@ final class LancerSkills {
         double[] glow = JobKit.glow(j);
         double range = k.num("pierce", 8);
         double len = Math.max(2, RuneKit.rayLength(level, from, f, range));
-        thrustFx(sp, j, f, len, 0, 1.8);
-        JobFx.spear(level, V.add(from, f, 3.2), f, 1.5, 0, 0.3, j, JobFx.hide1p(sp).with("fade", 0.5, "alpha", 0.85));
-        JobFx.dash(level, V.add(from, f, 0.8), V.add(from, f, len), j, 0.35, JobFx.hide1p(sp));
+        // 0.50.0 영상 1차: 꿰뚫는 순간이 폭풍보다 약했음 (가는 일섬 · 작은 고리가 적 몸에 가려지고 화면 번쩍임에 묻힘) → 큰 찌르기 · 굵은 줄기 둘 · 큰 창 잔상 ·
+        // 맞닿는 곳의 큰 번쩍임 · 더 크고 오래 남는 원뿔 충격 고리 · 짧은 번쩍임 (뒤의 그림이 보이게)
+        thrustFx(sp, j, f, len, 0, 2.2);
+        JobFx.spear(level, V.add(from, f, 3.4), f, 1.7, 0, 0.4, j, JobFx.hide1p(sp).with("fade", 0.5));
+        JobFx.dash(level, V.add(from, f, -0.6), V.add(from, f, len), j, 0.45, JobFx.hide1p(sp));
+        JobFx.dash(level, V.up(V.add(from, f, 0.4), 0.15), V.up(V.add(from, f, len * 0.75), 0.15), j, 0.35, JobFx.hide1p(sp).with("alpha", 0.8));
+        JobFx.stab(level, V.add(from, f, 1.9), 1.5, j, 0.32, Opt.empty());
+        JobFx.burst(level, V.add(from, f, 1.6), 1.5, j, 0.38, JobFx.hide1p(sp));
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.35);
         for (double s = 1.4; s < len; s += 1.5) {
             double ss = s;
-            RuneKit.later((int) Math.floor(s / PIERCE_SPEED * 20), () -> JobFx.ringFacing(level, V.add(from, f, ss), 0.6 + ss * 0.09, j, V.scale(f, -1), 0.3,
+            RuneKit.later((int) Math.floor(s / PIERCE_SPEED * 20), () -> JobFx.ringFacing(level, V.add(from, f, ss), 0.9 + ss * 0.14, j, V.scale(f, -1), 0.42,
                     Opt.empty()));
         }
         RuneKit.later((int) Math.floor(len / PIERCE_SPEED * 20), () -> {
             Vec3 tip = V.add(from, f, len);
-            JobFx.burst(level, tip, 1.3, j, 0.35, Opt.empty());
-            JobFx.feathers(level, tip, 6, 1.0, 0.2, j, 1.2, Opt.empty());
+            JobFx.burst(level, tip, 1.5, j, 0.4, Opt.empty());
+            JobFx.feathers(level, tip, 7, 1.1, 0.22, j, 1.3, Opt.empty());
         });
-        JobFx.wind(level, V.up(c, 0.08), 2.6, j, 0.45, Opt.empty());
-        RuneKit.rockBurst(level, V.up(c, 0.2), 6, 3.5, 0.15);
-        SkillFx.sparks(level, V.up(c, 0.2), DUST, 10, 4);
-        Ult.flash(level, V.up(c, 1.0), glow, Opt.empty(), sp);
+        JobFx.wind(level, V.up(c, 0.08), 2.8, j, 0.5, Opt.empty());
+        RuneKit.rockBurst(level, V.up(c, 0.2), 7, 3.8, 0.16);
+        SkillFx.sparks(level, V.up(c, 0.2), DUST, 12, 4.5);
+        Ult.flash(level, V.up(c, 1.0), glow, Opt.of("time", new double[] {0.02, 0.04, 0.3}), sp);
         RuneKit.shakeAround(level, c, 16, 0.4, 0.45);
         SkillFx.play(level, "item.trident.riptide_3", c, 0.9, 1.0);
         SkillFx.play(level, "entity.player.attack.crit", c, 0.7, 1.0);
@@ -618,8 +623,8 @@ final class LancerSkills {
     private static void pierceHitFx(ServerPlayer sp, LivingEntity e, Jobs.Job j, Vec3 c, Vec3 f, double knock, int[] cnt) {
         if (JobKit.pushable(e)) RuneKit.knock(e, V.flat(V.add(f, V.flat(V.sub(e.position(), c)))), knock, 0.35); // 0.50.0 밀쳐냄 (유틸 −5%)
         if (cnt[0]++ >= 8 || !(e.level() instanceof ServerLevel lv)) return;
-        JobFx.hit(e, j, 1.6);
-        JobFx.burst(lv, Kit.bodyPoint(e), 1.0 + Kit.bodyPad(e) * 0.5, j, 0.32, Opt.empty());
-        JobFx.stab(lv, Kit.bodyToward(e, sp.getEyePosition(), f), 0.9, j, 0.25, Opt.empty());
+        JobFx.hit(e, j, 1.7);
+        JobFx.burst(lv, Kit.bodyPoint(e), 1.3 + Kit.bodyPad(e) * 0.5, j, 0.4, Opt.empty());
+        JobFx.stab(lv, Kit.bodyToward(e, sp.getEyePosition(), f), 1.1, j, 0.3, Opt.empty());
     }
 }

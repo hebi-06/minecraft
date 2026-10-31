@@ -1015,7 +1015,7 @@ public final class RpgJobTests {
             mark[0] = sp.position().z;
             h.assertTrue(JobSkills.press(sp, 4), "흐레스벨그의 발톱 cast");
         }));
-        // 흐레스벨그의 발톱: 찌르기 폭풍 동안 그 자리에 버팀 → 뒤로 뛰었다가 과녁 1.3칸 앞 (몸 가장자리 기준) 까지 돌진 (50틱에 꿰뚫음)
+        // 흐레스벨그의 발톱: 찌르기 폭풍 동안 그 자리에 버팀 → 뒤로 뛰었다가 과녁 1.7칸 앞 (몸 가장자리 기준) 까지 돌진 (50틱에 꿰뚫음)
         steps.add(new Step(30, () -> {
             double moved = Math.abs(sp.position().z - mark[0]);
             h.assertTrue(moved < 0.3, "흐레스벨그의 발톱 held in place during the storm: " + moved);
