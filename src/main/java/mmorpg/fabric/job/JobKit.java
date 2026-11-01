@@ -44,9 +44,10 @@ public final class JobKit {
         double veil = JobTraits3.firstHit(sp, j);
         // 0.30.0 수호기사 반격 게이지 (다음 공격 직업 스킬의 첫 타에 더함)
         double counter = JobTraits4.counterTake(sp, j);
-        // 0.51.0 소드마스터 치명 (투지 8 에서 쓴 스킬 — 위력 × 1.3 · 치명 숫자)
+        // 0.51.0 소드마스터 치명 (투지 8 에서 쓴 스킬 — 위력 × 1.3 · 치명 숫자) · 라이칸 할퀴기 (야성 10 에서 쓴 스킬 — 위력 × 1.3)
         double crit = JobTraits5.critMult(sp, j);
-        double dmg = P * mult * veil * crit * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double claw = JobTraits6.clawMult(sp, j);
+        double dmg = P * mult * veil * crit * claw * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         if (!Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
@@ -60,6 +61,7 @@ public final class JobKit {
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 · 상처
+        JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 라이칸 야성 · 할퀴기 자국
         return got;
     }
 
@@ -92,7 +94,8 @@ public final class JobKit {
         double veil = JobTraits3.firstHit(sp, j); // 0.29.0 암영의 첫 타
         double counter = JobTraits4.counterTake(sp, j); // 0.30.0 반격 게이지
         double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
-        double dmg = P * mult * veil * crit * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double claw = JobTraits6.clawMult(sp, j); // 0.51.0 라이칸 할퀴기
+        double dmg = P * mult * veil * crit * claw * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         if (!Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
@@ -106,6 +109,7 @@ public final class JobKit {
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 · 상처
+        JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 라이칸 야성 · 할퀴기 자국
         return got;
     }
 

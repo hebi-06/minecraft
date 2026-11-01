@@ -414,6 +414,16 @@ public final class SkillBarHud {
                             for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
                             if (i < v) g.fill(bx + 1, ty + 3, bx + 2, ty + 4, 0xFFFFFFFF);
                         }
+                        case "lycan" -> {
+                            // 0.51.0 야성 (최대 10) — 송곳니 (5 × 7, 창날처럼 줄 높이만큼): 위가 넓고 아래로 굽어 뾰족한 이빨, 찬 것은 둘째 빛 (붉은 눈빛) + 위 흰 점,
+                            // 오른쪽 아래 1칸 그림자
+                            int c = i < v ? col : dim;
+                            int ty = y - 1;
+                            int[][] rows = {{0, 5}, {0, 5}, {1, 5}, {1, 4}, {2, 4}, {2, 4}, {3, 4}};
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0] + 1, ty + r + 1, bx + rows[r][1] + 1, ty + r + 2, 0xA0000000);
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
+                            if (i < v) g.fill(bx + 1, ty + 1, bx + 2, ty + 2, 0xFFFFFFFF);
+                        }
                         case "swordmaster" -> {
                             // 0.51.0 투지 (최대 8) — 금빛 마름모 보석: 찬 것은 첫째 빛 (금빛) + 가운데 흰 점
                             g.fill(bx + 2, by, bx + 3, by + 5, 0xC0000000);

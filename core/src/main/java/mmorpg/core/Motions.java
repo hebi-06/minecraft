@@ -91,6 +91,20 @@ public final class Motions {
         return Math.max(1, attackInterval() - (int) cfg().numOr("intervalSlack", 2));
     }
 
+    /**
+     * 0.51.0 공격 속도 배율 speed 의 평타 사이 틱 (울프헤딘(라이칸) 「야성」 — 1 = 그대로, 1.2 = 20% 빠름 → 10 ÷ 1.2 = 8.3 → 8틱). 틱 단위라 반올림
+     * (야성 0 ~ 2 는 10 · 3 ~ 8 은 9 · 9 ~ 10 은 8틱)
+     */
+    public static int attackInterval(double speed) {
+        if (!(speed > 0) || Math.abs(speed - 1) < 1e-9) return attackInterval();
+        return Math.max(1, (int) Math.round(attackInterval() / speed));
+    }
+
+    /** 공격 속도 배율 speed 에서 서버가 받는 평타 사이 틱 (intervalSlack 여유) */
+    public static int serverInterval(double speed) {
+        return Math.max(1, attackInterval(speed) - (int) cfg().numOr("intervalSlack", 2));
+    }
+
     private static Obj areaCfg() {
         Obj a = cfg().objOrNull("area");
         return a != null ? a : new Obj(new java.util.LinkedHashMap<>(), "MOTION.area");

@@ -27,6 +27,7 @@ import net.minecraft.world.phys.Vec3;
  * 0.28.0 전사 · 매지션 · 궁수 특성 (JobTraits 가 부름 — 자원 · 태세는 JobTraits 와 같은 틀):
  * <ul>
  * <li>전사 「분노」 (0 ~ 100): 도끼 평타가 맞으면 +onHit · 맞으면 +onHurt, idle 틱 동안 싸우지 않으면 1초에 decay 씩 줄어듦 (투혼 동안은 그대로).
+ * 0.51.0 각성 뵈드바르(워로드) 도 같은 분노 — 다 차면 곰의 화신 (JobTraits6: 그동안 분노가 줄어 끝나면 0 · 쌓이지 않음 · 평타 + fullBonus).
  * half 이상이면 도끼 평타 피해 + halfBonus, 다 차면 + fullBonus (RpgCombat.basicMult). 파쇄격의 방어 깨짐 (맞는 쪽 배율 — RpgCombat.takenMult).
  * 투혼: 체력이 low 아래로 떨어지면 한 번 heal 회복 (RpgHealth.lossHook)</li>
  * <li>매지션 「주문 연쇄」: 직업 스킬을 쓰고 window 틱 안에 다른 직업 스킬을 쓰면 연쇄 +1 (최대 max — 하나당 피해 + perChain, JobSystem 이 위력에 곱함).
@@ -132,6 +133,11 @@ public final class JobTraitsMore {
         return j == null || j.trait() == null ? fallback : j.trait().def().numOr(key, fallback);
     }
 
+    /** 0.51.0 분노를 쓰는 직업 (전사 · 각성 뵈드바르(워로드)) */
+    static boolean rageJob(Jobs.Job j) {
+        return j != null && (j.id().equals("warrior") || j.id().equals(JobTraits6.WL));
+    }
+
     private static Jobs.Skill skill(Jobs.Job j, String id) {
         return j == null ? null : j.skill(id);
     }
@@ -162,14 +168,24 @@ public final class JobTraitsMore {
         return true;
     }
 
-    /** 분노 더하기 (최대 100) — 50 · 100 을 넘으면 손에서 불꽃 */
+    /** 분노 더하기 (최대 100) — 50 · 100 을 넘으면 손에서 불꽃. 0.51.0 워로드: 곰의 화신 동안은 쌓이지 않음 · 다 차면 곰의 화신 */
     static void gainRage(ServerPlayer sp, Jobs.Job j, int n) {
         State st = of(sp);
+        boolean warlord = j.id().equals(JobTraits6.WL);
+        if (warlord && JobTraits6.bearOn(sp)) {
+            st.lastCombat = Tasks.now();
+            return;
+        }
         int max = j.trait() == null ? 100 : Math.max(1, j.trait().max());
         int before = st.rage;
         st.rage = Math.min(max, st.rage + n);
         st.lastCombat = Tasks.now();
         int half = (int) trait(j, "half", 50);
+        if (warlord && before < max && st.rage >= max) {
+            JobTraits6.bearStart(sp, j, (int) trait(j, "bearFor", 160));
+            JobTraits.sendGauge(sp, false);
+            return;
+        }
         if ((before < half && st.rage >= half) || (before < max && st.rage >= max)) {
             ServerLevel level = sp.level();
             RuneKit.Hand h = RuneKit.handOf(sp);
@@ -198,8 +214,9 @@ public final class JobTraitsMore {
         if (j == null) return 1;
         State st = STATES.get(sp.getUUID());
         if (st == null) return 1;
-        if (j.id().equals("warrior") && "axe".equals(w.type())) {
+        if (rageJob(j) && "axe".equals(w.type())) {
             int max = j.trait() == null ? 100 : Math.max(1, j.trait().max());
+            if (j.id().equals(JobTraits6.WL) && JobTraits6.bearOn(sp)) return 1 + trait(j, "fullBonus", 0.2); // 0.51.0 곰의 화신 (분노가 줄어도)
             if (st.rage >= max) return 1 + trait(j, "fullBonus", 0.2);
             if (st.rage >= trait(j, "half", 50)) return 1 + trait(j, "halfBonus", 0.1);
             return 1;
@@ -223,8 +240,8 @@ public final class JobTraitsMore {
 
     /** 맞음 (RpgHealth.lossHook): 전사 — 몹 · 플레이어에게 맞으면 분노 + onHurt, 투혼 동안 체력이 low 아래로 떨어지면 한 번 회복 */
     private static void onLoss(ServerPlayer sp, DamageSource src, double loss, double before, double after) {
-        Jobs.Job j = jobIf(sp, "warrior");
-        if (j == null) return;
+        Jobs.Job j = JobSystem.job(sp);
+        if (!rageJob(j)) return;
         if (src.getEntity() instanceof LivingEntity from && from != sp) gainRage(sp, j, (int) trait(j, "onHurt", 5));
         Jobs.Skill k = skill(j, "warrior_spirit");
         State st = of(sp);
@@ -434,7 +451,7 @@ public final class JobTraitsMore {
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return;
-        if (j.id().equals("warrior") && "axe".equals(w.type()) && Combat.isMeleeWeapon(w)) {
+        if (rageJob(j) && "axe".equals(w.type()) && Combat.isMeleeWeapon(w)) {
             gainRage(sp, j, (int) trait(j, "onHit", 8));
             return;
         }
@@ -476,7 +493,15 @@ public final class JobTraitsMore {
             return;
         }
         if (st == null) return;
-        if (j.id().equals("warrior")) {
+        if (j.id().equals(JobTraits6.WL) && JobTraits6.bearOn(sp)) {
+            // 0.51.0 곰의 화신: 분노가 남은 시간만큼 줄어 끝나면 0
+            int max = j.trait() == null ? 100 : Math.max(1, j.trait().max());
+            int want = (int) Math.ceil(max * JobTraits6.bearFrac(sp));
+            if (want != st.rage) {
+                st.rage = Math.max(0, Math.min(max, want));
+                JobTraits.sendGauge(sp, false);
+            }
+        } else if (rageJob(j)) {
             if (st.rage > 0 && !JobTraits.stanceOn(sp, "warrior_spirit") && now - st.lastCombat >= trait(j, "idle", 100)) {
                 st.rage = Math.max(0, st.rage - (int) Math.max(1, Math.round(trait(j, "decay", 5) * 4 / 20.0)));
                 JobTraits.sendGauge(sp, false);
@@ -521,7 +546,7 @@ public final class JobTraitsMore {
     /** 게이지 값: 전사 분노 · 매지션 연쇄 · 궁수 호흡 */
     static int gaugeValue(ServerPlayer sp, Jobs.Job j) {
         return switch (j.id()) {
-            case "warrior" -> rage(sp);
+            case "warrior", "warlord" -> rage(sp); // 0.51.0 뵈드바르(워로드) 도 분노
             case "mage" -> chain(sp);
             case "archer" -> breath(sp);
             default -> JobTraits3.gaugeValue(sp, j); // 0.29.0 표식 · 창끝 · 혼

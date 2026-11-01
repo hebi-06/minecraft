@@ -126,6 +126,10 @@ public final class MotionsTest {
         check(v[0] < 1.0, "first tick under 1 block/tick (moved-too-quickly safe) " + v[0]);
         // 0.39.0 평타 사이 · 참격 범위
         check(Motions.attackInterval() == 10 && Motions.serverInterval() == 8, "interval 10 · server 8");
+        // 0.51.0 공격 속도 (울프헤딘(라이칸) 야성 — 하나당 +2%): 1.02 · 1.04 → 10 · 1.06 ~ 1.16 → 9 · 1.18 · 1.2 → 8, 서버는 2틱 여유
+        check(Motions.attackInterval(1.0) == 10 && Motions.attackInterval(1.04) == 10 && Motions.attackInterval(1.06) == 9 && Motions.attackInterval(1.16) == 9
+                && Motions.attackInterval(1.18) == 8 && Motions.attackInterval(1.2) == 8 && Motions.serverInterval(1.2) == 6 && Motions.attackInterval(0) == 10,
+                "attack speed intervals");
         check(Motions.areaEnabled() && Motions.areaMax() == 6, "area on · max 6");
         for (String t : List.of("sword", "greatsword", "scythe", "dagger", "axe", "hammer", "lance", "shield", "scepter")) {
             for (String m : Motions.combo(t)) {
@@ -203,8 +207,9 @@ public final class MotionsTest {
             String fn = strike.obj(g).str("fn");
             check(SwingLooks.of(fn) != null, "strike rune look " + g + " " + fn);
         }
+        // 0.51.0 2차 직업: 곰의 화신 (뵈드바르(워로드) — 분노 100 · 평타 범위 ×1.5) · 늑대의 밤 (울프헤딘(라이칸) 태세)
         Map<String, Double> scales = Map.of("edgeHone", 1.15, "flurry", 1.2, "bloodBlade", 1.3, "cleave", 1.4, "swordGod", 1.5,
-                "swordsman_mirror", 1.2, "spellblade_awaken", 1.3, "reaper_avatar", 1.0);
+                "swordsman_mirror", 1.2, "spellblade_awaken", 1.3, "reaper_avatar", 1.0, "warlord_bear", 1.5, "lycan_night", 1.15);
         for (Map.Entry<String, Double> e : scales.entrySet()) {
             SwingLooks.Look l = SwingLooks.of(e.getKey());
             check(l != null && Math.abs(l.scale() - e.getValue()) < 1e-9 && l.glow() != null && l.aura() != null && SwingLooks.pack(l.glow()) != 0,
@@ -216,6 +221,7 @@ public final class MotionsTest {
         check(Math.abs(sb - 3.05) < 1e-9 && Math.abs(av.scaleAt(sb) - 5 / 3.05) < 1e-9 && av.fits("scythe") && !av.fits("sword"), "reaper avatar 5 blocks " + sb);
         check(SwingLooks.of("cleave").fits("sword") && SwingLooks.of("cleave").fits("bow"), "rune looks fit any weapon");
         check(!SwingLooks.of("swordsman_mirror").fits("greatsword") && SwingLooks.of("spellblade_awaken").fits("greatsword"), "job look weapons");
+        check(SwingLooks.of("warlord_bear").fits("axe") && !SwingLooks.of("warlord_bear").fits("sword") && SwingLooks.of("lycan_night").fits("axe"), "second-job looks: axe");
         check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
         check(SwingLooks.of("nope") == null && SwingLooks.pack(new double[] {0, 0, 0}) == 1 && SwingLooks.pack(new double[] {1, 0.5, 0}) == 0xFF8000, "pack");
         // 스킬 표

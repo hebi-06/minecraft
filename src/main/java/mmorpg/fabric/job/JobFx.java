@@ -98,6 +98,11 @@ final class JobFx {
     static final int BELL2 = 8;
     static final int BUCKLER2 = 8;
     static final int AEGIS2 = 6;
+    /** 0.51.0 전사 2차 그림 (tools/job_fx_art_adv.py) 의 장 수: 곰의 혼 · 곰 앞발 · 늑대 발톱 네 줄 · 달 */
+    static final int BEAR = 8;
+    static final int PAW = 4;
+    static final int CLAW4 = 6;
+    static final int MOON = 8;
     static final int STAR = 8;
     static final int TOME = 12;
     static final int BOW2 = 8;
@@ -115,15 +120,20 @@ final class JobFx {
 
     // ------------------------------------------------------------ 색
 
-    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라) */
+    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라). 0.51.0 라이칸은 첫째 빛 (달빛 은회 — 붉은 눈빛은 발톱 · 눈 그림에만) */
     static double[] outer(Jobs.Job j) {
+        if (j != null && JobTraits6.LY.equals(j.id())) return JobKit.glow(j);
         double[] a = JobKit.glow(j);
         double[] b = JobKit.core(j);
         return sat(a) >= sat(b) ? a : b;
     }
 
-    /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록) */
+    /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록). 0.51.0 라이칸은 달빛을 흰색 쪽으로 (달빛 흰빛) */
     static double[] inner(Jobs.Job j) {
+        if (j != null && JobTraits6.LY.equals(j.id())) {
+            double[] m = JobKit.glow(j);
+            return new double[] {m[0] + (1 - m[0]) * 0.6, m[1] + (1 - m[1]) * 0.6, m[2] + (1 - m[2]) * 0.6};
+        }
         double[] a = JobKit.glow(j);
         double[] b = JobKit.core(j);
         double[] o = sat(a) >= sat(b) ? b : a;
@@ -235,10 +245,13 @@ final class JobFx {
             java.util.Map.entry("priest", new Object[] {"block.bell.hit", 1.9, 0.3}),
             java.util.Map.entry("guardian", new Object[] {"item.shield.block", 1.35, 0.4}));
 
+    private static final Object[] LYCAN_HIT = {"entity.player.attack.sweep", 1.45, 0.4};
+
     /** 맞은 자리 (rfx_jhit): 몸 가운데 · 몸 크기에 맞춤 · 아무렇게나 기욺 */
     static void hit(LivingEntity e, Jobs.Job j, double scale) {
         if (!(e.level() instanceof ServerLevel level)) return;
-        Object[] snd = j == null ? null : HIT_SOUND.get(fid(j));
+        // 0.51.0 라이칸은 찢는 소리 (전사의 둔탁한 쿵 대신)
+        Object[] snd = j == null ? null : JobTraits6.LY.equals(j.id()) ? LYCAN_HIT : HIT_SOUND.get(fid(j));
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
         Vec3 b = Kit.bodyPoint(e);
@@ -251,6 +264,9 @@ final class JobFx {
             // 0.51.0 블러드 나이트: 맞은 자리에 피 튀김 (rfx_jblood — 베인 줄 · 튀는 핏방울) + 은빛 베인 줄 한 겹 (핏빛)
             JobTraits5.blood(level, b, size * 1.05, j, 0.36, Opt.of("spin", tilt));
             two(level, "jhits", HITS, 0, b, 0.3, Opt.of("size", size * 0.8, "spin", tilt, "fade", 0.25, "alpha", 0.8), outer(j), inner(j));
+        } else if (j != null && JobTraits6.LY.equals(j.id())) {
+            // 0.51.0 라이칸: 늑대 발톱 네 줄 (rfx_jclaw4 — 붉은 눈빛 겉 · 달빛 흰 속)
+            claw4(level, b, size * 1.05, tilt + 25, 0.32, Opt.empty(), JobKit.core(j), inner(j));
         } else if (row >= 0) two(level, "jhits", HITS, row * 12, b, 0.32, Opt.of("size", size * 0.9, "spin", tilt, "fade", 0.25), outer(j), inner(j));
         else two(level, "jhit", HIT, b, 0.3, Opt.of("size", size, "spin", Kit.rand() * 360, "fade", 0.2), outer(j), inner(j));
         // 0.47.0 더 화려하게: 맞은 자리의 짧은 번쩍 (터짐 작은 장) · 튀는 불티 (직업 빛)
@@ -932,6 +948,42 @@ final class JobFx {
         two(level, "jquake", QUAKE, at, life, o.with("dir", V.UP, "size", radius / 0.92, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
         mmorpg.fabric.skill.SkillFx.shock(level, at, inner(j), radius * 0.9, life * 0.6);
         mmorpg.fabric.skill.SkillFx.sparks(level, V.up(at, 0.2), outer(j), (int) Math.min(12, 4 + radius * 1.5), 3.5 + radius * 0.5);
+    }
+
+    // ------------------------------------------------------------ 0.51.0 전사 2차 그림 (tools/job_fx_art_adv.py)
+
+    /**
+     * 곰의 혼 (rfx_jbear — 카메라를 봄): 0 ~ 2 기운이 모여 곰이 됨 · 3 ~ 6 포효 (이어 돌림 — 턱 · 털이 일렁임) · 7 흩어짐. 장 from 부터 count 장 (loop 면 이어 돌림 ·
+     * 아니면 수명에 맞춤). 곰 머리 가운데가 칸 가운데 조금 위 — 크기 약 size × 2 칸. 빛 = 몸 (짙은 갈색) · 심지 = 눈 · 이빨 · 털끝 (주황)
+     */
+    static void bear(ServerLevel level, Vec3 at, double size, double life, int from, int count, boolean loop, Opt o, double[] glow, double[] core) {
+        cells(level, "jbear", BEAR, Math.max(0, Math.min(BEAR - 1, from)), Math.max(1, Math.min(BEAR - from, count)), at, life, loop ? 9 : 0, loop, o.with("size", size,
+                "fade", o.num("fade", 0.3)), glow, core);
+    }
+
+    /** 곰 앞발 (rfx_jpaw — 카메라를 봄, 이어 돌림): 발바닥 · 발가락 넷 · 아래로 뻗은 발톱 넷 · 위로 끌리는 바람 줄. 발바닥 가운데 = 칸 가운데, 크기 약 size × 2 칸 */
+    static void paw(ServerLevel level, Vec3 at, double size, double life, Opt o, double[] glow, double[] core) {
+        loop(level, "jpaw", PAW, at, life, 14, o.with("size", size, "fade", o.num("fade", 0.25)), glow, core);
+    }
+
+    /** 늑대 발톱 네 줄 (rfx_jclaw4 — 카메라를 봄): 0 ~ 1 네 줄이 오른쪽 위에서 왼쪽 아래로 찢어짐 · 2 번쩍 · 3 ~ 5 흐려지며 불티. 크기 약 size × 2 칸 (spin = 기울기) */
+    static void claw4(ServerLevel level, Vec3 at, double size, double spin, double life, Opt o, double[] glow, double[] core) {
+        two(level, "jclaw4", CLAW4, at, life, o.with("size", size, "spin", spin, "fade", o.num("fade", 0.25)), glow, core);
+    }
+
+    /** 전사 곰 발톱 세 줄 (rfx_jhits 의 전사 줄 — 곰의 화신 평타가 넓어짐): 크게 · 기울여 (직업 겉 · 속빛) */
+    static void bearClaws(ServerLevel level, Vec3 at, double size, double spin, double life, Opt o, Jobs.Job j) {
+        int row = HIT_ROWS.indexOf("warrior");
+        two(level, "jhits", HITS, row * 12, at, life, o.with("size", size, "spin", spin, "fade", 0.25), outer(j), inner(j));
+    }
+
+    /**
+     * 달 (rfx_jmoon — 카메라를 봄): 0 보름달 (바다 · 구덩이 · 둥근 빛무리) · 1 ~ 6 검은 그림자가 오른쪽에서 달을 삼킴 · 7 남은 붉은 테 (월식). 장 from 부터 count 장
+     * (수명에 맞춤 — count 1 이면 그 장 그대로). 크기 약 size × 2 칸 (달 원판 반지름 = size × 0.62)
+     */
+    static void moon(ServerLevel level, Vec3 at, double size, int from, int count, double life, Opt o, double[] glow, double[] core) {
+        cells(level, "jmoon", MOON, Math.max(0, Math.min(MOON - 1, from)), Math.max(1, Math.min(MOON - from, count)), at, life, 0, false, o.with("size", size, "fade",
+                o.num("fade", 0.2)), glow, core);
     }
 
     /** 펜리르의 늑대 기운 (rfx_jwolf — 가는 쪽으로 누움, 이어 돌림): 늑대 머리가 head (dir 쪽을 봄) · 갈기가 뒤로 흩날림. 길이 약 size × 2 칸 */

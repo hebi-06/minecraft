@@ -175,13 +175,29 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {4, 7, 10, 17, 27, 37, 46, 53, 57}, new int[] {10, 27, 53}, 66, false),
     };
 
+    /** 0.51.0 뵈드바르(워로드) · 울프헤딘(라이칸) */
+    private static final Case[] CASES_WL = {
+        new Case(0, new int[] {4, 12, 16}, new int[] {8, 12}, 26, false),
+        new Case(1, new int[] {2, 6, 12}, new int[] {3, 12}, 22, false),
+        new Case(2, new int[] {6, 20, 36, 42}, new int[] {10, 42}, 54, false),
+        new Case(3, new int[] {4, 12}, new int[] {6}, 28, false, true, 3), // 곰의 포효: 태세가 아니라 곰의 화신 → 화신 평타 (강화 평타로 확인)
+        new Case(4, new int[] {8, 12, 30, 50, 62, 68}, new int[] {12, 50, 68}, 84, false),
+    };
+    private static final Case[] CASES_LY = {
+        new Case(0, new int[] {2, 12, 21}, new int[] {12, 21}, 28, false),
+        new Case(1, new int[] {3, 8, 12}, new int[] {4, 8}, 20, false),
+        new Case(2, new int[] {3, 6, 16}, new int[] {4, 16}, 26, false),
+        new Case(3, new int[] {4, 20}, new int[] {6}, 26, true),
+        new Case(4, new int[] {6, 16, 36, 56, 66, 74}, new int[] {16, 56, 74}, 88, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active()) return;
         boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")
-                || RpgFilm.listed("filmjob4")); // 0.48.2 스킬 영상 (0.51.0 넷째 묶음 = 2차 직업)
+                || RpgFilm.listed("filmjob4") || RpgFilm.listed("filmjob5")); // 0.48.2 스킬 영상 (0.51.0 넷째 · 다섯째 묶음 = 2차 직업 — 검사 · 전사)
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -439,16 +455,17 @@ public final class RpgJobGallery implements FabricClientGameTest {
         // 0.51.0 2차 직업: 금빛 연격 검기 (투지 3) · 만월 강하 치명 (투지 8) · 상처 터뜨리기 · 끝나지 않는 전투 (과녁마다 상처 3)
         if (id.equals("swordmaster_flurry")) JobTraits.setStacks(sp, 3);
         if (id.equals("swordmaster_moon")) JobTraits.setStacks(sp, 8);
+        if (id.equals("lycan_fang")) mmorpg.fabric.job.JobTraits6.setFerocity(sp, 10); // 0.51.0 라이칸 할퀴기 (야성 10)
         if (id.equals("bloodknight_burst") || id.equals("bloodknight_ult")) {
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits5.setWounds(sp, h, 3);
         }
     }
 
-    // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3)
+    // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5)
 
-    /** 영상 묶음마다 직업 (넷 · 넷 · 셋) */
+    /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
-        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}};
+        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "lycan"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
@@ -470,6 +487,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "priest" -> newJob(ctx, server, conn, job, "rpg:scepter_l40_hero", 5, sp -> JobTraits4.setFaith(sp, 3));
                         case "swordmaster" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 8, sp -> JobTraits.setStacks(sp, 6));
                         case "bloodknight" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
+                        case "warlord" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
+                        case "lycan" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 10, sp -> mmorpg.fabric.job.JobTraits6.setFerocity(sp, 6));
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
                                 sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
                     }
@@ -494,6 +513,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "priest" -> CASES_PR;
             case "swordmaster" -> CASES_SM;
             case "bloodknight" -> CASES_BK;
+            case "warlord" -> CASES_WL;
+            case "lycan" -> CASES_LY;
             default -> CASES_GU;
         };
     }

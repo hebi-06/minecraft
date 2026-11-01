@@ -234,6 +234,17 @@ public final class ClientJobBar {
         return gaugeValue;
     }
 
+    /**
+     * 0.51.0 공격 속도 배율 (근접 평타 사이 — ClientMotions 의 선입력): 직업 특성에 atkSpeed (게이지 하나당) 가 있으면 1 + atkSpeed × 게이지 값
+     * (울프헤딘(라이칸) 야성 — 서버 JobTraits6.attackSpeed 와 같은 셈), 아니면 1
+     */
+    public static double attackSpeed() {
+        if (job.isEmpty() || gaugeValue <= 0) return 1;
+        mmorpg.core.Jobs.Job j = mmorpg.core.Jobs.job(job);
+        double per = j == null || j.trait() == null ? 0 : j.trait().def().numOr("atkSpeed", 0);
+        return per > 0 ? 1 + per * Math.min(gaugeValue, Math.max(0, j.trait().max())) : 1;
+    }
+
     public static int gaugeMax() {
         return gaugeMax;
     }

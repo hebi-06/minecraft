@@ -265,7 +265,8 @@ public final class ClientMotions {
         List<String> combo = Motions.combo(w.type());
         if (combo.isEmpty()) return true;
         // 0.39.0 평타 사이 (공격 대기 대신): 앞 평타 동작이 끝나기 전 (또는 허공을 친 뒤 바닐라 대기) 에 누르면 선입력 — 지나는 틱에 fireBuffered 가 나감
-        if (ticks - lastSwing < Motions.attackInterval() || mc.missTime > 0) {
+        int gap = Motions.attackInterval(mmorpg.fabric.client.ClientJobBar.attackSpeed()); // 0.51.0 공격 속도 (라이칸 야성)
+        if (ticks - lastSwing < gap || mc.missTime > 0) {
             buffered = ticks;
             return false;
         }
@@ -303,7 +304,7 @@ public final class ClientMotions {
     static void fireBuffered(Minecraft mc) {
         if (buffered < 0) return;
         LocalPlayer p = mc.player;
-        int gap = Motions.attackInterval();
+        int gap = Motions.attackInterval(mmorpg.fabric.client.ClientJobBar.attackSpeed()); // 0.51.0 공격 속도 (라이칸 야성)
         if (p == null || mc.gui.screen() != null || ticks - buffered > gap || meleeOf(p) == null || rolling()) {
             buffered = -1;
             return;

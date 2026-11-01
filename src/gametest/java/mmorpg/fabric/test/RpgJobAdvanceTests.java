@@ -16,6 +16,8 @@ import mmorpg.fabric.job.JobSystem;
 import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits5;
+import mmorpg.fabric.job.JobTraits6;
+import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.job.JobUpgrades;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.ui.FormNet;
@@ -39,12 +41,18 @@ import net.minecraft.world.phys.Vec3;
  * 만월 강하 (투지 8 → 치명 +30% × 투지 8 개 +64%) · 용의 심장 (두 번 베기 42% · −20% · 맞으면 받아치기) · 신들의 황혼 (돌진 · 4 + 3.5 × 4 + 22 = 40)</li>
  * <li>블러드 나이트 (mmorpg:job_bk): 피의 갈증 (체력 4% → 위력 +10%) · 흡혈 · 상처 (맞힐 때 +1 · 피의 질주 +2 · 상처 터뜨리기 상처 × 1 + 회복 15% · 끝나지 않는 전투
  * 상처 하나당 +5%) · 회그니의 맹세 (체력 15% · 피 칼날 42% · 상처 +1)</li>
+ * <li>워로드 (mmorpg:job_wl): 분노 100 → 곰의 화신 (평타 +20% · 범위 · −15% · 분노가 줄어듦) · 투구 깨부수기 (6.5 · 방어 깨짐 +15%) · 곰의 메치기 (1.4 + 2.5) ·
+ * 도끼 태풍 (1.8 × 4 + 4.5 · 흡혈) · 곰의 포효 (곰의 화신 · 쓰러지지 않음 · 위기 회복 둘) · 뵈드바르의 앞발 (6 × 4 + 28)</li>
+ * <li>라이칸 (mmorpg:job_ly): 야성 (사냥감 +1 · 다른 적이면 1부터 · 공격 · 이동 속도 +2%) · 송곳니 베기 (야성 10 → 할퀴기 +30% · 5 씀) · 사냥감 덮치기 (3.9 · 기절 ·
+ * 사냥감) · 달밤의 포효 (겁먹음 −15% · 3.7 + 8) · 늑대의 밤 (평타 두 번 42% · 이동 +20%) · 달 삼키기 (4.5 × 6 + 25)</li>
  * </ul>
  */
 public final class RpgJobAdvanceTests {
     static final String ENV_ADV = "mmorpg:job_adv";
     static final String ENV_SM = "mmorpg:job_sm";
     static final String ENV_BK = "mmorpg:job_bk";
+    static final String ENV_WL = "mmorpg:job_wl";
+    static final String ENV_LY = "mmorpg:job_ly";
 
     /** 넓은 돌 바닥 (그라니의 질주가 비스듬히 내달릴 땅) */
     static void floor(GameTestHelper h) {
@@ -132,10 +140,28 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(chest(sp) != null && chest(sp).body().contains("풀립니다"), "change confirm warns the second job is cleared");
             Forms.answer(sp, 11, null);
             h.assertTrue("warrior".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0, "changed first job → second job cleared: " + JobSystem.jobOf(sp));
-            // 전사의 2차 전직은 준비 중
+            // 0.51.0 전사의 2차 전직 (뵈드바르(워로드) · 울프헤딘(라이칸)) — 1차 직업에서 처음이라 무료
             JobTrainer.open(sp, () -> done[0]++);
             FormNet.ChestPayload wa = chest(sp);
-            h.assertTrue(wa != null && wa.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "warrior: 2차 전직 dim (준비 중)");
+            h.assertTrue(wa != null && wa.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "warrior: 2차 전직 open");
+            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
+            FormNet.ChestPayload wadv = chest(sp);
+            h.assertTrue(wadv != null && wadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("뵈드바르(워로드)")
+                    && wadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("울프헤딘(라이칸)"), "warrior advance cards");
+            Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
+            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "warrior advance confirm");
+            Forms.answer(sp, 11, null);
+            h.assertTrue("lycan".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("울프헤딘(라이칸)"),
+                    "lycan free from the first job: " + JobSystem.jobOf(sp));
+            // 마검사의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300)
+            Wallet.set(sp, Economy.Kind.SILVER, 300);
+            JobTrainer.open(sp, () -> done[0]++);
+            Forms.answer(sp, JobTrainer.slotOf("spellblade"), null);
+            Forms.answer(sp, 11, null);
+            h.assertTrue("spellblade".equals(JobSystem.jobOf(sp)), "changed to spellblade: " + JobSystem.jobOf(sp));
+            JobTrainer.open(sp, () -> done[0]++);
+            FormNet.ChestPayload sb = chest(sp);
+            h.assertTrue(sb != null && sb.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "spellblade: 2차 전직 dim (준비 중)");
             Forms.answer(sp, -1, null);
         } finally {
             JobUpgrades.set(sp, "swordsman_moon", 0);
@@ -344,6 +370,219 @@ public final class RpgJobAdvanceTests {
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+
+    // ------------------------------------------------------------ 뵈드바르(워로드)
+
+    @GameTest(environment = ENV_WL, maxTicks = 560)
+    public void warlordSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h, "warlord", 50);
+        Weapon w = Weapons.weaponFrom("axe", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("warlord");
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2)));
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        // 분노 96 에서 도끼 평타 (50 이상 +10%) → +8 → 100 → 곰의 화신 (8초 · 받는 피해 −15% · 곰 발톱 평타 모습)
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            JobTraitsMore.setRage(sp, 96);
+            double base = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.1), "rage 96 basic × 1.1: " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.1);
+            h.assertTrue(JobTraits6.bearOn(sp) && JobTraits6.bearLeft(sp) > 150 && JobTraitsMore.rage(sp) == 100, "bear avatar on at rage 100: " + JobTraits6.bearLeft(sp));
+            h.assertTrue(Math.abs(Guards.of(sp).reduce() - 0.15) < 1e-9, "avatar guard 15%: " + Guards.of(sp).reduce());
+            h.assertTrue("warlord_bear".equals(mmorpg.fabric.motion.SwingLook.testKey(sp)), "bear swing look: " + mmorpg.fabric.motion.SwingLook.testKey(sp));
+        }));
+        // 곰의 화신 동안 도끼 평타 × 1.2 (분노가 줄어도) · 분노가 남은 시간만큼 줄어듦 · 쌓이지 않음
+        double[] mark = {0};
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double before = TestDummies.dealt(z.get(0));
+            double base = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            RpgCombat.forceCrit = null;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - before, base * 1.2), "avatar basic × 1.2: " + (TestDummies.dealt(z.get(0)) - before) + " vs " + base * 1.2);
+            h.assertTrue(JobTraitsMore.rage(sp) < 100 && JobTraitsMore.rage(sp) > 80, "rage drains during the avatar: " + JobTraitsMore.rage(sp));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2.6));
+            h.assertTrue(JobSkills.press(sp, 0), "투구 깨부수기 cast");
+        }));
+        // 투구 깨부수기: 6.5 · 맞은 적 방어 깨짐 × 1.15
+        steps.add(new RpgJobTests.Step(18, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.5);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "투구 깨부수기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(Math.abs(JobTraitsMore.breakMult(z.get(0)) - 1.15) < 1e-9, "armor break × 1.15: " + JobTraitsMore.breakMult(z.get(0)));
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "warlord gradient number");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 4));
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "곰의 메치기 cast");
+        }));
+        // 곰의 메치기: 들이받음 1.4 + 메침 2.5 (허수아비는 들리지 않음)
+        steps.add(new RpgJobTests.Step(18, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 3.9);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "곰의 메치기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - mark[0] > 1 && z.get(0).position().z - sp.position().z < 2.8, "charged to the target: " + (sp.position().z - mark[0]));
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2));
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[0] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 2), "도끼 태풍 cast");
+        }));
+        // 도끼 태풍: 1.8 × 4 + 4.5 = 11.7 · 흡혈
+        steps.add(new RpgJobTests.Step(52, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 11.7);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "도끼 태풍 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.getHealth() > mark[0] + 1e-3, "storm lifesteal: " + mark[0] + " -> " + sp.getHealth());
+            sp.setHealth(sp.getMaxHealth());
+            h.assertTrue(JobSkills.press(sp, 3), "곰의 포효 cast");
+        }));
+        // 곰의 포효 (5틱에 포효): 곰의 화신 새로 · 쓰러지지 않음 (2초) · 위기 회복 둘 — 체력 20% 로 떨어지면 20% 회복
+        double[] hp = {0};
+        steps.add(new RpgJobTests.Step(8, () -> {
+            h.assertTrue(JobTraits6.bearLeft(sp) > 150 && JobTraits6.undyingOn(sp) && JobTraits6.roarHealsLeft(sp) == 2, "roar: avatar " + JobTraits6.bearLeft(sp)
+                    + " · undying · heals " + JobTraits6.roarHealsLeft(sp));
+            float max = sp.getMaxHealth();
+            sp.setHealth(max * 0.2F);
+            hp[0] = sp.getHealth();
+            mmorpg.fabric.RpgHealth.lossHook.lost(sp, sp.damageSources().mobAttack(z.get(0)), 2, hp[0] + 2, hp[0]);
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            double want = hp[0] + sp.getMaxHealth() * j.skill(3).num("heal", 0.2);
+            h.assertTrue(sp.getHealth() >= want - sp.getMaxHealth() * 0.01 && JobTraits6.roarHealsLeft(sp) == 1, "crisis heal 20%: " + sp.getHealth() + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(40, () -> h.assertTrue(!JobTraits6.undyingOn(sp) && JobTraits6.bearOn(sp), "undying 2s ends, avatar stays")));
+        // 뵈드바르의 앞발: 6 × 4 + 28 = 52
+        double[] start = {0};
+        steps.add(new RpgJobTests.Step(4, () -> {
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 3));
+            start[0] = sp.getY();
+            h.assertTrue(JobSkills.press(sp, 4), "뵈드바르의 앞발 cast");
+        }));
+        steps.add(new RpgJobTests.Step(90, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 52);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "뵈드바르의 앞발 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(Math.abs(sp.getY() - start[0]) < 0.3, "landed back on the ground: y " + sp.getY() + " vs " + start[0]);
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 울프헤딘(라이칸)
+
+    @GameTest(environment = ENV_LY, maxTicks = 560)
+    public void lycanSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = player(h, "lycan", 50);
+        Weapon w = Weapons.weaponFrom("axe", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("lycan");
+        double claw = 1 + j.trait().def().numOr("clawBonus", 0.3);
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2), dummy(h, 1.6, 2)));
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        // 야성: 같은 적을 평타로 이어 치면 +1 · 다른 적을 먼저 치면 그 적이 사냥감 · 1부터
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            JobTraits6.setFerocity(sp, 0);
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits6.ferocity(sp) == 1 && z.get(0).getUUID().equals(JobTraits6.preyOf(sp)), "ferocity 1 on the prey: " + JobTraits6.ferocity(sp));
+        }));
+        steps.add(new RpgJobTests.Step(11, () -> {
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits6.ferocity(sp) == 2, "same prey → 2: " + JobTraits6.ferocity(sp));
+        }));
+        steps.add(new RpgJobTests.Step(11, () -> {
+            sp.attack(z.get(1));
+            h.assertTrue(JobTraits6.ferocity(sp) == 1 && z.get(1).getUUID().equals(JobTraits6.preyOf(sp)), "other enemy → new prey, 1: " + JobTraits6.ferocity(sp));
+            // 하나당 공격 속도 · 이동 속도 +2% (10 → +20% · 평타 사이 8틱 · 서버 6틱)
+            JobTraits6.setFerocity(sp, 10);
+            h.assertTrue(Math.abs(JobTraits6.speedBonus(sp, false) - 0.2) < 1e-9 && Math.abs(RpgCombat.attackSpeed.applyAsDouble(sp) - 1.2) < 1e-9
+                    && mmorpg.core.Motions.serverInterval(RpgCombat.attackSpeed.applyAsDouble(sp)) == 6, "ferocity 10: speed " + JobTraits6.speedBonus(sp, false)
+                            + " · attack " + RpgCombat.attackSpeed.applyAsDouble(sp));
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 2.5));
+            h.assertTrue(JobSkills.press(sp, 0), "송곳니 베기 cast");
+            // 할퀴기는 쓸 때 야성 5 를 먼저 씀 → 첫 X자가 바로 들어가 사냥감 +1 (6)
+            h.assertTrue(JobTraits6.clawOn(sp) && JobTraits6.ferocity(sp) == 6, "claws on, 5 used, first hit +1: " + JobTraits6.ferocity(sp));
+        }));
+        // 송곳니 베기: (1.6 + 1.6 + 3.3) × 1.3 (할퀴기) · 맞힐 때마다 사냥감 야성 +1 (5 → 8)
+        steps.add(new RpgJobTests.Step(26, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.5 * claw);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "송곳니 베기 (claws) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits6.ferocity(sp) == 8, "skill hits on the prey 5 → 8: " + JobTraits6.ferocity(sp));
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "lycan gradient number");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 4));
+            JobTraits6.setFerocity(sp, 3);
+            h.assertTrue(JobSkills.press(sp, 1), "사냥감 덮치기 cast");
+        }));
+        // 사냥감 덮치기: 3.9 · 기절 (구속) · 그 적이 사냥감 (야성 3 → 4)
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 3.9);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "사냥감 덮치기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(z.get(0).getUUID().equals(JobTraits6.preyOf(sp)) && JobTraits6.ferocity(sp) == 4, "pounce prey · ferocity 4: " + JobTraits6.ferocity(sp));
+            h.assertTrue(z.get(0).hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS), "stunned");
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2));
+            JobTraits6.setFerocity(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 2), "달밤의 포효 cast");
+        }));
+        // 달밤의 포효: 4틱 포효 3.7 · 겁먹음 (가하는 피해 −15%) → 16틱 크게 한 바퀴 8
+        steps.add(new RpgJobTests.Step(8, () -> {
+            h.assertTrue(Math.abs(JobTraits6.fearOf(z.get(0)) - 0.15) < 1e-9 && Math.abs(mmorpg.fabric.RpgHealth.weakenOf.applyAsDouble(z.get(0)) - 0.15) < 1e-6,
+                    "feared −15%: " + JobTraits6.fearOf(z.get(0)));
+        }));
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 11.7);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "달밤의 포효 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobSkills.press(sp, 3), "늑대의 밤 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "lycan_night") && Math.abs(JobTraits6.speedBonus(sp, true) - 0.2) < 1e-9, "night stance · move +20%");
+        }));
+        // 늑대의 밤: 도끼 평타 × 1.42 (두 번째 베기) · 야성 유지
+        steps.add(new RpgJobTests.Step(8, () -> {
+            RpgCombat.forceCrit = false;
+            double before = TestDummies.dealt(z.get(0));
+            double base = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            RpgCombat.forceCrit = null;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - before, base * 1.42), "night echo " + (TestDummies.dealt(z.get(0)) - before) + " vs " + base * 1.42);
+        }));
+        // 달 삼키기: 4.5 × 6 + 25 = 52
+        double[] start = {0};
+        steps.add(new RpgJobTests.Step(4, () -> {
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 3));
+            JobTraits6.setFerocity(sp, 0);
+            start[0] = sp.getY();
+            h.assertTrue(JobSkills.press(sp, 4), "달 삼키기 cast");
+        }));
+        steps.add(new RpgJobTests.Step(96, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 52);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "달 삼키기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(Math.abs(sp.getY() - start[0]) < 0.3, "landed back on the ground: y " + sp.getY() + " vs " + start[0]);
+            h.assertTrue(JobTraits6.speedBonus(sp, true) > 0 || !JobTraits.stanceOn(sp, "lycan_night"), "night speed while the stance lasts");
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgJobTests.cleanup(sp);
+            h.assertTrue(JobTraits6.speedBonus(sp, false) == 0 && JobTraits6.speedBonus(sp, true) == 0, "speed modifiers removed on job change");
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });

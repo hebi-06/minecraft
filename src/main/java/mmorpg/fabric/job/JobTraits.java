@@ -76,8 +76,10 @@ public final class JobTraits {
         JobTraits3.init(); // 0.29.0 암살자 · 창술사 · 사신 (sureCrit 를 이어 받으므로 위의 sureCrit 다음)
         JobTraits4.init(); // 0.30.0 성기사 · 사제 · 수호기사
         JobTraits5.init(); // 0.51.0 2차 직업 (소드마스터 치명 · 용의 심장 · 블러드 나이트 피의 갈증 · 회그니의 맹세)
+        JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 곰의 포효 · 라이칸 야성 · 겁먹음 · 늑대의 밤)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
+            JobTraits6.tickFears(Tasks.now());
             JobTraits3.tickMarks(Tasks.now());
             JobTraits4.tickGlobal(server, Tasks.now());
             if (Tasks.now() % 4 == 0) tick(server);
@@ -115,6 +117,7 @@ public final class JobTraits {
         JobTraits3.reset(sp);
         JobTraits4.reset(sp);
         JobTraits5.reset(sp);
+        JobTraits6.reset(sp);
         String p = sp.getUUID() + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
         sendGauge(sp, true);
@@ -127,6 +130,7 @@ public final class JobTraits {
         JobTraits3.forget(id);
         JobTraits4.forget(id);
         JobTraits5.forget(id);
+        JobTraits6.forget(id);
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
@@ -136,6 +140,7 @@ public final class JobTraits {
         JobTraits3.lifeEnded(id);
         JobTraits4.lifeEnded(id);
         JobTraits5.lifeEnded(id);
+        JobTraits6.lifeEnded(id);
         State st = STATES.get(id);
         if (st != null) {
             st.stacks = 0;
@@ -266,6 +271,7 @@ public final class JobTraits {
         JobTraitsMore.stanceEnded(sp, id);
         JobTraits3.stanceEnded(sp, id);
         JobTraits4.stanceEnded(sp, id);
+        JobTraits6.stanceEnded(sp, id); // 0.51.0 늑대의 밤 → 이동 속도 수정치를 뗌
         JobFx3d.drop(sp, id, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
         sendGauge(sp, true);
     }
@@ -448,6 +454,7 @@ public final class JobTraits {
                 JobTraits3.tick(sp, j, now); // 0.29.0 암영 · 창끝 · 혼
                 JobTraits4.tick(sp, j, now); // 0.30.0 수호의 맹세 회복
                 JobTraits5.tick(sp, j, now); // 0.51.0 흡혈 숫자
+                JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 야성
             }
             if (st == null || j == null) continue;
             // 태세가 끝남
@@ -458,6 +465,7 @@ public final class JobTraits {
                 JobTraitsMore.stanceEnded(sp, ended); // 마나 과부하 → 이동 느려짐
                 JobTraits3.stanceEnded(sp, ended); // 0.29.0 암영 → 이동 빨라짐 · 투명이 풀림
                 JobTraits4.stanceEnded(sp, ended); // 0.30.0 철옹성 → 이동 수정치를 뗌
+                JobTraits6.stanceEnded(sp, ended); // 0.51.0 늑대의 밤 → 이동 수정치를 뗌
                 JobFx3d.drop(sp, ended, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
@@ -509,6 +517,8 @@ public final class JobTraits {
             // 0.30.0 수호의 맹세 (등 뒤 빛의 날개) · 철옹성 (앞의 큰 빛의 방패)
         } else if (JobTraits5.stanceFx(sp, j, st.stance)) {
             // 0.51.0 용의 심장 (가슴의 금빛 불씨 · 칼의 금빛) · 회그니의 맹세 (칼끝에서 떨어지는 핏방울)
+        } else if (JobTraits6.stanceFx(sp, j, st.stance)) {
+            // 0.51.0 늑대의 밤 (머리 위로 울부짖는 은빛 늑대 · 붉은 눈빛)
         } else if (st.stance.equals("archer_focus")) {
             // 정조준: 활을 든 손 앞 금빛 반짝임
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
@@ -527,9 +537,16 @@ public final class JobTraits {
         String stance = st != null && st.stanceUntil > now ? st.stanceName : "";
         int left = st != null && st.stanceUntil > now ? (int) (st.stanceUntil - now) : 0;
         int total = st != null && st.stanceUntil > now ? st.stanceTotal : 0;
+        Object[] line = stance.isEmpty() ? JobTraits6.stanceLine(sp, j) : null; // 0.51.0 곰의 화신 (태세가 아니라 따로 — 같은 줄에 보임)
+        if (line != null) {
+            stance = (String) line[0];
+            left = (int) line[1];
+            total = (int) line[2];
+        }
         int value = 0;
         if (fervor(j)) value = st == null ? 0 : st.stacks; // 0.51.0 소드마스터도 투지 (최대 8)
         else if (j.id().equals(JobTraits5.BK)) value = JobTraits5.gaugeValue(sp, j); // 0.51.0 블러드 나이트 = 그 적의 상처 수
+        else if (j.id().equals(JobTraits6.LY)) value = JobTraits6.gaugeValue(sp, j); // 0.51.0 라이칸 = 야성
         else if (j.id().equals("spellblade")) {
             if (st != null && st.target != null) {
                 Entity e = sp.level().getEntity(st.target);

@@ -81,7 +81,8 @@ public final class Slash {
         if (held == null || !Combat.isMeleeWeapon(held) || mmorpg.core.Motions.combo(held.type()).isEmpty()) return true;
         MotionSystem.Swing last = MotionSystem.last(sp);
         long now = Tasks.now();
-        if (last == null || now < last.tick() || now - last.tick() >= mmorpg.core.Motions.serverInterval()) return true;
+        // 0.51.0 공격 속도 (라이칸 야성 — 평타 사이가 줄어듦)
+        if (last == null || now < last.tick() || now - last.tick() >= mmorpg.core.Motions.serverInterval(RpgCombat.attackSpeed.applyAsDouble(sp))) return true;
         if (now == last.tick()) return attack && !SwingArea.hasPrimary(sp); // 같은 누름: 휘두르기 패킷이 먼저 왔으면 공격 패킷 하나는 받음
         return false;
     }
@@ -102,6 +103,13 @@ public final class Slash {
         swing(sp, m);
         // 0.39.0 참격 범위 피해: 범위 안 다른 적에게 평타 한 번씩 (1틱 뒤)
         if (ok) SwingArea.begin(sp, held, m, primary);
+        if (ok) {
+            try {
+                RpgCombat.swingHook.accept(sp, held); // 0.51.0 곰의 화신 발톱 세 줄
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] swing hook", e);
+            }
+        }
     }
 
     // ------------------------------------------------------------ 도움

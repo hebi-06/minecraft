@@ -581,8 +581,8 @@ public final class Bosses {
         boolean skill = mark != null && mark.style() != null;
         String ch = skill ? p.getUUID() + "|skill" : p.getUUID().toString();
         // 0.39.0 근접 평타 (공격 대기 없음 — 평타 사이는 서버가 serverInterval 로 막음): 무적 시간을 그만큼으로 (서버 틱이 어긋나 8 ~ 9틱 뒤에 온 평타도 온전히)
-        double window = mark != null && mark.melee() && mark.style() == null ? Math.min(BOSS.num("iframes"), mmorpg.core.Motions.serverInterval())
-                : BOSS.num("iframes");
+        double window = mark != null && mark.melee() && mark.style() == null ? Math.min(BOSS.num("iframes"),
+                mmorpg.core.Motions.serverInterval(RpgCombat.attackSpeed.applyAsDouble(p))) : BOSS.num("iframes"); // 0.51.0 공격 속도 (라이칸 야성)
         Unit u = unitById.get(e.getUUID());
         if (u == null) {
             PropInfo info = propInfo.get(e.getUUID());

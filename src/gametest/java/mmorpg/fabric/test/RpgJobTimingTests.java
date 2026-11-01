@@ -223,4 +223,16 @@ public final class RpgJobTimingTests {
     public void timingBloodknight(GameTestHelper h) {
         probe(h, "bloodknight");
     }
+
+    /** 0.51.0 2차 직업 — 전사 각성 뵈드바르(워로드) */
+    @GameTest(environment = "mmorpg:jt_wl", maxTicks = 2400)
+    public void timingWarlord(GameTestHelper h) {
+        probe(h, "warlord");
+    }
+
+    /** 0.51.0 2차 직업 — 전사 반전 울프헤딘(라이칸) (야성 10 이 되지 않아 할퀴기 없음 — 과녁마다 새 사냥감) */
+    @GameTest(environment = "mmorpg:jt_ly", maxTicks = 2400)
+    public void timingLycan(GameTestHelper h) {
+        probe(h, "lycan");
+    }
 }

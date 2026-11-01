@@ -356,15 +356,25 @@ public final class JobsTest {
         return sum;
     }
 
-    /** 0.51.0 2차 전직 (jobs.json advance — claude/job-advance.md): 검사의 각성 · 반전 — 모양 · 이름 · 칸 · 강화 열쇠 · 세기 (1차 × 1.2) · 무적 시간 띄움 · 시각 */
+    /**
+     * 0.51.0 2차 전직 (jobs.json advance — claude/job-advance.md): 검사 · 전사의 각성 · 반전 — 모양 · 이름 · 칸 · 강화 열쇠 · 세기 (1차 × 1.2) · 무적 시간 띄움 ·
+     * 시각 (직업표 차례 — 사용자 "다음 그냥 직업표에 있는 순서대로 하자")
+     */
     static void advance() {
         Jobs.Job sw = Jobs.job("swordsman");
         Jobs.Job sm = Jobs.job("swordmaster");
         Jobs.Job bk = Jobs.job("bloodknight");
-        check(sm != null && bk != null && Jobs.allAdvanced().size() == 2, "advanced jobs " + Jobs.allAdvanced().size());
-        if (sm == null || bk == null) return;
+        Jobs.Job wa = Jobs.job("warrior");
+        Jobs.Job wl = Jobs.job("warlord");
+        Jobs.Job ly = Jobs.job("lycan");
+        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 4, "advanced jobs " + Jobs.allAdvanced().size());
+        if (sm == null || bk == null || wl == null || ly == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
-        check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서)");
+        check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, ly)) && Jobs.advancedOf("spellblade").isEmpty()
+                && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 마검사는 아직)");
+        check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == ly && Jobs.baseOf(wl) == wa && Jobs.baseOf(ly) == wa, "warrior advance");
+        check(wl.display().equals("뵈드바르(워로드)") && ly.display().equals("울프헤딘(라이칸)") && "awaken".equals(wl.path()) && "invert".equals(ly.path()), "warrior display");
+        check(Jobs.find("워로드") == wl && Jobs.find("울프헤딘") == ly && Jobs.find("lycan") == ly, "find warrior advanced");
         check(Jobs.advance("swordsman", "awaken") == sm && Jobs.advance("swordsman", "invert") == bk && Jobs.advance("swordsman", "nope") == null
                 && Jobs.advance(null, "awaken") == null, "advance(base, path)");
         check(Jobs.baseOf(sm) == sw && Jobs.baseOf(bk) == sw && Jobs.baseOf(sw) == sw && Jobs.baseOf(null) == null, "baseOf");
@@ -376,7 +386,11 @@ public final class JobsTest {
         check(Jobs.find("소드마스터") == sm && Jobs.find("시구르드(소드마스터)") == sm && Jobs.find("시구르드") == sm && Jobs.find("bloodknight") == bk
                 && Jobs.find("블러드 나이트") == bk, "find advanced");
         Set<String> ids = new HashSet<>();
-        for (Jobs.Job j : Jobs.all()) for (Jobs.Skill k : j.skills()) ids.add(k.id());
+        Set<String> names = new HashSet<>();
+        for (Jobs.Job j : Jobs.all()) for (Jobs.Skill k : j.skills()) {
+            ids.add(k.id());
+            names.add(k.name());
+        }
         double[] cds = {6, 12, 15, 30, 60};
         for (Jobs.Job a : Jobs.allAdvanced()) {
             Jobs.Job b = Jobs.baseOf(a);
@@ -386,6 +400,9 @@ public final class JobsTest {
             for (int i = 0; i < Jobs.SLOTS; i++) {
                 Jobs.Skill k = a.skill(i);
                 check(k.slot() == i && k.cd() == cds[i] && k.id().startsWith(a.id() + "_") && !k.desc().isEmpty() && ids.add(k.id()), a.id() + " skill " + i + " " + k.id());
+                check(names.add(k.name()), a.id() + " skill name unique " + k.name());
+                for (String u : Jobs.utils(k)) check(Rules.get().obj("RUNE_SPREAD").obj("utils").has(u), k.id() + " util " + u + " known");
+                if (k.total() > 0) check(k.def().has("t") && (Jobs.areaKind(k) == null || List.of("single", "narrow").contains(Jobs.areaKind(k))), k.id() + " t · area");
                 check(Jobs.upId(k.id()).equals(b.skill(i).id()), a.id() + " up id " + k.id() + " → " + Jobs.upId(k.id()));
                 check(Jobs.jobOf(k) == a, "jobOf " + k.id());
                 check((k.total() > 0) == (b.skill(i).total() > 0), a.id() + " slot " + i + " same role (damage · stance)");
@@ -415,6 +432,46 @@ public final class JobsTest {
         check(bk.trait().name().equals("피의 갈증") && bk.trait().max() == 5 && near(bk.trait().def().numOr("cost", 0), 0.04) && near(bk.trait().def().numOr("leech", 0), 0.05),
                 "피의 갈증 상처 5 · 체력 4% · 흡혈 5%");
         check(Jobs.skillLine(sm.skill(0)).startsWith("금빛 연격 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("회그니의 맹세 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
+        warriorAdvance(wa, wl, ly);
+    }
+
+    /** 0.51.0 전사 2차 — 뵈드바르(워로드) · 울프헤딘(라이칸): 부분 합 = 배율 합 (전사와 같은 6.5 · 3.9 · 11.7 · 52) · 무적 시간 띄움 · t · 특성 · 유틸 */
+    static void warriorAdvance(Jobs.Job wa, Jobs.Job wl, Jobs.Job ly) {
+        for (int i : new int[] {0, 1, 2, 4}) check(near(wl.skill(i).total(), wa.skill(i).total()) && near(ly.skill(i).total(), wa.skill(i).total()), "warrior totals slot " + i);
+        check(near(wl.skill(0).num("mult", 0), 6.5) && near(wl.skill(1).num("ram", 0) + wl.skill(1).num("slam", 0), 3.9)
+                && near(sum(wl.skill(2), "spins") + wl.skill(2).num("slam", 0), 11.7)
+                && near(wl.skill(4).num("leaps", 0) * wl.skill(4).num("leap", 0) + wl.skill(4).num("final", 0), 52), "warlord totals 6.5 · 3.9 · 11.7 · 52");
+        check(near(sum(ly.skill(0), "beats"), 6.5) && near(ly.skill(1).num("mult", 0), 3.9) && near(ly.skill(2).num("howl", 0) + ly.skill(2).num("spin", 0), 11.7)
+                && near(sum(ly.skill(4), "pounces") + ly.skill(4).num("final", 0), 52), "lycan totals 6.5 · 3.9 · 11.7 · 52");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게
+        check(wl.skill(1).num("slamDelay", 0) >= 10 && wl.skill(2).num("gap", 0) >= 10 && wl.skill(2).num("slamDelay", 0) >= 10 && wl.skill(4).num("leapTicks", 0) >= 10
+                && wl.skill(4).num("finalDelay", 0) >= 10, "warlord i-frame spacing");
+        check(ly.skill(0).num("gap", 0) >= 10 && ly.skill(2).num("spinDelay", 0) >= 10 && ly.skill(4).num("every", 0) >= 10 && ly.skill(4).num("finalDelay", 0) >= 10,
+                "lycan i-frame spacing");
+        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값)
+        check(near(wl.skill(0).num("windup", 0), wl.skill(0).num("t", 0)) && near(wl.skill(0).num("w", 0), wl.skill(0).num("t", 0)), "투구 깨부수기 t 12 = 선딜");
+        check(near(wl.skill(1).num("slamDelay", 0), wl.skill(1).num("t", 0)), "곰의 메치기 t 10");
+        check(near((wl.skill(2).def().list("spins").size() - 1) * wl.skill(2).num("gap", 0) + wl.skill(2).num("slamDelay", 0), wl.skill(2).num("t", 0)), "도끼 태풍 t 42");
+        check(near(wl.skill(4).num("leaps", 0) * wl.skill(4).num("leapTicks", 0) + wl.skill(4).num("finalDelay", 0), wl.skill(4).num("t", 0))
+                && near(wl.skill(4).num("leapTicks", 0), wl.skill(4).num("w", 0)), "뵈드바르의 앞발 t 68 · w 12");
+        check(near((ly.skill(0).def().list("beats").size() - 1) * ly.skill(0).num("gap", 0), ly.skill(0).num("t", 0)), "송곳니 베기 t 20");
+        check(near(ly.skill(1).num("leapTicks", 0), ly.skill(1).num("t", 0)) && near(ly.skill(1).num("w", 0), ly.skill(1).num("t", 0)), "사냥감 덮치기 t 8 = 선딜");
+        check(near(ly.skill(2).num("howlAt", 0) + ly.skill(2).num("spinDelay", 0), ly.skill(2).num("t", 0)), "달밤의 포효 t 16");
+        check(near(ly.skill(4).num("first", 0) + (ly.skill(4).def().list("pounces").size() - 1) * ly.skill(4).num("every", 0) + ly.skill(4).num("finalDelay", 0),
+                ly.skill(4).num("t", 0)) && near(ly.skill(4).num("first", 0), ly.skill(4).num("w", 0)), "달 삼키기 t 74 · w 6");
+        // 특성: 워로드 = 전사의 분노 + 곰의 화신 (분노 100 · 8초 · −15%), 라이칸 = 야성 (최대 10 · 하나당 +2% · 10 이면 할퀴기 +30% · 5 씀)
+        check(wl.trait().name().equals("분노") && wl.trait().max() == 100 && near(wl.trait().def().numOr("bearFor", 0), 160) && near(wl.trait().def().numOr("bearGuard", 0), 0.15)
+                && near(wl.trait().def().numOr("onHit", 0), wa.trait().def().numOr("onHit", -1)), "분노 · 곰의 화신");
+        check(ly.trait().name().equals("야성") && ly.trait().max() == 10 && near(ly.trait().def().numOr("atkSpeed", 0), 0.02) && near(ly.trait().def().numOr("moveSpeed", 0), 0.02)
+                && near(ly.trait().def().numOr("clawBonus", 0), 0.3) && ly.trait().def().numOr("clawUse", 0) == 5, "야성 10 · +2% · 할퀴기 +30%");
+        // 유틸: 투구 깨부수기 방어 깨짐 +15% (20%) · 달밤의 포효 겁먹음 (15%) · 사냥감 덮치기 도약 + 기절 0.5초 (15%) — 단일
+        check(Jobs.utils(wl.skill(0)).equals(List.of("vuln15")) && near(Jobs.utilCost(wl.skill(0)), 0.2) && near(wl.skill(0).num("break", 0), 0.15), "투구 깨부수기 vuln15");
+        check(Jobs.utils(ly.skill(2)).equals(List.of("weaken15")) && near(Jobs.utilCost(ly.skill(2)), 0.15) && near(ly.skill(2).num("weaken", 0), 0.15), "달밤의 포효 weaken15");
+        check(near(Jobs.utilCost(ly.skill(1)), 0.15) && "single".equals(Jobs.areaKind(ly.skill(1))) && Jobs.windupTicks(ly.skill(1)) == 8, "사냥감 덮치기 util 15% · single · w 8");
+        check(Jobs.windupTicks(wl.skill(0)) == 12 && near(Jobs.windupBonus(wl.skill(0)), 0.12), "투구 깨부수기 선딜 12틱 +12%");
+        check(Jobs.upKeys(wl.skill(3)).size() == 2 && Jobs.upKeys(ly.skill(3)).size() == 2 && Jobs.upKey(ly.skill(2), "weaken") != null, "up keys");
+        check(Jobs.skillLine(wl.skill(3)).equals("곰의 포효 · 30초") && Jobs.skillLine(ly.skill(0)).startsWith("송곳니 베기 · 6초 · 배율 "), "warrior advanced skill line");
+        check(wl.color()[0][0] > 0.9 && ly.color()[0][2] > 0.85 && ly.color()[1][0] > 0.85, "colors: orange · brown / moon silver · red eye");
     }
 
     /** 0.50.0 직업 스킬 재설계: 유틸 값 · 시간 보정 (룬과 같은 표) · 직업 맞춤 */

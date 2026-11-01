@@ -237,6 +237,15 @@ public final class RpgCombat {
     public static java.util.function.ToDoubleFunction<ServerPlayer> dealtMult = p -> 1;
 
     /**
+     * 0.51.0 공격 속도 배율 (1 = 그대로 — 울프헤딘(라이칸) 야성이 넣음): 근접 평타 사이 (Slash.admit · 보스 무적 시간 칸 — Motions.serverInterval(배율)).
+     * 클라이언트 선입력은 같은 값을 게이지로 셈 (ClientJobBar.attackSpeed)
+     */
+    public static java.util.function.ToDoubleFunction<ServerPlayer> attackSpeed = p -> 1;
+
+    /** 0.51.0 근접 무기를 휘두름 (허공 포함 — Slash.once, 들 수 있는 근접 무기만): 뵈드바르(워로드) 곰의 화신의 발톱 세 줄 */
+    public static java.util.function.BiConsumer<ServerPlayer, Weapon> swingHook = (p, w) -> {};
+
+    /**
      * 0.20.0 맞는 쪽 배율 (심연의 낙인이 넣음 — 1 = 그대로): 플레이어가 준 피해가 이 생명체에 들어갈 때 한 번 곱함 — 바닐라 경로는
      * LivingEntity.hurtServer 앞 (mixin), 보스 엔진은 Bosses.absorb. 공격 쪽 배율 (dealtMult — 세계수의 가호) 과는 곱
      */

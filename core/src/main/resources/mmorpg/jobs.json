@@ -271,12 +271,12 @@
     }
   },
   "advance": {
-    "_comment": "0.51.0 2차 전직 (사용자 2026-11-01 \"직업의 2차 전직을 만들거임 이거는 각성형태랑 반전형태 총 2가지를 선택할 수 있음\" · \"각성도 기존에 컨셉을 유지한채로 스킬을 바꿔도 됨 더 역동적인 모션을 사용한다던가 더 쎈 스킬을 사용하던가\" · \"일단 검사부터 구현하자\" — claude/job-advance.md): level 렙부터 직업 교관에서 1차 직업 하나에 각성 (awaken — 1차 컨셉 그대로 · 스킬을 새 동작으로) · 반전 (invert — 같은 무기 · 같은 칸 역할의 새 스킬 다섯 · 뒤집힌 특성) 중 하나. 2차 직업 = jobs 와 같은 꼴 + base (1차 직업 id) · path · title (이명 — 표기 이명(직업명)), 무기 · 적용 스탯 · 룬 · scale 은 1차 그대로. 직업 맞춤 = dps × 1차의 초당 피해 (0.26.0 지속 보정 기준) ÷ 2차의 배율 — 1차보다 20% (각성 = 반전, 범위 보정은 1차와 같이 밖에서). 처음 2차 전직은 무료 · 각성 ↔ 반전 바꾸기 switchSilver 은화 · 1차 직업을 바꾸면 2차도 풀림. 직업 스킬 강화 단계는 같은 칸의 1차 스킬 기록을 씀 (Jobs.upId)",
+    "_comment": "0.51.0 2차 전직 (사용자 2026-11-01 \"직업의 2차 전직을 만들거임 이거는 각성형태랑 반전형태 총 2가지를 선택할 수 있음\" · \"각성도 기존에 컨셉을 유지한채로 스킬을 바꿔도 됨 더 역동적인 모션을 사용한다던가 더 쎈 스킬을 사용하던가\" · \"일단 검사부터 구현하자\" · \"다음 그냥 직업표에 있는 순서대로 하자\" (전사 — 뵈드바르(워로드) · 울프헤딘(라이칸)) — claude/job-advance.md): level 렙부터 직업 교관에서 1차 직업 하나에 각성 (awaken — 1차 컨셉 그대로 · 스킬을 새 동작으로) · 반전 (invert — 같은 무기 · 같은 칸 역할의 새 스킬 다섯 · 뒤집힌 특성) 중 하나. 2차 직업 = jobs 와 같은 꼴 + base (1차 직업 id) · path · title (이명 — 표기 이명(직업명)), 무기 · 적용 스탯 · 룬 · scale 은 1차 그대로. 직업 맞춤 = dps × 1차의 초당 피해 (0.26.0 지속 보정 기준) ÷ 2차의 배율 — 1차보다 20% (각성 = 반전, 범위 보정은 1차와 같이 밖에서). 처음 2차 전직은 무료 · 각성 ↔ 반전 바꾸기 switchSilver 은화 · 1차 직업을 바꾸면 2차도 풀림. 직업 스킬 강화 단계는 같은 칸의 1차 스킬 기록을 씀 (Jobs.upId)",
     "level": 50,
     "switchSilver": 600,
     "dps": 1.2,
     "paths": {"awaken": "각성", "invert": "반전"},
-    "order": ["swordmaster", "bloodknight"],
+    "order": ["swordmaster", "bloodknight", "warlord", "lycan"],
     "jobs": {
       "swordmaster": {"base": "swordsman", "path": "awaken", "title": "시구르드", "name": "소드마스터", "ready": true, "role": "근접 딜러", "line": "투지를 여덟까지 쌓아 더 크고 역동적으로 베는 정석 검술의 끝", "color": [[1.0, 0.8, 0.3], [0.94, 0.93, 0.88]],
         "trait": {"name": "투지", "max": 8, "decay": 80, "critAt": 8, "critUse": 3, "crit": 0.3, "desc": "칼 평타가 맞을 때마다 투지 +1 (최대 8 — 4초 동안 못 맞히면 하나씩 사라짐). 직업 스킬이 투지를 써서 세짐. 투지 8 이면 다음 직업 스킬이 치명 (위력 +30% · 투지 3 씀)"},
@@ -296,6 +296,26 @@
           {"id": "bloodknight_burst", "name": "상처 터뜨리기", "cd": 15, "total": 9, "spin": 4, "radius": 4.5, "burst": 1, "burstRadius": 6, "delay": 10, "heal": 0.15, "t": 10, "u": ["lifesteal"], "desc": "칼을 크게 한 바퀴 (둘레 4.5칸 — 4) → 0.5초 뒤 둘레 6칸 적의 상처를 한꺼번에 터뜨림 (상처 하나당 1 · 최대 5) · 터뜨린 피해의 15% 회복"},
           {"id": "bloodknight_oath", "name": "회그니의 맹세", "cd": 30, "dur": 160, "cost": 0.15, "echo": 0.42, "echoDelay": 3, "leechMult": 2, "up": [{"key": "echo", "name": "피 칼날", "fmt": "pct"}], "desc": "체력 15% 를 바쳐 8초 태세: 칼 평타에 피 칼날 (평타 42% 더) · 흡혈 두 배 · 상처가 사라지지 않음"},
           {"id": "bloodknight_ult", "name": "끝나지 않는 전투", "cd": 60, "total": 40, "cost": 0.1, "dash": 7, "step": 3, "rush": 6, "beats": [4, 4, 4, 4], "split": 2, "every": 10, "radius": 4.5, "finalDelay": 16, "final": 24, "finalRadius": 5, "finalRange": 8, "finalWidth": 3, "perWound": 0.05, "t": 52, "w": 6, "u": ["lifesteal"], "desc": "체력 10% 를 바치고 앞 7칸의 가장 가까운 적에게 돌진 → 0.5초마다 X자로 두 번씩 네 번 벰 (둘레 4.5칸 — 4 × 4) → 칼을 땅에 꽂아 핏빛 기둥이 터짐 (둘레 5칸 · 앞 8칸 — 24, 상처 하나당 +5%)"}
+        ]
+      },
+      "warlord": {"base": "warrior", "path": "awaken", "title": "뵈드바르", "name": "워로드", "ready": true, "role": "근접 브루저", "line": "분노가 차오르면 거대한 곰의 화신이 되어 싸우는 왕의 용사", "color": [[1.0, 0.58, 0.16], [0.66, 0.36, 0.14]],
+        "trait": {"name": "분노", "max": 100, "onHit": 8, "onHurt": 5, "idle": 100, "decay": 5, "half": 50, "halfBonus": 0.1, "fullBonus": 0.2, "bearFor": 160, "bearGuard": 0.15, "desc": "도끼 평타가 맞으면 분노 +8 · 맞으면 +5 (최대 100), 5초 동안 싸우지 않으면 1초에 5씩 줄어듦. 50 이상이면 도끼 평타 피해 +10%. 분노 100 이면 곰의 화신 8초 — 몸을 감싼 곰 · 평타가 곰 발톱 세 줄로 넓어짐 (범위 ×1.5 · 피해 +20%) · 받는 피해 −15% (그동안 분노가 줄어 끝나면 0)"},
+        "skills": [
+          {"id": "warlord_crush", "name": "투구 깨부수기", "cd": 6, "total": 6.5, "a": "narrow", "mult": 6.5, "lunge": 2.0, "jump": 3.0, "windup": 12, "ahead": 0.6, "radius": 2.5, "rift": 6, "riftWidth": 1.6, "breakFor": 100, "break": 0.15, "breakBoss": 0.075, "t": 12, "w": 12, "u": ["vuln15"], "desc": "3칸 뛰어올라 공중에서 한 바퀴 돌며 앞을 내려찍음 (6.5 — 둘레 2.5칸 · 앞 6칸 땅이 갈라짐) — 맞은 적 5초 방어 깨짐 (받는 피해 +15% · 보스 +7.5%)"},
+          {"id": "warlord_throw", "name": "곰의 메치기", "cd": 12, "total": 3.9, "a": "narrow", "ram": 1.4, "slam": 2.5, "dist": 8, "steps": 6, "width": 1.8, "drag": 2.5, "slamDelay": 10, "slamRadius": 3.0, "t": 10, "u": ["blink", "lift"], "desc": "8칸 돌진 — 처음 닿은 적을 들이받아 (1.4) 끌고 가다 들어 올려 땅에 메침 (2.5 — 둘레 3칸 땅 울림, 보스 · 허수아비는 들리지 않고 메침 피해만), 돌진 중 밀려나지 않음"},
+          {"id": "warlord_storm", "name": "도끼 태풍", "cd": 15, "total": 11.7, "spins": [1.8, 1.8, 1.8, 1.8], "gap": 10, "radius": 3.6, "slam": 4.5, "slamRadius": 4.2, "slamDelay": 12, "hop": 2.5, "leech": 0.01, "leechMax": 5, "t": 42, "u": ["lifesteal"], "up": [{"key": "leech", "name": "흡혈 (적마다)", "fmt": "pct"}], "desc": "도끼를 휘두르며 돌며 걸음 — 둘레 3.6칸 0.5초마다 네 번 (1.8 × 4 · 움직일 수 있음) → 뛰어올라 내려찍음 (4.5 — 둘레 4.2칸), 맞힌 적마다 최대 체력 1% 흡혈 (한 번에 5명까지)"},
+          {"id": "warlord_roar", "name": "곰의 포효", "cd": 30, "dur": 160, "undying": 40, "low": 0.3, "heal": 0.2, "heals": 2, "up": [{"key": "dur", "name": "지속", "fmt": "sec"}, {"key": "heal", "name": "위기 회복", "fmt": "pct"}], "desc": "가슴을 치며 포효 — 분노 100 · 곰의 화신이 바로 (8초), 2초 동안 쓰러지지 않음 · 그동안 체력이 30% 아래로 떨어지면 최대 체력 20% 회복 (두 번까지)"},
+          {"id": "warlord_ult", "name": "뵈드바르의 앞발", "cd": 60, "total": 52, "leaps": 4, "leap": 6, "leapTicks": 12, "height": 4.0, "range": 12, "landRadius": 3.5, "rise": 10, "riseHeight": 6.0, "final": 28, "finalRadius": 7, "finalDelay": 20, "knock": 0.8, "t": 68, "w": 12, "u": ["leap", "knock"], "desc": "가장 가까운 적 무리로 네 번 이어 뛰어 내려찍음 (6 × 4 — 둘레 3.5칸) → 곰 형상과 함께 높이 뛰어올라 앞발로 내리침 (28 — 둘레 7칸)"}
+        ]
+      },
+      "lycan": {"base": "warrior", "path": "invert", "title": "울프헤딘", "name": "라이칸", "ready": true, "role": "근접 딜러 · 속도", "line": "사냥감 하나에 달라붙을수록 빨라지는 늑대 가죽의 전사", "color": [[0.76, 0.8, 0.92], [0.9, 0.14, 0.18]],
+        "trait": {"name": "야성", "max": 10, "decay": 60, "atkSpeed": 0.02, "moveSpeed": 0.02, "clawAt": 10, "clawUse": 5, "clawBonus": 0.3, "claws": 3, "desc": "같은 적 (사냥감) 을 이어 맞히면 야성 +1 (도끼 평타 · 직업 스킬 — 최대 10, 다른 적을 평타로 먼저 치면 그 적이 사냥감 · 1부터, 사냥감이 쓰러지면 다음 적에게 이어짐, 3초 동안 못 맞히면 1초에 하나씩 사라짐). 하나당 공격 속도 · 이동 속도 +2%. 야성 10 이면 다음 피해 직업 스킬에 할퀴기 셋 (위력 +30% · 야성 5 씀)"},
+        "skills": [
+          {"id": "lycan_fang", "name": "송곳니 베기", "cd": 6, "total": 6.5, "a": "narrow", "beats": [1.6, 1.6, 3.3], "splits": [2, 2, 4], "gap": 10, "reach": 3.4, "arc": 120, "step": 0.5, "t": 20, "desc": "도끼로 X자 두 번 (1.6 · 1.6) → 발톱 네 줄로 할큄 (3.3) — 앞 3.4칸"},
+          {"id": "lycan_pounce", "name": "사냥감 덮치기", "cd": 12, "total": 3.9, "a": "single", "mult": 3.9, "range": 8, "arc": 90, "leapTicks": 8, "height": 1.8, "stun": 10, "miss": 6, "t": 8, "w": 8, "u": ["leap", "stun05"], "desc": "앞 8칸의 적 하나에게 덮쳐 넘어뜨림 (3.9 · 기절 0.5초) — 그 적이 사냥감 (야성 그대로). 적이 없으면 앞으로 6칸 뜀"},
+          {"id": "lycan_howl", "name": "달밤의 포효", "cd": 15, "total": 11.7, "howl": 3.7, "howlAt": 4, "howlRadius": 6, "spin": 8.0, "spinDelay": 12, "spinRadius": 4.5, "weaken": 0.15, "fearFor": 100, "t": 16, "u": ["weaken15"], "up": [{"key": "weaken", "name": "겁먹음 (가하는 피해 −)", "fmt": "pct"}], "desc": "달을 보며 포효 — 둘레 6칸 적 (3.7) 5초 겁먹음 (가하는 피해 −15%) → 도끼로 크게 한 바퀴 (8 — 둘레 4.5칸)"},
+          {"id": "lycan_night", "name": "늑대의 밤", "cd": 30, "dur": 160, "echo": 0.42, "echoDelay": 3, "speed": 0.2, "up": [{"key": "dur", "name": "지속", "fmt": "sec"}, {"key": "echo", "name": "두 번째 베기", "fmt": "pct"}], "desc": "8초 늑대 형상 — 도끼 평타가 두 번 벰 (두 번째 42% · 발톱) · 이동 속도 +20% · 야성이 사라지지 않음"},
+          {"id": "lycan_ult", "name": "달 삼키기", "cd": 60, "total": 52, "pounces": [4.5, 4.5, 4.5, 4.5, 4.5, 4.5], "first": 6, "every": 10, "range": 10, "height": 1.6, "rise": 10, "riseHeight": 5.0, "final": 25, "finalRadius": 6, "finalDelay": 18, "t": 74, "w": 6, "u": ["leap"], "desc": "하늘의 달이 삼켜지는 동안 둘레 적 사이를 여섯 번 덮쳐 찢음 (4.5 × 6) → 높이 뛰어올라 내려찍음 (25 — 둘레 6칸)"}
         ]
       }
     }

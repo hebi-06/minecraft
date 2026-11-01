@@ -24,6 +24,7 @@ import job_motions_a  # noqa: E402,F401
 import job_motions_b  # noqa: E402,F401
 import job_motions_c  # noqa: E402,F401
 import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트)
+import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 라이칸)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -97,6 +98,12 @@ AIR = {
     "jb_swordmaster_moon": [(1, 4, "tuck"), (5, 29, "float"), (30, 33, "tuck"), (34, 38, "land")],
     "jb_swordmaster_ult": [(9, 14, "tuck"), (15, 54, "float"), (55, 59, "tuck"), (60, 64, "land")],
     "jb_bloodknight_ult": [(45, 51, "hop"), (52, 56, "land")],
+    "jb_warlord_crush": [(1, 10, "tuck"), (12, 15, "land")],
+    "jb_warlord_storm": [(33, 41, "tuck"), (42, 45, "land")],
+    "jb_warlord_ult_final": [(2, 18, "tuck"), (20, 23, "land")],
+    "jb_lycan_pounce": [(2, 7, "tuck"), (8, 11, "land")],
+    "jb_lycan_ult_pounce": [(1, 5, "tuck"), (6, 8, "land")],
+    "jb_lycan_ult_final": [(2, 16, "tuck"), (18, 21, "land")],
 }
 
 
