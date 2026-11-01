@@ -278,7 +278,7 @@
     "paths": {"awaken": "각성", "invert": "반전"},
     "order": ["swordmaster", "bloodknight"],
     "jobs": {
-      "swordmaster": {"base": "swordsman", "path": "awaken", "title": "시구르드", "name": "소드마스터", "ready": true, "role": "근접 딜러 (각성)", "line": "투지를 여덟까지 쌓아 더 크고 역동적으로 베는 정석 검술의 끝", "color": [[1.0, 0.8, 0.3], [0.8, 0.88, 1.0]],
+      "swordmaster": {"base": "swordsman", "path": "awaken", "title": "시구르드", "name": "소드마스터", "ready": true, "role": "근접 딜러", "line": "투지를 여덟까지 쌓아 더 크고 역동적으로 베는 정석 검술의 끝", "color": [[1.0, 0.8, 0.3], [0.94, 0.93, 0.88]],
         "trait": {"name": "투지", "max": 8, "decay": 80, "critAt": 8, "critUse": 3, "crit": 0.3, "desc": "칼 평타가 맞을 때마다 투지 +1 (최대 8 — 4초 동안 못 맞히면 하나씩 사라짐). 직업 스킬이 투지를 써서 세짐. 투지 8 이면 다음 직업 스킬이 치명 (위력 +30% · 투지 3 씀)"},
         "skills": [
           {"id": "swordmaster_flurry", "name": "금빛 연격", "cd": 6, "total": 5, "a": "narrow", "beats": [1.0, 1.0, 1.2, 1.8], "splits": [2, 2, 1, 2], "gap": 10, "reach": 3.6, "arc": 140, "step": 0.55, "hop": 0.6, "wave": {"need": 3, "use": 3, "range": 8, "width": 1.6}, "t": 32, "desc": "세 걸음 내딛으며 좌우로 두 번씩 두 차례 (1.0 · 1.0) → 뛰어 돌며 내려 벰 (1.2) → X자 베기 (1.8). 투지 3 이상이면 X자가 검기 두 줄로 앞 8칸 관통 (투지 3 씀)"},
@@ -288,7 +288,7 @@
           {"id": "swordmaster_ult", "name": "신들의 황혼", "cd": 60, "total": 40, "dash": 7, "step": 3, "rush": 6, "launch": 4, "launchRadius": 4, "jump": 3.0, "beats": [3.5, 3.5, 3.5, 3.5], "first": 16, "every": 10, "radius": 4.5, "finalDelay": 14, "final": 22, "finalRadius": 5, "finalRange": 12, "finalWidth": 2.4, "fan": 25, "t": 60, "w": 6, "u": ["lift"], "desc": "앞 7칸 안의 가장 가까운 적에게 돌진해 올려 베어 띄우고 (4) 따라 뛰어올라 공중에서 네 번 벰 (둘레 4.5칸 — 3.5 × 4) → 두 손으로 내리꽂으며 착지 — 둘레 5칸 · 앞 12칸 세 갈래가 갈라짐 (22)"}
         ]
       },
-      "bloodknight": {"base": "swordsman", "path": "invert", "title": "다인슬레이프", "name": "블러드 나이트", "ready": true, "role": "근접 딜러 · 흡혈 (반전)", "line": "체력을 칼에 바쳐 세지고 벤 만큼 피로 되찾는 저주받은 검", "color": [[0.62, 0.02, 0.08], [0.95, 0.18, 0.2]],
+      "bloodknight": {"base": "swordsman", "path": "invert", "title": "다인슬레이프", "name": "블러드 나이트", "ready": true, "role": "근접 딜러 · 흡혈", "line": "체력을 칼에 바쳐 세지고 벤 만큼 피로 되찾는 저주받은 검", "color": [[0.62, 0.02, 0.08], [0.95, 0.18, 0.2]],
         "trait": {"name": "피의 갈증", "max": 5, "cost": 0.04, "costMin": 0.25, "bonus": 0.1, "leech": 0.05, "woundFor": 160, "desc": "직업 스킬을 쓸 때 체력 4% 를 바쳐 그 스킬 위력 +10% (체력 25% 아래면 바치지 않음) · 직업 스킬 피해의 5% 흡혈. 직업 스킬이 맞힌 적에 상처 +1 (최대 5 · 8초) — 상처 터뜨리기 · 끝나지 않는 전투가 터뜨림"},
         "skills": [
           {"id": "bloodknight_flurry", "name": "핏빛 연격", "cd": 6, "total": 5, "a": "narrow", "hits": [1.2, 1.2, 2.6], "gap": 10, "reach": 3.6, "arc": 130, "step": 0.8, "t": 20, "desc": "내딛으며 찌르듯 베고 (1.2) 되돌려 베고 (1.2) 머리 위에서 내려 벰 (2.6) — 맞힐 때마다 상처 +1"},

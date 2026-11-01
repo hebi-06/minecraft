@@ -490,7 +490,8 @@ final class BloodknightSkills {
         JobFx.slash(sp, j, 2.3, -0.1, 3.0, 95.0, 0.34);
         JobFx.slashCard(level, V.up(V.add(c, f, 1.0), 1.4), f, 95.0, 3.8, 0.32, V.ZERO, j, JobFx.hide1p(sp));
         JobFx.smash(level, V.up(tip, 0.05), R, j, 0.6, Opt.empty());
-        pillar(sp, level, tip, 5.0, 1.6, j);
+        // 큰 피 기둥: 칼끝보다 조금 앞 (눈 바로 앞이면 가늘어짐 — 0.51.0 영상 1: 칼끝 1.2칸은 1인칭 기준으로 0.56 굵기라 3인칭에서 가는 줄로 보였음)
+        pillar(sp, level, V.add(g, f, 2.2), 6.0, 2.0, j);
         JobTraits5.blood(level, V.up(tip, 0.8), 1.8, j, 0.5, Opt.empty());
         RuneKit.novaRing(level, V.up(g, 0.1), R * 0.4, 1.5, glow, core, Opt.of("life", 0.5));
         spray(level, V.up(tip, 0.5), V.UP, 8, 0.8, 5.0, j, 0.5, Opt.empty());
@@ -511,12 +512,12 @@ final class BloodknightSkills {
         SkillFx.play(level, "mob.warden.heartbeat", c, 0.7, 1.0);
         // 앞으로 솟는 피 기둥: 1.8칸마다 그 자리에 닿는 때 (가는 기둥 · 피 튀김 · 솟는 핏방울 · 고리 · 흙먼지)
         double len = Math.max(2, RuneKit.rayLength(level, V.up(g, 0.6), f, range));
-        for (double s = 2.0; s <= len + 0.01; s += 1.8) {
+        for (double s = 3.8; s <= len + 0.01; s += 1.8) { // 큰 기둥 (2.2칸) 다음부터
             double ss = s;
             RuneKit.later((int) Math.round(ss / SPLIT_SPEED * 20), () -> {
                 Vec3 p = V.add(g, f, ss);
                 Vec3 m = new Vec3(p.x, RuneKit.groundAt(level, p, g.y), p.z);
-                pillar(sp, level, m, 2.6, 0.7, j);
+                pillar(sp, level, m, 3.4, 1.1, j);
                 JobTraits5.blood(level, V.up(m, 0.6), 1.0, j, 0.4, Opt.empty());
                 spray(level, V.up(m, 0.3), V.UP, 4, 0.5, 4.0, j, 0.45, Opt.empty());
                 JobFx.ring(level, V.up(m, 0.06), 1.1, j, false, 0.35, Opt.of("alpha", 0.8));
@@ -540,9 +541,9 @@ final class BloodknightSkills {
         }
     }
 
-    /** 피 기둥 하나 (밑동 = at · 높이 h · 굵기 th — 카메라 가까이면 가늘게): 짙은 피 · 밝은 피 · 흰 심지 세 겹 */
+    /** 피 기둥 하나 (밑동 = at · 높이 h · 굵기 th — 눈 · 3인칭 카메라 가까이면 가늘게): 짙은 피 · 밝은 피 · 흰 심지 세 겹 */
     private static void pillar(ServerPlayer sp, ServerLevel level, Vec3 at, double h, double th, Jobs.Job j) {
-        double kk = RuneKit.nearK(sp, V.up(at, 1.6), th + 2.5, 0.35);
+        double kk = RuneKit.nearK(sp, V.up(at, 1.6), th + 1.2, 0.45);
         Vec3 mid = V.up(at, h / 2);
         SkillFx.fx(level, "rpg:arrow_shot", mid, Opt.of("dir", V.UP, "speed", 0.0, "size", h / 2, "thick", th * kk, "life", 0.6, "color", JobFx.outer(j), "alpha", 0.9));
         SkillFx.fx(level, "rpg:arrow_shot", mid, Opt.of("dir", V.UP, "speed", 0.0, "size", h / 2, "thick", th * 0.5 * kk, "life", 0.55, "color", JobFx.inner(j), "alpha",
