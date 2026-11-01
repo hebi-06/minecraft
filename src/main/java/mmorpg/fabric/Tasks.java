@@ -27,18 +27,39 @@ public final class Tasks {
         return now;
     }
 
-    /** ticks 틱 뒤 (최소 1) 서버 스레드에서 실행. 0.48.2 지금의 효과 주인 (owner) 을 잡아 두었다가 실행할 때 되살림 */
+    /** ticks 틱 뒤 (최소 1) 서버 스레드에서 실행. 0.48.2 지금의 효과 주인 (owner) · 0.50.0 꼬리표 (tag) 를 잡아 두었다가 실행할 때 되살림 */
     public static void later(int ticks, Runnable run) {
         int own = owner;
-        TASKS.add(new Task(now + Math.max(1, ticks), own == 0 ? run : () -> {
+        String tg = tag;
+        TASKS.add(new Task(now + Math.max(1, ticks), own == 0 && tg == null ? run : () -> {
             int prev = owner;
+            String prevTag = tag;
             owner = own;
+            tag = tg;
             try {
                 run.run();
             } finally {
                 owner = prev;
+                tag = prevTag;
             }
         }));
+    }
+
+    /**
+     * 0.50.0 지금 효과의 꼬리표 (null = 없음 — 룬을 쓰는 동안 RuneCast 가 "계열:등급" 으로 정함, later 가 이어 줌): 룬 피해가 들어간 적에 그 계열의 맞은 자리
+     * 그림 (RuneBoost.mark) · 아래 등급 룬의 그림 후광
+     */
+    private static String tag;
+
+    public static String tag() {
+        return tag;
+    }
+
+    /** 꼬리표를 바꾸고 예전 값을 돌려줌 (끝나면 되돌림) */
+    public static String tag(String t) {
+        String prev = tag;
+        tag = t;
+        return prev;
     }
 
     /**

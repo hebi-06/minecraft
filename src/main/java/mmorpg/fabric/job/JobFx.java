@@ -237,8 +237,8 @@ final class JobFx {
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
         Vec3 b = Kit.bodyPoint(e);
-        // 0.50.0 직업마다 다른 맞은 자리 (rfx_jhits — 사용자 "직업 고유 연출": 검사 십자 섬광 · 전사 금 간 충격 · 마검사 룬 고리 · 매지션 별빛 · 궁수 꽂힌 깃 ·
-        // 암살자 꽃잎 · 창술사 꿰뚫은 빛 · 사신 혼 · 성기사 번개 · 사제 빛 십자 · 수호기사 방패 문장 — 처음 두 장 번쩍 → 흩어짐)
+        // 0.50.0 직업마다 다른 맞은 자리 (rfx_jhits — 재설계표 "맞은 자리": 검사 은빛 베인 줄 · 전사 곰 발톱 세 줄 · 마검사 룬 균열 · 매지션 별 터짐 ·
+        // 궁수 깃털 바람 · 암살자 자홍 X · 창술사 원뿔 충격 · 사신 빠져나가는 혼 · 성기사 번개 갈래 · 사제 빛 꽃 · 수호기사 육각 판 금속 섬광 — 처음 두 장 번쩍 → 흩어짐)
         int row = j == null ? -1 : HIT_ROWS.indexOf(j.id());
         // 사신 (혼이 위로 솟음) 은 돌리지 않음, 나머지는 조금씩 기울임
         double tilt = "reaper".equals(j.id()) ? 0 : Kit.rand() * 40 - 20;

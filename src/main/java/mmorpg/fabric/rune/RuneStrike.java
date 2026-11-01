@@ -326,10 +326,12 @@ public final class RuneStrike {
                 st.swing = sw;
                 if (Double.isFinite(st.left)) st.left -= 1;
                 int own = RuneKit.enter(sp); // 0.48.2 참격 판의 1인칭 나눔
+                String tg = Tasks.tag("strike:" + g); // 0.50.0 계열의 맞은 자리 (RuneBoost.mark)
                 try {
                     strikeEffect(sp, victim, w, st);
                 } finally {
                     RuneKit.leave(own);
+                    Tasks.tag(tg);
                 }
                 if (st.left <= 0) {
                     strikeEnd(sp, st, true);

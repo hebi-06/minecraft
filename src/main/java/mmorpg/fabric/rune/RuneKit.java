@@ -123,6 +123,7 @@ public final class RuneKit {
         Kit.Cause c = cause != null ? cause : "int".equals(stat) ? Kit.Cause.MAGIC : Kit.Cause.ATTACK;
         float before = target.getHealth();
         if (!Kit.applySkillDamage(sp, target, dmg, false, c, style != null ? style : DamageNumbers.Style.RUNE)) return 0;
+        RuneBoost.mark(target); // 0.50.0 계열의 맞은 자리 (룬을 쓰는 동안 — Tasks.tag)
         float after = target.isRemoved() ? 0 : target.getHealth();
         return before > after ? before - after : dmg;
     }
@@ -527,6 +528,10 @@ public final class RuneKit {
         double solo = o.num("solo", 0); // 0.29.0 주인마다 하나만 — 빛 · 심지가 서로를 지우지 않게 번호를 나눔
         rfx(level, name, at, o.with("color", glow, "cell", c[0] + cell, "solo", solo > 0 ? solo * 2 : null));
         rfx(level, name, at, o.with("color", core, "cell", c[1] + cell, "alpha", coreAlpha != null ? coreAlpha : o.num("alpha", 1), "solo", solo > 0 ? solo * 2 + 1 : null));
+        // 0.50.0 아래 등급 룬의 물체 그림에 옅은 후광 (빛깔 겹 1.32배 — 다시 그리며 하나만 두는 solo 그림은 겹쳐 쌓이므로 뺌)
+        double aura = solo > 0 ? 0 : RuneBoost.lowAura(name);
+        if (aura > 0 && o.num("size", 0) >= 0.3) rfx(level, name, at, o.with("size", o.num("size", 1) * 1.32, "color", glow, "cell", c[0] + cell, "alpha", aura
+                * o.num("alpha", 1), "solo", null));
     }
 
     public static void rfx2(ServerLevel level, String name, Vec3 at, Opt o, double[] glow, double[] core) {
@@ -553,7 +558,12 @@ public final class RuneKit {
                     o.num("fade", 0.2), "alpha", o.num("alpha", 1), "spin", screenSpin(d, face, o.num("roll", 0)), "view", 2.0, "owner", (double) own), glow,
                     core, null, null);
         }
-        mmorpg.fabric.Fx3d.spawn(level, "slash_wave", at, faceCamIfFlat(card, d, face, o.num("roll", 0)));
+        Opt shown = faceCamIfFlat(card, d, face, o.num("roll", 0));
+        // 0.50.0 아래 등급 룬: 조금 큰 옅은 잔상 한 겹 (두 겹의 칼빛)
+        double aura = RuneBoost.lowAura();
+        if (aura > 0) mmorpg.fabric.Fx3d.spawn(level, "slash_wave", at, shown.with("scale", o.num("size", 1) * 1.28, "alpha", aura * o.num("alpha", 1), "glow", glow,
+                "shine", 0.0));
+        mmorpg.fabric.Fx3d.spawn(level, "slash_wave", at, shown);
     }
 
     /**
@@ -616,6 +626,10 @@ public final class RuneKit {
         double[] aura = o.color("aura", null);
         if (aura != null) mmorpg.fabric.Fx3d.spawn(level, "slash_" + shape + "_soft", at, base.with("scale", size * ARC_CARD * 1.03, "color", aura, "glow", aura,
                 "alpha", 0.8 * a));
+        // 0.50.0 아래 등급 룬: 조금 큰 옅은 잔상 한 겹 (두 겹의 칼빛)
+        double low = RuneBoost.lowAura();
+        if (low > 0) mmorpg.fabric.Fx3d.spawn(level, "slash_" + shape + "_soft", at, base.with("scale", size * ARC_CARD * 1.3, "color", aura != null ? aura : color,
+                "glow", aura != null ? aura : color, "alpha", low * a));
         boolean core = !(o.get("core") instanceof Boolean b && !b);
         mmorpg.fabric.Fx3d.spawn(level, core ? "slash_" + shape : "slash_" + shape + "_soft", at, base.with("color", color, "glow", whiten(color, 0.8), "alpha",
                 0.95 * a, "shine", core ? 0.15 : 0.0));
