@@ -879,7 +879,7 @@ final class JobFx {
     static final int HALO = 8;
     static final int BIFROST = 6;
     /** 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1): 늑대 머리 · 불덩이 · 얼음 창 끝 · 번개 구슬 · 태양 화살 촉 */
-    static final double WOLF_HEAD = 0.56;
+    static final double WOLF_HEAD = 0.6;
     static final double FIREBALL_HEAD = 0.6;
     static final double ICELANCE_HEAD = 0.9;
     static final double SPARKORB_HEAD = 0.56;

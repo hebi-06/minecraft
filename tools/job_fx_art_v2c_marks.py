@@ -11,9 +11,21 @@
 보는 꼴: rotate_xyz = 카메라를 봄 (판 안에서 돌 수 있음) · lookat_direction = 나아가는 쪽으로 늘임 (그림 +X 오른쪽 = 나아가는 쪽) · direction_z = 눕는 판 (dir = 위 → 땅 표식).
 
 그림 (이름 — 직업 — 보는 꼴 — 칸 — 장 수 — 열 수):
-- rfx_jglint       검사   rotate_xyz       128×128 ×6  (6 열)  칼끝 반짝임: 네 뿔 별 · 긴 가로 렌즈 빛 · 옅은 작은 고리 — 0 ~ 1 번쩍 들어옴, 2 ~ 5 작아지며 사라짐 (별이 살짝 돎). 칸 가운데 = 반짝이는 점
+- rfx_jglint       검사   rotate_xyz       128×128 ×6  (6 열)  칼끝 반짝임: 네 뿔 별 · 긴 가로 렌즈 빛 · 옅은 작은 고리 · 렌즈 잔상 점 — 0 ~ 1 번쩍 들어옴,
+                                                               2 ~ 5 작아지며 사라짐 (별이 살짝 돎 · 가로 빛은 돌지 않음). 칸 가운데 = 반짝이는 점
 - rfx_jbladering   검사   direction_z      256×256 ×8  (4 열)  이어 돌림: 가는 검 여섯이 둥글게 (자루 끝 0.35 · 코등이 0.47 · 칼끝 0.9 × 반 크기) · 코등이를 지나는 가는 빛 원 ·
-                                                               장마다 7.5° 돎 (8 장 = 60° — 여섯 겹 대칭이라 이음매 없음) · 날을 따라 흐르는 빛 · 칼끝 꼬리
+                                                               장마다 7.5° 시계 방향 (8 장 = 60° — 여섯 겹 대칭이라 장면 8 = 장면 0) · 날을 따라 흐르는 빛 (8 장 한 번 · 칼끝에서 반짝) · 짧은 칼끝 꼬리.
+                                                               칸 가운데 = 고리 가운데
+- rfx_jquake       전사   direction_z      192×192 ×12 (6 열)  광전사 땅 내려찍기: 0 ~ 1 번쩍 · 1 ~ 6 각진 금이 가지를 치며 뻗음 · 각진 돌덩이가 튀어 솟았다 떨어지며 작아지고 흐려짐
+                                                               (떨어진 자리에 작은 먼지) · 먼지 고리 (바깥 끝 0.46 S = rfx_jsmash2 고리 끝) · 7 ~ 8 금이 달아오름 → 9 ~ 11 식어 사라짐. 칸 가운데 = 맞은 자리
+- rfx_jwolf        전사   lookat_direction 256×128 ×6  (4 열)  이어 돌림: 펜리르 혼령 늑대 머리 옆모습 (오른쪽 = 나아가는 쪽, 머리 x 0.63 ~ 0.95 W · 코끝 0.95 W) — 벌린 턱 (송곳니 · 혀,
+                                                               아래턱이 6 장에 한 번 조금 여닫힘) · 선 귀 · 빛나는 눈 (뒤로 끌리는 빛 꼬리) · 왼쪽으로 흩날리는 갈기 가닥 (물결이 꼬리 쪽으로 흐름)
+- rfx_jninerunes   마검사 rotate_xyz       512×256 ×12 (4 열)  지어낸 각진 글자 아홉 (glyph_mask k = 0 ~ 8) 이 위로 굽은 호 (왕관 — 꼭대기 글자 y 70 · 양 끝 (58, 158) / (454, 158)):
+                                                               0 ~ 8 글자 k 가 장 k 에 번쩍 켜짐 (먼저 켜진 글자는 계속 빛남 · 안 켜진 글자는 옅은 자국), 9 ~ 11 모두 더 밝아지고
+                                                               호를 따라 가는 빛 줄이 가운데에서 양쪽으로 이음 · 왕관 띠 · 작은 불티 (마지막 장은 머무는 장면)
+- rfx_jwail        사신   rotate_xyz       192×192 ×8  (4 열)  연기 유령 얼굴의 비명 (칸 가운데 = 얼굴 가운데): 0 ~ 2 연기가 소용돌이치며 얼굴로 모임 (처진 빈 눈구멍 · 길게 벌린 입 ·
+                                                               홀쭉한 볼), 3 ~ 4 비명 (입이 가장 크고 살짝 커짐 · 일렁이는 소리 고리), 5 ~ 7 바깥 · 위로 끌린 가닥으로 찢겨 사라짐
+(전사 rfx_jwhirl2 회전 도끼 셋은 tools/job_fx_art_v2b.py 의 whirl_frame — 같은 칸 · 같은 장 수 · 같은 이어 돌림)
 """
 import math
 import os
@@ -25,11 +37,10 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from java_fx_art import save  # noqa: E402 — 같은 꼴의 파티클 정의 · tools/java_fx 에 씀
-from job_fx_art_v2 import (BG, COLORS, SS, TAU, Pad, Stack, Xf, bevel_light, bez, bolt_pts, clamp01, ease_out, edge_fade, gblur,  # noqa: E402
-                           glyph_lines, glyph_mask, inner_dist, label, obj_glow, rim_of, rot_pts, screen, smooth, sparkle, star_pts, taper_poly,
-                           to_sheet)
-from job_fx_art_v2b import (arc_pts, behind, chunk_pts, crescent_prof, cut_polyline, faceted, fbm, finish, gauss, lens, perlin, polar,  # noqa: E402
-                            polyline_len, star4, streak, swin, tint_comp_scaled, win_border, wrap)
+from job_fx_art_v2 import (BG, COLORS, SS, TAU, Pad, Stack, Xf, bevel_light, bez, clamp01, ease_out, edge_fade, gblur,  # noqa: E402
+                           glyph_mask, label, obj_glow, rim_of, rot_pts, screen, smooth, star_pts, taper_poly, to_sheet)
+from job_fx_art_v2b import (arc_pts, behind, chunk_pts, cut_polyline, faceted, fbm, finish, gauss, lens, polar,  # noqa: E402
+                            polyline_len, star4, streak, tint_comp_scaled, win_border)
 
 
 # ============================================================ 그림 목록 · 쓰기 · 확인용 그림
@@ -799,6 +810,7 @@ def ninerunes_frame(f, W=NR_W, H=NR_H):
     glow = pad.zeros()
     final = f >= 9
     fk = NR_FLARE[f - 9] if final else 0.0
+    gm_all = pad.zeros()
     for k in range(9):
         x, y, a = nr_pos(k)
         ang = a + math.pi / 2
@@ -813,6 +825,7 @@ def ninerunes_frame(f, W=NR_W, H=NR_H):
         else:
             state, sc, cb, gb = "off", 1.0, 0.0, 0.1
         m = glyph_mask(pad, k, x, y, NR_GW * sc, NR_GH * sc, NR_LW * sc, ang=ang)
+        gm_all = np.maximum(gm_all, m)
         if state == "off":
             glow = np.maximum(glow, m * gb)
             continue
@@ -837,34 +850,25 @@ def ninerunes_frame(f, W=NR_W, H=NR_H):
             # 막 켜진 다음 장: 남은 작은 반짝임
             core = np.maximum(core, star4(pad, x + 12 * math.cos(ang - 0.9), y + 12 * math.sin(ang - 0.9), 9, 0.8, rot=0.3, thin=0.12, diag=0.0))
     if final:
-        # ---- 이음 줄: 호를 따라 글자 사이를 잇는 가는 빛 줄 (가운데에서 양쪽으로) · 사이마다 작은 마름모
+        # ---- 이음 줄: 호를 따라 가는 빛 줄 (가운데에서 양쪽으로 뻗음 — 글자 획 둘레만 살짝 비워 획에 닿아 보이게) · 글자 사이마다 작은 마름모
         reach = NR_LINE[f - 9]
-        gap = (NR_GW * 0.5 + 7.0) / NR_R
+        half_span = 4 * NR_STEP * reach
         line_c = pad.zeros()
         line_g = pad.zeros()
+        pts = arc_pts(256.0, NR_YC, NR_R, -math.pi / 2 - half_span, -math.pi / 2 + half_span, n=120)
+        cut = 1 - clamp01(gblur(gm_all, 1.6 * SS) * 3.0)
+        line_c = np.maximum(line_c, pad.stroke(pts, 1.3, a0=0.95, taper=0.08 if reach < 1 else 0.0) * cut)
+        line_g = np.maximum(line_g, pad.stroke(pts, 5.0, a0=0.6, soft=2.0) * (0.35 + 0.65 * cut))
         for k in range(8):
-            a0 = -math.pi / 2 + (k - 4) * NR_STEP + gap
-            a1 = -math.pi / 2 + (k + 1 - 4) * NR_STEP - gap
-            # 가운데 (k = 3.5) 에서 먼 마디일수록 늦게 그어짐
-            dist = abs(k + 0.5 - 4) / 4.0
-            g = clamp01((reach - dist * 0.85) / 0.3)
-            if g <= 0:
+            am = -math.pi / 2 + (k + 0.5 - 4) * NR_STEP
+            if abs(am + math.pi / 2) > half_span:
                 continue
-            if k + 0.5 < 4:
-                a0 = a1 - (a1 - a0) * g
-            else:
-                a1 = a0 + (a1 - a0) * g
-            pts = arc_pts(256.0, NR_YC, NR_R, a0, a1, n=24)
-            line_c = np.maximum(line_c, pad.stroke(pts, 1.3, a0=0.95))
-            line_g = np.maximum(line_g, pad.stroke(pts, 5.0, a0=0.6, soft=2.0))
-            if g >= 1:
-                am = -math.pi / 2 + (k + 0.5 - 4) * NR_STEP
-                mx, my = 256.0 + math.cos(am) * NR_R, NR_YC + math.sin(am) * NR_R
-                ux, uy = math.cos(am), math.sin(am)
-                tx, ty = -uy, ux
-                dm = pad.poly([(mx + ux * 5.0, my + uy * 5.0), (mx + tx * 3.0, my + ty * 3.0), (mx - ux * 5.0, my - uy * 5.0), (mx - tx * 3.0, my - ty * 3.0)])
-                line_c = np.maximum(line_c, dm)
-                line_g = np.maximum(line_g, dm * 0.9)
+            mx, my = 256.0 + math.cos(am) * NR_R, NR_YC + math.sin(am) * NR_R
+            ux, uy = math.cos(am), math.sin(am)
+            tx, ty = -uy, ux
+            dm = pad.poly([(mx + ux * 5.0, my + uy * 5.0), (mx + tx * 3.0, my + ty * 3.0), (mx - ux * 5.0, my - uy * 5.0), (mx - tx * 3.0, my - ty * 3.0)])
+            line_c = np.maximum(line_c, dm)
+            line_g = np.maximum(line_g, dm * 0.9)
         # 바깥 · 안쪽 옅은 호 (왕관 띠)
         for dr, a_ in ((-31.0, 0.32), (31.0, 0.22)):
             pts = arc_pts(256.0, NR_YC, NR_R + dr, -math.pi / 2 - 4 * NR_STEP * reach, -math.pi / 2 + 4 * NR_STEP * reach, n=80)
@@ -926,19 +930,19 @@ def wail_face(pad, f, c=96.0):
     # 연기 꼬리: 턱 아래로 흘러내려 모이는 가닥 셋 · 턱 옆으로 흘러내리는 옅은 가닥
     wisps = pad.zeros()
     ph = f * 0.7
-    for k, (u0, L, bend, w0) in enumerate(((-6.0, 50.0, -7.0, 6.0), (2.0, 60.0, 4.0, 7.0), (8.0, 46.0, 10.0, 5.0))):
+    for k, (u0, L, bend, w0) in enumerate(((-6.0, 27.0, -7.0, 6.0), (2.0, 33.0, 4.0, 7.0), (8.0, 25.0, 9.0, 5.0))):
         pts = []
         for i in range(19):
             t = i / 18
             u = u0 * (1 - 0.6 * t) + bend * t * t + 3.5 * math.sin(ph + k * 1.7 + t * 3.4) * t
-            v = chin - 14 + L * t
+            v = chin - 18 + L * t
             pts.append(P(u, v))
         wisps = np.maximum(wisps, pad.stroke(pts, 1.0, wfn=lambda t, w0=w0: w0 * s * (1 - t) ** 0.7 + 0.6, afn=lambda t: 0.8 * (1 - t) ** 1.1, soft=4.0))
     for sg in (-1, 1):
         pts = []
         for i in range(15):
             t = i / 14
-            pts.append(P(sg * (27.0 + 9.0 * t + 2.0 * math.sin(ph + t * 3)), 4.0 + 44.0 * t))
+            pts.append(P(sg * (27.0 + 8.0 * t + 2.0 * math.sin(ph + t * 3)), 4.0 + 40.0 * t))
         wisps = np.maximum(wisps, pad.stroke(pts, 1.0, wfn=lambda t: 5.0 * s * (1 - t) + 0.5, afn=lambda t: 0.55 * (1 - t) ** 1.2, soft=3.0))
     # 구멍: 눈 (위가 가운데 쪽으로 기울고 아래 바깥으로 처진 눈구멍) · 길게 벌린 입 · 코 구멍 · 홀쭉한 볼 (파임)
     ery = WL_EYE_RY[f]

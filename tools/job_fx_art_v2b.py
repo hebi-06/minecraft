@@ -19,7 +19,7 @@
 - rfx_jring2     direction_z      192×192 ×8   땅에 눕는 한 바퀴 베기 (12시에서 시계 방향 → 고리 전체) + 칸 16 ~ 31 좌우 뒤집음 (반시계)
 - rfx_jburst2    rotate_xyz       192×192 ×8   터짐 (번쩍 · 충격 고리 둘 · 빛 갈래 · 불티)
 - rfx_jsmash2    direction_z      192×192 ×8   내려찍기 (충격 고리 바깥 끝 0.46 S · 빛나는 금 · 돌조각 · 먼지)
-- rfx_jwhirl2    direction_z      192×192 ×8   회전 칼날 셋 (이어 돌림 — 8 장 = 120°)
+- rfx_jwhirl2    direction_z      192×192 ×8   도끼 날 셋 · 핏빛 물보라 (이어 돌림 — 8 장 = 120° · 0.50.0 재설계표 "도끼 회오리 v2 (핏빛)")
 - rfx_jspin2     direction_z      192×192 ×8   도는 양날 창 (이어 돌림 — 8 장 = 180°)
 - rfx_jsmoke2    rotate_xyz       128×128 ×8   그림자 연기 (퍼지며 갈라져 사라짐)
 - rfx_jcross2    rotate_xyz       128×128 ×6   엇갈린 두 베기 + 가운데 X 번쩍
