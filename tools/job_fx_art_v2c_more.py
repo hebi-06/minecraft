@@ -247,6 +247,7 @@ def fireball_frame(f, frames=4):
     flow = 16.0 * f
     n1 = fbm((U - flow) / 16.0, V / 6.0, seed=71, octaves=3, px=4)
     n2 = fbm((U - 2 * flow) / 8.0, V / 3.5 + 5.0, seed=72, octaves=2, px=8)
+    n3 = fbm((U - 2 * flow) / 16.0, V / 2.4 + 11.0, seed=79, octaves=2, px=4)  # 흐름 쪽으로 길쭉한 결 (주기 64 점 · 32 점/장)
     glow = pad.zeros()
     core = pad.zeros()
     # ---- 불꼬리 몸: 머리 뒤에서 가늘어짐 (공보다 좁게 — 공이 또렷이) · 흔들리는 가운데 줄 · 가장자리를 따라 뒤로 흘러가는 뾰족한 불 혀
@@ -260,7 +261,7 @@ def fireball_frame(f, frames=4):
     dy = np.abs(V - yc) / w
     edge = 1 + tamp * tooth + 0.28 * n1 * (0.25 + 0.8 * t)
     plume = clamp01((edge - dy) / 0.28) * (U > 0) * (1 - t) ** 0.6 * smooth(1.0, 0.82, t)
-    glow = np.maximum(glow, plume * (0.56 + 0.22 * clamp01(0.5 + n2)))
+    glow = np.maximum(glow, plume * (0.5 + 0.26 * clamp01(0.5 + n2)))
     streaks = fbm((U - 1.5 * flow) / 24.0, V / 2.6 + 3.0, seed=76, octaves=2, px=4)  # 주기 96 점 · 24 점/장 → 4 장에 한 주기
     hot = clamp01((0.4 + 0.26 * n1 + 0.1 * n2 - dy) / 0.22) * (U > 0) * (1 - t) ** 4.0
     core = np.maximum(core, hot * 0.95)
@@ -283,8 +284,9 @@ def fireball_frame(f, frames=4):
         wl = w0 * (1 - s_) ** 1.35 * (1 + 0.45 * n2 * clamp01(s_ * 3))
         m = smooth(wl + 1.0, wl - 1.0, d) * (s_ < 0.995)
         glow = np.maximum(glow, m * 0.95 * (1 - 0.3 * s_))
-        if hotline:
-            core = np.maximum(core, pad.stroke(pts[:11], w0 * 0.5, 0.4, a0=0.75, a1=0.0))
+        # 혀 밑동의 뜨거운 결 (흐르는 잔결로 일렁이는 속불 — 한 줄 대신)
+        lick = clamp01((n3 + 0.2 - 0.8 * s_) / 0.22) * smooth(wl * 0.85 + 0.3, wl * 0.2, d) * (1 - s_) ** 1.5
+        core = np.maximum(core, lick * m * (0.7 if hotline else 0.5))
     # ---- 공: 겉이 불꽃으로 일렁이는 둥근 머리 (앞은 매끈 · 옆과 뒤는 뾰족뾰족) · 흰 속불 (끓어오르는 얼룩 — 두 결을 번갈아 섞어 이어 돎)
     thb = np.arctan2(V, X - hx)
     q = np.abs(thb) / math.pi
@@ -452,6 +454,13 @@ def icelance_frame(f, frames=4):
     st.add_core(sparkle(pad, tip - 3.5, cy, 6.5 + 4.5 * tw, 1.0, rot=0.12 * f, diag=0.45))
     st.add_core(sparkle(pad, 150, cy - ht[2], 3.0 + 3.5 * (1 - tw), 0.95, rot=0.0, diag=0.0))
     st.add_core(sparkle(pad, 199, cy - ht[3], 2.5 + 2.5 * tw, 0.85, rot=0.0, diag=0.0))
+    # 위 능선을 따라 미끄러지는 작은 반짝임 셋 (4 장에 한 칸)
+    for k in range(3):
+        u = ((k + f / frames) / 3.0) % 1.0
+        x = b0 + 8 + (tip - b0 - 30) * u
+        y = cy - float(np.interp(x, xs, ht)) * rt
+        a = math.sin(math.pi * u)
+        st.add_core(star4(pad, x, y, 2.5 + 2.5 * a, 0.9 * a, rot=0.0, thin=0.16, diag=0.0))
     rnd = random.Random(84)
     for i in range(20):
         u0 = rnd.uniform(4, 60)
@@ -466,7 +475,9 @@ def icelance_frame(f, frames=4):
         al = math.sin(math.pi * q) ** 0.9 * (1 - tt) ** 0.5 * rnd.uniform(0.6, 1.0)
         r = rnd.uniform(1.6, 3.6) * (1 - 0.4 * tt)
         if i % 3 == 0:
-            st.add_core(star4(pad, x, y, r + 1.5, al, rot=math.pi / 4 * (i % 2), thin=0.2, diag=0.0))
+            # 작은 눈꽃 (여섯 뿔)
+            st.add_core(pad.poly(star_pts(x, y, r + 1.6, 6, 0.22, rot=0.3 * i), al))
+            st.add_core(pad.disc_field(x, y, 0.7) * al)
         else:
             st.add_core(pad.disc_field(x, y, 0.55 + 0.2 * r) * al)
         st.body = np.maximum(st.body, pad.disc_field(x, y, 2.0, soft=1.0) * al * 0.5)
@@ -654,13 +665,14 @@ def sunarrow_frame(f, frames=4):
     flow_x = 24.0 * f
     pul = np.zeros_like(X)
     for kk in range(-1, 6):
-        c0 = 70 + kk * 96 + flow_x
-        pul = np.maximum(pul, np.exp(-0.5 * ((X - c0) / 9.0) ** 2) + 0.5 * np.exp(-0.5 * ((X - c0 + 16) / 5.0) ** 2))
-    pul = clamp01(pul) * smooth(s0, s0 + 30, X) * smooth(sock0 + 4, sock0 - 20, X)
-    sc = np.maximum(gauss(Y - cy + 0.4, 0.7) * 0.85, shaft * clamp01((cy - Y + 2.6) / 2.6) * 0.45)
-    sc = np.maximum(sc, pul * gauss(Y - cy, 1.6) * 1.0)
+        dist = X - (70 + kk * 96 + flow_x)
+        pul = np.maximum(pul, np.where(dist > 0, np.exp(-(dist / 4.5) ** 2), np.exp(np.maximum(dist, -300.0) / 20.0)))
+    pul = pul * smooth(s0, s0 + 30, X) * smooth(sock0 + 4, sock0 - 20, X)
+    sc = np.maximum(gauss(Y - cy + 0.4, 0.7) * 0.72, shaft * clamp01((cy - Y + 2.6) / 2.6) * 0.4)
     st.over(shaft, 0.86, sc * shaft)
-    st.body = np.maximum(st.body, pul * gauss(Y - cy, 5.0) * 0.75)
+    hh_ = 0.8 + 3.2 * pul
+    st.add_core(pul * smooth(hh_ + 1.0, hh_ - 1.0, np.abs(Y - cy)))
+    st.body = np.maximum(st.body, pul * gauss(Y - cy, 4.0 + 2.0 * pul) * 0.7)
     # ---- 불꽃 깃: 위 · 아래 깃 (뒤 · 바깥으로 넘실거림) + 가운데 (앞을 보는) 좁은 불꽃 · 오늬
     for sg, seed in ((-1, 3), (1, 7)):
         vb, vc = flame_vane(pad, sg, cy, 132.0, 46.0, 25.0, ph, seed)
@@ -971,7 +983,7 @@ def hammer_draw(pad, st, xf, alpha=1.0, seed=0, arcs=1.0):
     pm = pad.poly(xf(P["pommel"]))
     gem = pad.poly(xf([(0, -159), (4, -153), (0, -149), (-4, -153)]))
     sil = np.maximum(sil, put(P["pommel"], 0.9, 0.9, 3.0, gem * 0.95))
-    # 머리 판: 위 · 아래 모서리 깎은 면 (위 밝음 · 아래 어두움) · 양쪽 반에 새김 (지어낸 각진 글자 — 실제 룬이 아님) · 새김 둘레 마름모 점
+    # 머리 판: 위 · 아래 모서리 깎은 면 (위 밝음 · 아래 어두움) · 가운데를 따라 땋은 매듭 띠 (두 물결이 엇갈림 — 북유럽 매듭 무늬)
     body = pad.poly(xf(P["body"]))
     deco = pad.zeros()
     top_bevel = pad.poly(xf([(-49, -26), (49, -26), (45, -19), (-45, -19)]))
@@ -979,29 +991,26 @@ def hammer_draw(pad, st, xf, alpha=1.0, seed=0, arcs=1.0):
     for yy in (-19.0, 19.0):
         deco = np.maximum(deco, pad.stroke(xf([(-45, yy), (45, yy)]), 0.9, a0=0.6))
     for sg in (-1, 1):
-        gx_, gy_ = xf.p(sg * 31, 0)
-        deco = np.maximum(deco, glyph_mask(pad, 3 if sg < 0 else 8, gx_, gy_, 17, 25, 2.6, ang=xf.ang) * 0.95)
-        for dx in (-13.0, 13.0):
-            px_, py_ = xf.p(sg * 31 + dx, 0)
-            deco = np.maximum(deco, pad.poly([(px_ + 2.2, py_), (px_, py_ - 2.2), (px_ - 2.2, py_), (px_, py_ + 2.2)], 0.8))
+        for ph_ in (0.0, math.pi):
+            br = [(sg * (17 + 27 * u), 7.5 * math.sin(TAU * 1.5 * u + ph_)) for u in np.linspace(0, 1, 40)]
+            deco = np.maximum(deco, pad.stroke(xf(br), 2.0, a0=0.9))
     sil = np.maximum(sil, put(P["body"], 0.82, 1.2, 7.0, deco * body, lit_k=0.5))
     for cp in P["caps"]:
         cm = pad.poly(xf(cp))
-        x_out = max(x for x, _ in cp) if cp[2][0] > 0 else min(x for x, _ in cp)
-        sg = 1 if x_out > 0 else -1
-        face = xf([(sg * 56, -26), (sg * 59.5, -24), (sg * 59.5, 24), (sg * 56, 26)])
-        fe = pad.stroke(face + [face[0]], 1.0, a0=0.75) * cm
-        for yy in (-24.0, 24.0):
-            px_, py_ = xf.p(sg * 51, yy)
-            fe = np.maximum(fe, pad.disc_field(px_, py_, 2.0) * 0.95)
-        sil = np.maximum(sil, put(cp, 0.86, 1.2, 6.0, fe, lit_k=0.6))
+        sg = 1 if cp[2][0] > 0 else -1
+        fe = pad.stroke(xf([(sg * 52, -30), (sg * 52, 30)]), 1.0, a0=0.7) * cm
+        for yy in (-22.0, 22.0):
+            px_, py_ = xf.p(sg * 57, yy)
+            fe = np.maximum(fe, pad.disc_field(px_, py_, 1.9) * 0.9)
+        sil = np.maximum(sil, put(cp, 0.88, 1.2, 6.0, fe, lit_k=0.6))
     col = pad.poly(xf(P["collar"]))
     cd = pad.zeros()
-    for yy in (-21.0, -7.0, 7.0, 21.0):
+    gem = pad.poly(xf([(0, -11), (7, 0), (0, 11), (-7, 0)]))
+    cd = np.maximum(cd, gem * 0.95)
+    cd = np.maximum(cd, rim_of(gem, 0.8))
+    for yy in (-23.0, 23.0):
         px_, py_ = xf.p(0, yy)
         cd = np.maximum(cd, pad.disc_field(px_, py_, 2.1) * 0.95)
-    cd = np.maximum(cd, pad.stroke(xf([(-9, -30), (-9, 30)]), 0.8, a0=0.55))
-    cd = np.maximum(cd, pad.stroke(xf([(9, -30), (9, 30)]), 0.8, a0=0.55))
     sil = np.maximum(sil, put(P["collar"], 0.92, 1.0, 4.0, cd * col, lit_k=0.6))
     # 번개: 머리 위를 기어 다니는 줄기 · 겉에서 튀는 짧은 갈래 (장마다 다름)
     if arcs > 0:
