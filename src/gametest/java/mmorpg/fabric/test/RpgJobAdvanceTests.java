@@ -215,7 +215,8 @@ public final class RpgJobAdvanceTests {
             RpgCombat.forceCrit = null;
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.42), "heart echo " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.42);
             before[0] = TestDummies.dealt(z.get(0));
-            sp.hurtServer(sp.level(), sp.damageSources().mobAttack(z.get(0)), 2.0F);
+            // 맞음: 받는 피해 처리 (RpgHealth.onLoss — 실제 피해와 같은 길 · 끝에 lossHook) — 0.51.0 시험 1: sp.hurtServer 는 시험 플레이어에게 피해가 들어가지 않아 받아치기가 없었음
+            mmorpg.fabric.RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), sp.getHealth(), sp.getHealth() - 4F);
         }));
         steps.add(new RpgJobTests.Step(6, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(3), j.skill(3).num("counter", 1.0));
