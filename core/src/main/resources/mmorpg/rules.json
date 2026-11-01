@@ -871,7 +871,7 @@
       {
         "id": "tyrfing_waking",
         "name": "망자의 각성",
-        "desc": "열두 망령이 베고 무덤불 폭발",
+        "desc": "열두 망자 전사가 달려가 베고 폭발",
         "desc2": "체력 10% 대가 · 쓰러뜨리면 반환",
         "cd": 30,
         "mult": 3.5,
@@ -881,11 +881,10 @@
         "radius": 5,
         "warriors": 12,
         "rise": 10,
-        "first": 18,
+        "first": 24,
         "step": 2,
-        "second": 50,
-        "final": 62,
-        "size": 1.6
+        "second": 58,
+        "final": 70
       }
     ],
     "tyrfing": {

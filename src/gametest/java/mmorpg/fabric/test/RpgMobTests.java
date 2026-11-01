@@ -3,8 +3,10 @@ package mmorpg.fabric.test;
 import mmorpg.fabric.mob.BedrockMob;
 import mmorpg.fabric.mob.MobData;
 import mmorpg.fabric.mob.RpgEntities;
+import mmorpg.fabric.mob.TyrfingWarrior;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.Vec3;
@@ -24,7 +26,8 @@ public final class RpgMobTests {
 
     @GameTest(maxTicks = 20)
     public void mobsRegistered(GameTestHelper h) {
-        h.assertTrue(RpgEntities.types().size() == 42, "types (27 + 9단계 몬스터 8 + 0.32.0 공허 5 + 0.33.0 공허 기사 1 + 0.35.0 헬 1) " + RpgEntities.types().size());
+        h.assertTrue(RpgEntities.types().size() == 43, "types (27 + 9단계 몬스터 8 + 0.32.0 공허 5 + 0.33.0 공허 기사 1 + 0.35.0 헬 1 + 0.50.0 티르빙 전사 1) "
+                + RpgEntities.types().size());
         h.assertTrue(RpgEntities.eggs().size() == 19, "eggs (몬스터 6 + 8 + 공허 5) " + RpgEntities.eggs().size());
         for (MobData.Def d : MobData.all().values()) {
             BedrockMob e = spawn(h, d.id());
@@ -39,6 +42,22 @@ public final class RpgMobTests {
             e.discard();
         }
         h.succeed();
+    }
+
+    /** 0.50.0 티르빙 망자의 각성의 아군 전사: 아군 표시 · 맞지 않음 · 노려지지 않음 · 저장하지 않음 · maxAge 틱 뒤 스스로 사라짐 */
+    @GameTest(maxTicks = 40)
+    public void tyrfingWarriorAlly(GameTestHelper h) {
+        ServerLevel level = h.getLevel();
+        TyrfingWarrior w = TyrfingWarrior.spawn(level, h.absoluteVec(new Vec3(1.5, 2, 1.5)), 0F, 10);
+        h.assertTrue(w != null, "spawned");
+        h.assertTrue(w.entityTags().contains(TyrfingWarrior.TAG) && w.entityTags().contains("tyrfing_warrior"), "ally tags " + w.entityTags());
+        h.assertTrue(!w.shouldBeSaved() && !w.isAttackable() && !w.canBeSeenAsEnemy() && !w.canBeHitByProjectile(), "ally flags");
+        h.assertTrue(w.isInvulnerableTo(level, level.damageSources().generic()), "takes no damage");
+        h.assertTrue(w.getMaxHealth() == 100F && Math.abs(w.getScale() - 1.15) < 1e-3, "def " + w.getMaxHealth() + " " + w.getScale());
+        h.runAfterDelay(15, () -> {
+            h.assertTrue(w.isRemoved(), "gone after maxAge");
+            h.succeed();
+        });
     }
 
     @GameTest(maxTicks = 20)

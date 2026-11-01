@@ -1,12 +1,10 @@
 package mmorpg.fabric.skill;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -16,11 +14,11 @@ import mmorpg.core.Js;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
-import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.mob.TyrfingWarrior;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -382,7 +380,7 @@ final class Tyrfing {
 
     // ------------------------------------------------------------ 스킬 2 망자의 각성
 
-    /** 앙간튀르의 형제 한 명: i 번째 (앞에서부터 오른쪽으로), u 무덤 가운데에서 본 방향, at 선 자리 (그 땅 높이), rise 솟기 시작하는 틱 */
+    /** 앙간튀르의 형제 한 명이 솟는 자리: i 번째 (앞에서부터 오른쪽으로), u 무덤 가운데에서 본 방향, at 선 자리 (그 땅 높이), rise 솟기 시작하는 틱 */
     record Warrior(int i, Vec3 u, Vec3 at, int rise) {}
 
     /** 망자의 각성 한 번 동안 바뀌는 것: 벤 적 (밀려나도 터질 때 맞음), 바친 체력을 돌려받았는지 */
@@ -391,28 +389,12 @@ final class Tyrfing {
         boolean refunded;
     }
 
-    /** 전사 한 토막 그리기 (from 틱부터 to 틱까지 — o: tyrWarriorFx 의 frame · frames · fps · loop · sink · rise · fade) */
-    @FunctionalInterface
-    private interface Pose {
-        void draw(Warrior p, int from, int to, Object[] o);
-    }
-
-    /** 섬 (되풀이 4-5) · 벰 */
-    private static final Object[] IDLE = {"frame", 4, "frames", 2, "fps", 5, "loop", true};
-    private static final Object[] SWING = {"frame", 6, "frames", 2, "fps", 12};
-
-    /** t 틱에 할 일 더하기 */
-    private static void on(Map<Integer, List<Runnable>> events, int t, Runnable fn) {
-        events.computeIfAbsent(t, x -> new ArrayList<>()).add(fn);
-    }
-
-    /** 섬 (되풀이 4-5, 한 바퀴 8틱) 은 8틱씩 나눠 그림 — 오래 남는 한 장이 나중에 다가간 눈앞을 덮지 않게 (바퀴가 끊기지 않게 한 바퀴씩) */
-    private static void idle(Map<Integer, List<Runnable>> events, Pose pose, Warrior p, int from, int to) {
-        for (int t = from; t < to; t += 8) {
-            int t0 = t;
-            on(events, t, () -> pose.draw(p, t0, Math.min(to, t0 + 8), IDLE));
-        }
-    }
+    /** 전사가 솟는 깊이 (칸 — 키 2.4칸의 드라우그가 땅 밑에 다 묻혀 있다가 솟음) */
+    static final double RISE_DEPTH = 2.6;
+    /** 적 몸 겉에서 이만큼 떨어져 섬 (도끼가 닿는 거리) */
+    static final double REACH = 1.1;
+    /** 달려가는 빠르기 (이동 속성 0.34 × — 땅 위 한 틱 ≈ 2.2 × 0.98 × (0.34 × RUN)² ≈ 0.39칸, 초당 약 8칸: 달리는 플레이어의 1.4배) */
+    static final double RUN = 1.25;
 
     /** 적의 쪽 (전사 번호): 무덤 가운데 c0 에서 본 각 (a0 = 앞, n 명) */
     static int sectorOf(Entity e, Vec3 c0, double a0, int n) {
@@ -424,16 +406,56 @@ final class Tyrfing {
         return (int) (Math.round(a / ((Math.PI * 2) / n)) % n);
     }
 
+    static double hdist(Vec3 a, Vec3 b) {
+        return Math.hypot(a.x - b.x, a.z - b.z);
+    }
+
+    /** from 에서 to 를 보는 자바 가로 각도 (도 — 0 = 남쪽) */
+    static float yawTo(Vec3 from, Vec3 to) {
+        return (float) Math.toDegrees(Math.atan2(-(to.x - from.x), to.z - from.z));
+    }
+
+    /**
+     * 전사 i 가 노릴 적: 제 쪽 (30° — 처음 벨 적) 의 적 중 가장 가까운 적, 없으면 둘레 안의 적 중 (가까움 + 이미 노리는 전사 수 × 2.5칸) 가 가장 작은 적
+     * (한 적에게만 몰리지 않고 둘러쌈). 적이 없으면 null
+     */
+    static LivingEntity pickFoe(List<LivingEntity> all, Warrior p, TyrfingWarrior w, LivingEntity[] foe, Vec3 c0, double a0, int n) {
+        LivingEntity best = null;
+        double bd = Double.MAX_VALUE;
+        for (LivingEntity e : all) {
+            if (sectorOf(e, c0, a0, n) != p.i()) continue;
+            double d = hdist(e.position(), w.position());
+            if (d < bd) {
+                bd = d;
+                best = e;
+            }
+        }
+        if (best != null) return best;
+        for (LivingEntity e : all) {
+            int crowd = 0;
+            for (int j = 0; j < foe.length; j++) if (j != p.i() && foe[j] == e) crowd++;
+            double d = hdist(e.position(), w.position()) + crowd * 2.5;
+            if (d < bd) {
+                bd = d;
+                best = e;
+            }
+        }
+        return best;
+    }
+
     /**
      * 망자의 각성 (체력 대가 — 전설의 마검은 뽑을 때마다 생명을 앗아야 함): 둘레 안 (radius 칸 · 발밑 위 1.2칸에서 보이는) 에 맞을 적이 없으면
      * 쓰지 않음 (대가 · 재사용 대기 없음 — 벽 너머의 적만 있을 때도).
      * 최대 체력 × cost 를 바침 (생존 · 모험 모드 — 피해가 아니라 보호막 · 방어와 상관없음, 바치면 1 아래가 되면 쓰지 못함 · 재사용 대기 없음).
      * 발밑 (그 자리에 남음) 에 핏빛 무덤 룬 → 둘레 radius 칸에 앙간튀르의 열두 형제 (warriors — 앞에서부터 오른쪽으로 30° 마다, 그 땅 높이) 가
-     * 앞에서부터 양옆 · 뒤로 한 틱 사이로 무덤에서 솟음 (rise 틱) → first 틱부터 step 틱마다 차례로 자기 쪽 (30°) 을 안으로 벰
-     * (검 mult — 적마다 한 번, 마지막 전사 때 아직 안 베인 둘레 안의 적도) → second 틱에 다 같이 내리벰 (검 mult) →
-     * final 틱에 무덤이 무덤불로 터짐 (마력 spellMult, 밀쳐 띄움 — 보스는 밀지 않음 · 벤 적은 밀려났어도 radius + 2.5칸 안이면).
+     * 앞에서부터 양옆 · 뒤로 한 틱 사이로 무덤에서 솟음 (rise 틱).
+     * 0.50.0 (사용자 "티르빙 궁은 실제 아군 몹이 나와서 때리는 느낌이면 좋을거 같음"): 형제는 진짜 몹 (TyrfingWarrior — 보랏빛 망령 드라우그: 뿔 투구 ·
+     * 방패 · 도끼) — 땅 밑에서 솟아 제 쪽의 적 (없으면 둘레의 다른 적 — 둘러쌈) 에게 달려가 도끼로 내려침. 피해 때는 그대로:
+     * first 틱부터 step 틱마다 차례로 자기 쪽 (30°) 의 적을 벰 (검 mult — 적마다 한 번, 마지막 전사 때 아직 안 베인 둘레 안의 적도 — 그 틱에 그 전사가
+     * 멀면 뛰어듦) → second 틱에 다 같이 내리벰 (검 mult) → final 틱에 형제가 무덤불로 흩어지며 무덤이 터짐 (마력 spellMult, 밀쳐 띄움 — 보스는 밀지
+     * 않음 · 벤 적은 밀려났어도 radius + 2.5칸 안이면).
      * 둘레 안의 적은 무덤 가운데 위 1.2칸에서 보이는 적. 이 스킬로 적대 몹 · 보스를 쓰러뜨리면 바친 체력을 돌려받음
-     * (한 번 — 보스처럼 다음 틱에 쓰러지는 적은 2틱 뒤에 봄). 쓰러지거나 차원을 옮기면 남은 것은 없음 (무기를 바꿔도 깨운 망령은 끝까지)
+     * (한 번 — 보스처럼 다음 틱에 쓰러지는 적은 2틱 뒤에 봄). 쓰러지거나 차원을 옮기면 형제는 곧바로 사라짐 (무기를 바꿔도 깨운 형제는 끝까지)
      */
     static boolean waking(ServerPlayer sp, Weapon w, Obj k) {
         TyColors cs = tyColors();
@@ -466,7 +488,6 @@ final class Tyrfing {
         long castTick = Tasks.now();
         double mult = k.num("mult");
         double spellMult = k.num("spellMult");
-        double size = k.num("size");
         int n = (int) k.num("warriors");
         int riseLen = (int) k.num("rise");
         int first = (int) k.num("first");
@@ -534,85 +555,134 @@ final class Tyrfing {
             }
             return true;
         };
-        // 베기 그림: 전사의 칼 → 안쪽 (무덤 가운데) 으로 땅을 가르는 빛 + 전사 앞의 초승달 참격 (가운데 1.8칸 안은 빼고 · 눈 · 3인칭 카메라 가까이는 작게)
-        BiConsumer<Warrior, Boolean> slashFx = (p, core) -> {
-            Vec3 from = V.up(V.add(c0, p.u(), radius - 0.4), 0.15);
-            Vec3 to = V.up(V.add(c0, p.u(), 1.8), 0.15);
-            Gram.streakLine(level, from, to, TY_FIRE, 0.32, 0.3, 0.9, 0);
-            if (core) Gram.streakLine(level, from, to, TY_GHOST, 0.1, 0.25, 1, 0);
-            Vec3 at = V.up(V.add(c0, p.u(), radius * 0.72), 1.0);
-            double s = nearSize(1.6, viewDist(sp, at), 0.3, 1.6);
-            if (core && s > 0) {
-                SkillFx.arc(level, at, new Vec3(-p.u().x, 0, -p.u().z), Opt.of("shape", "heavy", "flip", false, "size", s, "life", 0.28, "speed", 0.0,
-                        "spin", 70.0, "color", TY_GHOST, "aura", TY_DEEP));
-            }
+        // 0.50.0 형제 (진짜 몹 — TyrfingWarrior): 솟음 → 노릴 적에게 달려감 → 도끼 내려치기 (공격 동작 STRIKE_AT 틱 뒤에 피해) → 무덤불로 흩어짐
+        TyrfingWarrior[] army = new TyrfingWarrior[n];
+        LivingEntity[] foe = new LivingEntity[n];
+        int[] pathAt = new int[n];
+        java.util.Arrays.fill(pathAt, -99);
+        Runnable disband = () -> {
+            for (TyrfingWarrior x : army) if (x != null && !x.isRemoved()) x.discard();
         };
-        // 전사 한 토막 (from 틱부터 to 틱까지 — 다음 토막과 0.05초 겹쳐 끊기지 않게). 그릴 때마다 지금 눈 · 3인칭 카메라로 다시 봄 (쓴 뒤 걷거나 돌아섰을 수 있음):
-        // 눈에서 2칸 안 · 3인칭 카메라 앞 2칸 안이면 그리지 않고, 눈 · 3인칭 카메라에서 3칸 안이면 흐리게 (0.55)
-        Pose pose = (p, from, to, o) -> {
-            Vec3 c = V.up(p.at(), 1.5);
-            double eyeD = 99;
-            double camD = 99;
-            if (!sp.isRemoved()) {
-                eyeD = V.len(V.sub(c, sp.getEyePosition()));
-                Cam tc = tpCam(sp);
-                Vec3 rel = V.sub(c, tc.cam());
-                camD = V.len(rel);
-                if (rel.x * tc.f().x + rel.z * tc.f().z < 0) camD = Math.max(camD, 2); // 카메라 뒤는 보이지 않음 (흐림만)
+        // 도끼 내려치기 그림: 전사 앞 (노린 적 쪽) 에 세로 초승달 참격 + 도끼가 땅을 긁은 보랏빛 금 + 불티 (눈 · 3인칭 카메라 가까이는 작게)
+        Consumer<Integer> chopFx = i -> {
+            TyrfingWarrior x = army[i];
+            if (x == null || x.isRemoved()) return;
+            LivingEntity e = foe[i];
+            Vec3 xp = x.position();
+            Vec3 d = e != null && !e.isRemoved() ? V.flat(V.sub(e.position(), xp)) : V.scale(posts.get(i).u(), -1);
+            d = V.len(d) > 1e-3 ? V.unit(d) : V.scale(posts.get(i).u(), -1);
+            Gram.streakLine(level, V.up(V.add(xp, d, 0.6), 0.12), V.up(V.add(xp, d, 2.3), 0.12), TY_FIRE, 0.26, 0.28, 0.9, 0);
+            Vec3 at = V.up(V.add(xp, d, 1.0), 1.2);
+            double s = nearSize(1.5, viewDist(sp, at), 0.3, 1.5);
+            if (s > 0) {
+                SkillFx.arc(level, at, d, Opt.of("shape", "heavy", "flip", false, "size", s, "life", 0.26, "speed", 0.0, "spin", 80.0, "color", TY_GHOST,
+                        "aura", TY_DEEP));
             }
-            if (eyeD < 2 || camD < 2) return;
-            tyrWarriorFx(level, p.at(), Opt.of("size", size, "life", (to - from) / 20.0 + 0.05, "alpha", Math.min(eyeD, camD) < 3 ? 0.25 : 0.4).with(o));
+            SkillFx.sparks(level, V.up(V.add(xp, d, 1.5), 0.3), TY_GHOST, 3, 3);
         };
-        // 0.48.0 입체 망령 기사 (ghost_knight — 키 2 × scale, 가운데를 봄): 땅에서 솟아 (rise) 떠 있다가 (float) 차례 · 다 같이 벰 (slash) → 터질 때 흩어짐
-        int[] knights = new int[n];
-        double ks = size * 0.88;
-        for (Warrior p : posts) {
-            int s1 = first + p.i() * step;
-            Vec3 face = new Vec3(-p.u().x, 0, -p.u().z);
-            Runnable spawnK = () -> {
-                if (!ok.getAsBoolean()) return;
-                knights[p.i()] = Fx3d.spawn(level, "ghost_knight", V.up(p.at(), -1.4), Opt.of("to", p.at(), "travel", riseLen / 20.0, "ease", "out", "dir", V.UP,
-                        "face", face, "scale", ks, "life", (fin - p.rise()) / 20.0 + 0.4, "color", TY_GHOST, "glow", TY_FIRE, "anim", "raise", "animSpeed",
-                        0.6 / Math.max(0.1, riseLen / 20.0), "glowAlpha", 0.45, "shine", 0.35, "alpha", 0.92, "fadeOut", 0.35));
-            };
-            if (p.rise() == 0) spawnK.run();
-            else Tasks.later(p.rise(), spawnK);
-            Tasks.later(p.rise() + riseLen, () -> Fx3d.anim(level, knights[p.i()], "float", true, p.at()));
-            for (int ts : new int[] {s1, second}) {
-                Tasks.later(Math.max(1, ts - 2), () -> Fx3d.anim(level, knights[p.i()], "slash", false, p.at()));
-                Tasks.later(ts + 9, () -> Fx3d.anim(level, knights[p.i()], "float", true, p.at()));
-            }
-            Tasks.later(fin, () -> WeaponFx3d.kill(level, knights[p.i()], p.at(), 0.4));
-        }
-        // 틱마다 할 일 (전사 토막: 솟음 → 섬 → 벰 → 섬 → 벰 → 섬 → 흩어짐)
-        Map<Integer, List<Runnable>> events = new HashMap<>();
-        for (Warrior p : posts) {
-            int s1 = first + p.i() * step;
-            on(events, p.rise(), () -> {
-                pose.draw(p, p.rise(), p.rise() + riseLen,
-                        new Object[] {"frame", 0, "frames", 4, "fps", 4 / (riseLen / 20.0), "sink", 1.2, "rise", riseLen / 20.0});
-                tyrFireFx(level, p.at(), 1.5, riseLen / 20.0 + 0.2);
-                tyCrack(level, p.at(), 1.1, (fin - p.rise()) / 20.0 + 0.5);
-                if (p.i() % 4 == 0) SkillFx.play(level, "particle.soul_escape", p.at(), 0.7 + 0.05 * p.i(), 1.0);
-            });
-            idle(events, pose, p, p.rise() + riseLen, s1);
-            on(events, s1, () -> pose.draw(p, s1, s1 + 4, SWING));
-            idle(events, pose, p, s1 + 4, second);
-            on(events, second, () -> pose.draw(p, second, second + 4, SWING));
-            idle(events, pose, p, second + 4, fin);
-            on(events, fin, () -> pose.draw(p, fin, fin + 8, new Object[] {"frame", 8, "frames", 4, "fps", 10, "fade", 0.15}));
-        }
+        // 공격 동작을 틀 때 노린 적이 멀면 (닿지 못했으면) 그쪽으로 뛰어듦 (도끼가 닿는 틱에 곁에 있게 — 공중에서 가로 속도는 틱마다 × 0.91:
+        // STRIKE_AT (6) 틱 동안 간 거리 ≈ 처음 속도 × 4.8 → 처음 속도 = 틈 ÷ 4.6, 한 틱 1칸까지)
+        Consumer<Integer> leap = i -> {
+            TyrfingWarrior x = army[i];
+            LivingEntity e = foe[i];
+            if (x == null || x.isRemoved() || e == null || e.isRemoved()) return;
+            double gap = hdist(x.position(), e.position()) - Kit.bodyPad(e) - REACH;
+            if (gap < 1.0) return;
+            Vec3 d = V.unit(V.flat(V.sub(e.position(), x.position())));
+            double v = Math.min(1.0, gap / 4.6);
+            x.getNavigation().stop();
+            x.setDeltaMovement(d.x * v, 0.32, d.z * v);
+        };
         Kit.ticks(t -> {
-            if (!ok.getAsBoolean() || t > fin + 2) return false;
-            for (Runnable fn : events.getOrDefault(t, List.of())) fn.run();
-            // 첫 바퀴: 차례로 자기 쪽을 안으로 벰
+            if (!ok.getAsBoolean() || t > fin + 2) {
+                disband.run();
+                return false;
+            }
+            // 솟음: 전사마다 rise 틱에 그 자리 땅 밑에서 (갈라진 땅 · 무덤불 · 불티 · 소리)
+            for (Warrior p : posts) {
+                if (t != p.rise()) continue;
+                TyrfingWarrior x = TyrfingWarrior.spawn(level, V.up(p.at(), -RISE_DEPTH), yawTo(p.at(), c0), fin - p.rise() + 40);
+                if (x != null) {
+                    x.noPhysics = true;
+                    x.setNoGravity(true);
+                    army[p.i()] = x;
+                }
+                tyrFireFx(level, p.at(), 1.6, riseLen / 20.0 + 0.25);
+                tyCrack(level, p.at(), 1.3, (fin - p.rise()) / 20.0 + 0.5);
+                SkillFx.burst(level, V.up(p.at(), 0.3), TY_DEEP, 0.8, 0.3);
+                SkillFx.sparks(level, V.up(p.at(), 0.4), TY_FIRE, 5, 3);
+                if (p.i() % 3 == 0) SkillFx.play(level, "particle.soul_escape", p.at(), 0.7 + 0.05 * p.i(), 1.0);
+                if (p.i() % 4 == 0) SkillFx.play(level, "mob.zombie.ambient", p.at(), 0.7, 0.55);
+            }
+            // 움직임: 솟는 동안 곧게 위로 → 노릴 적 (5틱마다 · 쓰러지거나 멀어지면 다시) 의 내 쪽 곁으로 달려가 그 적을 봄
+            List<LivingEntity> now = null;
+            for (Warrior p : posts) {
+                TyrfingWarrior x = army[p.i()];
+                if (x == null || x.isRemoved() || t >= fin) continue;
+                int age = t - p.rise();
+                if (age <= riseLen) {
+                    double q = Math.min(1.0, age / (double) Math.max(1, riseLen));
+                    double up = 1 - (1 - q) * (1 - q);
+                    x.setPos(p.at().x, p.at().y - RISE_DEPTH * (1 - up), p.at().z);
+                    if (age == riseLen) {
+                        x.noPhysics = false;
+                        x.setNoGravity(false);
+                    }
+                    continue;
+                }
+                LivingEntity e = foe[p.i()];
+                boolean lost = e == null || e.isRemoved() || !e.isAlive() || !Kit.canHit(sp, e) || hdist(e.position(), c0) > radius + 4;
+                if (lost || age % 5 == 0) {
+                    if (now == null) now = inside.get();
+                    e = pickFoe(now, p, x, foe, c0, a0, n);
+                    foe[p.i()] = e;
+                }
+                if (e == null) {
+                    x.getNavigation().stop();
+                    continue;
+                }
+                Vec3 ep = e.position();
+                Vec3 away = V.flat(V.sub(x.position(), ep));
+                Vec3 dir = V.len(away) > 1e-3 ? V.unit(away) : p.u();
+                Vec3 spot = V.add(ep, dir, Kit.bodyPad(e) + REACH);
+                x.getLookControl().setLookAt(e);
+                if (hdist(x.position(), spot) > 0.5) {
+                    if (t - pathAt[p.i()] >= 4) {
+                        x.getNavigation().moveTo(spot.x, spot.y, spot.z, RUN);
+                        pathAt[p.i()] = t;
+                    }
+                } else {
+                    x.getNavigation().stop();
+                    float yaw = yawTo(x.position(), ep);
+                    x.setYRot(yaw);
+                    x.setYBodyRot(yaw);
+                }
+            }
+            // 공격 동작 (도끼가 닿기 STRIKE_AT 틱 전): 첫 바퀴는 차례로, 둘째 바퀴는 다 같이
+            int anim = t + TyrfingWarrior.STRIKE_AT - first;
+            if (step > 0 && anim >= 0 && anim % step == 0 && anim / step < n) {
+                int i0 = anim / step;
+                if (army[i0] != null && !army[i0].isRemoved()) {
+                    leap.accept(i0);
+                    army[i0].swingAxe();
+                }
+            }
+            if (t == second - TyrfingWarrior.STRIKE_AT) {
+                for (int i = 0; i < n; i++) {
+                    if (army[i] == null || army[i].isRemoved()) continue;
+                    leap.accept(i);
+                    army[i].swingAxe();
+                }
+            }
+            // 첫 바퀴: 차례로 자기 쪽을 벰
             int since = t - first;
             if (step > 0 && since >= 0 && since % step == 0 && since / step < n) {
                 int i1 = since / step;
                 Warrior p = posts.get(i1);
-                slashFx.accept(p, true);
-                SkillFx.sparks(level, V.up(p.at(), 2.4), TY_GHOST, 2, 3);
-                SkillFx.play(level, "mob.vex.charge", p.at(), 0.8 + 0.03 * i1, 0.8); // 차례마다 한 음씩 높게
+                chopFx.accept(i1);
+                Vec3 at = army[i1] != null && !army[i1].isRemoved() ? army[i1].position() : p.at();
+                SkillFx.play(level, "mob.vex.charge", at, 0.8 + 0.03 * i1, 0.8); // 차례마다 한 음씩 높게
+                SkillFx.play(level, "mace.smash_air", at, 0.6, 1.1 + 0.02 * i1);
                 boolean last = i1 == n - 1;
                 for (LivingEntity e : inside.get()) {
                     if (g.struck.containsKey(e.getUUID()) || (!last && sectorOf(e, c0, a0, n) != i1)) continue;
@@ -622,26 +692,29 @@ final class Tyrfing {
             }
             // 둘째 바퀴: 다 같이 내리벰
             if (t == second) {
-                for (Warrior p : posts) slashFx.accept(p, false);
+                for (int i = 0; i < n; i++) chopFx.accept(i);
                 SkillFx.shock(level, c0, TY_FIRE, (radius * 0.7) / 1.8, 0.4);
                 SkillFx.play(level, "mace.smash_air", c0, 0.7, 1.0);
                 SkillFx.play(level, "mob.vex.charge", c0, 0.6, 1.0);
                 SkillFx.play(level, "item.trident.thunder", c0, 1.4, 0.6);
                 Kit.shakeNear(level, c0, 10, 0.2, 0.25);
                 List<LivingEntity> all = inside.get();
-                long now = Tasks.now();
+                long tick = Tasks.now();
                 for (int j = 0; j < all.size(); j++) {
                     LivingEntity e = all.get(j);
-                    Kit.hitAt(sp, e, Kit.reserveHit(sp, e, now + j / 6), ok, () -> strike.test(e, false));
+                    Kit.hitAt(sp, e, Kit.reserveHit(sp, e, tick + j / 6), ok, () -> strike.test(e, false));
                 }
             }
             if (t != fin) return true;
-            // 무덤이 무덤불로 터짐: 전사가 유령불로 흩어지며 그 자리에서 높이 솟는 무덤불 · 핏빛 룬 번쩍 · 고리 둘 → 마력 (밀쳐 띄움)
-            for (Warrior p : posts) {
-                double de = viewDist(sp, V.up(p.at(), 1.5));
-                if (de >= TY_NEAR) tyrFireFx(level, p.at(), Math.min(3.6, TY_NEAR_K * 1.3 * de), 0.5, SkillFx.WHITE, tyNearAlpha(de));
-                SkillFx.burst(level, V.up(p.at(), 1.2), TY_GHOST, Math.min(1.1, 0.3 * de), 0.3);
+            // 무덤이 무덤불로 터짐: 형제가 그 자리에서 높이 솟는 무덤불로 흩어짐 · 핏빛 룬 번쩍 · 고리 둘 → 마력 (밀쳐 띄움)
+            for (int i = 0; i < n; i++) {
+                TyrfingWarrior x = army[i];
+                Vec3 at = x != null && !x.isRemoved() ? x.position() : posts.get(i).at();
+                double de = viewDist(sp, V.up(at, 1.5));
+                if (de >= TY_NEAR) tyrFireFx(level, at, Math.min(3.6, TY_NEAR_K * 1.3 * de), 0.5, SkillFx.WHITE, tyNearAlpha(de));
+                SkillFx.burst(level, V.up(at, 1.2), TY_GHOST, Math.min(1.1, 0.3 * de), 0.3);
             }
+            disband.run();
             SkillFx.rune(level, c0, Opt.of("size", radius + 0.4, "life", 0.6, "grow", 0.25, "rate", -120.0, "color", cs.curse(), "alpha", 0.95));
             SkillFx.shock(level, c0, TY_FIRE, (radius + 1) / 1.8, 0.5);
             SkillFx.shock(level, c0, cs.curse(), radius / 3.6, 0.4);
@@ -657,10 +730,10 @@ final class Tyrfing {
                 }
             }
             List<LivingEntity> list = Kit.union(inside.get(), pushed);
-            long now = Tasks.now();
+            long tick = Tasks.now();
             for (int j = 0; j < list.size(); j++) {
                 LivingEntity e = list.get(j);
-                Kit.hitAt(sp, e, Kit.reserveHit(sp, e, now + j / 6), ok, () -> {
+                Kit.hitAt(sp, e, Kit.reserveHit(sp, e, tick + j / 6), ok, () -> {
                     if (!strike.test(e, true) || bossLike(e) || e.isRemoved()) return; // 들어간 적만 밀침 (보스는 밀지 않음)
                     Vec3 d = Math.hypot(e.getX() - c0.x, e.getZ() - c0.z) > 0.3 ? V.flat(V.sub(e.position(), c0)) : f0;
                     Kit.knockback(e, d.x * 0.5, d.z * 0.5, 0.45);

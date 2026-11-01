@@ -27,7 +27,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.SpawnEggItem;
 
 /**
- * 애드온 엔티티 27종 등록 (MobData 의 행동 팩 수치 그대로): 몬스터 6 (RpgMonster) · 보스 10 + 분신 (RpgBoss) · 소품 9 (RpgProp) · 탈것 1 (RpgMount — 6단계).
+ * 애드온 엔티티 27종 등록 (MobData 의 행동 팩 수치 그대로): 몬스터 6 (RpgMonster) · 보스 10 + 분신 (RpgBoss) · 소품 9 (RpgProp) · 탈것 1 (RpgMount — 6단계)
+ * + 0.50.0 티르빙의 아군 전사 (TyrfingWarrior).
  * 크기 = 충돌 상자 (minecraft:collision_box) × 크기 속성 (minecraft:scale → 자바 SCALE 속성 — 그리기와 충돌 상자가 함께 커짐).
  * 최대 체력 상한을 1024 에서 1,000,000 으로 (보스 체력 90000 — 베드락은 상한이 없음).
  * 몬스터 소환 알 (rpg:<키>_spawn_egg — 이름 "<이름> 소환 (Lv.N)", 크리에이티브 RPG 장비 탭 · 소환 알 탭).
@@ -63,7 +64,9 @@ public final class RpgEntities {
         Identifier id = Identifier.parse(d.id());
         ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
         EntityType.Builder<? extends BedrockMob> b;
-        if (d.monster()) b = EntityType.Builder.<RpgMonster>of(RpgMonster::new, MobCategory.MONSTER);
+        // 0.50.0 티르빙 망자의 각성의 아군 전사 (드라우그 모델 · 보랏빛 — 스킬이 움직임)
+        if (TyrfingWarrior.ID.equals(d.id())) b = EntityType.Builder.<TyrfingWarrior>of(TyrfingWarrior::new, MobCategory.MISC);
+        else if (d.monster()) b = EntityType.Builder.<RpgMonster>of(RpgMonster::new, MobCategory.MONSTER);
         else if (d.mount()) b = EntityType.Builder.<RpgMount>of(RpgMount::new, MobCategory.MISC);
         else if (d.family("rpg_boss") || d.id().contains("decoy_")) b = EntityType.Builder.<RpgBoss>of(RpgBoss::new, MobCategory.MONSTER);
         else b = EntityType.Builder.<RpgProp>of(RpgProp::new, MobCategory.MISC);

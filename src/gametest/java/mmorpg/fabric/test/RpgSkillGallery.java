@@ -68,7 +68,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         new Case("wand", 0, new int[] {8, 22, 38}, 60),
         new Case("wand", 1, new int[] {14, 32, 52, 62}, 78),
         new Case("greatsword", 0, new int[] {6, 14, 24}, 40),
-        new Case("greatsword", 1, new int[] {12, 26, 54, 66}, 84, true),
+        new Case("greatsword", 1, new int[] {14, 30, 59, 74}, 92, true), // 0.50.0 망자의 각성: 전사가 솟음 · 달려가 벰 (24 + 2i) · 함께 (58) · 폭발 (70)
     };
 
     private final List<String> failures = new ArrayList<>();
@@ -97,6 +97,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
             int slot = 0;
             String lastType = "";
             for (Case c : CASES) {
+                if (!picked(c)) continue;
                 if (!c.type().equals(lastType)) {
                     // 무기마다 칸 하나 (같은 무기 스킬 2 는 같은 칸)
                     slot = slot % 9;
@@ -116,6 +117,20 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         }
         LOG.info("[skill-gallery] done, {} failed", failures.size());
         if (!failures.isEmpty()) throw new AssertionError("skill gallery: " + String.join(" / ", failures));
+    }
+
+    /** only 에 "sk.<무기>.<번호>" (예: sk.greatsword.1) 가 하나라도 있으면 적힌 스킬만 (빠른 확인), 없으면 모두 */
+    private static boolean picked(Case c) {
+        String v = System.getProperty("mmorpg.only", "");
+        if (v.isBlank()) v = System.getenv().getOrDefault("MMORPG_ONLY", "");
+        boolean any = false;
+        for (String s : v.split(",")) {
+            String t = s.trim();
+            if (!t.startsWith("sk.")) continue;
+            any = true;
+            if (t.equalsIgnoreCase("sk." + c.type() + "." + c.index())) return true;
+        }
+        return !any;
     }
 
     /** 스킬 하나를 실제 입력으로 쓰고 사진 · 피해 기록 */
