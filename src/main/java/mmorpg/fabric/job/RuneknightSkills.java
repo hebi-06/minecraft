@@ -158,7 +158,7 @@ final class RuneknightSkills {
         double half = k.num("width", 1.5) / 2;
         Kit.noFall(sp, homeAt + 30);
         blinkFx(sp, level, start, dest, f, j);
-        pathHits(sp, j, P, k.num("path", 1.2), start, dest, half, life, marked);
+        pathHits(sp, j, P, k.num("path", 1.2), start, dest, half, life, marked, Set.of(), 0);
         // 룬 원 둘 (A 떠난 자리 · B 닿은 자리): 발밑 룬 띠가 돌며 그려짐 · 가운데 떠 있는 글자 (터질 때까지)
         runeCircle(level, start, radius, j, homeAt / 20.0, 0);
         runeCircle(level, dest, radius, j, returnAt / 20.0, 1);
@@ -171,14 +171,16 @@ final class RuneknightSkills {
             Vec3 back = V.flat(V.sub(start, now));
             Vec3 home = backLen > 0.5 ? blinkTo(sp, d, now, back, backLen) : null;
             JobKit.motion(sp, "runeknight_seid:back");
-            if (home != null) {
-                blinkFx(sp, d, now, home, back, j);
-                pathHits(sp, j, P, k.num("back", 1.2), now, home, half, life, marked);
-            }
-            circleBlast(sp, d, dest, radius, j, P, k.num("blast", 1.35), life, marked, 1);
+            // 같은 틱의 되돌아오는 길 (back) 과 닿은 자리 원 (blast): 둘 다 맞는 적은 한 번에 넣고 숫자 둘 (따로 넣으면 원이 무적 시간으로 10틱 밀리고 처음 자리 원까지
+            // 밀려 마지막 피해가 30틱 — 시험 2 CI 41307626485 의 직업 시간 시험)
+            Set<UUID> ring = new HashSet<>();
+            for (LivingEntity e : Kit.around(sp, dest, radius, 2.5)) ring.add(e.getUUID());
+            Set<UUID> onPath = home == null ? Set.of() : pathHits(sp, j, P, k.num("back", 1.2), now, home, half, life, marked, ring, k.num("blast", 1.35));
+            if (home != null) blinkFx(sp, d, now, home, back, j);
+            circleBlast(sp, d, dest, radius, j, P, k.num("blast", 1.35), life, marked, 1, onPath);
         });
         RuneKit.later(homeAt, () -> {
-            if (RuneKit.sameLife(sp, life)) circleBlast(sp, sp.level(), start, radius, j, P, k.num("home", 1.35), life, marked, 0);
+            if (RuneKit.sameLife(sp, life)) circleBlast(sp, sp.level(), start, radius, j, P, k.num("home", 1.35), life, marked, 0, Set.of());
         });
         return true;
     }
@@ -208,18 +210,26 @@ final class RuneknightSkills {
         SkillFx.play(level, "mob.evocation_illager.cast_spell", to, 1.6, 0.45);
     }
 
-    /** 지나간 길 (from → to · 반 폭 half) 의 적을 벰 (마법) */
-    private static void pathHits(ServerPlayer sp, Jobs.Job j, double P, double mult, Vec3 from, Vec3 to, double half, String life, Set<UUID> marked) {
+    /**
+     * 지나간 길 (from → to · 반 폭 half) 의 적을 벰 (마법). plus 에 든 적은 plusMult 를 더해 한 번에 (숫자 둘 — 같은 틱의 룬 원 피해). 길에서 벤 적 (plus 와 겹친 적은
+     * circleBlast 가 건너뜀)
+     */
+    private static Set<UUID> pathHits(ServerPlayer sp, Jobs.Job j, double P, double mult, Vec3 from, Vec3 to, double half, String life, Set<UUID> marked,
+            Set<UUID> plus, double plusMult) {
+        Set<UUID> got = new HashSet<>();
         double len = V.hdist(from, to); // V.flat 은 단위 방향 — 길이는 hdist (CI 41306605712: 길이 1 로 재어 길의 적을 거의 못 벴음)
-        if (len < 0.3) return;
+        if (len < 0.3) return got;
         int[] cnt = {0};
         for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(from, 1.0), V.flat(V.sub(to, from)), len, half)) {
             LivingEntity e = h.e();
-            JobKit.strike(sp, e, j, P, mult, true, false, life, 0, x -> {
+            boolean both = plus.contains(e.getUUID());
+            if (both) got.add(e.getUUID());
+            JobKit.strikeSplit(sp, e, j, P, mult + (both ? plusMult : 0), both ? 2 : 1, 2, true, false, life, 0, x -> {
                 markOnce(sp, e, j, marked);
                 if (cnt[0]++ < 8) JobFx.hit(e, j, 1.0);
             });
         }
+        return got;
     }
 
     /** 룬 원 (터질 때까지): 발밑 룬 띠 (돌며) · 둥근 베기가 그려짐 · 가운데 떠 있는 글자 kind */
@@ -232,7 +242,7 @@ final class RuneknightSkills {
 
     /** 룬 원이 터짐: 글자 번쩍 · 둥근 베기 · 큰 터짐 · 1인칭 눈앞 터짐 (쓴 사람이 그 안이면) · 둘레 radius 칸 (마법) */
     private static void circleBlast(ServerPlayer sp, ServerLevel level, Vec3 c, double radius, Jobs.Job j, double P, double mult, String life, Set<UUID> marked,
-            int kind) {
+            int kind, Set<UUID> done) {
         JobFx.glyph(level, V.up(c, 1.0), 1.0, kind, 4, 2, 0.32, false, Opt.of("alpha", 1.0), j);
         JobFx.ring(level, V.up(c, 0.06), radius, j, false, 0.4, Opt.empty());
         JobFx.burst(level, V.up(c, 1.0), radius * 0.55, j, 0.4, JobFx.hide1p(sp));
@@ -245,6 +255,10 @@ final class RuneknightSkills {
         SkillFx.play(level, "random.explode", c, 1.5, 0.55);
         SkillFx.play(level, "chime.amethyst_block", c, 0.9, 1.0);
         for (LivingEntity e : Kit.around(sp, c, radius, 2.5)) {
+            if (done.contains(e.getUUID())) { // 되돌아오는 길에서 함께 맞음 — 밀쳐내기만
+                RuneKit.knock(e, V.sub(e.position(), c), 0.3, 0.3);
+                continue;
+            }
             JobKit.strike(sp, e, j, P, mult, true, false, life, 0, x -> {
                 markOnce(sp, e, j, marked);
                 RuneKit.knock(e, V.sub(e.position(), c), 0.3, 0.3);
