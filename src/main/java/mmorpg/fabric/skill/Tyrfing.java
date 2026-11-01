@@ -617,11 +617,12 @@ final class Tyrfing {
                     double q = Math.min(1.0, age / (double) Math.max(1, riseLen));
                     double up = 1 - (1 - q) * (1 - q);
                     x.setPos(p.at().x, p.at().y - RISE_DEPTH * (1 - up), p.at().z);
-                    if (age == riseLen) {
-                        x.noPhysics = false;
-                        x.setNoGravity(false);
-                    }
-                    continue;
+                    if (age < riseLen) continue;
+                    // 다 솟음: 물리를 켜고 땅 위에 선 것으로 (둘째 영상: 땅에 닿았다고 보기까지 길 찾기가 거절되어 4 ~ 8틱 서 있다가 달렸음) → 이 틱부터 달려감
+                    x.noPhysics = false;
+                    x.setNoGravity(false);
+                    x.setOnGround(true);
+                    x.setDeltaMovement(0, -0.1, 0);
                 }
                 LivingEntity e = foe[p.i()];
                 boolean lost = e == null || e.isRemoved() || !e.isAlive() || !Kit.canHit(sp, e) || hdist(e.position(), c0) > radius + 4;
@@ -640,10 +641,8 @@ final class Tyrfing {
                 Vec3 spot = V.add(ep, dir, Kit.bodyPad(e) + REACH);
                 x.getLookControl().setLookAt(e);
                 if (hdist(x.position(), spot) > 0.5) {
-                    if (t - pathAt[p.i()] >= 4) {
-                        x.getNavigation().moveTo(spot.x, spot.y, spot.z, RUN);
-                        pathAt[p.i()] = t;
-                    }
+                    // 길: 4틱마다 다시 (못 찾으면 2틱 뒤에 다시)
+                    if (t - pathAt[p.i()] >= 4) pathAt[p.i()] = x.getNavigation().moveTo(spot.x, spot.y, spot.z, RUN) ? t : t - 2;
                     // 달리는 발자국마다 작은 무덤불 (3틱마다 — 전사 열둘이 다 달려도 한 틱에 넷)
                     if ((t + p.i()) % 3 == 0 && x.onGround() && x.getDeltaMovement().horizontalDistance() > 0.12) {
                         tyrFireFx(level, x.position(), 0.6, 0.3, SkillFx.WHITE, 0.6);

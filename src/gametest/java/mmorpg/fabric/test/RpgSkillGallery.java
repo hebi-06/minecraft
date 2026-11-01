@@ -41,16 +41,17 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         new Vec3(0.5, -60, 7.5), new Vec3(-1.0, -60, 8.5), new Vec3(2.0, -60, 8.0), new Vec3(0.5, -60, 10.0), new Vec3(-3.5, -60, 4.5),
         new Vec3(4.0, -60, 5.0)
     };
-    /** 둘레 과녁 (둘레 안의 적에게만 써지는 스킬 — 망자의 각성: 5칸): 앞 · 양옆 · 뒤로 2.5~4칸 */
+    /** 둘레 과녁 (둘레 안의 적에게만 써지는 스킬 — 망자의 각성: 5칸): 앞 · 양옆 · 왼쪽 뒤로 2.5~4칸 (0.50.0: 바로 뒤 과녁은 3인칭 카메라 바로 앞이라
+     *  사진을 몸 · 피해 숫자가 덮어 왼쪽 뒤로 옮김) */
     private static final Vec3[] RING = {
         new Vec3(0.5, -60, 4.0), new Vec3(-2.3, -60, 3.0), new Vec3(3.3, -60, 3.0), new Vec3(-3.0, -60, 0.5), new Vec3(4.0, -60, 0.5),
-        new Vec3(0.5, -60, -3.0)
+        new Vec3(-2.8, -60, -1.3)
     };
 
     /** 영상 카메라 (거리 · 높이 · 보는 높이 — 무기 스킬은 넓게), 둘레 과녁 스킬은 위에서 내려다봄 (0.50.0 망자의 각성: 둘레에서 솟은 전사 열둘 중
      *  카메라 쪽 전사가 화면 가운데를 가렸음 — 위에서 보면 둘레 · 달려드는 전사 · 과녁이 다 보임) */
     private static final double[] VIEW = {7.6, 2.9, 1.9};
-    private static final double[] VIEW_RING = {9.0, 7.5, 0.0};
+    private static final double[] VIEW_RING = {7.5, 6.8, 0.0};
 
     /** 스킬 하나: 무기 종류 · 스킬 번호 · 사진 찍을 틱 (쓴 뒤) · 끝까지 기다릴 틱 · 둘레 과녁인지 */
     private record Case(String type, int index, int[] shots, int total, boolean ring) {
