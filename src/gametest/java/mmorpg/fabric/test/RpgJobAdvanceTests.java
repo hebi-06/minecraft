@@ -225,12 +225,13 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(got, want), "heart counter " + got + " vs " + want);
         }));
         // 신들의 황혼: 앞 과녁 쪽으로 돌진 → 올려 베기 4 → 공중 3.5 × 4 → 내리꽂음 22 (= 40)
-        double[] start = {0};
+        double[] start = {0, 0};
         steps.add(new RpgJobTests.Step(10, () -> {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 3));
             start[0] = sp.position().z;
+            start[1] = sp.getY();
             h.assertTrue(JobSkills.press(sp, 4), "신들의 황혼 cast");
         }));
         steps.add(new RpgJobTests.Step(7, () -> {
@@ -240,7 +241,8 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(70, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 40);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "신들의 황혼 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(sp.onGround(), "landed");
+            // 내려앉음: 시험 플레이어는 물리가 돌지 않아 onGround 가 바뀌지 않음 (0.51.0 시험 3) → 높이로 봄 (JobMove 가 마지막 틱에 땅 높이로)
+            h.assertTrue(Math.abs(sp.getY() - start[1]) < 0.3, "landed back on the ground: y " + sp.getY() + " vs " + start[1]);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);
