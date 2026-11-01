@@ -487,6 +487,14 @@ final class WarriorSkills {
                 float pitch = (float) (pitch0 + (Math.max(-30F, Math.min(55F, want[1])) - pitch0) * q);
                 if (!Kit.moveTo(sp, p, yaw, pitch)) Kit.moveTo(sp, p);
                 ServerLevel d = sp.level();
+                if (ss >= 2 && ss < leapTicks) {
+                    // 0.50.0 펜리르의 늑대 기운 (재설계표 — rfx_jwolf): 몸 앞에 늑대 머리 · 뒤로 흩날리는 갈기 (3인칭 · 다른 사람 — 하나만 몸을 따라감)
+                    Vec3 v = V.sub(p, prev);
+                    if (V.len(v) > 0.05) {
+                        Vec3 u = V.unit(v);
+                        JobFx.wolf(d, V.add(V.up(p, 1.0), u, 0.45), u, 1.55, 0.12, j, JobFx.hide1p(sp).with("solo", 41.0, "vel", V.scale(v, 20), "alpha", 0.9));
+                    }
+                }
                 if (t > 0.45 && ss < leapTicks) {
                     // 떨어짐: 몸에 불꽃 꼬리 (머리 = 몸 가운데, 꼬리는 지나온 쪽 — 3인칭) · 1인칭 빠른 줄
                     Vec3 v = V.sub(p, prev);

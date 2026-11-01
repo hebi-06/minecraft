@@ -51,7 +51,9 @@ final class JobFx3d {
 
     /** 직업 색 (몸 = 짙은 빛 · 속빛과 빛 무리 = 옅은 빛) */
     static Opt look(Jobs.Job j) {
-        return Opt.of("color", JobFx.outer(j), "glow", JobFx.inner(j));
+        Opt o = Opt.of("color", JobFx.outer(j), "glow", JobFx.inner(j));
+        // 0.50.0 마검사의 마력 검은 룬이 새겨진 칼날 그림 (재설계표 "룬 칼날 2D" — card_greatsword 의 새김 맥동 날, 크기와 상관없이)
+        return j != null && "spellblade".equals(j.id()) ? o.with("rune", 1.0) : o;
     }
 
     /** a 에 b 를 덮어씀 */
@@ -116,8 +118,8 @@ final class JobFx3d {
     private static int put(ServerLevel level, String model, Vec3 at, Opt o) {
         String card = JobFx.FLAT ? CARDS.get(model) : null;
         if (card == null) return Fx3d.spawn(level, model, at, o);
-        if ("card_sword".equals(card) && o.num("scale", 1) * (1 + o.num("grow", 0)) >= GREAT) card = "card_greatsword";
-        return Fx3d.spawn(level, card, at, cardOpt(card, o));
+        if ("card_sword".equals(card) && (o.num("rune", 0) > 0 || o.num("scale", 1) * (1 + o.num("grow", 0)) >= GREAT)) card = "card_greatsword";
+        return Fx3d.spawn(level, card, at, cardOpt(card, o.with("rune", null)));
     }
 
     /**

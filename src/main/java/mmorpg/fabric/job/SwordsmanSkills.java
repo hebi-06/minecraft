@@ -226,8 +226,8 @@ final class SwordsmanSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             JobTraits.sureCritFor(sp, critFor);
             RuneKit.Hand h = RuneKit.handOf(sp);
-            RuneKit.rfx(sp.level(), "prop", V.up(V.add(h.hand(), h.f(), 0.7), 0.5), Opt.of("size", 0.16, "life", 0.3, "cell", (double) RuneKit.RFX.get("glint")[0],
-                    "spin", 20.0, "spinRate", 180.0, "color", WHITE, "grow", 0.5, "fade", 0.5, "vel", RuneKit.bodyVel(sp)));
+            // 0.50.0 칼끝 섬광 (재설계표 — rfx_jglint: 네 뿔 별 · 긴 가로 빛줄기 · 작은 고리, 번쩍 → 작아지며 돌아 사라짐)
+            JobFx.glint(sp.level(), V.up(V.add(h.hand(), h.f(), 0.7), 0.5), 0.34, j, 0.5, Opt.of("vel", RuneKit.bodyVel(sp), "spin", Kit.rand() * 20 - 10));
             DamageNumbers.showFace(sp, "§b§l치명 준비", 2.4, 0.9, -0.35);
             SkillFx.play(sp.level(), "block.amethyst_block.chime", sp.position(), 1.7, 0.7);
         });
@@ -331,6 +331,8 @@ final class SwordsmanSkills {
             });
         }
         JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
+        // 0.50.0 칼날 고리 (재설계표 — rfx_jbladering: 여섯 자루가 바깥을 겨눈 고리가 발밑에서 천천히 돎)
+        JobFx.bladeRing(sp.level(), V.up(sp.position(), 0.07), 1.6, j, 1.0, 10, Opt.of("vel", RuneKit.bodyVel(sp), "fade", 0.35, "alpha", 0.95));
         // 0.47.0 입체: 태세 동안 몸 둘레를 천천히 도는 환영 검 둘 (가슴 높이 · 칼끝이 가는 쪽 — 1인칭에서는 숨김)
         int[] ids = JobFx3d.orbitOwner(sp, "phantom_sword", 2, new Vec3(0, 1.15, 0), 1.15, 75, false, dur / 20.0, 0.62, j, Opt.of("view", 1.0, "owner", (double) sp
                 .getId(), "bob", 0.12, "bobHz", 0.6, "fadeIn", 0.3, "fadeOut", 0.5, "alpha", 0.9));

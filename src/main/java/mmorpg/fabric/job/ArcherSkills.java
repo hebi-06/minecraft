@@ -253,6 +253,12 @@ final class ArcherSkills {
                         if (pin && k.num("root", 0) > 0) {
                             boolean boss = mmorpg.fabric.boss.Bosses.isBossEntity(e);
                             RuneKit.effect(e, "slowness", (int) k.num("root", 20), boss ? 1 : 10);
+                            // 0.50.0 꽂힌 화살 (재설계표 — rfx_jpinned: 발밑 (쏜 사람 쪽 몸 앞) 에 꽂힌 화살 · 묶는 빛 고리)
+                            if (RuneKit.fxQuota("jobPin", 6)) {
+                                Vec3 toMe = V.flat(V.sub(sp.position(), e.position()));
+                                Vec3 at = V.len(toMe) > 0.1 ? V.add(e.position(), V.unit(toMe), Kit.bodyPad(e) + 0.15) : e.position();
+                                JobFx.pinned(sp.level(), V.up(at, 0.02), 0.42 + Kit.bodyPad(e) * 0.25, j, k.num("root", 20) / 20.0, Opt.of("vel", RuneKit.entVel(e)));
+                            }
                         }
                     });
                 }
@@ -381,7 +387,7 @@ final class ArcherSkills {
         // 놓은 활 (번쩍) · 거대한 빛의 화살 · 지나가는 길의 굵은 광선 (1인칭에서는 눈 가까이를 뺌) · 번쩍임 · 흔들림
         Vec3 bowAt = V.up(V.add(sp.position(), Kit.facingOf(sp), BOW_AHEAD), bowY(sp));
         JobFx.burst(level, bowAt, 0.9, j, 0.25, Opt.of("alpha", 0.8)); // 0.47.0 놓은 활 (입체 — loose) 의 번쩍
-        JobFx.arrow(level, V.add(from, look, 1.6), end, j, speed, 2.4, Opt.empty());
+        JobFx.sunArrow(level, V.add(from, look, 1.6), end, j, speed, 2.6, Opt.empty()); // 0.50.0 태양빛 거대 화살 (rfx_jsunarrow — 재설계표)
         // 광선은 활을 든 손에서 (1인칭: 오른쪽 아래에서 과녁 쪽으로 뻗는 줄로 보임 — 눈에서 곧장 나가면 점으로만 보임)
         Vec3 hand = V.add(RuneKit.bowHand(sp), look, 1.2);
         JobFx.beam(level, hand, end, j, 3.2, len / speed + 0.35, Opt.of("alpha", 0.85));

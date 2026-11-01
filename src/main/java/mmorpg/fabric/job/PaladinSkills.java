@@ -66,6 +66,16 @@ final class PaladinSkills {
         // 0.50.0 동작: 제자리에서 뛰어올라 (hop 칸) 내려앉으며 망치로 내려침 (hopT 틱 — 충격파 · 벼락은 그 뒤)
         int hopT = (int) k.num("hopT", 6);
         JobMove.run(sp, JobMove.hop(0, hopT, from -> from, k.num("hop", 0.9)));
+        // 0.50.0 번개 망치 내려치기 (재설계표 — rfx_jmaulswing 6장: 오른쪽 위에서 휘둘러 → 내려친 자리에서 번개가 터짐 — 터지는 장이 내려앉는 틱에)
+        Vec3 f0 = Kit.facingOf(sp);
+        Vec3 g0 = groundAhead(sp, sp.position(), f0, 1.6);
+        RuneKit.later(Math.max(0, hopT - 4), () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
+            JobFx.maulSwing(lv, V.up(g0, 0.05), 1.7, j, 0.3, JobFx.hide1p(sp));
+            Vec3 look = sp.getViewVector(1F);
+            JobFx.maulSwing(lv, V.add(V.add(sp.getEyePosition(), look, 2.7), JobFx.screenUp(look), -0.95), 1.35, j, 0.3, JobFx.only1p(sp));
+        });
         RuneKit.later(hopT, () -> {
             if (RuneKit.sameLife(sp, life)) smiteLand(sp, j, k, P, life);
         });
@@ -83,10 +93,7 @@ final class PaladinSkills {
         int judge = (int) k.num("judge", 2);
         JobFx.slash(sp, j, 2.3, 0.1, 2.0, 95.0, 0.22);
         Vec3 g = groundAhead(sp, c, f, 1.6);
-        // 0.47.0 입체: 번개 대망치가 위에서 앞 땅으로 내려꽂힘 (머리가 아래 · 0.1초) → 잠깐 박혀 있다 흐려짐
-        double ms = 0.85;
-        JobFx3d.spawn(level, "maul", V.up(g, 3.5), j, Opt.of("to", V.up(g, 0.3 * ms), "ctrl", V.up(g, 1.8), "travel", 0.1, "ease", "in", "dir", V.DOWN, "face",
-                V.scale(f, -1), "scale", ms, "life", 0.5, "fadeOut", 0.3, "glowAlpha", 0.55, "shine", 0.4));
+        // 0.50.0 내려치는 망치는 2D 장면 (smite — rfx_jmaulswing, 0.47.0 의 위에서 떨어지는 대망치 판 대신)
         JobFx.smash(level, V.up(g, 0.05), 1.8, j, 0.5, Opt.empty());
         for (int i = 0; i < 5; i++) {
             Vec3 d = V.turnY(f, (i / 4.0 - 0.5) * arc * 0.8);
@@ -180,6 +187,7 @@ final class PaladinSkills {
                     Vec3 stop = prev;
                     if (best != null && best.s() > sPrev + 0.05 && Kit.moveTo(sp, best.p())) stop = best.p();
                     JobFx.dash(d, V.up(prev, 0.9), V.up(stop, 0.9), j, 0.3, JobFx.hide1p(sp));
+                    JobFx.wheel(d, V.up(prev, 0.06), V.up(stop, 0.06), j, 0.9, Opt.empty()); // 0.50.0 천둥 바퀴 자국 (rfx_jwheel)
                     ram(sp, j, k, P, hit, f, life);
                     chargeEnd(sp, j, k);
                     return;
@@ -190,6 +198,8 @@ final class PaladinSkills {
                     return;
                 }
                 JobFx.dash(d, V.up(prev, 0.9), V.up(to, 0.9), j, 0.3, JobFx.hide1p(sp));
+                // 0.50.0 천둥 바퀴 자국 (재설계표 — rfx_jwheel: 지나온 땅에 그을린 두 줄 · 지직거리는 번개)
+                JobFx.wheel(d, V.up(prev, 0.06), V.up(to, 0.06), j, 0.9, Opt.empty());
                 SkillFx.sparks(d, V.up(to, 0.15), DUST, 3, 2);
                 JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.8);
                 if (ss == marks.size() - 1) {

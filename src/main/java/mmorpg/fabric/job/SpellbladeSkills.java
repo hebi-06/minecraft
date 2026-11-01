@@ -251,7 +251,7 @@ final class SpellbladeSkills {
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", c, 1.4, 0.8);
         SkillFx.play(level, "beacon.activate", c, 1.7, 0.6);
         // 0.47.0 입체: 원을 따라 도는 마력 검 (칼끝이 도는 쪽 · 넓은 면이 보는 사람 쪽 — 쓴 자리에 남음), 위아래로 너울거림
-        int[] ids = JobFx3d.orbitAt(level, "phantom_sword", swords, V.up(c, 1.0), r * 0.9, Math.toDegrees(0.21 * 20), dur / 20.0 + 0.1, 0.9, glow, core, Opt.of("bob",
+        int[] ids = JobFx3d.orbitAt(level, "phantom_sword", swords, V.up(c, 1.0), r * 0.9, Math.toDegrees(0.21 * 20), dur / 20.0 + 0.1, 0.9, glow, core, Opt.of("rune", 1.0, "bob",
                 0.25, "bobHz", 0.9, "fadeIn", 0.25, "fadeOut", 0.3, "shine", 0.3));
         JobFx3d.guard(sp, life, ids, dur);
         SkillFx.every(laps, gap, i -> {
@@ -345,6 +345,8 @@ final class SpellbladeSkills {
         RuneKit.godRays(sp, level0, c0, 5.0, 6, glow, core, Opt.of("h", 12.0, "life", rise / 20.0 + 0.4, "alpha", 0.7, "skipNear", true));
         JobFx.aura(sp, j, 2.8, rise / 20.0 + 0.4, 0.9);
         JobFx.eyeRing(sp, j, 2.6, 1.1, 0.5);
+        // 0.50.0 하늘의 룬 아홉 (재설계표 — rfx_jninerunes): 솟는 동안 앞 하늘에 아홉 글자가 위로 굽은 줄로 차례로 켜지고 → 베는 동안 모두 번쩍이며 이어짐
+        JobFx.nineRunes(level0, V.up(V.add(c0, Kit.facingOf(sp), 4.0), 7.2), 3.2, j, rise / 20.0, (thrustTick - rise) / 20.0 + 0.2, Opt.of("alpha", 0.95));
         SkillFx.play(level0, "mob.evocation_illager.prepare_attack", c0, 1.0, 1.0);
         SkillFx.play(level0, "beacon.power", c0, 1.2, 0.8);
         // 0.50.0 동작 (사용자 "역동적으로"): 거검과 함께 솟아올라 (rise 틱 · lift 칸) 공중에서 세 번 베고, 찌르기 직전에 조준한 쪽으로 내리꽂힘 (착지 → 찌르기)

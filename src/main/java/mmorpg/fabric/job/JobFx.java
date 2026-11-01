@@ -173,9 +173,12 @@ final class JobFx {
         Vec3 look = sp.getViewVector(1F);
         Vec3 at = V.add(V.add(sp.getEyePosition(), look, ahead), screenUp(look), -down);
         Opt own = only1p(sp);
-        two(sp.level(), "jslash2", SLASH, at, life, own.with("size", size, "spin", tilt, "vel", RuneKit.bodyVel(sp), "fade", 0.15), outer(j), inner(j));
+        // 0.50.0 직업 큰 베기 그림 (재설계표 — 검사 은빛 초승달 · 전사 도끼 궤적 · 마검사 두 겹 칼빛 · 사신 큰 낫 초승달, 나머지는 공통)
+        String name = slashName(j);
+        int frames = slashFrames(j);
+        two(sp.level(), name, frames, at, life, own.with("size", size, "spin", tilt, "vel", RuneKit.bodyVel(sp), "fade", 0.15), outer(j), inner(j));
         // 0.47.0 더 화려하게: 조금 크고 조금 기운 잔상 한 겹 (옅게 — 두 겹의 칼빛)
-        two(sp.level(), "jslash2", SLASH, V.add(at, look, 0.15), life * 0.9, own.with("size", size * 1.14, "spin", tilt + 7, "vel", RuneKit.bodyVel(sp), "fade", 0.2,
+        two(sp.level(), name, frames, V.add(at, look, 0.15), life * 0.9, own.with("size", size * 1.14, "spin", tilt + 7, "vel", RuneKit.bodyVel(sp), "fade", 0.2,
                 "alpha", 0.42, "coreAlpha", 0.3), outer(j), inner(j));
         // 0.50.0 3인칭 · 다른 사람: 카메라를 보는 그림 대신 세상에 놓인 참격 판 (휘두른 면 — 불룩한 날이 보는 쪽 · 가로 휘두름은 누운 판)
         slashCard(sp.level(), at, look, tilt, size * CARD, life, RuneKit.bodyVel(sp), j, hide1p(sp));
@@ -196,7 +199,7 @@ final class JobFx {
         Opt card = Opt.of("dir", d, "face", V.UP, "roll", roll, "scale", size, "life", lf, "grow", 0.15, "vel", vel, "anim", "play", "animSpeed", 1.0 / lf,
                 "fadeIn", 0.0, "fadeOut", lf * 0.3, "glowAlpha", 0.0, "color", outer(j), "glow", inner(j), "alpha", 0.95, "shine", 0.15, "view", view.num("view", 0),
                 "owner", view.num("owner", 0));
-        mmorpg.fabric.Fx3d.spawn(level, "slash_job", at, RuneKit.faceCamIfFlat(card, d, V.UP, roll));
+        mmorpg.fabric.Fx3d.spawn(level, slashModel(j), at, RuneKit.faceCamIfFlat(card, d, V.UP, roll));
     }
 
     /**
@@ -206,7 +209,7 @@ final class JobFx {
     static void wave(ServerPlayer sp, Jobs.Job j, Vec3 at, Vec3 dir, double speed, double life, Opt o) {
         ServerLevel level = sp.level();
         Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
-        two(level, "jslash2", SLASH, at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));
+        two(level, slashName(j), slashFrames(j), at, life, o.with("dir", d, "speed", speed, "view", 2.0, "owner", (double) sp.getId()), outer(j), inner(j));
         slashCard(level, at, d, o.num("spin", 0), o.num("size", 1) * CARD * 1.1, life, V.scale(d, speed), j, hide1p(sp));
     }
 
@@ -251,6 +254,13 @@ final class JobFx {
      * 보이지 않음). o: alpha · coreAlpha · fade · view · owner · grow · vel
      */
     static void ring(ServerLevel level, Vec3 center, double radius, Jobs.Job j, boolean reverse, double life, Opt o) {
+        if (j != null && "priest".equals(j.id())) {
+            // 0.50.0 사제는 베는 고리 대신 빛 고리 (재설계표 "빛 고리") — 조금 바깥의 옅은 고리 한 겹
+            halo(level, center, radius, j, life, o);
+            double a = o.num("alpha", 1);
+            halo(level, V.up(center, 0.02), radius * 1.12, j, life * 0.9, o.with("alpha", a * 0.4, "coreAlpha", a * 0.3));
+            return;
+        }
         two(level, "jring2", RING, reverse ? 2 * RING : 0, center, life, o.with("dir", V.UP, "size", radius / RING_R, "spin", o.num("spin", 0)), outer(j), inner(j));
         // 0.47.0 더 화려하게: 조금 바깥의 옅은 잔상 고리 (거꾸로 — 겹친 두 바퀴)
         double a = o.num("alpha", 1);
@@ -374,6 +384,10 @@ final class JobFx {
 
     /** 땅에 눕는 내려찍기 (rfx_jsmash): 충격 고리 반지름 radius 칸 (그림 고리 끝 = 반 크기 × 0.92) · 금 · 튀는 돌조각 */
     static void smash(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
+        if (j != null && "warrior".equals(j.id())) {
+            quake(level, at, radius, j, life * 1.25, o); // 0.50.0 전사는 갈라지는 땅 · 돌조각 12장 (재설계표 "내려찍기 v2")
+            return;
+        }
         two(level, "jsmash2", SMASH, at, life, o.with("dir", V.UP, "size", radius / 0.92, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
         // 0.47.0 더 화려하게: 땅을 따라 퍼지는 충격파 · 튀는 불티
         mmorpg.fabric.skill.SkillFx.shock(level, at, inner(j), radius * 0.9, life * 0.8);
@@ -843,5 +857,166 @@ final class JobFx {
         cells(level, "jwall", WALL, 0, WALL, at, Math.max(0.05, rise), 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
         RuneKit.later(Math.max(1, (int) Math.round(rise * 20) - 1), () -> cells(level, "jwall", WALL, WALL - 1, 1, at, Math.max(0.1, life - rise), 1, false,
                 o.with("size", size, "fade", o.num("fade", 0.3)), outer(j), inner(j)));
+    }
+
+    // ------------------------------------------------------------ 0.50.0 재설계표에 남아 있던 2D 그림 (tools/job_fx_art_v2c_slash.py · _marks.py · _more.py)
+    // 사용자 "직업 스킬 재설계표에 있던 다시 그릴 2d 그림 같은거 안햤던 작업들 다시 하고" — 직업마다 "다시 그릴 2D 그림" 중 그리지 않았던 것
+
+    static final int SLASH_SW = 12;
+    static final int GLINT = 6;
+    static final int BLADERING = 8;
+    static final int QUAKE = 12;
+    static final int WOLF = 6;
+    static final int NINERUNES = 12;
+    static final int WAIL = 8;
+    static final int FIREBALL = 4;
+    static final int ICELANCE = 4;
+    static final int SPARKORB = 4;
+    static final int SUNARROW = 4;
+    static final int PINNED = 6;
+    static final int MAULSWING = 6;
+    static final int WHEEL = 6;
+    static final int HALO = 8;
+    static final int BIFROST = 6;
+    /** 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1): 늑대 머리 · 불덩이 · 얼음 창 끝 · 번개 구슬 · 태양 화살 촉 */
+    static final double WOLF_HEAD = 0.56;
+    static final double FIREBALL_HEAD = 0.6;
+    static final double ICELANCE_HEAD = 0.9;
+    static final double SPARKORB_HEAD = 0.56;
+    static final double SUNARROW_HEAD = 0.8;
+    /** 번개 망치 내려치기 그림에서 내려친 자리 (칸 아래 가운데) 의 높이 — 칸 가운데에서 반 크기 × 이만큼 아래 */
+    static final double MAULSWING_IMPACT = 0.7;
+
+    /**
+     * 직업 큰 베기 그림 (재설계표): 검사 은빛 초승달 (가늘고 긴 날 · 세 겹 빛 · 12장) · 전사 도끼 궤적 (두꺼운 초승달 · 튀는 조각) · 마검사 두 겹 칼빛 (겉 · 속 두 날 —
+     * 보라 · 청록) · 사신 큰 낫 초승달 (갈고리 끝 · 혼불 꼬리), 나머지 직업은 공통 (rfx_jslash2). 모두 rfx_jslash2 와 같은 칸 · 같은 몸 범위 · 같은 쓸어 그림
+     */
+    private static final java.util.Map<String, String> SLASH_OF = java.util.Map.of("swordsman", "jslash_sw", "warrior", "jslash_wa", "spellblade", "jslash_sb",
+            "reaper", "jslash_rp");
+
+    static String slashName(Jobs.Job j) {
+        return j == null ? "jslash2" : SLASH_OF.getOrDefault(j.id(), "jslash2");
+    }
+
+    static int slashFrames(Jobs.Job j) {
+        return "jslash_sw".equals(slashName(j)) ? SLASH_SW : SLASH;
+    }
+
+    /** 참격 판 모델: slash_job (공통) · slash_job_sw · _wa · _sb · _rp (tools/fx_models_card.py — 같은 그림 · 같은 장 수) */
+    static String slashModel(Jobs.Job j) {
+        String n = slashName(j);
+        return n.startsWith("jslash_") ? "slash_job_" + n.substring(7) : "slash_job";
+    }
+
+    /** 칼끝 섬광 (rfx_jglint — 카메라를 봄): 네 뿔 별 · 긴 가로 빛줄기 · 작은 고리가 번쩍 (0 ~ 1) → 작아지며 돌아 사라짐. 크기 약 size × 2 칸 */
+    static void glint(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        two(level, "jglint", GLINT, at, life, o.with("size", size, "fade", o.num("fade", 0.3)), outer(j), inner(j));
+    }
+
+    /** 땅에 눕는 칼날 고리 (rfx_jbladering — 여섯 자루가 바깥을 겨눔, 이어 돌림): 칼끝 반지름 radius 칸 (= 반 크기 × 0.9) */
+    static void bladeRing(ServerLevel level, Vec3 center, double radius, Jobs.Job j, double life, double fps, Opt o) {
+        loop(level, "jbladering", BLADERING, center, life, fps, o.with("dir", V.UP, "size", radius / 0.9), outer(j), inner(j));
+    }
+
+    /** 전사의 내려찍기 (rfx_jquake — 땅에 누움 · 12장): 번쩍 → 갈라져 퍼지는 땅 · 튀어 떨어지는 돌조각 · 먼지 고리 (고리 끝 = 반 크기 × 0.92 — smash 와 같은 뜻) */
+    static void quake(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
+        two(level, "jquake", QUAKE, at, life, o.with("dir", V.UP, "size", radius / 0.92, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
+        mmorpg.fabric.skill.SkillFx.shock(level, at, inner(j), radius * 0.9, life * 0.6);
+        mmorpg.fabric.skill.SkillFx.sparks(level, V.up(at, 0.2), outer(j), (int) Math.min(12, 4 + radius * 1.5), 3.5 + radius * 0.5);
+    }
+
+    /** 펜리르의 늑대 기운 (rfx_jwolf — 가는 쪽으로 누움, 이어 돌림): 늑대 머리가 head (dir 쪽을 봄) · 갈기가 뒤로 흩날림. 길이 약 size × 2 칸 */
+    static void wolf(ServerLevel level, Vec3 head, Vec3 dir, double size, double life, Jobs.Job j, Opt o) {
+        loop(level, "jwolf", WOLF, V.add(head, dir, -size * WOLF_HEAD), life, 12, o.with("dir", dir, "size", size), outer(j), inner(j));
+    }
+
+    /**
+     * 하늘의 룬 아홉 (rfx_jninerunes — 카메라를 봄): 아홉 글자가 위로 굽은 줄로 차례로 켜짐 (0 ~ 8, ignite 초) → 모두 번쩍이며 빛줄로 이어짐 (9 ~ 11 이어 돌림, hold 초).
+     * 너비 약 size × 2 칸
+     */
+    static void nineRunes(ServerLevel level, Vec3 at, double size, Jobs.Job j, double ignite, double hold, Opt o) {
+        cells(level, "jninerunes", NINERUNES, 0, 9, at, Math.max(0.1, ignite), 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
+        RuneKit.later(Math.max(1, (int) Math.round(ignite * 20) - 1), () -> cells(level, "jninerunes", NINERUNES, 9, 3, at, Math.max(0.1, hold), 8, true,
+                o.with("size", size, "fade", o.num("fade", 0.3)), outer(j), inner(j)));
+    }
+
+    /** 망자의 비명 (rfx_jwail — 카메라를 봄): 연기가 비명 지르는 얼굴이 되어 (0 ~ 4) 찢겨 흩어짐 (5 ~ 7). 크기 약 size × 2 칸 */
+    static void wail(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        two(level, "jwail", WAIL, at, life, o.with("size", size, "fade", o.num("fade", 0.25)), outer(j), inner(j));
+    }
+
+    /**
+     * 갈드라보크의 주문 (가는 쪽으로 누움, 이어 돌림): kind 0 불 = 불덩이 (rfx_jfireball) · 1 얼음 = 얼음 창 (rfx_jicelance) · 2 번개 = 번개 구슬 (rfx_jsparkorb).
+     * 머리가 from 근처에서 나와 life 초에 to 에 닿음 (길이 약 size × 2 칸)
+     */
+    static void spell(ServerLevel level, int kind, Vec3 from, Vec3 to, double size, double life, double[] glow, double[] core) {
+        String name = kind == 0 ? "jfireball" : kind == 1 ? "jicelance" : "jsparkorb";
+        int frames = kind == 0 ? FIREBALL : kind == 1 ? ICELANCE : SPARKORB;
+        double head = kind == 0 ? FIREBALL_HEAD : kind == 1 ? ICELANCE_HEAD : SPARKORB_HEAD;
+        double len = V.len(V.sub(to, from));
+        fly(level, name, frames, from, to, Math.max(0.5, len) / Math.max(0.05, life), size, head, Opt.empty(), glow, core);
+    }
+
+    /** 솔의 화살 (rfx_jsunarrow — 가는 쪽으로 누움, 이어 돌림): 태양 고리 · 빛살을 두른 거대한 화살이 from → to (길이 약 size × 2 칸): 닿는 틱 */
+    static int sunArrow(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
+        return fly(level, "jsunarrow", SUNARROW, from, to, speed, size, SUNARROW_HEAD, o, outer(j), inner(j));
+    }
+
+    /**
+     * 꽂힌 화살 (rfx_jpinned — 세워 카메라 쪽으로 돎): 아래 끝 = ground (화살이 꽂힌 땅) · 높이 약 size × 3 칸 — 꽂히며 번쩍 (0 ~ 1) 뒤 묶는 빛 고리가 맥동
+     * (2 ~ 5 이어 돌림)
+     */
+    static void pinned(ServerLevel level, Vec3 ground, double size, Jobs.Job j, double life, Opt o) {
+        Vec3 at = V.up(ground, size * 1.5);
+        cells(level, "jpinned", PINNED, 0, 2, at, 0.1, 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
+        RuneKit.later(2, () -> cells(level, "jpinned", PINNED, 2, 4, at, Math.max(0.1, life - 0.1), 10, true, o.with("size", size, "fade", o.num("fade", 0.3)), outer(j),
+                inner(j)));
+    }
+
+    /** 번개 망치 내려치기 (rfx_jmaulswing — 카메라를 봄 · 6장): 오른쪽 위에서 휘둘러 (0 ~ 3) 내려친 자리 (칸 아래 가운데 = impact) 에서 번개가 터짐 (4 ~ 5) */
+    static void maulSwing(ServerLevel level, Vec3 impact, double size, Jobs.Job j, double life, Opt o) {
+        two(level, "jmaulswing", MAULSWING, V.up(impact, size * MAULSWING_IMPACT), life, o.with("size", size, "fade", o.num("fade", 0.2)), outer(j), inner(j));
+    }
+
+    /** 천둥 바퀴 자국 (rfx_jwheel — 땅에 누움, 길을 따라): from → to 사이 땅에 그을린 두 줄 · 지직거리는 번개 (밝음 → 사라짐) */
+    static void wheel(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double life, Opt o) {
+        Vec3 d = V.flat(V.sub(to, from));
+        double len = V.len(d);
+        if (len < 0.2) return;
+        Vec3 f = V.scale(d, 1 / len);
+        // direction_z (면 = 위): 칸의 +X 는 세계 −X, +Y 는 +Z → 칸 안에서 spin 도 돌리면 +X = (−cos, 0, sin) — 길 쪽 f 가 되게
+        double spin = Math.toDegrees(Math.atan2(f.z, -f.x));
+        two(level, "jwheel", WHEEL, V.lerp(from, to, 0.5), life, o.with("dir", V.UP, "size", len / 2 * 1.08, "spin", spin), outer(j), inner(j));
+    }
+
+    /** 빛 고리 (rfx_jhalo — 땅에 누움): 반지름 radius 칸 (= 반 크기 × 0.88 — ring 과 같은 뜻) — 부드러운 빛 고리 · 가는 빛살 · 반짝임이 조금 퍼지며 사라짐 */
+    static void halo(ServerLevel level, Vec3 center, double radius, Jobs.Job j, double life, Opt o) {
+        two(level, "jhalo", HALO, center, life, o.with("dir", V.UP, "size", radius / RING_R, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j),
+                inner(j));
+    }
+
+    /** 무지개 다리 비프로스트의 다섯 빛 (위에서부터 빨강 · 주황 · 초록 · 파랑 · 보라) */
+    static final double[][] RAINBOW = {{1.0, 0.3, 0.34}, {1.0, 0.66, 0.22}, {0.38, 0.95, 0.45}, {0.32, 0.6, 1.0}, {0.72, 0.4, 1.0}};
+
+    /**
+     * 무지개 다리 줄기 (rfx_jbifrost — 가는 쪽으로 누움, 이어 돌림): from → to 를 따라 무지개 다섯 띠 (위에서 빨강 → 보라, 띠 사이 gap 칸). 길을 2칸 남짓한 조각으로 나눠
+     * 띠 굵기가 길이와 상관없이 같게
+     */
+    static void bifrost(ServerLevel level, Vec3 from, Vec3 to, double gap, double life, Opt o) {
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.3) return;
+        Vec3 u = V.scale(d, 1 / len);
+        int n = Math.max(1, (int) Math.ceil(len / 2.2));
+        double seg = len / n;
+        for (int s = 0; s < n; s++) {
+            Vec3 mid = V.add(from, u, seg * (s + 0.5));
+            for (int i = 0; i < RAINBOW.length; i++) {
+                double[] c = RAINBOW[i];
+                double[] core = {c[0] + (1 - c[0]) * 0.6, c[1] + (1 - c[1]) * 0.6, c[2] + (1 - c[2]) * 0.6};
+                loop(level, "jbifrost", BIFROST, V.up(mid, (2 - i) * gap), life, 12, o.with("dir", u, "size", seg / 2 * 1.15, "phase", (double) ((s + i) % BIFROST)), c,
+                        core);
+            }
+        }
     }
 }

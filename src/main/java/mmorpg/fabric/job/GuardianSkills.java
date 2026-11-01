@@ -157,6 +157,7 @@ final class GuardianSkills {
                         Vec3 stop = prev;
                         if (best != null && best.s() > sPrev + 0.05 && Kit.moveTo(sp, best.p())) stop = best.p();
                         JobFx.dash(d, V.up(prev, 0.9), V.up(stop, 0.9), j, 0.3, JobFx.hide1p(sp));
+                        JobFx.bifrost(d, V.up(prev, 0.55), V.up(stop, 0.55), 0.13, 0.6, JobFx.hide1p(sp)); // 0.50.0 무지개 다리 줄기 (rfx_jbifrost)
                         JobFx.speed(sp, j, 0.25, 0.8);
                         arrive(sp, j, k, P, null, dir, life);
                         return;
@@ -164,6 +165,8 @@ final class GuardianSkills {
                 }
                 if (!Kit.moveTo(sp, to)) return;
                 JobFx.dash(d, V.up(prev, 0.9), V.up(to, 0.9), j, 0.3, JobFx.hide1p(sp));
+                // 0.50.0 무지개 다리 줄기 (재설계표 — rfx_jbifrost: 지나온 길에 빨강 · 주황 · 초록 · 파랑 · 보라 다섯 띠)
+                JobFx.bifrost(d, V.up(prev, 0.55), V.up(to, 0.55), 0.13, 0.6, JobFx.hide1p(sp));
                 SkillFx.sparks(d, V.up(to, 0.15), DUST, 3, 2);
                 JobFx.speed(sp, j, ss == marks.size() - 1 ? 0.25 : 0.1, 0.8);
             });
@@ -330,8 +333,17 @@ final class GuardianSkills {
         int aegisId = JobFx3d.spawn(level, "aegis", new Vec3(0, 1.05 + 0.1 * as, 0.95), j, Opt.of("follow", (double) sp.getId(), "view", 1.0, "owner", (double) sp
                 .getId(), "dir", V.UP, "face", new Vec3(0, 0, 1), "scale", as, "life", dur / 20.0, "pop", 0.25, "fadeOut", 0.25, "glowAlpha", 0.45, "shine", 0.3,
                 "alpha", 0.9, "bob", 0.04, "bobHz", 0.7));
-        JobFx3d.hold(sp, "guardian_bulwark", new int[] {aegisId});
-        JobFx3d.guard(sp, RuneKit.lifeToken(sp), new int[] {aegisId}, dur);
+        // 0.50.0 방패벽 (재설계표 "늘어선 방패"): 양옆에 조금 작은 방패 둘을 바깥으로 비스듬히 (가운데 방패와 한 줄의 벽)
+        int[] wall = new int[3];
+        wall[0] = aegisId;
+        for (int sd = -1; sd <= 1; sd += 2) {
+            double ang = Math.toRadians(32) * sd;
+            wall[sd < 0 ? 1 : 2] = JobFx3d.spawn(level, "aegis", new Vec3(0.78 * sd, 1.0 + 0.1 * as * 0.8, 0.68), j, Opt.of("follow", (double) sp.getId(), "view", 1.0,
+                    "owner", (double) sp.getId(), "dir", V.UP, "face", new Vec3(Math.sin(ang), 0, Math.cos(ang)), "scale", as * 0.8, "life", dur / 20.0, "pop", 0.3,
+                    "delay", 0.08, "fadeOut", 0.25, "glowAlpha", 0.4, "shine", 0.25, "alpha", 0.82, "bob", 0.04, "bobHz", 0.7));
+        }
+        JobFx3d.hold(sp, "guardian_bulwark", wall);
+        JobFx3d.guard(sp, RuneKit.lifeToken(sp), wall, dur);
         JobFx.ring(level, V.up(sp.position(), 0.06), 2.2, j, false, 0.4, Opt.empty());
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.45);
         JobFx.aura(sp, j, 2.6, 0.8, 0.8);

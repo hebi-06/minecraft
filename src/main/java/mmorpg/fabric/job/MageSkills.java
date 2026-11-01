@@ -413,13 +413,14 @@ final class MageSkills {
             double life = 6 / 20.0;
             if (kind == 2) {
                 RuneKit.zap(level, from, to, glow, core, 0.2, 0.35);
+                JobFx.spell(level, 2, from, to, 0.75, life, glow, core); // 0.50.0 번개 구슬 (rfx_jsparkorb — 재설계표 "번개 주문 v2")
                 RuneKit.later(6, () -> {
                     SkillFx.burst(level, to, core, 1.2, 0.3);
                     SkillFx.play(level, "ambient.weather.lightning.impact", to, 1.5, 0.35);
                 });
                 return;
             }
-            JobFx.comet(level, from, u, 0.7, len / life, life, glow, core, Opt.empty());
+            JobFx.spell(level, kind, from, to, kind == 0 ? 0.85 : 0.9, life, glow, core); // 0.50.0 불덩이 · 얼음 창 (rfx_jfireball · rfx_jicelance — "불 · 얼음 주문 v2")
             RuneKit.later(6, () -> {
                 SkillFx.burst(level, to, core, 1.1, 0.3);
                 SkillFx.sparks(level, to, glow, 6, 4);

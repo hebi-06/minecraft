@@ -213,6 +213,13 @@ final class ReaperSkills {
             JobFx.ring(d, V.up(p, 0.08), r, j, false, 0.4, Opt.empty());
             RuneKit.later(3, () -> JobFx.ring(d, V.up(p, 0.1), r * 0.55, j, true, 0.35, Opt.of("alpha", 0.85)));
             JobFx.smoke(d, V.up(p, 0.5), 1.6, j, 0.7, JobFx.hide1p(sp));
+            // 0.50.0 망자의 얼굴 (재설계표 — rfx_jwail): 폭발에서 비명 지르는 얼굴 넷이 사방 위로 흩어짐 (1인칭은 눈앞에 하나)
+            for (int q = 0; q < 4; q++) {
+                double a = Math.toRadians(q * 90 + 45 + Kit.rand() * 30);
+                Vec3 u = V.unit(new Vec3(Math.cos(a), 0.55, Math.sin(a)));
+                JobFx.wail(d, V.add(V.up(p, 1.3), u, 0.7), full ? 1.0 : 0.85, j, 0.8, JobFx.hide1p(sp).with("dir", u, "speed", 2.2));
+            }
+            JobFx.wail(d, V.add(V.add(sp.getEyePosition(), look, 2.8), JobFx.screenUp(look), 0.15), 0.9, j, 0.7, JobFx.only1p(sp));
             SkillFx.sparks(d, V.up(p, 1.0), JobKit.glow(j), 14, 6);
             JobKit.shake(sp, 10, full ? 0.4 : 0.3, 0.3);
             SkillFx.play(d, "random.explode", p, 1.3, 0.7);
