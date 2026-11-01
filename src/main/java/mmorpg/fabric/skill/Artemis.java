@@ -460,8 +460,8 @@ final class Artemis {
         // 만월은 활 뒤 (나에게서 먼 쪽) 0.8칸 · 조금 위 — 활 몸에 안긴 듯. 그쪽이 벽이면 (벽 면 · 벽에 붙은 몹을 조준) 벽 앞 0.3칸까지 (벽 속에 그려지면 보이지 않음)
         double back = Math.max(-0.3, Math.min(0.8, Kit.rayDist(level, V.up(bowC, 0.25 * s), away, 1.1) - 0.3));
         Vec3 moonC = V.add(V.up(bowC, 0.25 * s), away, back);
-        // 나타남: 만월 (rise 틱 동안 차오름 → final 에 번쩍 · 흩어짐) + 빛의 은활 (final 2틱 전부터 흩어짐) + 땅의 은빛 룬 + 달빛 기둥 + 소리
-        bowFx(level, bowC, s, (fin + 8) / 20.0, 0.5);
+        // 나타남: 만월 (rise 틱 동안 차오름 → final 에 번쩍 · 흩어짐) + 빛의 은활 + 땅의 은빛 룬 + 달빛 기둥 + 소리. 0.50.0: 옅은 은활 그림 (rpg:artemis_bow
+        // — 입체 은활 밑의 빛) 은 뺌 (사진첩: 그림의 점 테두리가 밝은 2D 만월 위에 회색 줄로 그려졌음 — 몸은 입체 은활)
         // 0.48.0 입체: 빛의 은활 (light_bow — 손잡이가 줌통, 활 팔이 가로 · 아래를 겨눔)
         Vec3 sideB = V.rightOf(away);
         int bow3d = Fx3d.spawn(level, "light_bow", rest, Opt.of("dir", sideB, "face", V.DOWN, "scale", 0.78 * s, "life", (fin + 6) / 20.0, "color", glow, "glow",

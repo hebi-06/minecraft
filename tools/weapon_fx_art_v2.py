@@ -464,8 +464,8 @@ def moon_surface(pad):
         dd = np.sqrt(((nx - mx) / rx) ** 2 + ((ny - my) / ry) ** 2)
         edge = 0.9 + 1.1 * (n1 - 0.5) + 0.5 * (n3 - 0.5)  # 바다 가장자리가 들쭉날쭉
         mare = np.maximum(mare, smooth(edge + 0.3, edge - 0.2, dd) * k)
-    mare = gblur(mare, 1.6 * SS) * (0.7 + 0.6 * (n2 - 0.5))  # 부드럽게 · 속이 얼룩덜룩
-    surf = surf - mare * 0.78
+    mare = gblur(mare, 1.3 * SS) * (0.72 + 0.56 * (n2 - 0.5))  # 부드럽게 · 속이 얼룩덜룩
+    surf = surf - mare * 1.02  # 0.50.0 사진첩: 낮 하늘 앞에서 바다가 거의 안 보였음 → 짙게
     # 빛살 구덩이 (티코 꼴 — 지어낸 자리): 원판을 가로지르는 가는 밝은 빛살
     tx, ty = TYCHO
     ang = np.arctan2(ny - ty, nx - tx)
