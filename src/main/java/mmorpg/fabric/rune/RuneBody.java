@@ -210,6 +210,7 @@ final class RuneBody {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         double[] col = accent(k);
+        RuneBoost.bloom(level, sp.position(), col, COLOR[1], 2.5); // 0.50.0 2D 강화 (아래 등급 터짐): 투지가 차오르는 순간의 빛
         for (int i = 0; i < 4; i++) { // 뒤로 흐르는 바람
             RuneKit.streak(level, V.up(V.add(sp.position(), f, -0.6 - i * 0.5), 0.4 + i * 0.3), V.up(V.add(sp.position(), f, -1.4 - i * 0.6), 0.4 + i * 0.3),
                     col, 0.1, 0.3, 0.8, 0);
@@ -232,6 +233,7 @@ final class RuneBody {
                     "color", RuneKit.WHITE, "grow", 0.4, "fade", 0.5));
         }
         SkillFx.burst(level, V.up(c, 1), RuneKit.STEEL, 1.8, 0.35);
+        RuneBoost.bloom(level, c, accent(k), COLOR[1], 2.8); // 0.50.0 2D 강화 (아래 등급 터짐): 몸이 강철이 되는 순간의 빛
         SkillFx.play(level, "armor.equip_iron", c, 0.8, 1);
         SkillFx.play(level, "random.anvil_use", c, 0.9, 0.6);
         return true;
@@ -243,6 +245,7 @@ final class RuneBody {
         bodyCast(sp, r, k, 0.4);
         ServerLevel level = sp.level();
         SkillFx.vanilla(level, "minecraft:heart_particle", V.up(sp.position(), 2.1));
+        RuneBoost.bloom(level, sp.position(), accent(k), COLOR[1], 3.2); // 0.50.0 2D 강화 (아래 등급 터짐): 재생이 시작되는 순간의 빛
         SkillFx.play(level, "beacon.power", sp.position(), 1.6, 0.6);
         SkillFx.play(level, "random.levelup", sp.position(), 1.8, 0.4);
         return true;
@@ -257,6 +260,7 @@ final class RuneBody {
         double[] col = accent(k);
         SkillFx.fx(level, "rpg:ground_crack", V.up(c, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 2.6, "life", 1.4, "color",
                 new double[] {0.4, 0.06, 0.04}, "alpha", 0.9));
+        RuneBoost.bloom(level, c, col, COLOR[1], 3.5); // 0.50.0 2D 강화 (아래 등급 터짐): 투신이 깨어나는 순간의 빛
         for (int i = 0; i < 3; i++) {
             final int ii = i;
             RuneKit.later(i * 2, () -> SkillFx.shock(level, c, ii % 2 == 1 ? col : COLOR[0], 1.6 + ii * 0.9, 0.5));

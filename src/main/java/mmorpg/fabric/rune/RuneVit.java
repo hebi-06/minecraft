@@ -77,6 +77,7 @@ final class RuneVit {
         RuneKit.zonePulse(level, c, glow, radius, 0.55);
         RuneKit.zonePulse(level, c, core, radius * 0.5, 0.4);
         SkillFx.rune(level, c, Opt.of("size", 1.6, "life", 1.0, "color", glow, "alpha", 0.85, "rate", 120.0, "grow", 0.3));
+        RuneBoost.bloom(level, c, glow, core, 2.5); // 0.50.0 2D 강화 (아래 등급 터짐): 외치는 순간의 빛 (쓴 자리)
         // 큰 방패 문장: 앞 1.8칸 · 머리 위쪽 (1인칭 화면 위쪽에 보이고, 3인칭에서는 몸 앞 위)
         Vec3 em = V.up(V.add(c, Kit.facingOf(sp), 1.8), 2.35);
         RuneKit.shieldEmblem(sp, level, em, 0.6, glow, Opt.of("life", 0.8, "grow", 0.35, "fade", 0.5, "alpha", 0.85, "vel", RuneKit.bodyVel(sp), "full", 3.0,
@@ -128,6 +129,7 @@ final class RuneVit {
         ToDoubleFunction<ServerPlayer> amountOf = pl -> RpgHealth.maxOf(pl) * k.num("heal") * Runes.supportScale(RpgStats.effective(sp), r.family()) / pulses;
         ServerLevel level0 = sp.level();
         SkillFx.rune(level0, sp.position(), Opt.of("size", 2.6, "life", (pulses * gap) / 20.0 + 0.4, "color", glow, "alpha", 0.85, "rate", 40.0, "grow", 0.1));
+        RuneBoost.bloom(level0, sp.position(), glow, core, 2.8); // 0.50.0 2D 강화 (아래 등급 터짐): 샘이 솟는 순간의 빛 (쓴 자리)
         SkillFx.play(level0, "beacon.power", sp.position(), 1.5, 0.8);
         SkillFx.play(level0, "bucket.empty_water", sp.position(), 1.2, 0.6);
         SkillFx.every(pulses, gap, i -> {
@@ -223,6 +225,7 @@ final class RuneVit {
             SkillFx.burst(level, V.up(pc, 1), RuneKit.STEEL, 1.6, 0.35);
             RuneKit.selfCue(sp, RuneKit.STEEL, RuneKit.WHITE, true);
             RuneKit.zonePulse(level, pc, RuneKit.STEEL, radius, 0.45);
+            RuneBoost.bloom(level, pc, glow, core, 3.2); // 0.50.0 2D 강화 (아래 등급 터짐): 판이 몸에 붙는 순간의 빛
             SkillFx.sparks(level, V.up(pc, 1), RuneKit.STEEL, 10, 4);
             SkillFx.play(level, "random.anvil_land", pc, 1.6, 0.5);
         });
@@ -269,6 +272,7 @@ final class RuneVit {
         int pulse = (int) k.num("pulse");
         double plate = (2 * Math.PI * radius) / n / 2 / 0.785; // 판 반 크기 (육각 판의 너비 = 크기 × 2 × 0.785 → 이웃과 맞닿음)
         SkillFx.rune(level, c, Opt.of("size", radius, "life", ticks / 20.0, "color", glow, "alpha", 0.75, "rate", 20.0, "grow", 0.0));
+        RuneBoost.bloom(level, c, glow, core, 3.5); // 0.50.0 2D 강화 (아래 등급 터짐): 방벽이 서는 순간의 빛 (방벽 가운데)
         SkillFx.play(level, "beacon.activate", c, 1.0, 1);
         SkillFx.play(level, "random.totem", c, 1.6, 0.3);
         for (int t = 0; t < ticks; t += 10) {

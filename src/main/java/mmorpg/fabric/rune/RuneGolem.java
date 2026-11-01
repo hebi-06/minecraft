@@ -154,6 +154,7 @@ final class RuneGolem {
             Vec3 g = PairKit.onGround(level, sp.position());
             SkillFx.rune(level, g, Opt.of("size", radius, "life", 0.5, "color", JADE, "alpha", 0.9, "rate", 220.0, "progress", 1.0));
             slamFx(sp, level, g, radius, 1.0);
+            RuneBoost.impact(level, g, JADE, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 착지해 내리찍은 자리
             RuneKit.rockBurst(level, V.up(g, 0.5), 7, 6, 0.26);
             SkillFx.burst(level, V.up(g, 0.8), JADE, 1.8, 0.3);
             RuneKit.zonePulse(level, g, JADE, radius, 0.45);
@@ -196,6 +197,7 @@ final class RuneGolem {
             Vec3 d = RuneKit.turn(f, j * 60 + 30);
             RuneKit.hexPlate(level, V.up(V.add(c, d, 1.15), 1.0), d, 0.5, JADE, Opt.of("life", 0.7, "grow", 0.25, "core", CORE, "alpha", 0.8));
         }
+        RuneBoost.bloom(level, c, JADE, CORE, 3.0); // 0.50.0 2D 강화 (아래 등급 터짐): 보호막이 걸리는 자리 (수호 — 부드러운 터짐)
         SkillFx.play(level, "armor.equip_iron", c, 0.7, 1.0);
         SkillFx.play(level, "block.deepslate.break", c, 0.6, 1.0);
         // 돌기둥 넷 (대각선)
@@ -381,6 +383,7 @@ final class RuneGolem {
                 }
             }
             RuneKit.zonePulse(level, g, CORE, radius, 0.45);
+            RuneBoost.impact(level, g, JADE, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 돌 껍데기가 깨지는 순간
             RuneKit.glowCrack(level, g, radius * 0.8, JADE, CORE, Opt.of("life", 1.0, "v", 1.0));
             RuneKit.shakeAround(level, g, 10, 0.25, 0.3);
             SkillFx.play(level, "block.stone.break", g, 0.5, 1.0);
@@ -484,6 +487,7 @@ final class RuneGolem {
             }
             g.crumble(7, 0.45, 3.5, 0.6);
             slamFx(sp, level, c, radius, 1.1);
+            RuneBoost.impact(level, c, JADE, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 골렘이 무너지는 마무리
             debris(level, V.up(c, 2.0), 40, 1.2, MOSSY_COBBLE);
             RuneKit.shakeAround(level, c, 12, 0.35, 0.4);
             SkillFx.play(level, "block.deepslate_bricks.break", c, 0.5, 1.0);

@@ -60,6 +60,9 @@ final class RuneBlade {
                 "alpha", 0.9), glow, RuneKit.WHITE);
         SkillFx.play(level, "random.anvil_land", head, 2.0, 0.35);
         SkillFx.play(level, "item.spear.attack_miss", head, 1.3, 0.9);
+        // 0.50.0 2D 강화 (아래 등급 터짐): 벤 부채꼴의 가운데 땅 (앞 range 의 반, 벽이 있으면 벽 앞) — 반지름 = range
+        Vec3 mid = V.add(sp.position(), f, RuneKit.dashDistance(sp, f, k.num("range") * 0.5));
+        RuneBoost.impact(level, new Vec3(mid.x, RuneKit.groundAt(level, mid, mid.y), mid.z), glow, core, k.num("range"), r.grade());
         List<LivingEntity> cut = new ArrayList<>();
         for (LivingEntity e : RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 10)) {
             if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
@@ -113,6 +116,7 @@ final class RuneBlade {
         SkillFx.play(level, "item.trident.throw", from, 1.3, 0.9);
         SkillFx.play(level, "item.spear.attack_miss", from, 1.6, 0.7);
         Map<Long, Integer> perTick = new HashMap<>(); // 틱 → 그 틱에 벤 적 수 (파티클 예산: 자국 6명 · 불꽃 3명까지)
+        boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 검기에 처음 베인 적에 한 번
         for (Kit.LineHit h : RuneKit.lineTargets(sp, from, dir, len, k.num("width"))) {
             LivingEntity e = h.e();
             RuneKit.later(Math.max(0, Math.round((h.t() / speed) * 20)), () -> {
@@ -124,6 +128,11 @@ final class RuneBlade {
                     perTick.put(now, n + 1);
                     if (n < 6) SkillFx.cutMark(level, at, dir, 70, 0.08, glow, core, 1.1);
                     if (n < 3) SkillFx.sparks(level, at, core, 5, 4);
+                    if (!boomed[0]) { // 0.50.0 2D 강화 (아래 등급 터짐): 검기에 처음 베인 적의 발밑
+                        boomed[0] = true;
+                        Vec3 feet = e.position();
+                        RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.0, r.grade());
+                    }
                     RuneKit.knock(e, dir, 0.4, 0.15);
                 }
             });
@@ -146,6 +155,7 @@ final class RuneBlade {
         long until = Tasks.now() + ticks;
         String life = RuneKit.lifeToken(sp);
         Map<Long, Integer> perTick = new HashMap<>(); // 틱 → 그 틱의 반격 수 (여럿이 한꺼번에 때리면 분신 · 참격은 둘까지 — 파티클 예산)
+        boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 반격이 처음 들어간 적에 한 번
         Guards.set(sp, ticks, k.num("reduce"), Guards.Reflect.fn((pl, attacker) -> {
             if (!RuneKit.sameLife(pl, life) || attacker == null || attacker.isRemoved() || countered.contains(attacker.getUUID()) || Tasks.now() > until) return;
             if (!Kit.canHit(pl, attacker)) return;
@@ -186,7 +196,18 @@ final class RuneBlade {
             DamageNumbers.showFace(pl, "§b§l반격!", 2.2, -0.8, -0.2);
             SkillFx.play(d, "item.shield.block", at, 1.4, 0.8);
             SkillFx.play(d, "game.player.attack.strong", at, 1.2, 1);
-            RuneKit.runeHit(pl, attacker, P, k.num("mult"), r.stat());
+            double got = RuneKit.runeHit(pl, attacker, P, k.num("mult"), r.stat());
+            if (got > 0 && !boomed[0]) {
+                // 0.50.0 2D 강화 (아래 등급 터짐): 반격이 처음 들어간 적의 발밑 — 맞을 때의 되받아침 (룬을 쓰는 중이 아님) 이라 arcFor 처럼 주인을 정해 줌 (1인칭 번쩍임 숨김)
+                boomed[0] = true;
+                Vec3 feet = attacker.position();
+                int prev = RuneKit.enter(pl);
+                try {
+                    RuneBoost.impact(d, new Vec3(feet.x, RuneKit.groundAt(d, feet, feet.y), feet.z), glow, core, 2.5, r.grade());
+                } finally {
+                    RuneKit.leave(prev);
+                }
+            }
         }), null);
         RuneKit.selfCue(sp, glow, core, true);
         SkillFx.play(level, "random.anvil_land", sp.position(), 1.8, 0.4);
@@ -261,6 +282,9 @@ final class RuneBlade {
                 thrust(level, from, f, len, glow, RuneKit.WHITE);
                 SkillFx.fx(level, "rpg:light_cut", V.add(from, f, len / 2), Opt.of("dir", f, "size", len / 2, "thick", 0.18, "life", 0.3, "color", core, "alpha", 1.0));
                 SkillFx.ring(level, V.add(from, f, len), f, glow, 0.9, 0.3, 0);
+                // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 찌르기 — 칼끝이 닿은 자리의 땅 (벽에 막혔으면 벽면에서 0.4칸 앞 — 벽 위로 올라가지 않게)
+                Vec3 tipAt = V.add(from, f, len - 0.4);
+                RuneBoost.impact(level, new Vec3(tipAt.x, RuneKit.groundAt(level, tipAt, tipAt.y - 1.1), tipAt.z), glow, core, 2.5, r.grade());
                 SkillFx.play(level, "item.trident.throw", eye, 1.1, 1);
                 list = new ArrayList<>();
                 for (Kit.LineHit h : RuneKit.lineTargets(sp, from, f, len, 1.2)) list.add(h.e());

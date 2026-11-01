@@ -182,6 +182,9 @@ final class RuneAssassin {
             SkillFx.fx(level, "rpg:slash_x", V.add(at, v, -0.5), Opt.of("dir", v, "size", 0.9 * xs, "life", 0.26, "color", core, "alpha", 1.0));
             SkillFx.sparks(level, V.add(at, v, -0.5), core, 7, 5);
             SkillFx.play(level, "game.player.attack.critical", at, 1.3, 0.9);
+            // 0.50.0 2D 강화 (아래 등급 터짐): 찔린 적의 발밑
+            Vec3 feet = target.position();
+            RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.5, r.grade());
         }
         return true;
     }
@@ -204,6 +207,7 @@ final class RuneAssassin {
         int stars = (int) k.num("stars");
         double spread = k.num("spread");
         int[] shuriken = RuneKit.RFX.get("shuriken");
+        boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 처음 맞은 적에 한 번
         for (int i = 0; i < stars; i++) {
             double deg = -spread / 2 + (spread * i) / Math.max(1, stars - 1);
             Vec3 h = RuneKit.turn(f, deg);
@@ -242,6 +246,11 @@ final class RuneAssassin {
                     SkillFx.fx(level, "rpg:slash_x", at, Opt.of("dir", d, "size", 0.8, "life", 0.22, "color", glow, "alpha", 1.0));
                     SkillFx.burst(level, at, POISON, 0.7, 0.3);
                     SkillFx.play(level, "item.trident.hit", at, 1.8, 0.5);
+                    if (!boomed[0]) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적의 발밑
+                        boomed[0] = true;
+                        Vec3 feet = target.position();
+                        RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.0, r.grade());
+                    }
                     // 중독: dotGap 틱마다 dots 번 (첫 타와 무적 시간이 겹치지 않게 dotGap 뒤부터, 맞을 때마다 표식도 새로)
                     int dots = (int) k.num("dots");
                     for (int j = 1; j <= dots; j++) {
@@ -295,6 +304,7 @@ final class RuneAssassin {
             SkillFx.burst(level, V.up(c, 0.8), SMOKE, 2.4, 0.5);
             SkillFx.burst(level, V.up(c, 0.6), SHADE, 1.6, 0.4);
             SkillFx.sparks(level, drop, EMBER, 6, 4);
+            RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 연막탄이 터지는 순간에 한 번 (베기마다 아님)
             if (!sp.isRemoved()) RuneKit.selfCue(sp, SMOKE, glow, true);
             SkillFx.play(level, "random.explode", c, 1.8, 0.4);
         });
@@ -431,6 +441,9 @@ final class RuneAssassin {
                     SkillFx.play(level, "game.player.attack.critical", at, 1.0, 1);
                     // 0.49.0 표식: 마지막 베기에 맞은 적 vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
                     RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, true);
+                    // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 찌르기 — 대상의 발밑
+                    Vec3 feet = e.position();
+                    RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.5, r.grade());
                 }
             }
             SkillFx.play(level, last ? "item.trident.hit" : "game.player.attack.strong", at, 1.2 + i * 0.12, 0.7);

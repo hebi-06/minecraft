@@ -59,6 +59,7 @@ final class RuneBow {
         }
         SkillFx.play(level, "crossbow.shoot", from, 1.2, 0.9);
         SkillFx.play(level, "random.bow", from, 1.5, 0.6);
+        boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 처음 꿰뚫린 적에 한 번
         for (Kit.LineHit h : RuneKit.lineTargets(sp, from, view, len, k.num("width"))) {
             LivingEntity e = h.e();
             RuneKit.later(Math.round(h.t() / speed * 20), () -> {
@@ -66,6 +67,11 @@ final class RuneBow {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                     RuneKit.hitFlash(level, Kit.bodyPoint(e), view, glow, core, 0.7);
                     SkillFx.play(level, "random.bowhit", Kit.bodyPoint(e), 1.2, 0.8);
+                    if (!boomed[0]) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 꿰뚫린 적의 발밑
+                        boomed[0] = true;
+                        Vec3 feet = e.position();
+                        RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.0, r.grade());
+                    }
                 }
             });
         }
@@ -120,6 +126,7 @@ final class RuneBow {
                 });
             }
             RuneKit.hitFlash(level, chest, V.unit(V.sub(chest, from)), glow, core, 0.8);
+            RuneBoost.impact(level, g, glow, core, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 묶인 적의 발밑
             SkillFx.play(level, "random.bowhit", g, 0.8, 1);
             SkillFx.play(level, "use.chain", g, 0.8, 1);
             RuneKit.later(2, () -> SkillFx.play(level, "use.chain", g, 1.1, 0.8));
@@ -163,6 +170,7 @@ final class RuneBow {
         RuneKit.later(2, () -> {
             if (sp.isRemoved()) return;
             List<LivingEntity> list = RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), (int) k.num("arrows"));
+            boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 처음 맞은 화살에 한 번
             for (int i = 0; i < list.size(); i++) {
                 final int ii = i;
                 LivingEntity e = list.get(i);
@@ -175,6 +183,11 @@ final class RuneBow {
                     RuneKit.later(ticks, () -> {
                         if (!sp.isRemoved() && !e.isRemoved() && RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                             RuneKit.hitFlash(level, Kit.bodyPoint(e), f, glow, core, 0.8);
+                            if (!boomed[0]) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적의 발밑
+                                boomed[0] = true;
+                                Vec3 feet = e.position();
+                                RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.0, r.grade());
+                            }
                         }
                     });
                 });
@@ -253,6 +266,7 @@ final class RuneBow {
                         "fade", 0.6));
                 SkillFx.fx(level, "rpg:slash_x", V.add(at, d, -0.2), Opt.of("dir", d, "size", 1.4, "life", 0.3, "color", core, "alpha", 1.0));
                 RuneKit.zonePulse(level, target.position(), glow, 2.0, 0.4);
+                RuneBoost.impact(level, target.position(), glow, core, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 꿰뚫린 적의 발밑
                 SkillFx.sparks(level, at, core, 10, 6);
                 SkillFx.play(level, "random.bowhit", at, 0.6, 1);
                 SkillFx.play(level, "item.trident.hit", at, 0.8, 1);

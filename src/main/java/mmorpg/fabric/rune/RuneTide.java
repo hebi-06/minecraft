@@ -126,6 +126,7 @@ final class RuneTide {
         SkillFx.play(level, "item.trident.riptide_1", sp.position(), 1.3, 0.7);
         SkillFx.play(level, "item.trident.throw", sp.position(), 0.8, 0.9);
         SkillFx.play(level, "entity.dolphin.splash", sp.position(), 1.0, 0.8);
+        boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 물의 창이 처음 꿰뚫은 적에 한 번
         for (Kit.LineHit h : RuneKit.lineTargets(sp, from, d, len, k.num("width"))) {
             LivingEntity e = h.e();
             int when = Math.max(0, (int) Math.round(Math.max(0, h.t() - s0) / speed * 20));
@@ -133,6 +134,10 @@ final class RuneTide {
                 if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
                 PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                     soak(level, e, 1.1);
+                    if (!burst[0]) {
+                        burst[0] = true;
+                        RuneBoost.impact(level, e.position(), WATER, FOAM, 2.0, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 처음 꿰뚫린 적의 발밑
+                    }
                     RuneKit.knock(e, d, k.num("knock"), 0.2);
                     SkillFx.play(level, "entity.generic.splash", e.position(), 1.2, 0.8);
                 });
@@ -207,6 +212,7 @@ final class RuneTide {
                     RuneKit.flyStreak(level, top, new Vec3(top.x, g.y + 0.1, top.z), 40, WATER, FOAM, 0.9, 0.3);
                 }
                 RuneKit.zonePulse(level, g, ii % 2 == 0 ? WATER : FOAM, radius, 0.5);
+                if (ii == 0) RuneBoost.impact(level, g, WATER, FOAM, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 첫 굵은 빗줄기
                 SkillFx.fx(level, "rpg:whirlpool", V.up(g, 0.08), Opt.of("dir", V.ZERO, "size", radius * 0.8, "life", 0.5, "spin", ii * 70.0, "speed", 220.0, "color",
                         FOAM, "alpha", 0.55));
                 spray(level, V.up(g, 0.2), 6, radius * 0.4);
@@ -325,6 +331,7 @@ final class RuneTide {
             SkillFx.particle(level, ParticleTypes.SPLASH, V.up(g, 2.5), 60, 1.2, 0.4);
             RuneKit.zonePulse(level, g, FOAM, radius, 0.5);
             RuneKit.novaRing(level, g, 1.2, 2.6, WATER, FOAM, Opt.of("life", 0.5));
+            RuneBoost.impact(level, g, WATER, FOAM, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 가운데에서 물기둥이 솟아 터짐
             RuneKit.shakeAround(level, g, 10, 0.25, 0.3);
             SkillFx.play(level, "entity.generic.splash", g, 0.6, 1.0);
             SkillFx.play(level, "block.bubble_column.upwards_inside", g, 0.9, 1.0);
@@ -428,6 +435,7 @@ final class RuneTide {
             }
             SkillFx.particle(level, ParticleTypes.SPLASH, V.up(end, 1.0), 80, span * 0.35, 0.5);
             RuneKit.zonePulse(level, end, FOAM, k.num("radius"), 0.5);
+            RuneBoost.impact(level, PairKit.onGround(level, end), WATER, FOAM, k.num("radius"), r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 파도가 부서진 자리 (가운데)
             RuneKit.shakeAround(level, end, 14, 0.3, 0.35);
             SkillFx.play(level, "entity.generic.splash", end, 0.5, 1.0);
             SkillFx.play(level, "item.trident.thunder", end, 1.6, 0.4);

@@ -124,6 +124,7 @@ final class RuneHunter {
             claw(level, V.up(g, 0.6), 0.9);
             SkillFx.particle(level, ParticleTypes.CRIT, V.up(g, 0.5), 16, 0.4, 0.4);
             RuneKit.zonePulse(level, g, WILD, radius, 0.35);
+            RuneBoost.impact(level, g, WILD, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 덫의 턱이 닫히는 자리
             SkillFx.play(level, "block.iron_trapdoor.close", g, 0.8, 1.0);
             SkillFx.play(level, "entity.fox.bite", g, 0.7, 1.0);
             SkillFx.play(level, "block.anvil.land", g, 1.8, 0.3);
@@ -162,6 +163,7 @@ final class RuneHunter {
         beast(level0, hand, FALCON, Opt.of("dir", V.unit(V.sub(up0, hand)), "speed", V.len(V.sub(up0, hand)) / 0.2, "size", 0.6, "life", 0.2, "fade", 0.2));
         SkillFx.play(level0, "entity.parrot.fly", sp.position(), 0.8, 1.0);
         SkillFx.play(level0, "mob.phantom.flap", sp.position(), 1.5, 0.6);
+        boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 매가 처음 할퀸 적에 한 번
         for (int i = 0; i < hits; i++) {
             final int ii = i;
             final int at = 4 + i * gap;
@@ -198,6 +200,10 @@ final class RuneHunter {
                 for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
                     PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                         if (RuneKit.fxQuota("falcon", 3)) claw(level, Kit.bodyPoint(e), 0.7);
+                        if (!burst[0]) {
+                            burst[0] = true;
+                            RuneBoost.impact(level, e.position(), WILD, CORE, 2.0, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 처음 할퀸 적의 발밑
+                        }
                         // 0.49.0 사냥감 표식: vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
                         if (ii == hits - 1) RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), WILD, CORE, RuneKit.fxQuota("falconMark", 6)); // 마지막 급강하에
                     });
@@ -289,6 +295,7 @@ final class RuneHunter {
                             "delay", 0.2, "color", WILD, "alpha", 0.9));
                 }
                 net(level, V.up(land, 0.02), V.UP, s * 1.05, 0.25, Vec3.ZERO, 0, 1.0);
+                if (ii == hits - 1) RuneBoost.impact(level, g, WILD, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 조이기
                 SkillFx.play(level, "block.chain.hit", g, 0.8 + ii * 0.1, 1.0);
                 SkillFx.play(level, "entity.player.attack.sweep", g, 1.2, 0.5);
                 for (LivingEntity e : Kit.around(sp, g, radius, 2.5)) {
@@ -378,6 +385,7 @@ final class RuneHunter {
                         "life", 0.45, "color", jj % 2 == 0 ? WILD : CORE, "alpha", 0.9)));
             }
             RuneKit.zonePulse(level, c, WILD, radius, 0.5);
+            RuneBoost.impact(level, c, WILD, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 무리의 울부짖음 (첫 대상 둘레)
             RuneKit.shakeAround(level, c, 10, 0.25, 0.35);
             SkillFx.play(level, "entity.ravager.roar", c, 1.3, 0.8);
             SkillFx.play(level, "entity.polar_bear.warning", c, 0.8, 1.0);

@@ -203,6 +203,7 @@ final class RuneVolcano {
                     0.6, "color", LAVA, "alpha", 0.9));
         }
         splatter(level, V.up(hit, 0.3), 10, 6);
+        RuneBoost.impact(level, hit, LAVA, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 땅을 내리친 자리
         SkillFx.burst(level, V.up(V.add(c, f, 2.4), 0.4), LAVA, 0.9, 0.25);
         RuneKit.shakeAround(level, c, 8, 0.2, 0.2);
         SkillFx.play(level, "mace.smash_ground", c, 0.8, 1.0);
@@ -236,6 +237,7 @@ final class RuneVolcano {
         int fly = 8;
         int lastLand = fly + (hits - 1) * gap;
         Map<UUID, LivingEntity> burned = new LinkedHashMap<>();
+        boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 화산탄이 처음 맞힌 적에 한 번
         SkillFx.rune(level, g, Opt.of("size", radius, "life", (lastLand + 4) / 20.0, "color", LAVA, "alpha", 0.75, "rate", 60.0, "progress", 1.0));
         for (int i = 0; i < hits; i++) {
             final int ii = i;
@@ -258,7 +260,13 @@ final class RuneVolcano {
                 SkillFx.play(level, "random.explode", land, 1.1, 0.7);
                 SkillFx.play(level, "block.lava.pop", land, 0.8, 1.0);
                 for (LivingEntity e : Kit.around(sp, land, radius, 3)) {
-                    PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> flames(level, e));
+                    PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
+                        flames(level, e);
+                        if (!burst[0]) {
+                            burst[0] = true;
+                            RuneBoost.impact(level, e.position(), LAVA, CORE, 2.0, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 화산탄이 처음 맞힌 적의 발밑
+                        }
+                    });
                     if (burned.putIfAbsent(e.getUUID(), e) == null) burn(sp, r, e, P, k, lastLand - (ii * gap + fly) + (int) Math.max(10, k.numOr("dotGap", 20)), life);
                 }
             });
@@ -306,6 +314,7 @@ final class RuneVolcano {
                     RuneKit.later(1 + j, () -> geyser(sp, level, p, 0.8, 2.4 + jj * 0.5, 3));
                 }
                 RuneKit.zonePulse(level, g, ii % 2 == 0 ? LAVA : CORE, radius, 0.4);
+                if (ii == hits - 1) RuneBoost.impact(level, g, LAVA, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 (가장 높은) 용암 기둥
                 RuneKit.shakeAround(level, g, 10, 0.2, 0.25);
                 SkillFx.play(level, "item.bucket.empty_lava", g, 0.6 + ii * 0.08, 1.0);
                 SkillFx.play(level, "mob.ghast.fireball", g, 0.8, 0.7);
@@ -423,6 +432,7 @@ final class RuneVolcano {
             }
             blast(sp, level, g, radius, 0.75);
             RuneKit.novaRing(level, g, 1.2, radius * 0.9, LAVA, CORE, Opt.of("life", 0.5));
+            RuneBoost.impact(level, g, LAVA, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 대분출
             RuneKit.shakeAround(level, g, 16, 0.4, 0.4);
             SkillFx.play(level, "random.explode", g, 0.6, 1.0);
             SkillFx.play(level, "mob.ghast.fireball", g, 0.6, 1.0);

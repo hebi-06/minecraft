@@ -111,7 +111,10 @@ final class RuneGladiator {
         SkillFx.play(level, "block.chain.place", sp.position(), 1.2, 0.8);
         RuneKit.later(fly, () -> {
             if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
-            PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> clang(level, Kit.bodyPoint(e), 0.9));
+            PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
+                clang(level, Kit.bodyPoint(e), 0.9);
+                RuneBoost.impact(level, e.position(), STEEL, CORE, 2.0, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 갈고리가 꽂힌 적의 발밑 (대상 하나 · 한 번)
+            });
             SkillFx.play(level, "block.chain.hit", e.position(), 0.8, 1.0);
             SkillFx.play(level, "item.trident.hit", e.position(), 1.2, 0.8);
             if (PairKit.boss(e)) return;
@@ -207,6 +210,7 @@ final class RuneGladiator {
             RuneKit.shieldEmblem(sp, level, V.up(at, 0.6), 0.9, STEEL, Opt.of("full", 2.6, "min", 0.45, "life", 0.25, "core", CORE));
             RuneKit.zonePulse(level, at, STEEL, radius, 0.4);
             RuneKit.glowCrack(level, at, radius * 0.8, STEEL, CORE, Opt.of("life", 1.0));
+            RuneBoost.impact(level, at, STEEL, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 방패로 내려찍은 자리
             RuneKit.rockBurst(level, V.up(at, 0.3), 5, 4, 0.2);
             RuneKit.shakeAround(level, at, 8, 0.25, 0.25);
             SkillFx.play(level, "mace.smash_ground", at, 0.9, 1.0);
@@ -298,6 +302,7 @@ final class RuneGladiator {
             Vec3 c = sp.position();
             for (Display.BlockDisplay d : balls) FxDisplays.move(d, PairKit.box(V.up(V.sub(c, base), 1.0), new Quaternionf(), 0.3, 0.3, 0.3), 3);
             RuneKit.zonePulse(level, c, CORE, radius, 0.4);
+            RuneBoost.impact(level, c, STEEL, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 사슬로 끌어모으는 마무리
             SkillFx.play(level, "block.chain.break", c, 0.6, 1.0);
             SkillFx.play(level, "item.armor.equip_chain", c, 0.6, 1.0);
             for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
@@ -412,6 +417,7 @@ final class RuneGladiator {
             if (!RuneKit.sameLife(sp, life)) return;
             for (int j = 0; j < posts; j += 2) chain(level, tops.get(j), V.up(c, 0.8), 0.35, 0.95);
             RuneKit.novaRing(level, c, 1.0, radius * 0.9, STEEL, CORE, Opt.of("life", 0.5));
+            RuneBoost.impact(level, c, STEEL, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 사슬이 모두 모여 내리치는 마무리
             RuneKit.glowCrack(level, c, radius * 0.7, STEEL, CORE, Opt.of("life", 1.2));
             RuneKit.shakeAround(level, c, 14, 0.35, 0.35);
             SkillFx.play(level, "block.anvil.land", c, 0.6, 0.8);

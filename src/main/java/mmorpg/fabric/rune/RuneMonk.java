@@ -80,6 +80,7 @@ final class RuneMonk {
         int gap = (int) k.num("gap");
         double radius = k.num("radius");
         double cone = k.num("cone");
+        boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 장풍이 처음 맞힌 적에 한 번
         SkillFx.every(hits + 1, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
@@ -120,6 +121,10 @@ final class RuneMonk {
                 PairKit.hit(sp, r, e, P, last ? k.num("crush") : k.num("mult"), last ? DamageNumbers.Style.IMPACT : null, life, dmg -> {
                     Vec3 b = Kit.bodyPoint(e);
                     if (RuneKit.fxQuota("chainFist", 4)) impact(level, V.add(b, V.unit(V.sub(sp.getEyePosition(), b)), 0.3), (last ? 0.6 : 0.4) * RuneKit.nearK(sp, b, 4, 0.5));
+                    if (last && !burst[0]) {
+                        burst[0] = true;
+                        RuneBoost.impact(level, e.position(), GOLD, CORE, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마무리 장풍이 처음 맞힌 적의 발밑
+                    }
                     if (last && !PairKit.boss(e)) RuneKit.knock(e, f, k.numOr("knock", 0), 0.15);
                     if (last) RuneKit.later(1, gainKi);
                 });
@@ -181,6 +186,7 @@ final class RuneMonk {
                 double radius = k.num("radius");
                 RuneKit.zonePulse(level, g, GOLD, radius, 0.45);
                 RuneKit.novaRing(level, g, 0.6, radius * 0.9, GOLD, CORE, Opt.of("life", 0.4));
+                RuneBoost.impact(level, g, GOLD, CORE, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 내려찍은 자리
                 RuneKit.glowCrack(level, g, radius * 0.8, GOLD, CORE, Opt.of("life", 1.0));
                 RuneKit.rockBurst(level, V.up(g, 0.3), 5, 4, 0.2);
                 SkillFx.particle(level, ParticleTypes.CRIT, V.up(g, 0.4), 20, radius * 0.3, 0.5);
@@ -257,9 +263,14 @@ final class RuneMonk {
             SkillFx.play(level, "wind_charge.burst", c, 0.6, 1.0);
             SkillFx.play(level, "mob.warden.sonic_boom", c, 1.6, 0.5);
             SkillFx.play(level, "entity.player.attack.knockback", c, 0.6, 1.0);
+            boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 장풍이 처음 맞힌 적에 한 번
             for (LivingEntity e : RuneKit.coneTargets(sp, range, cone, 32)) {
                 PairKit.hit(sp, r, e, P, k.num("mult"), life, dmg -> {
                     impact(level, Kit.bodyPoint(e), 1.0);
+                    if (!burst[0]) {
+                        burst[0] = true;
+                        RuneBoost.impact(level, e.position(), GOLD, CORE, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 장풍이 처음 맞힌 적의 발밑
+                    }
                     if (!PairKit.boss(e)) RuneKit.knock(e, V.sub(e.position(), c), k.num("knock"), 0.35);
                 });
             }
@@ -332,9 +343,14 @@ final class RuneMonk {
             SkillFx.play(level, "mace.heavy_smash_ground", c, 1.2, 0.8);
             SkillFx.play(level, "entity.goat.ram_impact", c, 0.8, 1.0);
             SkillFx.play(level, "wind_charge.burst", c, 0.8, 0.8);
+            boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 일격이 처음 맞힌 적에 한 번
             for (LivingEntity e : RuneKit.coneAround(sp, c, f, radius, cone)) {
                 PairKit.hit(sp, r, e, P, k.num("crush"), DamageNumbers.Style.IMPACT, life, dmg -> {
                     impact(level, Kit.bodyPoint(e), 1.0);
+                    if (!burst[0]) {
+                        burst[0] = true;
+                        RuneBoost.impact(level, e.position(), GOLD, CORE, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 일격이 처음 맞힌 적의 발밑
+                    }
                     if (!PairKit.boss(e)) RuneKit.knock(e, f, k.numOr("knock", 0), 0.2);
                     // 0.49.0 마지막 일격에 stun 틱 기절 (머리 위 금빛 룬)
                     if (k.numOr("stun", 0) > 0) RuneKit.stun(e, (int) k.num("stun"), GOLD, RuneKit.fxQuota("hundredStun", 8));

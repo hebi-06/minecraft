@@ -90,6 +90,14 @@ final class RuneAxe {
             final int tt = t;
             RuneKit.later(t, () -> spin.frame(tt, tt <= out ? V.add(from, f, len * tt / out) : tip, tt > out));
         }
+        // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적의 발밑에서 한 번 (갈 때 · 올 때 통틀어)
+        boolean[] boomed = {false};
+        java.util.function.Consumer<LivingEntity> boom = hitE -> {
+            if (boomed[0]) return;
+            boomed[0] = true;
+            Vec3 feet = hitE.position();
+            RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.0, r.grade());
+        };
         Map<UUID, Integer> outAt = new HashMap<>();
         for (Kit.LineHit h : RuneKit.lineTargets(sp, from, f, len, width)) {
             LivingEntity e = h.e();
@@ -98,6 +106,7 @@ final class RuneAxe {
             RuneKit.later(when, () -> {
                 if (!sp.isRemoved() && !e.isRemoved() && RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                     RuneKit.hitFlash(level, Kit.bodyPoint(e), f, glow, core);
+                    boom.accept(e); // 0.50.0 2D 강화 (아래 등급 터짐)
                 }
             });
         }
@@ -122,6 +131,7 @@ final class RuneAxe {
                 RuneKit.later(wait, () -> {
                     if (!sp.isRemoved() && !e.isRemoved() && RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                         RuneKit.hitFlash(level, Kit.bodyPoint(e), u, glow, core);
+                        boom.accept(e); // 0.50.0 2D 강화 (아래 등급 터짐)
                     }
                 });
             }
@@ -172,6 +182,7 @@ final class RuneAxe {
             if (sp.isRemoved()) return;
             Vec3 hitC = V.add(c, f, 1.8);
             RuneKit.zonePulse(level, hitC, glow, 2.0, 0.35);
+            RuneBoost.impact(level, hitC, glow, core, k.num("radius"), r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 도끼가 찍힌 앞자리 (부채꼴 가운데)
             SkillFx.fx(level, "rpg:light_cut", V.up(V.add(c, f, 2.0), 0.08), Opt.of("dir", f, "size", 1.6, "thick", 0.42, "life", 0.9, "delay", 0.6, "color", glow,
                     "alpha", 0.95));
             SkillFx.play(level, "mace.smash_ground", hitC, 0.8, 1);
@@ -254,6 +265,7 @@ final class RuneAxe {
             SkillFx.burst(level, V.up(c, 0.5), glow, 2.2, 0.35);
             RuneKit.zonePulse(level, c, glow, radius, 0.5);
             RuneKit.zonePulse(level, c, core, radius * 0.5, 0.35);
+            RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 내려찍은 자리
             SkillFx.fx(level, "rpg:ground_crack", V.up(V.add(c, f, 1.2), 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.0, "life", 1.2,
                     "color", new double[] {0.36, 0.1, 0.06}, "alpha", 0.9));
             for (int i = 0; i < 6; i++) {
@@ -316,6 +328,7 @@ final class RuneAxe {
                     "color", low ? BLOOD : glow, "aura", core));
             SkillFx.burst(level, at, low ? BLOOD : glow, low ? 2.6 : 1.8, 0.35);
             RuneKit.zonePulse(level, g, glow, 2.4, 0.45);
+            RuneBoost.impact(level, g, glow, core, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 도끼가 내려찍힌 대상의 발밑
             for (int i = 0; i < 4; i++) {
                 Vec3 d = RuneKit.turn(f, i * 90 + 45);
                 SkillFx.fx(level, "rpg:light_cut", V.add(V.up(g, 0.08), d, 1.1), Opt.of("dir", d, "size", 1.0, "thick", 0.3, "life", 0.8, "delay", 0.5,
