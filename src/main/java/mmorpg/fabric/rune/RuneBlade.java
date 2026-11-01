@@ -193,7 +193,6 @@ final class RuneBlade {
                 SkillFx.sparks(d, at, core, 8, 5);
             }
             SkillFx.fx(d, "rpg:slash_x", at, Opt.of("dir", v, "size", 1.4 * xs, "life", 0.3, "color", glow, "alpha", 1.0));
-            DamageNumbers.showFace(pl, "§b§l반격!", 2.2, -0.8, -0.2);
             SkillFx.play(d, "item.shield.block", at, 1.4, 0.8);
             SkillFx.play(d, "game.player.attack.strong", at, 1.2, 1);
             double got = RuneKit.runeHit(pl, attacker, P, k.num("mult"), r.stat());

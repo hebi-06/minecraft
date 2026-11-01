@@ -8,7 +8,6 @@ import java.util.UUID;
 import java.util.function.BooleanSupplier;
 import mmorpg.core.Obj;
 import mmorpg.core.Weapon;
-import mmorpg.fabric.Fx3d;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
 import net.minecraft.server.level.ServerLevel;
@@ -18,9 +17,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 크로노스의 낫 (초월 낫 — 12단계, 자바 전용): 시간 가르기 · 종말의 시계. 수치는 SKILLS.scythe, 색은 낫 날의 보랏빛 · 연보라 심지 + 놋쇠빛 (gold —
+ * 노른의 낫 (초월 낫 — 12단계, 자바 전용 · 0.50.0 크로노스의 낫 → 북유럽 노른 — 운명의 실을 잣고 끊는 세 여신): 운명 가르기 · 운명의 물레. 수치는 SKILLS.scythe, 색은 낫 날의 보랏빛 · 연보라 심지 + 놋쇠빛 (gold —
  * 0.12.8 무기 디자인 색, 예전 푸른빛 · 금빛).
- * 그림: rpg:rfx_clock (시계판 · 시침 · 분침 · 톱니 — 빛 · 심지), rpg:rfx_relicspin 칸 2 (크로노스의 낫 모델 — 하늘에서 내려오는 거대한 낫), 초승달 참격.
+ * 그림: rpg:rfx_clock (0.50.0 운명의 물레 — 룬 고리판 · 물렛가락 · 운명의 실 · 매듭 고리, 빛 · 심지 — 칸은 옛 시계판 · 시침 · 분침 · 톱니 자리 그대로), rpg:rfx_relicspin 칸 2 (노른의 낫 모델 — 하늘에서 내려오는 거대한 낫), 초승달 참격.
  * 시간이 멈춘 적: 움직이지 못함 (구속 X · 나약함 · 매 틱 속도 0), 머리 위에 거꾸로 도는 작은 시계. 보스는 움직임을 막지 않음 (피해만)
  */
 final class Kronos {
@@ -55,12 +54,10 @@ final class Kronos {
         Vec3 over = RuneKit.overHead(e, 0.6);
         Vec3 toEye = V.unit(V.sub(eye, over));
         double near = HeroKit.near(eye, over, 0.5);
-        clockPart(level, DIAL, over, toEye, 0.75 * near, 0, 0, ticks / 20.0, glow, core, 0.45);
-        clockPart(level, MINUTE, V.add(over, toEye, 0.02), toEye, 0.75 * near, 0, -720, ticks / 20.0, gold, core, 0.5);
-        clockPart(level, HOUR, V.add(over, toEye, 0.03), toEye, 0.75 * near, 90, -120, ticks / 20.0, gold, core, 0.5);
-        // 0.48.0 입체 시계 (머리 위 — 보는 사람 쪽, 바늘이 빠르게 돎)
-        Fx3d.spawn(level, "clock", over, Opt.of("dir", V.UP, "faceCam", 1.0, "scale", 0.62 * near, "life", ticks / 20.0, "color", glow, "glow", gold, "anim",
-                "tick", "loop", 1.0, "animSpeed", 6.0, "glowAlpha", 0.35, "shine", 0.3, "pop", 0.1, "fadeOut", 0.15));
+        // 0.50.0 운명의 물레 (노른의 낫 — 옛 입체 시계는 뺌, 2D 판을 진하게): 머리 위 보는 사람 쪽, 실이 빠르게 감김
+        clockPart(level, DIAL, over, toEye, 0.75 * near, 0, 0, ticks / 20.0, glow, core, 0.8);
+        clockPart(level, MINUTE, V.add(over, toEye, 0.02), toEye, 0.75 * near, 0, -720, ticks / 20.0, gold, core, 0.85);
+        clockPart(level, HOUR, V.add(over, toEye, 0.03), toEye, 0.75 * near, 90, -120, ticks / 20.0, gold, core, 0.85);
         if (heavy) return;
         Kit.ticks(t -> {
             if (!ok.getAsBoolean() || e.isRemoved() || !e.isAlive() || t >= ticks) return false;
@@ -70,7 +67,7 @@ final class Kronos {
         });
     }
 
-    // ------------------------------------------------------------ 스킬 1 시간 가르기
+    // ------------------------------------------------------------ 스킬 1 운명 가르기 (옛 시간 가르기)
 
     /**
      * 시간 가르기: windup 틱 동안 등 뒤에 거대한 낫의 그림자 (모델 그림) 가 솟음 → 앞 cone° · range 칸을 크게 가름 (mult — 커다란 초승달 참격 셋, 금빛 기운) →
@@ -162,7 +159,7 @@ final class Kronos {
         }
     }
 
-    // ------------------------------------------------------------ 스킬 2 종말의 시계
+    // ------------------------------------------------------------ 스킬 2 운명의 물레 (옛 종말의 시계)
 
     /**
      * 종말의 시계: 쓴 자리 발밑에 반지름 radius 칸 시계판 (금빛 톱니 · 시곗바늘) → tick 틱마다 바늘이 한 칸 (30°) 씩 12번 — gap 틱마다 판 안의 적을 벰
@@ -185,19 +182,17 @@ final class Kronos {
         int total = Math.max(12 * tick, hits * gap);
         double secs = total / 20.0 + 0.4;
         Vec3 ground = V.up(c, 0.07);
-        // 시계판 (빛 + 심지) · 바깥 금빛 톱니 (천천히 거꾸로) · 시침 (천천히) — 바늘 (분침) 은 틱마다 새로 그림
-        clockPart(level, DIAL, ground, V.UP, r * 1.05, 0, 0, secs + 0.6, glow, core, 0.45);
-        clockPart(level, GEAR, V.up(ground, -0.01), V.UP, r * 1.2, 0, -25, secs + 0.6, gold, core, 0.4);
-        clockPart(level, HOUR, V.up(ground, 0.02), V.UP, r * 1.05, 0, 30.0 / (total / 20.0), secs, gold, core, 0.5);
-        // 0.48.0 입체 시계판 (판 · 금빛 테 · 톱니 · 시침 · 분침 — 땅에 누움, 12 시가 북쪽): 분침이 total 틱에 한 바퀴 (tick) → 자정에 두 바늘이 겹침 (midnight)
-        int dial3d = Fx3d.spawn(level, "clock", V.up(c, 0.12), Opt.of("dir", new Vec3(0, 0, -1), "face", V.UP, "scale", r * 1.05, "life", secs + 0.7, "color", glow,
-                "glow", gold, "anim", "tick", "animSpeed", 3.0 / Math.max(0.5, 12 * tick / 20.0), "glowAlpha", 0.3, "shine", 0.25, "pop", 0.25, "fadeOut", 0.4));
+        // 0.50.0 운명의 물레 (노른의 낫 — 옛 입체 시계판은 뺌, 2D 판을 진하게): 룬 고리판 (빛 + 심지) · 바깥 금빛 매듭 고리 (천천히 거꾸로) · 물렛가락 (천천히)
+        // — 운명의 실 (옛 분침) 은 틱마다 새로 그림, 실이 맨 위 (끊는 자리) 에 닿으면 하늘에서 거대한 낫
+        clockPart(level, DIAL, ground, V.UP, r * 1.05, 0, 0, secs + 0.6, glow, core, 0.8);
+        clockPart(level, GEAR, V.up(ground, -0.01), V.UP, r * 1.2, 0, -25, secs + 0.6, gold, core, 0.65);
+        clockPart(level, HOUR, V.up(ground, 0.02), V.UP, r * 1.05, 0, 30.0 / (total / 20.0), secs, gold, core, 0.85);
         Kit.motionLater(sp, "kronos_clock:midnight", total, life); // 자정: 낫을 하늘로 치켜들었다가 내려찍음 (fall 틱 뒤 가름)
         RuneKit.zonePulse(level, c, glow, r, 0.6);
         SkillFx.play(level, "block.bell.hit", c, 0.5, 1.0);
         SkillFx.play(level, "beacon.activate", c, 0.7, 0.8);
         SkillFx.shake(sp, 0.1, 0.2);
-        // 바늘: tick 틱마다 30° (째깍 소리 · 판 끝의 빛)
+        // 운명의 실: tick 틱마다 30° 감김 (물레 소리 · 판 끝의 빛)
         for (int i = 0; i < 12; i++) {
             final int ii = i;
             Tasks.later(i * tick, () -> {
@@ -231,7 +226,7 @@ final class Kronos {
                 }
             });
         }
-        // 자정: 거대한 낫이 하늘에서 내려와 판을 가름 — 쓴 사람 앞 (판 반지름의 절반) 으로 내려옴 (1인칭에서 보이고 3인칭 화면을 덮지 않게)
+        // 실이 다 감김 (옛 자정): 거대한 낫이 하늘에서 내려와 실을 끊고 판을 가름 — 쓴 사람 앞 (판 반지름의 절반) 으로 내려옴 (1인칭에서 보이고 3인칭 화면을 덮지 않게)
         int fall = (int) k.num("fall");
         Vec3 drop = V.add(c, f, r * 0.5);
         Tasks.later(total, () -> {
@@ -240,8 +235,7 @@ final class Kronos {
             Vec3 top = V.up(drop, room);
             RuneKit.rfx(level, "relicspin", top, Opt.of("size", r * 1.1, "life", fall / 20.0 + 0.15, "spin", 0.0, "spinRate", 720.0, "cell", (double) RELIC_SPIN_CELL,
                     "alpha", 0.4, "fade", 0.2, "vel", new Vec3(0, -(room - 2.2) / (fall / 20.0), 0)));
-            // 0.48.0 입체: 시계판의 두 바늘이 12 시로 겹침 · 내 낫이 거대해져 보는 사람 쪽으로 돌며 하늘에서 내려옴 (fall 틱)
-            Fx3d.anim(level, dial3d, "midnight", false, c);
+            // 0.48.0 입체: 내 낫이 거대해져 보는 사람 쪽으로 돌며 하늘에서 내려옴 (fall 틱)
             WeaponFx3d.weapon(level, sp, w, top, Opt.of("to", V.up(drop, 2.2), "travel", fall / 20.0, "ease", "in", "dir", V.UP, "faceCam", 1.0, "spin", 720.0,
                     "spinAxis", "z", "size", 2.6, "life", fall / 20.0 + 0.1, "glow", glow, "glowAlpha", 0.6, "fadeOut", 0.08));
             SkillFx.beam(level, top, V.up(drop, 1), gold, Opt.of("half", 0.5, "thick", 0.4, "life", fall / 20.0 + 0.2, "gap", 1.0));
@@ -260,7 +254,6 @@ final class Kronos {
             // 0.48.0 입체: 거대한 낫이 위에서 앞 아래로 내리찍어 시계판을 가름 (보는 사람 쪽 — 판이 깨지며 흩어짐)
             WeaponFx3d.swingItem(level, sp, w, V.up(drop, 5.5), V.add(V.UP, f, -0.3), V.add(V.DOWN, f, 0.45), 0.12, 0.25, 2.6, true, Opt.of("glow", glow,
                     "glowAlpha", 0.6, "fadeOut", 0.2));
-            WeaponFx3d.kill(level, dial3d, c, 0.35);
             RuneKit.rfx2(level, "flare", V.up(drop, 1.2), Opt.of("size", 2.6, "life", 0.35, "grow", 0.5, "fade", 0.6, "spin", 45.0), glow, core, new int[] {0, 1},
                     null);
             RuneKit.novaRing(level, c, r * 0.5, 1.4, glow, core, Opt.of("life", 0.5));

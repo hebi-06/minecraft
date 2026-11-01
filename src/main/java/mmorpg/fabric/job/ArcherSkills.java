@@ -165,7 +165,6 @@ final class ArcherSkills {
         }
         RuneKit.later(steps, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            DamageNumbers.showFace(sp, "§a§l바람 — 다음 두 발 ×2", 2.4, 0, -0.3);
             JobFx.eyeRing(sp, j, 2.4, 0.8, 0.4);
             SkillFx.play(sp.level(), "block.amethyst_block.chime", sp.position(), 1.6, 0.6);
         });
@@ -284,7 +283,6 @@ final class ArcherSkills {
         JobFx.ring(level, V.up(c, 0.06), 2.0, j, false, 0.45, Opt.empty());
         JobFx.target(level, V.add(sp.getEyePosition(), look, 3.2), 0.85, j, V.scale(look, -1), 0, 0.35, JobFx.only1p(sp).with("vel", RuneKit.bodyVel(sp)));
         JobFx.target(level, V.add(V.up(c, 1.0), V.flat(look), 1.0), 0.7, j, V.scale(V.flat(look), -1), 0, 0.4, JobFx.hide1p(sp));
-        DamageNumbers.showFace(sp, "§a§l" + k.name(), 2.4, 0, 0.2);
         // 0.50.0 매의 눈 (사용자 "직업 고유 연출"): 머리 위에서 매의 깃털이 흩날려 내려앉음 (1인칭에서는 숨김 — 눈앞을 가리지 않게)
         JobFx.feathers(level, V.up(c, 2.4), 7, 0.9, 0.2, j, 1.3, JobFx.hide1p(sp));
         SkillFx.play(level, "crossbow.loading.end", c, 1.2, 0.9);

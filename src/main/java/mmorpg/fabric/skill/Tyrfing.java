@@ -509,7 +509,6 @@ final class Tyrfing {
         SkillFx.burst(level, front, cs.curse(), 0.6, 0.3);
         SkillFx.sparks(level, front, cs.curse(), 6, 3);
         SkillFx.shock(level, c0, cs.curse(), 1.8, 0.45);
-        if (paid > 0) DamageNumbers.showFace(sp, "§c§l-" + Js.str(Js.round(paid * 10) / 10) + " §r§c피의 대가", 2.6, -0.95, -0.8);
         SkillFx.play(level, "mob.warden.heartbeat", c0, 0.8, 1.0);
         SkillFx.play(level, "respawn_anchor.deplete", c0, 0.8, 0.8);
         // 무덤: 핏빛 룬 (반지름 radius) + 짙은 보랏빛 고리, 망령이 깨어나는 소리

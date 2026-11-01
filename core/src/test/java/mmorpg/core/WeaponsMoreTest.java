@@ -61,8 +61,8 @@ public final class WeaponsMoreTest {
         check(Weapons.allTypes().equals(all), "all types " + Weapons.allTypes());
 
         Map<String, String[]> names = Map.of("lance", new String[] {"황금 기사창", "게이 볼그", "궁니르", "창"}, "scythe",
-                new String[] {"황금 초승달낫", "하르페", "크로노스의 낫", "낫"}, "hammer", new String[] {"황금 전투망치", "다그다의 곤봉", "묠니르", "전투 망치"}, "scepter",
-                new String[] {"황금 성광홀", "카두케우스", "아폴론의 태양홀", "성스러운 홀"});
+                new String[] {"황금 초승달낫", "프레이르의 낫", "노른의 낫", "낫"}, "hammer", new String[] {"황금 전투망치", "다그다의 곤봉", "묠니르", "전투 망치"}, "scepter",
+                new String[] {"황금 성광홀", "에이르의 홀", "다그의 태양홀", "성스러운 홀"});
         Map<String, String[]> basics = Map.of("lance", new String[] {"철 장창", "푸른 강철창"}, "scythe", new String[] {"철 전투낫", "청강 전투낫"}, "hammer",
                 new String[] {"철 전투망치", "푸른 강철 망치"}, "scepter", new String[] {"견습 사제의 홀", "청수정 성홀"});
         Map<String, String[]> stats = Map.of("lance", new String[] {"str", "dex"}, "scythe", new String[] {"dex", "int"}, "hammer", new String[] {"vit", "str"},

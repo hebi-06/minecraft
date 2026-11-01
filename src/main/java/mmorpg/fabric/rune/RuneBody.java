@@ -137,7 +137,6 @@ final class RuneBody {
                 "color", core, "alpha", 1.0));
         RuneKit.bodyAura(sp, col, Opt.of("n", 6, "size", 1.2 + big * 0.15, "alpha", 0.85, "life", 0.36, "force", true)); // 쓸 때의 큰 기운 (조금 길게)
         RuneKit.selfCue(sp, col, core, true);
-        DamageNumbers.showFace(sp, "§6§l" + k.str("name") + "!", 2.2, -0.9, -0.35);
     }
 
     /** 신체 강화 동안 (짝수 틱 2틱마다 — 연출 횟수 n): 몸의 기운 (가장 높은 등급의 색, 짧게 · 몸을 따라옴) + 룬마다 덧붙임 + 1인칭 불티 (12틱마다) */

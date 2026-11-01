@@ -176,7 +176,6 @@ public final class Aegis {
     static void tauntMark(ServerLevel level, LivingEntity e, boolean scripted) {
         if (!scripted && !Kit.hasFamily(e, "monster")) return;
         if (e.isRemoved()) return;
-        DamageNumbers.showAt(level, V.up(e.getEyePosition(), 1.25), "§6§l도발"); // 피해 숫자 (머리 위 0.3칸 근처) 보다 위
     }
 
     /** 빙결 (애드온 석화): ticks 동안 움직이지 못하고 (구속 XI) 근접 공격이 거의 들어가지 않음 (나약함 V) — 룬 기절과 같음 (이 애드온 몬스터는 공격하지 못함) */

@@ -19,7 +19,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 아르테미스의 은활 (활) — 은월 관통 · 만월의 사냥 (skills.js v2.21.0 "달빛 · 사냥": 달빛을 모은 거대한 은빛 화살 · 만월을 품은 빛의 은활의 화살비).
+ * 마니의 은활 (활 — 0.50.0 아르테미스의 은활 → 북유럽 마니 — 달을 모는 신) — 은월 관통 · 만월의 사냥 (skills.js v2.21.0 "달빛 · 사냥": 달빛을 모은 거대한 은빛 화살 · 만월을 품은 빛의 은활의 화살비).
  * 수치는 SKILLS.bow. 입력 (웅크리고 = 스킬 1, 길게 = 스킬 2) 은 Transcend. 빛의 은활 그림은 모델 옆모습 (rpg:artemis_bow)
  */
 final class Artemis {

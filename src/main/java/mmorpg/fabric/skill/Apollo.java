@@ -14,7 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 아폴론의 태양홀 (초월 성스러운 홀 — 12단계, 자바 전용): 작은 태양 · 태양신의 성역. 수치는 SKILLS.scepter, 색은 햇빛 주황 · 흰 심지. 피해는 마법 (홀).
+ * 다그의 태양홀 (초월 성스러운 홀 — 12단계, 자바 전용 · 0.50.0 아폴론의 태양홀 → 북유럽 다그 — 빛나는 갈기의 말을 타고 낮을 여는 신): 작은 태양 · 한낮의 성역. 수치는 SKILLS.scepter, 색은 햇빛 주황 · 흰 심지. 피해는 마법 (홀).
  * 그림: rpg:rfx_sun (해), rfx_rays · rfx_sigil (holy) · rfx_nova · rfx_flare, 불꽃.
  * 쓰러지거나 차원을 옮기면 남은 것은 멈춤
  */

@@ -228,7 +228,6 @@ final class SwordsmanSkills {
             RuneKit.Hand h = RuneKit.handOf(sp);
             // 0.50.0 칼끝 섬광 (재설계표 — rfx_jglint: 네 뿔 별 · 긴 가로 빛줄기 · 작은 고리, 번쩍 → 작아지며 돌아 사라짐)
             JobFx.glint(sp.level(), V.up(V.add(h.hand(), h.f(), 0.7), 0.5), 0.5, j, 0.6, Opt.of("vel", RuneKit.bodyVel(sp), "spin", Kit.rand() * 20 - 10));
-            DamageNumbers.showFace(sp, "§b§l치명 준비", 2.4, 0.9, -0.35);
             SkillFx.play(sp.level(), "block.amethyst_block.chime", sp.position(), 1.7, 0.7);
         });
         return true;
@@ -250,8 +249,7 @@ final class SwordsmanSkills {
         String life = RuneKit.lifeToken(sp);
         ServerLevel level0 = sp.level();
         if (used > 0) {
-            // 검세를 씀: 글자 (1인칭) · 몸에서 솟는 빛 (3인칭 · 다른 사람)
-            DamageNumbers.showFace(sp, "§b§l" + j.trait().name() + " ×" + used + " §r§7+" + Math.round(per * used * 100) + "%", 2.4, 0.9, -0.3);
+            // 검세를 씀: 몸에서 솟는 빛 (3인칭 · 다른 사람)
             JobFx.aura(sp, j, 2.4, (gap + 10) / 20.0, Math.min(0.95, 0.5 + 0.1 * used));
         }
         SkillFx.play(level0, "entity.player.attack.sweep", sp.position(), 0.8, 1.0);
@@ -338,7 +336,6 @@ final class SwordsmanSkills {
                 .getId(), "bob", 0.12, "bobHz", 0.6, "fadeIn", 0.3, "fadeOut", 0.5, "alpha", 0.9));
         JobFx3d.hold(sp, "swordsman_mirror", ids);
         JobFx3d.guard(sp, life, ids, dur);
-        DamageNumbers.showFace(sp, "§b§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "block.amethyst_block.resonate", c, 1.4, 1.0);
         SkillFx.play(level, "item.trident.return", c, 1.2, 0.8);
         SkillFx.play(level, "block.bell.resonate", c, 1.6, 0.5);

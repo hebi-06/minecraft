@@ -15,7 +15,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 하르페 (영웅 낫 — 12단계, 자바 전용): 초승달 회전베기. 수치는 HERO_SKILLS.scythe, 색은 달빛 보라 · 흰 심지.
+ * 프레이르의 낫 (영웅 낫 — 12단계, 자바 전용 · 0.50.0 하르페 → 북유럽 프레이르 — 풍요와 수확의 신): 초승달 회전베기. 수치는 HERO_SKILLS.scythe, 색은 달빛 보라 · 흰 심지.
  * 낫을 크게 두 바퀴 (hits 번, gap 틱 간격) 휘둘러 둘레 radius 칸의 적을 벰 (mult — 몸 둘레의 초승달 참격 여덟 · 바닥 소용돌이) → 벤 적에게 초승달 낙인
  * (머리 위 초승달) → 두 번째 바퀴 delay 틱 뒤 낙인이 터짐 (afterMult — 적을 따라감). 대상이 없어도 씀
  */

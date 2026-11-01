@@ -454,6 +454,5 @@ public final class Breakthrough {
         SkillFx.vanilla(level, "minecraft:totem_particle", V.up(c, 1.2));
         SkillFx.play(level, "beacon.activate", c, 1.4, 0.8);
         SkillFx.play(level, "random.levelup", c, 0.7, 0.45);
-        DamageNumbers.showFace(sp, "§6§l★" + RuneBreak.max() + " 각성", 2.6, 0, 0.8);
     }
 }

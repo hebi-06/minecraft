@@ -342,7 +342,6 @@ final class WarriorSkills {
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.5);
         SkillFx.sparks(level, V.up(c, 1.0), JobKit.glow(j), 14, 5);
         Ult.flash(level, c, JobKit.glow(j), Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
-        DamageNumbers.showFace(sp, "§6§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "mob.ravager.roar", c, 1.0, 1.0);
         SkillFx.play(level, "fire.ignite", c, 0.7, 1.0);
         SkillFx.play(level, "beacon.activate", c, 1.2, 0.6);

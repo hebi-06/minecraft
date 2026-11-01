@@ -129,7 +129,7 @@ final class HeroKit {
                 "fade", 0.25));
     }
 
-    /** 앞 cone° · range 칸 안의 보이는 적: 조준한 적이 먼저, 그다음 화면 가운데에 가까운 순 (max 명 — 카두케우스, 예전 브류나크에서 옮김) */
+    /** 앞 cone° · range 칸 안의 보이는 적: 조준한 적이 먼저, 그다음 화면 가운데에 가까운 순 (max 명 — 에이르의 홀, 예전 브류나크에서 옮김) */
     static List<LivingEntity> targetsIn(ServerPlayer sp, double range, double cone, int max) {
         Vec3 eye = sp.getEyePosition();
         Vec3 view = sp.getViewVector(1F);

@@ -143,8 +143,6 @@ public final class RuneStrike {
         SkillFx.ring(level, h.hand(), h.f(), col, 0.5, 0.3, 0);
         RuneKit.rfx(level, "prop", h.hand(), Opt.of("size", 0.3, "life", 0.35, "cell", GLINT, "spin", 20.0, "color", RuneKit.WHITE, "grow", 0.6, "fade", 0.6));
         SkillFx.sparks(level, h.hand(), col, 6, 3);
-        // 무기를 든 오른손 쪽 아래
-        DamageNumbers.showFace(sp, "§6§l" + k.str("name") + (k.truthy("hits") ? " §r§f×" + k.text("hits") : ""), 3.0, 1.2, -1.0);
     }
 
     /** 날 세우기: 다음 평타 3번 (6초 안) 에 위력 × bonus — 칼날을 숫돌에 가는 불티 */

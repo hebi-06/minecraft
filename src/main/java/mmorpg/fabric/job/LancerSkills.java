@@ -323,7 +323,6 @@ final class LancerSkills {
         }
         JobFx3d.hold(sp, "lancer_wall", wallIds);
         JobFx3d.guard(sp, life, wallIds, dur);
-        mmorpg.fabric.DamageNumbers.showFace(sp, "§6§l" + k.name() + " §7— 정면 피해 −" + Math.round(k.num("guard", 0.3) * 100) + "%", 2.4, 0, -0.3);
         SkillFx.play(level, "item.armor.equip_iron", sp.position(), 0.9, 1.0);
         SkillFx.play(level, "item.trident.riptide_1", sp.position(), 0.7, 0.6);
         for (int t = every; t <= dur; t += every) {

@@ -85,7 +85,7 @@ public final class SkillFx {
         }
     }
 
-    /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게) — 궁니르 · 세계수의 도끼 · 아폴론 */
+    /** a → b 빛줄기에서 눈 near 칸 안의 부분은 빼고 그림 (1인칭 화면을 덮지 않게) — 궁니르 · 세계수의 도끼 · 다그의 태양홀 */
     public static void beamAway(ServerLevel level, Vec3 eye, Vec3 a, Vec3 b, double[] color, Opt o, double near) {
         Vec3 d = V.sub(b, a);
         double len = V.len(d);

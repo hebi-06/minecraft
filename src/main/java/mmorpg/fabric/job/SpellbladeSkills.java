@@ -232,7 +232,6 @@ final class SpellbladeSkills {
         // 0.50.0 룬 결계: 검무 동안 (guardFor 틱) 받는 피해 − guard
         if (k.num("guard", 0) > 0) {
             mmorpg.fabric.skill.Guards.set(sp, (int) k.num("guardFor", dur), k.num("guard", 0.2), null, null);
-            DamageNumbers.showFace(sp, "§d§l룬 결계 §7— 받는 피해 −" + Math.round(k.num("guard", 0.2) * 100) + "%", 2.4, 0, -0.3);
         }
         // 0.50.0 푸타르크 (사용자 "직업 고유 연출" — 룬 글자 띠 rfx_jrunes): 발밑 큰 고리 (검무의 범위) 와 몸 둘레 작은 고리 (룬 결계) 가 거꾸로 돌며 깜빡임
         for (int t = 0; t < dur; t += 10) {
@@ -309,7 +308,6 @@ final class SpellbladeSkills {
         JobFx3d.hold(sp, "spellblade_awaken", ids);
         JobFx3d.guard(sp, life, ids, dur);
         Ult.flash(level, c, glow, Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
-        DamageNumbers.showFace(sp, "§d§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "beacon.activate", c, 1.5, 0.8);
         SkillFx.play(level, "mob.evocation_illager.prepare_attack", c, 1.6, 0.6);
         SkillFx.play(level, "block.amethyst_block.resonate", c, 0.9, 1.0);
@@ -504,6 +502,5 @@ final class SpellbladeSkills {
             RuneKit.later(m * 2, () -> JobFx.burst(level, V.up(b, 0.25 * mm), 0.8 + 0.25 * mm + Kit.bodyPad(e) * 0.4, j, 0.32, Opt.empty()));
         }
         JobFx.hit(e, j, 1.3);
-        DamageNumbers.showAt(level, V.up(b, 1.4), "§d§l◈×" + marks);
     }
 }

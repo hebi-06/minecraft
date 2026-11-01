@@ -179,14 +179,6 @@ final class RuneSpirit {
         return V.add(eye, d, dist);
     }
 
-    /** 정령 이름이 뜰 자리: 화면에서 정령 바로 위, 더 멀리 (눈앞 2칸에 띄우면 글자가 화면을 가릴 만큼 큼) */
-    private static Vec3 spiritLabelAt(ServerPlayer sp, int slot, ServerLevel level) {
-        double[] s = SPIRIT_SLOTS[slot % SPIRIT_SLOTS.length];
-        Vec3 eye = sp.getEyePosition();
-        Vec3 d = viewRay(sp, s[0], s[1] + 6);
-        return V.add(eye, d, Math.max(1.2, Math.min(4.5, RuneKit.rayLength(level, eye, d, 4.8) - 0.3)));
-    }
-
     // ------------------------------------------------------------ 노릴 적
 
     /** 늘 노리는 적: RPG 몬스터 · 보스 · 훈련용 허수아비 · 적대 몹 (중립 몬스터 · 동물 · 보스 소품은 아님) */
@@ -283,9 +275,6 @@ final class RuneSpirit {
             SkillFx.burst(level, s.pos, s.glow, 0.55, 0.3); // 눈앞 2칸이므로 작게
             SkillFx.sparks(level, s.pos, s.core, 3, 3);
             if (king != null) RuneKit.streak(level, king, s.pos, s.glow, 0.08, 0.35, 0.8, 0.1 + i * 0.08); // 정령왕 → 정령 자리
-            RuneKit.later(i * 3, () -> {
-                if (RuneKit.sameLife(sp, life)) DamageNumbers.showAt(level, spiritLabelAt(sp, s.slot, level), s.def.str("text") + "§l" + s.def.str("name"));
-            });
         }
         SPIRITS.put(sp.getUUID(), list);
         return made;

@@ -266,7 +266,6 @@ final class MageSkills {
         JobFx.orb(level, wandTip(sp), 0.2, j, 0.6, Opt.of("vel", RuneKit.bodyVel(sp)));
         JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
         SkillFx.sparks(level, V.up(c, 1.0), JobKit.core(j), 12, 4);
-        DamageNumbers.showFace(sp, "§9§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "beacon.power", c, 1.6, 0.8);
         SkillFx.play(level, "mob.warden.sonic_charge", c, 1.6, 0.5);
         return true;

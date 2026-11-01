@@ -715,8 +715,6 @@ final class RuneAssassin {
         st.end = plan.start() + span(r);
         COMBOS.put(sp.getUUID(), st);
         if (step >= 2) {
-            // 조준점 오른쪽 조금 아래 (바로 앞 몹의 피해 숫자는 조준점 위에 뜸)
-            DamageNumbers.showFace(sp, "§d§l" + step + " 콤보!", 2.2, 0.8, -0.2);
             Notify.notify(sp, "§d" + step + " 콤보 §7" + r.def().str("name") + " 피해 §f+" + Js.str(Js.round((plan.mult() - 1) * 100)) + "%"
                     + (plan.start() > now ? " §8(앞 룬 뒤에 나감)" : ""), 30);
             SkillFx.playFor(sp, "note.pling", 0.9 + step * 0.12, 0.7);
@@ -770,8 +768,6 @@ final class RuneAssassin {
         List<LivingEntity> list = !marked.isEmpty() ? marked : first(RuneKit.nearestTo(Kit.around(sp, c, FIN.num("radius")), c), FIN_MAX);
         Vec3 eye = sp.getEyePosition();
         Vec3 view = sp.getViewVector(1F);
-        // 조준점 아래에서 떠오름 (조준점 위는 맞은 적의 피해 숫자 자리)
-        DamageNumbers.showFace(sp, "§5§l" + FIN.str("name") + "!", 2.2, 0, -0.6);
         SkillFx.fx(level, "rpg:slash_x", V.add(eye, view, 2.4), Opt.of("dir", view, "size", 2.2, "life", 0.45, "color", SHADE, "alpha", 0.95));
         SkillFx.ring(level, V.add(eye, view, 2.0), view, glow, 2.4, 0.5, 0);
         SkillFx.rune(level, c, Opt.of("size", 3.2, "life", 1.0, "color", glow, "alpha", 0.9, "rate", 200.0, "grow", 0.4));

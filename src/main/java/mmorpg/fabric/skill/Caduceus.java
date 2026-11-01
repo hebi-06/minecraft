@@ -13,7 +13,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 카두케우스 (영웅 성스러운 홀 — 12단계, 자바 전용): 쌍뱀의 축복. 수치는 HERO_SKILLS.scepter, 색은 금빛 뱀 (color) · 은빛 뱀 (silver).
+ * 에이르의 홀 (영웅 성스러운 홀 — 12단계, 자바 전용 · 0.50.0 카두케우스 → 북유럽 에이르 — 치유의 여신): 쌍뱀의 축복. 수치는 HERO_SKILLS.scepter, 색은 금빛 뱀 (color) · 은빛 뱀 (silver).
  * 지팡이에서 날개가 번쩍이며 빛의 뱀 둘이 나와 앞 cone° · range 칸의 적 (조준한 적 먼저 — 둘이면 하나씩) 을 쫓아 hits 번 번갈아 묾 (gap 틱마다 — mult,
  * 마법 피해) → 다 물면 내게 돌아오며 준 피해의 heal 만큼 회복 (한 번에 최대 체력의 healCap 까지). 뱀: 2D 빛의 뱀 판 (card_serpent —
  * tools/weapon_fx_art_v2.py rfx_wserpent: 옆모습 독사 머리 · S 자 몸 · 마름모 무늬, 꿈틀거림 · 덤빔 · 묾 · 쉭쉭거림).

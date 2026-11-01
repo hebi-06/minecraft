@@ -367,7 +367,6 @@ public final class RuneGrove {
                     i % 2 == 0 ? JADE : GOLD, "fade", 0.4, "vel", vel));
         }
         RuneKit.selfCue(m, JADE, CREAM, false);
-        DamageNumbers.showFace(m, "§a§l세계수의 가호", 2.4, 0, -0.25);
         String who = caster != null && !caster.isRemoved() ? " §8(" + caster.getName().getString() + ")" : "";
         Notify.notify(m, "§a세계수의 가호 §f가하는 피해 +" + pct(up) + "% §7· §f받는 피해 -" + pct(cut) + "% §7" + Js.str(ticks / 20.0) + "초" + who, 60);
         SkillFx.playFor(m, "chime.amethyst_block", 1.8, 0.6);

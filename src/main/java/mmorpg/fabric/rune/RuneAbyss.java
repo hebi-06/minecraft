@@ -294,7 +294,6 @@ public final class RuneAbyss {
             chains(level, e, n, sp.getUUID());
             n++;
         }
-        DamageNumbers.showFace(sp, "§d§l낙인 ×" + n, 2.4, 0, -0.2);
         Notify.notify(sp, "§d심연의 낙인 §f적 " + n + "체 §7· §f받는 피해 +" + pct(up) + "% §7· §f주는 피해 -" + pct(cut) + "% §7" + Js.str(ticks / 20.0) + "초", 60);
     }
 

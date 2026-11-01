@@ -308,12 +308,10 @@ public final class JobTraits4 {
         if (JobKit.isBoss(e)) {
             double add = trait(j, "bossTaken", 0.08);
             BOSS_JUDGE.put(e.getUUID(), new double[] {Tasks.now() + trait(j, "bossFor", 80), 1 + add});
-            DamageNumbers.showAt(level, V.up(e.getEyePosition(), 1.25), "§6§l심판 §e받는 피해 +" + Math.round(add * 100) + "%");
         } else {
             int t = (int) trait(j, "stun", 20);
             RuneKit.stun(e, t, JobKit.glow(j), false);
             JobFx.stunStars(e, j, t);
-            DamageNumbers.showAt(level, V.up(e.getEyePosition(), 1.25), "§6§l심판");
         }
     }
 
@@ -567,7 +565,6 @@ public final class JobTraits4 {
             SkillFx.play(level, "item.shield.block", Kit.bodyPoint(e), 0.7, 1.0);
             SkillFx.play(level, "block.anvil.land", Kit.bodyPoint(e), 1.4, 0.4);
         }
-        DamageNumbers.showFace(sp, "§b§l반격 +" + DamageNumbers.number(add), 2.2, 0, 0.1);
         JobTraits.sendGauge(sp, false);
     }
 

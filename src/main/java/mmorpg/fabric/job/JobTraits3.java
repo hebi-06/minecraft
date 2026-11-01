@@ -349,7 +349,6 @@ public final class JobTraits3 {
         State st = of(sp);
         st.veilHit = Tasks.now();
         veilBreak(sp);
-        DamageNumbers.showFace(sp, "§d§l암습", 2.2, 0, 0.1);
         return JobUpgrades.num(sp, k, "first", 2.5); // 0.31.0 강화 (1 을 넘는 몫)
     }
 
@@ -400,7 +399,6 @@ public final class JobTraits3 {
             JobFx.cross(level, Kit.bodyPoint(e), 0.9 + Kit.bodyPad(e) * 0.5, j, 0.35, Opt.empty());
             SkillFx.play(level, "entity.player.attack.crit", Kit.bodyPoint(e), 0.9, 1.0);
         }
-        DamageNumbers.showFace(sp, "§d§l암습", 2.2, 0, 0.1);
     }
 
     // ------------------------------------------------------------ 창술사 「창끝」

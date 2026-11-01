@@ -542,8 +542,6 @@ final class RuneSpellblade {
         RuneKit.Hand h = RuneKit.handOf(sp);
         SkillFx.ring(level, h.hand(), h.f(), cs[0], 0.5, 0.3, 0); // 손 앞 작은 고리 (1인칭 화면을 가리지 않게)
         SkillFx.sparks(level, h.hand(), cs[1], 6, 3);
-        // 무기를 든 오른손 쪽 아래 (가운데의 적 · 피해 숫자를 가리지 않게)
-        DamageNumbers.showFace(sp, "§9§l마검 부여 §r§f×" + IMBUE.text("hits"), 3.0, 1.2, -1.0);
         SkillFx.play(level, "item.trident.return", sp.position(), 1.4, 0.7);
     }
 

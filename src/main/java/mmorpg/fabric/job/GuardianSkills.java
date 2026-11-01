@@ -198,7 +198,6 @@ final class GuardianSkills {
         JobTraits4.shareStart(sp, ally, k);
         JobFx.chain(level, V.up(c, 1.1), V.up(ally.position(), 1.1), j, 2.0, 0.4, Opt.of("alpha", 1.0));
         JobFx.aegis(level, V.up(ally.position(), 1.1), 0.5, j, 0, 0.45, Opt.of("vel", RuneKit.bodyVel(ally)));
-        DamageNumbers.showFace(sp, "§b§l수호", 2.2, 0, 0.1);
         SkillFx.play(level, "block.chain.place", ally.position(), 0.8, 0.9);
         Notify.notify(ally, "§b" + sp.getName().getString() + " §7님이 지켜 줍니다 (" + Math.round(k.num("share", 0.4) * 100) + "% · " + Math.round(k.num("shareFor", 80)
                 / 20.0) + "초)", 40);
@@ -347,7 +346,6 @@ final class GuardianSkills {
         JobFx.ring(level, V.up(sp.position(), 0.06), 2.2, j, false, 0.4, Opt.empty());
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.45);
         JobFx.aura(sp, j, 2.6, 0.8, 0.8);
-        DamageNumbers.showFace(sp, "§b§l" + k.name(), 2.4, 0, 0.2);
         SkillFx.play(level, "item.shield.block", sp.position(), 0.6, 1.0);
         SkillFx.play(level, "block.iron_door.close", sp.position(), 0.7, 0.8);
         SkillFx.play(level, "entity.iron_golem.repair", sp.position(), 0.8, 0.8);
@@ -379,7 +377,6 @@ final class GuardianSkills {
         Ult.sky(level, c, "rpg:ult_still", dur + 20);
         JobFx.aura(sp, j, 3.0, 0.9, 1.0);
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
-        DamageNumbers.showFace(sp, "§b§l" + k.name(), 2.6, 0, 0.35);
         SkillFx.play(level, "entity.iron_golem.repair", c, 0.6, 1.0);
         SkillFx.play(level, "block.deepslate_bricks.place", c, 0.6, 1.0);
         List<Brick> bricks = new ArrayList<>();
