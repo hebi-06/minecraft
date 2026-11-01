@@ -25,6 +25,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -388,6 +389,22 @@ final class Tyrfing {
     /** 달려가는 빠르기 (이동 속성 0.34 × — 땅 위 한 틱 ≈ 2.2 × 0.98 × (0.34 × RUN)² ≈ 0.39칸, 초당 약 8칸: 달리는 플레이어의 1.4배) */
     static final double RUN = 1.25;
 
+    /**
+     * 전사가 솟는 자리 (무덤 가운데 c0 에서 u 쪽): 둘레 RISE_OUT 칸 바깥부터 1칸씩 안쪽으로 (1.5칸까지) — 그 땅 높이에 전사 몸 (폭 0.8 · 키 2.4) 이 들어가는 빈 곳이고
+     * 무덤 가운데 (위 1.2칸 — center) 에서 막힘 없이 보이는 첫 자리 (동굴 · 집 안에서 벽 속 · 벽 너머에서 솟아 갇히지 않게). 없으면 둘레 radius 칸 · 발 높이
+     */
+    static Vec3 risePoint(Level level, Vec3 c0, Vec3 center, Vec3 u, double radius) {
+        for (double r = radius + RISE_OUT; r >= 1.5; r -= 1.0) {
+            double x = c0.x + u.x * r;
+            double z = c0.z + u.z * r;
+            Double gy = tyGround(level, new Vec3(x, c0.y + 2.5, z), 6, c0.y + 0.1);
+            if (gy == null) continue;
+            Vec3 at = new Vec3(x, gy, z);
+            if (level.noBlockCollision(null, new AABB(x - 0.4, gy + 0.01, z - 0.4, x + 0.4, gy + 2.4, z + 0.4)) && tyClear(level, center, V.up(at, 1.2))) return at;
+        }
+        return new Vec3(c0.x + u.x * radius, c0.y, c0.z + u.z * radius);
+    }
+
     /** 적의 쪽 (전사 번호): 무덤 가운데 c0 에서 본 각 (a0 = 앞, n 명) */
     static int sectorOf(Entity e, Vec3 c0, double a0, int n) {
         double dx = e.getX() - c0.x;
@@ -505,10 +522,7 @@ final class Tyrfing {
         for (int i = 0; i < n; i++) {
             double a = a0 + ((double) i / n) * Math.PI * 2;
             Vec3 u = new Vec3(Math.cos(a), 0, Math.sin(a));
-            double x = c0.x + u.x * (radius + RISE_OUT);
-            double z = c0.z + u.z * (radius + RISE_OUT);
-            Double gy = tyGround(level, new Vec3(x, c0.y + 2.5, z), 6, c0.y + 0.1);
-            posts.add(new Warrior(i, u, new Vec3(x, gy != null ? gy : c0.y, z), Math.min(i, n - i)));
+            posts.add(new Warrior(i, u, risePoint(level, c0, center, u, radius), Math.min(i, n - i)));
         }
         Grave g = new Grave();
         Consumer<Vec3> refund = at -> {
