@@ -581,6 +581,7 @@ final class RuneGolem {
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.ultFlashFor(sp, level, aim, "colossus", "flash", Opt.empty());
+            RuneBoost.impact(level, aim, JADE, CORE, radius); // 0.50.0 2D 강화 (초월 나머지): 두 주먹으로 대지를 내려친 터짐
             slamFx(sp, level, aim, radius, 1.8);
             RuneKit.rockRing(sp, level, aim, radius * 0.95, 10, 0.9, JADE, Opt.of("life", 1.2, "minDist", 2.2));
             RuneKit.novaRing(level, aim, 1.6, radius * 0.85, JADE, CORE, Opt.of("life", 0.6));

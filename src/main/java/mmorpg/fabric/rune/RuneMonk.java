@@ -462,6 +462,7 @@ final class RuneMonk {
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.ultFlashFor(sp, level, aim, "heavenFist", "flash", Opt.empty());
+            RuneBoost.impact(level, aim, GOLD, CORE, radius); // 0.50.0 2D 강화 (초월 나머지): 거대한 주먹이 내리꽂힌 터짐
             double sc = RuneKit.nearK(sp, V.up(aim, 2), 8, 0.4);
             RuneKit.rfx2(level, "fist", V.up(aim, 2.2 * sc), Opt.of("size", 3.0 * sc, "life", 0.4, "grow", 0.8, "fade", 0.6), GOLD, CORE, FIST, null);
             RuneKit.novaRing(level, aim, 1.6, radius * 0.9, GOLD, CORE, Opt.of("life", 0.6));

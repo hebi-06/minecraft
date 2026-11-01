@@ -310,6 +310,10 @@ final class RuneDex {
             mz += e.getZ() / list.size();
         }
         Vec3 mid0 = new Vec3(mx, my, mz);
+        // 0.50.0 2D 강화 (초월 나머지): 끝의 터짐 반지름 = 대상들이 퍼진 만큼 (3 ~ 6칸 — 한 명이면 3)
+        double spread = 0;
+        for (LivingEntity e : list) spread = Math.max(spread, Math.hypot(e.getX() - mx, e.getZ() - mz));
+        double burstR = Math.max(3.0, Math.min(6.0, spread + 1.5));
         RuneKit.ultSkyFor(sp, level, c0, "shadowless", delay + 24, null);
         RuneKit.ultFlashFor(sp, level, c0, "shadowless", "still", Opt.of("time", new double[] {0.02, 0, 0.3}));
         RuneKit.domainSigil(level, c0, 6.5, "blade", glow, white, Opt.of("life", (delay + 2) / 20.0, "spinRate", 0.0, "alpha", 0.7, "fade", 0.15));
@@ -340,7 +344,7 @@ final class RuneDex {
                     Vec3 out = RuneKit.screenAngle(v, ang);
                     Vec3 pos = V.add(V.add(at, out, ringR), v, -0.3);
                     double hold = (delay - at0) / 20.0 + 0.05 + (ei % 3) / 20.0; // 그 적을 찌르는 틱까지 (i % 3 틱 늦음)
-                    RuneKit.rfx2(level, "sword", pos, Opt.of("dir", V.scale(out, -1), "size", 0.62, "life", hold), glow, white);
+                    RuneBoost.rfx2a(level, "sword", pos, Opt.of("dir", V.scale(out, -1), "size", 0.62, "life", hold), glow, white); // 0.50.0 2D 강화 (초월 나머지): 칼 후광
                     spots.computeIfAbsent(e.getUUID(), x -> new ArrayList<>()).add(out);
                 }
                 SkillFx.play(level, "chime.amethyst_block", eye, 1.2 + cc * 0.12, 0.45);
@@ -372,8 +376,9 @@ final class RuneDex {
                 Vec3 at = Kit.bodyPoint(e);
                 Vec3 v = V.unit(V.sub(at, eye));
                 for (Vec3 out : spots.getOrDefault(e.getUUID(), List.of())) {
-                    RuneKit.rfx(level, "sword", V.add(at, out, ringR), Opt.of("dir", V.scale(out, -1), "size", 0.62, "life", 0.1, "speed", ringR / 0.1,
-                            "color", glow, "cell", (double) swordCell));
+                    Opt so = Opt.of("dir", V.scale(out, -1), "size", 0.62, "life", 0.1, "speed", ringR / 0.1, "color", glow, "cell", (double) swordCell);
+                    RuneBoost.aura(level, "sword", V.add(at, out, ringR), so.with("cell", null), glow, 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 꽂히는 칼 후광
+                    RuneKit.rfx(level, "sword", V.add(at, out, ringR), so);
                 }
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) <= 0) return;
                 // 8단계 돌파 (3 · 6돌 — 멈춤이 꽂힌 뒤에도 남음): 머리 위에 멈춘 시간 문양 (돌지 않음) — 풀릴 때까지
@@ -396,6 +401,7 @@ final class RuneDex {
             SkillFx.play(level, "item.trident.thunder", eye, 1.4, 0.5);
             // 발동: 화면 번쩍임 · 깨진 하늘의 섬광 → 발밑에서 퍼지는 충격 고리 (1틱 뒤)
             RuneKit.ultFlashFor(sp, level, eye, "shadowless", "flash", Opt.empty());
+            RuneBoost.impact(level, new Vec3(mid0.x, RuneKit.groundAt(level, mid0, mid0.y), mid0.z), glow, white, burstR); // 0.50.0 2D 강화 (초월 나머지): 대상들 가운데 땅
             RuneKit.skyFlare(level, still, 4, glow, white, Opt.of("life", 0.5));
             RuneKit.later(1, () -> RuneKit.novaRing(level, c0, 1.5, 5, glow, white, Opt.of("life", 0.5)));
             RuneKit.shakeAround(level, eye, 10, 0.25, 0.25);

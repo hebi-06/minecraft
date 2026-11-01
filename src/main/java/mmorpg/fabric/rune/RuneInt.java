@@ -332,8 +332,11 @@ final class RuneInt {
         Vec3 d = V.unit(V.sub(g, start));
         double len = V.len(V.sub(g, start));
         Tasks.later(delay - fall, () -> {
-            RuneKit.rfx(level, "meteor", start, Opt.of("dir", d, "speed", len / (fall / 20.0), "size", 3.2, "life", fall / 20.0, "frames", 4.0, "fps", 12.0,
-                    "loop", true));
+            Opt mo = Opt.of("dir", d, "speed", len / (fall / 20.0), "size", 3.2, "life", fall / 20.0, "frames", 4.0, "fps", 12.0, "loop", true);
+            // 0.50.0 2D 강화 (초월 나머지): 운석 후광 (불빛 · 1.35배 · 옅게, 같은 길). 그림의 바위가 앞 끝 (가운데에서 너비 6.4 의 0.3) 이라
+            // 1.35배 겹은 그만큼 (0.3 × 6.4 × 0.35 칸) 뒤에서 내보내 바위를 겹침 — 같은 자리면 커진 바위가 운석 앞에 비침
+            RuneBoost.aura(level, "meteor", V.add(start, d, -0.3 * 6.4 * 0.35), mo, glow, 1.35, 0.42);
+            RuneKit.rfx(level, "meteor", start, mo);
             for (int t = 0; t < fall; t += 2) {
                 final int tt = t;
                 Tasks.later(t, () -> {
@@ -351,6 +354,7 @@ final class RuneInt {
             double sc = RuneKit.nearK(sp, mid, 8, 0.35);
             // 발동: 주황 번쩍임 · 갈라진 하늘의 섬광 → 충격 고리 (1틱 뒤) → 용암처럼 빛나는 금 (2틱 뒤) → 솟는 버섯구름 (3 · 5 · 7틱 뒤)
             RuneKit.ultFlashFor(sp, level, g, "meteor", "flash", Opt.empty());
+            RuneBoost.impact(level, g, glow, core, radius); // 0.50.0 2D 강화 (초월 나머지): 운석이 떨어진 자리의 터짐
             RuneKit.skyFlare(level, burning, 4.4, glow, core, Opt.of("life", 0.6));
             RuneKit.later(1, () -> RuneKit.novaRing(level, g, 2.4, 3.0, glow, core, Opt.of("life", 0.5)));
             RuneKit.later(2, () -> RuneKit.glowCrack(level, g, radius * 1.15, new double[] {1.0, 0.38, 0.08}, new double[] {1.0, 0.86, 0.5}, Opt.of("life", 2.8,

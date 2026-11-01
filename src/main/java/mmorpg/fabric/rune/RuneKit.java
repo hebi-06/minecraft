@@ -835,8 +835,10 @@ public final class RuneKit {
 
     /** 하늘의 섬광 (rpg:rfx_flare — 화면을 봄): 긴 빛살 · 무리 */
     public static void skyFlare(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, Opt o) {
-        rfx2(level, "flare", at, Opt.of("size", size, "life", o.num("life", 0.5), "grow", o.num("grow", 0.45), "fade", o.num("fade", 0.65), "alpha",
-                o.num("alpha", 1), "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 45, "spinRate", o.num("spinRate", 20)), glow, core, new int[] {0, 1}, null);
+        Opt f = Opt.of("size", size, "life", o.num("life", 0.5), "grow", o.num("grow", 0.45), "fade", o.num("fade", 0.65), "alpha", o.num("alpha", 1), "spin",
+                o.has("spin") ? o.num("spin", 0) : Kit.rand() * 45, "spinRate", o.num("spinRate", 20));
+        if (o.has("view")) f = f.with("view", o.num("view", 0), "owner", o.num("owner", 0)); // 0.50.0 보는 사람 걸러내기 (가까운 터짐의 번쩍임을 주인 1인칭에서 숨김)
+        rfx2(level, "flare", at, f, glow, core, new int[] {0, 1}, null);
     }
 
     /** 한 틱에 그린 같은 연출 수 (fxQuota) */

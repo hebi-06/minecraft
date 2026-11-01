@@ -119,12 +119,16 @@ final class RuneSpiritKing {
             if (!RuneKit.sameLife(sp, life)) return;
             // 내려옴 (위에서 0.4초) → 그 자리에서 팔을 들고 머묾
             double drop = 3.0;
-            RuneKit.rfx(level, "spiritking", V.up(center, drop), Opt.of("size", KING_SIZE, "life", 0.4, "cell", 0.0, "frames", 2.0, "fps", 5.0, "alpha", 0.95,
-                    "vel", new Vec3(0, -drop / 0.4, 0), "fade", 0.05));
+            Opt fallO = Opt.of("size", KING_SIZE, "life", 0.4, "cell", 0.0, "frames", 2.0, "fps", 5.0, "alpha", 0.95, "vel", new Vec3(0, -drop / 0.4, 0), "fade",
+                    0.05);
+            // 0.50.0 2D 강화 (초월 나머지): 정령왕 후광 — 미리 칠한 그림이라 빛깔 그대로 (흰색) 1.35배 · 옅게 (천공의 눈과 같이)
+            RuneBoost.aura(level, "spiritking", V.up(center, drop), fallO, WHITE, 1.35, 0.35);
+            RuneKit.rfx(level, "spiritking", V.up(center, drop), fallO);
             RuneKit.later(8, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                RuneKit.rfx(level, "spiritking", center, Opt.of("size", KING_SIZE, "life", kingLife - 0.4, "cell", 1.0, "frames", 2.0, "fps", 4.0, "alpha", 0.95,
-                        "fade", 0.25, "grow", 0.03));
+                Opt standO = Opt.of("size", KING_SIZE, "life", kingLife - 0.4, "cell", 1.0, "frames", 2.0, "fps", 4.0, "alpha", 0.95, "fade", 0.25, "grow", 0.03);
+                RuneBoost.aura(level, "spiritking", center, standO, WHITE, 1.35, 0.35); // 0.50.0 2D 강화 (초월 나머지): 정령왕 후광
+                RuneKit.rfx(level, "spiritking", center, standO);
                 RuneKit.domainSigil(level, base, 3.4, "spirit", new double[] {0.42, 1, 0.76}, WHITE, Opt.of("life", kingLife - 0.3, "spinRate", 25.0, "alpha", 0.8));
                 RuneKit.domainSigil(level, z, r, "spirit", new double[] {0.42, 1, 0.76}, WHITE, Opt.of("life", kingLife - 0.3, "spinRate", -20.0, "alpha", 0.7));
                 RuneKit.godRays(sp, level, base, 2.2, 4, WHITE, WHITE, Opt.of("h", 14.0, "life", 1.0, "colors",
@@ -260,6 +264,8 @@ final class RuneSpiritKing {
         }
         RuneKit.later(3, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
+            double[][] cs = RuneKit.colorOf("spirit");
+            RuneBoost.impact(level, z, cs[0], cs[1], r); // 0.50.0 2D 강화 (초월 나머지): 원소 붕괴의 터짐
             for (int i = 0; i < 4; i++) {
                 RuneKit.novaRing(level, z, r * (0.25 + 0.1 * i), 1.8 + 0.4 * i, cols[i], WHITE, Opt.of("life", 0.55 + 0.05 * i));
             }

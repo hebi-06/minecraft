@@ -292,6 +292,7 @@ final class RuneBody {
             Vec3 cc = sp.position();
             bodyCast(sp, r, k, 1.4);
             RuneKit.ultFlashFor(sp, level, cc, "awakening", "flash", Opt.empty());
+            RuneBoost.bloom(level, cc, col, white, radius); // 0.50.0 2D 강화 (초월 나머지): 빛기둥이 몸에 닿아 각성하는 순간의 빛
             RuneKit.later(1, () -> {
                 RuneKit.domainSigil(level, cc, 5.4, "holy", col, white, Opt.of("life", 1.4, "spinRate", 50.0, "grow", 0.3, "alpha", 0.85));
                 if (!sp.isRemoved()) RuneKit.skyFlare(level, RuneKit.skyPoint(sp, cc, 12, 20, 6, 22), 3.6, col, white, Opt.of("life", 0.7));

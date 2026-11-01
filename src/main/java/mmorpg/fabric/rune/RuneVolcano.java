@@ -560,6 +560,7 @@ final class RuneVolcano {
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.ultFlashFor(sp, level, aim, "grandEruption", "flash", Opt.empty());
+            RuneBoost.impact(level, aim, LAVA, CORE, radius); // 0.50.0 2D 강화 (초월 나머지): 대분화의 터짐 (화산 · 용암 기둥은 블록 표시라 후광 없음)
             Vec3 top = V.up(vc, 5.6);
             geyser(sp, level, V.up(vc, 4.8), 2.4, 7.0, 8);
             for (int j = 0; j < 5; j++) {

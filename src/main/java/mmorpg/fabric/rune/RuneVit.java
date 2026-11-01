@@ -347,9 +347,14 @@ final class RuneVit {
         // 눈앞 문장 (화면 위쪽, 1인칭에서 보임)
         Vec3 eye0 = sp.getEyePosition();
         Vec3 view0 = sp.getViewVector(1F);
-        RuneKit.rfx(level0, "emblem", V.up(V.add(eye0, view0, 2.8), 0.45), Opt.of("size", 0.62, "life", 0.9, "grow", 0.35, "fade", 0.55));
+        Vec3 emAt = V.up(V.add(eye0, view0, 2.8), 0.45);
+        Opt emO = Opt.of("size", 0.62, "life", 0.9, "grow", 0.35, "fade", 0.55);
+        // 0.50.0 2D 강화 (초월 나머지): 문장 후광 — 미리 칠한 그림이라 천공의 눈처럼 물들이지 않고 (흰색) 1.35배 · 옅게
+        RuneBoost.aura(level0, "emblem", emAt, emO, RuneKit.WHITE, 1.35, 0.42);
+        RuneKit.rfx(level0, "emblem", emAt, emO);
         SkillFx.burst(level0, V.up(c0, 1), crimson, 2.0, 0.4);
         RuneKit.selfCue(sp, crimson, gold, true);
+        RuneBoost.bloom(level0, c0, crimson, gold, radius); // 0.50.0 2D 강화 (초월 나머지): 맹약을 맺는 순간의 빛
         SkillFx.vanilla(level0, "minecraft:totem_particle", V.up(c0, 1));
         SkillFx.play(level0, "random.totem", c0, 0.9, 0.9);
         SkillFx.play(level0, "mob.wither.spawn", c0, 1.8, 0.25);
@@ -396,7 +401,11 @@ final class RuneVit {
                 if (!RuneKit.aliveSince(sp, alive)) return;
                 RuneKit.bodyAura(sp, crimson, Opt.of("n", 4, "alpha", 0.68));
                 if (tt % 12 == 0) RuneKit.auraCue(sp, tt % 24 != 0 ? gold : crimson, 2);
-                if (tt % 4 == 0) RuneKit.rfx(sp.level(), "emblem", V.up(sp.position(), 2.95), Opt.of("size", 0.42, "life", 0.24, "vel", RuneKit.bodyVel(sp)));
+                if (tt % 4 == 0) {
+                    Opt ho = Opt.of("size", 0.42, "life", 0.24, "vel", RuneKit.bodyVel(sp));
+                    RuneBoost.aura(sp.level(), "emblem", V.up(sp.position(), 2.95), ho, RuneKit.WHITE, 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 머리 위 문장 후광
+                    RuneKit.rfx(sp.level(), "emblem", V.up(sp.position(), 2.95), ho);
+                }
             });
         }
         Tasks.later(ticks, () -> {

@@ -336,6 +336,7 @@ final class RuneGravity {
                 if (!RuneKit.sameLife(sp, life)) return;
                 miniHole(level, c, 1.0 * sc, 0.25, Opt.of("grow", -0.9, "spinRate", 900.0, "noCore", true)); // 안으로 꺼짐
                 collapseFx(level, c, floor, radius, 0, sc);
+                RuneBoost.impact(level, floor, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 안으로 꺼지며 터진 자리의 땅
                 SkillFx.play(level, "random.explode", c, 0.7, 1.5);
                 SkillFx.play(level, "mob.shulker.bullet.hit", c, 1.2, 0.7);
                 for (LivingEntity e : Kit.around(sp, c, radius, 2.5)) {
@@ -402,6 +403,7 @@ final class RuneGravity {
                 RuneKit.shakeAround(level, sp.position(), 8, 0.2, 0.25);
             }
             Map<Long, Integer> landed = new HashMap<>(); // 틱 → 그 틱에 내리꽂힌 수 (파티클 예산)
+            boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 처음 내리꽂혀 맞은 적에게만
             for (LivingEntity e : alive) {
                 slamStreak(level, Kit.bodyPoint(e), 3.5);
                 slamDown(sp, e, life, x -> {
@@ -410,7 +412,10 @@ final class RuneGravity {
                     landed.put(now, n + 1);
                     slamFx(level, x.position(), 1.4, sp, n);
                     SkillFx.play(level, "mace.heavy_smash_ground", x.position(), 0.9, 0.9);
-                    RuneKit.runeHit(sp, x, P, mult, r.stat());
+                    if (RuneKit.runeHit(sp, x, P, mult, r.stat()) > 0 && !boomed[0]) {
+                        boomed[0] = true; // 0.50.0 2D 강화 (아래 등급 터짐): 처음 내리꽂혀 맞은 적의 발밑 (마지막 타격)
+                        RuneBoost.impact(level, x.position(), glow, core, 2.0, r.grade());
+                    }
                 });
             }
         });
@@ -465,6 +470,7 @@ final class RuneGravity {
             if (!RuneKit.sameLife(sp, life)) return;
             miniHole(level, hole, 1.5 * sc, 0.3, Opt.of("grow", -0.9, "spinRate", 900.0, "noCore", true)); // 안으로 꺼짐
             collapseFx(level, hole, g, radius, 0.4, sc);
+            RuneBoost.impact(level, g, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 붕괴의 터짐
             SkillFx.play(level, "random.explode", g, 0.8, 1.2);
             SkillFx.play(level, "mob.warden.sonic_boom", g, 0.6, 1.3);
             RuneKit.shakeAround(level, g, 12, 0.3, 0.3);
@@ -541,6 +547,7 @@ final class RuneGravity {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 pc = sp.position();
             RuneKit.zonePulse(level, pc, glow, radius, 0.5);
+            RuneBoost.impact(level, pc, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 한꺼번에 내리꽂는 순간 (가운데 = 나)
             SkillFx.rune(level, V.up(c, sky), Opt.of("size", radius * 0.85, "life", 0.3, "color", RuneKit.WHITE, "alpha", 0.9, "grow", 0.3, "rate", 0.0, "spin", 0.0));
             RuneKit.rfx2(level, "sun", sigil, Opt.of("size", 1.9 * RuneKit.nearK(sp, sigil, 3.5, 0.5), "life", 0.3, "grow", 0.4, "fade", 0.7, "spin", -gap * 9.0),
                     RuneKit.WHITE, core);

@@ -149,12 +149,18 @@ final class RuneReaper {
         SkillFx.play(level, "entity.player.attack.sweep", sp.position(), 0.6, 1.0);
         SkillFx.play(level, "item.trident.throw", sp.position(), 0.6, 0.8);
         SkillFx.play(level, "mob.phantom.flap", sp.position(), 1.4, 0.6);
+        boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적에게만
         for (Kit.LineHit h : RuneKit.lineTargets(sp, from, d, len, k.num("width"))) {
             LivingEntity e = h.e();
             int when = Math.max(0, (int) Math.round(h.t() / speed * 20));
             RuneKit.later(when, () -> {
                 if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) <= 0) return;
+                if (!boomed[0]) { // 0.50.0 2D 강화 (아래 등급 터짐): 초승달에 처음 맞은 적의 발밑
+                    boomed[0] = true;
+                    Vec3 foot = e.position();
+                    RuneBoost.impact(level, new Vec3(foot.x, RuneKit.groundAt(level, foot, foot.y - 1.2), foot.z), glow, core, 2.0, r.grade());
+                }
                 cut(sp, level, e, glow, core, 1.0);
                 SkillFx.play(level, "mob.phantom.bite", e.position(), 1.2, 0.6);
                 bleed(sp, r, e, P, k, (int) Math.max(10, k.numOr("dotGap", 20)), life);
@@ -198,6 +204,7 @@ final class RuneReaper {
                         "delay", 0.5, "color", glow, "alpha", 0.9));
             }
             RuneKit.zonePulse(level, V.add(c, f, 1.5), BLOOD, radius * 0.6, 0.35);
+            if (i == hits - 1) RuneBoost.impact(level, V.add(c, f, 1.5), glow, core, radius * 0.6, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 낫질 (앞 땅)
             SkillFx.play(level, "entity.player.attack.sweep", c, back ? 0.8 : 0.65, 1.0);
             SkillFx.play(level, "mace.smash_air", c, 0.7, 0.6);
             List<LivingEntity> got = new ArrayList<>();
@@ -277,6 +284,7 @@ final class RuneReaper {
             }
             if (i == hits - 1) {
                 SkillFx.burst(level, V.up(c, 1), glow, 2.2, 0.35);
+                RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 회오리
                 SkillFx.play(level, "mob.phantom.bite", c, 0.7, 0.8);
             }
         });
@@ -347,6 +355,7 @@ final class RuneReaper {
                 drops(level, b, 14, 0.45);
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) {
                     got.add(e);
+                    if (got.size() == 1) RuneBoost.impact(level, e.position(), glow, core, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 처음 터진 낙인의 발밑
                     bleed(sp, r, e, P, k, (int) Math.max(10, k.numOr("dotGap", 20)), life);
                 }
             }

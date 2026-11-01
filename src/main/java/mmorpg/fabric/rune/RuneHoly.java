@@ -86,6 +86,7 @@ final class RuneHoly {
         SkillFx.rune(level, c, Opt.of("size", 2.2, "life", 0.9, "color", glow, "alpha", 0.9, "rate", 90.0, "grow", 0.3));
         RuneKit.zonePulse(level, c, glow, k.num("radius"), 0.55);
         RuneKit.zonePulse(level, V.up(c, 1.2), core, k.num("radius") * 0.7, 0.5);
+        RuneBoost.bloom(level, c, glow, core, 2.5); // 0.50.0 2D 강화 (아래 등급 터짐): 보호막이 펼쳐지는 순간 (부드러운 터짐)
         // 큰 금빛 방패 문장: 앞 1.8칸 · 머리 위쪽 (1인칭 화면 위쪽에 보이고, 3인칭에서는 몸 앞 위)
         Vec3 em = V.up(V.add(c, Kit.facingOf(sp), 1.8), 2.55);
         double ek = RuneKit.nearK(sp, em, 3, 0.45);
@@ -145,6 +146,7 @@ final class RuneHoly {
                 "alpha", 0.95, "vel", vel), glow, RuneKit.WHITE);
         SkillFx.rune(level, c, Opt.of("size", 2.4, "life", 1.0, "color", glow, "alpha", 0.85, "rate", 60.0, "grow", 0.3));
         RuneKit.zonePulse(level, c, glow, radius, 0.6);
+        RuneBoost.bloom(level, c, glow, core, 3.0); // 0.50.0 2D 강화 (아래 등급 터짐): 정화의 빛이 내리는 순간 (부드러운 터짐)
         // 빛의 비: 둘레 (반지름 radius × 0.8 안) 에 내리꽂히는 빛줄기 12개 (3틱에 걸쳐)
         for (int i = 0; i < 12; i++) {
             final int ii = i;
@@ -183,6 +185,7 @@ final class RuneHoly {
         double[][] cs = RuneKit.colorOf("holy");
         Hammer h = new Hammer(sp, level, P, k, cs[0], cs[1]);
         h.done.add(first.getUUID());
+        h.boom = r.grade(); // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적에게 터짐 한 번
         h.fly(RuneKit.bowHand(sp), first, 0);
         SkillFx.play(level, "item.trident.throw", sp.position(), 0.8, 1);
         return true;
@@ -197,6 +200,8 @@ final class RuneHoly {
         final double[] glow;
         final double[] core;
         final Set<UUID> done = new HashSet<>();
+        /** 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적에게 낼 터짐의 룬 등급 (낸 뒤 null — 한 번 던지기에 한 번) */
+        String boom;
 
         Hammer(ServerPlayer sp, ServerLevel level, double P, Obj k, double[] glow, double[] core) {
             this.sp = sp;
@@ -233,6 +238,11 @@ final class RuneHoly {
                             "color", RuneKit.WHITE, "grow", 0.5, "fade", 0.6));
                     SkillFx.ring(level, at, d, core, 0.8, 0.3, 0);
                     SkillFx.sparks(level, at, core, 8, 5);
+                    if (boom != null) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적의 발밑 (튄 망치는 없음)
+                        Vec3 foot = e.position();
+                        RuneBoost.impact(level, new Vec3(foot.x, RuneKit.groundAt(level, foot, foot.y - 1.2), foot.z), glow, core, 2.0, boom);
+                        boom = null;
+                    }
                     SkillFx.play(level, "random.anvil_land", at, 1.4, 0.5);
                     SkillFx.play(level, "block.bell.hit", at, 1.2, 0.7);
                 }
@@ -296,6 +306,7 @@ final class RuneHoly {
             SkillFx.burst(level, V.up(c, 0.6), gold, 2.2, 0.35);
             RuneKit.novaRing(level, V.up(c, 0.05), 0.6, radius * 0.95, glow, core, Opt.of("life", 0.4));
             RuneKit.zonePulse(level, c, glow, radius, 0.45);
+            RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 착지하며 내려찍은 자리 (가장 센 한 방)
             RuneKit.glowCrack(level, c, radius * 0.8, gold, RuneKit.WHITE, Opt.of("life", 1.0));
             for (int i = 0; i < 6; i++) {
                 Vec3 d = RuneKit.turn(f, i * 60 + Kit.rand() * 14);

@@ -651,6 +651,7 @@ final class RuneTide {
             if (!RuneKit.sameLife(sp, life)) return;
             head.remove();
             RuneKit.ultFlashFor(sp, level, aim, "leviathan", "flash", Opt.empty());
+            RuneBoost.impact(level, aim, WATER, FOAM, radius); // 0.50.0 2D 강화 (초월 나머지): 바다뱀이 내리꽂힌 대해일의 터짐
             double sc = RuneKit.nearK(sp, V.up(aim, 2), 8, 0.4);
             crown(level, aim, 4.2 * sc, 0.9, 1.0);
             RuneKit.rfx(level, "fountain", V.up(aim, 4.2 * sc), Opt.of("size", 4.4 * sc, "life", 0.9, "fade", 0.5, "color", WATER, "alpha", 0.95, "frames", 4.0,

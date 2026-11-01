@@ -557,6 +557,7 @@ final class RuneGladiator {
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.ultFlashFor(sp, level, aim, "warChains", "flash", Opt.empty());
+            RuneBoost.impact(level, aim, STEEL, CORE, radius); // 0.50.0 2D 강화 (초월 나머지): 철퇴가 내리꽂힌 자리의 터짐 (사슬 기둥 · 철퇴는 블록 표시라 후광 없음)
             RuneKit.novaRing(level, aim, 1.8, radius * 0.9, STEEL, CORE, Opt.of("life", 0.6));
             RuneKit.glowCrack(level, aim, radius * 1.05, STEEL, CORE, Opt.of("life", 1.8, "v", 1.0));
             SkillFx.fx(level, "rpg:ground_crack", V.up(aim, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.1, "life", 1.6, "color", DARK,

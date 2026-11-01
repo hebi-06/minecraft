@@ -49,7 +49,7 @@ final class RuneBoost {
     /** 터짐 (반지름 r — 룬의 영역 크기): 번쩍임 · 고리 둘 · 충격파 셋 · 땅 빛살 열여섯 · 불티 · 빛 알갱이 · 흔들림 */
     static void impact(ServerLevel level, Vec3 at, double[] glow, double[] core, double r) {
         Vec3 mid = V.up(at, 1.0);
-        RuneKit.skyFlare(level, V.up(at, 1.3), r * 1.05, glow, core, Opt.of("life", 0.5, "grow", 0.8));
+        RuneKit.skyFlare(level, V.up(at, 1.3), r * 1.05, glow, core, nearOwner(level, V.up(at, 1.3), r * 1.05).with("life", 0.5, "grow", 0.8));
         RuneKit.novaRing(level, at, r * 0.3, r * 0.95, glow, core, Opt.of("life", 0.45));
         RuneKit.later(3, () -> RuneKit.novaRing(level, at, r * 0.2, r * 0.6, core, RuneKit.WHITE, Opt.of("life", 0.7)));
         for (int i = 0; i < 3; i++) {
@@ -66,12 +66,60 @@ final class RuneBoost {
         RuneKit.shakeAround(level, at, 24, 0.6, 0.5);
     }
 
+    /**
+     * 0.50.0 아래 등급 룬의 터짐 (impact 를 등급만큼 줄임 — 초월 > 영웅 > 고귀 > 희귀 > 일반): 번쩍임 · 고리 · (고귀 이상) 충격파 · 땅 빛살 · 불티 · 빛 알갱이 ·
+     * (영웅) 흔들림. grade = 룬 등급 ("transcend" 는 impact 그대로), r = 룬의 영역 반지름 (한 대상이면 약 2.5)
+     */
+    static void impact(ServerLevel level, Vec3 at, double[] glow, double[] core, double r, String grade) {
+        int t = switch (grade) {
+            case "common" -> 1;
+            case "rare" -> 2;
+            case "noble" -> 3;
+            case "hero" -> 4;
+            default -> 5;
+        };
+        if (t >= 5) {
+            impact(level, at, glow, core, r);
+            return;
+        }
+        double k = 0.25 + 0.15 * t; // 일반 0.4 · 희귀 0.55 · 고귀 0.7 · 영웅 0.85
+        RuneKit.skyFlare(level, V.up(at, 1.1), r * k, glow, core, nearOwner(level, V.up(at, 1.1), r * k).with("life", 0.3 + 0.03 * t, "grow", 0.6));
+        RuneKit.novaRing(level, at, r * 0.2, r * (0.45 + 0.1 * t), glow, core, Opt.of("life", 0.35 + 0.03 * t));
+        if (t >= 2) RuneKit.later(3, () -> RuneKit.novaRing(level, at, r * 0.15, r * (0.3 + 0.05 * t), core, RuneKit.WHITE, Opt.of("life", 0.5)));
+        for (int i = 0; i < t - 2; i++) {
+            final int ii = i;
+            RuneKit.later(i * 2, () -> SkillFx.shock(level, at, ii % 2 == 0 ? glow : core, r * (0.55 + 0.3 * ii), 0.45 + 0.1 * ii));
+        }
+        int rays = 2 + 2 * t; // 일반 4 · 희귀 6 · 고귀 8 · 영웅 10
+        double off = Kit.rand() * 360;
+        for (int i = 0; i < rays; i++) {
+            Vec3 d = RuneKit.turn(new Vec3(1, 0, 0), off + i * 360.0 / rays + Kit.rand() * 8);
+            SkillFx.fx(level, "rpg:light_cut", V.add(V.up(at, 0.1), d, r * 0.5), Opt.of("dir", d, "size", r * (0.25 + 0.05 * t), "thick", 0.3, "life", 0.45, "color",
+                    i % 2 == 0 ? glow : core, "alpha", 0.9));
+        }
+        SkillFx.sparks(level, V.up(at, 0.9), core, 4 + 3 * t, 6 + t);
+        motes(level, at, glow, r, 1 + t);
+        if (t >= 4) RuneKit.shakeAround(level, at, 16, 0.3, 0.35);
+    }
+
     /** 부드러운 터짐 (버프 · 회복): 번쩍임 · 고리 둘 · 빛 알갱이 — 흔들림 · 충격파 없음 */
     static void bloom(ServerLevel level, Vec3 at, double[] glow, double[] core, double r) {
-        RuneKit.skyFlare(level, V.up(at, 1.3), r * 0.8, glow, core, Opt.of("life", 0.45, "grow", 0.6));
+        RuneKit.skyFlare(level, V.up(at, 1.3), r * 0.8, glow, core, nearOwner(level, V.up(at, 1.3), r * 0.8).with("life", 0.45, "grow", 0.6));
         RuneKit.novaRing(level, at, r * 0.25, r * 0.8, glow, core, Opt.of("life", 0.5));
         RuneKit.later(3, () -> RuneKit.novaRing(level, at, r * 0.15, r * 0.5, core, RuneKit.WHITE, Opt.of("life", 0.7)));
         motes(level, at, glow, r, 14);
+    }
+
+    /**
+     * 0.50.0 터짐의 번쩍임이 쓴 사람의 눈 가까이 (번쩍임 크기 × 0.8 + 2.5칸 안) 면 그 사람의 1인칭에서만 숨김 (view 1 — 3인칭 · 다른 사람에게는 보임): 대상 바로 뒤로
+     * 옮겨 가는 룬 · 발밑의 부드러운 터짐이 1인칭 화면을 하얗게 덮지 않게
+     */
+    static Opt nearOwner(ServerLevel level, Vec3 flare, double size) {
+        int own = Tasks.owner();
+        if (own == 0) return Opt.empty();
+        net.minecraft.world.entity.Entity e = level.getEntity(own);
+        if (e == null || e.getEyePosition().distanceTo(flare) > size * 0.8 + 2.5) return Opt.empty();
+        return Opt.of("view", 1.0, "owner", (double) own);
     }
 
     /** 위로 튀는 빛 알갱이 n 개 (반지름 r 안 땅에서) */
@@ -134,8 +182,14 @@ final class RuneBoost {
         MARKED.put(e.getId(), now);
         double k = tierK(c < 0 ? "" : tag.substring(c + 1));
         double[][] col = RuneKit.colorOf(fam);
-        double size = (0.75 + Kit.bodyPad(e) * 0.6) * k * 0.9;
+        double size = (0.8 + Kit.bodyPad(e) * 0.6) * k * 1.15;
+        // 몸 가운데에 두면 몸에 가려 보이지 않음 (첫 영상) → 쓴 사람 쪽 몸 앞 (반폭 + 0.15칸)
         Vec3 b = Kit.bodyPoint(e);
+        net.minecraft.world.entity.Entity caster = Tasks.owner() != 0 ? level.getEntity(Tasks.owner()) : null;
+        if (caster != null && caster != e) {
+            Vec3 to = V.flat(V.sub(caster.position(), e.position()));
+            if (V.len(to) > 1e-3) b = V.add(b, V.unit(to), e.getBbWidth() / 2 + 0.15);
+        }
         double tilt = row == 7 ? 0 : Kit.rand() * 40 - 20; // 혼은 위로 솟으므로 돌리지 않음
         two(level, "jhits", MARK_FRAMES, row * 12, b, 0.32, Opt.of("size", size, "spin", tilt, "fade", 0.25), col[0], col[1]);
         double a = Math.min(1, 0.55 + k * 0.3);

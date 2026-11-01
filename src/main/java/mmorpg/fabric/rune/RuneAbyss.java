@@ -259,6 +259,7 @@ public final class RuneAbyss {
         // ---- 낙인 (charge 틱): 반지름 안 적마다 사슬 둘 · 머리 위 낙인 · 번쩍임 → 낙인
         RuneKit.later(charge, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
+            RuneBoost.bloom(level, c, WINE, PINK, radius); // 0.50.0 2D 강화 (초월 나머지): 낙인이 찍히는 순간의 빛 (피해 없는 약화 룬 — 터짐 대신 부드럽게)
             brandAll(sp, level, cast, c, radius, up, cut, ticks, fin);
         });
         return true;

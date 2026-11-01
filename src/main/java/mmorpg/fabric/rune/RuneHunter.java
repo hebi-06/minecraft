@@ -432,7 +432,9 @@ final class RuneHunter {
                 double e = 1 - (1 - u) * (1 - u);
                 Vec3 at = V.add(V.lerp(high, hover, e), V.UP, Math.sin(tt * 0.25) * 0.25);
                 double s = 2.0 + 2.6 * e;
-                beast(level, at, WOLF, Opt.of("size", s, "life", 0.14, "alpha", 0.55 + 0.45 * e, "fade", 0.0));
+                Opt wo = Opt.of("size", s, "life", 0.14, "alpha", 0.55 + 0.45 * e, "fade", 0.0);
+                RuneBoost.auraCell(level, "beast", at, wo, WILD, WOLF[0], 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 늑대왕 후광
+                beast(level, at, WOLF, wo);
                 if (tt % 6 == 0) RuneKit.skyFlare(level, V.add(at, f, 0.4), s * 0.7, WILD, CORE, Opt.of("life", 0.3, "alpha", 0.6));
                 if (tt % 4 == 0) SkillFx.particle(level, ParticleTypes.GLOW, at, 6, s * 0.4, 0.02);
             });
@@ -473,12 +475,15 @@ final class RuneHunter {
         RuneKit.later(crushAt - 4, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 d = V.sub(V.up(aim, 1.5), hover);
-            beast(level, hover, WOLF, Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.2, "size", 4.6, "life", 0.2, "grow", 0.2, "fade", 0.1));
+            Opt wo = Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.2, "size", 4.6, "life", 0.2, "grow", 0.2, "fade", 0.1);
+            RuneBoost.auraCell(level, "beast", hover, wo, WILD, WOLF[0], 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 내리꽂히는 늑대왕 후광
+            beast(level, hover, WOLF, wo);
             SkillFx.play(level, "mob.enderdragon.flap", hover, 0.5, 1.0);
         });
         RuneKit.later(crushAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.ultFlashFor(sp, level, aim, "beastKing", "flash", Opt.empty());
+            RuneBoost.impact(level, aim, WILD, CORE, radius); // 0.50.0 2D 강화 (초월 나머지): 늑대왕이 짓밟은 터짐
             double sc = RuneKit.nearK(sp, V.up(aim, 2), 8, 0.4);
             // 발자국 (발가락 넷 + 발바닥 — 땅의 충격 고리)
             Vec3 side = V.rightOf(f);

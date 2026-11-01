@@ -283,8 +283,11 @@ final class RuneBow {
         for (int t = 0; t <= draw; t += 4) {
             final int tt = t;
             // 시위를 당긴 정도 (빛 0~3)
-            RuneKit.later(tt, () -> RuneKit.rfx2(level, "bow", center, Opt.of("size", 2.1, "life", tt >= draw ? 0.32 : 0.24, "cell",
-                    Math.min(3, Math.floor(tt / draw * 4))), glow, gold, new int[] {0, RuneKit.BOW_CORE}, null));
+            RuneKit.later(tt, () -> {
+                Opt bo = Opt.of("size", 2.1, "life", tt >= draw ? 0.32 : 0.24, "cell", Math.min(3, Math.floor(tt / draw * 4)));
+                RuneBoost.auraCell(level, "bow", center, bo, glow, 0, 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 하늘의 활 후광
+                RuneKit.rfx2(level, "bow", center, bo, glow, gold, new int[] {0, RuneKit.BOW_CORE}, null);
+            });
         }
         SkillFx.rune(level, c0, Opt.of("size", 2.0, "life", draw / 20 + 0.3, "color", glow, "alpha", 0.8, "rate", 90.0, "grow", 0.2));
         SkillFx.play(level, "beacon.power", center, 1.6, 0.8);
@@ -297,7 +300,7 @@ final class RuneBow {
         RuneKit.domainSigil(level, c0, 4.2, "holy", glow, gold, Opt.of("life", (draw + 6) / 20, "spinRate", -40.0, "grow", 0.2, "alpha", 0.75));
         Set<UUID> hit = new HashSet<>();
         RuneKit.later(draw, () -> {
-            RuneKit.rfx2(level, "arrow", V.up(center, 1.2), Opt.of("dir", V.UP, "speed", 40.0, "size", 1.4, "life", 0.3), glow, gold);
+            RuneBoost.rfx2a(level, "arrow", V.up(center, 1.2), Opt.of("dir", V.UP, "speed", 40.0, "size", 1.4, "life", 0.3), glow, gold); // 0.50.0 2D 강화 (초월 나머지)
             RuneKit.rfx(level, "prop", V.up(center, 0.4), Opt.of("size", 1.3, "life", 0.3, "cell", (double) RuneKit.RFX.get("glint")[0], "color", RuneKit.WHITE,
                     "grow", 0.6, "fade", 0.6));
             SkillFx.burst(level, center, core, 1.6, 0.3);
@@ -314,15 +317,18 @@ final class RuneBow {
                     Vec3 g = e.position();
                     int drop = 5;
                     RuneKit.streak(level, V.up(g, 14), V.up(g, 0.1), core, 0.05, drop / 20.0, 0.6, 0); // 떨어질 자리 빛줄기
-                    RuneKit.rfx2(level, "arrow", V.up(g, 14), Opt.of("dir", V.DOWN, "speed", 12.6 / (drop / 20.0), "size", 1.9, "life", drop / 20.0), glow, gold);
+                    // 0.50.0 2D 강화 (초월 나머지): 떨어지는 · 꽂힌 거대한 화살 후광 (rfx2a)
+                    RuneBoost.rfx2a(level, "arrow", V.up(g, 14), Opt.of("dir", V.DOWN, "speed", 12.6 / (drop / 20.0), "size", 1.9, "life", drop / 20.0), glow, gold);
                     // 꽂힌 화살 (촉이 땅속): 떨어지는 화살이 끝나기 1틱 전 (깜빡임 없게)
-                    RuneKit.later(drop - 1, () -> RuneKit.rfx2(level, "arrow", V.up(g, 1.5), Opt.of("dir", V.DOWN, "size", 1.9, "life", 0.95, "fade", 0.45), glow,
+                    RuneKit.later(drop - 1, () -> RuneBoost.rfx2a(level, "arrow", V.up(g, 1.5), Opt.of("dir", V.DOWN, "size", 1.9, "life", 0.95, "fade", 0.45), glow,
                             gold));
                     RuneKit.later(drop, () -> {
                         if (sp.isRemoved()) return;
                         Vec3 at = V.up(g, 0.9);
                         SkillFx.burst(level, at, glow, 2.0, 0.32);
                         SkillFx.burst(level, at, gold, 1.0, 0.24);
+                        // 0.50.0 2D 강화 (초월 나머지): 마지막 화살이 꽂히는 터짐 (한 번 — 대상 발밑, 반지름 splash · 적어도 3)
+                        if (ii == list.size() - 1) RuneBoost.impact(level, g, glow, gold, Math.max(3.0, k.num("splash")));
                         RuneKit.godRays(sp, level, g, 0, 1, glow, gold, Opt.of("h", 13.0, "life", 0.55, "skipNear", true)); // 화살이 꽂힌 자리의 빛기둥
                         RuneKit.zonePulse(level, g, glow, k.num("splash"), 0.4);
                         for (int j = 0; j < 6; j++) {

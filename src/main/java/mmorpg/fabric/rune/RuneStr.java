@@ -47,6 +47,7 @@ final class RuneStr {
             RuneKit.zonePulse(level, c, glow, radius, 0.45);
             RuneKit.zonePulse(level, c, core, radius * 0.55, 0.3);
             SkillFx.burst(level, V.up(c, 0.4), glow, 1.3, 0.3);
+            RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 내려친 자리
             SkillFx.fx(level, "rpg:ground_crack", V.up(c, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.1, "life", 1.2, "color", CRACK,
                     "alpha", 0.9));
             RuneKit.rockRing(sp, level, c, radius * 0.7, 6, 0.55, glow, Opt.of("life", 0.8));
@@ -102,6 +103,7 @@ final class RuneStr {
             SkillFx.fx(level, "rpg:whirlpool", V.up(c, 0.1), Opt.of("dir", V.ZERO, "size", radius * 0.9, "life", 0.5, "spin", i * 60.0, "speed", -420.0, "color", dust,
                     "alpha", 0.5));
             RuneKit.zonePulse(level, c, glow, radius * (0.85 + 0.075 * i), 0.4);
+            if (i == (int) k.num("hits") - 1) RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 회오리
             SkillFx.rune(level, c, Opt.of("size", radius * 0.8, "life", 0.5, "color", glow, "alpha", 0.7, "rate", 360.0, "grow", 0.2));
             SkillFx.play(level, "item.trident.riptide_" + Math.min(3, i + 1), c, 1.0, 0.8);
             SkillFx.play(level, "mace.smash_air", c, 0.9 + 0.1 * i, 0.7);
@@ -163,6 +165,7 @@ final class RuneStr {
                 }
                 if (ss == length) {
                     RuneKit.zonePulse(level, p, glow, width * 1.8, 0.45);
+                    RuneBoost.impact(level, p, glow, core, width * 1.8, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 균열 끝에서 바위가 터지는 자리
                     RuneKit.rockRing(sp, level, p, 1.3, 5, 0.75, glow, Opt.of("life", 1.0));
                     RuneKit.rockBurst(level, V.up(p, 0.5), 5, 6, 0.24);
                     SkillFx.sparks(level, V.up(p, 0.4), core, 8, 5);
@@ -214,6 +217,7 @@ final class RuneStr {
             SkillFx.shock(level, c, glow, 2.0, 0.35);
             RuneKit.zonePulse(level, c, core, radius * 0.7, 0.5);
             RuneKit.zonePulse(level, c, glow, radius, 0.65);
+            RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 착지하며 망치로 내려찍은 자리
             SkillFx.fx(level, "rpg:ground_crack", V.up(c, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.3, "life", 1.6, "color",
                     new double[] {0.36, 0.14, 0.05}, "alpha", 0.95));
             RuneKit.rockRing(sp, level, c, radius * 0.62, 8, 0.8, glow, Opt.of("life", 1.1, "minDist", 1.8));

@@ -73,6 +73,7 @@ final class RuneStorm {
         SkillFx.fx(level, "rpg:magic_circle_flash", hand, Opt.of("size", 0.35, "life", 0.2, "spin", Kit.rand() * 360, "progress", 1.0, "color", glow, "alpha", 1.0));
         RuneKit.plasmaOrb(level, V.add(hand, sp.getViewVector(1F), 0.7), 0.15, glow, Opt.of("life", 0.2));
         double gap = k.num("gap");
+        boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적에게만
         for (int i = 0; i < n; i++) {
             final int ii = i;
             LivingEntity e = chain.get(i);
@@ -88,7 +89,11 @@ final class RuneStorm {
                 SkillFx.burst(level, to, glow, 1.3, 0.25);
                 SkillFx.sparks(level, to, core, 6, 5);
                 SkillFx.play(level, "ambient.weather.lightning.impact", to, 1.6 + ii * 0.1, 0.25);
-                if (!e.isRemoved()) RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat());
+                if (!e.isRemoved() && RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0 && !boomed[0]) {
+                    boomed[0] = true; // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적의 발밑
+                    Vec3 foot = e.position();
+                    RuneBoost.impact(level, new Vec3(foot.x, RuneKit.groundAt(level, foot, foot.y - 1.2), foot.z), glow, core, 2.0, r.grade());
+                }
             });
         }
         return true;
@@ -124,6 +129,7 @@ final class RuneStorm {
         // 도착: 번쩍 + 눈앞 고리 (1인칭)
         SkillFx.burst(level, V.up(end, 1), core, 1.0, 0.25);
         RuneKit.zonePulse(level, end, glow, 2.2, 0.35);
+        RuneBoost.impact(level, end, glow, core, 2.2, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 도착한 자리
         SkillFx.ring(level, V.add(V.up(end, 1.5), f, 0.9), f, glow, 1.0, 0.3, 2.5);
         List<Vec3> shocked = new ArrayList<>();
         for (Kit.LineHit h : path) {
@@ -184,6 +190,7 @@ final class RuneStorm {
             }
             SkillFx.burst(level, V.up(g, 1), glow, 2.2, 0.35);
             RuneKit.zonePulse(level, g, glow, radius, 0.45);
+            RuneBoost.impact(level, g, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 감옥이 닫히는 자리
             SkillFx.play(level, "ambient.weather.lightning.impact", g, 1.2, 0.5);
             SkillFx.play(level, "mob.ravager.stun", g, 1.0, 0.8);
             List<LivingEntity> stunned = new ArrayList<>();
@@ -283,6 +290,7 @@ final class RuneStorm {
                     "life", 0.2));
             SkillFx.burst(level, V.up(at, 0.5), core, 1.4, 0.25);
             RuneKit.zonePulse(level, at, glow, splash, 0.35);
+            if (i == 0) RuneBoost.impact(level, at, glow, core, splash, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 첫 번개가 떨어진 자리 (번개마다는 아님)
             SkillFx.play(level, "ambient.weather.lightning.impact", at, 1.0 + Kit.rand() * 0.3, 0.45);
             for (LivingEntity e : Kit.around(sp, at, splash, 3)) {
                 if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) struck.put(e.getUUID(), i);

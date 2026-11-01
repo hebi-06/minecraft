@@ -428,6 +428,8 @@ final class RuneGlacier {
             if (!RuneKit.sameLife(sp, life)) return;
             // 번쩍임은 첨탑이 다 솟은 뒤 짧게 (사진 검토: 기본 번쩍임 · 6돌의 긴 머묾이 솟는 첨탑을 덮음)
             RuneKit.later(2, () -> RuneKit.ultFlashFor(sp, level, c, FN, "flash", Opt.of("time", FLASH_TIME.clone())));
+            // 0.50.0 2D 강화 (초월 나머지): 빙하 붕괴의 터짐 — 번쩍임과 같은 틱 (첨탑이 다 솟은 뒤). 얼음 결정 · 첨탑은 블록 표시라 후광 없음
+            RuneKit.later(2, () -> RuneBoost.impact(level, c, ICE, CORE, R));
             RuneKit.novaRing(level, c, R * 0.3, 3.2, ICE, CORE, Opt.of("life", 0.6));
             RuneKit.later(2, () -> RuneKit.novaRing(level, c, R * 0.2, 4.0, CORE, RuneKit.WHITE, Opt.of("life", 0.55)));
             RuneKit.glowCrack(level, c, R * 1.05, DEEP, ICE, Opt.of("life", (SHATTER + 30) / 20.0, "fade", 0.5, "v", 1.0));

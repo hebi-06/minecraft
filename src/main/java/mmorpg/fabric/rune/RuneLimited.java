@@ -154,8 +154,9 @@ final class RuneLimited {
 
     /** 구슬 그림 (rpg:rfx_orb — 빛 = 스탯 색 · 심지 흰빛, 소용돌이가 돎) */
     static void orbFx(ServerLevel level, Vec3 at, Orb o, double size, double alpha, double life, int i) {
-        RuneKit.rfx2(level, "orb", at, Opt.of("size", size, "life", life, "frames", 4.0, "fps", 10.0, "loop", true, "phase", (double) i, "fade", 0.3, "alpha", alpha),
-                o.color(), WHITE, new int[] {0, 4}, alpha);
+        Opt oo = Opt.of("size", size, "life", life, "frames", 4.0, "fps", 10.0, "loop", true, "phase", (double) i, "fade", 0.3, "alpha", alpha);
+        if (o.share() > 0) RuneBoost.aura(level, "orb", at, oo, o.color(), 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 구슬 후광 (빛 칸 0 ~ 3 · 몫이 없는 빛 점은 빼고)
+        RuneKit.rfx2(level, "orb", at, oo, o.color(), WHITE, new int[] {0, 4}, alpha);
     }
 
     /** 구슬 크기 (반지름 칸): 비율이 클수록 큼 (빛 점은 작게) */
@@ -274,6 +275,7 @@ final class RuneLimited {
             if (!RuneKit.sameLife(sp, life)) return;
             double sc = RuneKit.nearK(sp, V.up(g, 1), 8, 0.4);
             RuneKit.ultFlashFor(sp, level, g, "arcanaUnity", "flash", Opt.empty());
+            RuneBoost.impact(level, g, PEARL, WHITE, radius); // 0.50.0 2D 강화 (초월 나머지): 귀일 폭발의 터짐
             RuneKit.streak(level, V.up(g, h), V.up(g, 0.2), WHITE, 0.9, 0.3, 1.0, 0);
             for (int i = 0; i < 4; i++) {
                 final int ii = i;
@@ -399,7 +401,11 @@ final class RuneLimited {
                 if (!RuneKit.sameLife(sp, life)) return;
                 double left = hold - ii * 3 / 20.0;
                 boolean polaris = ii == 7;
-                RuneKit.skyFlare(level, st[ii], polaris ? 1.9 : 1.45, STAR_GLOW, STAR_CORE, Opt.of("life", left, "grow", 0.0, "fade", 0.15, "spinRate", 25.0));
+                // 0.50.0 2D 강화 (초월 나머지): 별 후광 — skyFlare 가 스스로 고르던 기울기 (0 ~ 45°) 를 여기서 골라 별 · 후광에 같이 (빛살이 겹치게)
+                double spin = Kit.rand() * 45;
+                RuneBoost.aura(level, "flare", st[ii], Opt.of("size", polaris ? 1.9 : 1.45, "life", left, "grow", 0.0, "fade", 0.15, "spin", spin, "spinRate", 25.0),
+                        STAR_GLOW, 1.35, 0.42);
+                RuneKit.skyFlare(level, st[ii], polaris ? 1.9 : 1.45, STAR_GLOW, STAR_CORE, Opt.of("life", left, "grow", 0.0, "fade", 0.15, "spin", spin, "spinRate", 25.0));
                 SkillFx.burst(level, st[ii], STAR_CORE, 0.9, 0.3);
                 SkillFx.play(level, "note.chime", st[ii], pitch[ii], 1.0);
                 if (polaris) SkillFx.play(level, "random.levelup", st[ii], 1.8, 0.5);
@@ -463,8 +469,8 @@ final class RuneLimited {
             // 떨어짐 (8틱): 큰 별 + 꼬리
             double len = V.len(V.sub(g, c));
             Vec3 d = V.unit(V.sub(g, c));
-            RuneKit.rfx2(level, "flare", c, Opt.of("dir", d, "speed", len / 0.4, "size", 2.8, "life", 0.4, "fade", 0.1, "spinRate", 90.0), STAR_GLOW, STAR_CORE,
-                    new int[] {0, 1}, null);
+            // 0.50.0 2D 강화 (초월 나머지): 떨어지는 큰 별 후광 (rfx2a — 칸 {0, 1} · 심지 불투명도 null 은 rfx2 의 기본값 그대로)
+            RuneBoost.rfx2a(level, "flare", c, Opt.of("dir", d, "speed", len / 0.4, "size", 2.8, "life", 0.4, "fade", 0.1, "spinRate", 90.0), STAR_GLOW, STAR_CORE);
             RuneKit.flyStreak(level, c, V.up(g, 0.3), len / 0.4, STAR_GLOW, STAR_CORE, 2.4, 0.7);
             SkillFx.play(level, "item.trident.thunder", g, 1.5, 0.6);
         });
@@ -472,6 +478,7 @@ final class RuneLimited {
             if (!RuneKit.sameLife(sp, life)) return;
             double sc = RuneKit.nearK(sp, V.up(g, 1), 8, 0.4);
             RuneKit.ultFlashFor(sp, level, g, "sevenStars", "flash", Opt.empty());
+            RuneBoost.impact(level, g, STAR_GLOW, STAR_CORE, radius); // 0.50.0 2D 강화 (초월 나머지): 큰 별이 떨어진 자리의 터짐
             RuneKit.novaRing(level, g, radius * 0.4, 2.2, STAR_GLOW, STAR_CORE, Opt.of("life", 0.6));
             RuneKit.later(2, () -> RuneKit.novaRing(level, g, radius * 0.25, 3.0, STAR_CORE, WHITE, Opt.of("life", 0.55)));
             RuneKit.godRays(sp, level, g, radius * 0.6, 10, STAR_GLOW, STAR_CORE, Opt.of("h", 18.0, "life", 1.0, "skipNear", true));

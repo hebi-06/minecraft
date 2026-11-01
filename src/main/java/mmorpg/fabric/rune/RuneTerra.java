@@ -342,15 +342,19 @@ final class RuneTerra {
         RuneKit.later(charge, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.ultFlashFor(sp, level, TT, "earthSplitter", "flash", Opt.empty());
+            // 0.50.0 2D 강화 (초월 나머지): 대검이 박힌 자리의 터짐 — 땅 위 (tip0, TT 는 땅속 TIP_BURY), 반지름 = 박힘 충격 고리 4.5 (직선 룬이라 radius 없음).
+            // 대검 (아이템 표시) · 들린 땅 판 (블록 표시) 은 3D 라 후광 없음
+            RuneBoost.impact(level, tip0, AMBER, MOLTEN, 4.5);
             RuneKit.shakeAround(level, TT, L + 8, 0.6, 0.6);
             SkillFx.play(level, "item.mace.smash_ground_heavy", TT, 0.55, 1.6);
             SkillFx.play(level, "entity.generic.explode", TT, 0.6, 1.2);
             SkillFx.play(level, "block.anvil.land", TT, 0.5, 0.7);
             SkillFx.play(level, "entity.warden.sonic_boom", c, 0.6, 0.35);
-            SkillFx.shock(level, TT, AMBER, 3.2, 0.5);
-            SkillFx.shock(level, TT, DUST, 5.0, 0.7);
-            RuneKit.novaRing(level, TT, 1.2, 4.5, AMBER, MOLTEN, Opt.of("life", 0.45));
-            RuneKit.glowCrack(level, TT, 3.6, AMBER, MOLTEN, Opt.of("life", (endAt - charge) / 20.0, "fade", 0.25, "v", 1.0));
+            // 0.50.0 땅 위 (tip0) 에 — TT 는 칼끝이 박힌 땅속 (0.35칸 아래) 이라 충격파 · 고리 · 금이 땅에 묻혀 보이지 않았음
+            SkillFx.shock(level, tip0, AMBER, 3.2, 0.5);
+            SkillFx.shock(level, tip0, DUST, 5.0, 0.7);
+            RuneKit.novaRing(level, tip0, 1.2, 4.5, AMBER, MOLTEN, Opt.of("life", 0.45));
+            RuneKit.glowCrack(level, tip0, 3.6, AMBER, MOLTEN, Opt.of("life", (endAt - charge) / 20.0, "fade", 0.25, "v", 1.0));
             RuneKit.rockBurst(level, V.up(TT, 0.6), 16, 9, 0.34);
             SkillFx.fx(level, "rpg:dust", V.up(TT, 1.2), Opt.of("size", 4.0, "life", 1.1, "color", DUST, "alpha", 0.5));
             SkillFx.burst(level, V.up(tip0, 0.4), AMBER, 3.0, 0.35);

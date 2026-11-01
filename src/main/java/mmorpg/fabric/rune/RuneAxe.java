@@ -364,6 +364,7 @@ final class RuneAxe {
         SkillFx.burst(level0, V.up(c0, 1), glow, 2.2, 0.4);
         RuneKit.zonePulse(level0, c0, BLOOD, radius, 0.6);
         RuneKit.selfCue(sp, BLOOD, core, true);
+        RuneBoost.bloom(level0, c0, glow, core, radius); // 0.50.0 2D 강화 (초월 나머지): 광폭화하는 순간의 빛
         SkillFx.play(level0, "mob.ravager.roar", c0, 0.7, 1);
         SkillFx.play(level0, "mob.enderdragon.growl", c0, 1.4, 0.4);
         SkillFx.shake(sp, 0.2, 0.3);
@@ -392,8 +393,9 @@ final class RuneAxe {
                         Vec3 pos = new Vec3(cc.x + Math.cos(ang) * 2.3, cc.y + 1.0, cc.z + Math.sin(ang) * 2.3);
                         // 앞 (1인칭 화면) 을 지나는 도끼는 흐리게 — 화면을 덮지 않게
                         boolean ahead = V.dot(V.flat(V.sub(pos, cc)), Kit.facingOf(sp)) > 0.5;
-                        RuneKit.rfx2(sp.level(), "prop", pos, Opt.of("size", 0.74, "life", 0.14, "spin", (double) ((i * 140 + ss * 90 + jj * 180) % 360), "alpha",
-                                ahead ? 0.5 : 0.95), jj == 1 ? BLOOD : glow, core, AXE, null);
+                        Opt ao = Opt.of("size", 0.74, "life", 0.14, "spin", (double) ((i * 140 + ss * 90 + jj * 180) % 360), "alpha", ahead ? 0.5 : 0.95);
+                        RuneBoost.auraCell(sp.level(), "prop", pos, ao, jj == 1 ? BLOOD : glow, AXE[0], 1.35, 0.42); // 0.50.0 2D 강화 (초월 나머지): 도끼 후광
+                        RuneKit.rfx2(sp.level(), "prop", pos, ao, jj == 1 ? BLOOD : glow, core, AXE, null);
                     });
                 }
             }

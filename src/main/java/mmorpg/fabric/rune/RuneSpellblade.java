@@ -384,7 +384,7 @@ final class RuneSpellblade {
                 double q = (tt + 2.0) / charge;
                 Vec3 hilt = V.up(V.add(sp.position(), f, 2.6), 0.4);
                 double ls = 1.5 + q * 4.5;
-                RuneKit.rfx2(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), glow, core);
+                RuneBoost.rfx2a(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), glow, core); // 0.50.0 2D 강화 (초월 나머지)
                 for (int sd : new int[] {-1, 1}) {
                     Vec3 a = V.add(V.up(hilt, 1 + q * 2.5), V.rightOf(f), sd * (2.6 - q * 1.6));
                     SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.scale(V.rightOf(f), -sd), "speed", 3.0, "size", 0.16, "grow", 0.5, "life", 0.25,
@@ -434,10 +434,11 @@ final class RuneSpellblade {
                 RuneKit.later(i, () -> {
                     double a = deg * Math.PI / 180;
                     Vec3 dir = V.unit(V.add(V.scale(V.UP, Math.cos(a)), f, Math.sin(a)));
-                    RuneKit.rfx2(level, "sword", V.add(hilt, dir, len / 2), Opt.of("dir", dir, "size", len / 2, "life", 0.08), glow, core);
+                    RuneBoost.rfx2a(level, "sword", V.add(hilt, dir, len / 2), Opt.of("dir", dir, "size", len / 2, "life", 0.08), glow, core); // 0.50.0 2D 강화 (초월 나머지)
                 });
             }
-            RuneKit.later(3, () -> RuneKit.rfx2(level, "sword", V.add(hilt, f, len / 2), Opt.of("dir", f, "size", len / 2, "life", 0.55, "fade", 0.5), glow, core));
+            // 0.50.0 2D 강화 (초월 나머지): 눕힌 검에도 후광
+            RuneKit.later(3, () -> RuneBoost.rfx2a(level, "sword", V.add(hilt, f, len / 2), Opt.of("dir", f, "size", len / 2, "life", 0.55, "fade", 0.5), glow, core));
             SkillFx.fx(level, "rpg:light_cut", V.up(V.add(start, f, 3), 2.2), Opt.of("dir", V.UP, "size", 2.6, "thick", 0.35, "life", 0.3, "color", core, "alpha", 1.0));
             Vec3 mid = V.add(start, f, Math.min(len, length) * 0.55);
             double wk = k.num("width") / 2.4; // 폭을 따라 (기본 2.4칸 — 8단계 6돌은 넓음)
@@ -449,6 +450,7 @@ final class RuneSpellblade {
                 });
             }
             RuneKit.later(3, () -> {
+                RuneBoost.impact(level, mid, glow, core, cross + 1); // 0.50.0 2D 강화 (초월 나머지): 검이 내리꽂혀 십자로 터지는 순간
                 for (int sd : new int[] {-1, 1}) for (double s = 1.2; s <= cross; s += 1.2) SkillFx.burst(level, V.up(V.add(mid, side, sd * s), 0.7), glow, 1.2, 0.35);
                 SkillFx.fx(level, "rpg:magic_circle_flash", V.up(mid, 0.15), Opt.of("size", 2.4, "life", 0.45, "spin", Kit.rand() * 360, "progress", 1.0, "color", glow,
                         "alpha", 1.0));
@@ -561,10 +563,12 @@ final class RuneSpellblade {
             if (st.left <= 0) IMBUES.remove(sp.getUUID());
         }
         int own = RuneKit.enter(sp); // 0.48.2 참격 판의 1인칭 나눔 (평타 뒤 — 룬을 쓰는 중이 아님)
+        String tg = Tasks.tag("spellblade:common"); // 0.50.0 계열의 맞은 자리 (RuneBoost.mark — 마검 부여 평타는 작게)
         try {
             arcaneWave(sp, victim, part.add());
         } finally {
             RuneKit.leave(own);
+            Tasks.tag(tg);
         }
         int left = st != null ? Math.max(0, st.left) : 0;
         Notify.notify(sp, left > 0 ? imbueGems(left) + " §7마검 부여 남은 평타 " + left + "번" : "§7마검 부여를 모두 썼습니다", 16);

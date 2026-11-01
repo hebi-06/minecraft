@@ -124,13 +124,12 @@ final class RuneEndless {
                 Vec3 planted = swordAt(c, R, ii, swords, SWORD_Y);
                 Vec3 ground = swordAt(c, R, ii, swords, 0.1);
                 // 하늘에서 떨어짐 (0.15초) → 땅에 꽂힘 (칼끝이 아래 · 바깥으로 조금 기욺 — 모일 때까지)
-                RuneKit.rfx2(level, "sword", top, Opt.of("dir", V.DOWN, "speed", (SWORD_TOP - SWORD_Y) / 0.15, "size", SWORD_SIZE, "life", 0.15), INK, EDGE);
+                swordAura(level, top, Opt.of("dir", V.DOWN, "speed", (SWORD_TOP - SWORD_Y) / 0.15, "size", SWORD_SIZE, "life", 0.15)); // 0.50.0 2D 강화 (초월 나머지): 경계 검 후광
                 RuneKit.later(3, () -> {
                     if (!RuneKit.sameLife(sp, life)) return;
                     Vec3 out = V.unit(V.sub(new Vec3(planted.x, c.y, planted.z), c));
                     Vec3 tilt = V.unit(V.add(V.DOWN, out, 0.14));
-                    RuneKit.rfx2(level, "sword", planted, Opt.of("dir", tilt, "size", SWORD_SIZE, "life", Math.max(0.2, (converge - drop - 3) / 20.0), "fade", 0.04),
-                            INK, EDGE);
+                    swordAura(level, planted, Opt.of("dir", tilt, "size", SWORD_SIZE, "life", Math.max(0.2, (converge - drop - 3) / 20.0), "fade", 0.04)); // 0.50.0 2D 강화 (초월 나머지): 꽂힌 경계 검 후광
                     SkillFx.sparks(level, ground, EDGE, 5, 3);
                     RuneKit.novaRing(level, ground, 0.3, 1.3, CRIMSON, EDGE, Opt.of("life", 0.3));
                     if (ii % 2 == 0) SkillFx.play(level, "item.trident.hit_ground", ground, 1.1 + Kit.rand() * 0.3, 0.7);
@@ -185,7 +184,7 @@ final class RuneEndless {
                 Vec3 out = V.unit(V.sub(new Vec3(p.x, c.y, p.z), c));
                 Vec3 to = V.up(V.add(c, out, GATHER_R), 1.0); // 한가운데 둘레 (시전자 눈 앞을 덮지 않게 GATHER_R 칸 밖에서 멈춤)
                 Vec3 d = V.sub(to, p);
-                RuneKit.rfx2(level, "sword", p, Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.3, "size", SWORD_SIZE, "life", 0.4, "fade", 0.25), INK, EDGE);
+                swordAura(level, p, Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.3, "size", SWORD_SIZE, "life", 0.4, "fade", 0.25)); // 0.50.0 2D 강화 (초월 나머지): 모이는 검 후광
             }
             SkillFx.play(level, "item.trident.riptide_1", c, 0.7, 1.0);
             SkillFx.play(level, "mob.breeze.charge", c, 0.8, 0.8);
@@ -198,6 +197,8 @@ final class RuneEndless {
             Vec3 b = V.add(m, side, R + 1.5);
             sweep(level, a, b, 6, 0.15);
             RuneKit.later(3, () -> RuneKit.ultFlashFor(sp, level, c, "endlessSlash", "flash", Opt.of("time", FLASH_TIME.clone())));
+            // 0.50.0 2D 강화 (초월 나머지): 영역 한가운데의 터짐 — 번쩍임과 같은 틱 (일섬 줄이 다 그어진 뒤 — 터짐에 묻히지 않게)
+            RuneKit.later(3, () -> RuneBoost.impact(level, c, CRIMSON, EDGE, R));
             SkillFx.burst(level, m, EDGE, 2.2, 0.3);
             RuneKit.novaRing(level, c, R * 0.3, 3.4, CRIMSON, EDGE, Opt.of("life", 0.5));
             RuneKit.glowCrack(level, c, R * 0.95, INK, CRIMSON, Opt.of("life", 2.2, "fade", 0.6, "v", 1.0));
@@ -292,5 +293,11 @@ final class RuneEndless {
                 });
             });
         }
+    }
+
+    /** 0.50.0 2D 강화 (초월 나머지): 먹빛 경계 검 + 붉은 후광 (검의 빛깔 겹이 먹빛이라 같은 빛깔 후광은 그림자처럼 보임 → 핏빛 후광) */
+    private static void swordAura(ServerLevel level, Vec3 at, Opt o) {
+        RuneBoost.aura(level, "sword", at, o, CRIMSON, 1.35, 0.42);
+        RuneKit.rfx2(level, "sword", at, o, INK, EDGE);
     }
 }

@@ -463,8 +463,8 @@ final class RuneAssassin {
         // 2차 강화 — 예고: 한밤의 하늘 · 대상 뒤 하늘에 떠오르는 거대한 초승달 · 대상 발밑의 칼날 문양 (자홍)
         RuneKit.ultSkyFor(sp, level, target.position(), "moonAssassin", delay + 34, null);
         Vec3 moonAt = RuneKit.skyPoint(sp, target.position(), 9, 20, 6, 22);
-        RuneKit.rfx2(level, "moon", moonAt, Opt.of("size", 4.4, "life", (delay + 6) / 20.0, "grow", 0.12, "spin", -20.0, "alpha", 0.95, "fade", 0.25), MOON,
-                RuneKit.WHITE);
+        RuneBoost.rfx2a(level, "moon", moonAt, Opt.of("size", 4.4, "life", (delay + 6) / 20.0, "grow", 0.12, "spin", -20.0, "alpha", 0.95, "fade", 0.25), MOON,
+                RuneKit.WHITE); // 0.50.0 2D 강화 (초월 나머지): 하늘의 초승달 후광
         RuneKit.domainSigil(level, target.position(), 3.4, "blade", glow, MOON, Opt.of("life", (delay + 2) / 20.0, "spinRate", -45.0, "grow", 0.2,
                 "alpha", 0.8, "fade", 0.15));
         // 달빛 표식: 대상 머리 위 초승달이 커지며 차오르고 (달 그림 + 자홍 무리), 발밑에 자홍 룬
@@ -475,8 +475,8 @@ final class RuneAssassin {
             RuneKit.later(t, () -> {
                 if (target.isRemoved() || sp.isRemoved()) return;
                 Vec3 top = V.up(target.getEyePosition(), 2.2);
-                RuneKit.rfx2(level, "moon", top, Opt.of("size", 0.9 + tt * 0.03, "life", 0.24, "spin", -20.0, "alpha", 0.55 + (0.45 * tt) / delay), MOON,
-                        RuneKit.WHITE);
+                RuneBoost.rfx2a(level, "moon", top, Opt.of("size", 0.9 + tt * 0.03, "life", 0.24, "spin", -20.0, "alpha", 0.55 + (0.45 * tt) / delay), MOON,
+                        RuneKit.WHITE); // 0.50.0 2D 강화 (초월 나머지): 달빛 표식 후광
                 if (tt % 8 == 0) SkillFx.fx(level, "rpg:light_cut", V.up(target.position(), 2.6), Opt.of("dir", V.DOWN, "size", 1.2, "thick", 0.08, "life", 0.3,
                         "color", MOON, "alpha", 0.6));
             });
@@ -495,14 +495,15 @@ final class RuneAssassin {
             shadowPuff(level, sp.position(), glow);
             // 발동: 자홍 번쩍임 · 하늘의 달이 갈라짐 → 섬광 · 대상 둘레로 퍼지는 고리 (1틱 뒤)
             RuneKit.ultFlashFor(sp, level, at, "moonAssassin", "flash", Opt.empty());
+            RuneBoost.impact(level, c, glow, MOON, k.num("splash")); // 0.50.0 2D 강화 (초월 나머지): 달빛 일격의 터짐 (대상 발밑)
             RuneKit.skyPlate(sp, level, "crack", moonAt, 5, glow, MOON, Opt.of("life", 0.6, "grow", 0.5, "fade", 0.6));
             RuneKit.later(1, () -> {
                 RuneKit.skyFlare(level, moonAt, 3.6, glow, RuneKit.WHITE, Opt.of("life", 0.5));
                 RuneKit.novaRing(level, c, 1.2, 3.5, glow, MOON, Opt.of("life", 0.45));
             });
             // 달이 부서지며 거대한 X + 달빛 검기 둘
-            if (tgt != null) RuneKit.rfx2(level, "moon", V.up(tgt.getEyePosition(), 2.2), Opt.of("size", 1.5, "life", 0.25, "grow", 0.5, "fade", 0.8,
-                    "spin", -20.0), MOON, RuneKit.WHITE);
+            if (tgt != null) RuneBoost.rfx2a(level, "moon", V.up(tgt.getEyePosition(), 2.2), Opt.of("size", 1.5, "life", 0.25, "grow", 0.5, "fade", 0.8,
+                    "spin", -20.0), MOON, RuneKit.WHITE); // 0.50.0 2D 강화 (초월 나머지): 부서지는 표식 후광
             SkillFx.fx(level, "rpg:slash_x", V.add(at, v, -0.6), Opt.of("dir", v, "size", 2.8, "life", 0.4, "color", glow, "alpha", 1.0));
             SkillFx.fx(level, "rpg:slash_x", V.add(at, v, -0.7), Opt.of("dir", v, "size", 2.0, "life", 0.34, "color", MOON, "alpha", 1.0));
             double wk = RuneKit.nearK(sp, at, 4, 0.45);

@@ -393,7 +393,7 @@ final class RuneElement {
                 double[][] cs = colorOf(el);
                 Vec3 hilt = V.up(V.add(sp.position(), f, 2.4), 0.5);
                 double ls = 1.6 + q * 2.6;
-                RuneKit.rfx2(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), cs[0], cs[1]);
+                RuneBoost.rfx2a(level, "sword", V.up(hilt, ls / 2), Opt.of("dir", V.UP, "size", ls / 2, "life", 0.13), cs[0], cs[1]); // 0.50.0 2D 강화 (초월 나머지)
                 // 검 둘레를 돌며 감기는 세 원소
                 for (int j = 0; j < 3; j++) {
                     double a = tt * 0.5 + j * Math.PI * 2 / 3;
@@ -444,6 +444,9 @@ final class RuneElement {
                 Vec3 endAt = V.add(from, d, len);
                 RuneKit.later(Math.round(len / speed * 20), () -> RuneKit.godRays(sp, level, new Vec3(endAt.x, RuneKit.groundAt(level, endAt, from.y - 1.1), endAt.z),
                         0, 1, glow, core, Opt.of("h", 13.0, "life", 0.6, "skipNear", true)));
+                // 0.50.0 2D 강화 (초월 나머지): 가운데 (불) 검기가 닿는 끝의 터짐 (반지름 = 검기 폭 × 2)
+                if (w == 0) RuneKit.later(Math.round(len / speed * 20), () -> RuneBoost.impact(level, new Vec3(endAt.x, RuneKit.groundAt(level, endAt, from.y - 1.1),
+                        endAt.z), glow, core, width * 2));
                 for (Kit.LineHit h : RuneKit.lineTargets(sp, from, d, len, width)) plan.add(new Planned(h.e(), el, d, Math.max(0, Math.round(h.t() / speed * 20))));
             }
             RuneKit.arc(level, V.up(V.add(sp.getEyePosition(), f, 1.6), -0.3), f, Opt.of("shape", "heavy", "flip", false, "size", 3.6, "life", 0.3, "speed", 4.0,

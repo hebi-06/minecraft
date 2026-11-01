@@ -327,7 +327,11 @@ final class RuneBlade {
                 Vec3 eye = sp.getEyePosition();
                 Vec3 f = V.flat(sp.getViewVector(1F));
                 double q = tt / charge;
-                RuneKit.waveCard(level, V.up(V.add(eye, f, 2.5), -0.2), f, V.UP, Opt.of("size", 0.7 + q * 1.7, "life", 0.13, "alpha", 0.6 + 0.4 * q), glow, white);
+                // 0.50.0 2D 강화 (초월 나머지): 모이는 검기 후광 — 참격 판 (waveCard) 이라 RuneBoost.aura (파티클) 대신 같은 판을 1.35배 · 옅게 · 빛깔로 한 장 더
+                Opt wo = Opt.of("size", 0.7 + q * 1.7, "life", 0.13, "alpha", 0.6 + 0.4 * q);
+                RuneKit.waveCard(level, V.up(V.add(eye, f, 2.5), -0.2), f, V.UP, wo.with("size", (0.7 + q * 1.7) * 1.35, "alpha", (0.6 + 0.4 * q) * 0.42), glow,
+                        glow);
+                RuneKit.waveCard(level, V.up(V.add(eye, f, 2.5), -0.2), f, V.UP, wo, glow, white);
                 Vec3 side = V.rightOf(f);
                 for (int s : new int[] {-1, 1}) {
                     Vec3 a = V.add(V.up(V.add(eye, f, 2.4), -0.15), side, s * (2.4 - q * 1.6));
@@ -349,14 +353,22 @@ final class RuneBlade {
             long ticks = Math.max(1, Math.round((len / speed) * 20));
             // 거대한 검기: 눈앞 1.6칸에서 나타나 날아감 (한 장이 날아감 — 2틱마다 다시 그리지 않음)
             double s0 = Math.min(1.6, len * 0.5);
-            RuneKit.rfx2(level, "wave", V.add(from, f, s0), Opt.of("dir", f, "speed", speed, "size", k.num("width") * 1.15, "life", Math.max(0.05, (len - s0) / speed),
-                    "fade", 0.15), glow, white);
+            Opt wo = Opt.of("dir", f, "speed", speed, "size", k.num("width") * 1.15, "life", Math.max(0.05, (len - s0) / speed), "fade", 0.15);
+            // 0.50.0 2D 강화 (초월 나머지): 거대한 검기 후광 — 날아가는 wave 는 rfx2 가 참격 판 (waveCard) 으로 그리므로 (rfx2a 의 파티클 후광은 옆에서 보면
+            // 판과 어긋남) 같은 판을 1.35배 · 옅게 · 빛깔로 한 장 더 (같은 길 · 빠르기)
+            RuneKit.waveCard(level, V.add(from, f, s0), f, V.UP, wo.with("size", k.num("width") * 1.15 * 1.35, "alpha", 0.42), glow, glow);
+            RuneKit.rfx2(level, "wave", V.add(from, f, s0), wo, glow, white);
             for (int t = 0; t <= ticks; t += 2) {
                 double s = Math.min(len, (t / 20.0) * speed);
                 RuneKit.later(t, () -> SkillFx.fx(level, "rpg:light_cut", V.up(V.add(from, f, s), -1.05), Opt.of("dir", f, "size", 1.2, "thick", 0.16, "life", 0.9,
                         "delay", 0.3, "color", glow, "alpha", 0.9)));
             }
             RuneKit.flyStreak(level, from, V.add(from, f, len), speed, glow, core, 1.4, 0.5);
+            // 0.50.0 2D 강화 (초월 나머지): 검기가 끝에 닿는 터짐 (뇌신의 창처럼 길 끝의 땅 — 반지름은 검기 크기 (폭 × 1.15) 보다 조금 크게)
+            RuneKit.later(ticks, () -> {
+                Vec3 endp = V.add(from, f, len);
+                RuneBoost.impact(level, new Vec3(endp.x, RuneKit.groundAt(level, endp, from.y - 1.2), endp.z), glow, white, k.num("width") * 1.6);
+            });
             SkillFx.play(level, "item.trident.thunder", from, 1.5, 0.7);
             SkillFx.play(level, "firework.large_blast", from, 1.2, 0.8);
             RuneKit.shakeAround(level, from, 10, 0.25, 0.3);

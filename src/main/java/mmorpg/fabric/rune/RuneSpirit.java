@@ -84,6 +84,8 @@ final class RuneSpirit {
         long busyUntil;
         /** 바람의 정령 돌진 중 (아니면 null) */
         Dash dash;
+        /** 0.50.0 2D 강화 (아래 등급 터짐): 처음 공격이 닿을 때 낼 터짐의 룬 등급 (낸 뒤 · 초월 · 정령왕 강림의 정령은 null) */
+        String boom;
 
         Spirit(String kind, ServerLevel level, double P, Obj k, long now, int left, long nextAt, int slot, Vec3 pos, Vec3 eye, String token) {
             this.kind = kind;
@@ -229,7 +231,9 @@ final class RuneSpirit {
         List<Object> kinds = k.list("spirits");
         Vec3 king = kinds.size() > 1 ? spiritKing(sp) : null;
         String life = RuneKit.lifeToken(sp);
-        spawnSpirits(sp, P, k, king);
+        List<Spirit> made = spawnSpirits(sp, P, k, king);
+        // 0.50.0 2D 강화 (아래 등급 터짐): 정령의 처음 공격이 닿는 자리에 터짐 한 번 (아래 등급만 — 초월은 그대로)
+        if (!"transcend".equals(r.grade())) for (Spirit s : made) s.boom = r.grade();
         double[][] cs = RuneKit.colorOf("spirit");
         Vec3 feet = sp.position();
         SkillFx.rune(level, feet, Opt.of("size", 1.6, "life", 0.8, "color", cs[0], "alpha", 0.9, "rate", 120.0, "progress", 1.0, "grow", 0.2));
@@ -422,6 +426,10 @@ final class RuneSpirit {
                     SkillFx.burst(level, at, glow, 1.4, 0.3);
                     SkillFx.fx(level, "rpg:fire_wall", feet, Opt.of("size", radius * 1.4, "life", 0.6, "color", glow, "alpha", 0.95, "spin", Kit.rand() * 360));
                     RuneKit.zonePulse(level, feet, glow, radius, 0.35);
+                    if (s.boom != null) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 불덩이가 터진 발밑 (정령마다 한 번)
+                        RuneBoost.impact(level, feet, glow, core, radius, s.boom);
+                        s.boom = null;
+                    }
                     SkillFx.sparks(level, at, core, 6, 5);
                     SkillFx.play(level, "fire.ignite", at, 1.2, 0.8);
                     for (LivingEntity e : spiritFoesAround(sp, at, radius)) spiritDamage(sp, e, P, mult, x -> RuneKit.burn(x, d.num("fire")), s);
@@ -445,6 +453,11 @@ final class RuneSpirit {
                     if (!RuneKit.sameLife(sp, life)) return;
                     Vec3 at = !tgt.isRemoved() ? Kit.bodyPoint(tgt) : to;
                     SkillFx.fx(level, "rpg:splash", new Vec3(at.x, at.y - 0.9 + radius * 0.75, at.z), Opt.of("size", radius, "life", 0.6, "color", glow, "alpha", 0.95));
+                    if (s.boom != null) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 물줄기가 닿은 적의 발밑 땅 (정령마다 한 번)
+                        Vec3 foot = !tgt.isRemoved() ? tgt.position() : at;
+                        RuneBoost.impact(level, new Vec3(foot.x, RuneKit.groundAt(level, foot, foot.y - 1.2), foot.z), glow, core, radius, s.boom);
+                        s.boom = null;
+                    }
                     for (int i = 0; i < 4; i++) {
                         double a = (i / 4.0) * Math.PI * 2 + Kit.rand();
                         SkillFx.fx(level, "rpg:drop", V.up(at, 0.3), Opt.of("dir", V.unit(new Vec3(Math.cos(a), 1.4, Math.sin(a))), "speed", 4.0, "size", 0.35,
@@ -480,6 +493,11 @@ final class RuneSpirit {
                         Vec3 at = Kit.bodyPoint(e);
                         SkillFx.arc(level, at, u, Opt.of("shape", "thin", "flip", ((int) t) % 2 == 1, "size", 1.2, "life", 0.2, "speed", 0.0, "spin", 40.0,
                                 "color", glow, "core", false));
+                        if (s.boom != null) { // 0.50.0 2D 강화 (아래 등급 터짐): 돌진이 처음 꿰뚫은 적의 발밑 (정령마다 한 번)
+                            Vec3 foot = e.position();
+                            RuneBoost.impact(level, new Vec3(foot.x, RuneKit.groundAt(level, foot, foot.y - 1.2), foot.z), glow, core, 2.0, s.boom);
+                            s.boom = null;
+                        }
                         spiritDamage(sp, e, P, mult, x -> RuneKit.knock(x, u, 0.3, 0.35), s);
                     });
                 }
@@ -506,6 +524,10 @@ final class RuneSpirit {
                     }
                     SkillFx.fx(level, "rpg:ground_crack", V.up(g, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", radius * 1.6, "life", 1.2,
                             "color", new double[] {0.3, 0.2, 0.1}, "alpha", 0.9));
+                    if (s.boom != null) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 바위 가시가 솟은 자리 (정령마다 한 번)
+                        RuneBoost.impact(level, g, glow, core, radius, s.boom);
+                        s.boom = null;
+                    }
                     for (int i = 0; i < 2; i++) {
                         double a = Kit.rand() * Math.PI * 2;
                         SkillFx.fx(level, "rpg:boulder", V.up(g, 0.5), Opt.of("dir", V.unit(new Vec3(Math.cos(a) * 0.5, 1, Math.sin(a) * 0.5)), "speed", 6.0,
