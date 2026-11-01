@@ -19,6 +19,7 @@ import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraits4;
+import mmorpg.fabric.job.JobTraits5;
 import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.rune.RuneCast;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -158,12 +159,29 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {6, 12, 30, 80, 161, 166, 172}, new int[] {12, 40, 163, 172}, 180, false),
     };
 
+    /** 0.51.0 2차 직업 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) */
+    private static final Case[] CASES_SM = {
+        new Case(0, new int[] {2, 12, 21, 31}, new int[] {12, 31}, 40, false),
+        new Case(1, new int[] {2, 6, 12, 15}, new int[] {3, 13}, 26, false),
+        new Case(2, new int[] {4, 14, 24, 34, 38}, new int[] {14, 34}, 46, false),
+        new Case(3, new int[] {4, 20}, new int[] {6}, 26, true),
+        new Case(4, new int[] {4, 7, 16, 26, 36, 46, 55, 60, 63}, new int[] {7, 26, 46, 61}, 74, false),
+    };
+    private static final Case[] CASES_BK = {
+        new Case(0, new int[] {2, 11, 21}, new int[] {11, 21}, 28, false),
+        new Case(1, new int[] {1, 3, 6}, new int[] {2, 6}, 18, false),
+        new Case(2, new int[] {2, 6, 11, 14}, new int[] {2, 11}, 22, false),
+        new Case(3, new int[] {4, 20}, new int[] {6}, 26, true),
+        new Case(4, new int[] {4, 7, 10, 17, 27, 37, 46, 53, 57}, new int[] {10, 27, 53}, 66, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active()) return;
-        boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")); // 0.48.2 스킬 영상
+        boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")
+                || RpgFilm.listed("filmjob4")); // 0.48.2 스킬 영상 (0.51.0 넷째 묶음 = 2차 직업)
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -418,18 +436,25 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (id.equals("paladin_smite")) judgeHusks(sp, 3); // 심판 3 + 2 → 벼락 · 기절 별
         if (id.equals("priest_hymn") || id.equals("priest_ult")) JobTraits4.setFaith(sp, 3); // 신앙 3 → +30%
         if (id.equals("guardian_bash")) JobTraits4.setCounter(sp, 30); // 반격 게이지가 첫 타에
+        // 0.51.0 2차 직업: 금빛 연격 검기 (투지 3) · 만월 강하 치명 (투지 8) · 상처 터뜨리기 · 끝나지 않는 전투 (과녁마다 상처 3)
+        if (id.equals("swordmaster_flurry")) JobTraits.setStacks(sp, 3);
+        if (id.equals("swordmaster_moon")) JobTraits.setStacks(sp, 8);
+        if (id.equals("bloodknight_burst") || id.equals("bloodknight_ult")) {
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits5.setWounds(sp, h, 3);
+        }
     }
 
     // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3)
 
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
-        {"paladin", "priest", "guardian"}};
+        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
         for (int g = 0; g < FILM_JOBS.length; g++) {
             if (!RpgFilm.listed("filmjob" + (g + 1))) continue;
+            if (g == 3) part(ctx, "film advance window", () -> advanceWindow(ctx, server, conn)); // 0.51.0 2차 전직 창 (사진)
             for (String job : FILM_JOBS[g]) {
                 part(ctx, "film " + job, () -> {
                     switch (job) {
@@ -443,6 +468,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "reaper" -> newJob(ctx, server, conn, job, "rpg:scythe_l40_hero", 10, sp -> JobTraits3.setSouls(sp, 6));
                         case "paladin" -> newJob(ctx, server, conn, job, "rpg:hammer_l40_hero", 5, sp -> judgeHusks(sp, 3));
                         case "priest" -> newJob(ctx, server, conn, job, "rpg:scepter_l40_hero", 5, sp -> JobTraits4.setFaith(sp, 3));
+                        case "swordmaster" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 8, sp -> JobTraits.setStacks(sp, 6));
+                        case "bloodknight" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
                                 sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
                     }
@@ -465,6 +492,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "reaper" -> CASES_RE;
             case "paladin" -> CASES_PA;
             case "priest" -> CASES_PR;
+            case "swordmaster" -> CASES_SM;
+            case "bloodknight" -> CASES_BK;
             default -> CASES_GU;
         };
     }
@@ -502,6 +531,43 @@ public final class RpgJobGallery implements FabricClientGameTest {
         }
         server.runOnServer(s -> JobSystem.setJob(player(s), job));
         ctx.waitTicks(5);
+    }
+
+    /** 0.51.0 2차 전직 창 (사진): 50렙 검사 → 직업 교관 → 위 줄 2차 전직 칸 → 각성 · 1차 · 반전 카드 (설명) → 확인 창 → 각성 (연출) */
+    private void advanceWindow(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
+        home(server);
+        server.runCommand("xp set @a 50 levels");
+        server.runOnServer(s -> {
+            ServerPlayer sp = player(s);
+            mmorpg.fabric.RpgPlayers.update(sp, mmorpg.fabric.RpgData.of(sp).withLvmax(50));
+            JobSystem.setJob(sp, "swordsman");
+            JobTrainer.open(sp, null);
+        });
+        if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("직업 교관"), "trainer window (advance)")) return;
+        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.ADV_SLOT));
+        shot(ctx, "job_trainer_advance_button");
+        click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.ADV_SLOT));
+        if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("2차 전직"), "advance window")) return;
+        shot(ctx, "job_advance_window");
+        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.AWAKEN_SLOT));
+        shot(ctx, "job_advance_awaken");
+        hover(ctx, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.INVERT_SLOT));
+        shot(ctx, "job_advance_invert");
+        click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(JobTrainer.AWAKEN_SLOT));
+        if (!waitScreen(ctx, sc -> sc instanceof ChestFormScreen c && c.form().title().contains("확인"), "advance confirm")) return;
+        shot(ctx, "job_advance_confirm");
+        click(ctx, conn, sc -> ((ChestFormScreen) sc).slotCenter(11));
+        ctx.waitTicks(4);
+        shot(ctx, "job_advance_04");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
+        ctx.waitTicks(10);
+        shot(ctx, "job_advance_14_3p");
+        ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
+        ctx.waitTicks(16);
+        check(server.computeOnServer(s -> "swordmaster".equals(JobSystem.jobOf(player(s)))), "advance: swordmaster (first second job free)");
+        check(ctx.computeOnClient(mc -> ClientJobBar.jobId().equals("swordmaster") && ClientJobBar.jobName().contains("시구르드(소드마스터)") && ClientJobBar.gaugeMax() == 8),
+                "client bar: 시구르드(소드마스터), 투지 max 8 — '" + ctx.computeOnClient(mc -> ClientJobBar.jobName()) + "'");
+        shot(ctx, "job_hud_swordmaster");
     }
 
     // ------------------------------------------------------------ 0.28.0 새 직업 (운영자 /job set 과 같은 길) · 자원 HUD

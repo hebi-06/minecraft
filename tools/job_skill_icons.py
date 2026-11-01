@@ -463,7 +463,9 @@ ICONS = {
 
 
 def job_colors():
-    jobs = json.load(open(JOBS, encoding="utf-8"))["jobs"]
+    d = json.load(open(JOBS, encoding="utf-8"))
+    jobs = dict(d["jobs"])
+    jobs.update(d.get("advance", {}).get("jobs", {}))  # 0.51.0 2차 직업 (각성 · 반전)
     out = {}
     for jid, j in jobs.items():
         for s in j.get("skills", []):
@@ -522,6 +524,9 @@ def main():
     # 0.30.0 성기사 · 사제 · 수호기사 아이콘 (tools/job_skill_icons_four.py)
     import job_skill_icons_four
     ICONS.update(job_skill_icons_four.ICONS)
+    # 0.51.0 2차 직업 — 소드마스터 · 블러드 나이트 아이콘 (tools/job_skill_icons_adv.py)
+    import job_skill_icons_adv
+    ICONS.update(job_skill_icons_adv.ICONS)
     slot_sprites()
     cols = job_colors()
     os.makedirs(OUT, exist_ok=True)

@@ -9,7 +9,9 @@ assets/mmorpg/motion/poses.json 의 jb_* 동작으로 쓰고, rules_more.json MO
   python3 tools/job_motions.py --check  # 쓸 것이 없는지
   python3 tools/job_motions.py --list   # 스킬 → 동작 표
 """
+import copy
 import json
+import math
 import os
 import sys
 
@@ -21,6 +23,7 @@ K.PREFIX = "jb_"
 import job_motions_a  # noqa: E402,F401
 import job_motions_b  # noqa: E402,F401
 import job_motions_c  # noqa: E402,F401
+import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -34,6 +37,10 @@ def job_skill_ids():
     out = []
     for jid in d["order"]:
         for k in d["jobs"][jid]["skills"]:
+            out.append(k["id"])
+    adv = d.get("advance", {})  # 0.51.0 2차 직업 (각성 · 반전)
+    for jid in adv.get("order", []):
+        for k in adv["jobs"][jid]["skills"]:
             out.append(k["id"])
     return out
 
@@ -85,7 +92,57 @@ AIR = {
     "jb_priest_ult_toll": [(0, 16, "float")],
     "jb_guardian_bash": [],
     "jb_guardian_ult": [(1, 9, "tuck"), (10, 14, "land")],
+    # 0.51.0 2차 직업
+    "jb_swordmaster_flurry": [(16, 22, "hop")],
+    "jb_swordmaster_moon": [(1, 4, "tuck"), (5, 29, "float"), (30, 33, "tuck"), (34, 38, "land")],
+    "jb_swordmaster_ult": [(9, 14, "tuck"), (15, 54, "float"), (55, 59, "tuck"), (60, 64, "land")],
+    "jb_bloodknight_ult": [(45, 51, "hop"), (52, 56, "land")],
 }
+
+
+def _keys(a, b, skip=()):
+    """두 열쇠의 이름 (a 의 차례 → b 에만 있는 것 — 집합은 실행마다 차례가 달라 poses.json 이 매번 바뀜)"""
+    return [k for k in list(a) + [x for x in b if x not in a] if k not in skip]
+
+
+def _mix(a, b, s):
+    """두 열쇠 값 사이 (수 · 수 목록 · 팔 {dir · bend · blade · face} — 방향은 다시 길이 1)"""
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return round(a + (b - a) * s, 4)
+    if isinstance(a, list) and isinstance(b, list) and len(a) == len(b) and all(isinstance(x, (int, float)) for x in a + b):
+        return [round(x + (y - x) * s, 4) for x, y in zip(a, b)]
+    if isinstance(a, dict) and isinstance(b, dict):
+        out = {}
+        for k in _keys(a, b):
+            if k in a and k in b:
+                v = _mix(a[k], b[k], s)
+                if k in ("dir", "blade", "face") and isinstance(v, list):
+                    n = math.sqrt(sum(x * x for x in v)) or 1.0
+                    v = [round(x / n, 4) for x in v]
+                out[k] = v
+            else:
+                out[k] = copy.deepcopy(a.get(k, b.get(k)))
+        return out
+    return copy.deepcopy(b if s >= 0.5 else a)
+
+
+def fill_key(mo, t):
+    """0.51.0 t 에 열쇠가 없으면 앞 · 뒤 열쇠를 섞은 자세로 새로 만듦 (빈 열쇠는 팔 · 몸 · 몸 돎이 쉬는 자세로 읽혀 — MotionPoses — 몸이 뜨는 동안 팔이 잠깐 풀렸음)"""
+    if t in mo.keys:
+        return
+    ts = sorted(mo.keys)
+    prev = [x for x in ts if x < t]
+    nxt = [x for x in ts if x > t]
+    if not prev and not nxt:
+        mo.keys[t] = {}
+        return
+    if not prev or not nxt:
+        src = mo.keys[prev[-1] if prev else nxt[0]]
+        mo.keys[t] = {k: copy.deepcopy(v) for k, v in src.items() if k != "ease"}
+        return
+    a, b = mo.keys[prev[-1]], mo.keys[nxt[0]]
+    s = (t - prev[-1]) / (nxt[0] - prev[-1])
+    mo.keys[t] = {k: _mix(a[k], b[k], s) if k in a and k in b else copy.deepcopy(a.get(k, b.get(k))) for k in _keys(a, b, ("ease",))}
 
 
 def air_legs():
@@ -100,7 +157,7 @@ def air_legs():
             legs = AIR_LEGS[style]
             ta, tb = mo.t(a), mo.t(b)
             for t in (ta, tb):
-                mo.keys.setdefault(t, {})
+                fill_key(mo, t)
             for t, pose in mo.keys.items():
                 if ta - 1e-9 <= t <= tb + 1e-9:
                     for k, v in legs.items():

@@ -211,4 +211,16 @@ public final class RpgJobTimingTests {
     public void timingGuardian(GameTestHelper h) {
         probe(h, "guardian");
     }
+
+    /** 0.51.0 2차 직업 — 검사 각성 시구르드(소드마스터) */
+    @GameTest(environment = "mmorpg:jt_sm", maxTicks = 2400)
+    public void timingSwordmaster(GameTestHelper h) {
+        probe(h, "swordmaster");
+    }
+
+    /** 0.51.0 2차 직업 — 검사 반전 다인슬레이프(블러드 나이트) (스킬마다 체력을 바쳐 +10% — 다 맞은 것으로 셈) */
+    @GameTest(environment = "mmorpg:jt_bk", maxTicks = 2400)
+    public void timingBloodknight(GameTestHelper h) {
+        probe(h, "bloodknight");
+    }
 }

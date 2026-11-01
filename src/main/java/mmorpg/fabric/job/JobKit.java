@@ -44,11 +44,13 @@ public final class JobKit {
         double veil = JobTraits3.firstHit(sp, j);
         // 0.30.0 수호기사 반격 게이지 (다음 공격 직업 스킬의 첫 타에 더함)
         double counter = JobTraits4.counterTake(sp, j);
-        double dmg = P * mult * veil * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        // 0.51.0 소드마스터 치명 (투지 8 에서 쓴 스킬 — 위력 × 1.3 · 치명 숫자)
+        double crit = JobTraits5.critMult(sp, j);
+        double dmg = P * mult * veil * crit * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
-        if (!Kit.applyJobDamage(sp, e, dmg, veil > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG : DamageNumbers.Style.JOB,
-                grad(j))) {
+        if (!Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
+                : DamageNumbers.Style.JOB, grad(j))) {
             if (veil > 1) JobTraits3.firstHitMissed(sp);
             if (counter > 0) JobTraits4.counterMissed(sp);
             return 0;
@@ -56,7 +58,9 @@ public final class JobKit {
         if (veil > 1) JobTraits3.firstHitLanded(sp, e, j);
         if (counter > 0) JobTraits4.counterLanded(sp, e, j, counter);
         float after = e.isRemoved() ? 0 : e.getHealth();
-        return before > after ? before - after : dmg;
+        double got = before > after ? before - after : dmg;
+        JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 · 상처
+        return got;
     }
 
     /**
@@ -87,11 +91,12 @@ public final class JobKit {
         if (e == null || !Kit.canHit(sp, e) || !(mult > 0)) return 0;
         double veil = JobTraits3.firstHit(sp, j); // 0.29.0 암영의 첫 타
         double counter = JobTraits4.counterTake(sp, j); // 0.30.0 반격 게이지
-        double dmg = P * mult * veil * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
+        double dmg = P * mult * veil * crit * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
-        if (!Kit.applyJobDamage(sp, e, dmg, veil > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG : DamageNumbers.Style.JOB,
-                grad(j), split, gap)) {
+        if (!Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
+                : DamageNumbers.Style.JOB, grad(j), split, gap)) {
             if (veil > 1) JobTraits3.firstHitMissed(sp);
             if (counter > 0) JobTraits4.counterMissed(sp);
             return 0;
@@ -99,7 +104,9 @@ public final class JobKit {
         if (veil > 1) JobTraits3.firstHitLanded(sp, e, j);
         if (counter > 0) JobTraits4.counterLanded(sp, e, j, counter);
         float after = e.isRemoved() ? 0 : e.getHealth();
-        return before > after ? before - after : dmg;
+        double got = before > after ? before - after : dmg;
+        JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 · 상처
+        return got;
     }
 
     /** {@link #hitSplit} 를 delay 틱 뒤 (그 적이 무적 시간이면 끝난 뒤로 미룸 — strike 와 같음). 들어가면 then */

@@ -62,9 +62,22 @@ public final class Jobs {
      * @param ready   스킬이 들어간 직업 (전직 창에서 고를 수 있음)
      * @param scale   검사 대비 직업 스킬 세기
      * @param color   피해 숫자 · 연출 색 두 빛 [[r, g, b], [r, g, b]] (0 ~ 1)
+     * @param base    0.51.0 1차 직업 id (1차 직업은 제 id — 2차 직업은 그 1차 직업)
+     * @param path    0.51.0 2차 전직의 길 ("" = 1차 · awaken 각성 · invert 반전)
+     * @param title   0.51.0 이명 (2차 직업만 — 표기 이명(직업명), 1차는 "")
      */
     public record Job(String id, String name, List<String> weapons, List<String> stats, String rune, boolean ready, double scale,
-            String role, String line, double[][] color, Trait trait, List<Skill> skills) {
+            String role, String line, double[][] color, Trait trait, List<Skill> skills, String base, String path, String title) {
+        /** 0.51.0 2차 직업인지 */
+        public boolean advanced() {
+            return path != null && !path.isEmpty();
+        }
+
+        /** 0.51.0 보이는 이름: 1차 = 직업 이름 ("검사"), 2차 = 이명(직업명) ("시구르드(소드마스터)") */
+        public String display() {
+            return title == null || title.isEmpty() ? name : title + "(" + name + ")";
+        }
+
         /** 칸 i 의 스킬 (없으면 null) */
         public Skill skill(int slot) {
             return slot >= 0 && slot < skills.size() ? skills.get(slot) : null;
@@ -124,8 +137,20 @@ public final class Jobs {
 
     private record Upgrade(int max, double per, List<UpStep> steps) {}
 
+    /**
+     * 0.51.0 2차 전직 (jobs.json advance)
+     *
+     * @param level  2차 전직 레벨 (최고 레벨)
+     * @param silver 각성 ↔ 반전 바꾸기 값 (은화 — 처음 2차 전직은 무료)
+     * @param dps    2차 직업의 초당 피해 = 1차 × dps (직업 맞춤)
+     * @param paths  길 이름 (awaken → 각성 · invert → 반전 — 순서대로)
+     * @param jobs   2차 직업 (id → 직업, advance.order 순서)
+     * @param upIds  2차 스킬 id → 같은 칸의 1차 스킬 id (직업 스킬 강화 기록)
+     */
+    private record Advance(int level, double silver, double dps, Map<String, String> paths, Map<String, Job> jobs, Map<String, String> upIds) {}
+
     private record Data(int changeLevel, double changeSilver, double perPoint, int[] unlock, List<String> slotRoles, Map<String, Job> jobs, Upgrade upgrade,
-            Map<String, List<UpKey>> upKeys) {}
+            Map<String, List<UpKey>> upKeys, Advance advance) {}
 
     private static final Data DATA = load();
 
@@ -141,18 +166,82 @@ public final class Jobs {
         return List.copyOf(DATA.jobs().values());
     }
 
-    /** 직업 (없으면 null — 빈 id 도 null) */
+    /** 직업 (없으면 null — 빈 id 도 null). 0.51.0 2차 직업 id 도 (swordmaster · bloodknight) */
     public static Job job(String id) {
-        return id == null || id.isEmpty() ? null : DATA.jobs().get(id);
+        if (id == null || id.isEmpty()) return null;
+        Job j = DATA.jobs().get(id);
+        return j != null ? j : DATA.advance().jobs().get(id);
     }
 
-    /** 이름 · id 로 직업 찾기 (명령어 — "검사" · "swordsman") */
+    /** 이름 · id 로 직업 찾기 (명령어 — "검사" · "swordsman" · 0.51.0 "소드마스터" · "시구르드(소드마스터)") */
     public static Job find(String nameOrId) {
         if (nameOrId == null) return null;
-        Job j = job(nameOrId.trim());
+        String w = nameOrId.trim();
+        Job j = job(w);
         if (j != null) return j;
-        for (Job x : DATA.jobs().values()) if (x.name().equals(nameOrId.trim())) return x;
+        for (Job x : DATA.jobs().values()) if (x.name().equals(w)) return x;
+        for (Job x : DATA.advance().jobs().values()) if (x.name().equals(w) || x.display().equals(w) || x.title().equals(w)) return x;
         return null;
+    }
+
+    // ------------------------------------------------------------------ 0.51.0 2차 전직 (각성 · 반전)
+
+    /** 모든 2차 직업 (advance.order 순서) */
+    public static List<Job> allAdvanced() {
+        return List.copyOf(DATA.advance().jobs().values());
+    }
+
+    /** 이 1차 직업의 2차 직업들 (각성 · 반전 순서 — 없으면 빈 목록) */
+    public static List<Job> advancedOf(String baseId) {
+        List<Job> out = new ArrayList<>();
+        for (String p : DATA.advance().paths().keySet()) {
+            Job a = advance(baseId, p);
+            if (a != null) out.add(a);
+        }
+        return List.copyOf(out);
+    }
+
+    /** 1차 직업 baseId 의 길 path (awaken · invert) 2차 직업 (없으면 null) */
+    public static Job advance(String baseId, String path) {
+        if (baseId == null || path == null) return null;
+        for (Job a : DATA.advance().jobs().values()) if (a.base().equals(baseId) && a.path().equals(path)) return a;
+        return null;
+    }
+
+    /** 이 직업의 1차 직업 (1차면 그대로 · 없으면 null) */
+    public static Job baseOf(Job j) {
+        return j == null ? null : j.advanced() ? job(j.base()) : j;
+    }
+
+    /** 2차 전직 레벨 (최고 레벨 — 50) */
+    public static int advanceLevel() {
+        return DATA.advance().level();
+    }
+
+    /** 각성 ↔ 반전 바꾸기 값 (은화 — 처음 2차 전직은 무료) */
+    public static double switchSilver() {
+        return DATA.advance().silver();
+    }
+
+    /** 2차 직업의 초당 피해 배수 (1차 × 1.2) */
+    public static double advanceDps() {
+        return DATA.advance().dps();
+    }
+
+    /** 길 이름 (awaken → 각성 · invert → 반전 · 그 밖은 "") */
+    public static String pathName(String path) {
+        return path == null ? "" : DATA.advance().paths().getOrDefault(path, "");
+    }
+
+    /** 길 순서 (awaken · invert) */
+    public static List<String> paths() {
+        return List.copyOf(DATA.advance().paths().keySet());
+    }
+
+    /** 직업 스킬 강화 기록의 열쇠: 2차 스킬은 같은 칸의 1차 스킬 id (단계가 이어짐), 나머지는 그대로 */
+    public static String upId(String skillId) {
+        if (skillId == null) return null;
+        return DATA.advance().upIds().getOrDefault(skillId, skillId);
     }
 
     /** 전직 레벨 */
@@ -298,19 +387,38 @@ public final class Jobs {
 
     private static final Map<String, Double> NORM = norms();
 
-    /** 직업마다 직업 맞춤 = Σ (배율 합 × 0.26.0 지속 보정 ÷ 쿨) ÷ Σ (배율 합 × (1 − 유틸) × 시간 보정 ÷ 쿨) — 피해 스킬만 */
+    /**
+     * 직업마다 직업 맞춤 = Σ (배율 합 × 0.26.0 지속 보정 ÷ 쿨) ÷ Σ (배율 합 × (1 − 유틸) × 시간 보정 ÷ 쿨) — 피해 스킬만. 0.51.0 2차 직업은 1차의 앞 값 (Σ 배율 합 ×
+     * 지속 보정 ÷ 쿨 — 1차의 초당 피해) × advance.dps ÷ 2차의 뒤 값 (1차보다 20% — 각성 = 반전)
+     */
     private static Map<String, Double> norms() {
         Map<String, Double> out = new LinkedHashMap<>();
+        Map<String, Double> was = new LinkedHashMap<>();
         for (Job j : DATA.jobs().values()) {
-            double was = 0, now = 0;
-            for (Skill k : j.skills()) {
-                if (k.total() <= 0 || k.cd() <= 0) continue;
-                was += k.total() * spreadMult(k) / k.cd();
-                now += k.total() * (1 - utilCost(k)) * timeMult(k) / k.cd();
-            }
-            out.put(j.id(), SPREAD == null || now <= 0 ? 1.0 : was / now);
+            double w = wasOf(j), now = nowOf(j);
+            was.put(j.id(), w);
+            out.put(j.id(), SPREAD == null || now <= 0 ? 1.0 : w / now);
+        }
+        for (Job a : DATA.advance().jobs().values()) {
+            double now = nowOf(a);
+            double w = was.getOrDefault(a.base(), 0.0) * DATA.advance().dps();
+            out.put(a.id(), SPREAD == null || now <= 0 || w <= 0 ? 1.0 : w / now);
         }
         return Map.copyOf(out);
+    }
+
+    /** Σ (배율 합 × 0.26.0 지속 보정 ÷ 쿨) — 피해 스킬만 (직업 맞춤의 기준: 1차 직업의 초당 피해) */
+    private static double wasOf(Job j) {
+        double sum = 0;
+        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0) sum += k.total() * spreadMult(k) / k.cd();
+        return sum;
+    }
+
+    /** Σ (배율 합 × (1 − 유틸) × 시간 보정 ÷ 쿨) — 피해 스킬만 */
+    private static double nowOf(Job j) {
+        double sum = 0;
+        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0) sum += k.total() * (1 - utilCost(k)) * timeMult(k) / k.cd();
+        return sum;
     }
 
     /** 직업 맞춤 (직업의 초당 피해를 지금 그대로 두는 값 — 직업이 없으면 1) */
@@ -318,10 +426,11 @@ public final class Jobs {
         return j == null ? 1 : NORM.getOrDefault(j.id(), 1.0);
     }
 
-    /** 이 스킬의 직업 (없으면 null) */
+    /** 이 스킬의 직업 (없으면 null — 0.51.0 2차 직업의 스킬이면 그 2차 직업) */
     public static Job jobOf(Skill k) {
         if (k == null) return null;
         for (Job j : DATA.jobs().values()) if (j.skills().contains(k)) return j;
+        for (Job j : DATA.advance().jobs().values()) if (j.skills().contains(k)) return j;
         return null;
     }
 
@@ -545,39 +654,79 @@ public final class Jobs {
         Obj js = root.obj("jobs");
         for (Object idObj : root.list("order")) {
             String id = String.valueOf(idObj);
-            Obj o = js.obj(id);
-            List<String> weapons = new ArrayList<>();
-            for (Object w : o.list("weapons")) weapons.add(String.valueOf(w));
-            List<String> stats = new ArrayList<>();
-            for (Object w : o.list("stats")) stats.add(String.valueOf(w));
-            List<Object> colors = o.list("color");
-            double[][] color = new double[colors.size()][];
-            for (int i = 0; i < colors.size(); i++) {
-                List<?> c = (List<?>) colors.get(i);
-                color[i] = new double[] {((Number) c.get(0)).doubleValue(), ((Number) c.get(1)).doubleValue(), ((Number) c.get(2)).doubleValue()};
-            }
-            Obj t = o.objOrNull("trait");
-            Trait trait = t == null ? null : new Trait(t.str("name"), (int) t.numOr("max", 0), t.strOr("desc", ""), t);
-            List<Skill> skills = new ArrayList<>();
-            List<Obj> ss = o.objsOrNull("skills");
-            if (ss != null) {
-                for (int i = 0; i < ss.size(); i++) {
-                    Obj k = ss.get(i);
-                    Skill sk = new Skill(i, k.strOr("id", ""), k.str("name"), k.num("cd"), k.numOr("total", 0), k.strOr("desc", ""), k);
-                    skills.add(sk);
-                    List<Obj> up = k.objsOrNull("up");
-                    if (up != null && !sk.id().isEmpty()) {
-                        List<UpKey> keys = new ArrayList<>();
-                        for (Obj u : up) keys.add(new UpKey(u.str("key"), u.str("name"), u.strOr("fmt", "x"), u.truthy("bonus")));
-                        upKeys.put(sk.id(), List.copyOf(keys));
-                    }
+            jobs.put(id, parseJob(id, js.obj(id), null, upKeys));
+        }
+        Advance advance = advance(root, jobs, upKeys);
+        return new Data((int) root.num("changeLevel"), root.num("changeSilver"), root.num("perPoint"), unlock, List.copyOf(roles), jobs, upgrade(root),
+                Map.copyOf(upKeys), advance);
+    }
+
+    /**
+     * 직업 하나 (jobs.json 꼴). base 가 있으면 0.51.0 2차 직업 — 무기 · 적용 스탯 · 룬 · scale 은 적지 않았으면 1차 그대로, base · path · title 을 읽음.
+     * 스킬의 up (강화가 곱하는 값) 은 upKeys 에 더함
+     */
+    private static Job parseJob(String id, Obj o, Job base, Map<String, List<UpKey>> upKeys) {
+        List<String> weapons = new ArrayList<>();
+        if (o.has("weapons") || base == null) for (Object w : o.list("weapons")) weapons.add(String.valueOf(w));
+        else weapons.addAll(base.weapons());
+        List<String> stats = new ArrayList<>();
+        if (o.has("stats") || base == null) for (Object w : o.list("stats")) stats.add(String.valueOf(w));
+        else stats.addAll(base.stats());
+        List<Object> colors = o.list("color");
+        double[][] color = new double[colors.size()][];
+        for (int i = 0; i < colors.size(); i++) {
+            List<?> c = (List<?>) colors.get(i);
+            color[i] = new double[] {((Number) c.get(0)).doubleValue(), ((Number) c.get(1)).doubleValue(), ((Number) c.get(2)).doubleValue()};
+        }
+        Obj t = o.objOrNull("trait");
+        Trait trait = t == null ? null : new Trait(t.str("name"), (int) t.numOr("max", 0), t.strOr("desc", ""), t);
+        List<Skill> skills = new ArrayList<>();
+        List<Obj> ss = o.objsOrNull("skills");
+        if (ss != null) {
+            for (int i = 0; i < ss.size(); i++) {
+                Obj k = ss.get(i);
+                Skill sk = new Skill(i, k.strOr("id", ""), k.str("name"), k.num("cd"), k.numOr("total", 0), k.strOr("desc", ""), k);
+                skills.add(sk);
+                List<Obj> up = k.objsOrNull("up");
+                if (up != null && !sk.id().isEmpty()) {
+                    List<UpKey> keys = new ArrayList<>();
+                    for (Obj u : up) keys.add(new UpKey(u.str("key"), u.str("name"), u.strOr("fmt", "x"), u.truthy("bonus")));
+                    upKeys.put(sk.id(), List.copyOf(keys));
                 }
             }
-            jobs.put(id, new Job(id, o.str("name"), List.copyOf(weapons), List.copyOf(stats), o.strOrNull("rune"), o.truthy("ready"), o.numOr("scale", 1),
-                    o.strOr("role", ""), o.strOr("line", ""), color, trait, List.copyOf(skills)));
         }
-        return new Data((int) root.num("changeLevel"), root.num("changeSilver"), root.num("perPoint"), unlock, List.copyOf(roles), jobs, upgrade(root),
-                Map.copyOf(upKeys));
+        String rune = o.has("rune") || base == null ? o.strOrNull("rune") : base.rune();
+        double scale = o.has("scale") || base == null ? o.numOr("scale", 1) : base.scale();
+        return new Job(id, o.str("name"), List.copyOf(weapons), List.copyOf(stats), rune, o.truthy("ready"), scale, o.strOr("role", ""), o.strOr("line", ""), color,
+                trait, List.copyOf(skills), base == null ? id : base.id(), base == null ? "" : o.str("path"), base == null ? "" : o.strOr("title", ""));
+    }
+
+    /** 0.51.0 2차 전직 (jobs.json advance — 없으면 2차 직업 없음: 레벨 무한) */
+    private static Advance advance(Obj root, Map<String, Job> jobs, Map<String, List<UpKey>> upKeys) {
+        Obj a = root.objOrNull("advance");
+        if (a == null) return new Advance(Integer.MAX_VALUE, 0, 1, Map.of(), Map.of(), Map.of());
+        Map<String, String> paths = new LinkedHashMap<>();
+        Obj ps = a.obj("paths");
+        for (String p : ps.keys()) paths.put(p, ps.str(p));
+        Map<String, Job> adv = new LinkedHashMap<>();
+        Map<String, String> upIds = new LinkedHashMap<>();
+        Obj js = a.obj("jobs");
+        for (Object idObj : a.list("order")) {
+            String id = String.valueOf(idObj);
+            Obj o = js.obj(id);
+            Job base = jobs.get(o.str("base"));
+            if (base == null) throw new IllegalStateException("jobs.advance." + id + ": no base job " + o.str("base"));
+            if (jobs.containsKey(id)) throw new IllegalStateException("jobs.advance." + id + ": id used by a first job");
+            if (!paths.containsKey(o.str("path"))) throw new IllegalStateException("jobs.advance." + id + ": unknown path " + o.str("path"));
+            Job j = parseJob(id, o, base, upKeys);
+            adv.put(id, j);
+            for (Skill k : j.skills()) {
+                Skill b = base.skill(k.slot());
+                if (b != null && !k.id().isEmpty() && !b.id().isEmpty()) upIds.put(k.id(), b.id());
+            }
+        }
+        return new Advance((int) a.num("level"), a.num("switchSilver"), a.numOr("dps", 1), java.util.Collections.unmodifiableMap(paths), java.util.Collections.unmodifiableMap(adv),
+                Map.copyOf(upIds));
     }
 
     /** 0.31.0 강화 규칙 (jobs.json upgrade — 없으면 강화 없음: max 0) */

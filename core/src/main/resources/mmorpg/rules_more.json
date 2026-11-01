@@ -1014,7 +1014,9 @@
       "paladin_ult:smash": "jb_paladin_ult_smash", "priest_heal": "jb_priest_heal", "priest_step": "jb_priest_step", "priest_hymn": "jb_priest_hymn",
       "priest_stigma": "jb_priest_stigma", "priest_ult": "jb_priest_ult", "priest_ult:toll": "jb_priest_ult_toll", "guardian_bash": "jb_guardian_bash",
       "guardian_rush": "jb_guardian_rush", "guardian_throw": "jb_guardian_throw", "guardian_throw:catch": "jb_guardian_throw_catch", "guardian_bulwark": "jb_guardian_bulwark",
-      "guardian_ult": "jb_guardian_ult",
+      "guardian_ult": "jb_guardian_ult", "swordmaster_flurry": "jb_swordmaster_flurry", "swordmaster_grani": "jb_swordmaster_grani", "swordmaster_moon": "jb_swordmaster_moon",
+      "swordmaster_heart": "jb_swordmaster_heart", "swordmaster_heart:counter": "jb_swordmaster_heart_counter", "swordmaster_ult": "jb_swordmaster_ult", "bloodknight_flurry": "jb_bloodknight_flurry",
+      "bloodknight_rush": "jb_bloodknight_rush", "bloodknight_burst": "jb_bloodknight_burst", "bloodknight_oath": "jb_bloodknight_oath", "bloodknight_ult": "jb_bloodknight_ult",
       "rune:abyssBrand": "rn_abyss_brand", "rune:arcanaUnity": "rn_arcana_unity", "rune:arcaneCut": "rn_arcane_cut",
       "rune:archangel": "rn_archangel", "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening",
       "rune:axeBoomerang": "rn_axe_boomerang", "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep",
@@ -1093,7 +1095,9 @@
       "jb_reaper_burst", "jb_reaper_avatar", "jb_reaper_ult", "jb_reaper_ult_drain", "jb_reaper_ult_close", "jb_paladin_smite",
       "jb_paladin_charge", "jb_paladin_quake", "jb_paladin_oath", "jb_paladin_ult", "jb_paladin_ult_smash", "jb_priest_heal",
       "jb_priest_step", "jb_priest_hymn", "jb_priest_stigma", "jb_priest_ult", "jb_priest_ult_toll", "jb_guardian_bash",
-      "jb_guardian_rush", "jb_guardian_throw", "jb_guardian_throw_catch", "jb_guardian_bulwark", "jb_guardian_ult"
+      "jb_guardian_rush", "jb_guardian_throw", "jb_guardian_throw_catch", "jb_guardian_bulwark", "jb_guardian_ult", "jb_swordmaster_flurry",
+      "jb_swordmaster_grani", "jb_swordmaster_moon", "jb_swordmaster_heart", "jb_swordmaster_heart_counter", "jb_swordmaster_ult", "jb_bloodknight_flurry",
+      "jb_bloodknight_rush", "jb_bloodknight_burst", "jb_bloodknight_oath", "jb_bloodknight_ult"
     ],
     "weaponMotions": [
       "wp_gram_charge", "wp_gram_descent", "wp_gram_descent_dive", "wp_solas_rush", "wp_solas_halo", "wp_solas_halo_pillar",

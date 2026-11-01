@@ -244,7 +244,9 @@ public final class MotionsTest {
         }
         for (String fn : fns) want.add("rune:" + fn);
         int jobs = 0;
-        for (Jobs.Job j : Jobs.all()) {
+        List<Jobs.Job> allJobs = new java.util.ArrayList<>(Jobs.all());
+        allJobs.addAll(Jobs.allAdvanced()); // 0.51.0 2차 직업 스킬도 동작이 있어야 함
+        for (Jobs.Job j : allJobs) {
             for (Jobs.Skill k : j.skills()) {
                 if (k.id() == null || k.id().isEmpty()) continue;
                 want.add(k.id());
@@ -265,7 +267,7 @@ public final class MotionsTest {
         }
         // 0.47.0 직업 스킬 단계 열쇠 (스킬 id:단계 — 서버가 그 순간에 다시 보냄 JobKit.motion): 그 직업 스킬이 있어야 함 · 직업 스킬 동작 (jb_)
         Set<String> jobIds = new HashSet<>();
-        for (Jobs.Job j : Jobs.all()) for (Jobs.Skill k : j.skills()) jobIds.add(k.id());
+        for (Jobs.Job j : allJobs) for (Jobs.Skill k : j.skills()) jobIds.add(k.id());
         // 0.48.0 무기 스킬 단계 열쇠 (스킬 id:단계 — 서버가 그 순간에 다시 보냄 Kit.motion): 그 무기 스킬이 있어야 함 · 무기 스킬 동작 (wp_)
         Set<String> weaponIds = new HashSet<>(want);
         weaponIds.removeAll(jobIds);
@@ -329,6 +331,8 @@ public final class MotionsTest {
         check(Motions.skillMotion("gram_charge").equals("wp_gram_charge") && Motions.skillMotion("warrior_charge").equals("jb_warrior_charge")
                 && Motions.skillMotion("warrior_charge:slam").equals("jb_warrior_charge_slam") && Motions.skillMotion("guardian_throw:catch").equals("jb_guardian_throw_catch"),
                 "dashes (0.47.0 직업 스킬은 jb_ — 돌격 끝의 내려찍기 · 방패를 받음은 단계 열쇠)");
+        check(Motions.skillMotion("swordmaster_ult").equals("jb_swordmaster_ult") && Motions.skillMotion("swordmaster_heart:counter").equals("jb_swordmaster_heart_counter")
+                && Motions.skillMotion("bloodknight_ult").equals("jb_bloodknight_ult"), "0.51.0 2차 직업 스킬 동작 (jb_ — 용의 심장 받아치기는 단계 열쇠)");
         check(Motions.skillMotion("nothing") == null, "unknown → null");
         // poses.json 과 같은 이름
         Path poses = Path.of("src/main/resources/assets/mmorpg/motion/poses.json");

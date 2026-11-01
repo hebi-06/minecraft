@@ -73,6 +73,8 @@ public final class JobSystem {
         PaladinSkills.register(); // 0.30.0
         PriestSkills.register();
         GuardianSkills.register();
+        SwordmasterSkills.register(); // 0.51.0 2차 직업 (검사 각성 · 반전)
+        BloodknightSkills.register();
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);
@@ -218,15 +220,20 @@ public final class JobSystem {
             int faithN = JobTraits4.faith(sp);
             // 0.31.0 직업 스킬 강화: 위력 × (1 + 0.1 × 단계) — 모든 타격 (회복 · 보호막 · 태세 값은 JobUpgrades.num 으로 읽는 곳에서)
             int up = JobUpgrades.level(sp, k.id());
-            double P = power(sp, job) * Jobs.damageScale(k) * JobTraitsMore.chainMult(job, chain) * boost * faith * Jobs.upMult(up);
+            // 0.51.0 블러드 나이트 「피의 갈증」: 체력을 바칠 수 있으면 위력 × (1 + 10%) — 바치는 것은 나간 뒤
+            double blood = JobTraits5.castMult(sp, job, k);
+            double P = power(sp, job) * Jobs.damageScale(k) * JobTraitsMore.chainMult(job, chain) * boost * faith * Jobs.upMult(up) * blood;
             NOTES.remove(sp.getUUID());
             JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
+            JobTraits5.beforeCast(sp, job, k); // 0.51.0 소드마스터: 투지 8 이면 이 스킬이 치명
             int move0 = JobMove.gen(sp);
             boolean ok = impl.cast(sp, job, k, P);
             // 0.50.0 새 스킬이 나가면 앞 스킬의 몸 움직임 (JobMove) 은 그만 — 새 스킬이 제 움직임을 시작했으면 이미 바뀜 (순간 이동 · 돌진이 끌려 돌아가지 않게)
             if (ok && JobMove.gen(sp) == move0) JobMove.cancel(sp);
             JobTraits3.afterCast(sp, job, k, ok);
+            String advNote = JobTraits5.afterCast(sp, job, k, ok); // 0.51.0 치명 → 투지를 씀 · 피의 갈증 → 체력을 바침
             String note = NOTES.remove(sp.getUUID());
+            if (advNote != null) note = note == null ? advNote : advNote + " §8· " + note;
             if (ok) {
                 mmorpg.fabric.motion.MotionSystem.skill(sp, k.id()); // 0.38.0 직업 스킬 동작 (MOTION.skills)
                 JobTraitsMore.chainCommit(sp, job, k, chain);
@@ -236,7 +243,7 @@ public final class JobSystem {
                 String boostText = boost > 1 ? " §6· 창끝 +" + Math.round((boost - 1) * 100) + "%" : "";
                 String faithText = faith > 1 ? " §e· 신앙 ×" + faithN + " +" + Math.round((faith - 1) * 100) + "%" : "";
                 String powerText = k.total() > 0 ? " §7(위력 " + Js.str(Math.round(P * 10) / 10.0) + chainText + boostText + faithText + "§7)" : "";
-                Notify.notify(sp, "§f" + job.name() + " §8· §b" + k.name() + (up > 0 ? " §6+" + up : "") + powerText + (note != null ? " §8· " + note : ""), 24);
+                Notify.notify(sp, "§f" + job.display() + " §8· §b" + k.name() + (up > 0 ? " §6+" + up : "") + powerText + (note != null ? " §8· " + note : ""), 24);
             }
             return ok;
         }
@@ -256,7 +263,7 @@ public final class JobSystem {
     /** JobSkills.header: 칸 위 직업 이름 · 색 */
     static JobSkills.Header header(ServerPlayer sp) {
         Jobs.Job j = job(sp);
-        return j == null ? null : new JobSkills.Header(j.id(), j.name(), Jobs.rgb(j.color()[0]), Jobs.rgb(j.color()[1]));
+        return j == null ? null : new JobSkills.Header(j.id(), j.display(), Jobs.rgb(j.color()[0]), Jobs.rgb(j.color()[1])); // 0.51.0 2차 직업은 이명(직업명)
     }
 
     /** 칸이 바뀌었으면 (또는 force) 클라이언트에 다시 보냄 */
@@ -291,8 +298,10 @@ public final class JobSystem {
     static void register(CommandDispatcher<CommandSourceStack> d) {
         for (String name : List.of("job", "직업")) {
             LiteralArgumentBuilder<CommandSourceStack> set = Commands.literal("set").requires(JobSystem::admin);
-            for (Jobs.Job j : Jobs.all()) {
-                for (String word : List.of(j.id(), j.name())) {
+            List<Jobs.Job> jobs = new java.util.ArrayList<>(Jobs.all());
+            jobs.addAll(Jobs.allAdvanced()); // 0.51.0 2차 직업 (운영자 /job set swordmaster — 2차 전직 조건 없이)
+            for (Jobs.Job j : jobs) {
+                for (String word : List.of(j.id(), j.name().replace(' ', '_'))) {
                     set.then(Commands.literal(word).executes(c -> setCmd(c, List.of(c.getSource().getPlayerOrException()), j))
                             .then(Commands.argument("targets", EntityArgument.players()).executes(c -> setCmd(c, EntityArgument.getPlayers(c, "targets"), j))));
                 }
@@ -314,9 +323,9 @@ public final class JobSystem {
     private static int setCmd(CommandContext<CommandSourceStack> c, Collection<ServerPlayer> targets, Jobs.Job j) throws CommandSyntaxException {
         for (ServerPlayer sp : targets) {
             setJob(sp, j == null ? null : j.id());
-            Notify.say(sp, j == null ? "§7직업을 지웠습니다." : "§f직업: §b" + j.name() + " §7(" + j.weaponText() + " · " + j.statText() + ")");
+            Notify.say(sp, j == null ? "§7직업을 지웠습니다." : "§f직업: §b" + j.display() + " §7(" + j.weaponText() + " · " + j.statText() + ")");
         }
-        String what = j == null ? "직업 없음" : j.name();
+        String what = j == null ? "직업 없음" : j.display();
         c.getSource().sendSuccess(() -> net.minecraft.network.chat.Component.literal(targets.size() + "명 → " + what), true);
         return targets.size();
     }
@@ -329,7 +338,7 @@ public final class JobSystem {
             return 1;
         }
         double P = power(sp, j);
-        Notify.say(sp, "§f직업 §b" + j.name() + " §7— " + j.role() + " · 무기 " + j.weaponText() + " · 적용 스탯 " + j.statText() + " · 위력 P §f"
+        Notify.say(sp, "§f직업 §b" + j.display() + " §7— " + j.role() + " · 무기 " + j.weaponText() + " · 적용 스탯 " + j.statText() + " · 위력 P §f"
                 + String.format(Locale.ROOT, "%.1f", P));
         for (int i = 0; i < JobSkills.SIZE; i++) {
             Jobs.Skill k = j.skill(i);

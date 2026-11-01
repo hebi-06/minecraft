@@ -53,7 +53,7 @@ final class JobFx3d {
     static Opt look(Jobs.Job j) {
         Opt o = Opt.of("color", JobFx.outer(j), "glow", JobFx.inner(j));
         // 0.50.0 마검사의 마력 검은 룬이 새겨진 칼날 그림 (재설계표 "룬 칼날 2D" — card_greatsword 의 새김 맥동 날, 크기와 상관없이)
-        return j != null && "spellblade".equals(j.id()) ? o.with("rune", 1.0) : o;
+        return j != null && "spellblade".equals(JobFx.fid(j)) ? o.with("rune", 1.0) : o;
     }
 
     /** a 에 b 를 덮어씀 */

@@ -75,6 +75,7 @@ public final class JobTraits {
         JobTraitsMore.init(); // 0.28.0 전사 · 매지션 · 궁수
         JobTraits3.init(); // 0.29.0 암살자 · 창술사 · 사신 (sureCrit 를 이어 받으므로 위의 sureCrit 다음)
         JobTraits4.init(); // 0.30.0 성기사 · 사제 · 수호기사
+        JobTraits5.init(); // 0.51.0 2차 직업 (소드마스터 치명 · 용의 심장 · 블러드 나이트 피의 갈증 · 회그니의 맹세)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
             JobTraits3.tickMarks(Tasks.now());
@@ -113,6 +114,7 @@ public final class JobTraits {
         JobTraitsMore.reset(sp);
         JobTraits3.reset(sp);
         JobTraits4.reset(sp);
+        JobTraits5.reset(sp);
         String p = sp.getUUID() + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
         sendGauge(sp, true);
@@ -124,6 +126,7 @@ public final class JobTraits {
         JobTraitsMore.forget(id);
         JobTraits3.forget(id);
         JobTraits4.forget(id);
+        JobTraits5.forget(id);
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
@@ -132,6 +135,7 @@ public final class JobTraits {
         JobTraitsMore.lifeEnded(id);
         JobTraits3.lifeEnded(id);
         JobTraits4.lifeEnded(id);
+        JobTraits5.lifeEnded(id);
         State st = STATES.get(id);
         if (st != null) {
             st.stacks = 0;
@@ -284,12 +288,17 @@ public final class JobTraits {
         of(sp).sureUntil = Tasks.now() + ticks;
     }
 
-    /** 이번 평타가 치명타로 확정인지 (검사 · 칼 · 섬보 뒤 — 쓰면 지움) */
+    /** 0.51.0 투지를 쓰는 직업 (검사 · 각성 소드마스터 — 반전 블러드 나이트는 피의 갈증) */
+    static boolean fervor(Jobs.Job j) {
+        return j != null && (j.id().equals("swordsman") || j.id().equals(JobTraits5.SM));
+    }
+
+    /** 이번 평타가 치명타로 확정인지 (검사 · 칼 · 섬보 뒤 — 쓰면 지움. 0.51.0 소드마스터 그라니의 질주도) */
     private static boolean sureCrit(ServerPlayer sp, Weapon w) {
         State st = STATES.get(sp.getUUID());
         if (st == null || st.sureUntil < Tasks.now() || w == null || !"sword".equals(w.type())) return false;
         Jobs.Job j = JobSystem.job(sp);
-        if (j == null || !j.id().equals("swordsman")) return false;
+        if (!fervor(j)) return false;
         st.sureUntil = 0;
         return true;
     }
@@ -390,10 +399,10 @@ public final class JobTraits {
         ServerLevel level = sp.level();
         Vec3 at = Kit.bodyPoint(victim);
         switch (j.id()) {
-            case "swordsman" -> {
+            case "swordsman", "swordmaster" -> {
                 if (!"sword".equals(w.type()) || !Combat.isMeleeWeapon(w)) return;
                 gain(sp, j);
-                if (has(bonus, KEY_MIRROR)) {
+                if (has(bonus, KEY_MIRROR) || has(bonus, JobTraits5.KEY_HEART)) {
                     // 두 번째 베기: 맞은 자리에 반대로 그은 물빛 칼날 (조금 늦게)
                     RuneKit.later(3, () -> {
                         if (victim.isRemoved()) return;
@@ -438,6 +447,7 @@ public final class JobTraits {
                 JobTraitsMore.tick(sp, j, now); // 0.28.0 분노 · 연쇄 · 호흡
                 JobTraits3.tick(sp, j, now); // 0.29.0 암영 · 창끝 · 혼
                 JobTraits4.tick(sp, j, now); // 0.30.0 수호의 맹세 회복
+                JobTraits5.tick(sp, j, now); // 0.51.0 흡혈 숫자
             }
             if (st == null || j == null) continue;
             // 태세가 끝남
@@ -451,7 +461,7 @@ public final class JobTraits {
                 JobFx3d.drop(sp, ended, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
-            if (j.id().equals("swordsman") && st.stacks > 0 && !stanceOn(st, "swordsman_mirror")) {
+            if (fervor(j) && st.stacks > 0 && !stanceOn(st, "swordsman_mirror") && !stanceOn(st, JobTraits5.HEART)) { // 0.51.0 용의 심장도 투지 유지
                 int decay = (int) j.trait().def().numOr("decay", 80);
                 if (now - st.lastGain >= decay && now - st.lastDecay >= decay) {
                     st.stacks--;
@@ -497,6 +507,8 @@ public final class JobTraits {
             // 0.29.0 암영 (1인칭 화면 가장자리의 옅은 연기) · 창벽 (앞의 창끝 셋) · 사신 현신 (등 뒤의 사신 그림자)
         } else if (JobTraits4.stanceFx(sp, j, st.stance)) {
             // 0.30.0 수호의 맹세 (등 뒤 빛의 날개) · 철옹성 (앞의 큰 빛의 방패)
+        } else if (JobTraits5.stanceFx(sp, j, st.stance)) {
+            // 0.51.0 용의 심장 (가슴의 금빛 불씨 · 칼의 금빛) · 회그니의 맹세 (칼끝에서 떨어지는 핏방울)
         } else if (st.stance.equals("archer_focus")) {
             // 정조준: 활을 든 손 앞 금빛 반짝임
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
@@ -516,7 +528,8 @@ public final class JobTraits {
         int left = st != null && st.stanceUntil > now ? (int) (st.stanceUntil - now) : 0;
         int total = st != null && st.stanceUntil > now ? st.stanceTotal : 0;
         int value = 0;
-        if (j.id().equals("swordsman")) value = st == null ? 0 : st.stacks;
+        if (fervor(j)) value = st == null ? 0 : st.stacks; // 0.51.0 소드마스터도 투지 (최대 8)
+        else if (j.id().equals(JobTraits5.BK)) value = JobTraits5.gaugeValue(sp, j); // 0.51.0 블러드 나이트 = 그 적의 상처 수
         else if (j.id().equals("spellblade")) {
             if (st != null && st.target != null) {
                 Entity e = sp.level().getEntity(st.target);

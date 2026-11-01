@@ -342,10 +342,79 @@ public final class JobsTest {
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
 
         upgrade();
+        advance();
 
         System.out.println("JobsTest: " + ok + " ok, " + BAD.size() + " failed");
         for (String b : BAD) System.out.println("  FAIL " + b);
         if (!BAD.isEmpty()) System.exit(1);
+    }
+
+    /** 직업 초당 피해 (피해 스킬의 배율 합 × 피해 배율 ÷ 재사용 대기 — 범위 보정은 밖이라 뺌) */
+    static double dps(Jobs.Job j) {
+        double sum = 0;
+        for (Jobs.Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0) sum += k.total() * Jobs.damageScale(k) / Jobs.areaMult(k) / k.cd();
+        return sum;
+    }
+
+    /** 0.51.0 2차 전직 (jobs.json advance — claude/job-advance.md): 검사의 각성 · 반전 — 모양 · 이름 · 칸 · 강화 열쇠 · 세기 (1차 × 1.2) · 무적 시간 띄움 · 시각 */
+    static void advance() {
+        Jobs.Job sw = Jobs.job("swordsman");
+        Jobs.Job sm = Jobs.job("swordmaster");
+        Jobs.Job bk = Jobs.job("bloodknight");
+        check(sm != null && bk != null && Jobs.allAdvanced().size() == 2, "advanced jobs " + Jobs.allAdvanced().size());
+        if (sm == null || bk == null) return;
+        check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
+        check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서)");
+        check(Jobs.advance("swordsman", "awaken") == sm && Jobs.advance("swordsman", "invert") == bk && Jobs.advance("swordsman", "nope") == null
+                && Jobs.advance(null, "awaken") == null, "advance(base, path)");
+        check(Jobs.baseOf(sm) == sw && Jobs.baseOf(bk) == sw && Jobs.baseOf(sw) == sw && Jobs.baseOf(null) == null, "baseOf");
+        check(sm.advanced() && bk.advanced() && !sw.advanced() && "awaken".equals(sm.path()) && "invert".equals(bk.path()) && "swordsman".equals(sm.base()), "base · path");
+        check(sm.display().equals("시구르드(소드마스터)") && bk.display().equals("다인슬레이프(블러드 나이트)") && sw.display().equals("검사"), "display 이명(직업명)");
+        check(Jobs.pathName("awaken").equals("각성") && Jobs.pathName("invert").equals("반전") && Jobs.pathName("x").isEmpty() && Jobs.paths().equals(List.of("awaken", "invert")),
+                "path names");
+        check(!Jobs.order().contains("swordmaster") && Jobs.all().size() == 11 && !Jobs.all().contains(sm), "advanced jobs are not first jobs");
+        check(Jobs.find("소드마스터") == sm && Jobs.find("시구르드(소드마스터)") == sm && Jobs.find("시구르드") == sm && Jobs.find("bloodknight") == bk
+                && Jobs.find("블러드 나이트") == bk, "find advanced");
+        Set<String> ids = new HashSet<>();
+        for (Jobs.Job j : Jobs.all()) for (Jobs.Skill k : j.skills()) ids.add(k.id());
+        double[] cds = {6, 12, 15, 30, 60};
+        for (Jobs.Job a : Jobs.allAdvanced()) {
+            Jobs.Job b = Jobs.baseOf(a);
+            check(b != null && a.weapons().equals(b.weapons()) && a.stats().equals(b.stats()) && near(a.scale(), b.scale()), a.id() + " inherits weapons · stats · scale");
+            check(a.skills().size() == Jobs.SLOTS && a.trait() != null && !a.trait().desc().isEmpty() && a.ready() && !a.title().isEmpty(), a.id() + " five skills · trait · title");
+            check(a.color().length == 2 && a.color()[0].length == 3, a.id() + " two colors");
+            for (int i = 0; i < Jobs.SLOTS; i++) {
+                Jobs.Skill k = a.skill(i);
+                check(k.slot() == i && k.cd() == cds[i] && k.id().startsWith(a.id() + "_") && !k.desc().isEmpty() && ids.add(k.id()), a.id() + " skill " + i + " " + k.id());
+                check(Jobs.upId(k.id()).equals(b.skill(i).id()), a.id() + " up id " + k.id() + " → " + Jobs.upId(k.id()));
+                check(Jobs.jobOf(k) == a, "jobOf " + k.id());
+                check((k.total() > 0) == (b.skill(i).total() > 0), a.id() + " slot " + i + " same role (damage · stance)");
+                check(Jobs.upKeys(k).size() == Jobs.upKeys(b.skill(i)).size() || i == 3, a.id() + " slot " + i + " up keys");
+            }
+            double r = dps(a) / dps(b);
+            check(near(r, 1.2, 0.005), a.id() + " dps ×" + r + " (1차 × 1.2)");
+        }
+        check(Jobs.upId("swordsman_flurry").equals("swordsman_flurry") && Jobs.upId(null) == null, "upId keeps first-job ids");
+        // 부분 합 = 배율 합
+        check(near(sum(sm.skill(0), "beats"), 5) && near(sum(sm.skill(1), "cuts"), 3) && near(sum(sm.skill(2), "hits") + sm.skill(2).num("land", 0), 9)
+                && near(sm.skill(4).num("launch", 0) + sum(sm.skill(4), "beats") + sm.skill(4).num("final", 0), 40), "swordmaster totals 5 · 3 · 9 · 40");
+        check(near(sum(bk.skill(0), "hits"), 5) && near(bk.skill(1).num("mult", 0), 3) && near(bk.skill(2).num("spin", 0) + bk.skill(2).num("burst", 0) * bk.trait().max(), 9)
+                && near(sum(bk.skill(4), "beats") + bk.skill(4).num("final", 0), 40), "bloodknight totals 5 · 3 · 4 + 1 × 상처 5 · 40");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (빠른 두 번 베기는 한 번에 넣고 숫자만 두 줄 — splits · split)
+        check(sm.skill(0).num("gap", 0) >= 10 && sm.skill(1).num("gap", 0) >= 10 && sm.skill(2).num("gap", 0) >= 10 && sm.skill(4).num("every", 0) >= 10
+                && sm.skill(4).num("finalDelay", 0) >= 10 && sm.skill(4).num("first", 0) - sm.skill(4).num("rush", 0) >= 10, "swordmaster i-frame spacing");
+        check(bk.skill(0).num("gap", 0) >= 10 && bk.skill(2).num("delay", 0) >= 10 && bk.skill(4).num("every", 0) >= 10 && bk.skill(4).num("finalDelay", 0) >= 10,
+                "bloodknight i-frame spacing");
+        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값)
+        check(near(sm.skill(2).num("first", 0) + sm.skill(2).def().list("hits").size() * sm.skill(2).num("gap", 0), sm.skill(2).num("t", 0)), "만월 강하 t 34");
+        check(near(sm.skill(4).num("first", 0) + 3 * sm.skill(4).num("every", 0) + sm.skill(4).num("finalDelay", 0), sm.skill(4).num("t", 0)), "신들의 황혼 t 60");
+        check(near(bk.skill(4).num("rush", 0) + 3 * bk.skill(4).num("every", 0) + bk.skill(4).num("finalDelay", 0), bk.skill(4).num("t", 0)), "끝나지 않는 전투 t 52");
+        check(near(bk.skill(2).num("delay", 0), bk.skill(2).num("t", 0)) && near(sm.skill(1).num("gap", 0) + 3, sm.skill(1).num("t", 0)), "상처 터뜨리기 t 10 · 그라니 t 13");
+        // 특성
+        check(sm.trait().name().equals("투지") && sm.trait().max() == 8 && near(sm.trait().def().numOr("crit", 0), 0.3), "투지 최대 8 · 치명 +30%");
+        check(bk.trait().name().equals("피의 갈증") && bk.trait().max() == 5 && near(bk.trait().def().numOr("cost", 0), 0.04) && near(bk.trait().def().numOr("leech", 0), 0.05),
+                "피의 갈증 상처 5 · 체력 4% · 흡혈 5%");
+        check(Jobs.skillLine(sm.skill(0)).startsWith("금빛 연격 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("회그니의 맹세 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
     }
 
     /** 0.50.0 직업 스킬 재설계: 유틸 값 · 시간 보정 (룬과 같은 표) · 직업 맞춤 */

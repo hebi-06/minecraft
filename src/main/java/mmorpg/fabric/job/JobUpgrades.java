@@ -122,16 +122,17 @@ public final class JobUpgrades {
         return Map.copyOf(out);
     }
 
-    /** 이 스킬의 강화 단계 (0 ~ 5) */
+    /** 이 스킬의 강화 단계 (0 ~ 5 — 0.51.0 2차 직업의 스킬은 같은 칸의 1차 스킬 기록: Jobs.upId) */
     public static int level(ServerPlayer sp, String skillId) {
         if (skillId == null || skillId.isEmpty()) return 0;
-        Integer n = levels(sp).get(skillId);
+        Integer n = levels(sp).get(Jobs.upId(skillId));
         return n == null ? 0 : n;
     }
 
     /** 단계를 정함 (0 = 지움 · 5 를 넘으면 5) — 칸을 다시 보냄 */
     public static void set(ServerPlayer sp, String skillId, int level) {
         if (sp == null || skillId == null || skillId.isEmpty()) return;
+        skillId = Jobs.upId(skillId); // 0.51.0 2차 직업의 스킬 → 같은 칸의 1차 스킬 기록 (단계가 이어짐)
         Map<String, Integer> m = new LinkedHashMap<>(levels(sp));
         int n = Jobs.upClamp(level);
         if (n <= 0) m.remove(skillId);

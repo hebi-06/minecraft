@@ -108,6 +108,11 @@ final class JobFx {
     /** 그림 칸의 고리 반지름 = 사각형 반 크기 × 0.88 (tools/job_fx_art.py ring_frame R = 칸의 0.44) */
     private static final double RING_R = 0.88;
 
+    /** 0.51.0 그림 · 소리를 고르는 직업 id: 2차 직업은 1차 직업의 그림 (색은 2차 직업 색) — 블러드 나이트의 맞은 자리만 따로 (피 튀김) */
+    static String fid(Jobs.Job j) {
+        return j == null ? "" : j.advanced() ? j.base() : j.id();
+    }
+
     // ------------------------------------------------------------ 색
 
     /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라) */
@@ -233,16 +238,20 @@ final class JobFx {
     /** 맞은 자리 (rfx_jhit): 몸 가운데 · 몸 크기에 맞춤 · 아무렇게나 기욺 */
     static void hit(LivingEntity e, Jobs.Job j, double scale) {
         if (!(e.level() instanceof ServerLevel level)) return;
-        Object[] snd = j == null ? null : HIT_SOUND.get(j.id());
+        Object[] snd = j == null ? null : HIT_SOUND.get(fid(j));
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
         Vec3 b = Kit.bodyPoint(e);
         // 0.50.0 직업마다 다른 맞은 자리 (rfx_jhits — 재설계표 "맞은 자리": 검사 은빛 베인 줄 · 전사 곰 발톱 세 줄 · 마검사 룬 균열 · 매지션 별 터짐 ·
         // 궁수 깃털 바람 · 암살자 자홍 X · 창술사 원뿔 충격 · 사신 빠져나가는 혼 · 성기사 번개 갈래 · 사제 빛 꽃 · 수호기사 육각 판 금속 섬광 — 처음 두 장 번쩍 → 흩어짐)
-        int row = j == null ? -1 : HIT_ROWS.indexOf(j.id());
+        int row = j == null ? -1 : HIT_ROWS.indexOf(fid(j));
         // 사신 (혼이 위로 솟음) 은 돌리지 않음, 나머지는 조금씩 기울임
-        double tilt = "reaper".equals(j.id()) ? 0 : Kit.rand() * 40 - 20;
-        if (row >= 0) two(level, "jhits", HITS, row * 12, b, 0.32, Opt.of("size", size * 0.9, "spin", tilt, "fade", 0.25), outer(j), inner(j));
+        double tilt = "reaper".equals(fid(j)) ? 0 : Kit.rand() * 40 - 20;
+        if (j != null && JobTraits5.BK.equals(j.id())) {
+            // 0.51.0 블러드 나이트: 맞은 자리에 피 튀김 (rfx_jblood — 베인 줄 · 튀는 핏방울) + 은빛 베인 줄 한 겹 (핏빛)
+            JobTraits5.blood(level, b, size * 1.05, j, 0.36, Opt.of("spin", tilt));
+            two(level, "jhits", HITS, 0, b, 0.3, Opt.of("size", size * 0.8, "spin", tilt, "fade", 0.25, "alpha", 0.8), outer(j), inner(j));
+        } else if (row >= 0) two(level, "jhits", HITS, row * 12, b, 0.32, Opt.of("size", size * 0.9, "spin", tilt, "fade", 0.25), outer(j), inner(j));
         else two(level, "jhit", HIT, b, 0.3, Opt.of("size", size, "spin", Kit.rand() * 360, "fade", 0.2), outer(j), inner(j));
         // 0.47.0 더 화려하게: 맞은 자리의 짧은 번쩍 (터짐 작은 장) · 튀는 불티 (직업 빛)
         two(level, "jburst2", BURST, b, 0.2, Opt.of("size", size * 0.55, "spin", Kit.rand() * 360, "alpha", 0.75, "coreAlpha", 0.9, "fade", 0.3), outer(j), inner(j));
@@ -254,7 +263,7 @@ final class JobFx {
      * 보이지 않음). o: alpha · coreAlpha · fade · view · owner · grow · vel
      */
     static void ring(ServerLevel level, Vec3 center, double radius, Jobs.Job j, boolean reverse, double life, Opt o) {
-        if (j != null && "priest".equals(j.id())) {
+        if (j != null && "priest".equals(fid(j))) {
             // 0.50.0 사제는 베는 고리 대신 빛 고리 (재설계표 "빛 고리") — 조금 바깥의 옅은 고리 한 겹
             halo(level, center, radius, j, life, o);
             double a = o.num("alpha", 1);
@@ -384,7 +393,7 @@ final class JobFx {
 
     /** 땅에 눕는 내려찍기 (rfx_jsmash): 충격 고리 반지름 radius 칸 (그림 고리 끝 = 반 크기 × 0.92) · 금 · 튀는 돌조각 */
     static void smash(ServerLevel level, Vec3 at, double radius, Jobs.Job j, double life, Opt o) {
-        if (j != null && "warrior".equals(j.id())) {
+        if (j != null && "warrior".equals(fid(j))) {
             quake(level, at, radius, j, life * 1.25, o); // 0.50.0 전사는 갈라지는 땅 · 돌조각 12장 (재설계표 "내려찍기 v2")
             return;
         }
@@ -895,7 +904,7 @@ final class JobFx {
             "reaper", "jslash_rp");
 
     static String slashName(Jobs.Job j) {
-        return j == null ? "jslash2" : SLASH_OF.getOrDefault(j.id(), "jslash2");
+        return j == null ? "jslash2" : SLASH_OF.getOrDefault(fid(j), "jslash2");
     }
 
     static int slashFrames(Jobs.Job j) {
