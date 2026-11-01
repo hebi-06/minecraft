@@ -908,77 +908,162 @@ sprite("rfx_jsmash2", "direction_z", 192, 192, 8, 4, job="warrior", zoom=2,
        desc="땅에 눕는 내려찍기: 번쩍 · 방사 결이 있는 팬 자리 · 바깥 끝 0.46 S 의 충격 고리 · 빛나는 금 일곱 + 잔가지 · 비탈 빛 돌조각 · 먼지")(smash_frame)
 
 
-# ------------------------------------------------------------ rfx_jwhirl2 (땅에 눕는 회전 칼날 — 칼날 반지름 = 반 크기 × 0.8, 이어 돌림: 8 장 = 120°)
+# ------------------------------------------------------------ rfx_jwhirl2 (땅에 눕는 회전 도끼 셋 — 바깥 날 반지름 = 반 크기 × 0.84, 이어 돌림: 8 장 = 120°)
+# 묵직한 도끼 머리 셋이 돎: 머리 뒤로 굵은 초승달 휘두름 띠 (바깥 끝 = 도끼 날 앞 끝 자리 Re) · 띠 앞 끝 = 날이 앞을 보는 수염 도끼 머리 (극좌표로 휘어 원을 따름)
+# · 날에서 바깥으로 흩뿌려지는 피 안개 방울. 옛 칼날 그림과 같은 몸 범위 (바깥 Re = 0.4 S + 4).
 
 def whirl_frame(f, S=192):
+    from job_fx_art_v2 import axe_local  # 도끼 머리 꼴 (rfx_jaxe 와 같은 수염 도끼)
     pad = Pad(S, S)
     c = S / 2
     rr, th = polar(pad, c, c)
+    X, Y = pad.grid()
     R = S * 0.4
-    Re = R + 4.0  # 날 끝 (바깥 날 — 옛 그림 띠의 바깥 끝과 같은 자리)
+    Re = R + 4.0  # 바깥 끝 (도끼 날 앞 끝이 지나는 원 — 옛 그림 띠의 바깥 끝과 같은 자리)
     base = TAU / 3 * f / 8
     core = pad.zeros()
     glow = pad.zeros()
-    # ---- 안쪽: 도는 판의 옅은 결 (세 겹 대칭으로 돎) · 가운데 고리
-    rnd = random.Random(9)
-    for i in range(4):
-        r0 = rnd.uniform(0.34, 0.72) * R
-        a0 = rnd.uniform(0, TAU / 3)
-        ln = rnd.uniform(1.3, 1.9)
-        al = rnd.uniform(0.18, 0.34)
-        for k in range(3):
-            head = base + a0 + k * TAU / 3
-            b = behind(th, head)
-            m = gauss(rr - r0, 0.55) * clamp01(1 - b / ln) ** 1.5 * (b < ln)
-            core = np.maximum(core, m * al)
-            glow = np.maximum(glow, gauss(rr - r0, 2.0) * clamp01(1 - b / ln) ** 1.2 * (b < ln) * al * 0.5)
-    glow = np.maximum(glow, gauss(rr - R * 0.62, 3.0) * 0.18)
-    core = np.maximum(core, gauss(rr - R * 0.62, 0.55) * 0.22)
-    # ---- 칼날 셋: 머리 쪽 단단한 초승달 날 (비탈 · 갈아낸 날) + 뒤로 흐려지는 잔상
-    trail = math.radians(118)
-    solid = math.radians(40)
+    P = axe_local(0.0)
+    # 도끼 로컬 (x = 자루 쪽 → 머리, -y = 날 쪽) → 극좌표: 반지름 = r0 + sc·x (자루가 가운데를 봄), 각 = 머리 + (-sc·y) / 반지름 (날이 도는 쪽 앞을 봄)
+    toe, beard = P["edge"][-1], P["edge"][0]
+    sc = (Re - 0.6 - 49.0) / (toe[0] - beard[0])
+    r0 = Re - 0.6 - sc * toe[0]
+
+    def warp(pts, head):
+        out = []
+        for x, y in pts:
+            r = r0 + sc * x
+            a = head - sc * y / max(1.0, r)
+            out.append((c + math.cos(a) * r, c + math.sin(a) * r))
+        return out
+
+    r_in = r0 + sc * beard[0]  # 수염 끝 반지름 (띠 안쪽 끝)
+    wmax = Re - r_in
+    # ---- 안쪽: 피 안개 소용돌이 (세 겹 · 머리 뒤에서 안으로 감겨 듦) · 가운데 옅은 고리
     for k in range(3):
         head = base + k * TAU / 3
+        for j, (dr, da, al) in enumerate(((0.0, 0.0, 0.32), (7.0, 0.35, 0.22), (13.0, 0.75, 0.15))):
+            pts = []
+            for i in range(28):
+                t = i / 27
+                rad = r_in - 4 - dr * 0.4 - (r_in - 20) * t ** 0.9
+                a = head - 0.25 - da - 1.55 * t
+                pts.append((c + math.cos(a) * rad, c + math.sin(a) * rad))
+            core = np.maximum(core, pad.stroke(pts, 1.0, 0.2, a0=al * 0.6, a1=0.0))
+            glow = np.maximum(glow, pad.stroke(pts, 3.5, 1.2, a0=al * 0.7, a1=0.0, soft=2.0))
+    glow = np.maximum(glow, gauss(rr - 22.0, 2.5) * 0.16)
+    core = np.maximum(core, gauss(rr - 22.0, 0.5) * 0.2)
+    trail = math.radians(102)
+    axes = pad.zeros()
+    axe_core = pad.zeros()
+    axe_body = pad.zeros()
+    sw_core = pad.zeros()
+    sw_glow = pad.zeros()
+    for k in range(3):
+        head = base + k * TAU / 3
+        # ---- 휘두름 띠: 머리 쪽이 가장 굵고 (수염 끝 ~ 날 앞 끝) 꼬리로 가늘어짐 — 바깥 날 줄은 또렷 · 안쪽은 부드럽게
         b = behind(th, head)
         s = np.clip(1 - b / trail, 0, 1)
         on = b < trail
-        prof = crescent_prof(s, tip=0.2, rise=1.5) * on
-        w = 20.0 * prof
+        prof = s ** 1.35 * on
+        w = wmax * prof
         d = Re - rr
         outer = clamp01((d + 0.15) * SS + 0.5)
-        band = outer * smooth(w + 1.2, w - 2.2, d) * (prof > 0.004)
+        band = outer * smooth(w + 1.5, w - 3.0, d) * (prof > 0.004)
         t = np.clip(d / np.maximum(w, 0.4), 0, 1)
-        solid_k = smooth(solid * 1.25, solid * 0.7, b)  # 1 = 단단한 날, 0 = 잔상
-        # 날: 바깥 갈아낸 띠 (밝음) · 등 쪽 (안) 은 빛 몸
-        edge = outer * np.exp(-np.maximum(d, 0) / (0.8 + 2.4 * prof)) * band
-        bevel = band * (1 - smooth(0.25, 0.42, t)) * 0.95
-        spine = band * gauss(t - 0.78, 0.07) * 0.6 * solid_k
-        smear = band * (1 - smooth(0.2, 1.0, t)) * 0.75
-        core = np.maximum(core, np.maximum.reduce([edge, bevel * (0.35 + 0.65 * solid_k), spine, smear * (1 - solid_k)]))
-        glow = np.maximum(glow, smooth(-3.0, 0.5, d) * smooth(w * 1.25 + 3.5, w * 1.25 - 3.0, d) * (prof > 0.004) * (0.55 + 0.45 * solid_k))
-        # 잔상 결 (날과 나란한 줄)
-        for dk, s0, a in ((0.55, 0.15, 0.6), (0.85, 0.35, 0.4)):
-            core = np.maximum(core, gauss(d - dk * w, 0.5) * swin(s, s0, 0.9, 0.2, 0.08) * a * on)
-        # 머리 끝 반짝임 · 접선으로 튀는 불티 (이어 돌림: 장마다 같은 모양이 120° 뒤 날로 넘어감)
-        hx, hy = c + math.cos(head - 0.05) * (Re - 3), c + math.sin(head - 0.05) * (Re - 3)
-        core = np.maximum(core, star4(pad, hx, hy, 10.0, 0.95, rot=head + 0.3, thin=0.12, diag=0.35))
-        glow = np.maximum(glow, pad.radial(hx, hy, 11.0, 1.4) * 0.8)
+        edge = outer * np.exp(-np.maximum(d, 0) / (0.7 + 2.0 * prof)) * band * (0.55 + 0.45 * prof)
+        body = band * (1 - smooth(0.2, 1.0, t)) ** 1.3 * (0.3 + 0.7 * prof)
+        streaks = np.zeros_like(d)
+        for dk, s0, a in ((0.3, 0.12, 0.75), (0.52, 0.3, 0.55), (0.74, 0.45, 0.42), (0.93, 0.62, 0.5)):
+            streaks = np.maximum(streaks, gauss(d - dk * w, 0.45 + 0.35 * prof) * swin(s, s0, 0.995, 0.2, 0.02) * a)
+        sw_core = np.maximum(sw_core, np.maximum.reduce([edge, body * 0.42, streaks * 0.8 * outer * (prof > 0.004)]))
+        sw_glow = np.maximum(sw_glow, smooth(-3.5, 0.5, d) * smooth(w * 1.12 + 3.0, w * 1.12 - 4.0, d) * (prof > 0.004) * (0.25 + 0.47 * prof ** 0.8))
+        # ---- 도끼 머리 (날 = 볼록한 앞 · 위 앞 끝 (toe) 은 바깥, 수염 (beard) 은 안쪽으로 굽음) · 눈 · 짧은 자루 토막
+        bit = pad.poly(warp(P["bit"], head))
+        eye = pad.poly(warp(P["eye"], head))
+        stub = pad.poly(warp([(2.0, -3.4), (29.0, -4.4), (29.0, 4.6), (2.0, 3.6)], head))
+        langet = pad.poly(warp(P["langet"], head))
+        head_m = np.maximum.reduce([bit, eye])
+        sil = np.maximum.reduce([head_m, stub * smooth(r0 + 2, r0 + 12, rr), langet])
+        axes = np.maximum(axes, sil)
+        lit, dark, _ = bevel_light(head_m, 2.4)
+        hb = head_m * (0.95 + 0.05 * lit - 0.12 * dark)
+        hb = np.maximum(hb, stub * smooth(r0 + 2, r0 + 12, rr) * 0.7)
+        hb = np.maximum(hb, langet * 0.82)
+        axe_body = np.maximum(axe_body, hb)
+        ed = warp(P["edge"], head)
+        de, _ = pad.line_field(ed, 12)
+        hc = head_m * (0.42 + 0.2 * lit - 0.2 * dark)  # 쇠 머리 몸 (심지에도 채움 — 휘두름 띠보다 단단해 보이게)
+        hc = np.maximum(hc, np.exp(-de / 3.4) * bit * 0.95)  # 갈아낸 날 띠
+        hc = np.maximum(hc, pad.stroke(ed, 1.0, a0=1.0) * bit)  # 날 줄
+        hc = np.maximum(hc, gauss(de - 5.6, 0.45) * bit * 0.5)  # 비탈 경계
+        hc = np.maximum(hc, rim_of(head_m, 0.8) * 0.85)
+        hc = np.maximum(hc, lit * 0.6)
+        hc = np.maximum(hc, pad.stroke(warp(P["engr"], head), 0.8, a0=0.55, taper=0.5) * bit)
+        hc = np.maximum(hc, pad.poly(warp([(41, -36), (45, -30.5), (41, -25), (37, -30.5)], head)) * 0.95)
+        for q in P["rivets"]:
+            hc = np.maximum(hc, pad.disc_field(*warp([q], head)[0], 1.2) * 0.95)
+        hc = np.maximum(hc, rim_of(langet, 0.6) * 0.75)
+        axe_core = np.maximum(axe_core, hc)
+        # 앞 끝 (toe) 반짝임
+        tx, ty = warp([(toe[0] - 2.0, toe[1] + 1.5)], head)[0]
+        axe_core = np.maximum(axe_core, star4(pad, tx, ty, 9.0, 0.95, rot=head + 0.3, thin=0.12, diag=0.35))
+        glow = np.maximum(glow, pad.radial(tx, ty, 10.0, 1.4) * 0.7)
+    # 도끼 둘레를 조금 비움 (띠에서 머리가 또렷이 떨어져 보이게)
+    gap = clamp01(1 - inner_dist(1 - axes) / 1.6) * (axes < 0.5)
+    sw_core = sw_core * (1 - gap) * (1 - axes)
+    sw_glow = sw_glow * (1 - 0.6 * gap)
+    core = np.maximum.reduce([core, sw_core, axe_core])
+    glow = np.maximum.reduce([glow, sw_glow, axe_body])
+    # ---- 피 안개 방울: 날에서 바깥 · 앞으로 흩뿌려짐 (이어 돌림 — 방울마다 위상, 뿌린 뒤 머리가 도는 만큼 뒤에 남음)
+    blood_g = pad.zeros()
+    blood_c = pad.zeros()
+    for k in range(3):
+        head = base + k * TAU / 3
         rs = random.Random(31)
-        for i in range(5):
+        # 안개 띠: 머리 바로 뒤 바깥 (도끼 앞 끝이 지난 자리) 에서 바깥으로 퍼지며 흐려짐 — 머리를 따라 돎
+        b = behind(th, head)
+        mk = clamp01(1 - b / 1.05) * (b < 1.05)
+        blood_g = np.maximum(blood_g, gauss(rr - (Re + 1.0 + 4.5 * (1 - mk)), 2.0 + 2.8 * (1 - mk)) * mk ** 1.3 * 0.55 * (rr > Re - 3))
+        for i in range(26):
             ph = (rs.random() + f / 8) % 1.0
-            a0 = head - 0.12 - ph * 0.25
-            px_, py_ = c + math.cos(a0) * (Re - 1), c + math.sin(a0) * (Re - 1)
-            tx, ty = -math.sin(a0), math.cos(a0)
-            dist = 6 + 16 * ph
-            x, y = px_ + tx * dist, py_ + ty * dist
-            al = (1 - ph) ** 1.3 * 0.9 * smooth(3, 10, min(x, S - x, y, S - y))
-            Ls = 5 + 5 * ph
-            core = np.maximum(core, streak(pad, (x - tx * Ls, y - ty * Ls), (x, y), 1.3, al))
-    return finish(pad, glow, core, halo=((1.3, 0.48), (3.2, 0.38), (7.0, 0.2)), body_k=0.85, core_bloom=((1.2, 0.35), (3.0, 0.26)), win=4.0)
+            u = rs.uniform(0.35, 1.0)  # 날 위 자리 (0 = 수염 끝 → 1 = 앞 끝)
+            out_a = math.radians(rs.uniform(10, 60))
+            spd = rs.uniform(11, 23)
+            rad0 = rs.uniform(1.1, 2.8)
+            life = rs.uniform(0.3, 0.52)
+            if ph >= life:
+                continue
+            age = ph / life
+            he = head - ph * TAU / 3  # 뿌릴 때의 머리 각
+            ei = int(u * (len(P["edge"]) - 1))
+            ex, ey = warp([P["edge"][ei]], he)[0]
+            ang_e = math.atan2(ey - c, ex - c)
+            fx_, fy_ = -math.sin(ang_e), math.cos(ang_e)  # 도는 쪽 (앞)
+            ox, oy = math.cos(ang_e), math.sin(ang_e)  # 바깥
+            vx, vy = fx_ * math.cos(out_a) + ox * math.sin(out_a), fy_ * math.cos(out_a) + oy * math.sin(out_a)
+            dist = 2 + spd * ease_out(age, 1.4)
+            x, y = ex + vx * dist, ey + vy * dist
+            wfade = smooth(4, 12, min(x, S - x, y, S - y))
+            al = (1 - age) ** 1.1 * wfade
+            if al < 0.03:
+                continue
+            r_ = rad0 * (1 - 0.45 * age)
+            tl = 3 + 7 * age
+            # 방울 (꼬리가 지나온 쪽) — 빛 (피 안개 색) 이 짙고 심지는 작은 점
+            blood_g = np.maximum(blood_g, streak(pad, (x - vx * tl, y - vy * tl), (x, y), r_ * 2.0, al))
+            blood_c = np.maximum(blood_c, pad.disc_field(x - vx * 0.3, y - vy * 0.3, r_ * 0.5) * al * 0.6)
+            # 안개 (방울 뒤에 퍼지는 흐린 덩이)
+            mr = 3.0 + 6.0 * age
+            mx, my = x - vx * tl * 0.6, y - vy * tl * 0.6
+            blood_g = np.maximum(blood_g, pad.disc_field(mx, my, mr, soft=mr * 0.9) * al * 0.5)
+    glow = np.maximum(glow, blood_g)
+    core = np.maximum(core, blood_c * (1 - axes))
+    return finish(pad, glow, core, halo=((1.3, 0.48), (3.2, 0.36), (7.0, 0.2)), body_k=0.88, core_bloom=((1.2, 0.33), (3.0, 0.24)), win=4.0)
 
 
 sprite("rfx_jwhirl2", "direction_z", 192, 192, 8, 4, job="warrior", zoom=0,
-       desc="땅에 눕는 회전 칼날 (이어 돌림): 갈아낸 날 · 등줄이 있는 초승달 날 셋 + 뒤로 흐려지는 잔상 · 도는 판의 결 · 날 끝 반짝임 · 접선 불티")(whirl_frame)
+       desc="땅에 눕는 회전 도끼 (이어 돌림): 묵직한 수염 도끼 머리 셋 (갈아낸 날 · 새김 · 눈의 못) + 머리 뒤 굵은 초승달 휘두름 띠 · 날에서 흩뿌려지는 피 안개 방울 · 안쪽 소용돌이")(whirl_frame)
 
 
 # ------------------------------------------------------------ rfx_jspin2 (도는 양날 창 — 날 끝 반지름 = 반 크기 × 0.86, 이어 돌림: 8 장 = 180°)
