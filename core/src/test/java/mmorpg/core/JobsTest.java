@@ -367,11 +367,11 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
         Jobs.Job ly = Jobs.job("lycan");
-        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 4, "advanced jobs " + Jobs.allAdvanced().size());
+        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 6, "advanced jobs " + Jobs.allAdvanced().size());
         if (sm == null || bk == null || wl == null || ly == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
-        check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, ly)) && Jobs.advancedOf("spellblade").isEmpty()
-                && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 마검사는 아직)");
+        check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, ly)) && Jobs.advancedOf("spellblade").size() == 2
+                && Jobs.advancedOf("mage").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 매지션은 아직)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == ly && Jobs.baseOf(wl) == wa && Jobs.baseOf(ly) == wa, "warrior advance");
         check(wl.display().equals("뵈드바르(워로드)") && ly.display().equals("울프헤딘(라이칸)") && "awaken".equals(wl.path()) && "invert".equals(ly.path()), "warrior display");
         check(Jobs.find("워로드") == wl && Jobs.find("울프헤딘") == ly && Jobs.find("lycan") == ly, "find warrior advanced");
@@ -433,6 +433,64 @@ public final class JobsTest {
                 "피의 갈증 상처 5 · 체력 4% · 흡혈 5%");
         check(Jobs.skillLine(sm.skill(0)).startsWith("금빛 연격 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("회그니의 맹세 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
         warriorAdvance(wa, wl, ly);
+        spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("hexblade"));
+    }
+
+    /**
+     * 0.51.0 마검사 2차 — 뵐룬드(룬 나이트) · 투르스(헥스 블레이드) (사용자 "다음 직업표 진행"): 부분 합 = 배율 합 (마검사와 같은 8.5 · 5.1 · 15.3 · 68) · 무적 시간
+     * 띄움 · t · 특성 · 마력 검술 (2차는 1차 마검사의 칼 규칙을 이어 받음)
+     */
+    static void spellbladeAdvance(Jobs.Job sb, Jobs.Job rk, Jobs.Job hx) {
+        check(rk != null && hx != null, "spellblade advanced jobs");
+        if (rk == null || hx == null) return;
+        check(Jobs.advance("spellblade", "awaken") == rk && Jobs.advance("spellblade", "invert") == hx && Jobs.baseOf(rk) == sb && Jobs.baseOf(hx) == sb, "spellblade advance");
+        check(rk.display().equals("뵐룬드(룬 나이트)") && hx.display().equals("투르스(헥스 블레이드)") && Jobs.find("룬 나이트") == rk && Jobs.find("투르스") == hx,
+                "spellblade display · find");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(rk.skill(i).total(), sb.skill(i).total()) && near(hx.skill(i).total(), sb.skill(i).total()), "spellblade totals slot " + i);
+        check(near(rk.skill(0).num("cuts", 0) + rk.skill(0).num("burst", 0), 8.5)
+                && near(rk.skill(1).num("path", 0) + rk.skill(1).num("back", 0) + rk.skill(1).num("blast", 0) + rk.skill(1).num("home", 0), 5.1)
+                && near(sum(rk.skill(2), "laps") + rk.skill(2).num("final", 0), 15.3)
+                && near(sum(rk.skill(4), "slashes") + rk.skill(4).num("plunge", 0) + rk.skill(4).num("final", 0), 68), "runeknight totals 8.5 · 5.1 · 15.3 · 68");
+        check(near(hx.skill(0).num("upper", 0) + hx.skill(0).num("lower", 0), 8.5) && near(hx.skill(1).num("trap", 0), 5.1)
+                && near(sum(hx.skill(2), "hails") + hx.skill(2).num("shatter", 0), 15.3)
+                && near(sum(hx.skill(4), "strokes") + hx.skill(4).num("cleave", 0) + hx.skill(4).num("erupt", 0), 68), "hexblade totals 8.5 · 5.1 · 15.3 · 68");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (룬 새김 베기의 세 번 베기는 한 번에 넣고 숫자만 세 줄 — split)
+        check(rk.skill(0).num("thrustAt", 0) - (rk.skill(0).num("split", 1) - 1) * rk.skill(0).num("cutGap", 0) >= 8 && rk.skill(1).num("returnAt", 0) >= 10
+                && rk.skill(1).num("homeAt", 0) - rk.skill(1).num("returnAt", 0) >= 10 && rk.skill(2).num("gap", 0) >= 10
+                && rk.skill(2).num("finalAt", 0) - (rk.skill(2).def().list("laps").size() - 1) * rk.skill(2).num("gap", 0) >= 10 && rk.skill(4).num("gap", 0) >= 10
+                && rk.skill(4).num("plungeAt", 0) - rk.skill(4).num("rise", 0) - 2 * rk.skill(4).num("gap", 0) >= 10
+                && rk.skill(4).num("finalAt", 0) - rk.skill(4).num("plungeAt", 0) >= 10, "runeknight i-frame spacing");
+        check(hx.skill(0).num("gap", 0) >= 10 && hx.skill(2).num("gap", 0) >= 10
+                && hx.skill(2).num("shatterAt", 0) - hx.skill(2).num("first", 0) - (hx.skill(2).def().list("hails").size() - 1) * hx.skill(2).num("gap", 0) >= 10
+                && hx.skill(4).num("gap", 0) >= 10 && hx.skill(4).num("cleaveAt", 0) - hx.skill(4).num("first", 0) - 2 * hx.skill(4).num("gap", 0) >= 10
+                && hx.skill(4).num("eruptAt", 0) - hx.skill(4).num("cleaveAt", 0) >= 10, "hexblade i-frame spacing");
+        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값)
+        check(near(rk.skill(0).num("thrustAt", 0), rk.skill(0).num("t", 0)) && near(rk.skill(1).num("homeAt", 0), rk.skill(1).num("t", 0))
+                && near(rk.skill(2).num("finalAt", 0), rk.skill(2).num("t", 0)) && near(rk.skill(4).num("finalAt", 0), rk.skill(4).num("t", 0))
+                && near(rk.skill(4).num("rise", 0), rk.skill(4).num("w", 0)), "runeknight t 16 · 20 · 60 · 64 (w 20)");
+        check(near(hx.skill(0).num("gap", 0) + 2, hx.skill(0).num("t", 0)) && near(hx.skill(1).num("armAt", 0), hx.skill(1).num("t", 0))
+                && near(hx.skill(2).num("shatterAt", 0), hx.skill(2).num("t", 0)) && near(hx.skill(4).num("eruptAt", 0), hx.skill(4).num("t", 0))
+                && near(hx.skill(4).num("first", 0), hx.skill(4).num("w", 0)), "hexblade t 12 · 10 · 44 · 56 (w 6)");
+        // 특성: 룬 나이트 = 마력 각인 최대 5 · 번짐 0.5, 헥스 블레이드 = 뒤집힌 룬 최대 5 · 하나당 +12% · 다섯이면 1초 묶음
+        check(rk.trait().name().equals("마력 각인") && rk.trait().max() == 5 && near(rk.trait().def().numOr("markBurst", 0), sb.trait().def().numOr("markBurst", -1))
+                && near(rk.trait().def().numOr("spread", 0), 0.5), "마력 각인 5 · 번짐");
+        check(hx.trait().name().equals("뒤집힌 룬") && hx.trait().max() == 5 && near(hx.trait().def().numOr("perRune", 0), 0.12) && hx.trait().def().numOr("rootAt", 0) == 5
+                && near(hx.trait().def().numOr("rootFor", 0), 20), "뒤집힌 룬 5 · +12% · 묶음");
+        // 마력 검술: 2차는 특성에 magicSword 가 없어도 1차의 칼 규칙 (요구 힘 = 힘 + 마력 · 피해 힘 = 힘 + 마력 × 0.5)
+        Map<String, Double> s0 = new java.util.LinkedHashMap<>();
+        s0.put("str", 10.0);
+        s0.put("int", 40.0);
+        for (Jobs.Job a : List.of(rk, hx)) {
+            check(Jobs.magicSword(a, "sword") && !Jobs.magicSword(a, "axe"), a.id() + " magic sword");
+            check(near(Jobs.reqStats(a, "sword", s0).get("str"), 50) && near(Jobs.damageStats(a, "sword", s0).get("str"), 30), a.id() + " magic sword stats");
+        }
+        // 유틸: 세이드 섬광 순간 이동 (10%) · 푸타르크 대검무 결계 (10%) · 뒤집힌 걸음 순간 이동 + 묶음 (20%) · 우박의 룬 받는 피해 +10% (15%)
+        check(Jobs.utils(rk.skill(1)).equals(List.of("blink")) && Jobs.utils(rk.skill(2)).equals(List.of("reduce")) && near(Jobs.utilCost(hx.skill(1)), 0.2)
+                && Jobs.utils(hx.skill(2)).equals(List.of("vuln10")) && near(Jobs.utilCost(hx.skill(2)), 0.15), "spellblade advanced utils");
+        check(Jobs.windupTicks(rk.skill(4)) == 20 && Jobs.windupTicks(hx.skill(4)) == 6, "ult windups 20 · 6");
+        check(Jobs.upKeys(rk.skill(3)).size() == 1 && Jobs.upKeys(hx.skill(3)).size() == 1 && Jobs.upKey(hx.skill(3), "flame") != null, "stance up keys");
+        check(Jobs.skillLine(rk.skill(3)).equals("룬 담금질 · 30초") && Jobs.skillLine(hx.skill(0)).startsWith("가시 룬 베기 · 6초 · 배율 "), "spellblade advanced skill line");
+        check(rk.color()[1][0] > 0.9 && rk.color()[0][2] > 0.9 && hx.color()[0][0] > 0.9 && hx.color()[1][0] < 0.4, "colors: purple · gold / amber · black");
     }
 
     /** 0.51.0 전사 2차 — 뵈드바르(워로드) · 울프헤딘(라이칸): 부분 합 = 배율 합 (전사와 같은 6.5 · 3.9 · 11.7 · 52) · 무적 시간 띄움 · t · 특성 · 유틸 */

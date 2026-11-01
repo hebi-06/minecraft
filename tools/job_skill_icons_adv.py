@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
-"""0.51.0 2차 직업 스킬 아이콘 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) · 전사 각성 뵈드바르(워로드) · 반전 울프헤딘(라이칸)
-(메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름). 모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음).
+"""0.51.0 2차 직업 스킬 아이콘 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) · 전사 각성 뵈드바르(워로드) · 반전 울프헤딘(라이칸) ·
+마검사 각성 뵐룬드(룬 나이트) · 반전 투르스(헥스 블레이드) (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
+모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph · jrunes24 · jthorn 과 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
-라이칸 = 달빛 은회 (첫째) · 붉은 눈빛 (둘째) — jobs.json advance."""
+라이칸 = 달빛 은회 (첫째) · 붉은 눈빛 (둘째), 룬 나이트 = 보라 (첫째) · 금빛 룬 (둘째), 헥스 블레이드 = 호박빛 (첫째) · 먹빛 자주 (둘째) — jobs.json advance."""
 import math
 import os
 import sys
 
-from PIL import ImageChops
+from PIL import ImageChops, ImageDraw
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from job_skill_icons import (GOLD, GOLD_HI, GOLD_LO, STEEL, STEEL_HI, STEEL_LO, WHITE, backdrop, crescent, disc, finish, glow, layer, line, mask, mix,  # noqa: E402
                              poly, ring, stack, star, sword_layers)
 from job_skill_icons_more import axe_layers  # noqa: E402
+from job_skill_icons import SS  # noqa: E402
+from job_fx_art_v2 import GLYPHS  # noqa: E402 — 룬 글자 꼴 (게임의 룬 그림과 같음)
 
 NIGHT = (8, 10, 30)
 DUSK = (28, 8, 10)
@@ -520,6 +523,261 @@ def lycan_ult(A, B):
     return finish(subject, [glow(corona, B, 2.0, 1.0), glow(lighter(claws, sliver), B, 1.4, 0.9)], lycan_back(A, B))
 
 
+# ------------------------------------------------------------ 뵐룬드(룬 나이트) (빛: 보라 → 금빛 룬)
+
+RUNE_NIGHT = (10, 6, 30)
+
+
+def runeknight_back(A, B):
+    return backdrop(mix(A, RUNE_NIGHT, 0.84), mix(A, (40, 14, 84), 0.45))
+
+
+def glyph(m, k, cx, cy, w, h, lw, ang=0.0):
+    """룬 글자 k (job_fx_art_v2.GLYPHS — 게임의 rfx_jglyph · jrunes24 와 같은 꼴): (cx, cy) 가운데 · 폭 w · 높이 h · 굵기 lw · ang 도 돌림"""
+    ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+
+    def xf(x, y):
+        dx, dy = (x - 0.5) * w, (y - 0.5) * h
+        return (cx + dx * ca - dy * sa, cy + dx * sa + dy * ca)
+
+    for st in GLYPHS[k % len(GLYPHS)]:
+        if isinstance(st, tuple) and st and st[0] == "d":
+            x, y = xf(st[1], st[2])
+            disc(m, x, y, lw * 0.75)
+        else:
+            line(m, [xf(x, y) for x, y in st], lw)
+    return m
+
+
+def oval(m, cx, cy, rx, ry, w):
+    """납작한 고리 (땅의 룬 원)"""
+    d = ImageDraw.Draw(m)
+    d.ellipse([(cx - rx) * SS, (cy - ry) * SS, (cx + rx) * SS, (cy + ry) * SS], fill=255)
+    d.ellipse([(cx - rx + w) * SS, (cy - ry + w * 0.6) * SS, (cx + rx - w) * SS, (cy + ry - w * 0.6) * SS], fill=0)
+    return m
+
+
+def rune_sword(tip, end, A, B, blade=3.0, guard=7.0):
+    """룬 대검: 흰 보랏빛 날 · 금빛 코등이 (룬 나이트)"""
+    return sword_layers(tip, end, blade=blade, guard=guard, blade_cols=(WHITE, mix(A, WHITE, 0.55), WHITE, mix(A, (0, 0, 0), 0.35)),
+                        guard_cols=(mix(B, WHITE, 0.4), B, WHITE, mix(B, (0, 0, 0), 0.45)))
+
+
+def runeknight_carve(A, B):
+    # 룬 새김 베기: 앞 공중에 새긴 금빛 룬 셋 (왼쪽 · 가운데 위 · 오른쪽) · 아래왼쪽에서 셋의 가운데로 찌르는 룬 대검 · 칼끝의 터짐 · 글자 뒤 벤 자국 (옅은 보라 호)
+    cut = mask()
+    crescent(cut, 16.0, 30.0, 17.0, 1.8, 206, 334)
+    g = mask()
+    glyph(g, 2, 7.6, 13.0, 6.0, 8.6, 1.4)
+    glyph(g, 7, 16.6, 6.0, 6.0, 8.6, 1.4)
+    glyph(g, 4, 25.6, 13.0, 6.0, 8.6, 1.4)
+    sw = rune_sword((16.6, 15.6), (2.6, 30.0), A, B, blade=3.0, guard=6.6)
+    sp = mask()
+    star(sp, 16.8, 15.0, 3.8, 0.2, 45)
+    subject = stack(layer(cut, mix(A, (0, 0, 0), 0.1), mix(A, (0, 0, 0), 0.35)), layer(g, mix(B, WHITE, 0.55), B, WHITE, mix(B, (0, 0, 0), 0.4)), *sw,
+                    layer(sp, WHITE, mix(B, WHITE, 0.5)))
+    return finish(subject, [glow(lighter(g, sp), B, 1.6, 1.0), glow(cut, A, 1.4, 0.7)], runeknight_back(A, B))
+
+
+def runeknight_seid(A, B):
+    # 세이드 섬광: 가까운 룬 원 (아래) · 먼 룬 원 (위) 을 잇는 보랏빛 번개 (두 끝 화살 — 갔다가 되돌아옴) · 원마다 금빛 룬 점
+    near, far = mask(), mask()
+    oval(near, 16.0, 26.0, 11.4, 3.8, 1.4)
+    oval(far, 16.0, 6.6, 7.6, 2.6, 1.2)
+    dots = mask()
+    for i in range(8):
+        a = math.radians(i * 45 + 22)
+        disc(dots, 16.0 + math.cos(a) * 9.2, 26.0 + math.sin(a) * 2.7, 0.8)
+    bolt_m = mask()
+    line(bolt_m, [(15.0, 23.4), (18.6, 18.6), (13.6, 15.4), (17.0, 10.2)], 1.7)
+    heads = mask()
+    poly(heads, [(17.4, 6.8), (19.8, 11.6), (14.4, 10.4)])
+    poly(heads, [(14.4, 27.0), (12.4, 22.0), (17.6, 23.6)])
+    dark = mix(A, (0, 0, 0), 0.45)
+    subject = stack(layer(far, mix(B, WHITE, 0.3), B, None, mix(B, (0, 0, 0), 0.4)), layer(near, mix(B, WHITE, 0.35), B, WHITE, mix(B, (0, 0, 0), 0.4)),
+                    layer(dots, WHITE, mix(B, WHITE, 0.5)), layer(bolt_m, WHITE, A, WHITE, dark, axis=(0, -1)), layer(heads, WHITE, A, WHITE, dark))
+    return finish(subject, [glow(lighter(near, far), B, 1.6, 0.9), glow(lighter(bolt_m, heads), A, 1.6, 1.0)], runeknight_back(A, B))
+
+
+def runeknight_futhark(A, B):
+    # 푸타르크 대검무: 가운데 금빛 룬 고리 (반짝임) 둘레를 도는 마력 검 여섯 (도는 쪽으로 누움) · 흐린 궤도
+    orbit = mask()
+    ring(orbit, 16.0, 16.0, 13.4, 0.8)
+    rr = mask()
+    ring(rr, 16.0, 16.0, 5.8, 1.2)
+    g = mask()
+    star(g, 16.0, 16.0, 3.8, 0.24, 0)
+    swords = []
+    for i in range(6):
+        a = math.radians(-90 + i * 60)
+        cx, cy = 16 + math.cos(a) * 10.6, 16 + math.sin(a) * 10.6
+        ta = a + math.radians(90)
+        tip = (cx + math.cos(ta) * 5.2, cy + math.sin(ta) * 5.2)
+        end = (cx - math.cos(ta) * 4.6, cy - math.sin(ta) * 4.6)
+        swords += rune_sword(tip, end, A, B, blade=2.4, guard=4.6)
+    subject = stack(layer(orbit, mix(A, (0, 0, 0), 0.1), mix(A, (0, 0, 0), 0.3)), *swords, layer(rr, mix(B, WHITE, 0.4), B, WHITE, None),
+                    layer(g, WHITE, mix(B, WHITE, 0.5)))
+    return finish(subject, [glow(lighter(rr, g), B, 2.0, 1.0), glow(orbit, A, 1.2, 0.7)], runeknight_back(A, B))
+
+
+def runeknight_temper(A, B):
+    # 룬 담금질: 가운데 곧게 선 룬 대검 (날이 금빛으로 달아오름 — 아래가 더 뜨거움) · 발밑 보랏빛 룬 불 고리 · 솟는 불꽃 · 망치 불티
+    flames = mask()
+    for x, h in ((7.0, 6.0), (11.0, 8.0), (21.0, 8.0), (25.0, 6.0)):
+        poly(flames, [(x - 1.8, 27.0), (x, 27.0 - h), (x + 1.8, 27.0)])
+    fire = mask()
+    oval(fire, 16.0, 27.0, 12.0, 3.4, 1.5)
+    parts = {"blade": mask(), "guard": mask(), "grip": mask()}
+    from job_skill_icons import sword
+    sword(None, (16.0, 1.6), (16.0, 27.5), 5.2, 12.0, parts=parts)
+    hot = layer(parts["blade"], WHITE, mix(B, WHITE, 0.15), WHITE, mix(B, (0, 0, 0), 0.35))
+    guard = layer(parts["guard"], mix(A, WHITE, 0.35), A, WHITE, mix(A, (0, 0, 0), 0.45))
+    grip = layer(parts["grip"], mix(A, (0, 0, 0), 0.5), mix(A, (0, 0, 0), 0.75))
+    vein = mask()
+    line(vein, [(16.0, 5.0), (16.0, 19.0)], 0.8)
+    sp = mask()
+    star(sp, 6.5, 9.0, 3.0, 0.2, 0)
+    star(sp, 26.0, 6.0, 2.6, 0.2, 0)
+    star(sp, 25.0, 15.5, 2.0, 0.22, 0)
+    subject = stack(layer(flames, mix(A, WHITE, 0.4), A, None, None), layer(fire, mix(A, WHITE, 0.4), A, WHITE, mix(A, (0, 0, 0), 0.4)), grip, hot, guard,
+                    layer(vein, mix(B, (255, 140, 40), 0.4), mix(B, (255, 120, 30), 0.5)), layer(sp, WHITE, B))
+    return finish(subject, [glow(parts["blade"], B, 2.2, 1.0), glow(lighter(fire, flames), A, 1.6, 0.9)], runeknight_back(A, B))
+
+
+def runeknight_ult(A, B):
+    # 스물네 룬의 대검: 뒤 하늘의 금빛 룬 바퀴 (스물넷 눈금 · 여덟 살) · 그 가운데로 내리꽂히는 거대한 룬 대검 · 땅의 터짐 (호 둘)
+    wheel = mask()
+    ring(wheel, 16.0, 12.0, 11.6, 1.2)
+    ticks = mask()
+    for i in range(24):
+        a = math.radians(i * 15)
+        r0, r1 = (8.4, 10.2) if i % 3 else (7.6, 10.4)
+        line(ticks, [(16.0 + math.cos(a) * r0, 12.0 + math.sin(a) * r0), (16.0 + math.cos(a) * r1, 12.0 + math.sin(a) * r1)], 0.8)
+    spokes = mask()
+    for i in range(8):
+        a = math.radians(i * 45 + 22.5)
+        line(spokes, [(16.0 + math.cos(a) * 2.6, 12.0 + math.sin(a) * 2.6), (16.0 + math.cos(a) * 6.6, 12.0 + math.sin(a) * 6.6)], 0.7)
+    big = rune_sword((16.0, 30.0), (16.0, 2.0), A, B, blade=6.0, guard=13.0)
+    imp = mask()
+    crescent(imp, 16.0, 31.0, 13.0, 2.2, 192, 246)
+    crescent(imp, 16.0, 31.0, 13.0, 2.2, 294, 348)
+    subject = stack(layer(wheel, mix(B, WHITE, 0.3), B, None, None), layer(ticks, mix(B, WHITE, 0.45), B), layer(spokes, mix(B, (0, 0, 0), 0.1), mix(B, (0, 0, 0), 0.3)),
+                    *big, layer(imp, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.4)))
+    return finish(subject, [glow(lighter(wheel, ticks), B, 1.8, 0.9), glow(imp, A, 1.4, 0.9)], runeknight_back(A, B))
+
+
+# ------------------------------------------------------------ 투르스(헥스 블레이드) (빛: 호박빛 → 먹빛 자주)
+
+HEX_INK = (18, 6, 14)
+
+
+def hexblade_back(A, B):
+    return backdrop(mix(B, HEX_INK, 0.7), mix(B, (70, 34, 14), 0.5))
+
+
+def thorn(m, cx, cy, h, lw, spikes=True):
+    """ᚦ (게임의 rfx_jthorn 과 같은 꼴 — 줄기 · 오른쪽 가시 (줄기 0.28 ~ 0.72 에서 0.36 h) · 줄기 왼쪽의 작은 거꾸로 선 가시)"""
+    top, bot = cy - h / 2, cy + h / 2
+    sx = cx - h * 0.12
+    up_y, lo_y = top + h * 0.28, top + h * 0.72
+    tip = (sx + h * 0.36, cy)
+    line(m, [(sx, top), (sx, bot)], lw)
+    line(m, [(sx, up_y), tip, (sx, lo_y)], lw)
+    if spikes:
+        for k in range(3):
+            y = top + h * (0.16 + 0.3 * k)
+            poly(m, [(sx - lw * 0.4, y - h * 0.04), (sx - lw * 0.4 - h * 0.1, y + h * 0.07), (sx - lw * 0.4, y + h * 0.04)])
+    return m
+
+
+def hex_sword(tip, end, A, B, blade=2.8, guard=6.6):
+    """저주받은 칼: 먹빛 날 (호박빛 날끝) · 검은 코등이"""
+    return sword_layers(tip, end, blade=blade, guard=guard, blade_cols=(mix(A, WHITE, 0.25), mix(B, A, 0.35), mix(A, WHITE, 0.5), mix(B, (0, 0, 0), 0.5)),
+                        guard_cols=((92, 76, 70), (40, 30, 30), (150, 120, 96), (18, 12, 12)), grip_cols=(mix(B, (0, 0, 0), 0.3), mix(B, (0, 0, 0), 0.6), None, None))
+
+
+def hexblade_thorn(A, B):
+    # 가시 룬 베기: 오른쪽 아래에서 왼쪽 위로 올려 벤 옅은 호 · 왼쪽 위에서 오른쪽 아래로 크게 내려 벤 밝은 호 · 벤 자리에 박힌 큰 가시 룬 (호박빛 ᚦ)
+    up, down = mask(), mask()
+    crescent(up, 16.0, 38.0, 20.0, 2.0, 225, 297)
+    crescent(down, 0.0, 2.0, 27.0, 3.4, 10, 82)
+    t = mask()
+    thorn(t, 10.0, 10.6, 14.0, 1.8)
+    dark = mix(B, (0, 0, 0), 0.4)
+    subject = stack(layer(up, mix(A, (0, 0, 0), 0.15), mix(A, (0, 0, 0), 0.45)), layer(down, WHITE, A, WHITE, dark, axis=(0.6, 0.8)),
+                    layer(t, mix(A, WHITE, 0.6), A, WHITE, mix(B, (0, 0, 0), 0.2)))
+    return finish(subject, [glow(t, A, 1.8, 1.0), glow(lighter(up, down), A, 1.2, 0.7)], hexblade_back(A, B))
+
+
+def hexblade_backstep(A, B):
+    # 뒤집힌 걸음: 앞의 저주 룬 덫 (땅의 고리 · 그 위에 선 ᚦ) · 덫에서 뒤 (왼쪽 위) 로 물러나는 먹빛 그림자 줄과 화살
+    trap = mask()
+    oval(trap, 21.0, 25.5, 9.6, 3.2, 1.3)
+    t = mask()
+    thorn(t, 22.0, 16.0, 13.0, 1.6)
+    trail = mask()
+    for y0, x0, x1, w in ((9.0, 12.0, 4.5, 1.2), (13.0, 14.0, 5.5, 1.5), (17.0, 12.0, 6.0, 1.2)):
+        line(trail, [(x0, y0 + 2.0), (x1, y0)], w)
+    arrow = mask()
+    poly(arrow, [(1.6, 11.0), (6.4, 8.0), (6.6, 14.6)])
+    dark = mix(B, (0, 0, 0), 0.3)
+    subject = stack(layer(trap, mix(A, WHITE, 0.3), A, None, mix(B, (0, 0, 0), 0.3)), layer(trail, mix(B, WHITE, 0.35), B, None, None, axis=(-1, 0)),
+                    layer(arrow, mix(B, WHITE, 0.45), B, mix(B, WHITE, 0.6), dark), layer(t, mix(A, WHITE, 0.6), A, WHITE, mix(B, (0, 0, 0), 0.2)))
+    return finish(subject, [glow(lighter(trap, t), A, 1.8, 1.0)], hexblade_back(A, B))
+
+
+def hexblade_hail(A, B):
+    # 우박의 룬: 땅에 꽂힌 칼 · 둘레 땅의 룬 고리 (호박빛) · 하늘에서 비스듬히 떨어지는 검은 우박 조각 넷 (호박빛 테)
+    ringm = mask()
+    oval(ringm, 16.0, 26.0, 13.0, 3.8, 1.3)
+    sw = hex_sword((16.0, 27.5), (16.0, 9.0), A, B, blade=3.0, guard=7.4)
+    shards = mask()
+    for cx, cy, L in ((6.0, 7.0, 7.0), (12.0, 3.4, 5.6), (24.0, 5.0, 7.0), (27.5, 15.0, 5.6)):
+        ux, uy = -0.42, 0.91
+        px, py = -uy, ux
+        poly(shards, [(cx + ux * L * 0.55, cy + uy * L * 0.55), (cx + px * 1.3, cy + py * 1.3), (cx - ux * L * 0.45, cy - uy * L * 0.45), (cx - px * 1.3, cy - py * 1.3)])
+    crack = mask()
+    for pts in (((16.0, 27.0), (11.0, 28.5), (6.0, 27.6)), ((16.0, 27.0), (21.5, 29.0), (26.0, 27.8))):
+        line(crack, list(pts), 0.9)
+    subject = stack(layer(ringm, mix(A, WHITE, 0.3), A, None, mix(B, (0, 0, 0), 0.3)), layer(crack, mix(A, WHITE, 0.4), A), *sw,
+                    layer(shards, mix(B, (0, 0, 0), 0.2), mix(B, (0, 0, 0), 0.55), mix(A, WHITE, 0.3), A))
+    return finish(subject, [glow(lighter(ringm, crack), A, 1.8, 1.0), glow(shards, A, 1.0, 0.6)], hexblade_back(A, B))
+
+
+def hexblade_curse(A, B):
+    # 저주의 칼: 비스듬히 든 칼 · 날에서 솟는 먹빛 불꽃 혀 (호박빛 테) · 칼날 위에 떠오른 ᚦ · 불티
+    fl = mask()
+    for i, (t, h) in enumerate(((0.22, 6.0), (0.42, 8.0), (0.62, 7.0), (0.8, 5.4))):
+        x, y = 5.0 + 20.0 * t, 27.0 - 21.0 * t
+        poly(fl, [(x - 2.4, y + 1.2), (x - 0.6 + (1.2 if i % 2 else -1.2), y - h), (x + 2.6, y + 1.6)])
+    sw = hex_sword((26.0, 5.0), (4.0, 28.0), A, B, blade=3.0, guard=7.0)
+    t = mask()
+    thorn(t, 9.4, 8.6, 11.0, 1.5)
+    sp = mask()
+    star(sp, 27.0, 15.0, 2.4, 0.22, 0)
+    star(sp, 19.0, 3.6, 2.0, 0.22, 0)
+    subject = stack(layer(fl, mix(B, A, 0.35), mix(B, (0, 0, 0), 0.2), mix(A, WHITE, 0.25), None), *sw, layer(t, mix(A, WHITE, 0.6), A, WHITE, mix(B, (0, 0, 0), 0.2)),
+                    layer(sp, WHITE, A))
+    return finish(subject, [glow(fl, A, 1.6, 0.8), glow(t, A, 1.6, 1.0)], hexblade_back(A, B))
+
+
+def hexblade_ult(A, B):
+    # 재앙의 룬: 땅에 새긴 거대한 ᚦ (호박빛) · 줄기를 세로로 가른 흰 빛 · 아래에서 솟구치는 먹빛 저주 줄기 (호박빛 테) · 땅의 금
+    burst = mask()
+    for x, h, w in ((5.0, 12.0, 2.0), (9.0, 17.0, 2.2), (24.0, 18.0, 2.2), (28.0, 11.0, 1.8)):
+        poly(burst, [(x - w, 31.0), (x, 31.0 - h), (x + w, 31.0)])
+    t = mask()
+    thorn(t, 17.0, 15.6, 25.0, 2.6)
+    cut = mask()
+    line(cut, [(14.0, 1.0), (14.0, 30.5)], 0.9)
+    crack = mask()
+    for pts in (((14.0, 29.0), (9.0, 30.6), (3.0, 29.4)), ((14.0, 29.0), (20.5, 30.8), (29.0, 29.6))):
+        line(crack, list(pts), 0.9)
+    subject = stack(layer(burst, mix(B, A, 0.25), mix(B, (0, 0, 0), 0.3), mix(A, WHITE, 0.2), None), layer(crack, mix(A, WHITE, 0.4), A),
+                    layer(t, mix(A, WHITE, 0.55), A, WHITE, mix(B, (0, 0, 0), 0.2)), layer(cut, WHITE, mix(A, WHITE, 0.7)))
+    return finish(subject, [glow(lighter(t, cut), A, 2.0, 1.0), glow(burst, A, 1.2, 0.6)], hexblade_back(A, B))
+
+
 ICONS = {
     "swordmaster_flurry": swordmaster_flurry,
     "swordmaster_grani": swordmaster_grani,
@@ -541,4 +799,14 @@ ICONS = {
     "lycan_howl": lycan_howl,
     "lycan_night": lycan_night,
     "lycan_ult": lycan_ult,
+    "runeknight_carve": runeknight_carve,
+    "runeknight_seid": runeknight_seid,
+    "runeknight_futhark": runeknight_futhark,
+    "runeknight_temper": runeknight_temper,
+    "runeknight_ult": runeknight_ult,
+    "hexblade_thorn": hexblade_thorn,
+    "hexblade_backstep": hexblade_backstep,
+    "hexblade_hail": hexblade_hail,
+    "hexblade_curse": hexblade_curse,
+    "hexblade_ult": hexblade_ult,
 }

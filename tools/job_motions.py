@@ -25,6 +25,7 @@ import job_motions_b  # noqa: E402,F401
 import job_motions_c  # noqa: E402,F401
 import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트)
 import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 라이칸)
+import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (룬 나이트 · 헥스 블레이드)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -104,6 +105,15 @@ AIR = {
     "jb_lycan_pounce": [(2, 7, "tuck"), (8, 11, "land")],
     "jb_lycan_ult_pounce": [(1, 5, "tuck"), (6, 8, "land")],
     "jb_lycan_ult_final": [(2, 16, "tuck"), (18, 21, "land")],
+    "jb_runeknight_futhark": [(1, 56, "float")],
+    "jb_runeknight_futhark_plant": [(0, 5, "float"), (6, 10, "land")],
+    "jb_runeknight_ult": [(2, 22, "float")],
+    "jb_runeknight_ult_slash0": [(0, 12, "float")],
+    "jb_runeknight_ult_slash1": [(0, 12, "float")],
+    "jb_runeknight_ult_slash2": [(0, 12, "float")],
+    "jb_runeknight_ult_plunge": [(0, 12, "float")],
+    "jb_runeknight_ult_final": [(0, 6, "tuck"), (7, 11, "land")],
+    "jb_hexblade_ult_cleave": [(1, 11, "tuck"), (12, 16, "land")],
 }
 
 

@@ -191,13 +191,29 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {6, 16, 36, 56, 66, 74}, new int[] {16, 56, 74}, 88, false),
     };
 
+    /** 0.51.0 뵐룬드(룬 나이트) · 투르스(헥스 블레이드) */
+    private static final Case[] CASES_RK = {
+        new Case(0, new int[] {2, 6, 10, 16, 18}, new int[] {6, 16}, 26, false),
+        new Case(1, new int[] {1, 4, 10, 12, 20}, new int[] {2, 12, 20}, 30, false),
+        new Case(2, new int[] {4, 16, 31, 46, 56, 60, 62}, new int[] {16, 46, 60}, 72, false),
+        new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
+        new Case(4, new int[] {6, 14, 20, 30, 40, 48, 52, 58, 64, 66}, new int[] {14, 30, 52, 64}, 84, false),
+    };
+    private static final Case[] CASES_HX = {
+        new Case(0, new int[] {2, 4, 10, 12, 14}, new int[] {3, 12}, 22, false),
+        new Case(1, new int[] {1, 3, 8, 10, 12}, new int[] {2, 10}, 20, false),
+        new Case(2, new int[] {2, 4, 14, 24, 34, 42, 44, 46}, new int[] {4, 24, 44}, 56, false),
+        new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
+        new Case(4, new int[] {3, 6, 16, 26, 30, 38, 42, 46, 50, 56, 58}, new int[] {16, 38, 46, 56}, 72, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
         if (RpgProdSmoke.active()) return;
         boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")
-                || RpgFilm.listed("filmjob4") || RpgFilm.listed("filmjob5")); // 0.48.2 스킬 영상 (0.51.0 넷째 · 다섯째 묶음 = 2차 직업 — 검사 · 전사)
+                || RpgFilm.listed("filmjob4") || RpgFilm.listed("filmjob5") || RpgFilm.listed("filmjob6")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 여섯째 묶음 = 2차 직업 — 검사 · 전사 · 마검사)
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -459,13 +475,23 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (id.equals("bloodknight_burst") || id.equals("bloodknight_ult")) {
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits5.setWounds(sp, h, 3);
         }
+        // 0.51.0 룬 나이트 스물네 룬의 대검 (과녁마다 각인 3 — 마지막에 모두 터져 번짐) · 헥스 블레이드 (과녁마다 저주 룬 — 스킬이 터뜨림, 덫은 다섯이라 묶음)
+        if (id.equals("runeknight_ult")) {
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits.setMarks(sp, h, 3);
+        }
+        if (id.equals("hexblade_thorn") || id.equals("hexblade_backstep") || id.equals("hexblade_ult")) {
+            int n = id.equals("hexblade_backstep") ? 5 : 3;
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) {
+                mmorpg.fabric.job.JobTraits7.setRunes(sp, h, n);
+            }
+        }
     }
 
-    // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5)
+    // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5 · 6)
 
-    /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 — 넷째부터 2차 직업) */
+    /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
-        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "lycan"}};
+        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "lycan"}, {"runeknight", "hexblade"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
@@ -489,6 +515,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "bloodknight" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "warlord" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
                         case "lycan" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 10, sp -> mmorpg.fabric.job.JobTraits6.setFerocity(sp, 6));
+                        case "runeknight", "hexblade" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
                                 sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
                     }
@@ -515,6 +542,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "bloodknight" -> CASES_BK;
             case "warlord" -> CASES_WL;
             case "lycan" -> CASES_LY;
+            case "runeknight" -> CASES_RK;
+            case "hexblade" -> CASES_HX;
             default -> CASES_GU;
         };
     }

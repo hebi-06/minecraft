@@ -271,12 +271,12 @@
     }
   },
   "advance": {
-    "_comment": "0.51.0 2차 전직 (사용자 2026-11-01 \"직업의 2차 전직을 만들거임 이거는 각성형태랑 반전형태 총 2가지를 선택할 수 있음\" · \"각성도 기존에 컨셉을 유지한채로 스킬을 바꿔도 됨 더 역동적인 모션을 사용한다던가 더 쎈 스킬을 사용하던가\" · \"일단 검사부터 구현하자\" · \"다음 그냥 직업표에 있는 순서대로 하자\" (전사 — 뵈드바르(워로드) · 울프헤딘(라이칸)) — claude/job-advance.md): level 렙부터 직업 교관에서 1차 직업 하나에 각성 (awaken — 1차 컨셉 그대로 · 스킬을 새 동작으로) · 반전 (invert — 같은 무기 · 같은 칸 역할의 새 스킬 다섯 · 뒤집힌 특성) 중 하나. 2차 직업 = jobs 와 같은 꼴 + base (1차 직업 id) · path · title (이명 — 표기 이명(직업명)), 무기 · 적용 스탯 · 룬 · scale 은 1차 그대로. 직업 맞춤 = dps × 1차의 초당 피해 (0.26.0 지속 보정 기준) ÷ 2차의 배율 — 1차보다 20% (각성 = 반전, 범위 보정은 1차와 같이 밖에서). 처음 2차 전직은 무료 · 각성 ↔ 반전 바꾸기 switchSilver 은화 · 1차 직업을 바꾸면 2차도 풀림. 직업 스킬 강화 단계는 같은 칸의 1차 스킬 기록을 씀 (Jobs.upId)",
+    "_comment": "0.51.0 2차 전직 (사용자 2026-11-01 \"직업의 2차 전직을 만들거임 이거는 각성형태랑 반전형태 총 2가지를 선택할 수 있음\" · \"각성도 기존에 컨셉을 유지한채로 스킬을 바꿔도 됨 더 역동적인 모션을 사용한다던가 더 쎈 스킬을 사용하던가\" · \"일단 검사부터 구현하자\" · \"다음 그냥 직업표에 있는 순서대로 하자\" (전사 — 뵈드바르(워로드) · 울프헤딘(라이칸)) · \"다음 직업표 진행\" (마검사 — 뵐룬드(룬 나이트) · 투르스(헥스 블레이드)) — claude/job-advance.md): level 렙부터 직업 교관에서 1차 직업 하나에 각성 (awaken — 1차 컨셉 그대로 · 스킬을 새 동작으로) · 반전 (invert — 같은 무기 · 같은 칸 역할의 새 스킬 다섯 · 뒤집힌 특성) 중 하나. 2차 직업 = jobs 와 같은 꼴 + base (1차 직업 id) · path · title (이명 — 표기 이명(직업명)), 무기 · 적용 스탯 · 룬 · scale 은 1차 그대로. 직업 맞춤 = dps × 1차의 초당 피해 (0.26.0 지속 보정 기준) ÷ 2차의 배율 — 1차보다 20% (각성 = 반전, 범위 보정은 1차와 같이 밖에서). 처음 2차 전직은 무료 · 각성 ↔ 반전 바꾸기 switchSilver 은화 · 1차 직업을 바꾸면 2차도 풀림. 직업 스킬 강화 단계는 같은 칸의 1차 스킬 기록을 씀 (Jobs.upId)",
     "level": 50,
     "switchSilver": 600,
     "dps": 1.2,
     "paths": {"awaken": "각성", "invert": "반전"},
-    "order": ["swordmaster", "bloodknight", "warlord", "lycan"],
+    "order": ["swordmaster", "bloodknight", "warlord", "lycan", "runeknight", "hexblade"],
     "jobs": {
       "swordmaster": {"base": "swordsman", "path": "awaken", "title": "시구르드", "name": "소드마스터", "ready": true, "role": "근접 딜러", "line": "투지를 여덟까지 쌓아 더 크고 역동적으로 베는 정석 검술의 끝", "color": [[1.0, 0.8, 0.3], [0.94, 0.93, 0.88]],
         "trait": {"name": "투지", "max": 8, "decay": 80, "critAt": 8, "critUse": 3, "crit": 0.3, "desc": "칼 평타가 맞을 때마다 투지 +1 (최대 8 — 4초 동안 못 맞히면 하나씩 사라짐). 직업 스킬이 투지를 써서 세짐. 투지 8 이면 다음 직업 스킬이 치명 (위력 +30% · 투지 3 씀)"},
@@ -316,6 +316,26 @@
           {"id": "lycan_howl", "name": "달밤의 포효", "cd": 15, "total": 11.7, "howl": 3.7, "howlAt": 4, "howlRadius": 6, "spin": 8.0, "spinDelay": 12, "spinRadius": 4.5, "weaken": 0.15, "fearFor": 100, "t": 16, "u": ["weaken15"], "up": [{"key": "weaken", "name": "겁먹음 (가하는 피해 −)", "fmt": "pct"}], "desc": "달을 보며 포효 — 둘레 6칸 적 (3.7) 5초 겁먹음 (가하는 피해 −15%) → 도끼로 크게 한 바퀴 (8 — 둘레 4.5칸)"},
           {"id": "lycan_night", "name": "늑대의 밤", "cd": 30, "dur": 160, "echo": 0.42, "echoDelay": 3, "speed": 0.2, "up": [{"key": "dur", "name": "지속", "fmt": "sec"}, {"key": "echo", "name": "두 번째 베기", "fmt": "pct"}], "desc": "8초 늑대 형상 — 도끼 평타가 두 번 벰 (두 번째 42% · 발톱) · 이동 속도 +20% · 야성이 사라지지 않음"},
           {"id": "lycan_ult", "name": "달 삼키기", "cd": 60, "total": 52, "pounces": [4.5, 4.5, 4.5, 4.5, 4.5, 4.5], "first": 6, "every": 10, "range": 10, "height": 1.6, "rise": 10, "riseHeight": 5.0, "final": 25, "finalRadius": 6, "finalDelay": 18, "t": 74, "w": 6, "u": ["leap"], "desc": "하늘의 달이 삼켜지는 동안 둘레 적 사이를 여섯 번 덮쳐 찢음 (4.5 × 6) → 높이 뛰어올라 내려찍음 (25 — 둘레 6칸)"}
+        ]
+      },
+      "runeknight": {"base": "spellblade", "path": "awaken", "title": "뵐룬드", "name": "룬 나이트", "ready": true, "role": "근접 마법 딜러 · 각인", "line": "스킬마다 룬을 새겨 이어 터뜨리는 전설의 대장장이 — 칼은 룬 불에 벼린 대검이 됨", "color": [[0.62, 0.34, 1.0], [1.0, 0.8, 0.32]],
+        "trait": {"name": "마력 각인", "max": 5, "markBurst": 1.0, "markFor": 200, "spread": 0.5, "spreadRadius": 3.0, "desc": "직업 스킬이 맞힌 적에 마력 각인 +1 (스킬마다 적마다 한 번 · 최대 5 · 10초) — 평타가 각인 찍힌 적을 때리면 각인 하나가 터짐 (마법 피해 · 위력 × 1.0) · 터지면 둘레 3칸으로 룬 폭발이 번짐 (위력 × 0.5 — 그 적 말고). 마력 검술 (칼의 요구 '힘' = 힘 + 마력) 은 1차와 같음"},
+        "skills": [
+          {"id": "runeknight_carve", "name": "룬 새김 베기", "cd": 6, "total": 8.5, "a": "narrow", "cuts": 3.6, "split": 3, "cutGap": 4, "slide": 2.5, "reach": 4.2, "arc": 120, "burst": 4.9, "burstRadius": 2.6, "thrustAt": 16, "t": 16, "desc": "앞으로 미끄러지며 세 번 베어 (3.6 — 숫자 세 줄) 공중에 룬 글자 셋을 새기고 → 0.8초에 찔러 룬을 터뜨림 (4.9 — 글자 둘레 2.6칸 · 마법 피해)"},
+          {"id": "runeknight_seid", "name": "세이드 섬광", "cd": 12, "total": 5.1, "a": "narrow", "path": 1.2, "back": 1.2, "blast": 1.35, "home": 1.35, "dist": 7, "width": 1.5, "radius": 3, "returnAt": 10, "homeAt": 20, "t": 20, "u": ["blink"], "desc": "보는 쪽 7칸으로 순간 이동하며 지나간 적을 벰 (1.2) → 0.5초 뒤 되돌아오며 한 번 더 (1.2) — 닿았던 자리 (1.35) · 처음 자리 (1.35) 에 룬 원이 차례로 터짐 (둘레 3칸 · 마법 피해)"},
+          {"id": "runeknight_futhark", "name": "푸타르크 대검무", "cd": 15, "total": 15.3, "laps": [2.4, 2.4, 2.4, 2.4], "gap": 15, "swords": 9, "radius": 4.2, "lift": 2, "final": 5.7, "finalRadius": 4.5, "finalAt": 60, "t": 60, "u": ["reduce"], "guard": 0.2, "guardFor": 60, "zone": true, "desc": "2칸 떠올라 마력 검 아홉과 3초 검무 — 0.75초마다 둘레 4.2칸을 벰 (2.4 × 4) → 검을 모두 땅에 꽂으며 내려앉아 룬 원 폭발 (5.7 — 둘레 4.5칸). 검무 동안 룬 결계 (받는 피해 −20%)"},
+          {"id": "runeknight_temper", "name": "룬 담금질", "cd": 30, "dur": 240, "swords": 3, "echo": 0.37, "reach": 1.5, "up": [{"key": "echo", "name": "마력 검 하나", "fmt": "x"}], "desc": "칼을 룬 불에 담금질 — 12초 동안 룬 대검으로 커지고 (평타 사거리 +1.5칸) 평타가 맞을 때마다 몸 둘레의 마력 검 셋이 함께 벰 (위력 × 0.37 × 3)"},
+          {"id": "runeknight_ult", "name": "스물네 룬의 대검", "cd": 60, "total": 68, "slashes": [10, 10, 10], "plunge": 14, "plungeRadius": 4, "final": 24, "finalRadius": 5, "range": 10, "width": 4.5, "rise": 20, "lift": 6, "gap": 10, "plungeAt": 52, "finalAt": 64, "ahead": 6, "knock": 0.8, "t": 64, "w": 20, "u": ["knock"], "desc": "6칸 솟아 하늘에 룬 스물넷을 켜고 거대한 마력 검으로 가로 · 세로 · 대각 세 번 벰 (10 × 3) → 검이 앞 6칸에 내리꽂힘 (14 — 둘레 4칸) → 검과 함께 내리꽂혀 (24 — 둘레 5칸) 각인을 모두 터뜨림"}
+        ]
+      },
+      "hexblade": {"base": "spellblade", "path": "invert", "title": "투르스", "name": "헥스 블레이드", "ready": true, "role": "근접 마법 딜러 · 저주", "line": "평타로 거꾸로 선 저주 룬을 새기고 스킬로 한꺼번에 터뜨리는 재앙의 칼", "color": [[1.0, 0.64, 0.16], [0.3, 0.12, 0.26]],
+        "trait": {"name": "뒤집힌 룬", "max": 5, "runeFor": 200, "perRune": 0.12, "rootAt": 5, "rootFor": 20, "desc": "1차와 거꾸로 — 칼 평타가 맞힌 적에 저주 룬 +1 (최대 5 · 10초). 직업 스킬이 그 적을 맞히면 룬을 모두 터뜨려 그 피해 + 룬 하나당 12% · 다섯이면 1초 묶음. 마력 검술 (칼의 요구 '힘' = 힘 + 마력) 은 1차와 같음"},
+        "skills": [
+          {"id": "hexblade_thorn", "name": "가시 룬 베기", "cd": 6, "total": 8.5, "a": "narrow", "upper": 3.0, "lower": 5.5, "gap": 10, "reach": 4.0, "arc": 110, "thorns": 2, "t": 12, "desc": "올려 벰 (3.0) → 0.5초 뒤 내려 벰 (5.5) — 내려 벤 적에 가시 룬 둘을 박음 (저주 룬 +2)"},
+          {"id": "hexblade_backstep", "name": "뒤집힌 걸음", "cd": 12, "total": 5.1, "a": "narrow", "trap": 5.1, "dist": 6, "radius": 3, "armAt": 10, "rootFor": 20, "t": 10, "w": 10, "u": ["blink", "root"], "desc": "뒤로 6칸 순간 이동 — 떠난 자리에 저주 룬 덫, 0.5초 뒤 터짐 (5.1 — 둘레 3칸 · 마법 피해) · 맞은 적 1초 묶음"},
+          {"id": "hexblade_hail", "name": "우박의 룬", "cd": 15, "total": 15.3, "hails": [2.2, 2.2, 2.2, 2.2], "first": 4, "gap": 10, "radius": 5, "shatter": 6.5, "shatterAt": 44, "vuln": 0.1, "vulnBoss": 0.05, "vulnFor": 100, "t": 44, "u": ["vuln10"], "zone": true, "desc": "칼을 땅에 꽂아 둘레 5칸에 검은 우박 룬 — 0.5초마다 네 번 떨어짐 (2.2 × 4 · 맞은 적 5초 받는 피해 +10%) → 칼을 뽑으면 룬 원이 깨짐 (6.5)"},
+          {"id": "hexblade_curse", "name": "저주의 칼", "cd": 30, "dur": 200, "flame": 0.5, "runes": 2, "up": [{"key": "flame", "name": "저주 불꽃", "fmt": "x"}], "desc": "10초 동안 칼에 저주 불꽃 — 칼 평타가 맞을 때마다 불꽃 (위력 × 0.5 · 마법 피해) · 저주 룬을 둘씩 새김"},
+          {"id": "hexblade_ult", "name": "재앙의 룬", "cd": 60, "total": 68, "strokes": [10, 10, 10], "first": 6, "gap": 10, "length": 9, "thorn": 3.0, "width": 2.0, "cleave": 12, "cleaveAt": 46, "erupt": 26, "eruptAt": 56, "eruptRadius": 7, "rise": 3, "t": 56, "w": 6, "desc": "앞 땅에 거대한 ᚦ 룬을 세 획으로 새김 (10 × 3 — 획 위의 적) → 뛰어올라 룬을 세로로 가름 (12) → 안의 저주가 한꺼번에 터짐 (26 — 둘레 7칸 · 저주 룬도 모두)"}
         ]
       }
     }

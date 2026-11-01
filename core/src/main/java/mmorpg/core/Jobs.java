@@ -577,9 +577,22 @@ public final class Jobs {
 
     // ------------------------------------------------------------------ 마검사 「마력 검술」 (특성 magicSword)
 
+    /**
+     * 이 직업의 마력 검술 정의 (특성 magicSword — 0.51.0 2차 직업은 제 특성에 없으면 1차 직업의 것: 룬 나이트 · 헥스 블레이드도 마검사의 칼 규칙)
+     */
+    private static Obj magicSwordDef(Job j) {
+        if (j == null) return null;
+        Obj ms = j.trait() == null ? null : j.trait().def().objOrNull("magicSword");
+        if (ms == null && j.advanced()) {
+            Job b = baseOf(j);
+            if (b != null && b != j && b.trait() != null) ms = b.trait().def().objOrNull("magicSword");
+        }
+        return ms;
+    }
+
     /** 마력 검술이 이 무기 종류에 걸리는지 */
     public static boolean magicSword(Job j, String weaponType) {
-        Obj ms = j == null || j.trait() == null ? null : j.trait().def().objOrNull("magicSword");
+        Obj ms = magicSwordDef(j);
         if (ms == null || weaponType == null) return false;
         for (Object w : ms.list("weapons")) if (weaponType.equals(w)) return true;
         return false;
@@ -589,12 +602,12 @@ public final class Jobs {
      * 요구 스탯을 따질 때의 스탯 (마력 검술: 칼의 '힘' 을 힘 + 마력으로) — 걸리지 않으면 s 그대로. s 는 바꾸지 않음
      */
     public static Map<String, Double> reqStats(Job j, String weaponType, Map<String, Double> s) {
-        return magicSword(j, weaponType) ? shifted(s, j.trait().def().obj("magicSword").obj("req")) : s;
+        return magicSword(j, weaponType) ? shifted(s, magicSwordDef(j).obj("req")) : s;
     }
 
     /** 피해 배율을 셀 때의 스탯 (마력 검술: 칼의 '힘' 을 힘 + 마력 × 0.5 로) — 걸리지 않으면 s 그대로 */
     public static Map<String, Double> damageStats(Job j, String weaponType, Map<String, Double> s) {
-        return magicSword(j, weaponType) ? shifted(s, j.trait().def().obj("magicSword").obj("damage")) : s;
+        return magicSword(j, weaponType) ? shifted(s, magicSwordDef(j).obj("damage")) : s;
     }
 
     /** {stat: {다른 스탯: 계수}} — stat += Σ 다른 스탯 × 계수 */

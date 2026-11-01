@@ -235,4 +235,16 @@ public final class RpgJobTimingTests {
     public void timingLycan(GameTestHelper h) {
         probe(h, "lycan");
     }
+
+    /** 0.51.0 2차 직업 — 마검사 각성 뵐룬드(룬 나이트) (세이드 섬광은 처음 자리 원만 닿음 — 몇 타가 빗나간 스킬) */
+    @GameTest(environment = "mmorpg:jt_rk", maxTicks = 2400)
+    public void timingRuneknight(GameTestHelper h) {
+        probe(h, "runeknight");
+    }
+
+    /** 0.51.0 2차 직업 — 마검사 반전 투르스(헥스 블레이드) (뒤집힌 걸음 = 뒤로 물러난 뒤 10틱 덫 — 선딜 w 10, 재앙의 룬은 줄기 위 과녁) */
+    @GameTest(environment = "mmorpg:jt_hx", maxTicks = 2400)
+    public void timingHexblade(GameTestHelper h) {
+        probe(h, "hexblade");
+    }
 }

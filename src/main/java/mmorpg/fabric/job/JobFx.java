@@ -103,6 +103,12 @@ final class JobFx {
     static final int PAW = 4;
     static final int CLAW4 = 6;
     static final int MOON = 8;
+    /** 0.51.0 마검사 2차 그림: 공중 룬 글자 (종류마다 장 수 · 종류) · 하늘의 룬 스물넷 · 가시 룬 ᚦ · 땅의 거대한 ᚦ */
+    static final int GLYPH = 6;
+    static final int GLYPH_KINDS = 3;
+    static final int RUNES24 = 8;
+    static final int THORN = 6;
+    static final int THURS = 8;
     static final int STAR = 8;
     static final int TOME = 12;
     static final int BOW2 = 8;
@@ -126,9 +132,17 @@ final class JobFx {
      */
     static final double[] LYCAN_OUTER = {0.5, 0.58, 0.86};
 
-    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라). 0.51.0 라이칸은 짙은 달빛 은청 (LYCAN_OUTER — 붉은 눈빛은 발톱 · 눈 그림에만) */
+    /**
+     * 0.51.0 헥스 블레이드 겉빛 · 속빛 (검정 · 호박빛 — 컨셉 "거꾸로 선 룬"): 겉 (빛 칸 · 판의 몸) 은 검붉은 먹빛 (연기처럼 어두운 테), 속 (심지 · 판의 빛) 은 호박빛.
+     * 두 빛 중 짙은 쪽을 겉으로 고르는 규칙이면 호박빛이 겉 · 검정이 옅어진 회색 속이 되어 "검은 칼" 이 아니게 됨
+     */
+    static final double[] HEX_OUTER = {0.24, 0.07, 0.16};
+    static final double[] HEX_INNER = {1.0, 0.7, 0.26};
+
+    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라). 0.51.0 라이칸은 짙은 달빛 은청 (LYCAN_OUTER — 붉은 눈빛은 발톱 · 눈 그림에만) · 헥스 블레이드는 먹빛 */
     static double[] outer(Jobs.Job j) {
         if (j != null && JobTraits6.LY.equals(j.id())) return LYCAN_OUTER;
+        if (j != null && JobTraits7.HX.equals(j.id())) return HEX_OUTER;
         double[] a = JobKit.glow(j);
         double[] b = JobKit.core(j);
         return sat(a) >= sat(b) ? a : b;
@@ -136,6 +150,7 @@ final class JobFx {
 
     /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록). 0.51.0 라이칸은 직업 첫째 빛 (은회) 을 흰색 쪽으로 (달빛 흰빛) */
     static double[] inner(Jobs.Job j) {
+        if (j != null && JobTraits7.HX.equals(j.id())) return HEX_INNER;
         if (j != null && JobTraits6.LY.equals(j.id())) {
             double[] m = JobKit.glow(j);
             return new double[] {m[0] + (1 - m[0]) * 0.6, m[1] + (1 - m[1]) * 0.6, m[2] + (1 - m[2]) * 0.6};
@@ -1005,6 +1020,56 @@ final class JobFx {
         cells(level, "jninerunes", NINERUNES, 0, 9, at, Math.max(0.1, ignite), 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
         RuneKit.later(Math.max(1, (int) Math.round(ignite * 20) - 1), () -> cells(level, "jninerunes", NINERUNES, 9, 3, at, Math.max(0.1, hold), 8, true,
                 o.with("size", size, "fade", o.num("fade", 0.3)), outer(j), inner(j)));
+    }
+
+    // ------------------------------------------------------------ 0.51.0 마검사 2차 그림 (tools/job_fx_art_adv.py)
+
+    /**
+     * 공중에 새긴 룬 글자 (rfx_jglyph — 카메라를 봄): 글자 kind (0 ~ 2 — 지어낸 각진 글자 셋) 의 장 from 부터 count 장 — 0 ~ 1 획이 그어지며 새겨짐 · 2 ~ 3 빛남
+     * (loop 면 이어 돌림) · 4 번쩍 · 5 터져 흩어짐. 크기 약 size × 2 칸 (글자 높이 ≈ size × 1.2)
+     */
+    static void glyph(ServerLevel level, Vec3 at, double size, int kind, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int k = Math.floorMod(kind, GLYPH_KINDS);
+        int f = Math.max(0, Math.min(GLYPH - 1, from));
+        int n = Math.max(1, Math.min(GLYPH - f, count));
+        cells(level, "jglyph", GLYPH * GLYPH_KINDS, k * GLYPH + f, n, at, life, loop ? 6 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), glow, core);
+    }
+
+    static void glyph(ServerLevel level, Vec3 at, double size, int kind, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
+        glyph(level, at, size, kind, from, count, life, loop, o, outer(j), inner(j));
+    }
+
+    /**
+     * 하늘의 룬 스물넷 (rfx_jrunes24 — 카메라를 봄): 둥근 띠의 글자가 넷씩 켜짐 (0 ~ 5, ignite 초) → 모두 켜져 띠 안의 별 무늬가 이어짐 (6 · 7 — hold 초 이어 돌림).
+     * 너비 약 size × 2 칸 (글자 띠 반지름 ≈ size × 0.78)
+     */
+    static void runes24(ServerLevel level, Vec3 at, double size, Jobs.Job j, double ignite, double hold, Opt o) {
+        cells(level, "jrunes24", RUNES24, 0, 6, at, Math.max(0.1, ignite), 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
+        RuneKit.later(Math.max(1, (int) Math.round(ignite * 20) - 1), () -> cells(level, "jrunes24", RUNES24, 6, 2, at, Math.max(0.1, hold), 7, true,
+                o.with("size", size, "fade", o.num("fade", 0.35)), outer(j), inner(j)));
+    }
+
+    /**
+     * 가시 룬 ᚦ (rfx_jthorn — 카메라를 봄): 0 박힘 (번쩍) · 1 자리 잡음 · 2 ~ 3 맥동 (loop 면 이어 돌림) · 4 금이 감 · 5 터져 가시 조각. 장 from 부터 count 장.
+     * 크기 약 size × 2 칸 (글자 높이 ≈ size × 1.3)
+     */
+    static void thorn(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
+        int f = Math.max(0, Math.min(THORN - 1, from));
+        int n = Math.max(1, Math.min(THORN - f, count));
+        cells(level, "jthorn", THORN, f, n, at, life, loop ? 7 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), outer(j), inner(j));
+    }
+
+    /**
+     * 땅의 거대한 ᚦ (rfx_jthurs — 땅에 누움, 그림 위 = 바라본 쪽): 0 줄기 · 1 위 가시 획 · 2 아래 가시 획 (다 새겨짐) · 3 ~ 4 맥동 (이어 돌림) · 5 줄기를 따라 가른 빛 ·
+     * 6 ~ 7 금이 벌어지며 터짐. center = 룬 가운데 (줄기 가운데), facing = 줄기가 뻗는 쪽 (수평). 길이 약 size × 2 칸 (줄기 = size × 1.6)
+     */
+    static void thurs(ServerLevel level, Vec3 center, Vec3 facing, double size, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
+        int f = Math.max(0, Math.min(THURS - 1, from));
+        int n = Math.max(1, Math.min(THURS - f, count));
+        Vec3 fl = V.flat(facing);
+        double spin = V.len(fl) < 1e-3 ? 0 : Math.toDegrees(Math.atan2(fl.x, fl.z));
+        cells(level, "jthurs", THURS, f, n, center, life, loop ? 6 : 0, loop, o.with("dir", V.UP, "size", size, "spin", spin, "fade", o.num("fade", 0.25)), outer(j),
+                inner(j));
     }
 
     /** 망자의 비명 (rfx_jwail — 카메라를 봄): 연기가 비명 지르는 얼굴이 되어 (0 ~ 4) 찢겨 흩어짐 (5 ~ 7). 크기 약 size × 2 칸 */

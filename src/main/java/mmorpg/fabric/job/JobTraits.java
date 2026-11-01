@@ -77,6 +77,7 @@ public final class JobTraits {
         JobTraits4.init(); // 0.30.0 성기사 · 사제 · 수호기사
         JobTraits5.init(); // 0.51.0 2차 직업 (소드마스터 치명 · 용의 심장 · 블러드 나이트 피의 갈증 · 회그니의 맹세)
         JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 곰의 포효 · 라이칸 야성 · 겁먹음 · 늑대의 밤)
+        JobTraits7.init(); // 0.51.0 마검사 2차 (룬 나이트 각인 번짐 · 룬 담금질 · 헥스 블레이드 뒤집힌 룬 · 저주의 칼)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
             JobTraits6.tickFears(Tasks.now());
@@ -118,6 +119,7 @@ public final class JobTraits {
         JobTraits4.reset(sp);
         JobTraits5.reset(sp);
         JobTraits6.reset(sp);
+        JobTraits7.reset(sp);
         String p = sp.getUUID() + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
         sendGauge(sp, true);
@@ -131,6 +133,7 @@ public final class JobTraits {
         JobTraits4.forget(id);
         JobTraits5.forget(id);
         JobTraits6.forget(id);
+        JobTraits7.forget(id);
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
@@ -141,6 +144,7 @@ public final class JobTraits {
         JobTraits4.lifeEnded(id);
         JobTraits5.lifeEnded(id);
         JobTraits6.lifeEnded(id);
+        JobTraits7.lifeEnded(id);
         State st = STATES.get(id);
         if (st != null) {
             st.stacks = 0;
@@ -294,6 +298,11 @@ public final class JobTraits {
         of(sp).sureUntil = Tasks.now() + ticks;
     }
 
+    /** 0.51.0 마력 각인을 쓰는 직업 (마검사 · 각성 룬 나이트 — 반전 헥스 블레이드는 뒤집힌 룬) */
+    static boolean markJob(Jobs.Job j) {
+        return j != null && (j.id().equals("spellblade") || j.id().equals(JobTraits7.RK));
+    }
+
     /** 0.51.0 투지를 쓰는 직업 (검사 · 각성 소드마스터 — 반전 블러드 나이트는 피의 갈증) */
     static boolean fervor(Jobs.Job j) {
         return j != null && (j.id().equals("swordsman") || j.id().equals(JobTraits5.SM));
@@ -377,7 +386,7 @@ public final class JobTraits {
     private static RpgCombat.Bonus markBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
         if (w == null || victim == null || marks(sp, victim) <= 0) return null;
         Jobs.Job j = JobSystem.job(sp);
-        if (j == null || !j.id().equals("spellblade") || !j.usesWeapon(w.type())) return null;
+        if (!markJob(j) || !j.usesWeapon(w.type())) return null;
         double add = JobSystem.power(sp, j) * j.trait().def().numOr("markBurst", 1.0) * mmorpg.fabric.stattree.StatTrees.atkMult(sp);
         return new RpgCombat.Bonus(add, "§d◈", KEY_MARK, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
@@ -417,7 +426,7 @@ public final class JobTraits {
                     });
                 }
             }
-            case "spellblade" -> {
+            case "spellblade", "runeknight" -> {
                 if (!j.usesWeapon(w.type())) return;
                 of(sp).target = victim.getUUID();
                 if (has(bonus, KEY_MARK)) {
@@ -426,6 +435,7 @@ public final class JobTraits {
                     // 각인 폭발: 맞은 자리에서 터짐
                     JobFx.burst(level, at, 0.85 + Kit.bodyPad(victim) * 0.4, j, 0.3, Opt.empty());
                     SkillFx.play(level, "chime.amethyst_block", at, 1.6, 0.8);
+                    JobTraits7.spread(sp, victim, j, 1); // 0.51.0 룬 나이트: 둘레로 룬 폭발이 번짐
                 }
                 if (has(bonus, KEY_AWAKEN)) {
                     // 마력 참격 잔상: 평타 궤적을 따라 보라 · 청록 참격이 한 번 더 (2틱 뒤)
@@ -455,6 +465,7 @@ public final class JobTraits {
                 JobTraits4.tick(sp, j, now); // 0.30.0 수호의 맹세 회복
                 JobTraits5.tick(sp, j, now); // 0.51.0 흡혈 숫자
                 JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 야성
+                JobTraits7.tick(sp, j, now); // 0.51.0 저주 룬 표시
             }
             if (st == null || j == null) continue;
             // 태세가 끝남
@@ -519,6 +530,8 @@ public final class JobTraits {
             // 0.51.0 용의 심장 (가슴의 금빛 불씨 · 칼의 금빛) · 회그니의 맹세 (칼끝에서 떨어지는 핏방울)
         } else if (JobTraits6.stanceFx(sp, j, st.stance)) {
             // 0.51.0 늑대의 밤 (머리 위로 울부짖는 은빛 늑대 · 붉은 눈빛)
+        } else if (JobTraits7.stanceFx(sp, j, st.stance)) {
+            // 0.51.0 룬 담금질 (칼의 금빛 룬 불) · 저주의 칼 (칼의 먹빛 불꽃)
         } else if (st.stance.equals("archer_focus")) {
             // 정조준: 활을 든 손 앞 금빛 반짝임
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
@@ -547,7 +560,8 @@ public final class JobTraits {
         if (fervor(j)) value = st == null ? 0 : st.stacks; // 0.51.0 소드마스터도 투지 (최대 8)
         else if (j.id().equals(JobTraits5.BK)) value = JobTraits5.gaugeValue(sp, j); // 0.51.0 블러드 나이트 = 그 적의 상처 수
         else if (j.id().equals(JobTraits6.LY)) value = JobTraits6.gaugeValue(sp, j); // 0.51.0 라이칸 = 야성
-        else if (j.id().equals("spellblade")) {
+        else if (j.id().equals(JobTraits7.HX)) value = JobTraits7.gaugeValue(sp, j); // 0.51.0 헥스 블레이드 = 그 적의 저주 룬
+        else if (markJob(j)) { // 마검사 · 0.51.0 룬 나이트 = 그 적의 각인
             if (st != null && st.target != null) {
                 Entity e = sp.level().getEntity(st.target);
                 value = e == null || e.isRemoved() || !e.isAlive() ? 0 : marks(sp, e);

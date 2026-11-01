@@ -607,7 +607,7 @@
     "endlessSlash": {"fog": "rpg:ult_bloodvoid", "flash": [1, 0.76, 0.76]}
   },
   "ULT_FOGS_MORE": {
-    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸)",
+    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 헥스 블레이드 재앙의 룬 rpg:ult_hex (짙은 고동 — 호박빛 룬 · 검은 연기가 보이게)",
     "rpg:ult_glacier": [16, 96, "#1B3C80"],
     "rpg:ult_polar": [16, 100, "#0A2438"],
     "rpg:ult_deepsea": [12, 80, "#0E3A72"],
@@ -617,7 +617,8 @@
     "rpg:ult_ash": [6, 48, "#4A1608"],
     "rpg:ult_arena": [10, 72, "#6A5A48"],
     "rpg:ult_bloodvoid": [5, 40, "#2A0408"],
-    "rpg:ult_bloodsplit": [8, 56, "#5C0A14"]
+    "rpg:ult_bloodsplit": [8, 56, "#5C0A14"],
+    "rpg:ult_hex": [6, 44, "#24120C"]
   },
   "ARMOR_TYPE_ORDER": ["str", "dex", "vit", "strvit", "int", "intstr", "strdex", "dexint", "vitstr", "intvit"],
   "ARMOR_TYPES": {
@@ -937,7 +938,9 @@
       "spellblade_awaken": {"name": "마검 각성", "scale": 1.3, "glow": [0.62, 0.34, 1.0], "aura": [0.34, 0.96, 0.95], "weapons": ["sword", "greatsword"]},
       "reaper_avatar": {"name": "사신 현신", "scale": 1.0, "range": 5, "glow": [0.22, 0.96, 0.86], "aura": [0.08, 0.5, 0.52], "weapons": ["scythe"]},
       "warlord_bear": {"name": "곰의 화신", "scale": 1.5, "glow": [1.0, 0.62, 0.2], "aura": [0.62, 0.32, 0.1], "weapons": ["axe"]},
-      "lycan_night": {"name": "늑대의 밤", "scale": 1.15, "glow": [0.86, 0.9, 1.0], "aura": [0.9, 0.14, 0.18], "weapons": ["axe"]}
+      "lycan_night": {"name": "늑대의 밤", "scale": 1.15, "glow": [0.86, 0.9, 1.0], "aura": [0.9, 0.14, 0.18], "weapons": ["axe"]},
+      "runeknight_temper": {"name": "룬 담금질", "scale": 1.4, "glow": [1.0, 0.8, 0.32], "aura": [0.62, 0.34, 1.0], "weapons": ["sword", "greatsword"]},
+      "hexblade_curse": {"name": "저주의 칼", "scale": 1.2, "glow": [1.0, 0.64, 0.16], "aura": [0.3, 0.12, 0.26], "weapons": ["sword", "greatsword"]}
     }
   },
   "MOTION": {
@@ -1024,7 +1027,13 @@
       "warlord_crush": "jb_warlord_crush", "warlord_throw": "jb_warlord_throw", "warlord_throw:slam": "jb_warlord_throw_slam", "warlord_storm": "jb_warlord_storm",
       "warlord_roar": "jb_warlord_roar", "warlord_ult": "jb_warlord_leap", "warlord_ult:final": "jb_warlord_ult_final", "warlord_ult:leap": "jb_warlord_leap",
       "lycan_fang": "jb_lycan_fang", "lycan_pounce": "jb_lycan_pounce", "lycan_howl": "jb_lycan_howl", "lycan_night": "jb_lycan_night",
-      "lycan_ult": "jb_lycan_ult_pounce", "lycan_ult:final": "jb_lycan_ult_final", "lycan_ult:pounce": "jb_lycan_ult_pounce",
+      "lycan_ult": "jb_lycan_ult_pounce", "lycan_ult:final": "jb_lycan_ult_final", "lycan_ult:pounce": "jb_lycan_ult_pounce", "runeknight_carve": "jb_runeknight_carve",
+      "runeknight_carve:thrust": "jb_runeknight_carve_thrust", "runeknight_seid": "jb_runeknight_seid", "runeknight_seid:back": "jb_runeknight_seid_back", "runeknight_futhark": "jb_runeknight_futhark",
+      "runeknight_futhark:plant": "jb_runeknight_futhark_plant", "runeknight_temper": "jb_runeknight_temper", "runeknight_ult": "jb_runeknight_ult", "runeknight_ult:final": "jb_runeknight_ult_final",
+      "runeknight_ult:plunge": "jb_runeknight_ult_plunge", "runeknight_ult:slash0": "jb_runeknight_ult_slash0", "runeknight_ult:slash1": "jb_runeknight_ult_slash1", "runeknight_ult:slash2": "jb_runeknight_ult_slash2",
+      "hexblade_thorn": "jb_hexblade_thorn", "hexblade_thorn:lower": "jb_hexblade_thorn_lower", "hexblade_backstep": "jb_hexblade_backstep", "hexblade_hail": "jb_hexblade_hail",
+      "hexblade_hail:pull": "jb_hexblade_hail_pull", "hexblade_curse": "jb_hexblade_curse", "hexblade_ult": "jb_hexblade_ult", "hexblade_ult:cleave": "jb_hexblade_ult_cleave",
+      "hexblade_ult:stroke0": "jb_hexblade_ult_stroke0", "hexblade_ult:stroke1": "jb_hexblade_ult_stroke1", "hexblade_ult:stroke2": "jb_hexblade_ult_stroke2",
       "rune:abyssBrand": "rn_abyss_brand", "rune:arcanaUnity": "rn_arcana_unity", "rune:arcaneCut": "rn_arcane_cut",
       "rune:archangel": "rn_archangel", "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening",
       "rune:axeBoomerang": "rn_axe_boomerang", "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep",
@@ -1107,7 +1116,11 @@
       "jb_swordmaster_grani", "jb_swordmaster_moon", "jb_swordmaster_heart", "jb_swordmaster_heart_counter", "jb_swordmaster_ult", "jb_bloodknight_flurry",
       "jb_bloodknight_rush", "jb_bloodknight_burst", "jb_bloodknight_oath", "jb_bloodknight_ult", "jb_warlord_crush", "jb_warlord_throw",
       "jb_warlord_throw_slam", "jb_warlord_storm", "jb_warlord_roar", "jb_warlord_leap", "jb_warlord_ult_final", "jb_lycan_fang",
-      "jb_lycan_pounce", "jb_lycan_howl", "jb_lycan_night", "jb_lycan_ult_pounce", "jb_lycan_ult_final"
+      "jb_lycan_pounce", "jb_lycan_howl", "jb_lycan_night", "jb_lycan_ult_pounce", "jb_lycan_ult_final", "jb_runeknight_carve",
+      "jb_runeknight_carve_thrust", "jb_runeknight_seid", "jb_runeknight_seid_back", "jb_runeknight_futhark", "jb_runeknight_futhark_plant", "jb_runeknight_temper",
+      "jb_runeknight_ult", "jb_runeknight_ult_slash0", "jb_runeknight_ult_slash1", "jb_runeknight_ult_slash2", "jb_runeknight_ult_plunge", "jb_runeknight_ult_final",
+      "jb_hexblade_thorn", "jb_hexblade_thorn_lower", "jb_hexblade_backstep", "jb_hexblade_hail", "jb_hexblade_hail_pull", "jb_hexblade_curse",
+      "jb_hexblade_ult", "jb_hexblade_ult_stroke0", "jb_hexblade_ult_stroke1", "jb_hexblade_ult_stroke2", "jb_hexblade_ult_cleave"
     ],
     "weaponMotions": [
       "wp_gram_charge", "wp_gram_descent", "wp_gram_descent_dive", "wp_solas_rush", "wp_solas_halo", "wp_solas_halo_pillar",

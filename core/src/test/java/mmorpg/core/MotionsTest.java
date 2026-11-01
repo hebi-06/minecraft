@@ -207,9 +207,11 @@ public final class MotionsTest {
             String fn = strike.obj(g).str("fn");
             check(SwingLooks.of(fn) != null, "strike rune look " + g + " " + fn);
         }
-        // 0.51.0 2차 직업: 곰의 화신 (뵈드바르(워로드) — 분노 100 · 평타 범위 ×1.5) · 늑대의 밤 (울프헤딘(라이칸) 태세)
-        Map<String, Double> scales = Map.of("edgeHone", 1.15, "flurry", 1.2, "bloodBlade", 1.3, "cleave", 1.4, "swordGod", 1.5,
-                "swordsman_mirror", 1.2, "spellblade_awaken", 1.3, "reaper_avatar", 1.0, "warlord_bear", 1.5, "lycan_night", 1.15);
+        // 0.51.0 2차 직업: 곰의 화신 (뵈드바르(워로드) — 분노 100 · 평타 범위 ×1.5) · 늑대의 밤 (울프헤딘(라이칸) 태세) · 룬 담금질 (뵐룬드(룬 나이트) — 룬 대검 ×1.4) ·
+        // 저주의 칼 (투르스(헥스 블레이드))
+        Map<String, Double> scales = Map.ofEntries(Map.entry("edgeHone", 1.15), Map.entry("flurry", 1.2), Map.entry("bloodBlade", 1.3), Map.entry("cleave", 1.4),
+                Map.entry("swordGod", 1.5), Map.entry("swordsman_mirror", 1.2), Map.entry("spellblade_awaken", 1.3), Map.entry("reaper_avatar", 1.0),
+                Map.entry("warlord_bear", 1.5), Map.entry("lycan_night", 1.15), Map.entry("runeknight_temper", 1.4), Map.entry("hexblade_curse", 1.2));
         for (Map.Entry<String, Double> e : scales.entrySet()) {
             SwingLooks.Look l = SwingLooks.of(e.getKey());
             check(l != null && Math.abs(l.scale() - e.getValue()) < 1e-9 && l.glow() != null && l.aura() != null && SwingLooks.pack(l.glow()) != 0,
@@ -222,6 +224,8 @@ public final class MotionsTest {
         check(SwingLooks.of("cleave").fits("sword") && SwingLooks.of("cleave").fits("bow"), "rune looks fit any weapon");
         check(!SwingLooks.of("swordsman_mirror").fits("greatsword") && SwingLooks.of("spellblade_awaken").fits("greatsword"), "job look weapons");
         check(SwingLooks.of("warlord_bear").fits("axe") && !SwingLooks.of("warlord_bear").fits("sword") && SwingLooks.of("lycan_night").fits("axe"), "second-job looks: axe");
+        check(SwingLooks.of("runeknight_temper").fits("greatsword") && SwingLooks.of("hexblade_curse").fits("sword") && !SwingLooks.of("hexblade_curse").fits("axe"),
+                "second-job looks: magic sword");
         check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
         check(SwingLooks.of("nope") == null && SwingLooks.pack(new double[] {0, 0, 0}) == 1 && SwingLooks.pack(new double[] {1, 0.5, 0}) == 0xFF8000, "pack");
         // 스킬 표
