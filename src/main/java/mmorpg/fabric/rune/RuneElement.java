@@ -346,10 +346,18 @@ final class RuneElement {
                 for (Kit.LineHit h : RuneKit.lineTargets(sp, from, f, len, 1.4)) list.add(h.e());
                 Set<UUID> hit = new HashSet<>();
                 for (LivingEntity e : list) hit.add(e.getUUID());
+                boolean burst = false; // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 번개 찌르기가 처음 맞힌 적에 한 번
                 for (int idx = 0; idx < list.size(); idx++) {
                     LivingEntity e = list.get(idx);
                     int fd = idx / 2;
-                    if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) elementHitFx(level, e, "thunder", fd);
+                    if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) {
+                        elementHitFx(level, e, "thunder", fd);
+                        if (!burst) {
+                            burst = true;
+                            Vec3 feet = e.position();
+                            RuneKit.later(fd, () -> RuneBoost.impact(level, feet, glow, core, 2.5, r.grade())); // 0.50.0 2D 강화 (아래 등급 터짐): 맞은 자리 그림과 같은 틱에 그 적의 발밑
+                        }
+                    }
                     thunderChain(sp, e, P, k.num("chainMult"), k.num("chain"), hit, null, fd);
                 }
             }

@@ -284,6 +284,7 @@ final class RuneInt {
         }
         SkillFx.every(hits, gap, i -> {
             RuneKit.zonePulse(level, g, i % 2 == 1 ? core : glow, radius, 0.45);
+            if (i == 0) RuneBoost.impact(level, g, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 눈보라가 처음 내리치는 순간에 한 번 (틱마다 아님)
             SkillFx.play(level, "step.powder_snow", g, 0.8, 1);
             if (sp.isRemoved()) return;
             for (LivingEntity e : Kit.around(sp, g, radius, 4)) {
