@@ -444,8 +444,8 @@ export const SKILLS = {
     // 망자의 각성 (체력 대가 — 최대 체력 × cost 를 바침: 주위 radius 칸에 적이 없거나 바치면 1 아래가 되면 쓰지 않음, 이 스킬로 쓰러뜨리면 한 번 돌려받음):
     //   발밑 (그 자리에 남음) 에 무덤 룬, 둘레 radius 칸에 앙간튀르의 열두 형제 (warriors) 가 솟음 (rise 틱) → first 틱부터 step 틱마다 차례로 자기 쪽 (30°) 을 벰 (검 mult) →
     //   second 틱에 다 같이 내리벰 (검 mult) → final 틱에 무덤이 무덤불로 터짐 (마력 spellMult, 밀쳐 띄움). 한 대상 = mult × hits + spellMult
-    //   0.50.0 (사용자 "티르빙 궁은 실제 아군 몹이 나와서 때리는 느낌이면 좋을거 같음"): 자바 모드의 형제는 진짜 몹 (rpg:tyrfing_warrior — 솟아서 적에게 달려가
-    //   도끼로 내려침, 크기는 엔티티 정의) — 달려갈 틈이 있게 first 18 → 24 · second 50 → 58 · final 62 → 70 (피해 배율 그대로)
+    //   0.50.0 (사용자 "티르빙 궁은 실제 아군 몹이 나와서 때리는 느낌이면 좋을거 같음"): 자바 모드의 형제는 진짜 몹 (rpg:tyrfing_warrior — 둘레 1.5칸 바깥에서
+    //   솟아 적에게 달려가 도끼로 내려침, 크기는 엔티티 정의) — 달려갈 틈이 있게 first 18 → 24 · second 50 → 58 · final 62 → 70 (피해 배율 그대로)
     //   (hits 2 = 첫 바퀴 · 둘째 바퀴 — 스킬의 짜임새라 스탯 창 · 설명의 합에만 씀, 바꾸면 skills.js 의 바퀴 수도 같이)
     { id: "tyrfing_waking", name: "망자의 각성", desc: "열두 망자 전사가 달려가 베고 폭발", desc2: "체력 10% 대가 · 쓰러뜨리면 반환", cd: 30, mult: 3.5, hits: 2, spellMult: 11.9, cost: 0.1, radius: 5, warriors: 12, rise: 10, first: 24, step: 2, second: 58, final: 70 },
   ],

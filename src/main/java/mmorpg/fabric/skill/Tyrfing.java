@@ -381,8 +381,10 @@ final class Tyrfing {
 
     /** 전사가 솟는 깊이 (칸 — 키 2.4칸의 드라우그가 땅 밑에 다 묻혀 있다가 솟음) */
     static final double RISE_DEPTH = 2.6;
-    /** 적 몸 겉에서 이만큼 떨어져 섬 (도끼가 닿는 거리) */
-    static final double REACH = 1.1;
+    /** 적 몸 겉에서 이만큼 떨어져 섬 (도끼가 닿는 거리 — 몸이 거의 맞닿게) */
+    static final double REACH = 0.9;
+    /** 전사가 솟는 자리: 무덤 둘레 (radius) 에서 이만큼 바깥 (첫 영상: 둘레에서 솟으면 둘레 안의 적 곁이라 거의 달리지 않았음 — 바깥에서 솟아 달려듦) */
+    static final double RISE_OUT = 1.5;
     /** 달려가는 빠르기 (이동 속성 0.34 × — 땅 위 한 틱 ≈ 2.2 × 0.98 × (0.34 × RUN)² ≈ 0.39칸, 초당 약 8칸: 달리는 플레이어의 1.4배) */
     static final double RUN = 1.25;
 
@@ -440,7 +442,8 @@ final class Tyrfing {
      * 발밑 (그 자리에 남음) 에 핏빛 무덤 룬 → 둘레 radius 칸에 앙간튀르의 열두 형제 (warriors — 앞에서부터 오른쪽으로 30° 마다, 그 땅 높이) 가
      * 앞에서부터 양옆 · 뒤로 한 틱 사이로 무덤에서 솟음 (rise 틱).
      * 0.50.0 (사용자 "티르빙 궁은 실제 아군 몹이 나와서 때리는 느낌이면 좋을거 같음"): 형제는 진짜 몹 (TyrfingWarrior — 보랏빛 망령 드라우그: 뿔 투구 ·
-     * 방패 · 도끼) — 땅 밑에서 솟아 제 쪽의 적 (없으면 둘레의 다른 적 — 둘러쌈) 에게 달려가 도끼로 내려침. 피해 때는 그대로:
+     * 방패 · 도끼) — 둘레 1.5칸 바깥 (RISE_OUT) 의 땅 밑에서 솟아 제 쪽의 적 (없으면 둘레의 다른 적 — 둘러쌈) 에게 달려가 (발자국마다 무덤불)
+     * 도끼로 내려침. 피해 때는 그대로:
      * first 틱부터 step 틱마다 차례로 자기 쪽 (30°) 의 적을 벰 (검 mult — 적마다 한 번, 마지막 전사 때 아직 안 베인 둘레 안의 적도 — 그 틱에 그 전사가
      * 멀면 뛰어듦) → second 틱에 다 같이 내리벰 (검 mult) → final 틱에 형제가 무덤불로 흩어지며 무덤이 터짐 (마력 spellMult, 밀쳐 띄움 — 보스는 밀지
      * 않음 · 벤 적은 밀려났어도 radius + 2.5칸 안이면).
@@ -497,13 +500,13 @@ final class Tyrfing {
         SkillFx.shock(level, c0, TY_DEEP, (radius + 0.5) / 1.8, 0.6);
         SkillFx.play(level, "mob.warden.emerge", c0, 0.9, 1.1);
         SkillFx.play(level, "mob.evocation_illager.prepare_summon", c0, 1.0, 0.8);
-        // 전사 자리: 앞에서부터 오른쪽으로 30° 마다 (위에서 볼 때 시계 방향), 그 땅 높이
+        // 전사 자리: 앞에서부터 오른쪽으로 30° 마다 (위에서 볼 때 시계 방향), 둘레 RISE_OUT 칸 바깥 · 그 땅 높이
         List<Warrior> posts = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             double a = a0 + ((double) i / n) * Math.PI * 2;
             Vec3 u = new Vec3(Math.cos(a), 0, Math.sin(a));
-            double x = c0.x + u.x * radius;
-            double z = c0.z + u.z * radius;
+            double x = c0.x + u.x * (radius + RISE_OUT);
+            double z = c0.z + u.z * (radius + RISE_OUT);
             Double gy = tyGround(level, new Vec3(x, c0.y + 2.5, z), 6, c0.y + 0.1);
             posts.add(new Warrior(i, u, new Vec3(x, gy != null ? gy : c0.y, z), Math.min(i, n - i)));
         }
@@ -640,6 +643,10 @@ final class Tyrfing {
                     if (t - pathAt[p.i()] >= 4) {
                         x.getNavigation().moveTo(spot.x, spot.y, spot.z, RUN);
                         pathAt[p.i()] = t;
+                    }
+                    // 달리는 발자국마다 작은 무덤불 (3틱마다 — 전사 열둘이 다 달려도 한 틱에 넷)
+                    if ((t + p.i()) % 3 == 0 && x.onGround() && x.getDeltaMovement().horizontalDistance() > 0.12) {
+                        tyrFireFx(level, x.position(), 0.6, 0.3, SkillFx.WHITE, 0.6);
                     }
                 } else {
                     x.getNavigation().stop();

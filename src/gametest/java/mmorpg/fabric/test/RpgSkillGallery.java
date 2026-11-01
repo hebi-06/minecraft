@@ -47,6 +47,11 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         new Vec3(0.5, -60, -3.0)
     };
 
+    /** 영상 카메라 (거리 · 높이 · 보는 높이 — 무기 스킬은 넓게), 둘레 과녁 스킬은 위에서 내려다봄 (0.50.0 망자의 각성: 둘레에서 솟은 전사 열둘 중
+     *  카메라 쪽 전사가 화면 가운데를 가렸음 — 위에서 보면 둘레 · 달려드는 전사 · 과녁이 다 보임) */
+    private static final double[] VIEW = {7.6, 2.9, 1.9};
+    private static final double[] VIEW_RING = {9.0, 7.5, 0.0};
+
     /** 스킬 하나: 무기 종류 · 스킬 번호 · 사진 찍을 틱 (쓴 뒤) · 끝까지 기다릴 틱 · 둘레 과녁인지 */
     private record Case(String type, int index, int[] shots, int total, boolean ring) {
         Case(String type, int index, int[] shots, int total) {
@@ -78,7 +83,7 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         if (RpgProdSmoke.active()) return; // 배포 환경 시험 (prodClient) 은 짧은 시험만
         boolean film = RpgFilm.on() && RpgFilm.listed("filmsk"); // 0.48.2 스킬 영상 (only=film,filmsk) — 사진 대신 틱마다
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("skill"))) return; // 고른 시험만 (MMORPG_ONLY)
-        RpgFilm f = film ? new RpgFilm(ctx).view(7.6, 2.9, 1.9) : null;
+        RpgFilm f = film ? new RpgFilm(ctx).view(VIEW[0], VIEW[1], VIEW[2]) : null;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .adjustSettings(c -> c.setGameMode(WorldCreationUiState.SelectedGameMode.SURVIVAL))
@@ -216,6 +221,8 @@ public final class RpgSkillGallery implements FabricClientGameTest {
         boolean sneak = ranged ? c.index() == 0 : c.index() == 1;
         boolean hold = ranged && c.index() == 1;
         String how = hold ? "길게 우클릭" : sneak ? "웅크리고 우클릭" : "우클릭";
+        double[] v = c.ring() ? VIEW_RING : VIEW;
+        f.view(v[0], v[1], v[2]);
         f.begin(server, id, k.str("name"), w.name() + " · 초월 스킬 " + (c.index() + 1) + " (" + how + ")", c.ring() ? 1.5 : 4.0);
         f.frames(4);
         if (sneak) {
