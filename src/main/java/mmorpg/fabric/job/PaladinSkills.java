@@ -72,7 +72,7 @@ final class PaladinSkills {
         RuneKit.later(Math.max(0, hopT - 4), () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            JobFx.maulSwing(lv, V.up(g0, 0.05), 1.7, j, 0.3, JobFx.hide1p(sp));
+            JobFx.maulSwing(lv, V.up(g0, 0.05), 2.1, j, 0.3, JobFx.hide1p(sp));
             Vec3 look = sp.getViewVector(1F);
             JobFx.maulSwing(lv, V.add(V.add(sp.getEyePosition(), look, 2.7), JobFx.screenUp(look), -0.95), 1.35, j, 0.3, JobFx.only1p(sp));
         });

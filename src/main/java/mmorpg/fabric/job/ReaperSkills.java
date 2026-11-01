@@ -217,7 +217,7 @@ final class ReaperSkills {
             for (int q = 0; q < 4; q++) {
                 double a = Math.toRadians(q * 90 + 45 + Kit.rand() * 30);
                 Vec3 u = V.unit(new Vec3(Math.cos(a), 0.55, Math.sin(a)));
-                JobFx.wail(d, V.add(V.up(p, 1.3), u, 0.7), full ? 1.0 : 0.85, j, 0.8, JobFx.hide1p(sp).with("dir", u, "speed", 2.2));
+                JobFx.wail(d, V.add(V.up(p, 1.3), u, 1.1), full ? 1.0 : 0.85, j, 0.8, JobFx.hide1p(sp).with("dir", u, "speed", 3.0)); // 첫 영상: 폭발에 겹쳐 묻힘 → 더 바깥에서
             }
             JobFx.wail(d, V.add(V.add(sp.getEyePosition(), look, 2.8), JobFx.screenUp(look), 0.15), 0.9, j, 0.7, JobFx.only1p(sp));
             SkillFx.sparks(d, V.up(p, 1.0), JobKit.glow(j), 14, 6);

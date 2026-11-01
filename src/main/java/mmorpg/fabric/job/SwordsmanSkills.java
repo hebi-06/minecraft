@@ -227,7 +227,7 @@ final class SwordsmanSkills {
             JobTraits.sureCritFor(sp, critFor);
             RuneKit.Hand h = RuneKit.handOf(sp);
             // 0.50.0 칼끝 섬광 (재설계표 — rfx_jglint: 네 뿔 별 · 긴 가로 빛줄기 · 작은 고리, 번쩍 → 작아지며 돌아 사라짐)
-            JobFx.glint(sp.level(), V.up(V.add(h.hand(), h.f(), 0.7), 0.5), 0.34, j, 0.5, Opt.of("vel", RuneKit.bodyVel(sp), "spin", Kit.rand() * 20 - 10));
+            JobFx.glint(sp.level(), V.up(V.add(h.hand(), h.f(), 0.7), 0.5), 0.5, j, 0.6, Opt.of("vel", RuneKit.bodyVel(sp), "spin", Kit.rand() * 20 - 10));
             DamageNumbers.showFace(sp, "§b§l치명 준비", 2.4, 0.9, -0.35);
             SkillFx.play(sp.level(), "block.amethyst_block.chime", sp.position(), 1.7, 0.7);
         });
