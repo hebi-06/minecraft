@@ -883,7 +883,7 @@ final class JobFx {
     static final double FIREBALL_HEAD = 0.6;
     static final double ICELANCE_HEAD = 0.9;
     static final double SPARKORB_HEAD = 0.56;
-    static final double SUNARROW_HEAD = 0.8;
+    static final double SUNARROW_HEAD = 0.91;
     /** 번개 망치 내려치기 그림에서 내려친 자리 (칸 아래 가운데) 의 높이 — 칸 가운데에서 반 크기 × 이만큼 아래 */
     static final double MAULSWING_IMPACT = 0.7;
 
@@ -967,7 +967,7 @@ final class JobFx {
      * (2 ~ 5 이어 돌림)
      */
     static void pinned(ServerLevel level, Vec3 ground, double size, Jobs.Job j, double life, Opt o) {
-        Vec3 at = V.up(ground, size * 1.5);
+        Vec3 at = V.up(ground, size * 1.11); // 땅 점 = 칸 가운데에서 반 크기 × 1.11 아래
         cells(level, "jpinned", PINNED, 0, 2, at, 0.1, 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
         RuneKit.later(2, () -> cells(level, "jpinned", PINNED, 2, 4, at, Math.max(0.1, life - 0.1), 10, true, o.with("size", size, "fade", o.num("fade", 0.3)), outer(j),
                 inner(j)));
@@ -986,7 +986,8 @@ final class JobFx {
         Vec3 f = V.scale(d, 1 / len);
         // direction_z (면 = 위): 칸의 +X 는 세계 −X, +Y 는 +Z → 칸 안에서 spin 도 돌리면 +X = (−cos, 0, sin) — 길 쪽 f 가 되게
         double spin = Math.toDegrees(Math.atan2(f.z, -f.x));
-        two(level, "jwheel", WHEEL, V.lerp(from, to, 0.5), life, o.with("dir", V.UP, "size", len / 2 * 1.08, "spin", spin), outer(j), inner(j));
+        // 끝이 흐려지므로 조각끼리 겹치게 (한쪽 약 10% — 이음매가 어둡지 않게)
+        two(level, "jwheel", WHEEL, V.lerp(from, to, 0.5), life, o.with("dir", V.UP, "size", len / 2 * 1.24, "spin", spin), outer(j), inner(j));
     }
 
     /** 빛 고리 (rfx_jhalo — 땅에 누움): 반지름 radius 칸 (= 반 크기 × 0.88 — ring 과 같은 뜻) — 부드러운 빛 고리 · 가는 빛살 · 반짝임이 조금 퍼지며 사라짐 */
@@ -999,8 +1000,8 @@ final class JobFx {
     static final double[][] RAINBOW = {{1.0, 0.3, 0.34}, {1.0, 0.66, 0.22}, {0.38, 0.95, 0.45}, {0.32, 0.6, 1.0}, {0.72, 0.4, 1.0}};
 
     /**
-     * 무지개 다리 줄기 (rfx_jbifrost — 가는 쪽으로 누움, 이어 돌림): from → to 를 따라 무지개 다섯 띠 (위에서 빨강 → 보라, 띠 사이 gap 칸). 길을 2칸 남짓한 조각으로 나눠
-     * 띠 굵기가 길이와 상관없이 같게
+     * 무지개 다리 줄기 (rfx_jbifrost — 가는 쪽으로 누움, 이어 돌림): from → to 를 따라 무지개 다섯 띠 (위에서 빨강 → 보라, 띠 사이 gap 칸 — 0.11 이면 띠가 맞닿음).
+     * 조각 길이를 2.5칸으로 정해 (2.2칸마다 · 끝 조각은 길 끝에 맞춤) 띠 굵기 (높이의 35% — 약 0.11칸) 가 길이와 상관없이 같게
      */
     static void bifrost(ServerLevel level, Vec3 from, Vec3 to, double gap, double life, Opt o) {
         Vec3 d = V.sub(to, from);
@@ -1008,14 +1009,12 @@ final class JobFx {
         if (len < 0.3) return;
         Vec3 u = V.scale(d, 1 / len);
         int n = Math.max(1, (int) Math.ceil(len / 2.2));
-        double seg = len / n;
         for (int s = 0; s < n; s++) {
-            Vec3 mid = V.add(from, u, seg * (s + 0.5));
+            Vec3 mid = V.add(from, u, n == 1 ? len / 2 : Math.min(len - 1.1, 1.1 + 2.2 * s));
             for (int i = 0; i < RAINBOW.length; i++) {
                 double[] c = RAINBOW[i];
                 double[] core = {c[0] + (1 - c[0]) * 0.6, c[1] + (1 - c[1]) * 0.6, c[2] + (1 - c[2]) * 0.6};
-                loop(level, "jbifrost", BIFROST, V.up(mid, (2 - i) * gap), life, 12, o.with("dir", u, "size", seg / 2 * 1.15, "phase", (double) ((s + i) % BIFROST)), c,
-                        core);
+                loop(level, "jbifrost", BIFROST, V.up(mid, (2 - i) * gap), life, 12, o.with("dir", u, "size", 1.25, "phase", (double) ((s + i) % BIFROST)), c, core);
             }
         }
     }

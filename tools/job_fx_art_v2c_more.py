@@ -1,10 +1,45 @@
 #!/usr/bin/env python3
-"""v2c 직업 스킬 연출 그림 (더) — 새 스킬 연출 아홉 → tools/java_fx (rpg:rfx_j*).
+"""v2c 직업 스킬 연출 그림 (더) — 새 스킬 연출 아홉 (북유럽 신화 꼴) → tools/java_fx (rpg:rfx_j*).
 
   python3 tools/job_fx_art_v2c_more.py                        # 그림 · 파티클 정의를 tools/java_fx 에 씀 (java_fx_art.save)
   python3 tools/job_fx_art_v2c_more.py --only rfx_jfireball   # 몇 개만 (쉼표로 여럿)
-  python3 tools/job_fx_art_v2c_more.py --preview <폴더>       # 확인용 그림도 씀
-  python3 tools/job_fx_art_v2c_more.py --check                # 쓴 그림 검사 (보는 꼴 · 칸 크기 · 그림 크기 · NaN · 흰색 · 칸 가장자리 알파 < 7% · 빈 칸)
+  python3 tools/job_fx_art_v2c_more.py --preview <폴더>       # 확인용 그림도 씀 (그림마다: 직업 색 줄 · 다른 색 줄 · 작은 크기 줄 (× 0.33 — 휴대폰에서 멀리)
+                                                              #   · 한 장 크게 · 빛 / 심지 알파, 이어 돌리는 그림은 이웃 장 차이 (이음매) 를 찍음,
+                                                              #   rfx_jbifrost 는 무지개 다섯 색으로 비켜 겹친 그림 rfx_jbifrost_rainbow.png 도)
+  python3 tools/job_fx_art_v2c_more.py --check                # 쓴 그림 검사 (보는 꼴 · 칸 크기 · 열 수 · 흰색 · 칸 가장자리 알파 < 7% · 빈 칸)
+
+꼴은 tools/job_fx_art_v2.py · job_fx_art_v2b.py 와 같음 (그 도움 함수를 가져다 씀): 흰색 (밝기 = 알파) 으로 4배로 그려 LANCZOS 로 줄임 →
+빛 (넓고 흐린 겉 · 몸 채움) 장면 N 개 다음에 심지 (가늘고 또렷한 속 — 모서리 · 빛 줄 · 면 · 반짝임) 장면 N 개 (빛 = 칸 f, 심지 = 칸 N + f).
+두 겹은 같은 모양에서 그려 점 하나까지 겹침. 게임에서 빛 칸은 빛 색, 심지 칸은 심지 색으로 칠함. 고정 시드 · 칸 가장자리 3 점은 알파 0 ·
+다른 그림을 쓰지 않음 (새김은 지어낸 무늬 — 실제 룬 문자가 아님). 이어 돌리는 그림의 결 (노이즈) 은 모두 주기가 있어 마지막 장 → 첫 장이 이어짐.
+
+그림 (이름 — 보는 꼴 — 칸 — 장 수 — 열 · 칸 뜻 · 기준 자리):
+- rfx_jfireball   lookat_direction 256×96  ×4 열 4 (이어 돌림)  불덩이 (마법사 · 불): 공 가운데 x 205 (0.80 W · headAt 0.60) · 반지름 16.5 (앞 끝 0.87 W) ·
+                  공 겉이 일렁이고 속불이 끓음 · 공에서 떨어져 뒤로 넘실거리는 불 혀 여섯 · 가장자리 톱니 불길 · 뒤로 흐르는 불티 (x 20 까지 가늘어짐)
+- rfx_jicelance   lookat_direction 256×64  ×4 열 2 (이어 돌림)  얼음 창 (마법사 · 얼음): 끝 x 243 (0.95 W · headAt 0.90) · 꽁무니 x 84 · 마디마다 꺾이는
+                  육각 결정 (면 셋 · 능선 · 꺾임 줄) · 꽁무니의 작은 결정 다섯 · 심지에 면 줄 · 미끄러지는 빛 · 반짝임 · 뒤로 퍼지는 서리 안개 · 눈꽃
+- rfx_jsparkorb   lookat_direction 192×96  ×4 열 2 (이어 돌림)  번개 구슬 (마법사 · 번개): 구슬 가운데 x 150 (0.78 W · headAt 0.56) · 반지름 12.5 ·
+                  플라스마 구 (속 실 번개 · 테 · 가시 번개) · 뒤로 부채꼴로 퍼지며 갈라지는 번개 다섯 (장마다 다름) · 이온 꼬리 · 불똥
+- rfx_jsunarrow   lookat_direction 512×128 ×4 열 2 (이어 돌림)  솔의 화살 (궁수 궁극기): 촉 끝 x 490 (0.957 W · headAt 0.91) · 촉 가운데 x 455 (0.89 W) ·
+                  해 가운데 x 422 (0.82 W) 반지름 30 · 빛살 스물넷 (뒤쪽이 김 · 길이가 물결처럼 돎) · 테 안 구슬 열둘 (4 장에 한 칸) · 긴 살대를 따라 촉으로
+                  흐르는 빛 덩이 (96 점마다 · 24 점/장) · 불꽃 깃 (위 · 아래 · 가운데) · 오늬 x 50 ~ 63 · 깃에서 흩날리는 불티
+- rfx_jpinned     lookat_y         128×192 ×6 열 6               땅에 박힌 화살 (궁수 · 묶기 표시): 땅 자리 (64, 167) = 칸 가운데에서 71 점 아래 (반 너비 64 점 =
+                  size → 1.11 size 아래) · 화살은 10° 기울어 위로 (살대 끝 y 49 = 0.75 H · 깃 y 49 ~ 84 · 오늬 끝 y 42) · 묶는 빛 고리 = 땅 자리를 가운데로 한
+                  납작한 타원 (반지름 44 × 11 · 안 테 0.8 · 새김 열둘) — 뒤 반은 화살 뒤, 앞 반은 앞. 0 박힘 번쩍 (떨리는 화살 잔상 · 작은 충격 고리 · 튀는 흙),
+                  1 충격 고리가 퍼지고 묶는 고리가 생김, 2 ~ 5 버팀 (이어 돌림: 고리 맥동 · 새김이 4 장에 한 칸 돎 · 솟는 빛 줄 · 오르는 빛 알갱이)
+- rfx_jmaulswing  rotate_xyz       384×384 ×6 열 4               토르의 망치 내려치기 (성기사): 묠니르 꼴 망치 (머리 125 × 67 — 양끝 넓은 때리는 면 · 땋은 매듭 띠 ·
+                  마름모 보석 · 짧은 감은 자루 · 끈 고리). 0 오른쪽 위에서 들어 올림 (머리 가운데 (286, 106) · 번개가 기어 다님), 1 ~ 3 호를 그리며 가운데
+                  아래로 (잔상 띠 · 빠른 줄 · 자루 부채), 3 닿음 (머리 가운데 (192, 291) · 자루가 곧게 위), 4 터짐 (맞는 자리 (192, 324) = 가운데에서 132 점
+                  아래 · 번쩍 · 땅 충격 타원 112 × 27 · 사방 번개 여덟 · 땅 금 · 돌 조각), 5 사그라짐 (충격 타원 160 × 38 · 망치 옅어짐)
+- rfx_jwheel      direction_z      256×64  ×6 열 4               번개 수레 바퀴 자국 (성기사 · 이어 붙임): 길이 = x (반 길이 128 점 = size) · 그을린 자국 둘 = 가운데 y 32 ± 13
+                  (± 0.10 size) · 양 끝 4 ~ 24 점 (≈ 9%) 에서 옅어짐 (끝 4 점은 0 — jbeam2 처럼 조각마다 ~12% 씩 겹치면 이음매가 안 보임) · 자국 사이를
+                  건너뛰는 번개 · 자국을 따라 기는 번개 · 불똥. 0 ~ 1 밝음, 2 ~ 5 식으며 옅어짐
+- rfx_jhalo       direction_z      192×192 ×8 열 4               빛 고리 (사제): 고리 반지름 = 칸 × 0.44 (장 0 — ring2 와 같음, 반 크기 × 0.88) → 장마다 0.0022 S 씩
+                  커짐 (장 7 = 0.455 S) · 밝은 줄 · 안 테 둘 · 부드러운 빛 띠 (바깥은 좁게 · 둥근 창으로 옅어짐) · 안쪽으로 뻗는 가는 빛살 일흔둘 (처음 두 장에
+                  뻗음) · 반짝임. 0 나타남 번쩍 → 1 가장 밝음 → 옅어짐
+- rfx_jbifrost    lookat_direction 512×64  ×6 열 2 (이어 돌림)  비프로스트 무지개 다리 줄기 (수호자): 띠 가운데 y 32 (± 1.3 물결) · 반 두께 11.2 (두께 ≈ 높이의
+                  35%) · 가장자리 부드러움 · 왼쪽 끝 6 ~ 74 점 · 오른쪽 끝 7 ~ 38 점에서 옅어짐 · 오른쪽으로 흐르는 빛 줄기 (128 점마다 · 21.3 점/장) ·
+                  반짝이는 결 · 반짝임 — 게임이 다섯 색으로 조금씩 비켜 겹쳐 그림
 """
 import json
 import math
@@ -17,10 +52,9 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from java_fx_art import OUT, save  # noqa: E402 — 같은 꼴의 파티클 정의 · tools/java_fx 에 씀
-from job_fx_art_v2 import (BG, COLORS, SS, TAU, Pad, Stack, Xf, bevel_light, bez, bolt_pts, clamp01, ease_in_out, ease_out, edge_fade,  # noqa: E402
-                           gblur, glyph_mask, inner_dist, label, lerp, rim_of, rot_pts, screen, smooth, sparkle, star_pts, taper_poly,
-                           to_sheet)
-from job_fx_art_v2b import (arc_pts, band_cov, cut_polyline, fbm, finish, gauss, lens, polar, star4, streak, win_border)  # noqa: E402
+from job_fx_art_v2 import (BG, COLORS, SS, TAU, Pad, Stack, Xf, bevel_light, bez, bolt_pts, clamp01, ease_out, edge_fade, gblur,  # noqa: E402
+                           label, rim_of, rot_pts, smooth, sparkle, star_pts, taper_poly, to_sheet)
+from job_fx_art_v2b import (arc_pts, band_cov, fbm, finish, gauss, polar, star4, streak)  # noqa: E402
 
 TEX = os.path.join(OUT, "textures", "particle", "rpg", "fx")
 PART = os.path.join(OUT, "particles", "rpg", "fx")
@@ -61,12 +95,6 @@ def jag_path(rnd, pts, disp=0.2, levels=3, spread=0.55):
 
 def ellipse_pts(cx, cy, rx, ry, a0=0.0, a1=TAU, n=96):
     return [(cx + math.cos(a0 + (a1 - a0) * i / n) * rx, cy + math.sin(a0 + (a1 - a0) * i / n) * ry) for i in range(n + 1)]
-
-
-def tri_wave(x):
-    """0 ~ 1 톱니 → 0 → 1 → 0 세모 물결"""
-    x = np.mod(x, 1.0)
-    return 1 - np.abs(2 * x - 1)
 
 
 # ============================================================ 그림 목록 · 쓰기 · 확인용 그림 · 검사
@@ -451,7 +479,7 @@ def icelance_frame(f, frames=4):
         st.body = np.maximum(st.body, pad.stroke(pts, 3.5, 1.0, a0=0.35, a1=0.0, soft=1.0) * (1 - crystal))
     # ---- 반짝임: 끝 (장마다 크기 · 기울기) · 마디 모서리 · 서리 알갱이 (뒤로 흘러가며 깜빡임)
     tw = [1.0, 0.55, 0.85, 0.4][f]
-    st.add_core(sparkle(pad, tip - 3.5, cy, 6.5 + 4.5 * tw, 1.0, rot=0.12 * f, diag=0.45))
+    st.add_core(sparkle(pad, tip - 4.0, cy, 5.5 + 3.5 * tw, 1.0, rot=0.12 * f, diag=0.45))
     st.add_core(sparkle(pad, 150, cy - ht[2], 3.0 + 3.5 * (1 - tw), 0.95, rot=0.0, diag=0.0))
     st.add_core(sparkle(pad, 199, cy - ht[3], 2.5 + 2.5 * tw, 0.85, rot=0.0, diag=0.0))
     # 위 능선을 따라 미끄러지는 작은 반짝임 셋 (4 장에 한 칸)
@@ -468,7 +496,7 @@ def icelance_frame(f, frames=4):
         b = rnd.random()
         q = (b + f / frames) % 1.0
         x = butt - u0 - span * q
-        if x < 8:
+        if x < 13:
             continue
         tt = clamp01((butt - x) / (butt - 6))
         y = cy + rnd.uniform(-1, 1) * (4 + 15 * tt)
@@ -641,7 +669,7 @@ def sunarrow_frame(f, frames=4):
         r1 = r0 + 25.0 * k * (1 + 0.9 * back ** 1.4) * shim
         s_ = abs(math.sin(a))
         if s_ > 0.05:
-            r1 = min(r1, (cy - 6.5) / s_)
+            r1 = min(r1, (cy - 11.0) / s_)
         ux, uy = math.cos(a), math.sin(a)
         p0_, p1_ = (xs + ux * r0, cy + uy * r0), (xs + ux * r1, cy + uy * r1)
         wb = 1.0 + 1.4 * k
@@ -739,7 +767,11 @@ def sunarrow_frame(f, frames=4):
         st.add_core(star4(pad, x, y, 2.0 + 3.0 * twi, 0.35 + 0.55 * twi, rot=0.0, thin=0.16, diag=0.0))
     # 머리 쪽 큰 빛 무리
     st.body = np.maximum(st.body, pad.radial(xs + 14, cy, 76, 1.7) * 0.62)
-    return finish(pad, st.body, st.core, halo=((1.5, 0.5), (4.0, 0.4), (9.0, 0.24)), body_k=0.92, core_bloom=((1.5, 0.35), (4.0, 0.28)), win=4.0)
+    g1, c1 = finish(pad, st.body, st.core, halo=((1.5, 0.5), (4.0, 0.4), (9.0, 0.24)), body_k=0.92, core_bloom=((1.5, 0.35), (4.0, 0.28)), win=4.0)
+    # 위 · 아래 긴 가장자리 쪽으로 부드럽게 옅어짐 (머리 빛 무리가 칸 끝에서 곧게 잘리지 않게 — 빛살 끝은 y 11 ~ 117 안)
+    yy = np.arange(H, dtype=np.float32)[:, None] + 0.5
+    vw = smooth(3.0, 10.0, np.minimum(yy, H - yy))
+    return g1 * vw, c1 * vw
 
 
 sprite("rfx_jsunarrow", "lookat_direction", 512, 128, 4, 2, job="archer", loop=(0, 3), zoom=0, alt=[SUN],
@@ -748,7 +780,7 @@ sprite("rfx_jsunarrow", "lookat_direction", 512, 128, 4, 2, job="archer", loop=(
 
 # ------------------------------------------------------------ rfx_jpinned (땅에 박힌 화살 · 묶는 빛 고리 — 땅 자리 (64, 170), 0 ~ 1 박힘 번쩍 · 2 ~ 5 버팀 (이어 돌림))
 
-PN = dict(W=128, H=192, gx=64.0, gy=170.0, lean=math.radians(10.0), L=122.0, rx=44.0, ry=11.0)
+PN = dict(W=128, H=192, gx=64.0, gy=167.0, lean=math.radians(10.0), L=122.0, rx=44.0, ry=11.0)
 
 
 def pinned_arrow(pad, st, ang, alpha=1.0):
@@ -876,13 +908,14 @@ def pinned_frame(f, frames=6):
     else:
         # ---- 박힘: 번쩍 · 땅을 따라 퍼지는 충격 고리 · 튀어 오르는 흙 · 불티
         k = 1.0 if f == 0 else 0.62
-        st.add_core(sparkle(pad, gx, gy - 4, (40 if f == 0 else 26), k, rot=0.0, thin=0.07, diag=0.45))
+        under = smooth(gy + 13, gy + 3, Y)  # 번쩍은 땅 위로 (아래 빛살은 땅속으로 사라짐 — 칸 아래 끝에서 잘리지 않게)
+        st.add_core(sparkle(pad, gx, gy - 4, (40 if f == 0 else 26), k, rot=0.0, thin=0.07, diag=0.45) * under)
         st.add_core(pad.disc_field(gx, gy - 2, 6.5 * k, soft=2.0) * k)
-        st.body = np.maximum(st.body, pad.radial(gx, gy - 6, 40 * k + 8, 1.3) * k)
-        srx, sry = (27.0, 6.8) if f == 0 else (50.0, 12.4)
+        st.body = np.maximum(st.body, pad.radial(gx, gy - 6, 40 * k + 8, 1.3) * k * smooth(gy + 16, gy + 4, Y))
+        srx, sry = (27.0, 6.8) if f == 0 else (50.0, 11.0)
         sh = ellipse_pts(gx, gy, srx, sry, 0, TAU, 72)
         st.add_core(pad.stroke(sh, 2.6 if f == 0 else 1.3, a0=0.95 if f == 0 else 0.6))
-        st.body = np.maximum(st.body, pad.stroke(sh, 8.0 if f == 0 else 6.0, a0=0.75 if f == 0 else 0.4, soft=2.5))
+        st.body = np.maximum(st.body, pad.stroke(sh, 8.0 if f == 0 else 5.0, a0=0.75 if f == 0 else 0.4, soft=2.0))
         rnd = random.Random(717)
         q = 0.45 if f == 0 else 1.0
         for i in range(14):
@@ -901,8 +934,8 @@ def pinned_frame(f, frames=6):
             for j in range(3):
                 x = gx + sg * (10 + j * 12) * (0.7 + 0.5 * q)
                 st.body = np.maximum(st.body, pad.disc_field(x, gy - 2 - j, 7.0 - j, soft=4.0) * (0.45 if f == 0 else 0.3))
-    vfade = smooth(H - 1.0, H - 7.0, Y)
-    return finish(pad, st.body * vfade, st.core * vfade, halo=((1.2, 0.5), (3.0, 0.38), (7.0, 0.22)), body_k=0.9, core_bloom=((1.2, 0.34), (3.0, 0.26)), win=3.5)
+    vfade = smooth(H - 3.0, H - 11.0, Y)
+    return finish(pad, st.body * vfade, st.core * vfade, halo=((1.2, 0.5), (3.0, 0.38), (6.0, 0.2)), body_k=0.9, core_bloom=((1.2, 0.34), (3.0, 0.26)), win=3.5)
 
 
 sprite("rfx_jpinned", "lookat_y", 128, 192, 6, 6, job="archer", loop=(2, 5), zoom=3, alt=[SUN],
@@ -1194,7 +1227,7 @@ def wheel_frame(f, frames=6):
     X, Y = pad.grid()
     cy = H / 2
     env = WH_ENV[f]
-    ef = smooth(0.0, WH["end"], X) * smooth(W, W - WH["end"], X)
+    ef = smooth(4.0, WH["end"] + 6.0, X) * smooth(W - 4.0, W - WH["end"] - 6.0, X)
     glow = pad.zeros()
     core = pad.zeros()
     hot = [1.0, 0.9, 0.6, 0.4, 0.25, 0.12][f]  # 갓 그은 자국의 흰 속불 → 식으며 끊긴 불씨 줄로
@@ -1240,7 +1273,7 @@ def wheel_frame(f, frames=6):
         mid = ((pa[0] + pb[0]) / 2 + rnd.uniform(-14, 14), (pa[1] + pb[1]) / 2 + rnd.uniform(-4, 4))
         base = bez(pa, mid, pb, 4)
         pts = jag_path(rnd, base, 0.3, 3, 0.58)
-        pts = [(x, min(H - 7.0, max(7.0, y))) for x, y in pts]
+        pts = [(x, min(H - 10.0, max(10.0, y))) for x, y in pts]
         core = np.maximum(core, pad.stroke(pts, 1.6 * ak, 1.0 * ak, a0=env * 1.05, a1=env))
         glow = np.maximum(glow, pad.stroke(pts, 5.5 * ak, a0=env * 0.72, soft=2.0))
         for q_ in (pa, pb):
@@ -1251,7 +1284,7 @@ def wheel_frame(f, frames=6):
             bx_, by_ = pts[j]
             ba = rnd.uniform(0, TAU)
             bl = rnd.uniform(8, 16)
-            br = bolt_pts(rnd, (bx_, by_), (bx_ + math.cos(ba) * bl, min(H - 8.0, max(8.0, by_ + math.sin(ba) * bl * 0.6))), 0.3, 3, 0.6)
+            br = bolt_pts(rnd, (bx_, by_), (bx_ + math.cos(ba) * bl, min(H - 10.0, max(10.0, by_ + math.sin(ba) * bl * 0.6))), 0.3, 3, 0.6)
             core = np.maximum(core, pad.stroke(br, 1.0 * ak, 0.3, a0=env * 0.9, a1=env * 0.3))
             glow = np.maximum(glow, pad.stroke(br, 3.0 * ak, a0=env * 0.35, soft=1.2))
     for i in range(n_along * 2):
@@ -1260,14 +1293,14 @@ def wheel_frame(f, frames=6):
         xa = rnd.uniform(WH["end"] + 6, W - WH["end"] - 60)
         L = rnd.uniform(34, 60)
         pts = bolt_pts(rnd, (xa, yy + rnd.uniform(-1, 1)), (xa + L, yy + rnd.uniform(-1, 1)), 0.09, 5, 0.62)
-        pts = [(x, min(H - 7.0, max(7.0, y))) for x, y in pts]
+        pts = [(x, min(H - 10.0, max(10.0, y))) for x, y in pts]
         core = np.maximum(core, pad.stroke(pts, 1.3 * ak, 0.7, a0=env, a1=env * 0.7))
         glow = np.maximum(glow, pad.stroke(pts, 4.5 * ak, a0=env * 0.55, soft=1.5))
     for i in range(int(12 * env) + 2):
         sg = rnd.choice((-1, 1))
         x = rnd.uniform(WH["end"] + 4, W - WH["end"] - 4)
         y = cy + sg * (WH["off"] + rnd.uniform(-3, 9) * (1 if rnd.random() < 0.7 else -1))
-        y = min(H - 7.0, max(7.0, y))
+        y = min(H - 10.0, max(10.0, y))
         a = rnd.uniform(0, TAU)
         L = rnd.uniform(2.5, 6.0)
         al = rnd.uniform(0.5, 1.0) * env
@@ -1278,8 +1311,10 @@ def wheel_frame(f, frames=6):
             x = rnd.uniform(WH["end"] + 10, W - WH["end"] - 10)
             y = cy + rnd.choice((-1, 1)) * WH["off"]
             core = np.maximum(core, star4(pad, x, y, rnd.uniform(4.0, 6.5), env, rot=0.0, thin=0.13, diag=0.0))
-    glow, core = glow * ef, core * ef
-    return finish(pad, glow, core, halo=((1.1, 0.5), (2.8, 0.38), (6.0, 0.2)), body_k=0.88, core_bloom=((1.1, 0.36), (2.8, 0.26)), win=3.0)
+    # 띠의 긴 가장자리 쪽으로 부드럽게 옅어짐 (흐림이 칸 끝에서 곧게 잘려 땅에 금이 보이지 않게)
+    vf = smooth(1.0, 11.0, np.minimum(Y, H - Y))
+    glow, core = glow * ef * vf, core * ef * vf
+    return finish(pad, glow, core, halo=((1.1, 0.5), (2.8, 0.36), (5.0, 0.16)), body_k=0.88, core_bloom=((1.1, 0.36), (2.8, 0.24)), win=4.0)
 
 
 sprite("rfx_jwheel", "direction_z", 256, 64, 6, 4, job="paladin", zoom=0, alt=[THUNDER],
@@ -1296,18 +1331,18 @@ def halo_frame(f, frames=8):
     S = 192
     pad = Pad(S, S)
     c = S / 2
-    R = S * (0.44 + 0.0032 * f)
+    R = S * (0.44 + 0.0022 * f)
     env = HALO_ENV[f]
     rr, th = polar(pad, c, c)
     d = rr - R
     glow = pad.zeros()
     core = pad.zeros()
-    # ---- 고리: 또렷한 밝은 줄 · 안쪽 가는 줄 둘 · 부드러운 빛 띠 (안쪽으로 더 넓게 — 바깥은 칸 끝이 가까움)
+    # ---- 고리: 또렷한 밝은 줄 · 안쪽 가는 줄 둘 · 부드러운 빛 띠 (안쪽으로 넓게 · 바깥으로 좁게 — 바깥은 칸 끝이 가까움)
     wcore = 1.15 if f == 0 else 1.3 + 0.25 * min(1.0, f / 4)
     core = np.maximum(core, band_cov(d, wcore) * env)
     core = np.maximum(core, gauss(rr - R * 0.915, 0.5) * 0.5 * env)
     core = np.maximum(core, gauss(rr - R * 0.885, 0.4) * 0.3 * env)
-    glow = np.maximum(glow, gauss(d, 4.2) * 0.9 * env)
+    glow = np.maximum(glow, np.where(d > 0, gauss(d, 2.2), gauss(d, 4.6)) * 0.9 * env)
     glow = np.maximum(glow, gauss(rr - (R - 7.0), 11.0) * 0.36 * env)
     glow = np.maximum(glow, 0.09 * smooth(R * 1.0, R * 0.25, rr) * env)
     # ---- 가는 빛살: 고리에서 안쪽으로 (길게 · 중간 · 짧게 번갈아) · 바깥으로 짧은 가시 (처음 몇 장 — 커지면 칸 끝에 닿아서)
@@ -1322,18 +1357,18 @@ def halo_frame(f, frames=8):
         core = np.maximum(core, pad.stroke([p0_, p1_], 0.9 * (0.7 + 0.3 * k), 0.15, a0=0.85 * env * shim, a1=0.0))
         if i % 2 == 0:
             glow = np.maximum(glow, pad.stroke([p0_, p1_], 3.0, 0.6, a0=0.4 * env * shim, a1=0.0, soft=1.0))
-        if f <= 3 and i % 3 == 0:
+        if f <= 2 and i % 3 == 0:
             q0 = (c + ux * (R + 1.2), c + uy * (R + 1.2))
-            q1 = (c + ux * (R + 4.5 + 2.0 * k), c + uy * (R + 4.5 + 2.0 * k))
+            q1 = (c + ux * (R + 3.5 + 1.5 * k), c + uy * (R + 3.5 + 1.5 * k))
             core = np.maximum(core, pad.stroke([q0, q1], 0.8, 0.2, a0=0.55 * env, a1=0.0))
     # ---- 반짝임: 고리 위를 천천히 돌며 깜빡임 · 안쪽으로 떠도는 빛 알갱이
     rnd = random.Random(1717)
     for i in range(11):
         a = rnd.uniform(0, TAU) + 0.03 * f
-        rk = R + rnd.uniform(-3.0, 1.0)
+        rk = R + rnd.uniform(-4.0, 0.0)
         x, y = c + math.cos(a) * rk, c + math.sin(a) * rk
         tw = 0.5 + 0.5 * math.cos(f * 1.7 + i * 2.3)
-        sz = (3.5 + 5.0 * tw) * (0.6 + 0.4 * env)
+        sz = (3.0 + 4.0 * tw) * (0.6 + 0.4 * env)
         core = np.maximum(core, star4(pad, x, y, sz, env * (0.5 + 0.5 * tw), rot=0.0, thin=0.13, diag=0.35))
         glow = np.maximum(glow, pad.disc_field(x, y, 3.5, soft=2.0) * env * 0.6 * tw)
     for i in range(16):
@@ -1347,8 +1382,12 @@ def halo_frame(f, frames=8):
     if f == 0:
         # 나타나는 순간: 고리 전체가 가늘고 하얗게 번쩍
         core = np.maximum(core, gauss(d, 0.6) * 1.0)
-        glow = np.maximum(glow, gauss(d, 7.0) * 0.5)
-    return finish(pad, glow, core, halo=((1.2, 0.5), (3.0, 0.38), (6.5, 0.2)), body_k=0.9, core_bloom=((1.2, 0.34), (3.0, 0.26)), win=3.0)
+        glow = np.maximum(glow, np.where(d > 0, gauss(d, 3.0), gauss(d, 7.0)) * 0.5)
+    g1, c1 = finish(pad, glow, core, halo=((1.2, 0.5), (3.0, 0.36), (5.0, 0.16)), body_k=0.9, core_bloom=((1.2, 0.34), (3.0, 0.24)), win=3.0)
+    # 둥근 창: 고리 바깥 흐림이 칸 끝에서 곧게 잘리지 않고 둥글게 옅어짐 (고리 줄 = 반지름 ≤ 88.9 는 그대로)
+    yy, xx = np.mgrid[0:S, 0:S].astype(np.float32) + 0.5
+    r1 = np.sqrt((xx - c) ** 2 + (yy - c) ** 2)
+    return g1 * smooth(94.5, 88.5, r1), c1 * smooth(94.5, 90.0, r1)
 
 
 sprite("rfx_jhalo", "direction_z", 192, 192, 8, 4, job="priest", zoom=1, alt=[HOLY],
@@ -1367,7 +1406,7 @@ def bifrost_frame(f, frames=6):
     X, Y = pad.grid()
     cy = H / 2
     ph = TAU * f / frames
-    ends = smooth(2.0, BF["tail"], X) ** 1.2 * smooth(W - 2.0, W - BF["front"], X)
+    ends = smooth(6.0, BF["tail"], X) ** 1.2 * smooth(W - 7.0, W - BF["front"] - 4.0, X)
     # 띠가 리본처럼 살짝 물결침 (물결이 오른쪽으로 흐름 — 256 점에 한 물결)
     yc = cy + 1.3 * np.sin(X * TAU / 256.0 - ph)
     d = Y - yc
@@ -1390,7 +1429,7 @@ def bifrost_frame(f, frames=6):
     band = smooth(hb + 3.2, hb - 4.2, ad)
     glow = band * (0.7 + 0.18 * shimmer + 0.12 * clamp01(0.5 + n_s)) * ends
     glow = np.maximum(glow, band * clamp01(0.74 + 0.3 * prof_g) * ends)
-    glow = np.maximum(glow, gauss(d, hb * 1.25) * 0.35 * ends)
+    glow = np.maximum(glow, gauss(d, hb * 1.05) * 0.35 * ends)
     # ---- 심지: 가운데 밝은 속 (흐르는 결로 일렁임) · 가운데 가는 줄 · 가장자리 아주 가는 줄 둘 · 빛 줄기
     inner = smooth(hb * 0.7, hb * 0.12, ad)
     core = inner * (0.3 + 0.22 * shimmer) * ends
@@ -1414,7 +1453,9 @@ def bifrost_frame(f, frames=6):
         r = rnd.uniform(3.0, 5.5) * (0.6 + 0.4 * math.sin(math.pi * q))
         core = np.maximum(core, star4(pad, x, y, r, al, rot=0.0, thin=0.14, diag=0.0))
         glow = np.maximum(glow, pad.disc_field(x, y, 2.6, soft=1.2) * al * 0.5)
-    return finish(pad, glow, core, halo=((1.0, 0.45), (2.6, 0.34), (5.5, 0.18)), body_k=0.92, core_bloom=((1.0, 0.3), (2.6, 0.22)), win=3.0)
+    # 띠의 긴 가장자리 쪽으로 부드럽게 옅어짐 (흐림이 칸 끝에서 곧게 잘리지 않게)
+    vf = smooth(1.0, 10.0, np.minimum(Y, H - Y))
+    return finish(pad, glow * vf, core * vf, halo=((1.0, 0.45), (2.6, 0.32), (4.5, 0.14)), body_k=0.92, core_bloom=((1.0, 0.3), (2.6, 0.22)), win=3.0)
 
 
 sprite("rfx_jbifrost", "lookat_direction", 512, 64, 6, 2, job="guardian", loop=(0, 5), zoom=0, alt=[(RAINBOW[3], (0.8, 0.9, 1.0))],
