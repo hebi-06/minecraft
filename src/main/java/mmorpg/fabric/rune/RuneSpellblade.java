@@ -99,6 +99,7 @@ final class RuneSpellblade {
                 if (e.isRemoved()) continue;
                 Vec3 at = Kit.bodyPoint(e);
                 if (RuneKit.spellHit(sp, e, P, k.num("mult")) <= 0) continue;
+                if (n == 0) RuneBoost.impact(level, e.position(), glow, core, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마력 폭발이 처음 터진 적의 발밑
                 // 터지는 자리 (파티클 예산): 별빛 문장 6명 · 번쩍임 10명 · 불꽃 4명까지
                 if (n < 10) {
                     SkillFx.burst(level, at, glow, 1.1, 0.3);
@@ -176,6 +177,7 @@ final class RuneSpellblade {
             });
         }
         // 피해 (누른 순간 · gap 틱마다): 그때 광선 안의 적 모두 (적마다 한 번)
+        boolean[] burst = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 광선이 처음 맞힌 적에 한 번
         SkillFx.every(hits, gap, i -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
@@ -184,6 +186,10 @@ final class RuneSpellblade {
             for (Kit.LineHit h : RuneKit.lineTargets(sp, b.eye(), b.dir(), b.len(), k.num("width"))) {
                 LivingEntity e = h.e();
                 if (RuneKit.spellHit(sp, e, P, k.num("mult")) <= 0) continue;
+                if (!burst[0]) {
+                    burst[0] = true;
+                    RuneBoost.impact(level, e.position(), glow, core, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 광선이 처음 맞힌 적의 발밑
+                }
                 Vec3 at = Kit.bodyPoint(e);
                 if (n < 10) SkillFx.burst(level, at, glow, 0.7, 0.2); // 번쩍임 10명 · 불꽃 4명까지 (파티클 예산)
                 if (n < 4) SkillFx.sparks(level, at, core, 4, 5);
@@ -277,6 +283,8 @@ final class RuneSpellblade {
             for (double s = 0.6; s <= len; s += 1.2) if (far.test(V.add(start, f, s))) SkillFx.burst(level, V.up(V.add(start, f, s), 0.7), glow, 1.2, 0.3);
             for (double s = 0; s <= len; s += 2.4) if (far.test(V.add(start, f, s))) SkillFx.shock(level, V.add(start, f, s), glow, 0.9, 0.35);
             if (far.test(V.add(start, f, len / 2))) SkillFx.sparks(level, V.up(V.add(start, f, len / 2), 0.8), core, 10, 6);
+            // 0.50.0 2D 강화 (아래 등급 터짐): 갈라진 길 한가운데가 터짐 (반지름 = 길 폭 × 2 — 위의 터지는 빛처럼 내 몸 2.5칸 안이면 뺌)
+            if (far.test(V.add(start, f, len / 2))) RuneBoost.impact(level, V.add(start, f, len / 2), glow, core, width * 2, r.grade());
             SkillFx.play(level, "random.explode", V.up(V.add(start, f, len / 2), 0.5), 1.6, 0.5);
             SkillFx.play(level, "chime.amethyst_block", start, 0.8, 1);
             for (Kit.LineHit h : RuneKit.lineTargets(sp, from, f, len, width + 0.4)) {
@@ -331,6 +339,7 @@ final class RuneSpellblade {
             Vec3 eye = sp.getEyePosition();
             boolean magic = i % 2 == 1;
             RuneKit.zonePulse(level, c, magic ? glow : core, radius, 0.35);
+            if (i == hits - 1) RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 베기
             int n = 0;
             for (LivingEntity e : Kit.around(sp, c, radius, 3)) {
                 double d = magic ? RuneKit.spellHit(sp, e, P, k.num("mult")) : RuneKit.swordHit(sp, e, P, k.num("mult"));

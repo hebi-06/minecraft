@@ -170,6 +170,7 @@ final class RuneElement {
         int n = 0;
         for (LivingEntity e : RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 10)) {
             if (RuneKit.swordHit(sp, e, P, k.num("mult")) <= 0) continue;
+            if (n == 0) RuneBoost.impact(level, e.position(), glow, core, 2.5, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 처음 벤 적의 발밑
             elementEffect(e, "fire", k);
             elementHitFx(level, e, "fire", n / 4);
             Vec3 at = Kit.bodyPoint(e);
@@ -227,6 +228,9 @@ final class RuneElement {
             SkillFx.vanilla(level, "minecraft:snowflake_particle", V.add(from, f, len / 2));
             SkillFx.play(level, "mob.player.hurt_freeze", from, 1.0, 0.8);
             SkillFx.play(level, "break.amethyst_cluster", V.add(from, f, len / 2), 0.9, 1);
+            // 0.50.0 2D 강화 (아래 등급 터짐): 얼음 가시가 솟는 줄 한가운데 (가시와 같은 땅 높이 · 반지름 = 줄 폭 × 2)
+            Vec3 mq = V.add(feet, f, len / 2);
+            RuneBoost.impact(level, new Vec3(mq.x, RuneKit.groundAt(level, mq, feet.y), mq.z), glow, core, width * 2, r.grade());
             int n = 0;
             for (Kit.LineHit h : RuneKit.lineTargets(sp, from, f, len, width)) {
                 LivingEntity e = h.e();
@@ -268,6 +272,7 @@ final class RuneElement {
             if (!RuneKit.sameLife(sp, life)) return;
             Set<UUID> hit = new HashSet<>();
             for (LivingEntity e : cut) hit.add(e.getUUID());
+            boolean burst = false; // 0.50.0 2D 강화 (아래 등급 터짐): 번개가 처음 내리친 적에 한 번
             for (int idx = 0; idx < cut.size(); idx++) {
                 LivingEntity e = cut.get(idx);
                 if (e.isRemoved()) continue;
@@ -279,6 +284,10 @@ final class RuneElement {
                 else strike.run();
                 if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) {
                     elementHitFx(level, e, "thunder", fd);
+                    if (!burst) {
+                        burst = true;
+                        RuneKit.later(fd, () -> RuneBoost.impact(level, feet, glow, core, 2.5, r.grade())); // 0.50.0 2D 강화 (아래 등급 터짐): 번개 그림과 같은 틱에 그 적의 발밑
+                    }
                     // 0.49.0 감전: vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식 — 번개빛)
                     RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, idx < 8);
                 }

@@ -71,6 +71,9 @@ final class RuneDex {
         SkillFx.sparks(level, V.up(start, 0.5), glow, 6, 4);
         if (dist > 0.2) Kit.moveTo(sp, end); // 못 옮기면 (막힌 자리) 제자리에서 벰
         RuneKit.waveCard(level, V.up(V.add(end, f, 1.9), 1.0), f, V.UP, Opt.of("size", 1.2, "life", 0.22, "grow", 0.3, "fade", 0.6, "roll", 15.0), glow, core);
+        // 0.50.0 2D 강화 (아래 등급 터짐): 돌진을 마치고 내려선 자리 (막혀 못 옮겼으면 제자리) — 반지름 = 지나간 길의 너비
+        Vec3 land = sp.position();
+        RuneBoost.impact(level, new Vec3(land.x, RuneKit.groundAt(level, land, land.y), land.z), glow, core, width * 2, r.grade());
         SkillFx.play(level, "item.trident.riptide_1", start, 1.4, 0.8);
         SkillFx.play(level, "mob.enderdragon.flap", start, 1.8, 0.5);
         int n = 0;
@@ -99,6 +102,7 @@ final class RuneDex {
         int blades = (int) k.num("blades");
         Set<UUID> hit = new HashSet<>();
         List<LivingEntity> cands = Kit.around(sp, sp.position(), range + 1, 4);
+        boolean[] boomed = {false}; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 처음 맞은 적에 한 번
         for (int i = 0; i < blades; i++) {
             double deg = -spread / 2 + (spread * i) / Math.max(1, blades - 1);
             Vec3 h = RuneKit.turn(f, deg);
@@ -134,6 +138,11 @@ final class RuneDex {
                         SkillFx.fx(level, "rpg:slash_x", Kit.bodyPoint(target), Opt.of("dir", d, "size", 0.8, "life", 0.22, "color", glow, "alpha", 1.0));
                         SkillFx.sparks(level, Kit.bodyPoint(target), core, 3, 4);
                         SkillFx.play(level, "item.trident.hit", Kit.bodyPoint(target), 1.6, 0.5);
+                        if (!boomed[0]) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적의 발밑
+                            boomed[0] = true;
+                            Vec3 feet = target.position();
+                            RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.0, r.grade());
+                        }
                     }
                 });
             }
@@ -168,6 +177,7 @@ final class RuneDex {
         for (int i = 0; i < list.size(); i++) {
             LivingEntity e = list.get(i);
             int side = i % 2 == 1 ? 1 : -1;
+            boolean last = i == list.size() - 1; // 0.50.0 2D 강화 (아래 등급 터짐): 터짐은 마지막 분신의 베기에만
             Tasks.later(i * gap, () -> {
                 if (sp.isRemoved() || e.isRemoved()) return;
                 Vec3 fv = V.flat(sp.getViewVector(1F));
@@ -204,6 +214,10 @@ final class RuneDex {
                     SkillFx.cutMark(level, at, v, -40, 0.18, glow, core, 1.1 * xs);
                     SkillFx.sparks(level, at, core, 5, 5);
                     SkillFx.play(level, "game.player.attack.critical", at, 1.3, 0.8);
+                    if (last) { // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 분신이 벤 적의 발밑
+                        Vec3 feet = e.position();
+                        RuneBoost.impact(level, new Vec3(feet.x, RuneKit.groundAt(level, feet, feet.y), feet.z), glow, core, 2.5, r.grade());
+                    }
                     // 0.49.0 표식: 기습당한 적 vulnTicks 동안 받는 피해 + vuln (머리 위 금 간 표식)
                     if (RuneKit.runeHit(sp, e, P, k.num("mult"), r.stat()) > 0) RuneMarks.vuln(e, k.numOr("vuln", 0), (int) k.numOr("vulnTicks", 0), glow, core, true);
                 });
@@ -268,6 +282,7 @@ final class RuneDex {
                 }
             }
             if (i == hits - 1) SkillFx.play(level, "wind_charge.burst", c, 1.2, 0.8);
+            if (i == hits - 1) RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 베기 — 몸 둘레
         });
         return true;
     }

@@ -238,7 +238,7 @@ final class RuneHoly {
                             "color", RuneKit.WHITE, "grow", 0.5, "fade", 0.6));
                     SkillFx.ring(level, at, d, core, 0.8, 0.3, 0);
                     SkillFx.sparks(level, at, core, 8, 5);
-                    if (boom != null) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적의 발밑 (튄 망치는 없음)
+                    if (boom != null) { // 0.50.0 2D 강화 (아래 등급 터짐): 처음 맞은 적의 발밑 (한 번 던지기에 한 번)
                         Vec3 foot = e.position();
                         RuneBoost.impact(level, new Vec3(foot.x, RuneKit.groundAt(level, foot, foot.y - 1.2), foot.z), glow, core, 2.0, boom);
                         boom = null;

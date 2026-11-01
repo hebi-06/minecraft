@@ -66,6 +66,7 @@ final class RuneInt {
             SkillFx.ring(level, at, d, core, 0.9, 0.3, 0);
             SkillFx.sparks(level, at, glow, 10, 5);
             RuneKit.zonePulse(level, new Vec3(at.x, at.y - 0.9, at.z), glow, radius, 0.4);
+            RuneBoost.impact(level, new Vec3(at.x, RuneKit.groundAt(level, at, at.y - 1.2), at.z), glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 터진 자리의 땅
             SkillFx.vanilla(level, "minecraft:lava_particle", at);
             SkillFx.play(level, "random.explode", at, 1.4, 0.5);
             SkillFx.play(level, "fire.ignite", at, 1.0, 1);
@@ -114,6 +115,7 @@ final class RuneInt {
             });
         }
         SkillFx.burst(level, V.up(c, 1), core, 1.4, 0.3);
+        RuneBoost.impact(level, c, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 쓴 자리 (얼음 고리의 가운데)
         SkillFx.sparks(level, V.up(c, 0.8), core, 8, 4);
         for (int i = 0; i < 6; i++) {
             double a = Kit.rand() * Math.PI * 2;
@@ -222,6 +224,7 @@ final class RuneInt {
                 RuneKit.rfx(level, "boom", V.up(g, 1.0), Opt.of("size", radius * 0.8 * sc, "life", 0.55, "frames", 8.0, "fps", 15.0));
                 SkillFx.burst(level, V.up(g, 1), glow, 2.2, 0.35);
                 SkillFx.sparks(level, V.up(g, 1), core, 12, 6);
+                RuneBoost.impact(level, g, glow, core, radius, r.grade()); // 0.50.0 2D 강화 (아래 등급 터짐): 마지막 폭발
                 SkillFx.play(level, "random.fizz", g, 0.8, 1);
                 SkillFx.play(level, "random.explode", g, 1.1, 0.6);
             }
