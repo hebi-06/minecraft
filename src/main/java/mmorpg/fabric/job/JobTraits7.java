@@ -288,8 +288,7 @@ public final class JobTraits7 {
     /** 룬 담금질 평타: 몸 둘레의 마력 검 swords 자루가 맞은 적을 세 쪽에서 둘러 벰 (적 쪽으로 날아가 교차 — 금빛 줄 · 맞은 자리 글자 반짝) */
     static void temperSlashes(ServerPlayer sp, ServerLevel level, LivingEntity victim, Jobs.Job j, int swords) {
         Vec3 b = Kit.bodyPoint(victim);
-        Vec3 toMe = V.flat(V.sub(sp.position(), victim.position()));
-        Vec3 f = V.len(toMe) > 0.1 ? V.unit(toMe) : Kit.facingOf(sp);
+        Vec3 f = V.hdist(sp.position(), victim.position()) > 0.1 ? V.flat(V.sub(sp.position(), victim.position())) : Kit.facingOf(sp);
         for (int i = 0; i < swords; i++) {
             double a = Math.toRadians(-60 + 60 * i + (Kit.rand() - 0.5) * 16);
             Vec3 dir = V.turnY(f, Math.toDegrees(a));

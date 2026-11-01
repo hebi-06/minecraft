@@ -220,6 +220,13 @@ final class JobFx {
         slashCard(sp.level(), at, look, tilt, size * CARD, life, RuneKit.bodyVel(sp), j, hide1p(sp));
     }
 
+    /** 0.51.0 참격 판 빛: 겉빛 — 헥스 블레이드는 짙은 호박빛 (먹빛 겉빛의 판은 낮 하늘 · 풀밭에서 거의 보이지 않았음 — 영상 1) */
+    static final double[] HEX_SLASH = {0.92, 0.46, 0.1};
+
+    static double[] cardColor(Jobs.Job j) {
+        return j != null && JobTraits7.HX.equals(j.id()) ? HEX_SLASH : outer(j);
+    }
+
     /** 참격 판의 크기 (파티클 size 의 몫 — 파티클은 1인칭 눈앞 화면을 채우게 커서, 세상에 놓으면 몸보다 너무 큼 · 룬 ARC_CARD 와 같은 뜻) */
     static final double CARD = 0.75;
 
@@ -233,7 +240,7 @@ final class JobFx {
         double lf = Math.max(0.05, life);
         double roll = -tilt;
         Opt card = Opt.of("dir", d, "face", V.UP, "roll", roll, "scale", size, "life", lf, "grow", 0.15, "vel", vel, "anim", "play", "animSpeed", 1.0 / lf,
-                "fadeIn", 0.0, "fadeOut", lf * 0.3, "glowAlpha", 0.0, "color", outer(j), "glow", inner(j), "alpha", 0.95, "shine", 0.15, "view", view.num("view", 0),
+                "fadeIn", 0.0, "fadeOut", lf * 0.3, "glowAlpha", 0.0, "color", cardColor(j), "glow", inner(j), "alpha", 0.95, "shine", 0.15, "view", view.num("view", 0),
                 "owner", view.num("owner", 0));
         mmorpg.fabric.Fx3d.spawn(level, slashModel(j), at, RuneKit.faceCamIfFlat(card, d, V.UP, roll));
     }
@@ -1112,10 +1119,9 @@ final class JobFx {
 
     /** 천둥 바퀴 자국 (rfx_jwheel — 땅에 누움, 길을 따라): from → to 사이 땅에 그을린 두 줄 · 지직거리는 번개 (밝음 → 사라짐) */
     static void wheel(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double life, Opt o) {
-        Vec3 d = V.flat(V.sub(to, from));
-        double len = V.len(d);
+        double len = V.hdist(from, to); // 0.51.0 V.flat 은 단위 방향 — 길이는 hdist (전에는 늘 1 로 재어 조각이 걸음 길이와 맞지 않았음)
         if (len < 0.2) return;
-        Vec3 f = V.scale(d, 1 / len);
+        Vec3 f = V.flat(V.sub(to, from));
         // direction_z (면 = 위): 칸의 +X 는 세계 −X, +Y 는 +Z → 칸 안에서 spin 도 돌리면 +X = (−cos, 0, sin) — 길 쪽 f 가 되게
         double spin = Math.toDegrees(Math.atan2(f.z, -f.x));
         // 끝이 흐려지므로 조각끼리 겹치게 (한쪽 약 10% — 이음매가 어둡지 않게)

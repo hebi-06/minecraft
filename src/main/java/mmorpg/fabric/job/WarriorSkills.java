@@ -490,9 +490,8 @@ final class WarriorSkills {
                     // 0.50.0 펜리르의 늑대 기운 (재설계표 — rfx_jwolf): 몸 앞에 늑대 머리 · 뒤로 흩날리는 갈기 (3인칭 · 다른 사람 — 하나만 몸을 따라감). 가로로 눕힘
                     // (첫 영상: 뛰는 쪽 그대로면 솟는 동안 세로로 서서 머리가 몸 뒤에 가려 갈기만 다리에 보였음) · 머리는 몸 앞 0.9칸 가슴 높이
                     Vec3 v = V.sub(p, prev);
-                    Vec3 hv = V.flat(v);
-                    if (V.len(hv) > 0.04) {
-                        Vec3 u = V.unit(hv);
+                    if (Math.hypot(v.x, v.z) > 0.04) { // 0.51.0 수평으로 움직였을 때만 (V.flat 은 단위 방향이라 길이로 재면 늘 1)
+                        Vec3 u = V.flat(v);
                         JobFx.wolf(d, V.add(V.up(p, 1.15), u, 0.9), u, 1.9, 0.12, j, JobFx.hide1p(sp).with("solo", 41.0, "vel", V.scale(v, 20), "alpha", 0.95));
                     }
                 }

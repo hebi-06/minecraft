@@ -88,7 +88,7 @@ final class HexbladeSkills {
                         int shown = Math.min(thorns, 3);
                         for (int t = 0; t < shown; t++) {
                             Vec3 at = V.up(V.add(b, side, (t - (shown - 1) / 2.0) * 0.45), 0.15 * t);
-                            JobFx.thorn(l2, at, 0.32 + Kit.bodyPad(e) * 0.15, 0, 2, 0.4, false, Opt.of("vel", RuneKit.entVel(e), "spin", (t % 2 == 0 ? -1 : 1) * 14.0), j);
+                            JobFx.thorn(l2, at, 0.42 + Kit.bodyPad(e) * 0.15, 0, 2, 0.5, false, Opt.of("vel", RuneKit.entVel(e), "spin", (t % 2 == 0 ? -1 : 1) * 14.0), j);
                         }
                         SkillFx.play(l2, "block.pointed_dripstone.land", b, 1.3, 0.7);
                     }
@@ -378,11 +378,10 @@ final class HexbladeSkills {
                 JobFx.slash(sp, j, 2.4, 0.6, 2.4, ii == 0 ? 80.0 : ii == 1 ? 140.0 : 40.0, 0.24);
                 SkillFx.play(lv, "item.spear.attack_miss", sp.getEyePosition(), 0.9, 1.0);
                 SkillFx.play(lv, "block.basalt.break", segs[ii][1], 0.6, 1.0);
-                Vec3 d = V.flat(V.sub(segs[ii][1], segs[ii][0]));
-                double len = V.len(d);
+                double len = V.hdist(segs[ii][0], segs[ii][1]); // V.flat 은 단위 방향 — 획 길이는 hdist (CI 41306605712: 획이 1칸으로 재어져 줄기 위 적을 못 벴음)
                 if (len < 0.3) return;
                 int[] cnt = {0};
-                for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(segs[ii][0], 1.0), V.unit(d), len, half)) {
+                for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(segs[ii][0], 1.0), V.flat(V.sub(segs[ii][1], segs[ii][0])), len, half)) {
                     LivingEntity e = h.e();
                     JobKit.strike(sp, e, j, P, strokes.get(ii), true, false, life, 0, x -> {
                         if (cnt[0]++ < 8) JobFx.hit(e, j, 1.2);

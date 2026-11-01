@@ -151,9 +151,8 @@ final class LycanSkills {
                 Vec3 p = sp.position();
                 Vec3 v = V.sub(p, prev[0]);
                 prev[0] = p;
-                Vec3 hv = V.flat(v);
-                if (V.len(hv) > 0.04) {
-                    Vec3 u = V.unit(hv);
+                if (Math.hypot(v.x, v.z) > 0.04) { // 수평으로 움직였을 때만 (V.flat 은 단위 방향이라 길이로 재면 늘 1)
+                    Vec3 u = V.flat(v);
                     wolf(sp.level(), V.add(V.up(p, 1.1), u, 0.85), u, 1.4, 0.12, j, JobFx.hide1p(sp).with("solo", 44.0, "vel", V.scale(v, 20), "alpha", 0.9));
                 }
                 JobFx.speed(sp, j, 0.1, 0.7);
@@ -387,9 +386,8 @@ final class LycanSkills {
                 if (!RuneKit.moveTo(sp, p, focus)) Kit.moveTo(sp, p);
                 ServerLevel d = sp.level();
                 Vec3 v = V.sub(p, prev);
-                Vec3 hv = V.flat(v);
-                if (ss < ticks && V.len(hv) > 0.04) {
-                    Vec3 u = V.unit(hv);
+                if (ss < ticks && Math.hypot(v.x, v.z) > 0.04) { // 수평으로 움직였을 때만 (V.flat 은 단위 방향)
+                    Vec3 u = V.flat(v);
                     wolf(d, V.add(V.up(p, 1.1), u, 0.85), u, 1.3, 0.12, j, JobFx.hide1p(sp).with("solo", 44.0, "vel", V.scale(v, 20), "alpha", 0.85));
                 }
                 JobFx.speed(sp, j, 0.08, 0.7);

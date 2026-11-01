@@ -80,8 +80,8 @@ final class RuneknightSkills {
                 ServerLevel lv = sp.level();
                 JobFx.slash(sp, j, 2.2, 0.3, 1.9, CARVE_TILT[cc], 0.24);
                 // 새김 (0 ~ 1 — 획이 그어짐) → 빛남 (2 ~ 3 이어 돌림 — 찌를 때까지)
-                JobFx.glyph(lv, glyphAt[cc], 0.62, cc, 0, 2, 0.16, false, Opt.of("alpha", 0.95), j);
-                RuneKit.later(3, () -> JobFx.glyph(lv, glyphAt[cc], 0.62, cc, 2, 2, Math.max(0.1, (thrustAt - cc * gap - 3) / 20.0), true, Opt.of("alpha", 0.95), j));
+                JobFx.glyph(lv, glyphAt[cc], 0.85, cc, 0, 2, 0.16, false, Opt.of("alpha", 0.95), j); // 영상 1: 0.62 는 3인칭에서 머리보다 작아 잘 안 보였음
+                RuneKit.later(3, () -> JobFx.glyph(lv, glyphAt[cc], 0.85, cc, 2, 2, Math.max(0.1, (thrustAt - cc * gap - 3) / 20.0), true, Opt.of("alpha", 0.95), j));
                 SkillFx.sparks(lv, glyphAt[cc], JobFx.inner(j), 5, 2.2);
                 SkillFx.play(lv, "item.spear.attack_miss", sp.getEyePosition(), 1.15 + cc * 0.1, 0.85);
                 SkillFx.play(lv, "block.amethyst_block.chime", glyphAt[cc], 1.3 + cc * 0.2, 0.7);
@@ -107,7 +107,7 @@ final class RuneknightSkills {
             JobFx.speed(sp, j, 0.22, 0.8);
             for (int c = 0; c < 3; c++) {
                 Vec3 g = glyphAt[c];
-                JobFx.glyph(lv, g, 0.75, c, 4, 2, 0.3, false, Opt.of("alpha", 1.0), j);
+                JobFx.glyph(lv, g, 1.0, c, 4, 2, 0.3, false, Opt.of("alpha", 1.0), j);
                 JobFx.burst(lv, g, burstR * 0.45, j, 0.34, Opt.empty());
                 JobFx.ringFacing(lv, g, burstR * 0.55, j, V.unit(V.sub(sp.getEyePosition(), g)), 0.3, Opt.of("alpha", 0.85));
             }
@@ -166,11 +166,13 @@ final class RuneknightSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
             Vec3 now = sp.position();
+            // V.flat 은 수평 단위 방향 (길이 1) — 되돌아갈 거리는 hdist (CI 41306605712: 길이를 V.len(V.flat(…)) 로 재어 1칸만 되돌아왔음)
+            double backLen = V.hdist(start, now);
             Vec3 back = V.flat(V.sub(start, now));
-            Vec3 home = V.len(back) > 0.5 ? blinkTo(sp, d, now, V.unit(back), V.len(back)) : null;
+            Vec3 home = backLen > 0.5 ? blinkTo(sp, d, now, back, backLen) : null;
             JobKit.motion(sp, "runeknight_seid:back");
             if (home != null) {
-                blinkFx(sp, d, now, home, V.unit(back), j);
+                blinkFx(sp, d, now, home, back, j);
                 pathHits(sp, j, P, k.num("back", 1.2), now, home, half, life, marked);
             }
             circleBlast(sp, d, dest, radius, j, P, k.num("blast", 1.35), life, marked, 1);
@@ -208,11 +210,10 @@ final class RuneknightSkills {
 
     /** 지나간 길 (from → to · 반 폭 half) 의 적을 벰 (마법) */
     private static void pathHits(ServerPlayer sp, Jobs.Job j, double P, double mult, Vec3 from, Vec3 to, double half, String life, Set<UUID> marked) {
-        Vec3 d = V.flat(V.sub(to, from));
-        double len = V.len(d);
+        double len = V.hdist(from, to); // V.flat 은 단위 방향 — 길이는 hdist (CI 41306605712: 길이 1 로 재어 길의 적을 거의 못 벴음)
         if (len < 0.3) return;
         int[] cnt = {0};
-        for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(from, 1.0), V.unit(d), len, half)) {
+        for (Kit.LineHit h : RuneKit.lineTargets(sp, V.up(from, 1.0), V.flat(V.sub(to, from)), len, half)) {
             LivingEntity e = h.e();
             JobKit.strike(sp, e, j, P, mult, true, false, life, 0, x -> {
                 markOnce(sp, e, j, marked);
@@ -225,14 +226,14 @@ final class RuneknightSkills {
     private static void runeCircle(ServerLevel level, Vec3 c, double radius, Jobs.Job j, double life, int kind) {
         JobFx.runeRing(level, V.up(c, 0.12), radius * 0.92, j, 10, Kit.rand() * 36, Math.max(0.2, life), Opt.of("alpha", 0.85));
         JobFx.ring(level, V.up(c, 0.06), radius * 0.95, j, kind == 1, Math.max(0.2, life + 0.05), Opt.of("alpha", 0.7));
-        JobFx.glyph(level, V.up(c, 0.9), 0.5, kind, 0, 2, 0.15, false, Opt.of("alpha", 0.9), j);
-        RuneKit.later(3, () -> JobFx.glyph(level, V.up(c, 0.9), 0.5, kind, 2, 2, Math.max(0.1, life - 0.15), true, Opt.of("alpha", 0.9), j));
+        JobFx.glyph(level, V.up(c, 1.0), 0.7, kind, 0, 2, 0.15, false, Opt.of("alpha", 0.9), j);
+        RuneKit.later(3, () -> JobFx.glyph(level, V.up(c, 1.0), 0.7, kind, 2, 2, Math.max(0.1, life - 0.15), true, Opt.of("alpha", 0.9), j));
     }
 
     /** 룬 원이 터짐: 글자 번쩍 · 둥근 베기 · 큰 터짐 · 1인칭 눈앞 터짐 (쓴 사람이 그 안이면) · 둘레 radius 칸 (마법) */
     private static void circleBlast(ServerPlayer sp, ServerLevel level, Vec3 c, double radius, Jobs.Job j, double P, double mult, String life, Set<UUID> marked,
             int kind) {
-        JobFx.glyph(level, V.up(c, 0.9), 0.8, kind, 4, 2, 0.32, false, Opt.of("alpha", 1.0), j);
+        JobFx.glyph(level, V.up(c, 1.0), 1.0, kind, 4, 2, 0.32, false, Opt.of("alpha", 1.0), j);
         JobFx.ring(level, V.up(c, 0.06), radius, j, false, 0.4, Opt.empty());
         JobFx.burst(level, V.up(c, 1.0), radius * 0.55, j, 0.4, JobFx.hide1p(sp));
         if (sp.position().distanceTo(c) < radius) {
