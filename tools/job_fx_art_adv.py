@@ -397,20 +397,22 @@ def bear_frame(f, S=256):
     def TP(pts):
         return [T(x, y) for x, y in pts]
 
-    # ---- 어깨 · 몸 (맨 뒤 — 둥근 어깨 · 털 가시 · 아래로 흐려짐)
+    # ---- 어깨 · 몸 (맨 뒤 — 둥근 어깨 · 털 가시 · 허리로 좁아지며 가슴 아래부터 흐려짐)
+    # 영상 1 (0.51.0): 어깨 너비 그대로 칸 아래 끝까지 내려가 · 짙게 채운 몸이 곰의 화신 (몸을 감쌈) 에서 주황 상자처럼 보였음 →
+    # 허리로 좁힘 (아래 끝 너비 136 → 44) · 흐려짐을 가슴 (168) 부터 · 채움을 옅게 (0.42 → 0.28 — 테 · 털결로 꼴을 읽게)
     sh = []
     for i in range(49):
         u = i / 48
         x = 30 + 196 * u
         top = 172 - 30 * math.sin(math.pi * u) ** 0.6 + 7 * max(0.0, math.sin(u * 34 + loop_ph)) ** 3
         sh.append((x, top))
-    sh += [(214, 214), (196, 252), (60, 252), (42, 214)]
+    sh += [(210, 200), (184, 230), (150, 250), (106, 250), (72, 230), (46, 200)]
     shm0 = pad.poly(TP(sh))
     fur = fbm(X / 14.0, Y / 9.0 + loop_ph * 0.15, seed=12, octaves=3)
-    fade = smooth(246.0, 182.0, Y)
+    fade = smooth(236.0, 168.0, Y)
     shm = shm0 * fade
     lit, dark, _ = bevel_light(shm0, 18.0)
-    st.over(shm, (0.42 + 0.14 * lit - 0.1 * dark) * (0.8 + 0.3 * fur), rim_of(shm0, 1.2) * 0.35 * shm)
+    st.over(shm, (0.28 + 0.12 * lit - 0.08 * dark) * (0.8 + 0.3 * fur), rim_of(shm0, 1.2) * 0.45 * shm)
     for i in range(9):  # 가슴 털결
         x0 = 70 + 14 * i + rnd.uniform(-3, 3)
         y0 = 182 + rnd.uniform(-4, 8)

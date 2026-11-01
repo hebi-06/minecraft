@@ -495,7 +495,7 @@ final class WarlordSkills {
         Vec3 c0 = sp.position();
         double[] glow = JobKit.glow(j);
         Ult.sky(level0, c0, "rpg:ult_meteor", finalAt + 30);
-        JobFx.aura(sp, j, 3.0, 0.8, 1.0);
+        // 몸의 기운 (JobFx.aura) 은 그리지 않음 — 영상 1: 첫 도약이 바로 떠나 쓴 자리에 빈 불꽃 판만 0.8초 남았음
         JobFx.ring(level0, V.up(c0, 0.06), 3.0, j, false, 0.5, Opt.empty());
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
         SkillFx.sparks(level0, V.up(c0, 1.0), glow, 12, 4);
@@ -521,25 +521,31 @@ final class WarlordSkills {
             SkillFx.play(sp.level(), "mob.breeze.jump", sp.position(), 0.6, 1.0);
             SkillFx.sparks(sp.level(), V.up(sp.position(), 0.2), DUST, 10, 3.5);
         });
-        // 곰의 혼이 일어섬 (마지막 착지 + 2): 몸 뒤에서 거대한 곰 (3인칭 · 다른 사람) — 1인칭은 화면 위쪽 빛
+        // 곰의 혼이 일어섬 (마지막 착지 + 2): 앞 (적 무리 너머 7칸) 땅에서 거대한 곰이 솟아 앞발을 듦 — 1 · 3인칭 모두.
+        // 영상 1: 몸 뒤 (1.6칸) 에 세웠더니 3인칭 뒤 카메라와 몸 사이라 화면을 덮는 납작한 얼굴이 되고 1인칭에서는 보이지 않았음
+        Vec3[] bearAt = {null};
         RuneKit.later(lastLand + 2, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
             Vec3 f = Kit.facingOf(sp);
-            Vec3 at = V.up(V.add(last[0], f, -1.6), 4.2);
-            JobFx.bear(d, at, 4.4, (finalDelay + 6) / 20.0, 0, JobFx.BEAR - 1, false, JobFx.hide1p(sp).with("alpha", 0.92), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
-            SkillFx.play(d, "entity.polar_bear.warning", sp.position(), 0.5, 1.5);
-            SkillFx.play(d, "mob.ravager.roar", sp.position(), 0.6, 1.0);
+            bearAt[0] = V.up(V.add(last[0], f, 7.0), 4.4);
+            JobFx.bear(d, bearAt[0], 4.6, (finalDelay + 6) / 20.0, 0, JobFx.BEAR - 1, false, Opt.of("alpha", 0.85, "coreAlpha", 0.95), JobTraits6.bearGlow(j),
+                    JobTraits6.bearCore(j));
+            SkillFx.play(d, "entity.polar_bear.warning", bearAt[0], 0.5, 1.5);
+            SkillFx.play(d, "mob.ravager.roar", bearAt[0], 0.6, 1.0);
         });
-        // 앞발 (finalAt − 7 → finalAt): 위에서 내리치는 거대한 곰 앞발 — 앞 3칸 땅으로 (1인칭 · 3인칭 모두)
+        // 앞발 (finalAt − 7 → finalAt): 곰이 머리 위로 든 거대한 앞발이 앞 3칸 땅으로 내리침 (곰 쪽 위에서 비스듬히 — 1인칭 · 3인칭 모두).
+        // 영상 1: 크기 2.6 · 곧게 아래로는 곰 (4.4) 에 비해 작고 곰과 떨어져 보였음 → 3.4 · 곰의 오른쪽 위에서
         RuneKit.later(finalAt - 7, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
             Vec3 f = Kit.facingOf(sp);
-            Vec3 hit = V.add(last[0], f, 3.0);
-            Vec3 from = V.up(hit, 7.0);
-            double speed = 7.0 / (7 / 20.0);
-            JobFx.paw(d, from, 2.6, 7 / 20.0 + 0.05, Opt.of("dir", V.DOWN, "speed", speed, "alpha", 0.95), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
+            Vec3 hit = V.up(V.add(last[0], f, 3.0), 0.6);
+            Vec3 top = bearAt[0] != null ? bearAt[0] : V.up(V.add(last[0], f, 7.0), 4.4);
+            Vec3 from = V.up(V.add(V.add(top, f, -1.5), V.rightOf(f), 1.2), 5.0);
+            Vec3 dir = V.unit(V.sub(hit, from));
+            double speed = V.len(V.sub(hit, from)) / (7 / 20.0);
+            JobFx.paw(d, from, 3.4, 7 / 20.0 + 0.05, Opt.of("dir", dir, "speed", speed, "alpha", 0.95), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
             SkillFx.play(d, "item.trident.riptide_3", sp.position(), 0.6, 0.9);
         });
         RuneKit.later(finalAt, () -> {

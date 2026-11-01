@@ -120,15 +120,21 @@ final class JobFx {
 
     // ------------------------------------------------------------ 색
 
-    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라). 0.51.0 라이칸은 첫째 빛 (달빛 은회 — 붉은 눈빛은 발톱 · 눈 그림에만) */
+    /**
+     * 라이칸 겉빛 (짙은 달빛 은청 — 영상 1: 직업 첫째 빛 (은회 0.76 · 0.8 · 0.92) 은 낮 하늘과 밝기 · 빛이 같아 X자 베기 · 늑대 기운 · 달이 하늘 앞에서 묻혔음.
+     * 마니의 은활 만월 (짙은 달빛 파랑) 과 같은 까닭으로 짙게 — 피해 숫자 · 칸 HUD 는 직업 빛 그대로)
+     */
+    static final double[] LYCAN_OUTER = {0.5, 0.58, 0.86};
+
+    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라). 0.51.0 라이칸은 짙은 달빛 은청 (LYCAN_OUTER — 붉은 눈빛은 발톱 · 눈 그림에만) */
     static double[] outer(Jobs.Job j) {
-        if (j != null && JobTraits6.LY.equals(j.id())) return JobKit.glow(j);
+        if (j != null && JobTraits6.LY.equals(j.id())) return LYCAN_OUTER;
         double[] a = JobKit.glow(j);
         double[] b = JobKit.core(j);
         return sat(a) >= sat(b) ? a : b;
     }
 
-    /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록). 0.51.0 라이칸은 달빛을 흰색 쪽으로 (달빛 흰빛) */
+    /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록). 0.51.0 라이칸은 직업 첫째 빛 (은회) 을 흰색 쪽으로 (달빛 흰빛) */
     static double[] inner(Jobs.Job j) {
         if (j != null && JobTraits6.LY.equals(j.id())) {
             double[] m = JobKit.glow(j);

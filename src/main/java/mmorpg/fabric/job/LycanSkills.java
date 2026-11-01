@@ -47,9 +47,9 @@ final class LycanSkills {
         JobFx.claw4(level, at, size, spin, life, o, JobKit.core(j), JobFx.inner(j));
     }
 
-    /** 늑대 기운 (rfx_jwolf — 달빛 겉 · 붉은 속: 눈 · 이빨이 붉게) */
+    /** 늑대 기운 (rfx_jwolf — 짙은 달빛 겉 · 흰 속. 영상 1: 은회 겉 · 붉은 속은 낮 하늘 앞에서 옅은 분홍 얼룩으로 보였음) */
     static void wolf(ServerLevel level, Vec3 head, Vec3 dir, double size, double life, Jobs.Job j, Opt o) {
-        JobFx.loop(level, "jwolf", JobFx.WOLF, V.add(head, dir, -size * JobFx.WOLF_HEAD), life, 12, o.with("dir", dir, "size", size), JobKit.glow(j), JobKit.core(j));
+        JobFx.loop(level, "jwolf", JobFx.WOLF, V.add(head, dir, -size * JobFx.WOLF_HEAD), life, 12, o.with("dir", dir, "size", size), JobFx.outer(j), JobFx.inner(j));
     }
 
     // ------------------------------------------------------------ 송곳니 베기
@@ -197,9 +197,10 @@ final class LycanSkills {
         ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
         Vec3 f0 = Kit.facingOf(sp);
-        // 하늘의 보름달 (앞 위 — 1 · 3인칭 모두): 은빛 원판 · 빛무리
-        Vec3 moonAt = V.up(V.add(sp.getEyePosition(), f0, 7.0), 5.0);
-        JobFx.moon(level0, moonAt, 1.8, 0, 1, 1.4, Opt.of("alpha", 0.95), JobKit.glow(j), WHITE);
+        // 하늘의 보름달 (앞 위 — 1 · 3인칭 모두): 짙은 달빛 원판 · 빛무리 (낮 하늘 앞에서 보이게 — JobFx.outer).
+        // 영상 1: 눈에서 앞 7칸 · 5칸 위는 35° 위라 1인칭 화면 위 끝 → 앞 8칸 · 3.2칸 위 (22°)
+        Vec3 moonAt = V.up(V.add(sp.getEyePosition(), f0, 8.0), 3.2);
+        JobFx.moon(level0, moonAt, 2.0, 0, 1, 1.4, Opt.of("alpha", 0.95), JobFx.outer(j), WHITE);
         wolf(level0, V.up(V.add(c0, f0, -0.3), 2.7), V.UP, 1.25, 0.9, j, JobFx.hide1p(sp).with("solo", 45.0, "alpha", 0.85));
         JobTraits6.eyeGlint(sp, j, 0.8);
         SkillFx.play(level0, "item.goat_horn.sound.0", c0, 1.35, 0.9);
@@ -261,7 +262,7 @@ final class LycanSkills {
         Vec3 c = sp.position();
         Vec3 f = Kit.facingOf(sp);
         wolf(level, V.up(V.add(c, f, -0.35), 2.8), V.UP, 1.5, 0.9, j, JobFx.hide1p(sp).with("solo", 43.0, "alpha", 0.9));
-        JobFx.moon(level, V.up(V.add(sp.getEyePosition(), f, 6.0), 4.2), 1.2, 0, 1, 1.0, Opt.of("alpha", 0.85), JobKit.glow(j), WHITE);
+        JobFx.moon(level, V.up(V.add(sp.getEyePosition(), f, 7.0), 2.8), 1.4, 0, 1, 1.0, Opt.of("alpha", 0.85), JobFx.outer(j), WHITE); // 22° 위 (1인칭 화면 안)
         JobFx.aura(sp, j, 3.0, 1.0, 0.9);
         JobFx.ring(level, V.up(c, 0.06), 2.6, j, false, 0.5, Opt.empty());
         JobFx.eyeRing(sp, j, 2.4, 1.0, 0.5);
@@ -295,11 +296,13 @@ final class LycanSkills {
         Ult.sky(level0, c0, "rpg:ult_night", finalAt + 25);
         RpgCombat.setSteadfast(sp, finalAt + 10);
         Kit.noFall(sp, finalAt + 40);
-        // 하늘의 달 (앞 위 — 쓴 자리에 머묾): 보름달 → 여섯 덮침 동안 그림자가 삼킴 (0 ~ 5) → 붉은 테 (6 ~ 7 · 마지막)
-        Vec3 moonAt = V.up(V.add(c0, f0, 12.0), 9.0);
-        JobFx.moon(level0, moonAt, 3.2, 0, 6, (lastLand + 4) / 20.0, Opt.of("alpha", 0.95), JobKit.glow(j), WHITE);
-        RuneKit.later(lastLand + 4, () -> JobFx.moon(level0, moonAt, 3.4, 6, 2, (finalDelay + 18) / 20.0, Opt.of("alpha", 0.95), BLOOD_MOON, BLOOD_MOON_CORE));
-        JobFx.aura(sp, j, 3.0, 0.8, 1.0);
+        // 하늘의 달 (앞 위 — 쓴 자리에 머묾): 보름달 → 여섯 덮침 동안 그림자가 삼킴 (0 ~ 5) → 붉은 테 (6 ~ 7 · 마지막). 밤하늘이라 은회 · 흰빛 그대로.
+        // 영상 1: 앞 12칸 · 9칸 위는 눈높이에서 32° 위라 3인칭 화면 위 끝에 반쯤 잘렸음 → 앞 14칸 · 6칸 위 (17°)
+        Vec3 moonAt = V.up(V.add(c0, f0, 14.0), 6.0);
+        JobFx.moon(level0, moonAt, 3.4, 0, 6, (lastLand + 4) / 20.0, Opt.of("alpha", 0.95), JobKit.glow(j), WHITE);
+        RuneKit.later(lastLand + 4, () -> JobFx.moon(level0, moonAt, 3.6, 6, 2, (finalDelay + 18) / 20.0, Opt.of("alpha", 0.95), BLOOD_MOON, BLOOD_MOON_CORE));
+        // 몸의 기운 (JobFx.aura) 은 그리지 않음 — 영상 1: 첫 덮침이 바로 떠나 쓴 자리에 빈 은빛 불꽃 판만 0.8초 남았음. 대신 발밑 고리
+        JobFx.ring(level0, V.up(c0, 0.06), 2.6, j, false, 0.4, Opt.empty());
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
         JobTraits6.eyeGlint(sp, j, 1.0);
         SkillFx.play(level0, "item.goat_horn.sound.0", c0, 1.2, 1.0);

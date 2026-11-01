@@ -639,7 +639,8 @@ public final class JobTraits6 {
     private static void bearAura(ServerPlayer sp, Jobs.Job j) {
         ServerLevel level = sp.level();
         Vec3 c = V.up(V.add(sp.position(), Kit.facingOf(sp), -0.35), 1.55);
-        JobFx.bear(level, c, 1.75, 0.46, 3, 4, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.55, "coreAlpha", 0.7), bearGlow(j), bearCore(j));
+        // 영상 1: 빛 칸 0.55 는 몸을 덮는 주황 상자처럼 보였음 → 빛 옅게 · 선 (눈 · 이빨 · 발톱 · 테) 짙게
+        JobFx.bear(level, c, 1.75, 0.46, 3, 4, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.4, "coreAlpha", 0.92), bearGlow(j), bearCore(j));
         JobFx.aura(sp, j, 2.6, 0.5, 0.5);
         RuneKit.Hand h = RuneKit.handOf(sp);
         SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.1), Opt.of("dir", V.UP, "speed", 1.6, "size", 0.13, "grow", 0.8, "life", 0.35, "color", JobKit.glow(j),
