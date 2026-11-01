@@ -509,7 +509,7 @@ public final class RpgQuestTests {
     }
 
     /**
-     * 큰 보상 · 연출: 전설 퀘스트 (듀란드의 방패 — 전설 무기 · 렙제 알림), 왕실 마지막 (길에 맞는 초월 갑옷 한 벌 · 고급 뽑기권), 초월 보스 전설 (칭호 · 보스 재료),
+     * 큰 보상 · 연출: 전설 퀘스트 (비요른의 방패 — 전설 무기 · 렙제 알림), 왕실 마지막 (길에 맞는 초월 갑옷 한 벌 · 고급 뽑기권), 초월 보스 전설 (칭호 · 보스 재료),
      * 메인 이야기의 끝 (영웅의 귀환 — 할아버지에게 전달)
      */
     @GameTest(maxTicks = 40)
@@ -529,10 +529,10 @@ public final class RpgQuestTests {
                     + "\":{\"s\":\"a\",\"n\":1,\"c\":0},\"" + outro + "\":{\"s\":\"a\",\"n\":0,\"c\":0}}");
             Quests.forgetQuestPlayer(sp.getUUID());
             h.assertTrue(status(sp, legend).equals("ready") && status(sp, royal).equals("ready") && status(sp, surtr).equals("ready"), "ready");
-            // 1. 듀란드의 방패 (수호 기사 하콘)
+            // 1. 비요른의 방패 (수호 기사 하콘)
             QuestTalk.talkLoop(sp, hakon, null);
             h.assertTrue(dialogText(sp).contains("뒤에 선 이들을 위한 것"), "mentor greeting " + dialogText(sp));
-            pick(h, sp, "듀란드의 방패");
+            pick(h, sp, "비요른의 방패");
             nextPages(sp);
             h.assertTrue(dialogText(sp).contains("레벨 30부터 쓸 수 있음"), "level note " + dialogText(sp));
             pick(h, sp, "확인");

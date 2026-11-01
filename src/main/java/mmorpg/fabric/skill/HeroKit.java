@@ -122,7 +122,7 @@ final class HeroKit {
 
     /**
      * 날아가는 창 그림 한 자루 (rpg:rfx_relic — 모델 옆모습, 날아가는 쪽으로 눕는 창): 가운데 at, 창끝 방향 dir, 길이 len 칸, 초당 speed 칸으로 dir 쪽,
-     * cell = tools/java_fx_art.py RELIC 순서 (게이 볼그 1 — 예전 브류나크에서 옮김)
+     * cell = tools/java_fx_art.py RELIC 순서 (브륀힐드의 창 1 — 예전 브류나크에서 옮김)
      */
     static void relicSpear(ServerLevel level, Vec3 at, Vec3 dir, double len, double life, double speed, int cell, double alpha) {
         RuneKit.rfx(level, "relic", at, Opt.of("dir", dir, "size", len / RELIC_LEN, "life", life, "speed", speed, "cell", (double) cell, "alpha", alpha,

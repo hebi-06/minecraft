@@ -16,10 +16,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 게이 볼그 (영웅 창 — 12단계, 자바 전용): 심장 꿰뚫기. 수치는 HERO_SKILLS.lance, 색은 핏빛 · 연분홍 심지.
+ * 브륀힐드의 창 (영웅 창 — 12단계, 자바 전용 · 0.50.0 게이 볼그 → 북유럽 브륀힐드 — 발키리): 심장 꿰뚫기. 수치는 HERO_SKILLS.lance, 색은 핏빛 · 연분홍 심지.
  * windup 틱 동안 창에 붉은 기운이 모임 → 보는 쪽 (위아래는 15° 넘게 볼 때만, pitch 도까지) 으로 창을 던짐: 틱당 speed 칸씩 range 칸 (벽에서 멈춤)
  * 날며 폭 width 칸의 적을 모두 꿰뚫음 (mult) → 처음 꿰뚫은 적 (없으면 창이 멈춘 자리) 의 몸에서 delay 틱 뒤 가시가 사방으로 터져 나옴: 둘레 radius 칸의 적
- * (afterMult, 구속 I slow 틱). 그림: rpg:rfx_relic 칸 1 (게이 볼그 모델 옆모습). 대상이 없어도 씀
+ * (afterMult, 구속 I slow 틱). 그림: rpg:rfx_relic 칸 1 (브륀힐드의 창 모델 옆모습). 대상이 없어도 씀
  */
 final class GaeBolg {
     private GaeBolg() {}

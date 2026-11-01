@@ -60,8 +60,8 @@ public final class WeaponsMoreTest {
         all.addAll(MORE);
         check(Weapons.allTypes().equals(all), "all types " + Weapons.allTypes());
 
-        Map<String, String[]> names = Map.of("lance", new String[] {"황금 기사창", "게이 볼그", "궁니르", "창"}, "scythe",
-                new String[] {"황금 초승달낫", "프레이르의 낫", "노른의 낫", "낫"}, "hammer", new String[] {"황금 전투망치", "다그다의 곤봉", "묠니르", "전투 망치"}, "scepter",
+        Map<String, String[]> names = Map.of("lance", new String[] {"황금 기사창", "브륀힐드의 창", "궁니르", "창"}, "scythe",
+                new String[] {"황금 초승달낫", "프레이르의 낫", "노른의 낫", "낫"}, "hammer", new String[] {"황금 전투망치", "마그니의 망치", "묠니르", "전투 망치"}, "scepter",
                 new String[] {"황금 성광홀", "에이르의 홀", "다그의 태양홀", "성스러운 홀"});
         Map<String, String[]> basics = Map.of("lance", new String[] {"철 장창", "푸른 강철창"}, "scythe", new String[] {"철 전투낫", "청강 전투낫"}, "hammer",
                 new String[] {"철 전투망치", "푸른 강철 망치"}, "scepter", new String[] {"견습 사제의 홀", "청수정 성홀"});
@@ -198,7 +198,7 @@ public final class WeaponsMoreTest {
         }
         check(more == 16, "16 new recipes, got " + more);
         check(perGrade.get("noble") == 8 && perGrade.get("hero") == 8 && perGrade.get("transcend") == 9, "per page ≤ 9: " + perGrade);
-        check(Crafting.craftUseLines("boss", "worm_fang").contains("§r§f게이 볼그 §7영웅 8"), "worm fang lore " + Crafting.craftUseLines("boss", "worm_fang"));
+        check(Crafting.craftUseLines("boss", "worm_fang").contains("§r§f브륀힐드의 창 §7영웅 8"), "worm fang lore " + Crafting.craftUseLines("boss", "worm_fang"));
         check(Crafting.craftUseLines("boss", "worm_fang").contains("§r§f궁니르 §7초월 4"), "worm fang transcend lore " + Crafting.craftUseLines("boss", "worm_fang"));
         check(Crafting.craftUseLines("drop", "boar").contains("§r§f황금 기사창 §7고귀 6"), "boar noble lore " + Crafting.craftUseLines("drop", "boar"));
 
@@ -251,7 +251,7 @@ public final class WeaponsMoreTest {
             Weapon sh = Weapons.weaponFrom("shield", g.equals("hero") ? 30 : 10, g);
             check(sh != null && !sh.title().equals("스발린"), "shield " + g + " name unchanged " + (sh == null ? null : sh.title()));
         }
-        check(Weapons.weaponFrom("shield", 30, "hero").title().equals("듀란드의 방패"), "shield hero name unchanged");
+        check(Weapons.weaponFrom("shield", 30, "hero").title().equals("비요른의 방패"), "shield hero name (0.50.0 북유럽)");
         check(Weapons.weaponFrom("axe", 40, "hero").title().equals("대지의 심판"), "axe hero name unchanged");
 
         // 창 초월: 브류나크 → 궁니르 (0.12.3 — 예전 도끼 초월의 궁니르를 옮김). 종류 글자 '창', 평타는 애드온 궁니르의 찌르기 (SLASH.spear) 를 바탕으로 디자인 색 (0.12.8 — SLASH.gungnir 청록빛),
@@ -273,7 +273,7 @@ public final class WeaponsMoreTest {
                 check(!sk.get(1).has("heal") && !(sk.get(1).str("desc") + sk.get(1).str("desc2")).contains("회복"), "lance gungnir: no axe heal");
             }
         }
-        check(Weapons.weaponFrom("lance", 40, "hero").title().equals("게이 볼그"), "lance hero name unchanged");
+        check(Weapons.weaponFrom("lance", 40, "hero").title().equals("브륀힐드의 창"), "lance hero name (0.50.0 북유럽)");
         check(Crafting.craftUseLines("boss", "ygg_branch").stream().anyMatch(l -> l.contains("세계수의 도끼")), "boss material lore uses the new name");
 
         // 0.12.8: 영웅 · 초월 무기 21종 — 무기마다 디자인 색의 평타 모양 (LOOK → SLASH, base 를 따라 바탕 모양의 값을 받음)

@@ -13,7 +13,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 듀란드의 방패 (영웅 방패) — 성광 강타 (10단계, 자바 전용). 수치는 HERO_SKILLS.shield, 색은 디자인의 금빛 테 · 흰 방패 · 빛나는 보석.
+ * 비요른의 방패 (영웅 방패 · 0.50.0 듀란드의 방패 → 북유럽 비요른 — 전설 퀘스트의 스승 비요른 경) — 성광 강타 (10단계, 자바 전용). 수치는 HERO_SKILLS.shield, 색은 디자인의 금빛 테 · 흰 방패 · 빛나는 보석.
  * 눈앞에 빛의 방패가 나타나 내리침: 앞쪽 cone 도 · range 칸 (눈에서 보이는) 의 적을 침 (mult, 밀쳐냄 knock, stun 틱 기절) →
  * 나에게 guard 틱 동안 받는 피해 -reduce (발밑에 성스러운 문양이 따라다님) → delay 틱 뒤 친 적에게 하늘에서 빛기둥이 내리꽂힘
  * (afterMult — 밀려났어도 쓴 자리에서 range + 6칸 안). 대상이 없어도 씀 (보호막만 — 재사용 대기). 쓰러지거나 차원을 옮기면 남은 것은 멈춤

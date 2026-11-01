@@ -13,7 +13,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 다그다의 곤봉 (영웅 전투 망치 — 12단계, 자바 전용): 생과 사의 일격. 수치는 HERO_SKILLS.hammer, 색은 생명의 초록 · 흰 심지 + 죽음의 보라 (dark).
+ * 마그니의 망치 (영웅 전투 망치 — 12단계, 자바 전용 · 0.50.0 다그다의 곤봉 → 북유럽 마그니 — 토르의 아들, 힘): 생과 사의 일격. 수치는 HERO_SKILLS.hammer, 색은 생명의 초록 · 흰 심지 + 죽음의 보라 (dark).
  * windup 틱 동안 곤봉을 들어 올림 (초록 · 보라 기운이 감김) → 앞 ahead 칸을 내려침: 둘레 radius 칸 충격파 (mult, 띄움 lift) → delay 틱 뒤 같은 자리 여진
  * (afterMult) → 준 피해의 heal 만큼 회복 (한 번에 최대 체력의 healCap 까지 — 초록 숫자). 대상이 없어도 씀
  */
