@@ -107,16 +107,6 @@ final class Tyrfing {
         tyrFireFx(level, at, size, life, SkillFx.WHITE, 1);
     }
 
-    /**
-     * 유령 전사 한 장 (rpg:tyr_warrior — 꼬리 끝이 at, 보는 사람을 향해 섬): o = size 반 크기 · life 초 · frame 시작 장 · frames 장 수 · fps 초당 장 ·
-     * loop (되풀이) · sink 칸 아래에서 rise 초 동안 솟음 · fade 마지막 초 동안 사라짐 (· color · alpha)
-     */
-    static void tyrWarriorFx(ServerLevel level, Vec3 at, Opt o) {
-        SkillFx.fx(level, "rpg:tyr_warrior", at, Opt.of("size", o.num("size", 0), "life", o.num("life", 0), "color", o.color("color", SkillFx.WHITE),
-                "alpha", o.num("alpha", 1), "frame", o.num("frame", 4), "frames", Math.max(1, o.num("frames", 1)), "fps", o.num("fps", 0),
-                "loop", o.truthy("loop") ? 1.0 : 0.0, "sink", o.num("sink", 0), "rise", o.num("rise", 0), "fade", o.num("fade", 0)));
-    }
-
     /** 갈라진 땅 (rpg:ground_crack — 짙은 보랏빛) */
     static void tyCrack(ServerLevel level, Vec3 at, double size, double life) {
         SkillFx.fx(level, "rpg:ground_crack", V.up(at, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", size, "life", life, "color", TY_DEEP,
