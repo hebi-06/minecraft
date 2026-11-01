@@ -218,7 +218,8 @@ public final class RpgJobAdvanceTests {
             // 맞음: 받는 피해 처리 (RpgHealth.onLoss — 실제 피해와 같은 길 · 끝에 lossHook) — 0.51.0 시험 1: sp.hurtServer 는 시험 플레이어에게 피해가 들어가지 않아 받아치기가 없었음
             mmorpg.fabric.RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), sp.getHealth(), sp.getHealth() - 4F);
         }));
-        steps.add(new RpgJobTests.Step(6, () -> {
+        // 받아치기는 2틱 뒤 — 바로 앞 평타로 과녁이 무적 시간 (10틱) 이라 JobKit.strike 가 그 뒤로 미룸 → 14틱 뒤에 확인 (0.51.0 시험 2: 6틱 뒤는 아직 0)
+        steps.add(new RpgJobTests.Step(14, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(3), j.skill(3).num("counter", 1.0));
             double got = TestDummies.dealt(z.get(0)) - before[0];
             h.assertTrue(RpgJobTests.near(got, want), "heart counter " + got + " vs " + want);
