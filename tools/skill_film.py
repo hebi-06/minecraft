@@ -9,7 +9,7 @@ ci-logs 의 films/ 에 스킬마다 mp4 (1280×720 · 20fps — 틱마다 한 �
   python3 tools/skill_film.py                       # → build/film/weapon_skills.mp4 · job_skills.mp4 · runes.mp4 (있는 것만)
   python3 tools/skill_film.py --src 폴더 --out 폴더  # 이미 받은 films 폴더
 
-순서: 무기 = 칼 · 단검 · 도끼 · 방패 · 활 · 완드 · 대검 · 창 · 낫 · 망치 · 홀 (무기마다 영웅 → 초월 1 · 2), 직업 = jobs.json 의 order (스킬 1 ~ 5).
+순서: 무기 = 칼 · 단검 · 도끼 · 방패 · 활 · 완드 · 대검 · 창 · 낫 · 망치 · 홀 (무기마다 영웅 → 초월 1 · 2), 직업 = jobs.json 의 order (스킬 1 ~ 5) · 그 뒤 advance.order (0.51.0 2차 직업).
 """
 import argparse
 import glob
@@ -61,6 +61,11 @@ def job_order():
     for ji, j in enumerate(jobs["order"]):
         for si, s in enumerate(jobs["jobs"][j]["skills"]):
             order[s["id"]] = (ji, si, j)
+    adv = jobs.get("advance", {})  # 0.51.0 2차 직업 (각성 · 반전) — 1차 직업 뒤에 advance.order 차례
+    n = len(jobs["order"])
+    for ji, j in enumerate(adv.get("order", [])):
+        for si, s in enumerate(adv["jobs"][j]["skills"]):
+            order[s["id"]] = (n + ji, si, j)
     return order
 
 
