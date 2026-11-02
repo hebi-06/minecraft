@@ -664,6 +664,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
             f.cast();
             ctx.getInput().releaseKey(o -> o.keyShift);
+            if (TURN_AFTER.contains(k.id())) {
+                // 0.51.0 영상도: 순간 이동이 끝난 뒤 (4틱) 뒤로 돌아섬 — 원래 자리의 분신 · 환영이 보이게 (영상 카메라는 몸 뒤를 따라감)
+                f.frames(4);
+                ctx.runOnClient(mc -> turn(mc, 170F));
+            }
             f.until(c.total());
             if (c.stance() || c.buff()) {
                 boolean ranged = ranged(job);
