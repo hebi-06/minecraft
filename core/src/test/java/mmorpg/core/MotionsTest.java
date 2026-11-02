@@ -208,12 +208,12 @@ public final class MotionsTest {
             String fn = strike.obj(g).str("fn");
             check(SwingLooks.of(fn) != null, "strike rune look " + g + " " + fn);
         }
-        // 0.51.0 2차 직업: 곰의 화신 (뵈드바르(워로드) — 분노 100 · 평타 범위 ×1.5) · 룬 담금질 (뵐룬드(룬 나이트) — 룬 대검 ×1.4) ·
-        // 저주의 칼 (투르스(헥스 블레이드)) · 재설계안 2판: 용의 피 (시구르드 태세) · 다시 벼린 칼 (벼린 칼 ×1.5) · 광란 (다인슬레이프 태세) ·
-        // 거인의 무게 (뵈드바르 태세 — 도끼 ×1.6) · 불사의 분노 (스타르카드 태세)
+        // 0.51.0 2차 직업: 곰의 화신 (뵈드바르(워로드) — 분노 100 · 평타 범위 ×1.5) · 재설계안 2판: 용의 피 (시구르드 태세) · 다시 벼린 칼 (벼린 칼 ×1.5) ·
+        // 광란 (다인슬레이프 태세) · 거인의 무게 (뵈드바르 태세 — 도끼 ×1.6) · 불사의 분노 (스타르카드 태세) · 담금질 (뵐룬드(룬 스미스) — 달군 대검 ×1.3) ·
+        // 둘로 나뉘어라 (스키르니르(소드 콜러) — 칼빛만 · 범위 그대로)
         Map<String, Double> scales = Map.ofEntries(Map.entry("edgeHone", 1.15), Map.entry("flurry", 1.2), Map.entry("bloodBlade", 1.3), Map.entry("cleave", 1.4),
                 Map.entry("swordGod", 1.5), Map.entry("swordsman_mirror", 1.2), Map.entry("spellblade_awaken", 1.3), Map.entry("reaper_avatar", 1.0),
-                Map.entry("warlord_bear", 1.5), Map.entry("warlord_titan", 1.6), Map.entry("gladiator_fury", 1.1), Map.entry("runeknight_temper", 1.4), Map.entry("hexblade_curse", 1.2),
+                Map.entry("warlord_bear", 1.5), Map.entry("warlord_titan", 1.6), Map.entry("gladiator_fury", 1.1), Map.entry("runeknight_temper", 1.3), Map.entry("swordcaller_twin", 1.0),
                 Map.entry("swordmaster_blood", 1.15), Map.entry("swordmaster_ult", 1.5), Map.entry("bloodknight_frenzy", 1.2));
         for (Map.Entry<String, Double> e : scales.entrySet()) {
             SwingLooks.Look l = SwingLooks.of(e.getKey());
@@ -228,7 +228,7 @@ public final class MotionsTest {
         check(!SwingLooks.of("swordsman_mirror").fits("greatsword") && SwingLooks.of("spellblade_awaken").fits("greatsword"), "job look weapons");
         check(SwingLooks.of("warlord_bear").fits("axe") && !SwingLooks.of("warlord_bear").fits("sword") && SwingLooks.of("warlord_titan").fits("axe")
                 && SwingLooks.of("gladiator_fury").fits("axe") && !SwingLooks.of("gladiator_fury").fits("sword"), "second-job looks: axe");
-        check(SwingLooks.of("runeknight_temper").fits("greatsword") && SwingLooks.of("hexblade_curse").fits("sword") && !SwingLooks.of("hexblade_curse").fits("axe"),
+        check(SwingLooks.of("runeknight_temper").fits("greatsword") && SwingLooks.of("swordcaller_twin").fits("sword") && !SwingLooks.of("swordcaller_twin").fits("axe"),
                 "second-job looks: magic sword");
         check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
         check(SwingLooks.of("nope") == null && SwingLooks.pack(new double[] {0, 0, 0}) == 1 && SwingLooks.pack(new double[] {1, 0.5, 0}) == 0xFF8000, "pack");

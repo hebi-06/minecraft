@@ -108,12 +108,15 @@ final class JobFx {
     static final int SPIKE = 8;
     static final int ARMS = 8;
     static final int ARENA = 6;
-    /** 0.51.0 마검사 2차 그림: 공중 룬 글자 (종류마다 장 수 · 종류) · 하늘의 룬 스물넷 · 가시 룬 ᚦ · 땅의 거대한 ᚦ */
+    /**
+     * 0.51.0 마검사 2차 그림: 공중 룬 글자 (종류마다 장 수 · 종류) · 재설계안 2판 룬 스미스 — 달궈진 몸 · 쇳물 웅덩이 · 룬 모루 · 쇳물 숫양 (tools/job_fx_art_adv.py)
+     */
     static final int GLYPH = 6;
     static final int GLYPH_KINDS = 3;
-    static final int RUNES24 = 8;
-    static final int THORN = 6;
-    static final int THURS = 8;
+    static final int HEAT = 6;
+    static final int MOLTEN = 8;
+    static final int ANVIL = 8;
+    static final int RAM = 8;
     static final int STAR = 8;
     static final int TOME = 12;
     static final int BOW2 = 8;
@@ -132,22 +135,14 @@ final class JobFx {
     // ------------------------------------------------------------ 색
 
     /**
-     * 0.51.0 헥스 블레이드 겉빛 · 속빛 (검정 · 호박빛 — 컨셉 "거꾸로 선 룬"): 겉 (빛 칸 · 판의 몸) 은 검붉은 먹빛 (연기처럼 어두운 테), 속 (심지 · 판의 빛) 은 호박빛.
-     * 두 빛 중 짙은 쪽을 겉으로 고르는 규칙이면 호박빛이 겉 · 검정이 옅어진 회색 속이 되어 "검은 칼" 이 아니게 됨
-     */
-    static final double[] HEX_OUTER = {0.24, 0.07, 0.16};
-    static final double[] HEX_INNER = {1.0, 0.7, 0.26};
-
-    /**
      * 0.51.0 블레이드 댄서 겉빛 · 속빛 (연분홍 · 흰 금빛 — 컨셉 "흰 금빛 · 연분홍 (빛 꽃잎)"): 두 빛 중 짙은 쪽 규칙이면 옅은 흰 금빛이 겉이 되어 낮 하늘 · 풀밭에서 묻힘 →
      * 겉 (빛 칸 · 꽃잎 · 판의 몸) 은 짙은 연분홍, 속 (심지) 은 흰 금빛
      */
     static final double[] BD_OUTER = {1.0, 0.52, 0.74};
     static final double[] BD_INNER = {1.0, 0.95, 0.8};
 
-    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라 · 0.51.0 글래디에이터 진홍). 0.51.0 헥스 블레이드는 먹빛 */
+    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라 · 0.51.0 글래디에이터 진홍 · 소드 콜러 청록) */
     static double[] outer(Jobs.Job j) {
-        if (j != null && JobTraits7.HX.equals(j.id())) return HEX_OUTER;
         if (j != null && JobTraits10.BD.equals(j.id())) return BD_OUTER;
         double[] a = JobKit.glow(j);
         double[] b = JobKit.core(j);
@@ -156,7 +151,6 @@ final class JobFx {
 
     /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록 · 0.51.0 글래디에이터 옅은 모래 금빛) */
     static double[] inner(Jobs.Job j) {
-        if (j != null && JobTraits7.HX.equals(j.id())) return HEX_INNER;
         if (j != null && JobTraits10.BD.equals(j.id())) return BD_INNER;
         double[] a = JobKit.glow(j);
         double[] b = JobKit.core(j);
@@ -223,11 +217,9 @@ final class JobFx {
         slashCard(sp.level(), at, look, tilt, size * CARD, life, RuneKit.bodyVel(sp), j, hide1p(sp));
     }
 
-    /** 0.51.0 참격 판 빛: 겉빛 — 헥스 블레이드는 짙은 호박빛 (먹빛 겉빛의 판은 낮 하늘 · 풀밭에서 거의 보이지 않았음 — 영상 1) */
-    static final double[] HEX_SLASH = {0.92, 0.46, 0.1};
-
+    /** 참격 판 빛: 겉빛 */
     static double[] cardColor(Jobs.Job j) {
-        return j != null && JobTraits7.HX.equals(j.id()) ? HEX_SLASH : outer(j);
+        return outer(j);
     }
 
     /** 참격 판의 크기 (파티클 size 의 몫 — 파티클은 1인칭 눈앞 화면을 채우게 커서, 세상에 놓으면 몸보다 너무 큼 · 룬 ARC_CARD 와 같은 뜻) */
@@ -402,6 +394,14 @@ final class JobFx {
         two(level, "jburst2", BURST, at, life * 1.15, o.with("size", size * 1.4, "spin", Kit.rand() * 360, "alpha", a * 0.32, "coreAlpha", a * 0.22, "fade", 0.4), outer(j),
                 inner(j));
         if (size >= 0.6 && o.num("view", 0) == 0) mmorpg.fabric.skill.SkillFx.sparks(level, at, inner(j), (int) Math.min(10, 3 + size * 3), 3 + size * 1.5);
+    }
+
+    /** 같은 것 — 색을 정함 (0.51.0 룬 스미스 쇳물 터짐: 쇳물 · 흰 열) */
+    static void burst(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
+        two(level, "jburst2", BURST, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), glow, core);
+        double a = o.num("alpha", 1);
+        two(level, "jburst2", BURST, at, life * 1.15, o.with("size", size * 1.4, "spin", Kit.rand() * 360, "alpha", a * 0.32, "coreAlpha", a * 0.22, "fade", 0.4), glow,
+                core);
     }
 
     /** 몸에서 솟는 빛 (rfx_jaura — 세워 카메라 쪽으로 돎): 높이 약 height 칸, life 초 동안 이어 돌림. 시전자 1인칭에서는 숨김 */
@@ -1090,37 +1090,51 @@ final class JobFx {
         glyph(level, at, size, kind, from, count, life, loop, o, outer(j), inner(j));
     }
 
+    // ------------------------------------------------------------ 0.51.0 재설계안 2판 룬 스미스 그림 (tools/job_fx_art_adv.py — 쇳물 JobTraits7.MOLTEN · 흰 열 HOT)
+
     /**
-     * 하늘의 룬 스물넷 (rfx_jrunes24 — 카메라를 봄): 둥근 띠의 글자가 넷씩 켜짐 (0 ~ 5, ignite 초) → 모두 켜져 띠 안의 별 무늬가 이어짐 (6 · 7 — hold 초 이어 돌림).
-     * 너비 약 size × 2 칸 (글자 띠 반지름 ≈ size × 0.78)
+     * 달궈진 몸 (rfx_jheat — 카메라를 봄): 0 달아오름 (번쩍) · 1 ~ 4 붉게 달아오른 기운 · 오르는 열기 줄 (loop 면 이어 돌림) · 5 식으며 금이 감. 장 from 부터 count 장.
+     * 크기 약 size × 2 칸 (몸을 감쌈). 빛 = 쇳물빛 무리 · 심지 = 흰 열 줄 · 불씨
      */
-    static void runes24(ServerLevel level, Vec3 at, double size, Jobs.Job j, double ignite, double hold, Opt o) {
-        cells(level, "jrunes24", RUNES24, 0, 6, at, Math.max(0.1, ignite), 0, false, o.with("size", size, "fade", 0.0), outer(j), inner(j));
-        RuneKit.later(Math.max(1, (int) Math.round(ignite * 20) - 1), () -> cells(level, "jrunes24", RUNES24, 6, 2, at, Math.max(0.1, hold), 7, true,
-                o.with("size", size, "fade", o.num("fade", 0.35)), outer(j), inner(j)));
+    static void heat(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o) {
+        int f = Math.max(0, Math.min(HEAT - 1, from));
+        int n = Math.max(1, Math.min(HEAT - f, count));
+        cells(level, "jheat", HEAT, f, n, at, life, loop ? 10 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.25)), JobTraits7.MOLTEN, JobTraits7.HOT);
     }
 
     /**
-     * 가시 룬 ᚦ (rfx_jthorn — 카메라를 봄): 0 박힘 (번쩍) · 1 자리 잡음 · 2 ~ 3 맥동 (loop 면 이어 돌림) · 4 금이 감 · 5 터져 가시 조각. 장 from 부터 count 장.
-     * 크기 약 size × 2 칸 (글자 높이 ≈ size × 1.3)
+     * 쇳물 웅덩이 (rfx_jmolten — 땅에 누움): 0 ~ 1 번지며 달아오름 · 2 ~ 5 끓음 (loop 면 이어 돌림 — 식은 껍질 사이의 빛나는 금 · 터지는 거품) · 6 ~ 7 식어 흐려짐.
+     * 웅덩이 끝 = 반 크기 × 0.9 (radius 칸). 빛 = 쇳물 (주황) · 심지 = 금 · 거품의 흰 열
      */
-    static void thorn(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
-        int f = Math.max(0, Math.min(THORN - 1, from));
-        int n = Math.max(1, Math.min(THORN - f, count));
-        cells(level, "jthorn", THORN, f, n, at, life, loop ? 7 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), outer(j), inner(j));
+    static void molten(ServerLevel level, Vec3 center, double radius, int from, int count, double life, boolean loop, Opt o) {
+        int f = Math.max(0, Math.min(MOLTEN - 1, from));
+        int n = Math.max(1, Math.min(MOLTEN - f, count));
+        cells(level, "jmolten", MOLTEN, f, n, center, life, loop ? 7 : 0, loop, o.with("dir", V.UP, "size", radius / 0.9, "spin", o.has("spin") ? o.num("spin", 0)
+                : Kit.rand() * 360, "fade", o.num("fade", 0.25)), JobTraits7.MOLTEN, JobTraits7.HOT);
     }
 
     /**
-     * 땅의 거대한 ᚦ (rfx_jthurs — 땅에 누움, 그림 위 = 바라본 쪽): 0 줄기 · 1 위 가시 획 · 2 아래 가시 획 (다 새겨짐) · 3 ~ 4 맥동 (이어 돌림) · 5 줄기를 따라 가른 빛 ·
-     * 6 ~ 7 금이 벌어지며 터짐. center = 룬 가운데 (줄기 가운데), facing = 줄기가 뻗는 쪽 (수평). 길이 약 size × 2 칸 (줄기 = size × 1.6)
+     * 룬 모루 (rfx_janvil — 세워 카메라 쪽으로 돎, 아래 끝 = 땅): stage 0 = 땅을 뚫고 솟음 (0 ~ 1 · 흙 튐) · 1 = 서서 달아오름 (2 ~ 5 — 룬이 하나씩 켜지다 흰 열 금) ·
+     * 2 = 터짐 (6 ~ 7 — 조각이 튐). 아래 끝 = ground · 높이 약 size × 2 칸. 빛 = 모루 몸 (어두운 쇠 — 거의 불투명) · 심지 = 룬 · 금의 쇳물빛
      */
-    static void thurs(ServerLevel level, Vec3 center, Vec3 facing, double size, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
-        int f = Math.max(0, Math.min(THURS - 1, from));
-        int n = Math.max(1, Math.min(THURS - f, count));
-        Vec3 fl = V.flat(facing);
-        double spin = V.len(fl) < 1e-3 ? 0 : Math.toDegrees(Math.atan2(fl.x, fl.z));
-        cells(level, "jthurs", THURS, f, n, center, life, loop ? 6 : 0, loop, o.with("dir", V.UP, "size", size, "spin", spin, "fade", o.num("fade", 0.25)), outer(j),
-                inner(j));
+    static void anvil(ServerLevel level, Vec3 ground, double size, int stage, double life, Opt o, double[] glow, double[] core) {
+        Vec3 at = V.up(ground, size);
+        Opt b = o.with("size", size);
+        switch (stage) {
+            case 0 -> cells(level, "janvil", ANVIL, 0, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), glow, core);
+            case 1 -> cells(level, "janvil", ANVIL, 2, 4, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), glow, core);
+            default -> cells(level, "janvil", ANVIL, 6, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.4)), glow, core);
+        }
+    }
+
+    /**
+     * 쇳물 숫양 (rfx_jram — 세워 카메라 쪽으로 돎, 앞모습): 0 ~ 1 쇳물이 솟아 숫양이 됨 · 2 ~ 5 달려옴 (loop 면 이어 돌림 — 앞발 · 머리 · 쇳물 갈기) · 6 뿔로 받아 버팀 ·
+     * 7 터져 쇳물로 흩어짐. 장 from 부터 count 장. 발 = 칸 아래 끝 (at = 땅 + size) · 높이 약 size × 2 칸. 빛 = 쇳물 몸 · 심지 = 흰 열 금 · 눈 · 뿔 테
+     */
+    static void ram(ServerLevel level, Vec3 ground, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(RAM - 1, from));
+        int n = Math.max(1, Math.min(RAM - f, count));
+        cells(level, "jram", RAM, f, n, V.up(ground, size), life, loop ? 12 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.15)), glow, core);
     }
 
     /** 망자의 비명 (rfx_jwail — 카메라를 봄): 연기가 비명 지르는 얼굴이 되어 (0 ~ 4) 찢겨 흩어짐 (5 ~ 7). 크기 약 size × 2 칸 */

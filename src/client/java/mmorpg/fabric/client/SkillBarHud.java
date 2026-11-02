@@ -426,7 +426,7 @@ public final class SkillBarHud {
                             if (i < v) g.fill(bx + 1, ty, bx + 2, ty + 1, 0xFFFFFFFF);
                         }
                         case "runeknight" -> {
-                            // 0.51.0 마력 각인 (최대 5) — 금빛 룬 글자 ᚠ (4 × 7, 창날처럼 줄 높이만큼): 세로 줄기 · 오른쪽 위로 뻗은 가지 둘, 찬 것은 둘째 빛 (금빛) + 줄기 위 흰 점,
+                            // 0.51.0 룬 스미스 마력 각인 (최대 5) — 금빛 룬 글자 ᚠ (4 × 7, 창날처럼 줄 높이만큼): 세로 줄기 · 오른쪽 위로 뻗은 가지 둘, 찬 것은 둘째 빛 (금빛) + 줄기 위 흰 점,
                             // 오른쪽 아래 1칸 그림자
                             int c = i < v ? col : dim;
                             int ty = y - 1;
@@ -435,16 +435,15 @@ public final class SkillBarHud {
                             for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
                             if (i < v) g.fill(bx, ty, bx + 1, ty + 1, 0xFFFFFFFF);
                         }
-                        case "hexblade" -> {
-                            // 0.51.0 뒤집힌 룬 (최대 5) — 가시 룬 ᚦ (4 × 7): 세로 줄기 · 가운데 오른쪽으로 솟은 가시, 찬 것은 첫째 빛 (호박빛 — 둘째 빛은 먹빛이라 안 보임) +
-                            // 가시 끝 흰 점, 오른쪽 아래 1칸 그림자
+                        case "swordcaller" -> {
+                            // 0.51.0 스스로 싸우는 칼 (최대 5 — 이어 벨 때마다 하나 · 하나당 공격 속도 +20%) — 작은 칼 (3 × 7, 창날처럼 줄 높이만큼): 칼끝 · 곧은 날 ·
+                            // 가로 코등이 · 자루, 찬 것은 첫째 빛 (청록) + 칼끝 흰 점, 오른쪽 아래 1칸 그림자
                             int c = i < v ? bright : dim;
                             int ty = y - 1;
-                            int[][] cells = {{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {1, 1}, {1, 2}, {2, 2}, {1, 3}, {2, 3}, {3, 3}, {1, 4}, {2, 4},
-                                {1, 5}};
+                            int[][] cells = {{1, 0}, {1, 1}, {1, 2}, {1, 3}, {0, 4}, {1, 4}, {2, 4}, {1, 5}, {1, 6}};
                             for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
-                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
-                            if (i < v) g.fill(bx + 3, ty + 3, bx + 4, ty + 4, 0xFFFFFFFF);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, q[1] == 4 ? (i < v ? col : dim) : c);
+                            if (i < v) g.fill(bx + 1, ty, bx + 2, ty + 1, 0xFFFFFFFF);
                         }
                         case "arcmage" -> {
                             // 0.51.0 주문 연쇄 (최대 5 — 다섯째에 별자리) — 금빛 별 (5 × 6, 창날처럼 줄 높이만큼): 위 꼭짓점 · 양팔 · 몸 · 벌린 두 다리, 찬 것은 둘째 빛 (금빛) +

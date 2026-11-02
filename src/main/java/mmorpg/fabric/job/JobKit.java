@@ -48,11 +48,12 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j);
         double forge = JobTraits5.forgeMult(sp, j); // 0.51.0 소드마스터 다시 벼린 칼 (벼린 칼 동안 +20%)
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투 (상대 + 결투 × 3% · 다른 적 −40%)
-        double hex = JobTraits7.runeMult(sp, e, j); // 0.51.0 헥스 블레이드 뒤집힌 룬 (그 적의 저주 룬 하나당 +12% — 들어가면 터뜨림)
+        double quench = JobTraits7.quenchTake(sp, e, j); // 0.51.0 룬 스미스 식으며 깨짐 (달궈진 적 — 배율에 + quench, 큰 숫자 · 짧은 기절)
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위 (하나당 +6%)
-        double dmg = P * mult * veil * crit * forge * duel * hex * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double dmg = P * (mult + quench) * veil * crit * forge * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp)
+                + counter;
         float before = e.getHealth();
-        boolean bigger = big || veil > 1 || counter > 0;
+        boolean bigger = big || veil > 1 || counter > 0 || quench > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
         boolean landed;
         try {
@@ -64,15 +65,17 @@ public final class JobKit {
         if (!landed) {
             if (veil > 1) JobTraits3.firstHitMissed(sp);
             if (counter > 0) JobTraits4.counterMissed(sp);
+            if (quench > 0) JobTraits7.quenchMissed(sp, e);
             return 0;
         }
         if (veil > 1) JobTraits3.firstHitLanded(sp, e, j);
         if (counter > 0) JobTraits4.counterLanded(sp, e, j, counter);
+        if (quench > 0) JobTraits7.quenchLanded(sp, e, j);
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
         JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
-        JobTraits7.afterJobHit(sp, e, j, got); // 0.51.0 헥스 블레이드 — 저주 룬을 터뜨림 (다섯이면 묶음)
+        JobTraits7.afterJobHit(sp, e, j, got); // 0.51.0 룬 스미스 담금질 — 달군 쇳조각을 박음
         JobTraits10.afterJobHit(sp, e, j, got); // 0.51.0 블레이드 댄서 — 스킬 쪽 맞힘 (평타와 번갈아 춤사위)
         return got;
     }
@@ -115,11 +118,12 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
         double forge = JobTraits5.forgeMult(sp, j); // 0.51.0 소드마스터 다시 벼린 칼 (벼린 칼 동안 +20%)
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투
-        double hex = JobTraits7.runeMult(sp, e, j); // 0.51.0 헥스 블레이드 뒤집힌 룬
+        double quench = JobTraits7.quenchTake(sp, e, j); // 0.51.0 룬 스미스 식으며 깨짐
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위
-        double dmg = P * mult * veil * crit * forge * duel * hex * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double dmg = P * (mult + quench) * veil * crit * forge * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp)
+                + counter;
         float before = e.getHealth();
-        boolean bigger = big || veil > 1 || counter > 0;
+        boolean bigger = big || veil > 1 || counter > 0 || quench > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
         boolean landed;
         try {
@@ -131,15 +135,17 @@ public final class JobKit {
         if (!landed) {
             if (veil > 1) JobTraits3.firstHitMissed(sp);
             if (counter > 0) JobTraits4.counterMissed(sp);
+            if (quench > 0) JobTraits7.quenchMissed(sp, e);
             return 0;
         }
         if (veil > 1) JobTraits3.firstHitLanded(sp, e, j);
         if (counter > 0) JobTraits4.counterLanded(sp, e, j, counter);
+        if (quench > 0) JobTraits7.quenchLanded(sp, e, j);
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
         JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
-        JobTraits7.afterJobHit(sp, e, j, got); // 0.51.0 헥스 블레이드 — 저주 룬을 터뜨림 (다섯이면 묶음)
+        JobTraits7.afterJobHit(sp, e, j, got); // 0.51.0 룬 스미스 담금질 — 달군 쇳조각을 박음
         JobTraits10.afterJobHit(sp, e, j, got); // 0.51.0 블레이드 댄서 — 스킬 쪽 맞힘 (평타와 번갈아 춤사위)
         return got;
     }

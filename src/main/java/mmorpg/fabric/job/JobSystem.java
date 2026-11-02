@@ -78,8 +78,8 @@ public final class JobSystem {
         BloodknightSkills.register();
         WarlordSkills.register(); // 0.51.0 2차 직업 (전사 각성 · 반전)
         GladiatorSkills.register(); // 0.51.0 재설계안 2판 — 전사 반전 스타르카드(글래디에이터) (울프헤딘(라이칸) 대신)
-        RuneknightSkills.register(); // 0.51.0 2차 직업 (마검사 각성 · 반전)
-        HexbladeSkills.register();
+        RuneknightSkills.register(); // 0.51.0 2차 직업 (마검사 각성 · 반전 — 재설계안 2판 룬 스미스 · 소드 콜러)
+        SwordcallerSkills.register();
         ArcmageSkills.register(); // 0.51.0 2차 직업 (매지션 각성 · 반전)
         NecromancerSkills.register();
         SniperSkills.register(); // 0.51.0 궁수 2차 — 에길(스나이퍼)

@@ -53,6 +53,11 @@ public final class SwingArea {
     }
 
     private static final Map<UUID, Swing> NOW = new HashMap<>();
+    /**
+     * 0.51.0 범위 피해 없이 한 적만 (스키르니르(소드 콜러) 스스로 싸우는 칼 — 칼이 날아가 겨눈 적 하나를 대신 벰, JobTraits7): 참이면 휘두르기만 기억 (조준한 적 ·
+     * 같은 누름의 공격 패킷 하나)
+     */
+    public static java.util.function.Predicate<ServerPlayer> single = p -> false;
     /** 시험: 마지막으로 범위 피해를 준 적 수 (사람 → 수) */
     private static final Map<UUID, Integer> LAST_COUNT = new HashMap<>();
 
@@ -79,6 +84,7 @@ public final class SwingArea {
         if (primary != null) s.primary = primary.getUUID();
         NOW.put(sp.getUUID(), s);
         if (!Motions.areaEnabled()) return; // 범위 피해를 끔: 휘두르기만 기억 (같은 누름의 공격 패킷 하나 · 지진 한 번)
+        if (single.test(sp)) return; // 0.51.0 한 적만 (소드 콜러 — 칼이 날아가 벰)
         try {
             s.victims.addAll(targets(sp, w, m.motion(), primary));
         } catch (RuntimeException e) {
@@ -86,6 +92,12 @@ public final class SwingArea {
         }
         for (LivingEntity e : s.victims) s.inArea.add(e.getUUID());
         Tasks.later(1, () -> apply(sp, s));
+    }
+
+    /** 0.51.0 이번 휘두르기 (휘두른 틱 · 다음 틱) 의 조준한 적 (공격 패킷으로 바닐라 평타를 맞은 적 — 허공이면 null) */
+    public static UUID primaryOf(ServerPlayer sp) {
+        Swing s = current(sp);
+        return s == null ? null : s.primary;
     }
 
     /** 같은 틱에 조준 공격이 이어 들어옴 (휘두르기 패킷이 먼저 왔을 때): 그 적은 바닐라 공격으로 맞으므로 범위 피해에서 뺌 */

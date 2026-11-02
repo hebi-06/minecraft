@@ -2,10 +2,10 @@
   "format_version": "1.10.0",
   "particle_effect": {
     "description": {
-      "identifier": "rpg:rfx_jthurs",
+      "identifier": "rpg:rfx_jram",
       "basic_render_parameters": {
         "material": "particles_blend",
-        "texture": "textures/particle/rpg/fx/rfx_jthurs"
+        "texture": "textures/particle/rpg/fx/rfx_jram"
       }
     },
     "components": {
@@ -32,7 +32,7 @@
           "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
           "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
         ],
-        "facing_camera_mode": "direction_z",
+        "facing_camera_mode": "lookat_y",
         "uv": {
           "texture_width": 1280,
           "texture_height": 1280,
@@ -43,14 +43,6 @@
           "uv_size": [
             320,
             320
-          ]
-        },
-        "direction": {
-          "mode": "custom",
-          "custom_direction": [
-            "variable.dir.x",
-            "variable.dir.y",
-            "variable.dir.z"
           ]
         }
       },

@@ -607,7 +607,7 @@
     "endlessSlash": {"fog": "rpg:ult_bloodvoid", "flash": [1, 0.76, 0.76]}
   },
   "ULT_FOGS_MORE": {
-    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 헥스 블레이드 재앙의 룬 rpg:ult_hex (짙은 고동 — 호박빛 룬 · 검은 연기가 보이게), 0.51.0 네크로맨서 나글파르의 출항 rpg:ult_naglfar (짙은 녹색 안개 — 녹색 혼불 · 뼈색 배가 보이게), 0.51.0 섀도 헌터 어둠숲의 사냥 rpg:ult_myrkvidr (짙은 남보라 밤 — 은빛 촉 · 검은 화살의 연기가 보이게), 0.51.0 트릭스터 개기일식 rpg:ult_eclipse (해가 가려진 검자주 어둠 — 자홍 꽃 · 청록 환영이 보이게) → 해가 다시 뜰 때 rpg:ult_sunrise (주홍 새벽빛 — 잠깐), 0.51.0 블레이드 댄서 빛무리 춤 rpg:ult_alfheim (연보라 황혼 — 밝은 하늘이면 흰 금빛 · 연분홍 빛이 묻혀서 빛이 보이는 어스름), 0.51.0 글래디에이터 홀름강 rpg:ult_holmgang (짙은 녹슨 핏빛 황혼 — 진홍 결투장 · 모래 금빛 말뚝이 보이게)",
+    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 재설계안 2판 룬 스미스 쇳물 숫양 rpg:ult_forge (짙은 그을음 주황 — 쇳물 · 불티가 보이게) · 소드 콜러 칼날 감옥 rpg:ult_prison (짙은 청록 밤 — 청록 칼빛이 보이게), 0.51.0 네크로맨서 나글파르의 출항 rpg:ult_naglfar (짙은 녹색 안개 — 녹색 혼불 · 뼈색 배가 보이게), 0.51.0 섀도 헌터 어둠숲의 사냥 rpg:ult_myrkvidr (짙은 남보라 밤 — 은빛 촉 · 검은 화살의 연기가 보이게), 0.51.0 트릭스터 개기일식 rpg:ult_eclipse (해가 가려진 검자주 어둠 — 자홍 꽃 · 청록 환영이 보이게) → 해가 다시 뜰 때 rpg:ult_sunrise (주홍 새벽빛 — 잠깐), 0.51.0 블레이드 댄서 빛무리 춤 rpg:ult_alfheim (연보라 황혼 — 밝은 하늘이면 흰 금빛 · 연분홍 빛이 묻혀서 빛이 보이는 어스름), 0.51.0 글래디에이터 홀름강 rpg:ult_holmgang (짙은 녹슨 핏빛 황혼 — 진홍 결투장 · 모래 금빛 말뚝이 보이게)",
     "rpg:ult_glacier": [16, 96, "#1B3C80"],
     "rpg:ult_polar": [16, 100, "#0A2438"],
     "rpg:ult_deepsea": [12, 80, "#0E3A72"],
@@ -618,7 +618,8 @@
     "rpg:ult_arena": [10, 72, "#6A5A48"],
     "rpg:ult_bloodvoid": [5, 40, "#2A0408"],
     "rpg:ult_bloodsplit": [8, 56, "#5C0A14"],
-    "rpg:ult_hex": [6, 44, "#24120C"],
+    "rpg:ult_forge": [8, 60, "#3A160A"],
+    "rpg:ult_prison": [10, 64, "#0C2A30"],
     "rpg:ult_naglfar": [5, 38, "#0C2414"],
     "rpg:ult_myrkvidr": [5, 36, "#0E0C26"],
     "rpg:ult_eclipse": [5, 40, "#170A1C"],
@@ -946,8 +947,8 @@
       "warlord_bear": {"name": "곰의 화신", "scale": 1.5, "glow": [1.0, 0.62, 0.2], "aura": [0.62, 0.32, 0.1], "weapons": ["axe"]},
       "warlord_titan": {"name": "거인의 무게", "scale": 1.6, "glow": [1.0, 0.66, 0.26], "aura": [0.46, 0.32, 0.2], "weapons": ["axe"]},
       "gladiator_fury": {"name": "불사의 분노", "scale": 1.1, "glow": [1.0, 0.32, 0.18], "aura": [0.62, 0.06, 0.04], "weapons": ["axe"]},
-      "runeknight_temper": {"name": "룬 담금질", "scale": 1.4, "glow": [1.0, 0.8, 0.32], "aura": [0.62, 0.34, 1.0], "weapons": ["sword", "greatsword"]},
-      "hexblade_curse": {"name": "저주의 칼", "scale": 1.2, "glow": [1.0, 0.64, 0.16], "aura": [0.3, 0.12, 0.26], "weapons": ["sword", "greatsword"]},
+      "runeknight_temper": {"name": "담금질", "scale": 1.3, "glow": [1.0, 0.58, 0.18], "aura": [0.62, 0.34, 1.0], "weapons": ["sword", "greatsword"]},
+      "swordcaller_twin": {"name": "둘로 나뉘어라", "scale": 1.0, "glow": [0.18, 0.84, 0.86], "aura": [0.86, 1.0, 1.0], "weapons": ["sword", "greatsword"]},
       "swordmaster_blood": {"name": "용의 피", "scale": 1.15, "glow": [1.0, 0.55, 0.16], "aura": [1.0, 0.86, 0.42], "weapons": ["sword"]},
       "swordmaster_ult": {"name": "다시 벼린 칼", "scale": 1.5, "glow": [1.0, 0.84, 0.32], "aura": [1.0, 0.97, 0.78], "weapons": ["sword"]},
       "bloodknight_frenzy": {"name": "광란", "scale": 1.2, "glow": [1.0, 0.12, 0.16], "aura": [0.5, 0.0, 0.05], "weapons": ["sword"]}

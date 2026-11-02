@@ -587,7 +587,7 @@ public final class Jobs {
     // ------------------------------------------------------------------ 마검사 「마력 검술」 (특성 magicSword)
 
     /**
-     * 이 직업의 마력 검술 정의 (특성 magicSword — 0.51.0 2차 직업은 제 특성에 없으면 1차 직업의 것: 룬 나이트 · 헥스 블레이드도 마검사의 칼 규칙)
+     * 이 직업의 마력 검술 정의 (특성 magicSword — 0.51.0 2차 직업은 제 특성에 없으면 1차 직업의 것: 룬 스미스 · 소드 콜러도 마검사의 칼 규칙)
      */
     private static Obj magicSwordDef(Job j) {
         if (j == null) return null;

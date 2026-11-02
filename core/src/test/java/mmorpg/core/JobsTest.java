@@ -442,7 +442,7 @@ public final class JobsTest {
                 "피의 갈증 체력 4% · 흡혈 5% · 체력 30% 에서 가장 목마름");
         check(Jobs.skillLine(sm.skill(0)).startsWith("칼집 섬광 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("광란 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
         warriorAdvance(wa, wl, gl);
-        spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("hexblade"));
+        spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("swordcaller"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
         archerAdvance(Jobs.job("archer"), Jobs.job("sniper"), Jobs.job("shadowhunter"));
         assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("bladedancer"));
@@ -600,60 +600,76 @@ public final class JobsTest {
     }
 
     /**
-     * 0.51.0 마검사 2차 — 뵐룬드(룬 나이트) · 투르스(헥스 블레이드) (사용자 "다음 직업표 진행"): 부분 합 = 배율 합 (마검사와 같은 8.5 · 5.1 · 15.3 · 68) · 무적 시간
-     * 띄움 · t · 특성 · 마력 검술 (2차는 1차 마검사의 칼 규칙을 이어 받음)
+     * 0.51.0 마검사 2차 — 재설계안 2판 (claude/job-advance-redo.md · 사용자 "직업 이름 같은거 … 바꾸고 싶으면 바꿔도 됨"): 뵐룬드(룬 스미스 — 룬 나이트에서 이름을
+     * 바꿈) 새 스킬 다섯 · 스키르니르(소드 콜러) (투르스(헥스 블레이드) 대신). 부분 합 = 배율 합 (마검사와 같은 8.5 · 5.1 · 15.3 · 68) · 무적 시간 띄움 · t · w ·
+     * 특성 · 마력 검술 (2차는 1차 마검사의 칼 규칙을 이어 받음)
      */
-    static void spellbladeAdvance(Jobs.Job sb, Jobs.Job rk, Jobs.Job hx) {
-        check(rk != null && hx != null, "spellblade advanced jobs");
-        if (rk == null || hx == null) return;
-        check(Jobs.advance("spellblade", "awaken") == rk && Jobs.advance("spellblade", "invert") == hx && Jobs.baseOf(rk) == sb && Jobs.baseOf(hx) == sb, "spellblade advance");
-        check(rk.display().equals("뵐룬드(룬 나이트)") && hx.display().equals("투르스(헥스 블레이드)") && Jobs.find("룬 나이트") == rk && Jobs.find("투르스") == hx,
-                "spellblade display · find");
-        for (int i : new int[] {0, 1, 2, 4}) check(near(rk.skill(i).total(), sb.skill(i).total()) && near(hx.skill(i).total(), sb.skill(i).total()), "spellblade totals slot " + i);
-        check(near(rk.skill(0).num("cuts", 0) + rk.skill(0).num("burst", 0), 8.5)
-                && near(rk.skill(1).num("path", 0) + rk.skill(1).num("back", 0) + rk.skill(1).num("blast", 0) + rk.skill(1).num("home", 0), 5.1)
-                && near(sum(rk.skill(2), "laps") + rk.skill(2).num("final", 0), 15.3)
-                && near(sum(rk.skill(4), "slashes") + rk.skill(4).num("plunge", 0) + rk.skill(4).num("final", 0), 68), "runeknight totals 8.5 · 5.1 · 15.3 · 68");
-        check(near(hx.skill(0).num("upper", 0) + hx.skill(0).num("lower", 0), 8.5) && near(hx.skill(1).num("trap", 0), 5.1)
-                && near(sum(hx.skill(2), "hails") + hx.skill(2).num("shatter", 0), 15.3)
-                && near(sum(hx.skill(4), "strokes") + hx.skill(4).num("cleave", 0) + hx.skill(4).num("erupt", 0), 68), "hexblade totals 8.5 · 5.1 · 15.3 · 68");
-        // 같은 적을 여러 번 치는 것은 10틱 넘게 (룬 새김 베기의 세 번 베기는 한 번에 넣고 숫자만 세 줄 — split)
-        check(rk.skill(0).num("thrustAt", 0) - (rk.skill(0).num("split", 1) - 1) * rk.skill(0).num("cutGap", 0) >= 8 && rk.skill(1).num("returnAt", 0) >= 10
-                && rk.skill(1).num("homeAt", 0) - rk.skill(1).num("returnAt", 0) >= 10 && rk.skill(2).num("gap", 0) >= 10
-                && rk.skill(2).num("finalAt", 0) - (rk.skill(2).def().list("laps").size() - 1) * rk.skill(2).num("gap", 0) >= 10 && rk.skill(4).num("gap", 0) >= 10
-                && rk.skill(4).num("plungeAt", 0) - rk.skill(4).num("rise", 0) - 2 * rk.skill(4).num("gap", 0) >= 10
-                && rk.skill(4).num("finalAt", 0) - rk.skill(4).num("plungeAt", 0) >= 10, "runeknight i-frame spacing");
-        check(hx.skill(0).num("gap", 0) >= 10 && hx.skill(2).num("gap", 0) >= 10
-                && hx.skill(2).num("shatterAt", 0) - hx.skill(2).num("first", 0) - (hx.skill(2).def().list("hails").size() - 1) * hx.skill(2).num("gap", 0) >= 10
-                && hx.skill(4).num("gap", 0) >= 10 && hx.skill(4).num("cleaveAt", 0) - hx.skill(4).num("first", 0) - 2 * hx.skill(4).num("gap", 0) >= 10
-                && hx.skill(4).num("eruptAt", 0) - hx.skill(4).num("cleaveAt", 0) >= 10, "hexblade i-frame spacing");
-        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값)
-        check(near(rk.skill(0).num("thrustAt", 0), rk.skill(0).num("t", 0)) && near(rk.skill(1).num("homeAt", 0), rk.skill(1).num("t", 0))
-                && near(rk.skill(2).num("finalAt", 0), rk.skill(2).num("t", 0)) && near(rk.skill(4).num("finalAt", 0), rk.skill(4).num("t", 0))
-                && near(rk.skill(4).num("rise", 0), rk.skill(4).num("w", 0)), "runeknight t 16 · 20 · 60 · 64 (w 20)");
-        check(near(hx.skill(0).num("gap", 0) + 2, hx.skill(0).num("t", 0)) && near(hx.skill(1).num("armAt", 0), hx.skill(1).num("t", 0))
-                && near(hx.skill(2).num("shatterAt", 0), hx.skill(2).num("t", 0)) && near(hx.skill(4).num("eruptAt", 0), hx.skill(4).num("t", 0))
-                && near(hx.skill(4).num("first", 0), hx.skill(4).num("w", 0)), "hexblade t 12 · 10 · 44 · 56 (w 6)");
-        // 특성: 룬 나이트 = 마력 각인 최대 5 · 번짐 0.5, 헥스 블레이드 = 뒤집힌 룬 최대 5 · 하나당 +12% · 다섯이면 1초 묶음
+    static void spellbladeAdvance(Jobs.Job sb, Jobs.Job rk, Jobs.Job sc) {
+        check(rk != null && sc != null, "spellblade advanced jobs");
+        if (rk == null || sc == null) return;
+        check(Jobs.advance("spellblade", "awaken") == rk && Jobs.advance("spellblade", "invert") == sc && Jobs.baseOf(rk) == sb && Jobs.baseOf(sc) == sb, "spellblade advance");
+        check(rk.display().equals("뵐룬드(룬 스미스)") && sc.display().equals("스키르니르(소드 콜러)") && Jobs.find("룬 스미스") == rk && Jobs.find("스키르니르") == sc
+                && Jobs.find("소드 콜러") == sc && Jobs.find("swordcaller") == sc && Jobs.job("hexblade") == null, "spellblade display · find");
+        List<String> rkIds = new ArrayList<>();
+        List<String> scIds = new ArrayList<>();
+        for (Jobs.Skill k : rk.skills()) rkIds.add(k.id());
+        for (Jobs.Skill k : sc.skills()) scIds.add(k.id());
+        check(rkIds.equals(List.of("runeknight_anvil", "runeknight_bellows", "runeknight_furnace", "runeknight_temper", "runeknight_ult")), "rune smith skills " + rkIds);
+        check(scIds.equals(List.of("swordcaller_strike", "swordcaller_shift", "swordcaller_orbit", "swordcaller_twin", "swordcaller_ult")), "sword caller skills " + scIds);
+        for (int i : new int[] {0, 1, 2, 4}) check(near(rk.skill(i).total(), sb.skill(i).total()) && near(sc.skill(i).total(), sb.skill(i).total()), "spellblade totals slot " + i);
+        // 룬 스미스: 룬 모루 갈라짐 + 모루 터짐 · 풀무 숨 셋 · 쇳물 숫양 달려옴 + 되돌림
+        check(near(rk.skill(0).num("crack", 0) + rk.skill(0).num("burst", 0), 8.5) && near(sum(rk.skill(1), "breaths"), 5.1) && rk.skill(1).def().list("breaths").size() == 3
+                && near(rk.skill(4).num("charge", 0) + rk.skill(4).num("back", 0), 68), "rune smith totals 8.5 · 5.1 · 15.3 · 68");
+        // 소드 콜러: 베어라 넷 · 꿰뚫음 + 맴돌기 넷 · 칼날 감옥 여섯 + 큰 한 방
+        check(near(sum(sc.skill(0), "cuts"), 8.5) && sc.skill(0).def().list("cuts").size() == 4 && near(sc.skill(2).num("pierce", 0) + sum(sc.skill(2), "spins"), 15.3)
+                && near(sum(sc.skill(4), "slashes") + sc.skill(4).num("final", 0), 68) && sc.skill(4).def().list("slashes").size() == 6, "sword caller totals 8.5 · 5.1 · 15.3 · 68");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (숫자만 여러 줄)
+        check(rk.skill(0).num("burstAt", 0) >= 10 && rk.skill(1).num("every", 0) >= 10 && rk.skill(4).num("t", 0) - rk.skill(4).num("w", 0) >= 10, "rune smith i-frame spacing");
+        check(sc.skill(0).num("groupGap", 0) >= 10 && sc.skill(2).num("every", 0) >= 10 && sc.skill(4).num("every", 0) >= 10
+                && sc.skill(4).num("finalAt", 0) - sc.skill(4).num("surroundAt", 0) - 5 * sc.skill(4).num("every", 0) >= 10, "sword caller i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 앞 2.5칸 과녁)
+        Jobs.Skill an = rk.skill(0);
+        check(near(an.num("strikeAt", 0) + Math.ceil((2.5 - an.num("start", 0)) / an.num("speed", 1)) + an.num("burstAt", 0), an.num("t", 0)), "룬 모루 t 17");
+        Jobs.Skill be = rk.skill(1);
+        check(near(be.num("first", 0) + 2 * be.num("every", 0), be.num("t", 0)) && near(be.num("first", 0) + 2 * be.num("every", 0) + 6, be.num("dur", 0)), "풀무 숨 t 24");
+        check(near(rk.skill(2).num("eruptAt", 0), rk.skill(2).num("t", 0)) && near(rk.skill(2).num("eruptAt", 0), rk.skill(2).num("w", 0)), "용광로 t = w 16");
+        Jobs.Skill ram = rk.skill(4);
+        check(near(ram.num("runAt", 0) + Math.ceil((ram.num("summon", 0) - 3.0) / ram.num("speed", 1)), ram.num("w", 0))
+                && near(ram.num("strikeAt", 0) + Math.ceil((2.5 - 1.0) / ram.num("backSpeed", 1)), ram.num("t", 0)) && ram.num("clashAt", 0) < ram.num("strikeAt", 0),
+                "쇳물 숫양 w 21 · t 31");
+        Jobs.Skill st = sc.skill(0);
+        check(near(st.num("launch", 0) + 1 + st.num("groupGap", 0), st.num("t", 0)) && st.def().list("cuts").size() == 2 * st.num("group", 0), "베어라 t 13");
+        check(near(sc.skill(1).num("start", 0) + Math.ceil(2.5 / sc.skill(1).num("speed", 1)), sc.skill(1).num("t", 0)), "데려가라 t 3");
+        Jobs.Skill ob = sc.skill(2);
+        check(near(ob.num("launch", 0) + 1 + ob.def().list("spins").size() * ob.num("every", 0), ob.num("t", 0)) && ob.num("lines", 0) * ob.def().list("spins").size() == 12,
+                "꿰뚫고 맴돌아라 t 43 · 칼질 열둘");
+        check(near(sc.skill(4).num("finalAt", 0), sc.skill(4).num("t", 0)) && near(sc.skill(4).num("surroundAt", 0), sc.skill(4).num("w", 0))
+                && sc.skill(4).num("lines", 0) * sc.skill(4).def().list("slashes").size() == 30, "칼날 감옥 t 70 · w 10 · 칼질 서른");
+        // 특성: 룬 스미스 = 마력 각인 최대 5 · 번짐 0.5 · 달궈짐 5초 · 식으며 깨짐 위력 × 0.8, 소드 콜러 = 스스로 싸우는 칼 (최대 5 · 하나당 공격 속도 +20% → ×2)
         check(rk.trait().name().equals("마력 각인") && rk.trait().max() == 5 && near(rk.trait().def().numOr("markBurst", 0), sb.trait().def().numOr("markBurst", -1))
-                && near(rk.trait().def().numOr("spread", 0), 0.5), "마력 각인 5 · 번짐");
-        check(hx.trait().name().equals("뒤집힌 룬") && hx.trait().max() == 5 && near(hx.trait().def().numOr("perRune", 0), 0.12) && hx.trait().def().numOr("rootAt", 0) == 5
-                && near(hx.trait().def().numOr("rootFor", 0), 20), "뒤집힌 룬 5 · +12% · 묶음");
+                && near(rk.trait().def().numOr("spread", 0), 0.5) && near(rk.trait().def().numOr("heatFor", 0), 100) && near(rk.trait().def().numOr("quench", 0), 0.8),
+                "마력 각인 5 · 번짐 · 달궈짐");
+        check(sc.trait().name().equals("스스로 싸우는 칼") && sc.trait().max() == 5 && near(1 + sc.trait().max() * sc.trait().def().numOr("per", 0), 2)
+                && near(sc.trait().def().numOr("range", 0), 10), "스스로 싸우는 칼 5 · ×2 · 10칸");
         // 마력 검술: 2차는 특성에 magicSword 가 없어도 1차의 칼 규칙 (요구 힘 = 힘 + 마력 · 피해 힘 = 힘 + 마력 × 0.5)
         Map<String, Double> s0 = new java.util.LinkedHashMap<>();
         s0.put("str", 10.0);
         s0.put("int", 40.0);
-        for (Jobs.Job a : List.of(rk, hx)) {
+        for (Jobs.Job a : List.of(rk, sc)) {
             check(Jobs.magicSword(a, "sword") && !Jobs.magicSword(a, "axe"), a.id() + " magic sword");
             check(near(Jobs.reqStats(a, "sword", s0).get("str"), 50) && near(Jobs.damageStats(a, "sword", s0).get("str"), 30), a.id() + " magic sword stats");
         }
-        // 유틸: 세이드 섬광 순간 이동 (10%) · 푸타르크 대검무 결계 (10%) · 뒤집힌 걸음 순간 이동 + 묶음 (20%) · 우박의 룬 받는 피해 +10% (15%)
-        check(Jobs.utils(rk.skill(1)).equals(List.of("blink")) && Jobs.utils(rk.skill(2)).equals(List.of("reduce")) && near(Jobs.utilCost(hx.skill(1)), 0.2)
-                && Jobs.utils(hx.skill(2)).equals(List.of("vuln10")) && near(Jobs.utilCost(hx.skill(2)), 0.15), "spellblade advanced utils");
-        check(Jobs.windupTicks(rk.skill(4)) == 20 && Jobs.windupTicks(hx.skill(4)) == 6, "ult windups 20 · 6");
-        check(Jobs.upKeys(rk.skill(3)).size() == 1 && Jobs.upKeys(hx.skill(3)).size() == 1 && Jobs.upKey(hx.skill(3), "flame") != null, "stance up keys");
-        check(Jobs.skillLine(rk.skill(3)).equals("룬 담금질 · 30초") && Jobs.skillLine(hx.skill(0)).startsWith("가시 룬 베기 · 6초 · 배율 "), "spellblade advanced skill line");
-        check(rk.color()[1][0] > 0.9 && rk.color()[0][2] > 0.9 && hx.color()[0][0] > 0.9 && hx.color()[1][0] < 0.4, "colors: purple · gold / amber · black");
+        // 유틸: 룬 모루 · 용광로 띄움 · 풀무 숨 보호막 · 쇳물 숫양 띄움 + 밀쳐냄 / 데려가라 순간 이동 · 칼날 감옥 묶음 3초
+        check(Jobs.utils(rk.skill(0)).equals(List.of("lift")) && Jobs.utils(rk.skill(1)).equals(List.of("shield")) && Jobs.utils(rk.skill(2)).equals(List.of("lift"))
+                && Jobs.utils(rk.skill(4)).equals(List.of("lift", "knock")) && Jobs.utils(sc.skill(1)).equals(List.of("blink"))
+                && Jobs.utils(sc.skill(4)).equals(List.of("root3")) && Jobs.utils(sc.skill(0)).isEmpty() && Jobs.utils(sc.skill(2)).isEmpty(), "spellblade advanced utils");
+        check(Jobs.windupTicks(rk.skill(2)) == 16 && Jobs.windupTicks(rk.skill(4)) == 21 && Jobs.windupTicks(sc.skill(4)) == 10, "windups 16 · 21 · 10");
+        check("narrow".equals(Jobs.areaKind(rk.skill(0))) && Jobs.areaKind(rk.skill(2)) == null && "single".equals(Jobs.areaKind(sc.skill(2)))
+                && "single".equals(Jobs.areaKind(sc.skill(4))) && Jobs.slotRole(sc.skill(2)).equals("주력") && !Jobs.slotRole(rk.skill(2)).equals("주력"), "areas · 주력");
+        check(Jobs.upKeys(rk.skill(3)).size() == 1 && Jobs.upKey(rk.skill(3), "shard") != null && Jobs.upKeys(sc.skill(3)).size() == 1
+                && Jobs.upKey(sc.skill(3), "echo") != null, "stance up keys");
+        check(Jobs.skillLine(rk.skill(3)).equals("담금질 · 30초") && Jobs.skillLine(sc.skill(0)).startsWith("베어라 · 6초 · 배율 "), "spellblade advanced skill line");
+        check(rk.color()[1][0] > 0.9 && rk.color()[0][2] > 0.9 && sc.color()[0][0] < 0.3 && sc.color()[0][1] > 0.8 && sc.color()[1][2] > 0.9, "colors: purple · gold / teal · white");
     }
 
     /**
