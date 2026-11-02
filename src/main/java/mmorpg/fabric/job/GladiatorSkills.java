@@ -326,14 +326,15 @@ final class GladiatorSkills {
         Vec3 floor = V.up(cg, 0.04);
         double spin = Kit.rand() * 360;
         JobFx.arena(level, floor, R, 0, 0.5, Opt.of("spin", spin), j);
-        RuneKit.later(9, () -> JobFx.arena(level, floor, R, 1, (dur - 9) / 20.0, Opt.of("spin", spin), j));
+        // 바닥 · 성벽 · 말뚝은 마지막 내려찍기까지 짙게 (흐려지는 몫을 짧게 — 영상 1 은 끝 2초가 흐렸음) → 무너질 때 collapse
+        RuneKit.later(9, () -> JobFx.arena(level, floor, R, 1, (dur - 9 + 4) / 20.0, Opt.of("spin", spin, "fade", 0.08), j));
         int walls = Math.max(12, (int) Math.round(2 * Math.PI * R / 2.6));
         for (int i = 0; i < walls; i++) {
             double a = i * 2 * Math.PI / walls;
             Vec3 p = new Vec3(cg.x + Math.cos(a) * R, cg.y, cg.z + Math.sin(a) * R);
             Vec3 g = new Vec3(p.x, RuneKit.groundAt(level, V.up(p, 1.0), cg.y), p.z);
             int ii = i;
-            RuneKit.later(i % 4, () -> JobFx.wall(level, g, 0.8, j, 0.35, dur / 20.0 - ii % 4 / 20.0, Opt.of("fade", 0.4)));
+            RuneKit.later(i % 4, () -> JobFx.wall(level, g, 0.8, j, 0.35, (dur + 2) / 20.0 - ii % 4 / 20.0, Opt.of("fade", 0.08)));
         }
         for (int i = 0; i < 8; i++) {
             double a = Math.toRadians(i * 45 + 22.5);
@@ -341,8 +342,8 @@ final class GladiatorSkills {
             Vec3 g = new Vec3(p.x, RuneKit.groundAt(level, V.up(p, 1.0), cg.y), p.z);
             double size = 1.0;
             JobFx.cells(level, "jstake", JobTraits6.STAKE, 0, 1, V.up(g, size), 0.3, 0, false, Opt.of("size", size, "fade", 0.0), JobTraits6.WOOD, JobFx.outer(j));
-            RuneKit.later(5, () -> JobFx.cells(level, "jstake", JobTraits6.STAKE, 1, 4, V.up(g, size), (dur - 5) / 20.0, 6, true, Opt.of("size", size, "fade", 0.2),
-                    JobTraits6.WOOD, JobFx.outer(j)));
+            RuneKit.later(5, () -> JobFx.cells(level, "jstake", JobTraits6.STAKE, 1, 4, V.up(g, size), (dur - 5 + 2) / 20.0, 6, true, Opt.of("size", size, "fade",
+                    0.06), JobTraits6.WOOD, JobFx.outer(j)));
         }
         SkillFx.sparks(level, V.up(cg, 0.3), DUST, 16, 4);
         SkillFx.play(level, "event.raid.horn", cg, 1.0, 0.8);

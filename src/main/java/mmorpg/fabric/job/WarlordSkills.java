@@ -208,11 +208,13 @@ final class WarlordSkills {
             rift(level, g, f, free, JobKit.glow(j), 0.9 + 0.5 * c, SPLIT_SPEED);
             if (full) {
                 // 끝까지 모음: 갈라진 땅을 따라 돌창이 솟음 (닿는 때마다 — 크게 · 1.5칸마다 엇갈려)
-                for (double s = 1.4; s < free; s += 1.5) {
+                int[] side = {Kit.rand() < 0.5 ? 1 : -1};
+                for (double s = 1.4; s < free; s += 1.3) {
                     double ss = s;
+                    double off = (side[0] = -side[0]) * (0.35 + Kit.rand() * 0.25);
                     RuneKit.later((int) Math.round(Math.max(0, s - 2) / SPLIT_SPEED * 20), () -> {
-                        Vec3 p = ground(level, V.add(V.add(g, f, ss), V.rightOf(f), (Kit.rand() - 0.5) * 0.7));
-                        JobFx.spikeLife(level, p, 0.85 + Kit.rand() * 0.25, 0.15, 0.55, Opt.empty(), ROCK, JobKit.glow(j));
+                        Vec3 p = ground(level, V.add(V.add(g, f, ss), V.rightOf(f), off));
+                        JobFx.spikeLife(level, p, 1.2 + Kit.rand() * 0.3, 0.12, 0.8, Opt.empty(), ROCK, JobKit.glow(j));
                         SkillFx.play(level, "block.pointed_dripstone.land", p, 0.6, 0.6);
                     });
                 }
@@ -352,7 +354,8 @@ final class WarlordSkills {
             JobFx.paw(level, a1, 0.9, life0 + 0.05, JobFx.only1p(sp).with("dir", V.unit(V.sub(a2, a1)), "speed", V.len(V.sub(a2, a1)) / life0, "alpha", 0.95, "spin",
                     s * 70.0, "vel", RuneKit.bodyVel(sp)), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
         }
-        JobFx.bear(level, V.up(V.add(c, f, -0.6), 2.1), 2.0, (slamAt + 6) / 20.0, 0, JobFx.BEAR - 1, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha",
+        // 곰의 혼은 끌어모으는 자리 위 (3인칭 뒤 카메라와 몸 사이에 두면 화면을 덮음 — 영상 1)
+        JobFx.bear(level, V.up(V.add(c, f, 1.8), 3.0), 2.0, (slamAt + 6) / 20.0, 0, JobFx.BEAR - 1, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha",
                 0.8), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
         SkillFx.play(level, "entity.polar_bear.warning", c, 0.8, 1.0);
         SkillFx.play(level, "item.trident.riptide_1", c, 0.7, 0.8);
@@ -360,11 +363,15 @@ final class WarlordSkills {
         List<LivingEntity> pulled = new ArrayList<>();
         for (List<LivingEntity> side : List.of(left, right)) {
             double s = side == left ? -1 : 1;
+            side.sort(java.util.Comparator.comparingDouble(x -> x.distanceToSqr(sp)));
+            int idx = 0;
             for (LivingEntity e : side) {
                 if (!JobKit.pushable(e)) continue;
                 pulled.add(e);
                 Vec3 start = e.position();
-                Vec3 end = V.add(gather, r, s * (0.45 + Kit.bodyPad(e)));
+                // 가까운 적부터 가운데 · 뒤의 적은 바깥으로 조금씩 엇갈려 (몸 · 숫자가 한 자리에 겹치지 않게 — 내려찍는 둘레 안)
+                int i = idx++;
+                Vec3 end = V.add(V.add(gather, r, s * Math.min(2.4, 0.45 + Kit.bodyPad(e) + 0.55 * i)), f, i == 0 ? 0 : (i % 2 == 1 ? 0.55 : -0.55));
                 for (int t = 1; t <= pullTicks; t++) {
                     int tt = t;
                     RuneKit.later(pullAt + t, () -> {
@@ -452,7 +459,7 @@ final class WarlordSkills {
         return true;
     }
 
-    /** 거인의 무게 동안 휘두를 때마다 (JobTraits6.onSwing): 앞 부채꼴의 땅이 세 갈래로 갈라지고 돌이 튐 · 낮은 땅울림 */
+    /** 거인의 무게 동안 휘두를 때마다 (JobTraits6.onSwing): 앞 부채꼴의 땅이 세 갈래로 갈라지고 끝에서 돌창 둘 · 돌이 튐 · 낮은 땅울림 */
     static void titanQuake(ServerPlayer sp, Jobs.Job j) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
@@ -461,8 +468,14 @@ final class WarlordSkills {
             Vec3 d = V.turnY(f, s * 24.0);
             rift(level, g, d, 3.6 + (s == 0 ? 0.8 : 0), JobKit.glow(j), 0.85, 50);
         }
-        JobFx.two(level, "jquake", JobFx.QUAKE, V.up(V.add(g, f, 1.6), 0.05), 0.5, Opt.of("dir", V.UP, "size", 1.6 / 0.92, "spin", Kit.rand() * 360, "alpha", 0.8),
+        JobFx.two(level, "jquake", JobFx.QUAKE, V.up(V.add(g, f, 1.6), 0.05), 0.5, Opt.of("dir", V.UP, "size", 1.9 / 0.92, "spin", Kit.rand() * 360, "alpha", 0.9),
                 JobFx.outer(j), JobFx.inner(j));
+        // 갈라짐 끝에서 돌창 둘이 솟음 (가운데 · 엇갈려)
+        for (int i = 0; i < 2; i++) {
+            Vec3 p = ground(level, V.add(V.add(g, f, 2.6 + i * 1.0), V.rightOf(f), i == 0 ? -0.4 : 0.45));
+            int d = 1 + i;
+            RuneKit.later(d, () -> JobFx.spikeLife(level, p, 0.85 + Kit.rand() * 0.2, 0.1, 0.35, Opt.empty(), ROCK, JobKit.glow(j)));
+        }
         RuneKit.rockBurst(level, V.up(V.add(g, f, 2.2), 0.2), 4, 3.6, 0.15);
         SkillFx.sparks(level, V.up(V.add(g, f, 1.8), 0.2), DUST, 6, 2.8);
         SkillFx.play(level, "mace.smash_ground", g, 0.6, 0.55);
@@ -489,11 +502,11 @@ final class WarlordSkills {
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
         SkillFx.play(level0, "entity.polar_bear.warning", c0, 0.5, 1.2);
         SkillFx.play(level0, "mob.enderdragon.growl", c0, 1.4, 0.4);
-        // 등 뒤에서 곰의 혼이 솟음 (모여 이룸 → 포효를 이어 돌림)
-        JobFx.bear(level0, V.up(V.add(c0, Kit.facingOf(sp), -0.9), 2.6), 2.6, windup / 20.0 * 0.4, 0, 3, false, JobFx.hide1p(sp).with("alpha", 0.9),
+        // 앞 2.6칸 위에서 곰의 혼이 솟음 (모여 이룸 → 포효를 이어 돌림 — 몸 뒤에 두면 3인칭 뒤 카메라와 몸 사이라 화면을 덮음, 영상 1)
+        JobFx.bear(level0, V.up(V.add(c0, Kit.facingOf(sp), 2.6), 3.2), 2.6, windup / 20.0 * 0.4, 0, 3, false, JobFx.hide1p(sp).with("alpha", 0.9),
                 JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
         RuneKit.later((int) Math.round(windup * 0.4), () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.bear(sp.level(), V.up(V.add(sp.position(), Kit.facingOf(sp), -0.9), 2.6), 2.6, windup * 0.6 / 20.0 + 0.3, 3, 4, true,
+            if (RuneKit.sameLife(sp, life)) JobFx.bear(sp.level(), V.up(V.add(sp.position(), Kit.facingOf(sp), 2.6), 3.2), 2.6, windup * 0.6 / 20.0 + 0.3, 3, 4, true,
                     JobFx.hide1p(sp).with("alpha", 0.9, "vel", RuneKit.bodyVel(sp)), JobTraits6.bearGlow(j), JobTraits6.bearCore(j));
         });
         // 모음 (3틱마다): 바깥 고리의 달아오르는 금 (돌아가며) · 안쪽 경계의 옅은 금 · 빨려 드는 흙먼지 · 손의 불티 · 차오르는 땅울림

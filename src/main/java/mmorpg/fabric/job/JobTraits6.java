@@ -400,11 +400,19 @@ public final class JobTraits6 {
         }
     }
 
-    /** 도끼 평타가 맞음 (피해가 들어간 뒤): 결투 상대가 없으면 그 적과 결투 · 상대면 이어짐 */
+    /** 도끼 평타가 맞음 (피해가 들어간 뒤): 워로드 거인의 무게 — 무거운 타격 / 글래디에이터 — 결투 상대가 없으면 그 적과 결투 · 상대면 이어짐 (불사의 분노 — 붉은 타격) */
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         if (w == null || victim == null || !"axe".equals(w.type()) || !Combat.isMeleeWeapon(w)) return;
+        Jobs.Job wl = jobIf(sp, WL);
+        if (wl != null) {
+            // 거인의 무게: 도끼 평타가 무겁게 맞음 (큰 타격 섬광 · 무거운 소리 · 멈칫 — 한 휘두르기에 둘까지)
+            if (titanOn(sp) && RuneKit.fxQuota("titanHit" + sp.getId(), 2)) JobImpact.hit(sp, victim, wl, 1.35);
+            return;
+        }
         Jobs.Job j = jobIf(sp, GL);
         if (j == null) return;
+        // 불사의 분노: 빨라진 도끼 평타마다 붉은 타격 (멈칫 없이 — 빠른 연타)
+        if (furyOn(sp) && RuneKit.fxQuota("furyHit" + sp.getId(), 2)) JobImpact.fx(sp, victim, j, 0.95);
         LivingEntity t = duelTarget(sp);
         if (t == null) {
             if (victim.isAlive() && !victim.isRemoved()) startDuel(sp, j, victim, 0, false);
