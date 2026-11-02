@@ -27,6 +27,7 @@ import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 
 import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 라이칸)
 import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (룬 나이트 · 헥스 블레이드)
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
+import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 섀도 헌터)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -121,6 +122,17 @@ AIR = {
     "jb_arcmage_ult_wave": [(0, 10, "float")],
     "jb_arcmage_ult_rain": [(0, 20, "float")],
     "jb_arcmage_ult_final": [(0, 6, "float"), (7, 13, "land")],
+    # 0.51.0 스나이퍼: 꿰뚫는 연사 (뒤로 구름 0 ~ 8 → 무릎) · 순풍 공중 사격 · 울르의 폭우 (12틱 뜀) · 세 번째 화살 (8틱 뛰어올라 22 까지 떠 있음 → 26 내려앉음 · 놓을 때
+    # 무릎 꿇은 채 밀려남) / 섀도 헌터: 그림자 구르기 (8틱 구름) · 어둠숲의 사냥 (10틱 뒤로 뜀)
+    "jb_sniper_pierce": [(1, 7, "tuck"), (8, 11, "land")],
+    "jb_sniper_gale": [(1, 11, "tuck"), (12, 15, "land")],
+    "jb_sniper_storm": [(1, 11, "tuck"), (12, 15, "land")],
+    "jb_sniper_ult": [(1, 7, "tuck"), (8, 21, "float")],
+    "jb_sniper_ult_land": [(0, 3, "float"), (4, 7, "land")],
+    "jb_sniper_ult_release": [],
+    "jb_shadowhunter_roll": [(1, 7, "tuck"), (8, 11, "land")],
+    "jb_shadowhunter_roll_left": [(1, 7, "tuck"), (8, 11, "land")],
+    "jb_shadowhunter_ult": [(1, 9, "tuck"), (10, 13, "land")],
 }
 
 

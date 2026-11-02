@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """0.51.0 2차 직업 스킬 아이콘 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) · 전사 각성 뵈드바르(워로드) · 반전 울프헤딘(라이칸) ·
-마검사 각성 뵐룬드(룬 나이트) · 반전 투르스(헥스 블레이드) · 매지션 각성 오드레리르(아크메이지) · 반전 나글파르(네크로맨서) (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
+마검사 각성 뵐룬드(룬 나이트) · 반전 투르스(헥스 블레이드) · 매지션 각성 오드레리르(아크메이지) · 반전 나글파르(네크로맨서) ·
+궁수 각성 에길(스나이퍼) · 반전 미르크비드(섀도 헌터) (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
 모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph · jrunes24 · jthorn 과 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
 라이칸 = 달빛 은회 (첫째) · 붉은 눈빛 (둘째), 룬 나이트 = 보라 (첫째) · 금빛 룬 (둘째), 헥스 블레이드 = 호박빛 (첫째) · 먹빛 자주 (둘째), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
-네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕) — jobs.json advance."""
+네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕), 스나이퍼 = 밝은 연두 (첫째) · 금빛 흰 섬광 (둘째 — 짙은 숲 바탕),
+섀도 헌터 = 남보라 (첫째) · 은빛 (둘째 — 짙은 남색 바탕 · 검은 화살은 먹빛 살대 · 은빛 촉) — jobs.json advance."""
 import math
 import os
 import sys
@@ -15,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from job_skill_icons import (GOLD, GOLD_HI, GOLD_LO, STEEL, STEEL_HI, STEEL_LO, WHITE, backdrop, crescent, disc, finish, glow, layer, line, mask, mix,  # noqa: E402
                              poly, ring, stack, star, sword_layers)
 from job_skill_icons_more import axe_layers  # noqa: E402
-from job_skill_icons import SS  # noqa: E402
+from job_skill_icons import P, SS  # noqa: E402
 from job_fx_art_v2 import GLYPHS  # noqa: E402 — 룬 글자 꼴 (게임의 룬 그림과 같음)
 
 NIGHT = (8, 10, 30)
@@ -1068,6 +1070,322 @@ def necromancer_ult(A, B):
     return finish(subject, [glow(flames, A, 2.0, 1.0), glow(eyes, A, 1.0, 1.0), glow(hull, A, 1.2, 0.5)], necro_back(A, B))
 
 
+# ------------------------------------------------------------ 에길(스나이퍼) (빛: 밝은 연두 → 금빛 흰 섬광 — 짙은 숲 바탕)
+
+SNIPE_WOOD = (4, 18, 6)
+
+
+def sniper_back(A, B):
+    return backdrop(mix(A, SNIPE_WOOD, 0.86), mix((40, 90, 24), A, 0.35))
+
+
+def sn_arrow(tip, ang, L, head=3.2, w=1.4, fletch=True):
+    """빛의 화살 (tip = 촉 끝 · ang = 촉이 향한 쪽, 도): 살대 · 촉 · 깃 마스크"""
+    a = math.radians(ang)
+    ux, uy = math.cos(a), math.sin(a)
+    px, py = -uy, ux
+    tx, ty = tip
+    shaft = mask()
+    line(shaft, [(tx - ux * head * 0.8, ty - uy * head * 0.8), (tx - ux * L, ty - uy * L)], w)
+    hd = mask()
+    poly(hd, [(tx, ty), (tx - ux * head + px * head * 0.62, ty - uy * head + py * head * 0.62), (tx - ux * head * 0.68, ty - uy * head * 0.68),
+              (tx - ux * head - px * head * 0.62, ty - uy * head - py * head * 0.62)])
+    fl = mask()
+    if fletch:
+        for d in (0.0, 1.9):
+            bx, by = tx - ux * (L - 1.4 - d), ty - uy * (L - 1.4 - d)
+            line(fl, [(bx, by), (bx - ux * 2.6 + px * 2.1, by - uy * 2.6 + py * 2.1)], 1.0)
+            line(fl, [(bx, by), (bx - ux * 2.6 - px * 2.1, by - uy * 2.6 - py * 2.1)], 1.0)
+    return shaft, hd, fl
+
+
+def sn_arrow_layers(A, B, shaft, hd, fl):
+    return [layer(shaft, mix(A, WHITE, 0.55), A), layer(fl, WHITE, A), layer(hd, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.35))]
+
+
+def sniper_pierce(A, B):
+    # 꿰뚫는 연사: 오른쪽 위로 나란히 나는 화살 둘 (위 · 아래) 과 가운데 흰 섬광의 큰 꿰뚫는 화살 — 꿰뚫린 과녁 고리 둘 (비스듬한 타원) · 뒤의 섬광 줄
+    rings = mask()
+    for (cx, cy, rx, ry) in ((10.5, 21.5, 3.0, 7.0), (19.0, 13.0, 3.0, 7.0)):
+        pts = []
+        for i in range(37):
+            t = math.radians(i * 10)
+            x, y = math.cos(t) * rx, math.sin(t) * ry
+            a = math.radians(45)
+            pts.append((cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)))
+        line(rings, pts, 1.3)
+    flash = mask()
+    poly(flash, [(1.0, 30.5), (24.5, 7.0), (25.5, 8.0), (2.0, 31.5)])
+    big = sn_arrow((30.5, 1.5), -45, 30.0, 5.4, 2.0)
+    s1 = sn_arrow((21.5, 2.0), -45, 13.0, 3.2, 1.2)
+    s2 = sn_arrow((30.0, 10.5), -45, 13.0, 3.2, 1.2)
+    sp = mask()
+    star(sp, 29.0, 3.0, 3.4, 0.2, 0)
+    subject = stack(layer(flash, mix(B, WHITE, 0.5), mix(A, WHITE, 0.2), None, None), *sn_arrow_layers(A, B, *s1), *sn_arrow_layers(A, B, *s2),
+                    layer(rings, mix(B, WHITE, 0.3), B), layer(big[0], WHITE, mix(B, WHITE, 0.4)), layer(big[2], WHITE, A),
+                    layer(big[1], WHITE, B, WHITE, mix(B, (0, 0, 0), 0.3)), layer(sp, WHITE, B))
+    return finish(subject, [glow(lighter(big[0], big[1]), B, 1.6, 1.0), glow(flash, A, 1.6, 0.7), glow(rings, B, 1.0, 0.6)], sniper_back(A, B))
+
+
+def sniper_gale(A, B):
+    # 순풍 공중 사격: 왼쪽 아래에서 위로 휘감아 오르는 바람 줄 둘 · 바람 위 깃털 · 위에서 오른쪽 아래로 내리꽂는 화살 셋
+    gusts = []
+    for (cx, cy, r, a0, sw) in ((10.0, 20.0, 8.5, 150, 260), (13.0, 25.0, 6.0, 170, 220)):
+        m = mask()
+        pts = []
+        for i in range(25):
+            t = i / 24
+            a = math.radians(a0 + sw * t)
+            rr = r * (1 - 0.45 * t)
+            pts.append((cx + math.cos(a) * rr, cy + math.sin(a) * rr - 6.0 * t))
+        line(m, pts, 1.6)
+        gusts.append(m)
+    feather = mask()
+    poly(feather, [(4.0, 10.0), (8.5, 3.5), (10.5, 4.5), (6.5, 11.0)])
+    quill = mask()
+    line(quill, [(3.5, 11.5), (9.8, 3.8)], 0.6)
+    arrows = [sn_arrow((x, y), 40, 12.0, 3.2, 1.2) for (x, y) in ((22.0, 18.0), (26.0, 24.5), (30.0, 31.0))]
+    hits = mask()
+    for (x, y) in ((22.0, 18.0), (26.0, 24.5), (30.0, 31.0)):
+        star(hits, x + 0.6, y + 0.4, 2.0, 0.25, 15)
+    layers = []
+    for a in arrows:
+        layers += sn_arrow_layers(A, B, *a)
+    subject = stack(*[layer(m, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.3), axis=(1, 1)) for m in gusts], layer(feather, mix(A, WHITE, 0.6), A, WHITE, None),
+                    layer(quill, mix(A, (0, 0, 0), 0.3), mix(A, (0, 0, 0), 0.3)), *layers, layer(hits, WHITE, B))
+    return finish(subject, [glow(lighter(*gusts), A, 1.6, 0.9), glow(lighter(*[a[1] for a in arrows]), B, 1.2, 0.8)], sniper_back(A, B))
+
+
+def sniper_storm(A, B):
+    # 울르의 폭우: 위의 납작한 잿빛 비구름 (아래가 어두움) · 구름 밑에서 비스듬히 쏟아지는 빛의 화살 다섯 (촉이 아래 · 흰 빗줄기) · 아래 금빛 과녁 · 꽂힌 자리 반짝임
+    cloud = mask()
+    for (x, y, r) in ((6.5, 5.5, 3.4), (12.0, 3.8, 4.0), (18.5, 4.2, 3.8), (24.5, 5.6, 3.3), (15.5, 6.6, 3.4), (9.5, 7.0, 2.8), (21.5, 7.0, 2.8)):
+        disc(cloud, x, y, r)
+    target = mask()
+    d = ImageDraw.Draw(target)
+    d.ellipse([P(3.0, 24.0), P(29.0, 31.0)], fill=255)
+    d.ellipse([P(6.0, 25.5), P(26.0, 29.5)], fill=0)
+    d.ellipse([P(12.0, 26.4), P(20.0, 28.6)], fill=255)
+    spots = ((7.5, 26.5, 13.0), (13.0, 23.0, 10.5), (18.0, 28.0, 15.0), (23.0, 22.5, 10.0), (27.5, 26.0, 12.0))
+    arrows = [sn_arrow((x, y), 104, L, 3.4, 1.2, fletch=False) for (x, y, L) in spots]
+    rain = mask()
+    for (x, y, L) in spots:
+        a = math.radians(104)
+        line(rain, [(x - math.cos(a) * (L + 0.5), y - math.sin(a) * (L + 0.5)), (x - math.cos(a) * (L + 4.0), y - math.sin(a) * (L + 4.0))], 0.6)
+    layers = []
+    for a in arrows:
+        layers += [layer(a[0], WHITE, mix(A, WHITE, 0.35)), layer(a[1], WHITE, B, WHITE, mix(B, (0, 0, 0), 0.3))]
+    sp = mask()
+    for (x, y, _) in spots[::2]:
+        star(sp, x + 0.4, y + 0.8, 2.2, 0.25, 0)
+    grey = (70, 78, 84)
+    subject = stack(layer(target, mix(B, WHITE, 0.25), B, None, None), layer(rain, mix(A, WHITE, 0.5), A), *layers,
+                    layer(cloud, mix(grey, WHITE, 0.35), mix(grey, (0, 0, 0), 0.45), mix(grey, WHITE, 0.6), None), layer(sp, WHITE, B))
+    return finish(subject, [glow(target, B, 1.4, 0.7), glow(lighter(*[a[0] for a in arrows]), A, 1.2, 0.8)], sniper_back(A, B))
+
+
+def sniper_apple(A, B):
+    # 사과 겨누기: 가운데 금빛 사과 (잎 · 꼭지 · 반짝임) · 둘레 네 토막 과녁 테 · 사과를 겨눈 눈금 · 오른쪽에서 꿰뚫는 화살
+    apple = mask()
+    disc(apple, 14.4, 17.0, 5.6)
+    disc(apple, 18.4, 17.0, 5.6)
+    disc(apple, 16.4, 20.0, 5.4)
+    notch = mask()
+    disc(notch, 16.4, 10.8, 1.8)
+    apple = ImageChops.subtract(apple, notch)
+    leaf = mask()
+    poly(leaf, [(17.0, 11.5), (19.5, 8.2), (23.0, 8.0), (20.5, 11.2)])
+    stem = mask()
+    line(stem, [(16.4, 12.0), (15.6, 8.6)], 1.0)
+    shine = mask()
+    disc(shine, 13.2, 15.0, 1.5)
+    reticle = mask()
+    for q in range(4):
+        a0, a1 = q * 90 + 14, (q + 1) * 90 - 14
+        pts = [(16.0 + math.cos(math.radians(a)) * 13.5, 16.5 + math.sin(math.radians(a)) * 13.5) for a in range(a0, a1 + 1, 6)]
+        line(reticle, pts, 1.3)
+    ticks = mask()
+    for (a, b) in (((16, 0.8), (16, 5.0)), ((16, 28.0), (16, 31.4)), ((0.6, 16.5), (4.8, 16.5)), ((27.2, 16.5), (31.4, 16.5))):
+        line(ticks, [a, b], 1.2)
+    arr = sn_arrow((9.0, 18.5), 180, 18.0, 3.4, 1.3)
+    subject = stack(layer(reticle, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.3)), layer(ticks, WHITE, A), layer(apple, mix(B, WHITE, 0.25), mix(B, (120, 60, 0), 0.45), WHITE,
+                    mix(B, (0, 0, 0), 0.45)), layer(leaf, mix(A, WHITE, 0.2), mix(A, (0, 0, 0), 0.3)), layer(stem, mix(B, (60, 30, 0), 0.6), mix(B, (60, 30, 0), 0.6)),
+                    *sn_arrow_layers(A, B, *arr), layer(shine, WHITE, WHITE))
+    return finish(subject, [glow(apple, B, 1.8, 0.9), glow(reticle, A, 1.2, 0.7)], sniper_back(A, B))
+
+
+def sniper_ult(A, B):
+    # 세 번째 화살: 오른쪽 위로 나는 거대한 넓은 잎 촉 화살 · 살대를 감아 도는 바람 띠 둘 · 살대의 금 새김 셋 (III) · 촉 끝 흰 섬광
+    a = math.radians(-38)
+    ux, uy = math.cos(a), math.sin(a)
+    px, py = -uy, ux
+    tip = (30.5, 4.0)
+
+    def at(s, o=0.0):
+        return (tip[0] - ux * s + px * o, tip[1] - uy * s + py * o)
+    shaft = mask()
+    line(shaft, [at(9.0), at(31.0)], 2.2)
+    head = mask()
+    poly(head, [at(0), at(5.0, 4.6), at(9.5, 5.0), at(10.5, 2.0), at(8.6, 0), at(10.5, -2.0), at(9.5, -5.0), at(5.0, -4.6)])
+    fl = mask()
+    for d0 in (0.0, 2.6):
+        line(fl, [at(28.5 - d0), at(31.5 - d0, 3.6)], 1.2)
+        line(fl, [at(28.5 - d0), at(31.5 - d0, -3.6)], 1.2)
+    bands = []
+    for ph in (0.0, math.pi):
+        m = mask()
+        pts = [at(s, (1.5 + 3.6 * (s - 10) / 18.0) * math.sin(s * 0.62 + ph)) for s in [10.0 + 0.5 * i for i in range(37)]]
+        line(m, pts, 1.0)
+        bands.append(m)
+    marks = mask()
+    for s in (13.5, 15.5, 17.5):
+        line(marks, [at(s, 1.3), at(s, -1.3)], 0.7)
+    sp = mask()
+    star(sp, 29.0, 5.2, 4.6, 0.18, 8)
+    subject = stack(layer(bands[1], mix(A, WHITE, 0.2), mix(A, (0, 0, 0), 0.2)), layer(shaft, WHITE, mix(B, WHITE, 0.3)), layer(fl, WHITE, A), layer(marks, B, mix(B, (0, 0, 0), 0.35)),
+                    layer(head, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.3)), layer(bands[0], WHITE, A), layer(sp, WHITE, B))
+    return finish(subject, [glow(lighter(shaft, head), B, 1.8, 1.0), glow(lighter(*bands), A, 1.6, 0.9)], sniper_back(A, B))
+
+
+# ------------------------------------------------------------ 미르크비드(섀도 헌터) (빛: 남보라 → 은빛 — 짙은 남색 어둠숲 바탕 · 검은 화살)
+
+SHADE_NIGHT = (5, 4, 18)
+INK = (22, 18, 44)
+
+
+def shadow_back(A, B):
+    return backdrop(mix(A, SHADE_NIGHT, 0.86), mix((60, 52, 150), A, 0.3))
+
+
+def black_arrow_layers(A, B, shaft, hd, fl):
+    """검은 화살: 먹빛 살대 · 깃 (은빛 테) · 은빛 촉"""
+    return [layer(shaft, mix(INK, A, 0.25), INK, mix(B, INK, 0.45), None), layer(fl, mix(INK, A, 0.35), INK, mix(B, INK, 0.3), None),
+            layer(hd, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.45))]
+
+
+def smoke_puffs(pts):
+    m = mask()
+    for (x, y, r) in pts:
+        disc(m, x, y, r)
+    return m
+
+
+def shadowhunter_black(A, B):
+    # 검은 화살: 오른쪽으로 나란히 나는 검은 화살 셋 (은빛 촉 · 검은 깃) · 뒤로 끌리는 그림자 연기 · 은빛 줄
+    arrows = [sn_arrow((x, y), -12, 17.0, 3.4, 1.4) for (x, y) in ((30.0, 7.0), (27.0, 16.5), (30.5, 25.5))]
+    smoke = smoke_puffs([(x - 15.0 - k * 2.6, y + 3.2 + k * 0.6, 2.2 - k * 0.35) for (x, y) in ((30.0, 7.0), (27.0, 16.5), (30.5, 25.5)) for k in range(4)])
+    streak = mask()
+    for (x, y) in ((30.0, 7.0), (27.0, 16.5), (30.5, 25.5)):
+        line(streak, [(x - 19.0, y + 4.2), (x - 26.0, y + 5.7)], 0.6)
+    layers = []
+    for a in arrows:
+        layers += black_arrow_layers(A, B, *a)
+    subject = stack(layer(smoke, mix(A, (0, 0, 0), 0.35), mix(A, (0, 0, 0), 0.7), None, None), layer(streak, mix(B, A, 0.4), A), *layers)
+    return finish(subject, [glow(lighter(*[a[1] for a in arrows]), B, 1.4, 0.9), glow(smoke, A, 1.6, 0.7)], shadow_back(A, B))
+
+
+def shadowhunter_roll(A, B):
+    # 그림자 구르기: 가운데 둥글게 감긴 그림자 연기 고리 (구르는 몸 — 끝이 가늘어짐) · 고리에서 오른쪽으로 튀어나가는 검은 화살 · 떠난 자리의 흐린 잔상 · 은빛 반짝임
+    swirl = mask()
+    pts = []
+    for i in range(33):
+        t = i / 32
+        a = math.radians(200 + 300 * t)
+        rr = 8.5 - 2.5 * t
+        pts.append((13.0 + math.cos(a) * rr, 16.5 + math.sin(a) * rr))
+    for i in range(len(pts) - 1):
+        w = 3.6 * (1 - i / len(pts)) + 0.8
+        line(swirl, [pts[i], pts[i + 1]], w)
+    ghost = smoke_puffs([(4.0, 24.0, 2.6), (6.5, 26.5, 2.0), (3.0, 20.5, 1.6)])
+    arr = sn_arrow((31.0, 15.0), -6, 16.0, 3.6, 1.5)
+    sp = mask()
+    star(sp, 13.0, 16.5, 3.2, 0.22, 20)
+    subject = stack(layer(ghost, mix(A, (0, 0, 0), 0.4), mix(A, (0, 0, 0), 0.75), None, None), layer(swirl, mix(A, WHITE, 0.15), mix(A, INK, 0.5), mix(B, A, 0.4),
+                    mix(A, (0, 0, 0), 0.5), axis=(1, 1)), *black_arrow_layers(A, B, *arr), layer(sp, WHITE, B))
+    return finish(subject, [glow(swirl, A, 1.8, 0.8), glow(arr[1], B, 1.2, 0.9)], shadow_back(A, B))
+
+
+def curse_mark(m, cx, cy, r, w=1.1, thorns=8):
+    """가시 고리 (둘레 바깥 가시)"""
+    ring(m, cx, cy, r, w)
+    for i in range(thorns):
+        a = math.radians(i * 360 / thorns + 10)
+        b0 = (cx + math.cos(a - 0.2) * (r - 0.3), cy + math.sin(a - 0.2) * (r - 0.3))
+        b1 = (cx + math.cos(a + 0.2) * (r - 0.3), cy + math.sin(a + 0.2) * (r - 0.3))
+        tp = (cx + math.cos(a + 0.1) * (r + r * 0.45), cy + math.sin(a + 0.1) * (r + r * 0.45))
+        poly(m, [b0, tp, b1])
+    return m
+
+
+def closed_eye(m, cx, cy, s, w=0.9):
+    pts = [(cx - 3.6 * s + 7.2 * s * t, cy + 2.2 * s * math.sin(math.pi * t)) for t in [i / 12 for i in range(13)]]
+    line(m, pts, w)
+    for t in (0.25, 0.5, 0.75):
+        x = cx - 3.6 * s + 7.2 * s * t
+        y = cy + 2.2 * s * math.sin(math.pi * t)
+        line(m, [(x, y), (x + (t - 0.5) * 1.6 * s, y + 1.6 * s)], 0.6)
+    return m
+
+
+def shadowhunter_spread(A, B):
+    # 저주 번짐: 가운데 큰 저주 문양 (가시 고리 · 감긴 눈) · 문양에서 셋으로 번지는 검은 줄 · 줄 끝의 작은 문양 셋
+    big = mask()
+    curse_mark(big, 16.0, 15.5, 6.6, 1.3, 9)
+    disc_in = mask()
+    disc(disc_in, 16.0, 15.5, 5.0)
+    eye = mask()
+    closed_eye(eye, 16.0, 14.8, 1.0)
+    veins = mask()
+    for (x, y) in ((4.5, 5.0), (28.0, 6.5), (16.0, 29.0)):
+        line(veins, [(16.0, 15.5), ((16.0 + x) / 2 + 1.5, (15.5 + y) / 2 - 1.0), (x, y)], 1.0)
+    smalls = mask()
+    for (x, y) in ((4.5, 5.0), (28.0, 6.5), (16.0, 29.0)):
+        curse_mark(smalls, x, y, 2.4, 0.9, 6)
+    subject = stack(layer(veins, mix(A, INK, 0.3), mix(A, INK, 0.6)), layer(disc_in, mix(A, INK, 0.55), mix(INK, (0, 0, 0), 0.3), None, None),
+                    layer(big, mix(B, WHITE, 0.2), mix(B, A, 0.45), WHITE, mix(A, (0, 0, 0), 0.3)), layer(eye, WHITE, B), layer(smalls, mix(B, A, 0.25), mix(A, B, 0.2)))
+    return finish(subject, [glow(big, A, 1.8, 0.9), glow(lighter(smalls, veins), A, 1.4, 0.7), glow(eye, B, 1.0, 0.9)], shadow_back(A, B))
+
+
+def shadowhunter_moonless(A, B):
+    # 그믐밤: 하늘의 가는 그믐달 (은빛 테 — 가려진 쪽은 먹빛) · 아래 어둠숲의 뾰족한 나무 그림자 · 숲 속 은빛 눈 둘 · 별 둘
+    moon = mask()
+    disc(moon, 19.0, 10.0, 7.0)
+    cover = mask()
+    disc(cover, 16.6, 9.0, 6.6)
+    rim = ImageChops.subtract(moon, cover)
+    shadow = ImageChops.multiply(moon, cover)
+    trees = mask()
+    for (x, h, w) in ((3.0, 12.0, 3.6), (9.0, 15.0, 4.2), (15.5, 11.0, 3.6), (22.0, 14.0, 4.0), (28.5, 12.5, 3.6)):
+        poly(trees, [(x - w, 32.0), (x, 32.0 - h), (x + w, 32.0)])
+        poly(trees, [(x - w * 0.8, 32.0 - h * 0.45), (x, 32.0 - h * 1.08), (x + w * 0.8, 32.0 - h * 0.45)])
+    eyes = mask()
+    for x in (12.0, 15.0):
+        poly(eyes, [(x - 1.3, 25.0), (x + 1.3, 24.3), (x + 0.9, 25.5), (x - 1.0, 25.8)])
+    st = mask()
+    star(st, 6.0, 6.0, 2.2, 0.22, 0)
+    star(st, 27.5, 19.5, 1.8, 0.22, 0)
+    subject = stack(layer(shadow, mix(A, INK, 0.5), mix(INK, (0, 0, 0), 0.4), None, None), layer(rim, WHITE, B, WHITE, mix(B, A, 0.4)),
+                    layer(trees, mix(INK, A, 0.3), mix(INK, (0, 0, 0), 0.4), mix(A, INK, 0.3), None), layer(eyes, WHITE, B), layer(st, WHITE, B))
+    return finish(subject, [glow(rim, B, 1.8, 0.9), glow(eyes, B, 0.8, 1.0), glow(trees, A, 1.4, 0.5)], shadow_back(A, B))
+
+
+def shadowhunter_ult(A, B):
+    # 어둠숲의 사냥: 위에서 곧게 내리꽂는 거대한 검은 화살 (은빛 촉) · 양옆에서 내리는 작은 검은 화살 둘 · 아래 가시덤불 고리 (뾰족한 가시) · 꽂힌 자리 은빛 섬광
+    thorns = mask()
+    for (x, h, lean) in ((3.0, 9.0, -1.5), (8.0, 7.0, 1.0), (24.0, 7.5, -1.0), (29.0, 9.5, 1.5), (12.0, 5.0, -0.5), (20.0, 5.5, 0.5)):
+        line(thorns, [(x, 32.0), (x + lean, 32.0 - h)], 1.6)
+        line(thorns, [(x + lean * 0.5, 32.0 - h * 0.55), (x + lean * 0.5 + (2.0 if lean >= 0 else -2.0), 32.0 - h * 0.75)], 0.9)
+    big = sn_arrow((16.0, 27.0), 90, 25.0, 6.0, 2.4)
+    s1 = sn_arrow((7.0, 21.0), 96, 12.0, 3.0, 1.1, fletch=False)
+    s2 = sn_arrow((25.5, 20.0), 84, 12.0, 3.0, 1.1, fletch=False)
+    flash = mask()
+    star(flash, 16.0, 27.5, 5.2, 0.2, 0)
+    smoke = smoke_puffs([(10.0, 29.0, 2.6), (22.0, 29.0, 2.6), (16.0, 30.5, 3.0)])
+    subject = stack(layer(smoke, mix(A, (0, 0, 0), 0.3), mix(A, (0, 0, 0), 0.7), None, None), layer(thorns, mix(INK, A, 0.35), INK, mix(B, INK, 0.45), None),
+                    *black_arrow_layers(A, B, *s1), *black_arrow_layers(A, B, *s2), *black_arrow_layers(A, B, *big), layer(flash, WHITE, B))
+    return finish(subject, [glow(lighter(big[1], flash), B, 1.6, 1.0), glow(thorns, A, 1.4, 0.7), glow(lighter(big[0], s1[0], s2[0]), A, 1.4, 0.6)], shadow_back(A, B))
+
+
 ICONS = {
     "swordmaster_flurry": swordmaster_flurry,
     "swordmaster_grani": swordmaster_grani,
@@ -1109,4 +1427,14 @@ ICONS = {
     "necromancer_burst": necromancer_burst,
     "necromancer_raise": necromancer_raise,
     "necromancer_ult": necromancer_ult,
+    "sniper_pierce": sniper_pierce,
+    "sniper_gale": sniper_gale,
+    "sniper_storm": sniper_storm,
+    "sniper_apple": sniper_apple,
+    "sniper_ult": sniper_ult,
+    "shadowhunter_black": shadowhunter_black,
+    "shadowhunter_roll": shadowhunter_roll,
+    "shadowhunter_spread": shadowhunter_spread,
+    "shadowhunter_moonless": shadowhunter_moonless,
+    "shadowhunter_ult": shadowhunter_ult,
 }

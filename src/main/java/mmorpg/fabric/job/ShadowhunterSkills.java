@@ -144,6 +144,8 @@ final class ShadowhunterSkills {
         Vec3 d0 = dir;
         double go = free;
         JobMove.run(sp, JobMove.to(0, steps, from -> V.add(from, d0, go), JobMove.INOUT));
+        // 동작: 기본은 오른쪽으로 구름 — 왼쪽이면 단계 열쇠 left 를 1틱에 다시 보냄 (스킬 동작은 cast 가 끝난 뒤에 나감)
+        if (V.dot(d0, V.rightOf(look)) < 0) JobKit.motionLater(sp, "shadowhunter_roll:left", 1, life);
         JobTraits9.rollFor(sp, (int) k.num("invuln", steps));
         JobTraits9.addPursuit(sp, j, 1);
         // 떠난 자리 그림자 잔상 · 구르는 길을 따라 검은 연기 · 은빛 줄
@@ -428,7 +430,7 @@ final class ShadowhunterSkills {
                 }
             });
         }
-        JobKit.motionLater(sp, "shadowhunter_ult:hunt", huntAt - 10, life);
+        JobKit.motionLater(sp, "shadowhunter_ult:hunt", huntAt - 14, life);
         // 사냥의 화살: 다시 하늘로 (huntAt − 8) → 갈라져 적마다 거대한 검은 화살 (huntAt)
         RuneKit.later(huntAt - 8, () -> {
             if (!RuneKit.sameLife(sp, life)) return;

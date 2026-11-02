@@ -1039,7 +1039,10 @@
       "arcmage_phase": "jb_arcmage_phase", "arcmage_orb": "jb_arcmage_orb", "arcmage_song": "jb_arcmage_song", "arcmage_ult": "jb_arcmage_ult",
       "arcmage_ult:final": "jb_arcmage_ult_final", "arcmage_ult:rain": "jb_arcmage_ult_rain", "arcmage_ult:wave": "jb_arcmage_ult_wave", "necromancer_spear": "jb_necromancer_spear",
       "necromancer_swap": "jb_necromancer_swap", "necromancer_burst": "jb_necromancer_burst", "necromancer_raise": "jb_necromancer_raise", "necromancer_ult": "jb_necromancer_ult",
-      "necromancer_ult:final": "jb_necromancer_ult_final", "necromancer_ult:jump": "jb_necromancer_ult_jump",
+      "necromancer_ult:final": "jb_necromancer_ult_final", "necromancer_ult:jump": "jb_necromancer_ult_jump", "sniper_pierce": "jb_sniper_pierce", "sniper_gale": "jb_sniper_gale",
+      "sniper_storm": "jb_sniper_storm", "sniper_apple": "jb_sniper_apple", "sniper_ult": "jb_sniper_ult", "sniper_ult:land": "jb_sniper_ult_land",
+      "sniper_ult:release": "jb_sniper_ult_release", "shadowhunter_black": "jb_shadowhunter_black", "shadowhunter_roll": "jb_shadowhunter_roll", "shadowhunter_roll:left": "jb_shadowhunter_roll_left",
+      "shadowhunter_spread": "jb_shadowhunter_spread", "shadowhunter_moonless": "jb_shadowhunter_moonless", "shadowhunter_ult": "jb_shadowhunter_ult", "shadowhunter_ult:hunt": "jb_shadowhunter_ult_hunt",
       "rune:abyssBrand": "rn_abyss_brand", "rune:arcanaUnity": "rn_arcana_unity", "rune:arcaneCut": "rn_arcane_cut",
       "rune:archangel": "rn_archangel", "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening",
       "rune:axeBoomerang": "rn_axe_boomerang", "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep",
@@ -1129,7 +1132,9 @@
       "jb_hexblade_ult", "jb_hexblade_ult_stroke0", "jb_hexblade_ult_stroke1", "jb_hexblade_ult_stroke2", "jb_hexblade_ult_cleave", "jb_arcmage_bolts",
       "jb_arcmage_phase", "jb_arcmage_orb", "jb_arcmage_song", "jb_arcmage_ult", "jb_arcmage_ult_wave", "jb_arcmage_ult_rain",
       "jb_arcmage_ult_final", "jb_necromancer_spear", "jb_necromancer_swap", "jb_necromancer_burst", "jb_necromancer_raise", "jb_necromancer_ult",
-      "jb_necromancer_ult_jump", "jb_necromancer_ult_final"
+      "jb_necromancer_ult_jump", "jb_necromancer_ult_final", "jb_sniper_pierce", "jb_sniper_gale", "jb_sniper_storm", "jb_sniper_apple",
+      "jb_sniper_ult", "jb_sniper_ult_land", "jb_sniper_ult_release", "jb_shadowhunter_black", "jb_shadowhunter_roll", "jb_shadowhunter_roll_left",
+      "jb_shadowhunter_spread", "jb_shadowhunter_moonless", "jb_shadowhunter_ult", "jb_shadowhunter_ult_hunt"
     ],
     "weaponMotions": [
       "wp_gram_charge", "wp_gram_descent", "wp_gram_descent_dive", "wp_solas_rush", "wp_solas_halo", "wp_solas_halo_pillar",
