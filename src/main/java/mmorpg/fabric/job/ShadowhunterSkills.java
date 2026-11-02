@@ -360,6 +360,17 @@ final class ShadowhunterSkills {
     // ------------------------------------------------------------ 어둠숲의 사냥
 
     /**
+     * 가시덤불을 세우지 않을 자리: 쓴 사람 둘레 3.5칸 · 뒤쪽 7칸 (3인칭 카메라와 몸 사이 — 영상 1 에서 카메라 곁의 덤불이 화면을 가로지르는 검은 띠로 보였음)
+     */
+    private static boolean nearCamera(ServerPlayer sp, Vec3 p) {
+        double dx = p.x - sp.getX();
+        double dz = p.z - sp.getZ();
+        double d = Math.hypot(dx, dz);
+        Vec3 look = Kit.facingOf(sp);
+        return d < 3.5 || (dx * look.x + dz * look.z < 0 && d < 7);
+    }
+
+    /**
      * 어둠숲의 사냥: 어둠숲 하늘 · 하늘로 검은 화살을 쏘아 올림 → curseAt 틱 조준한 곳 (range 칸) 둘레 radius 칸에 가시덤불이 솟고 적마다 저주 + curse → first 틱부터 gap 틱마다
      * (waves 번) 저주 걸린 적마다 하늘에서 검은 화살 두 발이 내리꽂힘 (wave — 한 번에 · 숫자 둘) → huntAt 틱 다시 쏘아 올린 사냥의 화살이 갈라져 저주 걸린 적마다 거대한 검은
      * 화살 (hunt — 큰 숫자) · 가시덤불이 부서짐
@@ -397,6 +408,7 @@ final class ShadowhunterSkills {
                 double a = i < ring ? Math.PI * 2 * i / ring + Kit.rand() * 0.2 : Kit.rand() * Math.PI * 2;
                 double rr = i < ring ? radius * (0.92 + Kit.rand() * 0.12) : radius * (0.3 + Kit.rand() * 0.4);
                 Vec3 p = V.add(center, new Vec3(Math.cos(a), 0, Math.sin(a)), rr);
+                if (nearCamera(sp, p)) continue;
                 Vec3 g = new Vec3(p.x, RuneKit.groundAt(level, p, center.y), p.z);
                 double size = i < ring ? 1.2 + Kit.rand() * 0.5 : 0.8 + Kit.rand() * 0.3;
                 int left = huntAt - curseAt;
@@ -475,6 +487,7 @@ final class ShadowhunterSkills {
             for (int i = 0; i < 10; i++) {
                 double a = Math.PI * 2 * i / 10;
                 Vec3 p = V.add(center, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * 0.95);
+                if (nearCamera(sp, p)) continue;
                 JobFx.thicket(level, new Vec3(p.x, RuneKit.groundAt(level, p, center.y), p.z), 1.3, 2, 0.4, Opt.empty(), DUSK, SILVER);
             }
             JobFx.burst(level, V.up(center, 1.0), 2.4, j, 0.45, Opt.empty());
