@@ -556,7 +556,7 @@ public final class Kit {
      * (grad = {0xRRGGBB, 0xRRGGBB} — DamageNumbers.feedback)
      */
     public static boolean applyJobDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad) {
-        return applyDamage(sp, target, amount * skillMultOf(sp), crit, cause, style, grad, 1, 0);
+        return applyDamage(sp, target, amount * skillMultOf(sp), crit, cause, style, grad, 1, 0, null);
     }
 
     /** 0.43.0 무기 스킬 · 직업 스킬 피해 배율 (아티팩트 야른그레이프르 「쇠장갑」 — RelicPassives, 1 = 그대로): skillHit · applyJobDamage 에 곱함 (룬 · 평타는 아님) */
