@@ -24,7 +24,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -396,7 +395,7 @@ public final class JobTraits5 {
         if (near.isEmpty()) return;
         st.lastAuto = now;
         LivingEntity e = near.get(0);
-        sp.swing(InteractionHand.MAIN_HAND, true);
+        // 평타 그대로 (Player#attack — Slash.onAttack 이 둘레에 평타 동작 · 참격 범위를 알림. 바닐라 팔 휘두르기는 이 판의 swing 이 휘두르기 꼴까지 받아 쓰지 않음)
         sp.attack(e);
     }
 
