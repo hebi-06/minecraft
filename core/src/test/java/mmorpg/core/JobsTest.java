@@ -367,11 +367,12 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
         Jobs.Job ly = Jobs.job("lycan");
-        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 8, "advanced jobs " + Jobs.allAdvanced().size());
+        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 10, "advanced jobs " + Jobs.allAdvanced().size());
         if (sm == null || bk == null || wl == null || ly == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
         check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, ly)) && Jobs.advancedOf("spellblade").size() == 2
-                && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 궁수는 아직)");
+                && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").isEmpty() && Jobs.advancedOf("nope").isEmpty(),
+                "advancedOf (각성 · 반전 순서 — 암살자는 아직)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == ly && Jobs.baseOf(wl) == wa && Jobs.baseOf(ly) == wa, "warrior advance");
         check(wl.display().equals("뵈드바르(워로드)") && ly.display().equals("울프헤딘(라이칸)") && "awaken".equals(wl.path()) && "invert".equals(ly.path()), "warrior display");
         check(Jobs.find("워로드") == wl && Jobs.find("울프헤딘") == ly && Jobs.find("lycan") == ly, "find warrior advanced");
@@ -435,6 +436,53 @@ public final class JobsTest {
         warriorAdvance(wa, wl, ly);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("hexblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
+        archerAdvance(Jobs.job("archer"), Jobs.job("sniper"), Jobs.job("shadowhunter"));
+    }
+
+    /**
+     * 0.51.0 궁수 2차 — 에길(스나이퍼) · 미르크비드(섀도 헌터) (사용자 "다음 직업표 시작"): 부분 합 = 배율 합 (궁수와 같은 7.5 · 13.5 · 60 — 둘째 칸은 1차 뇨르드의 순풍처럼
+     * 평타 화살이라 배율 합 없음) · 무적 시간 띄움 · t · w · 특성 (호흡 8 급소 사격 / 추격 5 · 저주)
+     */
+    static void archerAdvance(Jobs.Job ar, Jobs.Job sn, Jobs.Job sh) {
+        check(sn != null && sh != null, "archer advanced jobs");
+        if (sn == null || sh == null) return;
+        check(Jobs.advance("archer", "awaken") == sn && Jobs.advance("archer", "invert") == sh && Jobs.baseOf(sn) == ar && Jobs.baseOf(sh) == ar, "archer advance");
+        check(sn.display().equals("에길(스나이퍼)") && sh.display().equals("미르크비드(섀도 헌터)") && Jobs.find("스나이퍼") == sn && Jobs.find("미르크비드") == sh
+                && Jobs.find("섀도 헌터") == sh, "archer display · find");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(sn.skill(i).total(), ar.skill(i).total()) && near(sh.skill(i).total(), ar.skill(i).total()), "archer totals slot " + i);
+        Jobs.Skill p0 = sn.skill(0);
+        Jobs.Skill su = sn.skill(4);
+        check(near(p0.num("rollShots", 0) * p0.num("rollArrow", 0) + p0.num("kneelShots", 0) * p0.num("kneelArrow", 0) + p0.num("pierce", 0), 7.5)
+                && near(sn.skill(2).num("volleys", 0) * sn.skill(2).num("volley", 0), 13.5)
+                && near(su.num("airShots", 0) * su.num("air", 0) + su.num("shot", 0) + su.num("wave", 0), 60), "sniper totals 7.5 · 13.5 · 60");
+        Jobs.Skill hu = sh.skill(4);
+        check(near(sh.skill(0).num("arrows", 0) * sh.skill(0).num("arrow", 0), 7.5) && near(sh.skill(2).num("pierce", 0) + sh.skill(2).num("burst", 0), 13.5)
+                && near(hu.num("waves", 0) * hu.num("wave", 0) + hu.num("hunt", 0), 60), "shadowhunter totals 7.5 · 13.5 · 60");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (구르며 두 발 · 무릎 꿇고 세 발 · 화살비 한 번 · 검은 화살 세 발은 한 번에 넣고 숫자만 여러 줄)
+        check(p0.num("kneelAt", 0) - p0.num("rollAt", 0) >= 10 && sn.skill(2).num("gap", 0) >= 10 && su.num("airGap", 0) >= 10
+                && su.num("shotAt", 0) - su.num("airAt", 0) - su.num("airGap", 0) >= 10 && su.num("waveDelay", 0) >= 10, "sniper i-frame spacing");
+        check(sh.skill(2).num("burstAt", 0) - sh.skill(2).num("shotAt", 0) - sh.skill(2).num("range", 0) / sh.skill(2).num("speed", 1) * 20 >= 10
+                && hu.num("first", 0) - hu.num("curseAt", 0) >= 0 && hu.num("gap", 0) >= 10 && hu.num("huntAt", 0) - hu.num("first", 0) - (hu.num("waves", 0) - 1) * hu.num("gap", 0) >= 10,
+                "shadowhunter i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 화살이 날아가는 틱은 2.5칸 앞 과녁 기준)
+        check(near(sn.skill(2).num("first", 0) + (sn.skill(2).num("volleys", 0) - 1) * sn.skill(2).num("gap", 0), sn.skill(2).num("t", 0))
+                && near(sn.skill(2).num("first", 0), sn.skill(2).num("w", 0)) && near(su.num("shotAt", 0) + su.num("waveDelay", 0), su.num("t", 0))
+                && su.num("w", 0) >= su.num("airAt", 0) && su.num("w", 0) <= su.num("airAt", 0) + 3 && p0.num("t", 0) >= p0.num("kneelAt", 0), "sniper t 14 · 30 · 54 (w 16 · 10)");
+        check(near(sh.skill(2).num("burstAt", 0), sh.skill(2).num("t", 0)) && sh.skill(2).num("w", 0) >= sh.skill(2).num("shotAt", 0)
+                && near(hu.num("huntAt", 0), hu.num("t", 0)) && near(hu.num("first", 0), hu.num("w", 0)), "shadowhunter t 36 · 58 (w 7 · 16)");
+        // 특성: 스나이퍼 = 궁수의 호흡 (같은 +4% · 사거리 +1칸) 최대 8 + 급소 사격, 섀도 헌터 = 추격 (최대 5 · 이동 +3%) + 저주 (최대 5 · 받는 피해 +2%)
+        check(sn.trait().name().equals(ar.trait().name()) && sn.trait().max() == 8 && near(sn.trait().def().numOr("perStack", 0), ar.trait().def().numOr("perStack", -1))
+                && near(sn.trait().def().numOr("rangePer", 0), ar.trait().def().numOr("rangePer", -1)) && near(sn.trait().def().numOr("snipeUse", 0), 3), "호흡 8 · 급소 사격");
+        check(sh.trait().name().equals("추격") && sh.trait().max() == 5 && near(sh.trait().def().numOr("speedPer", 0), 0.03) && near(sh.trait().def().numOr("curseMax", 0), 5)
+                && near(sh.trait().def().numOr("cursePer", 0), 0.02), "추격 5 · 이동 +3% · 저주 5 · +2%");
+        // 유틸 · 범위: 울르의 폭우 묶음, 꿰뚫는 연사 · 저주 번짐은 좁은 범위 (꿰뚫음), 검은 화살은 단일
+        check(Jobs.utils(sn.skill(2)).equals(List.of("root")) && near(Jobs.utilCost(sn.skill(2)), 0.1) && "narrow".equals(Jobs.areaKind(p0))
+                && "narrow".equals(Jobs.areaKind(sh.skill(2))) && "single".equals(Jobs.areaKind(sh.skill(0))) && Jobs.utils(sh.skill(4)).isEmpty(), "archer advanced utils · area");
+        check(Jobs.windupTicks(sn.skill(2)) == 16 && Jobs.windupTicks(su) == 10 && Jobs.windupTicks(hu) == 16, "windups 16 · 10 · 16");
+        check(Jobs.upKey(sn.skill(1), "arrow") != null && Jobs.upKey(sh.skill(1), "arrow") != null && Jobs.upKey(sn.skill(3), "dur") != null
+                && Jobs.upKey(sh.skill(3), "crit") != null, "archer advanced up keys");
+        check(Jobs.skillLine(sn.skill(3)).equals("사과 겨누기 · 30초") && Jobs.skillLine(sh.skill(0)).startsWith("검은 화살 · 6초 · 배율 "), "archer advanced skill line");
+        check(sn.color()[0][1] > 0.9 && sn.color()[1][0] > 0.9 && sh.color()[0][2] > 0.9 && sh.color()[1][2] > 0.9, "colors: lime · gold / indigo · silver");
     }
 
     /**

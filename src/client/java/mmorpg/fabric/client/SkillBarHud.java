@@ -455,6 +455,25 @@ public final class SkillBarHud {
                             for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
                             if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
                         }
+                        case "sniper" -> {
+                            // 0.51.0 호흡 (최대 8 — 가득 차면 급소 사격) — 과녁 (5 × 5): 바깥 테 넷 + 십자 조준선, 찬 것은 첫째 빛 (밝은 연두) + 가운데 흰 점 (가득이면 모두 금빛 테),
+                            // 오른쪽 아래 1칸 그림자
+                            int c = i < v ? (v >= max ? bright : col) : dim;
+                            int ty = y;
+                            int[][] cells = {{1, 0}, {3, 0}, {0, 1}, {4, 1}, {2, 1}, {1, 2}, {3, 2}, {2, 3}, {0, 3}, {4, 3}, {1, 4}, {3, 4}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            g.fill(bx + 2, ty + 2, bx + 3, ty + 3, i < v ? 0xFFFFFFFF : dim);
+                        }
+                        case "shadowhunter" -> {
+                            // 0.51.0 추격 (최대 5) — 검은 화살촉 (5 × 5, 위가 앞): 뾰족한 촉 · 갈라진 미늘, 찬 것은 첫째 빛 (남보라) + 촉 끝 은빛 (둘째 빛), 오른쪽 아래 1칸 그림자
+                            int c = i < v ? col : dim;
+                            int ty = y;
+                            int[][] cells = {{2, 0}, {1, 1}, {2, 1}, {3, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {2, 3}, {0, 3}, {4, 3}, {2, 4}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (i < v) g.fill(bx + 2, ty, bx + 3, ty + 1, bright);
+                        }
                         case "necromancer" -> {
                             // 0.51.0 망자의 군대 (최대 4) — 해골 (5 × 5): 둥근 머리 · 눈구멍 둘 · 이빨, 찬 것은 둘째 빛 (뼈색) + 눈구멍에 첫째 빛 (독초록 혼불), 오른쪽 아래 1칸 그림자
                             int c = i < v ? col : dim;

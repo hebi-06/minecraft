@@ -607,7 +607,7 @@
     "endlessSlash": {"fog": "rpg:ult_bloodvoid", "flash": [1, 0.76, 0.76]}
   },
   "ULT_FOGS_MORE": {
-    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 헥스 블레이드 재앙의 룬 rpg:ult_hex (짙은 고동 — 호박빛 룬 · 검은 연기가 보이게), 0.51.0 네크로맨서 나글파르의 출항 rpg:ult_naglfar (짙은 녹색 안개 — 녹색 혼불 · 뼈색 배가 보이게)",
+    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 헥스 블레이드 재앙의 룬 rpg:ult_hex (짙은 고동 — 호박빛 룬 · 검은 연기가 보이게), 0.51.0 네크로맨서 나글파르의 출항 rpg:ult_naglfar (짙은 녹색 안개 — 녹색 혼불 · 뼈색 배가 보이게), 0.51.0 섀도 헌터 어둠숲의 사냥 rpg:ult_myrkvidr (짙은 남보라 밤 — 은빛 촉 · 검은 화살의 연기가 보이게)",
     "rpg:ult_glacier": [16, 96, "#1B3C80"],
     "rpg:ult_polar": [16, 100, "#0A2438"],
     "rpg:ult_deepsea": [12, 80, "#0E3A72"],
@@ -619,7 +619,8 @@
     "rpg:ult_bloodvoid": [5, 40, "#2A0408"],
     "rpg:ult_bloodsplit": [8, 56, "#5C0A14"],
     "rpg:ult_hex": [6, 44, "#24120C"],
-    "rpg:ult_naglfar": [5, 38, "#0C2414"]
+    "rpg:ult_naglfar": [5, 38, "#0C2414"],
+    "rpg:ult_myrkvidr": [5, 36, "#0E0C26"]
   },
   "ARMOR_TYPE_ORDER": ["str", "dex", "vit", "strvit", "int", "intstr", "strdex", "dexint", "vitstr", "intvit"],
   "ARMOR_TYPES": {

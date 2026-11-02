@@ -1237,4 +1237,72 @@ final class JobFx {
         cells(level, "jrift", RIFT, f, n, V.up(center, 0.06), life, loop ? 6 : 0, loop, o.with("dir", V.UP, "size", size, "spin", spin, "fade", o.num("fade", 0.25)),
                 outer(j), inner(j));
     }
+
+    // ------------------------------------------------------------ 0.51.0 궁수 2차 그림 (tools/job_fx_art_adv.py — 에길(스나이퍼) · 미르크비드(섀도 헌터))
+
+    /** 장 수: 약점 과녁 · 거대한 셋째 화살 · 검은 화살 · 저주 문양 · 어둠숲 가시덤불 */
+    static final int WEAK = 6;
+    static final int GREATARROW = 4;
+    static final int BLACKARROW = 4;
+    static final int CURSE = 6;
+    static final int THICKET = 8;
+    /** 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1): 셋째 화살 촉 · 검은 화살 촉 */
+    static final double GREATARROW_HEAD = 0.95;
+    static final double BLACKARROW_HEAD = 0.95;
+
+    /**
+     * 약점 과녁 (rfx_jweak — 카메라를 봄): 0 조여 들며 나타남 · 1 ~ 3 맥동 (loop 면 이어 돌림 — 테가 돌고 가운데 사과빛 점이 깜빡임) · 4 맞음 (가운데가 깨지며 흰 섬광) ·
+     * 5 흐려짐. 장 from 부터 count 장, 크기 약 size × 2 칸
+     */
+    static void weak(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(WEAK - 1, from));
+        int n = Math.max(1, Math.min(WEAK - f, count));
+        cells(level, "jweak", WEAK, f, n, at, life, loop ? 8 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), glow, core);
+    }
+
+    /** 거대한 셋째 화살 (rfx_jgreatarrow — 가는 쪽으로 누움, 이어 돌림): 넓은 잎 촉 · 감아 도는 바람 띠 · 흰 섬광 깃. from → to (길이 약 size × 2 칸): 닿는 틱 */
+    static int greatArrow(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Opt o, double[] glow, double[] core) {
+        return fly(level, "jgreatarrow", GREATARROW, from, to, speed, size, GREATARROW_HEAD, o, glow, core);
+    }
+
+    /** 멈춘 셋째 화살 (시위에 걸림 · 꽂힘): 촉 tip 이 dir 쪽 (길이 약 size × 2 칸) — life 초 이어 돌림 */
+    static void greatArrowAt(ServerLevel level, Vec3 tip, Vec3 dir, double size, double life, Opt o, double[] glow, double[] core) {
+        Vec3 u = V.len(dir) < 1e-3 ? V.UP : V.unit(dir);
+        loop(level, "jgreatarrow", GREATARROW, V.add(tip, u, -size * GREATARROW_HEAD), life, 12, o.with("dir", u, "size", size), glow, core);
+    }
+
+    /** 검은 화살 (rfx_jblackarrow — 가는 쪽으로 누움, 이어 돌림): 검은 깃 · 은빛 촉 · 뒤로 끌리는 그림자 연기. from → to (길이 약 size × 2 칸): 닿는 틱 */
+    static int blackArrow(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Opt o, double[] glow, double[] core) {
+        return fly(level, "jblackarrow", BLACKARROW, from, to, speed, size, BLACKARROW_HEAD, o, glow, core);
+    }
+
+    /** 멈춘 검은 화살 (꽂힘 · 시위에 걸림): 촉 tip 이 dir 쪽 — life 초 이어 돌림 */
+    static void blackArrowAt(ServerLevel level, Vec3 tip, Vec3 dir, double size, double life, Opt o, double[] glow, double[] core) {
+        Vec3 u = V.len(dir) < 1e-3 ? V.UP : V.unit(dir);
+        loop(level, "jblackarrow", BLACKARROW, V.add(tip, u, -size * BLACKARROW_HEAD), life, 12, o.with("dir", u, "size", size), glow, core);
+    }
+
+    /**
+     * 저주 문양 (rfx_jcurse — 카메라를 봄): 0 검은 연기가 모여 문양 (가시 고리 · 가운데 감긴 눈) · 1 ~ 3 맥동 (loop 면 이어 돌림 — 가시가 조금씩 돎) · 4 터짐 (가시가 바깥으로
+     * 튐) · 5 흐려짐. 장 from 부터 count 장, 크기 약 size × 2 칸
+     */
+    static void curse(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(CURSE - 1, from));
+        int n = Math.max(1, Math.min(CURSE - f, count));
+        cells(level, "jcurse", CURSE, f, n, at, life, loop ? 7 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.25)), glow, core);
+    }
+
+    /**
+     * 어둠숲 가시덤불 (rfx_jthicket — 세워 카메라 쪽으로 돎): stage 0 = 땅을 뚫고 자람 (0 ~ 2) · 1 = 서 있음 (3 ~ 5 이어 돌림 — 가지가 일렁임) · 2 = 부서져 연기로 (6 ~ 7).
+     * 아래 끝 = ground · 높이 약 size × 2 칸
+     */
+    static void thicket(ServerLevel level, Vec3 ground, double size, int stage, double life, Opt o, double[] glow, double[] core) {
+        Vec3 at = V.up(ground, size);
+        Opt b = o.with("size", size);
+        switch (stage) {
+            case 0 -> cells(level, "jthicket", THICKET, 0, 3, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), glow, core);
+            case 1 -> cells(level, "jthicket", THICKET, 3, 3, at, life, 6, true, b.with("fade", o.num("fade", 0.15)), glow, core);
+            default -> cells(level, "jthicket", THICKET, 6, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.3)), glow, core);
+        }
+    }
 }

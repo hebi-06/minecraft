@@ -79,6 +79,7 @@ public final class JobTraits {
         JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 곰의 포효 · 라이칸 야성 · 겁먹음 · 늑대의 밤)
         JobTraits7.init(); // 0.51.0 마검사 2차 (룬 나이트 각인 번짐 · 룬 담금질 · 헥스 블레이드 뒤집힌 룬 · 저주의 칼)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 꿀술의 노래 · 네크로맨서 망자의 군대 · 망자 일으키기)
+        JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 사과 겨누기 · 섀도 헌터 추격 · 저주 · 그림자 구르기 · 그믐밤)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
             JobTraits6.tickFears(Tasks.now());
@@ -122,6 +123,7 @@ public final class JobTraits {
         JobTraits6.reset(sp);
         JobTraits7.reset(sp);
         JobTraits8.reset(sp);
+        JobTraits9.reset(sp);
         String p = sp.getUUID() + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
         sendGauge(sp, true);
@@ -137,6 +139,7 @@ public final class JobTraits {
         JobTraits6.forget(id);
         JobTraits7.forget(id);
         JobTraits8.forget(id);
+        JobTraits9.forget(id);
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
@@ -149,6 +152,7 @@ public final class JobTraits {
         JobTraits6.lifeEnded(id);
         JobTraits7.lifeEnded(id);
         JobTraits8.lifeEnded(id);
+        JobTraits9.lifeEnded(id);
         State st = STATES.get(id);
         if (st != null) {
             st.stacks = 0;
@@ -471,6 +475,7 @@ public final class JobTraits {
                 JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 야성
                 JobTraits7.tick(sp, j, now); // 0.51.0 저주 룬 표시
                 JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 시체의 혼불
+                JobTraits9.tick(sp, j, now); // 0.51.0 섀도 헌터 추격 · 저주 문양
             }
             if (st == null || j == null) continue;
             // 태세가 끝남
@@ -539,6 +544,8 @@ public final class JobTraits {
             // 0.51.0 룬 담금질 (칼의 금빛 룬 불) · 저주의 칼 (칼의 먹빛 불꽃)
         } else if (JobTraits8.stanceFx(sp, j, st.stance)) {
             // 0.51.0 꿀술의 노래 (머리 위 금빛 음표) · 망자 일으키기 (발밑의 녹색 혼불)
+        } else if (JobTraits9.stanceFx(sp, j, st.stance)) {
+            // 0.51.0 사과 겨누기 (앞 적들의 약점 과녁) · 그믐밤 (몸 둘레 어둠 · 적이 나를 놓침)
         } else if (st.stance.equals("archer_focus")) {
             // 정조준: 활을 든 손 앞 금빛 반짝임
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
@@ -569,6 +576,7 @@ public final class JobTraits {
         else if (j.id().equals(JobTraits6.LY)) value = JobTraits6.gaugeValue(sp, j); // 0.51.0 라이칸 = 야성
         else if (j.id().equals(JobTraits7.HX)) value = JobTraits7.gaugeValue(sp, j); // 0.51.0 헥스 블레이드 = 그 적의 저주 룬
         else if (j.id().equals(JobTraits8.NC)) value = JobTraits8.gaugeValue(sp, j); // 0.51.0 네크로맨서 = 망자 선원 수
+        else if (j.id().equals(JobTraits9.SH)) value = JobTraits9.gaugeValue(sp, j); // 0.51.0 섀도 헌터 = 추격
         else if (markJob(j)) { // 마검사 · 0.51.0 룬 나이트 = 그 적의 각인
             if (st != null && st.target != null) {
                 Entity e = sp.level().getEntity(st.target);

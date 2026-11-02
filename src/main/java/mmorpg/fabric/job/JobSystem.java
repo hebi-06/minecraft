@@ -81,6 +81,8 @@ public final class JobSystem {
         HexbladeSkills.register();
         ArcmageSkills.register(); // 0.51.0 2차 직업 (매지션 각성 · 반전)
         NecromancerSkills.register();
+        SniperSkills.register(); // 0.51.0 궁수 2차 — 에길(스나이퍼)
+        ShadowhunterSkills.register(); // 0.51.0 궁수 2차 — 미르크비드(섀도 헌터)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);

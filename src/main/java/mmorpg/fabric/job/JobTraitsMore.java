@@ -59,6 +59,8 @@ public final class JobTraitsMore {
         int moving;
         long windUntil;
         int windShots;
+        /** 0.51.0 스나이퍼 급소 사격: 호흡 8 에서 쏜 활 평타의 화살이 닿는 동안 (치명타 확정 — RpgCombat.sureCrit) */
+        long snipeUntil;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -122,6 +124,7 @@ public final class JobTraitsMore {
         st.breath = 0;
         st.windShots = 0;
         st.windUntil = 0;
+        st.snipeUntil = 0;
         st.spiritHealed = false;
     }
 
@@ -137,6 +140,11 @@ public final class JobTraitsMore {
     /** 0.51.0 주문 연쇄를 쓰는 직업 (매지션 · 각성 오드레리르(아크메이지) — 반전 나글파르(네크로맨서) 는 망자의 군대) */
     static boolean chainJob(Jobs.Job j) {
         return j != null && (j.id().equals("mage") || j.id().equals(JobTraits8.AM));
+    }
+
+    /** 0.51.0 호흡을 쓰는 직업 (궁수 · 각성 에길(스나이퍼) — 반전 미르크비드(섀도 헌터) 는 추격) */
+    static boolean breathJob(Jobs.Job j) {
+        return j != null && (j.id().equals("archer") || j.id().equals(JobTraits9.SN));
     }
 
     /** 0.51.0 분노를 쓰는 직업 (전사 · 각성 뵈드바르(워로드)) */
@@ -227,7 +235,7 @@ public final class JobTraitsMore {
             if (st.rage >= trait(j, "half", 50)) return 1 + trait(j, "halfBonus", 0.1);
             return 1;
         }
-        if (j.id().equals("archer") && "bow".equals(w.type())) return 1 + st.breath * trait(j, "perStack", 0.04);
+        if (breathJob(j) && "bow".equals(w.type())) return 1 + st.breath * trait(j, "perStack", 0.04); // 0.51.0 스나이퍼도 (최대 8)
         return 1;
     }
 
@@ -329,12 +337,27 @@ public final class JobTraitsMore {
         return st == null ? 0 : st.breath;
     }
 
-    /** 시험용: 호흡을 정함 */
+    /** 시험용: 호흡을 정함 (0 ~ 지금 직업의 최대 — 궁수 5 · 0.51.0 스나이퍼 8) */
     public static void setBreath(ServerPlayer sp, int n) {
         State st = of(sp);
-        st.breath = Math.max(0, Math.min(5, n));
+        Jobs.Job j = JobSystem.job(sp);
+        int max = j != null && breathJob(j) && j.trait() != null ? Math.max(1, j.trait().max()) : 5;
+        st.breath = Math.max(0, Math.min(max, n));
         st.moving = 0;
         JobTraits.sendGauge(sp, false);
+    }
+
+    /** 0.51.0 순풍 공중 사격 (스나이퍼): ticks 틱 동안 호흡이 줄지 않음 (덧쏘기 없이) */
+    static void holdBreath(ServerPlayer sp, int ticks) {
+        State st = of(sp);
+        st.windShots = 0;
+        st.windUntil = Tasks.now() + ticks;
+    }
+
+    /** 0.51.0 급소 사격 중인지 (호흡 8 에서 쏜 활 평타의 화살이 닿는 동안 — 치명타 확정, RpgCombat.sureCrit) */
+    static boolean snipeCrit(ServerPlayer sp, Weapon w) {
+        State st = STATES.get(sp.getUUID());
+        return st != null && st.snipeUntil >= Tasks.now() && w != null && "bow".equals(w.type()) && jobIf(sp, JobTraits9.SN) != null;
     }
 
     /** 바람 타기의 남은 덧쏘기 */
@@ -359,7 +382,7 @@ public final class JobTraitsMore {
     }
 
     private static boolean breathHeld(ServerPlayer sp, State st) {
-        return st.windUntil > Tasks.now() || JobTraits.stanceOn(sp, "archer_focus");
+        return st.windUntil > Tasks.now() || JobTraits.stanceOn(sp, "archer_focus") || JobTraits.stanceOn(sp, JobTraits9.APPLE); // 0.51.0 사과 겨누기
     }
 
     // ------------------------------------------------------------ 활 · 완드 평타 (RpgCombat.RangedMod · 훅)
@@ -368,7 +391,7 @@ public final class JobTraitsMore {
     static double rangeAdd(ServerPlayer sp, Weapon w) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return 0;
-        if (j.id().equals("archer") && "bow".equals(w.type())) return breath(sp) * trait(j, "rangePer", 1);
+        if (breathJob(j) && "bow".equals(w.type())) return breath(sp) * trait(j, "rangePer", 1);
         if (j.id().equals("mage") && "wand".equals(w.type()) && JobTraits.stanceOn(sp, "mage_overload")) {
             Jobs.Skill k = skill(j, "mage_overload");
             return k == null ? 4 : k.num("range", 4);
@@ -383,6 +406,16 @@ public final class JobTraitsMore {
         if (j.id().equals("archer") && "bow".equals(w.type()) && JobTraits.stanceOn(sp, "archer_focus")) {
             Jobs.Skill k = skill(j, "archer_focus");
             return k == null ? 0.6 : k.num("width", 0.6);
+        }
+        if (j.id().equals(JobTraits9.SN) && "bow".equals(w.type())) {
+            // 0.51.0 스나이퍼: 사과 겨누기 동안 · 호흡 8 (급소 사격) 이면 화살이 꿰뚫음
+            if (JobTraits.stanceOn(sp, JobTraits9.APPLE)) {
+                Jobs.Skill k = skill(j, JobTraits9.APPLE);
+                return k == null ? 0.6 : k.num("width", 0.6);
+            }
+            State st = STATES.get(sp.getUUID());
+            int max = j.trait() == null ? 8 : Math.max(1, j.trait().max());
+            if (st != null && st.breath >= max) return trait(j, "snipeWidth", 0.6);
         }
         if (j.id().equals("mage") && "wand".equals(w.type()) && JobTraits.stanceOn(sp, "mage_overload")) {
             Jobs.Skill k = skill(j, "mage_overload");
@@ -414,10 +447,18 @@ public final class JobTraitsMore {
         if (j == null || w == null) return;
         ServerLevel level = sp.level();
         long now = Tasks.now();
-        if (j.id().equals("archer") && "bow".equals(w.type())) {
+        if (breathJob(j) && "bow".equals(w.type())) {
             State st = of(sp);
             int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
-            if (now - st.lastMove > 4 && st.breath < max) {
+            if (j.id().equals(JobTraits9.SN) && st.breath >= max) {
+                // 0.51.0 스나이퍼 급소 사격: 호흡 8 에서 쏜 화살 — 닿는 동안 치명타 확정 · 꿰뚫음 (pierceWidth), 호흡 snipeUse 씀 (사과 겨누기 동안은 쓰지 않음)
+                st.snipeUntil = now + (long) trait(j, "snipeFor", 18);
+                if (!JobTraits.stanceOn(sp, JobTraits9.APPLE)) {
+                    st.breath = Math.max(0, st.breath - (int) trait(j, "snipeUse", 3));
+                    JobTraits.sendGauge(sp, false);
+                }
+                JobTraits9.snipeFx(sp, j, from, dir, dist);
+            } else if (now - st.lastMove > 4 && st.breath < max) {
                 st.breath++;
                 Vec3 hand = RuneKit.bowHand(sp);
                 JobFx.target(level, hand, 0.12 + 0.03 * st.breath, j, V.scale(sp.getViewVector(1F), -1), 0, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
@@ -443,6 +484,10 @@ public final class JobTraitsMore {
                     JobFx.wind(sp.level(), V.up(sp.position(), 0.08), 0.9, j, 0.35, Opt.of("alpha", 0.8));
                 });
             }
+            return;
+        }
+        if (j.id().equals(JobTraits9.SH) && "bow".equals(w.type())) {
+            JobTraits9.onFired(sp, j, w, target, from, dir, dist); // 0.51.0 섀도 헌터: 움직이며 쏘면 추격 +1
             return;
         }
         if (j.id().equals("mage") && "wand".equals(w.type()) && JobTraits.stanceOn(sp, "mage_overload")) {
@@ -481,7 +526,7 @@ public final class JobTraitsMore {
     /** 분노가 줄어듦 · 호흡 (움직임) · 연쇄가 끝남 · 방어 깨짐 표시 */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
         State st = STATES.get(sp.getUUID());
-        if (j.id().equals("archer")) {
+        if (breathJob(j)) { // 0.51.0 스나이퍼도
             if (st == null) st = of(sp);
             Vec3 p = sp.position();
             boolean moved = st.lastPos != null && Math.hypot(p.x - st.lastPos.x, p.z - st.lastPos.z) > 0.2;
@@ -557,7 +602,7 @@ public final class JobTraitsMore {
         return switch (j.id()) {
             case "warrior", "warlord" -> rage(sp); // 0.51.0 뵈드바르(워로드) 도 분노
             case "mage", "arcmage" -> chain(sp); // 0.51.0 오드레리르(아크메이지) 도 연쇄 (최대 5)
-            case "archer" -> breath(sp);
+            case "archer", "sniper" -> breath(sp); // 0.51.0 에길(스나이퍼) 도 호흡 (최대 8)
             default -> JobTraits3.gaugeValue(sp, j); // 0.29.0 표식 · 창끝 · 혼
         };
     }
