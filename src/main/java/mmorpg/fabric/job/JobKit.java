@@ -44,13 +44,13 @@ public final class JobKit {
         double veil = JobTraits3.firstHit(sp, j);
         // 0.30.0 수호기사 반격 게이지 (다음 공격 직업 스킬의 첫 타에 더함)
         double counter = JobTraits4.counterTake(sp, j);
-        // 0.51.0 소드마스터 치명 (투지 8 에서 쓴 스킬 — 위력 × 1.3 · 치명 숫자) · 라이칸 할퀴기 (야성 10 에서 쓴 스킬 — 위력 × 1.3)
+        // 0.51.0 소드마스터 치명 (투지 8 에서 쓴 스킬 — 위력 × 1.3 · 치명 숫자)
         double crit = JobTraits5.critMult(sp, j);
         double forge = JobTraits5.forgeMult(sp, j); // 0.51.0 소드마스터 다시 벼린 칼 (벼린 칼 동안 +20%)
-        double claw = JobTraits6.clawMult(sp, j);
+        double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투 (상대 + 결투 × 3% · 다른 적 −40%)
         double hex = JobTraits7.runeMult(sp, e, j); // 0.51.0 헥스 블레이드 뒤집힌 룬 (그 적의 저주 룬 하나당 +12% — 들어가면 터뜨림)
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위 (하나당 +6%)
-        double dmg = P * mult * veil * crit * forge * claw * hex * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double dmg = P * mult * veil * crit * forge * duel * hex * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
@@ -71,7 +71,7 @@ public final class JobKit {
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
-        JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 라이칸 야성 · 할퀴기 자국
+        JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
         JobTraits7.afterJobHit(sp, e, j, got); // 0.51.0 헥스 블레이드 — 저주 룬을 터뜨림 (다섯이면 묶음)
         JobTraits10.afterJobHit(sp, e, j, got); // 0.51.0 블레이드 댄서 — 스킬 쪽 맞힘 (평타와 번갈아 춤사위)
         return got;
@@ -102,22 +102,29 @@ public final class JobKit {
      * 막히지 않음. 깎인 체력 (0 = 안 들어감)
      */
     public static double hitSplit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, int split, int gap, boolean magic, boolean big) {
+        return hitSplit(sp, e, j, P, mult, split, gap, null, magic, big);
+    }
+
+    /**
+     * 같은 것 — 0.51.0 줄마다 다른 몫 (weights — 줄 수만큼, 합에 대한 몫: 글래디에이터 도끼 난타의 세 번째 내려침 · null 이면 같게). 피해는 한 번에 P × mult
+     */
+    public static double hitSplit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, int split, int gap, double[] weights, boolean magic, boolean big) {
         if (e == null || !Kit.canHit(sp, e) || !(mult > 0)) return 0;
         double veil = JobTraits3.firstHit(sp, j); // 0.29.0 암영의 첫 타
         double counter = JobTraits4.counterTake(sp, j); // 0.30.0 반격 게이지
         double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
         double forge = JobTraits5.forgeMult(sp, j); // 0.51.0 소드마스터 다시 벼린 칼 (벼린 칼 동안 +20%)
-        double claw = JobTraits6.clawMult(sp, j); // 0.51.0 라이칸 할퀴기
+        double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투
         double hex = JobTraits7.runeMult(sp, e, j); // 0.51.0 헥스 블레이드 뒤집힌 룬
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위
-        double dmg = P * mult * veil * crit * forge * claw * hex * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double dmg = P * mult * veil * crit * forge * duel * hex * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
         boolean landed;
         try {
             landed = Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
-                    : DamageNumbers.Style.JOB, grad(j), split, gap);
+                    : DamageNumbers.Style.JOB, grad(j), split, gap, weights);
         } finally {
             JobTraits8.afterJobHitDone();
         }
@@ -131,7 +138,7 @@ public final class JobKit {
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
-        JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 라이칸 야성 · 할퀴기 자국
+        JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
         JobTraits7.afterJobHit(sp, e, j, got); // 0.51.0 헥스 블레이드 — 저주 룬을 터뜨림 (다섯이면 묶음)
         JobTraits10.afterJobHit(sp, e, j, got); // 0.51.0 블레이드 댄서 — 스킬 쪽 맞힘 (평타와 번갈아 춤사위)
         return got;
@@ -140,9 +147,15 @@ public final class JobKit {
     /** {@link #hitSplit} 를 delay 틱 뒤 (그 적이 무적 시간이면 끝난 뒤로 미룸 — strike 와 같음). 들어가면 then */
     public static void strikeSplit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, int split, int gap, boolean magic, boolean big, String life,
             int delay, java.util.function.DoubleConsumer then) {
+        strikeSplit(sp, e, j, P, mult, split, gap, null, magic, big, life, delay, then);
+    }
+
+    /** 같은 것 — 줄마다 다른 몫 (weights · null 이면 같게) */
+    public static void strikeSplit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, int split, int gap, double[] weights, boolean magic, boolean big,
+            String life, int delay, java.util.function.DoubleConsumer then) {
         if (e == null || !(mult > 0)) return;
         hitLater(sp, e, life, now() + Math.max(0, delay), () -> {
-            double d = hitSplit(sp, e, j, P, mult, split, gap, magic, big);
+            double d = hitSplit(sp, e, j, P, mult, split, gap, weights, magic, big);
             if (d > 0 && then != null) then.accept(d);
         });
     }

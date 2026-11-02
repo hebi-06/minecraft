@@ -43,6 +43,8 @@ public final class RpgJobTimingTests {
     private static final int QUIET = 100;
     private static final int NONE = 200;
     private static final int MAX = 400;
+    /** 0.51.0 재설계안 2판: 첫 피해와 마지막 피해 사이가 QUIET 보다 긴 스킬 (홀름강 — 10 에 열고 140 에 내려찍음) */
+    private static final Map<String, Integer> QUIET_OF = Map.of("gladiator_ult", 160);
     /** 과녁 거리 (앞 칸 — 없으면 2.5): 멀리 내려앉는 스킬 */
     // 0.50.0 시험 1: 장대 도약 과녁을 7칸에 두었더니 시험 자리 둘레 barrier 벽 속 (바닥 8×8) 이라 숨막힘 피해가 10틱마다 들어갔음 → 5.5칸
     // 0.51.0 서리 별 걸음 (아크메이지) 도 위상 전환처럼 뒤로 물러나 두 잔상 — 두 자리가 모두 닿는 1.2칸
@@ -146,7 +148,7 @@ public final class RpgJobTimingTests {
                 if (p.hits.size() < 80) p.hits.add(t);
                 p.prev = d;
             }
-            boolean done = t >= MAX || (p.first >= 0 && t - p.last >= QUIET) || (p.first < 0 && t >= NONE) || !p.cast && t >= 5;
+            boolean done = t >= MAX || (p.first >= 0 && t - p.last >= QUIET_OF.getOrDefault(kk.id(), QUIET)) || (p.first < 0 && t >= NONE) || !p.cast && t >= 5;
             if (!done) throw h.assertionException("measuring " + t);
             Jobs.Skill k = p.skills.get(p.idx);
             LOG.info("[job-timing] {} {} {} cast={} first={} last={} dealt={} want={} hits={}", job, k.slot(), k.id(), p.cast, p.first, p.last,
@@ -243,10 +245,13 @@ public final class RpgJobTimingTests {
         probe(h, "warlord");
     }
 
-    /** 0.51.0 2차 직업 — 전사 반전 울프헤딘(라이칸) (야성 10 이 되지 않아 할퀴기 없음 — 과녁마다 새 사냥감) */
-    @GameTest(environment = "mmorpg:jt_ly", maxTicks = 2400)
-    public void timingLycan(GameTestHelper h) {
-        probe(h, "lycan");
+    /**
+     * 0.51.0 2차 직업 — 전사 반전 스타르카드(글래디에이터) (재설계안 2판 — 결투가 앞 과녁에서 다음 과녁으로 옮겨가 더 들어감: 다 맞은 것으로 셈 · 홀름강은 결투장
+     * 받는 피해 +15%)
+     */
+    @GameTest(environment = "mmorpg:jt_gl", maxTicks = 2400)
+    public void timingGladiator(GameTestHelper h) {
+        probe(h, "gladiator");
     }
 
     /** 0.51.0 2차 직업 — 마검사 각성 뵐룬드(룬 나이트) (세이드 섬광은 처음 자리 원만 닿음 — 몇 타가 빗나간 스킬) */

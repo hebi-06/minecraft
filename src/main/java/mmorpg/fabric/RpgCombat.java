@@ -145,13 +145,13 @@ public final class RpgCombat {
      * 맞히기 직전에 기억한 공격 (피해가 실제로 들어간 뒤 숫자 · 연출에 씀): 치명타였는지, 무기 (평타 · 활 · 완드 — 스킬은 null),
      * 근접 평타인지 (참격 연출), 스킬 · 룬 피해면 숫자 모양 (평타는 null — combat.js skillMarks), 평타에 더한 피해 (없으면 null)
      */
-    public record Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus, int[] grad, int split, int gap) {
+    public record Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus, int[] grad, int split, int gap, double[] weights) {
         public Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus) {
-            this(crit, tick, w, melee, style, bonus, null, 1, 0);
+            this(crit, tick, w, melee, style, bonus, null, 1, 0, null);
         }
 
         public Mark(boolean crit, long tick, Weapon w, boolean melee, DamageNumbers.Style style, WeaponBonus bonus, int[] grad) {
-            this(crit, tick, w, melee, style, bonus, grad, 1, 0);
+            this(crit, tick, w, melee, style, bonus, grad, 1, 0, null);
         }
     }
 
@@ -237,7 +237,7 @@ public final class RpgCombat {
     public static java.util.function.ToDoubleFunction<ServerPlayer> dealtMult = p -> 1;
 
     /**
-     * 0.51.0 공격 속도 배율 (1 = 그대로 — 울프헤딘(라이칸) 야성이 넣음): 근접 평타 사이 (Slash.admit · 보스 무적 시간 칸 — Motions.serverInterval(배율)).
+     * 0.51.0 공격 속도 배율 (1 = 그대로 — 소드마스터 용의 피 · 블러드 나이트 광란 · 워로드 거인의 무게 · 글래디에이터 불사의 분노가 넣음): 근접 평타 사이 (Slash.admit · 보스 무적 시간 칸 — Motions.serverInterval(배율)).
      * 클라이언트 선입력은 같은 값을 게이지로 셈 (ClientJobBar.attackSpeed)
      */
     public static java.util.function.ToDoubleFunction<ServerPlayer> attackSpeed = p -> 1;
@@ -451,7 +451,13 @@ public final class RpgCombat {
      * 막히지 않게 피해는 한 번에 넣음
      */
     public static void jobMark(Entity victim, ServerPlayer attacker, boolean crit, DamageNumbers.Style style, int[] grad, int split, int gap) {
-        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, false, style, null, grad, Math.max(1, split), Math.max(0, gap)));
+        jobMark(victim, attacker, crit, style, grad, split, gap, null);
+    }
+
+    /** 0.51.0 같은 것 — 줄마다 다른 몫 (weights — 줄 수만큼 · null 이면 같게) */
+    public static void jobMark(Entity victim, ServerPlayer attacker, boolean crit, DamageNumbers.Style style, int[] grad, int split, int gap, double[] weights) {
+        double[] w = weights != null && weights.length == Math.max(1, split) ? weights.clone() : null;
+        MARKS.put(key(victim, attacker), new Mark(crit, Tasks.now(), null, false, style, null, grad, Math.max(1, split), Math.max(0, gap), w));
     }
 
     /** 들어가지 않은 공격의 기억을 지움 */

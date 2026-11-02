@@ -255,7 +255,7 @@ public final class DamageNumbers {
         if (m != null && m.style() != null) {
             // 스킬 · 룬 피해: 그 모양 그대로 (치명타 · 참격 연출은 스킬이 직접 — combat.js hitFeedback), 0.27.0 직업 스킬은 직업 색 그라데이션
             if (m.grad() != null && m.grad().length >= 2) {
-                if (m.split() > 1) showSplit(victim, dealt, m.style(), m.grad(), mark, m.split(), m.gap());
+                if (m.split() > 1) showSplit(victim, dealt, m.style(), m.grad(), mark, m.split(), m.gap(), m.weights());
                 else showGradient(victim, dealt, m.style(), m.grad(), mark, 0);
             } else show(victim, dealt, m.style(), mark, 0);
             return;
@@ -327,8 +327,15 @@ public final class DamageNumbers {
      * 0.28.0 빠른 연타 숫자 (메이플식 쌓이는 숫자): 한 번 들어간 피해 amount 를 n 줄로 (줄마다 amount ÷ n) — gap 틱마다 한 줄씩 한 칸 위에 (첫 줄은 바로)
      */
     public static void showSplit(LivingEntity victim, double amount, Style style, int[] grad, String mark, int n, int gap) {
-        double each = amount / Math.max(1, n);
+        showSplit(victim, amount, style, grad, mark, n, gap, null);
+    }
+
+    /** 0.51.0 같은 것 — 줄마다 다른 몫 (weights — n 개, 합에 대한 몫 · null 이면 같게: 도끼 난타의 세 번째 내려침이 큰 숫자) */
+    public static void showSplit(LivingEntity victim, double amount, Style style, int[] grad, String mark, int n, int gap, double[] weights) {
+        double sum = 0;
+        if (weights != null && weights.length == n) for (double w : weights) sum += Math.max(0, w);
         for (int i = 0; i < n; i++) {
+            double each = sum > 0 ? amount * Math.max(0, weights[i]) / sum : amount / Math.max(1, n);
             double lift = i * 0.38;
             String mk = i == 0 ? mark : "";
             if (i == 0 || gap <= 0) showGradient(victim, each, style, grad, mk, lift);

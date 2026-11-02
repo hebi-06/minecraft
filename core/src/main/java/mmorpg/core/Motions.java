@@ -92,8 +92,8 @@ public final class Motions {
     }
 
     /**
-     * 0.51.0 공격 속도 배율 speed 의 평타 사이 틱 (울프헤딘(라이칸) 「야성」 — 1 = 그대로, 1.2 = 20% 빠름 → 10 ÷ 1.2 = 8.3 → 8틱). 틱 단위라 반올림
-     * (야성 0 ~ 2 는 10 · 3 ~ 8 은 9 · 9 ~ 10 은 8틱)
+     * 0.51.0 공격 속도 배율 speed 의 평타 사이 틱 (1 = 그대로, 1.2 = 20% 빠름 → 10 ÷ 1.2 = 8.3 → 8틱). 틱 단위라 반올림
+     * (재설계안 2판: 뵈드바르 「거인의 무게」 ×0.75 → 13틱 · 스타르카드 「불사의 분노」 ×1.4 → 7틱)
      */
     public static int attackInterval(double speed) {
         if (!(speed > 0) || Math.abs(speed - 1) < 1e-9) return attackInterval();

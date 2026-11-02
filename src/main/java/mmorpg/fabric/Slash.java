@@ -81,7 +81,7 @@ public final class Slash {
         if (held == null || !Combat.isMeleeWeapon(held) || mmorpg.core.Motions.combo(held.type()).isEmpty()) return true;
         MotionSystem.Swing last = MotionSystem.last(sp);
         long now = Tasks.now();
-        // 0.51.0 공격 속도 (라이칸 야성 — 평타 사이가 줄어듦)
+        // 0.51.0 공격 속도 (2차 직업 태세 — 평타 사이가 줄거나 늚)
         if (last == null || now < last.tick() || now - last.tick() >= mmorpg.core.Motions.serverInterval(RpgCombat.attackSpeed.applyAsDouble(sp))) return true;
         if (now == last.tick()) return attack && !SwingArea.hasPrimary(sp); // 같은 누름: 휘두르기 패킷이 먼저 왔으면 공격 패킷 하나는 받음
         return false;

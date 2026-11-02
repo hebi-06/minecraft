@@ -51,6 +51,17 @@ final class JobImpact {
 
     /** 맞은 자리 (그림 · 소리 · 움찔 · 멈칫) — e 를 맞힌 직후 (JobKit.strike 의 then) */
     static void hit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double power) {
+        if (e == null || !(e.level() instanceof ServerLevel)) return;
+        fx(sp, e, j, power);
+        double p = Math.max(0.6, power);
+        stop(sp, p >= 2 ? 4 : p >= 1.4 ? 3 : 2);
+    }
+
+    /**
+     * 맞은 자리의 그림 · 소리 · 움찔만 (멈칫 없이) — 0.51.0 빠른 연타의 숫자 줄마다 (글래디에이터 도끼 난타 · 여덟 팔: 피해는 무리마다 한 번이고 도끼질은 줄마다 —
+     * 멈칫은 무리의 센 도끼질에만)
+     */
+    static void fx(ServerPlayer sp, LivingEntity e, Jobs.Job j, double power) {
         if (e == null || !(e.level() instanceof ServerLevel level)) return;
         double p = Math.max(0.6, power);
         Vec3 b = Kit.bodyPoint(e);
@@ -73,7 +84,6 @@ final class JobImpact {
             if (p >= 1.4) SkillFx.play(level, "entity.player.attack.crit", b, 0.8, 0.7);
             if (p >= 2) SkillFx.play(level, "item.mace.smash_ground", b, 0.75, 0.6);
         }
-        stop(sp, p >= 2 ? 4 : p >= 1.4 ? 3 : 2);
     }
 
     /** 멈칫만 (그림 없이): ticks 틱 — GAP 틱 안에 다시 오면 버림 */

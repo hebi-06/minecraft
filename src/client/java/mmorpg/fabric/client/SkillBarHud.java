@@ -415,15 +415,15 @@ public final class SkillBarHud {
                             for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
                             if (i < v) g.fill(bx + 1, ty + 3, bx + 2, ty + 4, 0xFFFFFFFF);
                         }
-                        case "lycan" -> {
-                            // 0.51.0 야성 (최대 10) — 송곳니 (5 × 7, 창날처럼 줄 높이만큼): 위가 넓고 아래로 굽어 뾰족한 이빨, 찬 것은 둘째 빛 (붉은 눈빛) + 위 흰 점,
-                            // 오른쪽 아래 1칸 그림자
-                            int c = i < v ? col : dim;
+                        case "gladiator" -> {
+                            // 0.51.0 결투 (최대 10 — 하나당 상대에게 +3%) — 결투장 돌 말뚝 (3 × 7, 창날처럼 줄 높이만큼): 뾰족한 머리 · 곧은 몸 · 가운데 묶은 띠, 찬 것은
+                            // 첫째 빛 (진홍) + 머리 흰 점 · 띠는 둘째 빛 (모래 금빛), 오른쪽 아래 1칸 그림자
+                            int c = i < v ? bright : dim;
                             int ty = y - 1;
-                            int[][] rows = {{0, 5}, {0, 5}, {1, 5}, {1, 4}, {2, 4}, {2, 4}, {3, 4}};
+                            int[][] rows = {{1, 2}, {0, 3}, {0, 3}, {0, 3}, {0, 3}, {0, 3}, {0, 3}};
                             for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0] + 1, ty + r + 1, bx + rows[r][1] + 1, ty + r + 2, 0xA0000000);
-                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
-                            if (i < v) g.fill(bx + 1, ty + 1, bx + 2, ty + 2, 0xFFFFFFFF);
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, r == 4 ? (i < v ? col : dim) : c);
+                            if (i < v) g.fill(bx + 1, ty, bx + 2, ty + 1, 0xFFFFFFFF);
                         }
                         case "runeknight" -> {
                             // 0.51.0 마력 각인 (최대 5) — 금빛 룬 글자 ᚠ (4 × 7, 창날처럼 줄 높이만큼): 세로 줄기 · 오른쪽 위로 뻗은 가지 둘, 찬 것은 둘째 빛 (금빛) + 줄기 위 흰 점,

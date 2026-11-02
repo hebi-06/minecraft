@@ -24,7 +24,7 @@ import job_motions_a  # noqa: E402,F401
 import job_motions_b  # noqa: E402,F401
 import job_motions_c  # noqa: E402,F401
 import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트 — 재설계안 2판)
-import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 라이칸)
+import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 글래디에이터 — 재설계안 2판)
 import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (룬 나이트 · 헥스 블레이드)
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
 import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 섀도 헌터)
@@ -97,13 +97,7 @@ AIR = {
     "jb_priest_ult_toll": [(0, 16, "float")],
     "jb_guardian_bash": [],
     "jb_guardian_ult": [(1, 9, "tuck"), (10, 14, "land")],
-    # 0.51.0 2차 직업 (소드마스터 · 블러드 나이트는 재설계안 2판 — 몸이 뜨는 단계의 다리를 job_motions_d 에서 직접 · softLegs 끔)
-    "jb_warlord_crush": [(1, 10, "tuck"), (12, 15, "land")],
-    "jb_warlord_storm": [(33, 41, "tuck"), (42, 45, "land")],
-    "jb_warlord_ult_final": [(2, 18, "tuck"), (20, 23, "land")],
-    "jb_lycan_pounce": [(2, 7, "tuck"), (8, 11, "land")],
-    "jb_lycan_ult_pounce": [(1, 5, "tuck"), (6, 8, "land")],
-    "jb_lycan_ult_final": [(2, 16, "tuck"), (18, 21, "land")],
+    # 0.51.0 2차 직업 (소드마스터 · 블러드 나이트 · 워로드 · 글래디에이터는 재설계안 2판 — 몸이 뜨는 단계의 다리를 job_motions_d · e 에서 직접 · softLegs 끔)
     "jb_runeknight_futhark": [(1, 56, "float")],
     "jb_runeknight_futhark_plant": [(0, 5, "float"), (6, 10, "land")],
     "jb_runeknight_ult": [(2, 22, "float")],

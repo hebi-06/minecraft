@@ -575,20 +575,26 @@ public final class Kit {
     /** 0.28.0 빠른 연타: 피해 한 번 (amount) 을 split 줄의 숫자로 (gap 틱마다 한 줄 — 메이플식 쌓이는 숫자, RpgCombat.jobMark) */
     public static boolean applyJobDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad, int split,
             int gap) {
-        return applyDamage(sp, target, amount * skillMultOf(sp), crit, cause, style, grad, split, gap);
+        return applyDamage(sp, target, amount * skillMultOf(sp), crit, cause, style, grad, split, gap, null);
+    }
+
+    /** 0.51.0 같은 것 — 줄마다 다른 몫 (weights — 줄 수만큼 · null 이면 같게: 글래디에이터 도끼 난타의 세 번째 내려침) */
+    public static boolean applyJobDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad, int split,
+            int gap, double[] weights) {
+        return applyDamage(sp, target, amount * skillMultOf(sp), crit, cause, style, grad, split, gap, weights);
     }
 
     private static boolean applyDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad) {
-        return applyDamage(sp, target, amount, crit, cause, style, grad, 1, 0);
+        return applyDamage(sp, target, amount, crit, cause, style, grad, 1, 0, null);
     }
 
     private static boolean applyDamage(ServerPlayer sp, LivingEntity target, double amount, boolean crit, Cause cause, DamageNumbers.Style style, int[] grad, int split,
-            int gap) {
+            int gap, double[] weights) {
         if (sp.isRemoved() || target == null || target.isRemoved() || !(amount > 0)) return false;
         if (!(target.level() instanceof ServerLevel tl)) return false;
         DamageNumbers.Style st = style != null ? style : crit ? DamageNumbers.Style.SKILLCRIT : DamageNumbers.Style.SKILL;
         if (grad != null) {
-            if (split > 1) RpgCombat.jobMark(target, sp, crit, st, grad, split, gap);
+            if (split > 1) RpgCombat.jobMark(target, sp, crit, st, grad, split, gap, weights);
             else RpgCombat.jobMark(target, sp, crit, st, grad);
         } else RpgCombat.skillMark(target, sp, crit, st);
         Vec3 v = target.getDeltaMovement();

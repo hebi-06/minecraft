@@ -98,11 +98,16 @@ final class JobFx {
     static final int BELL2 = 8;
     static final int BUCKLER2 = 8;
     static final int AEGIS2 = 6;
-    /** 0.51.0 전사 2차 그림 (tools/job_fx_art_adv.py) 의 장 수: 곰의 혼 · 곰 앞발 · 늑대 발톱 네 줄 · 달 */
+    /**
+     * 0.51.0 전사 2차 그림 (tools/job_fx_art_adv.py) 의 장 수: 곰의 혼 · 곰 앞발 · 달 (섀도 헌터) · 재설계안 2판 — 땅에서 솟는 돌창 (워로드) · 결투 말뚝 · 여덟 팔 ·
+     * 결투장 바닥 (글래디에이터)
+     */
     static final int BEAR = 8;
     static final int PAW = 4;
-    static final int CLAW4 = 6;
     static final int MOON = 8;
+    static final int SPIKE = 8;
+    static final int ARMS = 8;
+    static final int ARENA = 6;
     /** 0.51.0 마검사 2차 그림: 공중 룬 글자 (종류마다 장 수 · 종류) · 하늘의 룬 스물넷 · 가시 룬 ᚦ · 땅의 거대한 ᚦ */
     static final int GLYPH = 6;
     static final int GLYPH_KINDS = 3;
@@ -127,12 +132,6 @@ final class JobFx {
     // ------------------------------------------------------------ 색
 
     /**
-     * 라이칸 겉빛 (짙은 달빛 은청 — 영상 1: 직업 첫째 빛 (은회 0.76 · 0.8 · 0.92) 은 낮 하늘과 밝기 · 빛이 같아 X자 베기 · 늑대 기운 · 달이 하늘 앞에서 묻혔음.
-     * 마니의 은활 만월 (짙은 달빛 파랑) 과 같은 까닭으로 짙게 — 피해 숫자 · 칸 HUD 는 직업 빛 그대로)
-     */
-    static final double[] LYCAN_OUTER = {0.5, 0.58, 0.86};
-
-    /**
      * 0.51.0 헥스 블레이드 겉빛 · 속빛 (검정 · 호박빛 — 컨셉 "거꾸로 선 룬"): 겉 (빛 칸 · 판의 몸) 은 검붉은 먹빛 (연기처럼 어두운 테), 속 (심지 · 판의 빛) 은 호박빛.
      * 두 빛 중 짙은 쪽을 겉으로 고르는 규칙이면 호박빛이 겉 · 검정이 옅어진 회색 속이 되어 "검은 칼" 이 아니게 됨
      */
@@ -146,9 +145,8 @@ final class JobFx {
     static final double[] BD_OUTER = {1.0, 0.52, 0.74};
     static final double[] BD_INNER = {1.0, 0.95, 0.8};
 
-    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라). 0.51.0 라이칸은 짙은 달빛 은청 (LYCAN_OUTER — 붉은 눈빛은 발톱 · 눈 그림에만) · 헥스 블레이드는 먹빛 */
+    /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라 · 0.51.0 글래디에이터 진홍). 0.51.0 헥스 블레이드는 먹빛 */
     static double[] outer(Jobs.Job j) {
-        if (j != null && JobTraits6.LY.equals(j.id())) return LYCAN_OUTER;
         if (j != null && JobTraits7.HX.equals(j.id())) return HEX_OUTER;
         if (j != null && JobTraits10.BD.equals(j.id())) return BD_OUTER;
         double[] a = JobKit.glow(j);
@@ -156,14 +154,10 @@ final class JobFx {
         return sat(a) >= sat(b) ? a : b;
     }
 
-    /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록). 0.51.0 라이칸은 직업 첫째 빛 (은회) 을 흰색 쪽으로 (달빛 흰빛) */
+    /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록 · 0.51.0 글래디에이터 옅은 모래 금빛) */
     static double[] inner(Jobs.Job j) {
         if (j != null && JobTraits7.HX.equals(j.id())) return HEX_INNER;
         if (j != null && JobTraits10.BD.equals(j.id())) return BD_INNER;
-        if (j != null && JobTraits6.LY.equals(j.id())) {
-            double[] m = JobKit.glow(j);
-            return new double[] {m[0] + (1 - m[0]) * 0.6, m[1] + (1 - m[1]) * 0.6, m[2] + (1 - m[2]) * 0.6};
-        }
         double[] a = JobKit.glow(j);
         double[] b = JobKit.core(j);
         double[] o = sat(a) >= sat(b) ? b : a;
@@ -282,13 +276,10 @@ final class JobFx {
             java.util.Map.entry("priest", new Object[] {"block.bell.hit", 1.9, 0.3}),
             java.util.Map.entry("guardian", new Object[] {"item.shield.block", 1.35, 0.4}));
 
-    private static final Object[] LYCAN_HIT = {"entity.player.attack.sweep", 1.45, 0.4};
-
     /** 맞은 자리 (rfx_jhit): 몸 가운데 · 몸 크기에 맞춤 · 아무렇게나 기욺 */
     static void hit(LivingEntity e, Jobs.Job j, double scale) {
         if (!(e.level() instanceof ServerLevel level)) return;
-        // 0.51.0 라이칸은 찢는 소리 (전사의 둔탁한 쿵 대신)
-        Object[] snd = j == null ? null : JobTraits6.LY.equals(j.id()) ? LYCAN_HIT : HIT_SOUND.get(fid(j));
+        Object[] snd = j == null ? null : HIT_SOUND.get(fid(j));
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
         Vec3 b = Kit.bodyPoint(e);
@@ -301,9 +292,9 @@ final class JobFx {
             // 0.51.0 블러드 나이트: 맞은 자리에 피 튀김 (rfx_jblood — 베인 줄 · 튀는 핏방울) + 은빛 베인 줄 한 겹 (핏빛)
             JobTraits5.blood(level, b, size * 1.05, j, 0.36, Opt.of("spin", tilt));
             two(level, "jhits", HITS, 0, b, 0.3, Opt.of("size", size * 0.8, "spin", tilt, "fade", 0.25, "alpha", 0.8), outer(j), inner(j));
-        } else if (j != null && JobTraits6.LY.equals(j.id())) {
-            // 0.51.0 라이칸: 늑대 발톱 네 줄 (rfx_jclaw4 — 붉은 눈빛 겉 · 달빛 흰 속)
-            claw4(level, b, size * 1.05, tilt + 25, 0.32, Opt.empty(), JobKit.core(j), inner(j));
+        } else if (j != null && JobTraits6.GL.equals(j.id())) {
+            // 0.51.0 글래디에이터: 엇갈린 두 도끼 자국 (rfx_jhits 의 X 줄 — 진홍 겉 · 모래 금빛 속, 조금 크게)
+            two(level, "jhits", HITS, HIT_ROWS.indexOf("assassin") * 12, b, 0.32, Opt.of("size", size * 1.0, "spin", tilt, "fade", 0.25), outer(j), inner(j));
         } else if (row >= 0) two(level, "jhits", HITS, row * 12, b, 0.32, Opt.of("size", size * 0.9, "spin", tilt, "fade", 0.25), outer(j), inner(j));
         else two(level, "jhit", HIT, b, 0.3, Opt.of("size", size, "spin", Kit.rand() * 360, "fade", 0.2), outer(j), inner(j));
         // 0.47.0 더 화려하게: 맞은 자리의 짧은 번쩍 (터짐 작은 장) · 튀는 불티 (직업 빛)
@@ -1008,9 +999,48 @@ final class JobFx {
         loop(level, "jpaw", PAW, at, life, 14, o.with("size", size, "fade", o.num("fade", 0.25)), glow, core);
     }
 
-    /** 늑대 발톱 네 줄 (rfx_jclaw4 — 카메라를 봄): 0 ~ 1 네 줄이 오른쪽 위에서 왼쪽 아래로 찢어짐 · 2 번쩍 · 3 ~ 5 흐려지며 불티. 크기 약 size × 2 칸 (spin = 기울기) */
-    static void claw4(ServerLevel level, Vec3 at, double size, double spin, double life, Opt o, double[] glow, double[] core) {
-        two(level, "jclaw4", CLAW4, at, life, o.with("size", size, "spin", spin, "fade", o.num("fade", 0.25)), glow, core);
+    /**
+     * 0.51.0 땅에서 솟는 돌창 무리 (rfx_jspike — 세워 카메라 쪽으로 돎, 아래 끝 = 땅): stage 0 = 땅을 뚫고 솟음 (0 ~ 2 · 흙 튐) · 1 = 서 있음 (3 ~ 5 이어 돌림 —
+     * 갈라진 틈의 빛이 맥동) · 2 = 금이 가 무너짐 (6 ~ 7). 아래 끝 = ground · 높이 약 size × 2 칸 (너비도 같음). 빛 = 돌 몸 (짙은 갈색 — 거의 불투명) · 심지 = 틈의 주황
+     */
+    static void spike(ServerLevel level, Vec3 ground, double size, int stage, double life, Opt o, double[] glow, double[] core) {
+        Vec3 at = V.up(ground, size);
+        Opt b = o.with("size", size);
+        switch (stage) {
+            case 0 -> cells(level, "jspike", SPIKE, 0, 3, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), glow, core);
+            case 1 -> cells(level, "jspike", SPIKE, 3, 3, at, life, 8, true, b.with("fade", o.num("fade", 0.15)), glow, core);
+            default -> cells(level, "jspike", SPIKE, 6, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.35)), glow, core);
+        }
+    }
+
+    /** 돌창이 솟아 서 있다가 무너짐 (rise 초 솟음 → hold 초 서 있음 → 0.3초 무너짐) */
+    static void spikeLife(ServerLevel level, Vec3 ground, double size, double rise, double hold, Opt o, double[] glow, double[] core) {
+        spike(level, ground, size, 0, Math.max(0.05, rise), o, glow, core);
+        int t1 = Math.max(1, (int) Math.round(rise * 20) - 1);
+        int t2 = Math.max(t1 + 1, (int) Math.round((rise + hold) * 20) - 1);
+        RuneKit.later(t1, () -> spike(level, ground, size, 1, Math.max(0.1, hold + 0.05), o, glow, core));
+        RuneKit.later(t2, () -> spike(level, ground, size, 2, 0.32, o, glow, core));
+    }
+
+    /**
+     * 0.51.0 여덟 팔 (rfx_jarms — 카메라를 봄, 이어 돌림): 어깨에서 뻗은 여덟 팔의 도끼 잔상이 차례로 내리침 (바퀴처럼 — 가운데 = 몸). 크기 약 size × 2 칸.
+     * 빛 = 잔상의 붉은 기운 · 심지 = 도끼날 · 팔의 모래 금빛 테
+     */
+    static void arms(ServerLevel level, Vec3 at, double size, double life, double fps, Opt o, Jobs.Job j) {
+        loop(level, "jarms", ARMS, at, life, fps, o.with("size", size, "fade", o.num("fade", 0.2)), outer(j), inner(j));
+    }
+
+    /**
+     * 0.51.0 결투장 바닥 (rfx_jarena — 땅에 누움): 0 ~ 1 테두리 룬 고리가 그어지며 펴짐 → 2 ~ 4 서 있음 (이어 돌림 — 룬이 맥동 · 가운데 엇갈린 두 도끼) → 5 흐려짐.
+     * 고리 끝 = 반 크기 × 0.92 (radius 칸)
+     */
+    static void arena(ServerLevel level, Vec3 center, double radius, int stage, double life, Opt o, Jobs.Job j) {
+        Opt b = o.with("dir", V.UP, "size", radius / 0.92, "spin", o.num("spin", 0));
+        switch (stage) {
+            case 0 -> cells(level, "jarena", ARENA, 0, 2, center, life, 0, false, b.with("fade", 0.0), outer(j), inner(j));
+            case 1 -> cells(level, "jarena", ARENA, 2, 3, center, life, 6, true, b.with("fade", o.num("fade", 0.1)), outer(j), inner(j));
+            default -> cells(level, "jarena", ARENA, 5, 1, center, life, 0, false, b.with("fade", 0.6), outer(j), inner(j));
+        }
     }
 
     /** 전사 곰 발톱 세 줄 (rfx_jhits 의 전사 줄 — 곰의 화신 평타가 넓어짐): 크게 · 기울여 (직업 겉 · 속빛) */

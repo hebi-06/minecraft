@@ -131,7 +131,7 @@ public final class JobSkills {
      * 0.27.0 서버 → 클라이언트: 직업 자원 게이지 (칸 위 — 검세 칼날 다섯 · 마력 각인 셋 …: name · value / max, max 0 = 없음) + 태세 (명경지수 · 마검 각성 —
      * stance 이름 · 남은 틱 / 전체 틱, 0 = 없음)
      */
-    /** 0.51.0 speed = 공격 속도 배율 (RpgCombat.attackSpeed — 클라이언트 선입력 평타 사이가 같은 값을 씀: 라이칸 야성 · 소드마스터 용의 피 · 블러드 나이트 광란 · 피의 갈증) */
+    /** 0.51.0 speed = 공격 속도 배율 (RpgCombat.attackSpeed — 클라이언트 선입력 평타 사이가 같은 값을 씀: 소드마스터 용의 피 · 블러드 나이트 광란 · 피의 갈증 · 워로드 거인의 무게 · 글래디에이터 불사의 분노) */
     public record GaugePayload(String name, int value, int max, String stance, int left, int total, float speed) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<GaugePayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("job_gauge"));
         public static final StreamCodec<RegistryFriendlyByteBuf, GaugePayload> CODEC = CustomPacketPayload.codec(GaugePayload::write, GaugePayload::read);

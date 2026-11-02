@@ -366,16 +366,17 @@ public final class JobsTest {
         Jobs.Job bk = Jobs.job("bloodknight");
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
-        Jobs.Job ly = Jobs.job("lycan");
-        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 12, "advanced jobs " + Jobs.allAdvanced().size());
-        if (sm == null || bk == null || wl == null || ly == null) return;
+        Jobs.Job gl = Jobs.job("gladiator");
+        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 12 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
+        if (sm == null || bk == null || wl == null || gl == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
-        check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, ly)) && Jobs.advancedOf("spellblade").size() == 2
+        check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, gl)) && Jobs.advancedOf("spellblade").size() == 2
                 && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").size() == 2
                 && Jobs.advancedOf("lancer").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 창술사는 아직)");
-        check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == ly && Jobs.baseOf(wl) == wa && Jobs.baseOf(ly) == wa, "warrior advance");
-        check(wl.display().equals("뵈드바르(워로드)") && ly.display().equals("울프헤딘(라이칸)") && "awaken".equals(wl.path()) && "invert".equals(ly.path()), "warrior display");
-        check(Jobs.find("워로드") == wl && Jobs.find("울프헤딘") == ly && Jobs.find("lycan") == ly, "find warrior advanced");
+        check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == gl && Jobs.baseOf(wl) == wa && Jobs.baseOf(gl) == wa, "warrior advance");
+        check(wl.display().equals("뵈드바르(워로드)") && gl.display().equals("스타르카드(글래디에이터)") && "awaken".equals(wl.path()) && "invert".equals(gl.path()),
+                "warrior display");
+        check(Jobs.find("워로드") == wl && Jobs.find("스타르카드") == gl && Jobs.find("gladiator") == gl && Jobs.find("글래디에이터") == gl, "find warrior advanced");
         check(Jobs.advance("swordsman", "awaken") == sm && Jobs.advance("swordsman", "invert") == bk && Jobs.advance("swordsman", "nope") == null
                 && Jobs.advance(null, "awaken") == null, "advance(base, path)");
         check(Jobs.baseOf(sm) == sw && Jobs.baseOf(bk) == sw && Jobs.baseOf(sw) == sw && Jobs.baseOf(null) == null, "baseOf");
@@ -440,7 +441,7 @@ public final class JobsTest {
                 && near(bk.trait().def().numOr("thirstAt", 0), 0.3) && bk.trait().def().numOr("thirstSpeed", 0) > 0 && bk.trait().def().numOr("leechMax", 0) > 0,
                 "피의 갈증 체력 4% · 흡혈 5% · 체력 30% 에서 가장 목마름");
         check(Jobs.skillLine(sm.skill(0)).startsWith("칼집 섬광 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("광란 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
-        warriorAdvance(wa, wl, ly);
+        warriorAdvance(wa, wl, gl);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("hexblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
         archerAdvance(Jobs.job("archer"), Jobs.job("sniper"), Jobs.job("shadowhunter"));
@@ -655,43 +656,68 @@ public final class JobsTest {
         check(rk.color()[1][0] > 0.9 && rk.color()[0][2] > 0.9 && hx.color()[0][0] > 0.9 && hx.color()[1][0] < 0.4, "colors: purple · gold / amber · black");
     }
 
-    /** 0.51.0 전사 2차 — 뵈드바르(워로드) · 울프헤딘(라이칸): 부분 합 = 배율 합 (전사와 같은 6.5 · 3.9 · 11.7 · 52) · 무적 시간 띄움 · t · 특성 · 유틸 */
-    static void warriorAdvance(Jobs.Job wa, Jobs.Job wl, Jobs.Job ly) {
-        for (int i : new int[] {0, 1, 2, 4}) check(near(wl.skill(i).total(), wa.skill(i).total()) && near(ly.skill(i).total(), wa.skill(i).total()), "warrior totals slot " + i);
-        check(near(wl.skill(0).num("mult", 0), 6.5) && near(wl.skill(1).num("ram", 0) + wl.skill(1).num("slam", 0), 3.9)
-                && near(sum(wl.skill(2), "spins") + wl.skill(2).num("slam", 0), 11.7)
-                && near(wl.skill(4).num("leaps", 0) * wl.skill(4).num("leap", 0) + wl.skill(4).num("final", 0), 52), "warlord totals 6.5 · 3.9 · 11.7 · 52");
-        check(near(sum(ly.skill(0), "beats"), 6.5) && near(ly.skill(1).num("mult", 0), 3.9) && near(ly.skill(2).num("howl", 0) + ly.skill(2).num("spin", 0), 11.7)
-                && near(sum(ly.skill(4), "pounces") + ly.skill(4).num("final", 0), 52), "lycan totals 6.5 · 3.9 · 11.7 · 52");
-        // 같은 적을 여러 번 치는 것은 10틱 넘게
-        check(wl.skill(1).num("slamDelay", 0) >= 10 && wl.skill(2).num("gap", 0) >= 10 && wl.skill(2).num("slamDelay", 0) >= 10 && wl.skill(4).num("leapTicks", 0) >= 10
-                && wl.skill(4).num("finalDelay", 0) >= 10, "warlord i-frame spacing");
-        check(ly.skill(0).num("gap", 0) >= 10 && ly.skill(2).num("spinDelay", 0) >= 10 && ly.skill(4).num("every", 0) >= 10 && ly.skill(4).num("finalDelay", 0) >= 10,
-                "lycan i-frame spacing");
-        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값)
-        check(near(wl.skill(0).num("windup", 0), wl.skill(0).num("t", 0)) && near(wl.skill(0).num("w", 0), wl.skill(0).num("t", 0)), "투구 깨부수기 t 12 = 선딜");
-        check(near(wl.skill(1).num("slamDelay", 0), wl.skill(1).num("t", 0)), "곰의 메치기 t 10");
-        check(near((wl.skill(2).def().list("spins").size() - 1) * wl.skill(2).num("gap", 0) + wl.skill(2).num("slamDelay", 0), wl.skill(2).num("t", 0)), "도끼 태풍 t 42");
-        check(near(wl.skill(4).num("leaps", 0) * wl.skill(4).num("leapTicks", 0) + wl.skill(4).num("finalDelay", 0), wl.skill(4).num("t", 0))
-                && near(wl.skill(4).num("leapTicks", 0), wl.skill(4).num("w", 0)), "뵈드바르의 앞발 t 68 · w 12");
-        check(near((ly.skill(0).def().list("beats").size() - 1) * ly.skill(0).num("gap", 0), ly.skill(0).num("t", 0)), "송곳니 베기 t 20");
-        check(near(ly.skill(1).num("leapTicks", 0), ly.skill(1).num("t", 0)) && near(ly.skill(1).num("w", 0), ly.skill(1).num("t", 0)), "사냥감 덮치기 t 8 = 선딜");
-        check(near(ly.skill(2).num("howlAt", 0) + ly.skill(2).num("spinDelay", 0), ly.skill(2).num("t", 0)), "달밤의 포효 t 16");
-        check(near(ly.skill(4).num("first", 0) + (ly.skill(4).def().list("pounces").size() - 1) * ly.skill(4).num("every", 0) + ly.skill(4).num("finalDelay", 0),
-                ly.skill(4).num("t", 0)) && near(ly.skill(4).num("first", 0), ly.skill(4).num("w", 0)), "달 삼키기 t 74 · w 6");
-        // 특성: 워로드 = 전사의 분노 + 곰의 화신 (분노 100 · 8초 · −15%), 라이칸 = 야성 (최대 10 · 하나당 +2% · 10 이면 할퀴기 +30% · 5 씀)
+    /**
+     * 0.51.0 전사 2차 — 재설계안 2판 (claude/job-advance-redo.md): 뵈드바르(워로드) 새 스킬 다섯 · 스타르카드(글래디에이터) (울프헤딘(라이칸) 대신). 부분 합 = 배율 합
+     * (전사와 같은 6.5 · 3.9 · 11.7 · 52 — 대지 가르기는 끝까지 모은 값, 마지막 휘두름은 바깥 날 · 안쪽은 절반), 무적 시간 띄움 · 다시 누름 · t · w · 특성 (분노 · 곰의
+     * 화신 / 결투 10 · +3% · −40%) · 단일 직업의 3번 칸 이름 (주력)
+     */
+    static void warriorAdvance(Jobs.Job wa, Jobs.Job wl, Jobs.Job gl) {
+        for (int i : new int[] {0, 1, 2, 4}) check(near(wl.skill(i).total(), wa.skill(i).total()) && near(gl.skill(i).total(), wa.skill(i).total()), "warrior totals slot " + i);
+        List<String> wlIds = new ArrayList<>();
+        List<String> glIds = new ArrayList<>();
+        for (Jobs.Skill k : wl.skills()) wlIds.add(k.id());
+        for (Jobs.Skill k : gl.skills()) glIds.add(k.id());
+        check(wlIds.equals(List.of("warlord_rend", "warlord_slumber", "warlord_hug", "warlord_titan", "warlord_ult")), "warlord skills " + wlIds);
+        check(glIds.equals(List.of("gladiator_flurry", "gladiator_hook", "gladiator_eight", "gladiator_fury", "gladiator_ult")), "gladiator skills " + glIds);
+        // 워로드: 대지 가르기 (끝까지 모으면 6.5 · 처음은 절반) · 동면 3.9 · 곰의 포옹 11.7 · 마지막 휘두름 바깥 52 / 안쪽 26
+        check(near(wl.skill(0).total(), 6.5) && near(wl.skill(0).num("minPower", 0), 0.5) && wl.skill(0).def().numbersOrNull("len").size() == 2
+                && near(wl.skill(4).num("outer", 0), 52) && near(wl.skill(4).num("inner", 0) * 2, wl.skill(4).num("outer", 0)), "warlord totals 6.5 · 52 (바깥) · 26 (안쪽)");
+        // 글래디에이터: 도끼 난타 여섯 = 6.5 · 여덟 팔 무리 넷 = 11.7 · 홀름강 내려침 + 내려찍기 = 52
+        check(near(sum(gl.skill(0), "chops"), 6.5) && gl.skill(0).def().list("chops").size() == 6 && near(sum(gl.skill(2), "volleys"), 11.7)
+                && gl.skill(2).def().list("volleys").size() * gl.skill(2).num("lines", 0) == 16 && near(gl.skill(4).num("open", 0) + gl.skill(4).num("slam", 0), 52),
+                "gladiator totals 6.5 (도끼질 여섯) · 11.7 (숫자 열여섯 줄) · 52");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (다시 누르는 단계는 gap — 다시 누를 수 있는 가장 이른 틱)
+        check(gl.skill(0).num("groupGap", 0) >= 10 && gl.skill(2).num("every", 0) >= 10 && gl.skill(4).num("dur", 0) - gl.skill(4).num("openAt", 0) >= 10
+                && gl.skill(1).num("hitAt", 0) > gl.skill(1).num("pullTicks", 0), "gladiator i-frame spacing");
+        check(gl.skill(2).num("lines", 0) * gl.skill(2).num("lineGap", 0) <= gl.skill(2).num("every", 0)
+                && gl.skill(0).num("group", 0) * gl.skill(0).num("every", 0) <= gl.skill(0).num("groupGap", 0), "연타 숫자 줄이 다음 무리 전에 끝남");
+        check(wl.skill(0).num("gap", 0) >= 6 && wl.skill(0).num("charge", 0) > 12 && wl.skill(2).num("slamAt", 0) > wl.skill(2).num("pullAt", 0) + wl.skill(2).num("pullTicks", 0),
+                "warlord timing order");
+        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값 — 다시 누르는 스킬은 12틱마다 다시 누름: 대지 가르기는 12틱 모아 내려침 → slamAt 뒤)
+        check(near(12 + wl.skill(0).num("slamAt", 0), wl.skill(0).num("t", 0)) && near(wl.skill(0).num("w", 0), wl.skill(0).num("t", 0)), "대지 가르기 t 16 = 12 + 4");
+        check(near(wl.skill(1).num("dur", 0), wl.skill(1).num("t", 0)) && near(wl.skill(1).num("w", 0), wl.skill(1).num("t", 0)), "동면 t 40 = 선딜");
+        check(near(wl.skill(2).num("slamAt", 0), wl.skill(2).num("t", 0)) && near(wl.skill(2).num("w", 0), wl.skill(2).num("t", 0)), "곰의 포옹 t 12");
+        check(near(wl.skill(4).num("windup", 0), wl.skill(4).num("t", 0)) && near(wl.skill(4).num("w", 0), wl.skill(4).num("t", 0)), "마지막 휘두름 t 24 = 선딜");
+        check(near(gl.skill(0).num("first", 0) + (gl.skill(0).def().list("chops").size() / (int) gl.skill(0).num("group", 1) - 1) * gl.skill(0).num("groupGap", 0),
+                gl.skill(0).num("t", 0)) && !gl.skill(0).def().has("w"), "도끼 난타 t 12 (둘째 무리)");
+        check(near(gl.skill(1).num("hitAt", 0), gl.skill(1).num("t", 0)) && near(gl.skill(1).num("w", 0), gl.skill(1).num("t", 0)), "걸어 당기기 t 6");
+        check(near(gl.skill(2).num("first", 0) + (gl.skill(2).def().list("volleys").size() - 1) * gl.skill(2).num("every", 0), gl.skill(2).num("t", 0)), "여덟 팔 t 34");
+        check(near(gl.skill(4).num("dur", 0), gl.skill(4).num("t", 0)) && near(gl.skill(4).num("openAt", 0), gl.skill(4).num("w", 0)), "홀름강 t 140 · w 10");
+        // 특성: 워로드 = 전사의 분노 + 곰의 화신 (분노 100 · 8초 · −15%), 글래디에이터 = 결투 (최대 10 · 1초마다 +3% · 다른 적 −40% · 쓰러지면 절반 · 5초)
         check(wl.trait().name().equals("분노") && wl.trait().max() == 100 && near(wl.trait().def().numOr("bearFor", 0), 160) && near(wl.trait().def().numOr("bearGuard", 0), 0.15)
                 && near(wl.trait().def().numOr("onHit", 0), wa.trait().def().numOr("onHit", -1)), "분노 · 곰의 화신");
-        check(ly.trait().name().equals("야성") && ly.trait().max() == 10 && near(ly.trait().def().numOr("atkSpeed", 0), 0.02) && near(ly.trait().def().numOr("moveSpeed", 0), 0.02)
-                && near(ly.trait().def().numOr("clawBonus", 0), 0.3) && ly.trait().def().numOr("clawUse", 0) == 5, "야성 10 · +2% · 할퀴기 +30%");
-        // 유틸: 투구 깨부수기 방어 깨짐 +15% (20%) · 달밤의 포효 겁먹음 (15%) · 사냥감 덮치기 도약 + 기절 0.5초 (15%) — 단일
-        check(Jobs.utils(wl.skill(0)).equals(List.of("vuln15")) && near(Jobs.utilCost(wl.skill(0)), 0.2) && near(wl.skill(0).num("break", 0), 0.15), "투구 깨부수기 vuln15");
-        check(Jobs.utils(ly.skill(2)).equals(List.of("weaken15")) && near(Jobs.utilCost(ly.skill(2)), 0.15) && near(ly.skill(2).num("weaken", 0), 0.15), "달밤의 포효 weaken15");
-        check(near(Jobs.utilCost(ly.skill(1)), 0.15) && "single".equals(Jobs.areaKind(ly.skill(1))) && Jobs.windupTicks(ly.skill(1)) == 8, "사냥감 덮치기 util 15% · single · w 8");
-        check(Jobs.windupTicks(wl.skill(0)) == 12 && near(Jobs.windupBonus(wl.skill(0)), 0.12), "투구 깨부수기 선딜 12틱 +12%");
-        check(Jobs.upKeys(wl.skill(3)).size() == 2 && Jobs.upKeys(ly.skill(3)).size() == 2 && Jobs.upKey(ly.skill(2), "weaken") != null, "up keys");
-        check(Jobs.skillLine(wl.skill(3)).equals("곰의 포효 · 30초") && Jobs.skillLine(ly.skill(0)).startsWith("송곳니 베기 · 6초 · 배율 "), "warrior advanced skill line");
-        check(wl.color()[0][0] > 0.9 && ly.color()[0][2] > 0.85 && ly.color()[1][0] > 0.85, "colors: orange · brown / moon silver · red eye");
+        check(gl.trait().name().equals("결투") && gl.trait().max() == 10 && near(gl.trait().def().numOr("per", 0), 0.03) && near(gl.trait().def().numOr("every", 0), 20)
+                && near(gl.trait().def().numOr("others", 0), 0.4) && near(gl.trait().def().numOr("keep", 0), 0.5) && near(gl.trait().def().numOr("lapse", 0), 100)
+                && near(gl.trait().max() * gl.trait().def().numOr("per", 0), 0.3), "결투 10 · +3% (최대 +30%) · −40% · 절반 · 5초");
+        // 유틸 · 범위: 대지 가르기 띄움 · 동면 피해 감소 + 밀쳐냄 · 곰의 포옹 끌당 + 기절 1초 · 마지막 휘두름 피해 감소 + 띄움 / 걸어 당기기 끌당 + 기절 0.5초 · 여덟 팔 적 받는 피해
+        // +10% · 홀름강 가둠 + 적 받는 피해 +15% — 글래디에이터는 모두 단일 (범위 보정 +15%)
+        check(Jobs.utils(wl.skill(0)).equals(List.of("lift")) && "narrow".equals(Jobs.areaKind(wl.skill(0))) && Jobs.windupTicks(wl.skill(0)) == 16, "대지 가르기 util · narrow · w 16");
+        check(Jobs.utils(wl.skill(1)).equals(List.of("reduce", "knock")) && near(Jobs.utilCost(wl.skill(1)), 0.15) && near(Jobs.windupBonus(wl.skill(1)), 0.3)
+                && near(wl.skill(1).num("guard", 0), 0.6), "동면 reduce · knock · 선딜 +30% (상한)");
+        check(Jobs.utils(wl.skill(2)).equals(List.of("pull", "stun1")) && near(wl.skill(2).num("stun", 0), 20) && Jobs.areaKind(wl.skill(2)) == null, "곰의 포옹 pull · stun1");
+        check(Jobs.utils(wl.skill(4)).equals(List.of("reduce", "lift")) && near(wl.skill(4).num("guard", 0), 0.5) && Jobs.windupTicks(wl.skill(4)) == 24, "마지막 휘두름 −50% · w 24");
+        for (int i : new int[] {0, 1, 2, 4}) check("single".equals(Jobs.areaKind(gl.skill(i))), "gladiator single " + gl.skill(i).id());
+        check(Jobs.utils(gl.skill(1)).equals(List.of("pull", "stun05")) && Jobs.utils(gl.skill(2)).equals(List.of("vuln10")) && near(gl.skill(2).num("break", 0), 0.1)
+                && Jobs.utils(gl.skill(4)).equals(List.of("taunt", "vuln15")) && near(gl.skill(4).num("vuln", 0), 0.15) && Jobs.utils(gl.skill(0)).isEmpty(), "gladiator utils");
+        check(Jobs.timeKind(gl.skill(4)).equals("long") && near(Jobs.timeMult(gl.skill(4)), 1.1 * 1.1) && near(Jobs.timeMult(gl.skill(0)), 1.05), "홀름강 지속 +10% · 선딜 +10%");
+        // 칸 이름: 단일 직업의 3번 칸은 주력 (재설계안 2판 기준 8) · 나머지는 그대로
+        check(Jobs.slotRole(gl.skill(2)).equals("주력") && Jobs.slotRole(wl.skill(2)).equals("광역") && Jobs.slotRole(gl.skill(0)).equals(Jobs.slotRole(0)),
+                "slot role 주력 for single slot 3");
+        check(Jobs.upKeys(wl.skill(3)).size() == 2 && Jobs.upKeys(gl.skill(3)).size() == 2 && Jobs.upKey(wl.skill(2), "stun") != null && Jobs.upKey(gl.skill(2), "break") != null,
+                "up keys");
+        check(Jobs.skillLine(wl.skill(3)).equals("거인의 무게 · 30초") && Jobs.skillLine(gl.skill(3)).equals("불사의 분노 · 30초")
+                && Jobs.skillLine(gl.skill(0)).startsWith("도끼 난타 · 6초 · 배율 "), "warrior advanced skill line");
+        check(wl.color()[0][0] > 0.9 && gl.color()[0][0] > 0.9 && gl.color()[0][1] < 0.4 && gl.color()[1][2] > 0.5, "colors: orange · brown / scarlet · sand");
     }
 
     /** 0.50.0 직업 스킬 재설계: 유틸 값 · 시간 보정 (룬과 같은 표) · 직업 맞춤 */

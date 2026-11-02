@@ -77,7 +77,7 @@ public final class JobSystem {
         SwordmasterSkills.register(); // 0.51.0 2차 직업 (검사 각성 · 반전)
         BloodknightSkills.register();
         WarlordSkills.register(); // 0.51.0 2차 직업 (전사 각성 · 반전)
-        LycanSkills.register();
+        GladiatorSkills.register(); // 0.51.0 재설계안 2판 — 전사 반전 스타르카드(글래디에이터) (울프헤딘(라이칸) 대신)
         RuneknightSkills.register(); // 0.51.0 2차 직업 (마검사 각성 · 반전)
         HexbladeSkills.register();
         ArcmageSkills.register(); // 0.51.0 2차 직업 (매지션 각성 · 반전)
@@ -239,15 +239,12 @@ public final class JobSystem {
             NOTES.remove(sp.getUUID());
             JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
             JobTraits5.beforeCast(sp, job, k); // 0.51.0 소드마스터: 투지 8 이면 이 스킬이 치명
-            JobTraits6.beforeCast(sp, job, k); // 0.51.0 라이칸: 야성 10 이면 이 스킬에 할퀴기
             int move0 = JobMove.gen(sp);
             boolean ok = impl.cast(sp, job, k, P);
             // 0.50.0 새 스킬이 나가면 앞 스킬의 몸 움직임 (JobMove) 은 그만 — 새 스킬이 제 움직임을 시작했으면 이미 바뀜 (순간 이동 · 돌진이 끌려 돌아가지 않게)
             if (ok && JobMove.gen(sp) == move0) JobMove.cancel(sp);
             JobTraits3.afterCast(sp, job, k, ok);
             String advNote = JobTraits5.afterCast(sp, job, k, ok); // 0.51.0 치명 → 투지를 씀 · 피의 갈증 → 체력을 바침
-            String clawNote = JobTraits6.afterCast(sp, job, k, ok); // 0.51.0 할퀴기 → 야성을 씀
-            if (clawNote != null) advNote = advNote == null ? clawNote : advNote + " §8· " + clawNote;
             String note = NOTES.remove(sp.getUUID());
             if (advNote != null) note = note == null ? advNote : advNote + " §8· " + note;
             String stageMotion = JobRecast.takeMotion(sp); // 0.51.0 다시 쓰기의 단계 동작 (없으면 스킬 id 동작)

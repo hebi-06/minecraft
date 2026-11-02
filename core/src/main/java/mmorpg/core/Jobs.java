@@ -274,6 +274,15 @@ public final class Jobs {
         return slot >= 0 && slot < DATA.slotRoles().size() ? DATA.slotRoles().get(slot) : "";
     }
 
+    /**
+     * 0.51.0 스킬의 칸 역할 이름: 단일 직업의 3번 칸 (광역 칸의 스킬이 한 적만 침 — a single) 은 "주력" (재설계안 2판 기준 8 — 칸 이름만), 나머지는 칸의 역할
+     */
+    public static String slotRole(Skill k) {
+        if (k == null) return "";
+        if (k.slot() == 2 && "single".equals(areaKind(k))) return "주력";
+        return slotRole(k.slot());
+    }
+
     // ------------------------------------------------------------------ 위력
 
     /** 직업 적용 스탯 = stats 의 합 (유효 스탯 — 장비 · 룬 버프 포함, 룬과 같음) */

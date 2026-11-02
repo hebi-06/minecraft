@@ -2,10 +2,10 @@
   "format_version": "1.10.0",
   "particle_effect": {
     "description": {
-      "identifier": "rpg:rfx_jclaw4",
+      "identifier": "rpg:rfx_jarms",
       "basic_render_parameters": {
         "material": "particles_blend",
-        "texture": "textures/particle/rpg/fx/rfx_jclaw4"
+        "texture": "textures/particle/rpg/fx/rfx_jarms"
       }
     },
     "components": {
@@ -34,15 +34,15 @@
         ],
         "facing_camera_mode": "rotate_xyz",
         "uv": {
-          "texture_width": 1152,
-          "texture_height": 384,
+          "texture_width": 1280,
+          "texture_height": 1280,
           "uv": [
-            "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 6) * 192",
-            "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 6) * 192"
+            "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 320",
+            "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 320"
           ],
           "uv_size": [
-            192,
-            192
+            320,
+            320
           ]
         }
       },

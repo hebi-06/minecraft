@@ -238,8 +238,8 @@ public final class ClientJobBar {
     }
 
     /**
-     * 0.51.0 공격 속도 배율 (근접 평타 사이 — ClientMotions 의 선입력): 직업 특성에 atkSpeed (게이지 하나당) 가 있으면 1 + atkSpeed × 게이지 값
-     * (울프헤딘(라이칸) 야성 — 서버 JobTraits6.attackSpeed 와 같은 셈), 아니면 1
+     * 0.51.0 공격 속도 배율 (근접 평타 사이 — ClientMotions 의 선입력): 서버가 보낸 값 (게이지 payload 의 speed — 태세 · 체력 · 거인의 무게 · 불사의 분노),
+     * 없으면 직업 특성에 atkSpeed (게이지 하나당) 가 있을 때 1 + atkSpeed × 게이지 값, 아니면 1
      */
     public static double attackSpeed() {
         if (speed > 0) return speed; // 0.51.0 서버가 셈 (태세 · 체력 — 소드마스터 용의 피 · 블러드 나이트 광란 · 피의 갈증)

@@ -77,14 +77,14 @@ public final class JobTraits {
         JobTraits4.init(); // 0.30.0 성기사 · 사제 · 수호기사
         JobTraits5.init(); // 0.51.0 검사 2차 (소드마스터 치명 · 용의 피 · 벼린 칼 · 블러드 나이트 피의 갈증 · 광란)
         JobImpact.init(); // 0.51.0 타격감 (큰 타격 그림 · 멈칫)
-        JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 곰의 포효 · 라이칸 야성 · 겁먹음 · 늑대의 밤)
+        JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 동면 · 거인의 무게 · 글래디에이터 결투 · 불사의 분노 · 홀름강)
         JobTraits7.init(); // 0.51.0 마검사 2차 (룬 나이트 각인 번짐 · 룬 담금질 · 헥스 블레이드 뒤집힌 룬 · 저주의 칼)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 꿀술의 노래 · 네크로맨서 망자의 군대 · 망자 일으키기)
         JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 사과 겨누기 · 섀도 헌터 추격 · 저주 · 그림자 구르기 · 그믐밤)
         JobTraits10.init(); // 0.51.0 암살자 2차 (블레이드 댄서 춤사위 · 요정의 걸음 · 눈부신 한낮 — 트릭스터의 표식 · 은신은 JobTraits3)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
-            JobTraits6.tickFears(Tasks.now());
+            JobTraits6.tickGlobal(Tasks.now()); // 0.51.0 홀름강의 결투장
             JobTraits3.tickMarks(Tasks.now());
             JobTraits4.tickGlobal(server, Tasks.now());
             if (Tasks.now() % 4 == 0) tick(server);
@@ -295,7 +295,6 @@ public final class JobTraits {
         JobTraitsMore.stanceEnded(sp, id);
         JobTraits3.stanceEnded(sp, id);
         JobTraits4.stanceEnded(sp, id);
-        JobTraits6.stanceEnded(sp, id); // 0.51.0 늑대의 밤 → 이동 속도 수정치를 뗌
         JobFx3d.drop(sp, id, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
         sendGauge(sp, true);
     }
@@ -485,7 +484,7 @@ public final class JobTraits {
                 JobTraits3.tick(sp, j, now); // 0.29.0 암영 · 창끝 · 혼
                 JobTraits4.tick(sp, j, now); // 0.30.0 수호의 맹세 회복
                 JobTraits5.tick(sp, j, now); // 0.51.0 흡혈 숫자
-                JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 야성
+                JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 결투
                 JobTraits7.tick(sp, j, now); // 0.51.0 저주 룬 표시
                 JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 시체의 혼불
                 JobTraits9.tick(sp, j, now); // 0.51.0 섀도 헌터 추격 · 저주 문양
@@ -500,7 +499,6 @@ public final class JobTraits {
                 JobTraitsMore.stanceEnded(sp, ended); // 마나 과부하 → 이동 느려짐
                 JobTraits3.stanceEnded(sp, ended); // 0.29.0 암영 → 이동 빨라짐 · 투명이 풀림
                 JobTraits4.stanceEnded(sp, ended); // 0.30.0 철옹성 → 이동 수정치를 뗌
-                JobTraits6.stanceEnded(sp, ended); // 0.51.0 늑대의 밤 → 이동 수정치를 뗌
                 JobFx3d.drop(sp, ended, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
@@ -554,7 +552,7 @@ public final class JobTraits {
         } else if (JobTraits5.stanceFx(sp, j, st.stance)) {
             // 0.51.0 용의 심장 (가슴의 금빛 불씨 · 칼의 금빛) · 회그니의 맹세 (칼끝에서 떨어지는 핏방울)
         } else if (JobTraits6.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 늑대의 밤 (머리 위로 울부짖는 은빛 늑대 · 붉은 눈빛)
+            // 0.51.0 거인의 무게 (발밑 눌림 · 떨어지는 돌가루) · 불사의 분노 (몸을 감싼 붉은 불길 · 불티 · 눈빛)
         } else if (JobTraits7.stanceFx(sp, j, st.stance)) {
             // 0.51.0 룬 담금질 (칼의 금빛 룬 불) · 저주의 칼 (칼의 먹빛 불꽃)
         } else if (JobTraits8.stanceFx(sp, j, st.stance)) {
@@ -590,7 +588,7 @@ public final class JobTraits {
         int value = 0;
         if (fervor(j)) value = st == null ? 0 : st.stacks; // 0.51.0 소드마스터도 투지 (최대 8)
         else if (j.id().equals(JobTraits5.BK)) value = JobTraits5.gaugeValue(sp, j); // 0.51.0 블러드 나이트 = 피의 갈증 (잃은 체력)
-        else if (j.id().equals(JobTraits6.LY)) value = JobTraits6.gaugeValue(sp, j); // 0.51.0 라이칸 = 야성
+        else if (j.id().equals(JobTraits6.GL)) value = JobTraits6.gaugeValue(sp, j); // 0.51.0 글래디에이터 = 결투
         else if (j.id().equals(JobTraits7.HX)) value = JobTraits7.gaugeValue(sp, j); // 0.51.0 헥스 블레이드 = 그 적의 저주 룬
         else if (j.id().equals(JobTraits8.NC)) value = JobTraits8.gaugeValue(sp, j); // 0.51.0 네크로맨서 = 망자 선원 수
         else if (j.id().equals(JobTraits9.SH)) value = JobTraits9.gaugeValue(sp, j); // 0.51.0 섀도 헌터 = 추격

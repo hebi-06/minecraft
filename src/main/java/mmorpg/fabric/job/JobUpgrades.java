@@ -579,7 +579,7 @@ public final class JobUpgrades {
     static List<String> skillLore(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         List<String> out = new ArrayList<>();
         int lv = level(sp, k.id());
-        out.add("§8⇧" + JobTrainer.KEYS.charAt(Math.max(0, Math.min(4, k.slot()))) + " · " + Jobs.slotRole(k.slot()) + " · " + Js.str(k.cd()) + "초");
+        out.add("§8⇧" + JobTrainer.KEYS.charAt(Math.max(0, Math.min(4, k.slot()))) + " · " + Jobs.slotRole(k) + " · " + Js.str(k.cd()) + "초");
         out.add("§6" + Jobs.upStars(lv) + " §e+" + lv + " §8/ " + Jobs.upMax());
         out.add("§7지금: §f" + String.join(" §8· §f", Jobs.upNow(k, lv)));
         if (k.total() > 0) out.add("§7⚔ 과녁 하나 §f" + Economy.fmt(Math.round(Jobs.totalDamage(k, P) * Jobs.upMult(lv))) + " §8(지금 스탯)");

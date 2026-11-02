@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""0.51.0 2차 직업 스킬 아이콘 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) · 전사 각성 뵈드바르(워로드) · 반전 울프헤딘(라이칸) ·
+"""0.51.0 2차 직업 스킬 아이콘 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) · 전사 각성 뵈드바르(워로드) · 반전 스타르카드(글래디에이터) (재설계안 2판) ·
 마검사 각성 뵐룬드(룬 나이트) · 반전 투르스(헥스 블레이드) · 매지션 각성 오드레리르(아크메이지) · 반전 나글파르(네크로맨서) ·
 궁수 각성 에길(스나이퍼) · 반전 미르크비드(섀도 헌터) · 암살자 각성 우트가르드(트릭스터) · 반전 료스알프(블레이드 댄서) (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
 모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph · jrunes24 · jthorn 과 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
-라이칸 = 달빛 은회 (첫째) · 붉은 눈빛 (둘째), 룬 나이트 = 보라 (첫째) · 금빛 룬 (둘째), 헥스 블레이드 = 호박빛 (첫째) · 먹빛 자주 (둘째), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
+글래디에이터 = 진홍 (첫째) · 모래 금빛 (둘째 — 결투장 황혼 바탕 · 말뚝은 나무빛), 룬 나이트 = 보라 (첫째) · 금빛 룬 (둘째), 헥스 블레이드 = 호박빛 (첫째) · 먹빛 자주 (둘째), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
 네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕), 스나이퍼 = 밝은 연두 (첫째) · 금빛 흰 섬광 (둘째 — 짙은 숲 바탕),
 섀도 헌터 = 남보라 (첫째) · 은빛 (둘째 — 짙은 남색 바탕 · 검은 화살은 먹빛 살대 · 은빛 촉), 트릭스터 = 자홍 (첫째) · 검보라 (둘째 — 짙은 보라 바탕 · 환영은 청록 테),
 블레이드 댄서 = 흰 금빛 (첫째) · 연분홍 (둘째 — 연보라 황혼 바탕) — jobs.json advance."""
@@ -304,246 +304,354 @@ def bear_face(cx, cy, s=1.0, mouth=1.0):
     return head, mouth_m, teeth, eyes
 
 
-def warlord_crush(A, B):
-    # 투구 깨부수기: 뿔 달린 투구 (둥근 머리 · 코 가리개 · 양옆 뿔) 를 위에서 내려찍은 도끼 날 · 투구를 가르는 흰 금 · 땅의 갈라짐 · 터짐
-    helm = mask()
-    crescent(helm, 15.0, 24.0, 6.4, 6.4, 180, 360, taper=False)
-    poly(helm, [(8.0, 23.4), (22.0, 23.4), (22.0, 25.2), (8.0, 25.2)])
-    poly(helm, [(14.0, 24.0), (16.0, 24.0), (15.6, 28.0), (14.4, 28.0)])
-    horn = mask()
-    for side in (-1, 1):
-        x0 = 15.0 + side * 6.6
-        line(horn, [(x0, 21.0), (x0 + side * 3.2, 18.4), (x0 + side * 4.0, 14.2)], 1.6)
-    split = mask()
-    line(split, [(15.2, 16.6), (14.4, 19.4), (15.8, 21.6), (14.8, 24.6)], 1.1)
-    crack = mask()
-    for pts in (((15, 29.0), (21, 29.8), (27, 28.8), (31, 30.2)), ((15, 29.0), (9, 29.8), (3, 28.8))):
-        line(crack, list(pts), 0.9)
-    ground = mask()
-    poly(ground, [(1, 28.4), (31, 28.4), (31, 29.4), (1, 29.4)])
-    burst = mask()
-    star(burst, 15.2, 16.2, 4.6, 0.18, 0)
-    axe = axe_layers((15.4, 15.0), (29.2, 1.6), blade=8.2, tint=A, side=-1)
+ROCK = (92, 70, 52)
+ROCK_HI = (150, 122, 96)
+ROCK_LO = (40, 28, 20)
+
+
+def rock_spike(m, bx, base, h, lean, w):
+    """모난 돌창 (게임의 rfx_jspike 와 같은 꼴 — 밑동 bx · 높이 h · 끝 기울기 lean · 밑 너비 w)"""
+    poly(m, [(bx - w / 2, base), (bx - w * 0.47 + lean * 0.22, base - h * 0.4), (bx + lean * 0.86 - w * 0.08, base - h * 0.88), (bx + lean, base - h),
+             (bx + lean * 0.9 + w * 0.1, base - h * 0.82), (bx + w * 0.44 + lean * 0.3, base - h * 0.46), (bx + w / 2, base)])
+
+
+def ribbon(m, cx, cy, rx, ry, a0, a1, w0, w1, steps=40):
+    """누운 타원을 따라 굵기가 w0 → w1 로 바뀌는 띠 (휘두른 궤적 — 각도는 화면 기준 · 90° = 앞쪽 아래)"""
+    outer, inner = [], []
+    for i in range(steps + 1):
+        t = i / steps
+        a = math.radians(a0 + (a1 - a0) * t)
+        w = w0 + (w1 - w0) * t
+        k = ry / rx
+        outer.append((cx + (rx + w) * math.cos(a), cy + (ry + w * k) * math.sin(a)))
+        inner.append((cx + (rx - w) * math.cos(a), cy + (ry - w * k) * math.sin(a)))
+    poly(m, outer + inner[::-1])
+
+
+def ground(y, x0=1, x1=31, y1=31):
+    m = mask()
+    poly(m, [(x0, y), (x1, y), (x1, y1), (x0, y1)])
+    return m
+
+
+def ground_layer(m, B):
+    return layer(m, mix(B, (40, 22, 10), 0.45), mix(B, (10, 5, 2), 0.75))
+
+
+def rock_layer(m, A):
+    return layer(m, ROCK_HI, ROCK, mix(A, WHITE, 0.45), ROCK_LO, axis=(0.7, 0.7))
+
+
+def warlord_rend(A, B):
+    # 대지 가르기: 앞으로 길게 뻗은 갈라진 땅 (가까울수록 넓음 · 지평선에서 한 점) · 금 속의 녹은 빛 · 갈라짐 양옆에서 바깥으로 기울어 솟는 돌창 (가까운 것이 큼) · 튀는 돌
+    gnd = ground(10.6)
+    rift = mask()
+    poly(rift, [(9.0, 31), (23.0, 31), (20.6, 27.0), (21.2, 23.6), (18.8, 20.2), (19.0, 17.0), (17.0, 14.0), (16.6, 11.2), (15.6, 11.2), (15.2, 13.8),
+                (13.2, 16.8), (13.6, 20.0), (11.2, 23.4), (11.8, 27.0)])
+    lava = mask()
+    poly(lava, [(12.0, 31), (20.0, 31), (18.6, 27.0), (19.2, 23.8), (17.2, 20.4), (17.4, 17.2), (16.3, 14.2), (16.1, 12.0), (15.9, 14.2),
+                (14.8, 17.0), (15.0, 20.2), (13.2, 23.6), (13.6, 27.0)])
+    side = mask()
+    for pts in (((10.0, 21.6), (5.6, 22.6), (1.6, 21.8)), ((21.6, 25.6), (26.0, 27.4), (30.4, 26.6)), ((14.0, 15.6), (10.4, 14.6)), ((18.6, 18.0), (22.6, 17.0))):
+        line(side, list(pts), 0.6)
+    spikes = mask()
+    rock_spike(spikes, 6.0, 31.0, 18.0, -2.6, 7.6)
+    rock_spike(spikes, 25.6, 28.6, 14.0, 2.4, 6.4)
+    rock_spike(spikes, 11.8, 19.6, 8.4, -1.4, 4.0)
+    rock_spike(spikes, 20.4, 16.6, 6.0, 1.0, 3.0)
+    cracks = mask()
+    line(cracks, [(6.0, 29.6), (5.4, 24.0), (6.4, 19.0)], 0.8)
+    line(cracks, [(25.6, 27.6), (26.4, 22.0), (26.0, 18.6)], 0.7)
+    line(cracks, [(11.8, 19.0), (11.4, 15.0)], 0.6)
+    rocks = mask()
+    for x, y, r in ((3.6, 6.6, 1.1), (28.0, 8.0, 1.2), (21.6, 3.6, 0.8), (10.4, 3.0, 0.8), (16.0, 6.4, 0.6)):
+        disc(rocks, x, y, r)
+    dark = mix(B, (0, 0, 0), 0.7)
+    core = mask()
+    line(core, [(16.0, 31.0), (16.2, 27.0), (16.6, 23.8), (16.0, 20.4), (16.3, 17.2), (16.1, 13.6)], 0.5)
+    subject = stack(layer(gnd, mix(B, (0, 0, 0), 0.82), mix(B, (0, 0, 0), 0.52)), layer(side, mix(A, WHITE, 0.2), A), layer(rift, (26, 12, 6), dark),
+                    layer(lava, mix(A, WHITE, 0.3), mix(A, (0, 0, 0), 0.1), None, None, axis=(0.0, -1.0)), layer(core, WHITE, mix(A, WHITE, 0.6)),
+                    rock_layer(spikes, A), layer(cracks, mix(A, WHITE, 0.5), A),
+                    layer(rocks, ROCK_HI, ROCK, None, ROCK_LO))
+    return finish(subject, [glow(lighter(lava, side, cracks, core), A, 1.8, 1.0)], warlord_back(A, B))
+
+
+def warlord_slumber(A, B):
+    # 동면: 돌창 굴 속에 웅크려 잠든 곰 (옆모습 — 둥근 등 · 왼쪽 아래로 묻은 머리 · 귀 · 주둥이 · 감은 눈) · 몸에 스며드는 주황 기운 (분노가 쌓임) · 위의 Z 숨
+    den = mask()
+    for bx, h, lean, w in ((3.2, 16.0, -1.2, 5.0), (8.0, 20.0, -0.6, 4.6), (24.2, 20.0, 0.6, 4.6), (29.0, 16.0, 1.2, 5.0)):
+        rock_spike(den, bx, 28.6, h, lean, w)
+    cave = mask()
+    disc(cave, 16.0, 26.0, 12.0)
+    gnd = ground(27.6)
+    body = mask()
+    disc(body, 18.6, 21.4, 7.4)
+    poly(body, [(11.2, 21.4), (26.0, 21.4), (26.0, 28.2), (11.2, 28.2)])
+    head = mask()
+    disc(head, 10.6, 23.4, 4.0)
+    poly(head, [(7.4, 22.0), (4.0, 23.4), (3.6, 25.6), (7.6, 27.0)])
+    disc(head, 10.0, 19.4, 1.5)
+    disc(head, 12.8, 19.6, 1.3)
+    seam = mask()
+    crescent(seam, 10.6, 23.4, 4.6, 0.8, -80, 60, taper=False)
+    eye = mask()
+    line(eye, [(8.4, 22.8), (9.6, 23.4), (10.8, 22.8)], 0.6)
+    nose = mask()
+    disc(nose, 3.8, 24.2, 0.9)
+    fur = mask()
+    for x0, y0 in ((15.4, 15.6), (19.0, 14.4), (22.6, 15.6)):
+        line(fur, [(x0, y0), (x0 + 1.0, y0 + 2.0)], 0.6)
+    aura = mask()
+    for x, y in ((19.0, 9.6), (24.0, 12.0), (14.0, 11.0)):
+        poly(aura, [(x, y - 1.6), (x + 0.7, y), (x, y + 1.6), (x - 0.7, y)])
+    zz = mask()
+    line(zz, [(24.6, 3.0), (28.2, 3.0), (24.6, 6.6), (28.2, 6.6)], 0.8)
+    line(zz, [(20.6, 4.0), (22.6, 4.0), (20.6, 6.0), (22.6, 6.0)], 0.6)
     dark = mix(B, (0, 0, 0), 0.55)
-    steel = (150, 150, 166)
-    subject = stack(layer(ground, mix(B, (40, 20, 10), 0.4), mix(B, (10, 4, 2), 0.6)), layer(crack, mix(A, WHITE, 0.5), A),
-                    layer(horn, mix(B, WHITE, 0.55), mix(B, WHITE, 0.2), WHITE, dark), layer(helm, mix(steel, WHITE, 0.35), steel, WHITE, (60, 60, 74), axis=(0.6, 0.8)),
-                    layer(split, WHITE, A), *axe, layer(burst, WHITE, A))
-    return finish(subject, [glow(lighter(split, burst), A, 1.6, 1.0)], warlord_back(A, B))
+    fur_c = mix(B, (0, 0, 0), 0.2)
+    subject = stack(layer(cave, mix(B, (0, 0, 0), 0.62), mix(B, (0, 0, 0), 0.8)), ground_layer(gnd, B), rock_layer(den, A),
+                    layer(body, mix(fur_c, WHITE, 0.3), fur_c, mix(A, WHITE, 0.3), dark, axis=(0.3, 0.95)), layer(fur, dark, dark),
+                    layer(head, mix(fur_c, WHITE, 0.42), mix(fur_c, WHITE, 0.12), mix(A, WHITE, 0.4), dark), layer(seam, dark, dark), layer(eye, dark, dark),
+                    layer(nose, (20, 12, 8), (20, 12, 8)), layer(aura, WHITE, A), layer(zz, WHITE, mix(A, WHITE, 0.5)))
+    return finish(subject, [glow(body, A, 1.6, 0.55), glow(lighter(aura, zz), A, 1.2, 0.9)], warlord_back(A, B))
 
 
-def warlord_throw(A, B):
-    # 곰의 메치기: 왼쪽 아래에서 머리 위를 넘어 오른쪽 땅으로 내리꽂히는 굵은 호 · 거꾸로 메쳐진 적 (머리가 땅) · 땅 울림 고리 · 터짐
-    arc = mask()
-    crescent(arc, 15.0, 21.0, 11.0, 3.4, 176, 338)
-    tip = mask()
-    poly(tip, [(23.6, 13.6), (28.6, 15.2), (24.0, 19.6)])
-    enemy = mask()
-    disc(enemy, 24.0, 24.4, 2.4)
-    poly(enemy, [(22.2, 22.4), (25.8, 22.4), (25.8, 16.2), (22.2, 16.2)])
-    line(enemy, [(22.8, 16.6), (20.2, 11.4)], 1.5)
-    line(enemy, [(25.2, 16.6), (27.8, 11.4)], 1.5)
-    line(enemy, [(22.2, 20.6), (19.6, 23.4)], 1.2)
-    line(enemy, [(25.8, 20.6), (28.4, 23.4)], 1.2)
-    quake = mask()
-    crescent(quake, 24.0, 28.0, 6.4, 1.5, 192, 348)
-    crescent(quake, 24.0, 28.0, 9.6, 1.1, 200, 340)
-    burst = mask()
-    star(burst, 24.0, 26.6, 5.4, 0.18, 0)
-    ground = mask()
-    poly(ground, [(1, 28.0), (31, 28.0), (31, 29.0), (1, 29.0)])
-    dark = mix(B, (0, 0, 0), 0.55)
-    subject = stack(layer(arc, mix(A, WHITE, 0.45), A, WHITE, None, axis=(1, 0)), layer(tip, mix(A, WHITE, 0.45), A),
-                    layer(ground, mix(B, (40, 20, 10), 0.4), mix(B, (10, 4, 2), 0.6)), layer(burst, WHITE, A), layer(quake, WHITE, A),
-                    layer(enemy, mix((150, 150, 160), WHITE, 0.2), (90, 90, 104), (220, 220, 230), dark))
-    return finish(subject, [glow(lighter(arc, tip), A, 1.6, 0.9), glow(lighter(quake, burst), A, 1.8, 1.0)], warlord_back(A, B))
-
-
-def warlord_storm(A, B):
-    # 도끼 태풍: 아래로 좁아지는 회오리 (누운 도끼 궤적 고리 넷 — 앞쪽이 밝음) · 아래 내려찍은 자리의 터짐 · 흩날리는 불티
-    back_m, front_m = mask(), mask()
-    for cy, rx, w in ((6.0, 12.6, 1.9), (11.2, 10.2, 1.9), (16.2, 7.8, 1.8), (20.8, 5.4, 1.6)):
-        ry = rx * 0.32
-        back = [(16 + math.cos(math.radians(a)) * rx, cy + math.sin(math.radians(a)) * ry) for a in range(180, 361, 12)]
-        front = [(16 + math.cos(math.radians(a)) * rx, cy + math.sin(math.radians(a)) * ry) for a in range(0, 181, 12)]
-        line(back_m, back, w * 0.6)
-        line(front_m, front, w)
-    burst = mask()
-    star(burst, 16.0, 26.4, 6.4, 0.16, 0)
-    ground = mask()
-    poly(ground, [(2, 27.4), (30, 27.4), (30, 28.4), (2, 28.4)])
-    sp = mask()
-    for x, y, r in ((28.0, 4.5, 1.0), (3.5, 9.0, 0.8), (27.5, 17.5, 0.9), (4.5, 19.0, 0.9)):
-        disc(sp, x, y, r)
-    subject = stack(layer(back_m, mix(A, B, 0.5), B), layer(ground, mix(B, (40, 20, 10), 0.4), mix(B, (10, 4, 2), 0.6)),
-                    layer(front_m, WHITE, A, WHITE, mix(B, (0, 0, 0), 0.3), axis=(0, 1)), layer(burst, WHITE, A), layer(sp, WHITE, A))
-    return finish(subject, [glow(front_m, A, 1.6, 0.9), glow(burst, A, 1.8, 1.0)], warlord_back(A, B))
-
-
-def warlord_roar(A, B):
-    # 곰의 포효: 포효하는 곰 얼굴 (귀 · 벌린 입 · 송곳니 · 성난 눈) · 양옆으로 퍼지는 소리 호
-    head, mouth_m, teeth, eyes = bear_face(16.0, 15.0, 1.15, 1.0)
-    waves = mask()
-    for r in (12.5, 15.0):
-        crescent(waves, 16.0, 16.0, r, 1.3, 150, 210)
-        crescent(waves, 16.0, 16.0, r, 1.3, -30, 30)
-    muzzle = mask()
-    disc(muzzle, 16.0, 19.0, 4.0)
+def warlord_hug(A, B):
+    # 곰의 포옹: 위에서 으르렁대는 곰 얼굴 · 양옆 아래에서 가운데로 뻗어 오는 굵은 앞발 둘 (팔 · 발 · 발가락 셋 · 안쪽으로 뻗은 흰 발톱) · 바깥의 휩쓰는 바람 줄 · 가운데 부딪힌 섬광
+    head, mouth_m, teeth, eyes = bear_face(16.0, 9.6, 0.72, 0.8)
+    arms = mask()
+    pads = mask()
+    claws = mask()
+    for sd in (-1, 1):
+        px, py = 16.0 + sd * 6.6, 21.4
+        poly(arms, [(16.0 + sd * 15.6, 31.0), (16.0 + sd * 9.0, 31.0), (px - sd * 1.4, py + 2.6), (px + sd * 2.0, py - 2.6)])
+        disc(arms, px, py, 3.6)
+        for dx, dy in ((-2.4, -2.6), (-3.2, 0.0), (-2.4, 2.6)):
+            tx, ty = px + sd * dx, py + dy
+            disc(arms, tx, ty, 1.3)
+            poly(claws, [(tx - sd * 0.6, ty - 0.7), (tx - sd * 0.6, ty + 0.6), (tx - sd * 3.2, ty + 0.3)])
+        disc(pads, px + sd * 0.4, py + 0.2, 1.4)
+    sweep = mask()
+    for sd in (-1, 1):
+        for k, (y, l) in enumerate(((16.4, 3.4), (19.0, 4.4), (21.6, 3.4))):
+            x = 16.0 + sd * (11.2 + k % 2 * 0.8)
+            poly(sweep, [(x, y - 0.45), (x + sd * l, y), (x, y + 0.45)])
+    clash = mask()
+    star(clash, 16.0, 21.4, 4.4, 0.16, 0)
     dark = mix(B, (0, 0, 0), 0.5)
-    subject = stack(layer(waves, WHITE, A), layer(head, mix(B, WHITE, 0.2), B, mix(A, WHITE, 0.25), dark, axis=(0.5, 0.8)),
-                    layer(muzzle, mix(B, WHITE, 0.4), mix(B, WHITE, 0.15)), layer(mouth_m, mix(dark, (0, 0, 0), 0.3), dark), layer(teeth, WHITE, mix(A, WHITE, 0.5)),
-                    layer(eyes, WHITE, A))
-    return finish(subject, [glow(lighter(waves, eyes), A, 1.6, 1.0), glow(head, A, 1.4, 0.5)], warlord_back(A, B))
+    fur_c = mix(B, (0, 0, 0), 0.15)
+    subject = stack(layer(sweep, mix(A, WHITE, 0.45), A), layer(head, mix(fur_c, WHITE, 0.25), fur_c, mix(A, WHITE, 0.3), dark, axis=(0.5, 0.8)),
+                    layer(mouth_m, mix(dark, (0, 0, 0), 0.3), dark), layer(teeth, WHITE, mix(A, WHITE, 0.5)), layer(eyes, WHITE, A),
+                    layer(arms, mix(fur_c, WHITE, 0.3), fur_c, mix(A, WHITE, 0.35), dark, axis=(0.4, 0.9)), layer(pads, mix(dark, (0, 0, 0), 0.2), dark),
+                    layer(claws, WHITE, mix(A, WHITE, 0.4)), layer(clash, WHITE, A))
+    return finish(subject, [glow(lighter(clash, sweep, eyes), A, 1.8, 1.0), glow(head, A, 1.3, 0.4)], warlord_back(A, B))
+
+
+def warlord_titan(A, B):
+    # 거인의 무게: 크게 내리디딘 쇠 장화 (옆모습 · 발끝 오른쪽 · 정강이 판 · 굵은 밑창) · 위에서 내리누르는 무게 줄 · 발밑에서 부채꼴로 갈라지는 땅 · 양옆 흙먼지
+    boot = mask()
+    poly(boot, [(10.6, 2.6), (19.0, 2.6), (19.4, 14.0), (25.4, 15.6), (28.2, 18.0), (28.6, 22.4), (8.4, 22.4), (8.2, 17.4), (10.6, 15.0)])
+    plates = mask()
+    line(plates, [(10.8, 6.6), (19.0, 6.6)], 0.9)
+    line(plates, [(10.8, 11.0), (19.2, 11.0)], 0.9)
+    line(plates, [(19.6, 15.4), (21.0, 22.0)], 0.7)
+    sole = mask()
+    poly(sole, [(7.6, 21.6), (29.2, 21.6), (29.2, 24.0), (7.6, 24.0)])
+    weight = mask()
+    for x, y0, y1 in ((4.6, 2.0, 13.0), (6.8, 6.0, 15.0), (23.4, 2.0, 11.0), (26.2, 5.0, 13.0)):
+        poly(weight, [(x - 0.55, y0), (x + 0.55, y0), (x, y1)])
+    gnd = ground(23.6)
+    cracks = mask()
+    line(cracks, [(18.0, 24.0), (18.6, 27.4), (17.6, 31.0)], 1.0)
+    line(cracks, [(12.0, 24.0), (8.0, 26.6), (3.0, 30.0)], 0.9)
+    line(cracks, [(24.0, 24.0), (27.4, 26.6), (31.0, 28.6)], 0.9)
+    dust = mask()
+    for x, y, r in ((5.0, 21.4, 2.2), (2.6, 19.4, 1.4), (30.0, 21.0, 1.8), (31.0, 18.6, 1.0)):
+        disc(dust, x, y, r)
+    shock = mask()
+    pts = [(18.0 + math.cos(math.radians(a)) * 15.0, 25.0 + math.sin(math.radians(a)) * 3.6) for a in range(0, 181, 6)]
+    line(shock, pts, 0.9)
+    iron = (120, 112, 104)
+    subject = stack(ground_layer(gnd, B), layer(shock, mix(A, WHITE, 0.4), A), layer(cracks, WHITE, A), layer(dust, mix(ROCK_HI, WHITE, 0.2), ROCK, None, ROCK_LO),
+                    layer(weight, WHITE, mix(A, WHITE, 0.2)), layer(boot, mix(iron, WHITE, 0.35), iron, mix(A, WHITE, 0.45), (44, 38, 34), axis=(0.7, 0.7)),
+                    layer(plates, mix(A, WHITE, 0.35), A), layer(sole, (60, 40, 26), (30, 18, 10)))
+    return finish(subject, [glow(lighter(cracks, shock), A, 1.6, 1.0), glow(lighter(plates, weight), A, 1.2, 0.6)], warlord_back(A, B))
 
 
 def warlord_ult(A, B):
-    # 뵈드바르의 앞발: 위에서 내리치는 거대한 곰 앞발 (털 덮인 발등 · 아래 가장자리의 발가락 넷 · 날카롭게 휜 발톱) · 위의 바람 줄 · 땅의 구덩이 · 발톱 자국 넷
-    paw = mask()
-    disc(paw, 11.0, 11.0, 6.4)
-    disc(paw, 21.0, 11.0, 6.4)
-    poly(paw, [(10.0, 4.8), (22.0, 4.8), (25.6, 13.0), (6.4, 13.0)])
-    toes = [(-6.6, 16.0), (-2.3, 17.2), (2.3, 17.2), (6.6, 16.0)]
-    for dx, dy in toes:
-        disc(paw, 16.0 + dx, dy, 2.6)
-    fur = mask()
-    for x0, y0 in ((10.0, 7.0), (14.0, 6.0), (18.0, 6.0), (22.0, 7.0)):
-        line(fur, [(x0, y0), (x0 - 0.6, y0 + 3.0)], 0.7)
-    claws = mask()
-    for dx, dy in toes:
-        sx, by = 16.0 + dx, dy + 1.6
-        poly(claws, [(sx - 1.3, by), (sx + 1.3, by), (sx + dx * 0.1, by + 5.0)])
-    wind = mask()
-    for x0 in (9.0, 16.0, 23.0):
-        line(wind, [(x0, 0.0), (x0, 3.4)], 1.0)
-    marks = mask()
-    for dx in (-6.0, -2.0, 2.0, 6.0):
-        line(marks, [(16.0 + dx * 1.2, 27.4), (16.0 + dx * 1.45, 30.8)], 1.1)
-    crater = mask()
-    crescent(crater, 16.0, 27.4, 12.6, 1.8, 196, 344)
-    dark = mix(B, (0, 0, 0), 0.5)
-    subject = stack(layer(wind, mix(A, WHITE, 0.4), A), layer(crater, mix(A, WHITE, 0.35), A), layer(marks, WHITE, A),
-                    layer(paw, mix(B, WHITE, 0.3), B, mix(A, WHITE, 0.4), dark, axis=(0.4, 0.9)), layer(fur, mix(B, (0, 0, 0), 0.25), mix(B, (0, 0, 0), 0.4)),
-                    layer(claws, WHITE, mix(A, WHITE, 0.35)))
-    return finish(subject, [glow(lighter(marks, crater), A, 1.8, 1.0), glow(lighter(paw, claws), A, 1.4, 0.6)], warlord_back(A, B))
+    # 마지막 휘두름: 몸을 둘러 크게 도는 도끼 궤적 (누운 타원 띠 — 뒤에서 가늘게 시작해 앞에서 굵고 밝아짐) · 띠 끝의 도끼 · 바깥 고리 땅에서 솟는 돌창 셋 · 가운데 쇠빛 몸
+    gnd = mask()
+    poly(gnd, [(16.0 + math.cos(math.radians(a)) * 15.0, 25.4 + math.sin(math.radians(a)) * 5.0) for a in range(0, 361, 6)])
+    ring_l = mask()
+    line(ring_l, [(16.0 + math.cos(math.radians(a)) * 12.6, 25.4 + math.sin(math.radians(a)) * 4.0) for a in range(0, 361, 6)], 0.8)
+    spikes = mask()
+    for ang, h in ((128, 7.0), (90, 8.6), (52, 7.0)):
+        a = math.radians(ang)
+        rock_spike(spikes, 16.0 + math.cos(a) * 12.6, 25.4 + math.sin(a) * 4.0 + 1.2, h, math.cos(a) * 2.0, 3.6)
+    man = mask()
+    disc(man, 16.0, 7.8, 2.3)
+    poly(man, [(13.0, 10.6), (19.0, 10.6), (18.4, 18.0), (13.6, 18.0)])
+    line(man, [(14.6, 17.6), (13.4, 24.6)], 1.7)
+    line(man, [(17.4, 17.6), (18.6, 24.6)], 1.7)
+    back = mask()
+    ribbon(back, 16.0, 14.6, 13.4, 4.4, 186, 352, 0.4, 1.3)
+    front = mask()
+    ribbon(front, 16.0, 14.6, 13.4, 4.4, -8, 166, 1.3, 3.4)
+    trail = mask()
+    ribbon(trail, 16.0, 11.6, 11.0, 3.4, 10, 150, 0.2, 0.8)
+    axe = axe_layers((3.4, 17.0), (11.6, 13.0), blade=6.0, tint=A, side=1)
+    iron = (120, 104, 92)
+    subject = stack(layer(back, mix(A, WHITE, 0.2), A), layer(gnd, mix(B, (40, 22, 10), 0.5), mix(B, (10, 5, 2), 0.8)), layer(ring_l, WHITE, A),
+                    layer(man, mix(iron, WHITE, 0.25), iron, mix(A, WHITE, 0.4), (40, 32, 28), axis=(0.6, 0.8)), rock_layer(spikes, A),
+                    layer(trail, mix(A, WHITE, 0.5), A), layer(front, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.2), axis=(1, 0)), *axe)
+    return finish(subject, [glow(lighter(front, ring_l, trail), A, 1.8, 1.0), glow(back, A, 1.2, 0.6)], warlord_back(A, B))
 
 
-# ------------------------------------------------------------ 울프헤딘(라이칸) (빛: 달빛 은회 → 붉은 눈빛)
+# ------------------------------------------------------------ 스타르카드(글래디에이터) (빛: 진홍 → 모래 금빛 — 결투장 바탕)
 
-MOONLIT = (10, 12, 26)
-
-
-def lycan_back(A, B):
-    return backdrop(mix(A, MOONLIT, 0.86), mix(B, (30, 6, 10), 0.45))
+ARENA_DUSK = (30, 10, 6)
 
 
-def claw_lines(m, x0, y0, x1, y1, n=4, gap=2.6, w=1.4):
-    """발톱 줄 n 개 (x0, y0 → x1, y1 방향 · 옆으로 gap 칸씩 · 가운데 굵게)"""
-    L = math.hypot(x1 - x0, y1 - y0)
-    ux, uy = (x1 - x0) / L, (y1 - y0) / L
-    px, py = -uy, ux
-    for i in range(n):
-        o = (i - (n - 1) / 2) * gap
-        a = (x0 + px * o, y0 + py * o)
-        b = (x1 + px * o, y1 + py * o)
-        mid = ((a[0] + b[0]) / 2 + px * 0.8, (a[1] + b[1]) / 2 + py * 0.8)
-        line(m, [a, mid, b], w)
-    return m
+def gladiator_back(A, B):
+    return backdrop(mix(A, ARENA_DUSK, 0.86), mix(A, (90, 20, 8), 0.4))
 
 
-def wolf_side(m, cx, cy, s=1.0, up=False):
-    """늑대 머리 옆모습 (오른쪽을 봄 — 긴 주둥이 · 선 뾰족 귀 · 목). up 이면 머리를 70° 들어 위를 보며 울부짖음 (목이 아래로 이어짐)"""
-    pts = [(-4.0, 6.4), (-6.2, 1.4), (-5.4, -2.6), (-5.0, -5.0), (-3.4, -9.6), (-1.8, -5.0), (0.8, -4.2), (3.0, -3.2), (8.6, -1.4), (9.6, -0.2), (9.2, 0.9),
-           (4.6, 1.6), (6.2, 2.4), (1.8, 3.4), (-0.6, 6.4)]
-    a = math.radians(-70.0 if up else 0.0)
-    ca, sa = math.cos(a), math.sin(a)
-    out = [(cx + (x * ca - y * sa) * s, cy + (x * sa + y * ca) * s) for x, y in pts]
-    poly(m, out)
-    if up:  # 목 · 가슴 (아래로)
-        poly(m, [(cx - 5.0 * s, cy + 1.0 * s), (cx + 2.4 * s, cy + 3.0 * s), (cx + 3.2 * s, cy + 12.0 * s), (cx - 6.6 * s, cy + 12.0 * s)])
-    return m
+def stake(m, x, base, h, w=2.4):
+    """결투 말뚝 (뾰족한 머리 — 게임의 rfx_jstake 와 같은 꼴)"""
+    poly(m, [(x - w / 2, base), (x - w / 2, base - h + 2.4), (x, base - h), (x + w / 2, base - h + 2.4), (x + w / 2, base)])
 
 
-def lycan_fang(A, B):
-    # 송곳니 베기: 은빛 X자 베기 둘 · 그 위를 가로지르는 붉은 발톱 네 줄
-    x1, x2 = mask(), mask()
-    crescent(x1, 2.0, 30.0, 25.0, 2.8, -84, -8)
-    crescent(x2, 30.0, 30.0, 25.0, 2.8, 188, 264)
-    claws = claw_lines(mask(), 25.5, 6.5, 8.0, 25.5, 4, 2.8, 1.5)
-    core = claw_lines(mask(), 25.5, 6.5, 8.0, 25.5, 4, 2.8, 0.5)
-    dark = mix(A, (0, 0, 0), 0.5)
-    subject = stack(layer(x1, WHITE, A, WHITE, dark, axis=(0.7, -0.7)), layer(x2, WHITE, A, WHITE, dark, axis=(-0.7, -0.7)),
-                    layer(claws, mix(B, WHITE, 0.3), B, mix(B, WHITE, 0.6), mix(B, (0, 0, 0), 0.4)), layer(core, WHITE, mix(B, WHITE, 0.5)))
-    return finish(subject, [glow(lighter(x1, x2), A, 1.4, 0.8), glow(claws, B, 1.6, 1.0)], lycan_back(A, B))
+def slash(m, x0, y0, x1, y1, w, steps=14):
+    """가운데가 굵고 양끝이 뾰족한 베기 자국"""
+    dx, dy = x1 - x0, y1 - y0
+    n = math.hypot(dx, dy) or 1.0
+    nx, ny = -dy / n, dx / n
+    left, right = [], []
+    for i in range(steps + 1):
+        t = i / steps
+        hw = w * math.sin(math.pi * t) ** 0.8
+        px, py = x0 + dx * t, y0 + dy * t
+        left.append((px + nx * hw, py + ny * hw))
+        right.append((px - nx * hw, py - ny * hw))
+    poly(m, left + right[::-1])
 
 
-def lycan_pounce(A, B):
-    # 사냥감 덮치기: 왼쪽 아래에서 튀어 오른 호 (덮치는 길) · 끝의 늑대 머리 (오른쪽 아래를 봄) · 넘어진 적 위의 기절 별
-    path = mask()
-    crescent(path, 14.0, 24.0, 11.0, 2.4, 190, 300)
-    wolf = wolf_side(mask(), 18.0, 13.0, 1.1)
-    eye = mask()
-    disc(eye, 20.6, 10.6, 0.8)
+def gladiator_flurry(A, B):
+    # 도끼 난타: 나란히 내리친 도끼 자국 셋 (오른쪽 위 → 왼쪽 아래 — 셋째가 가장 굵고 밝음: 셋째 찍기) · 셋째 자국의 맞은 섬광 · 오른쪽 위 도끼와 그 뒤 휘두른 잔상 호 둘 · 튀는 불티
+    cuts = mask()
+    slash(cuts, 17.0, 2.0, 3.0, 16.0, 1.4)
+    slash(cuts, 21.4, 5.0, 5.4, 21.0, 1.7)
+    heavy = mask()
+    slash(heavy, 27.0, 8.0, 8.0, 27.0, 2.6)
     hit = mask()
-    star(hit, 27.0, 23.0, 4.6, 0.18, 0)
-    stars = mask()
-    for x, y in ((22.0, 27.6), (26.0, 28.8), (30.0, 27.4)):
-        star(stars, x, y, 1.6, 0.3)
-    dark = mix(A, (0, 0, 0), 0.5)
-    subject = stack(layer(path, WHITE, A, None, None, axis=(1, -1)), layer(wolf, mix(A, WHITE, 0.3), A, WHITE, dark, axis=(0.6, 0.8)), layer(eye, WHITE, B),
-                    layer(hit, WHITE, mix(B, WHITE, 0.4)), layer(stars, mix(B, WHITE, 0.6), B))
-    return finish(subject, [glow(path, A, 1.4, 0.8), glow(lighter(eye, hit), B, 1.6, 1.0)], lycan_back(A, B))
+    star(hit, 17.0, 18.0, 5.2, 0.16, 45)
+    trail = mask()
+    crescent(trail, 21.0, 12.0, 8.6, 1.0, -80, -20)
+    crescent(trail, 21.0, 12.0, 6.2, 0.8, -80, -30)
+    axe = axe_layers((25.6, 4.4), (31.0, 0.0), blade=5.0, tint=A, side=-1)
+    sp = mask()
+    for x, y, r in ((5.0, 26.0, 0.9), (12.0, 29.0, 0.8), (27.6, 20.0, 0.9), (24.0, 26.6, 0.7)):
+        disc(sp, x, y, r)
+    subject = stack(layer(trail, mix(B, WHITE, 0.3), B), layer(cuts, mix(A, WHITE, 0.55), A, WHITE, mix(A, (0, 0, 0), 0.3), axis=(1, 0)),
+                    layer(heavy, WHITE, mix(A, WHITE, 0.2)), layer(hit, WHITE, B), *axe, layer(sp, WHITE, B))
+    return finish(subject, [glow(lighter(cuts, heavy), A, 1.6, 1.0), glow(hit, B, 1.8, 0.8)], gladiator_back(A, B))
 
 
-def lycan_howl(A, B):
-    # 달밤의 포효: 뒤의 큰 보름달 · 그 앞에서 위를 보며 울부짖는 늑대 · 퍼지는 소리 호
-    moon = mask()
-    disc(moon, 18.0, 11.0, 8.6)
-    rim = mask()
-    ring(rim, 18.0, 11.0, 8.6, 1.0)
-    wolf = wolf_side(mask(), 11.0, 18.0, 1.05, up=True)
-    waves = mask()
-    for r in (4.0, 6.8):
-        crescent(waves, 15.6, 6.4, r, 1.1, -160, -70)
-    eye = mask()
-    disc(eye, 12.4, 15.2, 0.75)
+def gladiator_hook(A, B):
+    # 걸어 당기기: 오른쪽 위에서 휘두른 도끼의 걸린 날 (갈고리 꼴 초승달) · 끌려오는 적 (왼쪽 → 오른쪽으로 · 뒤에 흙먼지 줄) · 당기는 화살표 꼴 줄
+    hook = mask()
+    crescent(hook, 13.0, 15.0, 9.6, 2.6, 200, 330)
+    tip = mask()
+    poly(tip, [(5.2, 12.0), (3.0, 16.4), (6.8, 15.0)])
+    enemy = mask()
+    disc(enemy, 9.0, 18.6, 2.4)
+    poly(enemy, [(7.0, 21.0), (11.0, 21.0), (11.6, 27.4), (6.4, 27.4)])
+    drag = mask()
+    for y, x0 in ((22.0, 1.0), (25.0, 2.0), (28.0, 1.4)):
+        line(drag, [(x0, y), (x0 + 4.0, y)], 0.8)
+    pull = mask()
+    line(pull, [(13.0, 24.0), (25.0, 24.0)], 1.2)
+    poly(pull, [(25.0, 21.6), (29.6, 24.0), (25.0, 26.4)])
+    axe = axe_layers((24.0, 8.4), (29.6, 18.6), blade=5.6, tint=A, side=1)
+    ground = mask()
+    poly(ground, [(1, 28.0), (31, 28.0), (31, 29.0), (1, 29.0)])
     dark = mix(A, (0, 0, 0), 0.6)
-    subject = stack(layer(moon, mix(A, WHITE, 0.6), mix(A, WHITE, 0.15)), layer(rim, WHITE, mix(A, WHITE, 0.4)), layer(waves, WHITE, B),
-                    layer(wolf, mix(A, (0, 0, 0), 0.55), mix(A, (0, 0, 0), 0.75), mix(A, WHITE, 0.2), None), layer(eye, WHITE, B))
-    return finish(subject, [glow(moon, A, 2.0, 0.9), glow(lighter(waves, eye), B, 1.4, 0.9)], lycan_back(A, B))
+    subject = stack(layer(ground, mix(A, (40, 14, 8), 0.6), mix(A, (10, 4, 2), 0.8)), layer(drag, mix(B, WHITE, 0.2), B),
+                    layer(hook, WHITE, A, WHITE, dark, axis=(1, 0)), layer(tip, WHITE, A), layer(enemy, (150, 150, 162), (90, 90, 104), (220, 220, 230), dark),
+                    layer(pull, mix(B, WHITE, 0.4), B), *axe)
+    return finish(subject, [glow(lighter(hook, tip), A, 1.6, 1.0), glow(pull, B, 1.4, 0.7)], gladiator_back(A, B))
 
 
-def lycan_night(A, B):
-    # 늑대의 밤: 어둠 속 늑대 머리 앞모습 (선 귀 · 좁은 주둥이 — 은빛 테) · 붉게 빛나는 두 눈 · 뒤의 초승달
-    moon = mask()
-    crescent(moon, 22.0, 8.0, 5.4, 2.4, 40, 230, taper=True)
-    head = mask()
-    poly(head, [(16.0, 27.0), (10.0, 19.0), (8.0, 11.0), (7.0, 3.0), (12.0, 8.0), (16.0, 7.0), (20.0, 8.0), (25.0, 3.0), (24.0, 11.0), (22.0, 19.0)])
-    rim = mask()
-    line(rim, [(16.0, 27.0), (10.0, 19.0), (8.0, 11.0), (7.0, 3.0), (12.0, 8.0), (16.0, 7.0), (20.0, 8.0), (25.0, 3.0), (24.0, 11.0), (22.0, 19.0), (16.0, 27.0)], 0.9)
+def gladiator_eight(A, B):
+    # 여덟 팔: 어두운 결투자 (머리 · 빛나는 두 눈 · 어깨) 의 어깨에서 위로 부채꼴로 뻗은 팔 여덟 — 끝마다 도끼날 (짝수는 짙고 홀수는 잔상처럼 옅음)
+    arms = mask()
+    faint = mask()
+    heads = mask()
+    ox, oy = 16.0, 21.0
+    for i in range(8):
+        a = math.radians(-170 + i * 22.86)
+        x0, y0 = ox + math.cos(a) * 4.0, oy + math.sin(a) * 4.0
+        x1, y1 = ox + math.cos(a) * 13.0, oy + math.sin(a) * 13.0
+        tgt = arms if i % 2 == 0 else faint
+        line(tgt, [(x0, y0), (x1, y1)], 1.4 if i % 2 == 0 else 1.0)
+        nx, ny = -math.sin(a), math.cos(a)
+        sd = 1 if i < 4 else -1
+        hx, hy = x1 - math.cos(a) * 0.4, y1 - math.sin(a) * 0.4
+        poly(heads, [(hx + math.cos(a) * 0.8, hy + math.sin(a) * 0.8), (hx + nx * sd * 3.2 + math.cos(a) * 1.8, hy + ny * sd * 3.2 + math.sin(a) * 1.8),
+                     (hx + nx * sd * 3.2 - math.cos(a) * 1.4, hy + ny * sd * 3.2 - math.sin(a) * 1.4), (hx - math.cos(a) * 0.8, hy - math.sin(a) * 0.8)])
+    body = mask()
+    disc(body, 16.0, 20.2, 2.8)
+    poly(body, [(11.0, 24.0), (21.0, 24.0), (19.6, 31.0), (12.4, 31.0)])
+    disc(body, 12.0, 24.4, 1.6)
+    disc(body, 20.0, 24.4, 1.6)
     eyes = mask()
-    for side in (-1, 1):
-        poly(eyes, [(16.0 + side * 5.6, 13.0), (16.0 + side * 1.8, 15.0), (16.0 + side * 4.6, 15.6)])
-    nose = mask()
-    disc(nose, 16.0, 24.4, 1.4)
-    dark = mix(A, (0, 0, 0), 0.75)
-    subject = stack(layer(moon, WHITE, A), layer(head, mix(dark, A, 0.25), dark), layer(rim, WHITE, A), layer(nose, mix(A, WHITE, 0.3), A), layer(eyes, WHITE, B))
-    return finish(subject, [glow(eyes, B, 1.6, 1.0), glow(lighter(rim, moon), A, 1.2, 0.7)], lycan_back(A, B))
+    disc(eyes, 15.0, 20.2, 0.6)
+    disc(eyes, 17.0, 20.2, 0.6)
+    subject = stack(layer(faint, mix(A, B, 0.4), mix(A, (0, 0, 0), 0.3)), layer(arms, mix(A, WHITE, 0.25), A, WHITE, mix(A, (0, 0, 0), 0.4)),
+                    layer(heads, WHITE, mix(B, WHITE, 0.2), WHITE, mix(B, (0, 0, 0), 0.4)), layer(body, mix(A, (0, 0, 0), 0.55), mix(A, (0, 0, 0), 0.75)),
+                    layer(eyes, WHITE, B))
+    return finish(subject, [glow(lighter(arms, heads), A, 1.6, 0.9), glow(eyes, B, 1.4, 1.0)], gladiator_back(A, B))
 
 
-def lycan_ult(A, B):
-    # 달 삼키기: 그림자에 삼켜진 달 (어두운 원판 · 붉은 테) · 그 위를 찢는 붉은 발톱 네 줄 · 남은 은빛 초승달
-    shadow = mask()
-    disc(shadow, 16.0, 15.0, 10.0)
-    corona = mask()
-    ring(corona, 16.0, 15.0, 10.6, 1.4)
-    sliver = mask()
-    crescent(sliver, 16.0, 15.0, 9.6, 2.2, 120, 220, taper=True)
-    claws = claw_lines(mask(), 27.0, 4.0, 6.0, 27.0, 4, 3.0, 1.6)
-    core = claw_lines(mask(), 27.0, 4.0, 6.0, 27.0, 4, 3.0, 0.5)
-    dark = mix(B, (0, 0, 0), 0.82)
-    subject = stack(layer(corona, mix(B, WHITE, 0.4), B), layer(shadow, mix(dark, B, 0.15), dark), layer(sliver, WHITE, A),
-                    layer(claws, mix(B, WHITE, 0.3), B, mix(B, WHITE, 0.6), mix(B, (0, 0, 0), 0.4)), layer(core, WHITE, mix(B, WHITE, 0.5)))
-    return finish(subject, [glow(corona, B, 2.0, 1.0), glow(lighter(claws, sliver), B, 1.4, 0.9)], lycan_back(A, B))
+def gladiator_fury(A, B):
+    # 불사의 분노: 붉은 불길에 싸인 사람 (몸 · 머리 · 팔을 벌림) · 위로 솟는 불길 · 가슴의 꺼지지 않는 불씨 (체력 1) · 둘레 고리
+    fire = mask()
+    for x, h in ((9.0, 14.0), (13.0, 20.0), (16.0, 24.0), (19.0, 20.0), (23.0, 14.0)):
+        poly(fire, [(x - 3.0, 28.0), (x + 3.0, 28.0), (x + 0.6, 28.0 - h), (x - 0.6, 28.0 - h + 2.0)])
+    man = mask()
+    disc(man, 16.0, 10.6, 2.6)
+    poly(man, [(13.2, 13.6), (18.8, 13.6), (18.2, 22.0), (13.8, 22.0)])
+    line(man, [(13.6, 14.4), (8.4, 10.0)], 1.6)
+    line(man, [(18.4, 14.4), (23.6, 10.0)], 1.6)
+    line(man, [(14.6, 21.6), (13.0, 27.0)], 1.7)
+    line(man, [(17.4, 21.6), (19.0, 27.0)], 1.7)
+    ember = mask()
+    disc(ember, 16.0, 16.4, 1.6)
+    rim = mask()
+    crescent(rim, 16.0, 28.0, 12.0, 1.4, 196, 344)
+    dark = mix(A, (0, 0, 0), 0.6)
+    subject = stack(layer(fire, mix(A, WHITE, 0.35), A, mix(B, WHITE, 0.4), dark, axis=(0, 1)), layer(rim, mix(B, WHITE, 0.3), B),
+                    layer(man, mix(A, (0, 0, 0), 0.55), mix(A, (0, 0, 0), 0.75)), layer(ember, WHITE, B))
+    return finish(subject, [glow(fire, A, 1.8, 0.9), glow(ember, B, 2.0, 1.0)], gladiator_back(A, B))
+
+
+def gladiator_ult(A, B):
+    # 홀름강: 둘레에 선 결투 말뚝 (앞쪽 다섯 — 밧줄로 이어짐) 이 둘러싼 결투장 바닥 (누운 고리) · 가운데 엇갈린 두 도끼
+    floor = mask()
+    for r, w in ((13.0, 1.4), (11.4, 0.6)):
+        pts_o = [(16 + math.cos(math.radians(a)) * r, 22 + math.sin(math.radians(a)) * r * 0.36) for a in range(0, 361, 8)]
+        line(floor, pts_o, w)
+    stakes = mask()
+    for x, base, h in ((4.0, 24.0, 9.0), (9.4, 26.4, 10.0), (16.0, 27.4, 10.6), (22.6, 26.4, 10.0), (28.0, 24.0, 9.0)):
+        stake(stakes, x, base, h)
+    rope = mask()
+    line(rope, [(4.0, 18.4), (9.4, 19.6), (16.0, 20.2), (22.6, 19.6), (28.0, 18.4)], 0.8)
+    axes = []
+    for (head, tail, side) in (((10.4, 6.0), (21.6, 17.6), -1), ((21.6, 6.0), (10.4, 17.6), 1)):
+        axes += axe_layers(head, tail, blade=5.0, tint=A, side=side)
+    subject = stack(layer(floor, mix(A, WHITE, 0.3), A), *axes, layer(stakes, (150, 104, 68), (92, 58, 34), (200, 160, 120), (40, 24, 12)),
+                    layer(rope, mix(A, WHITE, 0.2), A))
+    return finish(subject, [glow(floor, A, 1.8, 0.9), glow(rope, A, 1.2, 0.6)], gladiator_back(A, B))
 
 
 # ------------------------------------------------------------ 뵐룬드(룬 나이트) (빛: 보라 → 금빛 룬)
@@ -1714,16 +1822,16 @@ ICONS = {
     "bloodknight_chains": bloodknight_chains,
     "bloodknight_frenzy": bloodknight_frenzy,
     "bloodknight_ult": bloodknight_ult,
-    "warlord_crush": warlord_crush,
-    "warlord_throw": warlord_throw,
-    "warlord_storm": warlord_storm,
-    "warlord_roar": warlord_roar,
+    "warlord_rend": warlord_rend,
+    "warlord_slumber": warlord_slumber,
+    "warlord_hug": warlord_hug,
+    "warlord_titan": warlord_titan,
     "warlord_ult": warlord_ult,
-    "lycan_fang": lycan_fang,
-    "lycan_pounce": lycan_pounce,
-    "lycan_howl": lycan_howl,
-    "lycan_night": lycan_night,
-    "lycan_ult": lycan_ult,
+    "gladiator_flurry": gladiator_flurry,
+    "gladiator_hook": gladiator_hook,
+    "gladiator_eight": gladiator_eight,
+    "gladiator_fury": gladiator_fury,
+    "gladiator_ult": gladiator_ult,
     "runeknight_carve": runeknight_carve,
     "runeknight_seid": runeknight_seid,
     "runeknight_futhark": runeknight_futhark,
