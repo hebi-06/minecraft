@@ -161,7 +161,6 @@ final class BladedancerSkills {
                 JobFx.slash(sp, j, 1.8, 0.3, 1.25, ii % 2 == 0 ? 160.0 : 340.0, 0.18);
                 SkillFx.play(lv, "entity.player.attack.sweep", mid, 1.5 + ii * 0.1, 0.7);
                 SkillFx.play(lv, "block.amethyst_block.step", mid, 1.6, 0.8);
-                if (ii > 0) JobKit.motion(sp, "bladedancer_step:" + (ii % 2 == 1 ? "right" : "left"));
             });
         }
         return true;
@@ -201,7 +200,7 @@ final class BladedancerSkills {
                 if (ii == rounds - 1) {
                     JobFx.lightBloom(lv, V.up(c, 0.6), 1.2, j, 0.55, Opt.empty());
                     SkillFx.play(lv, "block.amethyst_block.chime", c, 1.2, 0.8);
-                } else if (ii > 0) JobKit.motion(sp, "bladedancer_waltz:spin");
+                }
             });
         }
         return true;

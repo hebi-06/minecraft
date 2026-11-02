@@ -245,6 +245,25 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {5, 12, 16, 27, 40, 51, 54, 58, 62}, new int[] {12, 27, 51, 58}, 76, false),
     };
 
+    /**
+     * 0.51.0 우트가르드(트릭스터) · 료스알프(블레이드 댄서): 끝없는 밤은 강화 (은신 → 단검 평타), 눈부신 한낮은 태세 (평타 두 번), 검은 장미 덤불은 파고들어 벰 → 머리 위로 넘음 →
+     * 등 뒤에서 터뜨림, 똬리는 S 자로 갔다가 되돌아옴 → 조임 → 독, 개기일식은 비수 네 번 → 돌아옴 → 해가 뜸, 빛무리 춤은 여덟 번 → 돌아옴 → 빛 꽃
+     */
+    private static final Case[] CASES_TR = {
+        new Case(0, new int[] {2, 6, 9, 13, 18}, new int[] {6, 13}, 26, false),
+        new Case(1, new int[] {2, 6, 14, 30, 42}, new int[] {4, 20, 42}, 50, false),
+        new Case(2, new int[] {3, 7, 11, 15, 19, 30}, new int[] {7, 14, 19}, 62, false),
+        new Case(3, new int[] {4, 16}, new int[] {6}, 24, false, true, 4),
+        new Case(4, new int[] {4, 8, 18, 28, 38, 44, 53, 58}, new int[] {8, 28, 53}, 72, false),
+    };
+    private static final Case[] CASES_BD = {
+        new Case(0, new int[] {1, 4, 8, 12, 16}, new int[] {4, 12}, 22, false),
+        new Case(1, new int[] {2, 6, 12, 22, 26}, new int[] {3, 13, 23}, 32, false),
+        new Case(2, new int[] {2, 5, 12, 15, 22, 26}, new int[] {5, 15, 24}, 32, false),
+        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 30, true, false, 4),
+        new Case(4, new int[] {2, 7, 12, 17, 22, 27, 32, 37, 41, 46, 51, 56}, new int[] {7, 22, 37, 51}, 66, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
@@ -252,7 +271,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (RpgProdSmoke.active()) return;
         boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")
                 || RpgFilm.listed("filmjob4") || RpgFilm.listed("filmjob5") || RpgFilm.listed("filmjob6")
-                || RpgFilm.listed("filmjob7") || RpgFilm.listed("filmjob8")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 여덟째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수)
+                || RpgFilm.listed("filmjob7") || RpgFilm.listed("filmjob8") || RpgFilm.listed("filmjob9")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 아홉째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수 · 암살자)
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -541,6 +560,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
         // 0.51.0 스나이퍼: 호흡 5 (사과 겨누기 뒤 평타는 태세가 8 로) · 섀도 헌터: 추격 3 (그믐밤 동안 그대로)
         if (id.startsWith("sniper_")) JobTraitsMore.setBreath(sp, 5);
         if (id.startsWith("shadowhunter_")) mmorpg.fabric.job.JobTraits9.setPursuit(sp, 3);
+        // 0.51.0 트릭스터: 검은 장미 덤불 · 개기일식은 표식 가득 (7 — 큰 터뜨림) · 블레이드 댄서: 춤사위 3 (몸 둘레 빛 꽃잎)
+        if (id.equals("trickster_rose") || id.equals("trickster_ult")) markHusks(sp, 7);
+        if (id.startsWith("bladedancer_")) mmorpg.fabric.job.JobTraits10.setDance(sp, 3);
     }
 
     /**
@@ -553,10 +575,10 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5 · 6 · 7 · 8)
 
-    /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
+    /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
         {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "lycan"}, {"runeknight", "hexblade"}, {"arcmage", "necromancer"},
-        {"sniper", "shadowhunter"}};
+        {"sniper", "shadowhunter"}, {"trickster", "bladedancer"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
@@ -585,6 +607,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "necromancer" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 4, sp -> {});
                         case "sniper" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 8, sp -> JobTraitsMore.setBreath(sp, 5));
                         case "shadowhunter" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 5, sp -> mmorpg.fabric.job.JobTraits9.setPursuit(sp, 3));
+                        case "trickster" -> newJob(ctx, server, conn, job, "rpg:dagger_l40_hero", 7, sp -> markHusks(sp, 4));
+                        case "bladedancer" -> newJob(ctx, server, conn, job, "rpg:dagger_l40_hero", 5, sp -> mmorpg.fabric.job.JobTraits10.setDance(sp, 3));
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
                                 sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
                     }
@@ -617,6 +641,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "necromancer" -> CASES_NC;
             case "sniper" -> CASES_SN;
             case "shadowhunter" -> CASES_SH;
+            case "trickster" -> CASES_TR;
+            case "bladedancer" -> CASES_BD;
             default -> CASES_GU;
         };
     }

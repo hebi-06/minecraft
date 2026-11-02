@@ -28,6 +28,7 @@ import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 라
 import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (룬 나이트 · 헥스 블레이드)
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
 import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 섀도 헌터)
+import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 블레이드 댄서)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -133,6 +134,8 @@ AIR = {
     "jb_shadowhunter_roll": [(1, 7, "tuck"), (8, 11, "land")],
     "jb_shadowhunter_roll_left": [(1, 7, "tuck"), (8, 11, "land")],
     "jb_shadowhunter_ult": [(1, 9, "tuck"), (10, 13, "land")],
+    "jb_trickster_rose_vault": [(0, 7, "tuck")],
+    "jb_trickster_rose_burst": [(0, 3, "land")],
 }
 
 

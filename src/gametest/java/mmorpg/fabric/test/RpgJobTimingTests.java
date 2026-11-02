@@ -275,4 +275,19 @@ public final class RpgJobTimingTests {
     public void timingShadowhunter(GameTestHelper h) {
         probe(h, "shadowhunter");
     }
+
+    /**
+     * 0.51.0 2차 직업 — 암살자 각성 우트가르드(트릭스터) (검은 장미 덤불은 표식 0 이라 일부 — 등 뒤에서 터뜨림이 t 12 안, 환술은 환영이 2초에 터짐 (w 0), 똬리는 마지막 독 58,
+     * 개기일식은 비수 네 번이 표식 7 을 채워 다 들어감 — 첫 비수 w 8)
+     */
+    @GameTest(environment = "mmorpg:jt_tr", maxTicks = 2400)
+    public void timingTrickster(GameTestHelper h) {
+        probe(h, "trickster");
+    }
+
+    /** 0.51.0 2차 직업 — 암살자 반전 료스알프(블레이드 댄서) (스킬 피해만 이어지므로 춤사위가 쌓이지 않음 — 다 들어감: 빛살 베기 11 · 요정의 걸음 20 · 칼날 원무 21 · 빛무리 춤 50) */
+    @GameTest(environment = "mmorpg:jt_bd", maxTicks = 2400)
+    public void timingBladedancer(GameTestHelper h) {
+        probe(h, "bladedancer");
+    }
 }
