@@ -120,6 +120,13 @@ public final class JobTraits8 {
         return l == null ? 0 : l.size();
     }
 
+    /** 시험용: 지금 겨눈 곳에 별 n 개 (연쇄는 JobTraitsMore.setChain 으로 따로) */
+    public static void testStars(ServerPlayer sp, int n) {
+        List<Vec3> l = STARS.computeIfAbsent(sp.getUUID(), u -> new ArrayList<>());
+        l.clear();
+        for (int i = 0; i < n; i++) l.add(starPoint(sp, i));
+    }
+
     /** 별을 지움 (연쇄가 끊김 · 시험의 setChain) */
     static void clearStars(ServerPlayer sp) {
         STARS.remove(sp.getUUID());
@@ -266,7 +273,7 @@ public final class JobTraits8 {
         Vec3 to = V.up(ground, 0.3);
         double speed = V.len(V.sub(to, from)) / (fall / 20.0);
         JobFx.fallStar(level, from, to, speed, 0.9, Opt.empty(), NIGHT, GOLD);
-        SkillFx.play(level, "firework.launch", from, 0.7, 0.8);
+        SkillFx.play(level, "entity.firework_rocket.launch", from, 0.7, 0.8);
         String life = RuneKit.lifeToken(sp);
         RuneKit.later(fall, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
@@ -328,6 +335,12 @@ public final class JobTraits8 {
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         if (victim == null || jobIf(sp, NC) == null) return;
         FOCUS.put(sp.getUUID(), victim.getUUID());
+    }
+
+    /** 시험용: 지금 망자 공격 배율 (네크로맨서가 아니면 0) */
+    public static double crewMultOf(ServerPlayer sp) {
+        Jobs.Job j = jobIf(sp, NC);
+        return j == null ? 0 : crewMult(sp, j);
     }
 
     /** 망자 공격 배율 (위력에 곱함): crewHit × (망자 일으키기 동안 1 + boost — 강화) */

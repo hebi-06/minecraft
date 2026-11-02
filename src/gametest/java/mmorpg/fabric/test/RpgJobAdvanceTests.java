@@ -18,6 +18,8 @@ import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits5;
 import mmorpg.fabric.job.JobTraits6;
 import mmorpg.fabric.job.JobTraits7;
+import mmorpg.fabric.job.JobTraits8;
+import mmorpg.fabric.job.NecroCrew;
 import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.job.JobUpgrades;
 import mmorpg.fabric.skill.Guards;
@@ -51,6 +53,10 @@ import net.minecraft.world.phys.Vec3;
  * 그 곁 룬 원 1.35) · 푸타르크 대검무 (2.4 × 4 + 5.7 · 떠오름 · 룬 결계 −20%) · 룬 담금질 (평타 + 위력 × 0.37 × 3 · 사거리 +1.5) · 스물네 룬의 대검 (10 × 3 + 14 + 24 + 각인 1)</li>
  * <li>헥스 블레이드 (mmorpg:job_hx): 뒤집힌 룬 (평타 +1) · 가시 룬 베기 (룬 3 → 3.0 × 1.36 · 룬을 터뜨림 → 5.5 · 가시 룬 +2) · 뒤집힌 걸음 (뒤로 6칸 · 덫 5.1 × 1.6 · 다섯이면
  * 묶음) · 우박의 룬 (2.2 → 방어 깨짐 +10% → 2.2 × 3 + 6.5 를 × 1.1) · 저주의 칼 (평타 + 위력 × 0.5 · 룬 +2) · 재앙의 룬 (줄기 획 10 · 셋째 획 10 · 가르기 12 · 터짐 26)</li>
+ * <li>아크메이지 (mmorpg:job_am): 별무리 마탄 (1.4 × 5 · 다른 적에게 별빛 0.7 × 5) · 서리 별 걸음 (두 잔상 2.8 · 1.4 — 빙결) · 쌍둥이 별 (1.4 × 6 + 4.2) · 꿀술의 노래
+ * (스킬마다 별똥 위력 × 2.4) · 별자리 완성 (연쇄 5 — 별 다섯 × 2 + 선 1 · 연쇄는 처음부터) · 완드 평타 → 재사용 대기 −6틱 · 별의 노래 (3 × 9 + 1.4 × 10 + 15)</li>
+ * <li>네크로맨서 (mmorpg:job_nc): 뼈 창 (4.9 + 2.1 · 표식) → 쓰러뜨리면 망자 선원 (rpg:naglfar_crew) 이 일어나 싸움 (위력 × 0.4 — 내 직업 스킬 피해) · 망자 일으키기 (둘 · +30%) ·
+ * 망자와 자리 바꾸기 (자리 · 뼈 방벽 2.8 + 1.4) · 시체 폭발 (시체 · 망자를 터뜨림 8.4 + 1.4 × 3) · 나글파르의 출항 (14 + 3 × 6 + 24 · 선원 여섯)</li>
  * </ul>
  */
 public final class RpgJobAdvanceTests {
@@ -61,6 +67,8 @@ public final class RpgJobAdvanceTests {
     static final String ENV_LY = "mmorpg:job_ly";
     static final String ENV_RK = "mmorpg:job_rk";
     static final String ENV_HX = "mmorpg:job_hx";
+    static final String ENV_AM = "mmorpg:job_am";
+    static final String ENV_NC = "mmorpg:job_nc";
 
     /** 넓은 돌 바닥 (그라니의 질주가 비스듬히 내달릴 땅) */
     static void floor(GameTestHelper h) {
@@ -187,7 +195,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("runeknight".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("뵐룬드(룬 나이트)"),
                     "runeknight free from the first job: " + JobSystem.jobOf(sp));
-            // 매지션의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300)
+            // 0.51.0 매지션의 2차 전직 (오드레리르(아크메이지) · 나글파르(네크로맨서)) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("mage"), null);
@@ -195,7 +203,25 @@ public final class RpgJobAdvanceTests {
             h.assertTrue("mage".equals(JobSystem.jobOf(sp)), "changed to mage: " + JobSystem.jobOf(sp));
             JobTrainer.open(sp, () -> done[0]++);
             FormNet.ChestPayload mg = chest(sp);
-            h.assertTrue(mg != null && mg.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "mage: 2차 전직 dim (준비 중)");
+            h.assertTrue(mg != null && mg.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "mage: 2차 전직 open");
+            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
+            FormNet.ChestPayload madv = chest(sp);
+            h.assertTrue(madv != null && madv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("오드레리르(아크메이지)")
+                    && madv.slots().get(JobTrainer.INVERT_SLOT).name().contains("나글파르(네크로맨서)"), "mage advance cards");
+            Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
+            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "mage advance confirm");
+            Forms.answer(sp, 11, null);
+            h.assertTrue("necromancer".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("나글파르(네크로맨서)"),
+                    "necromancer free from the first job: " + JobSystem.jobOf(sp));
+            // 궁수의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            Wallet.set(sp, Economy.Kind.SILVER, 300);
+            JobTrainer.open(sp, () -> done[0]++);
+            Forms.answer(sp, JobTrainer.slotOf("archer"), null);
+            Forms.answer(sp, 11, null);
+            h.assertTrue("archer".equals(JobSystem.jobOf(sp)), "changed to archer: " + JobSystem.jobOf(sp));
+            JobTrainer.open(sp, () -> done[0]++);
+            FormNet.ChestPayload ar = chest(sp);
+            h.assertTrue(ar != null && ar.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "archer: 2차 전직 dim (준비 중)");
             Forms.answer(sp, -1, null);
         } finally {
             JobUpgrades.set(sp, "swordsman_moon", 0);
@@ -834,6 +860,256 @@ public final class RpgJobAdvanceTests {
             JobTraits7.setRunes(sp, z.get(0), 3);
             RpgJobTests.cleanup(sp);
             h.assertTrue(JobTraits7.runesOf(sp, z.get(0)) == 0, "runes cleared on job change");
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 오드레리르(아크메이지)
+
+    /** 직업 스킬이 아닌 특성 피해 (별자리 · 별똥 — 피해 배율 없이 위력 × 배율 × 스탯 트리 공격력 × 가호) */
+    static double raw(ServerPlayer sp, Jobs.Job j, double mult) {
+        return JobSystem.power(sp, j) * mult * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+    }
+
+    @GameTest(environment = ENV_AM, maxTicks = 620)
+    public void arcmageSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "arcmage", Map.of("int", 50), 50);
+        Weapon w = Weapons.weaponFrom("wand", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("arcmage");
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 3)));
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        double[] mark = {0, 0};
+        // 별무리 마탄: 겨눈 과녁 1.4 × 5 (한 번에 · 숫자 다섯 줄) · 둘레 5칸의 다른 과녁에게 별빛 0.7 × 5 (하나뿐이라 다섯 모두)
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            z.add(dummy(h, 2, 4));
+            JobTraitsMore.setChain(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 0), "별무리 마탄 cast");
+        }));
+        steps.add(new RpgJobTests.Step(24, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 7);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "별무리 마탄 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            double bounce = RpgJobTests.expected(sp, j, j.skill(0), 0.7 * 5);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), bounce), "starlight bounce " + TestDummies.dealt(z.get(1)) + " vs " + bounce);
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "arcmage gradient number");
+            // 서리 별 걸음: 북쪽을 보고 서서 뒤 (남쪽) 로 — 첫 자리 곁 과녁 (2.8) · 둘째 자리 곁 과녁 (1.4)
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            sp.snapTo(sp.getX(), sp.getY(), sp.getZ(), 180F, 0F);
+            sp.setYHeadRot(180F);
+            z.add(dummy(h, -2, -1.0));
+            z.add(dummy(h, 2.5, 5.0));
+            mark[0] = sp.position().z;
+            JobTraitsMore.setChain(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 1), "서리 별 걸음 cast");
+            h.assertTrue(sp.position().z - mark[0] > 2.5, "blinked back: " + (sp.position().z - mark[0]));
+        }));
+        steps.add(new RpgJobTests.Step(36, () -> {
+            double a = RpgJobTests.expected(sp, j, j.skill(1), 2.8);
+            double b = RpgJobTests.expected(sp, j, j.skill(1), 1.4);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), a), "first afterimage " + TestDummies.dealt(z.get(0)) + " vs " + a);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), b), "second afterimage " + TestDummies.dealt(z.get(1)) + " vs " + b);
+            // 쌍둥이 별: 1.4 × 6 + 4.2
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 4));
+            JobTraitsMore.setChain(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 2), "쌍둥이 별 cast");
+        }));
+        steps.add(new RpgJobTests.Step(80, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 12.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "쌍둥이 별 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 꿀술의 노래 → 별무리 마탄 (연쇄 없이): 마탄 7 + 그 자리 별똥 (위력 × 2.4 — 0.6초 뒤)
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 3));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 3), "꿀술의 노래 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "arcmage_song"), "song stance");
+        }));
+        // 노래 (1칸 떠올라 1초 · 38틱에 내려앉음) 가 끝난 뒤 — 태세 (10초) 는 그대로
+        steps.add(new RpgJobTests.Step(40, () -> {
+            h.assertTrue(JobTraits.stanceOn(sp, "arcmage_song"), "song stance lasts");
+            JobTraitsMore.setChain(sp, 0);
+            mark[0] = TestDummies.dealt(z.get(0));
+            h.assertTrue(JobSkills.press(sp, 0), "별무리 마탄 (song) cast");
+        }));
+        steps.add(new RpgJobTests.Step(30, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 7) + raw(sp, j, 2.4);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "bolts + meteor " + got + " vs " + want);
+            // 별자리 완성: 연쇄 4 · 별 넷 (과녁 둘레) → 다섯째 (마탄 — 연쇄 5 +60%) → 0.5초 뒤 별 다섯 × 2 + 선 × 1 → 연쇄 · 별은 처음부터
+            JobTraits.testEndStance(sp);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 3));
+            JobSkills.resetCooldowns(sp);
+            JobTraitsMore.setChain(sp, 4);
+            JobTraits8.testStars(sp, 4);
+            h.assertTrue(JobTraits8.stars(sp) == 4, "four stars: " + JobTraits8.stars(sp));
+            h.assertTrue(JobSkills.press(sp, 0), "별무리 마탄 (chain 5) cast");
+            h.assertTrue(JobTraitsMore.chain(sp) == 0 && JobTraits8.stars(sp) == 0, "constellation → chain reset: chain " + JobTraitsMore.chain(sp) + " stars "
+                    + JobTraits8.stars(sp));
+        }));
+        steps.add(new RpgJobTests.Step(36, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 7) * 1.6 + raw(sp, j, 2.0 * 5 + 1.0);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "bolts (chain 5) + constellation " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 완드 평타가 맞으면 직업 스킬 재사용 대기 −6틱 (매지션과 같음 — 마탄의 미끄러짐으로 옆에 섰으니 시험 자리로)
+            home(h, sp);
+            mark[0] = JobSkills.cooldownLeft(sp, "arcmage_bolts");
+            mark[1] = mmorpg.fabric.Tasks.now();
+            RpgCombat.forceCrit = false;
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
+        }));
+        steps.add(new RpgJobTests.Step(16, () -> {
+            RpgCombat.forceCrit = null;
+            long left = JobSkills.cooldownLeft(sp, "arcmage_bolts");
+            long el = mmorpg.fabric.Tasks.now() - (long) mark[1];
+            h.assertTrue(left <= (long) mark[0] - el - 6 + 1, "wand hit cuts job cooldowns: " + mark[0] + " - " + el + " -> " + left);
+            // 별의 노래: 3 × 9 + 1.4 × 10 + 15 = 56 (3칸 떠오름)
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 5));
+            JobSkills.resetCooldowns(sp);
+            JobTraitsMore.setChain(sp, 0);
+            mark[1] = sp.getY();
+            h.assertTrue(JobSkills.press(sp, 4), "별의 노래 cast");
+        }));
+        steps.add(new RpgJobTests.Step(30, () -> h.assertTrue(sp.getY() - mark[1] > 1.0, "floated: " + (sp.getY() - mark[1]))));
+        steps.add(new RpgJobTests.Step(64, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 56);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "별의 노래 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(Math.abs(sp.getY() - mark[1]) < 0.3, "landed: y " + sp.getY() + " vs " + mark[1]);
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgJobTests.cleanup(sp);
+            h.assertTrue(JobTraits8.stars(sp) == 0, "stars cleared on job change");
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 나글파르(네크로맨서)
+
+    @GameTest(environment = ENV_NC, maxTicks = 760)
+    public void necromancerSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "necromancer", Map.of("int", 50), 50);
+        Weapon w = Weapons.weaponFrom("wand", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("necromancer");
+        NecroCrew.PASSIVE.add(sp.getUUID());
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 3)));
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        double[] mark = {0, 0, 0};
+        Husk[] victim = {null};
+        Vec3[] pos = {null};
+        // 뼈 창: 꿰뚫음 4.9 (창끝이 닿는 틱) · 1.2초에 뼈 가시 2.1 · 맞은 적에 표식
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            h.assertTrue(JobSkills.press(sp, 0), "뼈 창 cast");
+        }));
+        steps.add(new RpgJobTests.Step(32, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 7);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "뼈 창 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits8.marked(sp, z.get(0)), "bone spear death mark");
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "necromancer gradient number");
+            // 망자의 군대: 쓰러질 몹 (과녁이 아님 — 체력 1) 을 뼈 창으로 쓰러뜨림 → 그 자리에서 망자 선원이 일어남
+            z.get(0).discard();
+            Husk v = h.spawnWithNoFreeWill(EntityTypes.HUSK, 4.5F, 2F, 4.5F);
+            v.setHealth(1F);
+            victim[0] = v;
+            JobSkills.resetCooldowns(sp);
+            home(h, sp);
+            h.assertTrue(JobSkills.press(sp, 0), "뼈 창 (kill) cast");
+        }));
+        steps.add(new RpgJobTests.Step(30, () -> {
+            h.assertTrue(victim[0].isRemoved() || !victim[0].isAlive(), "victim fell");
+            h.assertTrue(NecroCrew.count(sp) == 1 && NecroCrew.bodies(sp).size() == 1, "a crew rose: " + NecroCrew.count(sp));
+            var x = NecroCrew.bodies(sp).get(0);
+            h.assertTrue(x.entityTags().contains(mmorpg.fabric.mob.TyrfingWarrior.TAG) && x.entityTags().contains("naglfar_crew")
+                    && !mmorpg.fabric.skill.Kit.canHit(sp, x), "crew: ally tags · not a skill target " + x.entityTags());
+            // 망자가 침: 곁의 과녁에게 1.5초마다 위력 × 0.4 (내 직업 스킬 피해 — 숫자는 직업 색)
+            NecroCrew.PASSIVE.remove(sp.getUUID());
+            z.set(0, dummy(h, 1.0, 4.0));
+        }));
+        steps.add(new RpgJobTests.Step(70, () -> {
+            NecroCrew.PASSIVE.add(sp.getUUID());
+            double one = raw(sp, j, 0.4);
+            double got = TestDummies.dealt(z.get(0));
+            double n = got / one;
+            h.assertTrue(got > 0 && Math.abs(n - Math.round(n)) < 1e-3 && Math.round(n) >= 1, "crew hits " + got + " = " + n + " × " + one);
+            // 망자 일으키기: 망자 둘이 바로 (모두 셋) · 10초 동안 망자 공격 +30%
+            z.get(0).discard();
+            home(h, sp);
+            h.assertTrue(JobSkills.press(sp, 3), "망자 일으키기 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "necromancer_raise") && NecroCrew.count(sp) == 3, "raise: stance · crew 3: " + NecroCrew.count(sp));
+            h.assertTrue(Math.abs(JobTraits8.crewMultOf(sp) - 0.4 * 1.3) < 1e-9, "crew attack +30%: " + JobTraits8.crewMultOf(sp));
+        }));
+        // 망자와 자리 바꾸기: 망자 (다 솟은 뒤) 와 자리를 바꿈 → 떠난 자리 곁 과녁 2.8 + 1.4
+        steps.add(new RpgJobTests.Step(20, () -> {
+            home(h, sp);
+            pos[0] = sp.position();
+            h.assertTrue(NecroCrew.testRaise(sp, h.absoluteVec(new Vec3(5.0, 2, 6.0))) != null, "a crew ahead to swap with");
+            h.assertTrue(JobSkills.press(sp, 1), "망자와 자리 바꾸기 cast");
+            z.set(0, dummy(h, -1.5, 0.0));
+            h.assertTrue(sp.position().distanceTo(pos[0]) > 1.0, "swapped: moved " + sp.position().distanceTo(pos[0]));
+            boolean crewAtStart = false;
+            for (var x : NecroCrew.bodies(sp)) if (x.position().distanceTo(pos[0]) < 0.6) crewAtStart = true;
+            h.assertTrue(crewAtStart, "a crew stands where I was");
+        }));
+        steps.add(new RpgJobTests.Step(32, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 4.2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "bone wall " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 시체 폭발 (시체): 과녁 곁 시체를 터뜨림 → 8.4 + 1.4 × 3 · 망자 수는 그대로
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 4.0));
+            JobTraits8.testCorpse(h.getLevel(), z.get(0).position().add(0.8, 0, 0), 200);
+            mark[0] = JobTraits8.corpses();
+            mark[1] = NecroCrew.count(sp);
+            h.assertTrue(JobSkills.press(sp, 2), "시체 폭발 (corpse) cast");
+            h.assertTrue(JobTraits8.corpses() == mark[0] - 1 && NecroCrew.count(sp) == mark[1], "corpse used, crew kept: " + JobTraits8.corpses() + " · " + NecroCrew.count(sp));
+        }));
+        steps.add(new RpgJobTests.Step(46, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 12.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "시체 폭발 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 시체 폭발 (망자): 시체가 없으면 과녁 곁 망자를 터뜨림 (하나 줄어듦)
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 4.0));
+            NecroCrew.testRaise(sp, z.get(0).position().add(1.2, 0, 0));
+            mark[1] = NecroCrew.count(sp);
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 2), "시체 폭발 (crew) cast");
+            h.assertTrue(NecroCrew.count(sp) == mark[1] - 1, "a crew exploded: " + mark[1] + " -> " + NecroCrew.count(sp));
+        }));
+        steps.add(new RpgJobTests.Step(46, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 12.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "시체 폭발 (crew) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 나글파르의 출항: 앞 2.5칸 과녁 — 솟는 배 밑 14 · 선원 여섯이 덮침 3 × 6 · 갈라진 땅 24 = 56, 선원 여섯은 6초 더
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2.5));
+            mark[2] = NecroCrew.countAll(sp) - NecroCrew.count(sp);
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 4), "나글파르의 출항 cast");
+        }));
+        steps.add(new RpgJobTests.Step(70, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 56);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "나글파르의 출항 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            int ult = NecroCrew.countAll(sp) - NecroCrew.count(sp);
+            h.assertTrue(ult - (int) mark[2] == 6, "six ult crew stay: " + ult);
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            NecroCrew.PASSIVE.remove(sp.getUUID());
+            RpgJobTests.cleanup(sp);
+            h.assertTrue(NecroCrew.countAll(sp) == 0, "crew disbanded on job change: " + NecroCrew.countAll(sp));
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });

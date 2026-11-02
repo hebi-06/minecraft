@@ -551,7 +551,7 @@ final class ArcmageSkills {
                 }
                 Vec3 from = sky[ii % sky.length];
                 JobFx.fallStar(d, from, to, V.len(V.sub(to, from)) / (fall / 20.0), 1.0, Opt.empty(), NIGHT, GOLD);
-                SkillFx.play(d, "firework.launch", from, 1.3, 0.5);
+                SkillFx.play(d, "entity.firework_rocket.launch", from, 1.3, 0.5);
                 RuneKit.later(fall, () -> {
                     JobFx.starNode(d, to, 0.7, 6, 2, 0.28, false, Opt.empty(), NIGHT, GOLD);
                     SkillFx.sparks(d, to, GOLD, 6, 4);

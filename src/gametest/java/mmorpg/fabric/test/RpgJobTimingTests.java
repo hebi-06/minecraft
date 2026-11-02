@@ -44,7 +44,8 @@ public final class RpgJobTimingTests {
     private static final int MAX = 400;
     /** 과녁 거리 (앞 칸 — 없으면 2.5): 멀리 내려앉는 스킬 */
     // 0.50.0 시험 1: 장대 도약 과녁을 7칸에 두었더니 시험 자리 둘레 barrier 벽 속 (바닥 8×8) 이라 숨막힘 피해가 10틱마다 들어갔음 → 5.5칸
-    private static final Map<String, Double> AHEAD = Map.of("lancer_vault", 5.5, "spellblade_blink", 6.0, "mage_phase", 1.2);
+    // 0.51.0 서리 별 걸음 (아크메이지) 도 위상 전환처럼 뒤로 물러나 두 잔상 — 두 자리가 모두 닿는 1.2칸
+    private static final Map<String, Double> AHEAD = Map.of("lancer_vault", 5.5, "spellblade_blink", 6.0, "mage_phase", 1.2, "arcmage_phase", 1.2);
 
     private static Husk dummy(GameTestHelper h, double ahead) {
         Husk m = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, (float) (1.5 + ahead)));
@@ -90,6 +91,8 @@ public final class RpgJobTimingTests {
         Jobs.Job j = Jobs.job(job);
         sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(RpgItems.byId(Weapons.weaponId(j.weapons().get(0), 40, "transcend"))));
         JobSystem.setJob(sp, job);
+        // 0.51.0 네크로맨서: 망자 (궁극기의 선원) 가 스킬 뒤에도 과녁을 쳐 마지막 피해 틱이 밀리지 않게 — 망자는 움직이되 치지 않음
+        if (job.equals("necromancer")) mmorpg.fabric.job.NecroCrew.PASSIVE.add(sp.getUUID());
         Probe p = new Probe();
         for (Jobs.Skill k : j.skills()) if (k.total() > 0) p.skills.add(k);
         h.assertTrue(!p.skills.isEmpty(), job + " damage skills");
@@ -99,6 +102,7 @@ public final class RpgJobTimingTests {
             if (!p.measuring) {
                 if (p.idx >= p.skills.size()) {
                     JobSkills.resetCooldowns(sp);
+                    mmorpg.fabric.job.NecroCrew.PASSIVE.remove(sp.getUUID());
                     JobSystem.setJob(sp, null);
                     h.getLevel().getServer().getPlayerList().remove(sp);
                     h.assertTrue(p.failures.isEmpty(), job + " timing: " + String.join(" / ", p.failures));
@@ -246,5 +250,17 @@ public final class RpgJobTimingTests {
     @GameTest(environment = "mmorpg:jt_hx", maxTicks = 2400)
     public void timingHexblade(GameTestHelper h) {
         probe(h, "hexblade");
+    }
+
+    /** 0.51.0 2차 직업 — 매지션 각성 오드레리르(아크메이지) (스킬 사이 5초 — 연쇄 · 별 없이, 별무리 마탄은 과녁 하나라 튀는 별빛 없음) */
+    @GameTest(environment = "mmorpg:jt_am", maxTicks = 2400)
+    public void timingArcmage(GameTestHelper h) {
+        probe(h, "arcmage");
+    }
+
+    /** 0.51.0 2차 직업 — 매지션 반전 나글파르(네크로맨서) (망자가 없어 자리 바꾸기는 뼈 허수아비 · 시체 폭발은 땅 속 망자, 망자는 치지 않음) */
+    @GameTest(environment = "mmorpg:jt_nc", maxTicks = 2400)
+    public void timingNecromancer(GameTestHelper h) {
+        probe(h, "necromancer");
     }
 }

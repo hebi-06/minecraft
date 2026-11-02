@@ -76,14 +76,15 @@ public final class NecroCrew {
             this.slot = slot;
         }
 
+        /** 아직 땅에서 솟는 중 (다 솟은 것으로 한 망자 — testRaise · 궁극기의 선원 — 는 아님) */
         boolean rising(long now) {
-            return now - born < RISE;
+            return !risen && now - born < RISE;
         }
     }
 
     private static final Map<UUID, List<Member>> CREW = new HashMap<>();
-    /** 시험: 망자가 치지 않음 (시간 시험이 스킬의 타격 틱만 재게 — 몸은 그대로 움직임) */
-    public static boolean passive;
+    /** 시험: 이 주인들의 망자는 치지 않음 (시간 시험 · 스킬 시험이 스킬의 타격만 재게 — 몸은 그대로 움직임. 시험이 함께 돌아도 서로 섞이지 않게 주인마다) */
+    public static final java.util.Set<UUID> PASSIVE = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     static void init() {
         ServerTickEvents.END_SERVER_TICK.register(NecroCrew::tick);
@@ -458,7 +459,7 @@ public final class NecroCrew {
             SkillFx.sparks(level, V.up(V.add(xp, d, 1.4), 0.4), FIRE, 3, 3);
         }
         SkillFx.play(level, "entity.zombie.attack_wooden_door", xp, 1.3, 0.35);
-        if (passive) return;
+        if (PASSIVE.contains(sp.getUUID())) return;
         JobKit.strike(sp, e, j, JobSystem.power(sp, j), JobTraits8.crewMult(sp, j), true, false, RuneKit.lifeToken(sp), 0, got -> {
             if (RuneKit.fxQuota("necroHit", 6)) JobFx.hit(e, j, 0.8);
         });
