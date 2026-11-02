@@ -371,7 +371,7 @@ final class WarlordSkills {
                 Vec3 start = e.position();
                 // 가까운 적부터 가운데 · 뒤의 적은 바깥으로 조금씩 엇갈려 (몸 · 숫자가 한 자리에 겹치지 않게 — 내려찍는 둘레 안)
                 int i = idx++;
-                Vec3 end = V.add(V.add(gather, r, s * Math.min(2.4, 0.45 + Kit.bodyPad(e) + 0.55 * i)), f, i == 0 ? 0 : (i % 2 == 1 ? 0.55 : -0.55));
+                Vec3 end = V.add(V.add(gather, r, s * Math.min(2.6, 0.45 + Kit.bodyPad(e) + 0.85 * i)), f, i == 0 ? 0 : (i % 2 == 1 ? 0.8 : -0.8));
                 for (int t = 1; t <= pullTicks; t++) {
                     int tt = t;
                     RuneKit.later(pullAt + t, () -> {
