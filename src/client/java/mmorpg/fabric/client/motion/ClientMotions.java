@@ -134,12 +134,16 @@ public final class ClientMotions {
         hitStop(p.entity(), p.ticks());
     }
 
-    /** 0.51.0 멈칫: 하는 동작이 없으면 아무 일 없음. 다음 틱부터 n 틱 (동작 시작과 같은 약속 — 렌더가 뒤로 돌아가지 않게) */
+    /**
+     * 0.51.0 멈칫: 하는 동작이 없으면 아무 일 없음. 다음 틱부터 n 틱 (동작 시작과 같은 약속 — 렌더가 뒤로 돌아가지 않게). 동작에 맞는 때 (impacts) 가 있으면
+     * 그 때에 맞춰 멈춤 (snap — 영상 1: 서버의 늦은 일은 서버 틱 처음에 돌고 스킬은 틱 사이에 나가 멈칫이 동작보다 1틱쯤 일찍 와서 베기 직전 자세로 멈췄음)
+     */
     public static void hitStop(int entity, int n) {
         Active a = ACTIVE.get(entity);
         if (a == null || n <= 0) return;
         stopsReceived++;
-        double from = ticks + 1;
+        double base = ticks + 1;
+        double from = base + snap(entity, a, base);
         Hold h = HOLDS.get(entity);
         if (h == null || h.start != a.start()) {
             h = new Hold();
@@ -155,6 +159,22 @@ public final class ClientMotions {
         double rem = Double.isNaN(h.from) ? 0 : heldBy(h.from, h.until, from);
         h.from = from - rem;
         h.until = from + n;
+    }
+
+    /** 멈칫을 맞는 때까지 미룰 수 있는 가장 긴 틱 (그 안에 맞는 때가 없으면 바로 멈춤) */
+    static final double SNAP = 2.0;
+
+    /** 지금 (base) 흐른 시간에서 −0.25 ~ +SNAP 틱 안의 가장 이른 맞는 때 (동작의 impacts — t) 까지 남은 틱 (없으면 0) */
+    private static double snap(int entity, Active a, double base) {
+        MotionPoses.Motion m = MotionPoses.get(a.motion());
+        if (m == null || m.impacts == null || m.impacts.length == 0) return 0;
+        double el = elapsed(entity, a, base);
+        double best = Double.NaN;
+        for (float f : m.impacts) {
+            double t = f * a.ticks();
+            if (t >= el - 0.25 && t <= el + SNAP && (Double.isNaN(best) || t < best)) best = t;
+        }
+        return Double.isNaN(best) ? 0 : Math.max(0, best - el);
     }
 
     /** 0.51.0 동작이 흐른 시간 (틱 — 멈춘 만큼 뺌 · 따라잡는 중이면 덜 뺌): 자세 · 참격 궤적이 같이 씀 */

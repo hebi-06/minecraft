@@ -589,13 +589,18 @@ public final class RpgJobGallery implements FabricClientGameTest {
         }
     }
 
-    /** 0.51.0 다시 쓰는 스킬: 쓴 뒤 at 틱이 오면 같은 칸을 다시 누름 (사진첩 — 누른 틱도 한 틱) */
+    /**
+     * 0.51.0 다시 쓰는 스킬: 쓴 뒤 at 틱이 오면 같은 칸을 다시 누름 (사진첩 — 직업 스킬 키는 Shift + 룬 칸 키라 2틱 앞에서 Shift 를 누르고 있음. 영상 1: Shift 없이 눌러
+     * 다시 쓰기가 나가지 않았음 — 창이 열린 채 재사용 대기가 0)
+     */
     private static int againUntil(ClientGameTestContext ctx, Case c, String id, int t, int upTo) {
         for (int a : AGAIN.getOrDefault(id, new int[0])) {
             if (a <= t || a > upTo) continue;
-            ctx.waitTicks(a - t);
-            ctx.getInput().holdKey(MmorpgClient.skillKeys[c.slot()]);
-            ctx.getInput().releaseKey(MmorpgClient.skillKeys[c.slot()]);
+            if (a - 2 > t) ctx.waitTicks(a - 2 - t);
+            ctx.getInput().holdKey(o -> o.keyShift);
+            ctx.waitTicks(Math.min(2, a - t));
+            ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
+            ctx.getInput().releaseKey(o -> o.keyShift);
             t = a;
         }
         return t;
@@ -698,11 +703,14 @@ public final class RpgJobGallery implements FabricClientGameTest {
             f.cast();
             ctx.getInput().releaseKey(o -> o.keyShift);
             for (int a : AGAIN.getOrDefault(k.id(), new int[0])) {
-                // 0.51.0 다시 쓰는 스킬: 그 틱에 같은 칸을 다시 누름 (영상의 0초는 처음 누른 때 그대로)
+                // 0.51.0 다시 쓰는 스킬: 그 틱에 같은 칸을 다시 누름 (Shift + 칸 키 — 2틱 앞에서 Shift · 영상의 0초는 처음 누른 때 그대로)
+                f.until(a - 2);
+                ctx.getInput().holdKey(o -> o.keyShift);
                 f.until(a);
                 ctx.getInput().holdKey(MmorpgClient.skillKeys[c.slot()]);
                 ctx.getInput().releaseKey(MmorpgClient.skillKeys[c.slot()]);
                 f.frames(1);
+                ctx.getInput().releaseKey(o -> o.keyShift);
             }
             f.until(c.total());
             if (c.stance() || c.buff()) {

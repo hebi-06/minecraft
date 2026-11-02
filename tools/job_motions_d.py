@@ -106,6 +106,11 @@ def strike_with(m, name, wind_tick, hit_tick, end_tick, a, b):
                 k[f] = mix[f]
 
 
+def impacts(m, *ticks):
+    """맞는 때 (틱 — 서버가 피해를 넣는 틱): 클라이언트 멈칫이 이 자세에 맞춰 멈춤 (ClientMotions.snap — 멈칫이 1틱쯤 일찍 와도 베기 직전에 멈추지 않게)"""
+    m.set(impacts=[m.t(x) for x in ticks])
+
+
 def first(m, pose, fp=None):
     """틱 0 의 자세 (앞 단계의 끝 자세에서 바로 이어짐 — 들어오는 무게 0 과 함께)"""
     keyp(m, 0.0, pose)
@@ -167,6 +172,7 @@ fpw(m, 15.6, FPW_FLICK, "in")
 fpw(m, 19.0, FPW_SHEATHED)
 fpw(m, 21.0, FPW_SHEATHED, "in")
 fpw(m, 23.8, FPW_LOW)
+impacts(m, 6.0, 7.7, 9.0)
 use_skill(m, "swordmaster_draw")
 
 # 받아넘기기 (효과: 0 ~ 10 칼을 세워 막음 (받는 피해 없음) → 아무것도 막지 않으면 10 에 한 걸음 내디뎌 가로 베기 (왼쪽 → 오른쪽 — 맞히면 멈칫 2틱))
@@ -186,6 +192,7 @@ keyp(m, 13.6, P(W_READY, body=[8, 8, 0]))
 fpw(m, 1.2, FPW_GUARD, "out3")
 fpw(m, 7.4, FPW_GUARD, dp=(0.0, -0.03, 0.0))
 fpw(m, 13.6, FPW_LOW)
+impacts(m, 10.0)
 use_skill(m, "swordmaster_parry")
 
 # 받아치기 (단계 :riposte — 막은 순간 서버가 보냄: 0 쨍 (4틱 멈칫 — 막은 자세 그대로) → 1.5배로 따라잡으며 효과 +6 · +8 · +10 (되돌려 · 바로 · 내려) =
@@ -270,6 +277,7 @@ def ring_cut(name, key, back, last=False):
         keyp(mo, 9.0, LOW_L)  # 다음은 되돌려 베기 (:cut0 · :last 의 0)
         fpw(mo, 9.0, FPW_SHEATHED)
     mo.set(softLegs=False)
+    impacts(mo, 3.0)
     use_skill(mo, key)
 
 
@@ -346,6 +354,7 @@ fpl(m, 5.4, nudge(FPL_RAISE2H, (0.05, 0.1, 0.0), (8, 0, 0)))
 fpl(m, 6.0, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
 fpl(m, 11.0, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
 fpl(m, 13.2, FP_LOW)
+impacts(m, 6.0)
 use_skill(m, "swordmaster_ult")
 
 # 검풍 (단계 :slash — 다시 누름 · 창이 닫힘: 3 에 앞으로 거대한 검풍 셋 (왼쪽 → 오른쪽) · 먼저 맞은 적에 멈칫 4틱)
@@ -367,6 +376,7 @@ fpw(m, 13.6, FPW_LOW)
 fpl(m, 1.8, ((-0.25, 0.05, -0.05), (15, 70, 0)), "out3")
 fpl(m, 3.0, FP_LOW, "linear")
 fpl(m, 13.6, FP_LOW)
+impacts(m, 3.0)
 use_skill(m, "swordmaster_ult:slash")
 
 # ------------------------------------------------------------ 다인슬레이프(블러드 나이트) (칼 — 검붉은 빛 · 무겁게 두 손으로)
@@ -395,6 +405,7 @@ fpw(m, 11.4, FPW_HEAVY_R)
 fpl(m, 2.4, ((-0.3, -0.12, -0.05), (10, 70, 0)), "out3")
 fpl(m, 5.0, FP_LOW, "linear")
 fpl(m, 11.4, FP_LOW)
+impacts(m, 5.0)
 use_skill(m, "bloodknight_cleave")
 
 # 핏빛 대검 2 (단계 :2 — 다시 누름 (첫 단계 뒤 6틱부터): 5 오른쪽 아래에서 왼쪽 위로 비스듬히 올려 휩씀 (칼끝 × 1.5))
@@ -427,6 +438,7 @@ fpw(m, 9.0, dict(p=(-0.9, 0.7, 0.2), blade=(-0.3, 0.9, -0.3)))
 fpw(m, 12.0, FPW_UP)
 fpl(m, 2.6, ((0.15, -0.3, 0.0), (0, -20, 0)), "out3")
 fpl(m, 6.4, FP_LOW)
+impacts(m, 5.0)
 use_skill(m, "bloodknight_cleave:2")
 
 # 핏빛 대검 3 (단계 :3 — 0 ~ 7 앞으로 1.2칸 · 0.9칸 높이 뜀 (JobMove.hop) → 7 앞 땅에 내리찍음 (둘레 · 가운데 × 1.5 · 갈라짐 — 맞히면 멈칫 2 ~ 3틱))
@@ -459,6 +471,7 @@ fpl(m, 7.0, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
 fpl(m, 10.4, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
 fpl(m, 12.6, FP_LOW)
 m.set(softLegs=False)
+impacts(m, 7.0)
 use_skill(m, "bloodknight_cleave:3")
 
 # 피의 돌진 (효과: 0 ~ 6 적에게 1.3칸 높이로 뛰어듦 (JobMove.hop) → 6 내려 박음 (기절 · 방어 깨짐 — 맞히면 멈칫 3틱))
@@ -491,6 +504,7 @@ fpl(m, 6.0, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
 fpl(m, 9.2, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
 fpl(m, 11.2, FP_LOW)
 m.set(softLegs=False)
+impacts(m, 6.0)
 use_skill(m, "bloodknight_leap")
 
 # 피의 사슬 (효과: 0 땅의 붉은 고리 → 4 둘레 적에게 사슬을 박음 (맞히면 멈칫 2틱) → 34 까지 사슬이 이어짐 → 34 끌어당김 (끌린 적이 있으면 단계 :pull))
@@ -526,6 +540,7 @@ fpl(m, 27.0, nudge(FP_JAB, (-0.02, 0.0, 0.02)))
 fpl(m, 31.6, FP_JAB2)
 fpl(m, 34.0, FP_CHAMBER, "in")
 fpl(m, 40.0, FP_LOW)
+impacts(m, 4.0)
 use_skill(m, "bloodknight_chains")
 
 # 끌어당김 (단계 :pull — 34: 끌려온 적을 2 에 내리찍음 (기절 — 맞히면 멈칫 3틱))
@@ -547,6 +562,7 @@ fpl(m, 1.4, ((0.18, 0.12, 0.05), (45, -15, 0)))
 fpl(m, 2.0, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
 fpl(m, 6.4, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
 fpl(m, 9.4, FP_LOW)
+impacts(m, 2.0)
 use_skill(m, "bloodknight_chains:pull")
 
 # 광란 (태세 — 효과: 0 몸에서 터지는 피 · 붉은 포효 · 0 · 5 발밑 핏빛 고리)
@@ -599,6 +615,7 @@ fpw(m, 5.8, FPW_SHEATHED, dp=(0.15, 0.08, 0))
 fpw(m, 12.0, FPW_ZAN)
 fpw(m, 16.0, FPW_ZAN, dp=(0.02, -0.03, 0))
 fpw(m, 20.4, FPW_LOW)
+impacts(m, 8.0)
 use_skill(m, "bloodknight_ult")
 
 # 날아감 (단계 :fly — 칼날이 닿은 틱: 0 ~ 11 적에게 뛰어 날아감 (JobMove.hop — 높이 1.5 ~ 4칸) → 11 내려꽂음 (:slam))
@@ -645,6 +662,7 @@ fpl(m, 0.0, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)))
 fpl(m, 2.4, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
 fpl(m, 5.0, FP_LOW)
 m.set(softLegs=False)
+impacts(m, 0.0)
 use_skill(m, "bloodknight_ult:slam")
 
 # X 베기 (단계 :x0 · :x1 — 10틱마다: 1 에 X 자 판 둘 · 피해 (맞히면 멈칫 2틱 · 마지막은 4틱). x0 = 왼쪽 위 → 오른쪽 아래 → 오른쪽 위 → 왼쪽 아래,
@@ -660,6 +678,7 @@ deepen(m, 0.35, 3.6, root=[-0.3, 0.4], **X_LEGS)
 keyp(m, 6.0, P(DIAG_END, body=[16, -30, 0], root=[-0.28, 0.3], **X_LEGS))
 keyp(m, 9.0, X1_START)
 fpw(m, 9.0, FPW_DIAG_WIND)
+impacts(m, 1.0, 2.7)
 use_skill(m, "bloodknight_ult:x0")
 m = Motion("bloodknight_ult_x1", 14, "칼을 뽑다 X 베기 — 내디디며 오른쪽 위에서 왼쪽 아래로, 이어 왼쪽 위에서 오른쪽 아래로 X 자로 벤 뒤 낮게 겨눠 버티고 칼의 피를 털어냄",
            fade=(0.0, 0.1))
@@ -674,4 +693,5 @@ keyp(m, 12.6, P(W_READY, body=[8, 6, 0]))
 fpw(m, 9.4, FPW_LOW_GUARD)
 fpw(m, 10.8, FPW_FLICK, "in")
 fpw(m, 12.6, FPW_LOW)
+impacts(m, 1.0, 2.7)
 use_skill(m, "bloodknight_ult:x1")
