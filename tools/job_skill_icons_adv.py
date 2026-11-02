@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """0.51.0 2차 직업 스킬 아이콘 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) · 전사 각성 뵈드바르(워로드) · 반전 울프헤딘(라이칸) ·
-마검사 각성 뵐룬드(룬 나이트) · 반전 투르스(헥스 블레이드) (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
+마검사 각성 뵐룬드(룬 나이트) · 반전 투르스(헥스 블레이드) · 매지션 각성 오드레리르(아크메이지) · 반전 나글파르(네크로맨서) (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
 모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph · jrunes24 · jthorn 과 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
-라이칸 = 달빛 은회 (첫째) · 붉은 눈빛 (둘째), 룬 나이트 = 보라 (첫째) · 금빛 룬 (둘째), 헥스 블레이드 = 호박빛 (첫째) · 먹빛 자주 (둘째) — jobs.json advance."""
+라이칸 = 달빛 은회 (첫째) · 붉은 눈빛 (둘째), 룬 나이트 = 보라 (첫째) · 금빛 룬 (둘째), 헥스 블레이드 = 호박빛 (첫째) · 먹빛 자주 (둘째), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
+네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕) — jobs.json advance."""
 import math
 import os
 import sys
@@ -778,6 +779,295 @@ def hexblade_ult(A, B):
     return finish(subject, [glow(lighter(t, cut), A, 2.0, 1.0), glow(burst, A, 1.2, 0.6)], hexblade_back(A, B))
 
 
+# ------------------------------------------------------------ 오드레리르(아크메이지) (빛: 별빛 파랑 → 금빛 — 밤하늘 자주 바탕)
+
+ARC_NIGHT = (10, 6, 34)
+
+
+def arcmage_back(A, B):
+    return backdrop(mix(A, ARC_NIGHT, 0.86), mix((70, 40, 150), A, 0.35))
+
+
+def star5(m, cx, cy, r, inner=0.44, rot=0.0):
+    """다섯 뿔 별"""
+    pts = []
+    for i in range(10):
+        a = math.radians(rot) - math.pi / 2 + i * math.pi / 5
+        rr = r if i % 2 == 0 else r * inner
+        pts.append((cx + math.cos(a) * rr, cy + math.sin(a) * rr))
+    poly(m, pts)
+    return m
+
+
+def arcmage_bolts(A, B):
+    # 별무리 마탄: 완드 (왼쪽 아래) 끝에서 지그재그로 꺾이며 날아가는 별빛 마탄 셋 (작은 별 머리 · 꼬리) → 오른쪽 위 과녁의 큰 별 터짐
+    zig = [(9.0, 24.0), (15.0, 21.0), (12.0, 15.0), (19.0, 12.0), (17.0, 7.0), (25.0, 6.0)]
+    trail = mask()
+    line(trail, zig, 1.1)
+    heads = mask()
+    for (x, y, r) in ((15.0, 21.0, 2.4), (12.0, 15.0, 2.4), (19.0, 12.0, 2.6)):
+        star5(heads, x, y, r)
+    burst = mask()
+    star(burst, 25.5, 6.0, 6.4, 0.18, 0)
+    big = mask()
+    star5(big, 25.5, 6.0, 4.0)
+    wand = mask()
+    line(wand, [(2.5, 31.0), (8.0, 25.0)], 2.0)
+    tip = mask()
+    star(tip, 8.6, 24.4, 3.6, 0.2, 45)
+    subject = stack(layer(trail, mix(A, WHITE, 0.35), A), layer(wand, mix(A, WHITE, 0.2), mix(A, (0, 0, 0), 0.4)), layer(heads, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.25)),
+                    layer(burst, WHITE, mix(B, WHITE, 0.3)), layer(big, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.25)), layer(tip, WHITE, B))
+    return finish(subject, [glow(lighter(heads, big), B, 1.6, 1.0), glow(trail, A, 1.2, 0.8), glow(tip, B, 1.4, 0.9)], arcmage_back(A, B))
+
+
+def mage_bolt(hx, hy, ang, L, w=2.2):
+    """마탄 (머리 마름모 · 꼬리) — job_skill_icons_more.bolt_mask 와 같은 꼴"""
+    a = math.radians(ang)
+    ux, uy = math.cos(a), math.sin(a)
+    px, py = -uy, ux
+    tailm = mask()
+    poly(tailm, [(hx + px * w * 0.55, hy + py * w * 0.55), (hx - ux * L, hy - uy * L), (hx - px * w * 0.55, hy - py * w * 0.55)])
+    headm = mask()
+    poly(headm, [(hx + ux * w * 1.6, hy + uy * w * 1.6), (hx + px * w, hy + py * w), (hx - ux * w * 0.9, hy - uy * w * 0.9), (hx - px * w, hy - py * w)])
+    return tailm, headm
+
+
+def arcmage_phase(A, B):
+    # 서리 별 걸음: 얼음빛 두건 쓴 잔상 둘 (앞 큰 것 · 뒤 작은 것 — 가슴의 금빛 별) · 꺾여 뒤로 물러나는 두 걸음 화살 · 얼음 조각
+    ICE = (150, 215, 255)
+    ghosts = []
+    for (cx, cy, s_) in ((22.0, 16.0, 1.0), (11.0, 12.0, 0.72)):
+        g = mask()
+        disc(g, cx, cy - 6.2 * s_, 2.8 * s_)
+        poly(g, [(cx - 1.8 * s_, cy - 4.4 * s_), (cx + 1.8 * s_, cy - 4.4 * s_), (cx + 5.6 * s_, cy + 9.0 * s_), (cx - 5.6 * s_, cy + 9.0 * s_)])
+        ghosts.append(g)
+    stars = mask()
+    star5(stars, 22.0, 13.0, 2.8)
+    star5(stars, 11.0, 10.5, 2.1)
+    path = mask()
+    line(path, [(26.0, 28.5), (16.0, 24.5), (6.5, 27.5)], 1.5)
+    poly(path, [(2.0, 28.5), (7.2, 24.4), (7.6, 30.4)])
+    shards = mask()
+    for (x, y, r) in ((29.0, 6.5, 2.0), (4.0, 4.5, 1.8), (17.0, 3.0, 1.5)):
+        poly(shards, [(x, y - r * 1.6), (x + r, y), (x, y + r * 1.6), (x - r, y)])
+    subject = stack(layer(ghosts[1], mix(ICE, WHITE, 0.15), mix(A, (0, 0, 0), 0.15), None, None), layer(ghosts[0], mix(ICE, WHITE, 0.45), mix(ICE, A, 0.4), WHITE,
+                    mix(A, (0, 0, 0), 0.2)), layer(path, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.3), axis=(-1, 0)), layer(stars, WHITE, B), layer(shards, WHITE, ICE))
+    return finish(subject, [glow(lighter(*ghosts), ICE, 1.8, 0.8), glow(stars, B, 1.4, 1.0)], arcmage_back(A, B))
+
+
+def arcmage_orb(A, B):
+    # 쌍둥이 별: 서로 도는 별 둘 (금빛 · 별빛) · 둘을 잇는 빛줄기 · 도는 궤도 고리 (기울어짐) · 반짝이
+    orbit = mask()
+    oval(orbit, 16.0, 16.0, 12.5, 6.5, 1.0)
+    beam = mask()
+    line(beam, [(7.0, 20.5), (25.0, 11.5)], 1.6)
+    beam_core = mask()
+    line(beam_core, [(7.0, 20.5), (25.0, 11.5)], 0.6)
+    s1, s2 = mask(), mask()
+    star5(s1, 25.0, 11.5, 6.0, rot=8)
+    star5(s2, 7.0, 20.5, 5.2, rot=-10)
+    sp = mask()
+    for x, y in ((16.0, 4.5), (27.5, 25.5), (4.0, 7.5)):
+        star(sp, x, y, 2.2, 0.2, 0)
+    subject = stack(layer(orbit, mix(A, WHITE, 0.3), A), layer(beam, mix(B, WHITE, 0.3), B), layer(beam_core, WHITE, WHITE),
+                    layer(s2, mix(A, WHITE, 0.6), A, WHITE, mix(A, (0, 0, 0), 0.3)), layer(s1, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.25)), layer(sp, WHITE, B))
+    return finish(subject, [glow(lighter(s1, s2), B, 2.0, 1.0), glow(beam, B, 1.2, 0.8)], arcmage_back(A, B))
+
+
+def arcmage_song(A, B):
+    # 꿀술의 노래: 금빛 꿀술 뿔잔 (기울어 넘치는 꿀술 방울) · 떠오르는 음표 둘 · 위에서 떨어지는 작은 별똥 · 반짝이
+    horn = mask()
+    pts = [(4.0, 25.0), (9.0, 28.5), (17.0, 27.0), (23.0, 22.0)]
+    line(horn, pts, 4.6)
+    rim = mask()
+    oval(rim, 22.5, 21.0, 3.6, 2.4, 1.0)
+    mead = mask()
+    for (x, y, r) in ((24.5, 17.5, 1.6), (26.5, 14.0, 1.2), (27.5, 10.8, 0.9)):
+        disc(mead, x, y, r)
+    notes = mask()
+    for (x, y, sc) in ((8.0, 12.0, 1.0), (15.0, 6.0, 0.8)):
+        disc(notes, x, y + 4.0 * sc, 2.0 * sc)
+        line(notes, [(x + 1.7 * sc, y + 4.0 * sc), (x + 1.7 * sc, y - 3.5 * sc)], 1.0 * sc)
+        line(notes, [(x + 1.7 * sc, y - 3.5 * sc), (x + 5.0 * sc, y - 2.0 * sc)], 1.1 * sc)
+    fall = mask()
+    line(fall, [(29.0, 2.0), (22.5, 8.0)], 0.9)
+    st = mask()
+    star5(st, 22.0, 8.5, 2.6)
+    subject = stack(layer(horn, mix(B, WHITE, 0.25), mix(B, (60, 30, 0), 0.4), WHITE, mix(B, (0, 0, 0), 0.4), axis=(1, 0)), layer(rim, WHITE, B),
+                    layer(mead, mix(B, WHITE, 0.4), B), layer(notes, WHITE, mix(A, WHITE, 0.3)), layer(fall, WHITE, B), layer(st, WHITE, B))
+    return finish(subject, [glow(lighter(mead, st), B, 1.8, 1.0), glow(notes, A, 1.4, 0.8)], arcmage_back(A, B))
+
+
+def arcmage_ult(A, B):
+    # 별의 노래: 하늘의 별자리 (북두칠성 — 금빛 선 · 별 일곱) · 아래 V 자로 펼친 마도서 (두 쪽 · 글줄) · 책에서 별자리로 솟는 가는 빛 셋 · 떨어지는 별똥 둘
+    pts = [(3.0, 9.5), (8.0, 7.0), (13.0, 8.5), (17.5, 6.0), (20.0, 2.5), (27.0, 3.5), (28.5, 8.5)]
+    lines_ = mask()
+    line(lines_, pts, 0.8)
+    line(lines_, [pts[3], pts[6]], 0.8)
+    stars = mask()
+    for i, (x, y) in enumerate(pts):
+        star5(stars, x, y, 2.4 if i in (0, 3, 6) else 1.9)
+    left = mask()
+    poly(left, [(15.4, 22.0), (3.0, 18.5), (3.5, 27.0), (15.4, 30.5)])
+    right = mask()
+    poly(right, [(16.6, 22.0), (29.0, 18.5), (28.5, 27.0), (16.6, 30.5)])
+    text = mask()
+    for k in range(3):
+        y = 22.0 + k * 2.3
+        line(text, [(6.0, y - 0.9), (13.0, y + 0.9)], 0.6)
+        line(text, [(19.0, y + 0.9), (26.0, y - 0.9)], 0.6)
+    rays = mask()
+    for (x0, x1) in ((14.0, 9.0), (16.0, 16.5), (18.0, 23.0)):
+        line(rays, [(x0, 21.0), (x1, 12.0)], 0.7)
+    falls = mask()
+    for (x0, y0, x1, y1) in ((10.0, 10.0, 6.5, 15.5), (24.0, 9.5, 27.0, 15.0)):
+        line(falls, [(x0, y0), (x1, y1)], 0.9)
+        star(falls, x1, y1, 2.0, 0.2, 0)
+    subject = stack(layer(rays, mix(B, WHITE, 0.4), B), layer(lines_, mix(B, WHITE, 0.4), B), layer(falls, WHITE, B),
+                    layer(left, WHITE, mix(B, WHITE, 0.4), WHITE, mix(A, (0, 0, 0), 0.3)), layer(right, mix(B, WHITE, 0.6), mix(B, WHITE, 0.2), WHITE, mix(A, (0, 0, 0), 0.3)),
+                    layer(text, mix(A, (0, 0, 0), 0.2), mix(A, (0, 0, 0), 0.4)), layer(stars, WHITE, B))
+    return finish(subject, [glow(stars, B, 1.8, 1.0), glow(lighter(rays, left, right), B, 1.4, 0.6)], arcmage_back(A, B))
+
+
+# ------------------------------------------------------------ 나글파르(네크로맨서) (빛: 독초록 → 뼈색 — 짙은 녹색 안개 바탕)
+
+NECRO_FOG = (4, 18, 10)
+
+
+def necro_back(A, B):
+    return backdrop(mix(A, NECRO_FOG, 0.86), mix((20, 70, 40), A, 0.3))
+
+
+def skull_mask(cx, cy, s):
+    """해골 (머리 · 턱 — 눈 · 코 구멍은 따로 eyes)"""
+    m = mask()
+    disc(m, cx, cy - 1.2 * s, 5.2 * s)
+    poly(m, [(cx - 3.8 * s, cy + 1.0 * s), (cx + 3.8 * s, cy + 1.0 * s), (cx + 2.6 * s, cy + 5.6 * s), (cx - 2.6 * s, cy + 5.6 * s)])
+    eyes = mask()
+    disc(eyes, cx - 2.0 * s, cy, 1.4 * s)
+    disc(eyes, cx + 2.0 * s, cy, 1.4 * s)
+    poly(eyes, [(cx, cy + 1.6 * s), (cx - 0.8 * s, cy + 3.0 * s), (cx + 0.8 * s, cy + 3.0 * s)])
+    return ImageChops.subtract(m, eyes), eyes
+
+
+def bone_layers(m, B):
+    return layer(m, mix(B, WHITE, 0.5), mix(B, (60, 50, 30), 0.35), WHITE, mix(B, (0, 0, 0), 0.45))
+
+
+def necromancer_spear(A, B):
+    # 뼈 창: 비스듬히 날아가는 등뼈 자루 · 이빨 같은 뼈 날 · 뒤로 휜 갈비 가시 · 꼬리의 녹색 혼불 연기 · 꿰뚫린 자리의 녹색 빛
+    shaft = mask()
+    for i in range(6):
+        t = i / 6
+        x, y = 4.0 + 16.0 * t, 28.0 - 16.0 * t
+        disc(shaft, x, y, 1.6)
+    blade = mask()
+    poly(blade, [(19.0, 13.0), (23.0, 7.0), (25.0, 9.0), (27.5, 3.5), (30.5, 1.5), (28.5, 4.5), (25.0, 11.0), (22.0, 12.0), (20.5, 15.0)])
+    hooks = mask()
+    line(hooks, [(19.5, 14.0), (16.5, 12.5), (15.0, 9.5)], 1.0)
+    line(hooks, [(20.0, 14.5), (21.0, 17.5), (23.5, 19.0)], 1.0)
+    smoke = mask()
+    for (x, y, r) in ((3.0, 30.0, 2.6), (6.0, 31.0, 1.8), (1.5, 27.0, 1.6)):
+        disc(smoke, x, y, r)
+    hit = mask()
+    star(hit, 27.5, 4.5, 4.6, 0.2, 15)
+    subject = stack(layer(smoke, mix(A, WHITE, 0.25), mix(A, (0, 0, 0), 0.4)), bone_layers(shaft, B), bone_layers(hooks, B), bone_layers(blade, B),
+                    layer(hit, WHITE, A))
+    return finish(subject, [glow(lighter(shaft, blade), A, 1.6, 0.9), glow(hit, A, 1.6, 1.0), glow(smoke, A, 1.4, 0.8)], necro_back(A, B))
+
+
+def necromancer_swap(A, B):
+    # 망자와 자리 바꾸기: 왼쪽 해골 망자 · 오른쪽 두건 쓴 네크로맨서 · 둘 사이 위 · 아래로 엇갈려 도는 녹색 화살 둘 · 아래 솟은 뼈 방벽
+    sk, eyes = skull_mask(7.5, 12.0, 0.75)
+    hood = mask()
+    disc(hood, 24.5, 8.6, 2.8)
+    poly(hood, [(22.6, 10.0), (26.4, 10.0), (29.5, 20.0), (19.5, 20.0)])
+    arrows = mask()
+    top = [(16.0 + math.cos(math.radians(a)) * 6.5, 11.0 + math.sin(math.radians(a)) * 5.0) for a in range(205, 336, 10)]
+    bot = [(16.0 + math.cos(math.radians(a)) * 6.5, 13.0 + math.sin(math.radians(a)) * 5.0) for a in range(25, 156, 10)]
+    line(arrows, top, 1.4)
+    line(arrows, bot, 1.4)
+    ex, ey = top[-1]
+    poly(arrows, [(ex + 2.6, ey + 1.6), (ex - 1.6, ey - 1.2), (ex + 0.6, ey - 3.0)])
+    ex, ey = bot[-1]
+    poly(arrows, [(ex - 2.6, ey - 1.6), (ex + 1.6, ey + 1.2), (ex - 0.6, ey + 3.0)])
+    wall = mask()
+    for (x, h, w) in ((7.0, 7.0, 2.0), (12.0, 9.0, 2.2), (17.0, 7.5, 2.0), (22.0, 9.5, 2.2), (27.0, 7.0, 2.0)):
+        poly(wall, [(x - w, 31.0), (x + w * 0.3, 31.0 - h), (x + w, 31.0)])
+    subject = stack(layer(hood, mix(A, (0, 0, 0), 0.25), mix(A, (0, 0, 0), 0.6), mix(A, WHITE, 0.3), None), layer(arrows, mix(A, WHITE, 0.45), A, WHITE,
+                    mix(A, (0, 0, 0), 0.3)), bone_layers(sk, B), layer(eyes, A, A), bone_layers(wall, B))
+    return finish(subject, [glow(arrows, A, 1.6, 0.9), glow(wall, A, 1.2, 0.6), glow(eyes, A, 1.0, 1.0)], necro_back(A, B))
+
+
+def necromancer_burst(A, B):
+    # 시체 폭발: 가운데 터지는 해골 (녹색 눈) · 둘레로 튀는 뼈 조각 · 녹색 폭발 테 · 아래 독 구름
+    blast = mask()
+    star(blast, 16.0, 15.0, 15.0, 0.42, 0)
+    star(blast, 16.0, 15.0, 11.0, 0.5, 22)
+    cloud = mask()
+    for (x, y, r) in ((7.0, 27.0, 4.0), (13.0, 28.5, 4.6), (20.0, 28.0, 4.4), (26.0, 26.5, 3.6)):
+        disc(cloud, x, y, r)
+    shards = mask()
+    for (x, y, a) in ((4.0, 6.0, 30), (27.5, 5.0, -40), (29.0, 18.0, 10), (3.0, 18.0, -20)):
+        r = math.radians(a)
+        line(shards, [(x - math.cos(r) * 2.4, y - math.sin(r) * 2.4), (x + math.cos(r) * 2.4, y + math.sin(r) * 2.4)], 1.4)
+    sk, eyes = skull_mask(16.0, 14.0, 1.0)
+    subject = stack(layer(blast, mix(A, WHITE, 0.45), A, None, None), layer(cloud, mix(A, (0, 0, 0), 0.1), mix(A, (0, 0, 0), 0.55)), bone_layers(shards, B),
+                    bone_layers(sk, B), layer(eyes, mix(A, WHITE, 0.3), A))
+    return finish(subject, [glow(blast, A, 2.2, 0.9), glow(eyes, A, 1.0, 1.0)], necro_back(A, B))
+
+
+def necromancer_raise(A, B):
+    # 망자 일으키기: 땅에서 솟는 뼈 손 둘 (손가락을 벌림) · 가운데 녹색 혼불 · 갈라진 땅 · 위의 작은 해골 둘
+    ground = mask()
+    line(ground, [(1.0, 28.5), (31.0, 28.5)], 1.4)
+    crack = mask()
+    for pts in (((16.0, 28.5), (12.0, 30.5), (7.0, 29.4)), ((16.0, 28.5), (21.0, 30.6), (26.0, 29.6))):
+        line(crack, list(pts), 0.8)
+    hands = mask()
+    for (x, sgn) in ((9.0, -1), (23.0, 1)):
+        line(hands, [(x, 28.5), (x + sgn * 1.0, 20.0)], 2.2)
+        for k, (dx, h) in enumerate(((-2.4, 5.0), (-0.8, 6.4), (0.8, 6.6), (2.4, 5.2))):
+            line(hands, [(x + sgn * 1.0 + dx * 0.6, 20.0), (x + sgn * 1.0 + dx, 20.0 - h)], 0.9)
+        line(hands, [(x + sgn * 1.0 - sgn * 2.0, 22.0), (x + sgn * 1.0 - sgn * 4.0, 19.5)], 0.9)
+    fire = mask()
+    poly(fire, [(13.0, 28.0), (16.0, 14.0), (19.0, 28.0)])
+    poly(fire, [(14.5, 22.0), (17.5, 10.5), (19.5, 21.0)])
+    sk1, e1 = skull_mask(8.0, 7.0, 0.55)
+    sk2, e2 = skull_mask(24.0, 6.0, 0.55)
+    subject = stack(layer(fire, mix(A, WHITE, 0.45), A, WHITE, None), layer(ground, mix(A, (0, 0, 0), 0.3), mix(A, (0, 0, 0), 0.6)), layer(crack, A, A),
+                    bone_layers(hands, B), bone_layers(lighter(sk1, sk2), B), layer(lighter(e1, e2), A, A))
+    return finish(subject, [glow(fire, A, 2.0, 1.0), glow(lighter(e1, e2), A, 1.0, 1.0)], necro_back(A, B))
+
+
+def necromancer_ult(A, B):
+    # 나글파르의 출항: 안개 위 손발톱 배 옆모습 (휜 뱃머리 해골 · 찢긴 돛 · 방패) · 배 밑 갈라진 땅에서 솟는 녹색 혼불 · 녹색 눈
+    fog = mask()
+    for (x, y, r) in ((5.0, 27.0, 4.6), (12.0, 28.5, 5.0), (20.0, 28.0, 5.0), (27.0, 27.0, 4.6)):
+        disc(fog, x, y, r)
+    hull = mask()
+    poly(hull, [(4.0, 19.5), (28.0, 19.5), (25.0, 25.0), (8.0, 25.0)])
+    prow = mask()
+    line(prow, [(27.0, 20.0), (29.5, 15.0), (29.0, 10.5), (27.0, 9.0)], 1.6)
+    line(prow, [(5.0, 20.0), (2.5, 15.5), (3.5, 12.5)], 1.4)
+    head, eyes = skull_mask(26.6, 8.6, 0.42)
+    mast = mask()
+    line(mast, [(15.5, 19.5), (15.5, 3.0)], 1.0)
+    line(mast, [(9.0, 4.5), (22.0, 4.5)], 0.9)
+    sail = mask()
+    poly(sail, [(9.5, 5.0), (21.5, 5.0), (20.5, 15.5), (18.0, 13.5), (16.0, 16.0), (13.5, 13.8), (10.5, 15.5)])
+    shields = mask()
+    for x in (8.5, 12.5, 16.5, 20.5, 24.0):
+        disc(shields, x, 20.8, 1.3)
+    flames = mask()
+    for (x, h) in ((6.0, 6.0), (11.0, 8.0), (21.0, 8.5), (26.0, 6.0)):
+        poly(flames, [(x - 1.6, 31.0), (x, 31.0 - h), (x + 1.6, 31.0)])
+    subject = stack(layer(flames, mix(A, WHITE, 0.4), A), layer(sail, mix(A, (0, 0, 0), 0.5), mix(A, (0, 0, 0), 0.75), mix(A, (0, 0, 0), 0.3), None),
+                    layer(mast, mix(B, (0, 0, 0), 0.3), mix(B, (0, 0, 0), 0.6)), bone_layers(hull, B), bone_layers(prow, B), bone_layers(head, B),
+                    layer(shields, A, mix(A, (0, 0, 0), 0.3)), layer(eyes, A, A), layer(fog, mix(A, (0, 0, 0), 0.35), mix(A, (0, 0, 0), 0.7)))
+    return finish(subject, [glow(flames, A, 2.0, 1.0), glow(eyes, A, 1.0, 1.0), glow(hull, A, 1.2, 0.5)], necro_back(A, B))
+
+
 ICONS = {
     "swordmaster_flurry": swordmaster_flurry,
     "swordmaster_grani": swordmaster_grani,
@@ -809,4 +1099,14 @@ ICONS = {
     "hexblade_hail": hexblade_hail,
     "hexblade_curse": hexblade_curse,
     "hexblade_ult": hexblade_ult,
+    "arcmage_bolts": arcmage_bolts,
+    "arcmage_phase": arcmage_phase,
+    "arcmage_orb": arcmage_orb,
+    "arcmage_song": arcmage_song,
+    "arcmage_ult": arcmage_ult,
+    "necromancer_spear": necromancer_spear,
+    "necromancer_swap": necromancer_swap,
+    "necromancer_burst": necromancer_burst,
+    "necromancer_raise": necromancer_raise,
+    "necromancer_ult": necromancer_ult,
 }

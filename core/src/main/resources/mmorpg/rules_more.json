@@ -1034,7 +1034,11 @@
       "runeknight_ult:plunge": "jb_runeknight_ult_plunge", "runeknight_ult:slash0": "jb_runeknight_ult_slash0", "runeknight_ult:slash1": "jb_runeknight_ult_slash1", "runeknight_ult:slash2": "jb_runeknight_ult_slash2",
       "hexblade_thorn": "jb_hexblade_thorn", "hexblade_thorn:lower": "jb_hexblade_thorn_lower", "hexblade_backstep": "jb_hexblade_backstep", "hexblade_hail": "jb_hexblade_hail",
       "hexblade_hail:pull": "jb_hexblade_hail_pull", "hexblade_curse": "jb_hexblade_curse", "hexblade_ult": "jb_hexblade_ult", "hexblade_ult:cleave": "jb_hexblade_ult_cleave",
-      "hexblade_ult:stroke0": "jb_hexblade_ult_stroke0", "hexblade_ult:stroke1": "jb_hexblade_ult_stroke1", "hexblade_ult:stroke2": "jb_hexblade_ult_stroke2",
+      "hexblade_ult:stroke0": "jb_hexblade_ult_stroke0", "hexblade_ult:stroke1": "jb_hexblade_ult_stroke1", "hexblade_ult:stroke2": "jb_hexblade_ult_stroke2", "arcmage_bolts": "jb_arcmage_bolts",
+      "arcmage_phase": "jb_arcmage_phase", "arcmage_orb": "jb_arcmage_orb", "arcmage_song": "jb_arcmage_song", "arcmage_ult": "jb_arcmage_ult",
+      "arcmage_ult:final": "jb_arcmage_ult_final", "arcmage_ult:rain": "jb_arcmage_ult_rain", "arcmage_ult:wave": "jb_arcmage_ult_wave", "necromancer_spear": "jb_necromancer_spear",
+      "necromancer_swap": "jb_necromancer_swap", "necromancer_burst": "jb_necromancer_burst", "necromancer_raise": "jb_necromancer_raise", "necromancer_ult": "jb_necromancer_ult",
+      "necromancer_ult:final": "jb_necromancer_ult_final", "necromancer_ult:jump": "jb_necromancer_ult_jump",
       "rune:abyssBrand": "rn_abyss_brand", "rune:arcanaUnity": "rn_arcana_unity", "rune:arcaneCut": "rn_arcane_cut",
       "rune:archangel": "rn_archangel", "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening",
       "rune:axeBoomerang": "rn_axe_boomerang", "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep",
@@ -1121,7 +1125,10 @@
       "jb_runeknight_carve_thrust", "jb_runeknight_seid", "jb_runeknight_seid_back", "jb_runeknight_futhark", "jb_runeknight_futhark_plant", "jb_runeknight_temper",
       "jb_runeknight_ult", "jb_runeknight_ult_slash0", "jb_runeknight_ult_slash1", "jb_runeknight_ult_slash2", "jb_runeknight_ult_plunge", "jb_runeknight_ult_final",
       "jb_hexblade_thorn", "jb_hexblade_thorn_lower", "jb_hexblade_backstep", "jb_hexblade_hail", "jb_hexblade_hail_pull", "jb_hexblade_curse",
-      "jb_hexblade_ult", "jb_hexblade_ult_stroke0", "jb_hexblade_ult_stroke1", "jb_hexblade_ult_stroke2", "jb_hexblade_ult_cleave"
+      "jb_hexblade_ult", "jb_hexblade_ult_stroke0", "jb_hexblade_ult_stroke1", "jb_hexblade_ult_stroke2", "jb_hexblade_ult_cleave", "jb_arcmage_bolts",
+      "jb_arcmage_phase", "jb_arcmage_orb", "jb_arcmage_song", "jb_arcmage_ult", "jb_arcmage_ult_wave", "jb_arcmage_ult_rain",
+      "jb_arcmage_ult_final", "jb_necromancer_spear", "jb_necromancer_swap", "jb_necromancer_burst", "jb_necromancer_raise", "jb_necromancer_ult",
+      "jb_necromancer_ult_jump", "jb_necromancer_ult_final"
     ],
     "weaponMotions": [
       "wp_gram_charge", "wp_gram_descent", "wp_gram_descent_dive", "wp_solas_rush", "wp_solas_halo", "wp_solas_halo_pillar",

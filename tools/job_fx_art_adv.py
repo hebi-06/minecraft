@@ -927,6 +927,411 @@ sprite("rfx_jthurs", "direction_z", 320, 320, TU_N, 4, "hexblade", zoom=5,
        desc="땅의 거대한 ᚦ (위 = 바라본 쪽): 0 줄기 · 1 위 가시 획 · 2 아래 가시 획 (갈라진 홈) → 3 ~ 4 맥동 → 5 줄기를 따라 가른 빛 → 6 금이 벌어지며 터짐 · 7 흐려짐")(thurs_frame)
 
 
+# ============================================================ 0.51.0 매지션 2차 (오드레리르(아크메이지) · 나글파르(네크로맨서))
+# 아크메이지: 빛 칸 = 밤하늘 자주 무리 · 심지 칸 = 금빛 별 (게임은 JobTraits8.NIGHT · GOLD — 별 · 별똥은 색을 정해 그림)
+# 네크로맨서: 빛 칸 = 독초록 혼불 · 연기 · 심지 칸 = 뼈 (몸 — 짙게 · 금 · 틈은 비침)
+
+from job_fx_art_v2 import SS, star_pts  # noqa: E402
+from job_fx_art_v2b import star5_pts  # noqa: E402
+
+COLORS.setdefault("arcmage", ((0.42, 0.26, 0.86), (1.0, 0.86, 0.42)))
+COLORS.setdefault("necromancer", ((0.3, 0.92, 0.45), (0.96, 0.95, 0.88)))
+
+
+# ------------------------------------------------------------ rfx_jstarnode (별자리의 별 — 카메라를 봄, 칸 가운데 = 별 가운데)
+
+SN_N = 8
+
+
+def _flares(pad, c, r, a, rot, thin=0.035):
+    """네 갈래 긴 빛살 (가로 · 세로 — 가늘게 뾰족) + 짧은 대각 빛살"""
+    out = pad.poly(star_pts(c, c, r, 4, thin, rot), a)
+    out = np.maximum(out, pad.poly(star_pts(c, c, r * 0.42, 4, thin * 1.6, rot + math.pi / 4), a * 0.7))
+    return out
+
+
+def starnode_frame(f, S=192):
+    pad = Pad(S, S)
+    c = S / 2
+    rs = random.Random(7100 + f)
+    body = pad.zeros()
+    core = pad.zeros()
+    if f == 0:
+        # 번쩍: 작은 밝은 점 · 긴 네 갈래 빛살 · 둥근 빛
+        body = np.maximum(body, pad.radial(c, c, 46.0, 1.6))
+        body = np.maximum(body, _flares(pad, c, 74.0, 0.8, 0.0, 0.03))
+        core = np.maximum(core, pad.disc_field(c, c, 7.0, soft=2.0))
+        core = np.maximum(core, _flares(pad, c, 62.0, 1.0, 0.0, 0.022))
+    elif f <= 5:
+        # 1 피어남 (작은 별) · 2 ~ 5 반짝임 (빛살 길이 · 돎 · 둘레 반짝이가 바뀜 — 이어 돌림)
+        k = 0.72 if f == 1 else 1.0
+        tw = [1.0, 0.86, 0.96, 0.8][(f - 2) % 4] if f >= 2 else 0.9
+        rot = (f - 2) * math.radians(4.0) if f >= 2 else 0.0
+        R = 38.0 * k
+        star = pad.poly(star5_pts(c, c, R, inner=0.44, rot=0.0))
+        body = np.maximum(body, star * 0.95)
+        body = np.maximum(body, pad.radial(c, c, 70.0 * k, 1.8) * 0.85)
+        body = np.maximum(body, _flares(pad, c, 88.0 * k * tw, 0.75, rot))
+        core = np.maximum(core, pad.poly(star5_pts(c, c, R * 0.7, inner=0.42, rot=0.0)))
+        core = np.maximum(core, _flares(pad, c, 78.0 * k * tw, 0.95, rot, 0.022))
+        core = np.maximum(core, pad.disc_field(c, c, 6.0, soft=1.5))
+        # 둘레를 도는 작은 반짝이 셋 (장마다 다른 자리)
+        for i in range(3):
+            a = (f * 0.9 + i * TAU / 3) % TAU
+            rr = 52.0 * k + 6 * math.sin(f + i)
+            x, y = c + math.cos(a) * rr, c + math.sin(a) * rr
+            core = np.maximum(core, star4(pad, x, y, 7.0 + 2 * ((f + i) % 2), 0.9, rot=0.3 * i))
+    elif f == 6:
+        # 크게 번쩍
+        R = 48.0
+        body = np.maximum(body, pad.poly(star5_pts(c, c, R, inner=0.46)))
+        body = np.maximum(body, pad.radial(c, c, 84.0, 1.4))
+        body = np.maximum(body, _flares(pad, c, 94.0, 0.95, 0.12))
+        core = np.maximum(core, pad.poly(star5_pts(c, c, R * 0.8, inner=0.44)))
+        core = np.maximum(core, _flares(pad, c, 90.0, 1.0, 0.12, 0.028))
+        core = np.maximum(core, pad.disc_field(c, c, 14.0, soft=4.0))
+    else:
+        # 별빛 조각으로 흩어짐: 바깥으로 날아가는 반짝이 · 옅은 별 자국
+        body = np.maximum(body, pad.radial(c, c, 60.0, 2.4) * 0.45)
+        core = np.maximum(core, pad.poly(star5_pts(c, c, 20.0, inner=0.44)) * 0.45)
+        for i in range(10):
+            a = i * TAU / 10 + rs.uniform(-0.2, 0.2)
+            rr = rs.uniform(44, 74)
+            x, y = c + math.cos(a) * rr, c + math.sin(a) * rr
+            core = np.maximum(core, star4(pad, x, y, rs.uniform(6, 11), 0.9, rot=rs.uniform(0, 1)))
+            body = np.maximum(body, pad.stroke([(c + math.cos(a) * rr * 0.55, c + math.sin(a) * rr * 0.55), (x, y)], 1.0, 4.0, a0=0.0, a1=0.6))
+    g, cc = finish(pad, body, core, halo=((1.5, 0.55), (4.0, 0.45), (10.0, 0.32)), body_k=0.9, core_bloom=((1.5, 0.45), (4.0, 0.32)), win=4.0)
+    return g, cc
+
+
+sprite("rfx_jstarnode", "rotate_xyz", 192, 192, SN_N, 4, "arcmage", zoom=3,
+       desc="별자리의 별: 0 번쩍 · 1 피어남 → 2 ~ 5 반짝임 (이어 돌림) → 6 크게 번쩍 · 7 별빛 조각으로 흩어짐")(starnode_frame)
+
+
+# ------------------------------------------------------------ rfx_jfallstar (별똥 — 가는 쪽으로 누움, 머리 = 오른쪽)
+
+FS_N = 4
+FS_HEAD = (226.0, 48.0)
+
+
+def fallstar_frame(f, W=256, H=96):
+    pad = Pad(W, H)
+    hx, hy = FS_HEAD
+    rs = random.Random(7200 + f)
+    body = pad.zeros()
+    core = pad.zeros()
+    # 꼬리: 머리에서 왼쪽으로 길게 가늘어짐 (조금 물결)
+    tail = [(hx - 210 * i / 24, hy + 2.5 * math.sin(i * 0.7 + f * 1.4) * (i / 24)) for i in range(25)]
+    tail = tail[::-1]
+    body = np.maximum(body, pad.stroke(tail, 2.0, 26.0, a0=0.0, a1=0.9, soft=4.0))
+    core = np.maximum(core, pad.stroke(tail, 0.6, 7.0, a0=0.0, a1=1.0, soft=1.0))
+    # 반짝이 가루 (꼬리를 따라 — 장마다 다른 자리 · 이어 돌림)
+    for i in range(9):
+        t = (i / 9 + f / (FS_N * 9)) % 1
+        x = hx - 30 - 170 * t
+        y = hy + rs.uniform(-14, 14) * (0.4 + t)
+        r = 6.0 * (1 - t) + 2.5
+        core = np.maximum(core, star4(pad, x, y, r, 0.9 * (1 - t * 0.7), rot=rs.uniform(0, 1)))
+    # 머리: 별 · 둥근 빛 · 짧은 네 갈래 빛살 (장마다 조금 돎)
+    body = np.maximum(body, pad.radial(hx, hy, 34.0, 1.5))
+    body = np.maximum(body, pad.poly(star5_pts(hx, hy, 17.0, inner=0.45, rot=f * 0.3)))
+    core = np.maximum(core, pad.poly(star5_pts(hx, hy, 12.0, inner=0.44, rot=f * 0.3)))
+    core = np.maximum(core, pad.poly(star_pts(hx, hy, 30.0 * [1.0, 0.85, 0.95, 0.8][f], 4, 0.05, 0.15 * f), 0.9))
+    core = np.maximum(core, pad.disc_field(hx, hy, 4.5, soft=1.0))
+    g, cc = finish(pad, body, core, halo=((1.5, 0.5), (3.5, 0.4), (8.0, 0.25)), body_k=0.9, core_bloom=((1.2, 0.4), (3.0, 0.3)), win=3.5)
+    return g, cc
+
+
+sprite("rfx_jfallstar", "lookat_direction", 256, 96, FS_N, 4, "arcmage", zoom=0, loop=True,
+       desc="별똥 (오른쪽 = 나아가는 쪽 · 머리 x 0.88 W): 빛나는 별 머리 · 길게 가늘어지는 꼬리 · 꼬리를 따라 흐르는 반짝이 가루 (이어 돌림)")(fallstar_frame)
+
+
+# ------------------------------------------------------------ rfx_jbonespear (뼈 창 — 가는 쪽으로 누움, 창끝 = 오른쪽)
+
+BS_N = 4
+
+
+def bonespear_frame(f, W=256, H=64):
+    pad = Pad(W, H)
+    cy = H / 2
+    rs = random.Random(7300 + f)
+    bone = pad.zeros()
+    dark = pad.zeros()
+    glow = pad.zeros()
+    # 자루: 등뼈 마디 (x 30 ~ 176) — 둥근 마디 · 위아래 작은 돌기 · 마디 사이 틈
+    x = 30.0
+    while x < 172:
+        w = 13.0
+        bone = np.maximum(bone, pad.ellipse(x + w / 2, cy, w / 2 + 0.5, 5.2))
+        bone = np.maximum(bone, pad.poly([(x + 3, cy - 4), (x + 6, cy - 9.5), (x + 9, cy - 4)]))
+        bone = np.maximum(bone, pad.poly([(x + 4, cy + 4), (x + 7, cy + 8.5), (x + 10, cy + 4)]))
+        dark = np.maximum(dark, pad.stroke([(x + w + 0.2, cy - 4), (x + w + 0.2, cy + 4)], 1.6))
+        x += w + 1.4
+    # 꼬리 끝 혹 (작은 머리뼈 마디)
+    bone = np.maximum(bone, pad.ellipse(26, cy, 7.5, 7.0))
+    dark = np.maximum(dark, pad.disc_field(24, cy - 1.5, 1.8))
+    # 창날: 이빨처럼 들쭉날쭉한 뼈 날 (x 172 ~ 248)
+    blade = [(170, cy - 7), (186, cy - 11), (196, cy - 8), (204, cy - 12), (214, cy - 7), (224, cy - 9), (236, cy - 4), (249, cy + 0.5),
+             (236, cy + 5), (224, cy + 9), (214, cy + 7), (204, cy + 12), (196, cy + 8), (186, cy + 11), (170, cy + 7)]
+    bone = np.maximum(bone, pad.poly(blade))
+    dark = np.maximum(dark, pad.stroke([(176, cy), (240, cy + 0.3)], 1.4, 0.6, a0=0.8))
+    # 갈비 가시 (날 밑동에서 뒤로 휜 갈고리 — 위 · 아래)
+    for sgn in (-1, 1):
+        hook = bez((168, cy + sgn * 6), (160, cy + sgn * 22), (146, cy + sgn * 24), n=14)
+        bone = np.maximum(bone, pad.stroke(hook, 5.0, 1.2))
+    # 녹색 혼불: 몸을 감싸는 빛 · 뒤로 끌리는 연기 가닥 (장마다 물결이 뒤로 흐름 — 이어 돌림)
+    glow = np.maximum(glow, gblur(bone, 3.0 * SS) * 1.4)
+    for k in range(3):
+        ph = f * TAU / BS_N + k * 2.1
+        pts = [(26 - 4 * i, cy + (k - 1) * 6 + 5 * math.sin(i * 0.55 + ph)) for i in range(7)]
+        glow = np.maximum(glow, pad.stroke(pts, 7.0, 1.0, a0=0.85, a1=0.0, soft=2.0))
+    for i in range(4):
+        t = (i / 4 + f / (BS_N * 4)) % 1
+        wx = 40 + 130 * t
+        wy = cy + (8 + 4 * math.sin(i + f)) * (1 if i % 2 else -1)
+        glow = np.maximum(glow, pad.disc_field(wx, wy, 3.0 + 2 * (1 - t), soft=2.0) * 0.8)
+    body = screen(glow * 0.9, bone * 0.25)
+    core = clamp01(bone - dark * 0.6)
+    g = pad.down(body)
+    g = screen(g, gblur(g, 2.0) * 0.6, gblur(g, 5.0) * 0.4)
+    cc = pad.down(core)
+    wb = win_border(g.shape, 3.0)
+    return clamp01(g * wb), clamp01(cc * wb)
+
+
+sprite("rfx_jbonespear", "lookat_direction", 256, 64, BS_N, 4, "necromancer", zoom=0, loop=True,
+       desc="뼈 창 (오른쪽 = 나아가는 쪽 · 창끝 x 0.97 W): 들쭉날쭉한 이빨 뼈 날 · 등뼈 마디 자루 · 뒤로 휜 갈비 가시 · 꼬리 혹 · 녹색 혼불 감쌈 · 뒤로 끌리는 연기 (이어 돌림)")(bonespear_frame)
+
+
+# ------------------------------------------------------------ rfx_jbonewall (뼈 방벽 — 세워 카메라 쪽, 아래 끝 = 땅)
+
+BW_N = 8
+# 뼈 가시: (밑동 x, 높이, 기울기 (위 끝이 옆으로), 밑동 폭)
+BW_SPIKES = [(128, 206, 6, 30), (88, 158, -26, 26), (170, 170, 24, 26), (54, 108, -34, 20), (204, 118, 34, 20), (110, 96, -10, 16), (150, 104, 12, 16)]
+
+
+def _spike(pad, bx, h, lean, w, base_y, frac):
+    """휘어 솟은 뼈 가시 (밑동 bx · 높이 h · 위 끝이 lean 만큼 옆) — frac = 땅 위로 나온 몫 (아래부터)"""
+    pts = bez((bx, base_y), (bx + lean * 0.2, base_y - h * 0.55), (bx + lean, base_y - h), n=20)
+    shown = max(2, int(round(len(pts) * frac)))
+    seg = pts[:shown]
+    # 땅에서 위로 솟는 중이면 전체 모양을 아래로 밀어 (끝이 먼저 보이게)
+    if frac < 1:
+        dy = h * (1 - frac)
+        seg = [(x, y + dy) for x, y in pts]
+    poly = taper_poly(seg, lambda t: w / 2 * (1 - t) ** 0.8 + 0.6)
+    m = pad.poly(poly)
+    # 마디 혹 (가시를 따라 두 곳)
+    for t in (0.3, 0.58):
+        i = int(t * (len(seg) - 1))
+        x, y = seg[i]
+        m = np.maximum(m, pad.ellipse(x, y, w * (1 - t) * 0.62, w * 0.22))
+    clip = pad.zeros()
+    clip[: int(base_y * pad.ss), :] = 1
+    return m * clip, seg
+
+
+def bonewall_frame(f, S=256):
+    pad = Pad(S, S)
+    base = S - 10.0
+    rs = random.Random(7400 + f)
+    bone = pad.zeros()
+    dark = pad.zeros()
+    glow = pad.zeros()
+    if f <= 5:
+        frac = [0.3, 0.66, 1.0, 1.0, 1.0, 1.0][f]
+        for i, (bx, h, lean, w) in enumerate(BW_SPIKES):
+            fr = min(1.0, frac * (1.15 if i == 0 else 1.0))
+            m, seg = _spike(pad, bx, h, lean, w, base, fr)
+            bone = np.maximum(bone, m)
+            # 금 (가시를 따라 가는 어두운 줄)
+            pts = [(x + 2, y) for x, y in seg[2:-3]]
+            if len(pts) > 2:
+                dark = np.maximum(dark, pad.stroke(pts, 1.4, 0.6, a0=0.7) * m)
+        # 밑동: 갈라진 땅 · 튀는 흙 (솟는 동안) · 녹색 빛
+        glow = np.maximum(glow, pad.radial(S / 2, base, 120.0, 2.0, sy=0.22) * 0.9)
+        if f <= 2:
+            for i in range(10):
+                x = rs.uniform(30, S - 30)
+                y = base - rs.uniform(10, 70) * (f + 1) / 3
+                bone = np.maximum(bone, pad.disc_field(x, y, rs.uniform(2.0, 4.5)))
+        # 혼불이 가시를 타고 오름 (장마다 다른 높이 — 이어 돌림 3 ~ 5)
+        for i in range(5):
+            t = ((i * 0.37 + f * 0.33) % 1)
+            bx, h, lean, w = BW_SPIKES[i % len(BW_SPIKES)]
+            x = bx + lean * t * 0.8
+            y = base - h * t * 0.9
+            glow = np.maximum(glow, pad.disc_field(x, y, 9.0 * (1 - t) + 3, soft=5.0) * 0.85)
+        glow = np.maximum(glow, gblur(bone, 4.0 * SS) * 1.2)
+    else:
+        # 6 금이 벌어짐 · 7 조각으로 흩어짐
+        push = 0.0 if f == 6 else 1.0
+        for i, (bx, h, lean, w) in enumerate(BW_SPIKES):
+            m, seg = _spike(pad, bx, h, lean, w, base, 1.0)
+            if f == 6:
+                bone = np.maximum(bone, m)
+                for k in range(4):
+                    y = base - h * rs.uniform(0.2, 0.85)
+                    dark = np.maximum(dark, pad.stroke([(bx - 14, y), (bx + lean * 0.5, y + rs.uniform(-6, 6)), (bx + lean + 14, y - 3)], 2.2) * m)
+            else:
+                for k in range(5):
+                    t = rs.uniform(0.1, 0.95)
+                    idx = int(t * (len(seg) - 1))
+                    x, y = seg[idx]
+                    dx = (x - S / 2) * 0.25 + rs.uniform(-20, 20)
+                    dy = -rs.uniform(10, 30)
+                    r = w * (1 - t) * 0.45 + 2
+                    chip = [(x + dx + rs.uniform(-r, r), y + dy + rs.uniform(-r, r)) for _ in range(4)]
+                    bone = np.maximum(bone, pad.poly(chip) * 0.85)
+        glow = np.maximum(glow, gblur(bone, 5.0 * SS) * (1.0 if f == 6 else 0.7))
+        glow = np.maximum(glow, pad.radial(S / 2, base - 40, 110.0, 2.0) * (0.7 if f == 6 else 0.35))
+    body = screen(glow * 0.85, bone * 0.2)
+    core = clamp01(bone - dark * 0.7)
+    g = pad.down(body)
+    g = screen(g, gblur(g, 3.0) * 0.5, gblur(g, 7.0) * 0.35)
+    cc = pad.down(core)
+    wb = win_border(g.shape, 3.0)
+    return clamp01(g * wb), clamp01(cc * wb)
+
+
+sprite("rfx_jbonewall", "lookat_y", 256, 256, BW_N, 4, "necromancer", zoom=3,
+       desc="뼈 방벽 (아래 끝 = 땅): 0 ~ 2 휘어진 뼈 가시 일곱이 땅을 뚫고 솟음 (흙 튐) → 3 ~ 5 서 있음 (녹색 혼불이 가시를 타고 오름 — 이어 돌림) → 6 금이 벌어짐 · 7 조각으로 흩어짐")(bonewall_frame)
+
+
+# ------------------------------------------------------------ rfx_jskull (망자의 해골 — 카메라를 봄, 칸 가운데 = 해골 가운데)
+
+SK_N = 6
+
+
+def _skull_masks(pad, c, jaw=0.0, k=1.0):
+    """해골 (뼈 · 구멍): 둥근 머리 · 광대 · 눈구멍 둘 · 코 구멍 · 위 이빨 · 아래턱 (jaw 만큼 벌어짐)"""
+    cx, cy = c, c - 6 * k
+    skull = pad.ellipse(cx, cy - 6 * k, 34 * k, 32 * k)
+    skull = np.maximum(skull, pad.poly([(cx - 26 * k, cy + 4 * k), (cx + 26 * k, cy + 4 * k), (cx + 18 * k, cy + 24 * k), (cx - 18 * k, cy + 24 * k)]))
+    holes = pad.ellipse(cx - 13 * k, cy + 2 * k, 9.5 * k, 8.5 * k)
+    holes = np.maximum(holes, pad.ellipse(cx + 13 * k, cy + 2 * k, 9.5 * k, 8.5 * k))
+    holes = np.maximum(holes, pad.poly([(cx, cy + 9 * k), (cx - 4.5 * k, cy + 17 * k), (cx + 4.5 * k, cy + 17 * k)]))
+    # 위 이빨 줄 (틈)
+    teeth_gap = pad.zeros()
+    for i in range(5):
+        x = cx - 10 * k + i * 5 * k
+        teeth_gap = np.maximum(teeth_gap, pad.stroke([(x, cy + 19 * k), (x, cy + 25 * k)], 1.1 * k))
+    # 아래턱 (jaw 만큼 아래로)
+    jy = cy + 27 * k + jaw
+    jawm = pad.poly([(cx - 17 * k, jy), (cx + 17 * k, jy), (cx + 12 * k, jy + 12 * k), (cx - 12 * k, jy + 12 * k)])
+    for i in range(4):
+        x = cx - 7.5 * k + i * 5 * k
+        teeth_gap = np.maximum(teeth_gap, pad.stroke([(x, jy), (x, jy + 4 * k)], 1.0 * k))
+    bone = clamp01(np.maximum(skull, jawm) - holes)
+    return bone, holes, teeth_gap, (cx - 13 * k, cy + 2 * k), (cx + 13 * k, cy + 2 * k)
+
+
+def skull_frame(f, S=128):
+    pad = Pad(S, S)
+    c = S / 2
+    rs = random.Random(7500 + f)
+    jaw = 9.0 if f == 4 else 0.0
+    k = [0.9, 1.0, 1.0, 1.0, 1.05, 1.08][f]
+    bone, holes, gaps, e1, e2 = _skull_masks(pad, c, jaw, k)
+    smoke = pad.zeros()
+    # 연기 가닥: 0 은 바깥에서 모여듦 · 5 는 위로 흩어짐 · 그 사이는 해골 둘레를 흐름
+    for i in range(7):
+        a = i * TAU / 7 + f * 0.4
+        r0 = 58.0 if f == 0 else 44.0
+        r1 = 30.0 if f == 0 else 54.0
+        pts = []
+        for s_ in range(8):
+            t = s_ / 7
+            rr = r0 + (r1 - r0) * t
+            aa = a + 0.5 * t
+            pts.append((c + math.cos(aa) * rr, c + math.sin(aa) * rr - (24 * t if f == 5 else 0)))
+        smoke = np.maximum(smoke, pad.stroke(pts, 9.0, 2.0, a0=0.6, a1=0.0, soft=3.0))
+    eye = [1.0, 1.0, 0.75, 0.9, 1.25, 0.6][f]
+    glowm = np.maximum(smoke, gblur(bone, 3.0 * SS) * 1.3)
+    for ex, ey in (e1, e2):
+        glowm = np.maximum(glowm, pad.disc_field(ex, ey, 9.0 * eye, soft=4.0))
+        glowm = np.maximum(glowm, pad.radial(ex, ey, 20.0 * eye, 2.0) * 0.8)
+    if f == 0:
+        bone = bone * 0.45
+    if f == 5:
+        bone = gblur(bone, 2.5 * SS) * 0.55
+    core = clamp01(bone - gaps * 0.9)
+    # 눈 속 밝은 점 (심지 — 혼불 심)
+    if f != 5:
+        for ex, ey in (e1, e2):
+            core = np.maximum(core, pad.disc_field(ex, ey, 2.4 * eye, soft=1.0) * 0.9)
+    body = screen(glowm * 0.9, bone * 0.2)
+    g = pad.down(body)
+    g = screen(g, gblur(g, 2.0) * 0.5, gblur(g, 5.0) * 0.35)
+    cc = pad.down(core)
+    wb = win_border(g.shape, 3.0)
+    return clamp01(g * wb), clamp01(cc * wb)
+
+
+sprite("rfx_jskull", "rotate_xyz", 128, 128, SK_N, 6, "necromancer", zoom=2,
+       desc="망자의 해골: 0 연기가 모여 해골 · 1 ~ 3 눈구멍의 혼불이 맥동 (이어 돌림) · 4 턱이 벌어지며 비명 · 5 연기로 흩어짐")(skull_frame)
+
+
+# ------------------------------------------------------------ rfx_jrift (갈라진 땅 — 땅에 누움, 그림 위 = 금이 뻗는 쪽, 칸 가운데 = 금 가운데)
+
+RF_N = 6
+
+
+def _rift_line(rs, W, H, amp):
+    pts = []
+    n = 22
+    for i in range(n + 1):
+        t = i / n
+        y = 16 + (H - 32) * t
+        x = W / 2 + (rs.uniform(-amp, amp) if 0 < i < n else 0)
+        pts.append((x, y))
+    return pts
+
+
+def rift_frame(f, W=128, H=320):
+    pad = Pad(W, H)
+    rs = random.Random(7600)
+    line = _rift_line(rs, W, H, 7.0)
+    rs2 = random.Random(7610 + f)
+    width = [2.5, 7.0, 12.0, 13.0, 13.0, 5.0][f]
+    glow_k = [0.5, 0.75, 1.0, 1.0, 0.85, 0.45][f]
+    # 틈 (가운데가 넓고 양 끝이 가늘어짐)
+    gap = pad.stroke(line, width, wfn=lambda s: width * np.maximum(0.0, np.sin(np.pi * np.clip(s, 0, 1))) ** 0.6 + 0.8, soft=1.0)
+    body = np.maximum(gblur(gap, 6.0 * SS) * 1.4, gap) * glow_k
+    # 심지 = 틈 가운데의 가는 빛 (틈 폭의 0.4 — 둘레는 녹색 빛이 보이게)
+    core = pad.stroke(line, width, wfn=lambda s: (width * np.maximum(0.0, np.sin(np.pi * np.clip(s, 0, 1))) ** 0.6 + 0.8) * 0.4, soft=0.8) * glow_k
+    # 가지 금 (곁으로 뻗는 짧은 금)
+    for i in range(7):
+        t = 0.1 + 0.8 * i / 6
+        idx = int(t * (len(line) - 1))
+        x, y = line[idx]
+        side = 1 if i % 2 else -1
+        pts = [(x, y), (x + side * rs.uniform(10, 20), y + rs.uniform(-12, 12)), (x + side * rs.uniform(20, 34), y + rs.uniform(-18, 18))]
+        core = np.maximum(core, pad.stroke(pts, 2.0 * min(1, width / 6), 0.5, a0=0.8 * glow_k, a1=0.1))
+        body = np.maximum(body, pad.stroke(pts, 6.0, 1.0, a0=0.5 * glow_k, a1=0.0, soft=2.0))
+    # 돌조각 · 불티 (벌어질 때 · 맥동 때 솟는 불티)
+    if f in (1, 2):
+        for i in range(12):
+            t = rs2.uniform(0.1, 0.9)
+            x, y = line[int(t * (len(line) - 1))]
+            core = np.maximum(core, pad.disc_field(x + rs2.uniform(-22, 22), y + rs2.uniform(-10, 10), rs2.uniform(1.5, 3.2)) * 0.9)
+    if f in (3, 4):
+        for i in range(8):
+            t = rs2.uniform(0.1, 0.9)
+            x, y = line[int(t * (len(line) - 1))]
+            core = np.maximum(core, star4(pad, x + rs2.uniform(-6, 6), y, rs2.uniform(4, 7), 0.85))
+            body = np.maximum(body, pad.disc_field(x, y, 10.0, soft=6.0) * 0.6)
+    g = pad.down(body)
+    g = screen(g, gblur(g, 3.0) * 0.5)
+    cc = pad.down(core)
+    wb = win_border(g.shape, 3.0)
+    return clamp01(g * wb), clamp01(cc * wb)
+
+
+sprite("rfx_jrift", "direction_z", 128, 320, RF_N, 6, "necromancer", zoom=3,
+       desc="갈라진 땅 (그림 위 = 금이 뻗는 쪽): 0 가는 금 · 1 ~ 2 벌어지며 돌조각 → 3 ~ 4 틈의 녹색 빛 맥동 (불티 — 이어 돌림) → 5 닫히며 흐려짐")(rift_frame)
+
+
 # ============================================================ 실행
 
 def main():

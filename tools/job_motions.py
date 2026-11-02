@@ -26,6 +26,7 @@ import job_motions_c  # noqa: E402,F401
 import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트)
 import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 라이칸)
 import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (룬 나이트 · 헥스 블레이드)
+import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -114,6 +115,12 @@ AIR = {
     "jb_runeknight_ult_plunge": [(0, 12, "float")],
     "jb_runeknight_ult_final": [(0, 6, "tuck"), (7, 11, "land")],
     "jb_hexblade_ult_cleave": [(1, 11, "tuck"), (12, 16, "land")],
+    # 0.51.0 아크메이지: 꿀술의 노래 (1칸 떠 노래 → 내려앉음) · 별의 노래 (3칸 떠 72틱 — 물결 · 별의 비 동안 떠 있음 → 대폭발에 내려앉음)
+    "jb_arcmage_song": [(1, 30, "float"), (31, 37, "land")],
+    "jb_arcmage_ult": [(2, 22, "float")],
+    "jb_arcmage_ult_wave": [(0, 10, "float")],
+    "jb_arcmage_ult_rain": [(0, 20, "float")],
+    "jb_arcmage_ult_final": [(0, 6, "float"), (7, 13, "land")],
 }
 
 
