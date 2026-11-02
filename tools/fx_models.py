@@ -1107,6 +1107,214 @@ def bone_hand():
     return m
 
 
+def p_nails(u, v, rnd):
+    """손발톱 판자 (나글파르 — 죽은 자의 손발톱으로 지은 배): 비늘처럼 엇갈려 겹친 손톱 (끝이 둥근 반달 · 밝은 판 · 어두운 틈 · 세로 결 · 밑동으로 어두워짐)"""
+    rows, cols = 5, 6
+    ry = v * rows
+    row = int(min(rows - 1, ry))
+    fy = ry - row
+    cx = u * cols + (0.5 if row % 2 else 0.0)
+    fx = cx - math.floor(cx)
+    dx = (fx - 0.5) * 2
+    tip = 0.3
+    if fy < tip:
+        inside = dx * dx + ((tip - fy) / tip) ** 2 < 0.8
+    else:
+        inside = abs(dx) < 0.9
+    if not inside:
+        return 0.2 + noise(rnd, 0.03), 1
+    lum = 0.9 - 0.32 * fy - 0.18 * dx * dx + 0.035 * math.sin(fx * 38.0)
+    if fy < 0.1:
+        lum += 0.08
+    return lum + noise(rnd, 0.03), 1
+
+
+def p_deck(u, v, rnd):
+    """갑판: 가로 판자 줄 (어두운 틈) · 판자마다 다른 밝기 · 못 자국"""
+    rows = 7
+    r = v * rows
+    k = int(r)
+    f = r - k
+    if f < 0.1:
+        return 0.25, 1
+    lum = 0.62 + 0.12 * ((k * 37) % 5) / 4 + 0.04 * math.sin(u * 30 + k)
+    if abs(u * 3 % 1 - 0.5) < 0.04 and abs(f - 0.5) < 0.12:
+        lum = 0.95
+    return lum + noise(rnd, 0.03), 1
+
+
+def p_sail(u, v, rnd):
+    """찢긴 돛: 세로 올 · 가로 기운 자국 · 구멍 (비침) · 아래 끝이 들쭉날쭉하게 찢김"""
+    lum = 0.55 + 0.1 * math.sin(u * 60) * 0.5 + 0.1 * (1 - v)
+    if abs((v * 4) % 1 - 0.5) < 0.04:
+        lum -= 0.18
+    hole = False
+    for hx, hy, hr in ((0.22, 0.42, 0.07), (0.71, 0.3, 0.05), (0.6, 0.68, 0.08), (0.33, 0.78, 0.05), (0.85, 0.55, 0.04)):
+        if math.hypot((u - hx) * 1.2, v - hy) < hr * (1 + 0.35 * math.sin(u * 40 + v * 30)):
+            hole = True
+    jag = 0.86 + 0.07 * math.sin(u * 23) + 0.05 * math.sin(u * 57 + 1.3)
+    if v > jag or hole:
+        return lum, 0
+    return lum + noise(rnd, 0.04), 1
+
+
+@model
+def naglfar():
+    """나글파르 (0.51.0 네크로맨서 궁극기 — 죽은 자의 손발톱으로 지은 배): 가운데 바닥 (땅) 이 원점, 뱃머리 +Y (4칸) · 위 +Z · 오른쪽 +X. 손톱 판자 배 몸 (용골은
+    땅 아래 −1.3) · 갑판 · 휘어 솟은 뱃머리 목 끝의 해골 (녹색 눈) · 말려 올라간 고물 · 돛대 · 활대 · 찢긴 돛 (가운데 녹색 해골 문장) · 양옆 방패 다섯씩 · 노 넷씩.
+    재질: 빛깔 (부른 색 — 뼈색) = 손톱 판자 · 뼈, 짙은 빛깔 = 갑판 · 돛대, 그림자 = 돛, 속빛 (녹색 혼불) = 눈 · 문장 · 방패 가운데"""
+    m = Model("naglfar", tex=256, cell=32)
+    a = m.atlas
+    nails = a.swatch("nails", p_nails, 2, 2)
+    deck = a.swatch("deck", p_deck, 2, 1)
+    bone = a.swatch("bone", p_bone)
+    gem = a.swatch("gem", p_gem)
+    sail = a.swatch("sail", p_sail, 2, 2)
+    glow = a.swatch("glow", p_flat, lum=1.0, k=0.0)
+    rim = a.swatch("rim", p_rim)
+    emb = a.swatch("emblem", p_emblem)
+
+    # 배 몸: 길이를 따라 단면 (U 꼴 — 왼쪽 뱃전 → 용골 → 오른쪽 뱃전), 두 면 (안에서도 보임)
+    def section(y):
+        t = y / 4.0
+        w = 1.35 * max(0.0, 1 - abs(t) ** 2.4) ** 0.55 + 0.05
+        top = 0.85 + 0.55 * abs(t) ** 2.2
+        keel = -1.3 * max(0.0, 1 - abs(t) ** 3) + 0.25 * abs(t) ** 3
+        pts = []
+        for k in range(9):
+            q = k / 8.0
+            ang = math.pi * q
+            x = -w * math.cos(ang)
+            z = keel + (top - keel) * (1 - math.sin(ang) ** 0.75)
+            pts.append((x, z))
+        return pts
+
+    ys = [-4.0 + 8.0 * i / 12 for i in range(13)]
+    secs = [[v3(x, y, z) for x, z in section(y)] for y in ys]
+    u0, v0, u1, v1 = nails
+    for j in range(len(secs) - 1):
+        for i in range(8):
+            ps = [secs[j][i], secs[j][i + 1], secs[j + 1][i + 1], secs[j + 1][i]]
+            if np.linalg.norm(ps[0] - ps[1]) < 1e-6 and np.linalg.norm(ps[2] - ps[3]) < 1e-6:
+                continue
+            uvs = [(u0 + (u1 - u0) * i / 8, v0 + (v1 - v0) * j / 12), (u0 + (u1 - u0) * (i + 1) / 8, v0 + (v1 - v0) * j / 12),
+                   (u0 + (u1 - u0) * (i + 1) / 8, v0 + (v1 - v0) * (j + 1) / 12), (u0 + (u1 - u0) * i / 8, v0 + (v1 - v0) * (j + 1) / 12)]
+            cen = sum(ps) / 4
+            m.quad(ps, uvs, TINT, inside=v3(0, cen[1], 0.9), double=True)
+    # 뱃전 테 (위 끝을 따라 둥근 막대)
+    for side in (0, 8):
+        for j in range(len(secs) - 1):
+            p0, p1 = secs[j][side], secs[j + 1][side]
+            mid = (p0 + p1) / 2
+            m.box(tuple(mid + v3(0, 0, 0.03)), (0.12, float(np.linalg.norm(p1 - p0)) + 0.02, 0.1), DARK, rim,
+                  rot=_rot_to(p1 - p0))
+    # 갑판 (뱃전 아래 0.35 — 가운데 너비만큼)
+    du0, dv0, du1, dv1 = deck
+    for j in range(len(ys) - 1):
+        y0_, y1_ = ys[j], ys[j + 1]
+        w0 = abs(section(y0_)[0][0]) * 0.92
+        w1 = abs(section(y1_)[0][0]) * 0.92
+        z = 0.35
+        m.quad([(-w0, y0_, z), (w0, y0_, z), (w1, y1_, z), (-w1, y1_, z)],
+               [(du0, dv1 - (dv1 - dv0) * j / 12), (du1, dv1 - (dv1 - dv0) * j / 12), (du1, dv1 - (dv1 - dv0) * (j + 1) / 12), (du0, dv1 - (dv1 - dv0) * (j + 1) / 12)],
+               DARK, inside=(0, (y0_ + y1_) / 2, 0), double=True)
+
+    # 뱃머리 목 (휘어 솟아 앞으로 굽음) 과 고물 (말려 올라감): 굵기가 줄어드는 팔각 관
+    def tube(pts, r0, r1, mat, uv):
+        rings = []
+        n = len(pts)
+        for i, p in enumerate(pts):
+            p = v3(p)
+            d = unit(v3(pts[min(n - 1, i + 1)]) - v3(pts[max(0, i - 1)]))
+            side = unit(np.cross(d, v3(1, 0, 0))) if abs(d[0]) < 0.95 else v3(0, 0, 1)
+            up = np.cross(side, d)
+            r = r0 + (r1 - r0) * i / (n - 1)
+            rings.append([p + side * (r * math.cos(math.pi / 4 * k)) + up * (r * math.sin(math.pi / 4 * k)) for k in range(8)])
+        m.loft(rings, mat, uv)
+
+    neck = [(0, 3.7, 0.9), (0, 4.15, 1.25), (0, 4.5, 1.75), (0, 4.62, 2.3), (0, 4.5, 2.75), (0, 4.25, 3.0)]
+    tube(neck, 0.26, 0.15, TINT, bone)
+    # 해골 머리 (목 끝 — 앞을 봄): 둥근 머리 · 턱 · 녹색 눈 둘
+    hc = v3(0, 4.42, 3.18)
+    m.lathe([(0.0, -0.3), (0.2, -0.24), (0.27, -0.05), (0.25, 0.12), (0.16, 0.26), (0.0, 0.3)], 10, TINT, bone, center=tuple(hc),
+            axis_rot=rot_x(90) @ np.diag([1, 1.25, 1]))
+    m.box(tuple(hc + v3(0, 0.3, -0.22)), (0.3, 0.22, 0.12), TINT, bone)
+    for sx in (-0.1, 0.1):
+        m.box(tuple(hc + v3(sx, 0.31, 0.02)), (0.09, 0.03, 0.08), GLOW, glow)
+    m.add_glow(-0.1, 4.75, 3.2, 0.18).add_glow(0.1, 4.75, 3.2, 0.18)
+    # 뿔 둘 (해골 옆에서 뒤로 휨)
+    for sx in (-1, 1):
+        tube([(sx * 0.2, 4.4, 3.3), (sx * 0.38, 4.25, 3.55), (sx * 0.45, 3.95, 3.75)], 0.07, 0.02, WHITE, bone)
+    stern = [(0, -3.7, 0.9), (0, -4.15, 1.3), (0, -4.4, 1.85), (0, -4.3, 2.35), (0, -3.95, 2.55), (0, -3.7, 2.35)]
+    tube(stern, 0.24, 0.1, TINT, bone)
+
+    # 돛대 · 활대 · 찢긴 돛 (앞으로 조금 부풀어 오름) · 돛의 녹색 해골 문장
+    m.box((0, 0.3, 2.7), (0.18, 0.18, 4.7), DARK, deck)
+    m.box((0, 0.3, 4.75), (3.6, 0.14, 0.14), DARK, deck)
+    su0, sv0, su1, sv1 = sail
+    cols, rows = 4, 4
+    grid = []
+    for r_ in range(rows + 1):
+        q = r_ / rows
+        row = []
+        for c_ in range(cols + 1):
+            pu = c_ / cols
+            x = -1.65 + 3.3 * pu
+            z = 4.62 - 3.0 * q
+            bulge = 0.55 * math.sin(math.pi * pu) * math.sin(math.pi * min(1, q * 1.1))
+            row.append(v3(x, 0.42 + bulge, z))
+        grid.append(row)
+    for r_ in range(rows):
+        for c_ in range(cols):
+            ps = [grid[r_][c_], grid[r_][c_ + 1], grid[r_ + 1][c_ + 1], grid[r_ + 1][c_]]
+            uvs = [(su0 + (su1 - su0) * c_ / cols, sv0 + (sv1 - sv0) * r_ / rows), (su0 + (su1 - su0) * (c_ + 1) / cols, sv0 + (sv1 - sv0) * r_ / rows),
+                   (su0 + (su1 - su0) * (c_ + 1) / cols, sv0 + (sv1 - sv0) * (r_ + 1) / rows), (su0 + (su1 - su0) * c_ / cols, sv0 + (sv1 - sv0) * (r_ + 1) / rows)]
+            m.quad(ps, uvs, SHADOW, inside=v3(0, -1.0, 3.0), double=True)
+    # 문장 (돛 가운데 — 앞 · 뒤 조금 띄움)
+    eu0, ev0, eu1, ev1 = emb
+    for dy in (0.06, -0.06):
+        c = grid[2][2] + v3(0, dy + (0.0 if dy > 0 else 0.0), 0)
+        m.quad([c + v3(-0.42, 0, -0.42), c + v3(0.42, 0, -0.42), c + v3(0.42, 0, 0.42), c + v3(-0.42, 0, 0.42)], [(eu0, ev1), (eu1, ev1), (eu1, ev0), (eu0, ev0)],
+               GLOW, inside=c - v3(0, dy * 10, 0))
+    m.add_glow(0, 0.9, 3.1, 0.55)
+
+    # 방패: 양옆 뱃전 바깥에 다섯씩 (둥근 판 — 테 · 가운데 녹색 혹)
+    for sx in (-1, 1):
+        for i in range(5):
+            y = -2.4 + 1.2 * i
+            w = abs(section(y)[0][0])
+            c = v3(sx * (w + 0.05), y, 0.62)
+            ax = rot_z(-90 * sx)
+            m.lathe([(0.0, 0.0), (0.3, 0.0), (0.3, 0.05), (0.12, 0.09), (0.0, 0.1)], 10, TINT, rim, center=tuple(c), axis_rot=ax)
+            m.box(tuple(c + v3(sx * 0.1, 0, 0)), (0.06, 0.1, 0.1), GLOW, glow)
+    # 노: 양옆 넷씩 (뱃전 아래에서 비스듬히 땅으로)
+    for sx in (-1, 1):
+        for i in range(4):
+            y = -1.8 + 1.2 * i
+            w = abs(section(y)[0][0])
+            p0 = v3(sx * (w - 0.1), y, 0.45)
+            p1 = v3(sx * (w + 1.5), y - 0.3, -0.7)
+            mid = (p0 + p1) / 2
+            m.box(tuple(mid), (0.07, float(np.linalg.norm(p1 - p0)), 0.07), DARK, deck, rot=_rot_to(p1 - p0))
+    m.add_glow(0, 0.0, 0.6, 0.9).add_glow(0, 2.6, 0.7, 0.5).add_glow(0, -2.6, 0.7, 0.5)
+    return m
+
+
+def _rot_to(d):
+    """모델 +Y 를 방향 d 로 돌리는 3×3 (상자의 긴 쪽을 d 로)"""
+    d = unit(v3(d))
+    y = v3(0, 1, 0)
+    c = float(np.dot(y, d))
+    if c > 0.9999:
+        return np.eye(3)
+    if c < -0.9999:
+        return rot_x(180)
+    axis = unit(np.cross(y, d))
+    ang = math.acos(max(-1.0, min(1.0, c)))
+    K = np.array([[0, -axis[2], axis[1]], [axis[2], 0, -axis[0]], [-axis[1], axis[0], 0]])
+    return np.eye(3) + math.sin(ang) * K + (1 - math.cos(ang)) * (K @ K)
+
+
 @model
 def phantom_axe():
     """환영 도끼 (자루 가운데가 원점, 위 +Y · 날은 +X 쪽 · 넓은 면 ±Z): 자루 · 초승달 날 (흰 날끝) · 뒤 갈고리"""

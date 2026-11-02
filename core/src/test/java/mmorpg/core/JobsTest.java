@@ -367,11 +367,11 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
         Jobs.Job ly = Jobs.job("lycan");
-        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 6, "advanced jobs " + Jobs.allAdvanced().size());
+        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 8, "advanced jobs " + Jobs.allAdvanced().size());
         if (sm == null || bk == null || wl == null || ly == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
         check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, ly)) && Jobs.advancedOf("spellblade").size() == 2
-                && Jobs.advancedOf("mage").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 매지션은 아직)");
+                && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 궁수는 아직)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == ly && Jobs.baseOf(wl) == wa && Jobs.baseOf(ly) == wa, "warrior advance");
         check(wl.display().equals("뵈드바르(워로드)") && ly.display().equals("울프헤딘(라이칸)") && "awaken".equals(wl.path()) && "invert".equals(ly.path()), "warrior display");
         check(Jobs.find("워로드") == wl && Jobs.find("울프헤딘") == ly && Jobs.find("lycan") == ly, "find warrior advanced");
@@ -434,6 +434,59 @@ public final class JobsTest {
         check(Jobs.skillLine(sm.skill(0)).startsWith("금빛 연격 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("회그니의 맹세 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
         warriorAdvance(wa, wl, ly);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("hexblade"));
+        mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
+    }
+
+    /**
+     * 0.51.0 매지션 2차 — 오드레리르(아크메이지) · 나글파르(네크로맨서) (사용자 "다음 직업표 작업"): 부분 합 = 배율 합 (매지션과 같은 7 · 4.2 · 12.6 · 56) · 무적 시간
+     * 띄움 · t · 특성 (주문 연쇄 5 · 별자리 / 망자의 군대 최대 4 · 20초)
+     */
+    static void mageAdvance(Jobs.Job mg, Jobs.Job am, Jobs.Job nc) {
+        check(am != null && nc != null, "mage advanced jobs");
+        if (am == null || nc == null) return;
+        check(Jobs.advance("mage", "awaken") == am && Jobs.advance("mage", "invert") == nc && Jobs.baseOf(am) == mg && Jobs.baseOf(nc) == mg, "mage advance");
+        check(am.display().equals("오드레리르(아크메이지)") && nc.display().equals("나글파르(네크로맨서)") && Jobs.find("아크메이지") == am && Jobs.find("나글파르") == nc,
+                "mage display · find");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(am.skill(i).total(), mg.skill(i).total()) && near(nc.skill(i).total(), mg.skill(i).total()), "mage totals slot " + i);
+        check(near(am.skill(0).num("bolts", 0) * am.skill(0).num("bolt", 0), 7) && near(am.skill(1).num("blast", 0) + am.skill(1).num("blast2", 0), 4.2)
+                && near(am.skill(2).num("pulses", 0) * am.skill(2).num("pulse", 0) + am.skill(2).num("burst", 0), 12.6)
+                && near(am.skill(4).num("pages", 0) * am.skill(4).num("page", 0) + am.skill(4).num("stars", 0) * am.skill(4).num("star", 0) + am.skill(4).num("final", 0), 56),
+                "arcmage totals 7 · 4.2 · 12.6 · 56");
+        check(near(nc.skill(0).num("spear", 0) + nc.skill(0).num("burst", 0), 7) && near(nc.skill(1).num("wall", 0) + nc.skill(1).num("shatter", 0), 4.2)
+                && near(nc.skill(2).num("blast", 0) + nc.skill(2).num("pulses", 0) * nc.skill(2).num("cloud", 0), 12.6)
+                && near(nc.skill(4).num("ram", 0) + nc.skill(4).num("crew", 0) * nc.skill(4).num("land", 0) + nc.skill(4).num("final", 0), 56),
+                "necromancer totals 7 · 4.2 · 12.6 · 56");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (마탄 다섯 · 별의 비는 한 번에 넣고 숫자만 여러 줄)
+        Jobs.Skill au = am.skill(4);
+        check(am.skill(1).num("second", 0) >= 10 && am.skill(2).num("gap", 0) >= 10 && au.num("gap", 0) >= 10
+                && au.num("rainAt", 0) - au.num("rise", 0) - (au.num("waves", 0) - 1) * au.num("gap", 0) >= 10 && au.num("finalAt", 0) + 4 - (au.num("rainAt", 0) + 6) >= 10,
+                "arcmage i-frame spacing");
+        Jobs.Skill nu = nc.skill(4);
+        check(nc.skill(0).num("burstAt", 0) - nc.skill(0).num("throwAt", 0) - nc.skill(0).num("range", 0) / nc.skill(0).num("speed", 1) * 20 >= 10
+                && nc.skill(1).num("shatterAt", 0) - nc.skill(1).num("wallAt", 0) >= 10 && nc.skill(2).num("cloudAt", 0) - nc.skill(2).num("swell", 0) >= 10
+                && nc.skill(2).num("gap", 0) >= 10 && nu.num("landAt", 0) - nu.num("rise", 0) - nu.num("sail", 0) >= 10 && nu.num("finalAt", 0) - nu.num("landAt", 0) >= 10,
+                "necromancer i-frame spacing");
+        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값)
+        check(near(am.skill(1).num("second", 0) + am.skill(1).num("delay", 0), am.skill(1).num("t", 0)) && near(am.skill(1).num("delay", 0), am.skill(1).num("w", 0))
+                && near(am.skill(2).num("dur", 0), am.skill(2).num("t", 0)) && near(au.num("finalAt", 0) + 4, au.num("t", 0)) && near(au.num("rise", 0) + 6, au.num("w", 0)),
+                "arcmage t 4 · 30 · 70 · 76 (w 20 · 10 · 26)");
+        check(near(nc.skill(0).num("burstAt", 0), nc.skill(0).num("t", 0)) && near(nc.skill(1).num("shatterAt", 0), nc.skill(1).num("t", 0))
+                && near(nc.skill(2).num("cloudAt", 0) + (nc.skill(2).num("pulses", 0) - 1) * nc.skill(2).num("gap", 0), nc.skill(2).num("t", 0))
+                && near(nc.skill(2).num("swell", 0), nc.skill(2).num("w", 0)) && near(nu.num("finalAt", 0), nu.num("t", 0)) && near(nu.num("emergeAt", 0), nu.num("w", 0)),
+                "necromancer t 24 · 24 · 40 · 60 (w 8 · 10 · 10)");
+        // 특성: 아크메이지 = 매지션의 주문 연쇄 (같은 +12% · 완드 −0.3초) 최대 5 + 별자리, 네크로맨서 = 망자의 군대 (최대 4 · 20초 · 위력 × 0.4 · 1.5초마다)
+        check(am.trait().name().equals(mg.trait().name()) && am.trait().max() == 5 && near(am.trait().def().numOr("perChain", 0), mg.trait().def().numOr("perChain", -1))
+                && near(am.trait().def().numOr("wandCut", 0), mg.trait().def().numOr("wandCut", -1)) && near(am.trait().def().numOr("star", 0), 2.0), "주문 연쇄 5 · 별자리");
+        check(nc.trait().name().equals("망자의 군대") && nc.trait().max() == 4 && near(nc.trait().def().numOr("crewFor", 0), 400) && near(nc.trait().def().numOr("crewHit", 0), 0.4)
+                && near(nc.trait().def().numOr("crewEvery", 0), 30), "망자의 군대 4 · 20초 · 위력 × 0.4");
+        // 유틸 · 범위: 서리 별 걸음 순간 이동 + 빙결 (15%) · 망자와 자리 바꾸기 순간 이동 + 묶음 (20%), 별무리 마탄 · 뼈 창은 좁은 범위 (튀는 별빛 · 꿰뚫음)
+        check(Jobs.utils(am.skill(1)).equals(List.of("blink", "stun05")) && near(Jobs.utilCost(am.skill(1)), 0.15) && Jobs.utils(nc.skill(1)).equals(List.of("blink", "root"))
+                && near(Jobs.utilCost(nc.skill(1)), 0.2) && "narrow".equals(Jobs.areaKind(am.skill(0))) && "narrow".equals(Jobs.areaKind(nc.skill(0))), "mage advanced utils · area");
+        check(Jobs.windupTicks(au) == 26 && Jobs.windupTicks(nu) == 10 && Jobs.windupTicks(nc.skill(0)) == 8, "windups 26 · 10 · 8");
+        check(Jobs.upKeys(am.skill(3)).size() == 1 && Jobs.upKey(nc.skill(3), "boost") != null, "stance up keys");
+        check(Jobs.skillLine(am.skill(3)).equals("꿀술의 노래 · 30초") && Jobs.skillLine(nc.skill(0)).startsWith("뼈 창 · 6초 · 배율 "), "mage advanced skill line");
+        check(am.color()[0][2] > 0.9 && am.color()[1][0] > 0.9 && nc.color()[0][1] > 0.85 && nc.color()[1][0] > 0.85 && nc.color()[1][2] > 0.6,
+                "colors: star blue · gold / poison green · bone");
     }
 
     /**

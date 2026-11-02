@@ -32,8 +32,8 @@ final class MageSkills {
     private static final double[] WHITE = RuneKit.WHITE;
     /** 잔상 (짙은 남색) */
     private static final double[] SHADE = {0.12, 0.14, 0.42};
-    /** 금서의 세 주문 색 {빛, 심지}: 불 · 얼음 · 번개 */
-    private static final double[][][] SPELLS = {
+    /** 금서의 세 주문 색 {빛, 심지}: 불 · 얼음 · 번개 (0.51.0 아크메이지 별의 노래도 씀) */
+    static final double[][][] SPELLS = {
         {{1.0, 0.42, 0.12}, {1.0, 0.86, 0.5}},
         {{0.42, 0.8, 1.0}, {0.9, 0.98, 1.0}},
         {{0.62, 0.5, 1.0}, {1.0, 0.96, 0.6}},
@@ -355,7 +355,7 @@ final class MageSkills {
         return true;
     }
 
-    private static double[] mix(double[] a, double[] b, double t) {
+    static double[] mix(double[] a, double[] b, double t) {
         return new double[] {a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t};
     }
 
@@ -402,7 +402,7 @@ final class MageSkills {
     }
 
     /** 주문 하나 (delay 틱 뒤): 불 = 불꽃 꼬리 · 얼음 = 하늘빛 꼬리 + 깨지는 조각 · 번개 = 내리꽂는 번개. 닿는 데 약 6틱 */
-    private static void spellFx(ServerLevel level, Vec3 from, Vec3 to, int kind, int delay) {
+    static void spellFx(ServerLevel level, Vec3 from, Vec3 to, int kind, int delay) {
         double[] glow = SPELLS[kind][0];
         double[] core = SPELLS[kind][1];
         RuneKit.later(delay, () -> {

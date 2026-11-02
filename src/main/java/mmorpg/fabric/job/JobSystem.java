@@ -79,6 +79,8 @@ public final class JobSystem {
         LycanSkills.register();
         RuneknightSkills.register(); // 0.51.0 2차 직업 (마검사 각성 · 반전)
         HexbladeSkills.register();
+        ArcmageSkills.register(); // 0.51.0 2차 직업 (매지션 각성 · 반전)
+        NecromancerSkills.register();
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);

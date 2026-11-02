@@ -445,6 +445,29 @@ public final class SkillBarHud {
                             for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
                             if (i < v) g.fill(bx + 3, ty + 3, bx + 4, ty + 4, 0xFFFFFFFF);
                         }
+                        case "arcmage" -> {
+                            // 0.51.0 주문 연쇄 (최대 5 — 다섯째에 별자리) — 금빛 별 (5 × 6, 창날처럼 줄 높이만큼): 위 꼭짓점 · 양팔 · 몸 · 벌린 두 다리, 찬 것은 둘째 빛 (금빛) +
+                            // 가운데 흰 점, 오른쪽 아래 1칸 그림자
+                            int c = i < v ? col : dim;
+                            int ty = y - 1;
+                            int[][] cells = {{2, 0}, {2, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {1, 3}, {2, 3}, {3, 3}, {1, 4}, {3, 4}, {0, 5}, {4, 5}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
+                        }
+                        case "necromancer" -> {
+                            // 0.51.0 망자의 군대 (최대 4) — 해골 (5 × 5): 둥근 머리 · 눈구멍 둘 · 이빨, 찬 것은 둘째 빛 (뼈색) + 눈구멍에 첫째 빛 (독초록 혼불), 오른쪽 아래 1칸 그림자
+                            int c = i < v ? col : dim;
+                            int ty = y;
+                            int[][] cells = {{1, 0}, {2, 0}, {3, 0}, {0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 1}, {0, 2}, {2, 2}, {4, 2}, {0, 3}, {1, 3}, {2, 3}, {3, 3}, {4, 3},
+                                {1, 4}, {3, 4}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (i < v) {
+                                g.fill(bx + 1, ty + 2, bx + 2, ty + 3, bright);
+                                g.fill(bx + 3, ty + 2, bx + 4, ty + 3, bright);
+                            }
+                        }
                         case "swordmaster" -> {
                             // 0.51.0 투지 (최대 8) — 금빛 마름모 보석: 찬 것은 첫째 빛 (금빛) + 가운데 흰 점
                             g.fill(bx + 2, by, bx + 3, by + 5, 0xC0000000);

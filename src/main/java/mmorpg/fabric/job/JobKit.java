@@ -51,8 +51,15 @@ public final class JobKit {
         double dmg = P * mult * veil * crit * claw * hex * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
-        if (!Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
-                : DamageNumbers.Style.JOB, grad(j))) {
+        JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
+        boolean landed;
+        try {
+            landed = Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
+                    : DamageNumbers.Style.JOB, grad(j));
+        } finally {
+            JobTraits8.afterJobHitDone();
+        }
+        if (!landed) {
             if (veil > 1) JobTraits3.firstHitMissed(sp);
             if (counter > 0) JobTraits4.counterMissed(sp);
             return 0;
@@ -101,8 +108,15 @@ public final class JobKit {
         double dmg = P * mult * veil * crit * claw * hex * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
-        if (!Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
-                : DamageNumbers.Style.JOB, grad(j), split, gap)) {
+        JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
+        boolean landed;
+        try {
+            landed = Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
+                    : DamageNumbers.Style.JOB, grad(j), split, gap);
+        } finally {
+            JobTraits8.afterJobHitDone();
+        }
+        if (!landed) {
             if (veil > 1) JobTraits3.firstHitMissed(sp);
             if (counter > 0) JobTraits4.counterMissed(sp);
             return 0;

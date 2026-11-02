@@ -31,6 +31,7 @@ import net.minecraft.world.phys.Vec3;
  * half 이상이면 도끼 평타 피해 + halfBonus, 다 차면 + fullBonus (RpgCombat.basicMult). 파쇄격의 방어 깨짐 (맞는 쪽 배율 — RpgCombat.takenMult).
  * 투혼: 체력이 low 아래로 떨어지면 한 번 heal 회복 (RpgHealth.lossHook)</li>
  * <li>매지션 「주문 연쇄」: 직업 스킬을 쓰고 window 틱 안에 다른 직업 스킬을 쓰면 연쇄 +1 (최대 max — 하나당 피해 + perChain, JobSystem 이 위력에 곱함).
+ * 0.51.0 각성 오드레리르(아크메이지) 도 같은 연쇄 (최대 5 — 이은 스킬마다 별 · 다섯째에 별자리 완성: JobTraits8).
  * 완드 평타가 맞으면 직업 스킬 재사용 대기 wandCut 틱 줄어듦 (한 발 — 같은 틱 — 에 한 번). 마나 과부하 (태세): 완드 평타 사거리 + · 관통 광선 · 공격 간격 ×
  * cdScale, 끝나면 이동 느려짐</li>
  * <li>궁수 「호흡」 (0 ~ 5): 움직이지 않고 활을 쏘면 +1, 움직이는 동안 decay 틱마다 하나씩 줄어듦. 하나당 활 평타 피해 + perStack · 사거리 + rangePer.
@@ -131,6 +132,11 @@ public final class JobTraitsMore {
 
     private static double trait(Jobs.Job j, String key, double fallback) {
         return j == null || j.trait() == null ? fallback : j.trait().def().numOr(key, fallback);
+    }
+
+    /** 0.51.0 주문 연쇄를 쓰는 직업 (매지션 · 각성 오드레리르(아크메이지) — 반전 나글파르(네크로맨서) 는 망자의 군대) */
+    static boolean chainJob(Jobs.Job j) {
+        return j != null && (j.id().equals("mage") || j.id().equals(JobTraits8.AM));
     }
 
     /** 0.51.0 분노를 쓰는 직업 (전사 · 각성 뵈드바르(워로드)) */
@@ -280,12 +286,13 @@ public final class JobTraitsMore {
         st.chain = Math.max(0, n);
         st.lastCast = n > 0 ? Tasks.now() : -1000;
         st.lastSkill = "";
+        JobTraits8.clearStars(sp); // 0.51.0 아크메이지의 별도 처음부터
         JobTraits.sendGauge(sp, false);
     }
 
     /** 이번 시전의 연쇄 (매지션이 아니면 0): window 안에 다른 스킬이면 지금 + 1 (최대 max), 아니면 0 · 같은 스킬이면 그대로 */
     static int chainNext(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
-        if (j == null || !j.id().equals("mage")) return 0;
+        if (!chainJob(j)) return 0;
         State st = of(sp);
         if (Tasks.now() - st.lastCast > trait(j, "window", 80)) return 0;
         if (k.id().equals(st.lastSkill)) return st.chain;
@@ -297,9 +304,9 @@ public final class JobTraitsMore {
         return chain <= 0 ? 1 : 1 + chain * trait(j, "perChain", 0.12);
     }
 
-    /** 시전이 나감: 연쇄 · 마지막 스킬 · 틱을 기록 (연쇄가 붙으면 글자 · 금빛 고리) */
+    /** 시전이 나감: 연쇄 · 마지막 스킬 · 틱을 기록 (연쇄가 붙으면 글자 · 금빛 고리). 0.51.0 아크메이지 — 별 · 별자리 완성이면 연쇄를 처음부터 */
     static void chainCommit(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, int chain) {
-        if (j == null || !j.id().equals("mage")) return;
+        if (!chainJob(j)) return;
         State st = of(sp);
         st.chain = chain;
         st.lastCast = Tasks.now();
@@ -310,6 +317,7 @@ public final class JobTraitsMore {
             JobFx.ringFacing(sp.level(), tip, 0.22 + 0.08 * chain, j, V.scale(sp.getViewVector(1F), -1), 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
             SkillFx.play(sp.level(), "block.amethyst_block.chime", sp.position(), 1.2 + chain * 0.2, 0.8);
         }
+        if (JobTraits8.commit(sp, j, k, chain)) st.chain = 0; // 0.51.0 아크메이지: 다섯째 별 → 별자리 완성 (연쇄는 처음부터 — 마지막 스킬 · 틱은 그대로라 다음 스킬이 연쇄 1)
         JobTraits.sendGauge(sp, false);
     }
 
@@ -455,7 +463,7 @@ public final class JobTraitsMore {
             gainRage(sp, j, (int) trait(j, "onHit", 8));
             return;
         }
-        if (j.id().equals("mage") && "wand".equals(w.type())) {
+        if (chainJob(j) && "wand".equals(w.type())) { // 0.51.0 아크메이지도 (같은 wandCut)
             State st = of(sp);
             long now = Tasks.now();
             if (st.lastCut == now) return;
@@ -506,9 +514,10 @@ public final class JobTraitsMore {
                 st.rage = Math.max(0, st.rage - (int) Math.max(1, Math.round(trait(j, "decay", 5) * 4 / 20.0)));
                 JobTraits.sendGauge(sp, false);
             }
-        } else if (j.id().equals("mage")) {
+        } else if (chainJob(j)) {
             if (st.chain > 0 && now - st.lastCast > trait(j, "window", 80)) {
                 st.chain = 0;
+                JobTraits8.clearStars(sp); // 0.51.0 아크메이지: 연쇄가 끊기면 별도 사라짐
                 JobTraits.sendGauge(sp, false);
             }
         }
@@ -547,7 +556,7 @@ public final class JobTraitsMore {
     static int gaugeValue(ServerPlayer sp, Jobs.Job j) {
         return switch (j.id()) {
             case "warrior", "warlord" -> rage(sp); // 0.51.0 뵈드바르(워로드) 도 분노
-            case "mage" -> chain(sp);
+            case "mage", "arcmage" -> chain(sp); // 0.51.0 오드레리르(아크메이지) 도 연쇄 (최대 5)
             case "archer" -> breath(sp);
             default -> JobTraits3.gaugeValue(sp, j); // 0.29.0 표식 · 창끝 · 혼
         };

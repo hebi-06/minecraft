@@ -522,6 +522,11 @@ final class JobFx {
         two(level, "jshatter2", SHATTER, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
+    /** 같은 것 — 색을 정함 (0.51.0 서리 별 걸음의 얼음 · 뼈 방벽의 뼈 조각) */
+    static void shatter(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
+        two(level, "jshatter2", SHATTER, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), glow, core);
+    }
+
     /**
      * 마력 구체 → 0.50.0 v2 떠도는 별 (rfx_jstar — 구 안의 빛나는 별 · 서로 다른 빠르기로 도는 기운 고리 둘 · 도는 반짝임, 카메라를 봄, 이어 돌림): 구 반지름
      * radius 칸 (v1 rfx_jorb 의 반 크기 × 0.6 과 같은 전체 크기 — × 1.17)
@@ -1155,5 +1160,81 @@ final class JobFx {
                 loop(level, "jbifrost", BIFROST, V.up(mid, (2 - i) * gap), life, 12, o.with("dir", u, "size", 1.25, "phase", (double) ((s + i) % BIFROST)), c, core);
             }
         }
+    }
+
+    // ------------------------------------------------------------ 0.51.0 매지션 2차 그림 (tools/job_fx_art_adv.py — 오드레리르(아크메이지) · 나글파르(네크로맨서))
+
+    /** 장 수: 별자리의 별 · 별똥 · 뼈 창 · 뼈 방벽 · 망자의 해골 · 갈라진 땅 */
+    static final int STARNODE = 8;
+    static final int FALLSTAR = 4;
+    static final int BONESPEAR = 4;
+    static final int BONEWALL = 8;
+    static final int SKULL = 6;
+    static final int RIFT = 6;
+    /** 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1): 별똥의 별 · 뼈 창 끝 */
+    static final double FALLSTAR_HEAD = 0.78;
+    static final double BONESPEAR_HEAD = 0.94;
+
+    /**
+     * 별자리의 별 (rfx_jstarnode — 카메라를 봄): 0 번쩍 · 1 피어남 → 2 ~ 5 반짝임 (loop 면 이어 돌림 — 네 갈래 빛살이 조금씩 돎) → 6 크게 번쩍 · 7 별빛 조각으로 흩어짐.
+     * 장 from 부터 count 장, 크기 약 size × 2 칸 (별 = size × 0.9)
+     */
+    static void starNode(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(STARNODE - 1, from));
+        int n = Math.max(1, Math.min(STARNODE - f, count));
+        cells(level, "jstarnode", STARNODE, f, n, at, life, loop ? 8 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), glow, core);
+    }
+
+    /** 별똥 (rfx_jfallstar — 가는 쪽으로 누움, 이어 돌림): 빛나는 별 머리 · 길게 가늘어지는 꼬리 · 반짝이 가루. 머리가 from 근처에서 나와 to 에 닿음 (길이 약 size × 2 칸): 닿는 틱 */
+    static int fallStar(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Opt o, double[] glow, double[] core) {
+        return fly(level, "jfallstar", FALLSTAR, from, to, speed, size, FALLSTAR_HEAD, o, glow, core);
+    }
+
+    /** 뼈 창 (rfx_jbonespear — 가는 쪽으로 누움, 이어 돌림): 들쭉날쭉한 뼈 끝 · 등뼈 자루 · 갈비 가시 · 녹색 혼불 꼬리. from → to (길이 약 size × 2 칸): 닿는 틱 */
+    static int boneSpear(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double speed, double size, Opt o) {
+        return fly(level, "jbonespear", BONESPEAR, from, to, speed, size, BONESPEAR_HEAD, o, outer(j), inner(j));
+    }
+
+    /** 멈춘 뼈 창 (손에 빚는 중 · 박힌 것): 끝 tip 이 dir 쪽 (길이 약 size × 2 칸) — life 초 이어 돌림 */
+    static void boneSpearAt(ServerLevel level, Vec3 tip, Vec3 dir, double size, double life, Jobs.Job j, Opt o) {
+        Vec3 u = V.len(dir) < 1e-3 ? V.UP : V.unit(dir);
+        loop(level, "jbonespear", BONESPEAR, V.add(tip, u, -size * BONESPEAR_HEAD), life, 12, o.with("dir", u, "size", size), outer(j), inner(j));
+    }
+
+    /**
+     * 뼈 방벽 (rfx_jbonewall — 세워 카메라 쪽으로 돎): stage 0 = 땅을 뚫고 솟음 (0 ~ 2) · 1 = 서 있음 (3 ~ 5 이어 돌림 — 혼불이 일렁임) · 2 = 부서짐 (6 ~ 7).
+     * 아래 끝 = ground · 높이 약 size × 2 칸 (너비도 같음)
+     */
+    static void boneWall(ServerLevel level, Vec3 ground, double size, int stage, double life, Opt o, Jobs.Job j) {
+        Vec3 at = V.up(ground, size);
+        Opt b = o.with("size", size);
+        switch (stage) {
+            case 0 -> cells(level, "jbonewall", BONEWALL, 0, 3, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), outer(j), inner(j));
+            case 1 -> cells(level, "jbonewall", BONEWALL, 3, 3, at, life, 6, true, b.with("fade", o.num("fade", 0.15)), outer(j), inner(j));
+            default -> cells(level, "jbonewall", BONEWALL, 6, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.3)), outer(j), inner(j));
+        }
+    }
+
+    /**
+     * 망자의 해골 (rfx_jskull — 카메라를 봄): 0 연기가 모여 해골 · 1 ~ 3 눈구멍의 혼불이 맥동 (loop 면 이어 돌림) · 4 턱이 벌어지며 비명 · 5 연기로 흩어짐. 장 from 부터
+     * count 장, 크기 약 size × 2 칸
+     */
+    static void skull(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
+        int f = Math.max(0, Math.min(SKULL - 1, from));
+        int n = Math.max(1, Math.min(SKULL - f, count));
+        cells(level, "jskull", SKULL, f, n, at, life, loop ? 7 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.25)), outer(j), inner(j));
+    }
+
+    /**
+     * 갈라진 땅 (rfx_jrift — 땅에 누움, 그림 위 = 갈라지는 쪽): 0 가는 금 · 1 ~ 2 벌어지며 돌조각 · 3 ~ 4 틈의 녹색 빛 맥동 (loop 면 이어 돌림) · 5 닫히며 흐려짐.
+     * center = 금 가운데, facing = 금이 뻗는 쪽 (수평), 길이 약 size × 5 칸 · 너비 size × 2 칸
+     */
+    static void rift(ServerLevel level, Vec3 center, Vec3 facing, double size, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
+        int f = Math.max(0, Math.min(RIFT - 1, from));
+        int n = Math.max(1, Math.min(RIFT - f, count));
+        Vec3 fl = V.flat(facing);
+        double spin = Math.toDegrees(Math.atan2(fl.x, fl.z));
+        cells(level, "jrift", RIFT, f, n, V.up(center, 0.06), life, loop ? 6 : 0, loop, o.with("dir", V.UP, "size", size, "spin", spin, "fade", o.num("fade", 0.25)),
+                outer(j), inner(j));
     }
 }
