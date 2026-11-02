@@ -413,26 +413,33 @@ public final class JobsTest {
             check(near(r, 1.2, 0.005), a.id() + " dps ×" + r + " (1차 × 1.2)");
         }
         check(Jobs.upId("swordsman_flurry").equals("swordsman_flurry") && Jobs.upId(null) == null, "upId keeps first-job ids");
-        // 부분 합 = 배율 합
-        check(near(sum(sm.skill(0), "beats"), 5) && near(sum(sm.skill(1), "cuts"), 3) && near(sum(sm.skill(2), "hits") + sm.skill(2).num("land", 0), 9)
-                && near(sm.skill(4).num("launch", 0) + sum(sm.skill(4), "beats") + sm.skill(4).num("final", 0), 40), "swordmaster totals 5 · 3 · 9 · 40");
-        check(near(sum(bk.skill(0), "hits"), 5) && near(bk.skill(1).num("mult", 0), 3) && near(bk.skill(2).num("spin", 0) + bk.skill(2).num("burst", 0) * bk.trait().max(), 9)
-                && near(sum(bk.skill(4), "beats") + bk.skill(4).num("final", 0), 40), "bloodknight totals 5 · 3 · 4 + 1 × 상처 5 · 40");
-        // 같은 적을 여러 번 치는 것은 10틱 넘게 (빠른 두 번 베기는 한 번에 넣고 숫자만 두 줄 — splits · split)
-        check(sm.skill(0).num("gap", 0) >= 10 && sm.skill(1).num("gap", 0) >= 10 && sm.skill(2).num("gap", 0) >= 10 && sm.skill(4).num("every", 0) >= 10
-                && sm.skill(4).num("finalDelay", 0) >= 10 && sm.skill(4).num("first", 0) - sm.skill(4).num("rush", 0) >= 10, "swordmaster i-frame spacing");
-        check(bk.skill(0).num("gap", 0) >= 10 && bk.skill(2).num("delay", 0) >= 10 && bk.skill(4).num("every", 0) >= 10 && bk.skill(4).num("finalDelay", 0) >= 10,
-                "bloodknight i-frame spacing");
-        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값)
-        check(near(sm.skill(2).num("first", 0) + sm.skill(2).def().list("hits").size() * sm.skill(2).num("gap", 0), sm.skill(2).num("t", 0)), "만월 강하 t 34");
-        check(near(sm.skill(4).num("first", 0) + 3 * sm.skill(4).num("every", 0) + sm.skill(4).num("finalDelay", 0), sm.skill(4).num("t", 0)), "신들의 황혼 t 60");
-        check(near(bk.skill(4).num("rush", 0) + 3 * bk.skill(4).num("every", 0) + bk.skill(4).num("finalDelay", 0), bk.skill(4).num("t", 0)), "끝나지 않는 전투 t 52");
-        check(near(bk.skill(2).num("delay", 0), bk.skill(2).num("t", 0)) && near(sm.skill(1).num("gap", 0) + 3, sm.skill(1).num("t", 0)), "상처 터뜨리기 t 10 · 그라니 t 13");
+        // 0.51.0 재설계안 2판 (claude/job-advance-redo.md) — 부분 합 = 배율 합: 칼집 섬광 · 받아넘기기는 한 번에 넣고 숫자만 여러 줄, 불의 울타리 가로지르기 다섯,
+        // 다시 벼린 칼 충격 + 검풍 / 핏빛 대검 세 번, 피의 사슬 박음 + 끌어당김, 칼을 뽑다 칼날 + 내려꽂음 + X 베기 넷
+        check(near(sm.skill(0).total(), 5) && sm.skill(0).num("lines", 0) >= 2 && near(sm.skill(1).total(), 3) && near(sum(sm.skill(2), "cuts"), 9)
+                && near(sm.skill(4).num("burst", 0) + sm.skill(4).num("slash", 0), 40), "swordmaster totals 5 · 3 · 9 · 40");
+        check(near(sum(bk.skill(0), "casts"), 5) && near(bk.skill(1).total(), 3) && near(bk.skill(2).num("bind", 0) + bk.skill(2).num("pull", 0), 9)
+                && near(bk.skill(4).num("blade", 0) + bk.skill(4).num("slam", 0) + sum(bk.skill(4), "slashes"), 40), "bloodknight totals 5 · 3 · 9 · 40");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (다시 누르는 단계는 gap — 다시 누를 수 있는 가장 이른 틱 · JobRecast)
+        List<Double> cleaveAt = bk.skill(0).def().numbersOrNull("hitAt");
+        check(cleaveAt != null && cleaveAt.size() == 3 && bk.skill(0).num("gap", 0) + cleaveAt.get(1) - cleaveAt.get(0) >= 10
+                && bk.skill(0).num("gap", 0) + cleaveAt.get(2) - cleaveAt.get(1) >= 10 && bk.skill(0).num("window", 0) > bk.skill(0).num("gap", 0), "핏빛 대검 다시 누름 간격");
+        check(sm.skill(4).num("gap", 0) + sm.skill(4).num("slashAt", 0) - sm.skill(4).num("burstAt", 0) >= 10 && sm.skill(4).num("dur", 0) > sm.skill(4).num("gap", 0),
+                "다시 벼린 칼 검풍 간격");
+        check(sm.skill(2).num("every", 0) >= 10 && bk.skill(2).num("delay", 0) >= 10 && bk.skill(4).num("every", 0) >= 10 && bk.skill(4).num("fly", 0) >= 10,
+                "swordmaster · bloodknight i-frame spacing");
+        // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값 — 다시 누르는 스킬은 12틱마다 다시 누름)
+        check(near(sm.skill(0).num("sheath", 0), sm.skill(0).num("t", 0)) && near(sm.skill(1).num("window", 0), sm.skill(1).num("t", 0)), "칼집 섬광 t 6 · 받아넘기기 t 10");
+        check(near(sm.skill(2).num("first", 0) + (sm.skill(2).def().list("cuts").size() - 1) * sm.skill(2).num("every", 0), sm.skill(2).num("t", 0)), "불의 울타리 t 46");
+        check(near(24 + cleaveAt.get(2), bk.skill(0).num("t", 0)) && near(bk.skill(1).num("leap", 0), bk.skill(1).num("t", 0)), "핏빛 대검 t 31 · 피의 돌진 t 6");
+        check(near(bk.skill(2).num("first", 0) + bk.skill(2).num("delay", 0) + 2, bk.skill(2).num("t", 0)), "피의 사슬 t 36");
+        check(near(bk.skill(4).num("draw", 0) + 1 + bk.skill(4).num("fly", 0) + bk.skill(4).def().list("slashes").size() * bk.skill(4).num("every", 0),
+                bk.skill(4).num("t", 0)), "칼을 뽑다 t 60");
         // 특성
         check(sm.trait().name().equals("투지") && sm.trait().max() == 8 && near(sm.trait().def().numOr("crit", 0), 0.3), "투지 최대 8 · 치명 +30%");
-        check(bk.trait().name().equals("피의 갈증") && bk.trait().max() == 5 && near(bk.trait().def().numOr("cost", 0), 0.04) && near(bk.trait().def().numOr("leech", 0), 0.05),
-                "피의 갈증 상처 5 · 체력 4% · 흡혈 5%");
-        check(Jobs.skillLine(sm.skill(0)).startsWith("금빛 연격 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("회그니의 맹세 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
+        check(bk.trait().name().equals("피의 갈증") && bk.trait().max() == 5 && near(bk.trait().def().numOr("cost", 0), 0.04) && near(bk.trait().def().numOr("leech", 0), 0.05)
+                && near(bk.trait().def().numOr("thirstAt", 0), 0.3) && bk.trait().def().numOr("thirstSpeed", 0) > 0 && bk.trait().def().numOr("leechMax", 0) > 0,
+                "피의 갈증 체력 4% · 흡혈 5% · 체력 30% 에서 가장 목마름");
+        check(Jobs.skillLine(sm.skill(0)).startsWith("칼집 섬광 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("광란 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
         warriorAdvance(wa, wl, ly);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("hexblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));

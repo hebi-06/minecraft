@@ -116,6 +116,8 @@ public final class MmorpgClient implements ClientModInitializer {
         // 0.38.0 동작 (다른 사람의 평타 · 스킬 · 구르기, 내 스킬)
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.motion.MotionNet.PlayPayload.TYPE, (payload, context) -> mmorpg.fabric.client.motion.ClientMotions.receive(payload));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.motion.MotionNet.LookPayload.TYPE, (payload, context) -> mmorpg.fabric.client.motion.ClientMotions.receiveLook(payload));
+        // 0.51.0 멈칫 (맞는 순간 동작 · 궤적이 잠깐 멈춤 — 화면은 흔들지 않음)
+        ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.motion.MotionNet.StopPayload.TYPE, (payload, context) -> mmorpg.fabric.client.motion.ClientMotions.receiveStop(payload));
         // 0.44.0 대장장이 전용 창 (open 이면 창) · 망치질 (창 패널 · 세상의 대장장이 NPC)
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.smith.SmithNet.ViewPayload.TYPE, (payload, context) -> ClientSmith.view(payload, context.client()));
         ClientPlayNetworking.registerGlobalReceiver(mmorpg.fabric.smith.SmithNet.WorkPayload.TYPE, (payload, context) -> ClientSmith.work(payload));

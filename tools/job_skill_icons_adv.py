@@ -54,207 +54,225 @@ def blood_sword(tip, end, A, B, blade=2.6, guard=7.0):
                         guard_cols=((96, 86, 92), (46, 40, 46), (140, 130, 136), (20, 16, 20)), grip_cols=(mix(A, (0, 0, 0), 0.5), mix(A, (0, 0, 0), 0.75), None, None))
 
 
-# ------------------------------------------------------------ 시구르드(소드마스터) (빛: 금빛 → 은빛)
+# ------------------------------------------------------------ 시구르드(소드마스터) (빛: 금빛 → 은빛) — 0.51.0 재설계안 2판
 
-def swordmaster_flurry(A, B):
-    # 금빛 연격: 크게 엇갈린 X자 초승달 둘 (금빛 · 은빛) + 작은 연격 자국 둘 · 가운데 금빛 반짝임
-    x1, x2 = mask(), mask()
-    crescent(x1, 2.0, 30.0, 26.0, 3.8, -84, -6)
-    crescent(x2, 30.0, 30.0, 26.0, 3.8, 186, 264)
-    small = mask()
-    crescent(small, 16.0, 16.0, 13.0, 1.6, 200, 250)
-    crescent(small, 16.0, 16.0, 13.0, 1.6, 20, 70)
+FIRE_C = (255, 112, 30)
+FIRE_HI = (255, 232, 140)
+LACQUER = (70, 22, 20)
+
+
+def swordmaster_draw(A, B):
+    # 칼집 섬광: 아래왼쪽의 검붉은 칼집 (금빛 어귀) 에서 막 뽑혀 위오른쪽으로 뻗은 칼 · 어귀의 섬광 · 뒤로 엇갈린 가는 칼자국 다발
+    cuts = mask()
+    for a, b, w in (((3.0, 9.0), (21.0, 3.5), 0.9), ((5.0, 15.5), (28.0, 9.0), 1.0), ((14.0, 27.5), (30.0, 14.5), 0.9), ((2.5, 20.0), (13.5, 2.5), 0.8),
+                    ((19.0, 30.0), (29.0, 22.0), 0.8)):
+        line(cuts, [a, b], w)
+    sheath = mask()
+    line(sheath, [(2.5, 29.5), (12.6, 19.4)], 3.4)
+    fit = mask()
+    disc(fit, 12.8, 19.2, 2.1)
+    disc(fit, 4.4, 27.6, 1.5)
+    sw = gold_sword((30.0, 2.0), (11.0, 21.0), blade=2.8, guard=6.6)
     sp = mask()
-    star(sp, 16.0, 14.4, 5.2, 0.18)
-    star(sp, 27.0, 5.4, 2.2)
-    star(sp, 5.0, 6.0, 1.8)
-    subject = stack(layer(small, mix(B, WHITE, 0.4), B, None, None), layer(x1, GOLD_HI, A, WHITE, GOLD_LO, axis=(0.7, -0.7)),
-                    layer(x2, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.4), axis=(-0.7, -0.7)), layer(sp, WHITE, GOLD_HI))
-    return finish(subject, [glow(lighter(x1, x2), A, 1.7, 1.0), glow(sp, GOLD_HI, 1.2, 0.9)], backdrop(mix(A, NIGHT, 0.86), mix(A, (60, 40, 10), 0.45)))
+    star(sp, 13.4, 18.6, 6.0, 0.16, 45)
+    star(sp, 25.0, 6.0, 2.4)
+    subject = stack(layer(cuts, WHITE, mix(A, WHITE, 0.4), None, None, axis=(1, -1)), layer(sheath, mix(LACQUER, A, 0.25), LACQUER, mix(LACQUER, WHITE, 0.3),
+                    mix(LACQUER, (0, 0, 0), 0.4)), layer(fit, GOLD_HI, GOLD, WHITE, GOLD_LO), *sw, layer(sp, WHITE, GOLD_HI))
+    return finish(subject, [glow(lighter(cuts, sp), A, 1.6, 1.0)], backdrop(mix(A, NIGHT, 0.86), mix(A, (60, 40, 10), 0.45)))
 
 
-def swordmaster_grani(A, B):
-    # 그라니의 질주: 아래왼쪽에서 Z자로 꺾여 위오른쪽으로 내달린 금빛 길 (두 마디) · 끝에 누운 칼 · 말발굽 자국 둘
-    path = mask()
-    line(path, [(2.5, 27.5), (14.5, 19.0)], 2.4)
-    line(path, [(14.5, 19.0), (10.5, 12.5)], 2.0)
-    line(path, [(10.5, 12.5), (23.0, 6.5)], 2.4)
+def swordmaster_parry(A, B):
+    # 받아넘기기: 곧게 세운 칼 · 왼쪽 위에서 날아든 검붉은 공격이 칼날에 막혀 튀는 큰 불꽃 · 오른쪽으로 되돌아 휘감는 은빛 받아치기 호
+    hit = mask()
+    crescent(hit, -2.0, 18.0, 17.0, 2.6, -70, -24)
+    counter = mask()
+    crescent(counter, 15.0, 16.0, 13.5, 2.8, -50, 70)
+    sw = gold_sword((14.0, 2.0), (14.0, 29.0), blade=3.0, guard=8.6)
+    sp = mask()
+    star(sp, 14.0, 10.6, 7.0, 0.15, 0)
+    star(sp, 14.0, 10.6, 4.0, 0.2, 45)
+    sparks = mask()
+    for cx, cy, r in ((7.0, 6.0, 1.0), (21.5, 5.0, 1.0), (8.5, 15.0, 0.8), (20.5, 14.0, 0.9)):
+        disc(sparks, cx, cy, r)
+    subject = stack(layer(hit, mix((150, 30, 30), WHITE, 0.2), (110, 20, 24), None, None), layer(counter, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.4), axis=(0, 1)),
+                    *sw, layer(sparks, GOLD_HI, A), layer(sp, WHITE, GOLD_HI))
+    return finish(subject, [glow(lighter(sp, sparks), A, 1.8, 1.1), glow(counter, B, 1.2, 0.8)], backdrop(mix(A, NIGHT, 0.86), mix(B, (20, 30, 60), 0.4)))
+
+
+def swordmaster_ring(A, B):
+    # 불의 울타리: 둘레에 솟은 불꽃 울타리 (불꽃 혀 열둘) · 안을 가로지른 금빛 별 (가로지르기 다섯) · 가운데 반짝임
+    cx, cy, R = 16.0, 17.0, 12.6
+    flames, cores = mask(), mask()
+    for i in range(12):
+        a = math.radians(i * 30 + 15)
+        x, y = cx + math.cos(a) * R, cy + math.sin(a) * R * 0.86
+        drop(flames, x, y, 1.9, -90)
+        drop(cores, x, y + 0.5, 0.9, -90)
+    pts = [(cx + math.cos(math.radians(-90 + 72 * i)) * 8.6, cy + math.sin(math.radians(-90 + 72 * i)) * 8.6) for i in range(5)]
+    starm = mask()
+    for i in range(5):
+        line(starm, [pts[i], pts[(i + 2) % 5]], 1.3)
     core = mask()
-    line(core, [(3.5, 27.0), (14.5, 19.0), (10.5, 12.5), (22.0, 7.0)], 0.7)
-    shoe = mask()
-    for cx, cy in ((22.5, 25.0), (27.0, 19.5)):
-        crescent(shoe, cx, cy, 2.6, 1.1, 200, 340, taper=False)
-    sw = gold_sword((30.5, 3.0), (18.0, 9.4), blade=2.6, guard=6.2)
+    for i in range(5):
+        line(core, [pts[i], pts[(i + 2) % 5]], 0.45)
     sp = mask()
-    star(sp, 30.0, 3.4, 3.4, 0.2)
-    subject = stack(layer(path, GOLD_HI, A, WHITE, GOLD_LO, axis=(1, -1)), layer(core, WHITE, WHITE), layer(shoe, B, mix(B, (0, 0, 0), 0.3)), *sw,
-                    layer(sp, WHITE, WHITE))
-    return finish(subject, [glow(lighter(path, sp), A, 1.6, 1.0)], backdrop(mix(A, NIGHT, 0.86), mix(B, (20, 30, 60), 0.4)))
+    star(sp, cx, cy, 3.6, 0.2)
+    subject = stack(layer(flames, FIRE_HI, FIRE_C, WHITE, mix(FIRE_C, (0, 0, 0), 0.35)), layer(cores, WHITE, FIRE_HI), layer(starm, GOLD_HI, A, WHITE, GOLD_LO),
+                    layer(core, WHITE, WHITE), layer(sp, WHITE, GOLD_HI))
+    return finish(subject, [glow(flames, FIRE_C, 1.8, 1.0), glow(starm, A, 1.3, 0.9)], backdrop(mix(FIRE_C, NIGHT, 0.85), mix(A, (90, 40, 10), 0.45)))
 
 
-def swordmaster_moon(A, B):
-    # 만월 강하: 뒤의 큰 금빛 보름달 (얇은 고리 · 옅은 속) · 그 앞을 지나 아래로 내리꽂히는 칼 · 땅에서 퍼지는 충격 초승달
-    moon = mask()
-    ring(moon, 16.0, 12.0, 10.4, 1.8)
-    full = mask()
-    disc(full, 16.0, 12.0, 8.8)
-    sw = gold_sword((16.0, 29.0), (16.0, 2.2), blade=3.2, guard=8.6)
-    arcs = mask()
-    crescent(arcs, 16.0, 31.5, 11.5, 2.2, 196, 252)
-    crescent(arcs, 16.0, 31.5, 11.5, 2.2, 288, 344)
+def swordmaster_blood(A, B):
+    # 용의 피: 금빛 용의 눈 (아몬드 꼴 · 세로로 갈라진 눈동자) · 눈 위로 솟는 금빛 불길 · 아래로 흐르는 금빛 핏방울
+    eye = mask()
+    up = [(4.0 + i * 1.2, 17.0 - math.sin(math.pi * i / 20) * 8.4) for i in range(21)]
+    lo = [(28.0 - i * 1.2, 17.0 + math.sin(math.pi * i / 20) * 6.2) for i in range(21)]
+    poly(eye, up + lo)
+    iris = mask()
+    disc(iris, 16.0, 16.4, 5.6)
+    pupil = mask()
+    poly(pupil, [(16.0, 10.4), (17.3, 16.4), (16.0, 22.4), (14.7, 16.4)])
+    flames = mask()
+    for x, y, r in ((8.0, 8.6, 1.7), (12.5, 6.0, 2.0), (16.0, 4.8, 2.2), (19.5, 6.0, 2.0), (24.0, 8.6, 1.7)):
+        drop(flames, x, y, r, -90)
+    drops = mask()
+    drop(drops, 11.0, 27.4, 1.4, -90)
+    drop(drops, 21.0, 28.4, 1.2, -90)
     sp = mask()
-    star(sp, 16.0, 28.4, 4.0, 0.18)
-    star(sp, 25.4, 4.6, 1.8)
-    subject = stack(layer(full, mix(A, NIGHT, 0.35), mix(A, NIGHT, 0.6)), layer(moon, GOLD_HI, A, WHITE, GOLD_LO), layer(arcs, WHITE, B, WHITE, None), *sw,
-                    layer(sp, WHITE, WHITE))
-    return finish(subject, [glow(moon, A, 2.0, 0.9), glow(arcs, B, 1.2, 0.8)], backdrop(mix(A, NIGHT, 0.86), mix(B, (20, 30, 70), 0.45)))
-
-
-def swordmaster_heart(A, B):
-    # 용의 심장: 땅에 곧게 꽂힌 칼 · 코등이 뒤에서 타오르는 금빛 심장 (용의 비늘 무늬) · 사방으로 솟는 빛
-    heart = mask()
-    disc(heart, 12.6, 11.0, 4.6)
-    disc(heart, 19.4, 11.0, 4.6)
-    poly(heart, [(8.2, 12.6), (23.8, 12.6), (16.0, 22.6)])
-    rays = mask()
-    for a in range(0, 360, 45):
-        r0, r1 = 11.0, 14.6
-        x0, y0 = 16 + math.cos(math.radians(a)) * r0, 13 + math.sin(math.radians(a)) * r0
-        x1, y1 = 16 + math.cos(math.radians(a)) * r1, 13 + math.sin(math.radians(a)) * r1
-        line(rays, [(x0, y0), (x1, y1)], 1.2)
-    scale = mask()
-    for cx, cy in ((13.0, 12.0), (19.0, 12.0), (16.0, 16.6)):
-        crescent(scale, cx, cy, 2.4, 0.9, 20, 160, taper=False)
-    sw = gold_sword((16.0, 30.5), (16.0, 3.0), blade=3.0, guard=9.0)
-    ground = mask()
-    poly(ground, [(5, 29.2), (27, 29.2), (27, 30.6), (5, 30.6)])
-    subject = stack(layer(rays, GOLD_HI, A, None, None), layer(heart, GOLD_HI, mix(A, (160, 40, 10), 0.35), WHITE, GOLD_LO),
-                    layer(scale, mix(A, (120, 50, 10), 0.4), mix(A, (90, 40, 10), 0.6)), layer(ground, B, mix(B, (0, 0, 0), 0.35)), *sw)
-    return finish(subject, [glow(lighter(heart, rays), A, 2.0, 1.0)], backdrop(mix(A, NIGHT, 0.84), mix(A, (80, 40, 10), 0.4)))
+    star(sp, 13.6, 13.8, 2.0, 0.22)
+    subject = stack(layer(flames, FIRE_HI, mix(A, FIRE_C, 0.4), WHITE, None), layer(eye, mix(A, (40, 20, 6), 0.55), mix(A, (20, 10, 4), 0.75), GOLD_HI, None),
+                    layer(iris, GOLD_HI, mix(A, FIRE_C, 0.5), WHITE, GOLD_LO), layer(pupil, (24, 10, 6), (10, 4, 2)),
+                    layer(drops, GOLD_HI, A, WHITE, GOLD_LO), layer(sp, WHITE, WHITE))
+    return finish(subject, [glow(lighter(iris, flames), A, 2.0, 1.0)], backdrop(mix(A, NIGHT, 0.84), mix(A, (90, 40, 10), 0.45)))
 
 
 def swordmaster_ult(A, B):
-    # 신들의 황혼: 땅에 내리꽂힌 큰 칼 · 칼끝에서 앞 (아래) 세 갈래로 갈라지는 빛나는 금 · 양옆 충격 초승달 · 하늘의 금빛 띠
-    crack = mask()
-    tip = (16.0, 20.5)
-    for end, mid in (((16.0, 31.5), (15.0, 26.0)), ((4.0, 31.5), (10.0, 25.0)), ((28.0, 31.5), (22.0, 25.4))):
-        line(crack, [tip, mid, end], 1.7)
-    core = mask()
-    for end, mid in (((16.0, 31.5), (15.0, 26.0)), ((4.0, 31.5), (10.0, 25.0)), ((28.0, 31.5), (22.0, 25.4))):
-        line(core, [tip, mid, end], 0.55)
-    arcs = mask()
-    crescent(arcs, 16.0, 22.0, 13.4, 2.4, 192, 240)
-    crescent(arcs, 16.0, 22.0, 13.4, 2.4, 300, 348)
-    sky = mask()
-    crescent(sky, 16.0, 30.0, 27.0, 2.0, 222, 318, taper=True)
-    sw = gold_sword((16.0, 21.0), (16.0, 1.6), blade=4.0, guard=10.4)
+    # 다시 벼린 칼: 아래의 모루 · 그 위에 곧게 선 빛나는 칼 (벼림) · 튀는 불티 · 뒤를 크게 가로지르는 은빛 검풍
+    wind = mask()
+    crescent(wind, 16.0, 30.0, 25.0, 3.0, 198, 342)
+    anvil = mask()
+    poly(anvil, [(7.0, 22.0), (26.0, 22.0), (24.0, 25.0), (19.0, 25.0), (19.0, 27.0), (23.0, 30.0), (9.0, 30.0), (13.0, 27.0), (13.0, 25.0), (8.0, 25.0)])
+    poly(anvil, [(2.0, 22.0), (7.5, 22.0), (7.5, 24.4)])
+    sw = gold_sword((16.0, 1.4), (16.0, 21.6), blade=3.4, guard=9.0)
     sp = mask()
-    star(sp, 16.0, 20.4, 4.6, 0.18)
-    dark = mix(A, (0, 0, 0), 0.65)
-    subject = stack(layer(sky, mix(A, WHITE, 0.3), A, None, None), layer(arcs, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.35)),
-                    layer(crack, mix(A, WHITE, 0.3), dark, GOLD_HI, mix(dark, (0, 0, 0), 0.3)), layer(core, WHITE, GOLD_HI), *sw, layer(sp, WHITE, WHITE))
-    return finish(subject, [glow(lighter(crack, sp), A, 1.8, 1.0), glow(lighter(arcs, sky), B, 1.2, 0.8)],
-                  backdrop(mix(A, NIGHT, 0.84), mix(A, (70, 50, 20), 0.4)))
+    for cx, cy, r in ((7.0, 15.0, 2.4), (25.0, 12.5, 2.6), (22.0, 19.5, 1.8), (10.5, 8.0, 1.6)):
+        star(sp, cx, cy, r, 0.22)
+    hot = mask()
+    disc(hot, 16.0, 21.8, 3.0)
+    subject = stack(layer(wind, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.35), axis=(1, 0)), layer(anvil, (120, 126, 140), (52, 56, 70), (170, 176, 190), (24, 26, 34)),
+                    layer(hot, FIRE_HI, FIRE_C), *sw, layer(sp, WHITE, GOLD_HI))
+    return finish(subject, [glow(lighter(sp, hot), A, 1.8, 1.0), glow(wind, B, 1.2, 0.8)], backdrop(mix(A, NIGHT, 0.84), mix(A, (70, 50, 20), 0.4)))
 
 
-# ------------------------------------------------------------ 다인슬레이프(블러드 나이트) (빛: 짙은 피 → 밝은 피)
+# ------------------------------------------------------------ 다인슬레이프(블러드 나이트) (빛: 짙은 피 → 밝은 피) — 0.51.0 재설계안 2판
 
-def bloodknight_flurry(A, B):
-    # 핏빛 연격: 위왼쪽을 가운데로 핏빛 호 셋 (찌르듯 · 되돌려 · 내려) · 끝에서 튀는 핏방울
-    ms = []
-    for r, w in ((11.0, 2.6), (18.0, 3.2), (25.0, 3.6)):
-        m = mask()
-        crescent(m, 2.5, 2.5, r, w, 4, 86)
-        ms.append(m)
-    drops = mask()
-    drop(drops, 27.0, 9.0, 1.6, -150)
-    drop(drops, 9.5, 27.5, 1.4, -120)
-    drop(drops, 22.5, 23.0, 1.9, -135)
+def bloodknight_cleave(A, B):
+    # 핏빛 대검: 아래왼쪽을 가운데로 한 거대한 핏빛 휩쓸기 (바깥 끝 = 칼끝 자리가 가장 밝음) · 넓은 검붉은 대검 · 아래 세 핏방울 (세 번)
+    sweep = mask()
+    crescent(sweep, 3.0, 29.0, 26.0, 5.0, -90, 0)
+    tip = mask()
+    crescent(tip, 3.0, 29.0, 26.0, 1.6, -76, -14, taper=True)
+    sw = blood_sword((27.5, 4.5), (6.0, 26.0), A, B, blade=4.0, guard=8.6)
+    pips = mask()
+    for x in (19.0, 23.5, 28.0):
+        drop(pips, x, 28.6, 1.3, -90)
     dark = mix(A, (0, 0, 0), 0.45)
-    slashes = stack(*[layer(m, mix(B, WHITE, 0.45), B, mix(B, WHITE, 0.7), dark, axis=(0.7, 0.7)) for m in ms],
-                    layer(drops, mix(B, WHITE, 0.25), A, mix(B, WHITE, 0.6), dark))
-    return finish(slashes, [glow(lighter(*ms), B, 1.6, 0.9)], backdrop(mix(A, DUSK, 0.82), mix(A, (60, 10, 14), 0.35)))
+    subject = stack(layer(sweep, mix(B, WHITE, 0.3), A, mix(B, WHITE, 0.6), dark, axis=(0.7, 0.7)), layer(tip, WHITE, mix(B, WHITE, 0.6)), *sw,
+                    layer(pips, mix(B, WHITE, 0.25), A, mix(B, WHITE, 0.6), dark))
+    return finish(subject, [glow(lighter(sweep, tip), B, 1.8, 1.0)], backdrop(mix(A, DUSK, 0.82), mix(A, (70, 12, 16), 0.4)))
 
 
-def bloodknight_rush(A, B):
-    # 피의 질주: 오른쪽으로 내달리는 누운 칼 · 뒤로 끌리는 핏빛 줄 셋 · 떨어지는 핏방울
-    lines = mask()
-    for y, x0, x1, w in ((11.0, 2.0, 12.0, 1.3), (16.0, 1.0, 9.0, 1.5), (21.0, 2.5, 13.0, 1.3)):
-        line(lines, [(x0, y), (x1, y)], w)
-    drops = mask()
-    for cx, cy, r in ((6.0, 25.5, 1.4), (11.5, 28.0, 1.2), (16.5, 25.0, 1.5)):
-        drop(drops, cx, cy, r, -90)
-    sw = blood_sword((30.0, 16.0), (13.5, 16.0), A, B, blade=3.0, guard=7.0)
-    sp = mask()
-    star(sp, 29.0, 16.0, 3.8, 0.2)
-    dark = mix(A, (0, 0, 0), 0.45)
-    subject = stack(layer(lines, mix(B, WHITE, 0.3), A, None, None, axis=(1, 0)), layer(drops, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.6), dark), *sw,
-                    layer(sp, WHITE, mix(B, WHITE, 0.5)))
-    return finish(subject, [glow(lighter(lines, sp), B, 1.6, 0.95)], backdrop(mix(A, DUSK, 0.84), mix(A, (60, 10, 14), 0.35)))
-
-
-def bloodknight_burst(A, B):
-    # 상처 터뜨리기: 가운데 터지는 피 (울퉁불퉁한 덩이 · 가시 여덟) · 바깥으로 튀는 핏방울 · 핏빛 고리
+def bloodknight_leap(A, B):
+    # 피의 돌진: 아래왼쪽에서 솟았다 떨어지는 점선 궤적 · 끝에 거꾸로 내리박힌 검붉은 칼 · 박힌 자리에서 크게 튀는 피 · 충격 반짝임
+    arc = mask()
+    for i in range(7):
+        a0 = math.radians(192 + i * 21)
+        a1 = math.radians(192 + i * 21 + 9)
+        line(arc, [(14.0 + math.cos(a0) * 11.0, 22.0 + math.sin(a0) * 13.0), (14.0 + math.cos(a1) * 11.0, 22.0 + math.sin(a1) * 13.0)], 1.3)
+    sw = blood_sword((23.0, 28.0), (23.0, 6.0), A, B, blade=3.2, guard=8.0)
     splat = mask()
     pts = []
     for i in range(16):
-        a = math.radians(i * 22.5 + 8)
-        r = 6.4 if i % 2 == 0 else 4.2
-        pts.append((16 + math.cos(a) * r, 16 + math.sin(a) * r))
+        a = math.radians(i * 22.5 + 11)
+        r = 7.2 if i % 2 == 0 else 3.6
+        pts.append((23.0 + math.cos(a) * r, 27.4 + math.sin(a) * r * 0.62))
     poly(splat, pts)
-    for i in range(8):
-        a = math.radians(i * 45 + 20)
-        line(splat, [(16 + math.cos(a) * 5.0, 16 + math.sin(a) * 5.0), (16 + math.cos(a) * 10.0, 16 + math.sin(a) * 10.0)], 1.3)
     drops = mask()
-    for i in range(8):
-        a = i * 45 + 42
-        rr = 12.6
-        drop(drops, 16 + math.cos(math.radians(a)) * rr, 16 + math.sin(math.radians(a)) * rr, 1.3, a + 180)
-    rim = mask()
-    ring(rim, 16.0, 16.0, 15.0, 1.1)
+    drop(drops, 14.5, 25.0, 1.2, 20)
+    drop(drops, 30.0, 22.5, 1.1, 150)
+    sp = mask()
+    star(sp, 23.0, 27.0, 4.2, 0.2)
+    dark = mix(A, (0, 0, 0), 0.45)
+    subject = stack(layer(arc, mix(B, WHITE, 0.35), B, None, None, axis=(1, 0)), *sw, layer(splat, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark),
+                    layer(drops, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark), layer(sp, WHITE, mix(B, WHITE, 0.6)))
+    return finish(subject, [glow(lighter(arc, splat), B, 1.6, 0.95)], backdrop(mix(A, DUSK, 0.84), mix(A, (60, 10, 14), 0.35)))
+
+
+def bloodknight_chains(A, B):
+    # 피의 사슬: 가운데 핏빛 덩이에서 세 쪽으로 뻗은 굵은 사슬 고리 (셋씩) · 끝에서 안쪽을 가리키는 갈고리 화살촉 (끌어당김)
+    links = mask()
+    ends = ((4.5, 5.5), (28.0, 6.5), (16.0, 30.0))
+    for ex, ey in ends:
+        for k, t in enumerate((0.36, 0.58, 0.8)):
+            x, y = 16.0 + (ex - 16.0) * t, 16.0 + (ey - 16.0) * t
+            ring(links, x, y, 2.3 if k % 2 == 0 else 1.9, 0.95)
+    hooks = mask()
+    for ex, ey in ends:
+        dx, dy = 16.0 - ex, 16.0 - ey
+        L = math.hypot(dx, dy)
+        ux, uy = dx / L, dy / L
+        px, py = -uy, ux
+        bx, by = ex - ux * 1.2, ey - uy * 1.2
+        poly(hooks, [(bx + ux * 4.2, by + uy * 4.2), (bx + px * 3.0, by + py * 3.0), (bx + ux * 1.4, by + uy * 1.4), (bx - px * 3.0, by - py * 3.0)])
+    heart = mask()
+    disc(heart, 16.0, 16.0, 4.6)
     core = mask()
-    disc(core, 15.0, 15.0, 2.4)
+    disc(core, 15.2, 15.2, 1.8)
     dark = mix(A, (0, 0, 0), 0.45)
-    subject = stack(layer(rim, B, A, None, None), layer(splat, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark),
-                    layer(drops, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark), layer(core, mix(B, WHITE, 0.6), mix(B, WHITE, 0.35)))
-    return finish(subject, [glow(lighter(splat, rim), B, 1.8, 1.0)], backdrop(mix(A, DUSK, 0.82), mix(A, (70, 12, 16), 0.4)))
+    subject = stack(layer(links, mix(B, WHITE, 0.35), A, mix(B, WHITE, 0.65), dark), layer(hooks, mix(B, WHITE, 0.5), B, WHITE, dark),
+                    layer(heart, mix(B, WHITE, 0.3), A, mix(B, WHITE, 0.7), dark), layer(core, mix(B, WHITE, 0.7), mix(B, WHITE, 0.45)))
+    return finish(subject, [glow(lighter(links, heart), B, 1.7, 1.0)], backdrop(mix(A, DUSK, 0.82), mix(A, (70, 12, 16), 0.4)))
 
 
-def bloodknight_oath(A, B):
-    # 회그니의 맹세: 얼굴 앞에 곧게 세운 검붉은 칼 · 날을 따라 흘러내리는 피 · 아래로 떨어지는 핏방울 · 둘레의 검붉은 기운
-    sw = blood_sword((16.0, 2.0), (16.0, 24.0), A, B, blade=3.0, guard=8.4)
-    flow = mask()
-    line(flow, [(16.6, 5.0), (16.8, 9.0), (16.2, 12.0), (16.6, 15.0)], 0.9)
+def bloodknight_frenzy(A, B):
+    # 광란: 위오른쪽에서 아래왼쪽으로 그은 세 갈래 핏빛 할퀸 자국 · 뒤의 붉게 이글거리는 두 눈 · 튀는 핏방울
+    claws = []
+    for off in (-5.0, 0.0, 5.0):
+        m = mask()
+        crescent(m, 34.0 + off, 34.0 - off * 0.2, 27.0, 2.6, 196, 252)
+        claws.append(m)
+    eyes = mask()
+    for cx in (10.0, 22.0):
+        poly(eyes, [(cx - 3.4, 7.0), (cx, 5.0), (cx + 3.4, 7.4), (cx, 9.0)])
     drops = mask()
-    drop(drops, 12.0, 19.0, 1.3, -90)
-    drop(drops, 20.5, 21.5, 1.5, -90)
-    drop(drops, 16.0, 29.0, 1.6, -90)
-    aura = mask()
-    crescent(aura, 16.0, 16.0, 14.0, 2.0, 120, 240)
-    crescent(aura, 16.0, 16.0, 14.0, 2.0, -60, 60)
+    drop(drops, 27.5, 26.0, 1.4, -135)
+    drop(drops, 5.0, 27.0, 1.2, -60)
     dark = mix(A, (0, 0, 0), 0.45)
-    subject = stack(layer(aura, B, A, None, None), *sw, layer(flow, mix(B, WHITE, 0.2), B), layer(drops, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark))
-    return finish(subject, [glow(lighter(aura, drops), B, 1.6, 0.9)], backdrop(mix(A, DUSK, 0.84), mix(A, (50, 8, 12), 0.35)))
+    subject = stack(layer(eyes, (255, 220, 200), (255, 60, 50), WHITE, None),
+                    *[layer(m, mix(B, WHITE, 0.4), B, mix(B, WHITE, 0.7), dark, axis=(-0.7, 0.7)) for m in claws],
+                    layer(drops, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark))
+    return finish(subject, [glow(lighter(*claws), B, 1.6, 0.95), glow(eyes, (255, 40, 30), 1.4, 1.2)], backdrop(mix(A, DUSK, 0.82), mix(A, (80, 12, 16), 0.45)))
 
 
 def bloodknight_ult(A, B):
-    # 끝나지 않는 전투: 뒤에서 솟는 핏빛 기둥 · 앞의 X자 베기 둘 · 땅에 꽂힌 검붉은 칼 · 튀는 핏방울
-    pillar = mask()
-    poly(pillar, [(12.0, 30.0), (20.0, 30.0), (18.6, 1.0), (13.4, 1.0)])
-    pcore = mask()
-    poly(pcore, [(14.6, 30.0), (17.4, 30.0), (16.6, 1.0), (15.4, 1.0)])
-    x1, x2 = mask(), mask()
-    crescent(x1, 2.0, 30.0, 25.0, 3.0, -84, -8)
-    crescent(x2, 30.0, 30.0, 25.0, 3.0, 188, 264)
-    sw = blood_sword((16.0, 29.0), (16.0, 12.0), A, B, blade=3.2, guard=8.0)
+    # 칼을 뽑다: 뒤의 핏빛 달 · 아래 검은 칼집에서 반쯤 뽑혀 나온 검붉은 칼 (자루가 위) · 칼집 어귀에서 뿜어지는 핏방울
+    moon = mask()
+    disc(moon, 16.0, 12.0, 10.0)
+    rim = mask()
+    ring(rim, 16.0, 12.0, 10.0, 1.2)
+    sw = blood_sword((16.0, 27.0), (16.0, 3.2), A, B, blade=3.4, guard=9.4)
+    sheath = mask()
+    line(sheath, [(16.0, 19.4), (16.0, 30.6)], 4.2)
+    fit = mask()
+    poly(fit, [(13.2, 18.6), (18.8, 18.6), (18.8, 20.4), (13.2, 20.4)])
     drops = mask()
-    for cx, cy, r, a in ((6.0, 10.0, 1.3, 140), (26.0, 9.0, 1.3, 40), (8.5, 22.0, 1.1, 160), (24.0, 21.0, 1.1, 20)):
+    for cx, cy, r, a in ((9.0, 18.0, 1.3, 200), (23.0, 17.5, 1.3, -20), (6.0, 23.5, 1.1, 170), (26.0, 23.0, 1.1, 10), (11.5, 14.0, 1.0, 230)):
         drop(drops, cx, cy, r, a + 180)
     dark = mix(A, (0, 0, 0), 0.45)
-    subject = stack(layer(pillar, mix(A, B, 0.5), A, None, None), layer(pcore, mix(B, WHITE, 0.55), mix(B, WHITE, 0.3)),
-                    layer(x1, mix(B, WHITE, 0.4), B, mix(B, WHITE, 0.7), dark, axis=(0.7, -0.7)), layer(x2, mix(B, WHITE, 0.4), B, mix(B, WHITE, 0.7), dark, axis=(-0.7, -0.7)),
-                    *sw, layer(drops, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark))
-    return finish(subject, [glow(lighter(pillar, x1, x2), B, 1.8, 1.0)], backdrop(mix(A, DUSK, 0.82), mix(A, (80, 12, 16), 0.4)))
+    subject = stack(layer(moon, mix(A, B, 0.35), mix(A, (0, 0, 0), 0.35), None, None), layer(rim, mix(B, WHITE, 0.4), B), *sw,
+                    layer(sheath, (46, 34, 40), (14, 10, 12), (90, 70, 80), (6, 4, 6)), layer(fit, (150, 140, 146), (60, 54, 58), WHITE, None),
+                    layer(drops, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark))
+    return finish(subject, [glow(lighter(rim, drops), B, 1.8, 1.0)], backdrop(mix(A, DUSK, 0.8), mix(A, (90, 12, 16), 0.45)))
 
 
 # ------------------------------------------------------------ 뵈드바르(워로드) (빛: 주황 → 갈색 곰 기운)
@@ -1686,15 +1704,15 @@ def bladedancer_ult(A, B):
 
 
 ICONS = {
-    "swordmaster_flurry": swordmaster_flurry,
-    "swordmaster_grani": swordmaster_grani,
-    "swordmaster_moon": swordmaster_moon,
-    "swordmaster_heart": swordmaster_heart,
+    "swordmaster_draw": swordmaster_draw,
+    "swordmaster_parry": swordmaster_parry,
+    "swordmaster_ring": swordmaster_ring,
+    "swordmaster_blood": swordmaster_blood,
     "swordmaster_ult": swordmaster_ult,
-    "bloodknight_flurry": bloodknight_flurry,
-    "bloodknight_rush": bloodknight_rush,
-    "bloodknight_burst": bloodknight_burst,
-    "bloodknight_oath": bloodknight_oath,
+    "bloodknight_cleave": bloodknight_cleave,
+    "bloodknight_leap": bloodknight_leap,
+    "bloodknight_chains": bloodknight_chains,
+    "bloodknight_frenzy": bloodknight_frenzy,
     "bloodknight_ult": bloodknight_ult,
     "warlord_crush": warlord_crush,
     "warlord_throw": warlord_throw,

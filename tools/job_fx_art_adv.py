@@ -2545,6 +2545,171 @@ sprite("rfx_jfairy", "direction_z", 256, 192, FA_N, 4, "bladedancer", zoom=2, lo
 
 # ============================================================ 실행
 
+
+# ============================================================ 0.51.0 재설계 — 타격감 · 검사 2차 (소드마스터)
+# 사용자 "이펙트가 전직업보다 안좋았음 타격감이 없었음 이펙트가 작았음": 맞은 자리의 큰 타격 섬광 (모든 2차 직업 — JobImpact) · 칼집 섬광의 칼자국 다발 ·
+# 불의 울타리의 서 있는 불꽃
+
+COLORS.setdefault("swordmaster", ((1.0, 0.8, 0.3), (0.94, 0.93, 0.88)))
+COLORS.setdefault("forgefire", ((1.0, 0.38, 0.08), (1.0, 0.88, 0.5)))
+
+# ------------------------------------------------------------ rfx_jimpact (타격 섬광 — 카메라를 봄)
+
+IM_N = 8
+_IM_RS = random.Random(9700)
+IM_RAYS = [(i * TAU / 12 + _IM_RS.uniform(-0.2, 0.2), _IM_RS.uniform(0.72, 1.0), _IM_RS.uniform(0.75, 1.3)) for i in range(12)]
+_IM_SP = random.Random(9750)
+IM_SPARKS = [(_IM_SP.uniform(0, TAU), _IM_SP.uniform(0.55, 1.0), _IM_SP.uniform(2.0, 3.6)) for _ in range(18)]
+
+
+def impact_frame(f, S=256):
+    pad = Pad(S, S)
+    c = S / 2
+    glow = pad.zeros()
+    core = pad.zeros()
+    ca = [1.0, 0.95, 0.7, 0.45, 0.26, 0.13, 0.05, 0.0][f]
+    cr = [24, 32, 30, 24, 18, 12, 8, 4][f]
+    if ca > 0:
+        core = np.maximum(core, pad.disc_field(c, c, cr, soft=1.2) * ca)
+        glow = np.maximum(glow, pad.radial(c, c, cr * 2.8, 1.3) * ca)
+    # 가시: 처음 두 장이 가장 길고 굵음 → 짧고 가늘어짐
+    rl = [0.8, 1.0, 0.84, 0.6, 0.4, 0.22, 0.1, 0.0][f]
+    rw = [8.0, 7.0, 5.0, 3.4, 2.4, 1.6, 1.0, 0.0][f]
+    if rl > 0:
+        for (a, k, w) in IM_RAYS:
+            L = 118 * k * rl
+            r0 = cr * 0.35
+            p0 = (c + math.cos(a) * r0, c + math.sin(a) * r0)
+            p1 = (c + math.cos(a) * max(L, r0 + 4), c + math.sin(a) * max(L, r0 + 4))
+            glow = np.maximum(glow, lens(pad, p0, p1, rw * w, a=0.95, power=0.55, skew=0.16))
+            core = np.maximum(core, lens(pad, p0, p1, rw * w * 0.36, a=0.45 + 0.55 * ca, power=0.6, skew=0.14))
+    # 퍼지는 충격 고리
+    rr = [0, 44, 66, 84, 98, 108, 114, 118][f]
+    ra = [0, 0.95, 0.85, 0.68, 0.5, 0.32, 0.18, 0.08][f]
+    rwid = [0, 7.0, 5.6, 4.4, 3.4, 2.6, 2.0, 1.6][f]
+    if ra > 0:
+        ring = arc_pts(c, c, rr, 0, TAU, n=120)
+        glow = np.maximum(glow, pad.stroke(ring, rwid, a0=ra))
+        core = np.maximum(core, pad.stroke(ring, rwid * 0.32, a0=ra * 0.85))
+    # 바깥으로 튀는 불티 줄
+    if f >= 1:
+        q = (f - 1) / (IM_N - 2)
+        for (a, k, w) in IM_SPARKS:
+            d1 = 28 + 92 * k * (q ** 0.7)
+            d0 = max(10, d1 - 24 * (1 - 0.5 * q))
+            sa = (1 - q) ** 1.2
+            if sa < 0.03:
+                continue
+            p0 = (c + math.cos(a) * d0, c + math.sin(a) * d0)
+            p1 = (c + math.cos(a) * d1, c + math.sin(a) * d1)
+            sk = streak(pad, p0, p1, w, a=sa)
+            core = np.maximum(core, sk)
+            glow = np.maximum(glow, sk * 0.7)
+    if f <= 2:
+        core = np.maximum(core, star4(pad, c, c, [72, 90, 52][f], [1.0, 0.92, 0.5][f], rot=0.3, thin=0.08, diag=0.5))
+    return finish(pad, glow, core, halo=((1.4, 0.55), (3.5, 0.42), (9.0, 0.28)), body_k=0.9, core_bloom=((1.4, 0.4), (3.5, 0.3)), win=4.0)
+
+
+sprite("rfx_jimpact", "rotate_xyz", 256, 256, IM_N, 4, "swordmaster", zoom=0,
+       desc="타격 섬광 (모든 2차 직업의 맞은 자리 — JobImpact): 0 흰 심지 · 길고 굵은 가시 열둘 · 네 뿔 별 → 1 가시가 가장 길고 충격 고리 → 2 ~ 4 가시가 짧고 가늘어지며 "
+       "고리가 퍼지고 불티 줄이 바깥으로 튐 → 5 ~ 7 흐려짐. 게임은 빛 칸에 직업 겉빛, 심지 칸에 흰빛")(impact_frame)
+
+
+# ------------------------------------------------------------ rfx_jcuts (칼집 섬광 — 칼자국 다발, 카메라를 봄)
+
+CT_N = 8
+CUT_LINES = [(-12, 0.95), (160, 0.86), (32, 0.9), (205, 0.8), (6, 1.0), (145, 0.88), (78, 0.74)]
+
+
+def cuts_frame(f, S=320):
+    pad = Pad(S, S)
+    c = S / 2
+    glow = pad.zeros()
+    core = pad.zeros()
+    shown = [1, 3, 5, 7, 7, 7, 7, 7][f]
+    fade = [1.0, 1.0, 1.0, 1.0, 1.0, 0.7, 0.42, 0.18][f]
+    rs = random.Random(9800)
+    for i, (deg, k) in enumerate(CUT_LINES):
+        off = rs.uniform(-26, 26)
+        bend = rs.uniform(-14, 14)
+        if i >= shown:
+            continue
+        a = math.radians(deg)
+        L = 148 * k
+        na = a + math.pi / 2
+        cx, cy = c + math.cos(na) * off, c + math.sin(na) * off
+        p0 = (cx - math.cos(a) * L, cy - math.sin(a) * L)
+        p1 = (cx + math.cos(a) * L, cy + math.sin(a) * L)
+        pts = []
+        for jj in range(33):
+            t = jj / 32
+            b = bend * math.sin(math.pi * t)
+            pts.append((p0[0] + (p1[0] - p0[0]) * t + math.cos(na) * b, p0[1] + (p1[1] - p0[1]) * t + math.sin(na) * b))
+        newest = i >= shown - 2 and f <= 3
+        w = (14.0 if newest else 9.0) * (0.55 + 0.45 * fade)
+        al = (1.0 if newest else 0.8) * fade
+        glow = np.maximum(glow, pad.poly(taper_poly(pts, lambda t, w=w: w / 2 * (math.sin(math.pi * t) ** 0.55)), al))
+        core = np.maximum(core, pad.poly(taper_poly(pts, lambda t, w=w: w * 0.17 * (math.sin(math.pi * t) ** 0.6)), min(1.0, al * 1.1)))
+        if newest:
+            core = np.maximum(core, star4(pad, pts[16][0], pts[16][1], 24, 0.9, rot=a, thin=0.1, diag=0.3))
+        if f >= 5:
+            sr = random.Random(9810 + i * 7 + f)
+            for _ in range(3):
+                t = sr.uniform(0.15, 0.85)
+                px, py = pts[int(t * 32)]
+                core = np.maximum(core, star4(pad, px + sr.uniform(-5, 5), py + sr.uniform(-5, 5), sr.uniform(3, 6), 0.7 * fade + 0.2, diag=0.0))
+    if f == 4:
+        core = np.maximum(core, pad.disc_field(c, c, 18, soft=1.5))
+        core = np.maximum(core, star4(pad, c, c, 110, 1.0, rot=0.2, thin=0.06, diag=0.45))
+        glow = np.maximum(glow, pad.radial(c, c, 96, 1.4) * 0.8)
+    return finish(pad, glow, core, halo=((1.4, 0.5), (3.5, 0.38), (8.0, 0.24)), body_k=0.9, core_bloom=((1.4, 0.34), (3.5, 0.24)), win=4.0)
+
+
+sprite("rfx_jcuts", "rotate_xyz", 320, 320, CT_N, 4, "swordmaster", zoom=0,
+       desc="칼집 섬광의 칼자국 다발 (1인칭 눈앞): 0 ~ 3 칼자국이 둘씩 그어짐 (막 그은 둘은 굵고 밝음 · 가운데 반짝임 — 가로 · 비스듬 · 되돌림이 엇갈림, 조금 휨) → "
+       "4 모두 번쩍 (가운데 흰 섬광 · 큰 네 뿔 별) → 5 ~ 7 가늘어지며 흐려지고 칼자국을 따라 반짝이")(cuts_frame)
+
+
+# ------------------------------------------------------------ rfx_jflame (서 있는 불꽃 — 아래 끝 = 땅, 이어 돌림)
+
+FL_N = 6
+
+
+def flame_frame(f, W=128, H=256):
+    pad = Pad(W, H)
+    X, Y = pad.grid()
+    t = np.clip((H - Y) / H, 0, 1)  # 0 = 땅 → 1 = 꼭대기
+    ph = f / FL_N
+    cx = W / 2
+    # 위로 흐르는 노이즈 (한 바퀴에 첫 겹 주기만큼 — 이어 돌림)
+    n1 = fbm(X / W * 3.0, Y / H * 4.0 + ph * 4.0, seed=411, octaves=3, px=3, py=4)
+    n2 = fbm(X / W * 6.0 + 7.3, Y / H * 8.0 + ph * 8.0, seed=433, octaves=2, px=6, py=8)
+    sway = (n1 - 0.5) * 34.0 * t
+    width = 46.0 * (1 - t) ** 0.55 * (0.75 + 0.5 * n2)
+    dx = np.abs(X - cx - sway)
+    body = clamp01((width - dx) / 6.0) * clamp01(t * 14.0) * clamp01((0.96 - t) * 8.0)
+    # 꼭대기 쪽 혀 (갈라진 불꽃): 노이즈로 깎음
+    tongue = clamp01((n1 + 0.35 - t * 0.9) * 3.0)
+    body = body * np.maximum(tongue, clamp01((0.55 - t) * 4.0))
+    hot = clamp01((width * 0.45 - dx) / 5.0) * clamp01((0.62 - t) * 3.0) * clamp01(t * 10.0)
+    hot = hot * (0.75 + 0.25 * n2)
+    glow = body.astype(np.float32)
+    core = np.maximum(hot, body * 0.25).astype(np.float32)
+    # 불티: 위로 날아가는 작은 점
+    rs = random.Random(9900)
+    for _ in range(7):
+        x0 = rs.uniform(cx - 26, cx + 26)
+        y0 = rs.uniform(40, 200)
+        y = (y0 - ph * 180) % 220 + 20
+        a = clamp01((y - 20) / 60.0)
+        core = np.maximum(core, pad.disc_field(x0 + math.sin(y * 0.05) * 6, y, 2.2, soft=1.0) * a)
+    return finish(pad, glow, core, halo=((1.5, 0.5), (4.0, 0.36), (9.0, 0.2)), body_k=0.92, core_bloom=((1.4, 0.32), (3.5, 0.2)), win=3.0)
+
+
+sprite("rfx_jflame", "lookat_y", 128, 256, FL_N, 6, "forgefire", zoom=0, loop=True,
+       desc="서 있는 불꽃 (아래 끝 = 땅 — 이어 돌림, 위로 흐르는 불): 아래가 넓고 위로 가늘어지는 혀 · 노이즈로 일렁이며 갈라지는 꼭대기 · 아래쪽의 밝은 속불 · 위로 "
+       "날아가는 불티")(flame_frame)
+
 def main():
     args = sys.argv[1:]
     folder = None

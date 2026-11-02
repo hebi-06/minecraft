@@ -75,7 +75,8 @@ public final class JobTraits {
         JobTraitsMore.init(); // 0.28.0 전사 · 매지션 · 궁수
         JobTraits3.init(); // 0.29.0 암살자 · 창술사 · 사신 (sureCrit 를 이어 받으므로 위의 sureCrit 다음)
         JobTraits4.init(); // 0.30.0 성기사 · 사제 · 수호기사
-        JobTraits5.init(); // 0.51.0 2차 직업 (소드마스터 치명 · 용의 심장 · 블러드 나이트 피의 갈증 · 회그니의 맹세)
+        JobTraits5.init(); // 0.51.0 검사 2차 (소드마스터 치명 · 용의 피 · 벼린 칼 · 블러드 나이트 피의 갈증 · 광란)
+        JobImpact.init(); // 0.51.0 타격감 (큰 타격 그림 · 멈칫)
         JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 곰의 포효 · 라이칸 야성 · 겁먹음 · 늑대의 밤)
         JobTraits7.init(); // 0.51.0 마검사 2차 (룬 나이트 각인 번짐 · 룬 담금질 · 헥스 블레이드 뒤집힌 룬 · 저주의 칼)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 꿀술의 노래 · 네크로맨서 망자의 군대 · 망자 일으키기)
@@ -194,6 +195,13 @@ public final class JobTraits {
         st.stacks = Math.max(0, n);
         st.lastGain = st.lastDecay = Tasks.now();
         sendGauge(sp, false);
+    }
+
+    /** 0.51.0 검세 · 투지를 n 개 더 (받아넘기기 — 쌓일 때 연출 · 다 차면 고리) */
+    static void addStacks(ServerPlayer sp, int n) {
+        Jobs.Job j = JobSystem.job(sp);
+        if (j == null || !fervor(j)) return;
+        for (int i = 0; i < n; i++) gain(sp, j);
     }
 
     private static void gain(ServerPlayer sp, Jobs.Job j) {
@@ -429,7 +437,8 @@ public final class JobTraits {
             case "swordsman", "swordmaster" -> {
                 if (!"sword".equals(w.type()) || !Combat.isMeleeWeapon(w)) return;
                 gain(sp, j);
-                if (has(bonus, KEY_MIRROR) || has(bonus, JobTraits5.KEY_HEART)) {
+                if (JobTraits.stanceOn(sp, JobTraits5.DRAGON)) gain(sp, j); // 0.51.0 용의 피: 칼 평타가 투지 +2
+                if (has(bonus, KEY_MIRROR)) {
                     // 두 번째 베기: 맞은 자리에 반대로 그은 물빛 칼날 (조금 늦게)
                     RuneKit.later(3, () -> {
                         if (victim.isRemoved()) return;
@@ -495,7 +504,7 @@ public final class JobTraits {
                 JobFx3d.drop(sp, ended, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
-            if (fervor(j) && st.stacks > 0 && !stanceOn(st, "swordsman_mirror") && !stanceOn(st, JobTraits5.HEART)) { // 0.51.0 용의 심장도 투지 유지
+            if (fervor(j) && st.stacks > 0 && !stanceOn(st, "swordsman_mirror") && !stanceOn(st, JobTraits5.DRAGON)) { // 0.51.0 용의 피도 투지 유지
                 int decay = (int) j.trait().def().numOr("decay", 80);
                 if (now - st.lastGain >= decay && now - st.lastDecay >= decay) {
                     st.stacks--;
@@ -566,7 +575,7 @@ public final class JobTraits {
     /** 지금 게이지 (직업이 없으면 빈 것) */
     static JobSkills.GaugePayload gauge(ServerPlayer sp) {
         Jobs.Job j = JobSystem.job(sp);
-        if (j == null || j.trait() == null) return new JobSkills.GaugePayload("", 0, 0, "", 0, 0);
+        if (j == null || j.trait() == null) return new JobSkills.GaugePayload("", 0, 0, "", 0, 0, 1F);
         State st = STATES.get(sp.getUUID());
         long now = Tasks.now();
         String stance = st != null && st.stanceUntil > now ? st.stanceName : "";
@@ -580,7 +589,7 @@ public final class JobTraits {
         }
         int value = 0;
         if (fervor(j)) value = st == null ? 0 : st.stacks; // 0.51.0 소드마스터도 투지 (최대 8)
-        else if (j.id().equals(JobTraits5.BK)) value = JobTraits5.gaugeValue(sp, j); // 0.51.0 블러드 나이트 = 그 적의 상처 수
+        else if (j.id().equals(JobTraits5.BK)) value = JobTraits5.gaugeValue(sp, j); // 0.51.0 블러드 나이트 = 피의 갈증 (잃은 체력)
         else if (j.id().equals(JobTraits6.LY)) value = JobTraits6.gaugeValue(sp, j); // 0.51.0 라이칸 = 야성
         else if (j.id().equals(JobTraits7.HX)) value = JobTraits7.gaugeValue(sp, j); // 0.51.0 헥스 블레이드 = 그 적의 저주 룬
         else if (j.id().equals(JobTraits8.NC)) value = JobTraits8.gaugeValue(sp, j); // 0.51.0 네크로맨서 = 망자 선원 수
@@ -592,14 +601,16 @@ public final class JobTraits {
                 value = e == null || e.isRemoved() || !e.isAlive() ? 0 : marks(sp, e);
             }
         } else value = JobTraitsMore.gaugeValue(sp, j); // 0.28.0 분노 · 연쇄 · 호흡
-        return new JobSkills.GaugePayload(j.trait().name(), value, Math.max(0, j.trait().max()), stance, left, total);
+        // 0.51.0 공격 속도 (클라이언트 평타 사이 — 0.05 단위로 맞춤)
+        float speed = (float) (Math.round(mmorpg.fabric.RpgCombat.attackSpeed.applyAsDouble(sp) * 20) / 20.0);
+        return new JobSkills.GaugePayload(j.trait().name(), value, Math.max(0, j.trait().max()), stance, left, total, speed);
     }
 
     /** 게이지를 보냄 (force 가 아니면 바뀌었을 때만 — 남은 틱은 클라이언트가 셈) */
     static void sendGauge(ServerPlayer sp, boolean force) {
         if (sp == null || sp.isRemoved()) return;
         JobSkills.GaugePayload g = gauge(sp);
-        String sig = g.name() + "|" + g.value() + "|" + g.max() + "|" + g.stance() + "|" + (g.left() > 0 ? Tasks.now() + g.left() : 0);
+        String sig = g.name() + "|" + g.value() + "|" + g.max() + "|" + g.stance() + "|" + (g.left() > 0 ? Tasks.now() + g.left() : 0) + "|" + g.speed();
         State st = of(sp);
         if (!force && sig.equals(st.sent)) return;
         st.sent = sig;

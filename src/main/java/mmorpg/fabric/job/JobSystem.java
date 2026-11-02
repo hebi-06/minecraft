@@ -62,6 +62,7 @@ public final class JobSystem {
         JobSkills.provider = JobSystem::slot;
         JobSkills.header = JobSystem::header;
         JobTraits.init();
+        JobRecast.init(); // 0.51.0 다시 쓰기 (리븐 R · 아트록스 Q)
         SwordsmanSkills.register();
         SpellbladeSkills.register();
         WarriorSkills.register(); // 0.28.0
@@ -97,6 +98,7 @@ public final class JobSystem {
             SENT.remove(handler.player.getUUID());
             JobTraits.forget(handler.player.getUUID());
             JobUpgrades.forget(handler.player.getUUID());
+            JobRecast.forget(handler.player.getUUID());
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> SENT.clear());
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
@@ -131,6 +133,7 @@ public final class JobSystem {
         Props.set(sp, PROP, j == null ? null : j.id());
         JobTraits.reset(sp);
         JobSkills.resetCooldowns(sp);
+        JobRecast.clear(sp); // 0.51.0 다시 쓰기 창
         refresh(sp, true);
     }
 
@@ -247,8 +250,9 @@ public final class JobSystem {
             if (clawNote != null) advNote = advNote == null ? clawNote : advNote + " §8· " + clawNote;
             String note = NOTES.remove(sp.getUUID());
             if (advNote != null) note = note == null ? advNote : advNote + " §8· " + note;
+            String stageMotion = JobRecast.takeMotion(sp); // 0.51.0 다시 쓰기의 단계 동작 (없으면 스킬 id 동작)
             if (ok) {
-                mmorpg.fabric.motion.MotionSystem.skill(sp, k.id()); // 0.38.0 직업 스킬 동작 (MOTION.skills)
+                mmorpg.fabric.motion.MotionSystem.skill(sp, stageMotion != null ? stageMotion : k.id()); // 0.38.0 직업 스킬 동작 (MOTION.skills)
                 JobTraitsMore.chainCommit(sp, job, k, chain);
                 if (boost > 1) JobTraits3.castCommit(sp, job);
                 JobTraits4.castCommit(sp, job, k);

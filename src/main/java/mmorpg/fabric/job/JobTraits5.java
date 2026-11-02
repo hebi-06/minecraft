@@ -1,37 +1,46 @@
 package mmorpg.fabric.job;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import mmorpg.core.Combat;
 import mmorpg.core.Jobs;
+import mmorpg.core.SwingLooks;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
+import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
+import mmorpg.fabric.motion.MotionSystem;
+import mmorpg.fabric.motion.SwingLook;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 특성 · 태세 (서버 — jobs.json advance):
+ * 0.51.0 검사 2차 특성 · 태세 (재설계안 2판 — claude/job-advance-redo.md):
  * <ul>
- * <li>시구르드(소드마스터) 「투지」: 쌓고 쓰는 것은 검사와 같음 (JobTraits — 최대 8). 투지 8 에서 피해 직업 스킬을 쓰면 그 스킬이 치명 — critFor 동안 직업 스킬 피해
- * × (1 + crit) · 치명 숫자 (JobKit), 나가면 투지 critUse 개를 씀. 용의 심장 (태세): 칼 평타 두 번째 베기 (echo) · 맞으면 받아치는 베기 (위력 × counter ·
- * counterGap 틱에 한 번 · counterRange 칸 안의 때린 적) · 받는 피해 −guard (Guards) · 투지 유지 (JobTraits)</li>
- * <li>다인슬레이프(블러드 나이트) 「피의 갈증」: 피해 직업 스킬을 쓸 때 체력이 costMin 이상이면 최대 체력 × cost 를 바쳐 그 스킬 위력 × (1 + bonus) (스킬이
- * 제 값 cost 를 바치면 그것만), 직업 스킬 피해 × leech 흡혈 (피의 질주 뒤 leechFor · 회그니의 맹세 동안 두 배), 직업 스킬이 맞힌 적에 상처 +1 (최대 trait.max ·
- * woundFor 틱 — 맹세 동안 사라지지 않음) → 상처 터뜨리기 · 끝나지 않는 전투가 씀. 회그니의 맹세: 칼 평타에 피 칼날 (echo — 그 몫도 두 배 흡혈)</li>
+ * <li>시구르드(소드마스터) 「투지」: 쌓고 쓰는 것은 검사와 같음 (JobTraits — 최대 8). 투지 8 에서 피해 직업 스킬을 쓰면 그 스킬이 치명 (위력 × (1 + crit) · 치명
+ * 숫자 — 나가면 투지 critUse 개). 용의 피 (태세 — 롤 마스터 이 R): 공격 속도 + haste · 이동 + move · 칼 평타가 투지 +2 · 투지 유지 · 받는 피해 −guard (Guards —
+ * 스킬). 다시 벼린 칼 (궁극기 — 롤 리븐 R): dur 틱 동안 칼이 커짐 — 평타 사거리 + reach · 참격 범위 (SWING_LOOK swordmaster_ult) · 칼 평타 · 직업 스킬 피해 +
+ * power</li>
+ * <li>다인슬레이프(블러드 나이트) 「피의 갈증」: 피해 직업 스킬을 쓸 때 체력이 costMin 이상이면 최대 체력 × cost 를 바쳐 그 스킬 위력 × (1 + bonus), 직업 스킬
+ * 피해 × leech 흡혈, 체력이 적을수록 공격 속도 · 흡혈이 오름 (체력 thirstAt 에서 가장 셈 — 공격 속도 + thirstSpeed · 흡혈 × (1 + leechMax), 롤 올라프 · 브라이어
+ * 패시브). 광란 (태세 — 롤 브라이어 W): 공격 속도 + haste · 흡혈 × leechMult · 둘레 autoRange 칸의 가장 가까운 적을 저절로 벰 (멈추지 않음)</li>
  * </ul>
  */
 public final class JobTraits5 {
@@ -39,14 +48,18 @@ public final class JobTraits5 {
 
     static final String SM = "swordmaster";
     static final String BK = "bloodknight";
-    static final String HEART = "swordmaster_heart";
-    static final String OATH = "bloodknight_oath";
+    /** 용의 피 (소드마스터 태세) · 다시 벼린 칼 (소드마스터 궁극기 — 벼린 칼 동안) · 광란 (블러드 나이트 태세) */
+    static final String DRAGON = "swordmaster_blood";
+    static final String FORGE = "swordmaster_ult";
+    static final String FRENZY = "bloodknight_frenzy";
     /** 평타에 더한 몫의 구분 (WeaponBonus.parts) */
-    static final String KEY_HEART = "job_heart";
-    static final String KEY_OATH = "job_oath";
-    /** 피 · 상처 빛 (블러드 나이트 색이 없을 때) */
+    static final String KEY_FORGE = "job_forge";
+    /** 피 빛 (블러드 나이트 색이 없을 때) */
     static final double[] BLOOD = {0.62, 0.02, 0.08};
     static final double[] BLOOD_LIGHT = {0.95, 0.22, 0.24};
+    /** 벼린 칼 사거리 · 용의 피 이동 속도 (속성 수정치) */
+    private static final Identifier FORGE_REACH = Mmorpg.id("job_forge_reach");
+    private static final Identifier DRAGON_SPEED = Mmorpg.id("job_dragon_speed");
 
     static final class State {
         /** 소드마스터: 이 틱까지 직업 스킬 피해 × (1 + crit) · 치명 숫자 */
@@ -55,34 +68,34 @@ public final class JobTraits5 {
         boolean critPending;
         /** 블러드 나이트: 이번 시전에 체력을 바침 */
         boolean payNow;
-        /** 피의 질주: 이 틱까지 흡혈 두 배 */
-        long leechUntil;
-        /** 용의 심장: 마지막 받아치기 틱 */
-        long counterAt = Long.MIN_VALUE / 2;
         /** 흡혈 숫자 (모아서 1초에 한 번) */
         double leechAcc;
         long leechShown;
-        /** 게이지: 마지막으로 상처를 낸 적 */
-        UUID woundTarget;
+        /** 소드마스터 벼린 칼: 끝나는 틱 · 피해 + · 사거리 + */
+        long forgeUntil;
+        double forgePower;
+        boolean forgeReach;
+        /** 용의 피 이동 속도 (걸린 값) */
+        double speedSet;
+        /** 광란: 마지막으로 저절로 벤 틱 */
+        long lastAuto;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
-    /** 상처: "공격자|적" → {수, 끝나는 틱} */
-    private static final Map<String, long[]> WOUNDS = new HashMap<>();
 
     static void init() {
-        RpgCombat.addScaledBonusHook(JobTraits5::heartBonus);
-        RpgCombat.addScaledBonusHook(JobTraits5::oathBonus);
+        RpgCombat.addScaledBonusHook(JobTraits5::forgeBonus);
         RpgCombat.addWeaponHitHook(JobTraits5::onWeaponHit);
-        RpgHealth.LossHook lh = RpgHealth.lossHook;
-        RpgHealth.lossHook = (sp, src, loss, before, after) -> {
-            lh.lost(sp, src, loss, before, after);
-            onLoss(sp, src, loss);
-        };
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            STATES.clear();
-            WOUNDS.clear();
+        java.util.function.ToDoubleFunction<ServerPlayer> as = RpgCombat.attackSpeed;
+        RpgCombat.attackSpeed = p -> as.applyAsDouble(p) * attackSpeed(p);
+        // 벼린 칼: 평타 참격 범위 · 금빛 궤적 (rules_more SWING_LOOK swordmaster_ult)
+        SwingLook.addSource((sp, out) -> {
+            State st = STATES.get(sp.getUUID());
+            if (st == null || st.forgeUntil <= Tasks.now() || jobIf(sp, SM) == null) return;
+            SwingLooks.Look l = SwingLooks.of(FORGE);
+            if (l != null) out.add(new SwingLook.Active(l, st.forgeUntil, false));
         });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> STATES.clear());
     }
 
     static State of(ServerPlayer sp) {
@@ -100,15 +113,14 @@ public final class JobTraits5 {
     }
 
     static void reset(ServerPlayer sp) {
-        STATES.remove(sp.getUUID());
-        String p = sp.getUUID() + "|";
-        WOUNDS.keySet().removeIf(k -> k.startsWith(p));
+        State st = STATES.remove(sp.getUUID());
+        if (st != null) clearMods(sp);
+        JobImpact.forget(sp.getUUID());
     }
 
     static void forget(UUID id) {
         STATES.remove(id);
-        String p = id + "|";
-        WOUNDS.keySet().removeIf(k -> k.startsWith(p));
+        JobImpact.forget(id);
     }
 
     static void lifeEnded(UUID id) {
@@ -117,11 +129,16 @@ public final class JobTraits5 {
             st.critUntil = 0;
             st.critPending = false;
             st.payNow = false;
-            st.leechUntil = 0;
-            st.woundTarget = null;
+            st.forgeUntil = 0;
         }
-        String p = id + "|";
-        WOUNDS.keySet().removeIf(k -> k.startsWith(p));
+    }
+
+    /** 사거리 · 이동 속도 수정치를 뗌 */
+    private static void clearMods(ServerPlayer sp) {
+        AttributeInstance r = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+        if (r != null) r.removeModifier(FORGE_REACH);
+        AttributeInstance m = sp.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (m != null) m.removeModifier(DRAGON_SPEED);
     }
 
     // ------------------------------------------------------------ 시전 (JobSystem.Slot.cast)
@@ -131,7 +148,7 @@ public final class JobTraits5 {
         if (j == null || !BK.equals(j.id())) return 1;
         State st = of(sp);
         st.payNow = false;
-        if (k == null || k.total() <= 0 || k.def().has("cost")) return 1; // 태세 · 제 값을 바치는 스킬 (맹세 · 끝나지 않는 전투) 은 그것만
+        if (k == null || k.total() <= 0) return 1;
         if (sp.getHealth() < sp.getMaxHealth() * trait(j, "costMin", 0.25) || !RpgHealth.isRpgMode(sp)) return 1;
         st.payNow = true;
         return 1 + trait(j, "bonus", 0.1);
@@ -174,8 +191,8 @@ public final class JobTraits5 {
     private static void critFx(ServerPlayer sp, Jobs.Job j) {
         ServerLevel level = sp.level();
         RuneKit.Hand h = RuneKit.handOf(sp);
-        JobFx.glint(level, V.up(V.add(h.hand(), h.f(), 0.7), 0.45), 0.7, j, 0.5, Opt.of("vel", RuneKit.bodyVel(sp), "spin", Kit.rand() * 30 - 15));
-        JobFx.burst(level, V.up(V.add(h.hand(), h.f(), 0.6), 0.3), 0.45, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
+        JobFx.glint(level, V.up(V.add(h.hand(), h.f(), 0.7), 0.45), 0.8, j, 0.5, Opt.of("vel", RuneKit.bodyVel(sp), "spin", Kit.rand() * 30 - 15));
+        JobFx.burst(level, V.up(V.add(h.hand(), h.f(), 0.6), 0.3), 0.55, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
         JobFx.aura(sp, j, 2.6, 0.5, 0.85);
         SkillFx.play(level, "entity.player.attack.crit", sp.position(), 1.2, 0.9);
         SkillFx.play(level, "block.bell.hit", sp.position(), 1.6, 0.6);
@@ -187,8 +204,8 @@ public final class JobTraits5 {
         if (paid > 0) {
             ServerLevel level = sp.level();
             Vec3 chest = V.up(sp.position(), 1.1);
-            SkillFx.sparks(level, chest, BLOOD_LIGHT, 8, 2.6);
-            blood(level, chest, 0.55, j, 0.35, JobFx.hide1p(sp));
+            SkillFx.sparks(level, chest, BLOOD_LIGHT, 10, 3.0);
+            blood(level, chest, 0.75, j, 0.35, JobFx.hide1p(sp));
             SkillFx.play(level, "entity.player.hurt_sweet_berry_bush", chest, 0.8, 0.6);
         }
         return paid;
@@ -201,20 +218,94 @@ public final class JobTraits5 {
         return st != null && st.critUntil >= Tasks.now() ? 1 + trait(j, "crit", 0.3) : 1;
     }
 
-    // ------------------------------------------------------------ 직업 스킬 피해가 들어간 뒤 (JobKit.hit)
-
-    /** 블러드 나이트: 흡혈 (피해 × leech — 질주 뒤 · 맹세 동안 두 배) · 상처 +1 */
-    static void afterJobHit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double dealt) {
-        if (j == null || !BK.equals(j.id()) || !(dealt > 0)) return;
-        leech(sp, j, dealt * trait(j, "leech", 0.05) * leechMult(sp));
-        addWound(sp, e, j, 1);
+    /** 벼린 칼 동안 직업 스킬 피해 배율 (1 + power — 그 밖 1) */
+    static double forgeMult(ServerPlayer sp, Jobs.Job j) {
+        if (j == null || !SM.equals(j.id())) return 1;
+        State st = STATES.get(sp.getUUID());
+        return st != null && st.forgeUntil > Tasks.now() ? 1 + st.forgePower : 1;
     }
 
-    /** 흡혈 배수 (피의 질주 뒤 · 회그니의 맹세 동안 2 — 그 밖 1) */
-    static double leechMult(ServerPlayer sp) {
+    // ------------------------------------------------------------ 소드마스터 다시 벼린 칼
+
+    /** 벼린 칼 시작: ticks 틱 — 피해 + power · 평타 사거리 + reach (속성) · 참격 범위 (SWING_LOOK) */
+    static void forge(ServerPlayer sp, int ticks, double power, double reach) {
+        State st = of(sp);
+        st.forgeUntil = Tasks.now() + ticks;
+        st.forgePower = power;
+        AttributeInstance r = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+        if (r != null && reach > 0) {
+            r.addOrUpdateTransientModifier(new AttributeModifier(FORGE_REACH, reach, AttributeModifier.Operation.ADD_VALUE));
+            st.forgeReach = true;
+        }
+    }
+
+    /** 벼린 칼 동안인지 (시험 · 스킬) */
+    public static boolean forged(ServerPlayer sp) {
         State st = STATES.get(sp.getUUID());
-        boolean doubled = (st != null && st.leechUntil >= Tasks.now()) || JobTraits.stanceOn(sp, OATH);
-        return doubled ? 2 : 1;
+        return st != null && st.forgeUntil > Tasks.now();
+    }
+
+    /** 벼린 칼이 더한 사거리 (시험 — 없으면 0) */
+    public static double forgeReach(ServerPlayer sp) {
+        AttributeInstance a = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+        AttributeModifier m = a == null ? null : a.getModifier(FORGE_REACH);
+        return m == null ? 0 : m.amount();
+    }
+
+    /** 벼린 칼: 칼 평타 + power (평타에 더한 몫 — 금빛 숫자) */
+    private static RpgCombat.Bonus forgeBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
+        if (w == null || !"sword".equals(w.type()) || !(dmg > 0)) return null;
+        State st = STATES.get(sp.getUUID());
+        if (st == null || st.forgeUntil <= Tasks.now()) return null;
+        Jobs.Job j = jobIf(sp, SM);
+        if (j == null) return null;
+        return new RpgCombat.Bonus(dmg * st.forgePower, "", KEY_FORGE, DamageNumbers.Style.JOB, null, JobKit.grad(j));
+    }
+
+    // ------------------------------------------------------------ 공격 속도 · 흡혈 (용의 피 · 광란 · 피의 갈증)
+
+    /** 공격 속도 배율 (RpgCombat.attackSpeed 에 곱함 — 클라이언트는 게이지 payload 의 speed) */
+    static double attackSpeed(ServerPlayer sp) {
+        Jobs.Job j = JobSystem.job(sp);
+        if (j == null) return 1;
+        if (SM.equals(j.id())) {
+            if (!JobTraits.stanceOn(sp, DRAGON)) return 1;
+            Jobs.Skill k = j.skill(DRAGON);
+            return 1 + (k == null ? 0.35 : JobUpgrades.num(sp, k, "haste", k.num("haste", 0.35)));
+        }
+        if (!BK.equals(j.id())) return 1;
+        double m = 1 + trait(j, "thirstSpeed", 0.3) * thirst(sp, j);
+        if (JobTraits.stanceOn(sp, FRENZY)) {
+            Jobs.Skill k = j.skill(FRENZY);
+            m *= 1 + (k == null ? 0.6 : JobUpgrades.num(sp, k, "haste", k.num("haste", 0.6)));
+        }
+        return m;
+    }
+
+    /** 피의 갈증 (0 = 체력 가득 ~ 1 = 체력 thirstAt 아래) */
+    static double thirst(ServerPlayer sp, Jobs.Job j) {
+        double max = Math.max(1, sp.getMaxHealth());
+        double at = trait(j, "thirstAt", 0.3);
+        double lost = 1 - sp.getHealth() / max;
+        return Math.max(0, Math.min(1, lost / Math.max(0.05, 1 - at)));
+    }
+
+    /** 흡혈 배수 (피의 갈증 · 광란) */
+    static double leechMult(ServerPlayer sp, Jobs.Job j) {
+        double m = 1 + trait(j, "leechMax", 1.0) * thirst(sp, j);
+        if (JobTraits.stanceOn(sp, FRENZY)) {
+            Jobs.Skill k = j.skill(FRENZY);
+            m *= k == null ? 2 : k.num("leechMult", 2);
+        }
+        return m;
+    }
+
+    // ------------------------------------------------------------ 직업 스킬 피해가 들어간 뒤 (JobKit.hit)
+
+    /** 블러드 나이트: 흡혈 (피해 × leech × 피의 갈증 · 광란) */
+    static void afterJobHit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double dealt) {
+        if (j == null || !BK.equals(j.id()) || !(dealt > 0)) return;
+        leech(sp, j, dealt * trait(j, "leech", 0.05) * leechMult(sp, j));
     }
 
     /** 체력을 amount 회복 (숫자는 모아서 1초에 한 번) — 실제로 오른 양 */
@@ -225,70 +316,11 @@ public final class JobTraits5 {
         return got;
     }
 
-    /** 피의 질주: ticks 동안 흡혈 두 배 */
-    static void leechFor(ServerPlayer sp, int ticks) {
-        State st = of(sp);
-        st.leechUntil = Math.max(st.leechUntil, Tasks.now() + ticks);
-    }
-
-    // ------------------------------------------------------------ 상처 (블러드 나이트)
-
-    private static String key(Entity attacker, Entity victim) {
-        return attacker.getUUID() + "|" + victim.getUUID();
-    }
-
-    /** 상처 n 개 더 (최대 trait.max · woundFor 틱) — 맞은 자리에 핏방울 · 머리 위 상처 수 */
-    static void addWound(ServerPlayer sp, LivingEntity e, Jobs.Job j, int n) {
-        if (e == null || e.isRemoved() || n <= 0) return;
-        long now = Tasks.now();
-        long[] w = WOUNDS.computeIfAbsent(key(sp, e), k -> new long[2]);
-        if (w[1] < now) w[0] = 0;
+    /** 게이지 값: 블러드 나이트 = 피의 갈증 (0 ~ trait.max) */
+    static int gaugeValue(ServerPlayer sp, Jobs.Job j) {
+        if (j == null || !BK.equals(j.id())) return 0;
         int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
-        w[0] = Math.min(max, w[0] + n);
-        w[1] = now + (long) trait(j, "woundFor", 160);
-        of(sp).woundTarget = e.getUUID();
-        if (e.level() instanceof ServerLevel level && RuneKit.fxQuota("jobWound", 6)) woundMarks(level, sp, e, j, (int) w[0]);
-        JobTraits.sendGauge(sp, false);
-    }
-
-    /** 머리 위 상처 수 (핏방울이 한 줄로 — 마지막 것이 밝게) */
-    static void woundMarks(ServerLevel level, ServerPlayer sp, LivingEntity e, Jobs.Job j, int n) {
-        Vec3 over = RuneKit.overHead(e, 0.45);
-        Vec3 right = V.rightOf(V.flat(V.sub(over, sp.getEyePosition())));
-        for (int i = 0; i < n; i++) {
-            Vec3 at = V.add(over, right, (i - (n - 1) / 2.0) * 0.26);
-            drop(level, at, V.UP, 0.13, i == n - 1 ? JobFx.inner(j) : JobFx.outer(j), 0.8, Opt.of("vel", RuneKit.entVel(e), "grow", 0.2, "fade", 0.4));
-        }
-    }
-
-    /** 이 적의 상처 수 (끝났으면 0 — 회그니의 맹세 동안은 끝나지 않음) */
-    static int wounds(ServerPlayer sp, Entity e) {
-        if (e == null) return 0;
-        long[] w = WOUNDS.get(key(sp, e));
-        if (w == null) return 0;
-        long now = Tasks.now();
-        if (JobTraits.stanceOn(sp, OATH)) w[1] = Math.max(w[1], now + 20);
-        return w[1] < now ? 0 : (int) w[0];
-    }
-
-    /** 상처를 모두 떼어 냄 (터뜨림) — 뗀 수 */
-    static int takeWounds(ServerPlayer sp, Entity e) {
-        int n = wounds(sp, e);
-        WOUNDS.remove(key(sp, e));
-        JobTraits.sendGauge(sp, false);
-        return n;
-    }
-
-    /** 시험용: 상처를 정함 */
-    public static void setWounds(ServerPlayer sp, LivingEntity e, int n) {
-        WOUNDS.put(key(sp, e), new long[] {Math.max(0, n), Tasks.now() + 200});
-        of(sp).woundTarget = e.getUUID();
-        JobTraits.sendGauge(sp, false);
-    }
-
-    /** 시험용: 상처 수 */
-    public static int woundsOf(ServerPlayer sp, Entity e) {
-        return wounds(sp, e);
+        return (int) Math.round(thirst(sp, j) * max);
     }
 
     /** 시험용: 치명 창이 열려 있는지 */
@@ -297,118 +329,102 @@ public final class JobTraits5 {
         return st != null && st.critUntil >= Tasks.now();
     }
 
-    /** 게이지 값: 블러드 나이트 = 마지막으로 상처를 낸 적의 상처 수 */
-    static int gaugeValue(ServerPlayer sp, Jobs.Job j) {
-        if (j == null || !BK.equals(j.id())) return 0;
-        State st = STATES.get(sp.getUUID());
-        if (st == null || st.woundTarget == null) return 0;
-        Entity e = sp.level().getEntity(st.woundTarget);
-        return e == null || e.isRemoved() || !e.isAlive() ? 0 : wounds(sp, e);
-    }
-
     // ------------------------------------------------------------ 평타 훅
 
-    /** 용의 심장: 칼 평타 두 번째 베기 (평타 × echo) */
-    private static RpgCombat.Bonus heartBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
-        if (w == null || !"sword".equals(w.type()) || !(dmg > 0) || !JobTraits.stanceOn(sp, HEART)) return null;
-        Jobs.Job j = jobIf(sp, SM);
-        if (j == null) return null;
-        Jobs.Skill k = j.skill(HEART);
-        double echo = k == null ? 0.42 : JobUpgrades.num(sp, k, "echo", 0.42);
-        return new RpgCombat.Bonus(dmg * echo, "", KEY_HEART, DamageNumbers.Style.JOB, null, JobKit.grad(j));
-    }
-
-    /** 회그니의 맹세: 칼 평타에 피 칼날 (평타 × echo) */
-    private static RpgCombat.Bonus oathBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
-        if (w == null || !"sword".equals(w.type()) || !(dmg > 0) || !JobTraits.stanceOn(sp, OATH)) return null;
-        Jobs.Job j = jobIf(sp, BK);
-        if (j == null) return null;
-        Jobs.Skill k = j.skill(OATH);
-        double echo = k == null ? 0.42 : JobUpgrades.num(sp, k, "echo", 0.42);
-        return new RpgCombat.Bonus(dmg * echo, "", KEY_OATH, DamageNumbers.Style.JOB, null, JobKit.grad(j));
-    }
-
-    /** 무기로 맞힘: 맹세의 피 칼날이 들어갔으면 맞은 자리에 핏빛 베기 · 그 몫의 흡혈 (두 배) · 상처 +1 */
+    /** 무기로 맞힘: 광란 · 벼린 칼의 칼 평타 — 맞은 자리에 핏빛 · 금빛 베기 (연출) */
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
-        if (bonus == null || victim == null || w == null || !Combat.isMeleeWeapon(w)) return;
-        Jobs.Job j = jobIf(sp, BK);
+        if (victim == null || w == null || !Combat.isMeleeWeapon(w) || !"sword".equals(w.type())) return;
+        Jobs.Job j = JobSystem.job(sp);
         if (j == null) return;
-        for (RpgCombat.Bonus p : bonus.parts()) {
-            if (!KEY_OATH.equals(p.key())) continue;
-            leech(sp, j, p.add() * trait(j, "leech", 0.05) * 2);
-            addWound(sp, victim, j, 1);
-            Jobs.Job jj = j;
-            RuneKit.later(3, () -> {
-                if (victim.isRemoved() || !(victim.level() instanceof ServerLevel lv)) return;
-                JobFx.hit(victim, jj, 1.0);
-                SkillFx.play(lv, "item.spear.attack_miss", Kit.bodyPoint(victim), 1.3, 0.5);
-            });
+        if (BK.equals(j.id()) && JobTraits.stanceOn(sp, FRENZY)) {
+            JobImpact.hit(sp, victim, j, 0.9);
             return;
         }
-    }
-
-    // ------------------------------------------------------------ 맞음 (용의 심장 받아치기)
-
-    private static void onLoss(ServerPlayer sp, DamageSource src, double loss) {
-        if (!(loss > 0) || !JobTraits.stanceOn(sp, HEART)) return;
-        Jobs.Job j = jobIf(sp, SM);
-        if (j == null) return;
-        if (!(src.getEntity() instanceof LivingEntity att) || att == sp || !att.isAlive()) return;
-        Jobs.Skill k = j.skill(HEART);
-        if (k == null || att.distanceToSqr(sp) > Math.pow(k.num("counterRange", 6), 2)) return;
-        State st = of(sp);
-        long now = Tasks.now();
-        if (now - st.counterAt < (long) k.num("counterGap", 20)) return;
-        st.counterAt = now;
-        double mult = JobUpgrades.num(sp, k, "counter", k.num("counter", 1.0));
-        double P = JobSystem.power(sp, j);
-        String life = RuneKit.lifeToken(sp);
-        // 받아치기: 때린 적 쪽으로 몸을 틀어 금빛 초승달 (2틱 뒤 — 맞는 중에 겹쳐 치지 않게)
-        RuneKit.later(2, () -> {
-            if (!RuneKit.sameLife(sp, life) || att.isRemoved()) return;
-            ServerLevel level = sp.level();
-            Vec3 f = V.flat(V.sub(att.position(), sp.position()));
-            Vec3 at = V.up(V.add(sp.position(), f, 1.1), 1.1);
-            JobFx.slashCard(level, at, f, Kit.rand() < 0.5 ? 172.0 : -8.0, 2.8, 0.28, V.ZERO, j, Opt.empty());
-            JobFx.glint(level, V.up(V.add(sp.position(), f, 0.8), 1.4), 0.45, j, 0.4, Opt.empty());
-            SkillFx.play(level, "item.trident.hit", sp.position(), 1.5, 0.7);
-            SkillFx.play(level, "block.amethyst_block.hit", sp.position(), 1.9, 0.7);
-            JobKit.motion(sp, HEART + ":counter");
-            JobKit.strike(sp, att, j, P, mult, false, false, life, 0, d -> JobFx.hit(att, j, 1.2));
-        });
+        if (SM.equals(j.id()) && forged(sp)) JobImpact.hit(sp, victim, j, 1.0);
     }
 
     // ------------------------------------------------------------ 틱 · 태세 연출
 
-    /** 4틱마다 (JobTraits.tick): 흡혈 숫자 (1초에 한 번) */
+    /** 틱마다 (JobTraits.tick): 흡혈 숫자 (1초에 한 번) · 벼린 칼이 끝남 · 용의 피 이동 속도 · 광란이 저절로 벰 */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
         State st = STATES.get(sp.getUUID());
-        if (st == null) return;
+        if (st == null) {
+            if (!JobTraits.stanceOn(sp, DRAGON) && !JobTraits.stanceOn(sp, FRENZY)) return;
+            st = of(sp);
+        }
         if (st.leechAcc >= 0.5 && now - st.leechShown >= 20) {
             DamageNumbers.show(sp, st.leechAcc, DamageNumbers.Style.HEAL, "", 0);
             st.leechAcc = 0;
             st.leechShown = now;
         }
-        if (WOUNDS.size() > 256) WOUNDS.values().removeIf(w -> w[1] < now);
+        if (st.forgeReach && (st.forgeUntil <= now || !SM.equals(j.id()))) {
+            st.forgeReach = false;
+            AttributeInstance r = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
+            if (r != null) r.removeModifier(FORGE_REACH);
+        }
+        double want = 0;
+        if (SM.equals(j.id()) && JobTraits.stanceOn(sp, DRAGON)) {
+            Jobs.Skill k = j.skill(DRAGON);
+            want = k == null ? 0.15 : k.num("move", 0.15);
+        }
+        if (Math.abs(want - st.speedSet) > 1e-9) {
+            st.speedSet = want;
+            AttributeInstance m = sp.getAttribute(Attributes.MOVEMENT_SPEED);
+            if (m != null) {
+                if (want > 0) m.addOrUpdateTransientModifier(new AttributeModifier(DRAGON_SPEED, want, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+                else m.removeModifier(DRAGON_SPEED);
+            }
+        }
+        if (BK.equals(j.id()) && JobTraits.stanceOn(sp, FRENZY)) frenzyAuto(sp, j, st, now);
     }
 
-    /** 태세 연출 (8틱마다 — JobTraits.stanceFx): 용의 심장 = 가슴의 금빛 불씨 · 칼의 금빛 / 회그니의 맹세 = 칼에서 떨어지는 핏방울. 그렸으면 true */
+    /**
+     * 광란: 평타 사이가 지났고 둘레 autoRange 칸에 적이 있으면 가장 가까운 적을 저절로 벰 (칼 평타 그대로 — Player#attack: 참격 범위 · 맞힘 훅 · 둘레에 동작).
+     * 내가 누른 평타와 겹치지 않게 마지막 휘두르기에서 평타 사이 (공격 속도) 뒤
+     */
+    private static void frenzyAuto(ServerPlayer sp, Jobs.Job j, State st, long now) {
+        if (sp.isSpectator() || !sp.isAlive() || sp.isUsingItem()) return;
+        Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
+        if (w == null || !"sword".equals(w.type()) || !RpgCombat.lackOf(sp, w).isEmpty()) return;
+        int gap = mmorpg.core.Motions.serverInterval(RpgCombat.attackSpeed.applyAsDouble(sp));
+        MotionSystem.Swing last = MotionSystem.last(sp);
+        if (last != null && now - last.tick() < gap) return;
+        if (now - st.lastAuto < gap) return;
+        Jobs.Skill k = j.skill(FRENZY);
+        double r = k == null ? 3.6 : k.num("autoRange", 3.6);
+        List<LivingEntity> near = JobKit.near(sp, r, 1);
+        if (near.isEmpty()) return;
+        st.lastAuto = now;
+        LivingEntity e = near.get(0);
+        sp.swing(InteractionHand.MAIN_HAND, true);
+        sp.attack(e);
+    }
+
+    /** 태세 연출 (8틱마다 — JobTraits.stanceFx): 용의 피 = 몸의 금빛 비늘 기운 · 칼의 불티 / 광란 = 붉은 눈빛 · 칼에서 떨어지는 피 · 몸의 핏빛 김. 그렸으면 true */
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
         ServerLevel level = sp.level();
         RuneKit.Hand h = RuneKit.handOf(sp);
-        if (HEART.equals(stance)) {
-            Vec3 chest = V.add(V.up(sp.position(), 1.25), V.flat(sp.getViewVector(1F)), 0.25);
-            JobFx.burst(level, chest, 0.3, j, 0.35, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.8));
-            SkillFx.fx(level, "rpg:light_cut", V.up(h.hand(), 0.2), Opt.of("dir", V.UP, "size", 0.5, "thick", 0.08, "life", 0.4, "color", JobKit.glow(j), "alpha", 0.85));
-            SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.3), Opt.of("dir", V.UP, "speed", 1.2, "size", 0.12, "grow", 0.6, "life", 0.4, "color", JobKit.glow(j),
+        if (DRAGON.equals(stance)) {
+            Vec3 chest = V.add(V.up(sp.position(), 1.2), V.flat(sp.getViewVector(1F)), 0.2);
+            JobFx.burst(level, chest, 0.42, j, 0.35, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.8));
+            RuneKit.godRays(sp, level, sp.position(), 0.8, 3, JobKit.glow(j), JobKit.core(j), JobFx.hide1p(sp).with("h", 2.6, "life", 0.45, "alpha", 0.55));
+            SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.3), Opt.of("dir", V.UP, "speed", 1.6, "size", 0.15, "grow", 0.6, "life", 0.4, "color", JobKit.glow(j),
                     "alpha", 1.0));
             return true;
         }
-        if (OATH.equals(stance)) {
-            // 칼끝에서 떨어지는 핏방울 (1인칭 오른쪽 아래에도 보임) · 몸의 핏빛 기운은 JobTraits 가 (aura)
+        if (FRENZY.equals(stance)) {
             Vec3 tip = V.up(V.add(h.hand(), h.f(), 0.55), 0.15);
-            drop(level, tip, V.scale(V.UP, -1), 0.12, JobFx.outer(j), 0.45, Opt.of("speed", 2.4, "fade", 0.3));
-            SkillFx.sparks(level, tip, JobFx.outer(j), 2, 1.2);
+            drop(level, tip, V.scale(V.UP, -1), 0.14, JobFx.outer(j), 0.45, Opt.of("speed", 2.4, "fade", 0.3));
+            SkillFx.sparks(level, tip, JobFx.outer(j), 3, 1.4);
+            blood(level, V.up(sp.position(), 1.0), 0.6, j, 0.4, JobFx.hide1p(sp).with("alpha", 0.6, "vel", RuneKit.bodyVel(sp)));
+            // 붉은 눈빛 (두 점 — 3인칭)
+            Vec3 eye = sp.getEyePosition();
+            Vec3 f = V.flat(sp.getViewVector(1F));
+            Vec3 r = V.rightOf(f);
+            for (int s = -1; s <= 1; s += 2) {
+                RuneKit.rfx(level, "prop", V.add(V.add(eye, f, 0.28), r, 0.1 * s), JobFx.hide1p(sp).with("size", 0.07, "life", 0.42, "cell",
+                        (double) RuneKit.RFX.get("glint")[0], "spin", 0.0, "color", BLOOD_LIGHT, "fade", 0.4, "vel", RuneKit.bodyVel(sp)));
+            }
             return true;
         }
         return false;

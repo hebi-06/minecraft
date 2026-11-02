@@ -23,7 +23,7 @@ K.PREFIX = "jb_"
 import job_motions_a  # noqa: E402,F401
 import job_motions_b  # noqa: E402,F401
 import job_motions_c  # noqa: E402,F401
-import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트)
+import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트 — 재설계안 2판)
 import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 라이칸)
 import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (룬 나이트 · 헥스 블레이드)
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
@@ -97,11 +97,7 @@ AIR = {
     "jb_priest_ult_toll": [(0, 16, "float")],
     "jb_guardian_bash": [],
     "jb_guardian_ult": [(1, 9, "tuck"), (10, 14, "land")],
-    # 0.51.0 2차 직업
-    "jb_swordmaster_flurry": [(16, 22, "hop")],
-    "jb_swordmaster_moon": [(1, 4, "tuck"), (5, 29, "float"), (30, 33, "tuck"), (34, 38, "land")],
-    "jb_swordmaster_ult": [(9, 14, "tuck"), (15, 54, "float"), (55, 59, "tuck"), (60, 64, "land")],
-    "jb_bloodknight_ult": [(45, 51, "hop"), (52, 56, "land")],
+    # 0.51.0 2차 직업 (소드마스터 · 블러드 나이트는 재설계안 2판 — 몸이 뜨는 단계의 다리를 job_motions_d 에서 직접 · softLegs 끔)
     "jb_warlord_crush": [(1, 10, "tuck"), (12, 15, "land")],
     "jb_warlord_storm": [(33, 41, "tuck"), (42, 45, "land")],
     "jb_warlord_ult_final": [(2, 18, "tuck"), (20, 23, "land")],
@@ -234,7 +230,8 @@ def write(check=False):
     names = [mo.name for mo in K.MOTIONS]
     # skills: 무기 스킬 (그대로) → 직업 스킬 (직업 · 스킬 차례, 단계 열쇠는 그 스킬 뒤) → 룬 (그대로)
     old = motion["skills"]
-    skills = {k: v for k, v in old.items() if not k.startswith("rune:") and not is_job_key(k, ids)}
+    # 0.51.0 직업 스킬이 아닌 열쇠가 jb_ 동작을 가리키면 지운 스킬의 남은 열쇠 (재설계로 스킬 id 가 바뀜) — 버림
+    skills = {k: v for k, v in old.items() if not k.startswith("rune:") and not is_job_key(k, ids) and not str(v).startswith(PREFIX)}
     order = {sid: i for i, sid in enumerate(ids)}
     for k in sorted(K.TABLE, key=lambda k: (order[k.split(":")[0]], k.count(":"), k)):
         skills[k] = K.TABLE[k]

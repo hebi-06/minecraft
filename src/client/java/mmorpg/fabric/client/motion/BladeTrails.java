@@ -370,7 +370,7 @@ public final class BladeTrails {
                     WORLD.put(id, tr);
                 }
                 Trail cur = tr;
-                sample(cur, m, now - a.start(), (tau, out) -> worldBlade(av, m, tau, cur, out), true);
+                sample(cur, m, ClientMotions.elapsed(id, a, now), (tau, out) -> worldBlade(av, m, tau, cur, out), true); // 0.51.0 멈칫한 시간을 뺌
             }
             // 사진첩: 멈춘 자세의 궤적 (그 순간까지)
             List<Trail> frozen = new ArrayList<>();
@@ -639,7 +639,7 @@ public final class BladeTrails {
                     }
                     if (fp != null) {
                         Trail f = fp;
-                        sample(f, m, now - a.start(), (tau, out) -> fpBlade(me, m, tau, f, out), true);
+                        sample(f, m, ClientMotions.elapsed(me.getId(), a, now), (tau, out) -> fpBlade(me, m, tau, f, out), true); // 0.51.0 멈칫
                     }
                 }
             }

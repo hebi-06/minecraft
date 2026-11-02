@@ -10,6 +10,7 @@ import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.Tasks;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -171,6 +172,25 @@ public final class MotionSystem {
             if (o != sp) MotionNet.send(o, p);
         }
         if (!exceptSelf) MotionNet.send(sp, p);
+    }
+
+    /** 0.51.0 멈칫 알림 횟수 (시험) · 마지막으로 보낸 틱 수 */
+    public static int stops;
+    public static int lastStop;
+
+    /**
+     * 0.51.0 멈칫 (사용자 "타격감이 없었음" · "화면 흔들림은 넣지마 멀미나"): 이 사람이 하는 동작을 ticks 틱 그 자세로 멈춤 — 쓴 사람과 둘레에 (MotionNet.StopPayload).
+     * 화면은 흔들지 않음 (카메라는 그대로 — 몸 · 1인칭 손 · 참격 궤적만 멈칫)
+     */
+    public static void hitStop(ServerPlayer sp, int ticks) {
+        if (sp == null || sp.isRemoved() || ticks <= 0) return;
+        stops++;
+        lastStop = ticks;
+        MotionNet.StopPayload p = new MotionNet.StopPayload(sp.getId(), ticks);
+        for (ServerPlayer o : PlayerLookup.tracking(sp)) {
+            if (o != sp && ServerPlayNetworking.canSend(o, MotionNet.StopPayload.TYPE)) ServerPlayNetworking.send(o, p);
+        }
+        if (ServerPlayNetworking.canSend(sp, MotionNet.StopPayload.TYPE)) ServerPlayNetworking.send(sp, p);
     }
 
     /** 시험: 이 사람의 마지막 동작 알림 (없으면 null) */

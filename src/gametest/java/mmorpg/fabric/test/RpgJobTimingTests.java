@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
  * 앞 과녁 하나에 써서, 쓴 틱부터 첫 피해 · 마지막 피해까지의 틱을 잼 (과녁이 밀려나지 않게 밀쳐냄 저항 1). 결과는 로그 [job-timing] (CI 의 job-timing.txt).
  * 확인: 피해가 들어가고, 다 맞은 스킬의 마지막 피해 틱 = jobs.json 의 t (±3틱 — 몇 타가 빗나간 스킬은 t + 3 안), 첫 피해 틱 = w (선딜 — ±3틱, w 가 없으면
  * 8틱 안 · w 0 을 적은 스킬은 빼고), 들어간 피해 ≤ 위력 × 배율 합 × 피해 배율 (Jobs.damageScale) × 스탯 트리 공격력 × 가호.
+ * 0.51.0 다시 쓰는 스킬 (JobRecast — 핏빛 대검 세 번 · 다시 벼린 칼의 검풍) 은 창이 열려 있는 동안 RECAST 틱마다 다시 누름 (받아 줄 때까지).
  */
 public final class RpgJobTimingTests {
     private static final Logger LOG = LoggerFactory.getLogger("mmorpg-job-timing");
@@ -80,7 +81,12 @@ public final class RpgJobTimingTests {
         double want;
         boolean cast;
         Husk z;
+        /** 0.51.0 다시 쓰는 스킬 (JobRecast): 마지막으로 누른 틱 (쓴 틱부터) */
+        int lastPress;
     }
+
+    /** 0.51.0 다시 쓰는 스킬 (핏빛 대검 · 다시 벼린 칼): 창이 열려 있으면 앞 누름에서 이만큼 뒤부터 다시 누름 (받아 줄 때까지 — 스킬의 gap) — jobs.json t 와 같은 셈 */
+    static final int RECAST = 12;
 
     private static void probe(GameTestHelper h, String job) {
         for (int x = -2; x < 12; x++) for (int z = -2; z < 14; z++) h.setBlock(new BlockPos(x, 1, z), Blocks.STONE);
@@ -122,6 +128,7 @@ public final class RpgJobTimingTests {
                 p.want = JobSystem.power(sp, j) * k.total() * Jobs.damageScale(k) * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
                 p.cast = JobSkills.press(sp, k.slot());
                 p.t0 = now;
+                p.lastPress = 0;
                 p.first = -1;
                 p.last = -1;
                 p.hits.clear();
@@ -130,6 +137,8 @@ public final class RpgJobTimingTests {
                 throw h.assertionException("measuring");
             }
             int t = (int) (now - p.t0);
+            Jobs.Skill kk = p.skills.get(p.idx);
+            if (p.cast && mmorpg.fabric.job.JobRecast.pending(sp, kk.id()) && t - p.lastPress >= RECAST && JobSkills.press(sp, kk.slot())) p.lastPress = t;
             double d = TestDummies.dealtBy(p.z);
             if (d > p.prev + 1e-9) {
                 if (p.first < 0) p.first = t;

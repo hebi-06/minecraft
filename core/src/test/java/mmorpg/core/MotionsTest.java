@@ -208,10 +208,11 @@ public final class MotionsTest {
             check(SwingLooks.of(fn) != null, "strike rune look " + g + " " + fn);
         }
         // 0.51.0 2차 직업: 곰의 화신 (뵈드바르(워로드) — 분노 100 · 평타 범위 ×1.5) · 늑대의 밤 (울프헤딘(라이칸) 태세) · 룬 담금질 (뵐룬드(룬 나이트) — 룬 대검 ×1.4) ·
-        // 저주의 칼 (투르스(헥스 블레이드))
+        // 저주의 칼 (투르스(헥스 블레이드)) · 재설계안 2판: 용의 피 (시구르드 태세) · 다시 벼린 칼 (벼린 칼 ×1.5) · 광란 (다인슬레이프 태세)
         Map<String, Double> scales = Map.ofEntries(Map.entry("edgeHone", 1.15), Map.entry("flurry", 1.2), Map.entry("bloodBlade", 1.3), Map.entry("cleave", 1.4),
                 Map.entry("swordGod", 1.5), Map.entry("swordsman_mirror", 1.2), Map.entry("spellblade_awaken", 1.3), Map.entry("reaper_avatar", 1.0),
-                Map.entry("warlord_bear", 1.5), Map.entry("lycan_night", 1.15), Map.entry("runeknight_temper", 1.4), Map.entry("hexblade_curse", 1.2));
+                Map.entry("warlord_bear", 1.5), Map.entry("lycan_night", 1.15), Map.entry("runeknight_temper", 1.4), Map.entry("hexblade_curse", 1.2),
+                Map.entry("swordmaster_blood", 1.15), Map.entry("swordmaster_ult", 1.5), Map.entry("bloodknight_frenzy", 1.2));
         for (Map.Entry<String, Double> e : scales.entrySet()) {
             SwingLooks.Look l = SwingLooks.of(e.getKey());
             check(l != null && Math.abs(l.scale() - e.getValue()) < 1e-9 && l.glow() != null && l.aura() != null && SwingLooks.pack(l.glow()) != 0,
@@ -341,8 +342,10 @@ public final class MotionsTest {
         check(Motions.skillMotion("gram_charge").equals("wp_gram_charge") && Motions.skillMotion("warrior_charge").equals("jb_warrior_charge")
                 && Motions.skillMotion("warrior_charge:slam").equals("jb_warrior_charge_slam") && Motions.skillMotion("guardian_throw:catch").equals("jb_guardian_throw_catch"),
                 "dashes (0.47.0 직업 스킬은 jb_ — 돌격 끝의 내려찍기 · 방패를 받음은 단계 열쇠)");
-        check(Motions.skillMotion("swordmaster_ult").equals("jb_swordmaster_ult") && Motions.skillMotion("swordmaster_heart:counter").equals("jb_swordmaster_heart_counter")
-                && Motions.skillMotion("bloodknight_ult").equals("jb_bloodknight_ult"), "0.51.0 2차 직업 스킬 동작 (jb_ — 용의 심장 받아치기는 단계 열쇠)");
+        check(Motions.skillMotion("swordmaster_ult").equals("jb_swordmaster_ult") && Motions.skillMotion("swordmaster_parry:riposte").equals("jb_swordmaster_parry_riposte")
+                && Motions.skillMotion("swordmaster_ring:cut1").equals("jb_swordmaster_ring_cut1") && Motions.skillMotion("swordmaster_ult:slash").equals("jb_swordmaster_ult_slash")
+                && Motions.skillMotion("bloodknight_cleave:3").equals("jb_bloodknight_cleave_3") && Motions.skillMotion("bloodknight_ult:x1").equals("jb_bloodknight_ult_x1")
+                && Motions.skillMotion("bloodknight_ult").equals("jb_bloodknight_ult"), "0.51.0 2차 직업 스킬 동작 (jb_ — 받아치기 · 가로지르기 · 다시 쓰기 · X 베기는 단계 열쇠)");
         check(Motions.skillMotion("nothing") == null, "unknown → null");
         // poses.json 과 같은 이름
         Path poses = Path.of("src/main/resources/assets/mmorpg/motion/poses.json");

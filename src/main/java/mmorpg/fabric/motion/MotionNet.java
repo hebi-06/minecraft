@@ -114,11 +114,35 @@ public final class MotionNet {
         }
     }
 
+    /**
+     * 0.51.0 멈칫 (사용자 "타격감이 없었음" — 화면 흔들림 없이): 그 사람 (entity) 이 하는 동작을 ticks 틱 그 자세로 멈췄다가 이어 감 (맞는 순간 칼이 걸리는 느낌 —
+     * 1인칭 손 · 3인칭 몸 · 참격 궤적이 같이 멈춤)
+     */
+    public record StopPayload(int entity, int ticks) implements CustomPacketPayload {
+        public static final CustomPacketPayload.Type<StopPayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("motion_stop"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, StopPayload> CODEC = CustomPacketPayload.codec(StopPayload::write, StopPayload::read);
+
+        private static StopPayload read(RegistryFriendlyByteBuf buf) {
+            return new StopPayload(buf.readVarInt(), buf.readVarInt());
+        }
+
+        private void write(RegistryFriendlyByteBuf buf) {
+            buf.writeVarInt(entity);
+            buf.writeVarInt(Math.max(0, ticks));
+        }
+
+        @Override
+        public CustomPacketPayload.Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     /** MotionSystem.init */
     static void register() {
         PayloadTypeRegistry.serverboundPlay().register(ReqPayload.TYPE, ReqPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PlayPayload.TYPE, PlayPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(LookPayload.TYPE, LookPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(StopPayload.TYPE, StopPayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(ReqPayload.TYPE, (p, context) -> MotionSystem.request(context.player(), p.kind(), p.step(), p.yaw()));
     }
 

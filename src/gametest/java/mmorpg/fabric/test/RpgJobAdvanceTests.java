@@ -12,6 +12,7 @@ import mmorpg.fabric.RpgData;
 import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.economy.Wallet;
+import mmorpg.fabric.job.JobRecast;
 import mmorpg.fabric.job.JobSkills;
 import mmorpg.fabric.job.JobSystem;
 import mmorpg.fabric.job.JobTrainer;
@@ -46,10 +47,11 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  * <li>2차 전직 창 (환경 mmorpg:job_adv — Forms.HEADLESS): 49렙 → 창은 열려 카드 미리 보기 · 고르면 50렙 안내, 50렙 → 각성 무료 · 반전으로 바꾸기 600 은화 (모자람 · 됨) ·
  * 이명(직업명) 표시 · 1차 카드는 같은 계열 안내 · 강화 단계는 같은 칸으로 이어짐 · 다른 1차 직업으로 바꾸면 2차 풀림 (확인 창이 알림)</li>
- * <li>소드마스터 (mmorpg:job_sm): 과녁 하나가 받은 피해 = 위력 × 피해 배율 × 배율 합 — 금빛 연격 (투지 3 → 검기, 5) · 그라니의 질주 (지나가며 1.5 · 다음 평타 치명타) ·
- * 만월 강하 (투지 8 → 치명 +30% × 투지 8 개 +64%) · 용의 심장 (두 번 베기 42% · −20% · 맞으면 받아치기) · 신들의 황혼 (돌진 · 4 + 3.5 × 4 + 22 = 40)</li>
- * <li>블러드 나이트 (mmorpg:job_bk): 피의 갈증 (체력 4% → 위력 +10%) · 흡혈 · 상처 (맞힐 때 +1 · 피의 질주 +2 · 상처 터뜨리기 상처 × 1 + 회복 15% · 끝나지 않는 전투
- * 상처 하나당 +5%) · 회그니의 맹세 (체력 15% · 피 칼날 42% · 상처 +1)</li>
+ * <li>소드마스터 (mmorpg:job_sm — 재설계안 2판): 과녁 하나가 받은 피해 = 위력 × 피해 배율 × 배율 합 — 칼집 섬광 (투지 3 → 6칸 · 열 줄, 뽑는 6틱에 5) · 받아넘기기
+ * (막는 동안 맞으면 깎이지 않고 받아침 3 · 투지 +3 / 막은 것이 없으면 내디뎌 벰 3) · 불의 울타리 (가로지르기 1.8 × 5) · 용의 피 (공격 속도 ×1.35 · 이동 +15% · −20% ·
+ * 칼 평타 투지 +2) · 다시 벼린 칼 (충격 8 → 벼린 칼 사거리 +1.5 · +20% → 다시 누름 (14틱부터) 검풍 32 × 잃은 체력)</li>
+ * <li>블러드 나이트 (mmorpg:job_bk — 재설계안 2판): 피의 갈증 (체력 4% → 위력 +10% · 체력 30% 에서 공격 속도 ×1.3) · 핏빛 대검 (세 번 다시 누름 — 10틱부터 · 칼끝 ×1.5) ·
+ * 피의 돌진 (뛰어들어 3 · 기절 · 방어 깨짐) · 피의 사슬 (박음 3 → 끌어당김 6) · 칼을 뽑다 (칼날 10 · 내리꽂음 10 · X 베기 5 × 4) · 광란 (공격 속도 ×1.6 · 저절로 벰)</li>
  * <li>워로드 (mmorpg:job_wl): 분노 100 → 곰의 화신 (평타 +20% · 범위 · −15% · 분노가 줄어듦) · 투구 깨부수기 (6.5 · 방어 깨짐 +15%) · 곰의 메치기 (1.4 + 2.5) ·
  * 도끼 태풍 (1.8 × 4 + 4.5 · 흡혈) · 곰의 포효 (곰의 화신 · 쓰러지지 않음 · 위기 회복 둘) · 뵈드바르의 앞발 (6 × 4 + 28)</li>
  * <li>라이칸 (mmorpg:job_ly): 야성 (사냥감 +1 · 다른 적이면 1부터 · 공격 · 이동 속도 +2%) · 송곳니 베기 (야성 10 → 할퀴기 +30% · 5 씀) · 사냥감 덮치기 (3.9 · 기절 ·
@@ -147,13 +149,13 @@ public final class RpgJobAdvanceTests {
             // 50렙 → 각성 (처음 2차 전직 — 무료)
             sp.setExperienceLevels(50);
             RpgPlayers.update(sp, RpgData.of(sp).withLvmax(50));
-            JobUpgrades.set(sp, "swordsman_moon", 2);
+            JobUpgrades.set(sp, "swordsman_moon", 2); // 셋째 칸 (원월참) → 2차의 셋째 칸 (불의 울타리 · 피의 사슬)
             Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "advance confirm");
             Forms.answer(sp, 11, null);
             h.assertTrue("swordmaster".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && done[0] == 1, "awaken free: " + JobSystem.jobOf(sp));
             h.assertTrue(JobTrainer.optionText(sp).contains("시구르드(소드마스터)") && JobSystem.job(sp).display().equals("시구르드(소드마스터)"), "display 이명(직업명)");
-            h.assertTrue(JobUpgrades.level(sp, "swordmaster_moon") == 2, "upgrade carries to the same slot: " + JobUpgrades.level(sp, "swordmaster_moon"));
+            h.assertTrue(JobUpgrades.level(sp, "swordmaster_ring") == 2, "upgrade carries to the same slot: " + JobUpgrades.level(sp, "swordmaster_ring"));
             // 1차 카드 (검사) → 같은 계열 안내
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("swordsman"), null);
@@ -169,7 +171,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("bloodknight".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 50, "switched to invert for 600: " + JobSystem.jobOf(sp) + " · "
                     + Wallet.get(sp, Economy.Kind.SILVER));
-            h.assertTrue(JobUpgrades.level(sp, "bloodknight_burst") == 2, "upgrade carries (invert)");
+            h.assertTrue(JobUpgrades.level(sp, "bloodknight_chains") == 2, "upgrade carries (invert)");
             // 같은 2차 직업 → 안내
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
@@ -284,7 +286,7 @@ public final class RpgJobAdvanceTests {
         RpgGearTests.done(h, sp);
     }
 
-    // ------------------------------------------------------------ 시구르드(소드마스터)
+    // ------------------------------------------------------------ 시구르드(소드마스터) — 0.51.0 재설계안 2판
 
     @GameTest(environment = ENV_SM, maxTicks = 520)
     public void swordmasterSkills(GameTestHelper h) {
@@ -292,97 +294,107 @@ public final class RpgJobAdvanceTests {
         ServerPlayer sp = player(h, "swordmaster", 50);
         Jobs.Job j = Jobs.job("swordmaster");
         Weapon w = Weapons.weaponFrom("sword", 0, "common");
-        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 3)));
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2.5)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
-        // 금빛 연격: 투지 3 → 마지막 X자가 검기 (투지 셋 씀), 1.0 + 1.0 + 1.2 + 1.8
+        // 칼집 섬광: 투지 3 → 6칸 · 열 줄 (투지 셋 씀) — 칼집에 넣은 6틱 동안은 피해 없음 → 뽑는 틱에 5 (한 번에 · 숫자만 여러 줄)
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             JobTraits.setStacks(sp, 3);
-            h.assertTrue(JobSkills.press(sp, 0), "금빛 연격 cast");
-            h.assertTrue(JobTraits.stacks(sp) == 0, "검기 used 3 stacks: " + JobTraits.stacks(sp));
+            h.assertTrue(JobSkills.press(sp, 0), "칼집 섬광 cast");
+            h.assertTrue(JobTraits.stacks(sp) == 0, "wave used 3 stacks: " + JobTraits.stacks(sp));
         }));
-        steps.add(new RpgJobTests.Step(38, () -> {
+        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "칼집 섬광: no damage while sheathed")));
+        steps.add(new RpgJobTests.Step(10, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 5);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "금빛 연격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "칼집 섬광 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "swordmaster gradient number");
             z.get(0).discard();
             home(h, sp);
-            // 그라니의 질주: 첫 질주 (앞 오른쪽 18°) 길 위의 과녁
-            double a = Math.toRadians(j.skill(1).num("angle", 18));
-            z.set(0, dummy(h, -Math.sin(a) * 2.2, Math.cos(a) * 2.2));
-            h.assertTrue(JobSkills.press(sp, 1), "그라니의 질주 cast");
+            z.set(0, dummy(h, 0, 2));
+            JobTraits.setStacks(sp, 0);
+            // 받아넘기기: 막는 동안 맞음 (받는 피해 처리 — RpgHealth.onLoss) → 깎이지 않음 · 다음 틱 받아침
+            h.assertTrue(JobSkills.press(sp, 1), "받아넘기기 cast");
+            float hp = sp.getHealth();
+            float left = mmorpg.fabric.RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
+            h.assertTrue(Math.abs(left - hp) < 1e-4, "받아넘기기 blocks the hit: " + left + " vs " + hp);
         }));
-        steps.add(new RpgJobTests.Step(20, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(1), 1.5);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "그라니의 질주 (one cut) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        // 받아치기: 막은 다음 틱 → +6 에 3 (숫자 세 줄) · 투지 +3, 막았으니 0.5초의 내디뎌 베기는 없음 (16틱 뒤에도 3 그대로)
+        steps.add(new RpgJobTests.Step(16, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 3);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "받아치기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits.stacks(sp) == 3, "riposte stacks +3: " + JobTraits.stacks(sp));
+            JobSkills.resetCooldowns(sp);
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2));
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            double crit = base * RpgCombat.critMultOf(sp, w);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), crit), "basic after 그라니 is a crit " + TestDummies.dealt(z.get(0)) + " vs " + crit);
+            h.assertTrue(JobSkills.press(sp, 1), "받아넘기기 cast (nothing comes)");
         }));
-        // 만월 강하: 투지 8 → 치명 (+30% · 투지 3 씀) · 투지를 모두 써서 하나당 +8% (8 → +64%) · 착지 2.4 → 발키리의 가호
-        double[] moonWant = {0, 1};
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 3);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "받아넘기기 step cut " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2.5));
+            JobTraits.setStacks(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 2), "불의 울타리 cast");
+        }));
+        // 불의 울타리: 가로지르기 다섯 (6 · 16 · 26 · 36 · 46) — 울타리 안의 과녁을 지나며 1.8 씩 (= 9)
+        double[] speed0 = {0, 0};
+        steps.add(new RpgJobTests.Step(60, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 9);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "불의 울타리 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2));
+            speed0[0] = RpgCombat.attackSpeed.applyAsDouble(sp);
+            speed0[1] = sp.getAttributeValue(Attributes.MOVEMENT_SPEED);
+            h.assertTrue(JobSkills.press(sp, 3), "용의 피 cast");
+            double after = RpgCombat.attackSpeed.applyAsDouble(sp);
+            h.assertTrue(JobTraits.stanceOn(sp, "swordmaster_blood") && Math.abs(Guards.of(sp).reduce() - 0.2) < 1e-9, "용의 피 stance on, guard 20%");
+            h.assertTrue(Math.abs(after / speed0[0] - 1.35) < 1e-6, "용의 피 attack speed ×1.35: " + speed0[0] + " → " + after);
+        }));
+        // 용의 피: 이동 속도 + 기본 × 15% · 칼 평타가 투지 +2
+        steps.add(new RpgJobTests.Step(4, () -> {
+            var ms = sp.getAttribute(Attributes.MOVEMENT_SPEED);
+            double gain = sp.getAttributeValue(Attributes.MOVEMENT_SPEED) - speed0[1];
+            h.assertTrue(ms != null && Math.abs(gain - ms.getBaseValue() * 0.15) < 1e-6, "용의 피 move speed +15%: " + gain);
+            JobTraits.setStacks(sp, 0);
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits.stacks(sp) == 2, "용의 피 basic +2 stacks: " + JobTraits.stacks(sp));
+        }));
+        // 다시 벼린 칼: 6 에 둘레 충격 8 (벼린 칼 전) → 벼린 칼 (사거리 +1.5 · 직업 스킬 · 칼 평타 +20%). 다시 누름은 14틱부터 (그 전은 버림) →
+        // 3 에 검풍 32 × (1 + 잃은 체력 50%) × 1.2
         steps.add(new RpgJobTests.Step(12, () -> {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2.5));
-            JobTraits.setStacks(sp, 8);
-            moonWant[0] = RpgJobTests.expected(sp, j, j.skill(2), 9 * (1 + 0.08 * 8) * (1 + j.trait().def().numOr("crit", 0.3)));
-            moonWant[1] = RpgCombat.dealtMult.applyAsDouble(sp);
-            h.assertTrue(JobSkills.press(sp, 2), "만월 강하 cast");
-            h.assertTrue(JobTraits.stacks(sp) == 0 && JobTraits5.critOn(sp), "crit window on, stacks used: " + JobTraits.stacks(sp));
+            JobTraits.setStacks(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 4), "다시 벼린 칼 cast");
+            h.assertTrue(JobRecast.pending(sp, "swordmaster_ult") && JobSkills.cooldownLeft(sp, "swordmaster_ult") == 0, "recast window open · no cooldown yet");
         }));
-        steps.add(new RpgJobTests.Step(46, () -> {
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), moonWant[0]), "만월 강하 (crit · 8 stacks) " + TestDummies.dealt(z.get(0)) + " vs " + moonWant[0]);
-            h.assertTrue(mmorpg.fabric.rune.RuneMarks.empowerLeft(sp) > 0 && Math.abs(RpgCombat.dealtMult.applyAsDouble(sp) - moonWant[1] * 1.1) < 1e-6,
-                    "발키리의 가호 after landing: " + RpgCombat.dealtMult.applyAsDouble(sp));
-            mmorpg.fabric.rune.RuneMarks.testClear();
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2));
-            h.assertTrue(JobSkills.press(sp, 3), "용의 심장 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "swordmaster_heart") && Math.abs(Guards.of(sp).reduce() - 0.2) < 1e-9, "stance on, guard 20%");
-        }));
-        // 용의 심장: 칼 평타 = 평타 × 1.42 · 맞으면 받아치기 (위력 × 1)
-        double[] before = {0};
         steps.add(new RpgJobTests.Step(8, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 8);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "다시 벼린 칼 burst " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits5.forged(sp) && Math.abs(JobTraits5.forgeReach(sp) - 1.5) < 1e-9, "forged: reach +" + JobTraits5.forgeReach(sp));
+            h.assertTrue(!JobSkills.press(sp, 4) && JobRecast.pending(sp, "swordmaster_ult"), "recast before the gap is ignored");
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            z.get(0).setHealth(z.get(0).getMaxHealth() * 0.5F);
+            h.assertTrue(JobSkills.press(sp, 4), "다시 벼린 칼 recast (검풍)");
+            h.assertTrue(!JobRecast.pending(sp, "swordmaster_ult") && JobSkills.cooldownLeft(sp, "swordmaster_ult") > 0, "recast closes the window · cooldown");
+        }));
+        double[] before = {0};
+        steps.add(new RpgJobTests.Step(16, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 8 + 32 * 1.5 * 1.2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "다시 벼린 칼 검풍 (잃은 체력 50% · 벼린 칼) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 벼린 칼 평타 +20% (평타에 더한 몫)
+            before[0] = TestDummies.dealt(z.get(0));
             RpgCombat.forceCrit = false;
             double base = RpgJobTests.basic(sp, w);
             sp.attack(z.get(0));
             RpgCombat.forceCrit = null;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.42), "heart echo " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.42);
-            before[0] = TestDummies.dealt(z.get(0));
-            // 맞음: 받는 피해 처리 (RpgHealth.onLoss — 실제 피해와 같은 길 · 끝에 lossHook) — 0.51.0 시험 1: sp.hurtServer 는 시험 플레이어에게 피해가 들어가지 않아 받아치기가 없었음
-            mmorpg.fabric.RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), sp.getHealth(), sp.getHealth() - 4F);
-        }));
-        // 받아치기는 2틱 뒤 — 바로 앞 평타로 과녁이 무적 시간 (10틱) 이라 JobKit.strike 가 그 뒤로 미룸 → 14틱 뒤에 확인 (0.51.0 시험 2: 6틱 뒤는 아직 0)
-        steps.add(new RpgJobTests.Step(14, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(3), j.skill(3).num("counter", 1.0));
             double got = TestDummies.dealt(z.get(0)) - before[0];
-            h.assertTrue(RpgJobTests.near(got, want), "heart counter " + got + " vs " + want);
-        }));
-        // 신들의 황혼: 앞 과녁 쪽으로 돌진 → 올려 베기 4 → 공중 3.5 × 4 → 내리꽂음 22 (= 40)
-        double[] start = {0, 0};
-        steps.add(new RpgJobTests.Step(10, () -> {
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 3));
-            start[0] = sp.position().z;
-            start[1] = sp.getY();
-            h.assertTrue(JobSkills.press(sp, 4), "신들의 황혼 cast");
-        }));
-        steps.add(new RpgJobTests.Step(7, () -> {
-            double moved = sp.position().z - start[0];
-            h.assertTrue(moved > 0.5 && moved < 1.8, "신들의 황혼 rushed to the target: " + moved);
-        }));
-        steps.add(new RpgJobTests.Step(70, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 40);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "신들의 황혼 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            // 내려앉음: 시험 플레이어는 물리가 돌지 않아 onGround 가 바뀌지 않음 (0.51.0 시험 3) → 높이로 봄 (JobMove 가 마지막 틱에 땅 높이로)
-            h.assertTrue(Math.abs(sp.getY() - start[1]) < 0.3, "landed back on the ground: y " + sp.getY() + " vs " + start[1]);
+            h.assertTrue(RpgJobTests.near(got, base * 1.2), "forged basic +20% " + got + " vs " + base * 1.2);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);
@@ -391,96 +403,103 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 다인슬레이프(블러드 나이트)
+    // ------------------------------------------------------------ 다인슬레이프(블러드 나이트) — 0.51.0 재설계안 2판
 
-    @GameTest(environment = ENV_BK, maxTicks = 420)
+    @GameTest(environment = ENV_BK, maxTicks = 480)
     public void bloodknightSkills(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = player(h, "bloodknight", 50);
         Jobs.Job j = Jobs.job("bloodknight");
-        Weapon w = Weapons.weaponFrom("sword", 0, "common");
         double bonus = 1 + j.trait().def().numOr("bonus", 0.1);
         double cost = j.trait().def().numOr("cost", 0.04);
-        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2.5)));
+        double sweet = j.skill(0).num("sweet", 1.5);
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 3.6)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
-        // 핏빛 연격: 체력 4% 를 바쳐 위력 +10% · 맞힐 때마다 상처 +1 (셋) · 흡혈
+        // 핏빛 대검: 세 번 (다시 누름은 10틱부터 — 그 전은 버림) · 과녁이 칼끝 (3.2칸 너머 · 내리찍은 가운데) 이라 × 1.5 · 단계마다 체력 4% 를 바쳐 위력 +10%
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             sp.setHealth(sp.getMaxHealth());
-            h.assertTrue(JobSkills.press(sp, 0), "핏빛 연격 cast");
+            h.assertTrue(JobSkills.press(sp, 0), "핏빛 대검 1 cast");
             h.assertTrue(Math.abs(sp.getHealth() - sp.getMaxHealth() * (1 - cost)) < sp.getMaxHealth() * 0.01, "paid 4% hp: " + sp.getHealth() + " / " + sp.getMaxHealth());
+            h.assertTrue(JobRecast.pending(sp, "bloodknight_cleave") && JobSkills.cooldownLeft(sp, "bloodknight_cleave") == 0, "cleave recast window · no cooldown yet");
         }));
-        steps.add(new RpgJobTests.Step(26, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 5 * bonus);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "핏빛 연격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits5.woundsOf(sp, z.get(0)) == 3, "3 wounds: " + JobTraits5.woundsOf(sp, z.get(0)));
-            h.assertTrue(sp.getHealth() > sp.getMaxHealth() * (1 - cost) + 1e-3, "lifesteal healed: " + sp.getHealth());
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 1.4 * sweet * bonus);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "핏빛 대검 1 (칼끝) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "bloodknight gradient number");
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2));
-            h.assertTrue(JobSkills.press(sp, 1), "피의 질주 cast");
+            h.assertTrue(!JobSkills.press(sp, 0), "recast before the gap (10) is ignored");
         }));
-        // 피의 질주: 지나가며 3 (+10%) · 상처 1 + 2
-        steps.add(new RpgJobTests.Step(8, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(1), 3 * bonus);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피의 질주 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits5.woundsOf(sp, z.get(0)) == 3, "rush wounds 1 + 2: " + JobTraits5.woundsOf(sp, z.get(0)));
-            z.get(0).discard();
-        }));
-        // 상처 터뜨리기: 상처 4 + 한 바퀴 (+1) → 5 를 터뜨림 — (4 + 1 × 5) × 1.1 · 터뜨린 피해의 15% 회복
-        double[] hp0 = {0};
-        steps.add(new RpgJobTests.Step(4, () -> {
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2.5));
-            JobTraits5.setWounds(sp, z.get(0), 4);
-            sp.setHealth(sp.getMaxHealth() * 0.5F);
-            h.assertTrue(JobSkills.press(sp, 2), "상처 터뜨리기 cast");
-            hp0[0] = sp.getHealth();
-        }));
-        steps.add(new RpgJobTests.Step(16, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 9 * bonus);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "상처 터뜨리기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            double burst = RpgJobTests.expected(sp, j, j.skill(2), 5 * bonus);
-            double healWant = Math.min(sp.getMaxHealth(), hp0[0] + burst * j.skill(2).num("heal", 0.15));
-            h.assertTrue(sp.getHealth() >= healWant - sp.getMaxHealth() * 0.01, "burst healed 15%: " + sp.getHealth() + " vs " + healWant);
-            h.assertTrue(JobTraits5.woundsOf(sp, z.get(0)) <= 1, "wounds taken: " + JobTraits5.woundsOf(sp, z.get(0)));
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2));
-            sp.setHealth(sp.getMaxHealth());
-            h.assertTrue(JobSkills.press(sp, 3), "회그니의 맹세 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "bloodknight_oath") && Math.abs(sp.getHealth() - sp.getMaxHealth() * 0.85) < sp.getMaxHealth() * 0.01,
-                    "oath stance on, paid 15%: " + sp.getHealth());
-        }));
-        // 회그니의 맹세: 칼 평타 = 평타 × 1.42 · 상처 +1
-        steps.add(new RpgJobTests.Step(8, () -> {
-            RpgCombat.forceCrit = false;
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            RpgCombat.forceCrit = null;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.42), "oath blood blade " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.42);
-            h.assertTrue(JobTraits5.woundsOf(sp, z.get(0)) == 1, "oath wound +1: " + JobTraits5.woundsOf(sp, z.get(0)));
-        }));
-        // 끝나지 않는 전투: 체력 10% · 상처 4 → 첫 X자 뒤 5 → 내리꽂음 24 × (1 + 5% × 5) — 4 × 4 + 30 = 46 (제 값을 바치므로 위력 +10% 없음)
+        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(JobSkills.press(sp, 0), "핏빛 대검 2 cast")));
+        steps.add(new RpgJobTests.Step(10, () -> h.assertTrue(JobSkills.press(sp, 0), "핏빛 대검 3 cast")));
         double[] start = {0};
-        steps.add(new RpgJobTests.Step(4, () -> {
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 5 * sweet * bonus);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "핏빛 대검 3단 (칼끝) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!JobRecast.pending(sp, "bloodknight_cleave") && JobSkills.cooldownLeft(sp, "bloodknight_cleave") > 0, "cleave done → cooldown");
+            // 피의 돌진: 5칸 앞 과녁에게 뛰어듦
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 5));
+            sp.setHealth(sp.getMaxHealth());
+            start[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "피의 돌진 cast");
+        }));
+        // 피의 돌진: 6 에 내려 박음 3 (+10%) · 기절 (느림 10) · 방어 깨짐 +10%
+        steps.add(new RpgJobTests.Step(9, () -> {
+            double moved = sp.position().z - start[0];
+            h.assertTrue(moved > 2.5 && moved < 4.5, "피의 돌진 leapt to the target: " + moved);
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 3 * bonus);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피의 돌진 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            var slow = z.get(0).getEffect(MobEffects.SLOWNESS);
+            h.assertTrue(slow != null && slow.getAmplifier() >= 10 && Math.abs(JobTraitsMore.breakMult(z.get(0)) - 1.1) < 1e-6,
+                    "stunned · armor break +10%: " + JobTraitsMore.breakMult(z.get(0)));
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 3));
-            JobTraits5.setWounds(sp, z.get(0), 4);
+            sp.setHealth(sp.getMaxHealth());
+            h.assertTrue(JobSkills.press(sp, 2), "피의 사슬 cast");
+        }));
+        // 피의 사슬: 4 에 박음 3 → 34 에 끌어당겨 2틱 뒤 6 (모두 +10%)
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 3 * bonus);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피의 사슬 bind " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(30, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 9 * bonus);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피의 사슬 pull " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 칼을 뽑다: 6칸 앞 과녁
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 6));
             sp.setHealth(sp.getMaxHealth());
             start[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 4), "끝나지 않는 전투 cast");
-            h.assertTrue(Math.abs(sp.getHealth() - sp.getMaxHealth() * 0.9) < sp.getMaxHealth() * 0.01, "ult paid 10%: " + sp.getHealth());
+            h.assertTrue(JobSkills.press(sp, 4), "칼을 뽑다 cast");
         }));
-        steps.add(new RpgJobTests.Step(7, () -> {
+        // 칼을 뽑다: 8 에 칼날 10 → 과녁에게 날아가 내리꽂음 10 → 10틱마다 X 베기 5 × 4 (= 40, +10%)
+        steps.add(new RpgJobTests.Step(30, () -> {
             double moved = sp.position().z - start[0];
-            h.assertTrue(moved > 0.5 && moved < 1.8, "끝나지 않는 전투 rushed to the target: " + moved);
+            h.assertTrue(moved > 3.0, "칼을 뽑다 flew to the target: " + moved);
         }));
-        steps.add(new RpgJobTests.Step(62, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 16 + 24 * (1 + 0.05 * 5));
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "끝나지 않는 전투 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        steps.add(new RpgJobTests.Step(45, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 40 * bonus);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "칼을 뽑다 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 광란 (마지막 — 끝날 때까지 둘레를 저절로 벰)
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2));
+            sp.setHealth(sp.getMaxHealth());
+            double before = RpgCombat.attackSpeed.applyAsDouble(sp);
+            h.assertTrue(JobSkills.press(sp, 3), "광란 cast");
+            double after = RpgCombat.attackSpeed.applyAsDouble(sp);
+            h.assertTrue(JobTraits.stanceOn(sp, "bloodknight_frenzy") && Math.abs(after / before - 1.6) < 1e-6, "광란 attack speed ×1.6: " + before + " → " + after);
+        }));
+        // 광란: 둘레 3.6칸의 과녁을 저절로 벰 (누르지 않음) · 피의 갈증: 체력 30% 에서 공격 속도 × 1.3 (광란과 곱)
+        steps.add(new RpgJobTests.Step(16, () -> {
+            h.assertTrue(TestDummies.dealt(z.get(0)) > 0, "광란 auto attack: " + TestDummies.dealt(z.get(0)));
+            double full = RpgCombat.attackSpeed.applyAsDouble(sp);
+            sp.setHealth(sp.getMaxHealth() * 0.3F);
+            double low = RpgCombat.attackSpeed.applyAsDouble(sp);
+            h.assertTrue(Math.abs(low / full - 1.3) < 1e-3, "피의 갈증 attack speed ×1.3 at 30% hp: " + full + " → " + low);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);

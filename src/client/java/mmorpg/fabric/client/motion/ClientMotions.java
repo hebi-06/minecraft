@@ -63,8 +63,27 @@ public final class ClientMotions {
 
     private static final Map<Integer, Frozen> FROZEN = new HashMap<>();
 
+    /**
+     * 0.51.0 멈칫 (서버 MotionNet.StopPayload — 맞는 순간): start = 그 동작의 시작 (다른 동작이 시작되면 버림), spans = 멈춘 구간들 [from, until].
+     * 멈춘 동안은 자세가 그대로 → 끝나면 멈춘 길이의 CATCH 배 동안 조금 빠르게 (1 + 1/CATCH 배) 돌아 서버의 효과 시각을 다시 따라잡음 (멈칫이 쌓여
+     * 뒤의 베기가 효과보다 늦게 나오지 않게)
+     */
+    private static final class Hold {
+        double start;
+        /** 멈춘 구간 (from 이 NaN 이면 없음 — 앞 구간에서 덜 따라잡은 만큼 from 을 당겨 둠) */
+        double from = Double.NaN;
+        double until;
+    }
+
+    /** 멈춘 길이의 이 배 동안 따라잡음 (2 = 1.5배 빠르기) */
+    static final double CATCH = 2.0;
+    private static final Map<Integer, Hold> HOLDS = new HashMap<>();
+    /** 시험: 받은 멈칫 수 */
+    private static int stopsReceived;
+
     public static void clear() {
         ACTIVE.clear();
+        HOLDS.clear();
         inAttack = false;
         pendingStep = 0;
         lastStep = 0;
@@ -110,6 +129,55 @@ public final class ClientMotions {
         start(p.entity(), p.motion(), p.yaw(), p.look());
     }
 
+    /** 0.51.0 서버가 알린 멈칫: 그 사람이 하는 동작을 지금부터 ticks 틱 멈춤 (멈춘 중이면 늘림) */
+    public static void receiveStop(MotionNet.StopPayload p) {
+        hitStop(p.entity(), p.ticks());
+    }
+
+    /** 0.51.0 멈칫: 하는 동작이 없으면 아무 일 없음. 다음 틱부터 n 틱 (동작 시작과 같은 약속 — 렌더가 뒤로 돌아가지 않게) */
+    public static void hitStop(int entity, int n) {
+        Active a = ACTIVE.get(entity);
+        if (a == null || n <= 0) return;
+        stopsReceived++;
+        double from = ticks + 1;
+        Hold h = HOLDS.get(entity);
+        if (h == null || h.start != a.start()) {
+            h = new Hold();
+            h.start = a.start();
+            HOLDS.put(entity, h);
+        }
+        if (!Double.isNaN(h.from) && from <= h.until) {
+            // 멈춘 중 (또는 막 끝남): 끝을 늘림 (지금부터 n 까지만 — 한 번에 너무 길게 멈추지 않게)
+            h.until = Math.max(h.until, from + n);
+            return;
+        }
+        // 앞 멈춤을 다 따라잡지 못했으면 그만큼 from 을 당김 (이어서 멈춤 — 끝나면 모두 따라잡음)
+        double rem = Double.isNaN(h.from) ? 0 : heldBy(h.from, h.until, from);
+        h.from = from - rem;
+        h.until = from + n;
+    }
+
+    /** 0.51.0 동작이 흐른 시간 (틱 — 멈춘 만큼 뺌 · 따라잡는 중이면 덜 뺌): 자세 · 참격 궤적이 같이 씀 */
+    public static double elapsed(int entity, Active a, double now) {
+        double e = now - a.start();
+        Hold h = HOLDS.get(entity);
+        if (h == null || h.start != a.start() || Double.isNaN(h.from)) return e;
+        return e - heldBy(h.from, h.until, now);
+    }
+
+    /** 지금 뺄 시간: 멈춘 동안 now − from · 끝나면 (until − from) 에서 그 CATCH 배 동안 0 으로 줄어듦 */
+    static double heldBy(double from, double until, double now) {
+        if (now <= from) return 0;
+        if (now <= until) return now - from;
+        double len = until - from;
+        return len <= 0 ? 0 : len * Math.max(0, 1 - (now - until) / (len * CATCH));
+    }
+
+    /** 시험: 받은 멈칫 수 */
+    public static int stopsReceived() {
+        return stopsReceived;
+    }
+
     /** 0.41.0 서버가 알린 내 평타 강화 모습 (NONE = 끝남) — ticks 동안 (끝나면 서버가 다시 알림 · 늦으면 여기서도 끝) */
     public static void receiveLook(MotionNet.LookPayload p) {
         MotionNet.Look l = p.look();
@@ -145,7 +213,7 @@ public final class ClientMotions {
         if (f != null) return f.motion();
         Active a = ACTIVE.get(entity);
         if (a == null) return null;
-        return ticks + 1 - a.start() >= a.ticks() ? null : a.motion();
+        return elapsed(entity, a, ticks + 1) >= a.ticks() ? null : a.motion();
     }
 
     /** 이 사람의 지금 자세 (out 에 — 없으면 null). left = 주 손이 왼손 */
@@ -160,9 +228,10 @@ public final class ClientMotions {
         }
         Active a = ACTIVE.get(entity);
         if (a == null) return null;
-        double t = (ticks + partial - a.start()) / a.ticks();
+        double t = elapsed(entity, a, ticks + partial) / a.ticks(); // 0.51.0 멈칫한 시간을 뺌
         if (t >= 1) {
             ACTIVE.remove(entity);
+            HOLDS.remove(entity);
             return null;
         }
         MotionPoses.Motion m = MotionPoses.get(a.motion());
@@ -205,7 +274,10 @@ public final class ClientMotions {
         fireBuffered(mc);
         rearm(p);
         ticks++;
-        if (ticks % 40 == 0) ACTIVE.entrySet().removeIf(e -> ticks + 1 - e.getValue().start() > e.getValue().ticks() + 2);
+        if (ticks % 40 == 0) {
+            ACTIVE.entrySet().removeIf(e -> elapsed(e.getKey(), e.getValue(), ticks + 1) > e.getValue().ticks() + 2);
+            HOLDS.keySet().removeIf(id -> !ACTIVE.containsKey(id));
+        }
     }
 
     // ------------------------------------------------------------ 0.46.0 룬 동작 뒤 무기를 다시 듦

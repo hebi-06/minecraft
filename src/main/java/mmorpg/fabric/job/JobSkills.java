@@ -131,12 +131,13 @@ public final class JobSkills {
      * 0.27.0 서버 → 클라이언트: 직업 자원 게이지 (칸 위 — 검세 칼날 다섯 · 마력 각인 셋 …: name · value / max, max 0 = 없음) + 태세 (명경지수 · 마검 각성 —
      * stance 이름 · 남은 틱 / 전체 틱, 0 = 없음)
      */
-    public record GaugePayload(String name, int value, int max, String stance, int left, int total) implements CustomPacketPayload {
+    /** 0.51.0 speed = 공격 속도 배율 (RpgCombat.attackSpeed — 클라이언트 선입력 평타 사이가 같은 값을 씀: 라이칸 야성 · 소드마스터 용의 피 · 블러드 나이트 광란 · 피의 갈증) */
+    public record GaugePayload(String name, int value, int max, String stance, int left, int total, float speed) implements CustomPacketPayload {
         public static final CustomPacketPayload.Type<GaugePayload> TYPE = new CustomPacketPayload.Type<>(Mmorpg.id("job_gauge"));
         public static final StreamCodec<RegistryFriendlyByteBuf, GaugePayload> CODEC = CustomPacketPayload.codec(GaugePayload::write, GaugePayload::read);
 
         private static GaugePayload read(RegistryFriendlyByteBuf buf) {
-            return new GaugePayload(buf.readUtf(32), buf.readVarInt(), buf.readVarInt(), buf.readUtf(32), buf.readVarInt(), buf.readVarInt());
+            return new GaugePayload(buf.readUtf(32), buf.readVarInt(), buf.readVarInt(), buf.readUtf(32), buf.readVarInt(), buf.readVarInt(), buf.readFloat());
         }
 
         private void write(RegistryFriendlyByteBuf buf) {
@@ -146,6 +147,7 @@ public final class JobSkills {
             buf.writeUtf(stance, 32);
             buf.writeVarInt(Math.max(0, left));
             buf.writeVarInt(Math.max(0, total));
+            buf.writeFloat(speed);
         }
 
         @Override
@@ -190,11 +192,21 @@ public final class JobSkills {
         return until == null ? 0 : Math.max(0, until - Tasks.now());
     }
 
+    /** 0.51.0 다시 쓰기 창이 닫힘 (JobRecast): 그 스킬의 재사용 대기를 cd 틱으로 시작 */
+    static void startCooldown(ServerPlayer sp, String skillId, int cd) {
+        if (sp == null || cd <= 0) return;
+        String k = sp.getUUID() + "|" + skillId;
+        COOLDOWNS.put(k, Tasks.now() + cd);
+        TOTALS.put(k, cd);
+        SkillBarNet.cooldown(sp, CD_PREFIX + skillId, cd, cd);
+    }
+
     /** 시험용: 이 사람의 직업 스킬 재사용 대기를 모두 지움 */
     public static void resetCooldowns(ServerPlayer sp) {
         String p = sp.getUUID() + "|";
         COOLDOWNS.keySet().removeIf(k -> k.startsWith(p));
         TOTALS.keySet().removeIf(k -> k.startsWith(p));
+        JobRecast.clear(sp); // 0.51.0 다시 쓰기 창도
     }
 
     /**
@@ -261,7 +273,10 @@ public final class JobSkills {
         }
         if (Status.blockedBySilence(sp)) return false; // 보스 기믹: 침묵 (룬과 같음)
         if (mmorpg.fabric.mount.Riding.blocked(sp, "skill")) return false; // 탈것에 탄 동안 (룬과 같음)
-        long left = cooldownLeft(sp, s);
+        // 0.51.0 다시 쓰기 (JobRecast — 리븐 R · 아트록스 Q): 창이 열려 있으면 재사용 대기를 보지 않음
+        boolean recast = JobRecast.pending(sp, s.id());
+        if (recast && !JobRecast.ready(sp, s.id())) return false;
+        long left = recast ? 0 : cooldownLeft(sp, s);
         if (left > 0) {
             Notify.notify(sp, "§c" + s.name() + " §7재사용 대기 §f" + String.format(Locale.ROOT, "%.1f", left / 20.0) + "초", 20);
             return false;
@@ -274,6 +289,7 @@ public final class JobSkills {
             ok = false;
         }
         if (!ok) return false;
+        if (JobRecast.pending(sp, s.id())) return true; // 다음 단계를 기다림 — 재사용 대기는 마지막 단계 · 창이 닫힐 때
         int cd = Math.max(0, s.cooldown());
         if (cd > 0) {
             COOLDOWNS.put(key(sp, s), Tasks.now() + cd);

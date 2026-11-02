@@ -19,7 +19,6 @@ import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraits4;
-import mmorpg.fabric.job.JobTraits5;
 import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.rune.RuneCast;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
@@ -159,21 +158,27 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {6, 12, 30, 80, 161, 166, 172}, new int[] {12, 40, 163, 172}, 180, false),
     };
 
-    /** 0.51.0 2차 직업 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) */
+    /**
+     * 0.51.0 2차 직업 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) (재설계안 2판): 칼집 섬광 (6 뽑음 · 10 큰 가로) · 받아넘기기 (4 에 맞음 →
+     * 5 쨍 · 11 · 13 · 15 받아침 — beforeCast) · 불의 울타리 (6 · 16 … 46 가로지르기 · 56 별) · 용의 피 · 다시 벼린 칼 (6 충격 · 20 다시 누름 → 23 검풍) /
+     * 핏빛 대검 (0 · 12 · 24 다시 누름 → 5 · 17 · 31) · 피의 돌진 (6) · 피의 사슬 (4 박음 · 36 끌어당김) · 광란 · 칼을 뽑다 (8 칼날 · 20 내리꽂음 · 30 ~ 60 X 베기)
+     */
     private static final Case[] CASES_SM = {
-        new Case(0, new int[] {2, 12, 21, 31}, new int[] {12, 31}, 40, false),
-        new Case(1, new int[] {2, 6, 12, 15}, new int[] {3, 13}, 26, false),
-        new Case(2, new int[] {4, 14, 24, 34, 38}, new int[] {14, 34}, 46, false),
-        new Case(3, new int[] {4, 20}, new int[] {6}, 26, true),
-        new Case(4, new int[] {4, 7, 16, 26, 36, 46, 55, 60, 63}, new int[] {7, 26, 46, 61}, 74, false),
+        new Case(0, new int[] {3, 7, 9, 12}, new int[] {7, 11}, 28, false),
+        new Case(1, new int[] {2, 5, 11, 15}, new int[] {5, 13}, 26, false),
+        new Case(2, new int[] {2, 6, 16, 36, 46, 57}, new int[] {6, 26, 57}, 64, false),
+        new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
+        new Case(4, new int[] {2, 6, 14, 21, 24, 28}, new int[] {6, 24}, 40, false),
     };
     private static final Case[] CASES_BK = {
-        new Case(0, new int[] {2, 11, 21}, new int[] {11, 21}, 28, false),
-        new Case(1, new int[] {1, 3, 6}, new int[] {2, 6}, 18, false),
-        new Case(2, new int[] {2, 6, 11, 14}, new int[] {2, 11}, 22, false),
-        new Case(3, new int[] {4, 20}, new int[] {6}, 26, true),
-        new Case(4, new int[] {4, 7, 10, 17, 27, 37, 46, 53, 57}, new int[] {10, 27, 53}, 66, false),
+        new Case(0, new int[] {3, 5, 15, 17, 29, 31}, new int[] {5, 17, 31}, 42, false),
+        new Case(1, new int[] {1, 3, 6, 10}, new int[] {3, 6}, 18, false),
+        new Case(2, new int[] {2, 5, 20, 35, 38}, new int[] {5, 36}, 46, false),
+        new Case(3, new int[] {3, 10}, new int[] {4}, 26, true),
+        new Case(4, new int[] {4, 8, 12, 18, 22, 32, 52, 62}, new int[] {10, 22, 52}, 72, false),
     };
+    /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 · 다시 벼린 칼의 검풍 — 사진첩 · 영상 모두) */
+    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24}, "swordmaster_ult", new int[] {20});
 
     /** 0.51.0 뵈드바르(워로드) · 울프헤딘(라이칸) */
     private static final Case[] CASES_WL = {
@@ -461,6 +466,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 int t = 0;
                 boolean turned = false;
                 for (int shot : shots) {
+                    t = againUntil(ctx, c, k.id(), t, shot);
                     if (shot > t) {
                         ctx.waitTicks(shot - t);
                         t = shot;
@@ -488,6 +494,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                     t += c.hitAt();
                     ctx.takeScreenshot(TestScreenshotOptions.of("job_" + k.id() + "_hit" + (third ? "_3p" : "")).withSize(1280, 720));
                 }
+                t = againUntil(ctx, c, k.id(), t, c.total());
                 if (c.total() > t) ctx.waitTicks(c.total() - t);
                 boolean cast = server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), k.id()) > 0);
                 double dealt = server.computeOnServer(s -> {
@@ -532,13 +539,12 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (id.equals("paladin_smite")) judgeHusks(sp, 3); // 심판 3 + 2 → 벼락 · 기절 별
         if (id.equals("priest_hymn") || id.equals("priest_ult")) JobTraits4.setFaith(sp, 3); // 신앙 3 → +30%
         if (id.equals("guardian_bash")) JobTraits4.setCounter(sp, 30); // 반격 게이지가 첫 타에
-        // 0.51.0 2차 직업: 금빛 연격 검기 (투지 3) · 만월 강하 치명 (투지 8) · 상처 터뜨리기 · 끝나지 않는 전투 (과녁마다 상처 3)
-        if (id.equals("swordmaster_flurry")) JobTraits.setStacks(sp, 3);
-        if (id.equals("swordmaster_moon")) JobTraits.setStacks(sp, 8);
+        // 0.51.0 2차 직업 (재설계안 2판): 칼집 섬광 — 투지 3 (6칸 · 열 줄) · 불의 울타리 — 투지 8 (치명 — 금빛 치명 숫자) · 블러드 나이트는 체력 60% (피의 갈증 —
+        // 공격 속도 · 흡혈이 오른 모습)
+        if (id.equals("swordmaster_draw")) JobTraits.setStacks(sp, 3);
+        if (id.equals("swordmaster_ring")) JobTraits.setStacks(sp, 8);
+        if (id.startsWith("bloodknight_")) sp.setHealth(sp.getMaxHealth() * 0.6F);
         if (id.equals("lycan_fang")) mmorpg.fabric.job.JobTraits6.setFerocity(sp, 10); // 0.51.0 라이칸 할퀴기 (야성 10)
-        if (id.equals("bloodknight_burst") || id.equals("bloodknight_ult")) {
-            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits5.setWounds(sp, h, 3);
-        }
         // 0.51.0 룬 나이트 스물네 룬의 대검 (과녁마다 각인 3 — 마지막에 모두 터져 번짐) · 헥스 블레이드 (과녁마다 저주 룬 — 스킬이 터뜨림, 덫은 다섯이라 묶음)
         if (id.equals("runeknight_ult")) {
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits.setMarks(sp, h, 3);
@@ -571,6 +577,28 @@ public final class RpgJobGallery implements FabricClientGameTest {
      */
     private static void beforeCast(ServerPlayer sp, String id) {
         if (id.equals("necromancer_swap")) mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, -60, -6.0));
+        if (id.equals("swordmaster_parry")) {
+            // 0.51.0 받아넘기기: 4틱 뒤 앞 과녁이 침 (받는 피해 처리 — 막아서 깎이지 않음) → 받아침 (과녁은 움직이지 않는 허스크라 직접)
+            mmorpg.fabric.Tasks.later(4, () -> {
+                List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(6), h -> true);
+                near.sort(java.util.Comparator.comparingDouble(h -> h.distanceToSqr(sp)));
+                if (near.isEmpty() || sp.isRemoved()) return;
+                float hp = sp.getHealth();
+                RpgHealth.onLoss(sp, sp.damageSources().mobAttack(near.get(0)), hp, hp - 4F);
+            });
+        }
+    }
+
+    /** 0.51.0 다시 쓰는 스킬: 쓴 뒤 at 틱이 오면 같은 칸을 다시 누름 (사진첩 — 누른 틱도 한 틱) */
+    private static int againUntil(ClientGameTestContext ctx, Case c, String id, int t, int upTo) {
+        for (int a : AGAIN.getOrDefault(id, new int[0])) {
+            if (a <= t || a > upTo) continue;
+            ctx.waitTicks(a - t);
+            ctx.getInput().holdKey(MmorpgClient.skillKeys[c.slot()]);
+            ctx.getInput().releaseKey(MmorpgClient.skillKeys[c.slot()]);
+            t = a;
+        }
+        return t;
     }
 
     // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5 · 6 · 7 · 8)
@@ -669,6 +697,13 @@ public final class RpgJobGallery implements FabricClientGameTest {
             ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
             f.cast();
             ctx.getInput().releaseKey(o -> o.keyShift);
+            for (int a : AGAIN.getOrDefault(k.id(), new int[0])) {
+                // 0.51.0 다시 쓰는 스킬: 그 틱에 같은 칸을 다시 누름 (영상의 0초는 처음 누른 때 그대로)
+                f.until(a);
+                ctx.getInput().holdKey(MmorpgClient.skillKeys[c.slot()]);
+                ctx.getInput().releaseKey(MmorpgClient.skillKeys[c.slot()]);
+                f.frames(1);
+            }
             f.until(c.total());
             if (c.stance() || c.buff()) {
                 boolean ranged = ranged(job);

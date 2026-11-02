@@ -41,6 +41,8 @@ public final class ClientJobBar {
     /** 0.27.0 직업 자원 게이지 · 태세 (끝나는 클라이언트 틱 · 전체 틱) */
     private static String gaugeName = "";
     private static int gaugeValue;
+    /** 0.51.0 서버가 알린 공격 속도 배율 (0 = 아직 — 게이지로 셈) */
+    private static double speed;
     private static int gaugeMax;
     private static String stance = "";
     private static long stanceEnd;
@@ -132,6 +134,7 @@ public final class ClientJobBar {
         stance = p.left() > 0 ? p.stance() : "";
         stanceEnd = p.left() > 0 ? ticks + p.left() : 0;
         stanceTotal = Math.max(p.left(), p.total());
+        speed = p.speed(); // 0.51.0 서버의 공격 속도 배율
     }
 
     /** 재사용 대기 (SkillBarNet.CooldownPayload 의 이름이 "job:" 으로 시작 — ClientSkillBar 가 넘김) */
@@ -239,6 +242,7 @@ public final class ClientJobBar {
      * (울프헤딘(라이칸) 야성 — 서버 JobTraits6.attackSpeed 와 같은 셈), 아니면 1
      */
     public static double attackSpeed() {
+        if (speed > 0) return speed; // 0.51.0 서버가 셈 (태세 · 체력 — 소드마스터 용의 피 · 블러드 나이트 광란 · 피의 갈증)
         if (job.isEmpty() || gaugeValue <= 0) return 1;
         mmorpg.core.Jobs.Job j = mmorpg.core.Jobs.job(job);
         double per = j == null || j.trait() == null ? 0 : j.trait().def().numOr("atkSpeed", 0);
