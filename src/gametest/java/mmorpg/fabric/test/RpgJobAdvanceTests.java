@@ -66,7 +66,7 @@ import net.minecraft.world.phys.Vec3;
  * 호흡 그대로) · 울르의 폭우 (6.75 × 2 · 묶음) · 사과 겨누기 (호흡 8 · 급소 사격이 호흡을 쓰지 않음) · 세 번째 화살 (8 × 2 + 30 + 14 · 뜸 → 내려앉음)</li>
  * <li>섀도 헌터 (mmorpg:job_sh): 검은 화살 (2.5 × 3 · 저주 +1 · 추격 +1 → 이동 +3%) · 그림자 구르기 (받는 피해 없음 · 활 평타 × 1.5 · 저주 +1) · 저주 번짐 (5.5 → 터짐 8 × 저주 1.02 ·
  * 둘레 4 / 쓰러지면 바로 번짐) · 그믐밤 (치명타 +20%p · 추격이 줄지 않음 · 몹이 나를 놓침) · 어둠숲의 사냥 (저주 +2 → (6 × 4 + 36) × 1.04)</li>
- * <li>트릭스터 (mmorpg:job_tr): 표식 최대 7 · 표식 6 인 몹이 쓰러지면 옆 과녁에게 옮겨감 · 검은 장미 덤불 (표식 7 → 0.35 + 0.2 + 0.6 × 7 · 머리 위로 넘어 등 뒤 · 과녁을 봄) ·
+ * <li>트릭스터 (mmorpg:job_tr): 표식 최대 7 · 표식 5 인 몹을 평타로 쓰러뜨리면 (+1) 옆 과녁에게 6 이 옮겨감 · 검은 장미 덤불 (표식 7 → 0.35 + 0.2 + 0.6 × 7 · 머리 위로 넘어 등 뒤 · 과녁을 봄) ·
  * 우트가르드의 환술 (환영 둘이 터짐 1.425 × 2 · 표식 +2) · 요르문간드의 똬리 (가며 2.4 → 조임 3.15 → 독 0.75 × 4 · 처음 자리로) · 끝없는 밤 (첫 평타 × 2.5 치명 · 풀려도 태세 ·
  * 쓰러뜨리면 다시 은신) · 개기일식 (1.25 × 4 × 4 · 표식 7 → 4 + 2 × 7)</li>
  * <li>블레이드 댄서 (mmorpg:job_bd): 춤사위 (평타 → 스킬 → 평타 번갈아 +1 · 하나당 +6% · 이동 +4% · 3초 끊기면 0) · 빛살 베기 (2.0 + 2.75 × 1.06) · 요정의 걸음 (0.95 × 3 ·
@@ -1444,20 +1444,20 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(12, () -> {
             sp.attack(z.get(0));
             h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 7, "marks capped at 7: " + JobTraits3.marks(sp, z.get(0)));
-            // 표식 옮겨감: 표식 6 인 몹이 쓰러지면 둘레 6칸의 가장 가까운 과녁에게 6
+            // 표식 옮겨감: 표식 5 인 몹을 단검 평타로 쓰러뜨리면 (쓰러뜨린 평타도 표식 +1 — 맞힘 훅이 쓰러짐보다 먼저) 둘레 6칸의 가장 가까운 과녁에게 6
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2.0, 3.5));
             victim[0] = weak(h, 0, 2.0);
             RpgJobTests.clearStrays(h, z.get(0), victim[0]);
-            JobTraits3.setMarks(sp, victim[0], 6);
+            JobTraits3.setMarks(sp, victim[0], 5);
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
             sp.attack(victim[0]);
             h.assertTrue(victim[0].isRemoved() || !victim[0].isAlive(), "marked mob fell");
         }));
         steps.add(new RpgJobTests.Step(8, () -> {
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 6, "marks shifted to the nearest: " + JobTraits3.marks(sp, z.get(0)));
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 6, "marks shifted to the nearest (5 + the killing blow): " + JobTraits3.marks(sp, z.get(0)));
             // 검은 장미 덤불: 표식 7 → 파고들어 0.35 → 머리 위로 넘어 등 뒤에서 터뜨림 0.2 + 0.6 × 7 (= 4.75) · 표식이 사라짐 · 과녁을 봄
             RpgCombat.forceCrit = null;
             z.get(0).discard();
