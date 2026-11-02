@@ -165,7 +165,7 @@ public final class JobTraits9 {
         for (int i = 0; i < Math.min(marks, list.size()); i++) {
             LivingEntity e = list.get(i);
             Vec3 head = RuneKit.overHead(e, 0.15);
-            JobFx.weak(level, head, 0.34 + Kit.bodyPad(e) * 0.3, 1, 3, 0.45, true, Opt.of("vel", RuneKit.entVel(e), "fade", 0.25), JobKit.glow(j), SNIPE);
+            JobFx.weak(level, head, 0.5 + Kit.bodyPad(e) * 0.3, 1, 3, 0.45, true, Opt.of("vel", RuneKit.entVel(e), "fade", 0.25), JobKit.glow(j), SNIPE);
         }
     }
 
@@ -260,7 +260,7 @@ public final class JobTraits9 {
         CURSES.put(e.getUUID(), new Curse(sp.getUUID(), stacks, trait(j, "cursePer", 0.02), now + (long) trait(j, "curseFor", 160)));
         CURSED.put(e.getUUID(), e);
         if (e.level() instanceof ServerLevel level && RuneKit.fxQuota("jobCurse", 8)) {
-            JobFx.curse(level, RuneKit.overHead(e, 0.35), 0.24 + 0.04 * stacks, 0, 2, 0.25, false, Opt.of("vel", RuneKit.entVel(e)), DUSK, SILVER);
+            JobFx.curse(level, RuneKit.overHead(e, 0.45), 0.34 + 0.05 * stacks, 0, 2, 0.25, false, Opt.of("vel", RuneKit.entVel(e)), DUSK, SILVER);
             SkillFx.play(level, "entity.wither.ambient", e.position(), 1.9, 0.25);
         }
     }
@@ -387,7 +387,7 @@ public final class JobTraits9 {
                 if (!c.owner().equals(sp.getUUID()) || c.until() < now) continue;
                 LivingEntity e = CURSED.get(en.getKey());
                 if (e == null || e.isRemoved() || !e.isAlive() || e.level() != level || e.distanceToSqr(sp) > 40 * 40 || n++ >= 8) continue;
-                JobFx.curse(level, RuneKit.overHead(e, 0.35), 0.2 + 0.035 * c.stacks(), 1, 3, 0.45, true, Opt.of("vel", RuneKit.entVel(e), "fade", 0.25), DUSK, SILVER);
+                JobFx.curse(level, RuneKit.overHead(e, 0.45), 0.3 + 0.045 * c.stacks(), 1, 3, 0.45, true, Opt.of("vel", RuneKit.entVel(e), "fade", 0.25), DUSK, SILVER);
             }
         }
     }
@@ -407,7 +407,7 @@ public final class JobTraits9 {
         if (MOONLESS.equals(stance)) {
             Jobs.Skill k = j.skill(MOONLESS);
             double r = k == null ? 6 : k.num("radius", 6);
-            JobFx.smoke(level, V.up(sp.position(), 0.6), r * 0.55, DUSK, SILVER, 0.6, JobFx.hide1p(sp).with("alpha", 0.5, "vel", RuneKit.bodyVel(sp)));
+            JobFx.smoke(level, V.up(sp.position(), 0.6), r * 0.35, DUSK, SILVER, 0.6, JobFx.hide1p(sp).with("alpha", 0.35, "vel", RuneKit.bodyVel(sp)));
             JobFx.ring(level, V.up(sp.position(), 0.06), r, j, false, 0.5, Opt.of("alpha", 0.55, "vel", RuneKit.bodyVel(sp)));
             int lose = k == null ? 10 : Math.max(4, (int) k.num("lose", 10));
             if (Tasks.now() % lose < 8) loseMe(sp, r);

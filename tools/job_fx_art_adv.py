@@ -1409,29 +1409,30 @@ def weak_frame(f, S=128):
     core = pad.zeros()
     if f <= 4:
         # 바깥 테 (네 토막 — 가로 · 세로 자리에 틈) · 틈으로 들어오는 눈금 · 대각 꺾쇠 · 안쪽 고리 · 가는 십자 · 가운데 사과빛 점
-        ring_c = _arcs4(pad, c, R, 0.0, 0.2, 1.7, A)
-        ring_b = _arcs4(pad, c, R, 0.0, 0.2, 5.0, A * 0.85, soft=1.6)
+        # 0.51.0 영상 1 뒤: 선을 굵게 (머리 위 과녁은 1칸 안팎 — 가는 선은 화면에서 사라졌음)
+        ring_c = _arcs4(pad, c, R, 0.0, 0.2, 3.4, A)
+        ring_b = _arcs4(pad, c, R, 0.0, 0.2, 8.5, A * 0.85, soft=2.0)
         ticks_c = pad.zeros()
         ticks_b = pad.zeros()
         for q in range(4):
             ux, uy = math.cos(q * math.pi / 2), math.sin(q * math.pi / 2)
             p0 = (c + ux * (R + 7.0), c + uy * (R + 7.0))
             p1 = (c + ux * (R - 11.0), c + uy * (R - 11.0))
-            ticks_c = np.maximum(ticks_c, pad.stroke([p0, p1], 1.9, 1.0, a0=A, a1=A * 0.85))
-            ticks_b = np.maximum(ticks_b, pad.stroke([p0, p1], 5.0, 3.0, a0=A * 0.8, a1=A * 0.5, soft=1.4))
-        br_c = _brackets(pad, c, Rb, rot, 2.2, A * (0.95 if f else 0.8))
-        br_b = gblur(br_c, 1.6 * SS) * 1.6
+            ticks_c = np.maximum(ticks_c, pad.stroke([p0, p1], 3.6, 2.0, a0=A, a1=A * 0.85))
+            ticks_b = np.maximum(ticks_b, pad.stroke([p0, p1], 8.0, 5.0, a0=A * 0.8, a1=A * 0.5, soft=1.8))
+        br_c = _brackets(pad, c, Rb, rot, 3.6, A * (0.95 if f else 0.8))
+        br_b = gblur(br_c, 2.0 * SS) * 1.6
         core = np.maximum.reduce([core, ring_c, ticks_c, br_c])
         body = np.maximum.reduce([body, ring_b, ticks_b, br_b])
         if f < 4:
-            inner = pad.stroke(arc_pts(c, c, rin, 0, TAU, n=40), 1.3, a0=A * 0.75)
+            inner = pad.stroke(arc_pts(c, c, rin, 0, TAU, n=40), 2.4, a0=A * 0.8)
             core = np.maximum(core, inner)
-            body = np.maximum(body, pad.stroke(arc_pts(c, c, rin, 0, TAU, n=40), 3.6, a0=A * 0.45, soft=1.2))
+            body = np.maximum(body, pad.stroke(arc_pts(c, c, rin, 0, TAU, n=40), 6.0, a0=A * 0.5, soft=1.6))
             for q in range(4):
                 ux, uy = math.cos(q * math.pi / 2), math.sin(q * math.pi / 2)
-                core = np.maximum(core, pad.stroke([(c + ux * 4.5, c + uy * 4.5), (c + ux * (rin - 2.5), c + uy * (rin - 2.5))], 1.0, a0=A * 0.7))
+                core = np.maximum(core, pad.stroke([(c + ux * 4.5, c + uy * 4.5), (c + ux * (rin - 2.5), c + uy * (rin - 2.5))], 1.8, a0=A * 0.75))
             # 사과빛 점 (가운데 — 깜빡임) · 둘레 무리
-            core = np.maximum(core, pad.disc_field(c, c, 2.2 + 2.4 * dot, soft=0.9) * (0.55 + 0.45 * dot))
+            core = np.maximum(core, pad.disc_field(c, c, 3.2 + 3.0 * dot, soft=1.0) * (0.6 + 0.4 * dot))
             body = np.maximum(body, pad.radial(c, c, 9.0 + 9.0 * dot, 1.6) * dot)
         else:
             # 맞음: 가운데가 깨지며 흰 섬광 — 갈라진 금 일곱 · 큰 네 뿔 별 · 깨진 조각
@@ -1752,16 +1753,16 @@ def _eye(pad, c, open_=0.0, a=1.0):
     body = pad.zeros()
     if open_ <= 0:
         lid = bez((c - 17, c - 1), (c, c + 10), (c + 17, c - 1), 20)
-        core = np.maximum(core, pad.stroke(lid, 2.2, a0=a, taper=0.5))
+        core = np.maximum(core, pad.stroke(lid, 3.4, a0=a, taper=0.4))
         up = bez((c - 17, c - 1), (c, c - 8), (c + 17, c - 1), 20)
-        core = np.maximum(core, pad.stroke(up, 1.0, a0=a * 0.35, taper=0.7))
+        core = np.maximum(core, pad.stroke(up, 1.6, a0=a * 0.4, taper=0.6))
         for i in range(5):
             t = 0.18 + 0.64 * i / 4
             x = (1 - t) ** 2 * (c - 17) + 2 * (1 - t) * t * c + t * t * (c + 17)
             y = (1 - t) ** 2 * (c - 1) + 2 * (1 - t) * t * (c + 10) + t * t * (c - 1)
             ang = math.pi / 2 + (t - 0.5) * 1.2
-            core = np.maximum(core, pad.stroke([(x, y + 1), (x + math.cos(ang) * 5.5, y + 1 + math.sin(ang) * 5.5)], 1.2, 0.4, a0=a * 0.85))
-        body = np.maximum(body, pad.stroke(lid, 7.0, a0=a * 0.5, soft=2.0))
+            core = np.maximum(core, pad.stroke([(x, y + 1), (x + math.cos(ang) * 5.5, y + 1 + math.sin(ang) * 6.5)], 2.0, 0.6, a0=a * 0.9))
+        body = np.maximum(body, pad.stroke(lid, 10.0, a0=a * 0.55, soft=2.4))
     else:
         up = bez((c - 18, c), (c, c - 13), (c + 18, c), 20)
         lo = bez((c - 18, c), (c, c + 12), (c + 18, c), 20)
@@ -1796,8 +1797,8 @@ def curse_frame(f, S=128):
             core = np.maximum(core, pad.stroke(pts[5:], 0.6, 1.2, a0=0.0, a1=0.5))
         for k in (0, 1):
             v = _vine_pts(c, CU_R, -0.6, k, frac=0.55)
-            body = np.maximum(body, pad.stroke(v, 6.5, soft=1.5))
-            core = np.maximum(core, pad.stroke(v, 1.2, a0=0.7))
+            body = np.maximum(body, pad.stroke(v, 9.0, soft=1.8))
+            core = np.maximum(core, pad.stroke(v, 2.2, a0=0.75))
         eb, ec = _eye(pad, c, 0.0, 0.4)
         body = np.maximum(body, pad.radial(c, c, 26.0, 0.8) * 0.75)
         body = np.maximum(body, eb)
@@ -1808,12 +1809,12 @@ def curse_frame(f, S=128):
         k = [1.0, 0.78, 0.9][f - 1]
         for kk in (0, 1):
             v = _vine_pts(c, CU_R, rot, kk)
-            body = np.maximum(body, pad.stroke(v, 7.0, soft=1.6))
-            core = np.maximum(core, pad.stroke(v, 1.25, a0=0.8 * k + 0.1))
+            body = np.maximum(body, pad.stroke(v, 9.5, soft=1.8))
+            core = np.maximum(core, pad.stroke(v, 2.4, a0=0.8 * k + 0.15))
         polys, tips = _thorns(c, CU_R, rot)
         th_m = pad.polys(polys)
         body = np.maximum(body, th_m)
-        core = np.maximum(core, rim_of(th_m, 0.8) * 0.75 * k)
+        core = np.maximum(core, rim_of(th_m, 1.4) * 0.85 * k)
         for (tx, ty), side in tips:
             if side > 0:
                 core = np.maximum(core, pad.disc_field(tx, ty, 1.3, soft=0.6) * k)
@@ -1835,8 +1836,8 @@ def curse_frame(f, S=128):
             for i in range(CU_T):
                 a0 = rot + i * step + 0.12
                 pts = arc_pts(c, c, CU_R + 4, a0, a0 + step - 0.3, n=8)
-                body = np.maximum(body, pad.stroke(pts, 6.0, soft=1.4) * 0.85)
-                core = np.maximum(core, pad.stroke(pts, 1.1, a0=0.9))
+                body = np.maximum(body, pad.stroke(pts, 9.0, soft=1.8) * 0.85)
+                core = np.maximum(core, pad.stroke(pts, 2.2, a0=0.9))
         polys, tips = _thorns(c, CU_R, rot, push=9.0, rs=rs)
         th_m = pad.polys(polys)
         body = np.maximum(body, th_m)
@@ -2033,7 +2034,7 @@ def thicket_frame(f, S=256):
                 x = 60 + i * 26 + 6 * math.sin(q * TAU + i)
                 y = base - 30 - 150 * q
                 core = np.maximum(core, pad.disc_field(x, y, 1.2, soft=0.6) * math.sin(math.pi * q) * 0.8)
-        body = np.maximum(body, gblur(wood, 3.0 * SS) * 0.45)
+        body = np.maximum(body, gblur(wood, 2.0 * SS) * 0.3)
     else:
         polys, thorns, tips, spines = _thicket_geom(1.0, 0.0)
         m = pad.polys(polys)
@@ -2072,7 +2073,9 @@ def thicket_frame(f, S=256):
                 y = rs.uniform(base - 170, base - 20)
                 core = np.maximum(core, pad.disc_field(x, y, 1.0, soft=0.6) * 0.6)
         body = np.maximum(body, pad.radial(S / 2, base + 2, 110.0, 1.2, sy=0.09) * (0.7 if f == 6 else 0.35))
-    g, cc = finish(pad, body, core, halo=((1.2, 0.35), (3.0, 0.22)), body_k=0.98, core_bloom=((1.0, 0.15),), win=3.0)
+    g, cc = finish(pad, body, core, halo=((1.2, 0.3),), body_k=0.98, core_bloom=((1.0, 0.12),), win=3.0)
+    # 옅은 안개는 지움 (가까이 선 카메라에서 넓은 반투명 판으로 보였음 — 영상 1)
+    g = clamp01((g - 0.05) / 0.95)
     return g, cc
 
 

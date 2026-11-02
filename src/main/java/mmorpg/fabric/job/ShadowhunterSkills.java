@@ -35,6 +35,8 @@ final class ShadowhunterSkills {
     private static final double[] SILVER = JobTraits9.SILVER;
     /** 그림자 잔상 (검은 남색) */
     private static final double[] SHADE = {0.08, 0.07, 0.2};
+    /** 그믐달의 빛 (옅은 은청 — 먹빛이면 달이 하늘에 묻힘) */
+    private static final double[] MOON_GLOW = {0.5, 0.55, 0.85};
 
     static void register() {
         JobSystem.register("shadowhunter_black", ShadowhunterSkills::black);
@@ -96,7 +98,10 @@ final class ShadowhunterSkills {
                 Vec3 from = RuneKit.bowHand(sp);
                 Vec3 to = V.up(Kit.bodyPoint(target), ((ii % 3) - 1) * 0.22);
                 JobFx.bow(level, V.add(from, sp.getViewVector(1F), 0.5), 0.42, j, 2, 4, every / 20.0 + 0.06, Opt.of("vel", RuneKit.bodyVel(sp), "fade", 0.3));
-                int t = JobFx.blackArrow(level, from, to, speed, 0.66, Opt.empty(), DUSK, SILVER);
+                int t = JobFx.blackArrow(level, from, to, speed, 0.82, Opt.empty(), DUSK, SILVER);
+                // 0.51.0 영상 1 뒤: 화살 길에 그림자 연기 줄 · 가는 은빛 줄 (빠른 검은 화살이 1 ~ 2틱만 보였음)
+                RuneKit.streak(level, V.add(from, V.unit(V.sub(to, from)), 0.6), to, SHADE, 0.2, 0.4, 0.8, 0);
+                RuneKit.streak(level, V.add(from, V.unit(V.sub(to, from)), 0.6), to, SILVER, 0.04, 0.3, 0.8, 0);
                 SkillFx.play(level, "random.bow", from, 1.0 + ii * 0.08, 0.7);
                 if (ii == 0) {
                     JobKit.strikeSplit(sp, target, j, P, k.num("arrow", 2.5) * n, n, every, false, false, life, t, d -> JobTraits9.addCurse(sp, target, (int) k.num("curse", 1), j));
@@ -170,7 +175,9 @@ final class ShadowhunterSkills {
             Vec3 from = RuneKit.bowHand(sp);
             boolean on = target != null && !target.isRemoved() && target.isAlive() && target.level() == level;
             Vec3 to = on ? Kit.bodyPoint(target) : Kit.aimPoint(sp, 24);
-            JobFx.blackArrow(level, from, to, 60, 0.72, Opt.empty(), DUSK, SILVER);
+            JobFx.blackArrow(level, from, to, 60, 0.85, Opt.empty(), DUSK, SILVER);
+            RuneKit.streak(level, V.add(from, V.unit(V.sub(to, from)), 0.6), to, SHADE, 0.2, 0.4, 0.8, 0);
+            RuneKit.streak(level, V.add(from, V.unit(V.sub(to, from)), 0.6), to, SILVER, 0.04, 0.3, 0.8, 0);
             SkillFx.play(level, "random.bow", from, 0.9, 0.8);
             Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
             if (!on || w == null || !"bow".equals(w.type())) return;
@@ -266,7 +273,7 @@ final class ShadowhunterSkills {
                     JobTraits9.addCurse(sp, e, (int) k.num("curse", 1), j);
                     if (e.level() instanceof ServerLevel lv) {
                         int left = Math.max(4, burstAt - shotAt - hitT);
-                        JobFx.curse(lv, Kit.bodyPoint(e), 0.55 + Kit.bodyPad(e) * 0.3, 0, 4, left / 20.0, false, Opt.of("vel", RuneKit.entVel(e)), DUSK, SILVER);
+                        JobFx.curse(lv, Kit.bodyPoint(e), 0.8 + Kit.bodyPad(e) * 0.3, 0, 4, left / 20.0, false, Opt.of("vel", RuneKit.entVel(e)), DUSK, SILVER);
                         JobFx.hit(e, j, 1.0);
                     }
                 });
@@ -329,11 +336,12 @@ final class ShadowhunterSkills {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         double r = k.num("radius", 6);
-        JobFx.smoke(level, V.up(c, 0.8), r * 0.8, DUSK, SILVER, 0.9, Opt.of("alpha", 0.75));
+        JobFx.smoke(level, V.up(c, 0.8), r * 0.5, DUSK, SILVER, 0.9, Opt.of("alpha", 0.5));
         JobFx.ring(level, V.up(c, 0.06), r, j, false, 0.6, Opt.empty());
         JobFx.aura(sp, j, 2.4, 0.8, 0.7);
         Vec3 look = V.flat(sp.getViewVector(1F));
-        JobFx.moon(level, V.up(V.add(c, look, 6), 7.5), 1.6, 7, 1, dur / 20.0 * 0.5, Opt.of("fade", 0.3, "alpha", 0.85), DUSK, SILVER);
+        // 하늘의 그믐달 (달 그림 5 — 그림자가 거의 삼킨 가는 달 · 은빛): 1인칭 눈높이에서 보이게 앞 9칸 · 4.5칸 위 (영상 1 — 7.5칸 위는 화면 밖)
+        JobFx.moon(level, V.up(V.add(c, look, 9), 4.5), 1.4, 5, 1, dur / 20.0 * 0.5, Opt.of("fade", 0.3, "alpha", 0.9), MOON_GLOW, SILVER);
         for (int i = 0; i < 8; i++) {
             double a = i * Math.PI / 4;
             Vec3 p = V.add(c, new Vec3(Math.cos(a), 0, Math.sin(a)), r * 0.8);

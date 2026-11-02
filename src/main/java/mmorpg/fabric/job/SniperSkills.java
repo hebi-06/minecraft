@@ -125,8 +125,11 @@ final class SniperSkills {
                 Vec3 dir = on ? V.unit(V.sub(Kit.bodyPoint(target), eye)) : sp.getViewVector(1F);
                 double len = Math.max(2, RuneKit.rayLength(level, eye, dir, range));
                 Vec3 end = V.add(eye, dir, len);
-                JobFx.greatArrow(level, from, V.add(from, dir, len), speed * 1.3, 0.95, Opt.empty(), JobKit.glow(j), FLASH);
-                RuneKit.streak(level, V.add(from, dir, 1.0), end, FLASH, 0.06, 0.3, 1.0, 0);
+                JobFx.greatArrow(level, from, V.add(from, dir, len), speed * 1.3, 1.25, Opt.empty(), JobKit.glow(j), FLASH);
+                // 0.51.0 영상 1 뒤: 굵은 흰 섬광 줄 · 연두 빛 줄 · 활 앞 터짐 (가는 줄은 3인칭에서 거의 안 보였음)
+                RuneKit.streak(level, V.add(from, dir, 1.0), end, FLASH, 0.12, 0.45, 1.0, 0);
+                RuneKit.streak(level, V.add(from, dir, 1.0), end, JobKit.glow(j), 0.32, 0.4, 0.5, 0);
+                JobFx.burst(level, V.add(from, dir, 0.6), 0.5, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
                 for (double dd : new double[] {3, 7, 12}) {
                     if (dd > len) break;
                     Vec3 at = V.add(eye, dir, dd);
