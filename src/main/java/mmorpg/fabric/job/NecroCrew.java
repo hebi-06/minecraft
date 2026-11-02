@@ -393,22 +393,39 @@ public final class NecroCrew {
         double pad = Kit.bodyPad(e);
         double gap = V.hdist(xp, ep) - pad;
         x.getLookControl().setLookAt(e);
-        if (gap > REACH + 0.45) {
-            Vec3 away = V.sub(xp, ep);
-            Vec3 dir = Math.hypot(away.x, away.z) > 1e-3 ? V.flat(away) : V.rightOf(Kit.facingOf(sp));
-            Vec3 spot = V.add(ep, dir, pad + REACH);
+        Vec3 away = V.sub(xp, ep);
+        Vec3 dir = Math.hypot(away.x, away.z) > 1e-3 ? V.flat(away) : V.rightOf(Kit.facingOf(sp));
+        Vec3 spot = V.add(ep, dir, pad + REACH);
+        double toSpot = V.hdist(xp, spot);
+        float yaw = (float) Math.toDegrees(Math.atan2(-(ep.x - xp.x), ep.z - xp.z));
+        if (toSpot > 1.2) {
+            // 길 찾기 (4틱마다 · 못 찾으면 2틱 뒤)
             if (now - m.pathAt >= 4) m.pathAt = x.getNavigation().moveTo(spot.x, spot.y, spot.z, RUN) ? now : now - 2;
             if ((now + m.slot) % 4 == 0 && x.onGround() && x.getDeltaMovement().horizontalDistance() > 0.1 && RuneKit.fxQuota("necroStep", 6)) {
                 SkillFx.fx(level, "rpg:tyr_ghostfire", xp, Opt.of("size", 0.55, "life", 0.3, "color", FIRE, "alpha", 0.6));
             }
+        } else if (toSpot > 0.3) {
+            // 한두 칸: 길 찾기는 이미 닿은 것으로 보고 서 버림 (같은 칸 · 옆 칸 — CI 41372463899 에서 망자가 1.87칸에 멈춰 내려치지 않았음) → 곧장 걸어감
+            x.getNavigation().stop();
+            x.getMoveControl().setWantedPosition(spot.x, spot.y, spot.z, RUN);
         } else {
             x.getNavigation().stop();
-            float yaw = (float) Math.toDegrees(Math.atan2(-(ep.x - xp.x), ep.z - xp.z));
             x.setYRot(yaw);
             x.setYBodyRot(yaw);
             x.setYHeadRot(yaw);
         }
-        if (now >= m.nextSwing && m.strikeAt < 0 && gap <= REACH + 0.9) {
+        if (now >= m.nextSwing && m.strikeAt < 0 && gap <= REACH + 1.3) {
+            // 닿지 않았으면 그쪽으로 뛰어듦 (도끼가 닿는 틱에 곁에 있게 — 티르빙의 전사와 같음: 공중의 가로 속도는 틱마다 × 0.91, 6틱에 처음 속도 × 4.6)
+            double far = gap - REACH;
+            if (far > 0.25 && x.onGround()) {
+                Vec3 d = V.flat(V.sub(ep, xp));
+                double v = Math.min(0.8, far / 4.6 + 0.04);
+                x.getNavigation().stop();
+                x.setDeltaMovement(d.x * v, 0.28, d.z * v);
+            }
+            x.setYRot(yaw);
+            x.setYBodyRot(yaw);
+            x.setYHeadRot(yaw);
             x.swingAxe();
             m.strikeAt = now + TyrfingWarrior.STRIKE_AT;
             m.strikeFoe = e;

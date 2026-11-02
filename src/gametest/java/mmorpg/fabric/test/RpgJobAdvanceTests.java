@@ -1042,6 +1042,7 @@ public final class RpgJobAdvanceTests {
             z.set(0, dummy(h, 1.0, 4.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
+            sp.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, z.get(0).getEyePosition()); // 비스듬한 과녁을 겨눔 (조준 보정 12° 밖)
             h.assertTrue(JobSkills.press(sp, 0), "뼈 창 (focus) cast");
         }));
         steps.add(new RpgJobTests.Step(70, () -> {
