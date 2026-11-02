@@ -367,12 +367,12 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
         Jobs.Job ly = Jobs.job("lycan");
-        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 10, "advanced jobs " + Jobs.allAdvanced().size());
+        check(sm != null && bk != null && wl != null && ly != null && Jobs.allAdvanced().size() == 12, "advanced jobs " + Jobs.allAdvanced().size());
         if (sm == null || bk == null || wl == null || ly == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
         check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, ly)) && Jobs.advancedOf("spellblade").size() == 2
-                && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").isEmpty() && Jobs.advancedOf("nope").isEmpty(),
-                "advancedOf (각성 · 반전 순서 — 암살자는 아직)");
+                && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").size() == 2
+                && Jobs.advancedOf("lancer").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 창술사는 아직)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == ly && Jobs.baseOf(wl) == wa && Jobs.baseOf(ly) == wa, "warrior advance");
         check(wl.display().equals("뵈드바르(워로드)") && ly.display().equals("울프헤딘(라이칸)") && "awaken".equals(wl.path()) && "invert".equals(ly.path()), "warrior display");
         check(Jobs.find("워로드") == wl && Jobs.find("울프헤딘") == ly && Jobs.find("lycan") == ly, "find warrior advanced");
@@ -437,6 +437,60 @@ public final class JobsTest {
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("hexblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
         archerAdvance(Jobs.job("archer"), Jobs.job("sniper"), Jobs.job("shadowhunter"));
+        assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("bladedancer"));
+    }
+
+    /**
+     * 0.51.0 암살자 2차 — 우트가르드(트릭스터) · 료스알프(블레이드 댄서) (사용자 "다음 작업"): 부분 합 = 배율 합 (암살자와 같은 4.75 · 2.85 · 8.55 · 38 — 표식을 터뜨리는
+     * 것은 표식 가득 (7) 기준) · 무적 시간 띄움 · t · w · 특성 (표식 7 · 옮겨감 / 춤사위 5 · +6% · 이동 +4%)
+     */
+    static void assassinAdvance(Jobs.Job as, Jobs.Job tr, Jobs.Job bd) {
+        check(tr != null && bd != null, "assassin advanced jobs");
+        if (tr == null || bd == null) return;
+        check(Jobs.advance("assassin", "awaken") == tr && Jobs.advance("assassin", "invert") == bd && Jobs.baseOf(tr) == as && Jobs.baseOf(bd) == as, "assassin advance");
+        check(tr.display().equals("우트가르드(트릭스터)") && bd.display().equals("료스알프(블레이드 댄서)") && Jobs.find("트릭스터") == tr && Jobs.find("료스알프") == bd
+                && Jobs.find("블레이드 댄서") == bd, "assassin display · find");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(tr.skill(i).total(), as.skill(i).total()) && near(bd.skill(i).total(), as.skill(i).total()), "assassin totals slot " + i);
+        int max = tr.trait().max();
+        Jobs.Skill r0 = tr.skill(0);
+        Jobs.Skill r1 = tr.skill(1);
+        Jobs.Skill r2 = tr.skill(2);
+        Jobs.Skill ru = tr.skill(4);
+        check(max == 7 && near(r0.num("cut", 0) + r0.num("base", 0) + r0.num("per", 0) * max, 4.75) && near(r1.num("blast", 0) * 2, 2.85)
+                && near(r2.num("cut", 0) + r2.num("coil", 0) + r2.num("venom", 0) * r2.num("ticks", 0), 8.55)
+                && near(ru.num("rounds", 0) * ru.num("throwers", 0) * ru.num("dagger", 0) + ru.num("base", 0) + ru.num("per", 0) * max, 38), "trickster totals 4.75 · 2.85 · 8.55 · 38 (표식 7)");
+        Jobs.Skill b0 = bd.skill(0);
+        Jobs.Skill b1 = bd.skill(1);
+        Jobs.Skill b2 = bd.skill(2);
+        Jobs.Skill bu = bd.skill(4);
+        check(near(b0.num("spin", 0) + b0.num("slash", 0), 4.75) && near(b1.num("steps", 0) * b1.num("cut", 0), 2.85) && near(b2.num("rounds", 0) * b2.num("round", 0), 8.55)
+                && near(bu.num("slashes", 0) * bu.num("slash", 0) + bu.num("final", 0), 38), "bladedancer totals 4.75 · 2.85 · 8.55 · 38");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (환영 둘의 터짐 · 비수 넷 · 두 번 베기는 한 번에 넣고 숫자만 여러 줄)
+        check(r0.num("burstAt", 0) - r0.num("cutAt", 0) >= 10 && r2.num("coilAt", 0) - r2.num("steps", 0) >= 10 && r2.num("every", 0) >= 10 && ru.num("every", 0) >= 10
+                && ru.num("finalAt", 0) - ru.num("first", 0) - (ru.num("rounds", 0) - 1) * ru.num("every", 0) - ru.num("flight", 0) >= 10, "trickster i-frame spacing");
+        check(b0.num("slashAt", 0) - 1 >= 10 && b1.num("every", 0) >= 10 && b2.num("every", 0) >= 10 && bu.num("every", 0) * 2 >= 10 && bu.num("finalDelay", 0) >= 10,
+                "bladedancer i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값)
+        check(near(r0.num("burstAt", 0), r0.num("t", 0)) && near(r2.num("coilAt", 0) + r2.num("ticks", 0) * r2.num("every", 0), r2.num("t", 0))
+                && near(ru.num("finalAt", 0), ru.num("t", 0)) && near(ru.num("first", 0) + ru.num("flight", 0), ru.num("w", 0)) && near(r1.num("life", 0), r1.num("t", 0)),
+                "trickster t 12 · 40 · 58 · 52 (w 8)");
+        check(near(b0.num("slashAt", 0), b0.num("t", 0)) && near((b1.num("steps", 0) - 1) * b1.num("every", 0), b1.num("t", 0))
+                && near(b2.num("first", 0) + (b2.num("rounds", 0) - 1) * b2.num("every", 0), b2.num("t", 0))
+                && near((bu.num("slashes", 0) - 1) * bu.num("every", 0) + bu.num("finalDelay", 0), bu.num("t", 0)), "bladedancer t 11 · 20 · 21 · 50");
+        // 특성: 트릭스터 = 암살자의 표식 (같은 등 뒤 +25%p · 10초) 최대 7 + 옮겨감 (5 이상 · 6칸), 블레이드 댄서 = 춤사위 (최대 5 · +6% · 이동 +4% · 3초)
+        check(tr.trait().name().equals(as.trait().name()) && near(tr.trait().def().numOr("back", 0), as.trait().def().numOr("back", -1))
+                && near(tr.trait().def().numOr("markFor", 0), as.trait().def().numOr("markFor", -1)) && near(tr.trait().def().numOr("shift", 0), 5)
+                && near(tr.trait().def().numOr("shiftRange", 0), 6), "표식 7 · 옮겨감");
+        check(bd.trait().name().equals("춤사위") && bd.trait().max() == 5 && near(bd.trait().def().numOr("perStack", 0), 0.06) && near(bd.trait().def().numOr("speedPer", 0), 0.04)
+                && near(bd.trait().def().numOr("keep", 0), 60), "춤사위 5 · +6% · 이동 +4% · 3초");
+        // 유틸 · 범위: 환술 = 순간 이동 · 도발 (1차와 같음), 요정의 걸음 = 피해 감소, 검은 장미 덤불 단일 · 나머지 좁은 범위
+        check(Jobs.utils(r1).equals(List.of("blink", "taunt")) && Jobs.utils(b1).equals(List.of("reduce")) && near(Jobs.utilCost(b1), 0.1) && "single".equals(Jobs.areaKind(r0))
+                && "narrow".equals(Jobs.areaKind(r2)) && "narrow".equals(Jobs.areaKind(b0)) && "narrow".equals(Jobs.areaKind(b2)) && Jobs.areaKind(bu) == null, "assassin advanced utils · area");
+        check(Jobs.windupTicks(ru) == 8 && Jobs.windupTicks(r1) == 0 && Jobs.windupTicks(bu) == 0, "windups 8 · 0 · 0");
+        check(Jobs.upKey(tr.skill(3), "first") != null && Jobs.upKey(bd.skill(3), "echo") != null, "assassin advanced up keys");
+        check(Jobs.skillLine(tr.skill(3)).equals("끝없는 밤 · 30초") && Jobs.skillLine(bd.skill(0)).startsWith("빛살 베기 · 6초 · 배율 "), "assassin advanced skill line");
+        check(tr.color()[0][0] > 0.9 && tr.color()[0][2] > 0.7 && tr.color()[1][1] < 0.2 && bd.color()[0][0] > 0.95 && bd.color()[0][1] > 0.8 && bd.color()[1][0] > 0.95
+                && bd.color()[1][2] > 0.7, "colors: magenta · violet / white gold · pink");
     }
 
     /**

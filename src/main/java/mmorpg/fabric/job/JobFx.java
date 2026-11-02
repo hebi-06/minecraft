@@ -139,10 +139,18 @@ final class JobFx {
     static final double[] HEX_OUTER = {0.24, 0.07, 0.16};
     static final double[] HEX_INNER = {1.0, 0.7, 0.26};
 
+    /**
+     * 0.51.0 블레이드 댄서 겉빛 · 속빛 (연분홍 · 흰 금빛 — 컨셉 "흰 금빛 · 연분홍 (빛 꽃잎)"): 두 빛 중 짙은 쪽 규칙이면 옅은 흰 금빛이 겉이 되어 낮 하늘 · 풀밭에서 묻힘 →
+     * 겉 (빛 칸 · 꽃잎 · 판의 몸) 은 짙은 연분홍, 속 (심지) 은 흰 금빛
+     */
+    static final double[] BD_OUTER = {1.0, 0.52, 0.74};
+    static final double[] BD_INNER = {1.0, 0.95, 0.8};
+
     /** 겉빛: 직업 두 빛 중 더 짙은 쪽 (검사 하늘색 · 마검사 보라). 0.51.0 라이칸은 짙은 달빛 은청 (LYCAN_OUTER — 붉은 눈빛은 발톱 · 눈 그림에만) · 헥스 블레이드는 먹빛 */
     static double[] outer(Jobs.Job j) {
         if (j != null && JobTraits6.LY.equals(j.id())) return LYCAN_OUTER;
         if (j != null && JobTraits7.HX.equals(j.id())) return HEX_OUTER;
+        if (j != null && JobTraits10.BD.equals(j.id())) return BD_OUTER;
         double[] a = JobKit.glow(j);
         double[] b = JobKit.core(j);
         return sat(a) >= sat(b) ? a : b;
@@ -151,6 +159,7 @@ final class JobFx {
     /** 속빛: 다른 쪽을 흰색 쪽으로 (검사 흰빛 · 마검사 옅은 청록). 0.51.0 라이칸은 직업 첫째 빛 (은회) 을 흰색 쪽으로 (달빛 흰빛) */
     static double[] inner(Jobs.Job j) {
         if (j != null && JobTraits7.HX.equals(j.id())) return HEX_INNER;
+        if (j != null && JobTraits10.BD.equals(j.id())) return BD_INNER;
         if (j != null && JobTraits6.LY.equals(j.id())) {
             double[] m = JobKit.glow(j);
             return new double[] {m[0] + (1 - m[0]) * 0.6, m[1] + (1 - m[1]) * 0.6, m[2] + (1 - m[2]) * 0.6};
@@ -1304,5 +1313,63 @@ final class JobFx {
             case 1 -> cells(level, "jthicket", THICKET, 3, 3, at, life, 6, true, b.with("fade", o.num("fade", 0.15)), glow, core);
             default -> cells(level, "jthicket", THICKET, 6, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.3)), glow, core);
         }
+    }
+
+    // ------------------------------------------------------------ 0.51.0 암살자 2차 그림 (tools/job_fx_art_adv.py — 우트가르드(트릭스터) · 료스알프(블레이드 댄서))
+
+    /** 장 수: 뱀의 똬리 · 거울 조각 · 다시 뜨는 해 · 빛 꽃 · 빛 리본 · 요정 날개 */
+    static final int COIL = 8;
+    static final int MIRROR = 6;
+    static final int DAWN = 8;
+    static final int LIGHTBLOOM = 8;
+    static final int RIBBON = 8;
+    static final int FAIRY = 4;
+
+    /**
+     * 요르문간드의 똬리 (rfx_jcoil — 땅에 누움, 그림 위 = 길이 뻗는 쪽): 0 ~ 1 뱀이 미끄러져 두 고리 (∞) 를 그림 · 2 ~ 4 비늘이 빛나며 조여 듦 (loop 면 이어 돌림) ·
+     * 5 조이는 섬광 (독빛 고리) · 6 ~ 7 독 안개로 흐려짐. center = 똬리 가운데, facing = 길이 뻗는 쪽 (수평), 길이 약 size × 2 칸 · 너비 size × 1.25 칸
+     */
+    static void coil(ServerLevel level, Vec3 center, Vec3 facing, double size, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
+        int f = Math.max(0, Math.min(COIL - 1, from));
+        int n = Math.max(1, Math.min(COIL - f, count));
+        Vec3 fl = V.flat(facing);
+        double spin = Math.toDegrees(Math.atan2(fl.x, fl.z));
+        cells(level, "jcoil", COIL, f, n, V.up(center, 0.07), life, loop ? 8 : 0, loop, o.with("dir", V.UP, "size", size, "spin", spin, "fade", o.num("fade", 0.2)),
+                outer(j), inner(j));
+    }
+
+    /** 환영이 깨지는 거울 조각 (rfx_jmirror — 카메라를 봄): 0 금 간 빛 · 1 ~ 3 조각이 사방으로 튐 (조각 테 = glow · 면 = core) · 4 ~ 5 흐려짐. 지름 약 size × 2 칸 */
+    static void mirror(ServerLevel level, Vec3 at, double size, double life, Opt o, double[] glow, double[] core) {
+        cells(level, "jmirror", MIRROR, 0, MIRROR, at, life, 0, false, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360, "fade",
+                o.num("fade", 0.25)), glow, core);
+    }
+
+    /** 다시 뜨는 해 (rfx_jdawn — 카메라를 봄): 0 검은 해의 가는 테 · 1 한쪽이 번쩍 (다이아몬드 고리) · 2 ~ 4 빛살이 터지며 퍼짐 · 5 ~ 7 큰 빛 고리로 흐려짐. 지름 약 size × 2 칸 */
+    static void dawn(ServerLevel level, Vec3 at, double size, double life, Opt o, double[] glow, double[] core) {
+        cells(level, "jdawn", DAWN, 0, DAWN, at, life, 0, false, o.with("size", size, "fade", o.num("fade", 0.3)), glow, core);
+    }
+
+    /**
+     * 빛 꽃 (rfx_jlightbloom — 카메라를 봄): 0 ~ 2 봉오리가 열림 · 3 ~ 4 활짝 핀 빛 꽃 (겹꽃잎 · 가운데 섬광) · 5 ~ 7 꽃잎이 빛으로 터져 흩어짐. o.from · o.count 로 장을
+     * 고름 (기본 전부). 지름 약 size × 2 칸
+     */
+    static void lightBloom(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
+        int f = Math.max(0, Math.min(LIGHTBLOOM - 1, (int) o.num("from", 0)));
+        int n = Math.max(1, Math.min(LIGHTBLOOM - f, (int) o.num("count", LIGHTBLOOM - f)));
+        cells(level, "jlightbloom", LIGHTBLOOM, f, n, at, life, 0, false, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 40 - 20,
+                "fade", o.num("fade", 0.25)), outer(j), inner(j));
+    }
+
+    /** 빛 리본 (rfx_jribbon — 땅과 나란히 누움, 이어 돌림): 몸 둘레를 휘감아 도는 리본 고리 (끝이 가늘어지는 두 띠 · 반짝임). 고리 반지름 radius 칸 (= 반 크기 × 0.85) */
+    static void ribbon(ServerLevel level, Vec3 center, double radius, Jobs.Job j, double life, double fps, Opt o) {
+        loop(level, "jribbon", RIBBON, center, life, fps, o.with("dir", V.UP, "size", radius / 0.85, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360,
+                "fade", o.num("fade", 0.3)), outer(j), inner(j));
+    }
+
+    /** 요정 날개 (rfx_jfairy — 등 뒤 · 이어 돌림 4장 날갯짓): 비치는 두 쌍 (위 큰 날개 · 아래 작은 날개 — 빛 날개맥 · 밝은 테). 앞뒤 두 장 (wing 과 같음) */
+    static void fairy(ServerLevel level, Vec3 at, Vec3 facing, double size, Jobs.Job j, double life, Opt o) {
+        loop(level, "jfairy", FAIRY, at, life, 6, o.with("dir", V.scale(facing, -1), "size", size), outer(j), inner(j));
+        double solo = o.num("solo", 0);
+        loop(level, "jfairy", FAIRY, at, life, 6, o.with("dir", facing, "size", size, "solo", solo > 0 ? solo + 16 : null), outer(j), inner(j));
     }
 }

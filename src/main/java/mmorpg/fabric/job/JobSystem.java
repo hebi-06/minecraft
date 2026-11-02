@@ -83,6 +83,8 @@ public final class JobSystem {
         NecromancerSkills.register();
         SniperSkills.register(); // 0.51.0 궁수 2차 — 에길(스나이퍼)
         ShadowhunterSkills.register(); // 0.51.0 궁수 2차 — 미르크비드(섀도 헌터)
+        TricksterSkills.register(); // 0.51.0 암살자 2차 — 우트가르드(트릭스터)
+        BladedancerSkills.register(); // 0.51.0 암살자 2차 — 료스알프(블레이드 댄서)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);

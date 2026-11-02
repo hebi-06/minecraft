@@ -1,6 +1,8 @@
 package mmorpg.fabric.job;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import mmorpg.core.Combat;
@@ -47,6 +49,9 @@ import net.minecraft.world.phys.Vec3;
  * momentumFor 틱 안의 다음 직업 스킬 위력 + momentum (JobSystem). 창벽 (태세): 정면 front° 에서 온 피해 − guard (RpgHealth.sourceReduce)</li>
  * <li>사신 「혼」 (0 ~ max): 낫 평타 (넓게 베기에 맞은 적 포함) · 직업 스킬이 맞힌 적마다 +1, 처치하면 + kill. 하나당 이동 속도 + speedPer · 준 피해의 leechPer 만큼 회복
  * (DamageNumbers.dealtHook). 혼백 폭발이 씀. 망령 걸음 동안 받는 피해 없음, 사신 현신 (태세) 동안 넓게 베기 범위 · 비율 (WeaponTraits.sweepMod)</li>
+ * <li>0.51.0 각성 우트가르드(트릭스터) 도 「표식」 (암살자 줄기 — {@link #assassinLine}: 최대 7 · 등 뒤 치명타 · 은신은 끝없는 밤). 표식이 shift 이상인 적이 쓰러지면
+ * 그 표식이 둘레 shiftRange 칸의 가장 가까운 적에게 옮겨감 (꽃잎이 날아감). 끝없는 밤 (태세 window 틱): 처음 dur 틱 은신 (1차 밤의 장막과 같음) · 은신이 풀린 뒤에도
+ * 태세 동안 적을 쓰러뜨리면 다시 은신 (reveil 틱 · again 번까지 — 첫 공격 강화도 다시)</li>
  * </ul>
  */
 public final class JobTraits3 {
@@ -64,6 +69,8 @@ public final class JobTraits3 {
         long veilHit = -1;
         /** 풀린 뒤 이동 + 가 끝나는 틱 */
         long speedUntil;
+        /** 0.51.0 끝없는 밤 (트릭스터): 다시 은신한 수 (태세마다 처음부터) */
+        int again;
         // 창술사
         long momentumUntil;
         /** 이번 평타가 끝자락 (밀침 · 연출 — 맞힘 훅) */
@@ -150,6 +157,7 @@ public final class JobTraits3 {
             st.ghostUntil = 0;
             st.speedUntil = 0;
             st.leechAcc = 0;
+            st.again = 0;
         }
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
@@ -158,6 +166,26 @@ public final class JobTraits3 {
     private static Jobs.Job jobIf(ServerPlayer sp, String id) {
         Jobs.Job j = JobSystem.job(sp);
         return j != null && j.id().equals(id) ? j : null;
+    }
+
+    /** 0.51.0 트릭스터 (암살자 각성) · 끝없는 밤 */
+    static final String TR = "trickster";
+    static final String NIGHT = "trickster_night";
+
+    /** 암살자 줄기 (표식 · 등 뒤 치명타 · 은신 — 1차 암살자 · 0.51.0 트릭스터) */
+    static boolean assassinLine(Jobs.Job j) {
+        return j != null && (j.id().equals("assassin") || j.id().equals(TR));
+    }
+
+    /** 지금 직업이 암살자 줄기면 그 직업 (아니면 null) */
+    private static Jobs.Job lineJob(ServerPlayer sp) {
+        Jobs.Job j = JobSystem.job(sp);
+        return assassinLine(j) ? j : null;
+    }
+
+    /** 은신 스킬 id (암살자 밤의 장막 · 트릭스터 끝없는 밤) */
+    private static String veilId(Jobs.Job j) {
+        return j != null && j.id().equals(TR) ? NIGHT : "assassin_veil";
     }
 
     private static double trait(Jobs.Job j, String key, double fallback) {
@@ -260,7 +288,8 @@ public final class JobTraits3 {
             if (e == null || !(e.level() instanceof ServerLevel level) || !RuneKit.fxQuota("jobAsMarks", 12)) continue;
             ServerPlayer sp = RuneKit.player(level, uuidOr(en.getKey().substring(0, bar)));
             if (sp == null) continue;
-            markFx(level, sp, e, as, (int) en.getValue()[0], false);
+            Jobs.Job oj = lineJob(sp); // 0.51.0 트릭스터의 꽃은 트릭스터 빛
+            markFx(level, sp, e, oj != null ? oj : as, (int) en.getValue()[0], false);
         }
     }
 
@@ -286,7 +315,7 @@ public final class JobTraits3 {
     /** 치명타 +: 암살자 단검이 적의 등 뒤에서 (victim 이 없으면 0 — 표시용) */
     private static double backCrit(ServerPlayer sp, Weapon w, LivingEntity victim) {
         if (victim == null || w == null || !"dagger".equals(w.type())) return 0;
-        Jobs.Job j = jobIf(sp, "assassin");
+        Jobs.Job j = lineJob(sp);
         if (j == null || !behind(sp, victim, trait(j, "backArc", 120))) return 0;
         return trait(j, "back", 0.25);
     }
@@ -299,18 +328,50 @@ public final class JobTraits3 {
         return st != null && st.veilUntil > Tasks.now();
     }
 
-    /** 암영 시작 (AssassinSkills): dur 틱 투명 · 몹이 노리던 것을 놓음 · 태세 (남은 시간) */
+    /**
+     * 암영 시작 (AssassinSkills): dur 틱 투명 · 몹이 노리던 것을 놓음 · 태세 (남은 시간). 0.51.0 트릭스터 끝없는 밤: 태세는 window 틱 (그동안 쓰러뜨리면 다시 은신 —
+     * {@link #reveil}), 은신은 처음 dur 틱
+     */
     static void veilStart(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
         State st = of(sp);
-        long now = Tasks.now();
         int dur = (int) k.num("dur", 120);
-        st.veilUntil = now + dur;
+        st.again = 0;
+        JobTraits.startStance(sp, k, j != null && j.id().equals(TR) ? Math.max(dur, (int) k.num("window", 200)) : dur);
+        hide(sp, st, dur);
+    }
+
+    /** 은신 ticks 틱: 투명 · 몹이 노리던 것을 놓음 · 첫 공격 강화를 처음부터 */
+    private static void hide(ServerPlayer sp, State st, int ticks) {
+        st.veilUntil = Tasks.now() + ticks;
         st.firstUntil = 0;
         st.veilHit = -1;
-        JobTraits.startStance(sp, k, dur);
-        sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, dur, 0, false, false, true));
+        sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, ticks, 0, false, false, true));
         Monsters.forgetMonsterFights(sp.getUUID());
         for (Mob m : sp.level().getEntitiesOfClass(Mob.class, sp.getBoundingBox().inflate(32), x -> x.getTarget() == sp)) m.setTarget(null);
+    }
+
+    /**
+     * 0.51.0 끝없는 밤 (트릭스터 — 태세 동안 적을 쓰러뜨림): 은신이 풀려 있고 다시 은신한 수가 again 보다 적으면 reveil 틱 다시 은신 — 망토를 휘두르는 검보라 연기 ·
+     * 꽃잎 · 청록 반짝임. 다시 숨었으면 true
+     */
+    static boolean reveil(ServerPlayer sp) {
+        Jobs.Job j = jobIf(sp, TR);
+        Jobs.Skill k = skill(j, NIGHT);
+        if (k == null || !JobTraits.stanceOn(sp, NIGHT) || veilOn(sp)) return false;
+        State st = of(sp);
+        if (st.again >= (int) k.num("again", 3)) return false;
+        st.again++;
+        hide(sp, st, (int) k.num("reveil", 60));
+        TricksterSkills.cloak(sp, j, 0.8);
+        Notify.notify(sp, "§d§l끝없는 밤 §7— 다시 은신 (" + st.again + "/" + (int) k.num("again", 3) + ")", 24);
+        JobTraits.sendGauge(sp, true);
+        return true;
+    }
+
+    /** 시험: 끝없는 밤에 다시 은신한 수 */
+    public static int againCount(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        return st == null ? 0 : st.again;
     }
 
     private static void removeInvisibility(ServerPlayer sp) {
@@ -325,8 +386,8 @@ public final class JobTraits3 {
         if (st == null || st.veilUntil <= 0) return;
         st.veilUntil = 0;
         removeInvisibility(sp);
-        Jobs.Job j = jobIf(sp, "assassin");
-        Jobs.Skill k = skill(j, "assassin_veil");
+        Jobs.Job j = lineJob(sp);
+        Jobs.Skill k = skill(j, veilId(j));
         if (j != null && k != null) {
             st.speedUntil = Tasks.now() + (long) k.num("speedFor", 60);
             speedMod(sp, VEIL_SPEED, k.num("speed", 0.3));
@@ -337,14 +398,15 @@ public final class JobTraits3 {
             JobFx.petals(level, c, 5, 2.0, 0.12, j, 0.6, Opt.empty());
             SkillFx.play(level, "mob.phantom.flap", c, 1.4, 0.6);
         }
-        JobTraits.stopStance(sp, "assassin_veil");
+        JobTraits.stopStance(sp, "assassin_veil"); // 0.51.0 끝없는 밤은 은신이 풀려도 태세 (다시 은신) 가 남음
+        JobTraits.sendGauge(sp, true);
     }
 
     /** 단검 평타의 배율: 암영의 첫 공격 × first (은신이 풀림 — 치명타 확정은 이 틱의 sureCrit) */
     private static double veilBasic(ServerPlayer sp, Weapon w) {
         if (w == null || !"dagger".equals(w.type()) || !veilOn(sp)) return 1;
-        Jobs.Job j = jobIf(sp, "assassin");
-        Jobs.Skill k = skill(j, "assassin_veil");
+        Jobs.Job j = lineJob(sp);
+        Jobs.Skill k = skill(j, veilId(j));
         if (k == null) return 1;
         State st = of(sp);
         st.veilHit = Tasks.now();
@@ -362,13 +424,13 @@ public final class JobTraits3 {
 
     /** 직업 스킬을 쓰기 직전 (JobSystem): 암영 중이면 그 스킬의 첫 타가 강화됨 (60틱 안) */
     static void beforeCast(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
-        if (j == null || !j.id().equals("assassin") || k.id().equals("assassin_veil") || !veilOn(sp)) return;
+        if (!assassinLine(j) || k.id().equals(veilId(j)) || !veilOn(sp)) return;
         of(sp).firstUntil = Tasks.now() + 60;
     }
 
     /** 직업 스킬을 쓴 뒤: 나갔으면 은신이 풀림, 안 나갔으면 첫 타 강화를 거둠 */
     static void afterCast(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, boolean ok) {
-        if (j == null || !j.id().equals("assassin") || k.id().equals("assassin_veil")) return;
+        if (!assassinLine(j) || k.id().equals(veilId(j))) return;
         State st = STATES.get(sp.getUUID());
         if (st == null || st.veilUntil <= 0) return;
         if (ok) veilBreak(sp);
@@ -377,11 +439,11 @@ public final class JobTraits3 {
 
     /** 직업 스킬 피해 한 번의 배율 (JobKit): 암영 중 쓴 스킬의 첫 타면 first (쓰면 지움 — 안 들어가면 firstHitMissed 가 되돌림) */
     static double firstHit(ServerPlayer sp, Jobs.Job j) {
-        if (j == null || !j.id().equals("assassin")) return 1;
+        if (!assassinLine(j)) return 1;
         State st = STATES.get(sp.getUUID());
         if (st == null || st.firstUntil < Tasks.now() || st.firstUntil == 0) return 1;
         st.firstUntil = -st.firstUntil; // 쓰는 중 (안 들어가면 되돌림)
-        Jobs.Skill k = skill(j, "assassin_veil");
+        Jobs.Skill k = skill(j, veilId(j));
         return k == null ? 2.5 : JobUpgrades.num(sp, k, "first", 2.5); // 0.31.0 강화
     }
 
@@ -419,7 +481,7 @@ public final class JobTraits3 {
         if (w == null) return 1;
         Jobs.Job j = JobSystem.job(sp);
         if (j == null) return 1;
-        if (j.id().equals("assassin")) return veilBasic(sp, w);
+        if (assassinLine(j)) return veilBasic(sp, w);
         if (j.id().equals("lancer") && "lance".equals(w.type()) && victim != null && edgeHit(sp, victim, trait(j, "edge", 1.0))) {
             State st = of(sp);
             st.edgeTick = Tasks.now();
@@ -559,9 +621,11 @@ public final class JobTraits3 {
         if (got > 0) st.leechAcc += got;
     }
 
-    /** 처치 (AFTER_DEATH): 사신이 잡으면 혼 + kill */
+    /** 처치 (AFTER_DEATH): 0.51.0 트릭스터 — 표식이 옮겨감 · 끝없는 밤 다시 은신, 사신이 잡으면 혼 + kill */
     private static void onDeath(LivingEntity e, DamageSource src) {
+        shiftMarks(e);
         if (!(src.getEntity() instanceof ServerPlayer sp) || sp == e) return;
+        if (jobIf(sp, TR) != null) reveil(sp);
         Jobs.Job j = jobIf(sp, "reaper");
         if (j == null) return;
         gainSouls(sp, j, (int) trait(j, "kill", 3), e);
@@ -569,6 +633,62 @@ public final class JobTraits3 {
             Vec3 c = Kit.bodyPoint(e);
             JobFx.soul(level, c, 0.35, j, 0.6, Opt.of("dir", V.UP, "speed", 1.5));
             SkillFx.play(level, "particle.soul_escape", c, 1.0, 1.0);
+        }
+    }
+
+    /**
+     * 0.51.0 트릭스터 「표식」 옮겨감: 쓰러진 적에 트릭스터의 표식이 shift 이상이면 둘레 shiftRange 칸의 가장 가까운 (그 트릭스터가 칠 수 있는) 적에게 모두 옮겨감
+     * (그 적의 표식에 더함 — 최대 max) — 쓰러진 몸에서 꽃잎이 날아가 머리 위에 꽃이 핌
+     */
+    private static void shiftMarks(LivingEntity dead) {
+        if (MARKS.isEmpty() || dead == null || !(dead.level() instanceof ServerLevel level)) return;
+        String tail = "|" + dead.getUUID();
+        List<String> keys = new ArrayList<>();
+        for (String key : MARKS.keySet()) if (key.endsWith(tail)) keys.add(key);
+        long now = Tasks.now();
+        for (String key : keys) {
+            long[] m = MARKS.remove(key);
+            if (m == null || m[1] < now) continue;
+            ServerPlayer sp = RuneKit.player(level, uuidOr(key.substring(0, key.indexOf('|'))));
+            Jobs.Job j = sp == null ? null : jobIf(sp, TR);
+            if (j == null || m[0] < trait(j, "shift", 5)) continue;
+            LivingEntity to = null;
+            double best = Double.MAX_VALUE;
+            for (LivingEntity x : Kit.around(sp, dead.position(), trait(j, "shiftRange", 6), 3)) {
+                if (x == dead || !x.isAlive() || x.isRemoved()) continue;
+                double d = x.distanceToSqr(dead);
+                if (d < best) {
+                    best = d;
+                    to = x;
+                }
+            }
+            if (to == null) continue;
+            int max = j.trait() == null ? 7 : Math.max(1, j.trait().max());
+            long[] n = MARKS.computeIfAbsent(key(sp, to), q -> new long[2]);
+            if (n[1] < now) n[0] = 0;
+            int moved = (int) m[0];
+            n[0] = Math.min(max, n[0] + moved);
+            n[1] = now + (long) trait(j, "markFor", 200);
+            MARKED.put(to.getUUID(), to);
+            of(sp).target = to.getUUID();
+            LivingEntity target = to;
+            Vec3 from = Kit.bodyPoint(dead);
+            Vec3 at = RuneKit.overHead(to, 0.5);
+            Vec3 d = V.sub(at, from);
+            double len = V.len(d);
+            Vec3 u = len < 1e-3 ? V.UP : V.scale(d, 1 / len);
+            // 쓰러진 몸에서 꽃잎이 날아감 (0.3초) → 새 적 머리 위에 꽃이 핌 · 맑은 소리
+            for (int i = 0; i < 6; i++) JobFx.petal(level, V.add(from, new Vec3((Kit.rand() - 0.5) * 0.4, (Kit.rand() - 0.5) * 0.4, (Kit.rand() - 0.5) * 0.4)), u,
+                    len / 0.3 * (0.85 + Kit.rand() * 0.3), 0.14, j, 0.3, Opt.empty());
+            JobFx.rose(level, from, 0.55 + Kit.bodyPad(dead) * 0.3, j, 0.5, Opt.empty());
+            SkillFx.play(level, "block.cherry_leaves.break", from, 1.3, 0.8);
+            RuneKit.later(6, () -> {
+                if (target.isRemoved() || !target.isAlive() || !(target.level() instanceof ServerLevel lv)) return;
+                markFx(lv, sp, target, j, marks(sp, target), true);
+                SkillFx.play(lv, "block.amethyst_block.chime", Kit.bodyPoint(target), 1.4, 0.7);
+            });
+            JobTraits.sendGauge(sp, false);
+            Notify.notify(sp, "§d표식 " + moved + " §7→ 옆 적에게 옮겨감", 20);
         }
     }
 
@@ -594,7 +714,7 @@ public final class JobTraits3 {
         ServerLevel level = sp.level();
         long now = Tasks.now();
         switch (j.id()) {
-            case "assassin" -> {
+            case "assassin", TR -> {
                 if (!"dagger".equals(w.type())) return;
                 mark(sp, victim, j);
                 if (behind(sp, victim, trait(j, "backArc", 120)) && RuneKit.fxQuota("jobBackstab", 4)) {
@@ -693,6 +813,8 @@ public final class JobTraits3 {
             st.speedUntil = 0;
             speedMod(sp, VEIL_SPEED, 0);
         }
+        // 0.51.0 끝없는 밤: 은신 (dur · reveil 틱) 이 태세보다 먼저 끝남 → 풀림 (이동 +) — 태세 (다시 은신) 는 그대로
+        if (st.veilUntil > 0 && st.veilUntil <= now && j.id().equals(TR)) veilBreak(sp);
         if (j.id().equals("reaper")) {
             if (st.leechAcc >= 0.5 && now - st.leechShown >= 20) {
                 DamageNumbers.show(sp, st.leechAcc, DamageNumbers.Style.HEAL, "", 0);
@@ -719,6 +841,15 @@ public final class JobTraits3 {
         if (stance.equals("assassin_veil")) {
             // 1인칭: 화면 네 귀퉁이의 옅은 그림자 연기 (다른 사람에게는 아무것도 — 은신)
             JobFx.cornerSmoke(sp, j, 0.55, 0.45, 0.45, RuneKit.bodyVel(sp));
+            return true;
+        }
+        if (stance.equals(NIGHT)) {
+            // 0.51.0 끝없는 밤: 은신 중이면 1인칭 귀퉁이 연기만 (은신), 풀려 있으면 (쓰러뜨리면 다시 숨는 동안) 발밑의 옅은 검보라 연기 · 더 옅은 귀퉁이 연기
+            if (veilOn(sp)) JobFx.cornerSmoke(sp, j, 0.55, 0.45, 0.45, RuneKit.bodyVel(sp));
+            else {
+                JobFx.cornerSmoke(sp, j, 0.5, 0.45, 0.22, RuneKit.bodyVel(sp));
+                JobFx.smoke(level, V.up(sp.position(), 0.25), 0.7, j, 0.55, JobFx.hide1p(sp).with("alpha", 0.45, "vel", RuneKit.bodyVel(sp)));
+            }
             return true;
         }
         if (stance.equals("lancer_wall")) {
@@ -750,7 +881,7 @@ public final class JobTraits3 {
 
     /** 태세가 끝남 (JobTraits): 암영 → 은신이 풀림 (이동 +) */
     static void stanceEnded(ServerPlayer sp, String id) {
-        if (id.equals("assassin_veil")) veilBreak(sp);
+        if (id.equals("assassin_veil") || id.equals(NIGHT)) veilBreak(sp);
         else if (id.equals("reaper_avatar")) {
             Jobs.Job j = jobIf(sp, "reaper");
             if (j != null) {
@@ -768,7 +899,7 @@ public final class JobTraits3 {
         State st = STATES.get(sp.getUUID());
         if (st == null) return 0;
         return switch (j.id()) {
-            case "assassin" -> {
+            case "assassin", TR -> {
                 if (st.target == null) yield 0;
                 Entity e = sp.level().getEntity(st.target);
                 yield e == null || e.isRemoved() || !e.isAlive() ? 0 : marks(sp, e);

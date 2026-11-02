@@ -2084,6 +2084,465 @@ sprite("rfx_jthicket", "lookat_y", 256, 256, TK_N, 4, "shadowhunter", zoom=4,
        "덤불 속 눈 셋 — 4 에서 깜빡 — 이어 돌림) → 6 은빛 금이 가며 부서짐 · 7 조각 · 연기로 흩어짐")(thicket_frame)
 
 
+# ============================================================ 0.51.0 암살자 2차 (우트가르드(트릭스터) · 료스알프(블레이드 댄서))
+
+# 확인용 색 (게임이 입히는 색과 같게 — JobFx.outer · inner): 트릭스터 = 검보라 겉 · 연분홍 흰빛 속 / 거울 조각 = 청록 테 (TricksterSkills.ILLUSION) · 연분홍 면 /
+# 다시 뜨는 해 = 흰 금빛 · 흰빛 (TricksterSkills.DAWN) / 블레이드 댄서 = 연분홍 겉 · 흰 금빛 속 (JobFx.BD_OUTER · BD_INNER)
+COLORS.setdefault("trickster", ((0.32, 0.07, 0.46), (0.98, 0.68, 0.91)))
+COLORS.setdefault("illusion", ((0.3, 0.95, 0.9), (0.98, 0.68, 0.91)))
+COLORS.setdefault("dawn", ((1.0, 0.86, 0.55), (1.0, 0.98, 0.9)))
+COLORS.setdefault("bladedancer", ((1.0, 0.52, 0.74), (1.0, 0.95, 0.8)))
+
+
+# ------------------------------------------------------------ rfx_jcoil (요르문간드의 똬리 — 땅에 누움, 그림 위 = 길이 뻗는 쪽, 칸 가운데 = 똬리 가운데)
+
+CO_N = 8
+# 장마다: 그린 몫 (머리까지) · 옆 폭 배율 (조여 듦) · 몸 밝기 · 비늘 흐름 · 섬광 · 흩어짐
+CO_DRAW = [0.42, 0.82, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+CO_AMP = [1.0, 1.0, 1.0, 0.93, 0.87, 0.82, 0.84, 0.86]
+CO_A = [0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 0.6, 0.28]
+CO_PH = [0.0, 0.0, 0.0, 0.33, 0.66, 1.0, 1.0, 1.0]
+CO_FLASH = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.25, 0.0]
+CO_MIST = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.55, 0.9]
+
+
+def _coil_pts(W, H, amp, frac=1.0, n=260):
+    """세로로 선 8 자 (Gerono 의 렘니스케이트 — 아래 끝에서 왼쪽 아래 고리 → 가운데 엇갈림 → 오른쪽 위 고리 → 위 끝 → 왼쪽 위 → 가운데 → 오른쪽 아래 → 아래 끝):
+    S 자로 갔다가 거꾸로 된 S 로 되돌아온 길 (TricksterSkills.coil) 을 둥글게 이은 것. 위 아래 끝 = H 의 0.08 · 0.92, 옆 = ±amp"""
+    c = W / 2
+    B = H * 0.42
+    out = []
+    m = max(2, int(n * frac))
+    for i in range(m + 1):
+        th = -math.pi / 2 + TAU * frac * i / m
+        x = c + 2 * amp * math.sin(th) * math.cos(th)
+        y = H / 2 - B * math.sin(th)
+        out.append((x, y))
+    return out
+
+
+def coil_frame(f, W=256, H=256):
+    pad = Pad(W, H)
+    rs = random.Random(9100 + f)
+    amp = W * 0.235 * CO_AMP[f]
+    pts = _coil_pts(W, H, amp, CO_DRAW[f])
+    A = CO_A[f]
+    d, s = pad.line_field(pts, 22)
+    n = len(pts)
+    L = sum(math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]) for i in range(n - 1))
+    full = CO_DRAW[f] >= 1.0
+    # 몸 굵기: 꼬리 (처음) 에서 굵어졌다 머리 쪽 조금 가늘게 (닫힌 똬리면 고르게)
+    sl = s * L
+    if full:
+        wid = np.full_like(s, 8.6)
+    else:
+        wid = 3.0 + 6.0 * clamp01(sl / 60.0) - 1.2 * clamp01((sl - (L - 30)) / 30.0)
+    body = clamp01((wid - d) * SS * 0.25 + 0.5) * (d < 30)
+    # 비늘: 몸을 따라 흐르는 갈매기 (|d| 로 휘게) — 빛나는 마루
+    k = TAU / 9.0
+    chev = 0.5 + 0.5 * np.sin(sl * k - np.abs(d) * 0.55 - CO_PH[f] * TAU)
+    scales = clamp01((chev - 0.55) / 0.3) * clamp01((wid * 0.78 - d) * SS * 0.3 + 0.5)
+    ridge = clamp01((wid * 0.32 - d) * SS * 0.3 + 0.5) * 0.55
+    core = np.maximum(scales * 0.85, ridge) * A
+    # 가장자리 테 (몸의 바깥 줄 — 밝은 테)
+    edge = clamp01(1 - np.abs(d - wid * 0.92) * SS * 0.18) * (d < wid + 2)
+    core = np.maximum(core, edge * 0.7 * A)
+    glow = body * (0.78 * A)
+    # 머리 (그린 끝 — 닫히면 꼬리를 무는 아래 끝): 쐐기 머리 · 눈 · 두 갈래 혀
+    hx, hy = pts[-1]
+    px, py = pts[-6]
+    ang = math.atan2(hy - py, hx - px)
+    ux, uy = math.cos(ang), math.sin(ang)
+    tx, ty = -uy, ux
+    head = [(hx + ux * 16, hy + uy * 16), (hx + tx * 9 + ux * 2, hy + ty * 9 + uy * 2), (hx - ux * 8 + tx * 6, hy - uy * 8 + ty * 6),
+            (hx - ux * 8 - tx * 6, hy - uy * 8 - ty * 6), (hx - tx * 9 + ux * 2, hy - ty * 9 + uy * 2)]
+    hm = pad.poly(head, 1.0)
+    glow = np.maximum(glow, hm * A)
+    core = np.maximum(core, rim_of(hm, 1.6) * 0.9 * A)
+    for sg in (-1, 1):
+        ex, ey = hx + ux * 5 + tx * sg * 4.2, hy + uy * 5 + ty * sg * 4.2
+        core = np.maximum(core, pad.disc_field(ex, ey, 2.0, soft=0.6) * A)
+    if not full or f >= 5:
+        tg = [(hx + ux * 16, hy + uy * 16), (hx + ux * 24, hy + uy * 24)]
+        core = np.maximum(core, pad.stroke(tg, 1.4, 1.0, a0=0.8 * A))
+        for sg in (-1, 1):
+            core = np.maximum(core, pad.stroke([tg[1], (hx + ux * 29 + tx * sg * 3.5, hy + uy * 29 + ty * sg * 3.5)], 1.2, 0.6, a0=0.8 * A))
+    if not full:
+        # 미끄러지는 머리 앞 옅은 길 (그려질 곳) · 꼬리 쪽 먼지
+        ahead = _coil_pts(W, H, amp, 1.0)
+        rest = ahead[len(pts) - 1:len(pts) + 40]
+        if len(rest) > 2:
+            glow = np.maximum(glow, pad.stroke(rest, 3.0, 0.5, a0=0.35, a1=0.0, soft=1.5))
+    # 섬광 (조임): 몸 전체가 밝게 · 두 고리 가운데에서 터지는 빛 고리 · 튀는 불티
+    fl = CO_FLASH[f]
+    if fl > 0:
+        core = np.maximum(core, body * 0.95 * fl)
+        for cy in (H / 2 - H * 0.21, H / 2 + H * 0.21):
+            ring = pad.stroke(arc_pts(W / 2, cy, 34 + 14 * (1 - fl), 0, TAU, n=48), 4.0 * fl + 0.8, a0=fl)
+            core = np.maximum(core, ring)
+            glow = np.maximum(glow, pad.stroke(arc_pts(W / 2, cy, 34 + 14 * (1 - fl), 0, TAU, n=48), 12.0, a0=0.6 * fl, soft=4.0))
+            for i in range(9):
+                a = rs.uniform(0, TAU)
+                r0, r1 = rs.uniform(14, 24), rs.uniform(36, 56)
+                core = np.maximum(core, streak(pad, (W / 2 + math.cos(a) * r0, cy + math.sin(a) * r0), (W / 2 + math.cos(a) * r1, cy + math.sin(a) * r1), 2.4, fl))
+        core = np.maximum(core, star4(pad, W / 2, H / 2, 34 * fl, fl, rot=0.0, thin=0.1, diag=0.4))
+    # 흩어짐: 몸에 구멍이 나며 독 안개로
+    mist = CO_MIST[f]
+    if mist > 0:
+        X, Y = pad.grid()
+        nz = fbm(X / 22.0, Y / 22.0, seed=91 + f, octaves=3)
+        holes = clamp01((nz + 0.15 - mist * 0.55) * 4.0)
+        core = core * holes
+        glow = np.maximum(glow * holes, gblur(body, 6.0 * SS) * 0.5 * mist * A)
+    g, cc = finish(pad, glow, core, halo=((1.4, 0.5), (3.5, 0.38), (8.0, 0.24)), body_k=0.9, core_bloom=((1.2, 0.35), (3.0, 0.25)), win=4.0)
+    return g, cc
+
+
+sprite("rfx_jcoil", "direction_z", 256, 256, CO_N, 4, "trickster", zoom=0,
+       desc="요르문간드의 똬리 (땅에 누움 — 그림 위 = 길이 뻗는 쪽): 0 ~ 1 뱀이 미끄러져 세로 8 자 (S 로 갔다 거꾸로 된 S 로 되돌아온 길) 를 그림 · 2 ~ 4 비늘 마루가 흐르며 "
+       "조여 듦 → 5 조이는 섬광 (두 고리 가운데의 빛 고리 · 불티) → 6 ~ 7 몸에 구멍이 나며 독 안개로 흐려짐")(coil_frame)
+
+
+# ------------------------------------------------------------ rfx_jmirror (환영이 깨지는 거울 조각 — 카메라를 봄, 칸 가운데 = 깨진 자리)
+
+MI_N = 6
+MI_P = [0.0, 0.2, 0.46, 0.7, 0.88, 1.0]
+MI_A = [1.0, 1.0, 0.95, 0.8, 0.55, 0.28]
+_R = random.Random(9200)
+MI_SHARDS = []
+for _i in range(18):
+    _a = _i * TAU / 18 + _R.uniform(-0.2, 0.2)
+    _nv = _R.choice((3, 3, 4))
+    _sz = _R.uniform(7, 16)
+    _poly = [(_R.uniform(0.6, 1.0) * _sz * math.cos(k * TAU / _nv + _R.uniform(-0.3, 0.3)), _R.uniform(0.6, 1.0) * _sz * math.sin(k * TAU / _nv + _R.uniform(-0.3, 0.3)))
+             for k in range(_nv)]
+    MI_SHARDS.append((_a, _R.uniform(0.45, 1.0), _poly, _R.uniform(0, TAU), _R.uniform(-2.5, 2.5), _R.random() < 0.45))
+
+
+def mirror_frame(f, S=192):
+    pad = Pad(S, S)
+    c = S / 2
+    p, A = MI_P[f], MI_A[f]
+    glow = pad.zeros()
+    core = pad.zeros()
+    rs = random.Random(9210 + f)
+    if f == 0:
+        # 금 간 거울 (사람 키 렌즈 꼴 빛) · 가운데에서 뻗는 금 · 번쩍
+        pane = lens(pad, (c, c - 62), (c, c + 62), 52, 0.55, power=0.5)
+        glow = np.maximum(glow, pane)
+        core = np.maximum(core, rim_of(pane > 0.2, 1.6) * 0.8)
+        for i in range(9):
+            a = i * TAU / 9 + rs.uniform(-0.2, 0.2)
+            pts = [(c, c)]
+            r = 0.0
+            while r < 55:
+                r += rs.uniform(7, 12)
+                aa = a + rs.uniform(-0.3, 0.3)
+                pts.append((c + math.cos(aa) * r * 0.55, c + math.sin(aa) * r))
+            core = np.maximum(core, pad.stroke(pts, 2.0, 0.6, a0=1.0, a1=0.5))
+        core = np.maximum(core, star4(pad, c, c, 30, 1.0, rot=0.2, thin=0.1, diag=0.5))
+        glow = np.maximum(glow, pad.radial(c, c, 40, 1.4) * 0.8)
+    else:
+        # 조각: 사방으로 튀며 돌고 작아짐 — 면 (빛) · 테 (심지) · 몇 조각에 반짝임
+        for (a, k, poly, r0, spin, sh) in MI_SHARDS:
+            r = 8 + 74 * (p ** 0.75) * k
+            x, y = c + math.cos(a) * r, c + math.sin(a) * r
+            rot = r0 + spin * p
+            sc = 1.0 - 0.45 * p
+            cr, sr = math.cos(rot), math.sin(rot)
+            pts = [(x + (px * cr - py * sr) * sc, y + (px * sr + py * cr) * sc) for px, py in poly]
+            m = pad.poly(pts, 1.0)
+            glow = np.maximum(glow, m * 0.6 * A)
+            core = np.maximum(core, rim_of(m, 1.5) * 0.95 * A)
+            if sh and f <= 4:
+                core = np.maximum(core, star4(pad, x, y, 7 * A, A, rot=rot, thin=0.12, diag=0.0))
+            # 날아가는 꼬리 (가는 빛 줄)
+            if f <= 3:
+                r_tail = max(4, r - 18)
+                glow = np.maximum(glow, pad.stroke([(c + math.cos(a) * r_tail, c + math.sin(a) * r_tail), (x, y)], 0.5, 3.0, a0=0.0, a1=0.45 * A, soft=1.2))
+        if f <= 2:
+            fl = 1.0 if f == 1 else 0.45
+            core = np.maximum(core, star4(pad, c, c, 26 * fl, fl, rot=0.6, thin=0.1, diag=0.4))
+            glow = np.maximum(glow, pad.radial(c, c, 30 + 20 * p, 1.3) * 0.7 * fl)
+            core = np.maximum(core, pad.stroke(arc_pts(c, c, 18 + 60 * p, 0, TAU, n=48), 2.6 * fl, a0=0.8 * fl))
+        for _ in range(10 if f >= 3 else 4):
+            a = rs.uniform(0, TAU)
+            r = rs.uniform(20, 80) * (0.5 + p)
+            core = np.maximum(core, star4(pad, c + math.cos(a) * min(r, 84), c + math.sin(a) * min(r, 84), rs.uniform(2, 4.5), A * rs.uniform(0.5, 1.0), diag=0.0))
+    g, cc = finish(pad, glow, core, halo=((1.4, 0.5), (3.5, 0.4), (8.0, 0.24)), body_k=0.9, core_bloom=((1.2, 0.35), (3.0, 0.25)), win=4.0)
+    return g, cc
+
+
+sprite("rfx_jmirror", "rotate_xyz", 192, 192, MI_N, 6, "illusion", zoom=1,
+       desc="환영이 깨지는 거울 조각: 0 금 간 렌즈 꼴 빛 (사람 키) · 가운데에서 뻗는 금 · 번쩍 → 1 ~ 3 조각 열여섯이 돌며 사방으로 튐 (면 = 빛 · 테 = 심지 · 몇 조각 반짝임 · "
+       "가는 꼬리) → 4 ~ 5 작아지며 흐려짐 · 반짝이 티끌")(mirror_frame)
+
+
+# ------------------------------------------------------------ rfx_jdawn (다시 뜨는 해 — 카메라를 봄, 칸 가운데 = 해 가운데)
+
+DW_N = 8
+DW_R = 62.0
+# 장마다: 밝아진 몫 (원판 안 — 구슬 쪽부터) · 빛살 길이 · 퍼지는 고리 · 밝기
+DW_LIT = [0.0, 0.0, 0.3, 0.62, 1.0, 1.0, 1.0, 1.0]
+DW_RAY = [0.0, 40.0, 92.0, 118.0, 134.0, 128.0, 104.0, 70.0]
+DW_RING = [0.0, 0.0, 0.0, 0.0, 0.0, 84.0, 112.0, 134.0]
+DW_A = [0.85, 1.0, 1.0, 1.0, 1.0, 0.95, 0.7, 0.4]
+_R = random.Random(9300)
+DW_RAYS = [(i * TAU / 16 + _R.uniform(-0.06, 0.06), _R.uniform(0.6, 1.0), _R.uniform(2.2, 3.6)) for i in range(16)]
+
+
+def dawn_frame(f, S=320):
+    pad = Pad(S, S)
+    c = S / 2
+    A = DW_A[f]
+    glow = pad.zeros()
+    core = pad.zeros()
+    X, Y = pad.grid()
+    rr = np.sqrt((X - c) ** 2 + (Y - c) ** 2)
+    th = np.arctan2(Y - c, X - c)
+    bead = -math.pi / 4  # 오른쪽 위 (화면 y 가 아래로 + 이므로 -45°)
+    bx, by = c + math.cos(bead) * DW_R, c + math.sin(bead) * DW_R
+    # 코로나: 원판 둘레의 일렁이는 빛 (가려진 원판 안은 비움 — 하늘색)
+    nz = fbm(np.cos(th) * 3 + 10, np.sin(th) * 3 + 10, seed=93, octaves=3)
+    streamer = clamp01(0.55 + 0.6 * nz)
+    corona = np.exp(-np.maximum(0, rr - DW_R) / (22.0 + 26.0 * streamer)) * (rr >= DW_R - 1) * (0.75 if f >= 1 else 0.6)
+    lit = DW_LIT[f]
+    disk = clamp01((DW_R - rr) * SS * 0.25 + 0.5)
+    if lit > 0:
+        # 구슬 쪽부터 밝아지는 원판 (낫 꼴 → 반 → 가득)
+        ux, uy = math.cos(bead), math.sin(bead)
+        proj = ((X - c) * ux + (Y - c) * uy) / DW_R
+        cres = clamp01((proj - (1 - 2 * lit)) * 3.0) * disk
+        core = np.maximum(core, cres * A)
+        glow = np.maximum(glow, cres * A)
+    glow = np.maximum(glow, corona * A * (1.0 - 0.4 * lit))
+    if f <= 4:
+        ring = clamp01(1 - np.abs(rr - DW_R) * SS * 0.2) * A
+        core = np.maximum(core, ring * (0.9 if f <= 1 else 0.6))
+    if f >= 1 and f <= 5:
+        # 다이아몬드 구슬 · 큰 네 뿔 별
+        k = 1.0 if f == 1 else max(0.3, 1 - 0.2 * (f - 1))
+        core = np.maximum(core, pad.disc_field(bx, by, 9 + 7 * k, soft=3) * A)
+        core = np.maximum(core, star4(pad, bx, by, 80 * k, A, rot=0.12, thin=0.07, diag=0.35))
+        glow = np.maximum(glow, pad.radial(bx, by, 60 * k, 1.2) * A)
+    ray_len = DW_RAY[f]
+    if ray_len > 0:
+        for a, kk, w in DW_RAYS:
+            L = ray_len * kk
+            r0 = DW_R * (0.7 if lit >= 1 else 1.04)
+            p0 = (c + math.cos(a) * r0, c + math.sin(a) * r0)
+            p1 = (c + math.cos(a) * (DW_R + L), c + math.sin(a) * (DW_R + L))
+            core = np.maximum(core, pad.stroke([p0, p1], w, 0.4, a0=0.9 * A, a1=0.0))
+            glow = np.maximum(glow, pad.stroke([p0, p1], w * 3.2, 1.0, a0=0.55 * A, a1=0.0, soft=2.5))
+    if lit >= 1:
+        glow = np.maximum(glow, pad.radial(c, c, DW_R * 2.1, 1.1) * 0.8 * A)
+    ring_r = DW_RING[f]
+    if ring_r > 0:
+        core = np.maximum(core, pad.stroke(arc_pts(c, c, ring_r, 0, TAU, n=96), 3.4 * A, a0=0.85 * A))
+        glow = np.maximum(glow, pad.stroke(arc_pts(c, c, ring_r, 0, TAU, n=96), 14.0, a0=0.5 * A, soft=5.0))
+    g, cc = finish(pad, glow, core, halo=((2.0, 0.5), (5.0, 0.38), (12.0, 0.26)), body_k=0.9, core_bloom=((1.5, 0.4), (4.0, 0.3)), win=5.0)
+    return g, cc
+
+
+sprite("rfx_jdawn", "rotate_xyz", 320, 320, DW_N, 4, "dawn", zoom=1,
+       desc="다시 뜨는 해: 0 가려진 해의 가는 테 · 일렁이는 코로나 (원판 안은 빔) → 1 오른쪽 위가 번쩍 (다이아몬드 고리 · 큰 네 뿔 별) → 2 ~ 4 구슬 쪽부터 원판이 밝아지며 "
+       "빛살 열여섯이 뻗음 → 5 ~ 7 가득 찬 해 · 큰 빛 고리가 퍼지며 흐려짐")(dawn_frame)
+
+
+# ------------------------------------------------------------ rfx_jlightbloom (빛 꽃 — 카메라를 봄, 칸 가운데 = 꽃 가운데)
+
+LB_N = 8
+# 장마다: 열린 몫 · 바깥으로 날아간 거리 · 밝기 · 가운데 별 · 돎 (도)
+LB_OPEN = [0.12, 0.48, 0.8, 1.0, 1.0, 1.0, 1.0, 1.0]
+LB_FLY = [0.0, 0.0, 0.0, 0.0, 0.0, 14.0, 30.0, 46.0]
+LB_A = [0.8, 0.95, 1.0, 1.0, 1.0, 0.85, 0.55, 0.25]
+LB_STAR = [0.3, 0.5, 0.7, 0.9, 1.0, 0.8, 0.35, 0.0]
+LB_ROT = [0.0, 3.0, 6.0, 8.0, 11.0, 14.0, 17.0, 20.0]
+
+
+def _petal_mask(pad, c, ang, r0, L, w):
+    p0 = (c + math.cos(ang) * r0, c + math.sin(ang) * r0)
+    p1 = (c + math.cos(ang) * (r0 + L), c + math.sin(ang) * (r0 + L))
+    return lens(pad, p0, p1, w, 1.0, power=0.55, skew=0.62), p0, p1
+
+
+def lightbloom_frame(f, S=256):
+    pad = Pad(S, S)
+    c = S / 2
+    rs = random.Random(9400 + f)
+    o, fly, A, sk, rot = LB_OPEN[f], LB_FLY[f], LB_A[f], LB_STAR[f], math.radians(LB_ROT[f])
+    st = Stack(pad)
+    X, Y = pad.grid()
+    rr = np.sqrt((X - c) ** 2 + (Y - c) ** 2)
+    # 빛살 (꽃잎 뒤 — 활짝 필 때): 가는 빛줄기 열둘
+    if o >= 0.8 and fly <= 0:
+        for i in range(12):
+            a = rot * 2 + i * TAU / 12 + math.pi / 12
+            p1 = (c + math.cos(a) * 118, c + math.sin(a) * 118)
+            st.add_core(pad.stroke([(c, c), p1], 1.6, 0.3, a0=0.45 * A * sk, a1=0.0))
+            st.body = np.maximum(st.body, pad.stroke([(c, c), p1], 6.0, 1.0, a0=0.3 * A, a1=0.0, soft=2.0))
+    # 겹꽃잎: 바깥 여섯 (길게) → 안 여섯 (30° 돌려 짧게 — 앞에 덮음). 꽃잎 몸은 밑동이 밝고 끝으로 옅어짐 (빛)
+    shrink = 1 - 0.5 * fly / 46.0
+    for layer, (n, Lmax, wmax, off, br) in enumerate(((6, 90.0, 44.0, 0.0, 0.5), (6, 60.0, 34.0, math.pi / 6, 0.68))):
+        L = Lmax * (0.32 + 0.68 * o) * shrink
+        w = wmax * (0.42 + 0.58 * o) * shrink
+        r0 = 6.0 + fly * (1.0 if layer == 0 else 0.75)
+        for i in range(n):
+            ang = rot + off + i * TAU / n - math.pi / 2
+            m, p0, p1 = _petal_mask(pad, c, ang, r0, L, w)
+            grad = clamp01(1.15 - (rr - r0) / max(1.0, L)) * m
+            vein = pad.stroke([p0, ((p0[0] * 0.25 + p1[0] * 0.75), (p0[1] * 0.25 + p1[1] * 0.75))], 1.6, 0.6, a0=0.75, a1=0.15) * m
+            st.over(m, br * A * (0.55 + 0.45 * grad), (rim_of(m, 1.8) * 0.95 + vein * 0.6 + grad * 0.35) * A)
+    # 가운데: 빛 심 (꽃술 점 여섯) · 네 뿔 별
+    st.add_core(pad.disc_field(c, c, 8 + 4 * o, soft=2.5) * A)
+    for i in range(6):
+        a = rot + i * TAU / 6
+        st.add_core(pad.disc_field(c + math.cos(a) * 13 * o, c + math.sin(a) * 13 * o, 2.4, soft=0.8) * A * o)
+    if sk > 0:
+        st.add_core(star4(pad, c, c, 30 + 26 * sk, sk, rot=rot, thin=0.09, diag=0.45))
+    glow_extra = pad.down(pad.radial(c, c, 70 + 20 * o, 1.3)) * 0.55 * A
+    # 반짝이: 피어 있을 때 둘레를 돌고, 터지면 사방으로
+    for i in range(10):
+        a = i * TAU / 10 + rot * 3
+        r = (74 + 8 * math.sin(i)) if fly <= 0 else (60 + fly * 1.1 + rs.uniform(-6, 6))
+        if o < 0.7:
+            continue
+        x, y = c + math.cos(a) * min(r, 118), c + math.sin(a) * min(r, 118)
+        st.add_core(star4(pad, x, y, rs.uniform(3, 6), A * rs.uniform(0.6, 1.0), rot=rs.uniform(0, 1), diag=0.0))
+    if fly > 0:
+        st.add_core(pad.stroke(arc_pts(c, c, 30 + fly * 1.4, 0, TAU, n=64), 2.4 * A + 0.5, a0=0.7 * A))
+    core1 = pad.down(st.core)
+    glow1 = obj_glow(pad, st.body, core1, halo=((1.4, 0.5), (3.5, 0.38), (8.0, 0.24)), body_k=0.92, core_bloom=((1.4, 0.32), (3.5, 0.24)))
+    glow1 = screen(glow1, glow_extra)
+    wb = win_border(core1.shape, 4.0)
+    return clamp01(glow1) * wb, clamp01(core1) * wb
+
+
+sprite("rfx_jlightbloom", "rotate_xyz", 256, 256, LB_N, 4, "bladedancer", zoom=0,
+       desc="빛 꽃: 0 ~ 2 겹꽃잎 (바깥 여섯 · 안 여섯) 봉오리가 열림 → 3 ~ 4 활짝 핀 빛 꽃 (꽃잎 테 · 잎맥 · 가운데 꽃술 · 네 뿔 별 · 둘레를 도는 반짝이) → 5 ~ 7 꽃잎이 "
+       "바깥으로 날아가며 작아지고 퍼지는 빛 고리 · 흩어지는 반짝이")(lightbloom_frame)
+
+
+# ------------------------------------------------------------ rfx_jribbon (빛 리본 — 땅과 나란히 누움, 이어 돌림, 칸 가운데 = 몸)
+
+RB_N = 8
+RB_R = 108.0
+
+
+def ribbon_frame(f, S=256):
+    pad = Pad(S, S)
+    c = S / 2
+    glow = pad.zeros()
+    core = pad.zeros()
+    ph = f / RB_N
+    for band in range(2):
+        a0 = TAU * ph + band * math.pi
+        span = math.radians(165)
+        n = 72
+        pts = []
+        for i in range(n + 1):
+            t = i / n
+            a = a0 + span * t
+            r = RB_R + 5.5 * math.sin(TAU * (2 * t + ph)) - 6.0 * (1 - t)
+            pts.append((c + math.cos(a) * r, c + math.sin(a) * r))
+
+        def wf(t, band=band):
+            twist = 0.42 + 0.58 * abs(math.cos(math.pi * (2.6 * t + ph * 2 + band * 0.5)))
+            return 12.5 * (math.sin(math.pi * min(1.0, t * 1.08)) ** 0.7) * twist * (0.35 + 0.65 * t)
+        m = pad.poly(taper_poly(pts, wf), 1.0)
+        # 앞 (머리 — 진행 쪽) 이 밝고 꼬리로 옅어짐
+        d, s = pad.line_field(pts, 16)
+        fade = clamp01(s * 1.25) ** 1.2
+        glow = np.maximum(glow, m * fade * 0.8)
+        core = np.maximum(core, rim_of(m, 1.7) * fade * 0.95)
+        core = np.maximum(core, pad.stroke(pts[int(n * 0.35):], 1.4, 2.2, a0=0.25, a1=0.85) * m)
+        # 머리 반짝임 · 꼬리에서 떨어지는 반짝이
+        hx, hy = pts[-1]
+        core = np.maximum(core, star4(pad, hx, hy, 9.0, 1.0, rot=a0, thin=0.12, diag=0.3))
+        rs = random.Random(9500 + band)
+        for k in range(6):
+            t = (rs.random() + ph * 0.9) % 0.6
+            px, py = pts[int(t * n)]
+            core = np.maximum(core, star4(pad, px + rs.uniform(-4, 4), py + rs.uniform(-4, 4), rs.uniform(2, 3.6), 0.4 + 0.5 * t, diag=0.0))
+    g, cc = finish(pad, glow, core, halo=((1.4, 0.5), (3.5, 0.38), (8.0, 0.22)), body_k=0.9, core_bloom=((1.2, 0.3), (3.0, 0.22)), win=4.0)
+    return g, cc
+
+
+sprite("rfx_jribbon", "direction_z", 256, 256, RB_N, 4, "bladedancer", zoom=0, loop=True,
+       desc="빛 리본 (땅과 나란히 누움 — 이어 돌림, 장마다 45°): 몸 둘레를 휘감아 도는 두 띠 (반지름 108 = 반 크기 × 0.85 · 끝이 가늘고 비틀려 폭이 바뀜 · 머리가 밝고 꼬리로 "
+       "옅어짐) · 머리 반짝임 · 꼬리에서 떨어지는 반짝이")(ribbon_frame)
+
+
+# ------------------------------------------------------------ rfx_jfairy (요정 날개 — 등 뒤, 이어 돌림 4장 날갯짓, 날개 뿌리 = 칸 가운데 조금 아래)
+
+FA_N = 4
+FA_SPREAD = [1.0, 0.86, 0.7, 0.86]
+FA_LIFT = [0.0, 3.0, 6.0, 3.0]
+
+
+def _wing_outline(root, sg, kx, lift, pts_rel):
+    """뿌리 root 에서 상대 점들 (x 는 바깥쪽 +) 을 지나는 매끈한 닫힌 날개 (베지어 고리)"""
+    rx, ry = root
+    P = [(rx + sg * x * kx, ry + y - lift * (abs(y) / 80.0)) for x, y in pts_rel]
+    out = []
+    m = len(P)
+    for i in range(m):
+        p0 = P[i]
+        p1 = P[(i + 1) % m]
+        p2 = P[(i + 2) % m]
+        a = ((p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2)
+        b = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+        out += bez(a, p1, b, 12)[:-1]
+    return out, P
+
+
+def fairy_frame(f, W=256, H=192):
+    pad = Pad(W, H)
+    root = (W / 2, H * 0.53)
+    kx, lift = FA_SPREAD[f], FA_LIFT[f]
+    glow = pad.zeros()
+    core = pad.zeros()
+    UP = [(4, -4), (30, -44), (70, -78), (110, -92), (118, -78), (96, -40), (56, -12)]
+    LO = [(4, 4), (36, 12), (68, 36), (84, 62), (70, 70), (30, 40)]
+    for sg in (-1, 1):
+        for shape, br in ((UP, 0.46), (LO, 0.4)):
+            outline, P = _wing_outline(root, sg, kx, lift if shape is UP else -lift * 0.5, shape)
+            m = pad.poly(outline, 1.0)
+            # 비치는 막 (가장자리로 갈수록 짙음) · 밝은 테 · 날개맥 · 끝 반짝임
+            rim_w = rim_of(m, 9.0)
+            glow = np.maximum(glow, m * (br * 0.42) + rim_w * br * 0.7)
+            core = np.maximum(core, rim_of(m, 1.6) * 0.95)
+            tip = max(P, key=lambda q: math.hypot(q[0] - root[0], q[1] - root[1]))
+            # 날개맥: 뿌리에서 부채처럼 퍼지는 여섯 · 그 사이를 잇는 가로맥 두 줄 (잠자리 · 요정 날개)
+            ends = [P[1 + k * (len(P) - 2) // 6] for k in range(6)]
+            veins = []
+            for tgt in ends:
+                mid = ((root[0] + tgt[0]) / 2 + sg * 5, (root[1] + tgt[1]) / 2 - 3)
+                vein = bez(root, mid, (tgt[0] * 0.94 + root[0] * 0.06, tgt[1] * 0.94 + root[1] * 0.06), 16)
+                veins.append(vein)
+                core = np.maximum(core, pad.stroke(vein, 1.2, 0.45, a0=0.5, a1=0.18) * m)
+            for frac in (0.45, 0.72):
+                cross = [v[int(frac * (len(v) - 1))] for v in veins]
+                core = np.maximum(core, pad.stroke(cross, 0.9, a0=0.32) * m)
+            core = np.maximum(core, star4(pad, tip[0], tip[1], 8 + 2 * (1 - kx) * 10, 0.9, rot=0.3, thin=0.12, diag=0.0))
+    core = np.maximum(core, pad.disc_field(root[0], root[1], 4.0, soft=1.5))
+    core = np.maximum(core, star4(pad, root[0], root[1], 14, 0.85, rot=0.0, diag=0.0))
+    # 떨어지는 빛 가루 (이어 돌림 — 장마다 조금씩 내려감)
+    rnd = random.Random(9600)
+    for i in range(10):
+        x0 = W / 2 + rnd.choice((-1, 1)) * rnd.uniform(24, 108)
+        t = (rnd.random() + f / FA_N) % 1.0
+        y = H * 0.6 + 64 * t
+        core = np.maximum(core, star4(pad, x0 + 4 * math.sin(t * 6 + i), y, 2.4 + 2 * rnd.random(), math.sin(math.pi * t) * 0.85, diag=0.0))
+    g, cc = finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.34), (9.0, 0.2)), body_k=0.95, core_bloom=((1.4, 0.3), (3.5, 0.22)), win=4.0)
+    return g, cc
+
+
+sprite("rfx_jfairy", "direction_z", 256, 192, FA_N, 4, "bladedancer", zoom=2, loop=True,
+       desc="요정 날개 (등 뒤 — 이어 돌림 4장 날갯짓): 비치는 두 쌍 (위 길고 뾰족한 날개 · 아래 작은 날개 — 가장자리로 짙어지는 막 · 밝은 테 · 부채꼴 날개맥 여섯 · "
+       "가로맥 두 줄 · 끝 반짝임) · 뿌리 섬광 · 떨어지는 빛 가루")(fairy_frame)
+
+
 # ============================================================ 실행
 
 def main():

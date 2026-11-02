@@ -48,7 +48,8 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j);
         double claw = JobTraits6.clawMult(sp, j);
         double hex = JobTraits7.runeMult(sp, e, j); // 0.51.0 헥스 블레이드 뒤집힌 룬 (그 적의 저주 룬 하나당 +12% — 들어가면 터뜨림)
-        double dmg = P * mult * veil * crit * claw * hex * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위 (하나당 +6%)
+        double dmg = P * mult * veil * crit * claw * hex * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
@@ -71,6 +72,7 @@ public final class JobKit {
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 · 상처
         JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 라이칸 야성 · 할퀴기 자국
         JobTraits7.afterJobHit(sp, e, j, got); // 0.51.0 헥스 블레이드 — 저주 룬을 터뜨림 (다섯이면 묶음)
+        JobTraits10.afterJobHit(sp, e, j, got); // 0.51.0 블레이드 댄서 — 스킬 쪽 맞힘 (평타와 번갈아 춤사위)
         return got;
     }
 
@@ -105,7 +107,8 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
         double claw = JobTraits6.clawMult(sp, j); // 0.51.0 라이칸 할퀴기
         double hex = JobTraits7.runeMult(sp, e, j); // 0.51.0 헥스 블레이드 뒤집힌 룬
-        double dmg = P * mult * veil * crit * claw * hex * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위
+        double dmg = P * mult * veil * crit * claw * hex * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
@@ -128,6 +131,7 @@ public final class JobKit {
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 · 상처
         JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 라이칸 야성 · 할퀴기 자국
         JobTraits7.afterJobHit(sp, e, j, got); // 0.51.0 헥스 블레이드 — 저주 룬을 터뜨림 (다섯이면 묶음)
+        JobTraits10.afterJobHit(sp, e, j, got); // 0.51.0 블레이드 댄서 — 스킬 쪽 맞힘 (평타와 번갈아 춤사위)
         return got;
     }
 

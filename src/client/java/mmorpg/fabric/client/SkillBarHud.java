@@ -345,8 +345,8 @@ public final class SkillBarHud {
                             g.fill(bx + 4, by + 1, bx + 5, by + 4, c);
                             g.fill(bx + 2, by + 2, bx + 3, by + 3, i < v ? 0xFFFFFFFF : dim);
                         }
-                        case "assassin" -> {
-                            // 꽃 (5 × 5): 둥근 어두운 바탕 · 찬 것은 꽃잎 여덟 점 (첫째 빛) + 가운데 흰 점
+                        case "assassin", "trickster" -> {
+                            // 꽃 (5 × 5): 둥근 어두운 바탕 · 찬 것은 꽃잎 여덟 점 (첫째 빛) + 가운데 흰 점 (0.51.0 트릭스터도 — 최대 7)
                             g.fill(bx + 1, by, bx + 4, by + 5, 0xC0000000);
                             g.fill(bx, by + 1, bx + 5, by + 4, 0xC0000000);
                             if (i < v) {
@@ -464,6 +464,16 @@ public final class SkillBarHud {
                             for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
                             for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
                             g.fill(bx + 2, ty + 2, bx + 3, ty + 3, i < v ? 0xFFFFFFFF : dim);
+                        }
+                        case "bladedancer" -> {
+                            // 0.51.0 춤사위 (최대 5) — 빛 반짝임 (5 × 5): 십자 빛줄기 (위아래 · 양옆) + 대각 네 점, 찬 것은 첫째 빛 (흰 금빛) + 가운데 흰 점 (가득이면 맥동),
+                            // 오른쪽 아래 1칸 그림자
+                            int c = i < v ? bright : dim;
+                            int ty = y;
+                            int[][] cells = {{2, 0}, {2, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {2, 3}, {2, 4}, {1, 1}, {3, 1}, {1, 3}, {3, 3}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int q = 0; q < cells.length; q++) g.fill(bx + cells[q][0], ty + cells[q][1], bx + cells[q][0] + 1, ty + cells[q][1] + 1, q >= 9 && i < v ? col : c);
+                            if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
                         }
                         case "shadowhunter" -> {
                             // 0.51.0 추격 (최대 5) — 검은 화살촉 (5 × 5, 위가 앞): 뾰족한 촉 · 갈라진 미늘, 찬 것은 첫째 빛 (남보라) + 촉 끝 은빛 (둘째 빛), 오른쪽 아래 1칸 그림자
