@@ -269,7 +269,7 @@ public final class JobTraits10 {
 
     /** 요정 날개 자리 (등 뒤 — 어깨 높이) */
     static Vec3 wingAt(ServerPlayer sp) {
-        return V.up(V.add(sp.position(), Kit.facingOf(sp), -0.32), 1.3);
+        return V.up(V.add(sp.position(), Kit.facingOf(sp), -0.42), 1.4);
     }
 
     /** 태세 연출 (8틱마다 — JobTraits.stanceFx): 눈부신 한낮 = 등 뒤 빛의 요정 날개 (3인칭 · 주인마다 하나) · 손의 섬광 · 1인칭 화면 아래 빛 꽃잎. 그렸으면 true */
@@ -277,7 +277,7 @@ public final class JobTraits10 {
         if (!NOON.equals(stance)) return false;
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
-        JobFx.fairy(level, wingAt(sp), f, 1.2, j, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.85, "solo", 61.0, "phase", (double) ((Tasks.now()
+        JobFx.fairy(level, wingAt(sp), f, 1.6, j, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.85, "solo", 61.0, "phase", (double) ((Tasks.now()
                 / 4) % JobFx.FAIRY)));
         RuneKit.Hand h = RuneKit.handOf(sp);
         JobFx.glint(level, V.up(h.hand(), 0.12), 0.16, j, 0.4, Opt.of("vel", RuneKit.bodyVel(sp)));

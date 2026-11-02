@@ -634,11 +634,11 @@ final class TricksterSkills {
         String life = RuneKit.lifeToken(sp);
         Vec3 home = sp.position();
         Vec3 f0 = Kit.facingOf(sp);
-        Ult.sky(level0, home, "rpg:ult_eclipse", finalAt + 2);
+        Ult.sky(level0, home, "rpg:ult_eclipse", finalAt + 14); // 해가 다시 뜰 때 새벽빛 하늘이 바꿈 (끝나는 쪽이 옅어지기 시작하면 해가 뜨기 전에 밝아졌음 — 영상 1)
         Kit.noFall(sp, finalAt + 30);
         RpgCombat.setSteadfast(sp, finalAt + 10);
-        // 앞 위 하늘의 검은 해 (커지며 나타남 → 코로나 맥동) — 해가 다시 뜰 때까지
-        Vec3 sunAt = V.up(V.add(home, f0, 8), 7.5);
+        // 앞 위 하늘의 검은 해 (커지며 나타남 → 코로나 맥동) — 해가 다시 뜰 때까지. 앞 10칸 · 6칸 위 (31° — 8칸 · 7.5칸 위는 다시 뜨는 해가 화면 위 끝에 잘렸음, 영상 1)
+        Vec3 sunAt = V.up(V.add(home, f0, 10), 6);
         JobFx.eclipse(level0, sunAt, 3.4, j, finalAt / 20.0 + 0.05, Opt.of("alpha", 0.95));
         // 시작: 망토 소용돌이 · 꽃잎 · 어두운 번쩍임 · 1인칭 눈앞 고리
         JobFx.ribbon(level0, V.up(home, 0.9), 1.2, j, 0.5, 26, JobFx.hide1p(sp).with("alpha", 0.95));

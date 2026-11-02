@@ -159,6 +159,10 @@ final class BladedancerSkills {
                 JobFx.ribbon(lv, V.up(to, 0.2), 1.2, j, 0.35, 26, Opt.of("alpha", 0.85));
                 JobFx.petals(lv, V.up(from, 0.9), 5, 2.2, 0.12, j, 0.6, Opt.empty());
                 JobFx.slash(sp, j, 1.8, 0.3, 1.25, ii % 2 == 0 ? 160.0 : 340.0, 0.18);
+                // 3인칭 · 다른 사람: 스텝 자리에 비스듬히 그은 큰 참격 판 · 섬광 (영상 1 — 눈앞 베기만으로는 가는 줄)
+                Vec3 ff = Kit.facingOf(sp);
+                JobFx.slashCard(lv, V.up(V.add(mid, ff, 0.9), 1.0), ff, ii % 2 == 0 ? 20.0 : -20.0, 2.0, 0.28, Vec3.ZERO, j, JobFx.hide1p(sp));
+                JobFx.glint(lv, V.up(V.add(mid, ff, 1.4), 1.1), 0.35, j, 0.3, Opt.empty());
                 SkillFx.play(lv, "entity.player.attack.sweep", mid, 1.5 + ii * 0.1, 0.7);
                 SkillFx.play(lv, "block.amethyst_block.step", mid, 1.6, 0.8);
             });
@@ -215,7 +219,7 @@ final class BladedancerSkills {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         Vec3 f = Kit.facingOf(sp);
-        JobFx.fairy(level, JobTraits10.wingAt(sp), f, 1.2, j, 0.7, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "grow", 0.35, "alpha", 0.9, "solo", 61.0));
+        JobFx.fairy(level, JobTraits10.wingAt(sp), f, 1.6, j, 0.7, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "grow", 0.35, "alpha", 0.9, "solo", 61.0));
         JobFx.lightBloom(level, V.up(V.add(c, f, 0.4), 1.2), 0.8, j, 0.5, JobFx.hide1p(sp));
         JobFx.glint(level, V.up(c, 2.3), 0.5, j, 0.45, JobFx.hide1p(sp));
         JobFx.aura(sp, j, 3.0, 1.0, 0.9);
@@ -261,7 +265,7 @@ final class BladedancerSkills {
         Kit.noFall(sp, finalAt + 30);
         RpgCombat.setSteadfast(sp, finalAt + 10);
         // 시작: 요정 날개 · 빛 꽃 · 빛 리본 · 밝은 번쩍임 · 1인칭 눈앞 고리
-        JobFx.fairy(level0, JobTraits10.wingAt(sp), f0, 1.3, j, 0.6, JobFx.hide1p(sp).with("grow", 0.3, "alpha", 0.9, "solo", 61.0));
+        JobFx.fairy(level0, JobTraits10.wingAt(sp), f0, 1.6, j, 0.6, JobFx.hide1p(sp).with("grow", 0.3, "alpha", 0.9, "solo", 61.0));
         JobFx.ribbon(level0, V.up(home, 0.9), 1.4, j, 0.5, 30, JobFx.hide1p(sp));
         JobFx.lightBloom(level0, V.up(home, 1.3), 1.0, j, 0.5, JobFx.hide1p(sp));
         JobFx.petals(level0, V.up(home, 1.2), 14, 3.0, 0.14, j, 0.9, Opt.empty());
