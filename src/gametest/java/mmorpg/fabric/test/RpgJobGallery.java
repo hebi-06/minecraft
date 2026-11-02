@@ -658,17 +658,17 @@ public final class RpgJobGallery implements FabricClientGameTest {
             ctx.waitTicks(12);
             f.begin(server, k.id(), k.name(), j.name() + " · 스킬 " + (c.slot() + 1) + (c.slot() == 4 ? " (궁극기)" : ""), 2.5);
             f.frames(4);
+            if (TURN_AFTER.contains(k.id())) {
+                // 0.51.0 영상: 과녁을 등지고 씀 (사진첩과 같음) — 영상 카메라는 처음 방향 그대로 몸을 따라가므로 카메라 쪽으로 순간 이동하면 원래 자리의 분신 · 환영과
+                // 과녁이 카메라 앞에 남음 (쓴 뒤 돌아서는 것은 카메라가 돌지 않아 환영이 화면 밖 그대로였음 — 영상 3)
+                ctx.runOnClient(mc -> turn(mc, 180F));
+            }
             ctx.getInput().holdKey(o -> o.keyShift);
             f.frames(2);
             server.runOnServer(s -> beforeCast(player(s), k.id()));
             ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
             f.cast();
             ctx.getInput().releaseKey(o -> o.keyShift);
-            if (TURN_AFTER.contains(k.id())) {
-                // 0.51.0 영상도: 순간 이동이 끝난 뒤 (4틱) 뒤로 돌아섬 — 원래 자리의 분신 · 환영이 보이게 (영상 카메라는 몸 뒤를 따라감)
-                f.frames(4);
-                ctx.runOnClient(mc -> turn(mc, 170F));
-            }
             f.until(c.total());
             if (c.stance() || c.buff()) {
                 boolean ranged = ranged(job);
