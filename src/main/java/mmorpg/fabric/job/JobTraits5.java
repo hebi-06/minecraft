@@ -78,6 +78,8 @@ public final class JobTraits5 {
         double speedSet;
         /** 광란: 마지막으로 저절로 벤 틱 */
         long lastAuto;
+        /** 벼린 칼: 마지막으로 칼날 불티를 그린 틱 */
+        long forgeFx;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -375,6 +377,22 @@ public final class JobTraits5 {
             }
         }
         if (BK.equals(j.id()) && JobTraits.stanceOn(sp, FRENZY)) frenzyAuto(sp, j, st, now);
+        // 벼린 칼 동안 칼날의 금빛 불티 (영상 2: 벼린 뒤 다시 누를 때까지 칼에 아무 표시가 없었음)
+        if (SM.equals(j.id()) && st.forgeUntil > now && now - st.forgeFx >= 6) {
+            st.forgeFx = now;
+            forgeFx(sp, j);
+        }
+    }
+
+    /** 벼린 칼 (6틱마다): 칼날을 따라 오르는 금빛 불티 · 칼끝 반짝임 (칼끝은 1인칭에선 숨김) */
+    private static void forgeFx(ServerPlayer sp, Jobs.Job j) {
+        ServerLevel level = sp.level();
+        RuneKit.Hand h = RuneKit.handOf(sp);
+        for (double s = 0.3; s <= 1.25; s += 0.45) {
+            Vec3 p = V.up(V.add(h.hand(), h.f(), s), 0.12 + s * 0.22);
+            SkillFx.sparks(level, p, SwordmasterSkills.FIRE_CORE, 1, 0.9);
+        }
+        JobFx.glint(level, V.up(V.add(h.hand(), h.f(), 1.15), 0.38), 0.4, j, 0.3, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
     }
 
     /**
