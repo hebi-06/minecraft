@@ -263,4 +263,16 @@ public final class RpgJobTimingTests {
     public void timingNecromancer(GameTestHelper h) {
         probe(h, "necromancer");
     }
+
+    /** 0.51.0 2차 직업 — 궁수 각성 에길(스나이퍼) (꿰뚫는 연사는 뒤로 구른 뒤 무릎 꿇고 쏜 세 발이 한 번에 · 세 번째 화살은 공중 두 발 → 셋째 화살 → 길의 바람) */
+    @GameTest(environment = "mmorpg:jt_sn", maxTicks = 2400)
+    public void timingSniper(GameTestHelper h) {
+        probe(h, "sniper");
+    }
+
+    /** 0.51.0 2차 직업 — 궁수 반전 미르크비드(섀도 헌터) (저주 번짐 · 어둠숲의 사냥은 저주 걸린 과녁이라 받는 피해 × 1.02 · 1.04 — 다 들어감) */
+    @GameTest(environment = "mmorpg:jt_sh", maxTicks = 2400)
+    public void timingShadowhunter(GameTestHelper h) {
+        probe(h, "shadowhunter");
+    }
 }

@@ -226,6 +226,25 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {6, 12, 20, 26, 34, 44, 50, 60, 64, 72}, new int[] {12, 34, 44, 61}, 86, false),
     };
 
+    /**
+     * 0.51.0 에길(스나이퍼) · 미르크비드(섀도 헌터): 사과 겨누기 · 그믐밤은 태세 → 활 평타 (급소 사격 · 그믐밤 치명타), 세 번째 화살은 공중 두 발 → 내려앉아 당김 → 셋째 화살 → 길의 바람,
+     * 어둠숲의 사냥은 가시덤불 → 검은 화살 물결 → 사냥의 화살
+     */
+    private static final Case[] CASES_SN = {
+        new Case(0, new int[] {2, 6, 12, 18, 21}, new int[] {6, 18}, 30, false),
+        new Case(1, new int[] {2, 5, 8, 11}, new int[] {4, 10}, 30, false),
+        new Case(2, new int[] {2, 9, 16, 22, 31}, new int[] {9, 31}, 44, false),
+        new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
+        new Case(4, new int[] {6, 9, 19, 28, 36, 41, 44, 55}, new int[] {9, 30, 41, 55}, 70, false),
+    };
+    private static final Case[] CASES_SH = {
+        new Case(0, new int[] {1, 5, 9, 12}, new int[] {3, 9}, 20, false),
+        new Case(1, new int[] {2, 4, 7, 10}, new int[] {3, 6}, 24, false),
+        new Case(2, new int[] {3, 7, 10, 20, 37, 40}, new int[] {7, 37}, 50, false),
+        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 30, true, false, 4),
+        new Case(4, new int[] {5, 12, 16, 27, 40, 51, 54, 58, 62}, new int[] {12, 27, 51, 58}, 76, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
@@ -233,7 +252,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (RpgProdSmoke.active()) return;
         boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")
                 || RpgFilm.listed("filmjob4") || RpgFilm.listed("filmjob5") || RpgFilm.listed("filmjob6")
-                || RpgFilm.listed("filmjob7")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 일곱째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션)
+                || RpgFilm.listed("filmjob7") || RpgFilm.listed("filmjob8")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 여덟째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수)
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -473,9 +492,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
         ctx.waitTicks(5);
     }
 
-    /** 활 · 완드 직업 (태세 · 강화 뒤 평타 = 오른쪽 클릭) — 0.51.0 아크메이지 · 네크로맨서도 완드 */
+    /** 활 · 완드 직업 (태세 · 강화 뒤 평타 = 오른쪽 클릭) — 0.51.0 아크메이지 · 네크로맨서도 완드, 스나이퍼 · 섀도 헌터는 활 */
     private static boolean ranged(String job) {
-        return job.equals("archer") || job.equals("mage") || job.equals("arcmage") || job.equals("necromancer");
+        return job.equals("archer") || job.equals("mage") || job.equals("arcmage") || job.equals("necromancer") || job.equals("sniper") || job.equals("shadowhunter");
     }
 
     /** 스킬 하나 쓰기 전 (서버): 직업 다시 (앞 칸의 태세 지움) · 재사용 대기 · 체력 · 자원 · 과녁 · 표식 */
@@ -519,6 +538,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
         }
         // 0.51.0 네크로맨서: 다 솟은 망자 하나 — 시체 폭발 (앞 과녁 곁). 자리 바꾸기는 누르기 바로 전에 뒤에 (beforeCast)
         if (id.equals("necromancer_burst")) mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(1.5, -60, 4.0));
+        // 0.51.0 스나이퍼: 호흡 5 (사과 겨누기 뒤 평타는 태세가 8 로) · 섀도 헌터: 추격 3 (그믐밤 동안 그대로)
+        if (id.startsWith("sniper_")) JobTraitsMore.setBreath(sp, 5);
+        if (id.startsWith("shadowhunter_")) mmorpg.fabric.job.JobTraits9.setPursuit(sp, 3);
     }
 
     /**
@@ -529,11 +551,12 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (id.equals("necromancer_swap")) mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, -60, -6.0));
     }
 
-    // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5 · 6 · 7)
+    // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5 · 6 · 7 · 8)
 
-    /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
+    /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
-        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "lycan"}, {"runeknight", "hexblade"}, {"arcmage", "necromancer"}};
+        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "lycan"}, {"runeknight", "hexblade"}, {"arcmage", "necromancer"},
+        {"sniper", "shadowhunter"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
@@ -560,6 +583,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "runeknight", "hexblade" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "arcmage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 5, sp -> JobTraitsMore.setChain(sp, 2));
                         case "necromancer" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 4, sp -> {});
+                        case "sniper" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 8, sp -> JobTraitsMore.setBreath(sp, 5));
+                        case "shadowhunter" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 5, sp -> mmorpg.fabric.job.JobTraits9.setPursuit(sp, 3));
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
                                 sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
                     }
@@ -590,6 +615,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "hexblade" -> CASES_HX;
             case "arcmage" -> CASES_AM;
             case "necromancer" -> CASES_NC;
+            case "sniper" -> CASES_SN;
+            case "shadowhunter" -> CASES_SH;
             default -> CASES_GU;
         };
     }

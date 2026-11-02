@@ -116,7 +116,7 @@ final class ShadowhunterSkills {
 
     /**
      * 그림자 구르기: 옆으로 (움직이는 쪽 — 서 있으면 번갈아) dist 칸을 steps 틱에 구름 (그동안 받는 피해 없음 — JobTraits9.rollFor · 적 사이를 통과) · shotAt 틱에 겨눈 적에게
-     * 그림자 화살 한 발 (활 평타 피해 × arrow — RpgCombat.extraArrow · 치명타 따로) → 맞은 적 저주 + curse · 추격 +1. 묶였거나 옆이 막혀 못 가면 쓰지 않음
+     * 그림자 화살 한 발 (활 평타 피해 × arrow — RpgCombat.extraArrow · 치명타 따로) → 맞은 적 저주 +1 (활 평타 훅) · 추격 +1. 묶였거나 옆이 막혀 못 가면 쓰지 않음
      */
     static boolean roll(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         if (Status.isRooted(sp) || Kit.ridingAny(sp)) {
@@ -174,8 +174,8 @@ final class ShadowhunterSkills {
             SkillFx.play(level, "random.bow", from, 0.9, 0.8);
             Weapon w = RpgCombat.weaponOf(sp.getMainHandItem());
             if (!on || w == null || !"bow".equals(w.type())) return;
-            int t = RpgCombat.extraArrow(sp, target, w, JobUpgrades.num(sp, k, "arrow", 1.5));
-            if (t >= 0) RuneKit.later(t, () -> JobTraits9.addCurse(sp, target, (int) k.num("curse", 1), j));
+            // 맞으면 저주 +1 은 활 평타 훅이 넣음 (JobTraits9.onWeaponHit — 덧쏘기도 활 평타 명중)
+            RpgCombat.extraArrow(sp, target, w, JobUpgrades.num(sp, k, "arrow", 1.5));
         });
         return true;
     }
