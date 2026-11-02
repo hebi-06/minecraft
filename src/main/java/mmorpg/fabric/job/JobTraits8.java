@@ -272,15 +272,17 @@ public final class JobTraits8 {
         Vec3 from = V.up(V.add(ground, f, -4.5), 9);
         Vec3 to = V.up(ground, 0.3);
         double speed = V.len(V.sub(to, from)) / (fall / 20.0);
-        JobFx.fallStar(level, from, to, speed, 0.9, Opt.empty(), NIGHT, GOLD);
+        JobFx.fallStar(level, from, to, speed, 1.8, Opt.empty(), NIGHT, GOLD); // 영상 1 뒤 0.9 → 1.8 (가는 줄로만 보였음)
         SkillFx.play(level, "entity.firework_rocket.launch", from, 0.7, 0.8);
         String life = RuneKit.lifeToken(sp);
         RuneKit.later(fall, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
-            JobFx.starNode(d, V.up(ground, 0.8), 0.9, 6, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
+            JobFx.starNode(d, V.up(ground, 0.8), 1.4, 6, 2, 0.32, false, Opt.empty(), NIGHT, GOLD);
+            JobFx.burst(d, V.up(ground, 0.6), r * 0.55, j, 0.32, Opt.empty());
             JobFx.ring(d, V.up(ground, 0.06), r, j, false, 0.35, Opt.empty());
-            SkillFx.sparks(d, V.up(ground, 0.5), GOLD, 10, 5);
+            SkillFx.shock(d, V.up(ground, 0.1), GOLD, r / 1.8, 0.35);
+            SkillFx.sparks(d, V.up(ground, 0.5), GOLD, 14, 6);
             SkillFx.play(d, "firework.blast", ground, 1.0, 1.0);
             SkillFx.play(d, "random.explode", ground, 1.6, 0.5);
             double P = JobSystem.power(sp, j);

@@ -273,11 +273,12 @@ final class ArcmageSkills {
                 Vec3 a = V.add(pos[0], u, r);
                 Vec3 b = V.add(pos[0], u, -r);
                 pair[0] = new Vec3[] {a, b};
-                JobFx.starNode(level, a, 0.36, 2, 4, 0.12, true, Opt.of("fade", 0.4, "phase", (double) (tt % 4)), NIGHT, GOLD);
-                JobFx.starNode(level, b, 0.36, 2, 4, 0.12, true, Opt.of("fade", 0.4, "phase", (double) ((tt + 2) % 4)), NIGHT, GOLD);
+                // 영상 1 뒤 0.36 → 0.62 · 빛줄기 굵게 (과녁 사이의 작은 점으로만 보였음)
+                JobFx.starNode(level, a, 0.62, 2, 4, 0.12, true, Opt.of("fade", 0.4, "phase", (double) (tt % 4)), NIGHT, GOLD);
+                JobFx.starNode(level, b, 0.62, 2, 4, 0.12, true, Opt.of("fade", 0.4, "phase", (double) ((tt + 2) % 4)), NIGHT, GOLD);
                 if (tt % 2 == 0) {
-                    RuneKit.streak(level, a, b, GOLD, 0.07, 0.14, 0.85, 0);
-                    RuneKit.streak(level, a, b, NIGHT, 0.2, 0.14, 0.4, 0);
+                    RuneKit.streak(level, a, b, GOLD, 0.11, 0.14, 0.9, 0);
+                    RuneKit.streak(level, a, b, NIGHT, 0.32, 0.14, 0.45, 0);
                 }
                 if (tt % 6 == 0) {
                     SkillFx.fx(level, "rpg:arrow_spark", a, Opt.of("dir", V.unit(new Vec3(Kit.rand() - 0.5, 0.6, Kit.rand() - 0.5)), "speed", 1.5, "size", 0.12, "grow",
@@ -305,8 +306,8 @@ final class ArcmageSkills {
                     });
                     if (k.num("slow", 0) > 0) RuneKit.effect(e, "slowness", (int) k.num("slow", 30), 1);
                 }
-                JobFx.starNode(level, a, 0.5, 6, 1, 0.15, false, Opt.empty(), NIGHT, GOLD);
-                JobFx.starNode(level, b, 0.5, 6, 1, 0.15, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.starNode(level, a, 0.85, 6, 1, 0.15, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.starNode(level, b, 0.85, 6, 1, 0.15, false, Opt.empty(), NIGHT, GOLD);
                 SkillFx.play(level, "block.amethyst_block.chime", pos[0], 1.6, 0.7);
             });
         }
@@ -472,14 +473,14 @@ final class ArcmageSkills {
         return true;
     }
 
-    /** 하늘의 별자리 일곱 (과녁 가운데 위 8칸 — 시전자 쪽으로 열린 국자 꼴: 북두칠성) */
+    /** 하늘의 별자리 일곱 (과녁 가운데 위 6칸 — 시전자 쪽으로 열린 국자 꼴: 북두칠성. 영상 1 뒤 8 → 6칸 — 3인칭 화면 위 끝에 잘렸음) */
     static Vec3[] skyStars(Vec3 center, Vec3 back, double radius) {
         Vec3 r = V.rightOf(back);
         double s = Math.min(1.0, radius / 8.0);
         double[][] pts = {{-4.2, -1.6, 0.4}, {-2.4, -0.8, 0.9}, {-0.8, -0.2, 0.3}, {0.9, 0.0, 0.0}, {1.6, 1.6, 0.6}, {3.6, 1.2, 0.2}, {3.2, -0.6, 0.8}};
         Vec3[] out = new Vec3[pts.length];
         for (int i = 0; i < pts.length; i++) {
-            out[i] = V.up(V.add(V.add(center, r, pts[i][0] * s * 1.3), back, pts[i][1] * s * 1.3), 8.0 + pts[i][2]);
+            out[i] = V.up(V.add(V.add(center, r, pts[i][0] * s * 1.3), back, pts[i][1] * s * 1.3), 6.0 + pts[i][2]);
         }
         return out;
     }
@@ -550,11 +551,11 @@ final class ArcmageSkills {
                     to = new Vec3(g.x, RuneKit.groundAt(d, g, center.y) + 0.3, g.z);
                 }
                 Vec3 from = sky[ii % sky.length];
-                JobFx.fallStar(d, from, to, V.len(V.sub(to, from)) / (fall / 20.0), 1.0, Opt.empty(), NIGHT, GOLD);
+                JobFx.fallStar(d, from, to, V.len(V.sub(to, from)) / (fall / 20.0), 1.6, Opt.empty(), NIGHT, GOLD); // 영상 1 뒤 1.0 → 1.6 (가는 줄로만 보였음)
                 SkillFx.play(d, "entity.firework_rocket.launch", from, 1.3, 0.5);
                 RuneKit.later(fall, () -> {
-                    JobFx.starNode(d, to, 0.7, 6, 2, 0.28, false, Opt.empty(), NIGHT, GOLD);
-                    SkillFx.sparks(d, to, GOLD, 6, 4);
+                    JobFx.starNode(d, to, 1.0, 6, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
+                    SkillFx.sparks(d, to, GOLD, 8, 5);
                     SkillFx.play(d, "firework.blast", to, 1.2 + 0.03 * ii, 0.6);
                 });
             });

@@ -417,6 +417,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 }
                 ctx.getInput().holdKey(o -> o.keyShift);
                 ctx.waitTicks(2);
+                server.runOnServer(s -> beforeCast(player(s), k.id()));
                 ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
                 ctx.getInput().releaseKey(o -> o.keyShift);
                 int t = 0;
@@ -516,9 +517,16 @@ public final class RpgJobGallery implements FabricClientGameTest {
             JobTraitsMore.setChain(sp, 4);
             mmorpg.fabric.job.JobTraits8.testStars(sp, 4);
         }
-        // 0.51.0 네크로맨서: 다 솟은 망자 하나 — 자리 바꾸기 (왼쪽 앞 · 보는 쪽) · 시체 폭발 (앞 과녁 곁)
-        if (id.equals("necromancer_swap")) mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-2.0, -60, 5.0));
+        // 0.51.0 네크로맨서: 다 솟은 망자 하나 — 시체 폭발 (앞 과녁 곁). 자리 바꾸기는 누르기 바로 전에 뒤에 (beforeCast)
         if (id.equals("necromancer_burst")) mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(1.5, -60, 4.0));
+    }
+
+    /**
+     * 0.51.0 키를 누르기 바로 전 (서버): 자리 바꾸기 — 뒤 6.5칸에 망자 하나 (미리 세우면 과녁에게 달려가 앞으로 바꿈 · 영상 1 은 과녁 무리 한가운데로 가 뼈 방벽이
+     * 카메라 뒤에 솟았음) → 뒤로 물러나고 떠난 자리 (과녁 앞) 에 망자 · 뼈 방벽
+     */
+    private static void beforeCast(ServerPlayer sp, String id) {
+        if (id.equals("necromancer_swap")) mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, -60, -6.0));
     }
 
     // ------------------------------------------------------------ 0.48.2 스킬 영상 (only=film,filmjob1 · 2 · 3 · 4 · 5 · 6 · 7)
@@ -599,6 +607,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             f.frames(4);
             ctx.getInput().holdKey(o -> o.keyShift);
             f.frames(2);
+            server.runOnServer(s -> beforeCast(player(s), k.id()));
             ctx.getInput().pressKey(MmorpgClient.skillKeys[c.slot()]);
             f.cast();
             ctx.getInput().releaseKey(o -> o.keyShift);
