@@ -886,6 +886,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             z.add(dummy(h, 2, 4));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0])); // 튀는 별빛 · 별의 비는 둘레의 적에게 나뉨 — 앞 시험이 남긴 몹이 받지 않게
             JobTraitsMore.setChain(sp, 0);
             h.assertTrue(JobSkills.press(sp, 0), "별무리 마탄 cast");
         }));
@@ -975,6 +976,7 @@ public final class RpgJobAdvanceTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 5));
+            RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
             JobTraitsMore.setChain(sp, 0);
             mark[1] = sp.getY();
@@ -1005,6 +1007,7 @@ public final class RpgJobAdvanceTests {
         Jobs.Job j = Jobs.job("necromancer");
         NecroCrew.PASSIVE.add(sp.getUUID());
         List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 3)));
+        RpgJobTests.clearStrays(h, z.get(0)); // 망자가 노리는 적 · 선원이 덮칠 적이 앞 시험이 남긴 몹이 되지 않게
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0, 0};
         Husk[] victim = {null};
@@ -1034,16 +1037,20 @@ public final class RpgJobAdvanceTests {
             var x = NecroCrew.bodies(sp).get(0);
             h.assertTrue(x.entityTags().contains(mmorpg.fabric.mob.TyrfingWarrior.TAG) && x.entityTags().contains("naglfar_crew")
                     && !mmorpg.fabric.skill.Kit.canHit(sp, x), "crew: ally tags · not a skill target " + x.entityTags());
-            // 망자가 침: 곁의 과녁에게 1.5초마다 위력 × 0.4 (내 직업 스킬 피해 — 숫자는 직업 색)
+            // 망자가 침: 내가 뼈 창으로 친 과녁 (망자가 먼저 노리는 적) 에게 1.5초마다 위력 × 0.4 (내 직업 스킬 피해 — 숫자는 직업 색)
             NecroCrew.PASSIVE.remove(sp.getUUID());
             z.set(0, dummy(h, 1.0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 0), "뼈 창 (focus) cast");
         }));
         steps.add(new RpgJobTests.Step(70, () -> {
             NecroCrew.PASSIVE.add(sp.getUUID());
             double one = raw(sp, j, 0.4);
-            double got = TestDummies.dealt(z.get(0));
+            double got = TestDummies.dealt(z.get(0)) - RpgJobTests.expected(sp, j, j.skill(0), 7);
             double n = got / one;
-            h.assertTrue(got > 0 && Math.abs(n - Math.round(n)) < 1e-3 && Math.round(n) >= 1, "crew hits " + got + " = " + n + " × " + one);
+            h.assertTrue(got > 1e-6 && Math.abs(n - Math.round(n)) < 1e-3 && Math.round(n) >= 1, "crew hits " + got + " = " + n + " × " + one + " — dummy at "
+                    + z.get(0).position() + " · " + NecroCrew.testState(sp));
             // 망자 일으키기: 망자 둘이 바로 (모두 셋) · 10초 동안 망자 공격 +30%
             z.get(0).discard();
             home(h, sp);
@@ -1070,6 +1077,7 @@ public final class RpgJobAdvanceTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0));
             JobTraits8.testCorpse(h.getLevel(), z.get(0).position().add(0.8, 0, 0), 200);
             mark[0] = JobTraits8.corpses();
             mark[1] = NecroCrew.count(sp);
@@ -1096,6 +1104,7 @@ public final class RpgJobAdvanceTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0));
             mark[2] = NecroCrew.countAll(sp) - NecroCrew.count(sp);
             JobSkills.resetCooldowns(sp);
             h.assertTrue(JobSkills.press(sp, 4), "나글파르의 출항 cast");

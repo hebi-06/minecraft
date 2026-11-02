@@ -118,6 +118,24 @@ public final class NecroCrew {
         return out;
     }
 
+    /** 시험 (실패 글): 망자마다 종류 · 자리 · 다 솟았는지 · 노리는 적 (자리 · 거리) · 다음 내려치기 · 도끼가 닿을 틱 */
+    public static String testState(ServerPlayer sp) {
+        StringBuilder out = new StringBuilder();
+        long now = Tasks.now();
+        for (Member m : members(sp)) {
+            Vec3 p = m.x.position();
+            out.append(String.format(java.util.Locale.ROOT, "[%s %.2f,%.2f,%.2f risen=%s scripted=%s", m.kind == TRAIT ? "trait" : "ult", p.x, p.y, p.z, m.risen, m.scripted));
+            if (m.foe != null) {
+                Vec3 f = m.foe.position();
+                out.append(String.format(java.util.Locale.ROOT, " foe=%s@%.2f,%.2f,%.2f d=%.2f", Kit.typeId(m.foe),
+                        f.x, f.y, f.z, V.hdist(p, f)));
+            } else out.append(" foe=none");
+            out.append(" swingIn=").append(m.nextSwing - now).append(" strikeAt=").append(m.strikeAt < 0 ? -1 : m.strikeAt - now)
+                    .append(" nav=").append(m.x.getNavigation().isInProgress()).append(" passive=").append(PASSIVE.contains(sp.getUUID())).append("]");
+        }
+        return out.length() == 0 ? "(no crew)" : out.toString();
+    }
+
     /** 시험: 망자 하나를 at 에 바로 세움 (솟는 동안도 지남 — 다 솟은 것으로) */
     public static TyrfingWarrior testRaise(ServerPlayer sp, Vec3 at) {
         Jobs.Job j = JobSystem.job(sp);

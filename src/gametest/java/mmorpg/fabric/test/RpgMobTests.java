@@ -26,7 +26,7 @@ public final class RpgMobTests {
 
     @GameTest(maxTicks = 20)
     public void mobsRegistered(GameTestHelper h) {
-        h.assertTrue(RpgEntities.types().size() == 43, "types (27 + 9단계 몬스터 8 + 0.32.0 공허 5 + 0.33.0 공허 기사 1 + 0.35.0 헬 1 + 0.50.0 티르빙 전사 1) "
+        h.assertTrue(RpgEntities.types().size() == 44, "types (27 + 9단계 몬스터 8 + 0.32.0 공허 5 + 0.33.0 공허 기사 1 + 0.35.0 헬 1 + 0.50.0 티르빙 전사 1 + 0.51.0 망자 선원 1) "
                 + RpgEntities.types().size());
         h.assertTrue(RpgEntities.eggs().size() == 19, "eggs (몬스터 6 + 8 + 공허 5) " + RpgEntities.eggs().size());
         for (MobData.Def d : MobData.all().values()) {

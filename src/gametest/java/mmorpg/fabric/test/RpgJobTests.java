@@ -158,6 +158,19 @@ public final class RpgJobTests {
         return m;
     }
 
+    /**
+     * 0.51.0 앞 시험이 남긴 몹을 치움: 시험 묶음 (환경) 은 차례로 돌아 지금 둘레의 남의 몹은 끝난 시험이 남긴 것 — 범위 스킬 (금서 개방 · 별의 비 · 튀는 별빛 · 망자가 노리는
+     * 적) 이 그 몹에게 나뉘지 않게. 과녁 keep · 아군 몹 (rpg_ally — 망자 선원) 은 둠 (시험 하나뿐인 환경에서만 부름)
+     */
+    static void clearStrays(GameTestHelper h, net.minecraft.world.entity.Entity... keep) {
+        var box = new net.minecraft.world.phys.AABB(h.absoluteVec(new Vec3(-14, -4, -14)), h.absoluteVec(new Vec3(30, 12, 30)));
+        java.util.Set<net.minecraft.world.entity.Entity> own = new java.util.HashSet<>(java.util.Arrays.asList(keep));
+        for (net.minecraft.world.entity.Mob m : h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.Mob.class, box,
+                e -> !own.contains(e) && !e.entityTags().contains("rpg_ally"))) {
+            m.discard();
+        }
+    }
+
     static void cleanup(ServerPlayer sp) {
         RpgCombat.forceCrit = null;
         JobSkills.resetCooldowns(sp);
@@ -680,6 +693,7 @@ public final class RpgJobTests {
             z.clear();
             home(h, sp);
             z.add(dummy(h, 6));
+            clearStrays(h, z.get(0)); // 0.51.0 금서의 책장은 둘레 8칸의 적에게 나뉨 — 앞 시험이 남긴 몹이 반을 받았음 (CI 41370960108)
             JobTraitsMore.setChain(sp, 0);
             h.assertTrue(JobSkills.press(sp, 4), "금서 개방 cast");
         }));
