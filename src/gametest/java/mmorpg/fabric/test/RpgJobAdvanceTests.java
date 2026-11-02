@@ -1166,12 +1166,13 @@ public final class RpgJobAdvanceTests {
         Weapon w = Weapons.weaponFrom("bow", 0, "common");
         RpgJobTests.hold(sp, w);
         Jobs.Job j = Jobs.job("sniper");
-        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 4), dummy(h, 0, 7)));
+        // 시험 자리는 barrier 벽 안 8 × 8 칸 (z 8 부터 벽 — 벽 속 과녁은 숨막힘 피해가 더해짐): 뒤로 물러나는 스킬은 앞쪽에서 써서 벽 안에 머묾
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 4.5), dummy(h, 0, 6.0)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0};
         // 꿰뚫는 연사: 뒤로 구르며 1.2 × 2 → 무릎 꿇고 1.4 × 2 + 꿰뚫는 화살 2.3 (겨눈 과녁 = 7.5) · 같은 일직선 뒤의 과녁도 꿰뚫음 (2.3)
         steps.add(new RpgJobTests.Step(1, () -> {
-            home(h, sp);
+            homeAt(h, sp, 3.5);
             RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
             JobTraitsMore.setBreath(sp, 0);
             mark[0] = sp.position().z;
@@ -1201,8 +1202,8 @@ public final class RpgJobAdvanceTests {
             // 순풍 공중 사격: 뒤로 5칸 · 2.5칸 높이 → 공중에서 세 발 (각각 활 평타 × 1 — 치명타 없이) · 그동안 호흡이 줄지 않음
             for (Husk x : z) x.discard();
             z.clear();
-            homeAt(h, sp, 7.5);
-            z.add(dummy(h, 0, 10.0));
+            homeAt(h, sp, 6.0);
+            z.add(dummy(h, 0, 6.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobTraitsMore.setBreath(sp, 2);
             RpgCombat.forceCrit = false;
@@ -1244,8 +1245,8 @@ public final class RpgJobAdvanceTests {
             // 세 번째 화살: 뒤로 뛰어 공중 두 발 8 × 2 → 내려앉아 셋째 화살 30 → 길의 바람 14 (= 60)
             JobTraits.testEndStance(sp);
             z.get(0).discard();
-            homeAt(h, sp, 6.5);
-            z.set(0, dummy(h, 0, 11.0));
+            homeAt(h, sp, 6.0);
+            z.set(0, dummy(h, 0, 6.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
             mark[1] = sp.getY();
