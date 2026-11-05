@@ -178,8 +178,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(3, new int[] {3, 10}, new int[] {4}, 26, true),
         new Case(4, new int[] {2, 10, 12, 20, 26, 31, 33, 41, 44}, new int[] {10, 26, 32, 42}, 52, false),
     };
-    /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 — 사진첩 · 영상 모두) */
-    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24}, "necromancer_call", new int[] {16});
+    /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 · 데드아이 세 발 — 사진첩 · 영상 모두) */
+    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24}, "necromancer_call", new int[] {16}, "sniper_ult",
+            new int[] {14, 28, 42});
 
     /**
      * 0.51.0 워로드 · 글래디에이터 (재설계안 2판): 대지 가르기 (24 까지 모음 → 28 내려침 · 돌창) · 동면 (40 깨어남) · 곰의 포옹 (2 ~ 8 끌어옴 · 12 내려찍음) ·
@@ -247,22 +248,25 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
 
     /**
-     * 0.51.0 스나이퍼 · 섀도 헌터: 사과 겨누기 · 그믐밤은 태세 → 활 평타 (급소 사격 · 그믐밤 치명타), 세 번째 화살은 공중 두 발 → 내려앉아 당김 → 셋째 화살 → 길의 바람,
-     * 어둠숲의 사냥은 가시덤불 → 검은 화살 물결 → 사냥의 화살
+     * 0.51.0 스나이퍼 · 배틀 아처 (재설계안 2판 — 2026-11-06): 하트시커 (0 ~ 20 끝까지 당김 → 20 저절로 놓음 · 번쩍 → 21 큰 한 발) · 스네어 샷 (2 그물 화살 · 반동으로 뒤로
+     * 뜀 → 3 감김 → 12 내려앉음 · 호흡 +3) · 트릭 샷 (3 쏨 → 4 맞음 → 3틱마다 튐) · 헌터스 마크 (태세 → 같은 과녁 셋째 활 평타 — 은빛 화살, 사진첩은 둘째까지 맞힌 것으로) ·
+     * 데드아이 (저격 자세 → 14 · 28 · 42 에 다시 눌러 세 발 — 셋째 금빛) / 호넷 스웜 (2 쏘아 올림 → 7 꽂힘) · 팰컨 다이브 (0 ~ 12 뛰어 매와 내리꽂힘 → 12 둘레 화살) ·
+     * 스플린터 샷 (0 ~ 6 당김 → 6 부채꼴 화살 조각) · 스톰 스트라이드 (태세 → 서서 쏜 평타가 세 갈래) · 퀴버 스톰 (2 ~ 62 화살 물결 · 10 ~ 60 여섯 번 → 62 하늘로 다발 →
+     * 64 화살비 → 70 내리꽂힘)
      */
     private static final Case[] CASES_SN = {
-        new Case(0, new int[] {2, 6, 12, 18, 21}, new int[] {6, 18}, 30, false),
-        new Case(1, new int[] {2, 5, 8, 11}, new int[] {4, 10}, 30, false),
-        new Case(2, new int[] {2, 9, 16, 22, 31}, new int[] {9, 31}, 44, false),
+        new Case(0, new int[] {4, 12, 19, 21, 24}, new int[] {12, 21}, 34, false),
+        new Case(1, new int[] {2, 4, 7, 12, 20}, new int[] {4, 12}, 30, false),
+        new Case(2, new int[] {3, 5, 8, 11, 16}, new int[] {5, 11}, 24, false),
         new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
-        new Case(4, new int[] {6, 9, 19, 28, 36, 41, 44, 55}, new int[] {9, 30, 41, 55}, 70, false),
+        new Case(4, new int[] {6, 14, 16, 28, 30, 42, 44, 52}, new int[] {14, 29, 43}, 60, false),
     };
-    private static final Case[] CASES_SH = {
-        new Case(0, new int[] {1, 5, 9, 12}, new int[] {3, 9}, 20, false),
-        new Case(1, new int[] {2, 4, 7, 10}, new int[] {3, 6}, 24, false),
-        new Case(2, new int[] {3, 7, 10, 20, 37, 40}, new int[] {7, 37}, 50, false),
-        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 30, true, false, 4),
-        new Case(4, new int[] {5, 12, 16, 27, 40, 51, 54, 58, 62}, new int[] {12, 27, 51, 58}, 76, false),
+    private static final Case[] CASES_BA = {
+        new Case(0, new int[] {1, 3, 5, 7, 10}, new int[] {4, 7}, 20, false),
+        new Case(1, new int[] {3, 6, 9, 12, 14, 20}, new int[] {6, 12, 14}, 30, false),
+        new Case(2, new int[] {2, 5, 7, 9, 12}, new int[] {4, 7}, 18, false),
+        new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
+        new Case(4, new int[] {4, 10, 20, 30, 40, 50, 60, 63, 66, 70, 74}, new int[] {10, 30, 50, 63, 70}, 84, false),
     };
 
     /**
@@ -533,9 +537,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
         ctx.waitTicks(5);
     }
 
-    /** 활 · 완드 직업 (태세 · 강화 뒤 평타 = 오른쪽 클릭) — 0.51.0 아크메이지 · 네크로맨서도 완드, 스나이퍼 · 섀도 헌터는 활 */
+    /** 활 · 완드 직업 (태세 · 강화 뒤 평타 = 오른쪽 클릭) — 0.51.0 아크메이지 · 네크로맨서도 완드, 스나이퍼 · 배틀 아처는 활 */
     private static boolean ranged(String job) {
-        return job.equals("archer") || job.equals("mage") || job.equals("arcmage") || job.equals("necromancer") || job.equals("sniper") || job.equals("shadowhunter");
+        return job.equals("archer") || job.equals("mage") || job.equals("arcmage") || job.equals("necromancer") || job.equals("sniper") || job.equals("battlearcher");
     }
 
     /** 스킬 하나 쓰기 전 (서버): 직업 다시 (앞 칸의 태세 지움) · 재사용 대기 · 체력 · 자원 · 과녁 · 표식 */
@@ -584,9 +588,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, -60, -1.0));
             mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(2.5, -60, -1.0));
         }
-        // 0.51.0 스나이퍼: 호흡 5 (사과 겨누기 뒤 평타는 태세가 8 로) · 섀도 헌터: 추격 3 (그믐밤 동안 그대로)
+        // 0.51.0 스나이퍼: 호흡 5 (하트시커 +30% · 스네어 샷이 내려앉으면 8 — 게이지)
         if (id.startsWith("sniper_")) JobTraitsMore.setBreath(sp, 5);
-        if (id.startsWith("shadowhunter_")) mmorpg.fabric.job.JobTraits9.setPursuit(sp, 3);
         // 0.51.0 트릭스터: 검은 장미 덤불 · 개기일식은 표식 가득 (7 — 큰 터뜨림) · 블레이드 댄서: 춤사위 3 (몸 둘레 빛 꽃잎)
         if (id.equals("trickster_rose") || id.equals("trickster_ult")) markHusks(sp, 7);
         if (id.startsWith("bladedancer_")) mmorpg.fabric.job.JobTraits10.setDance(sp, 3);
@@ -594,6 +597,14 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /** 0.51.0 키를 누르기 바로 전 (서버) */
     private static void beforeCast(ServerPlayer sp, String id) {
+        if (id.equals("sniper_mark")) {
+            // 0.51.0 헌터스 마크: 쓴 뒤 (태세가 이어 맞힌 수를 처음부터 셈) 가장 가까운 과녁에 둘째까지 맞힌 것으로 → 태세 뒤 활 평타가 셋째 — 은빛 화살 (머리 위 은빛 표식 둘)
+            mmorpg.fabric.Tasks.later(2, () -> {
+                List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, sp.getBoundingBox().inflate(6), h -> true);
+                near.sort(java.util.Comparator.comparingDouble(h -> h.distanceToSqr(sp)));
+                if (!near.isEmpty() && !sp.isRemoved()) mmorpg.fabric.job.JobTraits9.testMarkHits(sp, near.get(0), 2);
+            });
+        }
         if (id.equals("swordmaster_parry")) {
             // 0.51.0 받아넘기기: 4틱 뒤 앞 과녁이 침 (받는 피해 처리 — 막아서 깎이지 않음) → 받아침 (과녁은 움직이지 않는 허스크라 직접)
             mmorpg.fabric.Tasks.later(4, () -> {
@@ -628,7 +639,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
         {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"arcaneblade", "swordcaller"}, {"arcmage", "necromancer"},
-        {"sniper", "shadowhunter"}, {"trickster", "bladedancer"}};
+        {"sniper", "battlearcher"}, {"trickster", "bladedancer"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
@@ -656,7 +667,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "arcmage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 5, sp -> JobTraitsMore.setChain(sp, 2));
                         case "necromancer" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 4, sp -> {});
                         case "sniper" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 8, sp -> JobTraitsMore.setBreath(sp, 5));
-                        case "shadowhunter" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 5, sp -> mmorpg.fabric.job.JobTraits9.setPursuit(sp, 3));
+                        case "battlearcher" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 3, sp -> {});
                         case "trickster" -> newJob(ctx, server, conn, job, "rpg:dagger_l40_hero", 7, sp -> markHusks(sp, 4));
                         case "bladedancer" -> newJob(ctx, server, conn, job, "rpg:dagger_l40_hero", 5, sp -> mmorpg.fabric.job.JobTraits10.setDance(sp, 3));
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
@@ -690,7 +701,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "arcmage" -> CASES_AM;
             case "necromancer" -> CASES_NC;
             case "sniper" -> CASES_SN;
-            case "shadowhunter" -> CASES_SH;
+            case "battlearcher" -> CASES_BA;
             case "trickster" -> CASES_TR;
             case "bladedancer" -> CASES_BD;
             default -> CASES_GU;

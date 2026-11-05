@@ -83,7 +83,7 @@ public final class JobSystem {
         ArcmageSkills.register(); // 0.51.0 2차 직업 (매지션 각성 · 반전)
         NecromancerSkills.register();
         SniperSkills.register(); // 0.51.0 궁수 2차 — 스나이퍼
-        ShadowhunterSkills.register(); // 0.51.0 궁수 2차 — 섀도 헌터
+        BattlearcherSkills.register(); // 0.51.0 궁수 2차 — 배틀 아처 (재설계안 2판 — 섀도 헌터 대신)
         TricksterSkills.register(); // 0.51.0 암살자 2차 — 트릭스터
         BladedancerSkills.register(); // 0.51.0 암살자 2차 — 블레이드 댄서
         ServerTickEvents.END_SERVER_TICK.register(server -> {

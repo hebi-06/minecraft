@@ -48,13 +48,14 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j);
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투 (상대 + 결투 × 3% · 다른 적 −40%)
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위 (하나당 +6%)
-        double dmg = P * mult * veil * crit * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double range = JobTraits9.rangeMult(sp, e, j); // 0.51.0 배틀 아처 난사 (가까운 적 +20% · 먼 적 −30%)
+        double dmg = P * mult * veil * crit * duel * dance * range * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
         boolean landed;
         try {
-            landed = Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
+            landed = Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1 || critShown, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
                     : DamageNumbers.Style.JOB, grad(j));
         } finally {
             JobTraits8.afterJobHitDone();
@@ -72,6 +73,25 @@ public final class JobKit {
         JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
         JobTraits10.afterJobHit(sp, e, j, got); // 0.51.0 블레이드 댄서 — 스킬 쪽 맞힘 (평타와 번갈아 춤사위)
         return got;
+    }
+
+    /** 0.51.0 치명 숫자로 보일 피해 (트릭 샷의 튄 화살 · 데드아이 셋째 — 배율에 치명 몫을 넣어 둠): 이 동안 hit · hitSplit 의 숫자가 치명타 꼴 */
+    private static boolean critShown;
+
+    /** 0.51.0 {@link #strike} 와 같음 — 숫자만 치명타 꼴 (피해는 배율 그대로) */
+    public static void strikeCrit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, boolean magic, boolean big, String life, int delay,
+            java.util.function.DoubleConsumer then) {
+        if (e == null || !(mult > 0)) return;
+        hitLater(sp, e, life, now() + Math.max(0, delay), () -> {
+            double d;
+            critShown = true;
+            try {
+                d = hit(sp, e, j, P, mult, magic, big);
+            } finally {
+                critShown = false;
+            }
+            if (d > 0 && then != null) then.accept(d);
+        });
     }
 
     /**
@@ -112,13 +132,14 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위
-        double dmg = P * mult * veil * crit * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double range = JobTraits9.rangeMult(sp, e, j); // 0.51.0 배틀 아처 난사
+        double dmg = P * mult * veil * crit * duel * dance * range * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
         boolean landed;
         try {
-            landed = Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
+            landed = Kit.applyJobDamage(sp, e, dmg, veil > 1 || crit > 1 || critShown, magic ? Kit.Cause.MAGIC : Kit.Cause.ATTACK, bigger ? DamageNumbers.Style.JOB_BIG
                     : DamageNumbers.Style.JOB, grad(j), split, gap, weights);
         } finally {
             JobTraits8.afterJobHitDone();

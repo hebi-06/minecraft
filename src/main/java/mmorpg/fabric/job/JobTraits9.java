@@ -2,14 +2,16 @@ package mmorpg.fabric.job;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import mmorpg.core.Jobs;
 import mmorpg.core.Weapon;
+import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgCombat;
-import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.skill.Kit;
@@ -22,77 +24,69 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 궁수 각성 스나이퍼 · 반전 섀도 헌터 특성 · 태세 (서버 — jobs.json advance):
+ * 0.51.0 2차 직업 — 궁수 각성 스나이퍼 · 반전 배틀 아처 특성 · 태세 (서버 — jobs.json advance, 재설계안 2판 2026-11-06 — 섀도 헌터 대신 배틀 아처):
  * <ul>
- * <li>스나이퍼 「호흡」 (쌓임 · 활 평타 +4% · 사거리 +1칸은 궁수와 같음 — JobTraitsMore, 최대 trait.max = 8): 호흡 8 에서 쏜 활 평타는 급소 사격 — 그 화살이 닿는 동안
- * (snipeFor 틱) 치명타 확정 (RpgCombat.sureCrit) · 꿰뚫음 (snipeWidth) · 호흡 snipeUse 씀. 쏠 때 활 앞 흰 섬광 · 화살 길을 따라 흰 금빛 줄. 사과 겨누기 (태세): 호흡 가득 ·
- * 줄지 않음 · 급소 사격이 호흡을 쓰지 않음 (모든 화살이 급소 사격), 8틱마다 앞 markRange 칸 적 (marks 명까지) 의 머리 위에 금빛 약점 과녁</li>
- * <li>섀도 헌터 「추격」 (1차와 거꾸로): 움직이며 (4틱 안에 움직였으면) 활을 쏘면 추격 +1 (최대 trait.max) · 멈춰 서 있으면 decay 틱마다 하나씩 줄어듦, 하나당 이동 속도
- * + speedPer. 활 평타 · 검은 화살이 맞힌 적에 저주 +1 (최대 curseMax · curseFor 틱) — 저주 하나당 그 적이 받는 피해 + cursePer (누구에게서든 — RpgCombat.takenMult).
- * 그림자 구르기: 구르는 동안 받는 피해 없음 (RpgHealth.sourceReduce). 그믐밤 (태세): 활 평타 치명타 + crit · 추격이 줄지 않음 · lose 틱마다 둘레 radius 칸 몹이 나를 놓침</li>
+ * <li>스나이퍼 「호흡」 (쌓임 · 활 평타 +4% · 사거리 +1칸은 궁수와 같음 — JobTraitsMore, 최대 trait.max = 8): 호흡 8 에서 쏜 활 평타는 급소 사격 (치명타 확정 · 꿰뚫음 ·
+ * 호흡 snipeUse 씀 — JobTraitsMore, 쏠 때의 흰 섬광은 {@link #snipeFx}). 헌터스 마크 (태세): 활 평타가 같은 적을 every 번째 맞힐 때마다 그 평타에 은빛 화살을 더함
+ * (그 적 최대 체력 × pct — 위력 × min ~ cap, RpgCombat.addScaledBonusHook) · 맞힌 수만큼 그 적 머리 위 은빛 표식</li>
+ * <li>배틀 아처 「난사」 (1차와 거꾸로): 움직이며 (4틱 안에 움직였으면) 쏜 활 평타는 세 갈래 — 둘레 sideRange 칸의 다른 적 둘에게도 한 발씩 (RpgCombat.extraArrow — 평타 ×
+ * side, 스톰 스트라이드 동안은 서 있어도 · 스킬의 side). 내 둘레 near 칸 안의 적에게 주는 피해 + nearBonus · far 칸 밖 − farCut (활 평타 RpgCombat.rangedMult · 직업 스킬
+ * JobKit.hit). 게이지 = 다음 활 평타의 갈래 (1 · 3). 스톰 스트라이드 (태세): 이동 속도 + speed. 팰컨 다이브: 내려앉으며 쏜 적이 reset 틱 안에 쓰러지면 재사용 대기가 바로 돌아옴</li>
  * </ul>
  */
 public final class JobTraits9 {
     private JobTraits9() {}
 
     static final String SN = "sniper";
-    static final String SH = "shadowhunter";
-    static final String APPLE = "sniper_apple";
-    static final String MOONLESS = "shadowhunter_moonless";
+    static final String BA = "battlearcher";
+    static final String MARK = "sniper_mark";
+    static final String STRIDE = "battlearcher_stride";
+    static final String DIVE = "battlearcher_dive";
     /** 급소 사격의 흰 섬광 */
     static final double[] SNIPE = {1.0, 0.98, 0.84};
-    /** 어둠숲 (짙은 남색 — 그믐밤 · 저주 문양 바깥) */
-    static final double[] DUSK = {0.12, 0.1, 0.34};
-    /** 은빛 (검은 깃 화살의 심지 · 저주 문양의 테) */
-    static final double[] SILVER = {0.86, 0.9, 1.0};
+    /** 은빛 (헌터스 마크의 은빛 화살 · 표식) */
+    static final double[] SILVER = {0.82, 0.9, 1.0};
+    /** 은빛 화살의 짙은 테 (밝은 하늘 · 풀 위에서도 보이게) */
+    static final double[] STEEL = {0.36, 0.46, 0.66};
+    /** 헌터스 마크 평타 몫의 열쇠 (숫자 줄) */
+    private static final String KEY_MARK = "job_sniper_mark";
 
-    private static final Identifier PURSUIT_SPEED = Mmorpg.id("job_pursuit_speed");
+    private static final Identifier STRIDE_SPEED = Mmorpg.id("job_stride_speed");
 
     // ------------------------------------------------------------ 상태
 
     static final class State {
-        int pursuit;
         long lastMove = -1000;
         Vec3 lastPos;
-        int still;
-        long rollUntil;
-        double speedSet;
+        /** 배틀 아처 게이지 (다음 활 평타의 갈래 — 1 · 3) */
+        int gauge = 1;
+        boolean speedOn;
+        /** 헌터스 마크: 지금 맞히는 적 · 이어 맞힌 수 */
+        UUID markFoe;
+        int markHits;
+        LivingEntity markEnt;
+        /** 팰컨 다이브: 내려앉으며 쏜 적 · 재사용 대기가 돌아오는 끝 틱 */
+        final Set<UUID> diveFoes = new HashSet<>();
+        long diveUntil;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
 
-    /** 저주 (적마다 하나 — 주인 · 쌓인 수 · 하나당 받는 피해 · 끝 틱) */
-    record Curse(UUID owner, int stacks, double per, long until) {}
-
-    private static final Map<UUID, Curse> CURSES = new HashMap<>();
-    /** 저주가 걸린 적 (표시 · 받는 피해 — 몸을 찾으려고) */
-    private static final Map<UUID, LivingEntity> CURSED = new HashMap<>();
-
     static void init() {
         java.util.function.BiPredicate<ServerPlayer, Weapon> sc = RpgCombat.sureCrit;
         RpgCombat.sureCrit = (p, w) -> sc.test(p, w) || JobTraitsMore.snipeCrit(p, w);
-        java.util.function.ToDoubleFunction<LivingEntity> tm = RpgCombat.takenMult;
-        RpgCombat.takenMult = e -> tm.applyAsDouble(e) * curseMult(e);
-        java.util.function.ToDoubleBiFunction<ServerPlayer, DamageSource> sr = RpgHealth.sourceReduce;
-        RpgHealth.sourceReduce = (p, src) -> Math.max(sr.applyAsDouble(p, src), rollReduce(p));
-        RpgCombat.addCritBonusHook(JobTraits9::critAdd);
-        RpgCombat.addWeaponHitHook(JobTraits9::onWeaponHit);
+        RpgCombat.MeleeMult rm = RpgCombat.rangedMult;
+        RpgCombat.rangedMult = (p, w, v) -> rm.mult(p, w, v) * basicRange(p, w, v);
+        RpgCombat.addScaledBonusHook(JobTraits9::markBonus);
         ServerLivingEntityEvents.AFTER_DEATH.register(JobTraits9::onDeath);
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            STATES.clear();
-            CURSES.clear();
-            CURSED.clear();
-        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> STATES.clear());
     }
 
     static Jobs.Job jobIf(ServerPlayer sp, String id) {
@@ -111,28 +105,23 @@ public final class JobTraits9 {
     static void reset(ServerPlayer sp) {
         STATES.remove(sp.getUUID());
         speedMod(sp, 0);
-        forgetCurses(sp.getUUID());
     }
 
     static void forget(UUID id) {
         STATES.remove(id);
-        forgetCurses(id);
     }
 
     static void lifeEnded(UUID id) {
         State st = STATES.get(id);
         if (st != null) {
-            st.pursuit = 0;
-            st.rollUntil = 0;
+            st.markFoe = null;
+            st.markHits = 0;
+            st.markEnt = null;
+            st.diveFoes.clear();
         }
     }
 
-    private static void forgetCurses(UUID owner) {
-        CURSES.values().removeIf(c -> c.owner().equals(owner));
-        CURSED.keySet().removeIf(id -> !CURSES.containsKey(id));
-    }
-
-    // ------------------------------------------------------------ 스나이퍼: 급소 사격 · 사과 겨누기
+    // ------------------------------------------------------------ 스나이퍼: 급소 사격 · 헌터스 마크
 
     /** 급소 사격을 쏨 (JobTraitsMore.onFired — 호흡 8): 활 앞 흰 섬광 · 약점 과녁 번쩍 · 화살 길을 따라 흰 금빛 줄 · 맑은 소리 */
     static void snipeFx(ServerPlayer sp, Jobs.Job j, Vec3 from, Vec3 dir, double dist) {
@@ -147,277 +136,282 @@ public final class JobTraits9 {
         SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 2.0, 0.6);
     }
 
-    /** 사과 겨누기 동안 (8틱마다): 앞 markRange 칸 (보는 쪽 70°) 적 marks 명까지 머리 위에 금빛 약점 과녁 (조여 들었다 맥동) */
-    private static void weakMarks(ServerPlayer sp, Jobs.Job j) {
-        Jobs.Skill k = j.skill(APPLE);
-        double range = k == null ? 24 : k.num("markRange", 24);
-        int marks = k == null ? 6 : (int) k.num("marks", 6);
-        ServerLevel level = sp.level();
-        Vec3 eye = sp.getEyePosition();
-        Vec3 look = Kit.facingOf(sp);
-        List<LivingEntity> list = new ArrayList<>();
-        for (LivingEntity e : Kit.around(sp, sp.position(), range, 6)) {
-            Vec3 d = V.flat(V.sub(e.position(), sp.position()));
-            if (V.dot(d, look) < Math.cos(Math.toRadians(70)) || !Kit.splashFoe(sp, e)) continue;
-            list.add(e);
-        }
-        list.sort(java.util.Comparator.comparingDouble((LivingEntity e) -> e.position().distanceToSqr(eye)));
-        for (int i = 0; i < Math.min(marks, list.size()); i++) {
-            LivingEntity e = list.get(i);
-            Vec3 head = RuneKit.overHead(e, 0.15);
-            JobFx.weak(level, head, 0.5 + Kit.bodyPad(e) * 0.3, 1, 3, 0.45, true, Opt.of("vel", RuneKit.entVel(e), "fade", 0.25), JobKit.glow(j), SNIPE);
-        }
+    /** 헌터스 마크를 씀: 이어 맞힌 수를 처음부터 */
+    static void markStart(ServerPlayer sp) {
+        State st = of(sp);
+        st.markFoe = null;
+        st.markHits = 0;
+        st.markEnt = null;
     }
 
-    // ------------------------------------------------------------ 섀도 헌터: 추격 · 저주
-
-    /** 지금 추격 */
-    public static int pursuit(ServerPlayer sp) {
+    /** 시험: 헌터스 마크로 지금 적에게 이어 맞힌 수 */
+    public static int markHits(ServerPlayer sp) {
         State st = STATES.get(sp.getUUID());
-        return st == null ? 0 : st.pursuit;
+        return st == null ? 0 : st.markHits;
     }
 
-    /** 시험용: 추격을 정함 */
-    public static void setPursuit(ServerPlayer sp, int n) {
-        Jobs.Job j = jobIf(sp, SH);
+    /** 시험 (사진첩): 헌터스 마크로 그 적에게 이어 맞힌 수를 정함 (다음 활 평타가 n + 1 번째) */
+    public static void testMarkHits(ServerPlayer sp, LivingEntity e, int n) {
         State st = of(sp);
-        st.pursuit = Math.max(0, Math.min(j == null || j.trait() == null ? 5 : j.trait().max(), n));
-        st.still = 0;
-        applySpeed(sp, j, st);
-        JobTraits.sendGauge(sp, false);
+        st.markFoe = e.getUUID();
+        st.markEnt = e;
+        st.markHits = Math.max(0, n);
     }
 
-    /** 추격 + n (달리며 쏘는 스킬 · 활 평타) */
-    static void addPursuit(ServerPlayer sp, Jobs.Job j, int n) {
+    /**
+     * 평타에 더할 것 (RpgCombat.addScaledBonusHook): 헌터스 마크 동안 활 평타가 같은 적을 every 번째 맞히면 은빛 화살 — 그 적 최대 체력 × pct (위력 × min ~ cap) 를 더함
+     * (그 평타의 숫자 옆에 큰 숫자). 다른 적을 맞히면 처음부터
+     */
+    private static RpgCombat.Bonus markBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
+        if (w == null || victim == null || !"bow".equals(w.type()) || !JobTraits.stanceOn(sp, MARK)) return null;
+        Jobs.Job j = jobIf(sp, SN);
+        if (j == null) return null;
+        Jobs.Skill k = j.skill(MARK);
         State st = of(sp);
-        int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
-        if (st.pursuit >= max) {
-            st.still = 0;
-            return;
+        if (!victim.getUUID().equals(st.markFoe)) {
+            st.markFoe = victim.getUUID();
+            st.markHits = 0;
         }
-        st.pursuit = Math.min(max, st.pursuit + n);
-        st.still = 0;
-        applySpeed(sp, j, st);
-        // 발밑에서 은빛 바람이 뒤로 흩어짐 · 다 차면 맑은 소리
-        ServerLevel level = sp.level();
-        Vec3 back = V.scale(Kit.facingOf(sp), -1);
-        SkillFx.fx(level, "rpg:arrow_spark", V.up(sp.position(), 0.3), Opt.of("dir", V.unit(V.add(back, V.UP, 0.4)), "speed", 2.2, "size", 0.12, "grow", 0.6, "life", 0.35,
-                "color", SILVER, "alpha", 1.0));
-        if (st.pursuit == max) SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 1.5, 0.6);
-        JobTraits.sendGauge(sp, false);
+        st.markEnt = victim;
+        st.markHits++;
+        int every = k == null ? 3 : Math.max(2, (int) k.num("every", 3));
+        if (st.markHits < every) {
+            if (victim.level() instanceof ServerLevel level) pips(level, victim, st.markHits, every, j);
+            return null;
+        }
+        st.markHits = 0;
+        double power = JobSystem.power(sp, j);
+        double pct = k == null ? 0.05 : k.num("pct", 0.05);
+        double lo = power * (k == null ? 1 : k.num("min", 1));
+        double hi = power * (k == null ? 3 : k.num("cap", 3));
+        double add = Math.max(lo, Math.min(hi, victim.getMaxHealth() * pct));
+        if (victim.level() instanceof ServerLevel level) silverBolt(sp, level, victim, j);
+        return new RpgCombat.Bonus(add, "", KEY_MARK, DamageNumbers.Style.JOB_BIG, null, JobKit.grad(j));
     }
 
-    private static void applySpeed(ServerPlayer sp, Jobs.Job j, State st) {
-        double want = j == null ? 0 : st.pursuit * trait(j, "speedPer", 0.03);
-        if (Math.abs(want - st.speedSet) < 1e-9) return;
-        st.speedSet = want;
-        speedMod(sp, want);
+    /** 맞힌 수 (n / every) 만큼 적 머리 위 은빛 표식 (작은 약점 과녁 — 나란히) */
+    private static void pips(ServerLevel level, LivingEntity e, int n, int every, Jobs.Job j) {
+        Vec3 head = RuneKit.overHead(e, 0.35);
+        double pad = Kit.bodyPad(e);
+        for (int i = 0; i < every - 1; i++) {
+            boolean lit = i < n;
+            Vec3 at = V.add(head, new Vec3(1, 0, 0), (i - (every - 2) / 2.0) * (0.42 + pad * 0.2));
+            JobFx.weak(level, at, (lit ? 0.2 : 0.13) + pad * 0.08, lit ? 1 : 5, lit ? 3 : 1, 0.6, lit, Opt.of("vel", RuneKit.entVel(e), "fade", 0.3, "alpha", lit ? 1.0 : 0.5),
+                    STEEL, SILVER);
+        }
+        SkillFx.play(level, "block.amethyst_block.hit", e.position(), 1.4 + n * 0.2, 0.6);
+    }
+
+    /** 셋째 화살: 은빛 화살이 함께 꿰뚫음 — 적 앞뒤를 지나는 은빛 줄 · 몸 가운데 은빛 약점 과녁이 깨짐 · 은빛 섬광 · 맑은 쇳소리 */
+    private static void silverBolt(ServerPlayer sp, ServerLevel level, LivingEntity e, Jobs.Job j) {
+        Vec3 c = Kit.bodyPoint(e);
+        Vec3 d = V.unit(V.sub(c, sp.getEyePosition()));
+        double pad = Kit.bodyPad(e);
+        Vec3 a = V.add(c, d, -2.2 - pad);
+        Vec3 b = V.add(c, d, 1.6 + pad);
+        JobFx.greatArrow(level, a, b, 60, 0.75, Opt.of("fade", 0.2), STEEL, SILVER);
+        RuneKit.streak(level, a, b, SILVER, 0.1, 0.35, 1.0, 0);
+        JobFx.weak(level, c, 0.55 + pad * 0.3, 4, 2, 0.3, false, Opt.of("vel", RuneKit.entVel(e)), STEEL, SILVER);
+        JobFx.burst(level, c, 0.6 + pad * 0.3, STEEL, SILVER, 0.25, Opt.empty());
+        SkillFx.sparks(level, c, SILVER, 10, 4);
+        SkillFx.play(level, "item.trident.hit", c, 1.6, 0.9);
+        SkillFx.play(level, "block.anvil.land", c, 1.9, 0.35);
+    }
+
+    // ------------------------------------------------------------ 배틀 아처: 난사
+
+    /** 이 사람이 4틱 안에 움직였는지 (걷기 · 달리기 — 아는 움직임이 0.04칸 넘게) */
+    private static boolean moved(ServerPlayer sp, State st) {
+        Vec3 m = sp.getKnownMovement();
+        return Math.hypot(m.x, m.z) > 0.04 || Tasks.now() - st.lastMove <= 4;
+    }
+
+    /** 시험: 방금 움직인 것으로 (4틱 안에 쏜 활 평타가 세 갈래 — 시험 몸은 걷지 않음) */
+    public static void testMoved(ServerPlayer sp) {
+        of(sp).lastMove = Tasks.now();
+    }
+
+    /** 다음 활 평타가 세 갈래인지 (움직였거나 스톰 스트라이드) */
+    static boolean splitting(ServerPlayer sp) {
+        if (jobIf(sp, BA) == null) return false;
+        return JobTraits.stanceOn(sp, STRIDE) || moved(sp, of(sp));
+    }
+
+    /**
+     * 활 평타를 쏨 (JobTraitsMore.onFired — 배틀 아처): 세 갈래면 둘레 sideRange 칸의 다른 적 둘 (가까운 차례) 에게도 한 발씩 (평타 × side — 스톰 스트라이드면 스킬의 side) ·
+     * 활 앞 하늘빛 갈래 불티
+     */
+    static void onFired(ServerPlayer sp, Jobs.Job j, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist) {
+        State st = of(sp);
+        boolean stride = JobTraits.stanceOn(sp, STRIDE);
+        if (!stride && !moved(sp, st)) return;
+        double ratio = trait(j, "side", 0.5);
+        if (stride) {
+            Jobs.Skill k = j.skill(STRIDE);
+            ratio = k == null ? 1.0 : k.num("side", 1.0);
+        }
+        double range = trait(j, "sideRange", 5);
+        List<LivingEntity> others = new ArrayList<>();
+        for (LivingEntity e : Kit.around(sp, sp.position(), range, 4)) if (e != target && Kit.splashFoe(sp, e)) others.add(e);
+        others.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(sp)));
+        ServerLevel level = sp.level();
+        Vec3 bow = V.add(RuneKit.bowHand(sp), dir, 0.45);
+        int n = 0;
+        for (LivingEntity e : others) {
+            if (n >= 2) break;
+            if (RpgCombat.extraArrow(sp, e, w, ratio) < 0) continue;
+            n++;
+            Vec3 to = Kit.bodyPoint(e);
+            RuneKit.streak(level, bow, to, JobKit.glow(j), 0.07, 0.2, 0.75, 0);
+        }
+        // 갈래 불티 (쏘는 쪽으로 세 갈래 — 다른 적이 없어도 보임)
+        for (int s = -1; s <= 1; s++) {
+            Vec3 d = V.unit(V.add(dir, V.rightOf(V.flat(dir)), s * 0.32));
+            SkillFx.fx(level, "rpg:arrow_spark", bow, Opt.of("dir", d, "speed", 5.0, "size", 0.12, "grow", 0.5, "life", 0.22, "color", s == 0 ? JobKit.core(j) : JobKit.glow(j),
+                    "alpha", 1.0));
+        }
+    }
+
+    /** 활 평타 배율 (RpgCombat.rangedMult): 배틀 아처 활 — 가까운 적 + · 먼 적 − */
+    private static double basicRange(ServerPlayer sp, Weapon w, LivingEntity victim) {
+        if (w == null || victim == null || !"bow".equals(w.type())) return 1;
+        Jobs.Job j = jobIf(sp, BA);
+        return j == null ? 1 : distMult(sp, victim, j);
+    }
+
+    /** 직업 스킬 배율 (JobKit.hit): 배틀 아처 — 가까운 적 + · 먼 적 − (다른 직업은 1) */
+    static double rangeMult(ServerPlayer sp, LivingEntity e, Jobs.Job j) {
+        if (j == null || e == null || !BA.equals(j.id())) return 1;
+        return distMult(sp, e, j);
+    }
+
+    /** 거리 배율: 내 몸에서 적 몸까지 (가로 — 몸 여유를 뺌) near 칸 안 1 + nearBonus · far 칸 밖 1 − farCut · 그 사이 1 */
+    static double distMult(ServerPlayer sp, LivingEntity e, Jobs.Job j) {
+        double d = Math.max(0, V.hdist(sp.position(), e.position()) - Kit.bodyPad(e));
+        if (d <= trait(j, "near", 3)) return 1 + trait(j, "nearBonus", 0.2);
+        if (d > trait(j, "far", 10)) return 1 - trait(j, "farCut", 0.3);
+        return 1;
+    }
+
+    /** 스톰 스트라이드를 씀: 이동 속도 + speed · 게이지 3 */
+    static void strideStart(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
+        State st = of(sp);
+        speedMod(sp, k == null ? 0.25 : k.num("speed", 0.25));
+        st.speedOn = true;
+        st.gauge = 3;
+        JobTraits.sendGauge(sp, false);
     }
 
     private static void speedMod(ServerPlayer sp, double amount) {
         AttributeInstance a = sp.getAttribute(Attributes.MOVEMENT_SPEED);
         if (a == null) return;
-        if (amount > 0) a.addOrUpdateTransientModifier(new AttributeModifier(PURSUIT_SPEED, amount, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
-        else a.removeModifier(PURSUIT_SPEED);
+        if (amount > 0) a.addOrUpdateTransientModifier(new AttributeModifier(STRIDE_SPEED, amount, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+        else a.removeModifier(STRIDE_SPEED);
     }
 
-    /** 시험: 걸린 추격 이동 속도 (없으면 0) */
+    /** 시험: 걸린 스톰 스트라이드 이동 속도 (없으면 0) */
     public static double speedBonus(ServerPlayer sp) {
         AttributeInstance a = sp.getAttribute(Attributes.MOVEMENT_SPEED);
-        AttributeModifier m = a == null ? null : a.getModifier(PURSUIT_SPEED);
+        AttributeModifier m = a == null ? null : a.getModifier(STRIDE_SPEED);
         return m == null ? 0 : m.amount();
     }
 
-    /** 활 평타를 쏨 (JobTraitsMore.onFired — 섀도 헌터): 4틱 안에 움직였으면 추격 +1 · 화살 끝 은빛 */
-    static void onFired(ServerPlayer sp, Jobs.Job j, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist) {
+    /** 팰컨 다이브가 내려앉으며 쏜 적: ticks 틱 안에 하나라도 쓰러지면 재사용 대기가 바로 돌아옴 */
+    static void diveFoes(ServerPlayer sp, List<LivingEntity> foes, int ticks) {
         State st = of(sp);
-        if (Tasks.now() - st.lastMove <= 4 || moving(sp)) addPursuit(sp, j, 1);
-        RuneKit.rfx(sp.level(), "prop", V.add(RuneKit.bowHand(sp), dir, 0.4), Opt.of("size", 0.14, "life", 0.25, "cell", (double) RuneKit.RFX.get("glint")[0], "spin",
-                20.0, "spinRate", 200.0, "color", SILVER, "grow", 0.6, "fade", 0.5, "vel", RuneKit.bodyVel(sp)));
+        st.diveFoes.clear();
+        for (LivingEntity e : foes) st.diveFoes.add(e.getUUID());
+        st.diveUntil = Tasks.now() + ticks;
     }
 
-    /** 이 틱에 움직이는 중인지 (걷기 · 달리기 — 아는 움직임이 0.04칸 넘게) */
-    private static boolean moving(ServerPlayer sp) {
-        Vec3 m = sp.getKnownMovement();
-        return Math.hypot(m.x, m.z) > 0.04;
-    }
-
-    /** 무기로 맞힘: 섀도 헌터 활 평타 → 그 적에 저주 +1 */
-    private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
-        if (victim == null || w == null || !"bow".equals(w.type())) return;
-        Jobs.Job j = jobIf(sp, SH);
-        if (j != null) addCurse(sp, victim, 1, j);
-    }
-
-    /** 저주 + n (최대 curseMax · curseFor 틱 — 다시 걸면 새로): 머리 위 검은 저주 문양이 피어남 */
-    static void addCurse(ServerPlayer sp, LivingEntity e, int n, Jobs.Job j) {
-        if (e == null || e.isRemoved() || !e.isAlive() || n <= 0 || e instanceof net.minecraft.world.entity.player.Player) return;
-        long now = Tasks.now();
-        Curse c = CURSES.get(e.getUUID());
-        int old = c == null || c.until() < now ? 0 : c.stacks();
-        int max = (int) trait(j, "curseMax", 5);
-        int stacks = Math.min(max, old + n);
-        CURSES.put(e.getUUID(), new Curse(sp.getUUID(), stacks, trait(j, "cursePer", 0.02), now + (long) trait(j, "curseFor", 160)));
-        CURSED.put(e.getUUID(), e);
-        if (e.level() instanceof ServerLevel level && RuneKit.fxQuota("jobCurse", 8)) {
-            JobFx.curse(level, RuneKit.overHead(e, 0.45), 0.34 + 0.05 * stacks, 0, 2, 0.25, false, Opt.of("vel", RuneKit.entVel(e)), DUSK, SILVER);
-            SkillFx.play(level, "entity.wither.ambient", e.position(), 1.9, 0.25);
-        }
-    }
-
-    /** 이 적의 저주 (없으면 0) */
-    public static int curseOf(Entity e) {
-        Curse c = e == null ? null : CURSES.get(e.getUUID());
-        return c == null || c.until() < Tasks.now() ? 0 : c.stacks();
-    }
-
-    /** 시험용: 저주를 정함 (주인 sp) */
-    public static void setCurse(ServerPlayer sp, LivingEntity e, int n) {
-        Jobs.Job j = jobIf(sp, SH);
-        if (j == null || e == null) return;
-        CURSES.remove(e.getUUID());
-        if (n > 0) addCurse(sp, e, n, j);
-    }
-
-    /** 받는 피해 배율: 저주 하나당 + per */
-    static double curseMult(LivingEntity e) {
-        if (CURSES.isEmpty() || e == null) return 1;
-        Curse c = CURSES.get(e.getUUID());
-        if (c == null) return 1;
-        if (c.until() < Tasks.now()) {
-            CURSES.remove(e.getUUID());
-            CURSED.remove(e.getUUID());
-            return 1;
-        }
-        return 1 + c.stacks() * c.per();
-    }
-
-    /** 저주 걸린 적 (주인 sp — 둘레 radius 칸 · 살아 있는 것) */
-    static List<LivingEntity> cursedNear(ServerPlayer sp, Vec3 at, double radius) {
-        List<LivingEntity> out = new ArrayList<>();
-        long now = Tasks.now();
-        for (Map.Entry<UUID, Curse> en : CURSES.entrySet()) {
-            if (en.getValue().until() < now) continue;
-            LivingEntity e = CURSED.get(en.getKey());
-            if (e == null || e.isRemoved() || !e.isAlive() || e.level() != sp.level() || V.hdist(e.position(), at) > radius) continue;
-            out.add(e);
-        }
-        return out;
-    }
-
-    // ------------------------------------------------------------ 그림자 구르기 · 그믐밤
-
-    /** 그림자 구르기: ticks 틱 동안 받는 피해 없음 */
-    static void rollFor(ServerPlayer sp, int ticks) {
-        of(sp).rollUntil = Tasks.now() + ticks;
-    }
-
-    /** 시험: 구르는 중인지 */
-    public static boolean rolling(ServerPlayer sp) {
-        State st = STATES.get(sp.getUUID());
-        return st != null && st.rollUntil > Tasks.now();
-    }
-
-    private static double rollReduce(ServerPlayer sp) {
-        State st = STATES.get(sp.getUUID());
-        return st != null && st.rollUntil > Tasks.now() && jobIf(sp, SH) != null ? 1 : 0;
-    }
-
-    /** 치명타 + : 그믐밤 동안 섀도 헌터 활 평타 */
-    private static double critAdd(ServerPlayer sp, Weapon w, LivingEntity victim) {
-        if (w == null || !"bow".equals(w.type()) || !JobTraits.stanceOn(sp, MOONLESS)) return 0;
-        Jobs.Job j = jobIf(sp, SH);
-        Jobs.Skill k = j == null ? null : j.skill(MOONLESS);
-        return k == null ? 0 : JobUpgrades.num(sp, k, "crit", 0.2);
-    }
-
-    /** 그믐밤: 둘레 radius 칸 몹이 나를 놓침 (노리던 대상이 나면 잃음) — 놓친 수 */
-    private static int loseMe(ServerPlayer sp, double radius) {
-        int n = 0;
-        AABB box = sp.getBoundingBox().inflate(radius, 3, radius);
-        for (Mob m : sp.level().getEntitiesOfClass(Mob.class, box, x -> x.getTarget() == sp)) {
-            m.setTarget(null);
-            m.getNavigation().stop();
-            n++;
-            if (RuneKit.fxQuota("jobMoonlessLose", 4)) SkillFx.fx(sp.level(), "rpg:arrow_spark", RuneKit.overHead(m, 0.4), Opt.of("dir", V.UP, "speed", 0.8, "size",
-                    0.2, "grow", 0.5, "life", 0.5, "color", SILVER, "alpha", 0.9));
-        }
-        return n;
-    }
-
-    // ------------------------------------------------------------ 죽음 (저주 번짐)
-
+    /** 쓰러짐: 팰컨 다이브로 쏜 적이면 그 사람의 팰컨 다이브 재사용 대기를 끝냄 (하늘빛 깃털 · 맑은 소리) */
     private static void onDeath(LivingEntity e, DamageSource src) {
-        if (e == null) return;
-        ShadowhunterSkills.onDeath(e); // 저주 번짐 문양이 터지기 전에 쓰러짐 → 그 자리에서 바로 번짐
-        CURSES.remove(e.getUUID());
-        CURSED.remove(e.getUUID());
+        if (e == null || STATES.isEmpty() || !(e.level() instanceof ServerLevel level)) return;
+        long now = Tasks.now();
+        for (Map.Entry<UUID, State> en : STATES.entrySet()) {
+            State st = en.getValue();
+            if (st.diveUntil < now || !st.diveFoes.remove(e.getUUID())) continue;
+            ServerPlayer sp = level.getServer().getPlayerList().getPlayer(en.getKey());
+            Jobs.Job j = sp == null ? null : jobIf(sp, BA);
+            if (j == null) continue;
+            st.diveFoes.clear();
+            st.diveUntil = 0;
+            if (JobSkills.cooldownLeft(sp, DIVE) <= 0) continue;
+            JobSkills.clearCooldown(sp, DIVE);
+            ServerLevel lv = sp.level();
+            JobFx.feathers(lv, V.up(sp.position(), 1.4), 8, 1.0, 0.2, j, 1.0, JobFx.hide1p(sp));
+            JobFx.eyeRing(sp, j, 2.2, 0.8, 0.4);
+            SkillFx.sparks(lv, V.up(sp.position(), 1.0), JobKit.core(j), 10, 4);
+            SkillFx.play(lv, "block.amethyst_block.chime", sp.position(), 1.7, 0.8);
+            SkillFx.play(lv, "entity.phantom.flap", sp.position(), 1.6, 0.6);
+            JobSystem.note(sp, "§b팰컨 다이브 §7— 다시 쓸 수 있음");
+        }
+    }
+
+    /** 시험: 팰컨 다이브 재사용 대기가 돌아오는 적 수 */
+    public static int diveWatch(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        return st == null || st.diveUntil < Tasks.now() ? 0 : st.diveFoes.size();
     }
 
     // ------------------------------------------------------------ 틱 · 태세 · 게이지
 
-    /**
-     * 4틱마다 (JobTraits.tick — 사람마다): 섀도 헌터 — 움직였으면 추격이 줄지 않음 (멈춰 서 있으면 decay 틱마다 하나씩 — 그믐밤 동안은 그대로), 8틱마다 내 저주가 걸린
-     * 적 (8명까지) 머리 위 저주 문양 (쌓인 수만큼 크게)
-     */
+    /** 4틱마다 (JobTraits.tick — 사람마다): 배틀 아처 — 움직임 · 게이지 (갈래 1 · 3) · 스톰 스트라이드가 끝나면 이동 속도를 거둠 */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
-        if (!SH.equals(j.id())) return;
+        if (!BA.equals(j.id())) return;
         State st = of(sp);
         Vec3 p = sp.position();
-        boolean moved = (st.lastPos != null && Math.hypot(p.x - st.lastPos.x, p.z - st.lastPos.z) > 0.2) || moving(sp);
+        if ((st.lastPos != null && Math.hypot(p.x - st.lastPos.x, p.z - st.lastPos.z) > 0.2) || Math.hypot(sp.getKnownMovement().x, sp.getKnownMovement().z) > 0.04) st.lastMove = now;
         st.lastPos = p;
-        if (moved) {
-            st.lastMove = now;
-            st.still = 0;
-        } else if (st.pursuit > 0 && !JobTraits.stanceOn(sp, MOONLESS)) {
-            st.still += 4;
-            int decay = (int) trait(j, "decay", 20);
-            if (st.still >= decay) {
-                st.still -= decay;
-                st.pursuit--;
-                applySpeed(sp, j, st);
-                JobTraits.sendGauge(sp, false);
-            }
+        boolean stride = JobTraits.stanceOn(sp, STRIDE);
+        if (st.speedOn && !stride) {
+            speedMod(sp, 0);
+            st.speedOn = false;
         }
-        if (now % 8 == 0 && !CURSES.isEmpty()) {
-            ServerLevel level = sp.level();
-            int n = 0;
-            for (Map.Entry<UUID, Curse> en : CURSES.entrySet()) {
-                Curse c = en.getValue();
-                if (!c.owner().equals(sp.getUUID()) || c.until() < now) continue;
-                LivingEntity e = CURSED.get(en.getKey());
-                if (e == null || e.isRemoved() || !e.isAlive() || e.level() != level || e.distanceToSqr(sp) > 40 * 40 || n++ >= 8) continue;
-                JobFx.curse(level, RuneKit.overHead(e, 0.45), 0.3 + 0.045 * c.stacks(), 1, 3, 0.45, true, Opt.of("vel", RuneKit.entVel(e), "fade", 0.25), DUSK, SILVER);
-            }
+        int g = stride || now - st.lastMove <= 4 ? 3 : 1;
+        if (g != st.gauge) {
+            st.gauge = g;
+            JobTraits.sendGauge(sp, false);
         }
     }
 
     /**
-     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 사과 겨누기 = 앞 적들의 금빛 약점 과녁 · 활 앞 흰 반짝임 / 그믐밤 = 몸 둘레 짙은 남색 어둠 · 발밑 그림자 고리 ·
-     * 둘레 몹이 나를 놓침 (lose 틱마다). 그렸으면 true
+     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 헌터스 마크 = 활 앞 은빛 반짝임 · 화살통에서 솟는 은빛 / 스톰 스트라이드 = 발밑 폭풍 바람 고리 · 몸 뒤로 흐르는 바람 줄 ·
+     * 하늘빛 불티. 그렸으면 true
      */
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
         ServerLevel level = sp.level();
-        if (APPLE.equals(stance)) {
-            weakMarks(sp, j);
-            RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), JobFx.hide1p(sp).with("size", 0.14, "life", 0.4, "cell",
-                    (double) RuneKit.RFX.get("glint")[0], "spin", 0.0, "spinRate", 180.0, "color", SNIPE, "fade", 0.4, "vel", RuneKit.bodyVel(sp)));
+        if (MARK.equals(stance)) {
+            RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), JobFx.hide1p(sp).with("size", 0.16, "life", 0.4, "cell",
+                    (double) RuneKit.RFX.get("glint")[0], "spin", 0.0, "spinRate", 180.0, "color", SILVER, "fade", 0.4, "vel", RuneKit.bodyVel(sp)));
+            Vec3 back = V.up(V.add(sp.position(), Kit.facingOf(sp), -0.35), 1.5);
+            SkillFx.fx(level, "rpg:arrow_spark", back, Opt.of("dir", V.UP, "speed", 1.6, "size", 0.12, "grow", 0.6, "life", 0.4, "color", SILVER, "alpha", 0.9));
+            State st = STATES.get(sp.getUUID());
+            if (st != null && st.markEnt != null && st.markHits > 0 && !st.markEnt.isRemoved() && st.markEnt.isAlive() && st.markEnt.level() == level) {
+                Jobs.Skill k = j.skill(MARK);
+                pips(level, st.markEnt, st.markHits, k == null ? 3 : Math.max(2, (int) k.num("every", 3)), j);
+            }
             return true;
         }
-        if (MOONLESS.equals(stance)) {
-            Jobs.Skill k = j.skill(MOONLESS);
-            double r = k == null ? 6 : k.num("radius", 6);
-            JobFx.smoke(level, V.up(sp.position(), 0.6), r * 0.35, DUSK, SILVER, 0.6, JobFx.hide1p(sp).with("alpha", 0.35, "vel", RuneKit.bodyVel(sp)));
-            JobFx.ring(level, V.up(sp.position(), 0.06), r, j, false, 0.5, Opt.of("alpha", 0.55, "vel", RuneKit.bodyVel(sp)));
-            int lose = k == null ? 10 : Math.max(4, (int) k.num("lose", 10));
-            if (Tasks.now() % lose < 8) loseMe(sp, r);
+        if (STRIDE.equals(stance)) {
+            JobFx.wind(level, V.up(sp.position(), 0.06), 1.1, j, 0.45, JobFx.hide1p(sp).with("alpha", 0.8, "vel", RuneKit.bodyVel(sp)));
+            JobFx.speed(sp, j, 0.4, 0.75, RuneKit.bodyVel(sp));
+            Vec3 c = V.up(sp.position(), 0.4);
+            for (int i = 0; i < 2; i++) {
+                double a = Kit.rand() * Math.PI * 2;
+                Vec3 p = V.add(c, new Vec3(Math.cos(a), 0, Math.sin(a)), 0.6);
+                SkillFx.fx(level, "rpg:arrow_spark", p, Opt.of("dir", V.unit(new Vec3(Math.cos(a), 0.6, Math.sin(a))), "speed", 2.4, "size", 0.12, "grow", 0.6, "life", 0.3,
+                        "color", JobKit.core(j), "alpha", 1.0));
+            }
             return true;
         }
         return false;
     }
 
-    /** 게이지 값: 섀도 헌터 = 추격 (최대 trait.max) */
+    /** 게이지 값: 배틀 아처 = 다음 활 평타의 갈래 (1 · 3) */
     static int gaugeValue(ServerPlayer sp, Jobs.Job j) {
-        return j != null && SH.equals(j.id()) ? pursuit(sp) : 0;
+        if (j == null || !BA.equals(j.id())) return 0;
+        State st = STATES.get(sp.getUUID());
+        return st == null ? 1 : st.gauge;
     }
 }

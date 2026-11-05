@@ -69,10 +69,12 @@ import net.minecraft.world.phys.Vec3;
  * 재사용 대기 −6틱 · 셀레스티얼 이글 (6 × 4 + 32)</li>
  * <li>네크로맨서 (mmorpg:job_nc — 재설계안 2판): 그레이브 콜 (7 · 표식 → 쓰러지면 무덤 없이 망자) · 무덤 셋 → 다시 눌러 망자 넷 · 소울 미스트 (6.3 + 2.1 × 3 · 표식 →
  * 망자 × 0.52) · 그레이브야드 (2.1 + 2.1) · 블라이트 (0.84 × 20 · 안에서 쓰러지면 망자) · 팬텀 갤리온 (14 + 18 + 24 · 선장 2.2배) · 직업을 바꾸면 망자 · 선장이 무너짐</li>
- * <li>스나이퍼 (mmorpg:job_sn): 꿰뚫는 연사 (1.2 × 2 + 1.4 × 2 + 2.3 · 뒤의 과녁 2.3) · 급소 사격 (호흡 8 → 치명타 확정 · 꿰뚫음 · 호흡 3 씀) · 순풍 공중 사격 (뜀 · 활 평타 × 1 세 발 ·
- * 호흡 그대로) · 울르의 폭우 (6.75 × 2 · 묶음) · 사과 겨누기 (호흡 8 · 급소 사격이 호흡을 쓰지 않음) · 세 번째 화살 (8 × 2 + 30 + 14 · 뜸 → 내려앉음)</li>
- * <li>섀도 헌터 (mmorpg:job_sh): 검은 화살 (2.5 × 3 · 저주 +1 · 추격 +1 → 이동 +3%) · 그림자 구르기 (받는 피해 없음 · 활 평타 × 1.5 · 저주 +1) · 저주 번짐 (5.5 → 터짐 8 × 저주 1.02 ·
- * 둘레 4 / 쓰러지면 바로 번짐) · 그믐밤 (치명타 +20%p · 추격이 줄지 않음 · 몹이 나를 놓침) · 어둠숲의 사냥 (저주 +2 → (6 × 4 + 36) × 1.04)</li>
+ * <li>스나이퍼 (mmorpg:job_sn — 재설계안 2판): 하트시커 (다시 누름 — 당긴 몫만큼 7.5 × (0.5 → 1) · 끝까지 당기면 저절로 · 호흡 하나당 +6% · 호흡 3 씀) · 급소 사격
+ * (호흡 8 → 치명타 확정 · 꿰뚫음 · 호흡 3 씀) · 스네어 샷 (그물 화살 = 활 평타 × 1 · 둔화 · 반동으로 뒤로 뜀 → 호흡 +3) · 트릭 샷 (3.5 → 옆 과녁 5 → 같은 과녁 다시 5) ·
+ * 헌터스 마크 (같은 과녁 세 번째 활 평타마다 은빛 화살 — 최대 체력 5% · 위력 × 1 ~ 3) · 데드아이 (다시 누를 때마다 14 · 18 · 28 / 3초 지나면 저절로)</li>
+ * <li>배틀 아처 (mmorpg:job_ba — 섀도 헌터 대신): 난사 (서서 쏜 평타 한 갈래 · 움직이며 쏘면 세 갈래 — 옆 둘 평타 × 0.5 · 3칸 안 +20%) · 호넷 스웜 (열둘이 둘에게
+ * 나뉨 3.75 · 3.75) · 팰컨 다이브 (뛰어 내려앉으며 둘레마다 활 평타 · 둔화 · 쓰러뜨리면 재사용 대기가 돌아옴) · 스플린터 샷 (3칸 안 13.5 · 밀쳐냄 / 5.4칸 7조각) ·
+ * 스톰 스트라이드 (이동 +25% · 서서도 세 갈래 — 옆 평타 × 1) · 퀴버 스톰 (8 × 6 + 12)</li>
  * <li>트릭스터 (mmorpg:job_tr): 표식 최대 7 · 표식 5 인 몹을 평타로 쓰러뜨리면 (+1) 옆 과녁에게 6 이 옮겨감 · 검은 장미 덤불 (표식 7 → 0.35 + 0.2 + 0.6 × 7 · 머리 위로 넘어 등 뒤 · 과녁을 봄) ·
  * 우트가르드의 환술 (환영 둘이 터짐 1.425 × 2 · 표식 +2) · 요르문간드의 똬리 (가며 2.4 → 조임 3.15 → 독 0.75 × 4 · 처음 자리로) · 끝없는 밤 (첫 평타 × 2.5 치명 · 풀려도 태세 ·
  * 쓰러뜨리면 다시 은신) · 개기일식 (1.25 × 4 × 4 · 표식 7 → 4 + 2 × 7)</li>
@@ -91,7 +93,7 @@ public final class RpgJobAdvanceTests {
     static final String ENV_AM = "mmorpg:job_am";
     static final String ENV_NC = "mmorpg:job_nc";
     static final String ENV_SN = "mmorpg:job_sn";
-    static final String ENV_SH = "mmorpg:job_sh";
+    static final String ENV_BA = "mmorpg:job_ba";
     static final String ENV_TR = "mmorpg:job_tr";
     static final String ENV_BD = "mmorpg:job_bd";
 
@@ -238,7 +240,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("necromancer".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("네크로맨서"),
                     "necromancer free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 궁수의 2차 전직 (스나이퍼 · 섀도 헌터) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
+            // 0.51.0 궁수의 2차 전직 (스나이퍼 · 배틀 아처 — 재설계안 2판) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("archer"), null);
@@ -250,7 +252,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload aadv = chest(sp);
             h.assertTrue(aadv != null && aadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("스나이퍼")
-                    && aadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("섀도 헌터"), "archer advance cards");
+                    && aadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("배틀 아처"), "archer advance cards");
             Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "archer advance confirm");
             Forms.answer(sp, 11, null);
@@ -1331,7 +1333,7 @@ public final class RpgJobAdvanceTests {
         return w.damage() * RpgCombat.powerOf(sp, w) * RpgCombat.basicMult.applyAsDouble(sp, w);
     }
 
-    @GameTest(environment = ENV_SN, maxTicks = 640)
+    @GameTest(environment = ENV_SN, maxTicks = 720)
     public void sniperSkills(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = RpgJobTests.jobPlayer(h, "sniper", Map.of("dex", 50), 50);
@@ -1339,29 +1341,54 @@ public final class RpgJobAdvanceTests {
         RpgJobTests.hold(sp, w);
         Jobs.Job j = Jobs.job("sniper");
         // 시험 자리는 barrier 벽 안 8 × 8 칸 (z 8 부터 벽 — 벽 속 과녁은 숨막힘 피해가 더해짐): 뒤로 물러나는 스킬은 앞쪽에서 써서 벽 안에 머묾
-        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 4.5), dummy(h, 0, 6.0)));
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 4)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
-        double[] mark = {0, 0};
-        // 꿰뚫는 연사: 뒤로 구르며 1.2 × 2 → 무릎 꿇고 1.4 × 2 + 꿰뚫는 화살 2.3 (겨눈 과녁 = 7.5) · 같은 일직선 뒤의 과녁도 꿰뚫음 (2.3)
+        double[] mark = {0, 0, 0};
+        long[] t0 = {0};
+        // 하트시커: 당김 (다시 누를 수 있는 창 · 재사용 대기 없음 · 느려짐) → 10틱에 다시 누름 → 당긴 몫만큼 7.5 × (0.5 + 0.5 × 당김/20) (호흡 0)
         steps.add(new RpgJobTests.Step(1, () -> {
-            homeAt(h, sp, 3.5);
-            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            home(h, sp);
+            RpgJobTests.clearStrays(h, z.get(0));
             JobTraitsMore.setBreath(sp, 0);
-            mark[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 0), "꿰뚫는 연사 cast");
+            t0[0] = mmorpg.fabric.job.JobKit.now();
+            h.assertTrue(JobSkills.press(sp, 0), "하트시커 draw");
+            h.assertTrue(JobRecast.pending(sp, "sniper_heart") && JobSkills.cooldownLeft(sp, "sniper_heart") == 0 && sp.hasEffect(MobEffects.SLOWNESS),
+                    "heart drawing: recast window · no cooldown · slowed");
         }));
-        steps.add(new RpgJobTests.Step(30, () -> {
-            double e = RpgJobTests.expected(sp, j, j.skill(0), 1);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), e * 7.5), "꿰뚫는 연사 " + TestDummies.dealt(z.get(0)) + " vs " + e * 7.5);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), e * 2.3), "piercing arrow (behind) " + TestDummies.dealt(z.get(1)) + " vs " + e * 2.3);
+        steps.add(new RpgJobTests.Step(10, () -> {
+            long held = mmorpg.fabric.job.JobKit.now() - t0[0];
+            mark[0] = 0.5 + 0.5 * Math.min(1, held / 20.0);
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage while drawing");
+            h.assertTrue(JobSkills.press(sp, 0), "하트시커 release (held " + held + ")");
+            h.assertTrue(!JobRecast.pending(sp, "sniper_heart") && JobSkills.cooldownLeft(sp, "sniper_heart") > 0 && !sp.hasEffect(MobEffects.SLOWNESS),
+                    "released: window closed · cooldown · not slowed");
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 7.5 * mark[0]);
+            h.assertTrue(mark[0] < 1 && RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "하트시커 (part " + mark[0] + ") " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "sniper gradient number");
-            h.assertTrue(mark[0] - sp.position().z > 1.5, "rolled back: " + (mark[0] - sp.position().z));
+            // 끝까지 당김 (다시 누르지 않음): 20틱에 저절로 놓음 → 7.5 × 호흡 5 (1 + 0.06 × 5) · 호흡 3 씀
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 4));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            JobTraitsMore.setBreath(sp, 5);
+            h.assertTrue(JobSkills.press(sp, 0), "하트시커 draw (full)");
+        }));
+        steps.add(new RpgJobTests.Step(17, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == 0 && JobRecast.pending(sp, "sniper_heart"), "still drawing at 17")));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 7.5 * 1.3);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "하트시커 (full · breath 5) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!JobRecast.pending(sp, "sniper_heart") && JobSkills.cooldownLeft(sp, "sniper_heart") > 0, "auto release → cooldown");
+            h.assertTrue(JobTraitsMore.breath(sp) == 2, "heart uses 3 breath (5 → 2): " + JobTraitsMore.breath(sp));
             // 급소 사격: 호흡 8 에서 쏜 활 평타 → 치명타 확정 · 꿰뚫음 (뒤의 과녁도) · 호흡 3 씀 (8 → 5)
-            for (Husk x : z) x.discard();
+            z.get(0).discard();
             z.clear();
             home(h, sp);
             z.add(dummy(h, 0, 3));
             z.add(dummy(h, 0, 6));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
             JobTraitsMore.setBreath(sp, 8);
             RpgCombat.forceCrit = null;
             RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
@@ -1371,66 +1398,110 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(14, () -> {
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "snipe: sure crit " + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), mark[0]), "snipe pierces (crit) " + TestDummies.dealt(z.get(1)) + " vs " + mark[0]);
-            // 순풍 공중 사격: 뒤로 5칸 · 2.5칸 높이 → 공중에서 세 발 (각각 활 평타 × 1 — 치명타 없이) · 그동안 호흡이 줄지 않음
+            // 스네어 샷: 그물 화살 (활 평타 × 1 — 치명타 없이) · 맞은 과녁 둔화 → 반동으로 뒤로 낮게 뛰어 물러남 (6칸) → 내려앉으면 호흡 +3
             for (Husk x : z) x.discard();
             z.clear();
-            homeAt(h, sp, 6.0);
+            homeAt(h, sp, 6.5);
             z.add(dummy(h, 0, 6.0));
             RpgJobTests.clearStrays(h, z.get(0));
-            JobTraitsMore.setBreath(sp, 2);
-            RpgCombat.forceCrit = false;
-            mark[0] = 3 * bowShot(sp, w);
-            mark[1] = sp.getY();
-            h.assertTrue(JobSkills.press(sp, 1), "순풍 공중 사격 cast");
-        }));
-        steps.add(new RpgJobTests.Step(7, () -> h.assertTrue(sp.getY() - mark[1] > 1.0, "gale: rose " + (sp.getY() - mark[1]))));
-        steps.add(new RpgJobTests.Step(50, () -> {
-            RpgCombat.forceCrit = null;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "순풍 공중 사격 (3 bow shots) " + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
-            h.assertTrue(JobTraitsMore.breath(sp) == 2, "breath held: " + JobTraitsMore.breath(sp));
-            h.assertTrue(Math.abs(sp.getY() - mark[1]) < 0.3, "gale: landed " + sp.getY() + " vs " + mark[1]);
-            // 울르의 폭우: 과녁 자리에 화살비 두 번 6.75 × 2 (= 13.5) · 처음 맞은 과녁 1.5초 묶임 (둔화)
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 6));
-            RpgJobTests.clearStrays(h, z.get(0));
-            h.assertTrue(JobSkills.press(sp, 2), "울르의 폭우 cast");
-        }));
-        steps.add(new RpgJobTests.Step(20, () -> h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "storm: pinned (slowness)")));
-        steps.add(new RpgJobTests.Step(26, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 13.5);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "울르의 폭우 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            // 사과 겨누기: 태세 8초 — 호흡 즉시 8 · 급소 사격이 호흡을 쓰지 않음 (치명타 확정)
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 3));
             JobTraitsMore.setBreath(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 3), "사과 겨누기 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "sniper_apple") && JobTraitsMore.breath(sp) == 8, "apple: stance · breath 8 — " + JobTraitsMore.breath(sp));
-            RpgCombat.forceCrit = null;
-            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
-            h.assertTrue(JobTraitsMore.breath(sp) == 8, "apple: snipe keeps breath: " + JobTraitsMore.breath(sp));
-            mark[0] = bowShot(sp, w) * RpgCombat.critMultOf(sp, w);
+            RpgCombat.forceCrit = false;
+            mark[0] = bowShot(sp, w);
+            mark[1] = sp.getY();
+            mark[2] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "스네어 샷 cast");
         }));
-        steps.add(new RpgJobTests.Step(14, () -> {
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "apple snipe " + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
-            // 세 번째 화살: 뒤로 뛰어 공중 두 발 8 × 2 → 내려앉아 셋째 화살 30 → 길의 바람 14 (= 60)
+        steps.add(new RpgJobTests.Step(7, () -> h.assertTrue(sp.getY() - mark[1] > 0.5, "snare recoil: rose " + (sp.getY() - mark[1]))));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            RpgCombat.forceCrit = null;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "스네어 샷 (bow × 1) " + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "snare: netted (slowness)");
+            h.assertTrue(mark[2] - sp.position().z > 3.0 && Math.abs(sp.getY() - mark[1]) < 0.3, "snare: hopped back " + (mark[2] - sp.position().z) + " · landed " + sp.getY());
+            h.assertTrue(JobTraitsMore.breath(sp) == 3, "snare landing breath +3: " + JobTraitsMore.breath(sp));
+            // 트릭 샷: 겨눈 과녁 3.5 → 튀어 옆 과녁 5 (치명 숫자) → 튈 곳이 없으면 같은 과녁에게 다시 5 (= 13.5)
+            z.get(0).discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 3.0));
+            z.add(dummy(h, 2.0, 4.0));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            JobTraitsMore.setBreath(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 2), "트릭 샷 cast");
+        }));
+        steps.add(new RpgJobTests.Step(30, () -> {
+            double e = RpgJobTests.expected(sp, j, j.skill(2), 1);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), e * 3.5), "트릭 샷 first " + TestDummies.dealt(z.get(0)) + " vs " + e * 3.5);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), e * 10), "트릭 샷 bounces (5 × 2) " + TestDummies.dealt(z.get(1)) + " vs " + e * 10);
+            // 헌터스 마크: 태세 8초 — 활 평타가 같은 과녁을 세 번째 맞힐 때마다 은빛 화살 (최대 체력 1024 × 5% — 위력 × 1 ~ 3)
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 3));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraitsMore.setBreath(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 3), "헌터스 마크 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "sniper_mark") && JobTraits9.markHits(sp) == 0, "mark: stance · count 0");
+            RpgCombat.forceCrit = false;
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
+            mark[0] = bowShot(sp, w);
+        }));
+        steps.add(new RpgJobTests.Step(21, () -> {
+            h.assertTrue(JobTraits9.markHits(sp) == 1 && RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "mark 1: " + JobTraits9.markHits(sp) + " · "
+                    + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
+            mark[0] += bowShot(sp, w);
+        }));
+        steps.add(new RpgJobTests.Step(21, () -> {
+            h.assertTrue(JobTraits9.markHits(sp) == 2 && RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "mark 2: " + JobTraits9.markHits(sp) + " · "
+                    + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
+            double power = JobSystem.power(sp, j);
+            double silver = Math.max(power, Math.min(power * 3, TestDummies.HP * 0.05)) * RpgCombat.dealtMult.applyAsDouble(sp);
+            mark[0] += bowShot(sp, w) + silver;
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            RpgCombat.forceCrit = null;
+            h.assertTrue(JobTraits9.markHits(sp) == 0, "third hit resets the count: " + JobTraits9.markHits(sp));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "mark 3: silver arrow " + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
+            // 데드아이: 저격 자세 (다시 누를 수 있는 창) → 다시 누를 때마다 한 발 14 · 18 → 셋째 28 (= 60 — 과녁은 늘 체력이 가득이라 잃은 체력 몫 없음)
             JobTraits.testEndStance(sp);
             z.get(0).discard();
-            homeAt(h, sp, 6.0);
-            z.set(0, dummy(h, 0, 6.0));
+            home(h, sp);
+            z.set(0, dummy(h, 0, 5));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            mark[1] = sp.getY();
-            h.assertTrue(JobSkills.press(sp, 4), "세 번째 화살 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "데드아이 cast");
+            h.assertTrue(JobRecast.pending(sp, "sniper_ult") && JobSkills.cooldownLeft(sp, "sniper_ult") == 0, "deadeye: recast window · no cooldown yet");
         }));
-        steps.add(new RpgJobTests.Step(14, () -> h.assertTrue(sp.getY() - mark[1] > 1.5, "ult: in the air " + (sp.getY() - mark[1]))));
-        steps.add(new RpgJobTests.Step(18, () -> h.assertTrue(Math.abs(sp.getY() - mark[1]) < 0.3, "ult: landed to draw " + sp.getY() + " vs " + mark[1])));
-        steps.add(new RpgJobTests.Step(46, () -> {
+        steps.add(new RpgJobTests.Step(12, () -> h.assertTrue(JobSkills.press(sp, 4), "데드아이 shot 1")));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 14);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "데드아이 shot 1 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobSkills.press(sp, 4), "데드아이 shot 2");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            h.assertTrue(JobSkills.press(sp, 4), "데드아이 shot 3");
+            h.assertTrue(!JobRecast.pending(sp, "sniper_ult") && JobSkills.cooldownLeft(sp, "sniper_ult") > 0, "third shot → cooldown");
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 60);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "세 번째 화살 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "데드아이 (three presses) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 다시 누르지 않음: 3초가 지나면 남은 세 발을 10틱마다 저절로 (60 · 70 · 80)
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 4), "데드아이 cast (auto)");
+        }));
+        steps.add(new RpgJobTests.Step(56, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == 0 && JobRecast.pending(sp, "sniper_ult"), "deadeye: holds fire until 60")));
+        steps.add(new RpgJobTests.Step(32, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 60);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "데드아이 (auto fire) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!JobRecast.pending(sp, "sniper_ult") && JobSkills.cooldownLeft(sp, "sniper_ult") > 0, "auto fire → cooldown");
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);
             h.assertTrue(JobTraitsMore.breath(sp) == 0, "breath cleared on job change: " + JobTraitsMore.breath(sp));
             for (Husk x : z) x.discard();
@@ -1438,120 +1509,141 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 섀도 헌터
+    // ------------------------------------------------------------ 배틀 아처
 
-    @GameTest(environment = ENV_SH, maxTicks = 640)
-    public void shadowhunterSkills(GameTestHelper h) {
+    @GameTest(environment = ENV_BA, maxTicks = 640)
+    public void battlearcherSkills(GameTestHelper h) {
         floor(h);
-        ServerPlayer sp = RpgJobTests.jobPlayer(h, "shadowhunter", Map.of("dex", 50), 50);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "battlearcher", Map.of("dex", 50), 50);
         Weapon w = Weapons.weaponFrom("bow", 0, "common");
         RpgJobTests.hold(sp, w);
-        Jobs.Job j = Jobs.job("shadowhunter");
-        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 5)));
+        Jobs.Job j = Jobs.job("battlearcher");
+        // 앞 2.5칸 (3칸 안 — 피해 +20%) · 양옆 앞 4칸 (3 ~ 10칸 — 그대로)
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2.5), dummy(h, -2.0, 3.5), dummy(h, 2.0, 3.5)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
-        double[] mark = {0, 0};
+        double[] mark = {0, 0, 0};
         Husk[] victim = {null};
-        // 검은 화살: 옆으로 3칸 달리며 2.5 × 3 (= 7.5 — 한 번에) · 맞은 과녁 저주 +1 · 달리며 쏘아 추격 +1 (이동 +3%)
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
-            RpgJobTests.clearStrays(h, z.get(0));
-            JobTraits9.setPursuit(sp, 0);
-            mark[0] = sp.position().x;
-            h.assertTrue(JobSkills.press(sp, 0), "검은 화살 cast");
-            h.assertTrue(JobTraits9.pursuit(sp) == 1 && Math.abs(JobTraits9.speedBonus(sp) - 0.03) < 1e-9, "pursuit 1 → speed +3%: " + JobTraits9.pursuit(sp) + " · "
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+        }));
+        // 난사: 서서 쏜 활 평타 → 한 갈래 (가까운 과녁 × 1.2) — 시험 자리로 옮긴 움직임이 4틱 마디에 잡혀도 12틱이면 지남
+        steps.add(new RpgJobTests.Step(12, () -> {
+            RpgCombat.forceCrit = false;
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
+            mark[0] = bowShot(sp, w);
+        }));
+        steps.add(new RpgJobTests.Step(21, () -> {
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0] * 1.2), "near shot × 1.2: " + TestDummies.dealt(z.get(0)) + " vs " + mark[0] * 1.2);
+            h.assertTrue(TestDummies.dealt(z.get(1)) == 0 && TestDummies.dealt(z.get(2)) == 0, "standing still → one arrow");
+            // 움직이며 쏨 → 세 갈래 (둘레 5칸의 다른 과녁 둘에게 평타 × 0.5)
+            JobTraits9.testMoved(sp);
+            RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0] * 2.4), "moving shot (near × 1.2): " + TestDummies.dealt(z.get(0)) + " vs " + mark[0] * 2.4);
+            for (int i = 1; i <= 2; i++) h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(i)), mark[0] * 0.5), "split arrow × 0.5 (" + i + "): " + TestDummies.dealt(z.get(i))
+                    + " vs " + mark[0] * 0.5);
+            // 스톰 스트라이드: 태세 8초 — 이동 +25% · 서서 쏴도 세 갈래 (갈래 화살 = 평타 × 1)
+            h.assertTrue(JobSkills.press(sp, 3), "스톰 스트라이드 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "battlearcher_stride") && Math.abs(JobTraits9.speedBonus(sp) - 0.25) < 1e-9, "stride: stance · speed +25% — "
                     + JobTraits9.speedBonus(sp));
         }));
-        steps.add(new RpgJobTests.Step(24, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 7.5);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "검은 화살 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits9.curseOf(z.get(0)) == 1, "black arrow curse +1: " + JobTraits9.curseOf(z.get(0)));
-            h.assertTrue(Math.abs(sp.position().x - mark[0]) > 1.5, "ran sideways: " + Math.abs(sp.position().x - mark[0]));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "shadowhunter gradient number");
-            // 그림자 구르기: 옆으로 4칸 (8틱 — 받는 피해 없음) · 한가운데 그림자 화살 (활 평타 × 1.5 — 치명타 없이) · 맞은 과녁 저주 +1 · 추격 +1
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 5));
-            JobTraits9.setPursuit(sp, 0);
-            RpgCombat.forceCrit = false;
-            mark[0] = 1.5 * bowShot(sp, w);
-            mark[1] = sp.position().x;
-            h.assertTrue(JobSkills.press(sp, 1), "그림자 구르기 cast");
-            h.assertTrue(JobTraits9.rolling(sp) && JobTraits9.pursuit(sp) == 1, "rolling · pursuit 1");
-            float hp = sp.getHealth();
-            float after = RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
-            h.assertTrue(Math.abs(after - hp) < 1e-4, "no damage while rolling: " + hp + " -> " + after);
+        steps.add(new RpgJobTests.Step(12, () -> RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0))));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0] * 3.6), "stride shot (near × 1.2): " + TestDummies.dealt(z.get(0)) + " vs " + mark[0] * 3.6);
+            for (int i = 1; i <= 2; i++) h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(i)), mark[0] * 1.5), "stride split × 1 (" + i + "): " + TestDummies.dealt(z.get(i))
+                    + " vs " + mark[0] * 1.5);
+            JobTraits.testEndStance(sp);
         }));
-        steps.add(new RpgJobTests.Step(30, () -> {
+        steps.add(new RpgJobTests.Step(6, () -> {
             RpgCombat.forceCrit = null;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "그림자 구르기 (bow × 1.5) " + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
-            h.assertTrue(JobTraits9.curseOf(z.get(0)) == 1, "roll curse +1 (bow hit): " + JobTraits9.curseOf(z.get(0)));
-            h.assertTrue(!JobTraits9.rolling(sp) && Math.abs(sp.position().x - mark[1]) > 2.0, "rolled sideways: " + Math.abs(sp.position().x - mark[1]));
-            float hp = sp.getHealth();
-            h.assertTrue(RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F) < hp, "damage again after the roll");
-            // 저주 번짐: 꿰뚫는 저주 화살 5.5 (저주 +1) → 1.8초에 문양이 터짐 8 (저주 1 → × 1.02) · 둘레 3.5칸의 다른 과녁에게 번짐 4 (저주 +1)
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 5));
-            z.add(dummy(h, 2.5, 5.5));
-            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
-            h.assertTrue(JobSkills.press(sp, 2), "저주 번짐 cast");
-        }));
-        steps.add(new RpgJobTests.Step(50, () -> {
-            double e = RpgJobTests.expected(sp, j, j.skill(2), 1);
-            double a = e * 5.5 + e * 8 * 1.02;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), a), "저주 번짐 (pierce + burst × curse) " + TestDummies.dealt(z.get(0)) + " vs " + a);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), e * 4), "curse spreads " + TestDummies.dealt(z.get(1)) + " vs " + e * 4);
-            h.assertTrue(JobTraits9.curseOf(z.get(0)) == 1 && JobTraits9.curseOf(z.get(1)) == 1, "curses 1 · 1: " + JobTraits9.curseOf(z.get(0)) + " · "
-                    + JobTraits9.curseOf(z.get(1)));
-            // 문양이 터지기 전에 쓰러지면 그 자리에서 바로 번짐 (체력 1 몹 — 과녁이 아님)
+            h.assertTrue(JobTraits9.speedBonus(sp) == 0, "stride over → speed back: " + JobTraits9.speedBonus(sp));
+            // 호넷 스웜: 화살 열둘이 둘레 7칸 과녁 둘에게 나뉨 (가까운 차례로 돌아가며 — 여섯씩 0.625 × 6 = 3.75 · 둘 다 3 ~ 10칸)
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            Husk v = h.spawnWithNoFreeWill(EntityTypes.HUSK, 4.5F, 2F, 5.5F);
-            v.setHealth(1F);
-            victim[0] = v;
-            z.add(dummy(h, 2.0, 4.5));
-            RpgJobTests.clearStrays(h, v, z.get(0));
+            z.add(dummy(h, 0, 5));
+            z.add(dummy(h, 2.5, 4.5));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            h.assertTrue(JobSkills.press(sp, 0), "호넷 스웜 cast");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.75);
+            for (int i = 0; i < 2; i++) h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(i)), want), "호넷 스웜 (" + i + ") " + TestDummies.dealt(z.get(i)) + " vs " + want);
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "battlearcher gradient number");
+            // 팰컨 다이브: 과녁 무리 가운데로 뛰어올라 내려앉으며 둘레 과녁마다 화살 (활 평타 × 1 · 가까워 × 1.2) · 둔화 · 1.5초 안에 쓰러지면 재사용 대기가 돌아옴
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 5));
+            z.add(dummy(h, 1.2, 5.6));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            RpgCombat.forceCrit = false;
+            mark[0] = bowShot(sp, w);
+            mark[1] = sp.getY();
+            mark[2] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "팰컨 다이브 cast");
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> h.assertTrue(sp.getY() - mark[1] > 1.0, "dive: rose " + (sp.getY() - mark[1]))));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            h.assertTrue(Math.abs(sp.getY() - mark[1]) < 0.3 && sp.position().z - mark[2] > 2.5, "dive: landed ahead " + (sp.position().z - mark[2]) + " · " + sp.getY());
+            for (int i = 0; i < 2; i++) {
+                h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(i)), mark[0] * 1.2), "dive arrow (" + i + ") " + TestDummies.dealt(z.get(i)) + " vs " + mark[0] * 1.2);
+                h.assertTrue(z.get(i).hasEffect(MobEffects.SLOWNESS), "dive arrow slows (" + i + ")");
+            }
+            h.assertTrue(JobTraits9.diveWatch(sp) == 2 && JobSkills.cooldownLeft(sp, "battlearcher_dive") > 0, "dive watches 2 · cooldown: " + JobTraits9.diveWatch(sp));
+            // 내려앉으며 쏜 몹이 쓰러짐 (체력 1 — 과녁이 아님) → 재사용 대기가 바로 돌아옴
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 5));
+            victim[0] = weak(h, 1.0, 5.4);
+            RpgJobTests.clearStrays(h, z.get(0), victim[0]);
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 2), "저주 번짐 (kill) cast");
+            h.assertTrue(JobSkills.press(sp, 1), "팰컨 다이브 cast (kill)");
         }));
         steps.add(new RpgJobTests.Step(18, () -> {
-            double e = RpgJobTests.expected(sp, j, j.skill(2), 1);
-            h.assertTrue(victim[0].isRemoved() || !victim[0].isAlive(), "marked one fell");
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), e * 4), "spreads at once on death " + TestDummies.dealt(z.get(0)) + " vs " + e * 4);
-            // 그믐밤: 태세 6초 — 활 평타 치명타 +20%p · 추격이 줄지 않음 · 노리던 몹이 나를 놓침 (쓸 때 · 그 뒤로도)
-            z.get(0).discard();
+            RpgCombat.forceCrit = null;
+            h.assertTrue(victim[0].isRemoved() || !victim[0].isAlive(), "dive: weak mob fell");
+            h.assertTrue(JobSkills.cooldownLeft(sp, "battlearcher_dive") == 0, "dive reset on kill: " + JobSkills.cooldownLeft(sp, "battlearcher_dive"));
+            // 스플린터 샷: 부채꼴 화살 조각 열둘 — 3칸 안 과녁은 모두 (13.5 × 1.2 · 밀쳐냄) · 먼 과녁은 3 ÷ 거리만큼 (5.4칸 → 7조각 = 13.5 × 7/12)
+            for (Husk x : z) x.discard();
+            z.clear();
             home(h, sp);
-            z.set(0, dummy(h, 2.0, 3.0));
-            z.get(0).setTarget(sp);
-            JobTraits9.setPursuit(sp, 3);
-            mark[0] = RpgCombat.critChanceOf(sp, w, null);
-            h.assertTrue(JobSkills.press(sp, 3), "그믐밤 cast");
-            double c1 = RpgCombat.critChanceOf(sp, w, null);
-            h.assertTrue(JobTraits.stanceOn(sp, "shadowhunter_moonless") && Math.abs(c1 - mark[0] - 0.2) < 1e-9, "moonless: stance · crit +0.2 (" + mark[0] + " -> " + c1 + ")");
-            h.assertTrue(z.get(0).getTarget() == null, "a mob lost me on cast");
-            z.get(0).setTarget(sp);
+            z.add(loose(h, 0, 2.5));
+            z.add(dummy(h, 1.5, 5.5));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            mark[0] = z.get(0).getZ();
+            h.assertTrue(JobSkills.press(sp, 2), "스플린터 샷 cast");
         }));
-        steps.add(new RpgJobTests.Step(30, () -> {
-            h.assertTrue(JobTraits9.pursuit(sp) == 3, "moonless keeps pursuit: " + JobTraits9.pursuit(sp));
-            h.assertTrue(z.get(0).getTarget() == null, "a mob lost me again (moonless)");
-            // 어둠숲의 사냥: 가시덤불 · 저주 +2 → 저주 걸린 과녁에 검은 화살 6 × 4 → 사냥의 화살 36 (= 60 — 저주 2 → × 1.04)
-            JobTraits.testEndStance(sp);
-            z.get(0).discard();
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double e = RpgJobTests.expected(sp, j, j.skill(2), 1);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), e * 13.5 * 1.2), "스플린터 샷 close (all × 1.2) " + TestDummies.dealt(z.get(0)) + " vs " + e * 16.2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), e * 13.5 * 7 / 12), "스플린터 샷 far (7 of 12) " + TestDummies.dealt(z.get(1)) + " vs " + e * 13.5 * 7 / 12);
+            h.assertTrue(z.get(0).getZ() - mark[0] > 0.3, "splinter knocks the close one: " + (z.get(0).getZ() - mark[0]));
+            // 퀴버 스톰: 3초 부채꼴 화살 물결 8 × 6 → 화살비 12 (= 60 · 과녁 4.7칸 — 그대로) · 걷는 동안 느려짐
+            for (Husk x : z) x.discard();
+            z.clear();
             home(h, sp);
-            z.set(0, dummy(h, 0, 6));
+            z.add(dummy(h, 0, 5));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "어둠숲의 사냥 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "퀴버 스톰 cast");
+            h.assertTrue(sp.hasEffect(MobEffects.SLOWNESS), "quiver storm: slowed while firing");
         }));
-        steps.add(new RpgJobTests.Step(14, () -> h.assertTrue(JobTraits9.curseOf(z.get(0)) == 2, "hunt: curse 2 — " + JobTraits9.curseOf(z.get(0)))));
-        steps.add(new RpgJobTests.Step(60, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 60) * 1.04;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "어둠숲의 사냥 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        steps.add(new RpgJobTests.Step(35, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 24);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "퀴버 스톰 waves (3 of 6 by 35) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(40, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 60);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "퀴버 스톰 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);
-            h.assertTrue(JobTraits9.pursuit(sp) == 0 && JobTraits9.speedBonus(sp) == 0, "pursuit cleared on job change");
+            h.assertTrue(JobTraits9.speedBonus(sp) == 0, "speed cleared on job change");
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });

@@ -100,7 +100,7 @@ final class JobFx {
     static final int BUCKLER2 = 8;
     static final int AEGIS2 = 6;
     /**
-     * 0.51.0 전사 2차 그림 (tools/job_fx_art_adv.py) 의 장 수: 곰의 혼 · 곰 앞발 · 달 (섀도 헌터) · 재설계안 2판 — 땅에서 솟는 돌창 (워로드) · 결투 말뚝 · 여덟 팔 ·
+     * 0.51.0 전사 2차 그림 (tools/job_fx_art_adv.py) 의 장 수: 곰의 혼 · 곰 앞발 · 달 (블러드 나이트의 블러드 문 — 섀도 헌터 는 재설계안 2판에서 뺌) · 재설계안 2판 — 땅에서 솟는 돌창 (워로드) · 결투 말뚝 · 여덟 팔 ·
      * 결투장 바닥 (글래디에이터)
      */
     static final int BEAR = 8;
@@ -1387,17 +1387,16 @@ final class JobFx {
         cells(level, "jgrave", GRAVE, f, n, at, life, loop ? 7 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), outer(j), inner(j));
     }
 
-    // ------------------------------------------------------------ 0.51.0 궁수 2차 그림 (tools/job_fx_art_adv.py — 스나이퍼 · 섀도 헌터)
+    // ------------------------------------------------------------ 0.51.0 궁수 2차 그림 (tools/job_fx_art_adv.py — 스나이퍼 · 배틀 아처, 재설계안 2판에서 섀도 헌터 의
+    // 검은 화살 · 저주 문양 · 어둠숲 가시덤불은 뺌)
 
-    /** 장 수: 약점 과녁 · 거대한 셋째 화살 · 검은 화살 · 저주 문양 · 어둠숲 가시덤불 */
+    /** 장 수: 약점 과녁 · 거대한 셋째 화살 · 그물 · 폭풍 매 */
     static final int WEAK = 6;
     static final int GREATARROW = 4;
-    static final int BLACKARROW = 4;
-    static final int CURSE = 6;
-    static final int THICKET = 8;
-    /** 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1): 셋째 화살 촉 · 검은 화살 촉 */
+    static final int NET = 8;
+    static final int FALCON = 6;
+    /** 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1): 셋째 화살 촉 */
     static final double GREATARROW_HEAD = 0.95;
-    static final double BLACKARROW_HEAD = 0.95;
 
     /**
      * 약점 과녁 (rfx_jweak — 카메라를 봄): 0 조여 들며 나타남 · 1 ~ 3 맥동 (loop 면 이어 돌림 — 테가 돌고 가운데 사과빛 점이 깜빡임) · 4 맞음 (가운데가 깨지며 흰 섬광) ·
@@ -1420,39 +1419,35 @@ final class JobFx {
         loop(level, "jgreatarrow", GREATARROW, V.add(tip, u, -size * GREATARROW_HEAD), life, 12, o.with("dir", u, "size", size), glow, core);
     }
 
-    /** 검은 화살 (rfx_jblackarrow — 가는 쪽으로 누움, 이어 돌림): 검은 깃 · 은빛 촉 · 뒤로 끌리는 그림자 연기. from → to (길이 약 size × 2 칸): 닿는 틱 */
-    static int blackArrow(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, Opt o, double[] glow, double[] core) {
-        return fly(level, "jblackarrow", BLACKARROW, from, to, speed, size, BLACKARROW_HEAD, o, glow, core);
+    /**
+     * 그물이 날아감 (rfx_jnet 0 ~ 3 — 카메라를 봄): 묶인 다발이 from → to 를 ticks 틱에 날아가며 펼쳐짐 (펼친 그물 지름 약 size × 1.6 칸). 겉빛 = 밧줄 (직업 겉빛) · 심지 =
+     * 매듭 · 추 (직업 심지)
+     */
+    static void netFly(ServerLevel level, Vec3 from, Vec3 to, int ticks, double size, Jobs.Job j, Opt o) {
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        double life = Math.max(0.05, ticks / 20.0);
+        cells(level, "jnet", NET, 0, 4, from, life, 0, false, o.with("dir", len > 1e-3 ? V.scale(d, 1 / len) : V.UP, "speed", len / life, "size", size, "spin",
+                Kit.rand() * 360, "fade", o.num("fade", 0.0)), outer(j), inner(j));
     }
 
-    /** 멈춘 검은 화살 (꽂힘 · 시위에 걸림): 촉 tip 이 dir 쪽 — life 초 이어 돌림 */
-    static void blackArrowAt(ServerLevel level, Vec3 tip, Vec3 dir, double size, double life, Opt o, double[] glow, double[] core) {
+    /** 감긴 그물 (rfx_jnet 4 ~ 5 이어 돌림 → 6 ~ 7 끊어져 흩어짐 — 카메라를 봄): at 에 life 초 (자루 꼴 지름 약 size × 1.6 칸) */
+    static void netWrap(ServerLevel level, Vec3 at, double size, double life, Jobs.Job j, Opt o) {
+        double hold = Math.max(0.1, life - 0.25);
+        cells(level, "jnet", NET, 4, 2, at, hold, 6, true, o.with("size", size, "fade", 0.0), outer(j), inner(j));
+        Opt tail = o.has("vel") ? Opt.of("vel", o.vec("vel", V.ZERO)) : Opt.empty();
+        RuneKit.later((int) Math.round(hold * 20), () -> cells(level, "jnet", NET, 6, 2, at, 0.3, 0, false, tail.with("size", size * 1.05, "fade", 0.35), outer(j), inner(j)));
+    }
+
+    /**
+     * 폭풍 매 (rfx_jfalcon — 가는 쪽으로 누움, 오른쪽 = 머리): dive 가 아니면 0 ~ 3 날갯짓 (이어 돌림 · 12장/초) · dive 면 4 ~ 5 날개를 접고 내리꽂음. at = 몸 가운데,
+     * 날개 끝 사이 약 size × 1.7 칸
+     */
+    static void falcon(ServerLevel level, Vec3 at, Vec3 dir, double size, boolean dive, double life, Opt o, Jobs.Job j) {
         Vec3 u = V.len(dir) < 1e-3 ? V.UP : V.unit(dir);
-        loop(level, "jblackarrow", BLACKARROW, V.add(tip, u, -size * BLACKARROW_HEAD), life, 12, o.with("dir", u, "size", size), glow, core);
-    }
-
-    /**
-     * 저주 문양 (rfx_jcurse — 카메라를 봄): 0 검은 연기가 모여 문양 (가시 고리 · 가운데 감긴 눈) · 1 ~ 3 맥동 (loop 면 이어 돌림 — 가시가 조금씩 돎) · 4 터짐 (가시가 바깥으로
-     * 튐) · 5 흐려짐. 장 from 부터 count 장, 크기 약 size × 2 칸
-     */
-    static void curse(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
-        int f = Math.max(0, Math.min(CURSE - 1, from));
-        int n = Math.max(1, Math.min(CURSE - f, count));
-        cells(level, "jcurse", CURSE, f, n, at, life, loop ? 7 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.25)), glow, core);
-    }
-
-    /**
-     * 어둠숲 가시덤불 (rfx_jthicket — 세워 카메라 쪽으로 돎): stage 0 = 땅을 뚫고 자람 (0 ~ 2) · 1 = 서 있음 (3 ~ 5 이어 돌림 — 가지가 일렁임) · 2 = 부서져 연기로 (6 ~ 7).
-     * 아래 끝 = ground · 높이 약 size × 2 칸
-     */
-    static void thicket(ServerLevel level, Vec3 ground, double size, int stage, double life, Opt o, double[] glow, double[] core) {
-        Vec3 at = V.up(ground, size);
-        Opt b = o.with("size", size);
-        switch (stage) {
-            case 0 -> cells(level, "jthicket", THICKET, 0, 3, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), glow, core);
-            case 1 -> cells(level, "jthicket", THICKET, 3, 3, at, life, 6, true, b.with("fade", o.num("fade", 0.15)), glow, core);
-            default -> cells(level, "jthicket", THICKET, 6, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.3)), glow, core);
-        }
+        Opt b = o.with("dir", u, "size", size, "fade", o.num("fade", 0.0));
+        if (dive) cells(level, "jfalcon", FALCON, 4, 2, at, life, 10, true, b, outer(j), inner(j));
+        else cells(level, "jfalcon", FALCON, 0, 4, at, life, 12, true, b, outer(j), inner(j));
     }
 
     // ------------------------------------------------------------ 0.51.0 암살자 2차 그림 (tools/job_fx_art_adv.py — 트릭스터 · 블레이드 댄서)

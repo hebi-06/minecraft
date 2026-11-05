@@ -80,7 +80,7 @@ public final class JobTraits {
         JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 동면 · 거인의 무게 · 글래디에이터 결투 · 불사의 분노 · 홀름강)
         JobTraits7.init(); // 0.51.0 마검사 2차 (아케인 블레이드 각인 번짐 · 거대한 마력 대검 · 오버드라이브 검기 · 소드 콜러 스스로 싸우는 칼 · 제미니 소드)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 스펠 서지 · 네크로맨서 망자의 군대 · 무덤 · 표식)
-        JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 사과 겨누기 · 섀도 헌터 추격 · 저주 · 그림자 구르기 · 그믐밤)
+        JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 헌터스 마크 · 배틀 아처 난사 · 스톰 스트라이드 · 팰컨 다이브 초기화)
         JobTraits10.init(); // 0.51.0 암살자 2차 (블레이드 댄서 춤사위 · 요정의 걸음 · 눈부신 한낮 — 트릭스터의 표식 · 은신은 JobTraits3)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
@@ -480,7 +480,7 @@ public final class JobTraits {
                 JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 결투
                 JobTraits7.tick(sp, j, now); // 0.51.0 소드 콜러 쌓임 · 꽂힌 칼
                 JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 무덤 · 표식
-                JobTraits9.tick(sp, j, now); // 0.51.0 섀도 헌터 추격 · 저주 문양
+                JobTraits9.tick(sp, j, now); // 0.51.0 배틀 아처 갈래 게이지 · 스톰 스트라이드 이동 속도
                 JobTraits10.tick(sp, j, now); // 0.51.0 블레이드 댄서 춤사위 (끊기면 0 · 몸 둘레 빛 꽃잎)
             }
             if (st == null || j == null) continue;
@@ -534,7 +534,7 @@ public final class JobTraits {
         } else if (JobTraits8.stanceFx(sp, j, st.stance)) {
             // 0.51.0 스펠 서지 (몸 둘레를 도는 금빛 별 · 완드 끝 별빛)
         } else if (JobTraits9.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 사과 겨누기 (앞 적들의 약점 과녁) · 그믐밤 (몸 둘레 어둠 · 적이 나를 놓침)
+            // 0.51.0 헌터스 마크 (활 앞 은빛 · 적 머리 위 은빛 표식) · 스톰 스트라이드 (발밑 폭풍 바람 · 바람 줄)
         } else if (JobTraits10.stanceFx(sp, j, st.stance)) {
             // 0.51.0 눈부신 한낮 (등 뒤 빛의 요정 날개 · 손의 섬광)
         } else if (st.stance.equals("archer_focus")) {
@@ -567,7 +567,7 @@ public final class JobTraits {
         else if (j.id().equals(JobTraits6.GL)) value = JobTraits6.gaugeValue(sp, j); // 0.51.0 글래디에이터 = 결투
         else if (j.id().equals(JobTraits7.SC)) value = JobTraits7.gaugeValue(sp, j); // 0.51.0 소드 콜러 = 이어 벤 쌓임
         else if (j.id().equals(JobTraits8.NC)) value = JobTraits8.gaugeValue(sp, j); // 0.51.0 네크로맨서 = 망자 선원 수
-        else if (j.id().equals(JobTraits9.SH)) value = JobTraits9.gaugeValue(sp, j); // 0.51.0 섀도 헌터 = 추격
+        else if (j.id().equals(JobTraits9.BA)) value = JobTraits9.gaugeValue(sp, j); // 0.51.0 배틀 아처 = 다음 활 평타의 갈래 (1 · 3)
         else if (j.id().equals(JobTraits10.BD)) value = JobTraits10.gaugeValue(sp, j); // 0.51.0 블레이드 댄서 = 춤사위
         else if (markJob(j)) { // 마검사 · 0.51.0 룬 스미스 = 그 적의 각인
             if (st != null && st.target != null) {

@@ -27,7 +27,7 @@ import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 
 import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 글래디에이터 — 재설계안 2판)
 import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (아케인 블레이드 · 소드 콜러)
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
-import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 섀도 헌터)
+import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 배틀 아처 — 재설계안 2판)
 import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 블레이드 댄서)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -100,17 +100,10 @@ AIR = {
     # 0.51.0 2차 직업 (소드마스터 · 블러드 나이트 · 워로드 · 글래디에이터는 재설계안 2판 — 몸이 뜨는 단계의 다리를 job_motions_d · e 에서 직접 · softLegs 끔,
     # 아케인 블레이드 · 소드 콜러는 몸이 뜨지 않음)
     # 0.51.0 아크메이지 · 네크로맨서 (재설계안 2판 — 2026-11-06): 몸이 뜨지 않음 (완드 · 손짓만)
-    # 0.51.0 스나이퍼: 꿰뚫는 연사 (뒤로 구름 0 ~ 8 → 무릎) · 순풍 공중 사격 · 울르의 폭우 (12틱 뜀) · 세 번째 화살 (8틱 뛰어올라 22 까지 떠 있음 → 26 내려앉음 · 놓을 때
-    # 무릎 꿇은 채 밀려남) / 섀도 헌터: 그림자 구르기 (8틱 구름) · 어둠숲의 사냥 (10틱 뒤로 뜀)
-    "jb_sniper_pierce": [(1, 7, "tuck"), (8, 11, "land")],
-    "jb_sniper_gale": [(1, 11, "tuck"), (12, 15, "land")],
-    "jb_sniper_storm": [(1, 11, "tuck"), (12, 15, "land")],
-    "jb_sniper_ult": [(1, 7, "tuck"), (8, 21, "float")],
-    "jb_sniper_ult_land": [(0, 3, "float"), (4, 7, "land")],
-    "jb_sniper_ult_release": [],
-    "jb_shadowhunter_roll": [(1, 7, "tuck"), (8, 11, "land")],
-    "jb_shadowhunter_roll_left": [(1, 7, "tuck"), (8, 11, "land")],
-    "jb_shadowhunter_ult": [(1, 9, "tuck"), (10, 13, "land")],
+    # 0.51.0 스나이퍼 · 배틀 아처 (재설계안 2판 — 2026-11-06): 스네어 샷 (2 ~ 12 반동으로 뒤로 낮게 뜀) · 팰컨 다이브 (0 ~ 12 높이 뛰어올라 내려앉음) —
+    # 하트시커 · 트릭 샷 · 데드아이 · 호넷 스웜 · 스플린터 샷 · 퀴버 스톰은 땅에 선 채
+    "jb_sniper_snare": [(3, 10, "tuck"), (11, 14, "land")],
+    "jb_battlearcher_dive": [(1, 10, "tuck"), (11, 14, "land")],
     "jb_trickster_rose_vault": [(0, 7, "tuck")],
     "jb_trickster_rose_burst": [(0, 3, "land")],
 }

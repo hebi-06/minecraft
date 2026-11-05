@@ -141,7 +141,7 @@ public final class JobTraitsMore {
         return j != null && (j.id().equals("mage") || j.id().equals(JobTraits8.AM));
     }
 
-    /** 0.51.0 호흡을 쓰는 직업 (궁수 · 각성 스나이퍼 — 반전 섀도 헌터 는 추격) */
+    /** 0.51.0 호흡을 쓰는 직업 (궁수 · 각성 스나이퍼 — 반전 배틀 아처 는 난사, JobTraits9) */
     static boolean breathJob(Jobs.Job j) {
         return j != null && (j.id().equals("archer") || j.id().equals(JobTraits9.SN));
     }
@@ -346,11 +346,24 @@ public final class JobTraitsMore {
         JobTraits.sendGauge(sp, false);
     }
 
-    /** 0.51.0 순풍 공중 사격 (스나이퍼): ticks 틱 동안 호흡이 줄지 않음 (덧쏘기 없이) */
-    static void holdBreath(ServerPlayer sp, int ticks) {
+    /** 0.51.0 스네어 샷 (스나이퍼): 내려앉으며 호흡 + n (최대까지) */
+    static void addBreath(ServerPlayer sp, int n) {
         State st = of(sp);
-        st.windShots = 0;
-        st.windUntil = Tasks.now() + ticks;
+        Jobs.Job j = JobSystem.job(sp);
+        int max = j != null && breathJob(j) && j.trait() != null ? Math.max(1, j.trait().max()) : 5;
+        st.breath = Math.max(0, Math.min(max, st.breath + n));
+        JobTraits.sendGauge(sp, false);
+    }
+
+    /** 0.51.0 하트시커 (스나이퍼): 호흡 n 씀 — 쓴 만큼 (모자라면 있는 만큼) */
+    static int useBreath(ServerPlayer sp, int n) {
+        State st = of(sp);
+        int used = Math.max(0, Math.min(st.breath, n));
+        if (used > 0) {
+            st.breath -= used;
+            JobTraits.sendGauge(sp, false);
+        }
+        return used;
     }
 
     /** 0.51.0 급소 사격 중인지 (호흡 8 에서 쏜 활 평타의 화살이 닿는 동안 — 치명타 확정, RpgCombat.sureCrit) */
@@ -381,7 +394,7 @@ public final class JobTraitsMore {
     }
 
     private static boolean breathHeld(ServerPlayer sp, State st) {
-        return st.windUntil > Tasks.now() || JobTraits.stanceOn(sp, "archer_focus") || JobTraits.stanceOn(sp, JobTraits9.APPLE); // 0.51.0 사과 겨누기
+        return st.windUntil > Tasks.now() || JobTraits.stanceOn(sp, "archer_focus");
     }
 
     // ------------------------------------------------------------ 활 · 완드 평타 (RpgCombat.RangedMod · 훅)
@@ -403,11 +416,7 @@ public final class JobTraitsMore {
             return k == null ? 0.6 : k.num("width", 0.6);
         }
         if (j.id().equals(JobTraits9.SN) && "bow".equals(w.type())) {
-            // 0.51.0 스나이퍼: 사과 겨누기 동안 · 호흡 8 (급소 사격) 이면 화살이 꿰뚫음
-            if (JobTraits.stanceOn(sp, JobTraits9.APPLE)) {
-                Jobs.Skill k = skill(j, JobTraits9.APPLE);
-                return k == null ? 0.6 : k.num("width", 0.6);
-            }
+            // 0.51.0 스나이퍼: 호흡 8 (급소 사격) 이면 화살이 꿰뚫음
             State st = STATES.get(sp.getUUID());
             int max = j.trait() == null ? 8 : Math.max(1, j.trait().max());
             if (st != null && st.breath >= max) return trait(j, "snipeWidth", 0.6);
@@ -434,12 +443,10 @@ public final class JobTraitsMore {
             State st = of(sp);
             int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
             if (j.id().equals(JobTraits9.SN) && st.breath >= max) {
-                // 0.51.0 스나이퍼 급소 사격: 호흡 8 에서 쏜 화살 — 닿는 동안 치명타 확정 · 꿰뚫음 (pierceWidth), 호흡 snipeUse 씀 (사과 겨누기 동안은 쓰지 않음)
+                // 0.51.0 스나이퍼 급소 사격: 호흡 8 에서 쏜 화살 — 닿는 동안 치명타 확정 · 꿰뚫음 (pierceWidth), 호흡 snipeUse 씀
                 st.snipeUntil = now + (long) trait(j, "snipeFor", 18);
-                if (!JobTraits.stanceOn(sp, JobTraits9.APPLE)) {
-                    st.breath = Math.max(0, st.breath - (int) trait(j, "snipeUse", 3));
-                    JobTraits.sendGauge(sp, false);
-                }
+                st.breath = Math.max(0, st.breath - (int) trait(j, "snipeUse", 3));
+                JobTraits.sendGauge(sp, false);
                 JobTraits9.snipeFx(sp, j, from, dir, dist);
             } else if (now - st.lastMove > 4 && st.breath < max) {
                 st.breath++;
@@ -469,8 +476,8 @@ public final class JobTraitsMore {
             }
             return;
         }
-        if (j.id().equals(JobTraits9.SH) && "bow".equals(w.type())) {
-            JobTraits9.onFired(sp, j, w, target, from, dir, dist); // 0.51.0 섀도 헌터: 움직이며 쏘면 추격 +1
+        if (j.id().equals(JobTraits9.BA) && "bow".equals(w.type())) {
+            JobTraits9.onFired(sp, j, w, target, from, dir, dist); // 0.51.0 배틀 아처 난사: 움직이며 쏘면 세 갈래
             return;
         }
     }

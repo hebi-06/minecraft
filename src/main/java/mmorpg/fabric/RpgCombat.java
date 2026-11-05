@@ -66,6 +66,9 @@ public final class RpgCombat {
 
     public static MeleeMult meleeMult = (sp, w, victim) -> 1;
 
+    /** 0.51.0 활 · 완드 평타 배율 — 맞는 적을 아는 것 (배틀 아처 「난사」: 가까운 적 + · 먼 적 −, 1 = 그대로): rangedHit 의 피해에 곱함 (치명타 · 더한 피해 전) */
+    public static MeleeMult rangedMult = (sp, w, victim) -> 1;
+
     /**
      * 0.28.0 활 · 완드 평타를 바꾸는 직업 특성 (job.JobTraitsMore — 궁수 호흡 · 정조준 · 바람 타기, 매지션 마나 과부하): 사거리 더하기 · 관통 · 쏜 뒤 (덧쏘기 · 연출)
      */
@@ -118,6 +121,16 @@ public final class RpgCombat {
             rangedMod.fired(sp, w, target, from, dir, dist);
         } catch (RuntimeException e) {
             Mmorpg.LOG.warn("[mmorpg] ranged fired", e);
+        }
+    }
+
+    static double rangedMultOf(ServerPlayer sp, Weapon w, LivingEntity victim) {
+        try {
+            double k = rangedMult.mult(sp, w, victim);
+            return k > 0 ? k : 1;
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] ranged mult", e);
+            return 1;
         }
     }
 
@@ -750,7 +763,7 @@ public final class RpgCombat {
         ServerLevel level = sp.level();
         // 0.41.0 평타 강화 모습: 맞기 전에 색을 정함 (마지막 번이면 맞은 뒤 평타 강화가 끝나도 맞은 자리는 그 색)
         double[][] look = mmorpg.fabric.motion.SwingLook.shotColors(sp, w);
-        double dmg = w.damage() * powerOf(sp, w) * basicMultOf(sp, w) * (ratio > 0 ? ratio : 1); // 0.28.0 직업 특성 (궁수 호흡)
+        double dmg = w.damage() * powerOf(sp, w) * basicMultOf(sp, w) * rangedMultOf(sp, w, target) * (ratio > 0 ? ratio : 1); // 0.28.0 직업 특성 (궁수 호흡) · 0.51.0 난사
         boolean crit = rollCrit(sp, w, target);
         if (crit) dmg *= critMultOf(sp, w);
         WeaponBonus bonus = weaponBonus(sp, target, w, dmg);

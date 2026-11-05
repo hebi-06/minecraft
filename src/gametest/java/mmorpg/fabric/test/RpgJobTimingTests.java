@@ -283,16 +283,19 @@ public final class RpgJobTimingTests {
         probe(h, "necromancer");
     }
 
-    /** 0.51.0 2차 직업 — 궁수 각성 스나이퍼 (꿰뚫는 연사는 뒤로 구른 뒤 무릎 꿇고 쏜 세 발이 한 번에 · 세 번째 화살은 공중 두 발 → 셋째 화살 → 길의 바람) */
+    /**
+     * 0.51.0 2차 직업 — 궁수 각성 스나이퍼 (재설계안 2판: 하트시커는 12틱에 다시 눌러 일부 — 13 에 한 발, 트릭 샷은 과녁 하나라 같은 과녁에게 10틱마다 두 번 더 — 24,
+     * 데드아이는 12틱마다 다시 눌러 13 · 25 · 37)
+     */
     @GameTest(environment = "mmorpg:jt_sn", maxTicks = 2400)
     public void timingSniper(GameTestHelper h) {
         probe(h, "sniper");
     }
 
-    /** 0.51.0 2차 직업 — 궁수 반전 섀도 헌터 (저주 번짐 · 어둠숲의 사냥은 저주 걸린 과녁이라 받는 피해 × 1.02 · 1.04 — 다 들어감) */
-    @GameTest(environment = "mmorpg:jt_sh", maxTicks = 2400)
-    public void timingShadowhunter(GameTestHelper h) {
-        probe(h, "shadowhunter");
+    /** 0.51.0 2차 직업 — 궁수 반전 배틀 아처 (재설계안 2판 — 섀도 헌터 대신: 과녁이 2.5칸 앞이라 난사의 가까운 적 +20% — 다 들어감 · 호넷 스웜 7 · 스플린터 샷 6 · 퀴버 스톰 70) */
+    @GameTest(environment = "mmorpg:jt_ba", maxTicks = 2400)
+    public void timingBattlearcher(GameTestHelper h) {
+        probe(h, "battlearcher");
     }
 
     /**
