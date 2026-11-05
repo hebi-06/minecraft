@@ -414,7 +414,7 @@ public final class JobTraits {
         if (!markJob(j) || !j.usesWeapon(w.type())) return null;
         double add = JobSystem.power(sp, j) * j.trait().def().numOr("markBurst", 1.0) * mmorpg.fabric.stattree.StatTrees.atkMult(sp);
         if (j.id().equals(JobTraits7.AB) && n >= Math.max(1, j.trait().max()))
-            return new RpgCombat.Bonus(add * n, "§d◈×" + n, KEY_MARK_FULL, DamageNumbers.Style.JOB_BIG, null, JobKit.grad(j));
+            return new RpgCombat.Bonus(add * n, "§d◈×" + n + " ", KEY_MARK_FULL, DamageNumbers.Style.JOB_BIG, null, JobKit.grad(j));
         return new RpgCombat.Bonus(add, "§d◈", KEY_MARK, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 

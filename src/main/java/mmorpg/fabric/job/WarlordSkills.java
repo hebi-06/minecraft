@@ -573,11 +573,7 @@ final class WarlordSkills {
         JobFx.slash(sp, j, 2.4, 0.15, 3.4, -4.0, 0.3);
         RuneKit.later(2, () -> JobFx.slash(sp, j, 2.4, 0.15, 3.0, 176.0, 0.26));
         // 0.51.0 둘레로 퍼지는 거대한 도끼 검기 열둘 (사용자 "커다란 검기가 나오면서 때리면" — 한 바퀴 휘두른 날이 바깥 고리까지 뻗어 나감)
-        for (int i = 0; i < 12; i++) {
-            double a = Math.toRadians(i * 30 + 15);
-            Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
-            JobFx.bigWave(level, null, V.up(V.add(c, d, 1.4), 1.1), d, (R - 1.4) / 0.24, 2.0, 0, 0.34, j, JobFx.hide1p(sp));
-        }
+        JobFx.radialWaves(sp, j, c, 12, 1.4, R, 1.1, 2.0, 0.24, 15);
         SkillFx.shock(level, V.up(g, 0.1), JobFx.inner(j), R, 0.6);
         int n = 12;
         for (int i = 0; i < n; i++) {

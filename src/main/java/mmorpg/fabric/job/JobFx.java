@@ -1140,6 +1140,23 @@ final class JobFx {
         bigWave(level, sp, at, d, speed, size, 90 + (Kit.rand() - 0.5) * 8, L / speed + 0.12, j, Opt.empty());
     }
 
+    /**
+     * 둘레로 퍼지는 큰 검기 n 개 (한 바퀴 휘두름 — 아케인 템페스트 · 카타클리즘): c 에서 from 칸 → reach 칸까지 secs 초에 · 높이 h. 쓴 사람의 뒤쪽 (보는 쪽과 반대 —
+     * 3인칭 카메라가 있는 쪽) 은 짧고 작고 옅게 (영상 1: 카메라 쪽으로 날아온 검기가 화면을 다 덮었음), 1인칭에서는 숨김
+     */
+    static void radialWaves(ServerPlayer sp, Jobs.Job j, Vec3 c, int n, double from, double reach, double h, double size, double secs, double turn) {
+        Vec3 f = Kit.facingOf(sp);
+        for (int i = 0; i < n; i++) {
+            double a = Math.toRadians(i * 360.0 / n + turn);
+            Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
+            double dot = d.x * f.x + d.z * f.z;
+            boolean back = dot < -0.25;
+            double to = back ? Math.min(reach, from + 1.6) : reach;
+            bigWave(sp.level(), null, V.up(V.add(c, d, from), h), d, (to - from) / secs, back ? size * 0.6 : size, 0, secs + 0.1, j, hide1p(sp).with("alpha",
+                    back ? 0.45 : 1.0));
+        }
+    }
+
     /** 검기 한 벌 + 잔상 둘 (1 · 2틱 뒤 — 옅고 조금 작게) */
     private static void wavePair(ServerLevel level, Vec3 at, double life, Opt o, double alpha, double[] glow, double[] core) {
         two(level, "jwave", BIG_WAVE, at, life, o.with("alpha", alpha), glow, core);

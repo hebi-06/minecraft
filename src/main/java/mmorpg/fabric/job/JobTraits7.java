@@ -176,8 +176,8 @@ public final class JobTraits7 {
             JobFx.bigWave(lv, null, at, view, 0, s * 1.4, 45, 0.38, j, Opt.empty());
             JobFx.bigWave(lv, null, at, view, 0, s * 1.4, -45, 0.38, j, Opt.empty());
             JobFx.burst(lv, at, s, j, 0.35, Opt.empty());
-            JobFx.runeRing(lv, V.up(victim.position(), 0.1), 3.0, j, 9, Kit.rand() * 40, 0.6, Opt.of("alpha", 0.9));
-            SkillFx.shock(lv, V.up(victim.position(), 0.1), JobFx.outer(j), 3.4, 0.45);
+            JobFx.runeRing(lv, V.up(victim.position(), 0.1), 2.4, j, 9, Kit.rand() * 40, 0.6, Opt.of("alpha", 0.9));
+            SkillFx.shock(lv, V.up(victim.position(), 0.1), JobFx.outer(j), 2.6, 0.45);
             RuneKit.rockBurst(lv, V.up(victim.position(), 0.3), 6, 5.0, 0.15);
             SkillFx.sparks(lv, at, JobFx.inner(j), 18, 7.0);
             if (!victim.isRemoved()) JobImpact.hit(sp, victim, j, 1.8);

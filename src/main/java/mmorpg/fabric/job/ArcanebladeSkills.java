@@ -171,7 +171,8 @@ final class ArcanebladeSkills {
         // 가장 가까운 적 바로 앞 (그 적의 몸 폭 + 0.9칸 앞에 섬)
         List<Kit.LineHit> ahead = RuneKit.lineTargets(sp, V.up(start, 1.0), f, k.num("dist", 7), half + 0.4);
         double want = max;
-        if (!ahead.isEmpty()) want = Math.min(max, Math.max(0, ahead.get(0).t() - 0.9 - Kit.bodyPad(ahead.get(0).e())));
+        // 영상 1: 바로 앞 (0.9칸) 에 서면 3인칭 카메라에서 적과 X 가 내 몸에 가려 보이지 않았음 → 1.6칸 앞
+        if (!ahead.isEmpty()) want = Math.min(max, Math.max(0, ahead.get(0).t() - 1.6 - Kit.bodyPad(ahead.get(0).e())));
         Vec3 dest = start;
         if (want > 0.4) {
             Vec3 p = V.add(start, f, want);
@@ -231,7 +232,10 @@ final class ArcanebladeSkills {
                     double s = 0.7 + Kit.bodyPad(e) * 0.4;
                     JobFx.bigWave(lv, null, b, f, 0, s, 45, 0.2, j, Opt.of("alpha", 0.9));
                     JobFx.bigWave(lv, null, b, f, 0, s, -45, 0.2, j, Opt.of("alpha", 0.9));
-                    JobFx.cross(lv, b, s * 0.9, j, (crossAt - hitAt) / 20.0 + 0.05, Opt.of("spin", 0.0, "alpha", 0.95, "vel", RuneKit.entVel(e)));
+                    // 세상에 놓인 X 판 둘 (어느 쪽에서 보아도 X — 영상 1: 카메라를 보는 그림만으로는 둥근 빛으로 보였음) · 터질 때까지 빛나는 X 검흔
+                    JobFx.slashCard(lv, b, f, 45.0, 2.6 + Kit.bodyPad(e), 0.3, V.ZERO, j, Opt.empty());
+                    JobFx.slashCard(lv, b, f, 135.0, 2.6 + Kit.bodyPad(e), 0.3, V.ZERO, j, Opt.empty());
+                    JobFx.cross(lv, V.up(b, 0.3), s * 1.1, j, (crossAt - hitAt) / 20.0 + 0.05, Opt.of("spin", 0.0, "alpha", 0.95, "vel", RuneKit.entVel(e)));
                 }
             });
         }
@@ -259,8 +263,10 @@ final class ArcanebladeSkills {
                 if (m++ < 5 && e.level() instanceof ServerLevel lv) {
                     Vec3 b = Kit.bodyPoint(e);
                     double s = 1.5 + Kit.bodyPad(e) * 0.6;
-                    JobFx.bigWave(lv, null, b, f, 0, s, 45, 0.36, j, Opt.empty());
-                    JobFx.bigWave(lv, null, b, f, 0, s, -45, 0.36, j, Opt.empty());
+                    JobFx.bigWave(lv, null, V.up(b, 0.3), f, 0, s, 45, 0.36, j, Opt.empty());
+                    JobFx.bigWave(lv, null, V.up(b, 0.3), f, 0, s, -45, 0.36, j, Opt.empty());
+                    JobFx.slashCard(lv, V.up(b, 0.3), f, 45.0, 4.4 + Kit.bodyPad(e), 0.36, V.ZERO, j, Opt.empty());
+                    JobFx.slashCard(lv, V.up(b, 0.3), f, 135.0, 4.4 + Kit.bodyPad(e), 0.36, V.ZERO, j, Opt.empty());
                     JobFx.burst(lv, b, 1.0 + Kit.bodyPad(e) * 0.4, j, 0.32, Opt.empty());
                     JobFx.runeRing(lv, V.up(e.position(), 0.1), 1.6 + Kit.bodyPad(e), j, 6, Kit.rand() * 60, 0.4, Opt.of("alpha", 0.8));
                     SkillFx.sparks(lv, b, core, 12, 6.0);
@@ -351,13 +357,8 @@ final class ArcanebladeSkills {
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
         double R = k.num("radius", 4.5);
-        double secs = 0.22;
-        for (int i = 0; i < 8; i++) {
-            double a = Math.toRadians(i * 45 + 22.5);
-            Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
-            JobFx.bigWave(level, null, V.up(V.add(c, d, 1.1), 1.0), d, (R - 1.1) / secs, 1.35, 0, secs + 0.1, j, JobFx.hide1p(sp));
-        }
-        JobFx.whirl(level, V.up(c, 0.95), R * 0.95, j, 0.35, Opt.of("alpha", 0.9));
+        JobFx.radialWaves(sp, j, c, 8, 1.1, R, 1.0, 1.35, 0.22, 22.5);
+        JobFx.whirl(level, V.up(c, 0.95), R * 0.7, j, 0.35, Opt.of("alpha", 0.9));
         JobFx.ring(level, V.up(c, 0.08), R, j, false, 0.4, Opt.empty());
         SkillFx.shock(level, V.up(c, 0.1), JobFx.outer(j), R, 0.4);
         JobFx.slash(sp, j, 2.2, 0.35, 2.4, 180.0, 0.24);
@@ -388,7 +389,7 @@ final class ArcanebladeSkills {
             JobFx.bigWave(level, null, p, V.UP, 14.0, 1.6, 90 + (i % 2 == 0 ? 20 : -20), 0.32, j, Opt.empty());
         }
         JobFx.runeRing(level, V.up(c, 0.1), R, j, 12, Kit.rand() * 30, 0.5, Opt.empty());
-        JobFx.ring(level, V.up(c, 0.08), R * 1.05, j, true, 0.45, Opt.empty());
+        JobFx.ring(level, V.up(c, 0.08), R * 0.9, j, true, 0.45, Opt.empty());
         SkillFx.shock(level, V.up(c, 0.1), JobFx.inner(j), R * 1.1, 0.5);
         RuneKit.rockBurst(level, V.up(c, 0.3), 9, 6.5, 0.17);
         SkillFx.sparks(level, mid, JobFx.inner(j), 22, 8.0);

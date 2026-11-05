@@ -862,23 +862,24 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(got, mark[1] + unit * 5), "full burst (five marks) " + got + " vs " + (mark[1] + unit * 5));
             h.assertTrue(JobTraits.marks(sp, z.get(0)) == 0, "all five marks used: " + JobTraits.marks(sp, z.get(0)));
         }));
-        steps.add(new RpgJobTests.Step(5, () -> {
+        // 번진 과녁은 3틱 전 번짐에 맞아 무적 시간 (10틱) — 그 뒤로 미뤄져 들어감
+        steps.add(new RpgJobTests.Step(12, () -> {
             double unit = raw(sp, j, 1.0);
             double got = TestDummies.dealt(z.get(1)) - mark[2];
             h.assertTrue(RpgJobTests.near(got, unit * spread * 5), "full burst spreads five shares " + got + " vs " + unit * spread * 5);
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            z.add(dummy(h, 0, 4));
+            z.add(dummy(h, 0, 5));
             mark[0] = sp.position().z;
             h.assertTrue(JobSkills.press(sp, 1), "팬텀 크로스 cast");
         }));
-        // 팬텀 크로스: 4칸 과녁 바로 앞으로 순간 이동 → 1 에 X 새김 (2.55) → 12 에 X 검기로 터짐 (2.55) = 5.1
+        // 팬텀 크로스: 5칸 과녁 앞 (1.6칸 + 몸) 으로 순간 이동 → 1 에 X 새김 (2.55) → 12 에 X 검기로 터짐 (2.55) = 5.1
         steps.add(new RpgJobTests.Step(16, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 5.1);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "팬텀 크로스 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             double moved = sp.position().z - mark[0];
-            h.assertTrue(moved > 1.5 && sp.position().z < z.get(0).position().z - 0.5, "blinked to just before the target: moved " + moved);
+            h.assertTrue(moved > 2.0 && sp.position().z < z.get(0).position().z - 1.2, "blinked to just before the target: moved " + moved);
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2.5));
