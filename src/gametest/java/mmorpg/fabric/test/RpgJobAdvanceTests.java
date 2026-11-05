@@ -1226,7 +1226,7 @@ public final class RpgJobAdvanceTests {
             var x = NecroCrew.bodies(sp).get(0);
             h.assertTrue(x.entityTags().contains(mmorpg.fabric.mob.TyrfingWarrior.TAG) && x.entityTags().contains("naglfar_crew")
                     && !mmorpg.fabric.skill.Kit.canHit(sp, x), "crew: ally tags · not a skill target " + x.entityTags());
-            // 무덤 셋 (둘 넘게) → 그레이브 콜 (과녁) 뒤 다시 눌러 무덤마다 망자 (최대 넷)
+            // 무덤 셋 (둘 이상) → 그레이브 콜 (과녁) 뒤 다시 눌러 무덤마다 망자 (최대 넷)
             z.set(0, dummy(h, 0, 3));
             RpgJobTests.clearStrays(h, z.get(0));
             for (double[] g : new double[][] {{-2.5, 1.0}, {2.5, 1.0}, {0, 5.5}}) JobTraits8.testGrave(h.getLevel(), h.absoluteVec(new Vec3(4.5 + g[0], 2, 1.5 + g[1])), 200);

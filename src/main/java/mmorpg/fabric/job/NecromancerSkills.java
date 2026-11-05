@@ -22,7 +22,7 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 0.51.0 2차 직업 — 매지션 반전 네크로맨서 스킬 (jobs.json advance.necromancer — 독초록 · 뼈색, 특성 「망자의 군대」 — JobTraits8 · NecroCrew).
- * 재설계안 2판 (2026-11-06 사용자 "다음 작업" — 롤 요릭 · 카서스 · 애니 참고): 그레이브 콜 (요릭 Q — 거대한 뼈 창이 내리꽂힘 · 표식, 무덤이 둘 넘으면 다시 눌러 무덤마다
+ * 재설계안 2판 (2026-11-06 사용자 "다음 작업" — 롤 요릭 · 카서스 · 애니 참고): 그레이브 콜 (요릭 Q — 거대한 뼈 창이 내리꽂힘 · 표식, 무덤이 둘 이상이면 다시 눌러 무덤마다
  * 망자) · 그레이브야드 (요릭 W — 묘비 고리가 솟아 가둠) · 소울 미스트 (요릭 E — 혼령 안개 구슬 · 망자가 몰려드는 표식) · 블라이트 (카서스 E — 나를 따라가는 썩은 땅) ·
  * 팬텀 갤리온 (요릭 R · 애니 R — 망자의 배가 땅을 가르고 나아가 거대한 망자 선장을 내려놓음). 모두 마법 피해. 연출 = 2D 그림 (JobFx — 뼈 창 rfx_jbonespear · 해골
  * rfx_jskull · 갈라진 땅 rfx_jrift · 무덤 rfx_jgrave, 1차 사신의 혼불) + 망자 · 선장은 진짜 몹 (rpg:naglfar_crew) + 배는 입체 모델 (naglfar). 화면 흔들림 없음
@@ -69,7 +69,7 @@ final class NecromancerSkills {
 
     /**
      * 그레이브 콜: 겨눈 적 (range 칸 · 없으면 쓰지 않음) 위 하늘에 거대한 뼈 창 (rfx_jbonespear — 창끝이 아래) 이 맺혀 smashAt 틱에 내리꽂힘 (smash · 갈라진 땅 · 녹색 혼불 기둥 ·
-     * 비명 해골) — 그 적에 markFor 틱 표식 (그 안에 쓰러지면 무덤 없이 바로 망자: JobTraits8.mark). 쓸 때 내 둘레 graveRange 칸에 무덤이 graves 개 넘게 있으면 window 틱
+     * 비명 해골) — 그 적에 markFor 틱 표식 (그 안에 쓰러지면 무덤 없이 바로 망자: JobTraits8.mark). 쓸 때 내 둘레 graveRange 칸에 무덤이 graves 개 이상 있으면 window 틱
      * 안에 다시 눌러 (gap 틱 뒤부터) 그 무덤마다 망자 선원이 일어남 (최대 망자 수까지 — 가까운 무덤부터, 동작 :raise)
      */
     static boolean call(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
@@ -117,7 +117,7 @@ final class NecromancerSkills {
         JobKit.strike(sp, t, j, P, k.num("smash", 7), true, false, life, smashAt, x -> {
             if (RuneKit.fxQuota("jobGraveCall", 6)) JobFx.hit(t, j, 1.2);
         });
-        // 무덤이 graves 개 넘게 있으면 다시 누를 창
+        // 무덤이 graves 개 이상 있으면 다시 누를 창
         List<JobTraits8.Grave> gs = JobTraits8.gravesNear(level0, sp.position(), k.num("graveRange", 14));
         if (gs.size() >= (int) k.num("graves", 2)) {
             JobRecast.open(sp, k, 1, (int) k.num("window", 60), (int) k.num("gap", 8), null);
