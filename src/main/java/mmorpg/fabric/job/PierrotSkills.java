@@ -20,6 +20,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
@@ -47,8 +48,8 @@ final class PierrotSkills {
         JobSystem.register("pierrot_ult", PierrotSkills::ult);
     }
 
-    /** 상자 · 인형이 설 자리: 겨눈 적 앞 (나와 적 사이 — 적 몸에서 gap 칸) 이나 보는 쪽 fallback 칸 (벽 앞까지), 그 아래 땅 */
-    private static Vec3 spotFor(ServerPlayer sp, LivingEntity aim, double gap, double fallback) {
+    /** 상자 · 인형이 설 자리: 겨눈 적 앞 (나와 적 사이 — 적 몸에서 gap 칸 · 나에게서 적어도 min 칸) 이나 보는 쪽 fallback 칸 (벽 앞까지), 그 아래 땅 */
+    private static Vec3 spotFor(ServerPlayer sp, LivingEntity aim, double gap, double fallback, double min) {
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
         Vec3 want;
@@ -56,11 +57,25 @@ final class PierrotSkills {
             Vec3 to = V.flat(V.sub(aim.position(), sp.position()));
             double d = V.len(to);
             Vec3 u = d < 0.1 ? f : V.scale(to, 1 / d);
-            double s = Math.max(0.9, d - gap - Kit.bodyPad(aim));
+            double s = Math.max(min, d - gap - Kit.bodyPad(aim));
             want = V.add(sp.position(), u, Math.min(s, RuneKit.dashDistance(sp, u, s, 0.3, 1.5)));
         } else want = V.add(sp.position(), f, RuneKit.dashDistance(sp, f, fallback, 0.3, 1.5));
         Double gy = RuneKit.solidGround(level, new Vec3(want.x, Math.max(want.y, sp.getY()) + 1.2, want.z), 4);
         return new Vec3(want.x, gy != null ? gy : sp.getY(), want.z);
+    }
+
+    /** 광대 인형: 그 자리에서 오른쪽으로 side 칸 (커다란 인형이 화면 가운데를 가리지 않게 — 오른쪽이 막혔으면 왼쪽, 둘 다 막혔으면 그대로) */
+    private static Vec3 beside(ServerPlayer sp, Vec3 spot, double side) {
+        ServerLevel level = sp.level();
+        Vec3 r = V.rightOf(Kit.facingOf(sp));
+        for (double s : new double[] {side, -side}) {
+            Vec3 want = V.add(spot, r, s);
+            Double gy = RuneKit.solidGround(level, new Vec3(want.x, spot.y + 1.2, want.z), 3);
+            if (gy == null || Math.abs(gy - spot.y) > 1.1) continue;
+            Vec3 at = new Vec3(want.x, gy, want.z);
+            if (level.noCollision(new AABB(at.x - 0.35, at.y + 0.1, at.z - 0.35, at.x + 0.35, at.y + 1.8, at.z + 0.35))) return at;
+        }
+        return spot;
     }
 
     /** 자바 각도 (몸이 그쪽을 봄) */
@@ -94,7 +109,7 @@ final class PierrotSkills {
     static boolean box(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level0 = sp.level();
         LivingEntity aim = Kit.pickTarget(sp, k.num("range", 8), 25);
-        Vec3 spot = spotFor(sp, aim, 1.3, k.num("fallback", 4));
+        Vec3 spot = spotFor(sp, aim, 1.3, k.num("fallback", 4), 0.9);
         int throwAt = Math.max(0, (int) k.num("throwAt", 2));
         int landAt = Math.max(throwAt + 1, (int) k.num("landAt", 4));
         int popAt = Math.max(landAt + 1, (int) k.num("popAt", 6));
@@ -356,7 +371,8 @@ final class PierrotSkills {
     // ------------------------------------------------------------ 할루시네이트
 
     /**
-     * 할루시네이트: 조명이 내리비추고 커다란 광대 인형 (크기 scale · 체력 = 내 최대 체력 × hp · life 틱) 이 겨눈 적 앞 (없으면 앞 2.5칸) 으로 떨어져 내려섬 (줄 인형 —
+     * 할루시네이트: 조명이 내리비추고 커다란 광대 인형 (크기 scale · 체력 = 내 최대 체력 × hp · life 틱) 이 겨눈 적 앞 (없으면 앞 2.5칸 — 화면 가운데를 가리지 않게 오른쪽으로
+     * scale / 2 칸) 으로 떨어져 내려섬 (줄 인형 —
      * 끌어들임은 내려선 뒤) → 가까운 적에게 걸어가 섬 (PierrotSummons) → first 틱부터 every 틱마다 swings 번 커다란 뿅망치로 내리침 (동작은 HAMMER_AT 틱 전 — 인형 앞
      * reach 칸 둘레 radius 칸 swing). 인형이 부서지면 남은 뿅망치는 없음 (쇼타임 색종이 폭죽)
      */
@@ -364,7 +380,7 @@ final class PierrotSkills {
         ServerLevel level0 = sp.level();
         LivingEntity aim = Kit.pickTarget(sp, 8, 30);
         double scale = k.num("scale", 2.0);
-        Vec3 spot = spotFor(sp, aim, 1.0 + 0.45 * scale, 2.5);
+        Vec3 spot = beside(sp, spotFor(sp, aim, 1.0 + 0.45 * scale, 2.5, 0.9 + 0.45 * scale), 0.5 * scale);
         int first = Math.max(PierrotSummon.HAMMER_AT + 2, (int) k.num("first", 20));
         int every = Math.max(10, (int) k.num("every", 20));
         int swings = Math.max(1, (int) k.num("swings", 10));
@@ -438,9 +454,23 @@ final class PierrotSkills {
 
     // ------------------------------------------------------------ 그랜드 피날레
 
+    /** 피날레의 거대한 상자 크기 */
+    static final double BIG = 2.2;
+
+    /** 거대한 상자가 설 자리: 둘레 ring 칸 (a 쪽) — 벽 · 막힌 곳이면 안쪽으로 (0.7 · 0.4 배), 그래도 막혔으면 null (그 상자는 빠짐) */
+    private static Vec3 finaleSpot(ServerLevel level, Vec3 c, double a, double ring, double half) {
+        for (double k : new double[] {1.0, 0.7, 0.4}) {
+            Vec3 want = new Vec3(c.x + Math.cos(a) * ring * k, c.y, c.z + Math.sin(a) * ring * k);
+            Double gy = RuneKit.solidGround(level, V.up(want, 2), 5);
+            Vec3 p = new Vec3(want.x, gy != null ? gy : c.y, want.z);
+            if (level.noCollision(new AABB(p.x - half, p.y + 0.05, p.z - half, p.x + half, p.y + 1.6, p.z + half))) return p;
+        }
+        return null;
+    }
+
     /**
-     * 그랜드 피날레: 서커스 하늘 (rpg:ult_circus) · 둘레를 비추는 조명 넷 → dropAt 틱 둘레 ring 칸에 거대한 깜짝 상자 boxes 개가 떨어짐 (크기 2.2 · 체력 = 내 최대 체력 ×
-     * hp) → first 틱 활짝 열림 (용수철 광대 · 큰 색종이 — 둘레 몬스터를 끌어들임 · radius 칸 보스는 taunt 틱 나를 도발) → first 틱부터 every 틱마다 volleys 번 상자마다
+     * 그랜드 피날레: 서커스 하늘 (rpg:ult_circus) · 둘레를 비추는 조명 넷 → dropAt 틱 둘레 ring 칸에 거대한 깜짝 상자 boxes 개가 떨어짐 (크기 BIG · 체력 = 내 최대 체력 ×
+     * hp — 벽이면 안쪽으로) → first 틱 활짝 열림 (용수철 광대 · 큰 색종이 — 둘레 몬스터를 끌어들임 · radius 칸 보스는 taunt 틱 나를 도발) → first 틱부터 every 틱마다 volleys 번 상자마다
      * 불꽃을 쏘아 올려 radius 칸 적에게 쏟아짐 (rocket — 적마다 한 번) → finaleAt 틱 상자들이 한꺼번에 터지며 대폭죽 (finale · 밀쳐냄 knock). 상자는 그때 사라짐
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
@@ -483,10 +513,9 @@ final class PierrotSkills {
             ServerLevel lv = sp.level();
             for (int i = 0; i < nBox; i++) {
                 double a = base + Math.PI / 4 + i * Math.PI * 2 / nBox;
-                Vec3 want = new Vec3(c.x + Math.cos(a) * ring, c.y, c.z + Math.sin(a) * ring);
-                Double gy = RuneKit.solidGround(lv, V.up(want, 2), 5);
-                Vec3 at = new Vec3(want.x, gy != null ? gy : c.y, want.z);
-                PierrotSummons.Member m = PierrotSummons.spawn(sp, PierrotSummons.FINALE, at, yawToward(at, c) + 180F, finaleAt - dropAt + 2, k.num("hp", 0.4), 2.2, P,
+                Vec3 at = finaleSpot(lv, c, a, ring, 0.45 * BIG);
+                if (at == null) continue;
+                PierrotSummons.Member m = PierrotSummons.spawn(sp, PierrotSummons.FINALE, at, yawToward(at, c) + 180F, finaleAt - dropAt + 2, k.num("hp", 0.4), BIG, P,
                         first - dropAt);
                 if (m == null) continue;
                 boxes.add(m);

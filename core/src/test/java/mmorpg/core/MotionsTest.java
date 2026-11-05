@@ -365,6 +365,12 @@ public final class MotionsTest {
                 && Motions.skillMotion("arcaneblade_overdrive") == null && Motions.skillMotion("mage_overload").equals("jb_mage_overload")
                 && Motions.skillMotion("mage_overload:split").equals("jb_mage_overload_split") && Motions.skillMotion("spellblade_awaken").equals("jb_spellblade_awaken"),
                 "0.51.0 마검사 2차 동작 (내려쳐 가름 · 칼을 받음은 단계 열쇠 — 헥스 블레이드 · 룬 나이트 · 룬 스미스 동작은 뺌)");
+        check(Motions.skillMotion("trickster_swap").equals("jb_trickster_swap") && Motions.skillMotion("trickster_swap:stab").equals("jb_trickster_swap_stab")
+                && Motions.skillMotion("trickster_dash:back").equals("jb_trickster_dash_back") && Motions.skillMotion("trickster_phantom:x").equals("jb_trickster_phantom_x")
+                && Motions.skillMotion("trickster_ult:final").equals("jb_trickster_ult_final") && Motions.skillMotion("trickster_rose") == null
+                && Motions.skillMotion("pierrot_spring").equals("jb_pierrot_spring") && Motions.skillMotion("pierrot_ult:bow").equals("jb_pierrot_ult_bow")
+                && Motions.skillMotion("pierrot_ult:cheer").equals("jb_pierrot_ult_cheer") && Motions.skillMotion("bladedancer_ray") == null,
+                "0.51.0 암살자 2차 동작 (재설계안 2판 — 찌르기 · 돌아옴 · X · 터뜨림 · 환호 · 인사는 단계 열쇠, 1판 트릭스터 · 블레이드 댄서 동작은 뺌)");
         check(Motions.skillMotion("nothing") == null, "unknown → null");
         // poses.json 과 같은 이름
         Path poses = Path.of("src/main/resources/assets/mmorpg/motion/poses.json");

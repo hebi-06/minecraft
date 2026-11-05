@@ -47,7 +47,8 @@ public final class RpgJobTimingTests {
     private static final Map<String, Integer> QUIET_OF = Map.of("gladiator_ult", 160);
     /** 과녁 거리 (앞 칸 — 없으면 2.5): 멀리 내려앉는 스킬 */
     // 0.50.0 시험 1: 장대 도약 과녁을 7칸에 두었더니 시험 자리 둘레 barrier 벽 속 (바닥 8×8) 이라 숨막힘 피해가 10틱마다 들어갔음 → 5.5칸
-    private static final Map<String, Double> AHEAD = Map.of("lancer_vault", 5.5, "spellblade_blink", 6.0, "mage_phase", 1.2);
+    // 2026-11-06 미라주 대시 (트릭스터 2판): 6칸 뛰어들어 내려선 자리 둘레를 벰 — 과녁을 내려설 자리에
+    private static final Map<String, Double> AHEAD = Map.of("lancer_vault", 5.5, "spellblade_blink", 6.0, "mage_phase", 1.2, "trickster_dash", 6.0);
 
     private static Husk dummy(GameTestHelper h, double ahead) {
         Husk m = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, (float) (1.5 + ahead)));
@@ -299,17 +300,20 @@ public final class RpgJobTimingTests {
     }
 
     /**
-     * 0.51.0 2차 직업 — 암살자 각성 트릭스터 (검은 장미 덤불은 표식 0 이라 일부 — 등 뒤에서 터뜨림이 t 12 안, 환술은 환영이 2초에 터짐 (w 0), 똬리는 마지막 독 58,
-     * 개기일식은 비수 네 번이 표식 7 을 채워 다 들어감 — 첫 비수 w 8)
+     * 0.51.0 2차 직업 — 암살자 각성 트릭스터 (재설계안 2판 — 2026-11-06: 섀도 스와프는 12틱에 다시 눌러 14 에 찌름 · 표식 1 이라 일부, 미라주 대시는 과녁을 내려설 자리 (6칸)
+     * 에 — 4 에 벰 · 12 에 다시 눌러 돌아옴, 사우전드 팬텀 4 ~ 34, 와일드파이어 피스트는 표식 4 라 일부 — 62 에 터짐)
      */
     @GameTest(environment = "mmorpg:jt_tr", maxTicks = 2400)
     public void timingTrickster(GameTestHelper h) {
         probe(h, "trickster");
     }
 
-    /** 0.51.0 2차 직업 — 암살자 반전 블레이드 댄서 (스킬 피해만 이어지므로 춤사위가 쌓이지 않음 — 다 들어감: 빛살 베기 11 · 요정의 걸음 20 · 칼날 원무 21 · 빛무리 춤 50) */
-    @GameTest(environment = "mmorpg:jt_bd", maxTicks = 2400)
-    public void timingBladedancer(GameTestHelper h) {
-        probe(h, "bladedancer");
+    /**
+     * 2026-11-06 2차 직업 — 암살자 반전 피에로 (블레이드 댄서 대신: 잭 인 더 박스는 상자의 칼 10 ~ 50 · 핸드스프링 8 · 벌룬 퍼레이드 14 · 24 · 할루시네이트는 인형의
+     * 뿅망치 20 ~ 200 · 그랜드 피날레 10 ~ 90 — 소환물이 과녁을 노리지만 과녁은 움직이지 않음)
+     */
+    @GameTest(environment = "mmorpg:jt_pi", maxTicks = 2400)
+    public void timingPierrot(GameTestHelper h) {
+        probe(h, "pierrot");
     }
 }

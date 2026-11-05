@@ -5,6 +5,7 @@ import java.util.function.BiConsumer;
 import mmorpg.fabric.Mmorpg;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityType;
@@ -96,10 +97,15 @@ public class PierrotSummon extends BedrockMob {
         if (!level().isClientSide() && tickCount > maxAge) discard();
     }
 
-    /** 플레이어가 준 피해 (평타 · 화살 · 룬) 는 버림, 나머지 (몬스터 · 바닐라 몹 · 주인이 나눠 준 몫) 는 무적 시간 없이 모두 */
+    /**
+     * 플레이어가 준 피해 (평타 · 화살 · 룬) · 둘레 피해 (벽 속 · 떨어짐 · 몰림 · 물 — 좁은 곳에 선 소환물이 저절로 깎이지 않게) 는 버림, 나머지 (몬스터 · 바닐라 몹 ·
+     * 주인이 나눠 준 몫) 는 무적 시간 없이 모두
+     */
     @Override
     public boolean hurtServer(ServerLevel level, DamageSource source, float amount) {
         if (source.getEntity() instanceof Player || source.getDirectEntity() instanceof Player) return false;
+        if (source.is(DamageTypes.IN_WALL) || source.is(DamageTypes.FALL) || source.is(DamageTypes.CRAMMING) || source.is(DamageTypes.DROWN)
+                || source.is(DamageTypes.FLY_INTO_WALL)) return false;
         float before = getHealth();
         boolean ok = super.hurtServer(level, source, amount);
         invulnerableTime = 0;

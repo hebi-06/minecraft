@@ -25,8 +25,12 @@ import mmorpg.fabric.job.JobTraits7;
 import mmorpg.fabric.job.JobTraits8;
 import mmorpg.fabric.job.JobTraits9;
 import mmorpg.fabric.job.NecroCrew;
+import mmorpg.fabric.job.PierrotSummons;
 import mmorpg.fabric.job.JobTraitsMore;
 import mmorpg.fabric.job.JobUpgrades;
+import mmorpg.fabric.mob.Monsters;
+import mmorpg.fabric.mob.PierrotSummon;
+import mmorpg.fabric.mob.RpgMonster;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.stattree.StatTrees;
 import mmorpg.fabric.ui.FormNet;
@@ -75,11 +79,13 @@ import net.minecraft.world.phys.Vec3;
  * <li>배틀 아처 (mmorpg:job_ba — 섀도 헌터 대신): 난사 (서서 쏜 평타 한 갈래 · 움직이며 쏘면 세 갈래 — 옆 둘 평타 × 0.5 · 3칸 안 +20%) · 호넷 스웜 (열둘이 둘에게
  * 나뉨 3.75 · 3.75) · 팰컨 다이브 (뛰어 내려앉으며 둘레마다 활 평타 · 둔화 · 쓰러뜨리면 재사용 대기가 돌아옴) · 스플린터 샷 (3칸 안 13.5 · 5.7칸 6조각) ·
  * 스톰 스트라이드 (이동 +25% · 서서도 세 갈래 — 옆 평타 × 1) · 퀴버 스톰 (8 × 6 + 12)</li>
- * <li>트릭스터 (mmorpg:job_tr): 표식 최대 7 · 표식 5 인 몹을 평타로 쓰러뜨리면 (+1) 옆 과녁에게 6 이 옮겨감 · 검은 장미 덤불 (표식 7 → 0.35 + 0.2 + 0.6 × 7 · 머리 위로 넘어 등 뒤 · 과녁을 봄) ·
- * 우트가르드의 환술 (환영 둘이 터짐 1.425 × 2 · 표식 +2) · 요르문간드의 똬리 (가며 2.4 → 조임 3.15 → 독 0.75 × 4 · 처음 자리로) · 끝없는 밤 (첫 평타 × 2.5 치명 · 풀려도 태세 ·
- * 쓰러뜨리면 다시 은신) · 개기일식 (1.25 × 4 × 4 · 표식 7 → 4 + 2 × 7)</li>
- * <li>블레이드 댄서 (mmorpg:job_bd): 춤사위 (평타 → 스킬 → 평타 번갈아 +1 · 하나당 +6% · 이동 +4% · 3초 끊기면 0) · 빛살 베기 (2.0 + 2.75 × 1.06) · 요정의 걸음 (0.95 × 3 ·
- * 받는 피해 −30%) · 칼날 원무 (2.85 × 3) · 눈부신 한낮 (평타 두 번 42% · 춤사위가 줄지 않음) · 빛무리 춤 (2.5 × 8 + 18)</li>
+ * <li>트릭스터 (mmorpg:job_tr — 재설계안 2판): 표식 최대 7 · 표식 5 인 몹을 평타로 쓰러뜨리면 (+1) 옆 과녁에게 6 이 옮겨감 · 섀도 스와프 (환영이 꿰뚫음 0.35 · 표식 +1 →
+ * 다시 눌러 과녁 등 뒤로 자리를 바꿔 찌름 0.2 + 0.6 × 7 · 과녁을 봄) · 미라주 대시 (6칸 뛰어듦 · 지나간 과녁 표식 +1 · 내려서며 2.85 · 표식 +1 → 다시 눌러 처음 자리로) ·
+ * 사우전드 팬텀 (2.0 × 3 · 표식 +2씩 → 등 뒤로 순간 이동 → X 2.55) · 미러 팰리스 (단검 평타 + 거울 베기 50% · 표식 +2) · 와일드파이어 피스트 (6 + 1.5 × 4 → 표식 7 →
+ * 12 + 2 × 7 + 그동안 준 다른 피해 × 0.15)</li>
+ * <li>피에로 (mmorpg:job_pi — 블레이드 댄서 대신): 핸드스프링 (5칸 재주넘기 → 2.85 · 도발 · 받는 피해 −30%) · 벌룬 퍼레이드 (과녁 둘 — 감음 2.55 · 둔화 → 펑 6.0) ·
+ * 잭 인 더 박스 (과녁 앞 상자 — 체력 35% · 칼 0.95 × 5 · 플레이어 공격은 막힘) · 쇼타임 (받을 피해의 20% 를 상자가 · 몬스터가 상자를 노리고 때림 · 상자가 부서지면
+ * 위력 × 0.8 · 기절) · 할루시네이트 (커다란 인형 — 체력 80% · 1.14 씩 뿅망치) · 그랜드 피날레 (상자 넷 · 2.5 × 8 + 18 → 상자가 사라짐)</li>
  * </ul>
  */
 public final class RpgJobAdvanceTests {
@@ -95,7 +101,7 @@ public final class RpgJobAdvanceTests {
     static final String ENV_SN = "mmorpg:job_sn";
     static final String ENV_BA = "mmorpg:job_ba";
     static final String ENV_TR = "mmorpg:job_tr";
-    static final String ENV_BD = "mmorpg:job_bd";
+    static final String ENV_PI = "mmorpg:job_pi"; // 2026-11-06 피에로 (블레이드 댄서 대신 — job_pr 은 사제)
 
     /** 넓은 돌 바닥 (그라니의 질주가 비스듬히 내달릴 땅) */
     static void floor(GameTestHelper h) {
@@ -258,7 +264,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("sniper".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("스나이퍼"),
                     "sniper free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 암살자의 2차 전직 (트릭스터 · 블레이드 댄서) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
+            // 0.51.0 암살자의 2차 전직 (트릭스터 · 피에로 — 2026-11-06 블레이드 댄서 대신) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("assassin"), null);
@@ -270,12 +276,12 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload asadv = chest(sp);
             h.assertTrue(asadv != null && asadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("트릭스터")
-                    && asadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("블레이드 댄서"), "assassin advance cards");
+                    && asadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("피에로"), "assassin advance cards");
             Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "assassin advance confirm");
             Forms.answer(sp, 11, null);
-            h.assertTrue("bladedancer".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
-                    && JobSystem.job(sp).display().equals("블레이드 댄서"), "bladedancer free from the first job: " + JobSystem.jobOf(sp));
+            h.assertTrue("pierrot".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
+                    && JobSystem.job(sp).display().equals("피에로"), "pierrot free from the first job: " + JobSystem.jobOf(sp));
             // 창술사의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
@@ -1658,7 +1664,7 @@ public final class RpgJobAdvanceTests {
         return m;
     }
 
-    @GameTest(environment = ENV_TR, maxTicks = 720)
+    @GameTest(environment = ENV_TR, maxTicks = 600)
     public void tricksterSkills(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = RpgJobTests.jobPlayer(h, "trickster", Map.of("dex", 50), 50);
@@ -1695,92 +1701,121 @@ public final class RpgJobAdvanceTests {
         }));
         steps.add(new RpgJobTests.Step(8, () -> {
             h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 6, "marks shifted to the nearest (5 + the killing blow): " + JobTraits3.marks(sp, z.get(0)));
-            // 검은 장미 덤불: 표식 7 → 파고들어 0.35 → 머리 위로 넘어 등 뒤에서 터뜨림 0.2 + 0.6 × 7 (= 4.75) · 표식이 사라짐 · 과녁을 봄
-            RpgCombat.forceCrit = null;
+            // 섀도 스와프: 표식 6 → 던진 환영이 4틱에 과녁을 꿰뚫음 0.35 (표식 7) → 다시 누르면 과녁 등 뒤의 환영과 자리를 바꿔 찌름 0.2 + 0.6 × 7 (= 4.75 · 표식 0) · 과녁을 봄
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2.5));
             RpgJobTests.clearStrays(h, z.get(0));
-            JobTraits3.setMarks(sp, z.get(0), 7);
-            h.assertTrue(JobSkills.press(sp, 0), "검은 장미 덤불 cast");
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 0, "rose takes the marks");
+            JobTraits3.setMarks(sp, z.get(0), 6);
+            h.assertTrue(JobSkills.press(sp, 0), "섀도 스와프 cast");
+            h.assertTrue(JobRecast.pending(sp, "trickster_swap") && JobSkills.cooldownLeft(sp, "trickster_swap") == 0, "swap recast window · no cooldown yet");
         }));
-        steps.add(new RpgJobTests.Step(16, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.75);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "검은 장미 덤불 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double cut = RpgJobTests.expected(sp, j, j.skill(0), 0.35);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), cut), "섀도 스와프 (환영이 꿰뚫음) " + TestDummies.dealt(z.get(0)) + " vs " + cut);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 7, "swap cut marks +1: " + JobTraits3.marks(sp, z.get(0)));
             h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "trickster gradient number");
-            h.assertTrue(sp.position().z > z.get(0).getZ() + 0.6, "vaulted behind: " + sp.position().z + " vs target " + z.get(0).getZ());
-            h.assertTrue(Math.abs(net.minecraft.util.Mth.wrapDegrees(sp.getYRot() - 180F)) < 45F, "faces the target after the vault: " + sp.getYRot());
-            // 우트가르드의 환술: 앞으로 순간 이동 · 원래 자리 양옆 환영 둘 — 닿은 과녁 → 둘 다 터짐 (1.425 × 2 = 2.85) · 표식 +2
+            h.assertTrue(sp.position().z < z.get(0).getZ(), "still in front before the recast");
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            h.assertTrue(JobSkills.press(sp, 0), "섀도 스와프 recast (swap)");
+            h.assertTrue(sp.position().z > z.get(0).getZ() + 0.6, "swapped behind the target: " + sp.position().z + " vs target " + z.get(0).getZ());
+            h.assertTrue(!JobRecast.pending(sp, "trickster_swap") && JobSkills.cooldownLeft(sp, "trickster_swap") > 0, "swap done → cooldown");
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.75);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "섀도 스와프 (찌름 — 표식 7) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 0, "the stab takes the marks");
+            h.assertTrue(Math.abs(net.minecraft.util.Mth.wrapDegrees(sp.getYRot() - 180F)) < 45F, "faces the target from behind: " + sp.getYRot());
+            // 미라주 대시: 앞 6칸으로 뛰어듦 (지나간 과녁 표식 +1) → 4틱 내려서며 둘레 2.5칸 2.85 (표식 +1) → 다시 누르면 처음 자리로 (시험 자리 둘레 barrier 벽 안 —
+            // 0.5 에서 6.5 로)
             z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 1.4));
+            homeAt(h, sp, 0.5);
+            z.set(0, dummy(h, 0, 5.5));
             RpgJobTests.clearStrays(h, z.get(0));
             mark[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 1), "우트가르드의 환술 cast");
+            h.assertTrue(JobSkills.press(sp, 1), "미라주 대시 cast");
         }));
-        steps.add(new RpgJobTests.Step(10, () -> {
+        steps.add(new RpgJobTests.Step(8, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 2.85);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "우트가르드의 환술 (two illusions) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 2, "mirage marks +2: " + JobTraits3.marks(sp, z.get(0)));
-            h.assertTrue(sp.position().z - mark[0] > 4, "teleported ahead: " + (sp.position().z - mark[0]));
-            // 요르문간드의 똬리: S 자로 갔다가 되돌아옴 — 가며 벰 2.4 (표식 +1) → 0.9초에 조임 3.15 (표식 +1) → 독 0.75 × 4 (= 8.55) · 처음 자리로
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2.5));
-            RpgJobTests.clearStrays(h, z.get(0));
-            mark[1] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 2), "요르문간드의 똬리 cast");
-        }));
-        steps.add(new RpgJobTests.Step(12, () -> {
-            double cut = RpgJobTests.expected(sp, j, j.skill(2), 2.4);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), cut), "똬리 cut " + TestDummies.dealt(z.get(0)) + " vs " + cut);
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 1, "coil cut marks +1: " + JobTraits3.marks(sp, z.get(0)));
-        }));
-        steps.add(new RpgJobTests.Step(50, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 8.55);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "요르문간드의 똬리 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 2, "coil squeeze marks +1: " + JobTraits3.marks(sp, z.get(0)));
-            h.assertTrue(Math.abs(sp.position().z - mark[1]) < 1.2, "came back to the start: " + (sp.position().z - mark[1]));
-            // 끝없는 밤: 은신 (투명 · 태세 10초) → 첫 단검 평타 치명타 확정 × 2.5 → 풀림 (태세는 남음 · 이동 +30%) → 몹을 쓰러뜨리면 다시 은신
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2.0));
-            RpgJobTests.clearStrays(h, z.get(0));
-            h.assertTrue(JobSkills.press(sp, 3), "끝없는 밤 cast");
-            h.assertTrue(JobTraits3.veilOn(sp) && JobTraits.stanceOn(sp, "trickster_night") && sp.hasEffect(MobEffects.INVISIBILITY), "night: stealth · stance · invisible");
-        }));
-        steps.add(new RpgJobTests.Step(4, () -> {
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            double want = base * 2.5 * RpgCombat.critMultOf(sp, w);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "night first hit " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(!JobTraits3.veilOn(sp) && JobTraits.stanceOn(sp, "trickster_night") && !sp.hasEffect(MobEffects.INVISIBILITY), "attack breaks the stealth (stance stays)");
-            h.assertTrue(Math.abs(JobTraits3.speedBonus(sp, false) - 0.3) < 1e-9, "speed +30% after stealth: " + JobTraits3.speedBonus(sp, false));
-            victim[0] = weak(h, 1.0, 2.0);
-        }));
-        steps.add(new RpgJobTests.Step(12, () -> {
-            sp.attack(victim[0]);
-            h.assertTrue(victim[0].isRemoved() || !victim[0].isAlive(), "night: mob fell");
-            h.assertTrue(JobTraits3.veilOn(sp) && JobTraits3.againCount(sp) == 1 && sp.hasEffect(MobEffects.INVISIBILITY), "kill → stealth again (1)");
-        }));
-        // 다시 은신 3초가 지나면 풀림 (태세는 남음)
-        steps.add(new RpgJobTests.Step(66, () -> {
-            h.assertTrue(!JobTraits3.veilOn(sp) && JobTraits.stanceOn(sp, "trickster_night"), "re-stealth ends (stance stays)");
-            // 개기일식: 비수 넷 (나 + 환영 셋) × 1.25 × 네 번 (비수마다 표식 +1 → 7) → 해가 뜰 때 표식 7 → 4 + 2 × 7 (= 38)
-            JobTraits.testEndStance(sp);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "미라주 대시 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 2, "dash marks: passed +1 · landing +1: " + JobTraits3.marks(sp, z.get(0)));
+            h.assertTrue(sp.position().z - mark[0] > 5, "dashed ahead: " + (sp.position().z - mark[0]));
+            h.assertTrue(JobSkills.press(sp, 1), "미라주 대시 recast (back)");
+            h.assertTrue(Math.abs(sp.position().z - mark[0]) < 0.3, "back to the start: " + (sp.position().z - mark[0]));
+            // 사우전드 팬텀: 과녁 둘레 환영 여섯 — 4 · 14 · 24틱에 둘씩 엇갈려 꿰뚫음 (2.0 × 3 · 표식 +2씩) → 28틱 등 뒤로 순간 이동 → 34틱 거대한 X 2.55 (= 8.55)
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 3.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "개기일식 cast");
+            h.assertTrue(JobSkills.press(sp, 2), "사우전드 팬텀 cast");
         }));
-        steps.add(new RpgJobTests.Step(30, () -> h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 7, "eclipse daggers fill marks 7: " + JobTraits3.marks(sp, z.get(0)))));
-        steps.add(new RpgJobTests.Step(36, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 38);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "개기일식 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 0, "dawn bursts all marks");
+        steps.add(new RpgJobTests.Step(26, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 6.0);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "팬텀 꿰뚫음 셋 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 6, "phantom marks +2 × 3: " + JobTraits3.marks(sp, z.get(0)));
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(sp.position().z > z.get(0).getZ() + 0.6, "blinked behind the target (28): " + sp.position().z + " vs "
+                + z.get(0).getZ())));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 8.55);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "사우전드 팬텀 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 미러 팰리스: 태세 — 단검 평타에 거울 베기 50% (치명타 없이 × 1.5) · 표식 +2 (평타 · 거울)
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 3), "미러 팰리스 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "trickster_palace"), "palace stance");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double base = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.5), "palace basic + mirror 50% " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.5);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 2, "palace basic marks +2: " + JobTraits3.marks(sp, z.get(0)));
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            // 와일드파이어 피스트: 표식 3 → 과녁 앞으로 순간 이동해 2틱 벰 6 → 12 · 22 · 32 · 42틱 들불 환영 1.5 × 4 (표식 +1씩 → 7) → 그동안 평타 한 번 (들불이 쌓음)
+            // → 62틱 터짐 12 + 2 × 7 (= 38) + 쌓인 피해 × 0.15 (숫자 따로 — 10틱 뒤)
+            JobTraits.testEndStance(sp);
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 3.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits3.setMarks(sp, z.get(0), 3);
+            JobSkills.resetCooldowns(sp);
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 4), "와일드파이어 피스트 cast");
+            h.assertTrue(sp.position().z - mark[0] > 1.0 && sp.position().z < z.get(0).getZ(), "blinked in front of the target: " + (sp.position().z - mark[0]));
+            h.assertTrue(JobTraits10.fireStored(z.get(0)) == 0, "wildfire mark on (nothing stored)");
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "와일드파이어 베기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits10.fireStored(z.get(0)) == 0, "the ult's own slash is not stored: " + JobTraits10.fireStored(z.get(0)));
+        }));
+        steps.add(new RpgJobTests.Step(42, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 12);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "들불 환영 넷 (6 + 1.5 × 4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 7, "wildfire clones fill marks 7: " + JobTraits3.marks(sp, z.get(0)));
+            h.assertTrue(JobTraits10.fireStored(z.get(0)) == 0, "the clones are not stored: " + JobTraits10.fireStored(z.get(0)));
+        }));
+        steps.add(new RpgJobTests.Step(9, () -> {
+            // 몹 무적 시간 (마지막 환영 42) 이 지난 55틱에 평타 한 번 — 들불이 그 피해를 쌓음
+            mark[1] = TestDummies.dealt(z.get(0));
+            sp.attack(z.get(0));
+            mark[1] = TestDummies.dealt(z.get(0)) - mark[1];
+            h.assertTrue(mark[1] > 0 && Math.abs(JobTraits10.fireStored(z.get(0)) - mark[1]) < 1e-3, "basic hit stored: " + JobTraits10.fireStored(z.get(0)) + " vs "
+                    + mark[1]);
+        }));
+        steps.add(new RpgJobTests.Step(25, () -> {
+            double extra = mark[1] * 0.15 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 38) + mark[1] + extra;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "와일드파이어 피스트 (38 + 평타 + 쌓인 × 0.15) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 0, "the burst takes the marks");
+            h.assertTrue(JobTraits10.fireStored(z.get(0)) == -1, "wildfire mark gone");
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;
@@ -1790,120 +1825,198 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 블레이드 댄서
+    // ------------------------------------------------------------ 피에로
 
-    @GameTest(environment = ENV_BD, maxTicks = 760)
-    public void bladedancerSkills(GameTestHelper h) {
+    /** 시험 자리에서 (dx, dz) 의 허수아비 몬스터 (제자리 — 스크립트 공격은 그대로 · 상자의 칼에 쓰러지지 않게 체력 1000) */
+    static RpgMonster scarecrow(GameTestHelper h, double dx, double dz) {
+        RpgMonster m = Monsters.spawnAt(h.getLevel(), "scarecrow", h.absoluteVec(new Vec3(4.5 + dx, 2, 1.5 + dz)), 180F);
+        h.assertTrue(m != null, "spawn scarecrow");
+        m.setNoAi(true);
+        m.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1000);
+        m.setHealth(1000F);
+        return m;
+    }
+
+    @GameTest(environment = ENV_PI, maxTicks = 600)
+    public void pierrotSkills(GameTestHelper h) {
         floor(h);
-        ServerPlayer sp = RpgJobTests.jobPlayer(h, "bladedancer", Map.of("dex", 50), 50);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "pierrot", Map.of("dex", 50, "vit", 50), 50);
         Weapon w = Weapons.weaponFrom("dagger", 0, "common");
         RpgJobTests.hold(sp, w);
-        Jobs.Job j = Jobs.job("bladedancer");
-        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2.0)));
+        Jobs.Job j = Jobs.job("pierrot");
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 5.5)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0};
-        // 춤사위: 단검 평타 (처음 — 쌓이지 않음) → 직업 스킬이 맞음 → +1 (이동 +4%)
+        RpgMonster[] mob = {null};
+        // 핸드스프링: 앞 5칸 재주넘기 → 8틱 내려서며 둘레 3칸 2.85 · 맞은 과녁 도발 (나를 노림) · 2초 받는 피해 −30%
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             RpgJobTests.clearStrays(h, z.get(0));
             RpgCombat.forceCrit = false;
-            JobTraits10.setDance(sp, 0);
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base), "first basic (no dance) " + TestDummies.dealt(z.get(0)) + " vs " + base);
-            h.assertTrue(JobTraits10.dance(sp) == 0 && JobTraits10.lastKind(sp) == 1, "basic first: dance 0 · last basic");
-            // 빛살 베기: 돌며 벰 2.0 (스킬 쪽 → 춤사위 1) → 앞을 크게 벰 2.75 × 1.06
-            z.get(0).discard();
-            z.set(0, dummy(h, 0, 2.5));
-            RpgJobTests.clearStrays(h, z.get(0));
-            h.assertTrue(JobSkills.press(sp, 0), "빛살 베기 cast");
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "핸드스프링 cast");
         }));
-        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(JobTraits10.dance(sp) == 1 && Math.abs(JobTraits10.speedBonus(sp) - 0.04) < 1e-9,
-                "basic → skill: dance 1 · speed +4%: " + JobTraits10.dance(sp) + " · " + JobTraits10.speedBonus(sp))));
-        steps.add(new RpgJobTests.Step(12, () -> {
-            double e = RpgJobTests.expected(sp, j, j.skill(0), 1);
-            double want = e * 2.0 + e * 2.75 * 1.06;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "빛살 베기 (spin + slash × dance 1) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "bladedancer gradient number");
-            // 평타 (춤사위 1 → × 1.06) → 춤사위 2 (이동 +8%)
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2.0));
-            RpgJobTests.clearStrays(h, z.get(0));
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.06), "basic × dance 1 " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.06);
-            h.assertTrue(JobTraits10.dance(sp) == 2 && Math.abs(JobTraits10.speedBonus(sp) - 0.08) < 1e-9, "skill → basic: dance 2 · speed +8%");
-        }));
-        // 3초 동안 아무것도 맞히지 못하면 0
-        steps.add(new RpgJobTests.Step(70, () -> {
-            h.assertTrue(JobTraits10.dance(sp) == 0 && JobTraits10.speedBonus(sp) == 0, "dance fades after 3s: " + JobTraits10.dance(sp));
-            // 요정의 걸음: 옆으로 스텝 셋 (0.95 × 3) · 받는 피해 −30% (1.5초)
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2.5));
-            RpgJobTests.clearStrays(h, z.get(0));
-            JobTraits10.setDance(sp, 0);
-            mark[0] = sp.position().x;
-            h.assertTrue(JobSkills.press(sp, 1), "요정의 걸음 cast");
-            h.assertTrue(Math.abs(JobTraits10.guarding(sp) - 0.3) < 1e-9, "fairy step guard 0.3: " + JobTraits10.guarding(sp));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 2.85);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "핸드스프링 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "pierrot gradient number");
+            h.assertTrue(sp.position().z - mark[0] > 3.5, "flipped ahead: " + (sp.position().z - mark[0]));
+            h.assertTrue(z.get(0).getTarget() == sp, "the landing taunts the target (it targets me)");
+            h.assertTrue(Math.abs(JobTraits10.guarding(sp) - 0.3) < 1e-9, "spring guard 0.3: " + JobTraits10.guarding(sp));
             float hp = sp.getHealth();
             mark[1] = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
         }));
-        steps.add(new RpgJobTests.Step(36, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(1), 2.85);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "요정의 걸음 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits10.guarding(sp) == 0, "guard ends");
+        steps.add(new RpgJobTests.Step(40, () -> {
+            h.assertTrue(JobTraits10.guarding(sp) == 0, "guard ends after 2s");
             float hp = sp.getHealth();
             double loss = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
-            h.assertTrue(loss > 0 && Math.abs(mark[1] - loss * 0.7) < 1e-3, "step guard −30%: " + mark[1] + " vs " + loss * 0.7);
-            // 칼날 원무: 제자리에서 2.85 × 3
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2.0));
-            RpgJobTests.clearStrays(h, z.get(0));
-            JobTraits10.setDance(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 2), "칼날 원무 cast");
-        }));
-        steps.add(new RpgJobTests.Step(26, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 8.55);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "칼날 원무 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            // 눈부신 한낮: 태세 — 단검 평타 두 번 (두 번째 42%) · 춤사위가 줄지 않음
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2.0));
-            RpgJobTests.clearStrays(h, z.get(0));
-            JobTraits10.setDance(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 3), "눈부신 한낮 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "bladedancer_noon"), "noon stance");
-        }));
-        steps.add(new RpgJobTests.Step(4, () -> {
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.42), "noon echo " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.42);
-            JobTraits10.setDance(sp, 3);
-        }));
-        steps.add(new RpgJobTests.Step(70, () -> {
-            h.assertTrue(JobTraits10.dance(sp) == 3, "noon keeps the dance: " + JobTraits10.dance(sp));
-            // 빛무리 춤: 2.5 × 8 + 18
-            JobTraits.testEndStance(sp);
+            h.assertTrue(loss > 0 && Math.abs(mark[1] - loss * 0.7) < 1e-3, "spring guard −30%: " + mark[1] + " vs " + loss * 0.7);
+            // 벌룬 퍼레이드: 둘레 7칸 과녁 둘 (풍선 여섯이 나눠 붙음) — 14틱 감음 2.55 (둔화) → 24틱 펑 6.0 (= 8.55) · 도발
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 3.0));
-            RpgJobTests.clearStrays(h, z.get(0));
-            JobTraits10.setDance(sp, 0);
-            JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "빛무리 춤 cast");
+            z.add(dummy(h, 2.5, 3.5));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            h.assertTrue(JobSkills.press(sp, 2), "벌룬 퍼레이드 cast");
         }));
-        steps.add(new RpgJobTests.Step(60, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 38);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "빛무리 춤 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        steps.add(new RpgJobTests.Step(16, () -> {
+            double e = RpgJobTests.expected(sp, j, j.skill(2), 1);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), e * 2.55), "balloon tangle " + TestDummies.dealt(x) + " vs " + e * 2.55);
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS) && z.get(1).hasEffect(MobEffects.SLOWNESS), "tangled: slowed");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double e = RpgJobTests.expected(sp, j, j.skill(2), 1);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), e * 8.55), "벌룬 퍼레이드 " + TestDummies.dealt(x) + " vs " + e * 8.55);
+            h.assertTrue(z.get(0).getTarget() == sp && z.get(1).getTarget() == sp, "the pop taunts (they target me)");
+            // 잭 인 더 박스: 과녁 앞에 상자 (4틱 — 체력 = 내 최대 체력 35%) → 6틱 열림 → 10틱부터 10틱마다 칼 0.95 × 5 (= 4.75)
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 4.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            h.assertTrue(JobSkills.press(sp, 0), "잭 인 더 박스 cast");
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            List<PierrotSummon> boxes = PierrotSummons.bodies(sp, PierrotSummons.BOX);
+            h.assertTrue(boxes.size() == 1 && JobTraits10.summons(sp) == 1, "one box: " + PierrotSummons.testState(sp));
+            PierrotSummon b = boxes.get(0);
+            h.assertTrue(b.getZ() < z.get(0).getZ() && b.distanceTo(z.get(0)) < 2.4, "the box lands in front of the target: " + PierrotSummons.testState(sp));
+            h.assertTrue(Math.abs(b.getMaxHealth() - Math.max(10, RpgHealth.maxOf(sp) * 0.35)) < 0.01, "box hp = 35% of my max: " + b.getMaxHealth() + " / "
+                    + RpgHealth.maxOf(sp));
+            h.assertTrue(b.entityTags().contains("rpg_ally") && b.entityTags().contains(PierrotSummon.TAG), "box tags (ally · summon)");
+        }));
+        steps.add(new RpgJobTests.Step(46, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.75);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "잭 인 더 박스 (칼 다섯) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "pierrot gradient number (box knives)");
+            PierrotSummon b = PierrotSummons.bodies(sp, PierrotSummons.BOX).get(0);
+            // 플레이어의 공격은 막힘
+            float bh = b.getHealth();
+            b.hurtServer(h.getLevel(), sp.damageSources().playerAttack(sp), 5F);
+            h.assertTrue(b.getHealth() == bh, "players cannot hurt the box");
+            // 쇼타임: 받을 피해의 20% 를 12칸 안의 가장 가까운 상자가 나눠 받음 (상자는 다음 틱에)
+            float hp = sp.getHealth();
+            mark[0] = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
+            mark[1] = bh;
+        }));
+        steps.add(new RpgJobTests.Step(2, () -> {
+            PierrotSummon b = PierrotSummons.bodies(sp, PierrotSummons.BOX).get(0);
+            double moved = mark[0] / 0.8 * 0.2;
+            h.assertTrue(Math.abs(b.getHealth() - (mark[1] - moved)) < 0.02, "the box took 20%: " + b.getHealth() + " vs " + (mark[1] - moved));
+            b.discard();
+        }));
+        steps.add(new RpgJobTests.Step(2, () -> {
+            h.assertTrue(JobTraits10.summons(sp) == 0, "box gone: " + PierrotSummons.testState(sp));
+            float hp = sp.getHealth();
+            double loss = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
+            h.assertTrue(loss > 0 && Math.abs(mark[0] - loss * 0.8) < 1e-3, "share 20% while a box stands: " + mark[0] + " vs " + loss * 0.8);
+            // 몬스터가 상자를 노림: 허수아비 앞에 상자 → 열린 뒤 10틱마다 끌어들임 → 허수아비가 걸음 없이 (제자리) 상자를 침 · 나는 맞지 않음
+            z.get(0).discard();
+            z.clear();
+            home(h, sp);
+            mob[0] = scarecrow(h, 0, 4.0);
+            RpgJobTests.clearStrays(h, mob[0]);
+            JobSkills.resetCooldowns(sp);
+            RpgHealth.healFull(sp);
+            h.assertTrue(JobSkills.press(sp, 0), "잭 인 더 박스 (허수아비) cast");
+        }));
+        steps.add(new RpgJobTests.Step(50, () -> {
+            List<PierrotSummon> boxes = PierrotSummons.bodies(sp, PierrotSummons.BOX);
+            h.assertTrue(boxes.size() == 1, "box: " + PierrotSummons.testState(sp));
+            PierrotSummon b = boxes.get(0);
+            Monsters.Fight f = Monsters.fightOf(mob[0]);
+            h.assertTrue(f != null && f.lure() == b, "the scarecrow is lured to the box: " + (f == null ? "no fight" : String.valueOf(f.lure())));
+            h.assertTrue(b.getHealth() < b.getMaxHealth(), "the scarecrow hit the box: " + b.getHealth() + " / " + b.getMaxHealth());
+            h.assertTrue(sp.getHealth() >= sp.getMaxHealth() - 1e-3, "not me: " + sp.getHealth() + " / " + sp.getMaxHealth());
+            // 상자가 부서짐 (체력이 다함): 색종이 폭죽 — 둘레 3칸 위력 × 0.8 · 보스 아닌 적 기절 (나약함)
+            z.add(dummy(h, 1.2, 2.4));
+            b.hurtServer(h.getLevel(), mob[0].damageSources().mobAttack(mob[0]), 1000F);
+        }));
+        steps.add(new RpgJobTests.Step(3, () -> {
+            h.assertTrue(PierrotSummons.bodies(sp, PierrotSummons.BOX).isEmpty() && JobTraits10.summons(sp) == 0, "the box broke: " + PierrotSummons.testState(sp));
+            double burst = JobSystem.power(sp, j) * 0.8 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), burst), "box burst " + TestDummies.dealt(z.get(0)) + " vs " + burst);
+            h.assertTrue(z.get(0).hasEffect(MobEffects.WEAKNESS), "the burst stuns (not a boss)");
+            Monsters.Fight f = Monsters.fightOf(mob[0]);
+            h.assertTrue(f == null || f.lure() == null, "the lure ends with the box");
+            // 할루시네이트: 커다란 광대 인형 (크기 2 · 체력 80% — 화면 가운데를 가리지 않게 오른쪽으로 · 10틱 내려섬) → 20틱부터 20틱마다 뿅망치 1.14
+            for (Husk x : z) x.discard();
+            z.clear();
+            mob[0].discard();
+            home(h, sp);
+            z.add(dummy(h, 0, 4.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 3), "할루시네이트 cast");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            List<PierrotSummon> dolls = PierrotSummons.bodies(sp, PierrotSummons.DOLL);
+            h.assertTrue(dolls.size() == 1 && JobTraits10.summons(sp) == 1, "one doll: " + PierrotSummons.testState(sp));
+            PierrotSummon d = dolls.get(0);
+            h.assertTrue(Math.abs(d.getScale() - 2.0) < 1e-3 && Math.abs(d.getMaxHealth() - Math.max(10, RpgHealth.maxOf(sp) * 0.8)) < 0.01, "doll size 2 · hp 80%: "
+                    + d.getScale() + " · " + d.getMaxHealth());
+            h.assertTrue(Math.abs(d.getX() - sp.getX()) > 0.5, "the doll stands to the side: " + PierrotSummons.testState(sp));
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 1.14);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "할루시네이트 (첫 뿅망치) " + TestDummies.dealt(z.get(0)) + " vs " + want + " "
+                    + PierrotSummons.testState(sp));
+        }));
+        steps.add(new RpgJobTests.Step(20, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 1.14 * 2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "할루시네이트 (둘째 뿅망치) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 직업을 다시 정하면 소환물이 사라짐 → 그랜드 피날레: 둘레 3.5칸에 거대한 상자 넷 (4틱 — 시험 자리 가운데에서 써 barrier 벽 안) → 10틱부터 10틱마다 불꽃
+            // 2.5 × 8 → 90틱 대폭죽 18 (= 38) · 상자가 사라짐
+            JobSystem.setJob(sp, "pierrot");
+            h.assertTrue(JobTraits10.summons(sp) == 0, "job reset clears the summons");
+            for (Husk x : z) x.discard();
+            z.clear();
+            homeAt(h, sp, 4.0);
+            z.add(dummy(h, 0, 5.5));
+            z.add(dummy(h, -3.0, 2.0));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            h.assertTrue(JobSkills.press(sp, 4), "그랜드 피날레 cast");
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            List<PierrotSummon> boxes = PierrotSummons.bodies(sp, PierrotSummons.FINALE);
+            h.assertTrue(boxes.size() == 4 && JobTraits10.summons(sp) == 4, "four giant boxes: " + PierrotSummons.testState(sp));
+            for (PierrotSummon b : boxes) h.assertTrue(Math.abs(b.getScale() - 2.2) < 1e-3, "giant box size 2.2: " + b.getScale());
+        }));
+        steps.add(new RpgJobTests.Step(76, () -> {
+            double e = RpgJobTests.expected(sp, j, j.skill(4), 1);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), e * 20), "fireworks 2.5 × 8 " + TestDummies.dealt(x) + " vs " + e * 20);
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double e = RpgJobTests.expected(sp, j, j.skill(4), 1);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), e * 38), "그랜드 피날레 " + TestDummies.dealt(x) + " vs " + e * 38);
+            h.assertTrue(JobTraits10.summons(sp) == 0, "the boxes are gone after the finale: " + PierrotSummons.testState(sp));
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);
-            h.assertTrue(JobTraits10.dance(sp) == 0 && JobTraits10.speedBonus(sp) == 0, "dance cleared on job change");
+            h.assertTrue(JobTraits10.summons(sp) == 0, "summons cleared on job change");
             for (Husk x : z) x.discard();
+            if (mob[0] != null) mob[0].discard();
             RpgGearTests.done(h, sp);
         });
     }

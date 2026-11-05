@@ -44,9 +44,10 @@ import net.minecraft.world.phys.Vec3;
 public final class PierrotSummons {
     private PierrotSummons() {}
 
-    static final int BOX = 0;
-    static final int DOLL = 1;
-    static final int FINALE = 2;
+    /** 소환물 종류 (시험도 씀 — bodies) */
+    public static final int BOX = 0;
+    public static final int DOLL = 1;
+    public static final int FINALE = 2;
     /** 광대 인형이 노릴 적을 찾는 둘레 (인형에서) · 주인을 따르는 거리 · 곁으로 옮겨 오는 거리 */
     static final double FOE = 8;
     static final double FOLLOW = 3.5;

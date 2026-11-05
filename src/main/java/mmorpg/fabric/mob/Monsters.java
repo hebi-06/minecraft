@@ -527,7 +527,7 @@ public final class Monsters {
     /**
      * 2026-11-06 피에로의 소환물 (깜짝 상자 · 광대 인형 — 사용자 "소환물로 어그로랑 탱킹"): ticks 틱 동안 이 몬스터가 그 소환물을 노리고 때림 (걸어가 공격 동작 →
      * 소환물이 맞음 — 다시 부르면 늘어남). 싸우지 않던 몬스터는 주인 (owner) 과의 싸움을 시작함 (끌림이 끝나면 주인을 노림). 보스는 아님 (Monsters 의 몬스터만),
-     * 누가 도발 중이면 (수호기사 · 피에로 자신의 스킬 도발) 끌려가지 않음. 끌려갔으면 true
+     * 누가 도발 중이면 (수호기사 · 피에로 자신의 스킬 도발) · 다른 소환물에 이미 끌려가 있으면 (먼저 끈 쪽이 이김) 끌려가지 않음. 끌려갔으면 true
      */
     public static boolean lure(LivingEntity e, LivingEntity summon, ServerPlayer owner, int ticks) {
         Kind k = kindOf(e);
@@ -537,6 +537,8 @@ public final class Monsters {
         long now = Tasks.now();
         Fight f = FIGHTS.get(m.getUUID());
         if (f != null && f.taunt != null && f.taunt.until() > now) return false;
+        // 먼저 끈 소환물이 살아 있으면 그쪽을 계속 노림 (상자 · 인형 둘 사이에서 10틱마다 오가며 공격 동작이 끊기지 않게)
+        if (f != null && f.lure != null && f.lure != summon && now < f.lureUntil && f.lure.isAlive() && !f.lure.isRemoved()) return false;
         if (f == null) {
             f = new Fight(m, k, owner, now);
             FIGHTS.put(m.getUUID(), f);

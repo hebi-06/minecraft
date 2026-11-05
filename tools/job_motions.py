@@ -28,7 +28,7 @@ import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 글
 import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (아케인 블레이드 · 소드 콜러)
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
 import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 배틀 아처 — 재설계안 2판)
-import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 블레이드 댄서)
+import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 피에로 — 재설계안 2판)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -104,8 +104,10 @@ AIR = {
     # 하트시커 · 트릭 샷 · 데드아이 · 호넷 스웜 · 스플린터 샷 · 퀴버 스톰은 땅에 선 채
     "jb_sniper_snare": [(3, 10, "tuck"), (11, 14, "land")],
     "jb_battlearcher_dive": [(1, 10, "tuck"), (11, 14, "land")],
-    "jb_trickster_rose_vault": [(0, 7, "tuck")],
-    "jb_trickster_rose_burst": [(0, 3, "land")],
+    # 0.51.0 트릭스터 · 피에로 (재설계안 2판 — 2026-11-06): 미라주 대시 (1 ~ 4 낮게 내달림 — 제 다리) · 핸드스프링 (0 ~ 8 재주넘기 — 몸 뒤집기 flip · 제 다리) 는
+    # 걸음 다리를 끔. 섀도 스와프 · 사우전드 팬텀 · 와일드파이어 피스트의 순간 이동은 한 틱
+    "jb_trickster_dash": [],
+    "jb_pierrot_spring": [],
 }
 
 
