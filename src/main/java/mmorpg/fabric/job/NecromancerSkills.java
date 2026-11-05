@@ -82,10 +82,12 @@ final class NecromancerSkills {
         ServerLevel level0 = sp.level();
         int smashAt = Math.max(3, (int) k.num("smashAt", 6));
         String life = RuneKit.lifeToken(sp);
-        Vec3 top = V.up(t.position(), 6.5 + t.getBbHeight());
+        // 영상 1: 머리 위 6.5칸은 3인칭 화면 밖 · 뼈 창이 작았음 → 4칸 · 크게
+        double lift = 4.0 + t.getBbHeight();
+        Vec3 top = V.up(t.position(), lift);
         // 하늘에 녹색 혼불이 모여 뼈 창이 맺힘 (0 ~ smashAt − 3) → 내리꽂힘 (smashAt − 3 ~ smashAt)
-        JobFx.skull(level0, V.up(top, 0.6), 0.55, 0, 3, (smashAt - 2) / 20.0, false, Opt.empty(), j);
-        JobFx.boneSpearAt(level0, V.up(top, -1.0), V.DOWN, 1.6, (smashAt - 3) / 20.0 + 0.05, j, Opt.of("alpha", 0.9));
+        JobFx.skull(level0, V.up(top, 1.2), 0.75, 0, 3, (smashAt - 2) / 20.0, false, Opt.empty(), j);
+        JobFx.boneSpearAt(level0, V.up(top, -1.0), V.DOWN, 2.3, (smashAt - 3) / 20.0 + 0.05, j, Opt.of("alpha", 0.95));
         SkillFx.sparks(level0, top, FIRE, 6, 3);
         SkillFx.play(level0, "entity.zombie_villager.cure", top, 1.6, 0.5);
         SkillFx.play(level0, "particle.soul_escape", sp.position(), 0.8, 1.0);
@@ -93,7 +95,7 @@ final class NecromancerSkills {
             if (!RuneKit.sameLife(sp, life) || t.isRemoved()) return;
             ServerLevel d = sp.level();
             Vec3 g = t.position();
-            JobFx.boneSpear(d, V.up(g, 6.5 + t.getBbHeight()), V.up(g, 0.4), j, (6.1 + t.getBbHeight()) / 0.15, 1.6, Opt.empty());
+            JobFx.boneSpear(d, V.up(g, lift), V.up(g, 0.4), j, (lift - 0.4) / 0.15, 2.3, Opt.empty());
             SkillFx.play(d, "entity.arrow.shoot", g, 0.5, 1.0);
         });
         RuneKit.later(smashAt - 1, () -> {
@@ -296,8 +298,8 @@ final class NecromancerSkills {
             Vec3 from = wandTip(sp);
             Vec3 to = V.up(c, 1.0);
             double len = V.len(V.sub(to, from));
-            JobFx.soulFly(d, from, to, len / (flight / 20.0), 0.5, j, Opt.empty());
-            JobFx.skull(d, from, 0.26, 1, 3, flight / 20.0, true, Opt.of("dir", V.unit(V.sub(to, from)), "speed", len / (flight / 20.0)), j);
+            JobFx.soulFly(d, from, to, len / (flight / 20.0), 0.85, j, Opt.empty());
+            JobFx.skull(d, from, 0.42, 1, 3, flight / 20.0, true, Opt.of("dir", V.unit(V.sub(to, from)), "speed", len / (flight / 20.0)), j);
             SkillFx.play(d, "entity.allay.item_thrown", from, 0.6, 1.0);
         });
         RuneKit.later(burstAt, () -> {
@@ -378,19 +380,24 @@ final class NecromancerSkills {
                 if (!RuneKit.sameLife(sp, life) || !JobTraits8.blightOn(sp)) return; // 직업을 바꾸면 (JobTraits8.reset) 그침
                 ServerLevel d = sp.level();
                 Vec3 c = sp.position();
+                // 영상 1: 갈라진 땅 · 작은 불만으로는 범위가 보이지 않았음 → 가장자리 녹색 빛 고리 · 낮은 독 안개 · 큰 무덤불
                 if (tt % 20 == 0) crack(d, c, R * 0.95, 1.1);
                 if (tt % 8 == 0) {
-                    int n = 6;
+                    int n = 8;
                     double rot = tt * 0.09;
                     for (int i = 0; i < n; i++) {
                         double a = rot + i * Math.PI * 2 / n;
                         Vec3 p = V.add(c, new Vec3(Math.cos(a), 0, Math.sin(a)), R - 0.3);
-                        ghostfire(d, new Vec3(p.x, RuneKit.groundAt(d, V.up(p, 1.2), c.y), p.z), 0.75, 0.5, 0.75);
+                        ghostfire(d, new Vec3(p.x, RuneKit.groundAt(d, V.up(p, 1.2), c.y), p.z), 1.15, 0.5, 0.85);
                     }
+                    JobFx.halo(d, V.up(c, 0.08), R, j, 0.45, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.85));
+                    JobFx.smoke(d, V.up(c, 0.35), R * 0.8, DEEP, FIRE, 0.6, Opt.of("alpha", 0.4, "vel", RuneKit.bodyVel(sp)));
                 }
-                double a = Kit.rand() * Math.PI * 2;
-                Vec3 p = V.add(V.up(c, 0.2), new Vec3(Math.cos(a), 0, Math.sin(a)), R * 0.85 * Math.sqrt(Kit.rand()));
-                JobFx.soul(d, p, 0.16, j, 0.6, Opt.of("dir", V.UP, "speed", 1.0, "alpha", 0.8));
+                for (int i = 0; i < 2; i++) {
+                    double a = Kit.rand() * Math.PI * 2;
+                    Vec3 p = V.add(V.up(c, 0.2), new Vec3(Math.cos(a), 0, Math.sin(a)), R * 0.85 * Math.sqrt(Kit.rand()));
+                    JobFx.soul(d, p, 0.24, j, 0.6, Opt.of("dir", V.UP, "speed", 1.2, "alpha", 0.85));
+                }
                 if (tt % 40 == 0) SkillFx.play(d, "block.sculk.charge", c, 0.6, 0.6);
             });
         }
