@@ -342,17 +342,17 @@ final class SniperSkills {
         Vec3 a = Kit.bodyPoint(from);
         Vec3 b = Kit.bodyPoint(n);
         // 금빛 화살이 튀어 오름 → 휘어 내리꽂힘 (같은 적이면 높이 솟았다가 바로 위에서)
-        Vec3 apex = same ? V.up(a, 3.2 + Kit.bodyPad(from)) : V.up(V.lerp(a, b, 0.5), 1.6 + V.len(V.sub(b, a)) * 0.15);
+        Vec3 apex = same ? V.up(a, 3.6 + Kit.bodyPad(from)) : V.up(V.lerp(a, b, 0.5), 2.2 + V.len(V.sub(b, a)) * 0.2);
         double[] glow = JobKit.glow(j);
         int up = Math.max(1, delay / 2);
         int down = Math.max(1, delay - up);
-        JobFx.greatArrow(level, a, apex, V.len(V.sub(apex, a)) / (up / 20.0), 0.8, Opt.empty(), glow, GOLD);
-        RuneKit.streak(level, a, apex, GOLD, 0.12, 0.3, 0.85, 0);
+        JobFx.greatArrow(level, a, apex, V.len(V.sub(apex, a)) / (up / 20.0), 1.0, Opt.empty(), glow, GOLD);
+        RuneKit.streak(level, a, apex, GOLD, 0.16, 0.35, 0.9, 0);
         RuneKit.later(up, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 bb = n.isRemoved() ? b : Kit.bodyPoint(n);
-            JobFx.greatArrow(level, apex, bb, V.len(V.sub(bb, apex)) / (down / 20.0), 0.9, Opt.empty(), glow, GOLD);
-            RuneKit.streak(level, apex, bb, GOLD, 0.14, 0.35, 0.95, 0);
+            JobFx.greatArrow(level, apex, bb, V.len(V.sub(bb, apex)) / (down / 20.0), 1.1, Opt.empty(), glow, GOLD);
+            RuneKit.streak(level, apex, bb, GOLD, 0.2, 0.4, 1.0, 0);
             JobFx.glint(level, apex, 0.8, j, 0.25, Opt.empty());
         });
         SkillFx.sparks(level, a, GOLD, 10, 5);
@@ -384,7 +384,7 @@ final class SniperSkills {
         Vec3 c = sp.position();
         Vec3 look = sp.getViewVector(1F);
         JobFx.aura(sp, j, 2.4, 0.9, 0.9);
-        JobFx.ring(level, V.up(c, 0.06), 2.0, j, false, 0.45, Opt.empty());
+        JobFx.halo(level, V.up(c, 0.06), 2.0, j, 0.45, Opt.empty()); // 빛 고리 (칼질 고리 JobFx.ring 은 발밑의 초승달 베기로 보였음 — 영상 2)
         JobFx.greatArrowAt(level, V.up(V.add(c, V.flat(look), 0.5), 3.0), V.UP, 1.0, 0.5, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), JobTraits9.STEEL,
                 JobTraits9.SILVER);
         JobFx.weak(level, V.add(sp.getEyePosition(), look, 2.6), 0.6, 0, 3, 0.5, false, JobFx.only1p(sp).with("vel", RuneKit.bodyVel(sp)), JobTraits9.STEEL, JobTraits9.SILVER);
