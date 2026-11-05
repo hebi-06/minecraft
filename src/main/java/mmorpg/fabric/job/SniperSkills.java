@@ -53,6 +53,17 @@ final class SniperSkills {
         return RuneKit.sameLife(sp, life) && e != null && !e.isRemoved() && e.isAlive();
     }
 
+    /** 보이는 빠르기: 가까운 적이면 화살이 적어도 2틱 날아가게 (len 칸을 speed 칸/초 — 1틱이면 날아가는 것이 보이지 않음) */
+    private static double visSpeed(double speed, double len) {
+        return Math.min(speed, Math.max(25, len / 0.1));
+    }
+
+    /** 맞은 적에 꽂힌 큰 화살 (촉이 몸 너머로 조금 · 화살대가 쏜 쪽으로 — life 초, 적을 따라감) */
+    private static void stuck(ServerLevel level, LivingEntity e, Vec3 look, double size, double life, double[] glow, double[] core) {
+        Vec3 tip = V.add(Kit.bodyPoint(e), look, 0.3 + Kit.bodyPad(e));
+        JobFx.greatArrowAt(level, tip, look, size, life, Opt.of("vel", RuneKit.entVel(e), "fade", 0.35), glow, core);
+    }
+
     /** 보는 쪽 일직선에서 처음 맞는 적 (없으면 null) */
     private static Kit.LineHit firstOnLine(ServerPlayer sp, Vec3 from, Vec3 dir, double len, double half) {
         Kit.LineHit best = null;
@@ -156,10 +167,11 @@ final class SniperSkills {
         double reach = first == null ? len : Math.max(1, first.t());
         Vec3 from = V.add(RuneKit.bowHand(sp), look, 0.7);
         Vec3 end = V.add(eye, look, reach);
-        double speed = k.num("speed", 80);
+        // 보이는 빠르기: 가까운 적이면 화살이 2틱은 보이게 (1틱이면 영상 · 화면에서 날아가는 것이 보이지 않았음 — 영상 1), 맞는 틱도 그 빠르기
+        double speed = visSpeed(k.num("speed", 80), reach);
         JobFx.greatArrow(level, from, end, speed, 0.85 + 0.55 * c, Opt.empty(), glow, FLASH);
-        RuneKit.streak(level, V.add(from, look, 0.6), end, FLASH, 0.08 + 0.06 * c, 0.35, 1.0, 0);
-        RuneKit.streak(level, V.add(from, look, 0.6), end, glow, 0.22 + 0.12 * c, 0.3, 0.55, 0);
+        RuneKit.streak(level, V.add(from, look, 0.6), end, FLASH, 0.1 + 0.08 * c, 0.4, 1.0, 0);
+        RuneKit.streak(level, V.add(from, look, 0.6), end, glow, 0.26 + 0.16 * c, 0.35, 0.6, 0);
         JobFx.bow(level, bowAt(sp, 0.55), 0.6, j, 4, 2, 0.25, Opt.of("vel", RuneKit.bodyVel(sp), "fade", 0.3));
         JobFx.burst(level, from, 0.55 + 0.35 * c, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
         JobFx.wind(level, V.up(sp.position(), 0.06), 1.0 + c, j, 0.35, Opt.of("alpha", 0.85));
@@ -179,7 +191,8 @@ final class SniperSkills {
         JobKit.strike(sp, e, j, P, k.total() * frac * boost, false, full, life, hitT, x -> {
             if (!(e.level() instanceof ServerLevel lv)) return;
             Vec3 at = Kit.bodyPoint(e);
-            JobFx.weak(lv, at, 0.6 + 0.3 * c + Kit.bodyPad(e) * 0.3, 4, 2, 0.3, false, Opt.of("vel", RuneKit.entVel(e)), glow, FLASH);
+            stuck(lv, e, look, 0.75 + 0.45 * c, 0.5, glow, FLASH);
+            JobFx.weak(lv, at, 0.8 + 0.4 * c + Kit.bodyPad(e) * 0.3, 4, 2, 0.3, false, Opt.of("vel", RuneKit.entVel(e)), glow, FLASH);
             JobImpact.hit(sp, e, j, 1.1 + 0.6 * c);
             JobFx.burst(lv, at, 0.7 + 0.5 * c, j, 0.3, Opt.empty());
             SkillFx.sparks(lv, at, FLASH, 8 + (int) (8 * c), 4);
@@ -219,8 +232,8 @@ final class SniperSkills {
             double dist = V.len(V.sub(to, from));
             int fly = t > 0 ? t : Math.max(2, (int) Math.round(dist / 40 * 20));
             // 그물: 화살 뒤에서 펼쳐지며 날아감 (빛의 화살이 끌고 감) → 닿은 자리에서 감김
-            JobFx.netFly(level, from, to, fly, 0.55 + netR * 0.25, j, Opt.empty());
-            JobFx.arrow(level, from, to, j, dist / (fly / 20.0), 0.55, Opt.empty());
+            JobFx.netFly(level, from, to, fly, 0.9 + netR * 0.35, j, Opt.empty());
+            JobFx.arrow(level, from, to, j, dist / (fly / 20.0), 0.7, Opt.empty());
             JobFx.burst(level, from, 0.45, j, 0.2, Opt.of("vel", RuneKit.bodyVel(sp)));
             SkillFx.play(level, "item.crossbow.shoot", from, 1.3, 0.9);
             SkillFx.play(level, "entity.fishing_bobber.throw", from, 0.8, 0.8);
@@ -232,10 +245,13 @@ final class SniperSkills {
                 SkillFx.play(level, "entity.fishing_bobber.retrieve", at, 0.7, 0.8);
                 List<LivingEntity> caught = Kit.around(sp, at, netR, 3);
                 if (on && !target.isRemoved() && !caught.contains(target)) caught.add(target);
-                if (caught.isEmpty()) JobFx.netWrap(level, at, 0.9, slow / 20.0, j, Opt.empty());
+                if (caught.isEmpty()) JobFx.netWrap(level, at, 1.3, slow / 20.0, j, Opt.empty());
                 for (LivingEntity e : caught) {
                     RuneKit.effect(e, "slowness", slow, JobKit.isBoss(e) ? 1 : 2);
-                    JobFx.netWrap(level, Kit.bodyPoint(e), 0.55 + Kit.bodyPad(e) * 0.45, slow / 20.0, j, Opt.of("vel", RuneKit.entVel(e)));
+                    // 감긴 그물: 몸 가운데보다 쏜 쪽으로 조금 앞 (몸에 반쯤 가려 작게 보였음 — 영상 1)
+                    Vec3 b = Kit.bodyPoint(e);
+                    Vec3 toward = V.flat(V.sub(sp.position(), e.position()));
+                    JobFx.netWrap(level, V.add(b, toward, 0.3 + Kit.bodyPad(e)), 0.95 + Kit.bodyPad(e) * 0.5, slow / 20.0, j, Opt.of("vel", RuneKit.entVel(e)));
                 }
             });
         });
@@ -282,15 +298,15 @@ final class SniperSkills {
             ServerLevel level = sp.level();
             Vec3 from = bowAt(sp, 0.6);
             Vec3 to = Kit.bodyPoint(target);
-            int t = JobFx.arrow(level, from, to, j, k.num("speed", 60), 0.7, Opt.empty());
-            RuneKit.streak(level, from, to, JobKit.glow(j), 0.1, 0.25, 0.7, 0);
+            int t = JobFx.arrow(level, from, to, j, visSpeed(k.num("speed", 60), V.len(V.sub(to, from))), 0.9, Opt.empty());
+            RuneKit.streak(level, from, to, JobKit.glow(j), 0.14, 0.3, 0.75, 0);
             JobFx.burst(level, from, 0.4, j, 0.2, Opt.of("vel", RuneKit.bodyVel(sp)));
             SkillFx.play(level, "random.bow", from, 1.2, 0.9);
             Map<UUID, Long> hitAt = new HashMap<>();
             hitAt.put(target.getUUID(), JobKit.now() + t);
             JobKit.strike(sp, target, j, P, k.num("first", 3.5), false, false, life, t, d -> {
                 JobFx.hit(target, j, 1.0);
-                if (target.level() instanceof ServerLevel lv) JobFx.weak(lv, Kit.bodyPoint(target), 0.45, 4, 2, 0.25, false, Opt.of("vel", RuneKit.entVel(target)), JobKit.glow(j),
+                if (target.level() instanceof ServerLevel lv) JobFx.weak(lv, Kit.bodyPoint(target), 0.7, 4, 2, 0.25, false, Opt.of("vel", RuneKit.entVel(target)), JobKit.glow(j),
                         FLASH);
             });
             Vec3 dir = V.flat(V.sub(target.position(), sp.position()));
@@ -330,23 +346,25 @@ final class SniperSkills {
         double[] glow = JobKit.glow(j);
         int up = Math.max(1, delay / 2);
         int down = Math.max(1, delay - up);
-        JobFx.greatArrow(level, a, apex, V.len(V.sub(apex, a)) / (up / 20.0), 0.45, Opt.empty(), glow, GOLD);
+        JobFx.greatArrow(level, a, apex, V.len(V.sub(apex, a)) / (up / 20.0), 0.8, Opt.empty(), glow, GOLD);
+        RuneKit.streak(level, a, apex, GOLD, 0.12, 0.3, 0.85, 0);
         RuneKit.later(up, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 bb = n.isRemoved() ? b : Kit.bodyPoint(n);
-            JobFx.greatArrow(level, apex, bb, V.len(V.sub(bb, apex)) / (down / 20.0), 0.5, Opt.empty(), glow, GOLD);
-            RuneKit.streak(level, apex, bb, GOLD, 0.08, 0.3, 0.9, 0);
+            JobFx.greatArrow(level, apex, bb, V.len(V.sub(bb, apex)) / (down / 20.0), 0.9, Opt.empty(), glow, GOLD);
+            RuneKit.streak(level, apex, bb, GOLD, 0.14, 0.35, 0.95, 0);
+            JobFx.glint(level, apex, 0.8, j, 0.25, Opt.empty());
         });
-        SkillFx.sparks(level, a, GOLD, 8, 4);
-        JobFx.glint(level, a, 0.55, j, 0.25, Opt.empty());
+        SkillFx.sparks(level, a, GOLD, 10, 5);
+        JobFx.glint(level, a, 0.8, j, 0.25, Opt.empty());
         SkillFx.play(level, "item.trident.return", a, 1.6, 0.7);
         SkillFx.play(level, "block.anvil.land", a, 2.0, 0.25);
         JobKit.strikeCrit(sp, n, j, P, k.num("bounce", 5), false, false, life, delay, d -> {
             if (!(n.level() instanceof ServerLevel lv)) return;
             Vec3 at = Kit.bodyPoint(n);
             JobImpact.hit(sp, n, j, 1.15);
-            JobFx.weak(lv, at, 0.55 + Kit.bodyPad(n) * 0.3, 4, 2, 0.3, false, Opt.of("vel", RuneKit.entVel(n)), glow, GOLD);
-            SkillFx.sparks(lv, at, GOLD, 10, 5);
+            JobFx.weak(lv, at, 0.85 + Kit.bodyPad(n) * 0.3, 4, 2, 0.3, false, Opt.of("vel", RuneKit.entVel(n)), glow, GOLD);
+            SkillFx.sparks(lv, at, GOLD, 12, 5);
         });
         Vec3 nd = same ? dir : V.flat(V.sub(n.position(), from.position()));
         RuneKit.later(delay, () -> bounce(sp, j, k, P, life, n, nd, left - 1, hitAt));
@@ -367,7 +385,7 @@ final class SniperSkills {
         Vec3 look = sp.getViewVector(1F);
         JobFx.aura(sp, j, 2.4, 0.9, 0.9);
         JobFx.ring(level, V.up(c, 0.06), 2.0, j, false, 0.45, Opt.empty());
-        JobFx.greatArrowAt(level, V.up(V.add(c, V.flat(look), 0.5), 2.6), V.UP, 0.7, 0.45, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), JobTraits9.STEEL,
+        JobFx.greatArrowAt(level, V.up(V.add(c, V.flat(look), 0.5), 3.0), V.UP, 1.0, 0.5, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), JobTraits9.STEEL,
                 JobTraits9.SILVER);
         JobFx.weak(level, V.add(sp.getEyePosition(), look, 2.6), 0.6, 0, 3, 0.5, false, JobFx.only1p(sp).with("vel", RuneKit.bodyVel(sp)), JobTraits9.STEEL, JobTraits9.SILVER);
         SkillFx.sparks(level, V.up(c, 1.4), JobTraits9.SILVER, 12, 4);
@@ -437,7 +455,7 @@ final class SniperSkills {
                 double len = Math.max(2, RuneKit.rayLength(level, eye, look, k.num("range", 48)));
                 Kit.LineHit h = firstOnLine(sp, eye, look, len, k.num("width", 1.6) / 2);
                 Vec3 at = h == null ? V.add(eye, look, Math.min(len, 18)) : Kit.bodyPoint(h.e());
-                double size = h == null ? 0.7 : 0.75 + Kit.bodyPad(h.e()) * 0.5;
+                double size = h == null ? 0.9 : 1.05 + Kit.bodyPad(h.e()) * 0.5;
                 JobFx.weak(level, at, size, 1, 3, 0.14, true, Opt.of("fade", 0.0, "alpha", 0.95), glow, FLASH);
                 JobFx.weak(level, V.add(eye, look, 3.2), 0.9, 1, 3, 0.14, true, JobFx.only1p(sp).with("fade", 0.0, "alpha", 0.55), glow, FLASH);
                 RuneKit.rfx(level, "prop", bowAt(sp, 0.5), JobFx.hide1p(sp).with("size", 0.16, "life", 0.2, "cell", (double) RuneKit.RFX.get("glint")[0], "spin", 0.0,
@@ -480,11 +498,11 @@ final class SniperSkills {
         double reach = h == null ? len : Math.max(1, h.t());
         Vec3 from = V.add(RuneKit.bowHand(sp), look, 0.9);
         Vec3 end = V.add(eye, look, reach);
-        double speed = k.num("speed", 100);
+        double speed = visSpeed(k.num("speed", 100), reach);
         double size = last ? 2.4 : 1.4 + i * 0.3;
         JobFx.greatArrow(level, from, end, speed, size, Opt.empty(), glow, core);
-        JobFx.beam(level, V.add(from, look, 0.8), end, glow, core, last ? 2.6 : 1.8, reach / speed + 0.3, Opt.of("alpha", 0.8));
-        RuneKit.streak(level, V.add(from, look, 0.6), end, core, last ? 0.2 : 0.12, 0.4, 1.0, 0);
+        JobFx.beam(level, V.add(from, look, 0.8), end, glow, core, last ? 3.4 : 2.4, reach / speed + 0.45, Opt.of("alpha", 0.85));
+        RuneKit.streak(level, V.add(from, look, 0.6), end, core, last ? 0.26 : 0.16, 0.45, 1.0, 0);
         JobFx.burst(level, from, last ? 1.2 : 0.8, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
         JobFx.bow(level, bowAt(sp, 0.6), 0.7, j, 4, 2, 0.3, Opt.of("vel", RuneKit.bodyVel(sp), "fade", 0.3));
         for (double dd : new double[] {3, 7, 12, 18, 26}) {
@@ -511,6 +529,11 @@ final class SniperSkills {
         java.util.function.DoubleConsumer then = d -> {
             if (!(e.level() instanceof ServerLevel lv)) return;
             Vec3 at = Kit.bodyPoint(e);
+            stuck(lv, e, look, last ? 1.5 : 1.0 + i * 0.15, last ? 0.8 : 0.6, glow, core);
+            // 뒤로 뚫고 나가는 빛 (몸 너머 2.5칸 — 가까운 적이면 빛줄기가 짧아 맞은 것만 보였음)
+            Vec3 back = V.add(at, look, 0.4 + Kit.bodyPad(e));
+            RuneKit.streak(lv, back, V.add(back, look, last ? 3.2 : 2.4), core, last ? 0.22 : 0.14, 0.35, 1.0, 0);
+            SkillFx.fx(lv, "rpg:arrow_spark", back, Opt.of("dir", look, "speed", 6.0, "size", 0.2, "grow", 0.6, "life", 0.3, "color", core, "alpha", 1.0));
             JobImpact.hit(sp, e, j, last ? 2.0 : 1.4);
             JobFx.weak(lv, at, (last ? 1.0 : 0.75) + Kit.bodyPad(e) * 0.4, 4, 2, 0.35, false, Opt.of("vel", RuneKit.entVel(e)), glow, core);
             JobFx.burst(lv, at, last ? 1.6 : 1.0, j, 0.35, Opt.empty());

@@ -191,12 +191,13 @@ public final class JobTraits9 {
 
     /** 맞힌 수 (n / every) 만큼 적 머리 위 은빛 표식 (작은 약점 과녁 — 나란히) */
     private static void pips(ServerLevel level, LivingEntity e, int n, int every, Jobs.Job j) {
-        Vec3 head = RuneKit.overHead(e, 0.35);
+        // 영상 1: 표식이 작고 옅어 멀리서 보이지 않았음 → 크게 · 켜진 것은 진하게
+        Vec3 head = RuneKit.overHead(e, 0.5);
         double pad = Kit.bodyPad(e);
         for (int i = 0; i < every - 1; i++) {
             boolean lit = i < n;
-            Vec3 at = V.add(head, new Vec3(1, 0, 0), (i - (every - 2) / 2.0) * (0.42 + pad * 0.2));
-            JobFx.weak(level, at, (lit ? 0.2 : 0.13) + pad * 0.08, lit ? 1 : 5, lit ? 3 : 1, 0.6, lit, Opt.of("vel", RuneKit.entVel(e), "fade", 0.3, "alpha", lit ? 1.0 : 0.5),
+            Vec3 at = V.add(head, new Vec3(1, 0, 0), (i - (every - 2) / 2.0) * (0.62 + pad * 0.2));
+            JobFx.weak(level, at, (lit ? 0.34 : 0.24) + pad * 0.08, lit ? 1 : 5, lit ? 3 : 1, 0.6, lit, Opt.of("vel", RuneKit.entVel(e), "fade", 0.3, "alpha", lit ? 1.0 : 0.6),
                     STEEL, SILVER);
         }
         SkillFx.play(level, "block.amethyst_block.hit", e.position(), 1.4 + n * 0.2, 0.6);
@@ -207,13 +208,15 @@ public final class JobTraits9 {
         Vec3 c = Kit.bodyPoint(e);
         Vec3 d = V.unit(V.sub(c, sp.getEyePosition()));
         double pad = Kit.bodyPad(e);
-        Vec3 a = V.add(c, d, -2.2 - pad);
-        Vec3 b = V.add(c, d, 1.6 + pad);
-        JobFx.greatArrow(level, a, b, 60, 0.75, Opt.of("fade", 0.2), STEEL, SILVER);
-        RuneKit.streak(level, a, b, SILVER, 0.1, 0.35, 1.0, 0);
-        JobFx.weak(level, c, 0.55 + pad * 0.3, 4, 2, 0.3, false, Opt.of("vel", RuneKit.entVel(e)), STEEL, SILVER);
-        JobFx.burst(level, c, 0.6 + pad * 0.3, STEEL, SILVER, 0.25, Opt.empty());
-        SkillFx.sparks(level, c, SILVER, 10, 4);
+        Vec3 a = V.add(c, d, -2.8 - pad);
+        Vec3 b = V.add(c, d, 1.9 + pad);
+        JobFx.greatArrow(level, a, b, 40, 1.2, Opt.of("fade", 0.2), STEEL, SILVER);
+        RuneKit.streak(level, a, b, SILVER, 0.16, 0.4, 1.0, 0);
+        RuneKit.streak(level, a, b, STEEL, 0.3, 0.35, 0.5, 0);
+        JobFx.greatArrowAt(level, V.add(c, d, 0.3 + pad), d, 1.0, 0.55, Opt.of("vel", RuneKit.entVel(e), "fade", 0.35), STEEL, SILVER);
+        JobFx.weak(level, c, 0.85 + pad * 0.3, 4, 2, 0.3, false, Opt.of("vel", RuneKit.entVel(e)), STEEL, SILVER);
+        JobFx.burst(level, c, 0.9 + pad * 0.3, STEEL, SILVER, 0.3, Opt.empty());
+        SkillFx.sparks(level, c, SILVER, 14, 5);
         SkillFx.play(level, "item.trident.hit", c, 1.6, 0.9);
         SkillFx.play(level, "block.anvil.land", c, 1.9, 0.35);
     }

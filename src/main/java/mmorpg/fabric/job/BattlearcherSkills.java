@@ -56,7 +56,7 @@ final class BattlearcherSkills {
                 Vec3 p = bez(a, c, b, tt / (double) ticks);
                 Vec3 q = bez(a, c, b, (tt + 1) / (double) ticks);
                 JobFx.arrow(level, p, q, j, V.len(V.sub(q, p)) * 20, size, Opt.of("fade", 0.05));
-                RuneKit.streak(level, p, q, JobKit.glow(j), 0.07, 0.22, 0.75, 0);
+                RuneKit.streak(level, p, q, JobKit.core(j), 0.09, 0.25, 0.85, 0);
             });
         }
     }
@@ -106,7 +106,7 @@ final class BattlearcherSkills {
                     to = V.up(Kit.bodyPoint(e), (Kit.rand() - 0.5) * 0.6);
                 }
                 Vec3 ctrl = V.up(V.add(c, out, 2.4 + Kit.rand() * 0.8), 2.2 + Kit.rand() * 1.2);
-                curved(sp, life, start, ctrl, to, flight, j, 0.5);
+                curved(sp, life, start, ctrl, to, flight, j, 0.72);
             }
             JobFx.burst(level, V.up(sp.position(), 2.0), 0.9, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
             JobFx.halo(level, V.up(sp.position(), 1.8), 1.6, j, 0.3, Opt.of("alpha", 0.85));
@@ -173,17 +173,21 @@ final class BattlearcherSkills {
         JobFx.feathers(level0, V.up(start, 1.0), 6, 0.8, 0.2, j, 1.0, JobFx.hide1p(sp));
         SkillFx.play(level0, "entity.breeze.jump", start, 1.1, 1.0);
         SkillFx.play(level0, "entity.phantom.flap", start, 1.3, 0.8);
-        // 폭풍 매가 함께 날아 내리꽂힘 (2틱마다 한 조각 — 몸 위 · 뒤에서 내려앉는 곳으로)
-        Vec3 sky = V.up(V.lerp(start, dest, 0.35), k.num("lift", 2.6) + 2.4);
-        for (int t = 0; t < flight; t += 2) {
+        // 폭풍 매가 따로 날아 먼저 내리꽂힘 (2틱마다 한 조각 — 몸 위 오른쪽 3.6칸에서 더 높이 솟았다가 내려앉는 곳으로, 영상 1 은 몸에 겹쳐 날개 달린 사람으로 보였음)
+        Vec3 side = V.rightOf(V.flat(V.sub(dest, start)));
+        Vec3 f0 = V.add(V.up(start, 3.6), side, 1.8);
+        Vec3 sky = V.add(V.up(V.lerp(start, dest, 0.45), k.num("lift", 2.6) + 4.6), side, 1.0);
+        Vec3 f1 = V.up(dest, 0.7);
+        int falconT = Math.max(4, flight - 2);
+        for (int t = 0; t < falconT; t += 2) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel level = sp.level();
-                double u = tt / (double) flight;
-                Vec3 p = bez(V.up(start, 2.2), sky, V.up(dest, 0.6), u);
-                Vec3 q = bez(V.up(start, 2.2), sky, V.up(dest, 0.6), Math.min(1, u + 2.0 / flight));
-                JobFx.falcon(level, p, V.sub(q, p), 1.4, u > 0.55, 0.15, Opt.of("vel", V.scale(V.sub(q, p), 10), "alpha", 0.95), j);
+                double u = tt / (double) falconT;
+                Vec3 p = bez(f0, sky, f1, u);
+                Vec3 q = bez(f0, sky, f1, Math.min(1, u + 2.0 / falconT));
+                JobFx.falcon(level, p, V.sub(q, p), 1.9, u > 0.5, 0.15, Opt.of("vel", V.scale(V.sub(q, p), 10), "alpha", 0.95), j);
                 RuneKit.streak(level, V.up(sp.position(), 0.9), V.up(sp.position(), 1.4), JobKit.glow(j), 0.1, 0.25, 0.6, 0);
                 JobFx.feathers(level, p, 1, 0.4, 0.16, j, 0.6, Opt.empty());
             });
@@ -248,8 +252,8 @@ final class BattlearcherSkills {
                 Kit.LineHit h = null;
                 for (Kit.LineHit x : RuneKit.lineTargets(sp, from, d, len, 0.3)) if (h == null || x.t() < h.t()) h = x;
                 Vec3 to = V.add(from, d, h == null ? len : h.t());
-                JobFx.arrow(level, from, to, j, 90, 0.36, Opt.of("fade", 0.05));
-                RuneKit.streak(level, from, to, i % 2 == 0 ? JobKit.core(j) : JobKit.glow(j), 0.05, 0.18, 0.85, 0);
+                JobFx.arrow(level, from, to, j, 60, 0.55, Opt.of("fade", 0.05));
+                RuneKit.streak(level, from, to, i % 3 == 0 ? JobKit.glow(j) : JobKit.core(j), 0.08, 0.22, 0.9, 0);
             }
             JobFx.burst(level, from, 0.9, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
             JobFx.ringFacing(level, V.add(from, f, 0.8), 1.0, j, f, 0.25, Opt.of("alpha", 0.9));
@@ -333,7 +337,7 @@ final class BattlearcherSkills {
                 Vec3 f = Kit.facingOf(sp);
                 Vec3 rgt = V.rightOf(f);
                 Vec3 from = V.up(V.add(sp.position(), f, 0.6), 1.35);
-                for (int i = 0; i < 4; i++) {
+                for (int i = 0; i < 5; i++) {
                     double a = Math.toRadians((Kit.rand() - 0.5) * cone);
                     Vec3 d = V.unit(V.add(V.scale(f, Math.cos(a)), rgt, Math.sin(a)));
                     d = V.unit(V.add(d, V.UP, (Kit.rand() - 0.4) * 0.15));
@@ -341,7 +345,8 @@ final class BattlearcherSkills {
                     Kit.LineHit h = null;
                     for (Kit.LineHit x : RuneKit.lineTargets(sp, from, d, len, 0.3)) if (h == null || x.t() < h.t()) h = x;
                     Vec3 to = V.add(from, d, h == null ? len : h.t());
-                    JobFx.arrow(level, from, to, j, 70, 0.5, Opt.of("fade", 0.05));
+                    JobFx.arrow(level, from, to, j, 55, 0.66, Opt.of("fade", 0.05));
+                    if (i < 2) RuneKit.streak(level, from, to, JobKit.core(j), 0.06, 0.2, 0.8, 0);
                 }
                 if (tt % 4 == 0) {
                     JobFx.bow(level, bowAt(sp, 0.55), 0.6, j, 3, 3, 0.2, Opt.of("vel", RuneKit.bodyVel(sp), "fade", 0.3));
@@ -383,13 +388,14 @@ final class BattlearcherSkills {
                 Vec3 g = V.add(sp.position(), V.unit(V.add(V.scale(f, Math.cos(a)), rgt, Math.sin(a))), dist);
                 Vec3 to = new Vec3(g.x, RuneKit.groundAt(level, g, sp.getY()) + 0.1, g.z);
                 Vec3 from = V.add(V.up(to, 8 + Kit.rand() * 2), f, -2.0);
-                JobFx.arrow(level, from, to, j, V.len(V.sub(to, from)) / (fall / 20.0), 0.6, Opt.of("fade", 0.05));
+                JobFx.arrow(level, from, to, j, V.len(V.sub(to, from)) / (fall / 20.0), 0.8, Opt.of("fade", 0.05));
             }
             for (LivingEntity e : RuneKit.coneTargets(sp, range, cone, 16)) {
                 Vec3 to = Kit.bodyPoint(e);
                 for (int p = 0; p < 2; p++) {
                     Vec3 from = V.add(V.up(to, 8 + p), f, -2.0);
-                    JobFx.arrow(level, from, V.up(to, (p - 0.5) * 0.3), j, V.len(V.sub(to, from)) / (fall / 20.0), 0.65, Opt.of("fade", 0.05));
+                    JobFx.arrow(level, from, V.up(to, (p - 0.5) * 0.3), j, V.len(V.sub(to, from)) / (fall / 20.0), 0.85, Opt.of("fade", 0.05));
+                    RuneKit.streak(level, from, to, JobKit.core(j), 0.07, 0.3, 0.8, 0);
                 }
             }
         });
