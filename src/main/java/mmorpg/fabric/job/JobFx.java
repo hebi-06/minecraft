@@ -522,11 +522,6 @@ final class JobFx {
         two(level, "jshatter2", SHATTER, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
-    /** 같은 것 — 색을 정함 (0.51.0 서리 별 걸음의 얼음 · 뼈 방벽의 뼈 조각) */
-    static void shatter(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
-        two(level, "jshatter2", SHATTER, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), glow, core);
-    }
-
     /**
      * 마력 구체 → 0.50.0 v2 떠도는 별 (rfx_jstar — 구 안의 빛나는 별 · 서로 다른 빠르기로 도는 기운 고리 둘 · 도는 반짝임, 카메라를 봄, 이어 돌림): 구 반지름
      * radius 칸 (v1 rfx_jorb 의 반 크기 × 0.6 과 같은 전체 크기 — × 1.17)
@@ -1290,11 +1285,10 @@ final class JobFx {
 
     // ------------------------------------------------------------ 0.51.0 매지션 2차 그림 (tools/job_fx_art_adv.py — 아크메이지 · 네크로맨서)
 
-    /** 장 수: 별자리의 별 · 별똥 · 뼈 창 · 뼈 방벽 · 망자의 해골 · 갈라진 땅 */
+    /** 장 수: 별자리의 별 · 별똥 · 뼈 창 · 망자의 해골 · 갈라진 땅 (뼈 방벽 rfx_jbonewall 은 2026-11-06 매지션 2판에서 뺌) */
     static final int STARNODE = 8;
     static final int FALLSTAR = 4;
     static final int BONESPEAR = 4;
-    static final int BONEWALL = 8;
     static final int SKULL = 6;
     static final int RIFT = 6;
     /** 머리 자리 (그림 길이의 비율 — 가운데 기준 −1 ~ 1): 별똥의 별 · 뼈 창 끝 */
@@ -1325,20 +1319,6 @@ final class JobFx {
     static void boneSpearAt(ServerLevel level, Vec3 tip, Vec3 dir, double size, double life, Jobs.Job j, Opt o) {
         Vec3 u = V.len(dir) < 1e-3 ? V.UP : V.unit(dir);
         loop(level, "jbonespear", BONESPEAR, V.add(tip, u, -size * BONESPEAR_HEAD), life, 12, o.with("dir", u, "size", size), outer(j), inner(j));
-    }
-
-    /**
-     * 뼈 방벽 (rfx_jbonewall — 세워 카메라 쪽으로 돎): stage 0 = 땅을 뚫고 솟음 (0 ~ 2) · 1 = 서 있음 (3 ~ 5 이어 돌림 — 혼불이 일렁임) · 2 = 부서짐 (6 ~ 7).
-     * 아래 끝 = ground · 높이 약 size × 2 칸 (너비도 같음)
-     */
-    static void boneWall(ServerLevel level, Vec3 ground, double size, int stage, double life, Opt o, Jobs.Job j) {
-        Vec3 at = V.up(ground, size);
-        Opt b = o.with("size", size);
-        switch (stage) {
-            case 0 -> cells(level, "jbonewall", BONEWALL, 0, 3, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), outer(j), inner(j));
-            case 1 -> cells(level, "jbonewall", BONEWALL, 3, 3, at, life, 6, true, b.with("fade", o.num("fade", 0.15)), outer(j), inner(j));
-            default -> cells(level, "jbonewall", BONEWALL, 6, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.3)), outer(j), inner(j));
-        }
     }
 
     /**

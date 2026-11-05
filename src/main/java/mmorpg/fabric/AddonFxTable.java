@@ -101,7 +101,6 @@ public final class AddonFxTable {
         "rpg:rfx_jbolt",
         "rpg:rfx_jbolt2",
         "rpg:rfx_jbonespear",
-        "rpg:rfx_jbonewall",
         "rpg:rfx_jbook",
         "rpg:rfx_jbow",
         "rpg:rfx_jbow2",

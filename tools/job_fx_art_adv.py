@@ -35,13 +35,11 @@
                                                    별빛 · 빨려 드는 티끌, 심지 칸 = 검은 속): 0 가는 빛 금 · 번쩍 → 1 벌어짐 → 2 ~ 5 벌어져 일렁임 (이어 돌림 — 같은 꼴) →
                                                    6 닫힘 · 7 가로로 번쩍이며 닫힘 (조각). 틈 끝 x 0.065 · 0.935 W (반 크기 × 0.87) · 가운데 반 높이 46 점
 
-0.51.0 매지션 2차 (아크메이지 · 네크로맨서) — 빛 칸 = 넓은 빛 (아크메이지 밤하늘 자주 · 네크로맨서 짙은 녹색 혼불), 심지 칸 = 금빛 별 심지 · 뼈 ·
+0.51.0 매지션 2차 (아크메이지 · 네크로맨서 — 2026-11-06 재설계안 2판에서 1판의 뼈 방벽 rfx_jbonewall 은 뺌) — 빛 칸 = 넓은 빛 (아크메이지 밤하늘 자주 · 네크로맨서 짙은 녹색 혼불), 심지 칸 = 금빛 별 심지 · 뼈 ·
 눈구멍의 녹색 불 (네크로맨서는 '빛' 칸에 뼈 몸을 거의 불투명하게):
 - rfx_jstarnode  rotate_xyz       192×192 ×8 (4 열)  별자리의 별: 0 번쩍 · 1 피어남 → 2 ~ 5 반짝임 (네 갈래 긴 빛살 · 짧은 대각 빛살 — 이어 돌림) → 6 크게 번쩍 · 7 별빛 조각으로 흩어짐
 - rfx_jfallstar  lookat_direction 256×96  ×4 (4 열)  별똥 (오른쪽 = 나아가는 쪽 · 머리 x 0.88 W): 빛나는 별 머리 · 길게 가늘어지는 꼬리 · 꼬리를 따라 흐르는 반짝이 가루 (이어 돌림)
 - rfx_jbonespear lookat_direction 256×64  ×4 (4 열)  뼈 창 (창끝 x 0.97 W): 이빨 뼈 날 · 등뼈 마디 자루 · 뒤로 휜 갈비 가시 · 꼬리 혹 · 녹색 혼불 · 끌리는 연기 (이어 돌림)
-- rfx_jbonewall  lookat_y         256×256 ×8 (4 열)  뼈 방벽 (아래 끝 = 땅): 0 ~ 2 휜 뼈 가시 일곱이 땅을 뚫고 솟음 (흙 튐) → 3 ~ 5 서 있음 (혼불이 타고 오름 — 이어 돌림) →
-                                                     6 금이 벌어짐 · 7 조각으로 흩어짐
 - rfx_jskull     rotate_xyz       128×128 ×6 (6 열)  망자의 해골: 0 연기가 모여 해골 · 1 ~ 3 눈구멍 혼불 맥동 (이어 돌림) · 4 턱이 벌어지며 비명 · 5 연기로 흩어짐
 - rfx_jrift      direction_z      128×320 ×6 (6 열)  갈라진 땅 (그림 위 = 금이 뻗는 쪽): 0 가는 금 · 1 ~ 2 벌어지며 돌조각 → 3 ~ 4 틈의 녹색 빛 맥동 (불티 — 이어 돌림) →
                                                      5 닫히며 흐려짐
@@ -813,101 +811,6 @@ def bonespear_frame(f, W=256, H=64):
 
 sprite("rfx_jbonespear", "lookat_direction", 256, 64, BS_N, 4, "necromancer", zoom=0, loop=True,
        desc="뼈 창 (오른쪽 = 나아가는 쪽 · 창끝 x 0.97 W): 들쭉날쭉한 이빨 뼈 날 · 등뼈 마디 자루 · 뒤로 휜 갈비 가시 · 꼬리 혹 · 녹색 혼불 감쌈 · 뒤로 끌리는 연기 (이어 돌림)")(bonespear_frame)
-
-
-# ------------------------------------------------------------ rfx_jbonewall (뼈 방벽 — 세워 카메라 쪽, 아래 끝 = 땅)
-
-BW_N = 8
-# 뼈 가시: (밑동 x, 높이, 기울기 (위 끝이 옆으로), 밑동 폭)
-BW_SPIKES = [(128, 206, 6, 30), (88, 158, -26, 26), (170, 170, 24, 26), (54, 108, -34, 20), (204, 118, 34, 20), (110, 96, -10, 16), (150, 104, 12, 16)]
-
-
-def _spike(pad, bx, h, lean, w, base_y, frac):
-    """휘어 솟은 뼈 가시 (밑동 bx · 높이 h · 위 끝이 lean 만큼 옆) — frac = 땅 위로 나온 몫 (아래부터)"""
-    pts = bez((bx, base_y), (bx + lean * 0.2, base_y - h * 0.55), (bx + lean, base_y - h), n=20)
-    shown = max(2, int(round(len(pts) * frac)))
-    seg = pts[:shown]
-    # 땅에서 위로 솟는 중이면 전체 모양을 아래로 밀어 (끝이 먼저 보이게)
-    if frac < 1:
-        dy = h * (1 - frac)
-        seg = [(x, y + dy) for x, y in pts]
-    poly = taper_poly(seg, lambda t: w / 2 * (1 - t) ** 0.8 + 0.6)
-    m = pad.poly(poly)
-    # 마디 혹 (가시를 따라 두 곳)
-    for t in (0.3, 0.58):
-        i = int(t * (len(seg) - 1))
-        x, y = seg[i]
-        m = np.maximum(m, pad.ellipse(x, y, w * (1 - t) * 0.62, w * 0.22))
-    clip = pad.zeros()
-    clip[: int(base_y * pad.ss), :] = 1
-    return m * clip, seg
-
-
-def bonewall_frame(f, S=256):
-    pad = Pad(S, S)
-    base = S - 10.0
-    rs = random.Random(7400 + f)
-    bone = pad.zeros()
-    dark = pad.zeros()
-    glow = pad.zeros()
-    if f <= 5:
-        frac = [0.3, 0.66, 1.0, 1.0, 1.0, 1.0][f]
-        for i, (bx, h, lean, w) in enumerate(BW_SPIKES):
-            fr = min(1.0, frac * (1.15 if i == 0 else 1.0))
-            m, seg = _spike(pad, bx, h, lean, w, base, fr)
-            bone = np.maximum(bone, m)
-            # 금 (가시를 따라 가는 어두운 줄)
-            pts = [(x + 2, y) for x, y in seg[2:-3]]
-            if len(pts) > 2:
-                dark = np.maximum(dark, pad.stroke(pts, 1.4, 0.6, a0=0.7) * m)
-        # 밑동: 갈라진 땅 · 튀는 흙 (솟는 동안) · 녹색 빛
-        glow = np.maximum(glow, pad.radial(S / 2, base, 120.0, 2.0, sy=0.22) * 0.9)
-        if f <= 2:
-            for i in range(10):
-                x = rs.uniform(30, S - 30)
-                y = base - rs.uniform(10, 70) * (f + 1) / 3
-                bone = np.maximum(bone, pad.disc_field(x, y, rs.uniform(2.0, 4.5)))
-        # 혼불이 가시를 타고 오름 (장마다 다른 높이 — 이어 돌림 3 ~ 5)
-        for i in range(5):
-            t = ((i * 0.37 + f * 0.33) % 1)
-            bx, h, lean, w = BW_SPIKES[i % len(BW_SPIKES)]
-            x = bx + lean * t * 0.8
-            y = base - h * t * 0.9
-            glow = np.maximum(glow, pad.disc_field(x, y, 9.0 * (1 - t) + 3, soft=5.0) * 0.85)
-        glow = np.maximum(glow, gblur(bone, 4.0 * SS) * 1.2)
-    else:
-        # 6 금이 벌어짐 · 7 조각으로 흩어짐
-        push = 0.0 if f == 6 else 1.0
-        for i, (bx, h, lean, w) in enumerate(BW_SPIKES):
-            m, seg = _spike(pad, bx, h, lean, w, base, 1.0)
-            if f == 6:
-                bone = np.maximum(bone, m)
-                for k in range(4):
-                    y = base - h * rs.uniform(0.2, 0.85)
-                    dark = np.maximum(dark, pad.stroke([(bx - 14, y), (bx + lean * 0.5, y + rs.uniform(-6, 6)), (bx + lean + 14, y - 3)], 2.2) * m)
-            else:
-                for k in range(5):
-                    t = rs.uniform(0.1, 0.95)
-                    idx = int(t * (len(seg) - 1))
-                    x, y = seg[idx]
-                    dx = (x - S / 2) * 0.25 + rs.uniform(-20, 20)
-                    dy = -rs.uniform(10, 30)
-                    r = w * (1 - t) * 0.45 + 2
-                    chip = [(x + dx + rs.uniform(-r, r), y + dy + rs.uniform(-r, r)) for _ in range(4)]
-                    bone = np.maximum(bone, pad.poly(chip) * 0.85)
-        glow = np.maximum(glow, gblur(bone, 5.0 * SS) * (1.0 if f == 6 else 0.7))
-        glow = np.maximum(glow, pad.radial(S / 2, base - 40, 110.0, 2.0) * (0.7 if f == 6 else 0.35))
-    body = screen(glow * 0.85, bone * 0.2)
-    core = clamp01(bone - dark * 0.7)
-    g = pad.down(body)
-    g = screen(g, gblur(g, 3.0) * 0.5, gblur(g, 7.0) * 0.35)
-    cc = pad.down(core)
-    wb = win_border(g.shape, 3.0)
-    return clamp01(g * wb), clamp01(cc * wb)
-
-
-sprite("rfx_jbonewall", "lookat_y", 256, 256, BW_N, 4, "necromancer", zoom=3,
-       desc="뼈 방벽 (아래 끝 = 땅): 0 ~ 2 휘어진 뼈 가시 일곱이 땅을 뚫고 솟음 (흙 튐) → 3 ~ 5 서 있음 (녹색 혼불이 가시를 타고 오름 — 이어 돌림) → 6 금이 벌어짐 · 7 조각으로 흩어짐")(bonewall_frame)
 
 
 # ------------------------------------------------------------ rfx_jskull (망자의 해골 — 카메라를 봄, 칸 가운데 = 해골 가운데)
