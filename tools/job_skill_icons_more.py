@@ -280,24 +280,39 @@ def mage_orb(A, B):
 
 
 def mage_overload(A, B):
-    # 완드 (왼쪽 아래) 끝의 별에서 오른쪽으로 넓어지며 뻗는 광선 · 완드 둘레 기운 고리
+    # 프리즘 레이: 왼쪽 아래 완드 끝에서 뻗은 굵은 광선이 가운데 프리즘 (세모 유리 — 흰 테) 에 닿아 오른쪽으로 다섯 갈래 무지갯빛 광선으로 부채꼴로 갈라짐 ·
+    # 프리즘 번쩍임 (롤 벨코즈 R — 2026-11-05 마나 오버로드 대신)
     wand = mask()
-    line(wand, [(1.5, 30.5), (8.0, 21.0)], 2.2)
+    line(wand, [(1.5, 30.5), (6.6, 24.4)], 2.2)
     beam = mask()
-    poly(beam, [(9.0, 18.0), (31.5, 9.5), (31.5, 24.5), (9.0, 21.0)])
+    poly(beam, [(6.4, 22.6), (13.6, 15.4), (15.4, 17.6), (8.2, 24.6)])
     beam_core = mask()
-    poly(beam_core, [(9.5, 19.0), (31.5, 15.2), (31.5, 18.8), (9.5, 20.0)])
-    aura = mask()
-    ring(aura, 8.6, 19.6, 5.6, 1.1)
+    line(beam_core, [(7.4, 23.6), (14.4, 16.6)], 0.9)
+    prism = mask()
+    poly(prism, [(14.6, 8.6), (21.2, 20.2), (8.6, 20.2)])
+    prism_rim = mask()
+    line(prism_rim, [(14.6, 8.6), (21.2, 20.2), (8.6, 20.2), (14.6, 8.6)], 0.8)
+    cols = [(255, 90, 90), (255, 200, 70), (120, 240, 120), (90, 200, 255), (190, 120, 255)]
+    rays = []
+    for i, c in enumerate(cols):
+        a = math.radians(-42 + i * 21)
+        m = mask()
+        x0, y0 = 18.0, 15.6
+        poly(m, [(x0, y0 - 0.5), (x0 + math.cos(a) * 16.0 - math.sin(a) * 1.4, y0 + math.sin(a) * 16.0 + math.cos(a) * 1.4),
+                 (x0 + math.cos(a) * 16.0 + math.sin(a) * 1.4, y0 + math.sin(a) * 16.0 - math.cos(a) * 1.4), (x0, y0 + 0.5)])
+        rays.append((m, c))
     tip = mask()
-    star(tip, 8.6, 19.6, 5.0, 0.18, 45)
-    star(tip, 8.6, 19.6, 3.2, 0.3, 0)
-    sp = mask()
-    for x, y in ((3.5, 11.0), (16.5, 27.5), (21.0, 7.0)):
-        star(sp, x, y, 2.0, 0.22, 0)
-    subject = stack(layer(wand, mix(A, WHITE, 0.25), mix(A, DARK, 0.35)), layer(beam, mix(B, A, 0.15), mix(A, B, 0.35), None, None, axis=(1, 0)),
-                    layer(beam_core, WHITE, mix(B, WHITE, 0.5)), layer(aura, mix(A, WHITE, 0.5), A), layer(tip, WHITE, B), layer(sp, WHITE, B))
-    return finish(subject, [glow(beam, B, 2.0, 1.0), glow(tip, A, 1.8, 1.0)], mage_back(A, B))
+    star(tip, 6.8, 24.0, 3.4, 0.2, 45)
+    flash = mask()
+    star(flash, 15.4, 15.8, 4.6, 0.18, 0)
+    subject = stack(layer(wand, mix(A, WHITE, 0.25), mix(A, DARK, 0.35)), *[layer(m, mix(c, WHITE, 0.35), c) for m, c in rays],
+                    layer(beam, mix(B, WHITE, 0.4), mix(A, B, 0.4), None, None, axis=(1, -1)), layer(beam_core, WHITE, WHITE),
+                    layer(prism, (200, 230, 255), (110, 140, 220), WHITE, (60, 70, 140), axis=(0.7, 0.7)), layer(prism_rim, WHITE, mix(B, WHITE, 0.5)),
+                    layer(tip, WHITE, B), layer(flash, WHITE, WHITE))
+    allr = rays[0][0]
+    for m, _ in rays[1:]:
+        allr = ImageChops.lighter(allr, m)
+    return finish(subject, [glow(allr, B, 1.6, 0.9), glow(ImageChops.lighter(beam, flash), A, 1.8, 1.0)], mage_back(A, B))
 
 
 def mage_ult(A, B):

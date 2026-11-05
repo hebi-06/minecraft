@@ -366,39 +366,30 @@ public final class RpgJobAdvanceTests {
             sp.attack(z.get(0));
             h.assertTrue(JobTraits.stacks(sp) == 2, "용의 피 basic +2 stacks: " + JobTraits.stacks(sp));
         }));
-        // 다시 벼린 칼: 6 에 둘레 충격 8 (벼린 칼 전) → 벼린 칼 (사거리 +1.5 · 직업 스킬 · 칼 평타 +20%). 다시 누름은 14틱부터 (그 전은 버림) →
-        // 3 에 검풍 32 × (1 + 잃은 체력 50%) × 1.2
+        // 스타폴 블레이드 (0.51.0 — 다시 벼린 칼 대신 · 사용자 "검사 궁 2개 다른걸로 바꾸자 멋이 안난다"): 4 ~ 8 에 솟구침 → 혜성 여섯 (12 · 22 · … · 62 — 과녁이
+        // 하나면 같은 과녁에 3 씩) → 75 에 마지막 낙하 22 (= 40) · 내려앉음
+        double[] y0 = {0};
         steps.add(new RpgJobTests.Step(12, () -> {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2.5));
             JobTraits.setStacks(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 4), "다시 벼린 칼 cast");
-            h.assertTrue(JobRecast.pending(sp, "swordmaster_ult") && JobSkills.cooldownLeft(sp, "swordmaster_ult") == 0, "recast window open · no cooldown yet");
+            y0[0] = sp.getY();
+            h.assertTrue(JobSkills.press(sp, 4), "스타폴 블레이드 cast");
+            h.assertTrue(JobSkills.cooldownLeft(sp, "swordmaster_ult") > 0 && !JobRecast.pending(sp, "swordmaster_ult"), "one press · cooldown");
         }));
-        steps.add(new RpgJobTests.Step(8, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 8);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "다시 벼린 칼 burst " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits5.forged(sp) && Math.abs(JobTraits5.forgeReach(sp) - 1.5) < 1e-9, "forged: reach +" + JobTraits5.forgeReach(sp));
-            h.assertTrue(!JobSkills.press(sp, 4) && JobRecast.pending(sp, "swordmaster_ult"), "recast before the gap is ignored");
+        steps.add(new RpgJobTests.Step(9, () -> {
+            h.assertTrue(sp.getY() > y0[0] + 2.5, "rose into the sky: " + (sp.getY() - y0[0]));
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before the first comet");
         }));
-        steps.add(new RpgJobTests.Step(6, () -> {
-            z.get(0).setHealth(z.get(0).getMaxHealth() * 0.5F);
-            h.assertTrue(JobSkills.press(sp, 4), "다시 벼린 칼 recast (검풍)");
-            h.assertTrue(!JobRecast.pending(sp, "swordmaster_ult") && JobSkills.cooldownLeft(sp, "swordmaster_ult") > 0, "recast closes the window · cooldown");
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스타폴 블레이드 two comets " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
-        double[] before = {0};
-        steps.add(new RpgJobTests.Step(16, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 8 + 32 * 1.5 * 1.2);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "다시 벼린 칼 검풍 (잃은 체력 50% · 벼린 칼) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            // 벼린 칼 평타 +20% (평타에 더한 몫)
-            before[0] = TestDummies.dealt(z.get(0));
-            RpgCombat.forceCrit = false;
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            RpgCombat.forceCrit = null;
-            double got = TestDummies.dealt(z.get(0)) - before[0];
-            h.assertTrue(RpgJobTests.near(got, base * 1.2), "forged basic +20% " + got + " vs " + base * 1.2);
+        steps.add(new RpgJobTests.Step(56, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 40);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스타폴 블레이드 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(Math.abs(sp.getY() - y0[0]) < 0.6, "landed: " + (sp.getY() - y0[0]));
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);
@@ -471,22 +462,26 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(30, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 9 * bonus);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피의 사슬 pull " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            // 칼을 뽑다: 6칸 앞 과녁
+            // 블러드 문: 2.5칸 앞 과녁
             z.get(0).discard();
             home(h, sp);
-            z.set(0, dummy(h, 0, 6));
+            z.set(0, dummy(h, 0, 2.5));
             sp.setHealth(sp.getMaxHealth());
             start[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 4), "칼을 뽑다 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "블러드 문 cast");
         }));
-        // 칼을 뽑다: 8 에 칼날 10 → 과녁에게 날아가 내리꽂음 10 → 10틱마다 X 베기 5 × 4 (= 40, +10%)
-        steps.add(new RpgJobTests.Step(30, () -> {
+        // 블러드 문 (0.51.0 — 칼을 뽑다 대신 · 사용자 "검사 궁 2개 다른걸로 바꾸자 멋이 안난다"): 10 에 빨아들임 8 (18 에 회복) → 31 에 1칸 앞에 내리꽂음 ·
+        // 초승달 검기 20 → 41 부터 피의 기둥 12 (= 40, +10%)
+        double[] hp = {0};
+        steps.add(new RpgJobTests.Step(2, () -> hp[0] = sp.getHealth()));
+        steps.add(new RpgJobTests.Step(20, () -> {
+            h.assertTrue(TestDummies.dealt(z.get(0)) > 0 && sp.getHealth() > hp[0], "블러드 문 drain heals: " + hp[0] + " → " + sp.getHealth());
+        }));
+        steps.add(new RpgJobTests.Step(24, () -> {
             double moved = sp.position().z - start[0];
-            h.assertTrue(moved > 3.0, "칼을 뽑다 flew to the target: " + moved);
-        }));
-        steps.add(new RpgJobTests.Step(45, () -> {
+            h.assertTrue(Math.abs(moved - 1.0) < 0.6, "블러드 문 landed one block ahead: " + moved);
             double want = RpgJobTests.expected(sp, j, j.skill(4), 40 * bonus);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "칼을 뽑다 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블러드 문 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             // 광란 (마지막 — 끝날 때까지 둘레를 저절로 벰)
             z.get(0).discard();
             home(h, sp);
@@ -642,26 +637,28 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), inner), "마지막 휘두름 inner " + TestDummies.dealt(z.get(0)) + " vs " + inner);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), outer), "마지막 휘두름 outer edge " + TestDummies.dealt(z.get(1)) + " vs " + outer);
         }));
-        // 거인의 무게: 곰의 화신이 끝난 뒤 (분노 0 — 평타 그대로) · 공격 속도 × 0.75 · 도끼 평타 × 1.4 · 범위 모습 (×1.6)
-        double[] speed0 = {0};
+        // 베어 스톰프 (0.51.0 — 거인의 무게 대신 · 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 곰의 화신이 끝난 뒤 · 4칸 앞 과녁을 겨눠 그 앞으로
+        // 뛰어올라 16 에 내려찍음 11 → 26 에 땅이 갈라지며 솟음 4.6 (= 15.6 — 태세 칸 몫 12 × 1.3)
+        double[] from = {0};
         steps.add(new RpgJobTests.Step(70, () -> {
             h.assertTrue(!JobTraits6.bearOn(sp) && JobTraitsMore.rage(sp) < 50, "avatar over: rage " + JobTraitsMore.rage(sp));
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            z.add(dummy(h, 0, 2));
-            speed0[0] = RpgCombat.attackSpeed.applyAsDouble(sp);
-            h.assertTrue(JobSkills.press(sp, 3), "거인의 무게 cast");
-            double after = RpgCombat.attackSpeed.applyAsDouble(sp);
-            h.assertTrue(JobTraits6.titanOn(sp) && Math.abs(after / speed0[0] - 0.75) < 1e-6, "titan attack speed ×0.75: " + speed0[0] + " → " + after);
-            h.assertTrue("warlord_titan".equals(mmorpg.fabric.motion.SwingLook.testKey(sp)), "titan swing look: " + mmorpg.fabric.motion.SwingLook.testKey(sp));
+            z.add(dummy(h, 0, 4));
+            from[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 3), "베어 스톰프 cast");
+            h.assertTrue(!JobTraits.stanceOn(sp, "warlord_stomp"), "stomp is not a stance");
         }));
-        steps.add(new RpgJobTests.Step(14, () -> {
-            RpgCombat.forceCrit = false;
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            RpgCombat.forceCrit = null;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.4), "titan basic × 1.4: " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.4);
+        steps.add(new RpgJobTests.Step(20, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 11);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "베어 스톰프 stomp " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            double moved = sp.position().z - from[0];
+            h.assertTrue(moved > 2.0 && sp.position().z < z.get(0).position().z, "leapt to just before the aimed target: " + moved);
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 15.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "베어 스톰프 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);
@@ -765,14 +762,23 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 11.7);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "여덟 팔 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(Math.abs(JobTraitsMore.breakMult(z.get(0)) - 1.1) < 1e-9, "break +10%: " + JobTraitsMore.breakMult(z.get(0)));
-            // 불사의 분노: 쓰러지지 않음 · 공격 속도 × 1.4
-            double before = RpgCombat.attackSpeed.applyAsDouble(sp);
-            h.assertTrue(!mmorpg.fabric.RpgHealth.undying.test(sp), "not undying before fury");
-            h.assertTrue(JobSkills.press(sp, 3), "불사의 분노 cast");
-            double after = RpgCombat.attackSpeed.applyAsDouble(sp);
-            h.assertTrue(JobTraits6.furyOn(sp) && mmorpg.fabric.RpgHealth.undying.test(sp) && Math.abs(after / before - 1.4) < 1e-6,
-                    "fury: undying · attack speed ×1.4: " + before + " → " + after);
-            h.assertTrue("gladiator_fury".equals(mmorpg.fabric.motion.SwingLook.testKey(sp)), "fury swing look: " + mmorpg.fabric.motion.SwingLook.testKey(sp));
+            // 액스 그라인더 (0.51.0 — 불사의 분노 대신 · 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 결투 상대 (3칸 앞 · 결투 0 얼림) 에게 던짐
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 3));
+            JobTraits6.setDuel(sp, z.get(0), 0, true);
+            h.assertTrue(JobSkills.press(sp, 3), "액스 그라인더 cast");
+            h.assertTrue(!JobTraits.stanceOn(sp, "gladiator_grinder") && !mmorpg.fabric.RpgHealth.undying.test(sp), "grinder is not a stance (no undying)");
+        }));
+        // 액스 그라인더: 8 에 박힘 3 → 18 · 28 에 갈아냄 3.6 (숫자 네 줄 · 느려짐) → 38 에 뽑힘 5.4 (= 15.6 — 태세 칸 몫 12 × 1.3)
+        steps.add(new RpgJobTests.Step(20, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 6.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "액스 그라인더 stuck + grind " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "grinding slows");
+        }));
+        steps.add(new RpgJobTests.Step(22, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 15.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "액스 그라인더 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         // 홀름강: 3칸 앞 상대 (결투 0 얼림) 와 결투장 (둘 사이 가운데 · 7칸) — 안의 다른 적 (밀 수 있음) 은 밖으로 · 상대 받는 피해 +15% → 10 에 12 →
         // 140 에 40 (체력 30% 아래 — 두 배)
@@ -892,26 +898,18 @@ public final class RpgJobAdvanceTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2));
-            z.add(dummy(h, 0, 5.4));
-            double r0 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-            h.assertTrue(JobSkills.press(sp, 3), "스펠 오버드라이브 cast");
-            double r1 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-            h.assertTrue(JobTraits.stanceOn(sp, "arcaneblade_overdrive") && Math.abs(JobTraits.reachBonus(sp) - 1.0) < 1e-9 && Math.abs(r1 - r0 - 1.0) < 1e-9,
-                    "overdrive stance · reach +1: " + JobTraits.reachBonus(sp) + ", " + r0 + " -> " + r1);
-            h.assertTrue("arcaneblade_overdrive".equals(mmorpg.fabric.motion.SwingLook.testKey(sp)), "overdrive sword look: " + mmorpg.fabric.motion.SwingLook.testKey(sp));
+            z.add(loose(h, 0, 7.5));
+            h.assertTrue(JobSkills.press(sp, 3), "디멘션 슬래시 cast");
+            h.assertTrue(!JobTraits.stanceOn(sp, "arcaneblade_rift") && JobTraits.reachBonus(sp) == 0, "rift is not a stance");
         }));
-        // 스펠 오버드라이브: 칼 평타를 휘두르면 맞힌 적에 검기 몫 (위력 × 0.9) · 검기가 앞 6칸으로 날아가 길 위의 다른 적 (5.4칸 — 평타 범위 밖) 을 벰 (위력 × 0.45 · 마법)
-        steps.add(new RpgJobTests.Step(16, () -> {
-            RpgCombat.forceCrit = false;
-            mmorpg.fabric.Slash.onPunch(sp);
-        }));
-        steps.add(new RpgJobTests.Step(8, () -> {
-            double want = RpgJobTests.basic(sp, w) + raw(sp, j, 0.9);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "overdrive basic + wave " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), raw(sp, j, 0.45)), "overdrive wave down the line " + TestDummies.dealt(z.get(1)) + " vs "
-                    + raw(sp, j, 0.45));
-            RpgCombat.forceCrit = null;
-            JobTraits.testEndStance(sp);
+        // 디멘션 슬래시 (0.51.0 — 스펠 오버드라이브 대신 · 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 6 에 가르기 6.4 (앞 6.5칸 안) → 틈이 9칸 안의 적을
+        // 빨아들임 (7.5칸 밖의 밀 수 있는 적이 상자 안으로) → 22 에 닫히며 폭발 14 (= 20.4 — 태세 칸 몫 12 × 1.7) · 각인 1
+        steps.add(new RpgJobTests.Step(26, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 20.4);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "디멘션 슬래시 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits.marks(sp, z.get(0)) == 1, "rift mark 1: " + JobTraits.marks(sp, z.get(0)));
+            double pulled = z.get(1).position().z - h.absoluteVec(new Vec3(1.5, 2, 1.5)).z;
+            h.assertTrue(pulled < 7.0 && TestDummies.dealt(z.get(1)) > 0, "the far enemy was pulled in and hit: z " + pulled + " · " + TestDummies.dealt(z.get(1)));
             JobSkills.resetCooldowns(sp);
             for (Husk x : z) x.discard();
             z.clear();

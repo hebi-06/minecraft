@@ -28,7 +28,8 @@ import net.minecraft.world.phys.Vec3;
  * <li>크레센트 엣지 (롤 리븐 R2): 크게 감았다가 가로 · 세로로 거대한 초승달 검기 둘</li>
  * <li>팬텀 크로스 (롤 마스터 이 Q): 가장 가까운 적 앞으로 순간 이동해 X 자로 새김 → 칼을 털면 거대한 X 검기로 터짐</li>
  * <li>아케인 템페스트 (롤 다리우스 Q): 머리 위로 칼을 돌려 모았다가 크게 한 바퀴 — 둘레로 퍼지는 검기 · 끌어당김 → 마력 폭풍이 터짐</li>
- * <li>스펠 오버드라이브 (롤 리븐 R1): 칼이 커지고 평타마다 검기가 날아감 (JobTraits7)</li>
+ * <li>디멘션 슬래시 (2026-11-05 스펠 오버드라이브 대신 — 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 허공을 갈라 앞에 차원의 틈을 엶 → 적을 빨아들임 →
+ * 틈이 닫히며 폭발</li>
  * <li>월드 클리버 (롤 아트록스 Q): 칼이 하늘을 찌르는 마력 대검으로 자라나 앞 14칸을 내려쳐 가름 → 갈라진 땅을 따라 마력이 솟구침</li>
  * </ul>
  * 각인 다섯이 찬 적을 평타로 치면 하늘에서 거대한 마력 대검이 내리꽂힘 (롤 가렌 R — JobTraits7.giantSword). 큰 검기 = JobFx.bigWave (rfx_jwave), 감는 동안 칼끝에 모이는
@@ -46,7 +47,7 @@ final class ArcanebladeSkills {
         JobSystem.register("arcaneblade_crescent", ArcanebladeSkills::crescent);
         JobSystem.register("arcaneblade_cross", ArcanebladeSkills::cross);
         JobSystem.register("arcaneblade_tempest", ArcanebladeSkills::tempest);
-        JobSystem.register(JobTraits7.OVERDRIVE, ArcanebladeSkills::overdrive);
+        JobSystem.register("arcaneblade_rift", ArcanebladeSkills::rift);
         JobSystem.register("arcaneblade_ult", ArcanebladeSkills::ult);
     }
 
@@ -61,7 +62,7 @@ final class ArcanebladeSkills {
     }
 
     /** 쓴 자리 c 에서 f 쪽 직선 (앞 from ~ to 칸 · 반 폭 half) 위의 적 — 몸 폭을 더함 */
-    private static List<LivingEntity> inLine(ServerPlayer sp, Vec3 c, Vec3 f, double from, double to, double half) {
+    static List<LivingEntity> inLine(ServerPlayer sp, Vec3 c, Vec3 f, double from, double to, double half) {
         Vec3 right = V.rightOf(f);
         List<LivingEntity> out = new ArrayList<>();
         for (LivingEntity e : Kit.around(sp, V.add(c, f, (from + to) / 2), (to - from) / 2 + half + 1.0, 2.5)) {
@@ -76,7 +77,7 @@ final class ArcanebladeSkills {
     }
 
     /** c 에서 f 쪽으로 잰 e 의 거리 */
-    private static double along(Vec3 c, Vec3 f, LivingEntity e) {
+    static double along(Vec3 c, Vec3 f, LivingEntity e) {
         Vec3 d = V.sub(e.position(), c);
         return d.x * f.x + d.z * f.z;
     }
@@ -410,50 +411,129 @@ final class ArcanebladeSkills {
         }
     }
 
-    // ------------------------------------------------------------ 스펠 오버드라이브
+    // ------------------------------------------------------------ 디멘션 슬래시
+
+    /** 차원의 틈 속 (거의 검은 보라) · 가장자리의 흰 청록 */
+    private static final double[] VOID = {0.07, 0.01, 0.14};
+    private static final double[] EDGE = {0.75, 1.0, 1.0};
+
+    /** 쓴 자리 c 에서 f 쪽 상자 (앞 from ~ to 칸 · 옆 half 칸 — 몸 폭을 더함) 안의 적 */
+    private static List<LivingEntity> inBox(ServerPlayer sp, Vec3 c, Vec3 f, double from, double to, double half) {
+        Vec3 right = V.rightOf(f);
+        List<LivingEntity> out = new ArrayList<>();
+        for (LivingEntity e : Kit.around(sp, V.add(c, f, (from + to) / 2), Math.hypot((to - from) / 2, half) + 1.0, 3.0)) {
+            Vec3 d = V.sub(e.position(), c);
+            double along = d.x * f.x + d.z * f.z;
+            double side = Math.abs(d.x * right.x + d.z * right.z);
+            double pad = Kit.bodyPad(e);
+            if (along < from - pad || along > to + pad || side > half + pad) continue;
+            out.add(e);
+        }
+        return out;
+    }
 
     /**
-     * 스펠 오버드라이브 (롤 리븐 R1 — 태세 dur 틱): 칼을 얼굴 앞에 세우면 칼끝으로 마력이 빨려 들고 (JobFx.charge) 왼손으로 칼날을 쓸어 내리는 순간 칼이 커지며 빛남
-     * (SWING_LOOK arcaneblade_overdrive) · 발밑 룬 원 · 눈앞 고리 · 짧은 섬광 · 평타 사거리 + reach. 그동안 칼 평타를 휘두를 때마다 검기 (JobTraits7.overdriveSwing ·
-     * waveBonus)
+     * 디멘션 슬래시 (2026-11-05 사용자 "구지 신체 강화 스킬도 필수로 안넣어도 될거 같다" · "직업 중에 구지 강화 시키면 어색한 애들은 빼자" · "딜링기도 괜찮고",
+     * 스펠 오버드라이브 대신 — 롤 요네 R 처럼 끌어당김): 칼을 오른쪽 뒤로 크게 감아 칼끝에 마력을 모았다가 slashAt 틱에 허공을 가로로 갈라 앞 ahead 칸에 차원의 틈을
+     * 엶 (가로 큰 검기 · 앞 0.5 ~ depth 칸 · 옆 halfWidth 칸의 적 slash · 각인) → 틈이 둘레 pull 칸의 적을 2틱마다 빨아들임 (빨려 드는 빛 줄기) → closeAt 틱에
+     * 틈이 닫히며 폭발 (X 자 섬광 · 큰 터짐 — 같은 상자의 적 close 큰 숫자 · 각인). 틈 = rfx_jtear (카메라를 봄 — 0 ~ 1 갈라짐 · 2 ~ 5 벌어져 일렁임 · 6 ~ 7
+     * 닫힘)
      */
-    static boolean overdrive(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = (int) k.num("dur", 240);
-        JobTraits.startStance(sp, k, dur);
+    static boolean rift(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        int slashAt = Math.max(2, (int) k.num("slashAt", 6));
+        int closeAt = Math.max(slashAt + 10, (int) k.num("closeAt", 22));
+        double ahead = k.num("ahead", 3.5);
+        double half = k.num("halfWidth", 4.2);
+        double depth = k.num("depth", 6.5);
         String life = RuneKit.lifeToken(sp);
+        Set<UUID> marked = new HashSet<>();
         ServerLevel level0 = sp.level();
-        Vec3 c = sp.position();
-        JobFx.charge(sp, j, new Vec3(0.1, 1.9, 0.55), 8, 0.8);
-        JobFx.runeRing(level0, V.up(c, 0.08), 1.8, j, 8, Kit.rand() * 40, 0.75, Opt.of("alpha", 0.9));
-        SkillFx.play(level0, "block.respawn_anchor.charge", c, 1.2, 0.5);
-        // 칼날을 쓸어 내림 (4 ~ 8): 칼을 따라 흐르는 빛 (칼끝 → 손)
-        for (int t = 4; t <= 8; t += 2) {
+        Vec3 c0 = sp.position();
+        Vec3 f = Kit.facingOf(sp);
+        Vec3 tearAt = V.up(V.add(c0, f, ahead), 1.35);
+        // 감음: 오른쪽 뒤로 당긴 칼끝에 마력이 빨려 듦 · 차오르는 울림
+        JobFx.charge(sp, j, new Vec3(0.8, 1.3, -0.45), slashAt, 0.8);
+        SkillFx.play(level0, "item.trident.return", c0, 1.2, 0.7);
+        SkillFx.play(level0, "block.portal.trigger", c0, 1.8, 0.25);
+        RuneKit.later(slashAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
+            // 가로로 가름: 1인칭 눈앞 큰 베기 · 앞으로 가는 가로 큰 검기 · 틈이 갈라져 벌어짐 (일렁임은 닫히기 전까지)
+            JobFx.slash(sp, j, 2.2, 0.25, 2.6, 176.0, 0.26);
+            JobFx.bigWave(lv, sp, V.up(V.add(c0, f, 0.9), 1.2), f, 30.0, 2.3, -6, (ahead - 0.9) / 30.0 + 0.1, j, Opt.empty());
+            int open = closeAt - slashAt - 2;
+            tear(lv, tearAt, f, half * 1.15, 0, 2, 0.1, false, j);
+            RuneKit.later(2, () -> tear(lv, tearAt, f, half * 1.15, 2, 4, open / 20.0, true, j));
+            RuneKit.later(open + 2, () -> tear(lv, tearAt, f, half * 1.15, 6, 2, 0.12, false, j));
+            SkillFx.shock(lv, V.up(V.add(c0, f, ahead), 0.1), JobFx.outer(j), half * 0.8, 0.4);
+            SkillFx.sparks(lv, tearAt, JobFx.inner(j), 18, 6.0);
+            SkillFx.play(lv, "entity.player.attack.sweep", c0, 0.6, 1.0);
+            SkillFx.play(lv, "block.end_portal.spawn", tearAt, 1.6, 0.35);
+            SkillFx.play(lv, "item.trident.riptide_2", c0, 1.4, 0.6);
+            for (LivingEntity e : inBox(sp, c0, f, 0.5, depth, half)) {
+                JobKit.strike(sp, e, j, P, k.num("slash", 6.4), true, false, life, 0, x -> {
+                    markOnce(sp, e, j, marked);
+                    JobImpact.hit(sp, e, j, 1.5);
+                });
+            }
+        });
+        // 빨아들임 (2틱마다): 틈 쪽 (틈의 가로 줄 위 가장 가까운 곳) 으로 끌림 · 빨려 드는 빛 줄기 · 틈 둘레 불티
+        Vec3 right = V.rightOf(f);
+        for (int t = slashAt + 1; t < closeAt - 1; t += 2) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                RuneKit.Hand h = RuneKit.handOf(sp);
-                Vec3 p = V.up(V.add(h.hand(), h.f(), 0.25), 1.15 - (tt - 4) * 0.22);
-                JobFx.glint(sp.level(), p, 0.5, j, 0.18, Opt.of("vel", RuneKit.bodyVel(sp)));
-                SkillFx.play(sp.level(), "block.amethyst_block.chime", p, 1.4 + tt * 0.05, 0.5);
+                ServerLevel lv = sp.level();
+                double pull = k.num("pull", 9);
+                for (LivingEntity e : Kit.around(sp, tearAt, pull, 4.0)) {
+                    Vec3 d = V.sub(e.position(), tearAt);
+                    double side = Math.max(-half, Math.min(half, d.x * right.x + d.z * right.z));
+                    Vec3 to = V.add(tearAt, right, side);
+                    if (JobKit.pushable(e) && V.hdist(e.position(), to) > 1.0) RuneKit.knock(e, V.flat(V.sub(to, e.position())), 0.42, 0.06);
+                    if ((tt - slashAt) % 4 == 1 && RuneKit.fxQuota("jobRiftPull", 6)) JobFx.line(lv, Kit.bodyPoint(e), V.lerp(Kit.bodyPoint(e), to, 0.85), j, 0.14,
+                            Opt.of("alpha", 0.7));
+                }
+                SkillFx.sparks(lv, V.add(tearAt, right, (Kit.rand() - 0.5) * half * 1.6), JobFx.inner(j), 3, 2.0);
+                if ((tt - slashAt) % 6 == 1) SkillFx.play(lv, "block.portal.ambient", tearAt, 1.5, 0.35);
             });
         }
-        // 켜짐 (9): 칼이 커지며 빛남 — 칼 둘레 터짐 · 발밑 고리 · 충격파 · 눈앞 고리 · 짧은 섬광 · 소리
-        RuneKit.later(9, () -> {
+        RuneKit.later(closeAt - 3, () -> {
+            if (RuneKit.sameLife(sp, life)) SkillFx.play(sp.level(), "block.respawn_anchor.charge", tearAt, 1.4, 0.7);
+        });
+        RuneKit.later(closeAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            RuneKit.Hand h = RuneKit.handOf(sp);
-            Vec3 blade = V.up(V.add(h.hand(), h.f(), 0.4), 0.7);
-            JobFx.burst(lv, blade, 1.0, j, 0.3, JobFx.hide1p(sp));
-            JobFx.bigWave(lv, null, blade, h.f(), 0, 1.3, 90, 0.3, j, JobFx.hide1p(sp).with("alpha", 0.85));
-            JobFx.ring(lv, V.up(sp.position(), 0.08), 2.2, j, false, 0.45, Opt.of("alpha", 0.9));
-            SkillFx.shock(lv, V.up(sp.position(), 0.1), JobFx.outer(j), 2.6, 0.35);
-            JobFx.eyeRing(sp, j, 2.2, 1.0, 0.35);
-            SkillFx.sparks(lv, blade, JobFx.inner(j), 16, 6.0);
-            SkillFx.play(lv, "beacon.activate", sp.position(), 1.4, 0.6);
-            SkillFx.play(lv, "item.trident.thunder", sp.position(), 1.8, 0.35);
-            Ult.flash(lv, sp.position(), JobFx.outer(j), Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.3}), sp);
+            // 닫히며 폭발: X 자 섬광 · X 큰 검기 (그 자리에서 피었다 부서짐) · 큰 터짐 · 땅의 충격파 · 불티 · 섬광
+            JobKit.motion(sp, "arcaneblade_rift:close");
+            JobFx.cross(lv, tearAt, half * 0.75, j, 0.35, Opt.empty());
+            for (int s2 = -1; s2 <= 1; s2 += 2) JobFx.bigWave(lv, null, tearAt, f, 0, half * 0.7, 45 * s2, 0.32, j, Opt.empty());
+            JobFx.burst(lv, tearAt, 3.0, j, 0.45, Opt.empty());
+            JobFx.ring(lv, V.up(V.add(c0, f, ahead), 0.08), half * 0.9, j, false, 0.45, Opt.of("alpha", 0.95));
+            SkillFx.shock(lv, V.up(V.add(c0, f, ahead), 0.1), JobFx.outer(j), half * 1.1, 0.5);
+            SkillFx.sparks(lv, tearAt, JobFx.inner(j), 26, 8.0);
+            Ult.flash(lv, tearAt, JobFx.inner(j), Opt.of("radius", 6.0, "time", new double[] {0.03, 0.04, 0.25}), sp);
+            SkillFx.play(lv, "random.explode", tearAt, 1.0, 0.8);
+            SkillFx.play(lv, "block.amethyst_block.shatter", tearAt, 0.7, 1.0);
+            SkillFx.play(lv, "item.trident.thunder", tearAt, 1.6, 0.5);
+            for (LivingEntity e : inBox(sp, c0, f, 0.5, depth, half + 0.5)) {
+                JobKit.strike(sp, e, j, P, k.num("close", 14), true, true, life, 0, x -> {
+                    markOnce(sp, e, j, marked);
+                    JobImpact.hit(sp, e, j, 2.1);
+                });
+            }
         });
         return true;
+    }
+
+    /**
+     * 차원의 틈 (rfx_jtear — 카메라를 봄, 가로로 갈라진 틈): 장 from 부터 count 장 · 빛 = 직업 겉빛 테 · 무리 + 흰 청록 테 (조금 작게 · 틈 위에 덮여 속의 소용돌이 ·
+     * 별빛이 보임) · 심지 = 검은 보라 속. 두 겹의 이어 돌림 차례 (phase) 를 같게 (테 · 속이 어긋나지 않게). dir 은 흰 청록 겹을 조금 앞으로 (보는 쪽)
+     */
+    private static void tear(ServerLevel level, Vec3 at, Vec3 dir, double size, int from, int count, double life, boolean loop, Jobs.Job j) {
+        Opt o = Opt.of("size", size, "fade", 0.15, "phase", 0.0);
+        JobFx.cells(level, "jtear", JobFx.TEAR, from, count, at, life, loop ? 10 : 0, loop, o, JobFx.outer(j), VOID);
+        JobFx.cells(level, "jtear", JobFx.TEAR, from, count, V.add(at, dir, -0.02), life, loop ? 10 : 0, loop, o.with("size", size * 0.97, "alpha", 0.85, "coreAlpha", 0.0),
+                EDGE, VOID);
     }
 
     // ------------------------------------------------------------ 월드 클리버

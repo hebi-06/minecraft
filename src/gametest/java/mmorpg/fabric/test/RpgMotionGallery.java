@@ -494,7 +494,7 @@ public final class RpgMotionGallery implements FabricClientGameTest {
     /** {모습 key (none = 없음), 무기 종류} — 멈춘 마네킹 (3/4 · 가로 베기) 궤적 사진 mo_look_&lt;key&gt; */
     private static final String[][] LOOK_STILLS = {
         {"none", "sword"}, {"edgeHone", "sword"}, {"flurry", "sword"}, {"cleave", "sword"}, {"bloodBlade", "sword"}, {"swordGod", "sword"},
-        {"swordsman_mirror", "sword"}, {"spellblade_awaken", "greatsword"}, {"none", "scythe"}, {"reaper_avatar", "scythe"},
+        {"swordsman_mirror", "sword"}, {"warlord_bear", "axe"}, {"none", "scythe"}, {"reaper_avatar", "scythe"},
     };
 
     private static MotionNet.Look netLook(String key) {

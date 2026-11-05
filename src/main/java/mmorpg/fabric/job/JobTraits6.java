@@ -36,12 +36,11 @@ import net.minecraft.world.phys.Vec3;
  * <li>워로드 「분노」 (쌓고 줄어드는 것은 전사와 같음 — JobTraitsMore): 다 차면 곰의 화신 bearFor 틱 — 몸을 감싼 곰 (rfx_jbear · 3인칭 · 다른 사람), 도끼 평타가
  * 곰 발톱 세 줄로 넓어짐 (SWING_LOOK warlord_bear — 범위 ×1.5 · 휘두를 때마다 앞에 큰 발톱 세 줄, 피해 + fullBonus — JobTraitsMore.basicMult), 받는 피해
  * −bearGuard (Guards). 그동안 분노가 남은 시간만큼 줄어 끝나면 0 (쌓이지 않음). 동면 (WarlordSkills.slumber) 동안 받은 피해 (최대 체력 1%) 마다 분노 + rage.
- * 거인의 무게 (태세): 도끼 평타 피해 × (1 + power) (RpgCombat.meleeMult) · 공격 속도 × (1 − slow) (RpgCombat.attackSpeed → 평타 사이) · 밀려나지 않음 ·
- * 휘두를 때마다 앞 부채꼴의 땅이 갈라짐 (그림 — 범위는 SWING_LOOK warlord_titan ×1.6)</li>
+ * 4번 칸은 베어 스톰프 (피해 스킬 — 2026-11-05 거인의 무게 태세 대신, WarlordSkills.stomp)</li>
  * <li>글래디에이터 「결투」: 도끼 평타 · 직업 스킬로 처음 친 적이 결투 상대 (그 적을 따라다니는 돌 말뚝 고리 — rfx_jstake). 결투가 every 틱 이어질 때마다 +1 (최대
  * max) — 상대에게 주는 피해 × (1 + 결투 × per), 다른 적에게는 × (1 − others) (도끼 평타 RpgCombat.meleeMult · 직업 스킬 JobKit.hit). 상대가 쓰러지면 near 칸 안의
- * 가장 가까운 적과 새 결투 (결투 × keep), lapse 틱 동안 상대를 못 맞히거나 range 칸 넘게 멀어지면 끝 (0). 불사의 분노 (태세): 쓰러지지 않음 (RpgHealth.undying —
- * 체력 1 에서 멈춤) · 공격 속도 × (1 + haste). 홀름강의 결투장 동안 상대가 받는 피해 + vuln (RpgCombat.takenMult — GladiatorSkills.ult)</li>
+ * 가장 가까운 적과 새 결투 (결투 × keep), lapse 틱 동안 상대를 못 맞히거나 range 칸 넘게 멀어지면 끝 (0). 4번 칸은 액스 그라인더 (피해 스킬 — 2026-11-05
+ * 불사의 분노 태세 대신, GladiatorSkills.grinder). 홀름강의 결투장 동안 상대가 받는 피해 + vuln (RpgCombat.takenMult — GladiatorSkills.ult)</li>
  * </ul>
  */
 public final class JobTraits6 {
@@ -49,8 +48,6 @@ public final class JobTraits6 {
 
     static final String WL = "warlord";
     static final String GL = "gladiator";
-    static final String TITAN = "warlord_titan";
-    static final String FURY = "gladiator_fury";
     /** SWING_LOOK 의 곰의 화신 */
     static final String BEAR_LOOK = "warlord_bear";
     /** rfx_jstake 장 수 (tools/job_fx_art_adv.py — 0 솟음 · 1 ~ 4 서 있음 · 5 가라앉음) */
@@ -69,13 +66,11 @@ public final class JobTraits6 {
         int bearTotal;
         long bearSwing = -1;
         long slumberUntil;
-        long titanSwing = -1;
         // 글래디에이터
         UUID duel;
         long duelHit;
         long duelGain;
         int stacks;
-        long furyFx = -1000;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -89,19 +84,10 @@ public final class JobTraits6 {
 
     static void init() {
         RpgCombat.addWeaponHitHook(JobTraits6::onWeaponHit);
-        java.util.function.ToDoubleFunction<ServerPlayer> as = RpgCombat.attackSpeed;
-        RpgCombat.attackSpeed = p -> as.applyAsDouble(p) * attackSpeed(p);
         RpgCombat.MeleeMult mm = RpgCombat.meleeMult;
         RpgCombat.meleeMult = (p, w, v) -> mm.mult(p, w, v) * meleeMult(p, w, v);
         java.util.function.ToDoubleFunction<LivingEntity> tm = RpgCombat.takenMult;
         RpgCombat.takenMult = e -> tm.applyAsDouble(e) * arenaTaken(e);
-        java.util.function.Predicate<ServerPlayer> und = RpgHealth.undying;
-        java.util.function.Consumer<ServerPlayer> saved = RpgHealth.undyingSaved;
-        RpgHealth.undying = p -> und.test(p) || furyOn(p);
-        RpgHealth.undyingSaved = p -> {
-            if (und.test(p)) saved.accept(p);
-            else furySaved(p);
-        };
         RpgHealth.LossHook lh = RpgHealth.lossHook;
         RpgHealth.lossHook = (sp, src, loss, before, after) -> {
             lh.lost(sp, src, loss, before, after);
@@ -255,42 +241,18 @@ public final class JobTraits6 {
         }
     }
 
-    /** 거인의 무게를 짊어졌는지 */
-    public static boolean titanOn(ServerPlayer sp) {
-        return JobTraits.stanceOn(sp, TITAN) && jobIf(sp, WL) != null;
-    }
-
-    /** 공격 속도 배율 (거인의 무게 × (1 − slow) · 불사의 분노 × (1 + haste) — 클라이언트는 게이지의 speed) */
-    static double attackSpeed(ServerPlayer sp) {
-        Jobs.Job j = JobSystem.job(sp);
-        if (j == null) return 1;
-        if (WL.equals(j.id()) && JobTraits.stanceOn(sp, TITAN)) {
-            Jobs.Skill k = j.skill(TITAN);
-            return 1 - (k == null ? 0.25 : k.num("slow", 0.25));
-        }
-        if (GL.equals(j.id()) && JobTraits.stanceOn(sp, FURY)) {
-            Jobs.Skill k = j.skill(FURY);
-            return 1 + (k == null ? 0.4 : JobUpgrades.num(sp, k, "haste", k.num("haste", 0.4)));
-        }
-        return 1;
-    }
-
-    /** 근접 평타 배율: 거인의 무게 도끼 평타 + power · 결투 (상대 × (1 + 결투 × per) · 다른 적 × (1 − others)) */
+    /** 근접 평타 배율: 결투 (상대 × (1 + 결투 × per) · 다른 적 × (1 − others)) */
     static double meleeMult(ServerPlayer sp, Weapon w, LivingEntity victim) {
         if (w == null || !"axe".equals(w.type())) return 1;
         Jobs.Job j = JobSystem.job(sp);
         if (j == null) return 1;
-        if (WL.equals(j.id()) && JobTraits.stanceOn(sp, TITAN)) {
-            Jobs.Skill k = j.skill(TITAN);
-            return 1 + (k == null ? 0.4 : JobUpgrades.num(sp, k, "power", k.num("power", 0.4)));
-        }
         if (!GL.equals(j.id()) || victim == null) return 1;
         LivingEntity t = duelTarget(sp);
         if (t == null) return 1; // 이 평타가 결투를 엶 (onWeaponHit) — 처음 한 대는 그대로
         return victim == t ? 1 + duelBonus(sp, j) : 1 - trait(j, "others", 0.4);
     }
 
-    /** 휘두를 때마다 (허공 포함): 곰의 화신 — 앞에 큰 곰 발톱 세 줄 / 거인의 무게 — 앞 부채꼴의 땅이 갈라짐 */
+    /** 휘두를 때마다 (허공 포함): 곰의 화신 — 앞에 큰 곰 발톱 세 줄 */
     private static void onSwing(ServerPlayer sp, Weapon w) {
         if (w == null || !"axe".equals(w.type())) return;
         Jobs.Job j = jobIf(sp, WL);
@@ -298,10 +260,6 @@ public final class JobTraits6 {
         State st = of(sp);
         long now = Tasks.now();
         ServerLevel level = sp.level();
-        if (JobTraits.stanceOn(sp, TITAN) && st.titanSwing != now) {
-            st.titanSwing = now;
-            WarlordSkills.titanQuake(sp, j);
-        }
         if (!bearOn(sp) || st.bearSwing == now) return;
         st.bearSwing = now;
         Vec3 look = sp.getViewVector(1F);
@@ -400,19 +358,11 @@ public final class JobTraits6 {
         }
     }
 
-    /** 도끼 평타가 맞음 (피해가 들어간 뒤): 워로드 거인의 무게 — 무거운 타격 / 글래디에이터 — 결투 상대가 없으면 그 적과 결투 · 상대면 이어짐 (불사의 분노 — 붉은 타격) */
+    /** 도끼 평타가 맞음 (피해가 들어간 뒤): 글래디에이터 — 결투 상대가 없으면 그 적과 결투 · 상대면 이어짐 */
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         if (w == null || victim == null || !"axe".equals(w.type()) || !Combat.isMeleeWeapon(w)) return;
-        Jobs.Job wl = jobIf(sp, WL);
-        if (wl != null) {
-            // 거인의 무게: 도끼 평타가 무겁게 맞음 (큰 타격 섬광 · 무거운 소리 · 멈칫 — 한 휘두르기에 둘까지)
-            if (titanOn(sp) && RuneKit.fxQuota("titanHit" + sp.getId(), 2)) JobImpact.hit(sp, victim, wl, 1.35);
-            return;
-        }
         Jobs.Job j = jobIf(sp, GL);
         if (j == null) return;
-        // 불사의 분노: 빨라진 도끼 평타마다 붉은 타격 (멈칫 없이 — 빠른 연타)
-        if (furyOn(sp) && RuneKit.fxQuota("furyHit" + sp.getId(), 2)) JobImpact.fx(sp, victim, j, 0.95);
         LivingEntity t = duelTarget(sp);
         if (t == null) {
             if (victim.isAlive() && !victim.isRemoved()) startDuel(sp, j, victim, 0, false);
@@ -436,34 +386,6 @@ public final class JobTraits6 {
         if (j == null || !GL.equals(j.id()) || !(dealt > 0) || e == null) return;
         State st = STATES.get(sp.getUUID());
         if (st != null && e.getUUID().equals(st.duel)) st.duelHit = Tasks.now();
-    }
-
-    // ------------------------------------------------------------ 글래디에이터 불사의 분노
-
-    /** 불사의 분노로 쓰러지지 않는 중 */
-    public static boolean furyOn(ServerPlayer sp) {
-        return JobTraits.stanceOn(sp, FURY) && jobIf(sp, GL) != null;
-    }
-
-    /** 쓰러짐을 막음 (다음 틱): 붉은 섬광 · 포효 · 글자 (1초에 한 번) */
-    private static void furySaved(ServerPlayer sp) {
-        State st = of(sp);
-        long now = Tasks.now();
-        if (now - st.furyFx < 20) return;
-        st.furyFx = now;
-        Jobs.Job j = jobIf(sp, GL);
-        ServerLevel level = sp.level();
-        Vec3 c = V.up(sp.position(), 1.0);
-        if (j != null) {
-            JobFx.two(level, "jimpact", JobImpact.IMPACT, c, 0.35, JobFx.hide1p(sp).with("size", 1.6, "spin", Kit.rand() * 360, "fade", 0.3, "vel", RuneKit.bodyVel(sp)),
-                    JobFx.outer(j), WHITE);
-            JobFx.aura(sp, j, 3.2, 0.6, 1.0);
-            JobFx.eyeRing(sp, j, 2.2, 1.0, 0.4);
-            SkillFx.sparks(level, c, JobFx.inner(j), 16, 5);
-        }
-        SkillFx.play(level, "mob.ravager.roar", c, 1.3, 0.7);
-        SkillFx.play(level, "random.totem", c, 1.6, 0.4);
-        Notify.notify(sp, "§c§l불사의 분노 §r§7— 쓰러지지 않았습니다", 30);
     }
 
     // ------------------------------------------------------------ 홀름강의 결투장 (받는 피해)
@@ -552,40 +474,6 @@ public final class JobTraits6 {
         RuneKit.Hand h = RuneKit.handOf(sp);
         SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.1), Opt.of("dir", V.UP, "speed", 1.6, "size", 0.13, "grow", 0.8, "life", 0.35, "color", JobKit.glow(j),
                 "alpha", 1.0));
-    }
-
-    /**
-     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 거인의 무게 = 발밑이 눌려 갈라짐 · 몸에서 떨어지는 돌가루 · 손의 불티 / 불사의 분노 = 몸을 감싸는 붉은 불길 ·
-     * 위로 날리는 불티 · 붉은 눈빛. 그렸으면 true
-     */
-    static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
-        ServerLevel level = sp.level();
-        if (TITAN.equals(stance)) {
-            Vec3 c = sp.position();
-            JobFx.ring(level, V.up(c, 0.06), 1.3, j, false, 0.4, JobFx.hide1p(sp).with("alpha", 0.6, "vel", RuneKit.bodyVel(sp)));
-            SkillFx.sparks(level, V.up(c, 0.1), DUST, 4, 1.8);
-            for (int s = -1; s <= 1; s += 2) {
-                Vec3 sh = V.up(V.add(c, V.rightOf(Kit.facingOf(sp)), 0.35 * s), 1.45);
-                SkillFx.fx(level, "rpg:arrow_spark", sh, JobFx.hide1p(sp).with("dir", V.DOWN, "speed", 1.2, "size", 0.12, "grow", 0.3, "life", 0.5, "color", DUST,
-                        "alpha", 0.9));
-            }
-            RuneKit.Hand h = RuneKit.handOf(sp);
-            SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.1), Opt.of("dir", V.UP, "speed", 1.4, "size", 0.12, "grow", 0.6, "life", 0.35, "color", JobKit.glow(j),
-                    "alpha", 1.0));
-            return true;
-        }
-        if (FURY.equals(stance)) {
-            JobFx.aura(sp, j, 2.8, 0.5, 0.75);
-            Vec3 c = V.up(sp.position(), 1.0);
-            for (int i = 0; i < 3; i++) {
-                Vec3 p = V.add(c, new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.8 - 0.4, Kit.rand() - 0.5), 0.8);
-                SkillFx.fx(level, "rpg:arrow_spark", p, JobFx.hide1p(sp).with("dir", V.UP, "speed", 2.2, "size", 0.13, "grow", 0.5, "life", 0.45, "color",
-                        JobFx.inner(j), "alpha", 1.0, "vel", RuneKit.bodyVel(sp)));
-            }
-            eyeGlint(sp, j, 0.45);
-            return true;
-        }
-        return false;
     }
 
     /** 눈의 붉은 빛 (두 점 — 3인칭 · 다른 사람) */

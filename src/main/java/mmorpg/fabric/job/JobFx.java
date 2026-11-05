@@ -106,6 +106,8 @@ final class JobFx {
     static final int BEAR = 8;
     static final int PAW = 4;
     static final int MOON = 8;
+    /** 0.51.0 차원의 틈 (rfx_jtear — 디멘션 슬래시): 0 ~ 1 갈라짐 · 2 ~ 5 벌어져 일렁임 (이어 돌림) · 6 ~ 7 닫힘 */
+    static final int TEAR = 8;
     static final int SPIKE = 8;
     static final int ARMS = 8;
     static final int ARENA = 6;
@@ -538,6 +540,11 @@ final class JobFx {
      * 조각끼리 조금 겹침
      */
     static void beam(ServerLevel level, Vec3 from, Vec3 to, Jobs.Job j, double seg, double life, Opt o) {
+        beam(level, from, to, outer(j), inner(j), seg, life, o);
+    }
+
+    /** 같은 것 — 색을 정함 (0.51.0 프리즘 레이의 다섯 갈래) */
+    static void beam(ServerLevel level, Vec3 from, Vec3 to, double[] glow, double[] core, double seg, double life, Opt o) {
         Vec3 d = V.sub(to, from);
         double len = V.len(d);
         if (len < 0.3) return;
@@ -546,7 +553,7 @@ final class JobFx {
         double step = len / n;
         for (int i = 0; i < n; i++) {
             Vec3 c = V.add(from, u, step * (i + 0.5));
-            two(level, "jbeam2", BEAM, c, life, o.with("dir", u, "size", Math.max(step * 0.62, seg / 2)), outer(j), inner(j));
+            two(level, "jbeam2", BEAM, c, life, o.with("dir", u, "size", Math.max(step * 0.62, seg / 2)), glow, core);
         }
     }
 

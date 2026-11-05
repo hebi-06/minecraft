@@ -20,7 +20,8 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 0.51.0 검사 반전 블러드 나이트 — 재설계안 2판 (사용자 "검사 반전도 직업컨셉은 마음에 드는데 모션, 스킬 컨셉 같은건 마음에 안듬" · "스킬 컨셉은 롤같은거
  * 많이 참고하면 좋음"): 직업 컨셉 (체력을 칼에 바쳐 세지고 벤 만큼 피로 되찾음 — 피의 갈증 JobTraits5) 은 그대로, 스킬 다섯을 새로 — 핏빛 대검 (롤 아트록스 Q —
- * 세 번 다시 쓰기 · 칼끝) · 피의 돌진 (롤 브라이어 Q) · 피의 사슬 (롤 아트록스 W) · 광란 (롤 브라이어 W) · 칼을 뽑다 (롤 브라이어 R · 아트록스 R). 맞은 자리는
+ * 세 번 다시 쓰기 · 칼끝) · 피의 돌진 (롤 브라이어 Q) · 피의 사슬 (롤 아트록스 W) · 광란 (롤 브라이어 W) · 블러드 문 (롤 아트록스 R — 사용자 "검사 궁 2개 다른걸로
+ * 바꾸자 멋이 안난다", 칼을 뽑다 대신). 맞은 자리는
  * JobImpact (큰 타격 그림 · 멈칫 — 화면은 흔들지 않음) + 피 튀김. 몸 쓰는 직업 기준 (제 몸 · 제 칼 동작만 — 칼날 검기는 칼에서 날림).
  */
 final class BloodknightSkills {
@@ -346,158 +347,164 @@ final class BloodknightSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 칼을 뽑다
+    // ------------------------------------------------------------ 블러드 문
+
+    /** 핏빛 달 (rfx_jmoon 0 보름달 · 7 붉은 테) — 빛 · 심지 */
+    private static final double[] MOON_GLOW = {0.78, 0.04, 0.08};
+    private static final double[] MOON_CORE = {1.0, 0.42, 0.36};
+
+    /** 땅 높이로 내린 자리 */
+    private static Vec3 ground(ServerLevel level, Vec3 p) {
+        return new Vec3(p.x, RuneKit.groundAt(level, V.up(p, 0.6), p.y), p.z);
+    }
 
     /**
-     * 칼을 뽑다 (다인슬레이프는 뽑으면 피를 보아야 칼집에 들어감 — 롤 브라이어 R · 아트록스 R): draw 틱 동안 칼을 뽑음 (짙은 진홍 하늘) → 앞 range 칸으로 핏빛 칼날을 날림
-     * (speed 칸/초 · 폭 width — 처음 맞은 적 blade) → 맞은 적 (없으면 칼날이 멈춘 자리) 에게 fly 틱에 날아가 내리꽂음 (둘레 slamRadius 칸 slam) → every 틱마다
-     * 그 적을 X 자로 벰 (slashes — 쓰러졌으면 둘레 4칸의 가장 가까운 적) · 그 적을 쓰러뜨리면 체력 heal 회복 (한 번)
+     * 블러드 문 (사용자 "검사 궁 2개 다른걸로 바꾸자 멋이 안난다" → 고른 것 "하늘에 핏빛 달 → 둘레 적들의 피를 빨아들인 칼로 달을 등지고 뛰어올라 거대한 초승달
+     * 검기를 내리꽂음 → 피의 기둥 · 회복", 롤 아트록스 R): 하늘이 붉게 물들고 앞 하늘에 핏빛 달이 떠오름 · 칼을 얼굴 앞에 세움 → drainAt 틱에 둘레 range 칸 적들의
+     * 피가 줄기로 빨려 듦 (drain — 적 하나당 최대 체력 heal 회복 · healMax 명까지) → leapAt 틱에 달을 향해 높이 뛰어오름 (칼이 핏빛으로 타오름) → slamAt 틱에 1칸 앞에
+     * 내리꽂으며 거대한 초승달 핏빛 검기 (앞 length 칸 · 폭 width — speed 칸/초, 지나가는 틱에 crescent) · 땅이 갈라짐 → pillarAt 틱부터 갈라진 땅을 따라
+     * pillarSpeed 칸/틱 (검기와 같은 빠르기 — 같은 적에게 늘 10틱 뒤) 으로 피의 기둥이 솟구침 (pillar · 띄움). 내리꽂을 쪽은 쓴 순간 보는 쪽. 몸 쓰는 직업 기준
+     * (제 몸 · 제 칼 — 달 · 검기 · 기둥은 칼과 피의 힘)
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        ServerLevel level0 = sp.level();
-        int draw = Math.max(4, (int) k.num("draw", 8));
-        int fly = Math.max(10, (int) k.num("fly", 11));
-        int every = Math.max(10, (int) k.num("every", 10));
-        List<Double> slashes = SwordmasterSkills.numbers(k, "slashes", List.of(5.0, 5.0, 5.0, 5.0));
-        double speed = Math.max(10, k.num("speed", 40));
-        double range = k.num("range", 24);
+        if (Status.isRooted(sp) || Kit.ridingAny(sp)) {
+            mmorpg.fabric.Notify.notify(sp, "§c" + k.name() + " §7— 지금은 움직일 수 없습니다", 30);
+            return false;
+        }
+        int drainAt = Math.max(4, (int) k.num("drainAt", 10));
+        int leapAt = Math.max(drainAt + 2, (int) k.num("leapAt", 16));
+        int slamAt = Math.max(Math.max(leapAt + 8, drainAt + 10), (int) k.num("slamAt", 31));
+        int pillarAt = Math.max(slamAt + 10, (int) k.num("pillarAt", 41));
+        double range = k.num("range", 10);
         String life = RuneKit.lifeToken(sp);
+        ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
-        Ult.sky(level0, c0, "rpg:ult_bloodsplit", draw + 30 + fly + every * slashes.size());
-        RpgCombat.setSteadfast(sp, draw + 30 + fly + every * slashes.size());
-        Kit.noFall(sp, draw + 60 + fly + every * slashes.size());
-        // 칼을 뽑음: 칼집에서 솟는 핏빛 안개 · 심장 소리
-        RuneKit.Hand h = RuneKit.handOf(sp);
-        JobTraits5.blood(level0, V.up(V.add(h.hand(), h.f(), 0.4), 0.2), 0.9, j, 0.5, JobFx.hide1p(sp));
-        JobFx.aura(sp, j, 3.0, 0.6, 0.95);
-        SkillFx.play(level0, "entity.warden.heartbeat", c0, 0.8, 1.0);
-        SkillFx.play(level0, "item.armor.equip_netherite", c0, 0.7, 1.0);
-        JobFx.charge(sp, j, new Vec3(-0.45, 0.95, 0.25), draw, 0.7); // 0.51.0 뽑는 동안 칼집 쪽으로 핏빛이 모임
-        RuneKit.later(draw, () -> {
+        Vec3 f = Kit.facingOf(sp);
+        RpgCombat.setSteadfast(sp, slamAt + 6);
+        Ult.sky(level0, c0, "rpg:ult_bloodmoon", pillarAt + 40);
+        Ult.flash(level0, c0, MOON_GLOW, Opt.of("radius", 9.0, "time", new double[] {0.04, 0.08, 0.5}), sp);
+        // 앞 하늘의 핏빛 달 (보름달 · 붉은 테 — 천천히 커짐) · 종소리 · 낮은 울림
+        double moonLife = (pillarAt + 30) / 20.0;
+        Vec3 moonAt = V.up(V.add(c0, f, 20), 11);
+        JobFx.moon(level0, moonAt, 6.5, 0, 1, moonLife, Opt.of("fade", 0.12, "alpha", 0.95, "grow", 0.12), MOON_GLOW, MOON_CORE);
+        JobFx.moon(level0, moonAt, 7.4, 7, 1, moonLife, Opt.of("fade", 0.12, "alpha", 0.55, "grow", 0.12), MOON_GLOW, MOON_CORE);
+        SkillFx.play(level0, "block.bell.resonate", c0, 0.5, 1.0);
+        SkillFx.play(level0, "ambient.cave", c0, 0.6, 0.8);
+        SkillFx.play(level0, "mob.wither.ambient", c0, 0.6, 0.5);
+        // 칼을 얼굴 앞에 세움: 칼에 피가 모임 · 발밑 핏빛 고리
+        JobFx.charge(sp, j, new Vec3(0.05, 1.7, 0.5), leapAt, 1.0);
+        JobFx.ring(level0, V.up(c0, 0.08), range * 0.35, j, true, drainAt / 20.0 + 0.2, Opt.of("alpha", 0.8));
+        // drainAt: 둘레 적들의 피를 빨아들임 (피 튀김 · 피 줄기 → 내 몸 · 회복)
+        RuneKit.later(drainAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            ServerLevel level = sp.level();
-            Vec3 look = sp.getViewVector(1F);
-            Vec3 f = Kit.facingOf(sp);
-            Vec3 dir = V.unit(new Vec3(look.x, look.y * 0.4, look.z));
-            Vec3 from = V.up(V.add(sp.position(), f, 0.6), 1.15);
-            double len = Math.max(2, RuneKit.rayLength(level, from, dir, range));
-            LivingEntity hit = null;
-            double ht = len;
-            for (Kit.LineHit lh : RuneKit.lineTargets(sp, from, dir, len, k.num("width", 2.4) / 2)) {
-                if (lh.t() < ht) {
-                    ht = lh.t();
-                    hit = lh.e();
-                }
-            }
-            double travel = hit != null ? ht : len;
-            int arrive = Math.max(1, (int) Math.round(travel / speed * 20));
-            // 핏빛 칼날 (1인칭 눈앞 · 3인칭 날아가는 판)
-            JobFx.slash(sp, j, 2.3, 0.2, 3.2, -4.0, 0.3);
-            JobFx.bigWave(level, sp, V.add(from, dir, 1.0), dir, speed, 2.8, 176.0, travel / speed + 0.12, j, Opt.empty()); // 0.51.0 거대한 핏빛 초승달 검기
-            for (double s = 1; s < travel; s += 1.2) {
-                double ss = s;
-                RuneKit.later((int) Math.round(s / speed * 20), () -> JobTraits5.drop(level, V.add(from, dir, ss), V.DOWN, 0.13, JobFx.outer(j), 0.5, Opt.of("speed", 1.6,
-                        "fade", 0.4)));
-            }
-            SkillFx.play(level, "item.trident.throw", from, 0.75, 1.0);
-            SkillFx.play(level, "entity.player.attack.sweep", from, 0.6, 1.0);
-            LivingEntity tgt = hit;
-            Vec3 endAt = V.add(from, dir, travel);
-            if (tgt != null) JobKit.strike(sp, tgt, j, P, k.num("blade", 10), false, false, life, arrive, d -> {
-                JobImpact.hit(sp, tgt, j, 1.6);
-                if (tgt.level() instanceof ServerLevel lv) splash(lv, Kit.bodyPoint(tgt), 1.4 + Kit.bodyPad(tgt) * 0.5, j, 8);
-            });
-            // 날아감: 칼날이 닿은 틱부터 fly 틱 (적 앞 · 칼날이 멈춘 자리)
-            RuneKit.later(arrive, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 to = tgt != null && !tgt.isRemoved() ? tgt.position() : new Vec3(endAt.x, RuneKit.groundAt(sp.level(), endAt, sp.getY()), endAt.z);
-                Vec3 d = V.flat(V.sub(to, sp.position()));
-                Vec3 u = V.len(d) < 1e-3 ? Kit.facingOf(sp) : V.unit(d);
-                double want = Math.max(0, Math.hypot(to.x - sp.getX(), to.z - sp.getZ()) - (tgt != null ? 1.2 + Kit.bodyPad(tgt) : 0));
-                double free = Kit.reachFlat(sp.level(), sp.position(), u, want);
-                Vec3 spot = V.add(sp.position(), u, free);
-                RuneKit.shadeClone(sp, sp.level(), sp.position(), u, 1, SHADE, JobKit.glow(j), Opt.of("life", 0.55, "fade", 0.6, "alpha", 0.85));
-                JobMove.run(sp, JobMove.hop(0, fly, from2 -> new Vec3(spot.x, from2.y, spot.z), Math.min(4.0, 1.5 + free * 0.15)));
-                JobKit.motionLater(sp, "bloodknight_ult:fly", 0, life);
-                for (int t = 1; t < fly; t++) {
-                    RuneKit.later(t, () -> {
-                        if (!RuneKit.sameLife(sp, life)) return;
-                        JobTraits5.drop(sp.level(), V.up(sp.position(), 0.9), V.DOWN, 0.13, JobFx.outer(j), 0.5, JobFx.hide1p(sp).with("speed", 1.5, "fade", 0.4));
-                    });
-                }
-                RuneKit.later(fly, () -> {
-                    if (RuneKit.sameLife(sp, life)) landing(sp, j, k, P, tgt, slashes, every, life);
+            ServerLevel lv = sp.level();
+            List<LivingEntity> near = JobKit.near(sp, range, 32);
+            int healed = Math.min(near.size(), (int) k.num("healMax", 5));
+            for (int q = 0; q < near.size(); q++) {
+                LivingEntity e = near.get(q);
+                boolean stream = q < 8;
+                JobKit.strike(sp, e, j, P, k.num("drain", 8), true, false, life, 0, d -> {
+                    splash(lv, Kit.bodyPoint(e), 0.9, j, 4);
+                    JobImpact.fx(sp, e, j, 1.0);
+                    if (stream) bloodReturn(sp, j, Kit.bodyPoint(e));
                 });
+            }
+            JobFx.ring(lv, V.up(sp.position(), 0.08), 2.2, j, false, 0.45, Opt.of("alpha", 0.95));
+            SkillFx.play(lv, "entity.warden.heartbeat", sp.position(), 0.8, 1.0);
+            SkillFx.play(lv, "entity.generic.drink", sp.position(), 0.6, 0.7);
+            if (healed > 0) RuneKit.later(8, () -> {
+                if (RuneKit.sameLife(sp, life)) JobTraits5.leech(sp, j, sp.getMaxHealth() * k.num("heal", 0.02) * healed);
             });
+        });
+        // leapAt ~ slamAt: 달을 향해 높이 뛰어올라 (머리 위 칼에 핏빛 불길) 1칸 앞에 내리꽂음
+        double land = 1.0;
+        JobMove.run(sp,
+                JobMove.to(leapAt, slamAt - 5, from -> V.up(V.add(from, f, 0.6), 5.5), JobMove.OUT),
+                JobMove.hold(slamAt - 5, slamAt - 3),
+                JobMove.to(slamAt - 3, slamAt, from -> ground(sp.level(), V.add(c0, f, land)), JobMove.IN));
+        JobKit.motionLater(sp, k.id() + ":leap", leapAt, life);
+        RuneKit.later(leapAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            JobFx.charge(sp, j, new Vec3(0.05, 2.3, 0.2), slamAt - leapAt - 2, 1.3);
+            JobFx.aura(sp, j, 3.0, (slamAt - leapAt) / 20.0, 0.9);
+            SkillFx.play(sp.level(), "entity.player.attack.sweep", sp.position(), 0.5, 0.8);
+            SkillFx.play(sp.level(), "item.trident.riptide_2", sp.position(), 0.7, 0.8);
+        });
+        double lead = land + 0.8;
+        RuneKit.later(slamAt, () -> {
+            if (RuneKit.sameLife(sp, life)) crescent(sp, j, k, P, c0, f, lead, life);
+        });
+        RuneKit.later(pillarAt, () -> {
+            if (RuneKit.sameLife(sp, life)) pillars(sp, j, k, P, c0, f, lead, life);
         });
         return true;
     }
 
-    /** X 베기 동작 (:x0 · :x1) 의 첫 베기가 닿는 틱 (동작이 이만큼 먼저 나감 — tools/job_motions_d.py) */
-    static final int X_HIT = 1;
-
-    /** 내리꽂음 (둘레 slamRadius 칸) → every 틱마다 X 자 베기 (그 적 — 쓰러졌으면 둘레 4칸의 가장 가까운 적) · 쓰러뜨리면 회복 (한 번) */
-    private static void landing(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, LivingEntity tgt, List<Double> slashes, int every, String life) {
+    /**
+     * 초승달 핏빛 검기 (slamAt): 내리꽂은 자리의 터짐 · 피 튀김 · 앞으로 달리는 거대한 세로 초승달 둘 (겹친 잔상) · 길을 따라 갈라지는 땅 · 충격파 · 1인칭 눈앞 세로 베기
+     * — 길 (앞 lead ~ lead + length 칸 · 폭 width) 의 적에게 지나가는 틱에 crescent
+     */
+    private static void crescent(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 c0, Vec3 f, double lead, String life) {
         ServerLevel level = sp.level();
-        Vec3 c = sp.position();
-        Vec3 f = tgt != null && !tgt.isRemoved() ? V.unit(V.flat(V.sub(tgt.position(), c))) : Kit.facingOf(sp);
-        if (!(V.len(f) > 0.5)) f = Kit.facingOf(sp);
-        JobKit.motion(sp, "bloodknight_ult:slam");
-        JobFx.slashCard(level, V.up(V.add(c, f, 1.0), 1.4), f, 95.0, 4.6, 0.32, V.ZERO, j, JobFx.hide1p(sp));
-        JobFx.slash(sp, j, 2.2, -0.05, 3.1, 95.0, 0.3);
-        JobFx.groundWave(level, sp, c, f, 2.1, 6.0, 24, j); // 0.51.0 내리꽂은 자리에서 앞으로 달리는 세로 검기
-        JobFx.smash(level, V.up(c, 0.05), k.num("slamRadius", 3.5) + 0.5, j, 0.6, Opt.empty());
-        splash(level, V.up(c, 0.6), 3.2, j, 16);
-        crack(level, new Vec3(c.x, RuneKit.groundAt(level, V.up(c, 1), c.y), c.z), f, 5.0);
-        RuneKit.rockBurst(level, V.up(c, 0.2), 10, 4.6, 0.19);
-        SkillFx.play(level, "item.mace.smash_ground_heavy", c, 0.8, 1.0);
-        SkillFx.play(level, "entity.warden.heartbeat", c, 1.0, 1.0);
-        for (LivingEntity e : Kit.around(sp, V.up(c, 0.6), k.num("slamRadius", 3.5), 2.8)) {
-            JobKit.strike(sp, e, j, P, k.num("slam", 10), false, false, life, 0, d -> {
-                JobImpact.hit(sp, e, j, 1.7);
-                if (JobKit.pushable(e) && e != tgt) RuneKit.knock(e, V.flat(V.sub(e.position(), c)), 0.35, 0.25);
+        double len = k.num("length", 12);
+        double half = k.num("width", 4) / 2;
+        double speed = Math.max(10, k.num("speed", 30));
+        Vec3 hit = ground(level, V.add(c0, f, lead - 0.5));
+        JobFx.two(level, "jimpact", JobImpact.IMPACT, V.up(hit, 0.8), 0.35, Opt.of("size", 2.2, "spin", Kit.rand() * 360, "fade", 0.25), JobFx.outer(j), MOON_CORE);
+        JobFx.burst(level, V.up(hit, 0.6), 2.4, j, 0.42, Opt.empty());
+        JobFx.smash(level, V.up(hit, 0.05), 3.2, j, 0.5, Opt.empty());
+        splash(level, V.up(hit, 0.8), 1.6, j, 10);
+        Vec3 from = V.up(V.add(c0, f, lead), 1.9);
+        JobFx.bigWave(level, sp, from, f, speed, 3.8, 90, len / speed + 0.15, j, Opt.empty());
+        RuneKit.later(2, () -> JobFx.bigWave(level, null, from, f, speed, 3.0, 84, len / speed + 0.1, j, MOON_GLOW, MOON_CORE, Opt.of("alpha", 0.6)));
+        WarlordSkills.rift(level, ground(level, V.add(c0, f, lead)), f, len, JobFx.outer(j), 1.6, speed);
+        SkillFx.shock(level, V.up(hit, 0.1), JobFx.outer(j), 4.0, 0.5);
+        RuneKit.rockBurst(level, V.up(hit, 0.3), 10, 6.5, 0.2);
+        JobFx.slash(sp, j, 2.3, 0.2, 3.2, 96.0, 0.3);
+        Ult.flash(level, hit, MOON_CORE, Opt.empty(), sp);
+        SkillFx.play(level, "random.explode", hit, 0.8, 0.9);
+        SkillFx.play(level, "item.mace.smash_ground_heavy", hit, 0.7, 1.0);
+        SkillFx.play(level, "item.trident.thunder", hit, 0.8, 0.6);
+        for (LivingEntity e : ArcanebladeSkills.inLine(sp, c0, f, lead, lead + len, half)) {
+            int at = (int) Math.ceil(Math.max(0, ArcanebladeSkills.along(c0, f, e) - lead) / (speed / 20));
+            JobKit.strike(sp, e, j, P, k.num("crescent", 20), false, false, life, at, d -> {
+                JobImpact.hit(sp, e, j, 2.0);
+                splash(sp.level(), Kit.bodyPoint(e), 1.0, j, 5);
             });
         }
-        boolean[] healed = {false};
-        for (int s = 0; s < slashes.size(); s++) {
-            int ss = s;
-            double mult = slashes.get(s);
-            boolean lastOne = s == slashes.size() - 1;
-            // 동작 (:x0 · :x1) 을 먼저 보내고 X_HIT 틱 뒤에 벰 (동작의 첫 대각 베기가 닿는 틱 — 멈칫이 벤 자세에 걸리게)
-            RuneKit.later(every * (s + 1) - X_HIT, () -> {
-                if (RuneKit.sameLife(sp, life)) JobKit.motion(sp, "bloodknight_ult:x" + (ss % 2));
-            });
-            RuneKit.later(every * (s + 1), () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
+    }
+
+    /**
+     * 피의 기둥 (pillarAt ~): 갈라진 땅을 따라 1.5칸마다 pillarSpeed 칸/틱으로 피가 솟구침 (위로 솟는 핏빛 검기 · 핏빛 가시 · 피 튀김 · 불티) — 길의 적에게 닿는 틱에
+     * pillar (큰 숫자) · 띄움
+     */
+    private static void pillars(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 c0, Vec3 f, double lead, String life) {
+        ServerLevel level = sp.level();
+        double len = k.num("length", 12);
+        double half = k.num("width", 4) / 2;
+        double speed = Math.max(0.5, k.num("pillarSpeed", 1.5));
+        Vec3 right = V.rightOf(f);
+        for (double s = lead; s <= lead + len + 1e-6; s += 1.5) {
+            double ss = s;
+            int at = (int) Math.ceil((s - lead) / speed);
+            RuneKit.later(at, () -> {
                 ServerLevel lv = sp.level();
-                LivingEntity e = tgt != null && !tgt.isRemoved() && tgt.isAlive() && tgt.distanceToSqr(sp) <= 36 ? tgt : nearest(sp, 4.0);
-                Vec3 ff = e != null ? V.unit(V.flat(V.sub(e.position(), sp.position()))) : Kit.facingOf(sp);
-                if (!(V.len(ff) > 0.5)) ff = Kit.facingOf(sp);
-                double t1 = ss % 2 == 0 ? 35.0 : 145.0;
-                Vec3 at = V.up(V.add(sp.position(), ff, 1.1), 1.2);
-                JobFx.slashCard(lv, at, ff, t1, 4.0, 0.26, V.ZERO, j, JobFx.hide1p(sp));
-                JobFx.slashCard(lv, at, ff, 180 - t1, 4.0, 0.26, V.ZERO, j, JobFx.hide1p(sp));
-                JobFx.slash(sp, j, 2.2, 0.2, 2.9, t1, 0.24);
-                SkillFx.play(lv, "entity.player.attack.sweep", at, 0.8 + 0.08 * ss, 1.0);
-                if (e == null) return;
-                LivingEntity ee = e;
-                Vec3 fff = ff;
-                JobKit.strike(sp, ee, j, P, mult, false, lastOne, life, 0, d -> {
-                    JobImpact.hit(sp, ee, j, lastOne ? 2.0 : 1.3);
-                    if (ee.level() instanceof ServerLevel l2) {
-                        splash(l2, Kit.bodyPoint(ee), 1.0 + Kit.bodyPad(ee) * 0.5, j, 6);
-                        // 0.51.0 맞은 자리에 X 자 큰 검기 (마지막은 더 크게)
-                        double s2 = (lastOne ? 1.7 : 1.2) + Kit.bodyPad(ee) * 0.5;
-                        JobFx.bigWave(l2, null, Kit.bodyPoint(ee), fff, 0, s2, 45, 0.26, j, Opt.empty());
-                        JobFx.bigWave(l2, null, Kit.bodyPoint(ee), fff, 0, s2, -45, 0.26, j, Opt.empty());
-                    }
-                    if (!healed[0] && ee == tgt && (ee.isRemoved() || !ee.isAlive() || ee.isDeadOrDying())) {
-                        healed[0] = true;
-                        double got = JobTraits5.leech(sp, j, sp.getMaxHealth() * k.num("heal", 0.2));
-                        bloodReturn(sp, j, Kit.bodyPoint(ee));
-                        if (got > 0) mmorpg.fabric.DamageNumbers.show(sp, got, mmorpg.fabric.DamageNumbers.Style.HEAL, "", 0);
-                    }
-                });
+                Vec3 g = ground(lv, V.add(V.add(c0, f, ss), right, (Kit.rand() - 0.5) * 0.7));
+                double q = 1 - (ss - lead) / Math.max(1, len) * 0.3;
+                JobFx.bigWave(lv, null, V.up(g, 0.4), V.UP, 15.0, 1.8 * q, 90 + (Kit.rand() - 0.5) * 30, 0.36, j, Opt.empty());
+                JobFx.spikeLife(lv, g, 1.1 * q, 0.1, 0.4, Opt.empty(), MOON_GLOW, MOON_CORE);
+                JobTraits5.blood(lv, V.up(g, 1.4), 1.4 * q, j, 0.4, Opt.empty());
+                SkillFx.sparks(lv, V.up(g, 1.0), JobFx.inner(j), 8, 6.0);
+                if (((int) Math.round(ss / 1.5)) % 2 == 0) SkillFx.play(lv, "random.explode", g, 1.2, 0.5);
+            });
+        }
+        SkillFx.play(level, "entity.warden.sonic_boom", V.add(c0, f, lead + len * 0.4), 0.7, 0.5);
+        for (LivingEntity e : ArcanebladeSkills.inLine(sp, c0, f, lead, lead + len, half)) {
+            int at = (int) Math.ceil(Math.max(0, ArcanebladeSkills.along(c0, f, e) - lead) / speed);
+            JobKit.strike(sp, e, j, P, k.num("pillar", 12), false, true, life, at, d -> {
+                JobImpact.hit(sp, e, j, 2.3);
+                splash(sp.level(), Kit.bodyPoint(e), 1.2, j, 6);
+                if (JobKit.pushable(e)) Kit.launch(e, 0, 1.0, 0);
             });
         }
     }

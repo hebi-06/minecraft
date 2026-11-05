@@ -46,10 +46,9 @@ public final class JobKit {
         double counter = JobTraits4.counterTake(sp, j);
         // 0.51.0 소드마스터 치명 (투지 8 에서 쓴 스킬 — 위력 × 1.3 · 치명 숫자)
         double crit = JobTraits5.critMult(sp, j);
-        double forge = JobTraits5.forgeMult(sp, j); // 0.51.0 소드마스터 다시 벼린 칼 (벼린 칼 동안 +20%)
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투 (상대 + 결투 × 3% · 다른 적 −40%)
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위 (하나당 +6%)
-        double dmg = P * mult * veil * crit * forge * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double dmg = P * mult * veil * crit * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
@@ -111,10 +110,9 @@ public final class JobKit {
         double veil = JobTraits3.firstHit(sp, j); // 0.29.0 암영의 첫 타
         double counter = JobTraits4.counterTake(sp, j); // 0.30.0 반격 게이지
         double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
-        double forge = JobTraits5.forgeMult(sp, j); // 0.51.0 소드마스터 다시 벼린 칼 (벼린 칼 동안 +20%)
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위
-        double dmg = P * mult * veil * crit * forge * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double dmg = P * mult * veil * crit * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로

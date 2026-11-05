@@ -8,9 +8,9 @@
 몸 쓰는 직업 기준 (제 몸 · 제 도끼 동작만). 몸이 뜨는 단계 (홀름강의 뛰어듦 · 마지막 내려찍기) 는 다리를 이 파일에서 직접 (softLegs 끔)."""
 import rune_motion_kit as K
 from job_motions_d import LUNGE_DEEP, carry_spin, diag, diag_back, first, impacts, strike_with
-from rune_motion_kit import (A_CROSS, A_GUARD, A_JAB, A_POINT, A_SPREAD, FP_CHAMBER, FP_DOWN, FP_GUARD, FP_JAB, FP_JAB2, FP_LOW, FP_PUSH_OUT, FPL_RAISE2H,
-                             FPW_BACK, FPW_DOWN, FPW_LOW, FPW_SKY, FPW_SPREAD, FPW_UP, W_HIGH2, W_READY, L, P, arm, bent, fpl, fpw, keyp, nudge, off_bare,
-                             spin_right, use_skill)
+from rune_motion_kit import (A_CROSS, A_GUARD, A_JAB, A_POINT, A_THROW_FOLLOW, A_THROW_REL, A_THROW_WIND, FP_CHAMBER, FP_DOWN, FP_GUARD, FP_JAB, FP_JAB2,
+                             FP_LOW, FP_PUSH_OUT, FPL_RAISE2H, FPW_BACK, FPW_DOWN, FPW_LOW, FPW_SKY, FPW_SPREAD, FPW_UP, W_HIGH2, W_READY, L, P, arm, bent, fpl,
+                             fpw, keyp, nudge, off_bare, spin_right, use_skill)
 
 Motion = K.Motion
 
@@ -137,33 +137,38 @@ m.set(softLegs=False)
 impacts(m, 12.0)
 use_skill(m, "warlord_hug")
 
-# 거인의 무게 (태세 — 효과: 0 몸의 기운 → 6 한 발로 땅을 구름 (둘레가 갈라지고 돌창 넷))
-TITAN_LIFT = P(body=[-4, -10, -8], head=[-6, 0], ra=bent([0.5, 0.6, -0.3], 120, (-0.3, 1, -0.2)), la=arm([-0.9, 0.2, 0.25], 15), rl=[-80, 0, 8], rk=96,
-               ll=[-4, 0, -6], lk=16, root=[0.04, 0])  # 오른발을 높이 들고 도끼를 어깨에 메고 왼팔로 균형 (시코)
-TITAN_STOMP = P(body=[22, 4, 6], head=[0, 0], ra=bent([0.5, 0.55, -0.3], 120, (-0.3, 1, -0.2)), la=arm([-0.8, -0.3, 0.4], 20), rl=[-12, 0, 16], ll=[-10, 0, -14],
-                rk=58, lk=52, root=[-0.36, 0])  # 발을 구르며 크게 낮아짐
-TITAN_STANCE = P(body=[16, 0, 0], head=[-4, 0], ra=arm([0.3, -0.35, 0.88], 70, [-0.85, 0.3, 0.4]), la=bent([-0.2, -0.3, 0.92], 70, (0.8, 0.4, 0)),
-                 rl=[-8, 0, 16], ll=[-8, 0, -16], rk=50, lk=50, root=[-0.3, 0])  # 넓게 낮게 버티며 도끼를 두 손으로 앞에 가로로
-m = Motion("warlord_titan", 30, "거인의 무게 — 도끼를 어깨에 메고 오른발을 높이 들었다가 땅을 굴러 크게 낮아지고, 넓게 버티며 도끼를 두 손으로 앞에 가로로 쥠", fade=(0.03, 0.12))
+# 베어 스톰프 (효과: 0 등 뒤에 곰의 혼 · 도끼에 빛 (두 손으로 머리 위에 들고 웅크림) → 4 ~ 16 조준한 곳으로 뛰어오름 (JobMove.hop — 4.5칸 높이) · 거대한
+# 곰의 혼이 함께 내려옴 → 16 내려찍음 (둘레 · 띄움 · 맞히면 멈칫) → 26 땅이 갈라지며 둘레로 솟음). 롤 볼리베어 R — 하늘에서 몸을 젖혀 도끼를 끝까지 들었다가
+# 떨어지며 두 손으로 내려찍고 깊이 웅크려 버팀 (몸이 뜨는 동안 다리를 직접 — softLegs 끔)
+STOMP_CROUCH = P(AXE_OVER, body=[24, 0, 0], head=[-20, 0], rl=[-40, 0, 10], ll=[-40, 0, -10], rk=84, lk=84, root=[-0.34, 0])  # 도끼를 머리 위에 들고 깊이 웅크림
+STOMP_AIR = P(AXE_OVER, body=[-22, 0, 0], head=[-24, 0], rl=[-60, 0, 8], rk=100, ll=[-30, 0, -8], lk=80, root=[0, 0.1])  # 하늘에서 몸을 젖히고 다리를 접음
+STOMP_FALL = P(AXE_OVER, body=[-30, 0, 0], head=[-30, 0], rl=[-24, 0, 10], rk=50, ll=[-10, 0, -10], lk=30, root=[0, 0.1])  # 떨어지며 도끼를 끝까지 젖힘 (다리를 폄)
+m = Motion("warlord_stomp", 30, "베어 스톰프 — 도끼를 두 손으로 머리 위에 들고 깊이 웅크렸다가 높이 뛰어올라 하늘에서 몸을 젖히고 다리를 접은 채, 떨어지며 도끼를 끝까지 "
+           "젖혔다가 내려찍고 깊이 웅크려 버틴 뒤 일어섬", fade=(0.03, 0.12))
 off_bare(m)
-keyp(m, 3.4, TITAN_LIFT, "out3")
-keyp(m, 4.8, P(TITAN_LIFT, rl=[-86, 0, 8], rk=100, root=[0.06, 0]), "out")
-keyp(m, 6.0, TITAN_STOMP, "in")
-keyp(m, 8.6, P(TITAN_STOMP, body=[18, 2, 2], root=[-0.32, 0]))
-keyp(m, 12.0, TITAN_STANCE, "out3")
-keyp(m, 18.0, P(TITAN_STANCE, body=[18, 0, 0], root=[-0.32, 0]))
-keyp(m, 23.0, P(TITAN_STANCE, body=[15, 0, 0], root=[-0.29, 0]))
-keyp(m, 28.4, P(W_READY, body=[10, 6, 0], rk=30, lk=26))
-fpw(m, 3.4, dict(p=(0.25, 0.35, 0.45), blade=(0.2, 0.6, -0.8)), "out3")
-fpw(m, 6.0, dict(p=(0.2, 0.2, 0.4), blade=(0.25, 0.5, -0.85)), "in")
-fpw(m, 12.0, dict(p=(-0.3, -0.1, -0.2), blade=(-0.95, 0.15, 0.25)), "out3")
-fpw(m, 23.0, dict(p=(-0.3, -0.12, -0.2), blade=(-0.95, 0.15, 0.25)))
-fpw(m, 28.4, FPW_LOW)
-fpl(m, 3.4, nudge(FP_PUSH_OUT, (0.3, 0.0, 0.15), (0, -25, 0)), "out3")
-fpl(m, 12.0, nudge(FP_GUARD, (-0.1, -0.15, -0.05)), "out3")
-fpl(m, 28.4, FP_LOW)
+keyp(m, 2.0, STOMP_CROUCH, "out3")
+keyp(m, 3.6, P(STOMP_CROUCH, body=[30, 0, 0], rk=94, lk=94, root=[-0.4, 0]))
+keyp(m, 6.0, STOMP_AIR, "out")
+keyp(m, 11.0, P(STOMP_AIR, body=[-26, 0, 0], head=[-28, 0], rl=[-64, 0, 8], rk=104))
+keyp(m, 14.4, STOMP_FALL, "inout")
+strike_with(m, "slam", 14.6, 16.0, 17.4, a=STOMP_FALL, b=P(AXE_IMPACT, body=[48, 0, 0], rk=88, lk=60, root=[-0.44, 0.3]))
+keyp(m, 20.0, P(AXE_IMPACT, body=[44, 0, 0], root=[-0.4, 0.28]))
+keyp(m, 26.0, P(AXE_IMPACT, body=[36, 4, 0], rk=60, lk=40, root=[-0.3, 0.22]), "inout")
+keyp(m, 29.4, P(W_READY, body=[10, 6, 0], rk=30, lk=26))
+fpw(m, 2.0, FPW_UP, "out3")
+fpw(m, 6.0, FPW_SKY, "out")
+fpw(m, 14.4, FPW_SKY, "inout", dp=(0.0, 0.08, 0.15))
+fpw(m, 16.0, FPW_DOWN, "in")
+fpw(m, 26.0, FPW_DOWN)
+fpw(m, 29.4, FPW_LOW)
+fpl(m, 2.0, FPL_RAISE2H, "out3")
+fpl(m, 14.4, FPL_RAISE2H)
+fpl(m, 16.0, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
+fpl(m, 26.0, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
+fpl(m, 29.4, FP_LOW)
 m.set(softLegs=False)
-use_skill(m, "warlord_titan")
+impacts(m, 16.0)
+use_skill(m, "warlord_stomp")
 
 # 마지막 휘두름 (효과: 0 ~ 24 도끼를 뒤로 크게 젖혀 힘을 모음 (어스름한 하늘 · 바깥 고리가 달아오름 · 곰의 혼이 솟음) → 24 둘레를 한 바퀴 (오른쪽으로 — 도끼가
 # 앞을 지나는 때 · 맞히면 멈칫 3 ~ 4틱) → 28 한 바퀴를 마치고 도끼를 뻗은 채 버팀)
@@ -306,34 +311,54 @@ fpl(m, 48.4, FP_LOW)
 impacts(m, 4.0, 14.0, 24.0, 40.0)
 use_skill(m, "gladiator_eight")
 
-# 불사의 분노 (태세 — 효과: 0 몸에서 붉은 불길이 터짐 · 고리 셋 · 포효)
-FURY_HUNCH = P(body=[34, 0, 0], head=[24, 0], ra=bent([0.25, -0.6, 0.55], 100, (-0.5, 1, 0.3)), la=L(A_CROSS), rl=[-36, 0, 10], ll=[-36, 0, -10], rk=78,
-               lk=78, root=[-0.34, 0])  # 몸을 말아 웅크림 (팔을 몸 앞에 엇갈려 분노를 모음)
-FURY_ROAR = P(body=[-22, 0, 0], head=[-36, 0], ra=arm([0.85, 0.4, 0.2], 12, [0.6, 0.75, 0.2]), la=L(A_SPREAD), rl=[0, 0, 16], ll=[0, 0, -16], rk=14, lk=14,
-              root=[0.06, 0])  # 가슴을 젖히고 팔을 활짝 펼쳐 포효 (도끼를 바깥 위로)
-m = Motion("gladiator_fury", 26, "불사의 분노 — 몸을 말아 팔을 엇갈려 분노를 모았다가, 가슴을 젖히며 도끼와 왼팔을 활짝 펼쳐 하늘을 향해 포효하고 (몸이 떨림) 낮게 싸울 자세를 잡음",
-           fade=(0.03, 0.1))
+# 액스 그라인더 (효과: 0 ~ 4 오른 어깨 뒤로 당긴 도끼날에 빛 → 4 상대에게 회전시켜 던짐 → 8 박힘 (맞히면 멈칫) → 18 · 28 박힌 채 갈아냄 → 38 뽑히며 터짐 →
+# 단계 :catch (42 — 도끼가 손으로 돌아옴)). 롤 올라프 Q — 오른 어깨 뒤로 크게 감아 낮아졌다가 크게 내디디며 앞으로 던지고, 던진 손을 앞으로 뻗은 채 몸이 따라
+# 나간 뒤 왼 주먹을 들고 싸울 자세 (도끼가 박혀 있는 동안)
+GR_WIND = P(body=[4, 34, 0], head=[-8, 0], ra=A_THROW_WIND, la=arm([0.6, 0.1, 0.75], 30), rl=[20, 0, 6], ll=[-26, 0, -6], rk=40, lk=40,
+            root=[-0.22, -0.08])  # 도끼를 오른 어깨 뒤로 크게 감고 낮아짐 (왼손은 상대를 가리킴)
+GR_REL = P(body=[22, -26, 0], head=[-8, 0], ra=A_THROW_REL, la=arm([-0.4, -0.55, 0.15], 30), root=[-0.16, 0.36], **LUNGE_DEEP)  # 크게 내디디며 앞으로 던짐
+GR_FOLLOW = P(body=[26, -30, 0], head=[-6, 0], ra=A_THROW_FOLLOW, la=arm([-0.45, -0.6, 0.1], 30), root=[-0.2, 0.4], **LUNGE_DEEP)  # 던진 손이 앞 아래로 따라감
+m = Motion("gladiator_grinder", 14, "액스 그라인더 — 도끼를 오른 어깨 뒤로 크게 감아 낮아졌다가 크게 내디디며 앞으로 회전시켜 던지고, 던진 손이 앞 아래로 따라 나간 뒤 "
+           "싸울 자세를 잡음", fade=(0.03, 0.1))
 off_bare(m)
-keyp(m, 2.0, FURY_HUNCH, "out3")
-keyp(m, 3.0, FURY_ROAR, "out")
-keyp(m, 5.0, P(FURY_ROAR, body=[-26, 0, 3], head=[-40, 0], root=[0.08, 0]))
-keyp(m, 7.0, P(FURY_ROAR, body=[-23, 0, -3], head=[-37, 0], root=[0.06, 0]))
-keyp(m, 9.0, P(FURY_ROAR, body=[-25, 0, 2], head=[-38, 0], root=[0.07, 0]))
-keyp(m, 11.0, P(FURY_ROAR, body=[-22, 0, -1], head=[-35, 0], root=[0.06, 0]))
-keyp(m, 15.0, GL_READY, "in")
-keyp(m, 20.0, P(GL_READY, body=[16, -10, 0], root=[-0.18, 0.08]))
-keyp(m, 24.4, P(W_READY, body=[8, 4, 0]))
-fpw(m, 2.0, FPW_LOW, "out3", dp=(0, -0.1, 0))
-fpw(m, 3.0, FPW_SPREAD, "out")
-fpw(m, 11.0, FPW_SPREAD, dp=(0.04, -0.04, 0))
-fpw(m, 15.0, FPW_GL, "in")
-fpw(m, 24.4, FPW_LOW)
-fpl(m, 2.0, FP_GUARD, "out3")
-fpl(m, 3.0, FP_PUSH_OUT, "out")
-fpl(m, 11.0, FP_PUSH_OUT)
-fpl(m, 15.0, FP_GUARD, "in")
-fpl(m, 24.4, FP_LOW)
-use_skill(m, "gladiator_fury")
+keyp(m, 2.4, GR_WIND, "out3")
+keyp(m, 3.4, P(GR_WIND, body=[6, 40, 0], root=[-0.25, -0.12]), "in")
+keyp(m, 4.0, GR_REL, "in")
+m.arc(4.0, "ra", (-0.2, 0.6, 1))
+m.head.setdefault("trail", []).append([m.t(3.4), m.t(5.0)])
+keyp(m, 6.4, GR_FOLLOW, "out")
+keyp(m, 10.0, P(GL_READY), "inout")
+keyp(m, 13.6, P(W_READY, body=[10, -4, 0]))
+fpw(m, 2.4, dict(p=(0.75, 0.55, 0.45), blade=(0.3, 0.75, -0.6)), "out3")
+fpw(m, 3.4, dict(p=(0.8, 0.6, 0.55), blade=(0.25, 0.7, -0.67)), "in")
+fpw(m, 4.0, FPW_SPREAD, "in", dp=(-0.3, 0.1, 0.4))
+fpw(m, 6.4, FPW_DOWN, "out")
+fpw(m, 10.0, FPW_GL, "inout")
+fpw(m, 13.6, FPW_LOW)
+fpl(m, 2.4, nudge(FP_PUSH_OUT, (0.2, 0.05, 0.15), (0, -20, 0)), "out3")
+fpl(m, 4.0, FP_LOW, "in")
+fpl(m, 10.0, FP_GUARD, "inout")
+fpl(m, 13.6, FP_LOW)
+impacts(m, 8.0)
+use_skill(m, "gladiator_grinder")
+
+# 받기 (단계 :catch — 0 = 돌아오는 도끼가 손에 닿기 2틱 전: 0 ~ 2 오른손을 앞으로 뻗어 펼침 → 2 받음 (손이 뒤로 밀림) → 도끼를 한 바퀴 돌려 싸울 자세)
+m = Motion("gladiator_grinder_catch", 12, "받기 — 오른손을 앞으로 뻗어 돌아오는 도끼를 받아 손이 뒤로 밀리고, 도끼를 손목으로 한 바퀴 돌려 싸울 자세를 잡음", fade=(0.03, 0.1))
+off_bare(m)
+first(m, P(GL_READY), FPW_GL)
+keyp(m, 1.6, P(GL_READY, body=[8, -16, 0], ra=arm([0.25, 0.25, 0.94], 6, [0.1, 0.9, 0.4])), "out3")
+keyp(m, 2.6, P(GL_READY, body=[2, 6, 0], head=[-10, 0], ra=arm([0.55, 0.1, 0.55], 50, [0.2, 0.95, -0.25]), root=[-0.1, -0.08]), "out")
+keyp(m, 5.6, P(GL_READY, body=[12, -4, 0], ra=arm([0.55, 0.0, 0.7], 70, [0.3, -0.2, 0.9])), "inout")
+keyp(m, 11.6, P(W_READY, body=[8, 4, 0]))
+m.arc(5.6, "ra", (0.6, 0.0, 1))
+fpw(m, 1.6, dict(p=(0.05, 0.1, -0.35), blade=(0.15, 0.95, 0.25)), "out3")
+fpw(m, 2.6, dict(p=(0.25, 0.25, 0.25), blade=(0.25, 0.9, -0.35)), "out")
+fpw(m, 5.6, dict(p=(0.2, -0.1, -0.05), blade=(0.35, -0.2, 0.9)), "inout")
+fpw(m, 11.6, FPW_LOW)
+fpl(m, 1.6, FP_GUARD)
+fpl(m, 11.6, FP_LOW)
+impacts(m, 2.0)
+use_skill(m, "gladiator_grinder:catch")
 
 # 홀름강 (효과: 0 결투장이 솟음 (도끼를 하늘로 · 왼손으로 상대를 가리킴 — 결투를 알림) → 5 ~ 9 상대 곁으로 뛰어듦 (JobMove.hop — 멀면) → 10 내려침 (맞히면 멈칫 3틱)
 # → 132 단계 :slam (8 내려찍음))

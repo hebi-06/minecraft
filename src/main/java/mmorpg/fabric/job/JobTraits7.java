@@ -30,8 +30,7 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  * <li>아케인 블레이드 「마력 각인」 (쌓고 터지는 것은 마검사와 같음 — JobTraits.mark · markBonus, 최대 5): 각인이 터지면 둘레 spreadRadius 칸의 다른 적에게 마력
  * 폭발이 번짐 (위력 × markBurst × spread × 터진 수 · 마법). 다섯이 찬 적을 칼 평타로 치면 다섯이 한꺼번에 터짐 — 하늘에서 거대한 마력 대검이 내리꽂힘
- * ({@link #giantSword}). 스펠 오버드라이브 (태세): 칼 평타를 휘두를 때마다 마력 검기가 앞으로 날아가 길 위의 적을 벰 (위력 × line · 마법 — 평타로 맞힌 적은 평타에
- * 더한 몫 위력 × wave · 따로 숫자)</li>
+ * ({@link #giantSword}). 4번 칸은 디멘션 슬래시 (피해 스킬 — 2026-11-05 스펠 오버드라이브 태세 대신, ArcanebladeSkills.rift)</li>
  * <li>소드 콜러 「스스로 싸우는 칼」 (1차와 거꾸로 — 내가 베는 광역 → 칼이 스스로 베는 한 적): 칼 평타를 휘두르면 마력 칼이 어깨에서 날아가 겨눈 적 (range 칸 · 둘로
  * 나뉘어라 동안 + range) 을 대신 벰 — 평타 한 번 그대로 (RpgCombat.areaHit), 둘레 범위 피해는 없음 (SwingArea.single). 가까이 조준해 바닐라 평타로 맞힌 적은 칼이
  * 그 적을 베는 그림만. 같은 적을 이어 벨 때마다 쌓임 (최대 max — lapse 틱 못 베거나 다른 적을 베면 1부터) · 하나당 공격 속도 + per (RpgCombat.attackSpeed).
@@ -43,11 +42,9 @@ public final class JobTraits7 {
 
     static final String AB = "arcaneblade";
     static final String SC = "swordcaller";
-    static final String OVERDRIVE = "arcaneblade_overdrive";
     static final String TWIN = "swordcaller_twin";
-    /** 평타에 더한 몫의 구분 (WeaponBonus.parts) — 둘째 칼 · 오버드라이브 검기 */
+    /** 평타에 더한 몫의 구분 (WeaponBonus.parts) — 둘째 칼 */
     static final String KEY_ECHO = "job_echo";
-    static final String KEY_WAVE = "job_wave";
     /** 각인 다섯 — 거대한 마력 대검이 떨어지는 틱 */
     static final int FULL_FALL = 2;
     private static final double[] WHITE = RuneKit.WHITE;
@@ -69,7 +66,6 @@ public final class JobTraits7 {
 
     static void init() {
         RpgCombat.addScaledBonusHook(JobTraits7::echoBonus);
-        RpgCombat.addScaledBonusHook(JobTraits7::waveBonus);
         RpgCombat.addWeaponHitHook(JobTraits7::onWeaponHit);
         java.util.function.BiConsumer<ServerPlayer, Weapon> sh = RpgCombat.swingHook;
         RpgCombat.swingHook = (sp, w) -> {
@@ -186,63 +182,6 @@ public final class JobTraits7 {
         });
     }
 
-    // ------------------------------------------------------------ 아케인 블레이드: 스펠 오버드라이브 (태세 — 칼 평타마다 검기)
-
-    /** 오버드라이브: 평타로 맞힌 적에 검기 몫 (위력 × wave — 직업 색 숫자) */
-    private static RpgCombat.Bonus waveBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
-        if (w == null || victim == null || !JobTraits.stanceOn(sp, OVERDRIVE)) return null;
-        Jobs.Job j = jobIf(sp, AB);
-        if (j == null || !j.usesWeapon(w.type())) return null;
-        Jobs.Skill k = j.skill(OVERDRIVE);
-        double wave = k == null ? 0.9 : JobUpgrades.num(sp, k, "wave", 0.9);
-        double add = JobSystem.power(sp, j) * wave * mmorpg.fabric.stattree.StatTrees.atkMult(sp);
-        return new RpgCombat.Bonus(add, "", KEY_WAVE, DamageNumbers.Style.JOB, null, JobKit.grad(j));
-    }
-
-    /**
-     * 오버드라이브 동안 칼 평타를 휘두름 (Slash.once — 허공 포함): 1틱 뒤 마력 검기가 칼 높이에서 앞으로 날아감 (waveLen 칸 · waveSpeed 칸/틱 — 휘두를 때마다 기울기가 번갈아)
-     * → 길 위 (폭 waveWidth) 의 다른 적 (이번 휘두르기로 맞은 적 — 조준 · 범위 — 은 빼고: 그 몫은 waveBonus) 을 지나가는 틱에 벰 (위력 × line · 마법)
-     */
-    private static void overdriveSwing(ServerPlayer sp, Jobs.Job j) {
-        Jobs.Skill k = j.skill(OVERDRIVE);
-        if (k == null) return;
-        String life = RuneKit.lifeToken(sp);
-        State st = of(sp);
-        st.left = !st.left;
-        boolean left = st.left;
-        RuneKit.later(1, () -> {
-            if (!RuneKit.sameLife(sp, life) || !JobTraits.stanceOn(sp, OVERDRIVE)) return;
-            ServerLevel level = sp.level();
-            java.util.Set<UUID> swung = SwingArea.swingVictims(sp);
-            Vec3 c = sp.position();
-            Vec3 f = Kit.facingOf(sp);
-            double len = k.num("waveLen", 6.0);
-            double speed = Math.max(0.5, k.num("waveSpeed", 1.5));
-            double half = k.num("waveWidth", 2.0) / 2;
-            double L = Math.min(len, RuneKit.rayLength(level, V.up(c, 1.1), f, len + 0.5));
-            JobFx.bigWave(level, sp, V.up(V.add(c, f, 0.9), 1.15), f, speed * 20, 1.35, left ? 12 : -12, Math.max(0.12, L / speed / 20.0 + 0.08), j, Opt.empty());
-            SkillFx.play(level, "entity.player.attack.sweep", c, 1.3, 0.5);
-            double P = JobSystem.power(sp, j);
-            double mult = JobUpgrades.num(sp, k, "line", 0.45);
-            Vec3 right = V.rightOf(f);
-            for (LivingEntity e : Kit.around(sp, V.add(c, f, L / 2), L / 2 + 1.5, 2.5)) {
-                if (swung.contains(e.getUUID())) continue;
-                Vec3 d = V.sub(e.position(), c);
-                double along = d.x * f.x + d.z * f.z;
-                double side = Math.abs(d.x * right.x + d.z * right.z);
-                double pad = Kit.bodyPad(e);
-                if (along < 0.3 - pad || along > L + 0.4 + pad || side > half + pad) continue;
-                int at = (int) Math.ceil(Math.max(0, along - 0.9) / speed);
-                JobKit.hitLater(sp, e, life, Tasks.now() + at, () -> {
-                    if (JobKit.hit(sp, e, j, P, mult, true, false) > 0 && e.level() instanceof ServerLevel lv && RuneKit.fxQuota("jobOverdrive", 8)) {
-                        JobFx.cross(lv, Kit.bodyPoint(e), 0.7 + Kit.bodyPad(e) * 0.5, j, 0.22, Opt.empty());
-                        JobImpact.fx(sp, e, j, 0.8);
-                    }
-                });
-            }
-        });
-    }
-
     // ------------------------------------------------------------ 소드 콜러: 스스로 싸우는 칼
 
     /** 칼을 날리는 소드 콜러인지 (그 직업의 칼을 듦 — 둘레 범위 피해 없음 · SwingArea.single) */
@@ -309,11 +248,6 @@ public final class JobTraits7 {
      * 없으면 칼이 날아가 노린 적을 벰 (닿는 틱에 평타 한 번), 노릴 적이 없으면 칼이 앞으로 날았다 돌아옴
      */
     private static void onSwing(ServerPlayer sp, Weapon w) {
-        Jobs.Job ab = jobIf(sp, AB);
-        if (ab != null && w != null && ab.usesWeapon(w.type()) && JobTraits.stanceOn(sp, OVERDRIVE)) {
-            overdriveSwing(sp, ab);
-            return;
-        }
         Jobs.Job j = jobIf(sp, SC);
         if (j == null || w == null || !j.usesWeapon(w.type())) return;
         String life = RuneKit.lifeToken(sp);
@@ -536,22 +470,11 @@ public final class JobTraits7 {
     }
 
     /**
-     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 스펠 오버드라이브 = 손의 칼에서 흘러넘치는 마력 (보라 빛 알갱이가 칼날을 따라 오름 · 칼끝 반짝임 · 발밑에 이따금 룬
-     * 고리) / 제미니 소드 = 손의 칼에서 흩날리는 청록 빛살. 그렸으면 true
+     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 제미니 소드 = 손의 칼에서 흩날리는 청록 빛살. 그렸으면 true
      */
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
         ServerLevel level = sp.level();
         RuneKit.Hand h = RuneKit.handOf(sp);
-        if (OVERDRIVE.equals(stance)) {
-            Vec3 blade = V.up(V.add(h.hand(), h.f(), 0.3), 0.5);
-            for (int i = 0; i < 2; i++) {
-                SkillFx.fx(level, "rpg:arrow_spark", V.add(blade, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.35), Opt.of("dir", V.UP, "speed", 1.6,
-                        "size", 0.12, "grow", 0.5, "life", 0.4, "color", i == 0 ? JobFx.inner(j) : JobFx.outer(j), "alpha", 1.0));
-            }
-            JobFx.glint(level, V.up(blade, 0.4), 0.35, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
-            if (Kit.rand() < 0.3) JobFx.runeRing(level, V.up(sp.position(), 0.08), 1.1, j, 6, Kit.rand() * 60, 0.4, JobFx.hide1p(sp).with("alpha", 0.55));
-            return true;
-        }
         if (TWIN.equals(stance)) {
             Vec3 blade = V.up(V.add(h.hand(), h.f(), 0.3), 0.4);
             SkillFx.fx(level, "rpg:arrow_spark", blade, Opt.of("dir", V.unit(new Vec3(Kit.rand() - 0.5, 1, Kit.rand() - 0.5)), "speed", 1.2, "size", 0.1, "grow", 0.6,

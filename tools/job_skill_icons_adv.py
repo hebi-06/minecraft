@@ -148,21 +148,32 @@ def swordmaster_blood(A, B):
 
 
 def swordmaster_ult(A, B):
-    # 다시 벼린 칼: 아래의 모루 · 그 위에 곧게 선 빛나는 칼 (벼림) · 튀는 불티 · 뒤를 크게 가로지르는 은빛 검풍
-    wind = mask()
-    crescent(wind, 16.0, 30.0, 25.0, 3.0, 198, 342)
-    anvil = mask()
-    poly(anvil, [(7.0, 22.0), (26.0, 22.0), (24.0, 25.0), (19.0, 25.0), (19.0, 27.0), (23.0, 30.0), (9.0, 30.0), (13.0, 27.0), (13.0, 25.0), (8.0, 25.0)])
-    poly(anvil, [(2.0, 22.0), (7.5, 22.0), (7.5, 24.4)])
-    sw = gold_sword((16.0, 1.4), (16.0, 21.6), blade=3.4, guard=9.0)
+    # 스타폴 블레이드: 오른쪽 위 하늘에서 칼끝을 아래로 내리꽂히는 금빛 칼 (불타는 혜성 — 뒤로 넓어지는 불꼬리) · 꽂힌 땅의 큰 번쩍임 · 둥글게 솟는 불꽃 ·
+    # 뒤의 작은 혜성 둘 (여섯 번 떨어짐 — 2026-11-05 사용자 "검사 궁 2갸 다른걸로 바꾸자 멋이 안난다", 유성 연참)
+    tail = mask()
+    tapered(tail, [(13.0, 24.6), (19.4, 15.0), (27.0, 4.6), (33.0, -3.0)], 2.6, 12.0)
+    tail_hi = mask()
+    tapered(tail_hi, [(13.0, 24.6), (19.0, 15.6), (25.4, 7.0), (30.0, 1.0)], 1.4, 4.6)
+    small = mask()
+    small_hi = mask()
+    for hx, hy, L in ((5.6, 13.6, 9.0), (27.2, 21.0, 7.4)):
+        ux, uy = 0.6, -0.8
+        tapered(small, [(hx, hy), (hx + ux * L, hy + uy * L)], 1.6, 4.2)
+        disc(small_hi, hx, hy, 1.1)
+    gnd = ground(26.4)
+    dome = mask()
+    crescent(dome, 12.0, 27.0, 7.4, 1.6, 186, 354)
+    sw = gold_sword((11.6, 27.0), (21.4, 12.6), blade=3.0, guard=8.0)
+    flash = mask()
+    star(flash, 11.8, 26.4, 6.0, 0.16, 0)
     sp = mask()
-    for cx, cy, r in ((7.0, 15.0, 2.4), (25.0, 12.5, 2.6), (22.0, 19.5, 1.8), (10.5, 8.0, 1.6)):
-        star(sp, cx, cy, r, 0.22)
-    hot = mask()
-    disc(hot, 16.0, 21.8, 3.0)
-    subject = stack(layer(wind, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.35), axis=(1, 0)), layer(anvil, (120, 126, 140), (52, 56, 70), (170, 176, 190), (24, 26, 34)),
-                    layer(hot, FIRE_HI, FIRE_C), *sw, layer(sp, WHITE, GOLD_HI))
-    return finish(subject, [glow(lighter(sp, hot), A, 1.8, 1.0), glow(wind, B, 1.2, 0.8)], backdrop(mix(A, NIGHT, 0.84), mix(A, (70, 50, 20), 0.4)))
+    for cx, cy, r in ((4.0, 22.0, 1.6), (20.6, 24.0, 1.8), (7.6, 4.0, 1.4)):
+        star(sp, cx, cy, r, 0.24)
+    subject = stack(layer(tail, mix(FIRE_C, A, 0.45), mix(FIRE_C, (60, 10, 0), 0.4), FIRE_HI, None, axis=(0.6, -0.8)),
+                    layer(tail_hi, WHITE, FIRE_HI), layer(small, mix(FIRE_C, A, 0.5), mix(FIRE_C, (60, 10, 0), 0.5)), layer(small_hi, WHITE, FIRE_HI),
+                    ground_layer(gnd, A), layer(dome, FIRE_HI, FIRE_C, WHITE, None), *sw, layer(flash, WHITE, FIRE_HI), layer(sp, WHITE, GOLD_HI))
+    return finish(subject, [glow(lighter(tail, small), FIRE_C, 2.0, 1.0), glow(lighter(flash, dome), A, 1.8, 1.0)],
+                  backdrop(mix(A, NIGHT, 0.86), mix(A, (90, 40, 10), 0.4)))
 
 
 # ------------------------------------------------------------ 블러드 나이트 (빛: 짙은 피 → 밝은 피) — 0.51.0 재설계안 2판
@@ -256,24 +267,36 @@ def bloodknight_frenzy(A, B):
 
 
 def bloodknight_ult(A, B):
-    # 칼을 뽑다: 뒤의 핏빛 달 · 아래 검은 칼집에서 반쯤 뽑혀 나온 검붉은 칼 (자루가 위) · 칼집 어귀에서 뿜어지는 핏방울
+    # 블러드 문: 위의 거대한 핏빛 달 (어두운 바다 · 붉게 타는 테 · 둥근 빛무리) · 아래 둘레의 적에게서 달로 빨려 오르는 핏줄기 셋 (위로 오르는 핏방울) · 땅을
+    # 가로지르는 거대한 핏빛 초승달 검기 (뛰어올라 내려찍음 — 2026-11-05 사용자 "검사 궁 2갸 다른걸로 바꾸자 멋이 안난다")
+    halo = mask()
+    disc(halo, 16.0, 11.0, 11.6)
     moon = mask()
-    disc(moon, 16.0, 12.0, 10.0)
+    disc(moon, 16.0, 11.0, 8.6)
+    maria = mask()
+    for cx, cy, r in ((13.0, 8.6, 2.6), (18.8, 13.6, 2.2), (19.4, 7.4, 1.4), (12.4, 14.2, 1.2)):
+        disc(maria, cx, cy, r)
     rim = mask()
-    ring(rim, 16.0, 12.0, 10.0, 1.2)
-    sw = blood_sword((16.0, 27.0), (16.0, 3.2), A, B, blade=3.4, guard=9.4)
-    sheath = mask()
-    line(sheath, [(16.0, 19.4), (16.0, 30.6)], 4.2)
-    fit = mask()
-    poly(fit, [(13.2, 18.6), (18.8, 18.6), (18.8, 20.4), (13.2, 20.4)])
+    ring(rim, 16.0, 11.0, 8.8, 1.3)
+    streams = mask()
+    line(streams, [(3.6, 29.0), (7.0, 23.6), (10.4, 18.6)], 0.8)
+    line(streams, [(28.4, 29.0), (25.0, 23.6), (21.6, 18.6)], 0.8)
+    line(streams, [(16.0, 30.6), (16.0, 20.4)], 0.8)
     drops = mask()
-    for cx, cy, r, a in ((9.0, 18.0, 1.3, 200), (23.0, 17.5, 1.3, -20), (6.0, 23.5, 1.1, 170), (26.0, 23.0, 1.1, 10), (11.5, 14.0, 1.0, 230)):
-        drop(drops, cx, cy, r, a + 180)
+    drop(drops, 6.4, 24.6, 1.3, 122)
+    drop(drops, 25.6, 24.6, 1.3, 58)
+    drop(drops, 16.0, 23.6, 1.3, 90)
+    wave = mask()
+    crescent(wave, 16.0, 40.0, 15.0, 4.2, 214, 326)
+    wave_hi = mask()
+    crescent(wave_hi, 16.0, 40.0, 15.2, 1.3, 222, 318)
     dark = mix(A, (0, 0, 0), 0.45)
-    subject = stack(layer(moon, mix(A, B, 0.35), mix(A, (0, 0, 0), 0.35), None, None), layer(rim, mix(B, WHITE, 0.4), B), *sw,
-                    layer(sheath, (46, 34, 40), (14, 10, 12), (90, 70, 80), (6, 4, 6)), layer(fit, (150, 140, 146), (60, 54, 58), WHITE, None),
-                    layer(drops, mix(B, WHITE, 0.2), A, mix(B, WHITE, 0.55), dark))
-    return finish(subject, [glow(lighter(rim, drops), B, 1.8, 1.0)], backdrop(mix(A, DUSK, 0.8), mix(A, (90, 12, 16), 0.45)))
+    subject = stack(layer(moon, mix(A, B, 0.5), mix(A, (0, 0, 0), 0.2), None, None, axis=(0.6, 0.8)),
+                    layer(maria, mix(A, (0, 0, 0), 0.3), mix(A, (0, 0, 0), 0.5)), layer(rim, mix(B, WHITE, 0.5), B),
+                    layer(streams, mix(B, WHITE, 0.2), A), layer(drops, mix(B, WHITE, 0.25), A, mix(B, WHITE, 0.6), dark),
+                    layer(wave, mix(B, WHITE, 0.35), A, mix(B, WHITE, 0.65), dark, axis=(1, 0)), layer(wave_hi, WHITE, mix(B, WHITE, 0.5)))
+    return finish(subject, [glow(halo, B, 2.6, 0.75), glow(rim, B, 1.4, 1.0), glow(lighter(wave, streams), B, 1.6, 0.9)],
+                  backdrop(mix(A, DUSK, 0.8), mix(A, (90, 12, 16), 0.45)))
 
 
 # ------------------------------------------------------------ 워로드 (빛: 주황 → 갈색 곰 기운)
@@ -448,35 +471,46 @@ def warlord_hug(A, B):
     return finish(subject, [glow(lighter(clash, sweep, eyes), A, 1.8, 1.0), glow(head, A, 1.3, 0.4)], warlord_back(A, B))
 
 
-def warlord_titan(A, B):
-    # 거인의 무게: 크게 내리디딘 쇠 장화 (옆모습 · 발끝 오른쪽 · 정강이 판 · 굵은 밑창) · 위에서 내리누르는 무게 줄 · 발밑에서 부채꼴로 갈라지는 땅 · 양옆 흙먼지
-    boot = mask()
-    poly(boot, [(10.6, 2.6), (19.0, 2.6), (19.4, 14.0), (25.4, 15.6), (28.2, 18.0), (28.6, 22.4), (8.4, 22.4), (8.2, 17.4), (10.6, 15.0)])
-    plates = mask()
-    line(plates, [(10.8, 6.6), (19.0, 6.6)], 0.9)
-    line(plates, [(10.8, 11.0), (19.2, 11.0)], 0.9)
-    line(plates, [(19.6, 15.4), (21.0, 22.0)], 0.7)
-    sole = mask()
-    poly(sole, [(7.6, 21.6), (29.2, 21.6), (29.2, 24.0), (7.6, 24.0)])
-    weight = mask()
-    for x, y0, y1 in ((4.6, 2.0, 13.0), (6.8, 6.0, 15.0), (23.4, 2.0, 11.0), (26.2, 5.0, 13.0)):
-        poly(weight, [(x - 0.55, y0), (x + 0.55, y0), (x, y1)])
-    gnd = ground(23.6)
+def warlord_stomp(A, B):
+    # 베어 스톰프: 하늘에서 내리찍는 거대한 곰 발자국 (빛나는 곰의 혼 — 발바닥 볼록 · 발가락 넷 · 흰 발톱) · 위로 흐르는 바람 줄 (내려치는 중) · 발밑 땅의 번쩍임 ·
+    # 부채꼴로 갈라지는 땅 · 양옆에서 기울어 솟는 돌창 · 땅의 충격 고리 (롤 볼리베어 R — 2026-11-05 거인의 무게 대신)
+    pad = mask()
+    poly(pad, [(9.6, 16.2), (12.0, 12.4), (16.0, 11.0), (20.0, 12.4), (22.4, 16.2), (21.6, 19.6), (18.6, 21.0), (16.0, 19.8), (13.4, 21.0), (10.4, 19.6)])
+    toes = mask()
+    claws = mask()
+    for cx, cy, rx, ry, ang in ((8.4, 9.4, 2.2, 2.8, -28), (13.0, 5.8, 2.3, 3.0, -9), (19.0, 5.8, 2.3, 3.0, 9), (23.6, 9.4, 2.2, 2.8, 28)):
+        pts = []
+        for i in range(20):
+            t = math.radians(i * 18)
+            x, y = math.cos(t) * rx, math.sin(t) * ry
+            a = math.radians(ang)
+            pts.append((cx + x * math.cos(a) - y * math.sin(a), cy + x * math.sin(a) + y * math.cos(a)))
+        poly(toes, pts)
+        a = math.radians(ang - 90)
+        bx, by = cx + math.cos(a) * (ry - 0.2), cy + math.sin(a) * (ry - 0.2)
+        px, py = -math.sin(a), math.cos(a)
+        poly(claws, [(bx + px * 1.0, by + py * 1.0), (bx + math.cos(a) * 3.4, by + math.sin(a) * 3.4), (bx - px * 1.0, by - py * 1.0)])
+    wind = mask()
+    for x, y0, y1 in ((4.0, 1.0, 7.0), (2.4, 12.0, 18.0), (28.0, 1.0, 7.0), (29.6, 12.0, 18.0), (16.0, 0.0, 3.4)):
+        poly(wind, [(x - 0.55, y0), (x + 0.55, y0), (x, y1)])
+    gnd = ground(25.4)
     cracks = mask()
-    line(cracks, [(18.0, 24.0), (18.6, 27.4), (17.6, 31.0)], 1.0)
-    line(cracks, [(12.0, 24.0), (8.0, 26.6), (3.0, 30.0)], 0.9)
-    line(cracks, [(24.0, 24.0), (27.4, 26.6), (31.0, 28.6)], 0.9)
-    dust = mask()
-    for x, y, r in ((5.0, 21.4, 2.2), (2.6, 19.4, 1.4), (30.0, 21.0, 1.8), (31.0, 18.6, 1.0)):
-        disc(dust, x, y, r)
+    line(cracks, [(16.0, 25.4), (10.4, 27.6), (4.0, 30.6)], 1.0)
+    line(cracks, [(16.0, 25.4), (21.6, 27.6), (28.0, 30.6)], 1.0)
+    line(cracks, [(16.0, 25.4), (16.8, 28.2), (15.6, 31.0)], 0.9)
+    spikes = mask()
+    for bx, h, lean, w in ((4.0, 8.0, -2.0, 4.0), (28.0, 8.0, 2.0, 4.0)):
+        rock_spike(spikes, bx, 26.0, h, lean, w)
     shock = mask()
-    pts = [(18.0 + math.cos(math.radians(a)) * 15.0, 25.0 + math.sin(math.radians(a)) * 3.6) for a in range(0, 181, 6)]
-    line(shock, pts, 0.9)
-    iron = (120, 112, 104)
-    subject = stack(ground_layer(gnd, B), layer(shock, mix(A, WHITE, 0.4), A), layer(cracks, WHITE, A), layer(dust, mix(ROCK_HI, WHITE, 0.2), ROCK, None, ROCK_LO),
-                    layer(weight, WHITE, mix(A, WHITE, 0.2)), layer(boot, mix(iron, WHITE, 0.35), iron, mix(A, WHITE, 0.45), (44, 38, 34), axis=(0.7, 0.7)),
-                    layer(plates, mix(A, WHITE, 0.35), A), layer(sole, (60, 40, 26), (30, 18, 10)))
-    return finish(subject, [glow(lighter(cracks, shock), A, 1.6, 1.0), glow(lighter(plates, weight), A, 1.2, 0.6)], warlord_back(A, B))
+    oval(shock, 16.0, 25.8, 13.6, 3.0, 0.9)
+    clash = mask()
+    star(clash, 16.0, 24.6, 5.4, 0.16, 0)
+    deep = mix(A, (60, 20, 0), 0.35)
+    subject = stack(ground_layer(gnd, B), layer(shock, mix(A, WHITE, 0.35), A), layer(cracks, WHITE, A), rock_layer(spikes, A),
+                    layer(wind, mix(A, WHITE, 0.4), A), layer(pad, mix(A, WHITE, 0.45), deep, WHITE, mix(deep, (0, 0, 0), 0.4), axis=(0.3, 0.95)),
+                    layer(toes, mix(A, WHITE, 0.45), deep, WHITE, mix(deep, (0, 0, 0), 0.4), axis=(0.3, 0.95)), layer(claws, WHITE, mix(A, WHITE, 0.5)),
+                    layer(clash, WHITE, A))
+    return finish(subject, [glow(lighter(pad, toes), A, 2.0, 1.0), glow(lighter(clash, cracks, shock), A, 1.6, 0.9)], warlord_back(A, B))
 
 
 def warlord_ult(A, B):
@@ -614,26 +648,34 @@ def gladiator_eight(A, B):
     return finish(subject, [glow(lighter(arms, heads), A, 1.6, 0.9), glow(eyes, B, 1.4, 1.0)], gladiator_back(A, B))
 
 
-def gladiator_fury(A, B):
-    # 불사의 분노: 붉은 불길에 싸인 사람 (몸 · 머리 · 팔을 벌림) · 위로 솟는 불길 · 가슴의 꺼지지 않는 불씨 (체력 1) · 둘레 고리
-    fire = mask()
-    for x, h in ((9.0, 14.0), (13.0, 20.0), (16.0, 24.0), (19.0, 20.0), (23.0, 14.0)):
-        poly(fire, [(x - 3.0, 28.0), (x + 3.0, 28.0), (x + 0.6, 28.0 - h), (x - 0.6, 28.0 - h + 2.0)])
-    man = mask()
-    disc(man, 16.0, 10.6, 2.6)
-    poly(man, [(13.2, 13.6), (18.8, 13.6), (18.2, 22.0), (13.8, 22.0)])
-    line(man, [(13.6, 14.4), (8.4, 10.0)], 1.6)
-    line(man, [(18.4, 14.4), (23.6, 10.0)], 1.6)
-    line(man, [(14.6, 21.6), (13.0, 27.0)], 1.7)
-    line(man, [(17.4, 21.6), (19.0, 27.0)], 1.7)
-    ember = mask()
-    disc(ember, 16.0, 16.4, 1.6)
-    rim = mask()
-    crescent(rim, 16.0, 28.0, 12.0, 1.4, 196, 344)
-    dark = mix(A, (0, 0, 0), 0.6)
-    subject = stack(layer(fire, mix(A, WHITE, 0.35), A, mix(B, WHITE, 0.4), dark, axis=(0, 1)), layer(rim, mix(B, WHITE, 0.3), B),
-                    layer(man, mix(A, (0, 0, 0), 0.55), mix(A, (0, 0, 0), 0.75)), layer(ember, WHITE, B))
-    return finish(subject, [glow(fire, A, 1.8, 0.9), glow(ember, B, 2.0, 1.0)], gladiator_back(A, B))
+def gladiator_grinder(A, B):
+    # 액스 그라인더: 가운데에서 도는 큰 도끼 (비스듬히) · 도끼를 둘러싼 굵은 회전 궤적 (휜 띠 셋 — 끝이 밝음) · 왼쪽 아래에서 날아온 점선 · 둘레로 튀는 핏방울 ·
+    # 불티 (롤 올라프 Q — 2026-11-05 불사의 분노 대신)
+    spin = mask()
+    for a0 in (-40, 80, 200):
+        crescent(spin, 16.6, 14.6, 12.6, 3.2, a0, a0 + 92)
+    spin_hi = mask()
+    for a0 in (-40, 80, 200):
+        crescent(spin_hi, 16.6, 14.6, 12.8, 1.0, a0 + 40, a0 + 92)
+    trail = mask()
+    for i in range(3):
+        t0, t1 = 0.05 + i * 0.3, 0.05 + i * 0.3 + 0.15
+        x0, y0 = 1.0 + (7.6 - 1.0) * t0, 31.0 + (24.4 - 31.0) * t0
+        x1, y1 = 1.0 + (7.6 - 1.0) * t1, 31.0 + (24.4 - 31.0) * t1
+        line(trail, [(x0, y0), (x1, y1)], 1.3)
+    axes = axe_layers((21.6, 8.2), (10.8, 21.4), blade=8.4, tint=A, side=1)
+    drops = mask()
+    drop(drops, 29.6, 21.0, 1.3, 200)
+    drop(drops, 24.0, 28.4, 1.2, 250)
+    drop(drops, 3.4, 9.0, 1.1, -20)
+    sp = mask()
+    for cx, cy, r in ((29.0, 4.0, 2.0), (6.0, 3.4, 1.6), (20.0, 29.4, 1.6)):
+        star(sp, cx, cy, r, 0.22)
+    blood = mix(A, (120, 0, 0), 0.5)
+    subject = stack(layer(spin, mix(B, WHITE, 0.25), mix(A, B, 0.35), WHITE, mix(A, (0, 0, 0), 0.4), axis=(1, 0)), layer(spin_hi, WHITE, mix(B, WHITE, 0.4)),
+                    layer(trail, mix(B, WHITE, 0.2), A), *axes, layer(drops, mix(blood, WHITE, 0.3), blood, mix(A, WHITE, 0.5), mix(blood, (0, 0, 0), 0.5)),
+                    layer(sp, WHITE, B))
+    return finish(subject, [glow(lighter(spin, spin_hi), A, 1.8, 1.0), glow(sp, B, 1.2, 0.8)], gladiator_back(A, B))
 
 
 def gladiator_ult(A, B):
@@ -780,23 +822,56 @@ def arcaneblade_tempest(A, B):
     return finish(subject, [glow(lighter(swirl, flash), A, 1.8, 1.0), glow(gnd, A, 1.2, 0.6)], arcane_back(A, B))
 
 
-def arcaneblade_overdrive(A, B):
-    # 스펠 오버드라이브: 커다랗게 빛나는 마력 칼 (비스듬히 — 칼끝 오른쪽 위) · 칼날을 감싼 넘치는 빛 · 칼날을 따라 오르는 빛줄기 · 손잡이 곁의 룬 글자 · 칼끝 반짝임
-    aura = mask()
-    tapered(aura, [(9.0, 23.4), (17.4, 14.0), (28.4, 2.2)], 6.4, 1.6)
-    streaks = mask()
-    for off, (a, b) in ((-3.0, (0.25, 0.7)), (3.0, (0.35, 0.85)), (-1.6, (0.6, 0.95))):
-        x0, y0 = 6.6 + (27.4 - 6.6) * a, 26.0 + (3.2 - 26.0) * a
-        x1, y1 = 6.6 + (27.4 - 6.6) * b, 26.0 + (3.2 - 26.0) * b
-        line(streaks, [(x0 + off * 0.74, y0 + off * 0.67), (x1 + off * 0.74, y1 + off * 0.67)], 0.5)
-    sw = rune_sword((27.0, 3.6), (5.4, 27.6), A, B, blade=3.4, guard=8.0)
-    rune = mask()
-    glyph(rune, 1, 23.0, 23.0, 6.0, 7.6, 1.1)
-    flash = mask()
-    star(flash, 27.0, 3.8, 3.6, 0.2, 10)
-    subject = stack(layer(aura, mix(A, RUNE_NIGHT, 0.2), mix(A, RUNE_NIGHT, 0.55)), layer(streaks, WHITE, mix(B, WHITE, 0.3)), *sw, layer(rune, WHITE, B),
-                    layer(flash, WHITE, B))
-    return finish(subject, [glow(lighter(aura, flash), A, 2.2, 1.0), glow(lighter(streaks, rune), B, 1.0, 0.8)], arcane_back(A, B))
+def arcaneblade_rift(A, B):
+    # 디멘션 슬래시: 비스듬히 가로지르는 차원의 틈 (찢긴 들쭉날쭉한 청록 테 · 끝이 뾰족 — 검은 속의 보라 소용돌이 · 별빛) · 틈을 가르고 양끝 너머로 뻗은 흰 검기 ·
+    # 네 귀퉁이에서 틈으로 빨려 드는 빛줄기 (끌어당김 — 2026-11-05 스펠 오버드라이브 대신, 게임의 rfx_jtear 와 같은 꼴)
+    import random as _r
+    rnd = _r.Random(4117)
+    ang = math.radians(-10)
+    ca, sa = math.cos(ang), math.sin(ang)
+
+    def rot(x, y):
+        dx, dy = x - 16.0, y - 16.0
+        return (16.0 + dx * ca - dy * sa, 16.0 + dx * sa + dy * ca)
+
+    top, bot = [], []
+    n = 16
+    for i in range(n + 1):
+        x = 2.0 + 28.0 * i / n
+        u = abs(x - 16.0) / 14.0
+        env = max(0.0, 1 - u ** 2.0) ** 0.85
+        jt = 0.7 + rnd.random() * 0.5
+        jb = 0.7 + rnd.random() * 0.5
+        top.append(rot(x + rnd.uniform(-0.5, 0.5), 16.0 - 5.0 * env * jt))
+        bot.append(rot(x + rnd.uniform(-0.5, 0.5), 16.0 + 4.6 * env * jb))
+    tear = mask()
+    poly(tear, top + bot[::-1])
+    edge = mask()
+    line(edge, top, 1.1)
+    line(edge, bot, 1.1)
+    swirl = mask()
+    ribbon(swirl, 16.0, 16.0, 7.6, 2.2, 170, 370, 0.8, 0.15)
+    ribbon(swirl, 16.0, 16.0, 3.8, 1.2, -10, 190, 0.6, 0.1)
+    swirl = ImageChops.multiply(swirl, tear)
+    stars = mask()
+    for x, y, r in ((9.6, 16.8, 0.6), (22.0, 14.8, 0.7), (12.6, 18.0, 0.5), (24.4, 13.2, 0.5)):
+        disc(stars, x, y, r)
+    cut = mask()
+    p0, p1 = rot(-0.6, 16.0), rot(32.6, 16.0)
+    slash(cut, p0[0], p0[1], p1[0], p1[1], 1.8)
+    pulls = mask()
+    for x0, y0 in ((2.0, 3.0), (30.0, 4.0), (3.0, 29.0), (29.6, 28.0)):
+        x1, y1 = x0 + (16.0 - x0) * 0.42, y0 + (16.0 - y0) * 0.42
+        tapered(pulls, [(x0, y0), (x1, y1)], 0.4, 1.6)
+        dx, dy = x1 - x0, y1 - y0
+        L = math.hypot(dx, dy)
+        ux, uy = dx / L, dy / L
+        px, py = -uy, ux
+        poly(pulls, [(x1 + ux * 2.2, y1 + uy * 2.2), (x1 + px * 1.6, y1 + py * 1.6), (x1 - px * 1.6, y1 - py * 1.6)])
+    dark = mix(A, (0, 0, 0), 0.4)
+    subject = stack(layer(pulls, mix(A, WHITE, 0.45), A, WHITE, dark), layer(tear, (16, 6, 36), (4, 2, 10)), layer(swirl, mix(A, WHITE, 0.25), A),
+                    layer(stars, WHITE, mix(B, WHITE, 0.5)), layer(edge, mix(B, WHITE, 0.55), B), layer(cut, WHITE, mix(B, WHITE, 0.6)))
+    return finish(subject, [glow(lighter(edge, cut), B, 1.8, 1.0), glow(lighter(tear, pulls), A, 2.0, 0.8)], arcane_back(A, B))
 
 
 def arcaneblade_ult(A, B):
@@ -1852,17 +1927,17 @@ ICONS = {
     "warlord_rend": warlord_rend,
     "warlord_slumber": warlord_slumber,
     "warlord_hug": warlord_hug,
-    "warlord_titan": warlord_titan,
+    "warlord_stomp": warlord_stomp,
     "warlord_ult": warlord_ult,
     "gladiator_flurry": gladiator_flurry,
     "gladiator_hook": gladiator_hook,
     "gladiator_eight": gladiator_eight,
-    "gladiator_fury": gladiator_fury,
+    "gladiator_grinder": gladiator_grinder,
     "gladiator_ult": gladiator_ult,
     "arcaneblade_crescent": arcaneblade_crescent,
     "arcaneblade_cross": arcaneblade_cross,
     "arcaneblade_tempest": arcaneblade_tempest,
-    "arcaneblade_overdrive": arcaneblade_overdrive,
+    "arcaneblade_rift": arcaneblade_rift,
     "arcaneblade_ult": arcaneblade_ult,
     "swordcaller_strike": swordcaller_strike,
     "swordcaller_shift": swordcaller_shift,

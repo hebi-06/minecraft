@@ -485,21 +485,17 @@ public final class RpgJobTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 2));
-            // 사거리는 같은 틱의 앞뒤를 비교 (시험 플레이어는 창작 모드 — 첫 틱에 사거리 +2 가 붙음)
+            // 0.51.0 스펠 가이저 (마검 각성 태세 대신 — 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 태세가 아님 · 사거리 그대로
             double r0 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-            h.assertTrue(JobSkills.press(sp, 3), "마검 각성 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "spellblade_awaken"), "awaken stance");
-            double r1 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-            h.assertTrue(JobTraits.reachBonus(sp) == 1 && Math.abs(r1 - r0 - 1) < 1e-9, "awaken reach +1: bonus " + JobTraits.reachBonus(sp) + ", " + r0 + " -> " + r1);
+            h.assertTrue(JobSkills.press(sp, 3), "스펠 가이저 cast");
+            h.assertTrue(!JobTraits.stanceOn(sp, "spellblade_awaken") && JobTraits.reachBonus(sp) == 0
+                    && Math.abs(sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE) - r0) < 1e-9, "geyser is not a stance");
         }));
-        // 마검 각성: 평타 + 위력 × 0.93 잔상
-        steps.add(new Step(12, () -> {
-            RpgCombat.forceCrit = false;
-            double base = basic(sp, w);
-            sp.attack(z.get(0));
-            RpgCombat.forceCrit = null;
-            double echo = JobSystem.power(sp, j) * 0.93 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), base + echo), "awaken echo " + TestDummies.dealt(z.get(0)) + " vs " + (base + echo));
+        // 스펠 가이저: 룬 원 6 + 마력 기둥 14.4 (태세 칸 몫 12 × 1.7) · 각인 하나
+        steps.add(new Step(24, () -> {
+            double want = expected(sp, j, j.skill(3), 20.4);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "스펠 가이저 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits.marks(sp, z.get(0)) == 1, "geyser mark 1: " + JobTraits.marks(sp, z.get(0)));
         }));
         // 비전 거검: 11 × 3 + 35 + 각인 하나 (거검 첫 베기가 찍은 것) 터짐
         steps.add(new Step(12, () -> {
@@ -514,11 +510,7 @@ public final class RpgJobTests {
             h.assertTrue(JobTraits.marks(sp, z.get(0)) == 0, "all marks detonated");
         }));
         chain(h, steps, 0, () -> {
-            double during = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-            h.assertTrue(JobTraits.stanceOn(sp, "spellblade_awaken") && JobTraits.reachBonus(sp) == 1, "awaken still on at the end");
             cleanup(sp);
-            double after = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-            h.assertTrue(JobTraits.reachBonus(sp) == 0 && Math.abs(during - after - 1) < 1e-9, "reach restored on job change: " + during + " -> " + after);
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });
@@ -673,19 +665,24 @@ public final class RpgJobTests {
             z.set(0, dummy(h, 2));
             z.add(dummy(h, 4.5));
             JobTraitsMore.setChain(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 3), "마나 과부하 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "mage_overload") && RpgCombat.rangedMod.range(sp, w) == 4 && RpgCombat.rangedMod.pierce(sp, w) > 0,
-                    "overload: range +4, pierce");
+            // 0.51.0 프리즘 레이 (마나 오버로드 태세 대신 — 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 태세가 아님 · 완드 평타 그대로
+            h.assertTrue(JobSkills.press(sp, 3), "프리즘 레이 cast");
+            h.assertTrue(!JobTraits.stanceOn(sp, "mage_overload") && RpgCombat.rangedMod.range(sp, w) == 0 && RpgCombat.rangedMod.pierce(sp, w) == 0,
+                    "prism is not a stance (wand unchanged)");
+        }));
+        // 프리즘 레이: 광선 2.4 × 4 + 다섯 갈래 7.2 (태세 칸 몫 12 × 1.4) — 광선 · 가운데 갈래가 앞의 과녁 둘을 다 꿰뚫음
+        steps.add(new Step(54, () -> {
+            double want = expected(sp, j, j.skill(3), 16.8);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want) && near(TestDummies.dealt(z.get(1)), want), "프리즘 레이 " + TestDummies.dealt(z.get(0)) + " / "
+                    + TestDummies.dealt(z.get(1)) + " vs " + want);
             t0[0] = JobSkills.cooldownLeft(sp, "mage_overload");
             t0[1] = mmorpg.fabric.Tasks.now();
             RpgCombat.forceCrit = false;
             RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, null);
         }));
-        // 관통 광선: 앞의 과녁 둘 다 · 완드가 맞으면 재사용 대기 −6틱
+        // 완드가 맞으면 재사용 대기 −6틱
         steps.add(new Step(16, () -> {
             RpgCombat.forceCrit = null;
-            h.assertTrue(TestDummies.dealt(z.get(0)) > 0 && TestDummies.dealt(z.get(1)) > 0, "beam pierces: " + TestDummies.dealt(z.get(0)) + " / "
-                    + TestDummies.dealt(z.get(1)));
             long left = JobSkills.cooldownLeft(sp, "mage_overload");
             long el = mmorpg.fabric.Tasks.now() - t0[1];
             h.assertTrue(left <= t0[0] - el - 6 + 1, "wand hit cuts job cooldowns by 6: " + t0[0] + " - " + el + " -> " + left);
@@ -1698,12 +1695,12 @@ public final class RpgJobTests {
         double before = sp.getHealth();
         h.assertTrue(JobSkills.press(sp, 0), "치유의 손길 +5 cast");
         h.assertTrue(close(sp.getHealth() - before, RpgHealth.maxOf(sp) * 0.18, 0.01), "heal +5 = 18%: " + (sp.getHealth() - before));
-        // 매지션: 마나 과부하 +5 → 태세 300틱
-        JobSystem.setJob(sp, "mage");
-        hold(sp, Weapons.weaponFrom("wand", 0, "common"));
-        JobUpgrades.set(sp, "mage_overload", 5);
-        h.assertTrue(JobSkills.press(sp, 3), "마나 과부하 +5 cast");
-        h.assertTrue(JobTraits.stanceOn(sp, "mage_overload") && JobTraits.stanceTotal(sp) == 300, "overload +5 lasts 300 ticks: " + JobTraits.stanceTotal(sp));
+        // 성기사: 수호의 맹세 +5 → 태세 300틱 (0.51.0 매지션 마나 오버로드가 피해 스킬 (프리즘 레이) 이 되어 성기사로)
+        JobSystem.setJob(sp, "paladin");
+        hold(sp, Weapons.weaponFrom("hammer", 0, "common"));
+        JobUpgrades.set(sp, "paladin_oath", 5);
+        h.assertTrue(JobSkills.press(sp, 3), "수호의 맹세 +5 cast");
+        h.assertTrue(JobTraits.stanceOn(sp, "paladin_oath") && JobTraits.stanceTotal(sp) == 300, "oath +5 lasts 300 ticks: " + JobTraits.stanceTotal(sp));
         // 값: 암영 첫 공격 (1 을 넘는 몫) · 바람 타기 덧쏘기 · 맹세 오라 (up 키 아님)
         Jobs.Skill veil = Jobs.job("assassin").skill("assassin_veil");
         Jobs.Skill wind = Jobs.job("archer").skill("archer_wind");
@@ -1714,7 +1711,7 @@ public final class RpgJobTests {
         h.assertTrue(close(JobUpgrades.num(sp, veil, "first", 2.5), 3.25, 1e-9), "veil +5 first ×3.25");
         h.assertTrue(close(JobUpgrades.num(sp, wind, "extra", 1), 1.3, 1e-9), "wind +3 extra 130%");
         h.assertTrue(JobUpgrades.ticks(sp, oath, "dur", 200) == 300 && close(JobUpgrades.num(sp, oath, "aura", 0.15), 0.15, 1e-9), "oath +5: 300 ticks, aura unchanged");
-        for (String id : List.of("priest_heal", "mage_overload", veil.id(), wind.id(), oath.id())) JobUpgrades.set(sp, id, 0);
+        for (String id : List.of("priest_heal", veil.id(), wind.id(), oath.id())) JobUpgrades.set(sp, id, 0);
         cleanup(sp);
         RpgGearTests.done(h, sp);
     }

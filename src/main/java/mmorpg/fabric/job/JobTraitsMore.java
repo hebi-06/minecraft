@@ -96,7 +96,6 @@ public final class JobTraitsMore {
             }
         };
         RpgCombat.addCritBonusHook(JobTraitsMore::critAdd);
-        RpgCombat.addRangedCooldownHook(JobTraitsMore::rangedCd);
         RpgCombat.addWeaponHitHook(JobTraitsMore::onWeaponHit);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             STATES.clear();
@@ -387,19 +386,15 @@ public final class JobTraitsMore {
 
     // ------------------------------------------------------------ 활 · 완드 평타 (RpgCombat.RangedMod · 훅)
 
-    /** 사거리 +: 궁수 활 = 호흡 × rangePer, 매지션 완드 (마나 과부하) = range */
+    /** 사거리 +: 궁수 활 = 호흡 × rangePer (0.51.0 매지션 4번 칸이 프리즘 레이 — 완드 평타 강화는 뺌) */
     static double rangeAdd(ServerPlayer sp, Weapon w) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return 0;
         if (breathJob(j) && "bow".equals(w.type())) return breath(sp) * trait(j, "rangePer", 1);
-        if (j.id().equals("mage") && "wand".equals(w.type()) && JobTraits.stanceOn(sp, "mage_overload")) {
-            Jobs.Skill k = skill(j, "mage_overload");
-            return k == null ? 4 : k.num("range", 4);
-        }
         return 0;
     }
 
-    /** 관통 폭: 궁수 활 (정조준) · 매지션 완드 (마나 과부하) */
+    /** 관통 폭: 궁수 활 (정조준) · 스나이퍼 */
     static double pierceWidth(ServerPlayer sp, Weapon w) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return 0;
@@ -417,10 +412,6 @@ public final class JobTraitsMore {
             int max = j.trait() == null ? 8 : Math.max(1, j.trait().max());
             if (st != null && st.breath >= max) return trait(j, "snipeWidth", 0.6);
         }
-        if (j.id().equals("mage") && "wand".equals(w.type()) && JobTraits.stanceOn(sp, "mage_overload")) {
-            Jobs.Skill k = skill(j, "mage_overload");
-            return k == null ? 0.8 : k.num("width", 0.8);
-        }
         return 0;
     }
 
@@ -431,16 +422,8 @@ public final class JobTraitsMore {
         return k == null ? 0.2 : JobUpgrades.num(sp, k, "crit", 0.2); // 0.31.0 강화
     }
 
-    /** 공격 간격 배율: 매지션 완드 (마나 과부하) */
-    static double rangedCd(ServerPlayer sp, Weapon w) {
-        if (w == null || !"wand".equals(w.type()) || !JobTraits.stanceOn(sp, "mage_overload") || jobIf(sp, "mage") == null) return 1;
-        Jobs.Skill k = skill(JobSystem.job(sp), "mage_overload");
-        return k == null ? 0.6 : k.num("cdScale", 0.6);
-    }
-
     /**
-     * 쏨: 궁수 — 움직이지 않았으면 호흡 +1 (손에 작은 과녁 빛), 바람 타기가 남았으면 follow 틱 뒤 한 발 더 (평타와 같은 피해 · 빛의 화살) / 정조준이면 화살 끝 금빛.
-     * 매지션 — 마나 과부하의 굵은 광선
+     * 쏨: 궁수 — 움직이지 않았으면 호흡 +1 (손에 작은 과녁 빛), 바람 타기가 남았으면 follow 틱 뒤 한 발 더 (평타와 같은 피해 · 빛의 화살) / 정조준이면 화살 끝 금빛
      */
     private static void onFired(ServerPlayer sp, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist) {
         Jobs.Job j = JobSystem.job(sp);
@@ -489,14 +472,6 @@ public final class JobTraitsMore {
         if (j.id().equals(JobTraits9.SH) && "bow".equals(w.type())) {
             JobTraits9.onFired(sp, j, w, target, from, dir, dist); // 0.51.0 섀도 헌터: 움직이며 쏘면 추격 +1
             return;
-        }
-        if (j.id().equals("mage") && "wand".equals(w.type()) && JobTraits.stanceOn(sp, "mage_overload")) {
-            Vec3 end = V.add(from, dir, Math.max(1, dist));
-            JobFx.beam(level, V.add(from, dir, 0.6), end, j, 2.6, 0.3, Opt.of("alpha", 0.9));
-            // 광선 띠는 옆에서만 보임 → 쏜 사람 (1인칭 · 뒤 3인칭) 에게는 길을 따라 카메라를 보는 작은 터짐
-            for (double dd = 0.9; dd < Math.max(1, dist); dd += 1.1) JobFx.burst(level, V.add(from, dir, dd), 0.2, j, 0.22, Opt.empty());
-            JobFx.burst(level, from, 0.35, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
-            SkillFx.play(level, "mob.warden.sonic_charge", from, 1.9, 0.25);
         }
     }
 
@@ -581,17 +556,11 @@ public final class JobTraitsMore {
         }
     }
 
-    /** 태세가 끝남 (JobTraits): 마나 과부하 → 이동 느려짐 (after 틱) · 투혼 → 회복 기회 지움 */
+    /** 태세가 끝남 (JobTraits): 투혼 → 회복 기회 지움 */
     static void stanceEnded(ServerPlayer sp, String id) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null) return;
-        if (id.equals("mage_overload")) {
-            Jobs.Skill k = skill(j, id);
-            int after = k == null ? 40 : (int) k.num("after", 40);
-            RuneKit.effect(sp, "slowness", after, 1);
-            SkillFx.play(sp.level(), "beacon.deactivate", sp.position(), 1.4, 0.6);
-            SkillFx.sparks(sp.level(), V.up(sp.position(), 1.0), JobKit.glow(j), 8, 2);
-        } else if (id.equals("warrior_spirit")) {
+        if (id.equals("warrior_spirit")) {
             State st = STATES.get(sp.getUUID());
             if (st != null) st.spiritHealed = false;
         }

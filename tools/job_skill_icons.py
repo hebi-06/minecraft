@@ -409,29 +409,30 @@ def spellblade_runedance(A, B):
 
 
 def spellblade_awaken(A, B):
-    flame = mask()
-    pts = []
-    for i in range(25):
-        t = i / 24
-        a = math.pi * 2 * t
-        r = 11.0 + 2.6 * math.sin(a * 5)
-        pts.append((16 + math.sin(a) * r * 0.62, 17 - math.cos(a) * r * 1.05))
-    poly(flame, pts)
-    inner = mask()
-    pts = []
-    for i in range(25):
-        t = i / 24
-        a = math.pi * 2 * t
-        r = 7.5 + 1.6 * math.sin(a * 4 + 1)
-        pts.append((16 + math.sin(a) * r * 0.55, 18 - math.cos(a) * r * 1.0))
-    poly(inner, pts)
-    ring_m = ImageChops.subtract(flame, inner)
-    sw = sword_layers((16.0, 2.5), (16.0, 29.5), blade=3.0, guard=8.0, blade_cols=(WHITE, mix(B, WHITE, 0.5), WHITE, mix(B, (0, 0, 0), 0.3)))
-    sp = mask()
-    star(sp, 25.0, 6.0, 2.6)
-    star(sp, 7.0, 9.0, 2.0)
-    subject = stack(layer(ring_m, mix(A, WHITE, 0.25), A, mix(A, WHITE, 0.6), mix(A, (0, 0, 0), 0.35)), *sw, layer(sp, WHITE, B))
-    return finish(subject, [glow(flame, A, 1.8, 0.9)], backdrop(mix(A, (10, 4, 26), 0.82), mix(A, (40, 12, 80), 0.45)))
+    # 스펠 가이저: 땅의 룬 원 (누운 고리 · 룬 점) 가운데에 거꾸로 꽂힌 칼 · 원에서 하늘로 솟구치는 굵은 마력 기둥 (가운데 흰 심 · 양옆 옅은 빛살) · 떠오르는 룬 조각
+    # (롤 브랜드 W — 2026-11-05 스펠 인챈트 대신)
+    pillar = mask()
+    poly(pillar, [(9.4, 26.6), (22.6, 26.6), (19.6, -1.0), (12.4, -1.0)])
+    core = mask()
+    poly(core, [(14.0, 26.6), (18.0, 26.6), (17.0, -1.0), (15.0, -1.0)])
+    side = mask()
+    for x0, x1 in ((6.6, 9.6), (25.4, 22.4)):
+        poly(side, [(x0 - 0.4, 26.0), (x0 + 0.4, 26.0), (x1, 4.0)])
+    circle = mask()
+    d = ImageDraw.Draw(circle)
+    d.ellipse([P(2.4, 22.6), P(29.6, 30.4)], fill=255)
+    d.ellipse([P(3.8, 23.6), P(28.2, 29.4)], fill=0)
+    dots = mask()
+    for i in range(8):
+        a = math.radians(i * 45 + 22.5)
+        disc(dots, 16 + math.cos(a) * 13.0, 26.5 + math.sin(a) * 3.7, 0.8)
+    sw = sword_layers((16.0, 27.4), (16.0, 13.0), blade=3.0, guard=7.6, blade_cols=(WHITE, mix(B, WHITE, 0.5), WHITE, mix(B, (0, 0, 0), 0.3)))
+    runes = mask()
+    for x, y, r in ((6.0, 16.0, 1.6), (26.4, 12.0, 1.5), (8.4, 7.0, 1.2), (24.0, 3.6, 1.1)):
+        poly(runes, [(x, y - r * 1.4), (x + r, y), (x, y + r * 1.4), (x - r, y)])
+    subject = stack(layer(pillar, mix(A, WHITE, 0.3), A, None, None, axis=(1, 0)), layer(side, mix(B, WHITE, 0.3), B), layer(core, WHITE, mix(B, WHITE, 0.55)),
+                    layer(circle, mix(A, WHITE, 0.4), A), layer(dots, WHITE, B), *sw, layer(runes, WHITE, mix(B, WHITE, 0.3)))
+    return finish(subject, [glow(pillar, A, 2.2, 1.0), glow(ImageChops.lighter(circle, runes), B, 1.4, 0.9)], backdrop(mix(A, (10, 4, 26), 0.82), mix(A, (40, 12, 80), 0.45)))
 
 
 def spellblade_ult(A, B):

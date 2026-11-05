@@ -18,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 0.51.0 전사 반전 글래디에이터 — 재설계안 2판 (라이칸 대신 — 사용자 "반전 컨셉도 대부분이 맘에 안듬" · "매커니즘적으로 애가 단일인지
  * 광역인지랑 연타를 하는 애인지 단타로 때리는지"): 전사 (광역 · 묵직한 단타 · 맞으며 버팀) 를 뒤집음 — 한 적만 (결투 상대) · 빠른 연타 · 버티지 않음. 스킬 다섯 —
- * 도끼 난타 (롤 잭스 패시브 · 신 짜오 — 세 번째마다 크게) · 걸어 당기기 (롤 다리우스 E) · 여덟 팔 (롤 브라이어 W — 연타 열여섯) · 불사의 분노 (롤 트린다미어 R) ·
+ * 도끼 난타 (롤 잭스 패시브 · 신 짜오 — 세 번째마다 크게) · 걸어 당기기 (롤 다리우스 E) · 여덟 팔 (롤 브라이어 W — 연타 열여섯) · 액스 그라인더 (롤 올라프 Q — 2026-11-05 불사의 분노 대신) ·
  * 홀름강 (롤 모데카이저 R — 둘만의 결투장). 특성 「결투」 은 JobTraits6. 빠른 연타는 몹 무적 시간 (10틱) 때문에 피해를 무리마다 한 번에 넣고 숫자를 줄마다
  * (JobKit.strikeSplit — 도끼 난타는 줄마다 다른 몫), 도끼질 그림 · 멈칫은 줄마다. 맞은 자리는 JobImpact (화면은 흔들지 않음). 몸 쓰는 직업 기준 (제 몸 · 제 도끼 —
  * 여덟 팔은 제 팔의 잔상 rfx_jarms).
@@ -35,7 +35,7 @@ final class GladiatorSkills {
         JobSystem.register("gladiator_flurry", GladiatorSkills::flurry);
         JobSystem.register("gladiator_hook", GladiatorSkills::hook);
         JobSystem.register("gladiator_eight", GladiatorSkills::eight);
-        JobSystem.register(JobTraits6.FURY, GladiatorSkills::fury);
+        JobSystem.register("gladiator_grinder", GladiatorSkills::grinder);
         JobSystem.register("gladiator_ult", GladiatorSkills::ult);
     }
 
@@ -273,30 +273,112 @@ final class GladiatorSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 불사의 분노
+    // ------------------------------------------------------------ 액스 그라인더
 
-    /** 불사의 분노 (롤 트린다미어 R): dur 틱 태세 — 쓰러지지 않음 (체력 1 에서 멈춤) · 공격 속도 + haste (JobTraits6). 붉은 불길이 몸에서 터져 나옴 · 포효 */
-    static boolean fury(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = JobUpgrades.ticks(sp, k, "dur", (int) k.num("dur", 100));
-        JobTraits.startStance(sp, k, dur);
-        ServerLevel level = sp.level();
-        Vec3 c = sp.position();
+    /** 도는 도끼 (환영 도끼 판 — 제 판 안에서 구름): from → to 를 secs 초 (to 가 null 이면 그 자리에서 life 초 돎) */
+    private static void axeSpin(ServerLevel level, Vec3 from, Vec3 to, double secs, double life, double scale, Jobs.Job j) {
+        Vec3 d = to == null ? V.ZERO : V.sub(to, from);
+        double len = V.len(d);
+        Vec3 u = len < 1e-3 ? new Vec3(1, 0, 0) : V.scale(d, 1 / len);
+        Opt b = Opt.of("dir", u, "face", JobFx3d.sideOf(u), "spin", -1440.0, "spinAxis", "z", "scale", scale, "life", Math.max(life, secs), "fadeIn", 0.03, "fadeOut",
+                0.08, "glowAlpha", 0.55, "shine", 0.35);
+        if (to != null && len > 1e-3) b = b.with("to", to, "ctrl", V.up(V.lerp(from, to, 0.5), Math.min(1.2, len * 0.08)), "travel", secs);
+        JobFx3d.spawn(level, "phantom_axe", from, j, b);
+    }
+
+    /**
+     * 액스 그라인더 (롤 올라프 Q — 2026-11-05 사용자 "구지 신체 강화 스킬도 필수로 안넣어도 될거 같다" · "직업 중에 구지 강화 시키면 어색한 애들은 빼자" ·
+     * "딜링기도 괜찮고", 불사의 분노 대신): 도끼를 오른 어깨 뒤로 감았다가 throwAt 틱에 결투 상대 (없으면 앞 range 칸 · 40 도 안의 가장 가까운 적) 에게 회전시켜 던짐
+     * → hitAt 틱에 박힘 (hits[0]) → every 틱마다 박힌 채 갈아냄 (hits[1] · hits[2] — 숫자 split 줄씩 · 피 튀김 · 느려짐) → 뽑히며 핏빛으로 터짐 (hits[3] 큰 숫자) ·
+     * 도끼는 손으로 돌아옴 (받는 동작). 노릴 적이 없으면 앞 10칸으로 날았다 돌아옴 (피해 없음). 결투 상대가 없으면 맞힌 적과 결투 (JobKit.hit → JobTraits6.duelMult).
+     * 몸 쓰는 직업 기준 (제 도끼를 던짐 — 던지는 무기 동작)
+     */
+    static boolean grinder(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        int throwAt = Math.max(1, (int) k.num("throwAt", 4));
+        int hitAt = Math.max(throwAt + 2, (int) k.num("hitAt", 8));
+        int every = Math.max(10, (int) k.num("every", 10));
+        List<Double> hl = k.def().numbersOrNull("hits");
+        double[] hits = hl == null || hl.size() < 4 ? new double[] {3.0, 3.6, 3.6, 5.4} : new double[] {hl.get(0), hl.get(1), hl.get(2), hl.get(3)};
+        int split = Math.max(1, (int) k.num("split", 4));
+        double range = k.num("range", 12);
         String life = RuneKit.lifeToken(sp);
-        JobFx.aura(sp, j, 3.4, 0.9, 1.0);
-        JobFx.burst(level, V.up(c, 1.1), 1.8, j, 0.4, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
-        JobFx.eyeRing(sp, j, 2.3, 1.0, 0.5);
-        JobTraits6.eyeGlint(sp, j, 0.8);
-        for (int i = 0; i < 3; i++) {
-            int ii = i;
-            RuneKit.later(i * 3, () -> {
-                if (RuneKit.sameLife(sp, life)) JobFx.ring(sp.level(), V.up(sp.position(), 0.06), 1.6 + ii * 1.0, j, ii % 2 == 1, 0.4, Opt.of("alpha", 0.95 - ii * 0.15));
+        ServerLevel level0 = sp.level();
+        LivingEntity t = pick(sp, range, 40);
+        Vec3 f = Kit.facingOf(sp);
+        // 감음: 오른 어깨 뒤로 당긴 도끼날에 빛
+        JobFx.charge(sp, j, new Vec3(0.55, 1.7, -0.5), throwAt, 0.7);
+        SkillFx.play(level0, "item.trident.return", sp.position(), 0.8, 0.6);
+        int fly = hitAt - throwAt;
+        int back = 6;
+        int ripAt = hitAt + 3 * every;
+        if (t == null) {
+            RuneKit.later(throwAt, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                RuneKit.Hand h = RuneKit.handOf(sp);
+                Vec3 from = V.up(h.hand(), 0.3);
+                Vec3 to = V.up(V.add(sp.position(), f, Math.max(2, RuneKit.rayLength(sp.level(), from, f, 10))), 1.2);
+                axeSpin(sp.level(), from, to, 0.3, 0.3, 1.5, j);
+                SkillFx.play(sp.level(), "item.trident.throw", from, 0.7, 1.0);
+                RuneKit.later(6, () -> {
+                    if (RuneKit.sameLife(sp, life)) axeSpin(sp.level(), to, V.up(RuneKit.handOf(sp).hand(), 0.3), 0.3, 0.3, 1.5, j);
+                });
+                JobKit.motionLater(sp, k.id() + ":catch", 10, life);
+            });
+            return true;
+        }
+        RuneKit.later(throwAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            RuneKit.Hand h = RuneKit.handOf(sp);
+            Vec3 from = V.up(h.hand(), 0.3);
+            axeSpin(sp.level(), from, Kit.bodyPoint(t), fly / 20.0, fly / 20.0, 1.6, j);
+            JobFx.dash(sp.level(), V.up(sp.position(), 1.3), Kit.bodyPoint(t), j, 0.25, JobFx.hide1p(sp).with("alpha", 0.6));
+            SkillFx.play(sp.level(), "item.trident.throw", from, 0.6, 1.0);
+            SkillFx.play(sp.level(), "entity.player.attack.sweep", from, 0.8, 0.7);
+        });
+        // 박힘 (hitAt): 큰 타격 · 핏빛 튐 · 숫자 한 줄
+        JobKit.strike(sp, t, j, P, hits[0], false, false, life, hitAt, d -> {
+            JobImpact.hit(sp, t, j, 1.6);
+            BloodknightSkills.splash(sp.level(), Kit.bodyPoint(t), 0.8, j, 4);
+            SkillFx.play(sp.level(), "item.trident.hit", t.position(), 0.7, 1.0);
+        });
+        // 박힌 채 갈아냄 (hitAt ~ ripAt): 그 자리에서 도는 도끼 (적을 따라감 — every 틱마다 다시) · 불티 · 느려짐
+        for (int q = 0; q < 3; q++) {
+            int at = hitAt + q * every;
+            RuneKit.later(at, () -> {
+                if (!RuneKit.sameLife(sp, life) || t.isRemoved() || !t.isAlive()) return;
+                axeSpin(sp.level(), Kit.bodyPoint(t), null, 0, every / 20.0 + 0.03, 1.5, j);
+                RuneKit.effect(t, "slowness", every + 2, (int) k.num("slowAmp", 2));
             });
         }
-        SkillFx.sparks(level, V.up(c, 1.0), JobFx.inner(j), 18, 5);
-        SkillFx.play(level, "mob.ravager.roar", c, 1.1, 0.9);
-        SkillFx.play(level, "entity.blaze.shoot", c, 0.6, 0.7);
-        Notify.notify(sp, "§c§l불사의 분노 §7— " + dur / 20 + "초 · 쓰러지지 않음 · 공격 속도 +" + Math.round(JobUpgrades.num(sp, k, "haste", k.num("haste", 0.4)) * 100) + "%",
-                30);
+        for (int q = 1; q <= 2; q++) {
+            int at = hitAt + q * every;
+            double m = hits[q];
+            JobKit.strikeSplit(sp, t, j, P, m, split, 2, false, false, life, at, d -> {
+                JobImpact.fx(sp, t, j, 1.1);
+                Vec3 b = Kit.bodyPoint(t);
+                SkillFx.sparks(sp.level(), b, JobFx.inner(j), 10, 5.0);
+                BloodknightSkills.splash(sp.level(), b, 0.6, j, 3);
+                SkillFx.play(sp.level(), "entity.player.attack.sweep", b, 1.4, 0.6);
+                SkillFx.play(sp.level(), "block.grindstone.use", b, 1.2, 0.6);
+            });
+        }
+        // 뽑힘 (ripAt): 핏빛 터짐 · X 베기 판 · 큰 숫자 → 도끼가 손으로 돌아옴
+        JobKit.strike(sp, t, j, P, hits[3], false, true, life, ripAt, d -> {
+            ServerLevel lv = sp.level();
+            Vec3 b = Kit.bodyPoint(t);
+            JobImpact.hit(sp, t, j, 2.0);
+            JobFx.burst(lv, b, 1.6, j, 0.35, Opt.empty());
+            JobFx.cross(lv, b, 1.1 + Kit.bodyPad(t) * 0.5, j, 0.3, Opt.empty());
+            BloodknightSkills.splash(lv, b, 1.2, j, 8);
+            SkillFx.play(lv, "random.explode", b, 1.3, 0.5);
+        });
+        RuneKit.later(ripAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 from = t.isRemoved() ? V.up(V.add(sp.position(), f, 3), 1.2) : Kit.bodyPoint(t);
+            axeSpin(sp.level(), from, V.up(RuneKit.handOf(sp).hand(), 0.3), back / 20.0, back / 20.0, 1.5, j);
+            SkillFx.play(sp.level(), "item.trident.return", from, 0.9, 0.8);
+        });
+        JobKit.motionLater(sp, k.id() + ":catch", ripAt + back - 2, life);
         return true;
     }
 

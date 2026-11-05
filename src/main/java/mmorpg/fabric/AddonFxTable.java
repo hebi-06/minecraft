@@ -211,6 +211,7 @@ public final class AddonFxTable {
         "rpg:rfx_jsunarrow",
         "rpg:rfx_jtarget",
         "rpg:rfx_jtarget2",
+        "rpg:rfx_jtear",
         "rpg:rfx_jthicket",
         "rpg:rfx_jthunder",
         "rpg:rfx_jthunder2",

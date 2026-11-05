@@ -85,7 +85,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(0, new int[] {2, 6, 12}, new int[] {3, 12}, 22, false),
         new Case(1, new int[] {1, 4, 12}, new int[] {2, 12}, 20, false),
         new Case(2, new int[] {4, 18, 34}, new int[] {18}, 42, false),
-        new Case(3, new int[] {4, 20}, new int[] {6}, 24, true),
+        new Case(3, new int[] {3, 6, 12, 18, 20}, new int[] {6, 18}, 28, false), // 0.51.0 스펠 가이저 (6 꽂음 · 18 기둥)
         new Case(4, new int[] {10, 22, 32, 42, 56, 62}, new int[] {22, 56}, 72, false),
     };
 
@@ -101,7 +101,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(0, new int[] {2, 6, 12}, new int[] {3, 8}, 18, false),
         new Case(1, new int[] {1, 6, 12}, new int[] {2, 12}, 18, false),
         new Case(2, new int[] {6, 25, 50, 71}, new int[] {20, 71}, 76, false),
-        new Case(3, new int[] {4, 20}, new int[] {6}, 40, true, false, 13),
+        new Case(3, new int[] {6, 8, 18, 28, 38, 48, 50}, new int[] {18, 48}, 58, false), // 0.51.0 프리즘 레이 (8 ~ 38 광선 · 48 다섯 갈래)
         new Case(4, new int[] {10, 22, 34, 46, 58, 70, 74}, new int[] {22, 46, 70}, 84, false),
     };
     private static final Case[] CASES_AR = {
@@ -160,56 +160,57 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /**
      * 0.51.0 2차 직업 — 검사 각성 소드마스터 · 반전 블러드 나이트 (재설계안 2판): 칼집 섬광 (6 뽑음 · 10 큰 가로) · 받아넘기기 (4 에 맞음 →
-     * 5 쨍 · 11 · 13 · 15 받아침 — beforeCast) · 불의 울타리 (6 · 16 … 46 가로지르기 · 56 별) · 용의 피 · 다시 벼린 칼 (6 충격 · 20 다시 누름 → 23 검풍) /
-     * 핏빛 대검 (0 · 12 · 24 다시 누름 → 5 · 17 · 31) · 피의 돌진 (6) · 피의 사슬 (4 박음 · 36 끌어당김) · 광란 · 칼을 뽑다 (8 칼날 · 20 내리꽂음 · 30 ~ 60 X 베기)
+     * 5 쨍 · 11 · 13 · 15 받아침 — beforeCast) · 불의 울타리 (6 · 16 … 46 가로지르기 · 56 별) · 용의 피 · 스타폴 블레이드 (4 ~ 8 솟구침 · 12 · 22 … 62 혜성 ·
+     * 75 마지막 낙하) / 핏빛 대검 (0 · 12 · 24 다시 누름 → 5 · 17 · 31) · 피의 돌진 (6) · 피의 사슬 (4 박음 · 36 끌어당김) · 광란 · 블러드 문 (10 빨아들임 · 16 ~ 31
+     * 뛰어올라 내리꽂음 · 41 ~ 피의 기둥)
      */
     private static final Case[] CASES_SM = {
         new Case(0, new int[] {3, 7, 9, 12}, new int[] {7, 11}, 28, false),
         new Case(1, new int[] {2, 5, 11, 15}, new int[] {5, 13}, 26, false),
         new Case(2, new int[] {2, 6, 16, 36, 46, 57}, new int[] {6, 26, 57}, 64, false),
         new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
-        new Case(4, new int[] {2, 6, 14, 21, 24, 28}, new int[] {6, 24}, 40, false),
+        new Case(4, new int[] {3, 8, 11, 12, 22, 32, 52, 62, 71, 75, 77}, new int[] {8, 22, 62, 75}, 86, false),
     };
     private static final Case[] CASES_BK = {
         new Case(0, new int[] {3, 5, 15, 17, 29, 31}, new int[] {5, 17, 31}, 42, false),
         new Case(1, new int[] {1, 3, 6, 10}, new int[] {3, 6}, 18, false),
         new Case(2, new int[] {2, 5, 20, 35, 38}, new int[] {5, 36}, 46, false),
         new Case(3, new int[] {3, 10}, new int[] {4}, 26, true),
-        new Case(4, new int[] {4, 8, 12, 18, 22, 32, 52, 62}, new int[] {10, 22, 52}, 72, false),
+        new Case(4, new int[] {2, 10, 12, 20, 26, 31, 33, 41, 44}, new int[] {10, 26, 32, 42}, 52, false),
     };
-    /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 · 다시 벼린 칼의 검풍 — 사진첩 · 영상 모두) */
-    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24}, "swordmaster_ult", new int[] {20});
+    /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 — 사진첩 · 영상 모두) */
+    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24});
 
     /**
      * 0.51.0 워로드 · 글래디에이터 (재설계안 2판): 대지 가르기 (24 까지 모음 → 28 내려침 · 돌창) · 동면 (40 깨어남) · 곰의 포옹 (2 ~ 8 끌어옴 · 12 내려찍음) ·
-     * 거인의 무게 (6 땅 구름 → 평타가 땅을 가름) · 마지막 휘두름 (24 한 바퀴) / 도끼 난타 (2 · 5 · 8 · 12 · 15 · 18) · 걸어 당기기 (1 걺 · 6 내려찍음) · 여덟 팔
-     * (4 · 14 · 24 · 34 ~ 40) · 불사의 분노 · 홀름강 (10 열고 · 140 내려찍음)
+     * 베어 스톰프 (4 ~ 16 뛰어올라 내려찍음 · 26 갈라짐) · 마지막 휘두름 (24 한 바퀴) / 도끼 난타 (2 · 5 · 8 · 12 · 15 · 18) · 걸어 당기기 (1 걺 · 6 내려찍음) ·
+     * 여덟 팔 (4 · 14 · 24 · 34 ~ 40) · 액스 그라인더 (4 던짐 · 8 박힘 · 18 · 28 갈아냄 · 38 뽑힘) · 홀름강 (10 열고 · 140 내려찍음)
      */
     private static final Case[] CASES_WL = {
         new Case(0, new int[] {6, 16, 24, 29, 33}, new int[] {16, 29}, 46, false),
         new Case(1, new int[] {4, 20, 40, 42, 46}, new int[] {20, 42}, 56, false),
         new Case(2, new int[] {2, 6, 9, 12, 14}, new int[] {6, 13}, 28, false),
-        new Case(3, new int[] {4, 8, 20}, new int[] {8}, 24, true),
+        new Case(3, new int[] {3, 8, 12, 16, 18, 26}, new int[] {10, 16, 26}, 36, false),
         new Case(4, new int[] {6, 14, 22, 24, 26, 30, 36}, new int[] {14, 25, 30}, 50, false),
     };
     private static final Case[] CASES_GL = {
         new Case(0, new int[] {2, 5, 8, 12, 18}, new int[] {8, 18}, 30, false),
         new Case(1, new int[] {1, 3, 5, 6, 8}, new int[] {3, 6}, 20, false),
         new Case(2, new int[] {4, 14, 24, 34, 40}, new int[] {14, 40}, 52, false),
-        new Case(3, new int[] {3, 10}, new int[] {6}, 24, true),
+        new Case(3, new int[] {3, 6, 8, 18, 28, 38, 42}, new int[] {8, 28, 38}, 48, false),
         new Case(4, new int[] {4, 10, 12, 40, 100, 134, 140, 144}, new int[] {10, 60, 141}, 160, false),
     };
 
     /**
      * 0.51.0 아케인 블레이드 (룬 스미스 대신): 크레센트 엣지 (0 ~ 6 감음 → 6 가로 검기 · 7 맞음 → 16 세로 검기 · 17 맞음) · 팬텀 크로스 (0 순간 이동 → 1 X 새김 →
-     * 12 X 검기로 터짐) · 아케인 템페스트 (0 ~ 8 머리 위로 돌려 모음 → 8 한 바퀴 → 폭풍 → 20 터짐) · 스펠 오버드라이브 (9 켜짐 — 각인 다섯 찬 과녁에 뒤 평타: 검기 ·
-     * 거대한 마력 대검) · 월드 클리버 (0 ~ 21 하늘을 찌르는 대검으로 자라남 → 21 내려쳐 가름 → 30 ~ 갈라진 땅이 솟구침)
+     * 12 X 검기로 터짐) · 아케인 템페스트 (0 ~ 8 머리 위로 돌려 모음 → 8 한 바퀴 → 폭풍 → 20 터짐) · 디멘션 슬래시 (0 ~ 6 감음 → 6 가로로 갈라 틈 →
+     * 빨아들임 → 22 닫히며 폭발) · 월드 클리버 (0 ~ 21 하늘을 찌르는 대검으로 자라남 → 21 내려쳐 가름 → 30 ~ 갈라진 땅이 솟구침)
      */
     private static final Case[] CASES_AB = {
         new Case(0, new int[] {2, 5, 6, 7, 9, 14, 16, 17, 19}, new int[] {5, 7, 17}, 28, false),
         new Case(1, new int[] {1, 2, 4, 9, 12, 13, 15}, new int[] {2, 12}, 22, false),
         new Case(2, new int[] {3, 7, 8, 9, 13, 18, 20, 21, 24}, new int[] {7, 9, 20}, 32, false),
-        new Case(3, new int[] {3, 7, 9, 11}, new int[] {9}, 16, true, false, 12),
+        new Case(3, new int[] {3, 6, 7, 12, 18, 22, 24}, new int[] {6, 14, 22}, 30, false),
         new Case(4, new int[] {4, 10, 16, 19, 21, 22, 24, 28, 31, 33, 38}, new int[] {12, 21, 31}, 48, false),
     };
     /**
@@ -562,10 +563,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 3.2, 0.5, -60, 3.2).inflate(0.8), h -> true);
             if (!near.isEmpty()) mmorpg.fabric.job.JobTraits6.setDuel(sp, near.get(0), 6, false);
         }
-        // 0.51.0 아케인 블레이드: 오버드라이브는 각인 다섯이 찬 과녁 (뒤 평타 — 검기 · 하늘에서 거대한 마력 대검) / 소드 콜러: 데려가라는 앞 7칸에 꽂아 둔 칼 (그리로 날아감)
-        if (id.equals("arcaneblade_overdrive")) {
-            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits.setMarks(sp, h, 5);
-        }
+        // 0.51.0 소드 콜러: 데려가라는 앞 7칸에 꽂아 둔 칼 (그리로 날아감)
         if (id.equals("swordcaller_shift")) mmorpg.fabric.job.JobTraits7.testStuck(sp, new Vec3(0.5, -60, 7.5), 200);
         // 0.51.0 아크메이지: 마탄은 노래 태세 (스킬 뒤 별똥) · 쌍둥이 별은 연쇄 4 + 별 넷 (다섯째 별이 떠 별자리 완성)
         if (id.equals("arcmage_bolts")) JobTraits.testStance(sp, "arcmage", "arcmage_song", 200);

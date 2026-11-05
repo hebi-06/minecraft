@@ -31,6 +31,9 @@
 넓은 빛 (보라) · 심지 칸 = 날카로운 획 (청록):
 - rfx_jglyph   rotate_xyz       192×192 ×18 (6 열) 공중에 새긴 룬 글자 셋 (지어낸 각진 글자 GLYPHS 2 · 7 · 4 — 종류마다 6장): 0 획이 반쯤 그어짐 (긋는 끝 불티) · 1 다 그어지며 번쩍 →
                                                    2 ~ 3 빛남 (둘레 옅은 고리 · 반짝임이 바뀜 — 이어 돌림) → 4 번쩍 (네 뿔 별) → 5 획이 조각나 바깥으로 흩어짐. 글자 가운데 = 칸 가운데
+- rfx_jtear    rotate_xyz       512×256 ×8 (4 열)  차원의 틈 (아케인 블레이드 디멘션 슬래시 — 2026-11-05 스펠 오버드라이브 대신, 빛 칸 = 테 · 금 · 속의 소용돌이 ·
+                                                   별빛 · 빨려 드는 티끌, 심지 칸 = 검은 속): 0 가는 빛 금 · 번쩍 → 1 벌어짐 → 2 ~ 5 벌어져 일렁임 (이어 돌림 — 같은 꼴) →
+                                                   6 닫힘 · 7 가로로 번쩍이며 닫힘 (조각). 틈 끝 x 0.065 · 0.935 W (반 크기 × 0.87) · 가운데 반 높이 46 점
 
 0.51.0 매지션 2차 (아크메이지 · 네크로맨서) — 빛 칸 = 넓은 빛 (아크메이지 밤하늘 자주 · 네크로맨서 짙은 녹색 혼불), 심지 칸 = 금빛 별 심지 · 뼈 ·
 눈구멍의 녹색 불 (네크로맨서는 '빛' 칸에 뼈 몸을 거의 불투명하게):
@@ -70,7 +73,7 @@ import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from java_fx_art import save  # noqa: E402
-from job_fx_art_v2 import COLORS, TAU, Pad, Stack, bevel_light, bez, clamp01, gblur, obj_glow, rim_of, screen, smooth, taper_poly, to_sheet  # noqa: E402
+from job_fx_art_v2 import _ndi, COLORS, TAU, Pad, Stack, bevel_light, bez, clamp01, gblur, obj_glow, rim_of, screen, smooth, taper_poly, to_sheet  # noqa: E402
 from job_fx_art_v2 import GLYPHS, glyph_lines, glyph_mask  # noqa: E402
 from job_fx_art_v2b import arc_pts, chunk_pts, cut_polyline, faceted, fbm, finish, gauss, lens, polar, star4, streak, win_border  # noqa: E402
 import job_fx_art_v2c_marks as V2C  # noqa: E402 — 확인용 그림 (preview) 을 같은 꼴로
@@ -2904,6 +2907,157 @@ sprite("rfx_jwave", "rotate_xyz", 384, 384, WV_N, 4, "wave", zoom=0,
        "일어남 → 1 가장 밝고 굵은 초승달 (흰 날 · 결 셋) → 2 ~ 5 날아감 (이어 돌림 — 날을 따라 밝은 마디가 흐르고 날 뒤로 휜 기운 가닥이 흘러내림 · 날 위 반짝임 · 바깥으로 "
        "튀는 불티) → 6 날이 마디마디 끊기며 조각이 튐 → 7 조각 · 가닥이 흐려짐")(wave_frame)
 
+
+
+# ------------------------------------------------------------ rfx_jtear (차원의 틈 — 카메라를 봄, 칸 가운데 = 틈 가운데 · 틈 끝 x 0.065 W · 0.935 W)
+
+TR_N = 8
+TR_W, TR_H = 512, 256
+COLORS.setdefault("tear", ((0.66, 0.36, 1.0), (0.07, 0.01, 0.14)))  # 확인용: 빛 = 아케인 블레이드 겉빛 · 심지 = 검은 보라 속
+TR_L = 222.0  # 틈 반 길이 (칸 점 — 반 크기 × 0.87)
+TR_OPEN = [3.0, 22.0, 46.0, 46.0, 46.0, 46.0, 15.0, 0.0]  # 장마다 가운데 반 높이 (2 ~ 5 이어 돌림은 같은 꼴 — 겹 둘의 일렁임 차례가 달라도 테가 어긋나지 않게)
+_RT = random.Random(8120)
+# 틈 테에서 바깥으로 뻗는 금 (가로 몫 u · 위 (−1) / 아래 (+1) · 기울기 · 길이 · 꺾임 씨앗)
+TR_CRACKS = [(_RT.uniform(-0.8, 0.8), _RT.choice((-1, 1)), _RT.uniform(-0.55, 0.55), _RT.uniform(26, 70), _RT.randrange(10_000)) for _ in range(11)]
+# 틈 속 별빛 (반지름 몫 · 각 · 크기) · 빨려 드는 티끌 (각 · 처음 거리 · 길이)
+TR_STARS = [(_RT.uniform(0.1, 0.92), _RT.uniform(0, TAU), _RT.uniform(1.2, 2.6)) for _ in range(26)]
+TR_MOTES = [(_RT.uniform(0, TAU), _RT.uniform(0.0, 1.0), _RT.uniform(6, 14)) for _ in range(18)]
+
+
+def _tr_edge(x, top):
+    """틈의 위 (top) · 아래 테 높이 몫 (가운데 반 높이 × 이 값): 끝이 뾰족한 렌즈 꼴 × 찢긴 들쭉날쭉함 (큰 물결은 작게 · 잔 톱니는 날카롭게 — 깨진 유리 결)"""
+    u = np.clip(np.abs(x - TR_W / 2) / TR_L, 0, 1)
+    env = np.clip(1 - u ** 2.2, 0, 1) ** 0.75
+    k = 0 if top else 1
+    jag = 1 + 0.09 * np.sin(0.07 * x + 1.3 + 2.1 * k) + 0.06 * np.sin(0.19 * x + 0.4 + 1.7 * k)
+    tooth = np.abs(((x + 5.5 * k) / 11.0) % 2 - 1)  # 잔 톱니 (0 ~ 1)
+    tooth2 = np.abs(((x + 2.0 + 3.0 * k) / 4.6) % 2 - 1)
+    return env * (jag + 0.16 * (tooth - 0.5) + 0.05 * (tooth2 - 0.5))
+
+
+def _tr_dist(pad, inside):
+    """틈 테까지의 거리 (칸 점 · 안 < 0) — 4배 판의 참 거리"""
+    if _ndi is None:
+        return None
+    din = _ndi.distance_transform_edt(inside)
+    dout = _ndi.distance_transform_edt(~inside)
+    return ((dout - din) / pad.ss).astype(np.float32)
+
+
+def tear_frame(f):
+    S = TR_W
+    pad = Pad(TR_W, TR_H)
+    X, Y = pad.grid()
+    cx, cy = TR_W / 2, TR_H / 2
+    Hc = TR_OPEN[f]
+    loop = 2 <= f <= 5
+    ph = (f - 2) / 4.0 if loop else (0.0 if f < 2 else 0.25)
+    top = _tr_edge(X, True) * Hc
+    bot = _tr_edge(X, False) * Hc
+    inside_x = np.abs(X - cx) < TR_L
+    dy = Y - cy
+    # 테까지의 거리 (안 < 0): 참 거리 (scipy) — 없으면 세로 거리 (넓은 틈이라 거의 같음)
+    d_edge = np.where(dy < 0, -dy - top, dy - bot)
+    d_edge = np.where(inside_x, d_edge, np.sqrt((np.abs(X - cx) - TR_L).clip(0) ** 2 + dy ** 2))
+    if Hc > 0.5:
+        dt = _tr_dist(pad, d_edge < 0)
+        if dt is not None:
+            d_edge = dt
+    open_k = clamp01(Hc / 46.0)
+    glow = pad.zeros()
+    core = pad.zeros()
+    # ---- 틈 속 (심지 = 검은 보라 속 — 가장자리 1 점 부드럽게)
+    if Hc > 0.5:
+        core = clamp01((-d_edge) * pad.ss / 3.0 + 0.5) * 0.96
+    # ---- 테: 밝은 금 줄 (빛) · 바깥으로 번지는 띠
+    flick = 1.0 if not loop else 0.9 + 0.1 * math.sin(TAU * ph * 2 + 0.7)
+    rim_w = 2.2 if Hc > 0.5 else 2.6
+    env_x = clamp01(1 - (np.abs(X - cx) / (TR_L * 1.04)) ** 6)
+    rim = gauss(d_edge, rim_w) * flick
+    band = clamp01(1 - d_edge / 18.0) * (d_edge > 0) * 0.7 * env_x
+    if f == 0:
+        rim = gauss(np.abs(dy), 1.6) * env_x * 1.0
+        band = gauss(np.abs(dy), 7.0) * env_x * 0.6
+    if f == 7:  # 닫힘: 가로로 번쩍이는 가는 줄 (가운데가 가장 밝음)
+        flash = gauss(np.abs(dy), 2.0) * clamp01(1 - (np.abs(X - cx) / (TR_L * 0.95)) ** 2)
+        rim = flash
+        band = gauss(np.abs(dy), 9.0) * clamp01(1 - (np.abs(X - cx) / TR_L) ** 2) * 0.7
+    glow = np.maximum(glow, rim)
+    glow = screen(glow, band)
+    # ---- 금: 테에서 바깥으로 뻗는 깨진 유리 같은 금 (1 장부터 뻗음 · 7 장은 흐림)
+    grow = [0.15, 0.6, 1.0, 1.0, 1.0, 1.0, 0.85, 0.55][f]
+    ca = [0.55, 0.95, 0.92, 0.92, 0.92, 0.92, 0.85, 0.4][f]
+    for (u0, side, tilt, ln, seed) in TR_CRACKS:
+        x0 = cx + u0 * TR_L
+        e = float(_tr_edge(np.array([x0]), side < 0)[0]) * Hc
+        y0 = cy + side * e
+        rc = random.Random(seed)
+        pts = [(x0, y0)]
+        L = ln * grow
+        n = 4
+        for i in range(1, n + 1):
+            t = i / n
+            pts.append((x0 + (tilt * L * t) + rc.uniform(-4, 4), y0 + side * L * t + rc.uniform(-2, 2)))
+        a = ca * (0.85 + 0.15 * math.sin(TAU * ph + seed)) if loop else ca
+        glow = np.maximum(glow, pad.stroke(pts, 3.0, 0.7, a0=a, a1=a * 0.35))
+        if L > 30 and rc.random() < 0.6:  # 곁가지
+            k = rc.randrange(1, n)
+            bx, by = pts[k]
+            pts2 = [(bx, by), (bx + rc.uniform(-14, 14), by + side * rc.uniform(8, 18))]
+            glow = np.maximum(glow, pad.stroke(pts2, 1.4, 0.4, a0=a * 0.7, a1=0.1))
+    # ---- 틈 속 소용돌이 · 별빛 (빛 칸 — 게임은 흰 청록 겹을 틈 위에 옅게 덮음: 속이 도는 듯)
+    if Hc > 8:
+        sy = max(0.12, Hc / TR_L)
+        rr = np.sqrt((X - cx) ** 2 + ((Y - cy) / sy) ** 2)
+        th = np.arctan2((Y - cy) / sy, X - cx)
+        swirl = 0.5 + 0.5 * np.sin(th * 3.0 - rr * 0.045 + TAU * ph)
+        swirl = swirl ** 3 * clamp01(1 - rr / TR_L) * (d_edge < -2.0) * 0.32 * open_k
+        glow = np.maximum(glow, swirl)
+        for (rf, a0, sz) in TR_STARS:
+            ang = a0 + TAU * ph * (0.25 + 0.5 * rf)  # 안쪽이 빨리 돎 (이어 돌림 — 한 바퀴의 몫)
+            x = cx + math.cos(ang) * rf * TR_L * 0.9
+            y = cy + math.sin(ang) * rf * TR_L * 0.9 * sy
+            m = float(np.interp(x, [cx - TR_L, cx + TR_L], [0, 1]))
+            if -0.95 < (x - cx) / TR_L < 0.95:
+                lim_t = float(_tr_edge(np.array([x]), True)[0]) * Hc - 3
+                lim_b = float(_tr_edge(np.array([x]), False)[0]) * Hc - 3
+                if -lim_t < y - cy < lim_b:
+                    tw = 0.6 + 0.4 * math.sin(TAU * ph * 2 + a0 * 3 + m)
+                    glow = np.maximum(glow, pad.disc_field(x, y, sz * 0.6) * 0.75 * tw)
+    # ---- 빨려 드는 티끌 (테 바깥에서 틈 쪽으로 — 이어 돌림)
+    if 1 <= f <= 6:
+        for (a0, d0, ln) in TR_MOTES:
+            prog = (d0 + ph) % 1.0 if loop else d0
+            rad = (1 - prog) * 1.0
+            x = cx + math.cos(a0) * (TR_L * 0.55 + 70 * rad)
+            y = cy + math.sin(a0) * (Hc + 14 + 46 * rad)
+            if not (10 < x < TR_W - 10 and 8 < y < TR_H - 8):
+                continue
+            vx, vy = cx - x, cy - y
+            vl = math.hypot(vx, vy) + 1e-6
+            p1 = (x + vx / vl * 2.0, y + vy / vl * 2.0)
+            p0 = (x - vx / vl * ln, y - vy / vl * ln)
+            a = 0.75 * math.sin(math.pi * prog) if loop else 0.5
+            glow = np.maximum(glow, streak(pad, p0, p1, 2.4, a=a))
+    # ---- 번쩍 (0 · 1 갈라짐 · 7 닫힘): 가운데 큰 네 뿔 별
+    if f in (0, 1, 7):
+        r = {0: 70, 1: 50, 7: 110}[f]
+        a = {0: 1.0, 1: 0.7, 7: 1.0}[f]
+        glow = np.maximum(glow, star4(pad, cx, cy, r, a, rot=0.0, thin=0.05, diag=0.3))
+    if f == 7:  # 닫히며 튀는 조각 (가로로 퍼짐)
+        rs = random.Random(9031)
+        for _ in range(14):
+            x = cx + rs.uniform(-1, 1) * TR_L * 0.8
+            y = cy + rs.uniform(-1, 1) * 30
+            dx = (x - cx) / TR_L
+            glow = np.maximum(glow, lens(pad, (x, y), (x + dx * 26 + rs.uniform(-4, 4), y + (y - cy) * 0.8), 3.0, a=0.7, power=0.6, skew=0.3))
+    return finish(pad, glow, core, halo=((1.6, 0.5), (4.5, 0.4), (11.0, 0.28)), body_k=0.95, core_bloom=(), win=5.0)
+
+
+sprite("rfx_jtear", "rotate_xyz", TR_W, TR_H, TR_N, 4, "tear", zoom=0,
+       desc="차원의 틈 (디멘션 슬래시 — 카메라를 봄, 칸 가운데 = 틈 가운데 · 틈 끝 x 0.065 · 0.935 W): 0 가는 빛 금 · 가운데 번쩍 → 1 벌어짐 (테가 가장 밝음 · 금이 "
+       "뻗음) → 2 ~ 5 벌어져 일렁임 (이어 돌림 — 같은 꼴: 테의 깜빡임 · 속의 소용돌이 · 도는 별빛 · 바깥에서 빨려 드는 티끌) → 6 닫힘 · 7 가로로 번쩍이며 닫힘 "
+       "(조각이 튐). 빛 칸 = 테 · 금 · 속의 소용돌이, 심지 칸 = 검은 속 (불투명)")(tear_frame)
 
 def main():
     args = sys.argv[1:]

@@ -9,7 +9,7 @@ import rune_motion_kit as K
 from job_motions_a import PLANT, RISE_END, RISE_HIT
 from job_motions_d import (DASH_R, FLICK, FPW_FLICK, FPW_REV_UP, FPW_ZAN, J_IMPACT, LUNGE_DEEP, REV_RAISE, ZAN2, carry_spin, diag, diag_back, first, impacts,
                            strike_with)
-from rune_motion_kit import (A_PALM, A_POINT_UP, A_RAISE, A_SPREAD, FP_DOWN, FP_LOW, FP_PALM, FP_RAISE, FPL_GRIP2H, FPL_RAISE2H, FPW_DOWN, FPW_DRAWN,
+from rune_motion_kit import (A_PALM, A_POINT_UP, A_PULL, A_RAISE, A_SPREAD, FP_DOWN, FP_LOW, FP_PALM, FP_RAISE, FPL_GRIP2H, FPL_RAISE2H, FPW_DOWN, FPW_DRAWN,
                              FPW_FWD, FPW_LOW, FPW_SKY, FPW_SPREAD, FPW_UP, GRIP2H, LEGS_FIGHT, LEGS_LUNGE, LEGS_WIDE, RA_BACK_HIGH, RA_POINT, RA_SKY, RAISE2H,
                              W_READY, W_UP_FRONT, L, P, arm, bent, fpl, fpw, keyp, nudge, off_bare, spin_right, use_skill)
 
@@ -122,31 +122,53 @@ fpl(m, 25.0, FP_LOW)
 impacts(m, 8.0, 20.0)
 use_skill(m, "arcaneblade_tempest")
 
-# 스펠 오버드라이브 (효과: 0 ~ 8 칼끝으로 빛이 모임 · 4 ~ 8 칼날을 따라 빛이 흐름 → 9 켜짐 (칼이 커지며 빛남)). 칼을 얼굴 앞에 곧게 세우고 왼손을 칼끝에 댔다가
-# 칼날을 따라 쓸어 내린 뒤, 칼을 오른쪽 바깥으로 크게 털어 휘두르며 한 걸음 내디딤
-OD_HOLD = P(W_UP_FRONT, la=bent([0.05, 0.55, 0.85], 60, (-0.3, 1, 0)))  # 칼을 얼굴 앞에 세우고 왼손을 칼끝 가까이
-m = Motion("arcaneblade_overdrive", 16, "스펠 오버드라이브 — 칼을 얼굴 앞에 곧게 세우고 왼손을 칼끝에 댔다가 칼날을 따라 쓸어 내린 뒤, 칼을 오른쪽 바깥으로 크게 털어 "
-           "휘두르며 한 걸음 내디딤", fade=(0.03, 0.1))
+# 디멘션 슬래시 (효과: 0 ~ 6 오른쪽 뒤로 당긴 칼끝에 마력이 빨려 듦 → 6 허공을 가로로 가름 (앞 3.5칸에 차원의 틈 · 맞음) → 7 ~ 21 틈이 둘레의 적을 빨아들임
+# → 단계 :close (22 — 틈이 닫히며 폭발)). 몸을 오른쪽 끝까지 비틀어 칼을 오른쪽 뒤로 크게 당겨 낮게 웅크렸다가, 크게 내디디며 오른쪽 → 왼쪽 끝까지 허공을
+# 가르고, 칼을 왼쪽 아래에 둔 채 왼손을 틈으로 활짝 내밀어 끌어당김 (손이 조금씩 당겨지며 떨림)
+RIFT_PALM = P(body=[10, -30, 0], head=[-4, 0], ra=arm([-0.55, -0.62, 0.3], 20, [-0.6, -0.45, -0.65]), la=L(A_PALM), rl=[20, 0, 6], ll=[-30, 0, -6], rk=26,
+              lk=40, root=[-0.18, 0.34])  # 칼을 왼쪽 아래에 두고 왼손을 틈으로 활짝 내밂
+RIFT_DRAW = P(RIFT_PALM, body=[8, -22, 0], la=L(arm([-0.1, 0.06, 0.95], 35, [0, 1, 0.1])), root=[-0.16, 0.26])  # 내민 손이 조금 당겨짐 (끌어당김)
+m = Motion("arcaneblade_rift", 24, "디멘션 슬래시 — 몸을 오른쪽 끝까지 비틀어 칼을 오른쪽 뒤로 크게 당겨 낮게 웅크렸다가, 크게 내디디며 오른쪽에서 왼쪽 끝까지 허공을 "
+           "가르고, 칼을 왼쪽 아래에 둔 채 왼손을 활짝 내밀어 틈 쪽으로 끌어당김", fade=(0.03, 0.06))
 off_bare(m)
-keyp(m, 1.6, OD_HOLD, "out3")
-keyp(m, 4.0, P(OD_HOLD, body=[-8, 0, 0], head=[-10, 0]))
-keyp(m, 8.0, P(W_UP_FRONT, body=[-6, 0, 0], head=[-8, 0], la=bent([0.08, 0.05, 0.9], 70, (-0.3, 1, 0))), "inout")
-keyp(m, 9.2, P(P(body=[6, 34, 0], head=[-4, 0], ra=arm([0.95, 0.05, 0.25], 6, [0.75, 0.25, 0.6]), la=arm([-0.6, -0.5, 0.3], 30), **LEGS_LUNGE),
-               root=[-0.1, 0.26]), "out")
-keyp(m, 12.0, P(P(body=[6, 28, 0], head=[-4, 0], ra=arm([0.92, 0.05, 0.3], 8, [0.72, 0.3, 0.6]), la=arm([-0.6, -0.5, 0.3], 30), **LEGS_LUNGE),
-                root=[-0.08, 0.2]))
-keyp(m, 15.5, P(W_READY, body=[8, 6, 0]))
-m.arc(9.2, "ra", (0.4, 0.1, 1))
-m.head.setdefault("trail", []).append([m.t(8.4), m.t(10.4)])
-m.set(tilt=10)
-fpw(m, 1.6, FPW_UP, "out3")
-fpw(m, 8.0, FPW_UP, dp=(0, -0.05, 0))
-fpw(m, 9.2, FPW_SPREAD, "out")
-fpw(m, 15.5, FPW_LOW)
-fpl(m, 1.6, nudge(FP_PALM, (-0.1, 0.25, 0.05), (20, 20, 0)), "out3")
-fpl(m, 8.0, nudge(FP_PALM, (-0.1, -0.15, 0.05), (10, 20, 0)), "inout")
-fpl(m, 9.2, FP_LOW, "out")
-use_skill(m, "arcaneblade_overdrive")
+keyp(m, 1.6, P(CR_COIL, la=arm([0.3, -0.25, 0.75], 40)), "out3")
+keyp(m, 4.4, P(CR_COIL2, la=arm([0.3, -0.25, 0.75], 40)), "in")
+strike_with(m, "slash_h", 4.9, 6.0, 7.6, a=P(CR_COIL2, la=arm([0.3, -0.25, 0.75], 40)), b=CR_END)
+keyp(m, 10.0, RIFT_PALM, "out3")
+for i, tk in enumerate((12.0, 14.0, 16.0, 18.0, 20.0)):
+    q = (i + 1) / 5
+    keyp(m, tk, P(RIFT_PALM if i % 2 == 0 else RIFT_DRAW, body=[10 - 2 * q, -30 + 8 * q, 1.5 if i % 2 == 0 else -1.5]), "inout")
+keyp(m, 22.0, RIFT_DRAW, "inout")
+keyp(m, 23.6, RIFT_DRAW)
+fpw(m, 1.6, dict(p=(0.62, 0.38, 0.3), blade=(0.75, 0.35, -0.56)), "out3")
+fpw(m, 4.4, dict(p=(0.72, 0.32, 0.38), blade=(0.72, 0.3, -0.62)), "in")
+fpw(m, 9.4, dict(p=(-1.7, 0.28, 0.22), blade=(-0.85, 0.0, -0.52)))
+fpw(m, 12.0, FPW_LOW, "out3", dp=(-0.25, 0.0, 0.0))
+fpw(m, 23.6, FPW_LOW, dp=(-0.25, 0.0, 0.0))
+fpl(m, 1.6, ((0.1, -0.2, -0.05), (10, 40, 0)), "out3")
+fpl(m, 6.0, FP_LOW, "linear")
+fpl(m, 10.0, FPL_OPEN, "out3")
+fpl(m, 16.0, nudge(FPL_OPEN, (0.0, 0.0, 0.06)), "inout")
+fpl(m, 22.0, nudge(FPL_OPEN, (0.0, -0.02, 0.1)), "inout")
+impacts(m, 7.0)
+use_skill(m, "arcaneblade_rift")
+
+# 닫음 (단계 :close — 0 = 틈이 닫히며 폭발: 0 ~ 1 내민 왼손을 움켜쥐며 허리로 확 당김 (몸이 오른쪽으로 돌아감) → 버팀 → 싸울 자세)
+m = Motion("arcaneblade_rift_close", 12, "닫음 — 내민 왼손을 움켜쥐며 허리 뒤로 확 당겨 틈을 닫고, 몸이 오른쪽으로 돌아가며 칼을 아래로 턴 뒤 싸울 자세를 잡음", fade=(0.0, 0.1))
+off_bare(m)
+first(m, RIFT_DRAW, dict(FPW_LOW, p=(FPW_LOW["p"][0] - 0.25, FPW_LOW["p"][1], FPW_LOW["p"][2])))
+keyp(m, 1.2, P(RIFT_DRAW, body=[12, 18, 0], head=[-6, 0], la=L(A_PULL), ra=arm([0.55, -0.72, 0.4], 26, [0.4, -0.88, 0.25]), root=[-0.24, 0.3]), "out")
+keyp(m, 4.6, P(RIFT_DRAW, body=[14, 22, 0], head=[-4, 0], la=L(A_PULL), ra=arm([0.55, -0.72, 0.4], 26, [0.4, -0.88, 0.25]), root=[-0.26, 0.3]))
+keyp(m, 11.6, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.2, FPW_FLICK, "out")
+fpw(m, 4.6, FPW_FLICK)
+fpw(m, 11.6, FPW_LOW)
+fpl(m, 0.0, nudge(FPL_OPEN, (0.0, -0.02, 0.1)))
+fpl(m, 1.2, FPL_GRASP, "out")
+fpl(m, 3.0, nudge(FP_LOW, (0.0, 0.1, 0.0)), "in")
+fpl(m, 11.6, FP_LOW)
+impacts(m, 0.5)
+use_skill(m, "arcaneblade_rift:close")
 
 # 월드 클리버 (효과: 0 ~ 21 머리 위에서 하늘을 찌르는 대검으로 자라남 → 18 ~ 21 휘둘러 내려옴 → 21 :slam (내려쳐 가름) → 30 갈라진 땅이 솟구침).
 # 두 손으로 칼을 쥐고 웅크렸다가 하늘로 곧게 치켜들고 몸을 크게 젖혀 버티며 (떨림 — 점점 더 젖혀짐), 크게 내디디며 앞으로 내려침

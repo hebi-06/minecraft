@@ -14,6 +14,7 @@ import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
+import mmorpg.fabric.skill.Status;
 import mmorpg.fabric.skill.V;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,7 +25,7 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 0.51.0 전사 각성 워로드 — 재설계안 2판 (사용자 "각성은 스킬셋을 아예 바꿔도 된다니깐 매커니즘만 유지하고 컨셉만 유지하면" · "스킬 컨셉은 롤같은거
  * 많이 참고하면 좋음" · "이펙트가 전직업보다 안좋았음 타격감이 없었음 이펙트가 작았음"): 전사와 같은 매커니즘 (근접 · 광역 · 묵직한 단타 · 맞으며 버팀 · 분노),
- * 1차와 짝이 없는 새 스킬 다섯 — 대지 가르기 (롤 사이온 Q — 모아 쳐서 다시 누름) · 동면 (롤 알리스타 R) · 곰의 포옹 (롤 세트 E) · 거인의 무게 (롤 말파이트 W) ·
+ * 1차와 짝이 없는 새 스킬 다섯 — 대지 가르기 (롤 사이온 Q — 모아 쳐서 다시 누름) · 동면 (롤 알리스타 R) · 곰의 포옹 (롤 세트 E) · 베어 스톰프 (롤 볼리베어 R — 2026-11-05 거인의 무게 대신) ·
  * 마지막 휘두름 (롤 다리우스 Q — 바깥 날). 맞은 자리는 JobImpact (큰 타격 그림 · 멈칫 — 화면은 흔들지 않음). 몸 쓰는 직업 기준 (제 몸 · 제 도끼 동작만 — 곰은
  * 곰의 혼 그림 rfx_jbear · 앞발 rfx_jpaw). 땅의 그림: 갈라지는 땅 (fissure) · 내려찍기 (rfx_jquake) · 땅에서 솟는 돌창 (rfx_jspike).
  */
@@ -47,7 +48,7 @@ final class WarlordSkills {
         JobSystem.register(REND, WarlordSkills::rend);
         JobSystem.register(SLUMBER, WarlordSkills::slumber);
         JobSystem.register("warlord_hug", WarlordSkills::hug);
-        JobSystem.register(JobTraits6.TITAN, WarlordSkills::titan);
+        JobSystem.register("warlord_stomp", WarlordSkills::stomp);
         JobSystem.register("warlord_ult", WarlordSkills::ult);
     }
 
@@ -432,58 +433,130 @@ final class WarlordSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 거인의 무게
+    // ------------------------------------------------------------ 베어 스톰프
+
+    /** 내려찍을 자리: 조준한 적 앞 (몸 폭만큼 — 몸 속이 아니라) → 조준한 땅 (2칸 넘게 · 높이 4칸 안) → 앞 8칸 (벽 앞까지) */
+    private static Vec3 landSpot(ServerPlayer sp, double range, Vec3 f) {
+        ServerLevel level = sp.level();
+        RpgCombat.Aim a = RpgCombat.aimTarget(sp, range, 6.0);
+        if (a.target() != null && Kit.canHit(sp, a.target())) {
+            LivingEntity e = a.target();
+            Vec3 d = V.flat(V.sub(sp.position(), e.position()));
+            double len = Math.hypot(d.x, d.z);
+            Vec3 u = len > 0.05 ? V.scale(d, 1 / len) : V.scale(f, -1);
+            return ground(level, V.add(e.position(), u, Math.min(len, 0.6 + Kit.bodyPad(e))));
+        }
+        Vec3 g = RuneKit.groundAim(sp, range);
+        double dist = Math.hypot(g.x - sp.getX(), g.z - sp.getZ());
+        if (dist >= 2.0 && Math.abs(g.y - sp.getY()) <= 4) return ground(level, g);
+        double can = RuneKit.dashDistance(sp, f, 8, 0.3, 1.5);
+        return ground(level, V.add(sp.position(), f, can));
+    }
 
     /**
-     * 거인의 무게 (롤 말파이트 W): dur 틱 태세 — 도끼 평타 + power · 공격 속도 × (1 − slow) · 범위 ×1.6 (SWING_LOOK warlord_titan) · 밀려나지 않음 (JobTraits6).
-     * 쓸 때 한 발을 높이 들어 땅을 구름 (6틱 — 둘레가 갈라지고 돌창 넷)
+     * 베어 스톰프 (롤 볼리베어 R — 2026-11-05 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자" · "딜링기도 괜찮고", 거인의 무게 대신 — 워로드의 첫 이동기):
+     * 도끼를 두 손으로 머리 위에 들고 웅크림 (등 뒤에 곰의 혼) → leapAt 틱에 조준한 곳 (range 칸 — landSpot) 으로 peak 칸 높이 뛰어오름 · 거대한 곰의 혼이 그 자리 위
+     * 하늘에서 함께 내려옴 → landAt 틱에 내려찍음 (둘레 radius 칸 stomp · 띄움 — 곰의 두 앞발 · 갈라지는 땅 · 돌창 고리) → afterAt 틱에 둘레 afterRadius 칸 땅이
+     * 갈라지며 돌창이 바깥 고리로 솟음 (after). 몸 쓰는 직업 기준 (제 몸 · 제 도끼 — 곰의 혼은 분노의 그림). 밀려나지 않음
      */
-    static boolean titan(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = JobUpgrades.ticks(sp, k, "dur", (int) k.num("dur", 200));
-        JobTraits.startStance(sp, k, dur);
-        RpgCombat.setSteadfast(sp, dur);
+    static boolean stomp(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        if (Status.isRooted(sp) || Kit.ridingAny(sp)) {
+            Notify.notify(sp, "§c" + k.name() + " §7— 지금은 움직일 수 없습니다", 30);
+            return false;
+        }
+        int leapAt = Math.max(2, (int) k.num("leapAt", 4));
+        int landAt = Math.max(leapAt + 6, (int) k.num("landAt", 16));
+        int afterAt = Math.max(landAt + 10, (int) k.num("afterAt", 26));
+        double range = k.num("range", 10);
         String life = RuneKit.lifeToken(sp);
-        ServerLevel level = sp.level();
-        JobFx.aura(sp, j, 3.2, 0.8, 0.9);
-        SkillFx.play(level, "block.stone.break", sp.position(), 0.5, 0.9);
-        RuneKit.later(6, () -> {
+        ServerLevel level0 = sp.level();
+        Vec3 c0 = sp.position();
+        Vec3 f = Kit.facingOf(sp);
+        Vec3 dest = landSpot(sp, range, f);
+        RpgCombat.setSteadfast(sp, afterAt + 4);
+        double[] bg = JobTraits6.bearGlow(j);
+        double[] bc = JobTraits6.bearCore(j);
+        // 웅크림: 등 뒤에 곰의 혼이 모임 · 도끼에 빛 · 발밑 흙먼지
+        JobFx.bear(level0, V.up(V.add(c0, f, -0.9), 2.2), 1.6, (leapAt + 3) / 20.0, 0, 3, false, JobFx.hide1p(sp).with("alpha", 0.75, "coreAlpha", 0.95), bg, bc);
+        JobFx.charge(sp, j, new Vec3(0.0, 2.2, -0.2), leapAt + 1, 0.9);
+        SkillFx.sparks(level0, V.up(c0, 0.2), DUST, 10, 3.0);
+        SkillFx.play(level0, "mob.polarbear.warning", c0, 0.6, 1.0);
+        // 뛰어오름 (포물선) — 내려찍을 자리 땅의 곰 발자국 고리 (경고)
+        JobMove.run(sp, JobMove.hop(leapAt, landAt, JobMove.at(dest), k.num("peak", 4.5)));
+        JobFx.ring(level0, V.up(dest, 0.1), k.num("radius", 4.5), j, true, (landAt - leapAt) / 20.0 + 0.1, Opt.of("alpha", 0.75));
+        RuneKit.later(leapAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            Vec3 g = ground(lv, sp.position());
-            JobFx.smash(lv, V.up(g, 0.05), 3.0, j, 0.55, Opt.empty());
-            SkillFx.shock(lv, V.up(g, 0.1), JobFx.inner(j), 3.0, 0.4);
-            for (int i = 0; i < 4; i++) {
-                double a = Math.toRadians(i * 90 + 45);
-                JobFx.spikeLife(lv, ground(lv, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), 1.8)), 0.6, 0.12, 0.45, Opt.empty(), ROCK, JobKit.glow(j));
-            }
-            RuneKit.rockBurst(lv, V.up(g, 0.2), 8, 4.0, 0.16);
-            SkillFx.sparks(lv, V.up(g, 0.2), DUST, 12, 3.2);
-            SkillFx.play(lv, "mace.heavy_smash_ground", g, 0.6, 1.0);
-            SkillFx.play(lv, "entity.iron_golem.attack", g, 0.6, 0.8);
+            JobFx.dash(lv, V.up(c0, 0.6), V.up(sp.position(), 1.4), j, 0.3, JobFx.hide1p(sp));
+            SkillFx.play(lv, "entity.player.attack.sweep", sp.position(), 0.5, 0.8);
+            SkillFx.play(lv, "entity.ravager.roar", sp.position(), 1.2, 0.6);
+        });
+        // 거대한 곰의 혼이 자리 위 하늘에서 함께 내려옴 (포효 · 앞발을 든 채)
+        int fall = Math.max(4, landAt - leapAt - 4);
+        RuneKit.later(leapAt + 4, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            double h0 = 7.5;
+            double h1 = 2.6;
+            JobFx.bear(sp.level(), V.up(dest, h0), 3.2, fall / 20.0 + 0.1, 3, 4, true, Opt.of("vel", new Vec3(0, -(h0 - h1) / (fall / 20.0), 0), "alpha", 0.8, "coreAlpha",
+                    1.0, "fade", 0.1), bg, bc);
+        });
+        RuneKit.later(landAt, () -> {
+            if (RuneKit.sameLife(sp, life)) stompLand(sp, j, k, P, dest, life);
+        });
+        RuneKit.later(afterAt, () -> {
+            if (RuneKit.sameLife(sp, life)) stompAfter(sp, j, k, P, dest, life);
         });
         return true;
     }
 
-    /** 거인의 무게 동안 휘두를 때마다 (JobTraits6.onSwing): 앞 부채꼴의 땅이 세 갈래로 갈라지고 끝에서 돌창 둘 · 돌이 튐 · 낮은 땅울림 */
-    static void titanQuake(ServerPlayer sp, Jobs.Job j) {
+    /** 내려찍음: 곰의 두 앞발 · 큰 타격 · 갈라지는 땅 (다섯 갈래) · 돌창 고리 · 충격파 · 1인칭 세로 베기 — 둘레 radius 칸 stomp · 띄움 */
+    private static void stompLand(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 g, String life) {
         ServerLevel level = sp.level();
+        double r = k.num("radius", 4.5);
         Vec3 f = Kit.facingOf(sp);
-        Vec3 g = groundAhead(sp.position(), f, 0.9, level);
-        for (int s = -1; s <= 1; s++) {
-            Vec3 d = V.turnY(f, s * 24.0);
-            rift(level, g, d, 3.6 + (s == 0 ? 0.8 : 0), JobKit.glow(j), 0.85, 50);
+        Vec3 right = V.rightOf(f);
+        double[] bg = JobTraits6.bearGlow(j);
+        double[] bc = JobTraits6.bearCore(j);
+        slamFx(sp, j, g, r, 1.8);
+        for (int s = -1; s <= 1; s += 2) JobFx.paw(level, V.up(V.add(V.add(g, right, 1.4 * s), f, 0.6), 1.3), 1.7, 0.35, Opt.of("alpha", 0.9, "spin", s * 12.0), bg, bc);
+        JobFx.bear(level, V.up(g, 2.4), 3.0, 0.4, 7, 1, false, JobFx.hide1p(sp).with("alpha", 0.75), bg, bc);
+        for (int q = 0; q < 5; q++) rift(level, g, V.turnY(f, q * 72 + Kit.rand() * 20), r + 0.5, JobKit.glow(j), 1.0, 60);
+        for (int q = 0; q < 6; q++) {
+            double a = Math.toRadians(q * 60 + 30);
+            JobFx.spikeLife(level, ground(level, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), 2.4)), 0.85, 0.1, 0.45, Opt.empty(), ROCK, JobKit.glow(j));
         }
-        JobFx.two(level, "jquake", JobFx.QUAKE, V.up(V.add(g, f, 1.6), 0.05), 0.5, Opt.of("dir", V.UP, "size", 1.9 / 0.92, "spin", Kit.rand() * 360, "alpha", 0.9),
-                JobFx.outer(j), JobFx.inner(j));
-        // 갈라짐 끝에서 돌창 둘이 솟음 (가운데 · 엇갈려)
-        for (int i = 0; i < 2; i++) {
-            Vec3 p = ground(level, V.add(V.add(g, f, 2.6 + i * 1.0), V.rightOf(f), i == 0 ? -0.4 : 0.45));
-            int d = 1 + i;
-            RuneKit.later(d, () -> JobFx.spikeLife(level, p, 0.85 + Kit.rand() * 0.2, 0.1, 0.35, Opt.empty(), ROCK, JobKit.glow(j)));
+        SkillFx.shock(level, V.up(g, 0.1), JobFx.outer(j), r * 1.1, 0.5);
+        JobFx.slash(sp, j, 2.0, 0.3, 2.6, 95.0, 0.25);
+        SkillFx.play(level, "mob.polarbear.warning", g, 0.5, 1.0);
+        SkillFx.play(level, "item.mace.smash_ground_heavy", g, 0.7, 1.0);
+        for (LivingEntity e : Kit.around(sp, g, r, 3.0)) {
+            JobKit.strike(sp, e, j, P, k.num("stomp", 11), false, false, life, 0, d -> {
+                JobImpact.hit(sp, e, j, 2.0);
+                if (JobKit.pushable(e)) Kit.launch(e, 0, 0.75, 0);
+            });
         }
-        RuneKit.rockBurst(level, V.up(V.add(g, f, 2.2), 0.2), 4, 3.6, 0.15);
-        SkillFx.sparks(level, V.up(V.add(g, f, 1.8), 0.2), DUST, 6, 2.8);
-        SkillFx.play(level, "mace.smash_ground", g, 0.6, 0.55);
+    }
+
+    /** 땅이 갈라지며 솟음 (afterAt): 바깥 고리의 돌창 열 · 퍼지는 고리 · 충격파 · 돌 — 둘레 afterRadius 칸 after */
+    private static void stompAfter(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 g, String life) {
+        ServerLevel level = sp.level();
+        double r = k.num("afterRadius", 6.5);
+        JobFx.ring(level, V.up(g, 0.08), r, j, false, 0.5, Opt.of("alpha", 1.0));
+        SkillFx.shock(level, V.up(g, 0.1), JobFx.inner(j), r * 1.05, 0.5);
+        for (int q = 0; q < 10; q++) {
+            double a = Math.toRadians(q * 36 + Kit.rand() * 14);
+            double rr = r * (0.62 + Kit.rand() * 0.25);
+            int d = q % 3;
+            Vec3 p = ground(level, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), rr));
+            RuneKit.later(d, () -> JobFx.spikeLife(level, p, 0.95 + Kit.rand() * 0.25, 0.1, 0.5, Opt.empty(), ROCK, JobKit.glow(j)));
+        }
+        RuneKit.rockBurst(level, V.up(g, 0.3), 12, 6.0, 0.2);
+        SkillFx.sparks(level, V.up(g, 0.3), DUST, 16, 4.0);
+        SkillFx.play(level, "mace.heavy_smash_ground", g, 0.6, 0.9);
+        SkillFx.play(level, "random.explode", g, 0.7, 0.6);
+        for (LivingEntity e : Kit.around(sp, g, r, 3.0)) {
+            JobKit.strike(sp, e, j, P, k.num("after", 4.6), false, false, life, 0, d -> JobImpact.fx(sp, e, j, 1.4));
+        }
     }
 
     // ------------------------------------------------------------ 마지막 휘두름

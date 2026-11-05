@@ -23,7 +23,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.27.0 마검사 직업 스킬 (jobs.json spellblade — 남보라 마력 · 청록 칼날, 특성 「마력 검술」 · 마력 각인): 비전 참격 · 마력 도약 · 룬 검무 · 마검 각성 · 비전 거검.
+ * 0.27.0 마검사 직업 스킬 (jobs.json spellblade — 남보라 마력 · 청록 칼날, 특성 「마력 검술」 · 마력 각인): 비전 참격 · 마력 도약 · 룬 검무 · 스펠 가이저 (0.51.0
+ * 마검 각성 태세 대신 — 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자") · 비전 거검.
  * 칼 = 공격 피해, 마력 = 마법 피해 (방어 무시) — 숫자는 둘 다 직업 색 그라데이션. 스킬이 처음 맞힌 적마다 마력 각인 하나 (한 번 쓸 때 적마다 하나 — JobTraits.mark),
  * 평타가 각인 찍힌 적을 치면 하나가 터지고 (JobTraits), 비전 거검은 남은 각인을 모두 터뜨림.
  * 연출 = 메이플식 2D 그림 (JobFx — 눈앞 큰 베기 · 타격 그림 · 터짐 · 둥근 베기 · 돌진 줄기, 룬 연출의 문양 · 룬 글자는 쓰지 않음).
@@ -39,7 +40,7 @@ final class SpellbladeSkills {
         JobSystem.register("spellblade_arcslash", SpellbladeSkills::arcslash);
         JobSystem.register("spellblade_blink", SpellbladeSkills::blink);
         JobSystem.register("spellblade_runedance", SpellbladeSkills::runedance);
-        JobSystem.register("spellblade_awaken", SpellbladeSkills::awaken);
+        JobSystem.register("spellblade_awaken", SpellbladeSkills::geyser); // 0.51.0 스펠 가이저 (id 그대로 — 강화 단계 기록)
         JobSystem.register("spellblade_ult", SpellbladeSkills::ult);
     }
 
@@ -273,44 +274,96 @@ final class SpellbladeSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 마검 각성
+    // ------------------------------------------------------------ 스펠 가이저
 
     /**
-     * 마검 각성: dur 틱 태세 — 평타가 맞을 때마다 마력 참격 잔상 (위력 × echo — JobTraits) · 평타 사거리 +reach 칸.
-     * 그림: 손의 칼이 마력으로 길어짐 · 몸에서 솟는 빛 (3인칭) · 발밑 둥근 베기 · 솟는 불꽃 · 1인칭 눈앞 고리 · 글자, 태세 동안 8틱마다 칼빛 (JobTraits)
+     * 스펠 가이저 (2026-11-05 사용자 "구지 신체 강화 스킬도 필수로 안넣어도 될거 같다" · "직업 중에 구지 강화 시키면 어색한 애들은 빼자" · "딜링기도 괜찮고",
+     * 스펠 인챈트 대신 — 롤 브랜드 W): 칼을 거꾸로 쥐어 두 손으로 들었다가 plantAt 틱에 앞 ahead 칸 땅에 꽂음 — 둘레 radius 칸 룬 원 (circle · root 틱 묶음 — 보스는
+     * 느려짐 · 각인) → 원의 룬 글자가 떠오르며 빛이 가운데로 모임 → eruptAt 틱에 원에서 거대한 마력 기둥이 솟구침 (height 칸 — pillar 큰 숫자 · 띄움 · 각인). 스킬
+     * id 는 그대로 (spellblade_awaken — 강화 단계 기록)
      */
-    static boolean awaken(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = (int) k.num("dur", 240);
-        JobTraits.startStance(sp, k, dur);
-        ServerLevel level = sp.level();
-        Vec3 c = sp.position();
+    static boolean geyser(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        int plantAt = Math.max(2, (int) k.num("plantAt", 6));
+        int eruptAt = Math.max(plantAt + 10, (int) k.num("eruptAt", 18));
+        double r = k.num("radius", 3.5);
+        double height = k.num("height", 12);
+        String life = RuneKit.lifeToken(sp);
+        Set<UUID> marked = new HashSet<>();
+        ServerLevel level0 = sp.level();
+        Vec3 c0 = sp.position();
+        Vec3 f = Kit.facingOf(sp);
+        Vec3 a = V.add(c0, f, k.num("ahead", 2.2));
+        Vec3 g = new Vec3(a.x, RuneKit.groundAt(level0, V.up(a, 0.6), c0.y), a.z);
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
-        JobFx.aura(sp, j, 2.6, 1.2, 0.95);
-        JobFx.ring(level, V.up(c, 0.06), 2.2, j, false, 0.5, Opt.of("alpha", 0.85));
-        String life = RuneKit.lifeToken(sp);
-        for (int t = 0; t < 10; t += 2) {
+        // 듦: 거꾸로 쥔 칼끝에 마력 · 꽂힐 자리의 옅은 룬 원 (경고)
+        JobFx.charge(sp, j, new Vec3(0.0, 2.3, 0.35), plantAt, 0.8);
+        JobFx.runeRing(level0, V.up(g, 0.08), r, j, 9, Kit.rand() * 40, plantAt / 20.0 + 0.05, Opt.of("alpha", 0.45));
+        SkillFx.play(level0, "mob.evocation_illager.prepare_attack", c0, 1.4, 0.6);
+        RuneKit.later(plantAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
+            // 꽂음: 룬 원 · 퍼지는 고리 · 충격파 · 돌 · 1인칭 세로 베기 — 둘레 적 circle · 묶음
+            JobFx.runeRing(lv, V.up(g, 0.09), r, j, 9, Kit.rand() * 40, (eruptAt - plantAt) / 20.0 + 0.25, Opt.of("alpha", 1.0));
+            JobFx.ring(lv, V.up(g, 0.07), r, j, false, 0.45, Opt.of("alpha", 0.95));
+            SkillFx.shock(lv, V.up(g, 0.1), JobFx.outer(j), r * 0.9, 0.4);
+            JobFx.burst(lv, V.up(g, 0.5), 1.4, j, 0.3, Opt.empty());
+            RuneKit.rockBurst(lv, V.up(g, 0.2), 6, 4.0, 0.15);
+            JobFx.slash(sp, j, 1.9, 0.4, 2.1, 92.0, 0.22);
+            SkillFx.play(lv, "block.anvil.land", g, 1.6, 0.5);
+            SkillFx.play(lv, "block.amethyst_block.resonate", g, 0.8, 1.0);
+            int root = (int) k.num("root", 10);
+            for (LivingEntity e : Kit.around(sp, g, r, 2.5)) {
+                JobKit.strike(sp, e, j, P, k.num("circle", 6), true, false, life, 0, x -> {
+                    markOnce(sp, e, j, marked);
+                    JobFx.hit(e, j, 1.0);
+                    RuneKit.effect(e, "slowness", root, JobKit.isBoss(e) ? 1 : 10);
+                });
+            }
+        });
+        // 모음 (plantAt ~ eruptAt): 원에서 떠오르는 룬 글자 · 가운데로 빨려 드는 빛 · 땅울림
+        for (int t = plantAt + 2; t < eruptAt; t += 3) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                RuneKit.Hand h = RuneKit.handOf(sp);
-                double q = (tt + 2) / 10.0;
-                RuneKit.rfx2(sp.level(), "sword", V.up(h.hand(), 0.3 + 0.3 * q), Opt.of("dir", V.UP, "size", 0.45 + 0.35 * q, "life", 0.14, "alpha", 0.9, "vel",
-                        RuneKit.bodyVel(sp)), glow, core);
-                SkillFx.fx(sp.level(), "rpg:arrow_spark", V.up(sp.position(), 0.2 + q * 1.6), Opt.of("dir", V.UP, "speed", 2.0, "size", 0.14, "grow", 1.0, "life", 0.4,
-                        "color", tt % 4 == 0 ? glow : core, "alpha", 1.0));
+                ServerLevel lv = sp.level();
+                double q = (tt - plantAt) / (double) (eruptAt - plantAt);
+                double ang = Kit.rand() * Math.PI * 2;
+                Vec3 p = V.add(g, new Vec3(Math.cos(ang), 0, Math.sin(ang)), r * (0.4 + Kit.rand() * 0.5));
+                JobFx.glyph(lv, V.up(p, 0.6 + q), 0.5, (int) (Kit.rand() * 3), 0, 4, 0.35, false, Opt.of("vel", new Vec3(0, 2.0, 0)), j);
+                JobFx.line(lv, V.up(p, 0.2), V.up(g, 0.3 + q * 0.8), j, 0.15, Opt.of("alpha", 0.7));
+                SkillFx.sparks(lv, V.up(g, 0.3), JobFx.inner(j), 3 + (int) (q * 5), 2.0 + q * 2);
+                SkillFx.play(lv, "block.respawn_anchor.charge", g, 0.8 + q * 0.6, 0.35);
             });
         }
-        JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
-        // 0.47.0 입체: 태세 동안 몸 둘레를 도는 마력 검 셋 (허리 ~ 머리 — 칼끝이 가는 쪽, 1인칭에서는 숨김)
-        int[] ids = JobFx3d.orbitOwner(sp, "phantom_sword", 3, new Vec3(0, 1.2, 0), 1.2, 110, false, dur / 20.0, 0.6, j, Opt.of("view", 1.0, "owner", (double) sp
-                .getId(), "bob", 0.3, "bobHz", 0.5, "fadeIn", 0.3, "fadeOut", 0.5, "alpha", 0.92));
-        JobFx3d.hold(sp, "spellblade_awaken", ids);
-        JobFx3d.guard(sp, life, ids, dur);
-        Ult.flash(level, c, glow, Opt.of("radius", 4.0, "time", new double[] {0.03, 0.05, 0.35}), sp);
-        SkillFx.play(level, "beacon.activate", c, 1.5, 0.8);
-        SkillFx.play(level, "mob.evocation_illager.prepare_attack", c, 1.6, 0.6);
-        SkillFx.play(level, "block.amethyst_block.resonate", c, 0.9, 1.0);
+        RuneKit.later(eruptAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
+            // 솟구침: 하늘까지 닿는 마력 기둥 (빛기둥 · 굵은 광선) · 둘레에서 위로 솟는 큰 검기 여섯 · 터짐 · 고리 · 충격파 · 섬광 — 둘레 적 pillar · 띄움
+            RuneKit.godRays(sp, lv, g, r * 0.85, 10, glow, core, Opt.of("h", height, "life", 0.9, "alpha", 0.95, "skipNear", true));
+            JobFx.beam(lv, V.up(g, 0.2), V.up(g, height), j, 3.2, 0.45, Opt.of("alpha", 1.0));
+            for (int q = 0; q < 6; q++) {
+                double ang = Math.toRadians(q * 60 + Kit.rand() * 20);
+                Vec3 p = V.add(g, new Vec3(Math.cos(ang), 0, Math.sin(ang)), r * 0.6);
+                JobFx.bigWave(lv, null, V.up(p, 0.4), V.UP, 18.0, 1.6, 90 + (Kit.rand() - 0.5) * 30, 0.4, j, Opt.empty());
+            }
+            JobFx.burst(lv, V.up(g, 1.2), 3.0, j, 0.45, Opt.empty());
+            JobFx.ring(lv, V.up(g, 0.08), r, j, true, 0.45, Opt.of("alpha", 1.0));
+            SkillFx.shock(lv, V.up(g, 0.1), JobFx.outer(j), r * 1.2, 0.5);
+            RuneKit.rockBurst(lv, V.up(g, 0.3), 10, 6.5, 0.18);
+            SkillFx.sparks(lv, V.up(g, 1.5), JobFx.inner(j), 24, 8.0);
+            Ult.flash(lv, g, glow, Opt.of("radius", 6.0, "time", new double[] {0.03, 0.05, 0.3}), sp);
+            SkillFx.play(lv, "random.explode", g, 0.9, 0.8);
+            SkillFx.play(lv, "beacon.activate", g, 1.6, 0.8);
+            SkillFx.play(lv, "item.trident.thunder", g, 1.5, 0.6);
+            for (LivingEntity e : Kit.around(sp, g, r + 0.3, 3.0)) {
+                JobKit.strike(sp, e, j, P, k.num("pillar", 14.4), true, true, life, 0, x -> {
+                    markOnce(sp, e, j, marked);
+                    JobFx.hit(e, j, 1.5);
+                    if (JobKit.pushable(e)) Kit.launch(e, 0, 1.0, 0);
+                });
+            }
+        });
         return true;
     }
 

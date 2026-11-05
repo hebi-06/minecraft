@@ -59,25 +59,23 @@ public final class JobTraits {
     private static final Map<UUID, State> STATES = new HashMap<>();
     /** 마력 각인: "공격자|적" → {수, 끝나는 틱} */
     private static final Map<String, long[]> MARKS = new HashMap<>();
-    /** 마검 각성 사거리 +칸 (ENTITY_INTERACTION_RANGE) */
+    /** 태세의 평타 사거리 +칸 (스킬 정의 reach — ENTITY_INTERACTION_RANGE) */
     private static final net.minecraft.resources.Identifier REACH_ID = Mmorpg.id("job_reach");
     /** 평타에 더한 몫의 구분 (WeaponBonus.parts — 들어간 뒤 HitHook 이 연출 · 각인 씀) */
     static final String KEY_MIRROR = "job_mirror";
     static final String KEY_MARK = "job_mark";
     /** 0.51.0 아케인 블레이드: 각인 다섯이 한꺼번에 터짐 (거대한 마력 대검) */
     static final String KEY_MARK_FULL = "job_mark_full";
-    static final String KEY_AWAKEN = "job_awaken";
 
     static void init() {
         RpgCombat.addScaledBonusHook(JobTraits::mirrorBonus);
         RpgCombat.addScaledBonusHook(JobTraits::markBonus);
-        RpgCombat.addScaledBonusHook(JobTraits::awakenBonus);
         RpgCombat.addWeaponHitHook(JobTraits::onWeaponHit);
         RpgCombat.sureCrit = JobTraits::sureCrit;
         JobTraitsMore.init(); // 0.28.0 전사 · 매지션 · 궁수
         JobTraits3.init(); // 0.29.0 암살자 · 창술사 · 사신 (sureCrit 를 이어 받으므로 위의 sureCrit 다음)
         JobTraits4.init(); // 0.30.0 성기사 · 사제 · 수호기사
-        JobTraits5.init(); // 0.51.0 검사 2차 (소드마스터 치명 · 용의 피 · 벼린 칼 · 블러드 나이트 피의 갈증 · 광란)
+        JobTraits5.init(); // 0.51.0 검사 2차 (소드마스터 치명 · 용의 피 · 블러드 나이트 피의 갈증 · 광란)
         JobImpact.init(); // 0.51.0 타격감 (큰 타격 그림 · 멈칫)
         JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 동면 · 거인의 무게 · 글래디에이터 결투 · 불사의 분노 · 홀름강)
         JobTraits7.init(); // 0.51.0 마검사 2차 (아케인 블레이드 각인 번짐 · 거대한 마력 대검 · 오버드라이브 검기 · 소드 콜러 스스로 싸우는 칼 · 제미니 소드)
@@ -418,16 +416,6 @@ public final class JobTraits {
         return new RpgCombat.Bonus(add, "§d◈", KEY_MARK, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 
-    /** 마검 각성: 평타가 맞을 때마다 마력 참격 잔상 (위력 × echo) */
-    private static RpgCombat.Bonus awakenBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
-        if (w == null || !stanceOn(sp, "spellblade_awaken")) return null;
-        Jobs.Job j = JobSystem.job(sp);
-        if (j == null || !j.id().equals("spellblade") || !j.usesWeapon(w.type())) return null;
-        Jobs.Skill k = j.skill("spellblade_awaken");
-        double add = JobSystem.power(sp, j) * (k == null ? 0.93 : JobUpgrades.num(sp, k, "echo", 0.93)) * mmorpg.fabric.stattree.StatTrees.atkMult(sp); // 0.31.0 강화
-        return new RpgCombat.Bonus(add, "", KEY_AWAKEN, DamageNumbers.Style.JOB, null, JobKit.grad(j));
-    }
-
     private static boolean has(RpgCombat.WeaponBonus b, String key) {
         if (b == null) return false;
         for (RpgCombat.Bonus p : b.parts()) if (key.equals(p.key())) return true;
@@ -469,14 +457,6 @@ public final class JobTraits {
                     JobFx.burst(level, at, 0.85 + Kit.bodyPad(victim) * 0.4, j, 0.3, Opt.empty());
                     SkillFx.play(level, "chime.amethyst_block", at, 1.6, 0.8);
                     JobTraits7.spread(sp, victim, j, 1, 0); // 0.51.0 아케인 블레이드: 둘레로 마력 폭발이 번짐
-                }
-                if (has(bonus, KEY_AWAKEN)) {
-                    // 마력 참격 잔상: 평타 궤적을 따라 보라 · 청록 참격이 한 번 더 (2틱 뒤)
-                    RuneKit.later(2, () -> {
-                        if (victim.isRemoved()) return;
-                        JobFx.slash(sp, j, 2.0, 0.3, 1.3, 160.0, 0.22);
-                        JobFx.hit(victim, j, 1.1);
-                    });
                 }
                 sendGauge(sp, false);
             }
@@ -529,8 +509,7 @@ public final class JobTraits {
     }
 
     /**
-     * 태세 동안 8틱마다: 몸에서 솟는 옅은 빛 (3인칭 · 다른 사람 — 1인칭에서는 숨김) + 1인칭에서 보이는 칼의 빛 (명경지수 = 칼날을 따라 물빛 줄 ·
-     * 마검 각성 = 칼이 마력으로 길어짐)
+     * 태세 동안 8틱마다: 몸에서 솟는 옅은 빛 (3인칭 · 다른 사람 — 1인칭에서는 숨김) + 1인칭에서 보이는 칼의 빛 (명경지수 = 칼날을 따라 물빛 줄)
      */
     private static void stanceFx(ServerPlayer sp, Jobs.Job j, State st) {
         ServerLevel level = sp.level();
@@ -539,35 +518,19 @@ public final class JobTraits {
         if (!st.stance.equals("assassin_veil") && !(st.stance.equals(JobTraits3.NIGHT) && JobTraits3.veilOn(sp))) JobFx.aura(sp, j, 2.4, 0.5, 0.55);
         if (st.stance.equals("swordsman_mirror")) {
             SkillFx.fx(level, "rpg:light_cut", V.up(h.hand(), 0.2), Opt.of("dir", V.UP, "size", 0.45, "thick", 0.07, "life", 0.4, "color", JobKit.core(j), "alpha", 0.8));
-        } else if (st.stance.equals("spellblade_awaken")) {
-            RuneKit.rfx2(level, "sword", V.up(h.hand(), 0.35), Opt.of("dir", V.UP, "size", 0.5, "life", 0.42, "alpha", 0.7, "fade", 0.5, "vel", RuneKit.bodyVel(sp)),
-                    JobKit.glow(j), JobKit.core(j));
         } else if (st.stance.equals("warrior_spirit")) {
             // 투혼: 몸의 불꽃 (위 aura) + 손에서 솟는 불티 · 1인칭 화면 아래 양옆 불티
             RuneKit.auraCue(sp, JobKit.glow(j), 2);
             SkillFx.fx(level, "rpg:arrow_spark", V.up(h.hand(), 0.1), Opt.of("dir", V.UP, "speed", 1.6, "size", 0.13, "grow", 0.8, "life", 0.35, "color", JobKit.glow(j),
                     "alpha", 1.0));
-        } else if (st.stance.equals("mage_overload")) {
-            // 마나 과부하: 완드 끝에 작은 구체 · 몸 둘레를 도는 반짝임 (3인칭)
-            Vec3 tip = RpgCombat.circleAt(sp)[0];
-            JobFx.orb(level, tip, 0.11, j, 0.42, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.95));
-            double a = Tasks.now() * 0.35;
-            for (int i = 0; i < 3; i++) {
-                double b = a + i * Math.PI * 2 / 3;
-                Vec3 p = V.up(sp.position(), 0.6 + 0.5 * i);
-                RuneKit.rfx(level, "prop", new Vec3(p.x + Math.cos(b) * 0.85, p.y, p.z + Math.sin(b) * 0.85), JobFx.hide1p(sp).with("size", 0.13, "life", 0.42, "cell",
-                        (double) RuneKit.RFX.get("glint")[0], "spin", 0.0, "spinRate", 180.0, "color", JobKit.core(j), "fade", 0.4, "vel", RuneKit.bodyVel(sp)));
-            }
         } else if (JobTraits3.stanceFx(sp, j, st.stance)) {
             // 0.29.0 암영 (1인칭 화면 가장자리의 옅은 연기) · 창벽 (앞의 창끝 셋) · 사신 현신 (등 뒤의 사신 그림자)
         } else if (JobTraits4.stanceFx(sp, j, st.stance)) {
             // 0.30.0 수호의 맹세 (등 뒤 빛의 날개) · 철옹성 (앞의 큰 빛의 방패)
         } else if (JobTraits5.stanceFx(sp, j, st.stance)) {
             // 0.51.0 용의 심장 (가슴의 금빛 불씨 · 칼의 금빛) · 회그니의 맹세 (칼끝에서 떨어지는 핏방울)
-        } else if (JobTraits6.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 거인의 무게 (발밑 눌림 · 떨어지는 돌가루) · 불사의 분노 (몸을 감싼 붉은 불길 · 불티 · 눈빛)
         } else if (JobTraits7.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 담금질 (달군 대검 · 떨어지는 쇳물) · 둘로 나뉘어라 (손의 칼에서 흩날리는 청록 빛살)
+            // 0.51.0 제미니 소드 (손의 칼에서 흩날리는 청록 빛살)
         } else if (JobTraits8.stanceFx(sp, j, st.stance)) {
             // 0.51.0 꿀술의 노래 (머리 위 금빛 음표) · 망자 일으키기 (발밑의 녹색 혼불)
         } else if (JobTraits9.stanceFx(sp, j, st.stance)) {

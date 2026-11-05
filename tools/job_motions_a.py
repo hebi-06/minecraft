@@ -2,9 +2,9 @@
 단계 열쇠 (스킬 id:단계) 의 동작은 서버가 그 순간에 다시 보냄 (JobKit.motion)."""
 import rune_motion_kit as K
 from rune_motion_kit import (A_CROSS, A_HIP, A_PALM, A_PRAY, A_RAISE, A_SPREAD_DOWN, A_SPREAD_UP, BACK_END, BACK_HIT, BACK_WIND, CALL, FP_CHAMBER, FP_CROSS,
-                             FP_GATHER_L, FP_GROUND, FP_LOW, FP_PALM, FP_PUSH_OUT, FP_RAISE, FP_SPREAD_UP, FPL_GRIP2H, FPL_RAISE2H, FPW_BACK, FPW_DOWN, FPW_FWD,
-                             FPW_LOW, FPW_SKY, FPW_SPREAD, FPW_UP, GRIP2H, L, LEGS_FIGHT, LEGS_LUNGE, LEGS_WIDE, P, RA_POINT, RA_SKY, RA_UPRIGHT, RAISE2H, W_HIGH2,
-                             W_READY, W_SKY, arm, backhand, bent, fpl, fpw, keyp, nudge, off_bare, spin_left, spin_right, strike, use_skill, charge_slam)
+                             FP_GATHER_L, FP_GROUND, FP_LOW, FP_PALM, FP_PUSH_OUT, FP_RAISE, FP_SPREAD_UP, FPL_RAISE2H, FPW_BACK, FPW_DOWN, FPW_FWD, FPW_LOW,
+                             FPW_SKY, FPW_SPREAD, FPW_UP, L, LEGS_FIGHT, LEGS_LUNGE, LEGS_WIDE, P, RA_POINT, RA_SKY, RA_UPRIGHT, RAISE2H, W_HIGH2, W_READY,
+                             W_SKY, arm, backhand, bent, fpl, fpw, keyp, nudge, off_bare, spin_left, spin_right, strike, use_skill, charge_slam)
 
 Motion = K.Motion
 
@@ -228,20 +228,44 @@ spin_left(m, [15], 19, wind_tick=13, spin0=-360)
 spin_right(m, [30], 33, wind_tick=28.2, spin0=0)
 use_skill(m, "spellblade_runedance")
 
-# 마검 각성 (태세 — 효과: 0 ~ 10 손의 칼이 마력으로 길어짐 · 솟는 불꽃)
-m = Motion("spellblade_awaken", 24, "마검 각성 — 칼을 얼굴 앞에 세우고 왼손으로 칼날을 밑동에서 끝까지 쓸어 마력을 입힌 뒤 크게 털어 내림", fade=(0.04, 0.1))
+# 스펠 가이저 (효과: 0 ~ 6 거꾸로 쥔 칼끝에 마력 · 꽂힐 자리의 옅은 룬 원 → 6 앞 땅에 꽂음 (룬 원 · 맞음) → 8 ~ 17 룬 글자가 떠오르며 빛이 가운데로 모임 →
+# 18 원에서 거대한 마력 기둥이 솟구침 (맞음 · 띄움)). 롤 브랜드 W — 칼을 거꾸로 쥐어 두 손으로 머리 위로 들었다가 한 무릎을 꿇으며 앞 땅에 내리꽂고, 기둥이
+# 솟는 순간 칼을 뽑으며 일어서 왼손을 하늘로 쳐듦
+GZ_RAISE = P(body=[-12, 0, 0], head=[-18, 0], ra=arm([-0.1, 0.97, 0.18], 14, [0, -0.96, 0.25]), la=bent([0.1, 0.97, 0.18], 16, (-0.3, 1, 0)), rl=[0, 0, 10],
+             ll=[0, 0, -10], rk=14, lk=14, root=[-0.04, 0])  # 칼을 거꾸로 쥐고 두 손으로 머리 위로 (칼끝이 아래)
+GZ_KNEEL = P(body=[36, 0, 0], head=[-8, 0], ra=arm([0.0, -0.62, 0.78], 12, [0, -0.97, 0.22]), la=bent([0.05, -0.64, 0.76], 16, (0, 0, 1)), rl=[2, 0, 4], rk=92,
+             ll=[-82, 0, -4], lk=88, root=[-0.38, 0.22])  # 한 무릎을 꿇고 거꾸로 쥔 칼을 앞 땅에 꽂음
+GZ_RISE = P(body=[-14, 10, 0], head=[-22, 0], ra=arm([0.55, -0.45, 0.4], 20, [0.4, 0.85, 0.3]), la=L(A_RAISE), rl=[6, 0, 6], ll=[-12, 0, -6], rk=10, lk=14,
+            root=[0.0, 0.02])  # 칼을 뽑아 오른쪽으로 거두며 일어서 왼손을 하늘로 (기둥이 솟음)
+FPW_GZ_UP = dict(p=(-0.2, 0.7, 0.1), blade=(0.0, -0.9, -0.3))
+m = Motion("spellblade_awaken", 26, "스펠 가이저 — 칼을 거꾸로 쥐어 두 손으로 머리 위로 들었다가 한 무릎을 꿇으며 앞 땅에 내리꽂고, 룬이 모이는 동안 칼을 누른 채 버티다가 "
+           "기둥이 솟는 순간 칼을 뽑으며 일어서 왼손을 하늘로 쳐듦", fade=(0.03, 0.1))
 off_bare(m)
-keyp(m, 2.2, GRIP2H, "out3")
-keyp(m, 8.0, P(GRIP2H, la=bent([0.16, 0.66, 0.74], 50, (-0.3, 1, 0)), head=[-10, 0]), "linear")
-keyp(m, 10.6, P(body=[8, 30, 0], ra=arm([0.8, -0.35, 0.45], 8, [0.75, -0.4, 0.5]), la=arm([-0.6, -0.2, 0.4], 20), **LEGS_FIGHT), "in")
-keyp(m, 15, P(W_READY, body=[6, 10, 0]))
-fpw(m, 2.2, FPW_UP, "out3", dp=(-0.2, -0.15, 0))
-fpw(m, 8.0, FPW_UP, dp=(-0.2, -0.12, 0))
-fpw(m, 10.6, FPW_SPREAD, "in")
-fpw(m, 15, FPW_LOW)
-fpl(m, 2.2, nudge(FPL_GRIP2H, (-0.1, 0, -0.15), (0, 10, 0)), "out3")
-fpl(m, 8.0, nudge(FPL_GRIP2H, (-0.2, 0.34, -0.3), (62, 34, 0)), "linear")  # 칼날을 따라 올라감 (멀리 · 오른쪽 칼 곁으로 — 화면 가운데를 덮지 않게)
-fpl(m, 10.6, FP_LOW)
+keyp(m, 1.8, GZ_RAISE, "out3")
+keyp(m, 4.6, P(GZ_RAISE, body=[-18, 0, 0], head=[-24, 0], rk=24, lk=24, root=[-0.08, 0]), "in")
+keyp(m, 6.0, GZ_KNEEL, "in")
+m.head.setdefault("trail", []).append([m.t(5.0), m.t(6.4)])
+keyp(m, 8.0, P(GZ_KNEEL, body=[40, 0, 0], root=[-0.4, 0.22]))
+for i, tk in enumerate((10.5, 13.0, 15.5)):
+    keyp(m, tk, P(GZ_KNEEL, body=[36 - i, 0, 1.5 if i % 2 == 0 else -1.5], root=[-0.38 + 0.01 * i, 0.22]), "inout")
+keyp(m, 17.0, P(GZ_KNEEL, body=[34, 0, 0], head=[-14, 0], root=[-0.36, 0.2]), "inout")
+keyp(m, 18.6, GZ_RISE, "out")
+keyp(m, 21.0, P(GZ_RISE, body=[-16, 12, 0], head=[-26, 0]))
+keyp(m, 25.4, P(W_READY, body=[6, 6, 0]))
+fpw(m, 1.8, FPW_GZ_UP, "out3")
+fpw(m, 4.6, FPW_GZ_UP, "in", dp=(0.0, 0.08, 0.15))
+fpw(m, 6.0, FPW_DOWN, "in")
+fpw(m, 17.0, FPW_DOWN)
+fpw(m, 18.6, FPW_SPREAD, "out")
+fpw(m, 25.4, FPW_LOW)
+fpl(m, 1.8, FPL_RAISE2H, "out3")
+fpl(m, 4.6, FPL_RAISE2H)
+fpl(m, 6.0, nudge(FP_GROUND, (-0.2, 0.05, 0.05), (0, 40, 0)), "in")
+fpl(m, 17.0, nudge(FP_GROUND, (-0.2, 0.0, 0.05), (0, 40, 0)))
+fpl(m, 18.6, FP_RAISE, "out")
+fpl(m, 22.0, FP_RAISE)
+fpl(m, 25.4, FP_LOW)
+m.set(impacts=[m.t(6.0), m.t(18.0)])
 use_skill(m, "spellblade_awaken")
 
 # 비전 거검 (효과: 0 ~ 20 눈앞에 거대한 마력 검이 솟음 → 20 가로 · 30 세로 · 40 대각 베기 → 55 찌르기 폭발). 베기 · 찌르기는 서버가 그 틱에 :slash0 · :slash1 · :slash2 ·
@@ -326,24 +350,58 @@ fpl(m, 8, nudge(FP_PALM, (0.05, -0.05, 0.05)))
 fpl(m, 11, FP_LOW)
 use_skill(m, "mage_orb")
 
-# 마나 과부하 (태세 — 효과: 몸에서 솟는 남색 빛 · 완드 끝 구체)
-MG_CHARGE = P(body=[18, 0, 0], head=[16, 0], ra=bent([0.0, -0.45, 0.85], 100, (-0.4, 1, 0.2)), la=L(A_CROSS), rk=40, lk=40, root=[-0.2, 0])
-MG_SURGE = P(body=[-12, 0, 0], head=[-24, 0], ra=arm([0.55, 0.8, 0.2], 10, [0.3, 1, 0.1]), la=L(A_SPREAD_UP), rl=[0, 0, 12], ll=[0, 0, -12], rk=8, lk=8,
-             root=[0.04, 0])
-m = Motion("mage_overload", 22, "마나 과부하 — 웅크려 완드와 왼팔을 모았다가 마나가 터지듯 두 팔을 위로 펼침", fade=(0.04, 0.12))
+# 프리즘 레이 (효과: 0 ~ 8 완드 끝 구체가 커짐 · 발밑 둥근 빛 → 8 ~ 47 완드 끝에서 광선 (보는 쪽을 따라감 · 8 · 18 · 28 · 38 에 맞음) → 단계 :split (48 —
+# 눈앞의 프리즘에서 다섯 갈래로 갈라짐)). 롤 벨코즈 R — 완드를 가슴 앞으로 당겨 왼손을 끝에 대고 힘을 모았다가, 완드를 앞으로 곧게 내밀고 왼손으로 오른 손목을
+# 받쳐 광선을 버팀 (맞을 때마다 몸이 조금 밀림)
+PR_GATHER = P(body=[8, 10, 0], head=[4, 0], ra=bent([0.0, -0.3, 0.9], 105, (-0.4, 1, 0.2)), la=bent([0.35, -0.25, 0.85], 95, (0.6, 1, 0.2)), rl=[14, 0, 6],
+              ll=[-18, 0, -6], rk=26, lk=30, root=[-0.12, 0])  # 완드를 가슴 앞으로 당겨 두 손을 모음
+PR_BEAM = P(body=[10, -4, 0], head=[-2, 0], ra=arm([-0.05, 0.08, 1], 0, [0, 0.12, 1]), la=bent([0.42, -0.05, 0.9], 40, (0.4, 1, 0)), rl=[22, 0, 6],
+            ll=[-30, 0, -6], rk=22, lk=36, root=[-0.16, 0.2])  # 완드를 앞으로 곧게 · 왼손으로 오른 손목을 받침 (내디딘 다리로 버팀)
+m = Motion("mage_overload", 50, "프리즘 레이 — 완드를 가슴 앞으로 당겨 두 손을 모아 힘을 모았다가, 완드를 앞으로 곧게 내밀고 왼손으로 오른 손목을 받쳐 2초 동안 광선을 "
+           "버팀 (맞을 때마다 몸이 조금 밀림)", fade=(0.03, 0.08))
 off_bare(m)
-keyp(m, 2.4, MG_CHARGE, "out3")
-keyp(m, 5, MG_SURGE, "out3")
-keyp(m, 13, P(MG_SURGE, head=[-20, 0]))
-fpw(m, 2.4, dict(p=(-0.3, -0.1, 0.1), blade=(-0.2, 0.9, 0.3)), "out3")
-fpw(m, 5, FPW_SKY, "out3")
-fpw(m, 13, FPW_SKY)
-fpw(m, 17, FPW_LOW)
-fpl(m, 2.4, FP_CROSS, "out3")
-fpl(m, 5, FP_SPREAD_UP, "out3")
-fpl(m, 13, FP_SPREAD_UP)
-fpl(m, 16, FP_LOW)
+keyp(m, 2.0, PR_GATHER, "out3")
+keyp(m, 6.0, P(PR_GATHER, body=[10, 12, 0], head=[6, 0], root=[-0.14, -0.04]), "in")
+keyp(m, 7.6, PR_BEAM, "out")
+for tk in (8.0, 18.0, 28.0, 38.0):
+    keyp(m, tk + 1.2, P(PR_BEAM, body=[6, -4, 0], head=[-4, 0], root=[-0.18, 0.12]), "out")
+    keyp(m, tk + 6.0, P(PR_BEAM, body=[10, -4, 1 if tk % 20 == 8 else -1]), "inout")
+keyp(m, 47.0, P(PR_BEAM, body=[12, -6, 0], root=[-0.18, 0.22]), "inout")
+keyp(m, 49.6, P(PR_BEAM, body=[12, -6, 0], root=[-0.18, 0.22]))
+fpw(m, 2.0, dict(p=(-0.3, -0.1, 0.1), blade=(-0.2, 0.9, 0.3)), "out3")
+fpw(m, 6.0, dict(p=(-0.35, -0.12, 0.18), blade=(-0.15, 0.92, 0.35)), "in")
+fpw(m, 7.6, FPW_WAND, "out")
+for tk in (8.0, 18.0, 28.0, 38.0):
+    fpw(m, tk + 1.2, FPW_WAND, "out", dp=(0.0, 0.02, 0.08))
+    fpw(m, tk + 6.0, FPW_WAND, "inout")
+fpw(m, 49.6, FPW_WAND)
+fpl(m, 2.0, FP_GATHER_L, "out3")
+fpl(m, 7.6, nudge(FP_GATHER_L, (0.05, 0.12, -0.25), (10, 40, 0)), "out")
+fpl(m, 49.6, nudge(FP_GATHER_L, (0.05, 0.12, -0.25), (10, 40, 0)))
+m.set(impacts=[m.t(8.0), m.t(18.0), m.t(28.0), m.t(38.0)])
 use_skill(m, "mage_overload")
+
+# 갈라짐 (단계 :split — 0 = 눈앞의 프리즘에서 광선이 다섯 갈래로: 0 ~ 1 완드를 앞으로 확 밀며 몸이 뒤로 밀림 → 3 두 팔을 양옆으로 활짝 펼침 (갈래가 부채꼴로) →
+# 싸울 자세)
+m = Motion("mage_overload_split", 16, "갈라짐 — 완드를 앞으로 확 밀어 몸이 뒤로 밀린 뒤, 두 팔을 양옆으로 활짝 펼쳐 갈라진 광선을 부채꼴로 보냄", fade=(0.0, 0.12))
+off_bare(m)
+keyp(m, 0.0, P(PR_BEAM, body=[12, -6, 0], root=[-0.18, 0.22]))
+keyp(m, 1.0, P(PR_BEAM, body=[2, -4, 0], head=[-8, 0], root=[-0.22, 0.02]), "out")
+keyp(m, 3.4, P(body=[-6, 0, 0], head=[-10, 0], ra=arm([0.85, 0.3, 0.45], 6, [0.7, 0.4, 0.6]), la=L(A_SPREAD_UP), rl=[4, 0, 10], ll=[-8, 0, -10], rk=16,
+               lk=18, root=[-0.12, 0.0]), "out3")
+keyp(m, 8.0, P(body=[-4, 0, 0], head=[-8, 0], ra=arm([0.82, 0.25, 0.5], 8, [0.7, 0.35, 0.62]), la=L(A_SPREAD_UP), rl=[4, 0, 10], ll=[-8, 0, -10], rk=18,
+               lk=20, root=[-0.1, 0.0]), "inout")
+ready_out(m, 15.4)
+fpw(m, 0.0, FPW_WAND)
+fpw(m, 1.0, FPW_WAND, "out", dp=(0.0, 0.03, -0.1))
+fpw(m, 3.4, FPW_SPREAD, "out3")
+fpw(m, 8.0, FPW_SPREAD, "inout")
+fpl(m, 0.0, nudge(FP_GATHER_L, (0.05, 0.12, -0.25), (10, 40, 0)))
+fpl(m, 3.4, FP_SPREAD_UP, "out3")
+fpl(m, 8.0, FP_SPREAD_UP)
+fpl(m, 12.0, FP_LOW)
+m.set(impacts=[m.t(0.5)])
+use_skill(m, "mage_overload:split")
 
 # 금서 개방 (효과: 0 ~ 20 조준한 곳 하늘에 금서가 펼쳐짐 → 20 · 30 · 40 · 50 에 주문 물결 → 65 책이 닫히며 대폭발). 물결은 서버가 1틱 전에 :wave, 닫힘은 4틱 전에 :close
 m = Motion("mage_ult", 22, "금서 개방 — 완드와 왼손을 하늘로 들어 금서를 부름 → 완드로 그곳을 가리킴", fade=(0.04, 0.06))

@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.UUID;
 import mmorpg.core.Combat;
 import mmorpg.core.Jobs;
-import mmorpg.core.SwingLooks;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Mmorpg;
@@ -14,7 +13,6 @@ import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
 import mmorpg.fabric.motion.MotionSystem;
-import mmorpg.fabric.motion.SwingLook;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
@@ -35,8 +33,7 @@ import net.minecraft.world.phys.Vec3;
  * <ul>
  * <li>소드마스터 「투지」: 쌓고 쓰는 것은 검사와 같음 (JobTraits — 최대 8). 투지 8 에서 피해 직업 스킬을 쓰면 그 스킬이 치명 (위력 × (1 + crit) · 치명
  * 숫자 — 나가면 투지 critUse 개). 용의 피 (태세 — 롤 마스터 이 R): 공격 속도 + haste · 이동 + move · 칼 평타가 투지 +2 · 투지 유지 · 받는 피해 −guard (Guards —
- * 스킬). 다시 벼린 칼 (궁극기 — 롤 리븐 R): dur 틱 동안 칼이 커짐 — 평타 사거리 + reach · 참격 범위 (SWING_LOOK swordmaster_ult) · 칼 평타 · 직업 스킬 피해 +
- * power</li>
+ * 스킬). 궁극기 스타폴 블레이드는 태세가 없음 (2026-11-05 다시 벼린 칼 — 벼린 칼 동안 사거리 · 피해 + 를 뺌)</li>
  * <li>블러드 나이트 「피의 갈증」: 피해 직업 스킬을 쓸 때 체력이 costMin 이상이면 최대 체력 × cost 를 바쳐 그 스킬 위력 × (1 + bonus), 직업 스킬
  * 피해 × leech 흡혈, 체력이 적을수록 공격 속도 · 흡혈이 오름 (체력 thirstAt 에서 가장 셈 — 공격 속도 + thirstSpeed · 흡혈 × (1 + leechMax), 롤 올라프 · 브라이어
  * 패시브). 광란 (태세 — 롤 브라이어 W): 공격 속도 + haste · 흡혈 × leechMult · 둘레 autoRange 칸의 가장 가까운 적을 저절로 벰 (멈추지 않음)</li>
@@ -47,17 +44,13 @@ public final class JobTraits5 {
 
     static final String SM = "swordmaster";
     static final String BK = "bloodknight";
-    /** 용의 피 (소드마스터 태세) · 다시 벼린 칼 (소드마스터 궁극기 — 벼린 칼 동안) · 광란 (블러드 나이트 태세) */
+    /** 용의 피 (소드마스터 태세) · 광란 (블러드 나이트 태세) */
     static final String DRAGON = "swordmaster_blood";
-    static final String FORGE = "swordmaster_ult";
     static final String FRENZY = "bloodknight_frenzy";
-    /** 평타에 더한 몫의 구분 (WeaponBonus.parts) */
-    static final String KEY_FORGE = "job_forge";
     /** 피 빛 (블러드 나이트 색이 없을 때) */
     static final double[] BLOOD = {0.62, 0.02, 0.08};
     static final double[] BLOOD_LIGHT = {0.95, 0.22, 0.24};
-    /** 벼린 칼 사거리 · 용의 피 이동 속도 (속성 수정치) */
-    private static final Identifier FORGE_REACH = Mmorpg.id("job_forge_reach");
+    /** 용의 피 이동 속도 (속성 수정치) */
     private static final Identifier DRAGON_SPEED = Mmorpg.id("job_dragon_speed");
 
     static final class State {
@@ -70,32 +63,18 @@ public final class JobTraits5 {
         /** 흡혈 숫자 (모아서 1초에 한 번) */
         double leechAcc;
         long leechShown;
-        /** 소드마스터 벼린 칼: 끝나는 틱 · 피해 + · 사거리 + */
-        long forgeUntil;
-        double forgePower;
-        boolean forgeReach;
         /** 용의 피 이동 속도 (걸린 값) */
         double speedSet;
         /** 광란: 마지막으로 저절로 벤 틱 */
         long lastAuto;
-        /** 벼린 칼: 마지막으로 칼날 불티를 그린 틱 */
-        long forgeFx;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
 
     static void init() {
-        RpgCombat.addScaledBonusHook(JobTraits5::forgeBonus);
         RpgCombat.addWeaponHitHook(JobTraits5::onWeaponHit);
         java.util.function.ToDoubleFunction<ServerPlayer> as = RpgCombat.attackSpeed;
         RpgCombat.attackSpeed = p -> as.applyAsDouble(p) * attackSpeed(p);
-        // 벼린 칼: 평타 참격 범위 · 금빛 궤적 (rules_more SWING_LOOK swordmaster_ult)
-        SwingLook.addSource((sp, out) -> {
-            State st = STATES.get(sp.getUUID());
-            if (st == null || st.forgeUntil <= Tasks.now() || jobIf(sp, SM) == null) return;
-            SwingLooks.Look l = SwingLooks.of(FORGE);
-            if (l != null) out.add(new SwingLook.Active(l, st.forgeUntil, false));
-        });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> STATES.clear());
     }
 
@@ -130,14 +109,11 @@ public final class JobTraits5 {
             st.critUntil = 0;
             st.critPending = false;
             st.payNow = false;
-            st.forgeUntil = 0;
         }
     }
 
-    /** 사거리 · 이동 속도 수정치를 뗌 */
+    /** 이동 속도 수정치를 뗌 */
     private static void clearMods(ServerPlayer sp) {
-        AttributeInstance r = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
-        if (r != null) r.removeModifier(FORGE_REACH);
         AttributeInstance m = sp.getAttribute(Attributes.MOVEMENT_SPEED);
         if (m != null) m.removeModifier(DRAGON_SPEED);
     }
@@ -219,50 +195,6 @@ public final class JobTraits5 {
         return st != null && st.critUntil >= Tasks.now() ? 1 + trait(j, "crit", 0.3) : 1;
     }
 
-    /** 벼린 칼 동안 직업 스킬 피해 배율 (1 + power — 그 밖 1) */
-    static double forgeMult(ServerPlayer sp, Jobs.Job j) {
-        if (j == null || !SM.equals(j.id())) return 1;
-        State st = STATES.get(sp.getUUID());
-        return st != null && st.forgeUntil > Tasks.now() ? 1 + st.forgePower : 1;
-    }
-
-    // ------------------------------------------------------------ 소드마스터 다시 벼린 칼
-
-    /** 벼린 칼 시작: ticks 틱 — 피해 + power · 평타 사거리 + reach (속성) · 참격 범위 (SWING_LOOK) */
-    static void forge(ServerPlayer sp, int ticks, double power, double reach) {
-        State st = of(sp);
-        st.forgeUntil = Tasks.now() + ticks;
-        st.forgePower = power;
-        AttributeInstance r = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
-        if (r != null && reach > 0) {
-            r.addOrUpdateTransientModifier(new AttributeModifier(FORGE_REACH, reach, AttributeModifier.Operation.ADD_VALUE));
-            st.forgeReach = true;
-        }
-    }
-
-    /** 벼린 칼 동안인지 (시험 · 스킬) */
-    public static boolean forged(ServerPlayer sp) {
-        State st = STATES.get(sp.getUUID());
-        return st != null && st.forgeUntil > Tasks.now();
-    }
-
-    /** 벼린 칼이 더한 사거리 (시험 — 없으면 0) */
-    public static double forgeReach(ServerPlayer sp) {
-        AttributeInstance a = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
-        AttributeModifier m = a == null ? null : a.getModifier(FORGE_REACH);
-        return m == null ? 0 : m.amount();
-    }
-
-    /** 벼린 칼: 칼 평타 + power (평타에 더한 몫 — 금빛 숫자) */
-    private static RpgCombat.Bonus forgeBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
-        if (w == null || !"sword".equals(w.type()) || !(dmg > 0)) return null;
-        State st = STATES.get(sp.getUUID());
-        if (st == null || st.forgeUntil <= Tasks.now()) return null;
-        Jobs.Job j = jobIf(sp, SM);
-        if (j == null) return null;
-        return new RpgCombat.Bonus(dmg * st.forgePower, "", KEY_FORGE, DamageNumbers.Style.JOB, null, JobKit.grad(j));
-    }
-
     // ------------------------------------------------------------ 공격 속도 · 흡혈 (용의 피 · 광란 · 피의 갈증)
 
     /** 공격 속도 배율 (RpgCombat.attackSpeed 에 곱함 — 클라이언트는 게이지 payload 의 speed) */
@@ -332,21 +264,19 @@ public final class JobTraits5 {
 
     // ------------------------------------------------------------ 평타 훅
 
-    /** 무기로 맞힘: 광란 · 벼린 칼의 칼 평타 — 맞은 자리에 핏빛 · 금빛 베기 (연출) */
+    /** 무기로 맞힘: 광란의 칼 평타 — 맞은 자리에 핏빛 베기 (연출) */
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         if (victim == null || w == null || !Combat.isMeleeWeapon(w) || !"sword".equals(w.type())) return;
         Jobs.Job j = JobSystem.job(sp);
         if (j == null) return;
         if (BK.equals(j.id()) && JobTraits.stanceOn(sp, FRENZY)) {
             JobImpact.hit(sp, victim, j, 0.9);
-            return;
         }
-        if (SM.equals(j.id()) && forged(sp)) JobImpact.hit(sp, victim, j, 1.0);
     }
 
     // ------------------------------------------------------------ 틱 · 태세 연출
 
-    /** 틱마다 (JobTraits.tick): 흡혈 숫자 (1초에 한 번) · 벼린 칼이 끝남 · 용의 피 이동 속도 · 광란이 저절로 벰 */
+    /** 틱마다 (JobTraits.tick): 흡혈 숫자 (1초에 한 번) · 용의 피 이동 속도 · 광란이 저절로 벰 */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
         State st = STATES.get(sp.getUUID());
         if (st == null) {
@@ -357,11 +287,6 @@ public final class JobTraits5 {
             DamageNumbers.show(sp, st.leechAcc, DamageNumbers.Style.HEAL, "", 0);
             st.leechAcc = 0;
             st.leechShown = now;
-        }
-        if (st.forgeReach && (st.forgeUntil <= now || !SM.equals(j.id()))) {
-            st.forgeReach = false;
-            AttributeInstance r = sp.getAttribute(Attributes.ENTITY_INTERACTION_RANGE);
-            if (r != null) r.removeModifier(FORGE_REACH);
         }
         double want = 0;
         if (SM.equals(j.id()) && JobTraits.stanceOn(sp, DRAGON)) {
@@ -377,22 +302,6 @@ public final class JobTraits5 {
             }
         }
         if (BK.equals(j.id()) && JobTraits.stanceOn(sp, FRENZY)) frenzyAuto(sp, j, st, now);
-        // 벼린 칼 동안 칼날의 금빛 불티 (영상 2: 벼린 뒤 다시 누를 때까지 칼에 아무 표시가 없었음)
-        if (SM.equals(j.id()) && st.forgeUntil > now && now - st.forgeFx >= 6) {
-            st.forgeFx = now;
-            forgeFx(sp, j);
-        }
-    }
-
-    /** 벼린 칼 (6틱마다): 칼날을 따라 오르는 금빛 불티 · 칼끝 반짝임 (칼끝은 1인칭에선 숨김) */
-    private static void forgeFx(ServerPlayer sp, Jobs.Job j) {
-        ServerLevel level = sp.level();
-        RuneKit.Hand h = RuneKit.handOf(sp);
-        for (double s = 0.3; s <= 1.25; s += 0.45) {
-            Vec3 p = V.up(V.add(h.hand(), h.f(), s), 0.12 + s * 0.22);
-            SkillFx.sparks(level, p, SwordmasterSkills.FIRE_CORE, 1, 0.9);
-        }
-        JobFx.glint(level, V.up(V.add(h.hand(), h.f(), 1.15), 0.38), 0.4, j, 0.3, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
     }
 
     /**

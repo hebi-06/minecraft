@@ -415,18 +415,27 @@ public final class Jobs {
         return Map.copyOf(out);
     }
 
-    /** Σ (배율 합 × 0.26.0 지속 보정 ÷ 쿨) — 피해 스킬만 (직업 맞춤의 기준: 1차 직업의 초당 피해) */
+    /** Σ (배율 합 × 0.26.0 지속 보정 ÷ 쿨) — 피해 스킬만 (직업 맞춤의 기준: 1차 직업의 초당 피해 — 태세 칸 몫 스킬은 뺌) */
     private static double wasOf(Job j) {
         double sum = 0;
-        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0) sum += k.total() * spreadMult(k) / k.cd();
+        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0 && !stanceBudget(k)) sum += k.total() * spreadMult(k) / k.cd();
         return sum;
     }
 
-    /** Σ (배율 합 × (1 − 유틸) × 시간 보정 ÷ 쿨) — 피해 스킬만 */
+    /** Σ (배율 합 × (1 − 유틸) × 시간 보정 ÷ 쿨) — 피해 스킬만 (태세 칸 몫 스킬은 뺌) */
     private static double nowOf(Job j) {
         double sum = 0;
-        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0) sum += k.total() * (1 - utilCost(k)) * timeMult(k) / k.cd();
+        for (Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0 && !stanceBudget(k)) sum += k.total() * (1 - utilCost(k)) * timeMult(k) / k.cd();
         return sum;
+    }
+
+    /**
+     * 0.51.0 태세 칸 몫의 피해 스킬 (jobs.json budget "stance" — 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자" · "딜링기도 괜찮고 버프기도 괜찮고"): 4번
+     * 칸의 몸 · 평타 강화 대신 넣은 피해 스킬. 배율 합 = 태세 칸 몫 (검사 기준 초당 0.4 × 세기 — 30초면 12 × 세기, job-design.md 칸 틀) 이고 직업 맞춤
+     * (wasOf · nowOf) 에서 뺌 — 강화 스킬이 직업 맞춤 밖이던 것과 같아서 다른 스킬 · 2차 기준 (1차 × 1.2) 이 그대로
+     */
+    public static boolean stanceBudget(Skill k) {
+        return k != null && "stance".equals(k.def().strOrNull("budget"));
     }
 
     /** 직업 맞춤 (직업의 초당 피해를 지금 그대로 두는 값 — 직업이 없으면 1) */

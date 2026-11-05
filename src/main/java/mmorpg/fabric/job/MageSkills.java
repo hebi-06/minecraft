@@ -22,7 +22,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.28.0 매지션 직업 스킬 (jobs.json mage — 남색 · 금빛, 특성 「주문 연쇄」): 마탄 연사 · 위상 전환 · 비전 구체 · 마나 과부하 · 금서 개방. 모두 마법 피해 (방어 무시).
+ * 0.28.0 매지션 직업 스킬 (jobs.json mage — 남색 · 금빛, 특성 「주문 연쇄」): 마탄 연사 · 위상 전환 · 비전 구체 · 프리즘 레이 (0.51.0
+ * 마나 과부하 태세 대신 — 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자") · 금서 개방. 모두 마법 피해 (방어 무시).
  * 빠른 연타 (마탄 연사 · 금서의 주문) 는 피해를 한 번에 넣고 숫자를 여러 줄로 (메이플식 쌓이는 숫자 — JobKit.strikeSplit, 몹 무적 시간에 막히지 않게).
  * 연출 = 메이플식 2D 그림 (JobFx — 마탄 · 깨지는 거울 · 구체 · 광선 · 금서 · 책장 · 불꽃 꼬리 · 터짐, 마법진 · 룬 글자는 쓰지 않음).
  */
@@ -43,7 +44,7 @@ final class MageSkills {
         JobSystem.register("mage_bolts", MageSkills::bolts);
         JobSystem.register("mage_phase", MageSkills::phase);
         JobSystem.register("mage_orb", MageSkills::orb);
-        JobSystem.register("mage_overload", MageSkills::overload);
+        JobSystem.register("mage_overload", MageSkills::prism); // 0.51.0 프리즘 레이 (id 그대로 — 강화 단계 기록)
         JobSystem.register("mage_ult", MageSkills::ult);
     }
 
@@ -250,24 +251,113 @@ final class MageSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 마나 과부하
+    // ------------------------------------------------------------ 프리즘 레이
+
+    /** 프리즘의 다섯 빛 {빛, 심지} — 빨강 · 주황 · 금빛 · 청록 · 보라 (가운데가 직업 금빛) */
+    private static final double[][][] PRISM = {
+        {{1.0, 0.24, 0.32}, {1.0, 0.86, 0.88}},
+        {{1.0, 0.58, 0.14}, {1.0, 0.92, 0.7}},
+        {{1.0, 0.86, 0.3}, {1.0, 1.0, 0.86}},
+        {{0.24, 0.92, 0.9}, {0.86, 1.0, 1.0}},
+        {{0.6, 0.4, 1.0}, {0.92, 0.86, 1.0}},
+    };
 
     /**
-     * 마나 과부하: dur 틱 태세 — 완드 평타가 관통 광선 (사거리 + range · 폭 width) · 공격 간격 × cdScale, 끝나면 after 틱 이동 느려짐 (JobTraitsMore).
-     * 그림: 몸에서 솟는 남색 빛 · 발밑 둥근 베기 · 완드 끝 구체 · 1인칭 눈앞 고리 · 글자, 태세 동안 8틱마다 완드 끝 구체 · 둘레를 도는 반짝임 (JobTraits)
+     * 프리즘 레이 (2026-11-05 사용자 "구지 신체 강화 스킬도 필수로 안넣어도 될거 같다" · "직업 중에 구지 강화 시키면 어색한 애들은 빼자" · "딜링기도 괜찮고",
+     * 마나 오버로드 대신 — 롤 벨코즈 R): 완드를 앞으로 내밀어 왼손으로 받치고 광선을 뿜음 — 광선은 2틱마다 그때 보는 쪽 (위아래 포함) 으로 다시 그려 따라감 ·
+     * first 틱부터 every 틱마다 (beam) 앞 length 칸 · 폭 width 의 적을 벰 (숫자 두 줄씩 · 마법) · 쓰는 동안 느려짐 → splitAt 틱에 눈앞 1.6칸의 프리즘에서 다섯 갈래
+     * (rays — 부채꼴 fan 도 · rayLength 칸, 무지갯빛) 로 갈라지며 쓸어냄 (split 큰 숫자 — 적마다 한 번). 스킬 id 는 그대로 (mage_overload — 강화 단계 기록)
      */
-    static boolean overload(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = JobUpgrades.ticks(sp, k, "dur", 200); // 0.31.0 강화: 지속
-        JobTraits.startStance(sp, k, dur);
-        ServerLevel level = sp.level();
-        Vec3 c = sp.position();
-        JobFx.aura(sp, j, 2.8, 1.1, 0.95);
-        JobFx.ring(level, V.up(c, 0.06), 2.4, j, false, 0.5, Opt.empty());
-        JobFx.orb(level, wandTip(sp), 0.2, j, 0.6, Opt.of("vel", RuneKit.bodyVel(sp)));
-        JobFx.eyeRing(sp, j, 2.4, 0.95, 0.5);
-        SkillFx.sparks(level, V.up(c, 1.0), JobKit.core(j), 12, 4);
-        SkillFx.play(level, "beacon.power", c, 1.6, 0.8);
-        SkillFx.play(level, "mob.warden.sonic_charge", c, 1.6, 0.5);
+    static boolean prism(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        int first = Math.max(2, (int) k.num("first", 8));
+        int every = Math.max(10, (int) k.num("every", 10));
+        List<Double> beams = SwordsmanSkills.numbers(k, "beam", List.of(2.4, 2.4, 2.4, 2.4));
+        int lastBeam = first + (beams.size() - 1) * every;
+        int splitAt = Math.max(lastBeam + 10, (int) k.num("splitAt", 48));
+        double len = k.num("length", 14);
+        double half = k.num("width", 1.6) / 2;
+        String life = RuneKit.lifeToken(sp);
+        ServerLevel level0 = sp.level();
+        RuneKit.effect(sp, "slowness", splitAt + 2, (int) k.num("slowAmp", 1));
+        // 모음: 완드 끝 구체가 커짐 · 발밑 둥근 빛 · 차오르는 소리
+        for (int t = 0; t < first; t += 2) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (RuneKit.sameLife(sp, life)) JobFx.orb(sp.level(), wandTip(sp), 0.12 + 0.03 * tt, j, 0.14, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.95));
+            });
+        }
+        JobFx.ring(level0, V.up(sp.position(), 0.06), 2.0, j, true, first / 20.0 + 0.1, Opt.of("alpha", 0.85));
+        SkillFx.play(level0, "beacon.power", sp.position(), 1.4, 0.7);
+        SkillFx.play(level0, "mob.warden.sonic_charge", sp.position(), 1.3, 0.5);
+        // 광선 (2틱마다 다시 그림 — 보는 쪽을 따라감): 굵은 광선 · 끝의 터짐 · 완드 끝 섬광
+        for (int t = first - 2; t < splitAt; t += 2) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel lv = sp.level();
+                Vec3 tip = wandTip(sp);
+                Vec3 dir = sp.getViewVector(1F);
+                double L = Math.max(1.0, RuneKit.rayLength(lv, sp.getEyePosition(), dir, len));
+                Vec3 end = V.add(sp.getEyePosition(), dir, L);
+                JobFx.beam(lv, V.add(tip, dir, 0.3), end, j, 2.4, 0.14, Opt.of("alpha", 0.95));
+                JobFx.burst(lv, end, 0.7, j, 0.16, Opt.empty());
+                JobFx.orb(lv, tip, 0.28, j, 0.12, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 1.0));
+                if ((tt - first) % 4 == 0) SkillFx.sparks(lv, end, JobFx.inner(j), 5, 4.0);
+                if ((tt - first) % 10 == 8) SkillFx.play(lv, "mob.warden.sonic_charge", tip, 1.9, 0.25);
+            });
+        }
+        // 광선이 벰 (every 틱마다 — 그때 보는 쪽 · 숫자 두 줄)
+        for (int i = 0; i < beams.size(); i++) {
+            double m = beams.get(i);
+            RuneKit.later(first + i * every, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 eye = sp.getEyePosition();
+                Vec3 dir = sp.getViewVector(1F);
+                double L = Math.max(1.0, RuneKit.rayLength(sp.level(), eye, dir, len));
+                SkillFx.play(sp.level(), "block.beacon.ambient", eye, 1.8, 0.5);
+                for (Kit.LineHit h : RuneKit.lineTargets(sp, eye, dir, L, half)) {
+                    LivingEntity e = h.e();
+                    JobKit.strikeSplit(sp, e, j, P, m, 2, 2, true, false, life, 0, d -> {
+                        if (RuneKit.fxQuota("jobPrismHit", 6)) JobFx.hit(e, j, 0.9);
+                    });
+                }
+            });
+        }
+        // 다섯 갈래 (splitAt): 눈앞의 프리즘 (번쩍 · 고리) → 무지갯빛 광선 다섯이 부채꼴로 쓸어냄
+        RuneKit.later(splitAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
+            Vec3 eye = sp.getEyePosition();
+            Vec3 look = sp.getViewVector(1F);
+            Vec3 at = V.add(eye, look, 1.6);
+            Vec3 tip = wandTip(sp);
+            JobKit.motion(sp, k.id() + ":split");
+            JobFx.burst(lv, at, 1.1, j, 0.3, JobFx.hide1p(sp));
+            JobFx.ringFacing(lv, at, 0.9, j, look, 0.3, JobFx.hide1p(sp).with("alpha", 0.9));
+            JobFx.eyeRing(sp, j, 2.0, 0.9, 0.3);
+            int rays = Math.max(1, (int) k.num("rays", 5));
+            double fan = k.num("fan", 80);
+            double rl = k.num("rayLength", 12);
+            java.util.Set<java.util.UUID> done = new java.util.HashSet<>();
+            for (int r = 0; r < rays; r++) {
+                double deg = rays == 1 ? 0 : -fan / 2 + fan * r / (rays - 1);
+                Vec3 d = V.turnY(look, deg);
+                double L = Math.max(1.0, RuneKit.rayLength(lv, at, d, rl));
+                double[][] c = PRISM[r % PRISM.length];
+                JobFx.beam(lv, V.add(tip, d, 0.3), V.add(at, d, L), c[0], c[1], 2.6, 0.32, Opt.of("alpha", 1.0));
+                JobFx.burst(lv, V.add(at, d, L), 0.9, c[0], c[1], 0.3, Opt.empty());
+                for (Kit.LineHit h : RuneKit.lineTargets(sp, at, d, L, 0.9)) {
+                    LivingEntity e = h.e();
+                    if (!done.add(e.getUUID())) continue;
+                    JobKit.strike(sp, e, j, P, k.num("split", 7.2), true, true, life, 0, x -> JobFx.hit(e, j, 1.4));
+                }
+            }
+            SkillFx.sparks(lv, at, JobFx.inner(j), 18, 7.0);
+            Ult.flash(lv, at, JobFx.inner(j), Opt.of("radius", 5.0, "time", new double[] {0.03, 0.04, 0.25}), sp);
+            SkillFx.play(lv, "block.amethyst_block.shatter", at, 1.2, 0.9);
+            SkillFx.play(lv, "item.trident.thunder", at, 1.8, 0.5);
+            SkillFx.play(lv, "random.explode", at, 1.5, 0.4);
+        });
         return true;
     }
 
