@@ -145,8 +145,8 @@ public final class Jobs {
      * @param paths  길 이름 (awaken → 각성 · invert → 반전 — 순서대로)
      * @param jobs   2차 직업 (id → 직업, advance.order 순서)
      * @param upIds  2차 스킬 id → 같은 칸의 1차 스킬 id (직업 스킬 강화 기록)
+     * @param jobDps 2차 직업마다 따로 정한 초당 피해 배수 (jobs.json advance.jobs.&lt;id&gt;.dps — 없으면 dps: 2026-11-06 피에로 = 1차와 같음 1.0)
      */
-    /** jobDps = 2차 직업마다 따로 정한 초당 피해 배수 (jobs.json advance.jobs.&lt;id&gt;.dps — 없으면 dps: 2026-11-06 피에로 = 1차와 같음 1.0) */
     private record Advance(int level, double silver, double dps, Map<String, String> paths, Map<String, Job> jobs, Map<String, String> upIds,
             Map<String, Double> jobDps) {}
 
