@@ -338,7 +338,7 @@ public final class JobsTest {
         check(tyr.reqs().size() == 2 && tyr.reqs().get(0).value() == 74 && tyr.reqs().get(1).value() == 36, "tyrfing requirement unchanged " + tyr.reqs());
 
         // 글자
-        check(Jobs.skillLine(sw.skill(0)).equals("은빛 연격 · 6초 · 배율 5.84") && Jobs.skillLine(sw.skill(3)).equals("에인헤랴르 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(Jobs.skillLine(sw.skill(0)).equals("트리니티 엣지 · 6초 · 배율 5.84") && Jobs.skillLine(sw.skill(3)).equals("미러 블레이드 · 30초"), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(Jobs.hex(new double[] {1, 0.5, 0}).equals("#ff8000") && Jobs.rgb(new double[] {0, 0, 1}) == 0xff, "color text");
 
         upgrade();
@@ -441,7 +441,7 @@ public final class JobsTest {
         check(bk.trait().name().equals("피의 갈증") && bk.trait().max() == 5 && near(bk.trait().def().numOr("cost", 0), 0.04) && near(bk.trait().def().numOr("leech", 0), 0.05)
                 && near(bk.trait().def().numOr("thirstAt", 0), 0.3) && bk.trait().def().numOr("thirstSpeed", 0) > 0 && bk.trait().def().numOr("leechMax", 0) > 0,
                 "피의 갈증 체력 4% · 흡혈 5% · 체력 30% 에서 가장 목마름");
-        check(Jobs.skillLine(sm.skill(0)).startsWith("칼집 섬광 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("광란 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
+        check(Jobs.skillLine(sm.skill(0)).startsWith("라이트닝 드로우 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("새비지 프렌지 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
         warriorAdvance(wa, wl, gl);
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("runeknight"), Jobs.job("swordcaller"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
@@ -669,7 +669,7 @@ public final class JobsTest {
                 && "single".equals(Jobs.areaKind(sc.skill(4))) && Jobs.slotRole(sc.skill(2)).equals("주력") && !Jobs.slotRole(rk.skill(2)).equals("주력"), "areas · 주력");
         check(Jobs.upKeys(rk.skill(3)).size() == 1 && Jobs.upKey(rk.skill(3), "shard") != null && Jobs.upKeys(sc.skill(3)).size() == 1
                 && Jobs.upKey(sc.skill(3), "echo") != null, "stance up keys");
-        check(Jobs.skillLine(rk.skill(3)).equals("담금질 · 30초") && Jobs.skillLine(sc.skill(0)).startsWith("베어라 · 6초 · 배율 "), "spellblade advanced skill line");
+        check(Jobs.skillLine(rk.skill(3)).equals("담금질 · 30초") && Jobs.skillLine(sc.skill(0)).startsWith("플라잉 블레이드 · 6초 · 배율 "), "spellblade advanced skill line");
         check(rk.color()[1][0] > 0.9 && rk.color()[0][2] > 0.9 && sc.color()[0][0] < 0.3 && sc.color()[0][1] > 0.8 && sc.color()[1][2] > 0.9, "colors: purple · gold / teal · white");
     }
 
@@ -732,8 +732,8 @@ public final class JobsTest {
                 "slot role 주력 for single slot 3");
         check(Jobs.upKeys(wl.skill(3)).size() == 2 && Jobs.upKeys(gl.skill(3)).size() == 2 && Jobs.upKey(wl.skill(2), "stun") != null && Jobs.upKey(gl.skill(2), "break") != null,
                 "up keys");
-        check(Jobs.skillLine(wl.skill(3)).equals("거인의 무게 · 30초") && Jobs.skillLine(gl.skill(3)).equals("불사의 분노 · 30초")
-                && Jobs.skillLine(gl.skill(0)).startsWith("도끼 난타 · 6초 · 배율 "), "warrior advanced skill line");
+        check(Jobs.skillLine(wl.skill(3)).equals("타이탄 포스 · 30초") && Jobs.skillLine(gl.skill(3)).equals("이모탈 레이지 · 30초")
+                && Jobs.skillLine(gl.skill(0)).startsWith("데들리 플러리 · 6초 · 배율 "), "warrior advanced skill line");
         check(wl.color()[0][0] > 0.9 && gl.color()[0][0] > 0.9 && gl.color()[0][1] < 0.4 && gl.color()[1][2] > 0.5, "colors: orange · brown / scarlet · sand");
     }
 
@@ -773,11 +773,11 @@ public final class JobsTest {
         check(names == 55, "55 skill names " + names);
         // 하나씩: 라그나로크 (0.50.0 발할라를 바꿈 — 선딜 6틱: 돌진해 첫 베기 +6% · 지속 44틱 +10% → ×1.166 · 유틸 없음)
         Jobs.Skill ragnarok = sw.skill(4);
-        check(ragnarok.name().equals("라그나로크") && Jobs.windupTicks(ragnarok) == 6 && "long".equals(Jobs.timeKind(ragnarok)), "라그나로크 windup · long");
+        check(ragnarok.name().equals("블레이드 아포칼립스") && Jobs.windupTicks(ragnarok) == 6 && "long".equals(Jobs.timeKind(ragnarok)), "라그나로크 windup · long");
         check(near(Jobs.timeMult(ragnarok), 1.06 * 1.1) && !Jobs.timeCapped(ragnarok) && near(Jobs.utilCost(ragnarok), 0), "라그나로크 time 1.166");
         // 요르문간드의 독니: S 자로 휘감아 지나감 (순간 이동 값 −10%) · 독 2초 (지속 43틱 +10%)
         Jobs.Skill fang = Jobs.job("assassin").skill(2);
-        check(fang.name().equals("요르문간드의 독니") && Jobs.utils(fang).equals(List.of("blink")) && near(Jobs.utilCost(fang), 0.10) && near(Jobs.timeMult(fang), 1.1),
+        check(fang.name().equals("바이퍼 팽") && Jobs.utils(fang).equals(List.of("blink")) && near(Jobs.utilCost(fang), 0.10) && near(Jobs.timeMult(fang), 1.1),
                 "요르문간드의 독니 blink 10% · long");
         // 섬광 질주: 돌진 −10% · 다음 평타 치명 (피해 — 값 없음)
         check(Jobs.utils(sw.skill(1)).equals(List.of("blink", "crit")) && near(Jobs.utilCost(sw.skill(1)), 0.10), "섬광 질주 util 10%");
@@ -793,11 +793,11 @@ public final class JobsTest {
         check(near(Math.round(Jobs.jobNorm(pr) * 100) / 100.0, 1.48), "priest norm 1.48 " + Jobs.jobNorm(pr));
         String note = Jobs.scaleNote(pr.skill(2));
         check(note != null && note.contains("유틸 −25%") && note.contains("시간 +10%") && note.contains("직업 맞춤 ×1.48"), "스칼드의 노래 note " + note);
-        check(Jobs.skillLine(sw.skill(0)).startsWith("은빛 연격 · 6초 · 배율 "), "skill line " + Jobs.skillLine(sw.skill(0)));
+        check(Jobs.skillLine(sw.skill(0)).startsWith("트리니티 엣지 · 6초 · 배율 "), "skill line " + Jobs.skillLine(sw.skill(0)));
         check(sw.trait().name().equals("투지") && Jobs.job("reaper").trait().name().equals("영혼"), "trait names 투지 · 영혼");
         check(near(Jobs.utilCost(pr.skill(0)), 0) && near(Jobs.damageScale(pr.skill(0)), 1), "heal (no damage) scale 1");
         check(Jobs.utilName("stun07").equals("기절 0.7초") && near(utils.obj("undying").num("cost"), 0.2), "job utils in the table");
-        check(sb.skill(2).name().equals("푸타르크 검무") && near(Jobs.utilCost(sb.skill(2)), 0.10), "푸타르크 검무 룬 결계 10%");
+        check(sb.skill(2).name().equals("블레이드 왈츠") && near(Jobs.utilCost(sb.skill(2)), 0.10), "푸타르크 검무 룬 결계 10%");
         // 0.50.0 범위 보정 (단일 +15% · 좁은 범위 +8% — 직업 맞춤 밖): 단일 셋 (별빛 마탄 · 질풍 연사 · 검은 장미) · 좁은 범위 18 · 나머지 그대로
         Jobs.Job mg = Jobs.job("mage");
         Jobs.Job ar = Jobs.job("archer");

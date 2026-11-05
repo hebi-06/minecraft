@@ -286,7 +286,7 @@ final class SwordsmanSkills {
             Runnable bless = () -> {
                 if (given[0] || !RuneKit.sameLife(sp, life)) return;
                 given[0] = true;
-                mmorpg.fabric.rune.RuneMarks.empower(sp, k.num("buff", 0.1), (int) k.num("buffTicks", 80), "발키리의 가호", JobFx.outer(j), JobFx.inner(j));
+                mmorpg.fabric.rune.RuneMarks.empower(sp, k.num("buff", 0.1), (int) k.num("buffTicks", 80), "달빛 가호", JobFx.outer(j), JobFx.inner(j));
                 // 발키리의 날개 (가호 동안 등 뒤 — 1인칭에서는 숨김) · 내려앉는 깃털
                 JobFx.valWings(sp, j, 0.95, (int) k.num("buffTicks", 80), 0.72);
                 JobFx.feathers(sp.level(), V.up(sp.position(), 2.2), 6, 1.0, 0.17, j, 1.5, JobFx.hide1p(sp));

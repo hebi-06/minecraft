@@ -197,7 +197,7 @@ public final class RpgJobTests {
                     "paladin with a sword: slot locked to the hammer — " + (JobSkills.skill(sp, 0) == null ? "null" : JobSkills.skill(sp, 0).lock(sp)));
             JobSystem.setJob(sp, "swordsman");
             JobSkills.Skill s0 = JobSkills.skill(sp, 0);
-            h.assertTrue(s0 != null && s0.name().equals("은빛 연격") && s0.lock(sp).isEmpty(), "swordsman slot 1 = 은빛 연격, usable");
+            h.assertTrue(s0 != null && s0.name().equals("트리니티 엣지") && s0.lock(sp).isEmpty(), "swordsman slot 1 = 은빛 연격, usable");
             h.assertTrue(s0.cooldown() == JobSystem.cooldownTicks(sp, Jobs.job("swordsman").skill(0)), "cooldown from rules (× stat tree)");
             h.assertTrue(JobSkills.payload(sp).job().equals("swordsman") && JobSkills.payload(sp).colorA() == Jobs.rgb(Jobs.job("swordsman").color()[0]),
                     "bar payload carries the job and its color");
@@ -225,7 +225,7 @@ public final class RpgJobTests {
             JobSystem.setJob(sp, "spellblade");
             h.assertTrue(JobTraits.stacks(sp) == 0 && JobSkills.cooldownLeft(sp, "swordsman_mirror") == 0 && !JobTraits.stanceOn(sp, "swordsman_mirror"),
                     "job change clears stacks, stance, cooldowns");
-            h.assertTrue(JobSkills.skill(sp, 0).name().equals("룬 베기"), "spellblade slot 1");
+            h.assertTrue(JobSkills.skill(sp, 0).name().equals("아케인 슬래시"), "spellblade slot 1");
         } finally {
             cleanup(sp);
         }
