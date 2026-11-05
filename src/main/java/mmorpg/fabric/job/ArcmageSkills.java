@@ -456,15 +456,21 @@ final class ArcmageSkills {
 
     // ------------------------------------------------------------ 셀레스티얼 이글
 
-    /** 독수리가 도는 반지름 · 높이 · 내리꽂기 전 꼭대기 (가운데에서 앞 · 위) */
-    private static final double ORBIT_R = 6.5;
-    /** 영상 1: 7.5칸은 3인칭 화면 위 끝 밖 → 5칸 */
-    private static final double ORBIT_H = 5.0;
+    /** 독수리가 도는 반지름 · 높이 (영상 1: 7.5칸은 3인칭 화면 위 끝 밖 → 5.5칸) · 기울기 (내 쪽은 낮게 · 너머는 높게 — 4 ~ 7칸) */
+    private static final double ORBIT_R = 6.0;
+    private static final double ORBIT_H = 5.5;
+    private static final double ORBIT_TILT = 1.5;
+    /**
+     * 영상 2: 가까운 과녁 (2.7칸) 둘레를 돌면 내 쪽 반 바퀴가 카메라 위 · 뒤라 화면 밖 (4 ~ 26틱) → 도는 고리의 내 쪽 끝이 늘 6칸 앞이 되게 고리 가운데를 너머로 밂
+     * (조준한 곳이 12칸보다 가까울 때 — 깃털 · 내리꽂힘은 조준한 곳 그대로)
+     */
+    private static final double ORBIT_NEAR = 6.0;
 
     /**
-     * 셀레스티얼 이글: 별이 뜬 밤하늘 (rpg:ult_night) · 조준한 곳 (range 칸 — 겨눈 적의 발밑) 위 하늘에 formAt 틱 별빛 독수리 (rfx_jeagle — 날개 끝 사이 약 7칸) 가 나타나
-     * 그곳 둘레를 3/4 바퀴 돎 (왼쪽 → 앞 (내 쪽) → 오른쪽 → 너머) — first 틱부터 every 틱마다 beats 번 날개를 내리쳐 별빛 깃털이 쏟아짐 (둘레 radius 칸 — beat · 숫자 split 줄)
-     * → 너머에서 솟구쳐 diveAt 틱 그곳에 내리꽂힘 (dive · 큰 숫자 · 띄움 lift). 몸은 땅에 선 채 완드로 부름 (동작 :dive — 내리꽂을 때 완드로 가리킴)
+     * 셀레스티얼 이글: 별이 뜬 밤하늘 (rpg:ult_night) · 조준한 곳 (range 칸 — 겨눈 적의 발밑) 위 하늘에 formAt 틱 별빛 독수리 (rfx_jeagle — 날개 끝 사이 약 8.7칸) 가 나타나
+     * 그 하늘을 3/4 바퀴 돎 (왼쪽 → 앞 (내 쪽) → 오른쪽 → 너머 — 반지름 6칸 · 내 쪽 4칸 · 너머 7칸 높이로 기운 고리, 조준한 곳이 12칸보다 가까우면 고리의 내 쪽 끝이 6칸 앞이 되게
+     * 고리를 너머로 밂) — first 틱부터 every 틱마다 beats 번 날개를 내리쳐 별빛 깃털이 쏟아짐 (조준한 곳 둘레 radius 칸 — beat · 숫자 split 줄) → 너머에서 솟구쳐 되돌아와
+     * diveAt 틱 조준한 곳에 내리꽂힘 (dive · 큰 숫자 · 띄움 lift). 몸은 땅에 선 채 완드로 부름 (동작 :dive — 내리꽂을 때 완드로 가리킴)
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level0 = sp.level();
@@ -486,19 +492,18 @@ final class ArcmageSkills {
         JobFx.halo(level0, V.up(c, 0.06), radius, j, 0.8, Opt.of("alpha", 0.7));
         SkillFx.play(level0, "block.beacon.activate", sp.position(), 1.3, 1.0);
         SkillFx.play(level0, "entity.phantom.ambient", c, 0.5, 0.8);
-        // 하늘 길: 돎 (formAt ~ orbitEnd — 왼쪽에서 시작해 3/4 바퀴) → 솟구침 (~ climbEnd) → 내리꽂힘 (~ diveAt)
+        // 하늘 길: 돎 (formAt ~ orbitEnd — 왼쪽에서 시작해 3/4 바퀴 · 고리 가운데 o) → 너머에서 솟구쳐 되돌아옴 (~ climbEnd) → 내리꽂힘 (~ diveAt)
         double a0 = -Math.PI / 2;
         double sweep = Math.PI * 1.5;
-        Vec3 apex = V.up(V.add(c, f, ORBIT_R + 2.0), ORBIT_H + 4.0);
+        Vec3 o = V.add(c, f, Math.max(0, ORBIT_NEAR + ORBIT_R - Math.hypot(c.x - sp.getX(), c.z - sp.getZ())));
+        Vec3 apex = V.up(V.add(o, f, ORBIT_R * 0.4), ORBIT_H + ORBIT_TILT + 2.0);
         Vec3 impact = V.up(c, 0.8);
         java.util.function.IntFunction<Vec3> path = t -> {
             if (t <= orbitEnd) {
                 double u = Math.max(0, (t - formAt) / (double) (orbitEnd - formAt));
-                double a = a0 + sweep * u;
-                Vec3 h = V.add(V.scale(f, -Math.cos(a) * ORBIT_R), r, Math.sin(a) * ORBIT_R);
-                return V.add(V.up(c, ORBIT_H + 0.6 * Math.sin(u * Math.PI * 3)), h, 1);
+                return orbitAt(o, f, r, a0 + sweep * u, u);
             }
-            Vec3 end = path0(c, f, r, a0 + sweep, orbitEnd);
+            Vec3 end = orbitAt(o, f, r, a0 + sweep, 1);
             if (t <= climbEnd) {
                 double u = JobMove.ease((t - orbitEnd) / (double) (climbEnd - orbitEnd), JobMove.OUT);
                 return V.lerp(end, apex, u);
@@ -609,9 +614,9 @@ final class ArcmageSkills {
         return true;
     }
 
-    /** 도는 길의 한 점 (각 a — 가운데 c 에서 내 쪽 −f 가 0, 오른쪽 r 가 π/2) */
-    private static Vec3 path0(Vec3 c, Vec3 f, Vec3 r, double a, int t) {
+    /** 도는 길의 한 점 (각 a — 가운데 o 에서 내 쪽 −f 가 0, 오른쪽 r 가 π/2 · 너머 π) — 내 쪽은 낮고 너머는 높게 기운 고리 · 날갯짓 오르내림 (u = 돈 몫) */
+    private static Vec3 orbitAt(Vec3 o, Vec3 f, Vec3 r, double a, double u) {
         Vec3 h = V.add(V.scale(f, -Math.cos(a) * ORBIT_R), r, Math.sin(a) * ORBIT_R);
-        return V.add(V.up(c, ORBIT_H + 0.6 * Math.sin(Math.PI * 3)), h, 1);
+        return V.add(V.up(o, ORBIT_H - ORBIT_TILT * Math.cos(a) + 0.6 * Math.sin(u * Math.PI * 3)), h, 1);
     }
 }

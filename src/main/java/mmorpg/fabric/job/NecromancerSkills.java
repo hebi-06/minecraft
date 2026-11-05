@@ -82,11 +82,11 @@ final class NecromancerSkills {
         ServerLevel level0 = sp.level();
         int smashAt = Math.max(3, (int) k.num("smashAt", 6));
         String life = RuneKit.lifeToken(sp);
-        // 영상 1: 머리 위 6.5칸은 3인칭 화면 밖 · 뼈 창이 작았음 → 4칸 · 크게
-        double lift = 4.0 + t.getBbHeight();
+        // 영상 1: 머리 위 6.5칸은 3인칭 화면 밖 · 뼈 창이 작았음 → 4칸 · 크게 / 영상 2: 2.7칸 앞 과녁이면 4칸도 맺히는 동안 화면 위 끝 밖 → 3칸 · 해골을 창 끝 가까이
+        double lift = 3.0 + t.getBbHeight();
         Vec3 top = V.up(t.position(), lift);
         // 하늘에 녹색 혼불이 모여 뼈 창이 맺힘 (0 ~ smashAt − 3) → 내리꽂힘 (smashAt − 3 ~ smashAt)
-        JobFx.skull(level0, V.up(top, 1.2), 0.75, 0, 3, (smashAt - 2) / 20.0, false, Opt.empty(), j);
+        JobFx.skull(level0, V.up(top, 0.8), 0.75, 0, 3, (smashAt - 2) / 20.0, false, Opt.empty(), j);
         JobFx.boneSpearAt(level0, V.up(top, -1.0), V.DOWN, 2.3, (smashAt - 3) / 20.0 + 0.05, j, Opt.of("alpha", 0.95));
         SkillFx.sparks(level0, top, FIRE, 6, 3);
         SkillFx.play(level0, "entity.zombie_villager.cure", top, 1.6, 0.5);
