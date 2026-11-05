@@ -179,7 +179,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {2, 10, 12, 20, 26, 31, 33, 41, 44}, new int[] {10, 26, 32, 42}, 52, false),
     };
     /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 — 사진첩 · 영상 모두) */
-    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24});
+    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24}, "necromancer_call", new int[] {16});
 
     /**
      * 0.51.0 워로드 · 글래디에이터 (재설계안 2판): 대지 가르기 (24 까지 모음 → 28 내려침 · 돌창) · 동면 (40 깨어남) · 곰의 포옹 (2 ~ 8 끌어옴 · 12 내려찍음) ·
@@ -226,22 +226,24 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
 
     /**
-     * 0.51.0 아크메이지 · 네크로맨서: 마탄은 꿀술의 노래 태세로 (별똥까지), 쌍둥이 별은 연쇄 4 · 별 넷 (다섯째 별 → 별자리 완성), 자리 바꾸기 · 시체
-     * 폭발은 망자 하나를 세워 두고 (그와 바꿈 · 그를 터뜨림)
+     * 0.51.0 아크메이지 · 네크로맨서 (재설계안 2판 — 2026-11-06): 스타 체인 (2 첫 번개 → 3틱마다 튐) · 헤일로 배리어 (4 던짐 · 10칸 · 19 돌아옴 → 받음) · 스타 볼텍스
+     * (4 펼쳐짐 · 10 ~ 60 별빛 · 70 무너짐 — 연쇄 4 + 별 넷이라 다섯째 별에 별자리) · 스펠 서지 (태세 → 완드 평타) · 셀레스티얼 이글 (4 나타남 · 16 ~ 46 날갯짓 · 54 솟구침 ·
+     * 60 내리꽂힘) / 그레이브 콜 (6 내리꽂힘 · 16 다시 눌러 무덤 셋에서 망자) · 그레이브야드 (6 솟음 · 66 무너짐) · 소울 미스트 (4 던짐 · 8 터짐 · 18 ~ 38 안개 — 망자 둘이
+     * 표식으로 몰려듦) · 블라이트 (10틱마다 · 6초만 찍음) · 팬텀 갤리온 (10 솟음 · 14 ~ 34 나아감 · 30 선장이 뛰어내림 · 40 내려앉음 · 56 혼불)
      */
     private static final Case[] CASES_AM = {
-        new Case(0, new int[] {2, 6, 12, 18}, new int[] {4, 16}, 26, false),
-        new Case(1, new int[] {1, 10, 20, 30}, new int[] {2, 20, 30}, 40, false),
-        new Case(2, new int[] {4, 12, 20, 40, 71}, new int[] {12, 40, 71}, 80, false),
-        new Case(3, new int[] {4, 20}, new int[] {6}, 40, true, false, 13),
-        new Case(4, new int[] {10, 22, 32, 42, 50, 56, 66, 74, 78}, new int[] {22, 42, 56, 76}, 92, false),
+        new Case(0, new int[] {2, 5, 9, 14, 20}, new int[] {5, 14}, 28, false),
+        new Case(1, new int[] {3, 6, 10, 14, 18, 23}, new int[] {6, 14, 22}, 32, false),
+        new Case(2, new int[] {4, 8, 20, 40, 64, 71}, new int[] {12, 40, 71}, 82, false),
+        new Case(3, new int[] {2, 8, 14}, new int[] {8}, 24, true, false, 13),
+        new Case(4, new int[] {4, 10, 16, 26, 36, 46, 52, 56, 60, 64, 72}, new int[] {16, 36, 54, 61}, 84, false),
     };
     private static final Case[] CASES_NC = {
-        new Case(0, new int[] {3, 8, 16, 24}, new int[] {8, 24}, 32, false),
-        new Case(1, new int[] {1, 6, 14, 26}, new int[] {2, 14, 26}, 34, false),
-        new Case(2, new int[] {2, 8, 11, 22, 32, 42}, new int[] {8, 11, 32}, 48, false),
-        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 26, true, false, 13),
-        new Case(4, new int[] {6, 12, 20, 26, 34, 44, 50, 60, 64, 72}, new int[] {12, 34, 44, 61}, 86, false),
+        new Case(0, new int[] {2, 5, 7, 16, 20, 28}, new int[] {6, 20}, 36, false),
+        new Case(1, new int[] {3, 7, 12, 40, 67, 72}, new int[] {8, 40, 68}, 80, false),
+        new Case(2, new int[] {3, 6, 9, 18, 30, 44}, new int[] {9, 28}, 56, false),
+        new Case(3, new int[] {3, 12, 40, 80, 120}, new int[] {12, 80}, 124, false),
+        new Case(4, new int[] {6, 12, 20, 28, 33, 38, 41, 48, 56, 60, 72}, new int[] {12, 34, 41, 57}, 90, false),
     };
 
     /**
@@ -565,14 +567,23 @@ public final class RpgJobGallery implements FabricClientGameTest {
         }
         // 0.51.0 소드 콜러: 데려가라는 앞 7칸에 꽂아 둔 칼 (그리로 날아감)
         if (id.equals("swordcaller_shift")) mmorpg.fabric.job.JobTraits7.testStuck(sp, new Vec3(0.5, -60, 7.5), 200);
-        // 0.51.0 아크메이지: 마탄은 노래 태세 (스킬 뒤 별똥) · 쌍둥이 별은 연쇄 4 + 별 넷 (다섯째 별이 떠 별자리 완성)
-        if (id.equals("arcmage_bolts")) JobTraits.testStance(sp, "arcmage", "arcmage_song", 200);
-        if (id.equals("arcmage_orb")) {
+        // 0.51.0 아크메이지 (재설계안 2판): 스타 볼텍스는 연쇄 4 + 별 넷 (다섯째 별이 떠 별자리 완성)
+        if (id.equals("arcmage_vortex")) {
             JobTraitsMore.setChain(sp, 4);
             mmorpg.fabric.job.JobTraits8.testStars(sp, 4);
         }
-        // 0.51.0 네크로맨서: 다 솟은 망자 하나 — 시체 폭발 (앞 과녁 곁). 자리 바꾸기는 누르기 바로 전에 뒤에 (beforeCast)
-        if (id.equals("necromancer_burst")) mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(1.5, -60, 4.0));
+        // 0.51.0 네크로맨서 (재설계안 2판): 무덤은 스킬마다 비움 — 그레이브 콜은 둘레에 무덤 셋 (16 에 다시 눌러 망자 셋), 소울 미스트는 뒤에 다 솟은 망자 둘 (표식으로 몰려듦)
+        if (job.equals("necromancer")) {
+            mmorpg.fabric.job.JobTraits8.clearGraves();
+            mmorpg.fabric.job.NecroCrew.testClear(sp);
+        }
+        if (id.equals("necromancer_call")) {
+            for (Vec3 g : new Vec3[] {new Vec3(-2.5, -60, 1.0), new Vec3(3.5, -60, 1.0), new Vec3(0.5, -60, -2.5)}) mmorpg.fabric.job.JobTraits8.testGrave(sp.level(), g, 200);
+        }
+        if (id.equals("necromancer_mist")) {
+            mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, -60, -1.0));
+            mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(2.5, -60, -1.0));
+        }
         // 0.51.0 스나이퍼: 호흡 5 (사과 겨누기 뒤 평타는 태세가 8 로) · 섀도 헌터: 추격 3 (그믐밤 동안 그대로)
         if (id.startsWith("sniper_")) JobTraitsMore.setBreath(sp, 5);
         if (id.startsWith("shadowhunter_")) mmorpg.fabric.job.JobTraits9.setPursuit(sp, 3);
@@ -581,12 +592,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (id.startsWith("bladedancer_")) mmorpg.fabric.job.JobTraits10.setDance(sp, 3);
     }
 
-    /**
-     * 0.51.0 키를 누르기 바로 전 (서버): 자리 바꾸기 — 뒤 6.5칸에 망자 하나 (미리 세우면 과녁에게 달려가 앞으로 바꿈 · 영상 1 은 과녁 무리 한가운데로 가 뼈 방벽이
-     * 카메라 뒤에 솟았음) → 뒤로 물러나고 떠난 자리 (과녁 앞) 에 망자 · 뼈 방벽
-     */
+    /** 0.51.0 키를 누르기 바로 전 (서버) */
     private static void beforeCast(ServerPlayer sp, String id) {
-        if (id.equals("necromancer_swap")) mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, -60, -6.0));
         if (id.equals("swordmaster_parry")) {
             // 0.51.0 받아넘기기: 4틱 뒤 앞 과녁이 침 (받는 피해 처리 — 막아서 깎이지 않음) → 받아침 (과녁은 움직이지 않는 허스크라 직접)
             mmorpg.fabric.Tasks.later(4, () -> {

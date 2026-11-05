@@ -79,7 +79,7 @@ public final class JobTraits {
         JobImpact.init(); // 0.51.0 타격감 (큰 타격 그림 · 멈칫)
         JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 동면 · 거인의 무게 · 글래디에이터 결투 · 불사의 분노 · 홀름강)
         JobTraits7.init(); // 0.51.0 마검사 2차 (아케인 블레이드 각인 번짐 · 거대한 마력 대검 · 오버드라이브 검기 · 소드 콜러 스스로 싸우는 칼 · 제미니 소드)
-        JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 꿀술의 노래 · 네크로맨서 망자의 군대 · 망자 일으키기)
+        JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 스펠 서지 · 네크로맨서 망자의 군대 · 무덤 · 표식)
         JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 사과 겨누기 · 섀도 헌터 추격 · 저주 · 그림자 구르기 · 그믐밤)
         JobTraits10.init(); // 0.51.0 암살자 2차 (블레이드 댄서 춤사위 · 요정의 걸음 · 눈부신 한낮 — 트릭스터의 표식 · 은신은 JobTraits3)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -479,7 +479,7 @@ public final class JobTraits {
                 JobTraits5.tick(sp, j, now); // 0.51.0 흡혈 숫자
                 JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 결투
                 JobTraits7.tick(sp, j, now); // 0.51.0 소드 콜러 쌓임 · 꽂힌 칼
-                JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 시체의 혼불
+                JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 무덤 · 표식
                 JobTraits9.tick(sp, j, now); // 0.51.0 섀도 헌터 추격 · 저주 문양
                 JobTraits10.tick(sp, j, now); // 0.51.0 블레이드 댄서 춤사위 (끊기면 0 · 몸 둘레 빛 꽃잎)
             }
@@ -532,7 +532,7 @@ public final class JobTraits {
         } else if (JobTraits7.stanceFx(sp, j, st.stance)) {
             // 0.51.0 제미니 소드 (손의 칼에서 흩날리는 청록 빛살)
         } else if (JobTraits8.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 꿀술의 노래 (머리 위 금빛 음표) · 망자 일으키기 (발밑의 녹색 혼불)
+            // 0.51.0 스펠 서지 (몸 둘레를 도는 금빛 별 · 완드 끝 별빛)
         } else if (JobTraits9.stanceFx(sp, j, st.stance)) {
             // 0.51.0 사과 겨누기 (앞 적들의 약점 과녁) · 그믐밤 (몸 둘레 어둠 · 적이 나를 놓침)
         } else if (JobTraits10.stanceFx(sp, j, st.stance)) {

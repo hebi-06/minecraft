@@ -31,7 +31,7 @@ import net.minecraft.world.phys.Vec3;
  * half 이상이면 도끼 평타 피해 + halfBonus, 다 차면 + fullBonus (RpgCombat.basicMult). 파쇄격의 방어 깨짐 (맞는 쪽 배율 — RpgCombat.takenMult).
  * 투혼: 체력이 low 아래로 떨어지면 한 번 heal 회복 (RpgHealth.lossHook)</li>
  * <li>매지션 「주문 연쇄」: 직업 스킬을 쓰고 window 틱 안에 다른 직업 스킬을 쓰면 연쇄 +1 (최대 max — 하나당 피해 + perChain, JobSystem 이 위력에 곱함).
- * 0.51.0 각성 아크메이지 도 같은 연쇄 (최대 5 — 이은 스킬마다 별 · 다섯째에 별자리 완성: JobTraits8).
+ * 0.51.0 각성 아크메이지 도 같은 연쇄 (최대 5 — 이은 스킬마다 별 · 다섯째에 별자리 완성: JobTraits8 · 스펠 서지 동안 이어지는 틱 8초: JobTraits8.chainWindow).
  * 완드 평타가 맞으면 직업 스킬 재사용 대기 wandCut 틱 줄어듦 (한 발 — 같은 틱 — 에 한 번). 마나 과부하 (태세): 완드 평타 사거리 + · 관통 광선 · 공격 간격 ×
  * cdScale, 끝나면 이동 느려짐</li>
  * <li>궁수 「호흡」 (0 ~ 5): 움직이지 않고 활을 쏘면 +1, 움직이는 동안 decay 틱마다 하나씩 줄어듦. 하나당 활 평타 피해 + perStack · 사거리 + rangePer.
@@ -284,7 +284,7 @@ public final class JobTraitsMore {
         State st = STATES.get(sp.getUUID());
         if (st == null) return 0;
         Jobs.Job j = JobSystem.job(sp);
-        return j != null && Tasks.now() - st.lastCast <= trait(j, "window", 80) ? st.chain : 0;
+        return j != null && Tasks.now() - st.lastCast <= JobTraits8.chainWindow(sp, j) ? st.chain : 0;
     }
 
     /** 시험용: 연쇄를 정함 (마지막 시전 = 지금 · 스킬 이름은 비움 — 다음 스킬이 이어짐) */
@@ -301,7 +301,7 @@ public final class JobTraitsMore {
     static int chainNext(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
         if (!chainJob(j)) return 0;
         State st = of(sp);
-        if (Tasks.now() - st.lastCast > trait(j, "window", 80)) return 0;
+        if (Tasks.now() - st.lastCast > JobTraits8.chainWindow(sp, j)) return 0;
         if (k.id().equals(st.lastSkill)) return st.chain;
         return Math.min(Math.max(1, j.trait().max()), st.chain + 1);
     }
@@ -535,7 +535,7 @@ public final class JobTraitsMore {
                 JobTraits.sendGauge(sp, false);
             }
         } else if (chainJob(j)) {
-            if (st.chain > 0 && now - st.lastCast > trait(j, "window", 80)) {
+            if (st.chain > 0 && now - st.lastCast > JobTraits8.chainWindow(sp, j)) {
                 st.chain = 0;
                 JobTraits8.clearStars(sp); // 0.51.0 아크메이지: 연쇄가 끊기면 별도 사라짐
                 JobTraits.sendGauge(sp, false);

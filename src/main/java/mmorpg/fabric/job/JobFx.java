@@ -1364,6 +1364,49 @@ final class JobFx {
                 outer(j), inner(j));
     }
 
+    // ------------------------------------------------------------ 0.51.0 매지션 2차 재설계안 2판 그림 (2026-11-06 — 셀레스티얼 이글 · 스타 볼텍스 · 무덤)
+
+    /** 장 수: 별빛 독수리 · 별의 소용돌이 · 무덤 */
+    static final int EAGLE = 8;
+    static final int GALAXY = 8;
+    static final int GRAVE = 8;
+    /** 별의 소용돌이 팔 끝 (반 크기의 몫) */
+    static final double GALAXY_R = 0.9;
+    /** 무덤: 그림 높이 / 너비 · 아래 끝 (땅) 의 여백 (반 높이의 몫 — 192 칸 점 중 아래 8) */
+    static final double GRAVE_H = 1.5;
+    static final double GRAVE_BASE = 8.0 / 96.0;
+
+    /**
+     * 별빛 독수리 (rfx_jeagle — 가는 쪽으로 누움, 머리 = 오른쪽 · 날개 = 위아래로 펼침): 0 ~ 5 날갯짓 (이어 돌림 12 fps — 0 · 1 내리침 · 2 ~ 4 접으며 올림 · 5 다시 펼침)
+     * · 6 ~ 7 날개를 접고 내리꽂음 (이어 돌림). at = 몸 가운데 · dir = 머리 쪽 · 날개 끝 사이 약 size × 1.9 칸. o 의 phase = 시작 장 (조각마다 날갯짓 차례를 이어 그리게)
+     */
+    static void eagle(ServerLevel level, Vec3 at, Vec3 dir, double size, boolean dive, double life, Opt o, double[] glow, double[] core) {
+        Vec3 u = V.len(dir) < 1e-3 ? V.UP : V.unit(dir);
+        cells(level, "jeagle", EAGLE, dive ? 6 : 0, dive ? 2 : 6, at, life, dive ? 10 : 12, true, o.with("dir", u, "size", size, "fade", o.num("fade", 0.0)), glow, core);
+    }
+
+    /**
+     * 별의 소용돌이 (rfx_jgalaxy — 땅에 누움): 0 ~ 1 가운데에서 팔이 펼쳐짐 · 2 ~ 5 소용돌이 (이어 돌림 — 별이 반짝임, 도는 것은 spinRate) · 6 팔이 감기며 조여 듦 ·
+     * 7 한 점으로 번쩍. 팔 끝 반지름 = radius 칸
+     */
+    static void galaxy(ServerLevel level, Vec3 center, double radius, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(GALAXY - 1, from));
+        int n = Math.max(1, Math.min(GALAXY - f, count));
+        cells(level, "jgalaxy", GALAXY, f, n, V.up(center, 0.08), life, loop ? 8 : 0, loop, o.with("dir", V.UP, "size", radius / GALAXY_R, "fade", o.num("fade", 0.15)),
+                glow, core);
+    }
+
+    /**
+     * 무덤 (rfx_jgrave — 세워 카메라 쪽으로 돎, 아래 끝 = 땅 ground): 0 ~ 1 흙을 튀기며 묘비가 솟음 · 2 ~ 5 서 있음 (꼭대기의 녹색 혼불 · 새긴 해골의 눈 빛 — 이어 돌림) ·
+     * 6 금이 감 · 7 무너져 돌무더기 · 먼지. 너비 약 size × 2 칸 · 높이 size × 3 칸 (혼불 포함)
+     */
+    static void grave(ServerLevel level, Vec3 ground, double size, int from, int count, double life, boolean loop, Opt o, Jobs.Job j) {
+        int f = Math.max(0, Math.min(GRAVE - 1, from));
+        int n = Math.max(1, Math.min(GRAVE - f, count));
+        Vec3 at = V.up(ground, size * GRAVE_H * (1 - GRAVE_BASE));
+        cells(level, "jgrave", GRAVE, f, n, at, life, loop ? 7 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), outer(j), inner(j));
+    }
+
     // ------------------------------------------------------------ 0.51.0 궁수 2차 그림 (tools/job_fx_art_adv.py — 스나이퍼 · 섀도 헌터)
 
     /** 장 수: 약점 과녁 · 거대한 셋째 화살 · 검은 화살 · 저주 문양 · 어둠숲 가시덤불 */

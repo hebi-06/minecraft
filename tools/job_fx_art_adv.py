@@ -46,6 +46,14 @@
 - rfx_jrift      direction_z      128×320 ×6 (6 열)  갈라진 땅 (그림 위 = 금이 뻗는 쪽): 0 가는 금 · 1 ~ 2 벌어지며 돌조각 → 3 ~ 4 틈의 녹색 빛 맥동 (불티 — 이어 돌림) →
                                                      5 닫히며 흐려짐
 
+0.51.0 매지션 2차 재설계안 2판 (2026-11-06 — 아크메이지 셀레스티얼 이글 · 스타 볼텍스, 네크로맨서 무덤):
+- rfx_jeagle     lookat_direction 384×384 ×8 (4 열)  별빛 독수리 (머리 = 오른쪽 · 날개 = 위아래, 몸 가운데 (200, 192)): 0 ~ 5 날갯짓 (이어 돌림 — 1 = 내리친 끝 · 깃털 별빛 ·
+                                                     2 ~ 4 접으며 올림) · 6 ~ 7 날개를 몸에 붙여 내리꽂음 (뒤로 끌리는 별빛 줄 · 7 머리 번쩍). 빛 = 성운 결 몸, 심지 = 금빛 테 · 깃 · 별
+- rfx_jgalaxy    direction_z      384×384 ×8 (4 열)  별의 소용돌이 (팔 끝 = 반 크기 × 0.9): 0 번쩍 · 1 펼쳐짐 → 2 ~ 5 두 갈래 나선 팔 (이어 돌림 — 별 반짝임, 도는 것은
+                                                     spinRate) → 6 감기며 조여 듦 → 7 한 점 번쩍 · 옅은 충격 고리
+- rfx_jgrave     lookat_y         128×192 ×8 (4 열)  무덤 (아래 8 점 = 땅): 0 ~ 1 흙을 튀기며 아치 묘비가 솟음 → 2 ~ 5 서 있음 (꼭대기 녹색 혼불 · 새긴 해골의 눈 빛 —
+                                                     이어 돌림) → 6 금 · 혼불이 사그라짐 → 7 돌무더기 · 먼지 · 오르는 혼. 빛 = 녹색 혼불, 심지 = 뼈색 돌
+
 0.51.0 궁수 2차 (스나이퍼 · 섀도 헌터) — 스나이퍼: 빛 칸 = 연두 무리 · 심지 칸 = 흰 금빛 (JobTraits9.SNIPE) / 섀도 헌터: 빛 칸 = 먹빛 몸 (JobTraits9.DUSK
 — 화살대 · 깃 · 연기 · 덤불을 거의 불투명하게: 밝은 하늘 · 풀 위에서 검게 보임) · 심지 칸 = 은빛 (촉 · 테 · 눈):
 - rfx_jweak       rotate_xyz       128×128 ×6 (6 열)  약점 과녁: 0 조여 들며 나타남 · 1 ~ 3 맥동 (네 토막 테 · 틈으로 들어오는 눈금 · 대각 꺾쇠가 30 도씩 돎 · 가운데 사과빛 점 깜빡
@@ -3058,6 +3066,357 @@ sprite("rfx_jtear", "rotate_xyz", TR_W, TR_H, TR_N, 4, "tear", zoom=0,
        desc="차원의 틈 (디멘션 슬래시 — 카메라를 봄, 칸 가운데 = 틈 가운데 · 틈 끝 x 0.065 · 0.935 W): 0 가는 빛 금 · 가운데 번쩍 → 1 벌어짐 (테가 가장 밝음 · 금이 "
        "뻗음) → 2 ~ 5 벌어져 일렁임 (이어 돌림 — 같은 꼴: 테의 깜빡임 · 속의 소용돌이 · 도는 별빛 · 바깥에서 빨려 드는 티끌) → 6 닫힘 · 7 가로로 번쩍이며 닫힘 "
        "(조각이 튐). 빛 칸 = 테 · 금 · 속의 소용돌이, 심지 칸 = 검은 속 (불투명)")(tear_frame)
+
+
+# ============================================================ 0.51.0 매지션 2차 재설계안 2판 (2026-11-06 — 셀레스티얼 이글 · 스타 볼텍스 · 무덤)
+# 아크메이지: 빛 칸 = 밤하늘 자주 몸 (성운 결) · 심지 칸 = 금빛 테 · 별 / 네크로맨서: 빛 칸 = 녹색 혼불 · 안개 · 심지 칸 = 뼈색 돌 (몸)
+
+# ------------------------------------------------------------ rfx_jeagle (별빛 독수리 — 가는 쪽으로 누움, 머리 = 오른쪽 · 날개 = 위아래)
+
+EG_N = 8
+EG_S = 384
+# 장마다 (날개 펼침 몫 · 앞뒤로 젖힘 — + 앞 · − 뒤): 0 · 1 내리침 (1 = 내리친 끝 — 깃털이 쏟아지는 장) · 2 ~ 4 접으며 올림 · 5 다시 펼침 · 6 ~ 7 날개를 접고 내리꽂음
+EG_POSE = [(1.0, 0.15), (0.93, 0.0), (0.72, -0.25), (0.58, -0.42), (0.78, -0.2), (0.95, 0.1), (0.4, -1.5), (0.4, -1.5)]
+_RE = random.Random(9100)
+EG_DUST = [(_RE.uniform(0, 1), _RE.uniform(0, 1), _RE.uniform(0.6, 1.6)) for _ in range(70)]
+
+
+# 위 날개의 기본 꼴 (펼침 1 · 젖힘 0 — 어깨 기준 칸 점, x + = 앞 (머리 쪽) · y − = 바깥): 앞 테 (어깨 → 팔꿈치 → 손목 → 손 앞) · 손가락 깃 다섯 (밑 → 끝 —
+# 바깥 깃부터, 끝이 부채처럼 벌어짐) · 둘째 깃 뒤 테 (마지막 손가락 밑 → 몸)
+EG_LEAD = [(0.0, 0.0), (5.0, -42.0), (10.0, -86.0), (4.0, -112.0)]
+EG_FINGERS = [((-2.0, -114.0), (-4.0, -158.0)), ((-12.0, -113.0), (-20.0, -154.0)), ((-21.0, -110.0), (-34.0, -146.0)), ((-30.0, -105.0), (-46.0, -134.0)),
+              ((-38.0, -98.0), (-55.0, -120.0))]
+EG_TRAIL = [(-44.0, -86.0), (-52.0, -66.0), (-56.0, -44.0), (-57.0, -22.0), (-50.0, -4.0)]
+
+
+def _eg_dive_wing(side):
+    """내리꽂을 때 날개 (몸 옆에 붙여 뒤로 접음 — 칼날 꼴): 다각형 · 앞 테 · 손가락 깃 · 뒤 테 (꼴은 _eg_wing 과 같음)"""
+    cy = 192.0
+
+    def m(p):
+        return (p[0], cy + side * -p[1])
+
+    lead = [m((224.0, 14.0)), m((196.0, 30.0)), m((160.0, 38.0)), m((112.0, 34.0))]
+    fingers = [(m((118.0, 32.0)), m((80.0, 36.0))), (m((122.0, 28.0)), m((84.0, 28.0))), (m((126.0, 24.0)), m((90.0, 20.0)))]
+    trail = [m((140.0, 20.0)), m((168.0, 14.0)), m((196.0, 10.0))]
+    poly = lead + [b for (b, _) in fingers] + trail
+    return poly, lead, fingers, trail
+
+
+def _eg_wing(span, sweep, side, sc=0.92):
+    """날개 하나 (side −1 = 위 · +1 = 아래 — 위아래로 뒤집음): 기본 꼴을 펼침 span (바깥 길이) · 젖힘 sweep (+ 앞 · − 뒤 — 끝으로 갈수록 더 돎 · 접히면 손이 뒤로
+    꺾임) 으로 바꿈. 다각형 · (어깨 · 손목 · 끝) · 손가락 깃 (밑 · 끝) · 뒤 테"""
+    Sx, Sy = 214.0, 192.0 + side * 15.0
+
+    def tf(p):
+        x, y = p[0] * sc, p[1] * sc
+        r = -y / (158.0 * sc)
+        a = sweep * (0.3 + 0.7 * r) - (1 - span) * 0.9 * max(0.0, r - 0.5)
+        y2 = y * (0.35 + 0.65 * span)
+        ca, sa = math.cos(a), math.sin(a)
+        # 앞쪽으로 돎 (a > 0 이면 바깥 끝이 +x 쪽)
+        xr = x * ca - y2 * sa
+        yr = x * sa + y2 * ca
+        return (Sx + xr, Sy + yr if side < 0 else Sy - yr)
+
+    lead = [tf(p) for p in EG_LEAD]
+    fingers = [(tf(b), tf(t)) for (b, t) in EG_FINGERS]
+    trail = [tf(p) for p in EG_TRAIL]
+    poly = lead + [b for (b, _) in fingers] + trail
+    return poly, lead, fingers, trail
+
+
+def eagle_frame(f):
+    S = EG_S
+    pad = Pad(S, S)
+    X, Y = pad.grid()
+    cy = S / 2
+    span, sweep = EG_POSE[f]
+    dive = f >= 6
+    glow = pad.zeros()
+    core = pad.zeros()
+    sil = pad.zeros()
+    lines = []
+    joints = []
+    for side in (-1, 1):
+        poly, lead, fingers, trail = _eg_dive_wing(side) if dive else _eg_wing(span, sweep, side)
+        Sh, Wr = lead[0], lead[2]
+        T = fingers[0][1]
+        sil = np.maximum(sil, pad.poly(poly))
+        for i, (b, tip) in enumerate(fingers):
+            # 손가락 깃 (끝이 뾰족 · 사이가 벌어짐) · 테
+            sil = np.maximum(sil, pad.stroke([b, tip], 11.0 - i * 0.6, 2.5))
+            lines.append(([b, tip], 1.5, 0.85))
+        lines.append((lead + [T], 2.6, 1.0))
+        lines.append((trail, 1.0, 0.5))
+        # 날개 결 (앞 테에서 뒤 테 쪽으로 — 깃 줄기)
+        for k in range(4):
+            t = (k + 0.6) / 4.5
+            i0 = min(len(lead) - 2, int(t * (len(lead) - 1)))
+            u = t * (len(lead) - 1) - i0
+            p0 = (lead[i0][0] + (lead[i0 + 1][0] - lead[i0][0]) * u, lead[i0][1] + (lead[i0 + 1][1] - lead[i0][1]) * u)
+            q = trail[min(len(trail) - 1, len(trail) - 1 - k)]
+            lines.append(([p0, q], 0.9, 0.4))
+        joints += [(Sh, 7.0), (Wr, 9.0), (T, 10.0)]
+    # 몸 · 머리 · 부리 · 꼬리 (내리꽂을 때는 몸이 조금 길게)
+    bl = 1.12 if dive else 1.0
+    sil = np.maximum(sil, pad.ellipse(200, cy, 64 * bl, 21))
+    hx = 272 + (14 if dive else 0)
+    sil = np.maximum(sil, pad.disc_field(hx, cy, 18.0, soft=1.0))
+    beak = [(hx + 12, cy - 7), (hx + 34, cy - 1), (hx + 30, cy + 5), (hx + 12, cy + 7)]
+    sil = np.maximum(sil, pad.poly(beak))
+    tw = 0.55 if dive else 1.0
+    tail = [(146, cy - 12), (78, cy - 34 * tw), (70, cy - 18 * tw), (66, cy), (70, cy + 18 * tw), (78, cy + 34 * tw), (146, cy + 12)]
+    sil = np.maximum(sil, pad.poly(tail))
+    for k in range(-2, 3):
+        lines.append(([(144, cy + k * 4), (74, cy + k * 15 * tw)], 1.0, 0.5))
+    lines.append(([(140, cy), (200, cy - 10), (hx, cy - 8)], 1.4, 0.6))
+    lines.append(([(140, cy), (200, cy + 10), (hx, cy + 8)], 1.4, 0.6))
+    joints += [((hx, cy), 9.0), ((70, cy), 8.0)]
+    # 빛: 성운 결로 채운 몸 · 가장자리 빛 · 둘레 옅은 무리
+    neb = fbm(X / S, Y / S, seed=910 + (f % 6 if not dive else 7), octaves=4, px=5, py=5)
+    neb = clamp01(0.35 + 0.65 * neb)
+    edge = clamp01(sil - gblur(sil, 3.0 * SS)) * 2.0
+    glow = np.maximum(glow, sil * neb * 0.62)
+    glow = np.maximum(glow, clamp01(edge) * 0.7)
+    glow = screen(glow, gblur(sil, 10.0 * SS) * 0.35)
+    # 심지: 금빛 테 · 별자리 결 · 마디 별 · 눈 · 몸 안 잔별
+    for pts, w, a in lines:
+        core = np.maximum(core, pad.stroke(pts, w, w * 0.8, a0=a, a1=a, soft=0.4))
+    for (p, r) in joints:
+        core = np.maximum(core, star4(pad, p[0], p[1], r * 1.6, 1.0, rot=0.2 * f, thin=0.1, diag=0.4))
+        glow = np.maximum(glow, pad.disc_field(p[0], p[1], r * 1.4, soft=r) * 0.7)
+    core = np.maximum(core, pad.disc_field(hx + 4, cy - 4, 3.2, soft=0.8))
+    for (u, v, r) in EG_DUST:
+        x, y = 60 + u * 260, 40 + v * 304
+        ix, iy = int(min(S - 1, x)), int(min(S - 1, y))
+        if sil[int(iy * SS), int(ix * SS)] < 0.5:
+            continue
+        tw2 = 0.55 + 0.45 * math.sin(f * 1.9 + u * 17 + v * 11)
+        core = np.maximum(core, pad.disc_field(x, y, r * 0.8, soft=0.6) * tw2)
+    if f == 1:
+        # 내리친 끝: 날개 뒤 테에서 깃털 별빛이 흩어짐
+        rs = random.Random(9150)
+        for side in (-1, 1):
+            for _ in range(9):
+                x = rs.uniform(150, 260)
+                y = cy + side * rs.uniform(60, 150) * span
+                core = np.maximum(core, star4(pad, x, y, rs.uniform(5, 9), 0.9, rot=rs.uniform(0, 1)))
+                glow = np.maximum(glow, pad.stroke([(x + 10, y - side * 6), (x - 6, y + side * 10)], 3.0, 0.6, a0=0.5, a1=0.0))
+    if dive:
+        # 내리꽂음: 뒤로 끌리는 별빛 줄 · 머리 번쩍 (7)
+        rs = random.Random(9160 + f)
+        for k in range(9):
+            y = cy + (k - 4) * 10 + rs.uniform(-3, 3)
+            x0 = 66 - rs.uniform(0, 20)
+            ln = rs.uniform(40, 62)
+            glow = np.maximum(glow, pad.stroke([(x0 - ln, y), (x0, y)], 1.0, 5.0, a0=0.0, a1=0.6))
+            core = np.maximum(core, pad.stroke([(x0 - ln * 0.7, y), (x0, y)], 0.4, 1.6, a0=0.0, a1=0.8))
+        if f == 7:
+            core = np.maximum(core, star4(pad, hx + 30, cy, 34.0, 1.0, rot=0.0, thin=0.08, diag=0.35))
+            glow = np.maximum(glow, pad.radial(hx + 26, cy, 48.0, 1.6) * 0.8)
+    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (10.0, 0.24)), body_k=0.92, core_bloom=((1.3, 0.35), (3.5, 0.24)), win=4.0)
+
+
+COLORS.setdefault("eagle", ((0.42, 0.26, 0.86), (1.0, 0.86, 0.42)))
+sprite("rfx_jeagle", "lookat_direction", EG_S, EG_S, EG_N, 4, "eagle", zoom=0, loop=True,
+       desc="별빛 독수리 (셀레스티얼 이글 — 가는 쪽으로 누움, 오른쪽 = 머리 · 날개는 위아래로 펼침, 몸 가운데 (200, 192)): 0 ~ 5 날갯짓 (이어 돌림 — 0 · 1 내리침 "
+       "(1 = 내리친 끝 · 깃털 별빛) · 2 ~ 4 앞으로 접으며 올림 · 5 다시 펼침) · 6 ~ 7 날개를 접고 내리꽂음 (뒤로 끌리는 별빛 줄 · 7 머리 번쩍). 빛 칸 = 성운 결로 "
+       "채운 몸 · 가장자리 빛, 심지 칸 = 금빛 테 · 깃 결 · 마디 별 · 눈 · 몸 안 잔별")(eagle_frame)
+
+
+# ------------------------------------------------------------ rfx_jgalaxy (별의 소용돌이 — 땅에 누움, 칸 가운데 = 소용돌이 가운데 · 팔 끝 = 반 크기 × 0.9)
+
+GX_N = 8
+GX_S = 384
+_RG = random.Random(9200)
+GX_STARS = [(_RG.uniform(0.12, 1.0), _RG.uniform(0, TAU), _RG.uniform(1.0, 2.6), _RG.randrange(1000)) for _ in range(90)]
+
+
+def galaxy_frame(f):
+    S = GX_S
+    pad = Pad(S, S)
+    c = S / 2
+    rr, th = polar(pad, c, c)
+    Rfull = S / 2 * 0.9
+    Rm = [0.35, 0.7, 1.0, 1.0, 1.0, 1.0, 0.5, 0.0][f] * Rfull
+    b = 0.32 if f < 6 else 0.2  # 감긴 정도 (작을수록 많이 감김)
+    glow = pad.zeros()
+    core = pad.zeros()
+    if f <= 6:
+        r0 = 10.0
+        lr = np.log(np.maximum(rr, r0) / r0)
+        arm_phase = lr / b
+        wid = 0.32 + 0.25 * clamp01(rr / max(1.0, Rm))
+        arms = pad.zeros()
+        for k in range(2):
+            dphi = np.angle(np.exp(1j * (th - arm_phase - k * math.pi)))
+            arms = np.maximum(arms, np.exp(-0.5 * (dphi / wid) ** 2))
+            # 사이 팔 (옅게 — 성운이 넓게 보이게)
+            dphi2 = np.angle(np.exp(1j * (th - arm_phase - k * math.pi - math.pi / 2)))
+            arms = np.maximum(arms, np.exp(-0.5 * (dphi2 / (wid * 0.8)) ** 2) * 0.38)
+        fall = clamp01(1 - (rr / max(1.0, Rm)) ** 2.2) * clamp01(rr / 6.0)
+        X, Y = pad.grid()
+        nz = clamp01(0.45 + 0.75 * fbm(X / S, Y / S, seed=920, octaves=4, px=6, py=6))
+        twk = 1.0 if f < 2 or f == 6 else [1.0, 0.9, 0.96, 0.86][f - 2]
+        glow = np.maximum(glow, arms * fall * nz * 1.0 * twk)
+        glow = screen(glow, fall * 0.16 * nz)
+        # 팔 등줄 (심지 — 가는 밝은 줄)
+        ridge = pad.zeros()
+        for k in range(2):
+            dphi = np.angle(np.exp(1j * (th - arm_phase - k * math.pi)))
+            ridge = np.maximum(ridge, np.exp(-0.5 * (dphi / (wid * 0.28)) ** 2))
+        core = np.maximum(core, ridge * fall * 0.55)
+        # 가운데 불룩 (밝은 심)
+        bulge = np.exp(-0.5 * (rr / (16.0 + (10.0 if f == 6 else 0.0))) ** 2)
+        core = np.maximum(core, bulge * (1.0 if f != 0 else 0.8))
+        glow = np.maximum(glow, np.exp(-0.5 * (rr / 34.0) ** 2) * 0.9)
+        # 별 (팔을 따라 · 반짝임은 장마다 다름)
+        for (rf, a0, sz, seed) in GX_STARS:
+            r_ = rf * Rm
+            if r_ < 8:
+                continue
+            ph = math.log(max(r_, 10.0) / 10.0) / b
+            a = ph + a0 * 0.18 + (0 if seed % 2 else math.pi)
+            x, y = c + math.cos(a) * r_, c + math.sin(a) * r_
+            tw = 0.5 + 0.5 * math.sin(f * 2.1 + seed)
+            if seed % 5 == 0:
+                core = np.maximum(core, star4(pad, x, y, sz * 3.2, 0.9 * tw + 0.1, rot=0.3, thin=0.12, diag=0.4))
+            else:
+                core = np.maximum(core, pad.disc_field(x, y, sz * 0.7, soft=0.5) * (0.5 + 0.5 * tw))
+        if f == 0:
+            core = np.maximum(core, star4(pad, c, c, 60.0, 1.0, rot=0.0, thin=0.08, diag=0.4))
+    else:
+        # 한 점 번쩍 · 옅은 충격 고리
+        core = np.maximum(core, star4(pad, c, c, 120.0, 1.0, rot=0.3, thin=0.06, diag=0.35))
+        core = np.maximum(core, pad.disc_field(c, c, 12.0, soft=6.0))
+        glow = np.maximum(glow, pad.radial(c, c, 110.0, 1.4) * 0.9)
+        glow = np.maximum(glow, gauss(rr - 120.0, 6.0) * 0.6)
+        core = np.maximum(core, gauss(rr - 120.0, 1.6) * 0.5)
+    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (10.0, 0.22)), body_k=0.9, core_bloom=((1.3, 0.35), (3.5, 0.24)), win=5.0)
+
+
+sprite("rfx_jgalaxy", "direction_z", GX_S, GX_S, GX_N, 4, "arcmage", zoom=0,
+       desc="별의 소용돌이 (스타 볼텍스 — 땅에 누움, 칸 가운데 = 소용돌이 가운데 · 팔 끝 = 반 크기 × 0.9): 0 가운데 번쩍 · 작은 팔 → 1 펼쳐짐 → 2 ~ 5 두 갈래 나선 팔 "
+       "(이어 돌림 — 팔을 따라 별이 반짝임, 도는 것은 게임이 spinRate 로) → 6 팔이 감기며 조여 듦 · 가운데가 밝아짐 → 7 한 점으로 번쩍 · 옅은 충격 고리. 빛 칸 = 성운 "
+       "팔 · 둘레, 심지 칸 = 팔 등줄 · 별 · 가운데 불룩")(galaxy_frame)
+
+
+# ------------------------------------------------------------ rfx_jgrave (무덤 — 세워 카메라 쪽으로 돎, 아래 끝 = 땅)
+
+GV_N = 8
+GV_W, GV_H = 128, 192
+GV_BASE = GV_H - 8.0
+_RV = random.Random(9300)
+GV_CRACKS = [[(64 + _RV.uniform(-26, 26), GV_BASE - _RV.uniform(30, 80))] for _ in range(4)]
+for _cr in GV_CRACKS:
+    for _ in range(4):
+        x, y = _cr[-1]
+        _cr.append((x + _RV.uniform(-9, 9), y + _RV.uniform(5, 13)))
+
+
+def _gv_stone(pad, dy=0.0, shift=0.0):
+    """묘비 (아래가 땅 · 위가 둥근 아치): 몸 · 새긴 해골 자리 (어두운 홈) · 해골 눈 둘"""
+    x0, x1 = 34.0 + shift, 94.0 + shift
+    top = GV_BASE - 92.0 + dy
+    body = pad.poly([(x0, GV_BASE + dy), (x0 + 2, top + 30), (x1 - 2, top + 30), (x1, GV_BASE + dy)])
+    body = np.maximum(body, pad.ellipse((x0 + x1) / 2, top + 30, (x1 - x0) / 2 - 2, 30))
+    # 받침 (조금 넓게)
+    body = np.maximum(body, pad.poly([(x0 - 6, GV_BASE + dy), (x0 - 4, GV_BASE - 10 + dy), (x1 + 4, GV_BASE - 10 + dy), (x1 + 6, GV_BASE + dy)]))
+    cx = (x0 + x1) / 2
+    sk, holes, gaps, e1, e2 = _skull_masks(pad, 64, 0.0, 0.42)
+    # 해골은 칸 가운데 (64, 64) 기준 — 묘비 가운데 위쪽으로 옮김
+    def mv(a, ox, oy):
+        sx, sy = int(round(ox * SS)), int(round(oy * SS))
+        out = np.zeros_like(a)
+        ys = slice(max(0, sy), a.shape[0] + min(0, sy))
+        yd = slice(max(0, -sy), a.shape[0] - max(0, sy))
+        xs = slice(max(0, sx), a.shape[1] + min(0, sx))
+        xd = slice(max(0, -sx), a.shape[1] - max(0, sx))
+        out[ys, xs] = a[yd, xd]
+        return out
+    ox, oy = cx - 64, (top + 52) - 64
+    carve = mv(sk, ox, oy)
+    eyes = [(e1[0] + ox, e1[1] + oy), (e2[0] + ox, e2[1] + oy)]
+    return body, carve, eyes, top, cx
+
+
+def grave_frame(f):
+    pad = Pad(GV_W, GV_H)
+    rs = random.Random(9310 + f)
+    frac = [0.38, 0.82, 1, 1, 1, 1, 1, 0][f]
+    H = 92.0
+    dy = H * (1 - frac)
+    clip = pad.zeros()
+    clip[: int(GV_BASE * SS), :] = 1
+    glow = pad.zeros()
+    stone = pad.zeros()
+    dark = pad.zeros()
+    flame_k = [0.3, 0.6, 1.0, 1.0, 1.0, 1.0, 0.55, 0.0][f]
+    if f <= 6:
+        body, carve, eyes, top, cx = _gv_stone(pad, dy)
+        body = body * clip
+        lit, shade, _ = bevel_light(body, 5.0)
+        stone = clamp01(body * (0.8 + 0.2 * lit - 0.25 * shade))
+        dark = np.maximum(dark, carve * clip * 0.75)
+        # 금 (6 은 크게 벌어짐)
+        for cr in GV_CRACKS[: (4 if f == 6 else 2)]:
+            pts = [(x, y + dy) for x, y in cr]
+            dark = np.maximum(dark, pad.stroke(pts, 2.2 if f == 6 else 1.2, 0.5) * body)
+        if f == 6:
+            for k in range(3):
+                y = GV_BASE - rs.uniform(25, 75)
+                dark = np.maximum(dark, pad.stroke([(36, y), (64 + rs.uniform(-8, 8), y + rs.uniform(-6, 6)), (94, y - 4)], 2.6) * body)
+        # 해골 눈의 녹색 빛 · 몸 둘레 옅은 빛
+        for (ex, ey) in eyes:
+            if ey < GV_BASE:
+                glow = np.maximum(glow, pad.disc_field(ex, ey, 4.5, soft=2.5) * (0.6 + 0.4 * flame_k))
+        glow = np.maximum(glow, gblur(body, 4.0 * SS) * 0.45)
+        # 꼭대기의 녹색 혼불 (2 ~ 5 일렁임)
+        if flame_k > 0:
+            ph = f * 1.7
+            fx, fy = cx, top + 8
+            for k in range(5):
+                h = (48 + 12 * math.sin(ph + k * 1.3)) * flame_k
+                sway = 7 * math.sin(ph * 0.8 + k)
+                w = (16 - 2.4 * k) * (0.7 + 0.3 * flame_k)
+                pts = bez((fx + (k - 2) * 4, fy), (fx + sway * 0.5, fy - h * 0.5), (fx + sway, fy - h), n=12)
+                glow = np.maximum(glow, pad.stroke(pts, w, 1.0, a0=0.95, a1=0.0, soft=3.0))
+            glow = np.maximum(glow, pad.radial(fx, fy - 10, 30.0 * flame_k + 1, 1.6) * 0.75)
+            stone = np.maximum(stone, pad.stroke(bez((fx, fy), (fx + 2, fy - 12), (fx + 3 * math.sin(ph), fy - 24 * flame_k), n=8), 5.0, 0.8, a0=0.75, a1=0.0,
+                                                 soft=1.5) * flame_k)
+    else:
+        # 7: 무너진 돌무더기 · 먼지 · 오르는 혼 둘
+        for k in range(9):
+            x = 64 + rs.uniform(-34, 34)
+            y = GV_BASE - rs.uniform(2, 16)
+            stone = np.maximum(stone, pad.poly(chunk_pts(rs, x, y, rs.uniform(5, 10))) * 0.85)
+        glow = np.maximum(glow, pad.radial(64, GV_BASE - 20, 56.0, 1.6, sy=0.6) * 0.55)
+        for k in range(2):
+            x = 50 + 28 * k
+            glow = np.maximum(glow, pad.stroke(bez((x, GV_BASE - 20), (x - 6, GV_BASE - 60), (x + 4, GV_BASE - 100), n=12), 7.0, 1.0, a0=0.5, a1=0.0, soft=3.0))
+    # 땅: 녹색 빛 · 솟을 때 튀는 흙 · 금
+    glow = np.maximum(glow, pad.radial(64, GV_BASE, 60.0, 2.0, sy=0.18) * 0.85)
+    if f <= 1:
+        for k in range(12):
+            x = 64 + rs.uniform(-50, 50)
+            y = GV_BASE - rs.uniform(4, 46) * (f + 1) / 2
+            stone = np.maximum(stone, pad.disc_field(x, y, rs.uniform(1.6, 3.6)) * 0.9)
+        glow = np.maximum(glow, pad.stroke([(14, GV_BASE - 1), (114, GV_BASE - 1)], 3.0, 3.0, a0=0.8, a1=0.8, soft=2.0))
+    body = screen(glow * 0.9, stone * 0.18)
+    core = clamp01(stone - dark * 0.85)
+    g = pad.down(body)
+    g = screen(g, gblur(g, 2.5) * 0.5, gblur(g, 6.0) * 0.3)
+    cc = pad.down(core)
+    wb = win_border(g.shape, 2.0)
+    return clamp01(g * wb), clamp01(cc * wb)
+
+
+sprite("rfx_jgrave", "lookat_y", GV_W, GV_H, GV_N, 4, "necromancer", zoom=2,
+       desc="무덤 (그레이브 콜 · 그레이브야드 · 망자의 군대 — 아래 끝 = 땅 (아래 8 점)): 0 ~ 1 흙을 튀기며 둥근 아치 묘비가 솟음 → 2 ~ 5 서 있음 (꼭대기의 녹색 혼불이 "
+       "일렁임 · 새긴 해골의 눈 빛 — 이어 돌림) → 6 금이 벌어지고 혼불이 사그라짐 → 7 돌무더기 · 먼지 · 오르는 혼. 빛 칸 = 녹색 혼불 · 땅빛, 심지 칸 = 뼈색 돌 (새긴 "
+       "해골 · 금은 비움)")(grave_frame)
+
 
 def main():
     args = sys.argv[1:]

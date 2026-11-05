@@ -26,11 +26,12 @@ import net.minecraft.world.phys.Vec3;
  * 0.51.0 네크로맨서 「망자의 군대」 의 망자 선원 (진짜 몹 rpg:naglfar_crew — 티르빙의 전사와 같은 몸 · 독초록 혼불 · 뼈색): 스스로 생각하지 않고 이 틀이 틱마다
  * 움직임 (티르빙 망자의 각성과 같은 틀).
  * <ul>
- * <li>일어남: 쓰러진 적 자리 (그 땅) 아래에서 RISE 틱 동안 솟음 (녹색 무덤불 · 갈라진 땅) — 특성의 망자 (TRAIT) 는 주인마다 최대 trait.max (넘으면 가장 오래된 것이 무너짐),
- * 궁극기의 선원 (ULT) 은 따로 (스킬이 움직이다 놓아 줌 — stay 틱)</li>
- * <li>싸움: 주인이 마지막으로 친 적 (가까우면) → 아니면 둘레 crewRange 칸의 적대 몹 중 가까운 적 (다른 망자가 노리는 적은 1.5칸 멀게 — 둘러쌈) 에게 달려가 crewEvery 틱마다
- * 도끼로 내려침 (공격 동작 STRIKE_AT 틱 뒤 — 위력 × crewHit (망자 일으키기 동안 + boost) · 주인의 직업 스킬 피해 (JobKit — 숫자 · 처치 · 다시 망자는 주인의 것)).
- * 적이 없으면 주인 뒤를 따름 (24칸 넘게 떨어지면 곁으로 옮겨 옴)</li>
+ * <li>일어남: 쓰러진 적 자리 · 무덤 (그 땅) 아래에서 RISE 틱 동안 솟음 (녹색 무덤불 · 갈라진 땅) — 특성의 망자 (TRAIT) 는 주인마다 최대 trait.max (넘으면 가장 오래된 것이
+ * 무너짐). 재설계안 2판 (2026-11-06) 팬텀 갤리온의 망자 선장 (CAPTAIN — 같은 몸 × captainScale) 은 따로 (스킬이 배에서 뛰어내리게 움직이다 놓아 줌 — captainFor 틱)</li>
+ * <li>싸움: 노릴 적 = 주인의 소울 미스트 표식이 남은 적 → 그레이브야드 고리 안의 적 → 주인 (또는 선장) 이 마지막으로 친 적 → 둘레 crewRange 칸의 적대 몹 중 가까운 적
+ * (다른 망자가 노리는 적은 1.5칸 멀게 — 둘러쌈). 달려가 crewEvery 틱마다 도끼로 내려침 (공격 동작 STRIKE_AT 틱 뒤 — 위력 × crewHit (소울 미스트 표식이면 + crewBonus) ·
+ * 주인의 직업 스킬 피해 (JobKit — 숫자 · 처치 · 다시 망자는 주인의 것)). 선장은 captainEvery 틱마다 둘레 CLEAVE 칸을 휩쓸어 내려침 (위력 × captainHit · 친 적을 망자가
+ * 노림). 적이 없으면 주인 뒤를 따름 (24칸 넘게 떨어지면 곁으로 옮겨 옴)</li>
  * <li>끝: crewFor 틱이 지나거나 주인이 죽음 · 차원을 옮김 · 직업이 바뀜 · 나감 → 녹색 불길 · 뼈 조각으로 무너짐 (몹은 저장하지 않음 — TyrfingWarrior)</li>
  * </ul>
  */
@@ -38,7 +39,10 @@ public final class NecroCrew {
     private NecroCrew() {}
 
     static final int TRAIT = 0;
-    static final int ULT = 1;
+    /** 팬텀 갤리온의 망자 선장 (크게 — 스킬이 내려놓은 뒤 이 틀이 움직임) */
+    static final int CAPTAIN = 2;
+    /** 선장이 휩쓰는 둘레 (도끼 끝 둘레 칸 — 크기 1 기준, 선장 크기만큼 늘어남) */
+    static final double CLEAVE = 1.25;
     /** 솟는 틱 · 깊이 (키 2.4칸의 드라우그가 땅 밑에 다 묻혀 있다가 솟음) */
     static final int RISE = 14;
     static final double DEPTH = 2.6;
@@ -66,6 +70,10 @@ public final class NecroCrew {
         long pathAt = -99;
         /** 다 솟았는지 (물리를 켬 — 틱이 밀려도 한 번) */
         boolean risen;
+        /** 크기 (선장 captainScale — 닿는 거리 · 휩쓰는 둘레가 함께 늚) · 내려치는 틱 사이 · 공격 배율 (0 = 특성 crewEvery · crewHit) */
+        double scale = 1;
+        int every;
+        double hit;
 
         Member(TyrfingWarrior x, int kind, long born, long until, Vec3 ground, int slot) {
             this.x = x;
@@ -97,14 +105,14 @@ public final class NecroCrew {
         return l == null ? List.of() : new ArrayList<>(l);
     }
 
-    /** 특성의 망자 수 (궁극기의 선원은 빼고 — 게이지) */
+    /** 특성의 망자 수 (선장은 빼고 — 게이지) */
     public static int count(ServerPlayer sp) {
         int n = 0;
         for (Member m : members(sp)) if (m.kind == TRAIT && !m.x.isRemoved()) n++;
         return n;
     }
 
-    /** 시험: 모든 망자 수 (궁극기의 선원 포함) */
+    /** 시험: 모든 망자 수 (선장 포함) */
     public static int countAll(ServerPlayer sp) {
         int n = 0;
         for (Member m : members(sp)) if (!m.x.isRemoved()) n++;
@@ -124,7 +132,8 @@ public final class NecroCrew {
         long now = Tasks.now();
         for (Member m : members(sp)) {
             Vec3 p = m.x.position();
-            out.append(String.format(java.util.Locale.ROOT, "[%s %.2f,%.2f,%.2f risen=%s scripted=%s", m.kind == TRAIT ? "trait" : "ult", p.x, p.y, p.z, m.risen, m.scripted));
+            out.append(String.format(java.util.Locale.ROOT, "[%s %.2f,%.2f,%.2f risen=%s scripted=%s", m.kind == TRAIT ? "trait" : "captain", p.x, p.y, p.z, m.risen,
+                    m.scripted));
             if (m.foe != null) {
                 Vec3 f = m.foe.position();
                 out.append(String.format(java.util.Locale.ROOT, " foe=%s@%.2f,%.2f,%.2f d=%.2f", Kit.typeId(m.foe),
@@ -147,6 +156,11 @@ public final class NecroCrew {
         return m.x;
     }
 
+    /** 시험: 이 사람의 망자 · 선장을 모두 조용히 치움 */
+    public static void testClear(ServerPlayer sp) {
+        disband(sp.getUUID(), false);
+    }
+
     /** 다 솟은 것으로 (물리를 켜고 땅 위에 섬) */
     static void settle(Member m, Vec3 at) {
         m.x.noPhysics = false;
@@ -161,56 +175,6 @@ public final class NecroCrew {
         List<Member> l = CREW.remove(owner);
         if (l == null) return;
         for (Member m : l) crumble(m, fx);
-    }
-
-    /** 망자 하나를 목록에서 뺌 (시체 폭발이 터뜨림 · 몸은 스킬이 치움) */
-    static void take(ServerPlayer sp, Member m) {
-        List<Member> l = CREW.get(sp.getUUID());
-        if (l != null) l.remove(m);
-        JobTraits.sendGauge(sp, false);
-    }
-
-    /** at 둘레 radius 칸 안의 가장 가까운 망자 (다 솟았고 스킬이 움직이지 않는 것 — 없으면 null) */
-    static Member nearest(ServerPlayer sp, Vec3 at, double radius) {
-        long now = Tasks.now();
-        Member best = null;
-        double bd = Double.MAX_VALUE;
-        for (Member m : members(sp)) {
-            if (m.x.isRemoved() || m.scripted || m.rising(now)) continue;
-            double d = V.hdist(m.x.position(), at);
-            if (d <= radius && Math.abs(m.x.getY() - at.y) <= 4 && d < bd) {
-                bd = d;
-                best = m;
-            }
-        }
-        return best;
-    }
-
-    /** 자리를 바꿀 망자: 보는 쪽 cone 도 안 · range 칸 안에서 시선에 가장 가까운 것, 없으면 가장 먼 것 (다 솟았고 스킬이 움직이지 않는 것) */
-    static Member swapPick(ServerPlayer sp, double range, double cone) {
-        long now = Tasks.now();
-        Vec3 eye = sp.getEyePosition();
-        Vec3 look = sp.getViewVector(1F);
-        Member aimed = null;
-        double best = Double.MAX_VALUE;
-        Member far = null;
-        double fd = -1;
-        for (Member m : members(sp)) {
-            if (m.x.isRemoved() || m.scripted || m.rising(now) || m.x.level() != sp.level()) continue;
-            Vec3 to = V.sub(V.up(m.x.position(), 1.2), eye);
-            double d = V.len(to);
-            if (d > range) continue;
-            double ang = Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, V.dot(V.scale(to, 1 / Math.max(1e-6, d)), look)))));
-            if (ang <= cone && ang < best) {
-                best = ang;
-                aimed = m;
-            }
-            if (d > fd) {
-                fd = d;
-                far = m;
-            }
-        }
-        return aimed != null ? aimed : far;
     }
 
     /**
@@ -249,22 +213,42 @@ public final class NecroCrew {
         return m;
     }
 
-    /** 궁극기의 선원 하나 (스킬이 움직임 — 뛰어내리는 중, 물리 꺼짐): at 에 바로 섬 */
-    static Member crewAt(ServerPlayer sp, Vec3 at, float yaw, int life) {
+    /**
+     * 팬텀 갤리온의 망자 선장 (스킬이 움직임 — 갑판에서 뛰어내리는 중, 물리 꺼짐): at 에 바로 섬 · 크기 scale (몸 · 도끼가 닿는 거리 · 휩쓰는 둘레) · every 틱마다 위력 × hit.
+     * 한 사람에 하나 (전 선장은 무너짐). 못 세우면 null
+     */
+    static Member captainAt(ServerPlayer sp, Vec3 at, float yaw, int life, double scale, int every, double hit) {
         ServerLevel level = sp.level();
-        TyrfingWarrior x = TyrfingWarrior.spawnAs(TyrfingWarrior.CREW_ID, level, at, yaw, life + 80);
+        List<Member> list = CREW.computeIfAbsent(sp.getUUID(), k -> new ArrayList<>());
+        for (Member old : new ArrayList<>(list)) {
+            if (old.kind != CAPTAIN) continue;
+            list.remove(old);
+            crumble(old, true);
+        }
+        TyrfingWarrior x = TyrfingWarrior.spawnAs(TyrfingWarrior.CREW_ID, level, at, yaw, life + 120);
         if (x == null) return null;
+        var sc = x.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+        if (sc != null) sc.setBaseValue(scale);
+        x.refreshDimensions();
         x.noPhysics = true;
         x.setNoGravity(true);
-        List<Member> list = CREW.computeIfAbsent(sp.getUUID(), k -> new ArrayList<>());
         int slot = 0;
         java.util.Set<Integer> used = new java.util.HashSet<>();
         for (Member m : list) used.add(m.slot);
         while (used.contains(slot)) slot++;
-        Member m = new Member(x, ULT, Tasks.now() - RISE, Tasks.now() + life, at, slot);
+        Member m = new Member(x, CAPTAIN, Tasks.now() - RISE, Tasks.now() + life, at, slot);
         m.scripted = true;
+        m.scale = scale;
+        m.every = Math.max(10, every);
+        m.hit = hit;
         list.add(m);
         return m;
+    }
+
+    /** 시험: 이 사람의 선장 (없으면 null) */
+    public static TyrfingWarrior captain(ServerPlayer sp) {
+        for (Member m : members(sp)) if (m.kind == CAPTAIN && !m.x.isRemoved()) return m.x;
+        return null;
     }
 
     /** 스킬이 놓아 줌 (땅에 섬 — 이제 이 틀이 움직임): stay 틱 더 */
@@ -274,7 +258,7 @@ public final class NecroCrew {
         m.risen = true;
         m.scripted = false;
         m.until = Tasks.now() + stay;
-        m.nextSwing = Tasks.now() + 8 + m.slot * 3;
+        m.nextSwing = Tasks.now() + (m.kind == CAPTAIN ? 12 : 8 + m.slot * 3);
     }
 
     /** 망자가 설 땅: at 아래 (6칸 안) 의 단단한 땅 — 몸 (폭 0.7 · 키 2.3) 이 들어가지 않으면 둘레 1 ~ 1.5칸에서 */
@@ -308,9 +292,10 @@ public final class NecroCrew {
         if (x.isRemoved()) return;
         if (fx && x.level() instanceof ServerLevel level) {
             Vec3 at = x.position();
-            SkillFx.fx(level, "rpg:tyr_ghostfire", at, Opt.of("size", 2.0, "life", 0.6, "color", FIRE, "alpha", 0.9));
-            SkillFx.sparks(level, V.up(at, 1.0), new double[] {0.92, 0.88, 0.74}, 8, 4);
-            SkillFx.play(level, "entity.skeleton.death", at, 0.7, 0.6);
+            double k = m.scale;
+            SkillFx.fx(level, "rpg:tyr_ghostfire", at, Opt.of("size", 2.0 * k, "life", 0.6 + 0.15 * (k - 1), "color", FIRE, "alpha", 0.9));
+            SkillFx.sparks(level, V.up(at, 1.0 * k), new double[] {0.92, 0.88, 0.74}, (int) (8 * k), 4 * k);
+            SkillFx.play(level, "entity.skeleton.death", at, 0.7 / Math.sqrt(k), 0.6 + 0.2 * (k - 1));
         }
         x.discard();
     }
@@ -376,7 +361,9 @@ public final class NecroCrew {
             strike(sp, j, m);
         }
         // 머리의 녹색 혼불 (12틱마다 — 망자마다 엇갈려)
-        if ((now + m.slot * 4) % 12 == 0 && RuneKit.fxQuota("necroCrew", 6)) JobFx.soul(level, V.up(x.position(), 2.35), 0.15, j, 0.5, Opt.of("alpha", 0.85));
+        if ((now + m.slot * 4) % 12 == 0 && RuneKit.fxQuota("necroCrew", 6)) {
+            JobFx.soul(level, V.up(x.position(), 2.35 * m.scale), 0.15 * m.scale, j, 0.5, Opt.of("alpha", 0.85));
+        }
         double range = JobTraits8.trait(j, "crewRange", 10);
         LivingEntity e = m.foe;
         boolean lost = e == null || e.isRemoved() || !e.isAlive() || e.level() != level || !Kit.canHit(sp, e) || V.hdist(e.position(), x.position()) > range + 6;
@@ -391,11 +378,12 @@ public final class NecroCrew {
         Vec3 xp = x.position();
         Vec3 ep = e.position();
         double pad = Kit.bodyPad(e);
+        double reach = REACH * m.scale;
         double gap = V.hdist(xp, ep) - pad;
         x.getLookControl().setLookAt(e);
         Vec3 away = V.sub(xp, ep);
         Vec3 dir = Math.hypot(away.x, away.z) > 1e-3 ? V.flat(away) : V.rightOf(Kit.facingOf(sp));
-        Vec3 spot = V.add(ep, dir, pad + REACH);
+        Vec3 spot = V.add(ep, dir, pad + reach);
         double toSpot = V.hdist(xp, spot);
         float yaw = (float) Math.toDegrees(Math.atan2(-(ep.x - xp.x), ep.z - xp.z));
         if (toSpot > 1.2) {
@@ -414,9 +402,9 @@ public final class NecroCrew {
             x.setYBodyRot(yaw);
             x.setYHeadRot(yaw);
         }
-        if (now >= m.nextSwing && m.strikeAt < 0 && gap <= REACH + 1.3) {
+        if (now >= m.nextSwing && m.strikeAt < 0 && gap <= reach + 1.3) {
             // 닿지 않았으면 그쪽으로 뛰어듦 (도끼가 닿는 틱에 곁에 있게 — 티르빙의 전사와 같음: 공중의 가로 속도는 틱마다 × 0.91, 6틱에 처음 속도 × 4.6)
-            double far = gap - REACH;
+            double far = gap - reach;
             if (far > 0.25 && x.onGround()) {
                 Vec3 d = V.flat(V.sub(ep, xp));
                 double v = Math.min(0.8, far / 4.6 + 0.04);
@@ -429,19 +417,32 @@ public final class NecroCrew {
             x.swingAxe();
             m.strikeAt = now + TyrfingWarrior.STRIKE_AT;
             m.strikeFoe = e;
-            m.nextSwing = now + Math.max(10, (long) JobTraits8.trait(j, "crewEvery", 30));
+            m.nextSwing = now + (m.kind == CAPTAIN ? m.every : Math.max(10, (long) JobTraits8.trait(j, "crewEvery", 30)));
         }
     }
 
-    /** 노릴 적: 주인이 마지막으로 친 적 (이 망자에게서 range + 4칸 안) → 둘레 range 칸의 적대 몹 중 (가까움 + 이미 노리는 망자 수 × 1.5칸) 가 가장 작은 적 */
+    /**
+     * 노릴 적: 주인의 소울 미스트 표식이 남은 적 (이 망자에게서 range + 4칸 안) → 그레이브야드 고리 안의 적 (range 칸 — 가까움 + 이미 노리는 망자 수 × 1.5칸) → 주인 (또는
+     * 선장) 이 마지막으로 친 적 (range + 4칸) → 둘레 range 칸의 적대 몹 중 (가까움 + 이미 노리는 망자 수 × 1.5칸) 이 가장 작은 적
+     */
     private static LivingEntity pickFoe(ServerPlayer sp, Member m, List<Member> all, double range) {
         Vec3 xp = m.x.position();
+        LivingEntity mist = JobTraits8.mistFoe(sp, xp, range + 4);
+        if (mist != null && mist.level() == m.x.level() && Kit.canHit(sp, mist)) return mist;
+        LivingEntity yard = closest(sp, m, all, range, true);
+        if (yard != null) return yard;
         LivingEntity focus = JobTraits8.focus(sp);
         if (focus != null && focus.level() == m.x.level() && Kit.canHit(sp, focus) && V.hdist(focus.position(), xp) <= range + 4) return focus;
+        return closest(sp, m, all, range, false);
+    }
+
+    /** 둘레 range 칸의 적 중 (가까움 + 이미 노리는 망자 수 × 1.5칸) 이 가장 작은 적 — yard 면 그레이브야드 고리 안의 적만 */
+    private static LivingEntity closest(ServerPlayer sp, Member m, List<Member> all, double range, boolean yard) {
+        Vec3 xp = m.x.position();
         LivingEntity best = null;
         double bd = Double.MAX_VALUE;
         for (LivingEntity e : Kit.around(sp, xp, range, 4)) {
-            if (!Kit.splashFoe(sp, e)) continue;
+            if (!Kit.splashFoe(sp, e) || (yard && !JobTraits8.inYard(sp, e))) continue;
             int crowd = 0;
             for (Member o : all) if (o != m && o.foe == e) crowd++;
             double d = V.hdist(e.position(), xp) + crowd * 1.5;
@@ -459,7 +460,7 @@ public final class NecroCrew {
         Vec3 f = Kit.facingOf(sp);
         double[] angs = {145, -145, 110, -110, 170, -170, 80, -80};
         Vec3 dir = V.turnY(f, angs[m.slot % angs.length]);
-        Vec3 spot = V.add(sp.position(), dir, 2.6);
+        Vec3 spot = V.add(sp.position(), dir, m.kind == CAPTAIN ? 4.2 : 2.6);
         double d = V.hdist(x.position(), sp.position());
         if (d > 24 || Math.abs(x.getY() - sp.getY()) > 10) {
             Vec3 g = standAt(sp.level(), spot);
@@ -478,25 +479,51 @@ public final class NecroCrew {
         }
     }
 
-    /** 도끼가 닿음 (공격 동작 STRIKE_AT 틱 뒤): 그 적이 아직 닿는 곳이면 녹색 초승달 · 불티 · 직업 스킬 피해 (위력 × 망자 공격 배율) */
+    /**
+     * 도끼가 닿음 (공격 동작 STRIKE_AT 틱 뒤): 그 적이 아직 닿는 곳이면 녹색 초승달 · 불티 · 직업 스킬 피해 (위력 × 망자 공격 배율 — 소울 미스트 표식이면 더). 선장은 도끼 끝 둘레
+     * CLEAVE × 크기 칸을 휩쓸어 (위력 × hit — 같은 표식 덤) · 큰 초승달 · 갈라진 땅 · 녹색 충격 고리, 친 적을 망자가 노림
+     */
     private static void strike(ServerPlayer sp, Jobs.Job j, Member m) {
         LivingEntity e = m.strikeFoe;
         m.strikeFoe = null;
         TyrfingWarrior x = m.x;
         if (e == null || e.isRemoved() || !e.isAlive() || x.isRemoved() || e.level() != x.level()) return;
-        if (V.hdist(x.position(), e.position()) - Kit.bodyPad(e) > REACH + 1.6) return;
+        if (V.hdist(x.position(), e.position()) - Kit.bodyPad(e) > REACH * m.scale + 1.6) return;
         ServerLevel level = sp.level();
         Vec3 xp = x.position();
         Vec3 d = Math.hypot(e.getX() - xp.x, e.getZ() - xp.z) > 1e-3 ? V.flat(V.sub(e.position(), xp)) : Kit.facingOf(x);
-        if (RuneKit.fxQuota("necroChop", 8)) {
-            SkillFx.arc(level, V.up(V.add(xp, d, 1.0), 1.2), d, Opt.of("shape", "heavy", "flip", false, "size", 1.3, "life", 0.24, "speed", 0.0, "spin", 80.0, "color",
-                    FIRE, "aura", DEEP));
-            SkillFx.sparks(level, V.up(V.add(xp, d, 1.4), 0.4), FIRE, 3, 3);
+        boolean captain = m.kind == CAPTAIN;
+        double k = m.scale;
+        if (captain || RuneKit.fxQuota("necroChop", 8)) {
+            SkillFx.arc(level, V.up(V.add(xp, d, 1.0 * k), 1.2 * k), d, Opt.of("shape", "heavy", "flip", false, "size", 1.3 * k, "life", captain ? 0.3 : 0.24, "speed",
+                    0.0, "spin", 80.0, "color", FIRE, "aura", DEEP));
+            SkillFx.sparks(level, V.up(V.add(xp, d, 1.4 * k), 0.4), FIRE, captain ? 10 : 3, 3 * k);
         }
-        SkillFx.play(level, "entity.zombie.attack_wooden_door", xp, 1.3, 0.35);
+        Vec3 hitAt = V.add(xp, d, (REACH + 0.5) * k);
+        if (captain) {
+            Vec3 g = new Vec3(hitAt.x, RuneKit.groundAt(level, V.up(hitAt, 1.0), xp.y), hitAt.z);
+            SkillFx.fx(level, "rpg:ground_crack", V.up(g, 0.05), Opt.of("dir", V.ZERO, "spin", Kit.rand() * 360, "size", 1.45 * k, "life", 1.2, "color", DEEP,
+                    "alpha", 0.9));
+            SkillFx.shock(level, V.up(g, 0.1), FIRE, CLEAVE * k * 0.9, 0.35);
+            SkillFx.fx(level, "rpg:tyr_ghostfire", g, Opt.of("size", 1.8, "life", 0.45, "color", FIRE, "alpha", 0.85));
+            SkillFx.play(level, "mace.heavy_smash_ground", g, 0.6, 1.1);
+        }
+        SkillFx.play(level, "entity.zombie.attack_wooden_door", xp, captain ? 0.8 : 1.3, captain ? 0.7 : 0.35);
         if (PASSIVE.contains(sp.getUUID())) return;
-        JobKit.strike(sp, e, j, JobSystem.power(sp, j), JobTraits8.crewMult(sp, j), true, false, RuneKit.lifeToken(sp), 0, got -> {
-            if (RuneKit.fxQuota("necroHit", 6)) JobFx.hit(e, j, 0.8);
-        });
+        String life = RuneKit.lifeToken(sp);
+        if (!captain) {
+            JobKit.strike(sp, e, j, JobSystem.power(sp, j), JobTraits8.crewMult(sp, j, e), true, false, life, 0, got -> {
+                if (RuneKit.fxQuota("necroHit", 6)) JobFx.hit(e, j, 0.8);
+            });
+            return;
+        }
+        JobTraits8.setFocus(sp, e);
+        double P = JobSystem.power(sp, j);
+        for (LivingEntity o : Kit.around(sp, hitAt, CLEAVE * k, 3)) {
+            JobKit.strike(sp, o, j, P, m.hit * JobTraits8.mistFactor(sp, j, o), true, false, life, 0, got -> {
+                if (JobKit.pushable(o)) RuneKit.knock(o, V.sub(o.position(), xp), 0.25, 0.15);
+                if (RuneKit.fxQuota("necroCaptainHit", 6)) JobFx.hit(o, j, 1.2);
+            });
+        }
     }
 }

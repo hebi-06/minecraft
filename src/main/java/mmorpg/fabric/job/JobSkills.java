@@ -201,6 +201,16 @@ public final class JobSkills {
         SkillBarNet.cooldown(sp, CD_PREFIX + skillId, cd, cd);
     }
 
+    /** 0.51.0 그 스킬의 재사용 대기를 바로 끝냄 (아크메이지 스펠 서지 — 다른 스킬을 쓰면 스타 체인이 돌아옴): 덮개를 걷어 클라이언트에 보냄 */
+    static void clearCooldown(ServerPlayer sp, String skillId) {
+        if (sp == null) return;
+        String k = sp.getUUID() + "|" + skillId;
+        Long until = COOLDOWNS.remove(k);
+        if (until == null) return;
+        int total = TOTALS.getOrDefault(k, (int) Math.max(1, until - Tasks.now()));
+        SkillBarNet.cooldown(sp, CD_PREFIX + skillId, 0, total);
+    }
+
     /** 시험용: 이 사람의 직업 스킬 재사용 대기를 모두 지움 */
     public static void resetCooldowns(ServerPlayer sp) {
         String p = sp.getUUID() + "|";
