@@ -625,10 +625,10 @@ final class TricksterSkills {
         Ult.sky(level0, sp.position(), "rpg:ult_wildfire", finalAt + 30);
         // 순간 이동: 적 앞 1.2칸 (적과 나 사이) — 떠난 자리엔 불꽃 잔상
         Vec3 start = sp.position();
-        Vec3 tw = V.flat(V.sub(e.position(), start));
-        Vec3 u = V.len(tw) < 0.1 ? Kit.facingOf(sp) : V.unit(tw);
+        double dist = V.hdist(e.position(), start); // V.flat 은 단위 방향 — 거리는 hdist
+        Vec3 u = dist < 0.1 ? Kit.facingOf(sp) : V.flat(V.sub(e.position(), start));
         if (!Status.isRooted(sp) && !Kit.ridingAny(sp)) {
-            double in = Math.max(0, V.len(tw) - 1.2 - Kit.bodyPad(e));
+            double in = Math.max(0, dist - 1.2 - Kit.bodyPad(e));
             if (in > 0.3) {
                 Vec3 to = V.add(start, u, Math.min(in, RuneKit.dashDistance(sp, u, in, 0.3, 1.5)));
                 fireClone(sp, level0, start, u, 1, j, 0.35, 0.8);

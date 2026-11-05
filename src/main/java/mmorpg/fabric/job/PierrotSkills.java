@@ -54,9 +54,8 @@ final class PierrotSkills {
         Vec3 f = Kit.facingOf(sp);
         Vec3 want;
         if (aim != null) {
-            Vec3 to = V.flat(V.sub(aim.position(), sp.position()));
-            double d = V.len(to);
-            Vec3 u = d < 0.1 ? f : V.scale(to, 1 / d);
+            double d = V.hdist(aim.position(), sp.position()); // V.flat 은 단위 방향 — 거리는 hdist
+            Vec3 u = d < 0.1 ? f : V.flat(V.sub(aim.position(), sp.position()));
             double s = Math.max(min, d - gap - Kit.bodyPad(aim));
             want = V.add(sp.position(), u, Math.min(s, RuneKit.dashDistance(sp, u, s, 0.3, 1.5)));
         } else want = V.add(sp.position(), f, RuneKit.dashDistance(sp, f, fallback, 0.3, 1.5));

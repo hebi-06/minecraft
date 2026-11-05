@@ -1848,10 +1848,11 @@ public final class RpgJobAdvanceTests {
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0};
         RpgMonster[] mob = {null};
-        // 핸드스프링: 앞 5칸 재주넘기 → 8틱 내려서며 둘레 3칸 2.85 · 맞은 과녁 도발 (나를 노림) · 2초 받는 피해 −30%
+        // 핸드스프링: 앞 5칸 재주넘기 → 8틱 내려서며 둘레 3칸 2.85 · 맞은 몬스터 도발 (허수아비가 나를 노림) · 2초 받는 피해 −30%
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
-            RpgJobTests.clearStrays(h, z.get(0));
+            mob[0] = scarecrow(h, 1.2, 5.0);
+            RpgJobTests.clearStrays(h, z.get(0), mob[0]);
             RpgCombat.forceCrit = false;
             mark[0] = sp.position().z;
             h.assertTrue(JobSkills.press(sp, 1), "핸드스프링 cast");
@@ -1861,7 +1862,8 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "핸드스프링 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "pierrot gradient number");
             h.assertTrue(sp.position().z - mark[0] > 3.5, "flipped ahead: " + (sp.position().z - mark[0]));
-            h.assertTrue(z.get(0).getTarget() == sp, "the landing taunts the target (it targets me)");
+            Monsters.Fight tf = Monsters.fightOf(mob[0]);
+            h.assertTrue(tf != null && sp.getUUID().equals(tf.tauntId()), "the landing taunts the monster (it targets me)");
             h.assertTrue(Math.abs(JobTraits10.guarding(sp) - 0.3) < 1e-9, "spring guard 0.3: " + JobTraits10.guarding(sp));
             float hp = sp.getHealth();
             mark[1] = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
@@ -1871,12 +1873,14 @@ public final class RpgJobAdvanceTests {
             float hp = sp.getHealth();
             double loss = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F);
             h.assertTrue(loss > 0 && Math.abs(mark[1] - loss * 0.7) < 1e-3, "spring guard −30%: " + mark[1] + " vs " + loss * 0.7);
-            // 벌룬 퍼레이드: 둘레 7칸 과녁 둘 (풍선 여섯이 나눠 붙음) — 14틱 감음 2.55 (둔화) → 24틱 펑 6.0 (= 8.55) · 도발
+            // 벌룬 퍼레이드: 둘레 7칸 과녁 둘 · 허수아비 (풍선 여섯이 나눠 붙음) — 14틱 감음 2.55 (둔화) → 24틱 펑 6.0 (= 8.55) · 도발
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 3.0));
             z.add(dummy(h, 2.5, 3.5));
-            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            mob[0].discard();
+            mob[0] = scarecrow(h, -2.0, 3.0);
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1), mob[0]);
             h.assertTrue(JobSkills.press(sp, 2), "벌룬 퍼레이드 cast");
         }));
         steps.add(new RpgJobTests.Step(16, () -> {
@@ -1887,7 +1891,9 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(12, () -> {
             double e = RpgJobTests.expected(sp, j, j.skill(2), 1);
             for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), e * 8.55), "벌룬 퍼레이드 " + TestDummies.dealt(x) + " vs " + e * 8.55);
-            h.assertTrue(z.get(0).getTarget() == sp && z.get(1).getTarget() == sp, "the pop taunts (they target me)");
+            Monsters.Fight tf = Monsters.fightOf(mob[0]);
+            h.assertTrue(tf != null && sp.getUUID().equals(tf.tauntId()), "the pop taunts the monster (it targets me)");
+            mob[0].discard();
             // 잭 인 더 박스: 과녁 앞에 상자 (4틱 — 체력 = 내 최대 체력 35%) → 6틱 열림 → 10틱부터 10틱마다 칼 0.95 × 5 (= 4.75)
             for (Husk x : z) x.discard();
             z.clear();
