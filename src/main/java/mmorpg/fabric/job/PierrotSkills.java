@@ -342,7 +342,7 @@ final class PierrotSkills {
                 int tt = t;
                 RuneKit.later(t, () -> {
                     if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !(e.level() instanceof ServerLevel lv)) return;
-                    double s = 0.55 + Kit.bodyPad(e) * 0.45 + 0.05 * count;
+                    double s = 0.8 + Kit.bodyPad(e) * 0.5 + 0.06 * count; // 영상 1: 0.55 는 몸에 묻혀 작은 빛 조각으로만 보였음
                     JobFx.balloonWrap(lv, Kit.bodyPoint(e), s, 0.22, Opt.of("vel", RuneKit.entVel(e), "fade", 0.0, "phase", (double) ((tt / 4) % 2)), col[0], col[1]);
                     if (tt == tangleAt) JobFx.balloonWrap(lv, V.up(Kit.bodyPoint(e), 0.35), s * 0.8, 0.22 + (popAt - tangleAt) / 20.0, Opt.of("vel", RuneKit.entVel(e),
                             "phase", 1.0), JobFx.CIRCUS[(foes.indexOf(e) + 2) % JobFx.CIRCUS.length][0], JobFx.CIRCUS[(foes.indexOf(e) + 2) % JobFx.CIRCUS.length][1]);
@@ -470,7 +470,7 @@ final class PierrotSkills {
     }
 
     /**
-     * 그랜드 피날레: 서커스 하늘 (rpg:ult_circus) · 앞쪽 무대를 비추는 조명 넷 → dropAt 틱 앞쪽 반원 ring 칸에 거대한 깜짝 상자 boxes 개가 떨어짐 (크기 BIG · 체력 = 내 최대
+     * 그랜드 피날레: 서커스 하늘 (rpg:ult_circus) · 앞쪽 무대를 비추는 조명 넷 → dropAt 틱 앞쪽 부채꼴 (±60°) ring 칸에 거대한 깜짝 상자 boxes 개가 떨어짐 (크기 BIG · 체력 = 내 최대
      * 체력 × hp — 벽이면 안쪽으로 · 광대는 나를 봄) → first 틱 활짝 열림 (용수철 광대 · 큰 색종이 — 둘레 몬스터를 끌어들임 · radius 칸 보스는 taunt 틱 나를 도발) → first 틱부터 every 틱마다 volleys 번 상자마다
      * 불꽃을 쏘아 올려 radius 칸 적에게 쏟아짐 (rocket — 적마다 한 번) → finaleAt 틱 상자들이 한꺼번에 터지며 대폭죽 (finale · 밀쳐냄 knock). 상자는 그때 사라짐
      */
@@ -513,8 +513,8 @@ final class PierrotSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             for (int i = 0; i < nBox; i++) {
-                // 앞쪽 반원 (−75° ~ 75° — 뒤에 두면 3인칭 카메라 앞을 거대한 상자가 가림 · 영상 1), 광대는 나 (관객) 를 봄
-                double a = base + Math.toRadians(nBox == 1 ? 0 : -75 + 150.0 * i / (nBox - 1));
+                // 앞쪽 부채꼴 (−60° ~ 60° — 뒤에 두면 3인칭 카메라 앞을 거대한 상자가 가림 · 영상 1, ±75° 도 옆 상자가 카메라 곁에 컸음 · 영상 2), 광대는 나 (관객) 를 봄
+                double a = base + Math.toRadians(nBox == 1 ? 0 : -60 + 120.0 * i / (nBox - 1));
                 Vec3 at = finaleSpot(lv, c, a, ring, 0.45 * BIG);
                 if (at == null) continue;
                 PierrotSummons.Member m = PierrotSummons.spawn(sp, PierrotSummons.FINALE, at, yawToward(at, c), finaleAt - dropAt + 2, k.num("hp", 0.4), BIG, P,
