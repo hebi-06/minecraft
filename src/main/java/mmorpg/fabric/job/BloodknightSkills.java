@@ -419,7 +419,7 @@ final class BloodknightSkills {
         // leapAt ~ slamAt: 달을 향해 높이 뛰어올라 (머리 위 칼에 핏빛 불길) 1칸 앞에 내리꽂음
         double land = 1.0;
         JobMove.run(sp,
-                JobMove.to(leapAt, slamAt - 5, from -> V.up(V.add(from, f, 0.6), 5.5), JobMove.OUT),
+                JobMove.to(leapAt, slamAt - 5, from -> JobMove.upAt(sp, V.add(from, f, 0.6), 5.5), JobMove.OUT),
                 JobMove.hold(slamAt - 5, slamAt - 3),
                 JobMove.to(slamAt - 3, slamAt, from -> ground(sp.level(), V.add(c0, f, land)), JobMove.IN));
         JobKit.motionLater(sp, k.id() + ":leap", leapAt, life);

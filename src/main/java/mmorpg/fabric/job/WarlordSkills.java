@@ -482,7 +482,7 @@ final class WarlordSkills {
         SkillFx.sparks(level0, V.up(c0, 0.2), DUST, 10, 3.0);
         SkillFx.play(level0, "mob.polarbear.warning", c0, 0.6, 1.0);
         // 뛰어오름 (포물선) — 내려찍을 자리 땅의 곰 발자국 고리 (경고)
-        JobMove.run(sp, JobMove.hop(leapAt, landAt, JobMove.at(dest), k.num("peak", 4.5)));
+        JobMove.run(sp, JobMove.hop(leapAt, landAt, JobMove.at(dest), JobMove.hopPeak(sp, c0, dest, k.num("peak", 4.5))));
         JobFx.ring(level0, V.up(dest, 0.1), k.num("radius", 4.5), j, true, (landAt - leapAt) / 20.0 + 0.1, Opt.of("alpha", 0.75));
         RuneKit.later(leapAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;

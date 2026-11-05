@@ -135,6 +135,30 @@ final class JobMove {
         };
     }
 
+    /**
+     * p 에서 위로 h 칸 (그 자리 머리 위가 막히면 닿는 데까지 — 1칸 여유). 0.51.0 정한 자리 위로 솟는 구간 (스타폴 블레이드의 혜성 사이 · 마지막 솟구침 · 블러드 문의
+     * 뛰어오름) 이 낮은 천장 (굴 · 방 · 시험 자리의 barrier 천장) 에 막혀 움직임이 그 자리에서 그치지 않게 (CI 42043623116 — 공중에 남았음)
+     */
+    static Vec3 upAt(ServerPlayer sp, Vec3 p, double h) {
+        double room = RuneKit.rayLength(sp.level(), V.up(p, sp.getBbHeight()), V.UP, h + 1) - 1;
+        return V.up(p, Math.max(0, Math.min(h, room)));
+    }
+
+    /**
+     * 도약 (hop) 의 꼭대기 peak 를 길 위 머리 위 여유에 맞춤: from → to 사이 세 곳 (1/4 · 1/2 · 3/4) 에서 포물선 높이 4 · peak · u · (1 − u) 가 여유 (1칸 남김) 를
+     * 넘지 않게 — 0.6 아래로는 줄이지 않음 (베어 스톰프 — CI 42043623116: 4.5칸 도약이 시험 자리 천장에 막혀 1.1칸에서 그쳤음)
+     */
+    static double hopPeak(ServerPlayer sp, Vec3 from, Vec3 to, double peak) {
+        double best = peak;
+        for (int i = 1; i <= 3; i++) {
+            double u = i / 4.0;
+            Vec3 base = V.lerp(from, to, u);
+            double room = RuneKit.rayLength(sp.level(), V.up(base, sp.getBbHeight()), V.UP, peak + 1) - 1;
+            best = Math.min(best, Math.max(0, room) / (4 * u * (1 - u)));
+        }
+        return Math.max(0.6, best);
+    }
+
     /** 보는 쪽 (수평) 으로 dist 칸 · 위로 h 칸 (벽 앞까지) */
     static UnaryOperator<Vec3> ahead(ServerPlayer sp, double dist, double h) {
         return from -> {

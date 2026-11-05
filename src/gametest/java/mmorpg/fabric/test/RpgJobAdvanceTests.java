@@ -898,18 +898,21 @@ public final class RpgJobAdvanceTests {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2));
-            z.add(loose(h, 0, 7.5));
+            z.add(loose(h, -3.0, -1.0));
             h.assertTrue(JobSkills.press(sp, 3), "디멘션 슬래시 cast");
             h.assertTrue(!JobTraits.stanceOn(sp, "arcaneblade_rift") && JobTraits.reachBonus(sp) == 0, "rift is not a stance");
         }));
-        // 디멘션 슬래시 (0.51.0 — 스펠 오버드라이브 대신 · 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 6 에 가르기 6.4 (앞 6.5칸 안) → 틈이 9칸 안의 적을
-        // 빨아들임 (7.5칸 밖의 밀 수 있는 적이 상자 안으로) → 22 에 닫히며 폭발 14 (= 20.4 — 태세 칸 몫 12 × 1.7) · 각인 1
+        // 디멘션 슬래시 (0.51.0 — 스펠 오버드라이브 대신 · 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 6 에 가르기 6.4 (앞 0.5 ~ 6.5칸) → 틈이 9칸 안의 적을
+        // 빨아들임 (왼쪽 뒤 1칸의 밀 수 있는 적 — 가르기 상자 밖 · 시험 자리 벽 안 (z 8 부터 벽: CI 42043623116 의 7.5칸 앞 적은 벽 속이었음) 이 틈 쪽으로 끌려와 상자 안으로)
+        // → 22 에 닫히며 폭발 14 (= 20.4 — 태세 칸 몫 12 × 1.7) · 각인 1
         steps.add(new RpgJobTests.Step(26, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(3), 20.4);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "디멘션 슬래시 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits.marks(sp, z.get(0)) == 1, "rift mark 1: " + JobTraits.marks(sp, z.get(0)));
-            double pulled = z.get(1).position().z - h.absoluteVec(new Vec3(1.5, 2, 1.5)).z;
-            h.assertTrue(pulled < 7.0 && TestDummies.dealt(z.get(1)) > 0, "the far enemy was pulled in and hit: z " + pulled + " · " + TestDummies.dealt(z.get(1)));
+            double pulled = z.get(1).position().z - h.absoluteVec(new Vec3(4.5, 2, 1.5)).z;
+            double close = RpgJobTests.expected(sp, j, j.skill(3), 14);
+            h.assertTrue(pulled > 0.5 && RpgJobTests.near(TestDummies.dealt(z.get(1)), close), "the enemy behind was pulled in and hit by the close only: z " + pulled + " · "
+                    + TestDummies.dealt(z.get(1)) + " vs " + close);
             JobSkills.resetCooldowns(sp);
             for (Husk x : z) x.discard();
             z.clear();

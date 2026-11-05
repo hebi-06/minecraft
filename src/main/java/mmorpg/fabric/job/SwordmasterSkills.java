@@ -499,7 +499,7 @@ final class SwordmasterSkills {
                     Vec3 d = V.flat(V.sub(spot[ii], from));
                     double len = Math.hypot(d.x, d.z);
                     Vec3 back = len > 0.3 ? V.add(spot[ii], V.unit(d), -Math.min(2.0, len * 0.6)) : spot[ii];
-                    return V.up(back, 4.5);
+                    return JobMove.upAt(sp, back, 4.5);
                 }, JobMove.OUT));
                 segs.add(JobMove.hold(hitT - 4, hitT - 3));
             }
@@ -523,7 +523,7 @@ final class SwordmasterSkills {
         // 마지막: 친 자리들의 가운데 위로 높이 솟아 머묾 (칼에 불길) → 떨어짐
         segs.add(JobMove.to(lastHit + 1, finalAt - 5, from -> {
             center[0] = middle(sp.level(), spot, c0);
-            return V.up(center[0], k.num("finalRise", 7.5));
+            return JobMove.upAt(sp, center[0], k.num("finalRise", 7.5));
         }, JobMove.OUT));
         segs.add(JobMove.hold(finalAt - 5, finalAt - 3));
         segs.add(JobMove.to(finalAt - 3, finalAt, from -> {
