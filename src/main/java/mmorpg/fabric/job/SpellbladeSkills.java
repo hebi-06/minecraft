@@ -342,6 +342,7 @@ final class SpellbladeSkills {
             // 솟구침: 하늘까지 닿는 마력 기둥 (빛기둥 · 굵은 광선) · 둘레에서 위로 솟는 큰 검기 여섯 · 터짐 · 고리 · 충격파 · 섬광 — 둘레 적 pillar · 띄움
             RuneKit.godRays(sp, lv, g, r * 0.85, 10, glow, core, Opt.of("h", height, "life", 0.9, "alpha", 0.95, "skipNear", true));
             JobFx.beam(lv, V.up(g, 0.2), V.up(g, height), j, 3.2, 0.45, Opt.of("alpha", 1.0));
+            JobFx.beam(lv, V.up(g, 0.2), V.up(g, height), j, 7.0, 0.5, Opt.of("alpha", 0.55)); // 겉 기둥 (영상 1: 기둥이 가는 두 줄로만 보였음)
             for (int q = 0; q < 6; q++) {
                 double ang = Math.toRadians(q * 60 + Kit.rand() * 20);
                 Vec3 p = V.add(g, new Vec3(Math.cos(ang), 0, Math.sin(ang)), r * 0.6);

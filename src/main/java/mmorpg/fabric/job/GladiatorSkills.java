@@ -317,10 +317,10 @@ final class GladiatorSkills {
                 RuneKit.Hand h = RuneKit.handOf(sp);
                 Vec3 from = V.up(h.hand(), 0.3);
                 Vec3 to = V.up(V.add(sp.position(), f, Math.max(2, RuneKit.rayLength(sp.level(), from, f, 10))), 1.2);
-                axeSpin(sp.level(), from, to, 0.3, 0.3, 1.5, j);
+                axeSpin(sp.level(), from, to, 0.3, 0.3, 1.9, j);
                 SkillFx.play(sp.level(), "item.trident.throw", from, 0.7, 1.0);
                 RuneKit.later(6, () -> {
-                    if (RuneKit.sameLife(sp, life)) axeSpin(sp.level(), to, V.up(RuneKit.handOf(sp).hand(), 0.3), 0.3, 0.3, 1.5, j);
+                    if (RuneKit.sameLife(sp, life)) axeSpin(sp.level(), to, V.up(RuneKit.handOf(sp).hand(), 0.3), 0.3, 0.3, 1.9, j);
                 });
                 JobKit.motionLater(sp, k.id() + ":catch", 10, life);
             });
@@ -330,7 +330,7 @@ final class GladiatorSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             RuneKit.Hand h = RuneKit.handOf(sp);
             Vec3 from = V.up(h.hand(), 0.3);
-            axeSpin(sp.level(), from, Kit.bodyPoint(t), fly / 20.0, fly / 20.0, 1.6, j);
+            axeSpin(sp.level(), from, Kit.bodyPoint(t), fly / 20.0, fly / 20.0, 2.1, j); // 영상 1: 1.6 이면 멀리서 작은 붉은 표로만 보였음
             JobFx.dash(sp.level(), V.up(sp.position(), 1.3), Kit.bodyPoint(t), j, 0.25, JobFx.hide1p(sp).with("alpha", 0.6));
             SkillFx.play(sp.level(), "item.trident.throw", from, 0.6, 1.0);
             SkillFx.play(sp.level(), "entity.player.attack.sweep", from, 0.8, 0.7);
@@ -346,7 +346,7 @@ final class GladiatorSkills {
             int at = hitAt + q * every;
             RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life) || t.isRemoved() || !t.isAlive()) return;
-                axeSpin(sp.level(), Kit.bodyPoint(t), null, 0, every / 20.0 + 0.03, 1.5, j);
+                axeSpin(sp.level(), Kit.bodyPoint(t), null, 0, every / 20.0 + 0.03, 2.0, j);
                 RuneKit.effect(t, "slowness", every + 2, (int) k.num("slowAmp", 2));
             });
         }
@@ -375,7 +375,7 @@ final class GladiatorSkills {
         RuneKit.later(ripAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             Vec3 from = t.isRemoved() ? V.up(V.add(sp.position(), f, 3), 1.2) : Kit.bodyPoint(t);
-            axeSpin(sp.level(), from, V.up(RuneKit.handOf(sp).hand(), 0.3), back / 20.0, back / 20.0, 1.5, j);
+            axeSpin(sp.level(), from, V.up(RuneKit.handOf(sp).hand(), 0.3), back / 20.0, back / 20.0, 1.9, j);
             SkillFx.play(sp.level(), "item.trident.return", from, 0.9, 0.8);
         });
         JobKit.motionLater(sp, k.id() + ":catch", ripAt + back - 2, life);

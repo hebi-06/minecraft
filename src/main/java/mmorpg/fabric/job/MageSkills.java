@@ -299,7 +299,7 @@ final class MageSkills {
                 Vec3 dir = sp.getViewVector(1F);
                 double L = Math.max(1.0, RuneKit.rayLength(lv, sp.getEyePosition(), dir, len));
                 Vec3 end = V.add(sp.getEyePosition(), dir, L);
-                JobFx.beam(lv, V.add(tip, dir, 0.3), end, j, 2.4, 0.14, Opt.of("alpha", 0.95));
+                JobFx.beam(lv, V.add(tip, dir, 0.3), end, j, 3.4, 0.14, Opt.of("alpha", 0.95)); // 영상 1: 2.4 면 가는 파란 줄로만 보였음
                 JobFx.burst(lv, end, 0.7, j, 0.16, Opt.empty());
                 JobFx.orb(lv, tip, 0.28, j, 0.12, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 1.0));
                 if ((tt - first) % 4 == 0) SkillFx.sparks(lv, end, JobFx.inner(j), 5, 4.0);
@@ -344,7 +344,7 @@ final class MageSkills {
                 Vec3 d = V.turnY(look, deg);
                 double L = Math.max(1.0, RuneKit.rayLength(lv, at, d, rl));
                 double[][] c = PRISM[r % PRISM.length];
-                JobFx.beam(lv, V.add(tip, d, 0.3), V.add(at, d, L), c[0], c[1], 2.6, 0.32, Opt.of("alpha", 1.0));
+                JobFx.beam(lv, V.add(tip, d, 0.3), V.add(at, d, L), c[0], c[1], 3.6, 0.32, Opt.of("alpha", 1.0));
                 JobFx.burst(lv, V.add(at, d, L), 0.9, c[0], c[1], 0.3, Opt.empty());
                 for (Kit.LineHit h : RuneKit.lineTargets(sp, at, d, L, 0.9)) {
                     LivingEntity e = h.e();

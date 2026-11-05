@@ -385,7 +385,7 @@ final class BloodknightSkills {
         Ult.flash(level0, c0, MOON_GLOW, Opt.of("radius", 9.0, "time", new double[] {0.04, 0.08, 0.5}), sp);
         // 앞 하늘의 핏빛 달 (보름달 · 붉은 테 — 천천히 커짐) · 종소리 · 낮은 울림
         double moonLife = (pillarAt + 30) / 20.0;
-        Vec3 moonAt = V.up(V.add(c0, f, 20), 11);
+        Vec3 moonAt = V.up(V.add(c0, f, 21), 8.5); // 영상 1: 11칸 위면 3인칭 화면 위 끝에 잘렸음
         JobFx.moon(level0, moonAt, 6.5, 0, 1, moonLife, Opt.of("fade", 0.12, "alpha", 0.95, "grow", 0.12), MOON_GLOW, MOON_CORE);
         JobFx.moon(level0, moonAt, 7.4, 7, 1, moonLife, Opt.of("fade", 0.12, "alpha", 0.55, "grow", 0.12), MOON_GLOW, MOON_CORE);
         SkillFx.play(level0, "block.bell.resonate", c0, 0.5, 1.0);
