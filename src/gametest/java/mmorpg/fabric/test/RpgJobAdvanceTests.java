@@ -1089,12 +1089,13 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 4.2);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "헤일로 배리어 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(mmorpg.fabric.RpgHealth.shieldOf(sp) > 0, "halo caught: shield " + mmorpg.fabric.RpgHealth.shieldOf(sp));
-            // 스타 볼텍스: 과녁 발밑의 소용돌이 — 1.5 × 6 + 3.6 = 12.6, 3.5칸 옆의 밀 수 있는 적은 가운데로 끌려옴 (함께 맞음)
+            // 스타 볼텍스: 과녁 발밑의 소용돌이 — 1.5 × 6 + 3.6 = 12.6, 3칸 옆의 밀 수 있는 적은 가운데로 끌려옴 (함께 맞음 — 시험 자리 안쪽: x 8 은 barrier 벽 속이라
+            // 숨막힘 1 이 더해졌음, CI 42063990423)
             z.get(0).discard();
             z.clear();
             home(h, sp);
             z.add(dummy(h, 0, 4));
-            z.add(loose(h, 3.5, 4));
+            z.add(loose(h, -3.0, 4));
             JobSkills.resetCooldowns(sp);
             JobTraitsMore.setChain(sp, 0);
             h.assertTrue(JobSkills.press(sp, 2), "스타 볼텍스 cast");
