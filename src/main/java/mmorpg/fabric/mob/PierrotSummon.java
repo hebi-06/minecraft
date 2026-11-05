@@ -108,7 +108,7 @@ public class PierrotSummon extends BedrockMob {
                 || source.is(DamageTypes.FLY_INTO_WALL)) return false;
         float before = getHealth();
         boolean ok = super.hurtServer(level, source, amount);
-        invulnerableTime = 0;
+        setInvulnerableTime(0);
         if (ok && !isRemoved()) {
             float lost = Math.max(0F, before - getHealth());
             try {
