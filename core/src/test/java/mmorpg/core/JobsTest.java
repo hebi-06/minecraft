@@ -105,7 +105,7 @@ public final class JobsTest {
             check(near(k.total(), 12 * j.scale()) && k.cd() == 30 && Jobs.upKeys(k).isEmpty() && !k.def().has("dur"), j.id() + " stance budget " + k.total() + " = 12 × "
                     + j.scale());
         }
-        check(stanceDamage == 6, "six slot-3 damage skills (매지션 · 마검사 · 워로드 · 글래디에이터 · 아케인 블레이드 · 네크로맨서) " + stanceDamage);
+        check(stanceDamage == 7, "seven slot-3 damage skills (매지션 · 마검사 · 워로드 · 글래디에이터 · 아케인 블레이드 · 네크로맨서 · 피에로) " + stanceDamage);
 
         Jobs.Job sw = Jobs.job("swordsman");
         Jobs.Skill mirror = sw.skill("swordsman_mirror");
@@ -435,7 +435,7 @@ public final class JobsTest {
                 check(Jobs.upKeys(k).size() == Jobs.upKeys(b.skill(i)).size() || i == 3, a.id() + " slot " + i + " up keys");
             }
             double r = dps(a) / dps(b);
-            check(near(r, 1.2, 0.005), a.id() + " dps ×" + r + " (1차 × 1.2)");
+            check(near(r, Jobs.advanceDps(a), 0.005), a.id() + " dps ×" + r + " (1차 × " + Jobs.advanceDps(a) + " — 피에로만 1.0)");
         }
         check(Jobs.upId("swordsman_flurry").equals("swordsman_flurry") && Jobs.upId(null) == null, "upId keeps first-job ids");
         // 0.51.0 재설계안 2판 (claude/job-advance-redo.md) — 부분 합 = 배율 합: 칼집 섬광 · 받아넘기기는 한 번에 넣고 숫자만 여러 줄, 불의 울타리 가로지르기 다섯,
@@ -476,60 +476,81 @@ public final class JobsTest {
         spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("arcaneblade"), Jobs.job("swordcaller"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
         archerAdvance(Jobs.job("archer"), Jobs.job("sniper"), Jobs.job("battlearcher"));
-        assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("bladedancer"));
+        assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("pierrot"));
     }
 
     /**
-     * 0.51.0 암살자 2차 — 트릭스터 · 블레이드 댄서 (사용자 "다음 작업"): 부분 합 = 배율 합 (암살자와 같은 4.75 · 2.85 · 8.55 · 38 — 표식을 터뜨리는
-     * 것은 표식 가득 (7) 기준) · 무적 시간 띄움 · t · w · 특성 (표식 7 · 옮겨감 / 춤사위 5 · +6% · 이동 +4%)
+     * 0.51.0 암살자 2차 — 트릭스터 · 피에로 (재설계안 2판 — 2026-11-06 사용자 "다음 작업": 트릭스터 새 스킬 다섯 · 블레이드 댄서 대신 피에로 — 광대 소환물 탱커,
+     * 초당 피해 = 1차 암살자 (사용자 "1차 암살자랑 같게" — 직업의 dps 1.0)): 부분 합 = 배율 합 (암살자와 같은 4.75 · 2.85 · 8.55 · 38 — 표식을 터뜨리는 것은 표식
+     * 가득 (7) 기준, 할루시네이트는 태세 칸 몫 12 × 0.95) · 무적 시간 띄움 · t · w · 특성 (표식 7 · 옮겨감 / 쇼타임 — 끌어들임 6칸 · 나눠 받음 20% · 색종이 폭죽)
      */
-    static void assassinAdvance(Jobs.Job as, Jobs.Job tr, Jobs.Job bd) {
-        check(tr != null && bd != null, "assassin advanced jobs");
-        if (tr == null || bd == null) return;
-        check(Jobs.advance("assassin", "awaken") == tr && Jobs.advance("assassin", "invert") == bd && Jobs.baseOf(tr) == as && Jobs.baseOf(bd) == as, "assassin advance");
-        check(tr.display().equals("트릭스터") && bd.display().equals("블레이드 댄서") && Jobs.find("트릭스터") == tr && Jobs.find("료스알프") == null
-                && Jobs.find("블레이드 댄서") == bd, "assassin display · find");
-        for (int i : new int[] {0, 1, 2, 4}) check(near(tr.skill(i).total(), as.skill(i).total()) && near(bd.skill(i).total(), as.skill(i).total()), "assassin totals slot " + i);
+    static void assassinAdvance(Jobs.Job as, Jobs.Job tr, Jobs.Job pr) {
+        check(tr != null && pr != null, "assassin advanced jobs");
+        if (tr == null || pr == null) return;
+        check(Jobs.advance("assassin", "awaken") == tr && Jobs.advance("assassin", "invert") == pr && Jobs.baseOf(tr) == as && Jobs.baseOf(pr) == as, "assassin advance");
+        check(tr.display().equals("트릭스터") && pr.display().equals("피에로") && Jobs.find("트릭스터") == tr && Jobs.find("우트가르드") == null && Jobs.find("피에로") == pr
+                && Jobs.find("pierrot") == pr && Jobs.job("bladedancer") == null && Jobs.find("블레이드 댄서") == null, "assassin display · find");
+        List<String> trIds = new ArrayList<>();
+        List<String> prIds = new ArrayList<>();
+        for (Jobs.Skill k : tr.skills()) trIds.add(k.id());
+        for (Jobs.Skill k : pr.skills()) prIds.add(k.id());
+        check(trIds.equals(List.of("trickster_swap", "trickster_dash", "trickster_phantom", "trickster_palace", "trickster_ult"))
+                && prIds.equals(List.of("pierrot_box", "pierrot_spring", "pierrot_balloon", "pierrot_doll", "pierrot_ult")), "assassin advanced skill ids (2판)");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(tr.skill(i).total(), as.skill(i).total()) && near(pr.skill(i).total(), as.skill(i).total()), "assassin totals slot " + i);
         int max = tr.trait().max();
-        Jobs.Skill r0 = tr.skill(0);
-        Jobs.Skill r1 = tr.skill(1);
-        Jobs.Skill r2 = tr.skill(2);
-        Jobs.Skill ru = tr.skill(4);
-        check(max == 7 && near(r0.num("cut", 0) + r0.num("base", 0) + r0.num("per", 0) * max, 4.75) && near(r1.num("blast", 0) * 2, 2.85)
-                && near(r2.num("cut", 0) + r2.num("coil", 0) + r2.num("venom", 0) * r2.num("ticks", 0), 8.55)
-                && near(ru.num("rounds", 0) * ru.num("throwers", 0) * ru.num("dagger", 0) + ru.num("base", 0) + ru.num("per", 0) * max, 38), "trickster totals 4.75 · 2.85 · 8.55 · 38 (표식 7)");
-        Jobs.Skill b0 = bd.skill(0);
-        Jobs.Skill b1 = bd.skill(1);
-        Jobs.Skill b2 = bd.skill(2);
-        Jobs.Skill bu = bd.skill(4);
-        check(near(b0.num("spin", 0) + b0.num("slash", 0), 4.75) && near(b1.num("steps", 0) * b1.num("cut", 0), 2.85) && near(b2.num("rounds", 0) * b2.num("round", 0), 8.55)
-                && near(bu.num("slashes", 0) * bu.num("slash", 0) + bu.num("final", 0), 38), "bladedancer totals 4.75 · 2.85 · 8.55 · 38");
-        // 같은 적을 여러 번 치는 것은 10틱 넘게 (환영 둘의 터짐 · 비수 넷 · 두 번 베기는 한 번에 넣고 숫자만 여러 줄)
-        check(r0.num("burstAt", 0) - r0.num("cutAt", 0) >= 10 && r2.num("coilAt", 0) - r2.num("steps", 0) >= 10 && r2.num("every", 0) >= 10 && ru.num("every", 0) >= 10
-                && ru.num("finalAt", 0) - ru.num("first", 0) - (ru.num("rounds", 0) - 1) * ru.num("every", 0) - ru.num("flight", 0) >= 10, "trickster i-frame spacing");
-        check(b0.num("slashAt", 0) - 1 >= 10 && b1.num("every", 0) >= 10 && b2.num("every", 0) >= 10 && bu.num("every", 0) * 2 >= 10 && bu.num("finalDelay", 0) >= 10,
-                "bladedancer i-frame spacing");
-        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값)
-        check(near(r0.num("burstAt", 0), r0.num("t", 0)) && near(r2.num("coilAt", 0) + r2.num("ticks", 0) * r2.num("every", 0), r2.num("t", 0))
-                && near(ru.num("finalAt", 0), ru.num("t", 0)) && near(ru.num("first", 0) + ru.num("flight", 0), ru.num("w", 0)) && near(r1.num("life", 0), r1.num("t", 0)),
-                "trickster t 12 · 40 · 58 · 52 (w 8)");
-        check(near(b0.num("slashAt", 0), b0.num("t", 0)) && near((b1.num("steps", 0) - 1) * b1.num("every", 0), b1.num("t", 0))
-                && near(b2.num("first", 0) + (b2.num("rounds", 0) - 1) * b2.num("every", 0), b2.num("t", 0))
-                && near((bu.num("slashes", 0) - 1) * bu.num("every", 0) + bu.num("finalDelay", 0), bu.num("t", 0)), "bladedancer t 11 · 20 · 21 · 50");
-        // 특성: 트릭스터 = 암살자의 표식 (같은 등 뒤 +25%p · 10초) 최대 7 + 옮겨감 (5 이상 · 6칸), 블레이드 댄서 = 춤사위 (최대 5 · +6% · 이동 +4% · 3초)
+        Jobs.Skill ts = tr.skill(0), td = tr.skill(1), tp = tr.skill(2), tm = tr.skill(3), tu = tr.skill(4);
+        Jobs.Skill pb = pr.skill(0), ps = pr.skill(1), pl = pr.skill(2), pd = pr.skill(3), pu = pr.skill(4);
+        check(max == 7 && near(ts.num("cut", 0) + ts.num("base", 0) + ts.num("per", 0) * max, 4.75) && near(td.total(), 2.85)
+                && near(tp.num("packet", 0) * tp.num("packets", 0) + tp.num("x", 0), 8.55)
+                && near(tu.num("slash", 0) + tu.num("flame", 0) * tu.num("flames", 0) + tu.num("base", 0) + tu.num("per", 0) * max, 38), "trickster totals 4.75 · 2.85 · 8.55 · 38 (표식 7)");
+        check(near(pb.num("knife", 0) * pb.num("knives", 0), 4.75) && near(ps.total(), 2.85) && near(pl.num("tangle", 0) + pl.num("pop", 0), 8.55)
+                && near(pu.num("rocket", 0) * pu.num("volleys", 0) + pu.num("finale", 0), 38), "pierrot totals 4.75 · 2.85 · 8.55 · 38");
+        // 할루시네이트 = 태세 칸 몫 (30초 12 × 암살자 세기 0.95) · 직업 맞춤에서 뺌, 미러 팰리스 = 강화 (배율 합 없음)
+        check(Jobs.stanceBudget(pd) && near(pd.total(), 12 * as.scale()) && near(pd.num("swing", 0) * pd.num("swings", 0), pd.total()) && tm.total() <= 0 && !Jobs.stanceBudget(tm),
+                "할루시네이트 11.4 (태세 칸 몫) · 미러 팰리스 강화");
+        // 초당 피해: 트릭스터 = 1차 × 1.2, 피에로 = 1차와 같음 (직업의 dps 1.0 — 탱커)
+        check(near(Jobs.advanceDps(tr), 1.2) && near(Jobs.advanceDps(pr), 1.0) && near(Jobs.advanceDps(as), 1) && near(Jobs.advanceDps(), 1.2), "advance dps 1.2 · pierrot 1.0");
+        check(near(dps(pr) / dps(as), 1.0, 0.005) && near(dps(tr) / dps(as), 1.2, 0.005), "pierrot dps = assassin · trickster ×1.2");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (다시 누르는 찌르기는 지나간 환영의 벰 뒤 10틱 — 서버가 미룸 · 칼 · 불꽃놀이 · 꿰뚫기는 10틱마다)
+        check(ts.num("gap", 0) + ts.num("stabAt", 0) >= ts.num("cutAt", 0) && ts.num("t", 0) - ts.num("cutAt", 0) >= 10 && tp.num("every", 0) >= 10
+                && tp.num("xAt", 0) - tp.num("first", 0) - (tp.num("packets", 0) - 1) * tp.num("every", 0) >= 10 && tu.num("first", 0) - tu.num("slashAt", 0) >= 10
+                && tu.num("every", 0) >= 10 && tu.num("finalAt", 0) - tu.num("first", 0) - (tu.num("flames", 0) - 1) * tu.num("every", 0) >= 10, "trickster i-frame spacing");
+        check(pb.num("every", 0) >= 10 && pl.num("popAt", 0) - pl.num("tangleAt", 0) >= 10 && pd.num("every", 0) >= 10 && pu.num("every", 0) >= 10
+                && pu.num("finaleAt", 0) - pu.num("first", 0) - (pu.num("volleys", 0) - 1) * pu.num("every", 0) >= 10, "pierrot i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 다시 누르는 스킬은 12틱마다 다시 누름)
+        check(near(12 + ts.num("stabAt", 0), ts.num("t", 0)) && near(td.num("steps", 0), td.num("t", 0)) && near(tp.num("xAt", 0), tp.num("t", 0))
+                && near(tu.num("finalAt", 0), tu.num("t", 0)), "trickster t 14 · 4 · 34 · 62");
+        check(near(pb.num("first", 0) + (pb.num("knives", 0) - 1) * pb.num("every", 0), pb.num("t", 0)) && near(pb.num("first", 0), pb.num("w", 0))
+                && near(ps.num("land", 0), ps.num("t", 0)) && near(ps.num("land", 0), ps.num("w", 0)) && near(pl.num("popAt", 0), pl.num("t", 0))
+                && near(pl.num("tangleAt", 0), pl.num("w", 0)) && near(pd.num("first", 0) + (pd.num("swings", 0) - 1) * pd.num("every", 0), pd.num("t", 0))
+                && near(pd.num("first", 0), pd.num("w", 0)) && near(pu.num("finaleAt", 0), pu.num("t", 0)) && near(pu.num("first", 0), pu.num("w", 0)),
+                "pierrot t 50 · 8 · 24 · 200 · 90 (w 10 · 8 · 14 · 20 · 10)");
+        // 특성: 트릭스터 = 암살자의 표식 (같은 등 뒤 +25%p · 10초) 최대 7 + 옮겨감 (5 이상 · 6칸), 피에로 = 쇼타임 (소환물 넷까지 셈 · 끌어들임 6칸 · 나눠 받음 20% · 12칸 ·
+        // 부서지면 색종이 폭죽 둘레 3칸 위력 × 0.8 · 0.5초 기절)
         check(tr.trait().name().equals(as.trait().name()) && near(tr.trait().def().numOr("back", 0), as.trait().def().numOr("back", -1))
                 && near(tr.trait().def().numOr("markFor", 0), as.trait().def().numOr("markFor", -1)) && near(tr.trait().def().numOr("shift", 0), 5)
                 && near(tr.trait().def().numOr("shiftRange", 0), 6), "표식 7 · 옮겨감");
-        check(bd.trait().name().equals("춤사위") && bd.trait().max() == 5 && near(bd.trait().def().numOr("perStack", 0), 0.06) && near(bd.trait().def().numOr("speedPer", 0), 0.04)
-                && near(bd.trait().def().numOr("keep", 0), 60), "춤사위 5 · +6% · 이동 +4% · 3초");
-        // 유틸 · 범위: 환술 = 순간 이동 · 도발 (1차와 같음), 요정의 걸음 = 피해 감소, 검은 장미 덤불 단일 · 나머지 좁은 범위
-        check(Jobs.utils(r1).equals(List.of("blink", "taunt")) && Jobs.utils(b1).equals(List.of("reduce")) && near(Jobs.utilCost(b1), 0.1) && "single".equals(Jobs.areaKind(r0))
-                && "narrow".equals(Jobs.areaKind(r2)) && "narrow".equals(Jobs.areaKind(b0)) && "narrow".equals(Jobs.areaKind(b2)) && Jobs.areaKind(bu) == null, "assassin advanced utils · area");
-        check(Jobs.windupTicks(ru) == 8 && Jobs.windupTicks(r1) == 0 && Jobs.windupTicks(bu) == 0, "windups 8 · 0 · 0");
-        check(Jobs.upKey(tr.skill(3), "first") != null && Jobs.upKey(bd.skill(3), "echo") != null, "assassin advanced up keys");
-        check(Jobs.skillLine(tr.skill(3)).equals("끝없는 밤 · 30초") && Jobs.skillLine(bd.skill(0)).startsWith("빛살 베기 · 6초 · 배율 "), "assassin advanced skill line");
-        check(tr.color()[0][0] > 0.9 && tr.color()[0][2] > 0.7 && tr.color()[1][1] < 0.2 && bd.color()[0][0] > 0.95 && bd.color()[0][1] > 0.8 && bd.color()[1][0] > 0.95
-                && bd.color()[1][2] > 0.7, "colors: magenta · violet / white gold · pink");
+        check(pr.trait().name().equals("쇼타임") && pr.trait().max() == 4 && near(pr.trait().def().numOr("lure", 0), 6) && near(pr.trait().def().numOr("share", 0), 0.2)
+                && near(pr.trait().def().numOr("shareRange", 0), 12) && near(pr.trait().def().numOr("burst", 0), 0.8) && near(pr.trait().def().numOr("burstRadius", 0), 3)
+                && near(pr.trait().def().numOr("stun", 0), 10), "쇼타임 6칸 · 20% · 폭죽 0.8");
+        // 소환물 체력 (내 최대 체력의 몫): 상자 35% · 인형 80% · 피날레 상자 40%, 상자는 둘까지
+        check(near(pb.num("hp", 0), 0.35) && near(pd.num("hp", 0), 0.8) && near(pu.num("hp", 0), 0.4) && near(pb.num("boxes", 0), 2) && near(pu.num("boxes", 0), 4),
+                "summon hp 35% · 80% · 40%");
+        // 유틸 · 범위: 섀도 스와프 · 사우전드 팬텀 · 와일드파이어 피스트 단일 · 미라주 대시 좁은 범위 · 순간 이동, 잭 인 더 박스 단일 · 도발, 핸드스프링 좁은 범위 · 도약 · 도발 ·
+        // 피해 감소, 벌룬 퍼레이드 넓음 · 둔화 · 도발, 그랜드 피날레 넓음 · 도발 · 밀쳐냄
+        check("single".equals(Jobs.areaKind(ts)) && "narrow".equals(Jobs.areaKind(td)) && "single".equals(Jobs.areaKind(tp)) && "single".equals(Jobs.areaKind(tu))
+                && Jobs.utils(td).equals(List.of("blink")) && Jobs.utils(tp).equals(List.of("blink")) && Jobs.utils(tu).equals(List.of("blink")) && Jobs.utils(ts).isEmpty(),
+                "trickster utils · area");
+        check("single".equals(Jobs.areaKind(pb)) && "narrow".equals(Jobs.areaKind(ps)) && Jobs.areaKind(pl) == null && "narrow".equals(Jobs.areaKind(pd)) && Jobs.areaKind(pu) == null
+                && Jobs.utils(pb).equals(List.of("taunt")) && Jobs.utils(ps).equals(List.of("leap", "taunt", "reduce")) && near(Jobs.utilCost(ps), 0.3)
+                && Jobs.utils(pl).equals(List.of("slow", "taunt")) && Jobs.utils(pu).equals(List.of("taunt", "knock")), "pierrot utils · area");
+        check(Jobs.windupTicks(ts) == 0 && Jobs.windupTicks(tu) == 0 && Jobs.windupTicks(pb) == 10 && Jobs.windupTicks(ps) == 8 && Jobs.windupTicks(pl) == 14
+                && Jobs.windupTicks(pu) == 10, "windups 0 · 0 · 10 · 8 · 14 · 10");
+        check(Jobs.upKey(tm, "reflect") != null && Jobs.upKeys(pd).isEmpty() && Jobs.upKeys(ts).isEmpty(), "assassin advanced up keys");
+        check(Jobs.skillLine(tm).equals("미러 팰리스 · 30초") && Jobs.skillLine(ts).startsWith("섀도 스와프 · 6초 · 배율 ") && Jobs.skillLine(pb).startsWith("잭 인 더 박스 · 6초 · 배율 "),
+                "assassin advanced skill line");
+        check(tr.color()[0][0] > 0.9 && tr.color()[0][2] > 0.7 && tr.color()[1][1] < 0.2 && pr.color()[0][0] > 0.9 && pr.color()[0][1] < 0.3 && pr.color()[1][0] > 0.95
+                && pr.color()[1][1] > 0.85, "colors: magenta · violet / circus red · gold");
     }
 
     /**

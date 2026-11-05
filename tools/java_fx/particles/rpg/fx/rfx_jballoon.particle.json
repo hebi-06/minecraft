@@ -2,10 +2,10 @@
   "format_version": "1.10.0",
   "particle_effect": {
     "description": {
-      "identifier": "rpg:rfx_jfairy",
+      "identifier": "rpg:rfx_jballoon",
       "basic_render_parameters": {
         "material": "particles_blend",
-        "texture": "textures/particle/rpg/fx/rfx_jfairy"
+        "texture": "textures/particle/rpg/fx/rfx_jballoon"
       }
     },
     "components": {
@@ -30,27 +30,19 @@
       "minecraft:particle_appearance_billboard": {
         "size": [
           "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
-          "variable.size * 0.7500 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+          "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
         ],
-        "facing_camera_mode": "direction_z",
+        "facing_camera_mode": "rotate_xyz",
         "uv": {
-          "texture_width": 1024,
+          "texture_width": 1536,
           "texture_height": 384,
           "uv": [
-            "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 256",
-            "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 192"
+            "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 8) * 192",
+            "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 8) * 192"
           ],
           "uv_size": [
-            256,
+            192,
             192
-          ]
-        },
-        "direction": {
-          "mode": "custom",
-          "custom_direction": [
-            "variable.dir.x",
-            "variable.dir.y",
-            "variable.dir.z"
           ]
         }
       },

@@ -49,9 +49,9 @@ import net.minecraft.world.phys.Vec3;
  * momentumFor 틱 안의 다음 직업 스킬 위력 + momentum (JobSystem). 창벽 (태세): 정면 front° 에서 온 피해 − guard (RpgHealth.sourceReduce)</li>
  * <li>사신 「혼」 (0 ~ max): 낫 평타 (넓게 베기에 맞은 적 포함) · 직업 스킬이 맞힌 적마다 +1, 처치하면 + kill. 하나당 이동 속도 + speedPer · 준 피해의 leechPer 만큼 회복
  * (DamageNumbers.dealtHook). 혼백 폭발이 씀. 망령 걸음 동안 받는 피해 없음, 사신 현신 (태세) 동안 넓게 베기 범위 · 비율 (WeaponTraits.sweepMod)</li>
- * <li>0.51.0 각성 트릭스터 도 「표식」 (암살자 줄기 — {@link #assassinLine}: 최대 7 · 등 뒤 치명타 · 은신은 끝없는 밤). 표식이 shift 이상인 적이 쓰러지면
- * 그 표식이 둘레 shiftRange 칸의 가장 가까운 적에게 옮겨감 (꽃잎이 날아감). 끝없는 밤 (태세 window 틱): 처음 dur 틱 은신 (1차 밤의 장막과 같음) · 은신이 풀린 뒤에도
- * 태세 동안 적을 쓰러뜨리면 다시 은신 (reveil 틱 · again 번까지 — 첫 공격 강화도 다시)</li>
+ * <li>0.51.0 각성 트릭스터 도 「표식」 (암살자 줄기 — {@link #assassinLine}: 최대 7 · 등 뒤 치명타 — 재설계안 2판 (2026-11-06) 은 은신 대신 환영 · 거울: 미러
+ * 팰리스 동안은 어느 쪽에서 쳐도 등 뒤 — JobTraits10.anySide). 표식이 shift 이상인 적이 쓰러지면 그 표식이 둘레 shiftRange 칸의 가장 가까운 적에게 옮겨감
+ * (꽃잎이 날아감)</li>
  * </ul>
  */
 public final class JobTraits3 {
@@ -69,8 +69,6 @@ public final class JobTraits3 {
         long veilHit = -1;
         /** 풀린 뒤 이동 + 가 끝나는 틱 */
         long speedUntil;
-        /** 0.51.0 끝없는 밤 (트릭스터): 다시 은신한 수 (태세마다 처음부터) */
-        int again;
         // 창술사
         long momentumUntil;
         /** 이번 평타가 끝자락 (밀침 · 연출 — 맞힘 훅) */
@@ -157,7 +155,6 @@ public final class JobTraits3 {
             st.ghostUntil = 0;
             st.speedUntil = 0;
             st.leechAcc = 0;
-            st.again = 0;
         }
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
@@ -168,9 +165,8 @@ public final class JobTraits3 {
         return j != null && j.id().equals(id) ? j : null;
     }
 
-    /** 0.51.0 트릭스터 (암살자 각성) · 끝없는 밤 */
+    /** 0.51.0 트릭스터 (암살자 각성) */
     static final String TR = "trickster";
-    static final String NIGHT = "trickster_night";
 
     /** 암살자 줄기 (표식 · 등 뒤 치명타 · 은신 — 1차 암살자 · 0.51.0 트릭스터) */
     static boolean assassinLine(Jobs.Job j) {
@@ -183,9 +179,9 @@ public final class JobTraits3 {
         return assassinLine(j) ? j : null;
     }
 
-    /** 은신 스킬 id (암살자 밤의 장막 · 트릭스터 끝없는 밤) */
+    /** 은신 스킬 id (암살자 밤의 장막 — 재설계안 2판 트릭스터는 은신 스킬이 없음: 그 칸은 미러 팰리스) */
     private static String veilId(Jobs.Job j) {
-        return j != null && j.id().equals(TR) ? NIGHT : "assassin_veil";
+        return "assassin_veil";
     }
 
     private static double trait(Jobs.Job j, String key, double fallback) {
@@ -316,7 +312,7 @@ public final class JobTraits3 {
     private static double backCrit(ServerPlayer sp, Weapon w, LivingEntity victim) {
         if (victim == null || w == null || !"dagger".equals(w.type())) return 0;
         Jobs.Job j = lineJob(sp);
-        if (j == null || !behind(sp, victim, trait(j, "backArc", 120))) return 0;
+        if (j == null || !(behind(sp, victim, trait(j, "backArc", 120)) || JobTraits10.anySide(sp))) return 0; // 0.51.0 미러 팰리스: 어느 쪽에서든
         return trait(j, "back", 0.25);
     }
 
@@ -328,15 +324,11 @@ public final class JobTraits3 {
         return st != null && st.veilUntil > Tasks.now();
     }
 
-    /**
-     * 암영 시작 (AssassinSkills): dur 틱 투명 · 몹이 노리던 것을 놓음 · 태세 (남은 시간). 0.51.0 트릭스터 끝없는 밤: 태세는 window 틱 (그동안 쓰러뜨리면 다시 은신 —
-     * {@link #reveil}), 은신은 처음 dur 틱
-     */
+    /** 암영 시작 (AssassinSkills): dur 틱 투명 · 몹이 노리던 것을 놓음 · 태세 (남은 시간) */
     static void veilStart(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
         State st = of(sp);
         int dur = (int) k.num("dur", 120);
-        st.again = 0;
-        JobTraits.startStance(sp, k, j != null && j.id().equals(TR) ? Math.max(dur, (int) k.num("window", 200)) : dur);
+        JobTraits.startStance(sp, k, dur);
         hide(sp, st, dur);
     }
 
@@ -348,30 +340,6 @@ public final class JobTraits3 {
         sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, ticks, 0, false, false, true));
         Monsters.forgetMonsterFights(sp.getUUID());
         for (Mob m : sp.level().getEntitiesOfClass(Mob.class, sp.getBoundingBox().inflate(32), x -> x.getTarget() == sp)) m.setTarget(null);
-    }
-
-    /**
-     * 0.51.0 끝없는 밤 (트릭스터 — 태세 동안 적을 쓰러뜨림): 은신이 풀려 있고 다시 은신한 수가 again 보다 적으면 reveil 틱 다시 은신 — 망토를 휘두르는 검보라 연기 ·
-     * 꽃잎 · 청록 반짝임. 다시 숨었으면 true
-     */
-    static boolean reveil(ServerPlayer sp) {
-        Jobs.Job j = jobIf(sp, TR);
-        Jobs.Skill k = skill(j, NIGHT);
-        if (k == null || !JobTraits.stanceOn(sp, NIGHT) || veilOn(sp)) return false;
-        State st = of(sp);
-        if (st.again >= (int) k.num("again", 3)) return false;
-        st.again++;
-        hide(sp, st, (int) k.num("reveil", 60));
-        TricksterSkills.cloak(sp, j, 0.8);
-        Notify.notify(sp, "§d§l끝없는 밤 §7— 다시 은신 (" + st.again + "/" + (int) k.num("again", 3) + ")", 24);
-        JobTraits.sendGauge(sp, true);
-        return true;
-    }
-
-    /** 시험: 끝없는 밤에 다시 은신한 수 */
-    public static int againCount(ServerPlayer sp) {
-        State st = STATES.get(sp.getUUID());
-        return st == null ? 0 : st.again;
     }
 
     private static void removeInvisibility(ServerPlayer sp) {
@@ -398,7 +366,7 @@ public final class JobTraits3 {
             JobFx.petals(level, c, 5, 2.0, 0.12, j, 0.6, Opt.empty());
             SkillFx.play(level, "mob.phantom.flap", c, 1.4, 0.6);
         }
-        JobTraits.stopStance(sp, "assassin_veil"); // 0.51.0 끝없는 밤은 은신이 풀려도 태세 (다시 은신) 가 남음
+        JobTraits.stopStance(sp, "assassin_veil");
         JobTraits.sendGauge(sp, true);
     }
 
@@ -621,11 +589,10 @@ public final class JobTraits3 {
         if (got > 0) st.leechAcc += got;
     }
 
-    /** 처치 (AFTER_DEATH): 0.51.0 트릭스터 — 표식이 옮겨감 · 끝없는 밤 다시 은신, 사신이 잡으면 혼 + kill */
+    /** 처치 (AFTER_DEATH): 0.51.0 트릭스터 — 표식이 옮겨감, 사신이 잡으면 혼 + kill */
     private static void onDeath(LivingEntity e, DamageSource src) {
         shiftMarks(e);
         if (!(src.getEntity() instanceof ServerPlayer sp) || sp == e) return;
-        if (jobIf(sp, TR) != null) reveil(sp);
         Jobs.Job j = jobIf(sp, "reaper");
         if (j == null) return;
         gainSouls(sp, j, (int) trait(j, "kill", 3), e);
@@ -717,7 +684,7 @@ public final class JobTraits3 {
             case "assassin", TR -> {
                 if (!"dagger".equals(w.type())) return;
                 mark(sp, victim, j);
-                if (behind(sp, victim, trait(j, "backArc", 120)) && RuneKit.fxQuota("jobBackstab", 4)) {
+                if ((behind(sp, victim, trait(j, "backArc", 120)) || JobTraits10.anySide(sp)) && RuneKit.fxQuota("jobBackstab", 4)) {
                     JobFx.cross(level, Kit.bodyPoint(victim), 0.7 + Kit.bodyPad(victim) * 0.4, j, 0.28, Opt.empty());
                     SkillFx.play(level, "entity.player.attack.crit", Kit.bodyPoint(victim), 1.5, 0.6);
                 }
@@ -813,8 +780,6 @@ public final class JobTraits3 {
             st.speedUntil = 0;
             speedMod(sp, VEIL_SPEED, 0);
         }
-        // 0.51.0 끝없는 밤: 은신 (dur · reveil 틱) 이 태세보다 먼저 끝남 → 풀림 (이동 +) — 태세 (다시 은신) 는 그대로
-        if (st.veilUntil > 0 && st.veilUntil <= now && j.id().equals(TR)) veilBreak(sp);
         if (j.id().equals("reaper")) {
             if (st.leechAcc >= 0.5 && now - st.leechShown >= 20) {
                 DamageNumbers.show(sp, st.leechAcc, DamageNumbers.Style.HEAL, "", 0);
@@ -841,15 +806,6 @@ public final class JobTraits3 {
         if (stance.equals("assassin_veil")) {
             // 1인칭: 화면 네 귀퉁이의 옅은 그림자 연기 (다른 사람에게는 아무것도 — 은신)
             JobFx.cornerSmoke(sp, j, 0.55, 0.45, 0.45, RuneKit.bodyVel(sp));
-            return true;
-        }
-        if (stance.equals(NIGHT)) {
-            // 0.51.0 끝없는 밤: 은신 중이면 1인칭 귀퉁이 연기만 (은신), 풀려 있으면 (쓰러뜨리면 다시 숨는 동안) 발밑의 옅은 검보라 연기 · 더 옅은 귀퉁이 연기
-            if (veilOn(sp)) JobFx.cornerSmoke(sp, j, 0.55, 0.45, 0.45, RuneKit.bodyVel(sp));
-            else {
-                JobFx.cornerSmoke(sp, j, 0.5, 0.45, 0.22, RuneKit.bodyVel(sp));
-                JobFx.smoke(level, V.up(sp.position(), 0.25), 0.7, j, 0.55, JobFx.hide1p(sp).with("alpha", 0.45, "vel", RuneKit.bodyVel(sp)));
-            }
             return true;
         }
         if (stance.equals("lancer_wall")) {
@@ -881,7 +837,7 @@ public final class JobTraits3 {
 
     /** 태세가 끝남 (JobTraits): 암영 → 은신이 풀림 (이동 +) */
     static void stanceEnded(ServerPlayer sp, String id) {
-        if (id.equals("assassin_veil") || id.equals(NIGHT)) veilBreak(sp);
+        if (id.equals("assassin_veil")) veilBreak(sp);
         else if (id.equals("reaper_avatar")) {
             Jobs.Job j = jobIf(sp, "reaper");
             if (j != null) {

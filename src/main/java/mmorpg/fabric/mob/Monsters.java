@@ -333,6 +333,10 @@ public final class Monsters {
         /** 0.32.0 공허 특성: 진행 중인 것 (VoidMonsters.Run — 없으면 null) · 다음에 쓸 수 있는 틱 */
         Object voidRun;
         long nextTrait;
+        /** 2026-11-06 피에로의 소환물 (깜짝 상자 · 광대 인형): 이 틱까지 그 소환물을 노리고 때림 (없으면 null) · 소환물에게 휘두른 동작이 닿는 틱 (-1 = 없음) */
+        LivingEntity lure;
+        long lureUntil;
+        long lureAt = -1;
 
         Fight(RpgMonster m, Kind k, ServerPlayer p, long now) {
             this.m = m;
@@ -424,6 +428,11 @@ public final class Monsters {
         public Vec3 decoy() {
             return decoy != null && decoyUntil > Tasks.now() ? decoy : null;
         }
+
+        /** 2026-11-06 노리는 피에로 소환물 (끌려간 중이 아니면 null — 시험) */
+        public LivingEntity lure() {
+            return lure != null && lureUntil > Tasks.now() && lure.isAlive() && !lure.isRemoved() ? lure : null;
+        }
     }
 
     /** 멧돼지 돌진 하나: 준비 끝 틱 · 달리기 끝 틱 · 방향 (가로 단위) · 노린 사람, 달리는 중인지 · 맞혔는지 · 지난 틱 자리 · 막힌 틱 수 */
@@ -513,6 +522,99 @@ public final class Monsters {
             n++;
         }
         return n;
+    }
+
+    /**
+     * 2026-11-06 피에로의 소환물 (깜짝 상자 · 광대 인형 — 사용자 "소환물로 어그로랑 탱킹"): ticks 틱 동안 이 몬스터가 그 소환물을 노리고 때림 (걸어가 공격 동작 →
+     * 소환물이 맞음 — 다시 부르면 늘어남). 싸우지 않던 몬스터는 주인 (owner) 과의 싸움을 시작함 (끌림이 끝나면 주인을 노림). 보스는 아님 (Monsters 의 몬스터만),
+     * 누가 도발 중이면 (수호기사 · 피에로 자신의 스킬 도발) 끌려가지 않음. 끌려갔으면 true
+     */
+    public static boolean lure(LivingEntity e, LivingEntity summon, ServerPlayer owner, int ticks) {
+        Kind k = kindOf(e);
+        if (k == null || summon == null || !summon.isAlive() || summon.isRemoved() || summon.level() != e.level() || Kit.hasNoHealth(e)) return false;
+        if (targetState(owner, e) != State.OK || buried(e)) return false;
+        RpgMonster m = (RpgMonster) e;
+        long now = Tasks.now();
+        Fight f = FIGHTS.get(m.getUUID());
+        if (f != null && f.taunt != null && f.taunt.until() > now) return false;
+        if (f == null) {
+            f = new Fight(m, k, owner, now);
+            FIGHTS.put(m.getUUID(), f);
+        }
+        if (f.lure != summon) {
+            f.windup = null;
+            f.lureAt = -1;
+            f.decoy = null;
+            if (f.charge != null) endCharge(f, now, false);
+            if (f.voidRun != null && VoidMonsters.interruptible(f)) VoidMonsters.cancel(f, now);
+        }
+        f.lure = summon;
+        f.lureUntil = Math.max(f.lureUntil, now + ticks);
+        f.attackers.putIfAbsent(owner.getUUID(), new Attacker(owner, now));
+        return true;
+    }
+
+    /** 그 소환물이 사라짐 (부서짐 · 시간이 다 됨): 그 소환물을 노리던 몬스터가 다시 싸우던 사람을 노림 */
+    public static void endLure(LivingEntity summon) {
+        for (Fight f : FIGHTS.values()) {
+            if (f.lure != summon) continue;
+            f.lure = null;
+            f.lureAt = -1;
+            f.lureUntil = 0;
+            if (!f.m.isRemoved() && f.player != null && !f.player.isRemoved()) f.m.setTarget(f.player);
+        }
+    }
+
+    /**
+     * 끌려간 몬스터 한 걸음 (2틱마다 — fightStep): 소환물 쪽으로 걸어가 (10틱마다 길) 사거리 안이면 공격 동작 (예고 고리) → windup 틱 뒤 아직 닿으면 소환물이 맞음
+     * (몬스터 공격력 × 나약함 — 소환물은 무적 시간 없음), 아니면 헛손질. 기절 · 빙결 중에는 동작이 끊김
+     */
+    private static void lureStep(Fight f, LivingEntity s, long now) {
+        RpgMonster m = f.m;
+        Kind k = f.k;
+        ServerLevel level = (ServerLevel) m.level();
+        f.windup = null;
+        if (m.getTarget() != s) m.setTarget(s);
+        if (stunned(m)) {
+            f.lureAt = -1;
+            return;
+        }
+        double d = Math.hypot(s.getX() - m.getX(), s.getZ() - m.getZ());
+        double gap = Math.max(0, d - k.half() - s.getBbWidth() / 2);
+        double dy = s.getY() - m.getY();
+        boolean heightOk = dy >= -1.5 && dy <= k.height() + 0.5;
+        if (f.lureAt >= 0) {
+            if (now < f.lureAt) return;
+            f.lureAt = -1;
+            f.nextAttack = Math.max(f.nextAttack, now + 4);
+            f.lastResolved = now;
+            if (gap <= k.reach() + TOLERANCE + 0.3 && heightOk) {
+                f.hits++;
+                f.lastKind = "lure";
+                double dmg = k.attack() * weakMult(m);
+                Vec3 body = V.up(s.position(), s.getBbHeight() * 0.55);
+                Vec3 v = V.unit(V.sub(body, eyeish(m, k)));
+                SkillFx.arc(level, V.add(body, V.flat(V.sub(m.position(), s.position())), Math.min(0.6, s.getBbWidth() * 0.6)), v, Opt.of("shape", "thin", "flip",
+                        Kit.rand() < 0.5, "size", 1.0, "life", 0.2, "speed", 1.0, "spin", Kit.rand() * 60 - 30, "color", k.color()));
+                SkillFx.sparks(level, body, k.color(), 5, 3);
+                play(level, k.hitSound(), s.position(), 0.9 + Kit.rand() * 0.2, 1);
+                s.hurtServer(level, m.damageSources().mobAttack(m), (float) dmg);
+            } else {
+                f.misses++;
+                missFx(level, m, k, s.position());
+            }
+            return;
+        }
+        if (now < f.nextAttack) return;
+        if (gap <= k.reach() && heightOk) {
+            attackAnim(m, k);
+            play(level, k.windupSound(), m.position(), 0.9 + Kit.rand() * 0.2, 0.8);
+            telegraph(level, m, k, s.position());
+            f.nextAttack = now + k.every();
+            f.lureAt = now + k.windup();
+            return;
+        }
+        if (now % 10 == 0 || m.getNavigation().isDone()) m.getNavigation().moveTo(s, 1.0);
     }
 
     /** 미끼가 사라짐 (잔영이 터짐): 그 사람의 미끼를 쫓던 몬스터가 다시 그 사람을 노림 */
@@ -853,6 +955,18 @@ public final class Monsters {
             return;
         }
         f.paused = null;
+        if (f.lure != null) {
+            // 2026-11-06 피에로의 소환물을 노림 (끌림이 끝나거나 · 소환물이 사라지거나 · 누가 도발하면 다시 그 사람)
+            LivingEntity s = f.lure;
+            if (now < f.lureUntil && s.isAlive() && !s.isRemoved() && s.level() == m.level() && (f.taunt == null || f.taunt.until() <= now)
+                    && s.distanceTo(m) <= LEASH) {
+                lureStep(f, s, now);
+                return;
+            }
+            f.lure = null;
+            f.lureAt = -1;
+            if (f.player != null && !f.player.isRemoved()) m.setTarget(f.player);
+        }
         if (f.decoy != null) {
             // 0.29.0 미끼 (잔영): 그 자리로 걸어감 · 공격하지 않음 — 끝나면 다시 그 사람
             if (now < f.decoyUntil) {

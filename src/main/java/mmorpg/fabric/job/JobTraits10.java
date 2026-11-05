@@ -6,7 +6,6 @@ import java.util.UUID;
 import mmorpg.core.Jobs;
 import mmorpg.core.Weapon;
 import mmorpg.fabric.DamageNumbers;
-import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.Tasks;
@@ -15,59 +14,79 @@ import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
 import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.resources.Identifier;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 암살자 반전 블레이드 댄서 특성 · 태세 (서버 — jobs.json advance, 트릭스터의 표식 · 은신은 JobTraits3 의 암살자 줄기):
+ * 0.51.0 2차 직업 — 암살자 2차 (재설계안 2판 — 2026-11-06 사용자 "다음 작업") 의 특성 · 태세 (서버 — jobs.json advance, 트릭스터의 표식 · 등 뒤 치명은 JobTraits3
+ * 의 암살자 줄기):
  * <ul>
- * <li>「춤사위」 (1차 표식과 거꾸로 — 적이 아니라 내 몸에 쌓임): 단검 평타와 직업 스킬을 번갈아 맞히면 +1 (최대 trait.max — 평타 → 스킬 · 스킬 → 평타가 맞을 때마다,
- * 같은 쪽이 이어지면 그대로) · 하나당 주는 피해 + perStack (단검 평타 RpgCombat.meleeMult · 직업 스킬 JobKit.hit) · 이동 속도 + speedPer. keep 틱 동안 아무것도
- * 맞히지 못하면 0 (눈부신 한낮 동안은 그대로). 몸 둘레를 도는 빛 꽃잎 (쌓인 수만큼 — 3인칭 · 다른 사람)</li>
- * <li>요정의 걸음: 스텝을 밟는 동안 받는 피해 − guard (RpgHealth.sourceReduce)</li>
- * <li>눈부신 한낮 (태세): 단검 평타가 두 번 벰 (두 번째 echo — RpgCombat.addScaledBonusHook, echoDelay 틱 뒤 빛 베기 그림) · 춤사위가 줄지 않음 · 등 뒤 빛의 요정 날개</li>
+ * <li>트릭스터 미러 팰리스 (태세): 몸 둘레를 거울 여섯이 돎 (2틱마다 — 바깥 · 안쪽 두 장) · 단검 평타는 어느 쪽에서 쳐도 등 뒤 ({@link #anySide} — JobTraits3
+ * 치명타) · 거울에 비친 내 모습이 그 적의 등 뒤에서 한 번 더 벰 (평타 × reflect — RpgCombat.addScaledBonusHook, reflectDelay 틱 뒤 그림) · 표식 +1 더</li>
+ * <li>트릭스터 와일드파이어 피스트: 들불 표식이 남은 동안 그 적에게 준 다른 피해 (평타 · 다른 스킬 · 룬 — 궁극기 자신의 타격은 빼고) 를 쌓음 (AFTER_DAMAGE)</li>
+ * <li>피에로 「쇼타임」 (1차 표식과 거꾸로 — 숨어서 노리던 눈길 대신 모두의 눈길을 끌어모음): 소환물이 둘레 몬스터를 끌어들여 대신 맞음 (PierrotSummons) · 받는 피해의
+ * share 를 가장 가까운 소환물이 나눠 받음 (RpgHealth.lossShare) · 부서지면 색종이 폭죽. 게이지 = 소환물 수, 할루시네이트의 남은 시간은 태세 줄에. 핸드스프링: guardFor
+ * 틱 받는 피해 − guard (RpgHealth.sourceReduce). 몸에서 가장 가까운 소환물로 금빛 실 (8틱마다 — 나눠 받는 줄)</li>
  * </ul>
  */
 public final class JobTraits10 {
     private JobTraits10() {}
 
-    static final String BD = "bladedancer";
-    static final String NOON = "bladedancer_noon";
-    /** 평타에 더한 몫의 구분 (눈부신 한낮의 두 번째 베기) */
-    static final String KEY_NOON = "job_noon";
-    /** 빛 (흰 금빛 — 춤사위 꽃잎 · 섬광 심지) */
-    static final double[] LIGHT = {1.0, 0.97, 0.86};
-
-    private static final Identifier DANCE_SPEED = Mmorpg.id("job_dance_speed");
+    static final String TR = "trickster";
+    static final String PALACE = "trickster_palace";
+    /** 평타에 더한 몫의 구분 (미러 팰리스의 거울 베기) */
+    static final String KEY_PALACE = "job_palace";
+    static final String PR = "pierrot";
+    static final String DOLL = "pierrot_doll";
 
     static final class State {
-        int dance;
-        /** 마지막으로 맞힌 쪽: 0 없음 · 1 단검 평타 · 2 직업 스킬 */
-        int lastKind;
-        long lastHit = -1000;
+        /** 핸드스프링: 받는 피해 − guard · 끝나는 틱 */
         long guardUntil;
         double guard;
-        double speedSet;
+    }
+
+    /** 들불 표식 하나: 건 사람 · 끝나는 틱 · 쌓인 피해 */
+    static final class Fire {
+        final UUID owner;
+        final long until;
+        double stored;
+
+        Fire(UUID owner, long until) {
+            this.owner = owner;
+            this.until = until;
+        }
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
+    /** 적 UUID → 들불 표식 */
+    private static final Map<UUID, Fire> FIRES = new HashMap<>();
+    /** 궁극기 자신의 타격 중 (쌓지 않음) */
+    static boolean ownFire;
 
     static void init() {
-        RpgCombat.MeleeMult mm = RpgCombat.meleeMult;
-        RpgCombat.meleeMult = (p, w, v) -> mm.mult(p, w, v) * basicMult(p, w);
-        RpgCombat.addScaledBonusHook(JobTraits10::noonBonus);
+        RpgCombat.addScaledBonusHook(JobTraits10::palaceBonus);
         RpgCombat.addWeaponHitHook(JobTraits10::onWeaponHit);
+        RpgHealth.LossShare ls = RpgHealth.lossShare;
+        RpgHealth.lossShare = (p, src, loss) -> {
+            double a = ls.share(p, src, loss);
+            return a + showShare(p, loss - a);
+        };
         java.util.function.ToDoubleBiFunction<ServerPlayer, DamageSource> sr = RpgHealth.sourceReduce;
-        RpgHealth.sourceReduce = (p, src) -> Math.max(sr.applyAsDouble(p, src), stepGuard(p));
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> STATES.clear());
+        RpgHealth.sourceReduce = (p, src) -> Math.max(sr.applyAsDouble(p, src), springGuard(p));
+        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, source, base, taken, blocked) -> storeFire(entity, source, taken));
+        ServerTickEvents.END_SERVER_TICK.register(JobTraits10::palaceTick);
+        PierrotSummons.init();
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            STATES.clear();
+            FIRES.clear();
+        });
     }
 
     static Jobs.Job jobIf(ServerPlayer sp, String id) {
@@ -85,210 +104,207 @@ public final class JobTraits10 {
 
     static void reset(ServerPlayer sp) {
         STATES.remove(sp.getUUID());
-        speedMod(sp, 0);
+        PierrotSummons.dismissAll(sp.getUUID(), true);
+        FIRES.values().removeIf(f -> f.owner.equals(sp.getUUID()));
     }
 
     static void forget(UUID id) {
         STATES.remove(id);
+        PierrotSummons.dismissAll(id, false);
+        FIRES.values().removeIf(f -> f.owner.equals(id));
     }
 
     static void lifeEnded(UUID id) {
         State st = STATES.get(id);
-        if (st != null) {
-            st.dance = 0;
-            st.lastKind = 0;
-            st.guardUntil = 0;
-        }
+        if (st != null) st.guardUntil = 0;
+        PierrotSummons.dismissAll(id, true);
+        FIRES.values().removeIf(f -> f.owner.equals(id));
     }
 
-    // ------------------------------------------------------------ 춤사위
+    // ------------------------------------------------------------ 트릭스터 미러 팰리스
 
-    /** 지금 춤사위 */
-    public static int dance(ServerPlayer sp) {
-        State st = STATES.get(sp.getUUID());
-        return st == null ? 0 : st.dance;
+    /** 미러 팰리스 태세 중 (단검 평타가 어느 쪽에서 쳐도 등 뒤 — JobTraits3 의 등 뒤 치명타 · 엇갈린 베기) */
+    static boolean anySide(ServerPlayer sp) {
+        return JobTraits.stanceOn(sp, PALACE) && jobIf(sp, TR) != null;
     }
 
-    /** 시험용: 춤사위를 정함 (마지막으로 맞힌 쪽은 지움 — 다음 맞힘은 쌓이지 않음) */
-    public static void setDance(ServerPlayer sp, int n) {
-        Jobs.Job j = jobIf(sp, BD);
-        State st = of(sp);
-        st.dance = Math.max(0, Math.min(j == null || j.trait() == null ? 5 : j.trait().max(), n));
-        st.lastKind = 0;
-        st.lastHit = Tasks.now();
-        applySpeed(sp, j, st);
-        JobTraits.sendGauge(sp, false);
+    /** 미러 팰리스: 단검 평타에 거울 베기 (평타 피해 × reflect — 강화) */
+    private static RpgCombat.Bonus palaceBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
+        if (w == null || !"dagger".equals(w.type()) || !(dmg > 0) || !anySide(sp)) return null;
+        Jobs.Job j = jobIf(sp, TR);
+        Jobs.Skill k = j == null ? null : j.skill(PALACE);
+        double r = k == null ? 0.5 : JobUpgrades.num(sp, k, "reflect", 0.5);
+        return new RpgCombat.Bonus(dmg * r, "", KEY_PALACE, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 
-    /** 시험: 마지막으로 맞힌 쪽 (0 없음 · 1 평타 · 2 스킬) */
-    public static int lastKind(ServerPlayer sp) {
-        State st = STATES.get(sp.getUUID());
-        return st == null ? 0 : st.lastKind;
-    }
-
-    /** 맞힘 (kind 1 = 단검 평타 · 2 = 직업 스킬): 앞에 맞힌 쪽과 다르면 춤사위 +1 — 몸 둘레 빛 꽃잎 · 맑은 소리 (가득이면 빛 꽃) */
-    private static void hitKind(ServerPlayer sp, Jobs.Job j, int kind) {
-        State st = of(sp);
-        long now = Tasks.now();
-        int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
-        boolean gain = st.lastKind != 0 && st.lastKind != kind && st.dance < max;
-        st.lastKind = kind;
-        st.lastHit = now;
-        if (!gain) return;
-        st.dance++;
-        applySpeed(sp, j, st);
-        ServerLevel level = sp.level();
-        Vec3 c = V.up(sp.position(), 1.0);
-        JobFx.petals(level, c, 3 + st.dance, 2.4, 0.12, j, 0.55, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
-        JobFx.glint(level, V.up(RuneKit.handOf(sp).hand(), 0.15), 0.18 + 0.03 * st.dance, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
-        SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 1.2 + 0.12 * st.dance, 0.45);
-        if (st.dance == max) {
-            JobFx.ring(level, V.up(sp.position(), 0.06), 1.6, j, false, 0.4, Opt.of("vel", RuneKit.bodyVel(sp)));
-            JobFx.eyeRing(sp, j, 2.4, 0.7, 0.35);
-            SkillFx.play(level, "block.note_block.chime", sp.position(), 1.6, 0.7);
-        }
-        JobTraits.sendGauge(sp, false);
-    }
-
-    private static void applySpeed(ServerPlayer sp, Jobs.Job j, State st) {
-        double want = j == null ? 0 : st.dance * trait(j, "speedPer", 0.04);
-        if (Math.abs(want - st.speedSet) < 1e-9) return;
-        st.speedSet = want;
-        speedMod(sp, want);
-    }
-
-    private static void speedMod(ServerPlayer sp, double amount) {
-        AttributeInstance a = sp.getAttribute(Attributes.MOVEMENT_SPEED);
-        if (a == null) return;
-        if (amount > 0) a.addOrUpdateTransientModifier(new AttributeModifier(DANCE_SPEED, amount, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
-        else a.removeModifier(DANCE_SPEED);
-    }
-
-    /** 시험: 걸린 춤사위 이동 속도 (없으면 0) */
-    public static double speedBonus(ServerPlayer sp) {
-        AttributeInstance a = sp.getAttribute(Attributes.MOVEMENT_SPEED);
-        AttributeModifier m = a == null ? null : a.getModifier(DANCE_SPEED);
-        return m == null ? 0 : m.amount();
-    }
-
-    /** 단검 평타 배율 (RpgCombat.meleeMult): 블레이드 댄서 1 + 춤사위 × perStack */
-    private static double basicMult(ServerPlayer sp, Weapon w) {
-        if (w == null || !"dagger".equals(w.type())) return 1;
-        Jobs.Job j = jobIf(sp, BD);
-        return j == null ? 1 : 1 + dance(sp) * trait(j, "perStack", 0.06);
-    }
-
-    /** 직업 스킬 피해 한 번의 배율 (JobKit.hit · hitSplit): 블레이드 댄서 1 + 춤사위 × perStack */
-    static double skillMult(ServerPlayer sp, Jobs.Job j) {
-        if (j == null || !BD.equals(j.id())) return 1;
-        return 1 + dance(sp) * trait(j, "perStack", 0.06);
-    }
-
-    /** 직업 스킬 피해가 들어감 (JobKit): 블레이드 댄서 — 스킬 쪽 맞힘 */
-    static void afterJobHit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double got) {
-        if (j == null || !BD.equals(j.id()) || !(got > 0)) return;
-        hitKind(sp, j, 2);
-    }
-
-    /** 무기로 맞힘: 블레이드 댄서 단검 평타 → 평타 쪽 맞힘 · 눈부신 한낮이면 echoDelay 틱 뒤 두 번째 빛 베기 그림 */
+    /** 무기로 맞힘 (미러 팰리스): 표식 +1 더 · reflectDelay 틱 뒤 그 적의 등 뒤에 거울이 번쩍이며 비친 내 모습이 벰 */
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
-        if (victim == null || w == null || !"dagger".equals(w.type())) return;
-        Jobs.Job j = jobIf(sp, BD);
+        if (victim == null || w == null || !"dagger".equals(w.type()) || !anySide(sp)) return;
+        Jobs.Job j = jobIf(sp, TR);
         if (j == null) return;
-        hitKind(sp, j, 1);
-        if (!JobTraits.stanceOn(sp, NOON) || !RuneKit.fxQuota("jobNoonEcho" + sp.getId(), 1)) return;
-        Jobs.Skill k = j.skill(NOON);
-        int delay = k == null ? 3 : Math.max(1, (int) k.num("echoDelay", 3));
+        JobTraits3.mark(sp, victim, j);
+        Jobs.Skill k = j.skill(PALACE);
+        int delay = k == null ? 4 : Math.max(1, (int) k.num("reflectDelay", 4));
         String life = RuneKit.lifeToken(sp);
+        Vec3 from = sp.position();
         RuneKit.later(delay, () -> {
             if (!RuneKit.sameLife(sp, life) || victim.isRemoved() || !(victim.level() instanceof ServerLevel lv)) return;
+            Vec3 away = V.flat(V.sub(victim.position(), from));
+            if (V.len(away) < 1e-3) away = Kit.facingOf(sp);
+            Vec3 back = V.add(victim.position(), away, 1.0 + Kit.bodyPad(victim));
+            Vec3 face = V.scale(away, -1);
+            Vec3 vel = RuneKit.entVel(victim);
+            // 거울 한 장이 번쩍 → 비친 내 모습 (청록 테두리) 이 베고 거울 조각으로 깨짐
+            JobFx.pane(lv, V.up(back, 1.05), face, 1.9, 0.3, Opt.of("vel", vel, "alpha", 0.9), TricksterSkills.ILLUSION, TricksterSkills.ILLUSION_CORE);
+            JobFx.pane(lv, V.up(back, 1.05), away, 1.9, 0.3, Opt.of("vel", vel, "alpha", 0.9), TricksterSkills.ILLUSION, TricksterSkills.ILLUSION_CORE);
+            TricksterSkills.illusion(sp, lv, back, face, 2, j, 0.3, 0.9);
             Vec3 b = Kit.bodyPoint(victim);
-            JobFx.cross(lv, b, 0.65 + Kit.bodyPad(victim) * 0.35, j, 0.24, Opt.of("vel", RuneKit.entVel(victim), "spin", Kit.rand() * 360));
-            JobFx.glint(lv, b, 0.3, j, 0.25, Opt.of("vel", RuneKit.entVel(victim)));
-            JobFx.slash(sp, j, 1.7, 0.3, 1.1, Kit.rand() < 0.5 ? 160.0 : 340.0, 0.16);
-            SkillFx.play(lv, "entity.player.attack.sweep", b, 1.7, 0.45);
+            JobFx.cross(lv, b, 0.6 + Kit.bodyPad(victim) * 0.35, j, 0.24, Opt.of("vel", vel, "spin", Kit.rand() * 360));
+            RuneKit.later(5, () -> TricksterSkills.shatter(lv, V.up(back, 1.1), 0.45, j));
+            SkillFx.play(lv, "block.amethyst_block.hit", b, 1.6, 0.6);
+            SkillFx.play(lv, "entity.player.attack.sweep", b, 1.8, 0.4);
         });
     }
 
-    /** 눈부신 한낮: 단검 평타에 두 번째 베기 (평타 피해 × echo — 강화) */
-    private static RpgCombat.Bonus noonBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
-        if (w == null || !"dagger".equals(w.type()) || !(dmg > 0) || !JobTraits.stanceOn(sp, NOON)) return null;
-        Jobs.Job j = jobIf(sp, BD);
-        if (j == null) return null;
-        Jobs.Skill k = j.skill(NOON);
-        double echo = k == null ? 0.42 : JobUpgrades.num(sp, k, "echo", 0.42);
-        return new RpgCombat.Bonus(dmg * echo, "", KEY_NOON, DamageNumbers.Style.JOB, null, JobKit.grad(j));
+    /**
+     * 2틱마다: 미러 팰리스 태세인 트릭스터 둘레를 거울 mirrors 장이 돎 (반지름 radius · 3초에 한 바퀴 — 바깥을 보는 장과 안쪽을 보는 장 · 다음 그림까지 도는 쪽으로 움직임),
+     * 거울 사이 바닥에 옅은 고리
+     */
+    private static void palaceTick(MinecraftServer server) {
+        long now = Tasks.now();
+        if (now % 2 != 0) return;
+        for (ServerPlayer sp : server.getPlayerList().getPlayers()) {
+            if (!anySide(sp) || sp.isSpectator()) continue;
+            Jobs.Job j = jobIf(sp, TR);
+            Jobs.Skill k = j.skill(PALACE);
+            int n = k == null ? 6 : Math.max(3, (int) k.num("mirrors", 6));
+            double r = k == null ? 2.6 : k.num("radius", 2.6);
+            ServerLevel level = sp.level();
+            double w = Math.PI * 2 / 60; // 틱마다 (3초에 한 바퀴)
+            double a0 = now * w;
+            Vec3 c = sp.position();
+            Vec3 bodyVel = RuneKit.bodyVel(sp);
+            for (int i = 0; i < n; i++) {
+                double a = a0 + i * Math.PI * 2 / n;
+                Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
+                Vec3 at = new Vec3(c.x + out.x * r, c.y + 1.15 + 0.12 * Math.sin(a * 2 + now * 0.1), c.z + out.z * r);
+                Vec3 vel = V.add(bodyVel, new Vec3(-Math.sin(a), 0, Math.cos(a)), w * 20 * r);
+                Opt o = Opt.of("vel", vel, "alpha", 0.92, "fade", 0.0, "phase", (now * 8 / 20.0 + i * 1.3) % JobFx.PANE);
+                JobFx.pane(level, at, out, 1.7, 0.11, o, JobFx.outer(j), JobFx.inner(j));
+                JobFx.pane(level, at, V.scale(out, -1), 1.7, 0.11, o, JobFx.outer(j), JobFx.inner(j));
+            }
+            if (now % 10 == 0) JobFx.halo(level, V.up(c, 0.06), r, j, 0.55, Opt.of("vel", bodyVel, "alpha", 0.55));
+        }
     }
 
-    // ------------------------------------------------------------ 요정의 걸음: 받는 피해 −
+    // ------------------------------------------------------------ 트릭스터 와일드파이어 피스트 (들불 표식)
 
-    /** 요정의 걸음: ticks 틱 동안 받는 피해 − frac */
+    /** 들불 표식을 검 (ticks 틱 — 그동안 이 사람이 그 적에게 준 다른 피해를 쌓음) */
+    static void startFire(ServerPlayer sp, LivingEntity e, int ticks) {
+        FIRES.put(e.getUUID(), new Fire(sp.getUUID(), Tasks.now() + ticks));
+    }
+
+    /** 들불 표식을 거둠: 쌓인 피해 (없으면 0) */
+    static double takeFire(ServerPlayer sp, LivingEntity e) {
+        Fire f = FIRES.get(e.getUUID());
+        if (f == null || !f.owner.equals(sp.getUUID())) return 0;
+        FIRES.remove(e.getUUID());
+        return f.stored;
+    }
+
+    /** 시험: 그 적에 쌓인 들불 피해 (없으면 -1) */
+    public static double fireStored(LivingEntity e) {
+        Fire f = FIRES.get(e.getUUID());
+        return f == null ? -1 : f.stored;
+    }
+
+    private static void storeFire(LivingEntity e, DamageSource source, float taken) {
+        if (FIRES.isEmpty() || ownFire || !(taken > 0)) return;
+        Fire f = FIRES.get(e.getUUID());
+        if (f == null) return;
+        if (f.until < Tasks.now()) {
+            FIRES.remove(e.getUUID());
+            return;
+        }
+        if (source.getEntity() instanceof ServerPlayer p && p.getUUID().equals(f.owner)) f.stored += taken;
+    }
+
+    // ------------------------------------------------------------ 피에로 쇼타임
+
+    /** 핸드스프링: ticks 틱 동안 받는 피해 − frac */
     static void guardFor(ServerPlayer sp, int ticks, double frac) {
         State st = of(sp);
         st.guardUntil = Tasks.now() + ticks;
         st.guard = Math.max(0, Math.min(0.9, frac));
     }
 
-    /** 시험: 요정의 걸음 받는 피해 감소 (없으면 0) */
+    /** 시험: 핸드스프링 받는 피해 감소 (없으면 0) */
     public static double guarding(ServerPlayer sp) {
-        return stepGuard(sp);
+        return springGuard(sp);
     }
 
-    private static double stepGuard(ServerPlayer sp) {
+    private static double springGuard(ServerPlayer sp) {
         State st = STATES.get(sp.getUUID());
-        return st != null && st.guardUntil > Tasks.now() && jobIf(sp, BD) != null ? st.guard : 0;
+        return st != null && st.guardUntil > Tasks.now() && jobIf(sp, PR) != null ? st.guard : 0;
+    }
+
+    /** 나눠 받음 (RpgHealth.lossShare): 피에로가 받을 피해 loss 의 share 를 shareRange 칸 안의 가장 가까운 소환물이 받음 */
+    private static double showShare(ServerPlayer sp, double loss) {
+        Jobs.Job j = jobIf(sp, PR);
+        if (j == null || !(loss > 0)) return 0;
+        return PierrotSummons.share(sp, loss, trait(j, "share", 0.2), trait(j, "shareRange", 12));
+    }
+
+    /** 시험: 소환물 수 (게이지와 같음) */
+    public static int summons(ServerPlayer sp) {
+        return PierrotSummons.count(sp);
     }
 
     // ------------------------------------------------------------ 틱 · 태세 · 게이지
 
-    /**
-     * 4틱마다 (JobTraits.tick): 블레이드 댄서 — keep 틱 동안 아무것도 맞히지 못하면 춤사위 0 (눈부신 한낮 동안은 그대로), 8틱마다 몸 둘레를 도는 빛 꽃잎 (쌓인 수 —
-     * 3인칭 · 다른 사람)
-     */
+    /** 4틱마다 (JobTraits.tick): 피에로 — 8틱마다 몸에서 가장 가까운 소환물 (나눠 받는 것) 로 금빛 실 (3인칭 · 다른 사람) */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
-        if (!BD.equals(j.id())) return;
-        State st = STATES.get(sp.getUUID());
-        if (st == null) return;
-        if (st.dance > 0 && now - st.lastHit >= (long) trait(j, "keep", 60) && !JobTraits.stanceOn(sp, NOON)) {
-            st.dance = 0;
-            st.lastKind = 0;
-            applySpeed(sp, j, st);
-            SkillFx.play(sp.level(), "block.amethyst_block.break", sp.position(), 1.4, 0.35);
-            JobTraits.sendGauge(sp, false);
-        }
-        if (now % 8 == 0 && st.dance > 0 && !sp.isSpectator()) {
-            ServerLevel level = sp.level();
-            double a0 = now * 0.16;
-            for (int i = 0; i < st.dance; i++) {
-                double a = a0 + i * Math.PI * 2 / st.dance;
-                Vec3 p = new Vec3(sp.getX() + Math.cos(a) * 0.8, sp.getY() + 0.8 + 0.3 * Math.sin(a * 2 + i), sp.getZ() + Math.sin(a) * 0.8);
-                JobFx.blossom(level, p, 0.1, j, 0.42, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.85, "fade", 0.3));
+        if (!PR.equals(j.id()) || now % 8 != 0 || sp.isSpectator()) return;
+        double range = trait(j, "shareRange", 12);
+        PierrotSummons.Member best = null;
+        double bd = range * range;
+        for (PierrotSummons.Member m : PierrotSummons.members(sp)) {
+            if (!m.alive()) continue;
+            double d = m.x.distanceToSqr(sp);
+            if (d < bd) {
+                bd = d;
+                best = m;
             }
         }
-    }
-
-    /** 요정 날개 자리 (등 뒤 — 어깨 높이) */
-    static Vec3 wingAt(ServerPlayer sp) {
-        return V.up(V.add(sp.position(), Kit.facingOf(sp), -0.42), 1.4);
-    }
-
-    /** 태세 연출 (8틱마다 — JobTraits.stanceFx): 눈부신 한낮 = 등 뒤 빛의 요정 날개 (3인칭 · 주인마다 하나) · 손의 섬광 · 1인칭 화면 아래 빛 꽃잎. 그렸으면 true */
-    static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
-        if (!NOON.equals(stance)) return false;
+        if (best == null) return;
         ServerLevel level = sp.level();
-        Vec3 f = Kit.facingOf(sp);
-        JobFx.fairy(level, wingAt(sp), f, 1.6, j, 0.6, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.85, "solo", 61.0, "phase", (double) ((Tasks.now()
-                / 4) % JobFx.FAIRY)));
+        Vec3 from = V.up(RuneKit.handOf(sp).hand(), 0.1);
+        Vec3 to = V.up(best.x.position(), best.x.getBbHeight() * 0.85);
+        SkillFx.beam(level, from, to, PierrotSkills.GOLD, JobFx.hide1p(sp).with("half", 0.05, "thick", 0.025, "life", 0.42, "alpha", 0.45, "vel", RuneKit.bodyVel(sp)));
+    }
+
+    /** 태세 연출 (8틱마다 — JobTraits.stanceFx): 미러 팰리스 = 손의 청록 섬광 (거울은 palaceTick). 그렸으면 true */
+    static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
+        if (!PALACE.equals(stance)) return false;
         RuneKit.Hand h = RuneKit.handOf(sp);
-        JobFx.glint(level, V.up(h.hand(), 0.12), 0.16, j, 0.4, Opt.of("vel", RuneKit.bodyVel(sp)));
-        Vec3 look = sp.getViewVector(1F);
-        JobFx.petal(level, V.add(V.add(sp.getEyePosition(), look, 1.8), JobFx.screenUp(look), -0.7), V.UP, 0.6, 0.08, j, 0.4, JobFx.only1p(sp).with("alpha",
-                0.8));
+        JobFx.glint(sp.level(), V.up(h.hand(), 0.12), 0.16, TricksterSkills.ILLUSION, TricksterSkills.ILLUSION_CORE, 0.4, Opt.of("vel", RuneKit.bodyVel(sp)));
         return true;
     }
 
-    /** 게이지 값: 블레이드 댄서 = 춤사위 */
+    /** 게이지 값: 피에로 = 소환물 수 (최대 trait.max 까지 보임) */
     static int gaugeValue(ServerPlayer sp, Jobs.Job j) {
-        return j != null && BD.equals(j.id()) ? dance(sp) : 0;
+        return j != null && PR.equals(j.id()) ? Math.min(Math.max(1, j.trait().max()), PierrotSummons.count(sp)) : 0;
+    }
+
+    /** 태세 줄 (태세가 아닌 것 — JobTraits.gauge): 피에로 할루시네이트 = 광대 인형의 남은 시간 {이름, 남은 틱, 모두} (없으면 null) */
+    static Object[] stanceLine(ServerPlayer sp, Jobs.Job j) {
+        if (j == null || !PR.equals(j.id())) return null;
+        long now = Tasks.now();
+        for (PierrotSummons.Member m : PierrotSummons.members(sp)) {
+            if (m.kind != PierrotSummons.DOLL || !m.alive() || m.until <= now) continue;
+            Jobs.Skill k = j.skill(DOLL);
+            return new Object[] {k == null ? "할루시네이트" : k.name(), (int) (m.until - now), (int) (m.until - m.born)};
+        }
+        return null;
     }
 }

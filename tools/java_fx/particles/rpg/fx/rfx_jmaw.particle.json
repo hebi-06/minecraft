@@ -2,10 +2,10 @@
   "format_version": "1.10.0",
   "particle_effect": {
     "description": {
-      "identifier": "rpg:rfx_jcoil",
+      "identifier": "rpg:rfx_jmaw",
       "basic_render_parameters": {
         "material": "particles_blend",
-        "texture": "textures/particle/rpg/fx/rfx_jcoil"
+        "texture": "textures/particle/rpg/fx/rfx_jmaw"
       }
     },
     "components": {
@@ -32,7 +32,7 @@
           "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
           "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
         ],
-        "facing_camera_mode": "direction_z",
+        "facing_camera_mode": "rotate_xyz",
         "uv": {
           "texture_width": 1024,
           "texture_height": 1024,
@@ -43,14 +43,6 @@
           "uv_size": [
             256,
             256
-          ]
-        },
-        "direction": {
-          "mode": "custom",
-          "custom_direction": [
-            "variable.dir.x",
-            "variable.dir.y",
-            "variable.dir.z"
           ]
         }
       },

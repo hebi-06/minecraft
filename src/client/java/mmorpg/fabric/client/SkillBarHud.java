@@ -465,15 +465,16 @@ public final class SkillBarHud {
                             for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
                             g.fill(bx + 2, ty + 2, bx + 3, ty + 3, i < v ? 0xFFFFFFFF : dim);
                         }
-                        case "bladedancer" -> {
-                            // 0.51.0 춤사위 (최대 5) — 빛 반짝임 (5 × 5): 십자 빛줄기 (위아래 · 양옆) + 대각 네 점, 찬 것은 첫째 빛 (흰 금빛) + 가운데 흰 점 (가득이면 맥동),
-                            // 오른쪽 아래 1칸 그림자
-                            int c = i < v ? bright : dim;
+                        case "pierrot" -> {
+                            // 2026-11-06 쇼타임 (소환물 수 — 최대 4) — 깜짝 상자 (5 × 5): 위 두 줄 = 용수철 광대 머리 (두 뿔 모자) · 아래 세 줄 = 상자 (가운데 마름모 무늬 빈칸),
+                            // 찬 것은 머리 둘째 빛 (금빛) · 상자 첫째 빛 (서커스 빨강), 오른쪽 아래 1칸 그림자
                             int ty = y;
-                            int[][] cells = {{2, 0}, {2, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {2, 3}, {2, 4}, {1, 1}, {3, 1}, {1, 3}, {3, 3}};
-                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
-                            for (int q = 0; q < cells.length; q++) g.fill(bx + cells[q][0], ty + cells[q][1], bx + cells[q][0] + 1, ty + cells[q][1] + 1, q >= 9 && i < v ? col : c);
-                            if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
+                            int[][] head = {{1, 0}, {3, 0}, {1, 1}, {2, 1}, {3, 1}};
+                            int[][] box = {{0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {0, 3}, {2, 3}, {4, 3}, {0, 4}, {1, 4}, {2, 4}, {3, 4}, {4, 4}};
+                            for (int[] q : head) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : box) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : box) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, i < v ? bright : dim);
+                            for (int[] q : head) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, i < v ? col : dim);
                         }
                         case "battlearcher" -> {
                             // 0.51.0 난사 (갈래 — 다음 활 평타가 1 · 3 갈래) — 화살촉 (5 × 5, 위가 앞): 뾰족한 촉 · 갈라진 미늘, 찬 것은 첫째 빛 (폭풍 하늘빛) + 촉 끝 번개

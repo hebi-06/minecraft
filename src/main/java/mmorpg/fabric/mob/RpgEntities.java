@@ -28,7 +28,7 @@ import net.minecraft.world.item.SpawnEggItem;
 
 /**
  * 애드온 엔티티 27종 등록 (MobData 의 행동 팩 수치 그대로): 몬스터 6 (RpgMonster) · 보스 10 + 분신 (RpgBoss) · 소품 9 (RpgProp) · 탈것 1 (RpgMount — 6단계)
- * + 0.50.0 티르빙의 아군 전사 (TyrfingWarrior) · 0.51.0 나글파르의 망자 선원 (같은 몹).
+ * + 0.50.0 티르빙의 아군 전사 (TyrfingWarrior) · 0.51.0 나글파르의 망자 선원 (같은 몹) · 피에로의 깜짝 상자 · 광대 인형 (PierrotSummon).
  * 크기 = 충돌 상자 (minecraft:collision_box) × 크기 속성 (minecraft:scale → 자바 SCALE 속성 — 그리기와 충돌 상자가 함께 커짐).
  * 최대 체력 상한을 1024 에서 1,000,000 으로 (보스 체력 90000 — 베드락은 상한이 없음).
  * 몬스터 소환 알 (rpg:<키>_spawn_egg — 이름 "<이름> 소환 (Lv.N)", 크리에이티브 RPG 장비 탭 · 소환 알 탭).
@@ -67,6 +67,8 @@ public final class RpgEntities {
         // 0.50.0 티르빙 망자의 각성의 아군 전사 (드라우그 모델 · 보랏빛 — 스킬이 움직임)
         // 0.51.0 네크로맨서 의 망자 선원도 같은 몹 (독초록 · 뼈색 — job.NecroCrew 가 움직임)
         if (TyrfingWarrior.ID.equals(d.id()) || TyrfingWarrior.CREW_ID.equals(d.id())) b = EntityType.Builder.<TyrfingWarrior>of(TyrfingWarrior::new, MobCategory.MISC);
+        // 2026-11-06 피에로의 소환물 (깜짝 상자 · 광대 인형 — 몬스터가 노리고 때림, job.PierrotSummons 가 움직임)
+        else if (PierrotSummon.BOX.equals(d.id()) || PierrotSummon.DOLL.equals(d.id())) b = EntityType.Builder.<PierrotSummon>of(PierrotSummon::new, MobCategory.MISC);
         else if (d.monster()) b = EntityType.Builder.<RpgMonster>of(RpgMonster::new, MobCategory.MONSTER);
         else if (d.mount()) b = EntityType.Builder.<RpgMount>of(RpgMount::new, MobCategory.MISC);
         else if (d.family("rpg_boss") || d.id().contains("decoy_")) b = EntityType.Builder.<RpgBoss>of(RpgBoss::new, MobCategory.MONSTER);

@@ -67,7 +67,7 @@ public final class JobTrainer {
             // 0.51.0 2차 직업 (없는 것은 1차 직업 색)
             Map.entry("swordmaster", "§6"), Map.entry("bloodknight", "§4"), Map.entry("warlord", "§6"), Map.entry("gladiator", "§c"), Map.entry("arcaneblade", "§5"),
             Map.entry("swordcaller", "§3"), Map.entry("arcmage", "§9"), Map.entry("necromancer", "§a"),
-            Map.entry("sniper", "§a"), Map.entry("battlearcher", "§b"), Map.entry("trickster", "§d"), Map.entry("bladedancer", "§e"));
+            Map.entry("sniper", "§a"), Map.entry("battlearcher", "§b"), Map.entry("trickster", "§d"), Map.entry("pierrot", "§c"));
     /** 카드 그림 (직업 id → 무기 아이템) */
     private static final Map<String, ItemStack> CARD_ITEMS = new ConcurrentHashMap<>();
 
@@ -497,7 +497,7 @@ public final class JobTrainer {
         form.fillEmpty();
         List<String> lines = new ArrayList<>();
         lines.add("§8" + Jobs.advanceLevel() + "렙부터 1차 직업 하나에 §6각성§8 (컨셉 그대로 더 센 스킬 다섯) 또는 §4반전§8 (같은 무기 · 같은 칸 역할의 새 스킬 다섯 · 뒤집힌 특성) 중 하나."
-                + " 둘 다 1차보다 초당 피해 +" + Math.round((Jobs.advanceDps() - 1) * 100) + "%.§r");
+                + " 1차보다 초당 피해 +" + Math.round((Jobs.advanceDps() - 1) * 100) + "% (탱커는 1차와 같음).§r");
         lines.add(cost <= 0 ? "§8처음 2차 전직은 §2무료§8. 각성 ↔ 반전 바꾸기는 §2" + Math.round(Jobs.switchSilver()) + "§8 " + Inv.CURRENCY_NAME + ".§r"
                 : "§8지금 2차 직업: §0" + now.display() + "§8. 다른 길로 바꾸면 §2" + cost + "§8 " + Inv.CURRENCY_NAME + ".§r");
         if (message != null && !message.isEmpty()) lines.add(message);
@@ -510,6 +510,8 @@ public final class JobTrainer {
         Jobs.Job base = Jobs.baseOf(a);
         List<String> out = new ArrayList<>();
         out.add("§7" + Jobs.pathName(a.path()) + " §8· §7" + a.role());
+        double dps = Jobs.advanceDps(a);
+        out.add("§8초당 피해 " + (Math.abs(dps - 1) < 1e-9 ? "§f1차와 같음 §8(탱커 — 소환물 · 도발)" : "§f1차 × " + mmorpg.core.Js.str(dps)));
         out.add("§8무기 §f" + a.weaponText() + " §8· 적용 스탯 §f" + a.statText());
         for (String l : wrap(a.line(), 26)) out.add("§7" + l);
         out.add("");
@@ -539,7 +541,7 @@ public final class JobTrainer {
         out.add("§7" + Jobs.advanceLevel() + "렙부터 2차 전직 (직업 교관)");
         out.add("§6각성 §7— 1차 컨셉 그대로, 더 크고 센 스킬");
         out.add("§4반전 §7— 새 스킬 다섯 · 뒤집힌 특성 · 새 색");
-        out.add("§7둘 다 1차보다 초당 피해 +" + Math.round((Jobs.advanceDps() - 1) * 100) + "%");
+        out.add("§71차보다 초당 피해 +" + Math.round((Jobs.advanceDps() - 1) * 100) + "% §8(탱커 피에로는 1차와 같음)");
         out.add("§7처음 2차 전직 무료 · 각성 ↔ 반전 " + Math.round(Jobs.switchSilver()) + " " + Inv.CURRENCY_NAME);
         out.add("§71차 직업을 바꾸면 2차 직업도 풀림");
         out.add("§7직업 스킬 강화 단계는 같은 칸으로 이어짐");

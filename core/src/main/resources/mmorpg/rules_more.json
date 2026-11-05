@@ -607,7 +607,7 @@
     "endlessSlash": {"fog": "rpg:ult_bloodvoid", "flash": [1, 0.76, 0.76]}
   },
   "ULT_FOGS_MORE": {
-    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 아케인 블레이드 월드 클리버 rpg:ult_arcane (짙은 남보라 밤 — 보라 · 청록 마력 대검과 검기가 보이게) · 소드 콜러 칼날 감옥 rpg:ult_prison (짙은 청록 밤 — 청록 칼빛이 보이게), 0.51.0 네크로맨서 나글파르의 출항 rpg:ult_naglfar (짙은 녹색 안개 — 녹색 혼불 · 뼈색 배가 보이게), 0.51.0 스나이퍼 데드아이 rpg:ult_deadeye (짙은 올리브빛 어스름 — 연두 · 흰 금빛 큰 화살과 조준 과녁이 보이게) · 배틀 아처 퀴버 스톰 rpg:ult_tempest (짙은 폭풍 남청 — 하늘빛 화살 물결 · 번개 노랑 불티가 보이게), 0.51.0 트릭스터 개기일식 rpg:ult_eclipse (해가 가려진 검자주 어둠 — 자홍 꽃 · 청록 환영이 보이게) → 해가 다시 뜰 때 rpg:ult_sunrise (주홍 새벽빛 — 잠깐), 0.51.0 블레이드 댄서 빛무리 춤 rpg:ult_alfheim (연보라 황혼 — 밝은 하늘이면 흰 금빛 · 연분홍 빛이 묻혀서 빛이 보이는 어스름), 0.51.0 글래디에이터 홀름강 rpg:ult_holmgang (짙은 녹슨 핏빛 황혼 — 진홍 결투장 · 모래 금빛 말뚝이 보이게), 0.51.0 소드마스터 스타폴 블레이드 rpg:ult_starfall (짙은 자줏빛 황혼 — 금빛 혜성이 보이게: 영상 1 의 밝은 주황 노을에서는 금빛 혜성이 묻혔음) · 블러드 나이트 블러드 문 rpg:ult_bloodmoon (짙은 핏빛 밤 — 붉은 달 · 핏빛 검기가 보이게)",
+    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 아케인 블레이드 월드 클리버 rpg:ult_arcane (짙은 남보라 밤 — 보라 · 청록 마력 대검과 검기가 보이게) · 소드 콜러 칼날 감옥 rpg:ult_prison (짙은 청록 밤 — 청록 칼빛이 보이게), 0.51.0 네크로맨서 나글파르의 출항 rpg:ult_naglfar (짙은 녹색 안개 — 녹색 혼불 · 뼈색 배가 보이게), 0.51.0 스나이퍼 데드아이 rpg:ult_deadeye (짙은 올리브빛 어스름 — 연두 · 흰 금빛 큰 화살과 조준 과녁이 보이게) · 배틀 아처 퀴버 스톰 rpg:ult_tempest (짙은 폭풍 남청 — 하늘빛 화살 물결 · 번개 노랑 불티가 보이게), 2026-11-06 재설계안 2판 트릭스터 와일드파이어 피스트 rpg:ult_wildfire (짙은 검자주 밤 — 자홍 들불 · 흰 금빛 심지 · 청록 환영이 보이게 — 1판 개기일식의 rpg:ult_eclipse · rpg:ult_sunrise 대신) · 피에로 그랜드 피날레 rpg:ult_circus (서커스 천막 밤의 짙은 남보라 — 빨강 · 금빛 상자 · 여러 빛 불꽃놀이 · 조명이 보이게 — 블레이드 댄서 rpg:ult_alfheim 대신), 0.51.0 글래디에이터 홀름강 rpg:ult_holmgang (짙은 녹슨 핏빛 황혼 — 진홍 결투장 · 모래 금빛 말뚝이 보이게), 0.51.0 소드마스터 스타폴 블레이드 rpg:ult_starfall (짙은 자줏빛 황혼 — 금빛 혜성이 보이게: 영상 1 의 밝은 주황 노을에서는 금빛 혜성이 묻혔음) · 블러드 나이트 블러드 문 rpg:ult_bloodmoon (짙은 핏빛 밤 — 붉은 달 · 핏빛 검기가 보이게)",
     "rpg:ult_glacier": [16, 96, "#1B3C80"],
     "rpg:ult_polar": [16, 100, "#0A2438"],
     "rpg:ult_deepsea": [12, 80, "#0E3A72"],
@@ -623,9 +623,8 @@
     "rpg:ult_naglfar": [5, 38, "#0C2414"],
     "rpg:ult_deadeye": [7, 52, "#20280F"],
     "rpg:ult_tempest": [8, 56, "#16243A"],
-    "rpg:ult_eclipse": [5, 40, "#170A1C"],
-    "rpg:ult_sunrise": [10, 70, "#B8643C"],
-    "rpg:ult_alfheim": [10, 64, "#3C2A52"],
+    "rpg:ult_wildfire": [6, 46, "#1E0820"],
+    "rpg:ult_circus": [8, 58, "#140E2E"],
     "rpg:ult_holmgang": [8, 56, "#3E140C"],
     "rpg:ult_starfall": [9, 60, "#4A1C3C"],
     "rpg:ult_bloodmoon": [6, 50, "#3A0812"]

@@ -146,7 +146,9 @@ public final class Jobs {
      * @param jobs   2차 직업 (id → 직업, advance.order 순서)
      * @param upIds  2차 스킬 id → 같은 칸의 1차 스킬 id (직업 스킬 강화 기록)
      */
-    private record Advance(int level, double silver, double dps, Map<String, String> paths, Map<String, Job> jobs, Map<String, String> upIds) {}
+    /** jobDps = 2차 직업마다 따로 정한 초당 피해 배수 (jobs.json advance.jobs.&lt;id&gt;.dps — 없으면 dps: 2026-11-06 피에로 = 1차와 같음 1.0) */
+    private record Advance(int level, double silver, double dps, Map<String, String> paths, Map<String, Job> jobs, Map<String, String> upIds,
+            Map<String, Double> jobDps) {}
 
     private record Data(int changeLevel, double changeSilver, double perPoint, int[] unlock, List<String> slotRoles, Map<String, Job> jobs, Upgrade upgrade,
             Map<String, List<UpKey>> upKeys, Advance advance) {}
@@ -225,6 +227,12 @@ public final class Jobs {
     /** 2차 직업의 초당 피해 배수 (1차 × 1.2) */
     public static double advanceDps() {
         return DATA.advance().dps();
+    }
+
+    /** 그 2차 직업의 초당 피해 배수 (직업이 따로 정한 dps — 없으면 {@link #advanceDps()}, 1차 직업이면 1) */
+    public static double advanceDps(Job a) {
+        if (a == null || !a.advanced()) return 1;
+        return DATA.advance().jobDps().getOrDefault(a.id(), DATA.advance().dps());
     }
 
     /** 길 이름 (awaken → 각성 · invert → 반전 · 그 밖은 "") */
@@ -409,7 +417,7 @@ public final class Jobs {
         }
         for (Job a : DATA.advance().jobs().values()) {
             double now = nowOf(a);
-            double w = was.getOrDefault(a.base(), 0.0) * DATA.advance().dps();
+            double w = was.getOrDefault(a.base(), 0.0) * advanceDps(a); // 2026-11-06 피에로 (탱커) 는 1차와 같은 1.0
             out.put(a.id(), SPREAD == null || now <= 0 || w <= 0 ? 1.0 : w / now);
         }
         return Map.copyOf(out);
@@ -734,12 +742,13 @@ public final class Jobs {
     /** 0.51.0 2차 전직 (jobs.json advance — 없으면 2차 직업 없음: 레벨 무한) */
     private static Advance advance(Obj root, Map<String, Job> jobs, Map<String, List<UpKey>> upKeys) {
         Obj a = root.objOrNull("advance");
-        if (a == null) return new Advance(Integer.MAX_VALUE, 0, 1, Map.of(), Map.of(), Map.of());
+        if (a == null) return new Advance(Integer.MAX_VALUE, 0, 1, Map.of(), Map.of(), Map.of(), Map.of());
         Map<String, String> paths = new LinkedHashMap<>();
         Obj ps = a.obj("paths");
         for (String p : ps.keys()) paths.put(p, ps.str(p));
         Map<String, Job> adv = new LinkedHashMap<>();
         Map<String, String> upIds = new LinkedHashMap<>();
+        Map<String, Double> jobDps = new LinkedHashMap<>();
         Obj js = a.obj("jobs");
         for (Object idObj : a.list("order")) {
             String id = String.valueOf(idObj);
@@ -750,13 +759,14 @@ public final class Jobs {
             if (!paths.containsKey(o.str("path"))) throw new IllegalStateException("jobs.advance." + id + ": unknown path " + o.str("path"));
             Job j = parseJob(id, o, base, upKeys);
             adv.put(id, j);
+            if (o.has("dps")) jobDps.put(id, o.num("dps"));
             for (Skill k : j.skills()) {
                 Skill b = base.skill(k.slot());
                 if (b != null && !k.id().isEmpty() && !b.id().isEmpty()) upIds.put(k.id(), b.id());
             }
         }
         return new Advance((int) a.num("level"), a.num("switchSilver"), a.numOr("dps", 1), java.util.Collections.unmodifiableMap(paths), java.util.Collections.unmodifiableMap(adv),
-                Map.copyOf(upIds));
+                Map.copyOf(upIds), Map.copyOf(jobDps));
     }
 
     /** 0.31.0 강화 규칙 (jobs.json upgrade — 없으면 강화 없음: max 0) */
