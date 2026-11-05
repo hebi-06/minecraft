@@ -4,6 +4,7 @@ import mmorpg.core.Jobs;
 import mmorpg.fabric.rune.RuneKit;
 import mmorpg.fabric.skill.Kit;
 import mmorpg.fabric.skill.Opt;
+import mmorpg.fabric.skill.SkillFx;
 import mmorpg.fabric.skill.V;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -109,14 +110,11 @@ final class JobFx {
     static final int ARMS = 8;
     static final int ARENA = 6;
     /**
-     * 0.51.0 마검사 2차 그림: 공중 룬 글자 (종류마다 장 수 · 종류) · 재설계안 2판 룬 스미스 — 달궈진 몸 · 쇳물 웅덩이 · 룬 모루 · 쇳물 숫양 (tools/job_fx_art_adv.py)
+     * 0.51.0 마검사 2차 그림: 공중 룬 글자 (종류마다 장 수 · 종류) · 큰 검기 (rfx_jwave — 단타 직업 스킬의 커다란 초승달 검기, tools/job_fx_art_adv.py)
      */
     static final int GLYPH = 6;
     static final int GLYPH_KINDS = 3;
-    static final int HEAT = 6;
-    static final int MOLTEN = 8;
-    static final int ANVIL = 8;
-    static final int RAM = 8;
+    static final int BIG_WAVE = 8;
     static final int STAR = 8;
     static final int TOME = 12;
     static final int BOW2 = 8;
@@ -396,7 +394,7 @@ final class JobFx {
         if (size >= 0.6 && o.num("view", 0) == 0) mmorpg.fabric.skill.SkillFx.sparks(level, at, inner(j), (int) Math.min(10, 3 + size * 3), 3 + size * 1.5);
     }
 
-    /** 같은 것 — 색을 정함 (0.51.0 룬 스미스 쇳물 터짐: 쇳물 · 흰 열) */
+    /** 같은 것 — 색을 정함 */
     static void burst(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
         two(level, "jburst2", BURST, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), glow, core);
         double a = o.num("alpha", 1);
@@ -1090,51 +1088,79 @@ final class JobFx {
         glyph(level, at, size, kind, from, count, life, loop, o, outer(j), inner(j));
     }
 
-    // ------------------------------------------------------------ 0.51.0 재설계안 2판 룬 스미스 그림 (tools/job_fx_art_adv.py — 쇳물 JobTraits7.MOLTEN · 흰 열 HOT)
+    // ------------------------------------------------------------ 0.51.0 큰 검기 · 힘 모으기 (사용자 2026-11-05 "단타 애들이 너무 밋밋해 좀 더 화려하게 커다란 검기가 나오면서 때리면")
 
     /**
-     * 달궈진 몸 (rfx_jheat — 카메라를 봄): 0 달아오름 (번쩍) · 1 ~ 4 붉게 달아오른 기운 · 오르는 열기 줄 (loop 면 이어 돌림) · 5 식으며 금이 감. 장 from 부터 count 장.
-     * 크기 약 size × 2 칸 (몸을 감쌈). 빛 = 쇳물빛 무리 · 심지 = 흰 열 줄 · 불씨
+     * 큰 검기 (rfx_jwave — 카메라를 보는 초승달): at 에서 dir 쪽으로 speed 칸/초 life 초 날아감 (0 ~ 1 일어남 · 2 ~ 5 날아감 · 6 ~ 7 부서짐) · 반 크기 size 칸 ·
+     * 기울기 tilt 도 (0 = 가로 — 위로 불룩, 90 = 세로, 180 = 아래로 불룩, ±45 = X 의 한 획) · 뒤따르는 옅은 잔상 둘 (1 · 2틱 뒤 같은 자리에서 — 끌리는 검기).
+     * sp 가 있으면 그 사람의 1인칭에서는 0.6배 · 0.8칸 앞에서 (눈앞을 덮지 않게), 나머지 (3인칭 · 다른 사람) 는 그대로. speed 0 이면 그 자리에서 피었다 부서짐.
+     * glow · core 가 null 이면 직업 겉빛 · 속빛
      */
-    static void heat(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o) {
-        int f = Math.max(0, Math.min(HEAT - 1, from));
-        int n = Math.max(1, Math.min(HEAT - f, count));
-        cells(level, "jheat", HEAT, f, n, at, life, loop ? 10 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.25)), JobTraits7.MOLTEN, JobTraits7.HOT);
+    static void bigWave(ServerLevel level, ServerPlayer sp, Vec3 at, Vec3 dir, double speed, double size, double tilt, double life, Jobs.Job j, double[] glow,
+            double[] core, Opt o) {
+        Vec3 d = V.len(dir) > 1e-6 ? V.unit(dir) : V.UP;
+        double[] g = glow != null ? glow : outer(j);
+        double[] c = core != null ? core : inner(j);
+        double a = o.num("alpha", 1.0);
+        Opt b = o.with("dir", d, "speed", speed, "spin", tilt, "fade", o.num("fade", 0.18));
+        if (sp != null) {
+            Opt far = b.with("view", 1.0, "owner", (double) sp.getId());
+            Opt near = b.with("view", 2.0, "owner", (double) sp.getId());
+            wavePair(level, at, life, far.with("size", size), a, g, c);
+            wavePair(level, V.add(at, d, 0.8), life, near.with("size", size * 0.6), a, g, c);
+        } else {
+            wavePair(level, at, life, b.with("size", size), a, g, c);
+        }
     }
 
-    /**
-     * 쇳물 웅덩이 (rfx_jmolten — 땅에 누움): 0 ~ 1 번지며 달아오름 · 2 ~ 5 끓음 (loop 면 이어 돌림 — 식은 껍질 사이의 빛나는 금 · 터지는 거품) · 6 ~ 7 식어 흐려짐.
-     * 웅덩이 끝 = 반 크기 × 0.9 (radius 칸). 빛 = 쇳물 (주황) · 심지 = 금 · 거품의 흰 열
-     */
-    static void molten(ServerLevel level, Vec3 center, double radius, int from, int count, double life, boolean loop, Opt o) {
-        int f = Math.max(0, Math.min(MOLTEN - 1, from));
-        int n = Math.max(1, Math.min(MOLTEN - f, count));
-        cells(level, "jmolten", MOLTEN, f, n, center, life, loop ? 7 : 0, loop, o.with("dir", V.UP, "size", radius / 0.9, "spin", o.has("spin") ? o.num("spin", 0)
-                : Kit.rand() * 360, "fade", o.num("fade", 0.25)), JobTraits7.MOLTEN, JobTraits7.HOT);
+    static void bigWave(ServerLevel level, ServerPlayer sp, Vec3 at, Vec3 dir, double speed, double size, double tilt, double life, Jobs.Job j, Opt o) {
+        bigWave(level, sp, at, dir, speed, size, tilt, life, j, null, null, o);
     }
 
-    /**
-     * 룬 모루 (rfx_janvil — 세워 카메라 쪽으로 돎, 아래 끝 = 땅): stage 0 = 땅을 뚫고 솟음 (0 ~ 1 · 흙 튐) · 1 = 서서 달아오름 (2 ~ 5 — 룬이 하나씩 켜지다 흰 열 금) ·
-     * 2 = 터짐 (6 ~ 7 — 조각이 튐). 아래 끝 = ground · 높이 약 size × 2 칸. 빛 = 모루 몸 (어두운 쇠 — 거의 불투명) · 심지 = 룬 · 금의 쇳물빛
-     */
-    static void anvil(ServerLevel level, Vec3 ground, double size, int stage, double life, Opt o, double[] glow, double[] core) {
-        Vec3 at = V.up(ground, size);
-        Opt b = o.with("size", size);
-        switch (stage) {
-            case 0 -> cells(level, "janvil", ANVIL, 0, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), glow, core);
-            case 1 -> cells(level, "janvil", ANVIL, 2, 4, at, life, 0, false, b.with("fade", o.num("fade", 0.0)), glow, core);
-            default -> cells(level, "janvil", ANVIL, 6, 2, at, life, 0, false, b.with("fade", o.num("fade", 0.4)), glow, core);
+    /** 검기 한 벌 + 잔상 둘 (1 · 2틱 뒤 — 옅고 조금 작게) */
+    private static void wavePair(ServerLevel level, Vec3 at, double life, Opt o, double alpha, double[] glow, double[] core) {
+        two(level, "jwave", BIG_WAVE, at, life, o.with("alpha", alpha), glow, core);
+        double size = o.num("size", 1);
+        for (int k = 1; k <= 2; k++) {
+            int kk = k;
+            RuneKit.later(k, () -> two(level, "jwave", BIG_WAVE, at, Math.max(0.1, life - 0.05 * kk), o.with("size", size * (1 - 0.07 * kk), "alpha",
+                    alpha * (0.42 - 0.14 * kk), "coreAlpha", alpha * (0.3 - 0.1 * kk)), glow, core));
         }
     }
 
     /**
-     * 쇳물 숫양 (rfx_jram — 세워 카메라 쪽으로 돎, 앞모습): 0 ~ 1 쇳물이 솟아 숫양이 됨 · 2 ~ 5 달려옴 (loop 면 이어 돌림 — 앞발 · 머리 · 쇳물 갈기) · 6 뿔로 받아 버팀 ·
-     * 7 터져 쇳물로 흩어짐. 장 from 부터 count 장. 발 = 칸 아래 끝 (at = 땅 + size) · 높이 약 size × 2 칸. 빛 = 쇳물 몸 · 심지 = 흰 열 금 · 눈 · 뿔 테
+     * 힘 모으기 (사용자 "크게 감는 동작" — 예비 동작 동안): ticks 틱 동안 2틱마다 쓴 사람 기준 rel ([오른쪽, 위, 앞] 칸) 자리로 둘레 1.6칸에서 빛 알갱이 넷이 빨려
+     * 들어가고 그 자리의 빛이 점점 커짐 (rfx_jglint — size 까지) · 처음에 발밑 빛 고리 · 끝에 번쩍. 소리: 차오르는 울림 (점점 높게)
      */
-    static void ram(ServerLevel level, Vec3 ground, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
-        int f = Math.max(0, Math.min(RAM - 1, from));
-        int n = Math.max(1, Math.min(RAM - f, count));
-        cells(level, "jram", RAM, f, n, V.up(ground, size), life, loop ? 12 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.15)), glow, core);
+    static void charge(ServerPlayer sp, Jobs.Job j, Vec3 rel, int ticks, double size) {
+        if (sp == null || ticks <= 0) return;
+        String life = RuneKit.lifeToken(sp);
+        ring(sp.level(), V.up(sp.position(), 0.08), 1.4, j, false, ticks / 20.0 + 0.1, Opt.of("alpha", 0.7));
+        SkillFx.play(sp.level(), "block.respawn_anchor.charge", sp.position(), 1.3, 0.45);
+        for (int t = 0; t < ticks; t += 2) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel lv = sp.level();
+                Vec3 f = Kit.facingOf(sp);
+                Vec3 p = V.up(V.add(V.add(sp.position(), V.rightOf(f), rel.x), f, rel.z), rel.y);
+                double q = (tt + 2.0) / ticks;
+                for (int i = 0; i < 4; i++) {
+                    Vec3 r = V.unit(new Vec3(Kit.rand() - 0.5, (Kit.rand() - 0.4) * 0.8, Kit.rand() - 0.5));
+                    Vec3 from = V.add(p, r, 1.3 + Kit.rand() * 0.5);
+                    SkillFx.fx(lv, "rpg:arrow_spark", from, Opt.of("dir", V.scale(r, -1), "speed", 6.0, "size", 0.12, "grow", 0.3, "life", 0.24, "color", i % 2 == 0
+                            ? inner(j) : outer(j), "alpha", 1.0));
+                }
+                glint(lv, p, size * (0.35 + 0.65 * Math.min(1, q)), j, 0.16, Opt.of("vel", RuneKit.bodyVel(sp)));
+                if (tt % 4 == 0) SkillFx.play(lv, "block.amethyst_block.resonate", p, 0.8 + 0.6 * q, 0.35);
+            });
+        }
+        RuneKit.later(ticks, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            Vec3 f = Kit.facingOf(sp);
+            Vec3 p = V.up(V.add(V.add(sp.position(), V.rightOf(f), rel.x), f, rel.z), rel.y);
+            glint(sp.level(), p, size * 1.4, j, 0.2, Opt.of("vel", RuneKit.bodyVel(sp)));
+        });
     }
 
     /** 망자의 비명 (rfx_jwail — 카메라를 봄): 연기가 비명 지르는 얼굴이 되어 (0 ~ 4) 찢겨 흩어짐 (5 ~ 7). 크기 약 size × 2 칸 */

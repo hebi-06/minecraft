@@ -64,6 +64,8 @@ public final class JobTraits {
     /** 평타에 더한 몫의 구분 (WeaponBonus.parts — 들어간 뒤 HitHook 이 연출 · 각인 씀) */
     static final String KEY_MIRROR = "job_mirror";
     static final String KEY_MARK = "job_mark";
+    /** 0.51.0 아케인 블레이드: 각인 다섯이 한꺼번에 터짐 (거대한 마력 대검) */
+    static final String KEY_MARK_FULL = "job_mark_full";
     static final String KEY_AWAKEN = "job_awaken";
 
     static void init() {
@@ -78,7 +80,7 @@ public final class JobTraits {
         JobTraits5.init(); // 0.51.0 검사 2차 (소드마스터 치명 · 용의 피 · 벼린 칼 · 블러드 나이트 피의 갈증 · 광란)
         JobImpact.init(); // 0.51.0 타격감 (큰 타격 그림 · 멈칫)
         JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 동면 · 거인의 무게 · 글래디에이터 결투 · 불사의 분노 · 홀름강)
-        JobTraits7.init(); // 0.51.0 마검사 2차 (룬 스미스 각인 번짐 · 달궈짐 · 담금질 쇳조각 · 소드 콜러 스스로 싸우는 칼 · 둘로 나뉘어라)
+        JobTraits7.init(); // 0.51.0 마검사 2차 (아케인 블레이드 각인 번짐 · 거대한 마력 대검 · 오버드라이브 검기 · 소드 콜러 스스로 싸우는 칼 · 제미니 소드)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 꿀술의 노래 · 네크로맨서 망자의 군대 · 망자 일으키기)
         JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 사과 겨누기 · 섀도 헌터 추격 · 저주 · 그림자 구르기 · 그믐밤)
         JobTraits10.init(); // 0.51.0 암살자 2차 (블레이드 댄서 춤사위 · 요정의 걸음 · 눈부신 한낮 — 트릭스터의 표식 · 은신은 JobTraits3)
@@ -317,9 +319,9 @@ public final class JobTraits {
         of(sp).sureUntil = Tasks.now() + ticks;
     }
 
-    /** 0.51.0 마력 각인을 쓰는 직업 (마검사 · 각성 룬 스미스 — 반전 소드 콜러는 스스로 싸우는 칼) */
+    /** 0.51.0 마력 각인을 쓰는 직업 (마검사 · 각성 아케인 블레이드 — 반전 소드 콜러는 스스로 싸우는 칼) */
     static boolean markJob(Jobs.Job j) {
-        return j != null && (j.id().equals("spellblade") || j.id().equals(JobTraits7.RK));
+        return j != null && (j.id().equals("spellblade") || j.id().equals(JobTraits7.AB));
     }
 
     /** 0.51.0 투지를 쓰는 직업 (검사 · 각성 소드마스터 — 반전 블러드 나이트는 피의 갈증) */
@@ -401,12 +403,18 @@ public final class JobTraits {
         return new RpgCombat.Bonus(dmg * echo, "", KEY_MIRROR, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 
-    /** 마력 각인 폭발: 각인 찍힌 적을 직업 무기 평타로 치면 하나가 터짐 (위력 × markBurst — 들어가면 씀) */
+    /**
+     * 마력 각인 폭발: 각인 찍힌 적을 직업 무기 평타로 치면 하나가 터짐 (위력 × markBurst — 들어가면 씀). 0.51.0 아케인 블레이드: 각인이 다 찬 적 (trait.max — 다섯) 이면
+     * 다섯이 한꺼번에 (위력 × markBurst × 다섯 · 큰 숫자 — 하늘에서 거대한 마력 대검)
+     */
     private static RpgCombat.Bonus markBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
-        if (w == null || victim == null || marks(sp, victim) <= 0) return null;
+        int n = victim == null ? 0 : marks(sp, victim);
+        if (w == null || n <= 0) return null;
         Jobs.Job j = JobSystem.job(sp);
         if (!markJob(j) || !j.usesWeapon(w.type())) return null;
         double add = JobSystem.power(sp, j) * j.trait().def().numOr("markBurst", 1.0) * mmorpg.fabric.stattree.StatTrees.atkMult(sp);
+        if (j.id().equals(JobTraits7.AB) && n >= Math.max(1, j.trait().max()))
+            return new RpgCombat.Bonus(add * n, "§d◈×" + n, KEY_MARK_FULL, DamageNumbers.Style.JOB_BIG, null, JobKit.grad(j));
         return new RpgCombat.Bonus(add, "§d◈", KEY_MARK, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 
@@ -446,16 +454,21 @@ public final class JobTraits {
                     });
                 }
             }
-            case "spellblade", "runeknight" -> {
+            case "spellblade", "arcaneblade" -> {
                 if (!j.usesWeapon(w.type())) return;
                 of(sp).target = victim.getUUID();
-                if (has(bonus, KEY_MARK)) {
+                if (has(bonus, KEY_MARK_FULL)) {
+                    // 0.51.0 아케인 블레이드: 다섯이 한꺼번에 — 하늘에서 거대한 마력 대검이 내리꽂히고 둘레로 다섯 몫이 번짐
+                    int n = takeAllMarks(sp, victim);
+                    JobTraits7.giantSword(sp, victim, j);
+                    JobTraits7.spread(sp, victim, j, Math.max(1, n), JobTraits7.FULL_FALL);
+                } else if (has(bonus, KEY_MARK)) {
                     long[] m = MARKS.get(key(sp, victim));
                     if (m != null && m[0] > 0) m[0]--;
                     // 각인 폭발: 맞은 자리에서 터짐
                     JobFx.burst(level, at, 0.85 + Kit.bodyPad(victim) * 0.4, j, 0.3, Opt.empty());
                     SkillFx.play(level, "chime.amethyst_block", at, 1.6, 0.8);
-                    JobTraits7.spread(sp, victim, j, 1); // 0.51.0 룬 스미스: 둘레로 룬 폭발이 번짐
+                    JobTraits7.spread(sp, victim, j, 1, 0); // 0.51.0 아케인 블레이드: 둘레로 마력 폭발이 번짐
                 }
                 if (has(bonus, KEY_AWAKEN)) {
                     // 마력 참격 잔상: 평타 궤적을 따라 보라 · 청록 참격이 한 번 더 (2틱 뒤)
@@ -485,7 +498,7 @@ public final class JobTraits {
                 JobTraits4.tick(sp, j, now); // 0.30.0 수호의 맹세 회복
                 JobTraits5.tick(sp, j, now); // 0.51.0 흡혈 숫자
                 JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 결투
-                JobTraits7.tick(sp, j, now); // 0.51.0 달궈진 적 · 소드 콜러 쌓임 · 꽂힌 칼
+                JobTraits7.tick(sp, j, now); // 0.51.0 소드 콜러 쌓임 · 꽂힌 칼
                 JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 시체의 혼불
                 JobTraits9.tick(sp, j, now); // 0.51.0 섀도 헌터 추격 · 저주 문양
                 JobTraits10.tick(sp, j, now); // 0.51.0 블레이드 댄서 춤사위 (끊기면 0 · 몸 둘레 빛 꽃잎)

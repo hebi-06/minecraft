@@ -209,11 +209,11 @@ public final class MotionsTest {
             check(SwingLooks.of(fn) != null, "strike rune look " + g + " " + fn);
         }
         // 0.51.0 2차 직업: 곰의 화신 (워로드 — 분노 100 · 평타 범위 ×1.5) · 재설계안 2판: 용의 피 (시구르드 태세) · 다시 벼린 칼 (벼린 칼 ×1.5) ·
-        // 광란 (다인슬레이프 태세) · 거인의 무게 (뵈드바르 태세 — 도끼 ×1.6) · 불사의 분노 (스타르카드 태세) · 담금질 (룬 스미스 — 달군 대검 ×1.3) ·
-        // 둘로 나뉘어라 (소드 콜러 — 칼빛만 · 범위 그대로)
+        // 광란 (다인슬레이프 태세) · 거인의 무게 (뵈드바르 태세 — 도끼 ×1.6) · 불사의 분노 (스타르카드 태세) · 스펠 오버드라이브 (아케인 블레이드 — 커진 마력 칼
+        // ×1.45) · 제미니 소드 (소드 콜러 — 칼빛만 · 범위 그대로)
         Map<String, Double> scales = Map.ofEntries(Map.entry("edgeHone", 1.15), Map.entry("flurry", 1.2), Map.entry("bloodBlade", 1.3), Map.entry("cleave", 1.4),
                 Map.entry("swordGod", 1.5), Map.entry("swordsman_mirror", 1.2), Map.entry("spellblade_awaken", 1.3), Map.entry("reaper_avatar", 1.0),
-                Map.entry("warlord_bear", 1.5), Map.entry("warlord_titan", 1.6), Map.entry("gladiator_fury", 1.1), Map.entry("runeknight_temper", 1.3), Map.entry("swordcaller_twin", 1.0),
+                Map.entry("warlord_bear", 1.5), Map.entry("warlord_titan", 1.6), Map.entry("gladiator_fury", 1.1), Map.entry("arcaneblade_overdrive", 1.45), Map.entry("swordcaller_twin", 1.0),
                 Map.entry("swordmaster_blood", 1.15), Map.entry("swordmaster_ult", 1.5), Map.entry("bloodknight_frenzy", 1.2));
         for (Map.Entry<String, Double> e : scales.entrySet()) {
             SwingLooks.Look l = SwingLooks.of(e.getKey());
@@ -228,7 +228,7 @@ public final class MotionsTest {
         check(!SwingLooks.of("swordsman_mirror").fits("greatsword") && SwingLooks.of("spellblade_awaken").fits("greatsword"), "job look weapons");
         check(SwingLooks.of("warlord_bear").fits("axe") && !SwingLooks.of("warlord_bear").fits("sword") && SwingLooks.of("warlord_titan").fits("axe")
                 && SwingLooks.of("gladiator_fury").fits("axe") && !SwingLooks.of("gladiator_fury").fits("sword"), "second-job looks: axe");
-        check(SwingLooks.of("runeknight_temper").fits("greatsword") && SwingLooks.of("swordcaller_twin").fits("sword") && !SwingLooks.of("swordcaller_twin").fits("axe"),
+        check(SwingLooks.of("arcaneblade_overdrive").fits("greatsword") && SwingLooks.of("arcaneblade_overdrive").fits("sword") && SwingLooks.of("swordcaller_twin").fits("sword") && !SwingLooks.of("swordcaller_twin").fits("axe"),
                 "second-job looks: magic sword");
         check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
         check(SwingLooks.of("nope") == null && SwingLooks.pack(new double[] {0, 0, 0}) == 1 && SwingLooks.pack(new double[] {1, 0.5, 0}) == 0xFF8000, "pack");
@@ -353,10 +353,11 @@ public final class MotionsTest {
                 && Motions.skillMotion("gladiator_ult").equals("jb_gladiator_ult") && Motions.skillMotion("gladiator_ult:slam").equals("jb_gladiator_ult_slam")
                 && Motions.skillMotion("gladiator_flurry").equals("jb_gladiator_flurry") && Motions.skillMotion("lycan_fang") == null,
                 "0.51.0 재설계안 2판 전사 2차 동작 (대지 가르기 내려찍기 · 홀름강 마무리는 단계 열쇠 — 울프헤딘 동작은 뺌)");
-        check(Motions.skillMotion("runeknight_ult:clash").equals("jb_runeknight_ult_clash") && Motions.skillMotion("runeknight_ult:strike").equals("jb_runeknight_ult_strike")
+        check(Motions.skillMotion("arcaneblade_ult").equals("jb_arcaneblade_ult") && Motions.skillMotion("arcaneblade_ult:slam").equals("jb_arcaneblade_ult_slam")
+                && Motions.skillMotion("arcaneblade_crescent").equals("jb_arcaneblade_crescent") && Motions.skillMotion("arcaneblade_cross").equals("jb_arcaneblade_cross")
                 && Motions.skillMotion("swordcaller_ult:catch").equals("jb_swordcaller_ult_catch") && Motions.skillMotion("swordcaller_orbit").equals("jb_swordcaller_orbit")
-                && Motions.skillMotion("runeknight_anvil").equals("jb_runeknight_anvil") && Motions.skillMotion("hexblade_ult") == null
-                && Motions.skillMotion("runeknight_carve") == null, "0.51.0 재설계안 2판 마검사 2차 동작 (맞부딪침 · 받아침 · 칼을 받음은 단계 열쇠 — 헥스 블레이드 · 옛 룬 나이트 동작은 뺌)");
+                && Motions.skillMotion("hexblade_ult") == null && Motions.skillMotion("runeknight_anvil") == null && Motions.skillMotion("runeknight_carve") == null,
+                "0.51.0 마검사 2차 동작 (내려쳐 가름 · 칼을 받음은 단계 열쇠 — 헥스 블레이드 · 룬 나이트 · 룬 스미스 동작은 뺌)");
         check(Motions.skillMotion("nothing") == null, "unknown → null");
         // poses.json 과 같은 이름
         Path poses = Path.of("src/main/resources/assets/mmorpg/motion/poses.json");

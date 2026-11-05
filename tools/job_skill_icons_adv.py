@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """0.51.0 2차 직업 스킬 아이콘 — 검사 각성 소드마스터 · 반전 블러드 나이트 · 전사 각성 워로드 · 반전 글래디에이터 (재설계안 2판) ·
-마검사 각성 룬 스미스 · 반전 소드 콜러 (재설계안 2판) · 매지션 각성 아크메이지 · 반전 네크로맨서 ·
+마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신) · 반전 소드 콜러 (재설계안 2판) · 매지션 각성 아크메이지 · 반전 네크로맨서 ·
 궁수 각성 스나이퍼 · 반전 섀도 헌터 · 암살자 각성 트릭스터 · 반전 블레이드 댄서 (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
-모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph 와 같은 꼴, 룬 스미스의 모루 · 쇳물 · 숫양은 rfx_janvil · jmolten · jram 과 같은 꼴).
+모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph 와 같은 꼴, 아케인 블레이드의 검기는 rfx_jwave 와 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
-글래디에이터 = 진홍 (첫째) · 모래 금빛 (둘째 — 결투장 황혼 바탕 · 말뚝은 나무빛), 룬 스미스 = 보라 (첫째) · 금빛 룬 (둘째 — 대장간 불빛 바탕 · 쇳물 주황),
+글래디에이터 = 진홍 (첫째) · 모래 금빛 (둘째 — 결투장 황혼 바탕 · 말뚝은 나무빛), 아케인 블레이드 = 보라 (첫째) · 청록 (둘째 — 짙은 남보라 밤 바탕),
 소드 콜러 = 청록 (첫째) · 흰 청록 (둘째 — 짙은 청록 밤 바탕), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
 네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕), 스나이퍼 = 밝은 연두 (첫째) · 금빛 흰 섬광 (둘째 — 짙은 숲 바탕),
 섀도 헌터 = 남보라 (첫째) · 은빛 (둘째 — 짙은 남색 바탕 · 검은 화살은 먹빛 살대 · 은빛 촉), 트릭스터 = 자홍 (첫째) · 검보라 (둘째 — 짙은 보라 바탕 · 환영은 청록 테),
@@ -655,17 +655,17 @@ def gladiator_ult(A, B):
     return finish(subject, [glow(floor, A, 1.8, 0.9), glow(rope, A, 1.2, 0.6)], gladiator_back(A, B))
 
 
-# ------------------------------------------------------------ 룬 나이트 (빛: 보라 → 금빛 룬)
+# ------------------------------------------------------------ 아케인 블레이드 (빛: 보라 → 청록 — 짙은 남보라 밤 바탕, 2026-11-05 룬 스미스 대신)
 
 RUNE_NIGHT = (10, 6, 30)
 
 
-def runeknight_back(A, B):
+def arcane_back(A, B):
     return backdrop(mix(A, RUNE_NIGHT, 0.84), mix(A, (40, 14, 84), 0.45))
 
 
 def glyph(m, k, cx, cy, w, h, lw, ang=0.0):
-    """룬 글자 k (job_fx_art_v2.GLYPHS — 게임의 rfx_jglyph · jrunes24 와 같은 꼴): (cx, cy) 가운데 · 폭 w · 높이 h · 굵기 lw · ang 도 돌림"""
+    """룬 글자 k (job_fx_art_v2.GLYPHS — 게임의 rfx_jglyph 와 같은 꼴): (cx, cy) 가운데 · 폭 w · 높이 h · 굵기 lw · ang 도 돌림"""
     ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
 
     def xf(x, y):
@@ -690,26 +690,13 @@ def oval(m, cx, cy, rx, ry, w):
 
 
 def rune_sword(tip, end, A, B, blade=3.0, guard=7.0):
-    """룬 대검: 흰 보랏빛 날 · 금빛 코등이 (룬 나이트)"""
+    """마력 칼: 흰 보랏빛 날 · 청록 코등이 (아케인 블레이드)"""
     return sword_layers(tip, end, blade=blade, guard=guard, blade_cols=(WHITE, mix(A, WHITE, 0.55), WHITE, mix(A, (0, 0, 0), 0.35)),
                         guard_cols=(mix(B, WHITE, 0.4), B, WHITE, mix(B, (0, 0, 0), 0.45)))
 
 
-# 0.51.0 재설계안 2판 — 룬 스미스 의 대장간: 쇳물 (주황) · 흰 열 · 어두운 쇠 (룬은 금빛 — 게임의 rfx_janvil · jmolten · jram 과 같은 꼴)
-MOLT = (255, 110, 20)
-MOLT_HI = (255, 226, 128)
-IRON = (70, 62, 74)
-IRON_HI = (132, 122, 138)
-IRON_LO = (22, 18, 26)
-FORGE_DARK = (18, 6, 8)
-
-
-def forge_back(A, B):
-    return backdrop(mix(A, FORGE_DARK, 0.86), mix(MOLT, (60, 16, 6), 0.55))
-
-
 def tapered(m, pts, w0, w1):
-    """가운데 줄 pts 를 따라 굵기 w0 → w1 로 가늘어지는 띠 (뿔 · 불길)"""
+    """가운데 줄 pts 를 따라 굵기 w0 → w1 로 가늘어지는 띠 (검기 · 빛줄기)"""
     n = len(pts)
     left, right = [], []
     for i, (x, y) in enumerate(pts):
@@ -724,187 +711,109 @@ def tapered(m, pts, w0, w1):
     return m
 
 
-def anvil_mask(cx, top, s=1.0):
-    """모루 (옆모습 — 왼쪽 뿔 · 윗면 · 오른쪽 굽 · 오목한 허리 · 발): 게임의 rfx_janvil 과 같은 꼴"""
-    m = mask()
-    pts = [(-13.4, 1.6), (-10.6, 0.6), (-7.6, 0.0), (11.6, 0.0), (12.4, 0.6), (12.4, 3.6), (9.6, 4.4), (5.0, 5.4), (3.2, 8.2), (3.2, 10.6), (4.8, 12.4),
-           (8.2, 13.6), (9.0, 15.6), (-9.0, 15.6), (-8.2, 13.6), (-4.8, 12.4), (-3.2, 10.6), (-3.2, 8.2), (-5.0, 5.4), (-8.4, 4.8), (-11.6, 3.2)]
-    poly(m, [(cx + x * s, top + y * s) for x, y in pts])
-    return m
+def wave_layers(m_outer, m_edge, A, B, fade=0.0):
+    """큰 검기 (게임의 rfx_jwave 와 같은 꼴): 넓은 보랏빛 몸 · 흰 날 (청록 테)"""
+    def f(c):
+        return mix(c, RUNE_NIGHT, fade)
+    return [layer(m_outer, f(mix(A, WHITE, 0.35)), f(A), None, f(mix(A, (0, 0, 0), 0.35))), layer(m_edge, f(WHITE), f(mix(B, WHITE, 0.3)))]
 
 
-def molten_layer(m):
-    return layer(m, MOLT_HI, MOLT, WHITE, mix(MOLT, (0, 0, 0), 0.35))
+def arcaneblade_crescent(A, B):
+    # 크레센트 엣지: 위를 가로지르는 거대한 초승달 검기 (흰 날) · 그 뒤 옅게 선 세로 검기 (둘째) · 왼쪽 아래에서 휘두른 칼 · 검기 앞 끝의 반짝임 · 바람 줄
+    back = mask()
+    crescent(back, 13.0, 16.0, 12.6, 3.4, -58, 58)
+    big = mask()
+    crescent(big, 16.0, 30.0, 21.0, 6.4, 222, 318)
+    edge = mask()
+    crescent(edge, 16.0, 30.0, 21.0, 1.6, 226, 314)
+    sw = rune_sword((14.6, 19.4), (3.0, 29.6), A, B, blade=3.0, guard=6.6)
+    wind = mask()
+    for (x0, y0), (x1, y1) in (((3.0, 16.0), (8.0, 13.0)), ((24.0, 13.0), (29.4, 16.4)), ((19.0, 20.6), (24.6, 21.8))):
+        line(wind, [(x0, y0), (x1, y1)], 0.5)
+    flash = mask()
+    star(flash, 28.6, 14.6, 3.2, 0.2, 10)
+    subject = stack(*wave_layers(back, mask(), A, B, fade=0.5), layer(wind, mix(A, WHITE, 0.3), mix(A, RUNE_NIGHT, 0.4)), *wave_layers(big, edge, A, B), *sw,
+                    layer(flash, WHITE, B))
+    return finish(subject, [glow(lighter(big, flash), A, 1.8, 1.0), glow(edge, B, 1.0, 0.7)], arcane_back(A, B))
 
 
-def iron_layer(m, A):
-    return layer(m, IRON_HI, IRON, mix(A, WHITE, 0.5), IRON_LO, axis=(0.6, 0.8))
+def arcaneblade_cross(A, B):
+    # 팬텀 크로스: 가운데를 가르는 거대한 X 검기 (두 획 — 흰 날) · 가운데 번쩍임 · 왼쪽 아래에서 꿰뚫고 온 잔상 (갈매기 셋 — 앞이 밝음) · 둘레 룬 고리
+    xa = mask()
+    tapered(xa, [(4.0, 4.0), (16.0, 16.0), (28.0, 28.0)], 1.0, 1.0)
+    tapered(xa, [(28.0, 4.0), (16.0, 16.0), (4.0, 28.0)], 1.0, 1.0)
+    xb = mask()
+    for (x0, y0), (x1, y1) in (((4.6, 4.6), (27.4, 27.4)), ((27.4, 4.6), (4.6, 27.4))):
+        slash(xb, x0, y0, x1, y1, 2.8)
+    rring = mask()
+    ring(rring, 16.0, 16.0, 9.6, 0.8)
+    chev = []
+    for i, (x, y) in enumerate(((3.0, 24.0), (6.6, 20.4), (10.2, 16.8))):
+        m = mask()
+        poly(m, [(x, y + 3.6), (x + 3.4, y + 0.2), (x + 6.8, y + 3.6), (x + 3.4, y + 1.8)])
+        chev.append((m, 0.62 - 0.3 * i))
+    flash = mask()
+    star(flash, 16.0, 16.0, 5.0, 0.2, 45)
+    layers_ = [layer(rring, mix(A, WHITE, 0.3), A, None, mix(A, (0, 0, 0), 0.4))]
+    for m, fade in chev:
+        layers_.append(layer(m, mix(WHITE, RUNE_NIGHT, fade), mix(A, RUNE_NIGHT, fade), None, mix(A, (0, 0, 0), 0.4)))
+    subject = stack(*layers_, layer(xb, mix(A, WHITE, 0.35), A, None, mix(A, (0, 0, 0), 0.35)), layer(xa, WHITE, mix(B, WHITE, 0.3)), layer(flash, WHITE, B))
+    return finish(subject, [glow(lighter(xb, flash), A, 1.8, 1.0), glow(xa, B, 1.0, 0.7)], arcane_back(A, B))
 
 
-def runeknight_anvil(A, B):
-    # 룬 모루: 땅을 가르며 다가온 쇳물빛 금 (왼쪽 아래 → 모루 밑) · 갈라진 땅에서 솟은 룬 모루 (허리의 금빛 룬 · 달아오른 윗면 테) · 모루 둘레의 흰 열 금 · 터지기 직전 위의 불티 별
-    gnd = ground(24.0)
+def arcaneblade_tempest(A, B):
+    # 아케인 템페스트: 하늘로 세운 칼 둘레를 휘감아 오르는 초승달 검기 셋 (아래가 크고 위가 작음 — 회오리) · 발밑 룬 고리 · 칼끝의 반짝임
+    gnd = mask()
+    oval(gnd, 16.0, 27.4, 12.6, 3.4, 1.0)
+    swirl = mask()
+    ribbon(swirl, 16.0, 21.6, 13.6, 4.6, 20, 200, 2.6, 0.4)
+    ribbon(swirl, 16.0, 13.6, 9.6, 3.4, 200, 380, 2.0, 0.3)
+    ribbon(swirl, 16.0, 7.4, 6.0, 2.2, 20, 200, 1.4, 0.3)
+    back = mask()
+    ribbon(back, 16.0, 21.6, 13.6, 4.6, 200, 340, 0.4, 1.0)
+    ribbon(back, 16.0, 13.6, 9.6, 3.4, 20, 160, 0.3, 0.8)
+    sw = rune_sword((16.0, 2.4), (16.0, 26.0), A, B, blade=3.0, guard=7.0)
+    flash = mask()
+    star(flash, 16.0, 3.0, 3.4, 0.2, 0)
+    subject = stack(layer(gnd, mix(A, WHITE, 0.3), A, None, mix(A, (0, 0, 0), 0.4)), layer(back, mix(A, WHITE, 0.2), mix(A, RUNE_NIGHT, 0.45)), *sw,
+                    layer(swirl, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.3)), layer(flash, WHITE, B))
+    return finish(subject, [glow(lighter(swirl, flash), A, 1.8, 1.0), glow(gnd, A, 1.2, 0.6)], arcane_back(A, B))
+
+
+def arcaneblade_overdrive(A, B):
+    # 스펠 오버드라이브: 커다랗게 빛나는 마력 칼 (비스듬히 — 칼끝 오른쪽 위) · 칼날을 감싼 넘치는 빛 · 칼날을 따라 오르는 빛줄기 · 손잡이 곁의 룬 글자 · 칼끝 반짝임
+    aura = mask()
+    tapered(aura, [(9.0, 23.4), (17.4, 14.0), (28.4, 2.2)], 6.4, 1.6)
+    streaks = mask()
+    for off, (a, b) in ((-3.0, (0.25, 0.7)), (3.0, (0.35, 0.85)), (-1.6, (0.6, 0.95))):
+        x0, y0 = 6.6 + (27.4 - 6.6) * a, 26.0 + (3.2 - 26.0) * a
+        x1, y1 = 6.6 + (27.4 - 6.6) * b, 26.0 + (3.2 - 26.0) * b
+        line(streaks, [(x0 + off * 0.74, y0 + off * 0.67), (x1 + off * 0.74, y1 + off * 0.67)], 0.5)
+    sw = rune_sword((27.0, 3.6), (5.4, 27.6), A, B, blade=3.4, guard=8.0)
+    rune = mask()
+    glyph(rune, 1, 23.0, 23.0, 6.0, 7.6, 1.1)
+    flash = mask()
+    star(flash, 27.0, 3.8, 3.6, 0.2, 10)
+    subject = stack(layer(aura, mix(A, RUNE_NIGHT, 0.2), mix(A, RUNE_NIGHT, 0.55)), layer(streaks, WHITE, mix(B, WHITE, 0.3)), *sw, layer(rune, WHITE, B),
+                    layer(flash, WHITE, B))
+    return finish(subject, [glow(lighter(aura, flash), A, 2.2, 1.0), glow(lighter(streaks, rune), B, 1.0, 0.8)], arcane_back(A, B))
+
+
+def arcaneblade_ult(A, B):
+    # 월드 클리버: 하늘에서 내리꽂힌 거대한 마력 대검 (넓은 날 · 넓은 코등이 — 칼끝이 땅에) · 칼끝에서 좌우로 갈라진 땅 · 갈라진 땅을 따라 솟구치는 세로 검기 둘 · 칼끝 번쩍임
+    gnd = ground(24.6)
     crack = mask()
-    tapered(crack, [(2.0, 31.6), (5.6, 29.0), (8.2, 29.6), (11.4, 26.6), (13.6, 25.0)], 3.2, 1.2)
-    lava = mask()
-    tapered(lava, [(2.6, 31.4), (5.8, 29.2), (8.4, 29.4), (11.6, 26.8), (13.6, 25.2)], 1.4, 0.5)
-    anv = anvil_mask(16.6, 8.6, 1.0)
-    rune = mask()
-    glyph(rune, 0, 16.6, 19.0, 3.4, 5.0, 1.0)
-    top = mask()
-    line(top, [(5.0, 10.0), (9.0, 8.7), (28.0, 8.7)], 0.8)
-    hot = mask()
-    line(hot, [(13.4, 13.2), (12.6, 16.2), (13.8, 19.4)], 0.6)
-    line(hot, [(20.4, 13.6), (21.4, 17.0), (20.2, 20.6)], 0.6)
-    sp = mask()
-    star(sp, 22.0, 4.2, 3.6, 0.2, 10)
-    star(sp, 9.0, 4.0, 2.0, 0.24, 0)
-    pool = mask()
-    poly(pool, [(16.6 + math.cos(math.radians(a)) * 10.6, 24.8 + math.sin(math.radians(a)) * 2.0) for a in range(0, 361, 10)])
-    subject = stack(ground_layer(gnd, MOLT), molten_layer(pool), layer(crack, (34, 12, 6), (10, 4, 2)), layer(lava, MOLT_HI, MOLT), iron_layer(anv, A),
-                    layer(top, MOLT_HI, MOLT), layer(hot, MOLT_HI, MOLT), layer(rune, mix(B, WHITE, 0.5), B, WHITE, mix(B, (0, 0, 0), 0.4)), layer(sp, WHITE, MOLT_HI))
-    return finish(subject, [glow(lighter(rune, sp), B, 1.8, 1.0), glow(lighter(lava, pool, top, hot), MOLT, 1.6, 0.9)], forge_back(A, B))
-
-
-def runeknight_bellows(A, B):
-    # 풀무 숨: 왼쪽에서 곧게 겨눈 룬 대검 (날의 금빛 룬 셋) · 칼끝에서 오른쪽으로 부채꼴로 뿜어지는 불길 (겹친 불 혀 — 끝이 넓어짐) · 칼 뒤의 보랏빛 보호막 호
-    cone = mask()
-    poly(cone, [(15.0, 14.4), (31.0, 3.0), (31.0, 28.0)])
-    tongues = mask()
-    for pts, w0 in (([(15.6, 14.4), (21.0, 9.6), (27.0, 6.6), (30.6, 5.6)], 3.0), ([(15.6, 14.6), (22.0, 14.0), (28.0, 13.6), (31.0, 14.6)], 3.6),
-                    ([(15.6, 14.8), (21.0, 19.4), (26.6, 22.6), (30.4, 25.6)], 3.0)):
-        tapered(tongues, pts, w0 * 0.4, w0 * 1.6)
-    core = mask()
-    tapered(core, [(15.6, 14.6), (20.6, 14.2), (25.0, 14.0)], 0.6, 2.6)
-    sw = rune_sword((15.6, 14.6), (1.4, 22.0), A, B, blade=3.0, guard=6.6)
-    runes = mask()
-    for i, (x, y) in enumerate(((11.8, 16.6), (8.6, 18.2))):
-        glyph(runes, i + 1, x, y, 1.8, 2.4, 0.5, ang=-28)
-    shield = mask()
-    crescent(shield, 9.0, 18.0, 9.6, 1.6, 120, 250)
-    sparks = mask()
-    for x, y, r in ((24.0, 4.0, 1.4), (29.0, 18.6, 1.0), (26.6, 27.4, 1.2)):
-        star(sparks, x, y, r * 1.8, 0.24, 15)
-    subject = stack(layer(shield, mix(A, WHITE, 0.4), A, None, mix(A, (0, 0, 0), 0.3)), layer(cone, mix(MOLT, (0, 0, 0), 0.25), mix(MOLT, (0, 0, 0), 0.55)),
-                    layer(tongues, MOLT_HI, MOLT, WHITE, mix(MOLT, (0, 0, 0), 0.3), axis=(1, 0)), layer(core, WHITE, MOLT_HI), *sw, layer(runes, WHITE, B),
-                    layer(sparks, WHITE, MOLT_HI))
-    return finish(subject, [glow(lighter(tongues, core), MOLT, 2.0, 1.0), glow(shield, A, 1.4, 0.7), glow(runes, B, 1.0, 0.8)], forge_back(A, B))
-
-
-def runeknight_furnace(A, B):
-    # 용광로: 땅의 룬 원 (금빛 테 · 룬 점) 안의 끓는 쇳물 웅덩이 · 가운데에서 하늘로 솟구치는 쇳물 기둥 (위가 넓은 왕관 · 흰 열 심) · 튀어 오른 쇳물 방울
-    pool = mask()
-    poly(pool, [(16.0 + math.cos(math.radians(a)) * 12.6, 25.0 + math.sin(math.radians(a)) * 4.2) for a in range(0, 361, 8)])
-    rim = mask()
-    oval(rim, 16.0, 25.0, 13.8, 4.8, 1.2)
-    dots = mask()
-    for i in range(10):
-        a = math.radians(i * 36 + 18)
-        disc(dots, 16.0 + math.cos(a) * 13.1, 25.0 + math.sin(a) * 4.5, 0.55)
-    col = mask()
-    poly(col, [(13.0, 25.6), (14.2, 14.0), (12.4, 7.6), (9.6, 4.0), (13.0, 5.4), (14.6, 2.4), (16.0, 4.6), (17.4, 2.4), (19.0, 5.4), (22.4, 4.0),
-               (19.6, 7.6), (17.8, 14.0), (19.0, 25.6)])
-    heart = mask()
-    tapered(heart, [(16.0, 25.0), (16.0, 16.0), (16.0, 7.0)], 2.4, 0.8)
-    drops = mask()
-    for x, y, r in ((7.0, 9.0, 1.2), (25.4, 8.4, 1.3), (5.0, 16.4, 0.9), (27.4, 15.0, 1.0), (10.6, 2.6, 0.8), (21.8, 1.8, 0.8)):
-        drop(drops, x, y, r, ang=-90 if y < 10 else 100)
-    plates = mask()
-    for x0, x1, y in ((6.0, 10.4, 25.6), (21.6, 26.0, 25.0), (9.4, 12.0, 23.2)):
-        line(plates, [(x0, y), (x1, y + 0.4)], 1.1)
-    subject = stack(molten_layer(pool), layer(plates, mix(MOLT, (0, 0, 0), 0.6), mix(MOLT, (0, 0, 0), 0.75)), layer(rim, mix(B, WHITE, 0.4), B, WHITE, mix(B, (0, 0, 0), 0.4)),
-                    layer(dots, WHITE, B), layer(col, MOLT_HI, MOLT, WHITE, mix(MOLT, (0, 0, 0), 0.3), axis=(0, -1)), layer(heart, WHITE, MOLT_HI), molten_layer(drops))
-    return finish(subject, [glow(lighter(col, heart, drops), MOLT, 2.2, 1.0), glow(lighter(rim, dots), B, 1.4, 0.8)], forge_back(A, B))
-
-
-def runeknight_temper(A, B):
-    # 담금질: 가로로 누운 달군 대검 (날이 쇳물빛 → 흰 열 — 칼끝 쪽이 더 뜨거움) · 오른쪽 위에서 칼날을 내려치는 룬 망치 (금빛 머리 · 룬) · 맞은 자리의 불티 별 · 위로 솟는 김
-    parts = {"blade": mask(), "guard": mask(), "grip": mask()}
-    from job_skill_icons import sword
-    sword(None, (30.0, 21.4), (2.0, 21.4), 4.6, 9.0, parts=parts)
-    blade = layer(parts["blade"], WHITE, MOLT, MOLT_HI, mix(MOLT, (0, 0, 0), 0.35), axis=(1, 0))
-    guard = layer(parts["guard"], mix(A, WHITE, 0.35), A, WHITE, mix(A, (0, 0, 0), 0.45))
-    grip = layer(parts["grip"], mix(A, (0, 0, 0), 0.5), mix(A, (0, 0, 0), 0.75))
-    # 망치: 칼날 위 맞은 자리로 비스듬히 내려친 큰 쇠망치 (머리 = 기운 네모 · 때리는 면이 밝음) · 오른쪽 위 구석으로 뻗은 자루
-    ang = math.radians(-34)
-    ux, uy = math.cos(ang), math.sin(ang)
-    px, py = -uy, ux
-    hx, hy = 17.4, 12.2
-    head = mask()
-    poly(head, [(hx - ux * 5.2 - px * 3.0, hy - uy * 5.2 - py * 3.0), (hx + ux * 5.2 - px * 3.0, hy + uy * 5.2 - py * 3.0),
-                (hx + ux * 5.2 + px * 3.0, hy + uy * 5.2 + py * 3.0), (hx - ux * 5.2 + px * 3.0, hy - uy * 5.2 + py * 3.0)])
-    face = mask()
-    line(face, [(hx - ux * 5.0 + px * 2.6, hy - uy * 5.0 + py * 2.6), (hx + ux * 5.0 + px * 2.6, hy + uy * 5.0 + py * 2.6)], 0.9)
-    handle = mask()
-    line(handle, [(hx - px * 2.0, hy - py * 2.0), (hx - px * 13.0, hy - py * 13.0)], 1.8)
-    hrune = mask()
-    glyph(hrune, 1, hx, hy - 0.2, 2.6, 3.4, 0.6, ang=-34)
-    hit = mask()
-    star(hit, 15.8, 18.6, 5.4, 0.18, 8)
-    sparks = mask()
-    for x, y in ((8.6, 15.0), (24.6, 16.4), (11.4, 13.0), (5.6, 18.0)):
-        disc(sparks, x, y, 0.6)
-    steam = mask()
-    for x, y, r in ((27.0, 17.0, 2.0), (28.4, 13.6, 1.6), (27.0, 10.6, 1.2)):
-        disc(steam, x, y, r)
-    subject = stack(layer(steam, (244, 246, 250), (196, 200, 212), None, (150, 152, 164)), grip, blade, guard, layer(handle, (130, 90, 54), (70, 44, 24)),
-                    layer(head, mix(B, WHITE, 0.35), B, WHITE, mix(B, (0, 0, 0), 0.55), axis=(0.6, 0.8)), layer(face, WHITE, MOLT_HI),
-                    layer(hrune, WHITE, mix(A, WHITE, 0.3)), layer(hit, WHITE, MOLT_HI), layer(sparks, WHITE, MOLT_HI))
-    return finish(subject, [glow(parts["blade"], MOLT, 2.0, 1.0), glow(lighter(hit, sparks), MOLT_HI, 1.6, 1.0), glow(head, B, 1.2, 0.5)], forge_back(A, B))
-
-
-def ram_horn(m, side, cx, cy, s=1.0):
-    """숫양 뿔 (앞모습 — 머리 위 뿌리에서 바깥 · 뒤 · 아래로 감겨 앞으로 끝남): 게임의 rfx_jram 과 같은 꼴"""
-    pts = []
-    for i in range(31):
-        t = i / 30
-        th = -2.25 + t * 4.5
-        r = (6.4 - 3.8 * t) * s
-        pts.append((cx + side * (r * math.cos(th) + 0.6 * t), cy + r * math.sin(th)))
-    tapered(m, pts, 4.6 * s, 1.2 * s)
-    return pts
-
-
-def runeknight_ult(A, B):
-    # 쇳물 숫양: 앞을 보고 달려드는 쇳물 숫양의 머리 (식은 껍질 · 쇳물 금 · 흰 열 눈 · 이마의 금빛 룬) · 양옆의 큰 나선 뿔 (마디 줄) · 뒤에서 솟는 불길 · 아래의 쇳물 튐
-    flames = mask()
-    for x, h in ((5.0, 9.0), (9.0, 13.0), (23.0, 13.0), (27.0, 9.0), (16.0, 6.0)):
-        tapered(flames, [(x, 31.0), (x + 0.6, 31.0 - h * 0.5), (x - 0.4, 31.0 - h)], 4.0, 0.4)
-    head = mask()
-    poly(head, [(11.6, 8.8), (13.6, 6.6), (18.4, 6.6), (20.4, 8.8), (20.8, 14.0), (19.6, 20.6), (18.0, 25.0), (16.0, 26.2), (14.0, 25.0), (12.4, 20.6),
-                (11.2, 14.0)])
-    horns = mask()
-    hl = ram_horn(horns, -1, 9.2, 12.6, 1.0)
-    hr = ram_horn(horns, 1, 22.8, 12.6, 1.0)
-    ridges = mask()
-    for pts in (hl, hr):
-        for q in range(4, 27, 5):
-            (x0, y0), (x1, y1) = pts[q - 1], pts[q + 1]
-            L = math.hypot(x1 - x0, y1 - y0) or 1
-            nx, ny = -(y1 - y0) / L, (x1 - x0) / L
-            w = (4.6 - 3.4 * q / 30) * 0.5
-            line(ridges, [(pts[q][0] - nx * w, pts[q][1] - ny * w), (pts[q][0] + nx * w, pts[q][1] + ny * w)], 0.35)
-    veins = mask()
-    line(veins, [(13.0, 10.0), (14.4, 13.4), (13.2, 17.0)], 0.5)
-    line(veins, [(19.0, 10.4), (17.8, 14.0), (18.8, 17.6)], 0.5)
-    line(veins, [(16.0, 19.6), (15.2, 22.6)], 0.5)
-    eyes = mask()
-    for sd in (-1, 1):
-        poly(eyes, [(16.0 + sd * 4.4, 13.6), (16.0 + sd * 1.4, 14.8), (16.0 + sd * 3.6, 15.4)])
-    rune = mask()
-    glyph(rune, 0, 16.0, 10.0, 2.4, 3.2, 0.6)
-    nose = mask()
-    for sd in (-1, 1):
-        disc(nose, 16.0 + sd * 1.3, 23.4, 0.55)
-    splash = mask()
-    for x, y, r in ((6.0, 27.0, 1.0), (26.0, 27.6, 1.1), (10.6, 29.6, 0.8), (21.6, 29.8, 0.8)):
-        drop(splash, x, y, r, ang=-100 if x < 16 else -80)
-    crust = mix(MOLT, (60, 20, 10), 0.72)
-    subject = stack(layer(flames, MOLT_HI, MOLT, None, mix(MOLT, (0, 0, 0), 0.3), axis=(0, -1)), layer(horns, mix(MOLT, WHITE, 0.25), mix(crust, MOLT, 0.35),
-                    MOLT_HI, mix(crust, (0, 0, 0), 0.5), axis=(0.5, 0.8)), layer(ridges, MOLT_HI, MOLT), layer(head, mix(crust, MOLT, 0.45), crust, MOLT,
-                    mix(crust, (0, 0, 0), 0.5), axis=(0.4, 0.9)), layer(veins, MOLT_HI, MOLT), layer(eyes, WHITE, MOLT_HI), layer(rune, WHITE, B),
-                    layer(nose, MOLT_HI, MOLT), molten_layer(splash))
-    return finish(subject, [glow(lighter(flames, veins, eyes, ridges), MOLT, 2.0, 1.0), glow(rune, B, 1.0, 0.9)], forge_back(A, B))
+    tapered(crack, [(16.0, 25.0), (11.0, 26.6), (6.4, 26.0), (1.2, 27.6)], 2.0, 0.6)
+    tapered(crack, [(16.0, 25.0), (21.0, 26.4), (25.6, 25.8), (30.8, 27.2)], 2.0, 0.6)
+    pillars = mask()
+    crescent(pillars, 0.6, 17.0, 8.6, 2.6, -62, 62)
+    crescent(pillars, 31.4, 17.0, 8.6, 2.6, 118, 242)
+    sw = rune_sword((16.0, 25.2), (16.0, -1.0), A, B, blade=6.4, guard=12.6)
+    flash = mask()
+    star(flash, 16.0, 25.0, 5.6, 0.18, 0)
+    subject = stack(ground_layer(gnd, A), layer(crack, WHITE, B), layer(pillars, mix(A, WHITE, 0.4), A, WHITE, mix(A, (0, 0, 0), 0.3)), *sw,
+                    layer(flash, WHITE, B))
+    return finish(subject, [glow(lighter(crack, flash), B, 1.6, 1.0), glow(pillars, A, 1.8, 0.9)], arcane_back(A, B))
 
 
 # ------------------------------------------------------------ 소드 콜러 (빛: 청록 → 흰 청록 — 칼이 손을 떠나 스스로 싸움 · 재설계안 2판)
@@ -1950,11 +1859,11 @@ ICONS = {
     "gladiator_eight": gladiator_eight,
     "gladiator_fury": gladiator_fury,
     "gladiator_ult": gladiator_ult,
-    "runeknight_anvil": runeknight_anvil,
-    "runeknight_bellows": runeknight_bellows,
-    "runeknight_furnace": runeknight_furnace,
-    "runeknight_temper": runeknight_temper,
-    "runeknight_ult": runeknight_ult,
+    "arcaneblade_crescent": arcaneblade_crescent,
+    "arcaneblade_cross": arcaneblade_cross,
+    "arcaneblade_tempest": arcaneblade_tempest,
+    "arcaneblade_overdrive": arcaneblade_overdrive,
+    "arcaneblade_ult": arcaneblade_ult,
     "swordcaller_strike": swordcaller_strike,
     "swordcaller_shift": swordcaller_shift,
     "swordcaller_orbit": swordcaller_orbit,

@@ -201,15 +201,16 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
 
     /**
-     * 0.51.0 재설계안 2판 룬 스미스: 룬 모루 (4 내려찍음 → 갈라짐 · 모루 → 16 터짐) · 풀무 숨 (4 · 14 · 24 숨) · 용광로 (달궈 둔 과녁 — 16 쇳물 기둥 · 식으며 깨짐) ·
-     * 담금질 (3 · 7 · 11 망치 → 14 김 — 뒤 평타의 쇳조각이 1초 뒤 터짐까지) · 쇳물 숫양 (6 솟음 → 10 달려옴 → 22 맞댐 → 30 받아침 → 물결)
+     * 0.51.0 아케인 블레이드 (룬 스미스 대신): 크레센트 엣지 (0 ~ 6 감음 → 6 가로 검기 · 7 맞음 → 16 세로 검기 · 17 맞음) · 팬텀 크로스 (0 순간 이동 → 1 X 새김 →
+     * 12 X 검기로 터짐) · 아케인 템페스트 (0 ~ 8 머리 위로 돌려 모음 → 8 한 바퀴 → 폭풍 → 20 터짐) · 스펠 오버드라이브 (9 켜짐 — 각인 다섯 찬 과녁에 뒤 평타: 검기 ·
+     * 거대한 마력 대검) · 월드 클리버 (0 ~ 21 하늘을 찌르는 대검으로 자라남 → 21 내려쳐 가름 → 30 ~ 갈라진 땅이 솟구침)
      */
-    private static final Case[] CASES_RK = {
-        new Case(0, new int[] {2, 4, 6, 10, 16, 18}, new int[] {5, 16}, 28, false),
-        new Case(1, new int[] {3, 4, 9, 14, 24, 30}, new int[] {4, 14, 24}, 36, false),
-        new Case(2, new int[] {2, 6, 10, 14, 16, 18}, new int[] {10, 16}, 30, false),
-        new Case(3, new int[] {3, 7, 11, 14}, new int[] {7, 14}, 24, true, false, 22),
-        new Case(4, new int[] {4, 8, 14, 20, 23, 27, 30, 33, 38}, new int[] {14, 23, 31}, 50, false),
+    private static final Case[] CASES_AB = {
+        new Case(0, new int[] {2, 5, 6, 7, 9, 14, 16, 17, 19}, new int[] {5, 7, 17}, 28, false),
+        new Case(1, new int[] {1, 2, 4, 9, 12, 13, 15}, new int[] {2, 12}, 22, false),
+        new Case(2, new int[] {3, 7, 8, 9, 13, 18, 20, 21, 24}, new int[] {7, 9, 20}, 32, false),
+        new Case(3, new int[] {3, 7, 9, 11}, new int[] {9}, 16, true, false, 12),
+        new Case(4, new int[] {4, 10, 16, 19, 21, 22, 24, 28, 31, 33, 38}, new int[] {12, 21, 31}, 48, false),
     };
     /**
      * 0.51.0 재설계안 2판 소드 콜러: 베어라 (2 칼이 떠남 → 3 · 13 맴돌며 벰 → 22 꽂힘) · 데려가라 (꽂아 둔 칼로 날아감 — 지나가며 벰) · 꿰뚫고 맴돌아라 (3 꿰뚫음 →
@@ -561,11 +562,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
             List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 3.2, 0.5, -60, 3.2).inflate(0.8), h -> true);
             if (!near.isEmpty()) mmorpg.fabric.job.JobTraits6.setDuel(sp, near.get(0), 6, false);
         }
-        // 0.51.0 재설계안 2판 룬 스미스: 용광로는 달궈 둔 과녁 (식으며 깨짐 — 김 · 깨지는 껍질 · 기절) / 소드 콜러: 데려가라는 앞 7칸에 꽂아 둔 칼 (그리로 날아감)
-        if (id.equals("runeknight_furnace")) {
-            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) {
-                mmorpg.fabric.job.JobTraits7.setHeat(sp, h, 200);
-            }
+        // 0.51.0 아케인 블레이드: 오버드라이브는 각인 다섯이 찬 과녁 (뒤 평타 — 검기 · 하늘에서 거대한 마력 대검) / 소드 콜러: 데려가라는 앞 7칸에 꽂아 둔 칼 (그리로 날아감)
+        if (id.equals("arcaneblade_overdrive")) {
+            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits.setMarks(sp, h, 5);
         }
         if (id.equals("swordcaller_shift")) mmorpg.fabric.job.JobTraits7.testStuck(sp, new Vec3(0.5, -60, 7.5), 200);
         // 0.51.0 아크메이지: 마탄은 노래 태세 (스킬 뒤 별똥) · 쌍둥이 별은 연쇄 4 + 별 넷 (다섯째 별이 떠 별자리 완성)
@@ -623,7 +622,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
-        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"runeknight", "swordcaller"}, {"arcmage", "necromancer"},
+        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"arcaneblade", "swordcaller"}, {"arcmage", "necromancer"},
         {"sniper", "shadowhunter"}, {"trickster", "bladedancer"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
@@ -648,7 +647,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "bloodknight" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "warlord" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
                         case "gladiator" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 10, sp -> {});
-                        case "runeknight", "swordcaller" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
+                        case "arcaneblade", "swordcaller" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "arcmage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 5, sp -> JobTraitsMore.setChain(sp, 2));
                         case "necromancer" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 4, sp -> {});
                         case "sniper" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 8, sp -> JobTraitsMore.setBreath(sp, 5));
@@ -681,7 +680,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "bloodknight" -> CASES_BK;
             case "warlord" -> CASES_WL;
             case "gladiator" -> CASES_GL;
-            case "runeknight" -> CASES_RK;
+            case "arcaneblade" -> CASES_AB;
             case "swordcaller" -> CASES_SC;
             case "arcmage" -> CASES_AM;
             case "necromancer" -> CASES_NC;

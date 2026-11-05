@@ -65,7 +65,7 @@ public final class JobTrainer {
             Map.entry("mage", "§9"), Map.entry("archer", "§a"), Map.entry("assassin", "§5"), Map.entry("lancer", "§6"), Map.entry("reaper", "§3"),
             Map.entry("paladin", "§e"), Map.entry("priest", "§f"), Map.entry("guardian", "§7"),
             // 0.51.0 2차 직업 (없는 것은 1차 직업 색)
-            Map.entry("swordmaster", "§6"), Map.entry("bloodknight", "§4"), Map.entry("warlord", "§6"), Map.entry("gladiator", "§c"), Map.entry("runeknight", "§5"),
+            Map.entry("swordmaster", "§6"), Map.entry("bloodknight", "§4"), Map.entry("warlord", "§6"), Map.entry("gladiator", "§c"), Map.entry("arcaneblade", "§5"),
             Map.entry("swordcaller", "§3"), Map.entry("arcmage", "§9"), Map.entry("necromancer", "§a"),
             Map.entry("sniper", "§a"), Map.entry("shadowhunter", "§9"), Map.entry("trickster", "§d"), Map.entry("bladedancer", "§e"));
     /** 카드 그림 (직업 id → 무기 아이템) */

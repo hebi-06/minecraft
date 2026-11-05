@@ -255,15 +255,16 @@ public final class RpgJobTimingTests {
     }
 
     /**
-     * 0.51.0 2차 직업 — 마검사 각성 뵐룬드(룬 스미스 — 재설계안 2판: 룬 모루는 갈라짐 5 → 모루 터짐 17, 용광로 16 · 쇳물 숫양은 달려와 지나감 21 → 쇳물 물결 31)
+     * 0.51.0 2차 직업 — 마검사 각성 아케인 블레이드 (룬 스미스 대신: 크레센트 엣지는 가로 검기 7 → 세로 검기 17, 팬텀 크로스 1 → 12, 아케인 템페스트 8 → 20 · 월드 클리버는
+     * 내려침 21 → 솟구침 31)
      */
-    @GameTest(environment = "mmorpg:jt_rk", maxTicks = 2400)
-    public void timingRuneknight(GameTestHelper h) {
-        probe(h, "runeknight");
+    @GameTest(environment = "mmorpg:jt_ab", maxTicks = 2400)
+    public void timingArcaneblade(GameTestHelper h) {
+        probe(h, "arcaneblade");
     }
 
     /**
-     * 0.51.0 2차 직업 — 마검사 반전 스키르니르(소드 콜러 — 재설계안 2판: 베어라 3 → 13, 데려가라는 꽂힌 칼이 없어 앞 8칸 · 지나가며 3, 꿰뚫고 맴돌아라 3 → 43 ·
+     * 0.51.0 2차 직업 — 마검사 반전 소드 콜러 (재설계안 2판: 베어라 3 → 13, 데려가라는 꽂힌 칼이 없어 앞 8칸 · 지나가며 3, 꿰뚫고 맴돌아라 3 → 43 ·
      * 칼날 감옥 10 → 70)
      */
     @GameTest(environment = "mmorpg:jt_sc", maxTicks = 2400)

@@ -25,12 +25,13 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 마검사 각성 룬 스미스 · 반전 소드 콜러 특성 · 태세 (재설계안 2판 — claude/job-advance-redo.md):
+ * 0.51.0 2차 직업 — 마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신 — 이명에 맞춘 대장장이 컨셉을 버림) · 반전 소드 콜러 특성 · 태세 (재설계안 2판 —
+ * claude/job-advance-redo.md):
  * <ul>
- * <li>룬 스미스 「마력 각인」 (쌓고 터지는 것은 마검사와 같음 — JobTraits.mark · markBonus, 최대 5): 각인이 터지면 둘레 spreadRadius 칸의 다른 적에게 룬 폭발이 번짐
- * (위력 × markBurst × spread · 마법). 달궈짐: 풀무 숨 · 용광로 · 쇳물 숫양에 맞은 적은 heatFor 틱 달궈짐 (빨갛게 달아오른 몸 · 불티) — 달궈진 적이 다른 직업 스킬에
- * 맞으면 식으며 깨짐 (그 피해에 위력 × quench 를 더함 · 큰 숫자 · quenchStun 틱 기절 — 보스는 기절 없음 · 김 · 깨지는 껍질). 담금질 (태세): 칼 평타 · 직업 스킬이
- * 맞힌 적에 달군 쇳조각이 박혀 shardAt 틱 뒤 터짐 (위력 × shard · 마법 — 적마다 shardGap 틱에 하나). 쇳조각 · 번진 룬은 식히지 않고 쇳조각을 박지 않음</li>
+ * <li>아케인 블레이드 「마력 각인」 (쌓고 터지는 것은 마검사와 같음 — JobTraits.mark · markBonus, 최대 5): 각인이 터지면 둘레 spreadRadius 칸의 다른 적에게 마력
+ * 폭발이 번짐 (위력 × markBurst × spread × 터진 수 · 마법). 다섯이 찬 적을 칼 평타로 치면 다섯이 한꺼번에 터짐 — 하늘에서 거대한 마력 대검이 내리꽂힘
+ * ({@link #giantSword}). 스펠 오버드라이브 (태세): 칼 평타를 휘두를 때마다 마력 검기가 앞으로 날아가 길 위의 적을 벰 (위력 × line · 마법 — 평타로 맞힌 적은 평타에
+ * 더한 몫 위력 × wave · 따로 숫자)</li>
  * <li>소드 콜러 「스스로 싸우는 칼」 (1차와 거꾸로 — 내가 베는 광역 → 칼이 스스로 베는 한 적): 칼 평타를 휘두르면 마력 칼이 어깨에서 날아가 겨눈 적 (range 칸 · 둘로
  * 나뉘어라 동안 + range) 을 대신 벰 — 평타 한 번 그대로 (RpgCombat.areaHit), 둘레 범위 피해는 없음 (SwingArea.single). 가까이 조준해 바닐라 평타로 맞힌 적은 칼이
  * 그 적을 베는 그림만. 같은 적을 이어 벨 때마다 쌓임 (최대 max — lapse 틱 못 베거나 다른 적을 베면 1부터) · 하나당 공격 속도 + per (RpgCombat.attackSpeed).
@@ -40,18 +41,15 @@ import net.minecraft.world.phys.Vec3;
 public final class JobTraits7 {
     private JobTraits7() {}
 
-    static final String RK = "runeknight";
+    static final String AB = "arcaneblade";
     static final String SC = "swordcaller";
-    static final String TEMPER = "runeknight_temper";
+    static final String OVERDRIVE = "arcaneblade_overdrive";
     static final String TWIN = "swordcaller_twin";
-    /** 평타에 더한 몫의 구분 (WeaponBonus.parts) */
+    /** 평타에 더한 몫의 구분 (WeaponBonus.parts) — 둘째 칼 · 오버드라이브 검기 */
     static final String KEY_ECHO = "job_echo";
-
-    /** 쇳물 (주황) · 흰 열 (노란 흰빛) · 깨지는 달군 껍질 (붉은 쇳빛) · 김 (흰 회색) */
-    static final double[] MOLTEN = {1.0, 0.42, 0.06};
-    static final double[] HOT = {1.0, 0.88, 0.5};
-    static final double[] CRUST = {0.86, 0.3, 0.07};
-    static final double[] STEAM = {0.88, 0.9, 0.92};
+    static final String KEY_WAVE = "job_wave";
+    /** 각인 다섯 — 거대한 마력 대검이 떨어지는 틱 */
+    static final int FULL_FALL = 2;
     private static final double[] WHITE = RuneKit.WHITE;
 
     static final class State {
@@ -67,21 +65,11 @@ public final class JobTraits7 {
         String stuckLife;
     }
 
-    /** 달궈진 적 (적 · 끝나는 틱) */
-    record Heat(LivingEntity e, long until) {}
-
     private static final Map<UUID, State> STATES = new HashMap<>();
-    /** 달궈진 적: "쓴 사람|적" */
-    private static final Map<String, Heat> HEAT = new HashMap<>();
-    /** 식히는 중 (JobKit — 피해가 안 들어가면 되돌림) */
-    private static final Map<String, Heat> TAKEN = new HashMap<>();
-    /** 담금질 쇳조각: "쓴 사람|적" → 다음에 박힐 수 있는 틱 */
-    private static final Map<String, Long> SHARD_NEXT = new HashMap<>();
-    /** 쇳조각 · 번진 룬 (특성 피해) 이 들어가는 중: 식히지 않고 쇳조각을 박지 않음 */
-    private static int passive;
 
     static void init() {
         RpgCombat.addScaledBonusHook(JobTraits7::echoBonus);
+        RpgCombat.addScaledBonusHook(JobTraits7::waveBonus);
         RpgCombat.addWeaponHitHook(JobTraits7::onWeaponHit);
         java.util.function.BiConsumer<ServerPlayer, Weapon> sh = RpgCombat.swingHook;
         RpgCombat.swingHook = (sp, w) -> {
@@ -92,13 +80,7 @@ public final class JobTraits7 {
         RpgCombat.attackSpeed = p -> as.applyAsDouble(p) * attackSpeed(p);
         java.util.function.Predicate<ServerPlayer> single = SwingArea.single;
         SwingArea.single = p -> single.test(p) || flyingSword(p);
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-            STATES.clear();
-            HEAT.clear();
-            TAKEN.clear();
-            SHARD_NEXT.clear();
-            passive = 0;
-        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> STATES.clear());
     }
 
     static State of(ServerPlayer sp) {
@@ -114,10 +96,6 @@ public final class JobTraits7 {
         return j == null || j.trait() == null ? fallback : j.trait().def().numOr(key, fallback);
     }
 
-    private static String key(Entity attacker, Entity victim) {
-        return attacker.getUUID() + "|" + victim.getUUID();
-    }
-
     static void reset(ServerPlayer sp) {
         dropStuck(sp, 0.2);
         forget(sp.getUUID());
@@ -126,10 +104,6 @@ public final class JobTraits7 {
 
     static void forget(UUID id) {
         STATES.remove(id);
-        String p = id + "|";
-        HEAT.keySet().removeIf(k -> k.startsWith(p));
-        TAKEN.keySet().removeIf(k -> k.startsWith(p));
-        SHARD_NEXT.keySet().removeIf(k -> k.startsWith(p));
     }
 
     static void lifeEnded(UUID id) {
@@ -140,37 +114,31 @@ public final class JobTraits7 {
             st.stuckAt = null;
             st.stuckUntil = 0;
         }
-        String p = id + "|";
-        HEAT.keySet().removeIf(k -> k.startsWith(p));
-        TAKEN.keySet().removeIf(k -> k.startsWith(p));
     }
 
-    /** 특성 피해 (쇳조각 · 번진 룬): fn 동안 식히지 않고 쇳조각을 박지 않음 */
-    private static double passiveHit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult) {
-        passive++;
-        try {
-            return JobKit.hit(sp, e, j, P, mult, true, false);
-        } finally {
-            passive--;
-        }
-    }
-
-    // ------------------------------------------------------------ 룬 스미스: 각인이 터지면 번짐
+    // ------------------------------------------------------------ 아케인 블레이드: 각인이 터지면 번짐 · 다섯이면 거대한 마력 대검
 
     /**
-     * 각인 n 개가 터짐 (victim 에서): 둘레 spreadRadius 칸의 다른 적에게 룬 폭발이 번짐 (위력 × markBurst × spread × n — 마법). 그림: 터진 자리의 룬 글자 · 둘레로
-     * 퍼지는 룬 고리 · 번진 적마다 작은 글자 터짐 · 쇳물 불티
+     * 각인 n 개가 터짐 (victim 에서): delay 틱 뒤 둘레 spreadRadius 칸의 다른 적에게 마력 폭발이 번짐 (위력 × markBurst × spread × n — 마법). 그림: 둘레로 퍼지는 룬
+     * 고리 · 땅 충격파 · 번진 적마다 X 검흔
      */
-    static void spread(ServerPlayer sp, LivingEntity victim, Jobs.Job j, int n) {
-        if (j == null || !RK.equals(j.id()) || victim == null || n <= 0 || !(victim.level() instanceof ServerLevel level)) return;
+    static void spread(ServerPlayer sp, LivingEntity victim, Jobs.Job j, int n, int delay) {
+        if (j == null || !AB.equals(j.id()) || victim == null || n <= 0) return;
+        if (delay > 0) {
+            String life = RuneKit.lifeToken(sp);
+            RuneKit.later(delay, () -> {
+                if (RuneKit.sameLife(sp, life)) spread(sp, victim, j, n, 0);
+            });
+            return;
+        }
+        if (!(victim.level() instanceof ServerLevel level)) return;
         double r = trait(j, "spreadRadius", 3.0);
         double mult = trait(j, "markBurst", 1.0) * trait(j, "spread", 0.5) * n;
         Vec3 at = Kit.bodyPoint(victim);
         if (RuneKit.fxQuota("jobSpread", 6)) {
-            JobFx.glyph(level, at, 0.6 + Kit.bodyPad(victim) * 0.3, (int) (Kit.rand() * 3), 4, 2, 0.3, false, Opt.empty(), j);
             JobFx.runeRing(level, V.up(victim.position(), 0.12), r * 0.9, j, 8, Kit.rand() * 45, 0.35, Opt.of("alpha", 0.85));
-            SkillFx.shock(level, V.up(victim.position(), 0.1), MOLTEN, r, 0.35);
-            SkillFx.sparks(level, at, MOLTEN, 8, 4.0);
+            SkillFx.shock(level, V.up(victim.position(), 0.1), JobFx.outer(j), r, 0.35);
+            SkillFx.sparks(level, at, JobFx.inner(j), 8, 4.0);
             SkillFx.play(level, "block.amethyst_block.resonate", at, 1.7, 0.6);
         }
         String life = RuneKit.lifeToken(sp);
@@ -178,160 +146,101 @@ public final class JobTraits7 {
         int[] cnt = {0};
         for (LivingEntity e : Kit.around(sp, victim.position(), r, 2.5)) {
             if (e == victim) continue;
-            JobKit.hitLater(sp, e, life, Tasks.now() + 1, () -> {
-                if (passiveHit(sp, e, j, P, mult) > 0 && cnt[0]++ < 6 && e.level() instanceof ServerLevel lv) {
-                    JobFx.glyph(lv, Kit.bodyPoint(e), 0.42 + Kit.bodyPad(e) * 0.25, cnt[0] % 3, 4, 2, 0.28, false, Opt.empty(), j);
-                    SkillFx.sparks(lv, Kit.bodyPoint(e), MOLTEN, 5, 3.0);
+            JobKit.hitLater(sp, e, life, Tasks.now(), () -> {
+                if (JobKit.hit(sp, e, j, P, mult, true, false) > 0 && cnt[0]++ < 6 && e.level() instanceof ServerLevel lv) {
+                    JobFx.cross(lv, Kit.bodyPoint(e), 0.6 + Kit.bodyPad(e) * 0.4, j, 0.25, Opt.empty());
+                    SkillFx.sparks(lv, Kit.bodyPoint(e), JobFx.inner(j), 5, 3.0);
                 }
             });
         }
     }
 
-    // ------------------------------------------------------------ 룬 스미스: 달궈짐 · 식으며 깨짐
-
-    /** 이 적을 달굼 (heatFor 틱 — 다시 달구면 늘어남): 몸이 빨갛게 달아오름 (rfx_jheat 번쩍) · 쇳물 불티 · 지글 */
-    static void heat(ServerPlayer sp, LivingEntity e, Jobs.Job j) {
-        if (j == null || !RK.equals(j.id()) || e == null || e.isRemoved() || !e.isAlive()) return;
-        Heat old = HEAT.put(key(sp, e), new Heat(e, Tasks.now() + (long) trait(j, "heatFor", 100)));
-        if (!(e.level() instanceof ServerLevel level) || !RuneKit.fxQuota("jobHeat", 8)) return;
-        Vec3 b = Kit.bodyPoint(e);
-        double s = 0.55 + Kit.bodyPad(e) * 0.6;
-        JobFx.heat(level, b, s * 1.15, 0, 2, 0.22, false, Opt.of("vel", RuneKit.entVel(e)));
-        RuneKit.later(4, () -> {
-            if (!e.isRemoved() && e.level() instanceof ServerLevel lv) JobFx.heat(lv, Kit.bodyPoint(e), s, 1, 4, 0.5, true, Opt.of("vel", RuneKit.entVel(e), "alpha", 0.9));
-        });
-        SkillFx.sparks(level, b, MOLTEN, 8, 3.2);
-        SkillFx.fx(level, "rpg:ember", V.up(e.position(), 0.3), Opt.of("size", 1.0 + Kit.bodyPad(e), "life", 0.7, "speed", 1.4, "color", MOLTEN, "alpha", 0.9));
-        if (old == null || old.until() <= Tasks.now()) SkillFx.play(level, "block.lava.pop", b, 0.8, 0.7);
-    }
-
-    /** 달궈져 있는지 */
-    static boolean heated(ServerPlayer sp, Entity e) {
-        Heat h = e == null ? null : HEAT.get(key(sp, e));
-        return h != null && h.until() > Tasks.now();
-    }
-
     /**
-     * 직업 스킬 피해 (JobKit.hit · hitSplit 의 앞): 달궈진 적이면 식힘 — 그 피해에 더할 위력의 몫 (trait.quench — 위력 × quench). 아니면 0. 쇳조각 · 번진 룬 (특성 피해) 은 식히지 않음.
-     * 피해가 들어가면 quenchLanded, 안 들어가면 quenchMissed (다시 달궈진 채로)
+     * 각인 다섯이 한꺼번에 터짐 (평타 — JobTraits.onWeaponHit, 롤 가렌 R): 적 머리 위 7칸에서 거대한 마력 대검이 칼끝부터 내리꽂힘 (FULL_FALL 틱) → 꽂히는 순간 X 큰
+     * 검기 · 터짐 · 룬 고리 · 충격 고리 · 돌 · 맞은 자리 큰 타격 (멈칫). 피해는 평타에 더한 몫 (JobTraits.markBonus — 위력 × markBurst × 다섯 · 큰 숫자), 둘레로 번지는
+     * 것은 꽂히는 틱에 (spread)
      */
-    static double quenchTake(ServerPlayer sp, LivingEntity e, Jobs.Job j) {
-        if (passive > 0 || j == null || !RK.equals(j.id()) || e == null || !heated(sp, e)) return 0;
-        String k = key(sp, e);
-        TAKEN.put(k, HEAT.remove(k));
-        return trait(j, "quench", 0.8);
-    }
-
-    static void quenchMissed(ServerPlayer sp, LivingEntity e) {
-        Heat h = TAKEN.remove(key(sp, e));
-        if (h != null) HEAT.put(key(sp, e), h);
-    }
-
-    /** 식힌 피해가 들어감: 짧은 기절 (보스는 없음) · 김이 솟고 껍질이 깨짐 · 쉬익 */
-    static void quenchLanded(ServerPlayer sp, LivingEntity e, Jobs.Job j) {
-        TAKEN.remove(key(sp, e));
-        if (e.isRemoved()) return;
-        if (!JobKit.isBoss(e)) RuneKit.stun(e, (int) trait(j, "quenchStun", 10), HOT, true);
-        if (e.level() instanceof ServerLevel level && RuneKit.fxQuota("jobQuench", 6)) quenchFx(level, e, j);
-    }
-
-    /**
-     * 식으며 깨짐: 몸에서 김 셋이 솟구침 · 달아오른 껍질이 깨져 튐 (rfx_jshatter — 붉은 쇳빛 · 흰 열 테. 영상 1 뒤: 숯빛 조각은 하늘 앞에서 검은 별표로 보였음) · 흰 불티 ·
-     * 큰 쉬익 · 쇠 깨지는 소리
-     */
-    static void quenchFx(ServerLevel level, LivingEntity e, Jobs.Job j) {
-        Vec3 b = Kit.bodyPoint(e);
-        double s = 0.6 + Kit.bodyPad(e) * 0.5;
-        for (int i = 0; i < 3; i++) {
-            Vec3 p = V.add(V.up(b, 0.1 + 0.25 * i), new Vec3(Kit.rand() - 0.5, 0, Kit.rand() - 0.5), 0.5);
-            JobFx.smoke(level, p, s * (0.8 + 0.25 * i), STEAM, WHITE, 0.75 + 0.1 * i, Opt.of("vel", new Vec3((Kit.rand() - 0.5) * 0.6, 1.6 + 0.4 * i, (Kit.rand() - 0.5) * 0.6),
-                    "alpha", 0.75));
-        }
-        JobFx.shatter(level, b, s * 1.05, CRUST, HOT, 0.4, Opt.of("vel", RuneKit.entVel(e)));
-        JobFx.heat(level, b, s * 1.25, 5, 1, 0.35, false, Opt.of("vel", RuneKit.entVel(e)));
-        SkillFx.sparks(level, b, HOT, 12, 5.0);
-        SkillFx.sparks(level, b, MOLTEN, 8, 3.5);
-        SkillFx.play(level, "block.lava.extinguish", b, 1.0, 0.9);
-        SkillFx.play(level, "random.fizz", b, 0.7, 0.7);
-        SkillFx.play(level, "random.anvil_land", b, 1.7, 0.35);
-    }
-
-    /** 시험용: 달굼 (스킬을 쓰지 않고) */
-    public static void setHeat(ServerPlayer sp, LivingEntity e, int ticks) {
-        HEAT.put(key(sp, e), new Heat(e, Tasks.now() + ticks));
-    }
-
-    /** 시험용: 달궈져 있는지 */
-    public static boolean heatedOf(ServerPlayer sp, Entity e) {
-        return heated(sp, e);
-    }
-
-    // ------------------------------------------------------------ 룬 스미스: 담금질 쇳조각
-
-    /**
-     * 담금질 동안 맞힌 적에 달군 쇳조각이 박힘 (적마다 shardGap 틱에 하나): 맞은 쪽 몸에 꽂힌 빛나는 쇳조각 (점점 달아오름) → shardAt 틱 뒤 터짐 (위력 × shard · 마법 —
-     * 무적 시간이면 끝난 뒤로 미룸) — 작은 쇳물 터짐 · 불티 · 소리
-     */
-    static void embedShard(ServerPlayer sp, LivingEntity e, Jobs.Job j) {
-        if (passive > 0 || e == null || e.isRemoved() || !e.isAlive() || j == null || !RK.equals(j.id()) || !JobTraits.stanceOn(sp, TEMPER)) return;
-        Jobs.Skill k = j.skill(TEMPER);
-        if (k == null || !(e.level() instanceof ServerLevel level)) return;
-        long now = Tasks.now();
-        String key = key(sp, e);
-        Long next = SHARD_NEXT.get(key);
-        if (next != null && next > now) return;
-        SHARD_NEXT.put(key, now + (long) k.num("shardGap", 10));
-        double mult = JobUpgrades.num(sp, k, "shard", 0.45);
-        int at = Math.max(1, (int) k.num("shardAt", 20));
+    static void giantSword(ServerPlayer sp, LivingEntity victim, Jobs.Job j) {
+        if (!(victim.level() instanceof ServerLevel level)) return;
+        Vec3 b = Kit.bodyPoint(victim);
+        Vec3 top = V.up(b, 7.0);
+        JobFx3d.fly(level, "phantom_sword", top, V.up(victim.position(), 0.2), JobFx3d.SWORD_TIP, 2.6, 0.1, 0.4, j, Opt.of("shine", 0.6, "fadeOut", 0.25));
+        JobFx.line(level, top, b, j, 0.2, Opt.of("alpha", 0.6));
+        SkillFx.play(level, "item.trident.thunder", b, 1.6, 0.6);
         String life = RuneKit.lifeToken(sp);
-        double P = JobSystem.power(sp, j);
-        // 박힘: 맞은 쪽 (쓴 사람 쪽) 몸 겉에 비스듬히 꽂힘 — 꽂힌 조각 (rfx_icicle — 쇳물 · 흰 열) 이 at 틱 동안 몸을 따라감
-        Vec3 b = Kit.bodyPoint(e);
-        Vec3 toMe = V.flat(V.sub(sp.position(), e.position()));
-        Vec3 side = V.rightOf(toMe);
-        double off = (Kit.rand() - 0.5) * 0.7;
-        Vec3 skin = V.up(V.add(V.add(b, toMe, Kit.bodyPad(e) * 0.9 + 0.05), side, off * (0.4 + Kit.bodyPad(e))), (Kit.rand() - 0.3) * 0.5);
-        Vec3 into = V.unit(V.add(V.scale(toMe, -1), new Vec3(0, -0.35 + Kit.rand() * 0.3, 0)));
-        if (RuneKit.fxQuota("jobShard", 10)) {
-            RuneKit.rfx2(level, "icicle", V.add(skin, into, -0.2), Opt.of("dir", into, "size", 0.48, "life", at / 20.0, "fade", 0.05, "alpha", 1.0, "vel",
-                    RuneKit.entVel(e)), MOLTEN, HOT);
-            JobFx.two(level, "jimpact", JobImpact.IMPACT, skin, 0.2, Opt.of("size", 0.55, "spin", Kit.rand() * 360, "fade", 0.3, "vel", RuneKit.entVel(e)), MOLTEN, HOT);
-            SkillFx.sparks(level, skin, HOT, 6, 3.0);
-            SkillFx.play(level, "item.trident.hit", skin, 1.8, 0.35);
-            // 터지기 앞 6틱: 조각이 하얗게 달아오름 (흰 열 번쩍)
-            RuneKit.later(Math.max(1, at - 6), () -> {
-                if (!e.isRemoved() && e.level() instanceof ServerLevel lv) RuneKit.rfx2(lv, "icicle", V.add(skin, into, -0.2), Opt.of("dir", into, "size", 0.56, "life",
-                        0.32, "fade", 0.05, "alpha", 1.0, "vel", RuneKit.entVel(e)), HOT, WHITE);
-            });
-        }
-        JobKit.hitLater(sp, e, life, now + at, () -> {
-            if (passiveHit(sp, e, j, P, mult) > 0 && e.level() instanceof ServerLevel lv && RuneKit.fxQuota("jobShardBurst", 8)) shardBurstFx(lv, e);
+        RuneKit.later(FULL_FALL, () -> {
+            if (!RuneKit.sameLife(sp, life) || !(victim.level() instanceof ServerLevel lv)) return;
+            Vec3 at = victim.isRemoved() ? b : Kit.bodyPoint(victim);
+            double s = 1.5 + Kit.bodyPad(victim) * 0.6;
+            Vec3 view = V.unit(V.sub(at, sp.getEyePosition()));
+            JobFx.bigWave(lv, null, at, view, 0, s * 1.4, 45, 0.38, j, Opt.empty());
+            JobFx.bigWave(lv, null, at, view, 0, s * 1.4, -45, 0.38, j, Opt.empty());
+            JobFx.burst(lv, at, s, j, 0.35, Opt.empty());
+            JobFx.runeRing(lv, V.up(victim.position(), 0.1), 3.0, j, 9, Kit.rand() * 40, 0.6, Opt.of("alpha", 0.9));
+            SkillFx.shock(lv, V.up(victim.position(), 0.1), JobFx.outer(j), 3.4, 0.45);
+            RuneKit.rockBurst(lv, V.up(victim.position(), 0.3), 6, 5.0, 0.15);
+            SkillFx.sparks(lv, at, JobFx.inner(j), 18, 7.0);
+            if (!victim.isRemoved()) JobImpact.hit(sp, victim, j, 1.8);
+            SkillFx.play(lv, "random.explode", at, 1.2, 0.6);
+            SkillFx.play(lv, "block.amethyst_block.resonate", at, 0.7, 1.0);
         });
     }
 
-    /** 쇳조각이 터짐: 쇳물 폭발 (rfx_boom) · 타격 섬광 · 튀는 쇳물 방울 · 불티 · 짧은 쾅 (영상 1 뒤 크게 — 작은 불꽃으로만 보였음) */
-    private static void shardBurstFx(ServerLevel level, LivingEntity e) {
-        Vec3 b = Kit.bodyPoint(e);
-        double s = 0.85 + Kit.bodyPad(e) * 0.5;
-        RuneKit.rfx(level, "boom", b, Opt.of("size", s, "life", 0.45, "frames", 8.0, "fps", 18.0, "vel", RuneKit.entVel(e)));
-        JobFx.burst(level, b, s * 1.1, HOT, MOLTEN, 0.28, Opt.of("vel", RuneKit.entVel(e)));
-        JobFx.two(level, "jimpact", JobImpact.IMPACT, b, 0.25, Opt.of("size", s * 1.25, "spin", Kit.rand() * 360, "fade", 0.3, "vel", RuneKit.entVel(e)), MOLTEN, WHITE);
-        for (int i = 0; i < 4; i++) {
-            double a = Kit.rand() * Math.PI * 2;
-            SkillFx.fx(level, "rpg:glob", b, Opt.of("dir", V.unit(new Vec3(Math.cos(a), 1.2 + Kit.rand(), Math.sin(a))), "speed", 4.0 + Kit.rand() * 2, "size", 0.14
-                    + Kit.rand() * 0.08, "life", 0.55, "spin", Kit.rand() * 360, "color", i % 2 == 0 ? HOT : MOLTEN, "alpha", 1.0));
-        }
-        SkillFx.sparks(level, b, HOT, 8, 4.5);
-        SkillFx.play(level, "firework.blast", b, 1.3, 0.5);
-        SkillFx.play(level, "block.anvil.land", b, 1.9, 0.2);
+    // ------------------------------------------------------------ 아케인 블레이드: 스펠 오버드라이브 (태세 — 칼 평타마다 검기)
+
+    /** 오버드라이브: 평타로 맞힌 적에 검기 몫 (위력 × wave — 직업 색 숫자) */
+    private static RpgCombat.Bonus waveBonus(ServerPlayer sp, LivingEntity victim, Weapon w, double dmg) {
+        if (w == null || victim == null || !JobTraits.stanceOn(sp, OVERDRIVE)) return null;
+        Jobs.Job j = jobIf(sp, AB);
+        if (j == null || !j.usesWeapon(w.type())) return null;
+        Jobs.Skill k = j.skill(OVERDRIVE);
+        double wave = k == null ? 0.9 : JobUpgrades.num(sp, k, "wave", 0.9);
+        double add = JobSystem.power(sp, j) * wave * mmorpg.fabric.stattree.StatTrees.atkMult(sp);
+        return new RpgCombat.Bonus(add, "", KEY_WAVE, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 
-    // ------------------------------------------------------------ 직업 스킬 피해가 들어간 뒤 (JobKit)
-
-    /** 직업 스킬 피해가 들어간 뒤: 룬 스미스 담금질 — 쇳조각을 박음 (특성 피해는 빼고) */
-    static void afterJobHit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double dealt) {
-        if (j == null || !RK.equals(j.id()) || !(dealt > 0) || e == null || passive > 0) return;
-        embedShard(sp, e, j);
+    /**
+     * 오버드라이브 동안 칼 평타를 휘두름 (Slash.once — 허공 포함): 1틱 뒤 마력 검기가 칼 높이에서 앞으로 날아감 (waveLen 칸 · waveSpeed 칸/틱 — 휘두를 때마다 기울기가 번갈아)
+     * → 길 위 (폭 waveWidth) 의 다른 적 (이번 휘두르기로 맞은 적 — 조준 · 범위 — 은 빼고: 그 몫은 waveBonus) 을 지나가는 틱에 벰 (위력 × line · 마법)
+     */
+    private static void overdriveSwing(ServerPlayer sp, Jobs.Job j) {
+        Jobs.Skill k = j.skill(OVERDRIVE);
+        if (k == null) return;
+        String life = RuneKit.lifeToken(sp);
+        State st = of(sp);
+        st.left = !st.left;
+        boolean left = st.left;
+        RuneKit.later(1, () -> {
+            if (!RuneKit.sameLife(sp, life) || !JobTraits.stanceOn(sp, OVERDRIVE)) return;
+            ServerLevel level = sp.level();
+            java.util.Set<UUID> swung = SwingArea.swingVictims(sp);
+            Vec3 c = sp.position();
+            Vec3 f = Kit.facingOf(sp);
+            double len = k.num("waveLen", 6.0);
+            double speed = Math.max(0.5, k.num("waveSpeed", 1.5));
+            double half = k.num("waveWidth", 2.0) / 2;
+            double L = Math.min(len, RuneKit.rayLength(level, V.up(c, 1.1), f, len + 0.5));
+            JobFx.bigWave(level, sp, V.up(V.add(c, f, 0.9), 1.15), f, speed * 20, 1.35, left ? 12 : -12, Math.max(0.12, L / speed / 20.0 + 0.08), j, Opt.empty());
+            SkillFx.play(level, "entity.player.attack.sweep", c, 1.3, 0.5);
+            double P = JobSystem.power(sp, j);
+            double mult = JobUpgrades.num(sp, k, "line", 0.45);
+            Vec3 right = V.rightOf(f);
+            for (LivingEntity e : Kit.around(sp, V.add(c, f, L / 2), L / 2 + 1.5, 2.5)) {
+                if (swung.contains(e.getUUID())) continue;
+                Vec3 d = V.sub(e.position(), c);
+                double along = d.x * f.x + d.z * f.z;
+                double side = Math.abs(d.x * right.x + d.z * right.z);
+                double pad = Kit.bodyPad(e);
+                if (along < 0.3 - pad || along > L + 0.4 + pad || side > half + pad) continue;
+                int at = (int) Math.ceil(Math.max(0, along - 0.9) / speed);
+                JobKit.hitLater(sp, e, life, Tasks.now() + at, () -> {
+                    if (JobKit.hit(sp, e, j, P, mult, true, false) > 0 && e.level() instanceof ServerLevel lv && RuneKit.fxQuota("jobOverdrive", 8)) {
+                        JobFx.cross(lv, Kit.bodyPoint(e), 0.7 + Kit.bodyPad(e) * 0.5, j, 0.22, Opt.empty());
+                        JobImpact.fx(sp, e, j, 0.8);
+                    }
+                });
+            }
+        });
     }
 
     // ------------------------------------------------------------ 소드 콜러: 스스로 싸우는 칼
@@ -400,6 +309,11 @@ public final class JobTraits7 {
      * 없으면 칼이 날아가 노린 적을 벰 (닿는 틱에 평타 한 번), 노릴 적이 없으면 칼이 앞으로 날았다 돌아옴
      */
     private static void onSwing(ServerPlayer sp, Weapon w) {
+        Jobs.Job ab = jobIf(sp, AB);
+        if (ab != null && w != null && ab.usesWeapon(w.type()) && JobTraits.stanceOn(sp, OVERDRIVE)) {
+            overdriveSwing(sp, ab);
+            return;
+        }
         Jobs.Job j = jobIf(sp, SC);
         if (j == null || w == null || !j.usesWeapon(w.type())) return;
         String life = RuneKit.lifeToken(sp);
@@ -528,18 +442,11 @@ public final class JobTraits7 {
         return new RpgCombat.Bonus(add, "", KEY_ECHO, DamageNumbers.Style.JOB, null, JobKit.grad(j));
     }
 
-    /**
-     * 무기로 맞힘 (피해가 들어간 뒤): 룬 스미스 — 담금질이면 쇳조각, 소드 콜러 — 같은 적을 이어 벰 (쌓임 +1 · 최대 max, 다른 적이거나 lapse 틱이 지났으면 1)
-     */
+    /** 무기로 맞힘 (피해가 들어간 뒤): 소드 콜러 — 같은 적을 이어 벰 (쌓임 +1 · 최대 max, 다른 적이거나 lapse 틱이 지났으면 1) */
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         if (victim == null || w == null) return;
         Jobs.Job j = JobSystem.job(sp);
-        if (j == null || !j.usesWeapon(w.type())) return;
-        if (RK.equals(j.id())) {
-            embedShard(sp, victim, j);
-            return;
-        }
-        if (!SC.equals(j.id())) return;
+        if (j == null || !j.usesWeapon(w.type()) || !SC.equals(j.id())) return;
         State st = of(sp);
         long now = Tasks.now();
         int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
@@ -614,14 +521,8 @@ public final class JobTraits7 {
 
     // ------------------------------------------------------------ 틱 · 태세
 
-    /**
-     * 4틱마다 (JobTraits.tick): 끝난 달궈짐 · 쇳조각 기록 지우기 · 룬 스미스 — 8틱마다 달궈진 적의 붉은 몸 (rfx_jheat 이어 돌림) · 오르는 불티, 소드 콜러 — 쌓임이
-     * 끊김 (lapse) · 꽂힌 칼이 끝남 (흐려짐) · 꽂혀 있는 동안 8틱마다 빛기둥
-     */
+    /** 4틱마다 (JobTraits.tick): 소드 콜러 — 쌓임이 끊김 (lapse) · 꽂힌 칼이 끝남 (흐려짐) · 꽂혀 있는 동안 8틱마다 빛기둥 */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
-        if (HEAT.size() > 256) HEAT.values().removeIf(h -> h.until() < now || h.e().isRemoved());
-        if (SHARD_NEXT.size() > 256) SHARD_NEXT.values().removeIf(t -> t < now);
-        if (RK.equals(j.id()) && now % 8 == 0) heatTick(sp, now);
         if (!SC.equals(j.id())) return;
         State st = STATES.get(sp.getUUID());
         if (st == null) return;
@@ -634,42 +535,21 @@ public final class JobTraits7 {
         else if (st.stuckAt != null && now % 8 == 0 && RuneKit.sameLife(sp, st.stuckLife)) stuckBeam(sp.level(), st.stuckAt, j);
     }
 
-    /** 이 사람이 달군 적들: 붉게 달아오른 몸 (0.45초 이어 돌림 — 다음 그림과 겹침) · 오르는 불티 (몸에) · 끝난 것은 지움 */
-    private static void heatTick(ServerPlayer sp, long now) {
-        String p = sp.getUUID() + "|";
-        List<String> done = new ArrayList<>();
-        int n = 0;
-        for (Map.Entry<String, Heat> en : HEAT.entrySet()) {
-            if (!en.getKey().startsWith(p)) continue;
-            Heat h = en.getValue();
-            LivingEntity e = h.e();
-            if (h.until() <= now || e.isRemoved() || !e.isAlive()) {
-                done.add(en.getKey());
-                continue;
-            }
-            if (n++ >= 10 || !(e.level() instanceof ServerLevel level)) continue;
-            double s = 0.55 + Kit.bodyPad(e) * 0.6;
-            double left = (h.until() - now) / 20.0;
-            JobFx.heat(level, Kit.bodyPoint(e), s, 1, 4, 0.5, true, Opt.of("vel", RuneKit.entVel(e), "alpha", left < 1 ? 0.55 : 0.85));
-            SkillFx.fx(level, "rpg:arrow_spark", V.up(Kit.bodyPoint(e), 0.3), Opt.of("dir", V.UP, "speed", 1.6, "size", 0.1, "grow", 0.4, "life", 0.5, "color", MOLTEN,
-                    "alpha", 1.0));
-        }
-        for (String k : done) HEAT.remove(k);
-    }
-
     /**
-     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 담금질 = 달군 대검 (손에 든 칼날을 감싸는 붉은 열기 · 흰 열 심지 — 영상 1 뒤: 따로 세운 쇳물 칼 그림은 손 옆에 칼이 하나
-     * 더 떠 있는 것처럼 보였음) · 떨어지는 쇳물 방울 · 오르는 불티 / 둘로 나뉘어라 = 손의 칼에서 흩날리는 청록 빛살. 그렸으면 true
+     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 스펠 오버드라이브 = 손의 칼에서 흘러넘치는 마력 (보라 빛 알갱이가 칼날을 따라 오름 · 칼끝 반짝임 · 발밑에 이따금 룬
+     * 고리) / 제미니 소드 = 손의 칼에서 흩날리는 청록 빛살. 그렸으면 true
      */
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
         ServerLevel level = sp.level();
         RuneKit.Hand h = RuneKit.handOf(sp);
-        if (TEMPER.equals(stance)) {
-            Vec3 blade = V.up(V.add(h.hand(), h.f(), 0.25), 0.45);
-            JobFx.heat(level, V.up(blade, -0.05), 0.5, 1, 4, 0.45, true, Opt.of("alpha", 0.8, "vel", RuneKit.bodyVel(sp)));
-            SkillFx.fx(level, "rpg:arrow_spark", V.up(blade, 0.35), Opt.of("dir", V.UP, "speed", 1.4, "size", 0.12, "grow", 0.6, "life", 0.45, "color", HOT, "alpha", 1.0));
-            if (Kit.rand() < 0.5) SkillFx.fx(level, "rpg:glob", V.up(blade, -0.2), Opt.of("dir", V.DOWN, "speed", 0.5, "size", 0.07, "life", 0.5, "spin", 0.0, "color",
-                    MOLTEN, "alpha", 1.0));
+        if (OVERDRIVE.equals(stance)) {
+            Vec3 blade = V.up(V.add(h.hand(), h.f(), 0.3), 0.5);
+            for (int i = 0; i < 2; i++) {
+                SkillFx.fx(level, "rpg:arrow_spark", V.add(blade, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.35), Opt.of("dir", V.UP, "speed", 1.6,
+                        "size", 0.12, "grow", 0.5, "life", 0.4, "color", i == 0 ? JobFx.inner(j) : JobFx.outer(j), "alpha", 1.0));
+            }
+            JobFx.glint(level, V.up(blade, 0.4), 0.35, j, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
+            if (Kit.rand() < 0.3) JobFx.runeRing(level, V.up(sp.position(), 0.08), 1.1, j, 6, Kit.rand() * 60, 0.4, JobFx.hide1p(sp).with("alpha", 0.55));
             return true;
         }
         if (TWIN.equals(stance)) {

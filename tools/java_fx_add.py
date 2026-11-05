@@ -3,6 +3,7 @@
 assets/mmorpg/addon_particles.json · particles/addon.json · AddonFxTable.java 에 넣음 (다른 파티클은 그대로).
 
   python3 tools/java_fx_add.py rfx_jsword rfx_jaxe …     # 이 이름들 (tools/java_fx/particles/rpg/fx/<이름>.particle.json) 을 넣음 · 바꿈
+  python3 tools/java_fx_add.py --remove rfx_jheat …      # 0.51.0 이 이름들을 뺌 (정의 · 그림 · tools/java_fx 의 원본까지 — 더 쓰지 않는 파티클)
 
 tools/addon_particles.py <애드온 폴더> 는 애드온 파티클까지 처음부터 다시 만듦 (애드온 폴더가 있어야 함 — 없으면 이것을 씀). 결과 꼴은 같음.
 """
@@ -16,11 +17,21 @@ import addon_particles as A  # noqa: E402
 JAVA_FX = os.path.join(A.ROOT, "tools", "java_fx")
 
 
-def main(names):
+def main(names, remove=False):
     data = json.load(open(A.OUT_DEFS, encoding="utf-8"))
     defs = data["particles"]
     variables = set(data["vars"])
-    for n in names:
+    for n in names if remove else []:
+        pid = "rpg:" + n
+        if pid not in defs:
+            raise SystemExit("없음: " + pid)
+        sprite = defs.pop(pid)["sprite"]
+        out = os.path.join(A.OUT_TEX, sprite.split("addon/", 1)[1] + ".png")
+        for f in (out, os.path.join(JAVA_FX, "particles", "rpg", "fx", n + ".particle.json"), os.path.join(JAVA_FX, "textures", "particle", "rpg", "fx", n + ".png")):
+            if os.path.exists(f):
+                os.remove(f)
+        print("removed", pid, sprite)
+    for n in [] if remove else names:
         f = os.path.join(JAVA_FX, "particles", "rpg", "fx", n + ".particle.json")
         if not os.path.exists(f):
             raise SystemExit("없음: " + f)
@@ -55,4 +66,5 @@ def main(names):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    args = sys.argv[1:]
+    main([a for a in args if a != "--remove"], remove="--remove" in args)

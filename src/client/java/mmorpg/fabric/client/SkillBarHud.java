@@ -425,15 +425,15 @@ public final class SkillBarHud {
                             for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, r == 4 ? (i < v ? col : dim) : c);
                             if (i < v) g.fill(bx + 1, ty, bx + 2, ty + 1, 0xFFFFFFFF);
                         }
-                        case "runeknight" -> {
-                            // 0.51.0 룬 스미스 마력 각인 (최대 5) — 금빛 룬 글자 ᚠ (4 × 7, 창날처럼 줄 높이만큼): 세로 줄기 · 오른쪽 위로 뻗은 가지 둘, 찬 것은 둘째 빛 (금빛) + 줄기 위 흰 점,
-                            // 오른쪽 아래 1칸 그림자
-                            int c = i < v ? col : dim;
+                        case "arcaneblade" -> {
+                            // 0.51.0 아케인 블레이드 마력 각인 (최대 5 — 다섯이면 거대한 마력 대검) — 마력 결정 (5 × 7 마름모, 창날처럼 줄 높이만큼): 위아래가 뾰족한 결정,
+                            // 찬 것은 둘째 빛 (청록 — 다섯이 다 차면 모두 첫째 빛 · 보라) + 가운데 흰 점, 오른쪽 아래 1칸 그림자
+                            int c = i < v ? (v >= max ? bright : col) : dim;
                             int ty = y - 1;
-                            int[][] cells = {{0, 0}, {0, 1}, {0, 2}, {0, 3}, {0, 4}, {0, 5}, {0, 6}, {1, 1}, {2, 0}, {3, 0}, {1, 3}, {2, 2}, {3, 2}};
-                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
-                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
-                            if (i < v) g.fill(bx, ty, bx + 1, ty + 1, 0xFFFFFFFF);
+                            int[][] rows = {{2, 3}, {1, 4}, {0, 5}, {0, 5}, {0, 5}, {1, 4}, {2, 3}};
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0] + 1, ty + r + 1, bx + rows[r][1] + 1, ty + r + 2, 0xA0000000);
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
+                            if (i < v) g.fill(bx + 2, ty + 3, bx + 3, ty + 4, 0xFFFFFFFF);
                         }
                         case "swordcaller" -> {
                             // 0.51.0 스스로 싸우는 칼 (최대 5 — 이어 벨 때마다 하나 · 하나당 공격 속도 +20%) — 작은 칼 (3 × 7, 창날처럼 줄 높이만큼): 칼끝 · 곧은 날 ·
