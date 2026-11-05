@@ -73,7 +73,7 @@ import net.minecraft.world.phys.Vec3;
  * (호흡 8 → 치명타 확정 · 꿰뚫음 · 호흡 3 씀) · 스네어 샷 (그물 화살 = 활 평타 × 1 · 둔화 · 반동으로 뒤로 뜀 → 호흡 +3) · 트릭 샷 (3.5 → 옆 과녁 5 → 같은 과녁 다시 5) ·
  * 헌터스 마크 (같은 과녁 세 번째 활 평타마다 은빛 화살 — 최대 체력 5% · 위력 × 1 ~ 3) · 데드아이 (다시 누를 때마다 14 · 18 · 28 / 3초 지나면 저절로)</li>
  * <li>배틀 아처 (mmorpg:job_ba — 섀도 헌터 대신): 난사 (서서 쏜 평타 한 갈래 · 움직이며 쏘면 세 갈래 — 옆 둘 평타 × 0.5 · 3칸 안 +20%) · 호넷 스웜 (열둘이 둘에게
- * 나뉨 3.75 · 3.75) · 팰컨 다이브 (뛰어 내려앉으며 둘레마다 활 평타 · 둔화 · 쓰러뜨리면 재사용 대기가 돌아옴) · 스플린터 샷 (3칸 안 13.5 · 밀쳐냄 / 5.4칸 7조각) ·
+ * 나뉨 3.75 · 3.75) · 팰컨 다이브 (뛰어 내려앉으며 둘레마다 활 평타 · 둔화 · 쓰러뜨리면 재사용 대기가 돌아옴) · 스플린터 샷 (3칸 안 13.5 · 밀쳐냄 / 5.7칸 6조각) ·
  * 스톰 스트라이드 (이동 +25% · 서서도 세 갈래 — 옆 평타 × 1) · 퀴버 스톰 (8 × 6 + 12)</li>
  * <li>트릭스터 (mmorpg:job_tr): 표식 최대 7 · 표식 5 인 몹을 평타로 쓰러뜨리면 (+1) 옆 과녁에게 6 이 옮겨감 · 검은 장미 덤불 (표식 7 → 0.35 + 0.2 + 0.6 × 7 · 머리 위로 넘어 등 뒤 · 과녁을 봄) ·
  * 우트가르드의 환술 (환영 둘이 터짐 1.425 × 2 · 표식 +2) · 요르문간드의 똬리 (가며 2.4 → 조임 3.15 → 독 0.75 × 4 · 처음 자리로) · 끝없는 밤 (첫 평타 × 2.5 치명 · 풀려도 태세 ·
@@ -1607,7 +1607,8 @@ public final class RpgJobAdvanceTests {
             RpgCombat.forceCrit = null;
             h.assertTrue(victim[0].isRemoved() || !victim[0].isAlive(), "dive: weak mob fell");
             h.assertTrue(JobSkills.cooldownLeft(sp, "battlearcher_dive") == 0, "dive reset on kill: " + JobSkills.cooldownLeft(sp, "battlearcher_dive"));
-            // 스플린터 샷: 부채꼴 화살 조각 열둘 — 3칸 안 과녁은 모두 (13.5 × 1.2 · 밀쳐냄) · 먼 과녁은 3 ÷ 거리만큼 (5.4칸 → 7조각 = 13.5 × 7/12)
+            // 스플린터 샷: 부채꼴 화살 조각 열둘 — 3칸 안 과녁은 모두 (13.5 × 1.2 · 밀쳐냄) · 먼 과녁은 3 ÷ 거리만큼 (5.7칸 → 6조각 = 13.5 × 6/12 — 허스크는 몸 여유 0:
+            // CI 42081243507 에서 5.4칸 (여유 0.3) 으로 셈해 7조각을 기다렸음)
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
@@ -1620,7 +1621,7 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(10, () -> {
             double e = RpgJobTests.expected(sp, j, j.skill(2), 1);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), e * 13.5 * 1.2), "스플린터 샷 close (all × 1.2) " + TestDummies.dealt(z.get(0)) + " vs " + e * 16.2);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), e * 13.5 * 7 / 12), "스플린터 샷 far (7 of 12) " + TestDummies.dealt(z.get(1)) + " vs " + e * 13.5 * 7 / 12);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), e * 13.5 * 6 / 12), "스플린터 샷 far (6 of 12) " + TestDummies.dealt(z.get(1)) + " vs " + e * 13.5 * 6 / 12);
             h.assertTrue(z.get(0).getZ() - mark[0] > 0.3, "splinter knocks the close one: " + (z.get(0).getZ() - mark[0]));
             // 퀴버 스톰: 3초 부채꼴 화살 물결 8 × 6 → 화살비 12 (= 60 · 과녁 4.7칸 — 그대로) · 걷는 동안 느려짐
             for (Husk x : z) x.discard();
