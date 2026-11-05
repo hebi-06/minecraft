@@ -48,10 +48,10 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j);
         double forge = JobTraits5.forgeMult(sp, j); // 0.51.0 소드마스터 다시 벼린 칼 (벼린 칼 동안 +20%)
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투 (상대 + 결투 × 3% · 다른 적 −40%)
-        double quench = JobTraits7.quenchTake(sp, e, j); // 0.51.0 룬 스미스 식으며 깨짐 (달궈진 적 — 배율에 + quench, 큰 숫자 · 짧은 기절)
+        double quench = JobTraits7.quenchTake(sp, e, j); // 0.51.0 룬 스미스 식으며 깨짐 (달궈진 적 — 위력 × quench 를 더함 · 큰 숫자 · 짧은 기절)
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위 (하나당 +6%)
-        double dmg = P * (mult + quench) * veil * crit * forge * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp)
-                + counter;
+        double base = P * mult + (quench > 0 ? JobSystem.power(sp, j) * quench : 0);
+        double dmg = base * veil * crit * forge * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0 || quench > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
@@ -120,8 +120,8 @@ public final class JobKit {
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투
         double quench = JobTraits7.quenchTake(sp, e, j); // 0.51.0 룬 스미스 식으며 깨짐
         double dance = JobTraits10.skillMult(sp, j); // 0.51.0 블레이드 댄서 춤사위
-        double dmg = P * (mult + quench) * veil * crit * forge * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp)
-                + counter;
+        double base = P * mult + (quench > 0 ? JobSystem.power(sp, j) * quench : 0);
+        double dmg = base * veil * crit * forge * duel * dance * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0 || quench > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로

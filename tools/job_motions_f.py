@@ -1,376 +1,298 @@
-"""0.51.0 2차 직업 스킬 동작 — 마검사 각성 뵐룬드(룬 나이트) · 반전 투르스(헥스 블레이드) (틱 0 = 스킬이 나간 틱, 효과의 later · every 와 같은 틱 —
-RuneknightSkills · HexbladeSkills). 마검사는 몸 쓰는 직업이 아님 (마력 검 · 룬 · 왼손 손짓을 씀). 몸이 뜨는 동안의 다리는 job_motions.AIR.
-단계 열쇠 (스킬 id:단계) 의 동작은 서버가 그 순간에 다시 보냄 (JobKit.motion — 찌르기 · 되돌아옴 · 검을 꽂음 · 거검 베기 · 내리꽂힘 · 내려 벰 · 뽑기 · 획 ·
-가르기)."""
+"""0.51.0 2차 직업 스킬 동작 — 마검사 각성 뵐룬드(룬 스미스) · 반전 스키르니르(소드 콜러) — 재설계안 2판 (사용자 "이펙트가 전직업보다 안좋았음 타격감이 없었음
+이펙트가 작았음 동작이 뻣뻣했음"). 틱 0 = 스킬 (또는 단계 열쇠 — 서버가 그 순간에 다시 보냄: JobKit.motion) 이 나간 틱, 효과의 later 와 같은 틱
+(RuneknightSkills · SwordcallerSkills).
+
+뻣뻣하지 않게 (job_motions_d 와 같은 기준): 치기 전에 반대쪽으로 크게 감고 낮아짐 → 치는 틱에 내디딤 → 지나쳐 멈췄다 되돌아옴 · 멈춘 자세도 숨 쉬듯 조금씩.
+마검사는 몸 쓰는 직업이 아님: 룬 스미스 — 대검을 두 손으로 내려찍고 · 겨누고 · 꽂고 · 받아침 (불 · 쇳물 · 모루 · 룬 망치는 저절로 솟고 침),
+소드 콜러 — 칼이 손을 떠나 스스로 싸우므로 내 동작은 칼에게 내리는 명령 (칼끝으로 겨눔 · 왼손 손짓 · 돌아오는 칼을 받음)."""
 import rune_motion_kit as K
 from job_motions_a import PLANT, RISE_END, RISE_HIT
-from job_motions_d import FPW_REV_UP, GRASP_CLOSE, GRASP_OPEN, OVER1, REV_RAISE, diag, diag_back
-from rune_motion_kit import (A_SPREAD_UP, BACK_END, BACK_HIT, BACK_WIND, FP_DOWN, FP_GROUND, FP_LOW, FP_PALM, FP_SPREAD_UP, FPL_GRIP2H, FPL_RAISE2H,
-                             FPW_ACROSS, FPW_DOWN, FPW_FWD, FPW_LOW, FPW_SKY, FPW_UP, GRIP2H, LEGS_FIGHT, LEGS_LUNGE, LEGS_WIDE, RAISE2H, W_GUARD_H, W_HIGH2,
-                             W_READY, W_SKY, L, P, arm, backhand, bent, fpl, fpw, keyp, nudge, off_bare, spin_left, spin_right, strike, use_skill)
+from job_motions_d import FPW_REV_UP, LUNGE_DEEP, REV_RAISE, diag, first, impacts, strike_with
+from rune_motion_kit import (A_PALM, A_POINT_UP, A_RAISE, A_SPREAD, FP_DOWN, FP_LOW, FP_PALM, FP_RAISE, FPL_GRIP2H, FPL_RAISE2H, FPW_ACROSS, FPW_DOWN,
+                             FPW_DRAWN, FPW_FWD, FPW_LOW, FPW_SKY, FPW_SPREAD, FPW_UP, GRIP2H, LEGS_FIGHT, LEGS_LUNGE, LEGS_WIDE, RA_BACK_HIGH, RA_POINT, RA_SKY,
+                             RAISE2H, W_GUARD_H, W_READY, W_UP_FRONT, L, P, arm, bent, fpl, fpw, keyp, nudge, off_bare, use_skill)
 
 Motion = K.Motion
 
-# 올려 베기 (오른쪽 아래 → 왼쪽 위 — 효과 기울기 200 안팎): 몸을 오른쪽으로 감고 칼을 오른쪽 아래 뒤로 → 몸을 펴며 앞을 지나 → 왼쪽 위
-UPR_WIND = P(body=[16, 38, 0], ra=arm([0.62, -0.6, -0.2], 24, [0.45, -0.55, -0.7]), la=arm([-0.45, -0.5, 0.5], 35), rl=[18, 0, 4], ll=[-26, 0, -2], rk=32,
-             lk=38, root=[-0.18, 0.06])
-UPR_HIT = P(body=[2, 2, 0], head=[-6, 0], ra=arm([0.08, 0.1, 1.0], 6, [-0.6, 0.62, 0.48]), la=arm([-0.5, -0.6, 0.1], 35), rl=[8, 0, 0], ll=[-20, 0, 0], rk=16,
-            lk=24, root=[-0.06, 0.14])
-UPR_END = P(body=[-8, -32, 0], head=[-12, 0], ra=arm([-0.6, 0.58, 0.55], 14, [-0.5, 0.82, -0.25]), la=arm([-0.5, -0.6, 0.1], 35), rl=[8, 0, 0], ll=[-20, 0, 0],
-            rk=14, lk=22, root=[-0.04, 0.1])  # 칼이 왼쪽 위에 (다음 내려 베기 · 되돌려 베기 준비)
-FPW_UPR_WIND = dict(p=(0.45, -0.45, 0.2), blade=(0.6, -0.45, -0.65))
-FPW_UPR_HIT = dict(p=(-0.25, 0.3, -0.25), blade=(-0.6, 0.62, 0.48))
-FPW_UPR_END = dict(p=(-0.6, 0.75, 0.1), blade=(-0.55, 0.8, -0.2))
-
-
-def up_right(m, wind_tick, hit_tick, end_tick, wind=None, hit=None, end=None):
-    """올려 베기: wind_tick 에 오른쪽 아래 뒤로 감았다가 hit_tick 에 앞을 지나 end_tick 에 왼쪽 위로"""
-    keyp(m, wind_tick, wind or UPR_WIND)
-    keyp(m, hit_tick, hit or UPR_HIT, "linear")
-    keyp(m, end_tick, end or UPR_END, "out")
-    m.arc(hit_tick, "ra", (0.3, -0.25, 1))
-    m.head.setdefault("trail", []).append([m.t(wind_tick + (hit_tick - wind_tick) * 0.3), m.t(end_tick)])
-    m.set(tilt=30)
-    fpw(m, wind_tick, FPW_UPR_WIND)
-    fpw(m, hit_tick, FPW_UPR_HIT, "linear")
-    fpw(m, end_tick, FPW_UPR_END, "out")
-
-
-# 뒤로 미끄러져 낮게 내려앉음 (앞을 본 채 — 칼은 앞으로 겨눔 · 왼손은 땅을 스침)
-BACK_SKID = P(body=[20, -6, 0], head=[-8, 0], ra=arm([0.3, -0.3, 0.9], 35, [0.05, 0.4, 0.92]), la=arm([-0.4, -0.85, 0.2], 10), rl=[-30, 0, 6], ll=[34, 0, -6],
-              rk=66, lk=18, root=[-0.32, -0.12])
-FPW_AIM = dict(p=(-0.3, 0.1, -0.2), blade=(-0.05, 0.4, 0.92))  # 1인칭: 칼끝을 앞 위로 겨눔
-# 왼손을 펼침 · 움켜쥠 (1인칭 왼팔 — 상처 터뜨리기와 같은 꼴)
+# 1인칭 왼손: 꽂은 칼 자루를 누름 · 왼손을 펼침 · 움켜쥠
+FPL_PLANT = nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0))
+FPL_PLANT_HOLD = nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0))
 FPL_OPEN = ((0.0, 0.05, -0.4), (18, 55, 0))
 FPL_GRASP = ((0.0, -0.08, -0.22), (10, 30, 0))
-FPL_PLANT = nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0))  # 1인칭 왼손: 꽂은 칼 자루를 누름
-FPL_PLANT_HOLD = nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0))
 
-# ------------------------------------------------------------ 뵐룬드(룬 나이트) (칼 · 룬 대검 — 남보라 · 금빛 룬)
+# ------------------------------------------------------------ 뵐룬드(룬 스미스) (대검 — 보라 · 금빛 룬 · 쇳물)
 
-# 룬 새김 베기 (효과: 0 ~ 8 앞으로 미끄러짐 (JobMove) · 0 (-28 — 왼쪽 아래 → 오른쪽 위) · 4 (205 — 오른쪽 아래 → 왼쪽 위) · 8 (-4 — 왼쪽 → 오른쪽) 베기마다 앞 공중에
-# 룬 글자 → 12 에 :thrust (16 에 찔러 글자 셋을 터뜨림))
-m = Motion("runeknight_carve", 16, "룬 새김 베기 — 미끄러져 들어가며 왼쪽 아래에서 오른쪽 위로 · 오른쪽 아래에서 왼쪽 위로 · 왼쪽에서 오른쪽으로 세 번 베어 공중에 룬을 새김",
+# 룬 모루 (효과: 4 에 앞 땅을 내려찍음 → 앞으로 갈라짐 · 처음 닿은 적 자리에 모루가 솟아 12틱 뒤 터짐). 두 손으로 머리 위로 크게 들어 젖혔다가 크게 내디디며 내려찍음
+m = Motion("runeknight_anvil", 16, "룬 모루 — 두 손으로 대검을 머리 위로 크게 들어 젖혔다가 크게 내디디며 앞 땅을 내려찍어 가르고, 칼끝을 땅에 댄 채 낮게 버팀",
            fade=(0.03, 0.1))
-backhand(m, 0.1, 1.1, 2.3, wind=P(BACK_WIND, body=[14, -40, 0], ra=arm([-0.6, -0.35, 0.7], 60, [-0.75, -0.3, -0.55]), root=[-0.2, 0.1]),
-         hit=P(BACK_HIT, body=[16, 16, 0], **LEGS_LUNGE), end=P(BACK_END, body=[8, 38, 0], ra=arm([0.8, 0.35, 0.45], 18, [0.75, 0.45, -0.45]), **LEGS_LUNGE),
-         low=-0.4)
-up_right(m, 3.1, 4.7, 5.9, wind=P(UPR_WIND, **LEGS_LUNGE), hit=P(UPR_HIT, **LEGS_LUNGE), end=P(UPR_END, **LEGS_LUNGE))
-backhand(m, 7.0, 8.6, 10.0, wind=P(BACK_WIND, body=[2, -48, 0], **LEGS_LUNGE), hit=P(BACK_HIT, body=[14, 20, 0], **LEGS_LUNGE),
-         end=P(BACK_END, body=[12, 44, 0], **LEGS_LUNGE))
-keyp(m, 13.0, P(W_READY, body=[10, 16, 0], **LEGS_LUNGE))
-fpw(m, 13.0, FPW_LOW)
-use_skill(m, "runeknight_carve")
-m = Motion("runeknight_carve_thrust", 16, "룬 새김 베기 — 왼손으로 새긴 룬을 겨누며 칼을 허리로 당겼다가 룬 가운데로 깊게 찔러 터뜨림", fade=(0.03, 0.12))
 off_bare(m)
-keyp(m, 1.6, P(body=[0, 40, 0], ra=arm([0.35, -0.2, -0.9], 95, [0, 0.05, 1]), la=arm([-0.2, 0.25, 0.95], 2, [0, 0.9, 0.3]), rl=[16, 0, 0], ll=[-24, 0, 0], rk=24,
-               lk=26, root=[-0.08, 0]), "out3")
-strike(m, "thrust", 2.6, 4.0)
-keyp(m, 10, P(body=[16, -18, 0], ra=arm([0.04, 0.02, 1], 2, [0, 0.02, 1]), la=arm([-0.4, -0.6, -0.4], 30), **LEGS_LUNGE))
-keyp(m, 14, P(W_READY, body=[8, 4, 0]))
-fpw(m, 10, FPW_FWD)
-fpw(m, 14, FPW_LOW)
-fpl(m, 1.6, nudge(FP_PALM, (0.0, 0.08, 0.0), (12, 0, 0)), "out3")
-fpl(m, 3.4, FP_LOW)
-use_skill(m, "runeknight_carve:thrust")
-
-# 세이드 섬광 (효과: 0 에 보는 쪽 7칸으로 순간 이동 · 지나간 적을 벰 · 떠난 자리 · 닿은 자리에 룬 원 → 10 에 :back (되돌아오며 한 번 더 · 닿았던 자리의 원이 터짐) →
-# 20 에 처음 자리의 원이 터짐 (되돌아온 발밑))
-SEID_PASS = P(body=[18, 50, 0], ra=arm([0.88, -0.12, -0.35], 6, [0.82, -0.18, -0.55]), la=arm([-0.25, -0.6, 0.75], 8, [0, 0.3, 1]), rl=[30, 0, 6],
-              ll=[-40, 0, -4], rk=44, lk=58, root=[-0.32, 0.3])  # 지나가며 벤 뒤: 몸을 낮추고 칼을 오른쪽 뒤로 뻗음 · 왼손을 발밑 룬 원 쪽으로 펼침
-m = Motion("runeknight_seid", 12, "세이드 섬광 — 번쩍 지나가며 베고 낮게 미끄러져 서서, 칼을 오른쪽 뒤로 뻗은 채 왼손을 발밑 룬 원 쪽으로 펼침", fade=(0.02, 0.1))
-off_bare(m)
-keyp(m, 0.4, SEID_PASS, "out3")
-keyp(m, 6.0, P(SEID_PASS, root=[-0.3, 0.28]))
-keyp(m, 9.4, P(SEID_PASS, body=[14, 30, 0], root=[-0.26, 0.2]))
-fpw(m, 0.4, dict(p=(0.45, -0.25, 0.2), blade=(0.75, -0.2, -0.6)), "out3")
-fpw(m, 9.4, dict(p=(0.4, -0.25, 0.2), blade=(0.7, -0.2, -0.6)))
-fpl(m, 0.4, nudge(FP_PALM, (0.0, -0.18, 0.0), (-10, 0, 0)), "out3")
-fpl(m, 9.4, FP_LOW)
-use_skill(m, "runeknight_seid")
-m = Motion("runeknight_seid_back", 18, "세이드 섬광 — 뒤로 번쩍 되돌아와 미끄러지며 내려앉고, 칼을 거꾸로 들어 발밑에 꽂아 처음 자리의 룬 원을 터뜨림", fade=(0.02, 0.1))
-off_bare(m)
-keyp(m, 0.4, BACK_SKID, "out3")
-keyp(m, 5.0, P(BACK_SKID, root=[-0.3, -0.1]))
-keyp(m, 7.6, P(REV_RAISE, body=[-8, 0, 0]), "out3")
-keyp(m, 10.0, P(PLANT, body=[36, 0, 0]), "in")
-keyp(m, 13.0, PLANT)
-keyp(m, 16.6, P(W_READY, body=[8, 4, 0]))
-fpw(m, 0.4, FPW_AIM, "out3")
-fpw(m, 5.0, FPW_AIM)
-fpw(m, 7.6, FPW_REV_UP, "out3")
-fpw(m, 10.0, FPW_DOWN, "in")
-fpw(m, 13.0, FPW_DOWN)
-fpw(m, 16.6, FPW_LOW)
-fpl(m, 0.4, nudge(FP_GROUND, (0.05, -0.05, 0)), "out3")
-fpl(m, 5.0, FP_LOW)
-fpl(m, 7.6, FPL_RAISE2H, "out3")
-fpl(m, 10.0, FPL_PLANT, "in")
-fpl(m, 13.0, FPL_PLANT_HOLD)
-fpl(m, 16.0, FP_LOW)
-use_skill(m, "runeknight_seid:back")
-
-# 푸타르크 대검무 (효과: 0 ~ 8 2칸 떠오름 · 56 까지 떠 있음 (JobMove) → 0 · 15 · 30 · 45 에 둘레를 벰 — 칼 (시계) · 마력 (반시계) 차례 → 54 에 :plant (검이 모두 땅으로 ·
-# 56 ~ 60 내려앉음 · 60 룬 원 폭발))
-m = Motion("runeknight_futhark", 58, "푸타르크 대검무 — 떠올라 마력 검들과 함께 오른쪽 · 왼쪽 · 오른쪽 · 왼쪽으로 한 바퀴씩 춤추듯 돌며 벰", fade=(0.03, 0.08))
-spin_right(m, [1.0], 4.8, wind_tick=0.2)
-keyp(m, 9.0, P(W_READY, body=[0, -8, 0], spin=-360))
-spin_left(m, [15], 19, wind_tick=13, spin0=-360)
-keyp(m, 24.0, P(W_READY, body=[0, 8, 0]))
-spin_right(m, [30], 33.8, wind_tick=28.2, spin0=0)
-keyp(m, 39.0, P(W_READY, body=[0, -8, 0], spin=-360))
-spin_left(m, [45], 49, wind_tick=43, spin0=-360)
-keyp(m, 53.0, P(W_READY, body=[-4, 4, 0]))
-use_skill(m, "runeknight_futhark")
-m = Motion("runeknight_futhark_plant", 16, "푸타르크 대검무 끝 — 칼을 하늘로 치켜들어 검들을 부른 뒤, 두 손으로 머리 위로 들고 내려앉으며 땅에 내리꽂음", fade=(0.03, 0.1))
-off_bare(m)
-keyp(m, 0.8, P(W_SKY, head=[-30, 0]), "out3")
-keyp(m, 2.4, P(W_SKY, head=[-26, 0], body=[-14, -4, 0]))
-keyp(m, 3.6, P(W_HIGH2, body=[-16, 4, 0], head=[-12, 0]), "out3")
-strike(m, "slam", 4.4, 6.0, end_tick=7.4)
-keyp(m, 9.4, PLANT)
-keyp(m, 12.4, P(PLANT, body=[30, 0, 0], root=[-0.22, 0.12]))
-keyp(m, 15.0, P(W_READY, body=[8, 6, 0]))
-fpw(m, 0.8, FPW_SKY, "out3")
-fpw(m, 3.6, FPW_UP, "out3")
-fpw(m, 9.4, FPW_DOWN)
-fpw(m, 15.0, FPW_LOW)
-fpl(m, 0.8, FP_LOW)
-fpl(m, 3.6, FPL_RAISE2H, "out3")
-fpl(m, 6.0, FPL_PLANT, "in")
-fpl(m, 12.4, FPL_PLANT_HOLD)
+keyp(m, 1.2, GRIP2H, "out3")
+keyp(m, 2.4, P(RAISE2H, body=[-18, 0, 0], head=[-24, 0], rk=24, lk=26, root=[-0.08, 0]), "out3")
+strike_with(m, "slam", 2.6, 4.0, 5.6, a=P(RAISE2H, body=[-18, 0, 0], rl=[16, 0, 4], ll=[-24, 0, -4], rk=26, lk=34),
+            b=P(body=[40, 0, 0], head=[-10, 0], root=[-0.32, 0.32], **LUNGE_DEEP))
+keyp(m, 8.0, P(PLANT, body=[38, 4, 0], root=[-0.3, 0.28], **LUNGE_DEEP))
+keyp(m, 11.0, P(PLANT, body=[34, 6, 0], root=[-0.26, 0.24], **LUNGE_DEEP))
+keyp(m, 15.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.2, FPW_UP, "out3", dp=(-0.2, -0.15, 0))
+fpw(m, 2.4, FPW_UP, "out3", dp=(0.1, -0.05, 0))
+fpw(m, 8.0, FPW_DOWN)
+fpw(m, 11.0, FPW_DOWN, dp=(0, 0.02, 0))
+fpw(m, 15.5, FPW_LOW)
+fpl(m, 1.2, FPL_GRIP2H, "out3")
+fpl(m, 2.4, FPL_RAISE2H, "out3")
+fpl(m, 5.0, FPL_PLANT, "in")
+fpl(m, 11.0, FPL_PLANT_HOLD)
 fpl(m, 15.0, FP_LOW)
-use_skill(m, "runeknight_futhark:plant")
+impacts(m, 4.0)
+use_skill(m, "runeknight_anvil")
 
-# 룬 담금질 (태세 — 효과: 0 ~ 10 손의 칼이 룬 불에 달아오르며 커짐 · 0 · 4 · 8 망치 소리 → 10 김 · 번쩍)
-m = Motion("runeknight_temper", 26, "룬 담금질 — 두 손으로 칼을 얼굴 앞에 세워 룬 불에 달구고 (망치 소리마다 움찔), 김이 솟을 때 하늘로 치켜든 뒤 비스듬히 크게 내려 벰",
-           fade=(0.04, 0.1))
+# 풀무 숨 (효과: 4 · 14 · 24 에 큰 숨 — 그 사이 이어지는 불길, 30 에 끝). 두 손으로 대검을 가슴 앞에 곧게 겨누고 낮게 버팀 · 숨마다 칼을 밀어냈다가 반동
+BELLOWS_AIM = P(body=[12, 4, 0], head=[2, 0], ra=arm([0.04, 0.02, 1], 32, [0.0, 0.06, 1]), la=bent([-0.12, -0.05, 0.95], 70, (0.4, 1, 0)), rl=[22, 0, 8],
+                ll=[-26, 0, -8], rk=36, lk=42, root=[-0.16, 0.02])
+BELLOWS_PUSH = P(BELLOWS_AIM, body=[18, 4, 0], ra=arm([0.04, 0.04, 1], 8, [0.0, 0.08, 1]), la=bent([-0.1, -0.02, 0.97], 40, (0.4, 1, 0)), root=[-0.2, 0.14])
+m = Motion("runeknight_bellows", 31, "풀무 숨 — 두 손으로 대검을 가슴 앞에 곧게 겨누고 낮게 버티며, 불을 뿜을 때마다 칼을 앞으로 밀어내고 반동에 조금 밀려남",
+           fade=(0.03, 0.1))
 off_bare(m)
-keyp(m, 1.4, P(GRIP2H, body=[-2, 0, 0]), "out3")
-keyp(m, 4.0, P(GRIP2H, body=[3, 0, 0], head=[0, 0], rk=18, lk=18, root=[-0.06, 0]), "in")  # 망치 (4)
-keyp(m, 5.8, P(GRIP2H, body=[-4, 0, 0]))
-keyp(m, 8.0, P(GRIP2H, body=[4, 0, 0], head=[0, 0], rk=20, lk=20, root=[-0.08, 0]), "in")  # 망치 (8)
-keyp(m, 9.4, P(GRIP2H, body=[-6, 0, 0], head=[-8, 0]))
-keyp(m, 11.2, P(RAISE2H, head=[-26, 0]), "out3")  # 김 · 번쩍 (10) — 하늘로 치켜듦
-keyp(m, 14.6, P(RAISE2H, body=[-12, 0, 0], head=[-24, 0], rk=18, lk=18))
-diag(m, 15.6, 17.4, 19.2)
-keyp(m, 23.0, P(W_READY, body=[8, -10, 0]))
-fpw(m, 1.4, FPW_UP, "out3", dp=(-0.2, -0.15, 0))
-fpw(m, 9.4, FPW_UP, dp=(-0.2, -0.12, 0))
-fpw(m, 11.2, FPW_UP, "out3", dp=(0.1, -0.1, 0))
-fpw(m, 14.6, FPW_UP, dp=(0.12, -0.06, 0.05))
-fpw(m, 23.0, FPW_LOW)
-fpl(m, 1.4, FPL_GRIP2H, "out3")
-fpl(m, 9.4, FPL_GRIP2H)
-fpl(m, 11.2, FPL_RAISE2H, "out3")
-fpl(m, 14.6, nudge(FPL_RAISE2H, (0.02, 0.03, 0)))
-fpl(m, 16.0, FP_LOW)
+keyp(m, 2.0, BELLOWS_AIM, "out3")
+for tk in (4.0, 14.0, 24.0):
+    keyp(m, tk, BELLOWS_PUSH, "out")
+    keyp(m, tk + 3.5, P(BELLOWS_AIM, body=[8, 4, 0], root=[-0.13, -0.05]), "inout")
+    keyp(m, tk + 8.0, BELLOWS_AIM, "inout")
+    fpw(m, tk, FPW_FWD, "out", dp=(0, 0.02, -0.1))
+    fpw(m, tk + 3.5, FPW_FWD, "inout", dp=(0, 0, 0.05))
+keyp(m, 30.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 2.0, FPW_FWD, "out3")
+fpw(m, 30.5, FPW_LOW)
+fpl(m, 2.0, FPL_GRIP2H, "out3")
+fpl(m, 30.0, FP_LOW)
+impacts(m, 4.0)
+use_skill(m, "runeknight_bellows")
+
+# 용광로 (효과: 2 에 칼을 꽂은 자리 → 룬 불길이 조준한 곳으로 · 6 부터 용광로가 달아오름 → 16 에 쇳물 기둥). 칼을 거꾸로 들어 앞 땅에 꽂고 누르며 버티다가
+# 솟구치는 순간 뽑아 올림
+m = Motion("runeknight_furnace", 21, "용광로 — 대검을 거꾸로 들어 앞 땅에 내리꽂고 두 손으로 누르며 버티다가, 쇳물이 솟구치는 순간 단숨에 뽑아 올림", fade=(0.03, 0.1))
+off_bare(m)
+keyp(m, 1.0, P(REV_RAISE, root=[-0.04, 0.06]), "out3")
+keyp(m, 2.2, PLANT, "in")
+for i, tk in enumerate((5.0, 8.0, 11.0, 13.5)):
+    sg = 1 if i % 2 else -1
+    s = (i + 1) / 4
+    keyp(m, tk, P(PLANT, body=[34 + 4 * s, sg * 2.0, 0], rk=40 + 10 * s, lk=30 + 8 * s, root=[-0.24 - 0.06 * s, 0.15]))
+    fpw(m, tk, FPW_DOWN, dp=(sg * 0.015, -0.02 * s, 0))
+keyp(m, 15.0, P(PLANT, body=[42, 0, 0], rk=56, lk=42, root=[-0.34, 0.12]), "in")
+keyp(m, 16.2, P(RISE_HIT, root=[0.02, 0.22]), "out")
+keyp(m, 18.0, RISE_END, "out")
+keyp(m, 20.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.0, FPW_REV_UP, "out3")
+fpw(m, 2.2, FPW_DOWN, "in")
+fpw(m, 15.0, FPW_DOWN, dp=(0, -0.05, 0))
+fpw(m, 16.2, FPW_UP, "out")
+fpw(m, 18.0, FPW_SKY, "out")
+fpw(m, 20.5, FPW_LOW)
+fpl(m, 1.0, FPL_RAISE2H, "out3")
+fpl(m, 2.2, FPL_PLANT, "in")
+fpl(m, 15.0, FPL_PLANT_HOLD)
+fpl(m, 16.5, FP_LOW, "out")
+impacts(m, 16.0)
+use_skill(m, "runeknight_furnace")
+
+# 담금질 (효과: 3 · 7 · 11 에 룬 망치가 칼날을 내려침 → 14 에 김 · 칼이 쇳물빛으로). 대검을 가슴 앞에 가로로 들고 망치를 받을 때마다 움찔 → 세워 들어 보임
+TEMPER_HOLD = P(W_GUARD_H, body=[12, 6, 0], head=[8, 0], la=bent([0.1, -0.3, 0.9], 60, (0.4, 1, 0.2)), rl=[16, 0, 6], ll=[-20, 0, -6], rk=26, lk=30,
+                root=[-0.1, 0.04])
+TEMPER_DIP = P(TEMPER_HOLD, body=[16, 6, 0], ra=arm([0.15, -0.42, 0.88], 78, [-0.95, 0.05, 0.2]), rk=34, lk=36, root=[-0.15, 0.04])
+m = Motion("runeknight_temper", 20, "담금질 — 대검을 가슴 앞에 가로로 들어 룬 망치를 받고 (내려칠 때마다 칼이 움찔 내려가고 무릎이 굽음), 김이 솟을 때 칼을 얼굴 앞에 세워 "
+           "달군 날을 들어 보임", fade=(0.03, 0.1))
+off_bare(m)
+keyp(m, 1.5, TEMPER_HOLD, "out3")
+for tk in (3.0, 7.0, 11.0):
+    keyp(m, tk, TEMPER_DIP, "in")
+    keyp(m, tk + 2.0, TEMPER_HOLD, "out")
+    fpw(m, tk, FPW_ACROSS, "in", dp=(0, -0.09, 0))
+    fpw(m, tk + 2.0, FPW_ACROSS, "out")
+keyp(m, 14.0, P(W_UP_FRONT, body=[-4, 0, 0]), "out3")
+keyp(m, 16.5, P(W_UP_FRONT, body=[-10, 0, 0], head=[-12, 0], root=[0.0, 0.04]))
+keyp(m, 19.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.5, FPW_ACROSS, "out3")
+fpw(m, 14.0, FPW_UP, "out3")
+fpw(m, 16.5, FPW_UP, dp=(0, 0.05, 0))
+fpw(m, 19.5, FPW_LOW)
+fpl(m, 1.5, nudge(FP_PALM, (-0.1, -0.05, 0.05), (0, 20, 0)), "out3")
+fpl(m, 14.0, FP_LOW, "out3")
+impacts(m, 3.0, 7.0, 11.0)
 use_skill(m, "runeknight_temper")
 
-# 스물네 룬의 대검 (효과: 0 ~ 20 6칸 솟아오르며 (JobMove) 앞 하늘에 룬 스물넷이 켜지고 거대한 마력 검이 솟음 → 20 가로 · 30 세로 · 40 대각 베기 (서버가 그 틱 1 전에
-# :slash0 · :slash1 · :slash2) → 46 :plunge (52 에 검이 앞 6칸 땅에 꽂힘) → 57 :final (57 ~ 63 조준한 쪽으로 내리꽂혀 64 에 땅))
-m = Motion("runeknight_ult", 22, "스물네 룬의 대검 — 칼을 하늘로 곧게 치켜들고 왼팔을 펼쳐 솟아오르며 하늘의 룬을 켬 → 칼을 왼쪽으로 감아 첫 베기를 준비", fade=(0.04, 0.06))
+# 쇳물 숫양 (효과: 6 에 숫양이 솟음 → 10 부터 달려옴 → 23 에 :clash → 30 에 :strike). 칼끝을 땅에 짚고 왼손을 앞으로 뻗어 부름 → 두 손으로 칼을 앞에 가로로
+# 들고 깊이 버팀
+RAM_BRACE = P(body=[16, 0, 0], head=[4, 0], ra=arm([0.1, -0.1, 0.99], 70, [-0.9, 0.35, 0.25]), la=bent([-0.12, -0.12, 0.97], 70, (0.4, 1, 0)), rl=[28, 0, 10],
+              ll=[-30, 0, -10], rk=58, lk=60, root=[-0.32, 0.0])
+m = Motion("runeknight_ult", 24, "쇳물 숫양 — 칼끝을 땅에 짚고 왼손을 앞으로 곧게 뻗어 숫양을 부른 뒤, 두 손으로 대검을 앞에 비스듬히 가로로 들고 깊이 웅크려 받을 준비",
+           fade=(0.04, 0.06))
 off_bare(m)
-keyp(m, 2.4, P(W_SKY, head=[-30, 0], la=L(A_SPREAD_UP)), "out3")
-keyp(m, 9.0, P(W_SKY, head=[-28, 0], body=[-14, -4, 1], la=L(A_SPREAD_UP)))
-keyp(m, 15.0, P(W_SKY, head=[-30, 0], body=[-16, -2, -1], la=L(A_SPREAD_UP)))
-keyp(m, 19.4, P(BACK_WIND, body=[6, -40, 0]), "out3")
-fpw(m, 2.4, FPW_SKY, "out3")
-fpw(m, 15.0, FPW_SKY, dp=(0.02, 0.0, 0.0))
-fpl(m, 2.4, FP_SPREAD_UP, "out3")
-fpl(m, 15.0, nudge(FP_SPREAD_UP, (0.02, 0.02, 0)))
-fpl(m, 18.6, FP_LOW)
+keyp(m, 2.0, P(body=[6, -12, 0], head=[-4, 0], ra=arm([0.2, -0.7, 0.6], 30, [0.05, -0.95, 0.3]), la=arm([-0.05, 0.25, 0.97], 0, [0, 0.4, 1]), **LEGS_WIDE),
+     "out3")
+keyp(m, 6.0, P(body=[2, -14, 0], head=[-8, 0], ra=arm([0.2, -0.7, 0.6], 30, [0.05, -0.95, 0.3]), la=L(A_RAISE), **LEGS_WIDE), "out")
+keyp(m, 10.0, RAM_BRACE, "out3")
+for i, tk in enumerate((13.0, 16.0, 19.0, 21.5)):
+    sg = 1 if i % 2 else -1
+    keyp(m, tk, P(RAM_BRACE, body=[16 + i, sg * 1.5, 0], rk=58 + 3 * i, lk=60 + 3 * i, root=[-0.32 - 0.02 * i, 0.0]))
+fpw(m, 2.0, FPW_DOWN, "out3")
+fpw(m, 10.0, FPW_ACROSS, "out3", dp=(0, 0.08, -0.05))
+fpw(m, 21.5, FPW_ACROSS, dp=(0, 0.06, -0.08))
+fpl(m, 2.0, FPL_OPEN, "out3")
+fpl(m, 6.0, FP_RAISE, "out")
+fpl(m, 10.0, FPL_GRIP2H, "out3")
 use_skill(m, "runeknight_ult")
-m = Motion("runeknight_ult_slash0", 12, "스물네 룬의 대검 — 거대한 검과 함께 크게 가로로 되돌려 벰", fade=(0.03, 0.08))
-backhand(m, 0.1, 1.4, 3.6, wind=P(BACK_WIND, body=[2, -60, 0], rk=26, lk=30, root=[-0.14, 0]),
-         hit=P(BACK_HIT, body=[16, 24, 0], rl=[24, 0, 4], ll=[-34, 0, -2], rk=14, lk=36, root=[-0.12, 0.3]),
-         end=P(BACK_END, body=[14, 50, 0], rl=[22, 0, 4], ll=[-32, 0, -2], rk=14, lk=34, root=[-0.12, 0.26]))
-keyp(m, 9, P(W_READY, body=[8, 20, 0]))
-use_skill(m, "runeknight_ult:slash0")
-m = Motion("runeknight_ult_slash1", 12, "스물네 룬의 대검 — 거대한 검과 함께 머리 위에서 세로로 내리침", fade=(0.03, 0.08))
-strike(m, "slash_v", 0.1, 1.5)
-keyp(m, 9, P(W_READY, body=[10, 0, 0]))
-use_skill(m, "runeknight_ult:slash1")
-m = Motion("runeknight_ult_slash2", 12, "스물네 룬의 대검 — 거대한 검과 함께 왼쪽 위에서 오른쪽 아래로 비스듬히 벰", fade=(0.03, 0.08))
-diag_back(m, 0.1, 1.4, 3.6, low=0.65)
-keyp(m, 9, P(W_READY, body=[8, 16, 0]))
-use_skill(m, "runeknight_ult:slash2")
-POINT_DOWN = P(body=[16, -8, 0], head=[12, 0], ra=arm([0.1, -0.3, 0.95], 4, [0.0, -0.55, 0.84]), la=arm([-0.5, -0.6, 0.2], 30))  # 칼끝으로 앞 아래 땅을 가리킴
-m = Motion("runeknight_ult_plunge", 12, "스물네 룬의 대검 — 칼을 하늘로 치켜들었다가 앞 땅을 가리켜 거대한 검을 내리꽂음", fade=(0.03, 0.08))
+# 맞부딪침 (단계 :clash — 숫양 뿔이 대검에 부딪침): 밀려 젖혀졌다가 이를 악물고 앞으로 밀어붙이며 떨림
+m = Motion("runeknight_ult_clash", 8, "쇳물 숫양 — 뿔이 대검에 부딪쳐 몸이 뒤로 밀려 젖혀졌다가, 두 손으로 칼을 밀어붙이며 버팀", fade=(0.0, 0.06))
 off_bare(m)
-keyp(m, 1.4, P(W_SKY, head=[-26, 0], la=L(A_SPREAD_UP)), "out3")
-keyp(m, 3.6, P(W_SKY, head=[-22, 0], body=[-14, -4, 0], la=L(A_SPREAD_UP)))
-keyp(m, 5.8, POINT_DOWN, "in")  # 6 에 검이 꽂힘
-keyp(m, 10.0, P(POINT_DOWN, body=[14, -6, 0], head=[10, 0]))
-fpw(m, 1.4, FPW_SKY, "out3")
-fpw(m, 3.6, FPW_SKY)
-fpw(m, 5.8, dict(p=(-0.35, 0.05, -0.4), blade=(-0.05, -0.5, 0.86)), "in")
-fpw(m, 10.0, dict(p=(-0.35, 0.05, -0.38), blade=(-0.05, -0.48, 0.87)))
-fpl(m, 1.4, FP_SPREAD_UP, "out3")
-fpl(m, 5.0, FP_LOW)
-use_skill(m, "runeknight_ult:plunge")
-m = Motion("runeknight_ult_final", 24, "스물네 룬의 대검 끝 — 칼을 거꾸로 쥐어 두 손으로 머리 위로 들고, 거대한 검과 함께 내리꽂히며 땅에 꽂고 버팀", fade=(0.03, 0.1))
+first(m, RAM_BRACE, dict(FPW_ACROSS))
+keyp(m, 1.0, P(RAM_BRACE, body=[-6, 0, 0], head=[-10, 0], rk=70, lk=66, root=[-0.4, -0.2]), "out")
+keyp(m, 3.0, P(RAM_BRACE, body=[22, 2, 0], rk=62, lk=64, root=[-0.36, 0.04]), "inout")
+keyp(m, 5.0, P(RAM_BRACE, body=[24, -2, 0], rk=64, lk=66, root=[-0.37, 0.05]))
+keyp(m, 7.5, P(RAM_BRACE, body=[26, 2, 0], rk=66, lk=68, root=[-0.38, 0.06]))
+fpw(m, 1.0, FPW_ACROSS, "out", dp=(0, 0.12, 0.1))
+fpw(m, 3.0, FPW_ACROSS, "inout", dp=(0, 0.05, -0.1))
+fpw(m, 7.5, FPW_ACROSS, dp=(0.02, 0.05, -0.12))
+impacts(m, 0.5)
+use_skill(m, "runeknight_ult:clash")
+# 받아침 (단계 :strike — 숫양을 되돌려 보냄): 오른쪽 아래에서 왼쪽 위로 크게 올려 베며 내디딤
+m = Motion("runeknight_ult_strike", 16, "쇳물 숫양 — 버티던 대검을 오른쪽 아래로 끌어내렸다가 크게 내디디며 왼쪽 위로 힘껏 올려 베어 숫양을 쇳물 물결로 되돌려 보냄",
+           fade=(0.0, 0.1))
 off_bare(m)
-keyp(m, 0.8, P(REV_RAISE, head=[6, 0]), "out3")
-keyp(m, 4.4, P(REV_RAISE, body=[-16, 0, 0], head=[10, 0]))
-keyp(m, 6.8, P(PLANT, body=[38, 0, 0]), "in")
-keyp(m, 10.0, PLANT)
-keyp(m, 15.0, P(PLANT, body=[28, 0, 0], head=[-20, 0], root=[-0.2, 0.12]))
-keyp(m, 21.0, P(W_READY, body=[8, 6, 0]))
-fpw(m, 0.8, FPW_REV_UP, "out3")
-fpw(m, 4.4, FPW_REV_UP)
-fpw(m, 6.8, FPW_DOWN, "in")
-fpw(m, 15.0, FPW_DOWN)
-fpw(m, 21.0, FPW_LOW)
-fpl(m, 0.8, FPL_RAISE2H, "out3")
-fpl(m, 6.8, FPL_PLANT, "in")
-fpl(m, 15.0, FPL_PLANT_HOLD)
-fpl(m, 21.0, FP_LOW)
-use_skill(m, "runeknight_ult:final")
-
-# ------------------------------------------------------------ 투르스(헥스 블레이드) (칼 — 먹빛 · 호박빛 저주)
-
-# 가시 룬 베기 (효과: 0 ~ 3 반 걸음 들어감 (JobMove) · 2 에 올려 벰 (200 — 오른쪽 아래 → 왼쪽 위) → 9 에 :lower (12 에 내려 벰 (62 — 왼쪽 위 → 오른쪽 아래) · 가시 룬))
-m = Motion("hexblade_thorn", 12, "가시 룬 베기 — 반 걸음 들어가며 오른쪽 아래에서 왼쪽 위로 올려 벤 뒤 칼을 왼쪽 위에 든 채 버팀", fade=(0.03, 0.1))
-up_right(m, 0.4, 2.2, 3.6, wind=P(UPR_WIND, body=[18, 42, 0]), hit=P(UPR_HIT, **LEGS_LUNGE), end=P(UPR_END, **LEGS_LUNGE))
-keyp(m, 8.0, P(UPR_END, body=[-10, -30, 0], head=[-10, 0], **LEGS_LUNGE))
-use_skill(m, "hexblade_thorn")
-m = Motion("hexblade_thorn_lower", 14, "가시 룬 베기 — 왼쪽 위에서 오른쪽 아래로 크게 내려 벤 뒤 왼손을 뻗어 가시 룬을 박음", fade=(0.02, 0.1))
-off_bare(m)
-diag_back(m, 0.6, 3.0, 4.4, low=0.95)
-keyp(m, 5.6, P(GRASP_OPEN, body=[12, 10, 0], ra=arm([0.8, -0.45, 0.35], 14, [0.6, -0.65, -0.45])), "out3")  # 왼손을 뻗음 (가시 룬이 박힘)
-keyp(m, 8.6, P(GRASP_OPEN, body=[10, 6, 0], ra=arm([0.75, -0.5, 0.35], 16, [0.55, -0.7, -0.4])))
-keyp(m, 11.6, P(W_READY, body=[8, 8, 0]))
-fpw(m, 11.6, FPW_LOW)
-fpl(m, 4.0, FP_LOW)
-fpl(m, 5.6, FPL_OPEN, "out3")
-fpl(m, 8.6, nudge(FPL_OPEN, (0.0, -0.04, 0.04)))
-fpl(m, 11.0, FP_LOW)
-use_skill(m, "hexblade_thorn:lower")
-
-# 뒤집힌 걸음 (효과: 0 에 앞을 본 채 뒤로 6칸 순간 이동 · 떠난 자리에 저주 룬 덫 → 10 에 덫이 터짐 · 묶음)
-m = Motion("hexblade_backstep", 16, "뒤집힌 걸음 — 앞을 본 채 뒤로 미끄러져 낮게 내려앉아 칼을 겨누고, 덫이 터질 때 왼손을 펼쳤다가 움켜쥠", fade=(0.02, 0.1))
-off_bare(m)
-keyp(m, 0.5, BACK_SKID, "out3")
-keyp(m, 5.0, P(BACK_SKID, root=[-0.28, -0.1]))
-keyp(m, 8.0, P(GRASP_OPEN, body=[8, -16, 0]), "out3")
-keyp(m, 10.0, GRASP_CLOSE, "in")
-keyp(m, 13.0, P(GRASP_CLOSE, body=[12, -6, 0]))
-fpw(m, 0.5, FPW_AIM, "out3")
-fpw(m, 5.0, FPW_AIM)
-fpw(m, 8.0, FPW_LOW)
-fpl(m, 0.5, nudge(FP_GROUND, (0.05, -0.05, 0)), "out3")
-fpl(m, 5.0, FP_LOW)
-fpl(m, 8.0, FPL_OPEN, "out3")
-fpl(m, 10.0, FPL_GRASP, "in")
-fpl(m, 14.0, FP_LOW)
-use_skill(m, "hexblade_backstep")
-
-# 우박의 룬 (효과: 0 에 칼을 앞 땅에 꽂음 (꽂힌 칼 — 44 까지) · 4 · 14 · 24 · 34 에 검은 우박 → 40 에 :pull (44 에 뽑으면 룬 원이 깨짐))
-m = Motion("hexblade_hail", 44, "우박의 룬 — 칼을 거꾸로 쥐어 두 손으로 들었다가 앞 땅에 꽂고, 자루를 누른 채 우박이 떨어지는 하늘을 올려다봄", fade=(0.03, 0.1))
-off_bare(m)
-keyp(m, 0.3, REV_RAISE, "out3")
-keyp(m, 1.8, P(PLANT, body=[38, 0, 0]), "in")
-keyp(m, 5.0, PLANT)
-keyp(m, 9.0, P(PLANT, body=[24, 0, 0], head=[-36, 0], root=[-0.18, 0.12]), "out3")  # 하늘을 올려다봄 (우박)
-keyp(m, 20.0, P(PLANT, body=[26, 0, 0], head=[-30, 0], root=[-0.2, 0.12]))
-keyp(m, 30.0, P(PLANT, body=[24, 0, 0], head=[-34, 0], root=[-0.18, 0.12]))
-keyp(m, 38.0, P(PLANT, body=[32, 0, 0], head=[-12, 0]))
-fpw(m, 0.3, FPW_REV_UP, "out3")
-fpw(m, 1.8, FPW_DOWN, "in")
-fpw(m, 38.0, FPW_DOWN)
-fpl(m, 0.3, FPL_RAISE2H, "out3")
-fpl(m, 1.8, FPL_PLANT, "in")
-fpl(m, 38.0, FPL_PLANT_HOLD)
-use_skill(m, "hexblade_hail")
-m = Motion("hexblade_hail_pull", 14, "우박의 룬 — 꽂은 칼을 두 손으로 다잡고 몸을 낮췄다가 단숨에 뽑아 올려 룬 원을 깸", fade=(0.02, 0.1))
-off_bare(m)
-keyp(m, 0.6, P(PLANT, body=[40, 0, 0], head=[-4, 0], rk=56, lk=44, root=[-0.32, 0.1]), "out3")  # 몸을 낮춰 자루를 다잡음
-keyp(m, 2.8, P(PLANT, body=[36, 0, 0], rk=60, lk=48, root=[-0.34, 0.1]))
-keyp(m, 4.0, P(RISE_HIT, la=bent([0.08, 0.7, 0.66], 30, (-0.3, 1, 0))), "out")  # 뽑아 올림 (깨짐)
-keyp(m, 6.4, P(RISE_END, la=bent([0.06, 0.9, 0.3], 20, (-0.3, 1, 0))), "out")
-keyp(m, 11.0, P(W_READY, body=[6, 4, 0]))
-m.head.setdefault("trail", []).append([m.t(3.0), m.t(6.4)])
+first(m, P(RAM_BRACE, body=[26, 2, 0], rk=66, lk=68, root=[-0.38, 0.06]), dict(FPW_ACROSS))
+keyp(m, 0.8, P(body=[24, 34, 0], head=[-4, 0], ra=arm([0.62, -0.6, -0.2], 24, [0.45, -0.55, -0.7]), la=bent([0.4, -0.55, 0.3], 70, (0.6, 1, 0)), rl=[24, 0, 6],
+                ll=[-30, 0, -6], rk=56, lk=60, root=[-0.36, 0.0]), "out")
+keyp(m, 2.0, P(body=[2, 0, 0], head=[-10, 0], ra=arm([0.08, 0.1, 1.0], 6, [-0.6, 0.62, 0.48]), la=arm([-0.5, -0.6, 0.1], 35), root=[-0.12, 0.42], **LUNGE_DEEP),
+     "linear")
+keyp(m, 3.6, P(body=[-12, -36, 0], head=[-16, 0], ra=arm([-0.6, 0.62, 0.5], 14, [-0.5, 0.82, -0.25]), la=arm([-0.6, -0.5, 0.1], 30), root=[-0.14, 0.46],
+                **LUNGE_DEEP), "out")
+keyp(m, 8.0, P(body=[-8, -30, 0], head=[-14, 0], ra=arm([-0.55, 0.6, 0.5], 14, [-0.5, 0.8, -0.25]), la=arm([-0.6, -0.5, 0.1], 30), root=[-0.12, 0.42],
+                **LUNGE_DEEP))
+keyp(m, 15.0, P(W_READY, body=[8, 6, 0]))
+m.arc(2.0, "ra", (0.3, -0.25, 1))
+m.head.setdefault("trail", []).append([m.t(1.0), m.t(3.6)])
 m.set(tilt=30)
-fpw(m, 0.6, FPW_DOWN, "out3")
-fpw(m, 2.8, FPW_DOWN)
-fpw(m, 4.0, dict(p=(-0.25, 0.55, -0.15), blade=(0.0, 1, 0.15)), "out")
-fpw(m, 6.4, FPW_UP)
-fpw(m, 11.0, FPW_LOW)
-fpl(m, 0.6, FPL_PLANT_HOLD, "out3")
-fpl(m, 4.0, FPL_RAISE2H, "out")
-fpl(m, 8.0, FP_LOW)
-use_skill(m, "hexblade_hail:pull")
+fpw(m, 0.8, dict(p=(0.45, -0.45, 0.2), blade=(0.6, -0.45, -0.65)), "out")
+fpw(m, 2.0, dict(p=(-0.25, 0.3, -0.25), blade=(-0.6, 0.62, 0.48)), "linear")
+fpw(m, 3.6, dict(p=(-0.6, 0.75, 0.1), blade=(-0.55, 0.8, -0.2)), "out")
+fpw(m, 15.0, FPW_LOW)
+fpl(m, 0.8, FP_LOW, "out")
+impacts(m, 2.0)
+use_skill(m, "runeknight_ult:strike")
 
-# 저주의 칼 (태세 — 효과: 0 ~ 12 칼날에 먹빛 연기 · 불티 → 10 에 칼날 위 ᚦ 번쩍 · 몸의 기운 · 번쩍)
-CURSE_ACROSS = P(W_GUARD_H, body=[4, 8, 0], head=[6, 0], la=bent([0.18, -0.25, 0.75], 95, (-0.6, 0.6, 0.3)))  # 칼을 가로로 눈앞에 (왼손은 손잡이 곁)
-CURSE_TIP = P(W_GUARD_H, body=[2, -6, 0], head=[4, 0], la=arm([-0.62, -0.18, 0.76], 12, [0, 0.4, 1]))  # 왼손이 칼날을 따라 끝까지
-CURSE_LOW = P(body=[10, 12, 0], head=[8, 0], ra=arm([0.45, -0.6, 0.6], 15, [0.25, -0.85, 0.45]), la=arm([-0.6, -0.5, 0.3], 25), **LEGS_FIGHT)  # 칼끝을 아래로 떨굼
-m = Motion("hexblade_curse", 24, "저주의 칼 — 칼을 가로로 눈앞에 들고 왼손으로 칼날을 손잡이에서 끝까지 쓸어 먹빛 불꽃을 붙인 뒤, 칼끝을 아래로 떨궈 비스듬히 내려 듦",
-           fade=(0.04, 0.1))
-off_bare(m)
-keyp(m, 2.2, CURSE_ACROSS, "out3")
-keyp(m, 8.0, CURSE_TIP, "linear")
-keyp(m, 10.6, CURSE_LOW, "in")
-keyp(m, 15.0, P(CURSE_LOW, body=[8, 10, 0]))
-keyp(m, 20.0, P(W_READY, body=[6, 6, 0]))
-fpw(m, 2.2, FPW_ACROSS, "out3")
-fpw(m, 8.0, FPW_ACROSS)
-fpw(m, 10.6, dict(p=(0.1, -0.35, -0.1), blade=(0.15, -0.8, 0.55)), "in")
-fpw(m, 15.0, dict(p=(0.1, -0.38, -0.08), blade=(0.15, -0.8, 0.55)))
-fpw(m, 20.0, FPW_LOW)
-fpl(m, 2.2, nudge(FPL_GRIP2H, (0.05, 0.12, -0.1), (0, -10, 0)), "out3")
-fpl(m, 8.0, ((0.12, 0.2, -0.3), (25, 35, 0)), "linear")  # 칼날을 따라 화면 왼쪽 끝으로 (가운데를 오래 덮지 않게)
-fpl(m, 10.6, FP_LOW)
-use_skill(m, "hexblade_curse")
+# ------------------------------------------------------------ 스키르니르(소드 콜러) (칼 — 청록 · 흰빛 마력 칼, 칼에게 내리는 명령)
 
-# 재앙의 룬 (효과: 0 먹빛 하늘 → 6 · 16 · 26 에 앞 땅에 ᚦ 를 한 획씩 (서버가 3틱 전에 :stroke0 · :stroke1 · :stroke2 — 80 내리침 · 140 오른쪽 위 → 왼쪽 아래 ·
-# 40 왼쪽 위 → 오른쪽 아래) → 34 에 :cleave (34 ~ 42 3칸 뛰어오름 · 43 ~ 46 내려오며 46 에 줄기를 가름 · 56 에 저주가 터짐))
-HEX_CALL = P(body=[12, -14, 0], head=[10, 0], ra=arm([0.45, -0.7, 0.45], 14, [0.3, -0.85, 0.4]), la=arm([-0.25, 0.1, 0.95], 4, [0, 0.9, 0.3]), **LEGS_WIDE)
-m = Motion("hexblade_ult", 8, "재앙의 룬 — 칼끝을 땅으로 떨구고 왼손을 앞으로 펼쳐 하늘을 먹빛으로 물들임", fade=(0.04, 0.1))
+# 칼끝을 귀 옆 뒤로 당겼다가 (명령 준비) 겨눈 곳으로 곧게 내밀어 가리킴
+CALL_BACK = P(body=[2, -22, 0], head=[2, 0], ra=RA_BACK_HIGH, la=arm([-0.4, -0.5, 0.45], 30), **LEGS_FIGHT)
+CALL_POINT = P(P(body=[14, 14, 0], head=[4, 0], ra=RA_POINT, la=arm([-0.55, -0.6, -0.15], 30), **LEGS_LUNGE), root=[-0.06, 0.22])
+
+# 베어라 (효과: 2 에 칼이 손을 떠나 겨눈 곳으로 → 닿아 맴돌며 벰 → 10틱 뒤 두 번 더 → 땅에 꽂힘)
+m = Motion("swordcaller_strike", 13, "베어라 — 칼끝을 귀 옆 뒤로 당겼다가 겨눈 곳을 곧게 가리켜 칼을 보내고, 왼손을 펼쳐 내밀어 칼을 부림", fade=(0.03, 0.1))
 off_bare(m)
-keyp(m, 1.2, HEX_CALL, "out3")
-keyp(m, 3.4, P(HEX_CALL, body=[14, -16, 0]))
-fpw(m, 1.2, dict(p=(0.05, -0.35, -0.1), blade=(0.15, -0.8, 0.55)), "out3")
-fpl(m, 1.2, FP_PALM, "out3")
-fpl(m, 4.0, FP_LOW)
-use_skill(m, "hexblade_ult")
-m = Motion("hexblade_ult_stroke0", 12, "재앙의 룬 — 칼을 머리 위로 들어 앞 땅으로 곧게 내리쳐 줄기 획을 그음", fade=(0.03, 0.08))
-keyp(m, 0.4, P(OVER1, body=[-10, -4, 0]), "out3")
-strike(m, "slash_v", 1.2, 3.0, end_tick=5.4)
-keyp(m, 9.0, P(W_READY, body=[12, 0, 0]))
-fpw(m, 0.4, FPW_UP, "out3")
-use_skill(m, "hexblade_ult:stroke0")
-m = Motion("hexblade_ult_stroke1", 12, "재앙의 룬 — 오른쪽 위에서 왼쪽 아래 땅으로 비스듬히 내려 그어 가시 획을 그음", fade=(0.03, 0.08))
-diag(m, 1.0, 3.0, 4.6)
-keyp(m, 9.0, P(W_READY, body=[12, -10, 0]))
-use_skill(m, "hexblade_ult:stroke1")
-m = Motion("hexblade_ult_stroke2", 12, "재앙의 룬 — 왼쪽 위에서 오른쪽 아래 땅으로 되돌려 그어 가시 획을 닫음", fade=(0.03, 0.08))
-diag_back(m, 1.0, 3.0, 4.6, low=0.6)
-keyp(m, 9.0, P(W_READY, body=[12, 10, 0]))
-use_skill(m, "hexblade_ult:stroke2")
-m = Motion("hexblade_ult_cleave", 30, "재앙의 룬 끝 — 웅크렸다 뛰어올라 두 손으로 칼을 머리 위로 들고, 내려오며 룬의 줄기를 세로로 가른 뒤 칼을 꽂은 채 왼손을 움켜쥐어 "
-           "저주를 터뜨림", fade=(0.02, 0.1))
+keyp(m, 1.0, CALL_BACK, "out3")
+keyp(m, 2.2, CALL_POINT, "out")
+keyp(m, 4.5, P(CALL_POINT, body=[12, 4, 0], la=L(A_PALM), root=[-0.05, 0.18]), "out3")
+keyp(m, 8.0, P(CALL_POINT, body=[10, 2, 0], la=L(A_PALM), root=[-0.04, 0.16]))
+keyp(m, 12.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.0, FPW_DRAWN, "out3")
+fpw(m, 2.2, FPW_FWD, "out")
+fpw(m, 8.0, FPW_FWD, dp=(0, -0.03, 0.05))
+fpw(m, 12.5, FPW_LOW)
+fpl(m, 4.5, FPL_OPEN, "out3")
+fpl(m, 11.0, FP_LOW)
+use_skill(m, "swordcaller_strike")
+
+# 데려가라 (효과: 1 부터 꽂힌 칼 쪽 (또는 앞 8칸) 으로 끌려 날아감 · 지나간 적을 벰 → 닿으면 칼을 뽑아 쥠). 왼손을 앞으로 뻗어 끌려가며 몸이 앞으로 기울고
+# 칼은 뒤로 끌림 → 내려서며 미끄러짐
+PULLED = P(body=[30, 8, 0], head=[-14, 0], ra=arm([0.5, -0.45, -0.72], 20, [0.35, -0.2, -0.92]), la=arm([-0.04, 0.1, 1], 0, [0, 0.3, 1]), rl=[-24, 0, 6],
+           ll=[34, 0, -6], rk=60, lk=22, root=[-0.12, 0.3])
+m = Motion("swordcaller_shift", 14, "데려가라 — 왼손을 칼 쪽으로 곧게 뻗어 끌려가듯 몸을 앞으로 기울여 날아가고 (칼은 뒤로 끌림), 내려서며 낮게 미끄러져 칼을 고쳐 쥠",
+           fade=(0.02, 0.1))
 off_bare(m)
-keyp(m, 0.5, P(W_READY, body=[22, 0, 0], rk=60, lk=60, root=[-0.3, 0]), "out3")
-keyp(m, 3.0, P(W_HIGH2, head=[-16, 0], body=[-14, 0, 0]), "out3")
-keyp(m, 8.0, P(W_HIGH2, head=[-10, 0], body=[-18, 0, 0]))
-strike(m, "slam", 9.6, 12.0, end_tick=13.6)
-keyp(m, 16.0, PLANT)
-keyp(m, 19.2, P(PLANT, body=[24, -10, 0], la=arm([-0.2, -0.1, 0.97], 0, [0, 0.35, 1])), "out3")  # 왼손을 룬 쪽으로 펼침
-keyp(m, 22.0, P(PLANT, body=[30, -6, 0], la=bent([-0.25, -0.3, 0.6], 120, (0.3, 1, 0.2))), "in")  # 움켜쥠 (56 — 저주가 터짐)
-keyp(m, 24.6, P(PLANT, body=[28, -6, 0], la=bent([-0.25, -0.3, 0.6], 120, (0.3, 1, 0.2))))
-keyp(m, 28.0, P(W_READY, body=[8, 4, 0]))
-fpw(m, 0.5, FPW_LOW, "out3")
-fpw(m, 3.0, FPW_UP, "out3")
-fpw(m, 8.0, FPW_UP, dp=(0.05, 0.05, 0))
-fpw(m, 16.0, FPW_DOWN)
-fpw(m, 24.6, FPW_DOWN)
-fpw(m, 28.0, FPW_LOW)
-fpl(m, 3.0, FPL_RAISE2H, "out3")
-fpl(m, 12.0, FPL_PLANT, "in")
-fpl(m, 16.0, FPL_PLANT_HOLD)
-fpl(m, 19.2, FPL_OPEN, "out3")
-fpl(m, 22.0, FPL_GRASP, "in")
-fpl(m, 26.0, FP_LOW)
-use_skill(m, "hexblade_ult:cleave")
+keyp(m, 1.0, PULLED, "out3")
+keyp(m, 6.0, P(PULLED, body=[34, 6, 0], root=[-0.14, 0.32]))
+keyp(m, 8.5, P(body=[22, -16, 0], head=[0, 0], ra=arm([0.55, -0.5, 0.55], 20, [0.6, -0.4, 0.7]), la=arm([-0.5, -0.7, 0.2], 20), rl=[30, 0, 8], ll=[-30, 0, -8],
+                rk=66, lk=58, root=[-0.36, 0.0]), "out")
+keyp(m, 13.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.0, dict(p=(0.35, -0.55, 0.35), blade=(0.4, -0.2, -0.9)), "out3")
+fpw(m, 8.5, FPW_SPREAD, "out")
+fpw(m, 13.5, FPW_LOW)
+fpl(m, 1.0, FP_PALM, "out3")
+fpl(m, 8.5, FP_LOW, "out")
+use_skill(m, "swordcaller_shift")
+
+# 꿰뚫고 맴돌아라 (효과: 2 에 칼이 날아가 꿰뚫음 → 10틱마다 그 적 둘레를 돌며 벰 넷 → 손으로 돌아옴). 겨눠 보낸 뒤 왼손 검지로 허공에 원을 그리며 칼을 돌림
+m = Motion("swordcaller_orbit", 24, "꿰뚫고 맴돌아라 — 칼끝을 당겼다가 곧게 내밀어 칼을 꿰뚫게 보내고, 왼손을 들어 검지로 허공에 원을 크게 두 번 그리며 칼을 돌림",
+           fade=(0.03, 0.1))
+off_bare(m)
+keyp(m, 1.0, CALL_BACK, "out3")
+keyp(m, 2.2, CALL_POINT, "out")
+circle = [(0.35, 0.45), (0.05, 0.75), (-0.25, 0.45), (0.05, 0.15)]
+for i in range(8):
+    tk = 5.0 + i * 2.2
+    cxy = circle[i % 4]
+    keyp(m, tk, P(CALL_POINT, body=[10, 6, 0], la=arm([-0.25 + cxy[0] * 0.6, 0.1 + cxy[1] * 0.6, 0.9], 6, [0, 1, 0.2]), root=[-0.05, 0.16]),
+         "inout" if i else "out3")
+keyp(m, 23.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.0, FPW_DRAWN, "out3")
+fpw(m, 2.2, FPW_FWD, "out")
+fpw(m, 12.0, FPW_FWD, dp=(0, -0.05, 0.08))
+fpw(m, 23.5, FPW_LOW)
+fpl(m, 5.0, nudge(FP_PALM, (0.05, 0.12, 0), (30, 30, 0)), "out3")
+for i in range(1, 8):
+    cxy = circle[i % 4]
+    fpl(m, 5.0 + i * 2.2, nudge(FP_PALM, (cxy[0] * 0.25, cxy[1] * 0.25 - 0.05, 0), (30, 30, 0)), "inout")
+fpl(m, 23.0, FP_LOW)
+use_skill(m, "swordcaller_orbit")
+
+# 둘로 나뉘어라 (효과: 3 에 칼이 번쩍이며 둘로 갈라져 양옆으로 → 6 부터 칼 둘이 몸 둘레를 돎). 칼을 얼굴 앞에 세웠다가 칼과 왼손을 양옆으로 펼쳐 가름
+m = Motion("swordcaller_twin", 14, "둘로 나뉘어라 — 칼을 얼굴 앞에 곧게 세워 숨을 고른 뒤, 칼을 오른쪽 · 왼손을 왼쪽으로 크게 펼쳐 칼을 둘로 가름", fade=(0.03, 0.1))
+off_bare(m)
+keyp(m, 1.5, P(W_UP_FRONT, la=bent([0.05, 0.3, 0.95], 95, (-0.3, 1, 0))), "out3")
+keyp(m, 3.0, P(W_UP_FRONT, body=[-6, 0, 0], head=[-8, 0], la=bent([0.05, 0.32, 0.95], 95, (-0.3, 1, 0))))
+keyp(m, 4.6, P(body=[-6, 0, 0], head=[-10, 0], ra=arm([0.95, 0.25, 0.2], 6, [0.7, 0.55, 0.45]), la=L(A_SPREAD), **LEGS_WIDE), "out")
+keyp(m, 9.0, P(body=[-4, 0, 0], head=[-8, 0], ra=arm([0.92, 0.2, 0.3], 8, [0.7, 0.5, 0.5]), la=L(A_SPREAD), **LEGS_WIDE))
+keyp(m, 13.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.5, FPW_UP, "out3")
+fpw(m, 4.6, FPW_SPREAD, "out")
+fpw(m, 13.5, FPW_LOW)
+fpl(m, 1.5, FPL_GRIP2H, "out3")
+fpl(m, 4.6, nudge(FP_PALM, (-0.25, 0.05, 0.1), (10, -10, 0)), "out")
+fpl(m, 13.0, FP_LOW)
+use_skill(m, "swordcaller_twin")
+
+# 칼날 감옥 (효과: 0 ~ 6 등 뒤에 칼 여섯이 솟음 → 6 에 겨눈 적에게 날아가 10 에 둘러쌈 → 10틱마다 벰 여섯 → 67 에 :catch). 칼과 왼손을 하늘로 들어 칼들을
+# 부르고 → 칼끝으로 적을 겨눠 가둠 → 왼손을 펼쳐 쥐었다 폈다 하며 칼들을 부림
+m = Motion("swordcaller_ult", 30, "칼날 감옥 — 칼과 왼손을 하늘로 들어 칼 여섯을 부르고, 칼끝으로 겨눈 적을 곧게 가리켜 가둔 뒤 왼손을 펼쳤다 움켜쥐며 칼들을 부림",
+           fade=(0.04, 0.08))
+off_bare(m)
+keyp(m, 2.5, P(body=[-12, 0, 0], head=[-26, 0], ra=RA_SKY, la=L(A_RAISE), **LEGS_WIDE), "out3")
+keyp(m, 5.5, P(body=[-14, 0, 0], head=[-28, 0], ra=RA_SKY, la=L(A_RAISE), rl=[0, 0, 12], ll=[0, 0, -12], rk=18, lk=18))
+keyp(m, 8.0, P(CALL_POINT, la=L(A_POINT_UP)), "out")
+keyp(m, 12.0, P(CALL_POINT, body=[12, 8, 0], la=L(A_PALM)), "out3")
+keyp(m, 18.0, P(CALL_POINT, body=[12, 6, 0], la=bent([-0.25, -0.1, 0.9], 110, (0.3, 1, 0.2))), "in")
+keyp(m, 24.0, P(CALL_POINT, body=[12, 8, 0], la=L(A_PALM)), "out")
+keyp(m, 29.5, P(CALL_POINT, body=[10, 6, 0], la=arm([-0.5, -0.6, 0.2], 30)))
+fpw(m, 2.5, FPW_SKY, "out3")
+fpw(m, 8.0, FPW_FWD, "out")
+fpw(m, 29.5, FPW_FWD, dp=(0, -0.04, 0.05))
+fpl(m, 2.5, FP_RAISE, "out3")
+fpl(m, 8.0, FP_LOW, "out")
+fpl(m, 12.0, FPL_OPEN, "out3")
+fpl(m, 18.0, FPL_GRASP, "in")
+fpl(m, 24.0, FPL_OPEN, "out")
+use_skill(m, "swordcaller_ult")
+# 받음 (단계 :catch — 칼들이 적을 꿰뚫으며 손으로 돌아옴 · 3틱 뒤 큰 한 방): 왼손을 내밀어 돌아오는 칼들을 받고, 칼을 왼쪽 위에서 오른쪽 아래로 크게 내려 벰
+m = Motion("swordcaller_ult_catch", 14, "칼날 감옥 끝 — 왼손을 앞으로 내밀어 돌아오는 칼들을 받아들이고, 칼을 오른쪽 위에서 왼쪽 아래로 크게 내려 베어 마무리", fade=(0.0, 0.1))
+off_bare(m)
+first(m, P(CALL_POINT, body=[10, 6, 0], la=arm([-0.5, -0.6, 0.2], 30)), dict(FPW_FWD))
+keyp(m, 1.2, P(CALL_POINT, body=[6, -4, 0], la=L(A_PALM), root=[-0.04, 0.1]), "out3")
+diag(m, 1.8, 3.0, 4.6)
+keyp(m, 9.0, P(body=[16, -30, 0], head=[2, 0], ra=arm([-0.6, -0.55, 0.55], 14, [-0.5, -0.7, -0.4]), la=arm([-0.5, -0.6, 0.1], 35), root=[-0.12, 0.3],
+                **LUNGE_DEEP))
+keyp(m, 13.5, P(W_READY, body=[8, 6, 0]))
+fpl(m, 1.2, FPL_OPEN, "out3")
+fpl(m, 3.0, FP_LOW, "out")
+fpw(m, 13.5, FPW_LOW)
+impacts(m, 3.0)
+use_skill(m, "swordcaller_ult:catch")

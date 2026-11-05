@@ -254,16 +254,21 @@ public final class RpgJobTimingTests {
         probe(h, "gladiator");
     }
 
-    /** 0.51.0 2차 직업 — 마검사 각성 뵐룬드(룬 나이트) (세이드 섬광은 처음 자리 원만 닿음 — 몇 타가 빗나간 스킬) */
+    /**
+     * 0.51.0 2차 직업 — 마검사 각성 뵐룬드(룬 스미스 — 재설계안 2판: 룬 모루는 갈라짐 5 → 모루 터짐 17, 용광로 16 · 쇳물 숫양은 달려와 지나감 21 → 쇳물 물결 31)
+     */
     @GameTest(environment = "mmorpg:jt_rk", maxTicks = 2400)
     public void timingRuneknight(GameTestHelper h) {
         probe(h, "runeknight");
     }
 
-    /** 0.51.0 2차 직업 — 마검사 반전 투르스(헥스 블레이드) (뒤집힌 걸음 = 뒤로 물러난 뒤 10틱 덫 — 선딜 w 10, 재앙의 룬은 줄기 위 과녁) */
-    @GameTest(environment = "mmorpg:jt_hx", maxTicks = 2400)
-    public void timingHexblade(GameTestHelper h) {
-        probe(h, "hexblade");
+    /**
+     * 0.51.0 2차 직업 — 마검사 반전 스키르니르(소드 콜러 — 재설계안 2판: 베어라 3 → 13, 데려가라는 꽂힌 칼이 없어 앞 8칸 · 지나가며 3, 꿰뚫고 맴돌아라 3 → 43 ·
+     * 칼날 감옥 10 → 70)
+     */
+    @GameTest(environment = "mmorpg:jt_sc", maxTicks = 2400)
+    public void timingSwordcaller(GameTestHelper h) {
+        probe(h, "swordcaller");
     }
 
     /** 0.51.0 2차 직업 — 매지션 각성 오드레리르(아크메이지) (스킬 사이 5초 — 연쇄 · 별 없이, 별무리 마탄은 과녁 하나라 튀는 별빛 없음) */

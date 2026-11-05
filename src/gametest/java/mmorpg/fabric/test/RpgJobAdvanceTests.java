@@ -58,10 +58,12 @@ import net.minecraft.world.phys.Vec3;
  * <li>글래디에이터 (mmorpg:job_gl — 재설계안 2판): 결투 (처음 맞힌 적 · 다른 적 −40% · 상대 +3% × 결투 · 1초마다 +1 · 상대가 쓰러지면 가까운 적에게 반) ·
  * 도끼 난타 (6.5) · 걸어 당기기 (끌어와 3.9 · 기절) · 여덟 팔 (11.7 · 받는 피해 +10%) · 불사의 분노 (쓰러지지 않음 · 공격 속도 ×1.4) · 홀름강 (결투장 — 다른 적은
  * 밀려남 · 받는 피해 +15% · 12 → 체력 30% 아래면 40 × 2)</li>
- * <li>룬 나이트 (mmorpg:job_rk): 룬 새김 베기 (3.6 + 4.9 · 각인 1) → 평타가 각인을 터뜨림 (위력 × 1.0) · 둘레의 다른 적에게 번짐 (× 0.5) · 세이드 섬광 (길 1.2 + 되돌아옴 1.2 +
- * 그 곁 룬 원 1.35) · 푸타르크 대검무 (2.4 × 4 + 5.7 · 떠오름 · 룬 결계 −20%) · 룬 담금질 (평타 + 위력 × 0.37 × 3 · 사거리 +1.5) · 스물네 룬의 대검 (10 × 3 + 14 + 24 + 각인 1)</li>
- * <li>헥스 블레이드 (mmorpg:job_hx): 뒤집힌 룬 (평타 +1) · 가시 룬 베기 (룬 3 → 3.0 × 1.36 · 룬을 터뜨림 → 5.5 · 가시 룬 +2) · 뒤집힌 걸음 (뒤로 6칸 · 덫 5.1 × 1.6 · 다섯이면
- * 묶음) · 우박의 룬 (2.2 → 방어 깨짐 +10% → 2.2 × 3 + 6.5 를 × 1.1) · 저주의 칼 (평타 + 위력 × 0.5 · 룬 +2) · 재앙의 룬 (줄기 획 10 · 셋째 획 10 · 가르기 12 · 터짐 26)</li>
+ * <li>룬 스미스 (mmorpg:job_rk — 재설계안 2판): 룬 모루 (갈라짐 3.4 → 모루가 솟아 터짐 5.1 · 각인 1) → 평타가 각인을 터뜨림 (위력 × 1.0) · 둘레로 번짐 (× 0.5) ·
+ * 풀무 숨 (1.7 × 3 · 보호막 → 달궈짐) · 용광로 (15.3 + 달궈진 적은 식으며 깨짐 위력 × 0.8 · 기절 → 다시 달궈짐) · 담금질 (사거리 +1 · 평타가 맞힌 적에 쇳조각 → 1초 뒤 위력 × 0.45) ·
+ * 쇳물 숫양 (지나감 24 + 쇳물 물결 44 · 달궈짐)</li>
+ * <li>소드 콜러 (mmorpg:job_sc — 재설계안 2판): 스스로 싸우는 칼 (허공을 휘두르면 칼이 날아가 평타 그대로 · 이어 벨수록 공격 속도 +20% · 2초면 처음부터) · 베어라
+ * (4.0 + 4.5 → 꽂혀 기다림) · 데려가라 (꽂힌 칼로 날아감 5.1) · 꿰뚫고 맴돌아라 (3.3 + 3.0 × 4 · 적이 없으면 쓰지 않음) · 둘로 나뉘어라 (평타 + 위력 × 0.9 · 거리 +4) ·
+ * 칼날 감옥 (묶음 · 6 × 6 + 32)</li>
  * <li>아크메이지 (mmorpg:job_am): 별무리 마탄 (1.4 × 5 · 다른 적에게 별빛 0.7 × 5) · 서리 별 걸음 (두 잔상 2.8 · 1.4 — 빙결) · 쌍둥이 별 (1.4 × 6 + 4.2) · 꿀술의 노래
  * (스킬마다 별똥 위력 × 2.4) · 별자리 완성 (연쇄 5 — 별 다섯 × 2 + 선 1 · 연쇄는 처음부터) · 완드 평타 → 재사용 대기 −6틱 · 별의 노래 (3 × 9 + 1.4 × 10 + 15)</li>
  * <li>네크로맨서 (mmorpg:job_nc): 뼈 창 (4.9 + 2.1 · 표식) → 쓰러뜨리면 망자 선원 (rpg:naglfar_crew) 이 일어나 싸움 (위력 × 0.4 — 내 직업 스킬 피해) · 망자 일으키기 (둘 · +30%) ·
@@ -84,7 +86,7 @@ public final class RpgJobAdvanceTests {
     static final String ENV_WL = "mmorpg:job_wl";
     static final String ENV_GL = "mmorpg:job_gl";
     static final String ENV_RK = "mmorpg:job_rk";
-    static final String ENV_HX = "mmorpg:job_hx";
+    static final String ENV_SC = "mmorpg:job_sc";
     static final String ENV_AM = "mmorpg:job_am";
     static final String ENV_NC = "mmorpg:job_nc";
     static final String ENV_SN = "mmorpg:job_sn";
@@ -199,7 +201,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("gladiator".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
                     && JobSystem.job(sp).display().equals("스타르카드(글래디에이터)"), "gladiator free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 마검사의 2차 전직 (뵐룬드(룬 나이트) · 투르스(헥스 블레이드)) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
+            // 0.51.0 마검사의 2차 전직 (뵐룬드(룬 스미스) · 스키르니르(소드 콜러) — 재설계안 2판) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("spellblade"), null);
@@ -210,12 +212,12 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(sb != null && sb.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "spellblade: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload sadv = chest(sp);
-            h.assertTrue(sadv != null && sadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("뵐룬드(룬 나이트)")
-                    && sadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("투르스(헥스 블레이드)"), "spellblade advance cards");
+            h.assertTrue(sadv != null && sadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("뵐룬드(룬 스미스)")
+                    && sadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("스키르니르(소드 콜러)"), "spellblade advance cards");
             Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "spellblade advance confirm");
             Forms.answer(sp, 11, null);
-            h.assertTrue("runeknight".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("뵐룬드(룬 나이트)"),
+            h.assertTrue("runeknight".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("뵐룬드(룬 스미스)"),
                     "runeknight free from the first job: " + JobSystem.jobOf(sp));
             // 0.51.0 매지션의 2차 전직 (오드레리르(아크메이지) · 나글파르(네크로맨서)) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
@@ -809,218 +811,213 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 뵐룬드(룬 나이트)
+    // ------------------------------------------------------------ 뵐룬드(룬 스미스) — 재설계안 2판
 
-    @GameTest(environment = ENV_RK, maxTicks = 480)
+    @GameTest(environment = ENV_RK, maxTicks = 640)
     public void runeknightSkills(GameTestHelper h) {
         floor(h);
         ServerPlayer sp = RpgJobTests.jobPlayer(h, "runeknight", Map.of("int", 30, "str", 20), 50);
         Jobs.Job j = Jobs.job("runeknight");
         Weapon w = Weapons.weaponFrom("sword", 0, "common");
         double spread = j.trait().def().numOr("markBurst", 1.0) * j.trait().def().numOr("spread", 0.5);
+        double quench = j.trait().def().numOr("quench", 0.8);
         List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 3)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0};
-        // 룬 새김 베기: 미끄러지며 세 번 (3.6 — 한 번에 넣고 숫자 셋) → 16틱에 찔러 글자 셋이 터짐 (4.9) = 8.5 · 각인 1 (스킬마다 적마다 한 번)
+        // 룬 모루: 4 에 내려찍음 → 갈라짐이 3칸 과녁에 닿음 (3.4) → 그 자리에 모루가 솟아 12틱 뒤 터짐 (5.1) = 8.5 · 각인 1 (스킬마다 적마다 한 번)
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
-            mark[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 0), "룬 새김 베기 cast");
+            h.assertTrue(JobSkills.press(sp, 0), "룬 모루 cast");
         }));
-        steps.add(new RpgJobTests.Step(24, () -> {
+        steps.add(new RpgJobTests.Step(26, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 8.5);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "룬 새김 베기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "룬 모루 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits.marks(sp, z.get(0)) == 1, "one mark per cast: " + JobTraits.marks(sp, z.get(0)));
-            h.assertTrue(sp.position().z - mark[0] > 1.5, "slid forward: " + (sp.position().z - mark[0]));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "runeknight gradient number");
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "rune smith gradient number");
             // 과녁 곁 (1.5칸 앞) 에 서고 · 각인 찍힌 과녁 뒤 2.2칸에 다른 과녁 (번짐을 받음 — 평타는 닿지 않는 거리)
             homeAt(h, sp, 3.0);
             z.add(dummy(h, 0, 5.2));
         }));
-        // 평타가 각인 하나를 터뜨림 (위력 × 1.0) → 둘레 3칸의 다른 적에게 룬 폭발이 번짐 (위력 × 1.0 × 0.5)
+        // 평타가 각인 하나를 터뜨림 (위력 × 1.0) → 둘레 3칸의 다른 적에게 룬 폭발이 번짐 (1틱 뒤 — 위력 × 1.0 × 0.5)
         steps.add(new RpgJobTests.Step(4, () -> {
             RpgCombat.forceCrit = false;
-            double before = TestDummies.dealt(z.get(0));
-            double base = RpgJobTests.basic(sp, w);
+            mark[0] = TestDummies.dealt(z.get(0));
+            mark[1] = RpgJobTests.basic(sp, w);
             sp.attack(z.get(0));
             RpgCombat.forceCrit = null;
-            double unit = JobSystem.power(sp, j) * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - before, base + unit), "basic + mark burst " + (TestDummies.dealt(z.get(0)) - before) + " vs "
-                    + (base + unit));
+        }));
+        steps.add(new RpgJobTests.Step(3, () -> {
+            double unit = raw(sp, j, 1.0);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[0], mark[1] + unit), "basic + mark burst " + (TestDummies.dealt(z.get(0)) - mark[0])
+                    + " vs " + (mark[1] + unit));
             h.assertTrue(JobTraits.marks(sp, z.get(0)) == 0, "mark used");
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), unit * spread), "rune burst spreads " + TestDummies.dealt(z.get(1)) + " vs " + unit * spread);
-        }));
-        // 세이드 섬광: 보는 쪽으로 순간 이동 (길 1.2 — 시험 자리는 8칸이라 barrier 벽 앞 약 5.9칸) → 10틱에 되돌아옴 (길 1.2) · 닿은 자리 원 (1.35) → 20틱에 처음 자리
-        // 원 (1.35) — 처음 자리 곁 과녁 (2칸) · 닿은 자리 곁 과녁 (4.5칸) 모두 1.2 + 1.2 + 1.35 (두 원은 멀어 한 과녁이 둘 다 맞지 않음)
-        steps.add(new RpgJobTests.Step(12, () -> {
-            for (Husk x : z) x.discard();
-            z.clear();
-            home(h, sp);
-            z.add(dummy(h, 0, 2));
-            z.add(dummy(h, 0, 4.5));
-            mark[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 1), "세이드 섬광 cast");
-            h.assertTrue(sp.position().z - mark[0] > 5, "blinked ahead: " + (sp.position().z - mark[0]));
-        }));
-        steps.add(new RpgJobTests.Step(14, () -> h.assertTrue(Math.abs(sp.position().z - mark[0]) < 0.6, "returned to the start: " + (sp.position().z - mark[0]))));
-        steps.add(new RpgJobTests.Step(30, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(1), 1.2 + 1.2 + 1.35);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "세이드 섬광 (start circle) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), want), "세이드 섬광 (landing circle) " + TestDummies.dealt(z.get(1)) + " vs " + want);
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
             z.add(dummy(h, 0, 2.5));
-            mark[1] = sp.getY();
-            h.assertTrue(JobSkills.press(sp, 2), "푸타르크 대검무 cast");
-            h.assertTrue(Math.abs(Guards.of(sp).reduce() - 0.2) < 1e-9, "rune ward 20%: " + Guards.of(sp).reduce());
+            h.assertTrue(JobSkills.press(sp, 1), "풀무 숨 cast");
+            h.assertTrue(RpgHealth.shieldOf(sp) > 0, "bellows shield " + RpgHealth.shieldOf(sp));
         }));
-        // 푸타르크 대검무: 2칸 떠올라 2.4 × 4 (0 · 15 · 30 · 45) → 60 에 내려앉으며 룬 원 폭발 5.7 = 15.3
-        steps.add(new RpgJobTests.Step(20, () -> h.assertTrue(sp.getY() - mark[1] > 1.2, "lifted during the sword dance: " + (sp.getY() - mark[1]))));
-        steps.add(new RpgJobTests.Step(56, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 15.3);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "푸타르크 대검무 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(Math.abs(sp.getY() - mark[1]) < 0.3, "landed: y " + sp.getY() + " vs " + mark[1]);
+        // 풀무 숨: 4 · 14 · 24 에 큰 숨 (1.7 × 3 = 5.1) → 30 에 끝나면 맞은 적이 달궈짐
+        steps.add(new RpgJobTests.Step(34, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 5.1);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "풀무 숨 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits7.heatedOf(sp, z.get(0)), "heated after the bellows");
+            mark[0] = TestDummies.dealt(z.get(0));
+            h.assertTrue(JobSkills.press(sp, 2), "용광로 cast");
+        }));
+        // 용광로: 16 에 쇳물 기둥 (15.3) — 달궈진 과녁이라 식으며 깨짐 (위력 × 0.8 · 짧은 기절) → 다시 달궈짐
+        steps.add(new RpgJobTests.Step(19, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 15.3) + raw(sp, j, quench);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "용광로 + quench " + got + " vs " + want);
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "quench stun");
+            h.assertTrue(JobTraits7.heatedOf(sp, z.get(0)), "heated again by the furnace");
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2));
             double r0 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-            h.assertTrue(JobSkills.press(sp, 3), "룬 담금질 cast");
+            h.assertTrue(JobSkills.press(sp, 3), "담금질 cast");
             double r1 = sp.getAttributeValue(Attributes.ENTITY_INTERACTION_RANGE);
-            h.assertTrue(JobTraits.stanceOn(sp, "runeknight_temper") && Math.abs(JobTraits.reachBonus(sp) - 1.5) < 1e-9 && Math.abs(r1 - r0 - 1.5) < 1e-9,
-                    "temper stance · reach +1.5: " + JobTraits.reachBonus(sp) + ", " + r0 + " -> " + r1);
-            h.assertTrue("runeknight_temper".equals(mmorpg.fabric.motion.SwingLook.testKey(sp)), "rune greatsword swing look: " + mmorpg.fabric.motion.SwingLook.testKey(sp));
+            h.assertTrue(JobTraits.stanceOn(sp, "runeknight_temper") && Math.abs(JobTraits.reachBonus(sp) - 1.0) < 1e-9 && Math.abs(r1 - r0 - 1.0) < 1e-9,
+                    "temper stance · reach +1: " + JobTraits.reachBonus(sp) + ", " + r0 + " -> " + r1);
+            h.assertTrue("runeknight_temper".equals(mmorpg.fabric.motion.SwingLook.testKey(sp)), "tempered greatsword look: " + mmorpg.fabric.motion.SwingLook.testKey(sp));
         }));
-        // 룬 담금질: 칼 평타 = 평타 + 마력 검 셋 (위력 × 0.37 × 3)
-        steps.add(new RpgJobTests.Step(12, () -> {
+        // 담금질: 칼 평타가 맞힌 적에 달군 쇳조각이 박혀 1초 뒤 터짐 (위력 × 0.45 · 마법)
+        steps.add(new RpgJobTests.Step(16, () -> {
             RpgCombat.forceCrit = false;
-            double base = RpgJobTests.basic(sp, w);
+            mark[1] = RpgJobTests.basic(sp, w);
             sp.attack(z.get(0));
             RpgCombat.forceCrit = null;
-            double echo = JobSystem.power(sp, j) * 0.37 * 3 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base + echo), "temper swords " + TestDummies.dealt(z.get(0)) + " vs " + (base + echo));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[1]), "tempered basic (shard not burst yet) " + TestDummies.dealt(z.get(0)) + " vs " + mark[1]);
         }));
-        // 스물네 룬의 대검: 6칸 솟아 10 × 3 (첫 베기에 각인 +1) → 검이 앞 6칸에 내리꽂힘 14 → 검과 함께 내리꽂혀 24 + 각인 1 (위력 × 1.0) = 69
-        steps.add(new RpgJobTests.Step(12, () -> {
+        steps.add(new RpgJobTests.Step(26, () -> {
+            double want = mark[1] + raw(sp, j, 0.45);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "hot shard burst " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            JobTraits.testEndStance(sp);
+            JobSkills.resetCooldowns(sp);
             z.get(0).discard();
             home(h, sp);
-            z.set(0, dummy(h, 0, 4));
-            mark[0] = sp.position().z;
-            mark[1] = sp.getY();
-            h.assertTrue(JobSkills.press(sp, 4), "스물네 룬의 대검 cast");
+            z.set(0, dummy(h, 0, 3));
+            h.assertTrue(JobSkills.press(sp, 4), "쇳물 숫양 cast");
         }));
-        steps.add(new RpgJobTests.Step(30, () -> h.assertTrue(sp.getY() - mark[1] > 1.5, "rose with the giant sword: " + (sp.getY() - mark[1]))));
-        steps.add(new RpgJobTests.Step(56, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 68 + 1.0);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스물네 룬의 대검 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits.marks(sp, z.get(0)) == 0, "marks detonated");
-            h.assertTrue(Math.abs(sp.getY() - mark[1]) < 0.3 && sp.position().z - mark[0] > 1.5, "dove forward to the ground: y " + sp.getY() + " vs " + mark[1]
-                    + " · moved " + (sp.position().z - mark[0]));
+        // 쇳물 숫양: 달려온 숫양이 지나감 (24 · 21 틱쯤) → 23 에 대검과 맞부딪침 → 30 에 받아쳐 쇳물 물결 (44) = 68 · 달궈짐 · 각인 1
+        steps.add(new RpgJobTests.Step(44, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 68);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "쇳물 숫양 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits7.heatedOf(sp, z.get(0)), "heated by the molten wave");
+            h.assertTrue(JobTraits.marks(sp, z.get(0)) == 1, "one mark per cast: " + JobTraits.marks(sp, z.get(0)));
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
-            h.assertTrue(JobTraits.stanceOn(sp, "runeknight_temper") && JobTraits.reachBonus(sp) == 1.5, "temper still on at the end");
             RpgJobTests.cleanup(sp);
-            h.assertTrue(JobTraits.reachBonus(sp) == 0, "reach restored on job change");
+            h.assertTrue(!JobTraits7.heatedOf(sp, z.get(0)), "heat cleared on job change");
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });
     }
 
-    // ------------------------------------------------------------ 투르스(헥스 블레이드)
+    // ------------------------------------------------------------ 스키르니르(소드 콜러) — 재설계안 2판 (투르스(헥스 블레이드) 대신)
 
-    @GameTest(environment = ENV_HX, maxTicks = 480)
-    public void hexbladeSkills(GameTestHelper h) {
+    @GameTest(environment = ENV_SC, maxTicks = 640)
+    public void swordcallerSkills(GameTestHelper h) {
         floor(h);
-        ServerPlayer sp = RpgJobTests.jobPlayer(h, "hexblade", Map.of("int", 30, "str", 20), 50);
-        Jobs.Job j = Jobs.job("hexblade");
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "swordcaller", Map.of("int", 30, "str", 20), 50);
+        Jobs.Job j = Jobs.job("swordcaller");
         Weapon w = Weapons.weaponFrom("sword", 0, "common");
-        double per = j.trait().def().numOr("perRune", 0.12);
-        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2.5)));
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 5)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0};
-        // 뒤집힌 룬: 칼 평타가 맞힌 적에 저주 룬 +1 (평타 피해는 그대로)
+        // 스스로 싸우는 칼: 허공을 휘두르면 칼이 날아가 5칸 앞 과녁을 대신 벰 (평타 그대로 · 범위 피해 없음) → 이어 벨수록 쌓임 (하나당 공격 속도 +20%)
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             RpgCombat.forceCrit = false;
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
-            RpgCombat.forceCrit = null;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base), "basic unchanged " + TestDummies.dealt(z.get(0)) + " vs " + base);
-            h.assertTrue(JobTraits7.runesOf(sp, z.get(0)) == 1, "curse rune +1: " + JobTraits7.runesOf(sp, z.get(0)));
+            mmorpg.fabric.Slash.onPunch(sp);
         }));
-        // 가시 룬 베기: 룬 3 → 올려 벰 3.0 × (1 + 0.12 × 3) (들어가면 룬을 모두 터뜨림) → 내려 벰 5.5 · 가시 룬 +2
-        steps.add(new RpgJobTests.Step(12, () -> {
-            JobTraits7.setRunes(sp, z.get(0), 3);
-            mark[0] = TestDummies.dealt(z.get(0));
-            h.assertTrue(JobSkills.press(sp, 0), "가시 룬 베기 cast");
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.basic(sp, w);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "flying sword basic " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits7.stacksOf(sp) == 1 && Math.abs(RpgCombat.attackSpeed.applyAsDouble(sp) - 1.2) < 1e-9, "chain 1 · speed 1.2: "
+                    + JobTraits7.stacksOf(sp) + " · " + RpgCombat.attackSpeed.applyAsDouble(sp));
         }));
-        steps.add(new RpgJobTests.Step(24, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.0 * (1 + per * 3) + 5.5);
-            double got = TestDummies.dealt(z.get(0)) - mark[0];
-            h.assertTrue(RpgJobTests.near(got, want), "가시 룬 베기 (3 runes) " + got + " vs " + want);
-            h.assertTrue(JobTraits7.runesOf(sp, z.get(0)) == 2, "thorn runes +2 after the detonation: " + JobTraits7.runesOf(sp, z.get(0)));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "hexblade gradient number");
-            // 뒤집힌 걸음: 뒤로 물러날 자리가 있게 (4.5 — 시험 자리 8칸, 뒤 barrier 벽 앞까지 약 3.9칸) · 과녁은 앞 2칸 · 룬 5
-            z.get(0).discard();
-            homeAt(h, sp, 4.5);
-            z.set(0, dummy(h, 0, 5.0));
-            JobTraits7.setRunes(sp, z.get(0), 5);
-            mark[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 1), "뒤집힌 걸음 cast");
-            h.assertTrue(mark[0] - sp.position().z > 3, "stepped back: " + (mark[0] - sp.position().z));
+        steps.add(new RpgJobTests.Step(14, () -> mmorpg.fabric.Slash.onPunch(sp)));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.basic(sp, w) * 2;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "second flying cut " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits7.stacksOf(sp) == 2 && Math.abs(RpgCombat.attackSpeed.applyAsDouble(sp) - 1.4) < 1e-9, "chain 2 · speed 1.4: "
+                    + JobTraits7.stacksOf(sp) + " · " + RpgCombat.attackSpeed.applyAsDouble(sp));
         }));
-        // 뒤집힌 걸음: 떠난 자리 덫 (10틱) 5.1 × (1 + 0.12 × 5) — 룬 다섯이 터져 묶음
-        steps.add(new RpgJobTests.Step(16, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(1), 5.1 * (1 + per * 5));
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "뒤집힌 걸음 (5 runes) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits7.runesOf(sp, z.get(0)) == 0 && z.get(0).hasEffect(net.minecraft.world.effect.MobEffects.SLOWNESS), "runes detonated · rooted");
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2.5));
-            h.assertTrue(JobSkills.press(sp, 2), "우박의 룬 cast");
-        }));
-        // 우박의 룬: 첫 우박 2.2 → 맞은 적 받는 피해 +10% (5초) → 2.2 × 3 · 칼을 뽑아 깨짐 6.5 가 × 1.1
-        steps.add(new RpgJobTests.Step(10, () -> h.assertTrue(Math.abs(JobTraitsMore.breakMult(z.get(0)) - 1.1) < 1e-9, "hail vulnerability × 1.1: "
-                + JobTraitsMore.breakMult(z.get(0)))));
+        // 2초 못 베면 처음부터
         steps.add(new RpgJobTests.Step(48, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 2.2 + (2.2 * 3 + 6.5) * 1.1);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "우박의 룬 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            z.get(0).discard();
-            home(h, sp);
-            z.set(0, dummy(h, 0, 2));
-            h.assertTrue(JobSkills.press(sp, 3), "저주의 칼 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "hexblade_curse") && "hexblade_curse".equals(mmorpg.fabric.motion.SwingLook.testKey(sp)), "curse stance · cursed blade look: "
-                    + mmorpg.fabric.motion.SwingLook.testKey(sp));
-        }));
-        // 저주의 칼: 칼 평타 + 저주 불꽃 (위력 × 0.5) · 저주 룬 +2
-        steps.add(new RpgJobTests.Step(12, () -> {
-            RpgCombat.forceCrit = false;
-            double base = RpgJobTests.basic(sp, w);
-            sp.attack(z.get(0));
+            h.assertTrue(JobTraits7.stacksOf(sp) == 0 && Math.abs(RpgCombat.attackSpeed.applyAsDouble(sp) - 1) < 1e-9, "chain lapsed: " + JobTraits7.stacksOf(sp));
             RpgCombat.forceCrit = null;
-            double flame = JobSystem.power(sp, j) * 0.5 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base + flame), "curse flame " + TestDummies.dealt(z.get(0)) + " vs " + (base + flame));
-            h.assertTrue(JobTraits7.runesOf(sp, z.get(0)) == 2, "cursed basic +2 runes: " + JobTraits7.runesOf(sp, z.get(0)));
+            mark[0] = TestDummies.dealt(z.get(0));
+            h.assertTrue(JobSkills.press(sp, 0), "베어라 cast");
         }));
-        // 재앙의 룬: 앞 5칸 줄기 위 과녁 — 줄기 획 10 (6틱) · 셋째 획 10 (26틱 — 가시 끝이 줄기로 돌아옴, 둘째 획은 오른쪽 가시라 닿지 않음) → 34 ~ 46 뛰어올라 가르기 12 →
-        // 56 저주가 터짐 26 = 58
+        // 베어라: 칼이 겨눈 자리로 날아가 둘레를 두 번 (4.0) → 10틱 뒤 두 번 더 (4.5) = 8.5 → 땅에 꽂혀 기다림
+        steps.add(new RpgJobTests.Step(28, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 8.5);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "베어라 " + got + " vs " + want);
+            h.assertTrue(JobTraits7.stuckOf(sp), "sword stuck, waiting");
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "sword caller gradient number");
+            mark[0] = TestDummies.dealt(z.get(0));
+            mark[1] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "데려가라 cast");
+        }));
+        // 데려가라: 꽂힌 칼 (과녁 자리) 곁으로 날아감 — 지나가며 과녁을 벰 (5.1) · 칼을 뽑아 쥠
         steps.add(new RpgJobTests.Step(12, () -> {
-            z.get(0).discard();
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 5.1);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "데려가라 " + got + " vs " + want);
+            h.assertTrue(sp.position().z - mark[1] > 3.5, "flew to the sword: " + (sp.position().z - mark[1]));
+            h.assertTrue(!JobTraits7.stuckOf(sp), "sword taken back");
             home(h, sp);
-            z.set(0, dummy(h, 0, 5));
-            mark[1] = sp.getY();
-            h.assertTrue(JobSkills.press(sp, 4), "재앙의 룬 cast");
+            mark[0] = TestDummies.dealt(z.get(0));
+            h.assertTrue(JobSkills.press(sp, 2), "꿰뚫고 맴돌아라 cast");
         }));
-        steps.add(new RpgJobTests.Step(40, () -> h.assertTrue(sp.getY() - mark[1] > 1.5, "leapt to cleave: " + (sp.getY() - mark[1]))));
-        steps.add(new RpgJobTests.Step(32, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 10 + 10 + 12 + 26);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "재앙의 룬 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(Math.abs(sp.getY() - mark[1]) < 0.3, "landed: y " + sp.getY() + " vs " + mark[1]);
+        // 꿰뚫고 맴돌아라: 겨눈 과녁을 꿰뚫고 (3.3) 10틱마다 둘레를 돌며 벰 (3.0 × 4 — 숫자 셋씩) = 15.3
+        steps.add(new RpgJobTests.Step(52, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 15.3);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "꿰뚫고 맴돌아라 " + got + " vs " + want);
+            // 겨눈 적이 없으면 쓰지 않음 (뒤로 돌아섬 — 재사용 대기 없음)
+            JobSkills.resetCooldowns(sp);
+            Vec3 at = h.absoluteVec(new Vec3(4.5, 2, 1.5));
+            sp.snapTo(at.x, at.y, at.z, 180F, 0F);
+            sp.setYHeadRot(180F);
+            h.assertTrue(!JobSkills.press(sp, 2), "no target → not cast");
+            home(h, sp);
+            h.assertTrue(JobSkills.press(sp, 3), "둘로 나뉘어라 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "swordcaller_twin") && "swordcaller_twin".equals(mmorpg.fabric.motion.SwingLook.testKey(sp)), "twin stance · look: "
+                    + mmorpg.fabric.motion.SwingLook.testKey(sp));
+            h.assertTrue(Math.abs(JobTraits7.flyRangeOf(sp) - 14) < 1e-9, "fly range +4: " + JobTraits7.flyRangeOf(sp));
+            mark[0] = TestDummies.dealt(z.get(0));
+            RpgCombat.forceCrit = false;
+        }));
+        // 둘로 나뉘어라: 칼 평타 = 평타 + 둘째 칼 (위력 × 0.9 — 직업 색 숫자)
+        steps.add(new RpgJobTests.Step(16, () -> mmorpg.fabric.Slash.onPunch(sp)));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.basic(sp, w) + raw(sp, j, 0.9);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "twin swords " + got + " vs " + want);
+            RpgCombat.forceCrit = null;
+            JobTraits.testEndStance(sp);
+            h.assertTrue(Math.abs(JobTraits7.flyRangeOf(sp) - 10) < 1e-9, "fly range back to 10: " + JobTraits7.flyRangeOf(sp));
+            JobSkills.resetCooldowns(sp);
+            mark[0] = TestDummies.dealt(z.get(0));
+            h.assertTrue(JobSkills.press(sp, 4), "칼날 감옥 cast");
+        }));
+        // 칼날 감옥: 10 에 둘러싸 묶음 → 10틱마다 사방에서 벰 (6 × 6) → 70 에 칼들이 꿰뚫으며 돌아오는 큰 한 방 (32) = 68
+        steps.add(new RpgJobTests.Step(22, () -> h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "imprisoned (rooted)")));
+        steps.add(new RpgJobTests.Step(56, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 68);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "칼날 감옥 " + got + " vs " + want);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
-            JobTraits7.setRunes(sp, z.get(0), 3);
             RpgJobTests.cleanup(sp);
-            h.assertTrue(JobTraits7.runesOf(sp, z.get(0)) == 0, "runes cleared on job change");
+            h.assertTrue(JobTraits7.stacksOf(sp) == 0, "chain cleared on job change");
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });

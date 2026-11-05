@@ -212,7 +212,7 @@ public final class JobTraits7 {
     }
 
     /**
-     * 직업 스킬 피해 (JobKit.hit · hitSplit 의 앞): 달궈진 적이면 식힘 — 그 피해의 배율에 더할 몫 (trait.quench). 아니면 0. 쇳조각 · 번진 룬 (특성 피해) 은 식히지 않음.
+     * 직업 스킬 피해 (JobKit.hit · hitSplit 의 앞): 달궈진 적이면 식힘 — 그 피해에 더할 위력의 몫 (trait.quench — 위력 × quench). 아니면 0. 쇳조각 · 번진 룬 (특성 피해) 은 식히지 않음.
      * 피해가 들어가면 quenchLanded, 안 들어가면 quenchMissed (다시 달궈진 채로)
      */
     static double quenchTake(ServerPlayer sp, LivingEntity e, Jobs.Job j) {
@@ -371,6 +371,17 @@ public final class JobTraits7 {
         if (j == null || !SC.equals(j.id())) return 0;
         State st = STATES.get(sp.getUUID());
         return st == null || Tasks.now() - st.lastCut > trait(j, "lapse", 40) ? 0 : st.stacks;
+    }
+
+    /** 시험용: 칼이 날아가는 거리 */
+    public static double flyRangeOf(ServerPlayer sp) {
+        Jobs.Job j = jobIf(sp, SC);
+        return j == null ? 0 : flyRange(sp, j);
+    }
+
+    /** 시험용: 꽂혀 기다리는 칼이 있는지 */
+    public static boolean stuckOf(ServerPlayer sp) {
+        return stuckAt(sp) != null;
     }
 
     /** 시험용: 쌓임 */
@@ -550,6 +561,16 @@ public final class JobTraits7 {
         st.stuckUntil = Tasks.now() + ticks;
         st.stuckId = id;
         st.stuckLife = RuneKit.lifeToken(sp);
+    }
+
+    /** 시험 · 영상용: 꽂혀 기다리는 칼을 at (땅) 에 ticks 틱 둠 (베어라를 쓰지 않고 — 데려가라가 그리로 날아감) */
+    public static void testStuck(ServerPlayer sp, Vec3 at, int ticks) {
+        Jobs.Job j = jobIf(sp, SC);
+        if (j == null) return;
+        int id = JobFx3d.stuck(sp.level(), "phantom_sword", V.up(at, -0.25), V.unit(new Vec3(0.12, -1, 0.08)), JobFx3d.SWORD_TIP, 0.95, ticks / 20.0, j, Opt.of("fade",
+                0.3));
+        JobFx.runeRing(sp.level(), V.up(at, 0.08), 0.95, j, 6, 0, ticks / 20.0, Opt.of("alpha", 0.75));
+        setStuck(sp, at, ticks, id);
     }
 
     /** 꽂혀 기다리는 칼 자리 (없거나 끝났거나 삶이 바뀌었으면 null) */

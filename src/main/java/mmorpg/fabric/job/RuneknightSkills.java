@@ -575,22 +575,27 @@ final class RuneknightSkills {
             SkillFx.play(lv, "entity.goat.screaming.ambient", g0, 0.5, 1.0);
         });
         // runAt ~ clashAt: 달려옴 (한 장이 vel 로 미끄러짐 — 2 ~ 5 이어 돌림) · 발굽 자리의 쇳물 자국 · 불꽃 · 쿵쿵 · 지나간 적 피해
-        Vec3 clashP = V.add(c0, f, 2.0);
-        double runLen = Math.max(1, summon - 2.0);
-        int runTicks = Math.max(1, clashAt - runAt);
-        double runSpeed = runLen / runTicks;
+        // 맞댈 자리 (앞 2칸) 까지 speed 칸/틱 — 닿으면 (arrive) 뿔을 숙여 버티는 그림으로 바뀌고 clashAt 에 대검과 부딪침
+        double clashDist = 2.0;
+        Vec3 clashP = V.add(c0, f, clashDist);
+        int runTicks = Math.max(1, (int) Math.ceil((summon - clashDist) / speed));
+        int arrive = runAt + runTicks;
         RuneKit.later(runAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            JobFx.ram(sp.level(), new Vec3(g0.x, c0.y, g0.z), ramSize, 2, 4, runTicks / 20.0 + 0.03, true, Opt.of("vel", V.scale(f, -runSpeed * 20), "fade", 0.0, "alpha",
-                    0.98), MOLTEN, HOT);
+            JobFx.ram(sp.level(), new Vec3(g0.x, c0.y, g0.z), ramSize, 2, 4, runTicks / 20.0 + 0.02, true, Opt.of("vel", V.scale(f, -(summon - clashDist) / runTicks
+                    * 20), "fade", 0.0, "alpha", 0.98), MOLTEN, HOT);
+        });
+        RuneKit.later(arrive, () -> {
+            if (RuneKit.sameLife(sp, life)) JobFx.ram(sp.level(), new Vec3(clashP.x, c0.y, clashP.z), ramSize, 6, 1, (strikeAt - arrive) / 20.0 + 0.02, false, Opt.of(
+                    "fade", 0.0, "alpha", 0.98), MOLTEN, HOT);
         });
         Set<UUID> run = new HashSet<>();
-        for (int t = runAt; t < clashAt; t++) {
+        for (int t = runAt; t <= arrive; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
-                double x = summon - runSpeed * (tt - runAt);
+                double x = Math.max(clashDist, summon - speed * (tt - runAt));
                 Vec3 p = ground(lv, V.add(c0, f, x));
                 // 발굽: 쇳물 자국 (웅덩이 작게) · 불꽃 · 튀는 쇳물 · 쿵
                 if ((tt - runAt) % 2 == 0) {
@@ -623,7 +628,6 @@ final class RuneknightSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             JobKit.motion(sp, "runeknight_ult:clash");
-            JobFx.ram(lv, new Vec3(clashP.x, c0.y, clashP.z), ramSize, 6, 1, (strikeAt - clashAt) / 20.0 + 0.02, false, Opt.of("fade", 0.0, "alpha", 0.98), MOLTEN, HOT);
             Vec3 meet = V.up(V.add(sp.position(), Kit.facingOf(sp), 1.3), 1.2);
             JobFx.two(lv, "jimpact", JobImpact.IMPACT, meet, 0.3, Opt.of("size", 1.6, "spin", Kit.rand() * 360, "fade", 0.25), MOLTEN, WHITE);
             JobFx.burst(lv, meet, 1.2, MOLTEN, HOT, 0.3, Opt.empty());

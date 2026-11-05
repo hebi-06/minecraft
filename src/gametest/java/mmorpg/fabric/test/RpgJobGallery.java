@@ -200,20 +200,27 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {4, 10, 12, 40, 100, 134, 140, 144}, new int[] {10, 60, 141}, 160, false),
     };
 
-    /** 0.51.0 뵐룬드(룬 나이트) · 투르스(헥스 블레이드) */
+    /**
+     * 0.51.0 재설계안 2판 뵐룬드(룬 스미스): 룬 모루 (4 내려찍음 → 갈라짐 · 모루 → 16 터짐) · 풀무 숨 (4 · 14 · 24 숨) · 용광로 (달궈 둔 과녁 — 16 쇳물 기둥 · 식으며 깨짐) ·
+     * 담금질 (3 · 7 · 11 망치 → 14 김 — 뒤 평타의 쇳조각이 1초 뒤 터짐까지) · 쇳물 숫양 (6 솟음 → 10 달려옴 → 22 맞댐 → 30 받아침 → 물결)
+     */
     private static final Case[] CASES_RK = {
-        new Case(0, new int[] {2, 6, 10, 16, 18}, new int[] {6, 16}, 26, false),
-        new Case(1, new int[] {1, 4, 10, 12, 20}, new int[] {2, 12, 20}, 30, false),
-        new Case(2, new int[] {4, 16, 31, 46, 56, 60, 62}, new int[] {16, 46, 60}, 72, false),
-        new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
-        new Case(4, new int[] {6, 14, 20, 30, 40, 48, 52, 58, 64, 66}, new int[] {14, 30, 52, 64}, 84, false),
+        new Case(0, new int[] {2, 4, 6, 10, 16, 18}, new int[] {5, 16}, 28, false),
+        new Case(1, new int[] {3, 4, 9, 14, 24, 30}, new int[] {4, 14, 24}, 36, false),
+        new Case(2, new int[] {2, 6, 10, 14, 16, 18}, new int[] {10, 16}, 30, false),
+        new Case(3, new int[] {3, 7, 11, 14}, new int[] {7, 14}, 24, true, false, 22),
+        new Case(4, new int[] {4, 8, 14, 20, 23, 27, 30, 33, 38}, new int[] {14, 23, 31}, 50, false),
     };
-    private static final Case[] CASES_HX = {
-        new Case(0, new int[] {2, 4, 10, 12, 14}, new int[] {3, 12}, 22, false),
-        new Case(1, new int[] {1, 3, 8, 10, 12}, new int[] {2, 10}, 20, false),
-        new Case(2, new int[] {2, 4, 14, 24, 34, 42, 44, 46}, new int[] {4, 24, 44}, 56, false),
-        new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
-        new Case(4, new int[] {3, 6, 16, 26, 30, 38, 42, 46, 50, 56, 58}, new int[] {16, 38, 46, 56}, 72, false),
+    /**
+     * 0.51.0 재설계안 2판 스키르니르(소드 콜러): 베어라 (2 칼이 떠남 → 3 · 13 맴돌며 벰 → 22 꽂힘) · 데려가라 (꽂아 둔 칼로 날아감 — 지나가며 벰) · 꿰뚫고 맴돌아라 (3 꿰뚫음 →
+     * 13 · 23 · 33 · 43 맴돎) · 둘로 나뉘어라 (뒤 평타 — 칼 둘이 날아가 X 자) · 칼날 감옥 (10 둘러쌈 → 10 ~ 60 벰 → 70 큰 한 방)
+     */
+    private static final Case[] CASES_SC = {
+        new Case(0, new int[] {1, 3, 6, 13, 16, 23}, new int[] {3, 13, 23}, 30, false),
+        new Case(1, new int[] {1, 2, 3, 5, 8, 12}, new int[] {2, 5}, 20, false),
+        new Case(2, new int[] {2, 3, 8, 13, 23, 33, 43, 47}, new int[] {3, 23, 43}, 56, false),
+        new Case(3, new int[] {2, 4, 6, 12}, new int[] {6}, 20, true, false, 4),
+        new Case(4, new int[] {3, 6, 9, 10, 20, 30, 40, 50, 60, 67, 70, 72}, new int[] {6, 10, 40, 70}, 84, false),
     };
 
     /**
@@ -554,16 +561,13 @@ public final class RpgJobGallery implements FabricClientGameTest {
             List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 3.2, 0.5, -60, 3.2).inflate(0.8), h -> true);
             if (!near.isEmpty()) mmorpg.fabric.job.JobTraits6.setDuel(sp, near.get(0), 6, false);
         }
-        // 0.51.0 룬 나이트 스물네 룬의 대검 (과녁마다 각인 3 — 마지막에 모두 터져 번짐) · 헥스 블레이드 (과녁마다 저주 룬 — 스킬이 터뜨림, 덫은 다섯이라 묶음)
-        if (id.equals("runeknight_ult")) {
-            for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) JobTraits.setMarks(sp, h, 3);
-        }
-        if (id.equals("hexblade_thorn") || id.equals("hexblade_backstep") || id.equals("hexblade_ult")) {
-            int n = id.equals("hexblade_backstep") ? 5 : 3;
+        // 0.51.0 재설계안 2판 룬 스미스: 용광로는 달궈 둔 과녁 (식으며 깨짐 — 김 · 깨지는 껍질 · 기절) / 소드 콜러: 데려가라는 앞 7칸에 꽂아 둔 칼 (그리로 날아감)
+        if (id.equals("runeknight_furnace")) {
             for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) {
-                mmorpg.fabric.job.JobTraits7.setRunes(sp, h, n);
+                mmorpg.fabric.job.JobTraits7.setHeat(sp, h, 200);
             }
         }
+        if (id.equals("swordcaller_shift")) mmorpg.fabric.job.JobTraits7.testStuck(sp, new Vec3(0.5, -60, 7.5), 200);
         // 0.51.0 아크메이지: 마탄은 노래 태세 (스킬 뒤 별똥) · 쌍둥이 별은 연쇄 4 + 별 넷 (다섯째 별이 떠 별자리 완성)
         if (id.equals("arcmage_bolts")) JobTraits.testStance(sp, "arcmage", "arcmage_song", 200);
         if (id.equals("arcmage_orb")) {
@@ -619,7 +623,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
-        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"runeknight", "hexblade"}, {"arcmage", "necromancer"},
+        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"runeknight", "swordcaller"}, {"arcmage", "necromancer"},
         {"sniper", "shadowhunter"}, {"trickster", "bladedancer"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
@@ -644,7 +648,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "bloodknight" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "warlord" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
                         case "gladiator" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 10, sp -> {});
-                        case "runeknight", "hexblade" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
+                        case "runeknight", "swordcaller" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "arcmage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 5, sp -> JobTraitsMore.setChain(sp, 2));
                         case "necromancer" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 4, sp -> {});
                         case "sniper" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 8, sp -> JobTraitsMore.setBreath(sp, 5));
@@ -678,7 +682,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "warlord" -> CASES_WL;
             case "gladiator" -> CASES_GL;
             case "runeknight" -> CASES_RK;
-            case "hexblade" -> CASES_HX;
+            case "swordcaller" -> CASES_SC;
             case "arcmage" -> CASES_AM;
             case "necromancer" -> CASES_NC;
             case "sniper" -> CASES_SN;

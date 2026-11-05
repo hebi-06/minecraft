@@ -353,6 +353,10 @@ public final class MotionsTest {
                 && Motions.skillMotion("gladiator_ult").equals("jb_gladiator_ult") && Motions.skillMotion("gladiator_ult:slam").equals("jb_gladiator_ult_slam")
                 && Motions.skillMotion("gladiator_flurry").equals("jb_gladiator_flurry") && Motions.skillMotion("lycan_fang") == null,
                 "0.51.0 재설계안 2판 전사 2차 동작 (대지 가르기 내려찍기 · 홀름강 마무리는 단계 열쇠 — 울프헤딘 동작은 뺌)");
+        check(Motions.skillMotion("runeknight_ult:clash").equals("jb_runeknight_ult_clash") && Motions.skillMotion("runeknight_ult:strike").equals("jb_runeknight_ult_strike")
+                && Motions.skillMotion("swordcaller_ult:catch").equals("jb_swordcaller_ult_catch") && Motions.skillMotion("swordcaller_orbit").equals("jb_swordcaller_orbit")
+                && Motions.skillMotion("runeknight_anvil").equals("jb_runeknight_anvil") && Motions.skillMotion("hexblade_ult") == null
+                && Motions.skillMotion("runeknight_carve") == null, "0.51.0 재설계안 2판 마검사 2차 동작 (맞부딪침 · 받아침 · 칼을 받음은 단계 열쇠 — 헥스 블레이드 · 옛 룬 나이트 동작은 뺌)");
         check(Motions.skillMotion("nothing") == null, "unknown → null");
         // poses.json 과 같은 이름
         Path poses = Path.of("src/main/resources/assets/mmorpg/motion/poses.json");

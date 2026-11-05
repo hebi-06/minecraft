@@ -25,7 +25,7 @@ import job_motions_b  # noqa: E402,F401
 import job_motions_c  # noqa: E402,F401
 import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트 — 재설계안 2판)
 import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 글래디에이터 — 재설계안 2판)
-import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (룬 나이트 · 헥스 블레이드)
+import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (룬 스미스 · 소드 콜러 — 재설계안 2판)
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
 import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 섀도 헌터)
 import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 블레이드 댄서)
@@ -97,16 +97,8 @@ AIR = {
     "jb_priest_ult_toll": [(0, 16, "float")],
     "jb_guardian_bash": [],
     "jb_guardian_ult": [(1, 9, "tuck"), (10, 14, "land")],
-    # 0.51.0 2차 직업 (소드마스터 · 블러드 나이트 · 워로드 · 글래디에이터는 재설계안 2판 — 몸이 뜨는 단계의 다리를 job_motions_d · e 에서 직접 · softLegs 끔)
-    "jb_runeknight_futhark": [(1, 56, "float")],
-    "jb_runeknight_futhark_plant": [(0, 5, "float"), (6, 10, "land")],
-    "jb_runeknight_ult": [(2, 22, "float")],
-    "jb_runeknight_ult_slash0": [(0, 12, "float")],
-    "jb_runeknight_ult_slash1": [(0, 12, "float")],
-    "jb_runeknight_ult_slash2": [(0, 12, "float")],
-    "jb_runeknight_ult_plunge": [(0, 12, "float")],
-    "jb_runeknight_ult_final": [(0, 6, "tuck"), (7, 11, "land")],
-    "jb_hexblade_ult_cleave": [(1, 11, "tuck"), (12, 16, "land")],
+    # 0.51.0 2차 직업 (소드마스터 · 블러드 나이트 · 워로드 · 글래디에이터는 재설계안 2판 — 몸이 뜨는 단계의 다리를 job_motions_d · e 에서 직접 · softLegs 끔,
+    # 룬 스미스 · 소드 콜러는 몸이 뜨지 않음)
     # 0.51.0 아크메이지: 꿀술의 노래 (1칸 떠 노래 → 내려앉음) · 별의 노래 (3칸 떠 72틱 — 물결 · 별의 비 동안 떠 있음 → 대폭발에 내려앉음)
     "jb_arcmage_song": [(1, 30, "float"), (31, 37, "land")],
     "jb_arcmage_ult": [(2, 22, "float")],
