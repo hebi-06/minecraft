@@ -88,12 +88,15 @@ final class SwordmasterSkills {
         SkillFx.sparks(level, hip, JobFx.inner(j), 5, 1.6);
         SkillFx.play(level, "item.armor.equip_iron", sp.position(), 1.5, 0.8);
         SkillFx.play(level, "item.trident.return", sp.position(), 1.8, 0.5);
+        JobFx.charge(sp, j, new Vec3(-0.35, 0.95, 0.15), sheath, 0.6); // 0.51.0 숨을 고르는 동안 칼집 쪽으로 금빛이 모임
         int n = lines;
         double R = reach;
         RuneKit.later(sheath, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             Vec3 look = sp.getViewVector(1F);
+            // 0.51.0 뽑는 순간 앞으로 퍼지는 거대한 금빛 초승달 검기 (사용자 "커다란 검기가 나오면서 때리면")
+            JobFx.slashWave(sp, j, 184.0, R * 0.48, R + 2.0, 30);
             // 1인칭: 눈앞 칼자국 다발 (rfx_jcuts — 카메라를 봄)
             JobFx.two(lv, "jcuts", CUTS, V.add(sp.getEyePosition(), look, 2.3), 0.42, JobFx.only1p(sp).with("size", 2.5, "spin", Kit.rand() * 16 - 8, "vel",
                     RuneKit.bodyVel(sp), "fade", 0.25), JobFx.outer(j), JobFx.inner(j));
@@ -115,6 +118,7 @@ final class SwordmasterSkills {
                 Vec3 ff = Kit.facingOf(sp);
                 JobFx.slash(sp, j, 2.4, 0.25, 3.1, 4.0, 0.3);
                 JobFx.slashCard(sp.level(), V.up(V.add(sp.position(), ff, 1.6), 1.15), ff, 4.0, 4.8, 0.3, V.ZERO, j, JobFx.hide1p(sp));
+                JobFx.slashWave(sp, j, 4.0, R * 0.58, R + 4.0, 34); // 0.51.0 마지막 큰 가로 베기의 검기
             });
             SkillFx.play(lv, "item.trident.throw", sp.position(), 1.6, 0.9);
             SkillFx.play(lv, "entity.player.attack.sweep", sp.position(), 1.25, 1.0);
@@ -187,6 +191,7 @@ final class SwordmasterSkills {
                 Vec3 c = V.up(V.add(sp.position(), dir, 1.2), 1.15);
                 JobFx.slashCard(sp.level(), c, dir, tilt, 3.4, 0.26, V.ZERO, j, JobFx.hide1p(sp));
                 JobFx.slash(sp, j, 2.2, 0.25, 2.6, tilt, 0.24);
+                if (tilt == 95) JobFx.slashWave(sp, j, tilt, 2.0, 5.5, 26); // 0.51.0 마지막 내려 베기의 검기
                 SkillFx.play(sp.level(), "item.spear.attack_miss", c, 1.3 + 0.15 * Math.random(), 0.8);
             });
         }
@@ -209,6 +214,7 @@ final class SwordmasterSkills {
         if (step > 0 && sp.onGround() && !Status.isRooted(sp)) Kit.launch(sp, f.x * step, sp.getDeltaMovement().y, f.z * step);
         JobFx.slash(sp, j, 2.3, 0.2, 2.9, -4.0, 0.28);
         JobFx.slashCard(level, V.up(V.add(sp.position(), f, 1.4), 1.15), f, -4.0, 4.0, 0.28, V.ZERO, j, JobFx.hide1p(sp));
+        JobFx.slashWave(sp, j, -4.0, 2.0, 5.5, 26); // 0.51.0 가로 검기
         SkillFx.play(level, "entity.player.attack.sweep", sp.position(), 1.1, 1.0);
         SkillFx.play(level, "item.spear.attack_miss", sp.position(), 1.35, 0.8);
         for (LivingEntity e : RuneKit.coneTargets(sp, k.num("reach", 3.6), k.num("arc", 130), 8)) {
@@ -513,7 +519,8 @@ final class SwordmasterSkills {
                 double len = Math.max(2, RuneKit.rayLength(level, from, d, range));
                 double fl = len / speed;
                 double size = i == 0 ? 4.6 : 3.4;
-                JobFx.wave(sp, j, V.add(from, d, 1.0), d, speed, fl + 0.1, Opt.of("size", size, "spin", -2.0, "fade", 0.2));
+                // 0.51.0 거대한 초승달 검기 (rfx_jwave — 가운데가 가장 큼)
+                JobFx.bigWave(level, sp, V.add(from, d, 1.0), d, speed, size * 0.62, 178.0, fl + 0.12, j, Opt.empty());
                 bladeScar(level, from, d, len, speed, j);
                 for (Kit.LineHit h : RuneKit.lineTargets(sp, from, d, len, i == 0 ? half : half * 0.8)) {
                     LivingEntity e = h.e();

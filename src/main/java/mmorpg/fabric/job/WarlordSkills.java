@@ -130,6 +130,7 @@ final class WarlordSkills {
         SkillFx.play(level0, "entity.polar_bear.warning", sp.position(), 0.6, 0.5);
         double len0 = lenAt(k, 0);
         double len1 = lenAt(k, 1);
+        JobFx.charge(sp, j, new Vec3(0.75, 0.35, -0.55), charge, 0.75); // 0.51.0 모으는 동안 도끼날에 빛이 빨려 들며 커짐 (사용자 "크게 감는 동작")
         // 모으는 동안 (2틱마다): 도끼 끝이 땅을 긁는 불티 · 흙먼지 · 앞 땅에 모은 만큼 길어지는 빛 금 (4틱마다 — 다 모이면 번쩍) · 차오르는 소리
         for (int t = 1; t <= charge; t++) {
             int tt = t;
@@ -205,6 +206,7 @@ final class WarlordSkills {
             JobFx.slashCard(level, V.up(V.add(sp.position(), f, 1.1), 1.2), f, 95.0, 3.4, 0.3, V.ZERO, j, JobFx.hide1p(sp));
             slamFx(sp, j, g, 2.0 + c, 1.0 + 0.6 * c);
             double free = Math.max(2, RuneKit.rayLength(level, V.up(g, 0.6), f, len));
+            JobFx.groundWave(level, sp, g, f, 1.5 + 0.9 * c, free, SPLIT_SPEED, j); // 0.51.0 갈라짐 앞머리를 달리는 세로 도끼 검기 (모은 만큼 크게)
             rift(level, g, f, free, JobKit.glow(j), 0.9 + 0.5 * c, SPLIT_SPEED);
             if (full) {
                 // 끝까지 모음: 갈라진 땅을 따라 돌창이 솟음 (닿는 때마다 — 크게 · 1.5칸마다 엇갈려)
@@ -410,6 +412,9 @@ final class WarlordSkills {
             JobFx.slash(sp, j, 2.3, 0.15, 2.4, 95.0, 0.26);
             JobFx.slashCard(lv, V.up(V.add(sp.position(), ff, 1.1), 1.2), ff, 95.0, 3.4, 0.3, V.ZERO, j, JobFx.hide1p(sp));
             slamFx(sp, j, gather, rr, 1.5);
+            // 0.51.0 내려찍은 자리에서 큰 도끼 검기 X (가운데 — 둘 · 맞은 무리 위)
+            JobFx.bigWave(lv, null, V.up(gather, 1.2), ff, 0, 2.2, 90 + 30, 0.32, j, Opt.empty());
+            JobFx.bigWave(lv, null, V.up(gather, 1.2), ff, 0, 2.2, 90 - 30, 0.32, j, Opt.empty());
             for (int i = 0; i < 6; i++) {
                 double a = Math.toRadians(i * 60 + 15);
                 JobFx.spikeLife(lv, ground(lv, V.add(gather, new Vec3(Math.cos(a), 0, Math.sin(a)), rr * 0.8)), 0.75, 0.12, 0.35, Opt.empty(), ROCK, JobKit.glow(j));
@@ -544,6 +549,7 @@ final class WarlordSkills {
                 if (tt % 6 == 0) SkillFx.play(lv, "block.grindstone.use", c, 0.4 + 0.5 * q, 0.4);
             });
         }
+        JobFx.charge(sp, j, new Vec3(-0.9, 0.55, -0.55), windup, 1.0); // 0.51.0 왼쪽 뒤로 감은 도끼날에 빛이 빨려 들며 커짐
         RuneKit.later(windup - 4, () -> {
             if (RuneKit.sameLife(sp, life)) SkillFx.play(sp.level(), "mob.ravager.roar", sp.position(), 0.7, 1.0);
         });
@@ -566,6 +572,12 @@ final class WarlordSkills {
         JobFx.ring(level, V.up(c, 1.1), edge * 0.7, j, false, 0.3, Opt.of("alpha", 0.6, "spin", 80.0));
         JobFx.slash(sp, j, 2.4, 0.15, 3.4, -4.0, 0.3);
         RuneKit.later(2, () -> JobFx.slash(sp, j, 2.4, 0.15, 3.0, 176.0, 0.26));
+        // 0.51.0 둘레로 퍼지는 거대한 도끼 검기 열둘 (사용자 "커다란 검기가 나오면서 때리면" — 한 바퀴 휘두른 날이 바깥 고리까지 뻗어 나감)
+        for (int i = 0; i < 12; i++) {
+            double a = Math.toRadians(i * 30 + 15);
+            Vec3 d = new Vec3(Math.cos(a), 0, Math.sin(a));
+            JobFx.bigWave(level, null, V.up(V.add(c, d, 1.4), 1.1), d, (R - 1.4) / 0.24, 2.0, 0, 0.34, j, JobFx.hide1p(sp));
+        }
         SkillFx.shock(level, V.up(g, 0.1), JobFx.inner(j), R, 0.6);
         int n = 12;
         for (int i = 0; i < n; i++) {

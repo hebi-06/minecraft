@@ -188,7 +188,7 @@ final class SwordcallerSkills {
             JobFx.glint(level0, V.up(stuck, 1.2), 0.7, j, 0.3, Opt.empty());
             SkillFx.play(level0, "item.trident.return", stuck, 1.2, 0.9);
         } else {
-            JobFx.wave(sp, j, V.up(V.add(c0, f, 1.0), 1.2), f, 30.0, 0.25, Opt.of("size", 1.2, "spin", -6.0));
+            JobFx.bigWave(level0, sp, V.up(V.add(c0, f, 1.0), 1.2), f, 30.0, 1.6, 174.0, D / 30.0 + 0.12, j, Opt.empty()); // 0.51.0 길을 여는 큰 검기
             SkillFx.play(level0, "item.trident.throw", c0, 1.1, 0.8);
         }
         SkillFx.play(level0, "item.trident.riptide_2", c0, 1.3, 0.6);
@@ -214,7 +214,10 @@ final class SwordcallerSkills {
             int at = start + (int) Math.ceil(Math.max(0, along) / speed);
             JobKit.strike(sp, e, j, P, k.total(), true, false, life, at, x -> {
                 JobImpact.hit(sp, e, j, 1.1);
-                if (e.level() instanceof ServerLevel lv) cutAt(lv, Kit.bodyPoint(e), f, Kit.rand() < 0.5 ? -12 : 192, 1.1 + Kit.bodyPad(e), j);
+                if (e.level() instanceof ServerLevel lv) {
+                    cutAt(lv, Kit.bodyPoint(e), f, Kit.rand() < 0.5 ? -12 : 192, 1.1 + Kit.bodyPad(e), j);
+                    JobFx.bigWave(lv, null, Kit.bodyPoint(e), f, 0, 1.3 + Kit.bodyPad(e) * 0.5, Kit.rand() < 0.5 ? 10 : 170, 0.26, j, Opt.empty()); // 0.51.0 지나가며 벤 큰 검기
+                }
             });
         }
         // 닿음: 칼을 뽑아 쥠 (꽂힌 칼이 사라지며 둘레를 한 바퀴 벤 빛) · 착지
@@ -497,6 +500,11 @@ final class SwordcallerSkills {
                 }
             });
             JobFx.burst(lv, b, 1.8, j, 0.35, Opt.empty());
+            // 0.51.0 큰 한 방: 갇힌 적 위의 거대한 X 검기 (사용자 "커다란 검기가 나오면서 때리면")
+            Vec3 ff = V.flat(V.sub(t.position(), sp.position()));
+            ff = V.len(ff) < 1e-3 ? Kit.facingOf(sp) : V.unit(ff);
+            JobFx.bigWave(lv, null, b, ff, 0, 2.4 + Kit.bodyPad(t) * 0.6, 45, 0.38, j, Opt.empty());
+            JobFx.bigWave(lv, null, b, ff, 0, 2.4 + Kit.bodyPad(t) * 0.6, -45, 0.38, j, Opt.empty());
             JobFx.bladeRing(lv, b, R + 0.6, j, 0.35, 24, Opt.of("alpha", 1.0));
             Ult.flash(lv, b, JobKit.core(j), Opt.empty(), sp);
             SkillFx.play(lv, "entity.player.attack.crit", b, 0.7, 1.0);

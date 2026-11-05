@@ -75,6 +75,9 @@ final class BloodknightSkills {
         RuneKit.Hand h = RuneKit.handOf(sp);
         JobTraits5.blood(level, V.up(V.add(h.hand(), h.f(), 0.5), 0.2), 0.5, j, 0.3, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
         SkillFx.play(level, "item.trident.riptide_1", sp.position(), 0.8 + 0.12 * stage, 0.6);
+        // 0.51.0 크게 감는 동안 칼끝에 핏빛이 모임 (사용자 "커다란 검기") — 첫째 왼쪽 뒤 · 둘째 오른쪽 뒤 · 셋째 머리 위
+        Vec3 coil = stage == 0 ? new Vec3(-0.8, 0.75, -0.45) : stage == 1 ? new Vec3(0.8, 0.65, -0.45) : new Vec3(0.1, 2.4, -0.1);
+        JobFx.charge(sp, j, coil, Math.max(1, at - 1), 0.6);
         if (stage == 2) {
             // 셋째: 작게 뛰어올라 내리찍음 (몸 — at 틱에 땅)
             JobMove.run(sp, JobMove.hop(0, at, from -> V.add(from, Kit.facingOf(sp), 1.2), 0.9));
@@ -99,6 +102,7 @@ final class BloodknightSkills {
         double tilt = CLEAVE_TILT[stage];
         JobFx.slash(sp, j, 2.4, 0.2, 3.3, tilt, 0.32);
         JobFx.slashCard(level, V.up(V.add(sp.position(), f, 1.9), 1.1), f, tilt, 5.6, 0.32, V.ZERO, j, JobFx.hide1p(sp));
+        JobFx.slashWave(sp, j, tilt, 2.5, reach + 2.5, 26); // 0.51.0 핏빛 초승달 검기가 앞으로 뻗어 나감
         // 칼끝 자리: 누운 붉은 베인 줄 (앞 sweetFrom ~ reach)
         JobFx.slashCard(level, V.up(V.add(sp.position(), f, (from + reach) / 2), 0.35), f, 0.0, 4.2, 0.4, V.ZERO, j, Opt.empty());
         for (int q = 0; q < 8; q++) {
@@ -130,6 +134,7 @@ final class BloodknightSkills {
         double sweet = k.num("sweet", 1.5);
         JobFx.slash(sp, j, 2.2, -0.05, 3.2, 95.0, 0.32);
         JobFx.slashCard(level, V.up(V.add(sp.position(), f, 1.4), 1.4), f, 95.0, 5.0, 0.32, V.ZERO, j, JobFx.hide1p(sp));
+        JobFx.groundWave(level, sp, g, f, 1.9, 6.0, 24, j); // 0.51.0 내리찍은 자리에서 땅을 타고 달리는 세로 검기
         JobFx.smash(level, V.up(g, 0.05), r + 0.6, j, 0.55, Opt.empty());
         splash(level, V.up(g, 0.5), 2.6, j, 14);
         crack(level, g, f, 4.0);
@@ -208,6 +213,7 @@ final class BloodknightSkills {
             Vec3 tip = V.up(V.add(sp.position(), face, 1.0), 1.2);
             JobFx.slash(sp, j, 2.2, -0.05, 2.8, 95.0, 0.28);
             JobFx.slashCard(lv, tip, face, 95.0, 3.8, 0.28, V.ZERO, j, JobFx.hide1p(sp));
+            JobFx.groundWave(lv, sp, sp.position(), face, 1.6, 5.0, 22, j); // 0.51.0 내려 박은 칼에서 앞으로 달리는 세로 검기
             JobFx.smash(lv, V.up(sp.position(), 0.05), 1.6, j, 0.4, Opt.of("alpha", 0.85));
             SkillFx.play(lv, "item.trident.hit", tip, 0.8, 1.0);
             SkillFx.play(lv, "entity.player.attack.crit", tip, 0.9, 0.8);
@@ -366,6 +372,7 @@ final class BloodknightSkills {
         JobFx.aura(sp, j, 3.0, 0.6, 0.95);
         SkillFx.play(level0, "entity.warden.heartbeat", c0, 0.8, 1.0);
         SkillFx.play(level0, "item.armor.equip_netherite", c0, 0.7, 1.0);
+        JobFx.charge(sp, j, new Vec3(-0.45, 0.95, 0.25), draw, 0.7); // 0.51.0 뽑는 동안 칼집 쪽으로 핏빛이 모임
         RuneKit.later(draw, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel level = sp.level();
@@ -386,7 +393,7 @@ final class BloodknightSkills {
             int arrive = Math.max(1, (int) Math.round(travel / speed * 20));
             // 핏빛 칼날 (1인칭 눈앞 · 3인칭 날아가는 판)
             JobFx.slash(sp, j, 2.3, 0.2, 3.2, -4.0, 0.3);
-            JobFx.wave(sp, j, V.add(from, dir, 1.0), dir, speed, travel / speed + 0.08, Opt.of("size", 3.6, "spin", -4.0, "fade", 0.2));
+            JobFx.bigWave(level, sp, V.add(from, dir, 1.0), dir, speed, 2.8, 176.0, travel / speed + 0.12, j, Opt.empty()); // 0.51.0 거대한 핏빛 초승달 검기
             for (double s = 1; s < travel; s += 1.2) {
                 double ss = s;
                 RuneKit.later((int) Math.round(s / speed * 20), () -> JobTraits5.drop(level, V.add(from, dir, ss), V.DOWN, 0.13, JobFx.outer(j), 0.5, Opt.of("speed", 1.6,
@@ -438,6 +445,7 @@ final class BloodknightSkills {
         JobKit.motion(sp, "bloodknight_ult:slam");
         JobFx.slashCard(level, V.up(V.add(c, f, 1.0), 1.4), f, 95.0, 4.6, 0.32, V.ZERO, j, JobFx.hide1p(sp));
         JobFx.slash(sp, j, 2.2, -0.05, 3.1, 95.0, 0.3);
+        JobFx.groundWave(level, sp, c, f, 2.1, 6.0, 24, j); // 0.51.0 내리꽂은 자리에서 앞으로 달리는 세로 검기
         JobFx.smash(level, V.up(c, 0.05), k.num("slamRadius", 3.5) + 0.5, j, 0.6, Opt.empty());
         splash(level, V.up(c, 0.6), 3.2, j, 16);
         crack(level, new Vec3(c.x, RuneKit.groundAt(level, V.up(c, 1), c.y), c.z), f, 5.0);
@@ -473,9 +481,16 @@ final class BloodknightSkills {
                 SkillFx.play(lv, "entity.player.attack.sweep", at, 0.8 + 0.08 * ss, 1.0);
                 if (e == null) return;
                 LivingEntity ee = e;
+                Vec3 fff = ff;
                 JobKit.strike(sp, ee, j, P, mult, false, lastOne, life, 0, d -> {
                     JobImpact.hit(sp, ee, j, lastOne ? 2.0 : 1.3);
-                    if (ee.level() instanceof ServerLevel l2) splash(l2, Kit.bodyPoint(ee), 1.0 + Kit.bodyPad(ee) * 0.5, j, 6);
+                    if (ee.level() instanceof ServerLevel l2) {
+                        splash(l2, Kit.bodyPoint(ee), 1.0 + Kit.bodyPad(ee) * 0.5, j, 6);
+                        // 0.51.0 맞은 자리에 X 자 큰 검기 (마지막은 더 크게)
+                        double s2 = (lastOne ? 1.7 : 1.2) + Kit.bodyPad(ee) * 0.5;
+                        JobFx.bigWave(l2, null, Kit.bodyPoint(ee), fff, 0, s2, 45, 0.26, j, Opt.empty());
+                        JobFx.bigWave(l2, null, Kit.bodyPoint(ee), fff, 0, s2, -45, 0.26, j, Opt.empty());
+                    }
                     if (!healed[0] && ee == tgt && (ee.isRemoved() || !ee.isAlive() || ee.isDeadOrDying())) {
                         healed[0] = true;
                         double got = JobTraits5.leech(sp, j, sp.getMaxHealth() * k.num("heal", 0.2));

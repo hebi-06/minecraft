@@ -1117,6 +1117,29 @@ final class JobFx {
         bigWave(level, sp, at, dir, speed, size, tilt, life, j, null, null, o);
     }
 
+    /**
+     * 칼질에 붙는 큰 검기 (2차 직업 단타 — 사용자 "커다란 검기가 나오면서 때리면"): 가슴 높이 앞 0.9칸에서 보는 쪽 (수평) 으로 len 칸 (벽 앞까지) speed 칸/초로 날아감.
+     * slashTilt = 같이 쓰는 눈앞 큰 베기 (slash) 의 기울기 — 검기는 같은 모양이 되게 180 도 돌림 (slash 0 = 아래로 불룩 · 검기 0 = 위로 불룩), size = 반 크기 칸
+     */
+    static void slashWave(ServerPlayer sp, Jobs.Job j, double slashTilt, double size, double len, double speed) {
+        Vec3 f = Kit.facingOf(sp);
+        Vec3 at = V.up(V.add(sp.position(), f, 0.9), 1.15);
+        double L = Math.max(1.0, RuneKit.rayLength(sp.level(), at, f, len));
+        bigWave(sp.level(), sp, at, f, speed, size, slashTilt + 180, L / speed + 0.12, j, Opt.empty());
+    }
+
+    /**
+     * 땅을 타고 달리는 세로 검기 (내려찍기 · 내려 박기에 붙음): 땅 g 에서 f 쪽 (수평) 으로 len 칸 speed 칸/초 — 아래 끝이 땅을 스치게 (가운데 높이 = size × 0.62)
+     */
+    static void groundWave(ServerLevel level, ServerPlayer sp, Vec3 g, Vec3 f, double size, double len, double speed, Jobs.Job j) {
+        Vec3 d = V.flat(f);
+        if (V.len(d) < 1e-3) return;
+        d = V.unit(d);
+        Vec3 at = V.up(g, size * 0.62);
+        double L = Math.max(1.0, RuneKit.rayLength(level, at, d, len));
+        bigWave(level, sp, at, d, speed, size, 90 + (Kit.rand() - 0.5) * 8, L / speed + 0.12, j, Opt.empty());
+    }
+
     /** 검기 한 벌 + 잔상 둘 (1 · 2틱 뒤 — 옅고 조금 작게) */
     private static void wavePair(ServerLevel level, Vec3 at, double life, Opt o, double alpha, double[] glow, double[] core) {
         two(level, "jwave", BIG_WAVE, at, life, o.with("alpha", alpha), glow, core);

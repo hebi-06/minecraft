@@ -120,6 +120,8 @@ final class GladiatorSkills {
                         ServerLevel lv = sp.level();
                         Vec3 g0 = e != null ? e.position() : V.add(sp.position(), Kit.facingOf(sp), 1.8);
                         JobFx.smash(lv, V.up(new Vec3(g0.x, RuneKit.groundAt(lv, V.up(g0, 0.5), g0.y), g0.z), 0.05), 1.6, j, 0.4, Opt.empty());
+                        // 0.51.0 무리의 마지막 내려침: 땅을 타고 앞으로 달리는 세로 도끼 검기 (사용자 "커다란 검기")
+                        JobFx.groundWave(lv, sp, V.add(sp.position(), Kit.facingOf(sp), 0.8), Kit.facingOf(sp), 1.7, 5.0, 24, j);
                         SkillFx.play(lv, "entity.player.attack.strong", g0, 0.7, 0.9);
                     }
                 });
@@ -143,9 +145,10 @@ final class GladiatorSkills {
         int hitAt = Math.max(pullTicks + 2, (int) k.num("hitAt", 6));
         ServerLevel level = sp.level();
         Vec3 f = Kit.facingOf(sp);
-        // 크게 휘두름 (1인칭 눈앞 넓은 가로 베기 · 3인칭 앞의 판)
+        // 크게 휘두름 (1인칭 눈앞 넓은 가로 베기 · 3인칭 앞의 판 · 0.51.0 날 끝을 따라 뻗는 큰 도끼 검기)
         JobFx.slash(sp, j, 2.4, 0.1, 3.0, 8.0, 0.24);
         JobFx.slashCard(level, V.up(V.add(sp.position(), f, 1.5), 1.2), f, 8.0, 4.2, 0.26, V.ZERO, j, JobFx.hide1p(sp));
+        JobFx.slashWave(sp, j, 8.0, 2.2, range, 30);
         SkillFx.play(level, "entity.player.attack.sweep", sp.position(), 0.7, 0.9);
         SkillFx.play(level, "item.trident.throw", sp.position(), 0.6, 0.7);
         if (t == null) return true;
@@ -192,6 +195,7 @@ final class GladiatorSkills {
             Vec3 b = Kit.bodyPoint(t);
             JobFx.slash(sp, j, 2.2, 0.15, 2.4, 95.0, 0.24);
             JobFx.slashCard(lv, b, V.unit(V.sub(b, sp.getEyePosition())), 95.0, 3.4, 0.28, RuneKit.entVel(t), j, JobFx.hide1p(sp));
+            JobFx.bigWave(lv, null, b, Kit.facingOf(sp), 0, 1.6 + Kit.bodyPad(t) * 0.5, 90, 0.3, j, Opt.empty()); // 0.51.0 내려찍은 자리의 세로 도끼 검기
             Vec3 g = t.position();
             JobFx.smash(lv, V.up(new Vec3(g.x, RuneKit.groundAt(lv, V.up(g, 0.5), g.y), g.z), 0.05), 1.8, j, 0.45, Opt.empty());
             JobKit.strike(sp, t, j, P, k.total(), false, false, life, 0, d -> {
@@ -364,6 +368,7 @@ final class GladiatorSkills {
             Vec3 b = Kit.bodyPoint(t);
             JobFx.slash(sp, j, 2.2, 0.15, 2.6, 95.0, 0.26);
             JobFx.slashCard(lv, b, V.unit(V.sub(b, sp.getEyePosition())), 95.0, 3.6, 0.3, RuneKit.entVel(t), j, JobFx.hide1p(sp));
+            JobFx.bigWave(lv, null, b, Kit.facingOf(sp), 0, 1.8 + Kit.bodyPad(t) * 0.5, 90, 0.32, j, Opt.empty()); // 0.51.0 뛰어든 내려침의 세로 도끼 검기
             Vec3 g = t.position();
             JobFx.smash(lv, V.up(new Vec3(g.x, RuneKit.groundAt(lv, V.up(g, 0.5), g.y), g.z), 0.05), 2.4, j, 0.5, Opt.empty());
             SkillFx.play(lv, "block.anvil.land", g, 0.9, 0.8);
@@ -469,6 +474,12 @@ final class GladiatorSkills {
         boolean low = t.getHealth() < t.getMaxHealth() * k.num("below", 0.3);
         JobFx.slash(sp, j, 2.3, 0.1, 3.2, 95.0, 0.3);
         JobFx.slashCard(level, b, V.unit(V.sub(b, sp.getEyePosition())), 95.0, 4.4, 0.34, V.ZERO, j, JobFx.hide1p(sp));
+        // 0.51.0 마지막 내려찍기: 상대 위의 거대한 세로 도끼 검기 · 땅을 타고 사방으로 달리는 검기 넷 (사용자 "커다란 검기")
+        Vec3 ff = V.flat(V.sub(t.position(), sp.position()));
+        if (V.len(ff) < 1e-3) ff = Kit.facingOf(sp);
+        ff = V.unit(ff);
+        JobFx.bigWave(level, null, b, ff, 0, 2.6 + Kit.bodyPad(t) * 0.6, 90, 0.4, j, Opt.empty());
+        for (int i = 0; i < 4; i++) JobFx.groundWave(level, null, g, V.turnY(ff, 45 + i * 90), 1.6, 5.5, 22, j);
         JobFx.smash(level, V.up(g, 0.05), 4.0, j, 0.7, Opt.empty());
         JobFx.burst(level, V.up(g, 0.8), 2.2, j, 0.45, Opt.empty());
         JobFx.ring(level, V.up(g, 0.08), 4.0, j, false, 0.45, Opt.of("alpha", 1.0));
