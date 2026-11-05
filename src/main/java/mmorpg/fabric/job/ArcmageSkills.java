@@ -238,7 +238,7 @@ final class ArcmageSkills {
                     if (V.len(V.sub(Kit.bodyPoint(e), p1)) > radius + Kit.bodyPad(e)) continue;
                     boolean back = phase[0] == 2;
                     if (!(back ? backHit : outHit).add(e.getUUID())) continue;
-                    JobKit.strike(sp, e, j, JobSystem.power(sp, j), back ? k.num("back", 2.1) : k.num("out", 2.1), true, false, life, 0, x -> {
+                    JobKit.strike(sp, e, j, P, back ? k.num("back", 2.1) : k.num("out", 2.1), true, false, life, 0, x -> {
                         if (RuneKit.fxQuota("jobHalo", 6)) JobFx.hit(e, j, 0.9);
                         if (e.level() instanceof ServerLevel lv) JobFx.starNode(lv, Kit.bodyPoint(e), 0.4, 6, 2, 0.22, false, Opt.empty(), NIGHT, GOLD);
                     });

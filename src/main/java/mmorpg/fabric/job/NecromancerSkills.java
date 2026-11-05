@@ -196,7 +196,7 @@ final class NecromancerSkills {
             SkillFx.play(d, "entity.wither_skeleton.ambient", c, 0.7, 0.9);
             JobTraits8.addYard(sp, c, R, Tasks.now() + dur);
             for (LivingEntity e : Kit.around(sp, c, R, 3)) {
-                JobKit.strike(sp, e, j, JobSystem.power(sp, j), k.num("rise", 2.1), true, false, life, 0, x -> {
+                JobKit.strike(sp, e, j, P, k.num("rise", 2.1), true, false, life, 0, x -> {
                     if (RuneKit.fxQuota("jobYardRise", 6)) JobFx.hit(e, j, 1.0);
                 });
             }
@@ -231,7 +231,7 @@ final class NecromancerSkills {
             SkillFx.play(d, "block.deepslate_bricks.break", c, 0.6, 1.2);
             SkillFx.play(d, "entity.skeleton.death", c, 0.6, 0.8);
             for (LivingEntity e : Kit.around(sp, c, R + 0.5, 3)) {
-                JobKit.strike(sp, e, j, JobSystem.power(sp, j), k.num("crumble", 2.1), true, false, life, 0, x -> {
+                JobKit.strike(sp, e, j, P, k.num("crumble", 2.1), true, false, life, 0, x -> {
                     if (RuneKit.fxQuota("jobYardEnd", 6)) JobFx.hit(e, j, 1.0);
                 });
             }
