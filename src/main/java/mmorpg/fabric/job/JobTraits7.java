@@ -47,10 +47,10 @@ public final class JobTraits7 {
     /** 평타에 더한 몫의 구분 (WeaponBonus.parts) */
     static final String KEY_ECHO = "job_echo";
 
-    /** 쇳물 (주황) · 흰 열 (노란 흰빛) · 식은 껍질 (검붉은 숯) · 김 (흰 회색) */
+    /** 쇳물 (주황) · 흰 열 (노란 흰빛) · 깨지는 달군 껍질 (붉은 쇳빛) · 김 (흰 회색) */
     static final double[] MOLTEN = {1.0, 0.42, 0.06};
     static final double[] HOT = {1.0, 0.88, 0.5};
-    static final double[] SLAG = {0.22, 0.08, 0.04};
+    static final double[] CRUST = {0.86, 0.3, 0.07};
     static final double[] STEAM = {0.88, 0.9, 0.92};
     private static final double[] WHITE = RuneKit.WHITE;
 
@@ -235,7 +235,10 @@ public final class JobTraits7 {
         if (e.level() instanceof ServerLevel level && RuneKit.fxQuota("jobQuench", 6)) quenchFx(level, e, j);
     }
 
-    /** 식으며 깨짐: 몸에서 김 셋이 솟구침 · 식은 껍질이 깨져 튐 (rfx_jshatter — 숯빛 · 쇳물 테) · 흰 불티 · 큰 쉬익 · 쇠 깨지는 소리 */
+    /**
+     * 식으며 깨짐: 몸에서 김 셋이 솟구침 · 달아오른 껍질이 깨져 튐 (rfx_jshatter — 붉은 쇳빛 · 흰 열 테. 영상 1 뒤: 숯빛 조각은 하늘 앞에서 검은 별표로 보였음) · 흰 불티 ·
+     * 큰 쉬익 · 쇠 깨지는 소리
+     */
     static void quenchFx(ServerLevel level, LivingEntity e, Jobs.Job j) {
         Vec3 b = Kit.bodyPoint(e);
         double s = 0.6 + Kit.bodyPad(e) * 0.5;
@@ -244,7 +247,7 @@ public final class JobTraits7 {
             JobFx.smoke(level, p, s * (0.8 + 0.25 * i), STEAM, WHITE, 0.75 + 0.1 * i, Opt.of("vel", new Vec3((Kit.rand() - 0.5) * 0.6, 1.6 + 0.4 * i, (Kit.rand() - 0.5) * 0.6),
                     "alpha", 0.75));
         }
-        JobFx.shatter(level, b, s * 1.2, SLAG, MOLTEN, 0.45, Opt.of("vel", RuneKit.entVel(e)));
+        JobFx.shatter(level, b, s * 1.05, CRUST, HOT, 0.4, Opt.of("vel", RuneKit.entVel(e)));
         JobFx.heat(level, b, s * 1.25, 5, 1, 0.35, false, Opt.of("vel", RuneKit.entVel(e)));
         SkillFx.sparks(level, b, HOT, 12, 5.0);
         SkillFx.sparks(level, b, MOLTEN, 8, 3.5);
@@ -290,13 +293,14 @@ public final class JobTraits7 {
         Vec3 skin = V.up(V.add(V.add(b, toMe, Kit.bodyPad(e) * 0.9 + 0.05), side, off * (0.4 + Kit.bodyPad(e))), (Kit.rand() - 0.3) * 0.5);
         Vec3 into = V.unit(V.add(V.scale(toMe, -1), new Vec3(0, -0.35 + Kit.rand() * 0.3, 0)));
         if (RuneKit.fxQuota("jobShard", 10)) {
-            RuneKit.rfx2(level, "icicle", V.add(skin, into, -0.12), Opt.of("dir", into, "size", 0.3, "life", at / 20.0, "fade", 0.05, "alpha", 1.0, "vel",
+            RuneKit.rfx2(level, "icicle", V.add(skin, into, -0.2), Opt.of("dir", into, "size", 0.48, "life", at / 20.0, "fade", 0.05, "alpha", 1.0, "vel",
                     RuneKit.entVel(e)), MOLTEN, HOT);
-            SkillFx.sparks(level, skin, HOT, 4, 2.4);
+            JobFx.two(level, "jimpact", JobImpact.IMPACT, skin, 0.2, Opt.of("size", 0.55, "spin", Kit.rand() * 360, "fade", 0.3, "vel", RuneKit.entVel(e)), MOLTEN, HOT);
+            SkillFx.sparks(level, skin, HOT, 6, 3.0);
             SkillFx.play(level, "item.trident.hit", skin, 1.8, 0.35);
             // 터지기 앞 6틱: 조각이 하얗게 달아오름 (흰 열 번쩍)
             RuneKit.later(Math.max(1, at - 6), () -> {
-                if (!e.isRemoved() && e.level() instanceof ServerLevel lv) RuneKit.rfx2(lv, "icicle", V.add(skin, into, -0.12), Opt.of("dir", into, "size", 0.36, "life",
+                if (!e.isRemoved() && e.level() instanceof ServerLevel lv) RuneKit.rfx2(lv, "icicle", V.add(skin, into, -0.2), Opt.of("dir", into, "size", 0.56, "life",
                         0.32, "fade", 0.05, "alpha", 1.0, "vel", RuneKit.entVel(e)), HOT, WHITE);
             });
         }
@@ -305,16 +309,17 @@ public final class JobTraits7 {
         });
     }
 
-    /** 쇳조각이 터짐: 작은 쇳물 폭발 (rfx_boom — 작게) · 튀는 쇳물 방울 · 불티 · 짧은 쾅 */
+    /** 쇳조각이 터짐: 쇳물 폭발 (rfx_boom) · 타격 섬광 · 튀는 쇳물 방울 · 불티 · 짧은 쾅 (영상 1 뒤 크게 — 작은 불꽃으로만 보였음) */
     private static void shardBurstFx(ServerLevel level, LivingEntity e) {
         Vec3 b = Kit.bodyPoint(e);
-        double s = 0.5 + Kit.bodyPad(e) * 0.4;
-        RuneKit.rfx(level, "boom", b, Opt.of("size", s, "life", 0.4, "frames", 8.0, "fps", 20.0, "vel", RuneKit.entVel(e)));
-        JobFx.burst(level, b, s * 0.9, HOT, MOLTEN, 0.25, Opt.of("vel", RuneKit.entVel(e)));
+        double s = 0.85 + Kit.bodyPad(e) * 0.5;
+        RuneKit.rfx(level, "boom", b, Opt.of("size", s, "life", 0.45, "frames", 8.0, "fps", 18.0, "vel", RuneKit.entVel(e)));
+        JobFx.burst(level, b, s * 1.1, HOT, MOLTEN, 0.28, Opt.of("vel", RuneKit.entVel(e)));
+        JobFx.two(level, "jimpact", JobImpact.IMPACT, b, 0.25, Opt.of("size", s * 1.25, "spin", Kit.rand() * 360, "fade", 0.3, "vel", RuneKit.entVel(e)), MOLTEN, WHITE);
         for (int i = 0; i < 4; i++) {
             double a = Kit.rand() * Math.PI * 2;
-            SkillFx.fx(level, "rpg:glob", b, Opt.of("dir", V.unit(new Vec3(Math.cos(a), 1.2 + Kit.rand(), Math.sin(a))), "speed", 4.0 + Kit.rand() * 2, "size", 0.1
-                    + Kit.rand() * 0.06, "life", 0.5, "spin", Kit.rand() * 360, "color", i % 2 == 0 ? HOT : MOLTEN, "alpha", 1.0));
+            SkillFx.fx(level, "rpg:glob", b, Opt.of("dir", V.unit(new Vec3(Math.cos(a), 1.2 + Kit.rand(), Math.sin(a))), "speed", 4.0 + Kit.rand() * 2, "size", 0.14
+                    + Kit.rand() * 0.08, "life", 0.55, "spin", Kit.rand() * 360, "color", i % 2 == 0 ? HOT : MOLTEN, "alpha", 1.0));
         }
         SkillFx.sparks(level, b, HOT, 8, 4.5);
         SkillFx.play(level, "firework.blast", b, 1.3, 0.5);
@@ -462,7 +467,7 @@ public final class JobTraits7 {
         Vec3 out = V.scale(V.rightOf(f), left ? -1 : 1);
         double len = V.len(V.sub(to, from));
         Vec3 ctrl = V.up(V.add(V.lerp(from, to, 0.45), out, Math.min(1.6, 0.35 + len * 0.12)), Math.min(1.0, 0.2 + len * 0.06));
-        return JobFx3d.fly(sp.level(), "phantom_sword", from, to, JobFx3d.SWORD_TIP, 0.78, ticks / 20.0, 0.5, j, Opt.of("ctrl", ctrl, "shine", 0.3 + 0.08 * stacks,
+        return JobFx3d.fly(sp.level(), "phantom_sword", from, to, JobFx3d.SWORD_TIP, 1.0, ticks / 20.0, 0.5, j, Opt.of("ctrl", ctrl, "shine", 0.3 + 0.08 * stacks,
                 "glowAlpha", 0.5 + 0.06 * stacks, "fadeOut", 0.12));
     }
 
@@ -567,10 +572,22 @@ public final class JobTraits7 {
     public static void testStuck(ServerPlayer sp, Vec3 at, int ticks) {
         Jobs.Job j = jobIf(sp, SC);
         if (j == null) return;
-        int id = JobFx3d.stuck(sp.level(), "phantom_sword", V.up(at, -0.25), V.unit(new Vec3(0.12, -1, 0.08)), JobFx3d.SWORD_TIP, 0.95, ticks / 20.0, j, Opt.of("fade",
-                0.3));
-        JobFx.runeRing(sp.level(), V.up(at, 0.08), 0.95, j, 6, 0, ticks / 20.0, Opt.of("alpha", 0.75));
-        setStuck(sp, at, ticks, id);
+        setStuck(sp, at, ticks, stuckSword(sp.level(), at, ticks, j));
+    }
+
+    /**
+     * 땅에 꽂혀 기다리는 칼 (g = 땅): 비스듬히 꽂힌 큰 칼 · 발밑 룬 고리 · 위로 옅어지는 청록 빛기둥 (멀리서도 데려가라가 날아갈 자리가 보이게 — 영상 1 뒤: 과녁 무리 뒤에
+     * 묻혔음). 칼 번호
+     */
+    static int stuckSword(ServerLevel level, Vec3 g, int ticks, Jobs.Job j) {
+        double secs = ticks / 20.0;
+        int id = JobFx3d.stuck(level, "phantom_sword", V.up(g, -0.3), V.unit(new Vec3(0.12, -1, 0.08)), JobFx3d.SWORD_TIP, 1.25, secs, j, Opt.of("fade", 0.3));
+        JobFx.runeRing(level, V.up(g, 0.08), 1.1, j, 6, 0, secs, Opt.of("alpha", 0.8));
+        double[] alpha = {0.5, 0.36, 0.24, 0.13};
+        for (int i = 0; i < alpha.length; i++) {
+            JobFx.beam(level, V.up(g, 0.2 + i * 1.1), V.up(g, 0.2 + (i + 1) * 1.1), j, 1.1, secs, Opt.of("alpha", alpha[i], "fade", 0.3));
+        }
+        return id;
     }
 
     /** 꽂혀 기다리는 칼 자리 (없거나 끝났거나 삶이 바뀌었으면 null) */
@@ -635,15 +652,15 @@ public final class JobTraits7 {
     }
 
     /**
-     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 담금질 = 달군 대검 (칼날의 쇳물빛 · 흰 열 심지) · 떨어지는 쇳물 방울 · 오르는 불티 / 둘로 나뉘어라 = 손의 칼에서 흩날리는
-     * 청록 빛살. 그렸으면 true
+     * 태세 연출 (8틱마다 — JobTraits.stanceFx): 담금질 = 달군 대검 (손에 든 칼날을 감싸는 붉은 열기 · 흰 열 심지 — 영상 1 뒤: 따로 세운 쇳물 칼 그림은 손 옆에 칼이 하나
+     * 더 떠 있는 것처럼 보였음) · 떨어지는 쇳물 방울 · 오르는 불티 / 둘로 나뉘어라 = 손의 칼에서 흩날리는 청록 빛살. 그렸으면 true
      */
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
         ServerLevel level = sp.level();
         RuneKit.Hand h = RuneKit.handOf(sp);
         if (TEMPER.equals(stance)) {
             Vec3 blade = V.up(V.add(h.hand(), h.f(), 0.25), 0.45);
-            RuneKit.rfx2(level, "sword", blade, Opt.of("dir", V.UP, "size", 0.72, "life", 0.42, "alpha", 0.8, "fade", 0.5, "vel", RuneKit.bodyVel(sp)), MOLTEN, HOT);
+            JobFx.heat(level, V.up(blade, -0.05), 0.42, 1, 4, 0.45, true, Opt.of("alpha", 0.8, "vel", RuneKit.bodyVel(sp)));
             SkillFx.fx(level, "rpg:arrow_spark", V.up(blade, 0.35), Opt.of("dir", V.UP, "speed", 1.4, "size", 0.12, "grow", 0.6, "life", 0.45, "color", HOT, "alpha", 1.0));
             if (Kit.rand() < 0.5) SkillFx.fx(level, "rpg:glob", V.up(blade, -0.2), Opt.of("dir", V.DOWN, "speed", 0.5, "size", 0.07, "life", 0.5, "spin", 0.0, "color",
                     MOLTEN, "alpha", 1.0));

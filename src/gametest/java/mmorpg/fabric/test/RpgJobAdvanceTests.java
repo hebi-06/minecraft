@@ -824,7 +824,7 @@ public final class RpgJobAdvanceTests {
         List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 3)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0};
-        // 룬 모루: 4 에 내려찍음 → 갈라짐이 3칸 과녁에 닿음 (3.4) → 그 자리에 모루가 솟아 12틱 뒤 터짐 (5.1) = 8.5 · 각인 1 (스킬마다 적마다 한 번)
+        // 룬 모루: 4 에 내려찍음 → 갈라짐이 3칸 과녁에 닿음 (3.4) → 과녁 바로 뒤에 모루가 솟아 12틱 뒤 터짐 (5.1 — 과녁은 모루 둘레 2.5칸 안) = 8.5 · 각인 1 (스킬마다 적마다 한 번)
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             h.assertTrue(JobSkills.press(sp, 0), "룬 모루 cast");

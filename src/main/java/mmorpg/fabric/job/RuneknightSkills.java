@@ -34,8 +34,8 @@ final class RuneknightSkills {
     private static final double[] MOLTEN = JobTraits7.MOLTEN;
     private static final double[] HOT = JobTraits7.HOT;
     private static final double[] WHITE = RuneKit.WHITE;
-    /** 룬 모루 몸 (어두운 쇠) */
-    private static final double[] IRON = {0.24, 0.2, 0.24};
+    /** 룬 모루 몸 (어두운 쇠 — 풀밭 · 과녁 앞에서 묻히지 않게 조금 밝게) */
+    private static final double[] IRON = {0.34, 0.28, 0.36};
     /** 불꽃 겉 · 심지 */
     private static final double[] FIRE = {1.0, 0.34, 0.04};
     private static final double[] FIRE_CORE = {1.0, 0.84, 0.42};
@@ -44,8 +44,8 @@ final class RuneknightSkills {
     /** rfx_jflame · rfx_fountain 장 수 */
     private static final int FLAME = 6;
     private static final int FOUNTAIN = 4;
-    /** 룬 모루 크기 (높이 약 2.6칸) */
-    private static final double ANVIL_SIZE = 1.3;
+    /** 룬 모루 크기 (판 높이 약 3.4칸 — 모루 몸은 땅에서 약 2.2칸 · 너비 약 3칸, 영상 1 뒤 1.3 → 1.7: 과녁 몸에 가려 작은 그림자로만 보였음) */
+    private static final double ANVIL_SIZE = 1.7;
 
     static void register() {
         JobSystem.register("runeknight_anvil", RuneknightSkills::anvil);
@@ -91,7 +91,7 @@ final class RuneknightSkills {
 
     /**
      * 룬 모루 (롤 오른 Q): 대검을 머리 위로 들었다가 strikeAt 틱에 앞 땅을 내려찍음 → 앞 start ~ len 칸이 갈라짐 (speed 칸/틱 — 쇳물빛 틈 · 틈을 따라 솟는 불꽃) ·
-     * 갈라짐이 닿는 적 (폭 width — crack · 마법) → 처음 닿은 적 자리 (없으면 갈라짐 끝) 에 룬 모루가 땅을 뚫고 솟아 달아오름 (터질 둘레의 룬 고리 · 쇳물 웅덩이) →
+     * 갈라짐이 닿는 적 (폭 width — crack · 마법) → 처음 닿은 적 바로 뒤 (없으면 갈라짐 끝) 에 룬 모루가 땅을 뚫고 솟아 달아오름 (터질 둘레의 룬 고리 · 쇳물 웅덩이) →
      * burstAt 틱 뒤 터짐 (burst — 둘레 burstRadius 칸 · 띄움 lift)
      */
     static boolean anvil(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
@@ -147,7 +147,7 @@ final class RuneknightSkills {
                 SkillFx.fx(level, "rpg:ember", V.up(p, 0.2), Opt.of("size", 0.8, "life", 0.6, "speed", 1.2, "color", MOLTEN, "alpha", 0.85));
             });
         }
-        // 맞는 적: 앞 start ~ len 칸 · 폭 half (+ 몸 폭) — 갈라짐이 닿는 틱에. 처음 닿은 적 자리에 모루
+        // 맞는 적: 앞 start ~ len 칸 · 폭 half (+ 몸 폭) — 갈라짐이 닿는 틱에. 처음 닿은 적 바로 뒤에 모루
         Set<UUID> marked = new HashSet<>();
         LivingEntity first = null;
         double firstAlong = Double.MAX_VALUE;
@@ -173,7 +173,8 @@ final class RuneknightSkills {
         Vec3 end = ground(level, V.add(c, f, len));
         RuneKit.later(riseAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            Vec3 at = anchor != null && !anchor.isRemoved() ? ground(sp.level(), anchor.position()) : end;
+            // 처음 닿은 적 바로 뒤 (쓴 사람 반대쪽 0.9칸 + 몸 폭) — 적 몸이 모루를 가리지 않고 모루가 적 뒤에 버티고 솟음 (영상 1 뒤)
+            Vec3 at = anchor != null && !anchor.isRemoved() ? ground(sp.level(), V.add(anchor.position(), f, 0.9 + Kit.bodyPad(anchor))) : end;
             anvilRise(sp, j, k, P, at, life, marked);
         });
     }
@@ -199,7 +200,7 @@ final class RuneknightSkills {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                Vec3 top = V.up(at, ANVIL_SIZE * 1.55);
+                Vec3 top = V.up(at, ANVIL_SIZE * 1.3);
                 SkillFx.sparks(level, top, tt % 2 == 0 ? HOT : MOLTEN, 6, 3.0 + tt * 0.15);
                 SkillFx.fx(level, "rpg:arrow_spark", V.up(at, 0.4), Opt.of("dir", V.UP, "speed", 2.4, "size", 0.12, "grow", 0.5, "life", 0.5, "color", MOLTEN,
                         "alpha", 1.0));
@@ -287,7 +288,7 @@ final class RuneknightSkills {
                         JobImpact.fx(sp, e, j, 0.9);
                         if (hit.add(e.getUUID())) burned.add(e);
                         if (e.level() instanceof ServerLevel lv) {
-                            SkillFx.particle(lv, ParticleTypes.FLAME, Kit.bodyPoint(e), 8, 0.3, 0.04);
+                            SkillFx.particle(lv, ParticleTypes.FLAME, Kit.bodyPoint(e), 4, 0.3, 0.04);
                             SkillFx.sparks(lv, Kit.bodyPoint(e), MOLTEN, 6, 3.0);
                         }
                     });
@@ -321,16 +322,16 @@ final class RuneknightSkills {
             Vec3 d = V.unit(V.add(V.turnY(f, a), V.UP, (Kit.rand() - 0.4) * 0.25 + Math.max(-0.3, Math.min(0.3, look.y)) * 0.6));
             double sp0 = (big ? 13 : 10) + Kit.rand() * 4;
             double lf = range / sp0 * (0.8 + Kit.rand() * 0.3);
-            JobFx.loop(level, "jfireball", JobFx.FIREBALL, V.add(mouth, d, 0.2), lf, 14, Opt.of("dir", d, "speed", sp0, "size", (big ? 0.55 : 0.4) + Kit.rand() * 0.15,
-                    "grow", 0.9, "fade", 0.35, "alpha", 0.95), FIRE, FIRE_CORE);
+            JobFx.loop(level, "jfireball", JobFx.FIREBALL, V.add(mouth, d, 0.2), lf, 14, Opt.of("dir", d, "speed", sp0, "size", (big ? 0.95 : 0.7) + Kit.rand() * 0.2,
+                    "grow", 1.1, "fade", 0.35, "alpha", 0.95), FIRE, FIRE_CORE);
         }
         for (int i = 0; i < (big ? 3 : 1); i++) {
             double a = (Kit.rand() - 0.5) * arc * 0.8;
             Vec3 d = V.turnY(f, a);
-            SkillFx.fx(level, "rpg:breath", V.add(mouth, d, 0.4), Opt.of("dir", d, "speed", big ? 9.0 : 7.0, "size", big ? 1.0 : 0.7, "life", 0.6, "spin", Kit.rand()
-                    * 360, "color", i % 2 == 0 ? FIRE : MOLTEN, "alpha", 0.75));
+            SkillFx.fx(level, "rpg:breath", V.add(mouth, d, 0.4), Opt.of("dir", d, "speed", big ? 9.0 : 7.5, "size", big ? 2.1 : 1.5, "life", 0.6, "spin", Kit.rand()
+                    * 360, "color", i % 2 == 0 ? FIRE : MOLTEN, "alpha", 0.8));
         }
-        SkillFx.particle(level, ParticleTypes.FLAME, V.add(mouth, f, range * 0.4), big ? 14 : 5, range * 0.18, 0.06);
+        SkillFx.particle(level, ParticleTypes.FLAME, V.add(mouth, f, range * 0.4), big ? 6 : 2, range * 0.18, 0.06);
         if (big) {
             for (int i = 0; i < 4; i++) {
                 double a = -arc / 2 + arc * (i + 0.5) / 4;

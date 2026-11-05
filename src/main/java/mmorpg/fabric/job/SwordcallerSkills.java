@@ -101,7 +101,7 @@ final class SwordcallerSkills {
             ServerLevel lv = sp.level();
             Vec3 from = handTip(sp);
             int ticks = Math.max(1, (int) Math.ceil(V.len(V.sub(center, from)) / speed));
-            int id = JobFx3d.fly(lv, "phantom_sword", from, center, JobFx3d.SWORD_TIP, 0.9, ticks / 20.0, 0.05, j, Opt.of("shine", 0.35, "fadeOut", 0.05));
+            int id = JobFx3d.fly(lv, "phantom_sword", from, center, JobFx3d.SWORD_TIP, 1.3, ticks / 20.0, 0.05, j, Opt.of("shine", 0.4, "fadeOut", 0.05));
             JobFx.line(lv, from, center, j, ticks / 20.0 + 0.1, Opt.of("alpha", 0.6));
             SkillFx.play(lv, "item.trident.throw", from, 1.3, 0.8);
             RuneKit.later(ticks, () -> {
@@ -114,17 +114,14 @@ final class SwordcallerSkills {
             // 끝: 칼끝을 아래로 땅에 내리꽂혀 (2틱) 기다림 (stay 틱 — 발밑 룬 고리 · 칼 빛)
             int endT = ticks + groupGap + (cuts.size() - group) * cutGap + 2;
             RuneKit.later(endT - 2, () -> {
-                if (RuneKit.sameLife(sp, life)) JobFx3d.fly(sp.level(), "phantom_sword", V.up(center, 0.6), V.up(g, -0.25), JobFx3d.SWORD_TIP, 0.95, 0.1, 0.0, j, Opt.of(
+                if (RuneKit.sameLife(sp, life)) JobFx3d.fly(sp.level(), "phantom_sword", V.up(center, 0.8), V.up(g, -0.3), JobFx3d.SWORD_TIP, 1.25, 0.1, 0.0, j, Opt.of(
                         "fadeOut", 0.02));
             });
             RuneKit.later(endT, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel l2 = sp.level();
-                int sid = JobFx3d.stuck(l2, "phantom_sword", V.up(g, -0.25), V.unit(new Vec3(0.12, -1, 0.08)), JobFx3d.SWORD_TIP, 0.95, stay / 20.0, j, Opt.of("fade",
-                        0.3));
-                JobTraits7.setStuck(sp, g, stay, sid);
-                JobFx.runeRing(l2, V.up(g, 0.08), 0.95, j, 6, 0, stay / 20.0, Opt.of("alpha", 0.75));
-                JobFx.burst(l2, V.up(g, 0.3), 0.8, j, 0.3, Opt.empty());
+                JobTraits7.setStuck(sp, g, stay, JobTraits7.stuckSword(l2, g, stay, j));
+                JobFx.burst(l2, V.up(g, 0.3), 1.0, j, 0.3, Opt.empty());
                 RuneKit.rockBurst(l2, V.up(g, 0.2), 4, 3.5, 0.13);
                 SkillFx.play(l2, "item.trident.hit_ground", g, 1.0, 0.9);
             });
@@ -143,7 +140,7 @@ final class SwordcallerSkills {
         int n = w.length;
         if (n == 0) return;
         double spin = (last ? -1 : 1) * 1260;
-        JobFx3d.orbitAt(level, "phantom_sword", 1, center, R * 0.7, spin, spinTicks / 20.0, 0.9, JobFx.outer(j), JobFx.inner(j), Opt.of("angle", Kit.rand() * 360,
+        JobFx3d.orbitAt(level, "phantom_sword", 1, center, R * 0.75, spin, spinTicks / 20.0, 1.25, JobFx.outer(j), JobFx.inner(j), Opt.of("angle", Kit.rand() * 360,
                 "fadeIn", 0.0, "fadeOut", 0.06, "shine", 0.4));
         JobFx.bladeRing(level, center, R, j, (n * cutGap + 2) / 20.0, 18, Opt.of("alpha", 0.9));
         Vec3 view = V.unit(V.sub(center, sp.getEyePosition()));
@@ -151,7 +148,7 @@ final class SwordcallerSkills {
             int ii = i;
             RuneKit.later(i * cutGap, () -> {
                 double tilt = CUT_TILT[(from + ii) % CUT_TILT.length];
-                cutAt(level, center, view, tilt, R * (last && ii == n - 1 ? 1.25 : 1.0), j);
+                cutAt(level, center, view, tilt, R * (last && ii == n - 1 ? 1.4 : 1.15), j);
                 SkillFx.play(level, "entity.player.attack.sweep", center, 1.4 + 0.1 * ii, 0.6);
                 if (last && ii == n - 1) {
                     SkillFx.shock(level, V.up(g, 0.1), JobFx.inner(j), R, 0.3);
@@ -265,7 +262,7 @@ final class SwordcallerSkills {
             Vec3 from = handTip(sp);
             Vec3 to = Kit.bodyPoint(t);
             int ticks = Math.max(1, (int) Math.ceil(V.len(V.sub(to, from)) / speed));
-            int id = JobFx3d.fly(lv, "phantom_sword", from, to, JobFx3d.SWORD_TIP, 0.95, ticks / 20.0, 0.15, j, Opt.of("shine", 0.4, "fadeOut", 0.05));
+            int id = JobFx3d.fly(lv, "phantom_sword", from, to, JobFx3d.SWORD_TIP, 1.35, ticks / 20.0, 0.15, j, Opt.of("shine", 0.45, "fadeOut", 0.05));
             JobFx.line(lv, from, to, j, ticks / 20.0 + 0.08, Opt.of("alpha", 0.7));
             SkillFx.play(lv, "item.trident.throw", from, 1.2, 0.9);
             // 꿰뚫음 (닿는 틱): 칼이 몸을 뚫고 1.6칸 지나감 · 찌른 자리 · 타격 섬광
@@ -283,8 +280,8 @@ final class SwordcallerSkills {
                 });
                 // 맴돎: 꿰뚫고 지나간 칼이 돌아와 그 적 둘레를 돎 (적을 따라감) — 칼질 넷이 끝날 때까지
                 int dur = spins.size() * every + 3;
-                int oid = JobFx3d.spawn(lv, "phantom_sword", new Vec3(0, t.getBbHeight() * 0.55, 0), j, Opt.of("follow", (double) t.getId(), "orbit", 1.05 + Kit.bodyPad(t),
-                        "orbitSpeed", 620.0, "orbitAngle", Kit.rand() * 360, "life", dur / 20.0, "scale", 0.9, "align", 1.0, "faceCam", 1.0, "fadeIn", 0.1, "fadeOut", 0.1,
+                int oid = JobFx3d.spawn(lv, "phantom_sword", new Vec3(0, t.getBbHeight() * 0.55, 0), j, Opt.of("follow", (double) t.getId(), "orbit", 1.3 + Kit.bodyPad(t),
+                        "orbitSpeed", 620.0, "orbitAngle", Kit.rand() * 360, "life", dur / 20.0, "scale", 1.25, "align", 1.0, "faceCam", 1.0, "fadeIn", 0.1, "fadeOut", 0.1,
                         "glowAlpha", 0.55, "shine", 0.35, "delay", 0.12));
                 JobFx3d.guard(sp, life, new int[] {oid}, dur);
                 for (int i = 0; i < spins.size(); i++) {
@@ -306,7 +303,7 @@ final class SwordcallerSkills {
                                 if (t.isRemoved() || !(t.level() instanceof ServerLevel l3)) return;
                                 Vec3 b = Kit.bodyPoint(t);
                                 Vec3 view = V.unit(V.sub(b, sp.getEyePosition()));
-                                cutAt(l3, b, view, CUT_TILT[(ii * lines + qq) % CUT_TILT.length], 1.0 + Kit.bodyPad(t) * 0.9 + (last && qq == lines - 1 ? 0.4 : 0), j);
+                                cutAt(l3, b, view, CUT_TILT[(ii * lines + qq) % CUT_TILT.length], 1.3 + Kit.bodyPad(t) + (last && qq == lines - 1 ? 0.5 : 0), j);
                                 JobImpact.fx(sp, t, j, 0.8);
                                 SkillFx.play(l3, "entity.player.attack.sweep", b, 1.5 + 0.08 * qq, 0.45);
                             });
@@ -327,7 +324,7 @@ final class SwordcallerSkills {
         if (!RuneKit.sameLife(sp, life)) return;
         Vec3 hand = handTip(sp);
         int ticks = Math.max(1, (int) Math.ceil(V.len(V.sub(hand, from)) / 3.0));
-        int id = JobFx3d.fly(level, "phantom_sword", from, hand, JobFx3d.SWORD_TIP, 0.85, ticks / 20.0, 0.0, j, Opt.of("fadeOut", 0.06));
+        int id = JobFx3d.fly(level, "phantom_sword", from, hand, JobFx3d.SWORD_TIP, 1.1, ticks / 20.0, 0.0, j, Opt.of("fadeOut", 0.06));
         RuneKit.later(ticks, () -> {
             JobFx3d.kill(level, id, hand, 0.05);
             if (!RuneKit.sameLife(sp, life)) return;
@@ -357,7 +354,7 @@ final class SwordcallerSkills {
             Vec3 c = V.up(V.add(sp.position(), Kit.facingOf(sp), 0.9), 1.4);
             for (int s = -1; s <= 1; s += 2) {
                 Vec3 to = V.add(c, right, s * 1.3);
-                JobFx3d.fly(lv, "phantom_sword", c, to, 0, 0.8, 0.18, 0.1, j, Opt.of("ctrl", V.up(V.lerp(c, to, 0.5), 0.5), "fadeOut", 0.1));
+                JobFx3d.fly(lv, "phantom_sword", c, to, 0, 1.0, 0.18, 0.1, j, Opt.of("ctrl", V.up(V.lerp(c, to, 0.5), 0.5), "fadeOut", 0.1));
             }
             JobFx.ringFacing(lv, c, 1.0, j, Kit.facingOf(sp), 0.3, Opt.of("alpha", 0.9));
             SkillFx.play(lv, "block.amethyst_block.resonate", c, 1.4, 0.8);
@@ -365,7 +362,7 @@ final class SwordcallerSkills {
         });
         RuneKit.later(6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            int[] ids = JobFx3d.orbitOwner(sp, "phantom_sword", 2, new Vec3(0, 1.35, 0), 1.05, 150, false, (dur - 6) / 20.0, 0.72, j, Opt.of("view", 1.0, "owner",
+            int[] ids = JobFx3d.orbitOwner(sp, "phantom_sword", 2, new Vec3(0, 1.35, 0), 1.05, 150, false, (dur - 6) / 20.0, 0.85, j, Opt.of("view", 1.0, "owner",
                     (double) sp.getId(), "bob", 0.2, "bobHz", 0.6, "fadeIn", 0.2, "fadeOut", 0.4, "alpha", 0.92));
             JobFx3d.hold(sp, JobTraits7.TWIN, ids);
             JobFx3d.guard(sp, life, ids, dur - 6);
@@ -412,7 +409,7 @@ final class SwordcallerSkills {
             Vec3 p = V.up(V.add(V.add(c0, f0, -0.6), r0, Math.sin(a) * 1.6), 2.2 + Math.cos(a) * 0.9);
             backs.add(p);
             Vec3 tip = V.add(p, V.unit(V.add(V.UP, r0, Math.sin(a) * 0.6)), 0.3);
-            JobFx3d.fly(level0, "phantom_sword", V.up(p, -1.2), tip, JobFx3d.SWORD_TIP, 0.85, 0.2, 0.12, j, Opt.of("view", 1.0, "owner", (double) sp.getId(), "fadeOut", 0.05,
+            JobFx3d.fly(level0, "phantom_sword", V.up(p, -1.2), tip, JobFx3d.SWORD_TIP, 1.05, 0.2, 0.12, j, Opt.of("view", 1.0, "owner", (double) sp.getId(), "fadeOut", 0.05,
                     "delay", i * 0.03));
         }
         JobFx.aura(sp, j, 2.8, 0.5, 0.9);
@@ -424,7 +421,7 @@ final class SwordcallerSkills {
             for (int i = 0; i < n; i++) {
                 double a = Math.toRadians(i * 360.0 / n);
                 Vec3 ring = V.add(b, new Vec3(Math.cos(a), 0.25, Math.sin(a)), R);
-                JobFx3d.fly(lv, "phantom_sword", backs.get(i), ring, JobFx3d.SWORD_TIP, 0.9, (surroundAt - 6) / 20.0, 0.03, j, Opt.of("ctrl", V.up(V.lerp(backs.get(i), ring,
+                JobFx3d.fly(lv, "phantom_sword", backs.get(i), ring, JobFx3d.SWORD_TIP, 1.1, (surroundAt - 6) / 20.0, 0.03, j, Opt.of("ctrl", V.up(V.lerp(backs.get(i), ring,
                         0.5), 2.0), "fadeOut", 0.04));
             }
             SkillFx.play(lv, "item.trident.throw", sp.position(), 1.0, 1.0);
@@ -442,7 +439,7 @@ final class SwordcallerSkills {
                 Vec3 in = V.unit(new Vec3(-Math.cos(rad), -0.35, -Math.sin(rad)));
                 cage[i] = JobFx3d.spawn(lv, "phantom_sword", new Vec3(0, t.getBbHeight() * 0.6, 0), j, Opt.of("follow", (double) t.getId(), "orbit", R, "orbitSpeed", rate,
                         "orbitAngle", ang, "dir", in, "arcAxis", V.UP, "arc", -rate * hold / 20.0, "arcTime", hold / 20.0, "arcEase", "linear", "faceCam", 1.0, "life", hold
-                                / 20.0 + 0.1, "scale", 0.9, "fadeIn", 0.0, "fadeOut", 0.05, "glowAlpha", 0.55, "shine", 0.3, "bob", 0.12, "bobHz", 1.2));
+                                / 20.0 + 0.1, "scale", 1.1, "fadeIn", 0.0, "fadeOut", 0.05, "glowAlpha", 0.55, "shine", 0.3, "bob", 0.12, "bobHz", 1.2));
             }
             JobFx3d.guard(sp, life, cage, hold);
             JobFx.bladeRing(lv, V.up(t.position(), 0.1), R + 0.3, j, hold / 20.0, 6, Opt.of("alpha", 0.75));
@@ -480,7 +477,7 @@ final class SwordcallerSkills {
                 double ang = Math.toRadians(i * 360.0 / n + 40 * 3);
                 Vec3 from = V.add(b, new Vec3(Math.cos(ang), 0.3, Math.sin(ang)), R);
                 Vec3 hand = handTip(sp);
-                JobFx3d.fly(lv, "phantom_sword", from, hand, JobFx3d.SWORD_TIP, 0.9, 0.3, 0.0, j, Opt.of("ctrl", V.add(b, V.unit(V.sub(b, from)), 0.6), "fadeOut", 0.06,
+                JobFx3d.fly(lv, "phantom_sword", from, hand, JobFx3d.SWORD_TIP, 1.1, 0.3, 0.0, j, Opt.of("ctrl", V.add(b, V.unit(V.sub(b, from)), 0.6), "fadeOut", 0.06,
                         "shine", 0.5));
             }
             SkillFx.play(lv, "item.trident.riptide_3", b, 1.0, 0.9);
@@ -521,9 +518,9 @@ final class SwordcallerSkills {
         double h = (Kit.rand() - 0.5) * 0.8;
         Vec3 from = V.add(b, new Vec3(Math.cos(a), h, Math.sin(a)), R + 0.4);
         Vec3 to = V.add(b, new Vec3(-Math.cos(a), -h, -Math.sin(a)), R + 0.4);
-        JobFx3d.fly(level, "phantom_sword", from, to, JobFx3d.SWORD_TIP, 0.85, 0.15, 0.02, j, Opt.of("fadeOut", 0.05, "shine", 0.35));
+        JobFx3d.fly(level, "phantom_sword", from, to, JobFx3d.SWORD_TIP, 1.05, 0.15, 0.02, j, Opt.of("fadeOut", 0.05, "shine", 0.35));
         Vec3 view = V.unit(V.sub(b, sp.getEyePosition()));
-        cutAt(level, b, view, CUT_TILT[i % CUT_TILT.length], 1.1 + Kit.bodyPad(t) * 0.9, j);
+        cutAt(level, b, view, CUT_TILT[i % CUT_TILT.length], 1.25 + Kit.bodyPad(t), j);
         JobImpact.fx(sp, t, j, 0.75);
     }
 }
