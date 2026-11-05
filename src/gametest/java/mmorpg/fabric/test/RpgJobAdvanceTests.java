@@ -385,11 +385,12 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(sp.getY() > y0[0] + 2.5, "rose into the sky: " + (sp.getY() - y0[0]));
             h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before the first comet");
         }));
-        steps.add(new RpgJobTests.Step(14, () -> {
+        // 둘째 혜성 (22) 은 첫 혜성의 무적 시간 (10틱) 이 끝나는 틱이라 그 틱의 일 순서에 따라 한 틱 밀릴 수 있음 → 25 에 봄 (23 에 보던 CI 42086349509 에서 하나만 들어감 — 셋째는 32)
+        steps.add(new RpgJobTests.Step(16, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 6);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스타폴 블레이드 two comets " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
-        steps.add(new RpgJobTests.Step(56, () -> {
+        steps.add(new RpgJobTests.Step(54, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 40);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스타폴 블레이드 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(Math.abs(sp.getY() - y0[0]) < 0.6, "landed: " + (sp.getY() - y0[0]));
