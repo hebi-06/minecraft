@@ -435,7 +435,7 @@ final class ArcanebladeSkills {
     /**
      * 디멘션 슬래시 (2026-11-05 사용자 "구지 신체 강화 스킬도 필수로 안넣어도 될거 같다" · "직업 중에 구지 강화 시키면 어색한 애들은 빼자" · "딜링기도 괜찮고",
      * 스펠 오버드라이브 대신 — 롤 요네 R 처럼 끌어당김): 칼을 오른쪽 뒤로 크게 감아 칼끝에 마력을 모았다가 slashAt 틱에 허공을 가로로 갈라 앞 ahead 칸에 차원의 틈을
-     * 엶 (가로 큰 검기 · 앞 0.5 ~ depth 칸 · 옆 halfWidth 칸의 적 slash · 각인) → 틈이 둘레 pull 칸의 적을 2틱마다 빨아들임 (빨려 드는 빛 줄기) → closeAt 틱에
+     * 엶 (가로 큰 검기 · 앞 0.5 ~ depth 칸 · 옆 halfWidth 칸의 적 slash · 각인) → 가를 때 둘레 pull 칸의 밀 수 있는 적이 틈 앞으로 끌려옴 (빨려 드는 빛 줄기) → closeAt 틱에
      * 틈이 닫히며 폭발 (X 자 섬광 · 큰 터짐 — 같은 상자의 적 close 큰 숫자 · 각인). 틈 = rfx_jtear (카메라를 봄 — 0 ~ 1 갈라짐 · 2 ~ 5 벌어져 일렁임 · 6 ~ 7
      * 닫힘)
      */
@@ -477,24 +477,59 @@ final class ArcanebladeSkills {
                 });
             }
         });
-        // 빨아들임 (2틱마다): 틈 쪽 (틈의 가로 줄 위 가장 가까운 곳) 으로 끌림 · 빨려 드는 빛 줄기 · 틈 둘레 불티
+        // 빨아들임 (slashAt + 1 ~ closeAt − 2): 가를 때 둘레 pull 칸의 밀 수 있는 적이 틈 쪽 (틈의 가로 줄 위 가장 가까운 곳에서 0.9칸 앞) 으로 매 틱 조금씩 끌려옴
+        // (곰의 포옹과 같은 길 — 선 자리를 찾아 옮김: 속도로 밀면 AI 없는 몹 · 무거운 몹은 움직이지 않음, CI 42046185606) · 2틱마다 빨려 드는 빛 줄기 · 틈 둘레 불티
         Vec3 right = V.rightOf(f);
-        for (int t = slashAt + 1; t < closeAt - 1; t += 2) {
+        int pullFrom = slashAt + 1;
+        int pullTicks = Math.max(2, closeAt - 2 - pullFrom);
+        RuneKit.later(pullFrom, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            double pull = k.num("pull", 9);
+            for (LivingEntity e : Kit.around(sp, tearAt, pull, 4.0)) {
+                if (!JobKit.pushable(e)) continue;
+                Vec3 start = e.position();
+                Vec3 d = V.sub(start, tearAt);
+                double side = Math.max(-half, Math.min(half, d.x * right.x + d.z * right.z));
+                Vec3 line = new Vec3(tearAt.x + right.x * side, start.y, tearAt.z + right.z * side);
+                Vec3 back = V.flat(V.sub(start, line));
+                double bl = Math.hypot(back.x, back.z);
+                if (bl < 1.0) continue;
+                Vec3 end0 = V.add(line, V.scale(back, 1 / bl), 0.9);
+                Vec3 de = V.sub(end0, tearAt);
+                double lat = de.x * right.x + de.z * right.z;
+                double lim = Math.max(0, half - 0.4);
+                Vec3 end = V.add(end0, right, Math.max(-lim, Math.min(lim, lat)) - lat); // 닫힐 때 터지는 상자 (옆 half 칸) 안에 서게
+                for (int t = 1; t <= pullTicks; t++) {
+                    int tt = t;
+                    RuneKit.later(pullFrom + t, () -> {
+                        if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) return;
+                        double u = tt / (double) pullTicks;
+                        u = u * u * (3 - 2 * u);
+                        Vec3 p = V.lerp(start, end, u);
+                        Vec3 stand = Kit.standSpot(e.level(), new Vec3(p.x, Math.max(p.y, start.y) + 0.5, p.z), 1.5);
+                        if (stand != null) e.teleportTo(stand.x, stand.y, stand.z);
+                        e.setDeltaMovement(Vec3.ZERO);
+                    });
+                }
+            }
+        });
+        for (int t = pullFrom; t < closeAt - 1; t += 2) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 double pull = k.num("pull", 9);
-                for (LivingEntity e : Kit.around(sp, tearAt, pull, 4.0)) {
-                    Vec3 d = V.sub(e.position(), tearAt);
-                    double side = Math.max(-half, Math.min(half, d.x * right.x + d.z * right.z));
-                    Vec3 to = V.add(tearAt, right, side);
-                    if (JobKit.pushable(e) && V.hdist(e.position(), to) > 1.0) RuneKit.knock(e, V.flat(V.sub(to, e.position())), 0.42, 0.06);
-                    if ((tt - slashAt) % 4 == 1 && RuneKit.fxQuota("jobRiftPull", 6)) JobFx.line(lv, Kit.bodyPoint(e), V.lerp(Kit.bodyPoint(e), to, 0.85), j, 0.14,
-                            Opt.of("alpha", 0.7));
+                if ((tt - pullFrom) % 4 == 0) {
+                    for (LivingEntity e : Kit.around(sp, tearAt, pull, 4.0)) {
+                        if (!RuneKit.fxQuota("jobRiftPull", 6)) break;
+                        Vec3 d = V.sub(e.position(), tearAt);
+                        double side = Math.max(-half, Math.min(half, d.x * right.x + d.z * right.z));
+                        Vec3 to = V.add(tearAt, right, side);
+                        JobFx.line(lv, Kit.bodyPoint(e), V.lerp(Kit.bodyPoint(e), to, 0.85), j, 0.14, Opt.of("alpha", 0.7));
+                    }
                 }
                 SkillFx.sparks(lv, V.add(tearAt, right, (Kit.rand() - 0.5) * half * 1.6), JobFx.inner(j), 3, 2.0);
-                if ((tt - slashAt) % 6 == 1) SkillFx.play(lv, "block.portal.ambient", tearAt, 1.5, 0.35);
+                if ((tt - pullFrom) % 6 == 0) SkillFx.play(lv, "block.portal.ambient", tearAt, 1.5, 0.35);
             });
         }
         RuneKit.later(closeAt - 3, () -> {
