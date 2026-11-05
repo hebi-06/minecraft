@@ -175,7 +175,9 @@ final class PierrotSkills {
                 m.x.playAnimation(PierrotSummon.BOX_THROW);
                 PierrotSummons.face(m.x, e.position());
                 Vec3 from = V.up(m.x.position(), 1.3);
-                JobFx.dagger(lv, from, Kit.bodyPoint(e), 2, 0.42, j, Opt.empty());
+                // 칼 (영상 1: 0.42 는 날아가는 2틱에 거의 보이지 않았음 → 크게 · 지나간 줄)
+                JobFx.dagger(lv, from, Kit.bodyPoint(e), 2, 0.62, j, Opt.empty());
+                JobFx.line(lv, from, Kit.bodyPoint(e), j, 0.22, Opt.of("alpha", 0.75));
                 SkillFx.play(lv, "entity.snowball.throw", from, 1.6, 0.6);
                 JobKit.strike(sp, e, j, P, k.num("knife", 0.95), false, false, lifeTok, 2, d -> {
                     if (!(e.level() instanceof ServerLevel elv)) return;
@@ -468,8 +470,8 @@ final class PierrotSkills {
     }
 
     /**
-     * 그랜드 피날레: 서커스 하늘 (rpg:ult_circus) · 둘레를 비추는 조명 넷 → dropAt 틱 둘레 ring 칸에 거대한 깜짝 상자 boxes 개가 떨어짐 (크기 BIG · 체력 = 내 최대 체력 ×
-     * hp — 벽이면 안쪽으로) → first 틱 활짝 열림 (용수철 광대 · 큰 색종이 — 둘레 몬스터를 끌어들임 · radius 칸 보스는 taunt 틱 나를 도발) → first 틱부터 every 틱마다 volleys 번 상자마다
+     * 그랜드 피날레: 서커스 하늘 (rpg:ult_circus) · 앞쪽 무대를 비추는 조명 넷 → dropAt 틱 앞쪽 반원 ring 칸에 거대한 깜짝 상자 boxes 개가 떨어짐 (크기 BIG · 체력 = 내 최대
+     * 체력 × hp — 벽이면 안쪽으로 · 광대는 나를 봄) → first 틱 활짝 열림 (용수철 광대 · 큰 색종이 — 둘레 몬스터를 끌어들임 · radius 칸 보스는 taunt 틱 나를 도발) → first 틱부터 every 틱마다 volleys 번 상자마다
      * 불꽃을 쏘아 올려 radius 칸 적에게 쏟아짐 (rocket — 적마다 한 번) → finaleAt 틱 상자들이 한꺼번에 터지며 대폭죽 (finale · 밀쳐냄 knock). 상자는 그때 사라짐
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
@@ -489,7 +491,7 @@ final class PierrotSkills {
         SkillFx.play(level0, "entity.player.levelup", c, 0.8, 0.8);
         giggle(level0, c, 1.0);
         RpgCombat.setSteadfast(sp, first);
-        // 조명 넷: 둘레를 천천히 돌며 비춤
+        // 조명 넷: 앞쪽 무대 (상자 너머) 를 좌우로 흔들며 비춤 — 뒤 (3인칭 카메라 자리) 에 두면 카메라가 빛기둥 속에 들어가 화면이 한 빛으로 덮였음 (영상 1)
         Vec3 f = Kit.facingOf(sp);
         double base = Math.atan2(f.z, f.x);
         for (int t = 0; t < finaleAt + 6; t += 6) {
@@ -497,11 +499,11 @@ final class PierrotSkills {
             RuneKit.later(t, () -> {
                 ServerLevel lv = sp.level();
                 for (int i = 0; i < 4; i++) {
-                    double a = base + i * Math.PI / 2 + Math.PI / 4 + tt * 0.025;
-                    double rr = ring + 1.5 + 1.5 * Math.sin(tt * 0.07 + i);
+                    double a = base + (i - 1.5) * 0.5 + 0.35 * Math.sin(tt * 0.05 + i * 1.7);
+                    double rr = ring + 2.5 + 0.8 * Math.sin(tt * 0.07 + i);
                     Vec3 p = new Vec3(c.x + Math.cos(a) * rr, c.y, c.z + Math.sin(a) * rr);
                     double[][] col = JobFx.CIRCUS[i % 3];
-                    JobFx.spotlight(lv, new Vec3(p.x, RuneKit.groundAt(lv, p, c.y), p.z), 9, 0.4, Opt.of("alpha", 0.75), col[0], col[1]);
+                    JobFx.spotlight(lv, new Vec3(p.x, RuneKit.groundAt(lv, p, c.y), p.z), 9, 0.4, Opt.of("alpha", 0.55), col[0], col[1]);
                 }
             });
         }
@@ -511,10 +513,11 @@ final class PierrotSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             for (int i = 0; i < nBox; i++) {
-                double a = base + Math.PI / 4 + i * Math.PI * 2 / nBox;
+                // 앞쪽 반원 (−75° ~ 75° — 뒤에 두면 3인칭 카메라 앞을 거대한 상자가 가림 · 영상 1), 광대는 나 (관객) 를 봄
+                double a = base + Math.toRadians(nBox == 1 ? 0 : -75 + 150.0 * i / (nBox - 1));
                 Vec3 at = finaleSpot(lv, c, a, ring, 0.45 * BIG);
                 if (at == null) continue;
-                PierrotSummons.Member m = PierrotSummons.spawn(sp, PierrotSummons.FINALE, at, yawToward(at, c) + 180F, finaleAt - dropAt + 2, k.num("hp", 0.4), BIG, P,
+                PierrotSummons.Member m = PierrotSummons.spawn(sp, PierrotSummons.FINALE, at, yawToward(at, c), finaleAt - dropAt + 2, k.num("hp", 0.4), BIG, P,
                         first - dropAt);
                 if (m == null) continue;
                 boxes.add(m);

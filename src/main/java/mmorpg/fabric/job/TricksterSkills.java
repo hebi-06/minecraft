@@ -647,7 +647,7 @@ final class TricksterSkills {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !(e.level() instanceof ServerLevel lv)) return;
-                Vec3 over = RuneKit.overHead(e, 0.9);
+                Vec3 over = RuneKit.overHead(e, 2.0); // 피해 숫자 (머리 위 0.5 ~ 1.5칸) 를 가리지 않게 그 위에 (영상 1)
                 JobFx.maw(lv, over, 0.75 + Kit.bodyPad(e) * 0.3, tt == slashAt ? 0 : 2, tt == slashAt ? 2 : 4, tt == slashAt ? 0.3 : 0.36, tt != slashAt, Opt.of("vel",
                         RuneKit.entVel(e), "fade", 0.0), FIRE, FIRE_CORE);
                 double rr = 1.0 + Kit.bodyPad(e);
