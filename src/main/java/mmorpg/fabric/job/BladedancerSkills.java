@@ -19,7 +19,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 암살자 반전 료스알프(블레이드 댄서) 직업 스킬 (jobs.json advance.bladedancer — 흰 금빛 · 연분홍, 특성 「춤사위」 — JobTraits10): 빛살 베기 · 요정의 걸음 ·
+ * 0.51.0 암살자 반전 블레이드 댄서 직업 스킬 (jobs.json advance.bladedancer — 흰 금빛 · 연분홍, 특성 「춤사위」 — JobTraits10): 빛살 베기 · 요정의 걸음 ·
  * 칼날 원무 · 눈부신 한낮 · 빛무리 춤. 1차 암살자와 같은 단검 · 같은 칸 역할 (작은 폭딜 · 기동 유틸 · 큰 딜 · 태세 · 궁극기) 을 뒤집음 — 숨어서 한 적을 노리던 그림자
  * 대신 드러내 놓고 둘레를 베는 빛의 춤 (몸을 돌리며 베기 · 옆 스텝 · 제자리 원무 · 요정 날개 · 적들 사이를 오가는 빛무리).
  * 피해 = 위력 P × 배율 (JobKit.strike — 같은 적은 10틱 넘게 띄움, 두 번 베기는 strikeSplit). 연출 = 2D 그림 (빛 꽃잎 · 빛 리본 rfx_jribbon · 빛 꽃 rfx_jlightbloom ·

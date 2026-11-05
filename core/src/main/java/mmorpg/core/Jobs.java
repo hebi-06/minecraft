@@ -64,18 +64,17 @@ public final class Jobs {
      * @param color   피해 숫자 · 연출 색 두 빛 [[r, g, b], [r, g, b]] (0 ~ 1)
      * @param base    0.51.0 1차 직업 id (1차 직업은 제 id — 2차 직업은 그 1차 직업)
      * @param path    0.51.0 2차 전직의 길 ("" = 1차 · awaken 각성 · invert 반전)
-     * @param title   0.51.0 이명 (2차 직업만 — 표기 이명(직업명), 1차는 "")
      */
     public record Job(String id, String name, List<String> weapons, List<String> stats, String rune, boolean ready, double scale,
-            String role, String line, double[][] color, Trait trait, List<Skill> skills, String base, String path, String title) {
+            String role, String line, double[][] color, Trait trait, List<Skill> skills, String base, String path) {
         /** 0.51.0 2차 직업인지 */
         public boolean advanced() {
             return path != null && !path.isEmpty();
         }
 
-        /** 0.51.0 보이는 이름: 1차 = 직업 이름 ("검사"), 2차 = 이명(직업명) ("시구르드(소드마스터)") */
+        /** 보이는 이름 = 직업 이름 ("검사" · "소드마스터") — 0.51.0 의 이명(직업명) 표기는 지움 (사용자 2026-11-05 "이명을 지우고 다시 직업 이름만") */
         public String display() {
-            return title == null || title.isEmpty() ? name : title + "(" + name + ")";
+            return name;
         }
 
         /** 칸 i 의 스킬 (없으면 null) */
@@ -173,14 +172,14 @@ public final class Jobs {
         return j != null ? j : DATA.advance().jobs().get(id);
     }
 
-    /** 이름 · id 로 직업 찾기 (명령어 — "검사" · "swordsman" · 0.51.0 "소드마스터" · "시구르드(소드마스터)") */
+    /** 이름 · id 로 직업 찾기 (명령어 — "검사" · "swordsman" · 0.51.0 "소드마스터" · "swordmaster") */
     public static Job find(String nameOrId) {
         if (nameOrId == null) return null;
         String w = nameOrId.trim();
         Job j = job(w);
         if (j != null) return j;
         for (Job x : DATA.jobs().values()) if (x.name().equals(w)) return x;
-        for (Job x : DATA.advance().jobs().values()) if (x.name().equals(w) || x.display().equals(w) || x.title().equals(w)) return x;
+        for (Job x : DATA.advance().jobs().values()) if (x.name().equals(w)) return x;
         return null;
     }
 
@@ -684,7 +683,7 @@ public final class Jobs {
     }
 
     /**
-     * 직업 하나 (jobs.json 꼴). base 가 있으면 0.51.0 2차 직업 — 무기 · 적용 스탯 · 룬 · scale 은 적지 않았으면 1차 그대로, base · path · title 을 읽음.
+     * 직업 하나 (jobs.json 꼴). base 가 있으면 0.51.0 2차 직업 — 무기 · 적용 스탯 · 룬 · scale 은 적지 않았으면 1차 그대로, base · path 를 읽음.
      * 스킬의 up (강화가 곱하는 값) 은 upKeys 에 더함
      */
     private static Job parseJob(String id, Obj o, Job base, Map<String, List<UpKey>> upKeys) {
@@ -720,7 +719,7 @@ public final class Jobs {
         String rune = o.has("rune") || base == null ? o.strOrNull("rune") : base.rune();
         double scale = o.has("scale") || base == null ? o.numOr("scale", 1) : base.scale();
         return new Job(id, o.str("name"), List.copyOf(weapons), List.copyOf(stats), rune, o.truthy("ready"), scale, o.strOr("role", ""), o.strOr("line", ""), color,
-                trait, List.copyOf(skills), base == null ? id : base.id(), base == null ? "" : o.str("path"), base == null ? "" : o.strOr("title", ""));
+                trait, List.copyOf(skills), base == null ? id : base.id(), base == null ? "" : o.str("path"));
     }
 
     /** 0.51.0 2차 전직 (jobs.json advance — 없으면 2차 직업 없음: 레벨 무한) */

@@ -19,7 +19,7 @@ import net.minecraft.world.phys.Vec3;
  *     스킬 대상이 아님 (rpg_ally 태그 — Kit.canHit), 밀지도 밀리지도 않음 (적 · 플레이어 자리를 바꾸지 않게)</li>
  * <li>저장하지 않음 (서버가 꺼지거나 청크가 내려가면 사라짐), 전리품 · 경험치 없음, 제 소리 없음 (스킬이 냄), 스킬이 치우지 못해도 maxAge 틱 뒤 스스로 사라짐</li>
  * </ul>
- * 0.51.0 나글파르(네크로맨서) 의 망자 선원 (rpg:naglfar_crew — 같은 드라우그 모델 · 독초록 혼불 · 뼈색으로 다시 칠한 것, tools/naglfar_crew_tex.py) 도 이 몹
+ * 0.51.0 네크로맨서 의 망자 선원 (rpg:naglfar_crew — 같은 드라우그 모델 · 독초록 혼불 · 뼈색으로 다시 칠한 것, tools/naglfar_crew_tex.py) 도 이 몹
  * (생각은 job.NecroCrew 가 틱마다).
  */
 public class TyrfingWarrior extends BedrockMob {
@@ -41,7 +41,7 @@ public class TyrfingWarrior extends BedrockMob {
         setSilent(true);
     }
 
-    /** 0.51.0 나글파르(네크로맨서) 의 망자 선원 (같은 몹 — 독초록 · 뼈색 그림) */
+    /** 0.51.0 네크로맨서 의 망자 선원 (같은 몹 — 독초록 · 뼈색 그림) */
     public static final String CREW_ID = "rpg:naglfar_crew";
 
     /** 전사 하나를 at (발) 에 yaw (자바 각도) 로 세움 — maxAge 틱 뒤 스스로 사라짐. 못 세우면 null */

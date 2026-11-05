@@ -242,7 +242,7 @@ public final class RpgCombat {
      */
     public static java.util.function.ToDoubleFunction<ServerPlayer> attackSpeed = p -> 1;
 
-    /** 0.51.0 근접 무기를 휘두름 (허공 포함 — Slash.once, 들 수 있는 근접 무기만): 뵈드바르(워로드) 곰의 화신의 발톱 세 줄 */
+    /** 0.51.0 근접 무기를 휘두름 (허공 포함 — Slash.once, 들 수 있는 근접 무기만): 워로드 곰의 화신의 발톱 세 줄 */
     public static java.util.function.BiConsumer<ServerPlayer, Weapon> swingHook = (p, w) -> {};
 
     /**

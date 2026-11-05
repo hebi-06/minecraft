@@ -33,11 +33,11 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 0.51.0 검사 2차 특성 · 태세 (재설계안 2판 — claude/job-advance-redo.md):
  * <ul>
- * <li>시구르드(소드마스터) 「투지」: 쌓고 쓰는 것은 검사와 같음 (JobTraits — 최대 8). 투지 8 에서 피해 직업 스킬을 쓰면 그 스킬이 치명 (위력 × (1 + crit) · 치명
+ * <li>소드마스터 「투지」: 쌓고 쓰는 것은 검사와 같음 (JobTraits — 최대 8). 투지 8 에서 피해 직업 스킬을 쓰면 그 스킬이 치명 (위력 × (1 + crit) · 치명
  * 숫자 — 나가면 투지 critUse 개). 용의 피 (태세 — 롤 마스터 이 R): 공격 속도 + haste · 이동 + move · 칼 평타가 투지 +2 · 투지 유지 · 받는 피해 −guard (Guards —
  * 스킬). 다시 벼린 칼 (궁극기 — 롤 리븐 R): dur 틱 동안 칼이 커짐 — 평타 사거리 + reach · 참격 범위 (SWING_LOOK swordmaster_ult) · 칼 평타 · 직업 스킬 피해 +
  * power</li>
- * <li>다인슬레이프(블러드 나이트) 「피의 갈증」: 피해 직업 스킬을 쓸 때 체력이 costMin 이상이면 최대 체력 × cost 를 바쳐 그 스킬 위력 × (1 + bonus), 직업 스킬
+ * <li>블러드 나이트 「피의 갈증」: 피해 직업 스킬을 쓸 때 체력이 costMin 이상이면 최대 체력 × cost 를 바쳐 그 스킬 위력 × (1 + bonus), 직업 스킬
  * 피해 × leech 흡혈, 체력이 적을수록 공격 속도 · 흡혈이 오름 (체력 thirstAt 에서 가장 셈 — 공격 속도 + thirstSpeed · 흡혈 × (1 + leechMax), 롤 올라프 · 브라이어
  * 패시브). 광란 (태세 — 롤 브라이어 W): 공격 속도 + haste · 흡혈 × leechMult · 둘레 autoRange 칸의 가장 가까운 적을 저절로 벰 (멈추지 않음)</li>
  * </ul>

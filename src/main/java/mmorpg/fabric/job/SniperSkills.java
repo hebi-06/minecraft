@@ -17,7 +17,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 궁수 각성 에길(스나이퍼) 스킬 (jobs.json advance.sniper — 밝은 연두 · 금빛 · 흰 섬광, 특성 「호흡」 최대 8 · 급소 사격 — JobTraitsMore · JobTraits9):
+ * 0.51.0 2차 직업 — 궁수 각성 스나이퍼 스킬 (jobs.json advance.sniper — 밝은 연두 · 금빛 · 흰 섬광, 특성 「호흡」 최대 8 · 급소 사격 — JobTraitsMore · JobTraits9):
  * 1차 궁수의 컨셉 (멈춰 쏘는 명사수 · 빛의 화살 · 화살비 · 매의 눈 · 거대한 화살) 그대로 새 동작 — 꿰뚫는 연사 (뒤로 구르며 두 발 → 무릎 꿇고 세 발 · 마지막 관통) ·
  * 순풍 공중 사격 (바람을 타고 높이 물러나며 공중에서 세 발 — 활 평타 화살) · 울르의 폭우 (뛰어올라 하늘로 두 번 → 화살비 두 번 · 묶음) · 사과 겨누기 (8초 — 모든 화살이 급소
  * 사격 · 약점 과녁) · 세 번째 화살 (뒤로 뛰어 공중에서 두 발 → 무릎 꿇고 가장 큰 셋째 화살 · 반동). 화살은 공격 피해. 연출 = 2D 그림 (빛의 화살 · 약점 과녁

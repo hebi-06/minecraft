@@ -65,7 +65,7 @@ public final class RpgEntities {
         ResourceKey<EntityType<?>> key = ResourceKey.create(Registries.ENTITY_TYPE, id);
         EntityType.Builder<? extends BedrockMob> b;
         // 0.50.0 티르빙 망자의 각성의 아군 전사 (드라우그 모델 · 보랏빛 — 스킬이 움직임)
-        // 0.51.0 나글파르(네크로맨서) 의 망자 선원도 같은 몹 (독초록 · 뼈색 — job.NecroCrew 가 움직임)
+        // 0.51.0 네크로맨서 의 망자 선원도 같은 몹 (독초록 · 뼈색 — job.NecroCrew 가 움직임)
         if (TyrfingWarrior.ID.equals(d.id()) || TyrfingWarrior.CREW_ID.equals(d.id())) b = EntityType.Builder.<TyrfingWarrior>of(TyrfingWarrior::new, MobCategory.MISC);
         else if (d.monster()) b = EntityType.Builder.<RpgMonster>of(RpgMonster::new, MobCategory.MONSTER);
         else if (d.mount()) b = EntityType.Builder.<RpgMount>of(RpgMount::new, MobCategory.MISC);

@@ -32,7 +32,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 궁수 각성 에길(스나이퍼) · 반전 미르크비드(섀도 헌터) 특성 · 태세 (서버 — jobs.json advance):
+ * 0.51.0 2차 직업 — 궁수 각성 스나이퍼 · 반전 섀도 헌터 특성 · 태세 (서버 — jobs.json advance):
  * <ul>
  * <li>스나이퍼 「호흡」 (쌓임 · 활 평타 +4% · 사거리 +1칸은 궁수와 같음 — JobTraitsMore, 최대 trait.max = 8): 호흡 8 에서 쏜 활 평타는 급소 사격 — 그 화살이 닿는 동안
  * (snipeFor 틱) 치명타 확정 (RpgCombat.sureCrit) · 꿰뚫음 (snipeWidth) · 호흡 snipeUse 씀. 쏠 때 활 앞 흰 섬광 · 화살 길을 따라 흰 금빛 줄. 사과 겨누기 (태세): 호흡 가득 ·

@@ -43,10 +43,10 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 전직 게임 시험 (jobs.json advance — 검사의 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트)):
+ * 0.51.0 2차 전직 게임 시험 (jobs.json advance — 검사의 각성 소드마스터 · 반전 블러드 나이트):
  * <ul>
  * <li>2차 전직 창 (환경 mmorpg:job_adv — Forms.HEADLESS): 49렙 → 창은 열려 카드 미리 보기 · 고르면 50렙 안내, 50렙 → 각성 무료 · 반전으로 바꾸기 600 은화 (모자람 · 됨) ·
- * 이명(직업명) 표시 · 1차 카드는 같은 계열 안내 · 강화 단계는 같은 칸으로 이어짐 · 다른 1차 직업으로 바꾸면 2차 풀림 (확인 창이 알림)</li>
+ * 직업 이름 표시 (이명 없음) · 1차 카드는 같은 계열 안내 · 강화 단계는 같은 칸으로 이어짐 · 다른 1차 직업으로 바꾸면 2차 풀림 (확인 창이 알림)</li>
  * <li>소드마스터 (mmorpg:job_sm — 재설계안 2판): 과녁 하나가 받은 피해 = 위력 × 피해 배율 × 배율 합 — 칼집 섬광 (투지 3 → 6칸 · 열 줄, 뽑는 6틱에 5) · 받아넘기기
  * (막는 동안 맞으면 깎이지 않고 받아침 3 · 투지 +3 / 막은 것이 없으면 내디뎌 벰 3) · 불의 울타리 (가로지르기 1.8 × 5) · 용의 피 (공격 속도 ×1.35 · 이동 +15% · −20% ·
  * 칼 평타 투지 +2) · 다시 벼린 칼 (충격 8 → 벼린 칼 사거리 +1.5 · +20% → 다시 누름 (14틱부터) 검풍 32 × 잃은 체력)</li>
@@ -146,8 +146,8 @@ public final class RpgJobAdvanceTests {
             // 49렙: 창은 열림 (미리 보기) · 카드를 고르면 50렙 안내
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload adv = chest(sp);
-            h.assertTrue(adv != null && adv.title().contains("2차 전직") && adv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("시구르드(소드마스터)")
-                    && adv.slots().get(JobTrainer.INVERT_SLOT).name().contains("다인슬레이프(블러드 나이트)"), "advance window: 각성 · 반전 cards");
+            h.assertTrue(adv != null && adv.title().contains("2차 전직") && adv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("소드마스터")
+                    && adv.slots().get(JobTrainer.INVERT_SLOT).name().contains("블러드 나이트"), "advance window: 각성 · 반전 cards");
             Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).body().contains("50렙") && "swordsman".equals(JobSystem.jobOf(sp)), "below 50: blocked");
             // 50렙 → 각성 (처음 2차 전직 — 무료)
@@ -158,7 +158,7 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "advance confirm");
             Forms.answer(sp, 11, null);
             h.assertTrue("swordmaster".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && done[0] == 1, "awaken free: " + JobSystem.jobOf(sp));
-            h.assertTrue(JobTrainer.optionText(sp).contains("시구르드(소드마스터)") && JobSystem.job(sp).display().equals("시구르드(소드마스터)"), "display 이명(직업명)");
+            h.assertTrue(JobTrainer.optionText(sp).contains("소드마스터") && JobSystem.job(sp).display().equals("소드마스터"), "display 이명(직업명)");
             h.assertTrue(JobUpgrades.level(sp, "swordmaster_ring") == 2, "upgrade carries to the same slot: " + JobUpgrades.level(sp, "swordmaster_ring"));
             // 1차 카드 (검사) → 같은 계열 안내
             JobTrainer.open(sp, () -> done[0]++);
@@ -188,20 +188,20 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(chest(sp) != null && chest(sp).body().contains("풀립니다"), "change confirm warns the second job is cleared");
             Forms.answer(sp, 11, null);
             h.assertTrue("warrior".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0, "changed first job → second job cleared: " + JobSystem.jobOf(sp));
-            // 0.51.0 전사의 2차 전직 (뵈드바르(워로드) · 재설계안 2판 스타르카드(글래디에이터)) — 1차 직업에서 처음이라 무료
+            // 0.51.0 전사의 2차 전직 (워로드 · 재설계안 2판 글래디에이터) — 1차 직업에서 처음이라 무료
             JobTrainer.open(sp, () -> done[0]++);
             FormNet.ChestPayload wa = chest(sp);
             h.assertTrue(wa != null && wa.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "warrior: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload wadv = chest(sp);
-            h.assertTrue(wadv != null && wadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("뵈드바르(워로드)")
-                    && wadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("스타르카드(글래디에이터)"), "warrior advance cards");
+            h.assertTrue(wadv != null && wadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("워로드")
+                    && wadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("글래디에이터"), "warrior advance cards");
             Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "warrior advance confirm");
             Forms.answer(sp, 11, null);
             h.assertTrue("gladiator".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
-                    && JobSystem.job(sp).display().equals("스타르카드(글래디에이터)"), "gladiator free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 마검사의 2차 전직 (뵐룬드(룬 스미스) · 스키르니르(소드 콜러) — 재설계안 2판) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
+                    && JobSystem.job(sp).display().equals("글래디에이터"), "gladiator free from the first job: " + JobSystem.jobOf(sp));
+            // 0.51.0 마검사의 2차 전직 (룬 스미스 · 소드 콜러 — 재설계안 2판) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("spellblade"), null);
@@ -212,14 +212,14 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(sb != null && sb.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "spellblade: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload sadv = chest(sp);
-            h.assertTrue(sadv != null && sadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("뵐룬드(룬 스미스)")
-                    && sadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("스키르니르(소드 콜러)"), "spellblade advance cards");
+            h.assertTrue(sadv != null && sadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("룬 스미스")
+                    && sadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("소드 콜러"), "spellblade advance cards");
             Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "spellblade advance confirm");
             Forms.answer(sp, 11, null);
-            h.assertTrue("runeknight".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("뵐룬드(룬 스미스)"),
+            h.assertTrue("runeknight".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("룬 스미스"),
                     "runeknight free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 매지션의 2차 전직 (오드레리르(아크메이지) · 나글파르(네크로맨서)) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
+            // 0.51.0 매지션의 2차 전직 (아크메이지 · 네크로맨서) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("mage"), null);
@@ -230,14 +230,14 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(mg != null && mg.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "mage: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload madv = chest(sp);
-            h.assertTrue(madv != null && madv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("오드레리르(아크메이지)")
-                    && madv.slots().get(JobTrainer.INVERT_SLOT).name().contains("나글파르(네크로맨서)"), "mage advance cards");
+            h.assertTrue(madv != null && madv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("아크메이지")
+                    && madv.slots().get(JobTrainer.INVERT_SLOT).name().contains("네크로맨서"), "mage advance cards");
             Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "mage advance confirm");
             Forms.answer(sp, 11, null);
-            h.assertTrue("necromancer".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("나글파르(네크로맨서)"),
+            h.assertTrue("necromancer".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("네크로맨서"),
                     "necromancer free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 궁수의 2차 전직 (에길(스나이퍼) · 미르크비드(섀도 헌터)) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
+            // 0.51.0 궁수의 2차 전직 (스나이퍼 · 섀도 헌터) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("archer"), null);
@@ -248,14 +248,14 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(ar != null && ar.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "archer: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload aadv = chest(sp);
-            h.assertTrue(aadv != null && aadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("에길(스나이퍼)")
-                    && aadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("미르크비드(섀도 헌터)"), "archer advance cards");
+            h.assertTrue(aadv != null && aadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("스나이퍼")
+                    && aadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("섀도 헌터"), "archer advance cards");
             Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "archer advance confirm");
             Forms.answer(sp, 11, null);
-            h.assertTrue("sniper".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("에길(스나이퍼)"),
+            h.assertTrue("sniper".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && JobSystem.job(sp).display().equals("스나이퍼"),
                     "sniper free from the first job: " + JobSystem.jobOf(sp));
-            // 0.51.0 암살자의 2차 전직 (우트가르드(트릭스터) · 료스알프(블레이드 댄서)) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
+            // 0.51.0 암살자의 2차 전직 (트릭스터 · 블레이드 댄서) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("assassin"), null);
@@ -266,13 +266,13 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(as != null && as.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "assassin: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload asadv = chest(sp);
-            h.assertTrue(asadv != null && asadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("우트가르드(트릭스터)")
-                    && asadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("료스알프(블레이드 댄서)"), "assassin advance cards");
+            h.assertTrue(asadv != null && asadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("트릭스터")
+                    && asadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("블레이드 댄서"), "assassin advance cards");
             Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "assassin advance confirm");
             Forms.answer(sp, 11, null);
             h.assertTrue("bladedancer".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
-                    && JobSystem.job(sp).display().equals("료스알프(블레이드 댄서)"), "bladedancer free from the first job: " + JobSystem.jobOf(sp));
+                    && JobSystem.job(sp).display().equals("블레이드 댄서"), "bladedancer free from the first job: " + JobSystem.jobOf(sp));
             // 창술사의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
@@ -290,7 +290,7 @@ public final class RpgJobAdvanceTests {
         RpgGearTests.done(h, sp);
     }
 
-    // ------------------------------------------------------------ 시구르드(소드마스터) — 0.51.0 재설계안 2판
+    // ------------------------------------------------------------ 소드마스터 — 0.51.0 재설계안 2판
 
     @GameTest(environment = ENV_SM, maxTicks = 520)
     public void swordmasterSkills(GameTestHelper h) {
@@ -407,7 +407,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 다인슬레이프(블러드 나이트) — 0.51.0 재설계안 2판
+    // ------------------------------------------------------------ 블러드 나이트 — 0.51.0 재설계안 2판
 
     @GameTest(environment = ENV_BK, maxTicks = 480)
     public void bloodknightSkills(GameTestHelper h) {
@@ -513,7 +513,7 @@ public final class RpgJobAdvanceTests {
     }
 
 
-    // ------------------------------------------------------------ 뵈드바르(워로드) — 0.51.0 재설계안 2판
+    // ------------------------------------------------------------ 워로드 — 0.51.0 재설계안 2판
 
     /** 밀 수 있는 과녁 (끌어오기 · 밀어내기 — 넉백 저항 0) */
     static Husk loose(GameTestHelper h, double dx, double dz) {
@@ -670,7 +670,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 스타르카드(글래디에이터) — 0.51.0 재설계안 2판
+    // ------------------------------------------------------------ 글래디에이터 — 0.51.0 재설계안 2판
 
     @GameTest(environment = ENV_GL, maxTicks = 640)
     public void gladiatorSkills(GameTestHelper h) {
@@ -811,7 +811,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 뵐룬드(룬 스미스) — 재설계안 2판
+    // ------------------------------------------------------------ 룬 스미스 — 재설계안 2판
 
     @GameTest(environment = ENV_RK, maxTicks = 640)
     public void runeknightSkills(GameTestHelper h) {
@@ -917,7 +917,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 스키르니르(소드 콜러) — 재설계안 2판 (투르스(헥스 블레이드) 대신)
+    // ------------------------------------------------------------ 소드 콜러 — 재설계안 2판 (헥스 블레이드 대신)
 
     @GameTest(environment = ENV_SC, maxTicks = 640)
     public void swordcallerSkills(GameTestHelper h) {
@@ -1023,7 +1023,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 오드레리르(아크메이지)
+    // ------------------------------------------------------------ 아크메이지
 
     /** 직업 스킬이 아닌 특성 피해 (별자리 · 별똥 — 피해 배율 없이 위력 × 배율 × 스탯 트리 공격력 × 가호) */
     static double raw(ServerPlayer sp, Jobs.Job j, double mult) {
@@ -1154,7 +1154,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 나글파르(네크로맨서)
+    // ------------------------------------------------------------ 네크로맨서
 
     @GameTest(environment = ENV_NC, maxTicks = 760)
     public void necromancerSkills(GameTestHelper h) {
@@ -1283,7 +1283,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 에길(스나이퍼)
+    // ------------------------------------------------------------ 스나이퍼
 
     /** 활 평타 한 번 (치명타 없이 · 지금의 평타 배율 — 호흡) */
     static double bowShot(ServerPlayer sp, Weapon w) {
@@ -1397,7 +1397,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 미르크비드(섀도 헌터)
+    // ------------------------------------------------------------ 섀도 헌터
 
     @GameTest(environment = ENV_SH, maxTicks = 640)
     public void shadowhunterSkills(GameTestHelper h) {
@@ -1516,7 +1516,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 우트가르드(트릭스터)
+    // ------------------------------------------------------------ 트릭스터
 
     /** 시험 자리에서 (dx, dz) 의 체력 1 몹 (과녁이 아님 — 쓰러짐) */
     static Husk weak(GameTestHelper h, double dx, double dz) {
@@ -1657,7 +1657,7 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 료스알프(블레이드 댄서)
+    // ------------------------------------------------------------ 블레이드 댄서
 
     @GameTest(environment = ENV_BD, maxTicks = 760)
     public void bladedancerSkills(GameTestHelper h) {

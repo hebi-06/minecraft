@@ -31,7 +31,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 전사 각성 뵈드바르(워로드) · 반전 스타르카드(글래디에이터) 특성 · 태세 (재설계안 2판 — claude/job-advance-redo.md, 서버 — jobs.json advance):
+ * 0.51.0 2차 직업 — 전사 각성 워로드 · 반전 글래디에이터 특성 · 태세 (재설계안 2판 — claude/job-advance-redo.md, 서버 — jobs.json advance):
  * <ul>
  * <li>워로드 「분노」 (쌓고 줄어드는 것은 전사와 같음 — JobTraitsMore): 다 차면 곰의 화신 bearFor 틱 — 몸을 감싼 곰 (rfx_jbear · 3인칭 · 다른 사람), 도끼 평타가
  * 곰 발톱 세 줄로 넓어짐 (SWING_LOOK warlord_bear — 범위 ×1.5 · 휘두를 때마다 앞에 큰 발톱 세 줄, 피해 + fullBonus — JobTraitsMore.basicMult), 받는 피해

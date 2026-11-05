@@ -24,7 +24,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 매지션 반전 나글파르(네크로맨서) 스킬 (jobs.json advance.necromancer — 독초록 · 뼈색, 특성 「망자의 군대」 — JobTraits8 · NecroCrew): 같은 완드 ·
+ * 0.51.0 2차 직업 — 매지션 반전 네크로맨서 스킬 (jobs.json advance.necromancer — 독초록 · 뼈색, 특성 「망자의 군대」 — JobTraits8 · NecroCrew): 같은 완드 ·
  * 같은 칸 역할의 새 스킬 다섯 — 뼈 창 (꿰뚫음 · 1.2초에 몸에서 뼈 가시 · 5초 안에 쓰러지면 망자로) · 망자와 자리 바꾸기 (떠난 자리에 뼈 방벽) · 시체 폭발 (시체 · 망자 · 땅 속
  * 망자가 부풀어 터짐 · 독 뼈 구름) · 망자 일으키기 (선원 둘 · 망자 공격 +30%) · 나글파르의 출항 (안개 속 손발톱 배가 땅을 가르며 지나가고 선원 여섯이 뛰어내림). 모두 마법 피해.
  * 연출 = 2D 그림 (JobFx — 뼈 창 rfx_jbonespear · 뼈 방벽 rfx_jbonewall · 해골 rfx_jskull · 갈라진 땅 rfx_jrift, 1차 사신의 혼불 · 망자의 손) + 망자는 진짜 몹

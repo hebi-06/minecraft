@@ -27,11 +27,11 @@ import net.minecraft.world.phys.Vec3;
  * 0.28.0 전사 · 매지션 · 궁수 특성 (JobTraits 가 부름 — 자원 · 태세는 JobTraits 와 같은 틀):
  * <ul>
  * <li>전사 「분노」 (0 ~ 100): 도끼 평타가 맞으면 +onHit · 맞으면 +onHurt, idle 틱 동안 싸우지 않으면 1초에 decay 씩 줄어듦 (투혼 동안은 그대로).
- * 0.51.0 각성 뵈드바르(워로드) 도 같은 분노 — 다 차면 곰의 화신 (JobTraits6: 그동안 분노가 줄어 끝나면 0 · 쌓이지 않음 · 평타 + fullBonus).
+ * 0.51.0 각성 워로드 도 같은 분노 — 다 차면 곰의 화신 (JobTraits6: 그동안 분노가 줄어 끝나면 0 · 쌓이지 않음 · 평타 + fullBonus).
  * half 이상이면 도끼 평타 피해 + halfBonus, 다 차면 + fullBonus (RpgCombat.basicMult). 파쇄격의 방어 깨짐 (맞는 쪽 배율 — RpgCombat.takenMult).
  * 투혼: 체력이 low 아래로 떨어지면 한 번 heal 회복 (RpgHealth.lossHook)</li>
  * <li>매지션 「주문 연쇄」: 직업 스킬을 쓰고 window 틱 안에 다른 직업 스킬을 쓰면 연쇄 +1 (최대 max — 하나당 피해 + perChain, JobSystem 이 위력에 곱함).
- * 0.51.0 각성 오드레리르(아크메이지) 도 같은 연쇄 (최대 5 — 이은 스킬마다 별 · 다섯째에 별자리 완성: JobTraits8).
+ * 0.51.0 각성 아크메이지 도 같은 연쇄 (최대 5 — 이은 스킬마다 별 · 다섯째에 별자리 완성: JobTraits8).
  * 완드 평타가 맞으면 직업 스킬 재사용 대기 wandCut 틱 줄어듦 (한 발 — 같은 틱 — 에 한 번). 마나 과부하 (태세): 완드 평타 사거리 + · 관통 광선 · 공격 간격 ×
  * cdScale, 끝나면 이동 느려짐</li>
  * <li>궁수 「호흡」 (0 ~ 5): 움직이지 않고 활을 쏘면 +1, 움직이는 동안 decay 틱마다 하나씩 줄어듦. 하나당 활 평타 피해 + perStack · 사거리 + rangePer.
@@ -137,17 +137,17 @@ public final class JobTraitsMore {
         return j == null || j.trait() == null ? fallback : j.trait().def().numOr(key, fallback);
     }
 
-    /** 0.51.0 주문 연쇄를 쓰는 직업 (매지션 · 각성 오드레리르(아크메이지) — 반전 나글파르(네크로맨서) 는 망자의 군대) */
+    /** 0.51.0 주문 연쇄를 쓰는 직업 (매지션 · 각성 아크메이지 — 반전 네크로맨서 는 망자의 군대) */
     static boolean chainJob(Jobs.Job j) {
         return j != null && (j.id().equals("mage") || j.id().equals(JobTraits8.AM));
     }
 
-    /** 0.51.0 호흡을 쓰는 직업 (궁수 · 각성 에길(스나이퍼) — 반전 미르크비드(섀도 헌터) 는 추격) */
+    /** 0.51.0 호흡을 쓰는 직업 (궁수 · 각성 스나이퍼 — 반전 섀도 헌터 는 추격) */
     static boolean breathJob(Jobs.Job j) {
         return j != null && (j.id().equals("archer") || j.id().equals(JobTraits9.SN));
     }
 
-    /** 0.51.0 분노를 쓰는 직업 (전사 · 각성 뵈드바르(워로드)) */
+    /** 0.51.0 분노를 쓰는 직업 (전사 · 각성 워로드) */
     static boolean rageJob(Jobs.Job j) {
         return j != null && (j.id().equals("warrior") || j.id().equals(JobTraits6.WL));
     }
@@ -600,9 +600,9 @@ public final class JobTraitsMore {
     /** 게이지 값: 전사 분노 · 매지션 연쇄 · 궁수 호흡 */
     static int gaugeValue(ServerPlayer sp, Jobs.Job j) {
         return switch (j.id()) {
-            case "warrior", "warlord" -> rage(sp); // 0.51.0 뵈드바르(워로드) 도 분노
-            case "mage", "arcmage" -> chain(sp); // 0.51.0 오드레리르(아크메이지) 도 연쇄 (최대 5)
-            case "archer", "sniper" -> breath(sp); // 0.51.0 에길(스나이퍼) 도 호흡 (최대 8)
+            case "warrior", "warlord" -> rage(sp); // 0.51.0 워로드 도 분노
+            case "mage", "arcmage" -> chain(sp); // 0.51.0 아크메이지 도 연쇄 (최대 5)
+            case "archer", "sniper" -> breath(sp); // 0.51.0 스나이퍼 도 호흡 (최대 8)
             default -> JobTraits3.gaugeValue(sp, j); // 0.29.0 표식 · 창끝 · 혼
         };
     }

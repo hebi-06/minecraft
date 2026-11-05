@@ -23,7 +23,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 궁수 반전 미르크비드(섀도 헌터) 스킬 (jobs.json advance.shadowhunter — 남보라 · 은빛 · 검은 깃 화살, 특성 「추격」 · 저주 — JobTraits9):
+ * 0.51.0 2차 직업 — 궁수 반전 섀도 헌터 스킬 (jobs.json advance.shadowhunter — 남보라 · 은빛 · 검은 깃 화살, 특성 「추격」 · 저주 — JobTraits9):
  * 1차 궁수와 거꾸로 달리며 쏨 — 검은 화살 (달리며 세 발 · 저주) · 그림자 구르기 (옆으로 구르며 한 발 — 구르는 동안 받는 피해 없음) · 저주 번짐 (꿰뚫는 저주 화살 → 문양이 터지며
  * 둘레로 번짐 · 쓰러지면 바로) · 그믐밤 (6초 — 어둠 · 치명타 · 적이 나를 놓침) · 어둠숲의 사냥 (어둠숲 하늘 · 가시덤불 · 저주 걸린 적마다 검은 화살 → 사냥의 화살). 화살은
  * 공격 피해. 연출 = 2D 그림 (검은 화살 rfx_jblackarrow · 저주 문양 rfx_jcurse · 어둠숲 가시덤불 rfx_jthicket · 그림자 연기 · 달 rfx_jmoon).

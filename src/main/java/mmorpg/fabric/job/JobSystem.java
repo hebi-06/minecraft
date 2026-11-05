@@ -77,15 +77,15 @@ public final class JobSystem {
         SwordmasterSkills.register(); // 0.51.0 2차 직업 (검사 각성 · 반전)
         BloodknightSkills.register();
         WarlordSkills.register(); // 0.51.0 2차 직업 (전사 각성 · 반전)
-        GladiatorSkills.register(); // 0.51.0 재설계안 2판 — 전사 반전 스타르카드(글래디에이터) (울프헤딘(라이칸) 대신)
+        GladiatorSkills.register(); // 0.51.0 재설계안 2판 — 전사 반전 글래디에이터 (라이칸 대신)
         RuneknightSkills.register(); // 0.51.0 2차 직업 (마검사 각성 · 반전 — 재설계안 2판 룬 스미스 · 소드 콜러)
         SwordcallerSkills.register();
         ArcmageSkills.register(); // 0.51.0 2차 직업 (매지션 각성 · 반전)
         NecromancerSkills.register();
-        SniperSkills.register(); // 0.51.0 궁수 2차 — 에길(스나이퍼)
-        ShadowhunterSkills.register(); // 0.51.0 궁수 2차 — 미르크비드(섀도 헌터)
-        TricksterSkills.register(); // 0.51.0 암살자 2차 — 우트가르드(트릭스터)
-        BladedancerSkills.register(); // 0.51.0 암살자 2차 — 료스알프(블레이드 댄서)
+        SniperSkills.register(); // 0.51.0 궁수 2차 — 스나이퍼
+        ShadowhunterSkills.register(); // 0.51.0 궁수 2차 — 섀도 헌터
+        TricksterSkills.register(); // 0.51.0 암살자 2차 — 트릭스터
+        BladedancerSkills.register(); // 0.51.0 암살자 2차 — 블레이드 댄서
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);
@@ -277,7 +277,7 @@ public final class JobSystem {
     /** JobSkills.header: 칸 위 직업 이름 · 색 */
     static JobSkills.Header header(ServerPlayer sp) {
         Jobs.Job j = job(sp);
-        return j == null ? null : new JobSkills.Header(j.id(), j.display(), Jobs.rgb(j.color()[0]), Jobs.rgb(j.color()[1])); // 0.51.0 2차 직업은 이명(직업명)
+        return j == null ? null : new JobSkills.Header(j.id(), j.display(), Jobs.rgb(j.color()[0]), Jobs.rgb(j.color()[1])); // 직업 이름 (2차 직업도 — 이명은 2026-11-05 지움)
     }
 
     /** 칸이 바뀌었으면 (또는 force) 클라이언트에 다시 보냄 */

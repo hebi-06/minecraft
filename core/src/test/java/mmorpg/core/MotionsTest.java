@@ -208,9 +208,9 @@ public final class MotionsTest {
             String fn = strike.obj(g).str("fn");
             check(SwingLooks.of(fn) != null, "strike rune look " + g + " " + fn);
         }
-        // 0.51.0 2차 직업: 곰의 화신 (뵈드바르(워로드) — 분노 100 · 평타 범위 ×1.5) · 재설계안 2판: 용의 피 (시구르드 태세) · 다시 벼린 칼 (벼린 칼 ×1.5) ·
-        // 광란 (다인슬레이프 태세) · 거인의 무게 (뵈드바르 태세 — 도끼 ×1.6) · 불사의 분노 (스타르카드 태세) · 담금질 (뵐룬드(룬 스미스) — 달군 대검 ×1.3) ·
-        // 둘로 나뉘어라 (스키르니르(소드 콜러) — 칼빛만 · 범위 그대로)
+        // 0.51.0 2차 직업: 곰의 화신 (워로드 — 분노 100 · 평타 범위 ×1.5) · 재설계안 2판: 용의 피 (시구르드 태세) · 다시 벼린 칼 (벼린 칼 ×1.5) ·
+        // 광란 (다인슬레이프 태세) · 거인의 무게 (뵈드바르 태세 — 도끼 ×1.6) · 불사의 분노 (스타르카드 태세) · 담금질 (룬 스미스 — 달군 대검 ×1.3) ·
+        // 둘로 나뉘어라 (소드 콜러 — 칼빛만 · 범위 그대로)
         Map<String, Double> scales = Map.ofEntries(Map.entry("edgeHone", 1.15), Map.entry("flurry", 1.2), Map.entry("bloodBlade", 1.3), Map.entry("cleave", 1.4),
                 Map.entry("swordGod", 1.5), Map.entry("swordsman_mirror", 1.2), Map.entry("spellblade_awaken", 1.3), Map.entry("reaper_avatar", 1.0),
                 Map.entry("warlord_bear", 1.5), Map.entry("warlord_titan", 1.6), Map.entry("gladiator_fury", 1.1), Map.entry("runeknight_temper", 1.3), Map.entry("swordcaller_twin", 1.0),

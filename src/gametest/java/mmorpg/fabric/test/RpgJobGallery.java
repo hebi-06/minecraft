@@ -159,7 +159,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
 
     /**
-     * 0.51.0 2차 직업 — 검사 각성 시구르드(소드마스터) · 반전 다인슬레이프(블러드 나이트) (재설계안 2판): 칼집 섬광 (6 뽑음 · 10 큰 가로) · 받아넘기기 (4 에 맞음 →
+     * 0.51.0 2차 직업 — 검사 각성 소드마스터 · 반전 블러드 나이트 (재설계안 2판): 칼집 섬광 (6 뽑음 · 10 큰 가로) · 받아넘기기 (4 에 맞음 →
      * 5 쨍 · 11 · 13 · 15 받아침 — beforeCast) · 불의 울타리 (6 · 16 … 46 가로지르기 · 56 별) · 용의 피 · 다시 벼린 칼 (6 충격 · 20 다시 누름 → 23 검풍) /
      * 핏빛 대검 (0 · 12 · 24 다시 누름 → 5 · 17 · 31) · 피의 돌진 (6) · 피의 사슬 (4 박음 · 36 끌어당김) · 광란 · 칼을 뽑다 (8 칼날 · 20 내리꽂음 · 30 ~ 60 X 베기)
      */
@@ -181,7 +181,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24}, "swordmaster_ult", new int[] {20});
 
     /**
-     * 0.51.0 뵈드바르(워로드) · 스타르카드(글래디에이터) (재설계안 2판): 대지 가르기 (24 까지 모음 → 28 내려침 · 돌창) · 동면 (40 깨어남) · 곰의 포옹 (2 ~ 8 끌어옴 · 12 내려찍음) ·
+     * 0.51.0 워로드 · 글래디에이터 (재설계안 2판): 대지 가르기 (24 까지 모음 → 28 내려침 · 돌창) · 동면 (40 깨어남) · 곰의 포옹 (2 ~ 8 끌어옴 · 12 내려찍음) ·
      * 거인의 무게 (6 땅 구름 → 평타가 땅을 가름) · 마지막 휘두름 (24 한 바퀴) / 도끼 난타 (2 · 5 · 8 · 12 · 15 · 18) · 걸어 당기기 (1 걺 · 6 내려찍음) · 여덟 팔
      * (4 · 14 · 24 · 34 ~ 40) · 불사의 분노 · 홀름강 (10 열고 · 140 내려찍음)
      */
@@ -201,7 +201,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
 
     /**
-     * 0.51.0 재설계안 2판 뵐룬드(룬 스미스): 룬 모루 (4 내려찍음 → 갈라짐 · 모루 → 16 터짐) · 풀무 숨 (4 · 14 · 24 숨) · 용광로 (달궈 둔 과녁 — 16 쇳물 기둥 · 식으며 깨짐) ·
+     * 0.51.0 재설계안 2판 룬 스미스: 룬 모루 (4 내려찍음 → 갈라짐 · 모루 → 16 터짐) · 풀무 숨 (4 · 14 · 24 숨) · 용광로 (달궈 둔 과녁 — 16 쇳물 기둥 · 식으며 깨짐) ·
      * 담금질 (3 · 7 · 11 망치 → 14 김 — 뒤 평타의 쇳조각이 1초 뒤 터짐까지) · 쇳물 숫양 (6 솟음 → 10 달려옴 → 22 맞댐 → 30 받아침 → 물결)
      */
     private static final Case[] CASES_RK = {
@@ -212,7 +212,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {4, 8, 14, 20, 23, 27, 30, 33, 38}, new int[] {14, 23, 31}, 50, false),
     };
     /**
-     * 0.51.0 재설계안 2판 스키르니르(소드 콜러): 베어라 (2 칼이 떠남 → 3 · 13 맴돌며 벰 → 22 꽂힘) · 데려가라 (꽂아 둔 칼로 날아감 — 지나가며 벰) · 꿰뚫고 맴돌아라 (3 꿰뚫음 →
+     * 0.51.0 재설계안 2판 소드 콜러: 베어라 (2 칼이 떠남 → 3 · 13 맴돌며 벰 → 22 꽂힘) · 데려가라 (꽂아 둔 칼로 날아감 — 지나가며 벰) · 꿰뚫고 맴돌아라 (3 꿰뚫음 →
      * 13 · 23 · 33 · 43 맴돎) · 둘로 나뉘어라 (뒤 평타 — 칼 둘이 날아가 X 자) · 칼날 감옥 (10 둘러쌈 → 10 ~ 60 벰 → 70 큰 한 방)
      */
     private static final Case[] CASES_SC = {
@@ -224,7 +224,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
 
     /**
-     * 0.51.0 오드레리르(아크메이지) · 나글파르(네크로맨서): 마탄은 꿀술의 노래 태세로 (별똥까지), 쌍둥이 별은 연쇄 4 · 별 넷 (다섯째 별 → 별자리 완성), 자리 바꾸기 · 시체
+     * 0.51.0 아크메이지 · 네크로맨서: 마탄은 꿀술의 노래 태세로 (별똥까지), 쌍둥이 별은 연쇄 4 · 별 넷 (다섯째 별 → 별자리 완성), 자리 바꾸기 · 시체
      * 폭발은 망자 하나를 세워 두고 (그와 바꿈 · 그를 터뜨림)
      */
     private static final Case[] CASES_AM = {
@@ -243,7 +243,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
 
     /**
-     * 0.51.0 에길(스나이퍼) · 미르크비드(섀도 헌터): 사과 겨누기 · 그믐밤은 태세 → 활 평타 (급소 사격 · 그믐밤 치명타), 세 번째 화살은 공중 두 발 → 내려앉아 당김 → 셋째 화살 → 길의 바람,
+     * 0.51.0 스나이퍼 · 섀도 헌터: 사과 겨누기 · 그믐밤은 태세 → 활 평타 (급소 사격 · 그믐밤 치명타), 세 번째 화살은 공중 두 발 → 내려앉아 당김 → 셋째 화살 → 길의 바람,
      * 어둠숲의 사냥은 가시덤불 → 검은 화살 물결 → 사냥의 화살
      */
     private static final Case[] CASES_SN = {
@@ -262,7 +262,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
 
     /**
-     * 0.51.0 우트가르드(트릭스터) · 료스알프(블레이드 댄서): 끝없는 밤은 강화 (은신 → 단검 평타), 눈부신 한낮은 태세 (평타 두 번), 검은 장미 덤불은 파고들어 벰 → 머리 위로 넘음 →
+     * 0.51.0 트릭스터 · 블레이드 댄서: 끝없는 밤은 강화 (은신 → 단검 평타), 눈부신 한낮은 태세 (평타 두 번), 검은 장미 덤불은 파고들어 벰 → 머리 위로 넘음 →
      * 등 뒤에서 터뜨림, 똬리는 S 자로 갔다가 되돌아옴 → 조임 → 독, 개기일식은 비수 네 번 → 돌아옴 → 해가 뜸, 빛무리 춤은 여덟 번 → 돌아옴 → 빛 꽃
      */
     private static final Case[] CASES_TR = {
@@ -776,8 +776,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.FIRST_PERSON));
         ctx.waitTicks(16);
         check(server.computeOnServer(s -> "swordmaster".equals(JobSystem.jobOf(player(s)))), "advance: swordmaster (first second job free)");
-        check(ctx.computeOnClient(mc -> ClientJobBar.jobId().equals("swordmaster") && ClientJobBar.jobName().contains("시구르드(소드마스터)") && ClientJobBar.gaugeMax() == 8),
-                "client bar: 시구르드(소드마스터), 투지 max 8 — '" + ctx.computeOnClient(mc -> ClientJobBar.jobName()) + "'");
+        check(ctx.computeOnClient(mc -> ClientJobBar.jobId().equals("swordmaster") && ClientJobBar.jobName().contains("소드마스터") && ClientJobBar.gaugeMax() == 8),
+                "client bar: 소드마스터, 투지 max 8 — '" + ctx.computeOnClient(mc -> ClientJobBar.jobName()) + "'");
         shot(ctx, "job_hud_swordmaster");
     }
 

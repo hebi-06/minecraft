@@ -54,7 +54,7 @@ public final class SwingArea {
 
     private static final Map<UUID, Swing> NOW = new HashMap<>();
     /**
-     * 0.51.0 범위 피해 없이 한 적만 (스키르니르(소드 콜러) 스스로 싸우는 칼 — 칼이 날아가 겨눈 적 하나를 대신 벰, JobTraits7): 참이면 휘두르기만 기억 (조준한 적 ·
+     * 0.51.0 범위 피해 없이 한 적만 (소드 콜러 스스로 싸우는 칼 — 칼이 날아가 겨눈 적 하나를 대신 벰, JobTraits7): 참이면 휘두르기만 기억 (조준한 적 ·
      * 같은 누름의 공격 패킷 하나)
      */
     public static java.util.function.Predicate<ServerPlayer> single = p -> false;

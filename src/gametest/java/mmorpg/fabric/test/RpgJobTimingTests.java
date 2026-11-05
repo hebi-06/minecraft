@@ -227,26 +227,26 @@ public final class RpgJobTimingTests {
         probe(h, "guardian");
     }
 
-    /** 0.51.0 2차 직업 — 검사 각성 시구르드(소드마스터) */
+    /** 0.51.0 2차 직업 — 검사 각성 소드마스터 */
     @GameTest(environment = "mmorpg:jt_sm", maxTicks = 2400)
     public void timingSwordmaster(GameTestHelper h) {
         probe(h, "swordmaster");
     }
 
-    /** 0.51.0 2차 직업 — 검사 반전 다인슬레이프(블러드 나이트) (스킬마다 체력을 바쳐 +10% — 다 맞은 것으로 셈) */
+    /** 0.51.0 2차 직업 — 검사 반전 블러드 나이트 (스킬마다 체력을 바쳐 +10% — 다 맞은 것으로 셈) */
     @GameTest(environment = "mmorpg:jt_bk", maxTicks = 2400)
     public void timingBloodknight(GameTestHelper h) {
         probe(h, "bloodknight");
     }
 
-    /** 0.51.0 2차 직업 — 전사 각성 뵈드바르(워로드) */
+    /** 0.51.0 2차 직업 — 전사 각성 워로드 */
     @GameTest(environment = "mmorpg:jt_wl", maxTicks = 2400)
     public void timingWarlord(GameTestHelper h) {
         probe(h, "warlord");
     }
 
     /**
-     * 0.51.0 2차 직업 — 전사 반전 스타르카드(글래디에이터) (재설계안 2판 — 결투가 앞 과녁에서 다음 과녁으로 옮겨가 더 들어감: 다 맞은 것으로 셈 · 홀름강은 결투장
+     * 0.51.0 2차 직업 — 전사 반전 글래디에이터 (재설계안 2판 — 결투가 앞 과녁에서 다음 과녁으로 옮겨가 더 들어감: 다 맞은 것으로 셈 · 홀름강은 결투장
      * 받는 피해 +15%)
      */
     @GameTest(environment = "mmorpg:jt_gl", maxTicks = 2400)
@@ -271,32 +271,32 @@ public final class RpgJobTimingTests {
         probe(h, "swordcaller");
     }
 
-    /** 0.51.0 2차 직업 — 매지션 각성 오드레리르(아크메이지) (스킬 사이 5초 — 연쇄 · 별 없이, 별무리 마탄은 과녁 하나라 튀는 별빛 없음) */
+    /** 0.51.0 2차 직업 — 매지션 각성 아크메이지 (스킬 사이 5초 — 연쇄 · 별 없이, 별무리 마탄은 과녁 하나라 튀는 별빛 없음) */
     @GameTest(environment = "mmorpg:jt_am", maxTicks = 2400)
     public void timingArcmage(GameTestHelper h) {
         probe(h, "arcmage");
     }
 
-    /** 0.51.0 2차 직업 — 매지션 반전 나글파르(네크로맨서) (망자가 없어 자리 바꾸기는 뼈 허수아비 · 시체 폭발은 땅 속 망자, 망자는 치지 않음) */
+    /** 0.51.0 2차 직업 — 매지션 반전 네크로맨서 (망자가 없어 자리 바꾸기는 뼈 허수아비 · 시체 폭발은 땅 속 망자, 망자는 치지 않음) */
     @GameTest(environment = "mmorpg:jt_nc", maxTicks = 2400)
     public void timingNecromancer(GameTestHelper h) {
         probe(h, "necromancer");
     }
 
-    /** 0.51.0 2차 직업 — 궁수 각성 에길(스나이퍼) (꿰뚫는 연사는 뒤로 구른 뒤 무릎 꿇고 쏜 세 발이 한 번에 · 세 번째 화살은 공중 두 발 → 셋째 화살 → 길의 바람) */
+    /** 0.51.0 2차 직업 — 궁수 각성 스나이퍼 (꿰뚫는 연사는 뒤로 구른 뒤 무릎 꿇고 쏜 세 발이 한 번에 · 세 번째 화살은 공중 두 발 → 셋째 화살 → 길의 바람) */
     @GameTest(environment = "mmorpg:jt_sn", maxTicks = 2400)
     public void timingSniper(GameTestHelper h) {
         probe(h, "sniper");
     }
 
-    /** 0.51.0 2차 직업 — 궁수 반전 미르크비드(섀도 헌터) (저주 번짐 · 어둠숲의 사냥은 저주 걸린 과녁이라 받는 피해 × 1.02 · 1.04 — 다 들어감) */
+    /** 0.51.0 2차 직업 — 궁수 반전 섀도 헌터 (저주 번짐 · 어둠숲의 사냥은 저주 걸린 과녁이라 받는 피해 × 1.02 · 1.04 — 다 들어감) */
     @GameTest(environment = "mmorpg:jt_sh", maxTicks = 2400)
     public void timingShadowhunter(GameTestHelper h) {
         probe(h, "shadowhunter");
     }
 
     /**
-     * 0.51.0 2차 직업 — 암살자 각성 우트가르드(트릭스터) (검은 장미 덤불은 표식 0 이라 일부 — 등 뒤에서 터뜨림이 t 12 안, 환술은 환영이 2초에 터짐 (w 0), 똬리는 마지막 독 58,
+     * 0.51.0 2차 직업 — 암살자 각성 트릭스터 (검은 장미 덤불은 표식 0 이라 일부 — 등 뒤에서 터뜨림이 t 12 안, 환술은 환영이 2초에 터짐 (w 0), 똬리는 마지막 독 58,
      * 개기일식은 비수 네 번이 표식 7 을 채워 다 들어감 — 첫 비수 w 8)
      */
     @GameTest(environment = "mmorpg:jt_tr", maxTicks = 2400)
@@ -304,7 +304,7 @@ public final class RpgJobTimingTests {
         probe(h, "trickster");
     }
 
-    /** 0.51.0 2차 직업 — 암살자 반전 료스알프(블레이드 댄서) (스킬 피해만 이어지므로 춤사위가 쌓이지 않음 — 다 들어감: 빛살 베기 11 · 요정의 걸음 20 · 칼날 원무 21 · 빛무리 춤 50) */
+    /** 0.51.0 2차 직업 — 암살자 반전 블레이드 댄서 (스킬 피해만 이어지므로 춤사위가 쌓이지 않음 — 다 들어감: 빛살 베기 11 · 요정의 걸음 20 · 칼날 원무 21 · 빛무리 춤 50) */
     @GameTest(environment = "mmorpg:jt_bd", maxTicks = 2400)
     public void timingBladedancer(GameTestHelper h) {
         probe(h, "bladedancer");

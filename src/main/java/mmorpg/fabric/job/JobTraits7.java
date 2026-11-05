@@ -25,7 +25,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 마검사 각성 뵐룬드(룬 스미스) · 반전 스키르니르(소드 콜러) 특성 · 태세 (재설계안 2판 — claude/job-advance-redo.md):
+ * 0.51.0 2차 직업 — 마검사 각성 룬 스미스 · 반전 소드 콜러 특성 · 태세 (재설계안 2판 — claude/job-advance-redo.md):
  * <ul>
  * <li>룬 스미스 「마력 각인」 (쌓고 터지는 것은 마검사와 같음 — JobTraits.mark · markBonus, 최대 5): 각인이 터지면 둘레 spreadRadius 칸의 다른 적에게 룬 폭발이 번짐
  * (위력 × markBurst × spread · 마법). 달궈짐: 풀무 숨 · 용광로 · 쇳물 숫양에 맞은 적은 heatFor 틱 달궈짐 (빨갛게 달아오른 몸 · 불티) — 달궈진 적이 다른 직업 스킬에

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""0.51.0 나글파르(네크로맨서) 의 망자 선원 텍스처 (컨셉 "망자의 군대 — 스킬로 쓰러뜨린 적이 망자 선원으로 일어나 싸움", 색 독초록 · 뼈색):
+"""0.51.0 네크로맨서 의 망자 선원 텍스처 (컨셉 "망자의 군대 — 스킬로 쓰러뜨린 적이 망자 선원으로 일어나 싸움", 색 독초록 · 뼈색):
 북쪽 몬스터 드라우그 (rpg:draugr — 뿔 투구 · 해골 얼굴 · 사슬 갑옷 · 방패 · 서리 도끼 · 망토) 의 텍스처를 독초록 혼불 · 뼈색 망자로 다시 칠함
 → assets/mmorpg/textures/entity/rpg/allies/naglfar_crew(_emissive).png (모델 · 동작은 드라우그 그대로 — bedrock/entities.json 의 rpg:naglfar_crew).
 티르빙의 보랏빛 망령 전사 (tools/tyrfing_warrior_tex.py) 와 같은 틀.

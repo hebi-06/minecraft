@@ -27,7 +27,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 암살자 반전 료스알프(블레이드 댄서) 특성 · 태세 (서버 — jobs.json advance, 트릭스터의 표식 · 은신은 JobTraits3 의 암살자 줄기):
+ * 0.51.0 2차 직업 — 암살자 반전 블레이드 댄서 특성 · 태세 (서버 — jobs.json advance, 트릭스터의 표식 · 은신은 JobTraits3 의 암살자 줄기):
  * <ul>
  * <li>「춤사위」 (1차 표식과 거꾸로 — 적이 아니라 내 몸에 쌓임): 단검 평타와 직업 스킬을 번갈아 맞히면 +1 (최대 trait.max — 평타 → 스킬 · 스킬 → 평타가 맞을 때마다,
  * 같은 쪽이 이어지면 그대로) · 하나당 주는 피해 + perStack (단검 평타 RpgCombat.meleeMult · 직업 스킬 JobKit.hit) · 이동 속도 + speedPer. keep 틱 동안 아무것도

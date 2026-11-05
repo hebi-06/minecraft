@@ -25,7 +25,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 매지션 각성 오드레리르(아크메이지) · 반전 나글파르(네크로맨서) 특성 · 태세 (서버 — jobs.json advance):
+ * 0.51.0 2차 직업 — 매지션 각성 아크메이지 · 반전 네크로맨서 특성 · 태세 (서버 — jobs.json advance):
  * <ul>
  * <li>아크메이지 「주문 연쇄」 (이어지는 것 · +12% 는 매지션과 같음 — JobTraitsMore.chainNext · chainCommit, 최대 trait.max = 5): 이은 스킬 (연쇄 1 ~ 5) 마다 그 자리 (겨눈 적 ·
  * 조준한 곳) 에 별 — 같은 적이면 오각형 꼭짓점을 하나 건너 (차례로 이으면 ★). 다섯째 별에 별자리 완성 — 별을 잇는 금빛 선 (닫힌 고리) → starDelay 틱 뒤 별마다 폭발

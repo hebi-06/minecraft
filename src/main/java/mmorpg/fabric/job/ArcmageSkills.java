@@ -20,7 +20,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 2차 직업 — 매지션 각성 오드레리르(아크메이지) 스킬 (jobs.json advance.arcmage — 파랑 · 금빛 · 밤하늘 자주, 특성 「주문 연쇄」 최대 5 · 별자리 — JobTraits8):
+ * 0.51.0 2차 직업 — 매지션 각성 아크메이지 스킬 (jobs.json advance.arcmage — 파랑 · 금빛 · 밤하늘 자주, 특성 「주문 연쇄」 최대 5 · 별자리 — JobTraits8):
  * 1차 매지션의 컨셉 (마탄 · 서리 잔상 · 떠도는 별 · 갈드르 · 갈드라보크) 그대로 새 동작 — 별무리 마탄 (좌우로 미끄러지며 다섯 · 맞은 적 사이로 튀는 별빛) · 서리 별 걸음
  * (순간 이동 두 번 · 두 잔상이 1초 뒤 얼어 터짐) · 쌍둥이 별 (서로 도는 별 둘 · 잇는 빛줄기도 침) · 꿀술의 노래 (1칸 떠올라 노래 — 스킬마다 별똥) · 별의 노래 (3칸 떠올라
  * 마도서 — 불 · 얼음 · 번개에 이어 넷째 별의 비 · 별자리가 모여 대폭발). 모두 마법 피해. 연출 = 2D 그림 (JobFx — 별 rfx_jstarnode · 별똥 rfx_jfallstar 와 1차의 마탄 ·

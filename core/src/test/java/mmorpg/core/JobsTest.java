@@ -374,18 +374,18 @@ public final class JobsTest {
                 && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").size() == 2
                 && Jobs.advancedOf("lancer").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 창술사는 아직)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == gl && Jobs.baseOf(wl) == wa && Jobs.baseOf(gl) == wa, "warrior advance");
-        check(wl.display().equals("뵈드바르(워로드)") && gl.display().equals("스타르카드(글래디에이터)") && "awaken".equals(wl.path()) && "invert".equals(gl.path()),
+        check(wl.display().equals("워로드") && gl.display().equals("글래디에이터") && "awaken".equals(wl.path()) && "invert".equals(gl.path()),
                 "warrior display");
-        check(Jobs.find("워로드") == wl && Jobs.find("스타르카드") == gl && Jobs.find("gladiator") == gl && Jobs.find("글래디에이터") == gl, "find warrior advanced");
+        check(Jobs.find("워로드") == wl && Jobs.find("스타르카드") == null && Jobs.find("gladiator") == gl && Jobs.find("글래디에이터") == gl, "find warrior advanced");
         check(Jobs.advance("swordsman", "awaken") == sm && Jobs.advance("swordsman", "invert") == bk && Jobs.advance("swordsman", "nope") == null
                 && Jobs.advance(null, "awaken") == null, "advance(base, path)");
         check(Jobs.baseOf(sm) == sw && Jobs.baseOf(bk) == sw && Jobs.baseOf(sw) == sw && Jobs.baseOf(null) == null, "baseOf");
         check(sm.advanced() && bk.advanced() && !sw.advanced() && "awaken".equals(sm.path()) && "invert".equals(bk.path()) && "swordsman".equals(sm.base()), "base · path");
-        check(sm.display().equals("시구르드(소드마스터)") && bk.display().equals("다인슬레이프(블러드 나이트)") && sw.display().equals("검사"), "display 이명(직업명)");
+        check(sm.display().equals("소드마스터") && bk.display().equals("블러드 나이트") && sw.display().equals("검사"), "display 이명(직업명)");
         check(Jobs.pathName("awaken").equals("각성") && Jobs.pathName("invert").equals("반전") && Jobs.pathName("x").isEmpty() && Jobs.paths().equals(List.of("awaken", "invert")),
                 "path names");
         check(!Jobs.order().contains("swordmaster") && Jobs.all().size() == 11 && !Jobs.all().contains(sm), "advanced jobs are not first jobs");
-        check(Jobs.find("소드마스터") == sm && Jobs.find("시구르드(소드마스터)") == sm && Jobs.find("시구르드") == sm && Jobs.find("bloodknight") == bk
+        check(Jobs.find("소드마스터") == sm && Jobs.find("swordmaster") == sm && Jobs.find("시구르드") == null && Jobs.find("bloodknight") == bk
                 && Jobs.find("블러드 나이트") == bk, "find advanced");
         Set<String> ids = new HashSet<>();
         Set<String> names = new HashSet<>();
@@ -397,7 +397,8 @@ public final class JobsTest {
         for (Jobs.Job a : Jobs.allAdvanced()) {
             Jobs.Job b = Jobs.baseOf(a);
             check(b != null && a.weapons().equals(b.weapons()) && a.stats().equals(b.stats()) && near(a.scale(), b.scale()), a.id() + " inherits weapons · stats · scale");
-            check(a.skills().size() == Jobs.SLOTS && a.trait() != null && !a.trait().desc().isEmpty() && a.ready() && !a.title().isEmpty(), a.id() + " five skills · trait · title");
+            check(a.skills().size() == Jobs.SLOTS && a.trait() != null && !a.trait().desc().isEmpty() && a.ready() && a.display().equals(a.name()), a.id()
+                    + " five skills · trait · job name only (no epithet)");
             check(a.color().length == 2 && a.color()[0].length == 3, a.id() + " two colors");
             for (int i = 0; i < Jobs.SLOTS; i++) {
                 Jobs.Skill k = a.skill(i);
@@ -449,14 +450,14 @@ public final class JobsTest {
     }
 
     /**
-     * 0.51.0 암살자 2차 — 우트가르드(트릭스터) · 료스알프(블레이드 댄서) (사용자 "다음 작업"): 부분 합 = 배율 합 (암살자와 같은 4.75 · 2.85 · 8.55 · 38 — 표식을 터뜨리는
+     * 0.51.0 암살자 2차 — 트릭스터 · 블레이드 댄서 (사용자 "다음 작업"): 부분 합 = 배율 합 (암살자와 같은 4.75 · 2.85 · 8.55 · 38 — 표식을 터뜨리는
      * 것은 표식 가득 (7) 기준) · 무적 시간 띄움 · t · w · 특성 (표식 7 · 옮겨감 / 춤사위 5 · +6% · 이동 +4%)
      */
     static void assassinAdvance(Jobs.Job as, Jobs.Job tr, Jobs.Job bd) {
         check(tr != null && bd != null, "assassin advanced jobs");
         if (tr == null || bd == null) return;
         check(Jobs.advance("assassin", "awaken") == tr && Jobs.advance("assassin", "invert") == bd && Jobs.baseOf(tr) == as && Jobs.baseOf(bd) == as, "assassin advance");
-        check(tr.display().equals("우트가르드(트릭스터)") && bd.display().equals("료스알프(블레이드 댄서)") && Jobs.find("트릭스터") == tr && Jobs.find("료스알프") == bd
+        check(tr.display().equals("트릭스터") && bd.display().equals("블레이드 댄서") && Jobs.find("트릭스터") == tr && Jobs.find("료스알프") == null
                 && Jobs.find("블레이드 댄서") == bd, "assassin display · find");
         for (int i : new int[] {0, 1, 2, 4}) check(near(tr.skill(i).total(), as.skill(i).total()) && near(bd.skill(i).total(), as.skill(i).total()), "assassin totals slot " + i);
         int max = tr.trait().max();
@@ -502,14 +503,14 @@ public final class JobsTest {
     }
 
     /**
-     * 0.51.0 궁수 2차 — 에길(스나이퍼) · 미르크비드(섀도 헌터) (사용자 "다음 직업표 시작"): 부분 합 = 배율 합 (궁수와 같은 7.5 · 13.5 · 60 — 둘째 칸은 1차 뇨르드의 순풍처럼
+     * 0.51.0 궁수 2차 — 스나이퍼 · 섀도 헌터 (사용자 "다음 직업표 시작"): 부분 합 = 배율 합 (궁수와 같은 7.5 · 13.5 · 60 — 둘째 칸은 1차 뇨르드의 순풍처럼
      * 평타 화살이라 배율 합 없음) · 무적 시간 띄움 · t · w · 특성 (호흡 8 급소 사격 / 추격 5 · 저주)
      */
     static void archerAdvance(Jobs.Job ar, Jobs.Job sn, Jobs.Job sh) {
         check(sn != null && sh != null, "archer advanced jobs");
         if (sn == null || sh == null) return;
         check(Jobs.advance("archer", "awaken") == sn && Jobs.advance("archer", "invert") == sh && Jobs.baseOf(sn) == ar && Jobs.baseOf(sh) == ar, "archer advance");
-        check(sn.display().equals("에길(스나이퍼)") && sh.display().equals("미르크비드(섀도 헌터)") && Jobs.find("스나이퍼") == sn && Jobs.find("미르크비드") == sh
+        check(sn.display().equals("스나이퍼") && sh.display().equals("섀도 헌터") && Jobs.find("스나이퍼") == sn && Jobs.find("미르크비드") == null
                 && Jobs.find("섀도 헌터") == sh, "archer display · find");
         for (int i : new int[] {0, 1, 2, 4}) check(near(sn.skill(i).total(), ar.skill(i).total()) && near(sh.skill(i).total(), ar.skill(i).total()), "archer totals slot " + i);
         Jobs.Skill p0 = sn.skill(0);
@@ -548,14 +549,14 @@ public final class JobsTest {
     }
 
     /**
-     * 0.51.0 매지션 2차 — 오드레리르(아크메이지) · 나글파르(네크로맨서) (사용자 "다음 직업표 작업"): 부분 합 = 배율 합 (매지션과 같은 7 · 4.2 · 12.6 · 56) · 무적 시간
+     * 0.51.0 매지션 2차 — 아크메이지 · 네크로맨서 (사용자 "다음 직업표 작업"): 부분 합 = 배율 합 (매지션과 같은 7 · 4.2 · 12.6 · 56) · 무적 시간
      * 띄움 · t · 특성 (주문 연쇄 5 · 별자리 / 망자의 군대 최대 4 · 20초)
      */
     static void mageAdvance(Jobs.Job mg, Jobs.Job am, Jobs.Job nc) {
         check(am != null && nc != null, "mage advanced jobs");
         if (am == null || nc == null) return;
         check(Jobs.advance("mage", "awaken") == am && Jobs.advance("mage", "invert") == nc && Jobs.baseOf(am) == mg && Jobs.baseOf(nc) == mg, "mage advance");
-        check(am.display().equals("오드레리르(아크메이지)") && nc.display().equals("나글파르(네크로맨서)") && Jobs.find("아크메이지") == am && Jobs.find("나글파르") == nc,
+        check(am.display().equals("아크메이지") && nc.display().equals("네크로맨서") && Jobs.find("아크메이지") == am && Jobs.find("나글파르") == null,
                 "mage display · find");
         for (int i : new int[] {0, 1, 2, 4}) check(near(am.skill(i).total(), mg.skill(i).total()) && near(nc.skill(i).total(), mg.skill(i).total()), "mage totals slot " + i);
         check(near(am.skill(0).num("bolts", 0) * am.skill(0).num("bolt", 0), 7) && near(am.skill(1).num("blast", 0) + am.skill(1).num("blast2", 0), 4.2)
@@ -601,14 +602,14 @@ public final class JobsTest {
 
     /**
      * 0.51.0 마검사 2차 — 재설계안 2판 (claude/job-advance-redo.md · 사용자 "직업 이름 같은거 … 바꾸고 싶으면 바꿔도 됨"): 뵐룬드(룬 스미스 — 룬 나이트에서 이름을
-     * 바꿈) 새 스킬 다섯 · 스키르니르(소드 콜러) (투르스(헥스 블레이드) 대신). 부분 합 = 배율 합 (마검사와 같은 8.5 · 5.1 · 15.3 · 68) · 무적 시간 띄움 · t · w ·
+     * 바꿈) 새 스킬 다섯 · 소드 콜러 (헥스 블레이드 대신). 부분 합 = 배율 합 (마검사와 같은 8.5 · 5.1 · 15.3 · 68) · 무적 시간 띄움 · t · w ·
      * 특성 · 마력 검술 (2차는 1차 마검사의 칼 규칙을 이어 받음)
      */
     static void spellbladeAdvance(Jobs.Job sb, Jobs.Job rk, Jobs.Job sc) {
         check(rk != null && sc != null, "spellblade advanced jobs");
         if (rk == null || sc == null) return;
         check(Jobs.advance("spellblade", "awaken") == rk && Jobs.advance("spellblade", "invert") == sc && Jobs.baseOf(rk) == sb && Jobs.baseOf(sc) == sb, "spellblade advance");
-        check(rk.display().equals("뵐룬드(룬 스미스)") && sc.display().equals("스키르니르(소드 콜러)") && Jobs.find("룬 스미스") == rk && Jobs.find("스키르니르") == sc
+        check(rk.display().equals("룬 스미스") && sc.display().equals("소드 콜러") && Jobs.find("룬 스미스") == rk && Jobs.find("스키르니르") == null
                 && Jobs.find("소드 콜러") == sc && Jobs.find("swordcaller") == sc && Jobs.job("hexblade") == null, "spellblade display · find");
         List<String> rkIds = new ArrayList<>();
         List<String> scIds = new ArrayList<>();
@@ -673,7 +674,7 @@ public final class JobsTest {
     }
 
     /**
-     * 0.51.0 전사 2차 — 재설계안 2판 (claude/job-advance-redo.md): 뵈드바르(워로드) 새 스킬 다섯 · 스타르카드(글래디에이터) (울프헤딘(라이칸) 대신). 부분 합 = 배율 합
+     * 0.51.0 전사 2차 — 재설계안 2판 (claude/job-advance-redo.md): 워로드 새 스킬 다섯 · 글래디에이터 (라이칸 대신). 부분 합 = 배율 합
      * (전사와 같은 6.5 · 3.9 · 11.7 · 52 — 대지 가르기는 끝까지 모은 값, 마지막 휘두름은 바깥 날 · 안쪽은 절반), 무적 시간 띄움 · 다시 누름 · t · w · 특성 (분노 · 곰의
      * 화신 / 결투 10 · +3% · −40%) · 단일 직업의 3번 칸 이름 (주력)
      */

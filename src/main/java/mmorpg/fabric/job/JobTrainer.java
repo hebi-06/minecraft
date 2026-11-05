@@ -32,7 +32,7 @@ import net.minecraft.world.phys.Vec3;
  * 카드를 누르면 확인 창 (특성 · 스킬 다섯 설명) → 전직 연출 (직업 색 둥근 베기 · 빛기둥 · 솟는 빛 · 번쩍임 · 제목).
  * 스킬이 아직 들어가지 않은 직업 (ready false) 은 흐린 카드 ("준비 중").
  * 0.51.0 2차 전직 (jobs.json advance — claude/job-advance.md): 1차 직업이 있으면 위 줄 2차 전직 단추 → 2차 전직 창 (각성 · 1차 직업 · 반전 카드 —
- * 50렙 (Jobs.advanceLevel) 부터, 처음은 무료 · 각성 ↔ 반전 바꾸기 은화 600 (Jobs.switchSilver)). 2차 직업은 이명(직업명) 으로 보임 (Job.display),
+ * 50렙 (Jobs.advanceLevel) 부터, 처음은 무료 · 각성 ↔ 반전 바꾸기 은화 600 (Jobs.switchSilver)). 2차 직업도 직업 이름만 보임 (Job.display — 이명(직업명) 표기는 2026-11-05 지움),
  * 1차 직업을 바꾸면 2차도 풀림 (직업 id 하나만 저장 — 확인 창이 알림), 직업 스킬 강화 단계는 같은 칸으로 이어짐 (Jobs.upId).
  */
 public final class JobTrainer {
@@ -203,7 +203,7 @@ public final class JobTrainer {
         return form;
     }
 
-    /** 지금 직업 칸 (2차 직업은 이명(직업명) · 길) */
+    /** 지금 직업 칸 (직업 이름 · 2차 직업은 길) */
     static Slot mineSlot(Jobs.Job now) {
         String path = now.advanced() ? "§8 · §7" + Jobs.pathName(now.path()) : "";
         return Slot.of(cardItem(now), "§7지금 직업 §8· " + code(now) + "§l" + now.display() + path).lore("§7" + now.role(), "§8무기 §f" + now.weaponText() + " §8· 스탯 §f"
@@ -543,7 +543,6 @@ public final class JobTrainer {
         out.add("§7처음 2차 전직 무료 · 각성 ↔ 반전 " + Math.round(Jobs.switchSilver()) + " " + Inv.CURRENCY_NAME);
         out.add("§71차 직업을 바꾸면 2차 직업도 풀림");
         out.add("§7직업 스킬 강화 단계는 같은 칸으로 이어짐");
-        out.add("§8표기: 이명(직업명)");
         return out;
     }
 
@@ -582,7 +581,7 @@ public final class JobTrainer {
         });
     }
 
-    /** 2차 전직 확인 창 본문: 이명(직업명) · 길 · 특성 · 스킬 다섯 (설명) · 값 */
+    /** 2차 전직 확인 창 본문: 직업 이름 · 길 · 특성 · 스킬 다섯 (설명) · 값 */
     static List<String> advConfirmLines(Jobs.Job a, int cost, int bal) {
         Jobs.Job base = Jobs.baseOf(a);
         List<String> lines = new ArrayList<>();

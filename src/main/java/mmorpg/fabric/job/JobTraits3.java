@@ -49,7 +49,7 @@ import net.minecraft.world.phys.Vec3;
  * momentumFor 틱 안의 다음 직업 스킬 위력 + momentum (JobSystem). 창벽 (태세): 정면 front° 에서 온 피해 − guard (RpgHealth.sourceReduce)</li>
  * <li>사신 「혼」 (0 ~ max): 낫 평타 (넓게 베기에 맞은 적 포함) · 직업 스킬이 맞힌 적마다 +1, 처치하면 + kill. 하나당 이동 속도 + speedPer · 준 피해의 leechPer 만큼 회복
  * (DamageNumbers.dealtHook). 혼백 폭발이 씀. 망령 걸음 동안 받는 피해 없음, 사신 현신 (태세) 동안 넓게 베기 범위 · 비율 (WeaponTraits.sweepMod)</li>
- * <li>0.51.0 각성 우트가르드(트릭스터) 도 「표식」 (암살자 줄기 — {@link #assassinLine}: 최대 7 · 등 뒤 치명타 · 은신은 끝없는 밤). 표식이 shift 이상인 적이 쓰러지면
+ * <li>0.51.0 각성 트릭스터 도 「표식」 (암살자 줄기 — {@link #assassinLine}: 최대 7 · 등 뒤 치명타 · 은신은 끝없는 밤). 표식이 shift 이상인 적이 쓰러지면
  * 그 표식이 둘레 shiftRange 칸의 가장 가까운 적에게 옮겨감 (꽃잎이 날아감). 끝없는 밤 (태세 window 틱): 처음 dur 틱 은신 (1차 밤의 장막과 같음) · 은신이 풀린 뒤에도
  * 태세 동안 적을 쓰러뜨리면 다시 은신 (reveil 틱 · again 번까지 — 첫 공격 강화도 다시)</li>
  * </ul>

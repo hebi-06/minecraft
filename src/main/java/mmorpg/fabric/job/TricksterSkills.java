@@ -26,7 +26,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 암살자 각성 우트가르드(트릭스터) 직업 스킬 (jobs.json advance.trickster — 자홍 · 검보라 + 청록 환영 테두리, 특성 「표식」 최대 7 · 옮겨감 — JobTraits3 의 암살자
+ * 0.51.0 암살자 각성 트릭스터 직업 스킬 (jobs.json advance.trickster — 자홍 · 검보라 + 청록 환영 테두리, 특성 「표식」 최대 7 · 옮겨감 — JobTraits3 의 암살자
  * 줄기): 검은 장미 덤불 · 우트가르드의 환술 · 요르문간드의 똬리 · 끝없는 밤 · 개기일식. 1차 암살자 컨셉 (표식을 쌓아 터뜨림 · 환영 · 독 · 은신 · 일식) 그대로 더
  * 역동적인 동작 — 적의 머리 위로 넘어 등 뒤를 잡음 · 환영 둘 · 갔다가 되돌아오는 S 자 · 쓰러뜨리면 다시 숨음 · 환영 셋과 함께 던지는 비수.
  * 피해 = 위력 P × 배율 (JobKit.strike — 같은 적은 10틱 넘게 띄움, 한꺼번에 여러 줄은 strikeSplit). 연출 = 2D 그림 (꽃 · 꽃잎 · 장미 · 엇갈린 베기 · 비수 · 그림자 분신
