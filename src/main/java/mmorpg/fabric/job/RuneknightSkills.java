@@ -65,6 +65,18 @@ final class RuneknightSkills {
         return new Vec3(p.x, RuneKit.groundAt(level, V.up(p, 0.6), p.y), p.z);
     }
 
+    /**
+     * 솟는 연기 n 덩이 (rfx_jsmoke — 그을음 · 쇳물빛 테, 위로 퍼짐 — 영상 1 뒤: 바닐라 큰 연기는 하늘 앞에서 검은 별표 같은 점 무리로 보였음)
+     */
+    static void risingSmoke(ServerLevel level, Vec3 at, int n, double spread) {
+        for (int i = 0; i < n; i++) {
+            double a = Kit.rand() * Math.PI * 2;
+            Vec3 p = V.add(at, new Vec3(Math.cos(a), (Kit.rand() - 0.3) * 0.6, Math.sin(a)), spread * Kit.rand());
+            JobFx.smoke(level, p, 0.8 + Kit.rand() * 0.5, SOOT, MOLTEN, 0.9 + Kit.rand() * 0.4, Opt.of("vel", new Vec3((Kit.rand() - 0.5) * 0.8, 1.4 + Kit.rand() * 0.8,
+                    (Kit.rand() - 0.5) * 0.8), "alpha", 0.55, "grow", 0.8));
+        }
+    }
+
     /** 서 있는 불꽃 (rfx_jflame — 이어 돌림): 밑동 = ground · 높이 약 size × 2 칸 */
     static void flame(ServerLevel level, Vec3 ground, double size, double life, Opt o) {
         JobFx.loop(level, "jflame", FLAME, V.up(ground, size * 0.85), life, 14, o.with("size", size, "fade", o.num("fade", 0.3), "grow", o.num("grow", 0.15)), FIRE,
@@ -220,7 +232,7 @@ final class RuneknightSkills {
         ServerLevel level = sp.level();
         double R = k.num("burstRadius", 2.5);
         Vec3 mid = V.up(at, ANVIL_SIZE);
-        JobFx.anvil(level, at, ANVIL_SIZE, 2, 0.4, Opt.empty(), IRON, MOLTEN);
+        JobFx.anvil(level, at, ANVIL_SIZE, 2, 0.4, Opt.empty(), JobTraits7.CRUST, HOT);
         RuneKit.rfx(level, "boom", mid, Opt.of("size", R * 0.95, "life", 0.55, "frames", 8.0, "fps", 15.0));
         JobFx.burst(level, mid, 1.7, MOLTEN, HOT, 0.35, Opt.empty());
         JobFx.two(level, "jimpact", JobImpact.IMPACT, mid, 0.32, Opt.of("size", 2.1, "spin", Kit.rand() * 360, "fade", 0.25), MOLTEN, WHITE);
@@ -230,7 +242,7 @@ final class RuneknightSkills {
         splatter(level, mid, 12, 7, 0.16);
         RuneKit.rockBurst(level, V.up(at, 0.5), 8, 6.5, 0.18);
         SkillFx.sparks(level, mid, HOT, 20, 7.5);
-        SkillFx.particle(level, ParticleTypes.LARGE_SMOKE, V.up(mid, 0.5), 8, 0.6, 0.05);
+        risingSmoke(level, V.up(mid, 0.6), 3, 0.9);
         SkillFx.play(level, "random.explode", at, 0.9, 0.8);
         SkillFx.play(level, "random.anvil_land", at, 0.6, 0.9);
         SkillFx.play(level, "item.mace.smash_ground_heavy", at, 1.1, 0.6);
@@ -443,7 +455,7 @@ final class RuneknightSkills {
         JobFx.molten(level, V.up(g, 0.06), R, 6, 2, 1.0, false, Opt.empty());
         RuneKit.rockBurst(level, V.up(g, 0.4), 10, 7.0, 0.18);
         SkillFx.sparks(level, V.up(g, 1.5), HOT, 24, 8.0);
-        SkillFx.particle(level, ParticleTypes.LARGE_SMOKE, V.up(g, 2.5), 14, R * 0.35, 0.06);
+        risingSmoke(level, V.up(g, 2.2), 5, R * 0.3);
         SkillFx.play(level, "random.explode", g, 0.7, 1.0);
         SkillFx.play(level, "mob.ghast.fireball", g, 0.5, 0.9);
         SkillFx.play(level, "item.bucket.empty_lava", g, 0.5, 1.0);

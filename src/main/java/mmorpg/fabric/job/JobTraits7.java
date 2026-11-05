@@ -577,17 +577,22 @@ public final class JobTraits7 {
 
     /**
      * 땅에 꽂혀 기다리는 칼 (g = 땅): 비스듬히 꽂힌 큰 칼 · 발밑 룬 고리 · 위로 옅어지는 청록 빛기둥 (멀리서도 데려가라가 날아갈 자리가 보이게 — 영상 1 뒤: 과녁 무리 뒤에
-     * 묻혔음). 칼 번호
+     * 묻혔음 · 빛기둥은 꽂혀 있는 동안 8틱마다 다시 그려 칼을 뽑으면 곧 사라짐 — tick). 칼 번호
      */
     static int stuckSword(ServerLevel level, Vec3 g, int ticks, Jobs.Job j) {
         double secs = ticks / 20.0;
         int id = JobFx3d.stuck(level, "phantom_sword", V.up(g, -0.3), V.unit(new Vec3(0.12, -1, 0.08)), JobFx3d.SWORD_TIP, 1.25, secs, j, Opt.of("fade", 0.3));
         JobFx.runeRing(level, V.up(g, 0.08), 1.1, j, 6, 0, secs, Opt.of("alpha", 0.8));
+        stuckBeam(level, g, j);
+        return id;
+    }
+
+    /** 꽂힌 칼 위의 빛기둥 한 번 (0.5초 — 위로 옅어지는 청록 줄 넷) */
+    static void stuckBeam(ServerLevel level, Vec3 g, Jobs.Job j) {
         double[] alpha = {0.5, 0.36, 0.24, 0.13};
         for (int i = 0; i < alpha.length; i++) {
-            JobFx.beam(level, V.up(g, 0.2 + i * 1.1), V.up(g, 0.2 + (i + 1) * 1.1), j, 1.1, secs, Opt.of("alpha", alpha[i], "fade", 0.3));
+            JobFx.beam(level, V.up(g, 0.2 + i * 1.1), V.up(g, 0.2 + (i + 1) * 1.1), j, 1.1, 0.5, Opt.of("alpha", alpha[i], "fade", 0.2));
         }
-        return id;
     }
 
     /** 꽂혀 기다리는 칼 자리 (없거나 끝났거나 삶이 바뀌었으면 null) */
@@ -611,7 +616,7 @@ public final class JobTraits7 {
 
     /**
      * 4틱마다 (JobTraits.tick): 끝난 달궈짐 · 쇳조각 기록 지우기 · 룬 스미스 — 8틱마다 달궈진 적의 붉은 몸 (rfx_jheat 이어 돌림) · 오르는 불티, 소드 콜러 — 쌓임이
-     * 끊김 (lapse) · 꽂힌 칼이 끝남 (흐려짐)
+     * 끊김 (lapse) · 꽂힌 칼이 끝남 (흐려짐) · 꽂혀 있는 동안 8틱마다 빛기둥
      */
     static void tick(ServerPlayer sp, Jobs.Job j, long now) {
         if (HEAT.size() > 256) HEAT.values().removeIf(h -> h.until() < now || h.e().isRemoved());
@@ -626,6 +631,7 @@ public final class JobTraits7 {
             JobTraits.sendGauge(sp, false);
         }
         if (st.stuckAt != null && st.stuckUntil <= now) dropStuck(sp, 0.3);
+        else if (st.stuckAt != null && now % 8 == 0 && RuneKit.sameLife(sp, st.stuckLife)) stuckBeam(sp.level(), st.stuckAt, j);
     }
 
     /** 이 사람이 달군 적들: 붉게 달아오른 몸 (0.45초 이어 돌림 — 다음 그림과 겹침) · 오르는 불티 (몸에) · 끝난 것은 지움 */
@@ -660,7 +666,7 @@ public final class JobTraits7 {
         RuneKit.Hand h = RuneKit.handOf(sp);
         if (TEMPER.equals(stance)) {
             Vec3 blade = V.up(V.add(h.hand(), h.f(), 0.25), 0.45);
-            JobFx.heat(level, V.up(blade, -0.05), 0.42, 1, 4, 0.45, true, Opt.of("alpha", 0.8, "vel", RuneKit.bodyVel(sp)));
+            JobFx.heat(level, V.up(blade, -0.05), 0.5, 1, 4, 0.45, true, Opt.of("alpha", 0.8, "vel", RuneKit.bodyVel(sp)));
             SkillFx.fx(level, "rpg:arrow_spark", V.up(blade, 0.35), Opt.of("dir", V.UP, "speed", 1.4, "size", 0.12, "grow", 0.6, "life", 0.45, "color", HOT, "alpha", 1.0));
             if (Kit.rand() < 0.5) SkillFx.fx(level, "rpg:glob", V.up(blade, -0.2), Opt.of("dir", V.DOWN, "speed", 0.5, "size", 0.07, "life", 0.5, "spin", 0.0, "color",
                     MOLTEN, "alpha", 1.0));
