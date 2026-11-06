@@ -318,7 +318,7 @@ public final class JobTraits12 {
         try {
             // 방금 맞은 무적 시간 (바닐라는 그 사이의 더 큰 피해를 차이만큼만 넣음 — 남은 체력이 다 깎이지 않았음) 을 지우고, 마법 (방어구 무시) 으로 남은 체력 (흡수 포함)
             // 보다 넉넉히 — 숫자는 실제로 깎인 양 (LivingEntityMixin)
-            e.invulnerableTime = 0;
+            e.setInvulnerableTime(0);
             Kit.applyJobDamage(sp, e, (e.getHealth() + e.getAbsorptionAmount()) * 1.25 + 2, true, Kit.Cause.MAGIC, DamageNumbers.Style.JOB_BIG, JobKit.grad(j));
         } finally {
             inner = false;
