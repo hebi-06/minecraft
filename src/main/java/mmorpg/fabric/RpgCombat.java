@@ -573,7 +573,7 @@ public final class RpgCombat {
         double vit = Stats.get(RpgStats.effective(sp), "vit");
         double r = Math.min(SHIELD.num("passiveCap"), w.passive() + vit * SHIELD.num("passivePerVit"));
         Entity from = src.getDirectEntity() != null ? src.getDirectEntity() : src.getEntity();
-        if (sp.isShiftKeyDown() && from != null && !from.isRemoved() && !bashLocked(sp) && !noBlockNow(sp)) {
+        if (sp.isShiftKeyDown() && from != null && !from.isRemoved() && !bashLocked(sp) && !noBlockNow(sp) && !blockOff.test(sp)) {
             Vec3 dir = sp.getViewVector(1F);
             double dx = from.getX() - sp.getX();
             double dz = from.getZ() - sp.getZ();
@@ -606,6 +606,9 @@ public final class RpgCombat {
 
     public static BlockMod blockMod = (sp, w, dot) -> 0;
 
+    /** 2026-11-06 웅크려 막기를 끔 (어벤저 「앙갚음」 — 막지 않고 다 맞음 · 방패의 기본 감소는 그대로) */
+    public static java.util.function.Predicate<ServerPlayer> blockOff = p -> false;
+
     /** 0.30.0 마지막 shieldReduction 이 웅크려 막은 것인지 (RpgHealth.onLoss 가 바로 읽음 — 막은 양을 BlockHook 으로) */
     static boolean lastBlocked;
 
@@ -623,7 +626,7 @@ public final class RpgCombat {
         if (NO_BLOCK.size() > 256) NO_BLOCK.values().removeIf(t -> Tasks.now() - t > 1);
     }
 
-    static boolean noBlockNow(ServerPlayer sp) {
+    public static boolean noBlockNow(ServerPlayer sp) { // 2026-11-06 센티널 헤이븐 리프 (막을 수 있는 평타인지)
         Long t = NO_BLOCK.get(sp.getUUID());
         if (t == null) return false;
         if (Tasks.now() - t > 1) {

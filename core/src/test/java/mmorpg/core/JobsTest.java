@@ -390,13 +390,13 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
         Jobs.Job gl = Jobs.job("gladiator");
-        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 20 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
+        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 22 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
         if (sm == null || bk == null || wl == null || gl == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
         check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, gl)) && Jobs.advancedOf("spellblade").size() == 2
                 && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").size() == 2
                 && Jobs.advancedOf("lancer").size() == 2 && Jobs.advancedOf("reaper").size() == 2 && Jobs.advancedOf("paladin").size() == 2
-                && Jobs.advancedOf("priest").size() == 2 && Jobs.advancedOf("guardian").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 수호기사는 아직)");
+                && Jobs.advancedOf("priest").size() == 2 && Jobs.advancedOf("guardian").size() == 2 && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 열한 직업 모두)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == gl && Jobs.baseOf(wl) == wa && Jobs.baseOf(gl) == wa, "warrior advance");
         check(wl.display().equals("워로드") && gl.display().equals("글래디에이터") && "awaken".equals(wl.path()) && "invert".equals(gl.path()),
                 "warrior display");
@@ -484,6 +484,70 @@ public final class JobsTest {
         reaperAdvance(Jobs.job("reaper"), Jobs.job("soulreaper"), Jobs.job("executioner"));
         paladinAdvance(Jobs.job("paladin"), Jobs.job("thunderlord"), Jobs.job("tyrant"));
         priestAdvance(Jobs.job("priest"), Jobs.job("saint"), Jobs.job("warlock"));
+        guardianAdvance(Jobs.job("guardian"), Jobs.job("sentinel"), Jobs.job("avenger"));
+    }
+
+    /**
+     * 2026-11-06 수호기사 2차 — 센티널 · 어벤저 (재설계안 2판 — 사용자 "다음 작업": 센티널 새 스킬 다섯 · 어벤저는 막고 대신 맞는 탱커를 뒤집어 막지 않고 다 맞은 뒤
+     * 한 번에 되갚는 근접 딜러): 부분 합 = 배율 합 (수호기사와 같은 4 · 2.4 · 7.2 · 32 — 칸 틀 5 · 3 · 9 · 40 × 세기 0.8) · 무적 시간 띄움 · t · w · 특성 (반격 = 1차
+     * + 파수꾼의 위압 −15% / 앙갚음 — 받은 피해 50% · 최대 체력 150% · 받는 피해 +10%) · 초당 피해 (센티널 × 1.2 · 어벤저 × 1.3 — 근접 딜러 목표 1.20 ÷ 탱커 0.92 × 1.2 ≈
+     * 1.565 에서 앙갚음 덤 평균 +20% 쯤을 뺌)
+     */
+    static void guardianAdvance(Jobs.Job gu, Jobs.Job sn, Jobs.Job av) {
+        check(sn != null && av != null, "guardian advanced jobs");
+        if (sn == null || av == null) return;
+        check(Jobs.advance("guardian", "awaken") == sn && Jobs.advance("guardian", "invert") == av && Jobs.baseOf(sn) == gu && Jobs.baseOf(av) == gu
+                && Jobs.advancedOf("guardian").equals(List.of(sn, av)), "guardian advance");
+        check(sn.display().equals("센티널") && av.display().equals("어벤저") && Jobs.find("센티널") == sn && Jobs.find("히민뵤르그") == null && Jobs.find("어벤저") == av
+                && Jobs.find("비다르") == null && Jobs.find("avenger") == av, "guardian display · find");
+        List<String> snIds = new ArrayList<>();
+        List<String> avIds = new ArrayList<>();
+        for (Jobs.Skill k : sn.skills()) snIds.add(k.id());
+        for (Jobs.Skill k : av.skills()) avIds.add(k.id());
+        check(snIds.equals(List.of("sentinel_charge", "sentinel_haven", "sentinel_rampart", "sentinel_tides", "sentinel_ult"))
+                && avIds.equals(List.of("avenger_reprisal", "avenger_grudge", "avenger_reckoning", "avenger_pain", "avenger_ult")), "guardian advanced skill ids");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(sn.skill(i).total(), gu.skill(i).total()) && near(av.skill(i).total(), gu.skill(i).total()), "guardian totals slot " + i);
+        Jobs.Skill sc = sn.skill(0), sh = sn.skill(1), sr = sn.skill(2), st = sn.skill(3), su = sn.skill(4);
+        Jobs.Skill ar = av.skill(0), ag = av.skill(1), ak = av.skill(2), ap = av.skill(3), au = av.skill(4);
+        check(near(sc.num("ram", 0) + sc.num("slam", 0), 4) && near(sh.num("slam", 0), 2.4) && near(sr.num("rise", 0) + sr.num("collapse", 0), 7.2)
+                && near(su.num("blast", 0) + su.num("land", 0), 32), "sentinel totals 4 (1.6 + 2.4) · 2.4 · 7.2 (4.8 + 2.4) · 32 (8 + 24)");
+        check(near(ar.num("bash", 0), 4) && near(ag.num("ram", 0), 2.4) && near(ak.num("blast", 0), 7.2) && near(au.num("slam", 0), 32), "avenger totals 4 · 2.4 · 7.2 · 32");
+        // 4번 칸: 나인 타이즈 10초 · 페인 이터 8초 강화 태세 (피해 없음)
+        check(!Jobs.stanceBudget(st) && st.total() == 0 && near(st.num("dur", 0), 200) && !Jobs.stanceBudget(ap) && ap.total() == 0 && near(ap.num("dur", 0), 160),
+                "나인 타이즈 10초 · 페인 이터 8초 태세");
+        // 초당 피해: 센티널 = 1차 × 1.2 · 어벤저 = 1차 × 1.3 (역할이 바뀜 — 근접 딜러 목표 1.20 ÷ 탱커 0.92 × 1.2 ≈ 1.565 ÷ 앙갚음 덤 1.2)
+        check(near(Jobs.advanceDps(sn), 1.2) && near(Jobs.advanceDps(av), 1.3) && near(dps(sn) / dps(gu), 1.2, 0.005) && near(dps(av) / dps(gu), 1.3, 0.005),
+                "sentinel × 1.2 · avenger × 1.3");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (배스천 차지 — 닿는 틱이 w · 밀어붙임 slamAt)
+        check(sc.num("slamAt", 0) - sc.num("w", 0) >= 10 && sr.num("dur", 0) >= 10 && su.num("landAt", 0) - su.num("blastAt", 0) >= 10, "sentinel i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값)
+        check(near(sc.num("slamAt", 0), sc.num("t", 0)) && near(sc.num("braceAt", 0) + 2, sc.num("w", 0)) && near(sh.num("leap", 0), sh.num("t", 0))
+                && near(sh.num("leap", 0), sh.num("w", 0)) && near(sr.num("riseAt", 0) + sr.num("dur", 0), sr.num("t", 0)) && near(sr.num("riseAt", 0), sr.num("w", 0))
+                && near(su.num("landAt", 0), su.num("t", 0)) && near(su.num("blastAt", 0), su.num("w", 0)), "sentinel t 16 · 8 · 110 · 50 (w 6 · 8 · 10 · 10)");
+        check(near(ar.num("bashAt", 0), ar.num("t", 0)) && near(ar.num("bashAt", 0), ar.num("w", 0)) && near(ag.num("hitAt", 0), ag.num("t", 0))
+                && near(ag.num("hitAt", 0), ag.num("w", 0)) && near(ak.num("blastAt", 0), ak.num("t", 0)) && near(ak.num("blastAt", 0), ak.num("w", 0))
+                && near(au.num("slamAt", 0), au.num("t", 0)) && near(au.num("slamAt", 0), au.num("w", 0)) && au.num("grabAt", 0) < au.num("slamAt", 0),
+                "avenger t 6 · 8 · 12 · 26 (w = t)");
+        // 특성: 센티널 = 수호기사의 반격 (같은 이름 · 쌓임) + 파수꾼의 위압, 어벤저 = 앙갚음
+        for (String key : new String[] {"rate", "cap"}) check(near(sn.trait().def().numOr(key, -1), gu.trait().def().numOr(key, -2)), "반격 " + key + " = 1차");
+        check(sn.trait().name().equals(gu.trait().name()) && sn.trait().max() == gu.trait().max() && near(sn.trait().def().numOr("dread", 0), 0.15),
+                "반격 + 파수꾼의 위압 (도발한 적이 주는 피해 −15%)");
+        check(av.trait().name().equals("앙갚음") && near(av.trait().def().numOr("rate", 0), 0.5) && near(av.trait().def().numOr("cap", 0), 1.5)
+                && near(av.trait().def().numOr("taken", 0), 0.1) && near(av.trait().def().numOr("keep", 0), 160) && near(av.trait().def().numOr("decay", 0), 0.1)
+                && near(ar.num("use", 0), 0.3) && near(ak.num("core", 0), 1.0) && near(ak.num("side", 0), 0.5) && near(au.num("maxHp", 0), 0.08),
+                "앙갚음 50% · 최대 150% · 받는 피해 +10% · 8초 뒤 10% 씩 · 리프라이절 30% · 레크닝 전부 (옆 절반) · 조브레이커 최대 체력 8%");
+        // 유틸 · 범위 · 선딜
+        check("single".equals(Jobs.areaKind(sc)) && "narrow".equals(Jobs.areaKind(sh)) && "narrow".equals(Jobs.areaKind(sr)) && Jobs.areaKind(su) == null
+                && Jobs.utils(sc).equals(List.of("stun1", "taunt")) && Jobs.utils(sh).equals(List.of("leap", "allyGuard"))
+                && Jobs.utils(sr).equals(List.of("slow", "taunt", "knock")) && Jobs.utils(su).equals(List.of("taunt", "shield", "leap")), "sentinel utils · area");
+        check("narrow".equals(Jobs.areaKind(ar)) && "narrow".equals(Jobs.areaKind(ag)) && Jobs.areaKind(ak) == null && "narrow".equals(Jobs.areaKind(au))
+                && Jobs.utils(ar).isEmpty() && Jobs.utils(ag).equals(List.of("blink", "knock")) && Jobs.utils(ak).isEmpty() && Jobs.utils(au).equals(List.of("leap", "stun1")),
+                "avenger utils · area");
+        check(Jobs.windupTicks(sc) == 6 && Jobs.windupTicks(sh) == 8 && Jobs.windupTicks(sr) == 10 && Jobs.windupTicks(su) == 10 && Jobs.windupTicks(ar) == 6
+                && Jobs.windupTicks(ag) == 8 && Jobs.windupTicks(ak) == 12 && Jobs.windupTicks(au) == 26, "windups 6 · 8 · 10 · 10 / 6 · 8 · 12 · 26");
+        check(Jobs.skillLine(sc).startsWith("배스천 차지 · 6초 · 배율 ") && Jobs.skillLine(ap).equals("페인 이터 · 30초"), "guardian advanced skill line " + Jobs.skillLine(ap));
+        check(sn.color()[0][2] > 0.9 && sn.color()[0][0] < 0.5 && sn.color()[1][0] > 0.9 && av.color()[0][0] > 0.95 && av.color()[0][1] < 0.6 && av.color()[1][0] < 0.4,
+                "colors: sentinel steel sky · pearl / avenger ember · ash");
     }
 
     /**

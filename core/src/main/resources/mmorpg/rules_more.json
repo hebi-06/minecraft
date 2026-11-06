@@ -607,7 +607,7 @@
     "endlessSlash": {"fog": "rpg:ult_bloodvoid", "flash": [1, 0.76, 0.76]}
   },
   "ULT_FOGS_MORE": {
-    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 아케인 블레이드 월드 클리버 rpg:ult_arcane (짙은 남보라 밤 — 보라 · 청록 마력 대검과 검기가 보이게) · 소드 콜러 칼날 감옥 rpg:ult_prison (짙은 청록 밤 — 청록 칼빛이 보이게), 0.51.0 네크로맨서 나글파르의 출항 rpg:ult_naglfar (짙은 녹색 안개 — 녹색 혼불 · 뼈색 배가 보이게), 0.51.0 스나이퍼 데드아이 rpg:ult_deadeye (짙은 올리브빛 어스름 — 연두 · 흰 금빛 큰 화살과 조준 과녁이 보이게) · 배틀 아처 퀴버 스톰 rpg:ult_tempest (짙은 폭풍 남청 — 하늘빛 화살 물결 · 번개 노랑 불티가 보이게), 2026-11-06 재설계안 2판 트릭스터 와일드파이어 피스트 rpg:ult_wildfire (짙은 검자주 밤 — 자홍 들불 · 흰 금빛 심지 · 청록 환영이 보이게 — 1판 개기일식의 rpg:ult_eclipse · rpg:ult_sunrise 대신) · 피에로 그랜드 피날레 rpg:ult_circus (서커스 천막 밤의 짙은 남보라 — 빨강 · 금빛 상자 · 여러 빛 불꽃놀이 · 조명이 보이게 — 블레이드 댄서 rpg:ult_alfheim 대신), 0.51.0 글래디에이터 홀름강 rpg:ult_holmgang (짙은 녹슨 핏빛 황혼 — 진홍 결투장 · 모래 금빛 말뚝이 보이게), 0.51.0 소드마스터 스타폴 블레이드 rpg:ult_starfall (짙은 자줏빛 황혼 — 금빛 혜성이 보이게: 영상 1 의 밝은 주황 노을에서는 금빛 혜성이 묻혔음) · 블러드 나이트 블러드 문 rpg:ult_bloodmoon (짙은 핏빛 밤 — 붉은 달 · 핏빛 검기가 보이게), 2026-11-06 창술사 2차 스톰 랜서 아이 오브 더 스톰 rpg:ult_gale (짙은 옥빛 폭풍 — 옥빛 바람 · 흰 소용돌이가 보이게) · 드라군 드래곤폴 rpg:ult_wyrm (짙은 잿빛 숯불 밤 — 붉은 용 · 주홍 불길 · 노란 불 심지가 보이게: 사용자 \"드라군 빨간 레드 드레곤 느낌에 화염 이펙트\"), 2026-11-06 사신 2차 소울 리퍼 페일 하베스트 rpg:ult_souls (짙은 남청 밤 — 하늘빛 영혼 · 거대한 망령 사신이 보이게) · 엑시큐셔너 비포 선셋 rpg:ult_sunset (해 질 녘 뒤의 짙은 자줏빛 — 금빛 X 자 표식 · 참격이 보이게: 밝은 주황 노을에서는 금빛이 묻힘), 2026-11-06 성기사 2차 썬더로드 던브레이커 rpg:ult_daybreak (rpg:ult_dawn 은 1차 궁수 하늘 활의 연둣빛 하늘이라 따로 · 사슬을 거는 동안은 rpg:ult_storm — 망치를 꽂는 순간 새벽 직전의 짙은 장밋빛으로: 금빛 빛살 · 잿빛 돌 · 금 사이의 금빛이 보이게) · 타이런트 스톨른 썬더 rpg:ult_usurp (빼앗긴 하늘 — 짙은 남보라: 보랏빛 번개 · 핏빛 기운이 보이게), 2026-11-06 사제 2차 세인트 에버블룸 rpg:ult_spring (꽃이 피는 봄밤 — 짙은 보랏빛 남색: 금빛 연꽃 · 꽃잎빛 꽃 · 새잎 초록 나비가 보이게) · 워록 블러드 뱅큇 rpg:ult_feast (피의 잔치 — 검붉은 자줏빛 밤: 진홍 웅덩이 · 핏물 기둥 · 금빛 심지가 보이게)",
+    "_comment": "0.24.0: 자바 전용 하늘빛 (ULT_FX.fogs 에 없는 이름 — Ult 가 여기서도 찾음, [가까운 칸, 먼 칸, 색]): 만년빙하 필드 rpg:ult_glacier (짙은 사파이어 — 옅은 얼음빛 하늘에서는 투명한 얼음이 묻혀 어둡게), 6돌 빙하의 왕관 rpg:ult_polar (극야 — 오로라 장막이 보이게 짙은 남청), 0.25.2 무간참역 rpg:ult_bloodvoid (검붉은 — 블랙홀의 공허와 같은 거리) · 6돌 하늘 가르기 뒤 rpg:ult_bloodsplit (짙은 진홍 — 밝은 진홍 rpg:ult_crimson 은 낮에 화면이 분홍빛으로 들뜸), 0.51.0 아케인 블레이드 월드 클리버 rpg:ult_arcane (짙은 남보라 밤 — 보라 · 청록 마력 대검과 검기가 보이게) · 소드 콜러 칼날 감옥 rpg:ult_prison (짙은 청록 밤 — 청록 칼빛이 보이게), 0.51.0 네크로맨서 나글파르의 출항 rpg:ult_naglfar (짙은 녹색 안개 — 녹색 혼불 · 뼈색 배가 보이게), 0.51.0 스나이퍼 데드아이 rpg:ult_deadeye (짙은 올리브빛 어스름 — 연두 · 흰 금빛 큰 화살과 조준 과녁이 보이게) · 배틀 아처 퀴버 스톰 rpg:ult_tempest (짙은 폭풍 남청 — 하늘빛 화살 물결 · 번개 노랑 불티가 보이게), 2026-11-06 재설계안 2판 트릭스터 와일드파이어 피스트 rpg:ult_wildfire (짙은 검자주 밤 — 자홍 들불 · 흰 금빛 심지 · 청록 환영이 보이게 — 1판 개기일식의 rpg:ult_eclipse · rpg:ult_sunrise 대신) · 피에로 그랜드 피날레 rpg:ult_circus (서커스 천막 밤의 짙은 남보라 — 빨강 · 금빛 상자 · 여러 빛 불꽃놀이 · 조명이 보이게 — 블레이드 댄서 rpg:ult_alfheim 대신), 0.51.0 글래디에이터 홀름강 rpg:ult_holmgang (짙은 녹슨 핏빛 황혼 — 진홍 결투장 · 모래 금빛 말뚝이 보이게), 0.51.0 소드마스터 스타폴 블레이드 rpg:ult_starfall (짙은 자줏빛 황혼 — 금빛 혜성이 보이게: 영상 1 의 밝은 주황 노을에서는 금빛 혜성이 묻혔음) · 블러드 나이트 블러드 문 rpg:ult_bloodmoon (짙은 핏빛 밤 — 붉은 달 · 핏빛 검기가 보이게), 2026-11-06 창술사 2차 스톰 랜서 아이 오브 더 스톰 rpg:ult_gale (짙은 옥빛 폭풍 — 옥빛 바람 · 흰 소용돌이가 보이게) · 드라군 드래곤폴 rpg:ult_wyrm (짙은 잿빛 숯불 밤 — 붉은 용 · 주홍 불길 · 노란 불 심지가 보이게: 사용자 \"드라군 빨간 레드 드레곤 느낌에 화염 이펙트\"), 2026-11-06 사신 2차 소울 리퍼 페일 하베스트 rpg:ult_souls (짙은 남청 밤 — 하늘빛 영혼 · 거대한 망령 사신이 보이게) · 엑시큐셔너 비포 선셋 rpg:ult_sunset (해 질 녘 뒤의 짙은 자줏빛 — 금빛 X 자 표식 · 참격이 보이게: 밝은 주황 노을에서는 금빛이 묻힘), 2026-11-06 성기사 2차 썬더로드 던브레이커 rpg:ult_daybreak (rpg:ult_dawn 은 1차 궁수 하늘 활의 연둣빛 하늘이라 따로 · 사슬을 거는 동안은 rpg:ult_storm — 망치를 꽂는 순간 새벽 직전의 짙은 장밋빛으로: 금빛 빛살 · 잿빛 돌 · 금 사이의 금빛이 보이게) · 타이런트 스톨른 썬더 rpg:ult_usurp (빼앗긴 하늘 — 짙은 남보라: 보랏빛 번개 · 핏빛 기운이 보이게), 2026-11-06 사제 2차 세인트 에버블룸 rpg:ult_spring (꽃이 피는 봄밤 — 짙은 보랏빛 남색: 금빛 연꽃 · 꽃잎빛 꽃 · 새잎 초록 나비가 보이게) · 워록 블러드 뱅큇 rpg:ult_feast (피의 잔치 — 검붉은 자줏빛 밤: 진홍 웅덩이 · 핏물 기둥 · 금빛 심지가 보이게), 2026-11-06 수호기사 2차 센티널 클라리온 콜 rpg:ult_bifrost (하늘 성채의 새벽 — 짙은 남색: 황금 뿔피리 · 무지개 다리 · 하늘빛 프리즘 방패가 보이게) · 어벤저 조브레이커 rpg:ult_fenrir (늑대의 밤 — 잿빛 숯불 어둠: 주황 불씨 · 흰 불 늑대 턱이 보이게)",
     "rpg:ult_glacier": [16, 96, "#1B3C80"],
     "rpg:ult_polar": [16, 100, "#0A2438"],
     "rpg:ult_deepsea": [12, 80, "#0E3A72"],
@@ -633,7 +633,8 @@
     "rpg:ult_souls": [7, 52, "#06141E"],
     "rpg:ult_sunset": [9, 60, "#2E0F2A"],
     "rpg:ult_daybreak": [10, 66, "#4A2A3A"],
-    "rpg:ult_usurp": [7, 52, "#140A26"], "rpg:ult_spring": [10, 66, "#2C2C4E"], "rpg:ult_feast": [6, 48, "#220616"]
+    "rpg:ult_usurp": [7, 52, "#140A26"], "rpg:ult_spring": [10, 66, "#2C2C4E"], "rpg:ult_feast": [6, 48, "#220616"],
+    "rpg:ult_bifrost": [10, 66, "#1E2650"], "rpg:ult_fenrir": [6, 48, "#1C0E0A"]
   },
   "ARMOR_TYPE_ORDER": ["str", "dex", "vit", "strvit", "int", "intstr", "strdex", "dexint", "vitstr", "intvit"],
   "ARMOR_TYPES": {
@@ -1072,7 +1073,11 @@
       "saint_accord": "jb_saint_accord", "saint_veil": "jb_saint_veil", "saint_wing": "jb_saint_wing", "saint_bond": "jb_saint_bond",
       "saint_ult": "jb_saint_ult", "saint_ult:bloom": "jb_saint_ult_bloom", "warlock_lance": "jb_warlock_lance", "warlock_mire": "jb_warlock_mire",
       "warlock_mire:rise": "jb_warlock_mire_rise", "warlock_nova": "jb_warlock_nova", "warlock_nova:burst": "jb_warlock_nova_burst", "warlock_ash": "jb_warlock_ash",
-      "warlock_ult": "jb_warlock_ult", "warlock_ult:burst": "jb_warlock_ult_burst",
+      "warlock_ult": "jb_warlock_ult", "warlock_ult:burst": "jb_warlock_ult_burst", "sentinel_charge": "jb_sentinel_charge", "sentinel_charge:slam": "jb_sentinel_charge_slam",
+      "sentinel_haven": "jb_sentinel_haven", "sentinel_haven:land": "jb_sentinel_haven_land", "sentinel_rampart": "jb_sentinel_rampart", "sentinel_rampart:slam": "jb_sentinel_rampart_slam",
+      "sentinel_tides": "jb_sentinel_tides", "sentinel_ult": "jb_sentinel_ult", "sentinel_ult:land": "jb_sentinel_ult_land", "avenger_reprisal": "jb_avenger_reprisal",
+      "avenger_grudge": "jb_avenger_grudge", "avenger_reckoning": "jb_avenger_reckoning", "avenger_pain": "jb_avenger_pain", "avenger_ult": "jb_avenger_ult",
+      "avenger_ult:slam": "jb_avenger_ult_slam",
       "rune:abyssBrand": "rn_abyss_brand", "rune:arcanaUnity": "rn_arcana_unity", "rune:arcaneCut": "rn_arcane_cut",
       "rune:archangel": "rn_archangel", "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening",
       "rune:axeBoomerang": "rn_axe_boomerang", "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep",
@@ -1176,7 +1181,10 @@
       "jb_thunderlord_ult_dawn", "jb_tyrant_pillage", "jb_tyrant_shackle", "jb_tyrant_grip", "jb_tyrant_grip_slam", "jb_tyrant_colossus",
       "jb_tyrant_ult", "jb_tyrant_ult_slam", "jb_saint_accord", "jb_saint_veil", "jb_saint_wing", "jb_saint_bond",
       "jb_saint_ult", "jb_saint_ult_bloom", "jb_warlock_lance", "jb_warlock_mire", "jb_warlock_mire_rise", "jb_warlock_nova",
-      "jb_warlock_nova_burst", "jb_warlock_ash", "jb_warlock_ult", "jb_warlock_ult_burst"
+      "jb_warlock_nova_burst", "jb_warlock_ash", "jb_warlock_ult", "jb_warlock_ult_burst", "jb_sentinel_charge", "jb_sentinel_charge_slam",
+      "jb_sentinel_haven", "jb_sentinel_haven_land", "jb_sentinel_rampart", "jb_sentinel_rampart_slam", "jb_sentinel_tides", "jb_sentinel_ult",
+      "jb_sentinel_ult_land", "jb_avenger_reprisal", "jb_avenger_grudge", "jb_avenger_reckoning", "jb_avenger_pain", "jb_avenger_ult",
+      "jb_avenger_ult_slam"
     ],
     "weaponMotions": [
       "wp_gram_charge", "wp_gram_descent", "wp_gram_descent_dive", "wp_solas_rush", "wp_solas_halo", "wp_solas_halo_pillar",

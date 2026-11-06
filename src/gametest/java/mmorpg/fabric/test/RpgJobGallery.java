@@ -380,6 +380,29 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 2026-11-06 세인트 · 워록 영상의 아군 자리 (앞 왼쪽 — 눈길에서 0.85칸 옆이라 겨눌 수 있음 · 앞 과녁을 가리지 않음) */
     private static final Vec3 ALLY_AT = new Vec3(-0.35, -60, 2.6);
 
+    /**
+     * 2026-11-06 센티널 · 어벤저 (아군 — 가짜 연결의 두 번째 플레이어를 스킬마다 다른 자리에: prepare): 배스천 차지 (4 방패를 세움 → 4 ~ 10 돌진 · 닿은 과녁을 밀고 감 →
+     * 16 밀어붙임) · 헤이븐 리프 (앞 5칸 아군에게 무지개를 타고 뛰어 → 8 내려앉음 · 피난처 → 20 아군을 노린 과녁의 평타가 프리즘에 막힘 → 48 돔이 흩어짐) · 레인보우
+     * 램파트 (무지개가 방패로 모임 → 10 장벽이 솟음 → 30 · 44 몹 화살이 지워짐 → 110 부서짐) · 나인 타이즈 (태세 — 6 · 14 에 맞으면 물결이 아군에게 흘러감) ·
+     * 클라리온 콜 (10 뿔피리 · 소리 물결 · 위험한 아군 (35%) 머리 위 빛 기둥 → 40 무지개 다리를 타고 날아가 → 50 내려앉음) / 리프라이절 (방패를 당김 → 6 후려침 ·
+     * 불씨 부채) · 그러지 차지 (오른쪽 과녁이 두 번 때림 → 그 과녁에게 달려가 8 들이받음) · 레크닝 (불씨 기둥 · 빨려 드는 불씨 → 12 불씨 부채로 내지름) · 페인 이터
+     * (태세 — 8 · 16 에 아군이 맞으면 불씨 줄로 대신 받음) · 조브레이커 (6 붙잡음 → 뛰어오름 → 18 늑대의 턱 → 26 내리꽂음 · 턱이 찢어짐) — 어벤저는 앙갚음 60% 에서
+     */
+    private static final Case[] CASES_SE = {
+        new Case(0, new int[] {2, 4, 6, 9, 13, 16, 18, 22}, new int[] {6, 16}, 30, false),
+        new Case(1, new int[] {1, 3, 6, 8, 10, 16, 20, 30, 46}, new int[] {6, 10, 20}, 52, false),
+        new Case(2, new int[] {3, 7, 10, 12, 16, 31, 34, 60, 100, 110, 114}, new int[] {10, 32, 110}, 124, false),
+        new Case(3, new int[] {4, 8, 15, 20}, new int[] {8, 15}, 28, true),
+        new Case(4, new int[] {4, 10, 12, 20, 30, 40, 44, 48, 50, 52, 56, 62}, new int[] {10, 30, 44, 50}, 72, false),
+    };
+    private static final Case[] CASES_AV = {
+        new Case(0, new int[] {2, 4, 6, 8, 12}, new int[] {6, 10}, 20, false),
+        new Case(1, new int[] {1, 3, 5, 8, 10, 14}, new int[] {4, 8}, 22, false),
+        new Case(2, new int[] {3, 6, 10, 12, 14, 16, 20}, new int[] {10, 14}, 30, false),
+        new Case(3, new int[] {4, 9, 12, 17, 22}, new int[] {9, 17}, 28, true),
+        new Case(4, new int[] {2, 4, 6, 10, 14, 18, 20, 24, 26, 28, 32, 38}, new int[] {6, 18, 26, 30}, 44, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
@@ -388,7 +411,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")
                 || RpgFilm.listed("filmjob4") || RpgFilm.listed("filmjob5") || RpgFilm.listed("filmjob6")
                 || RpgFilm.listed("filmjob7") || RpgFilm.listed("filmjob8") || RpgFilm.listed("filmjob9") || RpgFilm.listed("filmjob10") || RpgFilm.listed("filmjob11")
-                || RpgFilm.listed("filmjob12") || RpgFilm.listed("filmjob13")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 열셋째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수 · 암살자 · 창술사 · 사신 · 성기사 · 사제)
+                || RpgFilm.listed("filmjob12") || RpgFilm.listed("filmjob13") || RpgFilm.listed("filmjob14")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 열넷째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수 · 암살자 · 창술사 · 사신 · 성기사 · 사제 · 수호기사)
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -713,6 +736,51 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 x.setHealth(x.getMaxHealth() * 0.1F);
             }
         }
+        // 2026-11-06 센티널 · 어벤저: 앞 스킬의 피난처 · 장벽 · 위압 · 앙갚음을 지우고 아군을 스킬마다 다른 자리에 — 헤이븐 리프는 앞 5칸 (겨눠 곁으로 뜀) · 나인 타이즈 ·
+        // 페인 이터는 옆 (물결 · 불씨 줄) · 클라리온 콜은 왼쪽 앞 멀리 체력 35% (가장 위험 → 날아감) · 나머지는 뒤 왼쪽 (비켜 섬). 센티널은 반격 60% · 어벤저는 앙갚음 60%
+        // (페인 이터는 20% — 대신 받으며 차오름)
+        if (job.equals("sentinel") || job.equals("avenger")) {
+            mmorpg.fabric.job.JobTraits15.testClear(sp);
+            ServerPlayer a = filmAlly(sp);
+            Vec3 at = switch (id) {
+                case "sentinel_haven" -> new Vec3(0.5, -60, 5.2);
+                case "sentinel_tides", "avenger_pain" -> new Vec3(-1.4, -60, 1.0);
+                case "sentinel_ult" -> new Vec3(-3.5, -60, 6.0);
+                default -> new Vec3(-2.5, -60, -1.5);
+            };
+            a.snapTo(at.x, at.y, at.z, 180F, 0F);
+            a.setYHeadRot(180F);
+            a.setYBodyRot(180F);
+            a.setDeltaMovement(Vec3.ZERO);
+            a.removeAllEffects();
+            a.setHealth(a.getMaxHealth() * (id.equals("sentinel_ult") ? 0.35F : 1F));
+            if (job.equals("sentinel")) JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("sentinel")) * 0.6);
+            else mmorpg.fabric.job.JobTraits15.setVengeance(sp, mmorpg.fabric.job.JobTraits15.vengeanceCap(sp, Jobs.job("avenger")) * (id.equals("avenger_pain") ? 0.2
+                    : 0.6));
+        }
+    }
+
+    /** 2026-11-06 센티널 · 어벤저 영상: at 에 가장 가까운 과녁 허스크 (없으면 null) */
+    private static Husk huskNear(ServerPlayer sp, Vec3 at) {
+        List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, new AABB(at, at).inflate(3), h -> h.isAlive());
+        near.sort(java.util.Comparator.comparingDouble(h -> h.distanceToSqr(at)));
+        return near.isEmpty() ? null : near.get(0);
+    }
+
+    /** 2026-11-06 센티널 · 어벤저 영상: 과녁 from 이 who 를 침 (받는 피해 처리 — 과녁은 움직이지 않는 허스크라 직접) */
+    private static void filmHit(ServerPlayer who, Husk from, float amount) {
+        if (who == null || from == null || who.isRemoved() || from.isRemoved()) return;
+        float hp = who.getHealth();
+        who.setHealth(RpgHealth.onLoss(who, who.damageSources().mobAttack(from), hp, hp - amount));
+    }
+
+    /** 2026-11-06 레인보우 램파트 영상: 장벽 너머에서 장벽 쪽으로 날아오는 몹 화살 (주인 없음 — 장벽이 지움) */
+    private static void filmArrow(ServerLevel level, double x, double z) {
+        net.minecraft.world.entity.Entity a = EntityTypes.ARROW.create(level, EntitySpawnReason.COMMAND);
+        if (a == null) return;
+        a.snapTo(x, -58.9, z, 180F, 0F);
+        a.setDeltaMovement(0, 0.04, -1.0);
+        level.addFreshEntity(a);
     }
 
     /** 0.51.0 키를 누르기 바로 전 (서버) */
@@ -734,6 +802,30 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 float hp = sp.getHealth();
                 RpgHealth.onLoss(sp, sp.damageSources().mobAttack(near.get(0)), hp, hp - 4F);
             });
+        }
+        // 2026-11-06 센티널 · 어벤저: 맞는 장면 (과녁이 직접 침) — 헤이븐 리프는 20 에 피난처 안 아군을 (프리즘에 막힘), 램파트는 30 · 44 에 몹 화살 (장벽이 지움), 나인 타이즈는
+        // 6 · 14 에 나를 (물결이 아군에게), 그러지 차지는 쓰기 전 오른쪽 과녁이 두 번 (나를 가장 많이 때린 적), 페인 이터는 8 · 16 에 아군을 (불씨 줄로 대신 받음)
+        ServerPlayer ally = sp.level().getServer().getPlayerList().getPlayers().stream().filter(p -> p != sp).findFirst().orElse(null);
+        switch (id) {
+            case "sentinel_haven" -> mmorpg.fabric.Tasks.later(20, () -> filmHit(ally, huskNear(sp, new Vec3(0.5, -60, 6.0)), 6F));
+            case "sentinel_rampart" -> {
+                mmorpg.fabric.Tasks.later(30, () -> filmArrow(sp.level(), -2.2, 8.0));
+                mmorpg.fabric.Tasks.later(44, () -> filmArrow(sp.level(), 1.4, 8.0));
+            }
+            case "sentinel_tides" -> {
+                mmorpg.fabric.Tasks.later(6, () -> filmHit(sp, huskNear(sp, new Vec3(0.5, -60, 3.2)), 8F));
+                mmorpg.fabric.Tasks.later(14, () -> filmHit(sp, huskNear(sp, new Vec3(0.5, -60, 3.2)), 8F));
+            }
+            case "avenger_grudge" -> {
+                Husk right = huskNear(sp, new Vec3(2.2, -60, 4.5));
+                filmHit(sp, right, 5F);
+                filmHit(sp, right, 5F);
+            }
+            case "avenger_pain" -> {
+                mmorpg.fabric.Tasks.later(8, () -> filmHit(ally, huskNear(sp, new Vec3(0.5, -60, 3.2)), 10F));
+                mmorpg.fabric.Tasks.later(16, () -> filmHit(ally, huskNear(sp, new Vec3(0.5, -60, 3.2)), 10F));
+            }
+            default -> {}
         }
     }
 
@@ -759,7 +851,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
         {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"arcaneblade", "swordcaller"}, {"arcmage", "necromancer"},
-        {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}, {"saint", "warlock"}};
+        {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}, {"saint", "warlock"},
+        {"sentinel", "avenger"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
@@ -801,11 +894,19 @@ public final class RpgJobGallery implements FabricClientGameTest {
                             filmAlly(sp);
                         });
                         case "warlock" -> newJob(ctx, server, conn, job, "rpg:scepter_l40_hero", 5, sp -> filmAlly(sp)); // 2026-11-06 생명 착취 게이지 = 다음 스킬이 빼앗을 몫 (다섯까지)
+                        case "sentinel" -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100, sp -> { // 2026-11-06 반격 (수호기사와 같음 — 최대 대비 100)
+                            JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("sentinel")) * 0.6);
+                            filmAlly(sp);
+                        });
+                        case "avenger" -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100, sp -> { // 2026-11-06 앙갚음 (최대 대비 100)
+                            mmorpg.fabric.job.JobTraits15.setVengeance(sp, mmorpg.fabric.job.JobTraits15.vengeanceCap(sp, Jobs.job("avenger")) * 0.6);
+                            filmAlly(sp);
+                        });
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
                                 sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
                     }
                     filmSkills(ctx, server, job, casesOf(job), f);
-                    if (job.equals("saint") || job.equals("warlock")) server.runOnServer(s -> {
+                    if (job.equals("saint") || job.equals("warlock") || job.equals("sentinel") || job.equals("avenger")) server.runOnServer(s -> {
                         ServerPlayer me = player(s);
                         for (ServerPlayer p : new ArrayList<>(s.getPlayerList().getPlayers())) if (p != me) s.getPlayerList().remove(p);
                     });
@@ -847,6 +948,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "tyrant" -> CASES_TY;
             case "saint" -> CASES_SA;
             case "warlock" -> CASES_WK;
+            case "sentinel" -> CASES_SE;
+            case "avenger" -> CASES_AV;
             default -> CASES_GU;
         };
     }

@@ -43,8 +43,11 @@ public final class RpgJobTimingTests {
     private static final int QUIET = 100;
     private static final int NONE = 200;
     private static final int MAX = 400;
-    /** 0.51.0 재설계안 2판: 첫 피해와 마지막 피해 사이가 QUIET 보다 긴 스킬 (홀름강 — 10 에 열고 140 에 내려찍음) */
-    private static final Map<String, Integer> QUIET_OF = Map.of("gladiator_ult", 160);
+    /**
+     * 0.51.0 재설계안 2판: 첫 피해와 마지막 피해 사이가 QUIET 보다 긴 스킬 (홀름강 — 10 에 열고 140 에 내려찍음 · 2026-11-06 레인보우 램파트 — 10 에 솟고 110 에
+     * 부서짐)
+     */
+    private static final Map<String, Integer> QUIET_OF = Map.of("gladiator_ult", 160, "sentinel_rampart", 140);
     /** 과녁 거리 (앞 칸 — 없으면 2.5): 멀리 내려앉는 스킬 */
     // 0.50.0 시험 1: 장대 도약 과녁을 7칸에 두었더니 시험 자리 둘레 barrier 벽 속 (바닥 8×8) 이라 숨막힘 피해가 10틱마다 들어갔음 → 5.5칸
     // 2026-11-06 미라주 대시 (트릭스터 2판): 6칸 뛰어들어 내려선 자리 둘레를 벰 — 과녁을 내려설 자리에
@@ -387,5 +390,24 @@ public final class RpgJobTimingTests {
     @GameTest(environment = "mmorpg:jt_wk", maxTicks = 2400)
     public void timingWarlock(GameTestHelper h) {
         probe(h, "warlock");
+    }
+
+    /**
+     * 2026-11-06 2차 직업 — 수호기사 각성 센티널 (배스천 차지 4 닿음 (과녁은 밀 수 없어 그 앞에서 멈춤) → 16 벽에 박힌 것으로, 헤이븐 리프 — 아군이 없어 앞 4칸으로 뛰어 8 에
+     * 내려앉음, 레인보우 램파트 10 솟음 → 110 부서짐 (QUIET_OF 140), 클라리온 콜 10 소리 물결 → 아군이 없어 겨눈 과녁 앞으로 40 날아가 50 내려앉음 — 나인 타이즈는 피해
+     * 없는 태세)
+     */
+    @GameTest(environment = "mmorpg:jt_se", maxTicks = 2400)
+    public void timingSentinel(GameTestHelper h) {
+        probe(h, "sentinel");
+    }
+
+    /**
+     * 2026-11-06 2차 직업 — 수호기사 반전 어벤저 (리프라이절 6, 그러지 차지 — 때린 적이 없어 겨눈 과녁에게 8, 레크닝 12, 조브레이커 — 과녁은 밀 수 없어 들지 않고 그 위로
+     * 뛰어올라 26 · 최대 체력 몫만큼 들어간 피해는 위력 × 배율 합보다 큼 — 앙갚음은 0, 페인 이터는 피해 없는 태세)
+     */
+    @GameTest(environment = "mmorpg:jt_av", maxTicks = 2400)
+    public void timingAvenger(GameTestHelper h) {
+        probe(h, "avenger");
     }
 }

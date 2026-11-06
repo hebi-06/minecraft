@@ -49,9 +49,11 @@ public final class JobKit {
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투 (상대 + 결투 × 3% · 다른 적 −40%)
         double range = JobTraits9.rangeMult(sp, e, j); // 0.51.0 배틀 아처 난사 (가까운 적 +20% · 먼 적 −30%)
         double exec = JobTraits12.hitMult(sp, e, j); // 0.51.0 엑시큐셔너 처형 덤 (잃은 체력) · 선고 · 섀도 스토크
-        double dmg = P * mult * veil * crit * duel * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double base = P * mult * veil * crit * duel * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+        double flat = flatAdd; // 2026-11-06 어벤저 앙갚음 (strikeFlat — 이 피해에 더하는 고정 피해)
+        double dmg = base + counter + flat;
         float before = e.getHealth();
-        boolean bigger = big || veil > 1 || counter > 0;
+        boolean bigger = big || veil > 1 || counter > 0 || flat > base * 0.25;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
         boolean landed;
         try {
@@ -73,6 +75,28 @@ public final class JobKit {
         JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
         JobTraits12.afterJobHit(sp, e, j, got); // 0.51.0 소울 리퍼 영혼 (+1 · 가득이면 해방) · 엑시큐셔너 처형
         return got;
+    }
+
+    /** 2026-11-06 이번 피해에 더할 고정 피해 (체력 양 — 어벤저 앙갚음, {@link #strikeFlat} 가 정했다가 지움) */
+    private static double flatAdd;
+
+    /**
+     * 2026-11-06 {@link #strike} 와 같음 — 피해에 고정 피해 flat (체력 양 — 어벤저 앙갚음: 배율 · 공격력에 곱하지 않고 더함, 반격 게이지처럼) 을 더함. magic 이면 방어구
+     * 무시 (레크닝 가운데 — 고정 피해)
+     */
+    public static void strikeFlat(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, double flat, boolean magic, boolean big, String life, int delay,
+            java.util.function.DoubleConsumer then) {
+        if (e == null || !(mult > 0)) return;
+        hitLater(sp, e, life, now() + Math.max(0, delay), () -> {
+            double d;
+            flatAdd = Math.max(0, flat);
+            try {
+                d = hit(sp, e, j, P, mult, magic, big);
+            } finally {
+                flatAdd = 0;
+            }
+            if (d > 0 && then != null) then.accept(d);
+        });
     }
 
     /** 0.51.0 치명 숫자로 보일 피해 (트릭 샷의 튄 화살 · 데드아이 셋째 — 배율에 치명 몫을 넣어 둠): 이 동안 hit · hitSplit 의 숫자가 치명타 꼴 */
@@ -133,9 +157,11 @@ public final class JobKit {
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투
         double range = JobTraits9.rangeMult(sp, e, j); // 0.51.0 배틀 아처 난사
         double exec = JobTraits12.hitMult(sp, e, j); // 0.51.0 엑시큐셔너 처형 덤
-        double dmg = P * mult * veil * crit * duel * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double base = P * mult * veil * crit * duel * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+        double flat = flatAdd; // 2026-11-06 어벤저 앙갚음 (strikeFlat — 이 피해에 더하는 고정 피해)
+        double dmg = base + counter + flat;
         float before = e.getHealth();
-        boolean bigger = big || veil > 1 || counter > 0;
+        boolean bigger = big || veil > 1 || counter > 0 || flat > base * 0.25;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
         boolean landed;
         try {

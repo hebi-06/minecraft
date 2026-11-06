@@ -103,6 +103,16 @@ public final class RpgHealth {
 
     public static BlockHook blockHook = (p, src, saved) -> {};
 
+    /** 2026-11-06 받는 피해 + (어벤저 「앙갚음」 — 받는 피해 +10%: 0 = 없음) — 다른 감소 · 스탯 트리 뒤에 × (1 + 값) */
+    public static java.util.function.ToDoubleFunction<ServerPlayer> takenUp = p -> 0;
+
+    /** 2026-11-06 받은 피해가 정해짐 (감소 · 나눠 받기 뒤 · 보호막 앞 — 센티널 나인 타이즈 · 어벤저 앙갚음): 받은 양 (보호막이 흡수할 몫 포함) */
+    public interface TakenHook {
+        void taken(ServerPlayer sp, DamageSource source, double amount);
+    }
+
+    public static TakenHook takenHook = (p, src, a) -> {};
+
     /** 결투 훅 (hp.js setDuelHooks — 6단계 결투가 넣음) */
     public interface DuelHooks {
         /** 결투 상대의 피해면 줄인 양 (× PVP.mult — 아니면 그대로) */
@@ -283,7 +293,13 @@ public final class RpgHealth {
         double reduce = 1 - (1 - shield) * (1 - Math.max(gsr, buff));
         // 스탯 트리 받는 피해 감소 (7단계): 방패 · 버프 감소 뒤에 곱함
         double tree = mmorpg.fabric.stattree.StatTrees.defMult(sp);
-        double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce) * tree); // 결투 상대의 피해 × PVP.mult
+        double up = 0;
+        try {
+            up = Math.max(0, Math.min(1, takenUp.applyAsDouble(sp))); // 2026-11-06 어벤저 앙갚음 (받는 피해 +10%)
+        } catch (RuntimeException e) {
+            Mmorpg.LOG.warn("[mmorpg] taken up", e);
+        }
+        double loss = duel.scale(sp, source, raw * CONFIG.num("DAMAGE_TAKEN_SCALE") * (1 - reduce) * tree * (1 + up)); // 결투 상대의 피해 × PVP.mult
         if (blocked && shield > 0) {
             // 0.30.0 막아 준 양 (방패 감소 몫): 다른 감소 (Guards · 창벽 · 가호) · 스탯 트리 뒤의 피해 × 방패 감소
             try {
@@ -314,6 +330,13 @@ public final class RpgHealth {
                 loss -= moved;
             } catch (RuntimeException e) {
                 Mmorpg.LOG.warn("[mmorpg] loss share", e);
+            }
+        }
+        if (loss > 0 && !safe) {
+            try {
+                takenHook.taken(sp, source, loss); // 2026-11-06 센티널 나인 타이즈 · 어벤저 앙갚음 (보호막 앞의 받은 양)
+            } catch (RuntimeException e) {
+                Mmorpg.LOG.warn("[mmorpg] taken hook", e);
             }
         }
         if (loss > 0 && !safe) loss = absorbShield(sp, loss); // 보호막 먼저

@@ -33,6 +33,7 @@ import job_motions_j  # noqa: E402,F401 — 0.51.0 2차 직업 (스톰 랜서 ·
 import job_motions_k  # noqa: E402,F401 — 0.51.0 2차 직업 (소울 리퍼 · 엑시큐셔너 — 2026-11-06)
 import job_motions_l  # noqa: E402,F401 — 0.51.0 2차 직업 (썬더로드 · 타이런트 — 2026-11-06)
 import job_motions_m  # noqa: E402,F401 — 0.51.0 2차 직업 (세인트 · 워록 — 2026-11-06)
+import job_motions_n  # noqa: E402,F401 — 0.51.0 2차 직업 (센티널 · 어벤저 — 2026-11-06)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -138,6 +139,13 @@ AIR = {
     # 하트 어코드 · 글리머윙 · 소울본드 · 에버블룸 · 블러드 노바 · 블러드 뱅큇의 긴 동작은 걸으며 쓰므로 걸음 다리를 둠
     "jb_warlock_mire": [],
     "jb_warlock_mire_rise": [],
+    # 0.51.0 센티널 · 어벤저 (2026-11-06): 헤이븐 리프 (2 ~ 6 무지개를 타고 뛰어오름) · 클라리온 콜 (40 ~ 46 날아감) · 조브레이커 (7 ~ 22 끌어안고 솟구침) 는 무릎을
+    # 당긴 다리, 배스천 차지 (방패에 어깨를 대고 내달림 — 제 다리) 는 걸음 다리를 끔. 밀어붙임 · 내려앉음 · 내리침 · 리프라이절 · 그러지 차지 · 레크닝 · 페인 이터 ·
+    # 내리꽂음도 크게 내디딤 · 무릎 꿇음이라 걸음 다리를 끔 (job_motions_n 의 softLegs) — 레인보우 램파트 · 나인 타이즈는 걸으며 쓰므로 걸음 다리를 둠
+    "jb_sentinel_charge": [],
+    "jb_sentinel_haven": [(2, 6, "tuck")],
+    "jb_sentinel_ult": [(40, 46, "tuck")],
+    "jb_avenger_ult": [(7, 22, "tuck")],
 }
 
 
