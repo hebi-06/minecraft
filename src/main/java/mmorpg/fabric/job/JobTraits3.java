@@ -52,6 +52,8 @@ import net.minecraft.world.phys.Vec3;
  * <li>0.51.0 각성 트릭스터 도 「표식」 (암살자 줄기 — {@link #assassinLine}: 최대 7 · 등 뒤 치명타 — 재설계안 2판 (2026-11-06) 은 은신 대신 환영 · 거울: 미러
  * 팰리스 동안은 어느 쪽에서 쳐도 등 뒤 — JobTraits10.anySide). 표식이 shift 이상인 적이 쓰러지면 그 표식이 둘레 shiftRange 칸의 가장 가까운 적에게 옮겨감
  * (꽃잎이 날아감)</li>
+ * <li>0.51.0 각성 스톰 랜서 도 「창끝」 (창술사 줄기 — {@link #lancerLine}: 끝자락 + edgeBonus · 밀쳐냄 · 기세) + 바람 (창 평타가 끝자락에 맞을 때마다 +1 → 가득이면
+ * 다음 창 평타가 질풍 창 — JobTraits11.lanceHit)</li>
  * </ul>
  */
 public final class JobTraits3 {
@@ -167,6 +169,13 @@ public final class JobTraits3 {
 
     /** 0.51.0 트릭스터 (암살자 각성) */
     static final String TR = "trickster";
+    /** 0.51.0 스톰 랜서 (창술사 각성 — 2026-11-06) */
+    static final String SL = "stormlancer";
+
+    /** 창술사 줄기 (창끝 — 끝자락 · 밀쳐냄 · 기세: 1차 창술사 · 0.51.0 스톰 랜서) */
+    static boolean lancerLine(Jobs.Job j) {
+        return j != null && (j.id().equals("lancer") || j.id().equals(SL));
+    }
 
     /** 암살자 줄기 (표식 · 등 뒤 치명타 · 은신 — 1차 암살자 · 0.51.0 트릭스터) */
     static boolean assassinLine(Jobs.Job j) {
@@ -450,7 +459,7 @@ public final class JobTraits3 {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null) return 1;
         if (assassinLine(j)) return veilBasic(sp, w);
-        if (j.id().equals("lancer") && "lance".equals(w.type()) && victim != null && edgeHit(sp, victim, trait(j, "edge", 1.0))) {
+        if (lancerLine(j) && "lance".equals(w.type()) && victim != null && edgeHit(sp, victim, trait(j, "edge", 1.0))) {
             State st = of(sp);
             st.edgeTick = Tasks.now();
             st.edgeVictim = victim.getUUID();
@@ -474,7 +483,7 @@ public final class JobTraits3 {
 
     /** 이번 시전의 위력 배율 (JobSystem): 창술사 기세가 남았으면 1 + momentum */
     static double castMult(ServerPlayer sp, Jobs.Job j) {
-        if (j == null || !j.id().equals("lancer") || !momentum(sp)) return 1;
+        if (!lancerLine(j) || !momentum(sp)) return 1;
         return 1 + trait(j, "momentum", 0.1);
     }
 
@@ -689,11 +698,13 @@ public final class JobTraits3 {
                     SkillFx.play(level, "entity.player.attack.crit", Kit.bodyPoint(victim), 1.5, 0.6);
                 }
             }
-            case "lancer" -> {
+            case "lancer", SL -> {
                 if (!"lance".equals(w.type())) return;
                 State st = of(sp);
                 Vec3 f = Kit.facingOf(sp);
-                if (st.edgeTick >= now - 1 && victim.getUUID().equals(st.edgeVictim)) {
+                boolean edge = st.edgeTick >= now - 1 && victim.getUUID().equals(st.edgeVictim);
+                JobTraits11.lanceHit(sp, victim, j, edge); // 0.51.0 스톰 랜서: 바람 +1 · 가득이면 질풍 창
+                if (edge) {
                     st.edgeTick = -1;
                     if (JobKit.pushable(victim)) RuneKit.knock(victim, V.sub(victim.position(), sp.position()), trait(j, "push", 0.3), 0.08);
                     Vec3 at = Kit.bodyToward(victim, sp.getEyePosition(), sp.getViewVector(1F));

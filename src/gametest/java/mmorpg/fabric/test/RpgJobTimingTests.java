@@ -48,7 +48,8 @@ public final class RpgJobTimingTests {
     /** 과녁 거리 (앞 칸 — 없으면 2.5): 멀리 내려앉는 스킬 */
     // 0.50.0 시험 1: 장대 도약 과녁을 7칸에 두었더니 시험 자리 둘레 barrier 벽 속 (바닥 8×8) 이라 숨막힘 피해가 10틱마다 들어갔음 → 5.5칸
     // 2026-11-06 미라주 대시 (트릭스터 2판): 6칸 뛰어들어 내려선 자리 둘레를 벰 — 과녁을 내려설 자리에
-    private static final Map<String, Double> AHEAD = Map.of("lancer_vault", 5.5, "spellblade_blink", 6.0, "mage_phase", 1.2, "trickster_dash", 6.0);
+    // 2026-11-06 크로스 게일 (스톰 랜서): 두 바람 창이 엇갈리는 창끝 (6.5칸 — 벽 앞) 에 과녁 · 셋 다 맞음
+    private static final Map<String, Double> AHEAD = Map.of("lancer_vault", 5.5, "spellblade_blink", 6.0, "mage_phase", 1.2, "trickster_dash", 6.0, "stormlancer_cross", 6.0);
 
     private static Husk dummy(GameTestHelper h, double ahead) {
         Husk m = TestDummies.make(h.spawnWithNoFreeWill(EntityTypes.HUSK, 1.5F, 2F, (float) (1.5 + ahead)));
@@ -315,5 +316,23 @@ public final class RpgJobTimingTests {
     @GameTest(environment = "mmorpg:jt_pi", maxTicks = 2400)
     public void timingPierrot(GameTestHelper h) {
         probe(h, "pierrot");
+    }
+
+    /**
+     * 0.51.0 2차 직업 — 창술사 각성 스톰 랜서 (2026-11-06: 크로스 게일 2 · 6 → 엇갈림 26 (과녁은 엇갈리는 6칸 앞), 게일 드라이브 지나감 → 12틱 다시 누름 → 14, 템페스트 드릴
+     * 6 ~ 36, 렌딩 게일 — 박힌 창 둘 → 12틱 다시 눌러 14에 뽑음 (박은 창만큼 · w 0), 아이 오브 더 스톰 14 ~ 70)
+     */
+    @GameTest(environment = "mmorpg:jt_sl", maxTicks = 2400)
+    public void timingStormlancer(GameTestHelper h) {
+        probe(h, "stormlancer");
+    }
+
+    /**
+     * 0.51.0 2차 직업 — 창술사 반전 드라군 (웜테일 6 · 18, 하이 점프 — 12틱 다시 눌러 17에 내리꽂음 (w 15), 임페일 6 · 20, 드래곤 브레스 14, 드래곤폴 46 · 56 — 시험 자리
+     * 천장이 낮아 높이 덤은 조금)
+     */
+    @GameTest(environment = "mmorpg:jt_dg", maxTicks = 2400)
+    public void timingDragoon(GameTestHelper h) {
+        probe(h, "dragoon");
     }
 }

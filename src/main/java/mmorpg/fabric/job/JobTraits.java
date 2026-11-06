@@ -82,6 +82,7 @@ public final class JobTraits {
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 스펠 서지 · 네크로맨서 망자의 군대 · 무덤 · 표식)
         JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 헌터스 마크 · 배틀 아처 난사 · 스톰 스트라이드 · 팰컨 다이브 초기화)
         JobTraits10.init(); // 0.51.0 암살자 2차 (트릭스터 미러 팰리스 · 들불 표식 · 피에로 쇼타임 — 소환물 · 나눠 받음 · 핸드스프링 — 트릭스터의 표식은 JobTraits3)
+        JobTraits11.init(); // 0.51.0 창술사 2차 (스톰 랜서 바람 · 질풍 창 · 렌딩 게일 · 드라군 비상 — 스톰 랜서의 창끝은 JobTraits3)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
             JobTraits6.tickGlobal(Tasks.now()); // 0.51.0 홀름강의 결투장
@@ -127,6 +128,7 @@ public final class JobTraits {
         JobTraits8.reset(sp);
         JobTraits9.reset(sp);
         JobTraits10.reset(sp);
+        JobTraits11.reset(sp);
         String p = sp.getUUID() + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
         sendGauge(sp, true);
@@ -144,6 +146,7 @@ public final class JobTraits {
         JobTraits8.forget(id);
         JobTraits9.forget(id);
         JobTraits10.forget(id);
+        JobTraits11.forget(id);
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
@@ -158,6 +161,7 @@ public final class JobTraits {
         JobTraits8.lifeEnded(id);
         JobTraits9.lifeEnded(id);
         JobTraits10.lifeEnded(id);
+        JobTraits11.lifeEnded(id);
         State st = STATES.get(id);
         if (st != null) {
             st.stacks = 0;
@@ -482,6 +486,7 @@ public final class JobTraits {
                 JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 무덤 · 표식
                 JobTraits9.tick(sp, j, now); // 0.51.0 배틀 아처 갈래 게이지 · 스톰 스트라이드 이동 속도
                 JobTraits10.tick(sp, j, now); // 0.51.0 피에로 (가장 가까운 소환물로 금빛 실)
+                JobTraits11.tick(sp, j, now); // 0.51.0 스톰 랜서 바람이 사라짐 · 가득이면 창끝 소용돌이
             }
             if (st == null || j == null) continue;
             // 태세가 끝남
@@ -557,6 +562,7 @@ public final class JobTraits {
         int total = st != null && st.stanceUntil > now ? st.stanceTotal : 0;
         Object[] line = stance.isEmpty() ? JobTraits6.stanceLine(sp, j) : null; // 0.51.0 곰의 화신 (태세가 아니라 따로 — 같은 줄에 보임)
         if (line == null && stance.isEmpty()) line = JobTraits10.stanceLine(sp, j); // 0.51.0 피에로 할루시네이트 (광대 인형의 남은 시간)
+        if (line == null && stance.isEmpty()) line = JobTraits11.stanceLine(sp, j); // 0.51.0 스톰 랜서 렌딩 게일 (바람 창이 박히는 남은 시간)
         if (line != null) {
             stance = (String) line[0];
             left = (int) line[1];
@@ -570,6 +576,7 @@ public final class JobTraits {
         else if (j.id().equals(JobTraits8.NC)) value = JobTraits8.gaugeValue(sp, j); // 0.51.0 네크로맨서 = 망자 선원 수
         else if (j.id().equals(JobTraits9.BA)) value = JobTraits9.gaugeValue(sp, j); // 0.51.0 배틀 아처 = 다음 활 평타의 갈래 (1 · 3)
         else if (j.id().equals(JobTraits10.PR)) value = JobTraits10.gaugeValue(sp, j); // 0.51.0 피에로 = 소환물 수
+        else if (j.id().equals(JobTraits11.SL) || j.id().equals(JobTraits11.DG)) value = JobTraits11.gaugeValue(sp, j); // 0.51.0 스톰 랜서 = 바람 · 드라군 = 높이
         else if (markJob(j)) { // 마검사 · 0.51.0 룬 스미스 = 그 적의 각인
             if (st != null && st.target != null) {
                 Entity e = sp.level().getEntity(st.target);

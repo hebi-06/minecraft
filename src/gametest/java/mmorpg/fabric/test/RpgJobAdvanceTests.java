@@ -18,6 +18,7 @@ import mmorpg.fabric.job.JobSystem;
 import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits10;
+import mmorpg.fabric.job.JobTraits11;
 import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraits5;
 import mmorpg.fabric.job.JobTraits6;
@@ -102,6 +103,8 @@ public final class RpgJobAdvanceTests {
     static final String ENV_BA = "mmorpg:job_ba";
     static final String ENV_TR = "mmorpg:job_tr";
     static final String ENV_PI = "mmorpg:job_pi"; // 2026-11-06 피에로 (블레이드 댄서 대신 — job_pr 은 사제)
+    static final String ENV_SL = "mmorpg:job_sl"; // 2026-11-06 스톰 랜서
+    static final String ENV_DG = "mmorpg:job_dg"; // 2026-11-06 드라군
 
     /** 넓은 돌 바닥 (그라니의 질주가 비스듬히 내달릴 땅) */
     static void floor(GameTestHelper h) {
@@ -282,7 +285,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("pierrot".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
                     && JobSystem.job(sp).display().equals("피에로"), "pierrot free from the first job: " + JobSystem.jobOf(sp));
-            // 창술사의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            // 0.51.0 창술사의 2차 전직 (스톰 랜서 · 드라군 — 2026-11-06) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("lancer"), null);
@@ -290,7 +293,25 @@ public final class RpgJobAdvanceTests {
             h.assertTrue("lancer".equals(JobSystem.jobOf(sp)), "changed to lancer: " + JobSystem.jobOf(sp));
             JobTrainer.open(sp, () -> done[0]++);
             FormNet.ChestPayload la = chest(sp);
-            h.assertTrue(la != null && la.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "lancer: 2차 전직 dim (준비 중)");
+            h.assertTrue(la != null && la.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "lancer: 2차 전직 open");
+            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
+            FormNet.ChestPayload ladv = chest(sp);
+            h.assertTrue(ladv != null && ladv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("스톰 랜서")
+                    && ladv.slots().get(JobTrainer.INVERT_SLOT).name().contains("드라군"), "lancer advance cards");
+            Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
+            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "lancer advance confirm");
+            Forms.answer(sp, 11, null);
+            h.assertTrue("dragoon".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
+                    && JobSystem.job(sp).display().equals("드라군"), "dragoon free from the first job: " + JobSystem.jobOf(sp));
+            // 사신의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            Wallet.set(sp, Economy.Kind.SILVER, 300);
+            JobTrainer.open(sp, () -> done[0]++);
+            Forms.answer(sp, JobTrainer.slotOf("reaper"), null);
+            Forms.answer(sp, 11, null);
+            h.assertTrue("reaper".equals(JobSystem.jobOf(sp)), "changed to reaper: " + JobSystem.jobOf(sp));
+            JobTrainer.open(sp, () -> done[0]++);
+            FormNet.ChestPayload re = chest(sp);
+            h.assertTrue(re != null && re.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "reaper: 2차 전직 dim (준비 중)");
             Forms.answer(sp, -1, null);
         } finally {
             JobUpgrades.set(sp, "swordsman_moon", 0);
@@ -2023,6 +2044,266 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(JobTraits10.summons(sp) == 0, "summons cleared on job change");
             for (Husk x : z) x.discard();
             if (mob[0] != null) mob[0].discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 스톰 랜서 — 2026-11-06
+
+    @GameTest(environment = ENV_SL, maxTicks = 640)
+    public void stormlancerSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "stormlancer", Map.of("str", 50, "dex", 30), 50);
+        Weapon w = Weapons.weaponFrom("lance", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("stormlancer");
+        List<Husk> z = new ArrayList<>();
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        double[] mark = {0, 0};
+        // 창끝 + 바람: 끝자락 평타 +15% · 바람 +1 → 바람 4 에서 평타를 맞히면 질풍 창 (앞 8칸 — 뒤의 과녁은 날아가 닿는 틱 · 맞은 과녁은 10틱 뒤 · 위력 × 0.6) · 바람 0
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            double r = sp.entityInteractionRange();
+            z.add(dummy(h, 0, Math.min(5.6, r - 0.5)));
+            z.add(dummy(h, 0, 6.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            JobTraits11.setWind(sp, 0);
+            h.assertTrue(JobTraits3.edgeHit(sp, z.get(0), 1.0), "edge distance (reach " + r + ")");
+            double base = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.15), "storm lancer edge +15% " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.15);
+            h.assertTrue(JobTraits11.wind(sp) == 1, "edge hit wind +1: " + JobTraits11.wind(sp));
+            mark[0] = TestDummies.dealt(z.get(0));
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            JobTraits11.setWind(sp, 4);
+            double base = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits11.wind(sp) == 0, "full wind → the gust uses it all: " + JobTraits11.wind(sp));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[0], base * 1.15), "gust swing (edge basic) " + (TestDummies.dealt(z.get(0)) - mark[0]));
+            mark[0] = TestDummies.dealt(z.get(0));
+        }));
+        steps.add(new RpgJobTests.Step(13, () -> {
+            double g = JobSystem.power(sp, j) * 0.6 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), g), "질풍 창 (뒤의 과녁) " + TestDummies.dealt(z.get(1)) + " vs " + g);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[0], g), "질풍 창 (맞은 과녁 — 10틱 뒤) " + (TestDummies.dealt(z.get(0)) - mark[0]) + " vs " + g);
+            RpgCombat.forceCrit = null;
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 크로스 게일: 두 바람 창이 엇갈리는 창끝 (6칸 앞 — 벽 앞) 의 과녁은 셋 다 맞음 (2 · 2 → 26 엇갈림 3.25)
+            home(h, sp);
+            z.add(dummy(h, 0, 6.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits3.setMomentum(sp, false);
+            h.assertTrue(JobSkills.press(sp, 0), "크로스 게일 cast");
+        }));
+        steps.add(new RpgJobTests.Step(18, () -> {
+            double two = RpgJobTests.expected(sp, j, j.skill(0), 4.0);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), two), "크로스 게일 바람 창 둘 " + TestDummies.dealt(z.get(0)) + " vs " + two);
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 7.25);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "크로스 게일 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "storm lancer gradient number");
+            // 게일 드라이브: 0.5 에서 앞 6칸을 꿰뚫고 지나감 (2.5칸 과녁 — 지나갈 때 1.45) → 다시 누르면 돌아서 바람 창 2.9 (과녁을 봄)
+            z.get(0).discard();
+            homeAt(h, sp, 0.5);
+            z.set(0, dummy(h, 0, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits3.setMomentum(sp, false);
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "게일 드라이브 cast");
+        }));
+        steps.add(new RpgJobTests.Step(11, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 1.45);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "게일 드라이브 (지나감) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - mark[0] > 4.5, "drove through: " + (sp.position().z - mark[0]));
+            h.assertTrue(JobRecast.pending(sp, "stormlancer_drive") && JobSkills.cooldownLeft(sp, "stormlancer_drive") == 0, "drive recast window · no cooldown yet");
+            h.assertTrue(JobSkills.press(sp, 1), "게일 드라이브 recast (lance back)");
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 4.35);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "게일 드라이브 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(Math.abs(net.minecraft.util.Mth.wrapDegrees(sp.getYRot() - 180F)) < 45F, "turned back to the passed target: " + sp.getYRot());
+            h.assertTrue(!JobRecast.pending(sp, "stormlancer_drive") && JobSkills.cooldownLeft(sp, "stormlancer_drive") > 0, "drive done → cooldown");
+            // 템페스트 드릴: 앞 3칸 과녁 — 6 · 16 · 26 갈아냄 3.0 × 3 → 36 터짐 4.05 (= 13.05) · 그동안 느려짐
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 3.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits3.setMomentum(sp, false);
+            h.assertTrue(JobSkills.press(sp, 2), "템페스트 드릴 cast");
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> h.assertTrue(sp.hasEffect(MobEffects.SLOWNESS), "drilling slows the lancer")));
+        steps.add(new RpgJobTests.Step(30, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 13.05);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "템페스트 드릴 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!sp.hasEffect(MobEffects.SLOWNESS), "the slow ends with the burst");
+            // 렌딩 게일: 앞 2.5칸 과녁에 바람 창 둘 (2틱) → 평타 하나 (+1 = 셋) → 다시 누르면 뽑아 찢음 (2.175 × 3)
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            h.assertTrue(JobSkills.press(sp, 3), "렌딩 게일 cast");
+            h.assertTrue(JobTraits11.rendOn(sp) && JobRecast.pending(sp, "stormlancer_rend"), "rend open (recast window)");
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(JobTraits11.spears(sp, z.get(0)) == 2, "two wind spears stuck: " + JobTraits11.spears(sp, z.get(0)))));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            RpgCombat.forceCrit = false;
+            mark[0] = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            RpgCombat.forceCrit = null;
+            h.assertTrue(JobTraits11.spears(sp, z.get(0)) == 3, "a lance basic adds a spear: " + JobTraits11.spears(sp, z.get(0)));
+            h.assertTrue(JobSkills.press(sp, 3), "렌딩 게일 recast (rip)");
+        }));
+        steps.add(new RpgJobTests.Step(5, () -> {
+            double want = mark[0] + RpgJobTests.expected(sp, j, j.skill(3), 2.175 * 3);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "렌딩 게일 (평타 + 창 셋) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits11.spears(sp, z.get(0)) == 0 && !JobTraits11.rendOn(sp), "spears ripped out · rend closed");
+            // 아이 오브 더 스톰: 앞 4칸 과녁 (겨눈 적) 에 폭풍의 눈 — 14 · 24 · 34 · 44 · 54 찌름 6 × 5 → 70 터짐 28 (= 58) · 밀 수 있는 과녁은 띄워 돌림
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 4.0));
+            Husk loose = dummy(h, 1.5, 4.5);
+            loose.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0);
+            z.add(loose);
+            RpgJobTests.clearStrays(h, z.get(0), loose);
+            JobTraits3.setMomentum(sp, false);
+            mark[1] = loose.getY();
+            h.assertTrue(JobSkills.press(sp, 4), "아이 오브 더 스톰 cast");
+        }));
+        steps.add(new RpgJobTests.Step(40, () -> h.assertTrue(z.get(1).getY() > mark[1] + 0.8, "the storm lifts a loose target: " + (z.get(1).getY() - mark[1]))));
+        steps.add(new RpgJobTests.Step(36, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 58);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "아이 오브 더 스톰 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 드라군 — 2026-11-06
+
+    @GameTest(environment = ENV_DG, maxTicks = 640)
+    public void dragoonSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "dragoon", Map.of("str", 50, "dex", 30), 50);
+        Weapon w = Weapons.weaponFrom("lance", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("dragoon");
+        List<Husk> z = new ArrayList<>();
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        double[] mark = {0, 0};
+        // 비상: 높이 1칸당 +5% (6칸까지 +30%) · 직업 스킬로 떠 있는 동안 받는 피해 −30% · 드래곤폴로 하늘에 있는 동안 받지 않음
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            z.add(dummy(h, 0, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            h.assertTrue(Math.abs(JobTraits11.heightMult(j, 4) - 1.2) < 1e-9 && Math.abs(JobTraits11.heightMult(j, 10) - 1.3) < 1e-9
+                    && JobTraits11.heightMult(Jobs.job("lancer"), 5) == 1, "비상 height bonus +5% per block · cap 6 blocks");
+            double none = RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0)));
+            JobTraits11.airFor(sp, 20);
+            double air = RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0)));
+            JobTraits11.immuneFor(sp, 20);
+            double sky = RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0)));
+            h.assertTrue(none == 0 && Math.abs(air - 0.3) < 1e-9 && Math.abs(sky - 1) < 1e-9, "비상 guard: ground 0 · air 0.3 · sky 1: " + none + " / " + air + " / " + sky);
+            JobSystem.setJob(sp, "dragoon");
+            h.assertTrue(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) == 0 && JobTraits11.gaugeOf(sp) == 0, "job reset clears 비상");
+            // 웜테일: 2.5칸 과녁 — 6 휩쓸기 2.9 → 따라 뛰어 18 내리꽂기 4.35 × 높이 덤
+            h.assertTrue(JobSkills.press(sp, 0), "웜테일 cast");
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 2.9);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "웜테일 휩쓸기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits11.airborne(sp), "hopping after the sweep (비상)");
+        }));
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double hm = JobTraits11.lastHeightMult(sp);
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 2.9 + 4.35 * hm);
+            h.assertTrue(hm > 1.0, "the slam has a height bonus: " + hm);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "웜테일 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 하이 점프: 곧장 솟구침 (천장 아래까지) · 떠 있음 (비상) → 다시 누르면 겨눈 과녁 앞으로 내리꽂음 4.35 × 높이 덤
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 3.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            mark[0] = sp.getY();
+            mark[1] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "하이 점프 cast");
+        }));
+        steps.add(new RpgJobTests.Step(14, () -> {
+            h.assertTrue(sp.getY() - mark[0] > 0.8 && JobTraits11.airborne(sp) && JobRecast.pending(sp, "dragoon_jump"), "rose and hovers: " + (sp.getY() - mark[0]));
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage while hovering");
+            sp.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, z.get(0).position());
+            h.assertTrue(JobSkills.press(sp, 1), "하이 점프 recast (dive)");
+        }));
+        steps.add(new RpgJobTests.Step(9, () -> {
+            double hm = JobTraits11.lastHeightMult(sp);
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 4.35 * hm);
+            h.assertTrue(hm > 1.0, "the dive has a height bonus: " + hm);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "하이 점프 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.getY() - mark[0] < 0.4 && sp.position().z - mark[1] > 1.0, "dove down toward the target: " + (sp.getY() - mark[0]) + " / "
+                    + (sp.position().z - mark[1]));
+            // 임페일: 밀 수 있는 과녁 — 6 꿰뚫음 2.6 → 머리 위로 들어 올림 → 20 앞 땅에 내리꽂음 10.45 (= 13.05)
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2.5));
+            z.get(0).getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0);
+            RpgJobTests.clearStrays(h, z.get(0));
+            mark[1] = z.get(0).getY();
+            h.assertTrue(JobSkills.press(sp, 2), "임페일 cast");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 2.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "임페일 꿰뚫음 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(z.get(0).getY() > mark[1] + 1.0, "the skewered target is lifted: " + (z.get(0).getY() - mark[1]));
+        }));
+        steps.add(new RpgJobTests.Step(11, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 13.05);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "임페일 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(z.get(0).getY() - mark[1] < 1.0, "slammed down: " + (z.get(0).getY() - mark[1]));
+            // 드래곤 브레스: 14 앞 부채꼴 (9칸 · 70°) 17.4 — 뒤의 과녁은 맞지 않음
+            z.get(0).discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 3.0));
+            z.add(dummy(h, 2.5, 5.0));
+            z.add(dummy(h, 0, -1.0));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            h.assertTrue(JobSkills.press(sp, 3), "드래곤 브레스 cast");
+        }));
+        steps.add(new RpgJobTests.Step(24, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 17.4);
+            for (int i = 0; i < 2; i++) {
+                h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(i)), want), "드래곤 브레스 (부채꼴 " + i + ") " + TestDummies.dealt(z.get(i)) + " vs " + want);
+            }
+            h.assertTrue(TestDummies.dealt(z.get(2)) == 0, "behind the dragoon: no breath");
+            // 드래곤폴: 하늘로 솟구쳐 (그동안 받는 피해 없음) 4칸 앞 과녁 앞으로 내리꽂음 — 46 둘레 4칸 40 · 그 밖 24 (× 높이 덤) → 56 불기둥 18
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 4.0));
+            z.add(dummy(h, -4.0, -1.0));
+            RpgJobTests.clearStrays(h, z.toArray(new net.minecraft.world.entity.Entity[0]));
+            h.assertTrue(JobSkills.press(sp, 4), "드래곤폴 cast");
+        }));
+        steps.add(new RpgJobTests.Step(26, () -> h.assertTrue(JobTraits11.immune(sp), "untouchable in the sky")));
+        steps.add(new RpgJobTests.Step(36, () -> {
+            double hm = JobTraits11.lastHeightMult(sp);
+            double inner = RpgJobTests.expected(sp, j, j.skill(4), 40 * hm + 18);
+            double outer = RpgJobTests.expected(sp, j, j.skill(4), 24 * hm + 18);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), inner), "드래곤폴 (안쪽) " + TestDummies.dealt(z.get(0)) + " vs " + inner);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), outer), "드래곤폴 (바깥) " + TestDummies.dealt(z.get(1)) + " vs " + outer);
+            h.assertTrue(!JobTraits11.immune(sp), "landed (no longer untouchable)");
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });
     }

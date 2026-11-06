@@ -486,6 +486,26 @@ public final class SkillBarHud {
                             for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
                             if (i < v) g.fill(bx + 2, ty, bx + 3, ty + 1, col);
                         }
+                        case "stormlancer" -> {
+                            // 0.51.0 창끝 바람 (최대 4 — 가득이면 다음 창 평타가 질풍 창) — 바람 소용돌이 (5 × 5): 바깥에서 가운데로 감기는 갈고리, 찬 것은 첫째 빛 (옥빛 바람) +
+                            // 가운데 흰 점 (가득이면 둘째 빛 · 반짝임), 오른쪽 아래 1칸 그림자
+                            int c = i < v ? (v >= max ? col : bright) : dim;
+                            int ty = y;
+                            int[][] cells = {{1, 0}, {2, 0}, {3, 0}, {0, 1}, {4, 1}, {0, 2}, {2, 2}, {4, 2}, {0, 3}, {3, 3}, {1, 4}, {2, 4}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
+                        }
+                        case "dragoon" -> {
+                            // 0.51.0 비상 (지금 발밑 땅에서의 높이 — 최대 6칸 · 1칸당 내리꽂기 +5%) — 겹친 날개 꺾쇠 (5 × 5, 위가 하늘): 찬 것은 첫째 빛 (용의 금빛) + 꼭대기 흰 점,
+                            // 오른쪽 아래 1칸 그림자
+                            int c = i < v ? bright : dim;
+                            int ty = y;
+                            int[][] cells = {{2, 0}, {1, 1}, {3, 1}, {0, 2}, {2, 2}, {4, 2}, {1, 3}, {3, 3}, {0, 4}, {4, 4}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (i < v) g.fill(bx + 2, ty, bx + 3, ty + 1, 0xFFFFFFFF);
+                        }
                         case "necromancer" -> {
                             // 0.51.0 망자의 군대 (최대 4) — 해골 (5 × 5): 둥근 머리 · 눈구멍 둘 · 이빨, 찬 것은 둘째 빛 (뼈색) + 눈구멍에 첫째 빛 (독초록 혼불), 오른쪽 아래 1칸 그림자
                             int c = i < v ? col : dim;

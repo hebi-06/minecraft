@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """0.51.0 2차 직업 스킬 아이콘 — 검사 각성 소드마스터 · 반전 블러드 나이트 · 전사 각성 워로드 · 반전 글래디에이터 (재설계안 2판) ·
 마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신) · 반전 소드 콜러 (재설계안 2판) · 매지션 각성 아크메이지 · 반전 네크로맨서 ·
-궁수 각성 스나이퍼 · 반전 배틀 아처 (재설계안 2판 — 섀도 헌터 대신) · 암살자 각성 트릭스터 (2026-11-06 2판) · 반전 피에로 (블레이드 댄서 대신) (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
+궁수 각성 스나이퍼 · 반전 배틀 아처 (재설계안 2판 — 섀도 헌터 대신) · 암살자 각성 트릭스터 (2026-11-06 2판) · 반전 피에로 (블레이드 댄서 대신) · 창술사 각성 스톰 랜서 · 반전 드라군 (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
 모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph 와 같은 꼴, 아케인 블레이드의 검기는 rfx_jwave 와 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
 글래디에이터 = 진홍 (첫째) · 모래 금빛 (둘째 — 결투장 황혼 바탕 · 말뚝은 나무빛), 아케인 블레이드 = 보라 (첫째) · 청록 (둘째 — 짙은 남보라 밤 바탕),
 소드 콜러 = 청록 (첫째) · 흰 청록 (둘째 — 짙은 청록 밤 바탕), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
 네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕), 스나이퍼 = 밝은 연두 (첫째) · 금빛 흰 섬광 (둘째 — 짙은 숲 바탕),
 배틀 아처 = 폭풍 하늘빛 (첫째) · 번개 노랑 (둘째 — 짙은 폭풍 남청 바탕), 트릭스터 = 자홍 (첫째) · 검보라 (둘째 — 짙은 보라 바탕 · 환영은 청록 테 · 들불은 분홍),
-피에로 = 빨강 (첫째) · 크림 금빛 (둘째 — 서커스 밤 바탕 · 할리퀸 마름모 무늬 · 금방울) — jobs.json advance."""
+피에로 = 빨강 (첫째) · 크림 금빛 (둘째 — 서커스 밤 바탕 · 할리퀸 마름모 무늬 · 금방울), 스톰 랜서 = 옥빛 바람 (첫째) · 흰빛 (둘째 — 짙은 옥빛 폭풍 바탕),
+드라군 = 용의 금빛 (첫째) · 진홍 (둘째 — 짙은 남보라 밤 바탕 · 불은 주홍) — jobs.json advance."""
 import math
 import os
 import sys
@@ -22,6 +23,7 @@ from job_skill_icons_more import axe_layers  # noqa: E402
 from job_skill_icons import P, SS  # noqa: E402
 from job_fx_art_v2 import GLYPHS  # noqa: E402 — 룬 글자 꼴 (게임의 룬 그림과 같음)
 from job_skill_icons_three import hood as _hood  # noqa: E402 — 암살자 두건 (0.51.0 암살자 2차)
+from job_skill_icons_three import spear as _spear  # noqa: E402 — 창 (0.51.0 창술사 2차)
 
 NIGHT = (8, 10, 30)
 DUSK = (28, 8, 10)
@@ -2206,6 +2208,313 @@ def pierrot_ult(A, B):
                   circus_back(A, B))
 
 
+# ------------------------------------------------------------ 스톰 랜서 (빛: 옥빛 바람 → 흰빛 — 짙은 옥빛 폭풍 바탕) — 2026-11-06
+
+GALE_NIGHT = (2, 16, 16)
+
+
+def gale_back(A, B):
+    return backdrop(mix(A, GALE_NIGHT, 0.86), mix((20, 90, 80), A, 0.3))
+
+
+def gale_spear(tail, tip, A, B, head=5.0, hw=1.8, shaft=1.2):
+    """옥빛 자루 · 흰 창날 (스톰 랜서)"""
+    sh, bl = _spear(tail, tip, head, hw, shaft)
+    return [layer(sh, mix(A, WHITE, 0.2), mix(A, (0, 0, 0), 0.45)), layer(bl, WHITE, mix(A, WHITE, 0.45), WHITE, mix(A, (0, 0, 0), 0.3), axis=(0.7, 0.7))], bl
+
+
+def swirl_mask(cx, cy, R, arms=3, w=1.4, turn=1.6, rot=0.0):
+    """바람 소용돌이: 가운데로 감기는 팔 arms 개 (바깥이 굵고 눈 쪽으로 가늚)"""
+    m = mask()
+    for k in range(arms):
+        pts = []
+        for i in range(14):
+            t = i / 13
+            r = R * (1 - t) + 1.0 * t
+            a = rot + k * 2 * math.pi / arms + turn * t * math.pi
+            pts.append((cx + math.cos(a) * r, cy + math.sin(a) * r))
+        for i in range(len(pts) - 1):
+            line(m, [pts[i], pts[i + 1]], w * (1 - i / 14) + 0.4)
+    return m
+
+
+def wind_lines(pts_list, w=0.9):
+    m = mask()
+    for pts in pts_list:
+        line(m, pts, w)
+    return m
+
+
+def stormlancer_cross(A, B):
+    # 크로스 게일: 왼쪽 위 · 왼쪽 아래에서 비껴 찌른 바람 창 둘이 오른쪽 가운데에서 엇갈림 · 엇갈린 자리의 소용돌이 · X 번쩍 · 지나간 바람 줄
+    fp = (22.5, 16.0)
+    layers, glows = [], []
+    for (tail, tip) in (((1.5, 4.0), (27.5, 22.5)), ((1.5, 28.0), (27.5, 9.5))):
+        ls, bl = gale_spear(tail, tip, A, B, head=5.0, hw=1.7, shaft=1.1)
+        layers += ls
+        glows.append(glow(bl, B, 1.2, 0.8))
+    trail = wind_lines([[(0.5, 9.0), (8.0, 12.0)], [(0.5, 23.0), (8.0, 20.0)], [(3.0, 16.0), (10.0, 16.0)]], 0.8)
+    sw = swirl_mask(fp[0], fp[1], 7.0, arms=3, w=1.2, turn=1.4, rot=0.4)
+    xf = mask()
+    star(xf, fp[0], fp[1], 5.0, 0.16, 45)
+    star(xf, fp[0], fp[1], 2.6, 0.22, 0)
+    subject = stack(layer(trail, mix(A, WHITE, 0.4), A, None, None, axis=(1, 0)), layer(sw, mix(A, WHITE, 0.4), A, WHITE, None), *layers, layer(xf, WHITE, B))
+    return finish(subject, glows + [glow(sw, A, 1.6, 0.9), glow(xf, A, 1.8, 1.0)], gale_back(A, B))
+
+
+def stormlancer_drive(A, B):
+    # 게일 드라이브: 왼쪽에서 오른쪽으로 꿰뚫고 지나간 창 (오른쪽 끝) · 지나온 길의 바람 줄기 · 길 위의 적 셋 (어두운 덩이 — 바람이 감김) · 위로 휘어 되돌아오는 화살 (다시 누름)
+    ls, bl = gale_spear((15.0, 17.5), (31.0, 17.5), A, B, head=5.0, hw=1.9, shaft=1.3)
+    trail = wind_lines([[(1.0, 14.5), (16.0, 15.5)], [(2.5, 18.0), (17.0, 18.0)], [(1.0, 21.5), (16.0, 20.0)]], 1.0)
+    foes = mask()
+    for (x, y) in ((6.0, 18.0), (11.5, 18.0)):
+        disc(foes, x, y - 2.0, 2.0)
+        poly(foes, [(x - 2.4, y + 4.0), (x - 1.6, y - 0.5), (x + 1.6, y - 0.5), (x + 2.4, y + 4.0)])
+    marks = mask()
+    for (x, y) in ((6.0, 17.0), (11.5, 17.0)):
+        crescent(marks, x, y, 3.6, 0.9, 200, 340)
+    back = mask()
+    crescent(back, 16.0, 13.0, 10.5, 1.8, 200, 340)
+    head = mask()
+    poly(head, [(5.0, 9.0), (8.6, 6.0), (9.4, 11.0)])
+    subject = stack(layer(trail, mix(A, WHITE, 0.4), A, None, None, axis=(1, 0)), layer(foes, (40, 56, 60), (14, 22, 26)), layer(marks, WHITE, A),
+                    layer(back, WHITE, mix(A, WHITE, 0.3)), layer(head, WHITE, mix(A, WHITE, 0.3)), *ls)
+    return finish(subject, [glow(bl, B, 1.2, 0.8), glow(lighter(trail, marks), A, 1.4, 0.8), glow(lighter(back, head), A, 1.2, 0.7)], gale_back(A, B))
+
+
+def stormlancer_drill(A, B):
+    # 템페스트 드릴: 왼쪽 아래에서 오른쪽 위로 겨눈 창 · 창을 감싸며 끝으로 갈수록 가늘어지는 바람 드릴 (감긴 띠 다섯) · 창끝 번쩍
+    ox, oy, tx, ty = 2.5, 27.5, 29.5, 4.5
+    L = math.hypot(tx - ox, ty - oy)
+    ux, uy = (tx - ox) / L, (ty - oy) / L
+    px, py = -uy, ux
+    drill = mask()
+    for k in range(6):
+        t0 = 0.18 + k * 0.13
+        t1 = t0 + 0.1
+        w0 = 7.0 * (1 - t0) + 1.0
+        w1 = 7.0 * (1 - t1) + 1.0
+        a = (ox + ux * L * t0 + px * w0, oy + uy * L * t0 + py * w0)
+        b = (ox + ux * L * t1 - px * w1, oy + uy * L * t1 - py * w1)
+        c = (ox + ux * L * (t0 + t1) / 2 + px * 0.3, oy + uy * L * (t0 + t1) / 2 + py * 0.3)
+        line(drill, [a, c, b], 1.5)
+    edge = mask()
+    for s in (1, -1):
+        line(edge, [(ox + ux * L * 0.15 + px * s * 7.2, oy + uy * L * 0.15 + py * s * 7.2), (tx - ux * 1.0, ty - uy * 1.0)], 0.7)
+    ls, bl = gale_spear((ox, oy), (tx, ty), A, B, head=5.5, hw=1.8, shaft=1.2)
+    sp = mask()
+    star(sp, tx - 0.5, ty + 0.5, 4.0, 0.18, 30)
+    subject = stack(layer(edge, mix(A, WHITE, 0.3), A, None, None), layer(drill, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.3)), *ls, layer(sp, WHITE, B))
+    return finish(subject, [glow(drill, A, 1.8, 1.0), glow(bl, B, 1.2, 0.8), glow(sp, A, 1.6, 1.0)], gale_back(A, B))
+
+
+def stormlancer_rend(A, B):
+    # 렌딩 게일: 가운데 어두운 적 몸에 비스듬히 박힌 바람 창 다섯 · 창마다 바깥으로 뽑히는 줄 · 몸 둘레 바람 소용돌이 · 아래 번쩍
+    foe = mask()
+    disc(foe, 16.0, 11.0, 3.6)
+    poly(foe, [(10.5, 27.5), (12.0, 15.0), (20.0, 15.0), (21.5, 27.5)])
+    sw = swirl_mask(16.0, 19.0, 11.5, arms=2, w=1.1, turn=1.0, rot=0.6)
+    layers, glows = [], []
+    pulls = mask()
+    for ang in (-150, -110, -60, -20, 20):
+        a = math.radians(ang)
+        tip = (16.0 + math.cos(a) * 2.0, 19.0 + math.sin(a) * 4.0)
+        tail = (16.0 + math.cos(a) * 13.0, 19.0 + math.sin(a) * 13.0)
+        ls, bl = gale_spear(tail, tip, A, B, head=3.6, hw=1.3, shaft=0.9)
+        layers += ls
+        glows.append(glow(bl, B, 1.0, 0.7))
+        line(pulls, [(16.0 + math.cos(a) * 14.0, 19.0 + math.sin(a) * 14.0), (16.0 + math.cos(a) * 16.5, 19.0 + math.sin(a) * 16.5)], 0.9)
+    subject = stack(layer(sw, mix(A, WHITE, 0.3), A, None, None), layer(foe, (44, 60, 64), (12, 18, 22)), *layers, layer(pulls, WHITE, A))
+    return finish(subject, glows + [glow(sw, A, 1.4, 0.8), glow(pulls, A, 1.2, 0.8)], gale_back(A, B))
+
+
+def stormlancer_ult(A, B):
+    # 아이 오브 더 스톰: 오른쪽에 솟은 거대한 회오리 (위로 넓어지는 띠 일곱 · 가운데 눈) · 왼쪽 아래에서 회오리 한가운데로 내지른 큰 창 · 눈의 번쩍 · 위 먹구름
+    cx = 20.0
+    tw = mask()
+    for i in range(7):
+        y = 28.5 - i * 3.7
+        rx = 2.0 + i * 1.5
+        crescent(tw, cx + math.sin(i * 1.1) * 0.8, y, rx, 1.1, 200 if i % 2 else 180, 340 if i % 2 else 360)
+    cloud = mask()
+    for (x, y, r) in ((11.0, 3.0, 3.4), (17.0, 2.0, 3.8), (24.0, 2.5, 3.6), (29.5, 3.5, 3.0)):
+        disc(cloud, x, y, r)
+    eye = swirl_mask(cx, 15.5, 4.6, arms=3, w=1.0, turn=1.2, rot=0.2)
+    ls, bl = gale_spear((1.0, 30.0), (cx - 0.5, 16.0), A, B, head=6.0, hw=2.4, shaft=1.6)
+    sp = mask()
+    star(sp, cx, 15.5, 5.4, 0.16, 20)
+    grey = (40, 70, 72)
+    subject = stack(layer(cloud, mix(grey, WHITE, 0.25), mix(grey, (0, 0, 0), 0.4), mix(grey, WHITE, 0.45), None), layer(tw, mix(A, WHITE, 0.45), A, WHITE, None),
+                    layer(eye, WHITE, A), *ls, layer(sp, WHITE, B))
+    return finish(subject, [glow(tw, A, 1.8, 1.0), glow(bl, B, 1.2, 0.8), glow(sp, A, 1.8, 1.0)], gale_back(A, B))
+
+
+# ------------------------------------------------------------ 드라군 (빛: 용의 금빛 → 진홍 — 짙은 남보라 밤 바탕 · 불은 주홍) — 2026-11-06
+
+WYRM_NIGHT = (10, 6, 22)
+EMBER = (255, 92, 26)
+EMBER_HI = (255, 220, 120)
+
+
+def wyrm_back(A, B):
+    return backdrop(mix(B, WYRM_NIGHT, 0.82), mix((60, 30, 70), B, 0.3))
+
+
+def wyrm_spear(tail, tip, A, B, head=5.0, hw=1.9, shaft=1.3):
+    """진홍 자루 · 금빛 창날 (드라군)"""
+    sh, bl = _spear(tail, tip, head, hw, shaft)
+    return [layer(sh, mix(B, WHITE, 0.25), mix(B, (0, 0, 0), 0.45)), layer(bl, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.35), axis=(0.7, 0.7))], bl
+
+
+def flame_mask(cx, base, h, w):
+    """서 있는 불꽃 (아래가 둥글고 위로 뾰족)"""
+    m = mask()
+    pts = []
+    for i in range(13):
+        t = i / 12
+        y = base - h * t
+        ww = w * (math.sin(math.pi * min(1.0, 0.15 + t * 0.95)) ** 0.8) * (1 - t * 0.85)
+        pts.append((cx + ww, y))
+    pts2 = [(cx - (x - cx), y) for (x, y) in pts[::-1]]
+    poly(m, pts + pts2)
+    return m
+
+
+def dragon_mask(cx, cy, s, dive=False):
+    """용의 혼 (앞모습 — 날개를 편 용): 몸 · 목 · 머리 · 날개 둘 · 꼬리 (s = 크기)"""
+    m = mask()
+    sg = -1 if dive else 1
+    disc(m, cx, cy, 1.6 * s)
+    line(m, [(cx, cy), (cx, cy - sg * 3.6 * s)], 1.6 * s)
+    poly(m, [(cx - 1.2 * s, cy - sg * 3.4 * s), (cx, cy - sg * 5.6 * s), (cx + 1.2 * s, cy - sg * 3.4 * s)])
+    for hs in (-1, 1):
+        line(m, [(cx + hs * 0.7 * s, cy - sg * 3.8 * s), (cx + hs * 1.8 * s, cy - sg * 4.6 * s)], 0.5 * s)
+    line(m, [(cx, cy + sg * 1.0 * s), (cx + 1.2 * s, cy + sg * 3.4 * s), (cx - 0.6 * s, cy + sg * 5.0 * s), (cx + 0.6 * s, cy + sg * 6.2 * s)], 0.9 * s)
+    for side in (-1, 1):
+        sx, sy = cx + side * 1.0 * s, cy - sg * 1.0 * s
+        lift = -1.0 if not dive else 1.0
+        wrist = (sx + side * 3.4 * s, sy + lift * 3.0 * s)
+        tips = [(sx + side * 7.4 * s, sy + lift * 4.6 * s), (sx + side * 7.8 * s, sy + lift * 1.0 * s), (sx + side * 6.4 * s, sy - lift * 2.2 * s)]
+        hip = (cx + side * 0.6 * s, cy + sg * 1.8 * s)
+        poly(m, [(sx, sy), wrist, tips[0], (sx + side * 5.6 * s, sy + lift * 2.0 * s), tips[1], (sx + side * 5.0 * s, sy - lift * 0.4 * s), tips[2],
+                 (sx + side * 3.0 * s, sy - lift * 1.8 * s), hip])
+    return m
+
+
+def dragon_bones(cx, cy, s, dive=False):
+    m = mask()
+    sg = -1 if dive else 1
+    for side in (-1, 1):
+        sx, sy = cx + side * 1.0 * s, cy - sg * 1.0 * s
+        lift = -1.0 if not dive else 1.0
+        wrist = (sx + side * 3.4 * s, sy + lift * 3.0 * s)
+        line(m, [(sx, sy), wrist], 0.45 * s)
+        for tp in ((sx + side * 7.4 * s, sy + lift * 4.6 * s), (sx + side * 7.8 * s, sy + lift * 1.0 * s), (sx + side * 6.4 * s, sy - lift * 2.2 * s)):
+            line(m, [wrist, tp], 0.3 * s)
+    line(m, [(cx, cy - sg * 4.6 * s), (cx, cy + sg * 2.0 * s)], 0.35 * s)
+    return m
+
+
+def dragoon_tail(A, B):
+    # 웜테일: 아래 둘레를 휩쓴 큰 고리 호 (자루 자국) · 위에서 거꾸로 내리꽂는 창 · 꽂힌 자리 번쩍 · 위로 띄워진 적 둘 (작은 덩이)
+    sweep = mask()
+    crescent(sweep, 16.0, 26.0, 13.5, 2.6, 160, 380)
+    foes = mask()
+    for (x, y) in ((6.0, 12.0), (26.0, 11.0)):
+        disc(foes, x, y, 1.9)
+        poly(foes, [(x - 2.0, y + 4.6), (x - 1.4, y + 0.6), (x + 1.4, y + 0.6), (x + 2.0, y + 4.6)])
+    lifts = wind_lines([[(6.0, 22.0), (6.0, 18.0)], [(26.0, 21.0), (26.0, 17.0)]], 0.8)
+    ls, bl = wyrm_spear((16.0, 1.5), (16.0, 25.5), A, B, head=6.0, hw=2.2, shaft=1.4)
+    hit = mask()
+    star(hit, 16.0, 26.5, 5.6, 0.16, 0)
+    subject = stack(layer(sweep, mix(A, WHITE, 0.35), mix(A, B, 0.4), WHITE, None, axis=(1, 0)), layer(foes, (60, 44, 60), (20, 12, 22)), layer(lifts, WHITE, A),
+                    *ls, layer(hit, WHITE, A))
+    return finish(subject, [glow(sweep, A, 1.6, 0.9), glow(bl, A, 1.2, 0.8), glow(hit, EMBER, 1.8, 1.0)], wyrm_back(A, B))
+
+
+def dragoon_jump(A, B):
+    # 하이 점프: 왼쪽 아래에서 곧장 솟구친 금빛 자취 (위로) · 하늘의 작은 용의 혼 · 오른쪽 아래 겨눈 고리로 비스듬히 내리꽂는 창 (불꽃 꼬리)
+    rise = wind_lines([[(5.0, 30.0), (5.0, 11.0)], [(2.6, 28.0), (2.6, 17.0)], [(7.4, 28.0), (7.4, 17.0)]], 0.55)
+    dg = dragon_mask(7.0, 6.0, 0.8)
+    target = mask()
+    d = ImageDraw.Draw(target)
+    d.ellipse([P(17.0, 26.0), P(31.0, 31.0)], fill=255)
+    d.ellipse([P(19.0, 27.2), P(29.0, 29.8)], fill=0)
+    trail = mask()
+    line(trail, [(9.0, 6.0), (16.0, 14.0)], 2.6)
+    line(trail, [(10.0, 9.0), (17.0, 16.5)], 1.2)
+    ls, bl = wyrm_spear((12.0, 9.5), (23.5, 27.5), A, B, head=6.0, hw=2.2, shaft=1.4)
+    hit = mask()
+    star(hit, 24.0, 28.5, 4.4, 0.18, 0)
+    subject = stack(layer(rise, WHITE, A, None, None), layer(dg, mix(A, WHITE, 0.4), A, WHITE, None), layer(trail, EMBER_HI, EMBER), layer(target, mix(A, WHITE, 0.3), A),
+                    *ls, layer(hit, WHITE, A))
+    return finish(subject, [glow(rise, A, 1.4, 0.8), glow(dg, A, 1.4, 0.9), glow(trail, EMBER, 1.6, 0.9), glow(hit, EMBER, 1.6, 1.0)], wyrm_back(A, B))
+
+
+def dragoon_impale(A, B):
+    # 임페일: 왼쪽 아래에서 위로 높이 치켜든 창 · 창끝에 꿰인 어두운 적 · 오른쪽으로 크게 휘어 땅으로 내리꽂는 화살 호 · 오른쪽 아래 땅의 충돌 (번쩍 · 금)
+    ls, bl = wyrm_spear((6.0, 30.0), (12.0, 5.0), A, B, head=5.4, hw=2.0, shaft=1.3)
+    foe = mask()
+    disc(foe, 12.6, 4.0, 2.4)
+    poly(foe, [(9.0, 12.0), (10.4, 6.0), (15.0, 6.0), (16.4, 12.0)])
+    arc = mask()
+    crescent(arc, 20.0, 16.0, 10.5, 2.0, 230, 395)
+    head = mask()
+    poly(head, [(27.0, 24.0), (31.0, 21.0), (31.0, 27.5)])
+    ground = mask()
+    poly(ground, [(14.0, 29.5), (31.5, 29.5), (31.5, 31.0), (14.0, 31.0)])
+    hit = mask()
+    star(hit, 26.0, 27.5, 5.6, 0.16, 0)
+    crack = wind_lines([[(26.0, 29.5), (21.5, 31.5)], [(26.0, 29.5), (30.5, 31.5)]], 0.8)
+    subject = stack(layer(ground, mix(B, (40, 20, 20), 0.5), mix(B, (0, 0, 0), 0.6)), layer(arc, WHITE, A, WHITE, None), layer(head, WHITE, A), *ls,
+                    layer(foe, (70, 50, 70), (24, 14, 26)), layer(crack, WHITE, EMBER), layer(hit, WHITE, EMBER))
+    return finish(subject, [glow(arc, A, 1.4, 0.8), glow(bl, A, 1.2, 0.8), glow(hit, EMBER, 2.0, 1.0)], wyrm_back(A, B))
+
+
+def dragoon_breath(A, B):
+    # 드래곤 브레스: 왼쪽 위 용의 머리 (옆모습 — 뿔 · 벌린 턱) · 입에서 오른쪽 아래로 부채꼴로 퍼지는 불길 (불꽃 혀 · 덩이) · 아래 땅의 작은 불꽃
+    head = mask()
+    poly(head, [(1.0, 6.0), (5.0, 3.0), (10.5, 4.0), (14.0, 6.6), (10.0, 8.0), (14.0, 10.0), (9.0, 11.6), (4.0, 12.0), (1.0, 10.0)])
+    horn = mask()
+    line(horn, [(5.5, 3.6), (2.0, 0.5)], 1.2)
+    line(horn, [(8.0, 3.6), (6.0, 0.4)], 1.0)
+    eye = mask()
+    disc(eye, 8.4, 5.6, 0.7)
+    fire = mask()
+    for i in range(6):
+        a = math.radians(14 + i * 9)
+        r0, r1 = 3.0, 17.0 + (i % 2) * 4.0
+        x0, y0 = 13.5 + math.cos(a) * r0, 8.6 + math.sin(a) * r0
+        x1, y1 = 13.5 + math.cos(a) * r1, 8.6 + math.sin(a) * r1
+        line(fire, [(x0, y0), (x1, y1)], 1.6 + i * 0.3)
+    blobs = mask()
+    for (x, y, r) in ((22.0, 17.0, 3.2), (27.0, 22.0, 3.6), (19.0, 22.5, 2.8), (28.0, 14.5, 2.4)):
+        disc(blobs, x, y, r)
+    hot = mask()
+    for (x, y, r) in ((21.5, 17.0, 1.6), (26.5, 22.0, 1.8)):
+        disc(hot, x, y, r)
+    small = lighter(flame_mask(10.0, 31.0, 6.0, 2.2), flame_mask(16.0, 31.0, 4.5, 1.8))
+    subject = stack(layer(fire, EMBER_HI, EMBER), layer(blobs, mix(EMBER, A, 0.5), EMBER, EMBER_HI, None), layer(hot, WHITE, EMBER_HI),
+                    layer(small, EMBER_HI, EMBER), layer(head, mix(A, WHITE, 0.3), mix(A, B, 0.45), WHITE, mix(B, (0, 0, 0), 0.4)), layer(horn, WHITE, A), layer(eye, WHITE, B))
+    return finish(subject, [glow(lighter(fire, blobs), EMBER, 2.0, 1.0), glow(head, A, 1.2, 0.7)], wyrm_back(A, B))
+
+
+def dragoon_ult(A, B):
+    # 드래곤폴: 위에서 내리꽂는 거대한 금빛 용의 혼 (머리가 아래 · 날개를 위로) · 뒤로 끌리는 불꽃 줄 · 아래 큰 충돌 (번쩍) · 양옆 불기둥
+    dg = dragon_mask(16.0, 12.0, 1.55, dive=True)
+    bones = dragon_bones(16.0, 12.0, 1.55, dive=True)
+    streaks = wind_lines([[(10.0, 0.5), (11.0, 5.0)], [(16.0, 0.0), (16.0, 3.5)], [(22.0, 0.5), (21.0, 5.0)]], 0.9)
+    ground = mask()
+    poly(ground, [(0.5, 29.5), (31.5, 29.5), (31.5, 31.5), (0.5, 31.5)])
+    hit = mask()
+    star(hit, 16.0, 26.5, 7.6, 0.14, 0)
+    star(hit, 16.0, 26.5, 4.0, 0.2, 45)
+    pillars = lighter(flame_mask(4.0, 30.0, 11.0, 2.4), flame_mask(28.0, 30.0, 11.0, 2.4), flame_mask(9.0, 30.0, 6.0, 1.8), flame_mask(23.0, 30.0, 6.0, 1.8))
+    subject = stack(layer(ground, mix(B, (40, 20, 20), 0.5), mix(B, (0, 0, 0), 0.6)), layer(pillars, EMBER_HI, EMBER, WHITE, None), layer(streaks, EMBER_HI, EMBER),
+                    layer(dg, mix(A, WHITE, 0.35), A, WHITE, mix(A, B, 0.6)), layer(bones, WHITE, mix(A, WHITE, 0.5)), layer(hit, WHITE, A))
+    return finish(subject, [glow(dg, A, 1.8, 1.0), glow(pillars, EMBER, 1.8, 1.0), glow(hit, EMBER, 2.2, 1.0)], wyrm_back(A, B))
+
+
 ICONS = {
     "swordmaster_draw": swordmaster_draw,
     "swordmaster_parry": swordmaster_parry,
@@ -2267,4 +2576,14 @@ ICONS = {
     "pierrot_balloon": pierrot_balloon,
     "pierrot_doll": pierrot_doll,
     "pierrot_ult": pierrot_ult,
+    "stormlancer_cross": stormlancer_cross,
+    "stormlancer_drive": stormlancer_drive,
+    "stormlancer_drill": stormlancer_drill,
+    "stormlancer_rend": stormlancer_rend,
+    "stormlancer_ult": stormlancer_ult,
+    "dragoon_tail": dragoon_tail,
+    "dragoon_jump": dragoon_jump,
+    "dragoon_impale": dragoon_impale,
+    "dragoon_breath": dragoon_breath,
+    "dragoon_ult": dragoon_ult,
 }

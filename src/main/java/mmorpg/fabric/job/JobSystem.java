@@ -86,6 +86,8 @@ public final class JobSystem {
         BattlearcherSkills.register(); // 0.51.0 궁수 2차 — 배틀 아처 (재설계안 2판 — 섀도 헌터 대신)
         TricksterSkills.register(); // 0.51.0 암살자 2차 — 트릭스터
         PierrotSkills.register(); // 0.51.0 암살자 2차 — 피에로 (재설계안 2판 — 블레이드 댄서 대신 광대 소환물 탱커)
+        StormlancerSkills.register(); // 0.51.0 창술사 2차 — 스톰 랜서 (2026-11-06)
+        DragoonSkills.register(); // 0.51.0 창술사 2차 — 드라군 (거리 · 연타 찌르기를 뒤집어 높이 · 내리꽂는 단타)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);

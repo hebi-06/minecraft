@@ -67,7 +67,8 @@ public final class JobTrainer {
             // 0.51.0 2차 직업 (없는 것은 1차 직업 색)
             Map.entry("swordmaster", "§6"), Map.entry("bloodknight", "§4"), Map.entry("warlord", "§6"), Map.entry("gladiator", "§c"), Map.entry("arcaneblade", "§5"),
             Map.entry("swordcaller", "§3"), Map.entry("arcmage", "§9"), Map.entry("necromancer", "§a"),
-            Map.entry("sniper", "§a"), Map.entry("battlearcher", "§b"), Map.entry("trickster", "§d"), Map.entry("pierrot", "§c"));
+            Map.entry("sniper", "§a"), Map.entry("battlearcher", "§b"), Map.entry("trickster", "§d"), Map.entry("pierrot", "§c"),
+            Map.entry("stormlancer", "§b"), Map.entry("dragoon", "§6"));
     /** 카드 그림 (직업 id → 무기 아이템) */
     private static final Map<String, ItemStack> CARD_ITEMS = new ConcurrentHashMap<>();
 

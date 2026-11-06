@@ -105,7 +105,8 @@ public final class JobsTest {
             check(near(k.total(), 12 * j.scale()) && k.cd() == 30 && Jobs.upKeys(k).isEmpty() && !k.def().has("dur"), j.id() + " stance budget " + k.total() + " = 12 × "
                     + j.scale());
         }
-        check(stanceDamage == 7, "seven slot-3 damage skills (매지션 · 마검사 · 워로드 · 글래디에이터 · 아케인 블레이드 · 네크로맨서 · 피에로) " + stanceDamage);
+        check(stanceDamage == 9, "nine slot-3 damage skills (매지션 · 마검사 · 워로드 · 글래디에이터 · 아케인 블레이드 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군) "
+                + stanceDamage);
 
         Jobs.Job sw = Jobs.job("swordsman");
         Jobs.Skill mirror = sw.skill("swordsman_mirror");
@@ -389,12 +390,13 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
         Jobs.Job gl = Jobs.job("gladiator");
-        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 12 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
+        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 14 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
         if (sm == null || bk == null || wl == null || gl == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
         check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, gl)) && Jobs.advancedOf("spellblade").size() == 2
                 && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").size() == 2
-                && Jobs.advancedOf("lancer").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 창술사는 아직)");
+                && Jobs.advancedOf("lancer").size() == 2 && Jobs.advancedOf("reaper").isEmpty() && Jobs.advancedOf("nope").isEmpty(),
+                "advancedOf (각성 · 반전 순서 — 사신부터는 아직)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == gl && Jobs.baseOf(wl) == wa && Jobs.baseOf(gl) == wa, "warrior advance");
         check(wl.display().equals("워로드") && gl.display().equals("글래디에이터") && "awaken".equals(wl.path()) && "invert".equals(gl.path()),
                 "warrior display");
@@ -477,6 +479,79 @@ public final class JobsTest {
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
         archerAdvance(Jobs.job("archer"), Jobs.job("sniper"), Jobs.job("battlearcher"));
         assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("pierrot"));
+        lancerAdvance(Jobs.job("lancer"), Jobs.job("stormlancer"), Jobs.job("dragoon"));
+    }
+
+    /**
+     * 0.51.0 창술사 2차 — 스톰 랜서 · 드라군 (재설계안 2판 — 2026-11-06 사용자 "다음 작업": 스톰 랜서 새 스킬 다섯 · 드라군은 거리 · 직선 · 연타 찌르기를 뒤집어
+     * 높이 · 광역 · 내리꽂는 단타): 부분 합 = 배율 합 (창술사와 같은 7.25 · 4.35 · 13.05 · 58 — 렌딩 게일 · 드래곤 브레스는 태세 칸 몫 12 × 1.45) · 무적 시간 띄움 ·
+     * t · w · 특성 (창끝 + 바람 4 질풍 창 / 비상 — 공중 −30% · 높이 1칸당 +5% · 최대 6칸)
+     */
+    static void lancerAdvance(Jobs.Job la, Jobs.Job sl, Jobs.Job dg) {
+        check(sl != null && dg != null, "lancer advanced jobs");
+        if (sl == null || dg == null) return;
+        check(Jobs.advance("lancer", "awaken") == sl && Jobs.advance("lancer", "invert") == dg && Jobs.baseOf(sl) == la && Jobs.baseOf(dg) == la
+                && Jobs.advancedOf("lancer").equals(List.of(sl, dg)), "lancer advance");
+        check(sl.display().equals("스톰 랜서") && dg.display().equals("드라군") && Jobs.find("스톰 랜서") == sl && Jobs.find("카리") == null && Jobs.find("드라군") == dg
+                && Jobs.find("파프니르") == null && Jobs.find("dragoon") == dg, "lancer display · find");
+        List<String> slIds = new ArrayList<>();
+        List<String> dgIds = new ArrayList<>();
+        for (Jobs.Skill k : sl.skills()) slIds.add(k.id());
+        for (Jobs.Skill k : dg.skills()) dgIds.add(k.id());
+        check(slIds.equals(List.of("stormlancer_cross", "stormlancer_drive", "stormlancer_drill", "stormlancer_rend", "stormlancer_ult"))
+                && dgIds.equals(List.of("dragoon_tail", "dragoon_jump", "dragoon_impale", "dragoon_breath", "dragoon_ult")), "lancer advanced skill ids");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(sl.skill(i).total(), la.skill(i).total()) && near(dg.skill(i).total(), la.skill(i).total()), "lancer totals slot " + i);
+        Jobs.Skill sc = sl.skill(0), sd = sl.skill(1), sr = sl.skill(2), sn = sl.skill(3), su = sl.skill(4);
+        Jobs.Skill dt = dg.skill(0), dj = dg.skill(1), di = dg.skill(2), db = dg.skill(3), du = dg.skill(4);
+        check(near(sc.num("gust", 0) * 2 + sc.num("cross", 0), 7.25) && near(sd.num("pass", 0) + sd.num("lance", 0), 4.35)
+                && near(sr.num("grind", 0) * sr.num("grinds", 0) + sr.num("burst", 0), 13.05) && near(su.num("pulse", 0) * su.num("pulses", 0) + su.num("final", 0), 58),
+                "storm lancer totals 7.25 (2 + 2 + 3.25) · 4.35 · 13.05 (3 × 3 + 4.05) · 58 (6 × 5 + 28)");
+        check(near(dt.num("sweep", 0) + dt.num("slam", 0), 7.25) && near(dj.total(), 4.35) && near(di.num("skewer", 0) + di.num("slam", 0), 13.05)
+                && near(du.num("impact", 0) + du.num("pillars", 0), 58) && near(du.num("outer", 0), 0.6), "dragoon totals 7.25 · 4.35 · 13.05 · 58 (40 + 18)");
+        // 렌딩 게일 · 드래곤 브레스 = 태세 칸 몫 (30초 12 × 창술사 세기 1.45) · 직업 맞춤에서 뺌
+        check(Jobs.stanceBudget(sn) && Jobs.stanceBudget(db) && near(sn.total(), 12 * la.scale()) && near(db.total(), 12 * la.scale())
+                && near(sn.num("spear", 0) * sn.num("spears", 0), sn.total()) && near(db.num("breath", 0), db.total()), "렌딩 게일 · 드래곤 브레스 17.4 (태세 칸 몫)");
+        // 초당 피해: 둘 다 1차 × 1.2
+        check(near(Jobs.advanceDps(sl), 1.2) && near(Jobs.advanceDps(dg), 1.2) && near(dps(sl) / dps(la), 1.2, 0.005) && near(dps(dg) / dps(la), 1.2, 0.005),
+                "storm lancer · dragoon dps = lancer × 1.2");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (크로스 게일 둘째 바람 창은 서버가 첫째 뒤 10틱으로 미룸 · 터짐은 그 뒤 10틱 — 바람 창이 창끝까지 날아가는 틱 (45칸/초) 을 더해, 게일 드라이브 되찌르기는 뛰어든 뒤
+        // — 지나간 벰과 10틱이 안 되면 서버가 미룸, 드릴 · 폭풍의 눈은 10틱마다, 웜테일 · 임페일 · 드래곤폴은 두 번째 피해가 10틱 넘게 뒤)
+        check(sc.num("crossAt", 0) - sc.num("thrustA", 0) >= 20 + sc.num("focus", 0) / 45 * 20 && sd.num("gap", 0) + sd.num("stabAt", 0) > sd.num("steps", 0)
+                && sr.num("every", 0) >= 10 && sr.num("burstAt", 0) - sr.num("first", 0) - (sr.num("grinds", 0) - 1) * sr.num("every", 0) >= 10
+                && su.num("every", 0) >= 10 && su.num("finalAt", 0) - su.num("first", 0) - (su.num("pulses", 0) - 1) * su.num("every", 0) >= 10, "storm lancer i-frame spacing");
+        check(dt.num("slamAt", 0) - dt.num("sweepAt", 0) >= 10 && di.num("slamAt", 0) - di.num("skewerAt", 0) >= 10 && du.num("pillarsAt", 0) - du.num("impactAt", 0) >= 10,
+                "dragoon i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 다시 누르는 스킬은 12틱마다 다시 누름)
+        check(near(sc.num("crossAt", 0), sc.num("t", 0)) && near(12 + sd.num("stabAt", 0), sd.num("t", 0))
+                && near(sr.num("burstAt", 0), sr.num("t", 0)) && near(sr.num("first", 0), sr.num("w", 0)) && near(12 + sn.num("ripAt", 0), sn.num("t", 0))
+                && near(sn.num("w", -1), 0) && near(su.num("finalAt", 0), su.num("t", 0)) && near(su.num("first", 0), su.num("w", 0)), "storm lancer t 26 · 14 · 36 · 14 · 70");
+        check(near(dt.num("slamAt", 0), dt.num("t", 0)) && near(dt.num("sweepAt", 0), dt.num("w", 0)) && near(12 + dj.num("diveTicks", 0), dj.num("t", 0))
+                && near(dj.num("gap", 0) + dj.num("diveTicks", 0), dj.num("w", 0)) && near(di.num("slamAt", 0), di.num("t", 0)) && near(di.num("skewerAt", 0), di.num("w", 0))
+                && near(db.num("breathAt", 0), db.num("t", 0)) && near(db.num("breathAt", 0), db.num("w", 0)) && near(du.num("pillarsAt", 0), du.num("t", 0))
+                && near(du.num("impactAt", 0), du.num("w", 0)) && du.num("diveAt", 0) > du.num("hideAt", 0) && du.num("hideAt", 0) > du.num("soarAt", 0),
+                "dragoon t 18 · 17 · 20 · 14 · 56 (w 6 · 15 · 6 · 14 · 46)");
+        // 특성: 스톰 랜서 = 창술사의 창끝 (같은 끝자락 +15% · 밀쳐냄 · 기세) + 바람 4 질풍 창, 드라군 = 비상 (공중 −30% · 높이 1칸당 +5% · 최대 6칸)
+        for (String key : new String[] {"edge", "edgeBonus", "push", "momentum", "momentumFor"}) {
+            check(near(sl.trait().def().numOr(key, -1), la.trait().def().numOr(key, -2)), "창끝 " + key + " = 1차");
+        }
+        check(sl.trait().name().equals(la.trait().name()) && sl.trait().max() == 4 && near(sl.trait().def().numOr("gust", 0), 8)
+                && near(sl.trait().def().numOr("gustHit", 0), 0.6) && sl.trait().def().numOr("gustDelay", 0) >= 10 && near(sl.trait().def().numOr("windFor", 0), 120),
+                "창끝 바람 4 · 질풍 창 8칸 · 위력 × 0.6");
+        check(dg.trait().name().equals("비상") && dg.trait().max() == 6 && near(dg.trait().def().numOr("air", 0), 0.3) && near(dg.trait().def().numOr("perBlock", 0), 0.05)
+                && near(dg.trait().def().numOr("maxBlocks", 0), 6), "비상 공중 −30% · 1칸당 +5% · 최대 6칸");
+        // 유틸 · 범위: 크로스 게일 · 게일 드라이브 · 템페스트 드릴 · 하이 점프 좁은 범위, 나머지 넓음
+        check("narrow".equals(Jobs.areaKind(sc)) && "narrow".equals(Jobs.areaKind(sd)) && "narrow".equals(Jobs.areaKind(sr)) && Jobs.areaKind(sn) == null
+                && Jobs.areaKind(su) == null && Jobs.utils(sc).isEmpty() && Jobs.utils(sd).equals(List.of("leap", "knock")) && Jobs.utils(sr).equals(List.of("pull", "knock"))
+                && Jobs.utils(sn).isEmpty() && Jobs.utils(su).equals(List.of("pull", "lift")), "storm lancer utils · area");
+        check(Jobs.areaKind(dt) == null && "narrow".equals(Jobs.areaKind(dj)) && Jobs.areaKind(di) == null && Jobs.areaKind(db) == null && Jobs.areaKind(du) == null
+                && Jobs.utils(dt).equals(List.of("lift")) && Jobs.utils(dj).equals(List.of("leap")) && Jobs.utils(di).equals(List.of("stun05"))
+                && Jobs.utils(db).equals(List.of("knock")) && Jobs.utils(du).equals(List.of("lift")), "dragoon utils · area");
+        check(Jobs.windupTicks(sc) == 0 && Jobs.windupTicks(sd) == 0 && Jobs.windupTicks(sr) == 6 && Jobs.windupTicks(sn) == 0 && Jobs.windupTicks(su) == 14
+                && Jobs.windupTicks(dt) == 6 && Jobs.windupTicks(dj) == 15 && Jobs.windupTicks(di) == 6 && Jobs.windupTicks(db) == 14 && Jobs.windupTicks(du) == 46,
+                "windups 0 · 0 · 6 · 0 · 14 / 6 · 15 · 6 · 14 · 46");
+        check(Jobs.skillLine(sc).startsWith("크로스 게일 · 6초 · 배율 ") && Jobs.skillLine(dg.skill(4)).startsWith("드래곤폴 · 60초 · 배율 "), "lancer advanced skill line");
+        check(sl.color()[0][1] > 0.95 && sl.color()[0][0] < 0.5 && sl.color()[1][2] > 0.9 && dg.color()[0][0] > 0.95 && dg.color()[0][1] > 0.7 && dg.color()[0][2] < 0.3
+                && dg.color()[1][0] > 0.6 && dg.color()[1][1] < 0.2, "colors: jade wind · white / dragon gold · crimson");
     }
 
     /**

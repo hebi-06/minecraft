@@ -1555,4 +1555,49 @@ final class JobFx {
     }
 
     static final int RIBBON = 8;
+
+    // ------------------------------------------------------------ 0.51.0 창술사 2차 그림 (tools/job_fx_art_adv.py — 2026-11-06: 스톰 랜서 · 드라군)
+
+    /** 장 수: 바람 소용돌이 · 용의 혼 · 불꽃 덩이 */
+    static final int SWIRL = 8;
+    static final int DRAGON = 8;
+    static final int FIRE = 8;
+
+    /**
+     * 바람 소용돌이 (rfx_jswirl — 카메라를 봄): 0 번쩍 → 1 펼쳐짐 → 2 ~ 5 세 갈래 바람 팔 → 6 풀림 → 7 흩어짐, 한 번 (life 초). 도는 빠르기 spinRate (없으면 600 도/초).
+     * 팔 끝 반지름 약 size × 0.86 칸
+     */
+    static void swirl(ServerLevel level, Vec3 at, double size, double life, Opt o, double[] glow, double[] core) {
+        cells(level, "jswirl", SWIRL, 0, SWIRL, at, life, 0, false, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360, "spinRate",
+                o.num("spinRate", 600), "fade", o.num("fade", 0.25)), glow, core);
+    }
+
+    /** 이어 도는 바람 소용돌이 (rfx_jswirl 2 ~ 5 — 이어 돌림): 폭풍의 눈 · 드릴 · 감긴 바람 */
+    static void swirlLoop(ServerLevel level, Vec3 at, double size, double life, Opt o, double[] glow, double[] core) {
+        cells(level, "jswirl", SWIRL, 2, 4, at, life, 12, true, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360, "spinRate",
+                o.num("spinRate", 600), "fade", o.num("fade", 0.2)), glow, core);
+    }
+
+    /**
+     * 용의 혼 (rfx_jdragon — 카메라를 봄, 앞뒤가 같은 꼴): 0 생겨남 · 1 다 생김 · 2 ~ 5 날갯짓 (loop 면 이어 돌림) · 6 포효 (머리 위 불) · 7 내리꽂음 (머리가 아래).
+     * from · count = 그릴 장, 가슴 at · 날개 끝 사이 약 size × 1.7 칸 (그림 칸 448 의 반 크기 size)
+     */
+    static void dragon(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(DRAGON - 1, from));
+        int n = Math.max(1, Math.min(DRAGON - f, count));
+        // 그림의 가슴 (224, 238) 은 칸 가운데보다 14 점 아래 → 가운데를 그만큼 위로
+        cells(level, "jdragon", DRAGON, f, n, V.up(at, size * 14 / 224.0), life, loop ? 10 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), glow, core);
+    }
+
+    /** 불꽃 덩이 (rfx_jfire — 카메라를 봄, 위 = 솟는 쪽): 0 불붙음 → 1 ~ 3 부풀어 오름 → 4 ~ 6 흩어짐 → 7 불티, 한 번. 지름 약 size × 1.6 칸 */
+    static void fire(ServerLevel level, Vec3 at, double size, double life, Opt o, double[] glow, double[] core) {
+        cells(level, "jfire", FIRE, 0, FIRE, at, life, 0, false, o.with("size", size, "fade", o.num("fade", 0.2)), glow, core);
+    }
+
+    /** 땅에서 솟는 회오리 (rfx_jtwister — 세워 카메라 쪽으로 돎, 이어 돌림): 아래 끝 ground · 높이 약 height 칸 (몸에 붙지 않는 twister) */
+    static void twisterAt(ServerLevel level, Vec3 ground, double height, Jobs.Job j, double life, Opt o) {
+        Vec3 c = V.up(ground, height * 0.6 - 0.2);
+        double a = o.num("alpha", 1);
+        loop(level, "jtwister2", TWISTER, c, life, 22, o.with("size", height * 0.34, "alpha", a, "coreAlpha", a * 0.85, "fade", o.num("fade", 0.3)), outer(j), inner(j));
+    }
 }

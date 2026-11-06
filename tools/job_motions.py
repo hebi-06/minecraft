@@ -29,6 +29,7 @@ import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (아케인 블레
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
 import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 배틀 아처 — 재설계안 2판)
 import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 피에로 — 재설계안 2판)
+import job_motions_j  # noqa: E402,F401 — 0.51.0 2차 직업 (스톰 랜서 · 드라군 — 2026-11-06)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -108,6 +109,13 @@ AIR = {
     # 걸음 다리를 끔. 섀도 스와프 · 사우전드 팬텀 · 와일드파이어 피스트의 순간 이동은 한 틱
     "jb_trickster_dash": [],
     "jb_pierrot_spring": [],
+    # 0.51.0 스톰 랜서 · 드라군 (2026-11-06): 게일 드라이브 (0 ~ 5 바람을 타고 내달림 — 제 다리) · 드라군의 뜀 · 내리꽂음 (다리를 job_motions_j 에서 직접) 은
+    # 걸음 다리를 끔
+    "jb_stormlancer_drive": [],
+    "jb_dragoon_tail": [],
+    "jb_dragoon_jump": [],
+    "jb_dragoon_jump_dive": [],
+    "jb_dragoon_ult": [],
 }
 
 
