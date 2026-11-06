@@ -27,26 +27,26 @@ def fpw_thrust(dx=0.0, dy=0.04):
 
 # ------------------------------------------------------------ 스톰 랜서 (창 — 옥빛 바람 · 흰빛)
 
-# 크로스 게일 (효과: 2 왼쪽으로 비껴 찌름 → 6 오른쪽으로 비껴 찌름 → 두 바람이 앞에서 엇갈려 소용돌이 → 22 터짐). 터지는 틱에 창끝으로 엇갈린 자리를 가리키며 홱 비틂
-m = Motion("stormlancer_cross", 26, "크로스 게일 — 창을 허리로 당겼다가 왼쪽 앞으로 비껴 찌르고, 곧바로 되당겨 오른쪽 앞으로 비껴 찌름 → 창끝으로 엇갈린 자리를 겨눈 채 버티다가 "
+# 크로스 게일 (효과: 2 왼쪽으로 비껴 찌름 → 6 오른쪽으로 비껴 찌름 → 두 바람이 앞에서 엇갈려 소용돌이 → 26 터짐). 터지는 틱에 창끝으로 엇갈린 자리를 가리키며 홱 비틂
+m = Motion("stormlancer_cross", 30, "크로스 게일 — 창을 허리로 당겼다가 왼쪽 앞으로 비껴 찌르고, 곧바로 되당겨 오른쪽 앞으로 비껴 찌름 → 창끝으로 엇갈린 자리를 겨눈 채 버티다가 "
            "터지는 순간 창을 홱 비틀어 당김", fade=(0.03, 0.1))
 keyp(m, 0.8, P(STORM_PULL, body=[10, 26, 0]), "out3")
 keyp(m, 2.0, thrust_pose(-0.2, 0.04), "out3")
 keyp(m, 4.2, P(STORM_PULL, body=[12, 10, 0]), "in")
 keyp(m, 6.0, thrust_pose(0.22, 0.04), "out3")
 keyp(m, 9.0, P(thrust_pose(0.04, 0.04, 0.6), root=[-0.2, 0.2]))
-keyp(m, 18.0, P(thrust_pose(0.0, 0.06, 0.5), root=[-0.2, 0.18]), "inout")
-keyp(m, 20.6, P(COIL, body=[8, 24, 0], root=[-0.26, -0.04]), "out3")
-keyp(m, 22.0, thrust_pose(0.0, 0.05, 1.2), "out3")
-keyp(m, 25.6, READY_L)
+keyp(m, 22.0, P(thrust_pose(0.0, 0.06, 0.5), root=[-0.2, 0.18]), "inout")
+keyp(m, 24.6, P(COIL, body=[8, 24, 0], root=[-0.26, -0.04]), "out3")
+keyp(m, 26.0, thrust_pose(0.0, 0.05, 1.2), "out3")
+keyp(m, 29.6, READY_L)
 fpw(m, 0.8, FPW_PULL, "out3")
 fpw(m, 2.0, fpw_thrust(-0.2, 0.04), "out3")
 fpw(m, 4.2, FPW_PULL, "in")
 fpw(m, 6.0, fpw_thrust(0.22, 0.04), "out3")
-fpw(m, 18.0, fpw_thrust(0.0, 0.06), "inout")
-fpw(m, 20.6, dict(p=(0.05, 0.05, 0.6), blade=(-0.1, 0.05, 1), edge=(0, -1, 0)), "out3")
-fpw(m, 22.0, fpw_thrust(0.0, 0.05), "out3")
-fpw(m, 25.6, FPW_LOW)
+fpw(m, 22.0, fpw_thrust(0.0, 0.06), "inout")
+fpw(m, 24.6, dict(p=(0.05, 0.05, 0.6), blade=(-0.1, 0.05, 1), edge=(0, -1, 0)), "out3")
+fpw(m, 26.0, fpw_thrust(0.0, 0.05), "out3")
+fpw(m, 29.6, FPW_LOW)
 use_skill(m, "stormlancer_cross")
 
 # 게일 드라이브 (효과: 0 ~ 5 보는 쪽 6칸을 꿰뚫고 지나감 — 다시 누르면 :back). 창을 옆구리에 끼고 숙여 내달렸다가 미끄러지며 멈춤 (몸이 뜨지 않음 — 제 다리로)
