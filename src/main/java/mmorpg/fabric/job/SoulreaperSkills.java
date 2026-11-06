@@ -264,9 +264,11 @@ final class SoulreaperSkills {
             Vec3 from = V.add(b, dir, 0.35 + pad);
             JobFx.line(level, from, V.add(from, dir, s * (0.7 + 0.8 * u)), SOUL, SOUL_CORE, 0.22, vel);
         }
-        JobFx.burst(level, b, (0.9 + 0.5 * u) * s, SHADE, SOUL, 0.2, vel.with("alpha", 0.7));
-        JobFx.soul(level, V.add(b, new Vec3(Kit.rand() - 0.5, 0.5, Kit.rand() - 0.5), 0.5 + pad), 0.2 + 0.12 * u, j, 0.5, Opt.of("dir", V.UP, "speed", 1.6));
-        JobFx.smoke(level, b, (0.9 + 0.5 * u) * s, SHADE, SOUL, 0.4, vel.with("alpha", 0.6));
+        JobFx.burst(level, b, (1.1 + 0.6 * u) * s, SHADE, SOUL, 0.2, vel.with("alpha", 0.85));
+        JobFx.soul(level, V.add(b, new Vec3(Kit.rand() - 0.5, 0.5, Kit.rand() - 0.5), 0.5 + pad), 0.24 + 0.14 * u, j, 0.5, Opt.of("dir", V.UP, "speed", 1.6));
+        JobFx.smoke(level, b, (1.2 + 0.6 * u) * s, SHADE, SOUL, 0.4, vel.with("alpha", 0.8));
+        // 2026-11-06 영상 2: 갈라짐이 아직 옅었음 → 발밑의 검푸른 고리 (적이 사로잡힘)
+        JobFx.halo(level, V.up(e.position(), 0.06), 0.9 + pad + 0.4 * u, j, 0.25, vel.with("alpha", 0.8));
     }
 
     // ------------------------------------------------------------ 바운티풀 하베스트
@@ -362,6 +364,8 @@ final class SoulreaperSkills {
             }
             held.clear();
         });
+        // 낫을 뽑음 (뜯어낸 피해가 무적 시간으로 미뤄진 것까지 흡혈 두 배 — 2틱 뒤): 느려짐 · 흡혈을 풂 (JobTraits12.tick 은 4틱마다라 늦을 수 있음)
+        RuneKit.later(ripAt + 2, () -> JobTraits12.harvestOff(sp));
         SkillFx.play(level0, "entity.warden.dig", c0, 1.3, 0.5);
         return true;
     }

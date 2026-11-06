@@ -243,6 +243,16 @@ public final class JobTraits12 {
 
     // ------------------------------------------------------------ 소울 리퍼 바운티풀 하베스트 · 랜턴 오브 소울즈
 
+    /** 바운티풀 하베스트가 끝남 (낫을 뽑음 — 뜯어낸 뒤): 흡혈 · 느려짐을 풂 */
+    static void harvestOff(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        if (st != null) {
+            st.harvestUntil = 0;
+            st.harvestLeech = 1;
+        }
+        slowMod(sp, 0);
+    }
+
     /** 바운티풀 하베스트: ticks 틱 동안 흡혈 × leech · 이동 속도 − slow (몫) */
     static void harvestOn(ServerPlayer sp, int ticks, double slow, double leech) {
         State st = of(sp);
@@ -324,6 +334,11 @@ public final class JobTraits12 {
             // 보다 넉넉히 — 숫자는 실제로 깎인 양 (LivingEntityMixin)
             e.setInvulnerableTime(0);
             Kit.applyJobDamage(sp, e, (e.getHealth() + e.getAbsorptionAmount()) * 1.25 + 2, true, Kit.Cause.MAGIC, DamageNumbers.Style.JOB_BIG, JobKit.grad(j));
+            if (e.isAlive() && !e.isRemoved()) {
+                // CI 42161452175: 무적 시간을 지워도 차이만 들어가 남은 체력이 있었음 (82 / 1024) → 마저 쓰러뜨림 (죽음 처리 · 전리품 · 처치는 쓴 사람 — 방금 맞힌 사람)
+                e.setHealth(0F);
+                e.die(sp.damageSources().playerAttack(sp));
+            }
         } finally {
             inner = false;
         }
