@@ -166,6 +166,12 @@ public final class JobTraits12 {
         track(sp, e, j);
     }
 
+    /** 시험: 지금 처형 기준 (엑시큐셔너가 아니면 0) */
+    public static double thresholdOf(ServerPlayer sp) {
+        Jobs.Job j = jobIf(sp, EX);
+        return j == null ? 0 : threshold(sp, j);
+    }
+
     /** 처형 기준 (체력 몫): 특성 execute · 원 라스트 데이 동안 그 스킬의 execute */
     static double threshold(ServerPlayer sp, Jobs.Job j) {
         double base = trait(j, "execute", 0.15);
@@ -310,7 +316,10 @@ public final class JobTraits12 {
         double h = e.getBbHeight();
         inner = true;
         try {
-            Kit.applyJobDamage(sp, e, e.getHealth() + 1, true, Kit.Cause.ATTACK, DamageNumbers.Style.JOB_BIG, JobKit.grad(j));
+            // 방금 맞은 무적 시간 (바닐라는 그 사이의 더 큰 피해를 차이만큼만 넣음 — 남은 체력이 다 깎이지 않았음) 을 지우고, 마법 (방어구 무시) 으로 남은 체력 (흡수 포함)
+            // 보다 넉넉히 — 숫자는 실제로 깎인 양 (LivingEntityMixin)
+            e.invulnerableTime = 0;
+            Kit.applyJobDamage(sp, e, (e.getHealth() + e.getAbsorptionAmount()) * 1.25 + 2, true, Kit.Cause.MAGIC, DamageNumbers.Style.JOB_BIG, JobKit.grad(j));
         } finally {
             inner = false;
         }

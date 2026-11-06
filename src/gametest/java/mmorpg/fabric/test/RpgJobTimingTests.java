@@ -335,4 +335,21 @@ public final class RpgJobTimingTests {
     public void timingDragoon(GameTestHelper h) {
         probe(h, "dragoon");
     }
+
+    /**
+     * 0.51.0 2차 직업 — 사신 각성 소울 리퍼 (2026-11-06: 리핑 크레센트 4 · 14, 엄브럴 트레스패스 몸속 → 18, 바운티풀 하베스트 10 ~ 40 → 50, 랜턴 오브 소울즈 사슬 8 ~ 152 (영혼
+     * 15 에서 해방 — 망령이 그 사이에 박힘), 페일 하베스트 20 · 30 → 46)
+     */
+    @GameTest(environment = "mmorpg:jt_sr", maxTicks = 2400)
+    public void timingSoulreaper(GameTestHelper h) {
+        probe(h, "soulreaper");
+    }
+
+    /**
+     * 0.51.0 2차 직업 — 사신 반전 엑시큐셔너 (컨뎀 6, 섀도 스토크 8 (건너편에 내려섬), 길로틴 22, 비포 선셋 — 10 순간 이동 → 12 · 22 (과녁이 쓰러지지 않아 다시 쓰기 없음))
+     */
+    @GameTest(environment = "mmorpg:jt_ex", maxTicks = 2400)
+    public void timingExecutioner(GameTestHelper h) {
+        probe(h, "executioner");
+    }
 }

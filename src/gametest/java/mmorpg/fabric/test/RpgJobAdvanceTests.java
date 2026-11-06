@@ -19,6 +19,7 @@ import mmorpg.fabric.job.JobTrainer;
 import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits10;
 import mmorpg.fabric.job.JobTraits11;
+import mmorpg.fabric.job.JobTraits12;
 import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraits5;
 import mmorpg.fabric.job.JobTraits6;
@@ -105,6 +106,8 @@ public final class RpgJobAdvanceTests {
     static final String ENV_PI = "mmorpg:job_pi"; // 2026-11-06 피에로 (블레이드 댄서 대신 — job_pr 은 사제)
     static final String ENV_SL = "mmorpg:job_sl"; // 2026-11-06 스톰 랜서
     static final String ENV_DG = "mmorpg:job_dg"; // 2026-11-06 드라군
+    static final String ENV_SR = "mmorpg:job_sr"; // 2026-11-06 소울 리퍼
+    static final String ENV_EX = "mmorpg:job_ex"; // 2026-11-06 엑시큐셔너
 
     /** 넓은 돌 바닥 (그라니의 질주가 비스듬히 내달릴 땅) */
     static void floor(GameTestHelper h) {
@@ -303,7 +306,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("dragoon".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
                     && JobSystem.job(sp).display().equals("드라군"), "dragoon free from the first job: " + JobSystem.jobOf(sp));
-            // 사신의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            // 0.51.0 사신의 2차 전직 (소울 리퍼 · 엑시큐셔너 — 2026-11-06) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("reaper"), null);
@@ -311,7 +314,25 @@ public final class RpgJobAdvanceTests {
             h.assertTrue("reaper".equals(JobSystem.jobOf(sp)), "changed to reaper: " + JobSystem.jobOf(sp));
             JobTrainer.open(sp, () -> done[0]++);
             FormNet.ChestPayload re = chest(sp);
-            h.assertTrue(re != null && re.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "reaper: 2차 전직 dim (준비 중)");
+            h.assertTrue(re != null && re.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "reaper: 2차 전직 open");
+            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
+            FormNet.ChestPayload readv = chest(sp);
+            h.assertTrue(readv != null && readv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("소울 리퍼")
+                    && readv.slots().get(JobTrainer.INVERT_SLOT).name().contains("엑시큐셔너"), "reaper advance cards");
+            Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
+            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "reaper advance confirm");
+            Forms.answer(sp, 11, null);
+            h.assertTrue("executioner".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
+                    && JobSystem.job(sp).display().equals("엑시큐셔너"), "executioner free from the first job: " + JobSystem.jobOf(sp));
+            // 성기사의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            Wallet.set(sp, Economy.Kind.SILVER, 300);
+            JobTrainer.open(sp, () -> done[0]++);
+            Forms.answer(sp, JobTrainer.slotOf("paladin"), null);
+            Forms.answer(sp, 11, null);
+            h.assertTrue("paladin".equals(JobSystem.jobOf(sp)), "changed to paladin: " + JobSystem.jobOf(sp));
+            JobTrainer.open(sp, () -> done[0]++);
+            FormNet.ChestPayload pa = chest(sp);
+            h.assertTrue(pa != null && pa.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "paladin: 2차 전직 dim (준비 중)");
             Forms.answer(sp, -1, null);
         } finally {
             JobUpgrades.set(sp, "swordsman_moon", 0);
@@ -2305,6 +2326,344 @@ public final class RpgJobAdvanceTests {
             RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);
             for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 소울 리퍼 — 2026-11-06
+
+    @GameTest(environment = ENV_SR, maxTicks = 900)
+    public void soulreaperSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "soulreaper", Map.of("dex", 50, "int", 30), 50);
+        Weapon w = Weapons.weaponFrom("scythe", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("soulreaper");
+        List<Husk> z = new ArrayList<>();
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        double[] mark = {0, 0};
+        // 리핑 크레센트: 앞 3.5칸을 내달려 4 · 14 둘레 3.4칸을 벰 (3.125 × 2) — 맞힌 적마다 영혼 +1
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            z.add(dummy(h, 0, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits3.setSouls(sp, 0);
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 0), "리핑 크레센트 cast");
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.125);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "리핑 크레센트 첫 바퀴 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - mark[0] > 2.5, "dashed forward: " + (sp.position().z - mark[0]));
+            h.assertTrue(JobTraits3.souls(sp) == 1, "job hit → soul +1: " + JobTraits3.souls(sp));
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.25);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "리핑 크레센트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.souls(sp) == 2, "two job hits → 2 souls: " + JobTraits3.souls(sp));
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "soul reaper gradient number");
+            // 영혼 해방: 영혼 14 에서 직업 스킬이 맞으면 15 → 망령 여섯이 둘레 8칸 적 (가까운 순) 에게 나눠 박힘 (위력 × 0.6 씩) · 체력 10% 회복 · 영혼 0
+            z.get(0).discard();
+            home(h, sp);
+            z.set(0, dummy(h, 0, 2.5));
+            z.add(dummy(h, -6.0, 0.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            JobSkills.resetCooldowns(sp);
+            JobTraits3.setSouls(sp, 14);
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[1] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 0), "리핑 크레센트 (영혼 14) cast");
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            h.assertTrue(JobTraits3.souls(sp) == 0, "15 souls → released (0): " + JobTraits3.souls(sp));
+            h.assertTrue(sp.getHealth() - mark[1] >= sp.getMaxHealth() * 0.1 - 0.01, "release heals 10%: " + (sp.getHealth() - mark[1]));
+        }));
+        steps.add(new RpgJobTests.Step(20, () -> {
+            double g = JobSystem.power(sp, j) * 0.6 * 3 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), g), "망령 셋 (먼 과녁) " + TestDummies.dealt(z.get(1)) + " vs " + g);
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 엄브럴 트레스패스: 4칸 앞 과녁에 스며들어 (2틱) 몸속에 숨음 (받는 피해 없음 · 보이지 않음 · 따라 붙음) → 18 건너편으로 찢고 나오며 3.75 · 체력 6% 회복
+            home(h, sp);
+            z.add(dummy(h, 0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits3.setSouls(sp, 0);
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[1] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 1), "엄브럴 트레스패스 cast");
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            h.assertTrue(sp.hasEffect(MobEffects.INVISIBILITY) && JobTraits3.ghost(sp), "inside the target: invisible · no damage taken");
+            h.assertTrue(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) == 1, "inside: damage blocked");
+            h.assertTrue(sp.position().distanceTo(z.get(0).position()) < 1.2, "rides inside the target: " + sp.position().distanceTo(z.get(0).position()));
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before bursting out");
+        }));
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 3.75);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "엄브럴 트레스패스 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - z.get(0).position().z > 0.8, "burst out on the far side: " + (sp.position().z - z.get(0).position().z));
+            h.assertTrue(!sp.hasEffect(MobEffects.INVISIBILITY), "visible again");
+            h.assertTrue(sp.getHealth() - mark[1] >= sp.getMaxHealth() * 0.06 - 0.01, "trespass heals 6%: " + (sp.getHealth() - mark[1]));
+            z.get(0).discard();
+            z.clear();
+            // 바운티풀 하베스트: 둘레 6칸 과녁 둘에 영혼 줄 — 10 · 20 · 30 · 40 빨아들임 1.0 → 50 뜯어냄 4.0 (= 8) · 그동안 흡혈 두 배 · 느려짐
+            home(h, sp);
+            z.add(dummy(h, 0, 3.0));
+            z.add(dummy(h, 3.0, 1.5));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            JobTraits3.setSouls(sp, 0);
+            mark[0] = sp.getAttribute(Attributes.MOVEMENT_SPEED).getValue();
+            h.assertTrue(JobSkills.press(sp, 2), "바운티풀 하베스트 cast");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            h.assertTrue(JobTraits12.harvesting(sp), "harvesting (channel)");
+            double now = sp.getAttribute(Attributes.MOVEMENT_SPEED).getValue();
+            h.assertTrue(now < mark[0] * 0.6, "slowed while harvesting: " + now + " vs " + mark[0]);
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 1.0);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "하베스트 첫 빨아들임 " + TestDummies.dealt(x) + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(42, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 8.0);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "바운티풀 하베스트 " + TestDummies.dealt(x) + " vs " + want);
+            h.assertTrue(!JobTraits12.harvesting(sp), "harvest over");
+            double now = sp.getAttribute(Attributes.MOVEMENT_SPEED).getValue();
+            h.assertTrue(now > mark[0] * 0.95, "speed back: " + now + " vs " + mark[0]);
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 랜턴 오브 소울즈 (태세 칸 몫): 8 · 24 · 40 … 사슬 (1.5) — 가장 오래 안 낚은 적부터 차례로 · 밀 수 있는 적은 끌려옴
+            home(h, sp);
+            z.add(dummy(h, 0, 3.0));
+            Husk loose = dummy(h, 0, 5.5);
+            loose.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0);
+            z.add(loose);
+            RpgJobTests.clearStrays(h, z.get(0), loose);
+            JobTraits3.setSouls(sp, 0);
+            mark[1] = loose.position().z;
+            h.assertTrue(JobSkills.press(sp, 3), "랜턴 오브 소울즈 cast");
+        }));
+        steps.add(new RpgJobTests.Step(43, () -> {
+            h.assertTrue(JobTraits12.lanternUp(sp), "the lantern floats");
+            double one = RpgJobTests.expected(sp, j, j.skill(3), 1.5);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), one * 2), "등불 사슬 (가까운 과녁 — 8 · 40) " + TestDummies.dealt(z.get(0)) + " vs " + one * 2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), one), "등불 사슬 (먼 과녁 — 24) " + TestDummies.dealt(z.get(1)) + " vs " + one);
+            h.assertTrue(mark[1] - z.get(1).position().z > 0.4, "the loose target was pulled in: " + (mark[1] - z.get(1).position().z));
+            JobSystem.setJob(sp, "soulreaper");
+            h.assertTrue(!JobTraits12.lanternUp(sp), "job reset puts the lantern out");
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 페일 하베스트: 20 · 30 둘레 9칸 휩쓸기 14 (적 하나당 체력 2% 회복) → 46 둘레 6칸 내리꽂기 22
+            home(h, sp);
+            z.add(dummy(h, 0, 3.0));
+            z.add(dummy(h, 0, 7.5));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            JobTraits3.setSouls(sp, 0);
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[1] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 4), "페일 하베스트 cast");
+        }));
+        steps.add(new RpgJobTests.Step(24, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 14);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "페일 하베스트 첫 휩쓸기 " + TestDummies.dealt(x) + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 28);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "페일 하베스트 휩쓸기 둘 " + TestDummies.dealt(x) + " vs " + want);
+            h.assertTrue(sp.getHealth() - mark[1] >= sp.getMaxHealth() * 0.08 - 0.05, "sweeps heal 2% per target: " + (sp.getHealth() - mark[1]));
+        }));
+        steps.add(new RpgJobTests.Step(16, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 50);
+            double outer = RpgJobTests.expected(sp, j, j.skill(4), 28);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "페일 하베스트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), outer), "outside the slam (7.5) " + TestDummies.dealt(z.get(1)) + " vs " + outer);
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 엑시큐셔너 — 2026-11-06
+
+    /** 쓰러질 수 있는 과녁 (최대 체력 1024 · 체력 hp · 방어 0 · 밀려나지 않음) */
+    static Husk mortal(GameTestHelper h, double dx, double dz, float hp) {
+        Husk m = h.spawnWithNoFreeWill(EntityTypes.HUSK, (float) (4.5 + dx), 2F, (float) (1.5 + dz));
+        m.setNoAi(true);
+        m.setSilent(true);
+        m.getAttribute(Attributes.ARMOR).setBaseValue(0);
+        m.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(1.0);
+        m.getAttribute(Attributes.MAX_HEALTH).setBaseValue(1024);
+        m.setHealth(hp);
+        return m;
+    }
+
+    @GameTest(environment = ENV_EX, maxTicks = 900)
+    public void executionerSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "executioner", Map.of("dex", 50, "int", 30), 50);
+        Weapon w = Weapons.weaponFrom("scythe", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("executioner");
+        List<Husk> z = new ArrayList<>();
+        Husk[] mob = {null};
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        double[] mark = {0, 0, 0};
+        // 컨뎀: 6 앞 4.5칸 적 하나를 벰 (6.25) — 둘레 3칸에 다른 적이 없으면 +50% · 잃은 체력 10% 마다 +5% (처형 덤) → 선고 표식
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            z.add(dummy(h, 0, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            h.assertTrue(Math.abs(JobTraits12.thresholdOf(sp) - 0.15) < 1e-9, "처형 기준 15%: " + JobTraits12.thresholdOf(sp));
+            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 cast");
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> z.get(0).setHealth(512F))); // 잃은 체력 50% → 처형 덤 +25%
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.25 * 1.5 * 1.25);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "컨뎀 (고립 · 잃은 체력 50%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits12.condemned(sp, z.get(0)), "condemned (skull mark)");
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "executioner gradient number");
+            // 선고 표식 +10% · 곁에 다른 적이 있으면 고립 덤 없음
+            z.add(dummy(h, 1.5, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            mark[0] = TestDummies.dealt(z.get(0));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 (곁에 적) cast");
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.25 * 1.1);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[0], want), "컨뎀 (선고 +10% · 고립 아님) " + (TestDummies.dealt(z.get(0)) - mark[0]) + " vs "
+                    + want);
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 처형: 체력 15% 아래 (보스 아님) 는 한 방에 쓰러짐 → 그 스킬의 재사용 대기 초기화
+            home(h, sp);
+            mob[0] = mortal(h, 0, 2.5, 140F);
+            RpgJobTests.clearStrays(h, mob[0]);
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 (처형) cast");
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            h.assertTrue(!mob[0].isAlive(), "executed");
+            h.assertTrue(JobSkills.cooldownLeft(sp, "executioner_condemn") == 0, "kill → condemn cooldown reset: " + JobSkills.cooldownLeft(sp, "executioner_condemn"));
+            mob[0].discard();
+            // 섀도 스토크: 4칸 앞 과녁의 건너편으로 뛰어듦 (돌아섬) → 8 등을 벰 3.75 → 다음 직업 스킬 +20%
+            home(h, sp);
+            z.add(dummy(h, 0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            mark[0] = z.get(0).position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "섀도 스토크 cast");
+        }));
+        steps.add(new RpgJobTests.Step(11, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 3.75);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "섀도 스토크 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - mark[0] > 0.8, "landed behind the target: " + (sp.position().z - mark[0]));
+            h.assertTrue(Math.abs(net.minecraft.util.Mth.wrapDegrees(sp.getYRot() - 180F)) < 45F, "turned toward the target: " + sp.getYRot());
+            h.assertTrue(JobTraits12.stalkPending(sp), "next job skill +20% waiting");
+            mark[1] = TestDummies.dealt(z.get(0));
+            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 (섀도 스토크 뒤) cast");
+        }));
+        steps.add(new RpgJobTests.Step(9, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.25 * 1.5 * 1.2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[1], want), "컨뎀 (+20% · 고립) " + (TestDummies.dealt(z.get(0)) - mark[1]) + " vs " + want);
+            h.assertTrue(!JobTraits12.stalkPending(sp), "stalk bonus used");
+            z.get(0).discard();
+            z.clear();
+            // 길로틴: 5칸 앞 과녁 머리 위에 단두대 날 → 22 내리침 8 × (1 + 잃은 체력 × 0.5) × 처형 덤
+            home(h, sp);
+            z.add(dummy(h, 0, 5.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 2), "길로틴 cast");
+        }));
+        steps.add(new RpgJobTests.Step(20, () -> {
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before the drop");
+            z.get(0).setHealth(512F);
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 8 * 1.25 * 1.25);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "길로틴 (잃은 체력 50%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            z.get(0).discard();
+            z.clear();
+            // 원 라스트 데이: 10초 처형 기준 25% · 처형마다 3초 이동 속도 +20% · 다른 직업 스킬 재사용 대기 2초 (자기는 그대로)
+            home(h, sp);
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 3), "원 라스트 데이 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "executioner_lastday") && Math.abs(JobTraits12.thresholdOf(sp) - 0.25) < 1e-9, "처형 기준 25%: "
+                    + JobTraits12.thresholdOf(sp));
+            z.add(dummy(h, 0, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 (재사용 대기를 걸어 둠) cast");
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            z.get(0).discard();
+            z.clear();
+            mob[0] = mortal(h, 0, 4.0, 240F);
+            RpgJobTests.clearStrays(h, mob[0]);
+            home(h, sp);
+            mark[0] = JobSkills.cooldownLeft(sp, "executioner_condemn");
+            mark[1] = JobSkills.cooldownLeft(sp, "executioner_lastday");
+            mark[2] = sp.getAttribute(Attributes.MOVEMENT_SPEED).getValue();
+            h.assertTrue(JobSkills.press(sp, 1), "섀도 스토크 (처형 23%) cast");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            h.assertTrue(!mob[0].isAlive(), "executed under 25%");
+            double c = JobSkills.cooldownLeft(sp, "executioner_condemn");
+            double l = JobSkills.cooldownLeft(sp, "executioner_lastday");
+            h.assertTrue(c <= mark[0] - 12 - 40 + 2, "other cooldowns −2 s: " + c + " (was " + mark[0] + ")");
+            h.assertTrue(l >= mark[1] - 12 - 2, "not its own: " + l + " (was " + mark[1] + ")");
+            h.assertTrue(JobSkills.cooldownLeft(sp, "executioner_stalk") == 0, "kill → stalk cooldown reset");
+            h.assertTrue(sp.getAttribute(Attributes.MOVEMENT_SPEED).getValue() > mark[2] * 1.1, "haste after the execution");
+            mob[0].discard();
+            JobSystem.setJob(sp, "executioner");
+            h.assertTrue(!JobTraits.stanceOn(sp, "executioner_lastday") && Math.abs(JobTraits12.thresholdOf(sp) - 0.15) < 1e-9, "job reset ends the last day");
+            // 비포 선셋: 6칸 앞 과녁에 X 표식 → 10 순간 이동 → 12 · 22 X 자로 벰 (둘레 3칸 25 × 2) — 쓰러뜨리지 않으면 재사용 대기
+            home(h, sp);
+            z.add(dummy(h, 0, 6.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 4), "비포 선셋 cast");
+        }));
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 25);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "비포 선셋 첫 획 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().distanceTo(z.get(0).position()) < 2.2, "blinked to the mark: " + sp.position().distanceTo(z.get(0).position()));
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 50);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "비포 선셋 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!JobRecast.pending(sp, "executioner_ult") && JobSkills.cooldownLeft(sp, "executioner_ult") > 0, "no kill → cooldown");
+            z.get(0).discard();
+            z.clear();
+            // 쓰러뜨리면 10초 안에 다시 쓸 수 있음
+            home(h, sp);
+            mob[0] = mortal(h, 0, 6.0, 100F);
+            RpgJobTests.clearStrays(h, mob[0]);
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 4), "비포 선셋 (처형) cast");
+        }));
+        steps.add(new RpgJobTests.Step(16, () -> {
+            h.assertTrue(!mob[0].isAlive(), "executed by the stroke");
+            h.assertTrue(JobRecast.pending(sp, "executioner_ult") && JobSkills.cooldownLeft(sp, "executioner_ult") == 0, "kill → recast window");
+            mob[0].discard();
+            home(h, sp);
+            z.add(dummy(h, 0, 5.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            h.assertTrue(JobSkills.press(sp, 4), "비포 선셋 recast");
+        }));
+        steps.add(new RpgJobTests.Step(26, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 50);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "비포 선셋 (다시) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!JobRecast.pending(sp, "executioner_ult") && JobSkills.cooldownLeft(sp, "executioner_ult") > 0, "recast without a kill → cooldown");
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
+            if (mob[0] != null) mob[0].discard();
             RpgGearTests.done(h, sp);
         });
     }
