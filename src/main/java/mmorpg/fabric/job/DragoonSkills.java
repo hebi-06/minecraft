@@ -577,11 +577,12 @@ final class DragoonSkills {
                 JobFx.glint(lv, V.up(dest, 0.4), 0.6 + 0.6 * u, DRAGON_GLOW, DRAGON_CORE, 0.22, Opt.empty());
                 if ((tt - hideAt) % 8 == 0) JobFx.fire(lv, V.up(dest, 0.6), 0.6 + 0.4 * u, 0.4, Opt.empty(), FIRE_GLOW, FIRE_CORE);
                 if ((tt - hideAt) % 12 == 0) SkillFx.play(lv, "entity.ender_dragon.flap", dest, 0.9, 0.8);
-                // 2026-11-06 영상 1: 하늘에 있는 동안 (1초) 화면이 빈 하늘 · 먼 땅뿐이었음 → 표식 자리를 위에서 내리비추는 불빛 기둥 · 내 앞에서 날갯짓하는 붉은 용
+                // 2026-11-06 영상 1: 하늘에 있는 동안 (1초) 화면이 빈 하늘 · 먼 땅뿐이었음 → 표식 자리를 위에서 내리비추는 불빛 기둥 · 내 앞 아래에서 날갯짓하는 붉은 용
+                // (영상 2: 발 높이 앞 2.6칸이면 3인칭 카메라 위로 꼬리만 보였음 → 발보다 1.5칸 아래 — 땅의 표식으로 날아가는 꼴)
                 JobFx.spotlight(lv, dest, 4 + 8 * u, 0.24, Opt.of("alpha", 0.55 + 0.3 * u), FIRE_GLOW, FIRE_CORE);
                 if (tt >= hideAt && tt < diveAt) {
                     Vec3 ff = Kit.facingOf(sp);
-                    JobFx.dragon(lv, V.up(V.add(sp.position(), ff, 2.6), 0.6), 3.0, 2, 4, 0.24, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.9,
+                    JobFx.dragon(lv, V.up(V.add(sp.position(), ff, 2.6), -1.5), 3.0, 2, 4, 0.24, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.9,
                             "solo", 70.0), DRAGON_GLOW, DRAGON_CORE);
                 }
             });
