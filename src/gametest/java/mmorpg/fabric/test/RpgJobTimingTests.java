@@ -352,4 +352,22 @@ public final class RpgJobTimingTests {
     public void timingExecutioner(GameTestHelper h) {
         probe(h, "executioner");
     }
+
+    /**
+     * 2026-11-06 2차 직업 — 성기사 각성 썬더로드 (아크 스매시 6 · 16 (갈래 — 다른 적이 없어 그 과녁에 다시 내리꽂힘), 썬더스텝 6 (벼락으로 내리꽂힘), 스톰 스파이어
+     * 16 · 26, 던브레이커 10 · 30 · 46 — 썬더헤드는 피해 없는 태세)
+     */
+    @GameTest(environment = "mmorpg:jt_tl", maxTicks = 2400)
+    public void timingThunderlord(GameTestHelper h) {
+        probe(h, "thunderlord");
+    }
+
+    /**
+     * 2026-11-06 2차 직업 — 성기사 반전 타이런트 (필리지 8, 섀클 볼트 10 (4 ~ 10 끌려감), 킹스 그립 10 · 20 · 30 · 40 (과녁은 밀 수 없어 들지 않음), 스톨른 썬더
+     * 10 · 20 · 30 · 44 — 빼앗은 힘이 쌓여 들어간 피해는 쓴 때의 배율 이상)
+     */
+    @GameTest(environment = "mmorpg:jt_ty", maxTicks = 2400)
+    public void timingTyrant(GameTestHelper h) {
+        probe(h, "tyrant");
+    }
 }

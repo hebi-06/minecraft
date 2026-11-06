@@ -20,7 +20,9 @@ import mmorpg.fabric.job.JobTraits;
 import mmorpg.fabric.job.JobTraits10;
 import mmorpg.fabric.job.JobTraits11;
 import mmorpg.fabric.job.JobTraits12;
+import mmorpg.fabric.job.JobTraits13;
 import mmorpg.fabric.job.JobTraits3;
+import mmorpg.fabric.job.JobTraits4;
 import mmorpg.fabric.job.JobTraits5;
 import mmorpg.fabric.job.JobTraits6;
 import mmorpg.fabric.job.JobTraits7;
@@ -108,6 +110,8 @@ public final class RpgJobAdvanceTests {
     static final String ENV_DG = "mmorpg:job_dg"; // 2026-11-06 드라군
     static final String ENV_SR = "mmorpg:job_sr"; // 2026-11-06 소울 리퍼
     static final String ENV_EX = "mmorpg:job_ex"; // 2026-11-06 엑시큐셔너
+    static final String ENV_TL = "mmorpg:job_tl"; // 2026-11-06 썬더로드
+    static final String ENV_TY = "mmorpg:job_ty"; // 2026-11-06 타이런트
 
     /** 넓은 돌 바닥 (그라니의 질주가 비스듬히 내달릴 땅) */
     static void floor(GameTestHelper h) {
@@ -324,7 +328,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("executioner".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
                     && JobSystem.job(sp).display().equals("엑시큐셔너"), "executioner free from the first job: " + JobSystem.jobOf(sp));
-            // 성기사의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            // 0.51.0 성기사의 2차 전직 (썬더로드 · 타이런트 — 2026-11-06) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("paladin"), null);
@@ -332,7 +336,25 @@ public final class RpgJobAdvanceTests {
             h.assertTrue("paladin".equals(JobSystem.jobOf(sp)), "changed to paladin: " + JobSystem.jobOf(sp));
             JobTrainer.open(sp, () -> done[0]++);
             FormNet.ChestPayload pa = chest(sp);
-            h.assertTrue(pa != null && pa.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "paladin: 2차 전직 dim (준비 중)");
+            h.assertTrue(pa != null && pa.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "paladin: 2차 전직 open");
+            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
+            FormNet.ChestPayload padv = chest(sp);
+            h.assertTrue(padv != null && padv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("썬더로드")
+                    && padv.slots().get(JobTrainer.INVERT_SLOT).name().contains("타이런트"), "paladin advance cards");
+            Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
+            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "paladin advance confirm");
+            Forms.answer(sp, 11, null);
+            h.assertTrue("thunderlord".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
+                    && JobSystem.job(sp).display().equals("썬더로드"), "thunderlord free from the first job: " + JobSystem.jobOf(sp));
+            // 사제의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            Wallet.set(sp, Economy.Kind.SILVER, 300);
+            JobTrainer.open(sp, () -> done[0]++);
+            Forms.answer(sp, JobTrainer.slotOf("priest"), null);
+            Forms.answer(sp, 11, null);
+            h.assertTrue("priest".equals(JobSystem.jobOf(sp)), "changed to priest: " + JobSystem.jobOf(sp));
+            JobTrainer.open(sp, () -> done[0]++);
+            FormNet.ChestPayload pr = chest(sp);
+            h.assertTrue(pr != null && pr.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "priest: 2차 전직 dim (준비 중)");
             Forms.answer(sp, -1, null);
         } finally {
             JobUpgrades.set(sp, "swordsman_moon", 0);
@@ -2673,6 +2695,307 @@ public final class RpgJobAdvanceTests {
             RpgJobTests.cleanup(sp);
             for (Husk x : z) x.discard();
             if (mob[0] != null) mob[0].discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 썬더로드 — 2026-11-06
+
+    @GameTest(environment = ENV_TL, maxTicks = 700)
+    public void thunderlordSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "thunderlord", Map.of("vit", 50, "str", 30), 50);
+        Weapon w = Weapons.weaponFrom("hammer", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("thunderlord");
+        List<Husk> z = new ArrayList<>();
+        ServerPlayer[] ally = {null};
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        double[] mark = {0, 0};
+        // 심판의 벼락: 다섯째 심판 → 기절 · 둘레 6칸의 다른 적에게 갈라져 튐 (위력 × 0.8 · 기절) · 나 (와 둘레 아군) 보호막 4% — 수호 오라 −8% (성기사 −5%)
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            z.add(dummy(h, 0, 2.0));
+            z.add(dummy(h, 2.5, 3.5));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            h.assertTrue(Math.abs(JobTraits4.auraFor(sp) - 0.08) < 1e-9, "guard aura 8%: " + JobTraits4.auraFor(sp));
+            JobTraits4.setJudges(sp, z.get(0), 4);
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 0 && z.get(0).hasEffect(MobEffects.SLOWNESS), "5th judgement → verdict (stunned): "
+                    + JobTraits4.judges(sp, z.get(0)));
+            h.assertTrue(Math.abs(RpgHealth.shieldOf(sp) - RpgHealth.maxOf(sp) * 0.04) < 1e-6, "verdict shield 4%: " + RpgHealth.shieldOf(sp));
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            double want = JobSystem.power(sp, j) * 0.8 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), want), "verdict fork (other foe) " + TestDummies.dealt(z.get(1)) + " vs " + want);
+            h.assertTrue(z.get(1).hasEffect(MobEffects.SLOWNESS), "the fork stuns");
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 아크 스매시: 6 앞 3.5칸 (120°) 휩쓸기 2.5 (가까운 과녁 기절) → 16 맞은 과녁마다 다른 과녁에게 갈라져 튐 3.0 (적마다 하나) — 과녁마다 심판 +2
+            home(h, sp);
+            z.add(dummy(h, 0, 2.0));
+            z.add(dummy(h, 1.6, 2.4));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            h.assertTrue(JobSkills.press(sp, 0), "아크 스매시 cast");
+        }));
+        steps.add(new RpgJobTests.Step(9, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 2.5);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "아크 스매시 휩쓸기 " + TestDummies.dealt(x) + " vs " + want);
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "the nearest swept foe is stunned");
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "thunderlord gradient number");
+        }));
+        steps.add(new RpgJobTests.Step(9, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 5.5);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "아크 스매시 (갈래) " + TestDummies.dealt(x) + " vs " + want);
+            for (Husk x : z) h.assertTrue(JobTraits4.judges(sp, x) == 2, "sweep + fork → 2 judgements: " + JobTraits4.judges(sp, x));
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 썬더스텝: 6칸 앞 과녁 — 번개가 되어 사라짐 (6틱 — 받는 피해 없음 · 보이지 않음) → 그 과녁 앞에 내리꽂힘 3.3 (narrow) · 기절 · 보호막 10%
+            home(h, sp);
+            z.add(dummy(h, 0, 6.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "썬더스텝 cast");
+        }));
+        steps.add(new RpgJobTests.Step(3, () -> {
+            h.assertTrue(JobTraits13.guarded(sp) && sp.hasEffect(MobEffects.INVISIBILITY), "vanished as lightning: no damage taken · invisible");
+            h.assertTrue(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) == 1, "lightning body: damage blocked");
+            h.assertTrue(Math.abs(sp.position().z - mark[0]) < 0.3, "held in place while vanished: " + (sp.position().z - mark[0]));
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 3.3);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "썬더스텝 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().z - mark[0] > 3.0 && z.get(0).position().z - sp.position().z < 2.6, "struck down in front of the target: "
+                    + (sp.position().z - mark[0]) + " · " + (z.get(0).position().z - sp.position().z));
+            h.assertTrue(!sp.hasEffect(MobEffects.INVISIBILITY), "visible again");
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "the strike stuns");
+            h.assertTrue(RpgHealth.shieldOf(sp) >= RpgHealth.maxOf(sp) * 0.1 - 1e-6, "step shield 10%: " + RpgHealth.shieldOf(sp));
+            z.get(0).discard();
+            z.clear();
+            // 스톰 스파이어: 5칸 앞 과녁의 발밑 — 16 번개 기둥 (둘레 3.5칸 6.6 · 기절 · 심판 +2) → 26 번개 물결 (둘레 6칸 3.3) — 기둥 밖 (4칸) 과녁은 물결만
+            home(h, sp);
+            z.add(dummy(h, 0, 5.0));
+            z.add(dummy(h, 4.0, 5.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            h.assertTrue(JobSkills.press(sp, 2), "스톰 스파이어 cast");
+        }));
+        steps.add(new RpgJobTests.Step(18, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 6.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스톰 스파이어 기둥 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(TestDummies.dealt(z.get(1)) == 0, "outside the pillar (4): " + TestDummies.dealt(z.get(1)));
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "the pillar stuns");
+            h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 2, "pillar → 2 judgements: " + JobTraits4.judges(sp, z.get(0)));
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 9.9);
+            double wave = RpgJobTests.expected(sp, j, j.skill(2), 3.3);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스톰 스파이어 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), wave), "번개 물결 (4칸) " + TestDummies.dealt(z.get(1)) + " vs " + wave);
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 썬더헤드: 10초 태세 (밀려나지 않음) — 망치 평타마다 먹구름 벼락 (평타 × 0.5 더 · 심판 +1 더) · 맞으면 둘레 아군 보호막 3% · 네 번째 평타마다 번개 고리 (기절)
+            home(h, sp);
+            z.add(dummy(h, 0, 2.0));
+            z.add(dummy(h, 2.0, 2.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            ally[0] = RpgJobTests.allyAt(h, sp, 2, -1);
+            h.assertTrue(JobSkills.press(sp, 3), "썬더헤드 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "thunderlord_head") && RpgCombat.isSteadfast(sp), "thunderhead: stance · steadfast");
+            mark[1] = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[1] * 1.5), "cloud bolt adds 50%: " + TestDummies.dealt(z.get(0)) + " vs " + mark[1] * 1.5);
+            h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 2, "hammer hit under the cloud → 2 judgements: " + JobTraits4.judges(sp, z.get(0)));
+            sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F);
+        }));
+        steps.add(new RpgJobTests.Step(3, () -> h.assertTrue(Math.abs(RpgHealth.shieldOf(ally[0]) - RpgHealth.maxOf(ally[0]) * 0.03) < 1e-6,
+                "hit under the cloud → allies shield 3%: " + RpgHealth.shieldOf(ally[0]))));
+        steps.add(new RpgJobTests.Step(11, () -> sp.attack(z.get(0))));
+        steps.add(new RpgJobTests.Step(14, () -> sp.attack(z.get(0)))); // 다섯째 심판 → 벼락 (곁의 과녁에게 갈라짐 — 기절 10틱)
+        steps.add(new RpgJobTests.Step(14, () -> {
+            h.assertTrue(!z.get(1).hasEffect(MobEffects.SLOWNESS), "the fork stun wore off");
+            sp.attack(z.get(0));
+            h.assertTrue(z.get(1).hasEffect(MobEffects.SLOWNESS), "4th hit → lightning ring stuns the one beside");
+            JobSystem.setJob(sp, "thunderlord");
+            h.assertTrue(!JobTraits.stanceOn(sp, "thunderlord_head"), "job reset ends the thunderhead");
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 던브레이커: 10 번개 사슬 (둘레 10칸 8 · 묶음) → 30 새벽 (12 · 돌로 굳음 · 나와 아군 2초 받는 피해 없음) → 46 돌이 깨짐 (24)
+            home(h, sp);
+            z.add(dummy(h, 0, 3.0));
+            z.add(dummy(h, -4.0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 4), "던브레이커 cast");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 8);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "던브레이커 사슬 " + TestDummies.dealt(x) + " vs " + want);
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "chained (rooted)");
+        }));
+        steps.add(new RpgJobTests.Step(20, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 20);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "던브레이커 새벽 " + TestDummies.dealt(x) + " vs " + want);
+            h.assertTrue(JobTraits13.guarded(sp) && JobTraits13.guarded(ally[0]), "light's grace on me and the ally");
+            h.assertTrue(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) == 1, "grace: damage blocked");
+        }));
+        steps.add(new RpgJobTests.Step(16, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 44);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "던브레이커 " + TestDummies.dealt(x) + " vs " + want);
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgJobTests.bye(h, ally[0]);
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 타이런트 — 2026-11-06
+
+    /** 타이런트: 빼앗은 힘 p 일 때의 스킬 피해 (지금 힘의 배율을 빼고 p 의 배율 — 힘은 맞힌 뒤에 늘어남) */
+    static double tyrantHit(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double mult, int p) {
+        return RpgJobTests.expected(sp, j, k, mult) / JobTraits13.powerMult(sp) * (1 + p * 0.03);
+    }
+
+    @GameTest(environment = ENV_TY, maxTicks = 900)
+    public void tyrantSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "tyrant", Map.of("vit", 50, "str", 30), 50);
+        Weapon w = Weapons.weaponFrom("hammer", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("tyrant");
+        List<Husk> z = new ArrayList<>();
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        double[] mark = {0, 0, 0};
+        // 강탈: 망치 평타가 힘 1 을 빼앗음 — 주는 피해 +3% · 받는 피해 −2% · 몸 크기 +2% · 빼앗긴 적은 주는 피해 −3% · 수호 오라 없음 (1차와 거꾸로)
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            z.add(dummy(h, 0, 2.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            h.assertTrue(JobTraits4.auraFor(sp) == 0, "tyrant: no guard aura");
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits13.power(sp) == 1, "hammer hit steals 1: " + JobTraits13.power(sp));
+            h.assertTrue(Math.abs(JobTraits13.powerMult(sp) - 1.03) < 1e-9, "dealt +3%: " + JobTraits13.powerMult(sp));
+            h.assertTrue(Math.abs(JobTraits13.scaleOf(sp) - 1.02) < 1e-6, "body +2%: " + JobTraits13.scaleOf(sp));
+            h.assertTrue(Math.abs(JobTraits13.robbedOf(z.get(0)) - 0.03) < 1e-9, "robbed foe deals −3%: " + JobTraits13.robbedOf(z.get(0)));
+            h.assertTrue(Math.abs(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) - 0.02) < 1e-9, "taken −2%: "
+                    + RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))));
+            z.get(0).discard();
+            z.clear();
+            // 필리지: 8 앞 4.5칸 적 하나를 내려침 5.5 (single) → 힘 2
+            home(h, sp);
+            z.add(dummy(h, 0, 2.5));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits13.setPower(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 0), "필리지 cast");
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = tyrantHit(sp, j, j.skill(0), 5.5, 0);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "필리지 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits13.power(sp) == 2, "pillage steals 2: " + JobTraits13.power(sp));
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "tyrant gradient number");
+            z.get(0).discard();
+            z.clear();
+            // 섀클 볼트: 6칸 앞 과녁에 사슬 (4 감음) → 끌려가 10 어깨로 들이받음 3.3 (힘 2 — × 1.06) · 기절 → 힘 3
+            home(h, sp);
+            z.add(dummy(h, 0, 6.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "섀클 볼트 cast");
+        }));
+        steps.add(new RpgJobTests.Step(3, () -> h.assertTrue(Math.abs(sp.position().z - mark[0]) < 0.3, "held until the chain latches: " + (sp.position().z - mark[0]))));
+        steps.add(new RpgJobTests.Step(9, () -> {
+            double want = tyrantHit(sp, j, j.skill(1), 3.3, 2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "섀클 볼트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().distanceTo(z.get(0).position()) < 2.6, "dragged to the target: " + sp.position().distanceTo(z.get(0).position()));
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "the ram stuns");
+            h.assertTrue(JobTraits13.power(sp) == 3, "shackle steals 1: " + JobTraits13.power(sp));
+            z.get(0).discard();
+            z.clear();
+            // 킹스 그립: 4칸 앞 (밀 수 있는) 과녁을 움켜쥐어 들어 올림 (6) → 10 · 20 · 30 쥐어짬 1.65 (힘 +1씩 · 준 피해의 30% 회복) → 40 내 앞 땅에 내리꽂음 4.95
+            home(h, sp);
+            Husk loose = dummy(h, 0, 4.0);
+            loose.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0);
+            z.add(loose);
+            RpgJobTests.clearStrays(h, loose);
+            JobTraits13.setPower(sp, 0);
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[0] = loose.getY();
+            mark[1] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 2), "킹스 그립 cast");
+        }));
+        steps.add(new RpgJobTests.Step(16, () -> {
+            h.assertTrue(z.get(0).getY() - mark[0] > 0.9, "lifted in the giant hand: " + (z.get(0).getY() - mark[0]));
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "gripped (rooted)");
+        }));
+        steps.add(new RpgJobTests.Step(26, () -> {
+            double sq = tyrantHit(sp, j, j.skill(2), 1.65, 0) + tyrantHit(sp, j, j.skill(2), 1.65, 1) + tyrantHit(sp, j, j.skill(2), 1.65, 2);
+            double want = sq + tyrantHit(sp, j, j.skill(2), 4.95, 3);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "킹스 그립 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits13.power(sp) == 3, "three squeezes steal 3: " + JobTraits13.power(sp));
+            h.assertTrue(z.get(0).getY() - mark[0] < 0.3 && sp.position().distanceTo(z.get(0).position()) < 3.2, "slammed down in front of me: "
+                    + (z.get(0).getY() - mark[0]) + " · " + sp.position().distanceTo(z.get(0).position()));
+            h.assertTrue(sp.getHealth() - mark[1] >= sq * 0.3 - 0.05, "squeezes heal 30%: " + (sp.getHealth() - mark[1]) + " vs " + sq * 0.3);
+            z.get(0).discard();
+            z.clear();
+            // 콜로서스: 10초 태세 — 몸 +30% · 받는 피해 −10% (힘 몫에 더함) · 빼앗는 힘 두 배 · 밀려나지 않음 · 손이 닿는 거리 +1
+            home(h, sp);
+            z.add(dummy(h, 0, 2.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits13.setPower(sp, 2);
+            h.assertTrue(JobSkills.press(sp, 3), "콜로서스 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "tyrant_colossus") && RpgCombat.isSteadfast(sp), "colossus: stance · steadfast");
+            h.assertTrue(Math.abs(JobTraits13.scaleOf(sp) - 1.34) < 1e-6, "body 1 + 0.04 + 0.3: " + JobTraits13.scaleOf(sp));
+            h.assertTrue(Math.abs(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) - 0.14) < 1e-9, "taken −(4% + 10%): "
+                    + RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))));
+            h.assertTrue(Math.abs(JobTraits.reachBonus(sp) - 1.0) < 1e-9, "reach +1: " + JobTraits.reachBonus(sp));
+            sp.attack(z.get(0));
+            h.assertTrue(JobTraits13.power(sp) == 4, "colossus doubles the steal (2 → 4): " + JobTraits13.power(sp));
+            JobSystem.setJob(sp, "tyrant");
+            h.assertTrue(!JobTraits.stanceOn(sp, "tyrant_colossus") && JobTraits13.power(sp) == 0 && Math.abs(JobTraits13.scaleOf(sp) - 1.0) < 1e-6
+                    && JobTraits.reachBonus(sp) == 0, "job reset: stance off · power 0 · size and reach back");
+            z.get(0).discard();
+            z.clear();
+            // 스톨른 썬더: 둘레 10칸 적의 힘을 빨아들임 (10 · 20 · 30 — 4 · 힘 +1 · 최대 체력 1% 회복 · 몸이 자라남) → 32 겨눈 적 앞으로 뛰어올라 44 내려침 (둘레 3칸 32)
+            home(h, sp);
+            z.add(dummy(h, 0, 6.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobSkills.resetCooldowns(sp);
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[1] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 4), "스톨른 썬더 cast");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = tyrantHit(sp, j, j.skill(4), 4, 0);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스톨른 썬더 첫 빨아들임 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits13.power(sp) == 1, "drain steals 1: " + JobTraits13.power(sp));
+        }));
+        steps.add(new RpgJobTests.Step(20, () -> {
+            double want = tyrantHit(sp, j, j.skill(4), 4, 0) + tyrantHit(sp, j, j.skill(4), 4, 1) + tyrantHit(sp, j, j.skill(4), 4, 2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스톨른 썬더 빨아들임 셋 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits13.power(sp) == 3, "three drains steal 3: " + JobTraits13.power(sp));
+            h.assertTrue(JobTraits13.scaleOf(sp) > 1.5, "the giant grows while draining: " + JobTraits13.scaleOf(sp));
+            h.assertTrue(sp.getHealth() - mark[1] >= sp.getMaxHealth() * 0.03 - 0.05, "drains heal 1% each: " + (sp.getHealth() - mark[1]));
+        }));
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double want = tyrantHit(sp, j, j.skill(4), 4, 0) + tyrantHit(sp, j, j.skill(4), 4, 1) + tyrantHit(sp, j, j.skill(4), 4, 2)
+                    + tyrantHit(sp, j, j.skill(4), 32, 3);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스톨른 썬더 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().distanceTo(z.get(0).position()) < 2.6, "leapt to the target: " + sp.position().distanceTo(z.get(0).position()));
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            h.assertTrue(Math.abs(JobTraits13.scaleOf(sp) - 1.06) < 1e-6, "after the slam: body back to the stolen power (1 + 3 × 0.02): " + JobTraits13.scaleOf(sp));
+            // 빼앗은 힘은 8초 동안 늘지 않으면 1초에 하나씩 사라짐
+            JobTraits13.setPower(sp, 3);
+        }));
+        steps.add(new RpgJobTests.Step(172, () -> h.assertTrue(JobTraits13.power(sp) == 2, "power fades after 8 s (one per second): " + JobTraits13.power(sp))));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });
     }

@@ -335,6 +335,27 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {2, 6, 10, 12, 16, 22, 26, 38, 48, 58}, new int[] {10, 22, 48}, 72, false),
     };
 
+    /**
+     * 2026-11-06 썬더로드 · 타이런트: 아크 스매시 (6 휩쓸기 → 16 갈래 — 과녁마다 심판 3 이라 벼락 · 갈라지는 벼락 · 보호막) · 썬더스텝 (사라짐 → 6 벼락으로 내리꽂힘) ·
+     * 스톰 스파이어 (먹구름 · 조여 드는 고리 → 16 번개 기둥 → 26 물결) · 썬더헤드 (태세 — 평타에 먹구름 벼락) · 던브레이커 (10 사슬 → 30 새벽 · 돌 → 46 깨짐) /
+     * 필리지 (8 내려침) · 섀클 볼트 (4 감음 → 10 들이받음) · 킹스 그립 (6 움켜쥠 → 10 · 20 · 30 쥐어짬 → 40 내리꽂음) · 콜로서스 (태세 — 거대해짐 · 왕관) ·
+     * 스톨른 썬더 (10 · 20 · 30 빨아들임 → 32 뛰어오름 → 44 내려침) — 타이런트는 힘 4 에서
+     */
+    private static final Case[] CASES_TL = {
+        new Case(0, new int[] {2, 6, 10, 16, 18}, new int[] {6, 16}, 28, false),
+        new Case(1, new int[] {1, 3, 6, 8, 12}, new int[] {3, 6}, 24, false),
+        new Case(2, new int[] {4, 10, 14, 16, 20, 26, 28}, new int[] {16, 26}, 40, false),
+        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 24, true),
+        new Case(4, new int[] {4, 10, 14, 20, 30, 34, 40, 46, 50}, new int[] {10, 30, 46}, 66, false),
+    };
+    private static final Case[] CASES_TY = {
+        new Case(0, new int[] {2, 5, 8, 10, 14}, new int[] {5, 8}, 22, false),
+        new Case(1, new int[] {1, 4, 7, 10, 12}, new int[] {4, 10}, 24, false),
+        new Case(2, new int[] {3, 6, 10, 20, 30, 38, 40, 44}, new int[] {10, 40}, 54, false),
+        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 24, true),
+        new Case(4, new int[] {4, 10, 20, 30, 34, 40, 44, 48}, new int[] {20, 34, 44}, 62, false),
+    };
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
@@ -342,7 +363,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (RpgProdSmoke.active()) return;
         boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")
                 || RpgFilm.listed("filmjob4") || RpgFilm.listed("filmjob5") || RpgFilm.listed("filmjob6")
-                || RpgFilm.listed("filmjob7") || RpgFilm.listed("filmjob8") || RpgFilm.listed("filmjob9") || RpgFilm.listed("filmjob10") || RpgFilm.listed("filmjob11")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 열한째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수 · 암살자 · 창술사 · 사신)
+                || RpgFilm.listed("filmjob7") || RpgFilm.listed("filmjob8") || RpgFilm.listed("filmjob9") || RpgFilm.listed("filmjob10") || RpgFilm.listed("filmjob11")
+                || RpgFilm.listed("filmjob12")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 열두째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수 · 암살자 · 창술사 · 사신 · 성기사)
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -645,6 +667,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
         // 2026-11-06 소울 리퍼: 영혼 6 (리핑 크레센트는 14 — 첫 바퀴에 영혼 해방 · 망령 여섯), 엑시큐셔너: 컨뎀 · 비포 선셋은 앞 과녁이 체력 10% 의 쓰러지는 몹
         // (처형 — 큰 숫자 · 해골 · 재사용 대기 초기화 · 비포 선셋 다시 쓰기)
         if (job.equals("soulreaper")) JobTraits3.setSouls(sp, id.equals("soulreaper_crescent") ? 14 : 6);
+        // 2026-11-06 썬더로드: 아크 스매시 · 스톰 스파이어는 과녁마다 심판 3 (휩쓸기 · 갈래 / 기둥 +2 → 벼락 — 갈라지는 벼락 · 보호막), 타이런트: 빼앗은 힘 4 (게이지 · 몸 크기)
+        if (id.equals("thunderlord_arc") || id.equals("thunderlord_spire")) judgeHusks(sp, 3);
+        if (job.equals("tyrant")) mmorpg.fabric.job.JobTraits13.setPower(sp, 4);
         if (id.equals("executioner_condemn") || id.equals("executioner_ult")) {
             for (Husk x : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 3.2, 0.5, -60, 3.2).inflate(0.8), x -> true)) {
                 x.removeTag(TestDummies.TAG);
@@ -697,7 +722,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
         {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"arcaneblade", "swordcaller"}, {"arcmage", "necromancer"},
-        {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}};
+        {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
@@ -732,6 +757,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "dragoon" -> newJob(ctx, server, conn, job, "rpg:lance_l40_hero", 6, sp -> {}); // 2026-11-06 비상 게이지 = 발밑 땅에서의 높이 (여섯까지)
                         case "soulreaper" -> newJob(ctx, server, conn, job, "rpg:scythe_l40_hero", 15, sp -> JobTraits3.setSouls(sp, 10)); // 2026-11-06 영혼 (열다섯까지 — 막대)
                         case "executioner" -> newJob(ctx, server, conn, job, "rpg:scythe_l40_hero", 10, sp -> {}); // 2026-11-06 처형 게이지 = 마지막으로 친 적의 잃은 체력
+                        case "thunderlord" -> newJob(ctx, server, conn, job, "rpg:hammer_l40_hero", 5, sp -> judgeHusks(sp, 3)); // 2026-11-06 심판 (다섯 — 성기사와 같음)
+                        case "tyrant" -> newJob(ctx, server, conn, job, "rpg:hammer_l40_hero", 10, sp -> mmorpg.fabric.job.JobTraits13.setPower(sp, 6)); // 2026-11-06 빼앗은 힘 (열 — 왕관 칸)
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
                                 sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
                     }
@@ -770,6 +797,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "dragoon" -> CASES_DG;
             case "soulreaper" -> CASES_SR;
             case "executioner" -> CASES_EX;
+            case "thunderlord" -> CASES_TL;
+            case "tyrant" -> CASES_TY;
             default -> CASES_GU;
         };
     }
