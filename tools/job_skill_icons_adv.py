@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """0.51.0 2차 직업 스킬 아이콘 — 검사 각성 소드마스터 · 반전 블러드 나이트 · 전사 각성 워로드 · 반전 글래디에이터 (재설계안 2판) ·
 마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신) · 반전 소드 콜러 (재설계안 2판) · 매지션 각성 아크메이지 · 반전 네크로맨서 ·
-궁수 각성 스나이퍼 · 반전 배틀 아처 (재설계안 2판 — 섀도 헌터 대신) · 암살자 각성 트릭스터 (2026-11-06 2판) · 반전 피에로 (블레이드 댄서 대신) · 창술사 각성 스톰 랜서 · 반전 드라군 (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
+궁수 각성 스나이퍼 · 반전 배틀 아처 (재설계안 2판 — 섀도 헌터 대신) · 암살자 각성 트릭스터 (2026-11-06 2판) · 반전 피에로 (블레이드 댄서 대신) · 창술사 각성 스톰 랜서 · 반전 드라군 · 사신 각성 소울 리퍼 · 반전 엑시큐셔너 (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
 모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph 와 같은 꼴, 아케인 블레이드의 검기는 rfx_jwave 와 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
 글래디에이터 = 진홍 (첫째) · 모래 금빛 (둘째 — 결투장 황혼 바탕 · 말뚝은 나무빛), 아케인 블레이드 = 보라 (첫째) · 청록 (둘째 — 짙은 남보라 밤 바탕),
@@ -9,7 +9,9 @@
 네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕), 스나이퍼 = 밝은 연두 (첫째) · 금빛 흰 섬광 (둘째 — 짙은 숲 바탕),
 배틀 아처 = 폭풍 하늘빛 (첫째) · 번개 노랑 (둘째 — 짙은 폭풍 남청 바탕), 트릭스터 = 자홍 (첫째) · 검보라 (둘째 — 짙은 보라 바탕 · 환영은 청록 테 · 들불은 분홍),
 피에로 = 빨강 (첫째) · 크림 금빛 (둘째 — 서커스 밤 바탕 · 할리퀸 마름모 무늬 · 금방울), 스톰 랜서 = 옥빛 바람 (첫째) · 흰빛 (둘째 — 짙은 옥빛 폭풍 바탕),
-드라군 = 붉은 용 진홍 (첫째) · 불꽃 주황 (둘째 — 2026-11-06 사용자 "빨간 레드 드레곤 느낌에 화염" · 짙은 숯불 밤 바탕 · 불은 주홍) — jobs.json advance."""
+드라군 = 붉은 용 진홍 (첫째) · 불꽃 주황 (둘째 — 2026-11-06 사용자 "빨간 레드 드레곤 느낌에 화염" · 짙은 숯불 밤 바탕 · 불은 주홍),
+소울 리퍼 = 영혼 하늘빛 (첫째) · 짙은 남청 (둘째 — 짙은 남청 밤 바탕 · 혼불은 흰 하늘빛), 엑시큐셔너 = 해 질 녘 금빛 (첫째) · 짙은 보라 (둘째 — 해 진 뒤의
+자줏빛 바탕) — jobs.json advance."""
 import math
 import os
 import sys
@@ -24,6 +26,7 @@ from job_skill_icons import P, SS  # noqa: E402
 from job_fx_art_v2 import GLYPHS  # noqa: E402 — 룬 글자 꼴 (게임의 룬 그림과 같음)
 from job_skill_icons_three import hood as _hood  # noqa: E402 — 암살자 두건 (0.51.0 암살자 2차)
 from job_skill_icons_three import spear as _spear  # noqa: E402 — 창 (0.51.0 창술사 2차)
+from job_skill_icons_three import scythe as _scythe, soul as _soul  # noqa: E402 — 낫 · 혼불 (0.51.0 사신 2차)
 
 NIGHT = (8, 10, 30)
 DUSK = (28, 8, 10)
@@ -2515,6 +2518,233 @@ def dragoon_ult(A, B):
     return finish(subject, [glow(dg, A, 1.8, 1.0), glow(pillars, EMBER, 1.8, 1.0), glow(hit, EMBER, 2.2, 1.0)], wyrm_back(A, B))
 
 
+# ------------------------------------------------------------ 소울 리퍼 (빛: 영혼 하늘빛 → 짙은 남청 — 짙은 남청 밤 바탕 · 혼불은 흰 하늘빛) — 2026-11-06
+
+SOUL_NIGHT = (3, 8, 18)
+
+
+def soul_back(A, B):
+    return backdrop(mix(B, SOUL_NIGHT, 0.72), mix(B, (24, 70, 120), 0.4))
+
+
+def soul_scythe(hand_lo, top, A, B, blade=12.0, bw=3.2, side=1, shaft=1.5):
+    """검푸른 자루 · 영혼빛 날 (소울 리퍼)"""
+    sh, bl, edge = _scythe(hand_lo, top, blade=blade, bw=bw, side=side, shaft=shaft)
+    return [layer(sh, mix(B, (60, 80, 110), 0.4), mix(B, (0, 0, 0), 0.55), mix(B, WHITE, 0.3), None),
+            layer(bl, mix(A, WHITE, 0.55), mix(A, B, 0.35), WHITE, mix(B, (0, 0, 0), 0.3), axis=(1, 1)), layer(edge, WHITE, WHITE)], bl
+
+
+def soulreaper_crescent(A, B):
+    # 리핑 크레센트: 가운데 낫 · 몸 둘레를 두 바퀴 휘감는 초승달 고리 둘 · 왼쪽의 내달린 줄 · 빨려 드는 혼불 둘
+    rings = mask()
+    crescent(rings, 17.0, 17.0, 13.5, 2.8, -150, 120)
+    crescent(rings, 17.0, 17.0, 9.5, 2.0, 30, 290)
+    dash = wind_lines([[(1.0, 12.0), (7.0, 12.0)], [(0.5, 17.0), (5.5, 17.0)], [(1.5, 22.0), (6.5, 22.0)]], 0.8)
+    ss, bl = soul_scythe((22.5, 28.5), (14.0, 5.0), A, B, blade=10.0, bw=3.0, side=1, shaft=1.4)
+    s1 = _soul(28.0, 9.0, 3.0, 5.0, -1.0)
+    s2 = _soul(5.5, 30.0, 2.8, 4.6, 1.0)
+    subject = stack(layer(dash, WHITE, A, None, None, axis=(1, 0)), layer(rings, mix(A, WHITE, 0.45), A, WHITE, None, axis=(1, -1)), *ss,
+                    layer(lighter(s1, s2), WHITE, A))
+    return finish(subject, [glow(rings, A, 1.8, 1.0), glow(lighter(s1, s2), A, 1.4, 0.9)], soul_back(A, B))
+
+
+def soulreaper_trespass(A, B):
+    # 엄브럴 트레스패스: 검은 적 그림자 (빛 금이 쩍쩍 갈라짐) · 그 몸을 왼쪽 아래에서 오른쪽 위로 찢고 나가는 큰 베어 올림 · 등 뒤로 흩어지는 혼불
+    foe = mask()
+    disc(foe, 13.0, 10.0, 4.4)
+    poly(foe, [(5.0, 30.0), (7.0, 15.0), (19.0, 15.0), (21.0, 30.0)])
+    cracks = mask()
+    for pts in (((13.0, 18.0), (10.0, 22.0), (11.5, 26.0)), ((13.0, 18.0), (17.0, 21.0), (16.0, 25.5)), ((13.0, 18.0), (12.0, 13.5)), ((13.0, 10.0), (15.5, 8.0))):
+        line(cracks, list(pts), 0.8)
+    slash = mask()
+    crescent(slash, 9.0, 26.0, 20.0, 3.6, -80, -10)
+    sp = mask()
+    star(sp, 13.0, 18.0, 4.6, 0.18, 20)
+    s1 = _soul(27.5, 13.0, 3.0, 5.0, 1.0)
+    s2 = _soul(24.0, 6.0, 2.4, 4.0, 1.4)
+    subject = stack(layer(foe, (34, 36, 58), (8, 8, 20), (70, 80, 110), None), layer(cracks, WHITE, A), layer(slash, WHITE, A, WHITE, None, axis=(1, -1)),
+                    layer(sp, WHITE, A), layer(lighter(s1, s2), WHITE, A))
+    return finish(subject, [glow(cracks, A, 1.4, 1.0), glow(slash, A, 1.8, 1.0), glow(lighter(s1, s2), A, 1.2, 0.8)], soul_back(A, B))
+
+
+def soulreaper_harvest(A, B):
+    # 바운티풀 하베스트: 가운데 땅에 꽂은 낫 (날이 위에서 휨) · 날 끝에서 사방의 혼불 넷으로 뻗은 영혼 줄 · 땅의 금
+    ground = mask()
+    poly(ground, [(0.5, 28.5), (31.5, 28.5), (31.5, 31.5), (0.5, 31.5)])
+    ss, bl = soul_scythe((16.0, 29.5), (16.0, 5.0), A, B, blade=11.0, bw=3.2, side=1, shaft=1.6)
+    tethers = mask()
+    knot = (16.0, 9.0)
+    souls = []
+    for (x, y, lean) in ((4.0, 8.0, 1.0), (28.0, 14.0, -1.0), (4.5, 24.0, 1.0), (27.5, 26.0, -1.0)):
+        line(tethers, [knot, (x, y - 2.0)], 0.7)
+        souls.append(_soul(x, y + 1.5, 3.0, 5.0, lean))
+    sm = lighter(*souls)
+    crack = wind_lines([[(16.0, 29.0), (11.0, 31.5)], [(16.0, 29.0), (21.5, 31.5)]], 0.7)
+    hit = mask()
+    star(hit, 16.0, 9.0, 3.6, 0.2, 0)
+    subject = stack(layer(ground, mix(B, (30, 30, 40), 0.5), mix(B, (0, 0, 0), 0.6)), layer(tethers, WHITE, A), layer(crack, WHITE, A), *ss, layer(sm, WHITE, A),
+                    layer(hit, WHITE, A))
+    return finish(subject, [glow(tethers, A, 1.2, 0.9), glow(sm, A, 1.6, 1.0)], soul_back(A, B))
+
+
+def soulreaper_lantern(A, B):
+    # 랜턴 오브 소울즈: 왼쪽 위에 매달린 등불 (넓은 지붕 · 띠 · 기둥 틀 · 눈 둘의 영혼 불꽃) · 오른쪽 아래로 던진 사슬 끝의 갈고리
+    frame = mask()
+    ring(frame, 10.0, 2.2, 1.5, 0.6)
+    line(frame, [(10.0, 3.6), (10.0, 5.2)], 0.7)
+    poly(frame, [(3.4, 9.6), (10.0, 4.8), (16.6, 9.6)])
+    poly(frame, [(4.4, 9.4), (15.6, 9.4), (15.6, 10.9), (4.4, 10.9)])
+    poly(frame, [(4.4, 19.4), (15.6, 19.4), (15.6, 20.9), (4.4, 20.9)])
+    poly(frame, [(6.0, 20.9), (14.0, 20.9), (12.6, 22.6), (7.4, 22.6)])
+    line(frame, [(5.6, 10.9), (5.6, 19.4)], 1.0)
+    line(frame, [(14.4, 10.9), (14.4, 19.4)], 1.0)
+    bars = mask()
+    line(bars, [(10.0, 10.9), (10.0, 13.0)], 0.5)
+    glass = mask()
+    poly(glass, [(6.1, 10.9), (13.9, 10.9), (13.9, 19.4), (6.1, 19.4)])
+    fl = _soul(10.0, 18.8, 3.8, 6.6, 0.3)
+    eyes = mask()
+    disc(eyes, 9.2, 16.2, 0.5)
+    disc(eyes, 10.8, 16.2, 0.5)
+    chain = mask()
+    pts = [(15.0, 17.0), (19.0, 19.5), (23.0, 22.5), (26.0, 25.5)]
+    for i in range(len(pts) - 1):
+        (x0, y0), (x1, y1) = pts[i], pts[i + 1]
+        ring(chain, (x0 + x1) / 2, (y0 + y1) / 2, 1.5, 0.6)
+    hook = mask()
+    crescent(hook, 26.0, 26.5, 3.6, 1.6, -30, 200)
+    subject = stack(layer(glass, mix(B, (0, 0, 0), 0.35), mix(B, (0, 0, 0), 0.7)), layer(fl, WHITE, A), layer(eyes, mix(B, (0, 0, 0), 0.4), B),
+                    layer(bars, mix(A, B, 0.3), B), layer(frame, mix(A, WHITE, 0.55), mix(A, B, 0.2), WHITE, None), layer(chain, mix(A, WHITE, 0.4), mix(A, B, 0.4)),
+                    layer(hook, WHITE, A, WHITE, None))
+    return finish(subject, [glow(fl, A, 2.2, 1.0), glow(hook, A, 1.0, 0.7)], soul_back(A, B))
+
+
+def soulreaper_ult(A, B):
+    # 페일 하베스트: 뒤의 커다란 두건 망령 사신 (빛나는 눈) · 그 낫이 앞을 크게 휩쓴 큰 고리 · 아래에서 솟는 혼불
+    body, face = _hood(16.0, 2.0, 24.0, 26.0)
+    face = mask()
+    d = ImageDraw.Draw(face)
+    d.ellipse([P(12.4, 6.4), P(19.6, 12.4)], fill=255)
+    eyes = mask()
+    disc(eyes, 14.5, 9.6, 1.0)
+    disc(eyes, 17.5, 9.6, 1.0)
+    sweep = mask()
+    crescent(sweep, 16.0, 20.0, 14.5, 3.4, 10, 170)
+    ss, bl = soul_scythe((5.0, 28.0), (6.0, 6.0), A, B, blade=9.0, bw=2.6, side=-1, shaft=1.3)
+    souls = lighter(_soul(9.0, 31.0, 2.8, 4.6, 1.0), _soul(23.0, 31.0, 2.8, 4.6, -1.0), _soul(16.0, 31.5, 2.2, 3.6, 0.6))
+    subject = stack(layer(body, mix(B, A, 0.3), mix(B, (0, 0, 0), 0.5), mix(A, WHITE, 0.2), None), layer(face, mix(B, (0, 0, 0), 0.75), mix(B, (0, 0, 0), 0.85)),
+                    layer(eyes, WHITE, A), *ss, layer(sweep, WHITE, A, WHITE, None, axis=(1, 1)), layer(souls, WHITE, A))
+    return finish(subject, [glow(body, A, 2.0, 0.7), glow(sweep, A, 1.8, 1.0), glow(eyes, A, 1.0, 1.0), glow(souls, A, 1.4, 0.9)], soul_back(A, B))
+
+
+# ------------------------------------------------------------ 엑시큐셔너 (빛: 해 질 녘 금빛 → 짙은 보라 — 해 진 뒤의 자줏빛 바탕) — 2026-11-06
+
+DUSK_SKY = (16, 4, 16)
+DUSK_GOLD = (255, 196, 92)
+
+
+def dusk_back(A, B):
+    return backdrop(mix(B, DUSK_SKY, 0.72), mix((110, 44, 40), B, 0.45))
+
+
+def dusk_scythe(hand_lo, top, A, B, blade=12.0, bw=3.2, side=1, shaft=1.5):
+    """검보라 자루 · 금빛 날 (엑시큐셔너)"""
+    sh, bl, edge = _scythe(hand_lo, top, blade=blade, bw=bw, side=side, shaft=shaft)
+    return [layer(sh, mix(B, (90, 60, 80), 0.3), mix(B, (0, 0, 0), 0.6), mix(B, WHITE, 0.25), None),
+            layer(bl, mix(A, WHITE, 0.45), mix(A, B, 0.3), WHITE, mix(B, (0, 0, 0), 0.3), axis=(1, 1)), layer(edge, WHITE, WHITE)], bl
+
+
+def executioner_condemn(A, B):
+    # 컨뎀: 오른쪽 위에서 왼쪽 아래로 크게 비스듬히 벤 금빛 자국 · 아래 적 그림자 위의 선고 해골 · 날 끝 반짝임
+    foe = mask()
+    disc(foe, 21.0, 18.0, 3.6)
+    poly(foe, [(14.5, 31.5), (16.0, 22.0), (26.0, 22.0), (27.5, 31.5)])
+    sk, sk_eyes = skull_mask(21.0, 7.0, 0.62)
+    slash = mask()
+    crescent(slash, 26.0, 26.0, 22.0, 3.8, -170, -100)
+    sp = mask()
+    star(sp, 14.0, 17.0, 4.0, 0.18, 30)
+    subject = stack(layer(foe, (58, 30, 56), (16, 6, 18), (100, 60, 96), None), layer(sk, WHITE, A, WHITE, None), layer(sk_eyes, B, B),
+                    layer(slash, WHITE, A, WHITE, None, axis=(-1, 1)), layer(sp, WHITE, A))
+    return finish(subject, [glow(slash, A, 1.8, 1.0), glow(sk, A, 1.4, 0.9)], dusk_back(A, B))
+
+
+def executioner_stalk(A, B):
+    # 섀도 스토크: 왼쪽 아래에서 적 머리 위를 넘는 보랏빛 그림자 호 · 오른쪽에서 내려서며 낫으로 등을 벤 금빛 자국 · 가운데 적 그림자
+    arc = mask()
+    crescent(arc, 15.0, 22.0, 12.5, 2.4, -175, -20)
+    shades = mask()
+    for (x, y, r) in ((4.0, 19.0, 2.0), (8.0, 11.5, 2.2), (15.0, 9.0, 2.3)):
+        disc(shades, x, y, r)
+    foe = mask()
+    disc(foe, 14.0, 17.5, 3.2)
+    poly(foe, [(8.5, 31.5), (10.0, 22.5), (18.0, 22.5), (19.5, 31.5)])
+    ss, bl = dusk_scythe((29.0, 22.0), (24.0, 6.0), A, B, blade=8.0, bw=2.6, side=1, shaft=1.3)
+    cut = mask()
+    crescent(cut, 26.0, 20.0, 9.5, 2.4, 150, 220)
+    subject = stack(layer(arc, mix(B, WHITE, 0.4), B, None, None, axis=(1, 0)), layer(shades, mix(B, WHITE, 0.3), B), layer(foe, (58, 30, 56), (16, 6, 18), (100, 60, 96), None),
+                    *ss, layer(cut, WHITE, A, WHITE, None))
+    return finish(subject, [glow(arc, B, 1.6, 0.9), glow(cut, A, 1.6, 1.0)], dusk_back(A, B))
+
+
+def executioner_guillotine(A, B):
+    # 길로틴: 위에서 떨어지는 거대한 단두대 날 (쇳덩이 · 해골 무늬 · 비스듬한 금빛 날) · 위로 끌리는 줄 · 아래 적 그림자 · 날 끝 섬광
+    bar = mask()
+    poly(bar, [(5.0, 4.0), (27.0, 4.0), (27.0, 8.0), (5.0, 8.0)])
+    blade = mask()
+    poly(blade, [(6.0, 8.0), (26.0, 8.0), (26.0, 11.0), (6.0, 20.0)])
+    edge = mask()
+    line(edge, [(26.0, 11.0), (6.0, 20.0)], 1.5)
+    streaks = wind_lines([[(8.0, 0.0), (8.0, 3.0)], [(16.0, 0.0), (16.0, 3.0)], [(24.0, 0.0), (24.0, 3.0)]], 0.8)
+    foe = mask()
+    disc(foe, 16.0, 23.0, 3.2)
+    poly(foe, [(10.0, 31.5), (11.5, 26.6), (20.5, 26.6), (22.0, 31.5)])
+    sk, sk_eyes = skull_mask(16.0, 5.8, 0.32)
+    hit = mask()
+    star(hit, 16.0, 17.0, 5.0, 0.16, 0)
+    subject = stack(layer(streaks, WHITE, A), layer(foe, (58, 30, 56), (16, 6, 18), (100, 60, 96), None), layer(blade, mix(B, WHITE, 0.35), B, mix(B, WHITE, 0.6), None, axis=(1, 1)),
+                    layer(bar, mix(B, (60, 40, 60), 0.4), mix(B, (0, 0, 0), 0.5), mix(B, WHITE, 0.4), None), layer(sk, A, A), layer(edge, WHITE, A), layer(hit, WHITE, A))
+    return finish(subject, [glow(edge, A, 1.6, 1.0), glow(blade, B, 1.4, 0.8), glow(hit, A, 1.6, 1.0)], dusk_back(A, B))
+
+
+def executioner_lastday(A, B):
+    # 원 라스트 데이: 지평선에 반쯤 진 금빛 해 (빛살) · 그 앞에 세워 꽂은 낫 그림자 · 위의 작은 해골
+    sun = mask()
+    disc(sun, 16.0, 24.0, 9.0)
+    poly_cut = mask()
+    poly(poly_cut, [(0.0, 24.0), (32.0, 24.0), (32.0, 32.0), (0.0, 32.0)])
+    sun = ImageChops.subtract(sun, poly_cut)
+    rays = mask()
+    for i in range(7):
+        a = math.radians(-170 + i * 26.6)
+        line(rays, [(16.0 + math.cos(a) * 11.0, 24.0 + math.sin(a) * 11.0), (16.0 + math.cos(a) * 14.5, 24.0 + math.sin(a) * 14.5)], 1.0)
+    horizon = mask()
+    poly(horizon, [(0.5, 24.0), (31.5, 24.0), (31.5, 25.2), (0.5, 25.2)])
+    ss, bl = dusk_scythe((21.0, 31.0), (21.0, 7.0), A, B, blade=9.0, bw=2.6, side=1, shaft=1.4)
+    sk, sk_eyes = skull_mask(7.0, 6.0, 0.5)
+    subject = stack(layer(rays, DUSK_GOLD, A), layer(sun, WHITE, A, WHITE, None), layer(horizon, mix(B, WHITE, 0.3), B), *ss, layer(sk, WHITE, A), layer(sk_eyes, B, B))
+    return finish(subject, [glow(sun, A, 2.4, 1.0), glow(rays, A, 1.4, 0.8)], dusk_back(A, B))
+
+
+def executioner_ult(A, B):
+    # 비포 선셋: 땅의 거대한 금빛 X 자 처형 표식 (거친 붓 획 둘 · 둘레 원) · 위의 지는 해 · 가운데 섬광
+    sun = mask()
+    disc(sun, 16.0, 19.8, 8.0)
+    xm = mask()
+    for a, b in (((5.0, 9.5), (27.0, 30.0)), ((27.0, 9.5), (5.0, 30.0))):
+        pts = [(a[0] + (b[0] - a[0]) * t / 12, a[1] + (b[1] - a[1]) * t / 12) for t in range(13)]
+        for i in range(12):
+            w = 1.2 + 2.6 * math.sin(math.pi * (i + 0.5) / 12) ** 0.6
+            line(xm, [pts[i], pts[i + 1]], w)
+    circ = mask()
+    ring(circ, 16.0, 19.8, 12.2, 0.8)
+    hit = mask()
+    star(hit, 16.0, 19.8, 6.4, 0.14, 0)
+    subject = stack(layer(sun, mix(B, A, 0.45), mix(B, (0, 0, 0), 0.2)), layer(circ, mix(A, WHITE, 0.3), mix(A, B, 0.4)),
+                    layer(xm, WHITE, A, WHITE, mix(A, B, 0.4), axis=(1, 1)), layer(hit, WHITE, A))
+    return finish(subject, [glow(xm, A, 2.0, 1.0), glow(sun, B, 2.4, 0.8), glow(hit, A, 1.6, 1.0)], dusk_back(A, B))
+
+
 ICONS = {
     "swordmaster_draw": swordmaster_draw,
     "swordmaster_parry": swordmaster_parry,
@@ -2586,4 +2816,14 @@ ICONS = {
     "dragoon_impale": dragoon_impale,
     "dragoon_breath": dragoon_breath,
     "dragoon_ult": dragoon_ult,
+    "soulreaper_crescent": soulreaper_crescent,
+    "soulreaper_trespass": soulreaper_trespass,
+    "soulreaper_harvest": soulreaper_harvest,
+    "soulreaper_lantern": soulreaper_lantern,
+    "soulreaper_ult": soulreaper_ult,
+    "executioner_condemn": executioner_condemn,
+    "executioner_stalk": executioner_stalk,
+    "executioner_guillotine": executioner_guillotine,
+    "executioner_lastday": executioner_lastday,
+    "executioner_ult": executioner_ult,
 }

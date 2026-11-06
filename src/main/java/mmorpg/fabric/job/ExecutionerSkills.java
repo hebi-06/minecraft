@@ -237,7 +237,7 @@ final class ExecutionerSkills {
         int fall = 4;
         int hangFrom = 4;
         double h = k.num("height", 7);
-        double size = 1.15 + Kit.bodyPad(e) * 0.8;
+        double size = 1.6 + Kit.bodyPad(e) * 0.9; // 날 너비 약 size × 1.1 칸 · 그림 높이 size × 2.67 칸 (날 끝 = 칸 가운데에서 size × 0.51 아래)
         JobTraits12.beginSkill(sp, k);
         RpgCombat.setSteadfast(sp, dropAt + 3);
         Vec3[] last = {e.position()};
@@ -250,7 +250,7 @@ final class ExecutionerSkills {
         RuneKit.later(hangFrom - 4 < 0 ? 0 : hangFrom - 4, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             if (e.isAlive() && !e.isRemoved()) last[0] = e.position();
-            JobFx.guillotine(sp.level(), V.up(last[0], tall + h), size, 0, 2, hangFrom / 20.0 + 0.05, false, Opt.empty(), DUSK, VIOLET_CORE);
+            JobFx.guillotine(sp.level(), V.up(last[0], tall + h), size, 0, 2, hangFrom / 20.0 + 0.05, false, Opt.empty(), VIOLET, DUSK_CORE);
             SkillFx.play(sp.level(), "block.chain.step", last[0], 0.5, 1.0);
         });
         for (int t = hangFrom; t < dropAt - fall; t += 4) {
@@ -262,7 +262,7 @@ final class ExecutionerSkills {
                 Vec3 g = ground(lv, last[0]);
                 double u = (tt - hangFrom) / (double) Math.max(1, dropAt - fall - hangFrom);
                 Opt vel = Opt.of("vel", e.isRemoved() ? Vec3.ZERO : RuneKit.entVel(e));
-                JobFx.guillotine(lv, V.up(last[0], tall + h), size, 2, 2, 0.25, true, vel, DUSK, VIOLET_CORE);
+                JobFx.guillotine(lv, V.up(last[0], tall + h), size, 2, 2, 0.25, true, vel, VIOLET, DUSK_CORE);
                 JobFx.spotlight(lv, g, tall + h, 0.24, vel.with("alpha", 0.4 + 0.35 * u), DUSK, DUSK_CORE);
                 JobFx.ring(lv, V.up(g, 0.08), 0.9 + Kit.bodyPad(e) + 0.3 * u, j, tt % 8 == 0, 0.24, vel.with("alpha", 0.8));
                 if (tt % 8 == 0) SkillFx.play(lv, "block.chain.step", g, 0.6 + 0.3 * u, 0.5);
@@ -274,7 +274,7 @@ final class ExecutionerSkills {
             if (e.isAlive() && !e.isRemoved()) last[0] = e.position();
             Vec3 top = V.up(last[0], tall + h);
             Vec3 vel = new Vec3(0, -(h - 0.4) / (fall / 20.0), 0);
-            JobFx.guillotine(sp.level(), top, size, 4, 1, fall / 20.0, false, Opt.of("vel", vel), DUSK, VIOLET_CORE);
+            JobFx.guillotine(sp.level(), top, size, 4, 1, fall / 20.0, false, Opt.of("vel", vel), VIOLET, DUSK_CORE);
             JobFx.line(sp.level(), top, V.up(last[0], tall), DUSK, DUSK_CORE, fall / 20.0 + 0.1, Opt.of("alpha", 0.6));
             SkillFx.play(sp.level(), "item.trident.riptide_1", last[0], 0.6, 0.8);
         });
@@ -286,7 +286,7 @@ final class ExecutionerSkills {
             Vec3 g = ground(lv, last[0]);
             Vec3 neck = V.up(last[0], tall * 0.8);
             // 내리침: 날 끝 섬광 → 흩어짐 · 하늘에서 땅까지 금빛 줄 · 터짐 · 땅 금 · 불티
-            JobFx.guillotine(lv, V.up(neck, size * 0.4), size, 5, 3, 0.45, false, Opt.empty(), DUSK, VIOLET_CORE);
+            JobFx.guillotine(lv, V.up(neck, size * 0.51), size, 5, 3, 0.45, false, Opt.empty(), VIOLET, DUSK_CORE);
             JobFx.line(lv, V.up(g, tall + h), V.up(g, -0.2), DUSK, DUSK_CORE, 0.3, Opt.empty());
             JobFx.burst(lv, neck, 1.4 + Kit.bodyPad(e) * 0.5, DUSK, DUSK_CORE, 0.35, Opt.empty());
             JobFx.burst(lv, neck, 1.0 + Kit.bodyPad(e) * 0.4, VIOLET, VIOLET_CORE, 0.3, Opt.empty());
@@ -378,7 +378,7 @@ final class ExecutionerSkills {
         RpgCombat.setSteadfast(sp, lastAt + 4);
         Kit.noFall(sp, lastAt + 30);
         // 표식: X 자가 번짐 (blinkAt 틱) → 맥동 · 위에서 내리비추는 해 질 녘 빛 · 둘레 금빛 고리 · 종소리
-        JobFx.xmark(level0, mark, R, 0, 3, blinkAt / 20.0, false, Opt.of("spin", spin), DUSK, VIOLET_CORE);
+        JobFx.xmark(level0, mark, R, 0, 3, blinkAt / 20.0, false, Opt.of("spin", spin), DUSK, DUSK_CORE);
         JobFx.spotlight(level0, mark, 9, (lastAt + 6) / 20.0, Opt.of("alpha", 0.6), DUSK, DUSK_CORE);
         JobFx.ring(level0, V.up(mark, 0.1), R, j, false, blinkAt / 20.0 + 0.1, Opt.of("alpha", 0.8));
         SkillFx.play(level0, "block.bell.use", mark, 0.5, 1.0);
@@ -389,7 +389,7 @@ final class ExecutionerSkills {
         RuneKit.later(blinkAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            JobFx.xmark(lv, mark, R, 3, 3, (lastAt - blinkAt) / 20.0 + 0.05, true, Opt.of("spin", spin), DUSK, VIOLET_CORE);
+            JobFx.xmark(lv, mark, R, 3, 3, (lastAt - blinkAt) / 20.0 + 0.05, true, Opt.of("spin", spin), DUSK, DUSK_CORE);
             // 순간 이동: 표식 가운데에서 온 쪽으로 몸 여유만큼 (막혔으면 비스듬히 · 없으면 제자리)
             Vec3 from = sp.position();
             double pad = aim != null && !aim.isRemoved() ? Kit.bodyPad(aim) : 0;
@@ -423,7 +423,7 @@ final class ExecutionerSkills {
                 SkillFx.play(lv, "entity.player.attack.sweep", mark, 0.5 + 0.1 * ii, 1.0);
                 SkillFx.play(lv, "item.trident.hit", mark, 0.6, 1.0);
                 if (big) {
-                    JobFx.xmark(lv, mark, R, 6, 2, 0.4, false, Opt.of("spin", spin), DUSK, VIOLET_CORE);
+                    JobFx.xmark(lv, mark, R, 6, 2, 0.4, false, Opt.of("spin", spin), DUSK, DUSK_CORE);
                     JobFx.smash(lv, V.up(mark, 0.06), R, j, 0.5, Opt.empty());
                     Ult.flash(lv, mark, DUSK, Opt.empty(), sp);
                     SkillFx.shock(lv, V.up(mark, 0.1), DUSK, R * 1.2, 0.5);

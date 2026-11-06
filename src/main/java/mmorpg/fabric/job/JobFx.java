@@ -1615,7 +1615,8 @@ final class JobFx {
 
     /**
      * 망령 단두대 날 (rfx_jguillotine — 세워 카메라 쪽으로 돎, 아래 = 비스듬한 날): 0 ~ 1 생겨남 · 2 ~ 3 매달려 날이 번득임 (loop 면 이어 돌림) · 4 떨어짐 (위로 끌리는
-     * 잔상) · 5 내리침 (날 끝 섬광) · 6 ~ 7 보랏빛 연기로 흩어짐. 장 from 부터 count 장, 날 가운데 at · 너비 약 size × 1.5 칸 (높이 size × 2)
+     * 잔상) · 5 내리침 (날 끝 섬광) · 6 ~ 7 연기로 흩어짐. 장 from 부터 count 장, 칸 가운데 at (날 가운데는 그보다 조금 아래 — 칸 192 × 256 의 (96, 140)) · 칸 너비
+     * size × 2 칸 · 높이 size × 2.67 칸 (쇳덩이 · 날 너비 약 size × 1.2 칸)
      */
     static void guillotine(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
         int f = Math.max(0, Math.min(GUILLOTINE - 1, from));

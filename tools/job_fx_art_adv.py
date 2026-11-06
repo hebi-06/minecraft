@@ -74,6 +74,14 @@
 - rfx_jdragon     rotate_xyz       448×448 ×8 (4 열)  용의 혼 (앞뒤가 같은 꼴 — 날개를 편 용): 0 생겨남 · 1 다 생김 → 2 ~ 5 날갯짓 (이어 돌림) → 6 포효 (머리 위 불) →
                                                      7 내리꽂음 (날개를 위로 모아 V · 머리가 아래)
 - rfx_jfire       rotate_xyz       256×256 ×8 (4 열)  불꽃 덩이 (위 = 솟는 쪽): 0 불붙음 → 1 ~ 3 부풀어 오름 (불의 혀) → 4 ~ 6 흩어짐 → 7 불티
+
+0.51.0 사신 2차 (2026-11-06 — 소울 리퍼 · 엑시큐셔너): 빛 칸 = 넓은 빛 (영혼 하늘빛 · 망령 보라 · 해 질 녘 금빛), 심지 칸 = 테 · 날 끝 · 결:
+- rfx_jlantern    rotate_xyz       192×192 ×8 (4 열)  영혼 등불 (위 = 매단 고리): 0 불이 붙음 → 1 ~ 4 흔들리며 타오름 (이어 돌림 — 눈 둘의 영혼 불꽃) → 5 번쩍 (빛살) →
+                                                     6 ~ 7 꺼지며 연기
+- rfx_jguillotine lookat_y         192×256 ×8 (4 열)  망령 단두대 날 (아래 = 비스듬한 날): 0 생겨남 · 1 다 생김 → 2 ~ 3 매달림 (이어 돌림 — 사슬 · 번득임) → 4 떨어짐 →
+                                                     5 내리침 (섬광) → 6 ~ 7 연기로 흩어짐
+- rfx_jxmark      direction_z      384×384 ×8 (4 열)  처형 표식 (땅에 누움 — 획 끝 = 반 크기 × 0.9): 0 ~ 2 붓 획 둘이 그어지며 X → 3 ~ 5 맥동 (이어 돌림) → 6 벰 →
+                                                     7 타 들어감
 """
 import math
 import os
@@ -3519,6 +3527,350 @@ sprite("rfx_jfire", "rotate_xyz", FI_S, FI_S, FI_N, 4, "dragonfire", zoom=0,
        desc="불꽃 덩이 (드라군 — 용의 불길 · 불기둥 · 내리꽂은 자리, 카메라를 봄 · 위 = 불이 솟는 쪽): 0 작게 번쩍이며 불붙음 → 1 ~ 3 불꽃 셋이 겹쳐 일렁이며 부풀어 "
        "오름 (가장자리가 위로 흐름) → 4 ~ 6 구멍이 뚫리며 위로 흩어짐 · 불티 → 7 불티. 빛 칸 = 불덩이, 심지 칸 = 안쪽 뜨거운 불 · 불티")(fire_frame)
 
+
+
+# ------------------------------------------------------------ 0.51.0 사신 2차 (2026-11-06 — 소울 리퍼 · 엑시큐셔너)
+
+# ------------------------------------------------------------ rfx_jlantern (영혼 등불 — 카메라를 봄, 위 = 매단 고리 · 등불 몸 가운데 (96, 100))
+
+LT_N = 8
+LT_S = 192
+
+
+def _soul_flame(X, Y, cx, cy, r, f, seed, tall=1.2, wob=0.35):
+    """곧게 선 영혼 불꽃 하나의 밀도 (0 ~ 1): 아래가 둥글고 위로 뾰족 · 가장자리가 조금 일렁임 (rfx_jfire 보다 덜 휨)"""
+    nx = (X - cx) / max(1.0, r)
+    ny = (Y - cy) / max(1.0, r)
+    turb = fbm(X / LT_S * 3.0, Y / LT_S * 3.0 + f * 0.45, seed=seed, octaves=3, px=6, py=6) - 0.5
+    up = np.clip(-ny, 0, None)
+    x = nx + turb * wob * (0.3 + up) + np.sin(f * 1.3 + ny * 2.0) * 0.06 * up
+    top = -1.05 * tall
+    t = np.clip((ny - top) / (0.62 - top), 0, 1)
+    w = 0.8 * np.sqrt(t) * np.clip((0.66 - ny) / 0.3, 0, 1) ** 0.5
+    return clamp01((w - np.abs(x)) * 3.4)
+
+
+def lantern_frame(f):
+    S = LT_S
+    pad = Pad(S, S)
+    c = S / 2
+    X, Y = pad.grid()
+    lum = [0.55, 1.0, 1.0, 1.0, 1.0, 1.0, 0.72, 0.38][f]
+    fl = [0.45, 1.0, 0.9, 1.06, 0.96, 1.25, 0.5, 0.0][f]
+    pane = [0.35, 0.8, 0.72, 0.88, 0.76, 1.0, 0.45, 0.12][f]
+    glow = pad.zeros()
+    core = pad.zeros()
+    # 고리 · 짧은 사슬 (위)
+    rr = np.sqrt((X - c) ** 2 + (Y - 18.0) ** 2)
+    glow = np.maximum(glow, gauss(rr - 7.0, 1.4) * 0.85)
+    core = np.maximum(core, gauss(rr - 7.0, 0.6) * 0.6)
+    glow = np.maximum(glow, pad.stroke([(c, 25.0), (c, 35.0)], 2.6, soft=0.6) * 0.85)
+    # 지붕 (뾰족한 덮개 — 옅게 채움 · 테) · 꼭지
+    roof = [(c - 32, 56.0), (c - 16, 44.0), (c, 34.0), (c + 16, 44.0), (c + 32, 56.0)]
+    glow = np.maximum(glow, pad.poly(roof + [(c + 32, 57.0), (c - 32, 57.0)]) * 0.42)
+    glow = np.maximum(glow, pad.stroke(roof + [roof[0]], 3.0, soft=0.7) * 0.9)
+    core = np.maximum(core, pad.stroke(roof, 1.1, soft=0.4) * 0.55)
+    # 띠 (위 · 아래) · 틀 (바깥 기둥 둘 · 안 기둥 셋 — 가운데는 불에 가려 옅게)
+    for y0, y1 in ((56.0, 63.0), (131.0, 138.0)):
+        band = [(c - 31, y0), (c + 31, y0), (c + 31, y1), (c - 31, y1)]
+        glow = np.maximum(glow, pad.poly(band) * 0.62)
+        core = np.maximum(core, pad.stroke([(c - 31, y0 + 0.8), (c + 31, y0 + 0.8)], 1.0, soft=0.4) * 0.5)
+    for x, a, w in ((c - 28, 0.95, 3.4), (c + 28, 0.95, 3.4), (c - 14, 0.4, 1.8), (c + 14, 0.4, 1.8), (c, 0.3, 1.6)):
+        top = (x, 63.0)
+        bot = (x + (1.5 if x < c else -1.5 if x > c else 0), 131.0)
+        glow = np.maximum(glow, pad.stroke([top, bot], w, soft=0.6) * a)
+        if a > 0.9:
+            core = np.maximum(core, pad.stroke([top, bot], 1.0, soft=0.4) * 0.45)
+    # 받침 (거꾸로 사다리꼴) · 아래 꼭지
+    base = [(c - 27, 138.0), (c + 27, 138.0), (c + 16, 148.0), (c - 16, 148.0)]
+    glow = np.maximum(glow, pad.poly(base) * 0.55)
+    glow = np.maximum(glow, pad.stroke(base + [base[0]], 2.4, soft=0.6) * 0.8)
+    glow = np.maximum(glow, pad.disc_field(c, 153.0, 3.4, soft=0.8) * 0.8)
+    # 유리 (불빛이 새어 나옴 — 불 쪽이 밝게)
+    glass = pad.poly([(c - 26, 63.0), (c + 26, 63.0), (c + 25, 131.0), (c - 25, 131.0)])
+    glow = np.maximum(glow, glass * (0.16 + 0.55 * pad.radial(c, 104.0, 52.0, 1.2)) * pane)
+    # 영혼 불꽃 (안 — 일렁임 · 눈 둘의 혼) — 0 작게 · 5 크게 · 7 꺼짐
+    if fl > 0:
+        r = 27.0 * fl
+        cy = 108.0
+        body = _soul_flame(X, Y, c, cy, r, f % 5, 9100, tall=1.3)
+        body = np.maximum(body, _soul_flame(X, Y, c - r * 0.4, cy + r * 0.2, r * 0.6, f % 5, 9120, tall=0.95) * 0.8)
+        body = np.maximum(body, _soul_flame(X, Y, c + r * 0.4, cy + r * 0.18, r * 0.58, f % 5, 9140, tall=1.0) * 0.8)
+        body = body * glass
+        hot = _soul_flame(X, Y, c, cy + r * 0.08, r * 0.78, f % 5, 9200, tall=1.1, wob=0.2) * glass
+        # 혼의 얼굴: 눈 둘 · 벌린 입 (뜨거운 속에 뚫린 구멍)
+        eyes = np.maximum(pad.disc_field(c - 6.0 * fl, cy - 2.0 * fl, 3.0 * fl, soft=0.7), pad.disc_field(c + 6.0 * fl, cy - 2.0 * fl, 3.0 * fl, soft=0.7))
+        mouth = pad.ellipse(c, cy + 8.0 * fl, 2.6 * fl, 4.0 * fl)
+        glow = np.maximum(glow, body * 0.95)
+        core = np.maximum(core, clamp01(hot * 1.05 - np.maximum(eyes, mouth) * 0.95))
+    rs = random.Random(9300 + f)
+    if 1 <= f <= 4:
+        # 안에서 오르는 작은 불티
+        for k in range(4):
+            x = c + rs.uniform(-18, 18)
+            y = 126.0 - ((f * 13 + k * 23) % 56)
+            core = np.maximum(core, pad.disc_field(x, y, rs.uniform(1.1, 1.8), soft=0.6) * 0.75 * glass)
+    if f == 0:
+        core = np.maximum(core, star4(pad, c, 104.0, 30.0, 0.9, rot=0.3, thin=0.12, diag=0.4))
+    if f == 5:
+        # 번쩍: 유리 틈으로 뻗는 빛살 · 큰 반짝임
+        core = np.maximum(core, star4(pad, c, 104.0, 56.0, 1.0, rot=0.0, thin=0.1, diag=0.45))
+        for k in range(10):
+            a = k * TAU / 10 + 0.2
+            p0 = (c + math.cos(a) * 34, 104.0 + math.sin(a) * 40)
+            p1 = (c + math.cos(a) * 86, 104.0 + math.sin(a) * 86)
+            glow = np.maximum(glow, pad.stroke([p0, p1], 5.0, 0.6, a0=0.7, a1=0.0, soft=1.5))
+    if f >= 6:
+        # 꺼짐: 지붕 위로 오르는 연기 줄 셋
+        for k in range(3):
+            pts = []
+            for i in range(17):
+                t = i / 16
+                y = 32.0 - t * 30.0 - (f - 6) * 6.0
+                x = c + (k - 1) * 9.0 + math.sin(t * 5.0 + k * 1.7 + f) * 6.0 * t
+                pts.append((x, y))
+            glow = np.maximum(glow, pad.stroke(pts, 4.5, 1.5, a0=0.55, a1=0.0, soft=2.0))
+    glow = glow * lum
+    core = core * lum
+    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (10.0, 0.24)), body_k=0.9, core_bloom=((1.3, 0.35), (3.5, 0.24)), win=4.0)
+
+
+COLORS.setdefault("soulreaper", ((0.3, 0.85, 1.0), (0.85, 0.97, 1.0)))
+sprite("rfx_jlantern", "rotate_xyz", LT_S, LT_S, LT_N, 4, "soulreaper", zoom=2,
+       desc="영혼 등불 (소울 리퍼 랜턴 오브 소울즈 — 카메라를 봄, 위 = 매단 고리 · 등불 몸 가운데 (96, 100)): 0 불이 붙음 (작은 불 · 반짝임) → 1 ~ 4 흔들리며 타오름 (이어 돌림 — "
+       "뾰족한 지붕 · 띠 · 기둥 틀 · 유리로 새는 빛 · 눈 둘의 영혼 불꽃 · 오르는 불티) → 5 번쩍 (사슬을 던짐 — 빛살) → 6 ~ 7 꺼지며 지붕 위로 연기. 빛 칸 = 틀 · 유리 빛 · "
+       "불꽃, 심지 칸 = 테 · 뜨거운 속")(lantern_frame)
+
+
+# ------------------------------------------------------------ rfx_jguillotine (망령 단두대 날 — 세워 카메라 쪽으로 돎, 아래 = 비스듬한 날 · 날 가운데 약 (96, 140))
+
+GL_N = 8
+GL_W, GL_H = 192, 256
+
+
+def guillotine_frame(f):
+    W, H = GL_W, GL_H
+    pad = Pad(W, H)
+    X, Y = pad.grid()
+    cx = W / 2
+    lum = [0.62, 1.0, 1.0, 1.0, 1.0, 1.0, 0.72, 0.38][f]
+    st = 1.12 if f == 4 else 1.0
+    top, bar_h = 78.0, 26.0
+    x0, x1 = 44.0, 148.0
+    bt = top + bar_h
+    edge_r = bt + 46.0 * st
+    edge_l = bt + 100.0 * st
+    glow = pad.zeros()
+    core = pad.zeros()
+    # 무게 판 (위 가로 쇳덩이 — 채움 · 테 · 못 넷 · 가운데 해골 무늬)
+    bar = [(x0 - 6, top), (x1 + 6, top), (x1 + 6, bt), (x0 - 6, bt)]
+    glow = np.maximum(glow, pad.poly(bar) * 0.6)
+    glow = np.maximum(glow, pad.stroke(bar + [bar[0]], 3.0, soft=0.7) * 0.9)
+    for x in (x0 + 2, x0 + 22, x1 - 22, x1 - 2):
+        core = np.maximum(core, pad.disc_field(x, top + bar_h / 2, 2.6, soft=0.6) * 0.75)
+    skull = np.maximum(pad.disc_field(cx, top + 11.0, 8.0, soft=0.7), pad.poly([(cx - 5, top + 15), (cx + 5, top + 15), (cx + 4, top + 22), (cx - 4, top + 22)]))
+    holes = np.maximum(pad.disc_field(cx - 3.2, top + 11.0, 2.2, soft=0.5), pad.disc_field(cx + 3.2, top + 11.0, 2.2, soft=0.5))
+    core = np.maximum(core, clamp01(skull - holes) * 0.7)
+    # 날 (오른쪽이 높고 왼쪽이 낮은 비스듬한 날 — 망령이라 옅게 채우고 날 쪽이 밝게)
+    blade = [(x0, bt), (x1, bt), (x1, edge_r), (x0, edge_l)]
+    bm = pad.poly(blade)
+    ex, ey = x0 - x1, edge_l - edge_r
+    el = math.hypot(ex, ey)
+    nx, ny = -ey / el, ex / el  # 날에 수직 (위쪽)
+    if ny > 0:
+        nx, ny = -nx, -ny
+    dist_edge = np.abs((X - x1) * nx + (Y - edge_r) * ny)
+    glow = np.maximum(glow, bm * (0.3 + 0.55 * np.exp(-dist_edge / 26.0)))
+    glow = np.maximum(glow, pad.stroke(blade + [blade[0]], 2.6, soft=0.7) * 0.8)
+    # 날 끝 (심지 — 굵은 밝은 줄 · 위의 가는 날 결)
+    edge = [(x1, edge_r), (x0, edge_l)]
+    core = np.maximum(core, pad.stroke(edge, 3.6, soft=0.6) * 1.0)
+    glow = np.maximum(glow, pad.stroke(edge, 9.0, soft=3.0) * 0.8)
+    bevel = [(x1 + nx * 11, edge_r + ny * 11), (x0 + nx * 11, edge_l + ny * 11)]
+    core = np.maximum(core, pad.stroke(bevel, 1.2, soft=0.5) * 0.4 * bm)
+    # 쇠의 결: 날과 나란한 비스듬한 반사 띠 둘 (위가 어둡고 날 쪽으로 밝게 — 깃발이 아니라 쇠 날로 보이게)
+    for off, a_, wd in ((24.0, 0.32, 7.0), (40.0, 0.2, 4.0)):
+        band = [(x1 + nx * off, edge_r + ny * off), (x0 + nx * off, edge_l + ny * off)]
+        glow = screen(glow, pad.stroke(band, wd, soft=2.5, taper=0.6) * a_ * 1.4 * bm)
+    # 사슬 둘 (판 위 모서리에서 위로 — 위로 갈수록 흐림), 떨어지는 장면엔 없음
+    if f != 4 and f < 6:
+        ca = 0.35 if f == 0 else 0.8
+        for sx, ex2 in ((x0 + 8, x0 + 20), (x1 - 8, x1 - 20)):
+            for i in range(7):
+                t0 = i / 7
+                y = top - 6.0 - i * 11.0
+                x = sx + (ex2 - sx) * t0
+                fade = 1.0 - t0 * 0.85
+                ring = gauss(np.sqrt(((X - x) / 3.4) ** 2 + ((Y - y) / 5.6) ** 2) - 1.0, 0.28)
+                glow = np.maximum(glow, ring * 0.8 * ca * fade)
+                core = np.maximum(core, ring * 0.35 * ca * fade)
+    # 망령 연기: 날 둘레 · 날 끝 아래로 흘러내리는 자락
+    nz = fbm(X / W * 5.0, Y / H * 5.0 + f * 0.35, seed=9500, octaves=4, px=10, py=10)
+    near = np.exp(-np.maximum(0.0, dist_edge - 2.0) / 14.0) * clamp01((Y - edge_r + 6.0) / 12.0)
+    glow = np.maximum(glow, clamp01((nz - 0.5) * 2.6) * near * 0.55)
+    rs = random.Random(9600 + f)
+    for k in range(5):
+        t = (k + 0.5) / 5
+        px = x1 + (x0 - x1) * t
+        py = edge_r + (edge_l - edge_r) * t
+        L = rs.uniform(14, 30) * (1.4 if f >= 4 else 1.0)
+        pts = [(px + math.sin(i * 0.7 + k + f) * 3.0, py + 3 + L * i / 10) for i in range(11)]
+        glow = np.maximum(glow, pad.stroke(pts, 5.0, 0.8, a0=0.45, a1=0.0, soft=1.6))
+    if f == 0:
+        hole = clamp01((fbm(X / W * 6.0, Y / H * 6.0, seed=9550, octaves=3, px=12, py=12) - 0.5) * 3.0 + 0.5)
+        glow = glow * (0.4 + 0.6 * hole)
+        core = core * (0.3 + 0.7 * hole)
+        core = np.maximum(core, star4(pad, cx, 130.0, 34.0, 0.8, rot=0.3, thin=0.12, diag=0.4))
+    if f in (1, 2, 3):
+        # 번득임: 날 끝을 따라 옮겨 가는 반짝임 (1 = 오른 끝 · 2 = 1/3 · 3 = 2/3)
+        t = [0.04, 0.35, 0.7][f - 1]
+        gx = x1 + (x0 - x1) * t
+        gy = edge_r + (edge_l - edge_r) * t
+        core = np.maximum(core, star4(pad, gx, gy, 22.0 if f == 1 else 18.0, 1.0, rot=0.2, thin=0.1, diag=0.4))
+    if f == 4:
+        # 떨어짐: 위로 끌리는 바람 줄
+        for k in range(9):
+            x = x0 - 2 + (x1 - x0 + 4) * k / 8
+            L = rs.uniform(40, 70)
+            glow = np.maximum(glow, pad.stroke([(x, top - 4 - L), (x, top - 2)], 0.8, 4.0, a0=0.0, a1=0.55, soft=1.2))
+            core = np.maximum(core, pad.stroke([(x, top - 4 - L * 0.6), (x, top - 2)], 0.4, 1.4, a0=0.0, a1=0.4, soft=0.5))
+    if f == 5:
+        # 내리침: 날 끝 섬광 · 옆으로 튀는 불티 · 아래로 퍼지는 충격 줄
+        mx, my = (x0 + x1) / 2, (edge_r + edge_l) / 2
+        core = np.maximum(core, star4(pad, mx, my + 4, 64.0, 1.0, rot=0.0, thin=0.09, diag=0.35))
+        glow = np.maximum(glow, pad.radial(mx, my + 6, 70.0, 1.6) * 0.6)
+        for k in range(12):
+            a = rs.uniform(-0.9, 0.9) + (0 if k % 2 == 0 else math.pi)
+            p0 = (mx + math.cos(a) * 18, my + 8 + math.sin(a) * 6)
+            p1 = (mx + math.cos(a) * rs.uniform(50, 80), my + 8 + abs(math.sin(a)) * rs.uniform(10, 40))
+            core = np.maximum(core, streak(pad, p0, p1, 2.6, 0.9))
+    if f >= 6:
+        cut = 0.38 if f == 6 else 0.2
+        hole = clamp01((fbm(X / W * 5.5, Y / H * 5.5 + 0.3, seed=9580, octaves=4, px=11, py=11) - cut) * 3.2)
+        rise = fbm(X / W * 4.0, Y / H * 4.0 + f * 0.5, seed=9590, octaves=3, px=8, py=8)
+        glow = np.maximum(glow * (1 - hole), clamp01((rise - 0.55) * 2.0) * bm * 0.5)
+        core = core * (1 - hole) * 0.7
+    glow = glow * lum
+    core = core * lum
+    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.34), (9.0, 0.22)), body_k=0.88, core_bloom=((1.3, 0.38), (3.5, 0.24)), win=4.0)
+
+
+COLORS.setdefault("executioner", ((0.62, 0.22, 0.6), (1.0, 0.93, 0.74)))
+sprite("rfx_jguillotine", "lookat_y", GL_W, GL_H, GL_N, 4, "executioner", zoom=2,
+       desc="망령 단두대 날 (엑시큐셔너 길로틴 — 세워 카메라 쪽으로 돎, 아래 = 비스듬한 날): 0 연기가 모여 생겨남 → 1 다 생김 (오른 끝 번득임) → 2 ~ 3 매달림 (이어 돌림 — "
+       "사슬 둘 · 날 끝을 따라 옮겨 가는 번득임 · 날 아래로 흘러내리는 망령 자락) → 4 떨어짐 (위로 끌리는 바람 줄) → 5 내리침 (날 끝 섬광 · 튀는 불티) → 6 ~ 7 연기로 "
+       "흩어짐. 빛 칸 = 쇳덩이 · 옅은 날 · 망령 연기, 심지 칸 = 날 끝 · 못 · 해골 무늬")(guillotine_frame)
+
+
+# ------------------------------------------------------------ rfx_jxmark (처형 표식 — 땅에 누움, 칸 가운데 = X 가운데 · 획 끝 = 반 크기 × 0.9)
+
+XM_N = 8
+XM_S = 384
+
+
+def _brush(pad, X, Y, p0, p1, w, frac, seed):
+    """붓 획 p0 → p1 (가운데 굵기 w · 앞 frac 만): 양 끝이 가늘고 (시작이 조금 굵게) 가장자리가 거친 획 · 결 (심지)"""
+    n = 48
+    if frac <= 0.02:
+        return pad.zeros(), pad.zeros()
+    pts = [(p0[0] + (p1[0] - p0[0]) * i / n, p0[1] + (p1[1] - p0[1]) * i / n) for i in range(n + 1)]
+    pts = cut_polyline(pts, frac)
+    if len(pts) < 2:
+        return pad.zeros(), pad.zeros()
+
+    def wfn(s):
+        return w * (0.1 + 0.9 * np.clip(np.sin(np.pi * np.clip(s * 0.94 + 0.03, 0, 1)), 0, 1) ** 0.55) * (1.08 - 0.16 * s)
+
+    body = pad.stroke(pts, w, wfn=wfn, soft=3.0)
+    # 거친 가장자리 (속은 꽉 차게 — 가장자리 띠에서만 노이즈로 깎음)
+    nz = fbm(X / XM_S * 10.0, Y / XM_S * 10.0, seed=seed, octaves=3, px=20, py=20)
+    rough = clamp01((body - 0.42 + (nz - 0.5) * 0.45) * 5.0 + 0.5)
+    # 결: 획을 따라 가는 줄 셋 (붓털)
+    dx, dy = p1[0] - p0[0], p1[1] - p0[1]
+    L = math.hypot(dx, dy)
+    ox, oy = -dy / L, dx / L
+    vein = pad.zeros()
+    for k, off in enumerate((-0.22, 0.0, 0.24)):
+        q = [(x + ox * w * off, y + oy * w * off) for x, y in pts]
+        q = q[int(len(q) * (0.06 + 0.05 * k)):max(2, int(len(q) * (0.94 - 0.07 * k)))]
+        if len(q) >= 2:
+            vein = np.maximum(vein, pad.stroke(q, w * (0.1 if k == 1 else 0.06), soft=1.0, afn=lambda s: 0.9 * np.clip(np.sin(np.pi * np.clip(s, 0, 1)), 0, 1) ** 0.4))
+    return rough, vein * rough
+
+
+def xmark_frame(f):
+    S = XM_S
+    pad = Pad(S, S)
+    c = S / 2
+    X, Y = pad.grid()
+    R0 = S / 2 * 0.9
+    k = R0 * math.cos(math.pi / 4)
+    lum = [0.9, 1.0, 1.1, 0.85, 1.0, 0.9, 1.15, 0.5][f]
+    fa = [0.62, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0][f]
+    fb = [0.0, 0.55, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0][f]
+    w = 46.0
+    ga, ca = _brush(pad, X, Y, (c - k, c - k), (c + k, c + k), w, fa, 9700)
+    gb, cb = _brush(pad, X, Y, (c + k, c - k), (c - k, c + k), w * 0.92, fb, 9710)
+    glow = np.maximum(ga, gb) * 0.95
+    core = np.maximum(ca, cb)
+    # 처형의 원 (가는 테 · 여덟 눈금)
+    rr, th = polar(pad, c, c)
+    ring_a = [0.25, 0.45, 0.8, 0.6, 0.7, 0.62, 0.95, 0.35][f]
+    glow = np.maximum(glow, gauss(rr - R0 * 1.02, 2.6) * ring_a)
+    core = np.maximum(core, gauss(rr - R0 * 1.02, 1.0) * ring_a * 0.6)
+    for q in range(8):
+        a = q * TAU / 8 + TAU / 16
+        p0 = (c + math.cos(a) * R0 * 0.9, c + math.sin(a) * R0 * 0.9)
+        p1 = (c + math.cos(a) * R0 * 1.0, c + math.sin(a) * R0 * 1.0)
+        glow = np.maximum(glow, pad.stroke([p0, p1], 4.0, soft=1.2) * ring_a * 0.8)
+    # 튄 먹 (획 끝 둘레 작은 방울)
+    rs = random.Random(9800)
+    if f >= 1:
+        for q in range(14):
+            ex, ey = [(c - k, c - k), (c + k, c + k), (c + k, c - k), (c - k, c + k)][q % 4]
+            if q % 4 >= 2 and fb < 1:
+                continue
+            a = rs.uniform(0, TAU)
+            d = rs.uniform(10, 40)
+            glow = np.maximum(glow, pad.disc_field(ex * 0.9 + c * 0.1 + math.cos(a) * d, ey * 0.9 + c * 0.1 + math.sin(a) * d, rs.uniform(2.0, 5.0), soft=1.0) * 0.8)
+    rs2 = random.Random(9810 + f)
+    if 3 <= f <= 5 or f == 7:
+        # 일렁이는 불티 (획 둘레에서 바깥으로)
+        for q in range(16):
+            t = rs2.uniform(0.1, 0.9)
+            first = q % 2 == 0
+            x = (c - k + 2 * k * t) if first else (c + k - 2 * k * t)
+            y = c - k + 2 * k * t
+            a = rs2.uniform(0, TAU)
+            d = rs2.uniform(20, 60)
+            core = np.maximum(core, pad.disc_field(x + math.cos(a) * d, y + math.sin(a) * d, rs2.uniform(1.6, 3.0), soft=0.8) * 0.7)
+    if f == 0:
+        core = np.maximum(core, star4(pad, c - k + 2 * k * 0.62, c - k + 2 * k * 0.62, 40.0, 0.9, rot=0.3, thin=0.1, diag=0.4))
+    if f == 2:
+        core = np.maximum(core, star4(pad, c, c, 70.0, 1.0, rot=0.0, thin=0.1, diag=0.45))
+    if f == 6:
+        # 벰: 획 가운데 굵은 흰 줄 · 큰 섬광 · 퍼지는 빛살
+        for p0, p1 in (((c - k, c - k), (c + k, c + k)), ((c + k, c - k), (c - k, c + k))):
+            core = np.maximum(core, pad.stroke([p0, p1], 9.0, taper=0.8, soft=2.0))
+        core = np.maximum(core, star4(pad, c, c, 120.0, 1.0, rot=0.0, thin=0.08, diag=0.4))
+        for q in range(12):
+            a = q * TAU / 12 + 0.13
+            glow = np.maximum(glow, pad.stroke([(c + math.cos(a) * 40, c + math.sin(a) * 40), (c + math.cos(a) * R0 * 0.95, c + math.sin(a) * R0 * 0.95)], 7.0, 0.8,
+                                               a0=0.6, a1=0.0, soft=2.0))
+    if f == 7:
+        hole = clamp01((fbm(X / S * 6.0, Y / S * 6.0, seed=9820, octaves=4, px=12, py=12) - 0.42) * 3.2)
+        glow = glow * (1 - hole)
+        core = core * (1 - hole) * 0.8
+    glow = glow * lum
+    core = core * lum
+    return finish(pad, glow, core, halo=((2.0, 0.45), (5.0, 0.34), (12.0, 0.22)), body_k=0.9, core_bloom=((1.5, 0.35), (4.0, 0.24)), win=4.0)
+
+
+COLORS.setdefault("dusk", ((1.0, 0.72, 0.26), (1.0, 0.93, 0.74)))
+sprite("rfx_jxmark", "direction_z", XM_S, XM_S, XM_N, 4, "dusk", zoom=0,
+       desc="처형 표식 (엑시큐셔너 비포 선셋 — 땅에 누움, 칸 가운데 = X 가운데 · 획 끝 = 반 크기 × 0.9): 0 첫 획이 그어짐 → 1 둘째 획 → 2 X 다 그어지며 번쩍 → 3 ~ 5 "
+       "맥동 (이어 돌림 — 거친 붓 획 · 붓털 결 · 처형의 원과 여덟 눈금 · 튄 먹 · 일렁이는 불티) → 6 벰 (획 가운데 흰 줄 · 큰 섬광 · 빛살) → 7 타 들어가 흐려짐. 빛 칸 = "
+       "붓 획 · 원, 심지 칸 = 결 · 불티 · 섬광")(xmark_frame)
 
 
 def main():

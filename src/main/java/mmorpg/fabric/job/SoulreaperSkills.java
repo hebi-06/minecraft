@@ -380,7 +380,7 @@ final class SoulreaperSkills {
     // ------------------------------------------------------------ 랜턴 오브 소울즈
 
     /**
-     * 랜턴 오브 소울즈 (롤 쓰레쉬 — 태세 칸 몫 딜): 곁 (오른쪽 앞 어깨 위) 에 영혼 등불이 떠서 first 틱부터 every 틱마다 hooks 번 둘레 range 칸의 적 (가장 오래 안 낚은
+     * 랜턴 오브 소울즈 (롤 쓰레쉬 — 태세 칸 몫 딜): 곁 (왼쪽 앞 어깨 위) 에 영혼 등불이 떠서 first 틱부터 every 틱마다 hooks 번 둘레 range 칸의 적 (가장 오래 안 낚은
      * 적부터 — 차례로 돌아가며 · 같으면 가까운 적) 에게 사슬을 던져 영혼을 낚아챔 (hook · 마법 · 내 쪽으로 pull 칸 끌어옴 · 영혼이 등불로) — 낚은 영혼만큼 등불이 커짐.
      * 적이 없으면 그 차례는 쉼. 직업을 바꾸거나 죽으면 꺼짐
      */
@@ -464,10 +464,10 @@ final class SoulreaperSkills {
         return true;
     }
 
-    /** 영혼 등불 자리: 오른쪽 0.85칸 · 앞 0.45칸 · 어깨 위 (3인칭 카메라는 왼쪽 뒤 — 몸 너머로 보임) */
+    /** 영혼 등불 자리: 왼쪽 0.85칸 · 앞 0.45칸 · 어깨 위 (동작이 왼손을 들어 등불을 띄움 — 오른손은 낫) */
     static Vec3 lanternAt(ServerPlayer sp) {
         Vec3 f = Kit.facingOf(sp);
-        return V.up(V.add(V.add(sp.position(), V.rightOf(f), 0.85), f, 0.45), 1.95);
+        return V.up(V.add(V.add(sp.position(), V.rightOf(f), -0.85), f, 0.45), 1.95);
     }
 
     /** 등불이 떠 있는지 (같은 목숨 · 소울 리퍼 · 꺼지지 않음) */

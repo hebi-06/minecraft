@@ -1060,6 +1060,10 @@
       "stormlancer_drill": "jb_stormlancer_drill", "stormlancer_rend": "jb_stormlancer_rend", "stormlancer_rend:rip": "jb_stormlancer_rend_rip", "stormlancer_ult": "jb_stormlancer_ult",
       "stormlancer_ult:final": "jb_stormlancer_ult_final", "stormlancer_ult:thrust": "jb_stormlancer_ult_thrust", "dragoon_tail": "jb_dragoon_tail", "dragoon_jump": "jb_dragoon_jump",
       "dragoon_jump:dive": "jb_dragoon_jump_dive", "dragoon_impale": "jb_dragoon_impale", "dragoon_breath": "jb_dragoon_breath", "dragoon_ult": "jb_dragoon_ult",
+      "soulreaper_crescent": "jb_soulreaper_crescent", "soulreaper_trespass": "jb_soulreaper_trespass", "soulreaper_harvest": "jb_soulreaper_harvest", "soulreaper_harvest:rip": "jb_soulreaper_harvest_rip",
+      "soulreaper_lantern": "jb_soulreaper_lantern", "soulreaper_ult": "jb_soulreaper_ult", "soulreaper_ult:slam": "jb_soulreaper_ult_slam", "executioner_condemn": "jb_executioner_condemn",
+      "executioner_stalk": "jb_executioner_stalk", "executioner_guillotine": "jb_executioner_guillotine", "executioner_guillotine:drop": "jb_executioner_guillotine_drop", "executioner_lastday": "jb_executioner_lastday",
+      "executioner_ult": "jb_executioner_ult",
       "rune:abyssBrand": "rn_abyss_brand", "rune:arcanaUnity": "rn_arcana_unity", "rune:arcaneCut": "rn_arcane_cut",
       "rune:archangel": "rn_archangel", "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening",
       "rune:axeBoomerang": "rn_axe_boomerang", "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep",
@@ -1156,7 +1160,9 @@
       "jb_pierrot_box", "jb_pierrot_spring", "jb_pierrot_balloon", "jb_pierrot_doll", "jb_pierrot_ult", "jb_pierrot_ult_cheer",
       "jb_pierrot_ult_bow", "jb_stormlancer_cross", "jb_stormlancer_drive", "jb_stormlancer_drive_back", "jb_stormlancer_drill", "jb_stormlancer_rend",
       "jb_stormlancer_rend_rip", "jb_stormlancer_ult", "jb_stormlancer_ult_thrust", "jb_stormlancer_ult_final", "jb_dragoon_tail", "jb_dragoon_jump",
-      "jb_dragoon_jump_dive", "jb_dragoon_impale", "jb_dragoon_breath", "jb_dragoon_ult"
+      "jb_dragoon_jump_dive", "jb_dragoon_impale", "jb_dragoon_breath", "jb_dragoon_ult", "jb_soulreaper_crescent", "jb_soulreaper_trespass",
+      "jb_soulreaper_harvest", "jb_soulreaper_harvest_rip", "jb_soulreaper_lantern", "jb_soulreaper_ult", "jb_soulreaper_ult_slam", "jb_executioner_condemn",
+      "jb_executioner_stalk", "jb_executioner_guillotine", "jb_executioner_guillotine_drop", "jb_executioner_lastday", "jb_executioner_ult"
     ],
     "weaponMotions": [
       "wp_gram_charge", "wp_gram_descent", "wp_gram_descent_dive", "wp_solas_rush", "wp_solas_halo", "wp_solas_halo_pillar",

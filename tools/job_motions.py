@@ -30,6 +30,7 @@ import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 
 import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 배틀 아처 — 재설계안 2판)
 import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 피에로 — 재설계안 2판)
 import job_motions_j  # noqa: E402,F401 — 0.51.0 2차 직업 (스톰 랜서 · 드라군 — 2026-11-06)
+import job_motions_k  # noqa: E402,F401 — 0.51.0 2차 직업 (소울 리퍼 · 엑시큐셔너 — 2026-11-06)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -116,6 +117,12 @@ AIR = {
     "jb_dragoon_jump": [],
     "jb_dragoon_jump_dive": [],
     "jb_dragoon_ult": [],
+    # 0.51.0 소울 리퍼 · 엑시큐셔너 (2026-11-06): 리핑 크레센트 (0 ~ 4 낫을 끌며 내달림 — 제 다리) · 엄브럴 트레스패스 (그림자로 스며듦 · 웅크림 — 제 다리) ·
+    # 페일 하베스트 :slam (제자리 뜀 — 제 다리) 은 걸음 다리를 끔, 섀도 스토크 (1 ~ 7 그림자처럼 뛰어듦 → 8 내려섬)
+    "jb_soulreaper_crescent": [],
+    "jb_soulreaper_trespass": [],
+    "jb_soulreaper_ult_slam": [],
+    "jb_executioner_stalk": [(1, 7, "tuck"), (8, 11, "land")],
 }
 
 
