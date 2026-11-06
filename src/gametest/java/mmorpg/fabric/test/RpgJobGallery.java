@@ -697,6 +697,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         // 2026-11-06 세인트 · 워록: 앞 왼쪽 아군 (세인트는 다친 아군 45% — 고르게 · 나비가 들름, 워록은 가득 — 빼앗을 피) · 세인트 글리머윙 · 에버블룸은 신앙 3 (+30%)
         if (job.equals("saint") || job.equals("warlock")) {
             ServerPlayer a = filmAlly(sp);
+            mmorpg.fabric.job.JobTraits14.testClear(a);
+            mmorpg.fabric.job.JobTraits14.testClear(sp);
             a.snapTo(ALLY_AT.x, ALLY_AT.y, ALLY_AT.z, 180F, 0F);
             a.setYHeadRot(180F);
             a.setYBodyRot(180F);
@@ -1009,7 +1011,12 @@ public final class RpgJobGallery implements FabricClientGameTest {
     private static ServerPlayer filmAlly(ServerPlayer sp) {
         MinecraftServer s = sp.level().getServer();
         for (ServerPlayer p : s.getPlayerList().getPlayers()) if (p != sp) return p;
-        return RpgDuelGallery.rival(s, "Ally", ALLY_AT, 180F);
+        ServerPlayer a = RpgDuelGallery.rival(s, "Ally", ALLY_AT, 180F);
+        // 나와 같은 40렙 · 스탯 150 (영상 1: 새 플레이어의 작은 최대 체력이라 회복 · 빼앗음 숫자가 +1 · −0.8 로 보였음)
+        a.setExperienceLevels(40);
+        mmorpg.fabric.RpgPlayers.update(a, mmorpg.fabric.RpgData.of(a).withLvmax(40));
+        for (String k : new String[] {"str", "dex", "vit", "int"}) mmorpg.fabric.RpgPlayers.setStat(a, k, 150);
+        return a;
     }
 
     /** 0.29.0 암살자: 과녁 허스크 (없으면 세움) 마다 표식 n — 가까운 것이 게이지 대상 (마지막에 찍음) */

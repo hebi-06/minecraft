@@ -87,7 +87,7 @@ final class WarlockSkills {
                 }
                 if (tt == 2) {
                     Vec3 u = V.unit(V.sub(aim.get(), at));
-                    JobFx14.lanceHold(lv, at, u, 0.7, (formAt - 2) / 20.0, Opt.of("alpha", 0.95, "vel", RuneKit.bodyVel(sp)), BLOOD, BLOOD_CORE);
+                    JobFx14.lanceHold(lv, at, u, 0.95, (formAt - 2) / 20.0, Opt.of("alpha", 0.95, "vel", RuneKit.bodyVel(sp)), BLOOD, BLOOD_CORE);
                     JobFx14.heart(lv, at, 0.35, 0, 4, (formAt - 2) / 20.0, false, Opt.of("vel", RuneKit.bodyVel(sp)), BLOOD, BLOOD_CORE);
                 }
             });
@@ -97,7 +97,7 @@ final class WarlockSkills {
             ServerLevel lv = sp.level();
             Vec3 from = hold.get();
             Vec3 to = aim.get();
-            JobFx14.lance(lv, from, to, hitAt - formAt, 0.8, Opt.empty(), BLOOD, BLOOD_CORE);
+            JobFx14.lance(lv, from, to, hitAt - formAt, 1.15, Opt.empty(), BLOOD, BLOOD_CORE); // 영상 1: 0.8 은 가는 붉은 줄로만 보였음
             JobFx.line(lv, from, to, WGOLD, WGOLD_CORE, 0.25, Opt.of("alpha", 0.5));
             JobFx.burst(lv, from, 0.6, BLOOD, BLOOD_CORE, 0.2, JobFx.hide1p(sp));
             SkillFx.play(lv, "item.trident.throw", sp.position(), 0.8, 1.0);
@@ -263,8 +263,9 @@ final class WarlockSkills {
         Vec3 g0 = ground(level0, sp.position());
         JobFx14.pool(level0, V.up(g0, 0.05), r, 0, 2, 0.4, false, Opt.of("alpha", 0.55, "coreAlpha", 0.5), BLOOD, BLOOD_CORE);
         RuneKit.later(8, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx14.pool(sp.level(), V.up(g0, 0.05), r, 2, 4, (burstAt - 8) / 20.0, true, Opt.of("alpha", 0.5, "coreAlpha", 0.45),
-                    BLOOD, BLOOD_CORE);
+            // 터지는 틱보다 4틱 더 · 끝 8% 만 흐려짐 (영상 1: 20% 가 흐려져 터지기 전에 웅덩이가 사라졌음)
+            if (RuneKit.sameLife(sp, life)) JobFx14.pool(sp.level(), V.up(g0, 0.05), r, 2, 4, (burstAt - 8 + 4) / 20.0, true, Opt.of("alpha", 0.5, "coreAlpha", 0.45,
+                    "fade", 0.08), BLOOD, BLOOD_CORE);
         });
         JobFx14.heart(level0, orb.get(), 0.7, 0, 1, 0.3, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), BLOOD, BLOOD_CORE);
         JobFx14.heart(level0, orb1p, 0.3, 0, 1, 0.3, false, JobFx.only1p(sp), BLOOD, BLOOD_CORE);
@@ -314,9 +315,12 @@ final class WarlockSkills {
             RuneKit.novaRing(lv, V.up(g, 0.2), 0.6, r * 0.75 / 0.6 - 1, WGOLD, WGOLD_CORE, Opt.of("life", 0.4));
             JobFx14.pool(lv, V.up(g, 0.06), r, 6, 2, 0.5, false, Opt.of("alpha", 0.8), BLOOD, BLOOD_CORE);
             Ult.flash(lv, c, BLOOD_CORE, Opt.of("radius", 5.0, "time", new double[] {0.02, 0.05, 0.25}), sp);
-            for (int i = 0; i < 10; i++) {
-                double a = i * JobTraits14.TAU / 10;
-                double rr = r * (i % 2 == 0 ? 0.45 : 0.75);
+            // 핏물 기둥 아홉: 앞 220° (뒤 — 3인칭 카메라 쪽은 비움) · 4.5칸 안 (영상 1: 6칸 기둥이 영상 카메라 바로 앞에서 화면을 덮었음)
+            Vec3 fw = Kit.facingOf(sp);
+            double base = Math.atan2(fw.z, fw.x);
+            for (int i = 0; i < 9; i++) {
+                double a = base + Math.toRadians(-110 + i * 27.5);
+                double rr = Math.min(4.5, r * (i % 2 == 0 ? 0.35 : 0.55));
                 Vec3 p = ground(lv, V.add(c, new Vec3(Math.cos(a), 0, Math.sin(a)), rr));
                 int delay = i % 3;
                 RuneKit.later(delay, () -> JobFx14.geyser(lv, p, 2.2 + Kit.rand() * 0.8, 0, 7, 0.6, Opt.empty(), BLOOD, BLOOD_CORE));
@@ -404,11 +408,13 @@ final class WarlockSkills {
         }
         if (center == null) center = ground(level0, V.add(c0, Kit.facingOf(sp), k.num("fallback", 6)));
         Vec3 mid = center;
-        Vec3 bigHeart = V.up(mid, 3.0);
+        Vec3 bigHeart = V.up(mid, 3.4);
         Ult.sky(level0, c0, "rpg:ult_feast", burstAt + 30);
         JobFx14.pool(level0, V.up(mid, 0.05), r, 0, 2, 0.5, false, Opt.of("alpha", 0.95), BLOOD, BLOOD_CORE);
         RuneKit.later(10, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx14.pool(sp.level(), V.up(mid, 0.05), r, 2, 4, (burstAt - 10) / 20.0, true, Opt.of("alpha", 0.9), BLOOD, BLOOD_CORE);
+            // 터지는 틱보다 4틱 더 · 끝 8% 만 흐려짐 (영상 1: 터지기 전에 웅덩이가 사라졌음)
+            if (RuneKit.sameLife(sp, life)) JobFx14.pool(sp.level(), V.up(mid, 0.05), r, 2, 4, (burstAt - 10 + 4) / 20.0, true, Opt.of("alpha", 0.9, "fade", 0.08), BLOOD,
+                    BLOOD_CORE);
         });
         JobFx.smoke(level0, V.up(mid, 0.8), r * 0.6, BLOOD, BLOOD_CORE, 1.4, Opt.of("alpha", 0.45, "dir", V.UP, "speed", 0.6));
         JobFx.line(level0, tip(sp), V.up(mid, 0.5), BLOOD, BLOOD_CORE, 0.35, Opt.of("alpha", 0.8));
@@ -449,7 +455,7 @@ final class WarlockSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             fed[0] = JobTraits14.feast(sp, j, bigHeart, k.num("feastRadius", 10), k.num("feast", 0.15));
-            JobFx14.heart(lv, bigHeart, 1.4 + fed[0] * 0.25, 0, 5, (burstAt - feastAt) / 20.0, false, Opt.of("alpha", 1.0), BLOOD, BLOOD_CORE);
+            JobFx14.heart(lv, bigHeart, 2.0 + fed[0] * 0.3, 0, 5, (burstAt - feastAt) / 20.0, false, Opt.of("alpha", 1.0), BLOOD, BLOOD_CORE); // 영상 1: 1.4 는 과녁만 했음
             JobFx.line(lv, tip(sp), bigHeart, BLOOD, BLOOD_CORE, 0.3, Opt.of("alpha", 0.8));
             SkillFx.play(lv, "entity.warden.heartbeat", mid, 0.6, 1.0);
             if (fed[0] > 0) JobSystem.note(sp, "§4블러드 뱅큇 §7— 아군 " + fed[0] + " · 터짐 +" + Math.round(fed[0] * JobUpgrades.num(sp, k, "feastUp", 0.15) * 100) + "%");
@@ -459,7 +465,7 @@ final class WarlockSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             double mult = k.num("burst", 18) * (1 + fed[0] * JobUpgrades.num(sp, k, "feastUp", 0.15));
-            JobFx14.heart(lv, bigHeart, 2.6 + fed[0] * 0.3, 5, 3, 0.5, false, Opt.empty(), BLOOD, BLOOD_CORE);
+            JobFx14.heart(lv, bigHeart, 3.2 + fed[0] * 0.35, 5, 3, 0.5, false, Opt.empty(), BLOOD, BLOOD_CORE);
             JobFx14.pool(lv, V.up(mid, 0.06), r, 6, 2, 0.6, false, Opt.of("alpha", 0.9), BLOOD, BLOOD_CORE);
             RuneKit.novaRing(lv, mid, 0.8, r * 1.4 / 0.8 - 1, BLOOD, BLOOD_CORE, Opt.of("life", 0.5));
             Ult.flash(lv, mid, BLOOD_CORE, Opt.empty(), sp);

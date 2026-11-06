@@ -413,9 +413,10 @@ final class SaintSkills {
         RuneKit.later(9, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            double rest = (bloomAt - 9) / 20.0;
-            JobFx14.lotus(lv, V.up(ground, 0.06), r, 3, 3, rest, true, Opt.of("alpha", 0.9), GOLD, GOLD_CORE);
-            JobFx14.lotus(lv, V.up(ground, 0.09), r * 0.6, 3, 3, rest, true, Opt.of("alpha", 0.8), LEAF, LEAF_CORE);
+            // 꽃이 피는 틱보다 5틱 더 (끝 6% 만 흐려짐 — 영상 1: 20% 가 흐려져 꽃이 피기 전에 꽃밭이 사라졌음 · 꽃이 필 때 연꽃 5 ~ 7 이 이어받음)
+            double rest = (bloomAt - 9 + 5) / 20.0;
+            JobFx14.lotus(lv, V.up(ground, 0.06), r, 3, 3, rest, true, Opt.of("alpha", 0.9, "fade", 0.06), GOLD, GOLD_CORE);
+            JobFx14.lotus(lv, V.up(ground, 0.09), r * 0.6, 3, 3, rest, true, Opt.of("alpha", 0.8, "fade", 0.06), LEAF, LEAF_CORE);
         });
         Vec3 budAt = V.up(V.add(ground, f, 2.5), 3.4);
         Vec3 look = sp.getViewVector(1F);
@@ -424,9 +425,10 @@ final class SaintSkills {
         RuneKit.later(10, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            double rest = (bloomAt - 10) / 20.0;
-            JobFx14.bloom(lv, budAt, 1.7, 0, 2, rest, true, JobFx.hide1p(sp).with("fps", 4.0), PETAL, PETAL_CORE);
-            JobFx14.bloom(lv, bud1p, 0.36, 0, 2, rest, true, JobFx.only1p(sp).with("fps", 4.0), PETAL, PETAL_CORE);
+            // 꽃봉오리는 꽃이 피는 틱까지 또렷이 (끝 3틱만 흐려짐 — 그 자리에서 큰 꽃이 핌)
+            double rest = (bloomAt - 10 + 1) / 20.0;
+            JobFx14.bloom(lv, budAt, 1.7, 0, 2, rest, true, JobFx.hide1p(sp).with("fps", 4.0, "fade", 0.04), PETAL, PETAL_CORE);
+            JobFx14.bloom(lv, bud1p, 0.36, 0, 2, rest, true, JobFx.only1p(sp).with("fps", 4.0, "fade", 0.04), PETAL, PETAL_CORE);
         });
         RuneKit.godRays(sp, level0, ground, 2.5, 4, GOLD, GOLD_CORE, Opt.of("h", 10.0, "life", 1.0, "alpha", 0.55, "skipNear", true));
         JobFx.aura(sp, j, 3.0, 1.0, 1.0);
@@ -454,13 +456,17 @@ final class SaintSkills {
     /** 꽃잎 폭풍: 꽃밭 둘레를 휘도는 꽃잎 · 꽃봉오리가 부풂 — 안의 적 storm (마법), 안의 아군은 쓰러지지 않음을 끝까지 (새로 들어온 아군도) */
     private static void storm(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Vec3 ground, double r, Vec3 budAt, int s, String life, int undyingLeft) {
         ServerLevel lv = sp.level();
-        for (int i = 0; i < 18; i++) {
-            double a = i * JobTraits14.TAU / 18 + s * 0.4;
-            double rr = r * (0.55 + 0.4 * ((i % 3) / 2.0));
-            Vec3 p = V.up(V.add(ground, new Vec3(Math.cos(a), 0, Math.sin(a)), rr), 0.4 + (i % 4) * 0.45);
-            Vec3 tan = V.unit(new Vec3(-Math.sin(a), 0.2, Math.cos(a)));
-            JobTraits14.petal(lv, p, tan, 7.0, 0.2, 0.45, Opt.empty());
+        // 꽃잎 폭풍 (영상 1: 작은 꽃잎 열여덟은 영상 카메라에서 거의 보이지 않았음): 꽃밭 둘레를 휘도는 큰 꽃잎 서른 (세 겹 높이 · 폭풍마다 도는 쪽을 바꿈) ·
+        // 땅의 연꽃 꽃잎이 바깥으로 떠오름 (분홍 물결) · 꽃봉오리가 부풂
+        double turn = s % 2 == 0 ? 1 : -1;
+        for (int i = 0; i < 30; i++) {
+            double a = i * JobTraits14.TAU / 30 + s * 0.4;
+            double rr = r * (0.35 + 0.6 * ((i % 3) / 2.0));
+            Vec3 p = V.up(V.add(ground, new Vec3(Math.cos(a), 0, Math.sin(a)), rr), 0.3 + (i % 5) * 0.55);
+            Vec3 tan = V.unit(new Vec3(-Math.sin(a) * turn, 0.25, Math.cos(a) * turn));
+            JobTraits14.petal(lv, p, tan, 6.0 + (i % 3), 0.34, 0.75, Opt.empty());
         }
+        JobFx14.lotus(lv, V.up(ground, 0.12), r * 0.92, 6, 2, 0.55, false, Opt.of("alpha", 0.95, "spin", s * 40.0), PETAL, PETAL_CORE);
         JobFx14.bloom(lv, budAt, 1.85, 1, 1, 0.3, false, Opt.of("alpha", 0.9), PETAL, PETAL_CORE);
         JobFx.halo(lv, V.up(ground, 0.08), r, j, 0.5, Opt.of("alpha", 0.6));
         SkillFx.play(lv, "block.cherry_leaves.break", ground, 0.9, 1.0);
@@ -471,10 +477,12 @@ final class SaintSkills {
             if (!e.isAlive() || e.isRemoved()) continue;
             JobKit.strike(sp, e, j, P, k.num("storm", 4), true, false, life, 0, d -> {
                 if (cnt[0]++ < 6 && e.level() instanceof ServerLevel el) {
-                    for (int q = 0; q < 4; q++) {
+                    for (int q = 0; q < 6; q++) {
                         Vec3 d2 = V.unit(new Vec3(Kit.rand() - 0.5, Kit.rand() * 0.6, Kit.rand() - 0.5));
-                        JobTraits14.petal(el, Kit.bodyPoint(e), d2, 4.0, 0.17, 0.4, Opt.empty());
+                        JobTraits14.petal(el, Kit.bodyPoint(e), d2, 4.0, 0.24, 0.5, Opt.empty());
                     }
+                    // 맞은 적 몸에서 꽃이 터짐 (흩날리는 큰 꽃 — 영상 1: 폭풍이 맞힌 자리가 보이지 않았음)
+                    JobFx14.bloom(el, Kit.bodyPoint(e), 0.75 + Kit.bodyPad(e) * 0.35, 5, 3, 0.4, false, Opt.of("vel", RuneKit.entVel(e)), PETAL, PETAL_CORE);
                     JobFx.burst(el, Kit.bodyPoint(e), 0.7 + Kit.bodyPad(e) * 0.4, PETAL, PETAL_CORE, 0.3, Opt.of("vel", RuneKit.entVel(e)));
                 }
             });

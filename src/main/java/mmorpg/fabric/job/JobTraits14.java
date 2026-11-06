@@ -279,6 +279,15 @@ public final class JobTraits14 {
         VEILS.put(to.getUUID(), new Veil(saint.getUUID(), now + from, now + from + ticks, radius, knock));
     }
 
+    /** 시험 · 사진첩: 이 사람에게 남은 페탈 베일 · 에버블룸 · 소울본드를 지움 (스킬마다 처음부터 — 영상 1: 앞 스킬의 장막이 다음 스킬 영상에서 터졌음) */
+    public static void testClear(ServerPlayer p) {
+        UUID id = p.getUUID();
+        VEILS.remove(id);
+        BLOOM.remove(id);
+        BONDS.remove(id);
+        BONDS.values().removeIf(s -> s.equals(id));
+    }
+
     /** 시험: 페탈 베일이 감싸고 있는지 */
     public static boolean veiled(ServerPlayer p) {
         Veil v = VEILS.get(p.getUUID());
