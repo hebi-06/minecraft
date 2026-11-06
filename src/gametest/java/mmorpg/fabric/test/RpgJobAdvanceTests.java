@@ -2816,9 +2816,13 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(3, () -> h.assertTrue(Math.abs(RpgHealth.shieldOf(ally[0]) - RpgHealth.maxOf(ally[0]) * 0.03) < 1e-6,
                 "hit under the cloud → allies shield 3%: " + RpgHealth.shieldOf(ally[0]))));
         steps.add(new RpgJobTests.Step(11, () -> sp.attack(z.get(0))));
-        steps.add(new RpgJobTests.Step(14, () -> sp.attack(z.get(0)))); // 다섯째 심판 → 벼락 (곁의 과녁에게 갈라짐 — 기절 10틱)
+        // 셋째 평타 전에 심판을 비움 (다섯째 심판의 갈래 벼락이 곁의 과녁을 기절시키면 번개 고리를 가를 수 없음 — AI 없는 과녁의 기절이 14틱 뒤에도 남았음, CI 42178510773)
         steps.add(new RpgJobTests.Step(14, () -> {
-            h.assertTrue(!z.get(1).hasEffect(MobEffects.SLOWNESS), "the fork stun wore off");
+            JobTraits4.setJudges(sp, z.get(0), 0);
+            sp.attack(z.get(0));
+        }));
+        steps.add(new RpgJobTests.Step(14, () -> {
+            h.assertTrue(!z.get(1).hasEffect(MobEffects.SLOWNESS), "the one beside is not stunned before the 4th hit");
             sp.attack(z.get(0));
             h.assertTrue(z.get(1).hasEffect(MobEffects.SLOWNESS), "4th hit → lightning ring stuns the one beside");
             JobSystem.setJob(sp, "thunderlord");
