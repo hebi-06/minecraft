@@ -240,8 +240,8 @@ final class ThunderlordSkills {
         Vec3 land = dest;
         LivingEntity look = face;
         // 웅크림 (gather 틱 — 발밑에 번개가 모임 · 받는 피해 없음 · 그 자리에 머묾) → 사라짐: 보이지 않음 — 몸에서 하늘로 솟는 벼락 · 터짐 · 하늘을 가로지르는 번개.
-        // 투명은 웅크린 뒤 (영상 1: 쓰자마자 투명이면 투명 효과가 동작보다 먼저 닿아 빈 몸 곁에 망치만 1 ~ 2틱 떠 있었음 — 동작은 1.6틱부터 망치를 숨김)
-        int gather = Math.min(2, vanish - 1);
+        // 투명은 웅크린 뒤 (영상 1 · 2: 투명 효과가 동작보다 1 ~ 2틱 먼저 닿아 빈 몸 곁에 망치만 떠 있었음 — 3틱에 투명 · 동작은 1틱부터 망치를 숨김)
+        int gather = Math.min(3, vanish - 1);
         JobTraits13.guardFor(sp, vanish + 2);
         RpgCombat.setSteadfast(sp, vanish + 4);
         JobMove.run(sp, JobMove.hold(0, vanish));
@@ -329,7 +329,7 @@ final class ThunderlordSkills {
         RpgCombat.setSteadfast(sp, strikeAt + 4);
         // 뜸: 망치를 하늘로 치켜듦 · 하늘의 먹구름이 모임 · 땅의 금빛 고리가 조여 듦 · 구름 속 번쩍임 · 땅을 기는 작은 번개
         JobFx.charge(sp, j, new Vec3(0.2, 2.7, 0.2), strikeAt - 2, 0.8);
-        Vec3 sky = V.up(g, 7.0); // 영상 1: 9.5칸은 3인칭 화면 위 밖이라 먹구름이 보이지 않았음
+        Vec3 sky = V.up(g, 5.2); // 영상 1 · 2: 9.5 · 7칸은 3인칭 화면 위 밖이라 먹구름이 보이지 않았음
         JobFx.cloud(level0, sky, 3.4, 0, 2, 0.4, false, Opt.empty(), CLOUD, GOLD);
         RuneKit.later(8, () -> {
             if (RuneKit.sameLife(sp, life)) JobFx.cloud(sp.level(), sky, 3.6, 2, 4, (strikeAt - 8) / 20.0 + 0.15, true, Opt.empty(), CLOUD, GOLD);
@@ -342,7 +342,7 @@ final class ThunderlordSkills {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
-                JobFx.thunder(lv, V.add(V.up(g, 5.8), new Vec3((Kit.rand() - 0.5) * 4, 0, (Kit.rand() - 0.5) * 4)), 3.0, j, 0.18, Opt.of("alpha", 0.8));
+                JobFx.thunder(lv, V.add(V.up(g, 4.2), new Vec3((Kit.rand() - 0.5) * 4, 0, (Kit.rand() - 0.5) * 4)), 2.6, j, 0.18, Opt.of("alpha", 0.8));
                 double a = Kit.rand() * Math.PI * 2;
                 Vec3 p = V.up(V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * (0.6 + Kit.rand() * 0.6)), 0.15);
                 JobFx.arc(lv, p, V.up(V.add(p, new Vec3(Math.cos(a + 1.6), 0, Math.sin(a + 1.6)), 1.2), 0.1), GOLD, GOLD_CORE, 0.2, Opt.empty());
@@ -353,8 +353,8 @@ final class ThunderlordSkills {
         RuneKit.later(strikeAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            JobFx.pillar(lv, g, 11, 1, 7, 0.7, false, Opt.empty(), GOLD, GOLD_CORE);
-            JobFx.pillar(lv, g, 9.5, 1, 7, 0.6, false, Opt.of("alpha", 0.7), SKY, SKY_CORE);
+            JobFx.pillar(lv, g, 9, 1, 7, 0.7, false, Opt.empty(), GOLD, GOLD_CORE);
+            JobFx.pillar(lv, g, 7.5, 1, 7, 0.6, false, Opt.of("alpha", 0.7), SKY, SKY_CORE);
             for (int i = 0; i < 3; i++) {
                 double a = i * Math.PI * 2 / 3 + Kit.rand();
                 JobFx.thunder(lv, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * 0.8), 9, j, 0.3, Opt.of("alpha", 0.85));

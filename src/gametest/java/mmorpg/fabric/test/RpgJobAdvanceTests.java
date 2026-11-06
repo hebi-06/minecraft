@@ -2751,19 +2751,19 @@ public final class RpgJobAdvanceTests {
             for (Husk x : z) h.assertTrue(JobTraits4.judges(sp, x) == 2, "sweep + fork → 2 judgements: " + JobTraits4.judges(sp, x));
             for (Husk x : z) x.discard();
             z.clear();
-            // 썬더스텝: 6칸 앞 과녁 — 번개가 되어 사라짐 (6틱 — 받는 피해 없음 · 보이지 않음) → 그 과녁 앞에 내리꽂힘 3.3 (narrow) · 기절 · 보호막 10%
+            // 썬더스텝: 6칸 앞 과녁 — 3틱 웅크렸다 번개가 되어 사라짐 (6틱까지 받는 피해 없음 · 보이지 않음) → 그 과녁 앞에 내리꽂힘 3.3 (narrow) · 기절 · 보호막 10%
             home(h, sp);
             z.add(dummy(h, 0, 6.0));
             RpgJobTests.clearStrays(h, z.get(0));
             mark[0] = sp.position().z;
             h.assertTrue(JobSkills.press(sp, 1), "썬더스텝 cast");
         }));
-        steps.add(new RpgJobTests.Step(3, () -> {
+        steps.add(new RpgJobTests.Step(4, () -> { // 3틱 웅크린 뒤 보이지 않게 됨
             h.assertTrue(JobTraits13.guarded(sp) && sp.hasEffect(MobEffects.INVISIBILITY), "vanished as lightning: no damage taken · invisible");
             h.assertTrue(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) == 1, "lightning body: damage blocked");
             h.assertTrue(Math.abs(sp.position().z - mark[0]) < 0.3, "held in place while vanished: " + (sp.position().z - mark[0]));
         }));
-        steps.add(new RpgJobTests.Step(6, () -> {
+        steps.add(new RpgJobTests.Step(5, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 3.3);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "썬더스텝 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(sp.position().z - mark[0] > 3.0 && z.get(0).position().z - sp.position().z < 2.6, "struck down in front of the target: "
