@@ -222,7 +222,8 @@ final class ExecutionerSkills {
     // ------------------------------------------------------------ 길로틴
 
     /**
-     * 길로틴 (롤 가렌 R): 낫을 높이 치켜드는 동안 (dropAt − 4 틱) 겨눈 적 (range 칸) 머리 위 height 칸에 거대한 망령 단두대 날이 생겨나 매달림 (적을 따라감 · 위에서 내리비추는
+     * 길로틴 (롤 가렌 R): 낫을 높이 치켜드는 동안 (dropAt − 4 틱) 겨눈 적 (range 칸) 머리 위 height 칸 (2026-11-06 영상 1: 7칸이면 3인칭 화면 위로 나가 떨어질 때만
+     * 보였음 → 3칸) 에 거대한 망령 단두대 날이 생겨나 매달림 (적을 따라감 · 위에서 내리비추는
      * 해 질 녘 빛) → 4틱에 떨어져 dropAt 틱에 내리쳐 벰 (drop × (1 + 잃은 체력 몫 × missing) — 처형 덤과 따로 · 큰 숫자). 겨눈 적이 없으면 쓰지 않음
      */
     static boolean guillotine(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
@@ -236,7 +237,7 @@ final class ExecutionerSkills {
         int dropAt = Math.max(8, (int) k.num("dropAt", 22));
         int fall = 4;
         int hangFrom = 4;
-        double h = k.num("height", 7);
+        double h = k.num("height", 3);
         double size = 1.6 + Kit.bodyPad(e) * 0.9; // 날 너비 약 size × 1.1 칸 · 그림 높이 size × 2.67 칸 (날 끝 = 칸 가운데에서 size × 0.51 아래)
         JobTraits12.beginSkill(sp, k);
         RpgCombat.setSteadfast(sp, dropAt + 3);

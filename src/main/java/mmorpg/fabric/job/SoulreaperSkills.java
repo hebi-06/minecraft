@@ -220,8 +220,9 @@ final class SoulreaperSkills {
             double pad = e.isRemoved() ? 0.3 : Kit.bodyPad(e);
             Vec3 out = JobTraits12.beyond(sp, c, toward, k.num("behind", 1.6) + pad);
             if (out != null) Kit.moveTo(sp, out);
+            // 이 스킬이 건 짧은 투명만 지움 (물약의 긴 투명은 그대로 — 시험의 가짜 플레이어는 효과 시간이 줄지 않아 남은 틱으로 가림)
             MobEffectInstance inv = sp.getEffect(MobEffects.INVISIBILITY);
-            if (inv != null && !inv.isInfiniteDuration() && inv.getDuration() <= 5) sp.removeEffect(MobEffects.INVISIBILITY);
+            if (inv != null && !inv.isInfiniteDuration() && inv.getDuration() <= exitAt + 2) sp.removeEffect(MobEffects.INVISIBILITY);
             Vec3 b = e.isRemoved() ? V.up(c, 1.0) : Kit.bodyPoint(e);
             double s = 1.0 + pad * 0.6;
             JobFx.slashCard(lv, V.up(b, 0.2), toward, 95.0, 3.6 * s, 0.3, Vec3.ZERO, j, JobFx.hide1p(sp));
@@ -248,18 +249,24 @@ final class SoulreaperSkills {
         return true;
     }
 
-    /** 몸속에 숨은 적이 검푸르게 갈라짐: 몸 가운데에서 바깥으로 뻗는 빛 금 둘 · 새어 나오는 영혼 · 짙은 연기 (u = 숨은 동안의 몫 0 ~ 1 — 점점 크게) */
+    /**
+     * 몸속에 숨은 적이 검푸르게 갈라짐: 몸 둘레에서 바깥으로 뻗는 빛 금 셋 (몸 밖에서 시작 — 2026-11-06 영상 1: 몸 가운데에서 그은 금은 몸에 가려 보이지 않았음) · 몸을
+     * 감싼 검푸른 불길 · 새어 나오는 영혼 · 짙은 연기 (u = 숨은 동안의 몫 0 ~ 1 — 점점 크게)
+     */
     private static void cracks(ServerLevel level, LivingEntity e, Jobs.Job j, double u) {
         if (e.isRemoved()) return;
         Vec3 b = Kit.bodyPoint(e);
-        double s = 0.5 + Kit.bodyPad(e) * 0.6;
+        double pad = Kit.bodyPad(e);
+        double s = 0.6 + pad * 0.6;
         Opt vel = Opt.of("vel", RuneKit.entVel(e));
-        for (int q = 0; q < 2; q++) {
-            Vec3 dir = V.unit(new Vec3(Kit.rand() - 0.5, (Kit.rand() - 0.3) * 1.2, Kit.rand() - 0.5));
-            JobFx.line(level, V.add(b, dir, 0.1), V.add(b, dir, s * (0.8 + 0.7 * u)), SOUL, SOUL_CORE, 0.2, vel);
+        for (int q = 0; q < 3; q++) {
+            Vec3 dir = V.unit(new Vec3(Kit.rand() - 0.5, (Kit.rand() - 0.25) * 1.4, Kit.rand() - 0.5));
+            Vec3 from = V.add(b, dir, 0.35 + pad);
+            JobFx.line(level, from, V.add(from, dir, s * (0.7 + 0.8 * u)), SOUL, SOUL_CORE, 0.22, vel);
         }
-        JobFx.soul(level, V.add(b, new Vec3(Kit.rand() - 0.5, 0.3, Kit.rand() - 0.5), 0.4), 0.15 + 0.1 * u, j, 0.45, Opt.of("dir", V.UP, "speed", 1.4));
-        JobFx.smoke(level, b, (0.7 + 0.4 * u) * s, SHADE, SOUL, 0.35, vel.with("alpha", 0.55));
+        JobFx.burst(level, b, (0.9 + 0.5 * u) * s, SHADE, SOUL, 0.2, vel.with("alpha", 0.7));
+        JobFx.soul(level, V.add(b, new Vec3(Kit.rand() - 0.5, 0.5, Kit.rand() - 0.5), 0.5 + pad), 0.2 + 0.12 * u, j, 0.5, Opt.of("dir", V.UP, "speed", 1.6));
+        JobFx.smoke(level, b, (0.9 + 0.5 * u) * s, SHADE, SOUL, 0.4, vel.with("alpha", 0.6));
     }
 
     // ------------------------------------------------------------ 바운티풀 하베스트
@@ -398,7 +405,7 @@ final class SoulreaperSkills {
         Map<UUID, Integer> lastHook = new HashMap<>();
         // 뜸: 등불에 불이 붙음 · 영혼 불꽃이 모여 듦 · 낮은 종소리
         Vec3 at0 = lanternAt(sp);
-        JobFx.lantern(level0, at0, 0.5, 0, 1, first / 20.0 + 0.05, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
+        JobFx.lantern(level0, at0, 0.62, 0, 1, first / 20.0 + 0.05, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
         for (int q = 0; q < 6; q++) {
             double a = q * Math.PI / 3;
             JobFx.soulFly(level0, V.add(at0, new Vec3(Math.cos(a) * 1.4, -0.6 + 0.2 * (q % 3), Math.sin(a) * 1.4)), at0, 9, 0.14, j, Opt.empty());
@@ -413,8 +420,9 @@ final class SoulreaperSkills {
                 if (!lit(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 at = lanternAt(sp);
-                double s = 0.5 + 0.025 * caught[0];
+                double s = 0.62 + 0.03 * caught[0];
                 JobFx.lantern(lv, at, s, 1, 4, 0.25, true, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.95), SOUL, SOUL_CORE);
+                if (tt % 8 == 0) JobFx.soul(lv, at, 0.32 + 0.02 * caught[0], j, 0.45, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.35)); // 등불의 옅은 빛무리
                 if (tt % 8 == 0) {
                     double a = tt * 0.35;
                     JobFx.soul(lv, V.add(at, new Vec3(Math.cos(a) * 0.45, -0.25, Math.sin(a) * 0.45)), 0.08 + 0.006 * caught[0], j, 0.4, Opt.of("vel", RuneKit
@@ -433,10 +441,13 @@ final class SoulreaperSkills {
                 lastHook.put(e.getUUID(), ii);
                 Vec3 from = lanternAt(sp);
                 Vec3 b = Kit.bodyPoint(e);
-                double s = 0.5 + 0.025 * caught[0];
-                JobFx.lantern(lv, from, s * 1.1, 5, 1, 0.2, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
-                JobFx.chain(lv, from, b, j, 0.5, 0.3, Opt.of("alpha", 0.95));
-                JobFx.glint(lv, b, 0.6 + Kit.bodyPad(e) * 0.4, SOUL, SOUL_CORE, 0.2, Opt.of("vel", RuneKit.entVel(e)));
+                double s = 0.62 + 0.03 * caught[0];
+                JobFx.lantern(lv, from, s * 1.15, 5, 1, 0.2, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
+                // 사슬: 굵은 영혼 사슬 (조각 1.2칸 — 굵기 0.15칸) · 사슬을 따라 빛 줄 · 걸린 자리의 터짐 (2026-11-06 영상 1: 조각 0.5칸 사슬은 가늘어 보이지 않았음)
+                JobFx.chain(lv, from, b, j, 1.2, 0.35, Opt.of("alpha", 1.0));
+                JobFx.line(lv, from, b, SOUL, SOUL_CORE, 0.3, Opt.of("alpha", 0.8));
+                JobFx.burst(lv, b, 0.8 + Kit.bodyPad(e) * 0.4, SOUL, SOUL_CORE, 0.25, Opt.of("vel", RuneKit.entVel(e)));
+                JobFx.glint(lv, b, 0.7 + Kit.bodyPad(e) * 0.4, SOUL, SOUL_CORE, 0.2, Opt.of("vel", RuneKit.entVel(e)));
                 SkillFx.play(lv, "block.chain.place", b, 0.8, 1.0);
                 SkillFx.play(lv, "entity.vex.charge", from, 1.4, 0.4);
                 JobKit.strike(sp, e, j, P, k.num("hook", 1.5), true, false, life, 0, d -> {
@@ -444,7 +455,7 @@ final class SoulreaperSkills {
                     if (JobKit.pushable(e) && e.distanceTo(sp) > 2.0) RuneKit.knock(e, V.sub(sp.position(), e.position()), pullVel, 0.1);
                     if (e.level() instanceof ServerLevel el) {
                         JobImpact.hit(sp, e, j, 0.9);
-                        JobFx.soulFly(el, Kit.bodyPoint(e), lanternAt(sp), 10, 0.2, j, Opt.empty());
+                        JobFx.soulFly(el, Kit.bodyPoint(e), lanternAt(sp), 10, 0.3, j, Opt.empty());
                     }
                 });
             });
@@ -454,7 +465,7 @@ final class SoulreaperSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             Vec3 at = lanternAt(sp);
-            JobFx.lantern(lv, at, 0.5 + 0.025 * caught[0], 6, 2, 0.35, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
+            JobFx.lantern(lv, at, 0.62 + 0.03 * caught[0], 6, 2, 0.35, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
             for (int q = 0; q < Math.min(8, 2 + caught[0] / 2); q++) {
                 double a = q * 0.9;
                 JobFx.soul(lv, at, 0.12, j, 0.6, Opt.of("dir", V.unit(new Vec3(Math.cos(a), 1.2, Math.sin(a))), "speed", 2.2));
@@ -515,10 +526,11 @@ final class SoulreaperSkills {
         Vec3 f0 = Kit.facingOf(sp);
         RpgCombat.setSteadfast(sp, finalAt + 4);
         Ult.sky(level0, c0, "rpg:ult_souls", finalAt + 30);
-        // 거대한 망령 사신: 몸 너머 2칸 · 높이 약 8칸 (size 3.0 — 가운데 at), 반투명 (앞의 적이 보이게)
-        double size = 3.0;
+        // 거대한 망령 사신: 몸 너머 3.2칸 · 높이 약 6.4칸 (size 2.4 — 가운데 at), 반투명 (앞의 적이 보이게). 2026-11-06 영상 1: 2칸 앞 · 8칸이면 3인칭 화면 위로 머리가
+        // 나갔음
+        double size = 2.4;
         double tall = size * 2.67;
-        Vec3 base = ground(level0, V.add(c0, f0, 2.0));
+        Vec3 base = ground(level0, V.add(c0, f0, 3.2));
         Vec3 mid = V.up(base, tall / 2 - 0.3);
         Opt ghost = JobFx.hide1p(sp).with("alpha", 0.8, "coreAlpha", 0.75);
         // 치켜듦: 낫 끝에 모이는 영혼 빛 · 발밑 영혼 고리 · 비명 · 1인칭 눈앞 고리

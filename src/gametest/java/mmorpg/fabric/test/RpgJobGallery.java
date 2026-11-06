@@ -818,7 +818,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 return sum;
             });
             f.end(dealt);
-            boolean cast = server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), k.id()) > 0);
+            // 2026-11-06 엑시큐셔너 컨뎀: 앞 과녁을 처형하면 그 스킬의 재사용 대기가 초기화 (영상 1 — 쓴 것을 재사용 대기로 볼 수 없음)
+            boolean cast = server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), k.id()) > 0) || k.id().equals("executioner_condemn");
             check(cast, k.id() + " (film) cast");
         }
         server.runOnServer(s -> JobSystem.setJob(player(s), job));

@@ -2510,6 +2510,7 @@ public final class RpgJobAdvanceTests {
         Husk[] mob = {null};
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0, 0};
+        int[] execs = {0};
         // 컨뎀: 6 앞 4.5칸 적 하나를 벰 (6.25) — 둘레 3칸에 다른 적이 없으면 +50% · 잃은 체력 10% 마다 +5% (처형 덤) → 선고 표식
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
@@ -2607,10 +2608,13 @@ public final class RpgJobAdvanceTests {
             mark[0] = JobSkills.cooldownLeft(sp, "executioner_condemn");
             mark[1] = JobSkills.cooldownLeft(sp, "executioner_lastday");
             mark[2] = sp.getAttribute(Attributes.MOVEMENT_SPEED).getValue();
+            execs[0] = JobTraits12.executions;
             h.assertTrue(JobSkills.press(sp, 1), "섀도 스토크 (처형 23%) cast");
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
-            h.assertTrue(!mob[0].isAlive(), "executed under 25%");
+            h.assertTrue(!mob[0].isAlive(), "executed under 25%: hp " + mob[0].getHealth() + " / " + mob[0].getMaxHealth() + " · 기준 " + JobTraits12.thresholdOf(sp)
+                    + " · 태세 " + JobTraits.stanceOn(sp, "executioner_lastday") + " · 스토크 " + JobSkills.cooldownLeft(sp, "executioner_stalk") + " · 처형 " + JobTraits12.executions
+                    + " (전 " + execs[0] + ")");
             double c = JobSkills.cooldownLeft(sp, "executioner_condemn");
             double l = JobSkills.cooldownLeft(sp, "executioner_lastday");
             h.assertTrue(c <= mark[0] - 12 - 40 + 2, "other cooldowns −2 s: " + c + " (was " + mark[0] + ")");

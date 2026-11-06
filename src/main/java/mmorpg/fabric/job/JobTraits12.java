@@ -309,9 +309,13 @@ public final class JobTraits12 {
 
     // ------------------------------------------------------------ 엑시큐셔너 처형
 
+    /** 시험: 처형한 수 (서버가 켜진 뒤 — 시험 메시지) */
+    public static int executions;
+
     /** 처형: 남은 체력만큼 (큰 숫자) · 위에서 떨어지는 금빛 단두대 빛 · 해골 · 원 라스트 데이면 이동 · 재사용 대기 */
     private static void execute(ServerPlayer sp, LivingEntity e, Jobs.Job j) {
         if (!(e.level() instanceof ServerLevel level)) return;
+        executions++;
         Vec3 b = Kit.bodyPoint(e);
         double h = e.getBbHeight();
         inner = true;
