@@ -1,9 +1,0 @@
--encoding
-UTF-8
--proc:none
--implicit:none
--d
-/tmp/claude-0/-home-claude/9bde0ddb-53cb-5b22-98c6-c970cde69ec4/scratchpad/synchk
--Xmaxerrs
-1000000
-@/tmp/claude-0/-home-claude/9bde0ddb-53cb-5b22-98c6-c970cde69ec4/scratchpad/all_src.txt

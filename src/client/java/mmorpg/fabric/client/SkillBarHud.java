@@ -315,7 +315,7 @@ public final class SkillBarHud {
             int px = tx + 4;
             if (bar) {
                 // 0.51.0 소울 리퍼 영혼 (최대 15 — 막대): 둘째 빛이 짙은 남청이라 막대 끝이 묻힘 → 첫째 빛 (영혼 하늘빛) 에서 흰빛 쪽으로
-                drawRageBar(g, px, y + 1, v, max, a, job.equals("soulreaper") || job.equals("avenger") ? lerp(a, 0xFFFFFF, 0.6F) : b, pulse, now); // 2026-11-06 어벤저도 (둘째 빛이 재)
+                drawRageBar(g, px, y + 1, v, max, a, job.equals("soulreaper") || job.equals("darkknight") ? lerp(a, 0xFFFFFF, 0.6F) : b, pulse, now); // 2026-11-06 다크 나이트도 (둘째 빛이 검음)
             } else {
                 for (int i = 0; i < max; i++) {
                     int bx = px + i * PIP;

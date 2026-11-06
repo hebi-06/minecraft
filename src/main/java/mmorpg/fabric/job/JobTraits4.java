@@ -530,15 +530,15 @@ public final class JobTraits4 {
         JobTraits.sendGauge(sp, false);
     }
 
-    /** 2026-11-06 수호기사 줄기 — 수호기사 · 센티널 (반격 게이지가 같음 — 센티널의 파수꾼의 위압 · 나인 타이즈는 JobTraits15) */
+    /** 2026-11-06 수호기사 줄기 — 수호기사 · 피닉스 가드 (반격 게이지가 같음 — 피닉스 가드의 불사조의 재 · 이그니션은 JobTraits15) */
     static boolean guardianLine(Jobs.Job j) {
-        return j != null && (j.id().equals("guardian") || j.id().equals(JobTraits15.SN));
+        return j != null && (j.id().equals("guardian") || j.id().equals(JobTraits15.PH));
     }
 
     /** 막음 (RpgHealth.blockHook): 수호기사 — 막아 준 양 × rate 가 반격 게이지로 (최대 체력 × cap 까지) */
     private static void onBlocked(ServerPlayer sp, double amount) {
         Jobs.Job j0 = JobSystem.job(sp);
-        Jobs.Job j = guardianLine(j0) ? j0 : null; // 2026-11-06 센티널도
+        Jobs.Job j = guardianLine(j0) ? j0 : null; // 2026-11-06 피닉스 가드도
         if (j == null || !(amount > 0)) return;
         State st = of(sp);
         double cap = counterCap(sp, j);
@@ -562,7 +562,7 @@ public final class JobTraits4 {
 
     /** 반격 게이지를 씀 (JobKit — 직업 스킬 피해 한 번의 첫 타): 더할 피해 (0 = 없음, 안 들어가면 counterMissed 가 되돌림) */
     static double counterTake(ServerPlayer sp, Jobs.Job j) {
-        if (!guardianLine(j)) return 0; // 2026-11-06 센티널도
+        if (!guardianLine(j) || JobTraits15.quiet) return 0; // 2026-11-06 피닉스 가드도 (이그니션 불꽃은 쓰지 않음)
         State st = STATES.get(sp.getUUID());
         if (st == null || !(st.counter > 0)) return 0;
         double c = st.counter;
@@ -816,7 +816,7 @@ public final class JobTraits4 {
                 yield e == null || e.isRemoved() || !e.isAlive() ? 0 : judges(sp, e);
             }
             case "priest", JobTraits14.SA -> st.faith; // 0.51.0 세인트도 신앙
-            case "guardian", JobTraits15.SN -> { // 2026-11-06 센티널도 반격
+            case "guardian", JobTraits15.PH -> { // 2026-11-06 피닉스 가드도 반격
                 double cap = counterCap(sp, j);
                 yield cap <= 0 ? 0 : (int) Math.round(Math.min(1, st.counter / cap) * 100);
             }

@@ -117,8 +117,8 @@ public final class RpgJobAdvanceTests {
     static final String ENV_TY = "mmorpg:job_ty"; // 2026-11-06 타이런트
     static final String ENV_ST = "mmorpg:job_st"; // 2026-11-06 세인트
     static final String ENV_WK = "mmorpg:job_wk"; // 2026-11-06 워록
-    static final String ENV_SE = "mmorpg:job_se"; // 2026-11-06 센티널 (job_sn 은 스나이퍼)
-    static final String ENV_AV = "mmorpg:job_av"; // 2026-11-06 어벤저
+    static final String ENV_PH = "mmorpg:job_ph"; // 2026-11-06 피닉스 가드
+    static final String ENV_DK = "mmorpg:job_dk"; // 2026-11-06 다크 나이트
 
     /** 넓은 돌 바닥 (그라니의 질주가 비스듬히 내달릴 땅) */
     static void floor(GameTestHelper h) {
@@ -371,7 +371,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("saint".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
                     && JobSystem.job(sp).display().equals("세인트"), "saint free from the first job: " + JobSystem.jobOf(sp));
-            // 2026-11-06 수호기사의 2차 전직 (센티널 · 어벤저 — 열한 직업 모두 2차가 열림) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
+            // 2026-11-06 수호기사의 2차 전직 (피닉스 가드 · 다크 나이트 — 열한 직업 모두 2차가 열림) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("guardian"), null);
@@ -382,13 +382,13 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(gu != null && gu.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "guardian: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload guadv = chest(sp);
-            h.assertTrue(guadv != null && guadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("센티널")
-                    && guadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("어벤저"), "guardian advance cards");
+            h.assertTrue(guadv != null && guadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("피닉스 가드")
+                    && guadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("다크 나이트"), "guardian advance cards");
             Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "guardian advance confirm");
             Forms.answer(sp, 11, null);
-            h.assertTrue("avenger".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
-                    && JobSystem.job(sp).display().equals("어벤저"), "avenger free from the first job: " + JobSystem.jobOf(sp));
+            h.assertTrue("darkknight".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
+                    && JobSystem.job(sp).display().equals("다크 나이트"), "darkknight free from the first job: " + JobSystem.jobOf(sp));
             Forms.answer(sp, -1, null);
         } finally {
             JobUpgrades.set(sp, "swordsman_moon", 0);
@@ -3345,26 +3345,25 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 센티널 — 2026-11-06
+    // ------------------------------------------------------------ 피닉스 가드 — 2026-11-06 (다시 — 푸른 불사조)
 
     /**
-     * 센티널: 배스천 차지 (밀 수 없는 과녁 — 닿자 1.6 · 도발 → 파수꾼의 위압 (그 적이 주는 피해 −15%) → 16 벽에 박힌 것으로 2.4 · 기절) · 헤이븐 리프 (겨눈 아군 곁으로
-     * 뛰어 8 에 둘레 2.4 → 피난처 — 안의 아군을 노린 몹 평타는 받지 않음 · 마법은 그대로 · 2초) · 레인보우 램파트 (10 장벽 4.8 · 도발 → 몹 투사체를 지움 · 닿은 적 둔화 →
-     * 110 부서짐 2.4) · 나인 타이즈 (받은 피해의 30% 가 다음 틱에 나와 둘레 아군의 보호막으로) · 클라리온 콜 (10 소리 물결 8 · 가장 위험한 아군 보호막 15% → 40 날아가 50
-     * 내려앉음 24 · 나도 보호막)
+     * 피닉스 가드: 피닉스 배시 (6 에 앞 3.8칸 120° 4 · 도발) · 반격 + 불사조의 재 (웅크려 막은 양 × 30% → 반격 게이지, × 20% → 다음 틱에 둘레 8칸에서 체력 비율이 가장
+     * 낮은 아군의 3초 보호막) · 윙 커버 (겨눈 아군 곁으로 날아들어 10 에 둘레 3칸 2.4 → 그 아군과 나 보호막 12%) · 블루 인페르노 (10 에 둘레 5칸 4.8 → 30 에 2.4) ·
+     * 이그니션 (받는 피해 −20% · 밀려나지 않음 · 맞거나 막으면 0.5초에 한 번 둘레 3칸에 위력 × 0.6 — 반격 게이지는 쓰지 않음 · 재 × 2) · 피닉스 디센트 (10 불기둥 둘레 6칸 8
+     * → 40 겨눈 과녁에 내리꽂힘 둘레 6칸 24 · 아군과 나 보호막 15%)
      */
-    @GameTest(environment = ENV_SE, maxTicks = 500)
-    public void sentinelSkills(GameTestHelper h) {
+    @GameTest(environment = ENV_PH, maxTicks = 500)
+    public void phoenixSkills(GameTestHelper h) {
         floor(h);
-        ServerPlayer sp = RpgJobTests.jobPlayer(h, "sentinel", Map.of("vit", 70), 50);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "phoenix", Map.of("vit", 70), 50);
         RpgJobTests.hold(sp, Weapons.weaponFrom("shield", 0, "common"));
-        Jobs.Job j = Jobs.job("sentinel");
+        Jobs.Job j = Jobs.job("phoenix");
         List<Husk> z = new ArrayList<>();
         ServerPlayer[] ally = {null};
-        double[] mark = {0, 0};
-        net.minecraft.world.entity.Entity[] ball = {null};
+        double[] mark = {0, 0, 0};
         List<RpgJobTests.Step> steps = new ArrayList<>();
-        // 배스천 차지: 2.5칸 앞 과녁 (밀 수 없음) — 닿자 1.6 · 도발 (위압) → 그 앞에서 멈춤 → 16 벽에 박힌 것으로 밀어붙임 2.4 · 기절
+        // 피닉스 배시: 2.5칸 앞 과녁 — 6 에 4 · 도발
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             RpgCombat.forceCrit = false;
@@ -3372,293 +3371,305 @@ public final class RpgJobAdvanceTests {
             z.add(dummy(h, 0, 2.5));
             RpgJobTests.clearStrays(h, z.get(0));
             sp.setHealth(sp.getMaxHealth());
-            h.assertTrue(JobSkills.press(sp, 0), "배스천 차지 cast");
+            h.assertTrue(JobSkills.press(sp, 0), "피닉스 배시 cast");
         }));
-        steps.add(new RpgJobTests.Step(8, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 1.6);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "배스천 차지 들이받음 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits15.dreaded(z.get(0)), "the rammed foe is taunted (dread)");
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "sentinel gradient number");
+        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before the bash (6)")));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 4);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피닉스 배시 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!sp.canBeSeenAsEnemy() || z.get(0).getTarget() == sp, "the bash taunts");
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "phoenix gradient number");
         }));
-        steps.add(new RpgJobTests.Step(10, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.0);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "배스천 차지 (1.6 + 벽 2.4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "slammed into an unmovable foe → stun");
-            // 파수꾼의 위압: 도발한 적이 주는 피해 −15% (다른 적은 그대로)
-            z.add(dummy(h, 3.0, 0.0));
-            h.assertTrue(RpgJobTests.close(RpgHealth.weakenOf.applyAsDouble(z.get(0)), 0.15, 1e-9) && RpgHealth.weakenOf.applyAsDouble(z.get(1)) == 0,
-                    "dread: the taunted foe deals −15%, others not");
+        // 반격 + 불사조의 재: 왼쪽 2칸 아군 (체력 50% — 가장 위험) · 앞 과녁의 평타를 웅크려 막음 → 반격 c (막은 양 × 30%) → 다음 틱에 그 아군 보호막 c ÷ 0.3 × 0.2
+        steps.add(new RpgJobTests.Step(4, () -> {
+            home(h, sp);
+            JobTraits4.setCounter(sp, 0);
+            JobTraits15.testClear(sp);
+            ally[0] = RpgJobTests.allyAt(h, sp, -2, 0);
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.5F);
+            RpgHealth.clearShield(ally[0]);
+            RpgHealth.clearShield(sp);
+            sp.setHealth(sp.getMaxHealth());
             float hp = sp.getHealth();
-            double a = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 10F);
-            double b = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(1)), hp, hp - 10F);
-            h.assertTrue(b > 0 && RpgJobTests.close(a, b * 0.85, 0.01 + b * 0.002), "dread cuts the hit: " + a + " vs " + b);
+            sp.setShiftKeyDown(true);
+            float next = RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 10F);
+            sp.setShiftKeyDown(false);
+            sp.setHealth(next);
+            mark[0] = JobTraits4.counter(sp);
+            h.assertTrue(mark[0] > 0, "blocked → counter " + mark[0]);
+            h.assertTrue(RpgHealth.shieldOf(ally[0]) == 0 && JobTraits15.ashGiven(sp) == 0, "the ash comes the next tick (it does not absorb this hit)");
         }));
-        // 헤이븐 리프: 앞 4칸 아군 (겨눔) 곁 (1.2칸 앞) 으로 뛰어 8 에 내려앉으며 둘레 3칸 2.4 → 피난처 40틱 (안의 아군을 노린 몹 평타는 받지 않음 · 마법은 그대로)
+        steps.add(new RpgJobTests.Step(2, () -> {
+            double want = mark[0] / 0.3 * 0.2;
+            h.assertTrue(RpgJobTests.close(JobTraits15.ashGiven(sp), want, 1e-3 + want * 1e-3) && RpgJobTests.close(RpgHealth.shieldOf(ally[0]), want, 1e-3 + want * 1e-3),
+                    "phoenix ash: 20% of the blocked hit shields the most endangered ally: " + JobTraits15.ashGiven(sp) + " / " + RpgHealth.shieldOf(ally[0]) + " vs "
+                            + want);
+            h.assertTrue(RpgHealth.shieldOf(sp) == 0, "not me (the ally is lower)");
+        }));
+        // 윙 커버: 앞 4칸 아군 (겨눔) 곁 (1.2칸 앞) 으로 날아들어 10 에 내려앉으며 둘레 3칸 2.4 → 그 아군과 나 보호막 12%
         steps.add(new RpgJobTests.Step(4, () -> {
             for (Husk x : z) x.discard();
             z.clear();
-            JobSystem.setJob(sp, "sentinel");
+            JobSystem.setJob(sp, "phoenix");
             JobTraits4.setCounter(sp, 0);
             home(h, sp);
-            ally[0] = RpgJobTests.allyAt(h, sp, 0, 4);
+            RpgJobTests.moveAlly(ally[0], sp, 0, 4);
             ally[0].setHealth(ally[0].getMaxHealth());
+            RpgHealth.clearShield(ally[0]);
+            RpgHealth.clearShield(sp);
             z.add(dummy(h, 1.5, 4.0));
             RpgJobTests.clearStrays(h, z.get(0));
-            mark[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 1), "헤이븐 리프 cast");
+            mark[1] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "윙 커버 cast");
         }));
-        steps.add(new RpgJobTests.Step(10, () -> {
-            h.assertTrue(sp.position().z - mark[0] > 2.0 && sp.distanceTo(ally[0]) < 2.0, "leapt beside the aimed ally: " + (sp.position().z - mark[0]) + " · "
+        steps.add(new RpgJobTests.Step(12, () -> {
+            h.assertTrue(sp.position().z - mark[1] > 2.0 && sp.distanceTo(ally[0]) < 2.0, "flew beside the aimed ally: " + (sp.position().z - mark[1]) + " · "
                     + sp.distanceTo(ally[0]));
             double want = RpgJobTests.expected(sp, j, j.skill(1), 2.4);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "헤이븐 리프 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits15.havenOf(ally[0]) != null && JobTraits15.havenOf(sp) != null, "haven around the ally and me");
-            float hp = ally[0].getHealth();
-            h.assertTrue(RpgHealth.onLoss(ally[0], ally[0].damageSources().mobAttack(z.get(0)), hp, hp - 10F) == hp, "haven: a mob's melee on the ally is blocked");
-            h.assertTrue(RpgHealth.sourceReduce.applyAsDouble(ally[0], ally[0].damageSources().magic()) == 0, "haven: magic still lands");
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "윙 커버 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.close(RpgHealth.shieldOf(ally[0]), RpgHealth.maxOf(ally[0]) * 0.12, 1e-3)
+                    && RpgJobTests.close(RpgHealth.shieldOf(sp), RpgHealth.maxOf(sp) * 0.12, 1e-3), "wing cover shields the ally and me (12%): "
+                    + RpgHealth.shieldOf(ally[0]) + " / " + RpgHealth.shieldOf(sp));
         }));
-        steps.add(new RpgJobTests.Step(40, () -> h.assertTrue(JobTraits15.havenOf(ally[0]) == null, "the haven fades after 2 s")));
-        // 레인보우 램파트: 2.5칸 앞 장벽 — 10 에 솟아 4.8 · 도발 → 장벽 면을 지나는 몹 투사체를 지움 · 닿은 적 둔화 → 110 부서짐 2.4
+        // 블루 인페르노: 앞 2.5칸 · 오른쪽 앞 과녁 — 10 에 둘레 5칸 4.8 · 도발 → 30 에 2.4 · 밀쳐냄
         steps.add(new RpgJobTests.Step(4, () -> {
             for (Husk x : z) x.discard();
             z.clear();
             JobTraits4.setCounter(sp, 0);
             home(h, sp);
-            RpgJobTests.moveAlly(ally[0], sp, -2, -2);
+            RpgJobTests.moveAlly(ally[0], sp, -3, -2);
             z.add(dummy(h, 0, 2.5));
-            RpgJobTests.clearStrays(h, z.get(0));
-            h.assertTrue(JobSkills.press(sp, 2), "레인보우 램파트 cast");
+            z.add(dummy(h, -3.0, 2.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            h.assertTrue(JobSkills.press(sp, 2), "블루 인페르노 cast");
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 4.8);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "레인보우 램파트 솟음 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits15.dreaded(z.get(0)) && JobTraits15.rampartBlocked(sp) == 0, "the wall taunts · stands (nothing erased yet)");
-            // 몹 투사체 (주인 없는 눈덩이): 장벽 너머 1.2칸 · 옆 1.5칸 · 땅 위 1칸에서 장벽 쪽으로 → 장벽 면을 지나며 지워짐
-            Vec3 at = h.absoluteVec(new Vec3(6.0, 3.0, 5.2));
-            net.minecraft.world.entity.Entity b = EntityTypes.SNOWBALL.create(h.getLevel(), net.minecraft.world.entity.EntitySpawnReason.COMMAND);
-            b.snapTo(at.x, at.y, at.z, 0F, 0F);
-            b.setDeltaMovement(0, 0, -0.4);
-            h.getLevel().addFreshEntity(b);
-            ball[0] = b;
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "블루 인페르노 솟음 " + TestDummies.dealt(x) + " vs " + want);
         }));
-        steps.add(new RpgJobTests.Step(6, () -> {
-            h.assertTrue(ball[0].isRemoved() && JobTraits15.rampartBlocked(sp) >= 1, "the wall erased the mob projectile: " + JobTraits15.rampartBlocked(sp));
-            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "a foe touching the wall is slowed");
-        }));
-        steps.add(new RpgJobTests.Step(96, () -> {
+        steps.add(new RpgJobTests.Step(20, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 7.2);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "레인보우 램파트 (4.8 + 부서짐 2.4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits15.rampartBlocked(sp) == -1, "the wall is gone");
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "블루 인페르노 (4.8 + 터짐 2.4) " + TestDummies.dealt(x) + " vs " + want);
         }));
-        // 나인 타이즈: 태세 — 받은 피해 (막지 않은 몹 평타) 의 30% 가 다음 틱에 나와 둘레 8칸 아군의 보호막으로 (이 피해를 방금 생긴 보호막이 흡수하지 않음)
+        // 이그니션: 태세 — 받는 피해 −20% · 밀려나지 않음 → 맞으면 둘레 3칸 과녁에 위력 × 0.6 (반격 게이지는 그대로) → 0.5초 뒤 막으면 한 번 더 · 재 × 2 (나 — 가장 위험)
         steps.add(new RpgJobTests.Step(4, () -> {
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            RpgJobTests.moveAlly(ally[0], sp, -2, 0);
-            z.add(dummy(h, 0, 2.5));
+            JobTraits15.testClear(sp);
+            RpgHealth.clearShield(sp);
+            RpgJobTests.moveAlly(ally[0], sp, -3, -2);
+            ally[0].setHealth(ally[0].getMaxHealth());
+            z.add(dummy(h, 0, 2.0));
             RpgJobTests.clearStrays(h, z.get(0));
-            sp.setHealth(sp.getMaxHealth());
-            h.assertTrue(JobSkills.press(sp, 3), "나인 타이즈 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "sentinel_tides"), "nine tides: stance");
+            sp.setHealth(sp.getMaxHealth() * 0.8F);
+            JobTraits4.setCounter(sp, 30);
+            h.assertTrue(JobSkills.press(sp, 3), "이그니션 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "phoenix_ignition") && RpgCombat.isSteadfast(sp), "ignition: stance · steadfast");
+            h.assertTrue(RpgJobTests.close(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))), 0.2, 1e-9), "ignition: damage taken −20%");
             float hp = sp.getHealth();
-            float next = RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 10F);
-            sp.setHealth(next);
-            mark[1] = hp - next;
-            h.assertTrue(mark[1] > 0 && RpgHealth.shieldOf(sp) == 0, "the tide comes the next tick (it does not absorb this hit)");
+            sp.setHealth(RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 6F));
+            double want = raw(sp, j, 0.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "ignition flame on being hit " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.close(JobTraits4.counter(sp), 30, 1e-9), "the flame does not use the counter gauge: " + JobTraits4.counter(sp));
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            JobTraits4.setCounter(sp, 0);
+            mark[2] = TestDummies.dealt(z.get(0));
+            float hp = sp.getHealth();
+            sp.setShiftKeyDown(true);
+            sp.setHealth(RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 10F));
+            sp.setShiftKeyDown(false);
+            mark[0] = JobTraits4.counter(sp);
+            double want = raw(sp, j, 0.6);
+            double got = TestDummies.dealt(z.get(0)) - mark[2];
+            h.assertTrue(mark[0] > 0 && RpgJobTests.near(got, want), "blocked during ignition: the flame again " + got + " vs " + want);
         }));
         steps.add(new RpgJobTests.Step(2, () -> {
-            double want = mark[1] * 0.3;
-            h.assertTrue(RpgJobTests.close(RpgHealth.shieldOf(sp), want, 1e-3 + want * 1e-3) && RpgJobTests.close(RpgHealth.shieldOf(ally[0]), want, 1e-3 + want * 1e-3),
-                    "tides: 30% of the hit shields me and the ally: " + RpgHealth.shieldOf(sp) + " / " + RpgHealth.shieldOf(ally[0]) + " vs " + want);
-            h.assertTrue(RpgJobTests.close(JobTraits15.tideGiven(sp), want * 2, 2e-3 + want * 2e-3), "tide given: " + JobTraits15.tideGiven(sp));
+            double want = mark[0] / 0.3 * 0.2 * 2;
+            h.assertTrue(RpgJobTests.close(RpgHealth.shieldOf(sp), want, 1e-3 + want * 1e-3), "ignition: ash × 2 to me (the lowest): " + RpgHealth.shieldOf(sp) + " vs "
+                    + want);
         }));
-        // 클라리온 콜: 3칸 앞 과녁 · 왼쪽 앞 아군 (체력 40% — 가장 위험) → 10 소리 물결 8 · 도발 · 그 아군 보호막 15% → 40 날아가 50 내려앉음 24 · 나도 보호막 15%
+        // 피닉스 디센트: 3칸 앞 과녁 (겨눔) · 왼쪽 앞 과녁 · 오른쪽 아군 → 10 불기둥 둘레 6칸 8 · 도발 → 40 겨눈 과녁에 내리꽂힘 둘레 6칸 24 · 아군과 나 보호막 15%
         steps.add(new RpgJobTests.Step(4, () -> {
-            JobSystem.setJob(sp, "sentinel");
+            JobSystem.setJob(sp, "phoenix");
             for (Husk x : z) x.discard();
             z.clear();
             JobTraits4.setCounter(sp, 0);
             home(h, sp);
-            RpgJobTests.moveAlly(ally[0], sp, -3, 6);
-            ally[0].setHealth(ally[0].getMaxHealth() * 0.4F);
+            RpgJobTests.moveAlly(ally[0], sp, 2, 1);
+            RpgHealth.clearShield(ally[0]);
+            RpgHealth.clearShield(sp);
             sp.setHealth(sp.getMaxHealth());
             z.add(dummy(h, 0, 3.0));
-            RpgJobTests.clearStrays(h, z.get(0));
+            z.add(dummy(h, -3.0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "클라리온 콜 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "피닉스 디센트 cast");
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 8);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "클라리온 콜 소리 물결 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits15.dreaded(z.get(0)), "the horn taunts");
-            h.assertTrue(RpgJobTests.close(RpgHealth.shieldOf(ally[0]), RpgHealth.maxOf(ally[0]) * 0.15, 1e-3), "the endangered ally gets a 15% shield: "
-                    + RpgHealth.shieldOf(ally[0]));
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "피닉스 디센트 불기둥 " + TestDummies.dealt(x) + " vs " + want);
         }));
-        steps.add(new RpgJobTests.Step(41, () -> {
+        steps.add(new RpgJobTests.Step(30, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 32);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "클라리온 콜 (8 + 내려앉음 24) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(sp.distanceTo(ally[0]) < 2.5, "flew to the ally: " + sp.distanceTo(ally[0]));
-            h.assertTrue(RpgJobTests.close(RpgHealth.shieldOf(sp), RpgHealth.maxOf(sp) * 0.15, 1e-3), "landing shields me too: " + RpgHealth.shieldOf(sp));
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "피닉스 디센트 (8 + 내리꽂힘 24) " + TestDummies.dealt(x) + " vs " + want);
+            h.assertTrue(RpgJobTests.close(RpgHealth.shieldOf(ally[0]), RpgHealth.maxOf(ally[0]) * 0.15, 1e-3)
+                    && RpgJobTests.close(RpgHealth.shieldOf(sp), RpgHealth.maxOf(sp) * 0.15, 1e-3), "the wings shield the ally and me (15%): "
+                    + RpgHealth.shieldOf(ally[0]) + " / " + RpgHealth.shieldOf(sp));
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);
             for (Husk x : z) x.discard();
-            if (ball[0] != null && !ball[0].isRemoved()) ball[0].discard();
             RpgJobTests.bye(h, ally[0]);
             RpgGearTests.done(h, sp);
         });
     }
 
-    // ------------------------------------------------------------ 어벤저 — 2026-11-06
+    // ------------------------------------------------------------ 다크 나이트 — 2026-11-06 (다시 — 타락한 흑기사)
 
     /**
-     * 어벤저: 앙갚음 (웅크려 막기 없음 · 받는 피해 +10% → 받은 피해의 50% 가 앙갚음 · 때린 적을 기억) · 리프라이절 (6 에 4 + 앙갚음의 30%) · 그러지 차지 (나를 가장 많이
-     * 때린 적에게 달려가 8 에 2.4) · 레크닝 (12 에 7.2 — 가운데 적은 + 앙갚음 전부 · 옆 적은 + 절반) · 페인 이터 (아군이 받을 피해의 50% 를 내가 × 0.8 로 · 앙갚음으로 · 내
-     * 받는 피해 −20%) · 조브레이커 (26 에 32 + 앙갚음 전부 + 최대 체력 8% (위력 × 8 까지) · 기절 · 둘레 다른 적 절반)
+     * 다크 나이트: 크런치 (4 에 1.6 · 굶주림 12 → 11 에 다시 누름 → 14 에 찢기 2.4 · 굶주림 24) · 헝거 런지 (굶주림 가득 → 겨눈 과녁에 뛰어들어 8 에 2.4 + 통째로 삼킴
+     * (최대 체력 8% — 위력 × 6 까지) · 회복 6% · 기절 · 굶주림 0 + 12) · 피스트 (6 에 둘레 6칸 2.4 — 물기가 아님 → 16 에 방패 앞 3칸 4.8 · 문 적마다 굶주림) · 언홀리
+     * 프렌지 (공격 속도 × 1.2 · 방패 평타 + 위력 × 0.5 · 굶주림 4 × 2) · 어비설 메이 (겨눈 과녁 둘레 4칸 — 26 에 8 · 기절 → 44 에 24 · 굶주림)
      */
-    @GameTest(environment = ENV_AV, maxTicks = 400)
-    public void avengerSkills(GameTestHelper h) {
+    @GameTest(environment = ENV_DK, maxTicks = 500)
+    public void darkknightSkills(GameTestHelper h) {
         floor(h);
-        ServerPlayer sp = RpgJobTests.jobPlayer(h, "avenger", Map.of("vit", 70, "str", 20), 50);
-        RpgJobTests.hold(sp, Weapons.weaponFrom("shield", 0, "common"));
-        Jobs.Job j = Jobs.job("avenger");
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "darkknight", Map.of("vit", 70, "str", 20), 50);
+        Weapon w = Weapons.weaponFrom("shield", 0, "common");
+        RpgJobTests.hold(sp, w);
+        Jobs.Job j = Jobs.job("darkknight");
         List<Husk> z = new ArrayList<>();
-        ServerPlayer[] ally = {null};
+        double[] mark = {0, 0, 0};
         List<RpgJobTests.Step> steps = new ArrayList<>();
-        // 앙갚음: 웅크려 막기 없음 (방패 기본 감소만) · 받는 피해 +10% (수호기사와 같은 피해 × 1.1) → 받은 피해의 50% · 때린 적 기억
+        // 크런치: 2.5칸 앞 과녁 — 4 에 1.6 (굶주림 12) → 11 에 다시 누름 → 14 에 물어 찢음 2.4 (굶주림 24)
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             RpgCombat.forceCrit = false;
+            JobTraits15.setHunger(sp, 0);
             z.add(dummy(h, 0, 2.5));
             RpgJobTests.clearStrays(h, z.get(0));
-            sp.setHealth(sp.getMaxHealth());
-            h.assertTrue(RpgCombat.blockOff.test(sp) && RpgJobTests.close(RpgHealth.takenUp.applyAsDouble(sp), 0.1, 1e-9), "avenger: no blocking · +10% taken");
-            sp.setShiftKeyDown(true);
-            double crouch = RpgCombat.shieldReduction(sp, sp.damageSources().mobAttack(z.get(0)));
-            sp.setShiftKeyDown(false);
-            double stand = RpgCombat.shieldReduction(sp, sp.damageSources().mobAttack(z.get(0)));
-            h.assertTrue(RpgJobTests.close(crouch, stand, 1e-9) && crouch < 1, "crouching does not block: " + crouch + " vs " + stand);
-            float hp = sp.getHealth();
-            double lossA = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 10F);
-            JobSystem.setJob(sp, "guardian");
-            double lossG = hp - RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 10F);
-            JobSystem.setJob(sp, "avenger");
-            h.assertTrue(lossG > 0 && RpgJobTests.close(lossA, lossG * 1.1, 0.01 + lossG * 0.002), "taken +10%: " + lossA + " vs guardian " + lossG);
-            float next = RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 10F);
-            sp.setHealth(next);
-            double got = hp - next;
-            h.assertTrue(RpgJobTests.close(JobTraits15.vengeance(sp), got * 0.5, 1e-3 + got * 1e-3), "vengeance = 50% of the hit: " + JobTraits15.vengeance(sp) + " vs " + got);
-            h.assertTrue(RpgJobTests.close(JobTraits15.foeDamage(sp, z.get(0)), got, 1e-3 + got * 1e-3), "the attacker is remembered: " + JobTraits15.foeDamage(sp, z.get(0)));
+            h.assertTrue(JobSkills.press(sp, 0), "크런치 cast");
+            h.assertTrue(JobRecast.pending(sp, "darkknight_crunch"), "crunch: recast window open");
         }));
-        // 리프라이절: 앙갚음 40 → 6 에 앞 과녁 4 + 12 (30%) · 앙갚음 28 이 남음
-        steps.add(new RpgJobTests.Step(2, () -> {
-            home(h, sp);
-            JobTraits15.setVengeance(sp, 40);
-            h.assertTrue(JobSkills.press(sp, 0), "리프라이절 cast");
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 1.6);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "크런치 물기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 12, 1e-9), "hunger +12: " + JobTraits15.hunger(sp));
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "darkknight gradient number");
         }));
-        steps.add(new RpgJobTests.Step(8, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 4) + 12;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "리프라이절 4 + 앙갚음 12 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.close(JobTraits15.vengeance(sp), 28, 1e-6), "30% used: " + JobTraits15.vengeance(sp));
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "avenger gradient number");
+        steps.add(new RpgJobTests.Step(5, () -> h.assertTrue(JobSkills.press(sp, 0), "크런치 recast (11)")));
+        steps.add(new RpgJobTests.Step(5, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.0);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "크런치 (1.6 + 찢기 2.4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 24, 1e-9) && !JobRecast.pending(sp, "darkknight_crunch"), "hunger 24 · window closed: "
+                    + JobTraits15.hunger(sp));
         }));
-        // 그러지 차지: 오른쪽 앞 과녁이 두 번 · 왼쪽 앞 과녁이 한 번 때림 → 겨눈 앞 과녁이 아니라 나를 가장 많이 때린 오른쪽 과녁에게 달려가 8 에 2.4
+        // 헝거 런지: 굶주림 가득 · 체력 50% · 6칸 앞 과녁 (겨눔) — 뛰어들어 8 에 2.4 + 통째로 삼킴 · 회복 6% · 기절 → 굶주림 0 + 12
         steps.add(new RpgJobTests.Step(4, () -> {
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            z.add(dummy(h, 0, 3.0));
-            z.add(dummy(h, 3.0, 5.0));
-            z.add(dummy(h, -3.0, 5.0));
-            RpgJobTests.clearStrays(h, z.get(0), z.get(1), z.get(2));
-            sp.setHealth(sp.getMaxHealth());
-            for (Husk x : List.of(z.get(1), z.get(1), z.get(2))) {
-                float hp = sp.getHealth();
-                sp.setHealth(RpgHealth.onLoss(sp, sp.damageSources().mobAttack(x), hp, hp - 6F));
-            }
-            h.assertTrue(JobTraits15.foeDamage(sp, z.get(1)) > JobTraits15.foeDamage(sp, z.get(2)) * 1.5, "memory: " + JobTraits15.foeDamage(sp, z.get(1)) + " / "
-                    + JobTraits15.foeDamage(sp, z.get(2)));
-            h.assertTrue(JobSkills.press(sp, 1), "그러지 차지 cast");
+            z.add(dummy(h, 0, 6.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits15.testClear(sp);
+            JobTraits15.setHunger(sp, 100);
+            sp.setHealth(sp.getMaxHealth() * 0.5F);
+            mark[0] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 1), "헝거 런지 cast");
         }));
         steps.add(new RpgJobTests.Step(10, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(1), 2.4);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), want), "그러지 차지 → the top attacker " + TestDummies.dealt(z.get(1)) + " vs " + want);
-            h.assertTrue(TestDummies.dealt(z.get(0)) == 0 && TestDummies.dealt(z.get(2)) == 0, "not the aimed / the lesser attacker");
-            h.assertTrue(sp.distanceTo(z.get(1)) < 2.4, "rushed to it: " + sp.distanceTo(z.get(1)));
+            Jobs.Skill k = j.skill(1);
+            double P = JobSystem.power(sp, j) * Jobs.damageScale(k);
+            double flat = Math.min(z.get(0).getMaxHealth() * 0.08, P * 6);
+            double want = RpgJobTests.expected(sp, j, k, 2.4) + flat;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "헝거 런지 2.4 + 통째로 삼킴 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits15.devoured(sp) == 1 && RpgJobTests.close(JobTraits15.hunger(sp), 12, 1e-9), "devoured once · hunger 0 + 12: " + JobTraits15.hunger(sp));
+            h.assertTrue(RpgJobTests.close(sp.getHealth() - mark[0], RpgHealth.maxOf(sp) * 0.06, 0.05), "devour heals 6%: " + (sp.getHealth() - mark[0]));
+            h.assertTrue(sp.distanceTo(z.get(0)) < 2.6 && z.get(0).hasEffect(MobEffects.SLOWNESS), "lunged to it · stunned: " + sp.distanceTo(z.get(0)));
         }));
-        // 레크닝: 앙갚음 60 → 12 에 앞 부채꼴 7.2 — 가운데 과녁은 + 60 (방어구 무시) · 옆 과녁은 + 30 → 앙갚음 0
+        // 피스트: 앞 2.5칸 · 왼쪽 앞 · 오른쪽 멀리 과녁 (밀 수 없음) — 6 에 셋 다 2.4 (물기가 아님) → 16 에 방패 앞 3칸 안 둘 4.8 (굶주림 + 24)
         steps.add(new RpgJobTests.Step(4, () -> {
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            z.add(dummy(h, 0, 4.0));
-            z.add(dummy(h, 2.6, 4.5));
-            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
-            JobTraits15.setVengeance(sp, 60);
-            h.assertTrue(JobSkills.press(sp, 2), "레크닝 cast");
+            z.add(dummy(h, 0, 2.5));
+            z.add(dummy(h, -1.5, 3.5));
+            z.add(dummy(h, 4.0, 2.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1), z.get(2));
+            JobTraits15.setHunger(sp, 0);
+            h.assertTrue(JobSkills.press(sp, 2), "피스트 cast");
         }));
-        steps.add(new RpgJobTests.Step(14, () -> {
-            double base = RpgJobTests.expected(sp, j, j.skill(2), 7.2);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base + 60), "레크닝 가운데 (7.2 + 앙갚음 전부) " + TestDummies.dealt(z.get(0)) + " vs " + (base + 60));
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), base + 30), "레크닝 옆 (7.2 + 절반) " + TestDummies.dealt(z.get(1)) + " vs " + (base + 30));
-            h.assertTrue(JobTraits15.vengeance(sp) == 0, "reckoning uses all vengeance: " + JobTraits15.vengeance(sp));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 2.4);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "피스트 검은 혀 " + TestDummies.dealt(x) + " vs " + want);
+            h.assertTrue(JobTraits15.hunger(sp) == 0, "the tongues are not bites: " + JobTraits15.hunger(sp));
         }));
-        // 페인 이터: 왼쪽 2칸 아군 — 그 아군이 받을 피해의 50% 를 내가 × 0.8 로 대신 받음 (앙갚음으로) · 내 받는 피해 −20%
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 7.2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want) && RpgJobTests.near(TestDummies.dealt(z.get(1)), want), "피스트 (2.4 + 물기 4.8) "
+                    + TestDummies.dealt(z.get(0)) + " / " + TestDummies.dealt(z.get(1)) + " vs " + want);
+            double far = RpgJobTests.expected(sp, j, j.skill(2), 2.4);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(2)), far), "the far one is not bitten " + TestDummies.dealt(z.get(2)));
+            h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 24, 1e-9), "two bitten → hunger 24: " + JobTraits15.hunger(sp));
+        }));
+        // 언홀리 프렌지: 태세 — 공격 속도 × 1.2 → 방패 평타 = 평타 + 위력 × 0.5 · 굶주림 4 × 2
         steps.add(new RpgJobTests.Step(4, () -> {
+            for (Husk x : z) x.discard();
+            z.clear();
+            home(h, sp);
+            z.add(dummy(h, 0, 2.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            JobTraits15.setHunger(sp, 0);
+            mark[1] = RpgCombat.attackSpeed.applyAsDouble(sp);
+            h.assertTrue(JobSkills.press(sp, 3), "언홀리 프렌지 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "darkknight_frenzy"), "frenzy: stance");
+            double after = RpgCombat.attackSpeed.applyAsDouble(sp);
+            h.assertTrue(Math.abs(after / mark[1] - 1.2) < 1e-6, "frenzy attack speed ×1.2: " + mark[1] + " → " + after);
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            RpgCombat.forceCrit = false;
+            mark[2] = TestDummies.dealt(z.get(0));
+            sp.attack(z.get(0));
+            double got = TestDummies.dealt(z.get(0)) - mark[2];
+            double want = RpgJobTests.basic(sp, w) + raw(sp, j, 0.5);
+            h.assertTrue(RpgJobTests.near(got, want), "frenzy bite: basic + power × 0.5 " + got + " vs " + want);
+            h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 8, 1e-9), "frenzy basic hunger 4 × 2: " + JobTraits15.hunger(sp));
+        }));
+        // 어비설 메이: 3칸 앞 과녁 (겨눔 — 가운데) · 그 왼쪽 앞 과녁 (둘레 4칸 안) · 오른쪽 멀리 과녁 (6칸 안 · 4칸 밖 — 밀 수 없어 끌려오지 못함) → 26 에 8 · 기절 → 44 에 24
+        steps.add(new RpgJobTests.Step(4, () -> {
+            JobSystem.setJob(sp, "darkknight");
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
             z.add(dummy(h, 0, 3.0));
-            RpgJobTests.clearStrays(h, z.get(0));
-            ally[0] = RpgJobTests.allyAt(h, sp, -2, 0);
-            ally[0].setHealth(ally[0].getMaxHealth());
-            sp.setHealth(sp.getMaxHealth());
-            JobTraits15.setVengeance(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 3), "페인 이터 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "avenger_pain"), "pain eater: stance");
-            float ha = ally[0].getHealth();
-            float hs = sp.getHealth();
-            float next = RpgHealth.onLoss(ally[0], ally[0].damageSources().mobAttack(z.get(0)), ha, ha - 10F);
-            ally[0].setHealth(next);
-            double la = ha - next;
-            double ls = hs - sp.getHealth();
-            h.assertTrue(la > 0 && RpgJobTests.close(ls, la * 0.8, 0.01 + la * 0.002), "the avenger takes 50% × 0.8 of the ally's hit: " + ls + " vs ally " + la);
-            h.assertTrue(RpgJobTests.close(JobTraits15.vengeance(sp), ls * 0.5, 1e-3 + ls * 1e-3) && RpgJobTests.close(JobTraits15.painTaken(sp), ls, 1e-3 + ls * 1e-3),
-                    "eaten pain becomes vengeance: " + JobTraits15.vengeance(sp) + " · " + JobTraits15.painTaken(sp));
-            h.assertTrue(RpgJobTests.close(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))), 0.2, 1e-9), "pain eater: my damage taken −20%");
-        }));
-        // 조브레이커: 앙갚음 50 · 4칸 앞 과녁 (밀 수 없음 — 들지 않고 그 위로 뛰어올라) → 26 에 32 + 50 + 최대 체력 8% (위력 × 8 까지) · 기절 · 둘레 다른 과녁 16 + 25
-        steps.add(new RpgJobTests.Step(4, () -> {
-            JobSystem.setJob(sp, "avenger");
-            for (Husk x : z) x.discard();
-            z.clear();
-            home(h, sp);
-            RpgJobTests.moveAlly(ally[0], sp, -3, -3);
-            z.add(dummy(h, 0, 4.0));
-            z.add(dummy(h, 2.0, 4.5));
-            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
-            sp.setHealth(sp.getMaxHealth());
-            JobTraits15.setVengeance(sp, 50);
+            z.add(dummy(h, -2.0, 3.5));
+            z.add(dummy(h, 5.3, 3.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1), z.get(2));
+            JobTraits15.setHunger(sp, 0);
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "조브레이커 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "어비설 메이 cast");
         }));
-        steps.add(new RpgJobTests.Step(28, () -> {
-            Jobs.Skill k = j.skill(4);
-            double P = JobSystem.power(sp, j) * Jobs.damageScale(k);
-            double cut = Math.min(z.get(0).getMaxHealth() * 0.08, P * 8);
-            double want = RpgJobTests.expected(sp, j, k, 32) + 50 + cut;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "조브레이커 32 + 앙갚음 50 + 최대 체력 몫 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            double side = RpgJobTests.expected(sp, j, k, 16) + 25;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), side), "조브레이커 여파 (절반) " + TestDummies.dealt(z.get(1)) + " vs " + side);
-            h.assertTrue(JobTraits15.vengeance(sp) == 0 && z.get(0).hasEffect(MobEffects.SLOWNESS), "all vengeance used · stunned");
+        steps.add(new RpgJobTests.Step(24, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "nothing before the maw rises (26)")));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 8);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want) && RpgJobTests.near(TestDummies.dealt(z.get(1)), want), "어비설 메이 삼킴 "
+                    + TestDummies.dealt(z.get(0)) + " / " + TestDummies.dealt(z.get(1)) + " vs " + want);
+            h.assertTrue(TestDummies.dealt(z.get(2)) == 0 && z.get(0).hasEffect(MobEffects.SLOWNESS), "outside the core not swallowed · the swallowed are stunned");
+        }));
+        steps.add(new RpgJobTests.Step(18, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 32);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want) && RpgJobTests.near(TestDummies.dealt(z.get(1)), want), "어비설 메이 (8 + 터뜨림 24) "
+                    + TestDummies.dealt(z.get(0)) + " / " + TestDummies.dealt(z.get(1)) + " vs " + want);
+            h.assertTrue(TestDummies.dealt(z.get(2)) == 0, "the far one untouched");
+            h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 48, 1e-9), "four bites → hunger 48: " + JobTraits15.hunger(sp));
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);
             for (Husk x : z) x.discard();
-            RpgJobTests.bye(h, ally[0]);
             RpgGearTests.done(h, sp);
         });
     }

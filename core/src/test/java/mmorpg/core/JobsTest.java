@@ -484,70 +484,75 @@ public final class JobsTest {
         reaperAdvance(Jobs.job("reaper"), Jobs.job("soulreaper"), Jobs.job("executioner"));
         paladinAdvance(Jobs.job("paladin"), Jobs.job("thunderlord"), Jobs.job("tyrant"));
         priestAdvance(Jobs.job("priest"), Jobs.job("saint"), Jobs.job("warlock"));
-        guardianAdvance(Jobs.job("guardian"), Jobs.job("sentinel"), Jobs.job("avenger"));
+        guardianAdvance(Jobs.job("guardian"), Jobs.job("phoenix"), Jobs.job("darkknight"));
     }
 
     /**
-     * 2026-11-06 수호기사 2차 — 센티널 · 어벤저 (재설계안 2판 — 사용자 "다음 작업": 센티널 새 스킬 다섯 · 어벤저는 막고 대신 맞는 탱커를 뒤집어 막지 않고 다 맞은 뒤
-     * 한 번에 되갚는 근접 딜러): 부분 합 = 배율 합 (수호기사와 같은 4 · 2.4 · 7.2 · 32 — 칸 틀 5 · 3 · 9 · 40 × 세기 0.8) · 무적 시간 띄움 · t · w · 특성 (반격 = 1차
-     * + 파수꾼의 위압 −15% / 앙갚음 — 받은 피해 50% · 최대 체력 150% · 받는 피해 +10%) · 초당 피해 (센티널 × 1.2 · 어벤저 × 1.3 — 근접 딜러 목표 1.20 ÷ 탱커 0.92 × 1.2 ≈
-     * 1.565 에서 앙갚음 덤 평균 +20% 쯤을 뺌)
+     * 2026-11-06 수호기사 2차 — 피닉스 가드 · 다크 나이트 (다시 — 사용자 "레인보우 컨셉이 개짜치고 반전도 이렇다할 멋이 없음" → 고른 것: 푸른 불사조 · 타락한 흑기사):
+     * 부분 합 = 배율 합 (수호기사와 같은 4 · 2.4 · 7.2 · 32 — 칸 틀 5 · 3 · 9 · 40 × 세기 0.8) · 무적 시간 띄움 · t · w · 특성 (반격 = 1차 + 불사조의 재 20% / 탐식 —
+     * 물면 +12 · 평타 +4 · 가득이면 삼킴 최대 체력 8% (위력 × 6 까지) · 회복 6%) · 초당 피해 (피닉스 가드 × 1.2 · 다크 나이트 × 1.3 — 근접 딜러 목표 1.20 ÷ 탱커 0.92 ×
+     * 1.2 ≈ 1.565 에서 삼킴 덤 평균 +20% 쯤을 뺌)
      */
-    static void guardianAdvance(Jobs.Job gu, Jobs.Job sn, Jobs.Job av) {
-        check(sn != null && av != null, "guardian advanced jobs");
-        if (sn == null || av == null) return;
-        check(Jobs.advance("guardian", "awaken") == sn && Jobs.advance("guardian", "invert") == av && Jobs.baseOf(sn) == gu && Jobs.baseOf(av) == gu
-                && Jobs.advancedOf("guardian").equals(List.of(sn, av)), "guardian advance");
-        check(sn.display().equals("센티널") && av.display().equals("어벤저") && Jobs.find("센티널") == sn && Jobs.find("히민뵤르그") == null && Jobs.find("어벤저") == av
-                && Jobs.find("비다르") == null && Jobs.find("avenger") == av, "guardian display · find");
-        List<String> snIds = new ArrayList<>();
-        List<String> avIds = new ArrayList<>();
-        for (Jobs.Skill k : sn.skills()) snIds.add(k.id());
-        for (Jobs.Skill k : av.skills()) avIds.add(k.id());
-        check(snIds.equals(List.of("sentinel_charge", "sentinel_haven", "sentinel_rampart", "sentinel_tides", "sentinel_ult"))
-                && avIds.equals(List.of("avenger_reprisal", "avenger_grudge", "avenger_reckoning", "avenger_pain", "avenger_ult")), "guardian advanced skill ids");
-        for (int i : new int[] {0, 1, 2, 4}) check(near(sn.skill(i).total(), gu.skill(i).total()) && near(av.skill(i).total(), gu.skill(i).total()), "guardian totals slot " + i);
-        Jobs.Skill sc = sn.skill(0), sh = sn.skill(1), sr = sn.skill(2), st = sn.skill(3), su = sn.skill(4);
-        Jobs.Skill ar = av.skill(0), ag = av.skill(1), ak = av.skill(2), ap = av.skill(3), au = av.skill(4);
-        check(near(sc.num("ram", 0) + sc.num("slam", 0), 4) && near(sh.num("slam", 0), 2.4) && near(sr.num("rise", 0) + sr.num("collapse", 0), 7.2)
-                && near(su.num("blast", 0) + su.num("land", 0), 32), "sentinel totals 4 (1.6 + 2.4) · 2.4 · 7.2 (4.8 + 2.4) · 32 (8 + 24)");
-        check(near(ar.num("bash", 0), 4) && near(ag.num("ram", 0), 2.4) && near(ak.num("blast", 0), 7.2) && near(au.num("slam", 0), 32), "avenger totals 4 · 2.4 · 7.2 · 32");
-        // 4번 칸: 나인 타이즈 10초 · 페인 이터 8초 강화 태세 (피해 없음)
-        check(!Jobs.stanceBudget(st) && st.total() == 0 && near(st.num("dur", 0), 200) && !Jobs.stanceBudget(ap) && ap.total() == 0 && near(ap.num("dur", 0), 160),
-                "나인 타이즈 10초 · 페인 이터 8초 태세");
-        // 초당 피해: 센티널 = 1차 × 1.2 · 어벤저 = 1차 × 1.3 (역할이 바뀜 — 근접 딜러 목표 1.20 ÷ 탱커 0.92 × 1.2 ≈ 1.565 ÷ 앙갚음 덤 1.2)
-        check(near(Jobs.advanceDps(sn), 1.2) && near(Jobs.advanceDps(av), 1.3) && near(dps(sn) / dps(gu), 1.2, 0.005) && near(dps(av) / dps(gu), 1.3, 0.005),
-                "sentinel × 1.2 · avenger × 1.3");
-        // 같은 적을 여러 번 치는 것은 10틱 넘게 (배스천 차지 — 닿는 틱이 w · 밀어붙임 slamAt)
-        check(sc.num("slamAt", 0) - sc.num("w", 0) >= 10 && sr.num("dur", 0) >= 10 && su.num("landAt", 0) - su.num("blastAt", 0) >= 10, "sentinel i-frame spacing");
-        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값)
-        check(near(sc.num("slamAt", 0), sc.num("t", 0)) && near(sc.num("braceAt", 0) + 2, sc.num("w", 0)) && near(sh.num("leap", 0), sh.num("t", 0))
-                && near(sh.num("leap", 0), sh.num("w", 0)) && near(sr.num("riseAt", 0) + sr.num("dur", 0), sr.num("t", 0)) && near(sr.num("riseAt", 0), sr.num("w", 0))
-                && near(su.num("landAt", 0), su.num("t", 0)) && near(su.num("blastAt", 0), su.num("w", 0)), "sentinel t 16 · 8 · 110 · 50 (w 6 · 8 · 10 · 10)");
-        check(near(ar.num("bashAt", 0), ar.num("t", 0)) && near(ar.num("bashAt", 0), ar.num("w", 0)) && near(ag.num("hitAt", 0), ag.num("t", 0))
-                && near(ag.num("hitAt", 0), ag.num("w", 0)) && near(ak.num("blastAt", 0), ak.num("t", 0)) && near(ak.num("blastAt", 0), ak.num("w", 0))
-                && near(au.num("slamAt", 0), au.num("t", 0)) && near(au.num("slamAt", 0), au.num("w", 0)) && au.num("grabAt", 0) < au.num("slamAt", 0),
-                "avenger t 6 · 8 · 12 · 26 (w = t)");
-        // 특성: 센티널 = 수호기사의 반격 (같은 이름 · 쌓임) + 파수꾼의 위압, 어벤저 = 앙갚음
-        for (String key : new String[] {"rate", "cap"}) check(near(sn.trait().def().numOr(key, -1), gu.trait().def().numOr(key, -2)), "반격 " + key + " = 1차");
-        check(sn.trait().name().equals(gu.trait().name()) && sn.trait().max() == gu.trait().max() && near(sn.trait().def().numOr("dread", 0), 0.15),
-                "반격 + 파수꾼의 위압 (도발한 적이 주는 피해 −15%)");
-        check(av.trait().name().equals("앙갚음") && near(av.trait().def().numOr("rate", 0), 0.5) && near(av.trait().def().numOr("cap", 0), 1.5)
-                && near(av.trait().def().numOr("taken", 0), 0.1) && near(av.trait().def().numOr("keep", 0), 160) && near(av.trait().def().numOr("decay", 0), 0.1)
-                && near(ar.num("use", 0), 0.3) && near(ak.num("core", 0), 1.0) && near(ak.num("side", 0), 0.5) && near(au.num("maxHp", 0), 0.08),
-                "앙갚음 50% · 최대 150% · 받는 피해 +10% · 8초 뒤 10% 씩 · 리프라이절 30% · 레크닝 전부 (옆 절반) · 조브레이커 최대 체력 8%");
+    static void guardianAdvance(Jobs.Job gu, Jobs.Job ph, Jobs.Job dk) {
+        check(ph != null && dk != null, "guardian advanced jobs");
+        if (ph == null || dk == null) return;
+        check(Jobs.advance("guardian", "awaken") == ph && Jobs.advance("guardian", "invert") == dk && Jobs.baseOf(ph) == gu && Jobs.baseOf(dk) == gu
+                && Jobs.advancedOf("guardian").equals(List.of(ph, dk)), "guardian advance");
+        check(ph.display().equals("피닉스 가드") && dk.display().equals("다크 나이트") && Jobs.find("피닉스 가드") == ph && Jobs.find("다크 나이트") == dk
+                && Jobs.find("darkknight") == dk && Jobs.find("센티널") == null && Jobs.find("어벤저") == null && Jobs.find("sentinel") == null
+                && Jobs.find("avenger") == null, "guardian display · find");
+        List<String> phIds = new ArrayList<>();
+        List<String> dkIds = new ArrayList<>();
+        for (Jobs.Skill k : ph.skills()) phIds.add(k.id());
+        for (Jobs.Skill k : dk.skills()) dkIds.add(k.id());
+        check(phIds.equals(List.of("phoenix_bash", "phoenix_wing", "phoenix_inferno", "phoenix_ignition", "phoenix_ult"))
+                && dkIds.equals(List.of("darkknight_crunch", "darkknight_lunge", "darkknight_feast", "darkknight_frenzy", "darkknight_ult")), "guardian advanced skill ids");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(ph.skill(i).total(), gu.skill(i).total()) && near(dk.skill(i).total(), gu.skill(i).total()), "guardian totals slot " + i);
+        Jobs.Skill pb = ph.skill(0), pw = ph.skill(1), pi = ph.skill(2), pg = ph.skill(3), pu = ph.skill(4);
+        Jobs.Skill dc = dk.skill(0), dl = dk.skill(1), df = dk.skill(2), dz = dk.skill(3), du = dk.skill(4);
+        check(near(pb.num("bash", 0), 4) && near(pw.num("slam", 0), 2.4) && near(pi.num("rise", 0) + pi.num("burst", 0), 7.2)
+                && near(pu.num("pillar", 0) + pu.num("dive", 0), 32), "phoenix totals 4 · 2.4 · 7.2 (4.8 + 2.4) · 32 (8 + 24)");
+        check(near(dc.num("bite", 0) + dc.num("tear", 0), 4) && near(dl.num("bite", 0), 2.4) && near(df.num("pull", 0) + df.num("bite", 0), 7.2)
+                && near(du.num("swallow", 0) + du.num("crush", 0), 32), "darkknight totals 4 (1.6 + 2.4) · 2.4 · 7.2 (2.4 + 4.8) · 32 (8 + 24)");
+        // 4번 칸: 이그니션 · 언홀리 프렌지 8초 강화 태세 (피해 칸 몫 아님)
+        check(!Jobs.stanceBudget(pg) && pg.total() == 0 && near(pg.num("dur", 0), 160) && !Jobs.stanceBudget(dz) && dz.total() == 0 && near(dz.num("dur", 0), 160),
+                "이그니션 · 언홀리 프렌지 8초 태세");
+        // 초당 피해: 피닉스 가드 = 1차 × 1.2 · 다크 나이트 = 1차 × 1.3 (역할이 바뀜 — 근접 딜러 목표 1.20 ÷ 탱커 0.92 × 1.2 ≈ 1.565 ÷ 삼킴 덤 1.2)
+        check(near(Jobs.advanceDps(ph), 1.2) && near(Jobs.advanceDps(dk), 1.3) && near(dps(ph) / dps(gu), 1.2, 0.005) && near(dps(dk) / dps(gu), 1.3, 0.005),
+                "phoenix × 1.2 · darkknight × 1.3");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게 (블루 인페르노 솟음 → 터짐 · 디센트 불기둥 → 내리꽂힘 · 크런치 물기 → 찢기 (다시 누름 gap) · 피스트 감기 → 물기 · 메이 삼킴 → 터뜨림)
+        check(pi.num("burstAt", 0) - pi.num("riseAt", 0) >= 10 && pu.num("diveAt", 0) - pu.num("pillarAt", 0) >= 10
+                && dc.num("gap", 0) + dc.num("tearAt", 0) - dc.num("biteAt", 0) >= 10 && df.num("biteAt", 0) - df.num("pullAt", 0) >= 10
+                && du.num("crushAt", 0) - du.num("swallowAt", 0) >= 10, "guardian advanced i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 크런치는 12틱에 다시 누름)
+        check(near(pb.num("bashAt", 0), pb.num("t", 0)) && near(pb.num("bashAt", 0), pb.num("w", 0)) && near(pw.num("glide", 0), pw.num("t", 0))
+                && near(pw.num("glide", 0), pw.num("w", 0)) && near(pi.num("burstAt", 0), pi.num("t", 0)) && near(pi.num("riseAt", 0), pi.num("w", 0))
+                && near(pu.num("diveAt", 0), pu.num("t", 0)) && near(pu.num("pillarAt", 0), pu.num("w", 0)), "phoenix t 6 · 10 · 30 · 40 (w 6 · 10 · 10 · 10)");
+        check(near(dc.num("biteAt", 0), dc.num("w", 0)) && near(12 + dc.num("tearAt", 0), dc.num("t", 0)) && dc.num("gap", 0) <= 12
+                && near(dl.num("biteAt", 0), dl.num("t", 0)) && near(dl.num("biteAt", 0), dl.num("w", 0)) && near(df.num("biteAt", 0), df.num("t", 0))
+                && near(df.num("pullAt", 0), df.num("w", 0)) && near(du.num("crushAt", 0), du.num("t", 0)) && near(du.num("swallowAt", 0), du.num("w", 0))
+                && du.num("plantAt", 0) < du.num("swallowAt", 0), "darkknight t 15 · 8 · 16 · 44 (w 4 · 8 · 6 · 26)");
+        // 특성: 피닉스 가드 = 수호기사의 반격 (같은 이름 · 쌓임) + 불사조의 재, 다크 나이트 = 탐식
+        for (String key : new String[] {"rate", "cap"}) check(near(ph.trait().def().numOr(key, -1), gu.trait().def().numOr(key, -2)), "반격 " + key + " = 1차");
+        check(ph.trait().name().equals(gu.trait().name()) && ph.trait().max() == gu.trait().max() && near(ph.trait().def().numOr("ash", 0), 0.2)
+                && near(ph.trait().def().numOr("ashRadius", 0), 8) && near(ph.trait().def().numOr("ashCap", 0), 0.15) && near(pg.num("ash", 0), 2)
+                && near(pg.num("cut", 0), 0.2), "반격 + 불사조의 재 (막아 준 피해 20% → 가장 위험한 아군 보호막 · 이그니션 두 배 · −20%)");
+        check(dk.trait().name().equals("탐식") && dk.trait().max() == 100 && near(dk.trait().def().numOr("bite", 0), 12) && near(dk.trait().def().numOr("basic", 0), 4)
+                && near(dk.trait().def().numOr("keep", 0), 160) && near(dk.trait().def().numOr("decay", 0), 10) && near(dk.trait().def().numOr("devour", 0), 0.08)
+                && near(dk.trait().def().numOr("devourCap", 0), 6) && near(dk.trait().def().numOr("heal", 0), 0.06) && near(dz.num("bite", 0), 0.5)
+                && near(dz.num("speed", 0), 0.2) && near(dz.num("hunger", 0), 2), "탐식 +12 · 평타 +4 · 8초 뒤 10 씩 · 삼킴 8% (× 6) · 회복 6% · 프렌지 × 0.5 · +20% · 두 배");
         // 유틸 · 범위 · 선딜
-        check("single".equals(Jobs.areaKind(sc)) && "narrow".equals(Jobs.areaKind(sh)) && "narrow".equals(Jobs.areaKind(sr)) && Jobs.areaKind(su) == null
-                && Jobs.utils(sc).equals(List.of("stun1", "taunt")) && Jobs.utils(sh).equals(List.of("leap", "allyGuard"))
-                && Jobs.utils(sr).equals(List.of("slow", "taunt", "knock")) && Jobs.utils(su).equals(List.of("taunt", "shield", "leap")), "sentinel utils · area");
-        check("narrow".equals(Jobs.areaKind(ar)) && "narrow".equals(Jobs.areaKind(ag)) && Jobs.areaKind(ak) == null && "narrow".equals(Jobs.areaKind(au))
-                && Jobs.utils(ar).isEmpty() && Jobs.utils(ag).equals(List.of("blink", "knock")) && Jobs.utils(ak).isEmpty() && Jobs.utils(au).equals(List.of("leap", "stun1")),
-                "avenger utils · area");
-        check(Jobs.windupTicks(sc) == 6 && Jobs.windupTicks(sh) == 8 && Jobs.windupTicks(sr) == 10 && Jobs.windupTicks(su) == 10 && Jobs.windupTicks(ar) == 6
-                && Jobs.windupTicks(ag) == 8 && Jobs.windupTicks(ak) == 12 && Jobs.windupTicks(au) == 26, "windups 6 · 8 · 10 · 10 / 6 · 8 · 12 · 26");
-        check(Jobs.skillLine(sc).startsWith("배스천 차지 · 6초 · 배율 ") && Jobs.skillLine(ap).equals("페인 이터 · 30초"), "guardian advanced skill line " + Jobs.skillLine(ap));
-        check(sn.color()[0][2] > 0.9 && sn.color()[0][0] < 0.5 && sn.color()[1][0] > 0.9 && av.color()[0][0] > 0.95 && av.color()[0][1] < 0.6 && av.color()[1][0] < 0.4,
-                "colors: sentinel steel sky · pearl / avenger ember · ash");
+        check("narrow".equals(Jobs.areaKind(pb)) && "narrow".equals(Jobs.areaKind(pw)) && Jobs.areaKind(pi) == null && Jobs.areaKind(pu) == null
+                && Jobs.utils(pb).equals(List.of("taunt", "lift")) && Jobs.utils(pw).equals(List.of("leap", "shield"))
+                && Jobs.utils(pi).equals(List.of("taunt", "knock")) && Jobs.utils(pu).equals(List.of("taunt", "shield", "lift")), "phoenix utils · area");
+        check("single".equals(Jobs.areaKind(dc)) && "single".equals(Jobs.areaKind(dl)) && Jobs.areaKind(df) == null && Jobs.areaKind(du) == null
+                && Jobs.utils(dc).isEmpty() && Jobs.utils(dl).equals(List.of("blink", "stun05")) && Jobs.utils(df).equals(List.of("pull"))
+                && Jobs.utils(du).equals(List.of("pull", "stun1")), "darkknight utils · area");
+        check(Jobs.windupTicks(pb) == 6 && Jobs.windupTicks(pw) == 10 && Jobs.windupTicks(pi) == 10 && Jobs.windupTicks(pu) == 10 && Jobs.windupTicks(dc) == 0
+                && Jobs.windupTicks(dl) == 8 && Jobs.windupTicks(df) == 6 && Jobs.windupTicks(du) == 26, "windups 6 · 10 · 10 · 10 / 0 (4틱은 선딜 아님) · 8 · 6 · 26");
+        check(Jobs.skillLine(pb).startsWith("피닉스 배시 · 6초 · 배율 ") && Jobs.skillLine(dz).equals("언홀리 프렌지 · 30초"), "guardian advanced skill line " + Jobs.skillLine(dz));
+        check(ph.color()[0][2] > 0.95 && ph.color()[0][0] < 0.4 && ph.color()[1][2] > 0.95 && dk.color()[0][0] > 0.85 && dk.color()[0][1] < 0.2 && dk.color()[1][0] < 0.3,
+                "colors: phoenix azure · white / darkknight crimson · black");
     }
 
     /**

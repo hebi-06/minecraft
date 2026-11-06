@@ -85,7 +85,7 @@ public final class JobTraits {
         JobTraits12.init(); // 0.51.0 사신 2차 (소울 리퍼 영혼 해방 · 엑시큐셔너 처형 — 소울 리퍼의 영혼은 JobTraits3)
         JobTraits11.init(); // 0.51.0 창술사 2차 (스톰 랜서 바람 · 질풍 창 · 렌딩 게일 · 드라군 비상 — 스톰 랜서의 창끝은 JobTraits3)
         JobTraits14.init(); // 0.51.0 사제 2차 (세인트 넘치는 빛 · 페탈 베일 · 소울본드 · 에버블룸 · 워록 생명 착취 · 피의 역병 — 세인트의 신앙은 JobTraits4)
-        JobTraits15.init(); // 0.51.0 수호기사 2차 (센티널 파수꾼의 위압 · 피난처 · 무지개 장벽 · 나인 타이즈 · 어벤저 앙갚음 · 페인 이터 — 센티널의 반격은 JobTraits4)
+        JobTraits15.init(); // 0.51.0 수호기사 2차 (피닉스 가드 불사조의 재 · 이그니션 · 다크 나이트 탐식 · 언홀리 프렌지 — 피닉스 가드의 반격은 JobTraits4)
         JobTraits13.init(); // 0.51.0 성기사 2차 (썬더로드 갈라지는 벼락 · 썬더헤드 · 빛의 가호 · 타이런트 강탈 · 콜로서스 — 썬더로드의 심판은 JobTraits4)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
@@ -506,7 +506,7 @@ public final class JobTraits {
                 JobTraits12.tick(sp, j, now); // 0.51.0 엑시큐셔너 선고 · 처형할 수 있는 적 해골 · 처형 뒤 이동 속도
                 JobTraits13.tick(sp, j, now); // 0.51.0 썬더헤드 먹구름 · 타이런트 강탈이 사라짐 · 콜로서스 왕관
                 JobTraits14.tick(sp, j, now); // 0.51.0 워록 게이지 (빼앗을 몫) · 애시본 불길
-                JobTraits15.tick(sp, j, now); // 0.51.0 어벤저 앙갚음이 사라짐 · 차오른 몸의 불씨
+                JobTraits15.tick(sp, j, now); // 0.51.0 다크 나이트 굶주림이 줄어듦 · 가득 찬 방패의 핏빛 숨
             }
             if (st == null || j == null) continue;
             // 태세가 끝남
@@ -519,7 +519,7 @@ public final class JobTraits {
                 JobTraits4.stanceEnded(sp, ended); // 0.30.0 철옹성 → 이동 수정치를 뗌
                 JobTraits13.stanceEnded(sp, ended); // 0.51.0 콜로서스 → 몸 크기를 강탈 몫만
                 JobTraits14.stanceEnded(sp, ended); // 0.51.0 소울본드 → 리본을 끊음
-                JobTraits15.stanceEnded(sp, ended); // 0.51.0 페인 이터 → 불씨가 흩어짐 · 나인 타이즈 → 물결이 부서짐
+                JobTraits15.stanceEnded(sp, ended); // 0.51.0 이그니션 → 날개가 깃털로 흩어짐 · 언홀리 프렌지 → 아가리가 다묾
                 JobFx3d.drop(sp, ended, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
@@ -570,7 +570,7 @@ public final class JobTraits {
         } else if (JobTraits14.stanceFx(sp, j, st.stance)) {
             // 0.51.0 소울본드 (리본 · 연꽃) · 애시본 (발밑 불길 · 도는 불티) — JobTraits14 가 그림
         } else if (JobTraits15.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 나인 타이즈 (둘레를 도는 아홉 물결) · 페인 이터 (불씨 기둥 · 아군에게서 불씨 줄) — JobTraits15 가 그림
+            // 0.51.0 이그니션 (등의 푸른 불꽃 날개) · 언홀리 프렌지 (방패의 아가리 · 핏빛 숨) — JobTraits15 가 그림
         } else if (st.stance.equals("archer_focus")) {
             // 정조준: 활을 든 손 앞 금빛 반짝임
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
@@ -610,7 +610,7 @@ public final class JobTraits {
         else if (j.id().equals(JobTraits12.EX)) value = JobTraits12.gaugeValue(sp, j); // 0.51.0 엑시큐셔너 = 마지막으로 친 적의 잃은 체력
         else if (j.id().equals(JobTraits13.TY)) value = JobTraits13.gaugeValue(sp, j); // 0.51.0 타이런트 = 빼앗은 힘
         else if (j.id().equals(JobTraits14.WK)) value = JobTraits14.gaugeValue(sp, j); // 0.51.0 워록 = 다음 스킬이 빼앗을 몫
-        else if (j.id().equals(JobTraits15.AV)) value = JobTraits15.gaugeValue(sp, j); // 0.51.0 어벤저 = 앙갚음 (최대 대비)
+        else if (j.id().equals(JobTraits15.DK)) value = JobTraits15.gaugeValue(sp, j); // 0.51.0 다크 나이트 = 굶주림
         else if (markJob(j)) { // 마검사 · 0.51.0 룬 스미스 = 그 적의 각인
             if (st != null && st.target != null) {
                 Entity e = sp.level().getEntity(st.target);

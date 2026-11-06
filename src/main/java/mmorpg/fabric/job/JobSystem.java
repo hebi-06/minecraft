@@ -94,8 +94,8 @@ public final class JobSystem {
         TyrantSkills.register(); // 0.51.0 성기사 2차 — 타이런트 (아군을 지키는 광역 제어를 뒤집어 적의 힘을 빼앗아 홀로 커짐)
         SaintSkills.register(); // 0.51.0 사제 2차 — 세인트 (2026-11-06)
         WarlockSkills.register(); // 0.51.0 사제 2차 — 워록 (아군에게 체력을 주는 힐러를 뒤집어 팀의 체력을 빼앗아 쓰는 딜러)
-        SentinelSkills.register(); // 0.51.0 수호기사 2차 — 센티널 (2026-11-06)
-        AvengerSkills.register(); // 0.51.0 수호기사 2차 — 어벤저 (막고 대신 맞는 탱커를 뒤집어 다 맞고 한 번에 되갚는 딜러)
+        PhoenixSkills.register(); // 0.51.0 수호기사 2차 — 피닉스 가드 (2026-11-06 다시 — 푸른 불사조)
+        DarkknightSkills.register(); // 0.51.0 수호기사 2차 — 다크 나이트 (막아 지키던 방패가 굶주린 아가리가 되어 물어뜯고 삼키는 딜러)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);

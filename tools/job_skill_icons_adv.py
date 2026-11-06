@@ -3301,18 +3301,16 @@ def warlock_ult(A, B):
     return finish(subject, [glow(heart, A, 2.4, 1.0), glow(cup, B, 1.4, 0.7), glow(sp, B, 1.0, 0.8)], warlock_back(A, B))
 
 
-# ------------------------------------------------------------ 센티널 (빛: 강철 하늘빛 → 진주빛 — 새벽 남빛 바탕 · 무지개 일곱 빛) — 2026-11-06
+# ------------------------------------------------------------ 피닉스 가드 (빛: 푸른 불꽃 → 흰 불 — 깊은 남빛 밤 바탕) — 2026-11-06 (다시 — 푸른 불사조)
 
-SENT_NIGHT = (6, 10, 30)
-BOW7 = [(255, 70, 80), (255, 146, 50), (255, 228, 80), (96, 236, 110), (74, 196, 255), (96, 108, 255), (190, 100, 255)]
-HORN_HI = (255, 240, 170)
-HORN_C = (236, 178, 64)
-HORN_LO = (140, 92, 26)
-SEA_C = (60, 190, 230)
+PH_NIGHT = (3, 8, 28)
+FIRE_HI = (226, 246, 255)
+FIRE_C = (84, 172, 255)
+FIRE_LO = (22, 66, 176)
 
 
-def sentinel_back(A, B):
-    return backdrop(mix(A, SENT_NIGHT, 0.86), mix(A, (60, 80, 150), 0.5))
+def phoenix_back(A, B):
+    return backdrop(mix(A, PH_NIGHT, 0.86), mix(A, (40, 90, 200), 0.5))
 
 
 def kite_shield(cx, cy, w, h, ang=0.0):
@@ -3320,240 +3318,267 @@ def kite_shield(cx, cy, w, h, ang=0.0):
     return kite(cx, cy, w, h, ang), kite(cx, cy, w, h, ang, 0.7)
 
 
-def sentinel_charge(A, B):
-    # 배스천 차지: 오른쪽으로 내달리는 연 방패 (앞에 세움) · 뒤로 끌리는 무지개 줄 일곱 · 방패 앞의 충돌 섬광
-    outer, inner = kite_shield(17.5, 15.5, 13.0, 18.0, ang=-8)
-    rim = ImageChops.subtract(outer, inner)
-    trail = []
-    for i, c in enumerate(BOW7):
-        m = mask()
-        y = 9.0 + i * 2.0
-        line(m, [(2.0 + i * 0.3, y + 1.0), (11.5, y)], 1.3)
-        trail.append(layer(m, mix(c, WHITE, 0.25), c))
-    burst = mask()
-    star(burst, 27.0, 15.0, 5.2, thin=0.18)
-    sparks = sparkles(((29.0, 7.0, 1.6), (28.5, 24.0, 1.4)))
-    subject = stack(*trail, layer(inner, mix(A, (40, 60, 120), 0.3), mix(A, (16, 24, 60), 0.5), mix(A, WHITE, 0.45), None, axis=(0.5, 1)),
-                    layer(rim, mix(B, WHITE, 0.4), mix(A, B, 0.45), WHITE, mix(A, (0, 0, 0), 0.4)), layer(burst, WHITE, B), layer(sparks, WHITE, A))
-    return finish(subject, [glow(outer, A, 2.0, 0.9), glow(burst, B, 2.0, 1.0)], sentinel_back(A, B))
+def fire_wing(m, sx, sy, side, scale=1.0, lift=0.0, fold=0.0):
+    """불꽃 날개 하나 (어깨 sx, sy 에서 깃 다섯 — side +1 = 오른쪽 · lift = 위로 더 (도) · fold = 아래 안쪽으로 접음 (도))"""
+    for ang, L, w in ((-82, 10.5, 2.6), (-62, 12.0, 3.0), (-42, 11.6, 3.0), (-24, 10.2, 2.8), (-8, 8.2, 2.4)):
+        a = ang - lift + fold * (1 + (ang + 82) / 74)
+        if side < 0:
+            a = 180 - a
+        petal(m, sx, sy, L * scale, w * scale, a)
+    return m
 
 
-def sentinel_haven(A, B):
-    # 헤이븐 리프: 땅의 빛 고리 위 반구 돔 (테 · 갈비) · 돔 위로 무지개 포물선 (뛰어 내려앉은 길) · 돔 안 작은 방패
-    dome = mask()
-    d = ImageDraw.Draw(dome)
-    d.pieslice([P(3.5, 9.0), P(28.5, 41.0)], 180, 360, fill=255)
-    shell = mask()
-    d = ImageDraw.Draw(shell)
-    d.arc([P(3.5, 9.0), P(28.5, 41.0)], 180, 360, fill=255, width=int(1.3 * SS))
-    for xs in (9.0, 16.0, 23.0):
-        line(shell, [(xs, 25.0), (16.0 + (xs - 16.0) * 0.55, 11.5)], 0.6)
-    base = mask()
-    d = ImageDraw.Draw(base)
-    d.ellipse([P(2.5, 22.5), P(29.5, 28.0)], outline=255, width=int(1.1 * SS))
-    arcs = []
-    for i, c in enumerate(BOW7[::2]):
-        m = mask()
-        d = ImageDraw.Draw(m)
-        r = 11.5 - i * 1.2
-        d.arc([P(16.0 - r, 5.0 - r * 0.5 + i * 0.6), P(16.0 + r, 5.0 + r * 1.3 + i * 0.6)], 200, 340, fill=255, width=int(0.9 * SS))
-        arcs.append(layer(m, mix(c, WHITE, 0.2), c))
-    outer, inner = kite_shield(16.0, 19.5, 6.0, 8.0)
-    subject = stack(layer(dome, mix(A, (20, 30, 70), 0.55), mix(A, (10, 14, 40), 0.75)), *arcs, layer(base, mix(B, WHITE, 0.3), A),
-                    layer(outer, mix(B, WHITE, 0.4), mix(A, B, 0.5), WHITE, mix(A, (0, 0, 0), 0.4)), layer(shell, WHITE, mix(A, B, 0.5)))
-    return finish(subject, [glow(shell, A, 1.8, 1.0), glow(base, B, 1.4, 0.8)], sentinel_back(A, B))
-
-
-def sentinel_rampart(A, B):
-    # 레인보우 램파트: 일곱 빛 장막 기둥이 나란히 선 무지개 장벽 (아랫단이 밝음) · 앞에서 막혀 부러진 화살 · 반짝임
-    bands = []
-    for i, c in enumerate(BOW7):
-        m = mask()
-        x0 = 3.0 + i * 3.75
-        poly(m, [(x0, 26.0), (x0 + 3.9, 26.0), (x0 + 3.6, 6.0 + (i % 2) * 1.5), (x0 + 0.3, 7.0 + ((i + 1) % 2) * 1.2)])
-        bands.append(layer(m, mix(c, WHITE, 0.15), mix(c, (0, 0, 0), 0.35)))
-    hem = mask()
-    line(hem, [(3.0, 26.4), (29.4, 26.4)], 1.4)
-    arrow = mask()
-    line(arrow, [(26.0, 30.0), (20.0, 21.5)], 0.9)
-    poly(arrow, [(19.0, 20.0), (21.6, 21.2), (20.0, 22.8)])
-    shards = sparkles(((18.5, 19.0, 2.6), (6.0, 4.5, 1.4), (27.0, 4.0, 1.2)))
-    subject = stack(*bands, layer(hem, WHITE, mix(A, WHITE, 0.5)), layer(arrow, (230, 220, 200), (140, 120, 96)), layer(shards, WHITE, B))
-    allbands = mask()
-    poly(allbands, [(3.0, 26.0), (29.5, 26.0), (29.5, 6.0), (3.0, 6.0)])
-    return finish(subject, [glow(allbands, A, 2.0, 0.6), glow(hem, B, 1.4, 1.0), glow(shards, B, 1.4, 1.0)], sentinel_back(A, B))
-
-
-def sentinel_tides(A, B):
-    # 나인 타이즈: 가운데 방패를 둘러 도는 아홉 물결 (말린 물마루) · 바닷빛 고리
-    ringm = mask()
-    ring(ringm, 16.0, 16.0, 12.5, 1.0)
-    waves = mask()
-    for k in range(9):
-        a = math.radians(k * 40 - 90)
-        cx, cy = 16.0 + math.cos(a) * 11.0, 16.0 + math.sin(a) * 11.0
-        tan = a + math.pi / 2
-        pts = []
-        for i in range(9):
-            t = i / 8
-            r = 2.6 * (1 - t * 0.5)
-            ang = tan + math.pi + t * math.pi * 1.4
-            pts.append((cx + math.cos(ang) * r, cy + math.sin(ang) * r))
-        line(waves, pts, 1.1)
-    outer, inner = kite_shield(16.0, 16.5, 9.0, 12.0)
-    rim = ImageChops.subtract(outer, inner)
-    subject = stack(layer(ringm, mix(SEA_C, WHITE, 0.2), SEA_C), layer(waves, mix(SEA_C, WHITE, 0.6), SEA_C),
-                    layer(inner, mix(A, (40, 60, 120), 0.3), mix(A, (16, 24, 60), 0.5), mix(A, WHITE, 0.45), None, axis=(0.5, 1)),
-                    layer(rim, mix(B, WHITE, 0.4), mix(A, B, 0.45), WHITE, mix(A, (0, 0, 0), 0.4)))
-    return finish(subject, [glow(waves, SEA_C, 1.6, 1.0), glow(outer, A, 1.6, 0.7)], sentinel_back(A, B))
-
-
-def sentinel_ult(A, B):
-    # 클라리온 콜: 왼쪽 아래의 휜 황금 뿔피리 (금 고리 · 나팔) · 나팔에서 번지는 소리 물결 셋 · 위로 걸린 무지개 다리
-    horn = mask()
-    pts = []
-    for i in range(16):
-        t = i / 15
-        x = 3.5 + t * 14.0
-        y = 27.5 - t * 9.0 + math.sin(t * math.pi) * 3.0
-        pts.append((x, y))
-    left, right = [], []
-    for i, (x, y) in enumerate(pts):
-        t = i / 15
-        w = 0.9 + 3.6 * t ** 2.2
-        left.append((x - w * 0.45, y - w))
-        right.append((x + w * 0.45, y + w))
-    poly(horn, left + right[::-1])
-    bell = mask()
-    d = ImageDraw.Draw(bell)
-    d.ellipse([P(16.0, 13.5), P(19.6, 23.4)], fill=255)
-    bands = mask()
-    for t in (0.3, 0.55, 0.78):
-        x, y = pts[int(t * 15)]
-        w = 0.9 + 3.6 * t ** 2.2
-        line(bands, [(x - w * 0.45, y - w), (x + w * 0.45, y + w)], 0.8)
-    waves = mask()
-    d = ImageDraw.Draw(waves)
-    for r in (4.5, 7.5, 10.5):
-        d.arc([P(18.0 - r, 18.5 - r), P(18.0 + r, 18.5 + r)], -70, 25, fill=255, width=int(1.0 * SS))
-    bridge = []
-    for i, c in enumerate(BOW7[::2]):
-        m = mask()
-        d = ImageDraw.Draw(m)
-        r = 13.0 - i * 1.1
-        d.arc([P(17.0 - r, 3.0 + i * 1.1), P(17.0 + r, 3.0 + 2 * r + i * 1.1)], 190, 350, fill=255, width=int(0.9 * SS))
-        bridge.append(layer(m, mix(c, WHITE, 0.2), c))
-    subject = stack(*bridge, layer(waves, WHITE, mix(HORN_C, WHITE, 0.4)), layer(horn, HORN_HI, HORN_C, WHITE, HORN_LO, axis=(0.6, 0.8)),
-                    layer(bell, HORN_HI, HORN_C, WHITE, HORN_LO), layer(bands, (255, 252, 230), HORN_HI))
-    return finish(subject, [glow(waves, HORN_C, 1.6, 1.0), glow(horn, HORN_C, 1.6, 0.7)], sentinel_back(A, B))
-
-
-# ------------------------------------------------------------ 어벤저 (빛: 불씨 주황 → 재 — 잿빛 숯불 밤 바탕 · 뜨거운 속은 흰 불) — 2026-11-06
-
-AV_NIGHT = (16, 6, 4)
-EMB_HI = (255, 214, 140)
-EMB_C = (255, 110, 30)
-EMB_LO = (130, 36, 8)
-ASH_C = (78, 64, 66)
-ASH_LO = (34, 26, 28)
-
-
-def avenger_back(A, B):
-    return backdrop(mix(A, AV_NIGHT, 0.88), mix(A, (90, 30, 10), 0.5))
-
-
-def ash_shield(cx, cy, w, h, ang=0.0):
-    """재빛 방패 (몸 = 재 · 테 = 불씨)"""
+def steel_shield(A, B, cx, cy, w, h, ang=0.0):
+    """푸른 강철 방패 (몸 · 테 · 가운데 불꽃 보석)"""
     outer, inner = kite_shield(cx, cy, w, h, ang)
     rim = ImageChops.subtract(outer, inner)
-    cracks = mask()
-    line(cracks, [(cx - w * 0.15, cy - h * 0.25), (cx + w * 0.05, cy - h * 0.05), (cx - w * 0.08, cy + h * 0.2)], 0.6)
-    return outer, [layer(inner, mix(ASH_C, WHITE, 0.15), ASH_LO, mix(ASH_C, WHITE, 0.35), None, axis=(0.5, 1)),
-                   layer(rim, EMB_HI, EMB_C, WHITE, EMB_LO), layer(cracks, EMB_HI, EMB_C)]
+    gem = mask()
+    d = ImageDraw.Draw(gem)
+    d.ellipse([P(cx - w * 0.13, cy - h * 0.16), P(cx + w * 0.13, cy + h * 0.06)], fill=255)
+    return outer, [layer(inner, mix(A, (30, 50, 110), 0.35), mix(A, (8, 16, 48), 0.6), mix(A, WHITE, 0.4), None, axis=(0.5, 1)),
+                   layer(rim, mix(B, WHITE, 0.4), mix(A, B, 0.45), WHITE, mix(A, (0, 0, 0), 0.4)), layer(gem, WHITE, FIRE_C)]
 
 
-def avenger_reprisal(A, B):
-    # 리프라이절: 왼쪽으로 크게 휘두른 재빛 방패 (방패 뒤의 불씨 호 — 휘두른 길) · 앞의 불씨 터짐
-    swing = mask()
-    crescent(swing, 18.0, 18.0, 13.0, 4.5, 200, 330)
-    outer, shield_layers = ash_shield(10.5, 14.0, 11.0, 15.0, ang=-30)
-    burst = mask()
-    star(burst, 6.0, 26.0, 4.8, thin=0.2, rot=10)
-    sparks = sparkles(((3.5, 19.5, 1.4), (12.0, 29.0, 1.2), (2.5, 29.5, 1.0)))
-    subject = stack(layer(swing, EMB_HI, EMB_C, None, EMB_LO), *shield_layers, layer(burst, WHITE, EMB_C), layer(sparks, EMB_HI, EMB_C))
-    return finish(subject, [glow(swing, EMB_C, 1.8, 0.9), glow(burst, EMB_C, 1.8, 1.0)], avenger_back(A, B))
-
-
-def avenger_grudge(A, B):
-    # 그러지 차지: 오른쪽 과녁 (불씨 고리 · 십자) 으로 들이받는 재빛 방패 · 뒤로 끌리는 불꽃 줄
-    tgt = mask()
-    ring(tgt, 26.0, 9.0, 4.4, 1.0)
-    line(tgt, [(26.0, 3.5), (26.0, 14.5)], 0.7)
-    line(tgt, [(20.5, 9.0), (31.5, 9.0)], 0.7)
-    flames = mask()
-    for i in range(5):
-        y = 17.0 + i * 2.6
-        line(flames, [(1.5 + (i % 2) * 1.5, y + 2.0), (10.5, y - 1.5)], 1.2 - i * 0.1)
-    outer, shield_layers = ash_shield(17.0, 18.0, 11.0, 15.0, ang=35)
-    subject = stack(layer(flames, EMB_HI, EMB_C, None, EMB_LO), layer(tgt, EMB_HI, EMB_C), *shield_layers)
-    return finish(subject, [glow(flames, EMB_C, 1.6, 0.9), glow(tgt, EMB_C, 1.4, 0.9)], avenger_back(A, B))
-
-
-def avenger_reckoning(A, B):
-    # 레크닝: 왼쪽 아래 방패에서 오른쪽 위로 퍼지는 불씨 부채꼴 (가운데 흰 불길 줄) · 끝의 불씨
-    fan = mask()
-    ax, ay = 6.0, 26.0
-    pts = [(ax, ay)]
-    for i in range(13):
-        a = math.radians(-45 - 34 + i * (68 / 12))
-        pts.append((ax + math.cos(a) * 26.0, ay + math.sin(a) * 26.0))
-    poly(fan, pts)
-    lane = mask()
-    line(lane, [(ax + 2, ay - 2), (ax + math.cos(math.radians(-45)) * 24.0, ay + math.sin(math.radians(-45)) * 24.0)], 1.8)
-    outer, shield_layers = ash_shield(6.5, 24.0, 8.0, 11.0, ang=45)
-    sparks = sparkles(((29.0, 9.0, 1.4), (21.5, 3.0, 1.3), (27.5, 17.0, 1.1)))
-    subject = stack(layer(fan, mix(EMB_C, WHITE, 0.15), EMB_LO, EMB_HI, None, axis=(0.7, -0.7)), layer(lane, WHITE, EMB_HI), *shield_layers, layer(sparks, EMB_HI, EMB_C))
-    return finish(subject, [glow(fan, EMB_C, 2.2, 0.8), glow(lane, WHITE, 1.4, 0.9)], avenger_back(A, B))
-
-
-def avenger_pain(A, B):
-    # 페인 이터: 가운데 금 간 잿빛 심장 (금 사이 불씨) · 네 모서리 아군에게서 들어오는 불씨 줄 · 심장 둘레 불씨 고리
-    heart = mask()
-    poly(heart, heart_pts(16.0, 16.5, 7.0))
-    cracks = mask()
-    line(cracks, [(16.0, 10.0), (14.6, 14.0), (17.2, 17.0), (15.4, 21.5)], 0.8)
-    line(cracks, [(14.6, 14.0), (11.5, 15.5)], 0.6)
-    line(cracks, [(17.2, 17.0), (20.5, 15.8)], 0.6)
-    threads = mask()
-    for (x, y) in ((3.0, 3.5), (29.0, 3.5), (3.0, 29.0), (29.0, 29.0)):
-        line(threads, [(x, y), (16.0 + (x - 16.0) * 0.42, 16.5 + (y - 16.5) * 0.42)], 0.9)
-        disc(threads, x, y, 1.4)
-    halo = mask()
-    ring(halo, 16.0, 16.5, 10.5, 0.8)
-    subject = stack(layer(halo, EMB_C, EMB_LO), layer(threads, EMB_HI, EMB_C), layer(heart, mix(ASH_C, WHITE, 0.2), ASH_LO, mix(ASH_C, WHITE, 0.4), None),
-                    layer(cracks, WHITE, EMB_C))
-    return finish(subject, [glow(threads, EMB_C, 1.4, 1.0), glow(cracks, EMB_C, 1.6, 1.0)], avenger_back(A, B))
-
-
-def avenger_ult(A, B):
-    # 조브레이커: 위아래로 찢겨 벌어진 늑대의 턱 (송곳니) · 가운데에서 위로 솟구쳤다 내리꽂는 재빛 방패 · 가운데 불씨 섬광 · 금
-    upper = mask()
-    poly(upper, [(3.0, 11.0), (8.0, 3.5), (16.0, 1.5), (24.0, 3.5), (29.0, 11.0), (24.0, 9.0), (16.0, 8.0), (8.0, 9.0)])
-    lower = mask()
-    poly(lower, [(4.0, 22.0), (8.0, 23.5), (16.0, 24.5), (24.0, 23.5), (28.0, 22.0), (24.0, 28.5), (16.0, 30.5), (8.0, 28.5)])
-    fangs = mask()
-    for x, big in ((7.5, True), (11.0, False), (14.0, False), (18.0, False), (21.0, False), (24.5, True)):
-        L = 4.2 if big else 2.2
-        poly(fangs, [(x - 1.0, 8.8), (x, 8.8 + L), (x + 1.0, 8.8)])
-        poly(fangs, [(x - 1.0, 23.6), (x, 23.6 - L * 0.85), (x + 1.0, 23.6)])
-    flash = mask()
-    star(flash, 16.0, 16.0, 8.0, thin=0.14)
+def phoenix_bash(A, B):
+    # 피닉스 배시: 머리 위로 치켜든 방패 양옆으로 펼친 불꽃 날개 · 아래로 내리쳐 땅에 번지는 푸른 충격 (금 · 섬광)
+    wings = mask()
+    fire_wing(wings, 18.0, 11.0, 1, 0.92, lift=8)
+    fire_wing(wings, 14.0, 11.0, -1, 0.92, lift=8)
+    outer, shield_layers = steel_shield(A, B, 16.0, 11.5, 9.0, 12.0)
+    hit = mask()
+    star(hit, 16.0, 27.0, 5.6, thin=0.16)
     crack = mask()
-    line(crack, [(16.0, 1.5), (15.2, 5.0), (16.6, 8.0)], 0.7)
-    line(crack, [(16.0, 30.5), (16.8, 27.0), (15.4, 24.5)], 0.7)
-    subject = stack(layer(flash, WHITE, EMB_C), layer(upper, mix(EMB_C, WHITE, 0.1), EMB_LO, EMB_HI, None), layer(lower, mix(EMB_C, WHITE, 0.1), EMB_LO, EMB_HI, None),
-                    layer(fangs, (255, 246, 226), EMB_HI), layer(crack, WHITE, EMB_HI))
-    return finish(subject, [glow(flash, EMB_C, 2.2, 1.0), glow(upper, EMB_C, 1.4, 0.6), glow(lower, EMB_C, 1.4, 0.6)], avenger_back(A, B))
+    line(crack, [(4.0, 28.5), (9.0, 27.6), (12.0, 28.4), (16.0, 27.4), (20.0, 28.4), (23.5, 27.6), (28.5, 28.6)], 0.9)
+    down = mask()
+    for x in (11.5, 16.0, 20.5):
+        line(down, [(x, 19.5), (x + (16.0 - x) * 0.2, 24.0)], 0.9)
+    subject = stack(layer(wings, FIRE_HI, FIRE_C, WHITE, FIRE_LO, axis=(0, 1)), *shield_layers, layer(down, FIRE_HI, FIRE_C), layer(crack, FIRE_HI, FIRE_C),
+                    layer(hit, WHITE, FIRE_C))
+    return finish(subject, [glow(wings, A, 2.2, 0.9), glow(hit, B, 2.0, 1.0)], phoenix_back(A, B))
+
+
+def phoenix_wing(A, B):
+    # 윙 커버: 작은 방패 (감싸인 아군) 를 앞에서 감싸 안는 두 불꽃 날개 (깃 끝이 아래 안쪽으로 접힘) · 왼쪽에서 날아든 불꽃 줄
+    trail = mask()
+    for i, y in enumerate((9.0, 13.0, 17.0)):
+        line(trail, [(1.5 + i, y + 1.5), (7.0, y)], 1.1 - i * 0.15)
+    wings = mask()
+    fire_wing(wings, 19.5, 12.0, 1, 0.95, lift=-6, fold=26)
+    fire_wing(wings, 12.5, 12.0, -1, 0.95, lift=-6, fold=26)
+    outer, shield_layers = steel_shield(A, B, 16.0, 18.5, 7.0, 9.5)
+    aura = mask()
+    ring(aura, 16.0, 18.0, 8.5, 0.8)
+    sp = sparkles(((27.5, 5.0, 1.6), (5.0, 26.5, 1.3), (28.0, 27.0, 1.2)))
+    subject = stack(layer(trail, FIRE_HI, FIRE_C), layer(aura, mix(B, WHITE, 0.3), A), *shield_layers, layer(wings, FIRE_HI, FIRE_C, WHITE, FIRE_LO, axis=(0, 1)),
+                    layer(sp, WHITE, B))
+    return finish(subject, [glow(wings, A, 2.0, 0.9), glow(aura, B, 1.4, 0.8)], phoenix_back(A, B))
+
+
+def phoenix_inferno(A, B):
+    # 블루 인페르노: 땅의 푸른 불꽃 고리 (타원) 위로 솟는 불의 혀 (뒤쪽 · 앞쪽 — 방패를 사이에 둠) · 가운데 박힌 방패
+    ringm = mask()
+    d = ImageDraw.Draw(ringm)
+    d.ellipse([P(2.0, 20.0), P(30.0, 29.5)], outline=255, width=int(1.5 * SS))
+    back_t, front_t = mask(), mask()
+    for k in range(10):
+        a = math.radians(k * 36 + 18)
+        x, y = 16.0 + math.cos(a) * 13.2, 24.75 + math.sin(a) * 4.5
+        petal(back_t if math.sin(a) < 0 else front_t, x, y, 6.5 + (k % 3) * 1.6, 2.6, -90 + math.cos(a) * 14)
+    outer, shield_layers = steel_shield(A, B, 16.0, 16.0, 8.0, 11.0)
+    sp = sparkles(((4.5, 6.0, 1.4), (27.5, 5.0, 1.6)))
+    fire = (FIRE_HI, FIRE_C, WHITE, FIRE_LO)
+    subject = stack(layer(back_t, *fire, axis=(0, -1)), layer(ringm, FIRE_HI, FIRE_C), *shield_layers, layer(front_t, *fire, axis=(0, -1)), layer(sp, WHITE, B))
+    both = ImageChops.lighter(back_t, front_t)
+    return finish(subject, [glow(both, A, 2.2, 0.9), glow(ringm, B, 1.6, 0.9)], phoenix_back(A, B))
+
+
+def phoenix_ignition(A, B):
+    # 이그니션: 방패 뒤로 활짝 펼친 큰 불꽃 날개 · 방패 둘레로 솟는 불길 · 가슴의 흰 불
+    wings = mask()
+    fire_wing(wings, 18.5, 16.0, 1, 1.15, lift=-4)
+    fire_wing(wings, 13.5, 16.0, -1, 1.15, lift=-4)
+    flames = mask()
+    for x, L in ((11.0, 6.0), (16.0, 8.5), (21.0, 6.0)):
+        petal(flames, x, 16.5, L, 3.0, -90)
+    outer, shield_layers = steel_shield(A, B, 16.0, 20.0, 9.0, 12.0)
+    core = mask()
+    star(core, 16.0, 18.5, 3.6, thin=0.2)
+    subject = stack(layer(wings, FIRE_HI, FIRE_C, WHITE, FIRE_LO, axis=(0, 1)), layer(flames, FIRE_HI, FIRE_C, WHITE, FIRE_LO, axis=(0, -1)), *shield_layers,
+                    layer(core, WHITE, FIRE_HI))
+    return finish(subject, [glow(wings, A, 2.4, 0.9), glow(core, B, 1.6, 1.0)], phoenix_back(A, B))
+
+
+def phoenix_ult(A, B):
+    # 피닉스 디센트: 머리를 아래로 내리꽂는 푸른 불사조 (날개를 위로 넓게 펼친 V · 위로 끌리는 꼬리 불길 셋) · 땅에 닿는 섬광 · 고리
+    wings = mask()
+    for side in (-1, 1):
+        for ang, L, w in ((-14, 12.0, 3.0), (-28, 13.5, 3.2), (-43, 13.0, 3.1), (-58, 10.5, 2.7)):
+            a = ang if side > 0 else 180 - ang
+            petal(wings, 16.0 + side * 1.2, 16.5, L, w, a)
+    trail = mask()
+    for x, L, ang in ((13.0, 7.0, -104), (16.0, 8.5, -90), (19.0, 7.0, -76)):
+        petal(trail, x, 13.5, L, 2.4, ang)
+    body = mask()
+    petal(body, 16.0, 9.5, 12.0, 5.6, 90)
+    head = mask()
+    d = ImageDraw.Draw(head)
+    d.ellipse([P(13.8, 18.6), P(18.2, 23.0)], fill=255)
+    poly(head, [(14.8, 22.2), (17.2, 22.2), (16.0, 25.0)])
+    hit = mask()
+    star(hit, 16.0, 28.2, 4.6, thin=0.16)
+    groundring = mask()
+    d = ImageDraw.Draw(groundring)
+    d.ellipse([P(4.0, 26.2), P(28.0, 30.6)], outline=255, width=int(1.0 * SS))
+    fire = (FIRE_HI, FIRE_C, WHITE, FIRE_LO)
+    subject = stack(layer(trail, *fire, axis=(0, -1)), layer(groundring, FIRE_HI, FIRE_C), layer(wings, *fire, axis=(0, -1)), layer(body, *fire),
+                    layer(head, WHITE, FIRE_HI), layer(hit, WHITE, FIRE_C))
+    return finish(subject, [glow(wings, A, 2.4, 0.9), glow(hit, B, 2.0, 1.0)], phoenix_back(A, B))
+
+
+# ------------------------------------------------------------ 다크 나이트 (빛: 핏빛 → 검정 — 검붉은 밤 바탕 · 아가리의 핏빛 목구멍) — 2026-11-06 (다시 — 타락한 흑기사)
+
+DK_NIGHT = (14, 2, 6)
+DK_RED_HI = (255, 130, 130)
+DK_RED = (226, 34, 56)
+DK_RED_LO = (96, 6, 20)
+DK_IRON_HI = (120, 96, 110)
+DK_IRON = (46, 34, 42)
+DK_IRON_LO = (12, 8, 12)
+FANG = (250, 236, 226)
+
+
+def darkknight_back(A, B):
+    return backdrop(mix(A, DK_NIGHT, 0.9), mix(A, (90, 10, 24), 0.55))
+
+
+def maw_shield(cx, cy, w, h, gap, eyes=True):
+    """굶주린 방패의 아가리: 연 방패를 가로로 벌린 틈 (gap) · 그 속 핏빛 목구멍 · 위아래 송곳니 · 비스듬한 붉은 눈 · 테. 바깥 마스크와 층들"""
+    from job_skill_icons_four import kite
+    outer, inner = kite(cx, cy, w, h), kite(cx, cy, w, h, 0.0, 0.84)
+    my = cy + h * 0.02
+    band = mask()
+    poly(band, [(cx - w, my - gap / 2), (cx + w, my - gap / 2), (cx + w, my + gap / 2), (cx - w, my + gap / 2)])
+    body = ImageChops.subtract(outer, band)
+    rim = ImageChops.subtract(ImageChops.subtract(outer, inner), band)
+    throat = mask()
+    d = ImageDraw.Draw(throat)
+    d.ellipse([P(cx - w * 0.36, my - gap / 2 - 0.6), P(cx + w * 0.36, my + gap / 2 + 0.6)], fill=255)
+    throat = ImageChops.multiply(throat, outer)
+    fangs = mask()
+    n = 5
+    for i in range(n):
+        x = cx - w * 0.3 + i * (w * 0.6) / (n - 1)
+        big = i in (0, n - 1)
+        L = (gap * 0.55 + 1.2) if big else (gap * 0.32 + 0.6)
+        poly(fangs, [(x - 0.75, my - gap / 2), (x, my - gap / 2 + L), (x + 0.75, my - gap / 2)])
+        poly(fangs, [(x - 0.75, my + gap / 2), (x, my + gap / 2 - L * 0.85), (x + 0.75, my + gap / 2)])
+    fangs = ImageChops.multiply(fangs, throat)
+    eye = mask()
+    if eyes:
+        for s in (-1, 1):
+            ex, ey = cx + s * w * 0.19, cy - h * 0.22
+            # 비스듬한 성난 눈 (안쪽 끝이 아래로)
+            poly(eye, [(ex - s * w * 0.13, ey - 1.4), (ex + s * w * 0.12, ey + 0.2), (ex + s * w * 0.02, ey + 1.2), (ex - s * w * 0.12, ey + 0.2)])
+    layers = [layer(body, (86, 74, 82), (28, 20, 26), (138, 122, 132), None, axis=(0.5, 1)), layer(throat, DK_RED, DK_RED_LO, DK_RED_HI, None),
+              layer(fangs, FANG, mix(FANG, (120, 90, 80), 0.4)), layer(rim, (128, 36, 48), (42, 10, 16), (206, 84, 94), None), layer(eye, (255, 226, 210), DK_RED)]
+    return outer, layers, throat, eye
+
+
+def darkknight_crunch(A, B):
+    # 크런치: 앞으로 내민 아가리 방패가 크게 벌어져 무는 순간 (송곳니 · 핏빛 목구멍 · 붉은 눈) · 앞의 물린 자국 섬광 · 튀는 핏방울
+    outer, layers, throat, eye = maw_shield(14.5, 16.0, 17.0, 20.0, 6.5)
+    snap = mask()
+    star(snap, 27.0, 15.5, 4.6, thin=0.16)
+    drops = mask()
+    for (x, y, r, a) in ((26.0, 23.5, 1.2, 70), (29.0, 21.0, 0.9, 50), (24.0, 8.5, 1.0, -60)):
+        drop(drops, x, y, r, ang=a)
+    subject = stack(*layers, layer(snap, WHITE, DK_RED), layer(drops, DK_RED_HI, DK_RED, None, DK_RED_LO))
+    return finish(subject, [glow(throat, A, 2.0, 0.9), glow(eye, A, 1.4, 1.0), glow(snap, A, 1.8, 1.0)], darkknight_back(A, B))
+
+
+def darkknight_lunge(A, B):
+    # 헝거 런지: 오른쪽으로 뛰어드는 아가리 방패 (반쯤 벌림) · 뒤로 끌리는 검붉은 줄 · 앞의 과녁을 문 섬광
+    trail = mask()
+    for i, y in enumerate((10.0, 14.5, 19.0, 23.5)):
+        line(trail, [(1.5 + (i % 2) * 1.5, y + 1.0), (10.5, y)], 1.3 - i * 0.15)
+    outer, layers, throat, eye = maw_shield(18.0, 16.5, 14.0, 17.0, 4.5)
+    tgt = mask()
+    ring(tgt, 28.0, 16.0, 3.2, 0.9)
+    subject = stack(layer(trail, DK_RED_HI, DK_RED, None, DK_RED_LO), *layers, layer(tgt, DK_RED_HI, DK_RED))
+    return finish(subject, [glow(trail, A, 1.6, 0.8), glow(throat, A, 1.8, 0.9), glow(eye, A, 1.2, 1.0)], darkknight_back(A, B))
+
+
+def darkknight_feast(A, B):
+    # 피스트: 아래 가운데의 크게 벌린 아가리 방패 · 거기서 둘레로 꿈틀대며 뻗는 검은 혀 넷 (붉은 핏줄 · 끝의 갈고리) · 감긴 과녁 고리
+    tongues = mask()
+    veins = mask()
+    hooks = mask()
+    for (ex, ey, bend) in ((4.0, 5.0, 1), (28.0, 5.0, -1), (2.5, 15.5, -1), (29.5, 15.5, 1)):
+        pts = []
+        for i in range(13):
+            t_ = i / 12
+            x = 16.0 + (ex - 16.0) * t_
+            y = 19.5 + (ey - 19.5) * t_
+            dx, dy = ex - 16.0, ey - 19.5
+            L = math.hypot(dx, dy) or 1.0
+            nx, ny = -dy / L, dx / L
+            o = bend * math.sin(t_ * math.pi * 2.0) * 1.8 * (1 - t_ * 0.4)
+            pts.append((x + nx * o, y + ny * o))
+        line(tongues, pts, 2.0)
+        line(veins, pts[2:10], 0.55)
+        # 갈고리 끝: 끝에서 안쪽으로 휜 짧은 가시
+        hx, hy = pts[-1]
+        px, py = pts[-3]
+        ux, uy = (hx - px), (hy - py)
+        ul = math.hypot(ux, uy) or 1.0
+        ux, uy = ux / ul, uy / ul
+        line(hooks, [(hx, hy), (hx + ux * 1.2 - uy * bend * 1.6, hy + uy * 1.2 + ux * bend * 1.6)], 1.0)
+    outer, layers, throat, eye = maw_shield(16.0, 22.5, 14.0, 16.0, 5.5, eyes=True)
+    subject = stack(layer(tongues, (70, 52, 62), (22, 14, 20), (120, 100, 112), None), layer(hooks, (150, 120, 130), (60, 40, 50)), layer(veins, DK_RED_HI, DK_RED),
+                    *layers)
+    return finish(subject, [glow(tongues, A, 1.6, 0.7), glow(throat, A, 2.0, 0.9), glow(veins, A, 1.0, 0.9)], darkknight_back(A, B))
+
+
+def darkknight_frenzy(A, B):
+    # 언홀리 프렌지: 붉은 눈을 뜨고 침을 흘리며 벌어진 아가리 방패 · 둘레의 검붉은 불길 · 양옆 갈퀴 자국 셋
+    flames = mask()
+    for x, L in ((7.0, 9.0), (11.0, 11.0), (16.0, 13.0), (21.0, 11.0), (25.0, 9.0)):
+        petal(flames, x, 20.0, L, 3.6, -90 + (x - 16.0) * 1.5)
+    outer, layers, throat, eye = maw_shield(16.0, 18.0, 15.0, 18.0, 5.0)
+    claws = mask()
+    for i in range(3):
+        line(claws, [(2.5 + i * 1.6, 24.0 - i * 0.4), (6.0 + i * 1.6, 30.0 - i * 0.4)], 0.8)
+        line(claws, [(26.0 + i * 1.6, 24.0 + i * 0.4), (29.5 + i * 1.2, 30.0 + i * 0.4)], 0.8)
+    drool = mask()
+    drop(drool, 14.2, 22.8, 0.9, ang=90)
+    drop(drool, 18.0, 23.2, 0.8, ang=90)
+    subject = stack(layer(flames, DK_RED, DK_RED_LO, DK_RED_HI, None, axis=(0, -1)), *layers, layer(claws, DK_RED_HI, DK_RED), layer(drool, DK_RED_HI, DK_RED))
+    return finish(subject, [glow(flames, A, 2.2, 0.85), glow(eye, A, 1.6, 1.0), glow(claws, A, 1.2, 0.9)], darkknight_back(A, B))
+
+
+def darkknight_ult(A, B):
+    # 어비설 메이: 갈라진 땅에서 솟은 거대한 아가리 (위아래 갈고리 턱 · 송곳니 · 붉은 목구멍) · 아래 땅의 붉은 금
+    upper = mask()
+    poly(upper, [(2.5, 15.0), (5.0, 7.0), (10.0, 3.0), (16.0, 2.0), (22.0, 3.0), (27.0, 7.0), (29.5, 15.0), (25.5, 12.0), (16.0, 10.5), (6.5, 12.0)])
+    lower = mask()
+    poly(lower, [(3.5, 19.0), (7.0, 21.5), (16.0, 22.5), (25.0, 21.5), (28.5, 19.0), (26.0, 25.5), (16.0, 27.5), (6.0, 25.5)])
+    throat = mask()
+    d = ImageDraw.Draw(throat)
+    d.ellipse([P(6.0, 10.0), P(26.0, 23.0)], fill=255)
+    fangs = mask()
+    for x, big in ((8.0, True), (11.5, False), (14.5, False), (17.5, False), (20.5, False), (24.0, True)):
+        L = 5.0 if big else 2.8
+        top = 11.0 + abs(x - 16.0) * 0.08
+        poly(fangs, [(x - 1.0, top), (x, top + L), (x + 1.0, top)])
+        bot = 21.6 - abs(x - 16.0) * 0.05
+        poly(fangs, [(x - 1.0, bot), (x, bot - L * 0.8), (x + 1.0, bot)])
+    crack = mask()
+    line(crack, [(1.5, 29.5), (6.0, 28.0), (10.0, 29.6), (16.0, 28.2), (22.0, 29.6), (26.0, 28.0), (30.5, 29.5)], 1.0)
+    line(crack, [(16.0, 28.2), (15.4, 31.0)], 0.7)
+    subject = stack(layer(throat, DK_RED, DK_RED_LO, DK_RED_HI, None), layer(upper, DK_IRON_HI, DK_IRON, mix(DK_IRON_HI, WHITE, 0.2), DK_IRON_LO),
+                    layer(lower, DK_IRON_HI, DK_IRON, mix(DK_IRON_HI, WHITE, 0.2), DK_IRON_LO), layer(fangs, FANG, mix(FANG, (120, 90, 80), 0.4)),
+                    layer(crack, DK_RED_HI, DK_RED))
+    return finish(subject, [glow(throat, A, 2.4, 1.0), glow(crack, A, 1.4, 0.9)], darkknight_back(A, B))
 
 
 ICONS = {
@@ -3657,14 +3682,14 @@ ICONS = {
     "warlock_nova": warlock_nova,
     "warlock_ash": warlock_ash,
     "warlock_ult": warlock_ult,
-    "sentinel_charge": sentinel_charge,
-    "sentinel_haven": sentinel_haven,
-    "sentinel_rampart": sentinel_rampart,
-    "sentinel_tides": sentinel_tides,
-    "sentinel_ult": sentinel_ult,
-    "avenger_reprisal": avenger_reprisal,
-    "avenger_grudge": avenger_grudge,
-    "avenger_reckoning": avenger_reckoning,
-    "avenger_pain": avenger_pain,
-    "avenger_ult": avenger_ult,
+    "phoenix_bash": phoenix_bash,
+    "phoenix_wing": phoenix_wing,
+    "phoenix_inferno": phoenix_inferno,
+    "phoenix_ignition": phoenix_ignition,
+    "phoenix_ult": phoenix_ult,
+    "darkknight_crunch": darkknight_crunch,
+    "darkknight_lunge": darkknight_lunge,
+    "darkknight_feast": darkknight_feast,
+    "darkknight_frenzy": darkknight_frenzy,
+    "darkknight_ult": darkknight_ult,
 }
