@@ -166,6 +166,8 @@ final class AvengerSkills {
                 if (V.hdist(p, last[0]) > 0.3) {
                     JobFx.line(lv, V.up(last[0], 0.9), V.up(p, 0.9), EMBER, EMBER_CORE, 0.3, Opt.of("alpha", 0.9));
                     SkillFx.fx(lv, "rpg:arrow_spark", V.up(p, 0.4), Opt.of("dir", V.UP, "speed", 1.4, "size", 0.14, "grow", 0.8, "life", 0.4, "color", EMBER, "alpha", 0.95));
+                    // 끄는 불씨: 지나간 땅에 낮은 불길 (영상 1: 가는 줄만으로는 돌진 길이 보이지 않았음)
+                    JobFx15.cinder(lv, ThunderlordSkills.ground(lv, last[0]), 1.3, 1, 5, 0.4, false, Opt.of("alpha", 0.85, "fade", 0.3), EMBER, EMBER_CORE);
                 }
                 last[0] = p;
             });
@@ -352,9 +354,9 @@ final class AvengerSkills {
         Vec3 landFeet = V.add(grab, dir, can);
         Vec3 standLand = Kit.standSpot(level0, V.up(landFeet, 0.6), 3);
         Vec3 land = standLand != null ? standLand : grab;
-        // 달려듦: 불씨 발자국 · 포효
+        // 달려듦: 불씨 발자국 · 포효 (몸의 불꽃은 짧게 — 영상 1: 1초 불꽃이 달려 나간 뒤 처음 자리에 벽처럼 남았음)
         if (free && V.hdist(grab, c0) > 0.4) JobMove.run(sp, JobMove.to(0, grabAt, JobMove.at(grab), JobMove.OUT));
-        JobFx.aura(sp, j, 3.0, 1.0, 1.0);
+        JobFx.aura(sp, j, 3.0, 0.3, 1.0);
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
         SkillFx.play(level0, "entity.warden.roar", c0, 0.6, 0.9);
         SkillFx.play(level0, "entity.ravager.roar", c0, 0.6, 0.8);
@@ -381,15 +383,22 @@ final class AvengerSkills {
             SkillFx.play(lv, "entity.player.attack.sweep", c, 0.5, 0.9);
         });
         // 끌어안고 감 (들 수 있는 적): 내 앞 위에 붙임 · 불씨 꼬리
+        double[] lastY = {Double.NaN};
         for (int t = grabAt + 1; t < slamAt; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 p = sp.position();
+                double vy = Double.isNaN(lastY[0]) ? 0 : p.y - lastY[0];
+                lastY[0] = p.y;
                 if (carry && target != null && target.isAlive() && !target.isRemoved()) {
-                    Vec3 want = V.up(V.add(p, dir, 0.75 + target.getBbWidth() * 0.5), 0.35);
+                    // 클라이언트의 몹 자리는 서버보다 2 ~ 3틱 늦게 따라옴 (보간) — 오를 때는 위로 · 내릴 때는 아래로 앞서 둠 (영상 1: 내려오는 동안 적이 내 머리 위에 떠 보였음)
+                    double lead = Math.max(-1.0, Math.min(1.0, vy * 2.5));
+                    Vec3 hold = V.add(p, dir, 0.75 + target.getBbWidth() * 0.5);
+                    Vec3 want = V.up(hold, 0.35 + lead);
                     if (Kit.moveTo(target, want)) heldAt[0] = want;
+                    else if (Kit.moveTo(target, V.up(hold, 0.35))) heldAt[0] = V.up(hold, 0.35);
                     target.resetFallDistance();
                 }
                 if (tt % 2 == 0) {

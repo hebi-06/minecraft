@@ -309,9 +309,11 @@ public final class JobTraits15 {
             Vec3 b = chest(p);
             Vec3 a = chest(d);
             Vec3 u = V.len(V.sub(a, b)) > 1e-3 ? V.unit(V.sub(a, b)) : Kit.facingOf(p);
-            Vec3 at = V.add(b, u, 1.3);
-            JobFx15.prism(h.level(), at, 0.42, 5, 1, 0.25, false, Opt.of("alpha", 0.95), SKY, SKY_CORE);
-            SkillFx.sparks(h.level(), at, bowCore(Kit.rand() < 0.5 ? 2 : 4), 5, 3);
+            Vec3 at = V.add(b, u, 1.1);
+            // 막음: 피난처 돔 앞의 프리즘 방패 · 빛 터짐 (영상 1: 0.42 는 몸 뒤에 묻혔음)
+            JobFx15.prism(h.level(), at, 0.7, 5, 1, 0.3, false, Opt.of("alpha", 0.95), SKY, SKY_CORE);
+            JobFx.burst(h.level(), at, 0.9, SKY, SKY_CORE, 0.25, Opt.empty());
+            SkillFx.sparks(h.level(), at, bowCore(Kit.rand() < 0.5 ? 2 : 4), 8, 3);
             SkillFx.play(h.level(), "item.shield.block", at, 1.4, 0.7);
             SkillFx.play(h.level(), "block.amethyst_block.hit", at, 1.6, 0.6);
         }
@@ -374,10 +376,13 @@ public final class JobTraits15 {
                 pr.discard();
                 r.blocked++;
                 if (RuneKit.fxQuota("jobRampart" + r.owner, 3)) {
+                    // 지워짐: 그 자리 장막 빛의 프리즘 · 빛 터짐 · 불티 (영상 1: 프리즘 0.4 는 장막 앞에서 거의 보이지 않았음)
                     int i = (int) Math.floor((V.dot(off, r.along) + r.half) / (2 * r.half) * BOW.length);
-                    JobFx15.prism(r.level, hit, 0.4, 5, 1, 0.25, false, Opt.of("alpha", 0.9), bow(i), bowCore(i));
-                    SkillFx.sparks(r.level, hit, bowCore(i), 6, 3);
+                    JobFx15.prism(r.level, hit, 0.75, 5, 1, 0.3, false, Opt.of("alpha", 0.95), bow(i), bowCore(i));
+                    JobFx.burst(r.level, hit, 1.0, bow(i), bowCore(i), 0.28, Opt.empty());
+                    SkillFx.sparks(r.level, hit, bowCore(i), 10, 3.5);
                     SkillFx.play(r.level, "block.amethyst_block.resonate", hit, 1.5, 0.7);
+                    SkillFx.play(r.level, "item.shield.block", hit, 1.3, 0.6);
                 }
             }
             // 닿은 적: 둔화 · 도발 (적마다 1초에 한 번)

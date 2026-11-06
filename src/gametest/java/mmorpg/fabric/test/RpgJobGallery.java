@@ -736,15 +736,16 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 x.setHealth(x.getMaxHealth() * 0.1F);
             }
         }
-        // 2026-11-06 센티널 · 어벤저: 앞 스킬의 피난처 · 장벽 · 위압 · 앙갚음을 지우고 아군을 스킬마다 다른 자리에 — 헤이븐 리프는 앞 5칸 (겨눠 곁으로 뜀) · 나인 타이즈 ·
-        // 페인 이터는 옆 (물결 · 불씨 줄) · 클라리온 콜은 왼쪽 앞 멀리 체력 35% (가장 위험 → 날아감) · 나머지는 뒤 왼쪽 (비켜 섬). 센티널은 반격 60% · 어벤저는 앙갚음 60%
-        // (페인 이터는 20% — 대신 받으며 차오름)
+        // 2026-11-06 센티널 · 어벤저: 앞 스킬의 피난처 · 장벽 · 위압 · 앙갚음 · 보호막을 지우고 아군을 스킬마다 다른 자리에 — 헤이븐 리프는 앞 4.7칸 (겨눠 곁으로 뜀 — 영상
+        // 카메라와 아군 사이의 과녁 둘을 비킴) · 클라리온 콜은 왼쪽 앞 멀리 체력 35% (가장 위험 → 날아감) · 나머지는 오른쪽 뒤 (비켜 섬 — 나인 타이즈 물결 · 페인 이터 불씨 줄이 영상
+        // 카메라에서 나와 겹치지 않게: 영상 1 은 옆 1.4칸이라 내 몸 뒤에 가렸음). 센티널은 반격 60% · 어벤저는 앙갚음 60% (페인 이터는 20% — 대신 받으며 차오름)
         if (job.equals("sentinel") || job.equals("avenger")) {
             mmorpg.fabric.job.JobTraits15.testClear(sp);
             ServerPlayer a = filmAlly(sp);
+            RpgHealth.clearShield(sp);
+            RpgHealth.clearShield(a);
             Vec3 at = switch (id) {
                 case "sentinel_haven" -> new Vec3(0.5, -60, 5.2);
-                case "sentinel_tides", "avenger_pain" -> new Vec3(-1.4, -60, 1.0);
                 case "sentinel_ult" -> new Vec3(-3.5, -60, 6.0);
                 default -> new Vec3(-2.5, -60, -1.5);
             };
@@ -754,10 +755,24 @@ public final class RpgJobGallery implements FabricClientGameTest {
             a.setDeltaMovement(Vec3.ZERO);
             a.removeAllEffects();
             a.setHealth(a.getMaxHealth() * (id.equals("sentinel_ult") ? 0.35F : 1F));
+            if (id.equals("sentinel_haven")) {
+                // 영상 카메라 (왼쪽 뒤) 와 피난처 가운데 사이의 과녁 둘 (앞 · 왼쪽 앞) 을 뒤로 비킴 — 내려앉는 자리 · 돔 안의 아군이 보이게
+                moveHusk(sp, new Vec3(0.5, -60, 3.2), new Vec3(-1.8, -60, 6.4));
+                moveHusk(sp, new Vec3(2.2, -60, 4.5), new Vec3(3.6, -60, 6.8));
+            }
             if (job.equals("sentinel")) JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("sentinel")) * 0.6);
             else mmorpg.fabric.job.JobTraits15.setVengeance(sp, mmorpg.fabric.job.JobTraits15.vengeanceCap(sp, Jobs.job("avenger")) * (id.equals("avenger_pain") ? 0.2
                     : 0.6));
         }
+    }
+
+    /** 2026-11-06 센티널 영상: from 에 가장 가까운 과녁 허스크를 to 로 옮김 (나를 봄) */
+    private static void moveHusk(ServerPlayer sp, Vec3 from, Vec3 to) {
+        Husk h = huskNear(sp, from);
+        if (h == null) return;
+        h.snapTo(to.x, to.y, to.z, 180F, 0F);
+        h.setYHeadRot(180F);
+        h.setYBodyRot(180F);
     }
 
     /** 2026-11-06 센티널 · 어벤저 영상: at 에 가장 가까운 과녁 허스크 (없으면 null) */
@@ -916,6 +931,18 @@ public final class RpgJobGallery implements FabricClientGameTest {
         server.runOnServer(s -> JobSystem.setJob(player(s), null));
     }
 
+    /**
+     * 2026-11-06 영상 카메라 (거리 · 높이 · 보는 높이 · 따라가는 몫 — 없으면 RpgFilm 처음 값): 센티널 · 어벤저의 앞으로 움직이는 스킬은 조금 멀리 · 덜 따라감, 날아가 내려앉는
+     * 궁극기는 더 멀리 · 높이 (영상 1: 내려앉은 곳이 과녁 무리 곁이라 따라간 카메라가 과녁 사이로 들어가 과녁 · 큰 숫자가 화면을 덮었음)
+     */
+    private static double[] filmView(String id) {
+        return switch (id) {
+            case "sentinel_ult", "avenger_ult" -> new double[] {7.6, 2.9, 1.9, 0.6};
+            case "sentinel_charge", "sentinel_haven", "avenger_grudge" -> new double[] {7.0, 2.6, 1.3, 0.7};
+            default -> null;
+        };
+    }
+
     private static Case[] casesOf(String job) {
         return switch (job) {
             case "swordsman" -> CASES;
@@ -963,6 +990,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             server.runOnServer(s -> prepare(player(s), job, k.id()));
             ctx.runOnClient(mc -> mc.options.setCameraType(CameraType.THIRD_PERSON_BACK));
             ctx.waitTicks(12);
+            double[] cam = filmView(k.id());
+            if (cam != null) f.view(cam[0], cam[1], cam[2]).follow(cam[3]);
             f.begin(server, k.id(), k.name(), j.name() + " · 스킬 " + (c.slot() + 1) + (c.slot() == 4 ? " (궁극기)" : ""), 2.5);
             f.frames(4);
             if (TURN_AFTER.contains(k.id())) {
@@ -998,6 +1027,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 return sum;
             });
             f.end(dealt);
+            if (cam != null) f.view(6.0, 2.1, 1.0).follow(1.0); // RpgFilm 처음 값으로
             // 2026-11-06 엑시큐셔너 컨뎀: 앞 과녁을 처형하면 그 스킬의 재사용 대기가 초기화 (영상 1 — 쓴 것을 재사용 대기로 볼 수 없음)
             boolean cast = server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), k.id()) > 0) || k.id().equals("executioner_condemn");
             check(cast, k.id() + " (film) cast");

@@ -168,6 +168,11 @@ public final class RpgHealth {
         return next - have;
     }
 
+    /** 2026-11-06 보호막을 지움 (깨지는 연출 없이 — 시험 · 영상: 앞 스킬이 남긴 보호막의 금빛 고리가 다음 스킬 영상에 남지 않게) */
+    public static void clearShield(ServerPlayer sp) {
+        SHIELDS.remove(sp.getUUID());
+    }
+
     /** 남은 보호막 (없으면 0) */
     public static double shieldOf(ServerPlayer sp) {
         Shield sh = SHIELDS.get(sp.getUUID());

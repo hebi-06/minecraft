@@ -52,9 +52,47 @@ final class SentinelSkills {
         return cone.isEmpty() ? null : cone.get(0);
     }
 
-    /** 무지개 줄 (a → b — 일곱 빛을 위아래로 겹친 무지개 다리 줄기) */
+    /** 무지개 줄 (a → b — 다섯 빛을 위아래로 겹친 무지개 다리 줄기 · 땅을 따라 달린 길) */
     static void rainbowTrail(ServerLevel level, Vec3 a, Vec3 b, double life, Opt o) {
         JobFx.bifrost(level, a, b, 0.11, life, o);
+    }
+
+    /**
+     * 무지개 다리 (뛰는 길 — from 에서 to 로 높이 peak 칸 포물선, RuneKit.leapPoint · JobMove.hop 과 같은 길): 길이를 따라 약 2칸마다 무지개 줄기 조각 하나 (길의 접선 쪽으로
+     * 눕힘 · 다섯 빛은 접선에 수직으로 겹침 — 가파른 곳에서도 띠가 펼쳐짐). 영상 1: 꺾은선 네 토막에 2.5칸 조각을 하나씩 두었더니 짧은 토막의 조각이 꺾인 곳 너머로 삐져나와
+     * 꼭대기에서 X 로 엇갈렸고 가파른 토막은 다섯 빛이 겹쳐 붉은 줄 하나로 보였음. 조각 수명은 life (처음) → lifeEnd (끝) — 다리가 처음부터 사라짐
+     */
+    static void rainbowArc(ServerLevel level, Vec3 from, Vec3 to, double peak, double life, double lifeEnd, Opt o) {
+        int N = 48;
+        Vec3[] pts = new Vec3[N + 1];
+        double[] acc = new double[N + 1];
+        for (int i = 0; i <= N; i++) {
+            pts[i] = V.up(RuneKit.leapPoint(from, to, peak, i / (double) N), 0.45);
+            if (i > 0) acc[i] = acc[i - 1] + V.len(V.sub(pts[i], pts[i - 1]));
+        }
+        double total = acc[N];
+        if (total < 0.5) return;
+        int n = Math.max(1, (int) Math.round(total / 2.0));
+        double step = total / n;
+        double size = Math.min(1.25, step * 0.62); // 조각 길이 = 반 크기 × 2 ≈ 간격 × 1.24 (끝이 옅어지는 그림이라 조금 겹침)
+        int k = 0;
+        for (int s = 0; s < n; s++) {
+            double want = step * (s + 0.5);
+            while (k < N - 1 && acc[k + 1] < want) k++;
+            double seg = acc[k + 1] - acc[k];
+            double a = seg > 1e-6 ? Math.max(0, Math.min(1, (want - acc[k]) / seg)) : 0;
+            Vec3 mid = V.add(pts[k], V.scale(V.sub(pts[k + 1], pts[k]), a));
+            Vec3 t = V.unit(V.sub(pts[k + 1], pts[k]));
+            Vec3 side = V.sub(V.UP, V.scale(t, V.dot(V.UP, t)));
+            side = V.len(side) < 1e-3 ? V.rightOf(t) : V.unit(side);
+            double lf = life + (lifeEnd - life) * (s + 0.5) / n;
+            for (int i = 0; i < JobFx.RAINBOW.length; i++) {
+                double[] c = JobFx.RAINBOW[i];
+                double[] core = {c[0] + (1 - c[0]) * 0.6, c[1] + (1 - c[1]) * 0.6, c[2] + (1 - c[2]) * 0.6};
+                JobFx.loop(level, "jbifrost", JobFx.BIFROST, V.add(mid, side, (2 - i) * 0.11 * size / 1.25), lf, 12, o.with("dir", t, "size", size, "phase",
+                        (double) ((s + i) % JobFx.BIFROST)), c, core);
+            }
+        }
     }
 
     // ------------------------------------------------------------ 배스천 차지
@@ -208,20 +246,13 @@ final class SentinelSkills {
         if (land == null) land = c0;
         Vec3 to = land;
         boolean moving = !Status.isRooted(sp) && !Kit.ridingAny(sp) && V.hdist(to, c0) > 0.4;
-        if (moving) JobMove.run(sp, JobMove.hop(0, leap, JobMove.at(to), JobMove.hopPeak(sp, c0, to, 2.2)));
+        double peak = JobMove.hopPeak(sp, c0, to, 2.2);
+        if (moving) JobMove.run(sp, JobMove.hop(0, leap, JobMove.at(to), peak));
         RpgCombat.setSteadfast(sp, leap + 2);
-        // 뛰어오름: 발밑 무지개 빛 · 무지개 다리 (뛰는 길 — 포물선을 세 조각으로)
+        // 뛰어오름: 발밑 무지개 빛 · 무지개 다리 (뛰는 포물선을 따라 — 처음부터 사라짐)
         JobFx15.halo(level0, V.up(c0, 0.06), 1.4, 0.5, Opt.of("alpha", 0.8), SKY, SKY_CORE);
         SkillFx.sparks(level0, V.up(c0, 0.3), JobTraits15.bowCore(4), 10, 4);
-        if (moving) {
-            Vec3 prev = c0;
-            for (int i = 1; i <= 4; i++) {
-                double u = i / 4.0;
-                Vec3 p = RuneKit.leapPoint(c0, to, 2.2, u);
-                rainbowTrail(level0, V.up(prev, 0.4), V.up(p, 0.4), 0.55 + u * 0.2, JobFx.hide1p(sp));
-                prev = p;
-            }
-        }
+        if (moving) rainbowArc(level0, c0, to, peak, 0.5, 0.8, JobFx.hide1p(sp));
         SkillFx.play(level0, "entity.player.attack.sweep", c0, 0.7, 0.7);
         SkillFx.play(level0, "block.amethyst_block.chime", c0, 0.7, 0.8);
         JobKit.motionLater(sp, "sentinel_haven:land", leap - 2, life);
@@ -491,13 +522,7 @@ final class SentinelSkills {
             if (!Status.isRooted(sp) && !Kit.ridingAny(sp) && V.hdist(land, c) > 0.4) {
                 double peak = JobMove.hopPeak(sp, c, land, Math.min(6, 2.5 + V.hdist(land, c) * 0.25));
                 JobMove.run(sp, JobMove.hop(0, fly, JobMove.at(land), peak));
-                Vec3 prev = c;
-                for (int i = 1; i <= 6; i++) {
-                    double u = i / 6.0;
-                    Vec3 p = RuneKit.leapPoint(c, land, peak, u);
-                    rainbowTrail(lv, V.up(prev, 0.5), V.up(p, 0.5), 0.6 + u * 0.4, JobFx.hide1p(sp));
-                    prev = p;
-                }
+                rainbowArc(lv, c, land, peak, 0.6, 1.1, JobFx.hide1p(sp));
             }
             JobFx.speed(sp, j, fly / 20.0, 0.7);
             SkillFx.play(lv, "item.goat_horn.sound.5", c, 0.9, 0.9);
