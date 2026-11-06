@@ -1635,6 +1635,96 @@ final class JobFx {
                 glow, core);
     }
 
+    // ------------------------------------------------------------ 0.51.0 성기사 2차 그림 (2026-11-06 — 썬더로드 · 타이런트, tools/job_fx_art_adv.py)
+
+    /** 장 수: 번개 줄 · 번개 기둥 · 먹구름 · 돌 껍데기 · 거인 왕의 손 · 번개 왕관 */
+    static final int ARC = 8;
+    static final int PILLAR = 8;
+    static final int CLOUD = 8;
+    static final int STONE = 8;
+    static final int GRIP = 8;
+    static final int CROWN = 8;
+
+    /**
+     * 번개 줄 (rfx_jarc — 방향으로 누움, 그림 512 × 128 · 줄 끝 = 칸 가로 끝 · 가운데 높이): from → to 를 3.5칸 넘으면 조각으로 (조각마다 굵기 = 조각 길이 / 4 —
+     * 조각 끝이 가운데 높이라 이어짐), life 동안 지직임 (0 ~ 3 이어 돌림 — 조각마다 다른 장). o 의 flash 가 있으면 4 ~ 7 (번쩍 → 가지 → 사그라짐) 한 번
+     */
+    static void arc(ServerLevel level, Vec3 from, Vec3 to, double[] glow, double[] core, double life, Opt o) {
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.2) return;
+        Vec3 u = V.scale(d, 1 / len);
+        int n = Math.max(1, (int) Math.ceil(len / 3.5));
+        double step = len / n;
+        boolean flash = o.truthy("flash");
+        for (int i = 0; i < n; i++) {
+            Vec3 c = V.add(from, u, step * (i + 0.5));
+            Opt b = o.with("dir", u, "size", step / 2 * 1.03, "fade", o.num("fade", 0.25), "flash", null);
+            if (flash) cells(level, "jarc", ARC, 4, 4, c, life, 0, false, b, glow, core);
+            else cells(level, "jarc", ARC, 0, 4, c, life, 24, true, b, glow, core);
+        }
+    }
+
+    /**
+     * 번개 기둥 (rfx_jpillar — 세워 카메라 쪽으로 돎, 그림 160 × 640): 0 가는 길잡이 번개가 내려옴 · 1 굵은 기둥이 내리꽂힘 (가장 밝음 · 가지) · 2 땅에 튀는 빛 →
+     * 3 ~ 5 지직이는 기둥 (loop 면 이어 돌림) → 6 끊어지며 사그라짐 · 7 남은 불티. 아래 끝이 ground · 높이 height 칸 (너비 height / 4)
+     */
+    static void pillar(ServerLevel level, Vec3 ground, double height, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(PILLAR - 1, from));
+        int n = Math.max(1, Math.min(PILLAR - f, count));
+        cells(level, "jpillar", PILLAR, f, n, V.up(ground, height / 2), life, loop ? 14 : 0, loop, o.with("size", height / 8, "fade", o.num("fade", 0.15)), glow, core);
+    }
+
+    /**
+     * 먹구름 (rfx_jcloud — 카메라를 봄, 그림 384 × 192): 0 ~ 1 모여 듦 · 2 ~ 5 일렁임 (loop 면 이어 돌림 — 빛 칸 = 짙은 구름 몸, 심지 칸 = 속에서 번쩍이는 번개) · 6 ~ 7
+     * 흩어짐. 가운데 at · 너비 size × 2 칸 (높이 size 칸)
+     */
+    static void cloud(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(CLOUD - 1, from));
+        int n = Math.max(1, Math.min(CLOUD - f, count));
+        cells(level, "jcloud", CLOUD, f, n, at, life, loop ? 8 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), glow, core);
+    }
+
+    /**
+     * 돌 껍데기 (rfx_jstone — 세워 카메라 쪽으로 돎, 그림 192 × 256): 0 발부터 돌이 차오름 · 1 가슴까지 → 2 ~ 3 다 굳음 (loop 면 이어 돌림 — 빛 칸 = 돌 몸, 심지 칸 = 테의
+     * 새벽빛) → 4 금이 가며 금빛이 새어 나옴 → 5 금이 벌어짐 · 빛이 터져 나옴 → 6 ~ 7 조각이 사방으로 흩어짐. 아래 끝이 feet · 높이 height 칸 (너비 height × 0.75)
+     */
+    static void stone(ServerLevel level, Vec3 feet, double height, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(STONE - 1, from));
+        int n = Math.max(1, Math.min(STONE - f, count));
+        cells(level, "jstone", STONE, f, n, V.up(feet, height / 2), life, loop ? 6 : 0, loop, o.with("size", height * 0.375, "fade", o.num("fade", 0.15)), glow, core);
+    }
+
+    /**
+     * 거인 왕의 손 (rfx_jgrip — 카메라를 봄, 그림 256 × 256 · 손 가운데 = 칸 가운데): 0 편 손이 내려옴 · 1 손가락을 오므림 → 2 움켜쥠 (가운데가 빈 주먹 — 쥔 적이 보이게) →
+     * 3 ~ 4 쥐어짬 (loop 면 이어 돌림 — 손등의 번개 핏줄 · 새는 핏빛) → 5 내리꽂음 (아래로 끌리는 줄) → 6 ~ 7 보랏빛 연기로 흩어짐. 너비 size × 2 칸
+     */
+    static void grip(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(GRIP - 1, from));
+        int n = Math.max(1, Math.min(GRIP - f, count));
+        cells(level, "jgrip", GRIP, f, n, at, life, loop ? 8 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.15)), glow, core);
+    }
+
+    /**
+     * 번개 왕관 (rfx_jcrown — 카메라를 봄, 그림 192 × 128): 0 ~ 1 불티가 모여 왕관 · 2 ~ 5 뿔 사이를 잇는 번개가 지직임 (loop 면 이어 돌림) · 6 ~ 7 흩어짐. 가운데 at ·
+     * 너비 size × 2 칸
+     */
+    static void crown(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(CROWN - 1, from));
+        int n = Math.max(1, Math.min(CROWN - f, count));
+        cells(level, "jcrown", CROWN, f, n, at, life, loop ? 10 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.15)), glow, core);
+    }
+
+    /** 날아가는 혼불 — 색을 정함 (0.51.0 타이런트 강탈의 핏빛 기운): from → to (speed 칸/초), 닿는 틱 */
+    static int soulFly(ServerLevel level, Vec3 from, Vec3 to, double speed, double size, double[] glow, double[] core, Opt o) {
+        Vec3 d = V.sub(to, from);
+        double len = V.len(d);
+        if (len < 0.1) return 0;
+        double life = Math.max(0.05, len / speed);
+        loop(level, "jsoul2", SOUL, from, life, 12, o.with("size", size, "dir", V.scale(d, 1 / len), "speed", len / life, "fade", 0.15), glow, core);
+        return Math.max(1, (int) Math.round(life * 20));
+    }
+
     /** 땅에서 솟는 회오리 (rfx_jtwister — 세워 카메라 쪽으로 돎, 이어 돌림): 아래 끝 ground · 높이 약 height 칸 (몸에 붙지 않는 twister) */
     static void twisterAt(ServerLevel level, Vec3 ground, double height, Jobs.Job j, double life, Opt o) {
         Vec3 c = V.up(ground, height * 0.6 - 0.2);

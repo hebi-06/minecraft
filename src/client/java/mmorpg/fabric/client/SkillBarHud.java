@@ -386,7 +386,7 @@ public final class SkillBarHud {
                             g.fill(bx + 1, by + 4, bx + 4, by + 5, c);
                             if (i < v) g.fill(bx + 2, by + 3, bx + 3, by + 4, 0xFFFFFFFF);
                         }
-                        case "paladin" -> {
+                        case "paladin", "thunderlord" -> { // 0.51.0 썬더로드도 심판 번개
                             // 0.30.0 심판 — 번개 (5 × 7, 창날처럼 줄 높이만큼): 위오른쪽에서 아래왼쪽으로 꺾인 번개, 찬 것은 첫째 빛 (금빛) + 가운데 흰 점,
                             // 오른쪽 아래 1칸 그림자
                             int c = i < v ? bright : dim;
@@ -510,6 +510,16 @@ public final class SkillBarHud {
                                 g.fill(bx + 1, ty + 2, bx + 2, ty + 3, 0xFF000000 | b);
                                 g.fill(bx + 3, ty + 2, bx + 4, ty + 3, 0xFF000000 | b);
                             }
+                        }
+                        case "tyrant" -> {
+                            // 0.51.0 강탈 (빼앗은 힘 — 최대 10) — 왕관 (5 × 4): 뿔 셋 · 띠, 찬 것은 첫째 빛 (훔친 번개 보랏빛) + 가운데 보석에 둘째 빛 (핏빛), 오른쪽 아래 1칸 그림자
+                            int c = i < v ? bright : dim;
+                            int ty = y + 1;
+                            int[][] cells = {{0, 0}, {2, 0}, {4, 0}, {0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {0, 3}, {1, 3}, {2, 3},
+                                {3, 3}, {4, 3}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFF000000 | b);
                         }
                         case "dragoon" -> {
                             // 0.51.0 비상 (지금 발밑 땅에서의 높이 — 최대 6칸 · 1칸당 내리꽂기 +5%) — 겹친 날개 꺾쇠 (5 × 5, 위가 하늘): 찬 것은 첫째 빛 (용의 금빛) + 꼭대기 흰 점,

@@ -237,6 +237,17 @@ public final class JobTraits4 {
 
     // ------------------------------------------------------------ 성기사 「심판」
 
+    /** 0.51.0 성기사 줄기 — 성기사 · 썬더로드 (심판 쌓임 · 벼락 · 수호 오라가 같음 — 썬더로드는 갈라지는 벼락 · 아군 보호막 · 오라 −8% JobTraits13) */
+    static boolean paladinLine(Jobs.Job j) {
+        return j != null && (j.id().equals("paladin") || j.id().equals(JobTraits13.TL));
+    }
+
+    /** 성기사 줄기의 직업 (아니면 null) */
+    static Jobs.Job paladinIf(ServerPlayer sp) {
+        Jobs.Job j = JobSystem.job(sp);
+        return paladinLine(j) ? j : null;
+    }
+
     private static String key(Entity attacker, Entity victim) {
         return attacker.getUUID() + "|" + victim.getUUID();
     }
@@ -264,7 +275,7 @@ public final class JobTraits4 {
 
     /** 심판 n 더하기 (최대 max · judgeFor 틱) — 머리 위 작은 번개. max 가 되면 벼락 (기절 · 보스는 받는 피해 +) 뒤 0 */
     static void judge(ServerPlayer sp, LivingEntity e, Jobs.Job j, int n) {
-        if (e == null || e.isRemoved() || !e.isAlive() || n <= 0 || j == null || !j.id().equals("paladin")) return;
+        if (e == null || e.isRemoved() || !e.isAlive() || n <= 0 || !paladinLine(j)) return; // 0.51.0 썬더로드도 (성기사 줄기)
         long now = Tasks.now();
         String k = key(sp, e);
         long[] m = JUDGE.computeIfAbsent(k, x -> new long[2]);
@@ -313,6 +324,7 @@ public final class JobTraits4 {
             RuneKit.stun(e, t, JobKit.glow(j), false);
             JobFx.stunStars(e, j, t);
         }
+        if (JobTraits13.TL.equals(j.id())) JobTraits13.thunderVerdict(sp, e, j); // 0.51.0 썬더로드: 갈라지는 벼락 · 아군 보호막
     }
 
     /** 기절 (스킬 — 보스 제외): ticks 동안 + 머리 위 별 */
@@ -333,7 +345,7 @@ public final class JobTraits4 {
         double best = 0;
         for (ServerPlayer o : p.level().players()) {
             if (o.isSpectator() || !o.isAlive()) continue;
-            Jobs.Job j = jobIf(o, "paladin");
+            Jobs.Job j = paladinIf(o); // 0.51.0 썬더로드도 (오라 −8%)
             if (j == null || !ally(o, p)) continue;
             double r = trait(j, "auraRadius", 6);
             if (o.distanceToSqr(p) > r * r || !holdsHammer(o)) continue;
@@ -644,7 +656,7 @@ public final class JobTraits4 {
     /** 망치 평타가 맞음 → 심판 +1 */
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         if (w == null || victim == null || !"hammer".equals(w.type())) return;
-        Jobs.Job j = jobIf(sp, "paladin");
+        Jobs.Job j = paladinIf(sp); // 0.51.0 썬더로드도
         if (j != null) judge(sp, victim, j, 1);
     }
 
@@ -787,7 +799,7 @@ public final class JobTraits4 {
         State st = STATES.get(sp.getUUID());
         if (st == null) return 0;
         return switch (j.id()) {
-            case "paladin" -> {
+            case "paladin", JobTraits13.TL -> { // 0.51.0 썬더로드도 심판
                 if (st.target == null) yield 0;
                 Entity e = sp.level().getEntity(st.target);
                 yield e == null || e.isRemoved() || !e.isAlive() ? 0 : judges(sp, e);

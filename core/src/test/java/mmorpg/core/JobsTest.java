@@ -390,13 +390,13 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
         Jobs.Job gl = Jobs.job("gladiator");
-        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 16 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
+        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 18 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
         if (sm == null || bk == null || wl == null || gl == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
         check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, gl)) && Jobs.advancedOf("spellblade").size() == 2
                 && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").size() == 2
-                && Jobs.advancedOf("lancer").size() == 2 && Jobs.advancedOf("reaper").size() == 2 && Jobs.advancedOf("paladin").isEmpty()
-                && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 성기사부터는 아직)");
+                && Jobs.advancedOf("lancer").size() == 2 && Jobs.advancedOf("reaper").size() == 2 && Jobs.advancedOf("paladin").size() == 2
+                && Jobs.advancedOf("priest").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 사제부터는 아직)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == gl && Jobs.baseOf(wl) == wa && Jobs.baseOf(gl) == wa, "warrior advance");
         check(wl.display().equals("워로드") && gl.display().equals("글래디에이터") && "awaken".equals(wl.path()) && "invert".equals(gl.path()),
                 "warrior display");
@@ -481,6 +481,73 @@ public final class JobsTest {
         assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("pierrot"));
         lancerAdvance(Jobs.job("lancer"), Jobs.job("stormlancer"), Jobs.job("dragoon"));
         reaperAdvance(Jobs.job("reaper"), Jobs.job("soulreaper"), Jobs.job("executioner"));
+        paladinAdvance(Jobs.job("paladin"), Jobs.job("thunderlord"), Jobs.job("tyrant"));
+    }
+
+    /**
+     * 0.51.0 성기사 2차 — 썬더로드 · 타이런트 (재설계안 2판 — 2026-11-06 사용자 "다음 작업": 썬더로드 새 스킬 다섯 · 타이런트는 아군에게 보호를 주는 광역 제어
+     * 탱커를 뒤집어 적의 힘을 빼앗아 홀로 커지는 단일 브루저): 부분 합 = 배율 합 (성기사와 같은 5.5 · 3.3 · 9.9 · 44) · 무적 시간 띄움 · t · w · 특성 (심판 —
+     * 갈래 벼락 · 아군 보호막 · 오라 −8% / 강탈 — 힘 하나당 +3% · −2% · 크기 +2% · 최대 10) · 초당 피해 (둘 다 × 1.2 — 타이런트는 역할이 바뀌나 강탈 덤을 셈해 그대로)
+     */
+    static void paladinAdvance(Jobs.Job pa, Jobs.Job tl, Jobs.Job ty) {
+        check(tl != null && ty != null, "paladin advanced jobs");
+        if (tl == null || ty == null) return;
+        check(Jobs.advance("paladin", "awaken") == tl && Jobs.advance("paladin", "invert") == ty && Jobs.baseOf(tl) == pa && Jobs.baseOf(ty) == pa
+                && Jobs.advancedOf("paladin").equals(List.of(tl, ty)), "paladin advance");
+        check(tl.display().equals("썬더로드") && ty.display().equals("타이런트") && Jobs.find("썬더로드") == tl && Jobs.find("스루드") == null
+                && Jobs.find("타이런트") == ty && Jobs.find("트림") == null && Jobs.find("tyrant") == ty, "paladin display · find");
+        List<String> tlIds = new ArrayList<>();
+        List<String> tyIds = new ArrayList<>();
+        for (Jobs.Skill k : tl.skills()) tlIds.add(k.id());
+        for (Jobs.Skill k : ty.skills()) tyIds.add(k.id());
+        check(tlIds.equals(List.of("thunderlord_arc", "thunderlord_step", "thunderlord_spire", "thunderlord_head", "thunderlord_ult"))
+                && tyIds.equals(List.of("tyrant_pillage", "tyrant_shackle", "tyrant_grip", "tyrant_colossus", "tyrant_ult")), "paladin advanced skill ids");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(tl.skill(i).total(), pa.skill(i).total()) && near(ty.skill(i).total(), pa.skill(i).total()), "paladin totals slot " + i);
+        Jobs.Skill ta = tl.skill(0), ts = tl.skill(1), tp = tl.skill(2), th = tl.skill(3), tu = tl.skill(4);
+        Jobs.Skill yp = ty.skill(0), ys = ty.skill(1), yg = ty.skill(2), yc = ty.skill(3), yu = ty.skill(4);
+        check(near(ta.num("sweep", 0) + ta.num("fork", 0), 5.5) && near(ts.num("strike", 0), 3.3) && near(tp.num("pillar", 0) + tp.num("wave", 0), 9.9)
+                && near(tu.num("chains", 0) + tu.num("dawn", 0) + tu.num("shatter", 0), 44), "thunderlord totals 5.5 (2.5 + 3) · 3.3 · 9.9 (6.6 + 3.3) · 44 (8 + 12 + 24)");
+        check(near(yp.num("smash", 0), 5.5) && near(ys.num("slam", 0), 3.3) && near(yg.num("squeeze", 0) * yg.num("squeezes", 0) + yg.num("slam", 0), 9.9)
+                && near(yu.num("drain", 0) * yu.num("drains", 0) + yu.num("slam", 0), 44), "tyrant totals 5.5 · 3.3 · 9.9 (1.65 × 3 + 4.95) · 44 (4 × 3 + 32)");
+        // 4번 칸: 썬더헤드 · 콜로서스 둘 다 강화 태세 (피해 없음 · 10초 — 성기사 수호의 맹세와 같은 칸)
+        check(!Jobs.stanceBudget(th) && th.total() == 0 && near(th.num("dur", 0), 200) && !Jobs.stanceBudget(yc) && yc.total() == 0 && near(yc.num("dur", 0), 200),
+                "썬더헤드 · 콜로서스 10초 태세");
+        // 초당 피해: 둘 다 1차 × 1.2 (타이런트 — 브루저 목표 1.08 ÷ 탱커 0.92 × 1.2 ≈ 1.41 에서 강탈 덤 평균 +18% 쯤을 뺌)
+        check(near(Jobs.advanceDps(tl), 1.2) && near(Jobs.advanceDps(ty), 1.2) && near(dps(tl) / dps(pa), 1.2, 0.005) && near(dps(ty) / dps(pa), 1.2, 0.005),
+                "thunderlord · tyrant × 1.2");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게
+        check(ta.num("forkAt", 0) - ta.num("swingAt", 0) >= 10 && tp.num("waveAt", 0) - tp.num("strikeAt", 0) >= 10 && tu.num("dawnAt", 0) - tu.num("chainAt", 0) >= 10
+                && tu.num("shatterAt", 0) - tu.num("dawnAt", 0) >= 10 && yg.num("every", 0) >= 10 && yg.num("slamAt", 0) - yg.num("first", 0)
+                - (yg.num("squeezes", 0) - 1) * yg.num("every", 0) >= 10 && yu.num("every", 0) >= 10 && yu.num("slamAt", 0) - yu.num("first", 0)
+                - (yu.num("drains", 0) - 1) * yu.num("every", 0) >= 10, "paladin advanced i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값)
+        check(near(ta.num("forkAt", 0), ta.num("t", 0)) && near(ta.num("swingAt", 0), ta.num("w", 0)) && near(ts.num("vanish", 0), ts.num("t", 0))
+                && near(ts.num("vanish", 0), ts.num("w", 0)) && near(tp.num("waveAt", 0), tp.num("t", 0)) && near(tp.num("strikeAt", 0), tp.num("w", 0))
+                && near(tu.num("shatterAt", 0), tu.num("t", 0)) && near(tu.num("chainAt", 0), tu.num("w", 0)), "thunderlord t 16 · 6 · 26 · 46 (w 6 · 6 · 16 · 10)");
+        check(near(yp.num("smashAt", 0), yp.num("t", 0)) && near(yp.num("smashAt", 0), yp.num("w", 0)) && near(ys.num("slamAt", 0), ys.num("t", 0))
+                && near(ys.num("slamAt", 0), ys.num("w", 0)) && near(yg.num("slamAt", 0), yg.num("t", 0)) && near(yg.num("first", 0), yg.num("w", 0))
+                && near(yu.num("slamAt", 0), yu.num("t", 0)) && near(yu.num("first", 0), yu.num("w", 0)), "tyrant t 8 · 10 · 40 · 44 (w 8 · 10 · 10 · 10)");
+        // 특성: 썬더로드 = 성기사의 심판 (같은 이름 · 쌓임) + 갈래 벼락 · 아군 보호막 · 오라 −8%, 타이런트 = 강탈
+        for (String key : new String[] {"max", "judgeFor", "stun", "bossTaken", "bossFor", "auraRadius"}) {
+            check(near(tl.trait().def().numOr(key, -1), pa.trait().def().numOr(key, -2)) || key.equals("max") && tl.trait().max() == pa.trait().max(), "심판 " + key + " = 1차");
+        }
+        check(tl.trait().name().equals(pa.trait().name()) && near(tl.trait().def().numOr("aura", 0), 0.08) && near(tl.trait().def().numOr("forks", 0), 2)
+                && near(tl.trait().def().numOr("forkHit", 0), 0.8) && near(tl.trait().def().numOr("shield", 0), 0.04), "심판 + 갈래 벼락 둘 × 0.8 · 보호막 4% · 오라 −8%");
+        check(ty.trait().name().equals("강탈") && ty.trait().max() == 10 && near(ty.trait().def().numOr("dealt", 0), 0.03) && near(ty.trait().def().numOr("taken", 0), 0.02)
+                && near(ty.trait().def().numOr("grow", 0), 0.02) && near(ty.trait().def().numOr("weaken", 0), 0.03), "강탈 10 · +3% · −2% · 크기 +2% · 빼앗긴 적 −3%");
+        // 유틸 · 범위 · 선딜
+        check(Jobs.areaKind(ta) == null && "narrow".equals(Jobs.areaKind(ts)) && Jobs.areaKind(tp) == null && Jobs.areaKind(tu) == null && Jobs.utils(ta).equals(List.of("stun05"))
+                && Jobs.utils(ts).equals(List.of("blink", "stun07", "shield")) && Jobs.utils(tp).equals(List.of("stun1", "knock", "shield"))
+                && Jobs.utils(tu).equals(List.of("root", "stun1", "invuln")), "thunderlord utils · area");
+        check("single".equals(Jobs.areaKind(yp)) && "single".equals(Jobs.areaKind(ys)) && "single".equals(Jobs.areaKind(yg)) && "narrow".equals(Jobs.areaKind(yu))
+                && Jobs.utils(yp).isEmpty() && Jobs.utils(ys).equals(List.of("leap", "stun05")) && Jobs.utils(yg).equals(List.of("root", "lifesteal", "stun05"))
+                && Jobs.utils(yu).equals(List.of("leap", "heal")), "tyrant utils · area");
+        check(Jobs.windupTicks(ta) == 6 && Jobs.windupTicks(ts) == 6 && Jobs.windupTicks(tp) == 16 && Jobs.windupTicks(tu) == 10 && Jobs.windupTicks(yp) == 8
+                && Jobs.windupTicks(ys) == 10 && Jobs.windupTicks(yg) == 10 && Jobs.windupTicks(yu) == 10, "windups 6 · 6 · 16 · 10 / 8 · 10 · 10 · 10");
+        check(Jobs.slotRole(yg).equals("주력") && !Jobs.slotRole(tp).equals("주력"), "타이런트 3번 칸 = 주력 (단일)");
+        check(Jobs.skillLine(ta).startsWith("아크 스매시 · 6초 · 배율 ") && Jobs.skillLine(yc).equals("콜로서스 · 30초"), "paladin advanced skill line " + Jobs.skillLine(yc));
+        check(tl.color()[0][0] > 0.95 && tl.color()[0][1] > 0.75 && tl.color()[1][2] > 0.95 && ty.color()[0][2] > 0.95 && ty.color()[0][0] > ty.color()[0][1]
+                && ty.color()[1][0] > 0.95, "colors: storm gold · sky / stolen violet · crimson");
     }
 
     /**

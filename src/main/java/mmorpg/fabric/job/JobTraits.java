@@ -84,6 +84,7 @@ public final class JobTraits {
         JobTraits10.init(); // 0.51.0 암살자 2차 (트릭스터 미러 팰리스 · 들불 표식 · 피에로 쇼타임 — 소환물 · 나눠 받음 · 핸드스프링 — 트릭스터의 표식은 JobTraits3)
         JobTraits12.init(); // 0.51.0 사신 2차 (소울 리퍼 영혼 해방 · 엑시큐셔너 처형 — 소울 리퍼의 영혼은 JobTraits3)
         JobTraits11.init(); // 0.51.0 창술사 2차 (스톰 랜서 바람 · 질풍 창 · 렌딩 게일 · 드라군 비상 — 스톰 랜서의 창끝은 JobTraits3)
+        JobTraits13.init(); // 0.51.0 성기사 2차 (썬더로드 갈라지는 벼락 · 썬더헤드 · 빛의 가호 · 타이런트 강탈 · 콜로서스 — 썬더로드의 심판은 JobTraits4)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
             JobTraits6.tickGlobal(Tasks.now()); // 0.51.0 홀름강의 결투장
@@ -131,6 +132,7 @@ public final class JobTraits {
         JobTraits10.reset(sp);
         JobTraits11.reset(sp);
         JobTraits12.reset(sp);
+        JobTraits13.reset(sp);
         String p = sp.getUUID() + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
         sendGauge(sp, true);
@@ -150,6 +152,7 @@ public final class JobTraits {
         JobTraits10.forget(id);
         JobTraits11.forget(id);
         JobTraits12.forget(id);
+        JobTraits13.forget(id);
         String p = id + "|";
         MARKS.keySet().removeIf(k -> k.startsWith(p));
     }
@@ -166,6 +169,7 @@ public final class JobTraits {
         JobTraits10.lifeEnded(id);
         JobTraits11.lifeEnded(id);
         JobTraits12.lifeEnded(id);
+        JobTraits13.lifeEnded(id);
         State st = STATES.get(id);
         if (st != null) {
             st.stacks = 0;
@@ -492,6 +496,7 @@ public final class JobTraits {
                 JobTraits10.tick(sp, j, now); // 0.51.0 피에로 (가장 가까운 소환물로 금빛 실)
                 JobTraits11.tick(sp, j, now); // 0.51.0 스톰 랜서 바람이 사라짐 · 가득이면 창끝 소용돌이
                 JobTraits12.tick(sp, j, now); // 0.51.0 엑시큐셔너 선고 · 처형할 수 있는 적 해골 · 처형 뒤 이동 속도
+                JobTraits13.tick(sp, j, now); // 0.51.0 썬더헤드 먹구름 · 타이런트 강탈이 사라짐 · 콜로서스 왕관
             }
             if (st == null || j == null) continue;
             // 태세가 끝남
@@ -502,6 +507,7 @@ public final class JobTraits {
                 JobTraitsMore.stanceEnded(sp, ended); // 마나 과부하 → 이동 느려짐
                 JobTraits3.stanceEnded(sp, ended); // 0.29.0 암영 → 이동 빨라짐 · 투명이 풀림
                 JobTraits4.stanceEnded(sp, ended); // 0.30.0 철옹성 → 이동 수정치를 뗌
+                JobTraits13.stanceEnded(sp, ended); // 0.51.0 콜로서스 → 몸 크기를 강탈 몫만
                 JobFx3d.drop(sp, ended, 0.25); // 0.47.0 태세의 입체 물체 (도는 검 · 앞의 창 · 방패)
             }
             // 검세: decay 틱 동안 못 맞히면 하나씩 사라짐 (명경지수 동안은 그대로)
@@ -547,6 +553,8 @@ public final class JobTraits {
             // 0.51.0 헌터스 마크 (활 앞 은빛 · 적 머리 위 은빛 표식) · 스톰 스트라이드 (발밑 폭풍 바람 · 바람 줄)
         } else if (JobTraits10.stanceFx(sp, j, st.stance)) {
             // 0.51.0 미러 팰리스 (손의 청록 섬광 — 도는 거울은 JobTraits10.palaceTick)
+        } else if (JobTraits13.stanceFx(sp, j, st.stance)) {
+            // 0.51.0 썬더헤드 (머리 위 먹구름) · 콜로서스 (머리 위 왕관) — JobTraits13.tick 이 그림
         } else if (st.stance.equals("archer_focus")) {
             // 정조준: 활을 든 손 앞 금빛 반짝임
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
@@ -584,6 +592,7 @@ public final class JobTraits {
         else if (j.id().equals(JobTraits10.PR)) value = JobTraits10.gaugeValue(sp, j); // 0.51.0 피에로 = 소환물 수
         else if (j.id().equals(JobTraits11.SL) || j.id().equals(JobTraits11.DG)) value = JobTraits11.gaugeValue(sp, j); // 0.51.0 스톰 랜서 = 바람 · 드라군 = 높이
         else if (j.id().equals(JobTraits12.EX)) value = JobTraits12.gaugeValue(sp, j); // 0.51.0 엑시큐셔너 = 마지막으로 친 적의 잃은 체력
+        else if (j.id().equals(JobTraits13.TY)) value = JobTraits13.gaugeValue(sp, j); // 0.51.0 타이런트 = 빼앗은 힘
         else if (markJob(j)) { // 마검사 · 0.51.0 룬 스미스 = 그 적의 각인
             if (st != null && st.target != null) {
                 Entity e = sp.level().getEntity(st.target);
