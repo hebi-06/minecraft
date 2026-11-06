@@ -2807,7 +2807,9 @@ public final class RpgJobAdvanceTests {
             sp.attack(z.get(0));
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[1] * 1.5), "cloud bolt adds 50%: " + TestDummies.dealt(z.get(0)) + " vs " + mark[1] * 1.5);
             h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 2, "hammer hit under the cloud → 2 judgements: " + JobTraits4.judges(sp, z.get(0)));
-            sp.hurtServer(h.getLevel(), sp.damageSources().mobAttack(z.get(0)), 4F);
+            // 맞음 (받는 피해 처리 — 시험 가짜 플레이어는 hurtServer 가 들어가지 않았음, CI 42176585569 → 다른 시험처럼 RpgHealth.onLoss)
+            float hp = sp.getHealth();
+            sp.setHealth(RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F));
         }));
         steps.add(new RpgJobTests.Step(3, () -> h.assertTrue(Math.abs(RpgHealth.shieldOf(ally[0]) - RpgHealth.maxOf(ally[0]) * 0.03) < 1e-6,
                 "hit under the cloud → allies shield 3%: " + RpgHealth.shieldOf(ally[0]))));
