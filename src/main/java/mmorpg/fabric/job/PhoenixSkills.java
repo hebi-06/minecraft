@@ -34,6 +34,9 @@ final class PhoenixSkills {
     static final double WING_SOLO = 94.0;
     static final double SWEEP_SOLO = 95.0;
     static final double BIRD_SOLO = 97.0;
+    /** 디센트의 불사조: 가슴 높이 (불기둥 밑에서) · 날개 끝 사이 (칸) */
+    static final double BIRD_UP = 8.0;
+    static final double BIRD_SPAN = 10.5;
 
     static void register() {
         JobSystem.register("phoenix_bash", PhoenixSkills::bash);
@@ -85,9 +88,10 @@ final class PhoenixSkills {
         double arc = k.num("arc", 120);
         int taunt = (int) k.num("taunt", 80);
         RpgCombat.setSteadfast(sp, at + 2);
-        // 치켜듦: 방패 양옆으로 날개가 펼쳐짐 (3인칭 머리 위 · 1인칭 화면 위) · 방패에 모이는 불
-        JobFx15.fwings(level0, overhead(sp), 2.8, 0, 2, at / 20.0 + 0.05, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), AZURE, AZURE_CORE);
-        JobFx15.fwings(level0, eyeTop(sp, 1.8, 0.55), 2.0, 0, 2, at / 20.0 + 0.05, false, JobFx.only1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.85), AZURE,
+        // 치켜듦: 방패 양옆으로 날개가 활짝 펼쳐짐 (3인칭 머리 위 · 1인칭 화면 위 — 펼친 장 1 → 2 · 2026-11-06 영상 검토: 모이는 장 0 부터는 작고 옅어 날개가 잘 보이지 않았음)
+        // · 방패에 모이는 불
+        JobFx15.fwings(level0, overhead(sp), 3.6, 1, 2, at / 20.0 + 0.05, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), AZURE, AZURE_CORE);
+        JobFx15.fwings(level0, eyeTop(sp, 1.8, 0.55), 2.2, 1, 2, at / 20.0 + 0.05, false, JobFx.only1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.85), AZURE,
                 AZURE_CORE);
         JobFx.charge(sp, j, new Vec3(0.0, 2.4, 0.25), at, 0.7);
         SkillFx.play(level0, "item.firecharge.use", sp.position(), 0.9, 0.6);
@@ -151,20 +155,26 @@ final class PhoenixSkills {
         if (moving) JobMove.run(sp, JobMove.hop(0, glide, JobMove.at(to), JobMove.hopPeak(sp, c0, to, 1.3)));
         RpgCombat.setSteadfast(sp, glide + 2);
         Kit.noFall(sp, glide + 20);
-        // 날아오름: 등의 불꽃 날개 (2틱마다 다시 그림 — 날갯짓) · 발밑 푸른 고리 · 지나간 자리의 불꽃 깃털
+        // 날아오름: 등의 불꽃 날개 (매 틱 다시 그림 — 날갯짓) · 발밑 푸른 고리 · 지나간 자리의 불꽃 깃털
         JobFx15.halo(level0, V.up(c0, 0.06), 1.4, 0.5, Opt.of("alpha", 0.8), AZURE, AZURE_CORE);
         SkillFx.sparks(level0, V.up(c0, 0.3), AZURE_CORE, 10, 4);
         SkillFx.play(level0, "entity.ender_dragon.flap", c0, 1.3, 0.8);
         SkillFx.play(level0, "item.firecharge.use", c0, 1.1, 0.5);
         Vec3[] last = {c0};
-        for (int t = 0; t < glide; t += 2) {
+        Vec3[] prev = {c0};
+        for (int t = 0; t < glide; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 p = sp.position();
-                JobFx15.fwings(lv, back(sp), 3.4, tt == 0 ? 1 : 2, tt == 0 ? 1 : 4, 0.25, tt != 0, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "solo", WING_SOLO,
-                        "fade", 0.05, "fps", 16.0), AZURE, AZURE_CORE);
+                // 몸을 따라감: JobMove 는 자리를 옮겨 놓아 몸의 속도 (bodyVel) 가 0 — 지난 틱에 옮긴 만큼 (위아래 포함) 을 속도로, 날갯짓은 이어지게 (phase). 2026-11-06 영상
+                // 검토: 2틱마다 몸의 속도로 그리니 앞 그림이 처진 자리에 남아 날개가 둘로 보였음
+                Vec3 vel = V.scale(V.sub(p, prev[0]), 20);
+                prev[0] = p;
+                JobFx15.fwings(lv, back(sp), 3.4, tt == 0 ? 1 : 2, tt == 0 ? 1 : 4, 0.2, tt != 0, JobFx.hide1p(sp).with("vel", vel, "solo", WING_SOLO, "fade", 0.05,
+                        "fps", 16.0, "phase", (tt * 16 / 20.0) % 4), AZURE, AZURE_CORE);
+                if (tt % 2 != 0) return;
                 if (V.len(V.sub(p, last[0])) > 0.3) {
                     JobFx.line(lv, V.up(last[0], 1.1), V.up(p, 1.1), AZURE, AZURE_CORE, 0.35, Opt.of("alpha", 0.75));
                     JobFx.feathers(lv, V.up(last[0], 1.2), 2, 0.4, 0.28, j, 0.9, Opt.empty());
@@ -366,7 +376,7 @@ final class PhoenixSkills {
 
     /**
      * 피닉스 디센트 (롤 애니비아 · 갈리오 R): 푸른 불사조의 하늘 (rpg:ult_phoenix) — 방패를 하늘로 치켜들면 pillarAt 틱에 푸른 불기둥이 솟아 둘레 pillarRadius 칸 적을 침
-     * (pillar) · 둘레 tauntRadius 칸 taunt 틱 도발 → 불기둥 꼭대기에서 날개 끝 12칸의 거대한 푸른 불사조가 깨어나 하늘을 돌다 diveAt 틱에 겨눈 곳 (range 칸 — 겨눈 적 · 없으면
+     * (pillar) · 둘레 tauntRadius 칸 taunt 틱 도발 → 불기둥 꼭대기에서 날개 끝 10.5칸의 거대한 푸른 불사조가 깨어나 하늘을 돌다 diveAt 틱에 겨눈 곳 (range 칸 — 겨눈 적 · 없으면
      * 앞 fallback 칸) 에 내리꽂힘 (둘레 diveRadius 칸 dive · 큰 숫자 · 띄움) → 펼친 날개가 땅을 덮으며 둘레 tauntRadius 칸 아군 (나 포함) shieldFor 틱 보호막 (최대 체력 ×
      * shield)
      */
@@ -434,22 +444,23 @@ final class PhoenixSkills {
                 });
             }
         });
-        // 깨어남: 불기둥 꼭대기에 불사조가 생겨남 → 날개를 활짝 (울음)
+        // 깨어남: 불기둥 꼭대기에 불사조가 생겨남 → 날개를 활짝 (울음). 2026-11-06 영상 검토: 가슴 높이 9.5칸 · 날개 끝 12칸 · 반지름 3.5칸으로 돌면 카메라 쪽으로 올 때
+        // 볏 · 날개가 화면 위로 잘렸음 → 8칸 · 10.5칸 · 3칸
         int wake = pillarAt + 3;
         int circleFrom = pillarAt + 8;
         int diveFrom = diveAt - 6;
         RuneKit.later(wake, () -> {
             if (!RuneKit.sameLife(sp, life) || base[0] == null) return;
             ServerLevel lv = sp.level();
-            Vec3 top = V.up(base[0], 9.5);
+            Vec3 top = V.up(base[0], BIRD_UP);
             bird[0] = top;
-            JobFx15.phoenix(lv, top, 12.0, 0, 2, (circleFrom - wake) / 20.0 + 0.05, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.05), AZURE,
-                    AZURE_CORE);
+            JobFx15.phoenix(lv, top, BIRD_SPAN, 0, 2, (circleFrom - wake) / 20.0 + 0.05, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.05),
+                    AZURE, AZURE_CORE);
             JobFx.feathers(lv, top, 14, 4.0, 0.5, j, 1.8, Opt.empty());
             SkillFx.play(lv, "entity.ender_dragon.growl", top, 1.6, 0.8);
             SkillFx.play(lv, "entity.ender_dragon.flap", top, 1.0, 1.0);
         });
-        // 하늘을 돎: 불기둥 위 반지름 3.5칸 (2틱마다 다시 그림 — 날갯짓 · 떨어지는 불꽃 깃털)
+        // 하늘을 돎: 불기둥 위 반지름 3칸 (2틱마다 다시 그림 — 날갯짓은 이어지게 (phase) · 떨어지는 불꽃 깃털)
         for (int t = circleFrom; t < diveFrom; t += 2) {
             int tt = t;
             RuneKit.later(t, () -> {
@@ -457,13 +468,13 @@ final class PhoenixSkills {
                 ServerLevel lv = sp.level();
                 double u = (tt - circleFrom) / (double) Math.max(1, diveFrom - circleFrom);
                 double a = u * Math.PI * 2 + Math.atan2(f0.z, f0.x) + Math.PI;
-                double rr = 3.5;
-                Vec3 p = V.up(V.add(base[0], new Vec3(Math.cos(a), 0, Math.sin(a)), rr), 9.5 + Math.sin(u * Math.PI * 2) * 0.6);
+                double rr = 3.0;
+                Vec3 p = V.up(V.add(base[0], new Vec3(Math.cos(a), 0, Math.sin(a)), rr), BIRD_UP + Math.sin(u * Math.PI * 2) * 0.6);
                 double w = Math.PI * 2 / ((diveFrom - circleFrom) / 20.0);
                 Vec3 tan = new Vec3(-Math.sin(a) * rr * w, 0, Math.cos(a) * rr * w);
                 bird[0] = p;
-                JobFx15.phoenix(lv, p, 12.0, 2, 3, 0.25, true, Opt.of("vel", tan, "solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.05, "fps", 10.0), AZURE,
-                        AZURE_CORE);
+                JobFx15.phoenix(lv, p, BIRD_SPAN, 2, 3, 0.25, true, Opt.of("vel", tan, "solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.05, "fps", 10.0,
+                        "phase", ((tt - circleFrom) * 10 / 20.0) % 3), AZURE, AZURE_CORE);
                 if ((tt - circleFrom) % 4 == 0) JobFx.feathers(lv, V.up(p, -1.0), 3, 2.5, 0.42, j, 1.4, Opt.empty());
                 if ((tt - circleFrom) % 8 == 0) SkillFx.play(lv, "entity.ender_dragon.flap", p, 1.4, 0.9);
             });
@@ -482,13 +493,13 @@ final class PhoenixSkills {
                     // 떨어질 땅에 미리 푸른 고리 (어디에 꽂힐지)
                     JobFx15.halo(lv, V.up(spot[0], 0.06), k.num("diveRadius", 6), (diveAt - tt) / 20.0 + 0.15, Opt.of("alpha", 0.8, "fade", 0.1), DEEP, DEEP_CORE);
                 }
-                Vec3 from = bird[0] != null ? bird[0] : V.up(base[0], 9.5);
-                Vec3 end = V.up(spot[0], 2.6);
+                Vec3 from = bird[0] != null ? bird[0] : V.up(base[0], BIRD_UP);
+                Vec3 end = V.up(spot[0], 2.8);
                 double u = (tt - diveFrom + 1) / (double) (diveAt - diveFrom);
                 Vec3 p = V.add(from, V.scale(V.sub(end, from), u * u));
                 Vec3 prev = V.add(from, V.scale(V.sub(end, from), Math.max(0, (tt - diveFrom) / (double) (diveAt - diveFrom))
                         * Math.max(0, (tt - diveFrom) / (double) (diveAt - diveFrom))));
-                JobFx15.phoenix(lv, p, 11.0, 5, 1, 0.1, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.0), AZURE, AZURE_CORE);
+                JobFx15.phoenix(lv, p, BIRD_SPAN - 0.5, 5, 1, 0.1, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.0), AZURE, AZURE_CORE);
                 JobFx.line(lv, V.up(prev, 1.5), V.up(p, 1.0), AZURE, AZURE_CORE, 0.4, Opt.of("alpha", 0.95));
                 JobFx.line(lv, V.add(V.up(prev, 2.5), V.rightOf(f0), 1.4), V.add(V.up(p, 1.5), V.rightOf(f0), 1.0), DEEP, DEEP_CORE, 0.35, Opt.of("alpha", 0.8));
                 JobFx.line(lv, V.add(V.up(prev, 2.5), V.rightOf(f0), -1.4), V.add(V.up(p, 1.5), V.rightOf(f0), -1.0), DEEP, DEEP_CORE, 0.35, Opt.of("alpha", 0.8));
@@ -501,9 +512,10 @@ final class PhoenixSkills {
             Vec3 g = spot[0] != null ? spot[0] : diveSpot(lv, target, fixed);
             double dr = k.num("diveRadius", 6);
             // 땅에 닿음: 불사조가 날개를 펼치며 크게 터짐 → 깃털로 흩어짐 · 둘레 불꽃 기둥 · 고리 · 금 · 깃털 비
-            JobFx15.phoenix(lv, V.up(g, 3.4), 13.0, 6, 1, 0.25, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.0), AZURE, AZURE_CORE);
-            RuneKit.later(5, () -> JobFx15.phoenix(lv, V.up(g, 3.4), 13.0, 7, 1, 0.7, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.4), AZURE,
-                    AZURE_CORE));
+            JobFx15.phoenix(lv, V.up(g, 3.8), BIRD_SPAN + 1.5, 6, 1, 0.25, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.0), AZURE,
+                    AZURE_CORE);
+            RuneKit.later(5, () -> JobFx15.phoenix(lv, V.up(g, 3.8), BIRD_SPAN + 1.5, 7, 1, 0.7, false, Opt.of("solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade",
+                    0.4), AZURE, AZURE_CORE));
             JobFx.smash(lv, V.up(g, 0.05), dr, j, 0.6, Opt.empty());
             for (int i = 0; i < 8; i++) {
                 double a = i * Math.PI / 4 + Math.PI / 8;

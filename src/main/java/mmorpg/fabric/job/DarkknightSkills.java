@@ -125,7 +125,7 @@ final class DarkknightSkills {
         double reach = k.num("reach", 3.5) + (stage == 1 ? 0.8 : 0);
         double arc = k.num("arc", 70);
         int at = Math.max(2, (int) (stage == 0 ? k.num("biteAt", 4) : k.num("tearAt", 3)));
-        double size = stage == 0 ? 0.7 : 1.0;
+        double size = stage == 0 ? 0.85 : 1.2; // 2026-11-06 영상 검토: 0.7 · 1.0 은 몸에 가려 작게 보였음
         // 벌어짐: 내민 방패의 아가리 (3인칭 방패 앞 · 1인칭 화면 아래)
         JobFx15.dmaw(level0, shieldFront(sp, 1.0), size, 0, 3, at / 20.0 + 0.02, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "solo", MAW_SOLO), VOID,
                 BLOOD);
@@ -206,15 +206,21 @@ final class DarkknightSkills {
         JobFx.smoke(level0, V.up(c0, 0.6), 1.0, VOID, BLOOD, 0.6, Opt.of("alpha", 0.6, "dir", V.UP, "speed", 0.5));
         SkillFx.play(level0, "entity.wolf.growl", c0, 0.6, 1.0);
         SkillFx.play(level0, "entity.ravager.step", c0, 0.7, 0.8);
-        // 뛰어듦: 앞세운 아가리 (2틱마다 다시 그림 — 벌어짐) · 지나간 자리의 검붉은 줄 · 연기
+        // 뛰어듦: 앞세운 아가리 (매 틱 다시 그림 — 벌어짐) · 지나간 자리의 검붉은 줄 · 연기 (2틱마다). 몸을 따라감: JobMove 는 자리를 옮겨 놓아 몸의 속도가 0 — 지난 틱에
+        // 옮긴 만큼을 속도로, 벌어짐은 이어지게 (phase)
         Vec3[] last = {c0};
-        for (int t = 1; t < biteAt; t += 2) {
+        Vec3[] prev = {c0};
+        for (int t = 1; t < biteAt; t++) {
+            int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 p = sp.position();
-                JobFx15.dmaw(lv, shieldFront(sp, 1.1), 0.85, 1, 2, 0.14, true, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "vel", RuneKit.bodyVel(sp),
-                        "fade", 0.0, "fps", 12.0, "view", 1.0), VOID, BLOOD);
+                Vec3 vel = V.scale(V.sub(p, prev[0]), 20);
+                prev[0] = p;
+                JobFx15.dmaw(lv, shieldFront(sp, 1.1), 0.9, 1, 2, 0.12, true, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "vel", vel, "fade", 0.0, "fps",
+                        12.0, "phase", (tt * 12 / 20.0) % 2, "view", 1.0), VOID, BLOOD);
+                if (tt % 2 == 0) return;
                 if (V.hdist(p, last[0]) > 0.3) {
                     JobFx.line(lv, V.up(last[0], 0.9), V.up(p, 0.9), CRIMSON, CRIMSON_CORE, 0.3, Opt.of("alpha", 0.9));
                     JobFx.smoke(lv, V.up(last[0], 0.8), 0.7, VOID, BLOOD, 0.5, Opt.of("alpha", 0.5));
@@ -280,7 +286,8 @@ final class DarkknightSkills {
         Vec3 mouth = V.up(V.add(c0, f0, 1.4), 1.0);
         Vec3 spot = V.add(c0, f0, 1.9);
         // 박음: 방패의 아가리가 벌어짐 · 발밑 검붉은 금
-        JobFx15.dmaw(level0, mouth, 1.1, 0, 3, (biteAt - 2) / 20.0, false, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "fade", 0.0), VOID, BLOOD);
+        // (수명은 물어뜯는 아가리가 나온 뒤까지 — solo 가 바꿔 그림. 2026-11-06 영상 검토: biteAt − 2 까지면 그 사이 한두 틱 아가리가 비었음)
+        JobFx15.dmaw(level0, mouth, 1.1, 0, 3, (biteAt + 2) / 20.0, false, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "fade", 0.0), VOID, BLOOD);
         RuneKit.glowCrack(level0, V.up(V.add(c0, f0, 1.2), 0.04), 1.8, CRIMSON, CRIMSON_CORE, Opt.of("life", biteAt / 20.0 + 0.3));
         SkillFx.play(level0, "entity.warden.sniff", c0, 0.8, 1.0);
         SkillFx.play(level0, "item.shield.block", c0, 0.5, 0.8);

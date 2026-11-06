@@ -45,10 +45,11 @@ final class JobFx15 {
 
     /**
      * 푸른 불사조 (rfx_jphoenix — 카메라를 봄, 그림 512 × 512 · 가슴 = 칸 가운데): 0 감겨 드는 불길 속에 생겨남 → 1 날개를 활짝 → 2 ~ 4 날갯짓 (loop 면 이어 돌림) →
-     * 5 내리꽂음 (머리가 아래 · 날개를 위로 모아 V) → 6 땅에 닿아 크게 터짐 (고리 · 불줄기) → 7 깃털 · 불티로 흩어짐. 날개 끝 사이 span 칸 (= 반 크기 × 1.95)
+     * 5 내리꽂음 (머리가 아래 · 날개를 위로 모아 V) → 6 땅에 닿아 크게 터짐 (고리 · 불줄기) → 7 깃털 · 불티로 흩어짐. 날개 끝 사이 span 칸 (= 반 크기 × 1.7 — 2026-11-06
+     * 다시 그림: 꼬리 = 깃 부채 · 날개가 칸 안. 볏 끝 ~ 꼬리 끝 ≈ span 의 1.04 배 — 가슴 위 0.49 · 아래 0.55)
      */
     static void phoenix(ServerLevel level, Vec3 chest, double span, int f, int n, double life, boolean loop, Opt o, double[] glow, double[] core) {
-        double size = span / 1.95;
+        double size = span / 1.7;
         JobFx.cells(level, "jphoenix", PHOENIX, f, n, chest, life, loop ? o.num("fps", 10) : 0, loop, o.with("size", size, "fade", o.num("fade", 0.12)), glow, core);
     }
 
@@ -93,16 +94,17 @@ final class JobFx15 {
 
     /**
      * 저주받은 방패의 아가리 (rfx_jdmaw — 카메라를 봄, 그림 256 × 256 · 방패 가운데 = 칸 가운데): 0 다문 방패 (눈 · 금) → 1 벌어짐 → 2 크게 벌어짐 (붉은 목구멍 · 검은 송곳니)
-     * → 3 콱 다묾 (번쩍) → 4 물어 찢음 (핏빛 튐) → 5 삼킴 → 6 포효 (고리) → 7 연기로 흐려짐. 방패 너비 약 size × 1.34 칸 (size = 반 크기)
+     * → 3 콱 다묾 (번쩍) → 4 물어 찢음 (핏빛 튐) → 5 삼킴 → 6 포효 (고리) → 7 연기로 흐려짐. 방패 너비 약 size × 1.34 칸 (2026-11-06 다시 그림 — 방패가 칸 안으로 0.8 배
+     * 줄어 (가장 크게 벌려도 뿔 · 아래 턱이 잘리지 않음) 그림 반 크기 = size × 1.25)
      */
     static void dmaw(ServerLevel level, Vec3 at, double size, int f, int n, double life, boolean loop, Opt o, double[] glow, double[] core) {
-        JobFx.cells(level, "jdmaw", DMAW, f, n, at, life, loop ? o.num("fps", 10) : 0, loop, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 8
-                - 4, "fade", o.num("fade", 0.12)), glow, core);
+        JobFx.cells(level, "jdmaw", DMAW, f, n, at, life, loop ? o.num("fps", 10) : 0, loop, o.with("size", size * 1.25, "spin", o.has("spin") ? o.num("spin", 0) : Kit
+                .rand() * 8 - 4, "fade", o.num("fade", 0.12)), glow, core);
     }
 
     /**
-     * 검은 혀 (rfx_jtendril — 가는 쪽으로 누움, 그림 512 × 64 · 뿌리 = 왼쪽 끝 (칸 가운데에서 반 너비 × 0.96) · 갈고리 끝 = 오른쪽): 0 ~ 3 꿈틀거림 (loop 면 이어 돌림 — 가시 ·
-     * 붉은 핏줄이 흐름). from (뿌리) 에서 to (끝) 까지 — 길이 = 반 너비 × 1.9
+     * 검은 혀 (rfx_jtendril — 가는 쪽으로 누움, 그림 512 × 96 · 뿌리 = 왼쪽 끝 (칸 가운데에서 반 너비 × 0.96) · 갈고리 끝 = 오른쪽): 0 ~ 3 꿈틀거림 (loop 면 이어 돌림 — 가시 ·
+     * 가로 주름 · 붉은 핏줄이 흐름). from (뿌리) 에서 to (끝) 까지 — 길이 = 반 너비 × 1.9 · 뿌리 굵기 ≈ 길이의 0.075 (2026-11-06 굵게 — 처음 512 × 64 는 가는 줄로만 보였음)
      */
     static void tendril(ServerLevel level, Vec3 from, Vec3 to, int f, int n, double life, boolean loop, Opt o, double[] glow, double[] core) {
         Vec3 d = V.sub(to, from);

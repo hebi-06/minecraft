@@ -12718,14 +12718,14 @@
    "uv": {
     "static": [
      "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 2) * 512",
-     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 64"
+     "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 2) * 96"
     ],
     "size": [
      512,
-     64
+     96
     ],
     "tw": 1024.0,
-    "th": 256.0
+    "th": 384.0
    },
    "rate": {
     "instant": 1
@@ -12756,7 +12756,7 @@
    },
    "size": [
     "variable.size * 1.0000 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))",
-    "variable.size * 0.1250 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
+    "variable.size * 0.1875 * (1 + variable.grow * (variable.particle_age / variable.particle_lifetime))"
    ],
    "facing": "lookat_direction",
    "face_dir": [

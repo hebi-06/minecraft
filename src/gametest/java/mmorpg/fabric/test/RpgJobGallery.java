@@ -757,7 +757,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
             a.setDeltaMovement(Vec3.ZERO);
             a.removeAllEffects();
             a.setHealth(a.getMaxHealth() * (id.equals("phoenix_ignition") ? 0.35F : 1F));
-            if (id.equals("phoenix_wing") || id.equals("darkknight_lunge")) moveHusk(sp, new Vec3(0.5, -60, 3.2), new Vec3(-1.6, -60, 2.0));
+            if (id.equals("phoenix_wing") || id.equals("darkknight_lunge")) {
+                moveHusk(sp, new Vec3(0.5, -60, 3.2), new Vec3(-1.6, -60, 2.0));
+                // 앞으로 움직이는 스킬: 따라가는 카메라 바로 앞에 서는 오른쪽 과녁을 왼쪽 뒤로 (영상 1 — 내려앉음 · 물기가 그 과녁에 가렸음)
+                moveHusk(sp, new Vec3(4.0, -60, 2.5), new Vec3(-4.2, -60, 5.4));
+            }
             if (job.equals("phoenix")) JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("phoenix")) * 0.6);
             else mmorpg.fabric.job.JobTraits15.setHunger(sp, id.equals("darkknight_lunge") ? 100 : 40);
         }
@@ -915,11 +919,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /**
      * 2026-11-06 영상 카메라 (거리 · 높이 · 보는 높이 · 따라가는 몫 — 없으면 RpgFilm 처음 값): 피닉스 가드 · 다크 나이트의 앞으로 움직이는 스킬은 조금 멀리 · 덜 따라감, 둘레
-     * 5칸 고리는 조금 멀리, 하늘을 도는 불사조 (불기둥 9칸 · 날개 끝 12칸) 는 멀리서 올려다봄, 땅의 거대한 아가리 (높이 약 8칸) 는 멀리 · 높이
+     * 5칸 고리는 조금 멀리, 하늘을 도는 불사조 (불기둥 9칸 · 가슴 8칸 · 날개 끝 10.5칸 — 볏이 13칸쯤) 는 멀리서 올려다봄, 땅의 거대한 아가리 (높이 약 8칸) 는 멀리 · 높이
      */
     private static double[] filmView(String id) {
         return switch (id) {
-            case "phoenix_ult" -> new double[] {12.5, 3.0, 5.5, 0.4};
+            case "phoenix_ult" -> new double[] {12.5, 3.0, 6.5, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
             case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};
             case "phoenix_wing", "darkknight_lunge" -> new double[] {7.0, 2.6, 1.3, 0.7};

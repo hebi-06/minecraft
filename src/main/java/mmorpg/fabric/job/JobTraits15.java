@@ -427,8 +427,9 @@ public final class JobTraits15 {
         ServerLevel level = sp.level();
         if (stance.equals(IGNITION)) {
             Vec3 back = V.up(V.add(sp.position(), Kit.facingOf(sp), -0.3), 1.35);
-            JobFx15.fwings(level, back, 3.6, 2, 4, 0.5, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "solo", 92.0, "fade", 0.05, "fps", 10.0), AZURE,
-                    AZURE_CORE);
+            // (날갯짓은 다시 그려도 이어지게 — phase = 지금 틱의 장)
+            JobFx15.fwings(level, back, 3.6, 2, 4, 0.5, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "solo", 92.0, "fade", 0.05, "fps", 10.0, "phase",
+                    (Tasks.now() * 10 / 20.0) % 4), AZURE, AZURE_CORE);
             SkillFx.fx(level, "rpg:arrow_spark", V.up(back, -0.4 + Kit.rand() * 0.8), Opt.of("dir", V.UP, "speed", 1.4, "size", 0.14, "grow", 0.8, "life", 0.45, "color",
                     AZURE, "alpha", 0.95));
             return true;
@@ -436,7 +437,8 @@ public final class JobTraits15 {
         if (stance.equals(FRENZY)) {
             RuneKit.Hand h = RuneKit.handOf(sp);
             Vec3 at = V.up(V.add(h.hand(), h.f(), 0.45), 0.2);
-            JobFx15.dmaw(level, at, 0.4, 1, 2, 0.5, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "solo", 93.0, "fade", 0.05, "fps", 6.0), VOID, BLOOD);
+            JobFx15.dmaw(level, at, 0.4, 1, 2, 0.5, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "solo", 93.0, "fade", 0.05, "fps", 6.0, "phase", (Tasks
+                    .now() * 6 / 20.0) % 2), VOID, BLOOD);
             JobFx.smoke(level, V.up(sp.position(), 1.0), 0.7, VOID, BLOOD, 0.7, JobFx.hide1p(sp).with("dir", V.UP, "speed", 0.5, "alpha", 0.45));
             SkillFx.fx(level, "rpg:arrow_spark", V.up(sp.position(), 0.4 + Kit.rand() * 1.2), Opt.of("dir", V.UP, "speed", 1.2, "size", 0.13, "grow", 0.8, "life", 0.4,
                     "color", BLOOD, "alpha", 0.95));

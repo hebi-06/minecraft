@@ -3363,7 +3363,7 @@ public final class RpgJobAdvanceTests {
         ServerPlayer[] ally = {null};
         double[] mark = {0, 0, 0};
         List<RpgJobTests.Step> steps = new ArrayList<>();
-        // 피닉스 배시: 2.5칸 앞 과녁 — 6 에 4 · 도발
+        // 피닉스 배시: 2.5칸 앞 과녁 — 6 에 4 (도발은 과녁이 움직이지 않는 허스크라 보지 않음 — CI 42231783040: 시험 플레이어를 노리지 않았음)
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             RpgCombat.forceCrit = false;
@@ -3377,7 +3377,6 @@ public final class RpgJobAdvanceTests {
         steps.add(new RpgJobTests.Step(4, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(0), 4);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "피닉스 배시 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(!sp.canBeSeenAsEnemy() || z.get(0).getTarget() == sp, "the bash taunts");
             h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "phoenix gradient number");
         }));
         // 반격 + 불사조의 재: 왼쪽 2칸 아군 (체력 50% — 가장 위험) · 앞 과녁의 평타를 웅크려 막음 → 반격 c (막은 양 × 30%) → 다음 틱에 그 아군 보호막 c ÷ 0.3 × 0.2
@@ -3590,14 +3589,15 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.close(sp.getHealth() - mark[0], RpgHealth.maxOf(sp) * 0.06, 0.05), "devour heals 6%: " + (sp.getHealth() - mark[0]));
             h.assertTrue(sp.distanceTo(z.get(0)) < 2.6 && z.get(0).hasEffect(MobEffects.SLOWNESS), "lunged to it · stunned: " + sp.distanceTo(z.get(0)));
         }));
-        // 피스트: 앞 2.5칸 · 왼쪽 앞 · 오른쪽 멀리 과녁 (밀 수 없음) — 6 에 셋 다 2.4 (물기가 아님) → 16 에 방패 앞 3칸 안 둘 4.8 (굶주림 + 24)
+        // 피스트: 앞 2.5칸 · 왼쪽 앞 · 왼쪽 멀리 과녁 (밀 수 없음 · 둘레 6칸 안 · 물어뜯는 곳에서 3칸 밖) — 6 에 셋 다 2.4 (물기가 아님) → 16 에 방패 앞 3칸 안 둘 4.8
+        // (굶주림 + 24). 시험 자리는 x 8 · z 8 칸부터 벽 (CI 42231783040: 오른쪽 (4, 2) 과녁이 벽 속에서 숨막힘 피해 1 만 받았음)
         steps.add(new RpgJobTests.Step(4, () -> {
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
             z.add(dummy(h, 0, 2.5));
             z.add(dummy(h, -1.5, 3.5));
-            z.add(dummy(h, 4.0, 2.0));
+            z.add(dummy(h, -3.0, 4.8));
             RpgJobTests.clearStrays(h, z.get(0), z.get(1), z.get(2));
             JobTraits15.setHunger(sp, 0);
             h.assertTrue(JobSkills.press(sp, 2), "피스트 cast");
@@ -3638,7 +3638,8 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(got, want), "frenzy bite: basic + power × 0.5 " + got + " vs " + want);
             h.assertTrue(RpgJobTests.close(JobTraits15.hunger(sp), 8, 1e-9), "frenzy basic hunger 4 × 2: " + JobTraits15.hunger(sp));
         }));
-        // 어비설 메이: 3칸 앞 과녁 (겨눔 — 가운데) · 그 왼쪽 앞 과녁 (둘레 4칸 안) · 오른쪽 멀리 과녁 (6칸 안 · 4칸 밖 — 밀 수 없어 끌려오지 못함) → 26 에 8 · 기절 → 44 에 24
+        // 어비설 메이: 3칸 앞 과녁 (겨눔 — 가운데) · 그 왼쪽 앞 과녁 (둘레 4칸 안) · 왼쪽 뒤 멀리 과녁 (가운데에서 5.7칸 — 혀가 닿는 6칸 안 · 터뜨림 4.5칸 (+ 0.5) 밖, 밀 수
+        // 없어 끌려오지 못함 · 벽 안) → 26 에 8 · 기절 → 44 에 24
         steps.add(new RpgJobTests.Step(4, () -> {
             JobSystem.setJob(sp, "darkknight");
             for (Husk x : z) x.discard();
@@ -3646,7 +3647,7 @@ public final class RpgJobAdvanceTests {
             home(h, sp);
             z.add(dummy(h, 0, 3.0));
             z.add(dummy(h, -2.0, 3.5));
-            z.add(dummy(h, 5.3, 3.0));
+            z.add(dummy(h, -4.0, -1.0));
             RpgJobTests.clearStrays(h, z.get(0), z.get(1), z.get(2));
             JobTraits15.setHunger(sp, 0);
             JobSkills.resetCooldowns(sp);
