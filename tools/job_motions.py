@@ -31,6 +31,7 @@ import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 
 import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 피에로 — 재설계안 2판)
 import job_motions_j  # noqa: E402,F401 — 0.51.0 2차 직업 (스톰 랜서 · 드라군 — 2026-11-06)
 import job_motions_k  # noqa: E402,F401 — 0.51.0 2차 직업 (소울 리퍼 · 엑시큐셔너 — 2026-11-06)
+import job_motions_l  # noqa: E402,F401 — 0.51.0 2차 직업 (썬더로드 · 타이런트 — 2026-11-06)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -123,6 +124,14 @@ AIR = {
     "jb_soulreaper_trespass": [],
     "jb_soulreaper_ult_slam": [],
     "jb_executioner_stalk": [(1, 7, "tuck"), (8, 11, "land")],
+    # 0.51.0 썬더로드 · 타이런트 (2026-11-06): 썬더스텝 (번개가 되어 솟구침 → :land 한 무릎으로 내려앉음) · 섀클 볼트 (4 ~ 10 사슬에 끌려감 — 어깨를 앞세움) ·
+    # 스톨른 썬더 (32 ~ 44 뛰어올라 내려침) 는 제 다리 (job_motions_l) — 걸음 다리를 끔. 아크 스매시 · 필리지 · 그립 내리꽂음 · 던브레이커 새벽 · 콜로서스도 크게 내디딤 ·
+    # 웅크림이라 걸음 다리를 끔 (job_motions_l 의 softLegs)
+    "jb_thunderlord_step": [],
+    "jb_thunderlord_step_land": [],
+    "jb_tyrant_shackle": [],
+    "jb_tyrant_ult": [],
+    "jb_tyrant_ult_slam": [],
 }
 
 

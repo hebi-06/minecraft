@@ -2745,6 +2745,265 @@ def executioner_ult(A, B):
     return finish(subject, [glow(xm, A, 2.0, 1.0), glow(sun, B, 2.4, 0.8), glow(hit, A, 1.6, 1.0)], dusk_back(A, B))
 
 
+# ------------------------------------------------------------ 썬더로드 (빛: 금빛 → 하늘빛 — 짙은 폭풍 남청 바탕 · 가운데 금빛) — 2026-11-06
+
+from job_skill_icons_four import CLOUD, CLOUD_LO, STONE, STONE_HI, STONE_LO, bolt_pts, hammer_layers, person  # noqa: E402 — 망치 · 번개 · 먹구름 (1차 성기사)
+
+THUNDER_NIGHT = (5, 7, 22)
+
+
+def thunder_back(A, B):
+    return backdrop(mix(B, THUNDER_NIGHT, 0.88), mix(A, (80, 64, 20), 0.55))
+
+
+def cloud_mask(blobs):
+    m = mask()
+    for x, y, r in blobs:
+        disc(m, x, y, r)
+    return m
+
+
+def foe_mask(cx, feet, h=10.0):
+    """적 그림자 (머리 · 어깨가 넓은 몸)"""
+    m = mask()
+    r = h * 0.2
+    disc(m, cx, feet - h + r, r)
+    poly(m, [(cx - h * 0.34, feet), (cx - h * 0.28, feet - h + r * 2.2), (cx + h * 0.28, feet - h + r * 2.2), (cx + h * 0.34, feet)])
+    return m
+
+
+FOE = ((92, 84, 120), (34, 30, 56), (140, 132, 170), None)  # 적 그림자 (어두운 바탕 위에서 보이게)
+
+
+def thunderlord_arc(A, B):
+    # 아크 스매시: 왼쪽 아래에서 휩쓴 망치 · 가운데를 가로지르는 큰 금빛 휩쓸기 · 오른쪽 끝에서 두 적에게 갈라져 튀는 번개
+    sweep = mask()
+    crescent(sweep, 16.0, 36.0, 24.0, 4.2, 214, 318)
+    forks = mask()
+    for (x1, y1, sd) in ((29.5, 5.0, 1), (30.0, 27.0, 2)):
+        line(forks, bolt_pts(24.5, 16.5, x1, y1, 4, 1.4, sd), 1.0)
+    f1 = foe_mask(29.5, 9.5, 7.0)
+    f2 = foe_mask(29.0, 31.5, 7.0)
+    sparks = mask()
+    star(sparks, 29.5, 5.6, 3.0, 0.2, 0)
+    star(sparks, 29.6, 26.5, 3.0, 0.2, 0)
+    ham, hd = hammer_layers(A, B, 7.5, 18.5, 120, head_w=11.0, head_h=6.0, handle=10.5, shaft=1.7)
+    subject = stack(layer(lighter(f1, f2), *FOE), layer(sweep, WHITE, A, WHITE, None, axis=(1, 0)), layer(forks, WHITE, mix(B, WHITE, 0.3)), *ham,
+                    layer(sparks, WHITE, B))
+    return finish(subject, [glow(sweep, A, 2.0, 1.0), glow(forks, B, 1.4, 1.0), glow(sparks, B, 1.2, 1.0)], thunder_back(A, B))
+
+
+def thunderlord_step(A, B):
+    # 썬더스텝: 왼쪽 위 하늘에서 내리꽂힌 굵은 벼락 · 그 자리에 꽂힌 망치 (머리가 아래) · 둘레를 감싼 하늘빛 보호막 반구 · 땅의 번쩍
+    bolt = mask()
+    line(bolt, bolt_pts(4.0, 0.0, 17.0, 22.0, 5, 2.4, 1), 2.4)
+    dome = mask()
+    crescent(dome, 17.0, 29.5, 12.5, 1.6, 180, 360, taper=False)
+    ground = mask()
+    poly(ground, [(1.0, 29.5), (31.0, 29.5), (31.0, 30.8), (1.0, 30.8)])
+    ham, hd = hammer_layers(A, B, 17.0, 24.5, -70, head_w=10.0, head_h=5.5, handle=9.0, shaft=1.6)
+    hit = mask()
+    star(hit, 17.0, 28.0, 6.0, 0.14, 0)
+    subject = stack(layer(ground, mix(A, (60, 50, 30), 0.6), mix(A, (0, 0, 0), 0.6)), layer(dome, mix(B, WHITE, 0.5), B, WHITE, None),
+                    layer(bolt, WHITE, A, WHITE, None), *ham, layer(hit, WHITE, A))
+    return finish(subject, [glow(bolt, A, 2.0, 1.0), glow(dome, B, 1.6, 0.9), glow(hit, A, 2.0, 1.0)], thunder_back(A, B))
+
+
+def thunderlord_spire(A, B):
+    # 스톰 스파이어: 위의 먹구름 · 가운데로 떨어지는 굵은 번개 기둥 (흰 심 · 들쭉날쭉한 가장자리) · 땅에 퍼지는 금빛 고리 둘 · 튀는 작은 벼락
+    cloud = cloud_mask(((5.0, 4.5, 4.4), (11.0, 3.4, 5.0), (17.5, 3.6, 5.4), (24.0, 3.4, 5.0), (29.0, 5.0, 3.8)))
+    pillar = mask()
+    left = bolt_pts(13.0, 6.0, 13.6, 26.5, 6, 1.0, 1)
+    right = bolt_pts(19.0, 6.0, 18.4, 26.5, 6, 1.0, 2)
+    poly(pillar, left + right[::-1])
+    core = mask()
+    line(core, bolt_pts(16.0, 6.0, 16.0, 26.5, 6, 0.8, 1), 1.4)
+    rings_ = mask()
+    d = ImageDraw.Draw(rings_)
+    for rx, ry in ((8.5, 2.6), (13.5, 4.0)):
+        d.ellipse([P(16 - rx, 27 - ry), P(16 + rx, 27 + ry)], outline=255, width=int(1.0 * SS))
+    sparks = mask()
+    for (x0, y0, x1, y1) in ((11.0, 20.0, 5.0, 16.0), (21.0, 18.0, 27.5, 14.0)):
+        line(sparks, bolt_pts(x0, y0, x1, y1, 3, 0.9), 0.8)
+    subject = stack(layer(cloud, CLOUD, CLOUD_LO, mix(CLOUD, WHITE, 0.3), None), layer(rings_, mix(A, WHITE, 0.3), A), layer(sparks, WHITE, B),
+                    layer(pillar, mix(A, WHITE, 0.5), A, WHITE, None, axis=(1, 0)), layer(core, WHITE, WHITE))
+    return finish(subject, [glow(pillar, A, 2.4, 1.0), glow(rings_, A, 1.4, 0.9), glow(sparks, B, 1.0, 0.8)], thunder_back(A, B))
+
+
+def thunderlord_head(A, B):
+    # 썬더헤드: 위의 먹구름 · 그 아래 세워 든 망치 (머리가 위) · 구름에서 망치 양옆으로 떨어지는 벼락 둘 · 아래의 하늘빛 보호 고리
+    cloud = cloud_mask(((6.0, 5.0, 4.4), (12.0, 3.8, 5.2), (19.0, 3.8, 5.4), (25.5, 4.6, 4.6)))
+    bolts = mask()
+    line(bolts, bolt_pts(7.0, 8.0, 5.0, 22.0, 4, 1.4, 1), 1.3)
+    line(bolts, bolt_pts(25.0, 8.0, 27.0, 22.0, 4, 1.4, 2), 1.3)
+    ring_ = mask()
+    d = ImageDraw.Draw(ring_)
+    d.ellipse([P(4.0, 24.0), P(28.0, 30.5)], outline=255, width=int(1.2 * SS))
+    ham, hd = hammer_layers(A, B, 16.0, 13.5, 90, head_w=11.5, head_h=6.0, handle=11.5, shaft=1.8)
+    sparks = mask()
+    star(sparks, 16.0, 13.5, 3.2, 0.2, 45)
+    subject = stack(layer(ring_, mix(B, WHITE, 0.4), B), layer(cloud, CLOUD, CLOUD_LO, mix(CLOUD, WHITE, 0.3), None), layer(bolts, WHITE, A), *ham,
+                    layer(sparks, WHITE, B))
+    return finish(subject, [glow(bolts, A, 1.6, 1.0), glow(ring_, B, 1.6, 0.9), glow(hd, A, 1.8, 0.8)], thunder_back(A, B))
+
+
+def thunderlord_ult(A, B):
+    # 던브레이커: 뒤에서 떠오르는 새벽 (금빛 빛살 · 테) · 가운데 돌로 굳은 적 (모난 잿빛 덩이) 이 금빛 금으로 쩍 갈라짐 · 튀는 돌 조각
+    rays = mask()
+    for i in range(9):
+        a = math.radians(-180 + i * 22.5)
+        poly(rays, [(16.0, 20.0), (16.0 + math.cos(a - 0.07) * 17, 20.0 + math.sin(a - 0.07) * 17), (16.0 + math.cos(a + 0.07) * 17, 20.0 + math.sin(a + 0.07) * 17)])
+    sun = mask()
+    ring(sun, 16.0, 20.0, 12.0, 1.2)
+    stone = mask()
+    poly(stone, [(16.5, 4.5), (20.5, 6.0), (21.0, 10.0), (24.5, 12.5), (25.5, 19.0), (23.5, 26.5), (9.0, 26.5), (7.0, 19.5), (8.5, 12.5), (12.0, 10.0),
+                 (12.5, 6.0)])
+    cracks = mask()
+    for pts in (((16.0, 15.5), (13.5, 11.5), (14.5, 7.5)), ((16.0, 15.5), (20.0, 13.0), (23.5, 14.5)), ((16.0, 15.5), (11.5, 19.0), (9.0, 23.5)),
+                ((16.0, 15.5), (19.0, 20.0), (18.0, 26.0)), ((16.0, 15.5), (22.0, 21.0))):
+        line(cracks, list(pts), 0.9)
+    burst = mask()
+    star(burst, 16.0, 15.5, 5.5, 0.16, 0)
+    ground = mask()
+    poly(ground, [(1.0, 26.5), (31.0, 26.5), (31.0, 28.2), (1.0, 28.2)])
+    shards = mask()
+    for (x, y, r, a) in ((5.0, 9.0, 1.6, 20), (27.5, 8.0, 1.5, 70), (4.0, 22.0, 1.3, 40), (28.5, 21.5, 1.4, 10)):
+        poly(shards, [(x + math.cos(math.radians(a + k * 120)) * r, y + math.sin(math.radians(a + k * 120)) * r) for k in range(3)])
+    subject = stack(layer(rays, mix(A, WHITE, 0.2), mix(A, (120, 60, 30), 0.4)), layer(sun, WHITE, A), layer(ground, mix(A, (60, 50, 30), 0.6), mix(A, (0, 0, 0), 0.6)),
+                    layer(stone, STONE_HI, STONE_LO, WHITE, mix(STONE_LO, (0, 0, 0), 0.4), axis=(0.6, 0.8)), layer(cracks, WHITE, A), layer(burst, WHITE, A),
+                    layer(shards, STONE_HI, STONE_LO))
+    return finish(subject, [glow(rays, A, 1.6, 0.7), glow(sun, A, 2.0, 0.9), glow(cracks, A, 1.4, 1.0), glow(burst, A, 1.8, 1.0)], thunder_back(A, B))
+
+
+# ------------------------------------------------------------ 타이런트 (빛: 보랏빛 번개 → 핏빛 — 짙은 보랏빛 밤 바탕 · 빼앗는 기운은 핏빛) — 2026-11-06
+
+TYRANT_NIGHT = (8, 2, 16)
+
+
+def tyrant_back(A, B):
+    return backdrop(mix(A, TYRANT_NIGHT, 0.86), mix(B, (70, 10, 34), 0.5))
+
+
+def tyrant_hammer(A, B, cx, cy, ang, head_w=11.0, head_h=6.0, handle=12.0, shaft=1.7):
+    """검보라 망치 (머리에 보랏빛 · 띠는 핏빛)"""
+    return hammer_layers(A, (40, 20, 50), cx, cy, ang, head_w, head_h, handle, shaft)
+
+
+def tyrant_pillage(A, B):
+    # 필리지: 위에서 크게 휘둘러 (보랏빛 길) 내려친 망치 (머리가 오른쪽 아래) · 맞은 적 그림자 · 맞은 자리 섬광 · 적에게서 빨려 나오는 핏빛 방울
+    foe = foe_mask(23.0, 31.5, 12.0)
+    ham, hd = tyrant_hammer(A, B, 18.5, 15.5, -140, head_w=12.0, head_h=6.5, handle=11.0)
+    hit = mask()
+    star(hit, 22.5, 20.5, 6.0, 0.14, 20)
+    drops = mask()
+    for (x, y, r) in ((11.0, 24.0, 1.4), (7.0, 20.5, 1.2), (5.0, 27.0, 1.1)):
+        drop(drops, x, y, r, ang=20)
+    trail = mask()
+    crescent(trail, 7.0, 25.0, 19.0, 2.6, -88, -22)
+    subject = stack(layer(foe, *FOE), layer(trail, mix(A, WHITE, 0.3), A, None, None, axis=(1, 1)), *ham, layer(hit, WHITE, A), layer(drops, mix(B, WHITE, 0.3), B))
+    return finish(subject, [glow(hit, A, 2.2, 1.0), glow(hd, A, 1.6, 0.8), glow(drops, B, 1.2, 0.9)], tyrant_back(A, B))
+
+
+def tyrant_shackle(A, B):
+    # 섀클 볼트: 왼쪽 아래 주먹에서 오른쪽 위 적으로 뻗은 보랏빛 번개 사슬 (고리 · 옆에서 본 마디가 번갈아 · 곁의 지그재그 번개) · 적을 감은 사슬 고리 둘
+    p0, p1 = (6.5, 25.5), (20.5, 12.0)
+    L = math.hypot(p1[0] - p0[0], p1[1] - p0[1])
+    ux, uy = (p1[0] - p0[0]) / L, (p1[1] - p0[1]) / L
+    chain = mask()
+    d = ImageDraw.Draw(chain)
+    n = 6
+    for i in range(n):
+        t = (i + 0.5) / n
+        cx, cy = p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t
+        if i % 2 == 0:
+            pts = [(cx + ux * 2.2 * math.cos(a) - uy * 1.3 * math.sin(a), cy + uy * 2.2 * math.cos(a) + ux * 1.3 * math.sin(a)) for a in [k * math.pi / 12 for k in range(24)]]
+            d.polygon([P(x, y) for x, y in pts], outline=255, width=int(0.8 * SS))
+        else:
+            line(chain, [(cx - ux * 2.0, cy - uy * 2.0), (cx + ux * 2.0, cy + uy * 2.0)], 1.0)
+    zig = mask()
+    line(zig, bolt_pts(5.0, 23.0, 19.0, 9.5, 6, 1.3, 1), 0.7)
+    fist = mask()
+    disc(fist, 5.0, 27.0, 3.2)
+    poly(fist, [(0.5, 31.5), (2.0, 28.0), (6.5, 29.0), (5.5, 31.5)])
+    foe = foe_mask(25.0, 24.0, 15.0)
+    wraps = mask()
+    d = ImageDraw.Draw(wraps)
+    for cy in (15.0, 19.5):
+        d.ellipse([P(19.0, cy - 1.7), P(31.0, cy + 1.7)], outline=255, width=int(1.1 * SS))
+    subject = stack(layer(foe, *FOE), layer(wraps, mix(A, WHITE, 0.45), A), layer(chain, mix(A, WHITE, 0.4), mix(A, (40, 20, 60), 0.3)), layer(zig, WHITE, A),
+                    layer(fist, mix(A, (70, 50, 90), 0.5), mix(A, (0, 0, 0), 0.6), mix(A, WHITE, 0.3), None))
+    return finish(subject, [glow(lighter(chain, zig), A, 1.6, 1.0), glow(wraps, A, 1.4, 0.9)], tyrant_back(A, B))
+
+
+def tyrant_grip(A, B):
+    # 킹스 그립: 오른쪽에서 뻗은 거대한 보랏빛 망령 주먹이 적을 꽉 쥠 (주먹 위로 적의 머리 · 아래로 버둥대는 다리) · 손가락 마디 줄 · 엄지 · 튀는 핏빛 방울
+    arm = mask()
+    poly(arm, [(31.5, 9.5), (31.5, 21.5), (22.0, 21.0), (22.0, 10.5)])
+    fist = mask()
+    poly(fist, [(9.0, 10.0), (23.5, 9.0), (25.0, 12.0), (25.0, 20.5), (23.0, 23.0), (9.5, 23.0), (7.0, 20.5), (7.0, 12.5)])
+    knuckles = mask()
+    for y in (13.4, 16.6, 19.8):
+        line(knuckles, [(7.8, y), (16.0, y)], 0.7)
+    thumb = mask()
+    poly(thumb, [(10.0, 9.0), (21.0, 8.0), (22.5, 10.5), (21.0, 12.0), (11.0, 12.5), (9.0, 11.0)])
+    head = mask()
+    disc(head, 15.0, 5.5, 2.8)
+    legs = mask()
+    line(legs, [(13.0, 23.0), (11.0, 28.5), (12.0, 30.5)], 1.6)
+    line(legs, [(17.0, 23.0), (18.5, 28.0), (20.5, 29.0)], 1.6)
+    cuff = mask()
+    line(cuff, bolt_pts(26.5, 9.5, 27.0, 21.5, 4, 1.2), 0.8)
+    drops = mask()
+    for (x, y, r, a) in ((4.0, 15.0, 1.2, 0), (5.0, 25.0, 1.1, -30), (4.0, 7.0, 1.0, 30), (26.0, 27.0, 1.1, -150)):
+        drop(drops, x, y, r, ang=a)
+    hand_cols = (mix(A, WHITE, 0.35), mix(A, (30, 10, 50), 0.35), WHITE, mix(A, (0, 0, 0), 0.5))
+    subject = stack(layer(lighter(head, legs), *FOE), layer(arm, mix(A, (30, 10, 50), 0.2), mix(A, (0, 0, 0), 0.5), mix(A, WHITE, 0.2), None, axis=(1, 0)),
+                    layer(fist, *hand_cols, axis=(0.3, 1)), layer(knuckles, mix(A, (0, 0, 0), 0.45), mix(A, (0, 0, 0), 0.6)), layer(thumb, *hand_cols, axis=(0.3, 1)),
+                    layer(cuff, WHITE, A), layer(drops, mix(B, WHITE, 0.3), B))
+    return finish(subject, [glow(lighter(fist, arm), A, 2.0, 0.9), glow(drops, B, 1.2, 0.9)], tyrant_back(A, B))
+
+
+def tyrant_colossus(A, B):
+    # 콜로서스: 머리 위의 보랏빛 번개 왕관 (뾰족 다섯 · 보석) · 아래 거대한 어깨 · 머리 그림자 (핏빛 눈) · 양옆 위로 자라는 화살
+    crown = mask()
+    pts = [(6.0, 12.0), (6.0, 4.5), (9.5, 8.5), (12.5, 2.0), (16.0, 7.5), (19.5, 2.0), (22.5, 8.5), (26.0, 4.5), (26.0, 12.0)]
+    poly(crown, pts)
+    gems = mask()
+    for x in (11.0, 16.0, 21.0):
+        disc(gems, x, 10.0, 1.1)
+    body = mask()
+    disc(body, 16.0, 18.5, 5.0)
+    poly(body, [(2.0, 31.5), (4.0, 25.0), (10.0, 22.0), (22.0, 22.0), (28.0, 25.0), (30.0, 31.5)])
+    eyes = mask()
+    poly(eyes, [(12.8, 18.0), (15.2, 18.6), (15.0, 19.6), (13.0, 19.2)])
+    poly(eyes, [(19.2, 18.0), (16.8, 18.6), (17.0, 19.6), (19.0, 19.2)])
+    arrows = mask()
+    for x in (3.5, 28.5):
+        line(arrows, [(x, 21.0), (x, 14.5)], 1.0)
+        poly(arrows, [(x - 2.0, 15.0), (x + 2.0, 15.0), (x, 12.0)])
+    sparks = mask()
+    for (x0, y0, x1, y1) in ((12.5, 2.0, 10.5, -1.0), (19.5, 2.0, 21.5, -1.0)):
+        line(sparks, [(x0, y0), (x1, y1)], 0.7)
+    subject = stack(layer(body, (46, 30, 60), (14, 6, 22), (90, 70, 110), None), layer(eyes, WHITE, B), layer(arrows, mix(B, WHITE, 0.3), B),
+                    layer(crown, mix(A, WHITE, 0.45), A, WHITE, mix(A, (0, 0, 0), 0.4)), layer(gems, WHITE, B), layer(sparks, WHITE, A))
+    return finish(subject, [glow(crown, A, 2.0, 1.0), glow(eyes, B, 1.0, 1.0), glow(arrows, B, 1.0, 0.7)], tyrant_back(A, B))
+
+
+def tyrant_ult(A, B):
+    # 스톨른 썬더: 가운데 세운 거대한 보랏빛 번개 망치 (머리가 위) · 둘레 가장자리의 핏빛 혼에서 망치 머리로 빨려 드는 번개 여섯
+    ham, hd = tyrant_hammer(A, B, 16.0, 11.0, 90, head_w=16.0, head_h=8.5, handle=13.0, shaft=2.2)
+    edge = mask()
+    line(edge, bolt_pts(9.0, 9.0, 23.0, 13.0, 4, 1.0), 0.8)
+    lines_ = mask()
+    orbs = mask()
+    for (x, y) in ((2.5, 4.0), (29.5, 4.0), (2.0, 17.0), (30.0, 17.0), (4.0, 28.5), (28.0, 28.5)):
+        tx = 16.0 + (6.0 if x > 16 else -6.0)
+        line(lines_, bolt_pts(x, y, tx, 11.0, 4, 1.1, 1 if x < 16 else 2), 0.8)
+        disc(orbs, x, y, 1.6)
+    subject = stack(layer(lines_, WHITE, A), layer(orbs, mix(B, WHITE, 0.3), B), *ham, layer(edge, WHITE, A))
+    return finish(subject, [glow(lines_, A, 1.4, 1.0), glow(hd, A, 2.4, 1.0), glow(orbs, B, 1.2, 1.0)], tyrant_back(A, B))
+
+
 ICONS = {
     "swordmaster_draw": swordmaster_draw,
     "swordmaster_parry": swordmaster_parry,
@@ -2826,4 +3085,14 @@ ICONS = {
     "executioner_guillotine": executioner_guillotine,
     "executioner_lastday": executioner_lastday,
     "executioner_ult": executioner_ult,
+    "thunderlord_arc": thunderlord_arc,
+    "thunderlord_step": thunderlord_step,
+    "thunderlord_spire": thunderlord_spire,
+    "thunderlord_head": thunderlord_head,
+    "thunderlord_ult": thunderlord_ult,
+    "tyrant_pillage": tyrant_pillage,
+    "tyrant_shackle": tyrant_shackle,
+    "tyrant_grip": tyrant_grip,
+    "tyrant_colossus": tyrant_colossus,
+    "tyrant_ult": tyrant_ult,
 }

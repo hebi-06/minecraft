@@ -1065,7 +1065,10 @@
       "soulreaper_crescent": "jb_soulreaper_crescent", "soulreaper_trespass": "jb_soulreaper_trespass", "soulreaper_harvest": "jb_soulreaper_harvest", "soulreaper_harvest:rip": "jb_soulreaper_harvest_rip",
       "soulreaper_lantern": "jb_soulreaper_lantern", "soulreaper_ult": "jb_soulreaper_ult", "soulreaper_ult:slam": "jb_soulreaper_ult_slam", "executioner_condemn": "jb_executioner_condemn",
       "executioner_stalk": "jb_executioner_stalk", "executioner_guillotine": "jb_executioner_guillotine", "executioner_guillotine:drop": "jb_executioner_guillotine_drop", "executioner_lastday": "jb_executioner_lastday",
-      "executioner_ult": "jb_executioner_ult",
+      "executioner_ult": "jb_executioner_ult", "thunderlord_arc": "jb_thunderlord_arc", "thunderlord_step": "jb_thunderlord_step", "thunderlord_step:land": "jb_thunderlord_step_land",
+      "thunderlord_spire": "jb_thunderlord_spire", "thunderlord_spire:call": "jb_thunderlord_spire_call", "thunderlord_head": "jb_thunderlord_head", "thunderlord_ult": "jb_thunderlord_ult",
+      "thunderlord_ult:dawn": "jb_thunderlord_ult_dawn", "tyrant_pillage": "jb_tyrant_pillage", "tyrant_shackle": "jb_tyrant_shackle", "tyrant_grip": "jb_tyrant_grip",
+      "tyrant_grip:slam": "jb_tyrant_grip_slam", "tyrant_colossus": "jb_tyrant_colossus", "tyrant_ult": "jb_tyrant_ult", "tyrant_ult:slam": "jb_tyrant_ult_slam",
       "rune:abyssBrand": "rn_abyss_brand", "rune:arcanaUnity": "rn_arcana_unity", "rune:arcaneCut": "rn_arcane_cut",
       "rune:archangel": "rn_archangel", "rune:arenaDomain": "rn_arena_domain", "rune:awakening": "rn_awakening",
       "rune:axeBoomerang": "rn_axe_boomerang", "rune:backstab": "rn_backstab", "rune:backstep": "rn_backstep",
@@ -1164,7 +1167,10 @@
       "jb_stormlancer_rend_rip", "jb_stormlancer_ult", "jb_stormlancer_ult_thrust", "jb_stormlancer_ult_final", "jb_dragoon_tail", "jb_dragoon_jump",
       "jb_dragoon_jump_dive", "jb_dragoon_impale", "jb_dragoon_breath", "jb_dragoon_ult", "jb_soulreaper_crescent", "jb_soulreaper_trespass",
       "jb_soulreaper_harvest", "jb_soulreaper_harvest_rip", "jb_soulreaper_lantern", "jb_soulreaper_ult", "jb_soulreaper_ult_slam", "jb_executioner_condemn",
-      "jb_executioner_stalk", "jb_executioner_guillotine", "jb_executioner_guillotine_drop", "jb_executioner_lastday", "jb_executioner_ult"
+      "jb_executioner_stalk", "jb_executioner_guillotine", "jb_executioner_guillotine_drop", "jb_executioner_lastday", "jb_executioner_ult", "jb_thunderlord_arc",
+      "jb_thunderlord_step", "jb_thunderlord_step_land", "jb_thunderlord_spire", "jb_thunderlord_spire_call", "jb_thunderlord_head", "jb_thunderlord_ult",
+      "jb_thunderlord_ult_dawn", "jb_tyrant_pillage", "jb_tyrant_shackle", "jb_tyrant_grip", "jb_tyrant_grip_slam", "jb_tyrant_colossus",
+      "jb_tyrant_ult", "jb_tyrant_ult_slam"
     ],
     "weaponMotions": [
       "wp_gram_charge", "wp_gram_descent", "wp_gram_descent_dive", "wp_solas_rush", "wp_solas_halo", "wp_solas_halo_pillar",
