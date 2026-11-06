@@ -2452,10 +2452,11 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(!JobTraits12.lanternUp(sp), "job reset puts the lantern out");
             for (Husk x : z) x.discard();
             z.clear();
-            // 페일 하베스트: 20 · 30 둘레 9칸 휩쓸기 14 (적 하나당 체력 2% 회복) → 46 둘레 6칸 내리꽂기 22
-            home(h, sp);
-            z.add(dummy(h, 0, 3.0));
-            z.add(dummy(h, 0, 7.5));
+            // 페일 하베스트: 20 · 30 둘레 9칸 휩쓸기 14 (적 하나당 체력 2% 회복) → 46 둘레 6칸 내리꽂기 22 — 바깥 과녁은 7.1칸 (시험 자리 안: 7.5칸 앞 z 9 는
+            // barrier 벽 속이라 숨막힘 1 × 2 가 더해졌음, CI 42163433947)
+            homeAt(h, sp, 0.5);
+            z.add(dummy(h, 0, 2.0));
+            z.add(dummy(h, 0, 6.1));
             RpgJobTests.clearStrays(h, z.get(0), z.get(1));
             JobTraits3.setSouls(sp, 0);
             sp.setHealth(sp.getMaxHealth() * 0.5F);
@@ -2475,7 +2476,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 50);
             double outer = RpgJobTests.expected(sp, j, j.skill(4), 28);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "페일 하베스트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), outer), "outside the slam (7.5) " + TestDummies.dealt(z.get(1)) + " vs " + outer);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), outer), "outside the slam (7.1) " + TestDummies.dealt(z.get(1)) + " vs " + outer);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;
