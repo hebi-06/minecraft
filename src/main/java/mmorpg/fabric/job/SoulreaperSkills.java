@@ -98,8 +98,7 @@ final class SoulreaperSkills {
         int every = Math.max(10, (int) k.num("every", 10));
         double r = k.num("radius", 3.4);
         double dist = k.num("dist", 3.5);
-        // 땅 마찰로 줄어드는 속도 — 처음 속도 × 약 2.2 칸을 미끄러짐 (갈퀴 베기와 같음)
-        double pullVel = k.num("pull", 0.35) / 2.2;
+        double pull = k.num("pull", 0.35); // 둘째 바퀴가 가운데로 끌어오는 칸 (JobKit.reel — 자리를 직접 옮김 · 유틸 아님: 바퀴 안에 붙잡아 두는 정도)
         Vec3 start = sp.position();
         Vec3 f = Kit.facingOf(sp);
         RpgCombat.setSteadfast(sp, first + (spins - 1) * every + 4);
@@ -128,11 +127,12 @@ final class SoulreaperSkills {
                 int[] cnt = {0};
                 for (LivingEntity e : Kit.around(sp, c, r, 2.5)) {
                     JobKit.strike(sp, e, j, P, k.num("spin", 3.125), false, false, life, 0, d -> {
-                        if (last && JobKit.pushable(e) && V.hdist(e.position(), c) > 1.4) RuneKit.knock(e, V.sub(c, e.position()), pullVel, 0);
                         if (cnt[0]++ < 6 && e.level() instanceof ServerLevel el) {
                             JobImpact.hit(sp, e, j, last ? 1.2 : 1.0);
                             JobFx.soulFly(el, Kit.bodyPoint(e), chest(sp), 11, 0.2, j, Opt.empty());
                         }
+                        // 둘째 바퀴: 낫 끝에 걸려 3틱 동안 가운데로 끌려옴 (가운데 1.2칸에서 멈춤 — 움찔 뒤에 옮겨서 덮어쓰이지 않음)
+                        if (last) JobKit.reel(sp, e, () -> c, pull, 3, 1.2 + Kit.bodyPad(e), life);
                     });
                 }
             });
@@ -403,7 +403,7 @@ final class SoulreaperSkills {
         int hooks = Math.max(1, (int) k.num("hooks", 10));
         int end = first + (hooks - 1) * every;
         double range = k.num("range", 6);
-        double pullVel = k.num("pull", 1.2) / 2.2;
+        double pull = k.num("pull", 1.2);
         JobTraits12.lanternOn(sp, end + 8);
         int[] caught = {0};
         Map<UUID, Integer> lastHook = new HashMap<>();
@@ -456,11 +456,12 @@ final class SoulreaperSkills {
                 SkillFx.play(lv, "entity.vex.charge", from, 1.4, 0.4);
                 JobKit.strike(sp, e, j, P, k.num("hook", 1.5), true, false, life, 0, d -> {
                     caught[0]++;
-                    if (JobKit.pushable(e) && e.distanceTo(sp) > 2.0) RuneKit.knock(e, V.sub(sp.position(), e.position()), pullVel, 0.1);
                     if (e.level() instanceof ServerLevel el) {
                         JobImpact.hit(sp, e, j, 0.9);
                         JobFx.soulFly(el, Kit.bodyPoint(e), lanternAt(sp), 10, 0.3, j, Opt.empty());
                     }
+                    // 사슬이 감겨 4틱 동안 내 쪽으로 끌려옴 (내 앞 1.6칸에서 멈춤)
+                    JobKit.reel(sp, e, sp::position, pull, 4, 1.6 + Kit.bodyPad(e), life);
                 });
             });
         }

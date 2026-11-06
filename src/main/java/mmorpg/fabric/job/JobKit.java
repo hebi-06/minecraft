@@ -180,6 +180,32 @@ public final class JobKit {
         return Kit.hasFamily(e, "rpg_boss") || Kit.hasFamily(e, "rpg_boss_prop");
     }
 
+    /**
+     * 0.51.0 적을 끌어옴 (밀 수 있는 적만 · 수평): ticks 틱 동안 틱마다 to 쪽으로 dist / ticks 칸씩 — to 에서 stop 칸 앞에서 멈춤 · 막히면 그 틱은 그대로.
+     * 속도로 끌면 이어지는 움찔 (JobImpact — 반대쪽 밀치기) 이 덮어쓰고 AI 를 끈 몹은 움직이지 않아서 (CI 42162246010: 끌려온 거리 0), 사슬 · 낫으로
+     * 끌어오는 스킬은 자리를 직접 옮김 (스톰랜서 드릴 · 아크메이지 소용돌이와 같은 길). to 는 틱마다 다시 읽음 (쓴 사람을 따라감)
+     */
+    public static void reel(ServerPlayer sp, LivingEntity e, java.util.function.Supplier<net.minecraft.world.phys.Vec3> to, double dist, int ticks, double stop,
+            String life) {
+        if (e == null || !pushable(e) || !(dist > 0)) return;
+        int n = Math.max(1, ticks);
+        double step = dist / n;
+        for (int t = 1; t <= n; t++) {
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life) || !e.isAlive() || e.isRemoved()) return;
+                net.minecraft.world.phys.Vec3 p = e.position();
+                net.minecraft.world.phys.Vec3 c = to.get();
+                double dx = c.x - p.x;
+                double dz = c.z - p.z;
+                double l = Math.hypot(dx, dz);
+                double s = Math.min(step, l - stop);
+                if (s <= 0.01) return;
+                Kit.moveTo(e, new net.minecraft.world.phys.Vec3(p.x + dx / l * s, p.y, p.z + dz / l * s));
+                e.resetFallDistance();
+            });
+        }
+    }
+
     /** 밀고 갈 수 있는 적 (보스 · 허수아비 · 플레이어 · 밀치기 저항이 큰 것은 아님) */
     public static boolean pushable(LivingEntity e) {
         if (e instanceof net.minecraft.world.entity.player.Player || isBoss(e) || Kit.hasFamily(e, "rpg_dummy")) return false;

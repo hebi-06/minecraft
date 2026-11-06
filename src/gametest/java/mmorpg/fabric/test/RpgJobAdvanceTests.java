@@ -2653,6 +2653,10 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(!mob[0].isAlive(), "executed by the stroke");
             h.assertTrue(JobRecast.pending(sp, "executioner_ult") && JobSkills.cooldownLeft(sp, "executioner_ult") == 0, "kill → recast window");
             mob[0].discard();
+        }));
+        // 다시 쓰기는 창이 열리고 6틱 뒤부터 (JobRecast.MIN_GAP — 12 에 쓰러뜨림 → 13 에 열림) · 첫 시전의 둘째 획 (22) 이 지난 뒤에 새 과녁 (CI 42162246010: 16 에 눌러 막혔음)
+        steps.add(new RpgJobTests.Step(10, () -> {
+            h.assertTrue(JobRecast.ready(sp, "executioner_ult"), "recast ready");
             home(h, sp);
             z.add(dummy(h, 0, 5.0));
             RpgJobTests.clearStrays(h, z.get(0));
