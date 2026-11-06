@@ -45,13 +45,16 @@ public final class AddonParticle extends SingleQuadParticle {
      * 겹친 두 장 (움직이면 자리가 조금 다름) 이 깊이 싸움으로 줄무늬가 지던 것을 막음. -1 = 아님
      */
     private final long soloKey;
-    /**
-     * 2026-11-06 solo 넘김: 이 그림이 나올 때 살아 있던 같은 (주인 · 번호) 의 앞 그림 — 이 그림의 첫 틱 (나이 0) 동안은 앞 그림이 보이는 한 이 그림을 그리지 않음
-     * (첫 틱 뒤에 앞 그림이 숨음 — replaced). 나이 0 의 그림은 움직이지 않은 채 페이드인으로 비쳐 보여, 한 틱 더 나아간 자리에서 몸을 따라 움직이는 앞 그림과 두
-     * 겹으로 보였음 (영상 — 피닉스 디센트의 도는 불사조 · 윙 커버 날개). 첫 틱이 지나면 놓음
-     */
-    private AddonParticle prev;
     private static final java.util.Map<Long, AddonParticle> SOLO = new java.util.HashMap<>();
+    /**
+     * 2026-11-06 solo 넘김: (주인 · 번호) 마다 첫 틱을 지난 그림 가운데 가장 새 것 — 이보다 앞 그림은 숨기고 (replaced) 이보다 새 그림은 첫 틱 (나이 0) 동안 그리지
+     * 않음 (waiting). 매 틱 다시 그리면 가장 새 그림 (나이 0) 만 보고 숨기던 앞 규칙으로는 나이 1 · 2 그림이 함께 보였고, 나이 0 그림은 움직이지 않은 채 페이드인으로
+     * 비쳐 보여 몸을 따라 움직이는 앞 그림과 두 겹이었음 (영상 — 피닉스 디센트의 도는 불사조 · 윙 커버 날개)
+     */
+    private static final java.util.Map<Long, AddonParticle> SHOWN = new java.util.HashMap<>();
+    private static long serials;
+    /** 만든 차례 (solo — 새 그림이 큼) */
+    private final long serial = ++serials;
 
     /** 시험 (사진첩 로그): solo 표 — 주인:번호 → 살아 있는지 · 나이 / 수명 (틱) · 그림 */
     public static String soloDebug() {
@@ -79,11 +82,7 @@ public final class AddonParticle extends SingleQuadParticle {
         this.owner = (view == 0 && solo <= 0) || AddonParticles.OWNER_HI < 0 || AddonParticles.OWNER_LO < 0 ? -1
                 : ((int) Math.round(v[AddonParticles.OWNER_HI]) << 16) | ((int) Math.round(v[AddonParticles.OWNER_LO]) & 0xFFFF);
         this.soloKey = solo > 0 && owner >= 0 ? ((long) owner << 20) | (solo & 0xFFFFF) : -1;
-        if (soloKey >= 0) {
-            AddonParticle before = SOLO.get(soloKey);
-            if (before != null && before != this && before.isAlive()) this.prev = before;
-            SOLO.put(soloKey, this);
-        }
+        if (soloKey >= 0) SOLO.put(soloKey, this);
         // 자리 · 방향 (발생기 모양)
         double ox = 0;
         double oy = 0;
@@ -209,17 +208,21 @@ public final class AddonParticle extends SingleQuadParticle {
             this.remove(); // 같은 (주인 · 번호) 의 새 그림이 나와 한 틱 지남
             return;
         }
-        this.prev = null; // 첫 틱이 지남 — 앞 그림은 이제 숨음 (replaced)
         if (this.age++ >= this.lifetime) {
             this.remove();
-            if (soloKey >= 0) SOLO.remove(soloKey, this);
+            forget();
             return;
         }
         double t = this.age / 20.0;
         if (t >= life) {
             this.remove();
-            if (soloKey >= 0) SOLO.remove(soloKey, this);
+            forget();
             return;
+        }
+        if (soloKey >= 0) {
+            // 첫 틱을 지남 → 보이는 그림 (더 새 그림이 먼저 올라 있지 않으면)
+            AddonParticle s = SHOWN.get(soloKey);
+            if (s == null || s == this || !s.isAlive() || s.serial < this.serial) SHOWN.put(soloKey, this);
         }
         v[AddonParticles.AGE] = t;
         v[AddonParticles.EAGE] = emitterAge0 + t;
@@ -347,18 +350,25 @@ public final class AddonParticle extends SingleQuadParticle {
      */
     private boolean replaced() {
         if (soloKey < 0) return false;
-        AddonParticle cur = SOLO.get(soloKey);
-        return cur != null && cur != this && cur.isAlive() && cur.age >= 1;
+        AddonParticle s = SHOWN.get(soloKey);
+        return s != null && s != this && s.isAlive() && s.serial > this.serial;
     }
 
     /**
-     * 2026-11-06 solo 넘김: 이 그림의 첫 틱 (나이 0) 동안 앞 그림이 아직 보이면 이 그림은 그리지 않음 — 앞 그림이 이어 보이고, 첫 틱 뒤에 이 그림 (몸을 따라 움직이기
-     * 시작 · 페이드인이 끝남) 으로 바뀜. 앞 그림의 수명이 먼저 끝나면 이 그림을 그대로 (빈 화면이 없게 — 황천문)
+     * 2026-11-06 solo 넘김: 이 그림의 첫 틱 (나이 0) 동안 앞 그림 (첫 틱을 지난 가장 새 것) 이 아직 보이면 이 그림은 그리지 않음 — 앞 그림이 이어 보이고, 첫 틱
+     * 뒤에 이 그림 (몸을 따라 움직이기 시작 · 페이드인이 끝남) 으로 바뀜. 앞 그림의 수명이 먼저 끝나면 이 그림을 그대로 (빈 화면이 없게 — 황천문)
      */
     private boolean waiting(float partialTick) {
-        AddonParticle p = prev;
-        if (p == null || this.age >= 1) return false;
-        return p.isAlive() && !p.replaced() && (p.age + partialTick) / 20.0 <= p.life;
+        if (soloKey < 0 || this.age >= 1) return false;
+        AddonParticle s = SHOWN.get(soloKey);
+        return s != null && s != this && s.isAlive() && s.serial < this.serial && (s.age + partialTick) / 20.0 <= s.life;
+    }
+
+    /** 다 산 그림을 solo 표에서 뺌 */
+    private void forget() {
+        if (soloKey < 0) return;
+        SOLO.remove(soloKey, this);
+        SHOWN.remove(soloKey, this);
     }
 
     /**
