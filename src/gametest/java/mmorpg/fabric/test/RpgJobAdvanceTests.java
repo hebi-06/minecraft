@@ -2157,7 +2157,8 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(JobTraits11.spears(sp, z.get(0)) == 3, "a lance basic adds a spear: " + JobTraits11.spears(sp, z.get(0)));
             h.assertTrue(JobSkills.press(sp, 3), "렌딩 게일 recast (rip)");
         }));
-        steps.add(new RpgJobTests.Step(5, () -> {
+        // 뽑음은 2틱 뒤지만 같은 틱의 평타가 남긴 무적 시간 (10틱) 뒤에 들어감 (Kit.reserveHit)
+        steps.add(new RpgJobTests.Step(12, () -> {
             double want = mark[0] + RpgJobTests.expected(sp, j, j.skill(3), 2.175 * 3);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "렌딩 게일 (평타 + 창 셋) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits11.spears(sp, z.get(0)) == 0 && !JobTraits11.rendOn(sp), "spears ripped out · rend closed");

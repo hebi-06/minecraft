@@ -475,7 +475,9 @@ final class DragoonSkills {
             for (LivingEntity e : Kit.around(sp, sp.position(), range, 4)) {
                 Vec3 d = V.sub(e.position(), sp.position());
                 double h = Math.hypot(d.x, d.z);
-                if (h > 1.2 && (d.x * ff.x + d.z * ff.z) / h < cosHalf) continue;
+                double ahead = d.x * ff.x + d.z * ff.z;
+                // 부채꼴 안 (1.2칸 안은 몸 앞 반쪽 — 등 뒤의 적은 불길이 머리 위로 지나감)
+                if (h > 1.2 ? ahead / h < cosHalf : ahead < 0) continue;
                 JobKit.strike(sp, e, j, P, k.num("breath", 17.4), false, false, life, (int) Math.round(h / range * 6), x -> {
                     JobImpact.hit(sp, e, j, 1.6);
                     if (e.level() instanceof ServerLevel el) JobFx.fire(el, Kit.bodyPoint(e), 0.9 + Kit.bodyPad(e) * 0.4, 0.5, Opt.of("vel", RuneKit.entVel(e)), FIRE_GLOW,
