@@ -200,24 +200,25 @@ final class DarkknightSkills {
         LivingEntity target = e;
         Vec3 to = land;
         RpgCombat.setSteadfast(sp, biteAt + 3);
-        if (V.hdist(to, c0) > 0.4) JobMove.run(sp, JobMove.hold(0, 1), JobMove.to(1, biteAt, JobMove.at(to), JobMove.IN));
+        boolean moves = V.hdist(to, c0) > 0.4;
+        if (moves) JobMove.run(sp, JobMove.hold(0, 1), JobMove.to(1, biteAt, JobMove.at(to), JobMove.IN));
         if (target != null) JobFx.target(level0, RuneKit.overHead(target, 0.6), 0.45 + Kit.bodyPad(target) * 0.2, j, V.scale(dir, -1), 0, biteAt / 20.0 + 0.1, Opt.of(
                 "vel", RuneKit.entVel(target)));
         JobFx.smoke(level0, V.up(c0, 0.6), 1.0, VOID, BLOOD, 0.6, Opt.of("alpha", 0.6, "dir", V.UP, "speed", 0.5));
         SkillFx.play(level0, "entity.wolf.growl", c0, 0.6, 1.0);
         SkillFx.play(level0, "entity.ravager.step", c0, 0.7, 0.8);
-        // 뛰어듦: 앞세운 아가리 (매 틱 다시 그림 — 벌어짐) · 지나간 자리의 검붉은 줄 · 연기 (2틱마다). 몸을 따라감: JobMove 는 자리를 옮겨 놓아 몸의 속도가 0 — 지난 틱에
-        // 옮긴 만큼을 속도로, 벌어짐은 이어지게 (phase)
+        // 뛰어듦: 앞세운 아가리 (매 틱 다시 그림 — 벌어짐) · 지나간 자리의 검붉은 줄 · 연기 (2틱마다). 몸을 따라감: JobMove 는 자리를 옮겨 놓아 몸의 속도가 0 — 뛰어드는
+        // 길 (1 → biteAt 틱 · 빨라짐 IN) 에서 다음 틱까지 옮길 만큼을 속도로, 벌어짐은 이어지게 (phase)
         Vec3[] last = {c0};
-        Vec3[] prev = {c0};
+        int span = Math.max(1, biteAt - 1);
         for (int t = 1; t < biteAt; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 p = sp.position();
-                Vec3 vel = V.scale(V.sub(p, prev[0]), 20);
-                prev[0] = p;
+                Vec3 vel = moves ? V.scale(V.sub(to, c0), 20 * (JobMove.ease(tt / (double) span, JobMove.IN) - JobMove.ease((tt - 1) / (double) span, JobMove.IN)))
+                        : V.ZERO;
                 JobFx15.dmaw(lv, shieldFront(sp, 1.1), 0.9, 1, 2, 0.12, true, Opt.of("solo", MAW_SOLO, "owner", (double) sp.getId(), "vel", vel, "fade", 0.0, "fps",
                         12.0, "phase", (tt * 12 / 20.0) % 2, "view", 1.0), VOID, BLOOD);
                 if (tt % 2 == 0) return;

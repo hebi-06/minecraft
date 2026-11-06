@@ -35,7 +35,7 @@ final class PhoenixSkills {
     static final double SWEEP_SOLO = 95.0;
     static final double BIRD_SOLO = 97.0;
     /** 디센트의 불사조: 가슴 높이 (불기둥 밑에서) · 날개 끝 사이 (칸) */
-    static final double BIRD_UP = 8.0;
+    static final double BIRD_UP = 7.5;
     static final double BIRD_SPAN = 10.5;
 
     static void register() {
@@ -152,7 +152,8 @@ final class PhoenixSkills {
         if (land == null) land = c0;
         Vec3 to = land;
         boolean moving = !Status.isRooted(sp) && !Kit.ridingAny(sp) && V.hdist(to, c0) > 0.4;
-        if (moving) JobMove.run(sp, JobMove.hop(0, glide, JobMove.at(to), JobMove.hopPeak(sp, c0, to, 1.3)));
+        double peak = moving ? JobMove.hopPeak(sp, c0, to, 1.3) : 0;
+        if (moving) JobMove.run(sp, JobMove.hop(0, glide, JobMove.at(to), peak));
         RpgCombat.setSteadfast(sp, glide + 2);
         Kit.noFall(sp, glide + 20);
         // 날아오름: 등의 불꽃 날개 (매 틱 다시 그림 — 날갯짓) · 발밑 푸른 고리 · 지나간 자리의 불꽃 깃털
@@ -161,17 +162,16 @@ final class PhoenixSkills {
         SkillFx.play(level0, "entity.ender_dragon.flap", c0, 1.3, 0.8);
         SkillFx.play(level0, "item.firecharge.use", c0, 1.1, 0.5);
         Vec3[] last = {c0};
-        Vec3[] prev = {c0};
         for (int t = 0; t < glide; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 p = sp.position();
-                // 몸을 따라감: JobMove 는 자리를 옮겨 놓아 몸의 속도 (bodyVel) 가 0 — 지난 틱에 옮긴 만큼 (위아래 포함) 을 속도로, 날갯짓은 이어지게 (phase). 2026-11-06 영상
-                // 검토: 2틱마다 몸의 속도로 그리니 앞 그림이 처진 자리에 남아 날개가 둘로 보였음
-                Vec3 vel = V.scale(V.sub(p, prev[0]), 20);
-                prev[0] = p;
+                // 몸을 따라감: JobMove 는 자리를 옮겨 놓아 몸의 속도 (bodyVel) 가 0 — 날아드는 길 (도약 포물선) 에서 다음 틱까지 옮길 만큼 (위아래 포함) 을 속도로, 날갯짓은
+                // 이어지게 (phase). 2026-11-06 영상 검토: 2틱마다 몸의 속도로 그리니 앞 그림이 처진 자리에 남아 날개가 둘로 보였음
+                Vec3 vel = moving ? V.scale(V.sub(RuneKit.leapPoint(c0, to, peak, Math.min(1.0, (tt + 1) / (double) glide)), RuneKit.leapPoint(c0, to, peak, tt
+                        / (double) glide)), 20) : V.ZERO;
                 JobFx15.fwings(lv, back(sp), 3.4, tt == 0 ? 1 : 2, tt == 0 ? 1 : 4, 0.2, tt != 0, JobFx.hide1p(sp).with("vel", vel, "solo", WING_SOLO, "fade", 0.05,
                         "fps", 16.0, "phase", (tt * 16 / 20.0) % 4), AZURE, AZURE_CORE);
                 if (tt % 2 != 0) return;
@@ -368,6 +368,12 @@ final class PhoenixSkills {
 
     // ------------------------------------------------------------ 피닉스 디센트
 
+    /** 디센트의 불사조가 도는 자리: 불기둥 밑 base 위 반지름 3칸 · 가슴 높이 BIRD_UP (± 0.6 오르내림) — u 0 ~ 1 이 한 바퀴 (뒤에서 시작) */
+    private static Vec3 circlePoint(Vec3 base, Vec3 f0, double u) {
+        double a = u * Math.PI * 2 + Math.atan2(f0.z, f0.x) + Math.PI;
+        return V.up(V.add(base, new Vec3(Math.cos(a), 0, Math.sin(a)), 3.0), BIRD_UP + Math.sin(u * Math.PI * 2) * 0.6);
+    }
+
     /** 디센트의 불사조가 내리꽂힐 자리 (겨눈 적 — 살아 있으면 지금 자리 · 아니면 정해 둔 땅) */
     private static Vec3 diveSpot(ServerLevel lv, LivingEntity target, Vec3 fixed) {
         if (target != null && target.isAlive() && !target.isRemoved() && target.level() == lv) return ThunderlordSkills.ground(lv, target.position());
@@ -445,7 +451,7 @@ final class PhoenixSkills {
             }
         });
         // 깨어남: 불기둥 꼭대기에 불사조가 생겨남 → 날개를 활짝 (울음). 2026-11-06 영상 검토: 가슴 높이 9.5칸 · 날개 끝 12칸 · 반지름 3.5칸으로 돌면 카메라 쪽으로 올 때
-        // 볏 · 날개가 화면 위로 잘렸음 → 8칸 · 10.5칸 · 3칸
+        // 볏 · 날개가 화면 위로 잘렸음 → 7.5칸 · 10.5칸 · 3칸 (영상 2: 8칸도 가장 가까울 때 볏이 잘림)
         int wake = pillarAt + 3;
         int circleFrom = pillarAt + 8;
         int diveFrom = diveAt - 6;
@@ -460,21 +466,18 @@ final class PhoenixSkills {
             SkillFx.play(lv, "entity.ender_dragon.growl", top, 1.6, 0.8);
             SkillFx.play(lv, "entity.ender_dragon.flap", top, 1.0, 1.0);
         });
-        // 하늘을 돎: 불기둥 위 반지름 3칸 (2틱마다 다시 그림 — 날갯짓은 이어지게 (phase) · 떨어지는 불꽃 깃털)
-        for (int t = circleFrom; t < diveFrom; t += 2) {
+        // 하늘을 돎: 불기둥 위 반지름 3칸 (매 틱 다시 그림 — 다음 틱 자리까지의 속도 · 날갯짓은 이어지게 (phase) · 떨어지는 불꽃 깃털). 2026-11-06 영상 검토: 2틱마다
+        // 접선 속도로 그리니 앞 그림이 원에서 벗어나 불사조가 두 겹으로 보였음
+        for (int t = circleFrom; t < diveFrom; t++) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life) || base[0] == null) return;
                 ServerLevel lv = sp.level();
-                double u = (tt - circleFrom) / (double) Math.max(1, diveFrom - circleFrom);
-                double a = u * Math.PI * 2 + Math.atan2(f0.z, f0.x) + Math.PI;
-                double rr = 3.0;
-                Vec3 p = V.up(V.add(base[0], new Vec3(Math.cos(a), 0, Math.sin(a)), rr), BIRD_UP + Math.sin(u * Math.PI * 2) * 0.6);
-                double w = Math.PI * 2 / ((diveFrom - circleFrom) / 20.0);
-                Vec3 tan = new Vec3(-Math.sin(a) * rr * w, 0, Math.cos(a) * rr * w);
+                Vec3 p = circlePoint(base[0], f0, (tt - circleFrom) / (double) Math.max(1, diveFrom - circleFrom));
+                Vec3 next = circlePoint(base[0], f0, (tt + 1 - circleFrom) / (double) Math.max(1, diveFrom - circleFrom));
                 bird[0] = p;
-                JobFx15.phoenix(lv, p, BIRD_SPAN, 2, 3, 0.25, true, Opt.of("vel", tan, "solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade", 0.05, "fps", 10.0,
-                        "phase", ((tt - circleFrom) * 10 / 20.0) % 3), AZURE, AZURE_CORE);
+                JobFx15.phoenix(lv, p, BIRD_SPAN, 2, 3, 0.2, true, Opt.of("vel", V.scale(V.sub(next, p), 20), "solo", BIRD_SOLO, "owner", (double) sp.getId(), "fade",
+                        0.05, "fps", 10.0, "phase", ((tt - circleFrom) * 10 / 20.0) % 3), AZURE, AZURE_CORE);
                 if ((tt - circleFrom) % 4 == 0) JobFx.feathers(lv, V.up(p, -1.0), 3, 2.5, 0.42, j, 1.4, Opt.empty());
                 if ((tt - circleFrom) % 8 == 0) SkillFx.play(lv, "entity.ender_dragon.flap", p, 1.4, 0.9);
             });

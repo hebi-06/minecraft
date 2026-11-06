@@ -45,6 +45,8 @@ public final class AddonParticle extends SingleQuadParticle {
      * 겹친 두 장 (움직이면 자리가 조금 다름) 이 깊이 싸움으로 줄무늬가 지던 것을 막음. -1 = 아님
      */
     private final long soloKey;
+    /** 만든 때의 세계 시각 (solo 넘김 — 그 뒤 틱이 지났으면 엔진에 들어온 것) */
+    private final long born;
     private static final java.util.Map<Long, AddonParticle> SOLO = new java.util.HashMap<>();
 
     /** 시험 (사진첩 로그): solo 표 — 주인:번호 → 살아 있는지 · 나이 / 수명 (틱) · 그림 */
@@ -74,6 +76,7 @@ public final class AddonParticle extends SingleQuadParticle {
                 : ((int) Math.round(v[AddonParticles.OWNER_HI]) << 16) | ((int) Math.round(v[AddonParticles.OWNER_LO]) & 0xFFFF);
         this.soloKey = solo > 0 && owner >= 0 ? ((long) owner << 20) | (solo & 0xFFFFF) : -1;
         if (soloKey >= 0) SOLO.put(soloKey, this);
+        this.born = level.getGameTime();
         // 자리 · 방향 (발생기 모양)
         double ox = 0;
         double oy = 0;
@@ -272,7 +275,7 @@ public final class AddonParticle extends SingleQuadParticle {
         float cr = clamp01(d.color[0].eval(v));
         float cg = clamp01(d.color[1].eval(v));
         float cb = clamp01(d.color[2].eval(v));
-        float ca = clamp01(d.color[3].eval(v));
+        float ca = clamp01(d.color[3].eval(v)) * handoff(partialTick);
         if (ca <= 0.003F) return;
         // UV (애드온 그림 픽셀 → 아틀라스)
         double u;
@@ -334,9 +337,23 @@ public final class AddonParticle extends SingleQuadParticle {
      * 처음 0.05초 페이드인 — 알파 0 에서 시작) 에는 앞 그림을 그대로 그림: 바로 숨기면 그 한 화면에 문 · 그림자가 비었음 (사진첩 — 황천문 1인칭 34 · 40틱)
      */
     private boolean replaced() {
+        // (아래 handoff 와 함께 — 새 그림이 첫 틱을 지나면 앞 그림은 숨기고 다음 틱에 지움)
         if (soloKey < 0) return false;
         AddonParticle cur = SOLO.get(soloKey);
         return cur != null && cur != this && cur.isAlive() && cur.age >= 1;
+    }
+
+    /**
+     * 2026-11-06 solo 넘김: 같은 (주인 · 번호) 의 새 그림이 엔진에 들어와 첫 틱을 기다리는 동안 (나이 0 — 그 그림은 0.05초 페이드인이라 알파 = partialTick) 이 그림의
+     * 알파 몫 = 1 − partialTick (서서히 넘겨줌). 앞 그림을 그 틱 끝까지 그대로 두면 움직이는 그림 (도는 불사조 · 날아드는 날개 — 앞 그림은 한 틱 더 나아가 있음) 이
+     * 두 겹으로 보였고 (영상 — 피닉스 디센트 · 윙 커버), 바로 숨기면 그 화면이 비었음 (황천문 — replaced). 새 그림이 아직 엔진 밖 (이 틱의 입자 틱 뒤에 만들어짐 —
+     * 세계 시각이 그대로) 이면 그대로
+     */
+    private float handoff(float partialTick) {
+        if (soloKey < 0) return 1F;
+        AddonParticle cur = SOLO.get(soloKey);
+        if (cur == null || cur == this || !cur.isAlive() || cur.age >= 1 || this.level.getGameTime() <= cur.born) return 1F;
+        return 1F - clamp01(partialTick);
     }
 
     /**

@@ -919,11 +919,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /**
      * 2026-11-06 영상 카메라 (거리 · 높이 · 보는 높이 · 따라가는 몫 — 없으면 RpgFilm 처음 값): 피닉스 가드 · 다크 나이트의 앞으로 움직이는 스킬은 조금 멀리 · 덜 따라감, 둘레
-     * 5칸 고리는 조금 멀리, 하늘을 도는 불사조 (불기둥 9칸 · 가슴 8칸 · 날개 끝 10.5칸 — 볏이 13칸쯤) 는 멀리서 올려다봄, 땅의 거대한 아가리 (높이 약 8칸) 는 멀리 · 높이
+     * 5칸 고리는 조금 멀리, 하늘을 도는 불사조 (불기둥 9칸 · 가슴 7.5칸 · 날개 끝 10.5칸 — 볏이 13칸쯤) 는 멀리서 올려다봄, 땅의 거대한 아가리 (높이 약 8칸) 는 멀리 · 높이
      */
     private static double[] filmView(String id) {
         return switch (id) {
-            case "phoenix_ult" -> new double[] {12.5, 3.0, 6.5, 0.4};
+            case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
             case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};
             case "phoenix_wing", "darkknight_lunge" -> new double[] {7.0, 2.6, 1.3, 0.7};
