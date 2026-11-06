@@ -2807,9 +2807,11 @@ public final class RpgJobAdvanceTests {
             sp.attack(z.get(0));
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[1] * 1.5), "cloud bolt adds 50%: " + TestDummies.dealt(z.get(0)) + " vs " + mark[1] * 1.5);
             h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 2, "hammer hit under the cloud → 2 judgements: " + JobTraits4.judges(sp, z.get(0)));
-            // 맞음 (받는 피해 처리 — 시험 가짜 플레이어는 hurtServer 가 들어가지 않았음, CI 42176585569 → 다른 시험처럼 RpgHealth.onLoss)
+            // 맞음 (받는 피해 처리 — 다른 시험처럼 RpgHealth.onLoss). 썬더스텝의 보호막 (10% · 3초) 이 아직 있어 작은 피해는 보호막이 다 먹고 체력이 깎이지 않아
+            // 맞음으로 셈하지 않았음 (CI 42176585569 · 42177612016) → 보호막보다 크게
             float hp = sp.getHealth();
-            sp.setHealth(RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - 4F));
+            float raw = (float) (RpgHealth.shieldOf(sp) * 2 + 6);
+            sp.setHealth(RpgHealth.onLoss(sp, sp.damageSources().mobAttack(z.get(0)), hp, hp - raw));
         }));
         steps.add(new RpgJobTests.Step(3, () -> h.assertTrue(Math.abs(RpgHealth.shieldOf(ally[0]) - RpgHealth.maxOf(ally[0]) * 0.03) < 1e-6,
                 "hit under the cloud → allies shield 3%: " + RpgHealth.shieldOf(ally[0]))));
