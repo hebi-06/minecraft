@@ -135,29 +135,41 @@ final class StormlancerSkills {
                 }
             });
         }
-        // 엇갈린 자리: 둘째 바람이 닿은 뒤부터 소용돌이가 점점 커짐 (3틱마다) → crossAt 에 터짐
+        // 엇갈린 자리: 둘째 바람이 닿은 뒤부터 소용돌이가 점점 커짐 (3틱마다) · 발밑에서 솟는 회오리 (6틱마다 — 점점 높이) → crossAt 에 터짐.
+        // 2026-11-06 영상 1: 소용돌이 0.8 → 1.8 은 6.5칸 앞 과녁 몸에 가려 거의 보이지 않았음 → 1.4 → 2.8 · 회오리 · 감겨 드는 바람 줄
         int meet = bAt + (int) Math.round(reach / speed * 20) + 1;
+        Vec3 g0 = ground(level0, V.add(sp.position(), f, reach));
         for (int t = meet; t < xAt; t += 3) {
             int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 double u = (tt - meet) / (double) Math.max(1, xAt - meet);
-                JobFx.swirlLoop(lv, fp, 0.8 + 1.0 * u, 0.2, Opt.of("alpha", 0.85, "spinRate", 720.0 + 600 * u), JobKit.glow(j), JobKit.core(j));
+                JobFx.swirlLoop(lv, fp, 1.4 + 1.4 * u, 0.2, Opt.of("alpha", 0.95, "spinRate", 720.0 + 700 * u), JobKit.glow(j), JobKit.core(j));
+                if ((tt - meet) % 6 == 0) {
+                    JobFx.twisterAt(lv, g0, 1.8 + 2.2 * u, j, 0.36, Opt.of("alpha", 0.55 + 0.35 * u));
+                    for (int q = 0; q < 3; q++) {
+                        double a = Kit.rand() * Math.PI * 2;
+                        Vec3 from = V.add(fp, new Vec3(Math.cos(a) * 2.6, (Kit.rand() - 0.4) * 1.6, Math.sin(a) * 2.6), 1.0);
+                        RuneKit.streak(lv, from, fp, JobKit.glow(j), 0.07, 0.2, 0.85, 0);
+                    }
+                }
                 if (tt == meet) {
-                    JobFx.ringFacing(lv, fp, 1.1, j, V.scale(f, -1), 0.3, Opt.of("alpha", 0.85));
+                    JobFx.ringFacing(lv, fp, 1.4, j, V.scale(f, -1), 0.3, Opt.of("alpha", 0.9));
                     SkillFx.play(lv, "entity.breeze.idle_ground", fp, 1.4, 0.6);
                 }
-                if ((tt - meet) % 6 == 0) SkillFx.sparks(lv, fp, WHITE, 3, 2.5);
+                if ((tt - meet) % 6 == 0) SkillFx.sparks(lv, fp, WHITE, 4, 3.0);
             });
         }
         RuneKit.later(xAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             double rad = k.num("radius", 1.8);
-            JobFx.swirl(lv, fp, 2.3, 0.35, Opt.of("alpha", 1.0, "spinRate", 1200.0), JobKit.glow(j), JobKit.core(j));
-            JobFx.cross(lv, fp, 1.5, j, 0.32, Opt.empty());
-            JobFx.burst(lv, fp, 1.4, j, 0.32, Opt.empty());
+            JobFx.swirl(lv, fp, 3.4, 0.4, Opt.of("alpha", 1.0, "spinRate", 1300.0), JobKit.glow(j), JobKit.core(j));
+            JobFx.twisterAt(lv, g0, 4.6, j, 0.4, Opt.of("alpha", 0.9));
+            JobFx.wind(lv, V.up(g0, 0.1), 3.2, j, 0.45, Opt.empty());
+            JobFx.cross(lv, fp, 2.0, j, 0.34, Opt.empty());
+            JobFx.burst(lv, fp, 2.0, j, 0.34, Opt.empty());
             JobFx.ringFacing(lv, fp, rad * 1.15, j, V.scale(f, -1), 0.3, Opt.of("alpha", 0.9));
             SkillFx.sparks(lv, fp, JobKit.glow(j), 12, 6.0);
             SkillFx.play(lv, "entity.breeze.wind_burst", fp, 1.0, 1.0);

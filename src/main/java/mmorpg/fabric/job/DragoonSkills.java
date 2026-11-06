@@ -31,10 +31,11 @@ final class DragoonSkills {
     private DragoonSkills() {}
 
     /** 용의 혼 (금빛 · 흰 금빛) · 용의 불 (주홍 · 금빛) · 흙먼지 */
-    static final double[] DRAGON_GLOW = {1.0, 0.62, 0.16};
-    static final double[] DRAGON_CORE = {1.0, 0.95, 0.72};
-    static final double[] FIRE_GLOW = {1.0, 0.36, 0.1};
-    static final double[] FIRE_CORE = {1.0, 0.86, 0.45};
+    // 2026-11-06 사용자 "드라군 빨간 레드 드레곤 느낌에 화염 이펙트가 좀 들어간 색이면 좋겠어": 용의 혼 = 붉은 용 (겉 진홍 · 심지 불꽃 주황), 불 = 주홍 · 노란 심지
+    static final double[] DRAGON_GLOW = {0.95, 0.14, 0.06};
+    static final double[] DRAGON_CORE = {1.0, 0.66, 0.24};
+    static final double[] FIRE_GLOW = {1.0, 0.3, 0.05};
+    static final double[] FIRE_CORE = {1.0, 0.84, 0.36};
     private static final double[] DUST = {0.62, 0.55, 0.45};
 
     static void register() {
@@ -194,6 +195,15 @@ final class DragoonSkills {
             double mult = k.num("slam", 4.35) * JobTraits11.heightMult(sp, j, peak[0]);
             plungeFx(sp, j, g, sr, 1.0);
             JobFx.slash(sp, j, 1.8, 0.4, 2.0, 90.0, 0.22);
+            // 꽂힌 자리 둘레로 번지는 불길 (붉은 용 — 불꽃 덩이 여섯 · 땅불)
+            for (int q = 0; q < 6; q++) {
+                double a = Math.toRadians(q * 60 + 15);
+                Vec3 p = ground(lv, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), sr * 0.7));
+                RuneKit.later(q % 3, () -> {
+                    JobFx.flame(lv, p, 0.6, 0.6, Opt.empty(), FIRE_GLOW, FIRE_CORE);
+                    JobFx.fire(lv, V.up(p, 0.7), 0.6, 0.45, Opt.of("vel", new Vec3(0, 1.6, 0)), FIRE_GLOW, FIRE_CORE);
+                });
+            }
             for (LivingEntity e : Kit.around(sp, g, sr, 3.5)) {
                 JobKit.strike(sp, e, j, P, mult, false, false, life, 0, d -> JobImpact.hit(sp, e, j, 1.4));
             }
@@ -245,7 +255,7 @@ final class DragoonSkills {
                 if (!life.equals(JUMPS.get(sp.getUUID())) || !RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
                 Vec3 f = Kit.facingOf(sp);
-                JobFx.dragon(lv, V.up(V.add(sp.position(), f, -0.7), 1.3), 1.7, tt == rise - 2 ? 0 : 2, tt == rise - 2 ? 2 : 4, 0.22, tt != rise - 2,
+                JobFx.dragon(lv, V.up(V.add(sp.position(), f, 0.5), 1.2), 1.7, tt == rise - 2 ? 0 : 2, tt == rise - 2 ? 2 : 4, 0.22, tt != rise - 2,
                         JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.8, "solo", 70.0), DRAGON_GLOW, DRAGON_CORE);
                 Vec3 d = aimSpot(sp, k.num("range", 10), k.num("fallback", 3), 12);
                 JobFx.ring(lv, V.up(d, 0.1), k.num("radius", 3.5), j, (tt / 4) % 2 == 0, 0.22, Opt.of("alpha", 0.7));
@@ -341,8 +351,9 @@ final class DragoonSkills {
         Vec3 land = ground(level0, V.add(c0, f, RuneKit.dashDistance(sp, f, k.num("ahead", 2.5), 0.3, 1.5)));
         Vec3[] at = {null};
         if (carry) {
-            Vec3 top = V.up(V.add(c0, f, 1.0), liftH);
-            int upEnd = slamAt - 4;
+            Vec3 top = V.up(V.add(c0, f, 1.1), Math.max(1.5, liftH - 0.9));
+            int upEnd = slamAt - 6;
+            int downEnd = slamAt - 2;
             Vec3[] start = {null};
             for (int t = skewerAt + 1; t <= slamAt; t++) {
                 int tt = t;
@@ -356,16 +367,18 @@ final class DragoonSkills {
                         Vec3 a = V.lerp(start[0], ctl, u);
                         Vec3 b2 = V.lerp(ctl, top, u);
                         p = V.lerp(a, b2, u);
-                    } else {
-                        double u = (tt - upEnd) / (double) Math.max(1, slamAt - upEnd);
+                    } else if (tt <= downEnd) {
+                        double u = (tt - upEnd) / (double) Math.max(1, downEnd - upEnd);
                         p = V.lerp(top, land, u * u);
+                    } else {
+                        p = land;
                     }
                     if (Kit.moveTo(e, p)) at[0] = p;
                     e.resetFallDistance();
                     if (tt % 2 == 0) {
                         ServerLevel lv = sp.level();
                         JobFx.fire(lv, Kit.bodyPoint(e), 0.45 + Kit.bodyPad(e) * 0.3, 0.3, Opt.of("vel", RuneKit.entVel(e)), FIRE_GLOW, FIRE_CORE);
-                        if (tt == upEnd - 1) {
+                        if (tt == upEnd) {
                             JobFx.glint(lv, Kit.bodyPoint(e), 0.9, DRAGON_GLOW, DRAGON_CORE, 0.25, Opt.empty());
                             SkillFx.play(lv, "entity.ender_dragon.growl", sp.position(), 1.3, 0.6);
                         }
@@ -413,7 +426,7 @@ final class DragoonSkills {
         double cone = k.num("cone", 70);
         Vec3 c0 = sp.position();
         Vec3 f = Kit.facingOf(sp);
-        Vec3 mouth = V.up(V.add(c0, f, -0.4), 3.6);
+        Vec3 mouth = V.up(V.add(c0, f, 0.9), 3.3);
         RpgCombat.setSteadfast(sp, breathAt + 8);
         sp.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, breathAt + 6, 3, false, false));
         // 창을 꽂음: 발밑 불꽃 고리 · 땅 고리
@@ -421,10 +434,10 @@ final class DragoonSkills {
         SkillFx.play(level0, "item.trident.hit_ground", c0, 0.8, 0.9);
         SkillFx.play(level0, "entity.ender_dragon.growl", c0, 0.9, 0.7);
         // 용의 혼: 생겨남 (0 · 1) → 날갯짓 → breathAt 에 포효
-        Vec3 dragonAt = V.up(V.add(c0, f, -0.9), 2.3);
-        JobFx.dragon(level0, dragonAt, 2.6, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
+        Vec3 dragonAt = V.up(V.add(c0, f, 0.7), 1.7);
+        JobFx.dragon(level0, dragonAt, 2.1, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
         RuneKit.later(6, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.dragon(sp.level(), dragonAt, 2.6, 2, 4, (breathAt - 6) / 20.0, true, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW,
+            if (RuneKit.sameLife(sp, life)) JobFx.dragon(sp.level(), dragonAt, 2.1, 2, 4, (breathAt - 6) / 20.0, true, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW,
                     DRAGON_CORE);
         });
         // 숨을 들이켬 (2틱마다): 둘레에서 입으로 빨려 드는 불티 · 커지는 불빛
@@ -448,7 +461,10 @@ final class DragoonSkills {
             sp.removeEffect(MobEffects.SLOWNESS);
             ServerLevel lv = sp.level();
             Vec3 ff = Kit.facingOf(sp);
-            JobFx.dragon(lv, dragonAt, 2.7, 6, 1, 0.5, false, JobFx.hide1p(sp).with("alpha", 0.95), DRAGON_GLOW, DRAGON_CORE);
+            JobFx.dragon(lv, dragonAt, 2.2, 6, 1, 0.5, false, JobFx.hide1p(sp).with("alpha", 0.95), DRAGON_GLOW, DRAGON_CORE);
+            // 입 앞 번쩍 · 첫 불길 (토하는 순간이 보이게)
+            JobFx.burst(lv, V.add(mouth, ff, 0.8), 1.3, FIRE_GLOW, FIRE_CORE, 0.3, Opt.empty());
+            JobFx.fire(lv, V.add(mouth, ff, 1.2), 1.5, 0.4, Opt.of("vel", V.scale(V.unit(V.add(ff, new Vec3(0, -0.35, 0), 1.0)), 7.0), "grow", 1.6), FIRE_GLOW, FIRE_CORE);
             SkillFx.play(lv, "entity.ender_dragon.shoot", mouth, 0.8, 1.0);
             SkillFx.play(lv, "entity.blaze.shoot", mouth, 0.7, 0.9);
             SkillFx.play(lv, "item.firecharge.use", mouth, 0.8, 0.9);
@@ -461,7 +477,7 @@ final class DragoonSkills {
                 Vec3 end = V.up(V.add(c0, dirq, dist), 0.6 + Kit.rand() * 0.8);
                 Vec3 vel = V.scale(V.sub(end, mouth), 1 / 0.45);
                 int dl = q % 4;
-                RuneKit.later(dl, () -> JobFx.fire(lv, V.add(mouth, ff, 0.5), 0.6 + 0.5 * Kit.rand(), 0.5, Opt.of("vel", vel, "grow", 2.2, "spin", Kit.rand() * 40 - 20), FIRE_GLOW,
+                RuneKit.later(dl, () -> JobFx.fire(lv, V.add(mouth, ff, 0.6), 0.95 + 0.5 * Kit.rand(), 0.5, Opt.of("vel", vel, "grow", 1.9, "spin", Kit.rand() * 40 - 20), FIRE_GLOW,
                         FIRE_CORE));
             }
             for (int q = 0; q < 9; q++) {
@@ -520,16 +536,16 @@ final class DragoonSkills {
         Kit.noFall(sp, impactAt + 40);
         // 웅크림: 등 뒤에서 솟는 용의 혼 · 창끝 빛 · 발밑 불꽃 고리 · 낮은 포효
         JobFx.charge(sp, j, new Vec3(0.2, 1.7, 0.3), soarAt, 1.0);
-        JobFx.dragon(level0, V.up(V.add(c0, f, -1.0), 2.6), 3.0, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
+        JobFx.dragon(level0, V.up(V.add(c0, f, 0.9), 2.0), 2.8, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
         RuneKit.later(6, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.dragon(sp.level(), V.up(V.add(c0, f, -1.0), 2.6), 3.0, 5, 2, (soarAt - 6) / 20.0 + 0.05, false, JobFx.hide1p(sp)
+            if (RuneKit.sameLife(sp, life)) JobFx.dragon(sp.level(), V.up(V.add(c0, f, 0.9), 2.0), 2.8, 5, 2, (soarAt - 6) / 20.0 + 0.05, false, JobFx.hide1p(sp)
                     .with("alpha", 0.9), DRAGON_GLOW, DRAGON_CORE);
         });
         JobFx.ring(level0, V.up(c0, 0.08), 2.2, j, false, soarAt / 20.0, Opt.empty());
         SkillFx.play(level0, "entity.ender_dragon.growl", c0, 0.8, 1.0);
         // 솟구침 → 조준한 곳 위로 옮겨 감 → 떠 있음 → 내리꽂음
         Vec3[] sky = {null};
-        JobMove.run(sp, JobMove.to(soarAt, hideAt, JobMove.up(sp, k.num("height", 20)), JobMove.OUT),
+        JobMove.run(sp, JobMove.to(soarAt, hideAt, JobMove.up(sp, k.num("height", 14)), JobMove.OUT),
                 JobMove.to(hideAt, diveAt - 4, from -> {
                     sky[0] = new Vec3(dest.x, from.y, dest.z);
                     return sky[0];
@@ -561,6 +577,13 @@ final class DragoonSkills {
                 JobFx.glint(lv, V.up(dest, 0.4), 0.6 + 0.6 * u, DRAGON_GLOW, DRAGON_CORE, 0.22, Opt.empty());
                 if ((tt - hideAt) % 8 == 0) JobFx.fire(lv, V.up(dest, 0.6), 0.6 + 0.4 * u, 0.4, Opt.empty(), FIRE_GLOW, FIRE_CORE);
                 if ((tt - hideAt) % 12 == 0) SkillFx.play(lv, "entity.ender_dragon.flap", dest, 0.9, 0.8);
+                // 2026-11-06 영상 1: 하늘에 있는 동안 (1초) 화면이 빈 하늘 · 먼 땅뿐이었음 → 표식 자리를 위에서 내리비추는 불빛 기둥 · 내 앞에서 날갯짓하는 붉은 용
+                JobFx.spotlight(lv, dest, 4 + 8 * u, 0.24, Opt.of("alpha", 0.55 + 0.3 * u), FIRE_GLOW, FIRE_CORE);
+                if (tt >= hideAt && tt < diveAt) {
+                    Vec3 ff = Kit.facingOf(sp);
+                    JobFx.dragon(lv, V.up(V.add(sp.position(), ff, 2.6), 0.6), 3.0, 2, 4, 0.24, true, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp), "alpha", 0.9,
+                            "solo", 70.0), DRAGON_GLOW, DRAGON_CORE);
+                }
             });
         }
         // 내리꽂음: 거대한 금빛 용 (내리꽂는 꼴) · 불꽃 꼬리

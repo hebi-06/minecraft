@@ -550,8 +550,8 @@ public final class JobsTest {
                 && Jobs.windupTicks(dt) == 6 && Jobs.windupTicks(dj) == 15 && Jobs.windupTicks(di) == 6 && Jobs.windupTicks(db) == 14 && Jobs.windupTicks(du) == 46,
                 "windups 0 · 0 · 6 · 0 · 14 / 6 · 15 · 6 · 14 · 46");
         check(Jobs.skillLine(sc).startsWith("크로스 게일 · 6초 · 배율 ") && Jobs.skillLine(dg.skill(4)).startsWith("드래곤폴 · 60초 · 배율 "), "lancer advanced skill line");
-        check(sl.color()[0][1] > 0.95 && sl.color()[0][0] < 0.5 && sl.color()[1][2] > 0.9 && dg.color()[0][0] > 0.95 && dg.color()[0][1] > 0.7 && dg.color()[0][2] < 0.3
-                && dg.color()[1][0] > 0.6 && dg.color()[1][1] < 0.2, "colors: jade wind · white / dragon gold · crimson");
+        check(sl.color()[0][1] > 0.95 && sl.color()[0][0] < 0.5 && sl.color()[1][2] > 0.9 && dg.color()[0][0] > 0.95 && dg.color()[0][1] < 0.3 && dg.color()[0][2] < 0.2
+                && dg.color()[1][0] > 0.95 && dg.color()[1][1] > 0.5 && dg.color()[1][2] < 0.3, "colors: jade wind · white / red dragon · flame orange");
     }
 
     /**

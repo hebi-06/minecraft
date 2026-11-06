@@ -220,15 +220,18 @@ public final class JobTraits11 {
         return now;
     }
 
-    /** 박힌 바람 창 하나 (i 번째 — 몸 둘레 고르게 · 비스듬히 꽂힘) */
+    /**
+     * 박힌 바람 창 하나 (i 번째 — 몸 둘레 고르게 · 비스듬히 꽂힘). 2026-11-06 영상 1: 0.42 크기 · 몸 속 깊이 꽂힌 창이 과녁 몸에 가려 가는 줄로만 보였음 → 0.8 · 창끝만
+     * 몸에 묻히고 자루가 바깥으로 길게 · 위쪽으로 더 기울임 (3인칭 카메라에서 몸 위로 솟아 보이게)
+     */
     private static void stuck(ServerLevel level, LivingEntity e, int i, Jobs.Job j, double life) {
         double a = Math.toRadians(i * 137.5 + 20);
         double pad = Kit.bodyPad(e);
         Vec3 b = Kit.bodyPoint(e);
-        Vec3 out = new Vec3(Math.cos(a), 0.25 + 0.18 * ((i % 3) - 1), Math.sin(a));
-        Vec3 tip = V.add(V.up(b, ((i % 4) - 1.5) * 0.18 * (1 + pad)), out, 0.15 + pad * 0.3);
+        Vec3 out = new Vec3(Math.cos(a), 0.55 + 0.2 * ((i % 3) - 1), Math.sin(a));
+        Vec3 tip = V.add(V.up(b, ((i % 4) - 1.5) * 0.2 * (1 + pad)), V.unit(out), 0.1 + pad * 0.35);
         // 창끝이 몸 속 (tip) · 자루가 바깥으로 비스듬히
-        JobFx.spear(level, tip, V.scale(V.unit(out), -1), 0.42 + pad * 0.12, 0, life, j, Opt.of("vel", RuneKit.entVel(e), "fade", 0.2, "alpha", 0.9));
+        JobFx.spear(level, tip, V.scale(V.unit(out), -1), 0.8 + pad * 0.18, 0, life, j, Opt.of("vel", RuneKit.entVel(e), "fade", 0.2, "alpha", 1.0));
     }
 
     /** 박힌 바람 창을 모두 거둠 (렌딩 게일을 닫음): 적 → 수 */
@@ -282,6 +285,9 @@ public final class JobTraits11 {
                     continue;
                 }
                 for (int i = 0; i < s.getValue(); i++) stuck(sp.level(), le, i, j, 0.5);
+                // 박힌 수만큼 짙어지는 감긴 바람 (몸 둘레 — 칼리스타 E 의 창 꽂힌 표시처럼 멀리서도 보이게)
+                JobFx.swirlLoop(sp.level(), Kit.bodyPoint(le), 0.75 + 0.1 * s.getValue() + Kit.bodyPad(le) * 0.4, 0.45, Opt.of("vel", RuneKit.entVel(le), "alpha",
+                        Math.min(0.85, 0.35 + 0.07 * s.getValue())), JobKit.glow(j), JobKit.core(j));
             }
             gone.forEach(st.spears::remove);
         }

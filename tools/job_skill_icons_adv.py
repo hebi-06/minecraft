@@ -9,7 +9,7 @@
 네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕), 스나이퍼 = 밝은 연두 (첫째) · 금빛 흰 섬광 (둘째 — 짙은 숲 바탕),
 배틀 아처 = 폭풍 하늘빛 (첫째) · 번개 노랑 (둘째 — 짙은 폭풍 남청 바탕), 트릭스터 = 자홍 (첫째) · 검보라 (둘째 — 짙은 보라 바탕 · 환영은 청록 테 · 들불은 분홍),
 피에로 = 빨강 (첫째) · 크림 금빛 (둘째 — 서커스 밤 바탕 · 할리퀸 마름모 무늬 · 금방울), 스톰 랜서 = 옥빛 바람 (첫째) · 흰빛 (둘째 — 짙은 옥빛 폭풍 바탕),
-드라군 = 용의 금빛 (첫째) · 진홍 (둘째 — 짙은 남보라 밤 바탕 · 불은 주홍) — jobs.json advance."""
+드라군 = 붉은 용 진홍 (첫째) · 불꽃 주황 (둘째 — 2026-11-06 사용자 "빨간 레드 드레곤 느낌에 화염" · 짙은 숯불 밤 바탕 · 불은 주홍) — jobs.json advance."""
 import math
 import os
 import sys
@@ -2349,21 +2349,21 @@ def stormlancer_ult(A, B):
     return finish(subject, [glow(tw, A, 1.8, 1.0), glow(bl, B, 1.2, 0.8), glow(sp, A, 1.8, 1.0)], gale_back(A, B))
 
 
-# ------------------------------------------------------------ 드라군 (빛: 용의 금빛 → 진홍 — 짙은 남보라 밤 바탕 · 불은 주홍) — 2026-11-06
+# ------------------------------------------------------------ 드라군 (빛: 붉은 용 진홍 → 불꽃 주황 — 짙은 숯불 밤 바탕 · 불은 주홍) — 2026-11-06
 
-WYRM_NIGHT = (10, 6, 22)
+WYRM_NIGHT = (22, 8, 5)
 EMBER = (255, 92, 26)
 EMBER_HI = (255, 220, 120)
 
 
 def wyrm_back(A, B):
-    return backdrop(mix(B, WYRM_NIGHT, 0.82), mix((60, 30, 70), B, 0.3))
+    return backdrop(mix(A, WYRM_NIGHT, 0.86), mix((70, 22, 10), A, 0.3))
 
 
 def wyrm_spear(tail, tip, A, B, head=5.0, hw=1.9, shaft=1.3):
-    """진홍 자루 · 금빛 창날 (드라군)"""
+    """검붉은 자루 · 불꽃 창날 (드라군)"""
     sh, bl = _spear(tail, tip, head, hw, shaft)
-    return [layer(sh, mix(B, WHITE, 0.25), mix(B, (0, 0, 0), 0.45)), layer(bl, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.35), axis=(0.7, 0.7))], bl
+    return [layer(sh, mix(A, (40, 10, 6), 0.35), mix(A, (0, 0, 0), 0.6)), layer(bl, WHITE, B, WHITE, mix(A, (0, 0, 0), 0.25), axis=(0.7, 0.7))], bl
 
 
 def flame_mask(cx, base, h, w):
