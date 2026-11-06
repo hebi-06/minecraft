@@ -314,7 +314,8 @@ public final class SkillBarHud {
             float pulse = full ? 0.5F + 0.5F * (float) Math.sin(now / 140.0) : 0;
             int px = tx + 4;
             if (bar) {
-                drawRageBar(g, px, y + 1, v, max, a, b, pulse, now);
+                // 0.51.0 소울 리퍼 영혼 (최대 15 — 막대): 둘째 빛이 짙은 남청이라 막대 끝이 묻힘 → 첫째 빛 (영혼 하늘빛) 에서 흰빛 쪽으로
+                drawRageBar(g, px, y + 1, v, max, a, job.equals("soulreaper") ? lerp(a, 0xFFFFFF, 0.6F) : b, pulse, now);
             } else {
                 for (int i = 0; i < max; i++) {
                     int bx = px + i * PIP;
@@ -495,6 +496,20 @@ public final class SkillBarHud {
                             for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
                             for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
                             if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
+                        }
+                        case "executioner" -> {
+                            // 0.51.0 처형 (마지막으로 친 적의 잃은 체력 — 한 칸 10%) — 해골 (5 × 5): 찬 것은 첫째 빛 (해 질 녘 금빛) + 눈구멍에 둘째 빛 (짙은 보라), 오른쪽 아래
+                            // 1칸 그림자
+                            int c = i < v ? bright : dim;
+                            int ty = y;
+                            int[][] cells = {{1, 0}, {2, 0}, {3, 0}, {0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 1}, {0, 2}, {2, 2}, {4, 2}, {0, 3}, {1, 3}, {2, 3}, {3, 3}, {4, 3},
+                                {1, 4}, {3, 4}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (i < v) {
+                                g.fill(bx + 1, ty + 2, bx + 2, ty + 3, 0xFF000000 | b);
+                                g.fill(bx + 3, ty + 2, bx + 4, ty + 3, 0xFF000000 | b);
+                            }
                         }
                         case "dragoon" -> {
                             // 0.51.0 비상 (지금 발밑 땅에서의 높이 — 최대 6칸 · 1칸당 내리꽂기 +5%) — 겹친 날개 꺾쇠 (5 × 5, 위가 하늘): 찬 것은 첫째 빛 (용의 금빛) + 꼭대기 흰 점,

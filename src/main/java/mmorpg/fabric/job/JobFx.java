@@ -1594,6 +1594,46 @@ final class JobFx {
         cells(level, "jfire", FIRE, 0, FIRE, at, life, 0, false, o.with("size", size, "fade", o.num("fade", 0.2)), glow, core);
     }
 
+    // ------------------------------------------------------------ 0.51.0 사신 2차 그림 (2026-11-06 — 소울 리퍼 · 엑시큐셔너, tools/job_fx_art_adv.py)
+
+    /** 장 수: 영혼 등불 · 망령 단두대 날 · 처형 표식 */
+    static final int LANTERN = 8;
+    static final int GUILLOTINE = 8;
+    static final int XMARK = 8;
+    /** 처형 표식의 획 끝 반지름 (반 크기의 몫) */
+    static final double XMARK_R = 0.9;
+
+    /**
+     * 영혼 등불 (rfx_jlantern — 카메라를 봄, 위 = 매단 고리): 0 불이 붙음 · 1 ~ 4 흔들리며 타오름 (loop 면 이어 돌림 — 유리 안 영혼 불꽃 · 새어 나오는 빛) · 5 번쩍 (사슬을
+     * 던짐 — 빛살) · 6 ~ 7 꺼지며 연기. 장 from 부터 count 장, 등불 몸 가운데 at · 높이 약 size × 2 칸 (고리 포함)
+     */
+    static void lantern(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(LANTERN - 1, from));
+        int n = Math.max(1, Math.min(LANTERN - f, count));
+        cells(level, "jlantern", LANTERN, f, n, at, life, loop ? 10 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.15)), glow, core);
+    }
+
+    /**
+     * 망령 단두대 날 (rfx_jguillotine — 세워 카메라 쪽으로 돎, 아래 = 비스듬한 날): 0 ~ 1 생겨남 · 2 ~ 3 매달려 날이 번득임 (loop 면 이어 돌림) · 4 떨어짐 (위로 끌리는
+     * 잔상) · 5 내리침 (날 끝 섬광) · 6 ~ 7 보랏빛 연기로 흩어짐. 장 from 부터 count 장, 날 가운데 at · 너비 약 size × 1.5 칸 (높이 size × 2)
+     */
+    static void guillotine(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(GUILLOTINE - 1, from));
+        int n = Math.max(1, Math.min(GUILLOTINE - f, count));
+        cells(level, "jguillotine", GUILLOTINE, f, n, at, life, loop ? 8 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.15)), glow, core);
+    }
+
+    /**
+     * 처형 표식 (rfx_jxmark — 땅에 누움): 0 ~ 2 붓 획 둘이 그어지며 X 자가 번짐 · 3 ~ 5 맥동 (loop 면 이어 돌림 — 획 둘레의 금빛이 일렁임) · 6 번쩍 (벰) · 7 타 들어가
+     * 흐려짐. 획 끝 반지름 = radius 칸, o 의 spin = 땅에서 돌린 각 (도)
+     */
+    static void xmark(ServerLevel level, Vec3 center, double radius, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(XMARK - 1, from));
+        int n = Math.max(1, Math.min(XMARK - f, count));
+        cells(level, "jxmark", XMARK, f, n, V.up(center, 0.07), life, loop ? 8 : 0, loop, o.with("dir", V.UP, "size", radius / XMARK_R, "fade", o.num("fade", 0.15)),
+                glow, core);
+    }
+
     /** 땅에서 솟는 회오리 (rfx_jtwister — 세워 카메라 쪽으로 돎, 이어 돌림): 아래 끝 ground · 높이 약 height 칸 (몸에 붙지 않는 twister) */
     static void twisterAt(ServerLevel level, Vec3 ground, double height, Jobs.Job j, double life, Opt o) {
         Vec3 c = V.up(ground, height * 0.6 - 0.2);

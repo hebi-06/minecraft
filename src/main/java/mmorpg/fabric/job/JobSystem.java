@@ -88,6 +88,8 @@ public final class JobSystem {
         PierrotSkills.register(); // 0.51.0 암살자 2차 — 피에로 (재설계안 2판 — 블레이드 댄서 대신 광대 소환물 탱커)
         StormlancerSkills.register(); // 0.51.0 창술사 2차 — 스톰 랜서 (2026-11-06)
         DragoonSkills.register(); // 0.51.0 창술사 2차 — 드라군 (거리 · 연타 찌르기를 뒤집어 높이 · 내리꽂는 단타)
+        SoulreaperSkills.register(); // 0.51.0 사신 2차 — 소울 리퍼 (2026-11-06)
+        ExecutionerSkills.register(); // 0.51.0 사신 2차 — 엑시큐셔너 (많이 거두는 흡혈을 뒤집어 하나를 끝내는 처형)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);

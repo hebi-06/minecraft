@@ -224,6 +224,11 @@ public final class JobSkills {
      * (전체 틱은 그대로 — 덮개가 그만큼 걷힘). 줄인 칸 수
      */
     public static int reduceCooldowns(ServerPlayer sp, int ticks) {
+        return reduceCooldowns(sp, ticks, null);
+    }
+
+    /** 같은 것 — 스킬 except 는 빼고 (0.51.0 엑시큐셔너 원 라스트 데이: "다른 직업 스킬" 재사용 대기) */
+    public static int reduceCooldowns(ServerPlayer sp, int ticks, String except) {
         if (sp == null || ticks <= 0) return 0;
         String p = sp.getUUID() + "|";
         long now = Tasks.now();
@@ -231,8 +236,9 @@ public final class JobSkills {
         for (var it = COOLDOWNS.entrySet().iterator(); it.hasNext(); ) {
             var e = it.next();
             if (!e.getKey().startsWith(p) || e.getValue() <= now) continue;
-            long until = Math.max(now, e.getValue() - ticks);
             String id = e.getKey().substring(p.length());
+            if (id.equals(except)) continue;
+            long until = Math.max(now, e.getValue() - ticks);
             int total = TOTALS.getOrDefault(e.getKey(), (int) (e.getValue() - now));
             n++;
             if (until <= now) {

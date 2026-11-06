@@ -48,7 +48,8 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j);
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투 (상대 + 결투 × 3% · 다른 적 −40%)
         double range = JobTraits9.rangeMult(sp, e, j); // 0.51.0 배틀 아처 난사 (가까운 적 +20% · 먼 적 −30%)
-        double dmg = P * mult * veil * crit * duel * range * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double exec = JobTraits12.hitMult(sp, e, j); // 0.51.0 엑시큐셔너 처형 덤 (잃은 체력) · 선고 · 섀도 스토크
+        double dmg = P * mult * veil * crit * duel * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
@@ -70,6 +71,7 @@ public final class JobKit {
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
         JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
+        JobTraits12.afterJobHit(sp, e, j, got); // 0.51.0 소울 리퍼 영혼 (+1 · 가득이면 해방) · 엑시큐셔너 처형
         return got;
     }
 
@@ -130,7 +132,8 @@ public final class JobKit {
         double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
         double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투
         double range = JobTraits9.rangeMult(sp, e, j); // 0.51.0 배틀 아처 난사
-        double dmg = P * mult * veil * crit * duel * range * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
+        double exec = JobTraits12.hitMult(sp, e, j); // 0.51.0 엑시큐셔너 처형 덤
+        double dmg = P * mult * veil * crit * duel * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp) + counter;
         float before = e.getHealth();
         boolean bigger = big || veil > 1 || counter > 0;
         JobTraits8.beforeJobHit(sp, e, j); // 0.51.0 네크로맨서: 이 피해로 쓰러지면 망자로
@@ -152,6 +155,7 @@ public final class JobKit {
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
         JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
+        JobTraits12.afterJobHit(sp, e, j, got); // 0.51.0 소울 리퍼 영혼 (+1 · 가득이면 해방) · 엑시큐셔너 처형
         return got;
     }
 

@@ -93,6 +93,24 @@ public final class JobTraits3 {
     /** 이동 속도 수정치 (암영이 풀린 뒤 · 혼) */
     private static final Identifier VEIL_SPEED = Mmorpg.id("job_veil_speed");
     private static final Identifier SOUL_SPEED = Mmorpg.id("job_soul_speed");
+    /** 0.51.0 엑시큐셔너 원 라스트 데이 — 처형 뒤 이동 속도 (JobTraits12) */
+    private static final Identifier EXEC_SPEED = Mmorpg.id("job_exec_speed");
+
+    /** 0.51.0 엑시큐셔너 원 라스트 데이: 처형 뒤 이동 속도 + amount (0 이면 걷음) */
+    static void hasteMod(ServerPlayer sp, double amount) {
+        speedMod(sp, EXEC_SPEED, amount);
+    }
+
+    /** 0.51.0 사신 줄기 — 사신 · 소울 리퍼 (영혼 쌓임 · 이동 · 흡혈 · 처치 +3 이 같음 — 소울 리퍼는 최대 15 · 영혼 해방 JobTraits12) */
+    static boolean reaperLine(Jobs.Job j) {
+        return j != null && (j.id().equals("reaper") || j.id().equals(JobTraits12.SR));
+    }
+
+    /** 사신 줄기 직업이면 그 직업 */
+    private static Jobs.Job reaperIf(ServerPlayer sp) {
+        Jobs.Job j = JobSystem.job(sp);
+        return reaperLine(j) ? j : null;
+    }
 
     static void init() {
         // 치명타 확정: 앞의 것 (검사 섬보) 이 아니면 암영의 첫 단검 평타
@@ -500,7 +518,7 @@ public final class JobTraits3 {
     /** RpgHealth.sourceReduce: 망령 걸음 동안 1 (받지 않음), 창벽 태세 동안 정면 front° 에서 온 피해 guard */
     private static double sourceReduce(ServerPlayer sp, DamageSource src) {
         State st = STATES.get(sp.getUUID());
-        if (st != null && st.ghostUntil > Tasks.now() && jobIf(sp, "reaper") != null) return 1;
+        if (st != null && st.ghostUntil > Tasks.now() && reaperIf(sp) != null) return 1; // 0.51.0 소울 리퍼 엄브럴 트레스패스 (몸속) 도
         if (!JobTraits.stanceOn(sp, "lancer_wall")) return 0;
         Jobs.Job j = jobIf(sp, "lancer");
         Jobs.Skill k = skill(j, "lancer_wall");
@@ -553,12 +571,12 @@ public final class JobTraits3 {
     }
 
     private static void soulSpeed(ServerPlayer sp, Jobs.Job j, State st) {
-        speedMod(sp, SOUL_SPEED, j != null && j.id().equals("reaper") ? st.souls * trait(j, "speedPer", 0.01) : 0);
+        speedMod(sp, SOUL_SPEED, reaperLine(j) ? st.souls * trait(j, "speedPer", 0.01) : 0);
     }
 
     /** 혼 + n (최대 max): from 에서 혼불이 날아옴 (적이 없으면 둘레에서) */
     static void gainSouls(ServerPlayer sp, Jobs.Job j, int n, LivingEntity from) {
-        if (j == null || !j.id().equals("reaper") || n <= 0) return;
+        if (!reaperLine(j) || n <= 0) return;
         State st = of(sp);
         int max = j.trait() == null ? 10 : Math.max(1, j.trait().max());
         int before = st.souls;
@@ -592,9 +610,9 @@ public final class JobTraits3 {
     private static void leech(ServerPlayer sp, LivingEntity victim, double dealt) {
         State st = STATES.get(sp.getUUID());
         if (st == null || st.souls <= 0 || !(dealt > 0)) return;
-        Jobs.Job j = jobIf(sp, "reaper");
+        Jobs.Job j = reaperIf(sp);
         if (j == null || !sp.isAlive() || sp.getHealth() <= 0) return;
-        double got = RpgHealth.healBy(sp, dealt * st.souls * trait(j, "leechPer", 0.001));
+        double got = RpgHealth.healBy(sp, dealt * st.souls * trait(j, "leechPer", 0.001) * JobTraits12.leechMult(sp)); // 0.51.0 바운티풀 하베스트 동안 × leech
         if (got > 0) st.leechAcc += got;
     }
 
@@ -602,7 +620,7 @@ public final class JobTraits3 {
     private static void onDeath(LivingEntity e, DamageSource src) {
         shiftMarks(e);
         if (!(src.getEntity() instanceof ServerPlayer sp) || sp == e) return;
-        Jobs.Job j = jobIf(sp, "reaper");
+        Jobs.Job j = reaperIf(sp);
         if (j == null) return;
         gainSouls(sp, j, (int) trait(j, "kill", 3), e);
         if (e.level() instanceof ServerLevel level) {
@@ -670,7 +688,7 @@ public final class JobTraits3 {
 
     /** 넓게 베기 (WeaponTraits.swept): 사신 낫 평타가 옆의 적에게도 들어감 → 혼 +1 */
     private static void onSwept(ServerPlayer sp, LivingEntity e) {
-        Jobs.Job j = jobIf(sp, "reaper");
+        Jobs.Job j = reaperIf(sp);
         if (j != null) gainSouls(sp, j, 1, e);
     }
 
@@ -725,7 +743,7 @@ public final class JobTraits3 {
                     JobTraits.sendGauge(sp, false);
                 }
             }
-            case "reaper" -> {
+            case "reaper", JobTraits12.SR -> {
                 if (!"scythe".equals(w.type())) return;
                 gainSouls(sp, j, 1, victim);
                 if (JobTraits.stanceOn(sp, "reaper_avatar")) avatarSwing(sp, j);
@@ -791,7 +809,7 @@ public final class JobTraits3 {
             st.speedUntil = 0;
             speedMod(sp, VEIL_SPEED, 0);
         }
-        if (j.id().equals("reaper")) {
+        if (reaperLine(j)) {
             if (st.leechAcc >= 0.5 && now - st.leechShown >= 20) {
                 DamageNumbers.show(sp, st.leechAcc, DamageNumbers.Style.HEAL, "", 0);
                 st.leechAcc = 0;
@@ -800,7 +818,7 @@ public final class JobTraits3 {
             // 혼불이 몸 둘레를 돎 (3인칭 · 다른 사람 — 8틱마다)
             if (now % 8 == 0 && st.souls > 0 && !sp.isSpectator()) {
                 ServerLevel level = sp.level();
-                int n = Math.min(st.souls, 10);
+                int n = Math.min(st.souls, 15);
                 double a0 = now * 0.12;
                 for (int i = 0; i < n; i++) {
                     double a = a0 + i * Math.PI * 2 / n;
@@ -872,7 +890,7 @@ public final class JobTraits3 {
                 yield e == null || e.isRemoved() || !e.isAlive() ? 0 : marks(sp, e);
             }
             case "lancer" -> st.momentumUntil > Tasks.now() ? 1 : 0;
-            case "reaper" -> st.souls;
+            case "reaper", JobTraits12.SR -> st.souls;
             default -> 0;
         };
     }
