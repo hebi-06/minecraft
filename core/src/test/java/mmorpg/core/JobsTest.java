@@ -390,13 +390,13 @@ public final class JobsTest {
         Jobs.Job wa = Jobs.job("warrior");
         Jobs.Job wl = Jobs.job("warlord");
         Jobs.Job gl = Jobs.job("gladiator");
-        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 18 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
+        check(sm != null && bk != null && wl != null && gl != null && Jobs.allAdvanced().size() == 20 && Jobs.job("lycan") == null, "advanced jobs " + Jobs.allAdvanced().size());
         if (sm == null || bk == null || wl == null || gl == null) return;
         check(Jobs.advanceLevel() == 50 && near(Jobs.switchSilver(), 600) && near(Jobs.advanceDps(), 1.2), "advance rules (50렙 · 은화 600 · ×1.2)");
         check(Jobs.advancedOf("swordsman").equals(List.of(sm, bk)) && Jobs.advancedOf("warrior").equals(List.of(wl, gl)) && Jobs.advancedOf("spellblade").size() == 2
                 && Jobs.advancedOf("mage").size() == 2 && Jobs.advancedOf("archer").size() == 2 && Jobs.advancedOf("assassin").size() == 2
                 && Jobs.advancedOf("lancer").size() == 2 && Jobs.advancedOf("reaper").size() == 2 && Jobs.advancedOf("paladin").size() == 2
-                && Jobs.advancedOf("priest").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 사제부터는 아직)");
+                && Jobs.advancedOf("priest").size() == 2 && Jobs.advancedOf("guardian").isEmpty() && Jobs.advancedOf("nope").isEmpty(), "advancedOf (각성 · 반전 순서 — 수호기사는 아직)");
         check(Jobs.advance("warrior", "awaken") == wl && Jobs.advance("warrior", "invert") == gl && Jobs.baseOf(wl) == wa && Jobs.baseOf(gl) == wa, "warrior advance");
         check(wl.display().equals("워로드") && gl.display().equals("글래디에이터") && "awaken".equals(wl.path()) && "invert".equals(gl.path()),
                 "warrior display");
@@ -433,7 +433,8 @@ public final class JobsTest {
                 check(Jobs.upId(k.id()).equals(b.skill(i).id()), a.id() + " up id " + k.id() + " → " + Jobs.upId(k.id()));
                 check(Jobs.jobOf(k) == a, "jobOf " + k.id());
                 // 4번 칸 (태세) 은 강화 스킬 · 태세 칸 몫 피해 스킬 (budget stance) 이 섞임 — 0.51.0 사용자 "딜링기도 괜찮고 버프기도 괜찮고"
-                check((k.total() > 0) == (b.skill(i).total() > 0) || i == 3, a.id() + " slot " + i + " same role (damage · stance)");
+                // 2026-11-06 워록은 역할이 바뀐 반전 (힐러 → 원거리 딜러 — 재설계안 2판 기준 5: 새 역할의 목표) 이라 사제의 회복 · 보호막 칸에도 피해
+                check((k.total() > 0) == (b.skill(i).total() > 0) || i == 3 || a.id().equals("warlock"), a.id() + " slot " + i + " same role (damage · stance)");
                 check(Jobs.upKeys(k).size() == Jobs.upKeys(b.skill(i)).size() || i == 3, a.id() + " slot " + i + " up keys");
             }
             double r = dps(a) / dps(b);
@@ -482,6 +483,7 @@ public final class JobsTest {
         lancerAdvance(Jobs.job("lancer"), Jobs.job("stormlancer"), Jobs.job("dragoon"));
         reaperAdvance(Jobs.job("reaper"), Jobs.job("soulreaper"), Jobs.job("executioner"));
         paladinAdvance(Jobs.job("paladin"), Jobs.job("thunderlord"), Jobs.job("tyrant"));
+        priestAdvance(Jobs.job("priest"), Jobs.job("saint"), Jobs.job("warlock"));
     }
 
     /**
@@ -548,6 +550,72 @@ public final class JobsTest {
         check(Jobs.skillLine(ta).startsWith("아크 스매시 · 6초 · 배율 ") && Jobs.skillLine(yc).equals("콜로서스 · 30초"), "paladin advanced skill line " + Jobs.skillLine(yc));
         check(tl.color()[0][0] > 0.95 && tl.color()[0][1] > 0.75 && tl.color()[1][2] > 0.95 && ty.color()[0][2] > 0.95 && ty.color()[0][0] > ty.color()[0][1]
                 && ty.color()[1][0] > 0.95, "colors: storm gold · sky / stolen violet · crimson");
+    }
+
+    /**
+     * 2026-11-06 사제 2차 — 세인트 · 워록 (재설계안 2판 — 사용자 "다음 작업": 세인트 새 스킬 다섯 · 워록은 아군에게 체력을 주는 힐러를 뒤집어 팀의 체력을 빼앗아 쓰는
+     * 원거리 딜러): 세인트 부분 합 = 배율 합 (사제와 같은 0 · 0 · 5.6 · 24 — 회복 · 보호막 칸은 피해 없음) · 워록 = 칸 틀 × 세기 0.6 (3 · 1.8 · 5.6 · 24 — 역할이 바뀌어
+     * 회복 · 보호막 칸에도 피해 · 사제와 같은 칸은 그대로) · 무적 시간 띄움 · t · w · 특성 (신앙 = 1차 + 넘치는 빛 / 생명 착취 4% · 혼자 8% · 25% · 몫 하나당 +10% ·
+     * 최대 5) · 초당 피해 (세인트 × 1.2 · 워록 × 1.425 — 원거리 딜러 목표 1.14 ÷ 힐러 0.96 × 1.2)
+     */
+    static void priestAdvance(Jobs.Job pr, Jobs.Job sa, Jobs.Job wk) {
+        check(sa != null && wk != null, "priest advanced jobs");
+        if (sa == null || wk == null) return;
+        check(Jobs.advance("priest", "awaken") == sa && Jobs.advance("priest", "invert") == wk && Jobs.baseOf(sa) == pr && Jobs.baseOf(wk) == pr
+                && Jobs.advancedOf("priest").equals(List.of(sa, wk)), "priest advance");
+        check(sa.display().equals("세인트") && wk.display().equals("워록") && Jobs.find("세인트") == sa && Jobs.find("난나") == null && Jobs.find("워록") == wk
+                && Jobs.find("굴베이그") == null && Jobs.find("warlock") == wk, "priest display · find");
+        List<String> saIds = new ArrayList<>();
+        List<String> wkIds = new ArrayList<>();
+        for (Jobs.Skill k : sa.skills()) saIds.add(k.id());
+        for (Jobs.Skill k : wk.skills()) wkIds.add(k.id());
+        check(saIds.equals(List.of("saint_accord", "saint_veil", "saint_wing", "saint_bond", "saint_ult"))
+                && wkIds.equals(List.of("warlock_lance", "warlock_mire", "warlock_nova", "warlock_ash", "warlock_ult")), "priest advanced skill ids");
+        for (int i : new int[] {0, 1, 2, 4}) check(near(sa.skill(i).total(), pr.skill(i).total()), "saint totals slot " + i);
+        Jobs.Skill ac = sa.skill(0), sv = sa.skill(1), sw = sa.skill(2), sb = sa.skill(3), su = sa.skill(4);
+        Jobs.Skill wl = wk.skill(0), wm = wk.skill(1), wn = wk.skill(2), wa = wk.skill(3), wu = wk.skill(4);
+        check(ac.total() == 0 && sv.total() == 0 && near(sw.num("hit", 0) * 2 + sw.num("last", 0), 5.6) && near(su.num("storm", 0) * su.num("storms", 0) + su.num("bloom",
+                0), 24), "saint totals 0 · 0 · 5.6 (1.6 × 2 + 2.4) · 24 (4 × 3 + 12)");
+        // 워록: 칸 틀 (검사 5 · 3 · 9 · 40) × 세기 — 사제와 같은 칸 (5.6 · 24) 은 그대로
+        check(near(wl.num("lance", 0), 5 * pr.scale()) && near(wm.num("pulse", 0) * wm.num("pulses", 0), 3 * pr.scale()) && near(wn.num("drain", 0) * wn.num("drains", 0)
+                + wn.num("burst", 0), pr.skill(2).total()) && near(wu.num("beat", 0) * wu.num("beats", 0) + wu.num("burst", 0), pr.skill(4).total()) && near(wl.total(), 3)
+                && near(wm.total(), 1.8) && near(wn.total(), 5.6) && near(wu.total(), 24), "warlock totals 3 · 1.8 (0.45 × 4) · 5.6 (0.6 × 3 + 3.8) · 24 (2 × 3 + 18)");
+        // 4번 칸: 소울본드 · 애시본 둘 다 강화 태세 (피해 없음 · 10초)
+        check(!Jobs.stanceBudget(sb) && sb.total() == 0 && near(sb.num("dur", 0), 200) && !Jobs.stanceBudget(wa) && wa.total() == 0 && near(wa.num("dur", 0), 200),
+                "소울본드 · 애시본 10초 태세");
+        // 초당 피해: 세인트 = 1차 × 1.2 · 워록 = 1차 × 1.425 (역할이 바뀜 — 원거리 딜러 목표 1.14 ÷ 힐러 0.96 × 1.2 · 팀 체력 몫 +20% 는 생명 착취 덤)
+        check(near(Jobs.advanceDps(sa), 1.2) && near(Jobs.advanceDps(wk), 1.425) && near(dps(sa) / dps(pr), 1.2, 0.005) && near(dps(wk) / dps(pr), 1.425, 0.005),
+                "saint × 1.2 · warlock × 1.425");
+        // 같은 적을 여러 번 치는 것은 10틱 넘게
+        check(sw.num("every", 0) * 2 >= 10 && su.num("every", 0) >= 10 && su.num("bloomAt", 0) - su.num("first", 0) - (su.num("storms", 0) - 1) * su.num("every", 0) >= 10
+                && wm.num("every", 0) >= 10 && wn.num("every", 0) >= 10 && wn.num("burstAt", 0) - wn.num("first", 0) - (wn.num("drains", 0) - 1) * wn.num("every", 0) >= 10
+                && wu.num("every", 0) >= 10 && wu.num("burstAt", 0) - wu.num("first", 0) - (wu.num("beats", 0) - 1) * wu.num("every", 0) >= 10,
+                "priest advanced i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 글리머윙은 적부터: 적 · 나 · 적 · 나 · 적)
+        check(near(sw.num("every", 0) * 5, sw.num("t", 0)) && near(sw.num("every", 0), sw.num("w", 0)) && near(su.num("bloomAt", 0), su.num("t", 0))
+                && near(su.num("first", 0), su.num("w", 0)), "saint t 40 · 80 (w 8 · 20)");
+        check(near(wl.num("hitAt", 0), wl.num("t", 0)) && near(wl.num("hitAt", 0), wl.num("w", 0)) && near(wm.num("first", 0) + (wm.num("pulses", 0) - 1)
+                * wm.num("every", 0), wm.num("t", 0)) && near(wm.num("first", 0), wm.num("w", 0)) && near(wn.num("burstAt", 0), wn.num("t", 0))
+                && near(wn.num("first", 0), wn.num("w", 0)) && near(wu.num("burstAt", 0), wu.num("t", 0)) && near(wu.num("first", 0), wu.num("w", 0)),
+                "warlock t 12 · 40 · 40 · 70 (w 12 · 10 · 10 · 10)");
+        // 특성: 세인트 = 사제의 신앙 (같은 이름 · 쌓임) + 넘치는 빛, 워록 = 생명 착취
+        for (String key : new String[] {"per", "overflowRadius"}) check(near(sa.trait().def().numOr(key, -1), pr.trait().def().numOr(key, -2)), "신앙 " + key + " = 1차");
+        check(sa.trait().name().equals(pr.trait().name()) && sa.trait().max() == pr.trait().max() && near(sa.trait().def().numOr("overShield", 0), 1.0)
+                && near(sa.trait().def().numOr("overCap", 0), 0.2) && near(sa.trait().def().numOr("overFor", 0), 80), "신앙 + 넘치는 빛 (넘친 회복 → 4초 보호막 · 최대 20%)");
+        check(wk.trait().name().equals("생명 착취") && wk.trait().max() == 5 && near(wk.trait().def().numOr("take", 0), 0.04) && near(wk.trait().def().numOr("solo", 0), 0.08)
+                && near(wk.trait().def().numOr("floor", 0), 0.25) && near(wk.trait().def().numOr("bonus", 0), 0.1) && near(wk.trait().def().numOr("radius", 0), 10),
+                "생명 착취 4% · 혼자 8% · 25% · 몫 하나당 +10% · 최대 5");
+        // 유틸 · 범위 · 선딜
+        check(Jobs.areaKind(sw) == null && Jobs.areaKind(su) == null && Jobs.utils(sw).equals(List.of("healAlly")) && Jobs.utils(su).equals(Jobs.utils(pr.skill(4))),
+                "saint utils · area");
+        check("single".equals(Jobs.areaKind(wl)) && "narrow".equals(Jobs.areaKind(wm)) && Jobs.areaKind(wn) == null && Jobs.areaKind(wu) == null && Jobs.utils(wl).isEmpty()
+                && Jobs.utils(wm).equals(List.of("invuln", "slow")) && Jobs.utils(wn).equals(List.of("knock")) && Jobs.utils(wu).equals(List.of("vuln10")),
+                "warlock utils · area");
+        check(Jobs.windupTicks(sw) == 8 && Jobs.windupTicks(su) == 20 && Jobs.windupTicks(wl) == 12 && Jobs.windupTicks(wm) == 10 && Jobs.windupTicks(wn) == 10
+                && Jobs.windupTicks(wu) == 10, "windups 8 · 20 / 12 · 10 · 10 · 10");
+        check(Jobs.skillLine(sw).startsWith("글리머윙 · 15초 · 배율 ") && Jobs.skillLine(wa).equals("애시본 · 30초"), "priest advanced skill line " + Jobs.skillLine(wa));
+        check(sa.color()[0][0] > 0.95 && sa.color()[0][1] > 0.85 && sa.color()[1][1] > 0.95 && wk.color()[0][0] > 0.8 && wk.color()[0][1] < 0.2 && wk.color()[1][1] > 0.7,
+                "colors: saint gold · green / warlock blood · witch gold");
     }
 
     /**

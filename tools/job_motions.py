@@ -32,6 +32,7 @@ import job_motions_i  # noqa: E402,F401 — 0.51.0 2차 직업 (트릭스터 · 
 import job_motions_j  # noqa: E402,F401 — 0.51.0 2차 직업 (스톰 랜서 · 드라군 — 2026-11-06)
 import job_motions_k  # noqa: E402,F401 — 0.51.0 2차 직업 (소울 리퍼 · 엑시큐셔너 — 2026-11-06)
 import job_motions_l  # noqa: E402,F401 — 0.51.0 2차 직업 (썬더로드 · 타이런트 — 2026-11-06)
+import job_motions_m  # noqa: E402,F401 — 0.51.0 2차 직업 (세인트 · 워록 — 2026-11-06)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 POSES = os.path.join(ROOT, "src/main/resources/assets/mmorpg/motion/poses.json")
@@ -132,6 +133,11 @@ AIR = {
     "jb_tyrant_shackle": [],
     "jb_tyrant_ult": [],
     "jb_tyrant_ult_slam": [],
+    # 0.51.0 세인트 · 워록 (2026-11-06): 크림슨 마이어 (0 ~ 10 핏물 웅덩이째 미끄러짐 — 주저앉은 제 다리 · :rise 솟구쳐 한 바퀴) 는 걸음 다리를 끔.
+    # 페탈 베일 · 에버블룸 꽃 피움 · 생귄 랜스 · 노바 터짐 · 애시본 · 뱅큇 터짐도 크게 내디딤 · 웅크림이라 걸음 다리를 끔 (job_motions_m 의 softLegs) —
+    # 하트 어코드 · 글리머윙 · 소울본드 · 에버블룸 · 블러드 노바 · 블러드 뱅큇의 긴 동작은 걸으며 쓰므로 걸음 다리를 둠
+    "jb_warlock_mire": [],
+    "jb_warlock_mire_rise": [],
 }
 
 

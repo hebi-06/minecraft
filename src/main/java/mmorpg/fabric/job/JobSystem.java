@@ -92,6 +92,8 @@ public final class JobSystem {
         ExecutionerSkills.register(); // 0.51.0 사신 2차 — 엑시큐셔너 (많이 거두는 흡혈을 뒤집어 하나를 끝내는 처형)
         ThunderlordSkills.register(); // 0.51.0 성기사 2차 — 썬더로드 (2026-11-06)
         TyrantSkills.register(); // 0.51.0 성기사 2차 — 타이런트 (아군을 지키는 광역 제어를 뒤집어 적의 힘을 빼앗아 홀로 커짐)
+        SaintSkills.register(); // 0.51.0 사제 2차 — 세인트 (2026-11-06)
+        WarlockSkills.register(); // 0.51.0 사제 2차 — 워록 (아군에게 체력을 주는 힐러를 뒤집어 팀의 체력을 빼앗아 쓰는 딜러)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             if (Tasks.now() % 5 != 0) return;
             for (ServerPlayer sp : server.getPlayerList().getPlayers()) refresh(sp, false);
@@ -241,7 +243,9 @@ public final class JobSystem {
             int up = JobUpgrades.level(sp, k.id());
             // 0.51.0 블러드 나이트 「피의 갈증」: 체력을 바칠 수 있으면 위력 × (1 + 10%) — 바치는 것은 나간 뒤
             double blood = JobTraits5.castMult(sp, job, k);
-            double P = power(sp, job) * Jobs.damageScale(k) * JobTraitsMore.chainMult(job, chain) * boost * faith * Jobs.upMult(up) * blood;
+            // 0.51.0 워록 「생명 착취」: 둘레 아군 (나 포함) 의 체력을 빼앗을 몫 하나당 위력 × (1 + 10%) (+ 애시본 40%) — 빼앗는 것은 나간 뒤
+            double tithe = JobTraits14.castMult(sp, job, k);
+            double P = power(sp, job) * Jobs.damageScale(k) * JobTraitsMore.chainMult(job, chain) * boost * faith * Jobs.upMult(up) * blood * tithe;
             NOTES.remove(sp.getUUID());
             JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
             JobTraits5.beforeCast(sp, job, k); // 0.51.0 소드마스터: 투지 8 이면 이 스킬이 치명
@@ -251,6 +255,8 @@ public final class JobSystem {
             if (ok && JobMove.gen(sp) == move0) JobMove.cancel(sp);
             JobTraits3.afterCast(sp, job, k, ok);
             String advNote = JobTraits5.afterCast(sp, job, k, ok); // 0.51.0 치명 → 투지를 씀 · 피의 갈증 → 체력을 바침
+            String titheNote = JobTraits14.afterCast(sp, job, k, ok); // 0.51.0 워록 생명 착취 → 빼앗음
+            if (titheNote != null) advNote = advNote == null ? titheNote : advNote + " §8· " + titheNote;
             String note = NOTES.remove(sp.getUUID());
             if (advNote != null) note = note == null ? advNote : advNote + " §8· " + note;
             String stageMotion = JobRecast.takeMotion(sp); // 0.51.0 다시 쓰기의 단계 동작 (없으면 스킬 id 동작)

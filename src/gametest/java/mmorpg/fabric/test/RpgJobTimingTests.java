@@ -370,4 +370,22 @@ public final class RpgJobTimingTests {
     public void timingTyrant(GameTestHelper h) {
         probe(h, "tyrant");
     }
+
+    /**
+     * 2026-11-06 2차 직업 — 사제 각성 세인트 (글리머윙 — 나비가 과녁 8 → 나 (다친 아군이 없어 나에게) 16 → 과녁 24 → 나 32 → 과녁 40 (셋째는 2.4), 에버블룸
+     * 20 · 40 · 60 꽃잎 폭풍 → 80 꽃 — 하트 어코드 · 페탈 베일 · 소울본드는 피해 없음)
+     */
+    @GameTest(environment = "mmorpg:jt_st", maxTicks = 2400)
+    public void timingSaint(GameTestHelper h) {
+        probe(h, "saint");
+    }
+
+    /**
+     * 2026-11-06 2차 직업 — 사제 반전 워록 (생귄 랜스 8 날아감 → 12, 크림슨 마이어 10 · 20 · 30 · 40 (과녁 앞으로 흘러간 웅덩이), 블러드 노바 10 · 20 · 30 → 40, 블러드
+     * 뱅큇 10 · 30 · 50 → 70 — 생명 착취 (혼자면 내 체력 8% — 몫 둘 · +20%) · 피의 역병 (+10%) 만큼 들어간 피해는 위력 × 배율 합보다 큼 · 애시본은 피해 없는 태세)
+     */
+    @GameTest(environment = "mmorpg:jt_wk", maxTicks = 2400)
+    public void timingWarlock(GameTestHelper h) {
+        probe(h, "warlock");
+    }
 }

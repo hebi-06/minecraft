@@ -64,7 +64,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 3인칭 사진을 앞 카메라로 찍는 스킬 (과녁 사이를 지나감) */
     private static final java.util.Set<String> FRONT_3P = java.util.Set.of("lancer_vault", "reaper_wraith", "priest_step");
     /** 0.30.0 피해가 없는 스킬 (회복 · 보호막 · 성흔 — 써졌는지만 확인) */
-    private static final java.util.Set<String> NO_DAMAGE = java.util.Set.of("priest_heal", "priest_step", "priest_stigma");
+    private static final java.util.Set<String> NO_DAMAGE = java.util.Set.of("priest_heal", "priest_step", "priest_stigma", "saint_accord", "saint_veil");
     /** 순간 이동이 끝난 뒤 (4틱) 뒤로 돌아 찍는 스킬 — 잔영: 과녁 너머로 간 뒤 분신 · 끌려간 과녁을 1인칭 · 3인칭 뒤 카메라로 (앞 카메라는 몸이 분신을 가림) */
     private static final java.util.Set<String> TURN_AFTER = java.util.Set.of("assassin_shade");
 
@@ -356,6 +356,30 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {4, 10, 20, 30, 34, 40, 44, 48}, new int[] {20, 34, 44}, 62, false),
     };
 
+    /**
+     * 2026-11-06 세인트 · 워록 (앞 왼쪽에 아군 — 가짜 연결의 두 번째 플레이어: 세인트는 체력 45% 의 다친 아군을 고르게 · 감싸고 · 잇고 · 나비가 들름, 워록은 그 아군의 피를
+     * 빼앗아 씀): 하트 어코드 (연꽃 → 6 빛줄기로 고르게 → 12 넘치는 빛) · 페탈 베일 (꽃잎이 아군에게 흘러가 4 감쌈) · 글리머윙 (8 · 24 · 40 적 · 16 · 32 · 48 아군) ·
+     * 소울본드 (태세 — 금빛 리본) · 에버블룸 (꽃밭 · 꽃봉오리 → 20 · 40 · 60 꽃잎 폭풍 → 80 꽃이 핌) / 생귄 랜스 (8 날아감 → 12 꿰뚫음 · 피를 돌려줌) · 크림슨 마이어
+     * (녹아내림 → 10 · 20 · 30 · 40 웅덩이 → 40 솟구침) · 블러드 노바 (10 · 20 · 30 빨아들임 → 40 터짐) · 애시본 (태세 — 불기둥 셋) · 블러드 뱅큇 (10 · 30 · 50 고동 →
+     * 62 잔치 → 70 건배 · 터짐)
+     */
+    private static final Case[] CASES_SA = {
+        new Case(0, new int[] {2, 6, 9, 12, 16}, new int[] {6, 12}, 24, false),
+        new Case(1, new int[] {1, 3, 4, 8, 14}, new int[] {3, 8}, 22, false),
+        new Case(2, new int[] {2, 8, 16, 24, 32, 40, 48, 52}, new int[] {8, 24, 40}, 60, false),
+        new Case(3, new int[] {4, 16}, new int[] {6, 16}, 24, true),
+        new Case(4, new int[] {4, 10, 20, 40, 60, 76, 80, 84, 92}, new int[] {20, 60, 80, 90}, 104, false),
+    };
+    private static final Case[] CASES_WK = {
+        new Case(0, new int[] {2, 6, 8, 10, 12, 16}, new int[] {6, 12}, 26, false),
+        new Case(1, new int[] {1, 2, 6, 10, 20, 30, 38, 40, 44}, new int[] {10, 40}, 54, false),
+        new Case(2, new int[] {4, 10, 20, 30, 36, 40, 44}, new int[] {20, 40}, 54, false),
+        new Case(3, new int[] {2, 6, 12, 16}, new int[] {6, 12}, 24, true),
+        new Case(4, new int[] {4, 10, 30, 50, 62, 66, 70, 74}, new int[] {10, 50, 70}, 90, false),
+    };
+    /** 2026-11-06 세인트 · 워록 영상의 아군 자리 (앞 왼쪽 — 눈길에서 0.85칸 옆이라 겨눌 수 있음 · 앞 과녁을 가리지 않음) */
+    private static final Vec3 ALLY_AT = new Vec3(-0.35, -60, 2.6);
+
     private final List<String> failures = new ArrayList<>();
 
     @Override
@@ -364,7 +388,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         boolean film = RpgFilm.on() && (RpgFilm.listed("filmjob1") || RpgFilm.listed("filmjob2") || RpgFilm.listed("filmjob3")
                 || RpgFilm.listed("filmjob4") || RpgFilm.listed("filmjob5") || RpgFilm.listed("filmjob6")
                 || RpgFilm.listed("filmjob7") || RpgFilm.listed("filmjob8") || RpgFilm.listed("filmjob9") || RpgFilm.listed("filmjob10") || RpgFilm.listed("filmjob11")
-                || RpgFilm.listed("filmjob12")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 열두째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수 · 암살자 · 창술사 · 사신 · 성기사)
+                || RpgFilm.listed("filmjob12") || RpgFilm.listed("filmjob13")); // 0.48.2 스킬 영상 (0.51.0 넷째 ~ 열셋째 묶음 = 2차 직업 — 검사 · 전사 · 마검사 · 매지션 · 궁수 · 암살자 · 창술사 · 사신 · 성기사 · 사제)
         if (!film && (RpgFilm.on() || !RpgProdSmoke.only("job"))) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
@@ -670,6 +694,17 @@ public final class RpgJobGallery implements FabricClientGameTest {
         // 2026-11-06 썬더로드: 아크 스매시 · 스톰 스파이어는 과녁마다 심판 3 (휩쓸기 · 갈래 / 기둥 +2 → 벼락 — 갈라지는 벼락 · 보호막), 타이런트: 빼앗은 힘 4 (게이지 · 몸 크기)
         if (id.equals("thunderlord_arc") || id.equals("thunderlord_spire")) judgeHusks(sp, 3);
         if (job.equals("tyrant")) mmorpg.fabric.job.JobTraits13.setPower(sp, 4);
+        // 2026-11-06 세인트 · 워록: 앞 왼쪽 아군 (세인트는 다친 아군 45% — 고르게 · 나비가 들름, 워록은 가득 — 빼앗을 피) · 세인트 글리머윙 · 에버블룸은 신앙 3 (+30%)
+        if (job.equals("saint") || job.equals("warlock")) {
+            ServerPlayer a = filmAlly(sp);
+            a.snapTo(ALLY_AT.x, ALLY_AT.y, ALLY_AT.z, 180F, 0F);
+            a.setYHeadRot(180F);
+            a.setYBodyRot(180F);
+            a.setDeltaMovement(Vec3.ZERO);
+            a.removeAllEffects();
+            a.setHealth(a.getMaxHealth() * (job.equals("saint") ? 0.45F : 1F));
+        }
+        if (id.equals("saint_wing") || id.equals("saint_ult")) JobTraits4.setFaith(sp, 3);
         if (id.equals("executioner_condemn") || id.equals("executioner_ult")) {
             for (Husk x : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 3.2, 0.5, -60, 3.2).inflate(0.8), x -> true)) {
                 x.removeTag(TestDummies.TAG);
@@ -722,7 +757,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
         {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"arcaneblade", "swordcaller"}, {"arcmage", "necromancer"},
-        {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}};
+        {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}, {"saint", "warlock"}};
 
     private void film(ClientGameTestContext ctx, TestServerContext server, TestServerConnection conn) {
         RpgFilm f = new RpgFilm(ctx);
@@ -759,10 +794,19 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "executioner" -> newJob(ctx, server, conn, job, "rpg:scythe_l40_hero", 10, sp -> {}); // 2026-11-06 처형 게이지 = 마지막으로 친 적의 잃은 체력
                         case "thunderlord" -> newJob(ctx, server, conn, job, "rpg:hammer_l40_hero", 5, sp -> judgeHusks(sp, 3)); // 2026-11-06 심판 (다섯 — 성기사와 같음)
                         case "tyrant" -> newJob(ctx, server, conn, job, "rpg:hammer_l40_hero", 10, sp -> mmorpg.fabric.job.JobTraits13.setPower(sp, 6)); // 2026-11-06 빼앗은 힘 (열 — 왕관 칸)
+                        case "saint" -> newJob(ctx, server, conn, job, "rpg:scepter_l40_hero", 5, sp -> {
+                            JobTraits4.setFaith(sp, 3); // 2026-11-06 신앙 (다섯 — 사제와 같음)
+                            filmAlly(sp);
+                        });
+                        case "warlock" -> newJob(ctx, server, conn, job, "rpg:scepter_l40_hero", 5, sp -> filmAlly(sp)); // 2026-11-06 생명 착취 게이지 = 다음 스킬이 빼앗을 몫 (다섯까지)
                         default -> newJob(ctx, server, conn, job, "rpg:shield_l40_hero", 100,
                                 sp -> JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("guardian")) * 0.6));
                     }
                     filmSkills(ctx, server, job, casesOf(job), f);
+                    if (job.equals("saint") || job.equals("warlock")) server.runOnServer(s -> {
+                        ServerPlayer me = player(s);
+                        for (ServerPlayer p : new ArrayList<>(s.getPlayerList().getPlayers())) if (p != me) s.getPlayerList().remove(p);
+                    });
                 });
             }
         }
@@ -799,6 +843,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "executioner" -> CASES_EX;
             case "thunderlord" -> CASES_TL;
             case "tyrant" -> CASES_TY;
+            case "saint" -> CASES_SA;
+            case "warlock" -> CASES_WK;
             default -> CASES_GU;
         };
     }
@@ -957,6 +1003,13 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     private static ServerPlayer player(MinecraftServer s) {
         return s.getPlayerList().getPlayers().get(0);
+    }
+
+    /** 2026-11-06 세인트 · 워록 영상의 아군 (가짜 연결의 두 번째 플레이어 — RpgDuelGallery.rival, 없으면 세움 · 직업 영상이 끝나면 내보냄) */
+    private static ServerPlayer filmAlly(ServerPlayer sp) {
+        MinecraftServer s = sp.level().getServer();
+        for (ServerPlayer p : s.getPlayerList().getPlayers()) if (p != sp) return p;
+        return RpgDuelGallery.rival(s, "Ally", ALLY_AT, 180F);
     }
 
     /** 0.29.0 암살자: 과녁 허스크 (없으면 세움) 마다 표식 n — 가까운 것이 게이지 대상 (마지막에 찍음) */

@@ -403,16 +403,21 @@ public final class JobTraits4 {
         JobTraits.sendGauge(sp, false);
     }
 
-    /** 이번 시전의 위력 배율 (JobSystem): 사제의 공격 직업 스킬 (배율 합 &gt; 0) 이면 1 + per × 신앙 */
+    /** 0.51.0 사제 줄기 — 사제 · 세인트 (신앙 쌓임 · 홀 흡혈 넘침이 같음 — 세인트는 넘치는 빛 · 소울본드 JobTraits14) */
+    static boolean priestLine(Jobs.Job j) {
+        return j != null && (j.id().equals("priest") || j.id().equals(JobTraits14.SA));
+    }
+
+    /** 이번 시전의 위력 배율 (JobSystem): 사제 줄기의 공격 직업 스킬 (배율 합 &gt; 0) 이면 1 + per × 신앙 */
     static double castMult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
-        if (j == null || !j.id().equals("priest") || k == null || !(k.total() > 0)) return 1;
+        if (!priestLine(j) || k == null || !(k.total() > 0)) return 1;
         State st = STATES.get(sp.getUUID());
         return st == null || st.faith <= 0 ? 1 : 1 + trait(j, "per", 0.1) * st.faith;
     }
 
     /** 직업 스킬이 나감 (JobSystem): 사제 — 공격 스킬은 신앙을 모두 씀, 회복 · 보호막 스킬은 +1 (손에 작은 십자) */
     static void castCommit(ServerPlayer sp, Jobs.Job j, Jobs.Skill k) {
-        if (j == null || !j.id().equals("priest") || k == null) return;
+        if (!priestLine(j) || k == null) return;
         State st = of(sp);
         if (k.total() > 0) st.faith = 0;
         else {
@@ -432,8 +437,8 @@ public final class JobTraits4 {
 
     /** 홀 흡혈이 넘침 (WeaponTraits.stealOverflow): 사제 — 둘레 overflowRadius 칸에서 체력 비율이 가장 낮은 아군 (나 제외) 에게 */
     private static void overflow(ServerPlayer sp, double extra) {
-        Jobs.Job j = jobIf(sp, "priest");
-        if (j == null || !(extra > 0)) return;
+        Jobs.Job j = JobSystem.job(sp);
+        if (!priestLine(j) || !(extra > 0)) return;
         ServerPlayer best = null;
         double ratio = 1 - 1e-6;
         for (ServerPlayer o : allies(sp, sp.position(), trait(j, "overflowRadius", 4))) {
@@ -804,7 +809,7 @@ public final class JobTraits4 {
                 Entity e = sp.level().getEntity(st.target);
                 yield e == null || e.isRemoved() || !e.isAlive() ? 0 : judges(sp, e);
             }
-            case "priest" -> st.faith;
+            case "priest", JobTraits14.SA -> st.faith; // 0.51.0 세인트도 신앙
             case "guardian" -> {
                 double cap = counterCap(sp, j);
                 yield cap <= 0 ? 0 : (int) Math.round(Math.min(1, st.counter / cap) * 100);

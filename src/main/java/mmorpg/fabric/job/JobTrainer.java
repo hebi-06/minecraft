@@ -68,7 +68,8 @@ public final class JobTrainer {
             Map.entry("swordmaster", "§6"), Map.entry("bloodknight", "§4"), Map.entry("warlord", "§6"), Map.entry("gladiator", "§c"), Map.entry("arcaneblade", "§5"),
             Map.entry("swordcaller", "§3"), Map.entry("arcmage", "§9"), Map.entry("necromancer", "§a"),
             Map.entry("sniper", "§a"), Map.entry("battlearcher", "§b"), Map.entry("trickster", "§d"), Map.entry("pierrot", "§c"),
-            Map.entry("stormlancer", "§b"), Map.entry("dragoon", "§6"), Map.entry("soulreaper", "§b"), Map.entry("executioner", "§6"), Map.entry("thunderlord", "§e"), Map.entry("tyrant", "§5"));
+            Map.entry("stormlancer", "§b"), Map.entry("dragoon", "§6"), Map.entry("soulreaper", "§b"), Map.entry("executioner", "§6"), Map.entry("thunderlord", "§e"), Map.entry("tyrant", "§5"),
+            Map.entry("saint", "§e"), Map.entry("warlock", "§4"));
     /** 카드 그림 (직업 id → 무기 아이템) */
     private static final Map<String, ItemStack> CARD_ITEMS = new ConcurrentHashMap<>();
 

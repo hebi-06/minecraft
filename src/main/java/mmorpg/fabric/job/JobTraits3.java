@@ -880,7 +880,7 @@ public final class JobTraits3 {
 
     /** 게이지 값: 암살자 표식 (마지막 대상) · 창술사 기세 (0 · 1) · 사신 혼 */
     static int gaugeValue(ServerPlayer sp, Jobs.Job j) {
-        if (j.id().equals("paladin") || j.id().equals(JobTraits13.TL) || j.id().equals("priest") || j.id().equals("guardian")) return JobTraits4.gaugeValue(sp, j); // 0.30.0 심판 · 신앙 · 반격 (0.51.0 썬더로드도 심판)
+        if (j.id().equals("paladin") || j.id().equals(JobTraits13.TL) || j.id().equals("priest") || j.id().equals(JobTraits14.SA) || j.id().equals("guardian")) return JobTraits4.gaugeValue(sp, j); // 0.30.0 심판 · 신앙 · 반격 (0.51.0 썬더로드도 심판 · 세인트도 신앙)
         State st = STATES.get(sp.getUUID());
         if (st == null) return 0;
         return switch (j.id()) {

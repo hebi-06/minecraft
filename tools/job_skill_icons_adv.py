@@ -3004,6 +3004,303 @@ def tyrant_ult(A, B):
     return finish(subject, [glow(lines_, A, 1.4, 1.0), glow(hd, A, 2.4, 1.0), glow(orbs, B, 1.2, 1.0)], tyrant_back(A, B))
 
 
+# ------------------------------------------------------------ 세인트 (빛: 옅은 금빛 → 연둣빛 — 짙은 초록 밤 바탕 · 꽃잎은 분홍빛) — 2026-11-06
+
+SAINT_NIGHT = (3, 14, 8)
+PETAL_C = (255, 158, 204)
+PETAL_HI = (255, 238, 246)
+PETAL_LO = (190, 64, 126)
+
+
+def saint_back(A, B):
+    return backdrop(mix(B, SAINT_NIGHT, 0.88), mix(A, (60, 70, 30), 0.55))
+
+
+def heart_pts(cx, cy, s, ang=0.0, steps=48):
+    """하트 (가운데 cx, cy · 너비 2s · 높이 약 1.8s — 위가 갈라지고 아래가 뾰족, ang 도 기울임)"""
+    k = s / 16.0
+    ca, sa = math.cos(math.radians(ang)), math.sin(math.radians(ang))
+    out = []
+    for i in range(steps):
+        t = i / steps * 2 * math.pi
+        x = 16 * math.sin(t) ** 3 * k
+        y = (-(13 * math.cos(t) - 5 * math.cos(2 * t) - 2 * math.cos(3 * t) - math.cos(4 * t)) - 2.5) * k
+        out.append((cx + x * ca - y * sa, cy + x * sa + y * ca))
+    return out
+
+
+def heart_mask(cx, cy, s, ang=0.0):
+    m = mask()
+    poly(m, heart_pts(cx, cy, s, ang))
+    return m
+
+
+def petal(m, bx, by, length, width, ang):
+    """꽃잎 하나: 뿌리 (bx, by) 에서 ang 쪽 (도 — 화면 좌표, -90 = 위) 으로 — 뿌리는 좁고 가운데가 넓고 끝이 뾰족"""
+    a = math.radians(ang)
+    ux, uy = math.cos(a), math.sin(a)
+    px, py = -uy, ux
+    left, right = [], []
+    for i in range(13):
+        t = i / 12
+        w = width / 2 * (math.sin(math.pi * t) ** 0.85) * (1.0 - 0.2 * t)
+        x, y = bx + ux * length * t, by + uy * length * t
+        left.append((x + px * w, y + py * w))
+        right.append((x - px * w, y - py * w))
+    return poly(m, left + right[::-1])
+
+
+def sparkles(pts):
+    m = mask()
+    for x, y, r in pts:
+        star(m, x, y, r)
+    return m
+
+
+def saint_accord(A, B):
+    # 하트 어코드: 아래의 금빛 연꽃 (세 겹) 에서 피어난 큰 빛의 심장 · 양옆 아군의 작은 심장 둘과 빛줄기로 이어짐 (체력을 고르게 나눔) · 반짝임
+    back_p, side_p, mid_p = mask(), mask(), mask()
+    for ang in (-160, -20):
+        petal(back_p, 16.0, 30.5, 7.0, 3.4, ang)
+    for ang in (-128, -52):
+        petal(side_p, 16.0, 30.5, 8.0, 3.8, ang)
+    petal(mid_p, 16.0, 30.5, 9.0, 4.4, -90)
+    big = heart_mask(16.0, 13.0, 6.4)
+    small = lighter(heart_mask(5.0, 20.5, 2.9, -14), heart_mask(27.0, 20.5, 2.9, 14))
+    beams = mask()
+    line(beams, [(12.0, 16.0), (6.5, 19.5)], 1.1)
+    line(beams, [(20.0, 16.0), (25.5, 19.5)], 1.1)
+    sp = sparkles(((4.5, 6.0, 2.0), (27.5, 5.0, 1.7), (26.0, 28.0, 1.2), (6.0, 28.5, 1.2)))
+    subject = stack(layer(back_p, mix(A, (150, 110, 40), 0.35), mix(A, (90, 60, 20), 0.6)), layer(side_p, mix(A, WHITE, 0.1), mix(A, (150, 110, 40), 0.5), WHITE, None),
+                    layer(mid_p, WHITE, A, WHITE, None), layer(beams, WHITE, mix(A, WHITE, 0.4)),
+                    layer(small, mix(B, WHITE, 0.45), B, WHITE, mix(B, (0, 0, 0), 0.45)), layer(big, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.45)), layer(sp, WHITE, A))
+    lotus = lighter(back_p, side_p, mid_p)
+    return finish(subject, [glow(big, A, 2.4, 1.0), glow(beams, A, 1.2, 0.9), glow(small, B, 1.4, 0.9), glow(lotus, A, 1.2, 0.6)], saint_back(A, B))
+
+def saint_veil(A, B):
+    # 페탈 베일: 가운데 옅은 연둣빛 빛의 방패 (연 모양 — 아군을 감싼 보호막) · 그 둘레를 기울어진 고리로 감아 도는 분홍 꽃잎 여덟 (뒤 넷 · 앞 넷) · 반짝임
+    from job_skill_icons_four import kite
+    shield = kite(16.0, 16.0, 12.5, 17.0)
+    inner = kite(16.0, 15.2, 6.5, 9.0)
+    back_p, front_p = mask(), mask()
+    for i in range(8):
+        th = math.radians(i * 45 + 10)
+        x, y = 16.0 + math.cos(th) * 13.0, 16.5 + math.sin(th) * 5.2 - math.cos(th) * 3.0
+        tang = math.degrees(math.atan2(math.cos(th) * 5.2 + math.sin(th) * 3.0, -math.sin(th) * 13.0))
+        petal(front_p if math.sin(th) > 0 else back_p, x, y, 5.6, 2.9, tang)
+    sp = sparkles(((27.0, 4.5, 1.6), (5.0, 5.5, 1.3), (16.0, 2.5, 1.2), (28.0, 28.0, 1.1)))
+    subject = stack(layer(back_p, mix(PETAL_C, (90, 30, 60), 0.35), PETAL_LO), layer(shield, mix(B, WHITE, 0.5), mix(B, (20, 80, 40), 0.35), WHITE, mix(B, (0, 0, 0), 0.4)),
+                    layer(inner, WHITE, mix(B, WHITE, 0.6)), layer(front_p, PETAL_HI, PETAL_C, WHITE, PETAL_LO, axis=(0.6, 0.8)), layer(sp, WHITE, A))
+    return finish(subject, [glow(front_p, PETAL_C, 1.6, 1.0), glow(shield, B, 2.0, 0.9), glow(inner, B, 1.4, 0.8)], saint_back(A, B))
+
+def butterfly(cx, cy, s):
+    """빛나는 나비 (앞모습 — 위 날개 둘 · 아래 날개 둘 · 몸 · 더듬이), s = 크기 (날개 끝까지 약 7s/7)"""
+    k = s / 7.0
+    up, low = mask(), mask()
+    petal(up, cx - 0.4 * k, cy - 0.2 * k, 7.4 * k, 6.4 * k, -148)
+    petal(up, cx + 0.4 * k, cy - 0.2 * k, 7.4 * k, 6.4 * k, -32)
+    petal(low, cx - 0.3 * k, cy + 0.6 * k, 5.0 * k, 4.4 * k, 128)
+    petal(low, cx + 0.3 * k, cy + 0.6 * k, 5.0 * k, 4.4 * k, 52)
+    body = mask()
+    line(body, [(cx, cy - 3.6 * k), (cx, cy + 3.8 * k)], 1.3 * k)
+    line(body, [(cx - 0.2 * k, cy - 3.4 * k), (cx - 2.2 * k, cy - 6.8 * k)], 0.6 * k)
+    line(body, [(cx + 0.2 * k, cy - 3.4 * k), (cx + 2.2 * k, cy - 6.8 * k)], 0.6 * k)
+    spots = mask()
+    disc(spots, cx - 3.8 * k, cy - 2.6 * k, 1.1 * k)
+    disc(spots, cx + 3.8 * k, cy - 2.6 * k, 1.1 * k)
+    return up, low, body, spots
+
+
+def saint_wing(A, B):
+    # 글리머윙: 오른쪽 위의 빛나는 나비 · 왼쪽 아래에서 적 (금빛) 과 아군 (연둣빛) 을 번갈아 튀어 오른 세 번의 빛 자국 · 튄 자리마다 반짝임
+    up, low, body, spots = butterfly(20.5, 12.0, 9.0)
+    path = mask()
+    hops = []
+    seq = [(2.5, 30.0), (7.5, 27.0), (12.0, 23.5), (16.5, 18.5)]
+    for (x0, y0), (x1, y1) in zip(seq, seq[1:]):
+        mx, my = (x0 + x1) / 2, min(y0, y1) - 3.2
+        arc = [((1 - t) ** 2 * x0 + 2 * (1 - t) * t * mx + t * t * x1, (1 - t) ** 2 * y0 + 2 * (1 - t) * t * my + t * t * y1) for t in [i / 10 for i in range(11)]]
+        line(path, arc, 0.8)
+        hops.append((x1, y1))
+    foe_sp = sparkles(((7.5, 27.0, 2.2), (16.5, 18.5, 1.2)))
+    ally_sp = sparkles(((12.0, 23.5, 2.0), (2.5, 30.0, 1.2)))
+    glints = sparkles(((28.5, 26.0, 1.4), (5.0, 6.0, 1.5), (27.5, 29.5, 1.0)))
+    subject = stack(layer(path, mix(A, WHITE, 0.3), mix(B, WHITE, 0.2)), layer(foe_sp, WHITE, A), layer(ally_sp, WHITE, B), layer(glints, WHITE, A),
+                    layer(low, mix(PETAL_C, WHITE, 0.3), PETAL_C, WHITE, PETAL_LO), layer(up, WHITE, A, WHITE, mix(A, (120, 80, 20), 0.5), axis=(0.4, 1)),
+                    layer(spots, mix(B, WHITE, 0.5), B), layer(body, mix(A, (90, 60, 20), 0.5), mix(A, (40, 24, 8), 0.7)))
+    return finish(subject, [glow(lighter(up, low), A, 2.0, 1.0), glow(path, A, 1.0, 0.8), glow(lighter(foe_sp, ally_sp), B, 1.2, 0.9)], saint_back(A, B))
+
+
+def lemniscate(cx, cy, a, steps=72):
+    """∞ 꼴 (가운데 cx, cy · 반 너비 a)"""
+    out = []
+    for i in range(steps + 1):
+        t = i / steps * 2 * math.pi
+        dn = 1 + math.sin(t) ** 2
+        out.append((cx + a * math.cos(t) / dn, cy + a * math.sin(t) * math.cos(t) / dn * 1.25))
+    return out
+
+
+def saint_bond(A, B):
+    # 소울본드: 두 심장 (나 — 금빛 · 아군 — 연둣빛) 을 ∞ 꼴로 감아 잇는 빛의 리본 · 가운데 매듭의 반짝임 · 둘레 꽃잎
+    ribbon = mask()
+    line(ribbon, lemniscate(16.0, 16.5, 14.0), 1.5)
+    h1 = heart_mask(8.6, 16.5, 4.4, -10)
+    h2 = heart_mask(23.4, 16.5, 4.4, 10)
+    knot = sparkles(((16.0, 16.5, 3.2),))
+    petals = mask()
+    petal(petals, 5.0, 5.0, 3.6, 2.2, -40)
+    petal(petals, 27.0, 28.0, 3.6, 2.2, 140)
+    petal(petals, 26.0, 5.5, 3.0, 1.9, -120)
+    sp = sparkles(((5.5, 28.0, 1.4), (16.0, 4.5, 1.2), (16.0, 28.5, 1.2)))
+    subject = stack(layer(petals, PETAL_HI, PETAL_C, None, PETAL_LO), layer(ribbon, WHITE, mix(A, WHITE, 0.35)), layer(h1, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.45)),
+                    layer(h2, mix(B, WHITE, 0.45), B, WHITE, mix(B, (0, 0, 0), 0.45)), layer(knot, WHITE, A), layer(sp, WHITE, A))
+    return finish(subject, [glow(ribbon, A, 1.4, 1.0), glow(h1, A, 1.8, 0.9), glow(h2, B, 1.8, 0.9), glow(knot, A, 1.4, 1.0)], saint_back(A, B))
+
+
+def saint_ult(A, B):
+    # 에버블룸: 활짝 핀 큰 빛의 꽃 (분홍 바깥 꽃잎 여덟 · 금빛 안 꽃잎 여덟 · 흰 꽃술) · 흩날리는 꽃잎 · 반짝임
+    outer = mask()
+    for i in range(8):
+        petal(outer, 16.0, 16.5, 13.0, 7.0, -90 + i * 45)
+    inner = mask()
+    for i in range(8):
+        petal(inner, 16.0, 16.5, 8.2, 4.6, -67.5 + i * 45)
+    center = mask()
+    disc(center, 16.0, 16.5, 3.0)
+    core = mask()
+    disc(core, 16.0, 16.5, 1.5)
+    veins = mask()
+    for i in range(8):
+        a = math.radians(-90 + i * 45)
+        line(veins, [(16.0 + math.cos(a) * 4.0, 16.5 + math.sin(a) * 4.0), (16.0 + math.cos(a) * 10.5, 16.5 + math.sin(a) * 10.5)], 0.5)
+    sp = sparkles(((4.0, 4.0, 1.8), (28.5, 28.0, 1.6), (28.0, 4.5, 1.2)))
+    subject = stack(layer(outer, PETAL_HI, PETAL_C, WHITE, PETAL_LO, axis=(0.6, 0.8)), layer(veins, mix(PETAL_C, WHITE, 0.6), PETAL_HI),
+                    layer(inner, WHITE, A, WHITE, mix(A, (130, 90, 30), 0.5)), layer(center, mix(A, WHITE, 0.4), A, WHITE, None), layer(core, WHITE, WHITE),
+                    layer(sp, WHITE, A))
+    return finish(subject, [glow(outer, PETAL_C, 2.0, 0.9), glow(inner, A, 1.8, 1.0), glow(center, A, 2.4, 1.0)], saint_back(A, B))
+
+
+# ------------------------------------------------------------ 워록 (빛: 핏빛 → 금빛 — 검붉은 밤 바탕 · 피는 핏빛, 불티 · 테는 금빛) — 2026-11-06
+
+WARLOCK_NIGHT = (14, 2, 6)
+BLOOD_HI = (255, 112, 112)
+BLOOD_C = (198, 14, 40)
+BLOOD_LO = (86, 2, 14)
+
+
+def warlock_back(A, B):
+    return backdrop(mix(A, WARLOCK_NIGHT, 0.88), mix(A, (96, 10, 26), 0.5))
+
+
+def warlock_lance(A, B):
+    # 생귄 랜스: 왼쪽 아래에서 오른쪽 위로 날아가는 핏빛 창 (가시 둘 · 흰 맥) · 창으로 빨려 드는 핏방울 · 창끝의 금빛 반짝임
+    tail, tip = (3.5, 28.5), (28.5, 3.5)
+    L = math.hypot(tip[0] - tail[0], tip[1] - tail[1])
+    ux, uy = (tip[0] - tail[0]) / L, (tip[1] - tail[1]) / L
+    px, py = -uy, ux
+    prof = [(0.0, 0.5), (0.4, 1.3), (0.6, 1.6), (0.64, 3.2), (0.68, 1.7), (0.74, 2.0), (0.77, 3.0), (0.82, 2.4), (1.0, 0.0)]
+    left = [(tail[0] + ux * L * t + px * w, tail[1] + uy * L * t + py * w) for t, w in prof]
+    right = [(tail[0] + ux * L * t - px * w, tail[1] + uy * L * t - py * w) for t, w in prof]
+    lance = mask()
+    poly(lance, left + right[::-1])
+    vein = mask()
+    line(vein, [(tail[0] + ux * L * 0.2, tail[1] + uy * L * 0.2), (tail[0] + ux * L * 0.9, tail[1] + uy * L * 0.9)], 0.55)
+    drops = mask()
+    for (x, y, r, a) in ((8.0, 16.5, 1.3, 50), (15.5, 26.5, 1.3, -130), (4.5, 21.0, 1.1, 30), (21.5, 29.0, 1.0, -150), (12.0, 9.5, 1.0, 70)):
+        drop(drops, x, y, r, ang=a + 180)
+    glint = sparkles(((27.0, 5.0, 3.4),))
+    subject = stack(layer(drops, mix(A, WHITE, 0.3), A), layer(lance, BLOOD_HI, BLOOD_C, WHITE, BLOOD_LO, axis=(0.7, 0.7)), layer(vein, (255, 196, 196), BLOOD_HI),
+                    layer(glint, WHITE, B))
+    return finish(subject, [glow(lance, A, 2.0, 1.0), glow(drops, A, 1.2, 0.8), glow(glint, B, 1.4, 1.0)], warlock_back(A, B))
+
+
+def warlock_mire(A, B):
+    # 크림슨 마이어: 아래에 넓게 번진 핏물 웅덩이 (물결 고리 둘) · 가운데에서 솟구치는 가는 핏물 줄기 (꼭대기 방울) · 둘레로 튀어 오른 왕관 물보라 · 튀는 핏방울
+    pool = mask()
+    d = ImageDraw.Draw(pool)
+    d.ellipse([P(2.5, 20.5), P(29.5, 29.5)], fill=255)
+    for (x, y, r) in ((4.0, 27.0, 2.2), (28.0, 24.0, 2.0), (9.0, 29.2, 1.6), (24.0, 29.4, 1.5)):
+        disc(pool, x, y, r)
+    ripples = mask()
+    d = ImageDraw.Draw(ripples)
+    d.ellipse([P(6.5, 22.5), P(25.5, 28.5)], outline=255, width=int(0.8 * SS))
+    jet = mask()
+    poly(jet, [(14.2, 24.5), (14.9, 10.0), (17.1, 10.0), (17.8, 24.5)])
+    disc(jet, 16.0, 7.6, 2.3)
+    crown = mask()
+    for k in range(7):
+        a = math.radians(180 + 15 + k * 25)
+        bx, by = 16.0 + math.cos(a) * 5.0, 23.0 + math.sin(a) * 1.6
+        tx, ty = 16.0 + math.cos(a) * 9.0, 23.0 + math.sin(a) * 1.6 - (5.5 - abs(k - 3) * 0.9)
+        pa = math.atan2(ty - by, tx - bx) + math.pi / 2
+        poly(crown, [(bx + math.cos(pa) * 1.5, by + math.sin(pa) * 1.5), (tx, ty), (bx - math.cos(pa) * 1.5, by - math.sin(pa) * 1.5)])
+        disc(crown, tx, ty - 0.6, 1.1)
+    drops = mask()
+    for (x, y, r, a) in ((7.0, 9.0, 1.2, -60), (25.0, 7.5, 1.2, -120), (4.5, 16.0, 1.0, -30), (27.5, 15.5, 1.0, -150), (11.5, 3.5, 0.9, -80), (21.0, 3.0, 0.9, -100)):
+        drop(drops, x, y, r, ang=a + 180)
+    subject = stack(layer(pool, BLOOD_C, BLOOD_LO, BLOOD_HI, None, axis=(0, 1)), layer(ripples, mix(A, WHITE, 0.35), A),
+                    layer(crown, BLOOD_HI, BLOOD_C, None, BLOOD_LO), layer(jet, BLOOD_HI, BLOOD_C, mix(BLOOD_HI, WHITE, 0.4), BLOOD_LO, axis=(1, 0)),
+                    layer(drops, mix(A, WHITE, 0.3), A))
+    return finish(subject, [glow(lighter(jet, crown), A, 1.8, 1.0), glow(pool, A, 1.4, 0.8), glow(drops, A, 1.0, 0.8)], warlock_back(A, B))
+
+def warlock_nova(A, B):
+    # 블러드 노바: 가운데 고동치는 피의 심장 · 둘레 여섯 곳에서 심장으로 빨려 드는 핏방울 (꼬리가 바깥) · 그 바깥으로 터져 나가는 금빛 충격 고리 (네 조각)
+    heart = heart_mask(16.0, 16.0, 7.0)
+    shine = mask()
+    disc(shine, 12.8, 12.4, 1.5)
+    drops = mask()
+    for i in range(6):
+        a = math.radians(-90 + i * 60)
+        x, y = 16.0 + math.cos(a) * 10.8, 16.0 + math.sin(a) * 10.8
+        drop(drops, x, y, 1.4, ang=math.degrees(a))
+    arcs = mask()
+    for i in range(4):
+        crescent(arcs, 16.0, 16.0, 14.8, 1.3, 15 + i * 90, 75 + i * 90, taper=True)
+    subject = stack(layer(arcs, mix(B, WHITE, 0.45), B), layer(drops, mix(A, WHITE, 0.25), A), layer(heart, BLOOD_HI, BLOOD_C, WHITE, BLOOD_LO, axis=(0.5, 1)),
+                    layer(shine, WHITE, mix(A, WHITE, 0.6)))
+    return finish(subject, [glow(heart, A, 2.6, 1.0), glow(arcs, B, 1.2, 0.9), glow(drops, A, 1.0, 0.8)], warlock_back(A, B))
+
+def warlock_ash(A, B):
+    # 애시본: 세 갈래로 치솟는 핏빛 불기둥 (속은 금빛) · 그 안에서 두 팔을 V 자로 펼치고 되살아나는 그림자 · 흩날리는 불티
+    f_out = lighter(flame_mask(16.0, 31.0, 28.0, 9.0), flame_mask(8.5, 31.0, 16.0, 5.0), flame_mask(23.5, 31.0, 18.0, 5.0))
+    f_in = lighter(flame_mask(16.0, 31.0, 24.0, 7.0), flame_mask(9.0, 31.0, 9.0, 2.6), flame_mask(23.0, 31.0, 10.0, 2.6))
+    sil = mask()
+    disc(sil, 16.0, 14.0, 2.2)
+    poly(sil, [(13.9, 16.8), (18.1, 16.8), (18.8, 27.5), (13.2, 27.5)])
+    line(sil, [(14.4, 17.4), (10.2, 11.0)], 1.6)
+    line(sil, [(17.6, 17.4), (21.8, 11.0)], 1.6)
+    embers = mask()
+    for (x, y, r) in ((5.0, 9.0, 1.0), (27.0, 7.0, 1.1), (7.5, 4.0, 0.8), (25.0, 14.0, 0.8), (21.0, 3.0, 0.9)):
+        star(embers, x, y, r * 1.6, 0.3, 45)
+    subject = stack(layer(f_out, mix(A, B, 0.35), A, mix(B, WHITE, 0.3), mix(A, (0, 0, 0), 0.4)), layer(f_in, WHITE, B), layer(sil, (46, 18, 22), (14, 4, 8)),
+                    layer(embers, WHITE, B))
+    return finish(subject, [glow(f_out, A, 2.2, 1.0), glow(f_in, B, 1.6, 0.9), glow(embers, B, 1.0, 0.9)], warlock_back(A, B))
+
+
+def warlock_ult(A, B):
+    # 블러드 뱅큇: 금빛 잔 (잔치) 에 차오른 핏물이 심장으로 솟고 · 잔 가장자리로 넘쳐 흐르는 핏물 · 둘레 금빛 반짝임
+    cup = mask()
+    bowl = [(7.5, 11.0), (24.5, 11.0)] + [(16.0 + 8.5 * math.cos(math.radians(a)), 11.0 + 8.0 * math.sin(math.radians(a))) for a in range(0, 181, 15)]
+    poly(cup, bowl)
+    poly(cup, [(15.0, 18.5), (17.0, 18.5), (17.4, 25.0), (14.6, 25.0)])
+    poly(cup, [(13.5, 24.5), (18.5, 24.5), (22.0, 28.5), (10.0, 28.5)])
+    rim = mask()
+    d = ImageDraw.Draw(rim)
+    d.ellipse([P(7.5, 9.6), P(24.5, 12.4)], fill=255)
+    heart = heart_mask(16.0, 6.4, 4.6)
+    spill = mask()
+    for (x, y, r, a) in ((8.6, 14.5, 1.2, 90), (23.4, 15.5, 1.2, 90), (11.0, 17.5, 0.9, 90)):
+        drop(spill, x, y, r, ang=a + 180)
+    line(spill, [(8.4, 11.5), (8.6, 13.5)], 1.2)
+    line(spill, [(23.6, 11.5), (23.4, 14.5)], 1.2)
+    sp = sparkles(((4.0, 5.0, 1.7), (28.0, 4.0, 1.5), (27.5, 22.0, 1.2), (4.5, 23.0, 1.2)))
+    gold_hi, gold_c, gold_lo = mix(B, WHITE, 0.45), B, mix(B, (110, 50, 10), 0.55)
+    subject = stack(layer(cup, gold_hi, gold_c, WHITE, gold_lo, axis=(1, 0)), layer(rim, BLOOD_C, BLOOD_LO, BLOOD_HI, None), layer(spill, BLOOD_HI, BLOOD_C),
+                    layer(heart, BLOOD_HI, BLOOD_C, WHITE, BLOOD_LO), layer(sp, WHITE, B))
+    return finish(subject, [glow(heart, A, 2.4, 1.0), glow(cup, B, 1.4, 0.7), glow(sp, B, 1.0, 0.8)], warlock_back(A, B))
+
+
 ICONS = {
     "swordmaster_draw": swordmaster_draw,
     "swordmaster_parry": swordmaster_parry,
@@ -3095,4 +3392,14 @@ ICONS = {
     "tyrant_grip": tyrant_grip,
     "tyrant_colossus": tyrant_colossus,
     "tyrant_ult": tyrant_ult,
+    "saint_accord": saint_accord,
+    "saint_veil": saint_veil,
+    "saint_wing": saint_wing,
+    "saint_bond": saint_bond,
+    "saint_ult": saint_ult,
+    "warlock_lance": warlock_lance,
+    "warlock_mire": warlock_mire,
+    "warlock_nova": warlock_nova,
+    "warlock_ash": warlock_ash,
+    "warlock_ult": warlock_ult,
 }

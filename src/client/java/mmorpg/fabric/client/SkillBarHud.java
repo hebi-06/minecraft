@@ -396,7 +396,7 @@ public final class SkillBarHud {
                             for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
                             if (i < v) g.fill(bx + 2, ty + 2, bx + 3, ty + 3, 0xFFFFFFFF);
                         }
-                        case "priest" -> {
+                        case "priest", "saint" -> { // 0.51.0 세인트도 신앙 십자
                             // 0.30.0 신앙 — 십자 (5 × 7): 세로가 긴 십자, 찬 것은 둘째 빛 (초록) + 가운데 흰 점, 오른쪽 아래 1칸 그림자
                             int c = i < v ? col : dim;
                             int ty = y - 1;
@@ -510,6 +510,17 @@ public final class SkillBarHud {
                                 g.fill(bx + 1, ty + 2, bx + 2, ty + 3, 0xFF000000 | b);
                                 g.fill(bx + 3, ty + 2, bx + 4, ty + 3, 0xFF000000 | b);
                             }
+                        }
+                        case "warlock" -> {
+                            // 0.51.0 생명 착취 (다음 스킬이 빼앗을 몫 — 최대 5) — 심장 (5 × 5): 위 두 봉우리 · 아래로 좁아지는 끝, 찬 것은 첫째 빛 (진홍) + 왼쪽 위 둘째 빛 점
+                            // (마녀의 금빛 반짝임), 오른쪽 아래 1칸 그림자
+                            int c = i < v ? bright : dim;
+                            int ty = y;
+                            int[][] cells = {{0, 0}, {1, 0}, {3, 0}, {4, 0}, {0, 1}, {1, 1}, {2, 1}, {3, 1}, {4, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {1, 3}, {2, 3},
+                                {3, 3}, {2, 4}};
+                            for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (i < v) g.fill(bx + 1, ty + 1, bx + 2, ty + 2, 0xFF000000 | b);
                         }
                         case "tyrant" -> {
                             // 0.51.0 강탈 (빼앗은 힘 — 최대 10) — 왕관 (5 × 4): 뿔 셋 · 띠, 찬 것은 첫째 빛 (훔친 번개 보랏빛) + 가운데 보석에 둘째 빛 (핏빛), 오른쪽 아래 1칸 그림자

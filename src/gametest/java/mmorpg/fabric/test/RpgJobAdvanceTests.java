@@ -21,6 +21,7 @@ import mmorpg.fabric.job.JobTraits10;
 import mmorpg.fabric.job.JobTraits11;
 import mmorpg.fabric.job.JobTraits12;
 import mmorpg.fabric.job.JobTraits13;
+import mmorpg.fabric.job.JobTraits14;
 import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraits4;
 import mmorpg.fabric.job.JobTraits5;
@@ -43,6 +44,7 @@ import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -112,6 +114,8 @@ public final class RpgJobAdvanceTests {
     static final String ENV_EX = "mmorpg:job_ex"; // 2026-11-06 엑시큐셔너
     static final String ENV_TL = "mmorpg:job_tl"; // 2026-11-06 썬더로드
     static final String ENV_TY = "mmorpg:job_ty"; // 2026-11-06 타이런트
+    static final String ENV_ST = "mmorpg:job_st"; // 2026-11-06 세인트
+    static final String ENV_WK = "mmorpg:job_wk"; // 2026-11-06 워록
 
     /** 넓은 돌 바닥 (그라니의 질주가 비스듬히 내달릴 땅) */
     static void floor(GameTestHelper h) {
@@ -346,7 +350,7 @@ public final class RpgJobAdvanceTests {
             Forms.answer(sp, 11, null);
             h.assertTrue("thunderlord".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
                     && JobSystem.job(sp).display().equals("썬더로드"), "thunderlord free from the first job: " + JobSystem.jobOf(sp));
-            // 사제의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            // 2026-11-06 사제의 2차 전직 (세인트 · 워록) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("priest"), null);
@@ -354,7 +358,25 @@ public final class RpgJobAdvanceTests {
             h.assertTrue("priest".equals(JobSystem.jobOf(sp)), "changed to priest: " + JobSystem.jobOf(sp));
             JobTrainer.open(sp, () -> done[0]++);
             FormNet.ChestPayload pr = chest(sp);
-            h.assertTrue(pr != null && pr.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "priest: 2차 전직 dim (준비 중)");
+            h.assertTrue(pr != null && pr.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "priest: 2차 전직 open");
+            Forms.answer(sp, JobTrainer.ADV_SLOT, null);
+            FormNet.ChestPayload pradv = chest(sp);
+            h.assertTrue(pradv != null && pradv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("세인트")
+                    && pradv.slots().get(JobTrainer.INVERT_SLOT).name().contains("워록"), "priest advance cards");
+            Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
+            h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "priest advance confirm");
+            Forms.answer(sp, 11, null);
+            h.assertTrue("saint".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
+                    && JobSystem.job(sp).display().equals("세인트"), "saint free from the first job: " + JobSystem.jobOf(sp));
+            // 수호기사의 2차 전직은 아직 준비 중 (다른 1차 직업 — 300 · 2차가 풀림)
+            Wallet.set(sp, Economy.Kind.SILVER, 300);
+            JobTrainer.open(sp, () -> done[0]++);
+            Forms.answer(sp, JobTrainer.slotOf("guardian"), null);
+            Forms.answer(sp, 11, null);
+            h.assertTrue("guardian".equals(JobSystem.jobOf(sp)), "changed to guardian: " + JobSystem.jobOf(sp));
+            JobTrainer.open(sp, () -> done[0]++);
+            FormNet.ChestPayload gu = chest(sp);
+            h.assertTrue(gu != null && gu.slots().get(JobTrainer.ADV_SLOT).kind() == 3, "guardian: 2차 전직 dim (준비 중)");
             Forms.answer(sp, -1, null);
         } finally {
             JobUpgrades.set(sp, "swordsman_moon", 0);
@@ -3005,6 +3027,308 @@ public final class RpgJobAdvanceTests {
             RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);
             for (Husk x : z) x.discard();
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 세인트 — 2026-11-06
+
+    /** 체력 비율 */
+    static double ratio(ServerPlayer p) {
+        return p.getHealth() / Math.max(1e-6, p.getMaxHealth());
+    }
+
+    /**
+     * 세인트: 하트 어코드 (6 체력 비율을 고르게 — 많은 쪽은 바로 내려가고 적은 쪽은 12 에 오름 → 12 모두 12% · 신앙 +1) · 페탈 베일 (4 겨눈 아군 보호막 15% · 빠르기 ·
+     * 꽃잎 장막 — 깨지면 터짐 · 신앙 +1) · 글리머윙 (적 8 · 24 · 40 에 1.6 · 1.6 · 2.4 × 신앙, 아군 16 · 32 · 48 에 5%) · 소울본드 (이은 아군이 받는 피해 20% 를 내가 ·
+     * 회복 +40%) · 에버블룸 (정화 · 쓰러지지 않음 · 꽃잎 폭풍 4 × 3 + 꽃 12 × 신앙 → 80 깎인 체력을 되돌림 + 15% — 넘치면 보호막)
+     */
+    @GameTest(environment = ENV_ST, maxTicks = 700)
+    public void saintSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "saint", Map.of("int", 50, "vit", 20), 50);
+        RpgJobTests.hold(sp, Weapons.weaponFrom("scepter", 0, "common"));
+        Jobs.Job j = Jobs.job("saint");
+        List<Husk> z = new ArrayList<>();
+        ServerPlayer[] ally = {null};
+        double[] mark = {0, 0, 0};
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        // 하트 어코드: 나 100% · 앞 4칸 아군 30% → 6 평균 65% (나는 바로 65%) → 12 아군 65% · 모두 +12%
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            ally[0] = RpgJobTests.allyAt(h, sp, 0, 4);
+            sp.setHealth(sp.getMaxHealth());
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.3F);
+            h.assertTrue(JobSkills.press(sp, 0), "하트 어코드 cast");
+            h.assertTrue(JobTraits4.faith(sp) == 1, "heart accord → faith 1: " + JobTraits4.faith(sp));
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            h.assertTrue(RpgJobTests.close(ratio(sp), 0.65, 0.015), "accord: the fuller one drops to the average at 6: " + ratio(sp));
+            h.assertTrue(RpgJobTests.close(ratio(ally[0]), 0.3, 0.015), "accord: the light is still flowing to the ally: " + ratio(ally[0]));
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            h.assertTrue(RpgJobTests.close(ratio(sp), 0.77, 0.015) && RpgJobTests.close(ratio(ally[0]), 0.77, 0.015),
+                    "accord: both at the average + 12%: " + ratio(sp) + " / " + ratio(ally[0]));
+            // 페탈 베일: 앞 4칸의 아군 (겨눔) — 4 에 보호막 15% · 빠르기 · 꽃잎 장막
+            h.assertTrue(JobSkills.press(sp, 1), "페탈 베일 cast");
+            h.assertTrue(JobTraits4.faith(sp) == 2, "petal veil → faith 2: " + JobTraits4.faith(sp));
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            h.assertTrue(RpgJobTests.close(RpgHealth.shieldOf(ally[0]), RpgHealth.maxOf(ally[0]) * 0.15, 1e-6), "veil shield 15%: " + RpgHealth.shieldOf(ally[0]));
+            h.assertTrue(ally[0].hasEffect(MobEffects.SPEED) && JobTraits14.veiled(ally[0]), "veil: speed · petals wrap the aimed ally");
+            h.assertTrue(RpgHealth.shieldOf(sp) == 0 && !JobTraits14.veiled(sp), "the aimed ally, not me");
+            // 장막이 깨짐 (보호막보다 큰 피해) → 꽃잎이 터지며 장막이 사라짐
+            z.add(dummy(h, 2.0, 4.0));
+            float hp = ally[0].getHealth();
+            ally[0].setHealth(RpgHealth.onLoss(ally[0], ally[0].damageSources().mobAttack(z.get(0)), hp, hp - (float) (RpgHealth.shieldOf(ally[0]) + 2)));
+            h.assertTrue(RpgHealth.shieldOf(ally[0]) <= 0.01, "the veil shield broke: " + RpgHealth.shieldOf(ally[0]));
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            h.assertTrue(!JobTraits14.veiled(ally[0]), "a broken veil bursts (petals scatter)");
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 글리머윙: 앞 3칸 과녁 → 체력 비율이 가장 낮은 아군 → 과녁 … (8틱마다 여섯 번) — 신앙 2 (+20%) 를 씀
+            home(h, sp);
+            z.add(dummy(h, 0, 3.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            RpgJobTests.moveAlly(ally[0], sp, -2.0, 3.0);
+            sp.setHealth(sp.getMaxHealth());
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.5F);
+            mark[0] = ally[0].getHealth();
+            h.assertTrue(JobSkills.press(sp, 2), "글리머윙 cast");
+            h.assertTrue(JobTraits4.faith(sp) == 0, "an attack skill uses all faith: " + JobTraits4.faith(sp));
+        }));
+        steps.add(new RpgJobTests.Step(9, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 1.6) * 1.2;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "글리머윙 첫 나비 (신앙 2) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "saint gradient number");
+        }));
+        steps.add(new RpgJobTests.Step(32, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 5.6) * 1.2;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "글리머윙 (적에게 셋 — 1.6 · 1.6 · 2.4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double got = ally[0].getHealth() - mark[0];
+            h.assertTrue(RpgJobTests.close(got, RpgHealth.maxOf(ally[0]) * 0.15, RpgHealth.maxOf(ally[0]) * 0.02), "글리머윙 heals the ally 5% × 3: " + got);
+            // 소울본드: 앞 4칸 아군 (겨눔) 과 이어짐 — 그 아군이 받는 피해 20% 를 내가 · 신앙 +1
+            home(h, sp);
+            RpgJobTests.moveAlly(ally[0], sp, 0, 4);
+            sp.setHealth(sp.getMaxHealth());
+            ally[0].setHealth(ally[0].getMaxHealth());
+            h.assertTrue(JobSkills.press(sp, 3), "소울본드 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "saint_bond") && ally[0].getUUID().equals(JobTraits14.bondOf(sp)), "soul bond: stance · tied to the aimed ally");
+            h.assertTrue(JobTraits4.faith(sp) == 1, "soul bond → faith 1: " + JobTraits4.faith(sp));
+            float hs = sp.getHealth();
+            float ha = ally[0].getHealth();
+            ally[0].setHealth(RpgHealth.onLoss(ally[0], ally[0].damageSources().mobAttack(z.get(0)), ha, ha - 10F));
+            h.assertTrue(RpgJobTests.close(ha - ally[0].getHealth(), 8, 0.05) && RpgJobTests.close(hs - sp.getHealth(), 2, 0.05),
+                    "bond: the ally takes 8 and I take 2 — " + (ha - ally[0].getHealth()) + " / " + (hs - sp.getHealth()));
+            // 이어진 동안 직업 스킬 회복 +40%: 둘 다 40% (고르게 할 것 없음) → 하트 어코드 12% × 1.4
+            sp.setHealth(sp.getMaxHealth() * 0.4F);
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.4F);
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 0), "하트 어코드 cast (bonded)");
+        }));
+        steps.add(new RpgJobTests.Step(14, () -> {
+            h.assertTrue(RpgJobTests.close(ratio(sp), 0.568, 0.015) && RpgJobTests.close(ratio(ally[0]), 0.568, 0.015),
+                    "bonded heal +40% (12% → 16.8%): " + ratio(sp) + " / " + ratio(ally[0]));
+            JobSystem.setJob(sp, "saint");
+            h.assertTrue(!JobTraits.stanceOn(sp, "saint_bond") && JobTraits14.bondOf(sp) == null, "job reset ends the soul bond");
+            for (Husk x : z) x.discard();
+            z.clear();
+            // 에버블룸: 발밑 둘레 10칸 꽃밭 — 안의 아군 정화 · 쓰러지지 않음 · 깎인 체력을 적어 둠 → 20 · 40 · 60 꽃잎 폭풍 4 → 80 꽃 12 · 되돌림 + 15%
+            home(h, sp);
+            z.add(dummy(h, 0, 3.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            RpgJobTests.moveAlly(ally[0], sp, -2.0, 1.0);
+            sp.setHealth(sp.getMaxHealth());
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.6F);
+            ally[0].addEffect(new MobEffectInstance(MobEffects.POISON, 200, 0));
+            JobTraits4.setFaith(sp, 2);
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 4), "에버블룸 cast");
+            h.assertTrue(!ally[0].hasEffect(MobEffects.POISON), "everbloom cleanses the ally");
+            h.assertTrue(JobTraits14.bloomOn(ally[0]) && JobTraits14.bloomOn(sp), "everbloom: undying on the ally and me");
+        }));
+        // 25: 쓰러질 피해 → 체력 1 에서 버팀 (깎인 체력 = 그때 체력 − 1 을 적어 둠)
+        steps.add(new RpgJobTests.Step(25, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 4) * 1.2;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "에버블룸 첫 꽃잎 폭풍 (신앙 2) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            float hp = ally[0].getHealth();
+            mark[1] = hp - 1;
+            float next = RpgHealth.onLoss(ally[0], ally[0].damageSources().magic(), hp, hp - 10000F);
+            ally[0].setHealth(next);
+            h.assertTrue(RpgJobTests.close(next, 1, 1e-6), "everbloom: a lethal hit leaves 1 HP (" + next + ")");
+        }));
+        steps.add(new RpgJobTests.Step(53, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 12) * 1.2;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "에버블룸 꽃잎 폭풍 셋 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            mark[2] = ally[0].getHealth();
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 24) * 1.2;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "에버블룸 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            double max = RpgHealth.maxOf(ally[0]);
+            double gain = ally[0].getHealth() - mark[2];
+            double back = Math.min(max - mark[2], mark[1] + max * 0.15);
+            h.assertTrue(RpgJobTests.close(gain, back, max * 0.02), "bloom rewinds the lost HP + 15%: " + gain + " vs " + back);
+            h.assertTrue(RpgJobTests.close(RpgHealth.shieldOf(sp), RpgHealth.maxOf(sp) * 0.15, RpgHealth.maxOf(sp) * 0.01),
+                    "overflowing light: my full-HP heal becomes a shield (15%): " + RpgHealth.shieldOf(sp));
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgJobTests.bye(h, ally[0]);
+            RpgGearTests.done(h, sp);
+        });
+    }
+
+    // ------------------------------------------------------------ 워록 — 2026-11-06
+
+    /**
+     * 워록: 생명 착취 (피해 직업 스킬마다 둘레 10칸 아군과 나의 체력 4% 씩 — 혼자면 나 8% · 몫 하나당 위력 +10%) · 생귄 랜스 (12 에 3 · 맞히면 빼앗은 체력의 반을 돌려줌) ·
+     * 블러드 노바 (0.6 × 3 + 3.8) · 크림슨 마이어 (받는 피해 없음 · 보이지 않음 · 과녁 앞으로 흘러가 0.45 × 4 · 둔화) · 애시본 (내 체력만 8% · 위력 +40%) · 블러드 뱅큇
+     * (피의 역병 — 받는 피해 +10% · 2 × 3 → 62 아군 15% → 70 18 × (1 + 0.15 × 빼앗은 아군))
+     */
+    @GameTest(environment = ENV_WK, maxTicks = 700)
+    public void warlockSkills(GameTestHelper h) {
+        floor(h);
+        ServerPlayer sp = RpgJobTests.jobPlayer(h, "warlock", Map.of("int", 50, "vit", 20), 50);
+        RpgJobTests.hold(sp, Weapons.weaponFrom("scepter", 0, "common"));
+        Jobs.Job j = Jobs.job("warlock");
+        List<Husk> z = new ArrayList<>();
+        ServerPlayer[] ally = {null};
+        double[] mark = {0, 0, 0};
+        List<RpgJobTests.Step> steps = new ArrayList<>();
+        // 생귄 랜스 (혼자): 나 8% (몫 둘 → +20%) → 12 에 3 × 1.2 · 맞히면 빼앗은 체력의 반 (4%) 을 돌려줌
+        steps.add(new RpgJobTests.Step(1, () -> {
+            home(h, sp);
+            RpgCombat.forceCrit = false;
+            z.add(dummy(h, 0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            sp.setHealth(sp.getMaxHealth());
+            h.assertTrue(JobTraits14.units(sp) == 2, "alone: my 8% = 2 shares: " + JobTraits14.units(sp));
+            mark[0] = sp.getHealth();
+            h.assertTrue(JobSkills.press(sp, 0), "생귄 랜스 cast (alone)");
+            h.assertTrue(RpgJobTests.close(mark[0] - sp.getHealth(), RpgHealth.maxOf(sp) * 0.08, 0.05), "alone: paid 8% of my HP: " + (mark[0] - sp.getHealth()));
+            h.assertTrue(RpgJobTests.close(JobTraits14.lastPaid(sp, sp), RpgHealth.maxOf(sp) * 0.08, 0.05), "the drain is remembered: " + JobTraits14.lastPaid(sp, sp));
+        }));
+        steps.add(new RpgJobTests.Step(13, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.0) * 1.2;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "생귄 랜스 (몫 둘 — +20%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "warlock gradient number");
+            mark[1] = sp.getHealth();
+        }));
+        steps.add(new RpgJobTests.Step(20, () -> {
+            double got = sp.getHealth() - mark[1];
+            h.assertTrue(got >= RpgHealth.maxOf(sp) * 0.04 - 0.05, "the lance gave half of the drain back (4%): " + got);
+            // 블러드 노바 (아군과): 나 4% · 옆 2칸 아군 4% (몫 둘 → +20%) → 10 · 20 · 30 빨아들임 0.6 → 40 터짐 3.8
+            home(h, sp);
+            for (Husk x : z) x.discard();
+            z.clear();
+            z.add(dummy(h, 0, 3.0));
+            z.add(dummy(h, 3.0, 1.0));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            ally[0] = RpgJobTests.allyAt(h, sp, -2.0, 0.0);
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.9F);
+            sp.setHealth(sp.getMaxHealth());
+            h.assertTrue(JobTraits14.units(sp) == 2, "with an ally: 4% + 4% = 2 shares: " + JobTraits14.units(sp));
+            mark[0] = sp.getHealth();
+            mark[1] = ally[0].getHealth();
+            h.assertTrue(JobSkills.press(sp, 2), "블러드 노바 cast");
+            h.assertTrue(RpgJobTests.close(mark[0] - sp.getHealth(), RpgHealth.maxOf(sp) * 0.04, 0.05)
+                    && RpgJobTests.close(mark[1] - ally[0].getHealth(), RpgHealth.maxOf(ally[0]) * 0.04, 0.05),
+                    "with an ally: each pays 4%: " + (mark[0] - sp.getHealth()) + " / " + (mark[1] - ally[0].getHealth()));
+            h.assertTrue(RpgJobTests.close(JobTraits14.lastPaid(sp, ally[0]), RpgHealth.maxOf(ally[0]) * 0.04, 0.05), "the ally's share is remembered");
+        }));
+        steps.add(new RpgJobTests.Step(42, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 5.6) * 1.2;
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want), "블러드 노바 (0.6 × 3 + 3.8) " + TestDummies.dealt(x) + " vs " + want);
+            // 크림슨 마이어: 4칸 앞 과녁 — 2 부터 보이지 않음 · 받는 피해 없음 → 10틱 동안 과녁 앞으로 흘러감 → 10 · 20 · 30 · 40 웅덩이 둘레 0.45 · 둔화 → 40 솟구침
+            home(h, sp);
+            for (Husk x : z) x.discard();
+            z.clear();
+            z.add(dummy(h, 0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            RpgJobTests.moveAlly(ally[0], sp, -2.0, 0.0);
+            sp.setHealth(sp.getMaxHealth());
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.9F);
+            mark[2] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 1), "크림슨 마이어 cast");
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            h.assertTrue(sp.hasEffect(MobEffects.INVISIBILITY) && JobTraits13.guarded(sp), "melted into a pool: invisible · no damage taken");
+            h.assertTrue(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) == 1, "pool body: damage blocked");
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            h.assertTrue(sp.position().z - mark[2] > 1.8 && z.get(0).position().z - sp.position().z < 2.6, "flowed in front of the target: "
+                    + (sp.position().z - mark[2]) + " · " + (z.get(0).position().z - sp.position().z));
+            var speed = sp.getAttribute(Attributes.MOVEMENT_SPEED);
+            h.assertTrue(speed != null && speed.getValue() > speed.getBaseValue() * 1.2, "the pool moves faster (+30%): " + (speed == null ? -1 : speed.getValue()));
+        }));
+        steps.add(new RpgJobTests.Step(30, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(1), 1.8) * 1.2;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "크림슨 마이어 (0.45 × 4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "the pool slows");
+            h.assertTrue(!sp.hasEffect(MobEffects.INVISIBILITY), "risen: visible again");
+            var speed = sp.getAttribute(Attributes.MOVEMENT_SPEED);
+            h.assertTrue(speed != null && speed.getValue() < speed.getBaseValue() * 1.2, "the pool speed is gone");
+            // 애시본: 태세 — 생명 착취가 아군 대신 내 체력만 (8%) · 위력 +40% → 생귄 랜스 3 × (1 + 0.2 + 0.4)
+            home(h, sp);
+            for (Husk x : z) x.discard();
+            z.clear();
+            z.add(dummy(h, 0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            RpgJobTests.moveAlly(ally[0], sp, -2.0, 0.0);
+            sp.setHealth(sp.getMaxHealth());
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.9F);
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 3), "애시본 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "warlock_ash"), "ashborn: stance");
+            mark[0] = sp.getHealth();
+            mark[1] = ally[0].getHealth();
+            h.assertTrue(JobSkills.press(sp, 0), "생귄 랜스 cast (ashborn)");
+            h.assertTrue(RpgJobTests.close(mark[0] - sp.getHealth(), RpgHealth.maxOf(sp) * 0.08, 0.05) && RpgJobTests.close(ally[0].getHealth(), mark[1], 1e-4),
+                    "ashborn: only my HP (8%), the ally keeps it: " + (mark[0] - sp.getHealth()) + " / " + (mark[1] - ally[0].getHealth()));
+        }));
+        steps.add(new RpgJobTests.Step(13, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 3.0) * 1.6;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "생귄 랜스 (애시본 — +20% +40%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            JobSystem.setJob(sp, "warlock");
+            h.assertTrue(!JobTraits.stanceOn(sp, "warlock_ash"), "job reset ends the ashborn");
+            // 블러드 뱅큇: 4칸 앞 과녁 둘레 5칸 — 10 피의 역병 (받는 피해 +10%) · 10 · 30 · 50 고동 2 → 62 둘레 10칸 아군 15% → 70 18 × (1 + 0.15)
+            home(h, sp);
+            for (Husk x : z) x.discard();
+            z.clear();
+            z.add(dummy(h, 0, 4.0));
+            RpgJobTests.clearStrays(h, z.get(0));
+            RpgJobTests.moveAlly(ally[0], sp, -2.0, 0.0);
+            sp.setHealth(sp.getMaxHealth());
+            ally[0].setHealth(ally[0].getMaxHealth() * 0.9F);
+            mark[1] = ally[0].getHealth();
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 4), "블러드 뱅큇 cast");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 2) * 1.2 * 1.1;
+            h.assertTrue(JobTraits14.plagued(z.get(0)), "blood plague on the target");
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블러드 뱅큇 첫 고동 (역병 +10%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(52, () -> {
+            double lost = mark[1] - ally[0].getHealth();
+            h.assertTrue(RpgJobTests.close(lost, RpgHealth.maxOf(ally[0]) * 0.19, RpgHealth.maxOf(ally[0]) * 0.02), "the feast took the ally's 15% (+ 4% tithe): " + lost);
+        }));
+        steps.add(new RpgJobTests.Step(8, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 6 + 18 * 1.15) * 1.2 * 1.1;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블러드 뱅큇 (2 × 3 + 18 × 1.15) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        RpgJobTests.chain(h, steps, 0, () -> {
+            RpgCombat.forceCrit = null;
+            RpgJobTests.cleanup(sp);
+            for (Husk x : z) x.discard();
+            RpgJobTests.bye(h, ally[0]);
             RpgGearTests.done(h, sp);
         });
     }

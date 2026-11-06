@@ -262,7 +262,8 @@ final class JobFx {
     /** 맞은 자리 (rfx_jhit): 몸 가운데 · 몸 크기에 맞춤 · 아무렇게나 기욺 */
     static void hit(LivingEntity e, Jobs.Job j, double scale) {
         if (!(e.level() instanceof ServerLevel level)) return;
-        Object[] snd = j == null ? null : HIT_SOUND.get(fid(j));
+        // 0.51.0 워록은 사제의 종소리 대신 젖은 찌름 (피)
+        Object[] snd = j == null ? null : JobTraits14.WK.equals(j.id()) ? new Object[] {"entity.player.hurt_sweet_berry_bush", 0.85, 0.45} : HIT_SOUND.get(fid(j));
         if (snd != null && RuneKit.fxQuota("jobHitSound", 3)) mmorpg.fabric.skill.SkillFx.play(level, (String) snd[0], e.position(), (double) snd[1], (double) snd[2]);
         double size = (0.75 + Kit.bodyPad(e) * 0.6) * scale;
         Vec3 b = Kit.bodyPoint(e);
@@ -275,6 +276,9 @@ final class JobFx {
             // 0.51.0 블러드 나이트: 맞은 자리에 피 튀김 (rfx_jblood — 베인 줄 · 튀는 핏방울) + 은빛 베인 줄 한 겹 (핏빛)
             JobTraits5.blood(level, b, size * 1.05, j, 0.36, Opt.of("spin", tilt));
             two(level, "jhits", HITS, 0, b, 0.3, Opt.of("size", size * 0.8, "spin", tilt, "fade", 0.25, "alpha", 0.8), outer(j), inner(j));
+        } else if (j != null && JobTraits14.WK.equals(j.id())) {
+            // 0.51.0 워록: 사제의 빛 꽃 대신 피 튀김 (rfx_jblood — 진홍 · 금빛 속)
+            JobTraits5.blood(level, b, size, j, 0.34, Opt.of("spin", tilt));
         } else if (j != null && JobTraits6.GL.equals(j.id())) {
             // 0.51.0 글래디에이터: 엇갈린 두 도끼 자국 (rfx_jhits 의 X 줄 — 진홍 겉 · 모래 금빛 속, 조금 크게)
             two(level, "jhits", HITS, HIT_ROWS.indexOf("assassin") * 12, b, 0.32, Opt.of("size", size * 1.0, "spin", tilt, "fade", 0.25), outer(j), inner(j));
