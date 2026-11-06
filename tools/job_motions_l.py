@@ -53,7 +53,7 @@ m.set(softLegs=False)
 impacts(m, 6.0, 16.0)
 use_skill(m, "thunderlord_arc")
 
-# 썬더스텝 (효과: 0 몸이 번개가 되어 하늘로 사라짐 (보이지 않음 — 망치도 숨김) → 6 :land 조준한 곳에 벼락으로 내리꽂힘)
+# 썬더스텝 (효과: 0 ~ 2 웅크림 (발밑에 번개) → 2 몸이 번개가 되어 하늘로 사라짐 (보이지 않음 — 망치는 1.6틱부터 숨김) → 6 :land 조준한 곳에 벼락으로 내리꽂힘)
 STEP_CROUCH = P(F_CROUCH, ra=arm([0.3, 0.88, -0.3], 30, [0.1, 0.85, -0.5]))  # 망치를 든 채 웅크림
 STEP_UP = P(body=[-12, 0, 0], head=[-28, 0], ra=RA_SKY, la=arm([-0.25, -0.85, -0.3], 10), rl=[-6, 0, 4], rk=8, ll=[6, 0, -4], lk=14, root=[0.0, 0.12])  # 솟구침
 STEP_DIVE = P(body=[20, 0, 0], head=[10, 0], ra=arm([0.2, 0.9, -0.35], 40, [0.05, 0.3, -0.95]), la=arm([-0.4, -0.3, 0.6], 20), rl=[-30, 0, 8], rk=60,
@@ -61,7 +61,7 @@ STEP_DIVE = P(body=[20, 0, 0], head=[10, 0], ra=arm([0.2, 0.9, -0.35], 40, [0.05
 LAND = P(body=[36, 0, 0], head=[-16, 0], ra=arm([0.05, -0.62, 0.78], 12, [0, -0.9, 0.42]), la=L(A_SPREAD_DOWN), rl=[2, 0, 4], rk=92, ll=[-82, 0, -4], lk=88,
          root=[-0.38, 0.24])  # 한 무릎을 꿇고 망치를 앞 땅에 내리꽂음 · 왼팔은 아래 바깥으로
 m = Motion("thunderlord_step", 8, "썬더스텝 — 망치를 든 채 웅크렸다가 번개가 되어 하늘로 솟구치고 (보이지 않음), 망치를 머리 위로 들고 내리꽂힘", fade=(0.02, 0.06))
-m.set(hands={"main": "thrown", "off": "fist"}, hide=[m.t(0.6), m.t(8.0)])
+m.set(hands={"main": "thrown", "off": "fist"}, hide=[m.t(1.6), m.t(8.0)])  # 2틱에 보이지 않게 됨 (서버가 웅크린 뒤 투명) — 그 전에 망치를 숨김
 keyp(m, 0.6, STEP_CROUCH, "out3")
 keyp(m, 2.0, STEP_UP, "out")
 keyp(m, 4.6, STEP_DIVE, "inout")

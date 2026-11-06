@@ -10992,7 +10992,7 @@
       ]
     },
     "jb_thunderlord_step": {
-      "ticks": 8, "parts": ["body", "ra", "la", "legs", "head", "root"], "softLegs": false, "fade": [0.02, 0.06], "hands": {"main": "thrown", "off": "fist"}, "hide": [0.075, 1.0],
+      "ticks": 8, "parts": ["body", "ra", "la", "legs", "head", "root"], "softLegs": false, "fade": [0.02, 0.06], "hands": {"main": "thrown", "off": "fist"}, "hide": [0.2, 1.0],
       "keys": [
         {"t": 0.0},
         {"t": 0.075, "body": [26, 0, 0], "head": [-16, 0], "ra": {"dir": [0.3071, 0.9008, -0.3071], "bend": 30, "blade": [0.1009, 0.8575, -0.5044]}, "la": {"dir": [-0.4924, -0.6155, -0.6155], "bend": 30}, "rl": [-42, 0, 10], "ll": [-42, 0, -10], "rk": 86, "lk": 86, "root": [-0.34, 0.05], "ease": "out3"},

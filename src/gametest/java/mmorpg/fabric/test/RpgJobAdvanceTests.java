@@ -2773,17 +2773,18 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgHealth.shieldOf(sp) >= RpgHealth.maxOf(sp) * 0.1 - 1e-6, "step shield 10%: " + RpgHealth.shieldOf(sp));
             z.get(0).discard();
             z.clear();
-            // 스톰 스파이어: 5칸 앞 과녁의 발밑 — 16 번개 기둥 (둘레 3.5칸 6.6 · 기절 · 심판 +2) → 26 번개 물결 (둘레 6칸 3.3) — 기둥 밖 (4칸) 과녁은 물결만
+            // 스톰 스파이어: 5칸 앞 과녁의 발밑 — 16 번개 기둥 (둘레 3.5칸 6.6 · 기절 · 심판 +2) → 26 번개 물결 (둘레 6칸 3.3) — 기둥 밖 (4.2칸) 과녁은 물결만
+            // (시험 자리 안: x 8 부터 barrier 벽 — 4칸 옆 x 8.5 과녁은 숨막힘 1 × 2 가 더해졌음, CI 42174923540)
             home(h, sp);
             z.add(dummy(h, 0, 5.0));
-            z.add(dummy(h, 4.0, 5.0));
+            z.add(dummy(h, -3.0, 2.0));
             RpgJobTests.clearStrays(h, z.get(0), z.get(1));
             h.assertTrue(JobSkills.press(sp, 2), "스톰 스파이어 cast");
         }));
         steps.add(new RpgJobTests.Step(18, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 6.6);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스톰 스파이어 기둥 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(TestDummies.dealt(z.get(1)) == 0, "outside the pillar (4): " + TestDummies.dealt(z.get(1)));
+            h.assertTrue(TestDummies.dealt(z.get(1)) == 0, "outside the pillar (4.2): " + TestDummies.dealt(z.get(1)));
             h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "the pillar stuns");
             h.assertTrue(JobTraits4.judges(sp, z.get(0)) == 2, "pillar → 2 judgements: " + JobTraits4.judges(sp, z.get(0)));
         }));
@@ -2791,7 +2792,7 @@ public final class RpgJobAdvanceTests {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 9.9);
             double wave = RpgJobTests.expected(sp, j, j.skill(2), 3.3);
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스톰 스파이어 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), wave), "번개 물결 (4칸) " + TestDummies.dealt(z.get(1)) + " vs " + wave);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), wave), "번개 물결 (4.2칸) " + TestDummies.dealt(z.get(1)) + " vs " + wave);
             for (Husk x : z) x.discard();
             z.clear();
             // 썬더헤드: 10초 태세 (밀려나지 않음) — 망치 평타마다 먹구름 벼락 (평타 × 0.5 더 · 심판 +1 더) · 맞으면 둘레 아군 보호막 3% · 네 번째 평타마다 번개 고리 (기절)
@@ -2823,7 +2824,7 @@ public final class RpgJobAdvanceTests {
             // 던브레이커: 10 번개 사슬 (둘레 10칸 8 · 묶음) → 30 새벽 (12 · 돌로 굳음 · 나와 아군 2초 받는 피해 없음) → 46 돌이 깨짐 (24)
             home(h, sp);
             z.add(dummy(h, 0, 3.0));
-            z.add(dummy(h, -4.0, 4.0));
+            z.add(dummy(h, -3.0, 4.0));
             RpgJobTests.clearStrays(h, z.get(0), z.get(1));
             JobSkills.resetCooldowns(sp);
             h.assertTrue(JobSkills.press(sp, 4), "던브레이커 cast");

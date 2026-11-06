@@ -59,6 +59,16 @@ final class ThunderlordSkills {
         return V.add(V.up(h.hand(), 0.15), h.f(), 0.45);
     }
 
+    /**
+     * 적의 발 자리를 쓴 사람 쪽으로 (몸 반 너비 + extra 칸 — 수평): 카메라를 보는 그림 (돌 껍데기 · 거인의 손) 이 쓴 사람의 시점에서 적 몸 앞에 그려지게 (영상 1: 적 발 자리면
+     * 몸 가운데를 지나는 판이라 적의 앞쪽 반이 그림 밖으로 나와 돌이 적 뒤의 판처럼 보였음)
+     */
+    static Vec3 inFront(ServerPlayer sp, LivingEntity e, double extra) {
+        Vec3 d = V.flat(V.sub(sp.position(), e.position()));
+        if (V.len(d) < 0.05) return e.position();
+        return V.add(e.position(), V.unit(d), e.getBbWidth() * 0.5 + extra);
+    }
+
     /** at 둘레에 작은 번개 n 줄 (지직임 — 감기 · 묶음 · 지나간 자리) */
     static void crackle(ServerLevel level, Vec3 at, double r, int n, double[] glow, double[] core, double life, Opt o) {
         for (int i = 0; i < n; i++) {
@@ -229,20 +239,28 @@ final class ThunderlordSkills {
         }
         Vec3 land = dest;
         LivingEntity look = face;
-        // 사라짐: 받는 피해 없음 · 보이지 않음 · 그 자리에 머묾 — 몸에서 하늘로 솟는 벼락 · 터짐 · 하늘을 가로지르는 번개
+        // 웅크림 (gather 틱 — 발밑에 번개가 모임 · 받는 피해 없음 · 그 자리에 머묾) → 사라짐: 보이지 않음 — 몸에서 하늘로 솟는 벼락 · 터짐 · 하늘을 가로지르는 번개.
+        // 투명은 웅크린 뒤 (영상 1: 쓰자마자 투명이면 투명 효과가 동작보다 먼저 닿아 빈 몸 곁에 망치만 1 ~ 2틱 떠 있었음 — 동작은 1.6틱부터 망치를 숨김)
+        int gather = Math.min(2, vanish - 1);
         JobTraits13.guardFor(sp, vanish + 2);
         RpgCombat.setSteadfast(sp, vanish + 4);
         JobMove.run(sp, JobMove.hold(0, vanish));
-        sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, vanish + 1, 0, false, false, false));
-        JobFx.thunder(level0, start, 12, j, 0.35, Opt.empty());
-        JobFx.thunder(level0, start, 10, SKY, SKY_CORE, 0.25, Opt.of("alpha", 0.75));
-        JobFx.bolt(level0, V.up(start, 1.0), V.up(start, 12), GOLD, GOLD_CORE, 60, 0.7, Opt.empty());
-        JobFx.burst(level0, V.up(start, 1.0), 1.4, GOLD, GOLD_CORE, 0.3, JobFx.hide1p(sp));
-        JobFx.volt(level0, V.up(start, 0.06), 1.4, j, 0.35, Opt.empty());
-        SkillFx.sparks(level0, V.up(start, 1.0), GOLD, 12, 6);
-        SkillFx.play(level0, "entity.lightning_bolt.thunder", start, 1.6, 0.4);
+        JobFx.volt(level0, V.up(start, 0.06), 1.6, j, (gather + 2) / 20.0, Opt.of("grow", -0.4));
+        crackle(level0, V.up(start, 0.6), 1.2, 3, GOLD, GOLD_CORE, 0.15, Opt.empty());
         SkillFx.play(level0, "item.trident.riptide_3", start, 1.4, 0.6);
-        RuneKit.later(vanish / 2, () -> {
+        RuneKit.later(gather, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
+            sp.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, vanish - gather + 1, 0, false, false, false));
+            JobFx.thunder(lv, start, 12, j, 0.35, Opt.empty());
+            JobFx.thunder(lv, start, 10, SKY, SKY_CORE, 0.25, Opt.of("alpha", 0.75));
+            JobFx.bolt(lv, V.up(start, 1.0), V.up(start, 12), GOLD, GOLD_CORE, 60, 0.7, Opt.empty());
+            JobFx.burst(lv, V.up(start, 1.0), 1.6, GOLD, GOLD_CORE, 0.3, JobFx.hide1p(sp));
+            JobFx.volt(lv, V.up(start, 0.06), 1.6, j, 0.35, Opt.empty());
+            SkillFx.sparks(lv, V.up(start, 1.0), GOLD, 12, 6);
+            SkillFx.play(lv, "entity.lightning_bolt.thunder", start, 1.6, 0.4);
+        });
+        RuneKit.later((gather + vanish) / 2, () -> {
             if (RuneKit.sameLife(sp, life)) JobFx.arc(sp.level(), V.up(start, 11), V.up(land, 11), GOLD, GOLD_CORE, 0.25, Opt.of("flash", 1.0));
         });
         JobKit.motionLater(sp, "thunderlord_step:land", vanish, life);
@@ -311,7 +329,7 @@ final class ThunderlordSkills {
         RpgCombat.setSteadfast(sp, strikeAt + 4);
         // 뜸: 망치를 하늘로 치켜듦 · 하늘의 먹구름이 모임 · 땅의 금빛 고리가 조여 듦 · 구름 속 번쩍임 · 땅을 기는 작은 번개
         JobFx.charge(sp, j, new Vec3(0.2, 2.7, 0.2), strikeAt - 2, 0.8);
-        Vec3 sky = V.up(g, 9.5);
+        Vec3 sky = V.up(g, 7.0); // 영상 1: 9.5칸은 3인칭 화면 위 밖이라 먹구름이 보이지 않았음
         JobFx.cloud(level0, sky, 3.4, 0, 2, 0.4, false, Opt.empty(), CLOUD, GOLD);
         RuneKit.later(8, () -> {
             if (RuneKit.sameLife(sp, life)) JobFx.cloud(sp.level(), sky, 3.6, 2, 4, (strikeAt - 8) / 20.0 + 0.15, true, Opt.empty(), CLOUD, GOLD);
@@ -324,7 +342,7 @@ final class ThunderlordSkills {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
-                JobFx.thunder(lv, V.add(V.up(g, 6.5), new Vec3((Kit.rand() - 0.5) * 4, 0, (Kit.rand() - 0.5) * 4)), 3.0, j, 0.18, Opt.of("alpha", 0.8));
+                JobFx.thunder(lv, V.add(V.up(g, 5.8), new Vec3((Kit.rand() - 0.5) * 4, 0, (Kit.rand() - 0.5) * 4)), 3.0, j, 0.18, Opt.of("alpha", 0.8));
                 double a = Kit.rand() * Math.PI * 2;
                 Vec3 p = V.up(V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * (0.6 + Kit.rand() * 0.6)), 0.15);
                 JobFx.arc(lv, p, V.up(V.add(p, new Vec3(Math.cos(a + 1.6), 0, Math.sin(a + 1.6)), 1.2), 0.1), GOLD, GOLD_CORE, 0.2, Opt.empty());
@@ -335,8 +353,8 @@ final class ThunderlordSkills {
         RuneKit.later(strikeAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            JobFx.pillar(lv, g, 15, 1, 7, 0.7, false, Opt.empty(), GOLD, GOLD_CORE);
-            JobFx.pillar(lv, g, 13, 1, 7, 0.6, false, Opt.of("alpha", 0.7), SKY, SKY_CORE);
+            JobFx.pillar(lv, g, 11, 1, 7, 0.7, false, Opt.empty(), GOLD, GOLD_CORE);
+            JobFx.pillar(lv, g, 9.5, 1, 7, 0.6, false, Opt.of("alpha", 0.7), SKY, SKY_CORE);
             for (int i = 0; i < 3; i++) {
                 double a = i * Math.PI * 2 / 3 + Kit.rand();
                 JobFx.thunder(lv, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), radius * 0.8), 9, j, 0.3, Opt.of("alpha", 0.85));
@@ -430,7 +448,7 @@ final class ThunderlordSkills {
 
     /**
      * 던브레이커 (롤 레오나 R · 타릭 R): 폭풍의 밤 (rpg:ult_storm) — 망치를 하늘로 치켜들면 chainAt 틱 둘레 radius 칸 적들 (targets 까지 — 가까운 차례) 에게 하늘에서 번개
-     * 사슬이 내리꽂혀 묶음 (chains · root 틱 묶음 · 심판 + judge) → dawnAt 틱 망치를 땅에 꽂는 순간 새벽이 밝아 옴 (rpg:ult_dawn · 금빛 빛살 — 둘레 적 dawn) · 빛을
+     * 사슬이 내리꽂혀 묶음 (chains · root 틱 묶음 · 심판 + judge) → dawnAt 틱 망치를 땅에 꽂는 순간 새벽이 밝아 옴 (rpg:ult_daybreak · 금빛 빛살 — 둘레 적 dawn) · 빛을
      * 받은 적이 돌로 굳음 (petrify 틱 기절 — 보스는 느려짐) · 둘레 radius 칸 아군 (나 포함) guard 틱 받는 피해 없음 (강화) → shatterAt 틱 돌이 금 가며 깨짐 (shatter · 큰 숫자)
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
@@ -515,7 +533,7 @@ final class ThunderlordSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             Vec3 c = sp.position();
-            Ult.sky(lv, c, "rpg:ult_dawn", shatterAt - dawnAt + 30);
+            Ult.sky(lv, c, "rpg:ult_daybreak", shatterAt - dawnAt + 30); // 영상 1: rpg:ult_dawn 은 1차 궁수 하늘 활의 연둣빛 하늘 (ULT_FX.fogs 가 먼저)
             Ult.flash(lv, c, DAWN, Opt.of("radius", radius, "time", new double[] {0.03, 0.1, 0.6}), sp);
             RuneKit.godRays(sp, lv, c, radius * 0.7, 10, DAWN, DAWN_CORE, Opt.of("h", 15.0, "life", 1.3, "alpha", 0.8, "skipNear", true));
             JobFx.cloud(lv, sky, 6.4, 6, 2, 0.6, false, Opt.empty(), CLOUD, GOLD);
@@ -535,7 +553,7 @@ final class ThunderlordSkills {
                     else RuneKit.stun(e, petrify, DAWN, false);
                     JobImpact.fx(sp, e, j, 1.2);
                 });
-                JobFx.stone(lv, e.position(), e.getBbHeight() * 1.08 + 0.1, 0, 2, 0.25, false, Opt.of("vel", RuneKit.entVel(e)), STONE, STONE_CORE);
+                JobFx.stone(lv, inFront(sp, e, 0.18), e.getBbHeight() * 1.15 + 0.15, 0, 2, 0.25, false, Opt.of("vel", RuneKit.entVel(e)), STONE, STONE_CORE);
             }
             int guard = (int) JobUpgrades.num(sp, k, "guard", 40);
             for (ServerPlayer o : JobTraits4.allies(sp, c, radius)) {
@@ -552,7 +570,7 @@ final class ThunderlordSkills {
                 ServerLevel lv = sp.level();
                 for (LivingEntity e : stoned) {
                     if (e.isRemoved() || !e.isAlive()) continue;
-                    JobFx.stone(lv, e.position(), e.getBbHeight() * 1.08 + 0.1, 2, 2, 0.35, true, Opt.of("vel", RuneKit.entVel(e)), STONE, STONE_CORE);
+                    JobFx.stone(lv, inFront(sp, e, 0.18), e.getBbHeight() * 1.15 + 0.15, 2, 2, 0.35, true, Opt.of("vel", RuneKit.entVel(e)), STONE, STONE_CORE);
                 }
             });
         }
@@ -562,7 +580,7 @@ final class ThunderlordSkills {
             ServerLevel lv = sp.level();
             for (LivingEntity e : stoned) {
                 if (e.isRemoved() || !e.isAlive()) continue;
-                JobFx.stone(lv, e.position(), e.getBbHeight() * 1.08 + 0.1, 4, 4, 0.5, false, Opt.of("vel", RuneKit.entVel(e)), STONE, STONE_CORE);
+                JobFx.stone(lv, inFront(sp, e, 0.18), e.getBbHeight() * 1.15 + 0.15, 4, 4, 0.5, false, Opt.of("vel", RuneKit.entVel(e)), STONE, STONE_CORE);
             }
             SkillFx.play(lv, "block.stone.break", sp.position(), 0.7, 1.0);
         });

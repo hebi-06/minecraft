@@ -154,9 +154,11 @@ final class TyrantSkills {
             if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
             ServerLevel lv = sp.level();
             Vec3 b = Kit.bodyPoint(e);
-            // 감음: 그 적 둘레의 번개 · 사슬
-            JobFx.burst(lv, b, 1.0 + pad * 0.4, VIOLET, VIOLET_CORE, 0.25, Opt.of("vel", RuneKit.entVel(e)));
-            ThunderlordSkills.crackle(lv, b, 1.0 + pad, 3, VIOLET, VIOLET_CORE, 0.3, Opt.of("vel", RuneKit.entVel(e)));
+            // 감음: 그 적에게 보랏빛 벼락이 떨어지며 사슬이 감김 · 둘레의 번개 · 발밑 고리 (영상 1: 작은 터짐뿐이라 감긴 때가 보이지 않았음)
+            JobFx.burst(lv, b, 1.4 + pad * 0.4, VIOLET, VIOLET_CORE, 0.3, Opt.of("vel", RuneKit.entVel(e)));
+            JobFx.thunder(lv, e.position(), 7 + e.getBbHeight(), VIOLET, VIOLET_CORE, 0.3, Opt.of("vel", RuneKit.entVel(e)));
+            JobFx.volt(lv, V.up(e.position(), 0.08), 1.2 + pad * 0.5, j, 0.4, Opt.of("vel", RuneKit.entVel(e)));
+            ThunderlordSkills.crackle(lv, b, 1.2 + pad, 4, VIOLET, VIOLET_CORE, 0.3, Opt.of("vel", RuneKit.entVel(e)));
             SkillFx.play(lv, "block.chain.hit", b, 0.9, 1.0);
             SkillFx.play(lv, "entity.lightning_bolt.impact", b, 1.6, 0.4);
         });
@@ -168,7 +170,7 @@ final class TyrantSkills {
                 ServerLevel lv = sp.level();
                 Vec3 h = V.up(V.add(sp.position(), Kit.facingOf(sp), 0.4), 1.2);
                 Vec3 b = Kit.bodyPoint(e);
-                JobFx.chain(lv, h, b, j, 0.8, 0.12, Opt.of("alpha", 1.0));
+                JobFx.chain(lv, h, b, j, 1.25, 0.12, Opt.of("alpha", 1.0)); // 영상 1: 0.8칸 마디는 가늘어 보이지 않았음
                 JobFx.arc(lv, h, b, VIOLET, VIOLET_CORE, 0.12, Opt.empty());
                 RuneKit.shadeClone(sp, lv, sp.position(), Kit.facingOf(sp), 1, VIOLET, VIOLET_CORE, Opt.of("life", 0.25, "fade", 0.7, "alpha", 0.55));
             });
@@ -178,6 +180,11 @@ final class TyrantSkills {
             ServerLevel lv = sp.level();
             Vec3 c = sp.position();
             JobFx.slash(sp, j, 1.6, 0.3, 2.2, 200.0, 0.22);
+            // 들이받음: 앞의 보랏빛 충격 · 땅을 긁는 고리 · 핏빛 터짐 (영상 1: 작은 고리뿐)
+            Vec3 hit = V.up(V.add(c, Kit.facingOf(sp), 1.0), 1.0);
+            JobFx.burst(lv, hit, 1.8, VIOLET, VIOLET_CORE, 0.3, JobFx.hide1p(sp));
+            JobFx.smash(lv, V.up(V.add(c, Kit.facingOf(sp), 0.8), 0.05), 2.0, j, 0.4, Opt.empty());
+            RuneKit.novaRing(lv, V.add(c, Kit.facingOf(sp), 0.8), 0.6, 3.0, CRIMSON, CRIMSON_CORE, Opt.of("life", 0.35));
             SkillFx.play(lv, "entity.goat.ram_impact", c, 0.8, 1.0);
             SkillFx.play(lv, "entity.lightning_bolt.impact", c, 1.3, 0.5);
             if (e.isRemoved() || !e.isAlive() || e.distanceTo(sp) > 3.5 + pad) return;
@@ -216,7 +223,7 @@ final class TyrantSkills {
         int squeezes = Math.max(1, (int) k.num("squeezes", 3));
         int slamAt = Math.max(first + (squeezes - 1) * every + 10, (int) k.num("slamAt", 40));
         double pad = Kit.bodyPad(e);
-        double size = 1.25 + pad * 0.8;
+        double size = 1.45 + pad * 0.8; // 영상 1: 1.25 는 쥔 적에 손가락이 묻혀 분홍 고치처럼 보였음
         boolean lift = JobKit.pushable(e) && e.getBbHeight() <= 2.6;
         double liftH = k.num("lift", 1.2);
         Vec3 base = e.position();
@@ -234,7 +241,7 @@ final class TyrantSkills {
             if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) return;
             ServerLevel lv = sp.level();
             RuneKit.effect(e, "slowness", slamAt - grabAt + 4, JobKit.isBoss(e) ? 1 : 10);
-            JobFx.grip(lv, Kit.bodyPoint(e), size, 2, 1, 0.15, false, Opt.of("vel", RuneKit.entVel(e)), VIOLET, CRIMSON);
+            JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55), size, 2, 1, 0.15, false, Opt.of("vel", RuneKit.entVel(e)), VIOLET, CRIMSON);
             JobFx.burst(lv, Kit.bodyPoint(e), 1.2 + pad * 0.4, VIOLET, VIOLET_CORE, 0.25, Opt.of("vel", RuneKit.entVel(e)));
             SkillFx.play(lv, "entity.iron_golem.attack", e.position(), 0.6, 0.9);
         });
@@ -250,7 +257,7 @@ final class TyrantSkills {
                     e.resetFallDistance();
                 }
                 if ((tt - grabAt) % 6 == 1) {
-                    JobFx.grip(lv, Kit.bodyPoint(e), size, 3, 2, 0.32, true, Opt.empty(), VIOLET, CRIMSON);
+                    JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55), size, 3, 2, 0.32, true, Opt.empty(), VIOLET, CRIMSON);
                     JobFx.arc(lv, V.up(V.add(sp.position(), V.rightOf(Kit.facingOf(sp)), -0.4), 1.4), Kit.bodyPoint(e), VIOLET, VIOLET_CORE, 0.3, Opt.empty());
                 }
             });
@@ -284,7 +291,7 @@ final class TyrantSkills {
                 e.resetFallDistance();
             }
             Vec3 b = Kit.bodyPoint(e);
-            JobFx.grip(lv, V.up(b, 0.3), size, 5, 3, 0.45, false, Opt.empty(), VIOLET, CRIMSON);
+            JobFx.grip(lv, V.up(ThunderlordSkills.inFront(sp, e, 0.15), e.getBbHeight() * 0.55 + 0.3), size, 5, 3, 0.45, false, Opt.empty(), VIOLET, CRIMSON);
             JobFx.smash(lv, V.up(e.position(), 0.05), 2.4, j, 0.5, Opt.empty());
             JobFx.volt(lv, V.up(e.position(), 0.08), 2.0, j, 0.45, Opt.empty());
             JobFx.thunder(lv, e.position(), 8, VIOLET, VIOLET_CORE, 0.3, Opt.empty());
@@ -366,7 +373,7 @@ final class TyrantSkills {
             RuneKit.later(first + i * every, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
-                Vec3 top = V.up(sp.position(), sp.getBbHeight() + 1.2);
+                Vec3 top = V.up(sp.position(), sp.getBbHeight() + 0.7); // 영상 1: + 1.2 는 3인칭 화면 위 끝에 망치가 잘렸음
                 List<LivingEntity> foes = new ArrayList<>(Kit.around(sp, sp.position(), radius, 4));
                 foes.removeIf(e -> !e.isAlive() || e.isRemoved());
                 foes.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(sp)));
