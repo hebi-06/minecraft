@@ -396,7 +396,7 @@ final class AvengerSkills {
                     // 클라이언트의 몹 자리는 서버보다 2 ~ 3틱 늦게 따라옴 (보간) — 오를 때는 위로 · 내릴 때는 아래로 앞서 둠 (영상 1: 내려오는 동안 적이 내 머리 위에 떠 보였음)
                     double lead = Math.max(-1.0, Math.min(1.0, vy * 2.5));
                     Vec3 hold = V.add(p, dir, 0.75 + target.getBbWidth() * 0.5);
-                    Vec3 want = V.up(hold, 0.35 + lead);
+                    Vec3 want = V.up(hold, lead); // 내 발 높이 (영상 2: 0.35칸 위면 적의 머리가 내 머리 위로 솟아 어깨에 얹힌 것처럼 보였음)
                     if (Kit.moveTo(target, want)) heldAt[0] = want;
                     else if (Kit.moveTo(target, V.up(hold, 0.35))) heldAt[0] = V.up(hold, 0.35);
                     target.resetFallDistance();

@@ -380,6 +380,9 @@ public final class JobTraits15 {
                     int i = (int) Math.floor((V.dot(off, r.along) + r.half) / (2 * r.half) * BOW.length);
                     JobFx15.prism(r.level, hit, 0.75, 5, 1, 0.3, false, Opt.of("alpha", 0.95), bow(i), bowCore(i));
                     JobFx.burst(r.level, hit, 1.0, bow(i), bowCore(i), 0.28, Opt.empty());
+                    // 장벽 면에 번지는 물결 고리 (영상 2: 프리즘 · 터짐만으로는 장막 빛에 묻혔음)
+                    SkillFx.ring(r.level, hit, r.normal, bowCore(i), 1.5, 0.4, 0);
+                    SkillFx.ring(r.level, hit, r.normal, bow(i), 0.8, 0.3, 0);
                     SkillFx.sparks(r.level, hit, bowCore(i), 10, 3.5);
                     SkillFx.play(r.level, "block.amethyst_block.resonate", hit, 1.5, 0.7);
                     SkillFx.play(r.level, "item.shield.block", hit, 1.3, 0.6);
@@ -456,12 +459,16 @@ public final class JobTraits15 {
             if (o == sp) {
                 JobFx15.tide(level, V.add(from, Kit.facingOf(sp), 0.2), 0.55, 6, 2, 0.3, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), SEA, SEA_CORE);
             } else {
+                // 나에게서 아군에게 흘러가는 물결 (영상 1: 0.2초에 3.6칸 — 너무 빨라 보이지 않았음 → 0.3 ~ 0.6초 · 크게 · 바닷빛 물줄기)
                 Vec3 d = V.sub(to, from);
                 double len = V.len(d);
-                if (len > 0.3) JobFx15.tide(level, from, 0.5, 0, 6, Math.min(0.45, len / 16), true, Opt.of("dir", V.scale(d, 1 / len), "speed", len / Math.min(0.45, len / 16),
-                        "alpha", 0.95), SEA, SEA_CORE);
-                RuneKit.later(Math.max(1, (int) Math.round(Math.min(0.45, len / 16) * 20)), () -> {
-                    if (!o.isRemoved()) JobFx15.tide(o.level(), chest(o), 0.5, 6, 2, 0.3, false, Opt.of("vel", RuneKit.bodyVel(o)), SEA, SEA_CORE);
+                double go = Math.max(0.3, Math.min(0.6, len / 8));
+                if (len > 0.3) {
+                    JobFx15.tide(level, from, 0.7, 0, 6, go, true, Opt.of("dir", V.scale(d, 1 / len), "speed", len / go, "alpha", 0.95), SEA, SEA_CORE);
+                    JobFx.line(level, from, to, SEA, SEA_CORE, go + 0.15, Opt.of("alpha", 0.6, "fade", 0.4));
+                }
+                RuneKit.later(Math.max(1, (int) Math.round(go * 20)), () -> {
+                    if (!o.isRemoved()) JobFx15.tide(o.level(), chest(o), 0.6, 6, 2, 0.35, false, Opt.of("vel", RuneKit.bodyVel(o)), SEA, SEA_CORE);
                 });
             }
             if (RuneKit.fxQuota("jobTides" + sp.getId(), 1)) SkillFx.play(level, "entity.player.splash.high_speed", sp.position(), 1.4, 0.35);

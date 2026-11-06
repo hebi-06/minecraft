@@ -83,13 +83,16 @@ final class SentinelSkills {
             double a = seg > 1e-6 ? Math.max(0, Math.min(1, (want - acc[k]) / seg)) : 0;
             Vec3 mid = V.add(pts[k], V.scale(V.sub(pts[k + 1], pts[k]), a));
             Vec3 t = V.unit(V.sub(pts[k + 1], pts[k]));
-            Vec3 side = V.sub(V.UP, V.scale(t, V.dot(V.UP, t)));
-            side = V.len(side) < 1e-3 ? V.rightOf(t) : V.unit(side);
+            // 다섯 빛을 겹치는 쪽: 접선에 수직인 위쪽 + 옆쪽 (비스듬히) — 옆에서 봐도 · 길 뒤에서 봐도 (3인칭 카메라 · 영상 2: 위쪽만이면 멀어지는 길을 뒤에서 볼 때 다섯 빛이 한 줄로 겹쳐 붉은 줄로 보였음) 띠가 펼쳐짐
+            Vec3 up = V.sub(V.UP, V.scale(t, V.dot(V.UP, t)));
+            up = V.len(up) < 1e-3 ? V.UP : V.unit(up);
+            Vec3 flat = V.flat(t);
+            Vec3 side = V.unit(V.add(up, V.rightOf(flat)));
             double lf = life + (lifeEnd - life) * (s + 0.5) / n;
             for (int i = 0; i < JobFx.RAINBOW.length; i++) {
                 double[] c = JobFx.RAINBOW[i];
                 double[] core = {c[0] + (1 - c[0]) * 0.6, c[1] + (1 - c[1]) * 0.6, c[2] + (1 - c[2]) * 0.6};
-                JobFx.loop(level, "jbifrost", JobFx.BIFROST, V.add(mid, side, (2 - i) * 0.11 * size / 1.25), lf, 12, o.with("dir", t, "size", size, "phase",
+                JobFx.loop(level, "jbifrost", JobFx.BIFROST, V.add(mid, side, (2 - i) * 0.14 * size / 1.25), lf, 12, o.with("dir", t, "size", size, "phase",
                         (double) ((s + i) % JobFx.BIFROST)), c, core);
             }
         }
