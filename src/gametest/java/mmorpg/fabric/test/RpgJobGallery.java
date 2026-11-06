@@ -756,10 +756,12 @@ public final class RpgJobGallery implements FabricClientGameTest {
             a.removeAllEffects();
             a.setHealth(a.getMaxHealth() * (id.equals("sentinel_ult") ? 0.35F : 1F));
             if (id.equals("sentinel_haven")) {
-                // 영상 카메라 (왼쪽 뒤) 와 피난처 가운데 사이의 과녁 셋 (앞 · 왼쪽 앞 · 왼쪽) 을 비킴 — 내려앉는 자리 · 돔 안의 아군이 보이게 (영상 2: 왼쪽 과녁이 돔 왼쪽을 가렸음)
-                moveHusk(sp, new Vec3(0.5, -60, 3.2), new Vec3(-1.8, -60, 6.4));
+                // 영상 카메라 (왼쪽 뒤) 와 피난처 가운데 사이의 과녁 셋 (앞 · 왼쪽 앞 · 왼쪽) 을 비킴 — 내려앉는 자리 · 돔 안의 아군이 보이게 (영상 2: 왼쪽 과녁이 돔 왼쪽을 가렸음).
+                // 비킨 둘 (오른쪽 앞 · 왼쪽) 은 돔 밖 카메라 쪽 — 돔 둘레 바깥이라 돔을 가리지 않고, 막을 때 돔 면의 프리즘이 카메라 쪽에 섬 (영상 3: 왼쪽 과녁을 카메라
+                // 바로 앞으로 옮겨 화면 왼쪽 아래를 덮었음)
+                moveHusk(sp, new Vec3(0.5, -60, 3.2), new Vec3(-1.0, -60, 0.3));
                 moveHusk(sp, new Vec3(2.2, -60, 4.5), new Vec3(3.6, -60, 6.8));
-                moveHusk(sp, new Vec3(4.0, -60, 2.5), new Vec3(6.0, -60, 0.0));
+                moveHusk(sp, new Vec3(4.0, -60, 2.5), new Vec3(5.0, -60, 4.5));
             }
             if (job.equals("sentinel")) JobTraits4.setCounter(sp, JobTraits4.counterCap(sp, Jobs.job("sentinel")) * 0.6);
             else mmorpg.fabric.job.JobTraits15.setVengeance(sp, mmorpg.fabric.job.JobTraits15.vengeanceCap(sp, Jobs.job("avenger")) * (id.equals("avenger_pain") ? 0.2
@@ -819,14 +821,14 @@ public final class RpgJobGallery implements FabricClientGameTest {
                 RpgHealth.onLoss(sp, sp.damageSources().mobAttack(near.get(0)), hp, hp - 4F);
             });
         }
-        // 2026-11-06 센티널 · 어벤저: 맞는 장면 (과녁이 직접 침) — 헤이븐 리프는 20 에 나를 · 28 에 피난처 안 아군을 (프리즘에 막힘 — 영상 2: 아군 뒤의 과녁이 친 것은 몸에 가렸음
-        // → 오른쪽 과녁이 나를 먼저), 램파트는 30 · 38 · 46 에 몹 화살 (장벽이 지움 — 영상 카메라에 보이는 장막 쪽 · 과녁 사이), 나인 타이즈는 6 · 14 에 나를 (물결이 아군에게),
+        // 2026-11-06 센티널 · 어벤저: 맞는 장면 (과녁이 직접 침) — 헤이븐 리프는 20 에 나를 · 28 에 피난처 안 아군을 (돔 밖 카메라 쪽 과녁 — 돔 면의 프리즘에 막힘), 램파트는 30 · 38 · 46 에 몹 화살 (장벽이 지움 — 영상 카메라에 보이는 장막 쪽 · 과녁 사이), 나인 타이즈는 6 · 14 에 나를 (물결이 아군에게),
         // 그러지 차지는 쓰기 전 오른쪽 과녁이 두 번 (나를 가장 많이 때린 적), 페인 이터는 8 · 16 에 아군을 (불씨 줄로 대신 받음)
         ServerPlayer ally = sp.level().getServer().getPlayerList().getPlayers().stream().filter(p -> p != sp).findFirst().orElse(null);
         switch (id) {
             case "sentinel_haven" -> {
-                mmorpg.fabric.Tasks.later(20, () -> filmHit(sp, huskNear(sp, new Vec3(-3.0, -60, 2.5)), 6F));
-                mmorpg.fabric.Tasks.later(28, () -> filmHit(ally, huskNear(sp, new Vec3(0.5, -60, 6.0)), 6F));
+                // 돔 밖 카메라 쪽 과녁 둘이 침 (왼쪽 → 나 · 오른쪽 앞 → 아군) — 돔 면에 막힘 (영상 3: 돔 뒤쪽 · 안의 과녁이 쳐서 보이지 않았음)
+                mmorpg.fabric.Tasks.later(20, () -> filmHit(sp, huskNear(sp, new Vec3(5.0, -60, 4.5)), 6F));
+                mmorpg.fabric.Tasks.later(28, () -> filmHit(ally, huskNear(sp, new Vec3(-1.0, -60, 0.3)), 6F));
             }
             case "sentinel_rampart" -> {
                 mmorpg.fabric.Tasks.later(30, () -> filmArrow(sp.level(), 3.2, 8.0));

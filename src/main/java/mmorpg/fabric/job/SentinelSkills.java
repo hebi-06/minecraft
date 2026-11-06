@@ -52,6 +52,17 @@ final class SentinelSkills {
         return cone.isEmpty() ? null : cone.get(0);
     }
 
+    /** 헤이븐 리프 돔의 solo 번호 (주인마다 하나 — 막을 때 다시 그리면 앞 돔은 다음 틱에 사라짐) */
+    static final double HAVEN_SOLO = 86.0;
+
+    /**
+     * 피난처 돔 (솟은 뒤 일렁임 — life 초). 돔은 카메라를 보는 판 하나 (가운데를 지남) 라 먼저 그린 돔이 그 뒤에 나중에 생긴 그림을 깊이로 가렸음 (영상 3: 피난처가 막은
+     * 평타의 프리즘 · 빛 터짐이 돔 가운데 뒤쪽이면 보이지 않았음) → solo 로 두고 막을 때 (JobTraits15.havenReduce) 그 그림들 뒤에 다시 그림
+     */
+    static void havenDome(ServerPlayer sp, ServerLevel lv, Vec3 g, double r, double life) {
+        JobFx15.haven(lv, g, r, 2, 4, Math.max(0.1, life), true, JobFx.hide1p(sp).with("fade", 0.05, "solo", HAVEN_SOLO), SKY, SKY_CORE);
+    }
+
     /** 무지개 줄 (a → b — 다섯 빛을 위아래로 겹친 무지개 다리 줄기 · 땅을 따라 달린 길) */
     static void rainbowTrail(ServerLevel level, Vec3 a, Vec3 b, double life, Opt o) {
         JobFx.bifrost(level, a, b, 0.11, life, o);
@@ -266,7 +277,7 @@ final class SentinelSkills {
             // 내려앉음: 땅을 내리치는 충격 · 빛의 피난처 (솟음 → 일렁임 → 금 · 흩어짐) · 땅의 빛 고리
             JobFx.smash(lv, V.up(g, 0.05), r * 0.9, j, 0.45, Opt.empty());
             JobFx15.haven(lv, g, r, 0, 2, 0.12, false, JobFx.hide1p(sp), SKY, SKY_CORE);
-            RuneKit.later(2, () -> JobFx15.haven(lv, g, r, 2, 4, Math.max(0.1, (dur - 6) / 20.0), true, JobFx.hide1p(sp).with("fade", 0.05), SKY, SKY_CORE));
+            RuneKit.later(2, () -> havenDome(sp, lv, g, r, (dur - 6) / 20.0));
             RuneKit.later(Math.max(3, dur - 4), () -> JobFx15.haven(lv, g, r, 6, 2, 0.35, false, JobFx.hide1p(sp), SKY, SKY_CORE));
             JobFx15.halo(lv, V.up(g, 0.06), r, dur / 20.0, Opt.of("alpha", 0.85, "fade", 0.1), GOLD, GOLD_CORE);
             JobFx15.halo(lv, V.up(g, 0.07), r * 0.6, dur / 20.0, Opt.of("alpha", 0.6, "fade", 0.1), SKY, SKY_CORE);

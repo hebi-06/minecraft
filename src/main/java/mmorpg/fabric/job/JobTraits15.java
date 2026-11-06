@@ -306,18 +306,45 @@ public final class JobTraits15 {
         if (h == null) return 0;
         if (RuneKit.fxQuota("jobHaven" + p.getId(), 1)) {
             Entity d = src.getDirectEntity() != null ? src.getDirectEntity() : from;
-            Vec3 b = chest(p);
-            Vec3 a = chest(d);
-            Vec3 u = V.len(V.sub(a, b)) > 1e-3 ? V.unit(V.sub(a, b)) : Kit.facingOf(p);
-            Vec3 at = V.add(b, u, 1.1);
-            // 막음: 피난처 돔 앞의 프리즘 방패 · 빛 터짐 (영상 1: 0.42 는 몸 뒤에 묻혔음)
-            JobFx15.prism(h.level(), at, 0.7, 5, 1, 0.3, false, Opt.of("alpha", 0.95), SKY, SKY_CORE);
-            JobFx.burst(h.level(), at, 0.9, SKY, SKY_CORE, 0.25, Opt.empty());
-            SkillFx.sparks(h.level(), at, bowCore(Kit.rand() < 0.5 ? 2 : 4), 8, 3);
-            SkillFx.play(h.level(), "item.shield.block", at, 1.4, 0.7);
-            SkillFx.play(h.level(), "block.amethyst_block.hit", at, 1.6, 0.6);
+            havenBlockFx(h, chest(p), chest(d), Kit.facingOf(p));
         }
         return 1;
+    }
+
+    /**
+     * 피난처가 막음: 공격이 돔 면에 닿는 자리 (때린 것이 돔 밖 — 막은 사람 가슴에서 그쪽으로 그은 줄이 돔 면을 지나는 곳 · 돔 안이면 막은 사람 앞 1.1칸) 에 무지개
+     * 프리즘 · 금빛 터짐 · 돔 면을 따라 번지는 물결 고리 → 돔을 이 그림들 뒤에 다시 그림 (SentinelSkills.havenDome — 영상 3: 하늘빛 프리즘이 하늘빛 돔에 묻혔고, 돔 가운데
+     * 뒤쪽이면 먼저 그린 돔에 가려 보이지 않았음)
+     */
+    private static void havenBlockFx(Haven h, Vec3 b, Vec3 a, Vec3 facing) {
+        Vec3 ab = V.sub(a, b);
+        double len = V.len(ab);
+        Vec3 u = len > 1e-3 ? V.scale(ab, 1 / len) : facing;
+        Vec3 q = V.sub(b, h.c());
+        double qu = V.dot(q, u);
+        double disc = qu * qu - (V.dot(q, q) - h.r() * h.r());
+        double s = disc > 0 ? -qu + Math.sqrt(disc) : -1;
+        Vec3 at;
+        Vec3 n;
+        if (s > 0.3 && s < len) {
+            at = V.add(b, u, s);
+            n = V.unit(V.sub(at, h.c()));
+        } else {
+            at = V.add(b, u, Math.max(0.5, Math.min(1.1, len * 0.5)));
+            n = u;
+        }
+        int i = (int) (Kit.rand() * 7);
+        ServerLevel lv = h.level();
+        SkillFx.ring(lv, V.add(at, n, 0.06), n, GOLD_CORE, 1.5, 0.45, 0);
+        SkillFx.ring(lv, V.add(at, n, 0.03), n, bowCore(i), 0.9, 0.35, 0);
+        JobFx15.prism(lv, V.add(at, n, 0.15), 0.62, 5, 1, 0.32, false, Opt.of("alpha", 0.95), bow(i), bowCore(i));
+        JobFx.burst(lv, at, 0.95, GOLD, GOLD_CORE, 0.26, Opt.empty());
+        SkillFx.sparks(lv, at, bowCore((i + 3) % 7), 10, 3);
+        SkillFx.play(lv, "item.shield.block", at, 1.4, 0.7);
+        SkillFx.play(lv, "block.amethyst_block.hit", at, 1.6, 0.6);
+        long left = h.until() - 4 - Tasks.now();
+        ServerPlayer o = RuneKit.player(lv, h.owner());
+        if (o != null && left > 2) SentinelSkills.havenDome(o, lv, h.c(), h.r(), left / 20.0);
     }
 
     // ------------------------------------------------------------ 센티널 — 레인보우 램파트
