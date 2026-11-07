@@ -616,3 +616,14 @@ net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext
 net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext
 net.fabricmc.fabric.api.gametest.v1.GameTest
 net.minecraft.world.level.chunk.status.ChunkStatus
+net.minecraft.world.level.biome.BiomeResolver
+net.minecraft.world.level.levelgen.WorldgenRandom
+net.minecraft.world.level.levelgen.RandomSupport
+net.minecraft.world.level.levelgen.densityfunction.SamplerContext
+net.minecraft.core.HolderSet
+net.minecraft.world.level.ServerLevelAccessor
+net.minecraft.world.level.levelgen.structure.BoundingBox
+net.minecraft.commands.arguments.blocks.BlockStateParser
+net.minecraft.world.level.block.entity.BlockEntity
+net.minecraft.world.level.chunk.status.ChunkStep
+net.minecraft.world.level.levelgen.presets.WorldPresets
