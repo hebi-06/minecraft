@@ -118,8 +118,9 @@ final class VanillaPack {
                 builder.addStringData("assets/" + Mmorpg.NS + "/models/item/vtile/" + e.getKey() + ".json",
                         "{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"" + e.getValue() + "\"},"
                                 + "\"display\":{\"gui\":{\"rotation\":[0,0,0],\"translation\":[9,-10,0],\"scale\":[1.5,1.5,1.5]}}}");
+                // oversized_in_gui: 1.21.6+ 는 GUI 아이템을 칸 (16 × 16) 크기로 잘라 그림 — 칸 밖까지 그리게 (CI 42387417421 사진: 왼쪽 위 조각만 보임)
                 builder.addStringData("assets/" + Mmorpg.NS + "/items/vtile/" + e.getKey() + ".json",
-                        "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + model + "\"}}");
+                        "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + model + "\"},\"oversized_in_gui\":true}");
             }
             Mmorpg.LOG.info("[vanilla] gui backgrounds {}, line fonts {} + {}, tiles {}, icons {}", VanillaGui.Bg.values().length, VanillaGui.LINES.length,
                     VanillaGui.NUM_LINES.length, VanillaMenu.TILES.size(), spriteModels(builder, dir.resolve("icons"), "vui", false));

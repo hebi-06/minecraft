@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 public final class VanillaMenu {
     private VanillaMenu() {}
 
-    public enum Page { HOME, STATS, SKILLS, EQUIP, GACHA }
+    public enum Page { HOME, STATS, SKILLS, EQUIP, GACHA, TREE }
 
     /** 홈 카드 그림 (VanillaPack 이 rpg:vtile/&lt;이름&gt; 아이템 모델로 — 그림 = 아이템 그림 경로) */
     public static final Map<String, String> TILES = new LinkedHashMap<>();
@@ -67,6 +67,23 @@ public final class VanillaMenu {
         g.refresh();
         g.open();
         SkillFx.playFor(sp, "ui.button.click", 1.4, 0.35);
+    }
+
+    /** 스탯 트리 쪽으로 (그 나무 — StatTrees.open 의 모드 없는 클라이언트) */
+    public static void openTree(ServerPlayer sp, String stat) {
+        MenuGui g = current(sp);
+        if (g != null) {
+            g.treeStat = stat;
+            g.treeSel = -1;
+            g.show(Page.TREE);
+            return;
+        }
+        open(sp, Page.TREE);
+        g = current(sp);
+        if (g != null && stat != null && !stat.equals(g.treeStat)) {
+            g.treeStat = stat;
+            g.refresh();
+        }
     }
 
     /** 열린 메뉴 (없으면 null — 시험 · 쪽 그리는 곳) */
@@ -112,6 +129,9 @@ public final class VanillaMenu {
         List<ItemStack> gachaResults = List.of();
         int gachaShown;
         long gachaSeq;
+        /** 스탯 트리 쪽: 보는 나무 · 오른쪽에 보일 갈래 칸 (-1 = 저절로) */
+        String treeStat;
+        int treeSel = -1;
 
         MenuGui(ServerPlayer sp) {
             super(MenuType.GENERIC_9x4, sp, false);
@@ -137,6 +157,7 @@ public final class VanillaMenu {
                 case SKILLS -> VanillaGui.Bg.SKILLS;
                 case EQUIP -> VanillaGui.Bg.EQUIP;
                 case GACHA -> VanillaGui.Bg.GACHA;
+                case TREE -> VanillaGui.Bg.TREE;
             });
             tabs();
             switch (page) {
@@ -145,6 +166,7 @@ public final class VanillaMenu {
                 case SKILLS -> VanillaSkillBar.render(this, t);
                 case EQUIP -> VanillaEquip.render(this, t);
                 case GACHA -> VanillaGacha.render(this, t);
+                case TREE -> VanillaTree.render(this, t);
             }
             setTitle(t.build());
         }
@@ -172,7 +194,7 @@ public final class VanillaMenu {
             Page[] pages = {Page.HOME, Page.STATS, Page.SKILLS, Page.EQUIP};
             for (int r = 0; r < 4; r++) {
                 Page p = pages[r];
-                boolean on = page == p || (page == Page.GACHA && p == Page.HOME);
+                boolean on = page == p || (page == Page.GACHA && p == Page.HOME) || (page == Page.TREE && p == Page.STATS);
                 set(r, 0, VanillaGui.blank((on ? "§e" : "§f") + "[ " + tabs[r][0] + " ]", List.of("§7" + tabs[r][1])), left(() -> show(p)));
             }
         }
@@ -199,8 +221,8 @@ public final class VanillaMenu {
             small(4, new ItemStack(Items.SADDLE), "§6탈것 고르기", "§7탈 것 고르기", true, p -> RpgNet.statAction(p, "mount_select"));
             small(5, VanillaGui.icon(Mmorpg.rpg("relic_aegishjalmr_hero"), "", List.of()), "§6유물", "§7꽂은 유물 요약 (채팅)", true,
                     mmorpg.fabric.relic.RelicSystem::open);
-            small(6, new ItemStack(Items.OAK_SAPLING), "§a스탯 트리", "§7스탯마다 받은 칸 · 고를 갈래 (채팅)", true,
-                    p -> mmorpg.fabric.stattree.StatTrees.open(p, null));
+            set(3, 6, VanillaGui.named(new ItemStack(Items.OAK_SAPLING), "§a스탯 트리", List.of("§7스탯마다 열리는 칸 · 고를 갈래")),
+                    left(() -> show(Page.TREE)));
             small(7, VanillaGui.icon(Mmorpg.rpg("cosmetic_angel_wings"), "", List.of()), "§8꾸미기", "§8모드 없는 접속은 준비 중", false, p -> {});
             small(8, new ItemStack(Items.LAVA_BUCKET), "§c쓰레기통", "§7넣고 닫으면 지워집니다", true, p -> RpgNet.statAction(p, "trash"));
         }

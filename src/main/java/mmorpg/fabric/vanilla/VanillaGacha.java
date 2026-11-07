@@ -51,7 +51,7 @@ public final class VanillaGacha {
             if (d.pool() != null && pity.hard() > 0) lore.add("§7천장 §f" + GachaSystem.counter(sp, d.pool()).n5() + " / " + pity.hard());
             lore.add("");
             lore.add(on ? "§e골랐음" : "§a눌러서 고르기");
-            ItemStack icon = VanillaGui.icon(modelOf(new ItemStack(d.ticket())), (on ? "§e▶ " : "§f") + strip(d.name()), lore);
+            ItemStack icon = VanillaGui.icon(modelOf(d.ticket() == null ? ItemStack.EMPTY : new ItemStack(d.ticket())), (on ? "§e▶ " : "§f") + strip(d.name()), lore);
             if (on) icon.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
             String key = d.key();
             g.set(0, 1 + i, icon, VanillaMenu.MenuGui.left(() -> {

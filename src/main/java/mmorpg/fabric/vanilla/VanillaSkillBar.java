@@ -49,9 +49,9 @@ public final class VanillaSkillBar {
         if (pick != null) {
             Runes.Rune r = RuneItems.runeOf(pick.bar() ? SkillBar.get(sp, pick.index()) : sp.getInventory().getItem(pick.index()));
             String what = r == null ? "" : r.def().str("name");
-            t.right(168, 0, VanillaGui.fit("▶ " + what + (pick.bar() ? " → 칸 · 빼기" : " → 칸"), 88), VanillaGui.GOLD_INK);
+            t.right(168, 0, VanillaGui.fit("▶ " + what + (pick.bar() ? " → 칸 · 빼기" : " → 칸"), 84), VanillaGui.GOLD_INK);
         } else {
-            t.right(168, 0, "가방의 룬을 눌러 고르기", VanillaGui.SUB);
+            t.right(168, 0, "룬을 눌러 고르기", VanillaGui.SUB); // 제목 "스킬 세팅" (x 31 ~ 77) 과 겹치지 않게 (CI 42387417421)
         }
         t.text(30, 15, "룬 스킬", VanillaGui.TEAL_INK);
         t.text(30 + VanillaGui.width("룬 스킬") + 6, 15, "F 한 번 · 숫자 1 ~ 8", VanillaGui.SUB);

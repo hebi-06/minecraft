@@ -26,6 +26,7 @@ import java.util.Optional;
  * 모드 없는 클라이언트 시험의 사진기 (2026-11-07 1번 — CI ci/vanilla_probe.sh). Fabric API 없이 Fabric Loader 만 — 서버가 보기에 바닐라 클라이언트.
  * 서버 (모드 jar, -Dmmorpg.probe=true) 가 장면을 만들고 채팅 "[probe] …" 로 신호: shot 이름 (지금 화면) · inv 이름 (인벤토리를 열고 찍고 닫음) ·
  * cam back|first · key f (F 키 패킷) · key N (숫자 키 N — 고른 칸) · shift on|off (Shift 누름) · slot N · shiftslot N (상자 메뉴 칸 누름 · Shift) ·
+ * hover N (마우스를 칸 N 위로 — 설명 상자) ·
  * close (상자 메뉴 닫기) · click id sel (대화창 단추) ·
  * submit id (입력창 확인) ·
  * done (닫힘). 접속이 끊기면 끊긴 화면을 찍고 닫힘. 아무 신호 없이 12분이면 찍고 닫힘. 사진은 게임 폴더 screenshots/probe_&lt;이름&gt;.png.
@@ -99,6 +100,21 @@ public final class Probe implements ClientModInitializer {
             // 상자 메뉴 칸을 왼쪽 클릭 (마우스로 누를 때와 같은 패킷)
             int n = Integer.parseInt(cmd.substring(5).trim());
             mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, n, 0, ContainerInput.PICKUP, mc.player);
+        } else if (cmd.startsWith("hover ") && mc.player != null) {
+            // 마우스를 상자 메뉴 칸 N 의 가운데로 (설명 상자 사진 — 창 자리는 바닐라 상자 화면처럼 가운데)
+            int n = Integer.parseInt(cmd.substring(6).trim());
+            var menu = mc.player.containerMenu;
+            if (n < 0) {
+                mc.mouseHandler.onMove(mc.getWindow().handle(), 0, 0, 0, 0); // 치움 (왼쪽 위 구석)
+            } else if (n < menu.slots.size()) {
+                int rows = menu instanceof net.minecraft.world.inventory.ChestMenu c ? c.getRowCount() : 3;
+                var win = mc.getWindow();
+                int left = (win.getGuiScaledWidth() - 176) / 2;
+                int top = (win.getGuiScaledHeight() - (114 + rows * 18)) / 2;
+                var slot = menu.slots.get(n);
+                double scale = win.getGuiScale();
+                mc.mouseHandler.onMove(win.handle(), (left + slot.x + 8) * scale, (top + slot.y + 8) * scale, 0, 0);
+            }
         } else if (cmd.equals("close") && mc.player != null) {
             mc.player.closeContainer(); // Esc 로 상자 메뉴를 닫을 때와 같음 (닫기 패킷)
         } else if (cmd.startsWith("click ") && mc.player != null) {

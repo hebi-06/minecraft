@@ -449,6 +449,10 @@ public final class StatTrees {
             sync(sp, s);
             return;
         }
+        if (mmorpg.fabric.vanilla.VanillaForms.supports(sp)) { // 모드 없는 클라이언트: 메뉴의 스탯 트리 쪽
+            mmorpg.fabric.vanilla.VanillaMenu.openTree(sp, s);
+            return;
+        }
         StatTreeCommands.chatSummary(sp);
     }
 }

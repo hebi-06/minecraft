@@ -22,7 +22,7 @@ import java.util.List;
  * │                  ▼                         │  줄 2
  * └───────[   스탯 트리   ]────────────────────┘  줄 3 · 칸 3 ~ 6
  * </pre>
- * 스탯마다 설명 (마우스): 효과 한 줄 · 1포인트 효과 · 누름 안내. 스탯 트리 단추 = 메뉴를 닫고 스탯 트리 (모드 없는 접속은 채팅 요약).
+ * 스탯마다 설명 (마우스): 효과 한 줄 · 1포인트 효과 · 누름 안내. 스탯 트리 단추 = 스탯 트리 쪽 (VanillaTree).
  */
 public final class VanillaStats {
     private VanillaStats() {}
@@ -49,8 +49,11 @@ public final class VanillaStats {
             stat(g, t, s, k, col++, point);
         }
         // 스탯 트리 단추 (줄 3 · 칸 3 ~ 6) + 화살표 둘레 (줄 2 · 칸 4 ~ 5)
-        List<String> tip = List.of("§7스탯마다 받은 칸 · 고를 갈래", "§8(모드 없는 접속은 채팅 요약)", "", "§e눌러서 열기");
-        GuiElement.ClickCallback tree = VanillaMenu.MenuGui.left(() -> g.closeThen(p -> mmorpg.fabric.stattree.StatTrees.open(p, null)));
+        List<String> tip = List.of("§7스탯마다 열리는 칸 · 고를 갈래", "", "§e눌러서 열기");
+        GuiElement.ClickCallback tree = VanillaMenu.MenuGui.left(() -> {
+            g.treeSel = -1;
+            g.show(VanillaMenu.Page.TREE);
+        });
         for (int c = 3; c <= 6; c++) g.set(3, c, VanillaGui.blank("§a스탯 트리", tip), tree);
         for (int c = 4; c <= 5; c++) g.set(2, c, VanillaGui.blank("§a스탯 트리", tip), tree);
     }

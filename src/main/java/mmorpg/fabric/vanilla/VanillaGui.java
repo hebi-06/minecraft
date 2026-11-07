@@ -35,8 +35,8 @@ import java.util.Map;
 public final class VanillaGui {
     private VanillaGui() {}
 
-    /** 줄 글꼴 (갈무리9) 의 세로 자리 d: 제목 줄 · 스킬 쪽 머리 줄 둘 · 뽑기 쪽 아래 줄 */
-    public static final int[] LINES = {0, 15, 51, 71};
+    /** 줄 글꼴 (갈무리9) 의 세로 자리 d: 제목 줄 · 스킬 쪽 머리 줄 둘 · 스탯 트리 갈래 이름 둘 (줄 1 · 2 가운데) · 아래 줄 (줄 3) */
+    public static final int[] LINES = {0, 15, 35, 51, 53, 71};
     /** 숫자 글꼴 (갈무리7) 의 세로 자리 d: 장비 쪽 손 +N (칸 위) · 스탯 값 · 아티팩트 +N (칸 아래) */
     public static final int[] NUM_LINES = {1, 38, 67};
     public static final Identifier SPACE = Mmorpg.rpg("gui_space");
@@ -46,7 +46,7 @@ public final class VanillaGui {
 
     /** 메뉴 쪽 바탕 (rpg:gui_bg 의 글자 — VanillaPack 이 같은 차례로 넣음): 그림 176 × 198 (창 위 12 부터) */
     public enum Bg {
-        HOME("menu_home"), STATS("menu_stats"), SKILLS("menu_skills"), EQUIP("menu_equip"), GACHA("menu_gacha");
+        HOME("menu_home"), STATS("menu_stats"), SKILLS("menu_skills"), EQUIP("menu_equip"), GACHA("menu_gacha"), TREE("menu_tree");
 
         public final String file;
 

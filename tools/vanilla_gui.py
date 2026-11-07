@@ -627,7 +627,7 @@ def menu_equip(font):
         slot_box(c, 1 + i, 0)
         ribbon(c, cell_x(1 + i) + 9, cell_y(1), key)
     # 손 막대 (줄 0 · 칸 6 ~ 7 — 강화 +N 은 칸 위)
-    c.box(cell_x(6) - 1, 3, cell_x(7) + 18, cell_y(0) + 19, BROWN, EDGE, r=2, hi=BROWN_HI)
+    c.box(cell_x(6) - 1, 5, cell_x(7) + 18, cell_y(0) + 19, BROWN, EDGE, r=2, hi=BROWN_HI)
     for i, key in enumerate(["sword", "shield"]):
         slot_box(c, 6 + i, 0)
         ribbon(c, cell_x(6 + i) + 9, cell_y(1), key)
@@ -664,6 +664,39 @@ def menu_gacha(font):
         edge = tuple(int(v * 0.48) for v in base)
         c.box(x0, y0 + 1, x0 + 35, y0 + 17, base, edge, r=2, hi=hi, lo=lo, lo_h=2)
         c.text(x0 + 18, y0 + 5, label, font, WHITE, outline=edge, center=True)
+    return c.final()
+
+
+def menu_tree(font):
+    """스탯 트리 쪽 (스탯 쪽의 아래 단추): 줄 0 = 나무 탭 넷 · 초기화 · 합계, 줄 1 ~ 2 칸 1 ~ 5 = 칸 열 개 (뱀 모양 — 1 → 5 → 6 → 10),
+    칸 6 ~ 8 = 갈래 둘 (그림 · 이름), 줄 3 = 설명 글"""
+    c = frame("stats")
+    # 나무 탭 (줄 0 · 칸 1 ~ 4)
+    c.box(cell_x(1) - 1, cell_y(0) - 1, cell_x(4) + 18, cell_y(0) + 18, BROWN, EDGE, r=2, hi=BROWN_HI)
+    for col in range(1, 5):
+        slot_box(c, col, 0)
+    small_button(c, 7, 0, (150, 70, 52))
+    small_button(c, 8, 0, (78, 128, 62))
+    # 덩굴 판 (줄 1 ~ 2 · 칸 1 ~ 5)
+    x0, x1 = cell_x(1) - 1, cell_x(5) + 18
+    c.box(x0, cell_y(1) - 1, x1, cell_y(2) + 18, (46, 66, 44), GREEN_LO, r=2, hi=(60, 84, 56))
+    vine, vine_lo = (120, 152, 80), (78, 104, 56)
+    ya, yb = cell_y(1) + 8, cell_y(2) + 8
+    c.rect(cell_x(1) + 8, ya - 1, cell_x(5) + 9, ya + 1, vine)
+    c.rect(cell_x(1) + 8, ya + 2, cell_x(5) + 9, ya + 2, vine_lo)
+    c.rect(cell_x(5) + 8, ya - 1, cell_x(5) + 10, yb + 1, vine)
+    c.rect(cell_x(1) + 8, yb - 1, cell_x(5) + 9, yb + 1, vine)
+    c.rect(cell_x(1) + 8, yb + 2, cell_x(5) + 9, yb + 2, vine_lo)
+    for row in (1, 2):
+        for col in range(1, 6):
+            x, y = cell_x(col) + 1, cell_y(row) + 1
+            c.box(x, y, x + 15, y + 15, (30, 42, 30), (98, 128, 70), r=2)
+    # 갈래 판 (줄 1 ~ 2 · 칸 6 ~ 8)
+    c.box(cell_x(6) + 1, cell_y(1) - 1, cell_x(8) + 18, cell_y(2) + 18, (150, 112, 72), EDGE, r=2, hi=(176, 134, 88), lo=(128, 94, 60))
+    for row in (1, 2):
+        slot_box(c, 6, row)
+        c.box(cell_x(7) - 1, cell_y(row) + 1, cell_x(8) + 16, cell_y(row) + 16, (112, 80, 48), None, r=1)
+    c.rect(cell_x(6) + 3, cell_y(2) - 1, cell_x(8) + 15, cell_y(2) - 1, (118, 86, 54))
     return c.final()
 
 
@@ -704,22 +737,21 @@ def icon_info():
 
 
 def tooltip_sprites():
-    """설명 상자 (nine_slice 32 × 32, 테두리 9): 어두운 초록 바탕 + 올리브 테 (모서리 깎음) — 그림 안쪽 5칸부터 보임"""
+    """설명 상자 (nine_slice 32 × 32, 테두리 9): 어두운 초록 바탕 + 올리브 테 (모서리 깎음).
+    바닐라는 이 그림을 글자 둘레 12px 바깥까지 늘려 그림 (여백 3 + 9) — 보이는 상자는 그림 안쪽 8px 부터 (글자 둘레 4px)"""
     bg = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
     fr = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
-    m = rounded(24, 24, 2)
-    for y in range(24):
-        for x in range(24):
-            if m[y, x]:
-                bg.putpixel((x + 4, y + 4), (24, 32, 22, 244))
+    m = rounded(16, 16, 2)
     edge = m & ~erode(m)
     inner = erode(m) & ~erode(erode(m))
-    for y in range(24):
-        for x in range(24):
+    for y in range(16):
+        for x in range(16):
+            if m[y, x]:
+                bg.putpixel((x + 8, y + 8), (24, 32, 22, 244))
             if edge[y, x]:
-                fr.putpixel((x + 4, y + 4), (122, 150, 84, 255))
+                fr.putpixel((x + 8, y + 8), (122, 150, 84, 255))
             elif inner[y, x]:
-                fr.putpixel((x + 4, y + 4), (54, 70, 46, 255))
+                fr.putpixel((x + 8, y + 8), (54, 70, 46, 255))
     return bg, fr
 
 
@@ -741,7 +773,7 @@ def main():
               ensure_ascii=False, separators=(",", ":"))
     font = ImageFont.truetype(sys.argv[1], 10)
     for name, fn in [("menu_home", menu_home), ("menu_stats", menu_stats), ("menu_skills", menu_skills), ("menu_equip", menu_equip),
-                     ("menu_gacha", menu_gacha)]:
+                     ("menu_gacha", menu_gacha), ("menu_tree", menu_tree)]:
         fn(font).save(os.path.join(OUT, name + ".png"))
     for old in ("stats.png", "skills.png"):
         p = os.path.join(OUT, old)

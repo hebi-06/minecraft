@@ -260,8 +260,16 @@ final class VanillaProbe {
                 check("stats tab (same menu)", g != null && g.page == VanillaMenu.Page.STATS && p.containerMenu == statsMenu);
                 strBefore = mmorpg.fabric.RpgData.of(p).str();
                 pointBefore = mmorpg.fabric.RpgData.of(p).point();
+                say(p, "hover " + VanillaMenu.idx(0, 3)); // 힘 그림 위에 마우스 (설명 상자 모양 rpg:menu)
+                next(p, 104, 10);
+            }
+            case 104 -> {
                 say(p, "shot 13_stats");
-                next(p, 31, 20);
+                next(p, 105, 10);
+            }
+            case 105 -> {
+                say(p, "hover -1");
+                next(p, 31, 10);
             }
             case 31 -> {
                 say(p, "slot " + VanillaMenu.idx(0, 3)); // 힘 그림 좌클릭 (+1)
@@ -278,6 +286,26 @@ final class VanillaProbe {
                 check("str +5 (shift left click)", d.str() == strBefore + 6 && d.point() == pointBefore - 6);
                 check("menu still open (same menu)", p.containerMenu == statsMenu);
                 say(p, "shot 13b_stats_after");
+                next(p, 100, 20);
+            }
+            case 100 -> {
+                say(p, "slot " + VanillaMenu.idx(3, 4)); // 가운데 아래 스탯 트리 단추
+                next(p, 101, 15);
+            }
+            case 101 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("stat tree page from stats button", g != null && g.page == VanillaMenu.Page.TREE && p.containerMenu == statsMenu);
+                say(p, "shot 13c_tree");
+                next(p, 102, 20);
+            }
+            case 102 -> {
+                say(p, "slot " + VanillaMenu.idx(1, 6)); // 오른쪽 갈래 A (저절로 고른 첫 갈래)
+                next(p, 103, 15);
+            }
+            case 103 -> {
+                String st = VanillaMenu.current(p) == null ? "str" : VanillaMenu.current(p).treeStat;
+                check("stat tree fork picked", !mmorpg.fabric.stattree.StatTrees.state(p).picksOf(st).isEmpty());
+                say(p, "shot 13d_tree_pick");
                 next(p, 34, 20);
             }
             case 34 -> {
