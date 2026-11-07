@@ -134,17 +134,20 @@ public final class Blueprint {
 
     /** 자리표 (설계 좌표 · 바라보는 쪽 — 설계 방향 기준) */
     public Blueprint mark(String id, double x, double y, double z, String facing) {
-        double wxd = ox + switch (turns) {
-            case 1 -> -z;
-            case 2 -> -x;
-            case 3 -> z;
-            default -> x;
+        // 칸 가운데 기준으로 돌림 (칸 (bx, bz) 은 [bx, bx + 1) — 돌린 칸의 같은 자리)
+        double px = x - 0.5;
+        double pz = z - 0.5;
+        double wxd = ox + 0.5 + switch (turns) {
+            case 1 -> -pz;
+            case 2 -> -px;
+            case 3 -> pz;
+            default -> px;
         };
-        double wzd = oz + switch (turns) {
-            case 1 -> x;
-            case 2 -> -z;
-            case 3 -> -x;
-            default -> z;
+        double wzd = oz + 0.5 + switch (turns) {
+            case 1 -> px;
+            case 2 -> -pz;
+            case 3 -> -px;
+            default -> pz;
         };
         marks.add(new Mark(id, wxd, oy + y, wzd, turnDir(facing, turns)));
         return this;

@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class FieldBlocks {
     private FieldBlocks() {}
 
-    static final BlockState AIR = Blocks.AIR.defaultBlockState();
+    public static final BlockState AIR = Blocks.AIR.defaultBlockState();
     static final BlockState BEDROCK = Blocks.BEDROCK.defaultBlockState();
     static final BlockState STONE = Blocks.STONE.defaultBlockState();
     static final BlockState DEEPSLATE = Blocks.DEEPSLATE.defaultBlockState();

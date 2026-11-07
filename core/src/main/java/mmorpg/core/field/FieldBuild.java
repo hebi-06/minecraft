@@ -7,7 +7,7 @@ import java.util.List;
  * 섬 맵에 짓는 것 (2026-11-07): 조각 (Piece) 마다 칸 (x, z) 의 블록을 아래에서 위로 알려 줌 — 게임은 청크를 만들 때 그 청크에 걸친 칸만 놓음
  * (fabric field.FieldPieces). 블록은 "minecraft:이름[상태=값,…]" 글자 (게임 쪽에서 블록 상태로).
  * <p>
- * 지금: 다리 (돌 아치 다리 — 16칸마다 기둥 · 기둥 사이 아치 · 가문비 나무 갑판 · 통나무 난간 · 8칸마다 기둥과 등불 · 두 끝의 문).
+ * 다리 (돌 아치 다리 — 16칸마다 기둥 · 기둥 사이 아치 · 가문비 나무 갑판 · 통나무 난간 · 8칸마다 기둥과 등불 · 두 끝의 문) · 마을 ({@link FieldTown}).
  */
 public final class FieldBuild {
     private FieldBuild() {}
@@ -31,11 +31,28 @@ public final class FieldBuild {
         void column(int x, int z, FieldTerrain.Column ground, Out out);
     }
 
-    /** 섬 맵의 조각 모두 (다리 — 마을 · 거점은 뒤에 더함) */
-    public static List<Piece> pieces(FieldTerrain t) {
+    /** 섬 맵에 짓는 것 모두: 조각 · 자리표 (NPC · 이동 지점 · 허수아비) */
+    public record Built(List<Piece> pieces, List<Blueprint.Mark> marks) {}
+
+    /** 섬 맵의 조각 모두 (다리 · 마을) */
+    public static Built build(FieldTerrain t) {
         List<Piece> out = new ArrayList<>();
+        List<Blueprint.Mark> marks = new ArrayList<>();
         for (FieldTerrain.Span s : t.spans()) out.add(new Bridge(s, t.plan().sea));
-        return out;
+        FieldPlan.Site town = t.plan().site("town");
+        if (town != null) {
+            int g = t.plan().sea + 9;
+            for (FieldTerrain.Plot p : t.plots()) if (p.id().equals("town")) g = p.y();
+            FieldTown.Result r = FieldTown.build((int) Math.round(town.x()), (int) Math.round(town.z()), g);
+            out.addAll(r.pieces());
+            marks.addAll(r.marks());
+        }
+        return new Built(List.copyOf(out), List.copyOf(marks));
+    }
+
+    /** 섬 맵의 조각 모두 */
+    public static List<Piece> pieces(FieldTerrain t) {
+        return build(t).pieces();
     }
 
     // ------------------------------------------------------------------ 다리

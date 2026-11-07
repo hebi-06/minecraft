@@ -3,7 +3,7 @@
   "seed": 20261107,
   "seaLevel": 63,
   "border": {"x": -150, "z": -70, "size": 6400},
-  "spawn": [0, 60],
+  "spawn": [0, 72],
   "bridge": {"width": 5, "deck": 70},
   "islands": [
     {"id": "midgard", "name": "마을 섬", "terrain": "village", "x": 0, "z": 0, "radius": 420, "coast": 0.12, "level": [1, 60]},

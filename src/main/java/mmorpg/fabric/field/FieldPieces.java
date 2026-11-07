@@ -29,7 +29,7 @@ public final class FieldPieces {
         // 조각은 처음 쓸 때 만듦 (field.json → 지형 → 조각)
     }
 
-    static List<FieldBuild.Piece> pieces() {
+    public static List<FieldBuild.Piece> pieces() {
         List<FieldBuild.Piece> p = pieces;
         if (p == null) {
             synchronized (FieldPieces.class) {
@@ -41,7 +41,7 @@ public final class FieldPieces {
     }
 
     /** "minecraft:spruce_stairs[facing=north,half=top]" → 블록 상태 */
-    static BlockState state(String text) {
+    public static BlockState state(String text) {
         return STATES.computeIfAbsent(text, t -> {
             int i = t.indexOf('[');
             String name = i < 0 ? t : t.substring(0, i);

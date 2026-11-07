@@ -3,8 +3,12 @@ package mmorpg.fabric.test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import mmorpg.core.field.Blueprint;
+import mmorpg.core.field.FieldBuild;
 import mmorpg.core.field.FieldPlan;
+import mmorpg.core.field.FieldTerrain;
 import mmorpg.fabric.Mmorpg;
+import mmorpg.fabric.field.FieldBlocks;
 import mmorpg.fabric.field.FieldWorld;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
@@ -13,11 +17,14 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContex
 import net.fabricmc.fabric.api.client.gametest.v1.screenshot.TestScreenshotOptions;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.ChatVisiblity;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.presets.WorldPreset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +45,11 @@ public final class RpgFieldGallery implements FabricClientGameTest {
 
     private static final List<Shot> SHOTS = List.of(
             new Shot("fd_01_village_island", 160, 175, 300, 0, 72, 20),
-            new Shot("fd_02_spawn", 0, 74, 100, 0, 80, -120),
+            new Shot("fd_01b_town_aerial", 0, 150, 230, 0, 72, 60),
+            new Shot("fd_02_spawn", 0, 74, 80, 0, 78, -60),
+            new Shot("fd_02b_town_street", 3, 75, 140, 0, 76, 60),
+            new Shot("fd_02c_town_gate", 160, 78, 66, 120, 76, 60),
+            new Shot("fd_02d_training", 50, 82, 64, 55, 73, 20),
             new Shot("fd_03_bridge_east", 470, 73, 3, 900, 75, 0),
             new Shot("fd_04_bridge_side", 520, 82, 60, 520, 66, -10),
             new Shot("fd_05_farm", 760, 150, 260, 1150, 70, -40),
@@ -95,11 +106,51 @@ public final class RpgFieldGallery implements FabricClientGameTest {
 
     private void checkWorld(MinecraftServer s) {
         ServerLevel level = s.overworld();
-        FieldPlan plan = FieldWorld.terrain().plan();
+        FieldTerrain t = FieldWorld.terrain();
+        FieldPlan plan = t.plan();
         check(FieldWorld.isField(level), "overworld uses the island map generator");
         check(Math.abs(level.getWorldBorder().getSize() - plan.borderSize) < 1, "world border " + level.getWorldBorder().getSize());
         var spawn = level.getRespawnData().pos();
         check(spawn.getX() == plan.spawnX && spawn.getZ() == plan.spawnZ, "spawn at the village square " + spawn.toShortString());
+        // 실제 청크: 섬 가운데 · 바다 · 거점의 땅 블록 (나무 밑 흙 · 눈 덮임 허용) · 바이옴 칸
+        FieldTerrain.Column c = new FieldTerrain.Column();
+        List<int[]> probes = new ArrayList<>();
+        for (FieldPlan.Island is : plan.islands) {
+            probes.add(new int[] {(int) is.x() + 37, (int) is.z() - 23});
+            probes.add(new int[] {(int) (is.x() + is.radius() * 1.6), (int) is.z()});
+        }
+        for (FieldPlan.Site site : plan.sites("camp")) probes.add(new int[] {(int) site.x() + 5, (int) site.z() + 5});
+        List<String> bad = new ArrayList<>();
+        for (int[] p : probes) {
+            level.getChunk(p[0] >> 4, p[1] >> 4);
+            t.sample(p[0], p[1], c);
+            BlockState got = level.getBlockState(new BlockPos(p[0], c.ground, p[1]));
+            BlockState want = FieldBlocks.of(c.top, p[0], c.ground, p[1]);
+            boolean ground = got.getBlock() == want.getBlock() || want.is(Blocks.GRASS_BLOCK) && (got.is(Blocks.DIRT) || got.is(Blocks.PODZOL) || got.is(Blocks.MOSS_BLOCK));
+            String biome = level.getNoiseBiome(p[0] >> 2, (c.ground + 1) >> 2, p[1] >> 2).unwrapKey().map(k -> k.identifier().toString()).orElse("?");
+            String wantBiome = t.biomeAt(((p[0] >> 2) << 2) + 2, ((p[1] >> 2) << 2) + 2);
+            if (!ground || !biome.equals(wantBiome)) bad.add(p[0] + " " + p[1] + ": " + got + " want " + want + " · " + biome + " want " + wantBiome);
+        }
+        check(bad.isEmpty(), "real chunks = plan (" + (probes.size() - bad.size()) + "/" + probes.size() + ") " + String.join(" / ", bad));
+        // 다리 갑판 (가운데)
+        for (FieldTerrain.Span sp : t.spans()) {
+            int mx = (int) Math.floor((sp.ax() + sp.bx()) / 2);
+            int mz = (int) Math.floor((sp.az() + sp.bz()) / 2);
+            level.getChunk(mx >> 4, mz >> 4);
+            BlockState deck = level.getBlockState(new BlockPos(mx, sp.deck(), mz));
+            check(deck.is(Blocks.SPRUCE_PLANKS) || deck.is(Blocks.STRIPPED_SPRUCE_LOG), "bridge " + sp.bridge().from() + "→" + sp.bridge().to() + " deck " + deck);
+        }
+        // 마을: 광장 분수 · 이동 지점 돌
+        FieldPlan.Site town = plan.site("town");
+        int g = plan.sea + 9;
+        level.getChunk((int) town.x() >> 4, (int) town.z() >> 4);
+        check(level.getBlockState(new BlockPos((int) town.x(), g, (int) town.z())).is(Blocks.CHISELED_STONE_BRICKS), "fountain at the square");
+        for (Blueprint.Mark m : FieldBuild.build(t).marks()) {
+            if (!m.id().startsWith("waystone")) continue;
+            BlockPos at = BlockPos.containing(m.x(), m.y(), m.z());
+            level.getChunk(at.getX() >> 4, at.getZ() >> 4);
+            check(level.getBlockState(at).is(Blocks.LODESTONE), "waystone stone at " + at.toShortString() + " = " + level.getBlockState(at));
+        }
     }
 
     private static void shot(ClientGameTestContext ctx, TestServerContext server, TestSingleplayerContext world, Shot s) {

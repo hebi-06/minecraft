@@ -14,6 +14,7 @@ import os
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 OUT = os.path.join(ROOT, 'src/main/resources/data/mmorpg/worldgen/biome')
 TAG = os.path.join(ROOT, 'src/main/resources/data/mmorpg/tags/worldgen/biome/field.json')
+PRESET = os.path.join(ROOT, 'src/main/resources/data/mmorpg/worldgen/world_preset/field.json')
 
 ORES = ['minecraft:ore_dirt', 'minecraft:ore_gravel', 'minecraft:ore_granite_upper', 'minecraft:ore_granite_lower', 'minecraft:ore_diorite_upper',
         'minecraft:ore_diorite_lower', 'minecraft:ore_andesite_upper', 'minecraft:ore_andesite_lower', 'minecraft:ore_tuff', 'minecraft:ore_coal_upper',
@@ -187,7 +188,19 @@ def main():
     with open(TAG, 'w', encoding='utf-8') as fh:
         json.dump({'values': ['mmorpg:' + k for k in B]}, fh, indent=2)
         fh.write('\n')
-    print(len(B), 'biomes →', os.path.relpath(OUT, ROOT))
+    # 월드 유형: 지상 세계 = 섬 맵 생성기 (바이옴은 목록으로 — 꼬리표는 레지스트리를 읽는 동안 아직 묶이지 않아 쓸 수 없음), 네더 · 엔드는 바닐라
+    preset = {'dimensions': {
+        'minecraft:overworld': {'type': 'minecraft:overworld', 'generator': {
+            'type': 'mmorpg:field', 'biome_source': {'type': 'mmorpg:field', 'biomes': ['mmorpg:' + k for k in B]}}},
+        'minecraft:the_end': {'type': 'minecraft:the_end', 'generator': {
+            'type': 'minecraft:noise', 'biome_source': {'type': 'minecraft:the_end'}, 'settings': 'minecraft:end'}},
+        'minecraft:the_nether': {'type': 'minecraft:the_nether', 'generator': {
+            'type': 'minecraft:noise', 'biome_source': {'type': 'minecraft:multi_noise', 'preset': 'minecraft:nether'}, 'settings': 'minecraft:nether'}}}}
+    os.makedirs(os.path.dirname(PRESET), exist_ok=True)
+    with open(PRESET, 'w', encoding='utf-8') as fh:
+        json.dump(preset, fh, indent=2)
+        fh.write('\n')
+    print(len(B), 'biomes →', os.path.relpath(OUT, ROOT), '· world preset', os.path.relpath(PRESET, ROOT))
 
 
 if __name__ == '__main__':

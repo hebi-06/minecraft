@@ -158,12 +158,16 @@ public final class FieldChunkGenerator extends ChunkGenerator {
 
     @Override
     public NoiseColumn getBaseColumn(int x, int z, LevelHeightAccessor level, RandomState random) {
-        int minY = level.getMinY();
-        BlockState[] states = new BlockState[level.getHeight()];
+        return new NoiseColumn(level.getMinY(), columnStates(x, z, level.getMinY(), level.getHeight()));
+    }
+
+    /** 칸 (x, z) 의 지형 블록 (아래 minY 부터 height 칸 — 장식 · 짓는 것 전) */
+    public static BlockState[] columnStates(int x, int z, int minY, int height) {
+        BlockState[] states = new BlockState[height];
         java.util.Arrays.fill(states, FieldBlocks.AIR);
         Column c = FieldWorld.terrain().sample(x, z, new Column());
-        column(c, x, z, minY, minY + level.getHeight() - 1, (y, state) -> states[y - minY] = state);
-        return new NoiseColumn(minY, states);
+        column(c, x, z, minY, minY + height - 1, (y, state) -> states[y - minY] = state);
+        return states;
     }
 
     @Override
