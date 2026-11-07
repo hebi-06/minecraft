@@ -412,6 +412,20 @@ final class ArcherSkills {
             JobFx16.wolfRun(level, at, f, 1.9, speed, run, JobFx.hide1p(sp), glow, core);
             JobFx16.wolf1p(level, V.up(at, 0.5), f, 1.7, speed, run, w[0] > 0, JobFx.only1p(sp), glow, core);
         }
+        // 잔상 (영상 42332661771 뒤 — 내달리는 무리가 빨라 잘 안 보였음): 3 · 6틱 늦게 같은 길을 따르는 옅은 사슴 왕 · 늑대 (3인칭 · 다른 사람)
+        for (int echo = 1; echo <= 2; echo++) {
+            int ee = echo;
+            RuneKit.later(echo * 3, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                double a = ee == 1 ? 0.5 : 0.26;
+                double left = Math.max(0.1, run - ee * 0.15);
+                JobFx16.stagRun(sp.level(), V.add(ground0, f, -0.6), f, k.num("stagH", 4.4) * 0.9, speed, left, JobFx.hide1p(sp).with("alpha", a), glow, core);
+                for (double[] w : pack) {
+                    Vec3 at = V.add(V.add(ground0, right, w[0]), f, w[1]);
+                    JobFx16.wolfRun(sp.level(), at, f, 1.9, speed, left, JobFx.hide1p(sp).with("alpha", a), glow, core);
+                }
+            });
+        }
         // 놓은 활 (번쩍) · 내달리는 길의 정령빛 띠 · 번쩍임 · 소리 (뿔피리 울부짖음 · 우레 같은 발굽)
         Vec3 bowAt = V.up(V.add(sp.position(), f, BOW_AHEAD), bowY(sp));
         JobFx.burst(level, bowAt, 0.9, j, 0.25, Opt.of("alpha", 0.8));

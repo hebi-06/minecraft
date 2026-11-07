@@ -423,7 +423,7 @@ final class ArcmageSkills {
     // ------------------------------------------------------------ 셀레스티얼 오빗 (2026-11-07 재설계안 3판 — 스펠 서지 대신)
 
     /**
-     * 셀레스티얼 오빗 (태세 칸 몫 딜 — 롤 아우렐리온 솔 패시브): 별 다섯 (환영 별 판 card_orb — 주인을 따라 돎) 이 둘레 orbit 칸을 돎 → first 틱부터 every 틱마다 shots 번,
+     * 셀레스티얼 오빗 (태세 칸 몫 딜 — 롤 아우렐리온 솔 패시브): 금빛 별 다섯 (rfx_jstarnode — 2틱마다 다시 그림 · 주인을 따라 돎 · orbitTicks 틱에 한 바퀴) 이 둘레 orbit 칸을 돎 → first 틱부터 every 틱마다 shots 번,
      * fly 틱 전에 가장 가까운 적 (range 칸) 쪽 별 하나가 별똥처럼 솟았다 떨어져 그 틱에 터짐 (그 적 둘레 radius 칸 — shot · 마법 피해). 터진 자리마다 작은 별이 남아 앞 자리와
      * 금빛 선으로 이어져 땅에 별자리를 그림 (끝날 때까지 — 그림만, 특성의 별자리와는 따로). 칸 HUD 에 남은 시간 (태세 줄)
      */
@@ -440,9 +440,27 @@ final class ArcmageSkills {
         ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
         JobTraits.startStance(sp, k, end + 6);
-        // 별 다섯이 둘레를 돎 (주인을 따라감 · 위아래로 조금씩 출렁임)
-        JobFx3d.orbitOwner(sp, "arcane_orb", 5, new Vec3(0, 1.25, 0), orbitR, 150, false, (end + 8) / 20.0, 0.85, j, Opt.of("fadeIn", 0.25, "fadeOut", 0.3,
-                "glowAlpha", 0.8, "shine", 0.6, "bob", 0.16, "bobHz", 0.9));
+        // 별 다섯이 둘레를 돎 — 금빛 네 갈래 별 (rfx_jstarnode — 반짝임 이어 돌림) 을 2틱마다 다시 그림 (주인을 따라감 · 도는 쪽으로 움직임 · 위아래로 조금씩 출렁임).
+        // 영상 42332661771 뒤: 환영 별 판 (card_orb) 은 파란 구슬로 보여 별 같지 않았음. 날아간 별은 gone 틱까지 비었다가 다시 뜸
+        double w = Math.PI * 2 / Math.max(20, k.num("orbitTicks", 60));
+        int[] gone = new int[5];
+        for (int t = 0; t < end + 8; t += 2) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life) || tt > 2 && !JobTraits.stanceOn(sp, k.id())) return;
+                ServerLevel lv = sp.level();
+                Vec3 c = V.up(sp.position(), 1.25);
+                Vec3 bodyVel = RuneKit.bodyVel(sp);
+                for (int i = 0; i < 5; i++) {
+                    if (gone[i] > tt) continue;
+                    double a = tt * w + i * Math.PI * 2 / 5;
+                    Vec3 p = new Vec3(c.x + Math.cos(a) * orbitR, c.y + 0.14 * Math.sin(a * 2 + tt * 0.15), c.z + Math.sin(a) * orbitR);
+                    Vec3 vel = V.add(bodyVel, new Vec3(-Math.sin(a), 0, Math.cos(a)), w * 20 * orbitR);
+                    boolean back = gone[i] > 0 && tt - gone[i] < 4; // 다시 뜨는 별은 번쩍
+                    JobFx.starNode(lv, p, back ? 0.62 : 0.46, back ? 0 : 2, back ? 2 : 4, 0.13, !back, Opt.of("vel", vel, "fade", 0.0), NIGHT, GOLD);
+                }
+            });
+        }
         // 부름: 완드 끝 큰 별 · 발밑 별빛 고리 · 둘레로 퍼지는 금빛 별 다섯
         JobFx.starNode(level0, wandTip(sp), 0.6, 0, 2, 0.3, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
         JobFx.halo(level0, V.up(c0, 0.06), orbitR + 0.5, j, 0.6, Opt.empty());
@@ -476,7 +494,21 @@ final class ArcmageSkills {
                 Vec3 to = Kit.bodyPoint(e);
                 Vec3 raw = V.sub(to, c);
                 Vec3 dir = Math.hypot(raw.x, raw.z) > 0.1 ? V.flat(raw) : Kit.facingOf(sp); // V.flat 은 단위 벡터 (0 이면 남쪽)
-                Vec3 from = V.add(c, dir, orbitR);
+                // 그 적 쪽에 가장 가까운 도는 별이 떨어져 나감 (14틱 비었다가 다시 뜸)
+                int now = at - fly;
+                int best = 0;
+                double bd = -2;
+                for (int s = 0; s < 5; s++) {
+                    double a = now * w + s * Math.PI * 2 / 5;
+                    double dd = Math.cos(a) * dir.x + Math.sin(a) * dir.z;
+                    if (dd > bd) {
+                        bd = dd;
+                        best = s;
+                    }
+                }
+                double ab = now * w + best * Math.PI * 2 / 5;
+                gone[best] = now + 14;
+                Vec3 from = new Vec3(c.x + Math.cos(ab) * orbitR, c.y, c.z + Math.sin(ab) * orbitR);
                 double dist = V.len(V.sub(to, from));
                 Vec3 apex = V.up(V.lerp(from, to, 0.5), 2.2 + dist * 0.2);
                 int half = Math.max(1, fly / 2);

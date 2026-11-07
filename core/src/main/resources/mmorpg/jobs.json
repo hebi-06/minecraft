@@ -128,8 +128,8 @@
         {"id": "archer_focus", "name": "와일드 헌트", "cd": 30, "dur": 200, "bite": 0.4, "width": 0.6, "wolves": 2,
           "up": [{"key": "bite", "name": "늑대 물어뜯기", "fmt": "pct"}],
           "desc": "10초: 교감 즉시 5 · 움직여도 줄지 않음 · 활 평타 관통 · 늑대 정령 둘이 곁에서 달림 — 활 평타가 겨눈 적을 맞힐 때마다 늑대가 그 적에게 뛰어올라 물어뜯음 (평타의 40%)"},
-        {"id": "archer_ult", "name": "스피릿 스탬피드", "cd": 60, "total": 60, "draw": 24, "range": 40, "width": 3, "shot": 40, "after": 20, "blooms": 20, "speed": 40,
-          "bloomDelay": 18, "stagH": 4.4, "t": 43, "w": 24,
+        {"id": "archer_ult", "name": "스피릿 스탬피드", "cd": 60, "total": 60, "draw": 24, "range": 40, "width": 3, "shot": 40, "after": 20, "blooms": 20, "speed": 18,
+          "bloomDelay": 18, "stagH": 4.4, "t": 44, "w": 26,
           "desc": "1.2초 시위를 당기면 등 뒤에 금빛 뿔의 사슴 정령 왕이 깨어남 → 화살이 사슴 정령 왕과 늑대 정령 무리가 되어 앞 40칸 (폭 3칸) 을 내달림 (40 — 짓밟아 띄움) → 지나간 자리에 정령 꽃 스물이 피어 차례로 터짐 (맞은 적마다 20)"}
       ]
     },

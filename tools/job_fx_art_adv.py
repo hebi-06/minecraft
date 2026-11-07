@@ -6834,6 +6834,196 @@ sprite("rfx_jsbloom", "lookat_y", SPB_S, SPB_S, SPB_N, 4, "spirit", zoom=2,
        "(이어 돌림 — 흐르는 정령빛 꽃잎 · 금빛 테 맥동 · 꽃술 · 오르는 티끌) → 5 부풀어 크게 번쩍 → 6 터짐 (꽃잎 열둘이 바깥으로 · 섬광 · 고리) → 7 흩어진 꽃잎 · 티끌")(sp_bloom_frame)
 
 
+# ------------------------------------------------------------ rfx_jshatter (2026-11-07 트릭스터 3판 — 거울이 금 가고 깨짐 · 세워 면이 dir 쪽, 칸 가운데 = 거울 가운데)
+# 거울 (rfx_jpane — 128×224) 을 둘레 여유가 있는 256×320 칸 가운데 (64, 48 만큼 안쪽) 에 같은 크기로 둠 → 조각이 칸 안에서 날아감. 게임 크기 = 거울 높이 / 1.75
+# (반 너비 — rfx_jpane 은 / 3.5). 빛 칸 = 거울면 · 굵은 테 · 조각 면, 심지 칸 = 금 · 조각 테 · 반짝임.
+
+SH_N = 8
+SH_W, SH_H = 256, 320
+SH_OX, SH_OY = (SH_W - PN_W) / 2, (SH_H - PN_H) / 2
+SH_IMPACT = (SH_OX + PN_W * 0.5, SH_OY + PN_H * 0.44)
+
+
+def _sh_outline(inset=0.0):
+    """거울면 (아치 — rfx_jpane 과 같은 꼴) 의 볼록 다각형 (칸 좌표 · 시계 반대)"""
+    x0, x1 = SH_OX + 22 + inset, SH_OX + PN_W - 22 - inset
+    r = (x1 - x0) / 2
+    cx = SH_OX + PN_W / 2
+    ytop = SH_OY + 16 + inset + r
+    y1 = SH_OY + PN_H - 16 - inset
+    pts = [(cx + math.cos(a) * r, ytop - math.sin(a) * r) for a in np.linspace(0, math.pi, 28)]
+    return pts + [(x0, y1), (x1, y1)]
+
+
+def _clip_convex(subject, clip):
+    """Sutherland–Hodgman: subject 다각형을 볼록 다각형 clip 안으로 자름"""
+    def inside(p, a, b):
+        return (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]) <= 0
+
+    def cross_pt(p, q, a, b):
+        x1, y1, x2, y2 = p[0], p[1], q[0], q[1]
+        x3, y3, x4, y4 = a[0], a[1], b[0], b[1]
+        den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+        if abs(den) < 1e-9:
+            return q
+        t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / den
+        return (x1 + t * (x2 - x1), y1 + t * (y2 - y1))
+    out = list(subject)
+    # clip 이 시계 반대면 inside 부호가 거꾸로 — 넓이 부호로 맞춤
+    area = sum(clip[i][0] * clip[(i + 1) % len(clip)][1] - clip[(i + 1) % len(clip)][0] * clip[i][1] for i in range(len(clip)))
+    cl = clip if area < 0 else clip[::-1]
+    for i in range(len(cl)):
+        a, b = cl[i], cl[(i + 1) % len(cl)]
+        inp = out
+        out = []
+        if not inp:
+            break
+        s = inp[-1]
+        for e in inp:
+            if inside(e, a, b):
+                if not inside(s, a, b):
+                    out.append(cross_pt(s, e, a, b))
+                out.append(e)
+            elif inside(s, a, b):
+                out.append(cross_pt(s, e, a, b))
+            s = e
+    return out
+
+
+def _sh_pieces():
+    """깨진 거울 조각: 맞은 자리 (SH_IMPACT) 에서 뻗는 금 열하나 × 고리 셋 (반지름 16 · 42 · 끝) 으로 나눈 조각 — 거울면 안으로 자름.
+    [(다각형, 무게중심, 맞은 자리에서 나가는 쪽, 고리 번호, 돌기, 늦음)]"""
+    rs = random.Random(9810)
+    ix, iy = SH_IMPACT
+    n = 11
+    angs = sorted((k * TAU / n + rs.uniform(-0.18, 0.18)) % TAU for k in range(n))
+    rings = [0.0, 16.0, 42.0, 220.0]
+    face = _sh_outline(0.0)
+    pieces = []
+    for k in range(n):
+        a0, a1 = angs[k], angs[(k + 1) % n] + (TAU if k == n - 1 else 0.0)
+        for j in range(3):
+            r0, r1 = rings[j], rings[j + 1]
+            # 바깥 고리는 가운데에서 한 번 더 나눔 (긴 조각이 덜 나오게)
+            cuts = [a0, a1] if j < 2 else [a0, (a0 + a1) / 2 + rs.uniform(-0.08, 0.08), a1]
+            for c in range(len(cuts) - 1):
+                b0, b1 = cuts[c], cuts[c + 1]
+                jit = lambda r: r * (1 + rs.uniform(-0.12, 0.12)) if 0 < r < 200 else r  # noqa: E731
+                ra, rb = jit(r0), jit(r1)
+                pts = []
+                if ra < 1e-6:
+                    pts.append((ix, iy))
+                else:
+                    for t in np.linspace(0, 1, 4):
+                        a = b0 + (b1 - b0) * t
+                        pts.append((ix + math.cos(a) * ra, iy + math.sin(a) * ra))
+                for t in np.linspace(1, 0, 4):
+                    a = b0 + (b1 - b0) * t
+                    pts.append((ix + math.cos(a) * rb, iy + math.sin(a) * rb))
+                poly = _clip_convex(pts, face)
+                if len(poly) < 3:
+                    continue
+                cx = sum(p[0] for p in poly) / len(poly)
+                cy = sum(p[1] for p in poly) / len(poly)
+                d = math.hypot(cx - ix, cy - iy)
+                ux, uy = ((cx - ix) / d, (cy - iy) / d) if d > 1e-6 else (math.cos(b0), math.sin(b0))
+                pieces.append((poly, (cx, cy), (ux, uy), j, rs.uniform(-1.0, 1.0), rs.uniform(0.0, 0.25)))
+    return pieces, angs
+
+
+SH_PIECES, SH_ANGS = _sh_pieces()
+SH_CRACK_RS = random.Random(9820)
+# 금: 맞은 자리에서 뻗는 열하나 (끝까지 · 조금씩 꺾임) + 고리 둘 (조각 경계 그대로)
+SH_CRACKS = []
+for _a in SH_ANGS:
+    _pts = [SH_IMPACT]
+    _r = 0.0
+    while _r < 200:
+        _r += SH_CRACK_RS.uniform(9, 16)
+        _aa = _a + SH_CRACK_RS.uniform(-0.07, 0.07)
+        _pts.append((SH_IMPACT[0] + math.cos(_aa) * _r, SH_IMPACT[1] + math.sin(_aa) * _r))
+    SH_CRACKS.append(_pts)
+
+
+def shatter_frame(f):
+    pad = Pad(SH_W, SH_H)
+    glow = pad.zeros()
+    core = pad.zeros()
+    ix, iy = SH_IMPACT
+    face_pts = _sh_outline(0.0)
+    face = pad.poly(face_pts, 1.0)
+    outer = pad.poly(_sh_outline(-9.0), 1.0)
+    frame = clamp01(outer - pad.poly(_sh_outline(-0.5), 1.0))
+    X, Y = pad.grid()
+    rs = random.Random(9830 + f)
+    if f <= 2:
+        # 0 맞은 자리 번쩍 · 짧은 금 → 1 금이 끝까지 뻗고 고리 금 → 2 금이 환히 빛나며 조각 테가 보임 (테 번쩍)
+        grad = clamp01(0.34 - 0.12 * ((Y - SH_OY) / PN_H)) + 0.08 * f
+        glow = np.maximum(glow, face * grad)
+        glow = np.maximum(glow, frame * (1.0 if f < 2 else 1.0))
+        reach = (0.16, 1.0, 1.0)[f]
+        for pts in SH_CRACKS:
+            cut = cut_polyline(pts, reach) if reach < 1 else pts
+            w = (1.3, 1.5, 2.1)[f]
+            core = np.maximum(core, pad.stroke(cut, w, w * 0.55, a0=1.0, a1=0.75) * clamp01(face + 0.0))
+            glow = np.maximum(glow, pad.stroke(cut, w * 2.6, w * 1.2, a0=0.55, a1=0.3) * face)
+        if f >= 1:
+            for rr in (16.0, 42.0):
+                ring = [(ix + math.cos(a) * rr * (1 + 0.1 * math.sin(a * 5 + rr)), iy + math.sin(a) * rr * (1 + 0.1 * math.sin(a * 5 + rr))) for a in np.linspace(0, TAU, 40)]
+                core = np.maximum(core, pad.stroke(ring, 1.2 if f == 1 else 1.7, a0=0.9) * face)
+        if f == 2:
+            for (poly, _c, _u, _j, _s, _l) in SH_PIECES:
+                core = np.maximum(core, rim_of(pad.poly(poly, 1.0), 1.2) * 0.55)
+        fl = (1.0, 0.8, 0.95)[f]
+        core = np.maximum(core, star4(pad, ix, iy, (30, 22, 40)[f], fl, rot=0.25, thin=0.09, diag=0.45))
+        glow = np.maximum(glow, pad.radial(ix, iy, (34, 30, 58)[f], 1.3) * 0.9 * fl)
+        if f == 2:
+            # 테가 번쩍 (깨지기 직전)
+            core = np.maximum(core, rim_of(outer > 0.5, 1.6) * 0.9)
+    else:
+        # 3 ~ 7: 조각이 맞은 자리에서 바깥으로 튀며 돌고 떨어짐 (바깥 고리일수록 늦고 멀리) — 면 (빛) · 테 (심지) · 몇 조각 반짝임
+        p = (f - 2) / (SH_N - 3)
+        A = (1.0, 0.95, 0.8, 0.55, 0.28)[f - 3]
+        for (poly, (cx, cy), (ux, uy), j, spin, late) in SH_PIECES:
+            q = clamp01((p - late * 0.5) / (1 - late * 0.5))
+            dist = (6 + 14 * j) * q + 70 * (q ** 1.4) * (0.6 + 0.25 * j)
+            fall = 46 * q * q
+            ox, oy = ux * dist, uy * dist + fall
+            rot = spin * 1.6 * q
+            sc = 1.0 - 0.4 * q
+            cr, sr = math.cos(rot), math.sin(rot)
+            pts = [(cx + ox + ((x - cx) * cr - (y - cy) * sr) * sc, cy + oy + ((x - cx) * sr + (y - cy) * cr) * sc) for x, y in poly]
+            m = pad.poly(pts, 1.0)
+            # 조각 면: 기울어 빛을 받는 조각이 번쩍 (조각마다 다른 때)
+            shine = 0.35 + 0.45 * max(0.0, math.sin(spin * 7 + f * 1.3))
+            glow = np.maximum(glow, m * shine * A)
+            core = np.maximum(core, rim_of(m, 1.3) * 0.95 * A)
+            if f <= 5 and abs(math.sin(spin * 11 + f)) > 0.82:
+                core = np.maximum(core, star4(pad, cx + ox, cy + oy, 7.5 * A, A, rot=rot, thin=0.12, diag=0.0))
+        # 테: 3 번쩍이며 끊어짐 → 4 조각난 테가 흩어짐 → 사라짐
+        if f == 3:
+            seg = frame * (0.5 + 0.5 * (np.sin((np.arctan2(Y - iy, X - ix)) * 9) > -0.2))
+            glow = np.maximum(glow, seg * 0.85)
+            core = np.maximum(core, rim_of(outer > 0.5, 1.4) * 0.6)
+            core = np.maximum(core, star4(pad, ix, iy, 46, 0.9, rot=0.7, thin=0.08, diag=0.5))
+            glow = np.maximum(glow, pad.radial(ix, iy, 70, 1.2) * 0.75)
+        elif f == 4:
+            glow = np.maximum(glow, frame * 0.35 * (np.sin((np.arctan2(Y - iy, X - ix)) * 9) > 0.3))
+        for _ in range((4, 8, 12, 14, 10)[f - 3]):
+            a = rs.uniform(0, TAU)
+            r = rs.uniform(20, 120) * (0.5 + p)
+            sx, sy = ix + math.cos(a) * r, iy + math.sin(a) * r * 1.2 + 30 * p
+            if 6 < sx < SH_W - 6 and 6 < sy < SH_H - 6:
+                core = np.maximum(core, star4(pad, sx, sy, rs.uniform(2.2, 5.0), A * rs.uniform(0.5, 1.0), diag=0.0))
+    return finish(pad, glow, core, halo=((1.2, 0.45), (3.0, 0.32), (7.0, 0.18)), body_k=0.95, core_bloom=((1.0, 0.32), (2.5, 0.22)), win=4.0)
+
+
+sprite("rfx_jshatter", "direction_z", SH_W, SH_H, SH_N, 4, "illusion", zoom=0,
+       desc="거울이 깨짐 (트릭스터 트윈 리플렉션 · 미러 월드 — 세워 면이 dir 쪽, rfx_jpane 과 같은 아치 거울을 256×320 칸 가운데에): 0 맞은 자리 번쩍 · 짧은 금 → "
+       "1 금 열하나가 끝까지 뻗고 고리 금 둘 → 2 금이 환히 빛나며 조각 테 · 테 번쩍 → 3 조각이 갈라지며 튐 (큰 번쩍 · 테가 끊어짐) → 4 ~ 6 조각이 돌며 바깥으로 날아가 "
+       "떨어짐 (바깥 고리일수록 멀리 · 반짝임) → 7 흐려진 조각 · 반짝이")(shatter_frame)
+
+
 def save_alias(alias, src, img, cw, ch, facing):
     """2026-11-07 같은 그림을 다른 보는 꼴로 쓰는 파티클 정의 (rfx_jswolf1p — 늑대 정령 옆모습을 1인칭에서 카메라를 보는 판으로): 그림은 src 의 것"""
     import json as _json
