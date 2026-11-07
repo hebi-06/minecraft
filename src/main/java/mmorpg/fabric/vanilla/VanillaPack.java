@@ -51,7 +51,7 @@ final class VanillaPack {
      * 그림 창 (VanillaGui — 상자 메뉴 제목 글자로 그리는 바탕 · 글자): mmorpg/vanilla/gui (tools/vanilla_gui.py) 를 팩에 —
      * 메뉴 쪽 바탕 (rpg:gui/menu_*.png · 글꼴 rpg:gui_bg), 글자판 (rpg:gui/text.png · 줄 글꼴 rpg:gl&lt;d&gt;), 숫자판 (rpg:gui/num.png ·
      * 숫자 글꼴 rpg:gn&lt;d&gt;), 자리 옮김 (rpg:gui_space), 칸 그림 (icons → rpg:vui/&lt;이름&gt;), 설명 상자 (tooltip → rpg:tooltip/menu_*),
-     * 홈 카드 그림 (rpg:vtile/&lt;이름&gt; — 아이템 모델의 gui 자리 옮김 · 크기로 카드 가운데에 크게).
+     * 홈 타일 그림 (rpg:vtile/&lt;이름&gt; — 아이템 모델의 gui 자리 옮김 · 크기로 타일 왼쪽 그림 자리 가운데에 크게).
      */
     private static void guiFonts(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path root) {
         Path dir = root.resolve("mmorpg").resolve("vanilla").resolve("gui");
@@ -112,12 +112,12 @@ final class VanillaPack {
                 builder.addData(base, Files.readAllBytes(png));
                 builder.addStringData(base + ".mcmeta", "{\"gui\":{\"scaling\":{\"type\":\"nine_slice\",\"width\":32,\"height\":32,\"border\":9}}}");
             }
-            // 홈 카드 그림 (카드 = 칸 둘 × 줄 셋 — 왼쪽 위 칸의 아이템을 오른쪽 9 · 아래 10 옮기고 1.5배)
+            // 홈 타일 그림 (타일 = 칸 넷 × 줄 둘, 왼쪽 그림 자리 30 × 30 — 왼쪽 위 칸의 아이템을 오른쪽 9 · 아래 9 옮기고 1.5배)
             for (Map.Entry<String, String> e : VanillaMenu.TILES.entrySet()) {
                 String model = Mmorpg.NS + ":item/vtile/" + e.getKey();
                 builder.addStringData("assets/" + Mmorpg.NS + "/models/item/vtile/" + e.getKey() + ".json",
                         "{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"" + e.getValue() + "\"},"
-                                + "\"display\":{\"gui\":{\"rotation\":[0,0,0],\"translation\":[9,-10,0],\"scale\":[1.5,1.5,1.5]}}}");
+                                + "\"display\":{\"gui\":{\"rotation\":[0,0,0],\"translation\":[9,-9,0],\"scale\":[1.5,1.5,1.5]}}}");
                 // oversized_in_gui: 1.21.6+ 는 GUI 아이템을 칸 (16 × 16) 크기로 잘라 그림 — 칸 밖까지 그리게 (CI 42387417421 사진: 왼쪽 위 조각만 보임)
                 builder.addStringData("assets/" + Mmorpg.NS + "/items/vtile/" + e.getKey() + ".json",
                         "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + model + "\"},\"oversized_in_gui\":true}");

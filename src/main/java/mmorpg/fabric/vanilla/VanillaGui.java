@@ -22,31 +22,32 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 모드 없는 클라이언트의 그림 창 (1번 4b — 사용자 "텍스처랑 넣고 … 최대한 비슷하게", "위르드 서버 처럼"): 상자 메뉴의 제목 글자로 창 바탕 · 글자를 그림.
+ * 모드 없는 클라이언트의 그림 창 (1번 4b): 상자 메뉴의 제목 글자로 창 바탕 · 글자를 그림.
  *
- * <p>바닐라 상자 메뉴는 제목을 칸 아이템보다 먼저 그림 (1.21.7+ — 아이템이 위). 제목 = [뒤로 8] [바탕 그림 글자 (rpg:gui_bg — 메뉴 쪽 176 × 198,
- * 창 위 12 부터)] [자리 옮김 (rpg:gui_space — 앞뒤 1 ~ 256)] [글자 (줄 글꼴 rpg:gl&lt;d&gt; — 갈무리9 글자판, 세로 d 만큼 아래 ·
+ * <p>바닐라 상자 메뉴는 제목을 칸 아이템보다 먼저 그림 (1.21.7+ — 아이템이 위). 제목 = [뒤로 8] [바탕 그림 글자 (rpg:gui_bg — 메뉴 쪽 176 × 236,
+ * 창 위 14 부터)] [자리 옮김 (rpg:gui_space — 앞뒤 1 ~ 256)] [글자 (줄 글꼴 rpg:gl&lt;d&gt; — 갈무리9 글자판, 세로 d 만큼 아래 ·
  * 숫자 글꼴 rpg:gn&lt;d&gt; — 갈무리7 숫자판)] … 처럼 이어 붙임. 글자 너비는 tools/vanilla_gui.py 가 만든 표 (text_widths.json · num_widths.json —
  * 마인크래프트 비트맵 글꼴 규칙과 같게) 로 셈. 바탕 · 글자판 · 글꼴은 VanillaPack 이 팩에만 넣음 (모드 클라이언트는 읽지 않음).
  *
- * <p>좌표는 4줄 상자 메뉴 (9 × 4 — VanillaMenu) 창 왼쪽 위 기준: 칸 c 의 틀 x = 7 + 18c, 줄 r 의 틀 y = 17 + 18r (가방 줄 4 ~ 6 은
- * 102 + 18(r − 4), 핫바 줄 7 은 160). 글자판 칸 12px 의 위 = 3 + d (갈무리9 글자 = y d + 4 ~ d + 12, 갈무리7 숫자 = d + 6 ~ d + 12).
+ * <p>메뉴 2판 (2026-11-08 — 사용자 "색이나 배열이나 그런거 다르게", "바닐라 아이템으로 꾸미는가 너무 밤티남"): 6줄 상자 메뉴 (9 × 6), 모드 창과 같은
+ * 남색 판 · 금테. 좌표는 창 왼쪽 위 기준: 칸 c 의 틀 x = 7 + 18c, 줄 r 의 틀 y = 17 + 18r (가방 줄 6 ~ 8 은 138 + 18(r − 6), 핫바 줄 9 는 196).
+ * 글자판 칸 12px 의 위 = 3 + d (갈무리9 글자 = y d + 4 ~ d + 12, 갈무리7 숫자 = d + 6 ~ d + 12).
  */
 public final class VanillaGui {
     private VanillaGui() {}
 
-    /** 줄 글꼴 (갈무리9) 의 세로 자리 d: 제목 줄 · 스킬 쪽 머리 줄 둘 · 스탯 트리 갈래 이름 둘 (줄 1 · 2 가운데) · 아래 줄 (줄 3) */
-    public static final int[] LINES = {0, 15, 35, 51, 53, 71};
-    /** 숫자 글꼴 (갈무리7) 의 세로 자리 d: 장비 쪽 손 +N (칸 위) · 스탯 값 · 아티팩트 +N (칸 아래) */
-    public static final int[] NUM_LINES = {1, 38, 67};
+    /** 줄 글꼴 (갈무리9) 의 세로 자리 d: 제목 줄 0 · 줄 1 ~ 5 가운데 (35 · 53 · 71 · 89 · 107) · 스킬 쪽 직업 안내 (103) */
+    public static final int[] LINES = {0, 35, 53, 71, 89, 103, 107};
+    /** 숫자 글꼴 (갈무리7) 의 세로 자리 d: 줄 1 ~ 5 가운데 (35 · 53 · 71 · 89 · 107 — 장비 강화 +N) · 스탯 값 (68) · 효과 (78) */
+    public static final int[] NUM_LINES = {35, 53, 68, 71, 78, 89, 107};
     public static final Identifier SPACE = Mmorpg.rpg("gui_space");
     public static final Identifier BG = Mmorpg.rpg("gui_bg");
     /** 메뉴 아이템 설명 상자 (rpg:tooltip/menu_background · menu_frame — VanillaPack) */
     public static final Identifier TOOLTIP = Mmorpg.rpg("menu");
 
-    /** 메뉴 쪽 바탕 (rpg:gui_bg 의 글자 — VanillaPack 이 같은 차례로 넣음): 그림 176 × 198 (창 위 12 부터) */
+    /** 메뉴 쪽 바탕 (rpg:gui_bg 의 글자 — VanillaPack 이 같은 차례로 넣음): 그림 176 × 236 (창 위 14 부터) */
     public enum Bg {
-        HOME("menu_home"), STATS("menu_stats"), SKILLS("menu_skills"), EQUIP("menu_equip"), GACHA("menu_gacha"), TREE("menu_tree");
+        HOME("menu_home"), STATS("menu_stats"), EQUIP("menu_equip"), SKILLS("menu_skills"), TREE("menu_tree"), GACHA("menu_gacha");
 
         public final String file;
 
@@ -61,20 +62,17 @@ public final class VanillaGui {
 
     /** 바탕 그림 크기 · 위 여유 (그림 위가 창 위보다 MENU_TOP 위 — 탭 막대 걸이) */
     public static final int BG_W = 176;
-    public static final int MENU_H = 198;
-    public static final int MENU_TOP = 12;
+    public static final int MENU_H = 236;
+    public static final int MENU_TOP = 14;
     /** 제목 글자가 시작하는 x (바닐라 titleLabelX) */
     static final int TITLE_X = 8;
 
     /** 그림 글자 (글자판 끝 — 흰색으로 쓰면 그림 색 그대로) */
     public static final String COIN = "\uE100", HEART = "\uE101", GEM = "\uE102", TICKET = "\uE103";
 
-    /** 어두운 바탕 위 */
-    public static final int WHITE = 0xFFFFFF, GRAY = 0xAAAAAA, DARK = 0x777777, GOLD = 0xFFC94A, GREEN = 0x9CFF8A, RED = 0xFF6B6B,
-            AQUA = 0x6FE6FF, PINK = 0xF08CFF;
-    /** 양피지 위 (밝은 판 — 어두운 글자) */
-    public static final int INK = 0x4A3524, SUB = 0x8C7052, OK = 0x3F7A34, WARN = 0xA0352E, GOLD_INK = 0x9A6A14, TEAL_INK = 0x1F6F78,
-            PURPLE_INK = 0x7A3F8C;
+    /** 남색 판 위 글자 색 */
+    public static final int WHITE = 0xFFFFFF, CREAM = 0xF0E4C8, GOLD = 0xFFD678, MUTED = 0x969ABE, DIM = 0x5C6084, GREEN = 0x8CF096,
+            RED = 0xF06E6E, TEAL = 0x6EDCE6, PINK = 0xF0A0F0, GRAY = 0xAAAAAA;
 
     private static Map<Integer, Integer> widths;
     private static int space = 4;
@@ -85,9 +83,14 @@ public final class VanillaGui {
         return 7 + 18 * c;
     }
 
-    /** 9 × 4 메뉴 줄 r 의 틀 y (0 ~ 3 메뉴 칸, 4 ~ 6 가방, 7 핫바) */
+    /** 9 × 6 메뉴 줄 r 의 틀 y (0 ~ 5 메뉴 칸, 6 ~ 8 가방, 9 핫바) */
     public static int cellY(int r) {
-        return r < 4 ? 17 + 18 * r : r < 7 ? 102 + 18 * (r - 4) : 160;
+        return r < 6 ? 17 + 18 * r : r < 9 ? 138 + 18 * (r - 6) : 196;
+    }
+
+    /** 줄 r (0 ~ 5) 가운데에 맞춘 글자 줄 d (갈무리9 · 갈무리7 둘 다 — 줄 1 ~ 5 = 35 · 53 · 71 · 89 · 107) */
+    public static int rowLine(int r) {
+        return 17 + 18 * r;
     }
 
     /** 칸 c 의 가운데 x */

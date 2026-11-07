@@ -16,13 +16,14 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * 메뉴의 스킬 쪽 (VanillaMenu — 왼쪽 탭 "스킬", 사용자 "스킬 세팅도 왼쪽에 박고"):
+ * 메뉴의 스킬 장착 쪽 (VanillaMenu — 위 탭 "스킬"). 2판 (사용자 "Claude 가 새로 디자인") — 숫자 키 모양:
  * <pre>
  * 스킬 세팅                                   ▶ 고른 룬
- * 룬 스킬  F 한 번 · 숫자 1 ~ 8
- * [룬 1] … [룬 8]                    (줄 1 · 칸 1 ~ 8)
- * 직업 스킬  F 두 번 · 숫자 1 ~ 5
- * [직업 1] … [직업 5]      [빼기] [도움말]   (줄 3)
+ * ◆ 룬 스킬  F 한 번 → 숫자 키                      줄 1
+ * [1][2][3][4][5][6][7][8]  [빼기]                  줄 2 (키 모양 칸 — 아래 숫자는 바탕)
+ *  1  2  3  4  5  6  7  8
+ * [1][2][3][4][5]  ◆ 직업 스킬   [도움말]            줄 4
+ *  1  2  3  4  5      F 두 번
  * </pre>
  * 고르고 놓기: 룬 칸 · 가방의 룬을 누르면 고름, 다음에 누른 칸으로 — 룬 칸 → 룬 칸 옮기기 (서로 바꿈), 가방 → 룬 칸 올리기 (있던 룬은 그 가방 칸으로),
  * 고른 룬 칸 + 빼기 = 가방으로. 같은 것을 다시 누르면 풂. 서버 동작은 SkillBar.equip · unequip · move (실패 문구는 그쪽이 알림).
@@ -45,23 +46,24 @@ public final class VanillaSkillBar {
         if (pick != null && !pick.bar() && RuneItems.runeOf(sp.getInventory().getItem(pick.index())) == null) pick = null;
         g.skillPick = pick;
 
-        t.text(31, 0, "스킬 세팅", VanillaGui.INK);
+        VanillaMenu.title(t, "스킬 세팅");
         if (pick != null) {
             Runes.Rune r = RuneItems.runeOf(pick.bar() ? SkillBar.get(sp, pick.index()) : sp.getInventory().getItem(pick.index()));
             String what = r == null ? "" : r.def().str("name");
-            t.right(168, 0, VanillaGui.fit("▶ " + what + (pick.bar() ? " → 칸 · 빼기" : " → 칸"), 84), VanillaGui.GOLD_INK);
+            t.right(166, 0, VanillaGui.fit("▶ " + what + (pick.bar() ? " → 칸 · 빼기" : " → 칸"), 92), VanillaGui.GOLD);
         } else {
-            t.right(168, 0, "룬을 눌러 고르기", VanillaGui.SUB); // 제목 "스킬 세팅" (x 31 ~ 77) 과 겹치지 않게 (CI 42387417421)
+            t.right(166, 0, "룬을 눌러 고르기", VanillaGui.MUTED);
         }
-        t.text(30, 15, "룬 스킬", VanillaGui.TEAL_INK);
-        t.text(30 + VanillaGui.width("룬 스킬") + 6, 15, "F 한 번 · 숫자 1 ~ 8", VanillaGui.SUB);
-        t.text(30, 51, "직업 스킬", VanillaGui.PURPLE_INK);
-        t.text(30 + VanillaGui.width("직업 스킬") + 6, 51, "F 두 번 · 숫자 1 ~ 5", VanillaGui.SUB);
+        // 머리 글 (바탕의 색 보석 옆): 룬 = 줄 1 왼쪽, 직업 = 줄 4 오른쪽 (칸 5 ~ 7)
+        t.text(11, VanillaGui.rowLine(1), "룬 스킬", VanillaGui.TEAL);
+        t.text(11 + VanillaGui.width("룬 스킬") + 6, VanillaGui.rowLine(1), "F 한 번 → 숫자 키", VanillaGui.MUTED);
+        t.text(VanillaGui.cellX(5) + 6, VanillaGui.rowLine(4), "직업 스킬", VanillaGui.PINK);
+        t.text(VanillaGui.cellX(5) + 6, 103, "F 두 번", VanillaGui.MUTED);
 
         for (int i = 0; i < SkillBar.SIZE && i < 8; i++) runeCell(g, i);
         for (int i = 0; i < JobSkills.SIZE && i < 5; i++) jobCell(g, i);
         boolean canRemove = pick != null && pick.bar();
-        g.set(3, 7, VanillaGui.ui("icon_cross", canRemove ? "§c빼기 §7(가방으로)" : "§8빼기",
+        g.set(2, 8, VanillaGui.blank(canRemove ? "§c빼기 §7(가방으로)" : "§8빼기",
                 List.of(canRemove ? "§7고른 룬을 가방으로" : "§8룬 칸을 먼저 고르세요")), VanillaMenu.MenuGui.left(() -> {
             Pick p = g.skillPick;
             if (p == null || !p.bar()) return;
@@ -69,14 +71,14 @@ public final class VanillaSkillBar {
             g.skillPick = null;
             g.refresh();
         }));
-        g.set(3, 8, VanillaGui.ui("info", "§b도움말", List.of(
+        g.set(4, 8, VanillaGui.blank("§b도움말", List.of(
                 "§7룬 칸을 누르고 → 다른 룬 칸: §f옮기기",
                 "§7가방의 룬을 누르고 → 룬 칸: §f올리기",
                 "§7룬 칸을 누르고 → §c빼기§7: §f가방으로",
                 "§7같은 것을 다시 누르면 고르기 풂",
                 "",
                 "§7스킬 쓰기: §fF§7 (룬) · §fF F§7 (직업) → 숫자 키",
-                "§7메뉴: §fShift + F")), GuiElement.EMPTY_CALLBACK);
+                "§7메뉴: §fShift + F")), null);
     }
 
     private static void runeCell(VanillaMenu.MenuGui g, int i) {
@@ -87,7 +89,7 @@ public final class VanillaSkillBar {
         boolean picked = pick != null && pick.bar() && pick.index() == i;
         GuiElement.ClickCallback cb = (ix, type, a, gg) -> clickBar(g, i, type);
         if (r == null) {
-            g.set(1, 1 + i, VanillaGui.blank("§8" + (i + 1) + "번 칸 §7(비어 있음)",
+            g.set(2, i, VanillaGui.blank("§8" + (i + 1) + "번 칸 §7(비어 있음)",
                     List.of(pick != null ? "§e누르면 여기로" : "§7가방의 룬을 고른 뒤 누르면 올림")), cb);
             return;
         }
@@ -100,7 +102,7 @@ public final class VanillaSkillBar {
         lore.add("§7" + (i + 1) + "번 칸 §8· §7룬 스킬 모드에서 숫자 " + (i + 1));
         if (left > 0) lore.add("§c재사용 대기 " + String.format(Locale.ROOT, "%.1f", left / 20.0) + "초");
         lore.add(picked ? "§e골랐음 §7— 다른 칸을 누르면 옮김 · 빼기 단추" : pick != null ? "§e누르면 여기로 (서로 바꿈)" : "§a누르면 고름");
-        g.set(1, 1 + i, VanillaGui.named(icon, (picked ? "§e▶ " : "") + r.gradeColor() + r.def().str("name"), lore), cb);
+        g.set(2, i, VanillaGui.named(icon, (picked ? "§e▶ " : "") + r.gradeColor() + r.def().str("name"), lore), cb);
     }
 
     private static void clickBar(VanillaMenu.MenuGui g, int i, ClickType type) {
@@ -123,7 +125,7 @@ public final class VanillaSkillBar {
         ServerPlayer sp = g.sp;
         JobSkills.Skill s = JobSkills.skill(sp, i);
         if (s == null) {
-            g.set(3, 1 + i, VanillaGui.blank("§8직업 스킬 " + (i + 1) + " §7(없음)", List.of("§7마을의 직업 교관에게서 직업을 고르면 들어감")), null);
+            g.set(4, i, VanillaGui.blank("§8직업 스킬 " + (i + 1) + " §7(없음)", List.of("§7마을의 직업 교관에게서 직업을 고르면 들어감")), null);
             return;
         }
         String lock = s.lock(sp);
@@ -135,7 +137,7 @@ public final class VanillaSkillBar {
         if (left > 0) lore.add("§c재사용 대기 " + String.format(Locale.ROOT, "%.1f", left / 20.0) + "초");
         ItemStack icon = VanillaGui.cooldown(VanillaGui.icon(mmorpg.fabric.Mmorpg.rpg("vjob/" + VanillaInput.iconId(s.id()) + (locked ? "_locked" : "")),
                 (locked ? "§8" : "§d") + s.name(), lore), VanillaInput.jobGroup(s.id()));
-        g.set(3, 1 + i, icon, null);
+        g.set(4, i, icon, null);
     }
 
     /** 가방 칸을 누름 (잠근 가방 — 아이템은 움직이지 않음): 룬이면 고르거나 고른 룬 칸에 올림 */

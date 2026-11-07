@@ -252,7 +252,7 @@ final class VanillaProbe {
                 next(p, 29, 20);
             }
             case 29 -> {
-                say(p, "slot 9"); // 왼쪽 탭 줄 1 = 스탯
+                say(p, "slot " + VanillaMenu.idx(0, 2)); // 위 탭 = 스탯
                 next(p, 30, 15);
             }
             case 30 -> {
@@ -260,7 +260,7 @@ final class VanillaProbe {
                 check("stats tab (same menu)", g != null && g.page == VanillaMenu.Page.STATS && p.containerMenu == statsMenu);
                 strBefore = mmorpg.fabric.RpgData.of(p).str();
                 pointBefore = mmorpg.fabric.RpgData.of(p).point();
-                say(p, "hover " + VanillaMenu.idx(0, 3)); // 힘 그림 위에 마우스 (설명 상자 모양 rpg:menu)
+                say(p, "hover " + VanillaMenu.idx(2, 1)); // 힘 그림 위에 마우스 (설명 상자 모양 rpg:menu)
                 next(p, 104, 10);
             }
             case 104 -> {
@@ -272,13 +272,13 @@ final class VanillaProbe {
                 next(p, 31, 10);
             }
             case 31 -> {
-                say(p, "slot " + VanillaMenu.idx(0, 3)); // 힘 그림 좌클릭 (+1)
+                say(p, "slot " + VanillaMenu.idx(2, 1)); // 힘 그림 좌클릭 (+1)
                 next(p, 32, 15);
             }
             case 32 -> {
                 mmorpg.fabric.RpgData d = mmorpg.fabric.RpgData.of(p);
                 check("str +1 (left click)", d.str() == strBefore + 1 && d.point() == pointBefore - 1);
-                say(p, "shiftslot " + VanillaMenu.idx(1, 3)); // 힘 값 Shift + 좌클릭 (+5)
+                say(p, "shiftslot " + VanillaMenu.idx(3, 1)); // 힘 기둥 값 Shift + 좌클릭 (+5)
                 next(p, 33, 15);
             }
             case 33 -> {
@@ -289,7 +289,7 @@ final class VanillaProbe {
                 next(p, 100, 20);
             }
             case 100 -> {
-                say(p, "slot " + VanillaMenu.idx(3, 4)); // 가운데 아래 스탯 트리 단추
+                say(p, "slot " + VanillaMenu.idx(5, 4)); // 가운데 아래 스탯 트리 단추
                 next(p, 101, 15);
             }
             case 101 -> {
@@ -299,7 +299,7 @@ final class VanillaProbe {
                 next(p, 102, 20);
             }
             case 102 -> {
-                say(p, "slot " + VanillaMenu.idx(1, 6)); // 오른쪽 갈래 A (저절로 고른 첫 갈래)
+                say(p, "slot " + VanillaMenu.idx(2, 5)); // 오른쪽 판 갈래 A (저절로 고른 첫 갈래)
                 next(p, 103, 15);
             }
             case 103 -> {
@@ -309,7 +309,7 @@ final class VanillaProbe {
                 next(p, 34, 20);
             }
             case 34 -> {
-                say(p, "slot 18"); // 왼쪽 탭 줄 2 = 스킬
+                say(p, "slot " + VanillaMenu.idx(0, 6)); // 위 탭 = 스킬
                 next(p, 35, 15);
             }
             case 35 -> {
@@ -320,22 +320,22 @@ final class VanillaProbe {
                 next(p, 36, 20);
             }
             case 36 -> {
-                say(p, "slot " + VanillaMenu.idx(1, 1)); // 룬 칸 1 고르기
+                say(p, "slot " + VanillaMenu.idx(2, 0)); // 룬 칸 1 고르기
                 next(p, 37, 15);
             }
             case 37 -> {
-                say(p, "slot " + VanillaMenu.idx(1, 6)); // 룬 칸 6 (비어 있음) 으로 옮기기
+                say(p, "slot " + VanillaMenu.idx(2, 5)); // 룬 칸 6 (비어 있음) 으로 옮기기
                 next(p, 38, 15);
             }
             case 38 -> {
                 check("rune moved 1 -> 6", mmorpg.fabric.rune.SkillBar.get(p, 0).isEmpty()
                         && ItemStack.isSameItem(mmorpg.fabric.rune.SkillBar.get(p, 5), movedRune) && !movedRune.isEmpty());
                 bagRunes = countRunes(p);
-                say(p, "slot " + VanillaMenu.idx(1, 6)); // 룬 칸 6 고르기
+                say(p, "slot " + VanillaMenu.idx(2, 5)); // 룬 칸 6 고르기
                 next(p, 39, 15);
             }
             case 39 -> {
-                say(p, "slot " + VanillaMenu.idx(3, 7)); // 빼기
+                say(p, "slot " + VanillaMenu.idx(2, 8)); // 빼기
                 next(p, 40, 15);
             }
             case 40 -> {
@@ -348,7 +348,7 @@ final class VanillaProbe {
                 next(p, 41, 15);
             }
             case 41 -> {
-                say(p, "slot " + VanillaMenu.idx(1, 1)); // 룬 칸 1 에 올리기
+                say(p, "slot " + VanillaMenu.idx(2, 0)); // 룬 칸 1 에 올리기
                 next(p, 42, 15);
             }
             case 42 -> {
@@ -357,7 +357,7 @@ final class VanillaProbe {
                 next(p, 43, 20);
             }
             case 43 -> {
-                say(p, "slot 27"); // 왼쪽 탭 줄 3 = 장비
+                say(p, "slot " + VanillaMenu.idx(0, 4)); // 위 탭 = 장비
                 next(p, 44, 15);
             }
             case 44 -> {
@@ -369,7 +369,7 @@ final class VanillaProbe {
                 next(p, 45, 20);
             }
             case 45 -> {
-                say(p, "slot " + VanillaMenu.idx(0, 1)); // 투구 칸 → 가방으로
+                say(p, "slot " + VanillaMenu.idx(1, 0)); // 투구 칸 → 가방으로
                 next(p, 46, 15);
             }
             case 46 -> {
@@ -393,11 +393,11 @@ final class VanillaProbe {
                 next(p, 49, 20);
             }
             case 49 -> {
-                say(p, "slot 0"); // 왼쪽 탭 줄 0 = 홈
+                say(p, "slot " + VanillaMenu.idx(0, 1)); // 위 탭 = 홈
                 next(p, 50, 15);
             }
             case 50 -> {
-                say(p, "slot " + VanillaMenu.idx(0, 7)); // 뽑기 카드
+                say(p, "slot " + VanillaMenu.idx(4, 7)); // 뽑기 타일
                 next(p, 51, 15);
             }
             case 51 -> {
@@ -408,7 +408,7 @@ final class VanillaProbe {
                 next(p, 52, 20);
             }
             case 52 -> {
-                say(p, "slot " + VanillaMenu.idx(1, 7)); // 1회 뽑기
+                say(p, "slot " + VanillaMenu.idx(5, 1)); // 1회 뽑기
                 next(p, 53, 40);
             }
             case 53 -> {
@@ -418,17 +418,25 @@ final class VanillaProbe {
                 next(p, 54, 15);
             }
             case 54 -> {
-                say(p, "slot " + VanillaMenu.idx(2, 7)); // 10회 뽑기
-                next(p, 55, 70);
+                say(p, "slot " + VanillaMenu.idx(5, 6)); // 10회 뽑기
+                next(p, 59, 18); // 카드 뒷면 → 뒤집는 중 사진
+            }
+            case 59 -> {
+                say(p, "shot 16c_gacha_flip");
+                next(p, 55, 60);
             }
             case 55 -> {
                 check("gacha 10 pulls give runes", countRunes(p) == runesBefore + mmorpg.core.Gacha.multi());
-                say(p, "shot 16c_gacha_ten");
+                say(p, "shot 16d_gacha_ten");
                 next(p, 56, 20);
             }
             case 56 -> {
-                say(p, "close");
-                next(p, 57, 20);
+                say(p, "slot " + VanillaMenu.idx(0, 8)); // 닫기 단추
+                next(p, 58, 15);
+            }
+            case 58 -> {
+                check("close button closes menu", VanillaMenu.current(p) == null && p.containerMenu == p.inventoryMenu);
+                next(p, 57, 10);
             }
             default -> {
                 say(p, "done");

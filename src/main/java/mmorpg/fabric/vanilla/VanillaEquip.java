@@ -27,13 +27,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 메뉴의 장비 쪽 (VanillaMenu — 사용자 "갑옷 패이지도 2번째 사진처럼"):
+ * 메뉴의 장비 쪽 (VanillaMenu). 2판 — 가운데 사람 그림 (도식):
  * <pre>
- * 장비
- * [투구][갑옷][바지][신발]   [무기][왼손] [i]     줄 0 (무기 · 왼손 위에 강화 +N)
- *  리본  리본  리본  리본     리본  리본            줄 1
- * [반지][반지][목걸이][귀걸이][팔찌]       [유물]   줄 2
- *  +N    +N    +N     +N     +N                   줄 3 (아티팩트 강화)
+ * 장비                                    아티팩트 2/5
+ * [투구] ┄┄┄┄┄  ( 사람 )  ┄┄┄┄ +N [반지]      줄 1
+ * [갑옷] ┄┄┄┄┄  (  그림 )  ┄┄┄┄    [반지]      줄 2
+ * [바지] ┄┄┄┄┄  (      )  ┄┄┄┄    [목걸이]    줄 3
+ * [신발] ┄┄┄┄┄  (      )  ┄┄┄┄    [귀걸이]    줄 4
+ * [요약]      +N [무기]  [왼손] +N   [팔찌]      줄 5
  * </pre>
  * 끼기: 가방의 갑옷 · 아티팩트를 누름 (갑옷은 요구 조건 확인 — 모자라면 끼지 않음, 있던 것은 그 가방 칸으로 · 아티팩트는 ArtifactSystem.equip 이 맞는 칸에).
  * 왼손: 가방의 아이템을 우클릭 · F (서로 바꿈 — Shift + F 가 메뉴라서 바닐라 왼손 바꾸기 대신). 빼기: 낀 칸을 누름 (가방으로 — 빈 칸이 없으면 그대로).
@@ -47,66 +48,58 @@ public final class VanillaEquip {
 
     static void render(VanillaMenu.MenuGui g, VanillaGui.Title t) {
         ServerPlayer sp = g.sp;
-        t.text(31, 0, "장비", VanillaGui.INK);
-        // 갑옷 넷 (줄 0 · 칸 1 ~ 4) · 리본 (줄 1)
+        VanillaMenu.title(t, "장비");
+        t.right(166, 0, "아티팩트 " + ArtifactSystem.worn(sp) + "/" + ArtifactSystem.SIZE, VanillaGui.MUTED);
+        // 갑옷 넷 (칸 0 · 줄 1 ~ 4 — 바탕의 점선이 몸까지)
         for (int i = 0; i < 4; i++) {
             EquipmentSlot es = ARMOR[i];
             ItemStack cur = sp.getItemBySlot(es);
             String name = ARMOR_NAMES[i];
             if (cur.isEmpty()) {
-                g.set(0, 1 + i, VanillaGui.blank("§7" + name + " §8(비어 있음)", List.of("§7가방의 " + name + "을(를) 누르면 낌")), null);
+                g.set(1 + i, 0, VanillaGui.blank("§7" + name + " §8(비어 있음)", List.of("§7가방의 " + name + "을(를) 누르면 낌")), null);
             } else {
-                g.set(0, 1 + i, cur.copy(), VanillaMenu.MenuGui.left(() -> takeOff(g, es, name)));
+                g.set(1 + i, 0, cur.copy(), VanillaMenu.MenuGui.left(() -> takeOff(g, es, name)));
             }
-            g.set(1, 1 + i, VanillaGui.blank("§f" + name + " 칸", List.of(cur.isEmpty() ? "§8비어 있음" : "§7위 칸을 누르면 가방으로")), null);
         }
-        // 무기 · 왼손 (줄 0 · 칸 6 ~ 7 — 강화 +N 은 칸 위)
+        // 무기 (줄 5 · 칸 3 — +N 은 왼쪽) · 왼손 (칸 5 — +N 은 오른쪽)
         ItemStack main = sp.getMainHandItem();
         if (main.isEmpty()) {
-            g.set(0, 6, VanillaGui.blank("§7손에 든 것 없음", List.of("§7핫바에서 무기를 고르면 여기 보임")), null);
+            g.set(5, 3, VanillaGui.blank("§7손에 든 것 없음", List.of("§7핫바에서 무기를 고르면 여기 보임")), null);
         } else {
-            g.set(0, 6, main.copy(), null);
-            enhance(t, 6, 1, main);
+            g.set(5, 3, main.copy(), null);
+            int n = WeaponEnhance.of(main);
+            if (n > 0) t.num(VanillaGui.cellX(3) - 2 - VanillaGui.numWidth("+" + n), VanillaGui.rowLine(5), "+" + n, color(n));
         }
-        g.set(1, 6, VanillaGui.blank("§f무기 §7(손에 든 것)", List.of("§7핫바에서 고름")), null);
         ItemStack off = sp.getOffhandItem();
         if (off.isEmpty()) {
-            g.set(0, 7, VanillaGui.blank("§7왼손 §8(비어 있음)", List.of("§7가방의 아이템을 우클릭 (또는 마우스를 올리고 F) 하면 왼손으로")), null);
+            g.set(5, 5, VanillaGui.blank("§7왼손 §8(비어 있음)", List.of("§7가방의 아이템을 우클릭 (또는 마우스를 올리고 F) 하면 왼손으로")), null);
         } else {
-            g.set(0, 7, off.copy(), VanillaMenu.MenuGui.left(() -> takeOff(g, EquipmentSlot.OFFHAND, "왼손")));
-            enhance(t, 7, 1, off);
+            g.set(5, 5, off.copy(), VanillaMenu.MenuGui.left(() -> takeOff(g, EquipmentSlot.OFFHAND, "왼손")));
+            int n = WeaponEnhance.of(off);
+            if (n > 0) t.num(VanillaGui.cellX(6) + 2, VanillaGui.rowLine(5), "+" + n, color(n));
         }
-        g.set(1, 7, VanillaGui.blank("§f왼손", List.of(off.isEmpty() ? "§8비어 있음" : "§7위 칸을 누르면 가방으로")), null);
-        g.set(0, 8, VanillaGui.ui("info", "§a장비 요약", summary(sp)), null);
-        // 아티팩트 다섯 (줄 2 · 칸 1 ~ 5 — 강화 +N 은 줄 3)
+        g.set(5, 0, VanillaGui.blank("§a장비 요약", summary(sp)), null);
+        // 아티팩트 다섯 (칸 8 · 줄 1 ~ 5 — 강화 +N 은 칸 왼쪽)
         for (int i = 0; i < ArtifactSystem.SIZE && i < 5; i++) {
             int slot = i;
             ItemStack a = ArtifactSystem.get(sp, i);
             String name = Artifacts.slotName(i);
             if (a.isEmpty()) {
-                g.set(2, 1 + i, VanillaGui.blank("§7" + name + " §8(비어 있음)", List.of("§7가방의 " + typeName(i) + "을(를) 누르면 낌")), null);
+                g.set(1 + i, 8, VanillaGui.blank("§7" + name + " §8(비어 있음)", List.of("§7가방의 " + typeName(i) + "을(를) 누르면 낌")), null);
             } else {
-                g.set(2, 1 + i, a.copy(), VanillaMenu.MenuGui.left(() -> {
+                g.set(1 + i, 8, a.copy(), VanillaMenu.MenuGui.left(() -> {
                     ArtifactSystem.unequip(sp, slot);
                     g.refresh();
                 }));
-                enhanceBelow(t, 1 + i, a);
+                int n = WeaponEnhance.of(a);
+                if (n > 0) t.num(VanillaGui.cellX(8) - 2 - VanillaGui.numWidth("+" + n), VanillaGui.rowLine(1 + i), "+" + n, color(n));
             }
         }
-        g.set(2, 8, VanillaGui.icon(mmorpg.fabric.Mmorpg.rpg("relic_aegishjalmr_hero"), "§6유물", List.of("§7꽂은 유물 요약 (채팅)", "", "§e눌러서 보기")),
-                VanillaMenu.MenuGui.left(() -> g.closeThen(mmorpg.fabric.relic.RelicSystem::open)));
     }
 
-    /** 칸 위 강화 +N (숫자 글꼴 — 무기 · 왼손) */
-    private static void enhance(VanillaGui.Title t, int c, int line, ItemStack st) {
-        int n = WeaponEnhance.of(st);
-        if (n > 0) t.numCenter(VanillaGui.cellMid(c), line, "+" + n, n >= 7 ? VanillaGui.GOLD : VanillaGui.WHITE);
-    }
-
-    /** 칸 아래 강화 +N (아티팩트) */
-    private static void enhanceBelow(VanillaGui.Title t, int c, ItemStack st) {
-        int n = WeaponEnhance.of(st);
-        if (n > 0) t.numCenter(VanillaGui.cellMid(c), 67, "+" + n, n >= 7 ? VanillaGui.GOLD : VanillaGui.WHITE);
+    /** 강화 +N 색 (7 이상 금색) */
+    private static int color(int n) {
+        return n >= 7 ? VanillaGui.GOLD : VanillaGui.WHITE;
     }
 
     private static String typeName(int slot) {

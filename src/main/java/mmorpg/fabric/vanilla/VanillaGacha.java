@@ -16,19 +16,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 메뉴의 뽑기 쪽 (VanillaMenu — 홈의 뽑기 카드, 사용자 "뽑기 들어가면 뽑기"). 모드 클라이언트의 뽑기 창 (GachaScreen) 대신:
+ * 메뉴의 룬 뽑기 쪽 (VanillaMenu — 홈의 뽑기 타일). 2판 (사용자 "Claude 가 새로 디자인") — 마법진 · 카드 뒤집기:
  * <pre>
- * 뽑기 · 일반 뽑기                              천장 37/90
- * [일반][고급][한정][힘][민첩][마력][체력] [ ]     줄 0 — 뽑기 종류 (고른 것은 빛남)
- * [결과 1 ~ 5]                     [  1회  ]       줄 1
- * [결과 6 ~ 10]                    [ 10회  ]       줄 2
- * 뽑기권 12장 · 영웅 확정까지 4                     줄 3
+ * 룬 뽑기 · 일반 뽑기                          천장 37/90
+ * [일반][고급][한정][힘][민첩][마력][체력]   [확률]    줄 1 — 뽑기 종류 (고른 것은 빛남)
+ *  ◆      [결과 1 ~ 5]       ◆                       줄 2 (마법진 위 · 양쪽 수정)
+ *         [결과 6 ~ 10]                              줄 3
+ *        뽑기권 12장 · 영웅까지 4                     줄 4
+ * [  1회 뽑기  ]           [  10회 뽑기  ]             줄 5
  * </pre>
- * 뽑기 = GachaSystem.pullFromScreen (뽑기권 · 천장 · 기록 · 룬 주기 — 모드 창과 같음). 결과는 칸마다 하나씩 펼침 (3틱마다 · 등급마다 소리),
+ * 뽑기 = GachaSystem.pullFromScreen (뽑기권 · 천장 · 기록 · 룬 주기 — 모드 창과 같음). 결과는 먼저 카드 뒷면, 칸마다 하나씩 뒤집음 (3틱마다 · 등급마다 소리),
  * 다 펼치면 GachaSystem.revealNow (영웅 이상 알림 · 빛기둥).
  */
 public final class VanillaGacha {
     private VanillaGacha() {}
+
+    /** 결과 칸 i (0 ~ 9) 의 자리 — 마법진 위 줄 2 ~ 3 · 칸 2 ~ 6 */
+    static int resultRow(int i) {
+        return 2 + i / 5;
+    }
+
+    static int resultCol(int i) {
+        return 2 + i % 5;
+    }
 
     static void render(VanillaMenu.MenuGui g, VanillaGui.Title t) {
         ServerPlayer sp = g.sp;
@@ -38,10 +48,10 @@ public final class VanillaGacha {
         if (cur == null && !defs.isEmpty()) cur = defs.get(0);
         g.gachaKey = cur == null ? null : cur.key();
 
-        t.text(31, 0, "뽑기", VanillaGui.INK);
-        if (cur != null) t.text(31 + VanillaGui.width("뽑기") + 5, 0, "· " + VanillaGui.fit(strip(cur.name()), 52), VanillaGui.SUB);
-        // 뽑기 종류 (줄 0 · 칸 1 ~ 8)
-        for (int i = 0; i < defs.size() && i < 8; i++) {
+        VanillaMenu.title(t, "룬 뽑기");
+        if (cur != null) t.text(10 + VanillaGui.width("룬 뽑기") + 5, 0, "· " + VanillaGui.fit(strip(cur.name()), 62), VanillaGui.CREAM);
+        // 뽑기 종류 (줄 1 · 칸 0 ~ 6)
+        for (int i = 0; i < defs.size() && i < 7; i++) {
             GachaSystem.Def d = defs.get(i);
             boolean on = d == cur;
             int have = GachaSystem.tickets(sp, d.ticket());
@@ -54,7 +64,7 @@ public final class VanillaGacha {
             ItemStack icon = VanillaGui.icon(modelOf(d.ticket() == null ? ItemStack.EMPTY : new ItemStack(d.ticket())), (on ? "§e▶ " : "§f") + strip(d.name()), lore);
             if (on) icon.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
             String key = d.key();
-            g.set(0, 1 + i, icon, VanillaMenu.MenuGui.left(() -> {
+            g.set(1, i, icon, VanillaMenu.MenuGui.left(() -> {
                 if (key.equals(g.gachaKey)) return;
                 g.gachaKey = key;
                 g.gachaResults = List.of();
@@ -64,34 +74,58 @@ public final class VanillaGacha {
             }));
         }
         if (cur == null) return;
-        // 결과 (줄 1 ~ 2 · 칸 1 ~ 5)
-        for (int i = 0; i < g.gachaShown && i < g.gachaResults.size() && i < 10; i++) {
-            g.set(1 + i / 5, 1 + i % 5, g.gachaResults.get(i), null);
+        g.set(1, 8, VanillaGui.blank("§b확률 · 천장", rates(sp, cur)), null);
+        // 결과 (마법진 위 — 아직 안 펼친 것은 카드 뒷면)
+        for (int i = 0; i < g.gachaResults.size() && i < 10; i++) {
+            g.set(resultRow(i), resultCol(i), i < g.gachaShown ? g.gachaResults.get(i) : back(), null);
         }
-        // 뽑기 단추 (칸 7 ~ 8 · 줄 1 = 1회, 줄 2 = 10회)
+        // 뽑기 단추 (줄 5 · 칸 0 ~ 3 = 1회, 칸 5 ~ 8 = 10회)
         int have = GachaSystem.tickets(sp, cur.ticket());
-        int multi = Gacha.multi();
-        button(g, 1, 1, have, cur);
-        button(g, 2, multi, have, cur);
-        // 아래 줄: 뽑기권 · 천장
-        t.text(30, 71, VanillaGui.TICKET, VanillaGui.WHITE);
-        t.text(30 + VanillaGui.width(VanillaGui.TICKET) + 3, 71, GachaSystem.ticketName(cur) + " " + have + "장", have > 0 ? VanillaGui.INK : VanillaGui.WARN);
+        button(g, 0, 1, have, cur);
+        button(g, 5, Gacha.multi(), have, cur);
+        // 줄 4 가운데: 뽑기권 · 영웅 확정
         Gacha.Pity pity = cur.banner().pity();
+        String line = GachaSystem.ticketName(cur) + " " + have + "장";
         if (cur.pool() != null && pity.hard() > 0) {
             Gacha.Counter c = GachaSystem.counter(sp, cur.pool());
-            t.right(168, 0, "천장 " + c.n5() + "/" + pity.hard(), VanillaGui.SUB);
-            if (pity.heroEvery() > 0) t.right(168, 71, "영웅까지 " + Math.max(1, pity.heroEvery() - c.n4()), VanillaGui.SUB);
+            t.right(166, 0, "천장 " + c.n5() + "/" + pity.hard(), VanillaGui.MUTED);
+            if (pity.heroEvery() > 0) line += " · 영웅까지 " + Math.max(1, pity.heroEvery() - c.n4());
         }
+        int w = VanillaGui.width(VanillaGui.TICKET) + 3 + VanillaGui.width(line);
+        int x = VanillaGui.cellMid(4) - w / 2;
+        t.text(x, VanillaGui.rowLine(4), VanillaGui.TICKET, VanillaGui.WHITE);
+        t.text(x + VanillaGui.width(VanillaGui.TICKET) + 3, VanillaGui.rowLine(4), line, have > 0 ? VanillaGui.CREAM : VanillaGui.RED);
     }
 
-    private static void button(VanillaMenu.MenuGui g, int row, int count, int have, GachaSystem.Def d) {
+    /** 카드 뒷면 (펼치기 전) */
+    private static ItemStack back() {
+        return VanillaGui.ui("card_back", "§8?", List.of());
+    }
+
+    /** 확률 · 천장 안내 (오른쪽 위 단추 설명) */
+    private static List<String> rates(ServerPlayer sp, GachaSystem.Def d) {
+        List<String> out = new ArrayList<>();
+        double sum = 0;
+        for (double v : d.banner().weights().values()) sum += v;
+        for (java.util.Map.Entry<String, Double> e : d.banner().weights().entrySet()) {
+            if (e.getValue() <= 0 || sum <= 0) continue;
+            mmorpg.core.Grade gr = mmorpg.core.Rules.get().grade(e.getKey());
+            out.add((gr == null ? "§f" + e.getKey() : gr.color() + gr.name()) + " §f" + String.format(java.util.Locale.ROOT, "%.2f", e.getValue() / sum * 100) + "%");
+        }
+        Gacha.Pity p = d.banner().pity();
+        if (p.hard() > 0) out.add("§7초월 천장 §f" + p.hard() + "회");
+        if (p.heroEvery() > 0) out.add("§7영웅 이상 §f" + p.heroEvery() + "회마다 확정");
+        return out;
+    }
+
+    private static void button(VanillaMenu.MenuGui g, int c0, int count, int have, GachaSystem.Def d) {
         boolean ok = have >= count;
         List<String> lore = List.of("§7" + GachaSystem.ticketName(d) + " " + count + "장 §8(가진 것 " + have + ")", "",
                 ok ? "§e눌러서 뽑기" : "§c뽑기권이 모자랍니다");
         String name = (ok ? "§d" : "§8") + count + "회 뽑기";
         String key = d.key();
-        for (int c = 7; c <= 8; c++) {
-            g.set(row, c, VanillaGui.blank(name, lore), VanillaMenu.MenuGui.left(() -> pull(g, key, count)));
+        for (int c = c0; c < c0 + 4; c++) {
+            g.set(5, c, VanillaGui.blank(name, lore), VanillaMenu.MenuGui.left(() -> pull(g, key, count)));
         }
     }
 
@@ -115,7 +149,7 @@ public final class VanillaGacha {
         long seq = ++g.gachaSeq;
         g.gachaResults = List.copyOf(icons);
         g.gachaShown = 0;
-        g.refresh();
+        g.refresh(); // 카드 뒷면 (펼치기 전)
         SkillFx.playFor(sp, "block.amethyst_block.chime", 0.8, 1.0);
         int n = icons.size();
         for (int i = 0; i < n; i++) {
@@ -123,7 +157,7 @@ public final class VanillaGacha {
             Tasks.later(6 + i * 3, () -> {
                 if (g.gachaSeq != seq || !g.isOpen() || g.page != VanillaMenu.Page.GACHA) return;
                 g.gachaShown = k + 1;
-                g.set(1 + k / 5, 1 + k % 5, icons.get(k), null);
+                g.set(resultRow(k), resultCol(k), icons.get(k), null);
                 revealSound(sp, grades.get(k), k);
             });
         }
