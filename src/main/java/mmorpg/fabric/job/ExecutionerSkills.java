@@ -37,8 +37,11 @@ final class ExecutionerSkills {
     /** 하늘의 단두대의 몸 (빛 칸 — 짙은 보라) · 칼날 · 테 (심지 칸 — 금빛) */
     static final double[] DARK = {0.34, 0.1, 0.46};
     static final double[] BLADE = {1.0, 0.78, 0.4};
-    /** 까마귀 그림 (rpg:odin_raven — 금빛 테를 두른 검은 까마귀 그림에 곱함): 거의 그대로 (살짝 보랏빛) */
-    static final double[] RAVEN = {1.0, 0.9, 1.0};
+    /** 까마귀 그림 (rpg:odin_raven — 금빛 테를 두른 검은 까마귀 그림에 곱함): 짙게 · 보랏빛 (영상 42338674203: 그대로면 주황 나방처럼 보였음) */
+    static final double[] RAVEN = {0.55, 0.42, 0.78};
+    /** 까마귀 떼의 그림자 연기 (짙은 보라 · 심지 보랏빛) */
+    static final double[] SHADOW = {0.22, 0.08, 0.3};
+    static final double[] SHADOW_CORE = {0.55, 0.3, 0.7};
     /** 하늘의 단두대 solo 번호 (주인마다 한 장 — 다시 쓰기 단계마다 따로: 앞 단두대가 아직 내리치는 중이어도 지우지 않게) */
     static final double GALLOWS_SOLO = 171.0;
 
@@ -234,21 +237,21 @@ final class ExecutionerSkills {
         for (int i = 0; i < 12; i++) {
             double s = (i % 2 == 0 ? 1 : -1) * (0.4 + (i / 2) * 0.32);
             double up = 0.6 + (i % 4) * 0.35;
-            double size2 = 0.42 + (2 - i % 3) * 0.06;
+            double size2 = 0.72 + (2 - i % 3) * 0.1;
             Vec3 from = V.add(V.up(start, up), side, s * 0.4);
             Vec3 mid = V.up(V.add(V.lerp(start, land, 0.5), side, s * 1.3), up + 1.0 + (i % 3) * 0.4);
             Vec3 to = V.add(V.up(land, 0.8 + (i % 4) * 0.25), side, s * 0.3);
-            raven(level0, from, V.scale(V.sub(mid, from), 20.0 / half), 0.42 + (i % 3) * 0.06, half / 20.0 + 0.02, 0.95);
+            raven(level0, from, V.scale(V.sub(mid, from), 20.0 / half), 0.72 + (i % 3) * 0.1, half / 20.0 + 0.02, 0.95);
             RuneKit.later(half, () -> {
                 if (RuneKit.sameLife(sp, life)) raven(sp.level(), mid, V.scale(V.sub(to, mid), 20.0 / (fly - half)), size2, (fly - half) / 20.0 + 0.02, 0.95);
             });
         }
-        JobFx.smoke(level0, V.up(start, 0.8), 1.2, VIOLET, DUSK_CORE, 0.5, JobFx.hide1p(sp).with("alpha", 0.8));
-        SkillFx.sparks(level0, V.up(start, 1.0), DUSK, 10, 4.0);
+        JobFx.smoke(level0, V.up(start, 0.8), 1.3, SHADOW, SHADOW_CORE, 0.55, JobFx.hide1p(sp).with("alpha", 0.85));
+        SkillFx.sparks(level0, V.up(start, 1.0), VIOLET_CORE, 10, 4.0);
         SkillFx.play(level0, "entity.phantom.flap", start, 0.9, 1.0);
         SkillFx.play(level0, "entity.parrot.fly", start, 0.7, 0.9);
         SkillFx.play(level0, "entity.enderman.teleport", start, 1.4, 0.4);
-        // 날아가는 동안: 몸을 감싸는 까마귀 (2틱마다 — 몸과 같이 감) · 깃털
+        // 날아가는 동안: 몸을 감싸는 까마귀 (2틱마다 — 몸과 같이 감) · 지나간 자리의 그림자 연기 · 깃털
         for (int t = 2; t < fly; t += 2) {
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
@@ -258,8 +261,9 @@ final class ExecutionerSkills {
                 for (int q = 0; q < 3; q++) {
                     double a = Kit.rand() * Math.PI * 2;
                     Vec3 p = V.add(c, new Vec3(Math.cos(a) * 0.6, (Kit.rand() - 0.5) * 0.8, Math.sin(a) * 0.6), 1.0);
-                    raven(lv, p, V.add(vel, new Vec3(-Math.sin(a), 0.3, Math.cos(a)), 3.0), 0.36, 0.14, 0.9);
+                    raven(lv, p, V.add(vel, new Vec3(-Math.sin(a), 0.3, Math.cos(a)), 3.0), 0.62, 0.14, 0.9);
                 }
+                JobFx.smoke(lv, c, 0.7, SHADOW, SHADOW_CORE, 0.45, Opt.of("alpha", 0.6));
                 SkillFx.sparks(lv, c, VIOLET_CORE, 2, 1.5);
             });
         }
@@ -273,10 +277,10 @@ final class ExecutionerSkills {
             for (int i = 0; i < 6; i++) {
                 double a = i * Math.PI / 3;
                 Vec3 from = V.add(V.up(c, 1.0), new Vec3(Math.cos(a), 0.4, Math.sin(a)), 1.6);
-                raven(lv, from, V.scale(V.sub(V.up(c, 1.0), from), 20.0 / 3), 0.38, 0.15, 0.9);
+                raven(lv, from, V.scale(V.sub(V.up(c, 1.0), from), 20.0 / 3), 0.62, 0.15, 0.9);
             }
             JobFx.slash(sp, j, 2.0, 0.3, 2.4, 300.0, 0.24);
-            JobFx.smoke(lv, V.up(c, 0.4), 1.0, VIOLET, DUSK_CORE, 0.45, JobFx.hide1p(sp).with("alpha", 0.7));
+            JobFx.smoke(lv, V.up(c, 0.4), 1.1, SHADOW, SHADOW_CORE, 0.5, JobFx.hide1p(sp).with("alpha", 0.75));
             SkillFx.play(lv, "entity.player.attack.sweep", c, 0.8, 1.0);
             SkillFx.play(lv, "item.trident.hit", c, 1.1, 0.7);
             if (e.isRemoved() || !e.isAlive()) return;
@@ -289,7 +293,7 @@ final class ExecutionerSkills {
                     JobFx.burst(el, b, 0.9 + Kit.bodyPad(e) * 0.4, VIOLET, VIOLET_CORE, 0.3, Opt.of("vel", RuneKit.entVel(e)));
                     for (int i = 0; i < 4; i++) {
                         double a = i * Math.PI / 2 + 0.4;
-                        raven(el, b, new Vec3(Math.cos(a) * 5, 3.5, Math.sin(a) * 5), 0.4, 0.4, 0.85);
+                        raven(el, b, new Vec3(Math.cos(a) * 5, 3.5, Math.sin(a) * 5), 0.65, 0.4, 0.85);
                     }
                 }
                 JobSystem.note(sp, "§5레이븐 시프트 §7— 다음 직업 스킬 +" + Math.round(k.num("next", 0.2) * 100) + "% (" + k.num("nextFor", 60) / 20.0 + "초)");
@@ -336,8 +340,8 @@ final class ExecutionerSkills {
         SkillFx.play(level0, "block.chain.place", sp.position(), 0.6, 0.8);
         // 사슬이 솟을 자리: 땅에 금빛 고리 · 반짝임
         for (Vec3 a : anchors) {
-            JobFx.ring(level0, V.up(a, 0.06), 0.55, j, false, bindAt / 20.0 + 0.2, Opt.of("alpha", 0.9));
-            JobFx.glint(level0, V.up(a, 0.2), 0.4, DUSK, DUSK_CORE, bindAt / 20.0 + 0.1, Opt.empty());
+            JobFx.ring(level0, V.up(a, 0.06), 0.9, j, false, bindAt / 20.0 + 0.3, Opt.of("alpha", 0.95));
+            JobFx.glint(level0, V.up(a, 0.25), 0.6, DUSK, DUSK_CORE, bindAt / 20.0 + 0.1, Opt.empty());
         }
         // 솟음 (bindAt − 3 ~ bindAt): 땅에서 그 적의 몸까지 사슬이 뻗음 → 묶음
         for (int t = 0; t <= 3; t++) {
@@ -348,8 +352,12 @@ final class ExecutionerSkills {
                 Vec3 b = V.up(e.position(), e.getBbHeight() * 0.55);
                 for (Vec3 a : anchors) {
                     Vec3 tip = V.lerp(V.up(a, 0.1), b, (tt + 1) / 4.0);
-                    JobFx.chain(lv, V.up(a, 0.1), tip, j, 1.2, 0.08, Opt.of("alpha", 1.0, "phase", chainPhase()));
-                    if (tt == 0) JobFx.smoke(lv, V.up(a, 0.3), 0.6, VIOLET, DUSK_CORE, 0.4, Opt.of("alpha", 0.7));
+                    JobFx.chain(lv, V.up(a, 0.1), tip, j, CHAIN_SEG, 0.08, Opt.of("alpha", 1.0, "phase", chainPhase()));
+                    if (tt == 0) {
+                        JobFx.burst(lv, V.up(a, 0.3), 0.7, DUSK, DUSK_CORE, 0.25, Opt.empty());
+                        JobFx.smoke(lv, V.up(a, 0.3), 0.7, SHADOW, SHADOW_CORE, 0.4, Opt.of("alpha", 0.75));
+                        SkillFx.sparks(lv, V.up(a, 0.3), DUSK, 5, 3.0);
+                    }
                 }
                 if (tt == 0) SkillFx.play(lv, "block.chain.break", e.position(), 0.6, 1.0);
             });
@@ -372,7 +380,10 @@ final class ExecutionerSkills {
                 if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) return;
                 ServerLevel lv = sp.level();
                 Vec3 b = V.up(e.position(), e.getBbHeight() * 0.55);
-                for (Vec3 a : anchors) JobFx.chain(lv, V.up(a, 0.1), b, j, 1.2, 0.25, Opt.of("alpha", 1.0, "phase", chainPhase(), "fade", 0.05));
+                for (Vec3 a : anchors) {
+                    JobFx.chain(lv, V.up(a, 0.1), b, j, CHAIN_SEG, 0.25, Opt.of("alpha", 1.0, "phase", chainPhase(), "fade", 0.05));
+                    JobFx.line(lv, V.up(a, 0.1), b, DUSK, DUSK_CORE, 0.25, Opt.of("alpha", 0.45, "fade", 0.05));
+                }
             });
         }
         // 내리찍음 (launchAt): 낫을 땅에 내리찍어 거대한 세로 검기가 땅을 타고 그 적에게 달려감 · 눈앞 세로 베기 · 땅 금
@@ -407,7 +418,7 @@ final class ExecutionerSkills {
             JobFx.skull(lv, V.up(at, tall + 0.6), 0.7, 4, 2, 0.4, false, Opt.empty(), j);
             JobFx.smash(lv, V.up(g, 0.05), 2.0 + Kit.bodyPad(e), j, 0.45, Opt.empty());
             for (Vec3 a : anchors) {
-                JobFx.chain(lv, V.up(a, 0.1), V.lerp(V.up(a, 0.1), neck, 0.5), j, 1.2, 0.15, Opt.of("alpha", 0.8));
+                JobFx.chain(lv, V.up(a, 0.1), V.lerp(V.up(a, 0.1), neck, 0.5), j, CHAIN_SEG, 0.15, Opt.of("alpha", 0.8));
                 SkillFx.sparks(lv, V.lerp(a, neck, 0.5), DUSK, 6, 4.0);
             }
             SkillFx.sparks(lv, neck, DUSK, 14, 5.5);
@@ -431,6 +442,11 @@ final class ExecutionerSkills {
         });
         return true;
     }
+
+    /**
+     * 처형 사슬 조각 길이 (칸): 땅 → 몸 사슬 (약 2.7칸) 이 한 조각 — 굵기 = 조각 길이 / 8 (영상 42338674203: 1.2칸 조각은 굵기 0.12칸이라 사슬이 보이지 않았음)
+     */
+    static final double CHAIN_SEG = 3.0;
 
     /** 사슬 그림의 장면 (서버 시간으로 이어서 — 4틱마다 다시 그려도 사슬 고리가 튀지 않음: jchain2 4장 · 10 fps) */
     private static double chainPhase() {
