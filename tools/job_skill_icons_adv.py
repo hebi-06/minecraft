@@ -1157,59 +1157,52 @@ def arcmage_vortex(A, B):
     return finish(subject, [glow(arms, A, 1.8, 0.9), glow(lighter(bulge, stars), B, 1.8, 1.0)], arcmage_back(A, B))
 
 
-def arcmage_surge(A, B):
-    # 스펠 서지: 곧게 세운 완드 끝의 큰 별 · 별을 감아 도는 둥근 화살 (재사용 대기가 돌아옴) · 완드를 타고 오르는 위 화살 셋
-    wand = mask()
-    line(wand, [(16.0, 31.0), (16.0, 14.0)], 2.4)
-    st = mask()
-    star5(st, 16.0, 10.0, 5.6)
-    burst = mask()
-    star(burst, 16.0, 10.0, 9.5, 0.14, 0)
-    loop = mask()
-    pts = [(16.0 + math.cos(math.radians(a)) * 9.0, 10.0 + math.sin(math.radians(a)) * 8.0) for a in range(-60, 241, 10)]
-    line(loop, pts, 1.3)
-    ex, ey = pts[-1]
-    poly(loop, [(ex - 3.0, ey - 1.2), (ex + 1.6, ey - 2.4), (ex + 0.2, ey + 2.2)])
-    ups = mask()
-    for y in (28.0, 23.0, 18.0):
-        line(ups, [(21.0, y + 1.6), (24.0, y - 1.0), (27.0, y + 1.6)], 1.1)
-        line(ups, [(5.0, y + 1.6), (8.0, y - 1.0), (11.0, y + 1.6)], 1.1)
-    subject = stack(layer(ups, mix(B, WHITE, 0.3), B), layer(wand, mix(A, WHITE, 0.25), mix(A, (0, 0, 0), 0.4), WHITE, mix(A, (0, 0, 0), 0.5), axis=(1, 0)),
-                    layer(loop, mix(A, WHITE, 0.45), A), layer(burst, WHITE, mix(B, WHITE, 0.3)), layer(st, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.25)))
-    return finish(subject, [glow(lighter(st, burst), B, 2.0, 1.0), glow(loop, A, 1.4, 0.8), glow(ups, B, 1.2, 0.6)], arcmage_back(A, B))
+def arcmage_orbit(A, B):
+    # 셀레스티얼 오빗 (2026-11-07 3판 — 스펠 서지 대신): 가운데 큰 금빛 별 · 그 둘레로 기운 궤도 고리 (뒤쪽 반은 옅게) · 고리 위 금빛 별 넷 · 고리를 떠나 오른쪽 아래로
+    # 떨어지는 별똥 하나와 그 끝의 터짐
+    back = mask()
+    line(back, [(15.0 + math.cos(math.radians(a)) * 12.6, 12.0 + math.sin(math.radians(a)) * 5.4) for a in range(180, 361, 6)], 1.0)
+    front = mask()
+    line(front, [(15.0 + math.cos(math.radians(a)) * 12.6, 12.0 + math.sin(math.radians(a)) * 5.4) for a in range(0, 181, 6)], 1.3)
+    core = mask()
+    star5(core, 15.0, 12.0, 5.8)
+    shine = mask()
+    star(shine, 15.0, 12.0, 9.4, 0.12, 0)
+    small = mask()
+    for ang in (150, 215, 300, 40):
+        x = 15.0 + math.cos(math.radians(ang)) * 12.6
+        y = 12.0 + math.sin(math.radians(ang)) * 5.4
+        star5(small, x, y, 2.6)
+    fall = mask()
+    line(fall, [(22.0, 18.6), (24.6, 22.6), (26.6, 26.0)], 1.1)
+    star5(fall, 26.8, 26.4, 2.4)
+    blast = mask()
+    star(blast, 26.8, 26.4, 5.0, 0.16, 20)
+    subject = stack(layer(back, mix(A, (20, 10, 60), 0.4), mix(A, (10, 5, 40), 0.6)), layer(shine, WHITE, mix(B, WHITE, 0.3)),
+                    layer(core, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.25)), layer(front, mix(A, WHITE, 0.35), A), layer(small, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.2)),
+                    layer(fall, mix(B, WHITE, 0.3), B), layer(blast, WHITE, B))
+    return finish(subject, [glow(lighter(core, shine), B, 2.0, 1.0), glow(lighter(front, back), A, 1.4, 0.8), glow(lighter(small, blast), B, 1.4, 0.9)],
+                  arcmage_back(A, B))
 
 
 def arcmage_ult(A, B):
-    # 셀레스티얼 이글: 날개를 활짝 편 별빛 독수리 (머리가 아래 — 내리꽂음) · 날개 끝 깃 · 마디 별 · 아래 터지는 금빛 별 · 쏟아지는 깃털 별빛
-    body = mask()
-    poly(body, [(16.0, 6.0), (18.6, 12.0), (17.8, 20.0), (16.0, 24.0), (14.2, 20.0), (13.4, 12.0)])
-    tail = mask()
-    poly(tail, [(13.4, 7.0), (18.6, 7.0), (20.5, 2.0), (16.0, 3.5), (11.5, 2.0)])
-    wings = mask()
-    for sgn in (-1, 1):
-        lead = [(16.0 + sgn * 2.0, 12.0), (16.0 + sgn * 8.0, 9.0), (16.0 + sgn * 14.5, 5.0)]
-        fingers = [(16.0 + sgn * 15.0, 7.5), (16.0 + sgn * 14.6, 10.0), (16.0 + sgn * 13.6, 12.5), (16.0 + sgn * 12.0, 14.5)]
-        poly(wings, lead + [(16.0 + sgn * 11.0, 14.0), (16.0 + sgn * 7.0, 15.0), (16.0 + sgn * 2.0, 17.0)])
-        for k, (fx, fy) in enumerate(fingers):
-            line(wings, [(16.0 + sgn * (10.5 - k * 0.6), 11.0 + k * 0.8), (fx, fy)], 1.1)
-    edges = mask()
-    for sgn in (-1, 1):
-        line(edges, [(16.0 + sgn * 2.0, 12.0), (16.0 + sgn * 8.0, 9.0), (16.0 + sgn * 14.5, 5.0)], 0.7)
-    head = mask()
-    disc(head, 16.0, 23.5, 2.2)
-    poly(head, [(14.9, 25.0), (17.1, 25.0), (16.0, 27.6)])
-    nodes = mask()
-    for (x, y, r) in ((1.5, 5.0, 2.2), (30.5, 5.0, 2.2), (8.0, 9.0, 1.6), (24.0, 9.0, 1.6), (16.0, 4.0, 1.8)):
-        star(nodes, x, y, r * 1.4, 0.2, 0)
+    # 콘스텔레이션 (2026-11-07 3판 — 셀레스티얼 이글 대신): 위 하늘의 국자 일곱 별 (금빛 선으로 이어짐 · 그릇이 닫힘) · 별마다 아래로 내리꽂히는 별빛 줄 셋 · 아래 가운데 큰 터짐
+    dip = [(4.0, 9.0), (8.6, 6.4), (13.0, 7.6), (17.0, 9.2), (17.6, 14.0), (23.4, 13.6), (23.0, 8.0)]
+    lines = mask()
+    line(lines, dip, 0.9)
+    line(lines, [dip[6], dip[3]], 0.9)
+    stars = mask()
+    for i, (x, y) in enumerate(dip):
+        star5(stars, x, y, 2.2 if i in (0, 6) else 1.8)
+    rays = mask()
+    for (x, y) in (dip[1], dip[4], dip[6]):
+        line(rays, [(x, y + 2.0), (16.0 + (x - 16.0) * 0.25, 26.0)], 0.8)
     blast = mask()
-    star(blast, 16.0, 29.5, 6.0, 0.16, 0)
-    feathers = mask()
-    for (x, y) in ((6.0, 20.0), (26.0, 21.0), (9.0, 26.0), (23.5, 27.0)):
-        line(feathers, [(x, y - 1.6), (x, y + 1.6)], 0.8)
-    subject = stack(layer(wings, mix(A, WHITE, 0.35), mix(A, (40, 20, 110), 0.45)), layer(edges, mix(B, WHITE, 0.3), B), layer(tail, mix(A, WHITE, 0.3),
-                    mix(A, (40, 20, 110), 0.4)), layer(body, mix(A, WHITE, 0.5), A, WHITE, mix(A, (0, 0, 0), 0.3)), layer(head, WHITE, mix(B, WHITE, 0.3)),
-                    layer(feathers, mix(B, WHITE, 0.4), B), layer(blast, WHITE, B), layer(nodes, WHITE, B))
-    return finish(subject, [glow(lighter(wings, body), A, 1.8, 0.9), glow(lighter(nodes, blast), B, 1.6, 1.0)], arcmage_back(A, B))
+    star(blast, 16.0, 27.0, 7.0, 0.14, 0)
+    disc(blast, 16.0, 27.0, 2.0)
+    subject = stack(layer(rays, mix(B, WHITE, 0.4), mix(A, B, 0.4)), layer(lines, mix(B, WHITE, 0.3), B), layer(stars, WHITE, B, WHITE, mix(B, (0, 0, 0), 0.2)),
+                    layer(blast, WHITE, B))
+    return finish(subject, [glow(lighter(stars, lines), B, 1.8, 1.0), glow(rays, A, 1.4, 0.8), glow(blast, B, 2.2, 1.0)], arcmage_back(A, B))
 
 
 # ------------------------------------------------------------ 네크로맨서 (빛: 독초록 → 뼈색 — 짙은 녹색 안개 바탕)
@@ -3644,7 +3637,7 @@ ICONS = {
     "arcmage_chain": arcmage_chain,
     "arcmage_halo": arcmage_halo,
     "arcmage_vortex": arcmage_vortex,
-    "arcmage_surge": arcmage_surge,
+    "arcmage_orbit": arcmage_orbit,
     "arcmage_ult": arcmage_ult,
     "necromancer_call": necromancer_call,
     "necromancer_yard": necromancer_yard,

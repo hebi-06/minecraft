@@ -25,9 +25,10 @@ import net.minecraft.world.phys.Vec3;
 /**
  * 0.51.0 2차 직업 — 매지션 각성 아크메이지 스킬 (jobs.json advance.arcmage — 파랑 · 금빛 · 밤하늘 자주, 특성 「주문 연쇄」 최대 5 · 별자리 — JobTraits8).
  * 재설계안 2판 (2026-11-06 사용자 "다음 작업" — 롤 참고): 스타 체인 (브랜드 R — 적 사이를 튀는 별빛 번개) · 헤일로 배리어 (럭스 W — 던졌다 되돌려 받는 별빛 고리 · 보호막) ·
- * 스타 볼텍스 (아우렐리온 솔 E — 끌어당기는 별의 소용돌이 · 무너지며 처형) · 스펠 서지 (라이즈 Q — 다른 스킬마다 스타 체인이 돌아옴) · 셀레스티얼 이글 (아우렐리온 솔 R —
- * 별빛 독수리가 하늘을 돌며 깃털을 쏟고 내리꽂힘). 모두 마법 피해. 연출 = 2D 그림 (JobFx — 별 rfx_jstarnode · 별똥 rfx_jfallstar · 빛 고리 rfx_jhalo · 별의 소용돌이
- * rfx_jgalaxy · 별빛 독수리 rfx_jeagle). 화면 흔들림 없음 (사용자 "화면 흔들림은 넣지마 멀미나")
+ * 스타 볼텍스 (아우렐리온 솔 E — 끌어당기는 별의 소용돌이 · 무너지며 처형) · 2026-11-07 재설계안 3판 (도감 표시 — 스펠 서지 · 셀레스티얼 이글이 별자리 컨셉과 맞지
+ * 않음): 셀레스티얼 오빗 (아우렐리온 솔 패시브 — 둘레를 도는 별 다섯이 1초마다 별똥처럼 떨어져 터지며 땅에 별자리를 그림) · 콘스텔레이션 (조이 R · 아우렐리온 솔 R — 하늘에
+ * 국자 일곱 별이 차례로 떠 별빛을 내리꽂고 한 점으로 무너져 터짐). 모두 마법 피해. 연출 = 2D 그림 (JobFx — 별 rfx_jstarnode · 별똥 rfx_jfallstar · 빛 고리 rfx_jhalo ·
+ * 별의 소용돌이 rfx_jgalaxy) · 환영 별 판 (card_orb). 화면 흔들림 없음 (사용자 "화면 흔들림은 넣지마 멀미나")
  */
 final class ArcmageSkills {
     private ArcmageSkills() {}
@@ -42,7 +43,7 @@ final class ArcmageSkills {
         JobSystem.register("arcmage_chain", ArcmageSkills::chain);
         JobSystem.register("arcmage_halo", ArcmageSkills::halo);
         JobSystem.register("arcmage_vortex", ArcmageSkills::vortex);
-        JobSystem.register("arcmage_surge", ArcmageSkills::surge);
+        JobSystem.register("arcmage_orbit", ArcmageSkills::orbit);
         JobSystem.register("arcmage_ult", ArcmageSkills::ult);
     }
 
@@ -419,204 +420,242 @@ final class ArcmageSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 스펠 서지
+    // ------------------------------------------------------------ 셀레스티얼 오빗 (2026-11-07 재설계안 3판 — 스펠 서지 대신)
 
     /**
-     * 스펠 서지: dur 틱 태세 (강화 dur) — 그동안 다른 직업 스킬을 쓰면 스타 체인의 재사용 대기가 바로 돌아오고 (JobTraits8.commit), 주문 연쇄가 window 틱 이어짐
-     * (JobTraits8.chainWindow). 그림: 완드 끝 큰 별 · 몸을 감아 오르는 금빛 별빛 · 발밑 고리 · 1인칭 눈앞 고리
+     * 셀레스티얼 오빗 (태세 칸 몫 딜 — 롤 아우렐리온 솔 패시브): 별 다섯 (환영 별 판 card_orb — 주인을 따라 돎) 이 둘레 orbit 칸을 돎 → first 틱부터 every 틱마다 shots 번,
+     * fly 틱 전에 가장 가까운 적 (range 칸) 쪽 별 하나가 별똥처럼 솟았다 떨어져 그 틱에 터짐 (그 적 둘레 radius 칸 — shot · 마법 피해). 터진 자리마다 작은 별이 남아 앞 자리와
+     * 금빛 선으로 이어져 땅에 별자리를 그림 (끝날 때까지 — 그림만, 특성의 별자리와는 따로). 칸 HUD 에 남은 시간 (태세 줄)
      */
-    static boolean surge(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
-        int dur = JobUpgrades.ticks(sp, k, "dur", (int) k.num("dur", 200));
-        JobTraits.startStance(sp, k, dur);
-        ServerLevel level = sp.level();
-        Vec3 c = sp.position();
+    static boolean orbit(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        int shots = Math.max(1, (int) k.num("shots", 10));
+        int first = Math.max(2, (int) k.num("first", 10));
+        int every = Math.max(1, (int) k.num("every", 20));
+        int fly = Math.max(2, Math.min(first, (int) k.num("fly", 4)));
+        double range = k.num("range", 14);
+        double R = k.num("radius", 2);
+        double orbitR = k.num("orbit", 1.7);
+        int end = first + every * (shots - 1);
         String life = RuneKit.lifeToken(sp);
-        JobFx.aura(sp, j, 2.6, 0.9, 0.9);
-        JobFx.halo(level, V.up(c, 0.06), 2.2, j, 0.5, Opt.empty());
-        JobFx.eyeRing(sp, j, 2.4, 0.9, 0.45);
-        JobFx.starNode(level, wandTip(sp), 0.55, 0, 2, 0.3, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
-        // 몸을 감아 오르는 금빛 별 셋 (14틱)
-        for (int t = 0; t < 14; t += 2) {
-            int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                ServerLevel d = sp.level();
-                for (int i = 0; i < 3; i++) {
-                    double a = tt * 0.55 + i * Math.PI * 2 / 3;
-                    Vec3 p = new Vec3(sp.getX() + Math.cos(a) * 0.9, sp.getY() + 0.2 + tt * 0.13, sp.getZ() + Math.sin(a) * 0.9);
-                    JobFx.starNode(d, p, 0.28, 2, 4, 0.3, true, JobFx.hide1p(sp).with("fade", 0.4, "vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
-                }
-            });
-        }
-        SkillFx.sparks(level, V.up(c, 1.0), GOLD, 14, 4);
-        SkillFx.play(level, "beacon.power", c, 1.8, 0.8);
-        SkillFx.play(level, "block.amethyst_block.resonate", c, 1.4, 1.0);
-        return true;
-    }
-
-    // ------------------------------------------------------------ 셀레스티얼 이글
-
-    /** 독수리가 도는 반지름 · 높이 (영상 1: 7.5칸은 3인칭 화면 위 끝 밖 → 5.5칸) · 기울기 (내 쪽은 낮게 · 너머는 높게 — 4 ~ 7칸) */
-    private static final double ORBIT_R = 6.0;
-    private static final double ORBIT_H = 5.5;
-    private static final double ORBIT_TILT = 1.5;
-    /**
-     * 영상 2: 가까운 과녁 (2.7칸) 둘레를 돌면 내 쪽 반 바퀴가 카메라 위 · 뒤라 화면 밖 (4 ~ 26틱) → 도는 고리의 내 쪽 끝이 늘 6칸 앞이 되게 고리 가운데를 너머로 밂
-     * (조준한 곳이 12칸보다 가까울 때 — 깃털 · 내리꽂힘은 조준한 곳 그대로)
-     */
-    private static final double ORBIT_NEAR = 6.0;
-
-    /**
-     * 셀레스티얼 이글: 별이 뜬 밤하늘 (rpg:ult_night) · 조준한 곳 (range 칸 — 겨눈 적의 발밑) 위 하늘에 formAt 틱 별빛 독수리 (rfx_jeagle — 날개 끝 사이 약 8.7칸) 가 나타나
-     * 그 하늘을 3/4 바퀴 돎 (왼쪽 → 앞 (내 쪽) → 오른쪽 → 너머 — 반지름 6칸 · 내 쪽 4칸 · 너머 7칸 높이로 기운 고리, 조준한 곳이 12칸보다 가까우면 고리의 내 쪽 끝이 6칸 앞이 되게
-     * 고리를 너머로 밂) — first 틱부터 every 틱마다 beats 번 날개를 내리쳐 별빛 깃털이 쏟아짐 (조준한 곳 둘레 radius 칸 — beat · 숫자 split 줄) → 너머에서 솟구쳐 되돌아와
-     * diveAt 틱 조준한 곳에 내리꽂힘 (dive · 큰 숫자 · 띄움 lift). 몸은 땅에 선 채 완드로 부름 (동작 :dive — 내리꽂을 때 완드로 가리킴)
-     */
-    static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level0 = sp.level();
-        Vec3 c = groundAim(sp, k.num("range", 20));
-        Vec3 f = Math.hypot(c.x - sp.getX(), c.z - sp.getZ()) > 0.5 ? V.flat(V.sub(c, sp.position())) : Kit.facingOf(sp);
-        Vec3 r = V.rightOf(f);
-        double radius = k.num("radius", 6);
-        int formAt = (int) k.num("formAt", 4);
-        int first = (int) k.num("first", 16);
-        int every = Math.max(1, (int) k.num("every", 10));
-        int beats = Math.max(1, (int) k.num("beats", 4));
-        int diveAt = (int) k.num("diveAt", 60);
-        int orbitEnd = diveAt - 12;
-        int climbEnd = diveAt - 6;
-        String life = RuneKit.lifeToken(sp);
-        Ult.sky(level0, sp.position(), "rpg:ult_night", diveAt + 30);
-        JobFx.aura(sp, j, 3.0, 0.9, 0.9);
-        JobFx.eyeRing(sp, j, 2.6, 1.1, 0.5);
-        JobFx.halo(level0, V.up(c, 0.06), radius, j, 0.8, Opt.of("alpha", 0.7));
-        SkillFx.play(level0, "block.beacon.activate", sp.position(), 1.3, 1.0);
-        SkillFx.play(level0, "entity.phantom.ambient", c, 0.5, 0.8);
-        // 하늘 길: 돎 (formAt ~ orbitEnd — 왼쪽에서 시작해 3/4 바퀴 · 고리 가운데 o) → 너머에서 솟구쳐 되돌아옴 (~ climbEnd) → 내리꽂힘 (~ diveAt)
-        double a0 = -Math.PI / 2;
-        double sweep = Math.PI * 1.5;
-        Vec3 o = V.add(c, f, Math.max(0, ORBIT_NEAR + ORBIT_R - Math.hypot(c.x - sp.getX(), c.z - sp.getZ())));
-        Vec3 apex = V.up(V.add(o, f, ORBIT_R * 0.4), ORBIT_H + ORBIT_TILT + 2.0);
-        Vec3 impact = V.up(c, 0.8);
-        java.util.function.IntFunction<Vec3> path = t -> {
-            if (t <= orbitEnd) {
-                double u = Math.max(0, (t - formAt) / (double) (orbitEnd - formAt));
-                return orbitAt(o, f, r, a0 + sweep * u, u);
-            }
-            Vec3 end = orbitAt(o, f, r, a0 + sweep, 1);
-            if (t <= climbEnd) {
-                double u = JobMove.ease((t - orbitEnd) / (double) (climbEnd - orbitEnd), JobMove.OUT);
-                return V.lerp(end, apex, u);
-            }
-            double u = Math.min(1, (t - climbEnd) / (double) (diveAt - climbEnd));
-            return V.lerp(apex, impact, u * u);
-        };
-        // 나타남: 하늘에 별 일곱이 독수리 꼴로 번쩍 → 독수리
-        Vec3 born = path.apply(formAt);
-        JobFx.starNode(level0, born, 2.2, 0, 2, formAt / 20.0 + 0.25, false, Opt.empty(), NIGHT, GOLD);
-        for (int i = 0; i < 6; i++) {
-            double a = i * Math.PI / 3;
-            Vec3 p = V.add(born, V.add(V.scale(r, Math.cos(a) * 2.6), V.UP, Math.sin(a) * 1.2), 1);
-            JobFx.starNode(level0, p, 0.4, 0, 2, formAt / 20.0 + 0.2, false, Opt.empty(), NIGHT, GOLD);
-            RuneKit.streak(level0, p, born, GOLD, 0.06, formAt / 20.0 + 0.2, 0.9, 0);
+        Vec3 c0 = sp.position();
+        JobTraits.startStance(sp, k, end + 6);
+        // 별 다섯이 둘레를 돎 (주인을 따라감 · 위아래로 조금씩 출렁임)
+        JobFx3d.orbitOwner(sp, "arcane_orb", 5, new Vec3(0, 1.25, 0), orbitR, 150, false, (end + 8) / 20.0, 0.42, j, Opt.of("fadeIn", 0.25, "fadeOut", 0.3,
+                "glowAlpha", 0.6, "shine", 0.45, "bob", 0.12, "bobHz", 0.9));
+        // 부름: 완드 끝 큰 별 · 발밑 별빛 고리 · 둘레로 퍼지는 금빛 별 다섯
+        JobFx.starNode(level0, wandTip(sp), 0.6, 0, 2, 0.3, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
+        JobFx.halo(level0, V.up(c0, 0.06), orbitR + 0.5, j, 0.6, Opt.empty());
+        for (int i = 0; i < 5; i++) {
+            double ang = i * Math.PI * 2 / 5;
+            Vec3 p = V.up(new Vec3(c0.x + Math.cos(ang) * orbitR, c0.y, c0.z + Math.sin(ang) * orbitR), 1.25);
+            JobFx.starNode(level0, p, 0.5, 0, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
+            RuneKit.streak(level0, V.up(c0, 1.25), p, GOLD, 0.06, 0.3, 0.8, 0);
         }
-        // 독수리 (2틱마다 한 조각 — 다음 자리로 움직이며 · 1틱 겹침 · 날갯짓 차례를 이어 그림: 날개를 내리친 장 (1) 이 깃털이 쏟아지는 틱에)
-        for (int t = formAt; t < diveAt; t += 2) {
-            int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life)) return;
-                ServerLevel d = sp.level();
-                Vec3 p = path.apply(tt);
-                Vec3 q = path.apply(Math.min(diveAt, tt + 2));
-                Vec3 dir = V.sub(q, p);
-                if (V.len(dir) < 1e-3) dir = f;
-                boolean dive = tt >= climbEnd;
-                double phase = (((tt - first) * 0.6 + 1) % 6 + 6) % 6;
-                JobFx.eagle(d, p, dir, 4.6, dive, 0.15, Opt.of("vel", V.scale(V.sub(q, p), 10), "phase", dive ? 0.0 : phase, "alpha", 0.95), NIGHT, GOLD);
-                // 지나간 자리의 옅은 별빛 줄 · 반짝이
-                Vec3 back = path.apply(Math.max(formAt, tt - 2));
-                RuneKit.streak(d, back, p, NIGHT, 0.5, 0.45, 0.35, 0);
-                SkillFx.sparks(d, p, GOLD, dive ? 6 : 2, 2.5);
-                if ((tt - formAt) % 10 == 0 && !dive) SkillFx.play(d, "entity.ender_dragon.flap", p, 1.5, 0.6);
-            });
-        }
-        // 날갯짓 (first + every × i): 4틱 전에 별빛 깃털이 독수리에서 적에게 날아가 그 틱에 닿음 · 옅은 깃털 비
-        for (int i = 0; i < beats; i++) {
+        SkillFx.sparks(level0, V.up(c0, 1.2), GOLD, 14, 4);
+        SkillFx.play(level0, "block.beacon.activate", c0, 1.7, 0.7);
+        SkillFx.play(level0, "block.amethyst_block.resonate", c0, 1.4, 1.0);
+        List<Vec3> marks = new ArrayList<>();
+        for (int i = 0; i < shots; i++) {
+            int ii = i;
             int at = first + every * i;
-            RuneKit.later(at - 4, () -> {
+            LivingEntity[] tgt = {null};
+            // 날아감 (at − fly): 그 적 쪽 별이 번쩍 떨어져 나와 솟았다가 (반) 떨어짐 (반)
+            RuneKit.later(at - fly, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                ServerLevel d = sp.level();
-                Vec3 from = path.apply(at - 4);
-                int n = 0;
-                for (LivingEntity e : Kit.around(sp, c, radius, 4)) {
-                    if (n++ >= 6) break;
-                    Vec3 to = Kit.bodyPoint(e);
-                    JobFx.fallStar(d, from, to, V.len(V.sub(to, from)) / 0.2, 0.7, Opt.empty(), NIGHT, GOLD);
+                ServerLevel lv = sp.level();
+                List<LivingEntity> near = JobKit.near(sp, range, 1);
+                Vec3 c = V.up(sp.position(), 1.25);
+                if (near.isEmpty()) {
+                    // 적이 없으면 별 하나가 반짝이고 그대로 돎
+                    JobFx.starNode(lv, V.add(c, Kit.facingOf(sp), orbitR), 0.4, 6, 2, 0.2, false, Opt.empty(), NIGHT, GOLD);
+                    return;
                 }
-                for (int m = n; m < 4; m++) {
-                    double a = Kit.rand() * Math.PI * 2;
-                    Vec3 g = V.add(V.up(c, 0.2), new Vec3(Math.cos(a), 0, Math.sin(a)), radius * Math.sqrt(Kit.rand()));
-                    JobFx.fallStar(d, from, g, V.len(V.sub(g, from)) / 0.2, 0.6, Opt.empty(), NIGHT, GOLD);
-                }
-                JobFx.feathers(d, from, 6, 2.0, 0.32, j, 1.2, Opt.empty());
-                SkillFx.play(d, "entity.phantom.flap", from, 1.2, 0.9);
+                LivingEntity e = near.get(0);
+                tgt[0] = e;
+                Vec3 to = Kit.bodyPoint(e);
+                Vec3 d = V.flat(V.sub(to, c));
+                Vec3 dir = V.len(d) > 0.1 ? V.unit(d) : Kit.facingOf(sp);
+                Vec3 from = V.add(c, dir, orbitR);
+                double dist = V.len(V.sub(to, from));
+                Vec3 apex = V.up(V.lerp(from, to, 0.5), 1.6 + dist * 0.15);
+                int half = Math.max(1, fly / 2);
+                JobFx.starNode(lv, from, 0.5, 6, 2, 0.2, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.fallStar(lv, from, apex, V.len(V.sub(apex, from)) / (half / 20.0), 0.55, Opt.empty(), NIGHT, GOLD);
+                RuneKit.later(half, () -> {
+                    if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
+                    Vec3 hit = Kit.bodyPoint(e);
+                    JobFx.fallStar(sp.level(), apex, hit, V.len(V.sub(hit, apex)) / ((fly - half) / 20.0), 0.6, Opt.empty(), NIGHT, GOLD);
+                });
+                SkillFx.play(lv, "block.amethyst_block.chime", from, 1.3 + 0.05 * ii, 0.7);
             });
-            JobKit.motionLater(sp, "arcmage_ult:beat", at - 3, life);
+            // 터짐 (at): 별 번쩍 · 둘레 별빛 고리 · 불티 → 그 자리에 작은 별 (끝까지) · 앞 자리와 금빛 선
             RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                ServerLevel d = sp.level();
-                SkillFx.play(d, "firework.blast", c, 1.3, 0.7);
-                for (LivingEntity e : Kit.around(sp, c, radius, 4)) {
-                    JobKit.strikeSplit(sp, e, j, P, k.num("beat", 6), Math.max(1, (int) k.num("split", 6)), 1, true, false, life, 0, x -> {
-                        if (e.level() instanceof ServerLevel lv) JobFx.starNode(lv, Kit.bodyPoint(e), 0.45, 6, 2, 0.22, false, Opt.empty(), NIGHT, GOLD);
-                        if (RuneKit.fxQuota("jobEagleBeat", 6)) JobFx.hit(e, j, 1.0);
+                LivingEntity e = tgt[0];
+                if (e == null || e.isRemoved()) return;
+                ServerLevel lv = sp.level();
+                Vec3 p = Kit.bodyPoint(e);
+                JobFx.starNode(lv, p, 1.0 + Kit.bodyPad(e) * 0.4, 6, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.burst(lv, p, 1.2, j, 0.3, Opt.empty());
+                JobFx.halo(lv, V.up(e.position(), 0.06), R, j, 0.35, Opt.of("alpha", 0.85));
+                SkillFx.sparks(lv, p, GOLD, 10, 4.5);
+                SkillFx.play(lv, "firework.blast", p, 1.5, 0.55);
+                Vec3 mark = V.up(e.position(), 0.25);
+                double keep = Math.max(0.3, (end - at) / 20.0 + 0.6);
+                JobFx.starNode(lv, mark, 0.35, 2, 4, keep, true, Opt.of("fade", 0.3), NIGHT, GOLD);
+                if (!marks.isEmpty() && V.len(V.sub(marks.get(marks.size() - 1), mark)) > 0.6) {
+                    RuneKit.streak(lv, marks.get(marks.size() - 1), mark, NIGHT, 0.22, keep, 0.5, 0);
+                    RuneKit.streak(lv, marks.get(marks.size() - 1), mark, GOLD, 0.07, keep, 0.95, 0);
+                }
+                marks.add(mark);
+                for (LivingEntity o : Kit.around(sp, p, R, 2.5)) {
+                    JobKit.strike(sp, o, j, P, k.num("shot", 1.68), true, false, life, 0, x -> {
+                        if (RuneKit.fxQuota("jobStarOrbit", 6)) JobFx.hit(o, j, 0.9);
                     });
                 }
             });
         }
-        // 솟구침 · 내리꽂음
-        RuneKit.later(orbitEnd, () -> {
-            if (RuneKit.sameLife(sp, life)) SkillFx.play(sp.level(), "entity.ender_dragon.growl", apex, 1.6, 0.5);
-        });
-        RuneKit.later(climbEnd, () -> {
+        // 끝: 땅에 그려진 별자리가 한 번 크게 반짝이고 사라짐
+        RuneKit.later(end + 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
-            ServerLevel d = sp.level();
-            RuneKit.streak(d, apex, impact, GOLD, 0.12, 0.35, 0.9, 0);
-            JobFx.starNode(d, V.up(c, 0.4), 1.2, 0, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
-            SkillFx.play(d, "item.trident.riptide_3", apex, 1.4, 0.8);
-        });
-        JobKit.motionLater(sp, "arcmage_ult:dive", climbEnd - 2, life);
-        RuneKit.later(diveAt, () -> {
-            if (!RuneKit.sameLife(sp, life)) return;
-            ServerLevel d = sp.level();
-            Vec3 m = V.up(c, 1.0);
-            JobFx.starNode(d, m, 3.0, 6, 2, 0.5, false, Opt.empty(), NIGHT, GOLD);
-            for (int i = 0; i < 3; i++) {
-                int ii = i;
-                RuneKit.later(i * 2, () -> JobFx.burst(d, V.up(c, 0.8 + ii * 0.7), 2.2 + ii * 0.8, j, 0.42, Opt.empty()));
-            }
-            JobFx.halo(d, V.up(c, 0.06), radius, j, 0.6, Opt.empty());
-            RuneKit.later(3, () -> JobFx.halo(d, V.up(c, 0.1), radius * 0.6, j, 0.5, Opt.empty()));
-            JobFx.feathers(d, V.up(c, 1.5), 14, radius * 0.6, 0.38, j, 1.4, Opt.empty());
-            RuneKit.godRays(sp, d, c, radius * 0.6, 6, NIGHT, GOLD, Opt.of("h", 14.0, "life", 0.9, "alpha", 0.8, "skipNear", true));
-            SkillFx.sparks(d, m, GOLD, 24, 7);
-            Ult.flash(d, c, GOLD, Opt.empty(), sp);
-            SkillFx.play(d, "random.explode", c, 0.8, 1.0);
-            SkillFx.play(d, "firework.large_blast", c, 1.0, 0.9);
-            SkillFx.play(d, "entity.phantom.death", c, 1.4, 0.6);
-            for (LivingEntity e : Kit.around(sp, c, radius, 4)) {
-                JobKit.strike(sp, e, j, P, k.num("dive", 32), true, true, life, 0, x -> {
-                    if (JobKit.pushable(e)) Kit.launch(e, 0, k.num("lift", 0.9), 0);
-                    if (RuneKit.fxQuota("jobEagleDive", 6)) JobFx.hit(e, j, 1.5);
-                });
-            }
+            ServerLevel lv = sp.level();
+            for (Vec3 m : marks) JobFx.starNode(lv, m, 0.6, 6, 2, 0.35, false, Opt.empty(), NIGHT, GOLD);
+            if (!marks.isEmpty()) SkillFx.play(lv, "block.amethyst_block.resonate", marks.get(marks.size() - 1), 1.5, 0.7);
         });
         return true;
     }
 
-    /** 도는 길의 한 점 (각 a — 가운데 o 에서 내 쪽 −f 가 0, 오른쪽 r 가 π/2 · 너머 π) — 내 쪽은 낮고 너머는 높게 기운 고리 · 날갯짓 오르내림 (u = 돈 몫) */
-    private static Vec3 orbitAt(Vec3 o, Vec3 f, Vec3 r, double a, double u) {
-        Vec3 h = V.add(V.scale(f, -Math.cos(a) * ORBIT_R), r, Math.sin(a) * ORBIT_R);
-        return V.add(V.up(o, ORBIT_H - ORBIT_TILT * Math.cos(a) + 0.6 * Math.sin(u * Math.PI * 3)), h, 1);
+    // ------------------------------------------------------------ 콘스텔레이션 (2026-11-07 재설계안 3판 — 셀레스티얼 이글 대신)
+
+    /**
+     * 큰곰자리 국자 일곱 별 (오른쪽 x · 위 y — 손잡이 끝 알카이드부터 차례로: 알카이드 · 미자르 · 알리오스 · 메그레즈 · 페크다 · 메라크 · 두베). 하늘의 별 자리 = 조준한
+     * 곳 위 DIPPER_H 칸 + 오른쪽 x × DIPPER_W · 위 y × DIPPER_V · 조금 너머로
+     */
+    private static final double[][] DIPPER = {{-0.95, 0.5}, {-0.45, 0.68}, {0.0, 0.55}, {0.45, 0.42}, {0.5, -0.12}, {1.0, -0.05}, {1.0, 0.55}};
+    private static final double DIPPER_H = 8.5;
+    private static final double DIPPER_W = 4.6;
+    private static final double DIPPER_V = 3.0;
+
+    /**
+     * 콘스텔레이션 (롤 조이 R · 아우렐리온 솔 R): 별이 뜬 밤하늘 (rpg:ult_night) — 조준한 곳 (range 칸 — 겨눈 적의 발밑) 위 하늘에 formAt 틱부터 every 틱마다 일곱 별이 차례로
+     * 떠 금빛 선으로 이어지며 국자 꼴 별자리를 그림 (마지막에 국자 그릇을 닫음). 별이 뜰 때마다 별빛이 둘레 radius 칸의 적 (가까운 순 일곱까지 · 돌아가며 — 적이 하나면 일곱 다
+     * 그 적) 에게 fall 틱 만에 내리꽂힘 — 피해는 그 적의 첫 별빛에 한 번 (star × 맞을 별 수 · 숫자는 별빛마다 한 줄) → burstAt − 6 에 별자리가 한 점으로 무너져 내려
+     * burstAt 틱에 터짐 (둘레 radius 칸 burst · 큰 숫자 · 띄움 lift). 화면은 흔들지 않음
+     */
+    static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        ServerLevel level0 = sp.level();
+        Vec3 c = groundAim(sp, k.num("range", 20));
+        Vec3 f = Math.hypot(c.x - sp.getX(), c.z - sp.getZ()) > 0.5 ? V.unit(V.flat(V.sub(c, sp.position()))) : Kit.facingOf(sp);
+        Vec3 r = V.rightOf(f);
+        double radius = k.num("radius", 9);
+        int stars = Math.max(1, Math.min(DIPPER.length, (int) k.num("stars", 7)));
+        int formAt = Math.max(2, (int) k.num("formAt", 8));
+        int every = Math.max(1, (int) k.num("every", 6));
+        int fall = Math.max(1, (int) k.num("fall", 2));
+        int burstAt = Math.max(formAt + every * (stars - 1) + fall + 6, (int) k.num("burstAt", 56));
+        String life = RuneKit.lifeToken(sp);
+        Ult.sky(level0, sp.position(), "rpg:ult_night", burstAt + 30);
+        JobFx.aura(sp, j, 3.0, 0.9, 0.9);
+        JobFx.eyeRing(sp, j, 2.6, 1.1, 0.5);
+        JobFx.halo(level0, V.up(c, 0.06), radius, j, burstAt / 20.0, Opt.of("alpha", 0.45));
+        SkillFx.play(level0, "block.beacon.activate", sp.position(), 1.3, 1.0);
+        SkillFx.play(level0, "block.amethyst_block.resonate", c, 0.8, 1.0);
+        // 하늘의 별 자리 (쓸 때 정함)
+        Vec3[] sky = new Vec3[stars];
+        for (int i = 0; i < stars; i++) {
+            sky[i] = V.add(V.add(V.up(c, DIPPER_H + DIPPER[i][1] * DIPPER_V), r, DIPPER[i][0] * DIPPER_W), f, 1.5);
+        }
+        // 별빛이 노릴 적 (쓸 때 둘레 radius 칸 — 가까운 순 일곱까지, 별 i 는 적 i mod n)
+        List<LivingEntity> foes = new ArrayList<>(Kit.around(sp, c, radius, 4));
+        foes.sort(java.util.Comparator.comparingDouble(e -> e.distanceToSqr(c.x, c.y, c.z)));
+        if (foes.size() > stars) foes = new ArrayList<>(foes.subList(0, stars));
+        int n = foes.size();
+        List<LivingEntity> fs = foes;
+        for (int i = 0; i < stars; i++) {
+            int ii = i;
+            int at = formAt + every * i;
+            LivingEntity e = n == 0 ? null : fs.get(i % n);
+            RuneKit.later(at, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel d = sp.level();
+                Vec3 p = sky[ii];
+                // 별이 뜸 (번쩍 → 반짝임 — 무너질 때까지) · 앞 별과 금빛 선 · 맑은 소리 (차례마다 한 음씩 높게)
+                double keep = (burstAt - 6 - at) / 20.0 + 0.1;
+                JobFx.starNode(d, p, 1.4, 0, 2, 0.25, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.starNode(d, p, 1.0, 2, 4, keep, true, Opt.of("fade", 0.2), NIGHT, GOLD);
+                if (ii > 0) {
+                    RuneKit.streak(d, sky[ii - 1], p, NIGHT, 0.5, keep, 0.55, 0);
+                    RuneKit.streak(d, sky[ii - 1], p, GOLD, 0.14, keep, 1.0, 0);
+                }
+                if (ii == stars - 1 && stars >= 4) {
+                    RuneKit.streak(d, p, sky[3], NIGHT, 0.5, keep, 0.55, 0);
+                    RuneKit.streak(d, p, sky[3], GOLD, 0.14, keep, 1.0, 0);
+                }
+                SkillFx.sparks(d, p, GOLD, 10, 3.5);
+                SkillFx.play(d, "block.amethyst_block.chime", p, 0.8 + 0.12 * ii, 1.0);
+                // 별빛이 내리꽂힘: 별 → 그 적 (없으면 별 아래 땅)
+                Vec3 to = e != null && e.isAlive() && !e.isRemoved() ? Kit.bodyPoint(e) : new Vec3(p.x, RuneKit.groundAt(d, p, c.y), p.z);
+                JobFx.fallStar(d, p, to, V.len(V.sub(to, p)) / (fall / 20.0), 0.9, Opt.empty(), NIGHT, GOLD);
+                RuneKit.later(fall, () -> {
+                    if (!RuneKit.sameLife(sp, life)) return;
+                    ServerLevel d2 = sp.level();
+                    Vec3 hit = e != null && e.isAlive() && !e.isRemoved() ? Kit.bodyPoint(e) : to;
+                    JobFx.beam(d2, p, hit, NIGHT, GOLD, 0.9, 0.3, Opt.of("alpha", 0.85));
+                    JobFx.starNode(d2, hit, 1.1, 6, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
+                    JobFx.burst(d2, hit, 1.4, j, 0.3, Opt.empty());
+                    SkillFx.sparks(d2, hit, GOLD, 12, 5);
+                    SkillFx.play(d2, "firework.blast", hit, 1.2, 0.8);
+                });
+            });
+        }
+        // 피해: 적마다 첫 별빛에 한 번 (star × 그 적에게 내리꽂힐 별 수 — 숫자는 별빛마다 한 줄, 줄 사이 = 같은 적의 다음 별빛까지)
+        for (int q = 0; q < n; q++) {
+            LivingEntity e = fs.get(q);
+            int count = 0;
+            for (int i = q; i < stars; i += n) count++;
+            int at = formAt + every * q + fall;
+            JobKit.strikeSplit(sp, e, j, P, k.num("star", 4) * count, count, every * n, true, false, life, at, x -> {
+                if (RuneKit.fxQuota("jobConstellation", 6)) JobFx.hit(e, j, 1.2);
+            });
+        }
+        // 무너짐 (burstAt − 6): 일곱 별이 한 점 (조준한 곳) 으로 떨어져 내림 → burstAt 터짐
+        JobKit.motionLater(sp, "arcmage_ult:burst", burstAt - 8, life);
+        RuneKit.later(burstAt - 6, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel d = sp.level();
+            Vec3 m = V.up(c, 1.0);
+            for (Vec3 p : sky) {
+                JobFx.fallStar(d, p, m, V.len(V.sub(m, p)) / 0.3, 1.0, Opt.empty(), NIGHT, GOLD);
+                RuneKit.streak(d, p, m, GOLD, 0.1, 0.3, 0.9, 0);
+            }
+            SkillFx.play(d, "item.trident.riptide_3", c, 1.4, 0.8);
+        });
+        RuneKit.later(burstAt, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel d = sp.level();
+            Vec3 m = V.up(c, 1.0);
+            JobFx.starNode(d, m, 3.4, 6, 2, 0.5, false, Opt.empty(), NIGHT, GOLD);
+            for (int i = 0; i < 3; i++) {
+                int ii = i;
+                RuneKit.later(i * 2, () -> JobFx.burst(d, V.up(c, 0.8 + ii * 0.8), 2.6 + ii * 1.0, j, 0.45, Opt.empty()));
+            }
+            JobFx.halo(d, V.up(c, 0.06), radius, j, 0.6, Opt.empty());
+            RuneKit.later(3, () -> JobFx.halo(d, V.up(c, 0.1), radius * 0.6, j, 0.5, Opt.empty()));
+            RuneKit.godRays(sp, d, c, radius * 0.6, 7, NIGHT, GOLD, Opt.of("h", 14.0, "life", 0.9, "alpha", 0.8, "skipNear", true));
+            for (Vec3 p : sky) JobFx.starNode(d, new Vec3(p.x, c.y + 1.2, p.z), 0.8, 6, 2, 0.35, false, Opt.empty(), NIGHT, GOLD);
+            SkillFx.sparks(d, m, GOLD, 28, 7);
+            Ult.flash(d, c, GOLD, Opt.empty(), sp);
+            SkillFx.play(d, "random.explode", c, 0.8, 1.0);
+            SkillFx.play(d, "firework.large_blast", c, 1.0, 0.9);
+            SkillFx.play(d, "block.amethyst_block.break", c, 0.6, 1.0);
+            for (LivingEntity e : Kit.around(sp, c, radius, 4)) {
+                JobKit.strike(sp, e, j, P, k.num("burst", 28), true, true, life, 0, x -> {
+                    if (JobKit.pushable(e)) Kit.launch(e, 0, k.num("lift", 0.9), 0);
+                    if (RuneKit.fxQuota("jobConstellationBurst", 6)) JobFx.hit(e, j, 1.5);
+                });
+            }
+        });
+        return true;
     }
 }

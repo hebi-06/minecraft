@@ -287,8 +287,8 @@ final class SwordmasterSkills {
                 Vec3 want;
                 if (e != null) {
                     // 그 적 둘레를 돌아가며 (황금각 137.5° 씩 — 같은 적이면 다른 쪽에서 벰), 몸 폭만큼 띄움
-                    Vec3 out = V.flat(V.sub(e.position(), cg));
-                    Vec3 u = V.len(out) > 0.2 ? V.unit(out) : f0;
+                    Vec3 out = V.sub(e.position(), cg);
+                    Vec3 u = Math.hypot(out.x, out.z) > 0.2 ? V.flat(out) : f0;
                     want = V.add(e.position(), V.turnY(u, 40 + i * 137.5), 1.25 + Kit.bodyPad(e));
                     tgt[i] = e;
                 } else {
@@ -296,7 +296,9 @@ final class SwordmasterSkills {
                     want = new Vec3(cg.x + Math.cos(a) * R * 0.72, cg.y, cg.z + Math.sin(a) * R * 0.72);
                 }
                 // 벽 앞까지 (앞 자리에서 그 자리로 갈 수 있는 데까지)
-                Vec3 d = V.flat(V.sub(want, prev));
+                // (V.flat 은 단위 벡터 — 길이는 뺀 그대로에서: 2026-11-07 CI 42326836876 영상에서 칼자국 사이를 0.8칸씩만 오갔음)
+                Vec3 raw = V.sub(want, prev);
+                Vec3 d = new Vec3(raw.x, 0, raw.z);
                 double len = Math.hypot(d.x, d.z);
                 double free = len < 0.3 ? 0 : Kit.reachFlat(lv, prev, V.unit(d), len);
                 Vec3 end = free > 0.3 ? V.add(prev, V.unit(d), Math.max(0, free - 0.2)) : prev;

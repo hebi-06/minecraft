@@ -1,12 +1,12 @@
 """0.51.0 2차 직업 스킬 동작 — 매지션 각성 아크메이지 · 반전 네크로맨서 (재설계안 2판 2026-11-06 — 틱 0 = 스킬이 나간 틱, 효과의 later · every 와 같은 틱 —
 ArcmageSkills · NecromancerSkills). 둘 다 완드 (오른손) · 맨손 (왼손), 몸은 땅에 선 채 (몸을 쓰는 직업이 아님 — 완드 · 손짓만).
-단계 열쇠 (스킬 id:단계) 의 동작은 서버가 그 순간에 다시 보냄 (JobKit.motion — 헤일로 배리어의 받음, 셀레스티얼 이글의 날갯짓 · 내리꽂음, 그레이브 콜의 다시 누름 (무덤에서
-망자), 팬텀 갤리온의 선장 · 마지막)."""
+단계 열쇠 (스킬 id:단계) 의 동작은 서버가 그 순간에 다시 보냄 (JobKit.motion — 헤일로 배리어의 받음, 콘스텔레이션의 무너뜨림 (2026-11-07 — 셀레스티얼 이글의 날갯짓 ·
+내리꽂음 대신), 그레이브 콜의 다시 누름 (무덤에서 망자), 팬텀 갤리온의 선장 · 마지막)."""
 import math
 
 import rune_motion_kit as K
 from job_motions_a import MG_POINT, FPW_WAND
-from job_motions_d import GRASP_CLOSE, GRASP_OPEN
+from job_motions_d import GRASP_CLOSE, GRASP_OPEN, impacts
 from rune_motion_kit import (A_RAISE, A_SPREAD_UP, CALL, FP_DOWN, FP_GATHER_L, FP_GROUND, FP_LOW, FP_PALM, FP_PUSH_OUT, FP_RAISE, FP_SPREAD_UP, FPW_DOWN, FPW_LOW,
                              FPW_SKY, FPW_SPREAD, FPW_UP, L, LEGS_FIGHT, LEGS_KNEEL, LEGS_LUNGE, LEGS_WIDE, P, RA_SKY, arm, bent, fpl, fpw, keyp, nudge, off_bare,
                              use_skill)
@@ -82,67 +82,70 @@ fpl(m, 9.0, ((0.0, -0.05, -0.25), (10, 30, 0)), "in")
 fpl(m, 14.0, FP_LOW)
 use_skill(m, "arcmage_vortex")
 
-# 스펠 서지 (태세 — 효과: 0 에 완드 끝 큰 별 · 몸을 감아 오르는 별 (14틱))
-m = Motion("arcmage_surge", 18, "스펠 서지 — 완드를 얼굴 앞에 곧게 세워 왼손을 대고 별빛을 끌어올린 뒤, 완드를 머리 위로 들어 휘둘러 펼침", fade=(0.03, 0.12))
+# 셀레스티얼 오빗 (2026-11-07 3판 — 스펠 서지 대신. 효과: 0 에 완드 끝 큰 별 · 둘레로 퍼지는 별 다섯 → 별 다섯이 둘레를 돎 · 10 부터 1초마다 별이 떨어져 터짐)
+m = Motion("arcmage_orbit", 20, "셀레스티얼 오빗 — 완드를 얼굴 앞에 곧게 세워 왼손을 대고 별빛을 모은 뒤, 완드를 머리 위로 들어 크게 한 바퀴 돌려 별 다섯을 둘레에 띄우고 "
+           "앞을 가리킴", fade=(0.03, 0.12))
 off_bare(m)
 keyp(m, 1.2, P(body=[2, 0, 0], head=[-4, 0], ra=bent([0.12, 0.35, 0.6], 110, (0, 1, 0)), la=bent([-0.12, 0.3, 0.6], 110, (0.2, 1, 0)), **LEGS_FIGHT), "out3")
-keyp(m, 6.0, P(body=[-2, 0, 0], head=[-8, 0], ra=bent([0.1, 0.5, 0.55], 100, (0, 1, 0)), la=bent([-0.1, 0.45, 0.55], 100, (0.2, 1, 0)), **LEGS_FIGHT))
-keyp(m, 8.4, P(body=[-10, 12, 0], head=[-20, 0], ra=RA_SKY, la=L(A_SPREAD_UP), **LEGS_WIDE), "out3")
-keyp(m, 11.5, P(body=[4, -14, 0], ra=arm([0.7, 0.2, 0.6], 10, [0.5, 0.5, 0.6]), la=arm([-0.6, -0.4, 0.3], 30), **LEGS_FIGHT), "out")
-keyp(m, 16.0, P(MG_POINT, body=[4, -8, 0]))
+keyp(m, 4.0, P(body=[-2, 0, 0], head=[-8, 0], ra=bent([0.1, 0.5, 0.55], 100, (0, 1, 0)), la=bent([-0.1, 0.45, 0.55], 100, (0.2, 1, 0)), **LEGS_FIGHT))
+# 머리 위에서 완드 끝으로 큰 원 (오른쪽 → 뒤 → 왼쪽 → 앞)
+for i, a in enumerate(range(0, 361, 60)):
+    rad = math.radians(a)
+    keyp(m, 6.0 + i * 1.2, P(body=[-8, 10 - 20 * math.sin(rad / 2), 0], head=[-20, 0], ra=arm([0.55 * math.cos(rad), 0.85, -0.55 * math.sin(rad)], 6),
+                            la=L(A_SPREAD_UP), **LEGS_WIDE), "out3" if i == 0 else None)
+keyp(m, 15.0, P(MG_POINT, body=[8, -12, 0]), "out")
+keyp(m, 19.0, P(MG_POINT, body=[4, -8, 0]))
 fpw(m, 1.2, dict(p=(-0.12, 0.2, -0.32), blade=(0.0, 1, 0.1)), "out3")
-fpw(m, 6.0, dict(p=(-0.1, 0.3, -0.3), blade=(0.0, 1, 0.05)))
-fpw(m, 8.4, FPW_SKY, "out3")
-fpw(m, 11.5, FPW_SPREAD, "out")
-fpw(m, 17.0, FPW_LOW)
+fpw(m, 4.0, dict(p=(-0.1, 0.3, -0.3), blade=(0.0, 1, 0.05)))
+fpw(m, 6.0, FPW_SKY, "out3")
+fpw(m, 13.2, FPW_SPREAD)
+fpw(m, 19.0, FPW_WAND)
 fpl(m, 1.2, FP_GATHER_L, "out3")
-fpl(m, 6.0, FP_GATHER_L)
-fpl(m, 8.4, FP_SPREAD_UP, "out3")
-fpl(m, 12.0, FP_LOW)
-use_skill(m, "arcmage_surge")
+fpl(m, 4.0, FP_GATHER_L)
+fpl(m, 6.0, FP_SPREAD_UP, "out3")
+fpl(m, 15.0, FP_LOW)
+use_skill(m, "arcmage_orbit")
 
-# 셀레스티얼 이글 (효과: 0 밤하늘 → 4 에 독수리가 나타나 그곳 둘레를 돎 → 16 · 26 · 36 · 46 날갯짓 (서버가 3틱 전에 :beat) → 54 솟구침 끝 · 60 내리꽂힘
-# (서버가 52 에 :dive))
-m = Motion("arcmage_ult", 22, "셀레스티얼 이글 — 완드와 왼손을 하늘로 들어 별을 불러 모으고, 두 팔을 날개처럼 크게 펼쳐 별빛 독수리를 날려 보냄", fade=(0.04, 0.08))
+# 콘스텔레이션 (2026-11-07 3판 — 셀레스티얼 이글 대신. 효과: 0 밤하늘 → 8 · 14 · 20 · 26 · 32 · 38 · 44 에 하늘의 별이 왼쪽 (국자 손잡이) 부터 차례로 뜸 —
+# 별마다 별빛이 2틱 뒤 내리꽂힘 → 서버가 48 에 :burst (50 별자리가 무너져 내림 · 56 터짐))
+m = Motion("arcmage_ult", 52, "콘스텔레이션 — 완드와 왼손을 하늘로 들어 밤하늘을 부르고, 완드 끝으로 하늘의 별을 왼쪽에서 오른쪽으로 하나씩 짚어 별자리를 그린 뒤 "
+           "두 팔을 하늘로 모음", fade=(0.04, 0.08))
 off_bare(m)
 keyp(m, 2.5, P(CALL, ra=RA_SKY), "out3")
-keyp(m, 8.0, P(CALL, ra=RA_SKY, head=[-34, 0]))
-keyp(m, 11.5, P(body=[-12, 0, 0], head=[-22, 0], ra=arm([0.9, 0.4, 0.15], 6, [0.6, 0.8, 0.1]), la=L(arm([0.9, 0.4, 0.15], 6)), **LEGS_WIDE), "out3")
-keyp(m, 19.0, P(body=[-8, 0, 0], head=[-18, 0], ra=arm([0.85, 0.3, 0.3], 10, [0.6, 0.7, 0.2]), la=L(arm([0.85, 0.3, 0.3], 10)), **LEGS_WIDE))
+keyp(m, 6.0, P(CALL, ra=RA_SKY, head=[-34, 0]))
+for i in range(7):
+    t = 8.0 + i * 6.0
+    x = -0.55 + 1.1 * i / 6.0
+    sky = arm([x, 0.82, 0.35], 4, [x * 0.6, 0.9, 0.3])
+    keyp(m, t - 1.2, P(body=[-12, -8 + 16 * i / 6.0, 0], head=[-30, -14 + 28 * i / 6.0], ra=sky, la=L(A_SPREAD_UP), **LEGS_WIDE), "inout")
+    keyp(m, t, P(body=[-14, -8 + 16 * i / 6.0, 0], head=[-32, -14 + 28 * i / 6.0], ra=arm([x * 1.05, 0.86, 0.42], 2, [x * 0.6, 0.85, 0.45]), la=L(A_SPREAD_UP),
+                 **LEGS_WIDE), "out")
+keyp(m, 48.0, P(CALL, ra=RA_SKY, head=[-30, 0]), "inout")
+keyp(m, 51.5, P(CALL, ra=RA_SKY, head=[-32, 0]))
 fpw(m, 2.5, FPW_SKY, "out3")
-fpw(m, 8.0, FPW_SKY)
-fpw(m, 11.5, FPW_SPREAD, "out3")
-fpw(m, 19.0, FPW_SPREAD)
+fpw(m, 8.0, dict(p=(-0.45, 1.0, 0.15), blade=(-0.4, 0.9, -0.1)), "inout")
+fpw(m, 26.0, FPW_SKY, "inout")
+fpw(m, 44.0, dict(p=(0.15, 1.0, 0.15), blade=(0.4, 0.9, -0.1)), "inout")
+fpw(m, 51.5, FPW_SKY)
 fpl(m, 2.5, FP_RAISE, "out3")
-fpl(m, 8.0, FP_RAISE)
-fpl(m, 11.5, FP_SPREAD_UP, "out3")
-fpl(m, 19.0, FP_SPREAD_UP)
+fpl(m, 8.0, FP_SPREAD_UP, "inout")
+fpl(m, 48.0, FP_RAISE, "inout")
+impacts(m, 10.0)
 use_skill(m, "arcmage_ult")
-m = Motion("arcmage_ult_beat", 10, "셀레스티얼 이글 — 펼친 두 팔을 날갯짓처럼 한 번 아래로 내리침 (깃털이 쏟아짐)", fade=(0.04, 0.1))
-off_bare(m)
-keyp(m, 1.4, P(body=[-12, 0, 0], head=[-20, 0], ra=arm([0.8, 0.6, 0.1], 6, [0.5, 0.85, 0.1]), la=L(arm([0.8, 0.6, 0.1], 6)), **LEGS_WIDE), "out")
-keyp(m, 3.2, P(body=[2, 0, 0], head=[-10, 0], ra=arm([0.85, -0.25, 0.4], 8, [0.6, -0.3, 0.7]), la=L(arm([0.85, -0.25, 0.4], 8)), **LEGS_WIDE), "in")
-keyp(m, 8.5, P(body=[-8, 0, 0], head=[-18, 0], ra=arm([0.85, 0.3, 0.3], 10, [0.6, 0.7, 0.2]), la=L(arm([0.85, 0.3, 0.3], 10)), **LEGS_WIDE))
-fpw(m, 1.4, FPW_SPREAD, "out")
-fpw(m, 3.2, dict(p=(0.45, -0.3, -0.05), blade=(0.65, -0.2, 0.7)), "in")
-fpw(m, 8.5, FPW_SPREAD)
-fpl(m, 1.4, FP_SPREAD_UP, "out")
-fpl(m, 3.2, nudge(FP_PUSH_OUT, (0.05, -0.15, 0.0)), "in")
-fpl(m, 8.5, FP_SPREAD_UP)
-use_skill(m, "arcmage_ult:beat")
-m = Motion("arcmage_ult_dive", 16, "셀레스티얼 이글 끝 — 완드를 머리 위로 들었다가 그곳을 향해 힘껏 내리그어 독수리를 내리꽂게 함", fade=(0.04, 0.12))
+m = Motion("arcmage_ult_burst", 18, "콘스텔레이션 끝 — 하늘로 든 완드를 더 높이 치켜들었다가 별자리가 무너지는 곳을 향해 힘껏 내리그음", fade=(0.04, 0.12))
 off_bare(m)
 keyp(m, 2.0, P(body=[-12, 0, 0], head=[-24, 0], ra=bent([0.1, 0.95, 0.2], 20, (0, 0, 1)), la=L(A_SPREAD_UP), **LEGS_WIDE), "out3")
-keyp(m, 6.5, P(body=[-12, 0, 0], head=[-28, 0], ra=bent([0.1, 0.98, 0.15], 16, (0, 0, 1)), la=L(A_SPREAD_UP), **LEGS_WIDE))
-keyp(m, 8.5, P(body=[20, -10, 0], head=[8, 0], ra=arm([0.05, -0.35, 0.95], 4, [0, -0.45, 0.9]), la=arm([-0.6, -0.5, 0.3], 30), **LEGS_LUNGE), "in")
-keyp(m, 14, P(body=[14, -8, 0], ra=arm([0.05, -0.3, 0.95], 6, [0, -0.4, 0.9]), la=arm([-0.6, -0.5, 0.3], 30), **LEGS_LUNGE))
+keyp(m, 6.0, P(body=[-14, 0, 0], head=[-28, 0], ra=bent([0.1, 0.98, 0.15], 16, (0, 0, 1)), la=L(A_SPREAD_UP), **LEGS_WIDE))
+keyp(m, 8.0, P(body=[20, -10, 0], head=[8, 0], ra=arm([0.05, -0.35, 0.95], 4, [0, -0.45, 0.9]), la=arm([-0.6, -0.5, 0.3], 30), **LEGS_LUNGE), "in")
+keyp(m, 15.0, P(body=[14, -8, 0], ra=arm([0.05, -0.3, 0.95], 6, [0, -0.4, 0.9]), la=arm([-0.6, -0.5, 0.3], 30), **LEGS_LUNGE))
 fpw(m, 2.0, FPW_SKY, "out3")
-fpw(m, 6.5, FPW_SKY)
-fpw(m, 8.5, dict(p=(-0.32, -0.1, -0.3), blade=(-0.05, -0.35, 0.94)), "in")
-fpw(m, 14, FPW_WAND)
+fpw(m, 6.0, FPW_SKY)
+fpw(m, 8.0, dict(p=(-0.32, -0.1, -0.3), blade=(-0.05, -0.35, 0.94)), "in")
+fpw(m, 15.0, FPW_WAND)
 fpl(m, 2.0, FP_SPREAD_UP, "out3")
-fpl(m, 8.5, FP_LOW, "in")
-use_skill(m, "arcmage_ult:dive")
+fpl(m, 8.0, FP_LOW, "in")
+impacts(m, 8.0)
+use_skill(m, "arcmage_ult:burst")
 
 # ------------------------------------------------------------ 네크로맨서 (완드 — 독초록 · 뼈색)
 

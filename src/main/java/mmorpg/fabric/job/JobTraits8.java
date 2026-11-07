@@ -30,7 +30,7 @@ import net.minecraft.world.phys.Vec3;
  * <li>아크메이지 「주문 연쇄」 (이어지는 것 · +12% 는 매지션과 같음 — JobTraitsMore.chainNext · chainCommit, 최대 trait.max = 5): 이은 스킬 (연쇄 1 ~ 5) 마다 그 자리 (겨눈 적 ·
  * 조준한 곳) 에 별 — 같은 적이면 오각형 꼭짓점을 하나 건너 (차례로 이으면 ★). 다섯째 별에 별자리 완성 — 별을 잇는 금빛 선 (닫힌 고리) → starDelay 틱 뒤 별마다 폭발
  * (위력 × star · 둘레 starRadius 칸) · 선에 닿은 적 (lineWidth) 위력 × line — 한 적에게 한 번에 (숫자 여러 줄) → 연쇄는 처음부터. 연쇄가 끊기면 별도 사라짐.
- * 스펠 서지 (태세 SURGE — 롤 라이즈 Q): 그동안 다른 직업 스킬을 쓰면 스타 체인 (CHAIN) 의 재사용 대기가 바로 돌아옴 · 연쇄가 surge.window 틱 이어짐 ({@link #chainWindow})</li>
+ * (스펠 서지 — 다른 스킬마다 스타 체인이 돌아오던 태세 — 는 2026-11-07 재설계안 3판에서 셀레스티얼 오빗 (ArcmageSkills.orbit) 으로 바뀌며 뺌)</li>
  * <li>네크로맨서 「망자의 군대」 (롤 요릭 패시브): 둘레 graveRange 칸에서 쓰러진 적대 몹의 자리에 graveFor 틱 무덤 (rfx_jgrave — 녹색 혼불이 타는 묘비, 그레이브 콜을 다시
  * 쓰면 무덤마다 망자 선원 NecroCrew). 그레이브 콜 · 소울 미스트의 표식이 남은 적과 블라이트 안에서 쓰러진 적은 무덤 없이 바로 망자로. 소울 미스트 표식은 망자가 먼저
  * 노리고 crewBonus 더 셈 · 그레이브야드 고리 안의 적도 망자가 먼저 노림</li>
@@ -41,8 +41,7 @@ public final class JobTraits8 {
 
     static final String AM = "arcmage";
     static final String NC = "necromancer";
-    static final String SURGE = "arcmage_surge";
-    static final String CHAIN = "arcmage_chain";
+    static final String ORBIT = "arcmage_orbit";
     static final String MIST = "necromancer_mist";
     /** 밤하늘 자주 (별자리 선의 바깥 빛 · 별 무리) */
     static final double[] NIGHT = {0.42, 0.26, 0.86};
@@ -141,17 +140,9 @@ public final class JobTraits8 {
         STARS.remove(sp.getUUID());
     }
 
-    /** 스펠 서지가 켜져 있는지 */
-    public static boolean surgeOn(ServerPlayer sp) {
-        return JobTraits.stanceOn(sp, SURGE);
-    }
-
-    /** 주문 연쇄가 이어지는 틱: 스펠 서지 동안 surge.window (8초), 아니면 특성 window (4초) */
+    /** 주문 연쇄가 이어지는 틱 (특성 window — 4초) */
     static double chainWindow(ServerPlayer sp, Jobs.Job j) {
-        double base = trait(j, "window", 80);
-        if (j == null || !AM.equals(j.id()) || !surgeOn(sp)) return base;
-        Jobs.Skill k = j.skill(SURGE);
-        return k == null ? base : Math.max(base, k.num("window", base * 2));
+        return trait(j, "window", 80);
     }
 
     /**
@@ -173,19 +164,12 @@ public final class JobTraits8 {
     }
 
     /**
-     * 시전이 나감 (JobTraitsMore.chainCommit — 아크메이지): 스펠 서지 동안 다른 스킬이면 스타 체인의 재사용 대기를 바로 돌려 놓음 (완드 끝 금빛 번쩍 · 맑은 소리),
-     * 연쇄 1 ~ 5 면 별 하나 (연쇄가 늘었을 때만 — 같은 스킬을 이어 쓰면 그대로). 다섯째 별이면 별자리 완성 → true (연쇄를 처음부터)
+     * 시전이 나감 (JobTraitsMore.chainCommit — 아크메이지): 연쇄 1 ~ 5 면 별 하나 (연쇄가 늘었을 때만 — 같은 스킬을 이어 쓰면 그대로). 다섯째 별이면 별자리 완성 → true
+     * (연쇄를 처음부터)
      */
     static boolean commit(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, int chain) {
         if (j == null || !AM.equals(j.id())) return false;
         ServerLevel level = sp.level();
-        if (surgeOn(sp) && !SURGE.equals(k.id()) && !CHAIN.equals(k.id()) && JobSkills.cooldownLeft(sp, CHAIN) > 0) {
-            JobSkills.clearCooldown(sp, CHAIN);
-            Vec3 tip = ArcmageSkills.wandTip(sp);
-            JobFx.starNode(level, tip, 0.42, 6, 2, 0.3, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
-            SkillFx.sparks(level, tip, GOLD, 8, 3);
-            SkillFx.play(level, "block.amethyst_cluster.break", sp.position(), 1.6, 0.9);
-        }
         List<Vec3> stars = STARS.computeIfAbsent(sp.getUUID(), u -> new ArrayList<>());
         if (chain <= 0) {
             stars.clear();
@@ -537,17 +521,10 @@ public final class JobTraits8 {
         }
     }
 
-    /** 태세 연출 (8틱마다 — JobTraits.stanceFx): 스펠 서지 = 몸 둘레를 도는 금빛 별 둘 · 완드 끝 별빛. 그렸으면 true */
+    /** 태세 연출 (8틱마다 — JobTraits.stanceFx): 셀레스티얼 오빗 = 완드 끝 별빛 (둘레를 도는 별 다섯은 ArcmageSkills.orbit 의 환영 별 판). 그렸으면 true */
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
-        if (!SURGE.equals(stance)) return false;
-        ServerLevel level = sp.level();
-        double a = Tasks.now() * 0.35;
-        for (int i = 0; i < 2; i++) {
-            double b = a + i * Math.PI;
-            Vec3 p = new Vec3(sp.getX() + Math.cos(b) * 0.85, sp.getY() + 1.1 + 0.25 * Math.sin(b * 2), sp.getZ() + Math.sin(b) * 0.85);
-            JobFx.starNode(level, p, 0.22, 2, 4, 0.45, true, JobFx.hide1p(sp).with("fade", 0.3, "vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
-        }
-        JobFx.starNode(level, ArcmageSkills.wandTip(sp), 0.16, 2, 4, 0.4, true, Opt.of("fade", 0.3, "vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
+        if (!ORBIT.equals(stance)) return false;
+        JobFx.starNode(sp.level(), ArcmageSkills.wandTip(sp), 0.18, 2, 4, 0.4, true, Opt.of("fade", 0.3, "vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
         return true;
     }
 

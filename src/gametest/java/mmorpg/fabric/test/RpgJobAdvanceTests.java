@@ -1130,7 +1130,7 @@ public final class RpgJobAdvanceTests {
 
     /**
      * 0.51.0 재설계안 2판 아크메이지 (2026-11-06): 스타 체인 (과녁 셋 사이를 튐 — 합 7) · 헤일로 배리어 (갈 때 · 올 때 4.2 · 돌려 받은 나에게 보호막) · 스타 볼텍스 (12.6 ·
-     * 밀 수 있는 적을 끌어당김) · 스펠 서지 (다른 스킬이 스타 체인을 돌려 놓음 · 연쇄가 8초) · 별자리 · 완드 평타 −0.3초 · 셀레스티얼 이글 (56)
+     * 밀 수 있는 적을 끌어당김) · 2026-11-07 3판 셀레스티얼 오빗 (1초마다 별 — 1.68 × 10) · 별자리 · 완드 평타 −0.3초 · 콘스텔레이션 (일곱 별빛 4 × 7 + 터짐 28)
      */
     @GameTest(environment = ENV_AM, maxTicks = 720)
     public void arcmageSkills(GameTestHelper h) {
@@ -1187,30 +1187,26 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스타 볼텍스 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             double d = Math.hypot(z.get(1).getX() - z.get(0).getX(), z.get(1).getZ() - z.get(0).getZ());
             h.assertTrue(d < 2.2 && RpgJobTests.near(TestDummies.dealt(z.get(1)), want), "vortex pulled the loose enemy in: " + d + " · " + TestDummies.dealt(z.get(1)));
-            // 스펠 서지 → 스타 체인 (재사용 대기 6초) → 헤일로 배리어: 스타 체인의 재사용 대기가 바로 돌아옴
+            // 셀레스티얼 오빗: 별 다섯이 둘레를 돎 — 10 부터 1초마다 가장 가까운 과녁에 별이 떨어져 터짐 (1.68 × 10)
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
             z.add(dummy(h, 0, 3));
+            RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
             JobTraitsMore.setChain(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 3), "스펠 서지 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "arcmage_surge") && JobTraits8.surgeOn(sp), "surge stance");
-            h.assertTrue(JobSkills.press(sp, 0), "스타 체인 (surge) cast");
-            h.assertTrue(JobSkills.cooldownLeft(sp, "arcmage_chain") > 0, "chain on cooldown");
+            h.assertTrue(JobSkills.press(sp, 3), "셀레스티얼 오빗 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "arcmage_orbit"), "orbit shown as a stance line");
         }));
-        steps.add(new RpgJobTests.Step(8, () -> {
-            h.assertTrue(JobSkills.press(sp, 1), "헤일로 배리어 (surge) cast");
-            h.assertTrue(JobSkills.cooldownLeft(sp, "arcmage_chain") == 0, "surge: another skill brought star chain back " + JobSkills.cooldownLeft(sp, "arcmage_chain"));
-            h.assertTrue(JobSkills.press(sp, 0), "스타 체인 again (surge) cast");
-            mark[0] = JobTraitsMore.chain(sp);
-            h.assertTrue(mark[0] >= 2, "chain grows: " + mark[0]);
+        steps.add(new RpgJobTests.Step(100, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 1.68 * 5);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "셀레스티얼 오빗 five stars " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
-        // 서지 동안 연쇄는 8초 (원래 4초) — 4.5초 뒤에도 그대로
-        steps.add(new RpgJobTests.Step(90, () -> {
-            h.assertTrue(JobTraitsMore.chain(sp) == (int) mark[0], "surge keeps the chain for 8 s: " + JobTraitsMore.chain(sp) + " vs " + mark[0]);
+        steps.add(new RpgJobTests.Step(100, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(3), 16.8);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "셀레스티얼 오빗 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!JobTraits.stanceOn(sp, "arcmage_orbit"), "orbit over");
             // 별자리 완성: 연쇄 4 · 별 넷 (과녁 둘레) → 다섯째 (스타 체인 — 연쇄 5 +60%) → 0.5초 뒤 별 다섯 × 2 + 선 × 1 → 연쇄 · 별은 처음부터
-            JobTraits.testEndStance(sp);
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 3));
@@ -1239,18 +1235,22 @@ public final class RpgJobAdvanceTests {
             long left = JobSkills.cooldownLeft(sp, "arcmage_chain");
             long el = mmorpg.fabric.Tasks.now() - (long) mark[1];
             h.assertTrue(left <= (long) mark[0] - el - 6 + 1, "wand hit cuts job cooldowns: " + mark[0] + " - " + el + " -> " + left);
-            // 셀레스티얼 이글: 6 × 4 + 32 = 56 (과녁 발밑 둘레를 도는 독수리)
+            // 콘스텔레이션: 과녁 위 하늘에 일곱 별 — 과녁 하나면 일곱 별빛이 다 그 과녁 (4 × 7 — 첫 별빛에 한 번) → 56 에 무너져 터짐 28
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 5));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
             JobTraitsMore.setChain(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 4), "셀레스티얼 이글 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "콘스텔레이션 cast");
         }));
-        steps.add(new RpgJobTests.Step(72, () -> {
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 28);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "콘스텔레이션 starlight (all seven on the lone dummy) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(48, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 56);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "셀레스티얼 이글 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "콘스텔레이션 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);

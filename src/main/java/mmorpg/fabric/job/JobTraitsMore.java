@@ -31,7 +31,7 @@ import net.minecraft.world.phys.Vec3;
  * half 이상이면 도끼 평타 피해 + halfBonus, 다 차면 + fullBonus (RpgCombat.basicMult). 파쇄격의 방어 깨짐 (맞는 쪽 배율 — RpgCombat.takenMult).
  * 투혼: 체력이 low 아래로 떨어지면 한 번 heal 회복 (RpgHealth.lossHook)</li>
  * <li>매지션 「주문 연쇄」: 직업 스킬을 쓰고 window 틱 안에 다른 직업 스킬을 쓰면 연쇄 +1 (최대 max — 하나당 피해 + perChain, JobSystem 이 위력에 곱함).
- * 0.51.0 각성 아크메이지 도 같은 연쇄 (최대 5 — 이은 스킬마다 별 · 다섯째에 별자리 완성: JobTraits8 · 스펠 서지 동안 이어지는 틱 8초: JobTraits8.chainWindow).
+ * 0.51.0 각성 아크메이지 도 같은 연쇄 (최대 5 — 이은 스킬마다 별 · 다섯째에 별자리 완성: JobTraits8 · 이어지는 틱: JobTraits8.chainWindow).
  * 완드 평타가 맞으면 직업 스킬 재사용 대기 wandCut 틱 줄어듦 (한 발 — 같은 틱 — 에 한 번). 마나 과부하 (태세): 완드 평타 사거리 + · 관통 광선 · 공격 간격 ×
  * cdScale, 끝나면 이동 느려짐</li>
  * <li>궁수 「호흡」 (0 ~ 5): 움직이지 않고 활을 쏘면 +1, 움직이는 동안 decay 틱마다 하나씩 줄어듦. 하나당 활 평타 피해 + perStack · 사거리 + rangePer.

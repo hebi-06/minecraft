@@ -129,7 +129,6 @@ public final class AddonFxTable {
         "rpg:rfx_jdmaw",
         "rpg:rfx_jdragon",
         "rpg:rfx_jdrop",
-        "rpg:rfx_jeagle",
         "rpg:rfx_jecho",
         "rpg:rfx_jeclipse",
         "rpg:rfx_jexcal",

@@ -105,7 +105,7 @@ public final class JobsTest {
             check(near(k.total(), 12 * j.scale()) && k.cd() == 30 && Jobs.upKeys(k).isEmpty() && !k.def().has("dur"), j.id() + " stance budget " + k.total() + " = 12 × "
                     + j.scale());
         }
-        check(stanceDamage == 9, "nine slot-3 damage skills (매지션 · 마검사 · 워로드 · 아케인 블레이드 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 · 소울 리퍼 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로) "
+        check(stanceDamage == 10, "ten slot-3 damage skills (매지션 · 마검사 · 워로드 · 아케인 블레이드 · 아크메이지 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 · 소울 리퍼 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로 · 아크메이지의 스펠 서지가 셀레스티얼 오빗으로) "
                 + stanceDamage);
 
         Jobs.Job sw = Jobs.job("swordsman");
@@ -959,52 +959,54 @@ public final class JobsTest {
         check(am.display().equals("아크메이지") && nc.display().equals("네크로맨서") && Jobs.find("아크메이지") == am && Jobs.find("나글파르") == null,
                 "mage display · find");
         for (int i : new int[] {0, 1, 2, 4}) check(near(am.skill(i).total(), mg.skill(i).total()) && near(nc.skill(i).total(), mg.skill(i).total()), "mage totals slot " + i);
-        // 0.51.0 재설계안 2판 (2026-11-06 사용자 "다음 작업" — 매지션 차례): 아크메이지 스타 체인 · 헤일로 배리어 · 스타 볼텍스 · 스펠 서지 · 셀레스티얼 이글,
-        // 네크로맨서 그레이브 콜 · 그레이브야드 · 소울 미스트 · 블라이트 (태세 칸 몫 12 × 1.4) · 팬텀 갤리온 — 부분 합 = 배율 합
+        // 0.51.0 재설계안 2판 (2026-11-06 사용자 "다음 작업" — 매지션 차례): 아크메이지 스타 체인 · 헤일로 배리어 · 스타 볼텍스 · 셀레스티얼 오빗 (태세 칸 몫) · 콘스텔레이션
+        // (2026-11-07 3판 — 스펠 서지 · 셀레스티얼 이글 대신), 네크로맨서 그레이브 콜 · 그레이브야드 · 소울 미스트 · 블라이트 (태세 칸 몫 12 × 1.4) · 팬텀 갤리온 — 부분 합 = 배율 합
         List<String> amIds = new ArrayList<>();
         List<String> ncIds = new ArrayList<>();
         for (Jobs.Skill k : am.skills()) amIds.add(k.id());
         for (Jobs.Skill k : nc.skills()) ncIds.add(k.id());
-        check(amIds.equals(List.of("arcmage_chain", "arcmage_halo", "arcmage_vortex", "arcmage_surge", "arcmage_ult"))
+        check(amIds.equals(List.of("arcmage_chain", "arcmage_halo", "arcmage_vortex", "arcmage_orbit", "arcmage_ult"))
                 && ncIds.equals(List.of("necromancer_call", "necromancer_yard", "necromancer_mist", "necromancer_blight", "necromancer_ult")), "mage advanced skill ids (2판)");
         Jobs.Skill ac = am.skill(0), ah = am.skill(1), av = am.skill(2), as = am.skill(3), au = am.skill(4);
         Jobs.Skill nk = nc.skill(0), ny = nc.skill(1), nm = nc.skill(2), nb = nc.skill(3), nu = nc.skill(4);
         check(near(ac.num("first", 0) + ac.num("jump", 0) * ac.num("jumps", 0), 7) && near(ah.num("out", 0) + ah.num("back", 0), 4.2)
-                && near(av.num("pulse", 0) * av.num("pulses", 0) + av.num("collapse", 0), 12.6) && near(au.num("beat", 0) * au.num("beats", 0) + au.num("dive", 0), 56),
+                && near(av.num("pulse", 0) * av.num("pulses", 0) + av.num("collapse", 0), 12.6) && near(au.num("star", 0) * au.num("stars", 0) + au.num("burst", 0), 56),
                 "arcmage totals 7 · 4.2 · 12.6 · 56");
         check(near(nk.num("smash", 0), 7) && near(ny.num("rise", 0) + ny.num("crumble", 0), 4.2) && near(nm.num("burst", 0) + nm.num("mist", 0) * nm.num("pulses", 0), 12.6)
                 && near(nu.num("ram", 0) + nu.num("slam", 0) + nu.num("final", 0), 56), "necromancer totals 7 · 4.2 · 12.6 · 56");
-        // 블라이트 = 태세 칸 몫 (30초 12 × 매지션 세기 1.4) · 직업 맞춤에서 뺌, 스펠 서지 = 강화 (배율 합 없음)
-        check(Jobs.stanceBudget(nb) && near(nb.total(), 16.8) && near(nb.num("tick", 0) * nb.num("ticks", 0), 16.8) && as.total() <= 0 && !Jobs.stanceBudget(as),
-                "블라이트 16.8 (태세 칸 몫) · 스펠 서지 강화");
+        // 블라이트 · 셀레스티얼 오빗 = 태세 칸 몫 (30초 12 × 매지션 세기 1.4) · 직업 맞춤에서 뺌
+        check(Jobs.stanceBudget(nb) && near(nb.total(), 16.8) && near(nb.num("tick", 0) * nb.num("ticks", 0), 16.8) && Jobs.stanceBudget(as) && near(as.total(), 16.8)
+                && near(as.num("shot", 0) * as.num("shots", 0), 16.8), "블라이트 · 셀레스티얼 오빗 16.8 (태세 칸 몫)");
         // 같은 적을 여러 번 치는 것은 10틱 넘게
-        check(av.num("every", 0) >= 10 && av.num("collapseAt", 0) - av.num("first", 0) - (av.num("pulses", 0) - 1) * av.num("every", 0) >= 10 && au.num("every", 0) >= 10
-                && au.num("diveAt", 0) - au.num("first", 0) - (au.num("beats", 0) - 1) * au.num("every", 0) >= 10 && ah.num("t", 0) - ah.num("w", 0) >= 10
-                && ac.num("perFoe", 0) == 2, "arcmage i-frame spacing");
+        // (콘스텔레이션의 별빛은 적마다 첫 별빛에 한 번 — 숫자만 별빛마다)
+        check(av.num("every", 0) >= 10 && av.num("collapseAt", 0) - av.num("first", 0) - (av.num("pulses", 0) - 1) * av.num("every", 0) >= 10 && as.num("every", 0) >= 10
+                && au.num("burstAt", 0) - au.num("w", 0) >= 10 && ah.num("t", 0) - ah.num("w", 0) >= 10 && ac.num("perFoe", 0) == 2, "arcmage i-frame spacing");
         check(ny.num("dur", 0) >= 10 && nm.num("first", 0) - nm.num("throwAt", 0) - nm.num("flight", 0) >= 10 && nm.num("every", 0) >= 10 && nb.num("every", 0) >= 10
                 && nu.num("dropAt", 0) - nu.num("emergeAt", 0) - nu.num("sail", 0) >= 10 && nu.num("finalAt", 0) - nu.num("dropAt", 0) >= 10, "necromancer i-frame spacing");
         // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 스타 체인은 과녁 하나면 두 번째가 무적 시간 뒤 12)
         check(near(ac.num("hitAt", 0) + 10, ac.num("t", 0)) && near(av.num("collapseAt", 0), av.num("t", 0)) && near(av.num("first", 0), av.num("w", 0))
-                && near(au.num("diveAt", 0), au.num("t", 0)) && near(au.num("first", 0), au.num("w", 0)), "arcmage t 12 · 70 · 60 (w 10 · 16)");
+                && near(as.num("first", 0) + (as.num("shots", 0) - 1) * as.num("every", 0), as.num("t", 0)) && near(as.num("first", 0), as.num("w", 0))
+                && near(au.num("burstAt", 0), au.num("t", 0)) && near(au.num("formAt", 0) + au.num("fall", 0), au.num("w", 0)), "arcmage t 12 · 70 · 190 · 56 (w 10 · 10 · 10)");
         check(near(nk.num("smashAt", 0), nk.num("t", 0)) && near(nk.num("smashAt", 0), nk.num("w", 0)) && near(ny.num("riseAt", 0) + ny.num("dur", 0), ny.num("t", 0))
                 && near(ny.num("riseAt", 0), ny.num("w", 0)) && near(nm.num("first", 0) + (nm.num("pulses", 0) - 1) * nm.num("every", 0), nm.num("t", 0))
                 && near(nm.num("throwAt", 0) + nm.num("flight", 0), nm.num("w", 0)) && near(nb.num("every", 0) * nb.num("ticks", 0), nb.num("t", 0))
                 && near(nb.num("every", 0), nb.num("w", 0)) && near(nu.num("finalAt", 0), nu.num("t", 0)) && near(nu.num("emergeAt", 0), nu.num("w", 0)),
                 "necromancer t 6 · 66 · 38 · 200 · 56 (w 6 · 6 · 8 · 10 · 10)");
-        // 특성: 아크메이지 = 매지션의 주문 연쇄 (같은 +12% · 완드 −0.3초) 최대 5 + 별자리 (스펠 서지 동안 이어지는 틱 160), 네크로맨서 = 망자의 군대 (최대 4 · 20초 · 위력 × 0.4 ·
-        // 1.5초마다) + 무덤 (10초)
+        // 특성: 아크메이지 = 매지션의 주문 연쇄 (같은 +12% · 완드 −0.3초) 최대 5 + 별자리, 네크로맨서 = 망자의 군대 (최대 4 · 20초 · 위력 × 0.4 · 1.5초마다) + 무덤 (10초)
         check(am.trait().name().equals(mg.trait().name()) && am.trait().max() == 5 && near(am.trait().def().numOr("perChain", 0), mg.trait().def().numOr("perChain", -1))
-                && near(am.trait().def().numOr("wandCut", 0), mg.trait().def().numOr("wandCut", -1)) && near(am.trait().def().numOr("star", 0), 2.0)
-                && near(as.num("window", 0), 2 * am.trait().def().numOr("window", 0)), "주문 연쇄 5 · 별자리 · 스펠 서지 8초");
+                && near(am.trait().def().numOr("wandCut", 0), mg.trait().def().numOr("wandCut", -1)) && near(am.trait().def().numOr("star", 0), 2.0), "주문 연쇄 5 · 별자리");
         check(nc.trait().name().equals("망자의 군대") && nc.trait().max() == 4 && near(nc.trait().def().numOr("crewFor", 0), 400) && near(nc.trait().def().numOr("crewHit", 0), 0.4)
                 && near(nc.trait().def().numOr("crewEvery", 0), 30) && near(nc.trait().def().numOr("graveFor", 0), 200), "망자의 군대 4 · 20초 · 위력 × 0.4 · 무덤 10초");
         // 유틸 · 범위: 헤일로 배리어 보호막 (15%) · 스타 볼텍스 끌당 · 그레이브야드 가둠 (10%) · 소울 미스트 둔화 · 그레이브 콜은 단일
         check(Jobs.utils(ah).equals(List.of("shield")) && near(Jobs.utilCost(ah), 0.15) && Jobs.utils(av).equals(List.of("pull")) && Jobs.utils(ny).equals(List.of("taunt"))
                 && near(Jobs.utilCost(ny), 0.1) && Jobs.utils(nm).equals(List.of("slow")) && Jobs.utils(au).equals(List.of("lift")) && Jobs.utils(nu).equals(List.of("knock"))
-                && "single".equals(Jobs.areaKind(nk)) && Jobs.areaKind(ac) == null, "mage advanced utils · area");
-        check(Jobs.windupTicks(au) == 16 && Jobs.windupTicks(nu) == 10 && Jobs.windupTicks(nk) == 6 && Jobs.windupTicks(nm) == 8, "windups 16 · 10 · 6 · 8");
-        check(Jobs.upKeys(as).size() == 1 && Jobs.upKey(as, "dur") != null && Jobs.upKeys(ah).isEmpty() && Jobs.upKeys(nb).isEmpty(), "up keys: surge dur only");
-        check(Jobs.skillLine(as).equals("스펠 서지 · 30초") && Jobs.skillLine(nk).startsWith("그레이브 콜 · 6초 · 배율 "), "mage advanced skill line");
+                && "single".equals(Jobs.areaKind(nk)) && Jobs.areaKind(ac) == null && "narrow".equals(Jobs.areaKind(as)) && Jobs.areaKind(au) == null,
+                "mage advanced utils · area");
+        check(Jobs.windupTicks(au) == 10 && Jobs.windupTicks(as) == 10 && Jobs.windupTicks(nu) == 10 && Jobs.windupTicks(nk) == 6 && Jobs.windupTicks(nm) == 8,
+                "windups 10 · 10 · 10 · 6 · 8");
+        check(Jobs.upKeys(as).isEmpty() && Jobs.upKeys(ah).isEmpty() && Jobs.upKeys(nb).isEmpty(), "up keys: none on the stance-budget slot");
+        check(Jobs.skillLine(as).startsWith("셀레스티얼 오빗 · 30초 · 배율 ") && Jobs.skillLine(au).startsWith("콘스텔레이션 · 60초 · 배율 ")
+                && Jobs.skillLine(nk).startsWith("그레이브 콜 · 6초 · 배율 "), "mage advanced skill line");
         check(am.color()[0][2] > 0.9 && am.color()[1][0] > 0.9 && nc.color()[0][1] > 0.85 && nc.color()[1][0] > 0.85 && nc.color()[1][2] > 0.6,
                 "colors: star blue · gold / poison green · bone");
     }

@@ -253,11 +253,11 @@ public final class FrostraiderSkills {
         if (t == null) t = Kit.pickTarget(sp, k.num("fallback", 6), 25);
         Vec3 dest;
         if (t != null) {
-            Vec3 d = V.flat(V.sub(c0, t.position()));
-            double len = Math.hypot(d.x, d.z);
-            Vec3 u = len > 0.05 ? V.scale(d, 1 / len) : new Vec3(0, 0, 1);
+            // (V.flat 은 단위 벡터 — 거리는 뺀 그대로에서: 2026-11-07 CI 42326836876 — 0.9칸만 날아 4칸 과녁에 닿지 않았음)
+            Vec3 d = V.sub(c0, t.position());
+            Vec3 u = Math.hypot(d.x, d.z) > 0.05 ? V.flat(d) : V.scale(Kit.facingOf(sp), -1);
             Vec3 want = V.add(t.position(), u, 1.1 + Kit.bodyPad(t));
-            Vec3 dir = V.flat(V.sub(want, c0));
+            Vec3 dir = new Vec3(want.x - c0.x, 0, want.z - c0.z);
             double dl = Math.hypot(dir.x, dir.z);
             double free = dl < 0.3 ? 0 : Kit.reachFlat(level0, c0, V.unit(dir), dl);
             Vec3 end = free > 0.3 ? V.add(c0, V.unit(dir), Math.max(0, free - 0.1)) : c0;

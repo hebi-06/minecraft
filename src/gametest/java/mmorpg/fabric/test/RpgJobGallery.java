@@ -234,16 +234,16 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /**
      * 0.51.0 아크메이지 · 네크로맨서 (재설계안 2판 — 2026-11-06): 스타 체인 (2 첫 번개 → 3틱마다 튐) · 헤일로 배리어 (4 던짐 · 10칸 · 19 돌아옴 → 받음) · 스타 볼텍스
-     * (4 펼쳐짐 · 10 ~ 60 별빛 · 70 무너짐 — 연쇄 4 + 별 넷이라 다섯째 별에 별자리) · 스펠 서지 (태세 → 완드 평타) · 셀레스티얼 이글 (4 나타남 · 16 ~ 46 날갯짓 · 54 솟구침 ·
-     * 60 내리꽂힘) / 그레이브 콜 (6 내리꽂힘 · 16 다시 눌러 무덤 셋에서 망자) · 그레이브야드 (6 솟음 · 66 무너짐) · 소울 미스트 (4 던짐 · 8 터짐 · 18 ~ 38 안개 — 망자 둘이
+     * (4 펼쳐짐 · 10 ~ 60 별빛 · 70 무너짐 — 연쇄 4 + 별 넷이라 다섯째 별에 별자리) · 2026-11-07 셀레스티얼 오빗 (별 다섯이 돎 · 10 · 30 · 50 · 70 별이 떨어져 터짐 —
+     * 땅에 별자리) · 콘스텔레이션 (8 ~ 44 하늘에 일곱 별 · 별빛 · 50 무너져 내림 · 56 터짐) / 그레이브 콜 (6 내리꽂힘 · 16 다시 눌러 무덤 셋에서 망자) · 그레이브야드 (6 솟음 · 66 무너짐) · 소울 미스트 (4 던짐 · 8 터짐 · 18 ~ 38 안개 — 망자 둘이
      * 표식으로 몰려듦) · 블라이트 (10틱마다 · 6초만 찍음) · 팬텀 갤리온 (10 솟음 · 14 ~ 34 나아감 · 30 선장이 뛰어내림 · 40 내려앉음 · 56 혼불)
      */
     private static final Case[] CASES_AM = {
         new Case(0, new int[] {2, 5, 9, 14, 20}, new int[] {5, 14}, 28, false),
         new Case(1, new int[] {3, 6, 10, 14, 18, 23}, new int[] {6, 14, 22}, 32, false),
         new Case(2, new int[] {4, 8, 20, 40, 64, 71}, new int[] {12, 40, 71}, 82, false),
-        new Case(3, new int[] {2, 8, 14}, new int[] {8}, 24, true, false, 13),
-        new Case(4, new int[] {4, 10, 16, 26, 36, 46, 52, 56, 60, 64, 72}, new int[] {16, 36, 54, 61}, 84, false),
+        new Case(3, new int[] {4, 10, 28, 30, 50, 70}, new int[] {10, 30, 70}, 80, false),
+        new Case(4, new int[] {6, 10, 20, 32, 44, 48, 52, 56, 60, 66}, new int[] {20, 44, 56}, 80, false),
     };
     private static final Case[] CASES_NC = {
         new Case(0, new int[] {2, 5, 7, 16, 20, 28}, new int[] {6, 20}, 36, false),
@@ -929,6 +929,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         return switch (id) {
             case "swordmaster_ult" -> new double[] {11.5, 3.0, 5.6, 0.4}; // 2026-11-07 엑스칼리버: 15칸 빛의 대검을 올려다봄 · 앞 24칸 검격
             case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3}; // 블레이드 에코: 둘레를 옮겨 다니다 처음 자리로 돌아옴 — 덜 따라감
+            case "arcmage_ult" -> new double[] {12.0, 3.6, 5.0, 0.4}; // 콘스텔레이션: 과녁 위 8.5칸 하늘의 국자 일곱 별 · 내리꽂히는 별빛 — 올려다봄
+            case "arcmage_orbit" -> new double[] {7.0, 2.8, 1.6, 0.6}; // 셀레스티얼 오빗: 둘레를 도는 별 · 과녁에 떨어지는 별똥 · 땅의 별자리
             case "frostraider_ult" -> new double[] {12.0, 3.4, 5.0, 0.4}; // 핌불윈터: 하늘의 빙하 도끼 (18칸 위) 가 내리꽂혀 빙하가 솟음 — 올려다봄
             case "frostraider_throw" -> new double[] {8.0, 3.0, 2.2, 0.6}; // 프로스트 바이트: 던져 박히고 되돌아오는 도끼가 다 보이게
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
