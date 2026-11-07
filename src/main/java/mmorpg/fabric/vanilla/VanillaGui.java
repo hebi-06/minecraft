@@ -236,13 +236,17 @@ public final class VanillaGui {
         return st;
     }
 
-    /** § 색 글자 (Stats.info color 등) → RGB */
+    /** 바닐라 § 색 (0 ~ f) 의 RGB */
+    private static final int[] LEGACY = {0x000000, 0x0000AA, 0x00AA00, 0x00AAAA, 0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA,
+            0x555555, 0x5555FF, 0x55FF55, 0x55FFFF, 0xFF5555, 0xFF55FF, 0xFFFF55, 0xFFFFFF};
+
+    /** § 색 글자 (Stats.info color 등 — 처음 나오는 색) → RGB */
     public static int legacyColor(String code, int def) {
         if (code == null) return def;
         for (int i = 0; i + 1 < code.length(); i++) {
             if (code.charAt(i) != '§') continue;
-            net.minecraft.ChatFormatting f = net.minecraft.ChatFormatting.getByCode(code.charAt(i + 1));
-            if (f != null && f.getColor() != null) return f.getColor();
+            int v = Character.digit(code.charAt(i + 1), 16);
+            if (v >= 0) return LEGACY[v];
         }
         return def;
     }
