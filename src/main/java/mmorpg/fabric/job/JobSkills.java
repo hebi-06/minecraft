@@ -317,6 +317,7 @@ public final class JobSkills {
 
     /** 칸들을 클라이언트에 (모드가 있는 클라이언트만) — 직업 · 레벨 · 무기가 바뀌면 부름 */
     public static void send(ServerPlayer sp) {
+        mmorpg.fabric.vanilla.VanillaInput.onJobBar(sp); // 모드 없는 클라이언트: 직업 스킬 모드 핫바 그림
         if (sp == null || sp.isRemoved() || !ServerPlayNetworking.canSend(sp, BarPayload.TYPE)) return;
         ServerPlayNetworking.send(sp, payload(sp));
     }

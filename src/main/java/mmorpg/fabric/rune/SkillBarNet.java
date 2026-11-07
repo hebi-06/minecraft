@@ -94,6 +94,7 @@ public final class SkillBarNet {
 
     /** 스킬 칸을 클라이언트에 (모드가 있는 클라이언트만) */
     public static void sendBar(ServerPlayer sp) {
+        mmorpg.fabric.vanilla.VanillaInput.onBar(sp); // 모드 없는 클라이언트: 룬 스킬 모드 핫바 그림
         if (sp == null || sp.isRemoved() || !ServerPlayNetworking.canSend(sp, BarPayload.TYPE)) return;
         List<ItemStack> list = new ArrayList<>(SkillBar.SIZE);
         for (ItemStack s : SkillBar.slots(sp)) list.add(s.copy());
@@ -102,6 +103,7 @@ public final class SkillBarNet {
 
     /** 룬 재사용 대기를 클라이언트에 (모드가 있는 클라이언트만) */
     public static void cooldown(ServerPlayer sp, String rune, int left, int total) {
+        mmorpg.fabric.vanilla.VanillaInput.cooldown(sp, rune, left); // 모드 없는 클라이언트: 바닐라 쿨타임 덮개 (스킬 모드 핫바 그림)
         if (sp == null || sp.isRemoved() || !ServerPlayNetworking.canSend(sp, CooldownPayload.TYPE)) return;
         ServerPlayNetworking.send(sp, new CooldownPayload(rune, Math.max(0, left), Math.max(0, total)));
     }

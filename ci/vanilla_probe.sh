@@ -50,7 +50,9 @@ if [ $up -eq 1 ]; then
   pcode=$?
   echo "[vanilla] probe client exit $pcode"
   grep -h "\[vanilla-client\]" ci-out/vanilla-client.txt | head -n 60
-  if grep -q "\[vanilla-probe\] done" "$dir/out.log" && grep -q "\[vanilla-client\] done" ci-out/vanilla-client.txt; then code=0; fi
+  grep -h "\[vanilla-probe\] check\|\[vanilla-probe\] skills" "$dir/out.log" | sed 's/^.*\[vanilla-probe\] /  /' | head -n 40
+  if grep -q "\[vanilla-probe\] done" "$dir/out.log" && grep -q "\[vanilla-client\] done" ci-out/vanilla-client.txt \
+      && ! grep -q "\[vanilla-probe\] check fail" "$dir/out.log"; then code=0; fi
 fi
 
 echo "stop" >&3

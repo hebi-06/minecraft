@@ -46,6 +46,9 @@ final class VanillaProbe {
         });
     }
 
+    /** 장면에 둔 몬스터 (스킬 시험 전에 치움 — 오래 두면 시험 사람을 침) */
+    private static final List<net.minecraft.world.entity.Entity> SPAWNED = new ArrayList<>();
+
     private static void scene(ServerPlayer p, int step) {
         if (p.isRemoved() || p.hasDisconnected()) {
             log("left at step " + step);
@@ -63,37 +66,113 @@ final class VanillaProbe {
                 run(server, "weather clear");
                 run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 15");
                 give(p);
-                say(p, "shot 01_hand");
-                next(p, 1, 60);
+                next(p, 1, 20); // 가방 내용은 틱 끝에 감 — 채팅 신호보다 늦음
             }
             case 1 -> {
-                say(p, "inv 02_inventory");
-                next(p, 2, 80);
+                say(p, "shot 01_hand");
+                next(p, 2, 40);
             }
             case 2 -> {
-                Block altar = BuiltInRegistries.BLOCK.getValue(Mmorpg.rpg("altar_scarecrow_king"));
-                if (altar != null) level.setBlockAndUpdate(new BlockPos(-2, y, 5), altar.defaultBlockState());
-                Monsters.spawnAt(level, "scarecrow", new Vec3(1.5, y, 6.5), 180F);
-                Monsters.spawnAt(level, "draugr", new Vec3(4.5, y, 8.5), 200F);
-                Monsters.spawnAt(level, "troll", new Vec3(-3.5, y, 10.5), 160F);
-                Monsters.spawnAt(level, "gulon", new Vec3(0.5, y, 12.5), 180F);
-                Dummy.spawnDummy(p);
-                say(p, "shot 03_world");
-                next(p, 3, 60);
+                say(p, "inv 02_inventory");
+                next(p, 3, 80);
             }
             case 3 -> {
-                say(p, "cam back");
-                next(p, 4, 30);
+                Block altar = BuiltInRegistries.BLOCK.getValue(Mmorpg.rpg("altar_scarecrow_king"));
+                if (altar != null) level.setBlockAndUpdate(new BlockPos(-2, y, 5), altar.defaultBlockState());
+                SPAWNED.add(Monsters.spawnAt(level, "scarecrow", new Vec3(1.5, y, 6.5), 180F));
+                SPAWNED.add(Monsters.spawnAt(level, "draugr", new Vec3(4.5, y, 8.5), 200F));
+                SPAWNED.add(Monsters.spawnAt(level, "troll", new Vec3(-3.5, y, 10.5), 160F));
+                SPAWNED.add(Monsters.spawnAt(level, "gulon", new Vec3(0.5, y, 12.5), 180F));
+                Dummy.spawnDummy(p);
+                next(p, 4, 40); // 모델 뼈가 붙고 첫 자세가 갈 때까지
             }
             case 4 -> {
+                say(p, "shot 03_world");
+                next(p, 5, 40);
+            }
+            case 5 -> {
+                say(p, "cam back");
+                next(p, 6, 30);
+            }
+            case 6 -> {
                 say(p, "shot 04_third");
-                next(p, 5, 60);
+                next(p, 7, 40);
+            }
+            case 7 -> {
+                say(p, "cam first");
+                for (net.minecraft.world.entity.Entity e : SPAWNED) if (e != null && !e.isRemoved()) e.discard();
+                SPAWNED.clear();
+                prepareSkills(p);
+                next(p, 8, 30);
+            }
+            case 8 -> {
+                say(p, "key f"); // 일반 → 룬 스킬
+                next(p, 9, 30);
+            }
+            case 9 -> {
+                check("rune mode", VanillaInput.mode(p) == VanillaInput.Mode.RUNE);
+                check("held slot 9", p.getInventory().getSelectedSlot() == VanillaInput.ANCHOR);
+                check("weapon moved to slot 9", p.getInventory().getItem(VanillaInput.ANCHOR).getItem() instanceof RpgWeaponItem);
+                say(p, "shot 05_rune_mode");
+                next(p, 10, 20);
+            }
+            case 10 -> {
+                say(p, "key 1"); // 룬 스킬 칸 1
+                next(p, 11, 12);
+            }
+            case 11 -> {
+                mmorpg.core.Runes.Rune r = mmorpg.fabric.rune.RuneItems.runeOf(mmorpg.fabric.rune.SkillBar.get(p, 0));
+                check("rune 1 cast (cooldown)", r != null && mmorpg.fabric.rune.RuneCast.cooldownLeft(p, r) > 0);
+                check("held slot still 9", p.getInventory().getSelectedSlot() == VanillaInput.ANCHOR);
+                say(p, "shot 06_cast");
+                next(p, 12, 30);
+            }
+            case 12 -> {
+                say(p, "key f"); // 룬 → 직업 스킬
+                next(p, 13, 30);
+            }
+            case 13 -> {
+                check("job mode", VanillaInput.mode(p) == VanillaInput.Mode.JOB);
+                say(p, "shot 07_job_mode");
+                next(p, 14, 20);
+            }
+            case 14 -> {
+                say(p, "key f"); // 직업 → 일반
+                next(p, 15, 30);
+            }
+            case 15 -> {
+                check("normal mode", VanillaInput.mode(p) == VanillaInput.Mode.NORMAL);
+                check("held slot back to 1", p.getInventory().getSelectedSlot() == 0);
+                check("weapon back in slot 1", p.getInventory().getItem(0).getItem() instanceof RpgWeaponItem);
+                say(p, "shot 08_normal");
+                next(p, 16, 40);
             }
             default -> {
                 say(p, "done");
                 log("done");
             }
         }
+    }
+
+    /** 스킬 시험 준비: 스탯 · 스킬 칸 룬 넷 (계열 앞 넷의 일반 등급) · 직업 (검사) · 체력 60% (하트 비율 확인) */
+    private static void prepareSkills(ServerPlayer p) {
+        for (String k : new String[]{"str", "dex", "vit", "int"}) mmorpg.fabric.RpgPlayers.setStat(p, k, 120);
+        int slot = 0;
+        for (String fam : mmorpg.core.Runes.FAMILY_ORDER) {
+            if (slot >= 4) break;
+            Item rune = BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.parse(mmorpg.core.Runes.runeId(fam, "common")));
+            if (rune == null || rune == net.minecraft.world.item.Items.AIR) continue;
+            mmorpg.fabric.rune.SkillBar.set(p, slot++, new ItemStack(rune));
+        }
+        mmorpg.fabric.job.JobSystem.setJob(p, "swordsman");
+        p.getInventory().setSelectedSlot(0);
+        p.connection.send(new net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(0));
+        p.setHealth(p.getMaxHealth() * 0.6F);
+        log("skills: runes " + slot + ", max health " + p.getMaxHealth() + ", health " + p.getHealth());
+    }
+
+    private static void check(String what, boolean ok) {
+        log("check " + (ok ? "ok" : "fail") + ": " + what);
     }
 
     private static void next(ServerPlayer p, int step, int ticks) {

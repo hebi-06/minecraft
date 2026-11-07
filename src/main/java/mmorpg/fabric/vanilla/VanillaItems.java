@@ -18,9 +18,11 @@ import net.minecraft.world.item.ItemUseAnimation;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.Consumable;
+import net.minecraft.world.item.component.UseCooldown;
 import net.minecraft.world.item.equipment.Equippable;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * RPG 아이템 (무기 · 갑옷 · 장신구 · 유물 · 재료 · 룬 · 뽑기권 · 동전 · 소환 알 · 제단 · 탈것 · 스탯 책 — 등록한 것 모두) 의 바닐라 대체.
@@ -64,6 +66,10 @@ final class VanillaItems {
         public void modifyBasePolymerItemStack(ItemStack out, ItemStack stack, PacketContext ctx, HolderLookup.Provider lookup) {
             Item item = stack.getItem();
             if (item instanceof RpgWeaponItem w && w.getUseDuration(stack, null) > 0) out.set(DataComponents.CONSUMABLE, HOLD);
+            // 쿨타임 묶음을 진짜 아이템의 것으로 (종이 묶음이 아니라 — 서버의 룬 · 무기 쿨타임 덮개가 이 아이템에 그려지게, 모드 클라이언트와 같음)
+            UseCooldown real = stack.get(DataComponents.USE_COOLDOWN);
+            out.set(DataComponents.USE_COOLDOWN, new UseCooldown(real != null ? real.seconds() : 0.01F,
+                    Optional.of(real != null ? real.cooldownGroup().orElse(BuiltInRegistries.ITEM.getKey(item)) : BuiltInRegistries.ITEM.getKey(item))));
             if (item instanceof RpgArmorItem armor) {
                 Equippable eq = out.get(DataComponents.EQUIPPABLE);
                 Item look = eq == null ? null : armorLook(armor.piece().type(), eq.slot());
