@@ -91,12 +91,12 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             new Shot("fb_06_mage_tower", -16, 94, 64, -42, 100, 32),
             new Shot("fb_07_guild", 12, 76, 54, 34, 80, 47),
             new Shot("fb_08_training", 76, 100, 46, 50, 73, 22),
-            new Shot("fb_09_market", 46, 90, 122, 46, 73, 88),
+            new Shot("fb_09_market", 46, 100, 114, 46, 72, 86),
             new Shot("fb_10_weaponsmith", -2, 76, 108, 12, 78, 94),
             new Shot("fb_11_west_avenue", -27, 75, 60, -90, 77, 60),
             new Shot("fb_12_south_avenue", 0, 75, 112, 0, 77, 160),
             new Shot("fb_13_town_aerial", 0, 130, 190, 0, 75, 40),
-            new Shot("fb_14_royal_hall", -18, 84, 18, -40, 80, -6));
+            new Shot("fb_14_royal_hall", -19, 81, -4, -34, 78, -6));
 
     /** only=fieldc: 거점 · 작은 마을 · 신전 · 세계수 (빈터 바이옴 — 나무 · 현무암 기둥에 묻히지 않는지) */
     private static final List<Shot> SHOTS_C = List.of(
@@ -114,8 +114,8 @@ public final class RpgFieldGallery implements FabricClientGameTest {
 
     /** 보이는 거리 (청크) — 12 는 CI 의 소프트웨어 그리기에서 사진마다 45초 안에 다 못 그림 (CI 42356359483) */
     private static final int VIEW = 8;
-    /** 사진마다 청크를 기다리는 최대 틱 */
-    private static final int CHUNK_WAIT = 1500;
+    /** 사진마다 청크를 기다리는 최대 틱 (다 그렸다는 신호는 CI 에서 끝내 오지 않음 — 45초면 사진은 다 차 있음, CI 42364178888) */
+    private static final int CHUNK_WAIT = 900;
 
     @Override
     public void runTest(ClientGameTestContext ctx) {
@@ -183,21 +183,12 @@ public final class RpgFieldGallery implements FabricClientGameTest {
         // 실제 청크: 섬 가운데 · 바다 · 거점의 땅 블록 (나무 밑 흙 · 눈 덮임 허용) · 바이옴 칸
         FieldTerrain.Column c = new FieldTerrain.Column();
         List<int[]> probes = new ArrayList<>();
+        // 짓는 것이 덮지 않은 칸만 (CI 42359496849: 항구 건물 칸 · CI 42364178888: 마을 섬 칸이 새 마을 줄집 자리)
         for (FieldPlan.Island is : plan.islands) {
-            probes.add(new int[] {(int) is.x() + 37, (int) is.z() - 23});
+            probe(probes, (int) is.x(), (int) is.z(), new int[][] {{37, -23}, {-160, 40}, {120, -180}, {-60, 200}, {200, 160}});
             probes.add(new int[] {(int) (is.x() + is.radius() * 1.6), (int) is.z()});
         }
-        for (FieldPlan.Site site : plan.sites("camp")) {
-            // 거점 둘레의 빈 땅 (짓는 것이 덮지 않은 칸 — CI 42359496849: 항구 건물 칸을 재서 실패)
-            for (int[] o : new int[][] {{5, 5}, {-6, 7}, {8, -6}, {-9, -9}, {12, 0}}) {
-                int px = (int) site.x() + o[0];
-                int pz = (int) site.z() + o[1];
-                if (!covered(px, pz)) {
-                    probes.add(new int[] {px, pz});
-                    break;
-                }
-            }
-        }
+        for (FieldPlan.Site site : plan.sites("camp")) probe(probes, (int) site.x(), (int) site.z(), new int[][] {{5, 5}, {-6, 7}, {8, -6}, {-9, -9}, {12, 0}});
         List<String> bad = new ArrayList<>();
         for (int[] p : probes) {
             level.getChunk(p[0] >> 4, p[1] >> 4);
@@ -244,6 +235,16 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             BlockPos at = BlockPos.containing(m.x(), m.y(), m.z());
             level.getChunk(at.getX() >> 4, at.getZ() >> 4);
             check(level.getBlockState(at).is(Blocks.LODESTONE), "waystone stone at " + at.toShortString() + " = " + level.getBlockState(at));
+        }
+    }
+
+    /** (x, z) + 어긋남 가운데 짓는 것이 덮지 않은 첫 칸을 확인 목록에 */
+    static void probe(List<int[]> probes, int x, int z, int[][] offsets) {
+        for (int[] o : offsets) {
+            if (!covered(x + o[0], z + o[1])) {
+                probes.add(new int[] {x + o[0], z + o[1]});
+                return;
+            }
         }
     }
 

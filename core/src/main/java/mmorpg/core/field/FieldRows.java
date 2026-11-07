@@ -13,10 +13,10 @@ final class FieldRows {
     /** 차림: 아래층 돌 · 기둥 (세로 통나무) · 들보 (가로 통나무) · 회벽 · 지붕 계단 · 용마루 · 문 · 덧창 · 받침 계단 */
     record Facade(String base, String post, String beam, String infill, String roof, String ridge, String door, String trap, String stair) {}
 
-    /** 차림 여덟 — 흰 회벽 · 벽돌 · 진흙 벽돌 · 사암, 지붕은 짙은 기와 · 짙은 참나무 · 벽돌 · 가문비 (무지개처럼 섞이지 않게 차분한 색만) */
+    /** 차림 여덟 — 흰 회벽 (흰 콘크리트 · 방해석) · 벽돌 · 진흙 벽돌 · 사암 · 자작 · 창백한 참나무, 지붕은 짙은 기와 · 짙은 참나무 · 벽돌 · 가문비 (무지개처럼 섞이지 않게 차분한 색만 — 흰 테라코타는 분홍빛이라 뺌) */
     static final Facade[] FACADES = {
         new Facade("minecraft:stone_bricks|minecraft:cobblestone|minecraft:stone_bricks", "minecraft:dark_oak_log", "minecraft:stripped_dark_oak_log",
-                "minecraft:white_terracotta", "minecraft:deepslate_tile_stairs", "minecraft:deepslate_tiles", "minecraft:dark_oak_door",
+                "minecraft:white_concrete", "minecraft:deepslate_tile_stairs", "minecraft:deepslate_tiles", "minecraft:dark_oak_door",
                 "minecraft:dark_oak_trapdoor", "minecraft:dark_oak_stairs"),
         new Facade("minecraft:cobblestone|minecraft:mossy_cobblestone|minecraft:cobblestone", "minecraft:spruce_log", "minecraft:stripped_spruce_log",
                 "minecraft:calcite", "minecraft:dark_oak_stairs", "minecraft:dark_oak_planks", "minecraft:spruce_door", "minecraft:spruce_trapdoor",
@@ -30,7 +30,7 @@ final class FieldRows {
         new Facade("minecraft:polished_andesite", "minecraft:dark_oak_log", "minecraft:stripped_dark_oak_log", "minecraft:mud_bricks",
                 "minecraft:deepslate_tile_stairs", "minecraft:deepslate_tiles", "minecraft:dark_oak_door", "minecraft:dark_oak_trapdoor",
                 "minecraft:dark_oak_stairs"),
-        new Facade("minecraft:cobblestone|minecraft:stone_bricks", "minecraft:oak_log", "minecraft:stripped_oak_log", "minecraft:white_terracotta",
+        new Facade("minecraft:cobblestone|minecraft:stone_bricks", "minecraft:oak_log", "minecraft:stripped_oak_log", "minecraft:birch_planks",
                 "minecraft:dark_oak_stairs", "minecraft:dark_oak_planks", "minecraft:oak_door", "minecraft:oak_trapdoor", "minecraft:oak_stairs"),
         new Facade("minecraft:stone_bricks|minecraft:mossy_stone_bricks|minecraft:stone_bricks", "minecraft:spruce_log", "minecraft:stripped_spruce_log",
                 "minecraft:pale_oak_planks", "minecraft:brick_stairs", "minecraft:bricks", "minecraft:spruce_door", "minecraft:spruce_trapdoor",

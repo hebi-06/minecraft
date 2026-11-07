@@ -172,17 +172,17 @@ final class FieldLandmarks {
                 return Math.floorMod(ix, 2) == 0 && z > 0.5 ? "minecraft:quartz_pillar[axis=y]" : SQ;
             }
         }
-        // 날개 (등 뒤로 젖힘 · 위로 솟고 끝은 아래로 · 깃털 줄)
+        // 날개: 어깨 뒤에서 위 · 바깥으로 솟아 끝이 머리 위까지 (앞에서 몸을 가리지 않게 좁게 · 뒤로 젖힘 — CI 42364178888 사진: 넓게 편 날개가 흰 벽처럼 보임)
         double ax = Math.abs(x);
-        if (ax >= 1.0 && ax <= 10.5) {
-            double zw = -1.6 - 0.24 * ax;
-            if (Math.abs(z - zw) <= 0.55) {
-                double t = (ax - 1.0) / 9.5;
-                double topEdge = 16.0 + 9.0 * Math.sin(t * Math.PI * 0.62) - (t > 0.82 ? (t - 0.82) * 22 : 0);
-                double botEdge = 12.5 - 8.0 * t;
+        if (ax >= 1.0 && ax <= 7.5 && y >= 11) {
+            double u = (ax - 1.0) / 6.5;
+            double zw = -1.5 - 2.2 * u;
+            if (Math.abs(z - zw) <= 0.6) {
+                double topEdge = 16.5 + 11.0 * Math.pow(u, 0.8);
+                double botEdge = 12.0 + 12.5 * Math.pow(u, 1.3);
                 if (y >= botEdge && y <= topEdge) {
-                    int band = (int) Math.floor((y - botEdge) / 1.6 + ax * 0.6);
-                    return Math.floorMod(band, 3) == 0 ? SQ : "minecraft:calcite";
+                    int band = (int) Math.floor((topEdge - y) / 1.8);
+                    return Math.floorMod(band, 2) == 0 ? SQ : "minecraft:calcite";
                 }
             }
         }
