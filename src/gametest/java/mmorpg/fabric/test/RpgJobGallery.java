@@ -947,6 +947,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "executioner_chains" -> new double[] {8.5, 3.0, 1.6, 0.5}; // 체인 오브 저지먼트: 과녁을 묶은 사슬 · 땅을 타고 달려가는 세로 검기
             case "executioner_knell" -> new double[] {7.0, 2.8, 2.0, 0.6}; // 데스 넬: 머리 위 망령 종
             case "soulreaper_scythe" -> new double[] {8.0, 3.0, 1.8, 0.6}; // 스펙트럴 사이스: 머리 위 영혼 낫날 · 둘레 5칸 휩쓸기
+            case "warlock_ult" -> new double[] {12.0, 3.4, 4.2, 0.4}; // 2026-11-07 블러드 뱅큇: 웅덩이 위 하늘에서 커지는 거대한 심장 (8칸까지) — 올려다봄
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
             case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};

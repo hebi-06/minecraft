@@ -1,6 +1,7 @@
 package mmorpg.fabric.client;
 
 import mmorpg.fabric.RpgNet;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.fog.FogData;
 
@@ -39,8 +40,25 @@ public final class UltFx {
     private static float flashHold;
     private static float flashOut;
 
+    /**
+     * 2026-11-07 시계 = 클라이언트 틱 (+ 틱 사이 몫) × 50ms — 벽시계 대신: 영상 (틱마다 한 장을 찍느라 실제 시간이 틱보다 몇 배 빨리 흐름) 에서 하늘빛 · 번쩍임 ·
+     * 테두리 빛이 일찍 걷혔음 (미러 월드 · 블러드 뱅큇의 하늘빛이 터지기 전에 걷힘 — 서버가 정한 틱보다 짧게 보였음). 게임에서는 20틱/초라 같음 (멈춤 창에서는 멈춤)
+     */
+    private static long ticks;
+
+    /** 클라이언트 틱마다 (MmorpgClient END_CLIENT_TICK) */
+    public static void tick() {
+        ticks++;
+    }
+
     private static long nowMs() {
-        return System.nanoTime() / 1_000_000L;
+        float pt = 0;
+        try {
+            pt = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        } catch (RuntimeException ignored) {
+            // 아직 게임이 뜨기 전
+        }
+        return Math.round((ticks + Math.max(0, Math.min(1, pt))) * 50.0);
     }
 
     /** 하늘빛 패킷: ticks 0 이면 (같은 표의 하늘빛만) 걷음 */

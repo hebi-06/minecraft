@@ -143,6 +143,7 @@ public final class MmorpgClient implements ClientModInitializer {
             ClientSmith.clear(); // 0.44.0 대장장이 전용 창
         });
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            UltFx.tick(); // 2026-11-07 하늘빛 · 번쩍임의 시계 (틱)
             while (statsKey.consumeClick()) {
                 if (client.player == null || client.gui.screen() != null) continue;
                 if (ClientRpgState.synced()) client.gui.setScreen(new StatScreen());

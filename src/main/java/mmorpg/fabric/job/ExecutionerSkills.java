@@ -263,9 +263,11 @@ final class ExecutionerSkills {
                 SkillFx.sparks(lv, c, VIOLET_CORE, 2, 1.5);
             });
         }
-        // 모여 베어 올림
+        // 모여 베어 올림 (몸이 다시 보임 — 투명 효과를 직접 뗌: 효과의 남은 틱은 몸이 틱을 돌아야 줄어듦)
         RuneKit.later(fly, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
+            MobEffectInstance inv = sp.getEffect(MobEffects.INVISIBILITY);
+            if (inv != null && !inv.isInfiniteDuration() && inv.getDuration() <= fly + 2) sp.removeEffect(MobEffects.INVISIBILITY);
             ServerLevel lv = sp.level();
             Vec3 c = sp.position();
             for (int i = 0; i < 6; i++) {

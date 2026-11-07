@@ -382,11 +382,15 @@ final class WarlockSkills {
 
     // ------------------------------------------------------------ 블러드 뱅큇
 
+    /** 블러드 뱅큇의 거대한 심장 solo 번호 (주인마다 한 장 — 고동마다 다시 그려도 겹친 두 장 없이) */
+    static final double HEART_SOLO = 181.0;
+
     /**
-     * 블러드 뱅큇 (롤 블라디미르 R): 피의 잔치 (rpg:ult_feast) — 겨눈 곳 (range 칸 — 겨눈 적 · 조준한 땅 · 없으면 앞 fallback 칸) 둘레 radius 칸에 핏물이 번지고 first
-     * 틱 그 안의 적들에게 피의 역병 (plague 틱 받는 피해 + vuln · 머리 위 피의 심장) → first 틱부터 every 틱마다 beats 번 심장이 고동침 (beat — 마법 · 새로 들어온 적도 역병)
-     * → feastAt 틱 둘레 feastRadius 칸 아군 (나 빼고) 의 체력 feast 씩 빼앗아 (floor 아래는 빼지 않음) 가운데 큰 심장으로 → burstAt 틱 모든 심장이 한꺼번에 터짐 (burst ×
-     * (1 + 빼앗은 아군 × feastUp · 강화) — 큰 숫자 · 핏물 기둥)
+     * 블러드 뱅큇 (롤 블라디미르 R — 2026-11-07 3판 직업 스킬 도감 표시 고침: 사용자 메모 "생긴게 너무 약해보임" → 숫자 · 틱은 그대로, 그림을 크게): 핏빛 하늘
+     * (rpg:ult_feast) — 겨눈 곳 (range 칸 — 없으면 앞 fallback 칸) 둘레 radius 칸에 핏물 웅덩이가 번지고 그 위 하늘에 거대한 피의 심장이 맺힘 → first 틱부터 every
+     * 틱마다 beats 번 심장이 고동침 (웅덩이 안 적들에게 beat · 처음 맞을 때 피의 역병 — plague 틱 받는 피해 + vuln · 머리 위 작은 심장): 고동마다 적들의 몸에서 핏줄기가
+     * 심장으로 빨려 들고 웅덩이 가장자리에서 핏물 기둥이 솟으며 심장이 커짐 → feastAt 틱 둘레 feastRadius 칸 아군 (나 빼고) 의 체력 feast 씩 빼앗아 심장에 먹임 (아군
+     * 하나당 터짐 + feastUp — 더 커짐) → burstAt 틱 심장이 터져 핏물 기둥이 두 겹 고리로 솟고 핏비가 쏟아짐 (burst — 큰 숫자)
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         ServerLevel level0 = sp.level();
@@ -408,7 +412,10 @@ final class WarlockSkills {
         }
         if (center == null) center = ground(level0, V.add(c0, Kit.facingOf(sp), k.num("fallback", 6)));
         Vec3 mid = center;
-        Vec3 bigHeart = V.up(mid, 3.4);
+        // 거대한 심장: 웅덩이 가운데 위 (아래 끝이 적들의 머리 위 — 커질수록 위로) · 고동마다 커짐 (1.8 → 4.2 · 먹인 아군만큼 더)
+        double[] size = {1.8};
+        java.util.function.DoubleFunction<Vec3> heartAt = sz -> V.up(mid, 3.2 + sz * 0.62);
+        double owner = sp.getId();
         Ult.sky(level0, c0, "rpg:ult_feast", burstAt + 30);
         JobFx14.pool(level0, V.up(mid, 0.05), r, 0, 2, 0.5, false, Opt.of("alpha", 0.95), BLOOD, BLOOD_CORE);
         RuneKit.later(10, () -> {
@@ -416,23 +423,50 @@ final class WarlockSkills {
             if (RuneKit.sameLife(sp, life)) JobFx14.pool(sp.level(), V.up(mid, 0.05), r, 2, 4, (burstAt - 10 + 4) / 20.0, true, Opt.of("alpha", 0.9, "fade", 0.08), BLOOD,
                     BLOOD_CORE);
         });
-        JobFx.smoke(level0, V.up(mid, 0.8), r * 0.6, BLOOD, BLOOD_CORE, 1.4, Opt.of("alpha", 0.45, "dir", V.UP, "speed", 0.6));
+        // 피어오르는 핏빛 안개 · 홀에서 웅덩이로 핏줄
+        JobFx.smoke(level0, V.up(mid, 0.8), r * 0.7, BLOOD, BLOOD_CORE, 1.6, Opt.of("alpha", 0.5, "dir", V.UP, "speed", 0.6));
         JobFx.line(level0, tip(sp), V.up(mid, 0.5), BLOOD, BLOOD_CORE, 0.35, Opt.of("alpha", 0.8));
         JobFx.aura(sp, j, 3.0, 1.0, 1.0);
         JobFx.eyeRing(sp, j, 2.4, 1.1, 0.5);
+        // 심장이 맺힘 (0 장 — 핏물이 감겨 모임): 웅덩이에서 핏방울이 솟아 하늘로 모여 듦
+        JobFx14.heart(level0, heartAt.apply(size[0]), size[0], 0, 1, (first + 1) / 20.0, false, Opt.of("solo", HEART_SOLO, "owner", owner, "fade", 0.0, "spin", 0.0),
+                BLOOD, BLOOD_CORE);
+        for (int q = 0; q < 10; q++) {
+            double a = q * JobTraits14.TAU / 10;
+            Vec3 from = V.add(V.up(mid, 0.2), new Vec3(Math.cos(a), 0, Math.sin(a)), r * (0.35 + 0.5 * Kit.rand()));
+            JobFx.soulFly(level0, from, heartAt.apply(size[0]), 10 + q * 0.6, 0.24, BLOOD, BLOOD_CORE, Opt.empty());
+        }
         SkillFx.play(level0, "entity.warden.heartbeat", c0, 0.8, 1.0);
         SkillFx.play(level0, "entity.wither.ambient", mid, 0.6, 0.5);
+        SkillFx.play(level0, "block.bubble_column.upwards_inside", mid, 0.7, 1.0);
         List<LivingEntity> marked = new ArrayList<>();
         int plague = (int) k.num("plague", 72);
         double vuln = k.num("vuln", 0.1);
         for (int i = 0; i < beats; i++) {
             int ii = i;
-            RuneKit.later(first + i * every, () -> {
+            int at = first + i * every;
+            int next = i < beats - 1 ? every : feastAt - at;
+            RuneKit.later(at, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
+                // 고동: 심장이 크게 부풀었다가 (5 장 — 2틱) 커진 채로 고동침 (1 ~ 4 이어 돌림) · 웅덩이가 금빛으로 맥동 · 땅을 타고 퍼지는 고리 · 가장자리에서 핏물 기둥 넷
+                size[0] = 1.8 + 0.8 * (ii + 1);
+                Vec3 hc = heartAt.apply(size[0]);
+                JobFx14.heart(lv, hc, size[0] * 1.15, 5, 1, 0.12, false, Opt.of("solo", HEART_SOLO, "owner", owner, "fade", 0.0, "spin", 0.0), BLOOD, BLOOD_CORE);
+                double sz = size[0];
+                RuneKit.later(2, () -> {
+                    if (RuneKit.sameLife(sp, life)) JobFx14.heart(sp.level(), hc, sz, 1, 4, (next - 2 + 1) / 20.0, true, Opt.of("solo", HEART_SOLO, "owner", owner, "fade",
+                            0.0, "spin", 0.0), BLOOD, BLOOD_CORE);
+                });
                 SkillFx.play(lv, "entity.warden.heartbeat", mid, 0.9 - ii * 0.05, 1.0);
+                SkillFx.play(lv, "entity.warden.heartbeat", hc, 0.7 - ii * 0.05, 0.7);
                 JobFx14.pool(lv, V.up(mid, 0.07), r, 5, 1, 0.3, false, Opt.of("alpha", 0.6), WGOLD, WGOLD_CORE);
-                int left = burstAt - (first + ii * every);
+                SkillFx.shock(lv, V.up(mid, 0.1), BLOOD, r * 1.2, 0.45);
+                for (int g = 0; g < 4; g++) {
+                    double a = g * JobTraits14.TAU / 4 + ii * 0.8;
+                    JobFx14.geyser(lv, ground(lv, V.add(mid, new Vec3(Math.cos(a), 0, Math.sin(a)), r * 0.85)), 2.6 + ii * 0.6, 0, 7, 0.6, Opt.empty(), BLOOD, BLOOD_CORE);
+                }
+                int left = burstAt - at;
                 for (LivingEntity e : Kit.around(sp, mid, r, 4)) {
                     if (!e.isAlive() || e.isRemoved()) continue;
                     if (!marked.contains(e)) {
@@ -443,8 +477,12 @@ final class WarlockSkills {
                             true, Opt.of("vel", RuneKit.entVel(e)), BLOOD, BLOOD_CORE);
                     JobKit.strike(sp, e, j, P, k.num("beat", 2), true, false, life, 0, d -> {
                         if (e.level() instanceof ServerLevel el) {
-                            JobFx.burst(el, Kit.bodyPoint(e), 0.6 + Kit.bodyPad(e) * 0.3, BLOOD, BLOOD_CORE, 0.25, Opt.of("vel", RuneKit.entVel(e)));
-                            JobFx.beam(el, Kit.bodyPoint(e), V.up(mid, 0.3), BLOOD, BLOOD_CORE, 2.0, 0.25, Opt.of("alpha", 0.6));
+                            // 적의 몸에서 핏줄기가 하늘의 심장으로 빨려 듦 (굵은 핏빛 줄 · 핏방울 셋)
+                            Vec3 b = Kit.bodyPoint(e);
+                            JobFx.burst(el, b, 0.7 + Kit.bodyPad(e) * 0.3, BLOOD, BLOOD_CORE, 0.25, Opt.of("vel", RuneKit.entVel(e)));
+                            JobFx.beam(el, b, hc, BLOOD, BLOOD_CORE, 2.0, 0.3, Opt.of("alpha", 0.75));
+                            for (int q = 0; q < 3; q++) JobFx.soulFly(el, V.add(b, new Vec3((Kit.rand() - 0.5) * 0.6, (Kit.rand() - 0.5) * 0.6, (Kit.rand() - 0.5) * 0.6)),
+                                    hc, 9 + q * 1.5, 0.22, BLOOD, BLOOD_CORE, Opt.empty());
                         }
                     });
                 }
@@ -454,39 +492,71 @@ final class WarlockSkills {
         RuneKit.later(feastAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            fed[0] = JobTraits14.feast(sp, j, bigHeart, k.num("feastRadius", 10), k.num("feast", 0.15));
-            JobFx14.heart(lv, bigHeart, 2.0 + fed[0] * 0.3, 0, 5, (burstAt - feastAt) / 20.0, false, Opt.of("alpha", 1.0), BLOOD, BLOOD_CORE); // 영상 1: 1.4 는 과녁만 했음
-            JobFx.line(lv, tip(sp), bigHeart, BLOOD, BLOOD_CORE, 0.3, Opt.of("alpha", 0.8));
+            // 잔치: 아군의 피를 먹고 심장이 가장 크게 (고동 셋 뒤 4.2 + 아군 하나당 0.5 — 넷까지) · 심장 아래 금빛 고리 · 핏빛 안개
+            fed[0] = JobTraits14.feast(sp, j, heartAt.apply(size[0]), k.num("feastRadius", 10), k.num("feast", 0.15));
+            size[0] = 1.8 + 0.8 * beats + 0.5 * Math.min(4, fed[0]);
+            Vec3 hc = heartAt.apply(size[0]);
+            JobFx14.heart(lv, hc, size[0], 1, 4, (burstAt - 2 - feastAt + 1) / 20.0, true, Opt.of("solo", HEART_SOLO, "owner", owner, "fade", 0.0, "spin", 0.0, "fps", 16.0),
+                    BLOOD, BLOOD_CORE); // 터지기 전 빠르게 고동침
+            JobFx.halo(lv, V.up(hc, -size[0] * 0.55), size[0] * 0.9, j, (burstAt - feastAt) / 20.0, Opt.of("alpha", 0.8));
+            JobFx.smoke(lv, hc, size[0] * 0.8, BLOOD, BLOOD_CORE, 0.5, Opt.of("alpha", 0.55));
+            JobFx.line(lv, tip(sp), hc, BLOOD, BLOOD_CORE, 0.3, Opt.of("alpha", 0.8));
             SkillFx.play(lv, "entity.warden.heartbeat", mid, 0.6, 1.0);
+            SkillFx.play(lv, "entity.warden.heartbeat", hc, 0.5, 1.0);
             if (fed[0] > 0) JobSystem.note(sp, "§4블러드 뱅큇 §7— 아군 " + fed[0] + " · 터짐 +" + Math.round(fed[0] * JobUpgrades.num(sp, k, "feastUp", 0.15) * 100) + "%");
+        });
+        // 터지기 직전 (burstAt − 2): 심장이 크게 부풂 (5 장)
+        RuneKit.later(burstAt - 2, () -> {
+            if (RuneKit.sameLife(sp, life)) JobFx14.heart(sp.level(), heartAt.apply(size[0]), size[0] * 1.2, 5, 1, 0.12, false, Opt.of("solo", HEART_SOLO, "owner", owner,
+                    "fade", 0.0, "spin", 0.0), BLOOD, BLOOD_CORE);
         });
         JobKit.motionLater(sp, "warlock_ult:burst", burstAt - 4, life);
         RuneKit.later(burstAt, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
             double mult = k.num("burst", 18) * (1 + fed[0] * JobUpgrades.num(sp, k, "feastUp", 0.15));
-            JobFx14.heart(lv, bigHeart, 3.2 + fed[0] * 0.35, 5, 3, 0.5, false, Opt.empty(), BLOOD, BLOOD_CORE);
+            double big = size[0] * 1.45;
+            Vec3 hc = heartAt.apply(size[0]);
+            // 터짐: 거대한 심장이 터짐 (6 · 7 장) · 하늘에서 터지는 핏빛 · 금빛 빛 · 땅을 휩쓰는 두 겹 고리 · 웅덩이가 빨려 듦 · 화면 번쩍임
+            JobFx14.heart(lv, hc, big, 6, 2, 0.6, false, Opt.of("solo", HEART_SOLO, "owner", owner, "fade", 0.3, "spin", 0.0), BLOOD, BLOOD_CORE);
+            JobFx.burst(lv, hc, size[0] * 1.3, BLOOD, BLOOD_CORE, 0.5, Opt.empty());
+            JobFx.burst(lv, hc, size[0] * 0.9, WGOLD, WGOLD_CORE, 0.4, Opt.empty());
             JobFx14.pool(lv, V.up(mid, 0.06), r, 6, 2, 0.6, false, Opt.of("alpha", 0.9), BLOOD, BLOOD_CORE);
-            RuneKit.novaRing(lv, mid, 0.8, r * 1.4 / 0.8 - 1, BLOOD, BLOOD_CORE, Opt.of("life", 0.5));
+            RuneKit.novaRing(lv, mid, 0.8, r * 1.6 / 0.8 - 1, BLOOD, BLOOD_CORE, Opt.of("life", 0.55));
+            RuneKit.novaRing(lv, hc, 0.8, size[0] * 1.6 / 0.8 - 1, BLOOD, BLOOD_CORE, Opt.of("life", 0.45, "dir", V.UP));
+            SkillFx.shock(lv, V.up(mid, 0.1), BLOOD, r * 2.0, 0.6);
             Ult.flash(lv, mid, BLOOD_CORE, Opt.empty(), sp);
-            SkillFx.sparks(lv, bigHeart, BLOOD_CORE, 30, 8.0);
-            SkillFx.play(lv, "entity.generic.explode", mid, 0.7, 1.0);
-            SkillFx.play(lv, "entity.warden.sonic_boom", mid, 1.2, 0.5);
+            SkillFx.sparks(lv, hc, BLOOD_CORE, 40, 9.0);
+            SkillFx.play(lv, "entity.generic.explode", mid, 0.6, 1.0);
+            SkillFx.play(lv, "entity.warden.sonic_boom", mid, 1.0, 0.6);
+            SkillFx.play(lv, "entity.warden.roar", mid, 0.7, 0.6);
             SkillFx.play(lv, "entity.generic.splash", mid, 0.5, 1.0);
+            // 핏물 기둥 두 겹 고리 (바깥 열 · 안 여섯 — 높게) · 핏비 (심장 자리에서 사방으로 쏟아져 떨어지는 핏방울)
+            for (int i = 0; i < 10; i++) {
+                double a = i * JobTraits14.TAU / 10 + 0.3;
+                Vec3 p = ground(lv, V.add(mid, new Vec3(Math.cos(a), 0, Math.sin(a)), r * 0.95));
+                JobFx14.geyser(lv, p, 4.6 + Kit.rand() * 1.4, 0, 7, 0.8, Opt.empty(), BLOOD, BLOOD_CORE);
+            }
             for (int i = 0; i < 6; i++) {
-                double a = i * JobTraits14.TAU / 6 + 0.3;
-                Vec3 p = ground(lv, V.add(mid, new Vec3(Math.cos(a), 0, Math.sin(a)), r * 0.6));
-                JobFx14.geyser(lv, p, 3.0 + Kit.rand(), 0, 7, 0.7, Opt.empty(), BLOOD, BLOOD_CORE);
+                double a = i * JobTraits14.TAU / 6;
+                Vec3 p = ground(lv, V.add(mid, new Vec3(Math.cos(a), 0, Math.sin(a)), r * 0.5));
+                JobFx14.geyser(lv, p, 3.4 + Kit.rand(), 0, 7, 0.7, Opt.empty(), BLOOD, BLOOD_CORE);
+            }
+            for (int i = 0; i < 24; i++) {
+                double a = Kit.rand() * JobTraits14.TAU;
+                double sp0 = 3.0 + Kit.rand() * 4.0;
+                Vec3 vel = new Vec3(Math.cos(a) * sp0, 2.0 + Kit.rand() * 3.0, Math.sin(a) * sp0);
+                JobTraits5.drop(lv, V.add(hc, V.scale(V.unit(vel), size[0] * 0.4)), V.unit(vel), 0.32 + Kit.rand() * 0.2, BLOOD, 0.9, Opt.of("vel", vel, "fade", 0.3));
             }
             int[] cnt = {0};
             for (LivingEntity e : Kit.around(sp, mid, r, 4)) {
                 if (!e.isAlive() || e.isRemoved()) continue;
                 JobKit.strike(sp, e, j, P, mult, true, true, life, 0, d -> {
-                    JobImpact.hit(sp, e, j, 1.5);
+                    JobImpact.hit(sp, e, j, 1.6);
                     if (cnt[0]++ < 8 && e.level() instanceof ServerLevel el) {
-                        JobFx14.geyser(el, ground(el, e.position()), 3.6 + Kit.bodyPad(e), 0, 7, 0.7, Opt.of("vel", RuneKit.entVel(e)), BLOOD, BLOOD_CORE);
-                        JobFx14.heart(el, RuneKit.overHead(e, 0.7), 0.7 + Kit.bodyPad(e) * 0.3, 6, 2, 0.4, false, Opt.of("vel", RuneKit.entVel(e)), BLOOD, BLOOD_CORE);
-                        JobFx.burst(el, Kit.bodyPoint(e), 1.3 + Kit.bodyPad(e) * 0.5, BLOOD, BLOOD_CORE, 0.35, Opt.of("vel", RuneKit.entVel(e)));
+                        JobFx14.geyser(el, ground(el, e.position()), 4.4 + Kit.bodyPad(e), 0, 7, 0.75, Opt.of("vel", RuneKit.entVel(e)), BLOOD, BLOOD_CORE);
+                        JobFx14.heart(el, RuneKit.overHead(e, 0.7), 0.8 + Kit.bodyPad(e) * 0.3, 6, 2, 0.4, false, Opt.of("vel", RuneKit.entVel(e)), BLOOD, BLOOD_CORE);
+                        JobFx.burst(el, Kit.bodyPoint(e), 1.5 + Kit.bodyPad(e) * 0.5, BLOOD, BLOOD_CORE, 0.35, Opt.of("vel", RuneKit.entVel(e)));
                     }
                 });
             }
