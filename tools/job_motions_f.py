@@ -1,10 +1,10 @@
-"""0.51.0 2차 직업 스킬 동작 — 마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신) · 반전 소드 콜러 — 재설계안 2판 (사용자 "이펙트가
+"""0.51.0 2차 직업 스킬 동작 — 마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신) · 반전 엘리멘탈 블레이드 (2026-11-07 소드 콜러 대신) — 재설계안 2판 (사용자 "이펙트가
 전직업보다 안좋았음 타격감이 없었음 이펙트가 작았음 동작이 뻣뻣했음" · "단타 애들이 너무 밋밋해 ... 커다란 검기가 나오면서 때리면"). 틱 0 = 스킬 (또는 단계 열쇠 —
-서버가 그 순간에 다시 보냄: JobKit.motion) 이 나간 틱, 효과의 later 와 같은 틱 (ArcanebladeSkills · SwordcallerSkills).
+서버가 그 순간에 다시 보냄: JobKit.motion) 이 나간 틱, 효과의 later 와 같은 틱 (ArcanebladeSkills · ElementalbladeSkills).
 
 뻣뻣하지 않게 (job_motions_d 와 같은 기준): 치기 전에 반대쪽으로 크게 감고 낮아짐 → 치는 틱에 내디딤 → 지나쳐 멈췄다 되돌아옴 · 멈춘 자세도 숨 쉬듯 조금씩.
 마검사는 몸 쓰는 직업이 아님: 아케인 블레이드 — 칼을 크게 감았다가 크게 휘두름 (맞는 것은 칼끝에서 나간 검기 · 마력 대검),
-소드 콜러 — 칼이 손을 떠나 스스로 싸우므로 내 동작은 칼에게 내리는 명령 (칼끝으로 겨눔 · 왼손 손짓 · 돌아오는 칼을 받음)."""
+엘리멘탈 블레이드 — 칼에 원소를 깃들여 크게 감고 휘두름 (불꽃 베기 · 땅을 긁으며 내달림 · 번개 찌르기 · 칼날을 쓸어 올림 · 하늘의 다섯 칼을 부림)."""
 import rune_motion_kit as K
 from job_motions_a import PLANT, RISE_END, RISE_HIT
 from job_motions_d import (DASH_R, FLICK, FPW_FLICK, FPW_REV_UP, FPW_ZAN, J_IMPACT, LUNGE_DEEP, REV_RAISE, ZAN2, carry_spin, diag, diag_back, first, impacts,
@@ -211,119 +211,155 @@ fpl(m, 9.5, FP_LOW, "out")
 impacts(m, 0.0, 9.0)
 use_skill(m, "arcaneblade_ult:slam")
 
-# ------------------------------------------------------------ 소드 콜러 (칼 — 청록 · 흰빛 마력 칼, 칼에게 내리는 명령)
+# ------------------------------------------------------------ 엘리멘탈 블레이드 (칼 · 대검 — 스킬마다 원소 빛: 불 · 바위 · 전기 · 물과 얼음 · 다섯, 2026-11-07 소드 콜러 대신)
+# 몸 쓰는 직업이 아님 (사용자 "몸을 쓰는 직업만 몸을 움직이고") — 원소를 칼에 깃들여 크게 감고 크게 휘두름 (맞는 것은 칼과 칼빛 · 원소)
 
-# 칼끝을 귀 옆 뒤로 당겼다가 (명령 준비) 겨눈 곳으로 곧게 내밀어 가리킴
-CALL_BACK = P(body=[2, -22, 0], head=[2, 0], ra=RA_BACK_HIGH, la=arm([-0.4, -0.5, 0.45], 30), **LEGS_FIGHT)
-CALL_POINT = P(P(body=[14, 14, 0], head=[4, 0], ra=RA_POINT, la=arm([-0.55, -0.6, -0.15], 30), **LEGS_LUNGE), root=[-0.06, 0.22])
-
-# 베어라 (효과: 2 에 칼이 손을 떠나 겨눈 곳으로 → 닿아 맴돌며 벰 → 10틱 뒤 두 번 더 → 땅에 꽂힘)
-m = Motion("swordcaller_strike", 13, "베어라 — 칼끝을 귀 옆 뒤로 당겼다가 겨눈 곳을 곧게 가리켜 칼을 보내고, 왼손을 펼쳐 내밀어 칼을 부림", fade=(0.03, 0.1))
+# 플레어 엣지 (효과: 0 ~ 5 오른쪽 뒤로 감은 칼날에 불꽃이 감김 → 5 앞을 가로로 크게 벰 (불꽃 초승달 검기) → 다시 누르면 :spin).
+# 몸을 오른쪽 끝까지 비틀어 칼을 오른쪽 뒤로 당겨 낮게 웅크렸다가 크게 내디디며 오른쪽 → 왼쪽 끝까지 휩쓸고 베어 낸 자세로 멈춤
+FL_COIL = P(CR_COIL, la=arm([0.3, -0.25, 0.75], 40))
+FL_COIL2 = P(CR_COIL2, la=arm([0.3, -0.25, 0.75], 40))
+m = Motion("elementalblade_flare", 15, "플레어 엣지 — 몸을 오른쪽 끝까지 비틀어 불꽃이 감기는 칼을 오른쪽 뒤로 당겨 낮게 웅크렸다가, 크게 내디디며 오른쪽에서 왼쪽 끝까지 "
+           "가로로 휩쓸고 베어 낸 자세로 멈춤", fade=(0.03, 0.1))
 off_bare(m)
-keyp(m, 1.0, CALL_BACK, "out3")
-keyp(m, 2.2, CALL_POINT, "out")
-keyp(m, 4.5, P(CALL_POINT, body=[12, 4, 0], la=L(A_PALM), root=[-0.05, 0.18]), "out3")
-keyp(m, 8.0, P(CALL_POINT, body=[10, 2, 0], la=L(A_PALM), root=[-0.04, 0.16]))
-keyp(m, 12.5, P(W_READY, body=[8, 6, 0]))
-fpw(m, 1.0, FPW_DRAWN, "out3")
-fpw(m, 2.2, FPW_FWD, "out")
-fpw(m, 8.0, FPW_FWD, dp=(0, -0.03, 0.05))
+keyp(m, 1.4, FL_COIL, "out3")
+keyp(m, 3.8, FL_COIL2, "in")
+strike_with(m, "slash_h", 4.0, 5.0, 6.6, a=FL_COIL2, b=CR_END)
+keyp(m, 9.0, P(CR_END, body=[12, -54, 0], root=[-0.26, 0.42]))
+keyp(m, 14.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 1.4, dict(p=(0.62, 0.38, 0.3), blade=(0.75, 0.35, -0.56)), "out3")
+fpw(m, 3.8, dict(p=(0.72, 0.32, 0.38), blade=(0.72, 0.3, -0.62)), "in")
+fpw(m, 9.0, dict(p=(-1.7, 0.28, 0.22), blade=(-0.85, 0.0, -0.52)))
+fpw(m, 14.5, FPW_LOW)
+fpl(m, 1.4, ((0.1, -0.2, -0.05), (10, 40, 0)), "out3")
+fpl(m, 5.0, FP_LOW, "linear")
+impacts(m, 5.0)
+use_skill(m, "elementalblade_flare")
+# 불꽃 회오리 (단계 :spin — 0 ~ 4 베어 낸 자세에서 몸을 크게 돌려 → 4 한 바퀴 (둘레를 벰) → 멈춤)
+m = Motion("elementalblade_flare_spin", 13, "불꽃 회오리 — 베어 낸 자세에서 낮게 웅크려 칼을 끝까지 뻗고 오른쪽으로 크게 한 바퀴 휘둘러 둘레를 벤 뒤 낮게 버팀",
+           fade=(0.0, 0.1))
+off_bare(m)
+first(m, P(CR_END, body=[12, -54, 0], root=[-0.26, 0.42]), dict(FPW_LOW))
+spin_right(m, [4.0], 6.6, wind_tick=2.4, fwd=P(K.SPIN_FWD_R, ra=arm([0.12, -0.1, 0.99], 6, [0.4, -0.15, 0.9]), rk=46, lk=46, root=[-0.28, 0]),
+           end_pose=P(K.SPIN_END_R, rk=38, lk=38, root=[-0.22, 0]))
+keyp(m, 12.5, P(W_READY, body=[8, 6, 0], spin=-360))
+carry_spin(m, 6.6, -360)
 fpw(m, 12.5, FPW_LOW)
-fpl(m, 4.5, FPL_OPEN, "out3")
-fpl(m, 11.0, FP_LOW)
-use_skill(m, "swordcaller_strike")
+impacts(m, 4.0)
+use_skill(m, "elementalblade_flare:spin")
 
-# 데려가라 (효과: 1 부터 꽂힌 칼 쪽 (또는 앞 8칸) 으로 끌려 날아감 · 지나간 적을 벰 → 닿으면 칼을 뽑아 쥠). 왼손을 앞으로 뻗어 끌려가며 몸이 앞으로 기울고
-# 칼은 뒤로 끌림 → 내려서며 미끄러짐
-PULLED = P(body=[30, 8, 0], head=[-14, 0], ra=arm([0.5, -0.45, -0.72], 20, [0.35, -0.2, -0.92]), la=arm([-0.04, 0.1, 1], 0, [0, 0.3, 1]), rl=[-24, 0, 6],
-           ll=[34, 0, -6], rk=60, lk=22, root=[-0.12, 0.3])
-m = Motion("swordcaller_shift", 14, "데려가라 — 왼손을 칼 쪽으로 곧게 뻗어 끌려가듯 몸을 앞으로 기울여 날아가고 (칼은 뒤로 끌림), 내려서며 낮게 미끄러져 칼을 고쳐 쥠",
-           fade=(0.02, 0.1))
+# 어스 서지 (효과: 0 ~ 6 앞으로 미끄러지듯 내달림 (칼끝이 땅을 긁음 · 받는 피해 −30%) → 7 갈라진 길에서 바위 가시가 솟음).
+# 칼끝을 땅에 대고 낮게 웅크린 채 미끄러져 내달리다가, 멈추는 순간 칼을 땅에서 확 쳐올려 가시를 솟게 하고 일어섬
+SURGE_LOW = P(body=[34, 18, 0], head=[-18, 0], ra=arm([0.4, -0.72, 0.56], 18, [0.3, -0.85, 0.42]), la=arm([-0.55, -0.45, -0.5], 25), rl=[30, 0, 6],
+              ll=[-36, 0, -6], rk=62, lk=40, root=[-0.4, 0.3])  # 칼끝을 오른쪽 앞 땅에 대고 낮게 웅크려 미끄러짐 (왼팔은 뒤로 — 균형)
+SURGE_UP = P(body=[-10, 10, 0], head=[-16, 0], ra=arm([0.45, 0.82, 0.35], 10, [0.25, 0.95, 0.2]), la=L(A_SPREAD), rl=[0, 0, 12], ll=[0, 0, -12], rk=16, lk=16,
+             root=[-0.06, 0.1])  # 칼을 땅에서 확 쳐올려 일어섬
+m = Motion("elementalblade_surge", 17, "어스 서지 — 칼끝을 오른쪽 앞 땅에 대고 낮게 웅크린 채 미끄러지듯 내달리다가, 멈추는 순간 칼을 땅에서 확 쳐올려 바위 가시를 "
+           "솟게 하며 일어섬", fade=(0.02, 0.1))
 off_bare(m)
-keyp(m, 1.0, PULLED, "out3")
-keyp(m, 6.0, P(PULLED, body=[34, 6, 0], root=[-0.14, 0.32]))
-keyp(m, 8.5, P(body=[22, -16, 0], head=[0, 0], ra=arm([0.55, -0.5, 0.55], 20, [0.6, -0.4, 0.7]), la=arm([-0.5, -0.7, 0.2], 20), rl=[30, 0, 8], ll=[-30, 0, -8],
-                rk=66, lk=58, root=[-0.36, 0.0]), "out")
-keyp(m, 13.5, P(W_READY, body=[8, 6, 0]))
-fpw(m, 1.0, dict(p=(0.35, -0.55, 0.35), blade=(0.4, -0.2, -0.9)), "out3")
-fpw(m, 8.5, FPW_SPREAD, "out")
-fpw(m, 13.5, FPW_LOW)
-fpl(m, 1.0, FP_PALM, "out3")
-fpl(m, 8.5, FP_LOW, "out")
-use_skill(m, "swordcaller_shift")
+keyp(m, 1.0, SURGE_LOW, "out")
+keyp(m, 3.5, P(SURGE_LOW, body=[36, 16, 0], root=[-0.42, 0.32]))
+keyp(m, 5.8, P(SURGE_LOW, body=[38, 14, 0], rk=70, lk=46, root=[-0.46, 0.26]), "in")
+keyp(m, 7.0, SURGE_UP, "out")
+keyp(m, 10.0, P(SURGE_UP, body=[-6, 8, 0], root=[-0.04, 0.08]))
+keyp(m, 16.5, P(W_READY, body=[8, 6, 0]))
+m.arc(7.0, "ra", (0.1, 1, 0.3))
+fpw(m, 1.0, dict(p=(0.35, -0.6, 0.0), blade=(0.25, -0.75, 0.6)), "out")
+fpw(m, 5.8, dict(p=(0.35, -0.65, -0.05), blade=(0.25, -0.8, 0.55)))
+fpw(m, 7.0, FPW_UP, "out")
+fpw(m, 16.5, FPW_LOW)
+fpl(m, 1.0, FP_LOW, "out")
+impacts(m, 7.0)
+use_skill(m, "elementalblade_surge")
 
-# 꿰뚫고 맴돌아라 (효과: 2 에 칼이 날아가 꿰뚫음 → 10틱마다 그 적 둘레를 돌며 벰 넷 → 손으로 돌아옴). 겨눠 보낸 뒤 왼손 검지로 허공에 원을 그리며 칼을 돌림
-m = Motion("swordcaller_orbit", 24, "꿰뚫고 맴돌아라 — 칼끝을 당겼다가 곧게 내밀어 칼을 꿰뚫게 보내고, 왼손을 들어 검지로 허공에 원을 크게 두 번 그리며 칼을 돌림",
+# 볼트 피어스 (효과: 0 ~ 8 뒤로 당긴 칼끝에 번개가 모임 → 8 겨눈 적을 번개 창처럼 찌름 → 18 · 28 · 38 남은 번개가 내리꽂힘).
+# 칼을 오른쪽 뒤로 수평으로 당겨 칼끝을 겨누고 몸을 낮췄다가, 크게 내디디며 곧게 찔러 끝까지 뻗고, 찌른 자세로 버티다 왼손을 들어 하늘의 번개를 부름
+BOLT_DRAW = P(body=[6, -34, 0], head=[4, 0], ra=arm([0.62, 0.05, -0.78], 92, [0.0, 0.05, 1.0]), la=arm([-0.05, 0.2, 0.98], 10, [0, 0.4, 1]), rl=[20, 0, 6],
+              ll=[-26, 0, -6], rk=36, lk=30, root=[-0.2, -0.12])  # 칼을 오른쪽 뒤로 수평으로 당겨 칼끝이 앞 (왼손은 겨눔)
+BOLT_DRAW2 = P(BOLT_DRAW, body=[8, -40, 0], rk=42, lk=36, root=[-0.24, -0.16])
+BOLT_THRUST = P(body=[14, 16, 0], head=[2, 0], ra=arm([-0.04, 0.06, 1], 0, [0, 0.05, 1]), la=arm([-0.6, -0.35, -0.6], 20), root=[-0.2, 0.6],
+                **LUNGE_DEEP)  # 크게 내디디며 곧게 찔러 끝까지 뻗음 (왼팔은 뒤로)
+m = Motion("elementalblade_bolt", 24, "볼트 피어스 — 칼을 오른쪽 뒤로 수평으로 당겨 번개가 모이는 칼끝을 겨누고 몸을 낮췄다가, 크게 내디디며 곧게 찔러 끝까지 뻗고, "
+           "찌른 자세로 버티며 왼손을 들어 하늘의 번개를 부름", fade=(0.03, 0.1))
+off_bare(m)
+keyp(m, 1.6, BOLT_DRAW, "out3")
+keyp(m, 6.6, BOLT_DRAW2, "in")
+keyp(m, 8.0, BOLT_THRUST, "linear")
+keyp(m, 10.5, P(BOLT_THRUST, body=[12, 14, 0], root=[-0.18, 0.56]), "out")
+keyp(m, 14.0, P(BOLT_THRUST, body=[8, 10, 0], la=L(A_RAISE), root=[-0.14, 0.48]), "out3")
+keyp(m, 18.0, P(BOLT_THRUST, body=[6, 8, 0], la=L(A_RAISE), root=[-0.12, 0.44]))
+keyp(m, 23.5, P(W_READY, body=[8, 6, 0]))
+m.arc(8.0, "ra", (0, 0.05, 1))
+fpw(m, 1.6, dict(p=(0.55, 0.15, 0.5), blade=(-0.05, 0.05, 1)), "out3")
+fpw(m, 6.6, dict(p=(0.6, 0.12, 0.6), blade=(-0.05, 0.05, 1)), "in")
+fpw(m, 8.0, FPW_FWD, "linear")
+fpw(m, 18.0, FPW_FWD, dp=(0, -0.04, 0.06))
+fpw(m, 23.5, FPW_LOW)
+fpl(m, 1.6, FP_PALM, "out3")
+fpl(m, 8.0, FP_LOW, "linear")
+fpl(m, 14.0, FP_RAISE, "out3")
+fpl(m, 20.0, FP_LOW)
+impacts(m, 8.0)
+use_skill(m, "elementalblade_bolt")
+
+# 프로스트타이드 (효과: 0 칼에 물과 얼음이 소용돌이침 — 8초 태세). 칼을 얼굴 앞에 곧게 세워 왼손 두 손가락으로 칼날을 쓸어 올린 뒤, 칼을 오른쪽 아래로 털어 내림
+m = Motion("elementalblade_tide", 15, "프로스트타이드 — 칼을 얼굴 앞에 곧게 세우고 왼손으로 칼날을 아래에서 위로 쓸어 올려 물과 서리를 깃들인 뒤, 칼을 오른쪽 아래로 털어 내림",
            fade=(0.03, 0.1))
 off_bare(m)
-keyp(m, 1.0, CALL_BACK, "out3")
-keyp(m, 2.2, CALL_POINT, "out")
-circle = [(0.35, 0.45), (0.05, 0.75), (-0.25, 0.45), (0.05, 0.15)]
-for i in range(8):
-    tk = 5.0 + i * 2.2
-    cxy = circle[i % 4]
-    keyp(m, tk, P(CALL_POINT, body=[10, 6, 0], la=arm([-0.25 + cxy[0] * 0.6, 0.1 + cxy[1] * 0.6, 0.9], 6, [0, 1, 0.2]), root=[-0.05, 0.16]),
-         "inout" if i else "out3")
-keyp(m, 23.5, P(W_READY, body=[8, 6, 0]))
-fpw(m, 1.0, FPW_DRAWN, "out3")
-fpw(m, 2.2, FPW_FWD, "out")
-fpw(m, 12.0, FPW_FWD, dp=(0, -0.05, 0.08))
-fpw(m, 23.5, FPW_LOW)
-fpl(m, 5.0, nudge(FP_PALM, (0.05, 0.12, 0), (30, 30, 0)), "out3")
-for i in range(1, 8):
-    cxy = circle[i % 4]
-    fpl(m, 5.0 + i * 2.2, nudge(FP_PALM, (cxy[0] * 0.25, cxy[1] * 0.25 - 0.05, 0), (30, 30, 0)), "inout")
-fpl(m, 23.0, FP_LOW)
-use_skill(m, "swordcaller_orbit")
-
-# 둘로 나뉘어라 (효과: 3 에 칼이 번쩍이며 둘로 갈라져 양옆으로 → 6 부터 칼 둘이 몸 둘레를 돎). 칼을 얼굴 앞에 세웠다가 칼과 왼손을 양옆으로 펼쳐 가름
-m = Motion("swordcaller_twin", 14, "둘로 나뉘어라 — 칼을 얼굴 앞에 곧게 세워 숨을 고른 뒤, 칼을 오른쪽 · 왼손을 왼쪽으로 크게 펼쳐 칼을 둘로 가름", fade=(0.03, 0.1))
-off_bare(m)
-keyp(m, 1.5, P(W_UP_FRONT, la=bent([0.05, 0.3, 0.95], 95, (-0.3, 1, 0))), "out3")
-keyp(m, 3.0, P(W_UP_FRONT, body=[-6, 0, 0], head=[-8, 0], la=bent([0.05, 0.32, 0.95], 95, (-0.3, 1, 0))))
-keyp(m, 4.6, P(body=[-6, 0, 0], head=[-10, 0], ra=arm([0.95, 0.25, 0.2], 6, [0.7, 0.55, 0.45]), la=L(A_SPREAD), **LEGS_WIDE), "out")
-keyp(m, 9.0, P(body=[-4, 0, 0], head=[-8, 0], ra=arm([0.92, 0.2, 0.3], 8, [0.7, 0.5, 0.5]), la=L(A_SPREAD), **LEGS_WIDE))
-keyp(m, 13.5, P(W_READY, body=[8, 6, 0]))
+keyp(m, 1.5, P(W_UP_FRONT, la=bent([0.05, 0.1, 0.95], 95, (-0.3, 1, 0))), "out3")
+keyp(m, 4.0, P(W_UP_FRONT, body=[-6, 0, 0], head=[-8, 0], la=bent([0.05, 0.42, 0.9], 70, (-0.3, 1, 0))), "inout")
+keyp(m, 6.0, P(W_UP_FRONT, body=[-8, 0, 0], head=[-10, 0], la=arm([0.1, 0.75, 0.62], 20)), "out")
+keyp(m, 8.4, P(FLICK, body=[6, 20, 0], la=arm([-0.5, -0.6, 0.2], 30), root=[-0.14, 0.2]), "out")
+keyp(m, 14.5, P(W_READY, body=[8, 6, 0]))
 fpw(m, 1.5, FPW_UP, "out3")
-fpw(m, 4.6, FPW_SPREAD, "out")
-fpw(m, 13.5, FPW_LOW)
+fpw(m, 6.0, FPW_UP, dp=(0, 0.06, 0))
+fpw(m, 8.4, FPW_FLICK, "out")
+fpw(m, 14.5, FPW_LOW)
 fpl(m, 1.5, FPL_GRIP2H, "out3")
-fpl(m, 4.6, nudge(FP_PALM, (-0.25, 0.05, 0.1), (10, -10, 0)), "out")
-fpl(m, 13.0, FP_LOW)
-use_skill(m, "swordcaller_twin")
+fpl(m, 6.0, nudge(FP_RAISE, (-0.15, -0.1, 0), (0, 10, 0)), "inout")
+fpl(m, 9.0, FP_LOW, "out")
+use_skill(m, "elementalblade_tide")
 
-# 칼날 감옥 (효과: 0 ~ 6 등 뒤에 칼 여섯이 솟음 → 6 에 겨눈 적에게 날아가 10 에 둘러쌈 → 10틱마다 벰 여섯 → 67 에 :catch). 칼과 왼손을 하늘로 들어 칼들을
-# 부르고 → 칼끝으로 적을 겨눠 가둠 → 왼손을 펼쳐 쥐었다 폈다 하며 칼들을 부림
-m = Motion("swordcaller_ult", 30, "칼날 감옥 — 칼과 왼손을 하늘로 들어 칼 여섯을 부르고, 칼끝으로 겨눈 적을 곧게 가리켜 가둔 뒤 왼손을 펼쳤다 움켜쥐며 칼들을 부림",
-           fade=(0.04, 0.08))
+# 엘리멘탈 칼라미티 (효과: 0 ~ 6 칼끝에서 다섯 빛줄기가 하늘로 → 6 하늘에 다섯 원소의 칼 → 18 ~ 58 차례로 내리꽂힘 → 66 :final).
+# 칼과 왼손을 하늘로 들어 다섯 칼을 부르고, 칼끝으로 겨눈 적을 곧게 가리킨 뒤 왼손을 펼쳐 쥐었다 폈다 하며 칼을 하나씩 떨어뜨림
+ULT_POINT = P(P(body=[14, 14, 0], head=[4, 0], ra=RA_POINT, la=arm([-0.55, -0.6, -0.15], 30), **LEGS_LUNGE), root=[-0.06, 0.22])  # 칼끝으로 겨눈 적을 가리킴
+ULT_GRASP = bent([-0.25, -0.1, 0.9], 110, (0.3, 1, 0.2))  # 내민 왼손을 움켜쥠
+ULT_HOLD = P(ULT_POINT, body=[10, 6, 0], la=arm([-0.5, -0.6, 0.2], 30), root=[-0.04, 0.18])
+m = Motion("elementalblade_ult", 30, "엘리멘탈 칼라미티 — 칼과 왼손을 하늘로 들어 다섯 원소의 칼을 부르고, 칼끝으로 겨눈 적을 곧게 가리킨 뒤 왼손을 펼쳤다 움켜쥐며 칼을 "
+           "하나씩 떨어뜨림", fade=(0.04, 0.08))
 off_bare(m)
 keyp(m, 2.5, P(body=[-12, 0, 0], head=[-26, 0], ra=RA_SKY, la=L(A_RAISE), **LEGS_WIDE), "out3")
 keyp(m, 5.5, P(body=[-14, 0, 0], head=[-28, 0], ra=RA_SKY, la=L(A_RAISE), rl=[0, 0, 12], ll=[0, 0, -12], rk=18, lk=18))
-keyp(m, 8.0, P(CALL_POINT, la=L(A_POINT_UP)), "out")
-keyp(m, 12.0, P(CALL_POINT, body=[12, 8, 0], la=L(A_PALM)), "out3")
-keyp(m, 18.0, P(CALL_POINT, body=[12, 6, 0], la=bent([-0.25, -0.1, 0.9], 110, (0.3, 1, 0.2))), "in")
-keyp(m, 24.0, P(CALL_POINT, body=[12, 8, 0], la=L(A_PALM)), "out")
-keyp(m, 29.5, P(CALL_POINT, body=[10, 6, 0], la=arm([-0.5, -0.6, 0.2], 30)))
+keyp(m, 9.0, P(ULT_POINT, la=L(A_POINT_UP)), "out")
+keyp(m, 13.0, P(ULT_POINT, body=[12, 8, 0], la=L(A_PALM), root=[-0.05, 0.2]), "out3")
+keyp(m, 18.0, P(ULT_POINT, body=[12, 6, 0], la=ULT_GRASP, root=[-0.05, 0.2]), "in")
+keyp(m, 23.0, P(ULT_POINT, body=[12, 8, 0], la=L(A_PALM), root=[-0.05, 0.2]), "out")
+keyp(m, 28.0, P(ULT_POINT, body=[12, 6, 0], la=ULT_GRASP, root=[-0.05, 0.2]), "in")
+keyp(m, 29.5, ULT_HOLD)
 fpw(m, 2.5, FPW_SKY, "out3")
-fpw(m, 8.0, FPW_FWD, "out")
+fpw(m, 9.0, FPW_FWD, "out")
 fpw(m, 29.5, FPW_FWD, dp=(0, -0.04, 0.05))
 fpl(m, 2.5, FP_RAISE, "out3")
-fpl(m, 8.0, FP_LOW, "out")
-fpl(m, 12.0, FPL_OPEN, "out3")
+fpl(m, 9.0, FP_LOW, "out")
+fpl(m, 13.0, FPL_OPEN, "out3")
 fpl(m, 18.0, FPL_GRASP, "in")
-fpl(m, 24.0, FPL_OPEN, "out")
-use_skill(m, "swordcaller_ult")
-# 받음 (단계 :catch — 칼들이 적을 꿰뚫으며 손으로 돌아옴 · 3틱 뒤 큰 한 방): 왼손을 내밀어 돌아오는 칼들을 받고, 칼을 왼쪽 위에서 오른쪽 아래로 크게 내려 벰
-m = Motion("swordcaller_ult_catch", 14, "칼날 감옥 끝 — 왼손을 앞으로 내밀어 돌아오는 칼들을 받아들이고, 칼을 오른쪽 위에서 왼쪽 아래로 크게 내려 베어 마무리", fade=(0.0, 0.1))
+fpl(m, 23.0, FPL_OPEN, "out")
+fpl(m, 28.0, FPL_GRASP, "in")
+use_skill(m, "elementalblade_ult")
+# 내리찍음 (단계 :final — 0 ~ 3 두 손으로 칼을 머리 위로 → 4 크게 내디디며 내려침 (합쳐진 대검이 적에게 꽂힘) → 낮게 버팀)
+m = Motion("elementalblade_ult_final", 18, "엘리멘탈 칼라미티 끝 — 두 손으로 칼을 머리 위로 크게 치켜들어 젖혔다가, 크게 내디디며 앞으로 내려쳐 합쳐진 대검을 꽂고 낮게 "
+           "버팀", fade=(0.02, 0.1))
 off_bare(m)
-first(m, P(CALL_POINT, body=[10, 6, 0], la=arm([-0.5, -0.6, 0.2], 30)), dict(FPW_FWD))
-keyp(m, 1.2, P(CALL_POINT, body=[6, -4, 0], la=L(A_PALM), root=[-0.04, 0.1]), "out3")
-diag(m, 1.8, 3.0, 4.6)
-keyp(m, 9.0, P(body=[16, -30, 0], head=[2, 0], ra=arm([-0.6, -0.55, 0.55], 14, [-0.5, -0.7, -0.4]), la=arm([-0.5, -0.6, 0.1], 35), root=[-0.12, 0.3],
-                **LUNGE_DEEP))
-keyp(m, 13.5, P(W_READY, body=[8, 6, 0]))
-fpl(m, 1.2, FPL_OPEN, "out3")
-fpl(m, 3.0, FP_LOW, "out")
-fpw(m, 13.5, FPW_LOW)
-impacts(m, 3.0)
-use_skill(m, "swordcaller_ult:catch")
+first(m, ULT_HOLD, dict(FPW_FWD))
+keyp(m, 2.2, P(RAISE2H, body=[-20, 0, 0], head=[-26, 0], rl=[16, 0, 4], ll=[-24, 0, -4], rk=30, lk=36, root=[-0.12, 0.08]), "out3")
+strike_with(m, "slam", 2.6, 4.0, 5.6, a=P(RAISE2H, body=[-24, 0, 0], head=[-28, 0], rk=32, lk=40, root=[-0.16, 0.06]), b=J_IMPACT)
+keyp(m, 9.5, P(J_IMPACT, body=[40, 0, 0], root=[-0.4, 0.3]))
+keyp(m, 12.0, P(RISE_HIT, root=[0.02, 0.22]), "out")
+keyp(m, 17.5, P(W_READY, body=[8, 6, 0]))
+fpw(m, 2.2, FPW_SKY, "out3")
+fpw(m, 9.5, FPW_DOWN)
+fpw(m, 17.5, FPW_LOW)
+fpl(m, 2.2, FPL_RAISE2H, "out3")
+fpl(m, 4.0, FPL_PLANT, "in")
+fpl(m, 12.0, FP_LOW, "out")
+impacts(m, 4.0)
+use_skill(m, "elementalblade_ult:final")

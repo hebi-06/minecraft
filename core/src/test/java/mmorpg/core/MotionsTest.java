@@ -209,11 +209,11 @@ public final class MotionsTest {
             check(SwingLooks.of(fn) != null, "strike rune look " + g + " " + fn);
         }
         // 0.51.0 2차 직업: 곰의 화신 (워로드 — 분노 100 · 평타 범위 ×1.5) · 재설계안 2판: 용의 피 (소드마스터 태세) · 광란 (블러드 나이트 태세) · 제미니 소드
-        // (소드 콜러 — 칼빛만 · 범위 그대로). 2026-11-05 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자" — 마검 각성 · 거인의 무게 · 불사의 분노 · 스펠
+        // (소드 콜러 — 칼빛만 · 범위 그대로 → 2026-11-07 엘리멘탈 블레이드 프로스트타이드). 2026-11-05 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자" — 마검 각성 · 거인의 무게 · 불사의 분노 · 스펠
         // 오버드라이브 · 다시 벼린 칼 (궁극기) 의 모습은 뺌 (피해 스킬이 됨). 2026-11-07 3판: 스펙트럴 사이스 (소울 리퍼 — 영혼 낫 · 5칸)
         Map<String, Double> scales = Map.ofEntries(Map.entry("edgeHone", 1.15), Map.entry("flurry", 1.2), Map.entry("bloodBlade", 1.3), Map.entry("cleave", 1.4),
                 Map.entry("swordGod", 1.5), Map.entry("swordsman_mirror", 1.2), Map.entry("reaper_avatar", 1.0), Map.entry("warlord_bear", 1.5),
-                Map.entry("swordcaller_twin", 1.0), Map.entry("swordmaster_blood", 1.15), Map.entry("bloodknight_frenzy", 1.2), Map.entry("soulreaper_scythe", 1.3));
+                Map.entry("elementalblade_tide", 1.0), Map.entry("swordmaster_blood", 1.15), Map.entry("bloodknight_frenzy", 1.2), Map.entry("soulreaper_scythe", 1.3));
         for (Map.Entry<String, Double> e : scales.entrySet()) {
             SwingLooks.Look l = SwingLooks.of(e.getKey());
             check(l != null && Math.abs(l.scale() - e.getValue()) < 1e-9 && l.glow() != null && l.aura() != null && SwingLooks.pack(l.glow()) != 0,
@@ -229,7 +229,7 @@ public final class MotionsTest {
         check(!SwingLooks.of("swordsman_mirror").fits("greatsword") && SwingLooks.of("swordsman_mirror").fits("sword"), "job look weapons");
         check(SwingLooks.of("warlord_bear").fits("axe") && !SwingLooks.of("warlord_bear").fits("sword") && SwingLooks.of("warlord_titan") == null
                 && SwingLooks.of("gladiator_fury") == null && SwingLooks.of("spellblade_awaken") == null && SwingLooks.of("swordmaster_ult") == null, "second-job looks: axe");
-        check(SwingLooks.of("arcaneblade_overdrive") == null && SwingLooks.of("swordcaller_twin").fits("sword") && !SwingLooks.of("swordcaller_twin").fits("axe"),
+        check(SwingLooks.of("arcaneblade_overdrive") == null && SwingLooks.of("elementalblade_tide").fits("sword") && !SwingLooks.of("elementalblade_tide").fits("axe"),
                 "second-job looks: magic sword");
         check(Math.abs(SwingLooks.baseRange("sword", 0) - 2.3) < 1e-9 && SwingLooks.baseRange("bow", 0) == 0, "base range (first combo motion)");
         check(SwingLooks.of("nope") == null && SwingLooks.pack(new double[] {0, 0, 0}) == 1 && SwingLooks.pack(new double[] {1, 0.5, 0}) == 0xFF8000, "pack");
@@ -361,7 +361,8 @@ public final class MotionsTest {
                 "전사 2차 동작 (0.51.0 대지 가르기 내려찍기 · 2026-11-07 프로스트 바이트 되부름은 단계 열쇠 — 글래디에이터 · 울프헤딘 동작은 뺌)");
         check(Motions.skillMotion("arcaneblade_ult").equals("jb_arcaneblade_ult") && Motions.skillMotion("arcaneblade_ult:slam").equals("jb_arcaneblade_ult_slam")
                 && Motions.skillMotion("arcaneblade_crescent").equals("jb_arcaneblade_crescent") && Motions.skillMotion("arcaneblade_cross").equals("jb_arcaneblade_cross")
-                && Motions.skillMotion("swordcaller_ult:catch").equals("jb_swordcaller_ult_catch") && Motions.skillMotion("swordcaller_orbit").equals("jb_swordcaller_orbit")
+                && Motions.skillMotion("elementalblade_ult:final").equals("jb_elementalblade_ult_final") && Motions.skillMotion("elementalblade_flare:spin").equals("jb_elementalblade_flare_spin")
+                && Motions.skillMotion("elementalblade_bolt").equals("jb_elementalblade_bolt") && Motions.skillMotion("swordcaller_orbit") == null
                 && Motions.skillMotion("hexblade_ult") == null && Motions.skillMotion("runeknight_anvil") == null && Motions.skillMotion("runeknight_carve") == null
                 && Motions.skillMotion("arcaneblade_rift").equals("jb_arcaneblade_rift") && Motions.skillMotion("arcaneblade_rift:close").equals("jb_arcaneblade_rift_close")
                 && Motions.skillMotion("arcaneblade_overdrive") == null && Motions.skillMotion("mage_overload").equals("jb_mage_overload")

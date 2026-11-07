@@ -79,7 +79,7 @@ public final class JobTraits {
         JobImpact.init(); // 0.51.0 타격감 (큰 타격 그림 · 멈칫)
         JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 동면)
         JobTraits16.init(); // 2026-11-07 전사 반전 프로스트 레이더 (빙결 · 깨짐 · 요툰 그립 — 글래디에이터 대신)
-        JobTraits7.init(); // 0.51.0 마검사 2차 (아케인 블레이드 각인 번짐 · 거대한 마력 대검 · 오버드라이브 검기 · 소드 콜러 스스로 싸우는 칼 · 제미니 소드)
+        JobTraits17.init(); // 2026-11-07 마검사 반전 엘리멘탈 블레이드 (원소의 칼 · 프로스트타이드 — 소드 콜러 대신, 아케인 블레이드 각인 번짐 · 대검은 JobTraits7)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 스펠 서지 · 네크로맨서 망자의 군대 · 무덤 · 표식)
         JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 헌터스 마크 · 배틀 아처 난사 · 스톰 스트라이드 · 팰컨 다이브 초기화)
         JobTraits10.init(); // 0.51.0 암살자 2차 (트릭스터 팬텀 왈츠 · 미러 월드 — 2026-11-07 3판 · 피에로 쇼타임 — 소환물 · 나눠 받음 · 핸드스프링 — 트릭스터의 표식은 JobTraits3)
@@ -130,7 +130,7 @@ public final class JobTraits {
         JobTraits5.reset(sp);
         JobTraits6.reset(sp);
         JobTraits16.reset(sp);
-        JobTraits7.reset(sp);
+        JobTraits17.reset(sp);
         JobTraits8.reset(sp);
         JobTraits9.reset(sp);
         JobTraits10.reset(sp);
@@ -154,7 +154,7 @@ public final class JobTraits {
         JobTraits6.forget(id);
         JobTraits16.forget(id);
         FrostraiderSkills.forget(id);
-        JobTraits7.forget(id);
+        JobTraits17.forget(id);
         JobTraits8.forget(id);
         JobTraits9.forget(id);
         JobTraits10.forget(id);
@@ -173,7 +173,7 @@ public final class JobTraits {
         JobTraits4.lifeEnded(id);
         JobTraits5.lifeEnded(id);
         JobTraits6.lifeEnded(id);
-        JobTraits7.lifeEnded(id);
+        JobTraits17.lifeEnded(id);
         JobTraits8.lifeEnded(id);
         JobTraits9.lifeEnded(id);
         JobTraits10.lifeEnded(id);
@@ -512,7 +512,7 @@ public final class JobTraits {
                 JobTraits4.tick(sp, j, now); // 0.30.0 수호의 맹세 회복
                 JobTraits5.tick(sp, j, now); // 0.51.0 흡혈 숫자
                 JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신
-                JobTraits7.tick(sp, j, now); // 0.51.0 소드 콜러 쌓임 · 꽂힌 칼
+                JobTraits17.tick(sp, j, now); // 2026-11-07 엘리멘탈 블레이드 칼의 원소 빛
                 JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 무덤 · 표식
                 JobTraits9.tick(sp, j, now); // 0.51.0 배틀 아처 갈래 게이지 · 스톰 스트라이드 이동 속도
                 JobTraits10.tick(sp, j, now); // 0.51.0 피에로 (가장 가까운 소환물로 금빛 실)
@@ -571,8 +571,8 @@ public final class JobTraits {
             // 0.30.0 수호의 맹세 (등 뒤 빛의 날개) · 철옹성 (앞의 큰 빛의 방패)
         } else if (JobTraits5.stanceFx(sp, j, st.stance)) {
             // 0.51.0 용의 심장 (가슴의 금빛 불씨 · 칼의 금빛) · 회그니의 맹세 (칼끝에서 떨어지는 핏방울)
-        } else if (JobTraits7.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 제미니 소드 (손의 칼에서 흩날리는 청록 빛살)
+        } else if (JobTraits17.stanceFx(sp, j, st.stance)) {
+            // 2026-11-07 프로스트타이드 (칼을 감도는 물 · 서리 소용돌이)
         } else if (JobTraits8.stanceFx(sp, j, st.stance)) {
             // 0.51.0 스펠 서지 (몸 둘레를 도는 금빛 별 · 완드 끝 별빛)
         } else if (JobTraits9.stanceFx(sp, j, st.stance)) {
@@ -615,7 +615,7 @@ public final class JobTraits {
         if (fervor(j)) value = st == null ? 0 : st.stacks; // 0.51.0 소드마스터도 투지 (최대 8)
         else if (j.id().equals(JobTraits5.BK)) value = JobTraits5.gaugeValue(sp, j); // 0.51.0 블러드 나이트 = 피의 갈증 (잃은 체력)
         else if (j.id().equals(JobTraits16.FR)) value = JobTraits16.gaugeValue(sp, j); // 2026-11-07 프로스트 레이더 = 마지막으로 친 적의 서리
-        else if (j.id().equals(JobTraits7.SC)) value = JobTraits7.gaugeValue(sp, j); // 0.51.0 소드 콜러 = 이어 벤 쌓임
+        else if (j.id().equals(JobTraits17.EB)) value = JobTraits17.gaugeValue(sp, j); // 2026-11-07 엘리멘탈 블레이드 = 칼에 깃든 원소 (1 불 ~ 5 바위)
         else if (j.id().equals(JobTraits8.NC)) value = JobTraits8.gaugeValue(sp, j); // 0.51.0 네크로맨서 = 망자 선원 수
         else if (j.id().equals(JobTraits9.BA)) value = JobTraits9.gaugeValue(sp, j); // 0.51.0 배틀 아처 = 다음 활 평타의 갈래 (1 · 3)
         else if (j.id().equals(JobTraits10.PR)) value = JobTraits10.gaugeValue(sp, j); // 0.51.0 피에로 = 소환물 수

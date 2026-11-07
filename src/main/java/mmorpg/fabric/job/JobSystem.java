@@ -79,8 +79,8 @@ public final class JobSystem {
         BloodknightSkills.register();
         WarlordSkills.register(); // 0.51.0 2차 직업 (전사 각성 · 반전)
         FrostraiderSkills.register(); // 2026-11-07 재설계안 3판 — 전사 반전 프로스트 레이더 (글래디에이터 대신 · 0.51.0 재설계안 2판의 글래디에이터는 라이칸 대신)
-        ArcanebladeSkills.register(); // 0.51.0 2차 직업 (마검사 각성 · 반전 — 아케인 블레이드 · 소드 콜러)
-        SwordcallerSkills.register();
+        ArcanebladeSkills.register(); // 0.51.0 2차 직업 (마검사 각성 — 아케인 블레이드)
+        ElementalbladeSkills.register(); // 2026-11-07 마검사 반전 엘리멘탈 블레이드 (소드 콜러 대신 — 원소 반응)
         ArcmageSkills.register(); // 0.51.0 2차 직업 (매지션 각성 · 반전)
         NecromancerSkills.register();
         SniperSkills.register(); // 0.51.0 궁수 2차 — 스나이퍼

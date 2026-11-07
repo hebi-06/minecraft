@@ -186,7 +186,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             java.util.Map.entry("dragoon_jump", new int[] {16}), // 2026-11-06 창술사 2차: 돌아서며 바람 창 · 뽑아 찢음 · 내리꽂음
             java.util.Map.entry("executioner_ult", new int[] {36}), java.util.Map.entry("darkknight_crunch", new int[] {12}), // 2026-11-06 엑시큐셔너: 앞 과녁을 처형 → 길로틴 오브 헤븐 다시 (2026-11-07 3판) · 다크 나이트: 크게 물어 찢음
             java.util.Map.entry("executioner_headhunt", new int[] {14}), // 2026-11-07 엑시큐셔너 3판: 헤드헌트 되돌려 X
-            java.util.Map.entry("frostraider_throw", new int[] {14})); // 2026-11-07 프로스트 레이더: 박힌 도끼를 되부름
+            java.util.Map.entry("frostraider_throw", new int[] {14}), // 2026-11-07 프로스트 레이더: 박힌 도끼를 되부름
+            java.util.Map.entry("elementalblade_flare", new int[] {12})); // 2026-11-07 엘리멘탈 블레이드: 불꽃 회오리
 
     /**
      * 0.51.0 워로드 (재설계안 2판): 대지 가르기 (24 까지 모음 → 28 내려침 · 돌창) · 동면 (40 깨어남) · 곰의 포옹 (2 ~ 8 끌어옴 · 12 내려찍음) ·
@@ -222,15 +223,17 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {4, 10, 16, 19, 21, 22, 24, 28, 31, 33, 38}, new int[] {12, 21, 31}, 48, false),
     };
     /**
-     * 0.51.0 재설계안 2판 소드 콜러: 베어라 (2 칼이 떠남 → 3 · 13 맴돌며 벰 → 22 꽂힘) · 데려가라 (꽂아 둔 칼로 날아감 — 지나가며 벰) · 꿰뚫고 맴돌아라 (3 꿰뚫음 →
-     * 13 · 23 · 33 · 43 맴돎) · 둘로 나뉘어라 (뒤 평타 — 칼 둘이 날아가 X 자) · 칼날 감옥 (10 둘러쌈 → 10 ~ 60 벰 → 70 큰 한 방)
+     * 2026-11-07 엘리멘탈 블레이드 (소드 콜러 대신 — 원소 반응): 플레어 엣지 (0 ~ 5 불꽃이 감김 → 5 가로 불꽃 베기 · 앞 과녁에 묻혀 둔 물과 증발 → 12 다시 누름 → 16 불꽃
+     * 회오리) · 어스 서지 (0 ~ 6 내달림 → 7 바위 가시 · 묻혀 둔 얼음과 쇄빙) · 볼트 피어스 (0 ~ 8 번개가 모임 → 8 찌름 · 묻혀 둔 물과 감전 → 18 · 28 · 38 내리꽂힘) ·
+     * 프로스트타이드 (태세 — 뒤 평타: 물결 검기 · 묻혀 둔 불과 증발) · 엘리멘탈 칼라미티 (6 다섯 칼 → 18 ~ 58 불 · 물 (증발) · 전기 · 얼음 (초전도) · 바위 → 60 합쳐짐 →
+     * 70 백금빛 대검)
      */
-    private static final Case[] CASES_SC = {
-        new Case(0, new int[] {1, 3, 6, 13, 16, 23}, new int[] {3, 13, 23}, 30, false),
-        new Case(1, new int[] {1, 2, 3, 5, 8, 12}, new int[] {2, 5}, 20, false),
-        new Case(2, new int[] {2, 3, 8, 13, 23, 33, 43, 47}, new int[] {3, 23, 43}, 56, false),
+    private static final Case[] CASES_EB = {
+        new Case(0, new int[] {2, 4, 5, 7, 12, 15, 16, 19}, new int[] {5, 16}, 30, false),
+        new Case(1, new int[] {1, 3, 5, 7, 9, 12}, new int[] {4, 7}, 22, false),
+        new Case(2, new int[] {4, 8, 10, 18, 28, 38, 41}, new int[] {8, 18, 38}, 50, false),
         new Case(3, new int[] {2, 4, 6, 12}, new int[] {6}, 20, true, false, 4),
-        new Case(4, new int[] {3, 6, 9, 10, 20, 30, 40, 50, 60, 67, 70, 72}, new int[] {6, 10, 40, 70}, 84, false),
+        new Case(4, new int[] {3, 6, 10, 18, 28, 38, 48, 58, 62, 67, 70, 73}, new int[] {10, 28, 48, 70}, 86, false),
     };
 
     /**
@@ -692,8 +695,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 3.2, 0.5, -60, 3.2).inflate(0.8), h -> true);
             if (!near.isEmpty()) mmorpg.fabric.job.JobTraits16.setFrost(sp, near.get(0), 3);
         }
-        // 0.51.0 소드 콜러: 데려가라는 앞 7칸에 꽂아 둔 칼 (그리로 날아감)
-        if (id.equals("swordcaller_shift")) mmorpg.fabric.job.JobTraits7.testStuck(sp, new Vec3(0.5, -60, 7.5), 200);
+        // 2026-11-07 엘리멘탈 블레이드: 과녁에 원소가 묻게 (mmorpg_elements 꼬리표) · 스킬마다 과녁에 먼저 묻혀 둔 원소 (반응이 보이게)
+        if (job.equals("elementalblade")) elementHusks(sp, id);
         // 0.51.0 아크메이지 (재설계안 2판): 스타 볼텍스는 연쇄 4 + 별 넷 (다섯째 별이 떠 별자리 완성)
         if (id.equals("arcmage_vortex")) {
             JobTraitsMore.setChain(sp, 4);
@@ -858,7 +861,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
-        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "frostraider"}, {"arcaneblade", "swordcaller"}, {"arcmage", "necromancer"},
+        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "frostraider"}, {"arcaneblade", "elementalblade"}, {"arcmage", "necromancer"},
         {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}, {"saint", "warlock"},
         {"phoenix", "darkknight"}};
 
@@ -884,7 +887,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "bloodknight" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "warlord" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
                         case "frostraider" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 5, sp -> {});
-                        case "arcaneblade", "swordcaller" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
+                        case "arcaneblade", "elementalblade" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "arcmage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 5, sp -> JobTraitsMore.setChain(sp, 2));
                         case "necromancer" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 4, sp -> {});
                         case "sniper" -> newJob(ctx, server, conn, job, "rpg:bow_l40_hero", 8, sp -> JobTraitsMore.setBreath(sp, 5));
@@ -948,6 +951,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "executioner_knell" -> new double[] {7.0, 2.8, 2.0, 0.6}; // 데스 넬: 머리 위 망령 종
             case "soulreaper_scythe" -> new double[] {8.0, 3.0, 1.8, 0.6}; // 스펙트럴 사이스: 머리 위 영혼 낫날 · 둘레 5칸 휩쓸기
             case "warlock_ult" -> new double[] {12.0, 3.4, 4.2, 0.4}; // 2026-11-07 블러드 뱅큇: 웅덩이 위 하늘에서 커지는 거대한 심장 (8칸까지) — 올려다봄
+            case "elementalblade_ult" -> new double[] {12.0, 3.4, 4.6, 0.4}; // 2026-11-07 엘리멘탈 칼라미티: 과녁 위 6칸 다섯 원소의 칼 · 8.7칸 백금빛 대검 — 올려다봄
+            case "elementalblade_surge" -> new double[] {8.5, 3.0, 1.4, 0.5}; // 어스 서지: 앞 7칸을 내달려 지나간 길의 바위 가시가 다 보이게
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
             case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};
@@ -973,7 +978,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "warlord" -> CASES_WL;
             case "frostraider" -> CASES_FR;
             case "arcaneblade" -> CASES_AB;
-            case "swordcaller" -> CASES_SC;
+            case "elementalblade" -> CASES_EB;
             case "arcmage" -> CASES_AM;
             case "necromancer" -> CASES_NC;
             case "sniper" -> CASES_SN;
@@ -1208,6 +1213,26 @@ public final class RpgJobGallery implements FabricClientGameTest {
             h.setYHeadRot(180F);
             h.setYBodyRot(180F);
             level.addFreshEntity(h);
+        }
+    }
+
+    /**
+     * 2026-11-07 엘리멘탈 블레이드 사진 · 영상: 과녁에 원소가 묻게 꼬리표 (mmorpg_elements — 옛 시험의 과녁은 묻지 않음) · 칼은 무속성에서 · 스킬마다 과녁에 먼저 묻혀 둔
+     * 원소 (플레어 엣지 → 물 = 증발 · 어스 서지 → 얼음 = 쇄빙 · 볼트 피어스 → 물 = 감전 · 프로스트타이드 → 불 = 증발 · 칼라미티는 스스로 이어 터뜨림)
+     */
+    private static void elementHusks(ServerPlayer sp, String id) {
+        mmorpg.fabric.job.ElementSystem.testClear();
+        mmorpg.fabric.job.JobTraits17.testBlade(sp, null);
+        String pre = switch (id) {
+            case "elementalblade_flare", "elementalblade_bolt" -> "water";
+            case "elementalblade_surge" -> "ice";
+            case "elementalblade_tide" -> "fire";
+            default -> null;
+        };
+        double P = JobSystem.power(sp, Jobs.job("elementalblade"));
+        for (Husk h : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 4, 0.5, -60, 4).inflate(30), h -> true)) {
+            h.addTag(mmorpg.fabric.job.ElementSystem.TEST_ELEMENTS);
+            if (pre != null) mmorpg.fabric.job.ElementSystem.apply(sp, h, pre, P, true, false);
         }
     }
 

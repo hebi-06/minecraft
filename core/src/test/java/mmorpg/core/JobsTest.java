@@ -480,7 +480,7 @@ public final class JobsTest {
                 "피의 갈증 체력 4% · 흡혈 5% · 체력 30% 에서 가장 목마름");
         check(Jobs.skillLine(sm.skill(0)).startsWith("라이트닝 드로우 · 6초 · 배율 ") && Jobs.skillLine(bk.skill(3)).equals("새비지 프렌지 · 30초"), "skill line " + Jobs.skillLine(sm.skill(0)));
         warriorAdvance(wa, wl, fr);
-        spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("arcaneblade"), Jobs.job("swordcaller"));
+        spellbladeAdvance(Jobs.job("spellblade"), Jobs.job("arcaneblade"), Jobs.job("elementalblade"));
         mageAdvance(Jobs.job("mage"), Jobs.job("arcmage"), Jobs.job("necromancer"));
         archerAdvance(Jobs.job("archer"), Jobs.job("sniper"), Jobs.job("battlearcher"));
         assassinAdvance(Jobs.job("assassin"), Jobs.job("trickster"), Jobs.job("pierrot"));
@@ -1022,41 +1022,54 @@ public final class JobsTest {
     }
 
     /**
-     * 0.51.0 마검사 2차 — 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신 — 사용자 "컨셉도 이명에 안맞추고 하자" · "커다란 검기가 나오면서 때리면") · 반전 소드 콜러
-     * (재설계안 2판 — 헥스 블레이드 대신). 부분 합 = 배율 합 (마검사와 같은 8.5 · 5.1 · 15.3 · 68) · 무적 시간 띄움 · t · w · 특성 · 마력 검술 (2차는 1차 마검사의 칼
-     * 규칙을 이어 받음)
+     * 0.51.0 마검사 2차 — 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신 — 사용자 "컨셉도 이명에 안맞추고 하자" · "커다란 검기가 나오면서 때리면") · 반전 엘리멘탈
+     * 블레이드 (2026-11-07 소드 콜러 대신 — 원소 반응 · "모두 원소 (예외)"). 부분 합 = 배율 합 (마검사와 같은 8.5 · 5.1 · 15.3 · 68) · 무적 시간 띄움 · t · w · 특성 ·
+     * 원소 · 마력 검술 (2차는 1차 마검사의 칼 규칙을 이어 받음)
      */
-    static void spellbladeAdvance(Jobs.Job sb, Jobs.Job ab, Jobs.Job sc) {
-        check(ab != null && sc != null, "spellblade advanced jobs");
-        if (ab == null || sc == null) return;
-        check(Jobs.advance("spellblade", "awaken") == ab && Jobs.advance("spellblade", "invert") == sc && Jobs.baseOf(ab) == sb && Jobs.baseOf(sc) == sb, "spellblade advance");
-        check(ab.display().equals("아케인 블레이드") && sc.display().equals("소드 콜러") && Jobs.find("아케인 블레이드") == ab && Jobs.find("arcaneblade") == ab
-                && Jobs.find("룬 스미스") == null && Jobs.job("runeknight") == null && Jobs.find("스키르니르") == null && Jobs.find("소드 콜러") == sc
-                && Jobs.find("swordcaller") == sc && Jobs.job("hexblade") == null, "spellblade display · find");
+    static void spellbladeAdvance(Jobs.Job sb, Jobs.Job ab, Jobs.Job eb) {
+        check(ab != null && eb != null, "spellblade advanced jobs");
+        if (ab == null || eb == null) return;
+        check(Jobs.advance("spellblade", "awaken") == ab && Jobs.advance("spellblade", "invert") == eb && Jobs.baseOf(ab) == sb && Jobs.baseOf(eb) == sb, "spellblade advance");
+        check(ab.display().equals("아케인 블레이드") && eb.display().equals("엘리멘탈 블레이드") && Jobs.find("아케인 블레이드") == ab && Jobs.find("arcaneblade") == ab
+                && Jobs.find("룬 스미스") == null && Jobs.job("runeknight") == null && Jobs.find("스키르니르") == null && Jobs.find("엘리멘탈 블레이드") == eb
+                && Jobs.find("elementalblade") == eb && Jobs.job("swordcaller") == null && Jobs.find("소드 콜러") == null && Jobs.job("hexblade") == null,
+                "spellblade display · find");
         List<String> abIds = new ArrayList<>();
-        List<String> scIds = new ArrayList<>();
+        List<String> ebIds = new ArrayList<>();
         for (Jobs.Skill k : ab.skills()) abIds.add(k.id());
-        for (Jobs.Skill k : sc.skills()) scIds.add(k.id());
+        for (Jobs.Skill k : eb.skills()) ebIds.add(k.id());
         check(abIds.equals(List.of("arcaneblade_crescent", "arcaneblade_cross", "arcaneblade_tempest", "arcaneblade_rift", "arcaneblade_ult")), "arcane blade skills " + abIds);
         // 디멘션 슬래시 (0.51.0 — 스펠 오버드라이브 대신): 가르기 + 닫힘 = 태세 칸 몫 12 × 1.7 · 16틱 사이 · 끌당
         Jobs.Skill rf = ab.skill(3);
         check(near(rf.num("slash", 0) + rf.num("close", 0), 20.4) && rf.num("closeAt", 0) - rf.num("slashAt", 0) >= 10 && near(rf.num("slashAt", 0), rf.num("w", 0))
                 && near(rf.num("closeAt", 0), rf.num("t", 0)) && Jobs.utils(rf).equals(List.of("pull")) && Jobs.areaKind(rf) == null, "디멘션 슬래시 6.4 + 14 · w 6 · t 22");
-        check(scIds.equals(List.of("swordcaller_strike", "swordcaller_shift", "swordcaller_orbit", "swordcaller_twin", "swordcaller_ult")), "sword caller skills " + scIds);
-        for (int i : new int[] {0, 1, 2, 4}) check(near(ab.skill(i).total(), sb.skill(i).total()) && near(sc.skill(i).total(), sb.skill(i).total()), "spellblade totals slot " + i);
+        check(ebIds.equals(List.of("elementalblade_flare", "elementalblade_surge", "elementalblade_bolt", "elementalblade_tide", "elementalblade_ult")),
+                "elemental blade skills " + ebIds);
+        for (int i : new int[] {0, 1, 2, 4}) check(near(ab.skill(i).total(), sb.skill(i).total()) && near(eb.skill(i).total(), sb.skill(i).total()), "spellblade totals slot " + i);
         // 아케인 블레이드: 가로 검기 + 세로 검기 · X 새김 + X 터짐 · 한 바퀴 + 폭풍 · 내려침 + 솟구침
         check(near(ab.skill(0).num("sweep", 0) + ab.skill(0).num("cleave", 0), 8.5) && near(ab.skill(1).num("path", 0) + ab.skill(1).num("cross", 0), 5.1)
                 && near(ab.skill(2).num("spin", 0) + ab.skill(2).num("burst", 0), 15.3) && near(ab.skill(4).num("slam", 0) + ab.skill(4).num("rift", 0), 68),
                 "arcane blade totals 8.5 · 5.1 · 15.3 · 68");
-        // 소드 콜러: 베어라 넷 · 꿰뚫음 + 맴돌기 넷 · 칼날 감옥 여섯 + 큰 한 방
-        check(near(sum(sc.skill(0), "cuts"), 8.5) && sc.skill(0).def().list("cuts").size() == 4 && near(sc.skill(2).num("pierce", 0) + sum(sc.skill(2), "spins"), 15.3)
-                && near(sum(sc.skill(4), "slashes") + sc.skill(4).num("final", 0), 68) && sc.skill(4).def().list("slashes").size() == 6, "sword caller totals 8.5 · 5.1 · 15.3 · 68");
+        // 엘리멘탈 블레이드: 불꽃 베기 + 회오리 · 바위 가시 · 번개 찌르기 + 내리꽂힘 셋 · 다섯 원소의 칼 + 합쳐진 대검
+        check(near(eb.skill(0).num("slash", 0) + eb.skill(0).num("spin", 0), 8.5) && near(eb.skill(1).num("spike", 0), 5.1)
+                && near(eb.skill(2).num("pierce", 0) + sum(eb.skill(2), "strikes"), 15.3) && eb.skill(2).def().list("strikes").size() == 3
+                && near(sum(eb.skill(4), "swords") + eb.skill(4).num("final", 0), 68) && eb.skill(4).def().list("swords").size() == 5, "elemental blade totals 8.5 · 5.1 · 15.3 · 68");
+        // 원소: 다섯 스킬 모두 원소 스킬 (사용자 "모두 원소 (예외)" — 불 · 바위 · 전기 · 물과 얼음 · 다섯), 칼라미티의 차례 = 다섯 원소 하나씩
+        check("fire".equals(Jobs.element(eb.skill(0))) && "rock".equals(Jobs.element(eb.skill(1))) && "thunder".equals(Jobs.element(eb.skill(2)))
+                && Elements.MULTI.equals(Jobs.element(eb.skill(3))) && Elements.MULTI.equals(Jobs.element(eb.skill(4))), "elemental blade elements");
+        List<Object> order = eb.skill(4).def().list("order");
+        check(order.size() == 5 && new java.util.HashSet<>(order).equals(new java.util.HashSet<Object>(Elements.order())) && Elements.reaction((String) order.get(0),
+                (String) order.get(1)) != null && Elements.reaction((String) order.get(2), (String) order.get(3)) != null, "칼라미티 차례: 다섯 원소 · 둘씩 반응 " + order);
+        for (Jobs.Skill k : eb.skills()) check(near(Jobs.elementMult(k), 1 - Elements.tax()), "elemental blade tax " + k.id());
         // 같은 적을 여러 번 치는 것은 10틱 넘게 (숫자만 여러 줄)
         check(ab.skill(0).num("gap", 0) >= 10 && ab.skill(1).num("crossAt", 0) - ab.skill(1).num("hitAt", 0) >= 10
                 && ab.skill(2).num("burstAt", 0) - ab.skill(2).num("spinAt", 0) >= 10 && ab.skill(4).num("t", 0) - ab.skill(4).num("w", 0) >= 10, "arcane blade i-frame spacing");
-        check(sc.skill(0).num("groupGap", 0) >= 10 && sc.skill(2).num("every", 0) >= 10 && sc.skill(4).num("every", 0) >= 10
-                && sc.skill(4).num("finalAt", 0) - sc.skill(4).num("surroundAt", 0) - 5 * sc.skill(4).num("every", 0) >= 10, "sword caller i-frame spacing");
-        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 앞 2.5칸 과녁)
+        Jobs.Skill fl = eb.skill(0);
+        Jobs.Skill bo = eb.skill(2);
+        Jobs.Skill ca = eb.skill(4);
+        check(fl.num("gap", 0) + fl.num("spinAt", 0) >= fl.num("slashAt", 0) + 10 && bo.num("every", 0) >= 10 && ca.num("every", 0) >= 10
+                && ca.num("finalAt", 0) - ca.num("first", 0) - 4 * ca.num("every", 0) >= 10, "elemental blade i-frame spacing");
+        // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 앞 2.5칸 과녁 · 다시 누름 12틱)
         Jobs.Skill cr = ab.skill(0);
         double first = cr.num("charge", 0) + Math.ceil((2.5 - cr.num("start", 0)) / cr.num("speed", 1));
         check(near(first, 7) && !cr.def().has("w") && near(first + cr.num("gap", 0), cr.num("t", 0)), "크레센트 엣지 첫 7 · t 17");
@@ -1067,43 +1080,40 @@ public final class JobsTest {
         Jobs.Skill wc = ab.skill(4);
         check(near(wc.num("slamAt", 0), wc.num("w", 0)) && near(wc.num("riftAt", 0) + Math.ceil((2.5 - wc.num("start", 0)) / wc.num("riftSpeed", 1)), wc.num("t", 0)),
                 "월드 클리버 w 21 · t 31");
-        Jobs.Skill st = sc.skill(0);
-        check(near(st.num("launch", 0) + 1 + st.num("groupGap", 0), st.num("t", 0)) && st.def().list("cuts").size() == 2 * st.num("group", 0), "베어라 t 13");
-        check(near(sc.skill(1).num("start", 0) + Math.ceil(2.5 / sc.skill(1).num("speed", 1)), sc.skill(1).num("t", 0)), "데려가라 t 3");
-        Jobs.Skill ob = sc.skill(2);
-        check(near(ob.num("launch", 0) + 1 + ob.def().list("spins").size() * ob.num("every", 0), ob.num("t", 0)) && ob.num("lines", 0) * ob.def().list("spins").size() == 12,
-                "꿰뚫고 맴돌아라 t 43 · 칼질 열둘");
-        check(near(sc.skill(4).num("finalAt", 0), sc.skill(4).num("t", 0)) && near(sc.skill(4).num("surroundAt", 0), sc.skill(4).num("w", 0))
-                && sc.skill(4).num("lines", 0) * sc.skill(4).def().list("slashes").size() == 30, "칼날 감옥 t 70 · w 10 · 칼질 서른");
-        // 특성: 아케인 블레이드 = 마력 각인 최대 5 · 번짐 0.5 · 3칸 (다섯이 차면 한꺼번에 — 거대한 마력 대검), 소드 콜러 = 스스로 싸우는 칼 (최대 5 · 하나당 공격 속도
-        // +20% → ×2)
+        check(near(12 + fl.num("spinAt", 0), fl.num("t", 0)) && fl.num("slashAt", 0) < 8 && !fl.def().has("w") && fl.num("gap", 0) <= 12, "플레어 엣지 첫 5 · t 16 (다시 누름 12)");
+        Jobs.Skill su = eb.skill(1);
+        check(near(su.num("eruptAt", 0), su.num("t", 0)) && near(su.num("eruptAt", 0), su.num("w", 0)) && su.num("dashTicks", 0) < su.num("eruptAt", 0)
+                && su.num("dist", 0) > 2.5, "어스 서지 w · t 7");
+        check(near(bo.num("chargeAt", 0), bo.num("w", 0)) && near(bo.num("chargeAt", 0) + 3 * bo.num("every", 0), bo.num("t", 0)), "볼트 피어스 w 8 · t 38");
+        check(near(ca.num("first", 0), ca.num("w", 0)) && near(ca.num("finalAt", 0), ca.num("t", 0)) && ca.num("riseAt", 0) < ca.num("first", 0), "칼라미티 w 18 · t 70");
+        // 특성: 아케인 블레이드 = 마력 각인 최대 5 · 번짐 0.5 · 3칸 (다섯이 차면 한꺼번에 — 거대한 마력 대검), 엘리멘탈 블레이드 = 원소의 칼 (게이지 = 깃든 원소의 차례 — 다섯)
         check(ab.trait().name().equals("마력 각인") && ab.trait().max() == 5 && near(ab.trait().def().numOr("markBurst", 0), sb.trait().def().numOr("markBurst", -1))
                 && near(ab.trait().def().numOr("spread", 0), 0.5) && near(ab.trait().def().numOr("spreadRadius", 0), 3) && !ab.trait().def().has("heatFor"),
                 "마력 각인 5 · 번짐 0.5 · 3칸");
-        check(sc.trait().name().equals("스스로 싸우는 칼") && sc.trait().max() == 5 && near(1 + sc.trait().max() * sc.trait().def().numOr("per", 0), 2)
-                && near(sc.trait().def().numOr("range", 0), 10), "스스로 싸우는 칼 5 · ×2 · 10칸");
+        check(eb.trait().name().equals("원소의 칼") && eb.trait().max() == Elements.order().size() && near(eb.scale(), sb.scale()), "원소의 칼 5");
         // 마력 검술: 2차는 특성에 magicSword 가 없어도 1차의 칼 규칙 (요구 힘 = 힘 + 마력 · 피해 힘 = 힘 + 마력 × 0.5)
         Map<String, Double> s0 = new java.util.LinkedHashMap<>();
         s0.put("str", 10.0);
         s0.put("int", 40.0);
-        for (Jobs.Job a : List.of(ab, sc)) {
+        for (Jobs.Job a : List.of(ab, eb)) {
             check(Jobs.magicSword(a, "sword") && !Jobs.magicSword(a, "axe"), a.id() + " magic sword");
             check(near(Jobs.reqStats(a, "sword", s0).get("str"), 50) && near(Jobs.damageStats(a, "sword", s0).get("str"), 30), a.id() + " magic sword stats");
         }
-        // 유틸: 크레센트 엣지 없음 · 팬텀 크로스 순간 이동 · 아케인 템페스트 끌당 + 띄움 · 월드 클리버 띄움 / 데려가라 순간 이동 · 칼날 감옥 묶음 3초
+        // 유틸: 크레센트 엣지 없음 · 팬텀 크로스 순간 이동 · 아케인 템페스트 끌당 + 띄움 · 월드 클리버 띄움 / 어스 서지 순간 이동 + 받는 피해 줄임 + 띄움 · 나머지 없음
         check(Jobs.utils(ab.skill(0)).isEmpty() && Jobs.utils(ab.skill(1)).equals(List.of("blink")) && Jobs.utils(ab.skill(2)).equals(List.of("pull", "lift"))
-                && Jobs.utils(ab.skill(4)).equals(List.of("lift")) && Jobs.utils(sc.skill(1)).equals(List.of("blink"))
-                && Jobs.utils(sc.skill(4)).equals(List.of("root3")) && Jobs.utils(sc.skill(0)).isEmpty() && Jobs.utils(sc.skill(2)).isEmpty(), "spellblade advanced utils");
-        check(Jobs.windupTicks(ab.skill(0)) == 0 && Jobs.windupTicks(ab.skill(2)) == 8 && Jobs.windupTicks(ab.skill(4)) == 21 && Jobs.windupTicks(sc.skill(4)) == 10,
-                "windups 0 · 8 · 21 · 10");
+                && Jobs.utils(ab.skill(4)).equals(List.of("lift")) && Jobs.utils(eb.skill(1)).equals(List.of("blink", "reduce", "lift"))
+                && Jobs.utils(eb.skill(0)).isEmpty() && Jobs.utils(eb.skill(2)).isEmpty() && Jobs.utils(eb.skill(4)).isEmpty(), "spellblade advanced utils");
+        check(Jobs.windupTicks(ab.skill(0)) == 0 && Jobs.windupTicks(ab.skill(2)) == 8 && Jobs.windupTicks(ab.skill(4)) == 21 && Jobs.windupTicks(eb.skill(0)) == 0
+                && Jobs.windupTicks(eb.skill(1)) == 7 && Jobs.windupTicks(eb.skill(2)) == 8 && Jobs.windupTicks(eb.skill(4)) == 18, "windups 0 · 8 · 21 / 0 · 7 · 8 · 18");
         check("narrow".equals(Jobs.areaKind(ab.skill(0))) && "narrow".equals(Jobs.areaKind(ab.skill(1))) && Jobs.areaKind(ab.skill(2)) == null && Jobs.areaKind(ab.skill(4)) == null
-                && "single".equals(Jobs.areaKind(sc.skill(2))) && "single".equals(Jobs.areaKind(sc.skill(4))) && Jobs.slotRole(sc.skill(2)).equals("주력")
+                && "single".equals(Jobs.areaKind(eb.skill(2))) && "single".equals(Jobs.areaKind(eb.skill(4))) && Jobs.slotRole(eb.skill(2)).equals("주력")
                 && !Jobs.slotRole(ab.skill(2)).equals("주력"), "areas · 주력");
-        check(Jobs.upKeys(ab.skill(3)).isEmpty() && Jobs.upKeys(sc.skill(3)).size() == 1 && Jobs.upKey(sc.skill(3), "echo") != null, "stance up keys");
-        check(Jobs.skillLine(ab.skill(3)).startsWith("디멘션 슬래시 · 30초 · 배율 ") && Jobs.skillLine(sc.skill(0)).startsWith("플라잉 블레이드 · 6초 · 배율 "),
+        check(Jobs.upKeys(ab.skill(3)).isEmpty() && Jobs.upKeys(eb.skill(3)).size() == 1 && Jobs.upKey(eb.skill(3), "echo") != null, "stance up keys");
+        check(Jobs.skillLine(ab.skill(3)).startsWith("디멘션 슬래시 · 30초 · 배율 ") && Jobs.skillLine(eb.skill(0)).startsWith("플레어 엣지 · 6초 · 배율 "),
                 "spellblade advanced skill line");
-        check(ab.color()[0][2] > 0.9 && ab.color()[0][0] > 0.6 && ab.color()[1][1] > 0.9 && ab.color()[1][2] > 0.9 && sc.color()[0][0] < 0.3 && sc.color()[0][1] > 0.8
-                && sc.color()[1][2] > 0.9, "colors: purple · cyan / teal · white");
+        check(ab.color()[0][2] > 0.9 && ab.color()[0][0] > 0.6 && ab.color()[1][1] > 0.9 && ab.color()[1][2] > 0.9 && eb.color()[0][0] > 0.9 && eb.color()[0][2] < 0.5
+                && eb.color()[1][2] > 0.9, "colors: purple · cyan / gold · ice blue");
+        for (Jobs.Skill k : eb.skills()) check(!k.desc().contains("롤") && (k.total() <= 0 || Jobs.scaleNote(k).contains("원소")), "no LoL names in-game · 원소 몫 " + k.id());
     }
 
     /**

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """0.51.0 2차 직업 스킬 아이콘 — 검사 각성 소드마스터 · 반전 블러드 나이트 · 전사 각성 워로드 · 반전 프로스트 레이더 (2026-11-07 재설계안 3판 — 글래디에이터 대신) ·
-마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신) · 반전 소드 콜러 (재설계안 2판) · 매지션 각성 아크메이지 · 반전 네크로맨서 ·
+마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신) · 반전 엘리멘탈 블레이드 (2026-11-07 소드 콜러 대신) · 매지션 각성 아크메이지 · 반전 네크로맨서 ·
 궁수 각성 스나이퍼 · 반전 배틀 아처 (재설계안 2판 — 섀도 헌터 대신) · 암살자 각성 트릭스터 (2026-11-06 2판) · 반전 피에로 (블레이드 댄서 대신) · 창술사 각성 스톰 랜서 · 반전 드라군 · 사신 각성 소울 리퍼 · 반전 엑시큐셔너 (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
 모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph 와 같은 꼴, 아케인 블레이드의 검기는 rfx_jwave 와 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
 프로스트 레이더 = 얼음빛 (첫째) · 서리 흰빛 (둘째 — 얼어붙은 극야 바탕 · 도끼 자루는 짙은 남빛 쇠), 아케인 블레이드 = 보라 (첫째) · 청록 (둘째 — 짙은 남보라 밤 바탕),
-소드 콜러 = 청록 (첫째) · 흰 청록 (둘째 — 짙은 청록 밤 바탕), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
+엘리멘탈 블레이드 = 금빛 (첫째) · 얼음빛 (둘째 — 스킬마다 원소 빛 · 짙은 남색 밤 바탕), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
 네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕), 스나이퍼 = 밝은 연두 (첫째) · 금빛 흰 섬광 (둘째 — 짙은 숲 바탕),
 배틀 아처 = 폭풍 하늘빛 (첫째) · 번개 노랑 (둘째 — 짙은 폭풍 남청 바탕), 트릭스터 = 자홍 (첫째) · 검보라 (둘째 — 짙은 보라 바탕 · 환영은 청록 테 · 들불은 분홍),
 피에로 = 빨강 (첫째) · 크림 금빛 (둘째 — 서커스 밤 바탕 · 할리퀸 마름모 무늬 · 금방울), 스톰 랜서 = 옥빛 바람 (첫째) · 흰빛 (둘째 — 짙은 옥빛 폭풍 바탕),
@@ -925,124 +925,133 @@ def arcaneblade_ult(A, B):
     return finish(subject, [glow(lighter(crack, flash), B, 1.6, 1.0), glow(pillars, A, 1.8, 0.9)], arcane_back(A, B))
 
 
-# ------------------------------------------------------------ 소드 콜러 (빛: 청록 → 흰 청록 — 칼이 손을 떠나 스스로 싸움 · 재설계안 2판)
+# ------------------------------------------------------------ 엘리멘탈 블레이드 (빛: 금빛 → 얼음빛 — 스킬마다 원소 빛 · 짙은 남색 밤 바탕, 2026-11-07 소드 콜러 대신)
 
-CALL_NIGHT = (4, 14, 20)
-
-
-def caller_back(A, B):
-    return backdrop(mix(A, CALL_NIGHT, 0.86), mix(A, (10, 54, 64), 0.5))
-
-
-def call_sword(tip, end, A, B, blade=2.6, guard=6.0, fade=0.0):
-    """마력 칼 (흰 청록 날 · 청록 코등이 — 게임의 phantom_sword 판). fade = 뒤 잔상 (바탕 쪽으로 어둡게)"""
-    def f(c):
-        return None if c is None else mix(c, CALL_NIGHT, fade)
-    return sword_layers(tip, end, blade=blade, guard=guard, blade_cols=(f(WHITE), f(mix(A, WHITE, 0.55)), f(WHITE), f(mix(A, (0, 0, 0), 0.35))),
-                        guard_cols=(f(mix(A, WHITE, 0.35)), f(A), f(WHITE), f(mix(A, (0, 0, 0), 0.5))),
-                        grip_cols=(f(mix(A, (0, 0, 0), 0.45)), f(mix(A, (0, 0, 0), 0.7)), None, None))
+EB_NIGHT = (12, 14, 38)
+EL_FIRE, EL_FIRE_HI = (255, 107, 26), (255, 230, 140)
+EL_WATER, EL_WATER_HI = (46, 128, 255), (179, 235, 255)
+EL_VOLT, EL_VOLT_HI = (184, 97, 255), (247, 224, 255)
+EL_ICE, EL_ICE_HI = (128, 230, 255), (240, 252, 255)
+EL_ROCK, EL_ROCK_HI = (204, 143, 51), (255, 219, 128)
+EL_ORDER = ((EL_FIRE, EL_FIRE_HI), (EL_WATER, EL_WATER_HI), (EL_VOLT, EL_VOLT_HI), (EL_ICE, EL_ICE_HI), (EL_ROCK, EL_ROCK_HI))
 
 
-def swordcaller_strike(A, B):
-    # 베어라: 왼쪽 위에서 날아드는 칼 (뒤의 바람 줄 · 옅은 잔상) · 오른쪽 아래 겨눈 자리의 고리 (땅) · 그 자리를 휘감아 도는 칼빛 두 줄 (원을 이룸)
-    target = mask()
-    oval(target, 21.0, 26.0, 8.6, 3.0, 1.0)
-    whirl = mask()
-    crescent(whirl, 21.0, 21.4, 8.0, 2.0, 200, 340)
-    crescent(whirl, 21.0, 21.4, 8.0, 2.0, 20, 160)
-    ghost = call_sword((15.4, 15.4), (2.0, 2.0), A, B, blade=2.4, guard=5.2, fade=0.55)
-    sw = call_sword((21.4, 21.4), (8.0, 8.0), A, B, blade=2.8, guard=6.0)
-    wind = mask()
-    for (x0, y0), (x1, y1) in (((2.0, 10.4), (8.6, 17.0)), ((10.4, 2.0), (17.0, 8.6)), ((3.4, 14.6), (7.0, 18.2))):
-        line(wind, [(x0, y0), (x1, y1)], 0.6)
+def eb_back(c):
+    """짙은 남색 밤에 그 원소 빛이 가운데서 번짐"""
+    return backdrop(mix(c, EB_NIGHT, 0.86), mix(c, EB_NIGHT, 0.5))
+
+
+def eb_sword(tip, end, A, c, hi, blade=2.6, guard=6.4):
+    """원소가 깃든 칼 (날 = 그 원소 빛을 머금은 흰 날 · 코등이 = 직업 금빛)"""
+    return sword_layers(tip, end, blade=blade, guard=guard, blade_cols=(mix(hi, WHITE, 0.35), mix(c, hi, 0.35), WHITE, mix(c, (0, 0, 0), 0.4)),
+                        guard_cols=(mix(A, WHITE, 0.4), A, WHITE, mix(A, (0, 0, 0), 0.5)), grip_cols=((70, 52, 40), (34, 24, 20), None, None))
+
+
+def eb_flame(m, x, base, h, w, lean=0.0):
+    """불꽃 혀 (밑 너비 w · 높이 h · 끝이 lean 만큼 기욺 — 위로 가늘어지며 살짝 휨)"""
+    poly(m, [(x - w / 2, base), (x - w * 0.42 + lean * 0.2, base - h * 0.45), (x - w * 0.12 + lean * 0.7, base - h * 0.82), (x + lean, base - h),
+             (x + w * 0.2 + lean * 0.55, base - h * 0.62), (x + w * 0.46 + lean * 0.15, base - h * 0.3), (x + w / 2, base)])
+
+
+def elementalblade_flare(A, B):
+    # 플레어 엣지: 위를 가로지르는 거대한 불꽃 초승달 (흰 날 · 바깥으로 솟는 불꽃 혀) · 아래의 둘째 불꽃 회오리 (옅은 고리) · 왼쪽 아래에서 휘두른 칼 · 앞 끝 불티
+    arc = mask()
+    crescent(arc, 16.0, 21.0, 13.4, 4.6, 196, 344)
+    edge = mask()
+    crescent(edge, 16.0, 21.0, 13.4, 1.4, 204, 336)
+    tongues = mask()
+    for a, hh in ((214, 3.2), (238, 4.4), (262, 5.0), (286, 4.4), (312, 3.4), (332, 2.4)):
+        r = math.radians(a)
+        x, y = 16.0 + math.cos(r) * 13.0, 21.0 + math.sin(r) * 13.0
+        eb_flame(tongues, x, y + 1.0, hh, 2.6, (x - 16.0) * 0.12)
+    sw = eb_sword((22.6, 16.4), (4.4, 29.6), A, EL_FIRE, EL_FIRE_HI, blade=3.0, guard=6.4)
+    sparks = mask()
+    star(sparks, 29.0, 18.6, 2.6, 0.2, 0)
+    star(sparks, 3.4, 17.6, 1.8, 0.24, 20)
+    for x, y in ((25.0, 25.0), (28.4, 23.0), (20.6, 27.6)):
+        disc(sparks, x, y, 0.75)
+    subject = stack(layer(tongues, EL_FIRE_HI, EL_FIRE, None, mix(EL_FIRE, (0, 0, 0), 0.35)),
+                    layer(arc, mix(EL_FIRE_HI, WHITE, 0.3), EL_FIRE, None, mix(EL_FIRE, (0, 0, 0), 0.4)), layer(edge, WHITE, EL_FIRE_HI), *sw,
+                    layer(sparks, WHITE, EL_FIRE_HI))
+    return finish(subject, [glow(lighter(arc, tongues), EL_FIRE, 2.0, 1.0), glow(sparks, EL_FIRE, 1.0, 0.8)], eb_back(EL_FIRE))
+
+
+def elementalblade_surge(A, B):
+    # 어스 서지: 왼쪽에서 땅을 긁으며 내달린 칼 (칼끝이 땅) · 지나간 땅의 금빛 갈라짐 · 갈라진 길에서 솟는 바위 가시 셋 (오른쪽이 큼) · 튀는 돌 조각
+    gnd = ground(25.0)
+    crack = mask()
+    zigzag(crack, (5.0, 25.6), (30.0, 25.2), 8, 0.9, 1.2, 2)
+    spikes = mask()
+    for bx, hh, lean, w in ((13.0, 6.5, -0.6, 4.2), (19.6, 10.0, 0.4, 5.0), (26.4, 14.0, 1.0, 5.8)):
+        rock_spike(spikes, bx, 25.4, hh, lean, w)
+    seams = mask()
+    for x0, y0, x1, y1 in ((19.4, 23.6, 20.2, 17.6), (26.0, 23.6, 27.0, 14.6), (13.0, 23.8, 12.6, 20.4)):
+        line(seams, [(x0, y0), (x1, y1)], 0.55)
+    chips = mask()
+    for x, y, r in ((16.6, 12.6, 0.9), (22.6, 7.4, 1.0), (29.6, 9.0, 0.7), (11.0, 16.6, 0.7)):
+        poly(chips, [(x - r, y), (x, y - r * 1.2), (x + r, y - 0.2), (x + r * 0.2, y + r)])
+    sw = eb_sword((7.8, 26.0), (2.6, 9.6), A, EL_ROCK, EL_ROCK_HI, blade=2.6, guard=5.8)
+    dust = mask()
+    for x, y in ((4.0, 23.6), (6.6, 21.8), (9.2, 23.0)):
+        disc(dust, x, y, 0.9)
+    stone = ((214, 172, 112), (112, 80, 48), mix(EL_ROCK_HI, WHITE, 0.3), (46, 32, 20))
+    subject = stack(layer(gnd, (64, 46, 30), (28, 20, 14)), layer(crack, WHITE, EL_ROCK_HI), layer(dust, mix(EL_ROCK, WHITE, 0.2), mix(EL_ROCK, EB_NIGHT, 0.3)),
+                    layer(spikes, *stone, axis=(0.7, 0.7)), layer(seams, WHITE, EL_ROCK_HI), layer(chips, *stone), *sw)
+    return finish(subject, [glow(lighter(crack, seams), EL_ROCK_HI, 1.8, 1.0), glow(spikes, EL_ROCK, 2.0, 0.7)], eb_back(EL_ROCK))
+
+
+def elementalblade_bolt(A, B):
+    # 볼트 피어스: 왼쪽에서 곧게 찔러 오른쪽 끝까지 뻗은 칼 · 칼날을 감는 번개 · 칼끝의 번쩍임 (꿰뚫음) · 오른쪽 위 하늘에서 칼끝으로 내리꽂히는 번개 · 찌른 바람 줄
+    sw = eb_sword((29.6, 17.0), (3.0, 20.4), A, EL_VOLT, EL_VOLT_HI, blade=2.6, guard=6.4)
+    coil = mask()
+    zigzag(coil, (12.0, 17.0), (28.6, 16.4), 9, 1.6, 0.6, 1)
+    strike = mask()
+    zigzag(strike, (22.0, 1.0), (28.4, 15.4), 6, 1.8, 1.3, 3)
+    zigzag(strike, (25.6, 6.4), (30.6, 9.6), 3, 0.7, 0.6, 0)
     flash = mask()
-    star(flash, 21.4, 21.4, 3.2, 0.2, 0)
-    subject = stack(layer(target, mix(A, WHITE, 0.3), A, None, mix(A, (0, 0, 0), 0.4)), layer(wind, mix(A, WHITE, 0.4), mix(A, CALL_NIGHT, 0.3)), *ghost,
-                    layer(whirl, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.3)), *sw, layer(flash, WHITE, B))
-    return finish(subject, [glow(lighter(whirl, target, flash), A, 1.8, 1.0)], caller_back(A, B))
-
-
-def swordcaller_shift(A, B):
-    # 데려가라: 오른쪽 땅에 꽂혀 기다리는 칼 (발밑 룬 고리) · 칼에서 뻗어 나를 끌어당기는 청록 줄 · 왼쪽에서 칼 쪽으로 날아가는 몸의 잔상 (갈매기 셋 — 앞이 밝음) · 바람 줄
-    gnd = ground(26.4)
-    rring = mask()
-    oval(rring, 24.0, 26.6, 5.0, 1.8, 0.8)
-    stuck = call_sword((24.0, 28.6), (24.0, 6.0), A, B, blade=3.0, guard=6.6)
-    tether = mask()
-    line(tether, [(23.0, 10.0), (17.0, 13.6), (9.0, 16.6)], 0.8)
-    chev = []
-    for i, x in enumerate((4.4, 9.4, 14.6)):
-        m = mask()
-        poly(m, [(x, 12.6), (x + 4.6, 17.0), (x, 21.4), (x + 1.8, 17.0)])
-        chev.append((m, 0.62 - 0.3 * i))
+    star(flash, 29.0, 16.6, 4.6, 0.18, 0)
     wind = mask()
-    for y, x0, x1 in ((11.0, 2.0, 7.6), (23.0, 2.6, 8.6), (9.0, 12.0, 15.6)):
+    for y, x0, x1 in ((12.6, 4.0, 11.0), (23.4, 6.0, 12.0)):
         line(wind, [(x0, y), (x1, y)], 0.5)
-    layers_ = [ground_layer(gnd, A), layer(rring, mix(A, WHITE, 0.4), A), layer(wind, mix(A, WHITE, 0.3), mix(A, CALL_NIGHT, 0.4))]
-    for m, fade in chev:
-        layers_.append(layer(m, mix(WHITE, CALL_NIGHT, fade), mix(A, CALL_NIGHT, fade), None, mix(A, (0, 0, 0), 0.4)))
-    subject = stack(*layers_, layer(tether, WHITE, A), *stuck)
-    return finish(subject, [glow(lighter(tether, chev[2][0], rring), A, 1.8, 1.0)], caller_back(A, B))
+    subject = stack(layer(wind, mix(EL_VOLT, WHITE, 0.4), mix(EL_VOLT, EB_NIGHT, 0.4)), *sw, layer(coil, WHITE, EL_VOLT_HI),
+                    layer(strike, WHITE, EL_VOLT_HI, None, mix(EL_VOLT, (0, 0, 0), 0.3)), layer(flash, WHITE, EL_VOLT_HI))
+    return finish(subject, [glow(lighter(coil, strike, flash), EL_VOLT, 2.0, 1.0)], eb_back(EL_VOLT))
 
 
-def swordcaller_orbit(A, B):
-    # 꿰뚫고 맴돌아라: 가운데 꿰뚫린 과녁 (마름모 표식 · 꿰뚫은 빛줄기) · 둘레를 비스듬히 도는 궤도 · 궤도 앞쪽을 도는 칼 (가는 쪽으로 누움 · 뒤로 끌리는 칼빛) · 벤 자국 셋
-    orbit_back = mask()
-    ribbon(orbit_back, 16.0, 16.0, 12.4, 5.4, 190, 350, 0.3, 0.6)
-    orbit_front = mask()
-    ribbon(orbit_front, 16.0, 16.0, 12.4, 5.4, 10, 170, 1.6, 0.4)
-    mark = mask()
-    poly(mark, [(16.0, 9.6), (20.0, 16.0), (16.0, 22.4), (12.0, 16.0)])
-    inner = mask()
-    poly(inner, [(16.0, 12.6), (18.0, 16.0), (16.0, 19.4), (14.0, 16.0)])
-    pierce = mask()
-    tapered(pierce, [(2.6, 5.0), (16.0, 16.0), (29.4, 27.0)], 0.4, 1.6)
-    a = math.radians(70)
-    cx, cy = 16.0 + math.cos(a) * 12.4, 16.0 + math.sin(a) * 5.4
-    tx, ty = -math.sin(a) * 12.4, math.cos(a) * 5.4
-    L = math.hypot(tx, ty)
-    tx, ty = tx / L, ty / L
-    sw = call_sword((cx + tx * 8.0, cy + ty * 8.0 - 1.0), (cx - tx * 6.6, cy - ty * 6.6 + 1.0), A, B, blade=3.0, guard=6.0)
-    subject = stack(layer(orbit_back, mix(A, WHITE, 0.2), mix(A, CALL_NIGHT, 0.4)), layer(pierce, WHITE, A), layer(mark, mix(B, A, 0.4), A, WHITE, mix(A, (0, 0, 0), 0.5)),
-                    layer(inner, WHITE, B), layer(orbit_front, WHITE, A), *sw)
-    return finish(subject, [glow(lighter(orbit_front, pierce), A, 1.8, 1.0), glow(inner, B, 1.0, 0.8)], caller_back(A, B))
+def elementalblade_tide(A, B):
+    # 프로스트타이드: 가운데 곧게 선 칼 · 칼을 감아 오르는 물결 띠 (왼쪽 · 물빛) 와 서리 띠 (오른쪽 · 얼음빛) · 오른쪽의 눈꽃 · 왼쪽의 물방울
+    water = mask()
+    ribbon(water, 16.0, 17.0, 8.6, 4.2, 100, 250, 0.4, 1.8)
+    ribbon(water, 16.0, 11.0, 6.4, 3.0, 110, 240, 0.3, 1.2)
+    frost = mask()
+    ribbon(frost, 16.0, 17.0, 8.6, 4.2, -70, 70, 1.8, 0.4)
+    ribbon(frost, 16.0, 23.0, 6.8, 3.2, -60, 60, 1.2, 0.3)
+    sw = eb_sword((16.0, 2.0), (16.0, 29.6), A, EL_ICE, EL_ICE_HI, blade=2.8, guard=7.0)
+    flakes = mask()
+    snowfall(flakes, [(27.0, 8.0, 2.0), (28.6, 24.0, 1.5), (24.0, 4.0, 1.2)])
+    drops = mask()
+    for x, y, r in ((4.6, 10.0, 1.1), (5.6, 23.6, 1.3), (8.4, 4.8, 0.9)):
+        drop(drops, x, y, r)
+    subject = stack(layer(drops, mix(EL_WATER_HI, WHITE, 0.3), EL_WATER), *sw, layer(water, mix(EL_WATER_HI, WHITE, 0.2), EL_WATER, None, mix(EL_WATER, (0, 0, 0), 0.4)),
+                    layer(frost, WHITE, EL_ICE, None, mix(EL_ICE, (0, 0, 0), 0.45)), layer(flakes, WHITE, EL_ICE_HI))
+    return finish(subject, [glow(water, EL_WATER, 1.8, 0.9), glow(lighter(frost, flakes), EL_ICE, 1.8, 0.9)], eb_back(mix(EL_WATER, EL_ICE, 0.5)))
 
 
-def swordcaller_twin(A, B):
-    # 둘로 나뉘어라: 가운데 아래에서 하나였던 칼이 둘로 갈라져 V 자로 벌어짐 (왼쪽 칼은 거울 · 오른쪽 칼 — 둘 다 칼끝 위) · 가운데를 가르는 세로 빛 · 갈라진 자리의 번쩍임
-    split = mask()
-    tapered(split, [(16.0, 30.0), (16.0, 16.0), (16.0, 2.0)], 1.4, 0.2)
-    left = call_sword((5.4, 4.0), (14.6, 27.4), A, B, blade=2.8, guard=6.0)
-    right = call_sword((26.6, 4.0), (17.4, 27.4), A, B, blade=2.8, guard=6.0)
-    arcs = mask()
-    crescent(arcs, 16.0, 26.0, 12.0, 1.4, 196, 250)
-    crescent(arcs, 16.0, 26.0, 12.0, 1.4, 290, 344)
-    flash = mask()
-    star(flash, 16.0, 23.4, 4.6, 0.18, 0)
-    subject = stack(layer(split, WHITE, mix(A, WHITE, 0.4)), layer(arcs, mix(A, WHITE, 0.3), A), *left, *right, layer(flash, WHITE, B))
-    return finish(subject, [glow(lighter(split, arcs, flash), A, 1.8, 1.0)], caller_back(A, B))
-
-
-def swordcaller_ult(A, B):
-    # 칼날 감옥: 가운데 갇힌 과녁 (마름모 표식) 을 둘러싸 칼끝을 겨눈 칼 여섯 (둥글게) · 칼 사이를 잇는 감옥 고리 · 가운데로 모이는 벤 자국 · 가운데 번쩍임
-    cage = mask()
-    ring(cage, 16.0, 16.0, 9.0, 0.9)
+def elementalblade_ult(A, B):
+    # 엘리멘탈 칼라미티: 위에 둥글게 선 다섯 원소의 칼 (칼끝이 아래 — 불 · 물 · 전기 · 얼음 · 바위) · 가운데로 내리꽂히는 백금빛 대검 · 아래 땅의 원소 고리 · 꽂힌 자리 번쩍임
     swords = []
-    for i in range(6):
-        a = math.radians(-90 + i * 60)
-        ux, uy = math.cos(a), math.sin(a)
-        swords += call_sword((16.0 + ux * 4.6, 16.0 + uy * 4.6), (16.0 + ux * 14.6, 16.0 + uy * 14.6), A, B, blade=2.2, guard=4.8)
-    mark = mask()
-    poly(mark, [(16.0, 12.6), (19.0, 16.0), (16.0, 19.4), (13.0, 16.0)])
-    cuts = mask()
-    for a in (20, 80, 140):
-        ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
-        line(cuts, [(16.0 - ca * 6.0, 16.0 - sa * 6.0), (16.0 + ca * 6.0, 16.0 + sa * 6.0)], 0.5)
+    for i, (c, hi) in enumerate(EL_ORDER):
+        a = math.radians(-90 + (i - 2) * 34)
+        cx, cy = 16.0 + math.cos(a) * 12.4, 15.4 + math.sin(a) * 9.6
+        swords += eb_sword((cx, cy + 6.0), (cx, cy - 4.6), A, c, hi, blade=2.2, guard=4.2)
+    big = sword_layers((16.0, 28.4), (16.0, 5.0), blade=3.6, guard=8.6, blade_cols=(WHITE, mix(A, WHITE, 0.55), WHITE, mix(A, (0, 0, 0), 0.3)),
+                       guard_cols=(WHITE, mix(A, WHITE, 0.2), WHITE, mix(A, (0, 0, 0), 0.45)), grip_cols=((96, 72, 44), (48, 34, 22), None, None))
+    ringm = mask()
+    oval(ringm, 16.0, 27.8, 11.4, 3.0, 1.5)
     flash = mask()
-    star(flash, 16.0, 16.0, 4.0, 0.2, 45)
-    subject = stack(layer(cage, mix(A, WHITE, 0.3), A, None, mix(A, (0, 0, 0), 0.4)), layer(cuts, WHITE, mix(A, WHITE, 0.5)), *swords,
-                    layer(mark, mix(B, A, 0.4), A, WHITE, mix(A, (0, 0, 0), 0.5)), layer(flash, WHITE, B))
-    return finish(subject, [glow(lighter(cage, cuts, flash), A, 1.8, 1.0)], caller_back(A, B))
+    star(flash, 16.0, 27.4, 5.4, 0.16, 0)
+    subject = stack(layer(ringm, mix(A, WHITE, 0.4), A, None, mix(A, (0, 0, 0), 0.4)), *swords, *big, layer(flash, WHITE, mix(A, WHITE, 0.5)))
+    return finish(subject, [glow(lighter(ringm, flash), A, 1.8, 1.0)], eb_back(A))
 
 
 # ------------------------------------------------------------ 아크메이지 (빛: 별빛 파랑 → 금빛 — 밤하늘 자주 바탕)
@@ -3662,11 +3671,11 @@ ICONS = {
     "arcaneblade_tempest": arcaneblade_tempest,
     "arcaneblade_rift": arcaneblade_rift,
     "arcaneblade_ult": arcaneblade_ult,
-    "swordcaller_strike": swordcaller_strike,
-    "swordcaller_shift": swordcaller_shift,
-    "swordcaller_orbit": swordcaller_orbit,
-    "swordcaller_twin": swordcaller_twin,
-    "swordcaller_ult": swordcaller_ult,
+    "elementalblade_flare": elementalblade_flare,
+    "elementalblade_surge": elementalblade_surge,
+    "elementalblade_bolt": elementalblade_bolt,
+    "elementalblade_tide": elementalblade_tide,
+    "elementalblade_ult": elementalblade_ult,
     "arcmage_chain": arcmage_chain,
     "arcmage_halo": arcmage_halo,
     "arcmage_vortex": arcmage_vortex,

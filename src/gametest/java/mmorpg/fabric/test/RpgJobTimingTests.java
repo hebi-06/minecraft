@@ -264,12 +264,12 @@ public final class RpgJobTimingTests {
     }
 
     /**
-     * 0.51.0 2차 직업 — 마검사 반전 소드 콜러 (재설계안 2판: 베어라 3 → 13, 데려가라는 꽂힌 칼이 없어 앞 8칸 · 지나가며 3, 꿰뚫고 맴돌아라 3 → 43 ·
-     * 칼날 감옥 10 → 70)
+     * 2026-11-07 2차 직업 — 마검사 반전 엘리멘탈 블레이드 (소드 콜러 대신: 플레어 엣지 5 → 다시 누름 12 → 16, 어스 서지 7 (앞 7칸을 내달려 지나간 과녁), 볼트 피어스
+     * 8 → 38, 엘리멘탈 칼라미티 18 → 70 — 시험 과녁에는 원소가 묻지 않아 반응 피해 없음)
      */
-    @GameTest(environment = "mmorpg:jt_sc", maxTicks = 2400)
-    public void timingSwordcaller(GameTestHelper h) {
-        probe(h, "swordcaller");
+    @GameTest(environment = "mmorpg:jt_eb", maxTicks = 2400)
+    public void timingElementalblade(GameTestHelper h) {
+        probe(h, "elementalblade");
     }
 
     /** 0.51.0 2차 직업 — 매지션 각성 아크메이지 (스킬 사이 5초 — 연쇄 · 별 없이, 별무리 마탄은 과녁 하나라 튀는 별빛 없음) */

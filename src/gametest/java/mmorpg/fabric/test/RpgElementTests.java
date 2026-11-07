@@ -174,6 +174,8 @@ public final class RpgElementTests {
             double rp = RuneCast.power(sp, "int");
             RuneKit.runeHit(sp, r, rp, 1.0, "int");
             h.assertTrue(ElementSystem.auraOf(r) == null, "no context → 무속성");
+            r.setInvulnerableTime(0); // 연속 피해 막기를 풀어 둘째 타격도 들어가게 (CI 42344479653 — 막혀 원소가 묻지 않았음)
+            r.damageCooldownTime = 0;
             ElementSystem.with("ice", rp, false, () -> RuneKit.runeHit(sp, r, rp, 1.0, "int"));
             h.assertTrue("ice".equals(ElementSystem.auraOf(r)), "rune hit in an ice context attaches ice: " + ElementSystem.auraOf(r));
             h.assertTrue(ElementSystem.LOG.size() >= 7, "reaction log " + ElementSystem.LOG);

@@ -310,7 +310,7 @@ public final class SkillBarHud {
         int tx = gradientText(g, font, name, x0, y, a, b);
         if (max > 0) {
             int v = Math.min(max, ClientJobBar.gaugeValue());
-            boolean full = v >= max;
+            boolean full = v >= max && !job.equals("elementalblade"); // 2026-11-07 엘리멘탈 블레이드 게이지는 원소의 차례 (5 = 바위 — 가득이 아님)
             float pulse = full ? 0.5F + 0.5F * (float) Math.sin(now / 140.0) : 0;
             int px = tx + 4;
             if (bar) {
@@ -436,15 +436,23 @@ public final class SkillBarHud {
                             for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
                             if (i < v) g.fill(bx + 2, ty + 3, bx + 3, ty + 4, 0xFFFFFFFF);
                         }
-                        case "swordcaller" -> {
-                            // 0.51.0 스스로 싸우는 칼 (최대 5 — 이어 벨 때마다 하나 · 하나당 공격 속도 +20%) — 작은 칼 (3 × 7, 창날처럼 줄 높이만큼): 칼끝 · 곧은 날 ·
-                            // 가로 코등이 · 자루, 찬 것은 첫째 빛 (청록) + 칼끝 흰 점, 오른쪽 아래 1칸 그림자
-                            int c = i < v ? bright : dim;
+                        case "elementalblade" -> {
+                            // 2026-11-07 원소의 칼 (칼에 깃든 원소 — 1 불 · 2 물 · 3 전기 · 4 얼음 · 5 바위, 없으면 0): 다섯 원소 그림 (5 × 7, 창날처럼 줄 높이만큼) 이
+                            // 늘 보이고 (옅은 제 빛), 깃든 원소 하나만 밝은 제 빛 + 흰 점 (숨 쉬듯 반짝임) — 오른쪽 아래 1칸 그림자
+                            String el = i < ELEMENT_IDS.length ? ELEMENT_IDS[i] : "";
+                            mmorpg.core.Elements.Element ee = mmorpg.core.Elements.get(el);
+                            int rgb = ee == null ? 0xFFFFFF : mmorpg.core.Jobs.rgb(ee.glow());
+                            boolean on = i == v - 1;
+                            float breathe = 0.5F + 0.5F * (float) Math.sin(now / 160.0);
+                            int c = on ? 0xFF000000 | lerp(rgb, 0xFFFFFF, 0.1F + 0.25F * breathe) : 0x70000000 | (rgb & 0xFFFFFF);
                             int ty = y - 1;
-                            int[][] cells = {{1, 0}, {1, 1}, {1, 2}, {1, 3}, {0, 4}, {1, 4}, {2, 4}, {1, 5}, {1, 6}};
+                            int[][] cells = ELEMENT_GLYPHS[Math.min(i, ELEMENT_GLYPHS.length - 1)];
                             for (int[] q : cells) g.fill(bx + q[0] + 1, ty + q[1] + 1, bx + q[0] + 2, ty + q[1] + 2, 0xA0000000);
-                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, q[1] == 4 ? (i < v ? col : dim) : c);
-                            if (i < v) g.fill(bx + 1, ty, bx + 2, ty + 1, 0xFFFFFFFF);
+                            for (int[] q : cells) g.fill(bx + q[0], ty + q[1], bx + q[0] + 1, ty + q[1] + 1, c);
+                            if (on) {
+                                int[] hi = ELEMENT_HI[Math.min(i, ELEMENT_HI.length - 1)];
+                                g.fill(bx + hi[0], ty + hi[1], bx + hi[0] + 1, ty + hi[1] + 1, 0xFFFFFFFF);
+                            }
                         }
                         case "arcmage" -> {
                             // 0.51.0 주문 연쇄 (최대 5 — 다섯째에 별자리) — 금빛 별 (5 × 6, 창날처럼 줄 높이만큼): 위 꼭짓점 · 양팔 · 몸 · 벌린 두 다리, 찬 것은 둘째 빛 (금빛) +
@@ -600,6 +608,20 @@ public final class SkillBarHud {
 
     /** 자원 보석 간격 · 태세 줄 높이 (직업 이름 줄 위) */
     static final int PIP = 6;
+    /** 2026-11-07 엘리멘탈 블레이드 게이지의 원소 차례 (rules_more ELEMENTS.order — 1 불 ~ 5 바위) */
+    private static final String[] ELEMENT_IDS = {"fire", "water", "thunder", "ice", "rock"};
+    /** 원소 그림 (5 × 7 칸 {x, y}): 불꽃 · 물방울 · 번개 · 눈꽃 · 바위 */
+    private static final int[][][] ELEMENT_GLYPHS = {
+            {{2, 0}, {1, 1}, {2, 1}, {1, 2}, {2, 2}, {3, 2}, {0, 3}, {1, 3}, {2, 3}, {3, 3}, {0, 4}, {1, 4}, {2, 4}, {3, 4}, {4, 4}, {0, 5}, {1, 5}, {2, 5}, {3, 5},
+                    {4, 5}, {1, 6}, {2, 6}, {3, 6}},
+            {{2, 0}, {2, 1}, {1, 2}, {2, 2}, {3, 2}, {0, 3}, {1, 3}, {2, 3}, {3, 3}, {4, 3}, {0, 4}, {1, 4}, {2, 4}, {3, 4}, {4, 4}, {0, 5}, {1, 5}, {2, 5}, {3, 5},
+                    {4, 5}, {1, 6}, {2, 6}, {3, 6}},
+            {{3, 0}, {4, 0}, {2, 1}, {3, 1}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {2, 3}, {3, 3}, {1, 4}, {2, 4}, {1, 5}, {0, 6}},
+            {{2, 0}, {0, 1}, {2, 1}, {4, 1}, {1, 2}, {2, 2}, {3, 2}, {0, 3}, {1, 3}, {2, 3}, {3, 3}, {4, 3}, {1, 4}, {2, 4}, {3, 4}, {0, 5}, {2, 5}, {4, 5}, {2, 6}},
+            {{1, 1}, {2, 1}, {3, 1}, {0, 2}, {1, 2}, {2, 2}, {3, 2}, {4, 2}, {0, 3}, {1, 3}, {3, 3}, {4, 3}, {0, 4}, {1, 4}, {2, 4}, {3, 4}, {4, 4}, {1, 5}, {2, 5},
+                    {3, 5}}};
+    /** 깃든 원소 그림의 흰 점 (반짝임) */
+    private static final int[][] ELEMENT_HI = {{2, 4}, {1, 3}, {2, 2}, {2, 3}, {1, 2}};
     static final int STANCE_LINE = 11;
     /** 0.28.0 분노 막대 너비 */
     static final int RAGE_W = 30;
