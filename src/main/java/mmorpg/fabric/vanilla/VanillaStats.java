@@ -129,7 +129,9 @@ public final class VanillaStats {
             } else {
                 int enh = mmorpg.fabric.gear.WeaponEnhance.reference(main, sp.getInventory().getNonEquipmentItems(), w);
                 List<String> lines = s.weaponLines(w, enh, false);
-                t.text(27, line1, VanillaGui.fit(w.name() + (enh > 0 ? " +" + enh : ""), 100), VanillaGui.legacyColor(w.grade() == null ? null : gradeCode(w), VanillaGui.WHITE));
+                // 이름은 § 서식이 섞여 있음 ("§c§l그람§r§7 [60렙]") — 줄 글꼴은 조각마다 한 색: 첫 색으로 이름, 나머지는 회색
+                String raw = w.name() == null ? "" : w.name();
+                t.text(27, line1, VanillaGui.fit(strip(raw) + (enh > 0 ? " +" + enh : ""), 100), VanillaGui.legacyColor(raw, VanillaGui.WHITE));
                 if (!lines.isEmpty()) t.text(27, line2, VanillaGui.fit(strip(lines.get(lines.size() > 1 ? 1 : 0)), 100), VanillaGui.GRAY);
                 List<String> tip = new ArrayList<>();
                 tip.add("§7기준 무기 §8(가진 무기 중 쓸 수 있는 것 · 공격력 높은 것)");
@@ -208,12 +210,6 @@ public final class VanillaStats {
     private static String pct(double v) {
         double r = Math.round(v * 10) / 10.0;
         return r == Math.rint(r) ? String.valueOf((long) r) : String.format(Locale.ROOT, "%.1f", r);
-    }
-
-    /** 무기 등급 색 (§ 글자) */
-    private static String gradeCode(Weapon w) {
-        String t = w.title();
-        return t != null && t.startsWith("§") && t.length() > 1 ? t.substring(0, 2) : "§f";
     }
 
     /** "§c" 같은 색 글자만 (Stats.info color 는 "§c" 꼴) */

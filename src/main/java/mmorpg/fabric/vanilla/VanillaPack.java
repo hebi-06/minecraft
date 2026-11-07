@@ -104,6 +104,10 @@ final class VanillaPack {
                 list.add(p);
                 builder.addStringData("assets/" + Mmorpg.NS + "/font/gl" + d + ".json", gson.toJson(providers(list)));
             }
+            // 상자 메뉴의 "인벤토리" 글자 (가방 위 — 그림 창의 바탕 위에 겹쳐 보임) 를 비움 (영어 · 한국어)
+            for (String lang : new String[]{"en_us", "ko_kr"}) {
+                builder.addStringData("assets/minecraft/lang/" + lang + ".json", "{\"container.inventory\":\"\"}");
+            }
             Mmorpg.LOG.info("[vanilla] gui backgrounds {}, line fonts {}, icons {}", VanillaGui.BACKGROUNDS.length, VanillaGui.LINES.length,
                     spriteModels(builder, dir.resolve("icons"), "vui", false));
         } catch (IOException | RuntimeException e) {
