@@ -557,7 +557,8 @@ public final class JobTraits {
         ServerLevel level = sp.level();
         RuneKit.Hand h = RuneKit.handOf(sp);
         // 은신 (암영) 은 몸의 빛을 그리지 않음
-        if (!st.stance.equals("assassin_veil")) JobFx.aura(sp, j, 2.4, 0.5, 0.55);
+        // 2026-11-07 프로스트타이드는 물 · 서리 빛 (JobTraits17.stanceFx — 직업의 금빛은 불꽃처럼 보였음, 영상 42346989114)
+        if (!st.stance.equals("assassin_veil") && !st.stance.equals(JobTraits17.TIDE)) JobFx.aura(sp, j, 2.4, 0.5, 0.55);
         if (st.stance.equals("swordsman_mirror")) {
             SkillFx.fx(level, "rpg:light_cut", V.up(h.hand(), 0.2), Opt.of("dir", V.UP, "size", 0.45, "thick", 0.07, "life", 0.4, "color", JobKit.core(j), "alpha", 0.8));
         } else if (st.stance.equals("warrior_spirit")) {

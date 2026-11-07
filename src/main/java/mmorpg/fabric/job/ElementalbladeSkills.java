@@ -267,8 +267,8 @@ final class ElementalbladeSkills {
         Guards.set(sp, dash + (int) k.num("guardFor", 20), k.num("guard", 0.3), null, null);
         RpgCombat.setSteadfast(sp, erupt + 2);
         if (can > 0.4) JobMove.run(sp, JobMove.to(0, dash, JobMove.at(V.add(c0, f, can)), JobMove.OUT));
-        // 바위 갑옷: 몸을 감싸는 돌 조각 · 발밑 돌가루 — 내달리는 동안 2틱마다 발밑 돌 튐 · 갈라짐이 몸을 따라 달림
-        JobFx.aura(sp, rj, 2.4, 0.5, 0.85);
+        // 바위 갑옷: 몸을 감싸는 돌 조각 · 발밑 돌가루 — 내달리는 동안 2틱마다 몸 둘레 돌 조각 · 발밑 돌 튐 · 갈라짐이 몸을 따라 달림
+        // (영상 42346989114: 몸에서 솟는 빛 JobFx.aura 는 쓴 자리에 남아 금빛 불꽃처럼 보였음 — 뺌)
         RuneKit.rockBurst(level0, V.up(c0, 0.8), 6, 2.0, 0.22);
         Vec3 g0 = ground(level0, c0);
         WarlordSkills.rift(level0, g0, f, len, ROCK_SEAM, 0.9, len * 20 / dash);
@@ -278,6 +278,7 @@ final class ElementalbladeSkills {
                 ServerLevel lv = sp.level();
                 Vec3 p = sp.position();
                 RuneKit.rockBurst(lv, V.up(p, 0.2), 3, 2.5, 0.16);
+                RuneKit.rockBurst(lv, V.up(p, 1.1), 3, 1.2, 0.2);
                 SkillFx.fx(lv, "rpg:dust", V.up(p, 0.1), Opt.of("size", 0.9, "life", 0.5, "color", ROCK_BODY, "alpha", 0.7));
                 SkillFx.play(lv, "block.gravel.break", p, 0.8, 0.5);
             });
@@ -292,9 +293,12 @@ final class ElementalbladeSkills {
             for (double s = 0.6; s <= len + 0.3; s += 1.1) {
                 double side = (Kit.rand() - 0.5) * 0.5;
                 Vec3 p = ground(lv, V.add(V.add(c0, f, s), r, side));
-                double size = 0.75 + 0.3 * Math.sin(Math.PI * s / (len + 0.6)) + Kit.rand() * 0.15;
-                JobFx.spikeLife(lv, p, size, 0.1, 0.55, Opt.of("spin", Kit.rand() * 24 - 12), ROCK_BODY, ROCK_SEAM);
-                RuneKit.glowCrack(lv, p, 0.9, ROCK_BODY, ROCK_SEAM, Opt.of("life", 1.0, "v", (double) ((int) (s * 3) % 2)));
+                // 영상 42346989114: 0.75 ~ 1.2 는 과녁 (2칸) 보다 작아 보였음 → 1.15 ~ 1.65 (높이 약 2.3 ~ 3.3칸) · 양옆에 작은 가시 하나씩
+                double size = 1.15 + 0.4 * Math.sin(Math.PI * s / (len + 0.6)) + Kit.rand() * 0.1;
+                JobFx.spikeLife(lv, p, size, 0.1, 0.6, Opt.of("spin", Kit.rand() * 24 - 12), ROCK_BODY, ROCK_SEAM);
+                Vec3 q = ground(lv, V.add(p, r, (side > 0 ? -1 : 1) * 0.8));
+                JobFx.spikeLife(lv, q, size * 0.6, 0.12, 0.5, Opt.of("spin", Kit.rand() * 30 - 15), ROCK_BODY, ROCK_SEAM);
+                RuneKit.glowCrack(lv, p, 1.1, ROCK_BODY, ROCK_SEAM, Opt.of("life", 1.0, "v", (double) ((int) (s * 3) % 2)));
             }
             RuneKit.rockBurst(lv, V.up(V.add(c0, f, len * 0.5), 0.5), 10, 5.0, 0.3);
             SkillFx.play(lv, "item.mace.smash_ground", sp.position(), 0.7, 1.0);
@@ -349,11 +353,15 @@ final class ElementalbladeSkills {
             Vec3 tip = bladeTip(sp);
             Vec3 to = t != null ? Kit.bodyPoint(t) : V.up(V.add(sp.position(), f, reach), 1.1);
             Vec3 d = V.unit(V.sub(to, tip));
-            // 번개 창: 칼끝에서 적을 꿰뚫고 뒤로 빠져나가는 빛의 창 · 창을 감는 번개 · 꿰뚫린 자리 번쩍임
-            JobFx.spear(lv, V.add(to, d, 0.9), d, 1.3, 0, 0.22, tj, Opt.of("fade", 0.4));
-            JobFx.beam(lv, tip, V.add(to, d, 1.2), tj, 0.5, 0.2, Opt.empty());
-            for (int i = 0; i < 3; i++) RuneKit.zap(lv, tip, V.add(to, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.6), JobKit.glow(tj),
-                    JobKit.core(tj), 0.1, 0.22);
+            // 번개 창: 칼끝에서 적을 꿰뚫고 뒤로 빠져나가는 빛의 창 · 창을 감는 번개 · 꿰뚫린 자리 번쩍임 (영상 42346989114: 창 1.3 · 빛줄기 하나는 3인칭에서 작았음 → 창 2.0 ·
+            // 꿰뚫고 뒤로 2칸 · 굵은 번개 다섯 · 칼끝 · 과녁의 번개 구슬 · 퍼지는 고리)
+            JobFx.spear(lv, V.add(to, d, 2.0), d, 2.0, 0, 0.3, tj, Opt.of("fade", 0.4));
+            JobFx.beam(lv, tip, V.add(to, d, 2.2), tj, 0.6, 0.26, Opt.empty());
+            for (int i = 0; i < 5; i++) RuneKit.zap(lv, tip, V.add(V.add(to, d, Kit.rand() * 1.6), new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.9),
+                    JobKit.glow(tj), JobKit.core(tj), 0.16, 0.28);
+            RuneKit.plasmaOrb(lv, to, 1.0, JobKit.glow(tj), Opt.of("life", 0.35));
+            RuneKit.plasmaOrb(lv, tip, 0.55, JobKit.glow(tj), Opt.of("life", 0.25, "vel", RuneKit.bodyVel(sp)));
+            RuneKit.novaRing(lv, V.sub(to, new Vec3(0, 0.9, 0)), 0.6, 2.4, JobKit.glow(tj), JobKit.core(tj), Opt.of("life", 0.4));
             JobFx.slash(sp, tj, 2.0, 0.15, 1.4, 90.0, 0.18);
             SkillFx.play(lv, "item.trident.throw", sp.position(), 1.4, 0.8);
             SkillFx.play(lv, "entity.lightning_bolt.impact", to, 1.6, 0.6);
@@ -361,7 +369,7 @@ final class ElementalbladeSkills {
             LivingEntity target = t;
             JobKit.strike(sp, target, tj, P, k.num("pierce", 6.1), true, false, life, 0, x -> {
                 JobImpact.hit(sp, target, tj, 1.5);
-                JobFx.stab(lv, Kit.bodyPoint(target), 0.9 + Kit.bodyPad(target) * 0.4, tj, 0.25, Opt.of("spin", 0.0));
+                JobFx.stab(lv, Kit.bodyPoint(target), 1.4 + Kit.bodyPad(target) * 0.5, tj, 0.3, Opt.of("spin", 0.0));
             });
             // 남은 번개: every 틱마다 하늘에서 그 적에게 (내리꽂히기 직전 칼끝이 지직거림)
             for (int i = 0; i < strikes.size(); i++) {
@@ -465,7 +473,7 @@ final class ElementalbladeSkills {
                 Vec3 at = V.add(spot[0], seats[i]);
                 hover[i] = at;
                 int stay = first + i * every - riseAt;
-                ids[i] = JobFx3d.spawn(lv, "phantom_sword", at, ej, Opt.of("dir", V.scale(V.UP, -1), "life", stay / 20.0 + 0.1, "scale", 1.7, "fadeIn", 0.2, "fadeOut", 0.05,
+                ids[i] = JobFx3d.spawn(lv, "phantom_sword", at, ej, Opt.of("dir", V.scale(V.UP, -1), "life", stay / 20.0 + 0.1, "scale", 2.1, "fadeIn", 0.2, "fadeOut", 0.05,
                         "glowAlpha", 0.6, "shine", 0.4, "bob", 0.12, "bobHz", 0.9, "faceCam", 1.0));
                 JobFx.glint(lv, at, 0.8, ej, 0.35, Opt.empty());
             }
@@ -487,7 +495,7 @@ final class ElementalbladeSkills {
                 Vec3 from = hover[ii] != null ? hover[ii] : V.add(spot[0], seats[ii]);
                 JobFx3d.kill(lv, ids[ii], from, 0.02);
                 Vec3 to = t != null ? Kit.bodyPoint(t) : V.up(ground(lv, spot[0]), 0.4);
-                JobFx3d.fly(lv, "phantom_sword", from, to, JobFx3d.SWORD_TIP, 1.7, 0.15, 0.3, ej, Opt.of("fadeOut", 0.12, "shine", 0.6, "glowAlpha", 0.7));
+                JobFx3d.fly(lv, "phantom_sword", from, to, JobFx3d.SWORD_TIP, 2.1, 0.15, 0.3, ej, Opt.of("fadeOut", 0.12, "shine", 0.6, "glowAlpha", 0.7));
                 SkillFx.play(lv, "item.trident.throw", from, 0.8, 0.8);
             });
             RuneKit.later(at, () -> {
@@ -543,7 +551,8 @@ final class ElementalbladeSkills {
             ServerLevel lv = sp.level();
             LivingEntity t = pick(sp, cur, spot);
             JobFx3d.kill(lv, big[0], bigAt[0], 0.02);
-            Vec3 to = t != null ? Kit.bodyPoint(t) : V.up(ground(lv, spot[0]), 0.5);
+            // 영상 42346989114: 칼끝이 가슴에서 멈춰 하늘에 걸린 칼처럼 보였음 → 과녁을 꿰뚫고 땅에 박힘 (칼끝이 땅 아래 0.8칸)
+            Vec3 to = V.up(ground(lv, t != null ? t.position() : spot[0]), -0.8);
             JobFx3d.fly(lv, "phantom_sword", bigAt[0], to, JobFx3d.SWORD_TIP, 3.4, 0.15, 0.45, tint(j, "prism", PRISM, PRISM_CORE), Opt.of("fadeOut", 0.2, "shine", 0.9,
                     "glowAlpha", 0.85));
             SkillFx.play(lv, "item.trident.riptide_3", to, 0.8, 1.0);
@@ -557,9 +566,10 @@ final class ElementalbladeSkills {
             for (int i = 0; i < n; i++) {
                 String el = order.get(i);
                 int ii = i;
-                RuneKit.later(i, () -> RuneKit.novaRing(lv, g, 0.6 + ii * 0.35, 3.2, ElementFx.glow(el), ElementFx.core(el), Opt.of("life", 0.5)));
+                RuneKit.later(i, () -> RuneKit.novaRing(lv, g, 1.0 + ii * 0.5, 3.4, ElementFx.glow(el), ElementFx.core(el), Opt.of("life", 0.55)));
             }
-            JobFx.burst(lv, b, 2.4, PRISM, PRISM_CORE, 0.4, Opt.empty());
+            JobFx.burst(lv, b, 3.0, PRISM, PRISM_CORE, 0.45, Opt.empty());
+            RuneKit.rockBurst(lv, V.up(g, 0.3), 12, 6.0, 0.3);
             RuneKit.godRays(sp, lv, g, 3.5, 8, PRISM, PRISM_CORE, Opt.of("h", 7.0, "life", 0.7, "alpha", 0.8, "skipNear", true));
             Vec3 ff = t != null ? V.flat(V.sub(t.position(), sp.position())) : Kit.facingOf(sp);
             ff = V.len(ff) < 1e-3 ? Kit.facingOf(sp) : V.unit(ff);

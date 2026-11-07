@@ -250,6 +250,7 @@ public final class JobTraits17 {
     static boolean stanceFx(ServerPlayer sp, Jobs.Job j, String stance) {
         if (!TIDE.equals(stance)) return false;
         String el = next(sp);
+        JobFx.aura(sp, ElementalbladeSkills.tint(j, el), 2.4, 0.5, 0.5);
         bladeGlow(sp, el, 1.2);
         String other = "ice".equals(el) ? "water" : "ice";
         bladeGlow(sp, other, 0.8);
