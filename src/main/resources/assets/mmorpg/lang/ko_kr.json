@@ -15,5 +15,6 @@
   "itemGroup.mmorpg.main": "MMO RPG",
   "key.category.mmorpg.main": "MMO RPG",
   "itemGroup.mmorpg.runes": "룬",
-  "itemGroup.mmorpg.gear": "RPG 장비 · 재료"
+  "itemGroup.mmorpg.gear": "RPG 장비 · 재료",
+  "generator.mmorpg.field": "섬 맵 (MMO RPG)"
 }

@@ -15,5 +15,6 @@
   "itemGroup.mmorpg.main": "MMO RPG",
   "key.category.mmorpg.main": "MMO RPG",
   "itemGroup.mmorpg.runes": "Runes",
-  "itemGroup.mmorpg.gear": "RPG Gear"
+  "itemGroup.mmorpg.gear": "RPG Gear",
+  "generator.mmorpg.field": "Island Map (MMO RPG)"
 }

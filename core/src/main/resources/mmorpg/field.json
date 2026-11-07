@@ -1,0 +1,101 @@
+{
+  "_doc": "2026-11-07 섬 맵 (사용자: \"필드 전체\" → \"섬형으로 할래 그래야 다음에 머 추가할때 편할거 같음 대신 섬하나하나를 크게 해줘\"). 섬 하나 = islands 한 줄 (자리 x · z · 반지름 radius · 지형 terrain · 지역 region). 새 섬은 줄을 더하고 bridges 에 이을 섬을 적음. 지도는 세계 시드와 상관없이 seed 로 늘 같음. 좌표: 북쪽 = −z, 동쪽 = +x. sites = 거점 · 사냥터 · 보스 제단 · 마을 자리 (게임이 그 자리에 짓고 NPC · 사냥터 · 제단을 놓음).",
+  "seed": 20261107,
+  "seaLevel": 63,
+  "border": {"x": -150, "z": -70, "size": 6400},
+  "spawn": [0, 60],
+  "bridge": {"width": 5, "deck": 70},
+  "islands": [
+    {"id": "midgard", "name": "마을 섬", "terrain": "village", "x": 0, "z": 0, "radius": 420, "coast": 0.12, "level": [1, 60]},
+    {"id": "harvest", "name": "농장 섬", "terrain": "farm", "region": "farm", "x": 1200, "z": 0, "radius": 560, "coast": 0.16, "level": [1, 10]},
+    {"id": "sands", "name": "사막 섬", "terrain": "desert", "region": "desert", "x": 0, "z": 1200, "radius": 560, "coast": 0.15, "level": [8, 25]},
+    {"id": "tides", "name": "바다 섬", "terrain": "sea", "region": "sea", "x": -1200, "z": 0, "radius": 560, "coast": 0.2, "level": [15, 32]},
+    {"id": "serpent", "name": "뱀의 섬", "terrain": "islet", "region": "sea", "x": -1890, "z": 300, "radius": 150, "coast": 0.22, "level": [32, 32]},
+    {"id": "gull", "name": "갈매기 바위", "terrain": "islet", "x": -1530, "z": -700, "radius": 85, "coast": 0.25, "level": [15, 32]},
+    {"id": "seal", "name": "물개 바위", "terrain": "islet", "x": -820, "z": 700, "radius": 70, "coast": 0.25, "level": [15, 32]},
+    {"id": "frost", "name": "북쪽 섬", "terrain": "north", "region": "north", "x": 0, "z": -1240, "radius": 600, "coast": 0.15, "level": [29, 40]},
+    {"id": "rift", "name": "공허 섬", "terrain": "void", "region": "void", "x": 0, "z": -2580, "radius": 500, "coast": 0.14, "level": [42, 58]},
+    {"id": "muspel", "name": "무스펠 섬", "terrain": "muspel", "region": "muspel", "x": 0, "z": 2530, "radius": 470, "coast": 0.13, "level": [50, 50]}
+  ],
+  "bridges": [
+    {"from": "midgard", "to": "harvest"},
+    {"from": "midgard", "to": "sands"},
+    {"from": "midgard", "to": "tides"},
+    {"from": "midgard", "to": "frost"},
+    {"from": "frost", "to": "rift"},
+    {"from": "sands", "to": "muspel"}
+  ],
+  "rivers": [
+    {"id": "farm_river", "island": "harvest", "width": 9, "points": [[1380, -360], [1300, -250], [1290, -140], [1190, -90], [1120, 20], [1150, 120], [1060, 210], [960, 250], [900, 360]]},
+    {"id": "farm_brook", "island": "harvest", "width": 5, "points": [[1460, 110], [1390, 170], [1380, 260], [1290, 300], [1250, 400]]},
+    {"id": "frost_river", "island": "frost", "width": 8, "points": [[-40, -1430], [-120, -1340], [-80, -1240], [-170, -1150], [-150, -1040], [-260, -960], [-330, -860], [-420, -800]]},
+    {"id": "tides_stream", "island": "tides", "width": 6, "points": [[-1160, -170], [-1060, -110], [-1080, 0], [-990, 60], [-1000, 160], [-920, 230]]},
+    {"id": "midgard_stream", "island": "midgard", "width": 5, "points": [[-120, -140], [-200, -110], [-230, -20], [-300, 40], [-290, 140], [-350, 210]]},
+    {"id": "muspel_lava_a", "island": "muspel", "lava": true, "width": 4, "points": [[-250, 2460], [-200, 2370], [-150, 2300], [-70, 2260]]},
+    {"id": "muspel_lava_b", "island": "muspel", "lava": true, "width": 4, "points": [[240, 2730], [180, 2630], [120, 2540], [60, 2460]]}
+  ],
+  "lakes": [
+    {"id": "oasis", "island": "sands", "x": 40, "z": 843, "r": 20},
+    {"id": "frost_tarn", "island": "frost", "x": 230, "z": -950, "r": 30},
+    {"id": "midgard_pond", "island": "midgard", "x": 170, "z": 230, "r": 18}
+  ],
+  "sites": [
+    {"id": "town", "kind": "town", "island": "midgard", "x": 0, "z": 60, "r": 150, "name": "마을"},
+    {"id": "tree", "kind": "tree", "island": "midgard", "x": 0, "z": -215, "r": 70, "name": "세계수"},
+
+    {"id": "farm_camp", "kind": "camp", "island": "harvest", "x": 840, "z": 30, "r": 40, "npc": 13, "name": "올라프의 농가"},
+    {"id": "z_scarecrow_a", "kind": "zone", "island": "harvest", "x": 880, "z": -90, "mob": "scarecrow"},
+    {"id": "z_scarecrow_b", "kind": "zone", "island": "harvest", "x": 910, "z": 140, "mob": "scarecrow"},
+    {"id": "z_nisse_a", "kind": "zone", "island": "harvest", "x": 1090, "z": -200, "mob": "nisse"},
+    {"id": "z_nisse_b", "kind": "zone", "island": "harvest", "x": 1130, "z": 210, "mob": "nisse"},
+    {"id": "z_boar_a", "kind": "zone", "island": "harvest", "x": 1350, "z": -280, "mob": "boar"},
+    {"id": "z_boar_b", "kind": "zone", "island": "harvest", "x": 1400, "z": 240, "mob": "boar"},
+    {"id": "b_scarecrow_king", "kind": "boss", "island": "harvest", "x": 1560, "z": -10, "boss": "scarecrow_king"},
+
+    {"id": "desert_camp", "kind": "camp", "island": "sands", "x": 40, "z": 770, "r": 45, "npc": 14, "name": "라그나르의 오아시스"},
+    {"id": "z_gulon_a", "kind": "zone", "island": "sands", "x": -110, "z": 880, "mob": "gulon"},
+    {"id": "z_gulon_b", "kind": "zone", "island": "sands", "x": 190, "z": 900, "mob": "gulon"},
+    {"id": "z_sand_scorpion_a", "kind": "zone", "island": "sands", "x": -230, "z": 1110, "mob": "sand_scorpion"},
+    {"id": "z_sand_scorpion_b", "kind": "zone", "island": "sands", "x": 240, "z": 1130, "mob": "sand_scorpion"},
+    {"id": "z_worm_larva_a", "kind": "zone", "island": "sands", "x": -160, "z": 1430, "mob": "worm_larva"},
+    {"id": "z_worm_larva_b", "kind": "zone", "island": "sands", "x": 200, "z": 1460, "mob": "worm_larva"},
+    {"id": "b_scorpions", "kind": "boss", "island": "sands", "x": 360, "z": 1290, "boss": "scorpions"},
+    {"id": "b_great_worm", "kind": "boss", "island": "sands", "x": -320, "z": 1580, "boss": "great_worm"},
+
+    {"id": "sea_camp", "kind": "camp", "island": "tides", "x": -770, "z": -20, "r": 45, "npc": 15, "name": "비요른의 항구"},
+    {"id": "z_skeljaskrimsli_a", "kind": "zone", "island": "tides", "x": -880, "z": 170, "mob": "skeljaskrimsli"},
+    {"id": "z_skeljaskrimsli_b", "kind": "zone", "island": "tides", "x": -900, "z": -210, "mob": "skeljaskrimsli"},
+    {"id": "z_crab_a", "kind": "zone", "island": "tides", "x": -1060, "z": 390, "mob": "crab"},
+    {"id": "z_crab_b", "kind": "zone", "island": "tides", "x": -1200, "z": 470, "mob": "crab"},
+    {"id": "z_nix_a", "kind": "zone", "island": "tides", "x": -1230, "z": -280, "mob": "nix"},
+    {"id": "z_grendel_a", "kind": "zone", "island": "tides", "x": -1470, "z": 260, "mob": "grendel"},
+    {"id": "z_grendel_b", "kind": "zone", "island": "tides", "x": -1400, "z": 80, "mob": "grendel"},
+    {"id": "b_kraken", "kind": "boss", "island": "tides", "x": -1590, "z": -170, "boss": "kraken"},
+    {"id": "b_jormungandr", "kind": "boss", "island": "serpent", "x": -1890, "z": 300, "boss": "jormungandr"},
+
+    {"id": "north_camp", "kind": "camp", "island": "frost", "x": 20, "z": -770, "r": 45, "npc": 16, "name": "스카디의 사냥막"},
+    {"id": "z_draugr_a", "kind": "zone", "island": "frost", "x": -130, "z": -870, "mob": "draugr"},
+    {"id": "z_draugr_b", "kind": "zone", "island": "frost", "x": 170, "z": -890, "mob": "draugr"},
+    {"id": "z_frost_wolf_a", "kind": "zone", "island": "frost", "x": -260, "z": -1060, "mob": "frost_wolf"},
+    {"id": "z_frost_wolf_b", "kind": "zone", "island": "frost", "x": 270, "z": -1080, "mob": "frost_wolf"},
+    {"id": "z_troll_a", "kind": "zone", "island": "frost", "x": -330, "z": -1330, "mob": "troll"},
+    {"id": "z_troll_b", "kind": "zone", "island": "frost", "x": 320, "z": -1310, "mob": "troll"},
+    {"id": "z_frost_giant_a", "kind": "zone", "island": "frost", "x": -170, "z": -1640, "mob": "frost_giant"},
+    {"id": "z_frost_giant_b", "kind": "zone", "island": "frost", "x": 180, "z": -1660, "mob": "frost_giant"},
+    {"id": "b_nidhogg", "kind": "boss", "island": "frost", "x": -420, "z": -1170, "boss": "nidhogg"},
+    {"id": "b_skoll_hati", "kind": "boss", "island": "frost", "x": 420, "z": -1190, "boss": "skoll_hati"},
+    {"id": "b_ymir", "kind": "boss", "island": "frost", "x": 0, "z": -1720, "boss": "ymir"},
+
+    {"id": "void_camp", "kind": "camp", "island": "rift", "x": 0, "z": -2170, "r": 40, "name": "균열 전초기지"},
+    {"id": "z_void_leaper", "kind": "zone", "island": "rift", "x": -150, "z": -2270, "mob": "void_leaper"},
+    {"id": "z_void_stalker", "kind": "zone", "island": "rift", "x": 190, "z": -2370, "mob": "void_stalker"},
+    {"id": "z_void_jelly", "kind": "zone", "island": "rift", "x": -260, "z": -2520, "mob": "void_jelly"},
+    {"id": "z_void_borer", "kind": "zone", "island": "rift", "x": 260, "z": -2640, "mob": "void_borer"},
+    {"id": "z_void_behemoth", "kind": "zone", "island": "rift", "x": 30, "z": -2800, "mob": "void_behemoth"},
+    {"id": "b_void_knight", "kind": "boss", "island": "rift", "x": -230, "z": -2730, "boss": "void_knight"},
+    {"id": "b_hel", "kind": "boss", "island": "rift", "x": 0, "z": -2960, "boss": "hel"},
+
+    {"id": "muspel_camp", "kind": "camp", "island": "muspel", "x": 0, "z": 2150, "r": 40, "name": "불꽃 전초기지"},
+    {"id": "b_surtr", "kind": "boss", "island": "muspel", "x": 0, "z": 2610, "boss": "surtr"}
+  ]
+}
