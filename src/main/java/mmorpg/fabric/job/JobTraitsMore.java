@@ -380,6 +380,12 @@ public final class JobTraitsMore {
         return st == null || st.windUntil <= Tasks.now() ? 0 : st.windShots;
     }
 
+    /** 시험: 바람 타기의 남은 덧쏘기를 지움 (앞 시험의 덧쏘기가 다음 시험의 화살에 붙지 않게) */
+    public static void testClearWind(ServerPlayer sp) {
+        State st = STATES.get(sp.getUUID());
+        if (st != null) st.windShots = 0;
+    }
+
     /** 바람 타기: shots 번 덧쏘기 · ticks 틱 동안 호흡이 줄지 않음 */
     static void windStart(ServerPlayer sp, int shots, int ticks) {
         State st = of(sp);

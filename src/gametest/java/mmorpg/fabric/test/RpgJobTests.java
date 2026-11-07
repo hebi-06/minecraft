@@ -788,6 +788,8 @@ public final class RpgJobTests {
             h.assertTrue(JobTraits.stanceOn(sp, "archer_focus") && JobTraitsMore.breath(sp) == 5 && RpgCombat.rangedMod.pierce(sp, w) > 0
                     && JobTraitsMore.huntWolves(sp) == 2, "wild hunt: communion 5, pierce, two spirit wolves: " + JobTraitsMore.huntWolves(sp));
             RpgCombat.forceCrit = false;
+            // 앞의 바람 타기 덧쏘기가 하나 남아 있음 (5초 안 — CI 42332661771: 덧쏘기 화살이 더 들어감) → 지움
+            JobTraitsMore.testClearWind(sp);
             want0[0] = w.damage() * RpgCombat.powerOf(sp, w) * RpgCombat.basicMult.applyAsDouble(sp, w);
             RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
         }));

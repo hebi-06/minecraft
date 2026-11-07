@@ -929,7 +929,7 @@ public final class JobsTest {
         check(bu.num("every", 0) >= 10 && bu.num("finalAt", 0) - bu.num("first", 0) - (bu.num("pulses", 0) - 1) * bu.num("every", 0) >= 10, "battlearcher i-frame spacing");
         // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 다시 쓰는 스킬은 12틱마다 다시 누름 · 화살이 2.5칸 앞 과녁에 닿는 1틱)
         check(near(sh.num("t", 0), 12 + 1) && near(sh.num("w", 0), sh.num("t", 0)) && near(st.num("shotAt", 0) + 1 + st.num("sameGap", 0) * st.num("bounces", 0), st.num("t", 0))
-                && near(su.num("w", 0), 12 * 2 + 2) && near(su.num("t", 0), su.num("w", 0) + su.num("burstAt", 0)), "sniper t 13 · 24 · 36 (w 13 · 26 — 사일런트 아울: 24 에 다시 눌러 2틱 날아감 · 10틱 뒤 터짐)");
+                && near(su.num("w", 0), su.num("gap", 0) + 2) && near(su.num("t", 0), su.num("w", 0) + su.num("burstAt", 0)), "sniper t 13 · 24 · 32 (w 13 · 22 — 사일런트 아울: 다시 누를 수 있는 20 에 눌러 (CI 42332661771) 2틱 날아감 · 10틱 뒤 터짐)");
         check(near(bs.num("launchAt", 0) + bs.num("flight", 0), bs.num("t", 0)) && near(bp.num("fireAt", 0), bp.num("t", 0)) && near(bp.num("fireAt", 0), bp.num("w", 0))
                 && near(bu.num("finalAt", 0), bu.num("t", 0)) && near(bu.num("first", 0), bu.num("w", 0)), "battlearcher t 6 · 6 · 70 (w 6 · 10)");
         // 특성: 스나이퍼 = 궁수의 정령 교감 (2026-11-07 3판 — 호흡에서 이름 · 그림만, 같은 +4% · 사거리 +1칸) 최대 8 + 급소 사격, 배틀 아처 = 난사 (세 갈래 — 평타 50% · 5칸, 3칸 안 +20% · 10칸 밖 −30%)
@@ -941,7 +941,7 @@ public final class JobsTest {
         // 유틸 · 범위: 하트시커 단일 · 스플린터 샷 좁은 범위 (60° · 7.5칸) · 밀쳐냄, 트릭 샷 · 호넷 스웜은 넓음
         check("single".equals(Jobs.areaKind(sh)) && "narrow".equals(Jobs.areaKind(bp)) && Jobs.areaKind(st) == null && Jobs.areaKind(bs) == null && Jobs.utils(bp).equals(List.of("knock"))
                 && Jobs.utils(bu).equals(List.of("knock")) && Jobs.utils(st).isEmpty() && Jobs.utils(sh).isEmpty(), "archer advanced utils · area");
-        check(Jobs.windupTicks(sh) == 13 && Jobs.windupTicks(su) == 26 && Jobs.windupTicks(bu) == 10 && Jobs.windupTicks(bp) == 6, "windups 13 · 26 · 10 · 6");
+        check(Jobs.windupTicks(sh) == 13 && Jobs.windupTicks(su) == 22 && Jobs.windupTicks(bu) == 10 && Jobs.windupTicks(bp) == 6, "windups 13 · 22 · 10 · 6");
         check(Jobs.upKey(ss, "arrow") != null && Jobs.upKey(bd, "arrow") != null && Jobs.upKey(sm, "dur") != null && Jobs.upKey(bt, "dur") != null && Jobs.upKeys(sh).isEmpty(),
                 "archer advanced up keys");
         check(sm.total() <= 0 && bt.total() <= 0 && !Jobs.stanceBudget(sm) && !Jobs.stanceBudget(bt), "헌터스 마크 · 스톰 스트라이드 강화 (배율 합 없음)");
