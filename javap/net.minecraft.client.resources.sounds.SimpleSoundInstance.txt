@@ -1,0 +1,15 @@
+Compiled from "SimpleSoundInstance.java"
+public class net.minecraft.client.resources.sounds.SimpleSoundInstance extends net.minecraft.client.resources.sounds.AbstractSoundInstance {
+  public net.minecraft.client.resources.sounds.SimpleSoundInstance(net.minecraft.sounds.SoundEvent, net.minecraft.sounds.SoundSource, float, float, net.minecraft.util.RandomSource, net.minecraft.core.BlockPos);
+  public static net.minecraft.client.resources.sounds.SimpleSoundInstance forUI(net.minecraft.sounds.SoundEvent, float);
+  public static net.minecraft.client.resources.sounds.SimpleSoundInstance forUI(net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent>, float);
+  public static net.minecraft.client.resources.sounds.SimpleSoundInstance forUI(net.minecraft.sounds.SoundEvent, float, float);
+  public static net.minecraft.client.resources.sounds.SimpleSoundInstance forMusic(net.minecraft.sounds.SoundEvent);
+  public static net.minecraft.client.resources.sounds.SimpleSoundInstance forJukeboxSong(net.minecraft.sounds.SoundEvent, net.minecraft.world.phys.Vec3);
+  public static net.minecraft.client.resources.sounds.SimpleSoundInstance forLocalAmbience(net.minecraft.sounds.SoundEvent, float, float);
+  public static net.minecraft.client.resources.sounds.SimpleSoundInstance forAmbientAddition(net.minecraft.sounds.SoundEvent);
+  public static net.minecraft.client.resources.sounds.SimpleSoundInstance forAmbientMood(net.minecraft.sounds.SoundEvent, net.minecraft.util.RandomSource, double, double, double);
+  public net.minecraft.client.resources.sounds.SimpleSoundInstance(net.minecraft.sounds.SoundEvent, net.minecraft.sounds.SoundSource, float, float, net.minecraft.util.RandomSource, double, double, double);
+  private net.minecraft.client.resources.sounds.SimpleSoundInstance(net.minecraft.sounds.SoundEvent, net.minecraft.sounds.SoundSource, float, float, net.minecraft.util.RandomSource, boolean, int, net.minecraft.client.resources.sounds.SoundInstance$Attenuation, double, double, double);
+  public net.minecraft.client.resources.sounds.SimpleSoundInstance(net.minecraft.resources.Identifier, net.minecraft.sounds.SoundSource, float, float, net.minecraft.util.RandomSource, boolean, int, net.minecraft.client.resources.sounds.SoundInstance$Attenuation, double, double, double, boolean);
+}

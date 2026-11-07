@@ -1,0 +1,15 @@
+Compiled from "RandomSupport.java"
+public final class net.minecraft.world.level.levelgen.RandomSupport {
+  public static final long GOLDEN_RATIO_64 = -7046029254386353131l;
+  public static final long SILVER_RATIO_64 = 7640891576956012809l;
+  private static final com.google.common.hash.HashFunction MD5_128;
+  private static final java.util.concurrent.atomic.AtomicLong SEED_UNIQUIFIER;
+  public net.minecraft.world.level.levelgen.RandomSupport();
+  public static long mixStafford13(long);
+  public static net.minecraft.world.level.levelgen.RandomSupport$Seed128bit upgradeSeedTo128bitUnmixed(long);
+  public static net.minecraft.world.level.levelgen.RandomSupport$Seed128bit upgradeSeedTo128bit(long);
+  public static net.minecraft.world.level.levelgen.RandomSupport$Seed128bit seedFromHashOf(java.lang.String);
+  public static long generateUniqueSeed();
+  private static long lambda$generateUniqueSeed$0(long);
+  static {};
+}

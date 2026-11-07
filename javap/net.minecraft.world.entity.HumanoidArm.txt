@@ -1,0 +1,22 @@
+Compiled from "HumanoidArm.java"
+public final class net.minecraft.world.entity.HumanoidArm extends java.lang.Enum<net.minecraft.world.entity.HumanoidArm> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.entity.HumanoidArm LEFT;
+  public static final net.minecraft.world.entity.HumanoidArm RIGHT;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.entity.HumanoidArm> CODEC;
+  private static final java.util.function.IntFunction<net.minecraft.world.entity.HumanoidArm> BY_ID;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.entity.HumanoidArm> STREAM_CODEC;
+  private final int id;
+  private final java.lang.String name;
+  private final net.minecraft.network.chat.Component caption;
+  private static final net.minecraft.world.entity.HumanoidArm[] $VALUES;
+  public static net.minecraft.world.entity.HumanoidArm[] values();
+  public static net.minecraft.world.entity.HumanoidArm valueOf(java.lang.String);
+  private net.minecraft.world.entity.HumanoidArm(int, java.lang.String, java.lang.String);
+  public net.minecraft.world.entity.HumanoidArm getOpposite();
+  public net.minecraft.network.chat.Component caption();
+  public java.lang.String getSerializedName();
+  private static net.minecraft.world.entity.HumanoidArm[] $values();
+  private static int lambda$static$1(net.minecraft.world.entity.HumanoidArm);
+  private static int lambda$static$0(net.minecraft.world.entity.HumanoidArm);
+  static {};
+}

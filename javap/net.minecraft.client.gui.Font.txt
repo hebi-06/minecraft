@@ -1,0 +1,32 @@
+Compiled from "Font.java"
+public class net.minecraft.client.gui.Font {
+  private static final float EFFECT_DEPTH = 0.01f;
+  private static final float OVER_EFFECT_DEPTH = 0.01f;
+  private static final float UNDER_EFFECT_DEPTH = -0.01f;
+  public static final float SHADOW_DEPTH = 0.03f;
+  public final int lineHeight = 9;
+  private final net.minecraft.util.RandomSource random;
+  private final net.minecraft.client.gui.Font$Provider provider;
+  private final net.minecraft.client.StringSplitter splitter;
+  public net.minecraft.client.gui.Font(net.minecraft.client.gui.Font$Provider);
+  private net.minecraft.client.gui.GlyphSource getGlyphSource(net.minecraft.network.chat.FontDescription);
+  public java.lang.String bidirectionalShaping(java.lang.String);
+  public net.minecraft.client.gui.Font$PreparedText prepare8xTextOutline(net.minecraft.util.FormattedCharSequence, float, float, int);
+  public net.minecraft.client.gui.font.TextRenderable prepareBackground(float, float, float, float, int);
+  private net.minecraft.client.gui.font.glyphs.BakedGlyph getGlyph(int, net.minecraft.network.chat.Style);
+  public net.minecraft.client.gui.Font$PreparedText prepareText(java.lang.String, float, float, int, boolean, int);
+  public net.minecraft.client.gui.Font$PreparedText prepareText(net.minecraft.util.FormattedCharSequence, float, float, int, boolean, boolean, int);
+  public int width(java.lang.String);
+  public int width(net.minecraft.network.chat.FormattedText);
+  public int width(net.minecraft.util.FormattedCharSequence);
+  public java.lang.String plainSubstrByWidth(java.lang.String, int, boolean);
+  public java.lang.String plainSubstrByWidth(java.lang.String, int);
+  public net.minecraft.network.chat.FormattedText substrByWidth(net.minecraft.network.chat.FormattedText, int);
+  public int wordWrapHeight(net.minecraft.network.chat.FormattedText, int);
+  public java.util.List<net.minecraft.util.FormattedCharSequence> split(net.minecraft.network.chat.FormattedText, int);
+  public java.util.List<net.minecraft.network.chat.FormattedText> splitIgnoringLanguage(net.minecraft.network.chat.FormattedText, int);
+  public boolean isBidirectional();
+  public net.minecraft.client.StringSplitter getSplitter();
+  private boolean lambda$prepare8xTextOutline$0(net.minecraft.client.gui.Font$PreparedTextBuilder, float[], int, float, int, int, int, net.minecraft.network.chat.Style, int);
+  private float lambda$new$0(int, net.minecraft.network.chat.Style);
+}

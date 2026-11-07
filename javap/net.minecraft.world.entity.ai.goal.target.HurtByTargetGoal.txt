@@ -1,0 +1,16 @@
+Compiled from "HurtByTargetGoal.java"
+public class net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal extends net.minecraft.world.entity.ai.goal.target.TargetGoal {
+  private static final net.minecraft.world.entity.ai.targeting.TargetingConditions HURT_BY_TARGETING;
+  private static final int ALERT_RANGE_Y = 10;
+  private boolean alertSameType;
+  private int timestamp;
+  private final java.lang.Class<?>[] toIgnoreDamage;
+  private java.lang.Class<?>[] toIgnoreAlert;
+  public net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal(net.minecraft.world.entity.PathfinderMob, java.lang.Class<?>...);
+  public boolean canUse();
+  public net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal setAlertOthers(java.lang.Class<?>...);
+  public void start();
+  protected void alertOthers();
+  protected void alertOther(net.minecraft.world.entity.Mob, net.minecraft.world.entity.LivingEntity);
+  static {};
+}

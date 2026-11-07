@@ -1,0 +1,4 @@
+Compiled from "EquipmentAsset.java"
+public class net.minecraft.world.item.equipment.EquipmentAsset {
+  public net.minecraft.world.item.equipment.EquipmentAsset();
+}

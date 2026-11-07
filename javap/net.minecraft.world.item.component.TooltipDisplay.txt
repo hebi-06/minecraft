@@ -1,0 +1,19 @@
+Compiled from "TooltipDisplay.java"
+public final class net.minecraft.world.item.component.TooltipDisplay extends java.lang.Record {
+  private final boolean hideTooltip;
+  private final java.util.SequencedSet<net.minecraft.core.component.DataComponentType<?>> hiddenComponents;
+  private static final com.mojang.serialization.Codec<java.util.SequencedSet<net.minecraft.core.component.DataComponentType<?>>> COMPONENT_SET_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.item.component.TooltipDisplay> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.world.item.component.TooltipDisplay> STREAM_CODEC;
+  public static final net.minecraft.world.item.component.TooltipDisplay DEFAULT;
+  public net.minecraft.world.item.component.TooltipDisplay(boolean, java.util.SequencedSet<net.minecraft.core.component.DataComponentType<?>>);
+  public net.minecraft.world.item.component.TooltipDisplay withHidden(net.minecraft.core.component.DataComponentType<?>, boolean);
+  public boolean shows(net.minecraft.core.component.DataComponentType<?>);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public boolean hideTooltip();
+  public java.util.SequencedSet<net.minecraft.core.component.DataComponentType<?>> hiddenComponents();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

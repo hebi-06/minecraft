@@ -1,0 +1,17 @@
+Compiled from "ClientboundSetTitlesAnimationPacket.java"
+public class net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> {
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.FriendlyByteBuf, net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket> STREAM_CODEC;
+  private final int fadeIn;
+  private final int stay;
+  private final int fadeOut;
+  public net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(int, int, int);
+  private net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(net.minecraft.network.FriendlyByteBuf);
+  private void write(net.minecraft.network.FriendlyByteBuf);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket> type();
+  public void handle(net.minecraft.network.protocol.game.ClientGamePacketListener);
+  public int getFadeIn();
+  public int getStay();
+  public int getFadeOut();
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

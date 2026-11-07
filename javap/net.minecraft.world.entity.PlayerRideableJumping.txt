@@ -1,0 +1,9 @@
+Compiled from "PlayerRideableJumping.java"
+public interface net.minecraft.world.entity.PlayerRideableJumping extends net.minecraft.world.entity.PlayerRideable {
+  public abstract void onPlayerJump(int);
+  public abstract boolean canJump();
+  public abstract void handleStartJump(int);
+  public abstract void handleStopJump();
+  public default int getJumpCooldown();
+  public default float getPlayerJumpPendingScale(int);
+}

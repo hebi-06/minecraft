@@ -1,0 +1,26 @@
+Compiled from "MoveControl.java"
+public class net.minecraft.world.entity.ai.control.MoveControl<T extends net.minecraft.world.entity.Mob> implements net.minecraft.world.entity.ai.control.Control {
+  public static final float MIN_SPEED = 5.0E-4f;
+  public static final float MIN_SPEED_SQR = 2.5000003E-7f;
+  protected static final int MAX_TURN = 90;
+  protected final T mob;
+  protected double wantedX;
+  protected double wantedY;
+  protected double wantedZ;
+  protected double speedModifier;
+  protected float strafeForwards;
+  protected float strafeRight;
+  protected net.minecraft.world.entity.ai.control.MoveControl$Operation operation;
+  public net.minecraft.world.entity.ai.control.MoveControl(T);
+  public boolean hasWanted();
+  public double getSpeedModifier();
+  public void setWantedPosition(double, double, double, double);
+  public void strafe(float, float);
+  public void tick();
+  private boolean isWalkable(float, float);
+  protected float rotlerp(float, float, float);
+  public double getWantedX();
+  public double getWantedY();
+  public double getWantedZ();
+  public void setWait();
+}

@@ -1,0 +1,18 @@
+Compiled from "ServerboundCustomClickActionPacket.java"
+public final class net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket extends java.lang.Record implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.common.ServerCommonPacketListener> {
+  private final net.minecraft.resources.Identifier id;
+  private final java.util.Optional<net.minecraft.nbt.Tag> payload;
+  private static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, java.util.Optional<net.minecraft.nbt.Tag>> UNTRUSTED_TAG_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket> STREAM_CODEC;
+  public net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket(net.minecraft.resources.Identifier, java.util.Optional<net.minecraft.nbt.Tag>);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket> type();
+  public void handle(net.minecraft.network.protocol.common.ServerCommonPacketListener);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.resources.Identifier id();
+  public java.util.Optional<net.minecraft.nbt.Tag> payload();
+  public void handle(net.minecraft.network.PacketListener);
+  private static net.minecraft.nbt.NbtAccounter lambda$static$0();
+  static {};
+}

@@ -1,0 +1,9 @@
+Compiled from "AttachmentRegistry.java"
+public interface net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry$Builder<A> {
+  public abstract net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry$Builder<A> persistent(com.mojang.serialization.Codec<A>);
+  public abstract net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry$Builder<A> copyOnDeath();
+  public abstract net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry$Builder<A> initializer(java.util.function.Supplier<A>);
+  public abstract net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry$Builder<A> syncWith(net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, A>, net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate);
+  public abstract net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry$Builder<A> syncWith(net.minecraft.network.codec.StreamCodec<? super net.minecraft.network.RegistryFriendlyByteBuf, A>, net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate, int);
+  public abstract net.fabricmc.fabric.api.attachment.v1.AttachmentType<A> buildAndRegister(net.minecraft.resources.Identifier);
+}

@@ -1,0 +1,19 @@
+Compiled from "PlayerFaceExtractor.java"
+public class net.minecraft.client.gui.components.PlayerFaceExtractor {
+  public static final int SKIN_HEAD_U = 8;
+  public static final int SKIN_HEAD_V = 8;
+  public static final int SKIN_HEAD_WIDTH = 8;
+  public static final int SKIN_HEAD_HEIGHT = 8;
+  public static final int SKIN_HAT_U = 40;
+  public static final int SKIN_HAT_V = 8;
+  public static final int SKIN_HAT_WIDTH = 8;
+  public static final int SKIN_HAT_HEIGHT = 8;
+  public static final int SKIN_TEX_WIDTH = 64;
+  public static final int SKIN_TEX_HEIGHT = 64;
+  public net.minecraft.client.gui.components.PlayerFaceExtractor();
+  public static void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.world.item.component.ResolvableProfile, int, int, int);
+  public static void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.world.entity.player.PlayerSkin, int, int, int);
+  public static void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.world.entity.player.PlayerSkin, int, int, int, int);
+  public static void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.resources.Identifier, int, int, int, boolean, boolean, int);
+  private static void extractHat(net.minecraft.client.gui.GuiGraphicsExtractor, net.minecraft.resources.Identifier, int, int, int, boolean, int);
+}

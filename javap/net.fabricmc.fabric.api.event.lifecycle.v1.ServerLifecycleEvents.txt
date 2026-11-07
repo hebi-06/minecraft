@@ -1,0 +1,32 @@
+Compiled from "ServerLifecycleEvents.java"
+public final class net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStarting> SERVER_STARTING;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStarted> SERVER_STARTED;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStopping> SERVER_STOPPING;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStopped> SERVER_STOPPED;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$SyncDataPackContents> SYNC_DATA_PACK_CONTENTS;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$StartDataPackReload> START_DATA_PACK_RELOAD;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$EndDataPackReload> END_DATA_PACK_RELOAD;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$BeforeSave> BEFORE_SAVE;
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$AfterSave> AFTER_SAVE;
+  private net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents();
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$AfterSave lambda$static$16(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$AfterSave[]);
+  private static void lambda$static$17(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$AfterSave[], net.minecraft.server.MinecraftServer, boolean, boolean);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$BeforeSave lambda$static$14(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$BeforeSave[]);
+  private static void lambda$static$15(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$BeforeSave[], net.minecraft.server.MinecraftServer, boolean, boolean);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$EndDataPackReload lambda$static$12(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$EndDataPackReload[]);
+  private static void lambda$static$13(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$EndDataPackReload[], net.minecraft.server.MinecraftServer, net.minecraft.server.packs.resources.CloseableResourceManager, boolean);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$StartDataPackReload lambda$static$10(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$StartDataPackReload[]);
+  private static void lambda$static$11(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$StartDataPackReload[], net.minecraft.server.MinecraftServer, net.minecraft.server.packs.resources.CloseableResourceManager);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$SyncDataPackContents lambda$static$8(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$SyncDataPackContents[]);
+  private static void lambda$static$9(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$SyncDataPackContents[], net.minecraft.server.level.ServerPlayer, boolean);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStopped lambda$static$6(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStopped[]);
+  private static void lambda$static$7(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStopped[], net.minecraft.server.MinecraftServer);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStopping lambda$static$4(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStopping[]);
+  private static void lambda$static$5(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStopping[], net.minecraft.server.MinecraftServer);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStarted lambda$static$2(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStarted[]);
+  private static void lambda$static$3(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStarted[], net.minecraft.server.MinecraftServer);
+  private static net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStarting lambda$static$0(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStarting[]);
+  private static void lambda$static$1(net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents$ServerStarting[], net.minecraft.server.MinecraftServer);
+  static {};
+}

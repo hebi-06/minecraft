@@ -1,0 +1,9 @@
+Compiled from "LayerDefinition.java"
+public class net.minecraft.client.model.geom.builders.LayerDefinition {
+  private final net.minecraft.client.model.geom.builders.MeshDefinition mesh;
+  private final net.minecraft.client.model.geom.builders.MaterialDefinition material;
+  private net.minecraft.client.model.geom.builders.LayerDefinition(net.minecraft.client.model.geom.builders.MeshDefinition, net.minecraft.client.model.geom.builders.MaterialDefinition);
+  public net.minecraft.client.model.geom.builders.LayerDefinition apply(net.minecraft.client.model.geom.builders.MeshTransformer);
+  public net.minecraft.client.model.geom.ModelPart bakeRoot();
+  public static net.minecraft.client.model.geom.builders.LayerDefinition create(net.minecraft.client.model.geom.builders.MeshDefinition, int, int);
+}

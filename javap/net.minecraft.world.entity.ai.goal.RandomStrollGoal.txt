@@ -1,0 +1,22 @@
+Compiled from "RandomStrollGoal.java"
+public class net.minecraft.world.entity.ai.goal.RandomStrollGoal extends net.minecraft.world.entity.ai.goal.Goal {
+  public static final int DEFAULT_INTERVAL = 120;
+  protected final net.minecraft.world.entity.PathfinderMob mob;
+  protected double wantedX;
+  protected double wantedY;
+  protected double wantedZ;
+  protected final double speedModifier;
+  protected int interval;
+  protected boolean forceTrigger;
+  private final boolean checkNoActionTime;
+  public net.minecraft.world.entity.ai.goal.RandomStrollGoal(net.minecraft.world.entity.PathfinderMob, double);
+  public net.minecraft.world.entity.ai.goal.RandomStrollGoal(net.minecraft.world.entity.PathfinderMob, double, int);
+  public net.minecraft.world.entity.ai.goal.RandomStrollGoal(net.minecraft.world.entity.PathfinderMob, double, int, boolean);
+  public boolean canUse();
+  protected net.minecraft.world.phys.Vec3 getPosition();
+  public boolean canContinueToUse();
+  public void start();
+  public void stop();
+  public void trigger();
+  public void setInterval(int);
+}

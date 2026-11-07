@@ -1,0 +1,28 @@
+Compiled from "AbstractSkeleton.java"
+public abstract class net.minecraft.world.entity.monster.skeleton.AbstractSkeleton extends net.minecraft.world.entity.monster.Monster implements net.minecraft.world.entity.monster.RangedAttackMob {
+  private static final int HARD_ATTACK_INTERVAL = 20;
+  private static final int NORMAL_ATTACK_INTERVAL = 40;
+  protected static final int INCREASED_HARD_ATTACK_INTERVAL = 50;
+  protected static final int INCREASED_NORMAL_ATTACK_INTERVAL = 70;
+  private final net.minecraft.world.entity.ai.goal.RangedBowAttackGoal<net.minecraft.world.entity.monster.skeleton.AbstractSkeleton> bowGoal;
+  private final net.minecraft.world.entity.ai.goal.MeleeAttackGoal meleeGoal;
+  protected net.minecraft.world.entity.monster.skeleton.AbstractSkeleton(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.monster.skeleton.AbstractSkeleton>, net.minecraft.world.level.Level);
+  protected void registerGoals();
+  public static net.minecraft.world.entity.ai.attributes.AttributeSupplier$Builder createAttributes();
+  protected void playStepSound(net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  protected abstract net.minecraft.sounds.SoundEvent getStepSound();
+  public void rideTick();
+  protected void populateDefaultEquipmentSlots(net.minecraft.util.RandomSource, net.minecraft.world.DifficultyInstance);
+  public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor, net.minecraft.world.DifficultyInstance, net.minecraft.world.entity.EntitySpawnReason, net.minecraft.world.entity.SpawnGroupData);
+  public void reassessWeaponGoal();
+  protected int getHardAttackInterval();
+  protected int getAttackInterval();
+  public void performRangedAttack(net.minecraft.world.entity.LivingEntity, float);
+  protected net.minecraft.world.entity.projectile.arrow.AbstractArrow getArrow(net.minecraft.world.item.ItemStack, float, net.minecraft.world.item.ItemStack);
+  public boolean canUseNonMeleeWeapon(net.minecraft.world.item.ItemStack);
+  public net.minecraft.tags.TagKey<net.minecraft.world.item.Item> getPreferredWeaponType();
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  public void onEquipItem(net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.item.ItemStack, net.minecraft.world.item.ItemStack);
+  public boolean isShaking();
+  public boolean wantsToPickUp(net.minecraft.server.level.ServerLevel, net.minecraft.world.item.ItemStack);
+}

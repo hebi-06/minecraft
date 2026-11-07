@@ -1,0 +1,9 @@
+Compiled from "CustomPacketPayload.java"
+public final class net.minecraft.network.protocol.common.custom.CustomPacketPayload$Type<T extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> extends java.lang.Record {
+  private final net.minecraft.resources.Identifier id;
+  public net.minecraft.network.protocol.common.custom.CustomPacketPayload$Type(net.minecraft.resources.Identifier);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.resources.Identifier id();
+}

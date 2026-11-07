@@ -1,0 +1,11 @@
+Compiled from "ModelLayerLocation.java"
+public final class net.minecraft.client.model.geom.ModelLayerLocation extends java.lang.Record {
+  private final net.minecraft.resources.Identifier model;
+  private final java.lang.String layer;
+  public net.minecraft.client.model.geom.ModelLayerLocation(net.minecraft.resources.Identifier, java.lang.String);
+  public java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.resources.Identifier model();
+  public java.lang.String layer();
+}

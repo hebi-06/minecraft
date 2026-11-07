@@ -1,0 +1,15 @@
+Compiled from "ClientboundShowDialogPacket.java"
+public final class net.minecraft.network.protocol.common.ClientboundShowDialogPacket extends java.lang.Record implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.common.ClientCommonPacketListener> {
+  private final net.minecraft.core.Holder<net.minecraft.server.dialog.Dialog> dialog;
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.network.protocol.common.ClientboundShowDialogPacket> STREAM_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.network.protocol.common.ClientboundShowDialogPacket> CONTEXT_FREE_STREAM_CODEC;
+  public net.minecraft.network.protocol.common.ClientboundShowDialogPacket(net.minecraft.core.Holder<net.minecraft.server.dialog.Dialog>);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.common.ClientboundShowDialogPacket> type();
+  public void handle(net.minecraft.network.protocol.common.ClientCommonPacketListener);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.core.Holder<net.minecraft.server.dialog.Dialog> dialog();
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

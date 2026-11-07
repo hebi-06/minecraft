@@ -1,0 +1,14 @@
+Compiled from "CuboidRotation.java"
+public final class net.minecraft.client.resources.model.cuboid.CuboidRotation$EulerXYZRotation extends java.lang.Record implements net.minecraft.client.resources.model.cuboid.CuboidRotation$RotationValue {
+  private final float x;
+  private final float y;
+  private final float z;
+  public net.minecraft.client.resources.model.cuboid.CuboidRotation$EulerXYZRotation(float, float, float);
+  public org.joml.Matrix4f transformation();
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public float x();
+  public float y();
+  public float z();
+}

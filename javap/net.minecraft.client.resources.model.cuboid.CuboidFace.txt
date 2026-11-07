@@ -1,0 +1,20 @@
+Compiled from "CuboidFace.java"
+public final class net.minecraft.client.resources.model.cuboid.CuboidFace extends java.lang.Record {
+  private final net.minecraft.core.Direction cullForDirection;
+  private final int tintIndex;
+  private final java.lang.String texture;
+  private final net.minecraft.client.resources.model.cuboid.CuboidFace$UVs uvs;
+  private final com.mojang.math.Quadrant rotation;
+  public static final int NO_TINT = -1;
+  public net.minecraft.client.resources.model.cuboid.CuboidFace(net.minecraft.core.Direction, int, java.lang.String, net.minecraft.client.resources.model.cuboid.CuboidFace$UVs, com.mojang.math.Quadrant);
+  public static float getU(net.minecraft.client.resources.model.cuboid.CuboidFace$UVs, com.mojang.math.Quadrant, int);
+  public static float getV(net.minecraft.client.resources.model.cuboid.CuboidFace$UVs, com.mojang.math.Quadrant, int);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.core.Direction cullForDirection();
+  public int tintIndex();
+  public java.lang.String texture();
+  public net.minecraft.client.resources.model.cuboid.CuboidFace$UVs uvs();
+  public com.mojang.math.Quadrant rotation();
+}

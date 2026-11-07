@@ -1,0 +1,15 @@
+Compiled from "SavedDataType.java"
+public final class net.minecraft.world.level.saveddata.SavedDataType<T extends net.minecraft.world.level.saveddata.SavedData> extends java.lang.Record {
+  private final net.minecraft.resources.Identifier id;
+  private final java.util.function.Supplier<T> constructor;
+  private final com.mojang.serialization.Codec<T> codec;
+  private final net.minecraft.util.datafix.DataFixTypes dataFixType;
+  public net.minecraft.world.level.saveddata.SavedDataType(net.minecraft.resources.Identifier, java.util.function.Supplier<T>, com.mojang.serialization.Codec<T>, net.minecraft.util.datafix.DataFixTypes);
+  public boolean equals(java.lang.Object);
+  public int hashCode();
+  public java.lang.String toString();
+  public net.minecraft.resources.Identifier id();
+  public java.util.function.Supplier<T> constructor();
+  public com.mojang.serialization.Codec<T> codec();
+  public net.minecraft.util.datafix.DataFixTypes dataFixType();
+}

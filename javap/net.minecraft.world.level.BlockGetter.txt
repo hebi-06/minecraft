@@ -1,0 +1,23 @@
+Compiled from "BlockGetter.java"
+public interface net.minecraft.world.level.BlockGetter extends net.minecraft.world.level.LevelHeightAccessor,net.fabricmc.fabric.api.blockgetter.v2.FabricBlockGetter {
+  public abstract net.minecraft.world.level.block.entity.BlockEntity getBlockEntity(net.minecraft.core.BlockPos);
+  public default <T extends net.minecraft.world.level.block.entity.BlockEntity> java.util.Optional<T> getBlockEntity(net.minecraft.core.BlockPos, net.minecraft.world.level.block.entity.BlockEntityType<T>);
+  public abstract net.minecraft.world.level.block.state.BlockState getBlockState(net.minecraft.core.BlockPos);
+  public abstract net.minecraft.world.level.material.FluidState getFluidState(net.minecraft.core.BlockPos);
+  public default int getLightEmission(net.minecraft.core.BlockPos);
+  public default java.util.stream.Stream<net.minecraft.world.level.block.state.BlockState> getBlockStates(net.minecraft.world.phys.AABB);
+  public default net.minecraft.world.phys.BlockHitResult isBlockInLine(net.minecraft.world.level.ClipBlockStateContext);
+  public default net.minecraft.world.phys.BlockHitResult clip(net.minecraft.world.level.ClipContext);
+  public default net.minecraft.world.phys.BlockHitResult clipWithInteractionOverride(net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, net.minecraft.core.BlockPos, net.minecraft.world.phys.shapes.VoxelShape, net.minecraft.world.level.block.state.BlockState);
+  public default double getBlockFloorHeight(net.minecraft.world.phys.shapes.VoxelShape, java.util.function.Supplier<net.minecraft.world.phys.shapes.VoxelShape>);
+  public default double getBlockFloorHeight(net.minecraft.core.BlockPos);
+  public static <T, C> T traverseBlocks(net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, C, java.util.function.BiFunction<C, net.minecraft.core.BlockPos, T>, java.util.function.Function<C, T>);
+  public static boolean forEachBlockIntersectedBetween(net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.AABB, net.minecraft.world.level.BlockGetter$BlockStepVisitor);
+  private static int addCollisionsAlongTravel(it.unimi.dsi.fastutil.longs.LongSet, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.AABB, net.minecraft.world.level.BlockGetter$BlockStepVisitor);
+  private static net.minecraft.core.Vec3i getFurthestCorner(net.minecraft.world.phys.Vec3);
+  private net.minecraft.world.phys.shapes.VoxelShape lambda$getBlockFloorHeight$0(net.minecraft.core.BlockPos);
+  private static net.minecraft.world.phys.BlockHitResult lambda$clip$1(net.minecraft.world.level.ClipContext);
+  private net.minecraft.world.phys.BlockHitResult lambda$clip$0(net.minecraft.world.level.ClipContext, net.minecraft.core.BlockPos);
+  private static net.minecraft.world.phys.BlockHitResult lambda$isBlockInLine$1(net.minecraft.world.level.ClipBlockStateContext);
+  private net.minecraft.world.phys.BlockHitResult lambda$isBlockInLine$0(net.minecraft.world.level.ClipBlockStateContext, net.minecraft.core.BlockPos);
+}

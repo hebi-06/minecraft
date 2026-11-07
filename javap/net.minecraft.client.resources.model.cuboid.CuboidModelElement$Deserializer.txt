@@ -1,0 +1,28 @@
+Compiled from "CuboidModelElement.java"
+public class net.minecraft.client.resources.model.cuboid.CuboidModelElement$Deserializer implements com.google.gson.JsonDeserializer<net.minecraft.client.resources.model.cuboid.CuboidModelElement> {
+  private static final int DEFAULT_LIGHT_EMISSION = 0;
+  private static final java.lang.String FIELD_SHADE_DIRECTION_OVERRIDE = "shade_direction_override";
+  private static final java.lang.String FIELD_LIGHT_EMISSION = "light_emission";
+  private static final java.lang.String FIELD_ROTATION = "rotation";
+  private static final java.lang.String FIELD_ORIGIN = "origin";
+  private static final java.lang.String FIELD_ANGLE = "angle";
+  private static final java.lang.String FIELD_X = "x";
+  private static final java.lang.String FIELD_Y = "y";
+  private static final java.lang.String FIELD_Z = "z";
+  private static final java.lang.String FIELD_AXIS = "axis";
+  private static final java.lang.String FIELD_RESCALE = "rescale";
+  private static final java.lang.String FIELD_FACES = "faces";
+  private static final java.lang.String FIELD_TO = "to";
+  private static final java.lang.String FIELD_FROM = "from";
+  protected net.minecraft.client.resources.model.cuboid.CuboidModelElement$Deserializer();
+  public net.minecraft.client.resources.model.cuboid.CuboidModelElement deserialize(com.google.gson.JsonElement, java.lang.reflect.Type, com.google.gson.JsonDeserializationContext) throws com.google.gson.JsonParseException;
+  private net.minecraft.core.Direction getShadeDirectionOverride(com.google.gson.JsonObject);
+  private net.minecraft.client.resources.model.cuboid.CuboidRotation getRotation(com.google.gson.JsonObject);
+  private net.minecraft.core.Direction$Axis getAxis(com.google.gson.JsonObject);
+  private java.util.Map<net.minecraft.core.Direction, net.minecraft.client.resources.model.cuboid.CuboidFace> getFaces(com.google.gson.JsonDeserializationContext, com.google.gson.JsonObject);
+  private java.util.Map<net.minecraft.core.Direction, net.minecraft.client.resources.model.cuboid.CuboidFace> filterNullFromFaces(com.google.gson.JsonDeserializationContext, com.google.gson.JsonObject);
+  private net.minecraft.core.Direction getFacing(java.lang.String);
+  private static org.joml.Vector3f getPosition(com.google.gson.JsonObject, java.lang.String);
+  private static org.joml.Vector3f getVector3f(com.google.gson.JsonObject, java.lang.String);
+  public java.lang.Object deserialize(com.google.gson.JsonElement, java.lang.reflect.Type, com.google.gson.JsonDeserializationContext) throws com.google.gson.JsonParseException;
+}

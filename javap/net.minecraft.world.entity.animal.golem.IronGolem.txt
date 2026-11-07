@@ -1,0 +1,46 @@
+Compiled from "IronGolem.java"
+public class net.minecraft.world.entity.animal.golem.IronGolem extends net.minecraft.world.entity.animal.golem.AbstractGolem implements net.minecraft.world.entity.NeutralMob {
+  protected static final net.minecraft.network.syncher.EntityDataAccessor<java.lang.Byte> DATA_FLAGS_ID;
+  private static final int IRON_INGOT_HEAL_AMOUNT = 25;
+  private static final boolean DEFAULT_PLAYER_CREATED = false;
+  private int attackAnimationTick;
+  private int offerFlowerTick;
+  private static final net.minecraft.util.valueproviders.UniformInt PERSISTENT_ANGER_TIME;
+  private long persistentAngerEndTime;
+  private net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.LivingEntity> persistentAngerTarget;
+  public net.minecraft.world.entity.animal.golem.IronGolem(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.animal.golem.IronGolem>, net.minecraft.world.level.Level);
+  protected void registerGoals();
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  public static net.minecraft.world.entity.ai.attributes.AttributeSupplier$Builder createAttributes();
+  protected int decreaseAirSupply(int);
+  protected void doPush(net.minecraft.world.entity.Entity);
+  public void aiStep();
+  public boolean canSpawnSprintParticle();
+  public boolean canAttack(net.minecraft.world.entity.LivingEntity);
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  public void startPersistentAngerTimer();
+  public void setPersistentAngerEndTime(long);
+  public long getPersistentAngerEndTime();
+  public void setPersistentAngerTarget(net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.LivingEntity>);
+  public net.minecraft.world.entity.EntityReference<net.minecraft.world.entity.LivingEntity> getPersistentAngerTarget();
+  private float getAttackDamage();
+  public boolean doHurtTarget(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.Entity);
+  public boolean hurtServer(net.minecraft.server.level.ServerLevel, net.minecraft.world.damagesource.DamageSource, float);
+  public net.minecraft.world.entity.Crackiness$Level getCrackiness();
+  public void handleEntityEvent(byte);
+  public int getAttackAnimationTick();
+  public void offerFlower(boolean);
+  protected net.minecraft.sounds.SoundEvent getHurtSound(net.minecraft.world.damagesource.DamageSource);
+  protected net.minecraft.sounds.SoundEvent getDeathSound();
+  protected net.minecraft.world.InteractionResult mobInteract(net.minecraft.world.entity.player.Player, net.minecraft.world.InteractionHand);
+  protected void playStepSound(net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState);
+  public int getOfferFlowerTick();
+  public boolean isPlayerCreated();
+  public void setPlayerCreated(boolean);
+  public void die(net.minecraft.world.damagesource.DamageSource);
+  public boolean checkSpawnObstruction(net.minecraft.world.level.LevelReader);
+  public net.minecraft.world.phys.Vec3 getLeashOffset();
+  private static boolean lambda$registerGoals$0(net.minecraft.world.entity.LivingEntity, net.minecraft.server.level.ServerLevel);
+  static {};
+}

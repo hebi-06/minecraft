@@ -1,0 +1,16 @@
+Compiled from "StringWidget.java"
+public class net.minecraft.client.gui.components.StringWidget extends net.minecraft.client.gui.components.AbstractStringWidget {
+  private static final int TEXT_MARGIN = 2;
+  private int maxWidth;
+  private int cachedWidth;
+  private boolean cachedWidthDirty;
+  private net.minecraft.client.gui.components.StringWidget$TextOverflow textOverflow;
+  public net.minecraft.client.gui.components.StringWidget(net.minecraft.network.chat.Component, net.minecraft.client.gui.Font);
+  public net.minecraft.client.gui.components.StringWidget(int, int, net.minecraft.network.chat.Component, net.minecraft.client.gui.Font);
+  public net.minecraft.client.gui.components.StringWidget(int, int, int, int, net.minecraft.network.chat.Component, net.minecraft.client.gui.Font);
+  public void setMessage(net.minecraft.network.chat.Component);
+  public net.minecraft.client.gui.components.StringWidget setMaxWidth(int);
+  public net.minecraft.client.gui.components.StringWidget setMaxWidth(int, net.minecraft.client.gui.components.StringWidget$TextOverflow);
+  public int getWidth();
+  public void visitLines(net.minecraft.client.gui.ActiveTextCollector);
+}

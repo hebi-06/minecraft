@@ -1,0 +1,27 @@
+Compiled from "ToastManager.java"
+public class net.minecraft.client.gui.components.toasts.ToastManager {
+  private static final int SLOT_COUNT = 5;
+  private static final int ALL_SLOTS_OCCUPIED = -1;
+  private final net.minecraft.client.Minecraft minecraft;
+  private final java.util.List<net.minecraft.client.gui.components.toasts.ToastManager$ToastInstance<?>> visibleToasts;
+  private final java.util.BitSet occupiedSlots;
+  private final java.util.Deque<net.minecraft.client.gui.components.toasts.Toast> queued;
+  private final java.util.Set<net.minecraft.sounds.SoundEvent> playedToastSounds;
+  private net.minecraft.client.gui.components.toasts.ToastManager$ToastInstance<net.minecraft.client.gui.components.toasts.NowPlayingToast> nowPlayingToast;
+  public net.minecraft.client.gui.components.toasts.ToastManager(net.minecraft.client.Minecraft, net.minecraft.client.Options);
+  public void update();
+  public void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor);
+  private int findFreeSlotsIndex(int);
+  private int freeSlotCount();
+  public <T extends net.minecraft.client.gui.components.toasts.Toast> T getToast(java.lang.Class<? extends T>, java.lang.Object);
+  public void clear();
+  public void addToast(net.minecraft.client.gui.components.toasts.Toast);
+  public void showNowPlayingToast();
+  public void hideNowPlayingToast();
+  public net.minecraft.client.Minecraft getMinecraft();
+  public double getNotificationDisplayTimeMultiplier();
+  private void initializeMusicToast(net.minecraft.client.MusicToastDisplayState);
+  public void setMusicToastDisplayState(net.minecraft.client.MusicToastDisplayState);
+  private boolean lambda$update$1(net.minecraft.client.gui.components.toasts.Toast);
+  private boolean lambda$update$0(org.apache.commons.lang3.mutable.MutableBoolean, net.minecraft.client.gui.components.toasts.ToastManager$ToastInstance);
+}

@@ -1,0 +1,10 @@
+Compiled from "MobRenderer.java"
+public abstract class net.minecraft.client.renderer.entity.MobRenderer<T extends net.minecraft.world.entity.Mob, S extends net.minecraft.client.renderer.entity.state.LivingEntityRenderState, M extends net.minecraft.client.model.EntityModel<? super S>> extends net.minecraft.client.renderer.entity.LivingEntityRenderer<T, S, M> {
+  public net.minecraft.client.renderer.entity.MobRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context, M, float);
+  protected boolean shouldShowName(T, double);
+  protected float getShadowRadius(S);
+  protected static boolean checkMagicName(net.minecraft.world.entity.Entity, java.lang.String);
+  protected boolean shouldShowName(net.minecraft.world.entity.LivingEntity, double);
+  protected float getShadowRadius(net.minecraft.client.renderer.entity.state.EntityRenderState);
+  protected boolean shouldShowName(net.minecraft.world.entity.Entity, double);
+}

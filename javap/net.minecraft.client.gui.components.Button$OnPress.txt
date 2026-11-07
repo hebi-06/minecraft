@@ -1,0 +1,4 @@
+Compiled from "Button.java"
+public interface net.minecraft.client.gui.components.Button$OnPress {
+  public abstract void onPress(net.minecraft.client.gui.components.Button);
+}

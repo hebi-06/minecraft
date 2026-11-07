@@ -1,0 +1,22 @@
+Compiled from "SoundSource.java"
+public final class net.minecraft.sounds.SoundSource extends java.lang.Enum<net.minecraft.sounds.SoundSource> {
+  public static final net.minecraft.sounds.SoundSource MASTER;
+  public static final net.minecraft.sounds.SoundSource MUSIC;
+  public static final net.minecraft.sounds.SoundSource RECORDS;
+  public static final net.minecraft.sounds.SoundSource WEATHER;
+  public static final net.minecraft.sounds.SoundSource BLOCKS;
+  public static final net.minecraft.sounds.SoundSource HOSTILE;
+  public static final net.minecraft.sounds.SoundSource NEUTRAL;
+  public static final net.minecraft.sounds.SoundSource PLAYERS;
+  public static final net.minecraft.sounds.SoundSource AMBIENT;
+  public static final net.minecraft.sounds.SoundSource VOICE;
+  public static final net.minecraft.sounds.SoundSource UI;
+  private final java.lang.String name;
+  private static final net.minecraft.sounds.SoundSource[] $VALUES;
+  public static net.minecraft.sounds.SoundSource[] values();
+  public static net.minecraft.sounds.SoundSource valueOf(java.lang.String);
+  private net.minecraft.sounds.SoundSource(java.lang.String);
+  public java.lang.String getName();
+  private static net.minecraft.sounds.SoundSource[] $values();
+  static {};
+}

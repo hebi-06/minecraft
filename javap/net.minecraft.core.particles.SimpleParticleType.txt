@@ -1,0 +1,10 @@
+Compiled from "SimpleParticleType.java"
+public class net.minecraft.core.particles.SimpleParticleType extends net.minecraft.core.particles.ParticleType<net.minecraft.core.particles.SimpleParticleType> implements net.minecraft.core.particles.ParticleOptions {
+  private final com.mojang.serialization.MapCodec<net.minecraft.core.particles.SimpleParticleType> codec;
+  private final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.core.particles.SimpleParticleType> streamCodec;
+  protected net.minecraft.core.particles.SimpleParticleType(boolean);
+  public net.minecraft.core.particles.SimpleParticleType getType();
+  public com.mojang.serialization.MapCodec<net.minecraft.core.particles.SimpleParticleType> codec();
+  public net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.core.particles.SimpleParticleType> streamCodec();
+  public net.minecraft.core.particles.ParticleType getType();
+}

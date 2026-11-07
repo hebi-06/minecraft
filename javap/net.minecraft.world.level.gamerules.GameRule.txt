@@ -1,0 +1,30 @@
+Compiled from "GameRule.java"
+public final class net.minecraft.world.level.gamerules.GameRule<T> implements net.minecraft.world.flag.FeatureElement {
+  private final net.minecraft.world.level.gamerules.GameRuleCategory category;
+  private final net.minecraft.world.level.gamerules.GameRuleType gameRuleType;
+  private final com.mojang.brigadier.arguments.ArgumentType<T> argument;
+  private final net.minecraft.world.level.gamerules.GameRules$VisitorCaller<T> visitorCaller;
+  private final com.mojang.serialization.Codec<T> valueCodec;
+  private final java.util.function.ToIntFunction<T> commandResultFunction;
+  private final T defaultValue;
+  private final net.minecraft.world.flag.FeatureFlagSet requiredFeatures;
+  public net.minecraft.world.level.gamerules.GameRule(net.minecraft.world.level.gamerules.GameRuleCategory, net.minecraft.world.level.gamerules.GameRuleType, com.mojang.brigadier.arguments.ArgumentType<T>, net.minecraft.world.level.gamerules.GameRules$VisitorCaller<T>, com.mojang.serialization.Codec<T>, java.util.function.ToIntFunction<T>, T, net.minecraft.world.flag.FeatureFlagSet);
+  public java.lang.String toString();
+  public java.lang.String id();
+  public net.minecraft.resources.Identifier getIdentifier();
+  public net.minecraft.resources.Identifier getIdentifierWithFallback();
+  public java.lang.String getDescriptionId();
+  public java.lang.String serialize(T);
+  public com.mojang.serialization.DataResult<T> deserialize(java.lang.String);
+  public java.lang.Class<T> valueClass();
+  public void callVisitor(net.minecraft.world.level.gamerules.GameRuleTypeVisitor);
+  public int getCommandResult(T);
+  public net.minecraft.world.level.gamerules.GameRuleCategory category();
+  public net.minecraft.world.level.gamerules.GameRuleType gameRuleType();
+  public com.mojang.brigadier.arguments.ArgumentType<T> argument();
+  public com.mojang.serialization.Codec<T> valueCodec();
+  public T defaultValue();
+  public net.minecraft.world.flag.FeatureFlagSet requiredFeatures();
+  private static java.lang.String lambda$deserialize$1();
+  private static java.lang.String lambda$deserialize$0();
+}

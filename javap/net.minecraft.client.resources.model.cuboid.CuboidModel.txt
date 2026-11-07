@@ -1,0 +1,22 @@
+Compiled from "CuboidModel.java"
+public final class net.minecraft.client.resources.model.cuboid.CuboidModel extends java.lang.Record implements net.minecraft.client.resources.model.UnbakedModel {
+  private final net.minecraft.client.resources.model.geometry.UnbakedGeometry geometry;
+  private final net.minecraft.client.resources.model.UnbakedModel$GuiLight guiLight;
+  private final java.lang.Boolean ambientOcclusion;
+  private final net.minecraft.client.resources.model.cuboid.ItemTransforms transforms;
+  private final net.minecraft.client.resources.model.sprite.TextureSlots$Data textureSlots;
+  private final net.minecraft.resources.Identifier parent;
+  static final com.google.gson.Gson GSON;
+  public net.minecraft.client.resources.model.cuboid.CuboidModel(net.minecraft.client.resources.model.geometry.UnbakedGeometry, net.minecraft.client.resources.model.UnbakedModel$GuiLight, java.lang.Boolean, net.minecraft.client.resources.model.cuboid.ItemTransforms, net.minecraft.client.resources.model.sprite.TextureSlots$Data, net.minecraft.resources.Identifier);
+  public static net.minecraft.client.resources.model.cuboid.CuboidModel fromStream(java.io.Reader);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.client.resources.model.geometry.UnbakedGeometry geometry();
+  public net.minecraft.client.resources.model.UnbakedModel$GuiLight guiLight();
+  public java.lang.Boolean ambientOcclusion();
+  public net.minecraft.client.resources.model.cuboid.ItemTransforms transforms();
+  public net.minecraft.client.resources.model.sprite.TextureSlots$Data textureSlots();
+  public net.minecraft.resources.Identifier parent();
+  static {};
+}

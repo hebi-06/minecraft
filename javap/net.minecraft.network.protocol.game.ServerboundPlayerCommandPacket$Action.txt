@@ -1,0 +1,16 @@
+Compiled from "ServerboundPlayerCommandPacket.java"
+public final class net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action extends java.lang.Enum<net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action> {
+  public static final net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action STOP_SLEEPING;
+  public static final net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action START_SPRINTING;
+  public static final net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action STOP_SPRINTING;
+  public static final net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action START_RIDING_JUMP;
+  public static final net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action STOP_RIDING_JUMP;
+  public static final net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action OPEN_INVENTORY;
+  public static final net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action START_FALL_FLYING;
+  private static final net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action[] $VALUES;
+  public static net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action[] values();
+  public static net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action valueOf(java.lang.String);
+  private net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action();
+  private static net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket$Action[] $values();
+  static {};
+}

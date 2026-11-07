@@ -1,0 +1,15 @@
+Compiled from "AbstractZombieRenderer.java"
+public abstract class net.minecraft.client.renderer.entity.AbstractZombieRenderer<T extends net.minecraft.world.entity.monster.zombie.Zombie, S extends net.minecraft.client.renderer.entity.state.ZombieRenderState, M extends net.minecraft.client.model.HumanoidModel<S>> extends net.minecraft.client.renderer.entity.HumanoidMobRenderer<T, S, M> {
+  private static final net.minecraft.resources.Identifier ZOMBIE_LOCATION;
+  private static final net.minecraft.resources.Identifier BABY_ZOMBIE_LOCATION;
+  protected net.minecraft.client.renderer.entity.AbstractZombieRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context, M, M, net.minecraft.client.renderer.entity.ArmorModelSet<M>, net.minecraft.client.renderer.entity.ArmorModelSet<M>);
+  public net.minecraft.resources.Identifier getTextureLocation(S);
+  public void extractRenderState(T, S, float);
+  protected boolean isShaking(S);
+  public void extractRenderState(net.minecraft.world.entity.Mob, net.minecraft.client.renderer.entity.state.HumanoidRenderState, float);
+  public void extractRenderState(net.minecraft.world.entity.LivingEntity, net.minecraft.client.renderer.entity.state.LivingEntityRenderState, float);
+  protected boolean isShaking(net.minecraft.client.renderer.entity.state.LivingEntityRenderState);
+  public net.minecraft.resources.Identifier getTextureLocation(net.minecraft.client.renderer.entity.state.LivingEntityRenderState);
+  public void extractRenderState(net.minecraft.world.entity.Entity, net.minecraft.client.renderer.entity.state.EntityRenderState, float);
+  static {};
+}

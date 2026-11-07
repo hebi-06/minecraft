@@ -1,0 +1,4 @@
+Compiled from "Renderable.java"
+public interface net.minecraft.client.gui.components.Renderable {
+  public abstract void extractRenderState(net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+}

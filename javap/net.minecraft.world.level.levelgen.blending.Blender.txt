@@ -1,0 +1,47 @@
+Compiled from "Blender.java"
+public class net.minecraft.world.level.levelgen.blending.Blender {
+  public static final net.minecraft.util.context.ContextKey<net.minecraft.world.level.levelgen.blending.Blender> CONTEXT_KEY;
+  public static final net.minecraft.util.context.ContextKey<net.minecraft.world.level.levelgen.densityfunction.DensitySampler> ALPHA_KEY;
+  public static final net.minecraft.util.context.ContextKey<net.minecraft.world.level.levelgen.densityfunction.DensitySampler> OFFSET_KEY;
+  private static final net.minecraft.world.level.levelgen.blending.Blender EMPTY;
+  private static final net.minecraft.world.level.levelgen.synth.Noise SHIFT_NOISE;
+  private static final int HEIGHT_BLENDING_RANGE_CELLS;
+  private static final int HEIGHT_BLENDING_RANGE_CHUNKS;
+  private static final int DENSITY_BLENDING_RANGE_CELLS = 2;
+  private static final int DENSITY_BLENDING_RANGE_CHUNKS;
+  private static final double OLD_CHUNK_XZ_RADIUS = 8.0d;
+  private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<net.minecraft.world.level.levelgen.blending.BlendingData> heightAndBiomeBlendingData;
+  private final it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<net.minecraft.world.level.levelgen.blending.BlendingData> densityBlendingData;
+  private final net.minecraft.world.level.chunk.CarvingMask$Filter carvingFilter;
+  public static net.minecraft.world.level.levelgen.blending.Blender empty();
+  public static net.minecraft.world.level.levelgen.blending.Blender of(net.minecraft.server.level.WorldGenRegion);
+  private net.minecraft.world.level.levelgen.blending.Blender(it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<net.minecraft.world.level.levelgen.blending.BlendingData>, it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<net.minecraft.world.level.levelgen.blending.BlendingData>, net.minecraft.world.level.chunk.CarvingMask$Filter);
+  public boolean isEmpty();
+  public net.minecraft.world.level.levelgen.blending.Blender$OutputBuffer blendOffsetAndFactor(net.minecraft.world.level.levelgen.densityfunction.DensityVolume);
+  protected net.minecraft.world.level.levelgen.blending.Blender$BlendingOutput blendOffsetAndFactor(int, int);
+  private static double heightToOffset(double);
+  public float blendDensity(int, int, int, float);
+  private float getBlendingDataValue(int, int, int, net.minecraft.world.level.levelgen.blending.Blender$CellValueGetter);
+  private float getBlendingDataValue(net.minecraft.world.level.levelgen.blending.Blender$CellValueGetter, int, int, int, int, int);
+  public net.minecraft.world.level.biome.BiomeResolver getBiomeResolver(net.minecraft.world.level.biome.BiomeResolver);
+  private net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> blendBiome(int, int, int);
+  public static void generateBorderTicks(net.minecraft.server.level.WorldGenRegion, net.minecraft.world.level.chunk.ChunkAccess);
+  private static void generateBorderTick(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.core.BlockPos);
+  public net.minecraft.world.level.chunk.CarvingMask$Filter getCarvingFilter();
+  private static net.minecraft.world.level.chunk.CarvingMask$Filter createAroundOldChunksCarvingMaskFilter(net.minecraft.world.level.WorldGenLevel, net.minecraft.world.level.chunk.ChunkAccess);
+  public static net.minecraft.world.level.levelgen.blending.Blender$DistanceGetter makeOldChunkDistanceGetter(net.minecraft.world.level.levelgen.blending.BlendingData, java.util.Map<net.minecraft.core.CompositeDirection$Direction8, net.minecraft.world.level.levelgen.blending.BlendingData>);
+  private static net.minecraft.world.level.levelgen.blending.Blender$DistanceGetter makeOffsetOldChunkDistanceGetter(net.minecraft.core.CompositeDirection$Direction8, net.minecraft.world.level.levelgen.blending.BlendingData);
+  private static double distanceToCube(double, double, double, double, double, double);
+  private static double lambda$makeOffsetOldChunkDistanceGetter$0(double, double, double, double, double, double, double);
+  private static double lambda$makeOldChunkDistanceGetter$1(java.util.List, double, double, double);
+  private static void lambda$makeOldChunkDistanceGetter$0(java.util.List, net.minecraft.core.CompositeDirection$Direction8, net.minecraft.world.level.levelgen.blending.BlendingData);
+  private static boolean lambda$createAroundOldChunksCarvingMaskFilter$0(net.minecraft.world.level.levelgen.blending.Blender$DistanceGetter, int, int, int);
+  private static void lambda$blendBiome$0(int, int, int, org.apache.commons.lang3.mutable.MutableFloat, org.apache.commons.lang3.mutable.MutableObject, long, net.minecraft.world.level.levelgen.blending.BlendingData);
+  private static void lambda$blendBiome$1(int, int, org.apache.commons.lang3.mutable.MutableFloat, org.apache.commons.lang3.mutable.MutableObject, int, int, net.minecraft.core.Holder);
+  private net.minecraft.core.Holder lambda$getBiomeResolver$0(net.minecraft.world.level.biome.BiomeResolver, int, int, int);
+  private static void lambda$blendDensity$0(int, int, int, org.apache.commons.lang3.mutable.MutableDouble, org.apache.commons.lang3.mutable.MutableDouble, org.apache.commons.lang3.mutable.MutableDouble, long, net.minecraft.world.level.levelgen.blending.BlendingData);
+  private static void lambda$blendDensity$1(int, int, int, org.apache.commons.lang3.mutable.MutableDouble, org.apache.commons.lang3.mutable.MutableDouble, org.apache.commons.lang3.mutable.MutableDouble, int, int, int, float);
+  private static void lambda$blendOffsetAndFactor$0(int, int, org.apache.commons.lang3.mutable.MutableDouble, org.apache.commons.lang3.mutable.MutableDouble, org.apache.commons.lang3.mutable.MutableDouble, long, net.minecraft.world.level.levelgen.blending.BlendingData);
+  private static void lambda$blendOffsetAndFactor$1(int, int, org.apache.commons.lang3.mutable.MutableDouble, org.apache.commons.lang3.mutable.MutableDouble, org.apache.commons.lang3.mutable.MutableDouble, int, int, float);
+  static {};
+}
