@@ -60,6 +60,14 @@ for _ in $(seq 1 90); do [ -f "$dir/exit.code" ] && break; sleep 1; done
 exec 3>&-
 [ -f "$dir/exit.code" ] || { pkill -f "jar server.jar nogui" || true; sleep 2; }
 
+# 만든 리소스 팩 살피기 (Polymer — polymer/resource_pack.zip): 크기 · 블록 상태 덮어쓰기 · 직업 아이콘 모델
+pack="$dir/polymer/resource_pack.zip"
+if [ -f "$pack" ]; then
+  echo "----- [vanilla] pack $(stat -c %s "$pack") bytes, $(unzip -Z1 "$pack" | wc -l) files"
+  unzip -Z1 "$pack" | grep -E "blockstates/|items/vjob/" | head -n 16
+  echo "--- note_block.json (앞)"
+  unzip -p "$pack" assets/minecraft/blockstates/note_block.json 2>/dev/null | head -c 600; echo
+fi
 cp "$dir/out.log" ci-out/vanilla-server.log 2>/dev/null || true
 cp run-probe/logs/latest.log ci-out/vanilla-client-latest.log 2>/dev/null || true
 for f in run-probe/screenshots/probe_*.png; do [ -f "$f" ] && cp "$f" "ci-out/shots/vanilla_$(basename "$f" .png | sed 's/^probe_//').png"; done
