@@ -13,6 +13,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.inventory.ContainerInput;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,7 +25,8 @@ import java.util.Optional;
 /**
  * 모드 없는 클라이언트 시험의 사진기 (2026-11-07 1번 — CI ci/vanilla_probe.sh). Fabric API 없이 Fabric Loader 만 — 서버가 보기에 바닐라 클라이언트.
  * 서버 (모드 jar, -Dmmorpg.probe=true) 가 장면을 만들고 채팅 "[probe] …" 로 신호: shot 이름 (지금 화면) · inv 이름 (인벤토리를 열고 찍고 닫음) ·
- * cam back|first · key f (F 키 패킷) · key N (숫자 키 N — 고른 칸) · close (상자 메뉴 닫기) · click id sel (대화창 단추) · submit id (입력창 확인) ·
+ * cam back|first · key f (F 키 패킷) · key N (숫자 키 N — 고른 칸) · slot N (상자 메뉴 칸 누름) · close (상자 메뉴 닫기) · click id sel (대화창 단추) ·
+ * submit id (입력창 확인) ·
  * done (닫힘). 접속이 끊기면 끊긴 화면을 찍고 닫힘. 아무 신호 없이 12분이면 찍고 닫힘. 사진은 게임 폴더 screenshots/probe_&lt;이름&gt;.png.
  */
 public final class Probe implements ClientModInitializer {
@@ -88,6 +90,10 @@ public final class Probe implements ClientModInitializer {
             mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
         } else if (cmd.equals("cam first")) {
             mc.options.setCameraType(CameraType.FIRST_PERSON);
+        } else if (cmd.startsWith("slot ") && mc.player != null && mc.gameMode != null) {
+            // 상자 메뉴 칸을 왼쪽 클릭 (마우스로 누를 때와 같은 패킷)
+            int n = Integer.parseInt(cmd.substring(5).trim());
+            mc.gameMode.handleContainerInput(mc.player.containerMenu.containerId, n, 0, ContainerInput.PICKUP, mc.player);
         } else if (cmd.equals("close") && mc.player != null) {
             mc.player.closeContainer(); // Esc 로 상자 메뉴를 닫을 때와 같음 (닫기 패킷)
         } else if (cmd.startsWith("click ") && mc.player != null) {

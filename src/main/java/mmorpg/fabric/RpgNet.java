@@ -335,12 +335,16 @@ public final class RpgNet {
         BEFORE_OPEN.add(fn);
     }
 
-    /** 스탯 창 열기: 모드가 있으면 화면, 없으면 채팅 스탯 창 */
+    /** 스탯 창 열기: 모드가 있으면 화면, 모드 없는 클라이언트는 상자 메뉴 (1번 4b — VanillaStats), 그 밖에는 채팅 스탯 창 */
     public static void openStats(ServerPlayer sp) {
         if (sp.isRemoved()) return;
         if (ServerPlayNetworking.canSend(sp, SyncPayload.TYPE)) {
             for (java.util.function.Consumer<ServerPlayer> fn : BEFORE_OPEN) fn.accept(sp);
             sync(sp, true);
+            return;
+        }
+        if (mmorpg.fabric.vanilla.VanillaForms.supports(sp)) {
+            mmorpg.fabric.vanilla.VanillaStats.open(sp);
             return;
         }
         StatSheet s = StatSheet.of(sp);

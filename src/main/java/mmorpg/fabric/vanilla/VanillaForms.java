@@ -112,8 +112,30 @@ public final class VanillaForms {
 
     // ------------------------------------------------------------ 상자 창
 
+    /** 열린 상자 메뉴 하나 (같은 줄 수의 다음 상자 창은 이 메뉴를 그대로 두고 칸 · 제목만 바꿈 — 다시 열지 않아 깜빡이지 않음) */
+    private static final class ChestGui extends SimpleGui {
+        final ServerPlayer sp;
+        final int rows;
+        /** 지금 보이는 창의 번호 (누름 · 닫기를 이 창의 응답으로) */
+        volatile int formId;
+
+        ChestGui(MenuType<?> type, ServerPlayer sp, int rows) {
+            super(type, sp, false);
+            this.sp = sp;
+            this.rows = rows;
+        }
+
+        @Override
+        public void onPlayerClose(boolean success) {
+            if (CHESTS.get(sp.getUUID()) != this) return;
+            CHESTS.remove(sp.getUUID());
+            Forms.answerVanilla(sp, formId, -1, List.of());
+        }
+    }
+
     private static void chest(ServerPlayer sp, FormNet.ChestPayload c) {
-        DIALOGS.remove(sp.getUUID()); // 상자 화면이 대화창 (응답 기다림) 을 바꿈
+        UUID uuid = sp.getUUID();
+        DIALOGS.remove(uuid); // 상자 화면이 대화창 (응답 기다림) 을 바꿈
         int size = Math.max(9, Math.min(54, c.slots().size()));
         int rows = (size + 8) / 9;
         MenuType<?> type = switch (rows) {
@@ -124,25 +146,22 @@ public final class VanillaForms {
             case 5 -> MenuType.GENERIC_9x5;
             default -> MenuType.GENERIC_9x6;
         };
+        SimpleGui open = CHESTS.get(uuid);
+        boolean reuse = open instanceof ChestGui g && g.rows == rows && g.isOpen();
+        ChestGui gui = reuse ? (ChestGui) open : new ChestGui(type, sp, rows);
         int id = c.id();
-        UUID uuid = sp.getUUID();
-        SimpleGui gui = new SimpleGui(type, sp, false) {
-            @Override
-            public void onPlayerClose(boolean success) {
-                if (CHESTS.get(uuid) != this) return;
-                CHESTS.remove(uuid);
-                Forms.answerVanilla(sp, id, -1, List.of());
-            }
-        };
-        gui.setTitle(Component.literal(c.title()));
+        gui.formId = id;
+        Component title = Component.literal(c.title());
+        if (!reuse || !title.equals(gui.getTitle())) gui.setTitle(title);
         int cells = rows * 9;
+        for (int i = 0; i < cells; i++) gui.clearSlot(i);
         for (int i = 0; i < c.slots().size() && i < cells; i++) {
             FormNet.SlotData s = c.slots().get(i);
             if (s.empty()) continue;
             boolean clickable = s.kind() != Slot.DECO && s.kind() != Slot.BIG;
             int index = i;
             GuiElement.ClickCallback cb = clickable ? (idx, click, action, g) -> {
-                if (CHESTS.get(uuid) == gui) Forms.answerVanilla(sp, id, index, List.of());
+                if (CHESTS.get(uuid) == gui && gui.formId == id) Forms.answerVanilla(sp, id, index, List.of());
             } : GuiElement.EMPTY_CALLBACK;
             gui.setSlot(i, new SimpleGuiElement(icon(s), cb));
         }
@@ -157,8 +176,8 @@ public final class VanillaForms {
             if (at >= 0) gui.setSlot(at, new SimpleGuiElement(info(c.body()), GuiElement.EMPTY_CALLBACK));
             else sp.sendSystemMessage(Component.literal(c.body()));
         }
-        CHESTS.put(uuid, gui); // 예전 상자 메뉴는 새 메뉴가 열릴 때 바닐라가 닫음 (onPlayerClose 는 부르지 않음 — 응답으로 치지 않음)
-        gui.open();
+        CHESTS.put(uuid, gui); // 줄 수가 다른 새 메뉴: 예전 메뉴는 새 메뉴가 열릴 때 바닐라가 닫음 (onPlayerClose 는 부르지 않음 — 응답으로 치지 않음)
+        if (!reuse) gui.open();
     }
 
     /** 칸의 그림: 아이템 (Polymer 가 종이 + 모델로 바꿈) 또는 창 그림 (rpg:vui/&lt;그림&gt; 모델) + 이름 · 설명 · 수 */
