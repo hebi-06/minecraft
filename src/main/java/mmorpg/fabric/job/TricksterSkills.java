@@ -100,6 +100,14 @@ final class TricksterSkills {
         SkillFx.play(level, "block.glass.break", body, 1.5, 0.45);
     }
 
+    /** 머리 위 꽃 n 송이 (표식 — 터지기 전까지 그대로 보이게 life 초) */
+    private static void heldFlowers(ServerLevel level, ServerPlayer sp, LivingEntity e, int n, Jobs.Job j, double life) {
+        Vec3 over = RuneKit.overHead(e, 0.5);
+        Vec3 right = V.rightOf(V.flat(V.sub(over, sp.getEyePosition())));
+        for (int i = 0; i < n; i++) JobFx.blossom(level, V.add(over, right, (i - (n - 1) / 2.0) * 0.32), 0.15, j, life, Opt.of("vel", RuneKit.entVel(e), "fade", 0.2,
+                "alpha", 0.9));
+    }
+
     /** 꽃이 터짐: 머리 위 꽃 n 송이 자리에서 꽃잎이 흩어짐 */
     private static void flowersBurst(ServerLevel level, ServerPlayer sp, LivingEntity e, int n, Jobs.Job j) {
         Vec3 over = RuneKit.overHead(e, 0.5);

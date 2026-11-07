@@ -457,7 +457,7 @@ final class ArcmageSkills {
                     Vec3 p = new Vec3(c.x + Math.cos(a) * orbitR, c.y + 0.14 * Math.sin(a * 2 + tt * 0.15), c.z + Math.sin(a) * orbitR);
                     Vec3 vel = V.add(bodyVel, new Vec3(-Math.sin(a), 0, Math.cos(a)), w * 20 * orbitR);
                     boolean back = gone[i] > 0 && tt - gone[i] < 4; // 다시 뜨는 별은 번쩍
-                    JobFx.starNode(lv, p, back ? 0.62 : 0.46, back ? 0 : 2, back ? 2 : 4, 0.13, !back, Opt.of("vel", vel, "fade", 0.0), NIGHT, GOLD);
+                    JobFx.starNode(lv, p, back ? 0.75 : 0.58, back ? 0 : 2, back ? 2 : 4, 0.13, !back, Opt.of("vel", vel, "fade", 0.0), NIGHT, GOLD);
                 }
             });
         }
