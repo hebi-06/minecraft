@@ -46,9 +46,9 @@ public final class Probe implements ClientModInitializer {
             mc.stop();
             return;
         }
-        if (!disconnectedShot && mc.screen instanceof DisconnectedScreen) {
+        if (!disconnectedShot && mc.gui.screen() instanceof DisconnectedScreen) {
             disconnectedShot = true;
-            log("disconnected: " + mc.screen.getTitle().getString());
+            log("disconnected: " + mc.gui.screen().getTitle().getString());
             shot(mc, "disconnected");
             quitIn = 40;
             return;
@@ -62,7 +62,7 @@ public final class Probe implements ClientModInitializer {
         if (pendingInv != null) {
             shot(mc, pendingInv);
             pendingInv = null;
-            mc.setScreen(null);
+            mc.gui.setScreen(null);
             wait = 10;
             return;
         }
@@ -73,7 +73,7 @@ public final class Probe implements ClientModInitializer {
             shot(mc, cmd.substring(5));
             wait = 5;
         } else if (cmd.startsWith("inv ") && mc.player != null) {
-            mc.setScreen(new InventoryScreen(mc.player));
+            mc.gui.setScreen(new InventoryScreen(mc.player));
             pendingInv = cmd.substring(4);
             wait = 20;
         } else if (cmd.equals("cam back")) {
