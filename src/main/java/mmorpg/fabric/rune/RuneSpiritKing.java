@@ -138,10 +138,11 @@ final class RuneSpiritKing {
             });
         });
         // 3) 원소 마무리 넷
-        RuneKit.later(14, () -> elemFire(sp, P, k, life, z, center));
-        RuneKit.later(14 + elemGap, () -> elemWater(sp, P, k, life, z, base));
+        // 2026-11-07 원소 반응: 불 · 물 · 바위 마무리는 그 원소를 묻힘 (바람은 무속성 — 정령왕 강림은 elem multi)
+        RuneKit.later(14, () -> mmorpg.fabric.job.ElementSystem.with("fire", () -> elemFire(sp, P, k, life, z, center)));
+        RuneKit.later(14 + elemGap, () -> mmorpg.fabric.job.ElementSystem.with("water", () -> elemWater(sp, P, k, life, z, base)));
         RuneKit.later(14 + elemGap * 2, () -> elemWind(sp, P, k, life, z));
-        RuneKit.later(14 + elemGap * 3, () -> elemEarth(sp, P, k, life, z));
+        RuneKit.later(14 + elemGap * 3, () -> mmorpg.fabric.job.ElementSystem.with("rock", () -> elemEarth(sp, P, k, life, z)));
         // 4) 원소 붕괴
         RuneKit.later(burstAt, () -> burst(sp, P, k, life, z, center));
     }

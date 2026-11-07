@@ -27,22 +27,46 @@ public final class Tasks {
         return now;
     }
 
-    /** ticks 틱 뒤 (최소 1) 서버 스레드에서 실행. 0.48.2 지금의 효과 주인 (owner) · 0.50.0 꼬리표 (tag) 를 잡아 두었다가 실행할 때 되살림 */
+    /**
+     * ticks 틱 뒤 (최소 1) 서버 스레드에서 실행. 0.48.2 지금의 효과 주인 (owner) · 0.50.0 꼬리표 (tag) · 2026-11-07 원소 맥락 (elem) 을 잡아 두었다가 실행할 때
+     * 되살림
+     */
     public static void later(int ticks, Runnable run) {
         int own = owner;
         String tg = tag;
-        TASKS.add(new Task(now + Math.max(1, ticks), own == 0 && tg == null ? run : () -> {
+        Object el = elem;
+        TASKS.add(new Task(now + Math.max(1, ticks), own == 0 && tg == null && el == null ? run : () -> {
             int prev = owner;
             String prevTag = tag;
+            Object prevEl = elem;
             owner = own;
             tag = tg;
+            elem = el;
             try {
                 run.run();
             } finally {
                 owner = prev;
                 tag = prevTag;
+                elem = prevEl;
             }
         }));
+    }
+
+    /**
+     * 2026-11-07 지금 효과의 원소 맥락 (null = 무속성 — 원소 스킬 · 룬을 쓰는 동안 JobSystem · RuneCast 가 정함 (job.ElementSystem.Ctx), later 가 이어 줌):
+     * 그 동안 들어간 직업 · 룬 피해가 맞은 적에 원소를 묻힘
+     */
+    private static Object elem;
+
+    public static Object elem() {
+        return elem;
+    }
+
+    /** 원소 맥락을 바꾸고 예전 값을 돌려줌 (끝나면 되돌림) */
+    public static Object elem(Object e) {
+        Object prev = elem;
+        elem = e;
+        return prev;
     }
 
     /**

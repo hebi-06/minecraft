@@ -253,6 +253,8 @@ public final class JobTraits16 {
         boolean giant = false;
         if (bonus != null) for (RpgCombat.Bonus p : bonus.parts()) if (KEY_JOTUNN.equals(p.key())) giant = true;
         addFrost(sp, j, victim, giant ? 2 : 1);
+        // 2026-11-07 원소 반응: 요툰 그립 (얼음 원소 스킬) 의 서리 거인 도끼가 맞은 적에 얼음을 묻힘 (평타 덤 — 쓰는 동안 밖이라 직접)
+        if (giant) ElementSystem.apply(sp, victim, Jobs.element(j.skill(JOTUNN)), JobSystem.power(sp, j), true, false);
         if (giant && victim.level() instanceof ServerLevel level) {
             Vec3 g = victim.position();
             RuneKit.later(3, () -> {

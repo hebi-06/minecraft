@@ -124,6 +124,7 @@ public final class RuneKit {
         float before = target.getHealth();
         if (!Kit.applySkillDamage(sp, target, dmg, false, c, style != null ? style : DamageNumbers.Style.RUNE)) return 0;
         RuneBoost.mark(target); // 0.50.0 계열의 맞은 자리 (룬을 쓰는 동안 — Tasks.tag)
+        mmorpg.fabric.job.ElementSystem.onHit(sp, target); // 2026-11-07 원소 룬이면 원소를 묻힘 (다른 원소가 묻은 적이면 반응)
         float after = target.isRemoved() ? 0 : target.getHealth();
         return before > after ? before - after : dmg;
     }

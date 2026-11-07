@@ -108,7 +108,14 @@ public final class DamageNumbers {
                 return b + "§6§l◎";
             }
         },
-        WISDOM("§b§l", "✦", "", 1.8F);
+        WISDOM("§b§l", "✦", "", 1.8F),
+        // 2026-11-07 원소 반응 (두 원소 색 그라데이션 — 반응 이름 + 숫자, 이름은 rules_more.json ELEMENTS.reactions 와 같게): 증발 · 쇄빙 (즉시 피해 — 크게) ·
+        // 과부하 · 열충격 (둘레 폭발) · 용암 (불타는 땅 — 작게, 자주)
+        REACT_VAPORIZE("§f§l", "증발 ", "!", 2.05F),
+        REACT_SHATTER("§f§l", "쇄빙 ", "!", 2.05F),
+        REACT_OVERLOAD("§f§l", "과부하 ", "!", 1.85F),
+        REACT_THERMAL("§f§l", "열충격 ", "!", 1.85F),
+        REACT_LAVA("§f§l", "용암 ", "", 1.35F);
 
         final String codes;
         final String before;
@@ -356,6 +363,19 @@ public final class DamageNumbers {
         RandomSource r = victim.getRandom();
         Vec3 pos = new Vec3(head.x + (r.nextDouble() - 0.5) * 0.7, head.y + 0.3 + lift, head.z + (r.nextDouble() - 0.5) * 0.7);
         spawnText(level, pos, gradient(mark, style.before + number(amount) + style.after, grad[0], grad[1]), style.scale, POP);
+    }
+
+    /**
+     * 2026-11-07 원소 반응 이름 (피해 없는 반응 — "감전!" · "빙결!"): 맞은 대상 머리 위에 두 원소 색 그라데이션 글자 (숫자보다 조금 높이 — lift 칸 더)
+     */
+    public static void showLabel(LivingEntity victim, String text, int[] grad, float scale, double lift) {
+        if (!Rules.get().obj("CONFIG").truthy("DAMAGE_TEXT") || grad == null || grad.length < 2 || text == null) return;
+        if (ACTIVE.size() >= MAX_TEXTS) return;
+        if (!(victim.level() instanceof ServerLevel level) || victim.isRemoved()) return;
+        Vec3 at = anchor.apply(victim);
+        Vec3 head = at != null ? at : victim.getEyePosition();
+        Vec3 pos = new Vec3(head.x, head.y + 0.55 + lift, head.z);
+        spawnText(level, pos, gradient("", text, grad[0], grad[1]), scale, POP);
     }
 
     /** 글자마다 a → b 로 바뀌는 색 (굵게 — 빈칸은 세지 않음), 앞 표시 mark 는 베드락 서식 그대로 */

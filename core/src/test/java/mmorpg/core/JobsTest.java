@@ -373,10 +373,11 @@ public final class JobsTest {
         if (!BAD.isEmpty()) System.exit(1);
     }
 
-    /** 직업 초당 피해 (피해 스킬의 배율 합 × 피해 배율 ÷ 재사용 대기 — 범위 보정은 밖이라 뺌) */
+    /** 직업 초당 피해 (피해 스킬의 배율 합 × 피해 배율 ÷ 재사용 대기 — 범위 보정 · 2026-11-07 원소 배율 (원소 스킬 −5%) 은 직업 맞춤 밖이라 뺌) */
     static double dps(Jobs.Job j) {
         double sum = 0;
-        for (Jobs.Skill k : j.skills()) if (k.total() > 0 && k.cd() > 0 && !Jobs.stanceBudget(k)) sum += k.total() * Jobs.damageScale(k) / Jobs.areaMult(k) / k.cd();
+        for (Jobs.Skill k : j.skills())
+            if (k.total() > 0 && k.cd() > 0 && !Jobs.stanceBudget(k)) sum += k.total() * Jobs.damageScale(k) / Jobs.areaMult(k) / Jobs.elementMult(k) / k.cd();
         return sum;
     }
 
@@ -1199,11 +1200,14 @@ public final class JobsTest {
                 check(a == null || a.equals("single") || a.equals("narrow"), k.id() + " area kind " + a);
                 double am = a == null ? 1 : a.equals("single") ? 1.15 : 1.08;
                 check(near(Jobs.areaMult(k), am), k.id() + " area mult " + Jobs.areaMult(k));
-                check(near(Jobs.damageScale(k), (1 - Jobs.utilCost(k)) * tm * Jobs.jobNorm(j) * am), k.id() + " scale = util × time × norm × area");
+                // 2026-11-07 원소 배율 (원소 스킬 × 0.95 · 무속성 1 — 직업 맞춤 밖)
+                double em = Jobs.element(k) == null ? 1 : 0.95;
+                check(near(Jobs.elementMult(k), em), k.id() + " element mult " + Jobs.elementMult(k));
+                check(near(Jobs.damageScale(k), (1 - Jobs.utilCost(k)) * tm * Jobs.jobNorm(j) * am * em), k.id() + " scale = util × time × norm × area × element");
                 check(Jobs.jobOf(k) == j, k.id() + " job");
                 if (Jobs.stanceBudget(k)) continue; // 0.51.0 태세 칸 몫 (직업 맞춤 밖)
                 was += k.total() * Jobs.spreadMult(k) / k.cd();
-                now += k.total() * Jobs.damageScale(k) / Jobs.areaMult(k) / k.cd();
+                now += k.total() * Jobs.damageScale(k) / Jobs.areaMult(k) / Jobs.elementMult(k) / k.cd();
             }
             check(near(was, now), j.id() + " job damage per second kept (without the area bonus) " + was + " → " + now);
             double n = Jobs.jobNorm(j);

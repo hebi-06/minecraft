@@ -112,6 +112,9 @@ public final class RuneTip {
         if (Runes.limited(r.family())) sb.append(D + " · §6한정");
         String only = Runes.weaponOnly(r.family());
         if (only != null) sb.append(D + " · §c" + Runes.weaponName(only) + " 전용");
+        // 2026-11-07 원소 룬 ("원소 불 −5%" — 맞은 적에 원소를 묻힘 · 피해는 무속성보다 5% 낮음 · 위의 총 피해에 듦)
+        String el = Elements.note(Runes.element(r), L);
+        if (el != null) sb.append(D + " · " + L + el);
         return sb.toString();
     }
 

@@ -480,7 +480,20 @@ public final class Jobs {
      */
     public static double damageScale(Skill k) {
         if (SPREAD == null || k == null || k.total() <= 0) return 1;
-        return (1 - utilCost(k)) * timeMult(k) * jobNorm(jobOf(k)) * areaMult(k);
+        return (1 - utilCost(k)) * timeMult(k) * jobNorm(jobOf(k)) * areaMult(k) * elementMult(k);
+    }
+
+    /** 2026-11-07 이 스킬의 원소 (jobs.json elem — 불 · 물 · 전기 · 얼음 · 바위 · multi, 무속성이면 null) */
+    public static String element(Skill k) {
+        return k == null ? null : Elements.of(k.def());
+    }
+
+    /**
+     * 2026-11-07 원소 배율 (원소 스킬 1 − tax · 무속성 1 — 사용자 "무속성 … 원소 부착 스킬보다 좀 더 쎈 대신에 원소 반응을 못 줌"). 직업 맞춤 밖 (원소 스킬이 많은 직업은
+     * 초당 피해가 그만큼 낮음 — 반응으로 채움)
+     */
+    public static double elementMult(Skill k) {
+        return Elements.mult(element(k));
     }
 
     /** 툴팁 한 줄 ("유틸 −25% · 시간 +10% · 단일 +15% · 직업 맞춤 ×1.48 포함") — 피해 배율이 1 이면 null */
@@ -495,6 +508,8 @@ public final class Jobs {
         if (a > 1 + 1e-9) parts.add(Runes.areaName(areaKind(k)) + " +" + Math.round((a - 1) * 100) + "%");
         double n = jobNorm(jobOf(k));
         if (Math.abs(n - 1) > 0.005) parts.add("직업 맞춤 ×" + Js.str(Math.round(n * 100) / 100.0));
+        String el = Elements.notePlain(element(k));
+        if (el != null) parts.add(el);
         return parts.isEmpty() ? null : String.join(" · ", parts) + " 포함";
     }
 

@@ -388,8 +388,25 @@ final class RuneSpirit {
         return out;
     }
 
-    /** 정령의 공격 한 번 (정령마다 다름: RUNE_SPIRITS) */
+    /** 2026-11-07 정령의 원소 (원소 반응 — 불의 정령 불 · 물의 정령 물 · 땅의 정령 바위, 바람의 정령은 무속성) */
+    static String spiritElement(String kind) {
+        return switch (kind) {
+            case "salamander" -> "fire";
+            case "undine" -> "water";
+            case "gnome" -> "rock";
+            default -> null;
+        };
+    }
+
+    /**
+     * 정령의 공격 한 번 (정령마다 다름: RUNE_SPIRITS) — 2026-11-07 정령은 룬을 쓴 뒤 틱마다 움직여 공격하므로 공격마다 그 정령의 원소 맥락을 정함 (반응 위력의 바탕 =
+     * 정령사 룬 위력)
+     */
     private static void spiritAttack(ServerPlayer sp, Spirit s, LivingEntity tgt) {
+        mmorpg.fabric.job.ElementSystem.with(spiritElement(s.kind), RuneCast.power(sp, "spirit"), false, () -> spiritAttackIn(sp, s, tgt));
+    }
+
+    private static void spiritAttackIn(ServerPlayer sp, Spirit s, LivingEntity tgt) {
         ServerLevel level = sp.level();
         Obj d = s.def;
         double[] glow = s.glow;

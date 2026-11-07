@@ -331,7 +331,7 @@ final class RuneElement {
                 SkillFx.play(level, "item.spear.attack_miss", eye, 1.1 + i * 0.15, 0.9);
                 int n = 0;
                 for (LivingEntity e : RuneKit.coneTargets(sp, k.num("range"), k.num("cone"), 10)) {
-                    if (RuneKit.swordHit(sp, e, P, k.num("mult")) <= 0) continue;
+                    if (mmorpg.fabric.job.ElementSystem.withHit(el, () -> RuneKit.swordHit(sp, e, P, k.num("mult"))) <= 0) continue; // 2026-11-07 원소 (불 · 얼음)
                     elementEffect(e, el, k);
                     elementHitFx(level, e, el, n++ / 4);
                 }
@@ -350,7 +350,7 @@ final class RuneElement {
                 for (int idx = 0; idx < list.size(); idx++) {
                     LivingEntity e = list.get(idx);
                     int fd = idx / 2;
-                    if (RuneKit.spellHit(sp, e, P, k.num("mult")) > 0) {
+                    if (mmorpg.fabric.job.ElementSystem.withHit("thunder", () -> RuneKit.spellHit(sp, e, P, k.num("mult"))) > 0) { // 2026-11-07 원소 (번개)
                         elementHitFx(level, e, "thunder", fd);
                         if (!burst) {
                             burst = true;
@@ -358,7 +358,7 @@ final class RuneElement {
                             RuneKit.later(fd, () -> RuneBoost.impact(level, feet, glow, core, 2.5, r.grade())); // 0.50.0 2D 강화 (아래 등급 터짐): 맞은 자리 그림과 같은 틱에 그 적의 발밑
                         }
                     }
-                    thunderChain(sp, e, P, k.num("chainMult"), k.num("chain"), hit, null, fd);
+                    mmorpg.fabric.job.ElementSystem.with("thunder", () -> thunderChain(sp, e, P, k.num("chainMult"), k.num("chain"), hit, null, fd));
                 }
             }
         });
@@ -487,11 +487,12 @@ final class RuneElement {
                 RuneKit.later(p.at(), () -> {
                     if (!RuneKit.sameLife(sp, life) || p.e().isRemoved() || hit.contains(p.e().getUUID())) return;
                     hit.add(p.e().getUUID());
-                    if (RuneKit.spellHit(sp, p.e(), P, k.num("mult")) <= 0) return;
+                    // 2026-11-07 원소 (그 검기의 원소 — 불 · 얼음 · 번개)
+                    if (mmorpg.fabric.job.ElementSystem.withHit(p.el(), () -> RuneKit.spellHit(sp, p.e(), P, k.num("mult"))) <= 0) return;
                     elementEffect(p.e(), p.el(), k);
                     elementHitFx(level, p.e(), p.el(), 0);
                     RuneKit.knock(p.e(), p.d(), 0.5, 0.25);
-                    if (p.el().equals("thunder")) thunderChain(sp, p.e(), P, k.num("chainMult"), k.num("chain"), hit, planned, 0);
+                    if (p.el().equals("thunder")) mmorpg.fabric.job.ElementSystem.with("thunder", () -> thunderChain(sp, p.e(), P, k.num("chainMult"), k.num("chain"), hit, planned, 0));
                 });
             }
         });

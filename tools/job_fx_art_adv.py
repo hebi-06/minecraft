@@ -6806,6 +6806,80 @@ sprite("rfx_jgallows", "lookat_y", GW_W, GW_H, GW_N, 4, "gallows", zoom=0,
        "6 끌어올려짐 → 7 흩어짐")(gallows_frame)
 
 
+# ------------------------------------------------------------ rfx_jelem (2026-11-07 원소 반응 — 적 머리 위에 묻은 원소 표시, 카메라를 봄)
+# 장마다 원소 하나 (rules_more.json ELEMENTS.list 의 cell): 0 불 (솟는 불꽃 · 양옆 작은 혀) · 1 물 (물방울 · 물결 틈 · 반짝임) · 2 전기 (굵은 번개) ·
+# 3 얼음 (육각 눈꽃) · 4 바위 (깎인 돌 · 금). 빛 칸 = 둥근 판 · 테 · 무리 (게임은 원소 빛을 입힘), 심지 칸 = 흰 글자 (게임은 원소 심지 — 흰빛에 가까운 그 색) ·
+# 테의 반짝임. 작게 (반 크기 0.3칸) 보여 굵게 그림
+
+EL_N = 5
+
+
+def _el_ring(pad, r, w):
+    pts = [(64.0 + math.cos(a) * r, 64.0 + math.sin(a) * r) for a in np.linspace(0, TAU, 97)]
+    return pad.stroke(pts, w)
+
+
+def _el_glyph(pad, f):
+    """원소 글자 (4배 그림판의 덮임 — 0 ~ 1)와 글자 안에서 비우는 틈 (물결 · 금 — 심지에서 뺌)"""
+    gap = pad.zeros()
+    if f == 0:  # 불: 아래가 둥글고 위로 솟는 불꽃 · 양옆 작은 혀 · 속 불꽃 틈
+        g = drop_shape(pad, 64.0, 76.0, 22.0, 58.0, ang=math.pi / 2 + 0.06)
+        g = np.maximum(g, drop_shape(pad, 49.0, 84.0, 12.0, 24.0, ang=1.25))
+        g = np.maximum(g, drop_shape(pad, 79.0, 84.0, 12.0, 24.0, ang=math.pi - 1.25))
+        g = np.maximum(g, pad.ellipse(64.0, 88.0, 24.0, 10.0))
+        gap = drop_shape(pad, 64.0, 86.0, 9.0, 22.0, ang=math.pi / 2) * 0.85
+    elif f == 1:  # 물: 물방울 · 가운데 물결 틈 · 왼쪽 위 반짝임 점
+        g = drop_shape(pad, 64.0, 74.0, 25.0, 48.0, ang=math.pi / 2)
+        for y0 in (78.0, 88.0):
+            wave = [(44.0 + i * 1.38, y0 + math.sin(i * 0.42) * 2.6) for i in range(30)]
+            gap = np.maximum(gap, pad.stroke(wave, 3.4) * 0.9)
+        shine = bez((52.0, 52.0), (45.0, 60.0), (46.0, 70.0), 12)
+        gap = np.maximum(gap, pad.stroke(shine, 3.2) * 0.8)
+    elif f == 2:  # 전기: 굵은 번개 (위 오른쪽 → 아래 왼쪽으로 꺾임)
+        pts = [(74.0, 16.0), (42.0, 70.0), (60.0, 70.0), (50.0, 112.0), (88.0, 52.0), (69.0, 52.0), (82.0, 16.0)]
+        g = pad.poly(pts)
+    elif f == 3:  # 얼음: 육각 눈꽃 (팔 여섯 · 팔마다 곁가지 둘 · 가운데 육각)
+        g = pad.zeros()
+        for i in range(6):
+            a = i * TAU / 6 - math.pi / 2
+            ux, uy = math.cos(a), math.sin(a)
+            g = np.maximum(g, pad.stroke([(64.0, 64.0), (64.0 + ux * 42.0, 64.0 + uy * 42.0)], 7.0))
+            for s in (-1, 1):
+                b = a + s * 0.75
+                bx, by = 64.0 + ux * 26.0, 64.0 + uy * 26.0
+                g = np.maximum(g, pad.stroke([(bx, by), (bx + math.cos(b) * 13.0, by + math.sin(b) * 13.0)], 5.0))
+        hexa = [(64.0 + math.cos(i * TAU / 6) * 12.0, 64.0 + math.sin(i * TAU / 6) * 12.0) for i in range(6)]
+        g = np.maximum(g, pad.poly(hexa))
+        gap = pad.disc_field(64.0, 64.0, 4.5) * 0.9
+    else:  # 바위: 깎인 돌 (울퉁불퉁한 칠각) · 금 셋
+        pts = [(40.0, 46.0), (58.0, 26.0), (84.0, 32.0), (98.0, 58.0), (90.0, 92.0), (60.0, 102.0), (34.0, 82.0)]
+        g = pad.poly(pts)
+        for c in ([(58.0, 26.0), (62.0, 48.0), (52.0, 62.0)], [(98.0, 58.0), (76.0, 62.0), (70.0, 80.0)], [(34.0, 82.0), (52.0, 74.0)]):
+            gap = np.maximum(gap, pad.stroke(c, 3.6) * 0.9)
+    return clamp01(g), clamp01(gap)
+
+
+def elem_frame(f):
+    pad = Pad(128, 128)
+    disc = pad.disc_field(64.0, 64.0, 47.0, soft=1.5)
+    ring = _el_ring(pad, 50.0, 4.5)
+    glyph, gap = _el_glyph(pad, f)
+    # 빛: 판 (옅게) · 테 · 글자 (빛도 조금 — 둘레 무리)
+    glow = np.maximum(disc * 0.62, ring)
+    glow = np.maximum(glow, glyph * 0.85)
+    # 심지: 흰 글자 (틈을 비움) · 테의 위쪽 반짝임
+    core = clamp01(glyph - gap)
+    arc = [(64.0 + math.cos(a) * 50.0, 64.0 + math.sin(a) * 50.0) for a in np.linspace(math.pi * 1.1, math.pi * 1.55, 20)]
+    core = np.maximum(core, pad.stroke(arc, 3.0) * 0.7)
+    return finish(pad, glow, core, halo=((1.2, 0.35), (3.0, 0.25)), body_k=0.95, core_bloom=((0.8, 0.25),), win=3.0)
+
+
+COLORS.setdefault("element", ((1.0, 0.42, 0.1), (1.0, 0.9, 0.55)))
+sprite("rfx_jelem", "rotate_xyz", 128, 128, EL_N, 5, "element", zoom=0,
+       desc="머리 위 원소 표시 (원소 반응 — 카메라를 봄, 장마다 원소 하나): 0 불꽃 · 1 물방울 (물결 틈) · 2 번개 · 3 육각 눈꽃 · 4 깎인 바위 (금). 빛 = 둥근 판 · 테, "
+       "심지 = 흰 글자 · 테 반짝임")(elem_frame)
+
+
 def save_alias(alias, src, img, cw, ch, facing):
     """2026-11-07 같은 그림을 다른 보는 꼴로 쓰는 파티클 정의 (rfx_jswolf1p — 늑대 정령 옆모습을 1인칭에서 카메라를 보는 판으로): 그림은 src 의 것"""
     import json as _json

@@ -43,7 +43,7 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · RuneScaleTest · EconomyTest · StorageTest · JobsTest · ArtifactsTest · MotionsTest · RelicsTest"
+echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · RuneScaleTest · EconomyTest · StorageTest · JobsTest · ArtifactsTest · MotionsTest · RelicsTest · ElementsTest"
 # 대조 시험은 애드온 config.js 그대로의 규칙으로 (자바 전용 덧붙임 rules_more.json 없이 — Rules.PURE)
 java -Dstdout.encoding=UTF-8 -Dmmorpg.pureRules=true -cp "$out/main:$out/test" mmorpg.core.ParityTest
 # 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
@@ -82,3 +82,5 @@ java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.ArtifactsTest
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.MotionsTest
 # 0.43.0 아티팩트 (rules_more.json RELICS: 종류 열 · 계열 4 + 6 · 판 3 × 3 · 이웃 연결 · 단계 3 · 5 · 7 · 스탯 줄 · 패시브 · 드랍) · 장신구 · 아티팩트 강화 (ENHANCE_GEAR)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RelicsTest
+# 2026-11-07 원소 반응 (rules_more.json ELEMENTS: 원소 다섯 · 반응 열 · 원소 스킬 −5% · 무속성이 더 많음 — 룬 RUNE_SPREAD.runes · 직업 스킬 jobs.json 의 elem)
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.ElementsTest

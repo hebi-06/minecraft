@@ -144,10 +144,10 @@ public final class RuneTipTest {
         List<String> gl = plain(RuneTip.lines(rune("glacier", "transcend"), 0, new RuneTip.Viewer(stats(31, 31, 31, 32), 1, 131)));
         String glj = String.join("\n", gl);
         double gS = Runes.damageScale(rune("glacier", "transcend")); // 0.49.0 빙결 2초 −20% × 시간 보정 (선딜 0.85초 · 장판 · 4초 넘게 → 최대 ×1.3)
-        check(near(gS, 0.8 * 1.3) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS)) && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
+        check(near(gS, 0.8 * 1.3 * 0.95) && gl.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * gS)) && gl.contains("  얼음 " + RuneTip.fmt(126 * gS) + " × 8번 + 빙하 붕괴 " + RuneTip.fmt(420 * gS))
                 && gl.contains("유틸 −20% · 시간 보정 +30% 포함")
                 && gl.contains("조준한 곳 반지름 6칸 얼음 필드 · 0.7초마다")
-                && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초 (보스는 얼지 않음)") && gl.get(0).equals("재사용 36초 · 한정")
+                && gl.contains("필드 안 적마다 발밑에서 거대한 얼음이 솟음") && gl.contains("빙결: 같은 적 3번 → 2초 (보스는 얼지 않음)") && gl.get(0).equals("재사용 36초 · 한정 · 원소 얼음 −5%")
                 && glj.contains("띄움"), "glacier: " + gl);
         check(glj.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 42 * gS)) && glj.contains("얼음 필드 6 → 7칸") && glj.contains("거대한 얼음 8 → 10번")
                 && glj.contains("빙결 2 → 2.5초") && glj.contains("☆6돌 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * gS)) && glj.contains("빙결 2.5 → 3초"), "glacier tiers: " + glj);
@@ -187,7 +187,7 @@ public final class RuneTipTest {
         Runes.Rune meteor = rune("int", "transcend");
         String m0 = joined(RuneTip.lines(meteor, 0, vm));
         double mS = Runes.damageScale(meteor); // 0.49.0 띄움 −5% × 선딜 1.5초 +30% (한 방이라 지속 0)
-        check(near(mS, 0.95 * 1.3) && m0.contains("⚔ 총 피해 " + RuneTip.fmt(1344 * mS)) && m0.contains("유틸 −5% · 시간 보정 +30% 포함")
+        check(near(mS, 0.95 * 1.3 * 0.95) && m0.contains("⚔ 총 피해 " + RuneTip.fmt(1344 * mS)) && m0.contains("유틸 −5% · 시간 보정 +30% 포함")
                 && m0.contains("불붙음 5초 · 띄움")
                 && m0.contains("마력 계수 1.0 · 다른 스탯 0.85"), "meteor 0: " + m0);
         check(m0.contains("☆3돌 총 피해 " + RuneTip.fmt(42 * 1.3 * 32 * mS) + " · 운석 범위 6 → 7.5칸") && m0.contains("떨어진 자리 3초 불바다 (1초마다 " + RuneTip.fmt(42 * 1.3 * 2 * mS) + ")"),
@@ -215,9 +215,9 @@ public final class RuneTipTest {
         List<String> te = plain(RuneTip.lines(rune("terra", "transcend"), 0, new RuneTip.Viewer(even, 1, 131)));
         String tej = String.join("\n", te);
         double tS = Runes.damageScale(rune("terra", "transcend")); // 0.49.0 띄움 −5% × (선딜 1.2초 · 장판 → 최대 ×1.3)
-        check(near(tS, 0.95 * 1.3) && tej.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * tS)) && tej.contains("대검 " + RuneTip.fmt(672 * tS) + " + 여진 " + RuneTip.fmt(126 * tS) + " × 6번")
+        check(near(tS, 0.95 * 1.3 * 0.95) && tej.contains("⚔ 총 피해 " + RuneTip.fmt(1428 * tS)) && tej.contains("대검 " + RuneTip.fmt(672 * tS) + " + 여진 " + RuneTip.fmt(126 * tS) + " × 6번")
                 && te.contains("앞으로 14칸 균열 (폭 5칸) 안 모든 적")
-                && te.contains("대검이 내려친 뒤 0.5초마다 여진") && te.get(0).equals("재사용 36초 · 한정") && tej.contains("띄움"), "terra: " + te);
+                && te.contains("대검이 내려친 뒤 0.5초마다 여진") && te.get(0).equals("재사용 36초 · 한정 · 원소 바위 −5%") && tej.contains("띄움"), "terra: " + te);
         String te6 = joined(RuneTip.lines(rune("terra", "transcend"), 6, new RuneTip.Viewer(even, 1, 131)));
         check(te6.contains("⚔ 총 피해 " + RuneTip.fmt(42 * 1.6 * 55 * tS)) && te6.contains("기절 1초") && te6.contains("앞으로 20칸 균열 (폭 7칸)") && !te6.contains("지맥 폭발"),
                 "terra 6: " + te6);
@@ -254,8 +254,8 @@ public final class RuneTipTest {
 
         // 스탯을 모를 때: 위력×N · 비율
         String n0 = joined(RuneTip.lines(meteor, 0, null));
-        check(n0.contains("총 피해 위력×39.52") && n0.contains("유틸 −5% · 시간 보정 +30% 포함") && !n0.contains(RuneTip.BASIS),
-                "no viewer meteor (32 × 띄움 0.95 × 시간 보정 1.3): " + n0);
+        check(n0.contains("총 피해 위력×37.54") && n0.contains("유틸 −5% · 시간 보정 +30% 포함") && !n0.contains(RuneTip.BASIS),
+                "no viewer meteor (32 × 띄움 0.95 × 시간 보정 1.3 × 불 0.95): " + n0);
         String ns = joined(RuneTip.lines(spring, 0, null));
         check(ns.contains("회복 최대 체력 14%+"), "no viewer spring: " + ns);
 

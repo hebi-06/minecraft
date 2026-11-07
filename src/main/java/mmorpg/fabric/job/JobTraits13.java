@@ -290,6 +290,8 @@ public final class JobTraits13 {
         Jobs.Skill k = j.skill(HEAD);
         if (k == null || !(victim.level() instanceof ServerLevel level)) return;
         JobTraits4.judge(sp, victim, j, (int) k.num("judge", 1));
+        // 2026-11-07 원소 반응: 썬더헤드 (전기 원소 스킬) 의 먹구름 벼락이 맞은 적에 전기를 묻힘 (평타 덤 — 쓰는 동안 밖이라 직접)
+        ElementSystem.apply(sp, victim, Jobs.element(k), JobSystem.power(sp, j), true, false);
         State st = of(sp);
         st.headHits++;
         // 먹구름에서 그 적에게 벼락

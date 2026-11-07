@@ -63,6 +63,7 @@ public final class JobSystem {
         JobSkills.header = JobSystem::header;
         JobTraits.init();
         JobRecast.init(); // 0.51.0 다시 쓰기 (리븐 R · 아트록스 Q)
+        ElementSystem.init(); // 2026-11-07 원소 반응 (직업 · 룬의 원소 스킬)
         SwordsmanSkills.register();
         SpellbladeSkills.register();
         WarriorSkills.register(); // 0.28.0
@@ -252,7 +253,14 @@ public final class JobSystem {
             JobTraits3.beforeCast(sp, job, k); // 0.29.0 암영 중 직업 스킬: 첫 타 강화를 걸어 둠 (나가면 은신이 풀림)
             JobTraits5.beforeCast(sp, job, k); // 0.51.0 소드마스터: 투지 8 이면 이 스킬이 치명
             int move0 = JobMove.gen(sp);
-            boolean ok = impl.cast(sp, job, k, P);
+            // 2026-11-07 원소 스킬 (jobs.json elem): 쓰는 동안 (later 로 이어지는 타격까지) 맞은 적에 원소를 묻힘 — 반응 위력의 바탕 = 직업 위력
+            Object elem = ElementSystem.enter(Jobs.element(k), power(sp, job), true);
+            boolean ok;
+            try {
+                ok = impl.cast(sp, job, k, P);
+            } finally {
+                ElementSystem.leave(elem);
+            }
             // 0.50.0 새 스킬이 나가면 앞 스킬의 몸 움직임 (JobMove) 은 그만 — 새 스킬이 제 움직임을 시작했으면 이미 바뀜 (순간 이동 · 돌진이 끌려 돌아가지 않게)
             if (ok && JobMove.gen(sp) == move0) JobMove.cancel(sp);
             JobTraits3.afterCast(sp, job, k, ok);

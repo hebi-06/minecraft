@@ -231,6 +231,8 @@ public final class RuneCast {
             boolean ok;
             int own = RuneKit.enter(sp); // 0.48.2 참격 판의 1인칭 나눔 (Tasks.later · SkillFx.every 가 이어 줌)
             String tg = Tasks.tag(r.family() + ":" + r.grade()); // 0.50.0 계열의 맞은 자리 · 아래 등급 그림 후광 (RuneBoost)
+            // 2026-11-07 원소 룬 (RUNE_SPREAD.runes elem): 쓰는 동안 맞은 적에 원소를 묻힘 — 반응 위력의 바탕 = 룬 위력 (스탯)
+            Object elem = mmorpg.fabric.job.ElementSystem.enter(Runes.element(r), power(sp, r.family()), false);
             try {
                 ok = fn.cast(sp, r, P, r.def());
             } catch (RuntimeException e) {
@@ -239,6 +241,7 @@ public final class RuneCast {
             } finally {
                 RuneKit.leave(own);
                 Tasks.tag(tg);
+                mmorpg.fabric.job.ElementSystem.leave(elem);
             }
             if (ok) Breakthrough.onCast(sp, r, lv, P); // 6돌 초월: 금빛 각성 · 단계 효과 (한 번 더)
             if (ok) {

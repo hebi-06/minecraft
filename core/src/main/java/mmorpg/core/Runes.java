@@ -430,7 +430,12 @@ public final class Runes {
      * 대조 시험 (표 없음) 이면 1
      */
     public static double damageScale(Rune r) {
-        return (1 - utilCost(r)) * timeMult(r) * areaMult(r);
+        return (1 - utilCost(r)) * timeMult(r) * areaMult(r) * Elements.mult(element(r));
+    }
+
+    /** 2026-11-07 이 룬의 원소 (RUNE_SPREAD.runes 의 elem — 불 · 물 · 전기 · 얼음 · 바위 · multi, 무속성이면 null) */
+    public static String element(Rune r) {
+        return Elements.of(spreadEntry(r));
     }
 
     // ------------------------------------------------------------------ draw and grinding

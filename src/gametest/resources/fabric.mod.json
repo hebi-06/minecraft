@@ -53,6 +53,7 @@
       "mmorpg.fabric.test.RpgContainerToolsTests",
       "mmorpg.fabric.test.RpgJobTests",
       "mmorpg.fabric.test.RpgJobAdvanceTests",
+      "mmorpg.fabric.test.RpgElementTests",
       "mmorpg.fabric.test.RpgArtifactTests",
       "mmorpg.fabric.test.RpgRelicTests",
       "mmorpg.fabric.test.RpgMotionTests",

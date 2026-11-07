@@ -255,11 +255,17 @@ public final class JobTraits15 {
             JobFx15.cinder(level, p, 1.5, 0, 6, 0.45, false, Opt.of("alpha", 0.85), AZURE, AZURE_CORE);
         }
         SkillFx.play(level, "item.firecharge.use", c, 1.3, 0.6);
-        for (LivingEntity e : Kit.around(sp, c, r, 3)) {
-            if (!e.isAlive() || e.isRemoved()) continue;
-            quietHit(sp, e, j, P, k.num("burst", 0.6));
-            if (e.level() instanceof ServerLevel el) JobFx.burst(el, Kit.bodyPoint(e), 0.8 + Kit.bodyPad(e) * 0.3, AZURE, AZURE_CORE, 0.25, Opt.of("vel",
-                    RuneKit.entVel(e)));
+        // 2026-11-07 원소 반응: 이그니션 (불 원소 스킬) 의 불꽃은 맞은 적에 불을 묻힘 (맞을 때 나감 — 쓰는 동안 밖이라 맥락을 정함)
+        Object elem = ElementSystem.enter(Jobs.element(k), P, true);
+        try {
+            for (LivingEntity e : Kit.around(sp, c, r, 3)) {
+                if (!e.isAlive() || e.isRemoved()) continue;
+                quietHit(sp, e, j, P, k.num("burst", 0.6));
+                if (e.level() instanceof ServerLevel el) JobFx.burst(el, Kit.bodyPoint(e), 0.8 + Kit.bodyPad(e) * 0.3, AZURE, AZURE_CORE, 0.25, Opt.of("vel",
+                        RuneKit.entVel(e)));
+            }
+        } finally {
+            ElementSystem.leave(elem);
         }
     }
 

@@ -89,7 +89,7 @@ public final class RuneScaleTest {
                 if (a != null && a.equals("narrow")) narrows++;
                 double am = a == null ? 1 : a.equals("single") ? 1.15 : 1.08;
                 near(Runes.areaMult(r), am, id + " area mult");
-                near(Runes.damageScale(r), (1 - Runes.utilCost(r)) * tm * am, id + " scale = util × time × area");
+                near(Runes.damageScale(r), (1 - Runes.utilCost(r)) * tm * am * Elements.mult(Runes.element(r)), id + " scale = util × time × area × element");
                 if (KEEP.contains(id)) {
                     check(Runes.utils(r).isEmpty(), id + " keep: no util cost");
                     continue;
@@ -122,7 +122,7 @@ public final class RuneScaleTest {
         Runes.Rune meteor = rune("int", "transcend");
         check(Runes.windupTicks(meteor) == 30 && Runes.spreadKind(meteor) == null && !Runes.timeCapped(meteor), "meteor windup 1.5s, one hit");
         near(Runes.timeMult(meteor), 1.3, "meteor +30%");
-        near(Runes.damageScale(meteor), 0.95 * 1.3, "meteor scale");
+        near(Runes.damageScale(meteor), 0.95 * 1.3 * 0.95, "meteor scale (불 원소 −5%)");
         Runes.Rune berserk = rune("axe", "transcend");
         check(Runes.utils(berserk).equals(List.of("lifesteal", "reduce")) && "zoneLong".equals(Runes.spreadKind(berserk)) && Runes.windupTicks(berserk) == 0,
                 "berserker: no exception " + Runes.utils(berserk) + " " + Runes.spreadKind(berserk));
@@ -132,7 +132,7 @@ public final class RuneScaleTest {
         near(Runes.damageScale(counter), 0.9 * 1.1 * 1.08, "counter stance scale (narrow cone)");
         Runes.Rune glacier = rune("glacier", "transcend");
         check(Runes.timeCapped(glacier) && "zoneLong".equals(Runes.spreadKind(glacier)), "glacier capped");
-        near(Runes.damageScale(glacier), 0.8 * 1.3, "glacier scale");
+        near(Runes.damageScale(glacier), 0.8 * 1.3 * 0.95, "glacier scale (얼음 원소 −5%)");
         Runes.Rune blood = rune("strike", "hero");
         check(Runes.utils(blood).equals(List.of("lifesteal")), "blood blade lifesteal");
         near(Runes.damageScale(blood), 0.9 * 1.15, "blood blade: util · single, no time");

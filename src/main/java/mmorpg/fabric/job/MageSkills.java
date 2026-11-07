@@ -457,6 +457,7 @@ final class MageSkills {
         Map<UUID, Integer> count = new LinkedHashMap<>();
         Map<UUID, LivingEntity> byId = new LinkedHashMap<>();
         java.util.Set<UUID> iced = new java.util.HashSet<>();
+        Map<UUID, Integer> lastKind = new LinkedHashMap<>(); // 2026-11-07 원소 (그 적에 마지막으로 떨어진 주문 — 불 · 얼음 · 전기)
         for (int p = 0; p < per; p++) {
             int kind = (w * per + p) % 3;
             Vec3 from = V.add(bookAt, new Vec3(Math.cos(p * 2.1 + w) * 1.4, -0.4, Math.sin(p * 2.1 + w) * 1.4), 1);
@@ -469,6 +470,7 @@ final class MageSkills {
                 LivingEntity e = foes.get((w * per + p) % foes.size());
                 count.merge(e.getUUID(), 1, Integer::sum);
                 if (kind == 1) iced.add(e.getUUID());
+                lastKind.put(e.getUUID(), kind);
                 byId.put(e.getUUID(), e);
                 to = Kit.bodyPoint(e);
             }
@@ -478,7 +480,8 @@ final class MageSkills {
             LivingEntity e = byId.get(en.getKey());
             int n = en.getValue();
             boolean ice = iced.contains(e.getUUID());
-            JobKit.strikeSplit(sp, e, j, P, k.num("page", 3) * n, n, 2, true, false, life, 6, x -> {
+            String el = SPELL_ELEMENTS[lastKind.getOrDefault(e.getUUID(), 0)];
+            ElementSystem.with(el, () -> JobKit.strikeSplit(sp, e, j, P, k.num("page", 3) * n, n, 2, true, false, life, 6, x -> {
                 if (RuneKit.fxQuota("jobBook", 6)) JobFx.hit(e, j, 1.1);
                 // 0.50.0 빙결: 얼음 주문에 맞은 적은 freeze 틱 얼어붙음 (기절 — 머리 위 얼음 룬), 보스는 둔화
                 if (ice && k.num("freeze", 0) > 0) {
@@ -487,9 +490,12 @@ final class MageSkills {
                     // 얼음 결정 (rfx_jfrost — 자라나 금이 가며 깨짐) 이 몸을 덮음
                     if (RuneKit.fxQuota("jobFrost", 6)) JobFx.frost(e, SPELLS[1][0], SPELLS[1][1], (int) k.num("freeze", 10) + 8);
                 }
-            });
+            }));
         }
     }
+
+    /** 2026-11-07 금서의 주문 원소 (불 · 얼음 · 번개 → 원소 반응의 fire · ice · thunder — 포비든 그리모어는 elem multi) */
+    private static final String[] SPELL_ELEMENTS = {"fire", "ice", "thunder"};
 
     /** 주문 하나 (delay 틱 뒤): 불 = 불꽃 꼬리 · 얼음 = 하늘빛 꼬리 + 깨지는 조각 · 번개 = 내리꽂는 번개. 닿는 데 약 6틱 */
     static void spellFx(ServerLevel level, Vec3 from, Vec3 to, int kind, int delay) {

@@ -69,6 +69,7 @@ public final class JobKit {
         }
         if (veil > 1) JobTraits3.firstHitLanded(sp, e, j);
         if (counter > 0) JobTraits4.counterLanded(sp, e, j, counter);
+        ElementSystem.onHit(sp, e); // 2026-11-07 원소 스킬이면 원소를 묻힘 (다른 원소가 묻은 적이면 반응)
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
@@ -177,6 +178,7 @@ public final class JobKit {
         }
         if (veil > 1) JobTraits3.firstHitLanded(sp, e, j);
         if (counter > 0) JobTraits4.counterLanded(sp, e, j, counter);
+        ElementSystem.onHit(sp, e); // 2026-11-07 원소 스킬이면 원소를 묻힘 (다른 원소가 묻은 적이면 반응)
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
