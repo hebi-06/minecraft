@@ -43,7 +43,7 @@ public final class FieldBuild {
         if (town != null) {
             int g = t.plan().sea + 9;
             for (FieldTerrain.Plot p : t.plots()) if (p.id().equals("town")) g = p.y();
-            FieldTown.Result r = FieldTown.build((int) Math.round(town.x()), (int) Math.round(town.z()), g);
+            FieldCity.Result r = FieldCity.build((int) Math.round(town.x()), (int) Math.round(town.z()), g);
             out.addAll(r.pieces());
             marks.addAll(r.marks());
         }

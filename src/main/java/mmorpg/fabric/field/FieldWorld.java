@@ -60,21 +60,34 @@ public final class FieldWorld {
         return p.getMinBlockZ();
     }
 
+    /** 세계 속성 — 마지막으로 맞춘 field.json 의 세계 경계 ("x z 크기") — 섬을 더하며 경계를 넓히면 다음에 열 때 맞춤 */
+    static final String BORDER_KEY = "rpg:field_border";
+
     private static void onStarted(MinecraftServer server) {
         ServerLevel level = server.overworld();
         if (!isField(level)) return;
-        if (!SETUP_VERSION.equals(Props.world(server, SETUP_KEY))) borderAndSpawn(server, level);
+        if (!SETUP_VERSION.equals(Props.world(server, SETUP_KEY))) spawn(server, level);
+        border(server, level);
         FieldSetup.run(server, level);
     }
 
-    /** 세계 경계 (field.json border) · 시작 자리 (마을 광장 남쪽) */
-    private static void borderAndSpawn(MinecraftServer server, ServerLevel level) {
+    /** 시작 자리 (마을 광장 남쪽) — 처음 한 번 */
+    private static void spawn(MinecraftServer server, ServerLevel level) {
         FieldPlan plan = terrain().plan();
-        level.getWorldBorder().setCenter(plan.borderX, plan.borderZ);
-        level.getWorldBorder().setSize(plan.borderSize);
         BlockPos spawn = new BlockPos(plan.spawnX, terrain().surfaceAt(plan.spawnX, plan.spawnZ) + 1, plan.spawnZ);
         level.setRespawnData(LevelData.RespawnData.of(Level.OVERWORLD, spawn, 180F, 0F));
         Props.setWorld(server, SETUP_KEY, SETUP_VERSION);
-        Mmorpg.LOG.info("[field] island map ready: border {} at {} {}, spawn {}", plan.borderSize, plan.borderX, plan.borderZ, spawn.toShortString());
+        Mmorpg.LOG.info("[field] island map ready: spawn {}", spawn.toShortString());
+    }
+
+    /** 세계 경계 (field.json border) — 처음, 그리고 field.json 의 경계가 바뀌었을 때만 (관리자가 /worldborder 로 바꾼 것은 그대로 둠) */
+    private static void border(MinecraftServer server, ServerLevel level) {
+        FieldPlan plan = terrain().plan();
+        String sig = plan.borderX + " " + plan.borderZ + " " + plan.borderSize;
+        if (sig.equals(Props.world(server, BORDER_KEY))) return;
+        level.getWorldBorder().setCenter(plan.borderX, plan.borderZ);
+        level.getWorldBorder().setSize(plan.borderSize);
+        Props.setWorld(server, BORDER_KEY, sig);
+        Mmorpg.LOG.info("[field] world border {} at {} {}", plan.borderSize, plan.borderX, plan.borderZ);
     }
 }

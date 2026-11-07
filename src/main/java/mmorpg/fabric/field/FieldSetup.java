@@ -1,7 +1,10 @@
 package mmorpg.fabric.field;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import mmorpg.core.field.Blueprint;
 import mmorpg.core.field.FieldBuild;
 import mmorpg.core.field.FieldPlan;
@@ -22,26 +25,41 @@ import net.minecraft.world.entity.decoration.Mannequin;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 섬 맵을 처음 열 때 한 번 (2026-11-07): 보스 제단 (미리 지은 신전 — 보스 엔진 목록에 "지어짐") · 사냥터 (field.json zone — 몬스터마다 두 곳) ·
+ * 섬 맵을 열 때 섬마다 한 번 (2026-11-07): 보스 제단 (미리 지은 신전 — 보스 엔진 목록에 "지어짐") · 사냥터 (field.json zone — 몬스터마다 두 곳) ·
  * NPC (마을 · 거점의 자리표 — 메인 퀘스트 NPC 1 ~ 16 · 상인 · 직업 교관) · 훈련장 허수아비. 그 자리 청크를 불러와 세우므로 처음 열 때 몇 초 걸림.
- * 다 하면 세계 속성 rpg:field_ready = 판. 이미 있는 것 (같은 번호의 메인 NPC · 같은 자리의 사냥터 · 제단) 은 그대로 둠.
+ * 다 한 섬은 세계 속성 rpg:field_ready_&lt;섬&gt; = 판 — field.json 에 섬을 더하면 (사용자 "다음에 머 추가할때 편할거 같음") 다음에 열 때 새 섬만 준비함.
+ * 이미 있는 것 (같은 번호의 메인 NPC · 같은 자리의 사냥터 · 제단) 은 그대로 둠.
  */
 public final class FieldSetup {
     private FieldSetup() {}
 
-    static final String READY_KEY = "rpg:field_ready";
+    static final String READY_PREFIX = "rpg:field_ready_";
     static final String READY_VERSION = "1";
     /** 사냥터마다 몬스터 수 */
     static final int ZONE_COUNT = 4;
 
+    /** 준비를 마친 섬인지 */
+    public static boolean ready(MinecraftServer server, String island) {
+        return READY_VERSION.equals(Props.world(server, READY_PREFIX + island));
+    }
+
+    /** 자리 (x, z) 가 속한 섬 (바다면 가장 가까운 섬) */
+    static String islandOf(FieldTerrain t, double x, double z) {
+        FieldTerrain.Column c = t.sample((int) Math.floor(x), (int) Math.floor(z), new FieldTerrain.Column());
+        return c.island == null ? "" : c.island.id();
+    }
+
     static void run(MinecraftServer server, ServerLevel level) {
-        if (READY_VERSION.equals(Props.world(server, READY_KEY))) return;
-        long t0 = System.nanoTime();
         FieldTerrain t = FieldWorld.terrain();
+        Set<String> todo = new HashSet<>();
+        for (FieldPlan.Island is : t.plan().islands) if (!ready(server, is.id())) todo.add(is.id());
+        if (todo.isEmpty()) return;
+        long t0 = System.nanoTime();
         String dim = NpcData.dimId(level);
         // 보스 제단 (신전은 지형과 함께 지어짐)
         int altars = 0;
         for (FieldExtras.AltarSpot s : FieldExtras.altars()) {
+            if (!todo.contains(islandOf(t, s.pos().getX(), s.pos().getZ()))) continue;
             Arena.Altar a = Arena.addAltar(s.key(), dim, s.pos());
             if (!a.built) {
                 a.built = true;
@@ -52,6 +70,7 @@ public final class FieldSetup {
         // 사냥터 (땅 위 — 몬스터는 사람이 가까이 오면 채워짐)
         int zones = 0;
         for (FieldPlan.Site s : t.plan().sites("zone")) {
+            if (!todo.contains(islandOf(t, s.x(), s.z()))) continue;
             int x = (int) Math.floor(s.x());
             int z = (int) Math.floor(s.z());
             int y = t.surfaceAt(x, z) + 1;
@@ -63,7 +82,7 @@ public final class FieldSetup {
         List<Blueprint.Mark> marks = FieldBuild.build(t).marks();
         for (Blueprint.Mark m : marks) {
             Vec3 at = new Vec3(m.x(), m.y(), m.z());
-            if (m.id().startsWith("waystone")) continue;
+            if (m.id().startsWith("waystone") || !todo.contains(islandOf(t, m.x(), m.z()))) continue;
             level.getChunk(BlockPos.containing(at));
             Vec3 face = at.add(dir(m.facing()).scale(5)).add(0, 1.6, 0);
             if (m.id().equals("dummy")) {
@@ -88,9 +107,9 @@ public final class FieldSetup {
                 npcs++;
             }
         }
-        Props.setWorld(server, READY_KEY, READY_VERSION);
-        Mmorpg.LOG.info("[field] first setup: {} altars built, {} hunt zones, {} NPCs, {} dummies in {} ms", altars, zones, npcs, dummies,
-                (System.nanoTime() - t0) / 1_000_000);
+        for (String id : todo) Props.setWorld(server, READY_PREFIX + id, READY_VERSION);
+        Mmorpg.LOG.info("[field] setup of {} islands {}: {} altars built, {} hunt zones, {} NPCs, {} dummies in {} ms", todo.size(), new TreeSet<>(todo), altars, zones,
+                npcs, dummies, (System.nanoTime() - t0) / 1_000_000);
     }
 
     /** 메인 퀘스트 NPC n 을 세움 (MainNpcs.mainNpcCommand 와 같은 기록 — 이미 세운 것이 기록에 있으면 건너뜀) */

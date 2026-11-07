@@ -14,6 +14,7 @@ import mmorpg.fabric.boss.AltarBlocks;
 import mmorpg.fabric.boss.Arena;
 import mmorpg.fabric.field.FieldBlocks;
 import mmorpg.fabric.field.FieldExtras;
+import mmorpg.fabric.field.FieldPieces;
 import mmorpg.fabric.field.FieldWorld;
 import mmorpg.fabric.mob.HuntZones;
 import mmorpg.fabric.npc.NpcData;
@@ -42,7 +43,8 @@ import org.slf4j.LoggerFactory;
 /**
  * 2026-11-07 섬 맵 사진첩 (화면 시험): 새 세계를 "월드 유형 = 섬 맵 (mmorpg:field)" 으로 만들어 찍음.
  * only=field: 섬마다 땅 모양 (fd_*) + 확인 (생성기 · 세계 경계 · 시작 자리 · 실제 청크 = 계획 · 다리 · 분수 · 제단 · 사냥터 · 메인 NPC · 이동 지점 돌).
- * only=fieldb: 마을 · 거점 · 신전 · 세계수 가까이 (fb_*). 사진마다 걸린 시간 · 서버 틱 · 스레드가 머문 곳을 기록. 사진 → ci-logs 의 shots/.
+ * only=fieldb: 마을 (광장 · 분수 · 여신상 · 성당 · 마탑 · 길드 · 장터 · 무기소 — fb_*), only=fieldc: 거점 · 작은 마을 · 신전 · 세계수 (fc_*).
+ * 사진마다 걸린 시간 · 서버 틱 · 스레드가 머문 곳을 기록. 사진 → ci-logs 의 shots/.
  */
 @SuppressWarnings("UnstableApiUsage")
 public final class RpgFieldGallery implements FabricClientGameTest {
@@ -76,26 +78,39 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             new Shot("fd_15_volcano", -143, 140, 2497, -243, 100, 2439),
             new Shot("fd_16_muspel", -1, 100, 2422, -1, 77, 2522));
 
-    /** only=fieldb: 마을 · 거점 · 세계수 · 신전 가까이 */
+    /**
+     * only=fieldb: 다시 지은 마을 (2026-11-07 — 사용자 "건물들이 촘촘히 있는 변화한 곳과 성당, 마탑, 여신상, 커다란 분수" ·
+     * "모험가 길드 · 장터 · 대장장이 무기소"): 광장 · 분수 · 여신상 · 성당 · 마탑 · 길드 · 훈련장 · 장터 · 무기소 · 큰길 · 전당 · 하늘에서.
+     */
     private static final List<Shot> SHOTS_B = List.of(
-            new Shot("fb_01_plaza", 0, 75, 84, 0, 74, 58),
-            new Shot("fb_02_south_gate", 0, 76, 140, 0, 78, 164),
-            new Shot("fb_03_royal_hall", 12, 90, 55, -12, 78, 30),
-            new Shot("fb_04_training", 60, 86, 75, 52, 73, 40),
-            new Shot("fb_05_market", 34, 84, 118, 34, 73, 90),
-            new Shot("fb_06_mentors", 54, 84, 56, 54, 75, 22),
-            new Shot("fb_07_rune_tower", -10, 90, 110, -36, 84, 86),
-            new Shot("fb_08_hamlet", 243, 89, -153, 255, 74, -120),
-            new Shot("fb_09_farm_camp", 868, 82, 2, 840, 72, 30),
-            new Shot("fb_10_desert_camp", 75, 88, 790, 40, 74, 790),
-            new Shot("fb_11_harbor", -641, 83, 66, -690, 70, 75),
-            new Shot("fb_12_lodge", 20, 86, -730, 20, 75, -770),
-            new Shot("fb_13_void_outpost", 0, 99, -2130, 0, 85, -2170),
-            new Shot("fb_14_ember_outpost", 0, 92, 2110, 0, 76, 2150),
-            new Shot("fb_15_scarecrow_temple", 1599, 86, 29, 1560, 80, -10),
-            new Shot("fb_16_surtr_arena", 0, 92, 2670, 0, 85, 2610),
-            new Shot("fb_17_nidhogg_arena", -360, 124, -1170, -420, 118, -1170),
-            new Shot("fb_18_world_tree_base", 25, 91, -172, 0, 90, -215));
+            new Shot("fb_01_plaza_view", 0, 74, 82, 0, 92, 12),
+            new Shot("fb_02_fountain", 10, 75, 76, 0, 78, 60),
+            new Shot("fb_03_statue", 14, 78, 50, 0, 90, 27),
+            new Shot("fb_04_cathedral_front", 24, 84, 48, 0, 92, 15),
+            new Shot("fb_05_cathedral_aerial", 48, 108, -8, 0, 85, -4),
+            new Shot("fb_06_mage_tower", -16, 94, 64, -42, 100, 32),
+            new Shot("fb_07_guild", 12, 76, 54, 34, 80, 47),
+            new Shot("fb_08_training", 76, 100, 46, 50, 73, 22),
+            new Shot("fb_09_market", 46, 90, 122, 46, 73, 88),
+            new Shot("fb_10_weaponsmith", -2, 76, 108, 12, 78, 94),
+            new Shot("fb_11_west_avenue", -27, 75, 60, -90, 77, 60),
+            new Shot("fb_12_south_avenue", 0, 75, 112, 0, 77, 160),
+            new Shot("fb_13_town_aerial", 0, 130, 190, 0, 75, 40),
+            new Shot("fb_14_royal_hall", -18, 84, 18, -40, 80, -6));
+
+    /** only=fieldc: 거점 · 작은 마을 · 신전 · 세계수 (빈터 바이옴 — 나무 · 현무암 기둥에 묻히지 않는지) */
+    private static final List<Shot> SHOTS_C = List.of(
+            new Shot("fc_01_hamlet", 243, 89, -153, 255, 74, -120),
+            new Shot("fc_02_farm_camp", 868, 82, 2, 840, 72, 30),
+            new Shot("fc_03_desert_camp", 75, 88, 790, 40, 74, 790),
+            new Shot("fc_04_harbor", -641, 83, 66, -690, 70, 75),
+            new Shot("fc_05_lodge", 20, 86, -730, 20, 75, -770),
+            new Shot("fc_06_void_outpost", 0, 99, -2130, 0, 85, -2170),
+            new Shot("fc_07_ember_outpost", 0, 92, 2110, 0, 76, 2150),
+            new Shot("fc_08_scarecrow_temple", 1599, 86, 29, 1560, 80, -10),
+            new Shot("fc_09_surtr_arena", 0, 92, 2670, 0, 85, 2610),
+            new Shot("fc_10_nidhogg_arena", -360, 124, -1170, -420, 118, -1170),
+            new Shot("fc_11_world_tree_base", 25, 91, -172, 0, 90, -215));
 
     /** 보이는 거리 (청크) — 12 는 CI 의 소프트웨어 그리기에서 사진마다 45초 안에 다 못 그림 (CI 42356359483) */
     private static final int VIEW = 8;
@@ -106,7 +121,8 @@ public final class RpgFieldGallery implements FabricClientGameTest {
     public void runTest(ClientGameTestContext ctx) {
         boolean a = RpgProdSmoke.only("field");
         boolean b2 = RpgProdSmoke.only("fieldb");
-        if (RpgProdSmoke.active() || !a && !b2) return;
+        boolean c3 = RpgProdSmoke.only("fieldc");
+        if (RpgProdSmoke.active() || !a && !b2 && !c3) return;
         ctx.getInput().resizeWindow(1280, 720);
         try (TestSingleplayerContext world = ctx.worldBuilder()
                 .setUseConsistentSettings(false)
@@ -129,6 +145,7 @@ public final class RpgFieldGallery implements FabricClientGameTest {
                 mc.options.setCameraType(CameraType.FIRST_PERSON);
                 mc.options.renderDistance().set(VIEW);
                 if (!mc.gui.hud.isHidden()) mc.gui.hud.toggle(); // 손 · 화면 칸 없이 (F1)
+                noAfkLimit(mc);
             });
             ctx.waitTicks(20);
             Sampler sampler = new Sampler();
@@ -138,6 +155,7 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             try {
                 if (a) for (Shot s : SHOTS) shot(ctx, server, world, s, sampler);
                 if (b2) for (Shot s : SHOTS_B) shot(ctx, server, world, s, sampler);
+                if (c3) for (Shot s : SHOTS_C) shot(ctx, server, world, s, sampler);
             } finally {
                 sampler.stop();
             }
@@ -169,7 +187,17 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             probes.add(new int[] {(int) is.x() + 37, (int) is.z() - 23});
             probes.add(new int[] {(int) (is.x() + is.radius() * 1.6), (int) is.z()});
         }
-        for (FieldPlan.Site site : plan.sites("camp")) probes.add(new int[] {(int) site.x() + 5, (int) site.z() + 5});
+        for (FieldPlan.Site site : plan.sites("camp")) {
+            // 거점 둘레의 빈 땅 (짓는 것이 덮지 않은 칸 — CI 42359496849: 항구 건물 칸을 재서 실패)
+            for (int[] o : new int[][] {{5, 5}, {-6, 7}, {8, -6}, {-9, -9}, {12, 0}}) {
+                int px = (int) site.x() + o[0];
+                int pz = (int) site.z() + o[1];
+                if (!covered(px, pz)) {
+                    probes.add(new int[] {px, pz});
+                    break;
+                }
+            }
+        }
         List<String> bad = new ArrayList<>();
         for (int[] p : probes) {
             level.getChunk(p[0] >> 4, p[1] >> 4);
@@ -194,7 +222,7 @@ public final class RpgFieldGallery implements FabricClientGameTest {
         FieldPlan.Site town = plan.site("town");
         int g = plan.sea + 9;
         level.getChunk((int) town.x() >> 4, (int) town.z() >> 4);
-        check(level.getBlockState(new BlockPos((int) town.x(), g, (int) town.z())).is(Blocks.CHISELED_STONE_BRICKS), "fountain at the square");
+        check(level.getBlockState(new BlockPos((int) town.x(), g, (int) town.z())).is(Blocks.CHISELED_QUARTZ_BLOCK), "fountain at the square");
         // 처음 준비: 보스 제단 (지어짐) · 사냥터 · 메인 NPC 1 ~ 16 기록
         int built = 0;
         for (FieldExtras.AltarSpot a : FieldExtras.altars()) {
@@ -216,6 +244,33 @@ public final class RpgFieldGallery implements FabricClientGameTest {
             BlockPos at = BlockPos.containing(m.x(), m.y(), m.z());
             level.getChunk(at.getX() >> 4, at.getZ() >> 4);
             check(level.getBlockState(at).is(Blocks.LODESTONE), "waystone stone at " + at.toShortString() + " = " + level.getBlockState(at));
+        }
+    }
+
+    /** (x, z) 칸을 짓는 것 (마을 바닥 · 다리 말고 설계 조각) 이 덮는지 */
+    static boolean covered(int x, int z) {
+        for (FieldBuild.Piece p : FieldPieces.pieces()) {
+            if (!(p instanceof Blueprint.Ops)) continue;
+            if (x >= p.minX() && x <= p.maxX() && z >= p.minZ() && z <= p.maxZ()) return true;
+        }
+        return false;
+    }
+
+    /**
+     * 화면 시험이 오래 돌면 (입력 없이 10분) 클라이언트가 "자리 비움" 으로 화면을 초당 10장으로 줄이고, 시험은 서버 틱을 화면에 맞춰 돌려
+     * 서버도 초당 10틱이 됨 (CI 42359496849: 11분째부터 사진마다 157초). 26.3 옵션 inactivityFpsLimit → MINIMIZED (최소화했을 때만 줄임).
+     * 이름이 바뀌었으면 기록만 남김 (반사로 찾음 — 컴파일은 늘 됨).
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static void noAfkLimit(net.minecraft.client.Minecraft mc) {
+        try {
+            Object opt = mc.options.getClass().getMethod("inactivityFpsLimit").invoke(mc.options);
+            Class<?> type = Class.forName("net.minecraft.client.InactivityFpsLimit");
+            Object minimized = Enum.valueOf((Class) type, "MINIMIZED");
+            opt.getClass().getMethod("set", Object.class).invoke(opt, minimized);
+            LOG.info("[field-gallery] inactivity fps limit → {}", minimized);
+        } catch (ReflectiveOperationException | RuntimeException | LinkageError e) {
+            LOG.warn("[field-gallery] inactivity fps limit not changed: {}", e.toString());
         }
     }
 

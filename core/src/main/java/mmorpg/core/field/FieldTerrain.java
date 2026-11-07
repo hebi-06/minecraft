@@ -58,6 +58,17 @@ public final class FieldTerrain {
     public static final int ROAD_EDGE = 8;
     public static final int RIVER = 16;
 
+    /** 빈터를 두는 자리 종류 */
+    static final java.util.Set<String> CLEARED = java.util.Set.of("camp", "hamlet", "boss");
+    /** 바이옴 → 같은 지역의 빈터 바이옴 (tools/field_biomes.py CLEAR — 하늘 · 안개 · 색은 같고 나무 · 큰 장식만 없음) */
+    static final java.util.Map<String, String> CLEARING = java.util.Map.ofEntries(
+            java.util.Map.entry("mmorpg:midgard", "mmorpg:midgard_town"), java.util.Map.entry("mmorpg:midgard_grove", "mmorpg:midgard_town"),
+            java.util.Map.entry("mmorpg:harvest_fields", "mmorpg:harvest_clearing"), java.util.Map.entry("mmorpg:harvest_woods", "mmorpg:harvest_clearing"),
+            java.util.Map.entry("mmorpg:dune_sea", "mmorpg:dune_clearing"), java.util.Map.entry("mmorpg:red_mesa", "mmorpg:dune_clearing"),
+            java.util.Map.entry("mmorpg:oasis", "mmorpg:oasis_clearing"), java.util.Map.entry("mmorpg:fjord_coast", "mmorpg:fjord_clearing"),
+            java.util.Map.entry("mmorpg:mire", "mmorpg:mire_clearing"), java.util.Map.entry("mmorpg:frost_taiga", "mmorpg:frost_clearing"),
+            java.util.Map.entry("mmorpg:glacier", "mmorpg:glacier_clearing"), java.util.Map.entry("mmorpg:muspelheim", "mmorpg:muspel_clearing"));
+
     /** 평평하게 고를 자리: 가운데 · 평평한 반지름 · 이어지는 반지름 · 높이 */
     public record Plot(String id, String kind, double x, double z, double flat, double blend, int y) {}
 
@@ -549,13 +560,17 @@ public final class FieldTerrain {
         out.coast = d;
         double h = landHeight(best, x, z, d, out);
         // 자리 고르기 (마을 · 거점 · 신전 · 다리 끝)
+        boolean clearing = false;
         for (Plot p : plots) {
             double r = Math.hypot(x - p.x(), z - p.z());
             if (r >= p.blend()) continue;
             h = lerp(h, p.y(), smoothstep(p.blend(), p.flat(), r));
             if (r < p.flat()) out.flags |= p.kind().equals("landing") ? LANDING : PLOT;
             if (r < p.flat() && p.kind().equals("town")) out.biome = "mmorpg:midgard_town"; // 마을 안: 나무가 저절로 나지 않는 바이옴 (건물 · 길 사이는 설계한 나무)
+            else if (r < p.flat() + 6 && CLEARED.contains(p.kind())) clearing = true;
         }
+        // 거점 · 작은 마을 · 신전 자리: 같은 지역의 "빈터" 바이옴 (나무 · 선인장 · 현무암 기둥 · 얼음 가시가 나지 않음 — CI 42359496849 사진: 항구 · 사냥막이 숲에 묻힘)
+        if (clearing && out != null) out.biome = CLEARING.getOrDefault(out.biome, out.biome);
         if (best.terrain().equals("village")) {
             FieldPlan.Site tree = plan.site("tree");
             if (tree != null) {

@@ -27,7 +27,15 @@
             "mmorpg:glacier",
             "mmorpg:void_rift",
             "mmorpg:helheim",
-            "mmorpg:muspelheim"
+            "mmorpg:muspelheim",
+            "mmorpg:harvest_clearing",
+            "mmorpg:dune_clearing",
+            "mmorpg:oasis_clearing",
+            "mmorpg:fjord_clearing",
+            "mmorpg:mire_clearing",
+            "mmorpg:frost_clearing",
+            "mmorpg:glacier_clearing",
+            "mmorpg:muspel_clearing"
           ]
         }
       }
