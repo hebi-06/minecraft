@@ -20,7 +20,7 @@ cp "$WS/$JAR" "$dir/mods/"
 curl -sfL -o "$dir/mods/fabric-api-$FAPI.jar" "https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/$FAPI/fabric-api-$FAPI.jar" || { echo "[vanilla] fabric-api download failed"; exit 2; }
 curl -sfL -o "$dir/server.jar" "https://meta.fabricmc.net/v2/versions/loader/$MC/$LOADER/$INSTALLER/server/jar" || { echo "[vanilla] server launcher download failed"; exit 2; }
 echo "eula=true" > "$dir/eula.txt"
-printf 'online-mode=false\nenforce-secure-profile=false\nlevel-type=minecraft\\:flat\nspawn-protection=0\nmax-tick-time=-1\nsync-chunk-writes=false\nview-distance=6\nsimulation-distance=6\nserver-port=25565\nmotd=vanilla probe\n' > "$dir/server.properties"
+printf 'online-mode=false\nenforce-secure-profile=false\nlevel-type=minecraft\\:flat\nspawn-protection=0\nmax-tick-time=-1\nsync-chunk-writes=false\nview-distance=6\nsimulation-distance=6\nserver-port=25565\nwhite-list=false\nenforce-whitelist=false\nmotd=vanilla probe\n' > "$dir/server.properties"
 
 cd "$dir" || exit 2
 rm -f in exit.code
@@ -39,6 +39,8 @@ grep -n -E "\[vanilla\]|polymer|Polymer|AutoHost|auto-host" "$dir/out.log" | hea
 
 code=1
 if [ $up -eq 1 ]; then
+  # 26.3 전용 서버는 허용 목록이 켜진 채 시작함 (CI 42375154420 — "You are not white-listed") — 설정 파일에 더해 콘솔로도 끔
+  echo "whitelist off" >&3
   # 리소스 팩을 다 만들 때까지 (AutoHost 가 접속을 기다리게 하지만 넉넉히)
   sleep 20
   mkdir -p run-probe
