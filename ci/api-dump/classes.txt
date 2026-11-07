@@ -284,6 +284,7 @@ net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket
 net.minecraft.network.protocol.common.custom.CustomPacketPayload
 net.minecraft.network.protocol.common.custom.CustomPacketPayload$Type
 net.minecraft.network.protocol.game.ClientboundBossEventPacket
+net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket
 net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket
 net.minecraft.network.protocol.game.ClientboundCooldownPacket
 net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket
@@ -299,6 +300,7 @@ net.minecraft.network.protocol.game.ClientboundSoundPacket
 net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket
 net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket$AttributeSnapshot
 net.minecraft.network.protocol.game.ServerboundAttackPacket
+net.minecraft.network.protocol.game.ServerboundContainerClickPacket
 net.minecraft.network.protocol.game.ServerboundInteractPacket
 net.minecraft.network.protocol.game.ServerboundPlayerActionPacket
 net.minecraft.network.protocol.game.ServerboundPlayerActionPacket$Action
@@ -318,6 +320,7 @@ net.minecraft.resources.RegistryOps
 net.minecraft.resources.ResourceKey
 net.minecraft.server.MinecraftServer
 net.minecraft.server.dialog.ActionButton
+net.minecraft.server.dialog.ButtonListDialog
 net.minecraft.server.dialog.CommonButtonData
 net.minecraft.server.dialog.CommonDialogData
 net.minecraft.server.dialog.ConfirmationDialog
@@ -500,7 +503,6 @@ net.minecraft.world.entity.projectile.arrow.AbstractArrow
 net.minecraft.world.food.FoodData
 net.minecraft.world.inventory.AbstractContainerMenu
 net.minecraft.world.inventory.ChestMenu
-net.minecraft.world.inventory.ClickType
 net.minecraft.world.inventory.ContainerInput
 net.minecraft.world.inventory.InventoryMenu
 net.minecraft.world.inventory.MenuType
@@ -516,6 +518,7 @@ net.minecraft.world.item.Item$TooltipContext
 net.minecraft.world.item.ItemCooldowns
 net.minecraft.world.item.ItemDisplayContext
 net.minecraft.world.item.ItemStack
+net.minecraft.world.item.ItemStackTemplate
 net.minecraft.world.item.ItemUseAnimation
 net.minecraft.world.item.Items
 net.minecraft.world.item.SpawnEggItem
