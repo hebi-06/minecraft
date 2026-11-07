@@ -933,9 +933,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "archer_ult" -> new double[] {11.0, 3.4, 2.8, 0.4}; // 2026-11-07 스피릿 스탬피드: 등 뒤 사슴 정령 왕 (4.4칸) · 앞으로 내달리는 무리 · 정령 꽃
             case "archer_focus" -> new double[] {7.5, 2.8, 1.2, 0.6}; // 와일드 헌트: 곁의 늑대 정령 둘 · 과녁에 뛰어오름
             case "sniper_ult" -> new double[] {9.0, 3.4, 3.0, 0.5}; // 사일런트 아울: 등 뒤 위 부엉이 정령 (2.5칸 위) · 부엉이 화살
-            case "trickster_twin" -> new double[] {9.0, 3.0, 1.6, 0.35}; // 2026-11-07 트윈 리플렉션: 과녁 등 뒤 거울 (2.8칸) · 엇갈려 꿰뚫고 돌아섬 — 덜 따라감
+            case "trickster_twin" -> new double[] {7.0, 2.8, 1.4, 0.35}; // 2026-11-07 트윈 리플렉션: 과녁 등 뒤 거울 (2.8칸) · 엇갈려 꿰뚫고 돌아섬 — 덜 따라감
             case "trickster_waltz" -> new double[] {7.5, 2.8, 1.2, 0.6}; // 팬텀 왈츠: 오른쪽 뒤의 춤 상대 · 과녁 둘레를 휘도는 환영
-            case "trickster_ult" -> new double[] {12.5, 4.2, 1.8, 0.35}; // 미러 월드: 과녁 둘레 4칸 거울 열둘 (3칸) — 위에서 넓게
+            case "trickster_ult" -> new double[] {10.0, 3.8, 1.6, 0.35}; // 미러 월드: 과녁 둘레 4칸 거울 열둘 (3칸) — 위에서 넓게
             case "arcmage_ult" -> new double[] {12.0, 3.6, 5.0, 0.4}; // 콘스텔레이션: 과녁 위 8.5칸 하늘의 국자 일곱 별 · 내리꽂히는 별빛 — 올려다봄
             case "arcmage_orbit" -> new double[] {7.0, 2.8, 1.6, 0.6}; // 셀레스티얼 오빗: 둘레를 도는 별 · 과녁에 떨어지는 별똥 · 땅의 별자리
             case "frostraider_ult" -> new double[] {12.0, 3.4, 5.0, 0.4}; // 핌불윈터: 하늘의 빙하 도끼 (18칸 위) 가 내리꽂혀 빙하가 솟음 — 올려다봄

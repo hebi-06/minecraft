@@ -659,7 +659,7 @@ final class TricksterSkills {
         int n = Math.max(6, (int) k.num("mirrors", 12));
         double mirrorH = k.num("mirrorH", 3.0);
         String life = RuneKit.lifeToken(sp);
-        Ult.sky(sp.level(), sp.position(), "rpg:ult_mirror", finalAt + 8);
+        Ult.sky(sp.level(), sp.position(), "rpg:ult_mirror", finalAt + 30); // 하늘은 끝나기 전부터 걷힘 — 깨질 때까지 보랏빛 (영상 42335099916)
         Vec3 u = blinkFront(sp, e, 1.2, j);
         ServerLevel level0 = sp.level();
         RpgCombat.setSteadfast(sp, slashAt + 6);
