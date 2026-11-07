@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/bosses_void_knight_emissive","particle":"rpg:item/vmob/bosses_void_knight_emissive"},"elements":[{"from":[4.48,3.48,3.48],"to":[11.52,11.52,10.52],"faces":{"north":{"uv":[10.125,0.875,11.0,1.875],"texture":"#0"}},"light_emission":15}]}

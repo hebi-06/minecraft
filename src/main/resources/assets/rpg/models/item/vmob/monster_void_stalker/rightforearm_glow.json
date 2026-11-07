@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/monsters_void_stalker_emissive","particle":"rpg:item/vmob/monsters_void_stalker_emissive"},"elements":[{"from":[7.48,4.98,6.98],"to":[8.52,11.02,9.02],"faces":{"east":{"uv":[1.5,4.5,1.75,6.0],"texture":"#0"},"west":{"uv":[1.875,4.5,2.125,6.0],"texture":"#0"}},"light_emission":15}]}

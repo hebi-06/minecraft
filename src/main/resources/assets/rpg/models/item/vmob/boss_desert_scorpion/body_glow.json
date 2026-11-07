@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/bosses_desert_scorpion_emissive","particle":"rpg:item/vmob/bosses_desert_scorpion_emissive"},"elements":[{"from":[0.98,3.48,-6.02],"to":[15.02,9.52,7.02],"faces":{"north":{"uv":[1.625,1.625,3.375,2.375],"texture":"#0"},"up":{"uv":[3.375,1.625,1.625,0.0],"texture":"#0"}},"light_emission":15}]}

@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/bosses_rock_scorpion_emissive","particle":"rpg:item/vmob/bosses_rock_scorpion_emissive"},"elements":[{"from":[6.48,9.48,5.98],"to":[9.52,11.52,9.02],"faces":{"west":{"uv":[13.5,8.875,13.875,9.125],"texture":"#0"},"up":{"uv":[13.5,8.875,13.125,8.5],"texture":"#0"}},"light_emission":15}]}

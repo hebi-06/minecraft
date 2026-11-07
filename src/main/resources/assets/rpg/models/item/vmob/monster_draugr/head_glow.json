@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/monsters_draugr_emissive","particle":"rpg:item/vmob/monsters_draugr_emissive"},"elements":[{"from":[3.98,3.48,4.23],"to":[12.02,11.52,12.27],"faces":{"north":{"uv":[1.0,7.0,2.0,9.0],"texture":"#0"}},"light_emission":15}]}

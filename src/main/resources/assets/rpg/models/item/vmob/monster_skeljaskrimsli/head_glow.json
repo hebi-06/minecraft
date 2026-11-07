@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/monsters_skeljaskrimsli_emissive","particle":"rpg:item/vmob/monsters_skeljaskrimsli_emissive"},"elements":[{"from":[4.48,2.98,3.98],"to":[11.52,9.02,12.02],"faces":{"north":{"uv":[1.0,4.375,1.875,5.125],"texture":"#0"}},"light_emission":15}]}

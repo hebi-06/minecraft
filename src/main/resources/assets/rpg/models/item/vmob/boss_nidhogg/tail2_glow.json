@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/bosses_nidhogg_emissive","particle":"rpg:item/vmob/bosses_nidhogg_emissive"},"elements":[{"from":[4.48,2.98,3.98],"to":[11.52,10.02,12.02],"faces":{"east":{"uv":[10.125,6.6875,10.625,7.125],"texture":"#0"},"west":{"uv":[11.0625,6.6875,11.5625,7.125],"texture":"#0"}},"light_emission":15}]}

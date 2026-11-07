@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/monsters_crab_emissive","particle":"rpg:item/vmob/monsters_crab_emissive"},"elements":[{"from":[6.98,8.48,6.98],"to":[9.02,10.52,9.02],"faces":{"north":{"uv":[1.5,5.75,1.75,6.25],"texture":"#0"}},"light_emission":15}]}

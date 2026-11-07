@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/bosses_hel_emissive","particle":"rpg:item/vmob/bosses_hel_emissive"},"elements":[{"from":[7.98,6.73,3.83],"to":[12.02,14.77,11.87],"faces":{"north":{"uv":[10.0,1.0,10.5,2.0],"texture":"#0"}},"light_emission":15},{"from":[3.98,6.73,3.83],"to":[8.02,14.77,11.87],"faces":{"north":{"uv":[13.0,1.0,13.5,2.0],"texture":"#0"}},"light_emission":15}]}

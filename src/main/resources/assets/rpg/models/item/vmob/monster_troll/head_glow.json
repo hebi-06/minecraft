@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/monsters_troll_emissive","particle":"rpg:item/vmob/monsters_troll_emissive"},"elements":[{"from":[3.98,4.98,5.23],"to":[12.02,12.02,12.27],"faces":{"north":{"uv":[0.875,8.125,1.875,9.0],"texture":"#0"}},"light_emission":15}]}

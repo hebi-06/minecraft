@@ -74,6 +74,9 @@ final class VanillaProbe {
                 Block altar = BuiltInRegistries.BLOCK.getValue(Mmorpg.rpg("altar_scarecrow_king"));
                 if (altar != null) level.setBlockAndUpdate(new BlockPos(-2, y, 5), altar.defaultBlockState());
                 Monsters.spawnAt(level, "scarecrow", new Vec3(1.5, y, 6.5), 180F);
+                Monsters.spawnAt(level, "draugr", new Vec3(4.5, y, 8.5), 200F);
+                Monsters.spawnAt(level, "troll", new Vec3(-3.5, y, 10.5), 160F);
+                Monsters.spawnAt(level, "gulon", new Vec3(0.5, y, 12.5), 180F);
                 Dummy.spawnDummy(p);
                 say(p, "shot 03_world");
                 next(p, 3, 60);

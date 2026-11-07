@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/monsters_void_behemoth_emissive","particle":"rpg:item/vmob/monsters_void_behemoth_emissive"},"elements":[{"from":[6.98,7.98,3.48],"to":[9.02,10.02,5.52],"faces":{"north":{"uv":[2.25,12.375,2.5,12.625],"texture":"#0"}},"light_emission":15}]}

@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/bosses_scarecrow_king_emissive","particle":"rpg:item/vmob/bosses_scarecrow_king_emissive"},"elements":[{"from":[6.98,7.98,5.48],"to":[9.02,10.02,7.52],"faces":{"north":{"uv":[12.75,8.875,13.0,9.125],"texture":"#0"}},"light_emission":15}]}

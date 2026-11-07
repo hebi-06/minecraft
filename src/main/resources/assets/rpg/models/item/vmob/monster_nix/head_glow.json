@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/monsters_nix_emissive","particle":"rpg:item/vmob/monsters_nix_emissive"},"elements":[{"from":[4.48,4.98,4.48],"to":[11.52,13.02,11.52],"faces":{"north":{"uv":[8.625,1.75,9.5,3.75],"texture":"#0"}},"light_emission":15}]}

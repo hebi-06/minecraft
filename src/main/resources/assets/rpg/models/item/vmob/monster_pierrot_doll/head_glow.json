@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/allies_pierrot_doll_emissive","particle":"rpg:item/vmob/allies_pierrot_doll_emissive"},"elements":[{"from":[4.48,3.48,4.88],"to":[11.52,10.52,11.92],"faces":{"north":{"uv":[2.375,1.75,3.25,3.5],"texture":"#0"}},"light_emission":15}]}

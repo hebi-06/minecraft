@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/mounts_dire_wolf_emissive","particle":"rpg:item/vmob/mounts_dire_wolf_emissive"},"elements":[{"from":[5.73,4.98,11.23],"to":[10.27,12.02,12.77],"faces":{"east":{"uv":[4.625,9.125,4.6875,10.0],"texture":"#0"},"north":{"uv":[4.6875,9.125,4.9375,10.0],"texture":"#0"},"up":{"uv":[4.9375,9.125,4.6875,9.0],"texture":"#0"}},"light_emission":15}]}

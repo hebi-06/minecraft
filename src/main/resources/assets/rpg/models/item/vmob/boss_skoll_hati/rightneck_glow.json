@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/bosses_skoll_hati_emissive","particle":"rpg:item/vmob/bosses_skoll_hati_emissive"},"elements":[{"from":[4.98,4.48,3.98],"to":[11.02,11.52,12.02],"faces":{"east":{"uv":[8.5,7.625,9.5,8.5],"texture":"#0"},"south":{"uv":[11.25,7.625,12.0,8.5],"texture":"#0"}},"light_emission":15}]}

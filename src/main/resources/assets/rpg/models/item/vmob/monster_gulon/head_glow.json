@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vmob/monsters_gulon_emissive","particle":"rpg:item/vmob/monsters_gulon_emissive"},"elements":[{"from":[3.98,1.98,5.48],"to":[12.02,9.02,12.52],"faces":{"north":{"uv":[0.875,12.5,1.875,14.25],"texture":"#0"}},"light_emission":15}]}
