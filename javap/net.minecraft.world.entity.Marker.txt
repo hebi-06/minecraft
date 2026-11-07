@@ -1,0 +1,15 @@
+Compiled from "Marker.java"
+public class net.minecraft.world.entity.Marker extends net.minecraft.world.entity.Entity {
+  public net.minecraft.world.entity.Marker(net.minecraft.world.entity.EntityType<?>, net.minecraft.world.level.Level);
+  public void tick();
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  public net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> getAddEntityPacket(net.minecraft.server.level.ServerEntity);
+  protected boolean canAddPassenger(net.minecraft.world.entity.Entity);
+  protected boolean couldAcceptPassenger();
+  protected void addPassenger(net.minecraft.world.entity.Entity);
+  public net.minecraft.world.level.material.PushReaction getPistonPushReaction();
+  public boolean isIgnoringBlockTriggers();
+  public final boolean hurtServer(net.minecraft.server.level.ServerLevel, net.minecraft.world.damagesource.DamageSource, float);
+}

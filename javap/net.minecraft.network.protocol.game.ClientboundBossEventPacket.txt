@@ -1,0 +1,25 @@
+Compiled from "ClientboundBossEventPacket.java"
+public class net.minecraft.network.protocol.game.ClientboundBossEventPacket implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> {
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.network.protocol.game.ClientboundBossEventPacket> STREAM_CODEC;
+  private static final int FLAG_DARKEN = 1;
+  private static final int FLAG_MUSIC = 2;
+  private static final int FLAG_FOG = 4;
+  private final java.util.UUID id;
+  private final net.minecraft.network.protocol.game.ClientboundBossEventPacket$Operation operation;
+  private static final net.minecraft.network.protocol.game.ClientboundBossEventPacket$Operation REMOVE_OPERATION;
+  private net.minecraft.network.protocol.game.ClientboundBossEventPacket(java.util.UUID, net.minecraft.network.protocol.game.ClientboundBossEventPacket$Operation);
+  private net.minecraft.network.protocol.game.ClientboundBossEventPacket(net.minecraft.network.RegistryFriendlyByteBuf);
+  public static net.minecraft.network.protocol.game.ClientboundBossEventPacket createAddPacket(net.minecraft.world.BossEvent);
+  public static net.minecraft.network.protocol.game.ClientboundBossEventPacket createRemovePacket(java.util.UUID);
+  public static net.minecraft.network.protocol.game.ClientboundBossEventPacket createUpdateProgressPacket(net.minecraft.world.BossEvent);
+  public static net.minecraft.network.protocol.game.ClientboundBossEventPacket createUpdateNamePacket(net.minecraft.world.BossEvent);
+  public static net.minecraft.network.protocol.game.ClientboundBossEventPacket createUpdateStylePacket(net.minecraft.world.BossEvent);
+  public static net.minecraft.network.protocol.game.ClientboundBossEventPacket createUpdatePropertiesPacket(net.minecraft.world.BossEvent);
+  private void write(net.minecraft.network.RegistryFriendlyByteBuf);
+  private static int encodeProperties(boolean, boolean, boolean);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.game.ClientboundBossEventPacket> type();
+  public void handle(net.minecraft.network.protocol.game.ClientGamePacketListener);
+  public void dispatch(net.minecraft.network.protocol.game.ClientboundBossEventPacket$Handler);
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

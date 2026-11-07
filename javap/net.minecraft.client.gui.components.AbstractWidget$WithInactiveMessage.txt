@@ -1,0 +1,8 @@
+Compiled from "AbstractWidget.java"
+public abstract class net.minecraft.client.gui.components.AbstractWidget$WithInactiveMessage extends net.minecraft.client.gui.components.AbstractWidget {
+  private net.minecraft.network.chat.Component inactiveMessage;
+  public static net.minecraft.network.chat.Component defaultInactiveMessage(net.minecraft.network.chat.Component);
+  public net.minecraft.client.gui.components.AbstractWidget$WithInactiveMessage(int, int, int, int, net.minecraft.network.chat.Component);
+  public net.minecraft.network.chat.Component getMessage();
+  public void setMessage(net.minecraft.network.chat.Component);
+}

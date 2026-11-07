@@ -1,0 +1,14 @@
+Compiled from "ClientboundSetHeldSlotPacket.java"
+public final class net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket extends java.lang.Record implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> {
+  private final int slot;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket> STREAM_CODEC;
+  public net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket(int);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.game.ClientboundSetHeldSlotPacket> type();
+  public void handle(net.minecraft.network.protocol.game.ClientGamePacketListener);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int slot();
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

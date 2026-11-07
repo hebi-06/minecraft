@@ -1,0 +1,44 @@
+Compiled from "AbstractVillager.java"
+public abstract class net.minecraft.world.entity.npc.villager.AbstractVillager extends net.minecraft.world.entity.AgeableMob implements net.minecraft.world.entity.npc.Npc,net.minecraft.world.item.trading.Merchant,net.minecraft.world.entity.npc.InventoryCarrier {
+  private static final org.slf4j.Logger LOGGER;
+  private static final net.minecraft.network.syncher.EntityDataAccessor<java.lang.Integer> DATA_UNHAPPY_COUNTER;
+  private net.minecraft.world.entity.player.Player tradingPlayer;
+  protected net.minecraft.world.item.trading.MerchantOffers offers;
+  private final net.minecraft.world.SimpleContainer inventory;
+  public net.minecraft.world.entity.npc.villager.AbstractVillager(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.npc.villager.AbstractVillager>, net.minecraft.world.level.Level);
+  public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor, net.minecraft.world.DifficultyInstance, net.minecraft.world.entity.EntitySpawnReason, net.minecraft.world.entity.SpawnGroupData);
+  public int getUnhappyCounter();
+  public void setUnhappyCounter(int);
+  public int getVillagerXp();
+  protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData$Builder);
+  public void setTradingPlayer(net.minecraft.world.entity.player.Player);
+  public net.minecraft.world.entity.player.Player getTradingPlayer();
+  public boolean isTrading();
+  public net.minecraft.world.item.trading.MerchantOffers getOffers();
+  public void overrideOffers(net.minecraft.world.item.trading.MerchantOffers);
+  public void overrideXp(int);
+  public void notifyTrade(net.minecraft.world.item.trading.MerchantOffer);
+  protected abstract void rewardTradeXp(net.minecraft.world.item.trading.MerchantOffer);
+  public boolean showProgressBar();
+  public void notifyTradeUpdated(net.minecraft.world.item.ItemStack);
+  public net.minecraft.sounds.SoundEvent getNotifyTradeSound();
+  protected net.minecraft.sounds.SoundEvent getTradeUpdatedSound(boolean);
+  public void playCelebrateSound();
+  protected void addAdditionalSaveData(net.minecraft.world.level.storage.ValueOutput);
+  protected void readAdditionalSaveData(net.minecraft.world.level.storage.ValueInput);
+  public net.minecraft.world.entity.Entity teleport(net.minecraft.world.level.portal.TeleportTransition);
+  protected void stopTrading();
+  public void die(net.minecraft.world.damagesource.DamageSource);
+  protected void addParticlesAroundSelf(net.minecraft.core.particles.ParticleOptions);
+  public boolean canBeLeashed();
+  public net.minecraft.world.SimpleContainer getInventory();
+  public net.minecraft.world.entity.SlotAccess getSlot(int);
+  protected abstract void updateTrades(net.minecraft.server.level.ServerLevel);
+  protected void addOffersFromTradeSet(net.minecraft.server.level.ServerLevel, net.minecraft.world.item.trading.MerchantOffers, net.minecraft.resources.ResourceKey<net.minecraft.world.item.trading.TradeSet>);
+  static void addOffersFromItemListings(net.minecraft.world.level.storage.loot.LootContext, net.minecraft.world.item.trading.MerchantOffers, net.minecraft.core.HolderSet<net.minecraft.world.item.trading.VillagerTrade>, int);
+  private static void addOffersFromItemListingsWithoutDuplicates(net.minecraft.world.level.storage.loot.LootContext, net.minecraft.world.item.trading.MerchantOffers, net.minecraft.core.HolderSet<net.minecraft.world.item.trading.VillagerTrade>, int);
+  public net.minecraft.world.phys.Vec3 getRopeHoldPosition(float);
+  public boolean isClientSide();
+  public boolean stillValid(net.minecraft.world.entity.player.Player);
+  static {};
+}

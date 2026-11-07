@@ -1,0 +1,15 @@
+Compiled from "WallSide.java"
+public final class net.minecraft.world.level.block.state.properties.WallSide extends java.lang.Enum<net.minecraft.world.level.block.state.properties.WallSide> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.level.block.state.properties.WallSide NONE;
+  public static final net.minecraft.world.level.block.state.properties.WallSide LOW;
+  public static final net.minecraft.world.level.block.state.properties.WallSide TALL;
+  private final java.lang.String name;
+  private static final net.minecraft.world.level.block.state.properties.WallSide[] $VALUES;
+  public static net.minecraft.world.level.block.state.properties.WallSide[] values();
+  public static net.minecraft.world.level.block.state.properties.WallSide valueOf(java.lang.String);
+  private net.minecraft.world.level.block.state.properties.WallSide(java.lang.String);
+  public java.lang.String toString();
+  public java.lang.String getSerializedName();
+  private static net.minecraft.world.level.block.state.properties.WallSide[] $values();
+  static {};
+}

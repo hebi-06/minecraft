@@ -1,0 +1,19 @@
+Compiled from "ColorParticleOption.java"
+public class net.minecraft.core.particles.ColorParticleOption implements net.minecraft.core.particles.ParticleOptions {
+  private final net.minecraft.core.particles.ParticleType<net.minecraft.core.particles.ColorParticleOption> type;
+  private final int color;
+  public static com.mojang.serialization.MapCodec<net.minecraft.core.particles.ColorParticleOption> codec(net.minecraft.core.particles.ParticleType<net.minecraft.core.particles.ColorParticleOption>);
+  public static net.minecraft.network.codec.StreamCodec<? super io.netty.buffer.ByteBuf, net.minecraft.core.particles.ColorParticleOption> streamCodec(net.minecraft.core.particles.ParticleType<net.minecraft.core.particles.ColorParticleOption>);
+  private net.minecraft.core.particles.ColorParticleOption(net.minecraft.core.particles.ParticleType<net.minecraft.core.particles.ColorParticleOption>, int);
+  public net.minecraft.core.particles.ParticleType<net.minecraft.core.particles.ColorParticleOption> getType();
+  public float getRed();
+  public float getGreen();
+  public float getBlue();
+  public float getAlpha();
+  public static net.minecraft.core.particles.ColorParticleOption create(net.minecraft.core.particles.ParticleType<net.minecraft.core.particles.ColorParticleOption>, int);
+  public static net.minecraft.core.particles.ColorParticleOption create(net.minecraft.core.particles.ParticleType<net.minecraft.core.particles.ColorParticleOption>, float, float, float);
+  private static java.lang.Integer lambda$streamCodec$1(net.minecraft.core.particles.ColorParticleOption);
+  private static net.minecraft.core.particles.ColorParticleOption lambda$streamCodec$0(net.minecraft.core.particles.ParticleType, java.lang.Integer);
+  private static java.lang.Integer lambda$codec$1(net.minecraft.core.particles.ColorParticleOption);
+  private static net.minecraft.core.particles.ColorParticleOption lambda$codec$0(net.minecraft.core.particles.ParticleType, java.lang.Integer);
+}

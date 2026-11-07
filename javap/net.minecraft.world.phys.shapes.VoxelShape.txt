@@ -1,0 +1,39 @@
+Compiled from "VoxelShape.java"
+public abstract class net.minecraft.world.phys.shapes.VoxelShape {
+  protected final net.minecraft.world.phys.shapes.DiscreteVoxelShape shape;
+  private net.minecraft.world.phys.shapes.VoxelShape[] faces;
+  protected net.minecraft.world.phys.shapes.VoxelShape(net.minecraft.world.phys.shapes.DiscreteVoxelShape);
+  public double min(net.minecraft.core.Direction$Axis);
+  public double max(net.minecraft.core.Direction$Axis);
+  public net.minecraft.world.phys.AABB bounds();
+  public net.minecraft.world.phys.shapes.VoxelShape singleEncompassing();
+  protected double get(net.minecraft.core.Direction$Axis, int);
+  public abstract it.unimi.dsi.fastutil.doubles.DoubleList getCoords(net.minecraft.core.Direction$Axis);
+  public boolean isEmpty();
+  public net.minecraft.world.phys.shapes.VoxelShape move(net.minecraft.world.phys.Vec3);
+  public net.minecraft.world.phys.shapes.VoxelShape move(net.minecraft.core.Vec3i);
+  public net.minecraft.world.phys.shapes.VoxelShape move(double, double, double);
+  public net.minecraft.world.phys.shapes.VoxelShape optimize();
+  public void forAllEdges(net.minecraft.world.phys.shapes.Shapes$DoubleLineConsumer);
+  public void forAllBoxes(net.minecraft.world.phys.shapes.Shapes$DoubleLineConsumer);
+  public java.util.List<net.minecraft.world.phys.AABB> toAabbs();
+  public double min(net.minecraft.core.Direction$Axis, double, double);
+  public double max(net.minecraft.core.Direction$Axis, double, double);
+  protected int findIndex(net.minecraft.core.Direction$Axis, double);
+  public net.minecraft.world.phys.BlockHitResult clip(net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, net.minecraft.core.BlockPos);
+  public java.util.Optional<net.minecraft.world.phys.Vec3> closestPointTo(net.minecraft.world.phys.Vec3);
+  public net.minecraft.world.phys.shapes.VoxelShape getFaceShape(net.minecraft.core.Direction);
+  private net.minecraft.world.phys.shapes.VoxelShape calculateFace(net.minecraft.core.Direction);
+  protected boolean isCubeLike();
+  private boolean isCubeLikeAlong(net.minecraft.core.Direction$Axis);
+  public double collide(net.minecraft.core.Direction$Axis, net.minecraft.world.phys.AABB, double);
+  protected double collideX(net.minecraft.core.AxisCycle, net.minecraft.world.phys.AABB, double);
+  public boolean equals(java.lang.Object);
+  public java.lang.String toString();
+  private static void lambda$closestPointTo$0(net.minecraft.world.phys.Vec3, org.apache.commons.lang3.mutable.MutableObject, double, double, double, double, double, double);
+  private boolean lambda$findIndex$0(double, net.minecraft.core.Direction$Axis, int);
+  private static void lambda$toAabbs$0(java.util.List, double, double, double, double, double, double);
+  private static void lambda$forAllBoxes$0(net.minecraft.world.phys.shapes.Shapes$DoubleLineConsumer, it.unimi.dsi.fastutil.doubles.DoubleList, it.unimi.dsi.fastutil.doubles.DoubleList, it.unimi.dsi.fastutil.doubles.DoubleList, int, int, int, int, int, int);
+  private void lambda$forAllEdges$0(net.minecraft.world.phys.shapes.Shapes$DoubleLineConsumer, int, int, int, int, int, int);
+  private static void lambda$optimize$0(net.minecraft.world.phys.shapes.VoxelShape[], double, double, double, double, double, double);
+}

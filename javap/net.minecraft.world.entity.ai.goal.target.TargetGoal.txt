@@ -1,0 +1,23 @@
+Compiled from "TargetGoal.java"
+public abstract class net.minecraft.world.entity.ai.goal.target.TargetGoal extends net.minecraft.world.entity.ai.goal.Goal {
+  private static final int EMPTY_REACH_CACHE = 0;
+  private static final int CAN_REACH_CACHE = 1;
+  private static final int CANT_REACH_CACHE = 2;
+  protected final net.minecraft.world.entity.Mob mob;
+  protected final boolean mustSee;
+  private final boolean mustReach;
+  private int reachCache;
+  private int reachCacheTime;
+  private int unseenTicks;
+  protected net.minecraft.world.entity.LivingEntity targetMob;
+  protected int unseenMemoryTicks;
+  public net.minecraft.world.entity.ai.goal.target.TargetGoal(net.minecraft.world.entity.Mob, boolean);
+  public net.minecraft.world.entity.ai.goal.target.TargetGoal(net.minecraft.world.entity.Mob, boolean, boolean);
+  public boolean canContinueToUse();
+  protected double getFollowDistance();
+  public void start();
+  public void stop();
+  protected boolean canAttack(net.minecraft.world.entity.LivingEntity, net.minecraft.world.entity.ai.targeting.TargetingConditions);
+  private boolean canReach(net.minecraft.world.entity.LivingEntity);
+  public net.minecraft.world.entity.ai.goal.target.TargetGoal setUnseenMemoryTicks(int);
+}

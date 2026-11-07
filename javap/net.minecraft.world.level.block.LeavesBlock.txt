@@ -1,0 +1,29 @@
+Compiled from "LeavesBlock.java"
+public class net.minecraft.world.level.block.LeavesBlock extends net.minecraft.world.level.block.Block implements net.minecraft.world.level.block.SimpleWaterloggedBlock {
+  public static final int DECAY_DISTANCE = 7;
+  public static final net.minecraft.world.level.block.state.properties.IntegerProperty DISTANCE;
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty PERSISTENT;
+  public static final net.minecraft.world.level.block.state.properties.BooleanProperty WATERLOGGED;
+  protected final net.minecraft.world.level.block.sounds.AmbientLeavesBlockSoundPlayer ambientLeavesBlockSoundPlayer;
+  private static final int TICK_DELAY = 1;
+  private static volatile boolean cutoutLeaves;
+  public net.minecraft.world.level.block.LeavesBlock(net.minecraft.world.level.block.sounds.AmbientLeavesBlockSoundPlayer, net.minecraft.world.level.block.state.BlockBehaviour$Properties);
+  protected boolean skipRendering(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.block.state.BlockState, net.minecraft.core.Direction);
+  public static void setCutoutLeaves(boolean);
+  protected net.minecraft.world.phys.shapes.VoxelShape getBlockSupportShape(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos);
+  protected boolean isRandomlyTicking(net.minecraft.world.level.block.state.BlockState);
+  protected void randomTick(net.minecraft.world.level.block.state.BlockState, net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource);
+  protected boolean decaying(net.minecraft.world.level.block.state.BlockState);
+  protected void tick(net.minecraft.world.level.block.state.BlockState, net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource);
+  protected int getLightDampening(net.minecraft.world.level.block.state.BlockState);
+  protected net.minecraft.world.level.block.state.BlockState updateShape(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.LevelReader, net.minecraft.world.level.ScheduledTickAccess, net.minecraft.core.BlockPos, net.minecraft.core.Direction, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.util.RandomSource);
+  private static net.minecraft.world.level.block.state.BlockState updateDistance(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.LevelAccessor, net.minecraft.core.BlockPos);
+  private static int getDistanceAt(net.minecraft.world.level.block.state.BlockState);
+  public static java.util.OptionalInt getOptionalDistanceAt(net.minecraft.world.level.block.state.BlockState);
+  protected net.minecraft.world.level.material.FluidState getFluidState(net.minecraft.world.level.block.state.BlockState);
+  public void animateTick(net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource);
+  private static void makeDrippingWaterParticles(net.minecraft.world.level.Level, net.minecraft.core.BlockPos, net.minecraft.util.RandomSource, net.minecraft.world.level.block.state.BlockState, net.minecraft.core.BlockPos);
+  protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition$Builder<net.minecraft.world.level.block.Block, net.minecraft.world.level.block.state.BlockState>);
+  public net.minecraft.world.level.block.state.BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext);
+  static {};
+}

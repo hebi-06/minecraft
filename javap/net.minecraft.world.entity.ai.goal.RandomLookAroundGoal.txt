@@ -1,0 +1,13 @@
+Compiled from "RandomLookAroundGoal.java"
+public class net.minecraft.world.entity.ai.goal.RandomLookAroundGoal extends net.minecraft.world.entity.ai.goal.Goal {
+  private final net.minecraft.world.entity.Mob mob;
+  private double relX;
+  private double relZ;
+  private int lookTime;
+  public net.minecraft.world.entity.ai.goal.RandomLookAroundGoal(net.minecraft.world.entity.Mob);
+  public boolean canUse();
+  public boolean canContinueToUse();
+  public void start();
+  public boolean requiresUpdateEveryTick();
+  public void tick();
+}

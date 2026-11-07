@@ -1,0 +1,13 @@
+Compiled from "Goal.java"
+public final class net.minecraft.world.entity.ai.goal.Goal$Flag extends java.lang.Enum<net.minecraft.world.entity.ai.goal.Goal$Flag> {
+  public static final net.minecraft.world.entity.ai.goal.Goal$Flag MOVE;
+  public static final net.minecraft.world.entity.ai.goal.Goal$Flag LOOK;
+  public static final net.minecraft.world.entity.ai.goal.Goal$Flag JUMP;
+  public static final net.minecraft.world.entity.ai.goal.Goal$Flag TARGET;
+  private static final net.minecraft.world.entity.ai.goal.Goal$Flag[] $VALUES;
+  public static net.minecraft.world.entity.ai.goal.Goal$Flag[] values();
+  public static net.minecraft.world.entity.ai.goal.Goal$Flag valueOf(java.lang.String);
+  private net.minecraft.world.entity.ai.goal.Goal$Flag();
+  private static net.minecraft.world.entity.ai.goal.Goal$Flag[] $values();
+  static {};
+}

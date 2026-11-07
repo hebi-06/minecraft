@@ -1,0 +1,11 @@
+Compiled from "FontDescription.java"
+public final class net.minecraft.network.chat.FontDescription$AtlasSprite extends java.lang.Record implements net.minecraft.network.chat.FontDescription {
+  private final net.minecraft.resources.Identifier atlasId;
+  private final net.minecraft.resources.Identifier spriteId;
+  public net.minecraft.network.chat.FontDescription$AtlasSprite(net.minecraft.resources.Identifier, net.minecraft.resources.Identifier);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.resources.Identifier atlasId();
+  public net.minecraft.resources.Identifier spriteId();
+}

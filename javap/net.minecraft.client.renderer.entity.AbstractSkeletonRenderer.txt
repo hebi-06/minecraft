@@ -1,0 +1,13 @@
+Compiled from "AbstractSkeletonRenderer.java"
+public abstract class net.minecraft.client.renderer.entity.AbstractSkeletonRenderer<T extends net.minecraft.world.entity.monster.skeleton.AbstractSkeleton, S extends net.minecraft.client.renderer.entity.state.SkeletonRenderState> extends net.minecraft.client.renderer.entity.HumanoidMobRenderer<T, S, net.minecraft.client.model.monster.skeleton.SkeletonModel<S>> {
+  public net.minecraft.client.renderer.entity.AbstractSkeletonRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context, net.minecraft.client.model.geom.ModelLayerLocation, net.minecraft.client.renderer.entity.ArmorModelSet<net.minecraft.client.model.geom.ModelLayerLocation>);
+  public net.minecraft.client.renderer.entity.AbstractSkeletonRenderer(net.minecraft.client.renderer.entity.EntityRendererProvider$Context, net.minecraft.client.renderer.entity.ArmorModelSet<net.minecraft.client.model.geom.ModelLayerLocation>, net.minecraft.client.model.monster.skeleton.SkeletonModel<S>);
+  public void extractRenderState(T, S, float);
+  protected boolean isShaking(S);
+  protected net.minecraft.client.model.HumanoidModel$ArmPose getArmPose(T, net.minecraft.world.entity.HumanoidArm);
+  public void extractRenderState(net.minecraft.world.entity.Mob, net.minecraft.client.renderer.entity.state.HumanoidRenderState, float);
+  protected net.minecraft.client.model.HumanoidModel$ArmPose getArmPose(net.minecraft.world.entity.Mob, net.minecraft.world.entity.HumanoidArm);
+  public void extractRenderState(net.minecraft.world.entity.LivingEntity, net.minecraft.client.renderer.entity.state.LivingEntityRenderState, float);
+  protected boolean isShaking(net.minecraft.client.renderer.entity.state.LivingEntityRenderState);
+  public void extractRenderState(net.minecraft.world.entity.Entity, net.minecraft.client.renderer.entity.state.EntityRenderState, float);
+}

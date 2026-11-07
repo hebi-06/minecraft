@@ -1,0 +1,16 @@
+Compiled from "ParticleGroup.java"
+public abstract class net.minecraft.client.particle.ParticleGroup<P extends net.minecraft.client.particle.Particle> {
+  private static final int MAX_PARTICLES = 16384;
+  private static final int RESERVOIR_SIZE = 4096;
+  private static final int RESERVOIR_START = 12288;
+  protected final net.minecraft.client.particle.ParticleEngine engine;
+  protected final java.util.Queue<P> particles;
+  public net.minecraft.client.particle.ParticleGroup(net.minecraft.client.particle.ParticleEngine);
+  public boolean isEmpty();
+  public void tickParticles();
+  private void tickParticle(net.minecraft.client.particle.Particle);
+  public boolean add(net.minecraft.client.particle.Particle);
+  public int size();
+  public abstract net.minecraft.client.renderer.state.level.ParticleGroupRenderState extractRenderState(net.minecraft.client.renderer.culling.Frustum, net.minecraft.client.Camera, float);
+  private void lambda$tickParticles$0(net.minecraft.core.particles.ParticleLimit);
+}

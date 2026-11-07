@@ -1,0 +1,14 @@
+Compiled from "Dialog.java"
+public interface net.minecraft.server.dialog.Dialog {
+  public static final com.mojang.serialization.Codec<java.lang.Integer> WIDTH_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.server.dialog.Dialog> DIRECT_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.core.Holder<net.minecraft.server.dialog.Dialog>> CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.core.HolderSet<net.minecraft.server.dialog.Dialog>> LIST_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.core.Holder<net.minecraft.server.dialog.Dialog>> STREAM_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.server.dialog.Dialog> CONTEXT_FREE_STREAM_CODEC;
+  public abstract net.minecraft.server.dialog.CommonDialogData common();
+  public abstract com.mojang.serialization.MapCodec<? extends net.minecraft.server.dialog.Dialog> codec();
+  public abstract java.util.Optional<net.minecraft.server.dialog.action.Action> onCancel();
+  private static com.mojang.serialization.MapCodec lambda$static$0(com.mojang.serialization.MapCodec);
+  static {};
+}

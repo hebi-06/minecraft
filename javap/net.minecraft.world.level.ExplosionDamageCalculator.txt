@@ -1,0 +1,9 @@
+Compiled from "ExplosionDamageCalculator.java"
+public class net.minecraft.world.level.ExplosionDamageCalculator {
+  public net.minecraft.world.level.ExplosionDamageCalculator();
+  public java.util.Optional<java.lang.Float> getBlockExplosionResistance(net.minecraft.world.level.Explosion, net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.material.FluidState);
+  public boolean shouldBlockExplode(net.minecraft.world.level.Explosion, net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, float);
+  public boolean shouldDamageEntity(net.minecraft.world.level.Explosion, net.minecraft.world.entity.Entity);
+  public float getKnockbackMultiplier(net.minecraft.world.entity.Entity);
+  public float getEntityDamageAmount(net.minecraft.world.level.Explosion, net.minecraft.world.entity.Entity, float);
+}

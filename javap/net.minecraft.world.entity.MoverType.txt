@@ -1,0 +1,15 @@
+Compiled from "MoverType.java"
+public final class net.minecraft.world.entity.MoverType extends java.lang.Enum<net.minecraft.world.entity.MoverType> {
+  public static final net.minecraft.world.entity.MoverType SELF;
+  public static final net.minecraft.world.entity.MoverType PLAYER;
+  public static final net.minecraft.world.entity.MoverType PISTON;
+  public static final net.minecraft.world.entity.MoverType SHULKER_BOX;
+  public static final net.minecraft.world.entity.MoverType SHULKER;
+  private static final net.minecraft.world.entity.MoverType[] $VALUES;
+  public static net.minecraft.world.entity.MoverType[] values();
+  public static net.minecraft.world.entity.MoverType valueOf(java.lang.String);
+  private net.minecraft.world.entity.MoverType();
+  public boolean isServerAndClientSimulated();
+  private static net.minecraft.world.entity.MoverType[] $values();
+  static {};
+}

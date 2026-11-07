@@ -1,0 +1,16 @@
+Compiled from "CheckerboardColumnBiomeSource.java"
+public class net.minecraft.world.level.biome.CheckerboardColumnBiomeSource extends net.minecraft.world.level.biome.BiomeSource implements net.minecraft.world.level.biome.BiomeResolver {
+  public static final com.mojang.serialization.MapCodec<net.minecraft.world.level.biome.CheckerboardColumnBiomeSource> CODEC;
+  private final net.minecraft.core.HolderSet<net.minecraft.world.level.biome.Biome> allowedBiomes;
+  private final int bitShift;
+  private final int size;
+  public net.minecraft.world.level.biome.CheckerboardColumnBiomeSource(net.minecraft.core.HolderSet<net.minecraft.world.level.biome.Biome>, int);
+  protected java.util.stream.Stream<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> collectPossibleBiomes();
+  public net.minecraft.world.level.biome.BiomeResolver createResolver(net.minecraft.world.level.biome.Climate$Sampler);
+  protected com.mojang.serialization.MapCodec<net.minecraft.world.level.biome.CheckerboardColumnBiomeSource> codec();
+  public net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getNoiseBiome(int, int, int);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  private static java.lang.Integer lambda$static$2(net.minecraft.world.level.biome.CheckerboardColumnBiomeSource);
+  private static net.minecraft.core.HolderSet lambda$static$1(net.minecraft.world.level.biome.CheckerboardColumnBiomeSource);
+  static {};
+}

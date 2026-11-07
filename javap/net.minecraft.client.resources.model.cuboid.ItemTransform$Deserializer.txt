@@ -1,0 +1,13 @@
+Compiled from "ItemTransform.java"
+public class net.minecraft.client.resources.model.cuboid.ItemTransform$Deserializer implements com.google.gson.JsonDeserializer<net.minecraft.client.resources.model.cuboid.ItemTransform> {
+  private static final org.joml.Vector3fc DEFAULT_ROTATION;
+  private static final org.joml.Vector3fc DEFAULT_TRANSLATION;
+  private static final org.joml.Vector3fc DEFAULT_SCALE;
+  public static final float MAX_TRANSLATION = 5.0f;
+  public static final float MAX_SCALE = 4.0f;
+  protected net.minecraft.client.resources.model.cuboid.ItemTransform$Deserializer();
+  public net.minecraft.client.resources.model.cuboid.ItemTransform deserialize(com.google.gson.JsonElement, java.lang.reflect.Type, com.google.gson.JsonDeserializationContext) throws com.google.gson.JsonParseException;
+  private static org.joml.Vector3f getVector3f(com.google.gson.JsonObject, java.lang.String, org.joml.Vector3fc);
+  public java.lang.Object deserialize(com.google.gson.JsonElement, java.lang.reflect.Type, com.google.gson.JsonDeserializationContext) throws com.google.gson.JsonParseException;
+  static {};
+}

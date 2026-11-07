@@ -1,0 +1,25 @@
+Compiled from "TagKey.java"
+public final class net.minecraft.tags.TagKey<T> extends java.lang.Record implements net.fabricmc.fabric.api.tag.FabricTagKey {
+  private final net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>> registry;
+  private final net.minecraft.resources.Identifier location;
+  private static final com.google.common.collect.Interner<net.minecraft.tags.TagKey<?>> VALUES;
+  public net.minecraft.tags.TagKey(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>>, net.minecraft.resources.Identifier);
+  public static <T> com.mojang.serialization.Codec<net.minecraft.tags.TagKey<T>> codec(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>>);
+  public static <T> com.mojang.serialization.Codec<net.minecraft.tags.TagKey<T>> hashedCodec(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>>);
+  public static <T> net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.tags.TagKey<T>> streamCodec(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>>);
+  public static <T> net.minecraft.tags.TagKey<T> create(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>>, net.minecraft.resources.Identifier);
+  public boolean isFor(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<?>>);
+  public <E> java.util.Optional<net.minecraft.tags.TagKey<E>> cast(net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<E>>);
+  public java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.resources.ResourceKey<? extends net.minecraft.core.Registry<T>> registry();
+  public net.minecraft.resources.Identifier location();
+  private static net.minecraft.tags.TagKey lambda$streamCodec$0(net.minecraft.resources.ResourceKey, net.minecraft.resources.Identifier);
+  private static java.lang.String lambda$hashedCodec$3(net.minecraft.tags.TagKey);
+  private static com.mojang.serialization.DataResult lambda$hashedCodec$0(net.minecraft.resources.ResourceKey, java.lang.String);
+  private static java.lang.String lambda$hashedCodec$2();
+  private static net.minecraft.tags.TagKey lambda$hashedCodec$1(net.minecraft.resources.ResourceKey, net.minecraft.resources.Identifier);
+  private static net.minecraft.tags.TagKey lambda$codec$0(net.minecraft.resources.ResourceKey, net.minecraft.resources.Identifier);
+  static {};
+}

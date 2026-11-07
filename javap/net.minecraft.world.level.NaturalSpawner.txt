@@ -1,0 +1,35 @@
+Compiled from "NaturalSpawner.java"
+public final class net.minecraft.world.level.NaturalSpawner {
+  private static final org.slf4j.Logger LOGGER;
+  private static final int MIN_SPAWN_DISTANCE = 24;
+  public static final int SPAWN_DISTANCE_CHUNK = 8;
+  public static final int SPAWN_DISTANCE_BLOCK = 128;
+  public static final int INSCRIBED_SQUARE_SPAWN_DISTANCE_CHUNK;
+  private static final int MAGIC_NUMBER;
+  private static final net.minecraft.world.entity.MobCategory[] SPAWNING_CATEGORIES;
+  private net.minecraft.world.level.NaturalSpawner();
+  public static net.minecraft.world.level.NaturalSpawner$SpawnState createState(int, net.minecraft.server.level.ServerLevel, net.minecraft.world.level.NaturalSpawner$ChunkGetter, net.minecraft.world.level.LocalMobCapCalculator);
+  public static java.util.List<net.minecraft.world.entity.MobCategory> getFilteredSpawningCategories(net.minecraft.world.level.NaturalSpawner$SpawnState, boolean, boolean);
+  public static void spawnForChunk(net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.LevelChunk, net.minecraft.world.level.NaturalSpawner$SpawnState, java.util.List<net.minecraft.world.entity.MobCategory>);
+  public static void spawnCategoryForChunk(net.minecraft.world.entity.MobCategory, net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.LevelChunk, net.minecraft.world.level.NaturalSpawner$SpawnPredicate, net.minecraft.world.level.NaturalSpawner$AfterSpawnCallback);
+  public static void spawnCategoryForPosition(net.minecraft.world.entity.MobCategory, net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos);
+  public static void spawnCategoryForPosition(net.minecraft.world.entity.MobCategory, net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.core.BlockPos, net.minecraft.world.level.NaturalSpawner$SpawnPredicate, net.minecraft.world.level.NaturalSpawner$AfterSpawnCallback);
+  private static boolean isRightDistanceToPlayerAndSpawnPoint(net.minecraft.server.level.ServerLevel, net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.core.BlockPos$MutableBlockPos, double);
+  private static boolean isValidSpawnPostitionForType(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.MobCategory, net.minecraft.world.level.StructureManager, net.minecraft.world.level.chunk.ChunkGenerator, net.minecraft.world.level.biome.MobSpawnSettings$SpawnerData, net.minecraft.core.BlockPos$MutableBlockPos, double);
+  private static net.minecraft.world.entity.Mob getMobForSpawn(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.EntityType<?>);
+  private static boolean isValidPositionForMob(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.Mob, double);
+  private static java.util.Optional<net.minecraft.world.level.biome.MobSpawnSettings$SpawnerData> getRandomSpawnMobAt(net.minecraft.server.level.ServerLevel, net.minecraft.world.level.StructureManager, net.minecraft.world.level.chunk.ChunkGenerator, net.minecraft.world.entity.MobCategory, net.minecraft.util.RandomSource, net.minecraft.core.BlockPos);
+  private static boolean canSpawnMobAt(net.minecraft.server.level.ServerLevel, net.minecraft.world.level.StructureManager, net.minecraft.world.level.chunk.ChunkGenerator, net.minecraft.world.entity.MobCategory, net.minecraft.world.level.biome.MobSpawnSettings$SpawnerData, net.minecraft.core.BlockPos);
+  private static net.minecraft.util.random.WeightedList<net.minecraft.world.level.biome.MobSpawnSettings$SpawnerData> mobsAt(net.minecraft.server.level.ServerLevel, net.minecraft.world.level.StructureManager, net.minecraft.world.level.chunk.ChunkGenerator, net.minecraft.world.entity.MobCategory, net.minecraft.core.BlockPos);
+  public static boolean isInNetherFortressBounds(net.minecraft.core.BlockPos, net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.MobCategory, net.minecraft.world.level.StructureManager);
+  private static net.minecraft.core.BlockPos getRandomPosWithin(net.minecraft.world.level.Level, net.minecraft.world.level.chunk.LevelChunk);
+  public static boolean isValidEmptySpawnBlock(net.minecraft.world.level.BlockGetter, net.minecraft.core.BlockPos, net.minecraft.world.level.block.state.BlockState, net.minecraft.world.level.material.FluidState, net.minecraft.world.entity.EntityType<?>);
+  public static void spawnMobsForChunkGeneration(net.minecraft.world.level.ServerLevelAccessor, net.minecraft.core.BlockPos, net.minecraft.world.level.ChunkPos, net.minecraft.util.RandomSource);
+  private static net.minecraft.core.BlockPos getTopNonCollidingPos(net.minecraft.world.level.LevelReader, net.minecraft.world.entity.EntityType<?>, int, int);
+  private static void lambda$spawnCategoryForPosition$1(net.minecraft.world.entity.Mob, net.minecraft.world.level.chunk.ChunkAccess);
+  private static boolean lambda$spawnCategoryForPosition$0(net.minecraft.world.entity.EntityType, net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, net.minecraft.world.level.chunk.ChunkAccess);
+  private static void lambda$createState$0(net.minecraft.server.level.ServerLevel, net.minecraft.core.BlockPos, net.minecraft.world.entity.Entity, net.minecraft.world.level.PotentialCalculator, net.minecraft.world.level.LocalMobCapCalculator, net.minecraft.world.entity.MobCategory, it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap, net.minecraft.world.level.chunk.LevelChunk);
+  private static net.minecraft.world.entity.MobCategory[] lambda$SPAWNING_CATEGORIES$0(int);
+  private static boolean lambda$static$0(net.minecraft.world.entity.MobCategory);
+  static {};
+}

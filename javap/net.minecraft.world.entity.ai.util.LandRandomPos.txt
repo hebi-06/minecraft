@@ -1,0 +1,15 @@
+Compiled from "LandRandomPos.java"
+public class net.minecraft.world.entity.ai.util.LandRandomPos {
+  public net.minecraft.world.entity.ai.util.LandRandomPos();
+  public static net.minecraft.world.phys.Vec3 getPos(net.minecraft.world.entity.PathfinderMob, int, int);
+  public static net.minecraft.world.phys.Vec3 getPos(net.minecraft.world.entity.PathfinderMob, int, int, java.util.function.ToDoubleFunction<net.minecraft.core.BlockPos>);
+  public static net.minecraft.world.phys.Vec3 getPosTowards(net.minecraft.world.entity.PathfinderMob, int, int, net.minecraft.world.phys.Vec3);
+  public static net.minecraft.world.phys.Vec3 getPosAway(net.minecraft.world.entity.PathfinderMob, int, int, net.minecraft.world.phys.Vec3);
+  public static net.minecraft.world.phys.Vec3 getPosAway(net.minecraft.world.entity.PathfinderMob, double, double, int, net.minecraft.world.phys.Vec3);
+  private static net.minecraft.world.phys.Vec3 getPosInDirection(net.minecraft.world.entity.PathfinderMob, double, double, int, net.minecraft.world.phys.Vec3, boolean);
+  public static net.minecraft.core.BlockPos movePosUpOutOfSolid(net.minecraft.world.entity.PathfinderMob, net.minecraft.core.BlockPos);
+  public static net.minecraft.core.BlockPos generateRandomPosTowardDirection(net.minecraft.world.entity.PathfinderMob, double, boolean, net.minecraft.core.BlockPos);
+  private static boolean lambda$movePosUpOutOfSolid$0(net.minecraft.world.entity.PathfinderMob, net.minecraft.core.BlockPos);
+  private static net.minecraft.core.BlockPos lambda$getPosInDirection$0(net.minecraft.world.entity.PathfinderMob, double, double, int, net.minecraft.world.phys.Vec3, boolean);
+  private static net.minecraft.core.BlockPos lambda$getPos$0(net.minecraft.world.entity.PathfinderMob, int, int, boolean);
+}

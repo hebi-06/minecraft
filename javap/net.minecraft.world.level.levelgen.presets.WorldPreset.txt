@@ -1,0 +1,16 @@
+Compiled from "WorldPreset.java"
+public class net.minecraft.world.level.levelgen.presets.WorldPreset {
+  public static final com.mojang.serialization.Codec<net.minecraft.world.level.levelgen.presets.WorldPreset> DIRECT_CODEC;
+  public static final com.mojang.serialization.Codec<net.minecraft.core.Holder<net.minecraft.world.level.levelgen.presets.WorldPreset>> CODEC;
+  private final java.util.Map<net.minecraft.resources.ResourceKey<net.minecraft.world.level.dimension.LevelStem>, net.minecraft.world.level.dimension.LevelStem> dimensions;
+  public net.minecraft.world.level.levelgen.presets.WorldPreset(java.util.Map<net.minecraft.resources.ResourceKey<net.minecraft.world.level.dimension.LevelStem>, net.minecraft.world.level.dimension.LevelStem>);
+  private com.google.common.collect.ImmutableMap<net.minecraft.resources.ResourceKey<net.minecraft.world.level.dimension.LevelStem>, net.minecraft.world.level.dimension.LevelStem> dimensionsInOrder();
+  public net.minecraft.world.level.levelgen.WorldDimensions createWorldDimensions();
+  public java.util.Optional<net.minecraft.world.level.dimension.LevelStem> overworld();
+  private static com.mojang.serialization.DataResult<net.minecraft.world.level.levelgen.presets.WorldPreset> requireOverworld(net.minecraft.world.level.levelgen.presets.WorldPreset);
+  private static java.lang.String lambda$requireOverworld$0();
+  private void lambda$dimensionsInOrder$0(com.google.common.collect.ImmutableMap$Builder, net.minecraft.resources.ResourceKey);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  private static java.util.Map lambda$static$1(net.minecraft.world.level.levelgen.presets.WorldPreset);
+  static {};
+}

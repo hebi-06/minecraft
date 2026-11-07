@@ -1,0 +1,6 @@
+Compiled from "ServerLevelAccessor.java"
+public interface net.minecraft.world.level.ServerLevelAccessor extends net.minecraft.world.level.LevelAccessor {
+  public abstract net.minecraft.server.level.ServerLevel getLevel();
+  public abstract net.minecraft.world.DifficultyInstance getCurrentDifficultyAt(net.minecraft.core.BlockPos);
+  public default void addFreshEntityWithPassengers(net.minecraft.world.entity.Entity);
+}

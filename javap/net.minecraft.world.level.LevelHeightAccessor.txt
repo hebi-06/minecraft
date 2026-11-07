@@ -1,0 +1,17 @@
+Compiled from "LevelHeightAccessor.java"
+public interface net.minecraft.world.level.LevelHeightAccessor {
+  public abstract int getHeight();
+  public abstract int getMinY();
+  public default int getMaxY();
+  public default int getSectionsCount();
+  public default int getMinSectionY();
+  public default int getMaxSectionY();
+  public default boolean isInsideBuildHeight(net.minecraft.core.BlockPos);
+  public default boolean isInsideBuildHeight(int);
+  public default boolean isOutsideBuildHeight(net.minecraft.core.BlockPos);
+  public default boolean isOutsideBuildHeight(int);
+  public default int getSectionIndex(int);
+  public default int getSectionIndexFromSectionY(int);
+  public default int getSectionYFromSectionIndex(int);
+  public static net.minecraft.world.level.LevelHeightAccessor create(int, int);
+}

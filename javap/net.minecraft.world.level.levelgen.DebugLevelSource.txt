@@ -1,0 +1,27 @@
+Compiled from "DebugLevelSource.java"
+public class net.minecraft.world.level.levelgen.DebugLevelSource extends net.minecraft.world.level.chunk.ChunkGenerator {
+  public static final com.mojang.serialization.MapCodec<net.minecraft.world.level.levelgen.DebugLevelSource> CODEC;
+  private static final int BLOCK_MARGIN = 2;
+  private static final java.util.List<net.minecraft.world.level.block.state.BlockState> ALL_BLOCKS;
+  private static final int GRID_WIDTH;
+  private static final int GRID_HEIGHT;
+  protected static final net.minecraft.world.level.block.state.BlockState AIR;
+  protected static final net.minecraft.world.level.block.state.BlockState BARRIER;
+  public static final int HEIGHT = 70;
+  public static final int BARRIER_HEIGHT = 60;
+  public net.minecraft.world.level.levelgen.DebugLevelSource(net.minecraft.core.Holder$Reference<net.minecraft.world.level.biome.Biome>);
+  protected com.mojang.serialization.MapCodec<? extends net.minecraft.world.level.chunk.ChunkGenerator> codec();
+  public void applyBiomeDecoration(net.minecraft.world.level.WorldGenLevel, net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.StructureManager);
+  public java.util.concurrent.CompletableFuture<net.minecraft.world.level.chunk.ChunkAccess> buildTerrain(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.world.level.levelgen.blending.Blender, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.StructureManager, net.minecraft.world.level.biome.BiomeManager, net.minecraft.server.level.WorldGenRegion, java.util.Set<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>);
+  public int getBaseHeight(int, int, net.minecraft.world.level.levelgen.Heightmap$Types, net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.levelgen.RandomState);
+  public net.minecraft.world.level.NoiseColumn getBaseColumn(int, int, net.minecraft.world.level.LevelHeightAccessor, net.minecraft.world.level.levelgen.RandomState);
+  public void addDebugScreenInfo(java.util.List<java.lang.String>, net.minecraft.world.level.levelgen.RandomState, net.minecraft.core.BlockPos, net.minecraft.world.level.levelgen.densityfunction.SamplerContext);
+  public static net.minecraft.world.level.block.state.BlockState getBlockStateFor(int, int);
+  public void spawnOriginalMobs(net.minecraft.server.level.WorldGenRegion);
+  public int getMinY();
+  public int getGenDepth();
+  public int getSeaLevel();
+  private static java.util.stream.Stream lambda$static$1(net.minecraft.world.level.block.Block);
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

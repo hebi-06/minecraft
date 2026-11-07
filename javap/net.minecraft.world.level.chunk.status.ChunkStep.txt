@@ -1,0 +1,21 @@
+Compiled from "ChunkStep.java"
+public final class net.minecraft.world.level.chunk.status.ChunkStep extends java.lang.Record {
+  private final net.minecraft.world.level.chunk.status.ChunkStatus targetStatus;
+  private final net.minecraft.world.level.chunk.status.ChunkDependencies directDependencies;
+  private final net.minecraft.world.level.chunk.status.ChunkDependencies accumulatedDependencies;
+  private final int blockStateWriteRadius;
+  private final net.minecraft.world.level.chunk.status.ChunkStatusTask task;
+  public net.minecraft.world.level.chunk.status.ChunkStep(net.minecraft.world.level.chunk.status.ChunkStatus, net.minecraft.world.level.chunk.status.ChunkDependencies, net.minecraft.world.level.chunk.status.ChunkDependencies, int, net.minecraft.world.level.chunk.status.ChunkStatusTask);
+  public int getAccumulatedRadiusOf(net.minecraft.world.level.chunk.status.ChunkStatus);
+  public java.util.concurrent.CompletableFuture<net.minecraft.world.level.chunk.ChunkAccess> apply(net.minecraft.world.level.chunk.status.WorldGenContext, net.minecraft.util.StaticCache2D<net.minecraft.server.level.GenerationChunkHolder>, net.minecraft.world.level.chunk.ChunkAccess);
+  private net.minecraft.world.level.chunk.ChunkAccess completeChunkGeneration(net.minecraft.world.level.chunk.ChunkAccess, net.minecraft.util.profiling.jfr.callback.ProfiledDuration);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.world.level.chunk.status.ChunkStatus targetStatus();
+  public net.minecraft.world.level.chunk.status.ChunkDependencies directDependencies();
+  public net.minecraft.world.level.chunk.status.ChunkDependencies accumulatedDependencies();
+  public int blockStateWriteRadius();
+  public net.minecraft.world.level.chunk.status.ChunkStatusTask task();
+  private net.minecraft.world.level.chunk.ChunkAccess lambda$apply$0(net.minecraft.util.profiling.jfr.callback.ProfiledDuration, net.minecraft.world.level.chunk.ChunkAccess);
+}

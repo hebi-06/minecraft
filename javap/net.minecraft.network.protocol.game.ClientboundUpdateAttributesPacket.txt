@@ -1,0 +1,14 @@
+Compiled from "ClientboundUpdateAttributesPacket.java"
+public class net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ClientGamePacketListener> {
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket> STREAM_CODEC;
+  private final int entityId;
+  private final java.util.List<net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket$AttributeSnapshot> attributes;
+  public net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket(int, java.util.Collection<net.minecraft.world.entity.ai.attributes.AttributeInstance>);
+  private net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket(int, java.util.List<net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket$AttributeSnapshot>);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket> type();
+  public void handle(net.minecraft.network.protocol.game.ClientGamePacketListener);
+  public int getEntityId();
+  public java.util.List<net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket$AttributeSnapshot> getValues();
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

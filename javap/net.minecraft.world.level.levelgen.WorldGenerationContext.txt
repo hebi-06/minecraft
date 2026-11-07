@@ -1,0 +1,12 @@
+Compiled from "WorldGenerationContext.java"
+public class net.minecraft.world.level.levelgen.WorldGenerationContext {
+  private final int minY;
+  private final int height;
+  private final int seaLevel;
+  public static net.minecraft.world.level.levelgen.WorldGenerationContext of(net.minecraft.world.level.LevelAccessor);
+  public net.minecraft.world.level.levelgen.WorldGenerationContext(net.minecraft.world.level.chunk.ChunkGenerator, net.minecraft.world.level.LevelHeightAccessor);
+  private net.minecraft.world.level.levelgen.WorldGenerationContext(net.minecraft.world.level.LevelAccessor);
+  public int getMinGenY();
+  public int getGenDepth();
+  public int seaLevel();
+}

@@ -1,0 +1,17 @@
+Compiled from "Husk.java"
+public class net.minecraft.world.entity.monster.zombie.Husk extends net.minecraft.world.entity.monster.zombie.Zombie {
+  private static final net.minecraft.world.entity.EntityDimensions BABY_DIMENSIONS;
+  public net.minecraft.world.entity.monster.zombie.Husk(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.monster.zombie.Husk>, net.minecraft.world.level.Level);
+  protected boolean isSunSensitive();
+  protected net.minecraft.sounds.SoundEvent getAmbientSound();
+  protected net.minecraft.sounds.SoundEvent getHurtSound(net.minecraft.world.damagesource.DamageSource);
+  protected net.minecraft.sounds.SoundEvent getDeathSound();
+  protected net.minecraft.sounds.SoundEvent getStepSound();
+  public boolean doHurtTarget(net.minecraft.server.level.ServerLevel, net.minecraft.world.entity.Entity);
+  protected boolean convertsInWater();
+  protected int getConversionSound();
+  protected net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.monster.zombie.Zombie> convertsToWhenDrowning();
+  public net.minecraft.world.entity.SpawnGroupData finalizeSpawn(net.minecraft.world.level.ServerLevelAccessor, net.minecraft.world.DifficultyInstance, net.minecraft.world.entity.EntitySpawnReason, net.minecraft.world.entity.SpawnGroupData);
+  public net.minecraft.world.entity.EntityDimensions getDefaultDimensions(net.minecraft.world.entity.Pose);
+  static {};
+}

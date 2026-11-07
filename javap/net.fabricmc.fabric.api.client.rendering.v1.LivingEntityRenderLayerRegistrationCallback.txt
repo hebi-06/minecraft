@@ -1,0 +1,8 @@
+Compiled from "LivingEntityRenderLayerRegistrationCallback.java"
+public interface net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback {
+  public static final net.fabricmc.fabric.api.event.Event<net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback> EVENT;
+  public abstract void registerLayers(net.minecraft.world.entity.EntityType<? extends net.minecraft.world.entity.LivingEntity>, net.minecraft.client.renderer.entity.LivingEntityRenderer<?, ?, ?>, net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback$RegistrationHelper, net.minecraft.client.renderer.entity.EntityRendererProvider$Context);
+  private static net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback lambda$static$0(net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback[]);
+  private static void lambda$static$1(net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback[], net.minecraft.world.entity.EntityType, net.minecraft.client.renderer.entity.LivingEntityRenderer, net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback$RegistrationHelper, net.minecraft.client.renderer.entity.EntityRendererProvider$Context);
+  static {};
+}

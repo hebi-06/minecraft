@@ -1,0 +1,21 @@
+Compiled from "SynchedEntityData.java"
+public class net.minecraft.network.syncher.SynchedEntityData {
+  private static final org.slf4j.Logger LOGGER;
+  private static final int MAX_ID_VALUE = 254;
+  private static final net.minecraft.util.ClassTreeIdRegistry ID_REGISTRY;
+  private final net.minecraft.network.syncher.SyncedDataHolder entity;
+  private final net.minecraft.network.syncher.SynchedEntityData$DataItem<?>[] itemsById;
+  private boolean isDirty;
+  private net.minecraft.network.syncher.SynchedEntityData(net.minecraft.network.syncher.SyncedDataHolder, net.minecraft.network.syncher.SynchedEntityData$DataItem<?>[]);
+  public static <T> net.minecraft.network.syncher.EntityDataAccessor<T> defineId(java.lang.Class<? extends net.minecraft.network.syncher.SyncedDataHolder>, net.minecraft.network.syncher.EntityDataSerializer<T>);
+  private <T> net.minecraft.network.syncher.SynchedEntityData$DataItem<T> getItem(net.minecraft.network.syncher.EntityDataAccessor<T>);
+  public <T> T get(net.minecraft.network.syncher.EntityDataAccessor<T>);
+  public <T> void set(net.minecraft.network.syncher.EntityDataAccessor<T>, T);
+  public <T> void set(net.minecraft.network.syncher.EntityDataAccessor<T>, T, boolean);
+  public boolean isDirty();
+  public java.util.List<net.minecraft.network.syncher.SynchedEntityData$DataValue<?>> packDirty();
+  public java.util.List<net.minecraft.network.syncher.SynchedEntityData$DataValue<?>> getNonDefaultValues();
+  public void assignValues(java.util.List<net.minecraft.network.syncher.SynchedEntityData$DataValue<?>>);
+  private <T> void assignValue(net.minecraft.network.syncher.SynchedEntityData$DataItem<T>, net.minecraft.network.syncher.SynchedEntityData$DataValue<?>);
+  static {};
+}

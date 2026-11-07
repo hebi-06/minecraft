@@ -1,0 +1,24 @@
+Compiled from "ArmorMaterial.java"
+public final class net.minecraft.world.item.equipment.ArmorMaterial extends java.lang.Record {
+  private final int durability;
+  private final java.util.Map<net.minecraft.world.item.equipment.ArmorType, java.lang.Integer> defense;
+  private final int enchantmentValue;
+  private final net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent> equipSound;
+  private final float toughness;
+  private final float knockbackResistance;
+  private final net.minecraft.tags.TagKey<net.minecraft.world.item.Item> repairIngredient;
+  private final net.minecraft.resources.ResourceKey<net.minecraft.world.item.equipment.EquipmentAsset> assetId;
+  public net.minecraft.world.item.equipment.ArmorMaterial(int, java.util.Map<net.minecraft.world.item.equipment.ArmorType, java.lang.Integer>, int, net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent>, float, float, net.minecraft.tags.TagKey<net.minecraft.world.item.Item>, net.minecraft.resources.ResourceKey<net.minecraft.world.item.equipment.EquipmentAsset>);
+  public net.minecraft.world.item.component.ItemAttributeModifiers createAttributes(net.minecraft.world.item.equipment.ArmorType);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int durability();
+  public java.util.Map<net.minecraft.world.item.equipment.ArmorType, java.lang.Integer> defense();
+  public int enchantmentValue();
+  public net.minecraft.core.Holder<net.minecraft.sounds.SoundEvent> equipSound();
+  public float toughness();
+  public float knockbackResistance();
+  public net.minecraft.tags.TagKey<net.minecraft.world.item.Item> repairIngredient();
+  public net.minecraft.resources.ResourceKey<net.minecraft.world.item.equipment.EquipmentAsset> assetId();
+}

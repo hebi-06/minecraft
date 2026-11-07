@@ -1,0 +1,44 @@
+Compiled from "MapCodec.java"
+public abstract class com.mojang.serialization.MapCodec<A> extends com.mojang.serialization.CompressorHolder implements com.mojang.serialization.MapDecoder<A>, com.mojang.serialization.MapEncoder<A> {
+  public com.mojang.serialization.MapCodec();
+  public static <A> com.mojang.serialization.MapCodec<A> assumeMapUnsafe(com.mojang.serialization.Codec<A>);
+  public final <O> com.mojang.serialization.codecs.RecordCodecBuilder<O, A> forGetter(java.util.function.Function<O, A>);
+  public static <A> com.mojang.serialization.MapCodec<A> of(com.mojang.serialization.MapEncoder<A>, com.mojang.serialization.MapDecoder<A>);
+  public static <A> com.mojang.serialization.MapCodec<A> of(com.mojang.serialization.MapEncoder<A>, com.mojang.serialization.MapDecoder<A>, java.util.function.Supplier<java.lang.String>);
+  public static <A> com.mojang.serialization.MapCodec<A> recursive(java.lang.String, java.util.function.Function<com.mojang.serialization.Codec<A>, com.mojang.serialization.MapCodec<A>>);
+  public com.mojang.serialization.MapCodec<A> fieldOf(java.lang.String);
+  public com.mojang.serialization.MapCodec<A> withLifecycle(com.mojang.serialization.Lifecycle);
+  public com.mojang.serialization.Codec<A> codec();
+  public com.mojang.serialization.MapCodec<A> stable();
+  public com.mojang.serialization.MapCodec<A> deprecated(int);
+  public <S> com.mojang.serialization.MapCodec<S> xmap(java.util.function.Function<? super A, ? extends S>, java.util.function.Function<? super S, ? extends A>);
+  public <S> com.mojang.serialization.MapCodec<S> flatXmap(java.util.function.Function<? super A, ? extends com.mojang.serialization.DataResult<? extends S>>, java.util.function.Function<? super S, ? extends com.mojang.serialization.DataResult<? extends A>>);
+  public com.mojang.serialization.MapCodec<A> validate(java.util.function.Function<A, com.mojang.serialization.DataResult<A>>);
+  public <E> com.mojang.serialization.MapCodec<A> dependent(com.mojang.serialization.MapCodec<E>, java.util.function.Function<A, com.mojang.datafixers.util.Pair<E, com.mojang.serialization.MapCodec<E>>>, java.util.function.BiFunction<A, E, A>);
+  public <E> com.mojang.serialization.Codec<E> dispatch(java.util.function.Function<? super E, ? extends A>, java.util.function.Function<? super A, ? extends com.mojang.serialization.MapCodec<? extends E>>);
+  public <E> com.mojang.serialization.Codec<E> dispatchStable(java.util.function.Function<? super E, ? extends A>, java.util.function.Function<? super A, ? extends com.mojang.serialization.MapCodec<? extends E>>);
+  public <E> com.mojang.serialization.Codec<E> partialDispatch(java.util.function.Function<? super E, ? extends com.mojang.serialization.DataResult<? extends A>>, java.util.function.Function<? super A, ? extends com.mojang.serialization.DataResult<? extends com.mojang.serialization.MapCodec<? extends E>>>);
+  public <E> com.mojang.serialization.MapCodec<E> dispatchMap(java.util.function.Function<? super E, ? extends A>, java.util.function.Function<? super A, ? extends com.mojang.serialization.MapCodec<? extends E>>);
+  public abstract <T> java.util.stream.Stream<T> keys(com.mojang.serialization.DynamicOps<T>);
+  public com.mojang.serialization.MapCodec<A> mapResult(com.mojang.serialization.MapCodec$ResultFunction<A>);
+  public com.mojang.serialization.MapCodec<A> orElse(java.util.function.Consumer<java.lang.String>, A);
+  public com.mojang.serialization.MapCodec<A> orElse(java.util.function.UnaryOperator<java.lang.String>, A);
+  public com.mojang.serialization.MapCodec<A> orElseGet(java.util.function.Consumer<java.lang.String>, java.util.function.Supplier<? extends A>);
+  public com.mojang.serialization.MapCodec<A> orElseGet(java.util.function.UnaryOperator<java.lang.String>, java.util.function.Supplier<? extends A>);
+  public com.mojang.serialization.MapCodec<A> orElse(A);
+  public com.mojang.serialization.MapCodec<A> orElseGet(java.util.function.Supplier<? extends A>);
+  public com.mojang.serialization.MapCodec<A> setPartial(java.util.function.Supplier<A>);
+  public static <A> com.mojang.serialization.MapCodec<A> unit(A);
+  public static <A> com.mojang.serialization.MapCodec<A> unit(java.util.function.Supplier<A>);
+  public static <A> com.mojang.serialization.Codec<A> unitCodec(A);
+  public static <A> com.mojang.serialization.Codec<A> unitCodec(java.util.function.Supplier<A>);
+  public com.mojang.serialization.MapDecoder withLifecycle(com.mojang.serialization.Lifecycle);
+  public com.mojang.serialization.MapEncoder withLifecycle(com.mojang.serialization.Lifecycle);
+  private static java.lang.Object lambda$unitCodec$6(java.lang.Object);
+  private static java.lang.Object lambda$unit$5(java.lang.Object);
+  private static com.mojang.serialization.DataResult lambda$dispatchStable$4(java.util.function.Function, java.lang.Object);
+  private static com.mojang.serialization.DataResult lambda$dispatchStable$3(java.util.function.Function, java.lang.Object);
+  private java.lang.String lambda$flatXmap$2();
+  private java.lang.String lambda$xmap$1();
+  private static java.lang.String lambda$of$0(com.mojang.serialization.MapEncoder, com.mojang.serialization.MapDecoder);
+}

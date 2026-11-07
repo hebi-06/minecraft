@@ -1,0 +1,16 @@
+Compiled from "Matrix3x2fStack.java"
+public class org.joml.Matrix3x2fStack extends org.joml.Matrix3x2f {
+  private static final long serialVersionUID = 1l;
+  private org.joml.Matrix3x2f[] mats;
+  private int curr;
+  public org.joml.Matrix3x2fStack(int);
+  public org.joml.Matrix3x2fStack();
+  public org.joml.Matrix3x2fStack clear();
+  public org.joml.Matrix3x2fStack pushMatrix();
+  public org.joml.Matrix3x2fStack popMatrix();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+  public void writeExternal(java.io.ObjectOutput) throws java.io.IOException;
+  public void readExternal(java.io.ObjectInput) throws java.io.IOException;
+  public java.lang.Object clone() throws java.lang.CloneNotSupportedException;
+}

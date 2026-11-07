@@ -1,0 +1,5 @@
+Compiled from "RangedAttackMob.java"
+public interface net.minecraft.world.entity.monster.RangedAttackMob {
+  public abstract void performRangedAttack(net.minecraft.world.entity.LivingEntity, float);
+  public default float rangedAttackUncertainty(net.minecraft.world.level.Level);
+}

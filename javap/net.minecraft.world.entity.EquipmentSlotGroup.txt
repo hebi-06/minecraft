@@ -1,0 +1,38 @@
+Compiled from "EquipmentSlotGroup.java"
+public final class net.minecraft.world.entity.EquipmentSlotGroup extends java.lang.Enum<net.minecraft.world.entity.EquipmentSlotGroup> implements net.minecraft.util.StringRepresentable, java.lang.Iterable<net.minecraft.world.entity.EquipmentSlot> {
+  public static final net.minecraft.world.entity.EquipmentSlotGroup ANY;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup MAINHAND;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup OFFHAND;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup HAND;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup FEET;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup LEGS;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup CHEST;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup HEAD;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup ARMOR;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup BODY;
+  public static final net.minecraft.world.entity.EquipmentSlotGroup SADDLE;
+  public static final java.util.function.IntFunction<net.minecraft.world.entity.EquipmentSlotGroup> BY_ID;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.entity.EquipmentSlotGroup> CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.world.entity.EquipmentSlotGroup> STREAM_CODEC;
+  private final int id;
+  private final java.lang.String key;
+  private final java.util.function.Predicate<net.minecraft.world.entity.EquipmentSlot> predicate;
+  private final java.util.List<net.minecraft.world.entity.EquipmentSlot> slots;
+  private static final net.minecraft.world.entity.EquipmentSlotGroup[] $VALUES;
+  public static net.minecraft.world.entity.EquipmentSlotGroup[] values();
+  public static net.minecraft.world.entity.EquipmentSlotGroup valueOf(java.lang.String);
+  private net.minecraft.world.entity.EquipmentSlotGroup(int, java.lang.String, java.util.function.Predicate<net.minecraft.world.entity.EquipmentSlot>);
+  private net.minecraft.world.entity.EquipmentSlotGroup(int, java.lang.String, net.minecraft.world.entity.EquipmentSlot);
+  public static net.minecraft.world.entity.EquipmentSlotGroup bySlot(net.minecraft.world.entity.EquipmentSlot);
+  public java.lang.String getSerializedName();
+  public boolean test(net.minecraft.world.entity.EquipmentSlot);
+  public java.util.List<net.minecraft.world.entity.EquipmentSlot> slots();
+  public java.util.Iterator<net.minecraft.world.entity.EquipmentSlot> iterator();
+  private static net.minecraft.world.entity.EquipmentSlotGroup[] $values();
+  private static boolean lambda$new$0(net.minecraft.world.entity.EquipmentSlot, net.minecraft.world.entity.EquipmentSlot);
+  private static int lambda$static$3(net.minecraft.world.entity.EquipmentSlotGroup);
+  private static int lambda$static$2(net.minecraft.world.entity.EquipmentSlotGroup);
+  private static boolean lambda$static$1(net.minecraft.world.entity.EquipmentSlot);
+  private static boolean lambda$static$0(net.minecraft.world.entity.EquipmentSlot);
+  static {};
+}

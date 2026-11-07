@@ -1,0 +1,21 @@
+Compiled from "ObjectContents.java"
+public final class net.minecraft.network.chat.contents.ObjectContents extends java.lang.Record implements net.minecraft.network.chat.ComponentContents {
+  private final net.minecraft.network.chat.contents.objects.ObjectInfo contents;
+  private final java.util.Optional<net.minecraft.network.chat.Component> fallback;
+  private static final java.lang.String PLACEHOLDER;
+  public static final com.mojang.serialization.MapCodec<net.minecraft.network.chat.contents.ObjectContents> MAP_CODEC;
+  public net.minecraft.network.chat.contents.ObjectContents(net.minecraft.network.chat.contents.objects.ObjectInfo, java.util.Optional<net.minecraft.network.chat.Component>);
+  public com.mojang.serialization.MapCodec<net.minecraft.network.chat.contents.ObjectContents> codec();
+  public net.minecraft.network.chat.MutableComponent resolve(net.minecraft.network.chat.ResolutionContext, int) throws com.mojang.brigadier.exceptions.CommandSyntaxException;
+  public <T> java.util.Optional<T> visit(net.minecraft.network.chat.FormattedText$ContentConsumer<T>);
+  public <T> java.util.Optional<T> visit(net.minecraft.network.chat.FormattedText$StyledContentConsumer<T>, net.minecraft.network.chat.Style);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public net.minecraft.network.chat.contents.objects.ObjectInfo contents();
+  public java.util.Optional<net.minecraft.network.chat.Component> fallback();
+  private static net.minecraft.network.chat.Component lambda$resolve$1(net.minecraft.network.chat.MutableComponent);
+  private net.minecraft.network.chat.MutableComponent lambda$resolve$0();
+  private static com.mojang.datafixers.kinds.App lambda$static$0(com.mojang.serialization.codecs.RecordCodecBuilder$Instance);
+  static {};
+}

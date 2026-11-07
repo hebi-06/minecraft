@@ -1,0 +1,20 @@
+Compiled from "ProjectileUtil.java"
+public final class net.minecraft.world.entity.projectile.ProjectileUtil {
+  public static final float DEFAULT_ENTITY_HIT_RESULT_MARGIN = 0.3f;
+  public net.minecraft.world.entity.projectile.ProjectileUtil();
+  public static net.minecraft.world.phys.HitResult getHitResultOnMoveVector(net.minecraft.world.entity.Entity, java.util.function.Predicate<net.minecraft.world.entity.Entity>);
+  public static com.mojang.datafixers.util.Either<net.minecraft.world.phys.BlockHitResult, java.util.Collection<net.minecraft.world.phys.EntityHitResult>> getHitEntitiesAlong(net.minecraft.world.entity.Entity, net.minecraft.world.item.component.AttackRange, java.util.function.Predicate<net.minecraft.world.entity.Entity>, net.minecraft.world.level.ClipContext$Block);
+  public static net.minecraft.world.phys.HitResult getHitResultOnMoveVector(net.minecraft.world.entity.Entity, java.util.function.Predicate<net.minecraft.world.entity.Entity>, net.minecraft.world.level.ClipContext$Block);
+  public static net.minecraft.world.phys.HitResult getHitResultOnViewVector(net.minecraft.world.entity.Entity, java.util.function.Predicate<net.minecraft.world.entity.Entity>, double);
+  private static net.minecraft.world.phys.HitResult getHitResult(net.minecraft.world.phys.Vec3, net.minecraft.world.entity.Entity, java.util.function.Predicate<net.minecraft.world.entity.Entity>, net.minecraft.world.phys.Vec3, net.minecraft.world.level.Level, float, net.minecraft.world.level.ClipContext$Block);
+  private static com.mojang.datafixers.util.Either<net.minecraft.world.phys.BlockHitResult, java.util.Collection<net.minecraft.world.phys.EntityHitResult>> getHitEntitiesAlong(net.minecraft.world.entity.Entity, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, java.util.function.Predicate<net.minecraft.world.entity.Entity>, net.minecraft.world.phys.Vec3, float, net.minecraft.world.level.ClipContext$Block);
+  public static net.minecraft.world.phys.EntityHitResult getEntityHitResult(net.minecraft.world.entity.Entity, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.AABB, java.util.function.Predicate<net.minecraft.world.entity.Entity>, double);
+  public static net.minecraft.world.phys.EntityHitResult getEntityHitResult(net.minecraft.world.level.Level, net.minecraft.world.entity.projectile.Projectile, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.AABB, java.util.function.Predicate<net.minecraft.world.entity.Entity>);
+  public static float computeMargin(net.minecraft.world.entity.Entity);
+  public static net.minecraft.world.phys.EntityHitResult getEntityHitResult(net.minecraft.world.level.Level, net.minecraft.world.entity.Entity, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.AABB, java.util.function.Predicate<net.minecraft.world.entity.Entity>, float);
+  public static java.util.Collection<net.minecraft.world.phys.EntityHitResult> getManyEntityHitResult(net.minecraft.world.level.Level, net.minecraft.world.entity.Entity, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.AABB, java.util.function.Predicate<net.minecraft.world.entity.Entity>, boolean, boolean);
+  public static java.util.Collection<net.minecraft.world.phys.EntityHitResult> getManyEntityHitResult(net.minecraft.world.level.Level, net.minecraft.world.entity.Entity, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.Vec3, net.minecraft.world.phys.AABB, java.util.function.Predicate<net.minecraft.world.entity.Entity>, float, net.minecraft.world.level.ClipContext$Block, boolean, boolean);
+  public static void rotateTowardsMovement(net.minecraft.world.entity.Entity, float);
+  public static net.minecraft.world.InteractionHand getWeaponHoldingHand(net.minecraft.world.entity.LivingEntity, net.minecraft.world.item.Item);
+  public static net.minecraft.world.entity.projectile.arrow.AbstractArrow getMobArrow(net.minecraft.world.entity.LivingEntity, net.minecraft.world.item.ItemStack, float, net.minecraft.world.item.ItemStack);
+}

@@ -1,0 +1,15 @@
+Compiled from "FixedBiomeSource.java"
+public class net.minecraft.world.level.biome.FixedBiomeSource extends net.minecraft.world.level.biome.BiomeSource implements net.minecraft.world.level.biome.BiomeResolver {
+  public static final com.mojang.serialization.MapCodec<net.minecraft.world.level.biome.FixedBiomeSource> CODEC;
+  private final net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> biome;
+  public net.minecraft.world.level.biome.FixedBiomeSource(net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>);
+  protected java.util.stream.Stream<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> collectPossibleBiomes();
+  protected com.mojang.serialization.MapCodec<net.minecraft.world.level.biome.FixedBiomeSource> codec();
+  public net.minecraft.world.level.biome.BiomeResolver createResolver(net.minecraft.world.level.biome.Climate$Sampler);
+  public net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome> getNoiseBiome(int, int, int);
+  public com.mojang.datafixers.util.Pair<net.minecraft.core.BlockPos, net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> findBiomeHorizontal(int, int, int, int, int, java.util.function.Predicate<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>, net.minecraft.util.RandomSource, boolean, net.minecraft.world.level.levelgen.RandomState);
+  public com.mojang.datafixers.util.Pair<net.minecraft.core.BlockPos, net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> findClosestBiome3d(net.minecraft.core.BlockPos, int, int, int, java.util.function.Predicate<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>>, net.minecraft.world.level.levelgen.RandomState, net.minecraft.world.level.LevelReader);
+  public java.util.Set<net.minecraft.core.Holder<net.minecraft.world.level.biome.Biome>> getBiomesWithin(int, int, int, int);
+  private static net.minecraft.core.Holder lambda$static$0(net.minecraft.world.level.biome.FixedBiomeSource);
+  static {};
+}

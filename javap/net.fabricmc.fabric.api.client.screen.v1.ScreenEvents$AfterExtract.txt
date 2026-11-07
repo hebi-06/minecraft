@@ -1,0 +1,4 @@
+Compiled from "ScreenEvents.java"
+public interface net.fabricmc.fabric.api.client.screen.v1.ScreenEvents$AfterExtract {
+  public abstract void afterExtract(net.minecraft.client.gui.screens.Screen, net.minecraft.client.gui.GuiGraphicsExtractor, int, int, float);
+}

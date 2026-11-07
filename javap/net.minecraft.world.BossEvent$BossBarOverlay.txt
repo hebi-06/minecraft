@@ -1,0 +1,18 @@
+Compiled from "BossEvent.java"
+public final class net.minecraft.world.BossEvent$BossBarOverlay extends java.lang.Enum<net.minecraft.world.BossEvent$BossBarOverlay> implements net.minecraft.util.StringRepresentable {
+  public static final net.minecraft.world.BossEvent$BossBarOverlay PROGRESS;
+  public static final net.minecraft.world.BossEvent$BossBarOverlay NOTCHED_6;
+  public static final net.minecraft.world.BossEvent$BossBarOverlay NOTCHED_10;
+  public static final net.minecraft.world.BossEvent$BossBarOverlay NOTCHED_12;
+  public static final net.minecraft.world.BossEvent$BossBarOverlay NOTCHED_20;
+  public static final com.mojang.serialization.Codec<net.minecraft.world.BossEvent$BossBarOverlay> CODEC;
+  private final java.lang.String name;
+  private static final net.minecraft.world.BossEvent$BossBarOverlay[] $VALUES;
+  public static net.minecraft.world.BossEvent$BossBarOverlay[] values();
+  public static net.minecraft.world.BossEvent$BossBarOverlay valueOf(java.lang.String);
+  private net.minecraft.world.BossEvent$BossBarOverlay(java.lang.String);
+  public java.lang.String getName();
+  public java.lang.String getSerializedName();
+  private static net.minecraft.world.BossEvent$BossBarOverlay[] $values();
+  static {};
+}

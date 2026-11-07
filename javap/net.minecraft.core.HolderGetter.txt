@@ -1,0 +1,11 @@
+Compiled from "HolderGetter.java"
+public interface net.minecraft.core.HolderGetter<T> extends net.minecraft.core.HolderOwner<T> {
+  public abstract java.util.Optional<net.minecraft.core.Holder$Reference<T>> get(net.minecraft.resources.ResourceKey<T>);
+  public default net.minecraft.core.Holder$Reference<T> getOrThrow(net.minecraft.resources.ResourceKey<T>);
+  public abstract java.util.Optional<net.minecraft.core.HolderSet$Named<T>> get(net.minecraft.tags.TagKey<T>);
+  public default net.minecraft.core.HolderSet$Named<T> getOrThrow(net.minecraft.tags.TagKey<T>);
+  public default java.util.Optional<net.minecraft.core.Holder<T>> getRandomElementOf(net.minecraft.tags.TagKey<T>, net.minecraft.util.RandomSource);
+  private static java.util.Optional lambda$getRandomElementOf$0(net.minecraft.util.RandomSource, net.minecraft.core.HolderSet$Named);
+  private static java.lang.IllegalStateException lambda$getOrThrow$1(net.minecraft.tags.TagKey);
+  private static java.lang.IllegalStateException lambda$getOrThrow$0(net.minecraft.resources.ResourceKey);
+}

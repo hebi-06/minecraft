@@ -1,0 +1,14 @@
+Compiled from "ServerboundAttackPacket.java"
+public final class net.minecraft.network.protocol.game.ServerboundAttackPacket extends java.lang.Record implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ServerGamePacketListener> {
+  private final int entityId;
+  public static final net.minecraft.network.codec.StreamCodec<io.netty.buffer.ByteBuf, net.minecraft.network.protocol.game.ServerboundAttackPacket> STREAM_CODEC;
+  public net.minecraft.network.protocol.game.ServerboundAttackPacket(int);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.game.ServerboundAttackPacket> type();
+  public void handle(net.minecraft.network.protocol.game.ServerGamePacketListener);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int entityId();
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

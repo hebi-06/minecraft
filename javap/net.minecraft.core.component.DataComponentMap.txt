@@ -1,0 +1,19 @@
+Compiled from "DataComponentMap.java"
+public interface net.minecraft.core.component.DataComponentMap extends java.lang.Iterable<net.minecraft.core.component.TypedDataComponent<?>>, net.minecraft.core.component.DataComponentGetter {
+  public static final net.minecraft.core.component.DataComponentMap EMPTY;
+  public static final com.mojang.serialization.Codec<net.minecraft.core.component.DataComponentMap> CODEC;
+  public static com.mojang.serialization.Codec<net.minecraft.core.component.DataComponentMap> makeCodec(com.mojang.serialization.Codec<net.minecraft.core.component.DataComponentType<?>>);
+  public static com.mojang.serialization.Codec<net.minecraft.core.component.DataComponentMap> makeCodecFromMap(com.mojang.serialization.Codec<java.util.Map<net.minecraft.core.component.DataComponentType<?>, java.lang.Object>>);
+  public static net.minecraft.core.component.DataComponentMap composite(net.minecraft.core.component.DataComponentMap, net.minecraft.core.component.DataComponentMap);
+  public static net.minecraft.core.component.DataComponentMap$Builder builder();
+  public abstract java.util.Set<net.minecraft.core.component.DataComponentType<?>> keySet();
+  public default boolean has(net.minecraft.core.component.DataComponentType<?>);
+  public default java.util.Iterator<net.minecraft.core.component.TypedDataComponent<?>> iterator();
+  public default java.util.stream.Stream<net.minecraft.core.component.TypedDataComponent<?>> stream();
+  public default int size();
+  public default boolean isEmpty();
+  public default net.minecraft.core.component.DataComponentMap filter(java.util.function.Predicate<net.minecraft.core.component.DataComponentType<?>>);
+  private net.minecraft.core.component.TypedDataComponent lambda$iterator$0(net.minecraft.core.component.DataComponentType);
+  private static com.mojang.serialization.DataResult lambda$makeCodecFromMap$0(net.minecraft.core.component.DataComponentMap);
+  static {};
+}

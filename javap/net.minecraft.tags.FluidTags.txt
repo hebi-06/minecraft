@@ -1,0 +1,16 @@
+Compiled from "FluidTags.java"
+public final class net.minecraft.tags.FluidTags {
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> WATER;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> LAVA;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> SUPPORTS_SUGAR_CANE_ADJACENTLY;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> SUPPORTS_LILY_PAD;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> SUPPORTS_FROGSPAWN;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> BUBBLE_COLUMN_CAN_OCCUPY;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> AXOLOTL_TRIES_TO_FIND;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> DOLPHIN_TRIES_TO_FIND;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> FROG_TRIES_TO_FIND_LAND_NEAR;
+  public static final net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> ENTITY_FLOATABLE;
+  private net.minecraft.tags.FluidTags();
+  private static net.minecraft.tags.TagKey<net.minecraft.world.level.material.Fluid> create(java.lang.String);
+  static {};
+}

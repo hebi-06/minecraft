@@ -1,0 +1,28 @@
+Compiled from "ServerboundContainerClickPacket.java"
+public final class net.minecraft.network.protocol.game.ServerboundContainerClickPacket extends java.lang.Record implements net.minecraft.network.protocol.Packet<net.minecraft.network.protocol.game.ServerGamePacketListener> {
+  private final int containerId;
+  private final int stateId;
+  private final short slotNum;
+  private final byte buttonNum;
+  private final net.minecraft.world.inventory.ContainerInput containerInput;
+  private final it.unimi.dsi.fastutil.ints.Int2ObjectMap<net.minecraft.network.HashedStack> changedSlots;
+  private final net.minecraft.network.HashedStack carriedItem;
+  private static final int MAX_SLOT_COUNT = 128;
+  private static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, it.unimi.dsi.fastutil.ints.Int2ObjectMap<net.minecraft.network.HashedStack>> SLOTS_STREAM_CODEC;
+  public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, net.minecraft.network.protocol.game.ServerboundContainerClickPacket> STREAM_CODEC;
+  public net.minecraft.network.protocol.game.ServerboundContainerClickPacket(int, int, short, byte, net.minecraft.world.inventory.ContainerInput, it.unimi.dsi.fastutil.ints.Int2ObjectMap<net.minecraft.network.HashedStack>, net.minecraft.network.HashedStack);
+  public net.minecraft.network.protocol.PacketType<net.minecraft.network.protocol.game.ServerboundContainerClickPacket> type();
+  public void handle(net.minecraft.network.protocol.game.ServerGamePacketListener);
+  public final java.lang.String toString();
+  public final int hashCode();
+  public final boolean equals(java.lang.Object);
+  public int containerId();
+  public int stateId();
+  public short slotNum();
+  public byte buttonNum();
+  public net.minecraft.world.inventory.ContainerInput containerInput();
+  public it.unimi.dsi.fastutil.ints.Int2ObjectMap<net.minecraft.network.HashedStack> changedSlots();
+  public net.minecraft.network.HashedStack carriedItem();
+  public void handle(net.minecraft.network.PacketListener);
+  static {};
+}

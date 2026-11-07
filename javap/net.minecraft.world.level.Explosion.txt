@@ -1,0 +1,13 @@
+Compiled from "Explosion.java"
+public interface net.minecraft.world.level.Explosion {
+  public static net.minecraft.world.damagesource.DamageSource getDefaultDamageSource(net.minecraft.world.level.Level, net.minecraft.world.entity.Entity);
+  public static net.minecraft.world.entity.LivingEntity getIndirectSourceEntity(net.minecraft.world.entity.Entity);
+  public abstract net.minecraft.server.level.ServerLevel level();
+  public abstract net.minecraft.world.level.Explosion$BlockInteraction getBlockInteraction();
+  public abstract net.minecraft.world.entity.LivingEntity getIndirectSourceEntity();
+  public abstract net.minecraft.world.entity.Entity getDirectSourceEntity();
+  public abstract float radius();
+  public abstract net.minecraft.world.phys.Vec3 center();
+  public abstract boolean canTriggerBlocks();
+  public abstract boolean shouldAffectBlocklikeEntities();
+}
