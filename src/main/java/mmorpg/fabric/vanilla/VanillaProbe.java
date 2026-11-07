@@ -46,6 +46,11 @@ final class VanillaProbe {
         });
     }
 
+    /** 창 시험의 응답 (상자 · 버튼 창 — 누른 번호, 입력창 — 값) */
+    private static int formResult = Integer.MIN_VALUE;
+    private static int formId = -1;
+    private static java.util.Map<String, Object> modalResult;
+
     /** 장면에 둔 몬스터 (스킬 시험 전에 치움 — 오래 두면 시험 사람을 침) */
     private static final List<net.minecraft.world.entity.Entity> SPAWNED = new ArrayList<>();
 
@@ -146,6 +151,66 @@ final class VanillaProbe {
                 check("weapon back in slot 1", p.getInventory().getItem(0).getItem() instanceof RpgWeaponItem);
                 say(p, "shot 08_normal");
                 next(p, 16, 40);
+            }
+            case 16 -> { // 4단계: 상자 창 → 바닐라 상자 메뉴
+                formResult = Integer.MIN_VALUE;
+                mmorpg.fabric.ui.ChestForm f = new mmorpg.fabric.ui.ChestForm("§6시험 상자 창", 3);
+                f.fillRange(0, 9, mmorpg.fabric.ui.Slot.PANE);
+                f.set(10, mmorpg.fabric.ui.Slot.of(p.getInventory().getItem(0).copy(), "§f무기 칸").lore("§7설명 한 줄"));
+                f.set(12, mmorpg.fabric.ui.Slot.of(mmorpg.fabric.ui.Icon.sprite("icon_check"), "§a확인"));
+                f.set(14, mmorpg.fabric.ui.Slot.of(mmorpg.fabric.ui.Icon.sprite("icon_cross"), "§c취소"));
+                f.set(16, mmorpg.fabric.ui.Slot.of(new ItemStack(net.minecraft.world.item.Items.EMERALD), "§a가격 칸").price(1500));
+                f.body("§7상자 창 본문 첫 줄\n§7둘째 줄");
+                f.show(p, sel -> formResult = sel);
+                next(p, 17, 20);
+            }
+            case 17 -> {
+                check("chest form opened as chest menu", p.containerMenu != p.inventoryMenu);
+                say(p, "shot 09_chest");
+                next(p, 18, 20);
+            }
+            case 18 -> {
+                say(p, "close"); // 상자 메뉴를 닫음 (Esc 와 같은 패킷)
+                next(p, 19, 20);
+            }
+            case 19 -> {
+                check("chest closed answers -1", formResult == -1);
+                formResult = Integer.MIN_VALUE;
+                int id = new mmorpg.fabric.ui.MenuForm("§b시험 버튼 창", "§f본문 글 §7(대화창)").button("첫째").button("둘째").button("셋째")
+                        .show(p, sel -> formResult = sel);
+                formId = id;
+                next(p, 20, 20);
+            }
+            case 20 -> {
+                say(p, "shot 10_menu");
+                next(p, 21, 20);
+            }
+            case 21 -> {
+                say(p, "click " + formId + " 1"); // 둘째 단추 (클라이언트가 보내는 것과 같은 패킷)
+                next(p, 22, 20);
+            }
+            case 22 -> {
+                check("menu button answers 1", formResult == 1);
+                modalResult = null;
+                new mmorpg.fabric.ui.ModalForm("§d시험 입력창").label("§7설명 글").text("name", "이름", "입력", "기본값")
+                        .dropdown("pick", "고르기", List.of("가", "나", "다"), 1).slider("num", "숫자", 0, 10, 5).toggle("on", "켜기", true)
+                        .show(p, map -> modalResult = map);
+                formId = mmorpg.fabric.ui.Forms.pendingId(p);
+                next(p, 23, 20);
+            }
+            case 23 -> {
+                say(p, "shot 11_modal");
+                next(p, 24, 20);
+            }
+            case 24 -> {
+                say(p, "submit " + formId);
+                next(p, 25, 20);
+            }
+            case 25 -> {
+                java.util.Map<String, Object> m = modalResult;
+                check("modal values " + m, m != null && "abc".equals(m.get("name")) && Integer.valueOf(2).equals(m.get("pick"))
+                        && Integer.valueOf(7).equals(m.get("num")) && Boolean.FALSE.equals(m.get("on")));
+                next(p, 26, 20);
             }
             default -> {
                 say(p, "done");

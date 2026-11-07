@@ -15,6 +15,7 @@
     "ServerPlayerDropMixin",
     "ServerPlayerXpMixin",
     "UpdateAttributesInvoker",
+    "VanillaDialogMixin",
     "VanillaInputMixin",
     "VanillaSendMixin"
   ],

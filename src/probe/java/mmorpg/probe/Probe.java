@@ -9,18 +9,23 @@ import net.minecraft.client.gui.screens.DisconnectedScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.common.ServerboundCustomClickActionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
+import net.minecraft.resources.Identifier;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Optional;
 
 /**
  * 모드 없는 클라이언트 시험의 사진기 (2026-11-07 1번 — CI ci/vanilla_probe.sh). Fabric API 없이 Fabric Loader 만 — 서버가 보기에 바닐라 클라이언트.
  * 서버 (모드 jar, -Dmmorpg.probe=true) 가 장면을 만들고 채팅 "[probe] …" 로 신호: shot 이름 (지금 화면) · inv 이름 (인벤토리를 열고 찍고 닫음) ·
- * cam back|first · key f (F 키 패킷) · key N (숫자 키 N — 고른 칸) · done (닫힘). 접속이 끊기면 끊긴 화면을 찍고 닫힘. 아무 신호 없이 12분이면 찍고 닫힘. 사진은 게임 폴더 screenshots/probe_&lt;이름&gt;.png.
+ * cam back|first · key f (F 키 패킷) · key N (숫자 키 N — 고른 칸) · close (상자 메뉴 닫기) · click id sel (대화창 단추) · submit id (입력창 확인) ·
+ * done (닫힘). 접속이 끊기면 끊긴 화면을 찍고 닫힘. 아무 신호 없이 12분이면 찍고 닫힘. 사진은 게임 폴더 screenshots/probe_&lt;이름&gt;.png.
  */
 public final class Probe implements ClientModInitializer {
     private static final Deque<String> QUEUE = new ArrayDeque<>();
@@ -83,6 +88,26 @@ public final class Probe implements ClientModInitializer {
             mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
         } else if (cmd.equals("cam first")) {
             mc.options.setCameraType(CameraType.FIRST_PERSON);
+        } else if (cmd.equals("close") && mc.player != null) {
+            mc.player.closeContainer(); // Esc 로 상자 메뉴를 닫을 때와 같음 (닫기 패킷)
+        } else if (cmd.startsWith("click ") && mc.player != null) {
+            // 대화창 단추를 누를 때 클라이언트가 보내는 것 (ClickEvent.Custom mmorpg:form {id, sel})
+            String[] a = cmd.split(" ");
+            CompoundTag tag = new CompoundTag();
+            tag.putInt("id", Integer.parseInt(a[1]));
+            tag.putInt("sel", Integer.parseInt(a[2]));
+            mc.player.connection.send(new ServerboundCustomClickActionPacket(Identifier.parse("mmorpg:form"), Optional.of(tag)));
+        } else if (cmd.startsWith("submit ") && mc.player != null) {
+            // 입력창 확인 (CustomAll: 입력 칸 값 + 덧붙인 {id, sel, n}) — 글자 · 고른 칸 id · 숫자 막대 (float) · 켜고 끄기 (byte)
+            CompoundTag tag = new CompoundTag();
+            tag.putInt("id", Integer.parseInt(cmd.substring(7).trim()));
+            tag.putInt("sel", 0);
+            tag.putInt("n", 4);
+            tag.putString("v0", "abc");
+            tag.putString("v1", "2");
+            tag.putFloat("v2", 7F);
+            tag.putBoolean("v3", false);
+            mc.player.connection.send(new ServerboundCustomClickActionPacket(Identifier.parse("mmorpg:form"), Optional.of(tag)));
         } else if (cmd.equals("key f") && mc.player != null) {
             // F (왼손 바꾸기 키) 와 같은 패킷 (Minecraft.handleKeybinds)
             mc.player.connection.send(new ServerboundPlayerActionPacket(ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN));

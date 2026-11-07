@@ -74,19 +74,22 @@ public final class Forms {
     static void open(ServerPlayer sp, int id, CustomPacketPayload payload, Consumer<FormNet.ResponsePayload> handler) {
         if (sp.isRemoved()) return;
         boolean headless = HEADLESS.contains(sp.getUUID());
-        if (!headless && !canShow(sp)) {
+        // 1번 4단계: 모드 없는 클라이언트는 바닐라 상자 메뉴 · 대화창으로 (VanillaForms)
+        boolean vanilla = !headless && !canShow(sp) && mmorpg.fabric.vanilla.VanillaForms.supports(sp);
+        if (!headless && !canShow(sp) && !vanilla) {
             Notify.warn(sp, "§c이 창은 MMO RPG 모드를 넣은 클라이언트에서 열립니다.");
             return;
         }
         BUSY_UNTIL.remove(sp.getUUID());
         PENDING.put(sp.getUUID(), new Pending(id, handler));
         if (headless) LAST.put(sp.getUUID(), payload);
+        else if (vanilla) mmorpg.fabric.vanilla.VanillaForms.show(sp, payload);
         else ServerPlayNetworking.send(sp, payload);
     }
 
-    private static void respond(ServerPlayer sp, FormNet.ResponsePayload p) {
+    private static boolean respond(ServerPlayer sp, FormNet.ResponsePayload p) {
         Pending cur = PENDING.get(sp.getUUID());
-        if (cur == null || cur.id() != p.id()) return; // 늦게 온 응답 · 바뀐 창
+        if (cur == null || cur.id() != p.id()) return false; // 늦게 온 응답 · 바뀐 창
         PENDING.remove(sp.getUUID());
         try {
             cur.handler().accept(p);
@@ -96,7 +99,14 @@ public final class Forms {
         if (!PENDING.containsKey(sp.getUUID())) {
             LAST.remove(sp.getUUID());
             if (!HEADLESS.contains(sp.getUUID()) && canShow(sp)) ServerPlayNetworking.send(sp, new FormNet.ClosePayload(p.id()));
+            else if (!HEADLESS.contains(sp.getUUID())) mmorpg.fabric.vanilla.VanillaForms.close(sp);
         }
+        return true;
+    }
+
+    /** 모드 없는 클라이언트의 응답 (VanillaForms — 상자 메뉴 누름 · 닫기, 대화창 단추 · 확인). 기다리던 창이었으면 true */
+    public static boolean answerVanilla(ServerPlayer sp, int id, int selection, java.util.List<String> values) {
+        return respond(sp, new FormNet.ResponsePayload(id, selection, values == null ? java.util.List.of() : values));
     }
 
     /** 열린 창을 닫음 (받을 일은 부르지 않음 — 서버가 흐름을 끝낼 때) */
@@ -105,6 +115,7 @@ public final class Forms {
         BUSY_UNTIL.remove(sp.getUUID());
         LAST.remove(sp.getUUID());
         if (cur != null && !HEADLESS.contains(sp.getUUID()) && canShow(sp)) ServerPlayNetworking.send(sp, new FormNet.ClosePayload(cur.id()));
+        else if (cur != null && !HEADLESS.contains(sp.getUUID())) mmorpg.fabric.vanilla.VanillaForms.close(sp);
     }
 
     /** 시험용: 열린 창에 응답한 것처럼 (클라이언트 없이 흐름을 돌림) */
