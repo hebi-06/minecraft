@@ -1,7 +1,7 @@
-"""0.51.0 2차 직업 스킬 동작 — 암살자 2차 재설계안 2판 (2026-11-06): 각성 트릭스터 · 반전 피에로 (틱 0 = 스킬이 나간 틱, 효과의 later · every 와 같은 틱 —
+"""0.51.0 2차 직업 스킬 동작 — 암살자 2차 재설계안 2판 (2026-11-06 · 트릭스터 3 · 4 · 5번은 2026-11-07 3판): 각성 트릭스터 · 반전 피에로 (틱 0 = 스킬이 나간 틱, 효과의 later · every 와 같은 틱 —
 TricksterSkills · PierrotSkills). 둘 다 단검 (오른손 — 1차 암살자 job_motions_b 의 엇갈려 긋기 dagger_x · 낮게 숙인 달리기 · 웅크림과 같은 꼴, 왼손은 맨손).
 몸 쓰는 직업이라 제 몸 · 제 무기 동작만 (환영 · 소환물은 2D 그림 · 몹이 움직임). 단계 열쇠 (스킬 id:단계) 의 동작은 서버가 그 순간에 다시 보냄 (JobKit.motion /
-JobRecast.motion — 섀도 스와프의 찌르기, 미라주 대시의 돌아옴, 사우전드 팬텀의 X, 와일드파이어 피스트의 터뜨림, 그랜드 피날레의 환호 · 인사). 단계 동작의 틱 0 열쇠는
+JobRecast.motion — 섀도 스와프의 찌르기, 미라주 대시의 돌아옴, 트윈 리플렉션의 X, 미러 월드의 깨뜨림, 그랜드 피날레의 환호 · 인사). 단계 동작의 틱 0 열쇠는
 앞 동작의 끝 자세 (한 장 쉬는 자세로 튀지 않게)."""
 import rune_motion_kit as K
 from job_motions_b import CROUCH_D, NINJA
@@ -78,28 +78,45 @@ fpl(m, 4.0, FP_LOW)
 fpw(m, 8.0, FPW_LOW)
 use_skill(m, "trickster_dash:back")
 
-# 사우전드 팬텀 (효과: 0 환영 여섯이 손끝에서 튀어 나감 → 4 · 14 · 24 둘씩 엇갈려 꿰뚫음 — 28 :x)
-CONDUCT = P(body=[-4, 0, 0], head=[-6, 0], ra=arm([0.05, 0.2, 1], 4, [0, 0.2, 1]), la=A_SPREAD_UP, **LEGS_WIDE)  # 단검으로 적을 가리키고 왼팔을 펼쳐 지휘
-m = Motion("trickster_phantom", 26, "사우전드 팬텀 — 두 팔을 활짝 펼쳐 환영 여섯을 흩뿌리고, 단검 끝으로 적을 가리키며 왼손을 지휘하듯 세 번 휘둘러 환영을 엇갈려 보냄", fade=(0.02, 0.12))
+# 트윈 리플렉션 (2026-11-07 3판 — 효과: 0 적 앞으로 순간 이동 · 등 뒤에 거울 → 4 · 14 · 24 나와 거울 속 내가 앞뒤에서 동시에 벰 — 28 :x)
+# 세 번: 오른쪽 위에서 왼쪽 아래로 · 되돌려 왼쪽에서 오른쪽으로 가로 · 아래에서 위로 올려 벰 (거꾸로 쥔 단검 — 거울 속 나도 같은 때 벰)
+TW_READY = P(body=[8, 6, 0], head=[2, 4], ra=REV_LOW, la=arm([-0.3, 0.1, 0.8], 30), **LEGS_FIGHT)
+TW_WIND = (P(body=[-4, -32, 0], head=[-4, -12], ra=arm([0.55, 0.75, -0.2], 50, [0.3, 0.9, -0.3]), la=arm([-0.5, 0.2, 0.6], 30), **LEGS_FIGHT),
+           P(body=[2, 34, 0], head=[0, 14], ra=arm([-0.75, 0.1, 0.45], 70, [-0.9, 0.1, 0.3]), la=arm([0.5, -0.2, -0.5], 30), **LEGS_FIGHT),
+           P(CROUCH_D, body=[22, -20, 0], head=[6, -8], ra=arm([0.35, -0.85, -0.25], 30, [0.2, -0.9, -0.3]), la=arm([-0.5, -0.3, 0.6], 20)))
+TW_HIT = (P(body=[18, 26, 0], head=[6, 12], ra=arm([-0.55, -0.6, 0.6], 8, [-0.6, -0.6, 0.5]), la=arm([0.6, -0.4, -0.4], 20), **LEGS_LUNGE),
+          P(body=[12, -30, 0], head=[4, -12], ra=arm([0.85, 0.0, 0.5], 6, [0.9, 0.05, 0.4]), la=arm([-0.6, -0.3, 0.3], 20), **LEGS_LUNGE),
+          P(body=[-10, 12, 0], head=[-14, 6], ra=arm([-0.1, 0.85, 0.5], 10, [0.0, 1, 0.2]), la=arm([-0.6, -0.4, 0.3], 20), **LEGS_FIGHT))
+m = Motion("trickster_twin", 28, "트윈 리플렉션 — 적 앞에 나타나 거꾸로 쥔 단검으로 세 번 엇갈려 벰 (오른쪽 위에서 비스듬히 내리 · 되돌려 가로 · 아래에서 올려) — "
+           "등 뒤 거울에서 나온 거울 속 나도 같은 때 벰", fade=(0.02, 0.12))
 off_bare(m)
-keyp(m, 0.5, P(body=[-8, 0, 0], head=[-14, 0], ra=A_SPREAD_UP, la=L(A_SPREAD_UP), **LEGS_WIDE), "out3")
+keyp(m, 0.6, P(CROUCH_D, body=[20, 0, 0], ra=REV_LOW, la=arm([-0.4, -0.2, 0.7], 20)), "out3")
 for i, t in enumerate((4, 14, 24)):
-    keyp(m, t - 2.0, P(CONDUCT, la=L(arm([0.85, 0.5, 0.2], 10)) if i % 2 == 0 else L(arm([0.6, -0.2, 0.75], 10))), "out3")
-    keyp(m, t, P(CONDUCT, la=L(arm([0.2, -0.1, 0.95], 4)) if i % 2 == 0 else L(arm([0.9, 0.3, 0.2], 8))), "in")
-keyp(m, 25.5, P(CONDUCT, la=L(A_HIP)))
-fpw(m, 0.5, FPW_SPREAD, "out3")
-fpw(m, 2.0, dict(p=(-0.35, 0.2, -0.5), blade=(-0.05, 0.1, 1)), "out3")
-fpl(m, 0.5, FP_SPREAD_UP, "out3")
-fpl(m, 3.0, FP_PALM)
-fpl(m, 25.0, FP_LOW)
-use_skill(m, "trickster_phantom")
+    keyp(m, t - 2.4, TW_WIND[i], "out3")
+    keyp(m, t, TW_HIT[i], "in")
+    keyp(m, t + 2.5, P(TW_HIT[i], root=[-0.1, 0.0]))
+m.arc(4.0, "ra", (0.3, 0.2, 1))
+m.arc(14.0, "ra", (0.0, 0.1, 1))
+m.arc(24.0, "ra", (0.1, -0.2, 1))
+keyp(m, 27.5, TW_READY)
+fpw(m, 0.6, FPW_REV, "out3")
+for i, t in enumerate((4, 14, 24)):
+    fpw(m, t - 2.4, (dict(p=(0.45, 0.55, 0.1), blade=(0.3, 0.9, -0.3)), dict(p=(-0.6, 0.0, 0.0), blade=(-0.9, 0.1, 0.3)), dict(p=(0.3, -0.6, 0.1), blade=(0.2, -0.9, -0.3)))[i],
+        "out3")
+    fpw(m, t, (dict(p=(-0.55, -0.35, -0.25), blade=(-0.6, -0.6, 0.5)), dict(p=(0.6, -0.05, -0.2), blade=(0.9, 0.05, 0.4)), dict(p=(0.0, 0.6, -0.25), blade=(0.0, 1, 0.2)))[i],
+        "in")
+fpw(m, 27.5, FPW_LOW)
+fpl(m, 0.6, nudge(FP_CROSS, (0.05, 0.0, -0.1)), "out3")
+fpl(m, 4.0, FP_LOW)
+use_skill(m, "trickster_twin")
 
-# 사우전드 팬텀 :x (28 등 뒤로 순간 이동 → 34 거대한 X — 이 동작의 6틱)
+# 트윈 리플렉션 :x (28 거울 속 나와 엇갈려 적을 꿰뚫고 지나감 → 돌아서 34 거대한 X — 이 동작의 6틱)
 X_WIND = P(body=[-6, -30, 0], head=[-8, -10], ra=arm([0.35, 0.85, -0.35], 60, [0.2, 0.9, -0.3]), la=arm([-0.45, 0.6, 0.5], 40), **LEGS_FIGHT)
 X_HIT = P(body=[26, 24, 0], head=[10, 10], ra=arm([-0.55, -0.55, 0.65], 6, [-0.6, -0.55, 0.55]), la=arm([0.6, -0.5, -0.4], 20), **LEGS_LUNGE)
-m = Motion("trickster_phantom_x", 12, "사우전드 팬텀 끝 — 적의 등 뒤에 나타나 단검을 왼쪽 어깨 위로 크게 감았다가 X 자를 그리듯 대각선으로 내리 벰", fade=(0.0, 0.12))
+m = Motion("trickster_twin_x", 12, "트윈 리플렉션 끝 — 낮게 숙여 적을 꿰뚫고 지나가 돌아서며 단검을 왼쪽 어깨 위로 크게 감았다가 X 자를 그리듯 대각선으로 내리 벰",
+           fade=(0.0, 0.12))
 off_bare(m)
-keyp(m, 0.0, P(CONDUCT, la=L(A_HIP)))
+keyp(m, 0.0, TW_READY)
 keyp(m, 1.0, P(CROUCH_D, body=[24, 0, 0], ra=REV_LOW, la=arm([-0.5, -0.3, 0.6], 20)), "out3")
 keyp(m, 4.2, X_WIND, "out3")
 keyp(m, 6.0, X_HIT, "in")
@@ -110,26 +127,29 @@ fpw(m, 1.0, FPW_REV, "out3")
 fpw(m, 4.2, dict(p=(-0.2, 0.75, 0.2), blade=(0.3, 0.9, -0.3)), "out3")
 fpw(m, 6.0, dict(p=(-0.55, -0.3, -0.3), blade=(-0.6, -0.6, 0.5)), "in")
 fpw(m, 11.5, FPW_LOW)
-use_skill(m, "trickster_phantom:x")
+use_skill(m, "trickster_twin:x")
 
-# 미러 팰리스 (태세 — 효과: 0 둘레 땅에서 거울 여섯이 솟음)
-m = Motion("trickster_palace", 16, "미러 팰리스 — 왼손을 펼쳐 몸 둘레로 한 바퀴 크게 쓸어 거울을 일으키고, 단검을 얼굴 앞에 세워 거울 속 내 모습을 봄", fade=(0.03, 0.12))
+# 팬텀 왈츠 (2026-11-07 3판 태세 — 효과: 0 ~ 6 몸에서 갈라져 나온 환영이 반 바퀴 돌아 오른쪽 곁에 섬)
+DANCE_HOLD = arm([0.85, 0.35, 0.3], 30)  # 왼손을 오른쪽 위로 내밀어 춤 상대의 손을 잡는 꼴
+m = Motion("trickster_waltz", 16, "팬텀 왈츠 — 발끝으로 한 바퀴 우아하게 돌며 왼손을 오른쪽으로 내밀어 (환영이 갈라져 나와 그 손을 잡음) 춤 상대를 맞고, 단검을 가슴 앞에 "
+           "세워 고개 숙여 인사", fade=(0.03, 0.12))
 off_bare(m)
-keyp(m, 0.5, P(body=[4, -30, 0], head=[0, -16], ra=REV_LOW, la=L(A_SPREAD), **LEGS_FIGHT), "out3")
-keyp(m, 3.0, P(body=[4, -30, 0], ra=REV_LOW, la=L(A_SPREAD), spin=180, **LEGS_FIGHT), "linear")
-keyp(m, 5.5, P(body=[4, 10, 0], ra=REV_LOW, la=L(A_SPREAD_UP), spin=360, **LEGS_WIDE), "out")
-keyp(m, 9.0, P(body=[-4, 0, 0], head=[-4, 0], ra=arm([0.1, 0.3, 0.95], 95, [0, 1, 0.08]), la=L(A_SPREAD_DOWN), spin=360, **LEGS_FIGHT), "inout")
+keyp(m, 0.5, P(body=[4, -24, 0], head=[0, -14], ra=REV_LOW, la=L(A_SPREAD), **LEGS_FIGHT), "out3")
+keyp(m, 3.0, P(body=[2, -20, 0], ra=REV_LOW, la=L(A_SPREAD_UP), spin=180, root=[0.06, 0], **LEGS_WIDE), "linear")
+keyp(m, 6.0, P(body=[4, 12, 0], head=[0, 10], ra=REV_LOW, la=L(DANCE_HOLD), spin=360, **LEGS_FIGHT), "out")
+keyp(m, 9.5, P(body=[18, 6, 0], head=[16, 6], ra=arm([0.1, 0.3, 0.95], 95, [0, 1, 0.08]), la=L(DANCE_HOLD), spin=360, **LEGS_FIGHT), "inout")
 keyp(m, 15.0, P(READY_T, spin=360))
 m.keys[1.0] = {"spin": 360}
 fpw(m, 0.5, FPW_REV, "out3")
-fpw(m, 9.0, FPW_UP, "inout")
+fpw(m, 9.5, FPW_UP, "inout")
 fpw(m, 15.0, FPW_LOW)
 fpl(m, 0.5, FP_SPREAD_UP, "out3")
-fpl(m, 9.0, FP_LOW)
-use_skill(m, "trickster_palace")
+fpl(m, 6.0, nudge(FP_PALM, (0.25, 0.05, 0.0)), "out")
+fpl(m, 13.0, FP_LOW)
+use_skill(m, "trickster_waltz")
 
-# 와일드파이어 피스트 (효과: 0 적 앞으로 순간 이동 → 2 베며 들불 표식 → 12 · 22 · 32 · 42 들불 환영 → 62 터짐 (:final — 58))
-m = Motion("trickster_ult", 12, "와일드파이어 피스트 — 적 앞에 나타나며 단검을 오른쪽 뒤로 감았다가 가로로 크게 그어 들불 표식을 새김", fade=(0.02, 0.1))
+# 미러 월드 (2026-11-07 3판 — 효과: 0 적 앞으로 순간 이동 · 둘레에 거울 열둘 → 2 베며 거울 세계에 가둠 → 12 · 22 · 32 · 42 거울에서 나온 환영 → 62 깨짐 (:final — 58))
+m = Motion("trickster_ult", 12, "미러 월드 — 적 앞에 나타나며 단검을 오른쪽 뒤로 감았다가 가로로 크게 그어 적을 거울 세계에 가둠", fade=(0.02, 0.1))
 off_bare(m)
 keyp(m, 0.6, P(body=[6, -34, 0], head=[0, -10], ra=A_SIDE_WIND, la=arm([-0.4, 0.0, 0.8], 10), **LEGS_FIGHT), "out3")
 keyp(m, 2.0, P(body=[14, 28, 0], head=[4, 10], ra=A_SIDE_REL, la=arm([-0.6, -0.3, -0.3], 20), **LEGS_LUNGE), "in")
@@ -141,7 +161,7 @@ fpw(m, 2.0, dict(p=(-0.7, 0.1, -0.3), blade=(-0.9, 0.0, 0.4)), "in")
 fpw(m, 11.0, FPW_LOW)
 use_skill(m, "trickster_ult")
 
-m = Motion("trickster_ult_final", 14, "와일드파이어 피스트 끝 — 왼손을 하늘로 들어 손가락을 튕기며 거꾸로 쥔 단검을 아래로 털어 내리는 순간 들불이 터짐", fade=(0.0, 0.15))
+m = Motion("trickster_ult_final", 14, "미러 월드 끝 — 왼손을 하늘로 들어 손가락을 튕기며 거꾸로 쥔 단검을 아래로 털어 내리는 순간 거울 세계가 유리처럼 깨짐", fade=(0.0, 0.15))
 off_bare(m)
 keyp(m, 0.0, READY_T)
 keyp(m, 2.0, P(body=[-8, -4, 0], head=[-20, 0], ra=REV_LOW, la=A_RAISE, **LEGS_WIDE), "out3")

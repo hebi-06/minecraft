@@ -22,14 +22,13 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.51.0 암살자 각성 트릭스터 직업 스킬 — 재설계안 2판 (2026-11-06 사용자 "다음 작업" · 3 · 4 번은 "더 화려한걸로" — 탈론 W 같은 돌아오는 칼 · 룬과 겹치는 연막 ·
- * 피에로와 겹치는 상자 · 분신은 빼고): 섀도 스와프 · 미라주 대시 · 사우전드 팬텀 · 미러 팰리스 (태세 — JobTraits10) · 와일드파이어 피스트 (jobs.json
+ * 0.51.0 암살자 각성 트릭스터 직업 스킬 — 재설계안 2판 (2026-11-06 사용자 "다음 작업") · 3판 (2026-11-07 직업 스킬 도감 표시 고침 — 사우전드 팬텀 · 미러 팰리스 ·
+ * 와일드파이어 피스트 표시 "컨셉하고 안맞음 · 멋이 없음"): 섀도 스와프 · 미라주 대시 · 트윈 리플렉션 · 팬텀 왈츠 (태세 — JobTraits10) · 미러 월드 (jobs.json
  * advance.trickster — 자홍 · 검보라 + 청록 환영 테두리, 특성 「표식」 최대 7 · 옮겨감 — JobTraits3 의 암살자 줄기).
- * 1차 암살자 매커니즘 (근접 · 단일 · 표식을 쌓아 한 방) 그대로 — 은신 대신 환영 · 거울: 환영과 자리를 바꿔 등 뒤를 잡음 · 뛰어들었다 돌아옴 · 환영 여섯이 엇갈려 꿰뚫음 ·
- * 둘레를 도는 거울 · 들불 표식이 쌓인 피해를 터뜨림.
+ * 1차 암살자 매커니즘 (근접 · 단일 · 표식을 쌓아 한 방) 그대로 — 은신 대신 환영 · 거울: 환영과 자리를 바꿔 등 뒤를 잡음 · 뛰어들었다 돌아옴 · 거울 속 나와 앞뒤에서 벰 ·
+ * 춤 상대 환영이 적의 등 뒤를 벰 · 적을 가둔 거울 세계가 깨지며 쌓인 피해를 터뜨림.
  * 피해 = 위력 P × 배율 (JobKit.strike — 같은 적은 10틱 넘게 띄움, 한꺼번에 여러 줄은 strikeSplit). 연출 = 2D 그림 (환영 = 그림자 분신 · 청록 테두리, 거울 조각
- * rfx_jmirror · 거울 rfx_jpane · 육망성 rfx_jhexa · 들불 표식 rfx_jmaw · 서 있는 불꽃 rfx_jflame · 꽃 · 꽃잎 · 엇갈린 베기 · 큰 검기 rfx_jwave) · 들불 하늘
- * (rpg:ult_wildfire).
+ * rfx_jmirror · 거울 rfx_jpane · 깨지는 거울 rfx_jmshatter · 꽃 · 꽃잎 · 엇갈린 베기 · 큰 검기 rfx_jwave) · 거울 하늘 (rpg:ult_mirror).
  */
 final class TricksterSkills {
     private TricksterSkills() {}
@@ -37,9 +36,6 @@ final class TricksterSkills {
     /** 환영의 테두리 (청록) · 그 심지 */
     static final double[] ILLUSION = {0.3, 0.95, 0.9};
     static final double[] ILLUSION_CORE = {0.8, 1.0, 0.97};
-    /** 들불 (환술의 불 — 자홍 불꽃 · 흰 금빛 심지) */
-    static final double[] FIRE = {1.0, 0.3, 0.72};
-    static final double[] FIRE_CORE = {1.0, 0.88, 0.62};
 
     /** 섀도 스와프의 던진 환영 (다시 누르면 자리를 바꿈): 서 있는 자리 · 노린 적 · 쓴 틱 · 환영이 지나간 틱 · 끝났는지 */
     private static final class Swap {
@@ -77,8 +73,8 @@ final class TricksterSkills {
     static void register() {
         JobSystem.register("trickster_swap", TricksterSkills::swap);
         JobSystem.register("trickster_dash", TricksterSkills::dash);
-        JobSystem.register("trickster_phantom", TricksterSkills::phantom);
-        JobSystem.register("trickster_palace", TricksterSkills::palace);
+        JobSystem.register("trickster_twin", TricksterSkills::twin);
+        JobSystem.register("trickster_waltz", TricksterSkills::waltz);
         JobSystem.register("trickster_ult", TricksterSkills::ult);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             SWAPS.clear();
@@ -96,25 +92,12 @@ final class TricksterSkills {
         RuneKit.shadeClone(sp, level, feet, face, pose, illusionBody(j), ILLUSION, Opt.of("life", life, "fade", 0.35, "alpha", alpha));
     }
 
-    /** 들불을 두른 환영 (자홍 불꽃 테두리) */
-    private static void fireClone(ServerPlayer sp, ServerLevel level, Vec3 feet, Vec3 face, int pose, Jobs.Job j, double life, double alpha) {
-        RuneKit.shadeClone(sp, level, feet, face, pose, illusionBody(j), FIRE, Opt.of("life", life, "fade", 0.35, "alpha", alpha));
-    }
-
     /** 환영이 깨짐: 거울 조각 (rfx_jmirror) · 검보라 연기 · 청록 반짝임 · 유리 소리 */
     static void shatter(ServerLevel level, Vec3 body, double size, Jobs.Job j) {
         JobFx.mirror(level, body, size, 0.45, Opt.empty(), ILLUSION, JobFx.inner(j));
         JobFx.smoke(level, body, size * 0.9, j, 0.5, Opt.of("alpha", 0.7));
         SkillFx.sparks(level, body, ILLUSION_CORE, 6, 3);
         SkillFx.play(level, "block.glass.break", body, 1.5, 0.45);
-    }
-
-    /** 머리 위 꽃 n 송이 (표식 — 터지기 전까지 그대로 보이게 life 초) */
-    private static void heldFlowers(ServerLevel level, ServerPlayer sp, LivingEntity e, int n, Jobs.Job j, double life) {
-        Vec3 over = RuneKit.overHead(e, 0.5);
-        Vec3 right = V.rightOf(V.flat(V.sub(over, sp.getEyePosition())));
-        for (int i = 0; i < n; i++) JobFx.blossom(level, V.add(over, right, (i - (n - 1) / 2.0) * 0.32), 0.15, j, life, Opt.of("vel", RuneKit.entVel(e), "fade", 0.2,
-                "alpha", 0.9));
     }
 
     /** 꽃이 터짐: 머리 위 꽃 n 송이 자리에서 꽃잎이 흩어짐 */
@@ -434,179 +417,224 @@ final class TricksterSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 사우전드 팬텀
+    // ------------------------------------------------------------ 트윈 리플렉션 (2026-11-07 재설계안 3판 — 사우전드 팬텀 대신)
+
+    /** 거울 (rfx_jpane — 청록 테 · 연분홍 빛줄기) 앞 · 뒤 두 장 (앞면만 그려지므로 둘레 어디서나 보이게): 가운데 at · 면 face 쪽 */
+    private static void mirrorPane(ServerLevel level, Vec3 at, Vec3 face, double height, double life, Opt o, Jobs.Job j) {
+        JobFx.pane(level, at, face, height, life, o, ILLUSION, JobFx.inner(j));
+        JobFx.pane(level, at, V.scale(face, -1), height, life, o, ILLUSION, JobFx.inner(j));
+    }
+
+    /** 거울이 깨짐 (rfx_jmshatter 앞 · 뒤 두 장 · 거울 조각 · 유리 소리) */
+    private static void mirrorBreak(ServerLevel level, Vec3 at, Vec3 face, double height, double life, Jobs.Job j) {
+        JobFx.mirrorShatter(level, at, face, height, life, Opt.empty(), ILLUSION, JobFx.inner(j));
+        JobFx.mirrorShatter(level, at, V.scale(face, -1), height, life, Opt.empty(), ILLUSION, JobFx.inner(j));
+        JobFx.mirror(level, at, height * 0.42, 0.45, Opt.empty(), ILLUSION, JobFx.inner(j));
+        SkillFx.sparks(level, at, ILLUSION_CORE, 10, 4.0);
+        SkillFx.play(level, "block.glass.break", at, 0.9 + Kit.rand() * 0.3, 1.0);
+    }
+
+    /** 적 앞으로 순간 이동 (적과 나 사이 gap 칸 — 떠난 자리엔 잔상 · 이동 줄): 적 쪽 (가로 단위 벡터) */
+    private static Vec3 blinkFront(ServerPlayer sp, LivingEntity e, double gap, Jobs.Job j) {
+        ServerLevel level = sp.level();
+        Vec3 start = sp.position();
+        double dist = V.hdist(e.position(), start); // V.flat 은 단위 방향 — 거리는 hdist
+        Vec3 u = dist < 0.1 ? Kit.facingOf(sp) : V.flat(V.sub(e.position(), start));
+        if (!Status.isRooted(sp) && !Kit.ridingAny(sp)) {
+            double in = Math.max(0, dist - gap - Kit.bodyPad(e));
+            if (in > 0.3) {
+                Vec3 to = V.add(start, u, Math.min(in, RuneKit.dashDistance(sp, u, in, 0.3, 1.5)));
+                illusion(sp, level, start, u, 1, j, 0.3, 0.7);
+                Kit.noFall(sp, 30);
+                Kit.moveTo(sp, to, sp.getYRot(), sp.getXRot());
+                JobFx.line(level, V.up(start, 1.0), V.up(to, 1.0), j, 0.3, Opt.empty());
+            }
+        }
+        faceTo(sp, e);
+        Vec3 raw = V.sub(e.position(), sp.position());
+        return Math.hypot(raw.x, raw.z) > 0.05 ? V.flat(raw) : u;
+    }
 
     /**
-     * 사우전드 팬텀: 겨눈 적 (range 칸 — 없으면 쓰지 않음) 둘레 ring 칸에 내 환영 여섯이 둥글게 나타남 (손끝에서 튀어 나감) → first 틱부터 every 틱마다 packets 번 마주 선
-     * 둘이 엇갈려 적을 꿰뚫고 반대편에 섬 (packet — 한 번에 넣고 숫자 두 줄 · 표식 + marks) — 꿰뚫은 자국이 발밑에 육망성으로 이어짐 → blinkAt 틱 나는 적의 등 뒤로
-     * 순간 이동 (잔상) → xAt 틱 거대한 X 로 벰 (x — 육망성이 번쩍이며 깨지고 환영 여섯이 거울 조각으로)
+     * 트윈 리플렉션 (단일 주력): 겨눈 적 (range 칸 — 없으면 쓰지 않음) 앞 (1.3칸) 으로 순간 이동 → 그 적 등 뒤에 큰 거울 (rfx_jpane · 높이 mirrorH) 이 솟고 거울 속 내
+     * 모습 (환영) 이 걸어 나와 적의 등 뒤에 섬 → first 틱부터 every 틱마다 packets 번 나 (앞) 와 거울 속 나 (뒤) 가 동시에 엇갈려 벰 (packet — 숫자 두 줄 · 표식 + marks)
+     * → passAt 틱 둘이 적을 꿰뚫고 엇갈려 지나감 (나는 거울을 깨며 등 뒤로 — rfx_jmshatter · 거울 속 나는 내 자리로) · 나는 돌아서 적을 봄 → xAt 틱 거대한 X (x — 등
+     * 뒤 치명 숫자 · 거울 속 나는 거울 조각으로 깨짐)
      */
-    static boolean phantom(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+    static boolean twin(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         double range = k.num("range", 8);
         LivingEntity e = Kit.pickTarget(sp, range, 25);
         if (e == null) {
             Notify.notify(sp, "§c" + k.name() + " §7— 겨눈 적이 없습니다 (" + Js.str(range) + "칸)", 30);
             return false;
         }
-        ServerLevel level0 = sp.level();
         int first = Math.max(2, (int) k.num("first", 4));
         int every = Math.max(10, (int) k.num("every", 10));
         int packets = Math.max(1, (int) k.num("packets", 3));
-        int blinkAt = Math.max(first + every * (packets - 1) + 2, (int) k.num("blinkAt", 28));
-        int xAt = Math.max(blinkAt + 2, Math.max(first + every * (packets - 1) + 10, (int) k.num("xAt", 34)));
-        double ring = k.num("ring", 3) + Kit.bodyPad(e);
+        int passAt = Math.max(first + every * (packets - 1) + 2, (int) k.num("passAt", 28));
+        int xAt = Math.max(passAt + 2, Math.max(first + every * (packets - 1) + 10, (int) k.num("xAt", 34)));
         int marks = Math.max(0, (int) k.num("marks", 2));
+        double mirrorH = k.num("mirrorH", 2.8);
         String life = RuneKit.lifeToken(sp);
-        Vec3 c0 = e.position();
-        Vec3 toward = V.flat(V.sub(c0, sp.position()));
-        if (V.len(toward) < 0.1) toward = Kit.facingOf(sp);
-        double a0 = Math.atan2(toward.z, toward.x) + Math.PI / 2;
-        // 여섯 자리 (마주 선 둘씩 — 0 · 3, 1 · 4, 2 · 5 · 60° 씩)
-        Vec3[] spots = new Vec3[6];
-        for (int i = 0; i < 6; i++) {
-            double a = a0 + i * Math.PI / 3;
-            spots[i] = new Vec3(Math.cos(a), 0, Math.sin(a));
-        }
-        // 손끝에서 튀어 나가는 환영 여섯 · 땅의 고리 · 소리
-        Vec3 hand = RuneKit.handOf(sp).hand();
-        for (int i = 0; i < 6; i++) {
-            Vec3 at = V.add(e.position(), spots[i], ring);
-            JobFx.line(level0, hand, V.up(at, 1.0), j, 0.2, Opt.of("alpha", 0.6));
-            SkillFx.sparks(level0, V.up(at, 1.0), ILLUSION_CORE, 3, 2.5);
-        }
-        JobFx.hexagram(level0, e.position(), ring, 0, 1, Math.max(0.2, first / 20.0), false, Opt.of("vel", RuneKit.entVel(e)), JobFx.outer(j), JobFx.inner(j));
-        SkillFx.play(level0, "entity.illusioner.mirror_move", e.position(), 1.2, 0.9);
-        SkillFx.play(level0, "entity.enderman.teleport", e.position(), 1.5, 0.6);
-        // 서 있는 환영 (4틱마다 — 적을 봄, 꿰뚫은 둘은 반대편에 섬)
-        int[] side = {1, 1, 1, 1, 1, 1};
-        for (int t = 0; t < xAt; t += 4) {
+        Vec3 d = blinkFront(sp, e, 1.3, j);
+        ServerLevel level0 = sp.level();
+        RpgCombat.setSteadfast(sp, xAt + 4);
+        double pad = Kit.bodyPad(e);
+        // 거울: 적 등 뒤 (몸 + 1.5칸) — 면이 나를 봄 · 솟으며 번쩍 (깨질 때까지)
+        Vec3 mFeet = V.add(e.position(), d, 1.5 + pad);
+        Vec3 mc = V.up(mFeet, mirrorH / 2);
+        mirrorPane(level0, mc, V.scale(d, -1), mirrorH, passAt / 20.0 + 0.05, Opt.of("alpha", 0.95), j);
+        JobFx.glint(level0, mc, 1.0, ILLUSION, ILLUSION_CORE, 0.3, Opt.empty());
+        SkillFx.sparks(level0, V.up(mFeet, 0.2), ILLUSION_CORE, 10, 3.0);
+        SkillFx.play(level0, "entity.illusioner.prepare_mirror", mc, 1.2, 1.0);
+        SkillFx.play(level0, "entity.enderman.teleport", sp.position(), 1.4, 0.6);
+        // 거울 속 내가 걸어 나옴 (0 ~ 3틱 — 옅게 → 짙게) → 적 등 뒤에 서서 벨 때마다 베는 꼴 (2틱마다 다시 그림)
+        for (int t = 0; t < passAt; t += t < 3 ? 1 : 2) {
+            int tt = t;
             RuneKit.later(t, () -> {
                 if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
-                ServerLevel lv = sp.level();
-                Vec3 c = e.position();
-                for (int i = 0; i < 6; i++) {
-                    Vec3 at = V.add(c, spots[i], ring * side[i]);
-                    illusion(sp, lv, at, V.flat(V.sub(c, at)), 0, j, 0.24, 0.85);
+                Vec3 back = V.add(e.position(), d, 0.95 + pad);
+                if (tt <= 3) {
+                    illusion(sp, sp.level(), V.lerp(mFeet, back, tt / 3.0), V.scale(d, -1), tt < 3 ? 1 : 0, j, 0.12, 0.45 + 0.15 * tt);
+                    return;
                 }
+                int ph = tt - first;
+                int m = ((ph % every) + every) % every;
+                boolean slashing = ph >= -1 && ph <= every * (packets - 1) + 1 && (m <= 1 || m >= every - 1); // 벨 때 ±1틱은 베는 꼴
+                illusion(sp, sp.level(), back, V.scale(d, -1), slashing ? 2 : 0, j, 0.14, 0.88);
             });
         }
-        // 엇갈려 꿰뚫음: 마주 선 둘 (2틱 — 잔상 줄 · 돌진 꼴) → 반대편에 섬
+        // 앞뒤에서 동시에 엇갈려 벰 (나 = 내 동작 · 거울 속 나 = 베는 꼴) — 앞 · 뒤 X 자국 · 꽃잎 · 유리 울림
         for (int p = 0; p < packets; p++) {
             int pair = p;
             int at = first + p * every;
-            RuneKit.later(at - 2, () -> {
-                if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
-                ServerLevel lv = sp.level();
-                Vec3 c = e.position();
-                for (int q : new int[] {pair, pair + 3}) {
-                    Vec3 from = V.add(c, spots[q], ring * side[q]);
-                    Vec3 to = V.add(c, spots[q], -ring * side[q]);
-                    for (int t = 0; t <= 2; t++) {
-                        int tt = t;
-                        RuneKit.later(t, () -> illusion(sp, lv, V.lerp(from, to, tt / 2.0), V.flat(V.sub(to, from)), 1, j, 0.16, 0.9));
-                    }
-                    JobFx.line(lv, V.up(from, 1.0), V.up(to, 1.0), j, 0.35, Opt.of("alpha", 0.9));
-                    side[q] = -side[q];
-                }
-                SkillFx.play(lv, "entity.player.attack.sweep", c, 1.3 + pair * 0.15, 0.7);
-            });
-            JobKit.strikeSplit(sp, e, j, P, k.num("packet", 2.0), 2, 3, false, false, life, at, d -> {
+            JobKit.strikeSplit(sp, e, j, P, k.num("packet", 2.0), 2, 3, false, false, life, at, dd -> {
                 for (int m = 0; m < marks; m++) JobTraits3.mark(sp, e, j);
                 if (!(e.level() instanceof ServerLevel lv)) return;
                 Vec3 b = Kit.bodyPoint(e);
-                JobFx.cross(lv, b, 0.8 + Kit.bodyPad(e) * 0.4, j, 0.24, Opt.of("vel", RuneKit.entVel(e), "spin", pair * 60.0));
-                JobFx.petals(lv, b, 4, 2.6, 0.12, j, 0.6, Opt.empty());
-                SkillFx.play(lv, "block.amethyst_block.hit", b, 1.4 + pair * 0.1, 0.6);
-            });
-            // 육망성이 한 획씩 이어짐 (꿰뚫은 자국)
-            RuneKit.later(at, () -> {
-                if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
-                ServerLevel lv = sp.level();
-                JobFx.hexagram(lv, e.position(), ring, pair == packets - 1 ? 1 : 0, 1, Math.max(0.2, (pair == packets - 1 ? xAt - at : every) / 20.0 + 0.05),
-                        false, Opt.of("vel", RuneKit.entVel(e), "alpha", 0.85), JobFx.outer(j), JobFx.inner(j));
+                Vec3 vel = RuneKit.entVel(e);
+                JobFx.cross(lv, V.add(b, d, -0.3), 0.8 + pad * 0.4, j, 0.24, Opt.of("vel", vel, "spin", pair * 50.0));
+                JobFx.cross(lv, V.add(b, d, 0.3), 0.75 + pad * 0.4, ILLUSION, ILLUSION_CORE, 0.24, Opt.of("vel", vel, "spin", -pair * 50.0 + 90));
+                JobFx.slash(sp, j, 1.5, 0.25, 1.15, pair % 2 == 0 ? 210.0 : 330.0, 0.18);
+                JobFx.petals(lv, b, 5, 2.8, 0.12, j, 0.6, Opt.empty());
+                SkillFx.sparks(lv, b, ILLUSION_CORE, 5, 3.0);
+                SkillFx.play(lv, "entity.player.attack.sweep", b, 1.3 + pair * 0.12, 0.7);
+                SkillFx.play(lv, "block.amethyst_block.hit", b, 1.5 + pair * 0.1, 0.6);
             });
         }
-        // 나는 등 뒤로 순간 이동 (잔상) → 거대한 X
-        RuneKit.later(blinkAt, () -> {
+        // 엇갈려 꿰뚫음: 나는 거울을 깨며 등 뒤로 (돌아서 적을 봄) · 거울 속 나는 내 자리로 (등을 맞댐)
+        RuneKit.later(passAt, () -> {
             if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) return;
             ServerLevel lv = sp.level();
             Vec3 from = sp.position();
-            Vec3 tw = V.flat(V.sub(e.position(), from));
-            Vec3 behind = Status.isRooted(sp) || Kit.ridingAny(sp) ? null : behindSpot(sp, e, V.len(tw) < 0.1 ? Kit.facingOf(sp) : V.unit(tw));
+            Vec3 tw = V.sub(e.position(), from);
+            Vec3 toward = Math.hypot(tw.x, tw.z) > 0.05 ? V.flat(tw) : d;
+            Vec3 behind = Status.isRooted(sp) || Kit.ridingAny(sp) ? null : behindSpot(sp, e, toward);
             if (behind != null) {
                 Kit.noFall(sp, 20);
-                illusion(sp, lv, from, Kit.facingOf(sp), 1, j, 0.3, 0.7);
+                illusion(sp, lv, from, toward, 1, j, 0.3, 0.7);
                 Kit.moveTo(sp, behind, sp.getYRot(), sp.getXRot());
-                JobFx.line(lv, V.up(from, 1.0), V.up(behind, 1.0), j, 0.3, Opt.empty());
-                SkillFx.play(lv, "entity.enderman.teleport", behind, 1.4, 0.7);
+                JobFx.line(lv, V.up(from, 1.0), V.up(behind, 1.0), j, 0.35, Opt.empty());
             }
+            // 거울 속 나: 등 뒤 → 내가 섰던 자리 (2틱 — 잔상 줄)
+            Vec3 mFrom = V.add(e.position(), d, 0.95 + pad);
+            Vec3 mTo = V.add(e.position(), d, -(1.3 + pad));
+            for (int t = 0; t <= 2; t++) {
+                int tt = t;
+                RuneKit.later(t, () -> illusion(sp, lv, V.lerp(mFrom, mTo, tt / 2.0), V.scale(d, -1), 1, j, 0.16, 0.9));
+            }
+            JobFx.line(lv, V.up(mFrom, 1.05), V.up(mTo, 1.05), ILLUSION, ILLUSION_CORE, 0.35, Opt.empty());
+            // 나는 거울을 깨고 지나감
+            mirrorBreak(lv, mc, V.scale(d, -1), mirrorH, 0.6, j);
+            JobFx.glint(lv, Kit.bodyPoint(e), 0.8, ILLUSION, ILLUSION_CORE, 0.2, Opt.empty());
+            SkillFx.play(lv, "entity.enderman.teleport", sp.position(), 1.4, 0.7);
+            SkillFx.play(lv, "entity.player.attack.sweep", Kit.bodyPoint(e), 0.8, 0.9);
             faceTo(sp, e);
-            JobKit.motion(sp, "trickster_phantom:x");
-            JobFx.charge(sp, j, new Vec3(0.3, 1.3, 0.4), xAt - blinkAt, 0.55);
+            JobKit.motion(sp, "trickster_twin:x");
+            JobFx.charge(sp, j, new Vec3(0.3, 1.3, 0.4), xAt - passAt, 0.55);
         });
-        JobKit.strike(sp, e, j, P, k.num("x", 2.55), false, false, life, xAt, d -> {
+        // 등을 맞댄 거울 속 나 (passAt + 2 ~ xAt)
+        for (int t = passAt + 3; t < xAt; t += 2) {
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
+                illusion(sp, sp.level(), V.add(e.position(), d, -(1.3 + pad)), V.scale(d, -1), 2, j, 0.14, 0.85);
+            });
+        }
+        // 거대한 X (등 뒤 치명 숫자) · 거울 속 나는 깨짐
+        JobKit.strikeCrit(sp, e, j, P, k.num("x", 2.55), false, true, life, xAt, dd -> {
             if (!(e.level() instanceof ServerLevel lv)) return;
             faceTo(sp, e);
             Vec3 b = Kit.bodyPoint(e);
             Vec3 f = Kit.facingOf(sp);
-            JobFx.bigWave(lv, sp, V.add(b, f, -0.3), f, 0, 1.7, 45, 0.45, j, Opt.empty());
-            JobFx.bigWave(lv, sp, V.add(b, f, -0.25), f, 0, 1.7, -45, 0.45, j, Opt.empty());
+            JobFx.bigWave(lv, sp, V.add(b, f, -0.3), f, 0, 1.8, 45, 0.45, j, Opt.empty());
+            JobFx.bigWave(lv, sp, V.add(b, f, -0.25), f, 0, 1.8, -45, 0.45, j, ILLUSION, ILLUSION_CORE, Opt.empty());
             JobFx.slash(sp, j, 1.8, 0.3, 1.3, 330.0, 0.2);
-            JobFx.hexagram(lv, e.position(), ring, 4, 2, 0.5, false, Opt.of("vel", RuneKit.entVel(e)), JobFx.outer(j), JobFx.inner(j));
-            for (int i = 0; i < 6; i++) shatter(lv, V.up(V.add(e.position(), spots[i], ring * side[i]), 1.0), 0.5, j);
-            JobFx.burst(lv, b, 1.3 + Kit.bodyPad(e) * 0.5, j, 0.35, Opt.empty());
+            JobFx.burst(lv, b, 1.4 + pad * 0.5, j, 0.35, Opt.empty());
+            JobFx.mirror(lv, b, 1.1 + pad * 0.4, 0.45, Opt.empty(), ILLUSION, JobFx.inner(j));
+            shatter(lv, V.up(V.add(e.position(), d, -(1.3 + pad)), 1.0), 0.7, j);
             JobFx.petals(lv, b, 10, 3.5, 0.14, j, 0.8, Opt.empty());
             SkillFx.play(lv, "entity.player.attack.crit", b, 0.9, 1.0);
-            SkillFx.play(lv, "block.glass.break", b, 0.9, 1.0);
+            SkillFx.play(lv, "block.glass.break", b, 0.8, 1.0);
         });
-        JobSystem.note(sp, "§d환영 여섯 §7· 표식 +" + marks * packets);
+        JobSystem.note(sp, "§d거울 속 나 §7· 표식 +" + marks * packets);
         return true;
     }
 
-    // ------------------------------------------------------------ 미러 팰리스
+    // ------------------------------------------------------------ 팬텀 왈츠 (2026-11-07 재설계안 3판 — 미러 팰리스 대신)
 
-    /** 미러 팰리스: dur 틱 태세 (도는 거울 · 어느 쪽에서든 등 뒤 · 거울 베기 — JobTraits10) — 땅에서 거울 여섯이 솟음 · 유리 울림 */
-    static boolean palace(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+    /**
+     * 팬텀 왈츠: dur 틱 태세 (춤 상대 환영 · 늘 등 뒤 · 환영 베기 — JobTraits10) — 내 몸에서 환영이 한 바퀴 돌며 걸어 나와 춤 상대처럼 곁에 섬 · 몸 둘레 빛 리본 ·
+     * 유리 울림 (화면은 움직이지 않음 — 멀미: 내가 매번 등 뒤로 옮겨 가면 화면이 180° 씩 돎)
+     */
+    static boolean waltz(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         int dur = Math.max(20, (int) JobUpgrades.num(sp, k, "dur", k.num("dur", 160)));
         JobTraits.startStance(sp, k, dur);
+        JobTraits10.waltzStart(sp);
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
-        double r = k.num("radius", 2.6);
-        int n = Math.max(3, (int) k.num("mirrors", 6));
-        for (int i = 0; i < n; i++) {
-            double a = i * Math.PI * 2 / n;
-            Vec3 out = new Vec3(Math.cos(a), 0, Math.sin(a));
-            Vec3 at = V.add(c, out, r);
-            JobFx.glint(level, V.up(at, 1.2), 0.5, ILLUSION, ILLUSION_CORE, 0.35, Opt.empty());
-            SkillFx.sparks(level, V.up(at, 0.4), ILLUSION_CORE, 3, 2.0);
+        Vec3 f = Kit.facingOf(sp);
+        String life = RuneKit.lifeToken(sp);
+        // 몸에서 갈라져 나온 환영이 반 바퀴 돌아 곁에 섬 (6틱)
+        for (int t = 0; t <= 6; t++) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                double a = Math.PI * tt / 6;
+                Vec3 out = V.add(V.scale(V.rightOf(f), Math.cos(a)), f, -Math.sin(a) * 0.6);
+                Vec3 at = V.add(sp.position(), out, 0.25 + 0.95 * tt / 6.0);
+                illusion(sp, sp.level(), at, V.rightOf(out), tt < 6 ? 1 : 0, j, 0.14, 0.45 + 0.07 * tt);
+            });
         }
-        JobFx.halo(level, V.up(c, 0.06), r, j, 0.6, Opt.of("vel", RuneKit.bodyVel(sp)));
-        JobFx.ribbon(level, V.up(c, 0.9), 1.1, j, 0.5, 22, JobFx.hide1p(sp).with("alpha", 0.8));
-        SkillFx.play(level, "block.amethyst_block.resonate", c, 1.0, 1.0);
-        SkillFx.play(level, "entity.illusioner.prepare_mirror", c, 1.1, 0.9);
+        JobFx.ribbon(level, V.up(c, 0.9), 1.2, j, 0.6, 22, JobFx.hide1p(sp).with("alpha", 0.85));
+        JobFx.halo(level, V.up(c, 0.06), 1.6, j, 0.5, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.7));
+        JobFx.petals(level, V.up(c, 1.0), 8, 2.4, 0.12, j, 0.7, Opt.empty());
+        SkillFx.sparks(level, V.up(c, 1.0), ILLUSION_CORE, 8, 3.0);
+        SkillFx.play(level, "block.amethyst_block.resonate", c, 1.2, 1.0);
+        SkillFx.play(level, "entity.illusioner.mirror_move", c, 1.1, 0.9);
         return true;
     }
 
-    // ------------------------------------------------------------ 와일드파이어 피스트
+    // ------------------------------------------------------------ 미러 월드 (2026-11-07 재설계안 3판 — 와일드파이어 피스트 대신 · 숫자 · 매커니즘 그대로)
 
-    /** 와일드파이어 피스트 자신의 타격 (들불 표식에 쌓지 않음 — JobTraits10.ownFire): delay 틱 뒤 (그 적이 무적 시간이면 끝난 뒤) */
+    /** 미러 월드 자신의 타격 (거울 세계에 쌓지 않음 — JobTraits10.ownMirror): delay 틱 뒤 (그 적이 무적 시간이면 끝난 뒤) */
     private static void ownHit(ServerPlayer sp, LivingEntity e, Jobs.Job j, double P, double mult, String life, int delay, java.util.function.DoubleConsumer then) {
         JobKit.hitLater(sp, e, life, JobKit.now() + Math.max(0, delay), () -> {
             double d;
-            JobTraits10.ownFire = true;
+            JobTraits10.ownMirror = true;
             try {
                 d = JobKit.hit(sp, e, j, P, mult, false, false);
             } finally {
-                JobTraits10.ownFire = false;
+                JobTraits10.ownMirror = false;
             }
             if (d > 0 && then != null) then.accept(d);
         });
     }
 
     /**
-     * 와일드파이어 피스트: 들불 하늘 (rpg:ult_wildfire) · 겨눈 적 (range 칸 — 없으면 쓰지 않음) 에게 순간 이동해 (등 뒤가 아니라 앞 1.2칸) slashAt 틱 베며 (slash) 들불
-     * 표식을 새김 (finalAt 틱까지 — 그동안 다른 공격으로 그 적에게 준 피해를 쌓음 · JobTraits10) → first 틱부터 every 틱마다 flames 번 들불을 두른 내 환영이 사방에서
-     * 꿰뚫음 (flame · 표식 +1) → finalAt 틱 들불이 터지며 표식을 모두 터뜨림 (base + per × 표식) + 쌓인 피해 × store (큰 숫자 · 불기둥)
+     * 미러 월드: 보랏빛 거울 하늘 (rpg:ult_mirror) · 겨눈 적 (range 칸 — 없으면 쓰지 않음) 앞 (1.2칸) 으로 순간 이동 · 그 적 둘레 ring 칸에 거울 mirrors 장이 차례로 솟아
+     * 거울 세계를 이룸 (안쪽을 봄 — 앞면만 그려져 바깥 · 3인칭 카메라 쪽 거울은 뒷면이 비침) → slashAt 틱 베며 (slash) 거울 세계에 가둠 (finalAt 틱까지 — 그동안 다른
+     * 공격으로 그 적에게 준 피해를 쌓음 · JobTraits10) → first 틱부터 every 틱마다 flames 번 거울 하나에서 내 환영이 튀어나와 적을 꿰뚫고 맞은편 거울로 들어감 (flame ·
+     * 표식 +1) → finalAt − 6 거울이 모두 번쩍 → finalAt 거울 세계가 유리처럼 깨지며 표식을 모두 터뜨림 (base + per × 표식) + 쌓인 피해 × store (큰 숫자) → 하늘이 돌아옴
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         double range = k.num("range", 10);
@@ -615,101 +643,154 @@ final class TricksterSkills {
             Notify.notify(sp, "§c" + k.name() + " §7— 겨눈 적이 없습니다 (" + Js.str(range) + "칸)", 30);
             return false;
         }
-        ServerLevel level0 = sp.level();
         int slashAt = Math.max(1, (int) k.num("slashAt", 2));
         int first = Math.max(slashAt + 10, (int) k.num("first", 12));
         int every = Math.max(10, (int) k.num("every", 10));
         int flames = Math.max(1, (int) k.num("flames", 4));
         int finalAt = Math.max(first + every * (flames - 1) + 10, (int) k.num("finalAt", 62));
+        int n = Math.max(6, (int) k.num("mirrors", 12));
+        double mirrorH = k.num("mirrorH", 3.0);
         String life = RuneKit.lifeToken(sp);
-        Ult.sky(level0, sp.position(), "rpg:ult_wildfire", finalAt + 30);
-        // 순간 이동: 적 앞 1.2칸 (적과 나 사이) — 떠난 자리엔 불꽃 잔상
-        Vec3 start = sp.position();
-        double dist = V.hdist(e.position(), start); // V.flat 은 단위 방향 — 거리는 hdist
-        Vec3 u = dist < 0.1 ? Kit.facingOf(sp) : V.flat(V.sub(e.position(), start));
-        if (!Status.isRooted(sp) && !Kit.ridingAny(sp)) {
-            double in = Math.max(0, dist - 1.2 - Kit.bodyPad(e));
-            if (in > 0.3) {
-                Vec3 to = V.add(start, u, Math.min(in, RuneKit.dashDistance(sp, u, in, 0.3, 1.5)));
-                fireClone(sp, level0, start, u, 1, j, 0.35, 0.8);
-                Kit.noFall(sp, 30);
-                Kit.moveTo(sp, to, sp.getYRot(), sp.getXRot());
-                JobFx.line(level0, V.up(start, 1.0), V.up(to, 1.0), FIRE, FIRE_CORE, 0.3, Opt.empty());
-            }
-        }
-        faceTo(sp, e);
+        Ult.sky(sp.level(), sp.position(), "rpg:ult_mirror", finalAt + 8);
+        Vec3 u = blinkFront(sp, e, 1.2, j);
+        ServerLevel level0 = sp.level();
         RpgCombat.setSteadfast(sp, slashAt + 6);
-        SkillFx.play(level0, "entity.blaze.shoot", sp.position(), 0.8, 1.0);
+        SkillFx.play(level0, "entity.illusioner.mirror_move", sp.position(), 0.8, 1.0);
         SkillFx.play(level0, "entity.enderman.teleport", sp.position(), 0.9, 0.8);
-        JobTraits10.startFire(sp, e, finalAt + 2);
-        // 들불 표식: 머리 위 · 발밑 불꽃 고리 (6틱마다 다시 — 터질 때까지)
-        for (int t = slashAt; t < finalAt; t += 6) {
-            int tt = t;
-            RuneKit.later(t, () -> {
-                if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !(e.level() instanceof ServerLevel lv)) return;
-                Vec3 over = RuneKit.overHead(e, 2.0); // 피해 숫자 (머리 위 0.5 ~ 1.5칸) 를 가리지 않게 그 위에 (영상 1)
-                JobFx.maw(lv, over, 0.75 + Kit.bodyPad(e) * 0.3, tt == slashAt ? 0 : 2, tt == slashAt ? 2 : 4, tt == slashAt ? 0.3 : 0.36, tt != slashAt, Opt.of("vel",
-                        RuneKit.entVel(e), "fade", 0.0), FIRE, FIRE_CORE);
-                double rr = 1.0 + Kit.bodyPad(e);
-                for (int i = 0; i < 5; i++) {
-                    double a = tt * 0.15 + i * Math.PI * 2 / 5;
-                    Vec3 p = V.add(e.position(), new Vec3(Math.cos(a), 0, Math.sin(a)), rr);
-                    JobFx.flame(lv, p, 0.28, 0.36, Opt.of("vel", RuneKit.entVel(e)), FIRE, FIRE_CORE);
-                }
-                if (tt % 18 == slashAt % 18) SkillFx.play(lv, "block.fire.ambient", e.position(), 1.2, 0.7);
+        JobTraits10.startMirror(sp, e, finalAt + 2);
+        // 거울 세계: 적 둘레 R 칸에 거울 n 장 (안쪽을 봄 — 앞에서부터 양옆으로 차례로 솟음 · 깨질 때까지) · 땅의 빛 고리
+        Vec3 c0 = e.position();
+        double R = k.num("ring", 4.0) + Kit.bodyPad(e);
+        double a0 = Math.atan2(u.z, u.x);
+        Vec3[] spots = new Vec3[n];
+        for (int i = 0; i < n; i++) {
+            double a = a0 + i * Math.PI * 2 / n;
+            spots[i] = new Vec3(Math.cos(a), 0, Math.sin(a));
+            int ii = i;
+            int order = Math.min(i, n - i); // 앞 (0) 에서 양옆으로 뒤까지
+            RuneKit.later(order, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel lv = sp.level();
+                Vec3 g = V.add(c0, spots[ii], R);
+                Vec3 m = V.up(new Vec3(g.x, RuneKit.groundAt(lv, V.up(g, 2.0), c0.y), g.z), mirrorH / 2);
+                JobFx.pane(lv, m, V.scale(spots[ii], -1), mirrorH, (finalAt - order) / 20.0 + 0.05, Opt.of("alpha", 0.95), ILLUSION, JobFx.inner(j));
+                JobFx.glint(lv, m, 0.8, ILLUSION, ILLUSION_CORE, 0.25, Opt.empty());
+                SkillFx.sparks(lv, V.up(m, -mirrorH / 2 + 0.2), ILLUSION_CORE, 4, 2.0);
+                if (ii % 3 == 0) SkillFx.play(lv, "block.amethyst_block.chime", m, 1.0 + 0.08 * order, 0.8);
             });
         }
-        // 베며 새김
+        JobFx.halo(level0, V.up(c0, 0.06), R, j, finalAt / 20.0, Opt.of("alpha", 0.65));
+        // 거울 속 빛 (8틱마다 — 거울 몇 장에 반짝임이 스침)
+        for (int t = 8; t < finalAt - 6; t += 8) {
+            int tt = t;
+            RuneKit.later(t, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel lv = sp.level();
+                for (int q = 0; q < 3; q++) {
+                    int i = (tt / 8 * 5 + q * 4) % n;
+                    Vec3 m = V.up(V.add(c0, spots[i], R), 0.6 + Kit.rand() * (mirrorH - 0.8));
+                    JobFx.glint(lv, m, 0.35, ILLUSION, ILLUSION_CORE, 0.3, Opt.empty());
+                }
+            });
+        }
+        // 베며 가둠
         ownHit(sp, e, j, P, k.num("slash", 6), life, slashAt, d -> {
             if (!(e.level() instanceof ServerLevel lv)) return;
             Vec3 b = Kit.bodyPoint(e);
-            JobFx.bigWave(lv, sp, V.add(b, Kit.facingOf(sp), -0.3), Kit.facingOf(sp), 0, 1.6, 20, 0.4, j, FIRE, FIRE_CORE, Opt.empty());
+            JobFx.bigWave(lv, sp, V.add(b, Kit.facingOf(sp), -0.3), Kit.facingOf(sp), 0, 1.6, 20, 0.4, j, Opt.empty());
             JobFx.slash(sp, j, 1.8, 0.3, 1.25, 200.0, 0.2);
-            JobFx.burst(lv, b, 1.1, FIRE, FIRE_CORE, 0.3, Opt.empty());
+            JobFx.burst(lv, b, 1.1, ILLUSION, ILLUSION_CORE, 0.3, Opt.empty());
+            JobFx.mirror(lv, b, 0.8, 0.4, Opt.empty(), ILLUSION, JobFx.inner(j));
             SkillFx.play(lv, "entity.player.attack.crit", b, 1.0, 1.0);
-            SkillFx.play(lv, "item.firecharge.use", b, 1.2, 0.8);
+            SkillFx.play(lv, "block.glass.hit", b, 1.2, 0.8);
         });
-        // 들불 환영 넷: 사방에서 꿰뚫음 (0.1초 — 불꽃 꼬리)
-        Vec3 r = V.rightOf(u);
-        Vec3[] dirs = {r, V.scale(u, -1), V.scale(r, -1), u};
+        // 거울에서 튀어나온 환영 넷: 오른쪽 · 왼쪽 · 앞 오른쪽 · 앞 왼쪽 거울에서 맞은편 거울로 (2틱 나옴 → 3틱 꿰뚫음 — 잔상 줄)
+        int[] from = {n / 4, n - n / 4, n / 12, n - n / 12};
         for (int i = 0; i < flames; i++) {
             int at = first + i * every;
-            Vec3 d0 = dirs[i % dirs.length];
-            RuneKit.later(at - 2, () -> {
-                if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
+            int si = from[i % from.length] % n;
+            int ti = (si + n / 2) % n;
+            RuneKit.later(at - 4, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
                 ServerLevel lv = sp.level();
-                double rr = 2.6 + Kit.bodyPad(e);
-                Vec3 from = V.add(e.position(), d0, rr);
-                Vec3 to = V.add(e.position(), d0, -rr);
-                for (int t = 0; t <= 2; t++) {
+                Vec3 s0 = V.add(c0, spots[si], R);
+                Vec3 s1 = V.add(c0, spots[si], R - 0.9);
+                Vec3 face = V.scale(spots[si], -1);
+                // 거울이 번쩍 → 환영이 걸어 나옴
+                JobFx.pane(lv, V.up(s0, mirrorH / 2), face, mirrorH, 0.25, Opt.of("alpha", 1.0), ILLUSION_CORE, ILLUSION_CORE);
+                JobFx.glint(lv, V.up(s0, mirrorH / 2), 1.0, ILLUSION, ILLUSION_CORE, 0.25, Opt.empty());
+                for (int t = 0; t <= 1; t++) {
                     int tt = t;
-                    RuneKit.later(t, () -> fireClone(sp, lv, V.lerp(from, to, tt / 2.0), V.scale(d0, -1), 1, j, 0.2, 0.9));
+                    RuneKit.later(t, () -> illusion(sp, lv, V.lerp(s0, s1, tt), face, 0, j, 0.12, 0.6 + 0.3 * tt));
                 }
-                JobFx.comet(lv, V.up(to, 1.0), V.scale(d0, -1), 0.9, 40, 0.15, FIRE, FIRE_CORE, Opt.empty());
-                JobFx.line(lv, V.up(from, 1.0), V.up(to, 1.0), FIRE, FIRE_CORE, 0.3, Opt.empty());
-                SkillFx.play(lv, "entity.blaze.shoot", e.position(), 1.3, 0.6);
+                SkillFx.play(lv, "entity.illusioner.mirror_move", s0, 1.4, 0.7);
+            });
+            RuneKit.later(at - 2, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                ServerLevel lv = sp.level();
+                Vec3 s1 = V.add(c0, spots[si], R - 0.9);
+                Vec3 t1 = V.add(c0, spots[ti], R - 0.4);
+                Vec3 face = V.scale(spots[si], -1);
+                for (int t = 0; t <= 3; t++) {
+                    int tt = t;
+                    RuneKit.later(t, () -> illusion(sp, lv, V.lerp(s1, t1, tt / 3.0), face, tt < 3 ? 1 : 3, j, 0.16, 0.9));
+                }
+                JobFx.line(lv, V.up(s1, 1.0), V.up(t1, 1.0), ILLUSION, ILLUSION_CORE, 0.35, Opt.empty());
+                JobFx.line(lv, V.up(s1, 1.05), V.up(t1, 1.05), j, 0.3, Opt.of("alpha", 0.7));
+                SkillFx.play(lv, "entity.player.attack.sweep", e.position(), 1.4, 0.6);
+                // 맞은편 거울로 들어감 (번쩍)
+                RuneKit.later(4, () -> {
+                    if (!RuneKit.sameLife(sp, life)) return;
+                    Vec3 tm = V.up(V.add(c0, spots[ti], R), mirrorH / 2);
+                    JobFx.pane(lv, tm, V.scale(spots[ti], -1), mirrorH, 0.2, Opt.of("alpha", 1.0), ILLUSION_CORE, ILLUSION_CORE);
+                    JobFx.glint(lv, tm, 0.8, ILLUSION, ILLUSION_CORE, 0.2, Opt.empty());
+                });
             });
             ownHit(sp, e, j, P, k.num("flame", 1.5), life, at, d -> {
                 JobTraits3.mark(sp, e, j);
                 if (!(e.level() instanceof ServerLevel lv)) return;
                 Vec3 b = Kit.bodyPoint(e);
-                JobFx.cross(lv, b, 0.8 + Kit.bodyPad(e) * 0.4, j, 0.24, Opt.of("vel", RuneKit.entVel(e)));
-                JobFx.flame(lv, e.position(), 0.5 + Kit.bodyPad(e) * 0.3, 0.4, Opt.of("vel", RuneKit.entVel(e)), FIRE, FIRE_CORE);
+                JobFx.cross(lv, b, 0.85 + Kit.bodyPad(e) * 0.4, ILLUSION, ILLUSION_CORE, 0.24, Opt.of("vel", RuneKit.entVel(e)));
+                JobFx.mirror(lv, b, 0.6, 0.35, Opt.empty(), ILLUSION, JobFx.inner(j));
+                JobFx.petals(lv, b, 4, 2.6, 0.12, j, 0.6, Opt.empty());
+                SkillFx.play(lv, "block.amethyst_block.hit", b, 1.5, 0.7);
             });
         }
-        // 터짐: 표식을 모두 + 쌓인 피해의 store
-        JobKit.motionLater(sp, "trickster_ult:final", finalAt - 4, life);
-        RuneKit.later(finalAt - 4, () -> {
-            if (RuneKit.sameLife(sp, life)) JobFx.charge(sp, j, new Vec3(0.3, 1.4, 0.4), 4, 0.6);
+        // 깨짐: finalAt − 6 거울이 모두 번쩍 (금) · 내 동작 → finalAt 거울 세계가 유리처럼 깨지며 표식을 모두 + 쌓인 피해의 store
+        JobKit.motionLater(sp, "trickster_ult:final", finalAt - 4, life); // 손가락을 튕기는 때 (동작 4틱) = 깨지는 틱
+        RuneKit.later(finalAt - 6, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            JobFx.charge(sp, j, new Vec3(0.3, 1.4, 0.4), 6, 0.6);
+            ServerLevel lv = sp.level();
+            for (int i = 0; i < n; i++) {
+                Vec3 m = V.up(V.add(c0, spots[i], R), mirrorH / 2);
+                JobFx.glint(lv, m, 0.9, ILLUSION, ILLUSION_CORE, 0.3, Opt.empty());
+            }
+            SkillFx.play(lv, "block.glass.hit", c0, 0.7, 1.0);
+            SkillFx.play(lv, "block.amethyst_block.resonate", c0, 0.6, 1.0);
         });
         RuneKit.later(finalAt, () -> {
-            if (!RuneKit.sameLife(sp, life) || e.isRemoved() || !e.isAlive()) {
-                if (!e.isAlive()) JobTraits10.takeFire(sp, e);
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
+            // 거울 세계가 깨짐 (적이 쓰러졌어도 그림은 그림)
+            for (int i = 0; i < n; i++) {
+                int ii = i;
+                RuneKit.later(Math.min(i, n - i) / 2, () -> {
+                    Vec3 g = V.add(c0, spots[ii], R);
+                    Vec3 m = V.up(new Vec3(g.x, RuneKit.groundAt(lv, V.up(g, 2.0), c0.y), g.z), mirrorH / 2);
+                    JobFx.mirrorShatter(lv, m, V.scale(spots[ii], -1), mirrorH, 0.6, Opt.empty(), ILLUSION, JobFx.inner(j));
+                    JobFx.mirrorShatter(lv, m, spots[ii], mirrorH, 0.6, Opt.empty(), ILLUSION, JobFx.inner(j));
+                    if (ii % 2 == 0) SkillFx.play(lv, "block.glass.break", m, 0.7 + Kit.rand() * 0.4, 0.9);
+                });
+            }
+            SkillFx.shock(lv, V.up(c0, 0.06), ILLUSION, R, 0.5);
+            SkillFx.play(lv, "block.amethyst_cluster.break", c0, 0.6, 1.0);
+            if (e.isRemoved() || !e.isAlive()) {
+                if (!e.isAlive()) JobTraits10.takeMirror(sp, e);
                 return;
             }
-            ServerLevel lv = sp.level();
             int nMarks = JobTraits3.takeMarks(sp, e);
-            double stored = JobTraits10.takeFire(sp, e);
+            double stored = JobTraits10.takeMirror(sp, e);
             double mult = k.num("base", 12) + k.num("per", 2) * nMarks;
             double extra = stored * k.num("store", 0.15);
             JobKit.strikeSplit(sp, e, j, P, mult, 1 + nMarks, 2, false, true, life, 0, null);
@@ -718,21 +799,14 @@ final class TricksterSkills {
                 JobKit.strike(sp, e, j, extra, 1.0, true, true, life, 0, null);
             }
             Vec3 b = Kit.bodyPoint(e);
-            Vec3 g = e.position();
-            JobFx.maw(lv, V.up(b, 0.4), 1.4 + Kit.bodyPad(e) * 0.5, 6, 2, 0.45, false, Opt.empty(), FIRE, FIRE_CORE);
-            for (int i = 0; i < 8; i++) {
-                double a = i * Math.PI / 4;
-                JobFx.flame(lv, V.add(g, new Vec3(Math.cos(a), 0, Math.sin(a)), 0.8 + Kit.bodyPad(e)), 0.7, 0.6, Opt.empty(), FIRE, FIRE_CORE);
-            }
-            JobFx.flame(lv, g, 1.3 + Kit.bodyPad(e) * 0.5, 0.7, Opt.empty(), FIRE, FIRE_CORE);
-            JobFx.burst(lv, b, 2.0 + Kit.bodyPad(e) * 0.6, FIRE, FIRE_CORE, 0.45, Opt.empty());
-            SkillFx.shock(lv, V.up(g, 0.06), FIRE, 1.6, 0.5);
+            JobFx.mirror(lv, b, 1.8 + Kit.bodyPad(e) * 0.5, 0.55, Opt.empty(), ILLUSION, JobFx.inner(j));
+            JobFx.burst(lv, b, 2.2 + Kit.bodyPad(e) * 0.6, j, 0.45, Opt.empty());
+            JobFx.burst(lv, b, 1.6, ILLUSION, ILLUSION_CORE, 0.35, Opt.empty());
             flowersBurst(lv, sp, e, nMarks, j);
             JobFx.petals(lv, b, 14, 4.5, 0.15, j, 0.9, Opt.empty());
-            SkillFx.play(lv, "entity.generic.explode", b, 1.2, 0.9);
-            SkillFx.play(lv, "item.firecharge.use", b, 0.7, 1.0);
-            SkillFx.play(lv, "block.amethyst_block.chime", b, 0.7, 1.0);
-            JobSystem.note(sp, "§d표식 " + nMarks + " §7· 들불 " + Math.round(stored) + " → +" + Math.round(extra));
+            SkillFx.play(lv, "entity.generic.explode", b, 1.3, 0.8);
+            SkillFx.play(lv, "block.glass.break", b, 0.6, 1.0);
+            JobSystem.note(sp, "§d표식 " + nMarks + " §7· 거울 세계 " + Math.round(stored) + " → +" + Math.round(extra));
         });
         return true;
     }

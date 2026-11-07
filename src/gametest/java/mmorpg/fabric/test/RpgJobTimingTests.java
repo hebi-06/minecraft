@@ -301,7 +301,7 @@ public final class RpgJobTimingTests {
 
     /**
      * 0.51.0 2차 직업 — 암살자 각성 트릭스터 (재설계안 2판 — 2026-11-06: 섀도 스와프는 12틱에 다시 눌러 14 에 찌름 · 표식 1 이라 일부, 미라주 대시는 과녁을 내려설 자리 (6칸)
-     * 에 — 4 에 벰 · 12 에 다시 눌러 돌아옴, 사우전드 팬텀 4 ~ 34, 와일드파이어 피스트는 표식 4 라 일부 — 62 에 터짐)
+     * 에 — 4 에 벰 · 12 에 다시 눌러 돌아옴, 트윈 리플렉션 (3판) 4 ~ 34, 미러 월드는 표식 4 라 일부 — 62 에 깨짐)
      */
     @GameTest(environment = "mmorpg:jt_tr", maxTicks = 2400)
     public void timingTrickster(GameTestHelper h) {

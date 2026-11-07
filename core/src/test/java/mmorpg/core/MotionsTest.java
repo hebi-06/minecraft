@@ -366,7 +366,8 @@ public final class MotionsTest {
                 && Motions.skillMotion("mage_overload:split").equals("jb_mage_overload_split") && Motions.skillMotion("spellblade_awaken").equals("jb_spellblade_awaken"),
                 "0.51.0 마검사 2차 동작 (내려쳐 가름 · 칼을 받음은 단계 열쇠 — 헥스 블레이드 · 룬 나이트 · 룬 스미스 동작은 뺌)");
         check(Motions.skillMotion("trickster_swap").equals("jb_trickster_swap") && Motions.skillMotion("trickster_swap:stab").equals("jb_trickster_swap_stab")
-                && Motions.skillMotion("trickster_dash:back").equals("jb_trickster_dash_back") && Motions.skillMotion("trickster_phantom:x").equals("jb_trickster_phantom_x")
+                && Motions.skillMotion("trickster_dash:back").equals("jb_trickster_dash_back") && Motions.skillMotion("trickster_twin:x").equals("jb_trickster_twin_x")
+                && Motions.skillMotion("trickster_waltz").equals("jb_trickster_waltz") && Motions.skillMotion("trickster_phantom") == null && Motions.skillMotion("trickster_palace") == null
                 && Motions.skillMotion("trickster_ult:final").equals("jb_trickster_ult_final") && Motions.skillMotion("trickster_rose") == null
                 && Motions.skillMotion("pierrot_spring").equals("jb_pierrot_spring") && Motions.skillMotion("pierrot_ult:bow").equals("jb_pierrot_ult_bow")
                 && Motions.skillMotion("pierrot_ult:cheer").equals("jb_pierrot_ult_cheer") && Motions.skillMotion("bladedancer_ray") == null,

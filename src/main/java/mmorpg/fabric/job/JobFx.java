@@ -646,6 +646,11 @@ final class JobFx {
         two(level, "jcross2", CROSS, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), outer(j), inner(j));
     }
 
+    /** 같은 것 — 색을 정함 (2026-11-07 트릭스터 거울 속 나의 X 자국 — 청록 환영빛) */
+    static void cross(ServerLevel level, Vec3 at, double size, double[] glow, double[] core, double life, Opt o) {
+        two(level, "jcross2", CROSS, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : Kit.rand() * 360), glow, core);
+    }
+
     /** 찌르기 번쩍 (rfx_jstab — 카메라를 봄): 길쭉한 창끝 빛 · 가로 충격 줄 · 퍼지는 고리 (반 크기 size) */
     static void stab(ServerLevel level, Vec3 at, double size, Jobs.Job j, double life, Opt o) {
         two(level, "jstab2", STAB, at, life, o.with("size", size, "spin", o.has("spin") ? o.num("spin", 0) : (Kit.rand() - 0.5) * 50), outer(j), inner(j));
@@ -1428,11 +1433,10 @@ final class JobFx {
 
     // ------------------------------------------------------------ 0.51.0 암살자 2차 그림 (tools/job_fx_art_adv.py — 재설계안 2판 2026-11-06: 트릭스터 · 피에로)
 
-    /** 장 수: 거울 조각 · 거울 · 육망성 · 들불 표식 · 색종이 · 풍선 · 불꽃놀이 · 조명 */
+    /** 장 수: 거울 조각 · 거울 · 깨지는 거울 (2026-11-07 3판 — 육망성 rfx_jhexa · 들불 표식 rfx_jmaw 는 뺌) · 색종이 · 풍선 · 불꽃놀이 · 조명 */
     static final int MIRROR = 6;
     static final int PANE = 4;
-    static final int HEXA = 6;
-    static final int MAW = 8;
+    static final int MSHATTER = 8;
     static final int CONFETTI = 6;
     static final int BALLOON = 8;
     static final int FIREWORK = 6;
@@ -1457,24 +1461,13 @@ final class JobFx {
     }
 
     /**
-     * 육망성 (rfx_jhexa — 땅에 누움): 0 두 세모의 선이 그어짐 · 1 다 그어지며 번쩍 · 2 ~ 3 빛남 (loop 면 이어 돌림 — 꼭짓점 별 · 고리 룬) · 4 크게 번쩍 · 5 조각나
-     * 흩어짐. 꼭짓점 반지름 radius 칸 (= 반 크기 × 0.88)
+     * 2026-11-07 깨지는 거울 (rfx_jmshatter — 세워 면이 dir 쪽, rfx_jpane 과 같은 아치 거울): 0 맞은 자리 번쩍 · 짧은 금 → 1 ~ 2 금이 끝까지 뻗고 환히 빛남 → 3 갈라져
+     * 튐 → 4 ~ 7 조각이 돌며 바깥으로 날아가 떨어짐 (life 초에 걸쳐). 가운데 at · 거울 높이 height 칸 ({@link #pane} 과 같은 크기 — 칸이 둘레 여유만큼 커서 반 너비 =
+     * height / 1.75). 앞면만 그려지므로 둘레 어디서나 보이게 하려면 두 장 (dir · −dir)
      */
-    static void hexagram(ServerLevel level, Vec3 center, double radius, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
-        int f = Math.max(0, Math.min(HEXA - 1, from));
-        int n = Math.max(1, Math.min(HEXA - f, count));
-        cells(level, "jhexa", HEXA, f, n, V.up(center, 0.07), life, loop ? 6 : 0, loop, o.with("dir", V.UP, "size", radius / 0.88, "spin", o.has("spin") ? o.num(
-                "spin", 0) : 0.0, "fade", o.num("fade", 0.2)), glow, core);
-    }
-
-    /**
-     * 들불 표식 (rfx_jmaw — 카메라를 봄): 0 ~ 1 불씨가 고리로 번지며 타오름 · 2 ~ 5 불꽃 혀가 도는 고리 + 가운데 불타는 눈 (loop 면 이어 돌림) · 6 크게 번쩍 ·
-     * 7 불길이 사방으로 터짐. 고리 반지름 약 size × 0.75 칸
-     */
-    static void maw(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
-        int f = Math.max(0, Math.min(MAW - 1, from));
-        int n = Math.max(1, Math.min(MAW - f, count));
-        cells(level, "jmaw", MAW, f, n, at, life, loop ? 10 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.2)), glow, core);
+    static void mirrorShatter(ServerLevel level, Vec3 at, Vec3 dir, double height, double life, Opt o, double[] glow, double[] core) {
+        cells(level, "jmshatter", MSHATTER, 0, MSHATTER, at, life, 0, false, o.with("dir", V.len(dir) < 1e-3 ? V.UP : V.unit(dir), "size", height / 1.75, "fade",
+                o.num("fade", 0.2)), glow, core);
     }
 
     /** 서 있는 불꽃 (rfx_jflame — 이어 돌림): 아래 끝 at 에서 위로 높이 약 size × 2.4 칸 · 색을 정함 */

@@ -91,8 +91,8 @@ import net.minecraft.world.phys.Vec3;
  * 스톰 스트라이드 (이동 +25% · 서서도 세 갈래 — 옆 평타 × 1) · 퀴버 스톰 (8 × 6 + 12)</li>
  * <li>트릭스터 (mmorpg:job_tr — 재설계안 2판): 표식 최대 7 · 표식 5 인 몹을 평타로 쓰러뜨리면 (+1) 옆 과녁에게 6 이 옮겨감 · 섀도 스와프 (환영이 꿰뚫음 0.35 · 표식 +1 →
  * 다시 눌러 과녁 등 뒤로 자리를 바꿔 찌름 0.2 + 0.6 × 7 · 과녁을 봄) · 미라주 대시 (6칸 뛰어듦 · 지나간 과녁 표식 +1 · 내려서며 2.85 · 표식 +1 → 다시 눌러 처음 자리로) ·
- * 사우전드 팬텀 (2.0 × 3 · 표식 +2씩 → 등 뒤로 순간 이동 → X 2.55) · 미러 팰리스 (단검 평타 + 거울 베기 50% · 표식 +2) · 와일드파이어 피스트 (6 + 1.5 × 4 → 표식 7 →
- * 12 + 2 × 7 + 그동안 준 다른 피해 × 0.15)</li>
+ * 트윈 리플렉션 (3판 — 거울 속 나와 앞뒤에서 2.0 × 3 · 표식 +2씩 → 엇갈려 꿰뚫고 등 뒤로 → X 2.55) · 팬텀 왈츠 (단검 평타 + 환영 베기 50% · 표식 +2) · 미러 월드
+ * (6 + 1.5 × 4 → 표식 7 → 12 + 2 × 7 + 그동안 준 다른 피해 × 0.15)</li>
  * <li>피에로 (mmorpg:job_pi — 블레이드 댄서 대신): 핸드스프링 (5칸 재주넘기 → 2.85 · 도발 · 받는 피해 −30%) · 벌룬 퍼레이드 (과녁 둘 — 감음 2.55 · 둔화 → 펑 6.0) ·
  * 잭 인 더 박스 (과녁 앞 상자 — 체력 35% · 칼 0.95 × 5 · 플레이어 공격은 막힘) · 쇼타임 (받을 피해의 20% 를 상자가 · 몬스터가 상자를 노리고 때림 · 상자가 부서지면
  * 위력 × 0.8 · 기절) · 할루시네이트 (커다란 인형 — 체력 80% · 1.14 씩 뿅망치) · 그랜드 피날레 (상자 넷 · 2.5 × 8 + 18 → 상자가 사라짐)</li>
@@ -1818,41 +1818,43 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(sp.position().z - mark[0] > 5, "dashed ahead: " + (sp.position().z - mark[0]));
             h.assertTrue(JobSkills.press(sp, 1), "미라주 대시 recast (back)");
             h.assertTrue(Math.abs(sp.position().z - mark[0]) < 0.3, "back to the start: " + (sp.position().z - mark[0]));
-            // 사우전드 팬텀: 과녁 둘레 환영 여섯 — 4 · 14 · 24틱에 둘씩 엇갈려 꿰뚫음 (2.0 × 3 · 표식 +2씩) → 28틱 등 뒤로 순간 이동 → 34틱 거대한 X 2.55 (= 8.55)
+            // 트윈 리플렉션 (3판): 과녁 앞으로 순간 이동 · 등 뒤 거울에서 거울 속 내가 나옴 — 4 · 14 · 24틱에 앞뒤에서 동시에 벰 (2.0 × 3 · 표식 +2씩) → 28틱 엇갈려 꿰뚫고
+            // 나는 등 뒤로 → 34틱 거대한 X 2.55 (= 8.55)
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 3.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 2), "사우전드 팬텀 cast");
+            h.assertTrue(JobSkills.press(sp, 2), "트윈 리플렉션 cast");
         }));
         steps.add(new RpgJobTests.Step(26, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 6.0);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "팬텀 꿰뚫음 셋 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 6, "phantom marks +2 × 3: " + JobTraits3.marks(sp, z.get(0)));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "트윈 리플렉션 앞뒤 베기 셋 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 6, "twin marks +2 × 3: " + JobTraits3.marks(sp, z.get(0)));
         }));
-        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(sp.position().z > z.get(0).getZ() + 0.6, "blinked behind the target (28): " + sp.position().z + " vs "
+        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(sp.position().z > z.get(0).getZ() + 0.6, "passed through to behind the target (28): " + sp.position().z + " vs "
                 + z.get(0).getZ())));
         steps.add(new RpgJobTests.Step(6, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 8.55);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "사우전드 팬텀 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            // 미러 팰리스: 태세 — 단검 평타에 거울 베기 50% (치명타 없이 × 1.5) · 표식 +2 (평타 · 거울)
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "트윈 리플렉션 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 팬텀 왈츠 (3판): 태세 — 단검 평타에 환영 베기 50% (치명타 없이 × 1.5) · 표식 +2 (평타 · 환영)
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 3), "미러 팰리스 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "trickster_palace"), "palace stance");
+            h.assertTrue(JobSkills.press(sp, 3), "팬텀 왈츠 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "trickster_waltz"), "waltz stance");
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
             double base = RpgJobTests.basic(sp, w);
             sp.attack(z.get(0));
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.5), "palace basic + mirror 50% " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.5);
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 2, "palace basic marks +2: " + JobTraits3.marks(sp, z.get(0)));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * 1.5), "waltz basic + phantom 50% " + TestDummies.dealt(z.get(0)) + " vs " + base * 1.5);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 2, "waltz basic marks +2: " + JobTraits3.marks(sp, z.get(0)));
         }));
         steps.add(new RpgJobTests.Step(8, () -> {
-            // 와일드파이어 피스트: 표식 3 → 과녁 앞으로 순간 이동해 2틱 벰 6 → 12 · 22 · 32 · 42틱 들불 환영 1.5 × 4 (표식 +1씩 → 7) → 그동안 평타 한 번 (들불이 쌓음)
+            // 미러 월드 (3판 — 와일드파이어 피스트와 같은 매커니즘): 표식 3 → 과녁 앞으로 순간 이동해 2틱 벰 6 → 12 · 22 · 32 · 42틱 거울에서 나온 환영 1.5 × 4 (표식 +1씩 → 7)
+            // → 그동안 평타 한 번 (거울 세계가 쌓음)
             // → 62틱 터짐 12 + 2 × 7 (= 38) + 쌓인 피해 × 0.15 (숫자 따로 — 10틱 뒤)
             JobTraits.testEndStance(sp);
             z.get(0).discard();
@@ -1862,35 +1864,35 @@ public final class RpgJobAdvanceTests {
             JobTraits3.setMarks(sp, z.get(0), 3);
             JobSkills.resetCooldowns(sp);
             mark[0] = sp.position().z;
-            h.assertTrue(JobSkills.press(sp, 4), "와일드파이어 피스트 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "미러 월드 cast");
             h.assertTrue(sp.position().z - mark[0] > 1.0 && sp.position().z < z.get(0).getZ(), "blinked in front of the target: " + (sp.position().z - mark[0]));
-            h.assertTrue(JobTraits10.fireStored(z.get(0)) == 0, "wildfire mark on (nothing stored)");
+            h.assertTrue(JobTraits10.mirrorStored(z.get(0)) == 0, "mirror world on (nothing stored)");
         }));
         steps.add(new RpgJobTests.Step(4, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 6);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "와일드파이어 베기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits10.fireStored(z.get(0)) == 0, "the ult's own slash is not stored: " + JobTraits10.fireStored(z.get(0)));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "미러 월드 베기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits10.mirrorStored(z.get(0)) == 0, "the ult's own slash is not stored: " + JobTraits10.mirrorStored(z.get(0)));
         }));
         steps.add(new RpgJobTests.Step(42, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 12);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "들불 환영 넷 (6 + 1.5 × 4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 7, "wildfire clones fill marks 7: " + JobTraits3.marks(sp, z.get(0)));
-            h.assertTrue(JobTraits10.fireStored(z.get(0)) == 0, "the clones are not stored: " + JobTraits10.fireStored(z.get(0)));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "거울 환영 넷 (6 + 1.5 × 4) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 7, "mirror clones fill marks 7: " + JobTraits3.marks(sp, z.get(0)));
+            h.assertTrue(JobTraits10.mirrorStored(z.get(0)) == 0, "the clones are not stored: " + JobTraits10.mirrorStored(z.get(0)));
         }));
         steps.add(new RpgJobTests.Step(9, () -> {
-            // 몹 무적 시간 (마지막 환영 42) 이 지난 55틱에 평타 한 번 — 들불이 그 피해를 쌓음
+            // 몹 무적 시간 (마지막 환영 42) 이 지난 55틱에 평타 한 번 — 거울 세계가 그 피해를 쌓음
             mark[1] = TestDummies.dealt(z.get(0));
             sp.attack(z.get(0));
             mark[1] = TestDummies.dealt(z.get(0)) - mark[1];
-            h.assertTrue(mark[1] > 0 && Math.abs(JobTraits10.fireStored(z.get(0)) - mark[1]) < 1e-3, "basic hit stored: " + JobTraits10.fireStored(z.get(0)) + " vs "
+            h.assertTrue(mark[1] > 0 && Math.abs(JobTraits10.mirrorStored(z.get(0)) - mark[1]) < 1e-3, "basic hit stored: " + JobTraits10.mirrorStored(z.get(0)) + " vs "
                     + mark[1]);
         }));
         steps.add(new RpgJobTests.Step(25, () -> {
             double extra = mark[1] * 0.15 * StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
             double want = RpgJobTests.expected(sp, j, j.skill(4), 38) + mark[1] + extra;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "와일드파이어 피스트 (38 + 평타 + 쌓인 × 0.15) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "미러 월드 (38 + 평타 + 쌓인 × 0.15) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(JobTraits3.marks(sp, z.get(0)) == 0, "the burst takes the marks");
-            h.assertTrue(JobTraits10.fireStored(z.get(0)) == -1, "wildfire mark gone");
+            h.assertTrue(JobTraits10.mirrorStored(z.get(0)) == -1, "mirror world gone");
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;

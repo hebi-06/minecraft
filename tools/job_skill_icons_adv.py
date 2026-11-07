@@ -1725,12 +1725,10 @@ def battlearcher_ult(A, B):
     return finish(subject, [glow(bolt, B, 1.8, 1.0), glow(lighter(*[a[0] for a in arrows]), A, 1.4, 0.9)], battle_back(A, B))
 
 
-# ------------------------------------------------------------ 트릭스터 (빛: 자홍 → 검보라 — 짙은 보라 바탕 · 청록 환영 테두리 · 들불은 분홍) — 2026-11-06 2판
+# ------------------------------------------------------------ 트릭스터 (빛: 자홍 → 검보라 — 짙은 보라 바탕 · 청록 환영 테두리 · 거울) — 2026-11-06 2판 · 2026-11-07 3판 (트윈 리플렉션 · 팬텀 왈츠 · 미러 월드)
 
 TEAL = (77, 242, 230)
 TEAL_LO = (20, 110, 112)
-WILDFIRE = (255, 77, 184)  # 들불 (TricksterSkills.FIRE)
-WILDFIRE_CORE = (255, 224, 158)
 BLACK = (0, 0, 0)
 
 
@@ -1857,28 +1855,54 @@ def trickster_dash(A, B):
     return finish(subject, [glow(ib, TEAL, 1.4, 0.7), glow(ring_m, A, 1.6, 0.9), glow(shards, TEAL, 1.2, 0.8), glow(streaks, A, 1.2, 0.7)], trick_back(A, B))
 
 
-def trickster_phantom(A, B):
-    # 사우전드 팬텀: 가운데 적을 둘러선 환영 여섯 (청록 테 두건) · 둘씩 엇갈려 꿰뚫은 자국이 그린 육망성 (자홍) · 가운데 거대한 X 베기 (흰 → 자홍)
-    hexm = mask()
-    R = 11.4
-    spots = [(16.0 + math.cos(math.radians(-90 + i * 60)) * R, 16.0 + math.sin(math.radians(-90 + i * 60)) * R) for i in range(6)]
-    for k in range(2):
-        pts = [spots[k + 2 * i] for i in range(3)]
-        line(hexm, pts + [pts[0]], 1.3)
-    hoods = []
-    glow_m = mask()
-    for (x, y) in spots:
-        body, face = _hood(x, y - 3.9, 5.4, 8.0)
-        hoods += hood_layers(body, face, mask(), A, B, ghost=True)
-        glow_m = lighter(glow_m, body)
+def trickster_twin(A, B):
+    # 2026-11-07 3판 트윈 리플렉션: 왼쪽의 나 (검보라 두건 · 자홍 테) 와 오른쪽 아치 거울 (자홍 테 · 청록 유리) 속 거울 속 나 (비치는 두건) — 가운데 엇갈린 X 베기 (흰 → 자홍) ·
+    # 거울에 맞은 자리에서 뻗는 금 · 튀는 거울 조각
+    body, face = _hood(8.5, 12.0, 9.5, 17.0)
+    cf, cg = mirror(23.5, 3.5, 12.0, 25.5, 1.5)
+    rb, rfc = _hood(23.5, 10.5, 8.5, 15.0)
+    rb, rfc = clip(rb, cg), clip(rfc, cg)
+    re = clip(hood_eyes(23.5, 10.5, 8.5, 15.0), cg)
+    cracks = mask()
+    for pts in (((27.0, 9.0), (25.4, 12.4), (26.4, 15.6)), ((27.0, 9.0), (29.0, 12.0)), ((27.0, 9.0), (24.6, 7.4), (22.6, 8.2)), ((27.0, 9.0), (28.4, 5.6))):
+        line(cracks, list(pts), 0.6)
+    cracks = clip(cracks, cg)
     xm = mask()
-    slash(xm, 9.0, 9.0, 23.0, 23.0, 1.8)
-    slash(xm, 23.0, 9.0, 9.0, 23.0, 1.8)
+    slash(xm, 10.5, 9.0, 21.5, 23.0, 1.9)
+    slash(xm, 21.5, 9.0, 10.5, 23.0, 1.9)
     xc = mask()
-    slash(xc, 10.5, 10.5, 21.5, 21.5, 0.6)
-    slash(xc, 21.5, 10.5, 10.5, 21.5, 0.6)
-    subject = stack(layer(hexm, mix(A, WHITE, 0.45), A, WHITE, None), *hoods, layer(xm, mix(A, WHITE, 0.45), A, WHITE, mix(B, BLACK, 0.2), axis=(1, 1)), layer(xc, WHITE, WHITE))
-    return finish(subject, [glow(hexm, A, 1.6, 1.0), glow(glow_m, TEAL, 1.4, 0.7), glow(xm, A, 1.8, 0.9)], trick_back(A, B))
+    slash(xc, 12.0, 11.0, 20.0, 21.0, 0.6)
+    slash(xc, 20.0, 11.0, 12.0, 21.0, 0.6)
+    sh = mask()
+    for (x, y, sz, rot) in ((30.0, 4.0, 1.3, -60), (30.5, 17.0, 1.1, 20), (18.0, 4.5, 1.0, -120)):
+        shard(sh, x, y, sz, rot)
+    frame_cols = (mix(A, WHITE, 0.15), mix(B, A, 0.6), mix(A, WHITE, 0.55), mix(B, BLACK, 0.35))
+    subject = stack(layer(cg, mix(TEAL, WHITE, 0.45), mix(TEAL_LO, B, 0.3), None, None, axis=(0.6, 0.8)),
+                    layer(rb, mix(TEAL, B, 0.45), mix(TEAL_LO, B, 0.6), mix(TEAL, WHITE, 0.3), None), layer(rfc, mix(B, BLACK, 0.7), mix(B, BLACK, 0.85)), layer(re, WHITE, TEAL),
+                    layer(cracks, WHITE, mix(TEAL, WHITE, 0.6)), layer(cf, *frame_cols), *hood_layers(body, face, hood_eyes(8.5, 12.0, 9.5, 17.0), A, B),
+                    layer(xm, mix(A, WHITE, 0.45), A, WHITE, mix(B, BLACK, 0.2), axis=(1, 1)), layer(xc, WHITE, WHITE), layer(sh, mix(TEAL, WHITE, 0.55), TEAL, WHITE, TEAL_LO))
+    return finish(subject, [glow(cg, TEAL, 1.8, 0.6), glow(cf, A, 1.4, 0.8), glow(xm, A, 1.8, 0.9), glow(sh, TEAL, 1.0, 0.8)], trick_back(A, B))
+
+
+def trickster_waltz(A, B):
+    # 2026-11-07 3판 팬텀 왈츠: 손을 맞잡고 도는 나 (왼쪽 아래 — 검보라 두건) 와 춤 상대 환영 (오른쪽 위 — 청록 테 · 비치는 두건) · 둘을 휘감아 도는 리본 두 줄기 (자홍 · 청록) ·
+    # 흩날리는 꽃잎 반짝임
+    body, face = _hood(11.0, 11.5, 9.5, 17.0)
+    ib, ifc = _hood(21.5, 4.5, 9.5, 17.0)
+    hands = mask()
+    line(hands, [(14.6, 17.5), (17.0, 14.5), (18.6, 12.8)], 1.2)
+    # 머리 위를 휘감는 자홍 리본 (끝이 가는 띠 — 화살촉 없음) · 발밑 청록 춤판 고리
+    rib1 = mask()
+    tongue(rib1, (3.5, 15.0), (6.0, 0.5), (28.5, 3.0), 0.5, 2.6)
+    tongue(rib1, (28.5, 3.0), (31.5, 9.0), (27.0, 13.0), 2.6, 0.4)
+    rib2 = minus(ellipse(mask(), 16.0, 27.6, 14.2, 3.6), ellipse(mask(), 16.0, 27.4, 12.4, 2.4))
+    pet = mask()
+    for (x, y, r) in ((4.0, 6.0, 1.7), (28.5, 27.0, 1.8), (5.5, 27.5, 1.3), (29.0, 5.0, 1.2)):
+        star(pet, x, y, r * 1.4, 0.3, 30)
+    subject = stack(layer(rib2, mix(TEAL, WHITE, 0.4), TEAL, WHITE, TEAL_LO, axis=(-1, 0)), *hood_layers(ib, ifc, hood_eyes(21.5, 4.5, 9.5, 17.0), A, B, ghost=True),
+                    *hood_layers(body, face, hood_eyes(11.0, 11.5, 9.5, 17.0), A, B), layer(hands, mix(A, WHITE, 0.5), mix(TEAL, WHITE, 0.3)),
+                    layer(rib1, mix(A, WHITE, 0.35), A, WHITE, mix(B, BLACK, 0.3), axis=(1, 0)), layer(pet, WHITE, mix(A, WHITE, 0.5)))
+    return finish(subject, [glow(ib, TEAL, 1.6, 0.8), glow(rib1, A, 1.4, 0.9), glow(rib2, TEAL, 1.4, 0.8), glow(pet, A, 1.0, 0.7)], trick_back(A, B))
 
 
 def mirror(cx, top, w, h, frame):
@@ -1890,63 +1914,34 @@ def mirror(cx, top, w, h, frame):
     return minus(outer, glass), glass
 
 
-def trickster_palace(A, B):
-    # 미러 팰리스: 가운데 큰 아치 거울 (자홍 테 · 청록 유리 · 비친 두건 그림자 · 흰 빛줄) · 양옆 조금 작은 아치 거울 둘 · 위 반짝임
-    cf, cg = mirror(16.0, 4.0, 12.5, 25.0, 1.6)
-    lf, lg = mirror(4.6, 11.0, 7.4, 16.5, 1.3)
-    rf, rg = mirror(27.4, 11.0, 7.4, 16.5, 1.3)
-    rb, rfc = _hood(16.0, 12.5, 9.0, 15.5)
-    rb = clip(rb, cg)
-    rfc = clip(rfc, cg)
-    re = clip(hood_eyes(16.0, 12.5, 9.0, 15.5), cg)
-    glint = mask()
-    line(glint, [(11.2, 15.0), (14.6, 9.0)], 0.9)
-    line(glint, [(11.2, 19.5), (18.0, 8.2)], 0.7)
-    line(glint, [(2.4, 17.5), (5.6, 13.6)], 0.7)
-    line(glint, [(25.3, 17.5), (28.4, 13.6)], 0.7)
-    glint = clip(glint, lighter(cg, lg, rg))
-    base = mask()
-    poly(base, [(8.5, 29.0), (23.5, 29.0), (24.5, 31.0), (7.5, 31.0)])
-    sp = mask()
-    star(sp, 23.5, 4.5, 2.8, 0.2, 0)
-    star(sp, 6.5, 6.0, 2.0, 0.22, 0)
-    frame_cols = (mix(A, WHITE, 0.15), mix(B, A, 0.6), mix(A, WHITE, 0.55), mix(B, BLACK, 0.35))
-    glass_side = (mix(TEAL, WHITE, 0.35), mix(TEAL_LO, B, 0.4))
-    subject = stack(layer(lg, glass_side[0], glass_side[1], None, None, axis=(0.6, 0.8)), layer(rg, glass_side[0], glass_side[1], None, None, axis=(-0.6, 0.8)),
-                    layer(lf, *frame_cols), layer(rf, *frame_cols),
-                    layer(cg, mix(TEAL, WHITE, 0.5), mix(TEAL_LO, B, 0.25), None, None, axis=(0.6, 0.8)),
-                    layer(rb, mix(B, A, 0.3), mix(B, BLACK, 0.45), mix(B, A, 0.6), None), layer(rfc, mix(B, BLACK, 0.75), mix(B, BLACK, 0.85)), layer(re, WHITE, A),
-                    layer(glint, WHITE, mix(TEAL, WHITE, 0.6)), layer(cf, *frame_cols), layer(base, mix(B, A, 0.45), mix(B, BLACK, 0.4)), layer(sp, WHITE, mix(A, WHITE, 0.5)))
-    return finish(subject, [glow(lighter(cg, lg, rg), TEAL, 1.8, 0.6), glow(cf, A, 1.6, 0.9)], trick_back(A, B))
-
-
-def wildfire(m, cx, by, w, h):
-    """들불 (아래 둥근 몸 + 위로 일렁이는 혀 다섯 — 가운데가 가장 김)"""
-    ellipse(m, cx, by - w * 0.3, w * 0.5, w * 0.32)
-    tongue(m, (cx, by - w * 0.3), (cx + w * 0.3, by - h * 0.55), (cx - w * 0.06, by - h), w * 0.8, 0.0)
-    tongue(m, (cx - w * 0.2, by - w * 0.3), (cx - w * 0.52, by - h * 0.42), (cx - w * 0.36, by - h * 0.74), w * 0.52, 0.0)
-    tongue(m, (cx + w * 0.2, by - w * 0.3), (cx + w * 0.56, by - h * 0.38), (cx + w * 0.42, by - h * 0.68), w * 0.52, 0.0)
-    tongue(m, (cx - w * 0.36, by - w * 0.2), (cx - w * 0.72, by - h * 0.22), (cx - w * 0.6, by - h * 0.44), w * 0.32, 0.0)
-    tongue(m, (cx + w * 0.36, by - w * 0.2), (cx + w * 0.74, by - h * 0.2), (cx + w * 0.62, by - h * 0.42), w * 0.32, 0.0)
-    return m
-
-
 def trickster_ult(A, B):
-    # 와일드파이어 피스트: 가운데 크게 타오르는 분홍 들불 (흰 금빛 속불) · 앞에 엇갈린 단검 둘 (X — 자홍 코등이) · 튀는 불티
-    fl = mask()
-    wildfire(fl, 16.0, 30.5, 19.0, 28.0)
-    core = mask()
-    wildfire(core, 16.0, 29.5, 8.5, 17.0)
-    cols = dict(blade_cols=(STEEL_HI, mix(STEEL, A, 0.3), WHITE, STEEL_LO), guard_cols=(mix(A, WHITE, 0.3), A, WHITE, mix(B, BLACK, 0.3)),
-                grip_cols=(mix(B, A, 0.3), mix(B, BLACK, 0.4), None, None))
-    d1 = sword_layers((25.0, 4.5), (8.0, 25.5), blade=2.8, guard=6.0, **cols)
-    d2 = sword_layers((7.0, 4.5), (24.0, 25.5), blade=2.8, guard=6.0, **cols)
-    em = mask()
-    for (x, y, r) in ((4.0, 10.0, 1.6), (28.0, 13.0, 1.8), (27.0, 4.0, 1.3), (5.0, 21.5, 1.2)):
-        star(em, x, y, r * 1.5, 0.3, 0)
-    subject = stack(layer(fl, mix(WILDFIRE, WHITE, 0.3), mix(B, WILDFIRE, 0.45), mix(WILDFIRE, WHITE, 0.55), mix(B, BLACK, 0.3)),
-                    layer(core, WHITE, WILDFIRE_CORE), *d2, *d1, layer(em, WHITE, WILDFIRE))
-    return finish(subject, [glow(fl, WILDFIRE, 2.2, 1.0), glow(em, WILDFIRE, 1.2, 0.9)], trick_back(A, B))
+    # 2026-11-07 3판 미러 월드: 둘레를 둘러선 아치 거울 다섯 (뒤 셋은 작게 — 거울 세계) · 가운데 거대한 X (흰 → 자홍) · 위로 깨져 튀는 거울 조각 · 금
+    frame_cols = (mix(A, WHITE, 0.15), mix(B, A, 0.6), mix(A, WHITE, 0.55), mix(B, BLACK, 0.35))
+    mirrors = [(16.0, 2.5, 7.0, 13.0, 1.1), (7.5, 5.0, 6.4, 12.0, 1.1), (24.5, 5.0, 6.4, 12.0, 1.1), (3.6, 12.5, 6.6, 15.5, 1.2), (28.4, 12.5, 6.6, 15.5, 1.2)]
+    layers = []
+    glass_all = mask()
+    frame_all = mask()
+    for (cx, top, w, h, fr) in mirrors:
+        f_, g_ = mirror(cx, top, w, h, fr)
+        glass_all = lighter(glass_all, g_)
+        frame_all = lighter(frame_all, f_)
+        layers += [layer(g_, mix(TEAL, WHITE, 0.4), mix(TEAL_LO, B, 0.35), None, None, axis=(0.6, 0.8)), layer(f_, *frame_cols)]
+    cr = mask()
+    for pts in (((16.0, 7.5), (14.6, 10.0), (15.4, 12.6)), ((16.0, 7.5), (18.2, 9.4)), ((7.5, 10.0), (6.0, 12.6)), ((24.5, 10.0), (26.0, 12.4))):
+        line(cr, list(pts), 0.55)
+    cr = clip(cr, glass_all)
+    xm = mask()
+    slash(xm, 9.0, 13.0, 23.0, 29.0, 2.2)
+    slash(xm, 23.0, 13.0, 9.0, 29.0, 2.2)
+    xc = mask()
+    slash(xc, 10.8, 15.0, 21.2, 27.0, 0.7)
+    slash(xc, 21.2, 15.0, 10.8, 27.0, 0.7)
+    sh = mask()
+    for (x, y, sz, rot) in ((11.0, 1.8, 1.2, -100), (21.0, 1.6, 1.2, -60), (2.0, 4.0, 1.0, -150), (30.0, 3.6, 1.0, -20), (12.5, 30.0, 0.9, 80), (20.0, 30.5, 0.9, 110)):
+        shard(sh, x, y, sz, rot)
+    subject = stack(*layers, layer(cr, WHITE, mix(TEAL, WHITE, 0.6)), layer(xm, mix(A, WHITE, 0.45), A, WHITE, mix(B, BLACK, 0.2), axis=(1, 1)), layer(xc, WHITE, WHITE),
+                    layer(sh, mix(TEAL, WHITE, 0.55), TEAL, WHITE, TEAL_LO))
+    return finish(subject, [glow(glass_all, TEAL, 1.6, 0.55), glow(frame_all, A, 1.3, 0.7), glow(xm, A, 2.0, 1.0), glow(sh, TEAL, 1.1, 0.8)], trick_back(A, B))
 
 
 # ------------------------------------------------------------ 피에로 (빛: 빨강 → 크림 금빛 — 서커스 밤 바탕 · 할리퀸 마름모 무늬 · 금방울) — 2026-11-06 블레이드 댄서 대신
@@ -3677,8 +3672,8 @@ ICONS = {
     "battlearcher_ult": battlearcher_ult,
     "trickster_swap": trickster_swap,
     "trickster_dash": trickster_dash,
-    "trickster_phantom": trickster_phantom,
-    "trickster_palace": trickster_palace,
+    "trickster_twin": trickster_twin,
+    "trickster_waltz": trickster_waltz,
     "trickster_ult": trickster_ult,
     "pierrot_box": pierrot_box,
     "pierrot_spring": pierrot_spring,

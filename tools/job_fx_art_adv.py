@@ -83,13 +83,15 @@
 - rfx_jexcal      lookat_direction 512×64  ×8 (2 열)  빛의 대검 (소드마스터 엑스칼리버): 0 모여 듦 → 1 자라남 → 2 번쩍 → 3 ~ 5 빛남 (이어 돌림) → 6 휘두름 → 7 흩어짐
 - rfx_jicecage    lookat_y         256×384 ×8 (4 열)  얼음 결정 감옥 (프로스트 레이더 샤터 · 핌불윈터 — 아래 = 땅): 0 솟음 → 1 번쩍 → 2 ~ 4 갇혀 있음 (이어 돌림) →
                                                      5 금 → 6 깨짐 → 7 조각이 흩어짐
+- rfx_jmshatter   direction_z      256×320 ×8 (4 열)  깨지는 거울 (트릭스터 트윈 리플렉션 · 미러 월드 — rfx_jpane 과 같은 아치 거울을 둘레 여유 칸 가운데에): 0 맞은 자리 번쩍 →
+                                                     1 ~ 2 금 → 3 갈라져 튐 → 4 ~ 7 조각이 돌며 날아가 떨어짐 (2판의 육망성 rfx_jhexa · 들불 표식 rfx_jmaw 는 뺌)
 
 2026-11-07 정령 궁수 (궁수 1차 재설계안 3판) · 스나이퍼 사일런트 아울 — 빛 칸 = 옥빛 연두 정령빛 (부엉이는 달빛 흰 청록), 심지 칸 = 금빛 눈 · 뿔 · 테:
 - rfx_jswolf      direction_x      256×128 ×12 (4 열) 늑대 정령 (옆모습 달림 — 0 ~ 5 머리 = 오른쪽 · 6 ~ 11 거울, 이어 돌림). 같은 그림의 rfx_jswolf1p = rotate_xyz (1인칭)
-- rfx_jstag       direction_x      384×256 ×6  (3 열) 사슴 정령 왕 (옆모습 달림 · 머리 = 오른쪽 · 가지 뿔 — 이어 돌림)
+- rfx_jstag       direction_x      384×256 ×12 (4 열) 사슴 정령 왕 (옆모습 달림 · 머리 = 오른쪽 · 가지 뿔 — 이어 돌림, 6 ~ 11 거울 — 판은 앞면만 그려져 반대쪽 판)
 - rfx_jstagf      lookat_y         256×256 ×12 (4 열) 사슴 정령 왕 (0 ~ 5 앞모습 깨어남 · 고개를 들어 울음 → 6 ~ 11 뒷모습 달림, 아래 = 땅)
 - rfx_jowl        rotate_xyz       384×256 ×8  (4 열) 부엉이 정령 (앞모습 — 0 ~ 1 모여 듦 → 2 ~ 5 날개를 펼쳐 떠 있음 (이어 돌림) → 6 ~ 7 흩어짐)
-- rfx_jowlside    direction_x      256×128 ×4  (4 열) 부엉이 정령 (옆모습 활공 · 내리꽂음 — 머리 = 오른쪽, 이어 돌림)
+- rfx_jowlside    direction_x      256×128 ×8  (4 열) 부엉이 정령 (옆모습 활공 · 내리꽂음 — 머리 = 오른쪽, 이어 돌림, 4 ~ 7 거울 — 반대쪽 판)
 - rfx_jsbloom     lookat_y         128×128 ×8  (4 열) 정령 꽃 (0 ~ 2 피어남 → 3 ~ 5 흔들림 → 6 ~ 7 꽃잎이 흩어짐, 아래 = 땅)
 """
 import math
@@ -1224,7 +1226,7 @@ sprite("rfx_jgreatarrow", "lookat_direction", 320, 96, GA_N, 2, "sniper", zoom=0
 # ============================================================ 0.51.0 암살자 2차 (재설계안 2판 2026-11-06 — 트릭스터 · 피에로)
 
 # 확인용 색 (게임이 입히는 색과 같게 — JobFx.outer · inner): 트릭스터 = 검보라 겉 · 연분홍 흰빛 속 / 거울 조각 · 거울 = 청록 테 (TricksterSkills.ILLUSION) · 연분홍 면 /
-# 들불 = 자홍 · 흰 금빛 (TricksterSkills.FIRE) / 피에로 서커스 = 빨강 · 금빛 · 분홍 (JobFx.CIRCUS — 색종이 · 풍선 · 불꽃놀이는 빛마다 다른 색을 입힘)
+# 피에로 서커스 = 빨강 · 금빛 · 분홍 (JobFx.CIRCUS — 색종이 · 풍선 · 불꽃놀이는 빛마다 다른 색을 입힘)
 COLORS.setdefault("trickster", ((0.32, 0.07, 0.46), (0.98, 0.68, 0.91)))
 COLORS.setdefault("illusion", ((0.3, 0.95, 0.9), (0.98, 0.68, 0.91)))
 
@@ -1405,169 +1407,11 @@ def pane_frame(f):
 
 
 sprite("rfx_jpane", "direction_z", PN_W, PN_H, PN_N, 4, "illusion", zoom=1, loop=True,
-       desc="거울 (미러 팰리스 — 세워 면이 dir 쪽, 이어 돌림): 아치 꼴 거울 (위 반원 · 아래 네모) · 빛 칸 = 굵은 테 · 위 · 아래 · 옆 마름모 장식 · 옅은 거울면, 심지 칸 = 안쪽 가는 테 · "
+       desc="거울 (트윈 리플렉션 · 미러 월드 · 팬텀 왈츠 앞 2판 미러 팰리스 — 세워 면이 dir 쪽, 이어 돌림): 아치 꼴 거울 (위 반원 · 아래 네모) · 빛 칸 = 굵은 테 · 위 · 아래 · 옆 마름모 장식 · 옅은 거울면, 심지 칸 = 안쪽 가는 테 · "
        "장마다 비스듬히 아래로 지나가는 빛줄기 둘 · 테의 반짝임")(pane_frame)
 
 
-# ------------------------------------------------------------ rfx_jhexa (육망성 — 땅에 누움, 칸 가운데 = 별 가운데 · 꼭짓점 = 반 크기 × 0.88)
-
-HX_N = 6
-HX_S = 256
-
-
-def _hexa_lines(R, c):
-    """두 세모의 여섯 변 [(p, q)] (꼭짓점 위부터)"""
-    out = []
-    for k in (0, 1):
-        pts = [(c + math.cos(-math.pi / 2 + k * math.pi / 3 + i * TAU / 3) * R, c + math.sin(-math.pi / 2 + k * math.pi / 3 + i * TAU / 3) * R) for i in range(3)]
-        for i in range(3):
-            out.append((pts[i], pts[(i + 1) % 3]))
-    return out
-
-
-def hexa_frame(f):
-    S = HX_S
-    pad = Pad(S, S)
-    c = S / 2
-    R = 0.88 * S / 2
-    glow = pad.zeros()
-    core = pad.zeros()
-    lines = _hexa_lines(R, c)
-    verts = [(c + math.cos(-math.pi / 2 + i * math.pi / 3) * R, c + math.sin(-math.pi / 2 + i * math.pi / 3) * R) for i in range(6)]
-    rs = random.Random(9600 + f)
-    if f <= 4:
-        frac = 0.5 if f == 0 else 1.0
-        w = (5.0, 6.5, 5.5, 6.0, 10.0)[f]
-        for (p, q) in lines:
-            e = (p[0] + (q[0] - p[0]) * frac, p[1] + (q[1] - p[1]) * frac)
-            glow = np.maximum(glow, pad.stroke([p, e], w, w, soft=1.0))
-            core = np.maximum(core, pad.stroke([p, e], w * 0.32, w * 0.32, soft=0.4))
-            if f == 0:
-                core = np.maximum(core, star4(pad, e[0], e[1], 9, 1.0, thin=0.12, diag=0.4))
-        # 둘레 고리 · 고리 위 룬 점 (장마다 돎)
-        if f >= 1:
-            ring = pad.stroke(arc_pts(c, c, R + 6, 0, TAU, n=96), 3.0, soft=0.6)
-            glow = np.maximum(glow, ring * (0.75 if f != 4 else 1.0))
-            core = np.maximum(core, pad.stroke(arc_pts(c, c, R + 6, 0, TAU, n=96), 1.0, soft=0.3) * 0.7)
-            for i in range(12):
-                a = i * TAU / 12 + f * 0.13
-                x, y = c + math.cos(a) * (R + 16), c + math.sin(a) * (R + 16)
-                glow = np.maximum(glow, pad.poly([(x, y - 4), (x + 3, y), (x, y + 4), (x - 3, y)], 0.8))
-        bright = (0.8, 1.0, 0.75, 0.95, 1.0)[f]
-        for (x, y) in verts:
-            core = np.maximum(core, star4(pad, x, y, (6, 16, 9, 11, 22)[f], bright, rot=rs.uniform(0, 0.6), thin=0.11, diag=0.35))
-        if f == 4:
-            glow = np.maximum(glow, pad.radial(c, c, R * 0.9, 1.6) * 0.6)
-            core = np.maximum(core, star4(pad, c, c, 40, 1.0, thin=0.08, diag=0.5))
-        if f == 1:
-            glow = np.maximum(glow, pad.radial(c, c, R * 0.5, 1.8) * 0.5)
-    else:
-        # 깨짐: 변이 토막나 바깥으로 밀리며 흐려짐 · 반짝이 티끌
-        for (p, q) in lines:
-            for t0 in (0.0, 0.34, 0.67):
-                t1 = t0 + 0.26
-                a = (p[0] + (q[0] - p[0]) * t0, p[1] + (q[1] - p[1]) * t0)
-                b = (p[0] + (q[0] - p[0]) * t1, p[1] + (q[1] - p[1]) * t1)
-                m = ((a[0] + b[0]) / 2 - c, (a[1] + b[1]) / 2 - c)
-                k = 0.22
-                a = (a[0] + m[0] * k, a[1] + m[1] * k)
-                b = (b[0] + m[0] * k, b[1] + m[1] * k)
-                glow = np.maximum(glow, pad.stroke([a, b], 4.0, soft=0.8) * 0.6)
-                core = np.maximum(core, pad.stroke([a, b], 1.3, soft=0.3) * 0.6)
-        for _ in range(14):
-            a = rs.uniform(0, TAU)
-            r = rs.uniform(20, R + 10)
-            core = np.maximum(core, star4(pad, c + math.cos(a) * r, c + math.sin(a) * r, rs.uniform(3, 6), 0.7, diag=0.0))
-    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.32), (9.0, 0.18)), body_k=0.9, core_bloom=((1.2, 0.3), (3.0, 0.22)), win=4.0)
-
-
-sprite("rfx_jhexa", "direction_z", HX_S, HX_S, HX_N, 6, "trickster", zoom=0,
-       desc="육망성 (사우전드 팬텀 — 땅에 누움, 꼭짓점 반지름 = 반 크기 × 0.88): 0 두 세모의 여섯 변이 반쯤 그어짐 (긋는 끝 반짝임) → 1 다 그어지며 번쩍 (꼭짓점 별 · 둘레 고리 · "
-       "고리 위 마름모 룬 열둘) → 2 ~ 3 빛남 (이어 돌림 — 룬이 돎) → 4 크게 번쩍 (굵은 변 · 가운데 별) → 5 변이 토막나 바깥으로 흩어짐")(hexa_frame)
-
-
-# ------------------------------------------------------------ rfx_jmaw (들불 표식 — 카메라를 봄, 칸 가운데 = 표식 가운데)
-
-MW_N = 8
-MW_S = 256
-
-
-def _flame_tongue(pad, base, ang, L, w, sway):
-    """불꽃 혀 하나 (밑 base 에서 ang 쪽으로 L — 흔들려 휜 끝)"""
-    bx, by = base
-    ux, uy = math.cos(ang), math.sin(ang)
-    nx, ny = -uy, ux
-    pts = []
-    for i in range(13):
-        t = i / 12
-        off = math.sin(t * math.pi * 1.2) * sway * t
-        pts.append((bx + ux * L * t + nx * off, by + uy * L * t + ny * off))
-    return pad.stroke(pts, w, 0.6, a0=1.0, a1=0.5, soft=1.2)
-
-
-def maw_frame(f):
-    S = MW_S
-    pad = Pad(S, S)
-    c = S / 2
-    glow = pad.zeros()
-    core = pad.zeros()
-    rs = random.Random(9700 + f)
-    Rr = 64.0
-    lit = (0.35, 0.75, 1, 1, 1, 1, 1.15, 0.7)[f]
-    if f <= 6:
-        # 불꽃 고리: 혀 열둘이 바깥 · 위로 (장마다 흔들림 · 돎)
-        n = 12
-        for i in range(n):
-            a = i * TAU / n + f * 0.11
-            if f == 0 and i % 3:
-                continue
-            if f == 1 and i % 2:
-                continue
-            base = (c + math.cos(a) * Rr, c + math.sin(a) * Rr)
-            ang = a - 0.5 * math.cos(a)  # 위쪽으로 조금 기욺
-            L = (36 + 16 * math.sin(i * 1.7 + f * 1.3)) * lit
-            glow = np.maximum(glow, _flame_tongue(pad, base, ang, L, 22 * lit, 9 * math.sin(f * 1.1 + i)))
-            core = np.maximum(core, _flame_tongue(pad, base, ang, L * 0.55, 8 * lit, 4 * math.sin(f * 1.1 + i)) * 0.9)
-            # 곁불 (작은 혀 — 큰 혀 사이)
-            a2 = a + TAU / n / 2
-            b2 = (c + math.cos(a2) * Rr, c + math.sin(a2) * Rr)
-            glow = np.maximum(glow, _flame_tongue(pad, b2, a2 - 0.5 * math.cos(a2), L * 0.5, 12 * lit, 5 * math.cos(f * 1.3 + i)) * 0.85)
-        if f >= 2:
-            glow = np.maximum(glow, pad.radial(c, c, Rr * 1.05, 0.8) * 0.28)
-        glow = np.maximum(glow, pad.stroke(arc_pts(c, c, Rr, 0, TAU, n=96), 8.0 * lit, soft=1.5))
-        core = np.maximum(core, pad.stroke(arc_pts(c, c, Rr, 0, TAU, n=96), 2.4, soft=0.5) * min(1.0, lit))
-        # 가운데: 불타는 눈 (렌즈 꼴 · 세로 동공 · 둘레 불꽃)
-        if f >= 1:
-            eye = lens(pad, (c - 40, c), (c + 40, c), 34 * min(1.0, lit), 1.0, power=0.7)
-            glow = np.maximum(glow, eye * 0.85)
-            core = np.maximum(core, rim_of(eye > 0.5, 2.0) * 0.95)
-            pupil = lens(pad, (c, c - 16), (c, c + 16), 8, 1.0, power=0.6)
-            core = np.maximum(core, pupil)
-            for k in (-1, 1):
-                core = np.maximum(core, pad.stroke([(c + k * 46, c), (c + k * 58, c - 6)], 3.0, 1.0, soft=0.5))
-        if f == 6:
-            glow = np.maximum(glow, pad.radial(c, c, 110, 1.4) * 0.8)
-            core = np.maximum(core, star4(pad, c, c, 70, 1.0, thin=0.07, diag=0.45))
-    else:
-        # 터짐: 불길 조각이 사방으로 · 흐려지는 고리
-        for i in range(16):
-            a = i * TAU / 16 + rs.uniform(-0.15, 0.15)
-            r0 = Rr * 1.25
-            p = (c + math.cos(a) * r0, c + math.sin(a) * r0)
-            glow = np.maximum(glow, _flame_tongue(pad, p, a, 30, 12, 4) * 0.7)
-            core = np.maximum(core, _flame_tongue(pad, p, a, 16, 4, 2) * 0.6)
-        glow = np.maximum(glow, pad.stroke(arc_pts(c, c, Rr * 1.5, 0, TAU, n=96), 5.0, soft=2.0) * 0.5)
-    for _ in range(10 if f >= 2 else 5):
-        a = rs.uniform(0, TAU)
-        r = rs.uniform(Rr * 0.8, Rr * 1.7)
-        core = np.maximum(core, star4(pad, c + math.cos(a) * r, c + math.sin(a) * r, rs.uniform(2.5, 5), 0.8, diag=0.0))
-    return finish(pad, glow, core, halo=((1.5, 0.5), (4.0, 0.36), (9.0, 0.2)), body_k=0.9, core_bloom=((1.2, 0.35), (3.0, 0.25)), win=4.0)
-
-
-COLORS.setdefault("wildfire", ((1.0, 0.3, 0.72), (1.0, 0.88, 0.62)))
-sprite("rfx_jmaw", "rotate_xyz", MW_S, MW_S, MW_N, 4, "wildfire", zoom=0,
-       desc="들불 표식 (와일드파이어 피스트 — 카메라를 봄): 0 ~ 1 불씨가 고리로 번지며 타오름 → 2 ~ 5 불꽃 혀 열둘이 바깥으로 흔들리며 도는 고리 · 가운데 불타는 눈 (렌즈 꼴 · "
-       "세로 동공 — 이어 돌림) → 6 크게 번쩍 → 7 불길 조각이 사방으로 터짐. 고리 반지름 64 (= 반 크기 × 0.5)")(maw_frame)
+# 2026-11-07 3판: 육망성 rfx_jhexa (2판 사우전드 팬텀) · 들불 표식 rfx_jmaw (2판 와일드파이어 피스트) 는 뺌 — 트윈 리플렉션 · 미러 월드는 깨지는 거울 rfx_jmshatter
 
 
 # ------------------------------------------------------------ rfx_jconfetti (색종이 폭죽 — 카메라를 봄, 칸 가운데 = 터진 자리)
@@ -6357,7 +6201,7 @@ def _sp_stag_side(pad, f):
     return sil, far, (hx, hy), (sx, sy), (hx_, sy), antlers
 
 
-def sp_stag_frame(f):
+def _sp_stag_one(f):
     """사슴 정령 왕 (옆모습 · 달림): 정령빛 몸 · 금빛 큰 뿔 (가지 여섯 · 가지 끝 반짝임) · 목 갈기 빛 가닥 · 무늬 · 눈"""
     W, H = SPS_W, SPS_H
     pad = Pad(W, H)
@@ -6398,8 +6242,16 @@ def sp_stag_frame(f):
     return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (10.0, 0.22)), body_k=0.9, core_bloom=((1.3, 0.38), (3.5, 0.26)), win=4.0)
 
 
-sprite("rfx_jstag", "direction_x", SPS_W, SPS_H, SPS_N, 3, "spirit", zoom=0, loop=True,
-       desc="사슴 정령 왕 (옆모습 — 세운 판이 가는 쪽 (오른쪽 = 머리) 을 따라 섬 · 이어 돌림 달리기 6장, 발굽 아래 ≈ 236 점): 정령빛 몸 · 털결 · 먼 쪽 다리 옅게 · "
+def sp_stag_frame(f):
+    """0 ~ 5 머리 오른쪽 · 6 ~ 11 거울 (머리 왼쪽 — 판이 앞면만 그려져 반대쪽에서 보는 판, JobFx16.stagRun)"""
+    g, c = _sp_stag_one(f % SPS_N)
+    if f >= SPS_N:
+        return g[:, ::-1].copy(), c[:, ::-1].copy()
+    return g, c
+
+
+sprite("rfx_jstag", "direction_x", SPS_W, SPS_H, SPS_N * 2, 4, "spirit", zoom=0, loop=True,
+       desc="사슴 정령 왕 (옆모습 — 세운 판이 가는 쪽 (오른쪽 = 머리) 을 따라 섬 · 이어 돌림 달리기 6장 · 6 ~ 11 거울 (반대쪽 판), 발굽 아래 ≈ 236 점): 정령빛 몸 · 털결 · 먼 쪽 다리 옅게 · "
        "금빛 큰 뿔 둘 (뒤 위로 휘고 가지 여섯 · 가지 끝 반짝임) · 목 · 등에서 뒤로 흩날리는 빛 가닥 · 소용돌이 무늬 · 금빛 눈 · 뒤로 끌리는 빛줄 · 잎 티끌")(sp_stag_frame)
 
 
@@ -6667,7 +6519,7 @@ SPOS_W, SPOS_H = 256, 128
 SPOS_FEATHER = []  # 가까운 날개 칼깃 (밑동 · 끝) · 앞 테 — 심지 줄
 
 
-def sp_owlside_frame(f):
+def _sp_owlside_one(f):
     """부엉이 정령 옆모습: 소리 없이 활공하며 꿰뚫음 — 뒤 위로 든 둥근 날개 둘 (칼깃 손가락 · 이어 돌림 조금 날갯짓) · 큰 둥근 머리 (얼굴 테 · 눈 · 귀깃 · 부리) ·
     달걀 꼴 몸 · 앞으로 뻗은 발톱 · 꼬리 부채 · 뒤로 흐르는 빛"""
     W, H = SPOS_W, SPOS_H
@@ -6744,8 +6596,16 @@ def sp_owlside_frame(f):
     return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (9.0, 0.22)), body_k=0.9, core_bloom=((1.2, 0.35), (3.0, 0.24)), win=4.0)
 
 
-sprite("rfx_jowlside", "direction_x", SPOS_W, SPOS_H, SPOS_N, 4, "owl", zoom=1, loop=True,
-       desc="부엉이 정령 옆모습 (세운 판이 가는 쪽 (오른쪽 = 머리) 을 따라 섬 · 이어 돌림 4장): 소리 없이 활공하며 내리꽂음 — 뒤 위로 든 둥근 날개 둘 (칼깃 손가락 · 조금 날갯짓) · "
+def sp_owlside_frame(f):
+    """0 ~ 3 머리 오른쪽 · 4 ~ 7 거울 (반대쪽 판 — JobFx16.owlGlide)"""
+    g, c = _sp_owlside_one(f % SPOS_N)
+    if f >= SPOS_N:
+        return g[:, ::-1].copy(), c[:, ::-1].copy()
+    return g, c
+
+
+sprite("rfx_jowlside", "direction_x", SPOS_W, SPOS_H, SPOS_N * 2, 4, "owl", zoom=1, loop=True,
+       desc="부엉이 정령 옆모습 (세운 판이 가는 쪽 (오른쪽 = 머리) 을 따라 섬 · 이어 돌림 4장 · 4 ~ 7 거울 (반대쪽 판)): 소리 없이 활공하며 내리꽂음 — 뒤 위로 든 둥근 날개 둘 (칼깃 손가락 · 조금 날갯짓) · "
        "큰 둥근 머리 (얼굴 테 · 금빛 눈 · 귀깃 · 부리) · 달걀 꼴 몸 · 앞으로 뻗은 발톱 · 꼬리 부채 · 소용돌이 · 뒤로 흐르는 빛 가닥")(sp_owlside_frame)
 
 
@@ -6834,7 +6694,7 @@ sprite("rfx_jsbloom", "lookat_y", SPB_S, SPB_S, SPB_N, 4, "spirit", zoom=2,
        "(이어 돌림 — 흐르는 정령빛 꽃잎 · 금빛 테 맥동 · 꽃술 · 오르는 티끌) → 5 부풀어 크게 번쩍 → 6 터짐 (꽃잎 열둘이 바깥으로 · 섬광 · 고리) → 7 흩어진 꽃잎 · 티끌")(sp_bloom_frame)
 
 
-# ------------------------------------------------------------ rfx_jshatter (2026-11-07 트릭스터 3판 — 거울이 금 가고 깨짐 · 세워 면이 dir 쪽, 칸 가운데 = 거울 가운데)
+# ------------------------------------------------------------ rfx_jmshatter (2026-11-07 트릭스터 3판 — 거울이 금 가고 깨짐 · 세워 면이 dir 쪽, 칸 가운데 = 거울 가운데)
 # 거울 (rfx_jpane — 128×224) 을 둘레 여유가 있는 256×320 칸 가운데 (64, 48 만큼 안쪽) 에 같은 크기로 둠 → 조각이 칸 안에서 날아감. 게임 크기 = 거울 높이 / 1.75
 # (반 너비 — rfx_jpane 은 / 3.5). 빛 칸 = 거울면 · 굵은 테 · 조각 면, 심지 칸 = 금 · 조각 테 · 반짝임.
 
@@ -7018,7 +6878,7 @@ def shatter_frame(f):
     return finish(pad, glow, core, halo=((1.2, 0.45), (3.0, 0.32), (7.0, 0.18)), body_k=0.95, core_bloom=((1.0, 0.32), (2.5, 0.22)), win=4.0)
 
 
-sprite("rfx_jshatter", "direction_z", SH_W, SH_H, SH_N, 4, "illusion", zoom=0,
+sprite("rfx_jmshatter", "direction_z", SH_W, SH_H, SH_N, 4, "illusion", zoom=0,
        desc="거울이 깨짐 (트릭스터 트윈 리플렉션 · 미러 월드 — 세워 면이 dir 쪽, rfx_jpane 과 같은 아치 거울을 256×320 칸 가운데에): 0 맞은 자리 번쩍 · 짧은 금 → "
        "1 금 열하나가 끝까지 뻗고 고리 금 둘 → 2 금이 환히 빛나며 조각 테 · 테 번쩍 → 3 조각이 갈라지며 튐 (큰 번쩍 · 테가 끊어짐) → 4 ~ 6 조각이 돌며 바깥으로 날아가 "
        "떨어짐 (바깥 고리일수록 멀리 · 반짝임) → 7 흐려진 조각 · 반짝이")(shatter_frame)

@@ -49,8 +49,8 @@ import net.minecraft.world.phys.Vec3;
  * momentumFor 틱 안의 다음 직업 스킬 위력 + momentum (JobSystem). 창벽 (태세): 정면 front° 에서 온 피해 − guard (RpgHealth.sourceReduce)</li>
  * <li>사신 「혼」 (0 ~ max): 낫 평타 (넓게 베기에 맞은 적 포함) · 직업 스킬이 맞힌 적마다 +1, 처치하면 + kill. 하나당 이동 속도 + speedPer · 준 피해의 leechPer 만큼 회복
  * (DamageNumbers.dealtHook). 혼백 폭발이 씀. 망령 걸음 동안 받는 피해 없음, 사신 현신 (태세) 동안 넓게 베기 범위 · 비율 (WeaponTraits.sweepMod)</li>
- * <li>0.51.0 각성 트릭스터 도 「표식」 (암살자 줄기 — {@link #assassinLine}: 최대 7 · 등 뒤 치명타 — 재설계안 2판 (2026-11-06) 은 은신 대신 환영 · 거울: 미러
- * 팰리스 동안은 어느 쪽에서 쳐도 등 뒤 — JobTraits10.anySide). 표식이 shift 이상인 적이 쓰러지면 그 표식이 둘레 shiftRange 칸의 가장 가까운 적에게 옮겨감
+ * <li>0.51.0 각성 트릭스터 도 「표식」 (암살자 줄기 — {@link #assassinLine}: 최대 7 · 등 뒤 치명타 — 재설계안 2판 (2026-11-06) 은 은신 대신 환영 · 거울: 팬텀
+ * 왈츠 (3판 — 2판 미러 팰리스) 동안은 어느 쪽에서 쳐도 등 뒤 — JobTraits10.anySide). 표식이 shift 이상인 적이 쓰러지면 그 표식이 둘레 shiftRange 칸의 가장 가까운 적에게 옮겨감
  * (꽃잎이 날아감)</li>
  * <li>0.51.0 각성 스톰 랜서 도 「창끝」 (창술사 줄기 — {@link #lancerLine}: 끝자락 + edgeBonus · 밀쳐냄 · 기세) + 바람 (창 평타가 끝자락에 맞을 때마다 +1 → 가득이면
  * 다음 창 평타가 질풍 창 — JobTraits11.lanceHit)</li>
@@ -206,7 +206,7 @@ public final class JobTraits3 {
         return assassinLine(j) ? j : null;
     }
 
-    /** 은신 스킬 id (암살자 밤의 장막 — 재설계안 2판 트릭스터는 은신 스킬이 없음: 그 칸은 미러 팰리스) */
+    /** 은신 스킬 id (암살자 밤의 장막 — 재설계안 2판 트릭스터는 은신 스킬이 없음: 그 칸은 팬텀 왈츠 · 2판 미러 팰리스) */
     private static String veilId(Jobs.Job j) {
         return "assassin_veil";
     }
@@ -339,7 +339,7 @@ public final class JobTraits3 {
     private static double backCrit(ServerPlayer sp, Weapon w, LivingEntity victim) {
         if (victim == null || w == null || !"dagger".equals(w.type())) return 0;
         Jobs.Job j = lineJob(sp);
-        if (j == null || !(behind(sp, victim, trait(j, "backArc", 120)) || JobTraits10.anySide(sp))) return 0; // 0.51.0 미러 팰리스: 어느 쪽에서든
+        if (j == null || !(behind(sp, victim, trait(j, "backArc", 120)) || JobTraits10.anySide(sp))) return 0; // 2026-11-07 팬텀 왈츠 (2판 미러 팰리스): 어느 쪽에서든
         return trait(j, "back", 0.25);
     }
 

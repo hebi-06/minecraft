@@ -842,8 +842,8 @@ public final class JobsTest {
         List<String> prIds = new ArrayList<>();
         for (Jobs.Skill k : tr.skills()) trIds.add(k.id());
         for (Jobs.Skill k : pr.skills()) prIds.add(k.id());
-        check(trIds.equals(List.of("trickster_swap", "trickster_dash", "trickster_phantom", "trickster_palace", "trickster_ult"))
-                && prIds.equals(List.of("pierrot_box", "pierrot_spring", "pierrot_balloon", "pierrot_doll", "pierrot_ult")), "assassin advanced skill ids (2판)");
+        check(trIds.equals(List.of("trickster_swap", "trickster_dash", "trickster_twin", "trickster_waltz", "trickster_ult"))
+                && prIds.equals(List.of("pierrot_box", "pierrot_spring", "pierrot_balloon", "pierrot_doll", "pierrot_ult")), "assassin advanced skill ids (2판 · 트릭스터 3판)");
         for (int i : new int[] {0, 1, 2, 4}) check(near(tr.skill(i).total(), as.skill(i).total()) && near(pr.skill(i).total(), as.skill(i).total()), "assassin totals slot " + i);
         int max = tr.trait().max();
         Jobs.Skill ts = tr.skill(0), td = tr.skill(1), tp = tr.skill(2), tm = tr.skill(3), tu = tr.skill(4);
@@ -853,9 +853,12 @@ public final class JobsTest {
                 && near(tu.num("slash", 0) + tu.num("flame", 0) * tu.num("flames", 0) + tu.num("base", 0) + tu.num("per", 0) * max, 38), "trickster totals 4.75 · 2.85 · 8.55 · 38 (표식 7)");
         check(near(pb.num("knife", 0) * pb.num("knives", 0), 4.75) && near(ps.total(), 2.85) && near(pl.num("tangle", 0) + pl.num("pop", 0), 8.55)
                 && near(pu.num("rocket", 0) * pu.num("volleys", 0) + pu.num("finale", 0), 38), "pierrot totals 4.75 · 2.85 · 8.55 · 38");
-        // 할루시네이트 = 태세 칸 몫 (30초 12 × 암살자 세기 0.95) · 직업 맞춤에서 뺌, 미러 팰리스 = 강화 (배율 합 없음)
+        // 할루시네이트 = 태세 칸 몫 (30초 12 × 암살자 세기 0.95) · 직업 맞춤에서 뺌, 팬텀 왈츠 = 강화 (배율 합 없음 — 환영 베기 평타의 50% · 강화 키 reflect)
         check(Jobs.stanceBudget(pd) && near(pd.total(), 12 * as.scale()) && near(pd.num("swing", 0) * pd.num("swings", 0), pd.total()) && tm.total() <= 0 && !Jobs.stanceBudget(tm),
-                "할루시네이트 11.4 (태세 칸 몫) · 미러 팰리스 강화");
+                "할루시네이트 11.4 (태세 칸 몫) · 팬텀 왈츠 강화");
+        check(near(tm.num("reflect", 0), 0.5) && Jobs.upKey(tm, "reflect") != null && tm.num("spinAt", 0) >= 2 && near(tm.num("dur", 0), 160), "팬텀 왈츠 50% · 8초");
+        check(near(tp.num("passAt", 0) + 6, tp.num("xAt", 0)) && tp.num("passAt", 0) > tp.num("first", 0) + (tp.num("packets", 0) - 1) * tp.num("every", 0)
+                && near(tu.num("mirrors", 0), 12) && tu.num("ring", 0) > 3, "트윈 리플렉션 28 엇갈림 → 34 X · 미러 월드 거울 12");
         // 초당 피해: 트릭스터 = 1차 × 1.2, 피에로 = 1차와 같음 (직업의 dps 1.0 — 탱커)
         check(near(Jobs.advanceDps(tr), 1.2) && near(Jobs.advanceDps(pr), 1.0) && near(Jobs.advanceDps(as), 1) && near(Jobs.advanceDps(), 1.2), "advance dps 1.2 · pierrot 1.0");
         check(near(dps(pr) / dps(as), 1.0, 0.005) && near(dps(tr) / dps(as), 1.2, 0.005), "pierrot dps = assassin · trickster ×1.2");
@@ -884,7 +887,7 @@ public final class JobsTest {
         // 소환물 체력 (내 최대 체력의 몫): 상자 35% · 인형 80% · 피날레 상자 40%, 상자는 둘까지
         check(near(pb.num("hp", 0), 0.35) && near(pd.num("hp", 0), 0.8) && near(pu.num("hp", 0), 0.4) && near(pb.num("boxes", 0), 2) && near(pu.num("boxes", 0), 4),
                 "summon hp 35% · 80% · 40%");
-        // 유틸 · 범위: 섀도 스와프 · 사우전드 팬텀 · 와일드파이어 피스트 단일 · 미라주 대시 좁은 범위 · 순간 이동, 잭 인 더 박스 단일 · 도발, 핸드스프링 좁은 범위 · 도약 · 도발 ·
+        // 유틸 · 범위: 섀도 스와프 · 트윈 리플렉션 · 미러 월드 단일 · 미라주 대시 좁은 범위 · 순간 이동, 잭 인 더 박스 단일 · 도발, 핸드스프링 좁은 범위 · 도약 · 도발 ·
         // 피해 감소, 벌룬 퍼레이드 넓음 · 둔화 · 도발, 그랜드 피날레 넓음 · 도발 · 밀쳐냄
         check("single".equals(Jobs.areaKind(ts)) && "narrow".equals(Jobs.areaKind(td)) && "single".equals(Jobs.areaKind(tp)) && "single".equals(Jobs.areaKind(tu))
                 && Jobs.utils(td).equals(List.of("blink")) && Jobs.utils(tp).equals(List.of("blink")) && Jobs.utils(tu).equals(List.of("blink")) && Jobs.utils(ts).isEmpty(),
@@ -895,7 +898,7 @@ public final class JobsTest {
         check(Jobs.windupTicks(ts) == 0 && Jobs.windupTicks(tu) == 0 && Jobs.windupTicks(pb) == 10 && Jobs.windupTicks(ps) == 8 && Jobs.windupTicks(pl) == 14
                 && Jobs.windupTicks(pu) == 10, "windups 0 · 0 · 10 · 8 · 14 · 10");
         check(Jobs.upKey(tm, "reflect") != null && Jobs.upKeys(pd).isEmpty() && Jobs.upKeys(ts).isEmpty(), "assassin advanced up keys");
-        check(Jobs.skillLine(tm).equals("미러 팰리스 · 30초") && Jobs.skillLine(ts).startsWith("섀도 스와프 · 6초 · 배율 ") && Jobs.skillLine(pb).startsWith("잭 인 더 박스 · 6초 · 배율 "),
+        check(Jobs.skillLine(tm).equals("팬텀 왈츠 · 30초") && Jobs.skillLine(ts).startsWith("섀도 스와프 · 6초 · 배율 ") && Jobs.skillLine(pb).startsWith("잭 인 더 박스 · 6초 · 배율 "),
                 "assassin advanced skill line");
         check(tr.color()[0][0] > 0.9 && tr.color()[0][2] > 0.7 && tr.color()[1][1] < 0.2 && pr.color()[0][0] > 0.9 && pr.color()[0][1] < 0.3 && pr.color()[1][0] > 0.95
                 && pr.color()[1][1] > 0.85, "colors: magenta · violet / circus red · gold");

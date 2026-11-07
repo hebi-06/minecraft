@@ -82,7 +82,7 @@ public final class JobTraits {
         JobTraits7.init(); // 0.51.0 마검사 2차 (아케인 블레이드 각인 번짐 · 거대한 마력 대검 · 오버드라이브 검기 · 소드 콜러 스스로 싸우는 칼 · 제미니 소드)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 스펠 서지 · 네크로맨서 망자의 군대 · 무덤 · 표식)
         JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 헌터스 마크 · 배틀 아처 난사 · 스톰 스트라이드 · 팰컨 다이브 초기화)
-        JobTraits10.init(); // 0.51.0 암살자 2차 (트릭스터 미러 팰리스 · 들불 표식 · 피에로 쇼타임 — 소환물 · 나눠 받음 · 핸드스프링 — 트릭스터의 표식은 JobTraits3)
+        JobTraits10.init(); // 0.51.0 암살자 2차 (트릭스터 팬텀 왈츠 · 미러 월드 — 2026-11-07 3판 · 피에로 쇼타임 — 소환물 · 나눠 받음 · 핸드스프링 — 트릭스터의 표식은 JobTraits3)
         JobTraits12.init(); // 0.51.0 사신 2차 (소울 리퍼 영혼 해방 · 엑시큐셔너 처형 — 소울 리퍼의 영혼은 JobTraits3)
         JobTraits11.init(); // 0.51.0 창술사 2차 (스톰 랜서 바람 · 질풍 창 · 렌딩 게일 · 드라군 비상 — 스톰 랜서의 창끝은 JobTraits3)
         JobTraits14.init(); // 0.51.0 사제 2차 (세인트 넘치는 빛 · 페탈 베일 · 소울본드 · 에버블룸 · 워록 생명 착취 · 피의 역병 — 세인트의 신앙은 JobTraits4)
@@ -568,7 +568,7 @@ public final class JobTraits {
         } else if (JobTraits9.stanceFx(sp, j, st.stance)) {
             // 0.51.0 헌터스 마크 (활 앞 은빛 · 적 머리 위 은빛 표식) · 스톰 스트라이드 (발밑 폭풍 바람 · 바람 줄)
         } else if (JobTraits10.stanceFx(sp, j, st.stance)) {
-            // 0.51.0 미러 팰리스 (손의 청록 섬광 — 도는 거울은 JobTraits10.palaceTick)
+            // 2026-11-07 팬텀 왈츠 (손의 청록 섬광 — 춤 상대 환영은 JobTraits10.waltzTick)
         } else if (JobTraits13.stanceFx(sp, j, st.stance)) {
             // 0.51.0 썬더헤드 (머리 위 먹구름) · 콜로서스 (머리 위 왕관) — JobTraits13.tick 이 그림
         } else if (JobTraits14.stanceFx(sp, j, st.stance)) {
