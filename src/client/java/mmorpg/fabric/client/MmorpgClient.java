@@ -41,6 +41,9 @@ public final class MmorpgClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        // 2026-11-07 1번: 이 클라이언트에 모드가 있다고 서버에 알림 (설정 단계 채널 — 서버가 아이템 · 엔티티를 그대로 보냄)
+        net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking.registerGlobalReceiver(
+                mmorpg.fabric.vanilla.VanillaClients.HelloPayload.TYPE, (payload, context) -> {});
         // 이펙트 그림 (활 빛줄기 · 마법진 · 참격 …) — assets/mmorpg/particles/fx.json 의 그림 순서 = FxParticle 의 TEX_*
         ParticleProviderRegistry.getInstance().register(RpgParticles.FX,
                 sprites -> (options, level, x, y, z, xd, yd, zd, random) -> new FxParticle(level, x, y, z, options, sprites));

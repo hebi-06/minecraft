@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "mmorpg.probe.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "ProbeChatMixin",
+    "ProbeMinecraftMixin",
+    "ProbePackMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

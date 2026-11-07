@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "mmorpg-probe",
+  "version": "1.0.0",
+  "name": "MMO RPG vanilla client probe (CI)",
+  "description": "모드 없는 클라이언트 시험의 사진기 — Fabric API 없이 (서버가 보기에 바닐라 클라이언트). ci/vanilla_probe.sh",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["mmorpg.probe.Probe"]
+  },
+  "mixins": ["mmorpg-probe.mixins.json"],
+  "depends": {
+    "fabricloader": "*",
+    "minecraft": "*"
+  }
+}

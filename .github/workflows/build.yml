@@ -15,7 +15,7 @@ on:
         type: boolean
         default: true
       only:
-        description: '화면 시험 중 이것만 (쉼표: client weapon particle skill rune gear form nav mob arena boss monster tree scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree runebreak mob9 hero skillbar weapons12 cosmetic gacha job prod — 세미콜론으로 동시에 돌 묶음, 비우면 모두, none 이면 사진첩 없이)'
+        description: '화면 시험 중 이것만 (vanilla = 모드 없는 클라이언트 접속 시험 · 쉼표: client weapon particle skill rune gear form nav mob arena boss monster tree scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree runebreak mob9 hero skillbar weapons12 cosmetic gacha job prod — 세미콜론으로 동시에 돌 묶음, 비우면 모두, none 이면 사진첩 없이)'
         type: string
         default: ''
 
@@ -190,12 +190,27 @@ jobs:
           grep -h -q "\[prod-client\] done, 0 failed" ci-out/prod-client.txt ci-out/prod-client-latest.log 2>/dev/null || code=1
           exit $code
 
+      - name: Vanilla client
+        id: vanilla
+        # 2026-11-07 1번 (모드 없이 접속): 배포 서버 (모드 jar + Fabric API) 에 모드 없는 클라이언트 (바닐라 + 사진기 src/probe) 로 접속해 사진
+        if: matrix.vanilla
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb libgl1 libgl1-mesa-dri libglx-mesa0 libegl1 mesa-vulkan-drivers libvulkan1 > /dev/null
+          mkdir -p ci-out/shots
+          ./gradlew assemble probeJar --stacktrace --console=plain 2>&1 | tail -n 30 | tee ci-out/vanilla-build.txt
+          bash ci/vanilla_probe.sh 2>&1 | tee ci-out/vanilla.txt
+          exit ${PIPESTATUS[0]}
+
       - name: Outcomes
         if: always()
         run: |
           mkdir -p ci-out
           echo "client ${{ matrix.name }} (${{ matrix.only }}): ${{ steps.client.outcome }}" > ci-out/outcome-client-${{ matrix.name }}.txt
           if [ "${{ matrix.prod }}" = "true" ]; then echo "prod-client: ${{ steps.prodclient.outcome }}" >> ci-out/outcome-client-${{ matrix.name }}.txt; fi
+          if [ "${{ matrix.vanilla }}" = "true" ]; then echo "vanilla-client: ${{ steps.vanilla.outcome }}" >> ci-out/outcome-client-${{ matrix.name }}.txt; fi
 
       - uses: actions/cache/save@v4
         if: always()
@@ -278,6 +293,12 @@ jobs:
         with:
           key: ci-${{ github.run_id }}-client-w12-${{ github.run_attempt }}
           restore-keys: ci-${{ github.run_id }}-client-w12-
+          path: ci-out
+      - uses: actions/cache/restore@v4
+        continue-on-error: true
+        with:
+          key: ci-${{ github.run_id }}-client-van-${{ github.run_attempt }}
+          restore-keys: ci-${{ github.run_id }}-client-van-
           path: ci-out
       - uses: actions/cache/restore@v4
         continue-on-error: true

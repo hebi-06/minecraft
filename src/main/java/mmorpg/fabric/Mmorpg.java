@@ -76,6 +76,8 @@ public final class Mmorpg implements ModInitializer {
         mmorpg.fabric.relic.RelicSystem.init();
         RpgPlayers.init();
         RpgCommands.init();
+        // 2026-11-07 1번: 모드 없는 클라이언트에 보내는 것만 바닐라 것으로 (Polymer — 모든 등록 뒤 · 레지스트리가 얼기 전)
+        mmorpg.fabric.vanilla.VanillaSupport.init();
         LOG.info("MMO RPG: weapons {}, rules {}", RpgItems.WEAPONS.size(), Rules.RESOURCE);
     }
 

@@ -42,10 +42,23 @@ fabricApi {
     }
 }
 
+repositories {
+    // Polymer (eu.pb4) — 2026-11-07 1번 모드 없이 접속
+    maven { url = 'https://maven.nucleoid.xyz' }
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // 모드 jar 안에 같이 넣음 (서버 · 모드 클라이언트 모두 따로 설치할 것 없음). core 는 networking · 레지스트리 동기화 조작 (rsm) 을,
+    // virtual-entity · resource-pack 은 common 을 안에 넣어 배포함 — autohost · blocks 는 resource-pack 을 넣지 않아 여기서 넣음
+    // (blocks: 제단처럼 그림이 있는 큰 블록을 바닐라 블록 상태 하나에 우리 모델로 — 리소스 팩이 그 상태를 바꿔 그림)
+    for (String m : ['polymer-core', 'polymer-virtual-entity', 'polymer-resource-pack', 'polymer-autohost', 'polymer-blocks']) {
+        implementation "eu.pb4:${m}:${project.polymer_version}"
+        include "eu.pb4:${m}:${project.polymer_version}"
+    }
 }
 
 processResources {
@@ -97,5 +110,25 @@ tasks.register('prodClient', net.fabricmc.loom.task.prod.ClientProductionRunTask
     mods.from(tasks.named('gametestJar'))
     jvmArgs.add('-Dfabric.client.gametest')
     jvmArgs.add('-Dmmorpg.prodSmoke=true')
+}
+
+// 2026-11-07 1번 (모드 없이 접속) 시험 — 모드 없는 클라이언트 (바닐라 + 사진만 찍는 작은 모드 src/probe: Fabric API 없이 Fabric Loader 만,
+// 서버가 보기에 바닐라와 같음). 배포 서버 (모드 jar) 가 장면을 움직이고 채팅 신호 ("[probe] shot 이름") 를 보내면 찍음 — ci/vanilla_probe.sh
+sourceSets {
+    probe {
+        compileClasspath += sourceSets.client.compileClasspath
+    }
+}
+
+tasks.register('probeJar', Jar) {
+    archiveClassifier = 'probe'
+    destinationDirectory = layout.buildDirectory.dir('probe-libs')
+    from sourceSets.probe.output
+}
+
+tasks.register('probeClient', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+    mods.setFrom(tasks.named('probeJar')) // 모드 jar · Fabric API 를 넣지 않음
+    runDir.set(layout.projectDirectory.dir('run-probe'))
+    programArgs.addAll(['--quickPlayMultiplayer', '127.0.0.1:25565', '--username', 'Probe', '--width', '1280', '--height', '720'])
 }
 

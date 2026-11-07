@@ -4,8 +4,9 @@
 인자: CI 수동 실행의 only 입력
   비움          → 기본 묶음 모두 (아래 DEFAULT — 한 묶음이 20분 안쪽이 되게)
   none          → 사진첩 없이 (client 일 건너뜀)
-  a,b;c,d       → 세미콜론으로 묶음, 쉼표로 묶음 안의 사진첩 키 (prod 를 넣으면 그 묶음에서 배포 환경 클라이언트도)
-출력: GITHUB_OUTPUT 줄 'groups=<JSON 목록>' — 항목 {name, only, prod}
+  a,b;c,d       → 세미콜론으로 묶음, 쉼표로 묶음 안의 사진첩 키 (prod 를 넣으면 그 묶음에서 배포 환경 클라이언트도,
+                  vanilla 를 넣으면 모드 없는 클라이언트 접속 시험도 — ci/vanilla_probe.sh, 2026-11-07 1번)
+출력: GITHUB_OUTPUT 줄 'groups=<JSON 목록>' — 항목 {name, only, prod, vanilla}
 사진첩 키: client weapon particle skill rune gear form nav mob arena boss monster tree
           scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree runebreak mob9 hero skillbar weapons12 cosmetic gacha limited market storage rpgui
           glacier pairs job jobup void voidknight hel voidarmor artifact motion relic smith workshop fx3d field fieldb fieldc
@@ -27,20 +28,24 @@ DEFAULT = [
     ("hero", "hero,skillbar,gacha,limited,rpgui,glacier,job,smith", False),
     ("w12", "weapons12,cosmetic,market,storage,jobup,voidarmor,artifact,relic,workshop", False),
 ]
+# 모드 없는 클라이언트 접속 시험만 하는 묶음 (사진첩 없이 — 배포 서버 + 바닐라 클라이언트)
+VANILLA = ("van", "none")
 
 
 def groups(only):
     only = (only or "").strip()
     if not only:
-        return [{"name": n, "only": o, "prod": p} for n, o, p in DEFAULT]
+        return [{"name": n, "only": o, "prod": p, "vanilla": False} for n, o, p in DEFAULT] + [
+            {"name": VANILLA[0], "only": VANILLA[1], "prod": False, "vanilla": True}]
     if only.lower() == "none":
         return []
     out = []
     for i, part in enumerate(p for p in only.split(";") if p.strip()):
         keys = [k.strip() for k in part.split(",") if k.strip()]
         prod = "prod" in keys
-        keys = [k for k in keys if k != "prod"]
-        out.append({"name": "g%d" % (i + 1), "only": ",".join(keys) if keys else "none", "prod": prod})
+        vanilla = "vanilla" in keys
+        keys = [k for k in keys if k not in ("prod", "vanilla")]
+        out.append({"name": "g%d" % (i + 1), "only": ",".join(keys) if keys else "none", "prod": prod, "vanilla": vanilla})
     return out
 
 
