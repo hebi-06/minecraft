@@ -345,11 +345,11 @@ public final class MotionsTest {
                 && Motions.skillMotion("warrior_charge:slam").equals("jb_warrior_charge_slam") && Motions.skillMotion("guardian_throw:catch").equals("jb_guardian_throw_catch"),
                 "dashes (0.47.0 직업 스킬은 jb_ — 돌격 끝의 내려찍기 · 방패를 받음은 단계 열쇠)");
         check(Motions.skillMotion("swordmaster_ult").equals("jb_swordmaster_ult") && Motions.skillMotion("swordmaster_parry:riposte").equals("jb_swordmaster_parry_riposte")
-                && Motions.skillMotion("swordmaster_ring:cut1").equals("jb_swordmaster_ring_cut1") && Motions.skillMotion("swordmaster_ult:dive").equals("jb_swordmaster_ult_dive")
-                && Motions.skillMotion("swordmaster_ult:final").equals("jb_swordmaster_ult_final") && Motions.skillMotion("swordmaster_ult:slash") == null
+                && Motions.skillMotion("swordmaster_echo").equals("jb_swordmaster_echo") && Motions.skillMotion("swordmaster_ring:cut1") == null
+                && Motions.skillMotion("swordmaster_ult:dive") == null && Motions.skillMotion("swordmaster_ult:slash") == null
                 && Motions.skillMotion("bloodknight_cleave:3").equals("jb_bloodknight_cleave_3") && Motions.skillMotion("bloodknight_ult:leap").equals("jb_bloodknight_ult_leap")
                 && Motions.skillMotion("bloodknight_ult:x1") == null && Motions.skillMotion("bloodknight_ult").equals("jb_bloodknight_ult"),
-                "0.51.0 2차 직업 스킬 동작 (jb_ — 받아치기 · 가로지르기 · 혜성 · 마지막 낙하 · 뛰어올라 내리꽂음은 단계 열쇠)");
+                "0.51.0 2차 직업 스킬 동작 (jb_ — 받아치기 · 뛰어올라 내리꽂음은 단계 열쇠 · 2026-11-07 블레이드 에코 · 엑스칼리버는 한 동작)");
         check(Motions.skillMotion("warlord_rend").equals("jb_warlord_rend") && Motions.skillMotion("warlord_rend:slam").equals("jb_warlord_rend_slam")
                 && Motions.skillMotion("gladiator_ult").equals("jb_gladiator_ult") && Motions.skillMotion("gladiator_ult:slam").equals("jb_gladiator_ult_slam")
                 && Motions.skillMotion("gladiator_flurry").equals("jb_gladiator_flurry") && Motions.skillMotion("lycan_fang") == null

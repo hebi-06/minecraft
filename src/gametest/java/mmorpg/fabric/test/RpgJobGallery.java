@@ -160,16 +160,16 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /**
      * 0.51.0 2차 직업 — 검사 각성 소드마스터 · 반전 블러드 나이트 (재설계안 2판): 칼집 섬광 (6 뽑음 · 10 큰 가로) · 받아넘기기 (4 에 맞음 →
-     * 5 쨍 · 11 · 13 · 15 받아침 — beforeCast) · 불의 울타리 (6 · 16 … 46 가로지르기 · 56 별) · 용의 피 · 스타폴 블레이드 (4 ~ 8 솟구침 · 12 · 22 … 62 혜성 ·
-     * 75 마지막 낙하) / 핏빛 대검 (0 · 12 · 24 다시 누름 → 5 · 17 · 31) · 피의 돌진 (6) · 피의 사슬 (4 박음 · 36 끌어당김) · 광란 · 블러드 문 (10 빨아들임 · 16 ~ 31
+     * 5 쨍 · 11 · 13 · 15 받아침 — beforeCast) · 블레이드 에코 (2026-11-07 3판 — 6 ~ 18 둘레 적 사이를 옮겨 가며 칼자국 · 26 칼집에 넣어 터짐) · 용의 피 ·
+     * 엑스칼리버 (2026-11-07 3판 — 4 ~ 12 빛의 대검이 자람 · 22 ~ 26 내리침 · 26 검격 · 36 빛의 검) / 핏빛 대검 (0 · 12 · 24 다시 누름 → 5 · 17 · 31) · 피의 돌진 (6) · 피의 사슬 (4 박음 · 36 끌어당김) · 광란 · 블러드 문 (10 빨아들임 · 16 ~ 31
      * 뛰어올라 내리꽂음 · 41 ~ 피의 기둥)
      */
     private static final Case[] CASES_SM = {
         new Case(0, new int[] {3, 7, 9, 12}, new int[] {7, 11}, 28, false),
         new Case(1, new int[] {2, 5, 11, 15}, new int[] {5, 13}, 26, false),
-        new Case(2, new int[] {2, 6, 16, 36, 46, 57}, new int[] {6, 26, 57}, 64, false),
+        new Case(2, new int[] {3, 8, 12, 18, 26, 28}, new int[] {12, 26}, 36, false),
         new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
-        new Case(4, new int[] {3, 8, 11, 12, 22, 32, 52, 62, 71, 75, 77}, new int[] {8, 22, 62, 75}, 86, false),
+        new Case(4, new int[] {4, 12, 20, 24, 26, 30, 36, 40}, new int[] {20, 26, 36}, 52, false),
     };
     private static final Case[] CASES_BK = {
         new Case(0, new int[] {3, 5, 15, 17, 29, 31}, new int[] {5, 17, 31}, 42, false),
@@ -677,7 +677,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         // 0.51.0 2차 직업 (재설계안 2판): 칼집 섬광 — 투지 3 (6칸 · 열 줄) · 불의 울타리 — 투지 8 (치명 — 금빛 치명 숫자) · 블러드 나이트는 체력 60% (피의 갈증 —
         // 공격 속도 · 흡혈이 오른 모습)
         if (id.equals("swordmaster_draw")) JobTraits.setStacks(sp, 3);
-        if (id.equals("swordmaster_ring")) JobTraits.setStacks(sp, 8);
+        if (id.equals("swordmaster_echo")) JobTraits.setStacks(sp, 8);
         if (id.startsWith("bloodknight_")) sp.setHealth(sp.getMaxHealth() * 0.6F);
         // 0.51.0 재설계안 2판 전사 2차: 워로드는 분노 60 (게이지) · 글래디에이터는 앞 과녁과 결투 6 (말뚝 고리 — 그 과녁을 먼저 노림)
         if (id.startsWith("warlord_")) JobTraitsMore.setRage(sp, 60);
@@ -923,6 +923,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
      */
     private static double[] filmView(String id) {
         return switch (id) {
+            case "swordmaster_ult" -> new double[] {11.5, 3.0, 5.6, 0.4}; // 2026-11-07 엑스칼리버: 15칸 빛의 대검을 올려다봄 · 앞 24칸 검격
+            case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3}; // 블레이드 에코: 둘레를 옮겨 다니다 처음 자리로 돌아옴 — 덜 따라감
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
             case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};

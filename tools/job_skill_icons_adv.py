@@ -105,27 +105,27 @@ def swordmaster_parry(A, B):
     return finish(subject, [glow(lighter(sp, sparks), A, 1.8, 1.1), glow(counter, B, 1.2, 0.8)], backdrop(mix(A, NIGHT, 0.86), mix(B, (20, 30, 60), 0.4)))
 
 
-def swordmaster_ring(A, B):
-    # 불의 울타리: 둘레에 솟은 불꽃 울타리 (불꽃 혀 열둘) · 안을 가로지른 금빛 별 (가로지르기 다섯) · 가운데 반짝임
-    cx, cy, R = 16.0, 17.0, 12.6
-    flames, cores = mask(), mask()
-    for i in range(12):
-        a = math.radians(i * 30 + 15)
-        x, y = cx + math.cos(a) * R, cy + math.sin(a) * R * 0.86
-        drop(flames, x, y, 1.9, -90)
-        drop(cores, x, y + 0.5, 0.9, -90)
-    pts = [(cx + math.cos(math.radians(-90 + 72 * i)) * 8.6, cy + math.sin(math.radians(-90 + 72 * i)) * 8.6) for i in range(5)]
-    starm = mask()
-    for i in range(5):
-        line(starm, [pts[i], pts[(i + 2) % 5]], 1.3)
-    core = mask()
-    for i in range(5):
-        line(core, [pts[i], pts[(i + 2) % 5]], 0.45)
+def swordmaster_echo(A, B):
+    # 블레이드 에코 (2026-11-07 3판 — 인페르노 링 대신): 가운데 아래 칼집에 막 넣은 칼 (금빛 코등이 · 어귀의 딸깍 섬광) · 둘레 허공에 걸린 가는 칼자국 일곱
+    # (여러 쪽 — 가운데가 갈라지며 빛남) · 칼자국마다 작은 반짝임
+    cuts, cuts_hi = mask(), mask()
+    for (x0, y0), (x1, y1) in (((3.0, 5.5), (13.5, 10.0)), ((18.5, 3.0), (29.0, 9.5)), ((2.5, 17.0), (10.5, 12.0)), ((22.0, 13.5), (30.0, 18.5)),
+                               ((4.0, 24.5), (11.5, 28.5)), ((21.0, 27.5), (29.5, 22.5)), ((12.0, 2.5), (20.0, 2.0))):
+        line(cuts, [(x0, y0), (x1, y1)], 1.0)
+        line(cuts_hi, [((x0 * 2 + x1) / 3, (y0 * 2 + y1) / 3), ((x0 + x1 * 2) / 3, (y0 + y1 * 2) / 3)], 0.5)
+    sheath = mask()
+    line(sheath, [(9.0, 30.0), (17.6, 17.4)], 3.4)
+    fit = mask()
+    disc(fit, 17.8, 17.1, 2.0)
+    sw = gold_sword((9.4, 29.4), (21.6, 11.6), blade=2.2, guard=7.0)
     sp = mask()
-    star(sp, cx, cy, 3.6, 0.2)
-    subject = stack(layer(flames, FIRE_HI, FIRE_C, WHITE, mix(FIRE_C, (0, 0, 0), 0.35)), layer(cores, WHITE, FIRE_HI), layer(starm, GOLD_HI, A, WHITE, GOLD_LO),
-                    layer(core, WHITE, WHITE), layer(sp, WHITE, GOLD_HI))
-    return finish(subject, [glow(flames, FIRE_C, 1.8, 1.0), glow(starm, A, 1.3, 0.9)], backdrop(mix(FIRE_C, NIGHT, 0.85), mix(A, (90, 40, 10), 0.45)))
+    star(sp, 18.0, 16.8, 5.6, 0.15, 45)
+    for x, y in ((8.2, 7.8), (23.8, 6.2), (6.5, 14.5), (26.0, 16.0), (7.8, 26.5), (25.2, 25.0), (16.0, 2.2)):
+        star(sp, x, y, 1.5, 0.24)
+    subject = stack(layer(cuts, WHITE, mix(A, WHITE, 0.35), None, None), layer(cuts_hi, WHITE, WHITE),
+                    layer(sheath, mix(LACQUER, A, 0.25), LACQUER, mix(LACQUER, WHITE, 0.3), mix(LACQUER, (0, 0, 0), 0.4)), layer(fit, GOLD_HI, GOLD, WHITE, GOLD_LO),
+                    *sw, layer(sp, WHITE, GOLD_HI))
+    return finish(subject, [glow(lighter(cuts, sp), A, 1.7, 1.0)], backdrop(mix(A, NIGHT, 0.86), mix(A, (60, 40, 10), 0.45)))
 
 
 def swordmaster_blood(A, B):
@@ -153,32 +153,33 @@ def swordmaster_blood(A, B):
 
 
 def swordmaster_ult(A, B):
-    # 스타폴 블레이드: 오른쪽 위 하늘에서 칼끝을 아래로 내리꽂히는 금빛 칼 (불타는 혜성 — 뒤로 넓어지는 불꼬리) · 꽂힌 땅의 큰 번쩍임 · 둥글게 솟는 불꽃 ·
-    # 뒤의 작은 혜성 둘 (여섯 번 떨어짐 — 2026-11-05 사용자 "검사 궁 2갸 다른걸로 바꾸자 멋이 안난다", 유성 연참)
-    tail = mask()
-    tapered(tail, [(13.0, 24.6), (19.4, 15.0), (27.0, 4.6), (33.0, -3.0)], 2.6, 12.0)
-    tail_hi = mask()
-    tapered(tail_hi, [(13.0, 24.6), (19.0, 15.6), (25.4, 7.0), (30.0, 1.0)], 1.4, 4.6)
-    small = mask()
-    small_hi = mask()
-    for hx, hy, L in ((5.6, 13.6, 9.0), (27.2, 21.0, 7.4)):
-        ux, uy = 0.6, -0.8
-        tapered(small, [(hx, hy), (hx + ux * L, hy + uy * L)], 1.6, 4.2)
-        disc(small_hi, hx, hy, 1.1)
-    gnd = ground(26.4)
-    dome = mask()
-    crescent(dome, 12.0, 27.0, 7.4, 1.6, 186, 354)
-    sw = gold_sword((11.6, 27.0), (21.4, 12.6), blade=3.0, guard=8.0)
-    flash = mask()
-    star(flash, 11.8, 26.4, 6.0, 0.16, 0)
+    # 엑스칼리버 (2026-11-07 3판 — 스타폴 블레이드 대신: 사용자 "엑스칼리버 같은 느낌으로 내리꽂는 커다란 검격"): 아래 가운데 금빛 코등이에서 위로 하늘을 찌르는
+    # 거대한 빛의 칼날 (흰 속 · 금빛 테 · 넓은 빛무리) · 칼날에서 퍼지는 빛살 · 칼끝의 큰 별 · 아래로 깔리는 빛의 검격 호
+    blade = mask()
+    poly(blade, [(13.6, 25.0), (13.9, 6.0), (16.0, 1.4), (18.1, 6.0), (18.4, 25.0)])
+    core = mask()
+    poly(core, [(15.2, 24.6), (15.4, 7.0), (16.0, 3.6), (16.6, 7.0), (16.8, 24.6)])
+    rays = mask()
+    for ang in (-62, -38, -16, 16, 38, 62, 200, 340):
+        a = math.radians(ang - 90)
+        line(rays, [(16.0 + math.cos(a) * 5.0, 12.0 + math.sin(a) * 5.0), (16.0 + math.cos(a) * 14.0, 12.0 + math.sin(a) * 14.0)], 0.6)
+    arc = mask()
+    crescent(arc, 16.0, 36.0, 13.0, 2.4, 205, 335)
+    guard = mask()
+    line(guard, [(9.6, 25.6), (22.4, 25.6)], 2.0)
+    grip = mask()
+    line(grip, [(16.0, 26.4), (16.0, 30.4)], 2.0)
+    pommel = mask()
+    disc(pommel, 16.0, 30.6, 1.3)
     sp = mask()
-    for cx, cy, r in ((4.0, 22.0, 1.6), (20.6, 24.0, 1.8), (7.6, 4.0, 1.4)):
-        star(sp, cx, cy, r, 0.24)
-    subject = stack(layer(tail, mix(FIRE_C, A, 0.45), mix(FIRE_C, (60, 10, 0), 0.4), FIRE_HI, None, axis=(0.6, -0.8)),
-                    layer(tail_hi, WHITE, FIRE_HI), layer(small, mix(FIRE_C, A, 0.5), mix(FIRE_C, (60, 10, 0), 0.5)), layer(small_hi, WHITE, FIRE_HI),
-                    ground_layer(gnd, A), layer(dome, FIRE_HI, FIRE_C, WHITE, None), *sw, layer(flash, WHITE, FIRE_HI), layer(sp, WHITE, GOLD_HI))
-    return finish(subject, [glow(lighter(tail, small), FIRE_C, 2.0, 1.0), glow(lighter(flash, dome), A, 1.8, 1.0)],
-                  backdrop(mix(A, NIGHT, 0.86), mix(A, (90, 40, 10), 0.4)))
+    star(sp, 16.0, 2.6, 5.2, 0.14, 0)
+    star(sp, 16.0, 25.4, 3.4, 0.2, 45)
+    for x, y in ((6.0, 6.0), (26.4, 8.0), (4.4, 19.0), (27.6, 18.4)):
+        star(sp, x, y, 1.3, 0.24)
+    subject = stack(layer(arc, GOLD_HI, A, WHITE, None), layer(rays, mix(A, WHITE, 0.5), A), layer(blade, mix(A, WHITE, 0.55), A, WHITE, GOLD_LO, axis=(1, 0)),
+                    layer(core, WHITE, WHITE), layer(guard, GOLD_HI, GOLD, WHITE, GOLD_LO), layer(grip, (110, 70, 30), (60, 34, 14)),
+                    layer(pommel, GOLD_HI, GOLD, WHITE, GOLD_LO), layer(sp, WHITE, GOLD_HI))
+    return finish(subject, [glow(lighter(blade, rays), A, 2.4, 1.0), glow(arc, A, 1.4, 0.8)], backdrop(mix(A, (14, 18, 52), 0.8), mix(A, (90, 70, 20), 0.5)))
 
 
 # ------------------------------------------------------------ 블러드 나이트 (빛: 짙은 피 → 밝은 피) — 0.51.0 재설계안 2판
@@ -3584,7 +3585,7 @@ def darkknight_ult(A, B):
 ICONS = {
     "swordmaster_draw": swordmaster_draw,
     "swordmaster_parry": swordmaster_parry,
-    "swordmaster_ring": swordmaster_ring,
+    "swordmaster_echo": swordmaster_echo,
     "swordmaster_blood": swordmaster_blood,
     "swordmaster_ult": swordmaster_ult,
     "bloodknight_cleave": bloodknight_cleave,

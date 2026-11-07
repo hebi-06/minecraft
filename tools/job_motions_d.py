@@ -214,8 +214,7 @@ fpw(m, 11.0, FPW_DOWN)
 fpw(m, 13.6, FPW_LOW)
 use_skill(m, "swordmaster_parry:riposte")
 
-# 불의 울타리 (효과: 0 둘레에 불꽃 울타리 → 3 · 13 · 23 · 33 · 43 가로지르기 (단계 :cut0 · :cut1 번갈아 · 마지막 :last — 3틱에 내달려 그 끝에서 벰 (6 · 16 …
-# 맞히면 멈칫 2틱)) → 56 별 자국이 타오름 (:last 의 13)). 가로지르는 쪽은 적마다 달라 다리는 제자리에서 내달리는 꼴 (몸은 서버가 옮김)
+# 낮게 내달리는 자세 · 지나가며 베기 · 미끄러져 멈춤 (2026-11-07 3판 블레이드 에코가 씀 — 2판 불의 울타리의 가로지르기에서 옴)
 LOW_L = P(IAI, body=[20, -32, 0], head=[-4, 0], rl=[22, 0, 6], ll=[-30, 0, -6], rk=46, lk=56, root=[-0.28, 0.06])  # 칼을 왼 허리 아래로 숨기고 낮게 (되돌려 벨 준비)
 LOW_R = P(body=[20, 30, 0], head=[-4, 0], ra=arm([0.55, -0.6, 0.2], 40, [0.6, -0.1, -0.8]), la=arm([-0.5, -0.55, 0.45], 35), rl=[20, 0, 6], ll=[-28, 0, -6],
           rk=44, lk=52, root=[-0.26, 0.08])  # 칼을 오른쪽 아래 뒤로 끌어 낮게 (바로 벨 준비)
@@ -228,62 +227,43 @@ PASS_END_B = P(DRAW_END, body=[16, 60, 0], head=[-8, 0], root=[-0.32, 0.45], **L
 SKID_B = P(ZANSHIN, body=[22, 46, 0], head=[-6, 0], la=arm([-0.45, -0.8, 0.25], 15), root=[-0.42, 0.22], **BRACE)  # 미끄러져 멈춤 (칼은 오른쪽 아래)
 SKID_F = P(body=[22, -46, 0], head=[-6, 0], ra=arm([-0.7, -0.45, 0.4], 20, [-0.6, -0.6, -0.5]), la=arm([0.1, -0.85, 0.4], 15), root=[-0.42, 0.22], **BRACE)
 
-m = Motion("swordmaster_ring", 8, "불의 울타리 — 칼을 낮게 뻗고 오른쪽으로 한 바퀴 휘둘러 둘레에 불꽃 울타리를 세운 뒤 칼을 왼 허리 아래로 숨기고 낮게 웅크림",
-           fade=(0.03, 0.1))
-spin_right(m, [1.5], 2.8, wind_tick=0.2, fwd=P(K.SPIN_FWD_R, ra=arm([0.12, -0.25, 0.96], 6, [0.4, -0.3, 0.87]), rk=42, lk=42, root=[-0.26, 0]),
-           end_pose=LOW_L)
-keyp(m, 6.0, P(LOW_L, spin=-360, body=[22, -34, 0], root=[-0.3, 0.06]))
-fpw(m, 6.0, FPW_SHEATHED)
-carry_spin(m, 2.8, -360)
+# 블레이드 에코 (2026-11-07 3판 — 인페르노 링 대신. 효과: 0 ~ 6 칼집에 손을 얹고 숨을 고름 → 6 · 8 · … · 16 둘레 적 곁으로 2틱마다 옮겨 감 (몸은 서버가 옮김 —
+# 도착 8 · 10 · … · 18 에 허공에 칼자국) → 18 ~ 20 처음 자리로 미끄러져 돌아옴 → 20 ~ 26 칼을 칼집에 천천히 밀어 넣음 → 26 딸깍 (칼자국이 한꺼번에 터짐))
+ECHO_HIT_F = P(SKID_F, body=[18, -58, 0], head=[-8, 0], root=[-0.3, 0.42], **SPRINT_B)  # 바로 베어 지나감 (칼은 왼쪽 아래)
+ECHO_HIT_B = P(PASS_END_B, body=[18, 58, 0], head=[-8, 0], root=[-0.3, 0.42], **SPRINT_A)  # 되베어 지나감 (칼은 오른쪽 아래)
+m = Motion("swordmaster_echo", 32, "블레이드 에코 — 칼자루에 손을 얹고 낮게 웅크려 숨을 고르다가, 번개처럼 이리저리 내달리며 되베기와 바로 베기를 번갈아 하고, 처음 자리로 "
+           "미끄러져 돌아와 낮게 버틴 채 칼을 천천히 칼집에 밀어 넣어 딸깍", fade=(0.03, 0.1))
+keyp(m, 1.4, SHEATHE, "out3")
+keyp(m, 3.6, IAI_LOW)
+keyp(m, 5.6, IAI_COIL, "in")
+fpw(m, 1.4, FPW_SHEATHED, "out3")
+for i in range(6):
+    t0 = 6 + 2 * i
+    if i % 2 == 0:
+        keyp(m, t0 + 0.5, P(DASH_L, root=[-0.24, 0.36]), "out")
+        keyp(m, t0 + 1.7, ECHO_HIT_B, "linear")
+        fpw(m, t0 + 0.5, FPW_SHEATHED, "out")
+        fpw(m, t0 + 1.7, FPW_ZAN, "linear")
+    else:
+        keyp(m, t0 + 0.5, P(DASH_R, root=[-0.24, 0.36]), "out")
+        keyp(m, t0 + 1.7, ECHO_HIT_F, "linear")
+        fpw(m, t0 + 0.5, FPW_BACK, "out")
+        fpw(m, t0 + 1.7, dict(p=(-1.2, -0.3, 0.2), blade=(-0.7, -0.35, -0.6)), "linear")
+m.head.setdefault("trail", []).append([m.t(6.2), m.t(18.0)])
+keyp(m, 19.0, P(SKID_B, body=[24, 40, 0], root=[-0.4, 0.2]), "out")
+keyp(m, 21.0, P(ZAN2, body=[14, 44, 0], root=[-0.3, 0.3], rk=40, lk=56))
+keyp(m, 22.6, NOTO_A)
+keyp(m, 25.4, P(NOTO_B, ra=arm([-0.4, -0.7, 0.45], 66, [-0.5, -0.24, -0.83])), "in")
+keyp(m, 26.0, NOTO_B, "in")
+keyp(m, 27.6, P(NOTO_B, body=[8, -16, 0], root=[-0.1, 0.06]))
+keyp(m, 30.4, P(W_READY, body=[6, 4, 0]))
+fpw(m, 19.0, FPW_ZAN, "out")
+fpw(m, 22.6, FPW_SHEATHED)
+fpw(m, 26.0, FPW_SHEATHED, "in")
+fpw(m, 30.4, FPW_LOW)
 m.set(softLegs=False)
-use_skill(m, "swordmaster_ring")
-
-
-def ring_cut(name, key, back, last=False):
-    """가로지르기 한 번 (단계 동작 — 0 에 서버가 보냄: 0 ~ 3 내달림 → 3 지나가며 벰 → 미끄러져 멈춤 → 다음 쪽으로 낮게 (9 — 다음 단계의 0 자세))"""
-    ticks = 18 if last else 13
-    about = ("되돌려 베기" if back else "바로 베기")
-    mo = Motion(name, ticks, "불의 울타리 가로지르기 — 낮게 숙여 내달리다 지나가며 " + about + (" 하고 미끄러져 멈춰 베어 낸 자세로 버티다가 칼을 털어냄" if last else
-                " 하고 미끄러져 멈춘 뒤 다음 쪽으로 낮게 웅크림"), fade=(0.0, 0.06 if not last else 0.1))
-    if back:
-        first(mo, LOW_L, FPW_SHEATHED)
-        keyp(mo, 1.0, DASH_L, "out3")
-        keyp(mo, 2.1, P(DASH_L, body=[36, -34, 0], root=[-0.24, 0.36], **SPRINT_B))
-        backhand(mo, 2.4, 3.0, 4.2, wind=P(DASH_L, body=[32, -46, 0], root=[-0.26, 0.4], **SPRINT_B), hit=PASS_HIT_B, end=PASS_END_B)
-        keyp(mo, 6.4, SKID_B, "out")
-        fpw(mo, 1.0, FPW_SHEATHED, "out3")
-        fpw(mo, 6.4, FPW_ZAN, "out")
-    else:
-        first(mo, LOW_R, FPW_BACK)
-        keyp(mo, 1.0, DASH_R, "out3")
-        keyp(mo, 2.1, P(DASH_R, body=[36, 26, 0], root=[-0.24, 0.36], **SPRINT_B))
-        strike_with(mo, "slash_h", 2.4, 3.0, 4.2, a=P(body=[32, 40, 0], head=[-10, 0], root=[-0.26, 0.4], **SPRINT_B),
-                    b=P(body=[16, -60, 0], head=[-8, 0], root=[-0.32, 0.45], **LUNGE_DEEP))
-        keyp(mo, 6.4, SKID_F, "out")
-        fpw(mo, 1.0, FPW_BACK, "out3")
-        fpw(mo, 6.4, dict(p=(-1.2, -0.3, 0.2), blade=(-0.7, -0.35, -0.6)), "out")
-    if last:
-        keyp(mo, 9.6, P(SKID_B, body=[18, 50, 0], root=[-0.36, 0.2], rk=54, lk=50))
-        keyp(mo, 12.2, P(FLICK, root=[-0.3, 0.16], **BRACE), "in")  # 칼을 털어냄 = 별 자국이 타오름 (13)
-        keyp(mo, 13.4, P(FLICK, body=[12, 30, 0], root=[-0.3, 0.16], **BRACE), "out")
-        keyp(mo, 16.0, P(W_READY, body=[8, 6, 0]))
-        fpw(mo, 9.6, FPW_ZAN)
-        fpw(mo, 12.2, FPW_FLICK, "in")
-        fpw(mo, 16.0, FPW_LOW)
-    elif back:
-        keyp(mo, 9.0, LOW_R)  # 다음은 바로 베기 (:cut1 의 0)
-        fpw(mo, 9.0, FPW_BACK)
-    else:
-        keyp(mo, 9.0, LOW_L)  # 다음은 되돌려 베기 (:cut0 · :last 의 0)
-        fpw(mo, 9.0, FPW_SHEATHED)
-    mo.set(softLegs=False)
-    impacts(mo, 3.0)
-    use_skill(mo, key)
-
-
-ring_cut("swordmaster_ring_cut0", "swordmaster_ring:cut0", True)
-ring_cut("swordmaster_ring_cut1", "swordmaster_ring:cut1", False)
-ring_cut("swordmaster_ring_last", "swordmaster_ring:last", True, last=True)
+impacts(m, 26.0)
+use_skill(m, "swordmaster_echo")
 
 # 용의 피 (태세 — 효과: 0 몸에서 솟는 금빛 불길 · 하늘 빛줄기 · 용의 울음 · 0 · 4 · 8 발밑 불꽃 고리)
 DB_GATHER = P(GATHER_W, body=[26, -8, 0], head=[24, 0], rk=48, lk=48, root=[-0.26, 0])  # 웅크려 칼을 몸 앞에 가로로 품음
@@ -329,73 +309,45 @@ SF_CROUCH = P(F_CROUCH, body=[30, 0, 0], head=[-20, 0], ra=arm([0.3, -0.62, 0.6]
               root=[-0.36, 0.05])  # 두 손으로 칼을 낮게 앞으로 쥐고 깊이 웅크림
 SF_RISE = P(RAISE2H, body=[-16, 0, 0], head=[-26, 0], rl=[-30, 0, 8], rk=70, ll=[-10, 0, -8], lk=40, root=[0.0, 0.1])  # 칼을 하늘로 들고 솟구침 (다리를 접음)
 SF_LAND = P(S_IMPACT, body=[34, 0, 0], head=[-4, 0], root=[-0.32, 0.25])  # 혜성이 꽂힘 — 한 무릎 · 칼끝이 땅
-m = Motion("swordmaster_ult", 10, "스타폴 블레이드 — 두 손으로 칼을 낮게 앞으로 쥐고 깊이 웅크렸다가, 칼을 하늘로 들어 올리며 솟구쳐 다리를 접고, 하늘에서 칼을 거꾸로 쥠",
-           fade=(0.03, 0.03))
+# 엑스칼리버 (2026-11-07 3판 — 스타폴 블레이드 대신. 효과: 0 새벽빛 하늘 · 둘레 금빛이 칼로 빨려 듦 → 4 ~ 12 칼날이 하늘에 닿는 빛의 대검으로 자람 → 22 ~ 26 머리 위에서
+# 앞 아래로 크게 내리침 → 26 검격 (앞 24칸 — 맞히면 멈칫) → 36 지나간 자리에서 빛의 검이 솟구침). 두 손 · 넓게 디딘 다리 · 무게를 실어 내리침
+XC_GRIP = P(body=[14, 0, 0], head=[-6, 0], ra=arm([0.3, -0.62, 0.6], 40, [0.15, 0.25, 0.95]), la=bent([0.05, -0.6, 0.62], 40, (0, 0, 1)), rl=[12, 0, 10],
+            ll=[-16, 0, -10], rk=30, lk=34, root=[-0.16, 0.0])  # 두 손으로 칼을 낮게 앞으로 쥐고 다리를 넓게
+XC_RAISE = P(RAISE2H, body=[-12, 0, 0], head=[-24, 0], rl=[14, 0, 14], ll=[-14, 0, -14], rk=22, lk=24, root=[-0.1, 0.0])  # 칼을 하늘로 치켜듦
+XC_HOLD = P(XC_RAISE, body=[-16, 0, 0], head=[-30, 0], rk=26, lk=28, root=[-0.13, 0.0])
+XC_WIND = P(XC_RAISE, body=[-22, 0, 0], head=[-34, 0], rk=30, lk=32, root=[-0.16, -0.06])  # 내리치기 직전 (몸을 뒤로 젖힘)
+XC_CLEAVE = P(body=[44, 0, 0], head=[-2, 0], ra=arm([0.0, -0.5, 0.86], 8, [0, -0.62, 0.78]), la=bent([0.05, -0.5, 0.86], 14, (0, 0, 1)), root=[-0.44, 0.52],
+              **LUNGE_DEEP)  # 내리쳐 칼끝이 앞 아래 (크게 내디딤)
+m = Motion("swordmaster_ult", 44, "엑스칼리버 — 두 손으로 칼을 낮게 쥐고 다리를 넓게 디뎠다가 칼을 하늘로 높이 치켜들고 (빛이 모이는 동안 버팀), 몸을 뒤로 젖혔다가 크게 "
+           "내디디며 머리 위에서 앞 아래로 내리치고 낮게 버틴 뒤 일어섬", fade=(0.03, 0.12))
 off_bare(m)
-keyp(m, 1.5, SF_CROUCH, "out3")
-keyp(m, 3.6, P(SF_CROUCH, body=[34, 0, 0], rk=96, lk=96, root=[-0.4, 0.05]))
-keyp(m, 5.0, SF_RISE, "out")
-keyp(m, 8.0, P(SF_RISE, body=[-20, 0, 0], head=[-30, 0]))
-keyp(m, 9.6, P(F_AIR, body=[-16, 0, 0]), "in")
-fpw(m, 1.5, FPW_LOW, "out3")
-fpw(m, 5.0, FPW_SKY, "out")
-fpw(m, 9.6, FPW_REV_UP, "in")
-fpl(m, 5.0, FPL_RAISE2H, "out")
-fpl(m, 9.6, FPL_RAISE2H)
+keyp(m, 1.6, XC_GRIP, "out3")
+keyp(m, 4.4, XC_RAISE, "out")
+keyp(m, 9.0, P(XC_HOLD, body=[-14, 0, 1]))
+keyp(m, 13.0, P(XC_HOLD, body=[-17, 0, -1], head=[-32, 0]))
+keyp(m, 17.0, P(XC_HOLD, body=[-15, 0, 1]))
+keyp(m, 21.6, XC_WIND, "in")
+keyp(m, 24.4, P(XC_CLEAVE, body=[18, 0, 0], ra=arm([0.0, 0.3, 0.95], 8, [0, 0.55, 0.83]), la=bent([0.05, 0.3, 0.95], 14, (0, 0, 1)), root=[-0.3, 0.36]), "in")
+keyp(m, 26.0, XC_CLEAVE, "in")
+keyp(m, 30.0, P(XC_CLEAVE, body=[42, 0, 0], root=[-0.42, 0.5]))
+keyp(m, 36.0, P(XC_CLEAVE, body=[38, 2, 0], root=[-0.4, 0.48]))
+keyp(m, 40.0, P(XC_CLEAVE, body=[22, 4, 0], rk=30, lk=40, root=[-0.24, 0.3]))
+keyp(m, 43.4, P(W_READY, body=[8, 4, 0]))
+m.head.setdefault("trail", []).append([m.t(22.4), m.t(27.0)])
+fpw(m, 1.6, FPW_LOW, "out3")
+fpw(m, 4.4, FPW_SKY, "out")
+fpw(m, 21.6, FPW_SKY, dp=(0.0, 0.08, -0.1))
+fpw(m, 26.0, FPW_DOWN, "in")
+fpw(m, 36.0, FPW_DOWN)
+fpw(m, 43.4, FPW_LOW)
+fpl(m, 4.4, FPL_RAISE2H, "out")
+fpl(m, 21.6, FPL_RAISE2H)
+fpl(m, 26.0, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
+fpl(m, 36.0, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
+fpl(m, 43.4, FP_LOW)
 m.set(softLegs=False)
+impacts(m, 26.0)
 use_skill(m, "swordmaster_ult")
-
-# 혜성 (단계 :dive — 10틱마다: 0 ~ 3 칼끝을 아래로 내리며 떨어짐 → 3 꽂힘 (둘레 · 맞히면 멈칫) → 4 ~ 9 칼을 뽑아 들며 다음 적 위로 솟구침 · 칼을 다시 거꾸로 쥠)
-m = Motion("swordmaster_ult_dive", 10, "혜성 — 칼을 거꾸로 쥐고 두 손으로 머리 위에 든 채, 칼끝을 아래로 내리며 떨어져 땅에 내리꽂고 한 무릎으로 받은 뒤 칼을 뽑아 들며 다시 솟구침",
-           fade=(0.0, 0.03))
-off_bare(m)
-first(m, P(F_AIR, body=[-16, 0, 0]), FPW_REV_UP)
-keyp(m, 1.6, F_PLUNGE, "in")
-keyp(m, 3.0, SF_LAND, "in")
-keyp(m, 4.6, P(SF_LAND, body=[36, 0, 0], root=[-0.34, 0.25]))
-keyp(m, 6.6, P(SF_RISE, body=[-10, 0, 0]), "out3")
-keyp(m, 9.6, P(F_AIR, body=[-16, 0, 0]), "in")
-fpw(m, 1.6, FPW_DOWN, "in")
-fpw(m, 4.6, FPW_DOWN)
-fpw(m, 6.6, FPW_SKY, "out3")
-fpw(m, 9.6, FPW_REV_UP, "in")
-fpl(m, 0.0, FPL_RAISE2H)
-fpl(m, 1.6, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
-fpl(m, 4.6, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
-fpl(m, 6.6, FPL_RAISE2H, "out3")
-m.set(softLegs=False)
-impacts(m, 3.0)
-use_skill(m, "swordmaster_ult:dive")
-
-# 마지막 낙하 (단계 :final — 0 = 여섯째 혜성 다음 틱: 0 ~ 7 칼을 뽑아 들며 높이 솟구침 → 7 ~ 9 하늘에서 칼을 크게 젖혀 불길을 모음 → 9 ~ 12 거꾸로 쥐고 떨어짐 →
-# 12 땅에 깊이 내리꽂음 (대폭발 — 맞히면 멈칫) → 버티고 일어섬)
-m = Motion("swordmaster_ult_final", 18, "마지막 낙하 — 칼을 뽑아 들며 높이 솟구쳐 하늘에서 칼을 머리 위로 크게 젖혀 불길을 모았다가, 칼을 거꾸로 쥐고 가운데로 떨어져 땅에 깊이 "
-           "내리꽂고 한 무릎으로 버틴 뒤 일어섬", fade=(0.0, 0.12))
-off_bare(m)
-first(m, SF_LAND, FPW_DOWN)
-keyp(m, 2.4, SF_RISE, "out3")
-keyp(m, 6.0, P(SF_RISE, body=[-24, 0, 0], head=[-34, 0]))
-keyp(m, 8.2, P(SF_RISE, body=[-30, 0, 0], head=[-38, 0], root=[0.02, 0.12]))
-keyp(m, 9.6, P(F_AIR, body=[-22, 0, 0]), "in")
-keyp(m, 11.0, F_PLUNGE, "in")
-keyp(m, 12.0, P(S_IMPACT, body=[42, 0, 0], root=[-0.42, 0.28]), "in")
-keyp(m, 14.6, P(S_IMPACT, body=[40, 0, 0], root=[-0.4, 0.26]))
-keyp(m, 16.4, P(S_IMPACT, body=[28, 6, 0], rk=64, lk=58, root=[-0.28, 0.2]))
-keyp(m, 17.8, P(W_READY, body=[8, 4, 0]))
-fpw(m, 2.4, FPW_SKY, "out3")
-fpw(m, 8.2, FPW_SKY, dp=(0.0, 0.08, 0.2))
-fpw(m, 9.6, FPW_REV_UP, "in")
-fpw(m, 11.0, FPW_DOWN, "in")
-fpw(m, 16.4, FPW_DOWN)
-fpw(m, 17.8, FPW_LOW)
-fpl(m, 2.4, FPL_RAISE2H, "out3")
-fpl(m, 9.6, FPL_RAISE2H)
-fpl(m, 11.0, nudge(FP_DOWN, (-0.2, 0, 0), (0, 40, 0)), "in")
-fpl(m, 16.4, nudge(FP_DOWN, (-0.2, -0.05, 0), (0, 40, 0)))
-fpl(m, 17.8, FP_LOW)
-m.set(softLegs=False)
-impacts(m, 12.0)
-use_skill(m, "swordmaster_ult:final")
 
 # ------------------------------------------------------------ 블러드 나이트 (칼 — 검붉은 빛 · 무겁게 두 손으로)
 

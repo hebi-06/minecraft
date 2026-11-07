@@ -6135,6 +6135,188 @@ sprite("rfx_jcinder", "lookat_y", CI_W, CI_H, CI_N, 4, "phoenix", zoom=2,
        "줄기 속 · 불꽃 속 · 불씨")(cinder_frame)
 
 
+
+# ============================================================ 2026-11-07 재설계안 3판 (직업 스킬 도감 표시 고침) — 소드마스터
+# 블레이드 에코의 걸린 칼자국 (rfx_jecho) · 엑스칼리버의 빛의 대검 (rfx_jexcal). 빛 칸 = 금빛 번짐, 심지 칸 = 흰 날 · 반짝임.
+
+EC_N = 8
+EC_W, EC_H = 384, 64
+
+
+def echo_frame(f):
+    """걸린 칼자국 (가는 쪽 = 오른쪽 · 칸 가운데 = 칼자국 가운데): 0 번쩍이며 그어짐 → 1 ~ 4 걸려 떨림 → 5 갈라져 번쩍 → 6 ~ 7 조각으로 흩어짐"""
+    W, H = EC_W, EC_H
+    pad = Pad(W, H)
+    X, Y = pad.grid()
+    cx, cy = W / 2, H / 2
+    x0, x1 = 14.0, W - 14.0
+    glow = pad.zeros()
+    core = pad.zeros()
+    rs = random.Random(16100 + f)
+    if f <= 4:
+        # 떨림: 칼자국이 아주 조금 물결침 (장마다 다른 위상)
+        wob = 0.0 if f == 0 else 0.9
+        ph = f * 1.7
+        pts = [(x0 + (x1 - x0) * i / 40, cy + wob * math.sin(i * 0.5 + ph) * math.sin(math.pi * i / 40)) for i in range(41)]
+        w = 3.4 if f == 0 else 2.4
+        line = pad.stroke(pts, w, taper=1.0, soft=0.6)
+        core = np.maximum(core, line)
+        glow = np.maximum(glow, pad.stroke(pts, w * 3.2, taper=1.0, soft=3.0) * 0.85)
+        glow = np.maximum(glow, pad.stroke(pts, w * 7.0, taper=1.0, soft=6.0) * 0.32)
+        if f == 0:
+            core = np.maximum(core, star4(pad, cx, cy, 22.0, 1.0, rot=0.0, thin=0.1, diag=0.35))
+            glow = np.maximum(glow, pad.radial(cx, cy, 26.0, 1.6) * 0.5)
+        else:
+            # 날을 따라 옮겨 가는 반짝임 · 날 둘레에 떠도는 금빛 티끌
+            t = [0.18, 0.42, 0.66, 0.88][f - 1]
+            gx = x0 + (x1 - x0) * t
+            core = np.maximum(core, star4(pad, gx, cy, 13.0, 0.95, rot=0.25 * f, thin=0.12, diag=0.4))
+            for _ in range(7):
+                px = rs.uniform(x0 + 20, x1 - 20)
+                py = cy + rs.uniform(-14, 14)
+                glow = np.maximum(glow, pad.disc_field(px, py, rs.uniform(1.2, 2.2), soft=1.0) * rs.uniform(0.4, 0.8))
+    elif f == 5:
+        # 갈라짐: 날이 벌어진 빛의 틈 · 가운데 섬광 · 위아래로 뻗는 빛살
+        core = np.maximum(core, lens(pad, (x0, cy), (x1, cy), 9.0, 1.0, power=0.55))
+        glow = np.maximum(glow, lens(pad, (x0 - 6, cy), (x1 + 6, cy), 26.0, 0.9, power=0.5))
+        core = np.maximum(core, star4(pad, cx, cy, 24.0, 1.0, rot=0.0, thin=0.08, diag=0.3))
+        for k in range(10):
+            px = x0 + 30 + (x1 - x0 - 60) * k / 9
+            L = rs.uniform(10, 26)
+            s = 1 if k % 2 == 0 else -1
+            core = np.maximum(core, streak(pad, (px, cy + s * 3), (px + rs.uniform(-6, 6), cy + s * L), 2.0, 0.85))
+    else:
+        # 조각: 짧은 칼날 조각이 날을 따라 흩어짐 (6 크게 · 7 작고 흐리게)
+        a = 1.0 if f == 6 else 0.5
+        n = 16 if f == 6 else 12
+        spread = 10.0 if f == 6 else 20.0
+        for k in range(n):
+            px = x0 + 10 + (x1 - x0 - 20) * (k + rs.uniform(0, 1)) / n
+            py = cy + rs.uniform(-spread, spread)
+            L = rs.uniform(8, 22) * (1.0 if f == 6 else 0.6)
+            ang = rs.uniform(-0.5, 0.5)
+            p0 = (px - math.cos(ang) * L / 2, py - math.sin(ang) * L / 2)
+            p1 = (px + math.cos(ang) * L / 2, py + math.sin(ang) * L / 2)
+            core = np.maximum(core, pad.stroke([p0, p1], 1.6, taper=1.0, soft=0.5) * a)
+            glow = np.maximum(glow, pad.stroke([p0, p1], 5.0, taper=1.0, soft=2.0) * a * 0.6)
+        if f == 6:
+            glow = np.maximum(glow, lens(pad, (x0, cy), (x1, cy), 14.0, 0.35, power=0.5))
+    return finish(pad, glow, core, halo=((1.2, 0.5), (3.0, 0.38), (7.0, 0.22)), body_k=0.9, core_bloom=((1.0, 0.4), (2.5, 0.25)), win=3.0)
+
+
+COLORS.setdefault("swordmaster", ((1.0, 0.8, 0.3), (0.94, 0.93, 0.88)))
+sprite("rfx_jecho", "lookat_direction", EC_W, EC_H, EC_N, 4, "swordmaster", zoom=0,
+       desc="걸린 칼자국 (소드마스터 블레이드 에코 — 가는 쪽으로 누움, 칸 가운데 = 칼자국 가운데 · 칼자국 길이 = 반 너비 × 1.9): 0 번쩍이며 그어짐 → 1 ~ 4 허공에 걸려 떨림 (이어 "
+       "돌림 — 가는 흰 날 · 금빛 번짐 · 날을 따라 옮겨 가는 반짝임 · 떠도는 금빛 티끌) → 5 갈라져 번쩍 (벌어진 빛의 틈 · 위아래 빛살) → 6 ~ 7 칼날 조각으로 흩어짐. 빛 칸 = "
+       "금빛 번짐, 심지 칸 = 흰 날 · 반짝임")(echo_frame)
+
+
+# ------------------------------------------------------------ rfx_jexcal (빛의 대검 — 가는 쪽으로 누움, 손잡이 = 왼쪽 (칸 가운데에서 반 너비 × 0.94) · 칼끝 = 오른쪽 (× 0.97))
+
+XC_N = 8
+XC_W, XC_H = 512, 64
+
+
+def _xc_blade(pad, X, Y, xh, xt, cy, hw):
+    """칼날 (xh 코등이 · xt 칼끝 · 반 굵기 hw — 칼끝 쪽 18% 에서 뾰족하게) 의 다각형과 날 가운데에서의 거리 (홈 · 날 결)"""
+    xs = xh + (xt - xh) * 0.82
+    pts = [(xh, cy - hw), (xs, cy - hw * 0.92), (xt, cy), (xs, cy + hw * 0.92), (xh, cy + hw)]
+    return pad.poly(pts), np.abs(Y - cy)
+
+
+def excal_frame(f):
+    W, H = XC_W, XC_H
+    pad = Pad(W, H)
+    X, Y = pad.grid()
+    cy = H / 2
+    xh = W / 2 - W / 2 * 0.94 + 18.0   # 코등이 (손잡이 끝에서 18 점)
+    x_grip = W / 2 - W / 2 * 0.94       # 손잡이 끝 (손)
+    xt = W / 2 + W / 2 * 0.97           # 칼끝
+    hw = 7.0
+    glow = pad.zeros()
+    core = pad.zeros()
+    rs = random.Random(16200 + f)
+    lum = [0.5, 0.8, 1.0, 1.0, 1.0, 1.0, 1.0, 0.6][f]
+    blade, dy = _xc_blade(pad, X, Y, xh, xt, cy, hw)
+    along = clamp01((X - xh) / (xt - xh))
+    if f == 0:
+        # 모여 듦: 칼 자리로 날아드는 빛 알갱이 · 가운데 가는 줄
+        line = pad.stroke([(xh, cy), (xt, cy)], 1.2, taper=0.6, soft=0.8)
+        glow = np.maximum(glow, line * 0.5)
+        for _ in range(40):
+            px = rs.uniform(xh, xt)
+            py = cy + rs.choice([-1, 1]) * rs.uniform(6, 26)
+            L = rs.uniform(5, 14)
+            core = np.maximum(core, streak(pad, (px, py + math.copysign(L, py - cy)), (px, py), 1.4, 0.8))
+    else:
+        if f == 1:
+            # 자라남: 날 테가 밝고 속은 옅음
+            glow = np.maximum(glow, blade * 0.35)
+            core = np.maximum(core, pad.stroke([(xh, cy - hw), (xt, cy)], 1.4, soft=0.6))
+            core = np.maximum(core, pad.stroke([(xh, cy + hw), (xt, cy)], 1.4, soft=0.6))
+            core = np.maximum(core, pad.stroke([(xh, cy), (xt - 30, cy)], 1.0, soft=0.6) * 0.6)
+        else:
+            # 다 자란 칼날: 흰 날 (가운데가 가장 밝음) · 홈 (가운데 줄) · 날 끝 테
+            body = blade * (0.55 + 0.45 * np.exp(-(dy / (hw * 0.55)) ** 2))
+            core = np.maximum(core, body * 0.9)
+            core = np.maximum(core, pad.stroke([(xh + 4, cy), (xt - 26, cy)], 1.3, taper=0.3, soft=0.6) * 1.0)
+            glow = np.maximum(glow, blade)
+            glow = np.maximum(glow, gblur(blade, 24.0) * 0.9)
+            if f in (3, 4, 5):
+                # 홈을 따라 칼끝으로 흐르는 빛 띠 (장마다 앞으로) · 날 가장자리 반짝임 · 오르는 빛 알갱이
+                ph = (f - 3) / 3.0
+                for k in range(3):
+                    u = (ph + k / 3.0) % 1.0
+                    bx = xh + (xt - xh) * u
+                    core = np.maximum(core, np.exp(-((X - bx) / 14.0) ** 2) * blade * 0.9)
+                for _ in range(5):
+                    u = rs.uniform(0.1, 0.95)
+                    px = xh + (xt - xh) * u
+                    side = rs.choice([-1, 1])
+                    core = np.maximum(core, star4(pad, px, cy + side * hw * (1 - 0.8 * max(0.0, (u - 0.82) / 0.18)), rs.uniform(6, 10), 0.9, rot=rs.uniform(0, 1),
+                                                  thin=0.14, diag=0.4))
+                for _ in range(14):
+                    px = rs.uniform(xh, xt)
+                    py = cy + rs.choice([-1, 1]) * rs.uniform(hw + 4, 28)
+                    glow = np.maximum(glow, pad.disc_field(px, py, rs.uniform(1.0, 2.0), soft=0.8) * rs.uniform(0.4, 0.9))
+            if f == 2:
+                # 번쩍: 칼끝 큰 별 · 날 전체가 하얗게
+                core = np.maximum(core, blade)
+                core = np.maximum(core, star4(pad, xt - 34, cy, 26.0, 1.0, rot=0.0, thin=0.07, diag=0.3))
+                glow = np.maximum(glow, pad.radial(xt - 34, cy, 28.0, 1.6) * 0.7)
+            if f == 6:
+                # 휘두름: 날 둘레로 끌리는 빛 (위아래 결 줄)
+                for k in range(26):
+                    px = xh + (xt - xh) * (k + 0.5) / 26
+                    L = (10 + 18 * (k / 26)) * rs.uniform(0.7, 1.1)
+                    s = 1 if k % 2 == 0 else -1
+                    glow = np.maximum(glow, pad.stroke([(px, cy + s * hw), (px - 6, cy + s * (hw + L))], 2.6, 0.6, a0=0.8, a1=0.0, soft=1.2))
+                    core = np.maximum(core, pad.stroke([(px, cy + s * hw), (px - 4, cy + s * (hw + L * 0.6))], 1.0, 0.3, a0=0.6, a1=0.0, soft=0.5))
+                core = np.maximum(core, blade)
+            if f == 7:
+                hole = clamp01((fbm(X / W * 9.0, Y / H * 2.0, seed=16250, octaves=4, px=18, py=4) - 0.42) * 3.0)
+                core = core * (1 - hole) * 0.8
+                glow = glow * (1 - hole * 0.8)
+                for _ in range(30):
+                    px = rs.uniform(xh, xt)
+                    py = cy + rs.uniform(-24, 24)
+                    core = np.maximum(core, pad.disc_field(px, py, rs.uniform(1.0, 2.2), soft=0.8) * rs.uniform(0.5, 1.0))
+        # 코등이 · 손잡이 (빛으로 된 — 테만)
+        guard = pad.stroke([(xh - 1, cy - 17), (xh - 1, cy + 17)], 3.0, taper=0.4, soft=0.6)
+        grip = pad.stroke([(x_grip + 2, cy), (xh - 2, cy)], 2.4, soft=0.6)
+        core = np.maximum(core, (guard + grip * 0.7) * (0.6 if f == 1 else 0.9))
+        glow = np.maximum(glow, pad.stroke([(xh - 1, cy - 19), (xh - 1, cy + 19)], 9.0, soft=3.0) * 0.6)
+    glow = glow * lum
+    core = core * lum
+    return finish(pad, glow, core, halo=((1.5, 0.5), (4.0, 0.42), (10.0, 0.28)), body_k=0.9, core_bloom=((1.2, 0.42), (3.0, 0.3)), win=3.0)
+
+
+sprite("rfx_jexcal", "lookat_direction", XC_W, XC_H, XC_N, 2, "swordmaster", zoom=0,
+       desc="빛의 대검 (소드마스터 엑스칼리버 — 가는 쪽으로 누움, 손잡이 = 왼쪽 · 칼끝 = 오른쪽): 0 둘레의 빛 알갱이가 한 줄로 모여 듦 → 1 칼날 테가 자라남 → 2 다 자라 번쩍 "
+       "(칼끝 큰 별) → 3 ~ 5 빛남 (이어 돌림 — 흰 칼날 · 금빛 번짐 · 홈을 따라 칼끝으로 흐르는 빛 · 날 반짝임 · 오르는 빛 알갱이) → 6 휘두름 (날 둘레로 끌리는 빛) → 7 빛 알갱이로 "
+       "흩어짐. 빛 칸 = 금빛 번짐, 심지 칸 = 흰 칼날 · 홈 · 반짝임")(excal_frame)
+
+
 def main():
     args = sys.argv[1:]
     folder = None

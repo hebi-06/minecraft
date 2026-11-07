@@ -179,13 +179,13 @@ public final class RpgJobAdvanceTests {
             // 50렙 → 각성 (처음 2차 전직 — 무료)
             sp.setExperienceLevels(50);
             RpgPlayers.update(sp, RpgData.of(sp).withLvmax(50));
-            JobUpgrades.set(sp, "swordsman_moon", 2); // 셋째 칸 (원월참) → 2차의 셋째 칸 (불의 울타리 · 피의 사슬)
+            JobUpgrades.set(sp, "swordsman_moon", 2); // 셋째 칸 (원월참) → 2차의 셋째 칸 (블레이드 에코 · 피의 사슬)
             Forms.answer(sp, JobTrainer.AWAKEN_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "advance confirm");
             Forms.answer(sp, 11, null);
             h.assertTrue("swordmaster".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0 && done[0] == 1, "awaken free: " + JobSystem.jobOf(sp));
             h.assertTrue(JobTrainer.optionText(sp).contains("소드마스터") && JobSystem.job(sp).display().equals("소드마스터"), "display 이명(직업명)");
-            h.assertTrue(JobUpgrades.level(sp, "swordmaster_ring") == 2, "upgrade carries to the same slot: " + JobUpgrades.level(sp, "swordmaster_ring"));
+            h.assertTrue(JobUpgrades.level(sp, "swordmaster_echo") == 2, "upgrade carries to the same slot: " + JobUpgrades.level(sp, "swordmaster_echo"));
             // 1차 카드 (검사) → 같은 계열 안내
             JobTrainer.open(sp, () -> done[0]++);
             Forms.answer(sp, JobTrainer.slotOf("swordsman"), null);
@@ -406,6 +406,7 @@ public final class RpgJobAdvanceTests {
         Jobs.Job j = Jobs.job("swordmaster");
         Weapon w = Weapons.weaponFrom("sword", 0, "common");
         List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2.5)));
+        Vec3[] pos0 = {null};
         List<RpgJobTests.Step> steps = new ArrayList<>();
         // 칼집 섬광: 투지 3 → 6칸 · 열 줄 (투지 셋 씀) — 칼집에 넣은 6틱 동안은 피해 없음 → 뽑는 틱에 5 (한 번에 · 숫자만 여러 줄)
         steps.add(new RpgJobTests.Step(1, () -> {
@@ -447,13 +448,18 @@ public final class RpgJobAdvanceTests {
             home(h, sp);
             z.set(0, dummy(h, 0, 2.5));
             JobTraits.setStacks(sp, 0);
-            h.assertTrue(JobSkills.press(sp, 2), "불의 울타리 cast");
+            pos0[0] = sp.position();
+            h.assertTrue(JobSkills.press(sp, 2), "블레이드 에코 cast");
         }));
-        // 불의 울타리: 가로지르기 다섯 (6 · 16 · 26 · 36 · 46) — 울타리 안의 과녁을 지나며 1.8 씩 (= 9)
+        // 블레이드 에코 (2026-11-07 3판 — 인페르노 링 대신): 6 ~ 18 과녁 곁을 옮겨 다니며 칼자국만 (피해 없음) → 20 처음 자리 → 26 칼집에 넣는 순간 9 (한 번에 ·
+        // 숫자 아홉 줄)
         double[] speed0 = {0, 0};
-        steps.add(new RpgJobTests.Step(60, () -> {
+        steps.add(new RpgJobTests.Step(14, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "블레이드 에코: no damage before the sheath "
+                + TestDummies.dealt(z.get(0)))));
+        steps.add(new RpgJobTests.Step(16, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 9);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "불의 울타리 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "블레이드 에코 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(sp.position().distanceTo(pos0[0]) < 0.6, "블레이드 에코 back home: " + sp.position().distanceTo(pos0[0]));
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2));
@@ -473,31 +479,28 @@ public final class RpgJobAdvanceTests {
             sp.attack(z.get(0));
             h.assertTrue(JobTraits.stacks(sp) == 2, "용의 피 basic +2 stacks: " + JobTraits.stacks(sp));
         }));
-        // 스타폴 블레이드 (0.51.0 — 다시 벼린 칼 대신 · 사용자 "검사 궁 2개 다른걸로 바꾸자 멋이 안난다"): 4 ~ 8 에 솟구침 → 혜성 여섯 (12 · 22 · … · 62 — 과녁이
-        // 하나면 같은 과녁에 3 씩) → 75 에 마지막 낙하 22 (= 40) · 내려앉음
-        double[] y0 = {0};
+        // 엑스칼리버 (2026-11-07 3판 — 스타폴 블레이드 대신 · 사용자 "엑스칼리버 같은 느낌으로 내리꽂는 커다란 검격"): 0 ~ 22 치켜듦 (빛의 대검 — 피해 없음 · 제자리) →
+        // 26 검격 28 (큰 숫자) → 37 빛의 검 12 (= 40)
         steps.add(new RpgJobTests.Step(12, () -> {
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2.5));
             JobTraits.setStacks(sp, 0);
-            y0[0] = sp.getY();
-            h.assertTrue(JobSkills.press(sp, 4), "스타폴 블레이드 cast");
+            pos0[0] = sp.position();
+            h.assertTrue(JobSkills.press(sp, 4), "엑스칼리버 cast");
             h.assertTrue(JobSkills.cooldownLeft(sp, "swordmaster_ult") > 0 && !JobRecast.pending(sp, "swordmaster_ult"), "one press · cooldown");
         }));
-        steps.add(new RpgJobTests.Step(9, () -> {
-            h.assertTrue(sp.getY() > y0[0] + 2.5, "rose into the sky: " + (sp.getY() - y0[0]));
-            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before the first comet");
+        steps.add(new RpgJobTests.Step(20, () -> {
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "엑스칼리버: no damage while raising " + TestDummies.dealt(z.get(0)));
+            h.assertTrue(sp.position().distanceTo(pos0[0]) < 0.3, "엑스칼리버 stays: " + sp.position().distanceTo(pos0[0]));
         }));
-        // 둘째 혜성 (22) 은 첫 혜성의 무적 시간 (10틱) 이 끝나는 틱이라 그 틱의 일 순서에 따라 한 틱 밀릴 수 있음 → 25 에 봄 (23 에 보던 CI 42086349509 에서 하나만 들어감 — 셋째는 32)
-        steps.add(new RpgJobTests.Step(16, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 6);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스타폴 블레이드 two comets " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        steps.add(new RpgJobTests.Step(10, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 28);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "엑스칼리버 검격 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
-        steps.add(new RpgJobTests.Step(54, () -> {
+        steps.add(new RpgJobTests.Step(12, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 40);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "스타폴 블레이드 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(Math.abs(sp.getY() - y0[0]) < 0.6, "landed: " + (sp.getY() - y0[0]));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "엑스칼리버 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);

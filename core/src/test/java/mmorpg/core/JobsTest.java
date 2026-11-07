@@ -444,29 +444,29 @@ public final class JobsTest {
         // 0.51.0 재설계안 2판 (claude/job-advance-redo.md) — 부분 합 = 배율 합: 칼집 섬광 · 받아넘기기는 한 번에 넣고 숫자만 여러 줄, 불의 울타리 가로지르기 다섯,
         // 스타폴 블레이드 혜성 여섯 + 마지막 낙하 / 핏빛 대검 세 번, 피의 사슬 박음 + 끌어당김, 블러드 문 빨아들임 + 초승달 검기 + 피의 기둥
         // (사용자 "검사 궁 2개 다른걸로 바꾸자 멋이 안난다")
-        check(near(sm.skill(0).total(), 5) && sm.skill(0).num("lines", 0) >= 2 && near(sm.skill(1).total(), 3) && near(sum(sm.skill(2), "cuts"), 9)
-                && near(sm.skill(4).num("strike", 0) * sm.skill(4).num("strikes", 0) + sm.skill(4).num("final", 0), 40) && near(sm.skill(4).num("strikes", 0), 6),
-                "swordmaster totals 5 · 3 · 9 · 40 (3 × 6 + 22)");
+        check(near(sm.skill(0).total(), 5) && sm.skill(0).num("lines", 0) >= 2 && near(sm.skill(1).total(), 3) && near(sm.skill(2).total(), 9)
+                && "swordmaster_echo".equals(sm.skill(2).id()) && sm.skill(2).num("lines", 0) >= 2
+                && near(sm.skill(4).num("beam", 0) + sm.skill(4).num("after", 0), 40) && sm.skill(4).name().equals("엑스칼리버"),
+                "swordmaster totals 5 · 3 · 9 (블레이드 에코 — 한 번에) · 40 (엑스칼리버 28 + 12)");
         check(near(sum(bk.skill(0), "casts"), 5) && near(bk.skill(1).total(), 3) && near(bk.skill(2).num("bind", 0) + bk.skill(2).num("pull", 0), 9)
                 && near(bk.skill(4).num("drain", 0) + bk.skill(4).num("crescent", 0) + bk.skill(4).num("pillar", 0), 40), "bloodknight totals 5 · 3 · 9 · 40 (8 + 20 + 12)");
         // 같은 적을 여러 번 치는 것은 10틱 넘게 (다시 누르는 단계는 gap — 다시 누를 수 있는 가장 이른 틱 · JobRecast)
         List<Double> cleaveAt = bk.skill(0).def().numbersOrNull("hitAt");
         check(cleaveAt != null && cleaveAt.size() == 3 && bk.skill(0).num("gap", 0) + cleaveAt.get(1) - cleaveAt.get(0) >= 10
                 && bk.skill(0).num("gap", 0) + cleaveAt.get(2) - cleaveAt.get(1) >= 10 && bk.skill(0).num("window", 0) > bk.skill(0).num("gap", 0), "핏빛 대검 다시 누름 간격");
-        // 스타폴 블레이드: 혜성마다 10틱 (적이 하나면 같은 적) · 마지막 낙하도 10틱 넘게 / 블러드 문: 빨아들임 → 검기 → 기둥 10틱 넘게 (기둥은 검기만큼 빨리 번짐 —
-        // 간격이 줄지 않음)
+        // 엑스칼리버 (2026-11-07 3판): 검격 → 빛의 검 10틱 넘게 / 블러드 문: 빨아들임 → 검기 → 기둥 10틱 넘게 (기둥은 검기만큼 빨리 번짐 — 간격이 줄지 않음)
         Jobs.Skill sf = sm.skill(4);
-        check(sf.num("every", 0) >= 10 && sf.num("finalAt", 0) - sf.num("first", 0) - (sf.num("strikes", 0) - 1) * sf.num("every", 0) >= 10, "스타폴 블레이드 간격");
+        check(sf.num("afterAt", 0) - sf.num("hitAt", 0) >= 10 && sf.num("hitAt", 0) > sf.num("swingAt", 0), "엑스칼리버 간격");
         Jobs.Skill bm = bk.skill(4);
         check(bm.num("slamAt", 0) - bm.num("drainAt", 0) >= 10 && bm.num("pillarAt", 0) - bm.num("slamAt", 0) >= 10 && bm.num("pillarSpeed", 0) * 20 >= bm.num("speed", 0),
                 "블러드 문 간격");
-        check(sm.skill(2).num("every", 0) >= 10 && bk.skill(2).num("delay", 0) >= 10, "swordmaster · bloodknight i-frame spacing");
+        check(bk.skill(2).num("delay", 0) >= 10, "bloodknight i-frame spacing (블레이드 에코는 한 번에)");
         // 마지막 피해 틱 = t (RpgJobTimingTests 와 같은 값 — 다시 누르는 스킬은 12틱마다 다시 누름)
         check(near(sm.skill(0).num("sheath", 0), sm.skill(0).num("t", 0)) && near(sm.skill(1).num("window", 0), sm.skill(1).num("t", 0)), "칼집 섬광 t 6 · 받아넘기기 t 10");
-        check(near(sm.skill(2).num("first", 0) + (sm.skill(2).def().list("cuts").size() - 1) * sm.skill(2).num("every", 0), sm.skill(2).num("t", 0)), "불의 울타리 t 46");
+        check(near(sm.skill(2).num("sheath", 0), sm.skill(2).num("t", 0)) && near(sm.skill(2).num("sheath", 0), sm.skill(2).num("w", 0)), "블레이드 에코 w · t 26 (칼집에 넣는 틱)");
         check(near(24 + cleaveAt.get(2), bk.skill(0).num("t", 0)) && near(bk.skill(1).num("leap", 0), bk.skill(1).num("t", 0)), "핏빛 대검 t 31 · 피의 돌진 t 6");
         check(near(bk.skill(2).num("first", 0) + bk.skill(2).num("delay", 0) + 2, bk.skill(2).num("t", 0)), "피의 사슬 t 36");
-        check(near(sf.num("finalAt", 0), sf.num("t", 0)) && near(sf.num("first", 0), sf.num("w", 0)), "스타폴 블레이드 w 12 · t 75");
+        check(near(sf.num("afterAt", 0), sf.num("t", 0)) && near(sf.num("hitAt", 0), sf.num("w", 0)), "엑스칼리버 w 26 · t 37 (검격의 무적 시간 10틱이 끝난 다음 틱)");
         // 블러드 문: 앞 2.5칸 과녁 — 1칸 앞에 내려앉아 0.8칸 앞에서 검기 · 기둥 시작 → 과녁까지 0.7칸 = 1틱
         check(near(bm.num("drainAt", 0), bm.num("w", 0)) && near(bm.num("pillarAt", 0) + 1, bm.num("t", 0)), "블러드 문 w 10 · t 42");
         // 특성
