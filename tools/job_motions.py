@@ -24,7 +24,7 @@ import job_motions_a  # noqa: E402,F401
 import job_motions_b  # noqa: E402,F401
 import job_motions_c  # noqa: E402,F401
 import job_motions_d  # noqa: E402,F401 — 0.51.0 2차 직업 (소드마스터 · 블러드 나이트 — 재설계안 2판)
-import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 · 글래디에이터 — 재설계안 2판)
+import job_motions_e  # noqa: E402,F401 — 0.51.0 2차 직업 (워로드 — 재설계안 2판 · 프로스트 레이더 — 2026-11-07 3판)
 import job_motions_f  # noqa: E402,F401 — 0.51.0 2차 직업 (아케인 블레이드 · 소드 콜러)
 import job_motions_g  # noqa: E402,F401 — 0.51.0 2차 직업 (아크메이지 · 네크로맨서)
 import job_motions_h  # noqa: E402,F401 — 0.51.0 2차 직업 (스나이퍼 · 배틀 아처 — 재설계안 2판)

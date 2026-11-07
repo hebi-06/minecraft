@@ -77,7 +77,8 @@ public final class JobTraits {
         JobTraits4.init(); // 0.30.0 성기사 · 사제 · 수호기사
         JobTraits5.init(); // 0.51.0 검사 2차 (소드마스터 치명 · 용의 피 · 블러드 나이트 피의 갈증 · 광란)
         JobImpact.init(); // 0.51.0 타격감 (큰 타격 그림 · 멈칫)
-        JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 동면 · 거인의 무게 · 글래디에이터 결투 · 불사의 분노 · 홀름강)
+        JobTraits6.init(); // 0.51.0 전사 2차 (워로드 곰의 화신 · 동면)
+        JobTraits16.init(); // 2026-11-07 전사 반전 프로스트 레이더 (빙결 · 깨짐 · 요툰 그립 — 글래디에이터 대신)
         JobTraits7.init(); // 0.51.0 마검사 2차 (아케인 블레이드 각인 번짐 · 거대한 마력 대검 · 오버드라이브 검기 · 소드 콜러 스스로 싸우는 칼 · 제미니 소드)
         JobTraits8.init(); // 0.51.0 매지션 2차 (아크메이지 별자리 · 스펠 서지 · 네크로맨서 망자의 군대 · 무덤 · 표식)
         JobTraits9.init(); // 0.51.0 궁수 2차 (스나이퍼 급소 사격 · 헌터스 마크 · 배틀 아처 난사 · 스톰 스트라이드 · 팰컨 다이브 초기화)
@@ -89,9 +90,9 @@ public final class JobTraits {
         JobTraits13.init(); // 0.51.0 성기사 2차 (썬더로드 갈라지는 벼락 · 썬더헤드 · 빛의 가호 · 타이런트 강탈 · 콜로서스 — 썬더로드의 심판은 JobTraits4)
         ServerTickEvents.END_SERVER_TICK.register(server -> {
             JobTraitsMore.tickBreaks(Tasks.now());
-            JobTraits6.tickGlobal(Tasks.now()); // 0.51.0 홀름강의 결투장
             JobTraits3.tickMarks(Tasks.now());
             JobTraits4.tickGlobal(server, Tasks.now());
+            if (Tasks.now() % 40 == 0) JobTraits16.tickGlobal(Tasks.now()); // 2026-11-07 끝난 서리 · 얼어붙음 지움
             if (Tasks.now() % 4 == 0) tick(server);
         });
         // 죽음 · 차원 이동 · 탈것 부르기: 자원 · 태세 · 각인이 끝남
@@ -128,6 +129,7 @@ public final class JobTraits {
         JobTraits4.reset(sp);
         JobTraits5.reset(sp);
         JobTraits6.reset(sp);
+        JobTraits16.reset(sp);
         JobTraits7.reset(sp);
         JobTraits8.reset(sp);
         JobTraits9.reset(sp);
@@ -150,6 +152,8 @@ public final class JobTraits {
         JobTraits4.forget(id);
         JobTraits5.forget(id);
         JobTraits6.forget(id);
+        JobTraits16.forget(id);
+        FrostraiderSkills.forget(id);
         JobTraits7.forget(id);
         JobTraits8.forget(id);
         JobTraits9.forget(id);
@@ -497,7 +501,7 @@ public final class JobTraits {
                 JobTraits3.tick(sp, j, now); // 0.29.0 암영 · 창끝 · 혼
                 JobTraits4.tick(sp, j, now); // 0.30.0 수호의 맹세 회복
                 JobTraits5.tick(sp, j, now); // 0.51.0 흡혈 숫자
-                JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신 · 결투
+                JobTraits6.tick(sp, j, now); // 0.51.0 곰의 화신
                 JobTraits7.tick(sp, j, now); // 0.51.0 소드 콜러 쌓임 · 꽂힌 칼
                 JobTraits8.tick(sp, j, now); // 0.51.0 아크메이지 별 · 네크로맨서 무덤 · 표식
                 JobTraits9.tick(sp, j, now); // 0.51.0 배틀 아처 갈래 게이지 · 스톰 스트라이드 이동 속도
@@ -601,7 +605,7 @@ public final class JobTraits {
         int value = 0;
         if (fervor(j)) value = st == null ? 0 : st.stacks; // 0.51.0 소드마스터도 투지 (최대 8)
         else if (j.id().equals(JobTraits5.BK)) value = JobTraits5.gaugeValue(sp, j); // 0.51.0 블러드 나이트 = 피의 갈증 (잃은 체력)
-        else if (j.id().equals(JobTraits6.GL)) value = JobTraits6.gaugeValue(sp, j); // 0.51.0 글래디에이터 = 결투
+        else if (j.id().equals(JobTraits16.FR)) value = JobTraits16.gaugeValue(sp, j); // 2026-11-07 프로스트 레이더 = 마지막으로 친 적의 서리
         else if (j.id().equals(JobTraits7.SC)) value = JobTraits7.gaugeValue(sp, j); // 0.51.0 소드 콜러 = 이어 벤 쌓임
         else if (j.id().equals(JobTraits8.NC)) value = JobTraits8.gaugeValue(sp, j); // 0.51.0 네크로맨서 = 망자 선원 수
         else if (j.id().equals(JobTraits9.BA)) value = JobTraits9.gaugeValue(sp, j); // 0.51.0 배틀 아처 = 다음 활 평타의 갈래 (1 · 3)

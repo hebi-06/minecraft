@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""0.51.0 2차 직업 스킬 아이콘 — 검사 각성 소드마스터 · 반전 블러드 나이트 · 전사 각성 워로드 · 반전 글래디에이터 (재설계안 2판) ·
+"""0.51.0 2차 직업 스킬 아이콘 — 검사 각성 소드마스터 · 반전 블러드 나이트 · 전사 각성 워로드 · 반전 프로스트 레이더 (2026-11-07 재설계안 3판 — 글래디에이터 대신) ·
 마검사 각성 아케인 블레이드 (2026-11-05 룬 스미스 대신) · 반전 소드 콜러 (재설계안 2판) · 매지션 각성 아크메이지 · 반전 네크로맨서 ·
 궁수 각성 스나이퍼 · 반전 배틀 아처 (재설계안 2판 — 섀도 헌터 대신) · 암살자 각성 트릭스터 (2026-11-06 2판) · 반전 피에로 (블레이드 댄서 대신) · 창술사 각성 스톰 랜서 · 반전 드라군 · 사신 각성 소울 리퍼 · 반전 엑시큐셔너 (메이플식 네모 스킬 그림 32×32, tools/job_skill_icons.py 와 같은 방식 — 그 스크립트가 함께 부름).
 모두 이 스크립트가 처음부터 그림 (다른 게임 그림을 쓰지 않음 — 룬 글자는 게임 그림 rfx_jglyph 와 같은 꼴, 아케인 블레이드의 검기는 rfx_jwave 와 같은 꼴).
 색: 소드마스터 = 금빛 (첫째) · 은빛 (둘째), 블러드 나이트 = 짙은 피 (첫째) · 밝은 피 (둘째), 워로드 = 주황 (첫째) · 갈색 (둘째),
-글래디에이터 = 진홍 (첫째) · 모래 금빛 (둘째 — 결투장 황혼 바탕 · 말뚝은 나무빛), 아케인 블레이드 = 보라 (첫째) · 청록 (둘째 — 짙은 남보라 밤 바탕),
+프로스트 레이더 = 얼음빛 (첫째) · 서리 흰빛 (둘째 — 얼어붙은 극야 바탕 · 도끼 자루는 짙은 남빛 쇠), 아케인 블레이드 = 보라 (첫째) · 청록 (둘째 — 짙은 남보라 밤 바탕),
 소드 콜러 = 청록 (첫째) · 흰 청록 (둘째 — 짙은 청록 밤 바탕), 아크메이지 = 별빛 파랑 (첫째) · 금빛 (둘째 — 밤하늘 자주 바탕),
 네크로맨서 = 독초록 (첫째) · 뼈색 (둘째 — 짙은 녹색 안개 바탕), 스나이퍼 = 밝은 연두 (첫째) · 금빛 흰 섬광 (둘째 — 짙은 숲 바탕),
 배틀 아처 = 폭풍 하늘빛 (첫째) · 번개 노랑 (둘째 — 짙은 폭풍 남청 바탕), 트릭스터 = 자홍 (첫째) · 검보라 (둘째 — 짙은 보라 바탕 · 환영은 청록 테 · 들불은 분홍),
@@ -548,18 +548,14 @@ def warlord_ult(A, B):
     return finish(subject, [glow(lighter(front, ring_l, trail), A, 1.8, 1.0), glow(back, A, 1.2, 0.6)], warlord_back(A, B))
 
 
-# ------------------------------------------------------------ 글래디에이터 (빛: 진홍 → 모래 금빛 — 결투장 바탕)
+# ------------------------------------------------------------ 프로스트 레이더 (빛: 얼음빛 → 서리 흰빛 — 얼어붙은 극야 바탕, 2026-11-07 재설계안 3판 · 글래디에이터 대신)
 
-ARENA_DUSK = (30, 10, 6)
-
-
-def gladiator_back(A, B):
-    return backdrop(mix(A, ARENA_DUSK, 0.86), mix(A, (90, 20, 8), 0.4))
+FROST_NIGHT = (6, 14, 34)
+ICE_DEEP = (40, 92, 170)
 
 
-def stake(m, x, base, h, w=2.4):
-    """결투 말뚝 (뾰족한 머리 — 게임의 rfx_jstake 와 같은 꼴)"""
-    poly(m, [(x - w / 2, base), (x - w / 2, base - h + 2.4), (x, base - h), (x + w / 2, base - h + 2.4), (x + w / 2, base)])
+def frost_back(A, B):
+    return backdrop(mix(A, FROST_NIGHT, 0.86), mix(A, (24, 70, 140), 0.45))
 
 
 def slash(m, x0, y0, x1, y1, w, steps=14):
@@ -577,130 +573,162 @@ def slash(m, x0, y0, x1, y1, w, steps=14):
     poly(m, left + right[::-1])
 
 
-def gladiator_flurry(A, B):
-    # 도끼 난타: 나란히 내리친 도끼 자국 셋 (오른쪽 위 → 왼쪽 아래 — 셋째가 가장 굵고 밝음: 셋째 찍기) · 셋째 자국의 맞은 섬광 · 오른쪽 위 도끼와 그 뒤 휘두른 잔상 호 둘 · 튀는 불티
-    cuts = mask()
-    slash(cuts, 17.0, 2.0, 3.0, 16.0, 1.4)
-    slash(cuts, 21.4, 5.0, 5.4, 21.0, 1.7)
-    heavy = mask()
-    slash(heavy, 27.0, 8.0, 8.0, 27.0, 2.6)
-    hit = mask()
-    star(hit, 17.0, 18.0, 5.2, 0.16, 45)
-    trail = mask()
-    crescent(trail, 21.0, 12.0, 8.6, 1.0, -80, -20)
-    crescent(trail, 21.0, 12.0, 6.2, 0.8, -80, -30)
-    axe = axe_layers((25.6, 4.4), (31.0, 0.0), blade=5.0, tint=A, side=-1)
-    sp = mask()
-    for x, y, r in ((5.0, 26.0, 0.9), (12.0, 29.0, 0.8), (27.6, 20.0, 0.9), (24.0, 26.6, 0.7)):
-        disc(sp, x, y, r)
-    subject = stack(layer(trail, mix(B, WHITE, 0.3), B), layer(cuts, mix(A, WHITE, 0.55), A, WHITE, mix(A, (0, 0, 0), 0.3), axis=(1, 0)),
-                    layer(heavy, WHITE, mix(A, WHITE, 0.2)), layer(hit, WHITE, B), *axe, layer(sp, WHITE, B))
-    return finish(subject, [glow(lighter(cuts, heavy), A, 1.6, 1.0), glow(hit, B, 1.8, 0.8)], gladiator_back(A, B))
+def ice_axe_masks(head, tail, blade=7.0, side=1):
+    """서리 도끼 (턱수염 도끼 — 아이콘 크기에서 날이 또렷하게): tail (자루 끝) → head (자루 위끝). 날 = 자루 위끝 한쪽 (side) 의 큰 초승달 날 (위 뿔 · 아래로 길게
+    늘어진 턱 · 바깥으로 불룩한 날 끝), 반대쪽 짧은 가시. 자루 · 날 · 날 끝 테 · 날의 얼음 결 (가운데 가는 줄)"""
+    hx, hy = head
+    tx, ty = tail
+    L = math.hypot(hx - tx, hy - ty)
+    ux, uy = (hx - tx) / L, (hy - ty) / L
+    px, py = -uy * side, ux * side
+    k = blade / 8.0
+
+    def at(u, p):
+        return (hx + ux * u * k + px * p * k, hy + uy * u * k + py * p * k)
+
+    handle = mask()
+    line(handle, [tail, at(1.4, 0.0)], 1.7)
+    bl = mask()
+    outer = [at(3.8, 4.6), at(2.6, 5.5), at(0.8, 6.0), at(-1.2, 5.9), at(-3.0, 5.3), at(-4.8, 4.2)]
+    poly(bl, [at(1.3, 0.7), at(2.4, 2.0)] + outer + [at(-3.0, 3.0), at(-1.6, 1.6), at(-1.3, 0.7)])
+    poly(bl, [at(0.9, -0.5), at(0.0, -2.4), at(-0.9, -0.5)])
+    poly(bl, [at(1.4, 0.8), at(1.4, -0.8), at(-1.4, -0.8), at(-1.4, 0.8)])
+    edge = mask()
+    line(edge, outer, 0.9)
+    vein = mask()
+    line(vein, [at(2.0, 2.6), at(0.2, 4.2), at(-2.6, 3.8)], 0.5)
+    return handle, bl, edge, vein
 
 
-def gladiator_hook(A, B):
-    # 걸어 당기기: 오른쪽 위에서 휘두른 도끼의 걸린 날 (갈고리 꼴 초승달) · 끌려오는 적 (왼쪽 → 오른쪽으로 · 뒤에 흙먼지 줄) · 당기는 화살표 꼴 줄
-    hook = mask()
-    crescent(hook, 13.0, 15.0, 9.6, 2.6, 200, 330)
-    tip = mask()
-    poly(tip, [(5.2, 12.0), (3.0, 16.4), (6.8, 15.0)])
-    enemy = mask()
-    disc(enemy, 9.0, 18.6, 2.4)
-    poly(enemy, [(7.0, 21.0), (11.0, 21.0), (11.6, 27.4), (6.4, 27.4)])
-    drag = mask()
-    for y, x0 in ((22.0, 1.0), (25.0, 2.0), (28.0, 1.4)):
-        line(drag, [(x0, y), (x0 + 4.0, y)], 0.8)
-    pull = mask()
-    line(pull, [(13.0, 24.0), (25.0, 24.0)], 1.2)
-    poly(pull, [(25.0, 21.6), (29.6, 24.0), (25.0, 26.4)])
-    axe = axe_layers((24.0, 8.4), (29.6, 18.6), blade=5.6, tint=A, side=1)
-    ground = mask()
-    poly(ground, [(1, 28.0), (31, 28.0), (31, 29.0), (1, 29.0)])
-    dark = mix(A, (0, 0, 0), 0.6)
-    subject = stack(layer(ground, mix(A, (40, 14, 8), 0.6), mix(A, (10, 4, 2), 0.8)), layer(drag, mix(B, WHITE, 0.2), B),
-                    layer(hook, WHITE, A, WHITE, dark, axis=(1, 0)), layer(tip, WHITE, A), layer(enemy, (150, 150, 162), (90, 90, 104), (220, 220, 230), dark),
-                    layer(pull, mix(B, WHITE, 0.4), B), *axe)
-    return finish(subject, [glow(lighter(hook, tip), A, 1.6, 1.0), glow(pull, B, 1.4, 0.7)], gladiator_back(A, B))
+def ice_axe(head, tail, A, blade=7.0, side=1, ghost=0.0):
+    """서리 도끼 (자루 = 짙은 남빛 쇠 · 날 = 얼음빛 — ghost 만큼 깊은 얼음빛 쪽으로 옅게: 거인의 도끼 환영)"""
+    handle, bl, edge, vein = ice_axe_masks(head, tail, blade, side)
+    fade = (lambda c: mix(c, (34, 78, 150), ghost)) if ghost > 0 else (lambda c: c)
+    return [layer(handle, fade((92, 110, 140)), fade((44, 54, 76)), fade((150, 170, 200)), None),
+            layer(bl, fade(mix(A, WHITE, 0.45)), fade(mix(A, ICE_DEEP, 0.45)), fade(WHITE), fade(mix(ICE_DEEP, (0, 0, 0), 0.3)), axis=(0.7, 0.7)),
+            layer(vein, fade(WHITE), fade(mix(A, WHITE, 0.5))), layer(edge, fade(WHITE), fade(mix(A, WHITE, 0.6)))]
 
 
-def gladiator_eight(A, B):
-    # 여덟 팔: 어두운 결투자 (머리 · 빛나는 두 눈 · 어깨) 의 어깨에서 위로 부채꼴로 뻗은 팔 여덟 — 끝마다 도끼날 (짝수는 짙고 홀수는 잔상처럼 옅음)
-    arms = mask()
-    faint = mask()
-    heads = mask()
-    ox, oy = 16.0, 21.0
-    for i in range(8):
-        a = math.radians(-170 + i * 22.86)
-        x0, y0 = ox + math.cos(a) * 4.0, oy + math.sin(a) * 4.0
-        x1, y1 = ox + math.cos(a) * 13.0, oy + math.sin(a) * 13.0
-        tgt = arms if i % 2 == 0 else faint
-        line(tgt, [(x0, y0), (x1, y1)], 1.4 if i % 2 == 0 else 1.0)
-        nx, ny = -math.sin(a), math.cos(a)
-        sd = 1 if i < 4 else -1
-        hx, hy = x1 - math.cos(a) * 0.4, y1 - math.sin(a) * 0.4
-        poly(heads, [(hx + math.cos(a) * 0.8, hy + math.sin(a) * 0.8), (hx + nx * sd * 3.2 + math.cos(a) * 1.8, hy + ny * sd * 3.2 + math.sin(a) * 1.8),
-                     (hx + nx * sd * 3.2 - math.cos(a) * 1.4, hy + ny * sd * 3.2 - math.sin(a) * 1.4), (hx - math.cos(a) * 0.8, hy - math.sin(a) * 0.8)])
-    body = mask()
-    disc(body, 16.0, 20.2, 2.8)
-    poly(body, [(11.0, 24.0), (21.0, 24.0), (19.6, 31.0), (12.4, 31.0)])
-    disc(body, 12.0, 24.4, 1.6)
-    disc(body, 20.0, 24.4, 1.6)
-    eyes = mask()
-    disc(eyes, 15.0, 20.2, 0.6)
-    disc(eyes, 17.0, 20.2, 0.6)
-    subject = stack(layer(faint, mix(A, B, 0.4), mix(A, (0, 0, 0), 0.3)), layer(arms, mix(A, WHITE, 0.25), A, WHITE, mix(A, (0, 0, 0), 0.4)),
-                    layer(heads, WHITE, mix(B, WHITE, 0.2), WHITE, mix(B, (0, 0, 0), 0.4)), layer(body, mix(A, (0, 0, 0), 0.55), mix(A, (0, 0, 0), 0.75)),
-                    layer(eyes, WHITE, B))
-    return finish(subject, [glow(lighter(arms, heads), A, 1.6, 0.9), glow(eyes, B, 1.4, 1.0)], gladiator_back(A, B))
+def ice_spike(m, x, base, h, w, lean=0.0):
+    """얼음 가시 (밑 너비 w · 높이 h · 끝이 lean 만큼 기욺)"""
+    poly(m, [(x - w / 2, base), (x - w * 0.18 + lean * 0.6, base - h * 0.62), (x + lean, base - h), (x + w * 0.22 + lean * 0.6, base - h * 0.6), (x + w / 2, base)])
 
 
-def gladiator_grinder(A, B):
-    # 액스 그라인더: 가운데에서 도는 큰 도끼 (비스듬히) · 도끼를 둘러싼 굵은 회전 궤적 (휜 띠 셋 — 끝이 밝음) · 왼쪽 아래에서 날아온 점선 · 둘레로 튀는 핏방울 ·
-    # 불티 (롤 올라프 Q — 2026-11-05 불사의 분노 대신)
+def snowfall(m, pts):
+    for x, y, r in pts:
+        star(m, x, y, r, 0.24)
+
+
+def frostraider_throw(A, B):
+    # 프로스트 바이트: 가운데에서 돌며 날아가는 서리 도끼 · 도끼를 둘러싼 회전 궤적 (휜 띠 셋 — 끝이 밝음) · 왼쪽 아래에서 날아온 점선 · 아래로 되돌아오는 화살표 (되부름) ·
+    # 눈꽃
     spin = mask()
     for a0 in (-40, 80, 200):
-        crescent(spin, 16.6, 14.6, 12.6, 3.2, a0, a0 + 92)
+        crescent(spin, 16.6, 13.0, 11.6, 3.0, a0, a0 + 92)
     spin_hi = mask()
     for a0 in (-40, 80, 200):
-        crescent(spin_hi, 16.6, 14.6, 12.8, 1.0, a0 + 40, a0 + 92)
+        crescent(spin_hi, 16.6, 13.0, 11.8, 1.0, a0 + 40, a0 + 92)
     trail = mask()
     for i in range(3):
         t0, t1 = 0.05 + i * 0.3, 0.05 + i * 0.3 + 0.15
-        x0, y0 = 1.0 + (7.6 - 1.0) * t0, 31.0 + (24.4 - 31.0) * t0
-        x1, y1 = 1.0 + (7.6 - 1.0) * t1, 31.0 + (24.4 - 31.0) * t1
+        x0, y0 = 1.0 + (6.4 - 1.0) * t0, 31.0 + (25.0 - 31.0) * t0
+        x1, y1 = 1.0 + (6.4 - 1.0) * t1, 31.0 + (25.0 - 31.0) * t1
         line(trail, [(x0, y0), (x1, y1)], 1.3)
-    axes = axe_layers((21.6, 8.2), (10.8, 21.4), blade=8.4, tint=A, side=1)
-    drops = mask()
-    drop(drops, 29.6, 21.0, 1.3, 200)
-    drop(drops, 24.0, 28.4, 1.2, 250)
-    drop(drops, 3.4, 9.0, 1.1, -20)
+    back = mask()
+    pts = [(16.0 + math.cos(math.radians(a)) * 12.4, 20.6 + math.sin(math.radians(a)) * 7.4) for a in range(20, 161, 6)]
+    line(back, pts, 0.9)
+    ex, ey = pts[-1]
+    poly(back, [(ex - 0.4, ey - 2.4), (ex - 2.6, ey + 0.6), (ex + 1.4, ey + 1.4)])
+    axe = ice_axe((21.8, 6.4), (11.0, 19.6), A, blade=8.2, side=1)
     sp = mask()
-    for cx, cy, r in ((29.0, 4.0, 2.0), (6.0, 3.4, 1.6), (20.0, 29.4, 1.6)):
-        star(sp, cx, cy, r, 0.22)
-    blood = mix(A, (120, 0, 0), 0.5)
-    subject = stack(layer(spin, mix(B, WHITE, 0.25), mix(A, B, 0.35), WHITE, mix(A, (0, 0, 0), 0.4), axis=(1, 0)), layer(spin_hi, WHITE, mix(B, WHITE, 0.4)),
-                    layer(trail, mix(B, WHITE, 0.2), A), *axes, layer(drops, mix(blood, WHITE, 0.3), blood, mix(A, WHITE, 0.5), mix(blood, (0, 0, 0), 0.5)),
-                    layer(sp, WHITE, B))
-    return finish(subject, [glow(lighter(spin, spin_hi), A, 1.8, 1.0), glow(sp, B, 1.2, 0.8)], gladiator_back(A, B))
+    snowfall(sp, ((28.6, 4.0, 2.0), (5.0, 4.4, 1.6), (27.4, 28.4, 1.4)))
+    subject = stack(layer(spin, mix(B, WHITE, 0.25), mix(A, ICE_DEEP, 0.3), WHITE, mix(ICE_DEEP, (0, 0, 0), 0.3), axis=(1, 0)), layer(spin_hi, WHITE, B),
+                    layer(trail, mix(A, WHITE, 0.4), A), layer(back, mix(A, WHITE, 0.5), A), *axe, layer(sp, WHITE, B))
+    return finish(subject, [glow(lighter(spin, spin_hi), A, 1.8, 1.0), glow(back, A, 1.2, 0.6), glow(sp, B, 1.2, 0.8)], frost_back(A, B))
 
 
-def gladiator_ult(A, B):
-    # 홀름강: 둘레에 선 결투 말뚝 (앞쪽 다섯 — 밧줄로 이어짐) 이 둘러싼 결투장 바닥 (누운 고리) · 가운데 엇갈린 두 도끼
-    floor = mask()
-    for r, w in ((13.0, 1.4), (11.4, 0.6)):
-        pts_o = [(16 + math.cos(math.radians(a)) * r, 22 + math.sin(math.radians(a)) * r * 0.36) for a in range(0, 361, 8)]
-        line(floor, pts_o, w)
-    stakes = mask()
-    for x, base, h in ((4.0, 24.0, 9.0), (9.4, 26.4, 10.0), (16.0, 27.4, 10.6), (22.6, 26.4, 10.0), (28.0, 24.0, 9.0)):
-        stake(stakes, x, base, h)
-    rope = mask()
-    line(rope, [(4.0, 18.4), (9.4, 19.6), (16.0, 20.2), (22.6, 19.6), (28.0, 18.4)], 0.8)
-    axes = []
-    for (head, tail, side) in (((10.4, 6.0), (21.6, 17.6), -1), ((21.6, 6.0), (10.4, 17.6), 1)):
-        axes += axe_layers(head, tail, blade=5.0, tint=A, side=side)
-    subject = stack(layer(floor, mix(A, WHITE, 0.3), A), *axes, layer(stakes, (150, 104, 68), (92, 58, 34), (200, 160, 120), (40, 24, 12)),
-                    layer(rope, mix(A, WHITE, 0.2), A))
-    return finish(subject, [glow(floor, A, 1.8, 0.9), glow(rope, A, 1.2, 0.6)], gladiator_back(A, B))
+def frostraider_leap(A, B):
+    # 아이스 바운드: 왼쪽 아래에서 솟은 점선 포물선 (서리 바람을 타고 날아감) · 가운데로 내리찍는 서리 도끼 (날이 아래) · 맞은 자리 섬광 · 둘레로 솟은 얼음 가시 · 땅의 얼음 고리
+    arc = mask()
+    for i in range(6):
+        t0, t1 = i / 6 + 0.02, i / 6 + 0.1
+        def pt(t):
+            return (2.0 + 12.0 * t, 27.0 - 22.0 * math.sin(math.pi * 0.5 * t))
+        line(arc, [pt(t0), pt(t1)], 1.0)
+    halo = mask()
+    pts = [(16.0 + math.cos(math.radians(a)) * 12.6, 26.6 + math.sin(math.radians(a)) * 3.0) for a in range(0, 361, 8)]
+    line(halo, pts, 1.0)
+    spikes = mask()
+    for x, h, w, lean in ((4.0, 8.0, 4.0, -1.4), (9.2, 11.0, 4.4, -0.8), (23.0, 11.6, 4.6, 0.8), (28.2, 8.6, 4.0, 1.4)):
+        ice_spike(spikes, x, 28.0, h, w, lean)
+    hit = mask()
+    star(hit, 15.0, 25.0, 6.4, 0.16)
+    axe = ice_axe((15.4, 16.6), (19.8, 1.6), A, blade=8.6, side=1)
+    subject = stack(layer(halo, mix(A, WHITE, 0.4), A), layer(arc, mix(B, WHITE, 0.3), A), layer(hit, WHITE, B),
+                    layer(spikes, mix(A, ICE_DEEP, 0.35), mix(ICE_DEEP, (0, 0, 0), 0.35), mix(A, WHITE, 0.4), mix(ICE_DEEP, (0, 0, 0), 0.5), axis=(1, 0)), *axe)
+    return finish(subject, [glow(lighter(spikes, halo), A, 1.6, 0.9), glow(hit, B, 2.0, 1.0)], frost_back(A, B))
+
+
+def frostraider_shatter(A, B):
+    # 샤터: 가운데 큰 육각 얼음 결정 (왼 면 짙게 · 오른 면 밝게) 에 금이 감 · 오른쪽에서 가로로 후려친 서리 도끼 · 맞은 자리 섬광 · 왼쪽으로 튀는 얼음 조각
+    left_f = mask()
+    poly(left_f, [(13.0, 4.0), (13.0, 30.0), (7.0, 25.0), (7.0, 9.0)])
+    right_f = mask()
+    poly(right_f, [(13.0, 4.0), (19.0, 9.0), (19.0, 25.0), (13.0, 30.0)])
+    edge = mask()
+    line(edge, [(13.0, 4.0), (19.0, 9.0), (19.0, 25.0), (13.0, 30.0), (7.0, 25.0), (7.0, 9.0), (13.0, 4.0)], 0.8)
+    line(edge, [(13.0, 4.0), (13.0, 30.0)], 0.6)
+    crack = mask()
+    line(crack, [(19.0, 15.0), (16.0, 14.0), (14.4, 11.0), (12.0, 10.0)], 0.7)
+    line(crack, [(16.0, 14.0), (14.0, 17.4), (10.6, 18.0), (8.4, 21.0)], 0.7)
+    line(crack, [(14.0, 17.4), (15.0, 22.0), (13.4, 26.0)], 0.6)
+    shards = mask()
+    for x, y, r, a in ((3.0, 8.0, 1.8, 20), (2.4, 15.0, 2.2, -30), (3.6, 22.0, 1.6, 60), (5.6, 29.0, 1.4, 10)):
+        poly(shards, [(x + math.cos(math.radians(a)) * r, y + math.sin(math.radians(a)) * r),
+                      (x + math.cos(math.radians(a + 140)) * r * 0.8, y + math.sin(math.radians(a + 140)) * r * 0.8),
+                      (x + math.cos(math.radians(a + 230)) * r, y + math.sin(math.radians(a + 230)) * r)])
+    hit = mask()
+    star(hit, 19.6, 15.0, 5.6, 0.16)
+    cut = mask()
+    slash(cut, 31.0, 13.0, 15.0, 17.0, 1.4)
+    axe = ice_axe((22.4, 16.6), (30.6, 28.4), A, blade=7.2, side=-1)
+    subject = stack(layer(left_f, mix(A, ICE_DEEP, 0.55), mix(ICE_DEEP, (0, 0, 0), 0.25)), layer(right_f, mix(A, WHITE, 0.45), mix(A, ICE_DEEP, 0.2)),
+                    layer(edge, WHITE, mix(A, WHITE, 0.5)), layer(crack, WHITE, WHITE), layer(shards, mix(A, WHITE, 0.6), A, WHITE, ICE_DEEP),
+                    layer(cut, WHITE, mix(A, WHITE, 0.4)), *axe, layer(hit, WHITE, B))
+    return finish(subject, [glow(lighter(edge, crack), A, 1.6, 0.9), glow(hit, B, 2.0, 1.0), glow(shards, A, 1.0, 0.6)], frost_back(A, B))
+
+
+def frostraider_jotunn(A, B):
+    # 요툰 그립: 뒤에 크게 솟은 서리 거인의 도끼 환영 (옅게 · 크게) 과 같은 꼴로 앞에 든 서리 도끼 (또렷하게) · 발밑 얼음 고리 둘 · 거인의 숨 (눈꽃)
+    halo = mask()
+    for r, w in ((12.6, 1.0), (8.6, 0.7)):
+        pts = [(16.0 + math.cos(math.radians(a)) * r, 27.0 + math.sin(math.radians(a)) * r * 0.24) for a in range(0, 361, 8)]
+        line(halo, pts, w)
+    ghost = ice_axe((20.6, 6.6), (3.0, 30.0), A, blade=12.0, side=1, ghost=0.55)
+    axe = ice_axe((25.4, 15.4), (17.0, 27.6), A, blade=6.6, side=1)
+    sp = mask()
+    snowfall(sp, ((5.0, 5.0, 1.8), (29.0, 7.0, 1.6), (12.0, 13.0, 1.0)))
+    gm = mask()
+    for mm in ice_axe_masks((20.6, 6.6), (3.0, 30.0), 12.0, 1):
+        gm = lighter(gm, mm)
+    subject = stack(*ghost, layer(halo, mix(A, WHITE, 0.4), A), *axe, layer(sp, WHITE, B))
+    return finish(subject, [glow(gm, A, 2.6, 0.7), glow(halo, A, 1.4, 0.8), glow(sp, B, 1.2, 0.8)], frost_back(A, B))
+
+
+def frostraider_ult(A, B):
+    # 핌불윈터: 하늘에서 거꾸로 내리꽂히는 거대한 빙하 도끼 (날이 아래 — 가운데 위) · 아래 솟아 가둔 빙하 (얼음 기둥 다섯) · 비스듬히 내리는 눈보라 줄 · 맞은 자리 섬광
+    storm = mask()
+    for x, y in ((3.0, 3.0), (8.0, 9.0), (26.0, 2.0), (29.0, 10.0), (4.0, 15.0), (27.0, 17.0)):
+        line(storm, [(x, y), (x - 2.2, y + 3.4)], 0.6)
+    glacier = mask()
+    for x, h, w, lean in ((3.4, 9.0, 5.0, -1.2), (8.0, 6.6, 4.6, -0.6), (24.0, 7.0, 4.6, 0.6), (28.6, 9.6, 5.0, 1.2)):
+        ice_spike(glacier, x, 31.0, h, w, lean)
+    hit = mask()
+    star(hit, 16.0, 26.0, 7.0, 0.14)
+    axe = ice_axe((16.6, 19.6), (21.0, 0.4), A, blade=10.6, side=1)
+    subject = stack(layer(storm, mix(B, WHITE, 0.3), A), layer(hit, WHITE, B),
+                    layer(glacier, mix(A, ICE_DEEP, 0.35), mix(ICE_DEEP, (0, 0, 0), 0.35), mix(A, WHITE, 0.4), mix(ICE_DEEP, (0, 0, 0), 0.5), axis=(1, 0)), *axe)
+    return finish(subject, [glow(glacier, A, 1.8, 0.9), glow(hit, B, 2.4, 1.0), glow(storm, B, 1.0, 0.5)], frost_back(A, B))
 
 
 # ------------------------------------------------------------ 아케인 블레이드 (빛: 보라 → 청록 — 짙은 남보라 밤 바탕, 2026-11-05 룬 스미스 대신)
@@ -3598,11 +3626,11 @@ ICONS = {
     "warlord_hug": warlord_hug,
     "warlord_stomp": warlord_stomp,
     "warlord_ult": warlord_ult,
-    "gladiator_flurry": gladiator_flurry,
-    "gladiator_hook": gladiator_hook,
-    "gladiator_eight": gladiator_eight,
-    "gladiator_grinder": gladiator_grinder,
-    "gladiator_ult": gladiator_ult,
+    "frostraider_throw": frostraider_throw,
+    "frostraider_leap": frostraider_leap,
+    "frostraider_shatter": frostraider_shatter,
+    "frostraider_jotunn": frostraider_jotunn,
+    "frostraider_ult": frostraider_ult,
     "arcaneblade_crescent": arcaneblade_crescent,
     "arcaneblade_cross": arcaneblade_cross,
     "arcaneblade_tempest": arcaneblade_tempest,

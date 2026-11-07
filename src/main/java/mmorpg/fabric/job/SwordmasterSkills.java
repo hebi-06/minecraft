@@ -252,7 +252,7 @@ final class SwordmasterSkills {
         if (surge) JobTraits.useStacks(sp, (int) wave.numOr("use", 3));
         double R = surge ? wave.numOr("radius", 6.5) : k.num("radius", 5);
         int lines = Math.max(1, surge ? (int) wave.numOr("lines", 14) : (int) k.num("lines", 9));
-        int per = surge ? 2 : 1;
+        int per = surge ? 3 : 2;
         String life = RuneKit.lifeToken(sp);
         ServerLevel level0 = sp.level();
         Vec3 c0 = sp.position();
@@ -262,8 +262,7 @@ final class SwordmasterSkills {
         RpgCombat.setSteadfast(sp, sheath + 2);
         // 숨을 고름: 칼집 쪽으로 모이는 금빛 · 둘레 범위 고리 (칼집에 넣을 때까지) · 칼집 소리
         JobFx.charge(sp, j, new Vec3(-0.35, 0.95, 0.15), stance, 0.55);
-        JobFx.ring(level0, V.up(cg, 0.08), R, j, false, sheath / 20.0 + 0.1, Opt.of("alpha", 0.6));
-        JobFx.ring(level0, V.up(cg, 0.06), R * 0.55, j, true, sheath / 20.0 + 0.1, Opt.of("alpha", 0.35));
+        JobFx.ring(level0, V.up(cg, 0.08), R, j, false, sheath / 20.0 + 0.1, Opt.of("alpha", 0.3));
         if (surge) {
             JobFx.aura(sp, j, 2.6, 0.45, 0.8);
             SkillFx.play(level0, "block.bell.hit", c0, 1.9, 0.35);
@@ -331,10 +330,10 @@ final class SwordmasterSkills {
                         Vec3 side = V.rightOf(V.flat(V.len(V.flat(V.sub(mid, spot[ii]))) > 0.1 ? V.sub(mid, spot[ii]) : f0));
                         Vec3 dir = V.unit(V.add(V.scale(side, Math.cos(tilt)), V.UP, Math.sin(tilt)));
                         Vec3 at = V.add(mid, new Vec3(Kit.rand() - 0.5, Kit.rand() - 0.5, Kit.rand() - 0.5), 0.35);
-                        double len = 2.4 + Kit.rand() * 0.8 + (e != null ? Kit.bodyPad(e) : 0);
+                        double len = 3.0 + Kit.rand() * 1.0 + (e != null ? Kit.bodyPad(e) : 0);
                         double hold = Math.max(0.1, (sheath - stance - (ii + 1) * every) / 20.0);
                         JobFx16.echo(l2, at, dir, len, 0, 1, 0.05, false, Opt.empty(), JobFx.outer(j), WHITE);
-                        RuneKit.later(1, () -> JobFx16.echo(sp.level(), at, dir, len, 1, 4, hold - 0.05, true, Opt.of("fade", 0.0, "alpha", 0.85), JobFx.outer(j), WHITE));
+                        RuneKit.later(1, () -> JobFx16.echo(sp.level(), at, dir, len, 1, 4, hold - 0.05, true, Opt.of("fade", 0.0, "alpha", 1.0), JobFx.outer(j), WHITE));
                         cuts.add(new Vec3[] {at, dir, new Vec3(len, 0, 0)});
                     }
                     JobFx.glint(l2, mid, 0.5, j, 0.2, Opt.empty());
@@ -359,7 +358,7 @@ final class SwordmasterSkills {
             SkillFx.play(lv, "entity.player.attack.sweep", c, 1.3, 1.0);
             SkillFx.play(lv, "block.amethyst_block.break", c, 1.6, 1.0);
             for (Vec3[] cut : cuts) {
-                JobFx16.echo(lv, cut[0], cut[1], cut[2].x * 1.15, 5, 3, 0.3, false, Opt.empty(), JobFx.outer(j), WHITE);
+                JobFx16.echo(lv, cut[0], cut[1], cut[2].x * 1.3, 5, 3, 0.3, false, Opt.empty(), JobFx.outer(j), WHITE);
                 JobFx.glint(lv, cut[0], 0.7, j, 0.2, Opt.empty());
             }
             JobFx.ring(lv, V.up(c, 0.1), R, j, false, 0.35, Opt.of("alpha", 1.0));
@@ -575,11 +574,11 @@ final class SwordmasterSkills {
         JobFx.burst(lv, V.up(hit, 0.8), 3.2, j, 0.45, Opt.empty());
         JobFx.ring(lv, V.up(hit, 0.08), near, j, false, 0.45, Opt.of("alpha", 1.0));
         SkillFx.shock(lv, V.up(hit, 0.1), gold, near * 1.3, 0.45);
-        // 앞으로 달리는 거대한 금빛 세로 검기 (가운데 크게 · 양옆 조금 작게 0.6칸 비껴)
-        JobFx.bigWave(lv, sp, V.up(V.add(g0, f, 1.2), 3.4), f, speed, 4.6, 90, L / speed + 0.18, j, gold, ivory, Opt.empty());
+        // 앞으로 달리는 거대한 금빛 세로 검기 (가운데 크게 · 양옆 조금 작게 0.8칸 비껴 — 영상 1 뒤 키움: 가운데 반 크기 4.6 → 6.4)
+        JobFx.bigWave(lv, sp, V.up(V.add(g0, f, 1.2), 4.6), f, speed, 6.4, 90, L / speed + 0.18, j, gold, ivory, Opt.empty());
         for (int s = -1; s <= 1; s += 2) {
-            Vec3 at = V.up(V.add(V.add(g0, f, 1.0), V.rightOf(f), 0.6 * s), 2.6);
-            JobFx.bigWave(lv, null, at, f, speed * 0.96, 3.4, 90 + 6 * s, L / speed + 0.18, j, gold, ivory, JobFx.hide1p(sp).with("alpha", 0.55));
+            Vec3 at = V.up(V.add(V.add(g0, f, 1.0), V.rightOf(f), 0.8 * s), 3.3);
+            JobFx.bigWave(lv, null, at, f, speed * 0.96, 4.6, 90 + 6 * s, L / speed + 0.18, j, gold, ivory, JobFx.hide1p(sp).with("alpha", 0.6));
         }
         // 땅을 달리는 빛의 길 (넓은 빛줄기 — 앞에서부터 차례로 켜짐) · 길 끝 빛살
         for (double s = 1.0; s < L; s += 2.4) {

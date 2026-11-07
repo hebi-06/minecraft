@@ -351,12 +351,12 @@ public final class MotionsTest {
                 && Motions.skillMotion("bloodknight_ult:x1") == null && Motions.skillMotion("bloodknight_ult").equals("jb_bloodknight_ult"),
                 "0.51.0 2차 직업 스킬 동작 (jb_ — 받아치기 · 뛰어올라 내리꽂음은 단계 열쇠 · 2026-11-07 블레이드 에코 · 엑스칼리버는 한 동작)");
         check(Motions.skillMotion("warlord_rend").equals("jb_warlord_rend") && Motions.skillMotion("warlord_rend:slam").equals("jb_warlord_rend_slam")
-                && Motions.skillMotion("gladiator_ult").equals("jb_gladiator_ult") && Motions.skillMotion("gladiator_ult:slam").equals("jb_gladiator_ult_slam")
-                && Motions.skillMotion("gladiator_flurry").equals("jb_gladiator_flurry") && Motions.skillMotion("lycan_fang") == null
+                && Motions.skillMotion("frostraider_ult").equals("jb_frostraider_ult") && Motions.skillMotion("frostraider_throw").equals("jb_frostraider_throw")
+                && Motions.skillMotion("frostraider_throw:recall").equals("jb_frostraider_throw_recall") && Motions.skillMotion("lycan_fang") == null
                 && Motions.skillMotion("warlord_stomp").equals("jb_warlord_stomp") && Motions.skillMotion("warlord_titan") == null
-                && Motions.skillMotion("gladiator_grinder").equals("jb_gladiator_grinder") && Motions.skillMotion("gladiator_grinder:catch").equals("jb_gladiator_grinder_catch")
-                && Motions.skillMotion("gladiator_fury") == null,
-                "0.51.0 재설계안 2판 전사 2차 동작 (대지 가르기 내려찍기 · 홀름강 마무리는 단계 열쇠 — 울프헤딘 동작은 뺌)");
+                && Motions.skillMotion("frostraider_shatter").equals("jb_frostraider_shatter") && Motions.skillMotion("frostraider_jotunn").equals("jb_frostraider_jotunn")
+                && Motions.skillMotion("gladiator_ult") == null && Motions.skillMotion("gladiator_grinder:catch") == null && Motions.skillMotion("gladiator_fury") == null,
+                "전사 2차 동작 (0.51.0 대지 가르기 내려찍기 · 2026-11-07 프로스트 바이트 되부름은 단계 열쇠 — 글래디에이터 · 울프헤딘 동작은 뺌)");
         check(Motions.skillMotion("arcaneblade_ult").equals("jb_arcaneblade_ult") && Motions.skillMotion("arcaneblade_ult:slam").equals("jb_arcaneblade_ult_slam")
                 && Motions.skillMotion("arcaneblade_crescent").equals("jb_arcaneblade_crescent") && Motions.skillMotion("arcaneblade_cross").equals("jb_arcaneblade_cross")
                 && Motions.skillMotion("swordcaller_ult:catch").equals("jb_swordcaller_ult_catch") && Motions.skillMotion("swordcaller_orbit").equals("jb_swordcaller_orbit")

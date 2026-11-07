@@ -12,6 +12,7 @@ import mmorpg.fabric.RpgData;
 import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.RpgHealth;
 import mmorpg.fabric.economy.Wallet;
+import mmorpg.fabric.job.FrostraiderSkills;
 import mmorpg.fabric.job.JobRecast;
 import mmorpg.fabric.job.JobSkills;
 import mmorpg.fabric.job.JobSystem;
@@ -23,6 +24,7 @@ import mmorpg.fabric.job.JobTraits12;
 import mmorpg.fabric.job.JobTraits13;
 import mmorpg.fabric.job.JobTraits14;
 import mmorpg.fabric.job.JobTraits15;
+import mmorpg.fabric.job.JobTraits16;
 import mmorpg.fabric.job.JobTraits3;
 import mmorpg.fabric.job.JobTraits4;
 import mmorpg.fabric.job.JobTraits5;
@@ -66,9 +68,9 @@ import net.minecraft.world.phys.Vec3;
  * <li>워로드 (mmorpg:job_wl — 재설계안 2판): 동면 (받는 피해 −60% · 맞으면 분노 · 깨어나며 3.9) · 분노 100 → 곰의 화신 (평타 +20% · −15% · 분노가 줄어듦) ·
  * 대지 가르기 (다시 누름 — 모은 몫만큼 6.5 × (0.5 → 1) · 끝까지 모으면 저절로 6.5) · 곰의 포옹 (양옆을 끌어와 11.7 · 양쪽이면 기절) · 마지막 휘두름 (안쪽 26 ·
  * 바깥 날 52 · 모으는 동안 −50%) · 거인의 무게 (공격 속도 ×0.75 · 도끼 평타 ×1.4 · 범위 모습)</li>
- * <li>글래디에이터 (mmorpg:job_gl — 재설계안 2판): 결투 (처음 맞힌 적 · 다른 적 −40% · 상대 +3% × 결투 · 1초마다 +1 · 상대가 쓰러지면 가까운 적에게 반) ·
- * 도끼 난타 (6.5) · 걸어 당기기 (끌어와 3.9 · 기절) · 여덟 팔 (11.7 · 받는 피해 +10%) · 불사의 분노 (쓰러지지 않음 · 공격 속도 ×1.4) · 홀름강 (결투장 — 다른 적은
- * 밀려남 · 받는 피해 +15% · 12 → 체력 30% 아래면 40 × 2)</li>
+ * <li>프로스트 레이더 (mmorpg:job_fr — 2026-11-07 재설계안 3판, 글래디에이터 대신): 빙결 (도끼 평타 · 직업 스킬 서리 +1 · 서리 5 → 얼어붙음 · 얼린 적을 직업 스킬로
+ * 치면 +30% 깨짐) · 프로스트 바이트 (던져 박음 2.5 · 다시 눌러 되부름 4) · 아이스 바운드 (날아가 내리찍음 3.9 · 보호막) · 샤터 (내려찍어 가둠 4.2 → 깨부숨 7.5 · 둔화) ·
+ * 요툰 그립 (도끼 평타 + 60%) · 핌불윈터 (내리꽂힘 20 · 얼어붙음 → 깨짐 32)</li>
  * <li>아케인 블레이드 (mmorpg:job_ab — 룬 스미스 대신): 크레센트 엣지 (가로 검기 3.4 + 세로 검기 5.1 · 각인 1) → 평타가 각인을 터뜨림 (위력 × 1.0) · 둘레로 번짐
  * (× 0.5) · 각인 다섯이면 한꺼번에 (거대한 마력 대검 — 위력 × 5 · 번짐 × 5) · 팬텀 크로스 (과녁 바로 앞으로 순간 이동 · X 새김 2.55 + X 터짐 2.55) · 아케인 템페스트
  * (한 바퀴 6.1 + 폭풍 9.2) · 스펠 오버드라이브 (사거리 +1 · 칼이 커짐 · 평타마다 검기 — 맞힌 적 위력 × 0.9 · 길 위의 다른 적 × 0.45) · 월드 클리버 (내려침 24 + 솟구침 44)</li>
@@ -100,7 +102,7 @@ public final class RpgJobAdvanceTests {
     static final String ENV_SM = "mmorpg:job_sm";
     static final String ENV_BK = "mmorpg:job_bk";
     static final String ENV_WL = "mmorpg:job_wl";
-    static final String ENV_GL = "mmorpg:job_gl";
+    static final String ENV_FR = "mmorpg:job_fr";
     static final String ENV_AB = "mmorpg:job_ab";
     static final String ENV_SC = "mmorpg:job_sc";
     static final String ENV_AM = "mmorpg:job_am";
@@ -214,19 +216,19 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(chest(sp) != null && chest(sp).body().contains("풀립니다"), "change confirm warns the second job is cleared");
             Forms.answer(sp, 11, null);
             h.assertTrue("warrior".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0, "changed first job → second job cleared: " + JobSystem.jobOf(sp));
-            // 0.51.0 전사의 2차 전직 (워로드 · 재설계안 2판 글래디에이터) — 1차 직업에서 처음이라 무료
+            // 0.51.0 전사의 2차 전직 (워로드 · 2026-11-07 재설계안 3판 프로스트 레이더) — 1차 직업에서 처음이라 무료
             JobTrainer.open(sp, () -> done[0]++);
             FormNet.ChestPayload wa = chest(sp);
             h.assertTrue(wa != null && wa.slots().get(JobTrainer.ADV_SLOT).kind() != 3, "warrior: 2차 전직 open");
             Forms.answer(sp, JobTrainer.ADV_SLOT, null);
             FormNet.ChestPayload wadv = chest(sp);
             h.assertTrue(wadv != null && wadv.slots().get(JobTrainer.AWAKEN_SLOT).name().contains("워로드")
-                    && wadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("글래디에이터"), "warrior advance cards");
+                    && wadv.slots().get(JobTrainer.INVERT_SLOT).name().contains("프로스트 레이더"), "warrior advance cards");
             Forms.answer(sp, JobTrainer.INVERT_SLOT, null);
             h.assertTrue(chest(sp) != null && chest(sp).title().contains("2차 전직 확인"), "warrior advance confirm");
             Forms.answer(sp, 11, null);
-            h.assertTrue("gladiator".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
-                    && JobSystem.job(sp).display().equals("글래디에이터"), "gladiator free from the first job: " + JobSystem.jobOf(sp));
+            h.assertTrue("frostraider".equals(JobSystem.jobOf(sp)) && Wallet.get(sp, Economy.Kind.SILVER) == 0
+                    && JobSystem.job(sp).display().equals("프로스트 레이더"), "frostraider free from the first job: " + JobSystem.jobOf(sp));
             // 0.51.0 마검사의 2차 전직 (아케인 블레이드 · 소드 콜러) — 다른 1차 직업 (300) 으로 바꾼 뒤 처음이라 무료
             Wallet.set(sp, Economy.Kind.SILVER, 300);
             JobTrainer.open(sp, () -> done[0]++);
@@ -778,149 +780,118 @@ public final class RpgJobAdvanceTests {
         });
     }
 
-    // ------------------------------------------------------------ 글래디에이터 — 0.51.0 재설계안 2판
+    // ------------------------------------------------------------ 프로스트 레이더 — 2026-11-07 재설계안 3판 (글래디에이터 대신)
 
-    @GameTest(environment = ENV_GL, maxTicks = 640)
-    public void gladiatorSkills(GameTestHelper h) {
+    @GameTest(environment = ENV_FR, maxTicks = 480)
+    public void frostraiderSkills(GameTestHelper h) {
         floor(h);
-        ServerPlayer sp = player(h, "gladiator", 50);
+        ServerPlayer sp = player(h, "frostraider", 50);
         Weapon w = Weapons.weaponFrom("axe", 0, "common");
         RpgJobTests.hold(sp, w);
-        Jobs.Job j = Jobs.job("gladiator");
-        double per = j.trait().def().numOr("per", 0.03);
-        double others = j.trait().def().numOr("others", 0.4);
-        // 둘째 과녁은 등 뒤 (첫 평타의 앞 범위에 들지 않게 — 결투는 처음 맞힌 앞 과녁)
-        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2), dummy(h, 0, -2.5)));
+        Jobs.Job j = Jobs.job("frostraider");
+        double shatter = j.trait().def().numOr("shatter", 0.3);
+        double echo = j.skill(3).num("echo", 0.6);
+        List<Husk> z = new ArrayList<>(List.of(dummy(h, 0, 2.5)));
         List<RpgJobTests.Step> steps = new ArrayList<>();
-        // 결투: 처음 도끼 평타로 맞힌 적이 상대 (그 한 대는 그대로)
+        double[] mark = {0};
+        // 빙결: 도끼 평타가 맞힌 적에 서리 +1 (평타 그대로)
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             RpgCombat.forceCrit = false;
             double base = RpgJobTests.basic(sp, w);
             sp.attack(z.get(0));
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base), "first basic × 1: " + TestDummies.dealt(z.get(0)) + " vs " + base);
-            h.assertTrue(JobTraits6.duelTarget(sp) == z.get(0) && JobTraits6.duelStacks(sp) == 0, "duel opened on the first enemy");
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base), "basic × 1: " + TestDummies.dealt(z.get(0)) + " vs " + base);
+            h.assertTrue(JobTraits16.frost(sp, z.get(0)) == 1 && !JobTraits16.frozen(z.get(0)), "frost +1 on an axe hit: " + JobTraits16.frost(sp, z.get(0)));
         }));
-        // 다른 적 × (1 − 0.4) · 상대는 × (1 + 결투 × 3%)
+        // 서리 5 → 얼어붙음 (묶임) → 얼린 적을 프로스트 바이트로 침: 2.5 × 1.3 · 깨짐 (풀림) · 박힌 도끼 · 서리 +1
         steps.add(new RpgJobTests.Step(14, () -> {
-            double base = RpgJobTests.basic(sp, w);
-            double before = TestDummies.dealt(z.get(1));
-            sp.attack(z.get(1));
-            double got = TestDummies.dealt(z.get(1)) - before;
-            h.assertTrue(RpgJobTests.near(got, base * (1 - others)), "other enemy −40%: " + got + " vs " + base * (1 - others));
-            h.assertTrue(JobTraits6.duelTarget(sp) == z.get(0), "duel stays on the first enemy");
-            JobTraits6.setDuel(sp, z.get(0), 5, true);
-        }));
-        double[] mark = {0};
-        steps.add(new RpgJobTests.Step(14, () -> {
-            double before = TestDummies.dealt(z.get(0));
-            double base = RpgJobTests.basic(sp, w);
+            JobTraits16.setFrost(sp, z.get(0), 4);
             sp.attack(z.get(0));
-            RpgCombat.forceCrit = null;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - before, base * (1 + 5 * per)), "duel 5 → +15%: " + (TestDummies.dealt(z.get(0)) - before) + " vs "
-                    + base * (1 + 5 * per));
-            // 1초마다 +1 (얼리지 않음)
-            JobTraits6.setDuel(sp, z.get(0), 0, false);
+            var slow = z.get(0).getEffect(MobEffects.SLOWNESS);
+            h.assertTrue(JobTraits16.frozen(z.get(0)) && slow != null && slow.getAmplifier() >= 10, "frost 5 → frozen (rooted)");
         }));
-        steps.add(new RpgJobTests.Step(44, () -> {
-            h.assertTrue(JobTraits6.duelStacks(sp) == 2, "duel grows 1 per second: " + JobTraits6.duelStacks(sp));
-            // 상대가 쓰러짐 → 가까운 적과 새 결투 (결투 × 0.5)
-            JobTraits6.setDuel(sp, z.get(0), 6, true);
-            z.get(0).discard();
+        // 평타의 무적 시간 (10틱) 이 지난 뒤 던짐 (얼어붙음 30틱 안 — 6 에 박힘)
+        steps.add(new RpgJobTests.Step(11, () -> {
+            mark[0] = TestDummies.dealt(z.get(0));
+            h.assertTrue(JobTraits16.frozen(z.get(0)), "still frozen");
+            h.assertTrue(JobSkills.press(sp, 0), "프로스트 바이트 cast");
         }));
         steps.add(new RpgJobTests.Step(8, () -> {
-            h.assertTrue(JobTraits6.duelTarget(sp) == z.get(1) && JobTraits6.duelStacks(sp) == 3, "duel moves to the nearest with half: " + JobTraits6.duelStacks(sp));
-            // 도끼 난타: 결투 4 (얼림) — 6.5 × 1.12 (2 · 12 에 무리마다 한 번)
-            for (Husk x : z) x.discard();
-            z.clear();
-            home(h, sp);
-            z.add(dummy(h, 0, 2.5));
-            JobTraits6.setDuel(sp, z.get(0), 4, true);
-            h.assertTrue(JobSkills.press(sp, 0), "도끼 난타 cast");
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 2.5) * (1 + shatter);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "프로스트 바이트 on frozen +30% " + got + " vs " + want);
+            h.assertTrue(!JobTraits16.frozen(z.get(0)) && JobTraits16.frost(sp, z.get(0)) == 1, "shattered (thawed) · frost 1: " + JobTraits16.frost(sp, z.get(0)));
+            h.assertTrue(FrostraiderSkills.embedded(sp) == z.get(0) && JobRecast.pending(sp, "frostraider_throw"), "axe stuck · recall window open");
+            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "frostraider gradient number");
         }));
-        steps.add(new RpgJobTests.Step(16, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.5) * (1 + 4 * per);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "도끼 난타 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "gladiator gradient number");
-            // 걸어 당기기: 5칸 앞 (밀 수 있는 과녁) 을 걸어 끌어와 6 에 3.9 · 기절
+        // 다시 누름 (14 — gap 10 뒤): 5틱 비틀다 뽑혀 4 → 손으로
+        steps.add(new RpgJobTests.Step(6, () -> {
+            mark[0] = TestDummies.dealt(z.get(0));
+            h.assertTrue(JobSkills.press(sp, 0), "프로스트 바이트 recall");
+            h.assertTrue(!JobRecast.pending(sp, "frostraider_throw"), "recall closes the window");
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == mark[0], "the axe twists before it tears out")));
+        steps.add(new RpgJobTests.Step(6, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.0);
+            double got = TestDummies.dealt(z.get(0)) - mark[0];
+            h.assertTrue(RpgJobTests.near(got, want), "되부름 " + got + " vs " + want);
+            h.assertTrue(FrostraiderSkills.embedded(sp) == null && JobTraits16.frost(sp, z.get(0)) == 2, "axe back · frost 2");
+            // 아이스 바운드: 박힌 도끼가 없으면 겨눈 적 (4칸) 앞으로 날아가 10 에 내리찍음 3.9 · 보호막
             z.get(0).discard();
             home(h, sp);
-            z.set(0, loose(h, 0, 5));
-            JobTraits6.setDuel(sp, z.get(0), 0, true);
-            mark[0] = z.get(0).getZ() - sp.getZ();
-            h.assertTrue(JobSkills.press(sp, 1), "걸어 당기기 cast");
+            z.set(0, dummy(h, 0, 4));
+            JobSkills.resetCooldowns(sp);
+            h.assertTrue(JobSkills.press(sp, 1), "아이스 바운드 cast");
         }));
-        steps.add(new RpgJobTests.Step(9, () -> {
-            double dz = z.get(0).getZ() - sp.getZ();
+        steps.add(new RpgJobTests.Step(14, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 3.9);
-            h.assertTrue(dz < 2.6 && dz < mark[0] - 2, "hooked in: " + mark[0] + " → " + dz);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "걸어 당기기 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            var slow = z.get(0).getEffect(MobEffects.SLOWNESS);
-            h.assertTrue(slow != null && slow.getAmplifier() >= 10, "hook stun");
-            // 여덟 팔: 4 · 14 · 24 · 34 에 2.6 · 2.6 · 2.6 · 3.9 (= 11.7) → 받는 피해 +10%
+            double d = Math.hypot(sp.getX() - z.get(0).getX(), sp.getZ() - z.get(0).getZ());
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "아이스 바운드 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(d < 2.6 && RpgHealth.shieldOf(sp) > 0, "leapt to the target · frost armor: " + d + " · " + RpgHealth.shieldOf(sp));
+            // 샤터: 8 에 내려찍어 가둠 4.2 (얼어붙음) → 28 에 깨부숨 7.5 (풀고 침 — 덤 없음) · 둔화
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 2.5));
-            JobTraits6.setDuel(sp, z.get(0), 0, true);
-            h.assertTrue(JobSkills.press(sp, 2), "여덟 팔 cast");
+            h.assertTrue(JobSkills.press(sp, 2), "샤터 cast");
         }));
-        steps.add(new RpgJobTests.Step(30, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(2), 7.8);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "여덟 팔 three volleys " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(Math.abs(JobTraitsMore.breakMult(z.get(0)) - 1) < 1e-9, "no break before the last volley");
+        steps.add(new RpgJobTests.Step(11, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(2), 4.2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "샤터 slam " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobTraits16.frozen(z.get(0)), "caged in ice");
         }));
-        steps.add(new RpgJobTests.Step(10, () -> {
+        steps.add(new RpgJobTests.Step(20, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 11.7);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "여덟 팔 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(Math.abs(JobTraitsMore.breakMult(z.get(0)) - 1.1) < 1e-9, "break +10%: " + JobTraitsMore.breakMult(z.get(0)));
-            // 액스 그라인더 (0.51.0 — 불사의 분노 대신 · 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자"): 결투 상대 (3칸 앞 · 결투 0 얼림) 에게 던짐
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "샤터 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(!JobTraits16.frozen(z.get(0)) && z.get(0).hasEffect(MobEffects.SLOWNESS), "shattered · chilled");
+            // 요툰 그립: 태세 — 도끼 평타 + 60% (서리 거인의 일격) · 서리 +2
             z.get(0).discard();
             home(h, sp);
-            z.set(0, dummy(h, 0, 3));
-            JobTraits6.setDuel(sp, z.get(0), 0, true);
-            h.assertTrue(JobSkills.press(sp, 3), "액스 그라인더 cast");
-            h.assertTrue(!JobTraits.stanceOn(sp, "gladiator_grinder") && !mmorpg.fabric.RpgHealth.undying.test(sp), "grinder is not a stance (no undying)");
+            z.set(0, dummy(h, 0, 2.5));
+            h.assertTrue(JobSkills.press(sp, 3), "요툰 그립 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "frostraider_jotunn"), "jotunn stance on");
         }));
-        // 액스 그라인더: 8 에 박힘 3 → 18 · 28 에 갈아냄 3.6 (숫자 네 줄 · 느려짐) → 38 에 뽑힘 5.4 (= 15.6 — 태세 칸 몫 12 × 1.3)
-        steps.add(new RpgJobTests.Step(20, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(3), 6.6);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "액스 그라인더 stuck + grind " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "grinding slows");
-        }));
-        steps.add(new RpgJobTests.Step(22, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(3), 15.6);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "액스 그라인더 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-        }));
-        // 홀름강: 3칸 앞 상대 (결투 0 얼림) 와 결투장 (둘 사이 가운데 · 7칸) — 안의 다른 적 (밀 수 있음) 은 밖으로 · 상대 받는 피해 +15% → 10 에 12 →
-        // 140 에 40 (체력 30% 아래 — 두 배)
-        Vec3[] cg = {Vec3.ZERO};
-        steps.add(new RpgJobTests.Step(4, () -> {
+        steps.add(new RpgJobTests.Step(14, () -> {
+            double base = RpgJobTests.basic(sp, w);
+            sp.attack(z.get(0));
+            RpgCombat.forceCrit = null;
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), base * (1 + echo)), "giant's echo +60%: " + TestDummies.dealt(z.get(0)) + " vs " + base * (1 + echo));
+            h.assertTrue(JobTraits16.frost(sp, z.get(0)) == 2, "giant's hit frost +2: " + JobTraits16.frost(sp, z.get(0)));
+            // 핌불윈터: 4칸 앞 과녁 (옆 1.5칸에 하나 더) — 26 에 내리꽂힘 20 (얼어붙음) → 46 에 깨짐 32
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
-            z.add(dummy(h, 0, 3));
-            z.add(loose(h, 2.0, 4.0));
-            JobTraits6.setDuel(sp, z.get(0), 0, true);
-            cg[0] = sp.position().lerp(z.get(0).position(), 0.5);
-            h.assertTrue(JobSkills.press(sp, 4), "홀름강 cast");
-            h.assertTrue(Math.abs(JobTraits6.arenaTaken(z.get(0)) - 1.15) < 1e-9 && Math.abs(JobTraits6.arenaTaken(z.get(1)) - 1) < 1e-9, "arena: the foe takes +15%");
+            z.add(dummy(h, 0, 4));
+            z.add(dummy(h, 1.5, 4));
+            h.assertTrue(JobSkills.press(sp, 4), "핌불윈터 cast");
         }));
-        steps.add(new RpgJobTests.Step(6, () -> {
-            Husk o = z.get(1);
-            double d = Math.hypot(o.getX() - cg[0].x, o.getZ() - cg[0].z);
-            h.assertTrue(d > 7.5, "other enemy pushed out of the arena: " + d);
+        steps.add(new RpgJobTests.Step(28, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 20);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want) && JobTraits16.frozen(x), "핌불윈터 drop " + TestDummies.dealt(x) + " vs " + want);
         }));
-        steps.add(new RpgJobTests.Step(8, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 12) * 1.15;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "홀름강 opening " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(TestDummies.dealtBy(z.get(1)) == 0, "the outsider is not hit (pushed out — only wall damage)");
+        steps.add(new RpgJobTests.Step(20, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 52);
+            for (Husk x : z) h.assertTrue(RpgJobTests.near(TestDummies.dealt(x), want) && !JobTraits16.frozen(x), "핌불윈터 " + TestDummies.dealt(x) + " vs " + want);
         }));
-        steps.add(new RpgJobTests.Step(118, () -> z.get(0).setHealth(z.get(0).getMaxHealth() * 0.2F)));
-        steps.add(new RpgJobTests.Step(12, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 12 + 40 * 2) * 1.15;
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "홀름강 finale (below 30% → ×2) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-        }));
-        steps.add(new RpgJobTests.Step(4, () -> h.assertTrue(Math.abs(JobTraits6.arenaTaken(z.get(0)) - 1) < 1e-9, "arena gone")));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgJobTests.cleanup(sp);
             for (Husk x : z) x.discard();

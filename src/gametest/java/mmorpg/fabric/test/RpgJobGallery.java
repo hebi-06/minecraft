@@ -179,15 +179,19 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(4, new int[] {2, 10, 12, 20, 26, 31, 33, 41, 44}, new int[] {10, 26, 32, 42}, 52, false),
     };
     /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 · 데드아이 세 발 — 사진첩 · 영상 모두) */
-    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.of("bloodknight_cleave", new int[] {12, 24}, "necromancer_call", new int[] {16}, "sniper_ult",
-            new int[] {14, 28, 42}, "trickster_swap", new int[] {12}, "trickster_dash", new int[] {16}, // 2026-11-06 트릭스터 2판: 섀도 스와프 자리 바꿈 · 미라주 대시 돌아옴
-            "stormlancer_drive", new int[] {12}, "stormlancer_rend", new int[] {20}, "dragoon_jump", new int[] {16}, // 2026-11-06 창술사 2차: 돌아서며 바람 창 · 뽑아 찢음 · 내리꽂음
-            "executioner_ult", new int[] {36}, "darkknight_crunch", new int[] {12}); // 2026-11-06 엑시큐셔너: 앞 과녁을 처형 → 비포 선셋 다시 · 다크 나이트: 크게 물어 찢음
+    private static final java.util.Map<String, int[]> AGAIN = java.util.Map.ofEntries(java.util.Map.entry("bloodknight_cleave", new int[] {12, 24}),
+            java.util.Map.entry("necromancer_call", new int[] {16}), java.util.Map.entry("sniper_ult", new int[] {14, 28, 42}),
+            java.util.Map.entry("trickster_swap", new int[] {12}), java.util.Map.entry("trickster_dash", new int[] {16}), // 2026-11-06 트릭스터 2판: 섀도 스와프 자리 바꿈 · 미라주 대시 돌아옴
+            java.util.Map.entry("stormlancer_drive", new int[] {12}), java.util.Map.entry("stormlancer_rend", new int[] {20}),
+            java.util.Map.entry("dragoon_jump", new int[] {16}), // 2026-11-06 창술사 2차: 돌아서며 바람 창 · 뽑아 찢음 · 내리꽂음
+            java.util.Map.entry("executioner_ult", new int[] {36}), java.util.Map.entry("darkknight_crunch", new int[] {12}), // 2026-11-06 엑시큐셔너: 앞 과녁을 처형 → 비포 선셋 다시 · 다크 나이트: 크게 물어 찢음
+            java.util.Map.entry("frostraider_throw", new int[] {14})); // 2026-11-07 프로스트 레이더: 박힌 도끼를 되부름
 
     /**
-     * 0.51.0 워로드 · 글래디에이터 (재설계안 2판): 대지 가르기 (24 까지 모음 → 28 내려침 · 돌창) · 동면 (40 깨어남) · 곰의 포옹 (2 ~ 8 끌어옴 · 12 내려찍음) ·
-     * 베어 스톰프 (4 ~ 16 뛰어올라 내려찍음 · 26 갈라짐) · 마지막 휘두름 (24 한 바퀴) / 도끼 난타 (2 · 5 · 8 · 12 · 15 · 18) · 걸어 당기기 (1 걺 · 6 내려찍음) ·
-     * 여덟 팔 (4 · 14 · 24 · 34 ~ 40) · 액스 그라인더 (4 던짐 · 8 박힘 · 18 · 28 갈아냄 · 38 뽑힘) · 홀름강 (10 열고 · 140 내려찍음)
+     * 0.51.0 워로드 (재설계안 2판): 대지 가르기 (24 까지 모음 → 28 내려침 · 돌창) · 동면 (40 깨어남) · 곰의 포옹 (2 ~ 8 끌어옴 · 12 내려찍음) ·
+     * 베어 스톰프 (4 ~ 16 뛰어올라 내려찍음 · 26 갈라짐) · 마지막 휘두름 (24 한 바퀴) / 2026-11-07 프로스트 레이더 (재설계안 3판 — 글래디에이터 대신): 프로스트 바이트
+     * (2 던짐 · 6 박힘 → 14 다시 누름 · 19 뽑혀 벰 · 23 받음) · 아이스 바운드 (0 ~ 10 날아가 10 내리찍음) · 샤터 (8 내려찍어 가둠 · 22 ~ 27 비틂 · 28 깨부숨) · 요툰 그립
+     * (태세 — 평타마다 거인의 도끼) · 핌불윈터 (6 하늘로 던짐 · 12 빙하 도끼 · 26 내리꽂힘 · 42 되부름 · 46 깨짐)
      */
     private static final Case[] CASES_WL = {
         new Case(0, new int[] {6, 16, 24, 29, 33}, new int[] {16, 29}, 46, false),
@@ -196,12 +200,12 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(3, new int[] {3, 8, 12, 16, 18, 26}, new int[] {10, 16, 26}, 36, false),
         new Case(4, new int[] {6, 14, 22, 24, 26, 30, 36}, new int[] {14, 25, 30}, 50, false),
     };
-    private static final Case[] CASES_GL = {
-        new Case(0, new int[] {2, 5, 8, 12, 18}, new int[] {8, 18}, 30, false),
-        new Case(1, new int[] {1, 3, 5, 6, 8}, new int[] {3, 6}, 20, false),
-        new Case(2, new int[] {4, 14, 24, 34, 40}, new int[] {14, 40}, 52, false),
-        new Case(3, new int[] {3, 6, 8, 18, 28, 38, 42}, new int[] {8, 28, 38}, 48, false),
-        new Case(4, new int[] {4, 10, 12, 40, 100, 134, 140, 144}, new int[] {10, 60, 141}, 160, false),
+    private static final Case[] CASES_FR = {
+        new Case(0, new int[] {2, 6, 10, 16, 19, 23}, new int[] {6, 19}, 34, false),
+        new Case(1, new int[] {2, 5, 8, 10, 12}, new int[] {6, 10}, 26, false),
+        new Case(2, new int[] {4, 8, 12, 20, 26, 28, 30}, new int[] {8, 20, 28}, 42, false),
+        new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
+        new Case(4, new int[] {4, 6, 12, 20, 26, 30, 42, 46, 48}, new int[] {12, 26, 46}, 66, false),
     };
 
     /**
@@ -679,11 +683,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (id.equals("swordmaster_draw")) JobTraits.setStacks(sp, 3);
         if (id.equals("swordmaster_echo")) JobTraits.setStacks(sp, 8);
         if (id.startsWith("bloodknight_")) sp.setHealth(sp.getMaxHealth() * 0.6F);
-        // 0.51.0 재설계안 2판 전사 2차: 워로드는 분노 60 (게이지) · 글래디에이터는 앞 과녁과 결투 6 (말뚝 고리 — 그 과녁을 먼저 노림)
+        // 0.51.0 재설계안 2판 전사 2차: 워로드는 분노 60 (게이지) · 2026-11-07 프로스트 레이더는 앞 과녁 서리 3 (게이지 — 스킬이 서리를 더해 얼어붙는 모습)
         if (id.startsWith("warlord_")) JobTraitsMore.setRage(sp, 60);
-        if (id.startsWith("gladiator_")) {
+        if (id.startsWith("frostraider_")) {
             List<Husk> near = sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 3.2, 0.5, -60, 3.2).inflate(0.8), h -> true);
-            if (!near.isEmpty()) mmorpg.fabric.job.JobTraits6.setDuel(sp, near.get(0), 6, false);
+            if (!near.isEmpty()) mmorpg.fabric.job.JobTraits16.setFrost(sp, near.get(0), 3);
         }
         // 0.51.0 소드 콜러: 데려가라는 앞 7칸에 꽂아 둔 칼 (그리로 날아감)
         if (id.equals("swordcaller_shift")) mmorpg.fabric.job.JobTraits7.testStuck(sp, new Vec3(0.5, -60, 7.5), 200);
@@ -851,7 +855,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /** 영상 묶음마다 직업 (넷 · 넷 · 셋 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 · 둘 — 넷째부터 2차 직업) */
     private static final String[][] FILM_JOBS = {{"swordsman", "spellblade", "warrior", "mage"}, {"archer", "assassin", "lancer", "reaper"},
-        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "gladiator"}, {"arcaneblade", "swordcaller"}, {"arcmage", "necromancer"},
+        {"paladin", "priest", "guardian"}, {"swordmaster", "bloodknight"}, {"warlord", "frostraider"}, {"arcaneblade", "swordcaller"}, {"arcmage", "necromancer"},
         {"sniper", "battlearcher"}, {"trickster", "pierrot"}, {"stormlancer", "dragoon"}, {"soulreaper", "executioner"}, {"thunderlord", "tyrant"}, {"saint", "warlock"},
         {"phoenix", "darkknight"}};
 
@@ -876,7 +880,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
                         case "swordmaster" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 8, sp -> JobTraits.setStacks(sp, 6));
                         case "bloodknight" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "warlord" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 100, sp -> JobTraitsMore.setRage(sp, 60));
-                        case "gladiator" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 10, sp -> {});
+                        case "frostraider" -> newJob(ctx, server, conn, job, "rpg:axe_l40_hero", 5, sp -> {});
                         case "arcaneblade", "swordcaller" -> newJob(ctx, server, conn, job, "rpg:sword_l40_hero", 5, sp -> {});
                         case "arcmage" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 5, sp -> JobTraitsMore.setChain(sp, 2));
                         case "necromancer" -> newJob(ctx, server, conn, job, "rpg:wand_l40_hero", 4, sp -> {});
@@ -925,6 +929,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         return switch (id) {
             case "swordmaster_ult" -> new double[] {11.5, 3.0, 5.6, 0.4}; // 2026-11-07 엑스칼리버: 15칸 빛의 대검을 올려다봄 · 앞 24칸 검격
             case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3}; // 블레이드 에코: 둘레를 옮겨 다니다 처음 자리로 돌아옴 — 덜 따라감
+            case "frostraider_ult" -> new double[] {12.0, 3.4, 5.0, 0.4}; // 핌불윈터: 하늘의 빙하 도끼 (18칸 위) 가 내리꽂혀 빙하가 솟음 — 올려다봄
+            case "frostraider_throw" -> new double[] {8.0, 3.0, 2.2, 0.6}; // 프로스트 바이트: 던져 박히고 되돌아오는 도끼가 다 보이게
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
             case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};
@@ -948,7 +954,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "swordmaster" -> CASES_SM;
             case "bloodknight" -> CASES_BK;
             case "warlord" -> CASES_WL;
-            case "gladiator" -> CASES_GL;
+            case "frostraider" -> CASES_FR;
             case "arcaneblade" -> CASES_AB;
             case "swordcaller" -> CASES_SC;
             case "arcmage" -> CASES_AM;

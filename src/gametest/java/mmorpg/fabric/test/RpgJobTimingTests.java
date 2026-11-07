@@ -43,8 +43,8 @@ public final class RpgJobTimingTests {
     private static final int QUIET = 100;
     private static final int NONE = 200;
     private static final int MAX = 400;
-    /** 0.51.0 재설계안 2판: 첫 피해와 마지막 피해 사이가 QUIET 보다 긴 스킬 (홀름강 — 10 에 열고 140 에 내려찍음) */
-    private static final Map<String, Integer> QUIET_OF = Map.of("gladiator_ult", 160);
+    /** 0.51.0 재설계안 2판: 첫 피해와 마지막 피해 사이가 QUIET 보다 긴 스킬 (없음 — 2026-11-07 홀름강 (10 에 열고 140 에 내려찍음) 이 빠짐) */
+    private static final Map<String, Integer> QUIET_OF = Map.of();
     /** 과녁 거리 (앞 칸 — 없으면 2.5): 멀리 내려앉는 스킬 */
     // 0.50.0 시험 1: 장대 도약 과녁을 7칸에 두었더니 시험 자리 둘레 barrier 벽 속 (바닥 8×8) 이라 숨막힘 피해가 10틱마다 들어갔음 → 5.5칸
     // 2026-11-06 미라주 대시 (트릭스터 2판): 6칸 뛰어들어 내려선 자리 둘레를 벰 — 과녁을 내려설 자리에
@@ -247,12 +247,11 @@ public final class RpgJobTimingTests {
     }
 
     /**
-     * 0.51.0 2차 직업 — 전사 반전 글래디에이터 (재설계안 2판 — 결투가 앞 과녁에서 다음 과녁으로 옮겨가 더 들어감: 다 맞은 것으로 셈 · 홀름강은 결투장
-     * 받는 피해 +15%)
+     * 2026-11-07 2차 직업 — 전사 반전 프로스트 레이더 (재설계안 3판 — 글래디에이터 대신: 프로스트 바이트는 12 에 다시 눌러 되부름 → 17 · 핌불윈터는 46 에 깨짐)
      */
-    @GameTest(environment = "mmorpg:jt_gl", maxTicks = 2400)
-    public void timingGladiator(GameTestHelper h) {
-        probe(h, "gladiator");
+    @GameTest(environment = "mmorpg:jt_fr", maxTicks = 2400)
+    public void timingFrostraider(GameTestHelper h) {
+        probe(h, "frostraider");
     }
 
     /**

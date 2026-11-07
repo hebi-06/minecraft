@@ -46,10 +46,10 @@ public final class JobKit {
         double counter = JobTraits4.counterTake(sp, j);
         // 0.51.0 소드마스터 치명 (투지 8 에서 쓴 스킬 — 위력 × 1.3 · 치명 숫자)
         double crit = JobTraits5.critMult(sp, j);
-        double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투 (상대 + 결투 × 3% · 다른 적 −40%)
+        double frost = JobTraits16.hitMult(sp, e, j); // 2026-11-07 프로스트 레이더 깨짐 (이 사람이 얼린 적 +30%)
         double range = JobTraits9.rangeMult(sp, e, j); // 0.51.0 배틀 아처 난사 (가까운 적 +20% · 먼 적 −30%)
         double exec = JobTraits12.hitMult(sp, e, j); // 0.51.0 엑시큐셔너 처형 덤 (잃은 체력) · 선고 · 섀도 스토크
-        double base = P * mult * veil * crit * duel * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+        double base = P * mult * veil * crit * frost * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
         double flat = flatAdd; // 2026-11-06 어벤저 앙갚음 (strikeFlat — 이 피해에 더하는 고정 피해)
         double dmg = base + counter + flat;
         float before = e.getHealth();
@@ -72,7 +72,7 @@ public final class JobKit {
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
-        JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
+        JobTraits16.afterJobHit(sp, e, j, got); // 2026-11-07 프로스트 레이더 서리 +1 · 얼린 적이면 깨짐 (얼음 조각)
         JobTraits12.afterJobHit(sp, e, j, got); // 0.51.0 소울 리퍼 영혼 (+1 · 가득이면 해방) · 엑시큐셔너 처형
         return got;
     }
@@ -154,10 +154,10 @@ public final class JobKit {
         double veil = JobTraits3.firstHit(sp, j); // 0.29.0 암영의 첫 타
         double counter = JobTraits4.counterTake(sp, j); // 0.30.0 반격 게이지
         double crit = JobTraits5.critMult(sp, j); // 0.51.0 소드마스터 치명
-        double duel = JobTraits6.duelMult(sp, e, j); // 0.51.0 글래디에이터 결투
+        double frost = JobTraits16.hitMult(sp, e, j); // 2026-11-07 프로스트 레이더 깨짐
         double range = JobTraits9.rangeMult(sp, e, j); // 0.51.0 배틀 아처 난사
         double exec = JobTraits12.hitMult(sp, e, j); // 0.51.0 엑시큐셔너 처형 덤
-        double base = P * mult * veil * crit * duel * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
+        double base = P * mult * veil * crit * frost * range * exec * mmorpg.fabric.stattree.StatTrees.atkMult(sp) * RpgCombat.dealtMult.applyAsDouble(sp);
         double flat = flatAdd; // 2026-11-06 어벤저 앙갚음 (strikeFlat — 이 피해에 더하는 고정 피해)
         double dmg = base + counter + flat;
         float before = e.getHealth();
@@ -180,7 +180,7 @@ public final class JobKit {
         float after = e.isRemoved() ? 0 : e.getHealth();
         double got = before > after ? before - after : dmg;
         JobTraits5.afterJobHit(sp, e, j, got); // 0.51.0 블러드 나이트 흡혈 (피의 갈증 · 광란)
-        JobTraits6.afterJobHit(sp, e, j, got); // 0.51.0 글래디에이터 결투 (상대를 맞힘 — 이어짐)
+        JobTraits16.afterJobHit(sp, e, j, got); // 2026-11-07 프로스트 레이더 서리 +1 · 얼린 적이면 깨짐 (얼음 조각)
         JobTraits12.afterJobHit(sp, e, j, got); // 0.51.0 소울 리퍼 영혼 (+1 · 가득이면 해방) · 엑시큐셔너 처형
         return got;
     }

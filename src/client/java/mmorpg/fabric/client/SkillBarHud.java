@@ -416,15 +416,15 @@ public final class SkillBarHud {
                             for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
                             if (i < v) g.fill(bx + 1, ty + 3, bx + 2, ty + 4, 0xFFFFFFFF);
                         }
-                        case "gladiator" -> {
-                            // 0.51.0 결투 (최대 10 — 하나당 상대에게 +3%) — 결투장 돌 말뚝 (3 × 7, 창날처럼 줄 높이만큼): 뾰족한 머리 · 곧은 몸 · 가운데 묶은 띠, 찬 것은
-                            // 첫째 빛 (진홍) + 머리 흰 점 · 띠는 둘째 빛 (모래 금빛), 오른쪽 아래 1칸 그림자
-                            int c = i < v ? bright : dim;
+                        case "frostraider" -> {
+                            // 2026-11-07 빙결 (마지막으로 친 적의 서리 — 최대 5, 다섯이면 얼어붙음) — 얼음 기둥 (5 × 7, 창날처럼 줄 높이만큼): 위아래가 뾰족한 육각
+                            // 기둥, 찬 것은 첫째 빛 (얼음빛 — 다섯이 다 차면 모두 둘째 빛 · 서리 흰빛) + 왼쪽 위 흰 점 (반짝임), 오른쪽 아래 1칸 그림자
+                            int c = i < v ? (v >= max ? col : bright) : dim;
                             int ty = y - 1;
-                            int[][] rows = {{1, 2}, {0, 3}, {0, 3}, {0, 3}, {0, 3}, {0, 3}, {0, 3}};
+                            int[][] rows = {{2, 3}, {1, 4}, {1, 4}, {1, 4}, {1, 4}, {1, 4}, {2, 3}};
                             for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0] + 1, ty + r + 1, bx + rows[r][1] + 1, ty + r + 2, 0xA0000000);
-                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, r == 4 ? (i < v ? col : dim) : c);
-                            if (i < v) g.fill(bx + 1, ty, bx + 2, ty + 1, 0xFFFFFFFF);
+                            for (int r = 0; r < rows.length; r++) g.fill(bx + rows[r][0], ty + r, bx + rows[r][1], ty + r + 1, c);
+                            if (i < v) g.fill(bx + 1, ty + 2, bx + 2, ty + 3, 0xFFFFFFFF);
                         }
                         case "arcaneblade" -> {
                             // 0.51.0 아케인 블레이드 마력 각인 (최대 5 — 다섯이면 거대한 마력 대검) — 마력 결정 (5 × 7 마름모, 창날처럼 줄 높이만큼): 위아래가 뾰족한 결정,

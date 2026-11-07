@@ -8,7 +8,8 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 2026-11-07 재설계안 3판 (직업 스킬 도감 표시 고침 — claude/job-advance-redo.md "2026-11-07 도감 표시 고침") 의 그림: 소드마스터 블레이드 에코의 걸린 칼자국
- * (rfx_jecho) · 엑스칼리버의 빛의 대검 (rfx_jexcal). 그림은 tools/job_fx_art_adv.py → tools/java_fx_add.py.
+ * (rfx_jecho) · 엑스칼리버의 빛의 대검 (rfx_jexcal) · 프로스트 레이더 샤터 · 핌불윈터의 얼음 결정 감옥 (rfx_jicecage). 그림은 tools/job_fx_art_adv.py →
+ * tools/java_fx_add.py.
  */
 final class JobFx16 {
     private JobFx16() {}
@@ -20,6 +21,8 @@ final class JobFx16 {
     /** 빛의 대검 그림의 칼끝 · 손잡이 (칸 가운데에서 반 너비의 몫 — 손잡이 왼쪽 · 칼끝 오른쪽) */
     static final double EXCAL_HILT = 0.94;
     static final double EXCAL_TIP = 0.97;
+    /** rfx_jicecage 장 수 (0 솟음 · 1 번쩍 · 2 ~ 4 갇혀 있음 · 5 금 · 6 깨짐 · 7 흩어짐) */
+    static final int ICECAGE = 8;
 
     /**
      * 걸린 칼자국 (rfx_jecho — 가는 쪽으로 누움, 그림 384 × 64 · 칸 가운데 = 칼자국 가운데): 0 번쩍이며 그어짐 → 1 ~ 4 허공에 걸려 떨림 (loop 면 이어 돌림 — 가는 흰 날 ·
@@ -47,5 +50,15 @@ final class JobFx16 {
     static void risingBlade(ServerLevel level, Vec3 ground, double h, double life, Opt o, double[] glow, double[] core) {
         Vec3 tilt = V.unit(new Vec3((Kit.rand() - 0.5) * 0.18, 1, (Kit.rand() - 0.5) * 0.18));
         excal(level, V.up(ground, -0.3), tilt, h, 1, 7, life, false, o, glow, core);
+    }
+
+    /**
+     * 얼음 결정 감옥 (rfx_jicecage — 세워 카메라 쪽으로 돎, 그림 256 × 384 · 아래 끝 = 땅): ground 에 아래 끝 · 높이 height 칸 (너비 = 높이 × 2/3). 0 서리가 기어올라
+     * 육각 얼음 기둥 다섯이 솟음 → 1 다 솟아 번쩍 → 2 ~ 4 갇혀 있음 (loop 면 이어 돌림 — 비치는 얼음 · 위로 지나가는 빛 띠) → 5 금 → 6 깨짐 → 7 조각이 흩어짐.
+     * 칸 f 부터 n 장을 life 초 (loop 면 fps 8 로 되풀이)
+     */
+    static void iceCage(ServerLevel level, Vec3 ground, double height, int f, int n, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        JobFx.cells(level, "jicecage", ICECAGE, f, n, V.up(ground, height / 2), life, loop ? o.num("fps", 8) : 0, loop, o.with("size", height / 3, "fade", o.num(
+                "fade", 0.1)), glow, core);
     }
 }
