@@ -121,6 +121,11 @@ public final class FieldTown {
 
     /** 둥근 탑: 가운데 (0, 0), 반지름 R · 높이 H, 원뿔 지붕, 문은 남쪽, 안 (마법 부여대 · 책장 둘레 · 자수정) */
     static void tower(Blueprint b, int R, int H, String npc) {
+        tower(b, R, H, npc, true);
+    }
+
+    /** 둥근 탑 (magic = 룬술사의 안 — 마법 부여대 · 책장 · 자수정 · 독서대) */
+    static void tower(Blueprint b, int R, int H, String npc, boolean magic) {
         double ro = R + 0.3;
         for (int x = -R - 1; x <= R + 1; x++) {
             for (int z = -R - 1; z <= R + 1; z++) {
@@ -159,15 +164,17 @@ public final class FieldTown {
         }
         // 사다리 (서쪽 벽 안쪽 — 벽에 붙음, 층 바닥을 뚫고)
         for (int y = 1; y <= 13; y++) b.set(-R + 1, y, 0, "minecraft:ladder[facing=east]");
-        b.set(0, 1, -1, "minecraft:enchanting_table");
-        for (int x = -2; x <= 2; x++) {
-            if (x == 0) continue;
-            b.set(x, 1, -R + 2, "minecraft:bookshelf");
-            b.set(x, 2, -R + 2, "minecraft:bookshelf");
+        if (magic) {
+            b.set(0, 1, -1, "minecraft:enchanting_table");
+            for (int x = -2; x <= 2; x++) {
+                if (x == 0) continue;
+                b.set(x, 1, -R + 2, "minecraft:bookshelf");
+                b.set(x, 2, -R + 2, "minecraft:bookshelf");
+            }
+            b.set(2, 1, 1, "minecraft:amethyst_block");
+            b.set(2, 2, 1, "minecraft:amethyst_cluster[facing=up]");
+            b.set(-1, 1, 2, "minecraft:lectern[facing=south]");
         }
-        b.set(2, 1, 1, "minecraft:amethyst_block");
-        b.set(2, 2, 1, "minecraft:amethyst_cluster[facing=up]");
-        b.set(-1, 1, 2, "minecraft:lectern[facing=south]");
         for (int y : new int[] {6, 12}) b.set(0, y, 0, "minecraft:lantern[hanging=true]");
         if (npc != null) b.mark(npc, 0.5, 1, 1.5, "south");
     }
@@ -278,9 +285,11 @@ public final class FieldTown {
         final int cx;
         final int cz;
         final int g;
-        static final int WALL = 136;
+        static final int WALL = 104;
         static final int PLAZA = 18;
-        static final int RING = 72;
+        static final int RING = 56;
+        /** 성벽 밖 길 (다리에서 오는 길과 이어짐) 끝 */
+        static final int OUTER = 150;
 
         Ground(int cx, int cz, int g) {
             this.cx = cx;
@@ -290,22 +299,22 @@ public final class FieldTown {
 
         @Override
         public int minX() {
-            return cx - WALL - 10;
+            return cx - OUTER;
         }
 
         @Override
         public int maxX() {
-            return cx + WALL + 10;
+            return cx + OUTER;
         }
 
         @Override
         public int minZ() {
-            return cz - WALL - 10;
+            return cz - OUTER;
         }
 
         @Override
         public int maxZ() {
-            return cz + WALL + 10;
+            return cz + OUTER;
         }
 
         private static String pick(String palette, int x, int y, int z) {
@@ -318,7 +327,16 @@ public final class FieldTown {
             int dx = x - cx;
             int dz = z - cz;
             double r = Math.hypot(dx + 0.5, dz + 0.5);
-            if (r > WALL + 9) return;
+            if (r > OUTER) return;
+            if (r > WALL + 9) {
+                // 성벽 밖: 큰길이 흙길로 이어짐 (마을 밖 길과 만남)
+                if (Math.abs(dx) <= 2 || Math.abs(dz) <= 2) {
+                    out.set(g, pick("minecraft:dirt_path|minecraft:dirt_path|minecraft:coarse_dirt", x, g, z));
+                    out.set(g + 1, "minecraft:air");
+                    out.set(g + 2, "minecraft:air");
+                }
+                return;
+            }
             int ax = Math.abs(dx);
             int az = Math.abs(dz);
             boolean avenue = (ax <= 2 || az <= 2) && r > PLAZA - 1 && r < WALL + 9;
@@ -466,7 +484,141 @@ public final class FieldTown {
         }
     }
 
+    // ------------------------------------------------------------------ 나무 · 꽃밭 · 우물 · 밭
+
+    /** 작은 나무 (참나무 · 자작나무 · 가문비 — 잎은 떨어지지 않게) : 밑동 (0, 0) */
+    static void tree(Blueprint b, int kind, int h) {
+        String log = kind == 1 ? "minecraft:birch_log[axis=y]" : kind == 2 ? "minecraft:spruce_log[axis=y]" : "minecraft:oak_log[axis=y]";
+        String leaf = (kind == 1 ? "minecraft:birch_leaves" : kind == 2 ? "minecraft:spruce_leaves" : "minecraft:oak_leaves") + "[persistent=true]";
+        b.set(0, 0, 0, "minecraft:dirt");
+        if (kind == 2) {
+            for (int y = 2; y <= h + 1; y++) {
+                int r = Math.max(0, (h + 1 - y) / 2);
+                for (int x = -r; x <= r; x++) for (int z = -r; z <= r; z++) if (Math.abs(x) + Math.abs(z) <= r + 1) b.set(x, y, z, leaf);
+            }
+            b.set(0, h + 2, 0, leaf);
+        } else {
+            for (int y = h - 1; y <= h + 1; y++) {
+                int r = y == h + 1 ? 1 : 2;
+                for (int x = -r; x <= r; x++) for (int z = -r; z <= r; z++) if (x * x + z * z <= r * r + 1) b.set(x, y, z, leaf);
+            }
+            b.set(0, h + 2, 0, leaf);
+        }
+        b.fill(0, 1, 0, 0, h, 0, log);
+    }
+
+    /** 꽃밭 (풀 위 꽃 — 5 × 2) */
+    static void flowers(Blueprint b, int seed) {
+        String[] f = {"minecraft:poppy", "minecraft:dandelion", "minecraft:cornflower", "minecraft:allium", "minecraft:oxeye_daisy", "minecraft:azure_bluet"};
+        for (int x = 0; x < 5; x++) {
+            for (int z = 0; z < 2; z++) {
+                b.set(x, 0, z, "minecraft:grass_block");
+                b.set(x, 1, z, f[(seed + x * 3 + z) % f.length]);
+            }
+        }
+    }
+
+    /** 우물: 3 × 3 돌 둘레 · 물 · 기둥 넷 · 지붕 */
+    static void well(Blueprint b) {
+        b.air(-2, 1, -2, 2, 5, 2);
+        b.fill(-2, -3, -2, 2, 0, 2, "minecraft:stone_bricks");
+        b.fill(-1, -2, -1, 1, 0, 1, "minecraft:water");
+        b.fill(-2, 1, -2, 2, 1, 2, "minecraft:stone_bricks|minecraft:mossy_stone_bricks");
+        b.fill(-1, 1, -1, 1, 1, 1, "minecraft:air");
+        for (int[] p : new int[][] {{-2, -2}, {2, -2}, {-2, 2}, {2, 2}}) b.fill(p[0], 2, p[1], p[0], 3, p[1], "minecraft:spruce_fence");
+        b.fill(-2, 4, -2, 2, 4, 2, "minecraft:spruce_slab[type=bottom]");
+        b.fill(-1, 4, -1, 1, 4, 1, "minecraft:spruce_planks");
+        b.set(0, 3, 0, "minecraft:lantern[hanging=true]");
+    }
+
+    /** 밭: W × D, 9칸마다 물길 · 작물 (다 자람) · 둘레 울타리 */
+    static void field(Blueprint b, int W, int D, String crop) {
+        b.air(0, 1, 0, W - 1, 2, D - 1);
+        b.fill(0, -1, 0, W - 1, -1, D - 1, "minecraft:dirt");
+        for (int x = 0; x < W; x++) {
+            boolean water = x % 9 == 4;
+            b.fill(x, 0, 0, x, 0, D - 1, water ? "minecraft:water" : "minecraft:farmland[moisture=7]");
+            if (!water) b.fill(x, 1, 0, x, 1, D - 1, crop);
+        }
+        b.walls(-1, 1, -1, W, 1, D, "minecraft:oak_fence");
+        b.air(W / 2, 1, D, W / 2 + 1, 1, D);
+        b.fill(-1, 0, -1, W, 0, -1, "minecraft:dirt_path");
+        b.fill(-1, 0, D, W, 0, D, "minecraft:dirt_path");
+    }
+
     // ------------------------------------------------------------------ 마을 전체
+
+    /** 차지한 칸 (마을 가운데 기준 ± 152) — 건물 · 길 · 나무가 겹치지 않게 */
+    static final class Occ {
+        static final int R = 152;
+        final boolean[] used = new boolean[(2 * R + 1) * (2 * R + 1)];
+        final int cx;
+        final int cz;
+
+        Occ(int cx, int cz) {
+            this.cx = cx;
+            this.cz = cz;
+        }
+
+        boolean free(int x1, int z1, int x2, int z2) {
+            for (int x = x1; x <= x2; x++) {
+                for (int z = z1; z <= z2; z++) {
+                    int dx = x - cx;
+                    int dz = z - cz;
+                    if (Math.abs(dx) > R || Math.abs(dz) > R) return false;
+                    if (used[(dx + R) * (2 * R + 1) + dz + R]) return false;
+                }
+            }
+            return true;
+        }
+
+        void take(int x1, int z1, int x2, int z2) {
+            for (int x = x1; x <= x2; x++) {
+                for (int z = z1; z <= z2; z++) {
+                    int dx = x - cx;
+                    int dz = z - cz;
+                    if (Math.abs(dx) <= R && Math.abs(dz) <= R) used[(dx + R) * (2 * R + 1) + dz + R] = true;
+                }
+            }
+        }
+
+        /** 설계의 상자 둘레 (+ 여백) 를 무조건 차지 (정해진 건물 — 길 곁이어도) */
+        void force(Blueprint b, int margin) {
+            int[] r = bounds(b);
+            take(r[0] - margin, r[2] - margin, r[1] + margin, r[3] + margin);
+        }
+
+        static int[] bounds(Blueprint b) {
+            int x1 = Integer.MAX_VALUE;
+            int x2 = Integer.MIN_VALUE;
+            int z1 = Integer.MAX_VALUE;
+            int z2 = Integer.MIN_VALUE;
+            for (Blueprint.Box x : b.boxes()) {
+                x1 = Math.min(x1, x.x1());
+                x2 = Math.max(x2, x.x2());
+                z1 = Math.min(z1, x.z1());
+                z2 = Math.max(z2, x.z2());
+            }
+            return new int[] {x1, x2, z1, z2};
+        }
+
+        /** 설계의 상자 둘레 (+ 여백) 가 비었으면 차지하고 true */
+        boolean place(Blueprint b, int margin) {
+            int x1 = Integer.MAX_VALUE;
+            int x2 = Integer.MIN_VALUE;
+            int z1 = Integer.MAX_VALUE;
+            int z2 = Integer.MIN_VALUE;
+            for (Blueprint.Box x : b.boxes()) {
+                x1 = Math.min(x1, x.x1());
+                x2 = Math.max(x2, x.x2());
+                z1 = Math.min(z1, x.z1());
+                z2 = Math.max(z2, x.z2());
+            }
+            if (!free(x1 - margin, z1 - margin, x2 + margin, z2 + margin)) return false;
+            take(x1 - margin, z1 - margin, x2 + margin, z2 + margin);
+            return true;
+        }
+    }
 
     /** 마을: 가운데 (cx, cz) · 바닥 높이 g */
     public static Result build(int cx, int cz, int g) {
@@ -474,75 +626,169 @@ public final class FieldTown {
         List<Blueprint.Mark> marks = new ArrayList<>();
         pieces.add(new Ground(cx, cz, g));
         List<Blueprint> bps = new ArrayList<>();
+        Occ occ = new Occ(cx, cz);
+        // 길 · 광장 · 성벽 자리
+        for (int dx = -Occ.R; dx <= Occ.R; dx++) {
+            for (int dz = -Occ.R; dz <= Occ.R; dz++) {
+                double r = Math.hypot(dx + 0.5, dz + 0.5);
+                boolean avenue = (Math.abs(dx) <= 3 || Math.abs(dz) <= 3) && r < Ground.WALL + 30;
+                if (r < Ground.PLAZA + 2 || avenue || Math.abs(r - Ground.RING) < 3 || Math.abs(r - Ground.WALL) < 7) occ.take(cx + dx, cz + dz, cx + dx, cz + dz);
+            }
+        }
         // 광장의 이동 지점 (북서)
         Blueprint way = new Blueprint(cx - 10, g, cz - 10, "south");
         waystone(way, "waystone_midgard");
         bps.add(way);
-        // 북서: 왕녀의 전당 (앞 = 동쪽 큰길)
-        Blueprint hall = front(cx - 6, g, cz - 36, "east", 15, 27);
-        longhouseRoyal(hall, 15, 27, 7, "npc_11");
-        bps.add(hall);
-        // 북동: 할아버지 하랄의 집 (앞 = 서쪽 큰길)
-        Blueprint haral = front(cx + 6, g, cz - 30, "west", 9, 13);
-        longhouse(haral, 9, 13, 4, SPRUCE, "npc_1");
-        bps.add(haral);
-        // 동쪽: 훈련장 (큰길 북쪽) · 무기 스승의 집 넷 (훈련장 북쪽 — 앞 = 남쪽)
-        Blueprint train = new Blueprint(cx + 30, g, cz - 30, "south");
-        trainingGround(train, 46, 24, "npc_2");
-        bps.add(train);
+        // 정해진 건물 (먼저 — 자리를 차지)
+        Blueprint[] fixed = {
+            front(cx - 5, g, cz - 30, "east", 15, 27),   // 왕녀의 전당
+            front(cx + 5, g, cz - 26, "west", 9, 13),    // 하랄의 집
+            new Blueprint(cx + 30, g, cz - 30, "south"), // 훈련장
+            front(cx + 82, g, cz - 20, "west", 9, 11),   // 엘린
+            new Blueprint(cx - 36, g, cz + 26, "east"),  // 룬술사의 탑
+            front(cx - 30, g, cz - 6, "south", 9, 11),   // 볼바
+            front(cx + 5, g, cz + 30, "west", 11, 9),    // 대장간
+            front(cx - 5, g, cz + 30, "east", 11, 17),   // 여관
+            front(cx - 36, g, cz + 70, "north", 11, 13)  // 직업 교관
+        };
+        longhouseRoyal(fixed[0], 15, 27, 7, "npc_11");
+        longhouse(fixed[1], 9, 13, 4, SPRUCE, "npc_1");
+        trainingGround(fixed[2], 46, 24, "npc_2");
+        longhouse(fixed[3], 9, 11, 4, BIRCH, "npc_7");
+        tower(fixed[4], 6, 18, "npc_12");
+        longhouse(fixed[5], 9, 11, 4, DARK, "npc_8");
+        fixed[5].set(4, 1, 2, "minecraft:amethyst_block");
+        fixed[5].set(4, 2, 2, "minecraft:amethyst_cluster[facing=up]");
+        smithy(fixed[6], "npc_9");
+        longhouse(fixed[7], 11, 17, 5, OAK, "npc_10");
+        longhouse(fixed[8], 11, 13, 5, DARK, "job");
+        for (Blueprint b : fixed) {
+            occ.force(b, 2);
+            bps.add(b);
+        }
+        // 무기 스승의 집 넷 (훈련장 북쪽 — 앞 = 남쪽)
         String[] mentors = {"npc_3", "npc_4", "npc_5", "npc_6"};
         Style[] mentorStyle = {SPRUCE, DARK, OAK, BIRCH};
         for (int i = 0; i < mentors.length; i++) {
             Blueprint m = front(cx + 36 + i * 12, g, cz - 34, "south", 9, 11);
             longhouse(m, 9, 11, 4, mentorStyle[i], mentors[i]);
+            occ.force(m, 1);
             bps.add(m);
         }
-        // 활 스승 엘린: 훈련장 동쪽 (앞 = 서쪽)
-        Blueprint elin = front(cx + 82, g, cz - 18, "west", 9, 11);
-        longhouse(elin, 9, 11, 4, BIRCH, "npc_7");
-        bps.add(elin);
-        // 서쪽: 룬술사의 탑 · 마법사 볼바의 집
-        Blueprint rune = new Blueprint(cx - 40, g, cz + 20, "east");
-        tower(rune, 6, 18, "npc_12");
-        bps.add(rune);
-        Blueprint volva = front(cx - 30, g, cz - 8, "south", 9, 11);
-        longhouse(volva, 9, 11, 4, DARK, "npc_8");
-        volva.set(4, 1, 2, "minecraft:amethyst_block");
-        volva.set(4, 2, 2, "minecraft:amethyst_cluster[facing=up]");
-        bps.add(volva);
-        // 남동: 대장간 (앞 = 서쪽 큰길) · 장터 (가게 넷)
-        Blueprint smith = front(cx + 6, g, cz + 30, "west", 11, 9);
-        smithy(smith, "npc_9");
-        bps.add(smith);
+        // 장터 (남동): 돌 바닥 마당 · 가운데 우물 · 가게 둘레
+        int mx = cx + 34;
+        int mz = cz + 30;
+        Blueprint square = new Blueprint(mx - 14, g, mz - 12, "south");
+        square.fill(0, 0, 0, 28, 0, 24, "minecraft:stone_bricks|minecraft:andesite|minecraft:polished_andesite|minecraft:cobblestone");
+        square.air(0, 1, 0, 28, 2, 24);
+        occ.force(square, 1);
+        bps.add(square);
+        Blueprint w = new Blueprint(mx, g, mz, "south");
+        well(w);
+        bps.add(w);
         String[][] stalls = {{"minecraft:red_wool", "minecraft:melon", "shop_0"}, {"minecraft:blue_wool", "minecraft:pumpkin", "shop_5"},
-                {"minecraft:green_wool", "minecraft:hay_block[axis=y]", "shop_10"}, {"minecraft:yellow_wool", "minecraft:bookshelf", null}};
+                {"minecraft:green_wool", "minecraft:hay_block[axis=y]", "shop_10"}, {"minecraft:yellow_wool", "minecraft:bookshelf", null},
+                {"minecraft:purple_wool", "minecraft:amethyst_block", null}, {"minecraft:orange_wool", "minecraft:pumpkin", null}};
+        int[][] stallAt = {{mx - 10, mz - 9, 0}, {mx - 2, mz - 9, 0}, {mx + 6, mz - 9, 0}, {mx - 10, mz + 9, 2}, {mx - 2, mz + 9, 2}, {mx + 6, mz + 9, 2}};
         for (int i = 0; i < stalls.length; i++) {
-            Blueprint st = front(cx + 30 + i * 9, g, cz + 12, "north", 5, 4);
+            Blueprint st = front(stallAt[i][0] + 2, g, stallAt[i][1], stallAt[i][2] == 0 ? "south" : "north", 5, 4);
             stall(st, stalls[i][0], stalls[i][1], stalls[i][2]);
             bps.add(st);
         }
-        // 남서: 여관 (앞 = 동쪽 큰길) · 직업 교관의 집
-        Blueprint inn = front(cx - 6, g, cz + 34, "east", 11, 17);
-        longhouse(inn, 11, 17, 5, OAK, "npc_10");
-        bps.add(inn);
-        Blueprint job = front(cx - 38, g, cz + 50, "north", 11, 13);
-        longhouse(job, 11, 13, 5, DARK, "job");
-        bps.add(job);
-        // 집 여럿 (둘레 길 바깥 — 길을 보게)
-        int i = 0;
-        for (double deg = 8; deg < 360; deg += 23) {
+        // 집: 둘레 길 안쪽 · 바깥쪽 고리 (길을 보게) — 빈 자리만
+        int n = 0;
+        double[][] rings = {{31, 16}, {44, 11}, {68, 7}, {81, 6}, {94, 5.5}};
+        for (double[] ring : rings) {
+            for (double deg = 4; deg < 360; deg += ring[1]) {
+                double a = Math.toRadians(deg + n * 1.7);
+                int hx = cx + (int) Math.round(Math.cos(a) * ring[0]);
+                int hz = cz + (int) Math.round(Math.sin(a) * ring[0]);
+                double toward = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? Math.cos(a) : Math.sin(a);
+                boolean xAxis = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a));
+                // 안쪽 고리는 바깥 (둘레 길) 을, 바깥 고리는 안쪽 (둘레 길) 을 봄
+                boolean faceOut = ring[0] < Ground.RING;
+                String facing = xAxis ? ((toward > 0) == faceOut ? "east" : "west") : ((toward > 0) == faceOut ? "south" : "north");
+                int W = n % 3 == 0 ? 7 : 9;
+                int D = 9 + (n % 4) * 2;
+                Blueprint h = front(hx, g, hz, facing, W, D);
+                longhouse(h, W, D, 4, HOUSES[n % HOUSES.length], null);
+                if (occ.place(h, 2)) {
+                    bps.add(h);
+                    n++;
+                }
+            }
+        }
+        // 빈 자리 채우기: 12칸 격자 — 자리마다 조금씩 옮겨 가며 (아홉 곳 · 작은 집 먼저 큰 집) 들어가는 곳에, 가까운 길 (큰길 · 둘레 길) 을 봄
+        int[][] nudge = {{0, 0}, {4, 0}, {-4, 0}, {0, 4}, {0, -4}, {4, 4}, {-4, -4}, {4, -4}, {-4, 4}};
+        for (int gx = -Ground.WALL; gx <= Ground.WALL; gx += 12) {
+            for (int gz = -Ground.WALL; gz <= Ground.WALL; gz += 12) {
+                boolean done = false;
+                for (int[] nd : nudge) {
+                    if (done) break;
+                    int hx = cx + gx + nd[0];
+                    int hz = cz + gz + nd[1];
+                    int dx = hx - cx;
+                    int dz = hz - cz;
+                    double r = Math.hypot(dx, dz);
+                    if (r > Ground.WALL - 12 || r < Ground.PLAZA + 6) continue;
+                    String facing;
+                    double toRing = Math.abs(r - Ground.RING);
+                    int toAve = Math.min(Math.abs(dx), Math.abs(dz));
+                    if (toAve < toRing) facing = Math.abs(dx) < Math.abs(dz) ? (dx > 0 ? "west" : "east") : (dz > 0 ? "north" : "south");
+                    else {
+                        boolean inside = r < Ground.RING;
+                        boolean xAxis = Math.abs(dx) > Math.abs(dz);
+                        int sgn = xAxis ? Integer.signum(dx) : Integer.signum(dz);
+                        facing = xAxis ? ((sgn > 0) == inside ? "east" : "west") : ((sgn > 0) == inside ? "south" : "north");
+                    }
+                    for (int[] size : new int[][] {{9, 11 + (n % 3) * 2}, {7, 9}}) {
+                        Blueprint h = front(hx, g, hz, facing, size[0], size[1]);
+                        longhouse(h, size[0], size[1], 4, HOUSES[n % HOUSES.length], null);
+                        if (occ.place(h, 1)) {
+                            bps.add(h);
+                            n++;
+                            done = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // 성벽 밖 밭 넷 (대각선) · 목장
+        String[] crops = {"minecraft:wheat[age=7]", "minecraft:carrots[age=7]", "minecraft:potatoes[age=7]", "minecraft:beetroots[age=3]"};
+        int f = 0;
+        for (double deg : new double[] {28, 62, 118, 152, 208, 242, 298, 332}) {
             double a = Math.toRadians(deg);
-            int hx = cx + (int) Math.round(Math.cos(a) * (Ground.RING + 14));
-            int hz = cz + (int) Math.round(Math.sin(a) * (Ground.RING + 14));
-            if (Math.abs(hx - cx) < 12 || Math.abs(hz - cz) < 12) continue; // 큰길 곁은 비움
-            if (hz < cz - 20 && hx > cx + 20 && hx < cx + 92) continue; // 훈련장 · 스승의 집 자리
-            String facing = Math.abs(Math.cos(a)) > Math.abs(Math.sin(a)) ? (Math.cos(a) > 0 ? "west" : "east") : (Math.sin(a) > 0 ? "north" : "south");
-            int W = i % 3 == 0 ? 7 : 9;
-            int D = 9 + (i % 4) * 2;
-            Blueprint h = front(hx, g, hz, facing, W, D);
-            longhouse(h, W, D, 4, HOUSES[i % HOUSES.length], null);
-            bps.add(h);
-            i++;
+            int fx = cx + (int) Math.round(Math.cos(a) * 128) - 9;
+            int fz = cz + (int) Math.round(Math.sin(a) * 128) - 6;
+            Blueprint fb = new Blueprint(fx, g, fz, "south");
+            field(fb, 19, 12, crops[f % crops.length]);
+            if (occ.place(fb, 1)) {
+                bps.add(fb);
+                f++;
+            }
+        }
+        // 나무 · 꽃밭 (성벽 안 빈 자리)
+        for (int gx = -Ground.WALL; gx <= Ground.WALL; gx += 11) {
+            for (int gz = -Ground.WALL; gz <= Ground.WALL; gz += 11) {
+                double jx = FieldNoise.hash(gx, gz, 41) * 6 - 3;
+                double jz = FieldNoise.hash(gx, gz, 42) * 6 - 3;
+                int x = cx + gx + (int) jx;
+                int z = cz + gz + (int) jz;
+                double r = Math.hypot(x - cx, z - cz);
+                if (r > Ground.WALL - 9 || r < Ground.PLAZA + 4) continue;
+                double roll = FieldNoise.hash(gx, gz, 43);
+                if (roll < 0.42) {
+                    Blueprint t = new Blueprint(x, g, z, "south");
+                    int kind = (int) (FieldNoise.hash(gx, gz, 44) * 3);
+                    tree(t, kind, 4 + (int) (FieldNoise.hash(gx, gz, 45) * 2));
+                    if (occ.place(t, 1)) bps.add(t);
+                } else if (roll < 0.62) {
+                    Blueprint fl = new Blueprint(x, g, z, "south");
+                    flowers(fl, (int) (roll * 100));
+                    if (occ.place(fl, 1)) bps.add(fl);
+                }
+            }
         }
         for (Blueprint bp : bps) {
             pieces.add(bp.piece("town"));

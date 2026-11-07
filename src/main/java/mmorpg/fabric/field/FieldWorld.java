@@ -33,6 +33,7 @@ public final class FieldWorld {
         Registry.register(BuiltInRegistries.BIOME_SOURCE, Mmorpg.id("field"), FieldBiomeSource.CODEC);
         ServerLifecycleEvents.SERVER_STARTED.register(FieldWorld::onStarted);
         FieldPieces.init();
+        FieldWaystones.init();
     }
 
     /** 지형 (field.json 한 벌 — 처음 쓸 때 만듦) */
@@ -62,7 +63,12 @@ public final class FieldWorld {
     private static void onStarted(MinecraftServer server) {
         ServerLevel level = server.overworld();
         if (!isField(level)) return;
-        if (SETUP_VERSION.equals(Props.world(server, SETUP_KEY))) return;
+        if (!SETUP_VERSION.equals(Props.world(server, SETUP_KEY))) borderAndSpawn(server, level);
+        FieldSetup.run(server, level);
+    }
+
+    /** 세계 경계 (field.json border) · 시작 자리 (마을 광장 남쪽) */
+    private static void borderAndSpawn(MinecraftServer server, ServerLevel level) {
         FieldPlan plan = terrain().plan();
         level.getWorldBorder().setCenter(plan.borderX, plan.borderZ);
         level.getWorldBorder().setSize(plan.borderSize);

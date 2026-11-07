@@ -111,7 +111,7 @@ public final class FieldTerrain {
         for (FieldPlan.Site s : plan.sites) {
             double flat;
             switch (s.kind()) {
-                case "town", "camp" -> flat = s.r();
+                case "town", "camp", "hamlet" -> flat = s.r();
                 case "tree" -> flat = Math.max(24, s.r() * 0.5);
                 case "boss" -> {
                     Obj b = s.boss() == null ? null : bosses.objOrNull(s.boss());
@@ -331,7 +331,8 @@ public final class FieldTerrain {
             case "village" -> {
                 h = sea + 1 + smooth(d / 36) * 7;
                 h += 3.5 * noise.fbm(x / 150, z / 150, 3) * smooth(d / 60) + 1.1 * noise.fbm(x / 34, z / 34, 2);
-                if (out != null) out.biome = "mmorpg:midgard";
+                boolean grove = noise.fbm(x / 190 + 3, z / 190 - 8, 2) > 0.16 && d > 45;
+                if (out != null) out.biome = grove ? "mmorpg:midgard_grove" : "mmorpg:midgard";
             }
             case "farm" -> {
                 h = sea + 1 + smooth(d / 30) * 5;
@@ -422,24 +423,30 @@ public final class FieldTerrain {
     private void buildRoads() {
         for (FieldPlan.Island is : plan.islands) {
             List<double[]> nodes = new ArrayList<>();
+            List<double[]> landings = new ArrayList<>();
             double[] hub = null;
             for (FieldPlan.Site s : plan.sites) {
                 if (!s.island().equals(is.id())) continue;
                 if (s.kind().equals("camp") || s.kind().equals("town")) hub = new double[] {s.x(), s.z()};
             }
             for (Span sp : spans) {
-                if (sp.bridge().from().equals(is.id())) nodes.add(new double[] {sp.ax(), sp.az()});
-                if (sp.bridge().to().equals(is.id())) nodes.add(new double[] {sp.bx(), sp.bz()});
+                if (sp.bridge().from().equals(is.id())) landings.add(new double[] {sp.ax(), sp.az()});
+                if (sp.bridge().to().equals(is.id())) landings.add(new double[] {sp.bx(), sp.bz()});
             }
             for (FieldPlan.Site s : plan.sites) {
                 if (!s.island().equals(is.id())) continue;
-                if (s.kind().equals("zone") || s.kind().equals("boss") || s.kind().equals("tree")) nodes.add(new double[] {s.x(), s.z()});
+                if (s.kind().equals("zone") || s.kind().equals("boss") || s.kind().equals("tree") || s.kind().equals("hamlet")) nodes.add(new double[] {s.x(), s.z()});
             }
-            if (nodes.isEmpty()) continue;
-            if (hub == null) hub = nodes.remove(0);
-            // 가까운 것부터 이어 붙임 (Prim): 이미 이어진 점 가운데 가장 가까운 곳에서 갈라짐
+            if (hub == null && !landings.isEmpty()) hub = landings.remove(0);
+            if (hub == null && !nodes.isEmpty()) hub = nodes.remove(0);
+            if (hub == null) continue;
+            // 다리 끝은 거점 (마을) 으로 곧장, 나머지는 가까운 것부터 이어 붙임 (Prim): 이미 이어진 점 가운데 가장 가까운 곳에서 갈라짐
             List<double[]> done = new ArrayList<>();
             done.add(hub);
+            for (double[] l : landings) {
+                curve(hub, l, 3.0, 0.07, roads);
+                done.add(l);
+            }
             List<double[]> left = new ArrayList<>(nodes);
             while (!left.isEmpty()) {
                 double best = Double.MAX_VALUE;
@@ -547,6 +554,7 @@ public final class FieldTerrain {
             if (r >= p.blend()) continue;
             h = lerp(h, p.y(), smoothstep(p.blend(), p.flat(), r));
             if (r < p.flat()) out.flags |= p.kind().equals("landing") ? LANDING : PLOT;
+            if (r < p.flat() && p.kind().equals("town")) out.biome = "mmorpg:midgard_town"; // 마을 안: 나무가 저절로 나지 않는 바이옴 (건물 · 길 사이는 설계한 나무)
         }
         if (best.terrain().equals("village")) {
             FieldPlan.Site tree = plan.site("tree");

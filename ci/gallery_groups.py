@@ -8,7 +8,7 @@
 출력: GITHUB_OUTPUT 줄 'groups=<JSON 목록>' — 항목 {name, only, prod}
 사진첩 키: client weapon particle skill rune gear form nav mob arena boss monster tree
           scorpions kraken worm jorm nidhogg skoll ymir surtr mount pvp stattree runebreak mob9 hero skillbar weapons12 cosmetic gacha limited market storage rpgui
-          glacier pairs job jobup void voidknight hel voidarmor artifact motion relic smith workshop fx3d field
+          glacier pairs job jobup void voidknight hel voidarmor artifact motion relic smith workshop fx3d field fieldb
 """
 import json
 import sys

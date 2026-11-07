@@ -358,6 +358,19 @@ public final class Dummy {
         return e;
     }
 
+    /** 2026-11-07 섬 맵 (FieldSetup): 그 자리에 허수아비 (yaw 쪽을 봄). 못 세웠으면 null */
+    public static TrainingDummy spawnDummyAt(ServerLevel level, Vec3 loc, float yaw) {
+        TrainingDummy e = TYPE.create(level, net.minecraft.world.entity.EntitySpawnReason.COMMAND);
+        if (e == null) return null;
+        e.snapTo(loc.x, loc.y, loc.z, yaw, 0F);
+        e.setYHeadRot(yaw);
+        e.setYBodyRot(yaw);
+        if (!level.addFreshEntity(e)) return null;
+        setAnchor(e, loc);
+        setLabel(e, dummyLabel(null));
+        return e;
+    }
+
     /** 허수아비 치우기 (기록 · 표시도 — removeDummy) */
     public static void removeDummy(TrainingDummy e) {
         if (e.isRemoved()) return;

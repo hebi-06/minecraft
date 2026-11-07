@@ -11,6 +11,7 @@ import mmorpg.core.field.FieldTerrain;
 import mmorpg.fabric.Mmorpg;
 import mmorpg.fabric.field.FieldBlocks;
 import mmorpg.fabric.field.FieldChunkGenerator;
+import mmorpg.fabric.field.FieldExtras;
 import mmorpg.fabric.field.FieldPieces;
 import mmorpg.fabric.field.FieldWorld;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
@@ -95,7 +96,10 @@ public final class RpgFieldTests {
         List<String> unknown = new ArrayList<>();
         for (String s : texts) if (!s.equals("minecraft:air") && FieldPieces.state(s).isAir()) unknown.add(s);
         h.assertTrue(unknown.isEmpty(), "every building block is a Java block (" + texts.size() + " kinds, unknown " + unknown + ")");
-        LOG.info("[field-test] OK preset · {} biomes · {} columns · {} building block kinds", seen.size(), ok, texts.size());
+        // 미리 짓는 것: 보스 신전 (field.json boss 자리마다) · 세계수
+        h.assertTrue(FieldExtras.altars().size() == plan.sites("boss").size(), "temples " + FieldExtras.altars().size() + "/" + plan.sites("boss").size());
+        h.assertTrue(FieldExtras.treeBase() != null, "world tree base");
+        LOG.info("[field-test] OK preset · {} biomes · {} columns · {} building block kinds · {} temples", seen.size(), ok, texts.size(), FieldExtras.altars().size());
         h.succeed();
     }
 }

@@ -47,6 +47,7 @@ public final class FieldBuild {
             out.addAll(r.pieces());
             marks.addAll(r.marks());
         }
+        FieldCamps.build(t, out, marks);
         return new Built(List.copyOf(out), List.copyOf(marks));
     }
 

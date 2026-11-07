@@ -21,7 +21,7 @@ public final class FieldTest {
 
     /** 게임의 data/mmorpg/worldgen/biome/*.json 과 같은 목록 */
     public static final Set<String> BIOMES = Set.of("mmorpg:open_sea", "mmorpg:shallows", "mmorpg:frozen_shallows", "mmorpg:rift_shallows", "mmorpg:ember_shallows",
-            "mmorpg:midgard", "mmorpg:harvest_fields", "mmorpg:harvest_woods", "mmorpg:dune_sea", "mmorpg:red_mesa", "mmorpg:oasis", "mmorpg:fjord_coast",
+            "mmorpg:midgard", "mmorpg:midgard_town", "mmorpg:midgard_grove", "mmorpg:harvest_fields", "mmorpg:harvest_woods", "mmorpg:dune_sea", "mmorpg:red_mesa", "mmorpg:oasis", "mmorpg:fjord_coast",
             "mmorpg:mire", "mmorpg:frost_taiga", "mmorpg:frost_peaks", "mmorpg:glacier", "mmorpg:void_rift", "mmorpg:helheim", "mmorpg:muspelheim");
 
     private static final List<String> BAD = new ArrayList<>();

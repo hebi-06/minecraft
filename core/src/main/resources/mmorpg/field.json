@@ -42,6 +42,11 @@
   "sites": [
     {"id": "town", "kind": "town", "island": "midgard", "x": 0, "z": 60, "r": 150, "name": "마을"},
     {"id": "tree", "kind": "tree", "island": "midgard", "x": 0, "z": -215, "r": 70, "name": "세계수"},
+    {"id": "hamlet_nw", "kind": "hamlet", "island": "midgard", "x": -235, "z": -150, "r": 24, "name": "서리풀 마을"},
+    {"id": "hamlet_ne", "kind": "hamlet", "island": "midgard", "x": 255, "z": -120, "r": 24, "name": "해돋이 마을"},
+    {"id": "hamlet_sw", "kind": "hamlet", "island": "midgard", "x": -175, "z": 230, "r": 24, "name": "물레방아 마을"},
+    {"id": "hamlet_farm", "kind": "hamlet", "island": "harvest", "x": 1210, "z": 330, "r": 24, "name": "밀밭 마을"},
+    {"id": "hamlet_fjord", "kind": "hamlet", "island": "tides", "x": -1020, "z": -330, "r": 24, "name": "갈매기 마을"},
 
     {"id": "farm_camp", "kind": "camp", "island": "harvest", "x": 840, "z": 30, "r": 40, "npc": 13, "name": "올라프의 농가"},
     {"id": "z_scarecrow_a", "kind": "zone", "island": "harvest", "x": 880, "z": -90, "mob": "scarecrow"},
@@ -62,7 +67,7 @@
     {"id": "b_scorpions", "kind": "boss", "island": "sands", "x": 360, "z": 1290, "boss": "scorpions"},
     {"id": "b_great_worm", "kind": "boss", "island": "sands", "x": -320, "z": 1580, "boss": "great_worm"},
 
-    {"id": "sea_camp", "kind": "camp", "island": "tides", "x": -770, "z": -20, "r": 45, "npc": 15, "name": "비요른의 항구"},
+    {"id": "sea_camp", "kind": "camp", "island": "tides", "x": -702, "z": 75, "r": 30, "npc": 15, "name": "비요른의 항구"},
     {"id": "z_skeljaskrimsli_a", "kind": "zone", "island": "tides", "x": -880, "z": 170, "mob": "skeljaskrimsli"},
     {"id": "z_skeljaskrimsli_b", "kind": "zone", "island": "tides", "x": -900, "z": -210, "mob": "skeljaskrimsli"},
     {"id": "z_crab_a", "kind": "zone", "island": "tides", "x": -1060, "z": 390, "mob": "crab"},

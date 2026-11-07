@@ -90,5 +90,12 @@ public final class FieldPieces {
                 }
             }
         }
+        // 게임 쪽 설계 (세계수 · 보스 신전)
+        for (FieldExtras.StatePiece p : FieldExtras.pieces()) {
+            if (p.maxX() < bx || p.minX() > bx + 15 || p.maxZ() < bz || p.minZ() > bz + 15) continue;
+            for (int x = Math.max(bx, p.minX()); x <= Math.min(bx + 15, p.maxX()); x++) {
+                for (int z = Math.max(bz, p.minZ()); z <= Math.min(bz + 15, p.maxZ()); z++) p.place(level, pos, x, z, minY, maxY);
+            }
+        }
     }
 }

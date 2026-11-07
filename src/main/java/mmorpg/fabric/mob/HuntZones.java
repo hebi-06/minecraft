@@ -241,6 +241,26 @@ public final class HuntZones {
                 + Js.str(ACTIVE) + "칸 안에 사람이 있을 때)";
     }
 
+    /**
+     * 2026-11-07 섬 맵 (FieldSetup): 그 자리에 사냥터 기록만 남김 (몬스터는 사람이 가까이 오면 zoneTick 이 채움). 같은 차원 · 자리 · 종류가 이미 있으면 그것,
+     * 모르는 종류 · 가득 찼으면 null
+     */
+    public static Zone addZoneAt(MinecraftServer s, ServerLevel level, String kind, int count, int x, int y, int z) {
+        if (server == null) server = s;
+        Monsters.Kind k = Monsters.kind(kind);
+        if (k == null) return null;
+        List<Zone> list = load();
+        String dim = NpcData.dimId(level);
+        for (Zone old : list) if (old.kind().equals(k.key()) && old.dim().equals(dim) && old.x() == x && old.z() == z) return old;
+        if (list.size() >= MAX_ZONES) return null;
+        int seq = (int) Props.worldNum(server, W_SEQ, 0) + 1;
+        Props.setWorld(server, W_SEQ, String.valueOf(seq));
+        Zone zone = new Zone("z" + seq, k.key(), Math.max(1, Math.min(MAX_COUNT, count)), dim, x, y, z);
+        list.add(zone);
+        save();
+        return zone;
+    }
+
     /** /mobzone clear: 가장 가까운 사냥터 (range 칸 안) 와 그 몬스터 (불러와진 것) 를 치움 — 알림 글 */
     public static String removeNearestZone(ServerPlayer sp, double range) {
         server(sp);
