@@ -89,8 +89,7 @@ public final class VanillaStats {
         f.set(ENDER, Slot.of(Icon.sprite("ender_chest"), "§d창고").lore("§7엔더 창고 (큰 상자 5개)"));
         f.set(MOUNT, Slot.of(Icon.sprite("icon_mount"), "§b탈것").lore("§7고른 탈것을 불러 탐 · 타고 있으면 돌려보냄"));
         f.set(MOUNT_SELECT, Slot.of(new ItemStack(Items.SADDLE), "§b탈것 고르기"));
-        ItemStack rune = mmorpg.fabric.rune.SkillBar.get(sp, 0);
-        f.set(SKILLS, Slot.of(rune.isEmpty() ? new ItemStack(Items.ENCHANTED_BOOK) : rune.copy(), "§b스킬 칸").lore("§7룬 올리기 · 빼기 · 옮기기, 직업 스킬 보기",
+        f.set(SKILLS, Slot.of(skillIcon(sp), "§b스킬 칸").lore("§7룬 올리기 · 빼기 · 옮기기, 직업 스킬 보기",
                 "§7F 로 룬 스킬 → 직업 스킬 → 일반"));
         f.set(TREE, Slot.of(new ItemStack(Items.OAK_SAPLING), "§a스탯 트리").lore("§7스탯마다 받은 칸 · 고를 갈래 (채팅)"));
         f.set(ARTIFACT, Slot.of(new ItemStack(Items.AMETHYST_SHARD), "§d아티팩트").lore("§7낀 아티팩트 요약 (채팅)"));
@@ -98,6 +97,18 @@ public final class VanillaStats {
         f.set(CLOSE, Slot.of(Icon.sprite("icon_cross"), "§c닫기"));
         f.fillEmpty();
         f.show(sp, sel -> click(sp, sel));
+    }
+
+    /** 스킬 칸 단추 그림: 첫 룬의 그림만 (룬 아이템 그대로면 룬 설명이 단추 설명에 섞임) — 룬이 없으면 마법 책 */
+    private static ItemStack skillIcon(ServerPlayer sp) {
+        for (ItemStack st : mmorpg.fabric.rune.SkillBar.slots(sp)) {
+            net.minecraft.resources.Identifier model = st.isEmpty() ? null : st.get(net.minecraft.core.component.DataComponents.ITEM_MODEL);
+            if (model == null) continue;
+            ItemStack icon = new ItemStack(Items.PAPER);
+            icon.set(net.minecraft.core.component.DataComponents.ITEM_MODEL, model);
+            return icon;
+        }
+        return new ItemStack(Items.ENCHANTED_BOOK);
     }
 
     /** 기준 무기의 아이템 (가진 것 — 강화 · 꾸밈 그대로, 없으면 그 무기 아이템) */
