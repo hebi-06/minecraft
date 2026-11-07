@@ -47,7 +47,8 @@ final class VanillaProbe {
     }
 
     /** 4b 시험: 스탯 창 투자 전 값 · 옮긴 룬 · 가방의 룬 수 */
-    private static int strBefore, pointBefore, bagRunes;
+    private static int strBefore, pointBefore, bagRunes, bagSlot;
+    private static net.minecraft.world.inventory.AbstractContainerMenu statsMenu;
     private static ItemStack movedRune = ItemStack.EMPTY;
 
     private static int countRunes(ServerPlayer p) {
@@ -224,62 +225,87 @@ final class VanillaProbe {
                         && Integer.valueOf(7).equals(m.get("num")) && Boolean.FALSE.equals(m.get("on")));
                 next(p, 26, 20);
             }
-            case 26 -> { // 4b: 스탯 창 (상자 메뉴)
+            case 26 -> { // 4b: 스탯 창 (그림 창 — VanillaStats)
                 mmorpg.fabric.RpgPlayers.addPoints(p, 10);
                 mmorpg.fabric.RpgNet.openStats(p);
                 next(p, 27, 20);
             }
             case 27 -> {
-                check("stats window open", p.containerMenu != p.inventoryMenu && mmorpg.fabric.ui.Forms.pendingId(p) >= 0);
+                check("stats window open", p.containerMenu != p.inventoryMenu);
+                statsMenu = p.containerMenu;
                 strBefore = mmorpg.fabric.RpgData.of(p).str();
                 pointBefore = mmorpg.fabric.RpgData.of(p).point();
                 say(p, "shot 12_stats");
                 next(p, 28, 20);
             }
             case 28 -> {
-                say(p, "slot 11"); // 힘 +1
-                next(p, 29, 20);
+                say(p, "slot 8"); // 힘 + 단추 좌클릭 (+1)
+                next(p, 29, 15);
             }
             case 29 -> {
                 mmorpg.fabric.RpgData d = mmorpg.fabric.RpgData.of(p);
-                check("str +1 from stats window", d.str() == strBefore + 1 && d.point() == pointBefore - 1);
-                check("stats window still open (same menu)", p.containerMenu != p.inventoryMenu);
-                say(p, "slot 49"); // 스킬 칸
-                next(p, 30, 20);
+                check("str +1 (left click)", d.str() == strBefore + 1 && d.point() == pointBefore - 1);
+                say(p, "shiftslot 8"); // Shift + 좌클릭 (+5)
+                next(p, 30, 15);
             }
             case 30 -> {
-                check("skill bar window open", p.containerMenu != p.inventoryMenu && mmorpg.fabric.ui.Forms.pendingId(p) >= 0);
-                say(p, "shot 13_skillbar");
+                mmorpg.fabric.RpgData d = mmorpg.fabric.RpgData.of(p);
+                check("str +5 (shift left click)", d.str() == strBefore + 6 && d.point() == pointBefore - 6);
+                check("stats window still open (same menu)", p.containerMenu == statsMenu);
+                say(p, "shot 12b_stats_after");
                 next(p, 31, 20);
             }
             case 31 -> {
-                movedRune = mmorpg.fabric.rune.SkillBar.get(p, 0).copy();
-                say(p, "slot 9"); // 룬 칸 1 고르기
-                next(p, 32, 15);
+                say(p, "slot 72"); // 아랫줄 스킬 칸 단추 (가방 자리 줄 8 · 칸 0)
+                next(p, 32, 20);
             }
             case 32 -> {
-                say(p, "slot 14"); // 룬 칸 6 (비어 있음) 으로 옮기기
-                next(p, 33, 15);
+                check("skill bar window open", p.containerMenu != p.inventoryMenu && p.containerMenu != statsMenu);
+                say(p, "shot 13_skillbar");
+                next(p, 33, 20);
             }
             case 33 -> {
+                movedRune = mmorpg.fabric.rune.SkillBar.get(p, 0).copy();
+                say(p, "slot 9"); // 룬 칸 1 고르기
+                next(p, 34, 15);
+            }
+            case 34 -> {
+                say(p, "slot 14"); // 룬 칸 6 (비어 있음) 으로 옮기기
+                next(p, 35, 15);
+            }
+            case 35 -> {
                 check("rune moved 1 -> 6", mmorpg.fabric.rune.SkillBar.get(p, 0).isEmpty()
                         && ItemStack.isSameItem(mmorpg.fabric.rune.SkillBar.get(p, 5), movedRune) && !movedRune.isEmpty());
                 bagRunes = countRunes(p);
                 say(p, "slot 14"); // 룬 칸 6 고르기
-                next(p, 34, 15);
-            }
-            case 34 -> {
-                say(p, "slot 17"); // 빼기
-                next(p, 35, 15);
-            }
-            case 35 -> {
-                check("rune removed to bag", mmorpg.fabric.rune.SkillBar.get(p, 5).isEmpty() && countRunes(p) == bagRunes + 1);
-                say(p, "shot 14_skillbar_after");
-                next(p, 36, 20);
+                next(p, 36, 15);
             }
             case 36 -> {
+                say(p, "slot 17"); // 빼기
+                next(p, 37, 15);
+            }
+            case 37 -> {
+                check("rune removed to bag", mmorpg.fabric.rune.SkillBar.get(p, 5).isEmpty() && countRunes(p) == bagRunes + 1);
+                bagSlot = -1;
+                for (int i = 0; i < net.minecraft.world.entity.player.Inventory.INVENTORY_SIZE; i++) {
+                    if (ItemStack.isSameItem(p.getInventory().getItem(i), movedRune)) bagSlot = i;
+                }
+                // 가방 칸 → 메뉴 칸 (가방 줄 54 ~ 80 = 가방 9 ~ 35, 핫바 81 ~ 89 = 0 ~ 8)
+                say(p, "slot " + (bagSlot < 9 ? 81 + bagSlot : 54 + bagSlot - 9)); // 가방의 그 룬 고르기
+                next(p, 38, 15);
+            }
+            case 38 -> {
+                say(p, "slot 9"); // 룬 칸 1 에 올리기
+                next(p, 39, 15);
+            }
+            case 39 -> {
+                check("bag rune equipped to 1", bagSlot >= 0 && ItemStack.isSameItem(mmorpg.fabric.rune.SkillBar.get(p, 0), movedRune));
+                say(p, "shot 14_skillbar_after");
+                next(p, 40, 20);
+            }
+            case 40 -> {
                 say(p, "close");
-                next(p, 37, 20);
+                next(p, 41, 20);
             }
             default -> {
                 say(p, "done");
