@@ -2,6 +2,8 @@ package mmorpg.fabric.field;
 
 import mmorpg.core.field.FieldNoise;
 import mmorpg.core.field.FieldTerrain.Surface;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -18,12 +20,15 @@ public final class FieldBlocks {
     static final BlockState END_STONE = Blocks.END_STONE.defaultBlockState();
     static final BlockState BLACKSTONE = Blocks.BLACKSTONE.defaultBlockState();
 
-    private static final BlockState[] BANDS = {
-        Blocks.TERRACOTTA.defaultBlockState(), Blocks.ORANGE_TERRACOTTA.defaultBlockState(), Blocks.YELLOW_TERRACOTTA.defaultBlockState(),
-        Blocks.TERRACOTTA.defaultBlockState(), Blocks.RED_TERRACOTTA.defaultBlockState(), Blocks.WHITE_TERRACOTTA.defaultBlockState(),
-        Blocks.LIGHT_GRAY_TERRACOTTA.defaultBlockState(), Blocks.ORANGE_TERRACOTTA.defaultBlockState(), Blocks.BROWN_TERRACOTTA.defaultBlockState(),
-        Blocks.TERRACOTTA.defaultBlockState()
-    };
+    /** 메사 띠 (색 테라코타 — 26.3 은 색 블록을 묶음으로 두므로 이름으로 찾음) */
+    private static final BlockState[] BANDS = bands("terracotta", "orange_terracotta", "yellow_terracotta", "terracotta", "red_terracotta", "white_terracotta",
+            "light_gray_terracotta", "orange_terracotta", "brown_terracotta", "terracotta");
+
+    private static BlockState[] bands(String... ids) {
+        BlockState[] out = new BlockState[ids.length];
+        for (int i = 0; i < ids.length; i++) out[i] = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(ids[i])).defaultBlockState();
+        return out;
+    }
 
     /** 겉흙 블록 (x · y · z 로 띠 · 반짝임을 고름) */
     public static BlockState of(Surface s, int x, int y, int z) {

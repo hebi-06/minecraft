@@ -11,6 +11,7 @@ import mmorpg.fabric.tree.TreeBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 
@@ -83,7 +84,8 @@ public final class FieldPieces {
                     final int fz = z;
                     p.column(x, z, col, (y, block) -> {
                         if (y < minY || y > maxY) return;
-                        chunk.setBlockState(pos.set(fx, y, fz), state(block), 0);
+                        // 장식 단계의 세계 쓰기: 블록 엔티티 (모닥불 등) 를 만들고, 울타리 · 계단 · 판유리 이음은 청크가 다 될 때 맞춰짐 (post-process)
+                        level.setBlock(pos.set(fx, y, fz), state(block), Block.UPDATE_CLIENTS);
                     });
                 }
             }
