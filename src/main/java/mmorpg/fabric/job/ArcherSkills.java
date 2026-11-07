@@ -18,7 +18,8 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * 0.28.0 궁수 직업 스킬 (jobs.json archer — 연두 · 금빛, 특성 「호흡」): 속사 · 바람 타기 · 화살비 · 정조준 · 관천일시. 화살은 공격 피해.
+ * 0.28.0 궁수 직업 스킬 (jobs.json archer — 연두 · 금빛, 특성 「정령 교감」 (2026-11-07 재설계안 3판 — 정령 궁수: 호흡에서 이름 · 그림만)): 스위프트 볼리 · 게일 스텝 ·
+ * 애로우 템페스트 · 와일드 헌트 (늑대 정령 — SpiritWolves) · 스피릿 스탬피드 (사슴 정령 왕 · 늑대 무리 · 정령 꽃). 화살은 공격 피해.
  * 빠른 연타 (속사 · 화살비의 한 물결) 는 피해를 한 번에 넣고 숫자를 여러 줄로 (메이플식 쌓이는 숫자 — JobKit.strikeSplit).
  * 연출 = 메이플식 2D 그림 (JobFx — 빛의 화살 · 빛의 활 · 과녁 · 바람 고리 · 굵은 광선 · 터짐).
  */
@@ -61,7 +62,7 @@ final class ArcherSkills {
         String life = RuneKit.lifeToken(sp);
         // 0.50.0 동작: 쏘며 뒤로 짧게 뜀 (back 칸) — 화살은 손에서 그대로
         JobMove.run(sp, JobMove.hop(0, Math.max(6, (n - 1) * every + 3), JobMove.ahead(sp, -k.num("back", 1.5), 0), 0.5));
-        if (n > (int) k.num("arrows", 3)) JobSystem.note(sp, "§a호흡 " + breath + " §7→ " + n + "발");
+        if (n > (int) k.num("arrows", 3)) JobSystem.note(sp, "§a교감 " + breath + " §7→ " + n + "발");
         for (int i = 0; i < n; i++) {
             int ii = i;
             RuneKit.later(i * every, () -> {
@@ -266,11 +267,12 @@ final class ArcherSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 정조준
+    // ------------------------------------------------------------ 와일드 헌트 (2026-11-07 재설계안 3판 — 이글 아이 대신, 정령 궁수)
 
     /**
-     * 정조준: dur 틱 태세 — 호흡 즉시 가득 · 움직여도 줄지 않음 · 활 평타 관통 (폭 width) · 치명타 + crit (JobTraitsMore). 그림: 몸에서 솟는 빛 · 1인칭 눈앞 과녁이 조여 듦 ·
-     * 발밑 둥근 베기 · 글자, 태세 동안 8틱마다 활 앞 금빛 반짝임 (JobTraits) · 쏠 때마다 화살 끝 금빛
+     * 와일드 헌트 (archer_focus — id 는 강화 기록이 이어지게 그대로): dur 틱 태세 — 교감 즉시 가득 · 움직여도 줄지 않음 · 활 평타 관통 (폭 width) · 늑대 정령 wolves 마리
+     * (진짜 몹 — SpiritWolves) 가 곁에서 달리다 활 평타가 겨눈 적을 맞힐 때마다 그 적에게 뛰어올라 물어뜯음 (평타 × bite — JobTraitsMore.onWeaponHit).
+     * 그림: 활을 하늘로 들어 부름 (동작) · 발밑 정령빛 고리 · 둘레에서 감겨 드는 금빛 · 늑대가 깨어나며 울부짖음 · 잎이 흩날림
      */
     static boolean focus(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         int dur = (int) k.num("dur", 200);
@@ -278,14 +280,16 @@ final class ArcherSkills {
         JobTraitsMore.focusStart(sp, j);
         ServerLevel level = sp.level();
         Vec3 c = sp.position();
-        Vec3 look = sp.getViewVector(1F);
         JobFx.aura(sp, j, 2.6, 1.0, 0.9);
-        JobFx.ring(level, V.up(c, 0.06), 2.0, j, false, 0.45, Opt.empty());
-        JobFx.target(level, V.add(sp.getEyePosition(), look, 3.2), 0.85, j, V.scale(look, -1), 0, 0.35, JobFx.only1p(sp).with("vel", RuneKit.bodyVel(sp)));
-        JobFx.target(level, V.add(V.up(c, 1.0), V.flat(look), 1.0), 0.7, j, V.scale(V.flat(look), -1), 0, 0.4, JobFx.hide1p(sp));
-        // 0.50.0 매의 눈 (사용자 "직업 고유 연출"): 머리 위에서 매의 깃털이 흩날려 내려앉음 (1인칭에서는 숨김 — 눈앞을 가리지 않게)
-        JobFx.feathers(level, V.up(c, 2.4), 7, 0.9, 0.2, j, 1.3, JobFx.hide1p(sp));
-        SkillFx.play(level, "crossbow.loading.end", c, 1.2, 0.9);
+        JobFx.ring(level, V.up(c, 0.06), 2.4, j, false, 0.55, Opt.empty());
+        JobFx15.halo(level, V.up(c, 0.08), 3.2, 0.6, Opt.of("alpha", 0.8), JobKit.glow(j), JobKit.core(j));
+        for (int i = 0; i < 10; i++) {
+            Vec3 at = V.add(V.up(c, 0.3 + Kit.rand() * 1.6), V.turnY(Kit.facingOf(sp), i * 36), 1.2 + Kit.rand() * 0.8);
+            SkillFx.fx(level, "rpg:arrow_spark", at, Opt.of("dir", V.UP, "speed", 1.4, "size", 0.12, "grow", 0.5, "life", 0.6, "color", i % 2 == 0 ? JobKit.core(j)
+                    : JobKit.glow(j), "alpha", 0.95));
+        }
+        SpiritWolves.summon(sp, j, Math.max(1, (int) k.num("wolves", 2)), dur);
+        SkillFx.play(level, "item.goat_horn.sound.1", c, 1.5, 0.45);
         SkillFx.play(level, "block.amethyst_block.resonate", c, 1.6, 0.6);
         return true;
     }
@@ -307,9 +311,10 @@ final class ArcherSkills {
     }
 
     /**
-     * 관천일시: 새벽빛 하늘 → draw 틱 동안 눈앞에 커지는 빛의 활 (시위를 당김 · 빛이 모여 듦) → 거대한 빛의 화살 한 발 (speed 칸/초) — 앞 range 칸 (막힌 블록까지) 일직선 폭 width
-     * 관통 (shot — 큰 숫자, 화살이 닿는 틱에) → 화살이 지나간 자리에 남은 잔상 afterimages 개가 burstDelay 틱 뒤부터 가까운 쪽부터 한 틱에 하나씩 터짐 (맞은 적마다 그 자리의 잔상 하나 —
-     * after). 화살과 잔상 사이는 10틱 넘게 떨어짐
+     * 스피릿 스탬피드 (archer_ult — 2026-11-07 재설계안 3판, 헤븐 피어서 대신 · 정령 궁수): 숲의 정령 하늘 (rpg:ult_spirit) → 뒤로 뛰어올라 draw 틱 동안 빛의 활을 당기면
+     * 등 뒤에 금빛 뿔의 사슴 정령 왕이 빛을 모아 깨어남 (rfx_jstagf) → 놓으면 화살이 사슴 정령 왕 · 늑대 정령 무리가 되어 보는 쪽 (수평) 앞 range 칸 (막힌 블록까지) 을
+     * speed 칸/초로 내달림 (폭 width — 지나가는 틱에 shot · 큰 숫자 · 짓밟아 띄움) → 지나간 자리에 정령 꽃 blooms 송이가 피어 bloomDelay 틱 뒤 차례로 터짐 (맞은 적마다
+     * after — 그 적을 지난 틱 + bloomDelay). 1인칭은 멀어지는 사슴 왕 뒷모습 · 양옆 늑대 판 (옆모습 판이 가는 쪽과 나란해 보이지 않으므로)
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         int draw = (int) k.num("draw", 24);
@@ -318,8 +323,8 @@ final class ArcherSkills {
         Vec3 c0 = sp.position();
         double[] glow = JobKit.glow(j);
         double[] core = JobKit.core(j);
-        int total = draw + (int) k.num("burstDelay", 12) + (int) k.num("afterimages", 20) + 10;
-        Ult.sky(level0, c0, "rpg:ult_dawn", total + 30);
+        int total = draw + (int) k.num("bloomDelay", 18) + 30;
+        Ult.sky(level0, c0, "rpg:ult_spirit", total + 30);
         // 0.50.0 동작 (사용자 "역동적으로"): 뒤로 뛰어올라 (back 칸 · lift 칸) 공중에서 시위를 당기고, 쏘는 반동으로 뒤로 밀리며 내려앉음
         JobMove.run(sp, JobMove.to(0, 8, from -> V.up(JobMove.ahead(sp, -k.num("back", 2.5), 0).apply(from), k.num("lift", 1.5)), JobMove.OUT),
                 JobMove.hold(8, draw), JobMove.to(draw, draw + 8, from -> JobMove.landAhead(sp, -0.0, c0.y).apply(JobMove.ahead(sp, -1.5, 0).apply(from)),
@@ -329,6 +334,19 @@ final class ArcherSkills {
         JobFx.ring(level0, V.up(c0, 0.06), 3.0, j, false, draw / 20.0 + 0.2, Opt.of("alpha", 0.8));
         SkillFx.play(level0, "crossbow.loading.start", c0, 0.7, 1.0);
         SkillFx.play(level0, "beacon.power", c0, 1.6, 0.8);
+        // 2026-11-07 등 뒤에 사슴 정령 왕이 깨어남 (빛이 감겨 들며 모임 → 서 있음 — 놓을 때 고개를 들고 번쩍), 3인칭 · 다른 사람 (1인칭은 등 뒤라 보이지 않음)
+        Vec3 f0 = Kit.facingOf(sp);
+        Vec3 stagAt = new Vec3(c0.x - f0.x * 5.4, c0.y, c0.z - f0.z * 5.4); // 뒤로 뛰어 내려앉는 자리 (약 4칸 뒤) 너머
+        double stagH = k.num("stagH", 4.4);
+        JobFx16.stagFront(level0, stagAt, stagH, 0, 3, 0.45, false, Opt.of("alpha", 0.95), glow, core);
+        RuneKit.later(9, () -> {
+            if (RuneKit.sameLife(sp, life)) JobFx16.stagFront(sp.level(), stagAt, stagH, 3, 3, Math.max(0.1, (draw - 9) / 20.0), true, Opt.of("alpha", 0.95, "fade",
+                    0.05), glow, core);
+        });
+        RuneKit.later(draw, () -> {
+            if (RuneKit.sameLife(sp, life)) JobFx16.stagFront(sp.level(), stagAt, stagH, 6, 2, 0.3, false, Opt.of("alpha", 1.0), glow, core);
+        });
+        JobFx15.halo(level0, V.up(stagAt, 0.08), 2.4, draw / 20.0 + 0.2, Opt.of("alpha", 0.7), glow, core);
         // 0.47.0 입체: 가슴 앞 2.6칸에 눕힌 빛의 활 (팔이 좌우 · 쏘는 쪽이 앞으로 30° 들림 — 주인을 따라감) 이 커지며 시위가 반 → 끝까지 당겨지고 빛의 화살이 걸림.
         // 사진첩: 세운 활은 1인칭 · 3인칭 모두 뒤에서 보아 활대 옆선 한 줄로만 보였음 → 눕혀 위에서 내려다보면 휜 활대 · 당긴 시위 · 화살이 다 보임
         double pitch = Math.toRadians(BOW_PITCH);
@@ -366,75 +384,86 @@ final class ArcherSkills {
         return true;
     }
 
-    /** 놓음: 거대한 빛의 화살 · 빛줄기 · 번쩍임 — 길 위의 적 (shot), 잔상이 차례로 터짐 (after) */
-    /** 0.50.0 솔의 화살을 쓴 때의 땅 높이 (공중에서 쏴도 빛줄기는 쓴 때의 눈 높이 — 땅의 적을 그대로 꿰뚫음) */
+    /** 0.50.0 쓴 때의 땅 높이 (공중에서 쏴도 정령 무리는 쓴 때의 땅을 달림 — 땅의 적을 그대로 짓밟음) */
     private static final java.util.Map<java.util.UUID, Double> ULT_GROUND = new java.util.concurrent.ConcurrentHashMap<>();
 
+    /** 놓음: 화살이 사슴 정령 왕 · 늑대 정령 무리가 되어 내달림 (길 위의 적 shot) → 지나간 자리의 정령 꽃이 차례로 터짐 (after) */
     private static void release(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, double[] glow, double[] core, String life) {
         ServerLevel level = sp.level();
-        Vec3 look = sp.getViewVector(1F);
         Double g = ULT_GROUND.remove(sp.getUUID());
-        Vec3 eye0 = g == null ? sp.getEyePosition() : new Vec3(sp.getX(), Math.min(sp.getEyeY(), g + sp.getEyeHeight()), sp.getZ());
-        Vec3 from = V.add(eye0, look, 0.8);
-        double len = Math.max(2, RuneKit.rayLength(level, from, look, k.num("range", 40)));
-        Vec3 end = V.add(from, look, len);
-        double speed = k.num("speed", 80);
+        double gy = g == null ? sp.getY() : Math.min(sp.getY(), g);
+        Vec3 f = Kit.facingOf(sp);
+        Vec3 base = new Vec3(sp.getX(), gy, sp.getZ());
+        Vec3 from = V.add(V.up(base, 1.2), f, 0.6);
+        double len = Math.max(3, RuneKit.rayLength(level, from, f, k.num("range", 40)));
+        double speed = Math.max(10, k.num("speed", 40));
         double half = k.num("width", 3) / 2;
-        int n = Math.max(1, (int) k.num("afterimages", 20));
-        int burstDelay = (int) k.num("burstDelay", 12);
-        // 놓은 활 (번쩍) · 거대한 빛의 화살 · 지나가는 길의 굵은 광선 (1인칭에서는 눈 가까이를 뺌) · 번쩍임 · 흔들림
-        Vec3 bowAt = V.up(V.add(sp.position(), Kit.facingOf(sp), BOW_AHEAD), bowY(sp));
-        JobFx.burst(level, bowAt, 0.9, j, 0.25, Opt.of("alpha", 0.8)); // 0.47.0 놓은 활 (입체 — loose) 의 번쩍
-        JobFx.sunArrow(level, V.add(from, look, 1.6), end, j, speed, 2.6, Opt.empty()); // 0.50.0 태양빛 거대 화살 (rfx_jsunarrow — 재설계표)
-        // 광선은 활을 든 손에서 (1인칭: 오른쪽 아래에서 과녁 쪽으로 뻗는 줄로 보임 — 눈에서 곧장 나가면 점으로만 보임)
-        Vec3 hand = V.add(RuneKit.bowHand(sp), look, 1.2);
-        JobFx.beam(level, hand, end, j, 3.2, len / speed + 0.35, Opt.of("alpha", 0.85));
-        // 화살이 지나가는 자리마다 카메라를 보는 작은 터짐 (가까운 것부터 차례로 — 광선 띠는 길이 방향 그림이라 쏜 사람 뒤 · 1인칭에서는 옆면만 보여 보이지 않음)
-        for (double dd = 1.6; dd <= len; dd += 1.3) {
-            Vec3 at = V.add(from, look, dd);
-            int delay = (int) Math.round(dd / speed * 20);
-            double sz = 0.32 + Math.min(0.3, dd * 0.008);
-            RuneKit.later(delay, () -> JobFx.burst(level, at, sz, j, 0.5, Opt.of("alpha", 0.9)));
+        int n = Math.max(1, (int) k.num("blooms", 20));
+        int bloomDelay = Math.max(10, (int) k.num("bloomDelay", 18)); // 같은 적 — 몹 무적 시간 (10틱) 을 넘게
+        double run = len / speed + 0.05;
+        Vec3 ground0 = V.add(base, f, 0.6);
+        Vec3 right = V.rightOf(f);
+        // 사슴 정령 왕 (가운데 — 옆모습 판 · 1인칭은 뒷모습) · 늑대 정령 넷 (양옆 · 조금 뒤)
+        JobFx16.stagRun(level, V.add(ground0, f, -0.6), f, k.num("stagH", 4.4) * 0.9, speed, run, JobFx.hide1p(sp), glow, core);
+        JobFx16.stagFront(level, V.add(ground0, f, 0.8), 3.2, 8, 4, run, true, JobFx.only1p(sp).with("speed", speed, "dir", f, "fps", 12.0), glow, core);
+        double[][] pack = {{-1.3, -0.9}, {1.3, -0.9}, {-2.3, -2.0}, {2.3, -2.0}};
+        for (double[] w : pack) {
+            Vec3 at = V.add(V.add(ground0, right, w[0]), f, w[1]);
+            JobFx16.wolfRun(level, at, f, 1.9, speed, run, JobFx.hide1p(sp), glow, core);
+            JobFx16.wolf1p(level, V.up(at, 0.5), f, 1.7, speed, run, w[0] > 0, JobFx.only1p(sp), glow, core);
         }
-        // 화살이 지나가며 남기는 충격 고리 (화살 쪽을 봄 — 1인칭에서는 과녁 둘레로 겹겹이 퍼지는 고리)
-        for (double dd : new double[] {3, 6, 10, 15, 21, 28, 36}) {
-            if (dd > len) break;
-            Vec3 ringAt = V.add(from, look, dd);
-            int delay = (int) Math.round(dd / speed * 20);
-            double rr = 0.9 + dd * 0.035;
-            RuneKit.later(delay, () -> JobFx.ringFacing(level, ringAt, rr, j, V.scale(look, -1), 0.55, Opt.of("alpha", 0.9)));
-        }
-        SkillFx.beamAway(level, sp.getEyePosition(), from, end, core, Opt.of("half", 0.4, "thick", 0.45, "life", len / speed + 0.4, "alpha", 0.9, "sweep",
-                len / speed), 2.4);
+        // 놓은 활 (번쩍) · 내달리는 길의 정령빛 띠 · 번쩍임 · 소리 (뿔피리 울부짖음 · 우레 같은 발굽)
+        Vec3 bowAt = V.up(V.add(sp.position(), f, BOW_AHEAD), bowY(sp));
+        JobFx.burst(level, bowAt, 0.9, j, 0.25, Opt.of("alpha", 0.8));
+        Vec3 end = V.add(from, f, len);
+        JobFx.beam(level, V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 1.0), V.add(from, f, Math.min(len, 6)), j, 1.6, 0.35, Opt.of("alpha", 0.7));
         Ult.flash(level, from, glow, Opt.empty(), sp);
-        RuneKit.shakeAround(level, from, 12, 0.3, 0.35);
-        SkillFx.play(level, "item.trident.thunder", from, 1.6, 0.8);
-        SkillFx.play(level, "firework.large_blast", from, 1.3, 0.8);
+        SkillFx.play(level, "item.goat_horn.sound.1", from, 1.3, 1.0);
+        SkillFx.play(level, "entity.ravager.roar", from, 1.4, 0.6);
         SkillFx.play(level, "random.bow", from, 0.6, 1.0);
-        // 잔상: 길을 n 칸으로 나눈 자리마다 화살 잔상 (터질 때까지) → burstDelay 틱 뒤부터 한 틱에 하나씩 터짐
+        // 발굽 자국 빛 (지나가는 틱마다 — 땅의 금빛 반짝임 · 흙먼지 대신 잎)
+        for (double dd = 1.5; dd <= len; dd += 1.6) {
+            Vec3 at = V.add(ground0, f, dd);
+            int delay = (int) Math.round(dd / speed * 20);
+            RuneKit.later(delay, () -> {
+                if (!RuneKit.sameLife(sp, life)) return;
+                Vec3 gp = new Vec3(at.x, RuneKit.groundAt(sp.level(), V.up(at, 1.5), at.y), at.z);
+                SkillFx.sparks(sp.level(), V.up(gp, 0.15), core, 3, 2.0);
+                if (RuneKit.fxQuota("jobStampede", 8)) JobFx.ring(sp.level(), V.up(gp, 0.05), 0.9, j, false, 0.3, Opt.of("alpha", 0.6));
+                if (((int) (at.x * 7 + at.z * 3)) % 3 == 0) SkillFx.play(sp.level(), "entity.horse.gallop", gp, 1.3, 0.5);
+            });
+        }
+        // 정령 꽃: 길을 n 칸으로 나눈 자리마다 사슴 왕이 지나가는 틱에 피어 bloomDelay 틱 뒤 터짐 (가까운 쪽부터)
         double seg = len / n;
         for (int i = 0; i < n; i++) {
-            Vec3 tip = V.add(from, look, seg * (i + 1));
-            int at = burstDelay + i;
-            if (i % 2 == 0) JobFx.arrowAt(level, tip, look, 0.6, at / 20.0, j, Opt.of("alpha", 0.6, "fade", 0.1));
-            RuneKit.later(at, () -> {
+            double dd = seg * (i + 0.5);
+            double side = (i % 2 == 0 ? -1 : 1) * (0.4 + (i * 37 % 10) / 10.0 * (half - 0.4));
+            Vec3 at = V.add(V.add(ground0, f, dd), right, side);
+            int born = (int) Math.round(dd / speed * 20);
+            RuneKit.later(born, () -> {
                 if (!RuneKit.sameLife(sp, life)) return;
-                JobFx.burst(level, tip, 1.0, j, 0.3, Opt.empty());
-                if (at % 3 == 0) SkillFx.play(level, "firework.blast", tip, 1.3, 0.5);
+                ServerLevel lv = sp.level();
+                Vec3 gp = new Vec3(at.x, RuneKit.groundAt(lv, V.up(at, 1.5), at.y), at.z);
+                JobFx16.bloom(lv, gp, 1.3, 0, 5, bloomDelay / 20.0, false, Opt.of("alpha", 0.95, "fade", 0.0), glow, core);
+                RuneKit.later(bloomDelay, () -> {
+                    if (!RuneKit.sameLife(sp, life)) return;
+                    JobFx16.bloom(sp.level(), gp, 1.5, 5, 3, 0.35, false, Opt.empty(), glow, core);
+                    if (RuneKit.fxQuota("jobBloom", 6)) SkillFx.play(sp.level(), "block.amethyst_block.break", gp, 1.6, 0.6);
+                });
             });
         }
-        RuneKit.later(burstDelay + n / 2, () -> JobFx.ring(level, V.up(new Vec3(from.x, RuneKit.groundAt(level, from, from.y - 1.5), from.z), 0.06), 3.0, j, false, 0.4,
-                Opt.of("alpha", 0.7)));
-        for (Kit.LineHit h : RuneKit.lineTargets(sp, from, look, len, half)) {
+        RuneKit.later((int) Math.round(len / speed * 20), () -> {
+            if (RuneKit.sameLife(sp, life)) JobFx.burst(sp.level(), end, 1.6, j, 0.4, Opt.empty());
+        });
+        for (Kit.LineHit h : RuneKit.lineTargets(sp, from, f, len, half)) {
             LivingEntity e = h.e();
-            int hitT = (int) Math.round(h.t() / speed * 20);
+            int hitT = Math.max(1, (int) Math.round(h.t() / speed * 20));
             JobKit.strike(sp, e, j, P, k.num("shot", 40), false, true, life, hitT, d -> {
-                RuneKit.knock(e, look, 0.5, 0.25);
-                if (RuneKit.fxQuota("jobSkyArrow", 6)) JobFx.hit(e, j, 1.6);
+                RuneKit.knock(e, f, 0.5, 0.35);
+                if (RuneKit.fxQuota("jobStampedeHit", 6)) JobFx.hit(e, j, 1.6);
             });
-            int idx = (int) Math.max(0, Math.min(n - 1, Math.floor(h.t() / seg)));
-            JobKit.strike(sp, e, j, P, k.num("after", 20), false, false, life, burstDelay + idx, d -> {
-                if (RuneKit.fxQuota("jobSkyBurst", 6)) JobFx.hit(e, j, 1.1);
+            JobKit.strike(sp, e, j, P, k.num("after", 20), false, false, life, hitT + bloomDelay, d -> {
+                if (RuneKit.fxQuota("jobBloomHit", 6)) JobFx.hit(e, j, 1.1);
             });
         }
     }

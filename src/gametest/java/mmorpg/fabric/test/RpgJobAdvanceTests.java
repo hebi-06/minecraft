@@ -82,9 +82,10 @@ import net.minecraft.world.phys.Vec3;
  * 재사용 대기 −6틱 · 셀레스티얼 이글 (6 × 4 + 32)</li>
  * <li>네크로맨서 (mmorpg:job_nc — 재설계안 2판): 그레이브 콜 (7 · 표식 → 쓰러지면 무덤 없이 망자) · 무덤 셋 → 다시 눌러 망자 넷 · 소울 미스트 (6.3 + 2.1 × 3 · 표식 →
  * 망자 × 0.52) · 그레이브야드 (2.1 + 2.1) · 블라이트 (0.84 × 20 · 안에서 쓰러지면 망자) · 팬텀 갤리온 (14 + 18 + 24 · 선장 2.2배) · 직업을 바꾸면 망자 · 선장이 무너짐</li>
- * <li>스나이퍼 (mmorpg:job_sn — 재설계안 2판): 하트시커 (다시 누름 — 당긴 몫만큼 7.5 × (0.5 → 1) · 끝까지 당기면 저절로 · 호흡 하나당 +6% · 호흡 3 씀) · 급소 사격
- * (호흡 8 → 치명타 확정 · 꿰뚫음 · 호흡 3 씀) · 스네어 샷 (그물 화살 = 활 평타 × 1 · 둔화 · 반동으로 뒤로 뜀 → 호흡 +3) · 트릭 샷 (3.5 → 옆 과녁 5 → 같은 과녁 다시 5) ·
- * 헌터스 마크 (같은 과녁 세 번째 활 평타마다 은빛 화살 — 최대 체력 5% · 위력 × 1 ~ 3) · 데드아이 (다시 누를 때마다 14 · 18 · 28 / 3초 지나면 저절로)</li>
+ * <li>스나이퍼 (mmorpg:job_sn — 재설계안 2판 · 2026-11-07 3판 정령 교감 · 사일런트 아울): 하트시커 (다시 누름 — 당긴 몫만큼 7.5 × (0.5 → 1) · 끝까지 당기면 저절로 ·
+ * 교감 하나당 +6% · 교감 3 씀) · 급소 사격 (교감 8 → 치명타 확정 · 꿰뚫음 · 교감 3 씀) · 스네어 샷 (그물 화살 = 활 평타 × 1 · 둔화 · 반동으로 뒤로 뜀 → 교감 +3) ·
+ * 트릭 샷 (3.5 → 옆 과녁 5 → 같은 과녁 다시 5) · 헌터스 마크 (같은 과녁 세 번째 활 평타마다 은빛 화살 — 최대 체력 5% · 위력 × 1 ~ 3) · 사일런트 아울 (1초 뒤부터
+ * 다시 누르면 한 발 45 → 10틱 뒤 정령빛 15 / 2초 지나면 저절로)</li>
  * <li>배틀 아처 (mmorpg:job_ba — 섀도 헌터 대신): 난사 (서서 쏜 평타 한 갈래 · 움직이며 쏘면 세 갈래 — 옆 둘 평타 × 0.5 · 3칸 안 +20%) · 호넷 스웜 (열둘이 둘에게
  * 나뉨 3.75 · 3.75) · 팰컨 다이브 (뛰어 내려앉으며 둘레마다 활 평타 · 둔화 · 쓰러뜨리면 재사용 대기가 돌아옴) · 스플린터 샷 (3칸 안 13.5 · 5.7칸 6조각) ·
  * 스톰 스트라이드 (이동 +25% · 서서도 세 갈래 — 옆 평타 × 1) · 퀴버 스톰 (8 × 6 + 12)</li>
@@ -1542,47 +1543,49 @@ public final class RpgJobAdvanceTests {
             RpgCombat.forceCrit = null;
             h.assertTrue(JobTraits9.markHits(sp) == 0, "third hit resets the count: " + JobTraits9.markHits(sp));
             h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), mark[0]), "mark 3: silver arrow " + TestDummies.dealt(z.get(0)) + " vs " + mark[0]);
-            // 데드아이: 저격 자세 (다시 누를 수 있는 창) → 다시 누를 때마다 한 발 14 · 18 → 셋째 28 (= 60 — 과녁은 늘 체력이 가득이라 잃은 체력 몫 없음)
+            // 사일런트 아울 (2026-11-07 3판 — 데드아이 대신): 조준 (다시 누를 수 있는 창 · 1초 뒤부터) → 다시 누르면 단 한 발 45 → 10틱 뒤 급소의 정령빛 15 (= 60 —
+            // 과녁은 늘 체력이 가득이라 잃은 체력 몫 없음)
             JobTraits.testEndStance(sp);
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 5));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "데드아이 cast");
-            h.assertTrue(JobRecast.pending(sp, "sniper_ult") && JobSkills.cooldownLeft(sp, "sniper_ult") == 0, "deadeye: recast window · no cooldown yet");
+            h.assertTrue(JobSkills.press(sp, 4), "사일런트 아울 cast");
+            h.assertTrue(JobRecast.pending(sp, "sniper_ult") && JobSkills.cooldownLeft(sp, "sniper_ult") == 0, "owl: recast window · no cooldown yet");
         }));
-        steps.add(new RpgJobTests.Step(12, () -> h.assertTrue(JobSkills.press(sp, 4), "데드아이 shot 1")));
-        steps.add(new RpgJobTests.Step(12, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(4), 14);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "데드아이 shot 1 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobSkills.press(sp, 4), "데드아이 shot 2");
+        steps.add(new RpgJobTests.Step(10, () -> {
+            h.assertTrue(!JobSkills.press(sp, 4) && JobRecast.pending(sp, "sniper_ult") && TestDummies.dealt(z.get(0)) == 0, "owl: too early (gap 20) — still aiming");
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
-            h.assertTrue(JobSkills.press(sp, 4), "데드아이 shot 3");
-            h.assertTrue(!JobRecast.pending(sp, "sniper_ult") && JobSkills.cooldownLeft(sp, "sniper_ult") > 0, "third shot → cooldown");
+            h.assertTrue(JobSkills.press(sp, 4), "사일런트 아울 shot");
+            h.assertTrue(!JobRecast.pending(sp, "sniper_ult") && JobSkills.cooldownLeft(sp, "sniper_ult") > 0, "the one shot → cooldown");
         }));
-        steps.add(new RpgJobTests.Step(6, () -> {
+        steps.add(new RpgJobTests.Step(5, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(4), 45);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "사일런트 아울 shot " + TestDummies.dealt(z.get(0)) + " vs " + want);
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 60);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "데드아이 (three presses) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            // 다시 누르지 않음: 3초가 지나면 남은 세 발을 10틱마다 저절로 (60 · 70 · 80)
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "사일런트 아울 + spirit burst " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            // 다시 누르지 않음: 2초가 지나면 저절로 쏨 (40 → 42 맞음 · 52 터짐)
             z.get(0).discard();
             home(h, sp);
             z.set(0, dummy(h, 0, 5));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "데드아이 cast (auto)");
+            h.assertTrue(JobSkills.press(sp, 4), "사일런트 아울 cast (auto)");
         }));
-        steps.add(new RpgJobTests.Step(56, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == 0 && JobRecast.pending(sp, "sniper_ult"), "deadeye: holds fire until 60")));
-        steps.add(new RpgJobTests.Step(32, () -> {
+        steps.add(new RpgJobTests.Step(36, () -> h.assertTrue(TestDummies.dealt(z.get(0)) == 0 && JobRecast.pending(sp, "sniper_ult"), "owl: holds fire until 40")));
+        steps.add(new RpgJobTests.Step(22, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 60);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "데드아이 (auto fire) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "사일런트 아울 (auto fire) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(!JobRecast.pending(sp, "sniper_ult") && JobSkills.cooldownLeft(sp, "sniper_ult") > 0, "auto fire → cooldown");
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
             RpgCombat.forceCrit = null;
             RpgJobTests.cleanup(sp);
-            h.assertTrue(JobTraitsMore.breath(sp) == 0, "breath cleared on job change: " + JobTraitsMore.breath(sp));
+            h.assertTrue(JobTraitsMore.breath(sp) == 0, "communion cleared on job change: " + JobTraitsMore.breath(sp));
             for (Husk x : z) x.discard();
             RpgGearTests.done(h, sp);
         });

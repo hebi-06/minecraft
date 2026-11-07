@@ -61,6 +61,8 @@ public final class JobTraitsMore {
         int windShots;
         /** 0.51.0 스나이퍼 급소 사격: 호흡 8 에서 쏜 활 평타의 화살이 닿는 동안 (치명타 확정 — RpgCombat.sureCrit) */
         long snipeUntil;
+        /** 2026-11-07 와일드 헌트: 마지막으로 쏜 활 평타가 겨눈 적 (그 적을 맞히면 늑대 정령이 물어뜯음 — 한 발에 한 번) */
+        LivingEntity huntTarget;
     }
 
     private static final Map<UUID, State> STATES = new HashMap<>();
@@ -95,8 +97,8 @@ public final class JobTraitsMore {
                 onFired(sp, w, target, from, dir, dist);
             }
         };
-        RpgCombat.addCritBonusHook(JobTraitsMore::critAdd);
         RpgCombat.addWeaponHitHook(JobTraitsMore::onWeaponHit);
+        SpiritWolves.init(); // 2026-11-07 와일드 헌트의 늑대 정령
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             STATES.clear();
             BREAKS.clear();
@@ -385,6 +387,11 @@ public final class JobTraitsMore {
         st.windUntil = Tasks.now() + ticks;
     }
 
+    /** 시험: 와일드 헌트의 늑대 정령 수 (2026-11-07) */
+    public static int huntWolves(ServerPlayer sp) {
+        return SpiritWolves.bodies(sp).size();
+    }
+
     /** 정조준 시작: 호흡 가득 */
     static void focusStart(ServerPlayer sp, Jobs.Job j) {
         State st = of(sp);
@@ -424,15 +431,9 @@ public final class JobTraitsMore {
         return 0;
     }
 
-    /** 치명타 +: 궁수 활 (정조준) */
-    static double critAdd(ServerPlayer sp, Weapon w, LivingEntity victim) {
-        if (w == null || !"bow".equals(w.type()) || !JobTraits.stanceOn(sp, "archer_focus") || jobIf(sp, "archer") == null) return 0;
-        Jobs.Skill k = skill(JobSystem.job(sp), "archer_focus");
-        return k == null ? 0.2 : JobUpgrades.num(sp, k, "crit", 0.2); // 0.31.0 강화
-    }
-
     /**
-     * 쏨: 궁수 — 움직이지 않았으면 호흡 +1 (손에 작은 과녁 빛), 바람 타기가 남았으면 follow 틱 뒤 한 발 더 (평타와 같은 피해 · 빛의 화살) / 정조준이면 화살 끝 금빛
+     * 쏨: 궁수 — 움직이지 않았으면 교감 +1 (둘레의 정령빛 하나가 활로 날아듦), 교감이 가득이면 화살이 늑대 정령의 모습으로 날아감 (2026-11-07 정령 궁수 — 스나이퍼의 급소
+     * 사격도), 바람 타기가 남았으면 follow 틱 뒤 한 발 더 (평타와 같은 피해 · 빛의 화살) / 와일드 헌트면 화살 끝 금빛 · 겨눈 적을 늑대가 노림
      */
     private static void onFired(ServerPlayer sp, Weapon w, LivingEntity target, Vec3 from, Vec3 dir, double dist) {
         Jobs.Job j = JobSystem.job(sp);
@@ -443,18 +444,21 @@ public final class JobTraitsMore {
             State st = of(sp);
             int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
             if (j.id().equals(JobTraits9.SN) && st.breath >= max) {
-                // 0.51.0 스나이퍼 급소 사격: 호흡 8 에서 쏜 화살 — 닿는 동안 치명타 확정 · 꿰뚫음 (pierceWidth), 호흡 snipeUse 씀
+                // 0.51.0 스나이퍼 급소 사격: 교감 8 에서 쏜 화살 — 닿는 동안 치명타 확정 · 꿰뚫음 (pierceWidth), 교감 snipeUse 씀 · 늑대 정령의 모습으로 날아감
                 st.snipeUntil = now + (long) trait(j, "snipeFor", 18);
                 st.breath = Math.max(0, st.breath - (int) trait(j, "snipeUse", 3));
                 JobTraits.sendGauge(sp, false);
                 JobTraits9.snipeFx(sp, j, from, dir, dist);
-            } else if (now - st.lastMove > 4 && st.breath < max) {
-                st.breath++;
-                Vec3 hand = RuneKit.bowHand(sp);
-                JobFx.target(level, hand, 0.12 + 0.03 * st.breath, j, V.scale(sp.getViewVector(1F), -1), 0, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
-                if (st.breath == max) SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 1.8, 0.6);
-                JobTraits.sendGauge(sp, false);
+                spiritArrow(sp, j, dir, dist);
+            } else {
+                if (now - st.lastMove > 4 && st.breath < max) {
+                    st.breath++;
+                    communionGain(sp, j, st.breath, max);
+                    JobTraits.sendGauge(sp, false);
+                }
+                if (j.id().equals("archer") && st.breath >= max) spiritArrow(sp, j, dir, dist);
             }
+            if (j.id().equals("archer") && JobTraits.stanceOn(sp, "archer_focus")) st.huntTarget = target;
             if (JobTraits.stanceOn(sp, "archer_focus")) {
                 RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), dir, 0.4), Opt.of("size", 0.16, "life", 0.25, "cell", (double) RuneKit.RFX.get("glint")[0], "spin",
                         20.0, "spinRate", 200.0, "color", JobKit.core(j), "grow", 0.6, "fade", 0.5, "vel", RuneKit.bodyVel(sp)));
@@ -486,6 +490,16 @@ public final class JobTraitsMore {
     private static void onWeaponHit(ServerPlayer sp, LivingEntity victim, Weapon w, RpgCombat.WeaponBonus bonus) {
         Jobs.Job j = JobSystem.job(sp);
         if (j == null || w == null) return;
+        if (j.id().equals("archer") && "bow".equals(w.type()) && !RpgCombat.bonusHitting() && JobTraits.stanceOn(sp, "archer_focus")) {
+            // 2026-11-07 와일드 헌트: 활 평타가 겨눈 적을 맞힘 → 늑대 정령이 그 적에게 뛰어올라 물어뜯음 (평타 × bite — 한 발에 한 번)
+            State st = STATES.get(sp.getUUID());
+            if (st != null && st.huntTarget == victim) {
+                st.huntTarget = null;
+                Jobs.Skill k = skill(j, "archer_focus");
+                SpiritWolves.bite(sp, j, victim, w, k == null ? 0.4 : JobUpgrades.num(sp, k, "bite", 0.4)); // 강화
+            }
+            return;
+        }
         if (rageJob(j) && "axe".equals(w.type()) && Combat.isMeleeWeapon(w)) {
             gainRage(sp, j, (int) trait(j, "onHit", 8));
             return;
@@ -501,6 +515,64 @@ public final class JobTraitsMore {
                         "alpha", 1.0));
             }
         }
+    }
+
+    // ------------------------------------------------------------ 2026-11-07 정령 교감 (정령 궁수 — 궁수 · 스나이퍼의 호흡이 이름 · 그림만 바뀜)
+
+    /** 정령빛 (연두) · 금빛 */
+    private static final double[] SPIRIT = {0.55, 1.0, 0.42};
+    private static final double[] SPIRIT_GOLD = {1.0, 0.86, 0.36};
+
+    /** 교감 +1: 둘레에서 정령빛 하나가 활로 날아듦 (1인칭에도) · 가득이면 맑은 소리 · 발밑 고리 */
+    private static void communionGain(ServerPlayer sp, Jobs.Job j, int n, int max) {
+        ServerLevel level = sp.level();
+        Vec3 hand = RuneKit.bowHand(sp);
+        double a = Kit.rand() * Math.PI * 2;
+        Vec3 p0 = new Vec3(hand.x + Math.cos(a) * 1.1, hand.y + 0.5 + Kit.rand() * 0.4, hand.z + Math.sin(a) * 1.1);
+        Vec3 d = V.sub(hand, p0);
+        SkillFx.fx(level, "rpg:arrow_spark", p0, Opt.of("dir", V.unit(d), "speed", V.len(d) / 0.22, "size", 0.13, "grow", 0.4, "life", 0.22, "color", n % 2 == 0
+                ? SPIRIT_GOLD : SPIRIT, "alpha", 1.0));
+        RuneKit.rfx(level, "prop", hand, Opt.of("size", 0.1 + 0.02 * n, "life", 0.3, "cell", (double) RuneKit.RFX.get("glint")[0], "spin", 15.0, "spinRate", 220.0,
+                "color", SPIRIT_GOLD, "grow", 0.5, "fade", 0.5, "vel", RuneKit.bodyVel(sp)));
+        if (n == max) {
+            SkillFx.play(level, "block.amethyst_block.chime", sp.position(), 1.8, 0.6);
+            JobFx.ring(level, V.up(sp.position(), 0.06), 1.2, j, false, 0.4, JobFx.hide1p(sp).with("alpha", 0.8));
+        }
+    }
+
+    /** 둘레를 도는 정령빛 (교감 수만큼 — 4틱마다, 3인칭 · 다른 사람: 1인칭에서는 화면을 가리지 않게 숨김) */
+    private static void communionFx(ServerPlayer sp, Jobs.Job j, int n, long now) {
+        ServerLevel level = sp.level();
+        Vec3 c = sp.position();
+        Opt view = JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp));
+        double base = now * 0.16;
+        int max = j.trait() == null ? 5 : Math.max(1, j.trait().max());
+        for (int i = 0; i < n; i++) {
+            double a = base + i * Math.PI * 2 / Math.max(3, n);
+            double r = 0.85 + 0.08 * Math.sin(base * 1.7 + i);
+            Vec3 p = new Vec3(c.x + Math.cos(a) * r, c.y + 1.05 + 0.18 * Math.sin(base * 2 + i * 1.3), c.z + Math.sin(a) * r);
+            RuneKit.rfx(level, "prop", p, view.with("size", n >= max ? 0.11 : 0.085, "life", 0.24, "cell", (double) RuneKit.RFX.get("glint")[0], "spin", i * 40.0,
+                    "spinRate", 120.0, "color", i % 2 == 0 ? SPIRIT_GOLD : SPIRIT, "fade", 0.4));
+        }
+    }
+
+    /**
+     * 교감이 가득일 때 쏜 활 평타: 화살이 늑대 정령의 모습으로 날아감 (화살과 같은 빠르기 — 3인칭 · 다른 사람은 세운 옆모습 판, 1인칭은 오른쪽 아래 활에서 가운데로 뛰는
+     * 거울 판) · 활에서 정령빛
+     */
+    static void spiritArrow(ServerPlayer sp, Jobs.Job j, Vec3 dir, double dist) {
+        ServerLevel level = sp.level();
+        RpgCombat.Path path = RpgCombat.arrowPath(sp.getEyePosition(), dir, Math.max(0.5, dist));
+        RpgCombat.Shot shot = RpgCombat.arrowShot(path.length());
+        double life = Math.max(0.1, shot.life() + 0.05);
+        double speed = path.length() / Math.max(0.05, shot.life());
+        Vec3 from = V.add(path.from(), path.dir(), 0.3);
+        double[] glow = JobKit.glow(j);
+        double[] core = JobKit.core(j);
+        JobFx16.wolfRun(level, V.up(from, -0.35), path.dir(), 1.5, speed, life, JobFx.hide1p(sp).with("fade", 0.15), glow, core);
+        JobFx16.wolf1p(level, V.add(from, path.dir(), 0.6), path.dir(), 0.9, speed, life, true, JobFx.only1p(sp).with("spin", -18.0, "fade", 0.2), glow, core);
+        SkillFx.sparks(level, from, SPIRIT, 5, 2.0);
+        if (RuneKit.fxQuota("spiritArrow", 4)) SkillFx.play(level, "entity.wolf.growl", from, 1.6, 0.35);
     }
 
     // ------------------------------------------------------------ 틱 (JobTraits 가 4틱마다)
@@ -525,6 +597,7 @@ public final class JobTraitsMore {
                     }
                 }
             } else st.moving = 0;
+            if (st.breath > 0) communionFx(sp, j, st.breath, now);
             return;
         }
         if (st == null) return;

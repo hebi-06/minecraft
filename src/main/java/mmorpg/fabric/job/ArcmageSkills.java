@@ -441,16 +441,16 @@ final class ArcmageSkills {
         Vec3 c0 = sp.position();
         JobTraits.startStance(sp, k, end + 6);
         // 별 다섯이 둘레를 돎 (주인을 따라감 · 위아래로 조금씩 출렁임)
-        JobFx3d.orbitOwner(sp, "arcane_orb", 5, new Vec3(0, 1.25, 0), orbitR, 150, false, (end + 8) / 20.0, 0.42, j, Opt.of("fadeIn", 0.25, "fadeOut", 0.3,
-                "glowAlpha", 0.6, "shine", 0.45, "bob", 0.12, "bobHz", 0.9));
+        JobFx3d.orbitOwner(sp, "arcane_orb", 5, new Vec3(0, 1.25, 0), orbitR, 150, false, (end + 8) / 20.0, 0.85, j, Opt.of("fadeIn", 0.25, "fadeOut", 0.3,
+                "glowAlpha", 0.8, "shine", 0.6, "bob", 0.16, "bobHz", 0.9));
         // 부름: 완드 끝 큰 별 · 발밑 별빛 고리 · 둘레로 퍼지는 금빛 별 다섯
         JobFx.starNode(level0, wandTip(sp), 0.6, 0, 2, 0.3, false, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)), NIGHT, GOLD);
         JobFx.halo(level0, V.up(c0, 0.06), orbitR + 0.5, j, 0.6, Opt.empty());
         for (int i = 0; i < 5; i++) {
             double ang = i * Math.PI * 2 / 5;
             Vec3 p = V.up(new Vec3(c0.x + Math.cos(ang) * orbitR, c0.y, c0.z + Math.sin(ang) * orbitR), 1.25);
-            JobFx.starNode(level0, p, 0.5, 0, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
-            RuneKit.streak(level0, V.up(c0, 1.25), p, GOLD, 0.06, 0.3, 0.8, 0);
+            JobFx.starNode(level0, p, 0.85, 0, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
+            RuneKit.streak(level0, V.up(c0, 1.25), p, GOLD, 0.1, 0.3, 0.8, 0);
         }
         SkillFx.sparks(level0, V.up(c0, 1.2), GOLD, 14, 4);
         SkillFx.play(level0, "block.beacon.activate", c0, 1.7, 0.7);
@@ -468,24 +468,24 @@ final class ArcmageSkills {
                 Vec3 c = V.up(sp.position(), 1.25);
                 if (near.isEmpty()) {
                     // 적이 없으면 별 하나가 반짝이고 그대로 돎
-                    JobFx.starNode(lv, V.add(c, Kit.facingOf(sp), orbitR), 0.4, 6, 2, 0.2, false, Opt.empty(), NIGHT, GOLD);
+                    JobFx.starNode(lv, V.add(c, Kit.facingOf(sp), orbitR), 0.7, 6, 2, 0.2, false, Opt.empty(), NIGHT, GOLD);
                     return;
                 }
                 LivingEntity e = near.get(0);
                 tgt[0] = e;
                 Vec3 to = Kit.bodyPoint(e);
-                Vec3 d = V.flat(V.sub(to, c));
-                Vec3 dir = V.len(d) > 0.1 ? V.unit(d) : Kit.facingOf(sp);
+                Vec3 raw = V.sub(to, c);
+                Vec3 dir = Math.hypot(raw.x, raw.z) > 0.1 ? V.flat(raw) : Kit.facingOf(sp); // V.flat 은 단위 벡터 (0 이면 남쪽)
                 Vec3 from = V.add(c, dir, orbitR);
                 double dist = V.len(V.sub(to, from));
-                Vec3 apex = V.up(V.lerp(from, to, 0.5), 1.6 + dist * 0.15);
+                Vec3 apex = V.up(V.lerp(from, to, 0.5), 2.2 + dist * 0.2);
                 int half = Math.max(1, fly / 2);
-                JobFx.starNode(lv, from, 0.5, 6, 2, 0.2, false, Opt.empty(), NIGHT, GOLD);
-                JobFx.fallStar(lv, from, apex, V.len(V.sub(apex, from)) / (half / 20.0), 0.55, Opt.empty(), NIGHT, GOLD);
+                JobFx.starNode(lv, from, 0.85, 6, 2, 0.2, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.fallStar(lv, from, apex, V.len(V.sub(apex, from)) / (half / 20.0), 1.0, Opt.empty(), NIGHT, GOLD);
                 RuneKit.later(half, () -> {
                     if (!RuneKit.sameLife(sp, life) || e.isRemoved()) return;
                     Vec3 hit = Kit.bodyPoint(e);
-                    JobFx.fallStar(sp.level(), apex, hit, V.len(V.sub(hit, apex)) / ((fly - half) / 20.0), 0.6, Opt.empty(), NIGHT, GOLD);
+                    JobFx.fallStar(sp.level(), apex, hit, V.len(V.sub(hit, apex)) / ((fly - half) / 20.0), 1.1, Opt.empty(), NIGHT, GOLD);
                 });
                 SkillFx.play(lv, "block.amethyst_block.chime", from, 1.3 + 0.05 * ii, 0.7);
             });
@@ -496,17 +496,17 @@ final class ArcmageSkills {
                 if (e == null || e.isRemoved()) return;
                 ServerLevel lv = sp.level();
                 Vec3 p = Kit.bodyPoint(e);
-                JobFx.starNode(lv, p, 1.0 + Kit.bodyPad(e) * 0.4, 6, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
-                JobFx.burst(lv, p, 1.2, j, 0.3, Opt.empty());
+                JobFx.starNode(lv, p, 1.5 + Kit.bodyPad(e) * 0.5, 6, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.burst(lv, p, 1.8, j, 0.3, Opt.empty());
                 JobFx.halo(lv, V.up(e.position(), 0.06), R, j, 0.35, Opt.of("alpha", 0.85));
-                SkillFx.sparks(lv, p, GOLD, 10, 4.5);
+                SkillFx.sparks(lv, p, GOLD, 14, 4.5);
                 SkillFx.play(lv, "firework.blast", p, 1.5, 0.55);
                 Vec3 mark = V.up(e.position(), 0.25);
                 double keep = Math.max(0.3, (end - at) / 20.0 + 0.6);
-                JobFx.starNode(lv, mark, 0.35, 2, 4, keep, true, Opt.of("fade", 0.3), NIGHT, GOLD);
+                JobFx.starNode(lv, mark, 0.55, 2, 4, keep, true, Opt.of("fade", 0.3), NIGHT, GOLD);
                 if (!marks.isEmpty() && V.len(V.sub(marks.get(marks.size() - 1), mark)) > 0.6) {
-                    RuneKit.streak(lv, marks.get(marks.size() - 1), mark, NIGHT, 0.22, keep, 0.5, 0);
-                    RuneKit.streak(lv, marks.get(marks.size() - 1), mark, GOLD, 0.07, keep, 0.95, 0);
+                    RuneKit.streak(lv, marks.get(marks.size() - 1), mark, NIGHT, 0.34, keep, 0.5, 0);
+                    RuneKit.streak(lv, marks.get(marks.size() - 1), mark, GOLD, 0.11, keep, 0.95, 0);
                 }
                 marks.add(mark);
                 for (LivingEntity o : Kit.around(sp, p, R, 2.5)) {
@@ -520,7 +520,7 @@ final class ArcmageSkills {
         RuneKit.later(end + 6, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            for (Vec3 m : marks) JobFx.starNode(lv, m, 0.6, 6, 2, 0.35, false, Opt.empty(), NIGHT, GOLD);
+            for (Vec3 m : marks) JobFx.starNode(lv, m, 0.95, 6, 2, 0.35, false, Opt.empty(), NIGHT, GOLD);
             if (!marks.isEmpty()) SkillFx.play(lv, "block.amethyst_block.resonate", marks.get(marks.size() - 1), 1.5, 0.7);
         });
         return true;
@@ -582,28 +582,28 @@ final class ArcmageSkills {
                 Vec3 p = sky[ii];
                 // 별이 뜸 (번쩍 → 반짝임 — 무너질 때까지) · 앞 별과 금빛 선 · 맑은 소리 (차례마다 한 음씩 높게)
                 double keep = (burstAt - 6 - at) / 20.0 + 0.1;
-                JobFx.starNode(d, p, 1.4, 0, 2, 0.25, false, Opt.empty(), NIGHT, GOLD);
-                JobFx.starNode(d, p, 1.0, 2, 4, keep, true, Opt.of("fade", 0.2), NIGHT, GOLD);
+                JobFx.starNode(d, p, 2.4, 0, 2, 0.25, false, Opt.empty(), NIGHT, GOLD);
+                JobFx.starNode(d, p, 1.7, 2, 4, keep, true, Opt.of("fade", 0.2), NIGHT, GOLD);
                 if (ii > 0) {
-                    RuneKit.streak(d, sky[ii - 1], p, NIGHT, 0.5, keep, 0.55, 0);
-                    RuneKit.streak(d, sky[ii - 1], p, GOLD, 0.14, keep, 1.0, 0);
+                    RuneKit.streak(d, sky[ii - 1], p, NIGHT, 0.9, keep, 0.55, 0);
+                    RuneKit.streak(d, sky[ii - 1], p, GOLD, 0.26, keep, 1.0, 0);
                 }
                 if (ii == stars - 1 && stars >= 4) {
-                    RuneKit.streak(d, p, sky[3], NIGHT, 0.5, keep, 0.55, 0);
-                    RuneKit.streak(d, p, sky[3], GOLD, 0.14, keep, 1.0, 0);
+                    RuneKit.streak(d, p, sky[3], NIGHT, 0.9, keep, 0.55, 0);
+                    RuneKit.streak(d, p, sky[3], GOLD, 0.26, keep, 1.0, 0);
                 }
                 SkillFx.sparks(d, p, GOLD, 10, 3.5);
                 SkillFx.play(d, "block.amethyst_block.chime", p, 0.8 + 0.12 * ii, 1.0);
                 // 별빛이 내리꽂힘: 별 → 그 적 (없으면 별 아래 땅)
                 Vec3 to = e != null && e.isAlive() && !e.isRemoved() ? Kit.bodyPoint(e) : new Vec3(p.x, RuneKit.groundAt(d, p, c.y), p.z);
-                JobFx.fallStar(d, p, to, V.len(V.sub(to, p)) / (fall / 20.0), 0.9, Opt.empty(), NIGHT, GOLD);
+                JobFx.fallStar(d, p, to, V.len(V.sub(to, p)) / (fall / 20.0), 1.6, Opt.empty(), NIGHT, GOLD);
                 RuneKit.later(fall, () -> {
                     if (!RuneKit.sameLife(sp, life)) return;
                     ServerLevel d2 = sp.level();
                     Vec3 hit = e != null && e.isAlive() && !e.isRemoved() ? Kit.bodyPoint(e) : to;
-                    JobFx.beam(d2, p, hit, NIGHT, GOLD, 0.9, 0.3, Opt.of("alpha", 0.85));
-                    JobFx.starNode(d2, hit, 1.1, 6, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
-                    JobFx.burst(d2, hit, 1.4, j, 0.3, Opt.empty());
+                    JobFx.beam(d2, p, hit, NIGHT, GOLD, 1.4, 0.3, Opt.of("alpha", 0.9));
+                    JobFx.starNode(d2, hit, 1.7, 6, 2, 0.3, false, Opt.empty(), NIGHT, GOLD);
+                    JobFx.burst(d2, hit, 2.0, j, 0.3, Opt.empty());
                     SkillFx.sparks(d2, hit, GOLD, 12, 5);
                     SkillFx.play(d2, "firework.blast", hit, 1.2, 0.8);
                 });
@@ -626,8 +626,8 @@ final class ArcmageSkills {
             ServerLevel d = sp.level();
             Vec3 m = V.up(c, 1.0);
             for (Vec3 p : sky) {
-                JobFx.fallStar(d, p, m, V.len(V.sub(m, p)) / 0.3, 1.0, Opt.empty(), NIGHT, GOLD);
-                RuneKit.streak(d, p, m, GOLD, 0.1, 0.3, 0.9, 0);
+                JobFx.fallStar(d, p, m, V.len(V.sub(m, p)) / 0.3, 1.8, Opt.empty(), NIGHT, GOLD);
+                RuneKit.streak(d, p, m, GOLD, 0.2, 0.3, 0.9, 0);
             }
             SkillFx.play(d, "item.trident.riptide_3", c, 1.4, 0.8);
         });
@@ -635,7 +635,7 @@ final class ArcmageSkills {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel d = sp.level();
             Vec3 m = V.up(c, 1.0);
-            JobFx.starNode(d, m, 3.4, 6, 2, 0.5, false, Opt.empty(), NIGHT, GOLD);
+            JobFx.starNode(d, m, 4.6, 6, 2, 0.5, false, Opt.empty(), NIGHT, GOLD);
             for (int i = 0; i < 3; i++) {
                 int ii = i;
                 RuneKit.later(i * 2, () -> JobFx.burst(d, V.up(c, 0.8 + ii * 0.8), 2.6 + ii * 1.0, j, 0.45, Opt.empty()));
@@ -643,7 +643,7 @@ final class ArcmageSkills {
             JobFx.halo(d, V.up(c, 0.06), radius, j, 0.6, Opt.empty());
             RuneKit.later(3, () -> JobFx.halo(d, V.up(c, 0.1), radius * 0.6, j, 0.5, Opt.empty()));
             RuneKit.godRays(sp, d, c, radius * 0.6, 7, NIGHT, GOLD, Opt.of("h", 14.0, "life", 0.9, "alpha", 0.8, "skipNear", true));
-            for (Vec3 p : sky) JobFx.starNode(d, new Vec3(p.x, c.y + 1.2, p.z), 0.8, 6, 2, 0.35, false, Opt.empty(), NIGHT, GOLD);
+            for (Vec3 p : sky) JobFx.starNode(d, new Vec3(p.x, c.y + 1.2, p.z), 1.2, 6, 2, 0.35, false, Opt.empty(), NIGHT, GOLD);
             SkillFx.sparks(d, m, GOLD, 28, 7);
             Ult.flash(d, c, GOLD, Opt.empty(), sp);
             SkillFx.play(d, "random.explode", c, 0.8, 1.0);

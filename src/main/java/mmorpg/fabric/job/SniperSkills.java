@@ -394,58 +394,73 @@ final class SniperSkills {
         return true;
     }
 
-    // ------------------------------------------------------------ 데드아이
+    // ------------------------------------------------------------ 사일런트 아울 (2026-11-07 재설계안 3판 — 데드아이 대신, 정령 궁수)
 
-    /** 저격 자세 (끝 틱 · 쏜 수 · 목숨) */
+    /** 조준 (끝 틱 · 목숨 · 쏨) */
     private static final class Snipe {
         final long deadline;
         final String life;
+        final long start;
         int shot;
 
-        Snipe(long deadline, String life) {
+        Snipe(long deadline, String life, long start) {
             this.deadline = deadline;
             this.life = life;
+            this.start = start;
         }
     }
 
     private static final Map<UUID, Snipe> SNIPES = new HashMap<>();
+    /** 부엉이 정령이 뜨는 자리 (등 뒤 위 — 보는 쪽에서 뒤로 칸 · 위로 칸) · 날개 끝 사이 */
+    private static final double OWL_BACK = 1.4;
+    private static final double OWL_UP = 2.5;
+    private static final double OWL_SPAN = 4.6;
 
     /**
-     * 데드아이: 무릎 꿇고 저격 자세 (어두운 하늘 rpg:ult_deadeye · window 틱 — 앞 range 칸 조준 과녁이 따라다님) → 다시 누를 때마다 (gap 틱 뒤부터) 거대한 화살 한 발 —
-     * 일직선 (폭 width) 에서 처음 맞는 적에게 shot1 · shot2 → 셋째 shot3 (치명 · 큰 숫자 · 큰 타격), 그 적이 잃은 체력만큼 최대 + missing. window 틱이 지나면 남은 화살을 10틱마다
-     * 저절로 쏨
+     * 사일런트 아울: 무릎 꿇고 조준 (둘레가 어두워짐 — rpg:ult_owl · 밀려나지 않음) · 등 뒤 위에 부엉이 정령이 날개를 펼침 (rfx_jowl — 3인칭 · 다른 사람) · 보는 쪽에서 처음
+     * 맞는 적 (range 칸 · 폭 width) 에 금빛 과녁이 조여 듦 → gap 틱 뒤부터 다시 누르면 (window 틱이 지나면 저절로) 단 한 발: 부엉이 정령이 된 화살이 소리 없이 날아가
+     * (옆모습 활공 판 · 1인칭은 날개를 모은 뒷모습) 그 적의 급소를 꿰뚫음 (shot · 치명 · 큰 숫자 · 잃은 체력만큼 최대 + missing) → burstAt 틱 뒤 급소에서 정령빛이 터짐
+     * (burst — 같은 적)
      */
     static boolean ult(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         int stage = JobRecast.stage(sp, k.id());
-        int gap = Math.max(10, (int) k.num("gap", 10));
         if (stage >= 1) {
             Snipe s = SNIPES.get(sp.getUUID());
-            if (s == null || !RuneKit.sameLife(sp, s.life)) {
-                JobRecast.close(sp, k.id());
-                return true;
-            }
+            JobRecast.close(sp, k.id());
+            if (s == null || !RuneKit.sameLife(sp, s.life) || s.shot > 0) return true;
             JobRecast.motion(sp, k.id() + ":shot");
             fire(sp, j, k, P, s);
-            if (s.shot >= 3) {
-                JobRecast.close(sp, k.id());
-                SNIPES.remove(sp.getUUID());
-            } else JobRecast.open(sp, k, stage + 1, (int) Math.max(gap + 1, s.deadline - JobKit.now()), gap, () -> autoFire(sp, j, k, P));
+            SNIPES.remove(sp.getUUID());
             return true;
         }
         ServerLevel level0 = sp.level();
-        int window = Math.max(20, (int) k.num("window", 60));
+        int window = Math.max(20, (int) k.num("window", 40));
+        int gap = Math.max(10, (int) k.num("gap", 20));
         String life = RuneKit.lifeToken(sp);
-        Snipe s = new Snipe(JobKit.now() + window, life);
+        long now0 = JobKit.now();
+        Snipe s = new Snipe(now0 + window, life, now0);
         SNIPES.put(sp.getUUID(), s);
-        Ult.sky(level0, sp.position(), "rpg:ult_deadeye", window + 50);
+        Ult.sky(level0, sp.position(), "rpg:ult_owl", window + 50);
         RpgCombat.setSteadfast(sp, window + 30);
-        JobFx.aura(sp, j, 2.6, 0.8, 0.9);
+        double[] glow = JobKit.glow(j);
+        JobFx.aura(sp, j, 2.4, 0.8, 0.85);
         JobFx.wind(level0, V.up(sp.position(), 0.06), 2.0, j, 0.5, Opt.empty());
         SkillFx.play(level0, "crossbow.loading.end", sp.position(), 0.6, 1.0);
-        SkillFx.play(level0, "beacon.power", sp.position(), 1.6, 0.8);
-        double[] glow = JobKit.glow(j);
-        // 자세 동안 (2틱마다): 보는 쪽에서 처음 맞는 적 (없으면 range 칸) 에 큰 조준 과녁 · 1인칭 눈앞 조준 · 활 앞 흰 반짝임
-        for (int t = 2; t <= window + 30; t += 2) {
+        SkillFx.play(level0, "entity.phantom.flap", sp.position(), 0.6, 0.8);
+        SkillFx.play(level0, "block.amethyst_block.resonate", sp.position(), 1.3, 0.6);
+        // 등 뒤 위의 부엉이 정령: 빛이 모여 날개를 펼침 (0 → 1) → 날갯짓 (2 ~ 5 이어 돌림 — 쏠 때까지)
+        Vec3 f0 = Kit.facingOf(sp);
+        Vec3 owlAt = V.up(V.add(sp.position(), f0, -OWL_BACK), OWL_UP);
+        JobFx16.owl(level0, owlAt, OWL_SPAN, 0, 2, 0.3, false, JobFx.hide1p(sp).with("alpha", 0.95), glow, FLASH);
+        RuneKit.later(6, () -> {
+            Snipe cur = SNIPES.get(sp.getUUID());
+            if (cur != s || !RuneKit.sameLife(sp, life)) return;
+            JobFx16.owl(sp.level(), owlAt, OWL_SPAN, 2, 4, (window - 4) / 20.0, true, JobFx.hide1p(sp).with("alpha", 0.95, "fps", 8.0, "fade", 0.05, "solo", 7.0),
+                    glow, FLASH);
+        });
+        // 자세 동안 (2틱마다): 보는 쪽에서 처음 맞는 적 (없으면 range 칸) 에 조여 드는 금빛 과녁 · 1인칭 눈앞 과녁 · 떨어지는 깃털빛
+        for (int t = 2; t <= window + 2; t += 2) {
+            int tt = t;
             RuneKit.later(t, () -> {
                 Snipe cur = SNIPES.get(sp.getUUID());
                 if (cur != s || !RuneKit.sameLife(sp, life)) return;
@@ -455,42 +470,44 @@ final class SniperSkills {
                 double len = Math.max(2, RuneKit.rayLength(level, eye, look, k.num("range", 48)));
                 Kit.LineHit h = firstOnLine(sp, eye, look, len, k.num("width", 1.6) / 2);
                 Vec3 at = h == null ? V.add(eye, look, Math.min(len, 18)) : Kit.bodyPoint(h.e());
-                double size = h == null ? 0.9 : 1.05 + Kit.bodyPad(h.e()) * 0.5;
-                JobFx.weak(level, at, size, 1, 3, 0.14, true, Opt.of("fade", 0.0, "alpha", 0.95), glow, FLASH);
-                JobFx.weak(level, V.add(eye, look, 3.2), 0.9, 1, 3, 0.14, true, JobFx.only1p(sp).with("fade", 0.0, "alpha", 0.55), glow, FLASH);
-                RuneKit.rfx(level, "prop", bowAt(sp, 0.5), JobFx.hide1p(sp).with("size", 0.16, "life", 0.2, "cell", (double) RuneKit.RFX.get("glint")[0], "spin", 0.0,
-                        "spinRate", 200.0, "color", FLASH, "fade", 0.4, "vel", RuneKit.bodyVel(sp)));
+                double q = Math.min(1.0, tt / (double) gap);
+                double size = (h == null ? 0.9 : 1.0 + Kit.bodyPad(h.e()) * 0.5) * (1.9 - 0.9 * q);
+                JobFx.weak(level, at, size, 1, 3, 0.14, true, Opt.of("fade", 0.0, "alpha", 0.95), glow, GOLD);
+                JobFx.weak(level, V.add(eye, look, 3.2), 0.9 * (1.6 - 0.6 * q), 1, 3, 0.14, true, JobFx.only1p(sp).with("fade", 0.0, "alpha", 0.55), glow, GOLD);
+                if (tt == gap) {
+                    SkillFx.playFor(sp, "block.note_block.chime", 1.6, 0.6); // 조여 듦 끝 — 이제 쏠 수 있음
+                    JobFx.weak(level, at, size * 1.15, 4, 1, 0.2, false, Opt.of("alpha", 0.9), glow, GOLD);
+                }
+                if (tt % 6 == 0 && RuneKit.fxQuota("owlFeather", 4)) {
+                    Vec3 fp = V.add(V.up(owlAt, -0.2), V.rightOf(Kit.facingOf(sp)), (Kit.rand() - 0.5) * 3.0);
+                    SkillFx.fx(level, "rpg:arrow_spark", fp, JobFx.hide1p(sp).with("dir", new Vec3(0, -1, 0), "speed", 0.6, "size", 0.12, "grow", 0.3, "life", 0.8,
+                            "color", glow, "alpha", 0.8));
+                }
             });
         }
         JobRecast.open(sp, k, 1, window, gap, () -> autoFire(sp, j, k, P));
-        JobSystem.note(sp, "§a다시 누를 때마다 쏨 §7(" + window / 20 + "초 안에 세 발 — 지나면 저절로)");
+        JobSystem.note(sp, "§a" + Math.round(gap / 2.0) / 10.0 + "초 뒤 다시 눌러 쏨 §7(" + window / 20 + "초가 지나면 저절로)");
         return true;
     }
 
-    /** 창이 닫힘 (다시 누르지 않음): 남은 화살을 10틱마다 저절로 */
+    /** 창이 닫힘 (다시 누르지 않음): 저절로 쏨 */
     private static void autoFire(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
         Snipe s = SNIPES.get(sp.getUUID());
-        if (s == null || !RuneKit.sameLife(sp, s.life)) return;
-        int left = 3 - s.shot;
-        for (int i = 0; i < left; i++) {
-            RuneKit.later(i * 10, () -> {
-                if (SNIPES.get(sp.getUUID()) != s || !RuneKit.sameLife(sp, s.life) || s.shot >= 3) return;
-                JobKit.motion(sp, k.id() + ":shot");
-                fire(sp, j, k, P, s);
-                if (s.shot >= 3) SNIPES.remove(sp.getUUID());
-            });
-        }
+        if (s == null || !RuneKit.sameLife(sp, s.life) || s.shot > 0) return;
+        JobKit.motion(sp, k.id() + ":shot");
+        fire(sp, j, k, P, s);
+        SNIPES.remove(sp.getUUID());
     }
 
-    /** 한 발: 거대한 화살 (셋째는 더 크고 금빛) · 굵은 빛줄기 · 지나가는 충격 고리 · 반동 → 처음 맞는 적 (잃은 체력만큼 +) */
+    /**
+     * 단 한 발: 등 뒤의 부엉이가 날개를 모아 내리꽂음 (번쩍) → 부엉이 정령이 된 화살이 소리 없이 날아감 (활공 옆모습 판 · 1인칭은 날개를 모은 뒷모습 · 뒤로 흐르는 깃털빛) →
+     * 처음 맞는 적의 급소를 꿰뚫음 (shot — 치명 · 큰 숫자, 잃은 체력만큼 +) → burstAt 틱 뒤 그 적의 급소에서 정령빛이 터짐 (burst)
+     */
     private static void fire(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P, Snipe s) {
-        int i = s.shot++;
-        boolean last = i == 2;
-        double mult = k.num(i == 0 ? "shot1" : i == 1 ? "shot2" : "shot3", i == 0 ? 14 : i == 1 ? 18 : 28);
+        s.shot = 1;
         ServerLevel level = sp.level();
         String life = s.life;
         double[] glow = JobKit.glow(j);
-        double[] core = last ? GOLD : FLASH;
         Vec3 eye = sp.getEyePosition();
         Vec3 look = sp.getViewVector(1F);
         double len = Math.max(2, RuneKit.rayLength(level, eye, look, k.num("range", 48)));
@@ -498,55 +515,58 @@ final class SniperSkills {
         double reach = h == null ? len : Math.max(1, h.t());
         Vec3 from = V.add(RuneKit.bowHand(sp), look, 0.9);
         Vec3 end = V.add(eye, look, reach);
-        double speed = visSpeed(k.num("speed", 100), reach);
-        double size = last ? 2.4 : 1.4 + i * 0.3;
-        JobFx.greatArrow(level, from, end, speed, size, Opt.empty(), glow, core);
-        JobFx.beam(level, V.add(from, look, 0.8), end, glow, core, last ? 3.4 : 2.4, reach / speed + 0.45, Opt.of("alpha", 0.85));
-        RuneKit.streak(level, V.add(from, look, 0.6), end, core, last ? 0.26 : 0.16, 0.45, 1.0, 0);
-        JobFx.burst(level, from, last ? 1.2 : 0.8, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
-        JobFx.bow(level, bowAt(sp, 0.6), 0.7, j, 4, 2, 0.3, Opt.of("vel", RuneKit.bodyVel(sp), "fade", 0.3));
-        for (double dd : new double[] {3, 7, 12, 18, 26}) {
-            if (dd > reach) break;
+        double speed = visSpeed(k.num("speed", 60), reach);
+        double fly = reach / speed;
+        Vec3 f0 = Kit.facingOf(sp);
+        Vec3 owlAt = V.up(V.add(sp.position(), f0, -OWL_BACK), OWL_UP);
+        // 등 뒤의 부엉이가 날개를 모아 내리꽂음 (6 — 번쩍) · 활에서 정령빛 · 부엉이 화살 (3인칭 옆모습 · 1인칭 뒷모습)
+        JobFx16.owl(level, owlAt, OWL_SPAN, 6, 2, 0.25, false, JobFx.hide1p(sp).with("alpha", 1.0, "solo", 7.0), glow, FLASH);
+        JobFx.burst(level, from, 1.0, j, 0.25, Opt.of("vel", RuneKit.bodyVel(sp)));
+        Vec3 dir = V.unit(V.sub(end, from));
+        JobFx16.owlGlide(level, from, dir, 2.2, speed, fly + 0.08, JobFx.hide1p(sp), glow, FLASH);
+        JobFx16.owl(level, V.add(from, dir, 0.8), 1.7, 6, 1, fly + 0.08, false, JobFx.only1p(sp).with("speed", speed, "dir", dir, "alpha", 0.95), glow, FLASH);
+        RuneKit.streak(level, V.add(from, look, 0.6), end, GOLD, 0.12, 0.35, 0.8, 0);
+        for (double dd = 2.0; dd < reach; dd += 2.5) {
             Vec3 at = V.add(eye, look, dd);
             int delay = (int) Math.round(dd / speed * 20);
-            double rr = (last ? 1.1 : 0.7) + dd * 0.035;
-            RuneKit.later(delay, () -> JobFx.ringFacing(level, at, rr, j, V.scale(look, -1), 0.4, Opt.of("alpha", 0.9)));
+            RuneKit.later(delay, () -> SkillFx.fx(sp.level(), "rpg:arrow_spark", at, Opt.of("dir", V.scale(look, -1), "speed", 1.5, "size", 0.12, "grow", 0.4, "life",
+                    0.5, "color", glow, "alpha", 0.8)));
         }
-        JobFx.wind(level, V.up(sp.position(), 0.06), last ? 2.2 : 1.4, j, 0.4, Opt.of("alpha", 0.9));
-        SkillFx.play(level, "item.crossbow.shoot", from, last ? 0.5 : 0.7 + i * 0.1, 1.0);
-        SkillFx.play(level, "item.trident.thunder", from, last ? 1.2 : 1.8, last ? 0.8 : 0.4);
-        if (last) {
-            Ult.flash(level, from, core, Opt.empty(), sp);
-            SkillFx.play(level, "firework.large_blast", from, 0.9, 0.9);
-            JobMove.run(sp, JobMove.to(0, 5, JobMove.ahead(sp, -1.2, 0), JobMove.OUT));
-        }
+        Ult.flash(level, from, GOLD, Opt.empty(), sp);
+        SkillFx.play(level, "entity.phantom.flap", from, 1.4, 0.7); // 소리 없이 — 날갯짓 · 바람 소리만
+        SkillFx.play(level, "item.elytra.flying", from, 1.8, 0.25);
+        JobMove.run(sp, JobMove.to(0, 5, JobMove.ahead(sp, -0.8, 0), JobMove.OUT));
         if (h == null) return;
         LivingEntity e = h.e();
         double max = e.getMaxHealth();
         double missing = max > 0 ? Math.max(0, Math.min(1, 1 - e.getHealth() / max)) : 0;
-        double m = mult * (1 + k.num("missing", 0.5) * missing);
-        int hitT = Math.max(1, (int) Math.round(h.t() / speed * 20));
-        java.util.function.DoubleConsumer then = d -> {
+        double m = k.num("shot", 45) * (1 + k.num("missing", 0.5) * missing);
+        int hitT = Math.max(1, (int) Math.round(fly * 20));
+        int burstAt = Math.max(10, (int) k.num("burstAt", 10)); // 같은 적 — 몹 무적 시간 (10틱) 을 넘게
+        JobKit.strikeCrit(sp, e, j, P, m, false, true, life, hitT, d -> {
             if (!(e.level() instanceof ServerLevel lv)) return;
             Vec3 at = Kit.bodyPoint(e);
-            stuck(lv, e, look, last ? 1.5 : 1.0 + i * 0.15, last ? 0.8 : 0.6, glow, core);
-            // 뒤로 뚫고 나가는 빛 (몸 너머 2.5칸 — 가까운 적이면 빛줄기가 짧아 맞은 것만 보였음)
+            JobImpact.hit(sp, e, j, 2.0);
+            JobFx.weak(lv, at, 1.0 + Kit.bodyPad(e) * 0.4, 4, 2, 0.35, false, Opt.of("vel", RuneKit.entVel(e)), glow, GOLD);
             Vec3 back = V.add(at, look, 0.4 + Kit.bodyPad(e));
-            RuneKit.streak(lv, back, V.add(back, look, last ? 3.2 : 2.4), core, last ? 0.22 : 0.14, 0.35, 1.0, 0);
-            SkillFx.fx(lv, "rpg:arrow_spark", back, Opt.of("dir", look, "speed", 6.0, "size", 0.2, "grow", 0.6, "life", 0.3, "color", core, "alpha", 1.0));
-            JobImpact.hit(sp, e, j, last ? 2.0 : 1.4);
-            JobFx.weak(lv, at, (last ? 1.0 : 0.75) + Kit.bodyPad(e) * 0.4, 4, 2, 0.35, false, Opt.of("vel", RuneKit.entVel(e)), glow, core);
-            JobFx.burst(lv, at, last ? 1.6 : 1.0, j, 0.35, Opt.empty());
-            if (last) {
-                JobFx.halo(lv, V.up(e.position(), 0.08), 2.4 + Kit.bodyPad(e), j, 0.5, Opt.empty());
-                SkillFx.sparks(lv, at, GOLD, 24, 7);
-            } else SkillFx.sparks(lv, at, FLASH, 10, 4);
-        };
-        if (last) JobKit.strikeCrit(sp, e, j, P, m, false, true, life, hitT, then);
-        else JobKit.strike(sp, e, j, P, m, false, false, life, hitT, then);
+            RuneKit.streak(lv, back, V.add(back, look, 3.0), GOLD, 0.2, 0.35, 1.0, 0);
+            SkillFx.sparks(lv, at, GOLD, 18, 6);
+            SkillFx.play(lv, "entity.phantom.bite", at, 1.2, 0.7);
+        });
+        JobKit.strike(sp, e, j, P, k.num("burst", 15), false, true, life, hitT + burstAt, d -> {
+            if (!(e.level() instanceof ServerLevel lv)) return;
+            Vec3 at = Kit.bodyPoint(e);
+            // 급소에서 정령빛이 터짐: 큰 빛 · 고리 · 사방으로 깃털 · 잎
+            JobFx.burst(lv, at, 2.0, j, 0.4, Opt.empty());
+            JobFx.halo(lv, V.up(e.position(), 0.08), 2.4 + Kit.bodyPad(e), j, 0.5, Opt.empty());
+            JobFx16.owl(lv, V.up(at, 0.4), 2.2, 7, 1, 0.45, false, Opt.of("alpha", 0.9), glow, FLASH);
+            SkillFx.sparks(lv, at, glow, 16, 6);
+            SkillFx.play(lv, "block.amethyst_block.break", at, 1.4, 0.9);
+            SkillFx.play(lv, "firework.large_blast", at, 1.2, 0.6);
+        });
     }
 
-    /** 시험: 데드아이 저격 자세가 남았는지 · 쏜 수 (없으면 −1) */
+    /** 시험: 사일런트 아울 조준이 남았는지 · 쏜 수 (없으면 −1) */
     static int deadeyeShots(ServerPlayer sp) {
         Snipe s = SNIPES.get(sp.getUUID());
         return s == null ? -1 : s.shot;

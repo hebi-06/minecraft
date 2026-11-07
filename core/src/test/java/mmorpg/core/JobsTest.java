@@ -124,7 +124,7 @@ public final class JobsTest {
         check(Jobs.upLines(mirror, 0, 1).equals(List.of("두 번째 베기 35% → 38.5%")), "mirror lines " + Jobs.upLines(mirror, 0, 1));
         check(Jobs.upLines(veil, 0, 1).equals(List.of("첫 공격 ×2.5 → ×2.65")), "veil lines " + Jobs.upLines(veil, 0, 1));
         check(Jobs.upLines(oath, 0, 1).equals(List.of("지속 10초 → 11초")), "oath lines " + Jobs.upLines(oath, 0, 1));
-        check(Jobs.upLines(Jobs.job("archer").skill("archer_focus"), 0, 1).equals(List.of("치명타 +20%p → +22%p")), "focus lines");
+        check(Jobs.upLines(Jobs.job("archer").skill("archer_focus"), 0, 1).equals(List.of("늑대 물어뜯기 40% → 44%")), "wild hunt lines: " + Jobs.upLines(Jobs.job("archer").skill("archer_focus"), 0, 1));
         check(Jobs.upLines(Jobs.job("priest").skill("priest_hymn"), 0, 1).equals(List.of("위력 ×1 → ×1.1", "회복 (0.5초마다) 1.5% → 1.65%")),
                 "hymn lines " + Jobs.upLines(Jobs.job("priest").skill("priest_hymn"), 0, 1));
         check(Jobs.upLines(Jobs.job("lancer").skill("lancer_wall"), 0, 1).equals(List.of("위력 ×1 → ×1.1")), "wall lines (power only)");
@@ -223,14 +223,15 @@ public final class JobsTest {
         check(near(mg.skill(2).num("pulse", 0) * mg.skill(2).num("pulses", 0) + mg.skill(2).num("burst", 0), 12.6), "비전 구체 1.4 × 6 + 4.2");
         check(near(mg.skill(4).num("page", 0) * mg.skill(4).num("pages", 0) + mg.skill(4).num("final", 0), 56)
                 && near(mg.skill(4).num("pages", 0) % mg.skill(4).num("waves", 1), 0), "금서 개방 3 × 12 + 20 (물결마다 같은 장 수)");
-        check(near(ar.skill(0).num("arrow", 0) * ar.skill(0).num("arrows", 0), 7.5) && ar.skill(0).num("more", 0) == 4, "속사 2.5 × 3 (호흡 3 이상 4발)");
+        check(near(ar.skill(0).num("arrow", 0) * ar.skill(0).num("arrows", 0), 7.5) && ar.skill(0).num("more", 0) == 4, "속사 2.5 × 3 (교감 3 이상 4발)");
         check(near(ar.skill(2).num("wave", 0) * ar.skill(2).num("waves", 0), 13.5) && ar.skill(2).num("per", 0) == 2, "화살비 2.7 × 5 (두 발씩)");
-        check(near(ar.skill(4).num("shot", 0) + ar.skill(4).num("after", 0), 60), "관천일시 40 + 20");
+        check(near(ar.skill(4).num("shot", 0) + ar.skill(4).num("after", 0), 60) && ar.skill(4).name().equals("스피릿 스탬피드") && ar.skill(3).name().equals("와일드 헌트")
+                && near(ar.skill(3).num("bite", 0), 0.4) && ar.skill(3).num("wolves", 0) == 2 && ar.trait().name().equals("정령 교감"), "스피릿 스탬피드 40 + 20 · 와일드 헌트 늑대 둘 40% · 정령 교감 (2026-11-07 3판)");
         // 같은 적을 여러 번 치는 것은 10틱 넘게 (빠른 연타는 한 번에 넣고 숫자만 여러 줄 — 마탄 연사 · 속사 · 화살비 한 물결 · 금서의 주문)
         check(wa.skill(2).num("gap", 0) >= 10 && wa.skill(4).num("leapTicks", 0) >= 10 && wa.skill(4).num("finalDelay", 0) >= 10, "warrior i-frame spacing");
         check(mg.skill(2).num("gap", 0) >= 10 && mg.skill(2).num("dur", 0) - mg.skill(2).num("gap", 0) * mg.skill(2).num("pulses", 0) >= 10
                 && mg.skill(4).num("gap", 0) >= 10 && mg.skill(4).num("finalDelay", 0) >= 10, "mage i-frame spacing");
-        check(ar.skill(2).num("gap", 0) >= 10 && ar.skill(4).num("burstDelay", 0) >= 10, "archer i-frame spacing");
+        check(ar.skill(2).num("gap", 0) >= 10 && ar.skill(4).num("bloomDelay", 0) >= 10, "archer i-frame spacing");
         // 지속 보정: 대회전 t 40 → short · 격노 도약 · 비전 구체 · 관천일시 → long · 화살비 · 금서 개방 (장판) → zone, 나머지 한방
         check(Jobs.spreadKind(wa.skill(0)) == null && Jobs.spreadKind(wa.skill(1)) == null && "short".equals(Jobs.spreadKind(wa.skill(2)))
                 && "long".equals(Jobs.spreadKind(wa.skill(4))), "warrior spread");
@@ -920,27 +921,27 @@ public final class JobsTest {
         Jobs.Skill sh = sn.skill(0), ss = sn.skill(1), st = sn.skill(2), sm = sn.skill(3), su = sn.skill(4);
         Jobs.Skill bs = ba.skill(0), bd = ba.skill(1), bp = ba.skill(2), bt = ba.skill(3), bu = ba.skill(4);
         check(near(sh.total(), 7.5) && near(st.num("first", 0) + st.num("bounce", 0) * st.num("bounces", 0), 13.5)
-                && near(su.num("shot1", 0) + su.num("shot2", 0) + su.num("shot3", 0), 60), "sniper totals 7.5 · 13.5 · 60");
+                && near(su.num("shot", 0) + su.num("burst", 0), 60) && su.name().equals("사일런트 아울"), "sniper totals 7.5 · 13.5 · 60 (사일런트 아울 45 + 15)");
         check(near(bs.num("arrows", 0) * bs.num("arrow", 0), 7.5) && near(bp.total(), 13.5) && near(bu.num("pulses", 0) * bu.num("pulse", 0) + bu.num("final", 0), 60),
                 "battlearcher totals 7.5 · 13.5 · 60");
         // 같은 적을 여러 번 치는 것은 10틱 넘게 (트릭 샷이 같은 적에게 다시 · 데드아이 세 발 · 퀴버 스톰 물결 — 열두 발 · 조각은 한 번에 넣고 숫자만 여러 줄)
-        check(st.num("sameGap", 0) >= 10 && su.num("gap", 0) >= 10 && sh.num("gap", 0) >= 6, "sniper i-frame spacing");
+        check(st.num("sameGap", 0) >= 10 && su.num("burstAt", 0) >= 10 && su.num("gap", 0) >= 10 && sh.num("gap", 0) >= 6, "sniper i-frame spacing");
         check(bu.num("every", 0) >= 10 && bu.num("finalAt", 0) - bu.num("first", 0) - (bu.num("pulses", 0) - 1) * bu.num("every", 0) >= 10, "battlearcher i-frame spacing");
         // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값 — 다시 쓰는 스킬은 12틱마다 다시 누름 · 화살이 2.5칸 앞 과녁에 닿는 1틱)
         check(near(sh.num("t", 0), 12 + 1) && near(sh.num("w", 0), sh.num("t", 0)) && near(st.num("shotAt", 0) + 1 + st.num("sameGap", 0) * st.num("bounces", 0), st.num("t", 0))
-                && near(su.num("t", 0), 12 * 3 + 1) && near(su.num("w", 0), 12 + 1), "sniper t 13 · 24 · 37 (w 13 · 13)");
+                && near(su.num("w", 0), 12 * 2 + 2) && near(su.num("t", 0), su.num("w", 0) + su.num("burstAt", 0)), "sniper t 13 · 24 · 36 (w 13 · 26 — 사일런트 아울: 24 에 다시 눌러 2틱 날아감 · 10틱 뒤 터짐)");
         check(near(bs.num("launchAt", 0) + bs.num("flight", 0), bs.num("t", 0)) && near(bp.num("fireAt", 0), bp.num("t", 0)) && near(bp.num("fireAt", 0), bp.num("w", 0))
                 && near(bu.num("finalAt", 0), bu.num("t", 0)) && near(bu.num("first", 0), bu.num("w", 0)), "battlearcher t 6 · 6 · 70 (w 6 · 10)");
-        // 특성: 스나이퍼 = 궁수의 호흡 (같은 +4% · 사거리 +1칸) 최대 8 + 급소 사격, 배틀 아처 = 난사 (세 갈래 — 평타 50% · 5칸, 3칸 안 +20% · 10칸 밖 −30%)
+        // 특성: 스나이퍼 = 궁수의 정령 교감 (2026-11-07 3판 — 호흡에서 이름 · 그림만, 같은 +4% · 사거리 +1칸) 최대 8 + 급소 사격, 배틀 아처 = 난사 (세 갈래 — 평타 50% · 5칸, 3칸 안 +20% · 10칸 밖 −30%)
         check(sn.trait().name().equals(ar.trait().name()) && sn.trait().max() == 8 && near(sn.trait().def().numOr("perStack", 0), ar.trait().def().numOr("perStack", -1))
-                && near(sn.trait().def().numOr("rangePer", 0), ar.trait().def().numOr("rangePer", -1)) && near(sn.trait().def().numOr("snipeUse", 0), 3), "호흡 8 · 급소 사격");
+                && near(sn.trait().def().numOr("rangePer", 0), ar.trait().def().numOr("rangePer", -1)) && near(sn.trait().def().numOr("snipeUse", 0), 3) && sn.trait().name().equals("정령 교감"), "정령 교감 8 · 급소 사격");
         check(ba.trait().name().equals("난사") && ba.trait().max() == 3 && near(ba.trait().def().numOr("side", 0), 0.5) && near(ba.trait().def().numOr("sideRange", 0), 5)
                 && near(ba.trait().def().numOr("near", 0), 3) && near(ba.trait().def().numOr("nearBonus", 0), 0.2) && near(ba.trait().def().numOr("far", 0), 10)
                 && near(ba.trait().def().numOr("farCut", 0), 0.3), "난사 세 갈래 · +20% · −30%");
         // 유틸 · 범위: 하트시커 단일 · 스플린터 샷 좁은 범위 (60° · 7.5칸) · 밀쳐냄, 트릭 샷 · 호넷 스웜은 넓음
         check("single".equals(Jobs.areaKind(sh)) && "narrow".equals(Jobs.areaKind(bp)) && Jobs.areaKind(st) == null && Jobs.areaKind(bs) == null && Jobs.utils(bp).equals(List.of("knock"))
                 && Jobs.utils(bu).equals(List.of("knock")) && Jobs.utils(st).isEmpty() && Jobs.utils(sh).isEmpty(), "archer advanced utils · area");
-        check(Jobs.windupTicks(sh) == 13 && Jobs.windupTicks(su) == 13 && Jobs.windupTicks(bu) == 10 && Jobs.windupTicks(bp) == 6, "windups 13 · 13 · 10 · 6");
+        check(Jobs.windupTicks(sh) == 13 && Jobs.windupTicks(su) == 26 && Jobs.windupTicks(bu) == 10 && Jobs.windupTicks(bp) == 6, "windups 13 · 26 · 10 · 6");
         check(Jobs.upKey(ss, "arrow") != null && Jobs.upKey(bd, "arrow") != null && Jobs.upKey(sm, "dur") != null && Jobs.upKey(bt, "dur") != null && Jobs.upKeys(sh).isEmpty(),
                 "archer advanced up keys");
         check(sm.total() <= 0 && bt.total() <= 0 && !Jobs.stanceBudget(sm) && !Jobs.stanceBudget(bt), "헌터스 마크 · 스톰 스트라이드 강화 (배율 합 없음)");

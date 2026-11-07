@@ -435,41 +435,56 @@ def archer_rain(A, B):
 
 
 def archer_focus(A, B):
-    rings = mask()
-    ring(rings, 16, 16, 13.0, 1.5)
-    ring(rings, 16, 16, 7.5, 1.2)
-    ticks = mask()
-    for (a, b) in (((16, 0.5), (16, 6.5)), ((16, 25.5), (16, 31.5)), ((0.5, 16), (6.5, 16)), ((25.5, 16), (31.5, 16))):
-        line(ticks, [a, b], 1.4)
-    tip = mask()
-    star(tip, 16, 16, 5.5, 0.18, 45)
-    star(tip, 16, 16, 3.0, 0.3, 0)
-    subject = stack(layer(rings, WHITE, A, WHITE, mix(A, DARK, 0.3)), layer(ticks, WHITE, A), layer(tip, WHITE, B))
-    return finish(subject, [glow(rings, A, 1.4, 0.8), glow(tip, B, 1.8, 1.0)], archer_back(A, B))
+    # 2026-11-07 와일드 헌트 (정령 궁수 — 이글 아이 대신): 금빛 보름달 앞에서 고개를 들어 울부짖는 늑대 정령의 옆얼굴 (선 귀 · 벌린 입 · 금빛 눈) · 목 뒤로 흩날리는 정령빛 갈기
+    moon = mask()
+    disc(moon, 22.5, 9.5, 7.5)
+    head = mask()
+    poly(head, [(8.0, 31.5), (9.4, 25.0), (11.0, 19.0), (12.0, 14.2), (11.4, 4.4), (15.8, 10.0), (19.4, 9.4), (28.4, 3.6), (30.0, 6.0), (22.4, 12.6), (27.6, 12.4),
+                (22.0, 16.2), (18.6, 19.4), (16.6, 24.4), (15.6, 31.5)])
+    inner = mask()
+    poly(inner, [(12.8, 12.4), (12.6, 7.4), (14.8, 10.4)])
+    mane = mask()
+    for (x0, y0, x1, y1) in ((9.8, 22.0, 2.6, 19.2), (10.8, 16.5, 4.0, 11.8), (9.0, 28.0, 2.2, 27.0), (11.4, 11.0, 7.0, 4.6)):
+        line(mane, [(x0, y0), ((x0 + x1) / 2 - 0.8, (y0 + y1) / 2 + 0.6), (x1, y1)], 1.3)
+    eye = mask()
+    star(eye, 19.0, 11.0, 2.2, 0.3, 20)
+    sp = mask()
+    star(sp, 26.0, 23.0, 2.6, 0.2, 10)
+    subject = stack(layer(moon, mix(B, WHITE, 0.45), B, None, None), layer(mane, mix(A, WHITE, 0.4), A),
+                    layer(head, mix(A, WHITE, 0.25), mix(A, DARK, 0.1), WHITE, mix(A, DARK, 0.4), axis=(0.6, 0.8)),
+                    layer(inner, mix(A, DARK, 0.4), mix(A, DARK, 0.55)), layer(eye, WHITE, B), layer(sp, WHITE, B))
+    return finish(subject, [glow(moon, B, 1.8, 0.7), glow(mane, A, 1.4, 0.7), glow(eye, B, 1.4, 1.0)], archer_back(A, B))
 
 
 def archer_ult(A, B):
-    # 거대한 빛의 화살이 고리 둘을 꿰뚫음 · 뒤의 빛줄기
-    beam = mask()
-    poly(beam, [(0.5, 12.5), (24.0, 14.5), (24.0, 17.5), (0.5, 19.5)])
-    rings = mask()
-    for x, h in ((9.5, 9.5), (17.5, 12.0)):
-        d = ImageDraw.Draw(rings)
-        d.ellipse([P(x - 3.4, 16 - h), P(x + 3.4, 16 + h)], outline=255, width=int(1.3 * SS))
-    shaft = mask()
-    poly(shaft, [(4.0, 14.6), (22.5, 14.6), (22.5, 17.4), (4.0, 17.4)])
-    head = mask()
-    poly(head, [(31.5, 16.0), (21.5, 9.0), (24.0, 16.0), (21.5, 23.0)])
-    fl = mask()
-    for d0 in (0.0, 2.6):
-        line(fl, [(6.5 + d0, 16.0), (2.0 + d0, 11.5)], 1.1)
-        line(fl, [(6.5 + d0, 16.0), (2.0 + d0, 20.5)], 1.1)
+    # 2026-11-07 스피릿 스탬피드 (정령 궁수 — 헤븐 피어서 대신): 사슴 정령 왕의 앞얼굴 (정령빛 얼굴 · 양옆 귀 · 금빛 눈) · 머리 위 크게 벌어진 금빛 뿔 (가지 · 끝 반짝임) ·
+    # 아래로 뻗는 빛줄기 (내달리는 무리)
+    face = mask()
+    poly(face, [(11.2, 13.0), (20.8, 13.0), (19.4, 20.0), (17.6, 26.0), (16.0, 27.8), (14.4, 26.0), (12.6, 20.0)])
+    ears = mask()
+    poly(ears, [(11.4, 14.2), (5.0, 12.4), (6.2, 14.6), (11.2, 17.4)])
+    poly(ears, [(20.6, 14.2), (27.0, 12.4), (25.8, 14.6), (20.8, 17.4)])
+    neck = mask()
+    poly(neck, [(12.4, 24.0), (19.6, 24.0), (23.0, 31.5), (9.0, 31.5)])
+    ant = mask()
+    for sgn in (-1, 1):
+        def X(x):
+            return 16.0 + sgn * (x - 16.0)
+        line(ant, [(X(13.6), 13.2), (X(11.0), 9.0), (X(7.0), 6.4), (X(4.2), 1.8)], 1.9)
+        line(ant, [(X(11.6), 9.8), (X(11.4), 4.2)], 1.4)
+        line(ant, [(X(8.6), 7.3), (X(7.8), 2.4)], 1.4)
+        line(ant, [(X(6.2), 5.6), (X(1.8), 6.8)], 1.3)
+    eyes = mask()
+    disc(eyes, 13.9, 17.6, 1.1)
+    disc(eyes, 18.1, 17.6, 1.1)
     sp = mask()
-    star(sp, 27.0, 6.0, 2.6)
-    star(sp, 25.0, 27.0, 2.2)
-    subject = stack(layer(beam, mix(A, WHITE, 0.35), A, None, None, axis=(1, 0)), layer(rings, B, mix(B, WHITE, 0.4)), layer(shaft, WHITE, mix(A, WHITE, 0.4)),
-                    layer(fl, WHITE, A), layer(head, WHITE, B, WHITE, mix(B, DARK, 0.3)), layer(sp, WHITE, B))
-    return finish(subject, [glow(beam, A, 2.0, 0.9), glow(head, B, 1.6, 1.0)], archer_back(A, B))
+    star(sp, 4.2, 1.8, 2.2, 0.25, 0)
+    star(sp, 27.8, 1.8, 2.2, 0.25, 0)
+    star(sp, 16.0, 6.0, 2.6, 0.2, 45)
+    subject = stack(layer(neck, mix(A, WHITE, 0.15), mix(A, DARK, 0.25)), layer(ears, mix(A, WHITE, 0.2), mix(A, DARK, 0.3)),
+                    layer(face, mix(A, WHITE, 0.35), A, WHITE, mix(A, DARK, 0.35)), layer(ant, mix(B, WHITE, 0.4), B, WHITE, mix(B, DARK, 0.3)), layer(eyes, WHITE, B),
+                    layer(sp, WHITE, B))
+    return finish(subject, [glow(ant, B, 1.6, 0.9), glow(face, A, 1.6, 0.8), glow(neck, A, 1.2, 0.5)], archer_back(A, B))
 
 
 ICONS = {

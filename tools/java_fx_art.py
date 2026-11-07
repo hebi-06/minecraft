@@ -49,7 +49,7 @@ def particle(name, tw, th, cw, ch, facing):
         "facing_camera_mode": facing,
         "uv": {"texture_width": tw, "texture_height": th, "uv": uv_expr(tw // cw, cw, ch), "uv_size": [cw, ch]},
     }
-    if facing in ("lookat_direction", "direction_z"):
+    if facing in ("lookat_direction", "direction_z", "direction_x"):  # 2026-11-07 direction_x (정령 옆모습 — 세운 판이 가는 쪽을 따라 섬)
         bb["direction"] = {"mode": "custom", "custom_direction": ["variable.dir.x", "variable.dir.y", "variable.dir.z"]}
     return {"format_version": "1.10.0", "particle_effect": {
         "description": {"identifier": f"rpg:{name}", "basic_render_parameters": {"material": "particles_blend", "texture": f"textures/particle/rpg/fx/{name}"}},

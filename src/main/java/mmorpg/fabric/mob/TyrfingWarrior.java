@@ -43,6 +43,11 @@ public class TyrfingWarrior extends BedrockMob {
 
     /** 0.51.0 네크로맨서 의 망자 선원 (같은 몹 — 독초록 · 뼈색 그림) */
     public static final String CREW_ID = "rpg:naglfar_crew";
+    /** 2026-11-07 정령 궁수 와일드 헌트의 늑대 정령 (서리 늑대 모델 · 정령빛 — tools/spirit_wolf_tex.py, 움직임은 job.SpiritWolves) */
+    public static final String WOLF_ID = "rpg:spirit_wolf";
+    /** 늑대 정령의 물어뜯기 · 울부짖음 (서리 늑대 동작 0.55초 · 1.2초) */
+    public static final String WOLF_BITE = "animation.rpg.monster.frost_wolf.attack";
+    public static final String WOLF_HOWL = "animation.rpg.monster.frost_wolf.howl";
 
     /** 전사 하나를 at (발) 에 yaw (자바 각도) 로 세움 — maxAge 틱 뒤 스스로 사라짐. 못 세우면 null */
     public static TyrfingWarrior spawn(ServerLevel level, Vec3 at, float yaw, int maxAge) {

@@ -576,7 +576,7 @@ public final class JobTraits {
         } else if (JobTraits15.stanceFx(sp, j, st.stance)) {
             // 0.51.0 이그니션 (등의 푸른 불꽃 날개) · 언홀리 프렌지 (방패의 아가리 · 핏빛 숨) — JobTraits15 가 그림
         } else if (st.stance.equals("archer_focus")) {
-            // 정조준: 활을 든 손 앞 금빛 반짝임
+            // 와일드 헌트 (2026-11-07 — 이글 아이 대신): 활을 든 손 앞 금빛 반짝임 (늑대 정령은 SpiritWolves)
             RuneKit.rfx(level, "prop", V.add(RuneKit.bowHand(sp), sp.getViewVector(1F), 0.35), Opt.of("size", 0.14, "life", 0.4, "cell",
                     (double) RuneKit.RFX.get("glint")[0], "spin", 30.0, "spinRate", 160.0, "color", JobKit.core(j), "grow", 0.4, "fade", 0.5, "vel", RuneKit.bodyVel(sp)));
         }

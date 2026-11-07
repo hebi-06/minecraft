@@ -708,8 +708,8 @@ public final class RpgJobTests {
     // ------------------------------------------------------------ 0.28.0 궁수
 
     /**
-     * 궁수: 호흡 (멈춰 쏘면 +1 · 하나당 활 평타 +4%) → 속사 (2.5 × 3, 호흡 3 이상 4발) · 바람 타기 (다음 활 평타가 두 발) · 화살비 (2.7 × 5) · 정조준 (호흡 5 · 관통 · 치명타
-     * +20%p) · 관천일시 (40 + 20)
+     * 궁수: 정령 교감 (2026-11-07 3판 — 호흡에서 이름 · 그림만: 멈춰 쏘면 +1 · 하나당 활 평타 +4%) → 속사 (2.5 × 3, 교감 3 이상 4발) · 바람 타기 (다음 활 평타가 두 발) ·
+     * 화살비 (2.7 × 5) · 와일드 헌트 (교감 5 · 관통 · 늑대 정령 둘 — 겨눈 적을 맞히면 물어뜯음 평타의 40%, 태세가 끝나면 사라짐) · 스피릿 스탬피드 (40 + 20)
      */
     @GameTest(environment = ENV_AR, maxTicks = 460)
     public void archerSkills(GameTestHelper h) {
@@ -784,28 +784,32 @@ public final class RpgJobTests {
             home(h, sp);
             z.set(0, dummy(h, 2.5));
             z.add(dummy(h, 5));
-            double c0 = RpgCombat.critChanceOf(sp, w, null);
-            h.assertTrue(JobSkills.press(sp, 3), "정조준 cast");
-            double c1 = RpgCombat.critChanceOf(sp, w, null);
-            h.assertTrue(JobTraits.stanceOn(sp, "archer_focus") && JobTraitsMore.breath(sp) == 5 && Math.abs(c1 - c0 - 0.2) < 1e-9 && RpgCombat.rangedMod.pierce(sp, w) > 0,
-                    "focus: breath 5, crit +0.2 (" + c0 + " -> " + c1 + "), pierce");
+            h.assertTrue(JobSkills.press(sp, 3), "와일드 헌트 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "archer_focus") && JobTraitsMore.breath(sp) == 5 && RpgCombat.rangedMod.pierce(sp, w) > 0
+                    && JobTraitsMore.huntWolves(sp) == 2, "wild hunt: communion 5, pierce, two spirit wolves: " + JobTraitsMore.huntWolves(sp));
             RpgCombat.forceCrit = false;
+            want0[0] = w.damage() * RpgCombat.powerOf(sp, w) * RpgCombat.basicMult.applyAsDouble(sp, w);
             RpgCombat.fireRanged(sp, sp.getMainHandItem(), w, z.get(0));
         }));
-        // 관통: 앞의 과녁과 그 뒤의 과녁
-        steps.add(new Step(10, () -> {
+        // 관통: 앞의 과녁과 그 뒤의 과녁 · 늑대 정령이 겨눈 (앞의) 과녁에게 뛰어올라 물어뜯음 (평타의 40% — 화살의 무적 시간이 끝난 뒤)
+        steps.add(new Step(26, () -> {
             RpgCombat.forceCrit = null;
-            h.assertTrue(TestDummies.dealt(z.get(0)) > 0 && TestDummies.dealt(z.get(1)) > 0, "arrow pierces: " + TestDummies.dealt(z.get(0)) + " / "
-                    + TestDummies.dealt(z.get(1)));
+            double bite = j.skill(3).num("bite", 0.4);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want0[0] * (1 + bite)) && near(TestDummies.dealt(z.get(1)), want0[0]), "arrow pierces · wolf bites the aimed one: "
+                    + TestDummies.dealt(z.get(0)) + " vs " + want0[0] * (1 + bite) + " / " + TestDummies.dealt(z.get(1)) + " vs " + want0[0]);
+            JobTraits.testEndStance(sp);
+        }));
+        steps.add(new Step(2, () -> {
+            h.assertTrue(JobTraitsMore.huntWolves(sp) == 0, "wolves leave with the stance: " + JobTraitsMore.huntWolves(sp));
             for (Husk x : z) x.discard();
             z.clear();
             home(h, sp);
             z.add(dummy(h, 6));
-            h.assertTrue(JobSkills.press(sp, 4), "관천일시 cast");
+            h.assertTrue(JobSkills.press(sp, 4), "스피릿 스탬피드 cast");
         }));
         steps.add(new Step(70, () -> {
             double want = expected(sp, j, j.skill(4), 60);
-            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "관천일시 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(near(TestDummies.dealt(z.get(0)), want), "스피릿 스탬피드 " + TestDummies.dealt(z.get(0)) + " vs " + want);
         }));
         chain(h, steps, 0, () -> {
             cleanup(sp);

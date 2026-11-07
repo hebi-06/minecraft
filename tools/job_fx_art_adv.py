@@ -83,6 +83,14 @@
 - rfx_jexcal      lookat_direction 512×64  ×8 (2 열)  빛의 대검 (소드마스터 엑스칼리버): 0 모여 듦 → 1 자라남 → 2 번쩍 → 3 ~ 5 빛남 (이어 돌림) → 6 휘두름 → 7 흩어짐
 - rfx_jicecage    lookat_y         256×384 ×8 (4 열)  얼음 결정 감옥 (프로스트 레이더 샤터 · 핌불윈터 — 아래 = 땅): 0 솟음 → 1 번쩍 → 2 ~ 4 갇혀 있음 (이어 돌림) →
                                                      5 금 → 6 깨짐 → 7 조각이 흩어짐
+
+2026-11-07 정령 궁수 (궁수 1차 재설계안 3판) · 스나이퍼 사일런트 아울 — 빛 칸 = 옥빛 연두 정령빛 (부엉이는 달빛 흰 청록), 심지 칸 = 금빛 눈 · 뿔 · 테:
+- rfx_jswolf      direction_x      256×128 ×12 (4 열) 늑대 정령 (옆모습 달림 — 0 ~ 5 머리 = 오른쪽 · 6 ~ 11 거울, 이어 돌림). 같은 그림의 rfx_jswolf1p = rotate_xyz (1인칭)
+- rfx_jstag       direction_x      384×256 ×6  (3 열) 사슴 정령 왕 (옆모습 달림 · 머리 = 오른쪽 · 가지 뿔 — 이어 돌림)
+- rfx_jstagf      lookat_y         256×256 ×12 (4 열) 사슴 정령 왕 (0 ~ 5 앞모습 깨어남 · 고개를 들어 울음 → 6 ~ 11 뒷모습 달림, 아래 = 땅)
+- rfx_jowl        rotate_xyz       384×256 ×8  (4 열) 부엉이 정령 (앞모습 — 0 ~ 1 모여 듦 → 2 ~ 5 날개를 펼쳐 떠 있음 (이어 돌림) → 6 ~ 7 흩어짐)
+- rfx_jowlside    direction_x      256×128 ×4  (4 열) 부엉이 정령 (옆모습 활공 · 내리꽂음 — 머리 = 오른쪽, 이어 돌림)
+- rfx_jsbloom     lookat_y         128×128 ×8  (4 열) 정령 꽃 (0 ~ 2 피어남 → 3 ~ 5 흔들림 → 6 ~ 7 꽃잎이 흩어짐, 아래 = 땅)
 """
 import math
 import os
@@ -6106,6 +6114,738 @@ sprite("rfx_jicecage", "lookat_y", IC_W, IC_H, IC_N, 4, "frostraider", zoom=0,
        "번짐, 심지 칸 = 모서리 · 면 줄 · 반짝임 · 금")(icecage_frame)
 
 
+
+# ============================================================ 2026-11-07 재설계안 3판 — 정령 궁수 (궁수 1차 · 스나이퍼 궁)
+# 숲의 정령 (늑대 · 사슴 정령 왕 · 부엉이 · 정령 꽃). 빛 칸 = 흐르는 정령빛으로 채운 몸 (비치는 듯 옅게 — 결을 따라 흐르는 빛줄기) · 가장자리 빛 ·
+# 뒤로 흩날리는 빛 가닥, 심지 칸 = 테 · 눈 · 뿔 · 소용돌이 무늬 · 잎맥 · 반짝임 (게임: 빛 = 직업 겉빛 (연두) · 심지 = 직업 속빛 (금빛))
+
+COLORS.setdefault("spirit", ((0.62, 0.95, 0.3), (1.0, 0.86, 0.36)))
+
+
+def _sp_chain(x, y, segs):
+    """관절 (x, y) 에서 마디들 (길이, 각 — 0 = 바로 아래 · + = 앞 (+x) 쪽, 도) → 점들"""
+    pts = [(x, y)]
+    for L, a in segs:
+        r = math.radians(a)
+        x += math.sin(r) * L
+        y += math.cos(r) * L
+        pts.append((x, y))
+    return pts
+
+
+def _sp_leg(pad, pts, w0, w1):
+    """다리 (관절이 둥근 줄 — 뿌리 굵기 w0 → 끝 w1, 온 폭)"""
+    return pad.stroke(pts, w0, w1, soft=0.6)
+
+
+def _sp_body(pad, X, Y, sil, seed, f, flow_px=2, flow_py=14, a=1.0):
+    """정령의 몸: 결을 따라 흐르는 빛 (가로로 길게 늘인 노이즈 — 장마다 흐름) · 가장자리 빛 · 속 테 (심지)"""
+    flow = clamp01(0.5 + 1.0 * (fbm(X / pad.w + f * 0.11, Y / pad.h, seed=seed, octaves=3, px=flow_px, py=flow_py) - 0.5))
+    edge = clamp01(sil - gblur(sil, 2.5 * SS)) * 2.2
+    glow = sil * (0.26 + 0.42 * flow) * a
+    glow = np.maximum(glow, clamp01(edge) * 0.85 * a)
+    core = clamp01(edge) * 0.55 * a + sil * clamp01(flow - 0.72) * 0.9 * a
+    return glow, core
+
+
+def _sp_swirl(pad, cx, cy, r, turns=1.4, a=0.8, w=1.6, rot=0.0):
+    """소용돌이 무늬 (정령의 문양 — 가운데에서 바깥으로 감김)"""
+    pts = []
+    n = 28
+    for i in range(n + 1):
+        t = i / n
+        ang = rot + TAU * turns * t
+        rr = r * (0.15 + 0.85 * t)
+        pts.append((cx + math.cos(ang) * rr, cy + math.sin(ang) * rr * 0.8))
+    return pad.stroke(pts, w * 0.5, w, a0=a * 0.6, a1=a, soft=0.4)
+
+
+def _sp_wisps(pad, rs, roots, back, up, n_each, w, a, curl=6.0, phase=0.0):
+    """뿌리 점들에서 뒤 (−x) 로 흩날리는 빛 가닥 (끝이 가늘고 흐림)"""
+    out = pad.zeros()
+    for (x0, y0) in roots:
+        for k in range(n_each):
+            L = back * rs.uniform(0.6, 1.15)
+            lift = up * rs.uniform(-0.5, 1.0)
+            ph = rs.uniform(0, TAU) + phase
+            pts = []
+            for i in range(14):
+                t = i / 13
+                pts.append((x0 - L * t, y0 - lift * t + curl * math.sin(ph + t * 4.2) * t))
+            out = np.maximum(out, pad.stroke(pts, 1.0, wfn=lambda s, w=w: w * (1 - s) ** 1.2 + 0.4,
+                                             afn=lambda s, a=a: a * (1 - s) ** 1.3, soft=1.0))
+    return out
+
+
+def _sp_leaf(pad, cx, cy, L, ang, a=1.0):
+    """작은 잎 (정령빛 티끌): 양 끝이 뾰족한 렌즈"""
+    dx, dy = math.cos(ang) * L / 2, math.sin(ang) * L / 2
+    return lens(pad, (cx - dx, cy - dy), (cx + dx, cy + dy), max(1.2, L * 0.38), a, power=0.7)
+
+
+def _sp_fur(pad, rs, sil, x0, x1, y0, y1, n, a=0.35, ang=0.0):
+    """몸 안의 짧은 털결 (뒤쪽으로 누움 — 몸 꼴로 자름)"""
+    out = pad.zeros()
+    for i in range(n):
+        x, y = rs.uniform(x0, x1), rs.uniform(y0, y1)
+        L = rs.uniform(6, 11)
+        out = np.maximum(out, pad.stroke([(x, y), (x - math.cos(ang) * L, y - math.sin(ang) * L + rs.uniform(-1.5, 1.5))], 1.0, 0.4, a0=a, a1=0.0))
+    return out * clamp01(sil * 1.5)
+
+
+# ------------------------------------------------------------ rfx_jswolf (늑대 정령 — 옆모습 달림 · 머리 = 오른쪽 (0 ~ 5) · 거울 (6 ~ 11, 머리 = 왼쪽 — 1인칭 판))
+
+SPW_N = 6
+SPW_W, SPW_H = 256, 128
+# 장마다 (몸 들썩 dy · 몸 모음 g (+ 모음 · − 폄)) — 달리기 (회전 갤럽): 0 폄 (공중) · 1 앞발 디딤 · 2 모음 (공중) · 3 뒷발 디딤 · 4 박참 · 5 펴짐
+SPW_BODY = [(-5.0, -1.0), (2.0, -0.3), (-4.0, 1.0), (3.0, 0.5), (0.0, 0.0), (-3.0, -0.6)]
+# 앞다리 (윗마디 · 아랫마디 각) · 뒷다리 (넓적다리 · 정강이 · 발등 각) — 먼 쪽 다리는 한 장 뒤의 자세
+SPW_FRONT = [(38, 78), (18, 22), (-6, -6), (-30, -40), (-14, -96), (24, 30)]
+SPW_HIND = [(-12, -72, -64), (30, -30, 10), (58, 4, 34), (36, -28, 8), (8, -52, -22), (-6, -66, -46)]
+
+
+def _sp_wolf_side(pad, f):
+    """늑대 정령 옆모습 꼴: (가까운 몸, 먼 쪽 다리 · 귀, 머리 자리, 어깨, 엉덩이, 꼬리 줄)"""
+    dy, g = SPW_BODY[f]
+    sx, sy = 176.0, 60.0 + dy
+    hx_ = 86.0 + 10.0 * g
+    sil = pad.zeros()
+    far = pad.zeros()
+    for far_leg in (True, False):
+        fi = (f + 2) % SPW_N if far_leg else f
+        u, l = SPW_FRONT[fi]
+        dx = 5.0 if far_leg else 0.0
+        fp = _sp_chain(sx - 6 + dx, sy + 8, [(18, u), (24, l), (7, l + 78)])
+        th, sh, ft = SPW_HIND[fi]
+        hp = _sp_chain(hx_ + dx, sy + 4, [(20, th), (20, sh), (15, ft), (6, ft + 78)])
+        m = np.maximum(_sp_leg(pad, fp, 9.0, 4.5), _sp_leg(pad, hp, 13.0, 4.0))
+        m = np.maximum(m, pad.disc_field(hx_ + dx + math.sin(math.radians(th)) * 20, sy + 4 + math.cos(math.radians(th)) * 20, 5.5, soft=0.8))
+        if far_leg:
+            far = np.maximum(far, m)
+        else:
+            sil = np.maximum(sil, m)
+    mx = (sx + hx_) / 2
+    sil = np.maximum(sil, pad.ellipse(sx - 8, sy + 7, 30, 21))
+    sil = np.maximum(sil, pad.ellipse(mx, sy - 5 * g + 2, 46, 14))
+    sil = np.maximum(sil, pad.ellipse(hx_ + 6, sy + 2, 26, 18))
+    hx, hy = sx + 33, sy - 20
+    sil = np.maximum(sil, pad.poly([(sx - 20, sy - 4), (hx - 14, hy - 9), (hx + 2, hy + 7), (sx + 12, sy + 20)]))
+    sil = np.maximum(sil, pad.ellipse(hx, hy, 16, 13))
+    sil = np.maximum(sil, pad.poly([(hx + 5, hy - 9), (hx + 35, hy - 2), (hx + 37, hy + 3), (hx + 8, hy + 6)]))
+    sil = np.maximum(sil, pad.poly([(hx + 3, hy + 5), (hx + 28, hy + 10), (hx + 26, hy + 13), (hx + 1, hy + 11)]))
+    ear = [(hx - 10, hy - 7), (hx - 5, hy - 29), (hx + 4, hy - 9)]
+    sil = np.maximum(sil, pad.poly(ear))
+    far = np.maximum(far, pad.poly([(p[0] - 7, p[1] + 1) for p in ear]))
+    tw = math.sin(f / SPW_N * TAU) * 6
+    tail = bez((hx_ - 18, sy - 6), (hx_ - 44, sy - 22 + tw), (hx_ - 78, sy - 14 + tw * 1.5), 18)
+    sil = np.maximum(sil, pad.poly(taper_poly(tail, lambda t: 9.5 * (1 - t) ** 0.7 + 1.5)))
+    return sil, far, (hx, hy), (sx, sy), (hx_, sy), tail
+
+
+def _sp_wolf_one(f):
+    W, H = SPW_W, SPW_H
+    pad = Pad(W, H)
+    X, Y = pad.grid()
+    rs = random.Random(18000 + f)
+    sil, far, (hx, hy), (sx, sy), (px, py), tail = _sp_wolf_side(pad, f)
+    glow, core = _sp_body(pad, X, Y, sil, 18010, f)
+    g2, c2 = _sp_body(pad, X, Y, far, 18020, f, a=0.45)
+    glow = np.maximum(glow, g2 * (1 - clamp01(sil)))
+    core = np.maximum(core, c2 * 0.5 * (1 - clamp01(sil)))
+    roots = [(hx - 12, hy - 4), (sx - 14, sy - 14), (sx - 40, sy - 16), (px + 10, py - 12)]
+    wisp = _sp_wisps(pad, rs, roots, 46.0, 10.0, 2, 4.5, 0.75, curl=5.0, phase=f * 1.1)
+    wisp = np.maximum(wisp, _sp_wisps(pad, rs, [tail[-1], tail[-5]], 30.0, 8.0, 2, 4.0, 0.7, curl=4.0, phase=f))
+    glow = np.maximum(glow, wisp)
+    core = np.maximum(core, wisp * 0.35)
+    core = np.maximum(core, _sp_fur(pad, rs, sil, px, sx + 10, sy - 14, sy + 14, 26, a=0.35))
+    core = np.maximum(core, _sp_swirl(pad, sx - 12, sy + 6, 11.0, 1.3, 0.85, 1.8, rot=f * 0.4) * clamp01(sil * 2))
+    core = np.maximum(core, _sp_swirl(pad, px + 4, py + 2, 10.0, 1.2, 0.8, 1.6, rot=-f * 0.4) * clamp01(sil * 2))
+    core = np.maximum(core, lens(pad, (hx + 6, hy - 4), (hx + 16, hy - 6), 3.4, 1.0, power=0.6))
+    core = np.maximum(core, star4(pad, hx + 12, hy - 5, 7.0, 0.8, rot=0.2, thin=0.14, diag=0.35))
+    core = np.maximum(core, pad.stroke([(hx + 8, hy + 6), (hx + 30, hy + 7)], 1.0, 0.6, a0=0.6, a1=0.3))
+    core = np.maximum(core, pad.disc_field(hx + 36, hy + 1, 2.0, soft=0.6) * 0.8)
+    for i in range(7):
+        y = rs.uniform(36, 104)
+        x1 = rs.uniform(40, 90)
+        L = rs.uniform(30, 64)
+        glow = np.maximum(glow, pad.stroke([(x1 - L, y), (x1, y)], 0.6, 3.0, a0=0.0, a1=0.4, soft=0.8))
+    for i in range(5):
+        lf = _sp_leaf(pad, rs.uniform(14, 90), rs.uniform(26, 96), rs.uniform(5, 9), rs.uniform(0, TAU), rs.uniform(0.5, 0.9))
+        glow = np.maximum(glow, lf * 0.8)
+        core = np.maximum(core, lf * 0.6)
+    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (9.0, 0.22)), body_k=0.9, core_bloom=((1.2, 0.35), (3.0, 0.24)), win=4.0)
+
+
+def sp_wolf_frame(f):
+    """늑대 정령 (옆모습 · 달림 — 0 ~ 5 머리 오른쪽 · 6 ~ 11 같은 장의 거울 (머리 왼쪽 — 1인칭에서 오른쪽 아래 활에서 가운데로 뛰는 판))"""
+    g, c = _sp_wolf_one(f % SPW_N)
+    if f >= SPW_N:
+        return g[:, ::-1].copy(), c[:, ::-1].copy()
+    return g, c
+
+
+sprite("rfx_jswolf", "direction_x", SPW_W, SPW_H, SPW_N * 2, 4, "spirit", zoom=0, loop=True,
+       desc="늑대 정령 (옆모습 — 세운 판이 가는 쪽을 따라 섬 · 이어 돌림 달리기, 0 ~ 5 머리 오른쪽 · 6 ~ 11 거울 (머리 왼쪽 — 1인칭 판 rfx_jswolf1p 가 씀), 발 끝 아래 ≈ 112 점): "
+       "흐르는 정령빛 몸 · 털결 · 먼 쪽 다리 · 귀 옅게 · 갈기 · 꼬리 끝에서 뒤로 흩날리는 빛 가닥 · 어깨 · 엉덩이 소용돌이 · 금빛 눈 · 뒤로 끌리는 빛줄 · 잎 티끌")(sp_wolf_frame)
+ALIASES = globals().get("ALIASES", {})
+ALIASES["rfx_jswolf1p"] = ("rfx_jswolf", "rotate_xyz")
+
+
+# ------------------------------------------------------------ rfx_jstag (사슴 정령 왕 — 옆모습 달림, 머리 = 오른쪽 · 세운 판 (direction_x))
+
+SPS_N = 6
+SPS_W, SPS_H = 384, 256
+SPS_BODY = [(-6.0, -1.0), (3.0, -0.3), (-5.0, 1.0), (4.0, 0.5), (0.0, 0.0), (-3.0, -0.6)]
+SPS_FRONT = [(36, 80), (16, 20), (-6, -6), (-28, -38), (-12, -100), (22, 30)]
+SPS_HIND = [(-12, -70, -62), (28, -30, 8), (56, 2, 32), (34, -28, 6), (6, -50, -20), (-6, -64, -44)]
+
+
+def _sp_antler(pts_main, tines):
+    """뿔 하나: 줄기 점들 · 가지 (줄기의 몫 t · 각 (도, 화면 — 0 = 오른쪽 · −90 = 위) · 길이)"""
+    out = [pts_main]
+    n = len(pts_main) - 1
+    for t, ang, L in tines:
+        i = min(n - 1, int(t * n))
+        u = t * n - i
+        x = pts_main[i][0] + (pts_main[i + 1][0] - pts_main[i][0]) * u
+        y = pts_main[i][1] + (pts_main[i + 1][1] - pts_main[i][1]) * u
+        r = math.radians(ang)
+        tip = (x + math.cos(r) * L, y + math.sin(r) * L)
+        mid = (x + math.cos(r) * L * 0.5 + math.cos(r - 0.5) * L * 0.08, y + math.sin(r) * L * 0.5 - L * 0.08)
+        out.append(bez((x, y), mid, tip, 8))
+    return out
+
+
+def _sp_stag_side(pad, f):
+    dy, g = SPS_BODY[f]
+    sx, sy = 252.0, 150.0 + dy
+    hx_ = 128.0 + 12.0 * g
+    sil = pad.zeros()
+    far = pad.zeros()
+    for far_leg in (True, False):
+        fi = (f + 2) % SPS_N if far_leg else f
+        u, l = SPS_FRONT[fi]
+        dx = 7.0 if far_leg else 0.0
+        fp = _sp_chain(sx - 8 + dx, sy + 14, [(30, u), (40, l), (9, l + 70)])
+        th, sh, ft = SPS_HIND[fi]
+        hp = _sp_chain(hx_ + dx, sy + 8, [(32, th), (30, sh), (28, ft), (8, ft + 70)])
+        m = np.maximum(_sp_leg(pad, fp, 11.0, 4.5), _sp_leg(pad, hp, 17.0, 4.2))
+        if far_leg:
+            far = np.maximum(far, m)
+        else:
+            sil = np.maximum(sil, m)
+    mx = (sx + hx_) / 2
+    sil = np.maximum(sil, pad.ellipse(sx - 12, sy + 6, 40, 28))
+    sil = np.maximum(sil, pad.ellipse(mx, sy - 4 * g + 2, 62, 20))
+    sil = np.maximum(sil, pad.ellipse(hx_ + 6, sy + 2, 34, 25))
+    # 목 (앞 위로 · 굵게) · 머리 · 귀
+    hx, hy = sx + 40, sy - 58
+    sil = np.maximum(sil, pad.poly([(sx - 26, sy - 10), (hx - 16, hy - 6), (hx + 6, hy + 6), (sx + 22, sy + 16)]))
+    sil = np.maximum(sil, pad.ellipse(hx, hy, 17, 13))
+    sil = np.maximum(sil, pad.poly([(hx + 6, hy - 9), (hx + 38, hy + 6), (hx + 36, hy + 13), (hx + 4, hy + 10)]))
+    ear = [(hx - 6, hy - 8), (hx - 28, hy - 20), (hx - 26, hy - 13), (hx - 4, hy - 1)]
+    sil = np.maximum(sil, pad.poly(ear))
+    sil = np.maximum(sil, pad.poly(taper_poly(bez((hx_ - 30, sy - 10), (hx_ - 42, sy - 20), (hx_ - 48, sy - 12), 8), lambda t: 6.0 * (1 - t) + 1.0)))
+    # 뿔 둘 (머리 위에서 뒤 위로 크게 휘고 · 가지는 앞 위로 — 꼭대기 왕관 셋)
+    antlers = []
+    for far_a in (True, False):
+        o = -9.0 if far_a else 0.0
+        base = (hx - 4 + o, hy - 11)
+        main = bez(base, (hx - 24 + o, hy - 40), (hx - 62 + o, hy - 58), 20, p3=(hx - 50 + o, hy - 82))
+        tines = [(0.1, -30, 24), (0.3, -55, 28), (0.5, -70, 28), (0.68, -85, 24), (0.84, -45, 20), (0.97, -115, 16)]
+        antlers.append((far_a, _sp_antler(main, tines)))
+    return sil, far, (hx, hy), (sx, sy), (hx_, sy), antlers
+
+
+def sp_stag_frame(f):
+    """사슴 정령 왕 (옆모습 · 달림): 정령빛 몸 · 금빛 큰 뿔 (가지 여섯 · 가지 끝 반짝임) · 목 갈기 빛 가닥 · 무늬 · 눈"""
+    W, H = SPS_W, SPS_H
+    pad = Pad(W, H)
+    X, Y = pad.grid()
+    rs = random.Random(18200 + f)
+    sil, far, (hx, hy), (sx, sy), (px, py), antlers = _sp_stag_side(pad, f)
+    glow, core = _sp_body(pad, X, Y, sil, 18210, f, flow_px=2, flow_py=16)
+    g2, c2 = _sp_body(pad, X, Y, far, 18220, f, a=0.45)
+    glow = np.maximum(glow, g2 * (1 - clamp01(sil)))
+    core = np.maximum(core, c2 * 0.5 * (1 - clamp01(sil)))
+    for far_a, parts in antlers:
+        a = 0.5 if far_a else 1.0
+        for i, pts in enumerate(parts):
+            w0 = 7.0 if i == 0 else 4.0
+            core = np.maximum(core, pad.stroke(pts, w0, 1.6, a0=0.95 * a, a1=0.85 * a, soft=0.4))
+            glow = np.maximum(glow, pad.stroke(pts, w0 * 2.6, 3.0, a0=0.55 * a, a1=0.35 * a, soft=2.0))
+            tip = pts[-1]
+            if not far_a and i > 0:
+                core = np.maximum(core, star4(pad, tip[0], tip[1], 8.0 + 2 * ((i + f) % 3), 0.9, rot=0.3 * i + f * 0.2, thin=0.13, diag=0.35))
+    roots = [(hx - 22, hy + 16), (sx - 30, sy - 30), (sx - 50, sy - 18), ((sx + px) / 2, sy - 18), (px, sy - 16)]
+    wisp = _sp_wisps(pad, rs, roots, 70.0, 14.0, 2, 6.0, 0.7, curl=7.0, phase=f * 1.1)
+    glow = np.maximum(glow, wisp)
+    core = np.maximum(core, wisp * 0.3)
+    core = np.maximum(core, _sp_fur(pad, rs, sil, px, sx + 10, sy - 18, sy + 22, 40, a=0.32))
+    core = np.maximum(core, _sp_swirl(pad, sx - 14, sy + 6, 16.0, 1.4, 0.85, 2.2, rot=f * 0.4) * clamp01(sil * 2))
+    core = np.maximum(core, _sp_swirl(pad, px + 6, py + 2, 14.0, 1.3, 0.8, 2.0, rot=-f * 0.4) * clamp01(sil * 2))
+    core = np.maximum(core, lens(pad, (hx + 5, hy - 3), (hx + 17, hy - 1), 3.8, 1.0, power=0.6))
+    core = np.maximum(core, star4(pad, hx + 12, hy - 2, 8.0, 0.8, rot=0.2, thin=0.14, diag=0.35))
+    for i in range(8):
+        y = rs.uniform(90, 240)
+        x1 = rs.uniform(60, 130)
+        L = rs.uniform(40, 90)
+        glow = np.maximum(glow, pad.stroke([(x1 - L, y), (x1, y)], 0.8, 3.6, a0=0.0, a1=0.38, soft=0.8))
+    for i in range(7):
+        lf = _sp_leaf(pad, rs.uniform(20, 160), rs.uniform(60, 220), rs.uniform(7, 12), rs.uniform(0, TAU), rs.uniform(0.5, 0.9))
+        glow = np.maximum(glow, lf * 0.8)
+        core = np.maximum(core, lf * 0.6)
+    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (10.0, 0.22)), body_k=0.9, core_bloom=((1.3, 0.38), (3.5, 0.26)), win=4.0)
+
+
+sprite("rfx_jstag", "direction_x", SPS_W, SPS_H, SPS_N, 3, "spirit", zoom=0, loop=True,
+       desc="사슴 정령 왕 (옆모습 — 세운 판이 가는 쪽 (오른쪽 = 머리) 을 따라 섬 · 이어 돌림 달리기 6장, 발굽 아래 ≈ 236 점): 정령빛 몸 · 털결 · 먼 쪽 다리 옅게 · "
+       "금빛 큰 뿔 둘 (뒤 위로 휘고 가지 여섯 · 가지 끝 반짝임) · 목 · 등에서 뒤로 흩날리는 빛 가닥 · 소용돌이 무늬 · 금빛 눈 · 뒤로 끌리는 빛줄 · 잎 티끌")(sp_stag_frame)
+
+
+# ------------------------------------------------------------ rfx_jstagf (사슴 정령 왕 — 앞모습 깨어남 · 뒷모습 달림, 세워 카메라 쪽으로 돎, 아래 = 땅)
+
+SPF_N = 12
+SPF_S = 256
+SPF_A = [0.35, 0.65, 0.9, 1.0, 1.0, 1.0, 1.0, 0.45, 1.0, 1.0, 1.0, 1.0]
+
+
+def _sp_stag_antlers_front(cx, top, spread=1.0, lift=0.0):
+    """앞 · 뒤에서 본 뿔 둘 (리라 꼴 — 양옆으로 벌어졌다 위에서 안으로 · 가지는 위로, 꼭대기 왕관)"""
+    parts = []
+    for s in (-1, 1):
+        base = (cx + s * 13, top)
+        main = bez(base, (cx + s * 62 * spread, top - 22 - lift * 0.5), (cx + s * 92 * spread, top - 66 - lift), 20, p3=(cx + s * 66 * spread, top - 100 - lift))
+        tines = [(0.12, -90 - s * 60, 22), (0.3, -90 - s * 25, 30), (0.48, -90 + s * 0, 32), (0.66, -90 - s * 18, 30), (0.82, -90 + s * 20, 24), (0.96, -90 - s * 35, 18)]
+        parts.append(_sp_antler(main, tines))
+    return parts
+
+
+def sp_stagf_frame(f):
+    """앞모습: 0 ~ 2 빛이 모여 사슴 왕이 됨 → 3 ~ 5 서 있음 (뿔빛 맥동 · 갈기가 흐름 — 이어 돌림) → 6 고개를 들고 번쩍 (뿔에서 빛살) → 7 위로 흩어짐.
+    뒷모습 (8 ~ 11 — 이어 돌림): 멀어지며 달림 (엉덩이 · 번갈아 박차는 뒷다리 · 등 너머 뿔)"""
+    S = SPF_S
+    pad = Pad(S, S)
+    X, Y = pad.grid()
+    rs = random.Random(18300 + f)
+    cx = 128.0
+    rear = f >= 8
+    sil = pad.zeros()
+    behind = pad.zeros()
+    if not rear:
+        ph = TAU * ((f - 3) % 3) / 3 if 3 <= f <= 5 else 0.0
+        toss = 8.0 if f == 6 else 0.0
+        hy = 132.0 - toss
+        # 몸 (뒤 — 옅게) · 넓은 가슴 · 앞다리 둘 · 굵은 목 · 머리 (아래로 좁아지는 얼굴) · 양옆 귀
+        behind = np.maximum(behind, pad.ellipse(cx, 184, 50, 24))
+        sil = np.maximum(sil, pad.ellipse(cx, 190, 34, 26))
+        for s in (-1, 1):
+            leg = _sp_chain(cx + s * 17, 204, [(22, s * -3), (24, s * 2), (6, 0)])
+            sil = np.maximum(sil, _sp_leg(pad, leg, 11.0, 6.0))
+        sil = np.maximum(sil, pad.poly([(cx - 22, 192), (cx - 15, hy + 12), (cx + 15, hy + 12), (cx + 22, 192)]))
+        sil = np.maximum(sil, pad.ellipse(cx, hy - 2, 22, 18))
+        sil = np.maximum(sil, pad.poly([(cx - 20, hy - 4), (cx + 20, hy - 4), (cx + 10, hy + 30), (cx, hy + 36), (cx - 10, hy + 30)]))
+        for s in (-1, 1):
+            sil = np.maximum(sil, pad.poly([(cx + s * 16, hy - 8), (cx + s * 46, hy - 16 + 3 * math.sin(ph)), (cx + s * 44, hy - 8), (cx + s * 18, hy + 2)]))
+        antlers = _sp_stag_antlers_front(cx, hy - 16, 1.0, toss * 0.6)
+    else:
+        ph = TAU * (f - 8) / 4
+        bob = math.sin(ph) * 4.0
+        hy = 120.0 + bob
+        # 뒷모습: 엉덩이 (둥글게) · 등 · 목 · 뒤통수 · 귀 · 번갈아 박차는 뒷다리 · 짧은 꼬리
+        sil = np.maximum(sil, pad.ellipse(cx, 184 + bob, 38, 30))
+        sil = np.maximum(sil, pad.ellipse(cx, 156 + bob, 30, 16))
+        sil = np.maximum(sil, pad.poly([(cx - 13, 158 + bob), (cx - 11, hy + 6), (cx + 11, hy + 6), (cx + 13, 158 + bob)]))
+        sil = np.maximum(sil, pad.ellipse(cx, hy, 18, 14))
+        for s in (-1, 1):
+            sil = np.maximum(sil, pad.poly([(cx + s * 12, hy - 4), (cx + s * 42, hy - 12), (cx + s * 40, hy - 4), (cx + s * 14, hy + 6)]))
+            ext = 0.5 + 0.5 * math.sin(ph + (0 if s < 0 else math.pi))
+            leg = _sp_chain(cx + s * 22, 200 + bob, [(18 + 8 * ext, s * (4 + 10 * (1 - ext))), (16 + 14 * ext, s * 3), (6, 0)])
+            sil = np.maximum(sil, _sp_leg(pad, leg, 15.0, 6.0))
+        sil = np.maximum(sil, pad.ellipse(cx, 160 + bob, 7, 9))
+        antlers = _sp_stag_antlers_front(cx, hy - 12, 0.95, 0.0)
+    glow, core = _sp_body(pad, X, Y, sil, 18310, f, flow_px=5, flow_py=5)
+    gb, cb = _sp_body(pad, X, Y, behind, 18320, f, flow_px=5, flow_py=5, a=0.35)
+    glow = np.maximum(glow, gb * (1 - clamp01(sil)))
+    core = np.maximum(core, cb * 0.3 * (1 - clamp01(sil)))
+    pulse = 1.0 if f not in (3, 4, 5) else 0.8 + 0.2 * math.cos(TAU * (f - 3) / 3)
+    for parts in antlers:
+        for i, pts in enumerate(parts):
+            w0 = 8.0 if i == 0 else 4.2
+            core = np.maximum(core, pad.stroke(pts, w0, 1.8, a0=0.95 * pulse, a1=0.85 * pulse, soft=0.4))
+            glow = np.maximum(glow, pad.stroke(pts, w0 * 2.8, 3.2, a0=0.6, a1=0.38, soft=2.0))
+            if i > 0:
+                tip = pts[-1]
+                core = np.maximum(core, star4(pad, tip[0], tip[1], 8.0 + 3 * ((i + f) % 3), 0.85, rot=0.25 * i + f * 0.3, thin=0.13, diag=0.35))
+    if not rear:
+        for s in (-1, 1):
+            core = np.maximum(core, lens(pad, (cx + s * 16, hy + 2), (cx + s * 6, hy + 6), 3.8, 1.0, power=0.6))
+        core = np.maximum(core, _sp_swirl(pad, cx, hy - 4, 8.0, 1.2, 0.8, 1.6, rot=f * 0.3) * clamp01(sil * 2))
+        core = np.maximum(core, _sp_swirl(pad, cx, 188, 14.0, 1.4, 0.75, 2.0, rot=-f * 0.3) * clamp01(sil * 2))
+        core = np.maximum(core, pad.disc_field(cx, hy + 33, 2.6, soft=0.6) * 0.7)
+    else:
+        core = np.maximum(core, _sp_swirl(pad, cx, 182 + math.sin(TAU * (f - 8) / 4) * 4, 16.0, 1.3, 0.75, 2.0, rot=f * 0.6) * clamp01(sil * 2))
+        for s in (-1, 1):
+            ext = 0.5 + 0.5 * math.sin(TAU * (f - 8) / 4 + (0 if s < 0 else math.pi))
+            if ext > 0.7:
+                core = np.maximum(core, star4(pad, cx + s * 26, 246, 9.0, 0.85, rot=0.3, thin=0.14, diag=0.3))
+                glow = np.maximum(glow, pad.radial(cx + s * 26, 246, 18.0, 1.6) * 0.5)
+    wisp = pad.zeros()
+    for i in range(10):
+        x0 = cx + rs.uniform(-40, 40)
+        y0 = rs.uniform(150, 220)
+        L = rs.uniform(30, 60)
+        pts = [(x0 + 6 * math.sin(t * 4 + i + f), y0 - L * t) for t in np.linspace(0, 1, 12)]
+        wisp = np.maximum(wisp, pad.stroke(pts, 1.0, wfn=lambda s: 4.0 * (1 - s) + 0.5, afn=lambda s: 0.5 * (1 - s), soft=1.2))
+    glow = np.maximum(glow, wisp)
+    if f <= 2:
+        k = 1.0 - f / 3.0
+        for i in range(12):
+            a0 = TAU * i / 12 + 0.2
+            pts = []
+            for jj in range(20):
+                u = jj / 19
+                r = (124 - 80 * u) * (0.8 + 0.4 * k)
+                a = a0 + 1.5 * u
+                pts.append((cx + math.cos(a) * r, 150 + math.sin(a) * r * 0.85))
+            glow = np.maximum(glow, pad.stroke(pts, 1.0, wfn=lambda t: 5.0 * (1 - t) + 1.0, afn=lambda t, k=k: k * 0.6 * np.sin(np.pi * t), soft=1.5))
+    if f == 6:
+        core = np.maximum(core, star4(pad, cx, 40, 46.0, 1.0, rot=0.0, thin=0.07, diag=0.3))
+        glow = np.maximum(glow, pad.radial(cx, 60, 80.0, 1.5) * 0.55)
+        for i in range(9):
+            a = math.radians(-90 + (i - 4) * 18)
+            glow = np.maximum(glow, pad.stroke([(cx + math.cos(a) * 34, 74 + math.sin(a) * 34), (cx + math.cos(a) * 118, 74 + math.sin(a) * 118)], 3.0, 0.5,
+                                               a0=0.55, a1=0.0, soft=1.0))
+    if f == 7:
+        nz = fbm(X / 26.0, Y / 26.0 - 2.0, seed=18330, octaves=3)
+        keep = smooth(-0.05, 0.3, nz + (Y - 60) / 300.0)
+        glow = glow * keep
+        core = core * keep
+    a = SPF_A[f]
+    return finish(pad, glow * a, core * a, halo=((1.5, 0.45), (4.0, 0.36), (10.0, 0.22)), body_k=0.9, core_bloom=((1.3, 0.38), (3.5, 0.26)), win=4.0)
+
+
+sprite("rfx_jstagf", "lookat_y", SPF_S, SPF_S, SPF_N, 4, "spirit", zoom=0,
+       desc="사슴 정령 왕 (세워 카메라 쪽으로 돎 · 아래 끝 = 땅): 앞모습 0 ~ 2 빛이 감겨 들며 모여 사슴 왕이 됨 → 3 ~ 5 서 있음 (이어 돌림 — 리라 꼴 금빛 뿔 맥동 · 오르는 빛 가닥) → "
+       "6 고개를 들고 번쩍 (뿔 위 빛살) → 7 위로 흩어짐 / 뒷모습 8 ~ 11 멀어지며 달림 (이어 돌림 — 엉덩이 · 번갈아 박차는 뒷다리 · 등 너머 뿔 · 박찬 자리 반짝임)")(sp_stagf_frame)
+
+
+# ------------------------------------------------------------ rfx_jowl (부엉이 정령 — 앞모습 날개를 펼침, 카메라를 봄)
+
+SPO_N = 8
+SPO_W, SPO_H = 384, 256
+SPO_FLAP = [0.0, 0.0, -1.0, -0.35, 0.8, 0.3, 0.0, 0.0]  # 날개 끝 올림 (−) · 내림 (+)
+SPO_A = [0.4, 0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 0.45]
+
+
+def _sp_owl_wing(cx, s, flap, sweep=0.0):
+    """날개 하나 (앞모습 — s = −1 왼쪽 · +1 오른쪽): 앞 테 (어깨 → 손목 → 손 끝), 칼깃 일곱 (밑동 · 끝 — 손가락처럼 벌어짐), 둘째 깃 물결 (뒤 테 — 몸 쪽으로)"""
+    shx, shy = cx + s * 22, 118.0
+    wx, wy = cx + s * (96 - 26 * sweep), 92.0 + 30 * flap - 46 * sweep
+    hx, hy = cx + s * (128 - 50 * sweep), 98.0 + 42 * flap - 62 * sweep
+    lead = bez((shx, shy - 6), ((shx + wx) / 2, shy - 30 + 16 * flap - 24 * sweep), (wx, wy), 10) + bez((wx, wy), ((wx + hx) / 2, wy - 6 + 6 * flap), (hx, hy), 8)[1:]
+    fingers = []
+    for i in range(7):
+        u = i / 6
+        bx = hx - s * (2 + 30 * u)
+        by = hy + 4 + 18 * u
+        ang = math.radians(-12 + 78 * u + 24 * flap + 50 * sweep)  # 0 = 바깥으로 · 90 = 아래
+        L = (44 - 12 * u) * (1 - 0.25 * sweep)
+        fingers.append(((bx, by), (bx + s * math.cos(ang) * L, by + math.sin(ang) * L)))
+    trail = []
+    tb = fingers[-1][0]
+    for i in range(11):
+        u = i / 10
+        x = tb[0] + (shx + s * 4 - tb[0]) * u
+        y = tb[1] + 22 + (shy + 40 - tb[1] - 22) * u
+        trail.append((x, y))
+    return lead, fingers, trail
+
+
+def sp_owl_frame(f):
+    """부엉이 정령 (앞모습): 0 빛이 모여 듦 → 1 날개를 펼치며 번쩍 → 2 ~ 5 날갯짓 (이어 돌림) → 6 날개를 뒤 위로 모아 내리꽂음 (뒷모습으로도 — 얼굴 없음) → 7 깃털로 흩어짐"""
+    W, H = SPO_W, SPO_H
+    pad = Pad(W, H)
+    X, Y = pad.grid()
+    rs = random.Random(18400 + f)
+    cx = W / 2
+    flap = SPO_FLAP[f]
+    sweep = 1.0 if f == 6 else 0.0
+    sil = pad.zeros()
+    wing_core = pad.zeros()
+    for s in (-1, 1):
+        lead, fingers, trail = _sp_owl_wing(cx, s, flap, sweep)
+        # 날개 판: 앞 테 · 칼깃 밑동 · 둘째 깃 물결 (뒤 테를 따라 둥근 깃 끝)
+        poly = lead + [fg[0] for fg in fingers] + trail
+        wm = pad.poly(poly)
+        for i in range(len(trail) - 1):
+            mxp = ((trail[i][0] + trail[i + 1][0]) / 2, (trail[i][1] + trail[i + 1][1]) / 2)
+            wm = np.maximum(wm, pad.disc_field(mxp[0], mxp[1] - 2, 9.0, soft=0.8))
+        for (b, t) in fingers:
+            wm = np.maximum(wm, pad.stroke([b, t], 11.0, 3.0, soft=0.6))
+        sil = np.maximum(sil, wm)
+        wing_core = np.maximum(wing_core, pad.stroke(lead, 3.0, 1.6, a0=0.95, a1=0.75, soft=0.4))
+        for (b, t) in fingers:
+            wing_core = np.maximum(wing_core, pad.stroke([b, t], 1.4, 0.6, a0=0.65, a1=0.3, soft=0.4))
+        for r in range(3):
+            pts = [(lead[i][0], lead[i][1] + 13 + 11 * r) for i in range(1, len(lead) - 2)]
+            wing_core = np.maximum(wing_core, pad.stroke(pts, 1.2, 0.6, a0=0.45, a1=0.2, soft=0.5) * clamp01(wm * 2))
+    sil = np.maximum(sil, pad.ellipse(cx, 150, 30, 44))
+    sil = np.maximum(sil, pad.ellipse(cx, 102, 32, 29))
+    for s in (-1, 1):
+        sil = np.maximum(sil, pad.poly([(cx + s * 10, 82), (cx + s * 30, 58), (cx + s * 27, 88)]))
+    for i in range(5):
+        a = math.radians(90 + (i - 2) * 13)
+        sil = np.maximum(sil, pad.stroke([(cx, 178), (cx + math.cos(a) * 32, 178 + math.sin(a) * 40)], 12.0, 8.0, soft=0.6))
+    glow, core = _sp_body(pad, X, Y, sil, 18410, f, flow_px=6, flow_py=4)
+    core = np.maximum(core, wing_core * clamp01(sil * 2))
+    if f != 6:
+        for s in (-1, 1):
+            core = np.maximum(core, pad.stroke(bez((cx, 84), (cx + s * 36, 86), (cx + s * 25, 124), 14), 1.6, 1.0, a0=0.7, a1=0.45, soft=0.4))
+            ex, ey = cx + s * 13, 102
+            ring = [(ex + math.cos(t) * 8.5, ey + math.sin(t) * 8.5) for t in np.linspace(0, TAU, 25)]
+            core = np.maximum(core, pad.stroke(ring, 2.6, soft=0.4))
+            core = np.maximum(core, pad.disc_field(ex, ey, 3.6, soft=0.6))
+            glow = np.maximum(glow, pad.radial(ex, ey, 15.0, 1.5) * 0.7)
+        core = np.maximum(core, pad.poly([(cx - 4, 110), (cx + 4, 110), (cx, 122)]) * 0.9)
+        for r in range(4):
+            for c in range(-1, 2):
+                x0, y0 = cx + c * 10 + (r % 2) * 5, 134 + r * 11
+                core = np.maximum(core, pad.stroke([(x0 - 4, y0), (x0, y0 + 4), (x0 + 4, y0)], 1.0, 0.6, a0=0.4, a1=0.4) * clamp01(sil * 2))
+    else:
+        core = np.maximum(core, _sp_swirl(pad, cx, 132, 14.0, 1.3, 0.8, 2.0, rot=0.4) * clamp01(sil * 2))
+    wisp = pad.zeros()
+    for s in (-1, 1):
+        _, fingers, _ = _sp_owl_wing(cx, s, flap, sweep)
+        for (b, t) in fingers[:4]:
+            pts = [(t[0] + s * 8 * u, t[1] + 22 * u + 4 * math.sin(u * 5 + f)) for u in np.linspace(0, 1, 10)]
+            wisp = np.maximum(wisp, pad.stroke(pts, 1.0, wfn=lambda q: 3.0 * (1 - q) + 0.4, afn=lambda q: 0.5 * (1 - q), soft=1.0))
+    glow = np.maximum(glow, wisp)
+    for i in range(8):
+        lf = _sp_leaf(pad, rs.uniform(30, W - 30), rs.uniform(40, 230), rs.uniform(6, 11), rs.uniform(0, TAU), rs.uniform(0.4, 0.8))
+        glow = np.maximum(glow, lf * 0.7)
+        core = np.maximum(core, lf * 0.5)
+    if f == 0:
+        for i in range(12):
+            a0 = TAU * i / 12
+            pts = []
+            for jj in range(18):
+                u = jj / 17
+                r = 150 - 110 * u
+                a = a0 + 1.4 * u
+                pts.append((cx + math.cos(a) * r, 128 + math.sin(a) * r * 0.62))
+            glow = np.maximum(glow, pad.stroke(pts, 1.0, wfn=lambda t: 5.0 * (1 - t) + 1.0, afn=lambda t: 0.6 * np.sin(np.pi * t), soft=1.5))
+        glow *= 0.7
+        core *= 0.5
+    if f == 1:
+        core = np.maximum(core, star4(pad, cx, 102, 40.0, 1.0, rot=0.0, thin=0.07, diag=0.3))
+        glow = np.maximum(glow, pad.radial(cx, 112, 90.0, 1.5) * 0.5)
+    if f == 7:
+        nz = fbm(X / 30.0, Y / 30.0, seed=18430, octaves=3)
+        keep = smooth(0.0, 0.35, nz)
+        glow = glow * keep
+        core = core * keep
+        for i in range(16):
+            lf = _sp_leaf(pad, rs.uniform(20, W - 20), rs.uniform(30, 240), rs.uniform(8, 14), rs.uniform(0, TAU), 0.8)
+            glow = np.maximum(glow, lf)
+            core = np.maximum(core, lf * 0.6)
+    a = SPO_A[f]
+    return finish(pad, glow * a, core * a, halo=((1.5, 0.45), (4.0, 0.36), (10.0, 0.22)), body_k=0.9, core_bloom=((1.3, 0.38), (3.5, 0.26)), win=4.0)
+
+
+COLORS.setdefault("owl", ((0.72, 1.0, 0.38), (1.0, 0.94, 0.62)))
+sprite("rfx_jowl", "rotate_xyz", SPO_W, SPO_H, SPO_N, 4, "owl", zoom=0,
+       desc="부엉이 정령 (앞모습 — 카메라를 봄, 몸 가운데 (192, 150) · 날개 끝 사이 ≈ 340 점): 0 빛이 감겨 들며 모임 → 1 날개를 펼치며 번쩍 → 2 ~ 5 날갯짓 (이어 돌림 — "
+       "손가락처럼 벌어진 칼깃 일곱 · 둥근 둘째 깃 · 덮깃 물결 · 하트 꼴 얼굴 테 · 큰 금빛 눈 · 가슴 깃 무늬) → 6 날개를 뒤 위로 모아 내리꽂음 (얼굴 없음 — 뒷모습으로도) → "
+       "7 깃털 · 잎 티끌로 흩어짐")(sp_owl_frame)
+
+
+# ------------------------------------------------------------ rfx_jowlside (부엉이 정령 — 옆모습 활공 · 내리꽂음, 머리 = 오른쪽 · 세운 판 (direction_x))
+
+SPOS_N = 4
+SPOS_W, SPOS_H = 256, 128
+SPOS_FEATHER = []  # 가까운 날개 칼깃 (밑동 · 끝) · 앞 테 — 심지 줄
+
+
+def sp_owlside_frame(f):
+    """부엉이 정령 옆모습: 소리 없이 활공하며 꿰뚫음 — 뒤 위로 든 둥근 날개 둘 (칼깃 손가락 · 이어 돌림 조금 날갯짓) · 큰 둥근 머리 (얼굴 테 · 눈 · 귀깃 · 부리) ·
+    달걀 꼴 몸 · 앞으로 뻗은 발톱 · 꼬리 부채 · 뒤로 흐르는 빛"""
+    W, H = SPOS_W, SPOS_H
+    pad = Pad(W, H)
+    X, Y = pad.grid()
+    rs = random.Random(18500 + f)
+    ph = f / SPOS_N * TAU
+    lift = 6.0 * math.sin(ph)
+    sil = pad.zeros()
+    far = pad.zeros()
+    bx, by = 140.0, 80.0
+    for far_w in (True, False):
+        ox, oy = (-14.0, 6.0) if far_w else (0.0, 0.0)
+        sh = (bx + 8 + ox, by - 16 + oy)
+        wr = (bx - 18 + ox, by - 54 - lift * 0.6 + oy)
+        hd = (bx - 44 + ox, by - 62 - lift + oy)
+        lead = bez(sh, (bx - 2 + ox, by - 46 - lift * 0.4 + oy), wr, 10) + [hd]
+        bases = []
+        tips = []
+        for i in range(7):
+            b0 = (hd[0] + 6 * i, hd[1] + 6 * i)
+            ang = math.radians(196 + 8 * i - lift * 0.8)
+            L = 40 - 3 * i
+            bases.append(b0)
+            tips.append((b0[0] + math.cos(ang) * L, b0[1] + math.sin(ang) * L))
+        trail = bez(bases[-1], (bx - 22 + ox, by - 4 + oy), (bx - 4 + ox, by + 6 + oy), 10)
+        wm = pad.poly(lead + bases + trail[1:])
+        for i in range(len(trail) - 1):
+            wm = np.maximum(wm, pad.disc_field((trail[i][0] + trail[i + 1][0]) / 2 - 2, (trail[i][1] + trail[i + 1][1]) / 2 + 2, 6.0, soft=0.8))
+        for b0, t0 in zip(bases, tips):
+            wm = np.maximum(wm, pad.stroke([b0, t0], 9.0, 2.6, soft=0.6))
+        if far_w:
+            far = np.maximum(far, wm)
+        else:
+            sil = np.maximum(sil, wm)
+            SPOS_FEATHER[:] = list(zip(bases, tips)) + [("lead", lead)]
+    sil = np.maximum(sil, pad.ellipse(bx, by, 34, 19))
+    hx, hy = bx + 38, by - 14
+    sil = np.maximum(sil, pad.ellipse(hx, hy, 21, 19))
+    sil = np.maximum(sil, pad.poly([(hx - 8, hy - 14), (hx - 4, hy - 32), (hx + 5, hy - 16)]))
+    sil = np.maximum(sil, pad.poly([(hx + 17, hy - 1), (hx + 26, hy + 5), (hx + 16, hy + 9)]))
+    for i in range(4):
+        a = math.radians(180 + (i - 1.5) * 9)
+        sil = np.maximum(sil, pad.stroke([(bx - 28, by), (bx - 28 + math.cos(a) * 30, by + math.sin(a) * 30)], 9.0, 6.0, soft=0.6))
+    for o in (0, 6):
+        leg = [(bx + 12 + o, by + 14), (bx + 30 + o, by + 26), (bx + 48 + o, by + 27)]
+        sil = np.maximum(sil, pad.stroke(leg, 7.0, 4.0, soft=0.6))
+    glow, core = _sp_body(pad, X, Y, sil, 18510, f, flow_px=2, flow_py=12)
+    g2, c2 = _sp_body(pad, X, Y, far, 18520, f, a=0.45)
+    glow = np.maximum(glow, g2 * (1 - clamp01(sil)))
+    core = np.maximum(core, c2 * 0.5 * (1 - clamp01(sil)))
+    for item in SPOS_FEATHER:
+        if item[0] == "lead":
+            core = np.maximum(core, pad.stroke(item[1], 2.6, 1.4, a0=0.9, a1=0.7, soft=0.4))
+        else:
+            core = np.maximum(core, pad.stroke([item[0], item[1]], 1.3, 0.5, a0=0.6, a1=0.25, soft=0.4))
+    for o in (0, 6):
+        tipx, tipy = bx + 48 + o, by + 27
+        for c in (-1, 1):
+            core = np.maximum(core, pad.stroke(bez((tipx - 2, tipy), (tipx + 6, tipy + c * 2), (tipx + 8, tipy + 6 + c * 3), 6), 1.8, 0.5, a0=0.9, a1=0.6))
+    core = np.maximum(core, pad.stroke(bez((hx + 2, hy - 15), (hx + 20, hy - 6), (hx + 6, hy + 14), 12), 1.4, 1.0, a0=0.6, a1=0.4, soft=0.4))
+    ring = [(hx + 8 + math.cos(t) * 5.5, hy - 3 + math.sin(t) * 5.5) for t in np.linspace(0, TAU, 21)]
+    core = np.maximum(core, pad.stroke(ring, 2.0, soft=0.4))
+    core = np.maximum(core, pad.disc_field(hx + 8, hy - 3, 2.6, soft=0.6))
+    glow = np.maximum(glow, pad.radial(hx + 8, hy - 3, 10.0, 1.5) * 0.6)
+    core = np.maximum(core, _sp_swirl(pad, bx - 2, by + 2, 10.0, 1.3, 0.8, 1.6, rot=f * 0.5) * clamp01(sil * 2))
+    wisp = _sp_wisps(pad, rs, [(bx - 58, by - 2), (bx - 80, by - 66 - lift), (bx - 60, by - 40)], 56.0, 6.0, 2, 4.0, 0.6, curl=4.0, phase=f)
+    glow = np.maximum(glow, wisp)
+    for i in range(6):
+        y = rs.uniform(30, 110)
+        x1 = rs.uniform(30, 80)
+        L = rs.uniform(30, 60)
+        glow = np.maximum(glow, pad.stroke([(x1 - L, y), (x1, y)], 0.6, 2.6, a0=0.0, a1=0.35, soft=0.8))
+    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (9.0, 0.22)), body_k=0.9, core_bloom=((1.2, 0.35), (3.0, 0.24)), win=4.0)
+
+
+sprite("rfx_jowlside", "direction_x", SPOS_W, SPOS_H, SPOS_N, 4, "owl", zoom=1, loop=True,
+       desc="부엉이 정령 옆모습 (세운 판이 가는 쪽 (오른쪽 = 머리) 을 따라 섬 · 이어 돌림 4장): 소리 없이 활공하며 내리꽂음 — 뒤 위로 든 둥근 날개 둘 (칼깃 손가락 · 조금 날갯짓) · "
+       "큰 둥근 머리 (얼굴 테 · 금빛 눈 · 귀깃 · 부리) · 달걀 꼴 몸 · 앞으로 뻗은 발톱 · 꼬리 부채 · 소용돌이 · 뒤로 흐르는 빛 가닥")(sp_owlside_frame)
+
+
+# ------------------------------------------------------------ rfx_jsbloom (정령 꽃 — 세워 카메라 쪽으로 돎, 아래 = 땅)
+
+SPB_N = 8
+SPB_S = 128
+
+
+def _sp_petal(pad, base, ang, L, w, curl=0.0):
+    """꽃잎 하나 (밑동 base 에서 ang 쪽으로 길이 L · 폭 w — 끝이 뾰족한 잎 꼴)"""
+    tip = (base[0] + math.cos(ang) * L, base[1] + math.sin(ang) * L)
+    mid = (base[0] + math.cos(ang + curl) * L * 0.55, base[1] + math.sin(ang + curl) * L * 0.55)
+    pts = bez(base, mid, tip, 12)
+    return pad.poly(taper_poly(pts, lambda t: w * math.sin(math.pi * min(1.0, t * 0.85 + 0.08)) ** 0.8)), pts
+
+
+def sp_bloom_frame(f):
+    """정령 꽃: 0 땅에서 빛 싹이 솟음 → 1 봉오리가 열림 → 2 활짝 피며 번쩍 → 3 ~ 4 빛남 (이어 돌림 — 꽃잎 금빛 테 맥동 · 오르는 티끌) → 5 부풀어 번쩍 → 6 터짐 (꽃잎이 바깥으로) → 7 티끌"""
+    S = SPB_S
+    pad = Pad(S, S)
+    X, Y = pad.grid()
+    rs = random.Random(18600 + f)
+    cx, cy = 64.0, 80.0
+    glow = pad.zeros()
+    core = pad.zeros()
+    openness = [0.0, 0.45, 1.0, 1.0, 1.0, 1.08, 1.4, 1.0][f]
+    if f <= 5:
+        stem = [(cx, 124), (cx + 2, 104), (cx, cy + 4)]
+        glow = np.maximum(glow, pad.stroke(stem, 3.0, 2.0, a0=0.6, a1=0.8, soft=0.6))
+        core = np.maximum(core, pad.stroke(stem, 1.0, 0.8, a0=0.4, a1=0.6))
+        for s in (-1, 1):
+            m, pts = _sp_petal(pad, (cx + s * 1, 110), math.radians(-90 + s * 60), 16, 6, curl=-s * 0.3)
+            glow = np.maximum(glow, m * 0.55)
+            core = np.maximum(core, pad.stroke(pts, 0.8, 0.4, a0=0.5, a1=0.2))
+        if f == 0:
+            glow = np.maximum(glow, pad.radial(cx, cy + 6, 14.0, 1.4) * 0.9)
+            core = np.maximum(core, star4(pad, cx, cy + 4, 10.0, 0.9, rot=0.0, thin=0.14, diag=0.35))
+        else:
+            n = 6
+            for i in range(n):
+                spread = 0.25 + 0.75 * min(1.0, openness)
+                ang = math.radians(-90 + (i - (n - 1) / 2) * 30 * spread)
+                L = 30 + 6 * (1 - abs(i - (n - 1) / 2) / 3) + (4 if f == 5 else 0)
+                m, pts = _sp_petal(pad, (cx, cy + 4), ang, L, 9.0 + 3 * spread, curl=0.12 * (i - 2.5) / 2.5)
+                pulse = 1.0 if f not in (3, 4) else (0.85 + 0.15 * (1 if (i + f) % 2 else -1))
+                gp, cp = _sp_body(pad, X, Y, m, 18610 + i, f, flow_px=4, flow_py=6, a=0.9)
+                glow = np.maximum(glow, gp)
+                core = np.maximum(core, cp * 0.8)
+                core = np.maximum(core, rim_of(m, 1.0) * 0.8 * pulse * m)
+                core = np.maximum(core, pad.stroke(pts[:10], 1.0, 0.5, a0=0.6, a1=0.2))
+            glow = np.maximum(glow, pad.radial(cx, cy, 16.0, 1.4) * 0.8)
+            core = np.maximum(core, pad.disc_field(cx, cy, 4.5, soft=1.0))
+            for i in range(5):
+                a = math.radians(-90 + (i - 2) * 22)
+                tip = (cx + math.cos(a) * 14, cy + math.sin(a) * 14)
+                core = np.maximum(core, pad.stroke([(cx, cy), tip], 1.0, 0.6, a0=0.6, a1=0.8))
+                core = np.maximum(core, pad.disc_field(tip[0], tip[1], 1.8, soft=0.5))
+            if f in (2, 5):
+                core = np.maximum(core, star4(pad, cx, cy - 6, 26.0 if f == 2 else 34.0, 1.0, rot=0.2, thin=0.08, diag=0.35))
+                glow = np.maximum(glow, pad.radial(cx, cy, 40.0, 1.5) * (0.5 if f == 2 else 0.75))
+            for i in range(4):
+                px, py = cx + rs.uniform(-26, 26), rs.uniform(20, 70)
+                core = np.maximum(core, pad.disc_field(px, py, rs.uniform(1.0, 2.0), soft=0.6) * rs.uniform(0.5, 0.9))
+    else:
+        k = 1.0 if f == 6 else 0.45
+        for i in range(12):
+            ang = TAU * i / 12 + rs.uniform(-0.15, 0.15)
+            r0 = 22 if f == 6 else 44
+            px, py = cx + math.cos(ang) * r0, cy - 8 + math.sin(ang) * r0 * 0.8
+            lf = _sp_leaf(pad, px, py, 12.0 if f == 6 else 9.0, ang, 0.9 * k)
+            glow = np.maximum(glow, lf)
+            core = np.maximum(core, lf * 0.7)
+        if f == 6:
+            core = np.maximum(core, star4(pad, cx, cy - 8, 40.0, 1.0, rot=0.1, thin=0.07, diag=0.3))
+            glow = np.maximum(glow, pad.radial(cx, cy - 8, 44.0, 1.4) * 0.7)
+            ring = [(cx + math.cos(t) * 34, cy - 8 + math.sin(t) * 30) for t in np.linspace(0, TAU, 49)]
+            core = np.maximum(core, pad.stroke(ring, 2.2, soft=0.8) * 0.8)
+        for i in range(14):
+            core = np.maximum(core, pad.disc_field(rs.uniform(10, 118), rs.uniform(10, 110), rs.uniform(1.0, 2.2), soft=0.6) * rs.uniform(0.4, 0.9) * k)
+    return finish(pad, glow, core, halo=((1.5, 0.45), (4.0, 0.36), (8.0, 0.22)), body_k=0.9, core_bloom=((1.2, 0.35), (3.0, 0.24)), win=4.0)
+
+
+sprite("rfx_jsbloom", "lookat_y", SPB_S, SPB_S, SPB_N, 4, "spirit", zoom=2,
+       desc="정령 꽃 (세워 카메라 쪽으로 돎 · 아래 끝 = 땅 · 꽃 가운데 (64, 80)): 0 땅에서 빛 싹이 솟음 → 1 봉오리 (꽃잎 여섯) 가 열림 → 2 활짝 피며 번쩍 → 3 ~ 4 빛남 "
+       "(이어 돌림 — 흐르는 정령빛 꽃잎 · 금빛 테 맥동 · 꽃술 · 오르는 티끌) → 5 부풀어 크게 번쩍 → 6 터짐 (꽃잎 열둘이 바깥으로 · 섬광 · 고리) → 7 흩어진 꽃잎 · 티끌")(sp_bloom_frame)
+
+
+def save_alias(alias, src, img, cw, ch, facing):
+    """2026-11-07 같은 그림을 다른 보는 꼴로 쓰는 파티클 정의 (rfx_jswolf1p — 늑대 정령 옆모습을 1인칭에서 카메라를 보는 판으로): 그림은 src 의 것"""
+    import json as _json
+    from java_fx_art import PART, particle
+    d = particle(alias, img.size[0], img.size[1], cw, ch, facing)
+    d["particle_effect"]["description"]["basic_render_parameters"]["texture"] = f"textures/particle/rpg/fx/{src}"
+    with open(os.path.join(PART, f"{alias}.particle.json"), "w", encoding="utf-8") as fh:
+        _json.dump(d, fh, ensure_ascii=False, indent=2)
+        fh.write("\n")
+    print(f"{alias}: alias of {src} ({facing})")
+
+
 def main():
     args = sys.argv[1:]
     folder = None
@@ -6122,6 +6862,9 @@ def main():
         img = to_sheet(list(glows) + list(cores), sp.cols, sp.cw, sp.ch)
         assert img.size[0] <= 4096 and img.size[1] <= 4096, (sp.name, img.size)
         save(sp.name, img, sp.cw, sp.ch, sp.facing)
+        for alias, (src, facing) in ALIASES.items():
+            if src == sp.name:
+                save_alias(alias, sp.name, img, sp.cw, sp.ch, facing)
         if folder:
             print("  preview:", V2C.preview(sp, glows, cores, folder))
 

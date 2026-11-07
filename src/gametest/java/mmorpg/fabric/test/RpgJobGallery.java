@@ -108,8 +108,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(0, new int[] {2, 6, 12}, new int[] {3, 9}, 18, false),
         new Case(1, new int[] {1, 3, 8}, new int[] {2, 6}, 30, false, true, 4),
         new Case(2, new int[] {3, 10, 26, 46}, new int[] {10, 30}, 52, false),
-        new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
-        new Case(4, new int[] {8, 18, 25, 31, 40, 52}, new int[] {14, 26, 32, 44}, 64, false),
+        new Case(3, new int[] {4, 10, 18}, new int[] {6, 14}, 40, true, false, 4), // 2026-11-07 와일드 헌트: 늑대 정령 둘이 깨어남 → 4 활 평타 → 늑대가 뛰어올라 물어뜯음
+        new Case(4, new int[] {8, 18, 25, 27, 36, 43, 50}, new int[] {12, 22, 26, 30, 44}, 64, false), // 스피릿 스탬피드: 0 ~ 24 사슴 왕 깨어남 → 24 내달림 → 43 꽃이 터짐
     };
 
     /** 0.29.0 암살자 · 창술사 · 사신 (암영은 태세지만 평타가 풀므로 강화처럼 — 평타가 들어갔는지만) */
@@ -180,7 +180,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
     };
     /** 0.51.0 다시 쓰는 스킬 (JobRecast): 쓴 뒤 이 틱들에 같은 칸을 다시 누름 (핏빛 대검 둘째 · 셋째 · 데드아이 세 발 — 사진첩 · 영상 모두) */
     private static final java.util.Map<String, int[]> AGAIN = java.util.Map.ofEntries(java.util.Map.entry("bloodknight_cleave", new int[] {12, 24}),
-            java.util.Map.entry("necromancer_call", new int[] {16}), java.util.Map.entry("sniper_ult", new int[] {14, 28, 42}),
+            java.util.Map.entry("necromancer_call", new int[] {16}), java.util.Map.entry("sniper_ult", new int[] {22}),
             java.util.Map.entry("trickster_swap", new int[] {12}), java.util.Map.entry("trickster_dash", new int[] {16}), // 2026-11-06 트릭스터 2판: 섀도 스와프 자리 바꿈 · 미라주 대시 돌아옴
             java.util.Map.entry("stormlancer_drive", new int[] {12}), java.util.Map.entry("stormlancer_rend", new int[] {20}),
             java.util.Map.entry("dragoon_jump", new int[] {16}), // 2026-11-06 창술사 2차: 돌아서며 바람 창 · 뽑아 찢음 · 내리꽂음
@@ -255,8 +255,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /**
      * 0.51.0 스나이퍼 · 배틀 아처 (재설계안 2판 — 2026-11-06): 하트시커 (0 ~ 20 끝까지 당김 → 20 저절로 놓음 · 번쩍 → 21 큰 한 발) · 스네어 샷 (2 그물 화살 · 반동으로 뒤로
-     * 뜀 → 3 감김 → 12 내려앉음 · 호흡 +3) · 트릭 샷 (3 쏨 → 4 맞음 → 3틱마다 튐) · 헌터스 마크 (태세 → 같은 과녁 셋째 활 평타 — 은빛 화살, 사진첩은 둘째까지 맞힌 것으로) ·
-     * 데드아이 (저격 자세 → 14 · 28 · 42 에 다시 눌러 세 발 — 셋째 금빛) / 호넷 스웜 (2 쏘아 올림 → 7 꽂힘) · 팰컨 다이브 (0 ~ 12 뛰어 매와 내리꽂힘 → 12 둘레 화살) ·
+     * 뜀 → 3 감김 → 12 내려앉음 · 교감 +3) · 트릭 샷 (3 쏨 → 4 맞음 → 3틱마다 튐) · 헌터스 마크 (태세 → 같은 과녁 셋째 활 평타 — 은빛 화살, 사진첩은 둘째까지 맞힌 것으로) ·
+     * 사일런트 아울 (2026-11-07 3판 — 조준 · 등 뒤 위 부엉이 정령 → 22 에 다시 눌러 부엉이 화살 → 24 급소 → 34 정령빛) / 호넷 스웜 (2 쏘아 올림 → 7 꽂힘) · 팰컨 다이브 (0 ~ 12 뛰어 매와 내리꽂힘 → 12 둘레 화살) ·
      * 스플린터 샷 (0 ~ 6 당김 → 6 부채꼴 화살 조각) · 스톰 스트라이드 (태세 → 서서 쏜 평타가 세 갈래) · 퀴버 스톰 (2 ~ 62 화살 물결 · 10 ~ 60 여섯 번 → 62 하늘로 다발 →
      * 64 화살비 → 70 내리꽂힘)
      */
@@ -265,7 +265,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
         new Case(1, new int[] {2, 4, 7, 12, 20}, new int[] {4, 12}, 30, false),
         new Case(2, new int[] {3, 5, 8, 11, 16}, new int[] {5, 11}, 24, false),
         new Case(3, new int[] {4, 16}, new int[] {6}, 30, true, false, 4),
-        new Case(4, new int[] {6, 14, 16, 28, 30, 42, 44, 52}, new int[] {14, 29, 43}, 60, false),
+        new Case(4, new int[] {6, 14, 22, 24, 30, 36, 42}, new int[] {12, 23, 35}, 52, false), // 2026-11-07 사일런트 아울: 22 에 다시 눌러 부엉이 화살 → 24 꿰뚫음 → 34 정령빛
     };
     private static final Case[] CASES_BA = {
         new Case(0, new int[] {1, 3, 5, 7, 10}, new int[] {4, 7}, 20, false),
@@ -708,7 +708,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(-1.5, -60, -1.0));
             mmorpg.fabric.job.NecroCrew.testRaise(sp, new Vec3(2.5, -60, -1.0));
         }
-        // 0.51.0 스나이퍼: 호흡 5 (하트시커 +30% · 스네어 샷이 내려앉으면 8 — 게이지)
+        // 0.51.0 스나이퍼: 정령 교감 5 (하트시커 +30% · 스네어 샷이 내려앉으면 8 — 게이지)
         if (id.startsWith("sniper_")) JobTraitsMore.setBreath(sp, 5);
         // 2026-11-06 트릭스터 2판: 섀도 스와프는 표식 6 (꿰뚫어 7 — 가득 찬 터뜨림) · 와일드파이어 피스트는 표식 3 (들불 환영 넷이 7 까지)
         if (id.equals("trickster_swap")) markHusks(sp, 6);
@@ -929,6 +929,9 @@ public final class RpgJobGallery implements FabricClientGameTest {
         return switch (id) {
             case "swordmaster_ult" -> new double[] {11.5, 3.0, 5.6, 0.4}; // 2026-11-07 엑스칼리버: 15칸 빛의 대검을 올려다봄 · 앞 24칸 검격
             case "swordmaster_echo" -> new double[] {8.5, 3.2, 1.2, 0.3}; // 블레이드 에코: 둘레를 옮겨 다니다 처음 자리로 돌아옴 — 덜 따라감
+            case "archer_ult" -> new double[] {11.0, 3.4, 2.8, 0.4}; // 2026-11-07 스피릿 스탬피드: 등 뒤 사슴 정령 왕 (4.4칸) · 앞으로 내달리는 무리 · 정령 꽃
+            case "archer_focus" -> new double[] {7.5, 2.8, 1.2, 0.6}; // 와일드 헌트: 곁의 늑대 정령 둘 · 과녁에 뛰어오름
+            case "sniper_ult" -> new double[] {9.0, 3.4, 3.0, 0.5}; // 사일런트 아울: 등 뒤 위 부엉이 정령 (2.5칸 위) · 부엉이 화살
             case "arcmage_ult" -> new double[] {12.0, 3.6, 5.0, 0.4}; // 콘스텔레이션: 과녁 위 8.5칸 하늘의 국자 일곱 별 · 내리꽂히는 별빛 — 올려다봄
             case "arcmage_orbit" -> new double[] {7.0, 2.8, 1.6, 0.6}; // 셀레스티얼 오빗: 둘레를 도는 별 · 과녁에 떨어지는 별똥 · 땅의 별자리
             case "frostraider_ult" -> new double[] {12.0, 3.4, 5.0, 0.4}; // 핌불윈터: 하늘의 빙하 도끼 (18칸 위) 가 내리꽂혀 빙하가 솟음 — 올려다봄

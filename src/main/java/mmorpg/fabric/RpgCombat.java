@@ -755,6 +755,37 @@ public final class RpgCombat {
         rangedHit(sp, target, w, path, ratio);
     }
 
+    /**
+     * 2026-11-07 정령 궁수 와일드 헌트의 늑대 정령이 물어뜯음: 평타 피해 × ratio (치명타 · 더한 피해 · 맞힘 훅까지 평타 그대로 — 화살 그림 · 맞은 자리 그림 없이, 그림은
+     * 늑대가 냄). 대상이 아직 무적 시간 (앞 화살 뒤 10틱) 이면 끝날 때까지 미룸 (두 번까지 — 덧쏘기와 같음). 물어뜯는 동안은 {@link #bonusHitting()} (맞힘 훅이 다시
+     * 물어뜯게 하지 않게)
+     */
+    public static void bonusHit(ServerPlayer sp, LivingEntity target, Weapon w, double ratio) {
+        landBonusHit(sp, target, w, 2, ratio);
+    }
+
+    private static boolean bonusHitting;
+
+    /** 지금 들어가는 평타 피해가 늑대 정령의 물어뜯기인지 (맞힘 훅에서) */
+    public static boolean bonusHitting() {
+        return bonusHitting;
+    }
+
+    private static void landBonusHit(ServerPlayer sp, LivingEntity target, Weapon w, int retry, double ratio) {
+        if (sp.isRemoved() || target.isRemoved() || !target.isAlive()) return;
+        int wait = target.damageCooldownTime - 10;
+        if (wait > 0 && retry > 0) {
+            Tasks.later(wait, () -> landBonusHit(sp, target, w, retry - 1, ratio));
+            return;
+        }
+        bonusHitting = true;
+        try {
+            rangedHit(sp, target, w, null, ratio);
+        } finally {
+            bonusHitting = false;
+        }
+    }
+
     /** 원거리 명중 (combat.js rangedHit): 활 = 공격 피해 (방어구 적용), 완드 = 마법 피해 (방어 무시) */
     static void rangedHit(ServerPlayer sp, LivingEntity target, Weapon w, Path path) {
         rangedHit(sp, target, w, path, 1);
@@ -778,6 +809,7 @@ public final class RpgCombat {
             MARKS.remove(key(target, sp));
             return;
         }
+        if (bonusHitting) return; // 2026-11-07 늑대 정령의 물어뜯기: 맞은 자리 그림 · 소리는 늑대가
         double[][] prevLook = Fx.pushLook(look);
         try {
             if (path != null) {

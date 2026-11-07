@@ -1528,23 +1528,44 @@ def sniper_mark(A, B):
 
 
 def sniper_ult(A, B):
-    # 데드아이: 큰 조준경 (둥근 테 · 십자선 · 가운데 점) 을 가로지르는 세 화살 줄 — 둘은 연두 · 셋째는 굵은 금빛 · 십자 가운데 금빛 섬광
-    scope = mask()
-    ring(scope, 16.0, 16.0, 12.5, 1.6)
-    cross = mask()
-    for (p0, p1) in (((16.0, 3.0), (16.0, 11.5)), ((16.0, 20.5), (16.0, 29.0)), ((3.0, 16.0), (11.5, 16.0)), ((20.5, 16.0), (29.0, 16.0))):
-        line(cross, [p0, p1], 1.0)
-    shots = []
-    for (y0, y1, w) in ((26.0, 9.0, 1.1), (30.0, 13.0, 1.1)):
-        m = mask()
-        line(m, [(2.0, y0), (26.0, y1 - 6.0)], w)
-        shots.append(m)
-    gold = big_arrow((29.0, 4.0), -40, 30.0, 4.4, 2.2)
+    # 2026-11-07 사일런트 아울 (데드아이 대신): 날개를 활짝 편 부엉이 정령 (손가락처럼 벌어진 칼깃 · 귀깃 · 큰 금빛 눈) · 가슴을 가로지르는 금빛 화살 · 반짝임
+    wings = mask()
+    for sgn in (-1, 1):
+        def X(x):
+            return 16.0 + sgn * (x - 16.0)
+        poly(wings, [(X(13.0), 14.0), (X(7.5), 8.8), (X(1.5), 8.0), (X(1.0), 10.6), (X(3.2), 12.6), (X(1.6), 14.4), (X(4.6), 15.8), (X(3.4), 17.8),
+                     (X(7.2), 18.6), (X(7.0), 20.8), (X(13.0), 20.5)])
+    body = mask()
+    disc(body, 16.0, 21.0, 4.6)
+    poly(body, [(11.6, 21.0), (20.4, 21.0), (18.4, 28.0), (16.0, 29.5), (13.6, 28.0)])
+    head = mask()
+    disc(head, 16.0, 12.2, 5.2)
+    poly(head, [(12.0, 9.6), (11.2, 4.4), (14.4, 7.6)])
+    poly(head, [(20.0, 9.6), (20.8, 4.4), (17.6, 7.6)])
+    eyes = mask()
+    disc(eyes, 13.7, 12.4, 2.4)
+    disc(eyes, 18.3, 12.4, 2.4)
+    pupils = mask()
+    disc(pupils, 13.9, 12.6, 1.0)
+    disc(pupils, 18.1, 12.6, 1.0)
+    beak = mask()
+    poly(beak, [(15.2, 14.6), (16.8, 14.6), (16.0, 16.6)])
+    feathers = mask()
+    for sgn in (-1, 1):
+        for i in range(3):
+            x0 = 16.0 + sgn * (6.0 + 2.6 * i)
+            line(feathers, [(x0, 11.5 + i * 0.6), (x0 + sgn * 1.2, 17.0 + i * 0.4)], 0.5)
+    streak = mask()
+    line(streak, [(3.0, 30.0), (12.5, 24.5)], 1.1)
+    line(streak, [(19.5, 24.5), (29.0, 19.0)], 1.1)
     sp = mask()
-    star(sp, 16.0, 16.0, 5.0, 0.18, 0)
-    subject = stack(layer(scope, WHITE, A, WHITE, mix(A, (0, 0, 0), 0.35)), layer(cross, WHITE, A), *[layer(m, mix(A, WHITE, 0.4), A) for m in shots],
-                    layer(gold[0], WHITE, B), layer(gold[2], WHITE, B), layer(gold[1], WHITE, B, WHITE, mix(B, (0, 0, 0), 0.3)), layer(sp, WHITE, B))
-    return finish(subject, [glow(lighter(gold[0], gold[1]), B, 1.8, 1.0), glow(lighter(scope, *shots), A, 1.4, 0.8)], sniper_back(A, B))
+    star(sp, 27.0, 4.0, 2.6, 0.22, 10)
+    star(sp, 29.0, 19.0, 2.4, 0.22, 0)
+    subject = stack(layer(wings, mix(A, WHITE, 0.3), A, WHITE, mix(A, (0, 0, 0), 0.35), axis=(0.0, 1.0)), layer(feathers, mix(A, (0, 0, 0), 0.45), mix(A, (0, 0, 0), 0.5)),
+                    layer(body, mix(A, WHITE, 0.25), mix(A, (0, 0, 0), 0.15), WHITE, mix(A, (0, 0, 0), 0.35)), layer(head, mix(A, WHITE, 0.35), A, WHITE, mix(A, (0, 0, 0), 0.3)),
+                    layer(eyes, mix(B, WHITE, 0.5), B), layer(pupils, (20, 24, 10), (10, 12, 6)),
+                    layer(beak, WHITE, B), layer(streak, WHITE, B), layer(sp, WHITE, B))
+    return finish(subject, [glow(lighter(wings, head), A, 1.6, 0.8), glow(lighter(eyes, streak), B, 1.6, 1.0)], sniper_back(A, B))
 
 
 # ------------------------------------------------------------ 배틀 아처 (빛: 폭풍 하늘빛 → 번개 노랑 — 짙은 폭풍 남청 바탕)
