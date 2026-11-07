@@ -1045,12 +1045,26 @@ public final class Monsters {
             double next = Math.min(max, cur + max * rate);
             if (next > cur + 1e-9) {
                 m.setHealth((float) next);
+                relabel(m, k);
                 if (k.regen() != null && rate == k.regen().perSec() && m.level() instanceof ServerLevel level) {
                     SkillFx.sparks(level, V.up(m.position(), k.height() * 0.5), new double[] {0.45, 1.0, 0.45}, 3, 1.5);
                 }
             }
             if (next >= max - 1e-6 && !fighting) HURT.remove(en.getKey(), s);
         }
+    }
+
+    /**
+     * 0.51.0: 회복한 그 틱에 이름표 막대도 맞춤 (몬스터 틱을 기다리지 않음 — 회복은 1초마다 한꺼번에 도는데 이름표는 몬스터 틱에서만 바뀌어, 엔티티 틱을 안 도는 청크의
+     * 몬스터는 막대가 그대로였음 · CI 시험 regeneration 이 세 번 떨어짐). 이름표가 이미 붙어 있고 숨거나 균열 속이 아닐 때만
+     */
+    private static void relabel(RpgMonster m, Kind k) {
+        if (m.labelText == null || VoidMonsters.phased(m) || m.buried()) return;
+        float hp = m.getHealth();
+        float max = m.getMaxHealth();
+        m.labelHp = hp;
+        m.labelMax = max;
+        setLabel(m, monsterLabel(k, hp, max));
     }
 
     // ------------------------------------------------------------ 9단계 특성: 니세 깡충 · 멧돼지 돌진 · 웜 유충 매복 · 서리 늑대 무리

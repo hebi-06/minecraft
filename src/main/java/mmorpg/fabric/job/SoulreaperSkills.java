@@ -1,10 +1,7 @@
 package mmorpg.fabric.job;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import mmorpg.core.Jobs;
 import mmorpg.fabric.DamageNumbers;
 import mmorpg.fabric.Notify;
@@ -26,8 +23,9 @@ import net.minecraft.world.phys.Vec3;
 
 /**
  * 0.51.0 사신 각성 소울 리퍼 (재설계안 2판 — 2026-11-06 사용자 "다음 작업", jobs.json advance soulreaper — 영혼 하늘빛 · 짙은 남청, 특성 「영혼」 — JobTraits3 의
- * 사신 줄기 + JobTraits12 영혼 해방): 1차의 낫 · 영혼 · 흡혈을 더 크게 — 리핑 크레센트 · 엄브럴 트레스패스 · 바운티풀 하베스트 · 랜턴 오브 소울즈 · 페일 하베스트.
- * 몸 쓰는 직업이라 제 몸 · 제 낫 동작만 (영혼 등불 · 영혼 줄 · 거대한 망령 사신은 그림). 맞힌 적마다 영혼 +1 · 가득이면 영혼 해방은 JobKit.hit (JobTraits12.afterJobHit).
+ * 사신 줄기 + JobTraits12 영혼 해방): 1차의 낫 · 영혼 · 흡혈을 더 크게 — 리핑 크레센트 · 엄브럴 트레스패스 · 바운티풀 하베스트 · 스펙트럴 사이스 (2026-11-07 3판 —
+ * 직업 스킬 도감 표시 고침: 랜턴 오브 소울즈 대신) · 페일 하베스트. 몸 쓰는 직업이라 제 몸 · 제 낫 동작만 (영혼 줄 · 영혼 낫날 · 거대한 망령 사신은 그림). 맞힌 적마다
+ * 영혼 +1 · 가득이면 영혼 해방은 JobKit.hit (JobTraits12.afterJobHit).
  */
 final class SoulreaperSkills {
     private SoulreaperSkills() {}
@@ -42,7 +40,7 @@ final class SoulreaperSkills {
         JobSystem.register("soulreaper_crescent", SoulreaperSkills::crescent);
         JobSystem.register("soulreaper_trespass", SoulreaperSkills::trespass);
         JobSystem.register("soulreaper_harvest", SoulreaperSkills::harvest);
-        JobSystem.register("soulreaper_lantern", SoulreaperSkills::lantern);
+        JobSystem.register("soulreaper_scythe", SoulreaperSkills::scythe);
         JobSystem.register("soulreaper_ult", SoulreaperSkills::ult);
     }
 
@@ -388,125 +386,57 @@ final class SoulreaperSkills {
         return out.size() > max ? new ArrayList<>(out.subList(0, max)) : out;
     }
 
-    // ------------------------------------------------------------ 랜턴 오브 소울즈
+    // ------------------------------------------------------------ 스펙트럴 사이스 (2026-11-07 3판 — 랜턴 오브 소울즈 대신)
 
     /**
-     * 랜턴 오브 소울즈 (롤 쓰레쉬 — 태세 칸 몫 딜): 곁 (왼쪽 앞 어깨 위) 에 영혼 등불이 떠서 first 틱부터 every 틱마다 hooks 번 둘레 range 칸의 적 (가장 오래 안 낚은
-     * 적부터 — 차례로 돌아가며 · 같으면 가까운 적) 에게 사슬을 던져 영혼을 낚아챔 (hook · 마법 · 내 쪽으로 pull 칸 끌어옴 · 영혼이 등불로) — 낚은 영혼만큼 등불이 커짐.
-     * 적이 없으면 그 차례는 쉼. 직업을 바꾸거나 죽으면 꺼짐
+     * 스펙트럴 사이스 (태세 — 롤 헤카림 · 요릭의 낫 강화): dur 틱 동안 영혼이 낫으로 모여들어 낫이 거대한 영혼 낫이 됨 — 평타 사거리 + reach 칸 (JobTraits.startStance) ·
+     * 낫 평타의 넓게 베기 range 칸 · ratio (JobTraits12.scytheSweep) · 휘두를 때마다 영혼 초승달 검기 (JobTraits12.onWeaponHit — 그림) · 평타 궤적이 영혼 빛으로
+     * range 칸까지 (rules_more SWING_LOOK). 그동안 적을 쓰러뜨리면 perKill 틱씩 늘어남 (maxExtra 까지 — JobTraits12.onDeath). 그림: 둘레의 영혼 여섯이 낫으로
+     * 빨려 들고 머리 위에 거대한 영혼 낫날이 피었다가 몸과 함께 한 바퀴 휘둘러 펼침 (영혼 고리)
      */
-    static boolean lantern(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+    static boolean scythe(ServerPlayer sp, Jobs.Job j, Jobs.Skill k, double P) {
+        int dur = (int) k.num("dur", 160);
+        JobTraits.startStance(sp, k, dur);
+        JobTraits12.scytheOn(sp);
         ServerLevel level0 = sp.level();
         String life = RuneKit.lifeToken(sp);
-        int first = Math.max(2, (int) k.num("first", 8));
-        int every = Math.max(10, (int) k.num("every", 16));
-        int hooks = Math.max(1, (int) k.num("hooks", 10));
-        int end = first + (hooks - 1) * every;
-        double range = k.num("range", 6);
-        double pull = k.num("pull", 1.2);
-        JobTraits12.lanternOn(sp, end + 8);
-        int[] caught = {0};
-        Map<UUID, Integer> lastHook = new HashMap<>();
-        // 뜸: 등불에 불이 붙음 · 영혼 불꽃이 모여 듦 · 낮은 종소리
-        Vec3 at0 = lanternAt(sp);
-        JobFx.lantern(level0, at0, 0.62, 0, 1, first / 20.0 + 0.05, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
+        Vec3 c = sp.position();
+        Vec3 f = Kit.facingOf(sp);
+        // 모여듦 (0 ~ 8): 둘레의 영혼 여섯이 치켜든 낫으로 · 낫 끝에 차오르는 영혼빛 · 발밑 영혼 고리 · 영혼 비명
+        Vec3 top = V.up(c, 2.6);
         for (int q = 0; q < 6; q++) {
-            double a = q * Math.PI / 3;
-            JobFx.soulFly(level0, V.add(at0, new Vec3(Math.cos(a) * 1.4, -0.6 + 0.2 * (q % 3), Math.sin(a) * 1.4)), at0, 9, 0.14, j, Opt.empty());
+            double a = q * Math.PI / 3 + 0.3;
+            JobFx.soulFly(level0, V.add(V.up(c, 0.8), new Vec3(Math.cos(a) * 2.6, 0.3 * (q % 3), Math.sin(a) * 2.6)), top, 8, 0.26, j, Opt.empty());
         }
-        JobFx.halo(level0, V.up(sp.position(), 0.08), 1.6, j, 0.5, Opt.of("alpha", 0.7));
-        SkillFx.play(level0, "block.bell.resonate", sp.position(), 1.6, 0.6);
-        SkillFx.play(level0, "particle.soul_escape", sp.position(), 0.8, 1.0);
-        // 4틱마다 등불 (곁을 따라감 · 흔들리며 타오름 · 낚은 영혼만큼 크게) · 8틱마다 등불 둘레를 도는 작은 영혼
-        for (int t = first; t <= end + 4; t += 4) {
-            int tt = t;
-            RuneKit.later(t, () -> {
-                if (!lit(sp, life)) return;
-                ServerLevel lv = sp.level();
-                Vec3 at = lanternAt(sp);
-                double s = 0.62 + 0.03 * caught[0];
-                JobFx.lantern(lv, at, s, 1, 4, 0.25, true, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.95), SOUL, SOUL_CORE);
-                if (tt % 8 == 0) JobFx.soul(lv, at, 0.32 + 0.02 * caught[0], j, 0.45, Opt.of("vel", RuneKit.bodyVel(sp), "alpha", 0.35)); // 등불의 옅은 빛무리
-                if (tt % 8 == 0) {
-                    double a = tt * 0.35;
-                    JobFx.soul(lv, V.add(at, new Vec3(Math.cos(a) * 0.45, -0.25, Math.sin(a) * 0.45)), 0.08 + 0.006 * caught[0], j, 0.4, Opt.of("vel", RuneKit
-                            .bodyVel(sp), "alpha", 0.85));
-                }
-            });
-        }
-        // 사슬 (every 틱마다)
-        for (int i = 0; i < hooks; i++) {
-            int ii = i;
-            RuneKit.later(first + i * every, () -> {
-                if (!lit(sp, life)) return;
-                ServerLevel lv = sp.level();
-                LivingEntity e = nextHook(sp, range, lastHook);
-                if (e == null) return;
-                lastHook.put(e.getUUID(), ii);
-                Vec3 from = lanternAt(sp);
-                Vec3 b = Kit.bodyPoint(e);
-                double s = 0.62 + 0.03 * caught[0];
-                JobFx.lantern(lv, from, s * 1.15, 5, 1, 0.2, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
-                // 사슬: 굵은 영혼 사슬 (조각 1.2칸 — 굵기 0.15칸) · 사슬을 따라 빛 줄 · 걸린 자리의 터짐 (2026-11-06 영상 1: 조각 0.5칸 사슬은 가늘어 보이지 않았음)
-                JobFx.chain(lv, from, b, j, 1.2, 0.35, Opt.of("alpha", 1.0));
-                JobFx.line(lv, from, b, SOUL, SOUL_CORE, 0.3, Opt.of("alpha", 0.8));
-                JobFx.burst(lv, b, 0.8 + Kit.bodyPad(e) * 0.4, SOUL, SOUL_CORE, 0.25, Opt.of("vel", RuneKit.entVel(e)));
-                JobFx.glint(lv, b, 0.7 + Kit.bodyPad(e) * 0.4, SOUL, SOUL_CORE, 0.2, Opt.of("vel", RuneKit.entVel(e)));
-                SkillFx.play(lv, "block.chain.place", b, 0.8, 1.0);
-                SkillFx.play(lv, "entity.vex.charge", from, 1.4, 0.4);
-                JobKit.strike(sp, e, j, P, k.num("hook", 1.5), true, false, life, 0, d -> {
-                    caught[0]++;
-                    if (e.level() instanceof ServerLevel el) {
-                        JobImpact.hit(sp, e, j, 0.9);
-                        JobFx.soulFly(el, Kit.bodyPoint(e), lanternAt(sp), 10, 0.3, j, Opt.empty());
-                    }
-                    // 사슬이 감겨 4틱 동안 내 쪽으로 끌려옴 (내 앞 1.6칸에서 멈춤)
-                    JobKit.reel(sp, e, sp::position, pull, 4, 1.6 + Kit.bodyPad(e), life);
-                });
-            });
-        }
-        // 꺼짐: 등불이 꺼지며 연기 · 남은 영혼이 흩어짐
-        RuneKit.later(end + 8, () -> {
+        JobFx.charge(sp, j, new Vec3(0.1, 2.6, 0.2), 8, 0.8);
+        JobFx.halo(level0, V.up(c, 0.08), 2.4, j, 0.6, Opt.empty());
+        SkillFx.play(level0, "particle.soul_escape", c, 0.7, 1.2);
+        SkillFx.play(level0, "entity.vex.charge", c, 0.6, 0.8);
+        // 낫날이 핌 (8): 머리 위에 거대한 영혼 낫날 (아래로 휜 초승달) · 영혼 터짐
+        RuneKit.later(8, () -> {
             if (!RuneKit.sameLife(sp, life)) return;
             ServerLevel lv = sp.level();
-            Vec3 at = lanternAt(sp);
-            JobFx.lantern(lv, at, 0.62 + 0.03 * caught[0], 6, 2, 0.35, false, Opt.of("vel", RuneKit.bodyVel(sp)), SOUL, SOUL_CORE);
-            for (int q = 0; q < Math.min(8, 2 + caught[0] / 2); q++) {
-                double a = q * 0.9;
-                JobFx.soul(lv, at, 0.12, j, 0.6, Opt.of("dir", V.unit(new Vec3(Math.cos(a), 1.2, Math.sin(a))), "speed", 2.2));
-            }
-            SkillFx.play(lv, "block.candle.extinguish", at, 0.7, 1.0);
+            Vec3 cc = sp.position();
+            Vec3 ff = Kit.facingOf(sp);
+            JobFx.bigWave(lv, sp, V.up(V.add(cc, ff, 0.4), 2.7), ff, 0, 2.8, 180, 0.45, j, SOUL, SOUL_CORE, Opt.of("alpha", 0.95));
+            JobFx.burst(lv, V.up(cc, 2.6), 1.2, SOUL, SOUL_CORE, 0.3, Opt.of("vel", RuneKit.bodyVel(sp)));
+            JobFx.wail(lv, V.up(cc, 2.2), 1.3, j, 0.4, JobFx.hide1p(sp).with("vel", RuneKit.bodyVel(sp)));
+            SkillFx.play(lv, "item.trident.return", cc, 0.5, 1.0);
         });
+        // 펼침 (11 — 한 바퀴 휘두름): 몸 둘레를 휩쓰는 영혼 초승달 여섯 · 영혼 고리 · 사방으로 흩어지는 영혼 불티
+        RuneKit.later(11, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            ServerLevel lv = sp.level();
+            Vec3 cc = sp.position();
+            sweep(sp, j, cc, Kit.facingOf(sp), k.num("range", 5), true, 1.2);
+            SkillFx.sparks(lv, V.up(cc, 1.0), SOUL, 12, 4.0);
+            SkillFx.play(lv, "entity.player.attack.sweep", cc, 0.5, 1.0);
+            SkillFx.play(lv, "entity.vex.ambient", cc, 0.6, 0.8);
+        });
+        JobFx.aura(sp, j, 2.2, 0.8, 0.9);
+        Notify.notify(sp, "§b§l" + k.name() + " §7— 넓게 베기 " + Math.round(k.num("range", 5)) + "칸 · " + Math.round(JobUpgrades.num(sp, k, "ratio", 0.5) * 100)
+                + "%", 40);
         return true;
-    }
-
-    /** 영혼 등불 자리: 왼쪽 0.85칸 · 앞 0.45칸 · 어깨 위 (동작이 왼손을 들어 등불을 띄움 — 오른손은 낫) */
-    static Vec3 lanternAt(ServerPlayer sp) {
-        Vec3 f = Kit.facingOf(sp);
-        return V.up(V.add(V.add(sp.position(), V.rightOf(f), -0.85), f, 0.45), 1.95);
-    }
-
-    /** 등불이 떠 있는지 (같은 목숨 · 소울 리퍼 · 꺼지지 않음) */
-    private static boolean lit(ServerPlayer sp, String life) {
-        return RuneKit.sameLife(sp, life) && JobTraits12.jobIf(sp, JobTraits12.SR) != null && JobTraits12.lanternUp(sp);
-    }
-
-    /** 다음에 낚을 적: 둘레 range 칸에서 가장 오래 안 낚은 적 (안 낚은 적이 먼저 · 같으면 가까운 적) */
-    private static LivingEntity nextHook(ServerPlayer sp, double range, Map<UUID, Integer> lastHook) {
-        LivingEntity best = null;
-        int bestAt = Integer.MAX_VALUE;
-        double bestD = Double.MAX_VALUE;
-        for (LivingEntity e : Kit.around(sp, sp.position(), range, 3)) {
-            if (!e.isAlive() || e.isRemoved()) continue;
-            int at = lastHook.getOrDefault(e.getUUID(), -1);
-            double d = e.distanceToSqr(sp);
-            if (at < bestAt || (at == bestAt && d < bestD)) {
-                best = e;
-                bestAt = at;
-                bestD = d;
-            }
-        }
-        return best;
     }
 
     // ------------------------------------------------------------ 페일 하베스트

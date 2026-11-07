@@ -210,10 +210,10 @@ public final class MotionsTest {
         }
         // 0.51.0 2차 직업: 곰의 화신 (워로드 — 분노 100 · 평타 범위 ×1.5) · 재설계안 2판: 용의 피 (소드마스터 태세) · 광란 (블러드 나이트 태세) · 제미니 소드
         // (소드 콜러 — 칼빛만 · 범위 그대로). 2026-11-05 사용자 "직업 중에 구지 강화 시키면 어색한 애들은 빼자" — 마검 각성 · 거인의 무게 · 불사의 분노 · 스펠
-        // 오버드라이브 · 다시 벼린 칼 (궁극기) 의 모습은 뺌 (피해 스킬이 됨)
+        // 오버드라이브 · 다시 벼린 칼 (궁극기) 의 모습은 뺌 (피해 스킬이 됨). 2026-11-07 3판: 스펙트럴 사이스 (소울 리퍼 — 영혼 낫 · 5칸)
         Map<String, Double> scales = Map.ofEntries(Map.entry("edgeHone", 1.15), Map.entry("flurry", 1.2), Map.entry("bloodBlade", 1.3), Map.entry("cleave", 1.4),
                 Map.entry("swordGod", 1.5), Map.entry("swordsman_mirror", 1.2), Map.entry("reaper_avatar", 1.0), Map.entry("warlord_bear", 1.5),
-                Map.entry("swordcaller_twin", 1.0), Map.entry("swordmaster_blood", 1.15), Map.entry("bloodknight_frenzy", 1.2));
+                Map.entry("swordcaller_twin", 1.0), Map.entry("swordmaster_blood", 1.15), Map.entry("bloodknight_frenzy", 1.2), Map.entry("soulreaper_scythe", 1.3));
         for (Map.Entry<String, Double> e : scales.entrySet()) {
             SwingLooks.Look l = SwingLooks.of(e.getKey());
             check(l != null && Math.abs(l.scale() - e.getValue()) < 1e-9 && l.glow() != null && l.aura() != null && SwingLooks.pack(l.glow()) != 0,
@@ -223,6 +223,8 @@ public final class MotionsTest {
         SwingLooks.Look av = SwingLooks.of("reaper_avatar");
         double sb = SwingLooks.baseRange("scythe", 0);
         check(Math.abs(sb - 3.05) < 1e-9 && Math.abs(av.scaleAt(sb) - 5 / 3.05) < 1e-9 && av.fits("scythe") && !av.fits("sword"), "reaper avatar 5 blocks " + sb);
+        SwingLooks.Look ss = SwingLooks.of("soulreaper_scythe");
+        check(Math.abs(ss.scaleAt(sb) - 5 / 3.05) < 1e-9 && ss.fits("scythe") && !ss.fits("sword"), "spectral scythe 5 blocks (2026-11-07)");
         check(SwingLooks.of("cleave").fits("sword") && SwingLooks.of("cleave").fits("bow"), "rune looks fit any weapon");
         check(!SwingLooks.of("swordsman_mirror").fits("greatsword") && SwingLooks.of("swordsman_mirror").fits("sword"), "job look weapons");
         check(SwingLooks.of("warlord_bear").fits("axe") && !SwingLooks.of("warlord_bear").fits("sword") && SwingLooks.of("warlord_titan") == null
@@ -372,6 +374,14 @@ public final class MotionsTest {
                 && Motions.skillMotion("pierrot_spring").equals("jb_pierrot_spring") && Motions.skillMotion("pierrot_ult:bow").equals("jb_pierrot_ult_bow")
                 && Motions.skillMotion("pierrot_ult:cheer").equals("jb_pierrot_ult_cheer") && Motions.skillMotion("bladedancer_ray") == null,
                 "0.51.0 암살자 2차 동작 (재설계안 2판 — 찌르기 · 돌아옴 · X · 터뜨림 · 환호 · 인사는 단계 열쇠, 1판 트릭스터 · 블레이드 댄서 동작은 뺌)");
+        check(Motions.skillMotion("soulreaper_scythe").equals("jb_soulreaper_scythe") && Motions.skillMotion("soulreaper_lantern") == null
+                && Motions.skillMotion("executioner_headhunt").equals("jb_executioner_headhunt") && Motions.skillMotion("executioner_headhunt:x").equals("jb_executioner_headhunt_x")
+                && Motions.skillMotion("executioner_raven").equals("jb_executioner_raven") && Motions.skillMotion("executioner_chains:drop").equals("jb_executioner_chains_drop")
+                && Motions.skillMotion("executioner_knell").equals("jb_executioner_knell") && Motions.skillMotion("executioner_ult:drop").equals("jb_executioner_ult_drop")
+                && Motions.skillMotion("executioner_condemn") == null && Motions.skillMotion("executioner_stalk") == null
+                && Motions.skillMotion("executioner_guillotine:drop") == null && Motions.skillMotion("executioner_lastday") == null,
+                "사신 2차 동작 (2026-11-07 3판 — 헤드헌트 X · 사슬 끝의 내리찍음 · 단두대 칼날의 내리그음은 단계 열쇠, 랜턴 오브 소울즈 · 컨뎀 · 섀도 스토크 · 길로틴 · "
+                + "원 라스트 데이 동작은 뺌)");
         check(Motions.skillMotion("nothing") == null, "unknown → null");
         // poses.json 과 같은 이름
         Path poses = Path.of("src/main/resources/assets/mmorpg/motion/poses.json");

@@ -1561,32 +1561,36 @@ final class JobFx {
 
     // ------------------------------------------------------------ 0.51.0 사신 2차 그림 (2026-11-06 — 소울 리퍼 · 엑시큐셔너, tools/job_fx_art_adv.py)
 
-    /** 장 수: 영혼 등불 · 망령 단두대 날 · 처형 표식 */
-    static final int LANTERN = 8;
-    static final int GUILLOTINE = 8;
+    /** 장 수: 처형 표식 · 하늘의 단두대 (2026-11-07 3판 — 영혼 등불 rfx_jlantern · 망령 단두대 날 rfx_jguillotine 뺌: 랜턴 오브 소울즈 · 길로틴이 바뀜) */
     static final int XMARK = 8;
+    static final int GALLOWS = 8;
     /** 처형 표식의 획 끝 반지름 (반 크기의 몫) */
     static final double XMARK_R = 0.9;
 
     /**
-     * 영혼 등불 (rfx_jlantern — 카메라를 봄, 위 = 매단 고리): 0 불이 붙음 · 1 ~ 4 흔들리며 타오름 (loop 면 이어 돌림 — 유리 안 영혼 불꽃 · 새어 나오는 빛) · 5 번쩍 (사슬을
-     * 던짐 — 빛살) · 6 ~ 7 꺼지며 연기. 장 from 부터 count 장, 등불 몸 가운데 at · 높이 약 size × 2 칸 (고리 포함)
+     * 하늘의 단두대 (rfx_jgallows — 384 × 512 · 세워 카메라 쪽으로 돎 (lookat_y)): 0 빛 조각이 모여 생겨남 · 1 칼날이 올라감 · 2 ~ 3 매달려 번득임 (loop 면 이어
+     * 돌림) · 4 떨어짐 (위로 끌리는 잔상) · 5 내리침 (목판의 섬광) · 6 끌어올려짐 · 7 빛 조각으로 흩어짐. 기둥 아래 끝 (뾰족) 이 땅 ground 에 닿고 높이 height 칸 (그림
+     * 높이 = 반 크기 × 2.667 · 기둥 아래 끝은 그림 아래에서 16/512 — 반 크기 = height × 0.375)
      */
-    static void lantern(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
-        int f = Math.max(0, Math.min(LANTERN - 1, from));
-        int n = Math.max(1, Math.min(LANTERN - f, count));
-        cells(level, "jlantern", LANTERN, f, n, at, life, loop ? 10 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.15)), glow, core);
+    static void gallows(ServerLevel level, Vec3 ground, double height, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
+        int f = Math.max(0, Math.min(GALLOWS - 1, from));
+        int n = Math.max(1, Math.min(GALLOWS - f, count));
+        cells(level, "jgallows", GALLOWS, f, n, V.up(ground, height * (0.5 - 16 / 512.0)), life, 0, loop, o.with("size", height * 0.375, "fade", o.num("fade", 0.15)),
+                glow, core);
     }
 
     /**
-     * 망령 단두대 날 (rfx_jguillotine — 세워 카메라 쪽으로 돎, 아래 = 비스듬한 날): 0 ~ 1 생겨남 · 2 ~ 3 매달려 날이 번득임 (loop 면 이어 돌림) · 4 떨어짐 (위로 끌리는
-     * 잔상) · 5 내리침 (날 끝 섬광) · 6 ~ 7 연기로 흩어짐. 장 from 부터 count 장, 칸 가운데 at (날 가운데는 그보다 조금 아래 — 칸 192 × 256 의 (96, 140)) · 칸 너비
-     * size × 2 칸 · 높이 size × 2.67 칸 (쇳덩이 · 날 너비 약 size × 1.2 칸)
+     * 단두대 한 토막을 at 틱 뒤에 (같은 목숨일 때만): 장 from 부터 count 장을 ticks 틱 (+ 1 — 다음 토막과 한 틱 겹침). 주인마다 solo 한 장 (다음 토막이 첫 틱을 지나면
+     * 앞 토막을 넘겨받음 — 겹친 두 장 없이), 끝 장 (7 흩어짐) 만 서서히 사라짐
      */
-    static void guillotine(ServerLevel level, Vec3 at, double size, int from, int count, double life, boolean loop, Opt o, double[] glow, double[] core) {
-        int f = Math.max(0, Math.min(GUILLOTINE - 1, from));
-        int n = Math.max(1, Math.min(GUILLOTINE - f, count));
-        cells(level, "jguillotine", GUILLOTINE, f, n, at, life, loop ? 8 : 0, loop, o.with("size", size, "fade", o.num("fade", 0.15)), glow, core);
+    static void gallowsLater(ServerPlayer sp, String life, double solo, Vec3 ground, double height, int at, int from, int count, int ticks, boolean loop, double[] glow,
+            double[] core) {
+        RuneKit.later(at, () -> {
+            if (!RuneKit.sameLife(sp, life)) return;
+            boolean end = from + count >= GALLOWS;
+            gallows(sp.level(), ground, height, from, count, (ticks + 1) / 20.0, loop, Opt.of("solo", solo, "owner", (double) sp.getId(), "fade", end ? 0.6 : 0.0), glow,
+                    core);
+        });
     }
 
     /**

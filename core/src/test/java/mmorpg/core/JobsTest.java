@@ -105,7 +105,7 @@ public final class JobsTest {
             check(near(k.total(), 12 * j.scale()) && k.cd() == 30 && Jobs.upKeys(k).isEmpty() && !k.def().has("dur"), j.id() + " stance budget " + k.total() + " = 12 × "
                     + j.scale());
         }
-        check(stanceDamage == 10, "ten slot-3 damage skills (매지션 · 마검사 · 워로드 · 아케인 블레이드 · 아크메이지 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 · 소울 리퍼 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로 · 아크메이지의 스펠 서지가 셀레스티얼 오빗으로) "
+        check(stanceDamage == 9, "nine slot-3 damage skills (매지션 · 마검사 · 워로드 · 아케인 블레이드 · 아크메이지 · 네크로맨서 · 피에로 · 스톰 랜서 · 드라군 — 2026-11-07 글래디에이터의 액스 그라인더가 요툰 그립 태세로 · 아크메이지의 스펠 서지가 셀레스티얼 오빗으로 · 소울 리퍼의 랜턴 오브 소울즈가 스펙트럴 사이스 태세로) "
                 + stanceDamage);
 
         Jobs.Job sw = Jobs.job("swordsman");
@@ -692,8 +692,10 @@ public final class JobsTest {
 
     /**
      * 0.51.0 사신 2차 — 소울 리퍼 · 엑시큐셔너 (재설계안 2판 — 2026-11-06 사용자 "다음 작업": 소울 리퍼 새 스킬 다섯 · 엑시큐셔너는 광역 · 많이 거둠 · 흡혈을 뒤집어
-     * 단일 · 처형 단타 · 흡혈 없음): 부분 합 = 배율 합 (사신과 같은 6.25 · 3.75 · 8 · 50 — 랜턴 오브 소울즈는 태세 칸 몫 12 × 1.25) · 무적 시간 띄움 · t · w ·
-     * 특성 (영혼 15 · 영혼 해방 / 처형 — 잃은 체력 10% 당 +5% · 15% 아래 한 방 · 초기화) · 초당 피해 (소울 리퍼 × 1.2 · 엑시큐셔너 × 1.0 — 처형 덤 평균 +25%)
+     * 단일 · 처형 단타 · 흡혈 없음): 부분 합 = 배율 합 (사신과 같은 6.25 · 3.75 · 8 · 50) · 무적 시간 띄움 · t · w · 특성 (영혼 15 · 영혼 해방 / 처형 — 잃은 체력
+     * 10% 당 +5% · 15% 아래 한 방 · 초기화) · 초당 피해 (소울 리퍼 × 1.2 · 엑시큐셔너 × 1.0 — 처형 덤 평균 +25%). 2026-11-07 3판 (직업 스킬 도감 표시 고침):
+     * 소울 리퍼 4번 칸 랜턴 오브 소울즈 (태세 칸 몫 피해) → 스펙트럴 사이스 (강화 태세), 엑시큐셔너 다섯을 새로 (헤드헌트 4 + X 2.25 · 레이븐 시프트 · 체인 오브 저지먼트 ·
+     * 데스 넬 · 길로틴 오브 헤븐 — 숫자 같음)
      */
     static void reaperAdvance(Jobs.Job re, Jobs.Job sr, Jobs.Job ex) {
         check(sr != null && ex != null, "reaper advanced jobs");
@@ -706,51 +708,54 @@ public final class JobsTest {
         List<String> exIds = new ArrayList<>();
         for (Jobs.Skill k : sr.skills()) srIds.add(k.id());
         for (Jobs.Skill k : ex.skills()) exIds.add(k.id());
-        check(srIds.equals(List.of("soulreaper_crescent", "soulreaper_trespass", "soulreaper_harvest", "soulreaper_lantern", "soulreaper_ult"))
-                && exIds.equals(List.of("executioner_condemn", "executioner_stalk", "executioner_guillotine", "executioner_lastday", "executioner_ult")),
+        check(srIds.equals(List.of("soulreaper_crescent", "soulreaper_trespass", "soulreaper_harvest", "soulreaper_scythe", "soulreaper_ult"))
+                && exIds.equals(List.of("executioner_headhunt", "executioner_raven", "executioner_chains", "executioner_knell", "executioner_ult")),
                 "reaper advanced skill ids");
         for (int i : new int[] {0, 1, 2, 4}) check(near(sr.skill(i).total(), re.skill(i).total()) && near(ex.skill(i).total(), re.skill(i).total()), "reaper totals slot " + i);
         Jobs.Skill sc = sr.skill(0), st = sr.skill(1), sh = sr.skill(2), sl = sr.skill(3), su = sr.skill(4);
         Jobs.Skill ec = ex.skill(0), es = ex.skill(1), eg = ex.skill(2), el = ex.skill(3), eu = ex.skill(4);
         check(near(sc.num("spin", 0) * sc.num("spins", 0), 6.25) && near(st.num("burst", 0), 3.75) && near(sh.num("drain", 0) * sh.num("drains", 0) + sh.num("rip", 0), 8)
                 && near(su.num("sweep", 0) * su.num("sweeps", 0) + su.num("final", 0), 50), "soul reaper totals 6.25 (3.125 × 2) · 3.75 · 8 (1 × 4 + 4) · 50 (14 × 2 + 22)");
-        check(near(ec.num("slash", 0), 6.25) && near(es.num("cut", 0), 3.75) && near(eg.num("drop", 0), 8) && near(eu.num("stroke", 0) * eu.num("strokes", 0), 50),
-                "executioner totals 6.25 · 3.75 · 8 · 50 (25 × 2)");
-        // 랜턴 오브 소울즈 = 태세 칸 몫 (30초 12 × 사신 세기 1.25) · 원 라스트 데이는 강화 (피해 없음 · 10초)
-        check(Jobs.stanceBudget(sl) && near(sl.total(), 12 * re.scale()) && near(sl.num("hook", 0) * sl.num("hooks", 0), sl.total()) && !Jobs.stanceBudget(el)
-                && el.total() == 0 && near(el.num("dur", 0), 200), "랜턴 오브 소울즈 15 (태세 칸 몫) · 원 라스트 데이 10초");
+        check(near(ec.num("slash", 0) + ec.num("x", 0), 6.25) && near(ec.num("slash", 0), 4.0) && near(es.num("cut", 0), 3.75) && near(eg.num("drop", 0), 8)
+                && near(eu.num("stroke", 0) * eu.num("strokes", 0), 50), "executioner totals 6.25 (4 + X 2.25) · 3.75 · 8 · 50 (25 × 2)");
+        // 2026-11-07 3판: 스펙트럴 사이스 · 데스 넬은 강화 (피해 없음 — 8초 · 10초), 스펙트럴 사이스는 넓게 베기 5칸 · 50% (강화 열쇠 ratio) · 처치 1초씩 (최대 4초)
+        check(!Jobs.stanceBudget(sl) && sl.total() == 0 && near(sl.num("dur", 0), 160) && near(sl.num("range", 0), 5) && near(sl.num("ratio", 0), 0.5)
+                && near(sl.num("perKill", 0), 20) && near(sl.num("maxExtra", 0), 80) && Jobs.upKeys(sl).size() == 1 && Jobs.upKey(sl, "ratio") != null
+                && !Jobs.stanceBudget(el) && el.total() == 0 && near(el.num("dur", 0), 200), "스펙트럴 사이스 8초 (넓게 베기 5칸 · 50%) · 데스 넬 10초");
         // 초당 피해: 소울 리퍼 1차 × 1.2 · 엑시큐셔너 1차 × 1.0 (처형 덤을 따로 셈 — 직업의 dps)
         check(near(Jobs.advanceDps(sr), 1.2) && near(Jobs.advanceDps(ex), 1.0) && near(dps(sr) / dps(re), 1.2, 0.005) && near(dps(ex) / dps(re), 1.0, 0.005),
                 "soul reaper × 1.2 · executioner × 1.0");
         // 같은 적을 여러 번 치는 것은 10틱 넘게
         check(sc.num("every", 0) >= 10 && sh.num("every", 0) >= 10 && sh.num("ripAt", 0) - sh.num("first", 0) - (sh.num("drains", 0) - 1) * sh.num("every", 0) >= 10
-                && sl.num("every", 0) >= 10 && su.num("every", 0) >= 10 && su.num("finalAt", 0) - su.num("sweepAt", 0) - (su.num("sweeps", 0) - 1) * su.num("every", 0) >= 10
-                && eu.num("every", 0) >= 10, "reaper advanced i-frame spacing");
+                && su.num("every", 0) >= 10 && su.num("finalAt", 0) - su.num("sweepAt", 0) - (su.num("sweeps", 0) - 1) * su.num("every", 0) >= 10
+                && eu.num("every", 0) >= 10 && ec.num("gap", 0) + ec.num("xAt", 0) - ec.num("slashAt", 0) >= 10, "reaper advanced i-frame spacing (헤드헌트 X 는 11틱 뒤)");
         // 마지막 피해 틱 = t · 첫 피해 = w (RpgJobTimingTests 와 같은 값)
         check(near(sc.num("first", 0) + (sc.num("spins", 0) - 1) * sc.num("every", 0), sc.num("t", 0)) && near(st.num("exitAt", 0), st.num("t", 0))
                 && near(st.num("exitAt", 0), st.num("w", 0)) && near(sh.num("ripAt", 0), sh.num("t", 0)) && near(sh.num("first", 0), sh.num("w", 0))
-                && near(sl.num("first", 0) + (sl.num("hooks", 0) - 1) * sl.num("every", 0), sl.num("t", 0)) && near(sl.num("first", 0), sl.num("w", 0))
-                && near(su.num("finalAt", 0), su.num("t", 0)) && near(su.num("sweepAt", 0), su.num("w", 0)), "soul reaper t 14 · 18 · 50 · 152 · 46");
-        check(near(ec.num("slashAt", 0), ec.num("t", 0)) && near(ec.num("slashAt", 0), ec.num("w", 0)) && near(es.num("leapTicks", 0), es.num("t", 0))
-                && near(es.num("leapTicks", 0), es.num("w", 0)) && near(eg.num("dropAt", 0), eg.num("t", 0)) && near(eg.num("dropAt", 0), eg.num("w", 0))
-                && near(eu.num("first", 0) + (eu.num("strokes", 0) - 1) * eu.num("every", 0), eu.num("t", 0)) && near(eu.num("first", 0), eu.num("w", 0)),
-                "executioner t 6 · 8 · 22 · 22 (w 6 · 8 · 22 · 12)");
+                && near(su.num("finalAt", 0), su.num("t", 0)) && near(su.num("sweepAt", 0), su.num("w", 0)), "soul reaper t 14 · 18 · 50 · 46");
+        // 헤드헌트: 첫 벰 slashAt · X = 다시 누를 수 있는 gap 틱에 누름 + xAt (시간 시험은 다시 누를 수 있는 첫 틱에 누름)
+        check(near(ec.num("slashAt", 0), ec.num("w", 0)) && near(ec.num("gap", 0) + ec.num("xAt", 0), ec.num("t", 0)) && near(es.num("flyTicks", 0), es.num("t", 0))
+                && near(es.num("flyTicks", 0), es.num("w", 0)) && near(eg.num("dropAt", 0), eg.num("t", 0)) && near(eg.num("dropAt", 0), eg.num("w", 0))
+                && near(eu.num("first", 0) + (eu.num("strokes", 0) - 1) * eu.num("every", 0), eu.num("t", 0)) && near(eu.num("first", 0), eu.num("w", 0))
+                && eu.num("landAt", 0) < eu.num("first", 0) && eg.num("bindAt", 0) < eg.num("dropAt", 0), "executioner t 17 · 8 · 22 · 28 (w 6 · 8 · 22 · 16)");
         // 특성: 소울 리퍼 = 사신의 영혼 (같은 처치 +3 · 이동 · 흡혈) 최대 15 + 영혼 해방, 엑시큐셔너 = 처형
         for (String key : new String[] {"kill", "speedPer", "leechPer"}) check(near(sr.trait().def().numOr(key, -1), re.trait().def().numOr(key, -2)), "영혼 " + key + " = 1차");
         check(sr.trait().name().equals(re.trait().name()) && sr.trait().max() == 15 && near(sr.trait().def().numOr("wisps", 0), 6)
                 && near(sr.trait().def().numOr("wispHit", 0), 0.6), "영혼 15 · 망령 여섯 × 0.6");
         check(ex.trait().name().equals("처형") && ex.trait().max() == 10 && near(ex.trait().def().numOr("per", 0), 0.05) && near(ex.trait().def().numOr("maxBonus", 0), 0.5)
-                && near(ex.trait().def().numOr("execute", 0), 0.15) && near(el.num("execute", 0), 0.25), "처형 10% 당 +5% · 최대 +50% · 15% (원 라스트 데이 25%)");
+                && near(ex.trait().def().numOr("execute", 0), 0.15) && near(el.num("execute", 0), 0.25) && near(el.num("fear", 0), 20) && near(el.num("fearRange", 0), 8),
+                "처형 10% 당 +5% · 최대 +50% · 15% (데스 넬 25% · 처형하면 둘레 8칸 공포 1초)");
         // 유틸 · 범위
-        check(Jobs.areaKind(sc) == null && "narrow".equals(Jobs.areaKind(st)) && Jobs.areaKind(sh) == null && "single".equals(Jobs.areaKind(sl)) && Jobs.areaKind(su) == null
+        check(Jobs.areaKind(sc) == null && "narrow".equals(Jobs.areaKind(st)) && Jobs.areaKind(sh) == null && Jobs.areaKind(sl) == null && Jobs.areaKind(su) == null
                 && Jobs.utils(sc).isEmpty() && Jobs.utils(st).equals(List.of("blink", "invuln", "heal")) && Jobs.utils(sh).equals(List.of("lifesteal"))
-                && Jobs.utils(sl).equals(List.of("pull")) && Jobs.utils(su).equals(List.of("lifesteal", "lift")), "soul reaper utils · area");
+                && Jobs.utils(sl).isEmpty() && Jobs.utils(su).equals(List.of("lifesteal", "lift")), "soul reaper utils · area");
         check("single".equals(Jobs.areaKind(ec)) && "single".equals(Jobs.areaKind(es)) && "single".equals(Jobs.areaKind(eg)) && "narrow".equals(Jobs.areaKind(eu))
-                && Jobs.utils(ec).equals(List.of("vuln10")) && Jobs.utils(es).equals(List.of("leap", "buff10")) && Jobs.utils(eg).isEmpty()
-                && Jobs.utils(eu).equals(List.of("blink")), "executioner utils · area");
+                && Jobs.utils(ec).equals(List.of("vuln10")) && Jobs.utils(es).equals(List.of("leap", "invuln", "buff10")) && Jobs.utils(eg).equals(List.of("root"))
+                && Jobs.utils(eu).equals(List.of("root")), "executioner utils · area");
         check(Jobs.windupTicks(sc) == 0 && Jobs.windupTicks(st) == 18 && Jobs.windupTicks(sh) == 10 && Jobs.windupTicks(su) == 20 && Jobs.windupTicks(ec) == 6
-                && Jobs.windupTicks(es) == 8 && Jobs.windupTicks(eg) == 22 && Jobs.windupTicks(eu) == 12, "windups 0 · 18 · 10 · 20 / 6 · 8 · 22 · 12");
-        check(Jobs.skillLine(sc).startsWith("리핑 크레센트 · 6초 · 배율 ") && Jobs.skillLine(el).equals("원 라스트 데이 · 30초"), "reaper advanced skill line " + Jobs.skillLine(el));
+                && Jobs.windupTicks(es) == 8 && Jobs.windupTicks(eg) == 22 && Jobs.windupTicks(eu) == 16, "windups 0 · 18 · 10 · 20 / 6 · 8 · 22 · 16");
+        check(Jobs.skillLine(sc).startsWith("리핑 크레센트 · 6초 · 배율 ") && Jobs.skillLine(el).equals("데스 넬 · 30초") && Jobs.skillLine(sl).equals("스펙트럴 사이스 · 30초"),
+                "reaper advanced skill line " + Jobs.skillLine(el) + " · " + Jobs.skillLine(sl));
         check(sr.color()[0][2] > 0.95 && sr.color()[0][0] < 0.4 && sr.color()[1][2] > sr.color()[1][0] && ex.color()[0][0] > 0.95 && ex.color()[0][1] > 0.6
                 && ex.color()[0][2] < 0.4 && ex.color()[1][2] > ex.color()[1][1], "colors: soul blue · deep sea / sunset gold · dusk violet");
     }

@@ -184,7 +184,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             java.util.Map.entry("trickster_swap", new int[] {12}), java.util.Map.entry("trickster_dash", new int[] {16}), // 2026-11-06 트릭스터 2판: 섀도 스와프 자리 바꿈 · 미라주 대시 돌아옴
             java.util.Map.entry("stormlancer_drive", new int[] {12}), java.util.Map.entry("stormlancer_rend", new int[] {20}),
             java.util.Map.entry("dragoon_jump", new int[] {16}), // 2026-11-06 창술사 2차: 돌아서며 바람 창 · 뽑아 찢음 · 내리꽂음
-            java.util.Map.entry("executioner_ult", new int[] {36}), java.util.Map.entry("darkknight_crunch", new int[] {12}), // 2026-11-06 엑시큐셔너: 앞 과녁을 처형 → 비포 선셋 다시 · 다크 나이트: 크게 물어 찢음
+            java.util.Map.entry("executioner_ult", new int[] {36}), java.util.Map.entry("darkknight_crunch", new int[] {12}), // 2026-11-06 엑시큐셔너: 앞 과녁을 처형 → 길로틴 오브 헤븐 다시 (2026-11-07 3판) · 다크 나이트: 크게 물어 찢음
+            java.util.Map.entry("executioner_headhunt", new int[] {14}), // 2026-11-07 엑시큐셔너 3판: 헤드헌트 되돌려 X
             java.util.Map.entry("frostraider_throw", new int[] {14})); // 2026-11-07 프로스트 레이더: 박힌 도끼를 되부름
 
     /**
@@ -321,23 +322,24 @@ public final class RpgJobGallery implements FabricClientGameTest {
 
     /**
      * 2026-11-06 소울 리퍼 · 엑시큐셔너: 리핑 크레센트 (0 ~ 4 내달림 → 4 · 14 두 바퀴 — 영혼 14 라 첫 바퀴에 영혼 해방 · 망령 여섯) · 엄브럴 트레스패스 (2 스며듦 → 18 찢고
-     * 나옴) · 바운티풀 하베스트 (6 꽂음 → 10 ~ 40 빨아들임 → 50 뜯어냄) · 랜턴 오브 소울즈 (8 · 24 · 40 · 56 사슬) · 페일 하베스트 (4 사신이 솟음 → 20 · 30 휩쓸기 →
-     * 46 내리꽂음) / 컨뎀 (6 벰 — 앞 과녁은 체력 10% 라 처형) · 섀도 스토크 (0 ~ 8 뛰어듦 → 8 벰) · 길로틴 (단두대 날 → 22 내리침) · 원 라스트 데이 (태세) · 비포 선셋
-     * (10 순간 이동 → 12 · 22 X — 앞 과녁 처형 → 36 다시 → 48 · 58)
+     * 나옴) · 바운티풀 하베스트 (6 꽂음 → 10 ~ 40 빨아들임 → 50 뜯어냄) · 스펙트럴 사이스 (2026-11-07 3판 — 8 영혼 낫날 → 11 한 바퀴 · 태세 뒤 평타) · 페일 하베스트
+     * (4 사신이 솟음 → 20 · 30 휩쓸기 → 46 내리꽂음) / 2026-11-07 엑시큐셔너 3판: 헤드헌트 (6 가로 벰 → 14 다시 눌러 17 X) · 레이븐 시프트 (0 ~ 8 까마귀 떼 → 8 베어
+     * 올림) · 체인 오브 저지먼트 (4 사슬이 묶음 → 거리만큼 일찍 내리찍음 → 22 목을 벰 — 앞 과녁은 체력 10% 라 처형) · 데스 넬 (태세 — 머리 위 망령 종) · 길로틴 오브 헤븐
+     * (10 단두대가 박힘 → 16 · 28 칼날 — 앞 과녁 처형 → 36 다시 → 46 박힘 → 52 · 64)
      */
     private static final Case[] CASES_SR = {
         new Case(0, new int[] {1, 3, 4, 6, 10, 14, 16, 20}, new int[] {4, 14}, 30, false),
         new Case(1, new int[] {1, 2, 8, 14, 17, 18, 20}, new int[] {8, 18}, 30, false),
         new Case(2, new int[] {2, 6, 10, 20, 30, 46, 50, 52}, new int[] {10, 30, 50}, 62, false),
-        new Case(3, new int[] {2, 8, 24, 40, 56}, new int[] {8, 40}, 70, false),
+        new Case(3, new int[] {4, 8, 11, 14}, new int[] {8, 12}, 26, true),
         new Case(4, new int[] {2, 4, 10, 16, 20, 24, 30, 40, 46, 50, 56}, new int[] {10, 20, 46}, 66, false),
     };
     private static final Case[] CASES_EX = {
-        new Case(0, new int[] {2, 4, 6, 8, 12}, new int[] {4, 6}, 26, false),
-        new Case(1, new int[] {1, 3, 6, 8, 10}, new int[] {3, 8}, 24, false),
-        new Case(2, new int[] {2, 8, 14, 18, 20, 22, 24}, new int[] {14, 22}, 34, false),
-        new Case(3, new int[] {4, 12}, new int[] {6}, 26, true),
-        new Case(4, new int[] {2, 6, 10, 12, 16, 22, 26, 38, 48, 58}, new int[] {10, 22, 48}, 72, false),
+        new Case(0, new int[] {2, 4, 6, 8, 14, 16, 17, 20}, new int[] {6, 17}, 30, false),
+        new Case(1, new int[] {1, 3, 5, 7, 8, 10}, new int[] {4, 8}, 24, false),
+        new Case(2, new int[] {2, 4, 8, 14, 18, 20, 22, 24}, new int[] {8, 22}, 34, false),
+        new Case(3, new int[] {4, 8, 12}, new int[] {6}, 26, true),
+        new Case(4, new int[] {2, 6, 10, 14, 16, 20, 28, 36, 46, 52, 64, 70}, new int[] {10, 16, 28, 52}, 80, false),
     };
 
     /**
@@ -716,8 +718,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
         if (id.equals("trickster_ult")) markHusks(sp, 3);
         // 2026-11-06 스톰 랜서: 창끝 바람 3 (게이지 — 다음 끝자락 평타가 바람 4 → 질풍 창)
         if (job.equals("stormlancer")) mmorpg.fabric.job.JobTraits11.setWind(sp, 3);
-        // 2026-11-06 소울 리퍼: 영혼 6 (리핑 크레센트는 14 — 첫 바퀴에 영혼 해방 · 망령 여섯), 엑시큐셔너: 컨뎀 · 비포 선셋은 앞 과녁이 체력 10% 의 쓰러지는 몹
-        // (처형 — 큰 숫자 · 해골 · 재사용 대기 초기화 · 비포 선셋 다시 쓰기)
+        // 2026-11-06 소울 리퍼: 영혼 6 (리핑 크레센트는 14 — 첫 바퀴에 영혼 해방 · 망령 여섯), 엑시큐셔너: 체인 오브 저지먼트 · 길로틴 오브 헤븐 (2026-11-07 3판) 은
+        // 앞 과녁이 체력 10% 의 쓰러지는 몹 (처형 — 큰 숫자 · 해골 · 재사용 대기 초기화 · 길로틴 오브 헤븐 다시 쓰기)
         if (job.equals("soulreaper")) JobTraits3.setSouls(sp, id.equals("soulreaper_crescent") ? 14 : 6);
         // 2026-11-06 썬더로드: 아크 스매시 · 스톰 스파이어는 과녁마다 심판 3 (휩쓸기 · 갈래 / 기둥 +2 → 벼락 — 갈라지는 벼락 · 보호막), 타이런트: 빼앗은 힘 4 (게이지 · 몸 크기)
         if (id.equals("thunderlord_arc") || id.equals("thunderlord_spire")) judgeHusks(sp, 3);
@@ -735,7 +737,7 @@ public final class RpgJobGallery implements FabricClientGameTest {
             a.setHealth(a.getMaxHealth() * (job.equals("saint") ? 0.45F : 1F));
         }
         if (id.equals("saint_wing") || id.equals("saint_ult")) JobTraits4.setFaith(sp, 3);
-        if (id.equals("executioner_condemn") || id.equals("executioner_ult")) {
+        if (id.equals("executioner_chains") || id.equals("executioner_ult")) {
             for (Husk x : sp.level().getEntitiesOfClass(Husk.class, new AABB(0.5, -60, 3.2, 0.5, -60, 3.2).inflate(0.8), x -> true)) {
                 x.removeTag(TestDummies.TAG);
                 x.setHealth(x.getMaxHealth() * 0.1F);
@@ -940,6 +942,11 @@ public final class RpgJobGallery implements FabricClientGameTest {
             case "arcmage_orbit" -> new double[] {7.0, 2.8, 1.6, 0.6}; // 셀레스티얼 오빗: 둘레를 도는 별 · 과녁에 떨어지는 별똥 · 땅의 별자리
             case "frostraider_ult" -> new double[] {12.0, 3.4, 5.0, 0.4}; // 핌불윈터: 하늘의 빙하 도끼 (18칸 위) 가 내리꽂혀 빙하가 솟음 — 올려다봄
             case "frostraider_throw" -> new double[] {8.0, 3.0, 2.2, 0.6}; // 프로스트 바이트: 던져 박히고 되돌아오는 도끼가 다 보이게
+            case "executioner_ult" -> new double[] {12.0, 3.6, 4.4, 0.35}; // 2026-11-07 길로틴 오브 헤븐: 과녁 위 9칸에서 내려오는 7.5칸 단두대 — 올려다봄
+            case "executioner_raven" -> new double[] {8.0, 3.0, 1.4, 0.4}; // 레이븐 시프트: 과녁 건너편으로 날아가는 까마귀 떼 — 덜 따라감
+            case "executioner_chains" -> new double[] {8.5, 3.0, 1.6, 0.5}; // 체인 오브 저지먼트: 과녁을 묶은 사슬 · 땅을 타고 달려가는 세로 검기
+            case "executioner_knell" -> new double[] {7.0, 2.8, 2.0, 0.6}; // 데스 넬: 머리 위 망령 종
+            case "soulreaper_scythe" -> new double[] {8.0, 3.0, 1.8, 0.6}; // 스펙트럴 사이스: 머리 위 영혼 낫날 · 둘레 5칸 휩쓸기
             case "phoenix_ult" -> new double[] {12.5, 3.0, 7.0, 0.4};
             case "darkknight_ult" -> new double[] {9.5, 3.0, 3.4, 0.5};
             case "phoenix_inferno" -> new double[] {8.0, 3.0, 1.4, 0.6};
@@ -1033,8 +1040,8 @@ public final class RpgJobGallery implements FabricClientGameTest {
             });
             f.end(dealt);
             if (cam != null) f.view(6.0, 2.1, 1.0).follow(1.0); // RpgFilm 처음 값으로
-            // 2026-11-06 엑시큐셔너 컨뎀: 앞 과녁을 처형하면 그 스킬의 재사용 대기가 초기화 (영상 1 — 쓴 것을 재사용 대기로 볼 수 없음)
-            boolean cast = server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), k.id()) > 0) || k.id().equals("executioner_condemn");
+            // 2026-11-06 엑시큐셔너: 앞 과녁을 처형하면 그 스킬의 재사용 대기가 초기화 (영상 1 — 쓴 것을 재사용 대기로 볼 수 없음 · 2026-11-07 3판은 체인 오브 저지먼트)
+            boolean cast = server.computeOnServer(s -> JobSkills.cooldownLeft(player(s), k.id()) > 0) || k.id().equals("executioner_chains");
             check(cast, k.id() + " (film) cast");
         }
         server.runOnServer(s -> JobSystem.setJob(player(s), job));

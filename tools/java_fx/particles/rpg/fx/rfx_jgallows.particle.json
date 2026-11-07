@@ -2,10 +2,10 @@
   "format_version": "1.10.0",
   "particle_effect": {
     "description": {
-      "identifier": "rpg:rfx_jguillotine",
+      "identifier": "rpg:rfx_jgallows",
       "basic_render_parameters": {
         "material": "particles_blend",
-        "texture": "textures/particle/rpg/fx/rfx_jguillotine"
+        "texture": "textures/particle/rpg/fx/rfx_jgallows"
       }
     },
     "components": {
@@ -34,15 +34,15 @@
         ],
         "facing_camera_mode": "lookat_y",
         "uv": {
-          "texture_width": 768,
-          "texture_height": 1024,
+          "texture_width": 1536,
+          "texture_height": 2048,
           "uv": [
-            "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 192",
-            "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 256"
+            "math.mod((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)), 4) * 384",
+            "math.floor((variable.cell + (variable.frames > 1 ? (variable.loop > 0 ? math.mod(math.floor(variable.particle_age * variable.fps + variable.phase), variable.frames) : math.min(variable.frames - 1, math.floor(variable.particle_age * variable.fps))) : 0)) / 4) * 512"
           ],
           "uv_size": [
-            192,
-            256
+            384,
+            512
           ]
         }
       },

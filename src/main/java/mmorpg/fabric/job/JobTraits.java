@@ -299,6 +299,16 @@ public final class JobTraits {
         return skillId.equals(st.stance) && st.stanceUntil > Tasks.now();
     }
 
+    /** 2026-11-07 걸린 태세 skillId 를 ticks 틱 늘림 (스펙트럴 사이스 — 처치하면 늘어남 · 태세 줄도 그만큼 길어짐). 걸려 있지 않으면 false */
+    static boolean extendStance(ServerPlayer sp, String skillId, int ticks) {
+        State st = STATES.get(sp.getUUID());
+        if (st == null || ticks <= 0 || !stanceOn(st, skillId)) return false;
+        st.stanceUntil += ticks;
+        st.stanceTotal += ticks;
+        sendGauge(sp, true);
+        return true;
+    }
+
     /**
      * 마검 각성이 더한 사거리 칸 (걸린 속성 수정치 — 없으면 0). 시험 · 표시용: 창작 모드의 사거리 +2 (ServerPlayer 가 틱마다 붙임) 와 섞이지 않게
      * 값 대신 이 수정치를 봄
@@ -596,7 +606,6 @@ public final class JobTraits {
         Object[] line = stance.isEmpty() ? JobTraits6.stanceLine(sp, j) : null; // 0.51.0 곰의 화신 (태세가 아니라 따로 — 같은 줄에 보임)
         if (line == null && stance.isEmpty()) line = JobTraits10.stanceLine(sp, j); // 0.51.0 피에로 할루시네이트 (광대 인형의 남은 시간)
         if (line == null && stance.isEmpty()) line = JobTraits11.stanceLine(sp, j); // 0.51.0 스톰 랜서 렌딩 게일 (바람 창이 박히는 남은 시간)
-        if (line == null && stance.isEmpty()) line = JobTraits12.stanceLine(sp, j); // 0.51.0 소울 리퍼 랜턴 오브 소울즈 (등불의 남은 시간)
         if (line != null) {
             stance = (String) line[0];
             left = (int) line[1];

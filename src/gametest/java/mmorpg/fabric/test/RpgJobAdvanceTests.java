@@ -11,6 +11,7 @@ import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgData;
 import mmorpg.fabric.RpgPlayers;
 import mmorpg.fabric.RpgHealth;
+import mmorpg.fabric.WeaponTraits;
 import mmorpg.fabric.economy.Wallet;
 import mmorpg.fabric.job.FrostraiderSkills;
 import mmorpg.fabric.job.JobRecast;
@@ -39,6 +40,7 @@ import mmorpg.fabric.job.JobUpgrades;
 import mmorpg.fabric.mob.Monsters;
 import mmorpg.fabric.mob.PierrotSummon;
 import mmorpg.fabric.mob.RpgMonster;
+import mmorpg.fabric.motion.SwingLook;
 import mmorpg.fabric.skill.Guards;
 import mmorpg.fabric.stattree.StatTrees;
 import mmorpg.fabric.ui.FormNet;
@@ -2466,27 +2468,39 @@ public final class RpgJobAdvanceTests {
             h.assertTrue(now > mark[0] * 0.95, "speed back: " + now + " vs " + mark[0]);
             for (Husk x : z) x.discard();
             z.clear();
-            // 랜턴 오브 소울즈 (태세 칸 몫): 8 · 24 · 40 … 사슬 (1.5) — 가장 오래 안 낚은 적부터 차례로 · 밀 수 있는 적은 끌려옴
+            // 스펙트럴 사이스 (2026-11-07 3판 — 랜턴 오브 소울즈 대신): 8초 평타 사거리 +1.5 · 낫 넓게 베기 5칸 · 50% · 영혼 낫 모습 (평타 범위 5칸) · 처치마다 +1초
+            // (최대 4초)
             home(h, sp);
-            z.add(dummy(h, 0, 3.0));
-            Husk loose = dummy(h, 0, 5.5);
-            loose.getAttribute(Attributes.KNOCKBACK_RESISTANCE).setBaseValue(0);
-            z.add(loose);
-            RpgJobTests.clearStrays(h, z.get(0), loose);
+            z.add(dummy(h, 0, 2.0));
+            z.add(dummy(h, 0, 4.5));
+            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
             JobTraits3.setSouls(sp, 0);
-            mark[1] = loose.position().z;
-            h.assertTrue(JobSkills.press(sp, 3), "랜턴 오브 소울즈 cast");
+            h.assertTrue(JobSkills.press(sp, 3), "스펙트럴 사이스 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "soulreaper_scythe") && JobTraits.stanceTotal(sp) == 160, "scythe stance 8 s: " + JobTraits.stanceTotal(sp));
+            h.assertTrue(Math.abs(JobTraits.reachBonus(sp) - 1.5) < 1e-9, "reach +1.5: " + JobTraits.reachBonus(sp));
+            double[] sw = WeaponTraits.sweepMod.mod(sp, w);
+            h.assertTrue(sw != null && Math.abs(sw[0] - 5) < 1e-9 && Math.abs(sw[1] - 0.5) < 1e-9, "sweep 5 blocks · 50%: " + java.util.Arrays.toString(sw));
+            h.assertTrue("soulreaper_scythe".equals(SwingLook.testKey(sp)), "spectral scythe look " + SwingLook.testKey(sp));
+            RpgCombat.forceCrit = false;
+            sp.attack(z.get(0));
+            h.assertTrue(TestDummies.dealt(z.get(0)) > 0, "scythe swing hits");
         }));
-        steps.add(new RpgJobTests.Step(43, () -> {
-            h.assertTrue(JobTraits12.lanternUp(sp), "the lantern floats");
-            double one = RpgJobTests.expected(sp, j, j.skill(3), 1.5);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), one * 2), "등불 사슬 (가까운 과녁 — 8 · 40) " + TestDummies.dealt(z.get(0)) + " vs " + one * 2);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(1)), one), "등불 사슬 (먼 과녁 — 24) " + TestDummies.dealt(z.get(1)) + " vs " + one);
-            h.assertTrue(mark[1] - z.get(1).position().z > 0.4, "the loose target was pulled in: " + (mark[1] - z.get(1).position().z));
-            JobSystem.setJob(sp, "soulreaper");
-            h.assertTrue(!JobTraits12.lanternUp(sp), "job reset puts the lantern out");
+        steps.add(new RpgJobTests.Step(3, () -> {
+            h.assertTrue(TestDummies.dealt(z.get(1)) > 0, "spectral scythe reaches 4.5 blocks: " + TestDummies.dealt(z.get(1)));
             for (Husk x : z) x.discard();
             z.clear();
+            // 처치마다 +1초 (다섯을 쓰러뜨려도 4초까지)
+            for (int i = 0; i < 5; i++) {
+                Husk m = mortal(h, -2.0 + i, 3.0, 5F);
+                m.hurtServer(h.getLevel(), sp.damageSources().playerAttack(sp), 50F);
+                h.assertTrue(!m.isAlive(), "kill " + i);
+                m.discard();
+            }
+            h.assertTrue(JobTraits12.scytheExtra(sp) == 80 && JobTraits.stanceTotal(sp) == 240, "kills extend +4 s at most: " + JobTraits12.scytheExtra(sp) + " · "
+                    + JobTraits.stanceTotal(sp));
+            JobSystem.setJob(sp, "soulreaper");
+            h.assertTrue(!JobTraits.stanceOn(sp, "soulreaper_scythe") && JobTraits.reachBonus(sp) == 0 && WeaponTraits.sweepMod.mod(sp, w) == null,
+                    "job reset ends the spectral scythe");
             // 페일 하베스트: 20 · 30 둘레 9칸 휩쓸기 14 (적 하나당 체력 2% 회복) → 46 둘레 6칸 내리꽂기 22 — 바깥 과녁은 7.1칸 (시험 자리 안: 7.5칸 앞 z 9 는
             // barrier 벽 속이라 숨막힘 1 × 2 가 더해졌음, CI 42163433947)
             homeAt(h, sp, 0.5);
@@ -2546,135 +2560,168 @@ public final class RpgJobAdvanceTests {
         Husk[] mob = {null};
         List<RpgJobTests.Step> steps = new ArrayList<>();
         double[] mark = {0, 0, 0};
-        int[] execs = {0};
-        // 컨뎀: 6 앞 4.5칸 적 하나를 벰 (6.25) — 둘레 3칸에 다른 적이 없으면 +50% · 잃은 체력 10% 마다 +5% (처형 덤) → 선고 표식
+        int[] execs = {0, 0, 0};
+        // 헤드헌트 (2026-11-07 3판): 6 앞 4.5칸 적 하나를 가로로 벰 (4.0) — 잃은 체력 10% 마다 +5% (처형 덤) → 14틱 뒤부터 다시 누르면 X (+3 — 2.25) · 선고 표식
         steps.add(new RpgJobTests.Step(1, () -> {
             home(h, sp);
             RpgCombat.forceCrit = false;
             z.add(dummy(h, 0, 2.5));
             RpgJobTests.clearStrays(h, z.get(0));
             h.assertTrue(Math.abs(JobTraits12.thresholdOf(sp) - 0.15) < 1e-9, "처형 기준 15%: " + JobTraits12.thresholdOf(sp));
-            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 cast");
+            h.assertTrue(JobSkills.press(sp, 0), "헤드헌트 cast");
         }));
         steps.add(new RpgJobTests.Step(4, () -> z.get(0).setHealth(512F))); // 잃은 체력 50% → 처형 덤 +25%
         steps.add(new RpgJobTests.Step(6, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.25 * 1.5 * 1.25);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "컨뎀 (고립 · 잃은 체력 50%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(JobTraits12.condemned(sp, z.get(0)), "condemned (skull mark)");
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.0 * 1.25);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "헤드헌트 (잃은 체력 50%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(JobRecast.pending(sp, "executioner_headhunt") && !JobTraits12.condemned(sp, z.get(0)), "X window open · no mark yet");
             h.assertTrue(RpgJobTests.gradientNumber(h, z.get(0), j), "executioner gradient number");
-            // 선고 표식 +10% · 곁에 다른 적이 있으면 고립 덤 없음
-            z.add(dummy(h, 1.5, 2.5));
-            RpgJobTests.clearStrays(h, z.get(0), z.get(1));
+            mark[0] = TestDummies.dealt(z.get(0));
+        }));
+        steps.add(new RpgJobTests.Step(5, () -> {
+            z.get(0).setHealth(512F);
+            h.assertTrue(JobSkills.press(sp, 0), "헤드헌트 X (다시 누름)");
+        }));
+        steps.add(new RpgJobTests.Step(4, () -> {
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 2.25 * 1.25);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[0], want), "헤드헌트 X " + (TestDummies.dealt(z.get(0)) - mark[0]) + " vs " + want);
+            h.assertTrue(JobTraits12.condemned(sp, z.get(0)), "condemned (skull mark)");
+            h.assertTrue(!JobRecast.pending(sp, "executioner_headhunt") && JobSkills.cooldownLeft(sp, "executioner_headhunt") > 0, "X closes the window → cooldown");
+            // 선고 표식 +10% (과녁은 체력 가득 — 처형 덤 없음)
             mark[0] = TestDummies.dealt(z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 (곁에 적) cast");
+            h.assertTrue(JobSkills.press(sp, 0), "헤드헌트 (선고) cast");
         }));
         steps.add(new RpgJobTests.Step(10, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.25 * 1.1);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[0], want), "컨뎀 (선고 +10% · 고립 아님) " + (TestDummies.dealt(z.get(0)) - mark[0]) + " vs "
-                    + want);
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.0 * 1.1);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[0], want), "헤드헌트 (선고 +10%) " + (TestDummies.dealt(z.get(0)) - mark[0]) + " vs " + want);
             for (Husk x : z) x.discard();
             z.clear();
-            // 처형: 체력 15% 아래 (보스 아님) 는 한 방에 쓰러짐 → 그 스킬의 재사용 대기 초기화
+            JobRecast.clear(sp);
+            // 처형: 체력 15% 아래 (보스 아님) 는 한 방에 쓰러짐 → 그 스킬의 재사용 대기 초기화 · X 창은 닫힘
             home(h, sp);
             mob[0] = mortal(h, 0, 2.5, 140F);
             RpgJobTests.clearStrays(h, mob[0]);
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 (처형) cast");
+            h.assertTrue(JobSkills.press(sp, 0), "헤드헌트 (처형) cast");
         }));
         steps.add(new RpgJobTests.Step(10, () -> {
             h.assertTrue(!mob[0].isAlive(), "executed");
-            h.assertTrue(JobSkills.cooldownLeft(sp, "executioner_condemn") == 0, "kill → condemn cooldown reset: " + JobSkills.cooldownLeft(sp, "executioner_condemn"));
+            h.assertTrue(JobSkills.cooldownLeft(sp, "executioner_headhunt") == 0 && !JobRecast.pending(sp, "executioner_headhunt"), "kill → headhunt reset · X window closed: "
+                    + JobSkills.cooldownLeft(sp, "executioner_headhunt"));
             mob[0].discard();
-            // 섀도 스토크: 4칸 앞 과녁의 건너편으로 뛰어듦 (돌아섬) → 8 등을 벰 3.75 → 다음 직업 스킬 +20%
+            // 레이븐 시프트: 4칸 앞 과녁의 건너편으로 까마귀 떼가 되어 날아감 (보이지 않음 · 피해 받지 않음) → 8 베어 올림 3.75 → 다음 직업 스킬 +20%
             home(h, sp);
             z.add(dummy(h, 0, 4.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
             mark[0] = z.get(0).position().z;
-            h.assertTrue(JobSkills.press(sp, 1), "섀도 스토크 cast");
+            h.assertTrue(JobSkills.press(sp, 1), "레이븐 시프트 cast");
         }));
-        steps.add(new RpgJobTests.Step(11, () -> {
+        steps.add(new RpgJobTests.Step(4, () -> {
+            h.assertTrue(JobTraits12.ravenFlying(sp) && sp.hasEffect(MobEffects.INVISIBILITY), "flying as ravens (invisible)");
+            h.assertTrue(RpgHealth.sourceReduce.applyAsDouble(sp, sp.damageSources().mobAttack(z.get(0))) == 1, "no damage while flying");
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before landing");
+        }));
+        steps.add(new RpgJobTests.Step(7, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(1), 3.75);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "섀도 스토크 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "레이븐 시프트 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(sp.position().z - mark[0] > 0.8, "landed behind the target: " + (sp.position().z - mark[0]));
             h.assertTrue(Math.abs(net.minecraft.util.Mth.wrapDegrees(sp.getYRot() - 180F)) < 45F, "turned toward the target: " + sp.getYRot());
+            h.assertTrue(!JobTraits12.ravenFlying(sp) && !sp.hasEffect(MobEffects.INVISIBILITY), "visible again");
             h.assertTrue(JobTraits12.stalkPending(sp), "next job skill +20% waiting");
             mark[1] = TestDummies.dealt(z.get(0));
-            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 (섀도 스토크 뒤) cast");
+            h.assertTrue(JobSkills.press(sp, 0), "헤드헌트 (레이븐 시프트 뒤) cast");
         }));
         steps.add(new RpgJobTests.Step(9, () -> {
-            double want = RpgJobTests.expected(sp, j, j.skill(0), 6.25 * 1.5 * 1.2);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[1], want), "컨뎀 (+20% · 고립) " + (TestDummies.dealt(z.get(0)) - mark[1]) + " vs " + want);
-            h.assertTrue(!JobTraits12.stalkPending(sp), "stalk bonus used");
+            double want = RpgJobTests.expected(sp, j, j.skill(0), 4.0 * 1.2);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)) - mark[1], want), "헤드헌트 (+20%) " + (TestDummies.dealt(z.get(0)) - mark[1]) + " vs " + want);
+            h.assertTrue(!JobTraits12.stalkPending(sp), "raven bonus used");
             z.get(0).discard();
             z.clear();
-            // 길로틴: 5칸 앞 과녁 머리 위에 단두대 날 → 22 내리침 8 × (1 + 잃은 체력 × 0.5) × 처형 덤
+            JobRecast.clear(sp);
+            // 체인 오브 저지먼트: 5칸 앞 과녁을 땅의 사슬 넷이 묶음 (4 — 1초) → 땅을 타고 달려온 세로 검기가 22 목을 벰 8 × (1 + 잃은 체력 × 0.5) × 처형 덤
             home(h, sp);
             z.add(dummy(h, 0, 5.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 2), "길로틴 cast");
+            h.assertTrue(JobSkills.press(sp, 2), "체인 오브 저지먼트 cast");
         }));
-        steps.add(new RpgJobTests.Step(20, () -> {
-            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before the drop");
+        steps.add(new RpgJobTests.Step(8, () -> {
+            MobEffectInstance slow = z.get(0).getEffect(MobEffects.SLOWNESS);
+            h.assertTrue(slow != null && slow.getAmplifier() >= 10, "bound by the chains: " + slow);
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage while bound");
+        }));
+        steps.add(new RpgJobTests.Step(12, () -> {
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no damage before the cleave");
             z.get(0).setHealth(512F);
         }));
         steps.add(new RpgJobTests.Step(4, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(2), 8 * 1.25 * 1.25);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "길로틴 (잃은 체력 50%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "체인 오브 저지먼트 (잃은 체력 50%) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             z.get(0).discard();
             z.clear();
-            // 원 라스트 데이: 10초 처형 기준 25% · 처형마다 3초 이동 속도 +20% · 다른 직업 스킬 재사용 대기 2초 (자기는 그대로)
+            // 데스 넬: 10초 처형 기준 25% · 처형마다 종이 울려 둘레 8칸 적 공포 (기절 1초) · 3초 이동 속도 +20% · 다른 직업 스킬 재사용 대기 2초 (자기는 그대로)
             home(h, sp);
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 3), "원 라스트 데이 cast");
-            h.assertTrue(JobTraits.stanceOn(sp, "executioner_lastday") && Math.abs(JobTraits12.thresholdOf(sp) - 0.25) < 1e-9, "처형 기준 25%: "
+            h.assertTrue(JobSkills.press(sp, 3), "데스 넬 cast");
+            h.assertTrue(JobTraits.stanceOn(sp, "executioner_knell") && Math.abs(JobTraits12.thresholdOf(sp) - 0.25) < 1e-9, "처형 기준 25%: "
                     + JobTraits12.thresholdOf(sp));
             z.add(dummy(h, 0, 2.5));
             RpgJobTests.clearStrays(h, z.get(0));
-            h.assertTrue(JobSkills.press(sp, 0), "컨뎀 (재사용 대기를 걸어 둠) cast");
+            h.assertTrue(JobSkills.press(sp, 2), "체인 오브 저지먼트 (재사용 대기를 걸어 둠) cast");
         }));
-        steps.add(new RpgJobTests.Step(10, () -> {
+        steps.add(new RpgJobTests.Step(26, () -> {
             z.get(0).discard();
             z.clear();
             mob[0] = mortal(h, 0, 4.0, 240F);
-            RpgJobTests.clearStrays(h, mob[0]);
+            z.add(dummy(h, 1.5, 5.0)); // 처형한 자리 곁의 적 — 공포에 질림
+            RpgJobTests.clearStrays(h, mob[0], z.get(0));
             home(h, sp);
-            mark[0] = JobSkills.cooldownLeft(sp, "executioner_condemn");
-            mark[1] = JobSkills.cooldownLeft(sp, "executioner_lastday");
+            mark[0] = JobSkills.cooldownLeft(sp, "executioner_chains");
+            mark[1] = JobSkills.cooldownLeft(sp, "executioner_knell");
             mark[2] = sp.getAttribute(Attributes.MOVEMENT_SPEED).getValue();
             execs[0] = JobTraits12.executions;
-            h.assertTrue(JobSkills.press(sp, 1), "섀도 스토크 (처형 23%) cast");
+            execs[1] = JobTraits12.knells;
+            execs[2] = JobTraits12.feared;
+            h.assertTrue(JobSkills.press(sp, 1), "레이븐 시프트 (처형 23%) cast");
         }));
         steps.add(new RpgJobTests.Step(12, () -> {
             h.assertTrue(!mob[0].isAlive(), "executed under 25%: hp " + mob[0].getHealth() + " / " + mob[0].getMaxHealth() + " · 기준 " + JobTraits12.thresholdOf(sp)
-                    + " · 태세 " + JobTraits.stanceOn(sp, "executioner_lastday") + " · 스토크 " + JobSkills.cooldownLeft(sp, "executioner_stalk") + " · 처형 " + JobTraits12.executions
-                    + " (전 " + execs[0] + ")");
-            double c = JobSkills.cooldownLeft(sp, "executioner_condemn");
-            double l = JobSkills.cooldownLeft(sp, "executioner_lastday");
+                    + " · 태세 " + JobTraits.stanceOn(sp, "executioner_knell") + " · 처형 " + JobTraits12.executions + " (전 " + execs[0] + ")");
+            double c = JobSkills.cooldownLeft(sp, "executioner_chains");
+            double l = JobSkills.cooldownLeft(sp, "executioner_knell");
             h.assertTrue(c <= mark[0] - 12 - 40 + 2, "other cooldowns −2 s: " + c + " (was " + mark[0] + ")");
             h.assertTrue(l >= mark[1] - 12 - 2, "not its own: " + l + " (was " + mark[1] + ")");
-            h.assertTrue(JobSkills.cooldownLeft(sp, "executioner_stalk") == 0, "kill → stalk cooldown reset");
+            h.assertTrue(JobSkills.cooldownLeft(sp, "executioner_raven") == 0, "kill → raven cooldown reset");
             h.assertTrue(sp.getAttribute(Attributes.MOVEMENT_SPEED).getValue() > mark[2] * 1.1, "haste after the execution");
+            h.assertTrue(JobTraits12.knells == execs[1] + 1 && JobTraits12.feared > execs[2] && z.get(0).hasEffect(MobEffects.WEAKNESS),
+                    "the knell tolls · the bystander is feared: " + JobTraits12.knells + " · " + JobTraits12.feared);
             mob[0].discard();
+            z.get(0).discard();
+            z.clear();
             JobSystem.setJob(sp, "executioner");
-            h.assertTrue(!JobTraits.stanceOn(sp, "executioner_lastday") && Math.abs(JobTraits12.thresholdOf(sp) - 0.15) < 1e-9, "job reset ends the last day");
-            // 비포 선셋: 6칸 앞 과녁에 X 표식 → 10 순간 이동 → 12 · 22 X 자로 벰 (둘레 3칸 25 × 2) — 쓰러뜨리지 않으면 재사용 대기
+            h.assertTrue(!JobTraits.stanceOn(sp, "executioner_knell") && Math.abs(JobTraits12.thresholdOf(sp) - 0.15) < 1e-9, "job reset ends the knell");
+            // 길로틴 오브 헤븐: 6칸 앞 과녁 위 하늘에서 단두대가 내려와 10 박히며 가둠 → 16 · 28 칼날이 떨어짐 (둘레 2.5칸 25 × 2) — 몸은 그 자리 · 쓰러뜨리지 않으면 재사용 대기
             home(h, sp);
             z.add(dummy(h, 0, 6.0));
             RpgJobTests.clearStrays(h, z.get(0));
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "비포 선셋 cast");
+            mark[0] = sp.position().z;
+            h.assertTrue(JobSkills.press(sp, 4), "길로틴 오브 헤븐 cast");
         }));
-        steps.add(new RpgJobTests.Step(14, () -> {
+        steps.add(new RpgJobTests.Step(12, () -> {
+            h.assertTrue(z.get(0).hasEffect(MobEffects.SLOWNESS), "trapped under the gallows");
+            h.assertTrue(TestDummies.dealt(z.get(0)) == 0, "no stroke yet");
+        }));
+        steps.add(new RpgJobTests.Step(6, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 25);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "비포 선셋 첫 획 " + TestDummies.dealt(z.get(0)) + " vs " + want);
-            h.assertTrue(sp.position().distanceTo(z.get(0).position()) < 2.2, "blinked to the mark: " + sp.position().distanceTo(z.get(0).position()));
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "길로틴 오브 헤븐 첫 칼날 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(Math.abs(sp.position().z - mark[0]) < 0.5, "the executioner stays (the blade falls from the sky): " + (sp.position().z - mark[0]));
         }));
-        steps.add(new RpgJobTests.Step(10, () -> {
+        steps.add(new RpgJobTests.Step(12, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 50);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "비포 선셋 " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "길로틴 오브 헤븐 " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(!JobRecast.pending(sp, "executioner_ult") && JobSkills.cooldownLeft(sp, "executioner_ult") > 0, "no kill → cooldown");
             z.get(0).discard();
             z.clear();
@@ -2683,24 +2730,24 @@ public final class RpgJobAdvanceTests {
             mob[0] = mortal(h, 0, 6.0, 100F);
             RpgJobTests.clearStrays(h, mob[0]);
             JobSkills.resetCooldowns(sp);
-            h.assertTrue(JobSkills.press(sp, 4), "비포 선셋 (처형) cast");
+            h.assertTrue(JobSkills.press(sp, 4), "길로틴 오브 헤븐 (처형) cast");
         }));
-        steps.add(new RpgJobTests.Step(16, () -> {
-            h.assertTrue(!mob[0].isAlive(), "executed by the stroke");
+        steps.add(new RpgJobTests.Step(20, () -> {
+            h.assertTrue(!mob[0].isAlive(), "executed by the blade");
             h.assertTrue(JobRecast.pending(sp, "executioner_ult") && JobSkills.cooldownLeft(sp, "executioner_ult") == 0, "kill → recast window");
             mob[0].discard();
         }));
-        // 다시 쓰기는 창이 열리고 6틱 뒤부터 (JobRecast.MIN_GAP — 12 에 쓰러뜨림 → 13 에 열림) · 첫 시전의 둘째 획 (22) 이 지난 뒤에 새 과녁 (CI 42162246010: 16 에 눌러 막혔음)
-        steps.add(new RpgJobTests.Step(10, () -> {
+        // 다시 쓰기는 창이 열리고 6틱 뒤부터 (JobRecast.MIN_GAP — 16 에 쓰러뜨림 → 17 에 열림) · 첫 시전의 둘째 칼날 (28) 이 지난 뒤에 새 과녁
+        steps.add(new RpgJobTests.Step(12, () -> {
             h.assertTrue(JobRecast.ready(sp, "executioner_ult"), "recast ready");
             home(h, sp);
             z.add(dummy(h, 0, 5.0));
             RpgJobTests.clearStrays(h, z.get(0));
-            h.assertTrue(JobSkills.press(sp, 4), "비포 선셋 recast");
+            h.assertTrue(JobSkills.press(sp, 4), "길로틴 오브 헤븐 recast");
         }));
-        steps.add(new RpgJobTests.Step(26, () -> {
+        steps.add(new RpgJobTests.Step(32, () -> {
             double want = RpgJobTests.expected(sp, j, j.skill(4), 50);
-            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "비포 선셋 (다시) " + TestDummies.dealt(z.get(0)) + " vs " + want);
+            h.assertTrue(RpgJobTests.near(TestDummies.dealt(z.get(0)), want), "길로틴 오브 헤븐 (다시) " + TestDummies.dealt(z.get(0)) + " vs " + want);
             h.assertTrue(!JobRecast.pending(sp, "executioner_ult") && JobSkills.cooldownLeft(sp, "executioner_ult") > 0, "recast without a kill → cooldown");
         }));
         RpgJobTests.chain(h, steps, 0, () -> {
