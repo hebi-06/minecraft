@@ -200,7 +200,11 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb libgl1 libgl1-mesa-dri libglx-mesa0 libegl1 mesa-vulkan-drivers libvulkan1 > /dev/null
           mkdir -p ci-out/shots
-          ./gradlew assemble probeJar --stacktrace --console=plain 2>&1 | tail -n 30 | tee ci-out/vanilla-build.txt
+          set +e
+          ./gradlew assemble probeJar --console=plain > ci-out/vanilla-build.txt 2>&1
+          bcode=$?
+          grep -n -E "error:|warning:|What went wrong|BUILD (SUCCESSFUL|FAILED)|> Task :compileProbe|Could not" ci-out/vanilla-build.txt | head -n 60
+          [ $bcode -eq 0 ] || { tail -n 40 ci-out/vanilla-build.txt; exit $bcode; }
           bash ci/vanilla_probe.sh 2>&1 | tee ci-out/vanilla.txt
           exit ${PIPESTATUS[0]}
 
