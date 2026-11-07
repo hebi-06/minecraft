@@ -50,6 +50,9 @@ final class VanillaProbe {
     private static int strBefore, pointBefore, bagRunes, bagSlot;
     private static net.minecraft.world.inventory.AbstractContainerMenu statsMenu;
     private static ItemStack movedRune = ItemStack.EMPTY;
+    /** 메뉴 시험: 뺐다 낄 투구 · 아티팩트 수 · 뽑기 전 룬 수 */
+    private static ItemStack helmet = ItemStack.EMPTY;
+    private static int artBefore, runesBefore;
 
     private static int countRunes(ServerPlayer p) {
         int n = 0;
@@ -225,87 +228,179 @@ final class VanillaProbe {
                         && Integer.valueOf(7).equals(m.get("num")) && Boolean.FALSE.equals(m.get("on")));
                 next(p, 26, 20);
             }
-            case 26 -> { // 4b: 스탯 창 (그림 창 — VanillaStats)
+            case 26 -> { // 4b: 메뉴 (Shift + F — VanillaMenu)
+                p.setExperienceLevels(60);
+                wearSet(p);
                 mmorpg.fabric.RpgPlayers.addPoints(p, 10);
-                mmorpg.fabric.RpgNet.openStats(p);
-                next(p, 27, 20);
+                if (mmorpg.fabric.rune.RuneItems.TICKET != null) p.getInventory().setItem(20, new ItemStack(mmorpg.fabric.rune.RuneItems.TICKET, 12));
+                Item art = lowestArtifact();
+                if (art != null) p.getInventory().setItem(22, new ItemStack(art));
+                say(p, "shift on");
+                next(p, 27, 10);
             }
             case 27 -> {
-                check("stats window open", p.containerMenu != p.inventoryMenu);
-                statsMenu = p.containerMenu;
-                strBefore = mmorpg.fabric.RpgData.of(p).str();
-                pointBefore = mmorpg.fabric.RpgData.of(p).point();
-                say(p, "shot 12_stats");
-                next(p, 28, 20);
+                say(p, "key f"); // Shift + F → 메뉴
+                next(p, 28, 15);
             }
             case 28 -> {
-                say(p, "slot 8"); // 힘 + 단추 좌클릭 (+1)
-                next(p, 29, 15);
+                say(p, "shift off");
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("shift+F opens menu home", g != null && g.page == VanillaMenu.Page.HOME && p.containerMenu != p.inventoryMenu);
+                check("still normal mode", VanillaInput.mode(p) == VanillaInput.Mode.NORMAL);
+                statsMenu = p.containerMenu;
+                say(p, "shot 12_menu_home");
+                next(p, 29, 20);
             }
             case 29 -> {
-                mmorpg.fabric.RpgData d = mmorpg.fabric.RpgData.of(p);
-                check("str +1 (left click)", d.str() == strBefore + 1 && d.point() == pointBefore - 1);
-                say(p, "shiftslot 8"); // Shift + 좌클릭 (+5)
+                say(p, "slot 9"); // 왼쪽 탭 줄 1 = 스탯
                 next(p, 30, 15);
             }
             case 30 -> {
-                mmorpg.fabric.RpgData d = mmorpg.fabric.RpgData.of(p);
-                check("str +5 (shift left click)", d.str() == strBefore + 6 && d.point() == pointBefore - 6);
-                check("stats window still open (same menu)", p.containerMenu == statsMenu);
-                say(p, "shot 12b_stats_after");
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("stats tab (same menu)", g != null && g.page == VanillaMenu.Page.STATS && p.containerMenu == statsMenu);
+                strBefore = mmorpg.fabric.RpgData.of(p).str();
+                pointBefore = mmorpg.fabric.RpgData.of(p).point();
+                say(p, "shot 13_stats");
                 next(p, 31, 20);
             }
             case 31 -> {
-                say(p, "slot 72"); // 아랫줄 스킬 칸 단추 (가방 자리 줄 8 · 칸 0)
-                next(p, 32, 20);
+                say(p, "slot " + VanillaMenu.idx(0, 3)); // 힘 그림 좌클릭 (+1)
+                next(p, 32, 15);
             }
             case 32 -> {
-                check("skill bar window open", p.containerMenu != p.inventoryMenu && p.containerMenu != statsMenu);
-                say(p, "shot 13_skillbar");
-                next(p, 33, 20);
+                mmorpg.fabric.RpgData d = mmorpg.fabric.RpgData.of(p);
+                check("str +1 (left click)", d.str() == strBefore + 1 && d.point() == pointBefore - 1);
+                say(p, "shiftslot " + VanillaMenu.idx(1, 3)); // 힘 값 Shift + 좌클릭 (+5)
+                next(p, 33, 15);
             }
             case 33 -> {
-                movedRune = mmorpg.fabric.rune.SkillBar.get(p, 0).copy();
-                say(p, "slot 9"); // 룬 칸 1 고르기
-                next(p, 34, 15);
+                mmorpg.fabric.RpgData d = mmorpg.fabric.RpgData.of(p);
+                check("str +5 (shift left click)", d.str() == strBefore + 6 && d.point() == pointBefore - 6);
+                check("menu still open (same menu)", p.containerMenu == statsMenu);
+                say(p, "shot 13b_stats_after");
+                next(p, 34, 20);
             }
             case 34 -> {
-                say(p, "slot 14"); // 룬 칸 6 (비어 있음) 으로 옮기기
+                say(p, "slot 18"); // 왼쪽 탭 줄 2 = 스킬
                 next(p, 35, 15);
             }
             case 35 -> {
-                check("rune moved 1 -> 6", mmorpg.fabric.rune.SkillBar.get(p, 0).isEmpty()
-                        && ItemStack.isSameItem(mmorpg.fabric.rune.SkillBar.get(p, 5), movedRune) && !movedRune.isEmpty());
-                bagRunes = countRunes(p);
-                say(p, "slot 14"); // 룬 칸 6 고르기
-                next(p, 36, 15);
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("skills tab", g != null && g.page == VanillaMenu.Page.SKILLS);
+                say(p, "shot 14_skills");
+                movedRune = mmorpg.fabric.rune.SkillBar.get(p, 0).copy();
+                next(p, 36, 20);
             }
             case 36 -> {
-                say(p, "slot 17"); // 빼기
+                say(p, "slot " + VanillaMenu.idx(1, 1)); // 룬 칸 1 고르기
                 next(p, 37, 15);
             }
             case 37 -> {
+                say(p, "slot " + VanillaMenu.idx(1, 6)); // 룬 칸 6 (비어 있음) 으로 옮기기
+                next(p, 38, 15);
+            }
+            case 38 -> {
+                check("rune moved 1 -> 6", mmorpg.fabric.rune.SkillBar.get(p, 0).isEmpty()
+                        && ItemStack.isSameItem(mmorpg.fabric.rune.SkillBar.get(p, 5), movedRune) && !movedRune.isEmpty());
+                bagRunes = countRunes(p);
+                say(p, "slot " + VanillaMenu.idx(1, 6)); // 룬 칸 6 고르기
+                next(p, 39, 15);
+            }
+            case 39 -> {
+                say(p, "slot " + VanillaMenu.idx(3, 7)); // 빼기
+                next(p, 40, 15);
+            }
+            case 40 -> {
                 check("rune removed to bag", mmorpg.fabric.rune.SkillBar.get(p, 5).isEmpty() && countRunes(p) == bagRunes + 1);
                 bagSlot = -1;
                 for (int i = 0; i < net.minecraft.world.entity.player.Inventory.INVENTORY_SIZE; i++) {
                     if (ItemStack.isSameItem(p.getInventory().getItem(i), movedRune)) bagSlot = i;
                 }
-                // 가방 칸 → 메뉴 칸 (가방 줄 54 ~ 80 = 가방 9 ~ 35, 핫바 81 ~ 89 = 0 ~ 8)
-                say(p, "slot " + (bagSlot < 9 ? 81 + bagSlot : 54 + bagSlot - 9)); // 가방의 그 룬 고르기
-                next(p, 38, 15);
+                say(p, "slot " + VanillaMenu.invIndex(Math.max(0, bagSlot))); // 가방의 그 룬 고르기
+                next(p, 41, 15);
             }
-            case 38 -> {
-                say(p, "slot 9"); // 룬 칸 1 에 올리기
-                next(p, 39, 15);
+            case 41 -> {
+                say(p, "slot " + VanillaMenu.idx(1, 1)); // 룬 칸 1 에 올리기
+                next(p, 42, 15);
             }
-            case 39 -> {
+            case 42 -> {
                 check("bag rune equipped to 1", bagSlot >= 0 && ItemStack.isSameItem(mmorpg.fabric.rune.SkillBar.get(p, 0), movedRune));
-                say(p, "shot 14_skillbar_after");
-                next(p, 40, 20);
+                say(p, "shot 14b_skills_after");
+                next(p, 43, 20);
             }
-            case 40 -> {
+            case 43 -> {
+                say(p, "slot 27"); // 왼쪽 탭 줄 3 = 장비
+                next(p, 44, 15);
+            }
+            case 44 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("equip tab", g != null && g.page == VanillaMenu.Page.EQUIP);
+                helmet = p.getItemBySlot(EquipmentSlot.HEAD).copy();
+                check("wearing helmet", !helmet.isEmpty());
+                say(p, "shot 15_equip");
+                next(p, 45, 20);
+            }
+            case 45 -> {
+                say(p, "slot " + VanillaMenu.idx(0, 1)); // 투구 칸 → 가방으로
+                next(p, 46, 15);
+            }
+            case 46 -> {
+                int at = -1;
+                for (int i = 0; i < net.minecraft.world.entity.player.Inventory.INVENTORY_SIZE; i++) {
+                    if (!helmet.isEmpty() && ItemStack.isSameItem(p.getInventory().getItem(i), helmet)) at = i;
+                }
+                check("helmet taken off to bag", p.getItemBySlot(EquipmentSlot.HEAD).isEmpty() && at >= 0);
+                say(p, "slot " + VanillaMenu.invIndex(Math.max(0, at))); // 가방의 투구 → 다시 끼기
+                next(p, 47, 15);
+            }
+            case 47 -> {
+                check("helmet worn again from bag", ItemStack.isSameItem(p.getItemBySlot(EquipmentSlot.HEAD), helmet));
+                artBefore = mmorpg.fabric.artifact.ArtifactSystem.worn(p);
+                say(p, "slot " + VanillaMenu.invIndex(22)); // 가방의 아티팩트 → 끼기
+                next(p, 48, 15);
+            }
+            case 48 -> {
+                check("artifact equipped from bag", mmorpg.fabric.artifact.ArtifactSystem.worn(p) == artBefore + 1);
+                say(p, "shot 15b_equip_after");
+                next(p, 49, 20);
+            }
+            case 49 -> {
+                say(p, "slot 0"); // 왼쪽 탭 줄 0 = 홈
+                next(p, 50, 15);
+            }
+            case 50 -> {
+                say(p, "slot " + VanillaMenu.idx(0, 7)); // 뽑기 카드
+                next(p, 51, 15);
+            }
+            case 51 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("gacha page from home card", g != null && g.page == VanillaMenu.Page.GACHA);
+                runesBefore = countRunes(p);
+                say(p, "shot 16_gacha");
+                next(p, 52, 20);
+            }
+            case 52 -> {
+                say(p, "slot " + VanillaMenu.idx(1, 7)); // 1회 뽑기
+                next(p, 53, 40);
+            }
+            case 53 -> {
+                check("gacha 1 pull gives rune", countRunes(p) == runesBefore + 1);
+                runesBefore = countRunes(p);
+                say(p, "shot 16b_gacha_one");
+                next(p, 54, 15);
+            }
+            case 54 -> {
+                say(p, "slot " + VanillaMenu.idx(2, 7)); // 10회 뽑기
+                next(p, 55, 70);
+            }
+            case 55 -> {
+                check("gacha 10 pulls give runes", countRunes(p) == runesBefore + mmorpg.core.Gacha.multi());
+                say(p, "shot 16c_gacha_ten");
+                next(p, 56, 20);
+            }
+            case 56 -> {
                 say(p, "close");
-                next(p, 41, 20);
+                next(p, 57, 20);
             }
             default -> {
                 say(p, "done");
@@ -357,8 +452,17 @@ final class VanillaProbe {
         Item altarItem = BuiltInRegistries.ITEM.getValue(Mmorpg.rpg("altar_scarecrow_king"));
         if (altarItem != null) hotbar.add(altarItem);
         for (int i = 0; i < hotbar.size() && i < 9; i++) p.getInventory().setItem(i, new ItemStack(hotbar.get(i)));
+        RpgArmorItem chest = wearSet(p);
+        log("gave " + hotbar.size() + " hotbar items, armor set " + (chest != null ? chest.piece().set() : "-"));
+    }
+
+    /** 힘 계열 갑옷 한 벌 (가장 낮은 레벨 — 요구 조건이 낮은 것) 을 입힘. 그 가슴 갑옷 (없으면 null) */
+    private static RpgArmorItem wearSet(ServerPlayer p) {
         RpgArmorItem chest = null;
-        for (RpgArmorItem a : GearItems.armor()) if (a.piece().type().equals("str") && a.piece().slot().equals("Chest")) chest = a;
+        for (RpgArmorItem a : GearItems.armor()) {
+            if (!a.piece().type().equals("str") || !a.piece().slot().equals("Chest")) continue;
+            if (chest == null || a.piece().level() < chest.piece().level()) chest = a;
+        }
         if (chest != null) {
             String set = chest.piece().set();
             for (RpgArmorItem a : GearItems.armor()) {
@@ -372,7 +476,21 @@ final class VanillaProbe {
                 p.setItemSlot(slot, new ItemStack(a));
             }
         }
-        log("gave " + hotbar.size() + " hotbar items, armor set " + (chest != null ? chest.piece().set() : "-"));
+        return chest;
+    }
+
+    /** 착용 레벨이 가장 낮은 아티팩트 아이템 */
+    private static Item lowestArtifact() {
+        Item best = null;
+        int bestLv = Integer.MAX_VALUE;
+        for (Item item : BuiltInRegistries.ITEM) {
+            mmorpg.core.Artifacts.Art a = mmorpg.fabric.gear.ArtifactItem.of(new ItemStack(item));
+            if (a != null && a.level() < bestLv) {
+                best = item;
+                bestLv = a.level();
+            }
+        }
+        return best;
     }
 
     private static void run(MinecraftServer server, String command) {

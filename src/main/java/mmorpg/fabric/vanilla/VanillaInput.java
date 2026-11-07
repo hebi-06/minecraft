@@ -37,7 +37,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 무기 스킬은 똑같이 우클릭 쉬프트 우클릭으로"). 바닐라 클라이언트가 서버에 알려 주는 키는 핫바 칸 번호 · F (왼손 바꾸기) · Q · 움직임 · 클릭뿐이라 그것으로 만듦.
  *
  * <ul>
- * <li>F (왼손 바꾸기 키 — 바닐라 바꾸기는 하지 않음, Shift + F 는 일반 모드에서 원래대로 바꿈): 일반 → 룬 스킬 → 직업 스킬 → 일반</li>
+ * <li>F (왼손 바꾸기 키 — 바닐라 바꾸기는 하지 않음): 일반 → 룬 스킬 → 직업 스킬 → 일반. Shift + F = 메뉴 (VanillaMenu — 스킬 모드면 나오고 엶).
+ * 왼손 바꾸기는 메뉴 장비 쪽의 우클릭 · 가방 화면에서 아이템에 마우스를 올리고 F</li>
  * <li>스킬 모드 동안 든 칸은 9번 (들고 있던 무기를 9번 칸과 바꿔 둠 — 나올 때 되돌림): 숫자 키는 지금 든 칸을 다시 누르면 아무것도 보내지 않으므로,
  * 1 ~ 8 이 모두 "칸 바뀜" 을 보내도록 든 칸을 스킬 키가 아닌 9번에 둠. 칸 바뀜이 오면 그 칸의 스킬을 쓰고 든 칸을 9번으로 되돌림</li>
  * <li>룬 스킬: 숫자 1 ~ 8 = 스킬 칸 1 ~ 8 ({@link SkillBar#cast}) · 직업 스킬: 숫자 1 ~ 5 = 직업 스킬 1 ~ 5 ({@link JobSkills#press})</li>
@@ -96,7 +97,11 @@ public final class VanillaInput {
     public static boolean onSwapKey(ServerPlayer sp) {
         if (sp == null || !VanillaClients.isVanilla(sp)) return false;
         Mode m = mode(sp);
-        if (m == Mode.NORMAL && sp.isShiftKeyDown()) return false; // Shift + F: 원래 왼손 바꾸기
+        if (sp.isShiftKeyDown() && !sp.isSpectator()) { // Shift + F: 메뉴 (사용자 2026-11-07 — 왼손 바꾸기는 메뉴 장비 쪽 · 가방 화면의 F)
+            if (m != Mode.NORMAL) exit(sp, true);
+            VanillaMenu.open(sp, VanillaMenu.Page.HOME);
+            return true;
+        }
         if (!RpgHealth.isRpgMode(sp)) { // 크리에이티브 · 관전: 스킬 모드 없음 (F 는 원래대로)
             if (m == Mode.NORMAL) return false;
             exit(sp, true);
@@ -307,7 +312,7 @@ public final class VanillaInput {
     private static void guide(ServerPlayer sp) {
         if (sp == null || !VanillaClients.isVanilla(sp)) return;
         if (sp.entityTags().contains(GUIDE_TAG)) {
-            sp.sendSystemMessage(Component.literal(Notify.PREFIX + "§7F §f스킬 모드 (룬 → 직업 → 일반) §8· §7우클릭 · Shift + 우클릭 §f무기 스킬"));
+            sp.sendSystemMessage(Component.literal(Notify.PREFIX + "§7F §f스킬 모드 (룬 → 직업 → 일반) §8· §7Shift + F §f메뉴 §8· §7우클릭 · Shift + 우클릭 §f무기 스킬"));
             return;
         }
         sp.addTag(GUIDE_TAG);
@@ -316,8 +321,8 @@ public final class VanillaInput {
                 "§fF §7: 일반 → §b룬 스킬 §7(숫자 1 ~ 8) → §d직업 스킬 §7(숫자 1 ~ 5) → 일반",
                 "§7스킬 모드 동안 핫바에 스킬 그림이 보이고, 들고 있던 무기는 9번 칸에 있습니다",
                 "§f우클릭 · Shift + 우클릭 §7: 무기 스킬 (활 · 완드는 길게 누르기도)",
-                "§fShift + F §7: 원래의 왼손 바꾸기",
-                "§7스탯 책 우클릭 §f: 스탯 창 §7(포인트 배분 · 스킬 칸 · 퀘스트 · 창고 · 탈것)",
+                "§fShift + F §7: 메뉴 §7(스탯 · 스킬 세팅 · 장비 · 장터 · 뽑기 · 퀘스트 · 창고 · 탈것)",
+                "§7왼손 바꾸기: 메뉴 장비 쪽에서 가방의 아이템 우클릭 · 가방 화면에서 아이템에 마우스를 올리고 F",
                 "§7숫자 키가 멀면 §f옵션 → 조작 → 키 설정 §7의 §f핫바 칸 1 ~ 8 §7을 다른 키로 바꿔 쓰세요 (예: R Z V B …)",
                 "§c스킬 모드에서 마우스 휠을 굴리면 1번 · 8번 스킬이 나갑니다"}) {
             sp.sendSystemMessage(Component.literal(line));

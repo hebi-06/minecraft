@@ -386,6 +386,11 @@ public final class GachaSystem {
         return Json.stringify(m);
     }
 
+    /** 모드 없는 클라이언트의 뽑기 쪽 (VanillaGacha) 연출이 끝남 — 결과 알림 · 빛기둥을 바로 */
+    public static void revealNow(ServerPlayer sp, long id) {
+        revealed(sp, String.valueOf(id));
+    }
+
     /** 연출에서 결과가 보임 (클라이언트) */
     static void revealed(ServerPlayer sp, String id) {
         Reveal r = REVEALS.get(sp.getUUID());

@@ -22,35 +22,59 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 모드 없는 클라이언트의 그림 창 (1번 4b — 사용자 "텍스처랑 넣고 … 최대한 비슷하게"): 상자 메뉴의 제목 글자로 창 바탕 · 글자를 그림.
+ * 모드 없는 클라이언트의 그림 창 (1번 4b — 사용자 "텍스처랑 넣고 … 최대한 비슷하게", "위르드 서버 처럼"): 상자 메뉴의 제목 글자로 창 바탕 · 글자를 그림.
  *
- * <p>바닐라 상자 메뉴는 제목을 칸 아이템보다 먼저 그림 (1.21.7+ — 아이템이 위). 제목 = [뒤로 8] [바탕 그림 글자 (rpg:gui_bg, 창 전체 176 × 222)]
- * [자리 옮김 (rpg:gui_space — 앞뒤 1 ~ 256)] [글자 (줄 글꼴 rpg:gl&lt;d&gt; — 갈무리9 글자판, 세로 d 만큼 아래)] … 처럼 이어 붙임.
- * 글자 너비는 tools/vanilla_gui.py 가 만든 표 (mmorpg/vanilla/gui/text_widths.json — 마인크래프트 비트맵 글꼴 규칙과 같게) 로 셈.
- * 바탕 · 글자판 · 글꼴은 VanillaPack 이 팩에만 넣음 (모드 클라이언트는 읽지 않음).
+ * <p>바닐라 상자 메뉴는 제목을 칸 아이템보다 먼저 그림 (1.21.7+ — 아이템이 위). 제목 = [뒤로 8] [바탕 그림 글자 (rpg:gui_bg — 메뉴 쪽 176 × 198,
+ * 창 위 12 부터)] [자리 옮김 (rpg:gui_space — 앞뒤 1 ~ 256)] [글자 (줄 글꼴 rpg:gl&lt;d&gt; — 갈무리9 글자판, 세로 d 만큼 아래 ·
+ * 숫자 글꼴 rpg:gn&lt;d&gt; — 갈무리7 숫자판)] … 처럼 이어 붙임. 글자 너비는 tools/vanilla_gui.py 가 만든 표 (text_widths.json · num_widths.json —
+ * 마인크래프트 비트맵 글꼴 규칙과 같게) 로 셈. 바탕 · 글자판 · 글꼴은 VanillaPack 이 팩에만 넣음 (모드 클라이언트는 읽지 않음).
  *
- * <p>좌표는 창 왼쪽 위 기준 (칸 c 의 틀 x = 7 + 18c, 줄 r 의 틀 y = 17 + 18r — 가방 자리 줄 6 ~ 8 은 139 + 18(r − 6), 핫바 줄 9 는 197).
- * 글자 줄의 위 (글자판 칸 12px 의 위) = 3 + d.
+ * <p>좌표는 4줄 상자 메뉴 (9 × 4 — VanillaMenu) 창 왼쪽 위 기준: 칸 c 의 틀 x = 7 + 18c, 줄 r 의 틀 y = 17 + 18r (가방 줄 4 ~ 6 은
+ * 102 + 18(r − 4), 핫바 줄 7 은 160). 글자판 칸 12px 의 위 = 3 + d (갈무리9 글자 = y d + 4 ~ d + 12, 갈무리7 숫자 = d + 6 ~ d + 12).
  */
 public final class VanillaGui {
     private VanillaGui() {}
 
-    /** 줄 글꼴의 세로 자리 d (글자판 칸 위 = 3 + d): 제목 · 칸 줄 0 ~ 5 · 가방 줄 6 ~ 9 · 가방 위 글 */
-    public static final int[] LINES = {0, 17, 35, 53, 71, 89, 107, 124, 139, 157, 175, 197};
+    /** 줄 글꼴 (갈무리9) 의 세로 자리 d: 제목 줄 · 스킬 쪽 머리 줄 둘 · 뽑기 쪽 아래 줄 */
+    public static final int[] LINES = {0, 15, 51, 71};
+    /** 숫자 글꼴 (갈무리7) 의 세로 자리 d: 장비 쪽 손 +N (칸 위) · 스탯 값 · 아티팩트 +N (칸 아래) */
+    public static final int[] NUM_LINES = {1, 38, 67};
     public static final Identifier SPACE = Mmorpg.rpg("gui_space");
     public static final Identifier BG = Mmorpg.rpg("gui_bg");
-    /** 바탕 그림 글자 (rpg:gui_bg — VanillaPack 과 같은 순서) */
-    public static final char BG_STATS = '';
-    public static final char BG_SKILLS = '';
-    public static final String[] BACKGROUNDS = {"stats", "skills"};
-    /** 바탕 그림 크기 (모두 176 × 222 — 6줄 상자 창 전체) */
+    /** 메뉴 아이템 설명 상자 (rpg:tooltip/menu_background · menu_frame — VanillaPack) */
+    public static final Identifier TOOLTIP = Mmorpg.rpg("menu");
+
+    /** 메뉴 쪽 바탕 (rpg:gui_bg 의 글자 — VanillaPack 이 같은 차례로 넣음): 그림 176 × 198 (창 위 12 부터) */
+    public enum Bg {
+        HOME("menu_home"), STATS("menu_stats"), SKILLS("menu_skills"), EQUIP("menu_equip"), GACHA("menu_gacha");
+
+        public final String file;
+
+        Bg(String file) {
+            this.file = file;
+        }
+
+        public char glyph() {
+            return (char) ('\uE000' + ordinal());
+        }
+    }
+
+    /** 바탕 그림 크기 · 위 여유 (그림 위가 창 위보다 MENU_TOP 위 — 탭 막대 걸이) */
     public static final int BG_W = 176;
-    public static final int BG_H = 222;
+    public static final int MENU_H = 198;
+    public static final int MENU_TOP = 12;
     /** 제목 글자가 시작하는 x (바닐라 titleLabelX) */
     static final int TITLE_X = 8;
 
-    public static final int WHITE = 0xFFFFFF, GRAY = 0xAAAAAA, DARK = 0x777777, GOLD = 0xFFC94A, GREEN = 0x7CFF8A, RED = 0xFF6B6B,
+    /** 그림 글자 (글자판 끝 — 흰색으로 쓰면 그림 색 그대로) */
+    public static final String COIN = "\uE100", HEART = "\uE101", GEM = "\uE102", TICKET = "\uE103";
+
+    /** 어두운 바탕 위 */
+    public static final int WHITE = 0xFFFFFF, GRAY = 0xAAAAAA, DARK = 0x777777, GOLD = 0xFFC94A, GREEN = 0x9CFF8A, RED = 0xFF6B6B,
             AQUA = 0x6FE6FF, PINK = 0xF08CFF;
+    /** 양피지 위 (밝은 판 — 어두운 글자) */
+    public static final int INK = 0x4A3524, SUB = 0x8C7052, OK = 0x3F7A34, WARN = 0xA0352E, GOLD_INK = 0x9A6A14, TEAL_INK = 0x1F6F78,
+            PURPLE_INK = 0x7A3F8C;
 
     private static Map<Integer, Integer> widths;
     private static int space = 4;
@@ -61,18 +85,22 @@ public final class VanillaGui {
         return 7 + 18 * c;
     }
 
-    /** 줄 r 의 틀 y (0 ~ 5 위 칸, 6 ~ 8 가방, 9 핫바) */
+    /** 9 × 4 메뉴 줄 r 의 틀 y (0 ~ 3 메뉴 칸, 4 ~ 6 가방, 7 핫바) */
     public static int cellY(int r) {
-        return r < 6 ? 17 + 18 * r : r < 9 ? 139 + 18 * (r - 6) : 197;
+        return r < 4 ? 17 + 18 * r : r < 7 ? 102 + 18 * (r - 4) : 160;
     }
 
-    /** 줄 r 의 칸 안에 가운데 맞춘 글자 줄 d (= 그 줄의 틀 y) */
-    public static int rowLine(int r) {
-        return cellY(r);
+    /** 칸 c 의 가운데 x */
+    public static int cellMid(int c) {
+        return 16 + 18 * c;
     }
 
     static Identifier lineFont(int d) {
         return Mmorpg.rpg("gl" + d);
+    }
+
+    static Identifier numFont(int d) {
+        return Mmorpg.rpg("gn" + d);
     }
 
     private static synchronized Map<Integer, Integer> widths() {
@@ -92,6 +120,63 @@ public final class VanillaGui {
         }
         widths = m;
         return m;
+    }
+
+    private static Map<Integer, Integer> numWidths;
+    private static int numSpace = 3;
+
+    private static synchronized Map<Integer, Integer> numWidths() {
+        if (numWidths != null) return numWidths;
+        Map<Integer, Integer> m = new HashMap<>();
+        try (InputStream in = VanillaGui.class.getResourceAsStream("/mmorpg/vanilla/gui/num_widths.json")) {
+            if (in != null) {
+                JsonObject o = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
+                numSpace = o.get("space").getAsInt();
+                for (Map.Entry<String, com.google.gson.JsonElement> e : o.getAsJsonObject("widths").entrySet()) {
+                    m.put(e.getKey().codePointAt(0), e.getValue().getAsInt());
+                }
+            }
+        } catch (Exception e) {
+            Mmorpg.LOG.warn("[vanilla] gui number widths: {}", e.toString());
+        }
+        numWidths = m;
+        return m;
+    }
+
+    /** 숫자 글꼴 (갈무리7) 의 너비 — 숫자판에 없는 글자는 빈칸 */
+    public static int numWidth(String s) {
+        Map<Integer, Integer> w = numWidths();
+        int n = 0;
+        for (int i = 0; i < s.length(); ) {
+            int cp = s.codePointAt(i);
+            i += Character.charCount(cp);
+            n += w.getOrDefault(cp, numSpace);
+        }
+        return n;
+    }
+
+    /** 숫자판에 없는 글자는 빈칸으로 */
+    static String numDrawable(String s) {
+        Map<Integer, Integer> w = numWidths();
+        StringBuilder out = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); ) {
+            int cp = s.codePointAt(i);
+            i += Character.charCount(cp);
+            out.appendCodePoint(w.containsKey(cp) ? cp : ' ');
+        }
+        return out.toString();
+    }
+
+    /** 1000 이상은 "1.2k" (숫자 칸 하나에 들어가게) */
+    public static String compact(long v) {
+        if (Math.abs(v) < 1000) return String.valueOf(v);
+        double k = v / 1000.0;
+        return (Math.abs(k) < 10 ? String.format(java.util.Locale.ROOT, "%.1f", k) : String.valueOf(Math.round(k))) + "k";
+    }
+
+    /** 1,234,567 (쉼표) */
+    public static String commas(long v) {
+        return String.format(java.util.Locale.ROOT, "%,d", v);
     }
 
     /** 글자 너비 (줄 글꼴 — § 서식은 0) */
@@ -169,11 +254,36 @@ public final class VanillaGui {
         }
 
         /** 바탕 그림 (창 왼쪽 위에 — 그림 너비 + 1 만큼 나아감) */
-        public Title background(char glyph) {
+        public Title background(Bg bg) {
             move(0);
-            root.append(Component.literal(String.valueOf(glyph)).withStyle(Style.EMPTY.withFont(new FontDescription.Resource(BG)).withColor(WHITE)));
+            root.append(Component.literal(String.valueOf(bg.glyph())).withStyle(Style.EMPTY.withFont(new FontDescription.Resource(BG)).withColor(WHITE)));
             cursor = BG_W + 1;
             return this;
+        }
+
+        /** 숫자 (갈무리7 숫자판 — 숫자 · + - % . / : , × k, 그 밖은 빈칸) x 부터 · 줄 d */
+        public Title num(int x, int line, String s, int rgb) {
+            if (s == null || s.isEmpty()) return this;
+            s = numDrawable(s);
+            move(x);
+            root.append(Component.literal(s).withStyle(Style.EMPTY.withFont(new FontDescription.Resource(numFont(line))).withColor(rgb)));
+            cursor += numWidth(s);
+            return this;
+        }
+
+        /** 숫자를 가운데 x 에 */
+        public Title numCenter(int x, int line, String s, int rgb) {
+            return num(x - (numWidth(s) - 1) / 2, line, s, rgb);
+        }
+
+        /** 글자를 가운데 x 에 */
+        public Title center(int x, int line, String s, int rgb) {
+            return text(x - (width(drawable(s)) - 1) / 2, line, s, rgb);
+        }
+
+        /** 지금 글자 자리 (다음 글자가 이어질 x) */
+        public int cursor() {
+            return cursor;
         }
 
         /** x (창 왼쪽 기준) · 줄 d 에 글자 (색 rgb) */
@@ -226,14 +336,29 @@ public final class VanillaGui {
         return ui("blank", name, lore);
     }
 
-    /** 이름 · 설명 붙이기 (복사본) */
+    /** 이름 · 설명 붙이기 (복사본 — 메뉴 설명 상자 모양 rpg:menu) */
     public static ItemStack named(ItemStack stack, String name, List<String> lore) {
         ItemStack st = stack.copy();
+        st.set(DataComponents.TOOLTIP_STYLE, TOOLTIP);
         st.set(DataComponents.CUSTOM_NAME, Component.literal(name == null || name.isEmpty() ? " " : name).withStyle(Style.EMPTY.withItalic(false)));
         List<Component> lines = new ArrayList<>();
         if (lore != null) for (String l : lore) lines.add(Component.literal(l).withStyle(Style.EMPTY.withItalic(false)));
         st.set(DataComponents.LORE, new ItemLore(lines));
         return st;
+    }
+
+    /** 쿨타임 묶음 (서버가 보내는 쿨타임 덮개가 이 그림에도 그려지게 — 진짜 아이템 · 직업 스킬과 같은 묶음) */
+    public static ItemStack cooldown(ItemStack icon, Identifier group) {
+        if (group != null) icon.set(DataComponents.USE_COOLDOWN, new net.minecraft.world.item.component.UseCooldown(0.01F, java.util.Optional.of(group)));
+        return icon;
+    }
+
+    /** 진짜 아이템의 쿨타임 묶음 (USE_COOLDOWN 의 묶음, 없으면 아이템 id) */
+    public static Identifier cooldownGroup(ItemStack real) {
+        if (real == null || real.isEmpty()) return null;
+        net.minecraft.world.item.component.UseCooldown c = real.get(DataComponents.USE_COOLDOWN);
+        Identifier id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(real.getItem());
+        return c != null ? c.cooldownGroup().orElse(id) : id;
     }
 
     /** 바닐라 § 색 (0 ~ f) 의 RGB */

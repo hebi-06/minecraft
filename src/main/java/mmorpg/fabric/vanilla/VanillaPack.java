@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 /**
  * 모드 없는 클라이언트가 받을 리소스 팩 (Polymer 가 서버를 켤 때 만듦 · AutoHost 가 같은 포트로 보냄 — 접속할 때 받기 창, 필수):
@@ -48,26 +49,26 @@ final class VanillaPack {
 
     /**
      * 그림 창 (VanillaGui — 상자 메뉴 제목 글자로 그리는 바탕 · 글자): mmorpg/vanilla/gui (tools/vanilla_gui.py) 를 팩에 —
-     * 바탕 그림 (rpg:gui/&lt;이름&gt;.png · 글꼴 rpg:gui_bg), 글자판 (rpg:gui/text.png · 줄 글꼴 rpg:gl&lt;d&gt; — 세로 d), 자리 옮김 (rpg:gui_space),
-     * 칸 그림 (icons → rpg:vui/&lt;이름&gt;).
+     * 메뉴 쪽 바탕 (rpg:gui/menu_*.png · 글꼴 rpg:gui_bg), 글자판 (rpg:gui/text.png · 줄 글꼴 rpg:gl&lt;d&gt;), 숫자판 (rpg:gui/num.png ·
+     * 숫자 글꼴 rpg:gn&lt;d&gt;), 자리 옮김 (rpg:gui_space), 칸 그림 (icons → rpg:vui/&lt;이름&gt;), 설명 상자 (tooltip → rpg:tooltip/menu_*),
+     * 홈 카드 그림 (rpg:vtile/&lt;이름&gt; — 아이템 모델의 gui 자리 옮김 · 크기로 카드 가운데에 크게).
      */
     private static void guiFonts(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path root) {
         Path dir = root.resolve("mmorpg").resolve("vanilla").resolve("gui");
         if (!Files.isDirectory(dir)) return;
         try {
             com.google.gson.Gson gson = new com.google.gson.GsonBuilder().disableHtmlEscaping().create();
-            // 바탕 그림
+            // 바탕 그림 (메뉴 쪽마다 하나 — 그림 위 = 창 위 − MENU_TOP: 제목 줄 (y 6) 에서 6 + 7 − ascent)
             com.google.gson.JsonArray bg = new com.google.gson.JsonArray();
-            for (int i = 0; i < VanillaGui.BACKGROUNDS.length; i++) {
-                String name = VanillaGui.BACKGROUNDS[i];
-                builder.addData("assets/" + Mmorpg.NS + "/textures/gui/" + name + ".png", Files.readAllBytes(dir.resolve(name + ".png")));
+            for (VanillaGui.Bg b : VanillaGui.Bg.values()) {
+                builder.addData("assets/" + Mmorpg.NS + "/textures/gui/" + b.file + ".png", Files.readAllBytes(dir.resolve(b.file + ".png")));
                 com.google.gson.JsonObject p = new com.google.gson.JsonObject();
                 p.addProperty("type", "bitmap");
-                p.addProperty("file", Mmorpg.NS + ":gui/" + name + ".png");
-                p.addProperty("height", VanillaGui.BG_H);
-                p.addProperty("ascent", 13); // 제목 줄 (y 6) 의 그림 위 = 6 + 7 − 13 = 0 (창 위)
+                p.addProperty("file", Mmorpg.NS + ":gui/" + b.file + ".png");
+                p.addProperty("height", VanillaGui.MENU_H);
+                p.addProperty("ascent", 13 + VanillaGui.MENU_TOP);
                 com.google.gson.JsonArray chars = new com.google.gson.JsonArray();
-                chars.add(String.valueOf((char) (VanillaGui.BG_STATS + i)));
+                chars.add(String.valueOf(b.glyph()));
                 p.add("chars", chars);
                 bg.add(p);
             }
@@ -88,31 +89,62 @@ final class VanillaPack {
             builder.addData("assets/" + Mmorpg.NS + "/textures/gui/text.png", Files.readAllBytes(dir.resolve("text.png")));
             com.google.gson.JsonArray rows = com.google.gson.JsonParser.parseString(Files.readString(dir.resolve("text_chars.json"), StandardCharsets.UTF_8)).getAsJsonArray();
             for (int d : VanillaGui.LINES) {
-                com.google.gson.JsonArray list = new com.google.gson.JsonArray();
-                com.google.gson.JsonObject blank = new com.google.gson.JsonObject();
-                blank.addProperty("type", "space");
-                com.google.gson.JsonObject one = new com.google.gson.JsonObject();
-                one.addProperty(" ", 4);
-                blank.add("advances", one);
-                list.add(blank);
-                com.google.gson.JsonObject p = new com.google.gson.JsonObject();
-                p.addProperty("type", "bitmap");
-                p.addProperty("file", Mmorpg.NS + ":gui/text.png");
-                p.addProperty("height", 12);
-                p.addProperty("ascent", 10 - d); // 글자판 칸 12 · 기준선 10 → 칸 위 = 줄 y + 7 − ascent
-                p.add("chars", rows);
-                list.add(p);
-                builder.addStringData("assets/" + Mmorpg.NS + "/font/gl" + d + ".json", gson.toJson(providers(list)));
+                builder.addStringData("assets/" + Mmorpg.NS + "/font/gl" + d + ".json", gson.toJson(providers(lineFont("text.png", rows, d, 4))));
+            }
+            // 숫자판 + 숫자 글꼴
+            builder.addData("assets/" + Mmorpg.NS + "/textures/gui/num.png", Files.readAllBytes(dir.resolve("num.png")));
+            com.google.gson.JsonObject nums = com.google.gson.JsonParser.parseString(Files.readString(dir.resolve("num_widths.json"), StandardCharsets.UTF_8)).getAsJsonObject();
+            com.google.gson.JsonArray numRows = new com.google.gson.JsonArray();
+            numRows.add(nums.get("chars").getAsString());
+            for (int d : VanillaGui.NUM_LINES) {
+                builder.addStringData("assets/" + Mmorpg.NS + "/font/gn" + d + ".json",
+                        gson.toJson(providers(lineFont("num.png", numRows, d, nums.get("space").getAsInt()))));
             }
             // 상자 메뉴의 "인벤토리" 글자 (가방 위 — 그림 창의 바탕 위에 겹쳐 보임) 를 비움 (영어 · 한국어)
             for (String lang : new String[]{"en_us", "ko_kr"}) {
                 builder.addStringData("assets/minecraft/lang/" + lang + ".json", "{\"container.inventory\":\"\"}");
             }
-            Mmorpg.LOG.info("[vanilla] gui backgrounds {}, line fonts {}, icons {}", VanillaGui.BACKGROUNDS.length, VanillaGui.LINES.length,
-                    spriteModels(builder, dir.resolve("icons"), "vui", false));
+            // 설명 상자 (tooltip_style rpg:menu → 그림 rpg:tooltip/menu_background · menu_frame, 9 칸 늘림)
+            for (String part : new String[]{"menu_background", "menu_frame"}) {
+                Path png = dir.resolve("tooltip").resolve(part + ".png");
+                if (!Files.exists(png)) continue;
+                String base = "assets/" + Mmorpg.NS + "/textures/gui/sprites/tooltip/" + part + ".png";
+                builder.addData(base, Files.readAllBytes(png));
+                builder.addStringData(base + ".mcmeta", "{\"gui\":{\"scaling\":{\"type\":\"nine_slice\",\"width\":32,\"height\":32,\"border\":9}}}");
+            }
+            // 홈 카드 그림 (카드 = 칸 둘 × 줄 셋 — 왼쪽 위 칸의 아이템을 오른쪽 9 · 아래 10 옮기고 1.5배)
+            for (Map.Entry<String, String> e : VanillaMenu.TILES.entrySet()) {
+                String model = Mmorpg.NS + ":item/vtile/" + e.getKey();
+                builder.addStringData("assets/" + Mmorpg.NS + "/models/item/vtile/" + e.getKey() + ".json",
+                        "{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"" + e.getValue() + "\"},"
+                                + "\"display\":{\"gui\":{\"rotation\":[0,0,0],\"translation\":[9,-10,0],\"scale\":[1.5,1.5,1.5]}}}");
+                builder.addStringData("assets/" + Mmorpg.NS + "/items/vtile/" + e.getKey() + ".json",
+                        "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + model + "\"}}");
+            }
+            Mmorpg.LOG.info("[vanilla] gui backgrounds {}, line fonts {} + {}, tiles {}, icons {}", VanillaGui.Bg.values().length, VanillaGui.LINES.length,
+                    VanillaGui.NUM_LINES.length, VanillaMenu.TILES.size(), spriteModels(builder, dir.resolve("icons"), "vui", false));
         } catch (IOException | RuntimeException e) {
             Mmorpg.LOG.warn("[vanilla] 그림 창 글꼴을 팩에 넣지 못함: {}", e.toString());
         }
+    }
+
+    /** 줄 글꼴 하나: 빈칸 (너비 blank) + 글자판 (칸 12 · 기준선 10 → 칸 위 = 제목 줄 y + 7 − ascent = 3 + d) */
+    private static com.google.gson.JsonArray lineFont(String file, com.google.gson.JsonArray rows, int d, int blank) {
+        com.google.gson.JsonArray list = new com.google.gson.JsonArray();
+        com.google.gson.JsonObject space = new com.google.gson.JsonObject();
+        space.addProperty("type", "space");
+        com.google.gson.JsonObject one = new com.google.gson.JsonObject();
+        one.addProperty(" ", blank);
+        space.add("advances", one);
+        list.add(space);
+        com.google.gson.JsonObject p = new com.google.gson.JsonObject();
+        p.addProperty("type", "bitmap");
+        p.addProperty("file", Mmorpg.NS + ":gui/" + file);
+        p.addProperty("height", 12);
+        p.addProperty("ascent", 10 - d);
+        p.add("chars", rows);
+        list.add(p);
+        return list;
     }
 
     private static com.google.gson.JsonObject providers(com.google.gson.JsonArray list) {

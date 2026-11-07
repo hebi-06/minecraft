@@ -35,7 +35,7 @@ while [ $t -lt 480 ]; do
 done
 cd "$WS" || exit 2
 echo "[vanilla] server up=$up after ${t}s"
-grep -n -E "\[vanilla\]|polymer|Polymer|AutoHost|auto-host" "$dir/out.log" | head -n 40
+grep -n -E "\[vanilla\]|polymer|Polymer|AutoHost|auto-host" "$dir/out.log" | head -n 80
 
 code=1
 if [ $up -eq 1 ]; then
@@ -50,7 +50,7 @@ if [ $up -eq 1 ]; then
   pcode=$?
   echo "[vanilla] probe client exit $pcode"
   grep -h "\[vanilla-client\]" ci-out/vanilla-client.txt | head -n 60
-  grep -h "\[vanilla-probe\] check\|\[vanilla-probe\] skills" "$dir/out.log" | sed 's/^.*\[vanilla-probe\] /  /' | head -n 40
+  grep -h "\[vanilla-probe\] check\|\[vanilla-probe\] skills" "$dir/out.log" | sed 's/^.*\[vanilla-probe\] /  /' | head -n 80
   if grep -q "\[vanilla-probe\] done" "$dir/out.log" && grep -q "\[vanilla-client\] done" ci-out/vanilla-client.txt \
       && ! grep -q "\[vanilla-probe\] check fail" "$dir/out.log"; then code=0; fi
 fi
