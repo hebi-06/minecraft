@@ -173,32 +173,43 @@ final class VanillaProbe {
                 mmorpg.fabric.Notify.notify(p, "§a시험 알림 §7— 액션바 글자 줄", 80);
                 check("notify goes to hud message line", VanillaHud.message(p).contains("시험 알림"));
                 // 스킬 칸 HUD (사용자 "스킬 Hud로도"): 룬 1 · 2 재사용 대기 (덮개 · 남은 초) — 룬 재사용과 같은 길 (SkillBarNet.cooldown)
+                // 룬 1 · 2 · 3 = 12초 · 6초 · 마지막 1초 (노랑) — 19_hud_msg 사진 (15틱 뒤)
+                int[] cds = {240, 120, 32};
                 String cdName = null;
-                for (int i = 0; i < 2; i++) {
+                for (int i = 0; i < cds.length; i++) {
                     mmorpg.core.Runes.Rune r = mmorpg.fabric.rune.RuneItems.runeOf(mmorpg.fabric.rune.SkillBar.get(p, i));
                     if (r == null) continue;
-                    mmorpg.fabric.rune.SkillBarNet.cooldown(p, r.id(), 240 - 120 * i, 300);
+                    mmorpg.fabric.rune.SkillBarNet.cooldown(p, r.id(), cds[i], 300);
                     if (cdName == null) cdName = r.id();
                 }
                 check("skill hud knows rune cooldown", cdName != null && VanillaHud.cooldownLeft(p, cdName) > 0);
+                // 남은 초는 칸 아래쪽 가운데 두 글자까지 (CI 42445608056 사진: 가운데 "12" 의 앞 숫자가 키 상자에 가려짐 → 테두리 숫자 그림)
+                check("cooldown seconds fit a slot", VanillaHud.secsText(12).equals("12") && VanillaHud.secsText(99).equals("99")
+                        && VanillaHud.secsText(100).equals("2m") && VanillaHud.secsText(5000).equals("9m"));
+                boolean digits = true;
+                for (char c : "0123456789m".toCharArray()) digits &= VanillaHud.hasSkillGlyph("sec_" + c);
+                check("cooldown digit glyphs in skill fonts", digits);
                 next(p, 161, 15);
             }
             case 161 -> {
                 say(p, "shot 19_hud_msg");
+                next(p, 162, 6); // 체력은 사진 뒤에 바꿈 (지난 판: 같은 틱에 바꿔서 사진에 낮은 체력이 찍힘)
+            }
+            case 162 -> {
                 hpBefore = p.getHealth();
                 p.setHealth(p.getMaxHealth() * 0.18F); // 25% 아래 → 빨간 테 깜박임 · 깎인 부분이 잠깐 밝게
                 p.setAbsorptionAmount(p.getMaxHealth() * 0.1F);
-                next(p, 162, 4);
-            }
-            case 162 -> {
-                say(p, "shot 19b_hud_low");
-                next(p, 163, 30);
+                next(p, 163, 4);
             }
             case 163 -> {
-                say(p, "shot 19c_hud_low_later");
-                next(p, 164, 10);
+                say(p, "shot 19b_hud_low");
+                next(p, 164, 30);
             }
             case 164 -> {
+                say(p, "shot 19c_hud_low_later");
+                next(p, 165, 10);
+            }
+            case 165 -> {
                 p.setAbsorptionAmount(0);
                 p.setHealth(hpBefore > 0 ? hpBefore : p.getMaxHealth());
                 next(p, 16, 20);

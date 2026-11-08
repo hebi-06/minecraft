@@ -170,9 +170,45 @@ def icon_advance(img, scale):
     return 1 if not bb else int(0.5 + bb[2] * scale) + 1
 
 
+# 재사용 대기 남은 초 숫자 (바닐라 글꼴 모양 5 × 7 — 모드 SkillBarHud 는 바닐라 글꼴). 테두리 1px 를 그림에 넣어 7 × 9:
+# 어떤 그림 위에서도 읽힘. 칸 아래쪽 가운데 (키 상자 = 왼쪽 위 8 × 9 를 가리지 않게 — CI 42445608056 사진: 가운데 두 자리 "12" 의 앞 숫자가
+# 키 상자에 가려 "2" 로 보임). 칸 위 + 8 에 그림 위 (테두리) → 숫자 = 칸 위 + 9 ~ 15 (모드: 칸 위 + s − 9)
+SEC_TOP = 8
+SEC_DIGITS = {
+    "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."],
+    "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", "#####"],
+    "2": [".###.", "#...#", "....#", "..##.", ".#...", "#...#", "#####"],
+    "3": [".###.", "#...#", "....#", "..##.", "....#", "#...#", ".###."],
+    "4": ["...##", "..#.#", ".#..#", "#...#", "#####", "....#", "....#"],
+    "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
+    "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."],
+    "7": ["#####", "#...#", "....#", "...#.", "..#..", "..#..", "..#.."],
+    "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."],
+    "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
+    "m": [".....", ".....", "##.#.", "#.#.#", "#.#.#", "#...#", "#...#"],
+}
+SEC_OUTLINE = (14, 14, 22, 255)
+
+
+def sec_glyph(rows):
+    """숫자 하나 (흰 몸 + 8 방향 어두운 테두리 1px) — 7 × 9"""
+    g = Image.new("RGBA", (7, 9), (0, 0, 0, 0))
+    body = {(x + 1, y + 1) for y, row in enumerate(rows) for x, c in enumerate(row) if c == "#"}
+    for (x, y) in body:
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                p = (x + dx, y + dy)
+                if p not in body:
+                    g.putpixel(p, SEC_OUTLINE)
+    for p in body:
+        g.putpixel(p, (255, 255, 255, 255))
+    return g
+
+
 def skill_sheets(chars, src):
     """스킬 칸 글꼴 (줄마다 같은 글자 · 다른 ascent): 칸 틀 · 등급 테 · 직업 칸 틀 · 직업 테 (18 × 18 — 모드 그림 nine_slice), 키 상자 8 × 9,
-    재사용 대기 덮개 (위에서 k 줄 — 16 × 16), 그림 (룬 그림 · 직업 스킬 그림 32 × 32 → 16 — 높이 16 으로 줄여 그림)"""
+    재사용 대기 덮개 (위에서 k 줄 — 16 × 16), 남은 초 숫자 sec_0 ~ sec_9 · sec_m (7 × 9 테두리 — 칸 위 + SEC_TOP),
+    그림 (룬 그림 · 직업 스킬 그림 32 × 32 → 16 — 높이 16 으로 줄여 그림)"""
     singles = {
         "skill_frame": nine_slice(src("skill_slot"), 18, 18, 3),
         "skill_edge": nine_slice(src("skill_edge"), 18, 18, 3),
@@ -199,6 +235,12 @@ def skill_sheets(chars, src):
     cover_chars = chars.take(16)
     for k, ch in enumerate(cover_chars, 1):
         glyphs["cover_%d" % k] = [ch, 17]
+    secs = [sec_glyph(rows) for rows in SEC_DIGITS.values()]
+    sim, _ = sheet(secs, 7, 9, len(secs))
+    sim.save(os.path.join(OUT, "hud_sec.png"))
+    sec_chars = chars.take(len(secs))
+    for c, g, ch in zip(SEC_DIGITS, secs, sec_chars):
+        glyphs["sec_" + c] = [ch, advance(g)]
     icons = []
     for f in sorted(os.listdir(RUNE_DIR)):
         if f.endswith(".png") and f.startswith("rune_") and "ticket" not in f:
@@ -228,6 +270,7 @@ def skill_sheets(chars, src):
         for name, img in singles.items():
             prov.append({"type": "bitmap", "file": f"{NS}:gui/hud/hud_{name}.png", "height": img.size[1], "ascent": top, "chars": [single_chars[name]]})
         prov.append({"type": "bitmap", "file": f"{NS}:gui/hud/hud_cover.png", "height": 16, "ascent": itop, "chars": [cover_chars]})
+        prov.append({"type": "bitmap", "file": f"{NS}:gui/hud/hud_sec.png", "height": 9, "ascent": top - SEC_TOP, "chars": [sec_chars]})
         prov.append({"type": "bitmap", "file": f"{NS}:gui/hud/hud_icons.png", "height": 16, "ascent": itop, "chars": icon_lines})
         fonts["hud_" + row] = prov
     print("skill icons", len(cells), "sheet", iim.size)

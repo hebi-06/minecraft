@@ -40,7 +40,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * <li>체력 (하트 줄 자리): 하트 · 체력 막대 ("196 / 316") · 25% 아래 빨간 테 깜박임 · 맞으면 깎인 부분이 잠깐 남았다가 줄어듦 · 흡수 (노란 줄)</li>
  * <li>배지 (배고픔 줄 자리): 방어 · Lv · 남은 스탯 포인트</li>
  * <li>스킬 칸 (핫바 양옆 — 액션바는 화면 가운데 기준이라 오른쪽 끝에 붙일 수 없음): 오른쪽 룬 1 ~ 8 (4 × 2), 왼쪽 직업 1 ~ 5 (3 + 2).
- * 칸마다 모드 그림 (칸 틀 · 등급 / 직업 색 테 · 키 상자 + 번호) · 룬 · 직업 스킬 그림 · 재사용 대기 (위에서 덮는 어두운 덮개 + 남은 초).
+ * 칸마다 모드 그림 (칸 틀 · 등급 / 직업 색 테 · 키 상자 + 번호) · 룬 · 직업 스킬 그림 · 재사용 대기 (위에서 덮는 어두운 덮개 + 남은 초 —
+ * 아래쪽 가운데 테두리 숫자, 마지막 1초는 노랑).
  * 지금 모드 (F — 룬 · 직업) 의 키 상자는 금색, 잠긴 직업 스킬 · 탈것에 탄 동안은 그림을 어둡게. 화면 너비 424 (GUI) 이상에서 다 보임</li>
  * </ul>
  * 바닐라 하트 · 갑옷 · 배고픔 그림은 팩에서 투명 (VanillaPack — 배고픔은 게임에서 꺼져 있음).
@@ -59,9 +60,13 @@ public final class VanillaHud {
     public static final int BAR_D = 29, BADGE_D = 30, MSG_D = 1;
     /** 스킬 칸 줄 (위 · 아래) 의 칸 위 = 화면 아래 − ROW_K (tools/vanilla_hud.py SKILL_ROWS) */
     static final int[] ROW_K = {39, 20};
-    /** 남은 초 글자 (글자판 — 칸 위 + 2 = 77 − k, 그림자는 1 아래) */
-    static final int[] SEC_D = {77 - ROW_K[0], 77 - ROW_K[1]};
-    static final int[] TEXT_D = {BAR_D, BADGE_D, MSG_D, SEC_D[0], SEC_D[0] + 1, SEC_D[1], SEC_D[1] + 1};
+    static final int[] TEXT_D = {BAR_D, BADGE_D, MSG_D};
+    /**
+     * 남은 초 숫자 그림 (줄 글꼴의 sec_0 ~ sec_9 · sec_m — 7 × 9, 테두리 1px 포함, 그림 위 = 칸 위 + 8): 너비 · 숫자 사이 (테두리끼리 겹침).
+     * 칸 아래쪽 가운데 — 왼쪽 위 키 상자 (8 × 9) 를 가리지 않음 (모드 SkillBarHud 와 같은 자리). CI 42445608056 사진: 가운데에 두면 "12" 의
+     * 앞 숫자가 키 상자에 가려 "2" 로 보였음
+     */
+    static final int SEC_W = 7, SEC_ADV = 6;
     /** 숫자 글꼴 (작은 숫자판 — 칸 위 = 화면 아래 − 75 + d): 키 번호 (칸 위 − 2 = 73 − k), 줄마다 */
     static final int[] NUM_D = {73 - ROW_K[0], 73 - ROW_K[1]};
     /** 칸 크기 · 칸 사이 (칸 + 1) · 룬 칸 왼쪽 끝 (가운데 + RUNE_X) · 직업 칸 오른쪽 끝 (가운데 − JOB_RIGHT) */
@@ -348,14 +353,20 @@ public final class VanillaHud {
         if (s.icon() != null) l.skill(f, x + 1, s.icon(), s.tint());
         if (s.cover() > 0) l.skill(f, x + 1, "cover_" + s.cover(), WHITE);
         l.skill(f, x, job ? "job_edge" : "skill_edge", s.edge());
-        if (s.secs() > 0) { // 남은 초 (갈무리9 · 1px 그림자 — CI 42444726662 사진: 작은 숫자판은 그림 위에서 잘 안 보임)
-            String t = String.valueOf(s.secs());
-            int tx = x + 1 + (17 - VanillaGui.width(t)) / 2;
-            l.text(textFont(SEC_D[row] + 1), tx + 1, t, 0x101018);
-            l.text(textFont(SEC_D[row]), tx, t, WHITE);
+        if (s.secs() > 0) { // 남은 초: 아래쪽 가운데 테두리 숫자 (마지막 1초는 노랑 — 모드와 같음)
+            String t = secsText(s.secs());
+            int sx = x + (SLOT - (SEC_ADV * (t.length() - 1) + SEC_W)) / 2;
+            int rgb = s.secs() <= 1 ? YELLOW : WHITE;
+            for (int i = 0; i < t.length(); i++) l.skill(f, sx + i * SEC_ADV, "sec_" + t.charAt(i), rgb);
         }
         l.skill(f, x - 1, "key", on ? KEY_ON : KEY_OFF);
         l.text(numFont(73 - ROW_K[row]), x + 1, String.valueOf(number), on ? KEY_ON : KEY_OFF);
+    }
+
+    /** 남은 초 글자 (칸에 두 자리까지): 99 초까지 그대로, 그 위는 분 (올림 · "2m" — 9m 까지) */
+    static String secsText(int secs) {
+        if (secs <= 99) return String.valueOf(Math.max(0, secs));
+        return Math.min(9, (secs + 59) / 60) + "m";
     }
 
     static Identifier textFont(int d) {
@@ -494,6 +505,12 @@ public final class VanillaHud {
         skillGlyphs = sk;
         glyphs = m;
         return m;
+    }
+
+    /** 스킬 칸 글꼴에 이 그림이 있는지 (VanillaProbe) */
+    static boolean hasSkillGlyph(String name) {
+        glyphs();
+        return skillGlyphs != null && skillGlyphs.containsKey(name);
     }
 
     private static void read(JsonObject o, Map<String, String[]> into) {
