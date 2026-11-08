@@ -3,11 +3,14 @@ package mmorpg.fabric.vanilla;
 import mmorpg.fabric.mixin.LivingEntityAccessor;
 import mmorpg.fabric.mixin.UpdateAttributesInvoker;
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBundlePacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
 import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
 import net.minecraft.network.protocol.game.ClientboundSetPlayerInventoryPacket;
 import net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket;
@@ -41,6 +44,19 @@ public final class VanillaPackets {
     /** 보내기 전 (HEAD): 바꿀 것이면 새 패킷, 아니면 그대로 */
     public static Packet<?> rewrite(ServerPlayer sp, Packet<?> packet) {
         if (sp == null || packet == null) return packet;
+        // 묶음 (엔티티를 처음 볼 때 — 생김 · 데이터 · 장비가 한 묶음) 은 안의 패킷마다 (2026-11-08 꾸미기: 장비)
+        if (packet instanceof ClientboundBundlePacket b) {
+            List<Packet<? super ClientGamePacketListener>> out = new ArrayList<>();
+            boolean changed = false;
+            for (Packet<? super ClientGamePacketListener> sub : b.subPackets()) {
+                Packet<?> r = rewrite(sp, sub);
+                changed |= r != sub;
+                @SuppressWarnings("unchecked")
+                Packet<? super ClientGamePacketListener> cast = (Packet<? super ClientGamePacketListener>) r;
+                out.add(cast);
+            }
+            return changed ? new ClientboundBundlePacket(out) : packet;
+        }
         // 2026-11-08 HUD: 액션바 글자 (알림 · 상태 줄 · 바닐라) 는 HUD 와 합쳐서 (VanillaHud — HUD 를 그리지 않는 사람이면 그대로)
         if (packet instanceof ClientboundSystemChatPacket p && p.overlay()) {
             Packet<?> hud = VanillaHud.overlay(sp, p.content());
@@ -50,6 +66,8 @@ public final class VanillaPackets {
             Packet<?> hud = VanillaHud.overlay(sp, p.text());
             if (hud != null) return hud;
         }
+        // 2026-11-08 꾸미기: 다른 사람 · 마네킹의 장비 그림을 그 엔티티의 장식 모습으로 (VanillaCosmetics)
+        if (packet instanceof ClientboundSetEquipmentPacket p) return VanillaCosmetics.equipment(sp, p);
         if (packet instanceof ClientboundSetHealthPacket p) {
             if (!VanillaClients.isVanilla(sp)) return packet;
             return new ClientboundSetHealthPacket(scale(sp, p.getHealth()), p.getFood(), p.getSaturation());

@@ -30,6 +30,7 @@ final class VanillaPack {
                         if (Files.isDirectory(assets)) builder.copyFromPath(assets, "assets/" + Mmorpg.NS + "/", false);
                         jobIcons(builder, root);
                         guiFonts(builder, root);
+                        cosmeticItems(builder, root);
                     }
                 }));
         // 전용 서버는 켬 · 클라이언트 (싱글 — 다른 사람이 들어오지 않음) 는 끔: 개발 환경 (화면 시험) 에서 Polymer 기본은 켜짐이라 세계를 열 때마다 팩을 다시 만듦
@@ -337,6 +338,113 @@ final class VanillaPack {
             Mmorpg.LOG.warn("[vanilla] {} 그림을 팩에 넣지 못함: {}", prefix, e.toString());
         }
         return n;
+    }
+
+    private static final String[] HANDS = {"firstperson_righthand", "firstperson_lefthand", "thirdperson_righthand", "thirdperson_lefthand"};
+
+    /**
+     * 2026-11-08 꾸미기 (VanillaCosmetics): RPG 무기 · 투구 아이템 정의를 custom_model_data 글자 (서버가 그 사람의 장식으로 넣음) 로 감쌈 —
+     * 무기: 스킨 키면 손 (1 · 3인칭) 에서 스킨 모델 (rpg:item/model/&lt;디자인&gt; — 모드 장식과 같은 모델), 투구: 머리 장식 모델 이름이면 머리 자리 (head —
+     * 투구 그림을 뺀 투구를 바닐라가 CustomHeadLayer 로 그림) 에 그 장식 (뼈 모델 묶음 — tools/vanilla_cosmetics.py), "hide" 면 머리 자리 빈 그림.
+     * 다른 자리 (가방 · 핫바 · 땅 · 액자) 와 글자가 없을 때는 그대로. 장식 아이콘의 어두운 것 rpg:vcosdim/&lt;키&gt; (꾸미기 창 — 아직 가지지 않은 것).
+     */
+    private static void cosmeticItems(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path root) {
+        Path items = root.resolve("assets").resolve(Mmorpg.NS).resolve("items");
+        if (!Files.isDirectory(items)) return;
+        com.google.gson.Gson gson = new com.google.gson.GsonBuilder().disableHtmlEscaping().create();
+        Map<String, java.util.List<String[]>> byType = new java.util.HashMap<>();
+        for (Map.Entry<String, String> e : VanillaCosmetics.skinDesigns().entrySet()) {
+            mmorpg.fabric.cosmetic.CosmeticDefs.Def d = mmorpg.fabric.cosmetic.CosmeticDefs.get(e.getKey());
+            byType.computeIfAbsent(d.weapon(), k -> new java.util.ArrayList<>()).add(new String[]{e.getKey(), e.getValue()});
+        }
+        int weapons = 0, helmets = 0;
+        for (net.minecraft.world.item.Item item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+            net.minecraft.resources.Identifier id = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item);
+            if (!Mmorpg.NS.equals(id.getNamespace())) continue;
+            Path f = items.resolve(id.getPath() + ".json");
+            if (!Files.isRegularFile(f)) continue;
+            com.google.gson.JsonArray cases = new com.google.gson.JsonArray();
+            com.google.gson.JsonObject def;
+            try {
+                def = com.google.gson.JsonParser.parseString(Files.readString(f, StandardCharsets.UTF_8)).getAsJsonObject();
+            } catch (IOException | RuntimeException e) {
+                continue;
+            }
+            com.google.gson.JsonElement original = def.get("model");
+            if (item instanceof mmorpg.fabric.RpgWeaponItem) {
+                java.util.List<String[]> skins = byType.get(VanillaCosmetics.weaponType(item));
+                if (skins == null) continue;
+                for (String[] s : skins) {
+                    cases.add(when(s[0], context(HANDS, model(Mmorpg.NS + ":item/model/" + s[1]), original)));
+                }
+                weapons++;
+            } else if (item instanceof mmorpg.fabric.gear.RpgArmorItem) {
+                net.minecraft.world.item.equipment.Equippable eq = item.components().get(net.minecraft.core.component.DataComponents.EQUIPPABLE);
+                if (eq == null || eq.slot() != net.minecraft.world.entity.EquipmentSlot.HEAD) continue;
+                for (Map.Entry<String, java.util.List<String>> h : VanillaCosmetics.headModels().entrySet()) {
+                    com.google.gson.JsonArray parts = new com.google.gson.JsonArray();
+                    for (String m : h.getValue()) parts.add(model(m));
+                    com.google.gson.JsonObject composite = new com.google.gson.JsonObject();
+                    composite.addProperty("type", "minecraft:composite");
+                    composite.add("models", parts);
+                    cases.add(when(h.getKey(), context(new String[]{"head"}, composite, original)));
+                }
+                com.google.gson.JsonObject empty = new com.google.gson.JsonObject();
+                empty.addProperty("type", "minecraft:empty");
+                cases.add(when("hide", context(new String[]{"head"}, empty, original)));
+                helmets++;
+            } else {
+                continue;
+            }
+            com.google.gson.JsonObject sel = new com.google.gson.JsonObject();
+            sel.addProperty("type", "minecraft:select");
+            sel.addProperty("property", "minecraft:custom_model_data");
+            sel.addProperty("index", 0);
+            sel.add("cases", cases);
+            sel.add("fallback", original);
+            def.add("model", sel);
+            builder.addStringData("assets/" + Mmorpg.NS + "/items/" + id.getPath() + ".json", gson.toJson(def));
+        }
+        int dim = 0;
+        for (mmorpg.fabric.cosmetic.CosmeticDefs.Def d : mmorpg.fabric.cosmetic.CosmeticDefs.all().values()) {
+            builder.addStringData("assets/" + Mmorpg.NS + "/items/vcosdim/" + d.id() + ".json",
+                    "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + Mmorpg.NS + ":item/cosmetic/" + d.id()
+                            + "\",\"tints\":[{\"type\":\"minecraft:constant\",\"value\":5263440}]}}");
+            dim++;
+        }
+        Mmorpg.LOG.info("[vanilla] cosmetics: weapon definitions {}, helmet definitions {}, dim icons {}", weapons, helmets, dim);
+    }
+
+    private static com.google.gson.JsonObject model(String id) {
+        com.google.gson.JsonObject o = new com.google.gson.JsonObject();
+        o.addProperty("type", "minecraft:model");
+        o.addProperty("model", id);
+        return o;
+    }
+
+    /** select 의 경우 하나 (when = 글자) */
+    private static com.google.gson.JsonObject when(String value, com.google.gson.JsonElement model) {
+        com.google.gson.JsonObject o = new com.google.gson.JsonObject();
+        o.addProperty("when", value);
+        o.add("model", model);
+        return o;
+    }
+
+    /** 그 자리 (display_context) 들에서만 model, 나머지는 fallback */
+    private static com.google.gson.JsonObject context(String[] contexts, com.google.gson.JsonElement model, com.google.gson.JsonElement fallback) {
+        com.google.gson.JsonArray w = new com.google.gson.JsonArray();
+        for (String c : contexts) w.add(c);
+        com.google.gson.JsonObject one = new com.google.gson.JsonObject();
+        one.add("when", w);
+        one.add("model", model);
+        com.google.gson.JsonArray cases = new com.google.gson.JsonArray();
+        cases.add(one);
+        com.google.gson.JsonObject o = new com.google.gson.JsonObject();
+        o.addProperty("type", "minecraft:select");
+        o.addProperty("property", "minecraft:display_context");
+        o.add("cases", cases);
+        o.add("fallback", fallback.deepCopy());
+        return o;
     }
 
     /** PNG 의 긴 변 (IHDR 너비 · 높이, 읽지 못하면 0) */

@@ -86,6 +86,10 @@ public final class CosmeticCommands {
 
     private static int open(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
         ServerPlayer sp = c.getSource().getPlayerOrException();
+        if (mmorpg.fabric.vanilla.VanillaClients.isVanilla(sp)) { // 2026-11-08 모드 없는 클라이언트: 메뉴의 꾸미기 전용 창
+            mmorpg.fabric.vanilla.VanillaMenu.open(sp, mmorpg.fabric.vanilla.VanillaMenu.Page.COSMETIC);
+            return 1;
+        }
         if (!CosmeticNet.canSend(sp)) {
             sp.sendSystemMessage(Component.literal("§c장식 창은 MMO RPG 모드가 있는 클라이언트에서 열립니다 §7(/장식 목록 · /장식 입기 <키>)"));
             return 0;

@@ -705,6 +705,94 @@ final class VanillaProbe {
             }
             case 155 -> {
                 say(p, "close");
+                next(p, 170, 15);
+            }
+            case 170 -> { // 2026-11-08 꾸미기 (VanillaCosmeticPage · VanillaCosmetics)
+                run(server, "tp " + NAME + " 0.5 " + y + " 0.5 0 12");
+                mmorpg.fabric.economy.Wallet.add(p, mmorpg.core.Economy.Kind.GOLD, 500);
+                RpgWeaponItem sword = null;
+                for (RpgWeaponItem w : RpgItems.WEAPONS) {
+                    if (!w.weapon().type().equals("sword") || !mmorpg.fabric.RpgCombat.lackOf(p, w.weapon()).isEmpty()) continue;
+                    if (sword == null || w.weapon().level() > sword.weapon().level()) sword = w;
+                }
+                if (sword != null) p.getInventory().setItem(p.getInventory().getSelectedSlot(), new ItemStack(sword));
+                VanillaMenu.open(p, VanillaMenu.Page.COSMETIC);
+                next(p, 171, 15);
+            }
+            case 171 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("cosmetic page opens", g != null && g.page == VanillaMenu.Page.COSMETIC);
+                say(p, "hover 18");
+                say(p, "shot 20_cosmetic");
+                next(p, 172, 15);
+            }
+            case 172 -> {
+                say(p, "slot 18"); // 벚꽃 검: 첫 번째 누름 = 사기 확인
+                next(p, 173, 8);
+            }
+            case 173 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("first click arms purchase", g != null && "sakura_sword".equals(g.cosArm));
+                say(p, "slot 18"); // 두 번째 누름 = 사기 (바로 입음)
+                next(p, 174, 10);
+            }
+            case 174 -> {
+                check("bought and wearing sword skin", mmorpg.fabric.cosmetic.Cosmetics.owns(p, "sakura_sword")
+                        && "sakura_sword".equals(VanillaCosmetics.lookOf(p).weaponSkin("sword")));
+                for (String id : List.of("crown", "paladin_chest", "paladin_legs", "paladin_boots", "angel_wings", "star_aura", "title_hero")) {
+                    mmorpg.fabric.cosmetic.Cosmetics.give(p, id);
+                    mmorpg.fabric.cosmetic.Cosmetics.equip(p, id);
+                }
+                say(p, "slot 14"); // 머리 장식 탭
+                next(p, 175, 10);
+            }
+            case 175 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("cosmetic tab switches", g != null && "head".equals(g.cosTab));
+                say(p, "hover 18");
+                say(p, "shot 20b_cosmetic_head");
+                next(p, 176, 15);
+            }
+            case 176 -> {
+                mmorpg.fabric.cosmetic.Look look = VanillaCosmetics.lookOf(p);
+                check("vanilla look cache follows equips", "crown".equals(look.get("head")) && "angel_wings".equals(look.get("back"))
+                        && "title_hero".equals(look.get("title")) && "paladin_chest".equals(look.get("chest")));
+                check("crown replaces helmet on head", VanillaCosmetics.visual(look, "helmet", false).kind() == VanillaCosmetics.HEAD_ITEM);
+                check("armor skin uses equipment asset", VanillaCosmetics.visual(look, "chest", false).kind() == VanillaCosmetics.SET);
+                String info = VanillaCosmetics.holderInfo(p);
+                log("holder " + info);
+                check("title and wings ride the player", info.startsWith("title") && !info.endsWith("bones 0"));
+                say(p, "slot 51"); // 미리보기 (창을 닫고 마네킹)
+                next(p, 177, 14);
+            }
+            case 177 -> {
+                net.minecraft.world.entity.decoration.Mannequin m = VanillaCosmetics.previewOf(p);
+                check("preview mannequin stands", m != null && VanillaMenu.current(p) == null);
+                check("preview wears the look", m != null && VanillaCosmetics.holderInfo(m).startsWith("title"));
+                check("equipment rewritten for viewers", VanillaCosmetics.rewrites > 0 && "crown".equals(VanillaCosmetics.lastHead));
+                log("rewrites " + VanillaCosmetics.rewrites + " lastHead " + VanillaCosmetics.lastHead);
+                say(p, "shot 21_preview_front");
+                next(p, 178, 62);
+            }
+            case 178 -> {
+                say(p, "shot 21b_preview_back");
+                next(p, 179, 10);
+            }
+            case 179 -> {
+                say(p, "cam back");
+                next(p, 180, 15);
+            }
+            case 180 -> {
+                say(p, "shot 21c_self_back");
+                say(p, "cam first");
+                next(p, 181, 15);
+            }
+            case 181 -> {
+                say(p, "shot 21d_hand_skin");
+                next(p, 182, 10);
+            }
+            case 182 -> {
+                mmorpg.fabric.cosmetic.Cosmetics.reset(p);
                 next(p, 57, 15);
             }
             default -> {

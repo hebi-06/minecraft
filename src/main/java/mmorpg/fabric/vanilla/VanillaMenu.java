@@ -38,7 +38,7 @@ import java.util.function.Consumer;
 public final class VanillaMenu {
     private VanillaMenu() {}
 
-    public enum Page { HOME, STATS, EQUIP, SKILLS, TREE, GACHA }
+    public enum Page { HOME, STATS, EQUIP, SKILLS, TREE, GACHA, COSMETIC }
 
     /** 홈 타일 그림 (VanillaPack 이 rpg:vtile/&lt;이름&gt; 아이템 모델로 — 게임 아이템 그림, 칸 밖까지 1.5배) */
     public static final Map<String, String> TILES = new LinkedHashMap<>();
@@ -138,6 +138,10 @@ public final class VanillaMenu {
         int gachaConfirm;
         /** 스탯 트리 쪽: 보는 나무 ("sum" = 합계) · 고른 칸 (단계 × 2 + 갈래 (0 · 1, 갈래 아님 = 0) — -1 = 저절로) · 보이는 맨 윗줄 · 초기화 누른 때 (틱) */
         String treeStat;
+        /** 꾸미기 쪽 (2026-11-08): 보는 칸 (weapon · helmet … title) · 사려고 한 번 누른 장식 · 그때 (틱) */
+        String cosTab = "weapon";
+        String cosArm;
+        long cosArmAt;
         int treeSel = -1;
         int treeTop = -1;
         long treeArm;
@@ -160,6 +164,7 @@ public final class VanillaMenu {
             if (p != page) {
                 skillPick = null;
                 gachaConfirm = 0;
+                cosArm = null;
                 SkillFx.playFor(sp, "ui.button.click", 1.7, 0.3);
             }
             page = p;
@@ -176,8 +181,9 @@ public final class VanillaMenu {
                 case SKILLS -> VanillaGui.Bg.SKILLS;
                 case TREE -> VanillaGui.Bg.TREE;
                 case GACHA -> gachaConfirm > 0 ? VanillaGui.Bg.GACHA_CONFIRM : VanillaGui.Bg.GACHA;
+                case COSMETIC -> VanillaGui.Bg.COSMETIC;
             });
-            if (page != Page.GACHA) tabs(); // 뽑기는 전용 창 (위 탭 없음 — 돌아가기 단추)
+            if (page != Page.GACHA && page != Page.COSMETIC) tabs(); // 뽑기 · 꾸미기는 전용 창 (위 탭 없음 — 돌아가기 단추)
             if (showsBag()) mirrorBag();
             switch (page) {
                 case HOME -> home(t);
@@ -186,6 +192,7 @@ public final class VanillaMenu {
                 case SKILLS -> VanillaSkillBar.render(this, t);
                 case TREE -> VanillaTree.render(this, t);
                 case GACHA -> VanillaGacha.render(this, t);
+                case COSMETIC -> VanillaCosmeticPage.render(this, t);
             }
             setTitle(t.build());
         }
@@ -254,7 +261,7 @@ public final class VanillaMenu {
             Page[] pages = {Page.HOME, Page.STATS, Page.EQUIP, Page.SKILLS};
             for (int i = 0; i < 4; i++) {
                 Page p = pages[i];
-                boolean on = page == p || (page == Page.GACHA && p == Page.HOME) || (page == Page.TREE && p == Page.STATS);
+                boolean on = page == p || ((page == Page.GACHA || page == Page.COSMETIC) && p == Page.HOME) || (page == Page.TREE && p == Page.STATS);
                 ItemStack icon = VanillaGui.blank((on ? "§6" : "§f") + tabs[i][0], List.of("§7" + tabs[i][1]));
                 GuiElement.ClickCallback cb = left(() -> show(p));
                 set(0, 2 * i, icon, cb);
@@ -282,7 +289,8 @@ public final class VanillaMenu {
             quick(3, "§6탈것 고르기", "§7탈 것 고르기", p -> RpgNet.statAction(p, "mount_select"));
             quick(4, "§6유물", "§7꽂은 유물 요약 (채팅)", mmorpg.fabric.relic.RelicSystem::open);
             set(5, 5, VanillaGui.blank("§a스탯 트리", List.of("§7스탯마다 열리는 칸 · 고를 갈래", "", "§e눌러서 열기")), left(() -> show(Page.TREE)));
-            set(5, 6, VanillaGui.blank("§8꾸미기", List.of("§8모드 없는 접속은 준비 중")), null);
+            set(5, 6, VanillaGui.blank("§d꾸미기", List.of("§7무기 스킨 · 갑옷 숨기기 · 스킨 · 머리 · 등 장식 · 오라 · 칭호", "", "§e눌러서 열기")),
+                    left(() -> show(Page.COSMETIC)));
             quick(7, "§c쓰레기통", "§7넣고 닫으면 지워집니다", p -> RpgNet.statAction(p, "trash"));
             set(5, 8, VanillaGui.blank("§b조작", List.of(
                     "§fF §7스킬 모드: 일반 → 룬 → 직업 → 일반",

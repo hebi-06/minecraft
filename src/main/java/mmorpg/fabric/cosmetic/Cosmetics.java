@@ -236,6 +236,15 @@ public final class Cosmetics {
         String json = Json.stringify(m);
         for (ServerPlayer p : server.getPlayerList().getPlayers()) CosmeticNet.looks(p, false, json);
         sync(sp, "");
+        mmorpg.fabric.vanilla.VanillaCosmetics.changed(sp); // 2026-11-08 모드 없는 클라이언트가 보는 그림 (장비 · 태운 장식)
+    }
+
+    /** 사람이 아닌 몸 (꾸미기 미리보기 마네킹) 의 모습을 모드 클라이언트에 (look null = 지움) */
+    public static void showLook(MinecraftServer server, UUID id, Look look) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put(id.toString(), look == null ? null : look.toMap());
+        String json = Json.stringify(m);
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) CosmeticNet.looks(p, false, json);
     }
 
     private static void join(ServerPlayer sp, MinecraftServer server) {

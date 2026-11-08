@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vcos/frost_wings.glow","particle":"rpg:item/vcos/frost_wings.glow"},"elements":[{"from":[-0.02,-3.02,7.98],"to":[16.02,19.02,8.02],"faces":{"south":{"uv":[12.0,0.0,16.0,5.5],"texture":"#0"}},"light_emission":15}]}

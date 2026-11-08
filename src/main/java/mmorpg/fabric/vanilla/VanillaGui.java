@@ -40,7 +40,7 @@ public final class VanillaGui {
      * 줄 글꼴 (갈무리9) 의 세로 자리 d: 제목 줄 0 · 줄 1 ~ 5 가운데 (35 · 53 · 71 · 89 · 107) · 스킬 쪽 직업 안내 (103) ·
      * 아래 판 줄 6 ~ 9 (138 · 156 · 174 · 196 — 스탯 트리 · 뽑기 쪽이 가방 자리를 씀) · 창 밑 (223 — "[ 힘 스탯 트리 ]")
      */
-    public static final int[] LINES = {0, 35, 53, 71, 89, 103, 107, 138, 156, 174, 196, 223};
+    public static final int[] LINES = {0, 17, 35, 53, 71, 89, 103, 107, 138, 156, 174, 196, 223};
     /** 숫자 글꼴 (갈무리7) 의 세로 자리 d: 줄 1 ~ 5 가운데 (35 · 53 · 71 · 89 · 107 — 장비 강화 +N) · 스탯 값 (68) · 효과 (78) · 아래 판 (138 · 156 · 174 · 196) */
     public static final int[] NUM_LINES = {35, 53, 68, 71, 78, 89, 107, 138, 156, 174, 196};
     public static final Identifier SPACE = Mmorpg.rpg("gui_space");
@@ -53,7 +53,9 @@ public final class VanillaGui {
         HOME("menu_home"), STATS("menu_stats"), EQUIP("menu_equip"), SKILLS("menu_skills"), TREE("menu_tree"), GACHA("menu_gacha"),
         GACHA_CONFIRM("menu_gacha_confirm"),
         /** 2026-11-08 Forms 상자 창 · 상자 메뉴 (창고 · 쓰레기통) — 줄 1 ~ 6 (containerTitle) */
-        FORM1("form_1"), FORM2("form_2"), FORM3("form_3"), FORM4("form_4"), FORM5("form_5"), FORM6("form_6");
+        FORM1("form_1"), FORM2("form_2"), FORM3("form_3"), FORM4("form_4"), FORM5("form_5"), FORM6("form_6"),
+        /** 2026-11-08 꾸미기 전용 창 (VanillaCosmeticPage) */
+        COSMETIC("menu_cosmetic");
 
         public final String file;
 

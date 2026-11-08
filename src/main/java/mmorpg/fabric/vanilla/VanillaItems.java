@@ -76,6 +76,8 @@ final class VanillaItems {
                 Equippable vanilla = look == null ? null : look.components().get(DataComponents.EQUIPPABLE);
                 if (vanilla != null) out.set(DataComponents.EQUIPPABLE, vanilla);
             }
+            // 2026-11-08 꾸미기: 무기 스킨 (손) · 갑옷 숨기기 · 스킨 · 머리 장식 (받는 사람의 모습 — 다른 사람의 장비는 그 사람의 모습)
+            VanillaCosmetics.convert(out, stack, ctx, lookup);
         }
 
         @Override

@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vcos/phoenix_wings.glow","particle":"rpg:item/vcos/phoenix_wings.glow"},"elements":[{"from":[-0.02,-2.52,7.48],"to":[16.02,18.52,8.52],"faces":{"north":{"uv":[0.25,0.25,4.25,5.5],"texture":"#0"},"south":{"uv":[4.5,0.25,8.5,5.5],"texture":"#0"}},"light_emission":15}]}

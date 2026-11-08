@@ -1,0 +1,1 @@
+{"textures":{"0":"rpg:item/vcos/fairy_wings.glow","particle":"rpg:item/vcos/fairy_wings.glow"},"elements":[{"from":[-0.02,-1.02,7.98],"to":[16.02,17.02,8.02],"faces":{"south":{"uv":[12.0,0.0,16.0,4.5],"texture":"#0"}},"light_emission":15}]}

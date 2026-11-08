@@ -706,9 +706,55 @@ def menu_home():
     # 빠른 단추 (줄 5 · 칸 0 ~ 8)
     for i, key in enumerate(QUICK_ROW):
         x, y = cell_x(i), cell_y(5)
-        dim = key == "cosmetic"
-        button(c, x + 1, y + 1, x + 16, y + 16, tint=(60, 60, 80) if dim else None)
-        icon(c, art.QUICK[key], x + 3, y + 3, DIM if dim else GOLD_HI)
+        button(c, x + 1, y + 1, x + 16, y + 16)
+        icon(c, art.QUICK[key], x + 3, y + 3, GOLD_HI)
+    return c.final()
+
+
+# ------------------------------------------------------------------ 꾸미기 전용 창 (2026-11-08 로드맵 3번 — 홈 빠른 단추 · /장식)
+#
+# 위 탭 없음 (뽑기 창처럼). 줄 0: 돌아가기 (0, 0) · 닫기 (0, 8) · 가운데 판. 줄 1: 칸 탭 아홉 (무기 · 투구 · 갑옷 · 바지 · 신발 · 머리 · 등 ·
+# 오라 · 칭호 — 그림은 Java 가 글자 cat_<칸> 으로 물들여 그림, 고른 탭은 tab_sel 빛). 줄 2 ~ 4: 그 칸의 장식 27칸 (가진 것 = 그림, 아직 = 어둡게,
+# 입은 것 = 금 ring). 줄 5: 원래대로 · 숨기기 · 모두 숨기기 · 모두 원래대로 · 미리보기 · 도움말. 아래 판: 진짜 가방 (비춤).
+
+COSMETIC_TABS = ["weapon", "helmet", "chest", "legs", "boots", "head", "back", "aura", "title"]
+
+
+def cosmetic_tab_art(key):
+    return {"weapon": art.GHOST["sword"], "helmet": art.GHOST["helmet"], "chest": art.TAB["equip"], "legs": art.GHOST["legs"],
+            "boots": art.GHOST["boots"]}.get(key) or art.COSMETIC[key]
+
+
+def menu_cosmetic():
+    c = frame(None, inv=True, tabs=False)
+    # 줄 0: 돌아가기 · 가운데 판 · 닫기
+    button(c, cell_x(0) + 1, cell_y(0) + 1, cell_x(0) + 16, cell_y(0) + 16, tint=(120, 104, 70))
+    icon(c, art.QUICK["left"], cell_x(0) + 3, cell_y(0) + 3, CREAM)
+    # 가운데 판 (칸 이름 · 금화 — Java 글자 줄 17)
+    c.box(cell_x(1) + 1, cell_y(0) + 2, cell_x(7) + 16, cell_y(0) + 15, (16, 18, 38), edge=GOLD_DK, r=2, hi=(30, 34, 64))
+    button(c, cell_x(8) + 1, cell_y(0) + 1, cell_x(8) + 16, cell_y(0) + 16, tint=(150, 50, 50))
+    icon(c, art.QUICK["close"], cell_x(8) + 3, cell_y(0) + 3, GOLD_HI)
+    # 줄 1: 칸 탭 (단추 판 — 그림은 Java 글자)
+    for col in range(9):
+        button(c, cell_x(col) + 1, cell_y(1) + 1, cell_x(col) + 16, cell_y(1) + 16, tint=(40, 44, 84))
+    c.rect(8, cell_y(2) - 1, MW - 9, cell_y(2) - 1, GOLD_LO)
+    # 줄 2 ~ 4: 장식 칸 (안쪽 판 + 칸 27)
+    thin_frame(c, 4, cell_y(2) + 1, MW - 5, cell_y(4) + 18, (17, 19, 38), edge=GOLD_DK, r=2,
+               glow=(MW / 2, cell_y(3) + 9, 70, GLOW, 0.5))
+    for r in range(2, 5):
+        for col in range(9):
+            slot_at(c, cell_x(col), cell_y(r))
+    # 줄 5: 단추
+    for (col, rows, tint, slash) in ((0, art.QUICK["reset"], (110, 90, 60), False), (1, art.COSMETIC["eye_off"], (70, 70, 120), False),
+                                     (2, art.TAB["equip"], (70, 70, 120), True), (3, art.TAB["equip"], (60, 100, 90), False),
+                                     (6, art.COSMETIC["preview"], (50, 110, 130), False), (8, art.QUICK["help"], (50, 90, 150), False)):
+        x, y = cell_x(col), cell_y(5)
+        button(c, x + 1, y + 1, x + 16, y + 16, tint=tint)
+        icon(c, rows, x + 3, y + 3, GOLD_HI)
+        if slash:  # 모두 숨기기: 갑옷 그림 위 빗금
+            for k in range(12):
+                c.put(x + 3 + k, y + 14 - k, OUTLINE)
+                c.put(x + 4 + k, y + 14 - k, (230, 90, 90))
     return c.final()
 
 
@@ -1027,6 +1073,13 @@ def _node_frame_img(sel):
     return im
 
 
+def _cat_img(key):
+    """꾸미기 창 칸 탭 그림 (18 × 18 — 칸 틀 자리, 12 × 12 흰 그림을 가운데 (3, 3) 에 — 글자 색으로 물들임)"""
+    im = Image.new("RGBA", (18, 18), (0, 0, 0, 0))
+    im.alpha_composite(art.art(cosmetic_tab_art(key), one=(255, 255, 255)), (3, 3))
+    return im
+
+
 def _ring_img():
     """칸 틀 자리 18 × 18 의 1px 테 (등급 색으로 물들임) + 안쪽 모서리 빛"""
     im = Image.new("RGBA", (18, 18), (0, 0, 0, 0))
@@ -1111,7 +1164,7 @@ def tree_sheets(out_dir):
         "tree_cells": [("up_o", _line_img("up", True)), ("down_o", _line_img("down", True)), ("left_o", _line_img("left", True)),
                        ("right_o", _line_img("right", True)), ("up", _line_img("up", False)), ("down", _line_img("down", False)),
                        ("left", _line_img("left", False)), ("right", _line_img("right", False)), ("tab_sel", _tab_sel_img()),
-                       ("ring", _ring_img())],
+                       ("ring", _ring_img())] + [("cat_" + k, _cat_img(k)) for k in COSMETIC_TABS],
         "tree_frames": [("frame", _node_frame_img(False)), ("frame_sel", _node_frame_img(True))],
         "tree_plate": [("plate", _plate_img())],
         "tree_tri": [("tri", _tri_img())],
@@ -1301,7 +1354,7 @@ def item_icons():
 
 
 PAGES = [("menu_home", menu_home), ("menu_stats", menu_stats), ("menu_equip", menu_equip), ("menu_skills", menu_skills),
-         ("menu_tree", menu_tree), ("menu_gacha", menu_gacha), ("menu_gacha_confirm", menu_gacha_confirm)] + \
+         ("menu_tree", menu_tree), ("menu_gacha", menu_gacha), ("menu_gacha_confirm", menu_gacha_confirm), ("menu_cosmetic", menu_cosmetic)] + \
         [("form_%d" % n, (lambda n=n: form_page(n))) for n in range(1, 7)]
 
 
