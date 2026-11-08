@@ -30,7 +30,7 @@ import net.minecraft.world.item.ItemStack;
  * <ul>
  * <li>무기 스킨 ({@link #skinned}): 사람 (플레이어 · 마네킹) 이 손에 든 RPG 무기를 그릴 때 (1인칭 · 3인칭 손 — ItemModelResolver.updateForLiving),
  * 그 무기 종류의 스킨이 있으면 아이템 모델만 rpg:cosmetic_&lt;스킨&gt; 으로 바꾼 복사본을 그림. 가방 · 핫바 아이콘 (GUI) · 땅에 떨어진 것은 그대로</li>
- * <li>갑옷 · 장식 ({@link #extract} — AvatarRenderer.extractRenderState 끝): 숨기거나 스킨을 입은 갑옷 칸은 렌더 상태에서 비움 (바닐라 · RPG 갑옷 모두
+ * <li>갑옷 · 장식 ({@link #extract} — AvatarRenderer.extractRenderState 끝): 갑옷은 늘 비움 (2026-11-08 사용자 — 갑옷 스킨만 그림), 스킨을 입은 갑옷 칸도 비움 (바닐라 · RPG 갑옷 모두
  * 그리지 않음 — 투구 칸은 머리에 쓴 블록 · 머리도, 머리에 얹는 장식 (hideHelmet — 모자 · 왕관) 을 쓰면 투구도), 그릴 것 (갑옷 스킨 · 머리 · 등 장식 · 칭호) 은
  * 렌더 상태에 붙여 둠 → {@link CosmeticLayer}.
  * 등 장식이 있으면 바닐라 망토는 그리지 않음</li>
@@ -97,6 +97,7 @@ public final class CosmeticRender {
     // ------------------------------------------------------------ 갑옷 · 장식
 
     public static void extract(Avatar entity, AvatarRenderState state) {
+        hideArmor(state);
         if (!ClientCosmetics.any()) {
             state.setData(KEY, NONE);
             return;
@@ -132,6 +133,24 @@ public final class CosmeticRender {
         float lift = headDef == null ? 0F : (float) headDef.nameLift();
         state.setData(KEY, armor.isEmpty() && head == null && back == null && title == null ? NONE
                 : new Data(List.copyOf(armor), head, back, title, lift));
+    }
+
+    /**
+     * 2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마": 사람 (플레이어 · 마네킹) 의 갑옷 (RPG 갑옷 · 바닐라 갑옷) 은 늘 그리지 않음
+     * — 막는 수치는 그대로, 갑옷 스킨 (장식) 만 그림. 겉날개 · 호박 · 머리처럼 갑옷이 아닌 것은 그대로 (모드 없는 클라이언트도 같음 — VanillaCosmetics)
+     */
+    private static void hideArmor(AvatarRenderState state) {
+        if (armor(state.headEquipment)) clear(state, "helmet");
+        if (armor(state.chestEquipment)) clear(state, "chest");
+        if (armor(state.legsEquipment)) clear(state, "legs");
+        if (armor(state.feetEquipment)) clear(state, "boots");
+    }
+
+    static boolean armor(ItemStack st) {
+        if (st == null || st.isEmpty()) return false;
+        if (st.getItem() instanceof mmorpg.fabric.gear.RpgArmorItem) return true;
+        return st.is(net.minecraft.tags.ItemTags.HEAD_ARMOR) || st.is(net.minecraft.tags.ItemTags.CHEST_ARMOR)
+                || st.is(net.minecraft.tags.ItemTags.LEG_ARMOR) || st.is(net.minecraft.tags.ItemTags.FOOT_ARMOR);
     }
 
     /** 갑옷 칸을 그리지 않게 (렌더 상태만 — 입은 갑옷 · 수치는 그대로) */

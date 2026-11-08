@@ -716,6 +716,12 @@ final class VanillaProbe {
                     if (sword == null || w.weapon().level() > sword.weapon().level()) sword = w;
                 }
                 if (sword != null) p.getInventory().setItem(p.getInventory().getSelectedSlot(), new ItemStack(sword));
+                say(p, "cam back");
+                next(p, 168, 20);
+            }
+            case 168 -> { // 갑옷 (RPG 힘 세트) 을 입었지만 보이지 않음 (사용자 "갑옷 아예 빼버려 안보이게를 기본으로")
+                say(p, "shot 20a_self_no_armor");
+                say(p, "cam first");
                 VanillaMenu.open(p, VanillaMenu.Page.COSMETIC);
                 next(p, 171, 15);
             }
@@ -758,6 +764,10 @@ final class VanillaProbe {
                 check("vanilla look cache follows equips", "crown".equals(look.get("head")) && "angel_wings".equals(look.get("back"))
                         && "title_hero".equals(look.get("title")) && "paladin_chest".equals(look.get("chest")));
                 check("crown replaces helmet on head", VanillaCosmetics.visual(look, "helmet", false).kind() == VanillaCosmetics.HEAD_ITEM);
+                // 2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마"
+                check("armor hidden by default", VanillaCosmetics.visual(mmorpg.fabric.cosmetic.Look.EMPTY, "helmet", false).kind() == VanillaCosmetics.HIDE
+                        && VanillaCosmetics.visual(mmorpg.fabric.cosmetic.Look.EMPTY, "chest", false).kind() == VanillaCosmetics.HIDE
+                        && VanillaCosmetics.visual(look, "boots", true).kind() == VanillaCosmetics.SET);
                 check("armor skin uses equipment asset", VanillaCosmetics.visual(look, "chest", false).kind() == VanillaCosmetics.SET);
                 String info = VanillaCosmetics.holderInfo(p);
                 log("holder " + info);
@@ -771,6 +781,12 @@ final class VanillaProbe {
                 check("preview wears the look", m != null && VanillaCosmetics.holderInfo(m).startsWith("title"));
                 check("equipment rewritten for viewers", VanillaCosmetics.rewrites > 0 && "crown".equals(VanillaCosmetics.lastHead));
                 log("rewrites " + VanillaCosmetics.rewrites + " lastHead " + VanillaCosmetics.lastHead);
+                if (m != null) {
+                    log("mannequin " + m.getId() + " holder " + VanillaCosmetics.holderIds(m) + " passenger attachment "
+                            + m.getDimensions(m.getPose()).attachments().getNullable(net.minecraft.world.entity.EntityAttachment.PASSENGER, 0, 0F)
+                            + " player attachment " + p.getDimensions(p.getPose()).attachments().getNullable(net.minecraft.world.entity.EntityAttachment.PASSENGER, 0, 0F));
+                }
+                say(p, "ents");
                 say(p, "shot 21_preview_front");
                 next(p, 178, 62);
             }

@@ -60,7 +60,8 @@ final class VanillaAuras {
                     double ang = tick / 40.0 * Math.PI * 2 + k * Math.PI;
                     double py = y + h * 0.55 + Math.sin(tick * 0.15 + k * 2) * 0.18;
                     double px = x + Math.cos(ang) * 0.75, pz = z + Math.sin(ang) * 0.75;
-                    emit.send(ParticleTypes.END_ROD, px, py, pz, 0, 0, 0, 0, 0);
+                    // 끝막대 (2 ~ 3초 남음) 는 한 바퀴 내내 남아 흰 고리처럼 뭉침 (CI 42455311391 사진) → 금방 사라지는 먼지로 (흰 심지 + 색)
+                    emit.send(new DustParticleOptions(0xFFFFFF, 0.7F), px, py, pz, 0, 0, 0, 0, 0);
                     emit.send(dust(cols.get(k % cols.size()), 1.1F), px, py, pz, 1, 0.02, 0.02, 0.02, 0);
                 }
                 for (int i = 0; i < Math.max(0, n - 2) / 3; i++) {

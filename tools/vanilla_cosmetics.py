@@ -2,7 +2,8 @@
 """모드 없는 클라이언트의 장식 (2026-11-08 로드맵 3번 꾸미기) — 모드 장식 모델 (assets/mmorpg/cosmetic/<모델>.json — PieceModel, 자바 ModelPart
 좌표: 아래 +y · 앞 -z · 사람의 왼쪽 +x) 을 바닐라 그림으로.
 
-1. 투구 칸 아이템 (머리에 얹는 장식 — hideHelmet: 왕관 · 마법사 모자 · 고양이 귀 · 악마의 뿔 · 꽃 화관 · 얼음 왕관, 투구 스킨 — 성기사 · 빙룡):
+1. 투구 칸 아이템 (머리 장식 모두 — 왕관 · 천사의 고리 · 마법사 모자 · 고양이 귀 · 악마의 뿔 · 꽃 화관 · 얼음 왕관, 투구 스킨 — 성기사 · 빙룡.
+   갑옷은 늘 안 보이므로 (사용자 2026-11-08) 투구와 겹치지 않음):
    assets/rpg/items/vcos/<모델>.json = composite (뼈마다 모델 — 모델마다 display.head 변환). 바닐라 CustomHeadLayer 가 투구 칸 아이템을
    머리 움직임 그대로 그림 (투구 그림 — equippable asset 이 없을 때). 머리 기준: 아이템 공간 p = 1.6 · (j − (0, 0.25, 0)) (블록,
    j = 머리 뼈 가운데 (목) 에서 본 j 공간 — CustomHeadLayer.translateToHead: T(0, −0.25) · Ry(180) · S(0.625, −0.625, −0.625)).
@@ -176,7 +177,8 @@ def main():
             continue
         slot, model = d.get("slot"), d.get("model")
         if slot == "head" and model:
-            (head_models if d.get("hideHelmet") else rig_models).append(model)
+            # 2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로" — 투구가 늘 안 보이므로 머리 장식은 모두 투구 칸 아이템 (천사의 고리도)
+            head_models.append(model)
         elif slot == "back" and model:
             rig_models.append(model)
         elif slot == "helmet" and model:

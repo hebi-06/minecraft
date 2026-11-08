@@ -744,17 +744,11 @@ def menu_cosmetic():
     for r in range(2, 5):
         for col in range(9):
             slot_at(c, cell_x(col), cell_y(r))
-    # 줄 5: 단추
-    for (col, rows, tint, slash) in ((0, art.QUICK["reset"], (110, 90, 60), False), (1, art.COSMETIC["eye_off"], (70, 70, 120), False),
-                                     (2, art.TAB["equip"], (70, 70, 120), True), (3, art.TAB["equip"], (60, 100, 90), False),
-                                     (6, art.COSMETIC["preview"], (50, 110, 130), False), (8, art.QUICK["help"], (50, 90, 150), False)):
+    # 줄 5: 단추 (원래대로 · 미리보기 · 도움말 — 갑옷은 늘 안 보여 숨기기 단추 없음, 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마")
+    for (col, rows, tint) in ((0, art.QUICK["reset"], (110, 90, 60)), (6, art.COSMETIC["preview"], (50, 110, 130)), (8, art.QUICK["help"], (50, 90, 150))):
         x, y = cell_x(col), cell_y(5)
         button(c, x + 1, y + 1, x + 16, y + 16, tint=tint)
         icon(c, rows, x + 3, y + 3, GOLD_HI)
-        if slash:  # 모두 숨기기: 갑옷 그림 위 빗금
-            for k in range(12):
-                c.put(x + 3 + k, y + 14 - k, OUTLINE)
-                c.put(x + 4 + k, y + 14 - k, (230, 90, 90))
     return c.final()
 
 

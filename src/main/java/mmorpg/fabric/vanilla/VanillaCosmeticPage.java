@@ -17,8 +17,9 @@ import java.util.List;
 /**
  * 모드 없는 클라이언트의 꾸미기 전용 창 (2026-11-08 로드맵 3번 — 메뉴 홈 빠른 단추 · /장식). 모드 장식 창 (CosmeticScreen) 과 같은 일:
  * 칸 탭 아홉 (무기 · 투구 · 갑옷 · 바지 · 신발 · 머리 · 등 · 오라 · 칭호) → 그 칸의 장식 (가진 것 = 그림, 아직 = 어둡게 · 입은 것 = 금 테 · 빛남),
- * 누르면 입기 / 벗기, 아직 가지지 않은 것은 두 번 눌러 골드로 사기 (사면 바로 입음 — Cosmetics.buy). 줄 5: 원래대로 (그 칸) · 숨기기 (갑옷 칸 — 무료,
- * 막는 수치는 그대로) · 모두 숨기기 · 모두 원래대로 · 미리보기 (창을 닫고 앞에 내 모습 마네킹 — VanillaCosmetics.preview) · 도움말.
+ * 누르면 입기 / 벗기, 아직 가지지 않은 것은 두 번 눌러 골드로 사기 (사면 바로 입음 — Cosmetics.buy). 줄 5: 원래대로 (그 칸) · 미리보기 (창을 닫고
+ * 앞에 내 모습 마네킹 — VanillaCosmetics.preview) · 도움말. 갑옷은 늘 안 보임 (2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게
+ * 하지 마") — 숨기기 단추 없음, 갑옷 칸 탭은 갑옷 스킨만.
  * 글자는 칸 이름 · 금화만 (사용자 "글자를 최대한 줄여서" — 이름 · 설명 · 값은 마우스를 올리면).
  */
 final class VanillaCosmeticPage {
@@ -92,24 +93,15 @@ final class VanillaCosmeticPage {
 
         // 줄 5: 단추
         boolean armor = CosmeticDefs.ARMOR.contains(tab);
-        g.set(5, 0, VanillaGui.blank("§f원래대로", List.of("weapon".equals(tab) ? "§7모든 무기 스킨을 벗음" : "§7이 칸의 장식을 벗음"
-                + (armor ? " §8(입은 갑옷 그대로)" : ""))), VanillaMenu.MenuGui.left(() -> act(g, "clear", tab, "")));
-        if (armor) {
-            boolean hidden = look.hidden(tab);
-            g.set(5, 1, VanillaGui.blank("§f" + tabName(tab) + " 숨기기", List.of("§7이 갑옷 칸을 보이지 않게 §8(무료 · 막는 수치는 그대로)",
-                    hidden ? "§a숨기는 중" : "§8보이는 중")), VanillaMenu.MenuGui.left(() -> act(g, "hide", tab, "")));
-        } else {
-            g.set(5, 1, VanillaGui.blank("§8숨기기", List.of("§8갑옷 칸 (투구 · 갑옷 · 바지 · 신발) 만")), null);
-        }
-        g.set(5, 2, VanillaGui.blank("§f갑옷 모두 숨기기", List.of("§7투구 · 갑옷 · 바지 · 신발을 보이지 않게")), VanillaMenu.MenuGui.left(() -> act(g, "hide_all", "", "")));
-        g.set(5, 3, VanillaGui.blank("§f갑옷 모두 원래대로", List.of("§7숨김 · 갑옷 스킨을 모두 풂")), VanillaMenu.MenuGui.left(() -> act(g, "show_all", "", "")));
+        g.set(5, 0, VanillaGui.blank("§f원래대로", List.of("weapon".equals(tab) ? "§7모든 무기 스킨을 벗음" : armor ? "§7이 칸의 갑옷 스킨을 벗음 §8(갑옷은 보이지 않음)"
+                : "§7이 칸의 장식을 벗음")), VanillaMenu.MenuGui.left(() -> act(g, "clear", tab, "")));
         g.set(5, 6, VanillaGui.blank("§b미리보기", List.of("§7창을 닫고 내 앞에 지금 모습을 15초 동안 세움",
                 "§8(칭호 · 등 장식 · 오라는 내 화면에서 내 몸에는 그리지 않음 — 다른 사람에게 보임)")), VanillaMenu.MenuGui.left(() -> g.closeThen(VanillaCosmetics::preview)));
         g.set(5, 8, VanillaGui.blank("§b꾸미기", List.of(
                 "§f누르기 §7입기 · 벗기",
                 "§f두 번 누르기 §7사기 (골드 — 사면 바로 입음)",
                 "§7무기 스킨은 무기 종류마다 하나 · 손에 든 모습만",
-                "§7갑옷 숨기기는 무료 · 막는 수치는 그대로",
+                "§7갑옷은 보이지 않음 (막는 수치는 그대로) — 갑옷 스킨만 보임",
                 "§7산 장식은 계속 가짐 (죽어도 그대로)")), null);
     }
 
@@ -159,12 +151,9 @@ final class VanillaCosmeticPage {
             }
             return out;
         }
-        if (look.hidden(slot)) {
-            out.add("§7숨기는 중");
-            return out;
-        }
         CosmeticDefs.Def d = look.def(slot);
-        out.add(d == null ? "§8없음" : "§7입는 중: §f" + d.name());
+        if (d == null && CosmeticDefs.ARMOR.contains(slot)) out.add("§8갑옷은 보이지 않음 §7(스킨을 입으면 그 모습)");
+        else out.add(d == null ? "§8없음" : "§7입는 중: §f" + d.name());
         return out;
     }
 

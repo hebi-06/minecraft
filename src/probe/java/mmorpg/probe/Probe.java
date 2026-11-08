@@ -147,6 +147,15 @@ public final class Probe implements ClientModInitializer {
             // 숫자 키 N (핫바 칸 N) 과 같음: 고른 칸만 바꾸면 다음 틱에 클라이언트가 칸 바뀜을 보냄
             int n = Integer.parseInt(cmd.substring(4).trim());
             if (n >= 1 && n <= 9) mc.player.getInventory().setSelectedSlot(n - 1);
+        } else if (cmd.equals("ents") && mc.level != null && mc.player != null) {
+            // 둘레 10칸 엔티티: 번호 · 종류 · 자리 · 탄 것 (꾸미기 표시 엔티티가 사람에게 탔는지)
+            for (net.minecraft.world.entity.Entity e : mc.level.entitiesForRendering()) {
+                if (e.distanceTo(mc.player) > 10) continue;
+                net.minecraft.world.phys.Vec3 p = e.position();
+                log(String.format("ent %d %s pos %.2f %.2f %.2f vehicle %d passengers %d", e.getId(),
+                        net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(e.getType()), p.x, p.y, p.z,
+                        e.getVehicle() == null ? -1 : e.getVehicle().getId(), e.getPassengers().size()));
+            }
         } else if (cmd.equals("done")) {
             log("done");
             quitIn = 40;

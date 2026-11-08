@@ -35,9 +35,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundSetEquipmentPacket;
-import net.minecraft.network.protocol.game.ClientboundSetPassengersPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.MinecraftServer;
@@ -75,7 +73,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 /**
  * 모드 없는 클라이언트가 보는 장식 (2026-11-08 로드맵 3번 꾸미기 — 사용자 "다음 작업"). 모드 클라이언트는 그대로 (CosmeticNet 모습 표 → 모드가 그림).
@@ -83,16 +80,17 @@ import java.util.function.Consumer;
  * <ul>
  * <li>무기 스킨: 손에 든 RPG 무기에 custom_model_data 글자 = 스킨 키 → 무기 아이템 정의 (VanillaPack 이 감쌈) 가 손 (1 · 3인칭) 에서만 스킨 모델
  * — 가방 · 핫바 아이콘은 그대로 (모드와 같음)</li>
- * <li>갑옷: 숨기기 = 갑옷 그림 (equippable asset) 을 뺌, 갑옷 스킨 = 그림 rpg:&lt;세트&gt; (갑옷 · 바지 · 신발 — 평면 그림), 투구 스킨 · 머리에 얹는
- * 장식 (hideHelmet) = 투구 칸 아이템 모델 (custom_model_data → 투구 아이템 정의의 head 자리 · 빈 칸이면 다른 사람에게는 그 그림만 보냄) —
- * 바닐라 CustomHeadLayer 가 머리 움직임 그대로 그림</li>
- * <li>칭호 · 천사의 고리 · 등 장식: 그 사람에게 태운 표시 엔티티 (글자 · 아이템 — Polymer). 등 장식 · 고리는 서버가 몸 방향 · 웅크림 · 날갯짓을
+ * <li>갑옷 (2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마"): 사람 (플레이어 · 마네킹) 의 갑옷은 늘 그리지 않음
+ * (RPG 갑옷 = equippable asset 을 뺌, 바닐라 갑옷 = 다른 사람에게 빈 칸). 막는 수치는 그대로. 갑옷 스킨 (꾸미기) 만 그림 rpg:&lt;세트&gt;
+ * (갑옷 · 바지 · 신발 — 평면 그림). 머리 장식 · 투구 스킨 = 투구 칸 아이템 모델 (custom_model_data → 투구 아이템 정의의 head 자리 · 빈 칸이면
+ * 다른 사람에게는 그 그림만 보냄) — 바닐라 CustomHeadLayer 가 머리 움직임 그대로 그림</li>
+ * <li>칭호 · 등 장식: 그 사람을 따라가는 표시 엔티티 (글자 · 아이템 — Polymer, 자리 보간 3틱). 등 장식은 서버가 몸 방향 · 웅크림 · 날갯짓을
  * 2 ~ 8틱마다 (그 사이는 보간 — VanillaModels 와 같은 변환 차례)</li>
  * <li>오라 · 날개 가루: 바닐라 파티클 (보는 사람마다 — 48칸)</li>
  * </ul>
- * 내가 보는 내 모습: 무기 스킨 (1인칭에서도) · 갑옷 숨기기 · 스킨 · 머리 장식은 입은 칸만 (3인칭 F5 — 투구를 쓴 때만 머리 장식). 칭호 · 고리 · 등 장식 ·
+ * 내가 보는 내 모습: 무기 스킨 (1인칭에서도) · 갑옷 (안 보임) · 갑옷 스킨 · 머리 장식은 입은 칸만 (3인칭 F5 — 투구를 쓴 때만 머리 장식). 칭호 · 등 장식 ·
  * 오라는 다른 사람에게만 (서버는 1 · 3인칭을 모름 — 모드도 1인칭에서는 내 오라를 뿌리지 않음) — 꾸미기 창의 미리보기 (마네킹) 로 봄.
- * 투명 (투명화 물약) 이면 모드처럼: 숨기기 · 머리 · 등 장식 · 오라 · 칭호 없음, 갑옷 스킨은 그대로.
+ * 투명 (투명화 물약) 이면 모드처럼: 머리 · 등 장식 · 오라 · 칭호 없음, 갑옷 스킨은 그대로.
  */
 public final class VanillaCosmetics {
     private VanillaCosmetics() {}
@@ -107,7 +105,8 @@ public final class VanillaCosmetics {
 
     // ------------------------------------------------------------ 그림 목록 (vanilla_cosmetics.json)
 
-    record Bone(String name, String parent, String root, float[] off, float[] rot, String anim, ItemStack item, ItemStack glow, float k, float[] c0) {}
+    /** 뼈 하나 (item · glow = 아이템 모델 — 아이템은 서버가 켠 뒤에 만듦: 모드를 불러올 때 ItemStack 을 만들면 "Components not bound yet" — CI 42455311391) */
+    record Bone(String name, String parent, String root, float[] off, float[] rot, String anim, Identifier item, Identifier glow, float k, float[] c0) {}
 
     record Rig(String root, List<Bone> bones) {}
 
@@ -134,7 +133,8 @@ public final class VanillaCosmetics {
     private static final Map<Item, String> TYPES = new ConcurrentHashMap<>();
     private static final Map<Equippable, Map<String, Equippable>> EQUIP = new ConcurrentHashMap<>();
 
-    record View(Look look, boolean invisible) {}
+    /** 아이템을 만들 때 따를 모습 (person = 사람 — 갑옷을 그리지 않음) */
+    record View(Look look, boolean invisible, boolean person) {}
 
     record Preview(UUID owner, Mannequin body, long end) {}
 
@@ -167,7 +167,7 @@ public final class VanillaCosmetics {
                 for (JsonElement be : r.getAsJsonArray("bones")) {
                     JsonObject b = be.getAsJsonObject();
                     bones.add(new Bone(b.get("name").getAsString(), str(b, "parent"), b.get("root").getAsString(), floats(b.getAsJsonArray("off")),
-                            floats(b.getAsJsonArray("rot")), str(b, "anim"), stack(str(b, "item")), stack(str(b, "glow")),
+                            floats(b.getAsJsonArray("rot")), str(b, "anim"), id(str(b, "item")), id(str(b, "glow")),
                             b.has("k") ? b.get("k").getAsFloat() : 1F, b.has("c0") ? floats(b.getAsJsonArray("c0")) : new float[]{8, 8, 8}));
                 }
                 RIGS.put(e.getKey(), new Rig(r.get("root").getAsString(), bones));
@@ -193,10 +193,14 @@ public final class VanillaCosmetics {
         return f;
     }
 
-    private static ItemStack stack(String model) {
-        if (model == null) return null;
+    private static Identifier id(String model) {
+        return model == null ? null : Identifier.parse(model);
+    }
+
+    /** 아이템 모델만 있는 종이 (표시 엔티티 · 빈 칸 그림) */
+    static ItemStack stack(Identifier model) {
         ItemStack s = new ItemStack(Items.PAPER);
-        s.set(DataComponents.ITEM_MODEL, Identifier.parse(model));
+        s.set(DataComponents.ITEM_MODEL, model);
         return s;
     }
 
@@ -236,7 +240,7 @@ public final class VanillaCosmetics {
         for (Preview p : new ArrayList<>(PREVIEWS.values())) if (p.owner().equals(sp.getUUID())) endPreview(p, server);
     }
 
-    /** 보이는 것을 다시: 태운 표시 엔티티 · 다른 사람의 장비 그림 · 내 가방 (다른 창이 열려 있으면 닫은 뒤) */
+    /** 보이는 것을 다시: 따라가는 표시 엔티티 · 다른 사람의 장비 그림 · 내 가방 (다른 창이 열려 있으면 닫은 뒤) */
     static void refresh(LivingEntity e) {
         Look look = lookOf(e);
         CosmeticHolder old = HOLDERS.remove(e.getUUID());
@@ -268,10 +272,9 @@ public final class VanillaCosmetics {
             ServerPlayer receiver = receiver(ctx);
             if (receiver == null) return;
             Look own = LOOKS.get(receiver.getUUID());
-            if (own == null || own.isEmpty()) return;
-            view = new View(own, receiver.isInvisible());
+            view = new View(own == null ? Look.EMPTY : own, receiver.isInvisible(), true);
         }
-        if (view.look().isEmpty()) return;
+        if (!view.person()) return;
         if (lookup == null) lookup = SERVER_LOOKUP;
         if (lookup == null) return;
         Item item = stack.getItem();
@@ -320,19 +323,35 @@ public final class VanillaCosmetics {
 
     private static final Visual NOTHING = new Visual(NONE, null);
 
-    /** 갑옷 칸 하나의 모습 (모드 CosmeticRender.extract 와 같은 차례): 머리에 얹는 장식 → 투구 스킨 · 숨김 → 갑옷 스킨 */
+    private static final Visual HIDDEN = new Visual(HIDE, null);
+
+    /**
+     * 사람의 갑옷 칸 하나의 모습 (2026-11-08 사용자 "갑옷 아예 빼버려 안보이게를 기본으로 하자 보이게 하지 마" — 갑옷은 늘 안 보임):
+     * 투구 칸 = 머리 장식 (투명이면 없음) → 투구 스킨 → 안 보임, 다른 칸 = 갑옷 스킨 → 안 보임. 투명해도 갑옷 스킨은 그림 (모드와 같음)
+     */
     static Visual visual(Look look, String slot, boolean invisible) {
-        if ("helmet".equals(slot) && !invisible) {
-            CosmeticDefs.Def hat = look.def("head");
-            if (hat != null && hat.hideHelmet() && hat.model() != null && HEAD.containsKey(hat.model())) return new Visual(HEAD_ITEM, hat.model());
+        if ("helmet".equals(slot)) {
+            CosmeticDefs.Def hat = invisible ? null : look.def("head");
+            if (hat != null && hat.model() != null && HEAD.containsKey(hat.model())) return new Visual(HEAD_ITEM, hat.model());
+            CosmeticDefs.Def skin = look.def("helmet");
+            if (skin != null && skin.model() != null && HEAD.containsKey(skin.model())) return new Visual(HEAD_ITEM, skin.model());
+            return HIDDEN;
         }
-        String v = look.get(slot);
-        if (v == null) return NOTHING;
-        if (Look.HIDE.equals(v)) return invisible ? NOTHING : new Visual(HIDE, null);
-        CosmeticDefs.Def d = CosmeticDefs.get(v);
-        if (d == null) return NOTHING;
-        if ("helmet".equals(slot)) return d.model() != null && HEAD.containsKey(d.model()) ? new Visual(HEAD_ITEM, d.model()) : NOTHING;
-        return d.set() != null && SETS.contains(d.set()) ? new Visual(SET, d.set()) : NOTHING;
+        CosmeticDefs.Def d = look.def(slot);
+        return d != null && d.set() != null && SETS.contains(d.set()) ? new Visual(SET, d.set()) : HIDDEN;
+    }
+
+    /** 사람 (플레이어 · 마네킹 — 갑옷을 그리지 않고 장식을 입는 몸) */
+    static boolean person(Entity e) {
+        return e instanceof net.minecraft.world.entity.Avatar;
+    }
+
+    /** 갑옷 (RPG 갑옷 · 바닐라 갑옷 태그) — 겉날개 · 호박 · 머리 같은 것은 아님 */
+    static boolean armor(ItemStack st) {
+        if (st.isEmpty()) return false;
+        if (st.getItem() instanceof RpgArmorItem) return true;
+        return st.is(net.minecraft.tags.ItemTags.HEAD_ARMOR) || st.is(net.minecraft.tags.ItemTags.CHEST_ARMOR)
+                || st.is(net.minecraft.tags.ItemTags.LEG_ARMOR) || st.is(net.minecraft.tags.ItemTags.FOOT_ARMOR);
     }
 
     static String slotKey(EquipmentSlot s) {
@@ -374,15 +393,18 @@ public final class VanillaCosmetics {
         if (!VanillaClients.isVanilla(receiver)) return p;
         Entity e = receiver.level().getEntity(p.getEntity());
         Look look = lookOf(e);
+        boolean person = person(e);
         boolean rpg = false;
         for (Pair<EquipmentSlot, ItemStack> s : p.getSlots()) rpg |= VanillaSupport.ours(BuiltInRegistries.ITEM.getKey(s.getSecond().getItem()));
-        if (!rpg && look.isEmpty()) return p;
+        if (!rpg && !person) return p;
         boolean invisible = e != null && e.isInvisible();
         HolderLookup.Provider lookup = receiver.registryAccess();
         List<Pair<EquipmentSlot, ItemStack>> out = new ArrayList<>();
-        OVERRIDE.set(new View(look, invisible));
+        OVERRIDE.set(new View(look, invisible, person));
         try {
-            for (Pair<EquipmentSlot, ItemStack> s : p.getSlots()) out.add(Pair.of(s.getFirst(), slotStack(receiver, s.getFirst(), s.getSecond(), look, invisible, lookup)));
+            for (Pair<EquipmentSlot, ItemStack> s : p.getSlots()) {
+                out.add(Pair.of(s.getFirst(), slotStack(receiver, s.getFirst(), s.getSecond(), look, invisible, person, lookup)));
+            }
         } finally {
             OVERRIDE.remove();
         }
@@ -390,22 +412,22 @@ public final class VanillaCosmetics {
         return new ClientboundSetEquipmentPacket(p.getEntity(), out);
     }
 
-    private static ItemStack slotStack(ServerPlayer receiver, EquipmentSlot slot, ItemStack st, Look look, boolean invisible, HolderLookup.Provider lookup) {
+    private static ItemStack slotStack(ServerPlayer receiver, EquipmentSlot slot, ItemStack st, Look look, boolean invisible, boolean person,
+            HolderLookup.Provider lookup) {
         String key = slotKey(slot);
-        Visual v = key == null || look.isEmpty() ? NOTHING : visual(look, key, invisible);
+        Visual v = key == null || !person ? NOTHING : visual(look, key, invisible);
         boolean ours = !st.isEmpty() && VanillaSupport.ours(BuiltInRegistries.ITEM.getKey(st.getItem()));
         if (ours) {
             ItemStack c = PolymerItemUtils.getPolymerItemStack(st, receiver.getPacketContext(), lookup);
             if (slot == EquipmentSlot.HEAD) lastHead = v.kind() == HEAD_ITEM ? v.value() : "";
             return c;
         }
-        // 빈 칸 · 바닐라 아이템: 머리에 얹는 그림 · 갑옷 스킨은 그 그림만, 숨김은 빈 칸
+        // 빈 칸 · 바닐라 아이템: 머리 장식 · 갑옷 스킨은 그 그림만, 갑옷은 빈 칸 (겉날개 · 호박 · 머리 같은 갑옷 아닌 것은 그대로)
+        if (v.kind() == HIDE && !st.isEmpty() && !armor(st)) return st;
         switch (v.kind()) {
             case HEAD_ITEM -> {
                 lastHead = v.value();
-                ItemStack hat = new ItemStack(Items.PAPER);
-                hat.set(DataComponents.ITEM_MODEL, HEAD.get(v.value()));
-                return hat;
+                return stack(HEAD.get(v.value()));
             }
             case HIDE -> {
                 return ItemStack.EMPTY;
@@ -550,7 +572,19 @@ public final class VanillaCosmetics {
         return (h.title != null ? "title " : "") + "bones " + h.parts.size();
     }
 
-    // ------------------------------------------------------------ 태운 표시 엔티티 (칭호 · 고리 · 등 장식)
+    /** 시험용: 태운 표시 엔티티 번호들 · 보는 사람 수 (클라이언트 기록 "ent …" 과 맞춰 봄) */
+    static String holderIds(Entity e) {
+        CosmeticHolder h = HOLDERS.get(e.getUUID());
+        return h == null ? "-" : h.getEntityIds() + " watchers " + h.getWatchingPlayers().size() + " passengers " + h.getAttachedPassengerEntityIds();
+    }
+
+    // ------------------------------------------------------------ 따라가는 표시 엔티티 (칭호 · 등 장식)
+
+    /**
+     * 표시 엔티티가 사람을 따라가는 보간 (틱 — 다른 사람 몸의 보간 3틱과 같게). 태우지 않고 (passenger) 자리를 보냄: CI 42455311391 에서 마네킹에 태운
+     * 칭호가 발 높이에 그려짐 (태워지지 않음) → 엔티티 자리 (발) 기준으로 변환을 줌 (마네킹 · 플레이어 같은 방법 — 시험에서 확인할 수 있게)
+     */
+    static final int FOLLOW = 3;
 
     /** 뼈 하나의 표시 엔티티 (그림 · 빛 겹) */
     record Part(Rig rig, int index, ItemDisplayElement base, ItemDisplayElement glow) {}
@@ -567,10 +601,8 @@ public final class VanillaCosmetics {
 
         static boolean wanted(Look look) {
             CosmeticDefs.Def t = look.def("title");
-            CosmeticDefs.Def head = look.def("head");
             CosmeticDefs.Def back = look.def("back");
-            return (t != null && t.title() != null) || (head != null && !head.hideHelmet() && head.model() != null && RIGS.containsKey(head.model()))
-                    || (back != null && back.model() != null && RIGS.containsKey(back.model()));
+            return (t != null && t.title() != null) || (back != null && back.model() != null && RIGS.containsKey(back.model()));
         }
 
         CosmeticHolder(LivingEntity entity, Look look) {
@@ -583,12 +615,9 @@ public final class VanillaCosmetics {
                 title.setBackground(0x40000000);
                 title.setSeeThrough(true);
                 title.setShadow(false);
-                title.setTeleportDuration(0);
-                title.ignorePositionUpdates();
-                addPassengerElement(title);
+                title.setTeleportDuration(FOLLOW);
+                addElement(title);
             }
-            CosmeticDefs.Def head = look.def("head");
-            if (head != null && !head.hideHelmet() && head.model() != null) rig(RIGS.get(head.model()));
             CosmeticDefs.Def back = look.def("back");
             if (back != null && back.model() != null) rig(RIGS.get(back.model()));
             pose();
@@ -599,16 +628,16 @@ public final class VanillaCosmetics {
             for (int i = 0; i < rig.bones().size(); i++) {
                 Bone b = rig.bones().get(i);
                 if (b.item() == null) continue;
-                parts.add(new Part(rig, i, element(b.item()), b.glow() == null ? null : element(b.glow())));
+                parts.add(new Part(rig, i, element(stack(b.item())), b.glow() == null ? null : element(stack(b.glow()))));
             }
         }
 
         private ItemDisplayElement element(ItemStack stack) {
-            ItemDisplayElement e = new ItemDisplayElement(stack.copy());
+            ItemDisplayElement e = new ItemDisplayElement(stack);
             e.setInterpolationDuration(every);
             e.setDisplaySize(2F, 2F);
-            e.ignorePositionUpdates();
-            addPassengerElement(e);
+            e.setTeleportDuration(FOLLOW);
+            addElement(e);
             return e;
         }
 
@@ -616,12 +645,6 @@ public final class VanillaCosmetics {
         public boolean startWatching(ServerGamePacketListenerImpl player) {
             if (VanillaClients.isModded(player.getPlayer())) return false;
             return super.startWatching(player);
-        }
-
-        /** 이미 보이는 사람이 새로 보기 시작하면 (장식을 바꿈) 태운 것을 알려 줌 (처음 볼 때는 Polymer 가 보냄) */
-        @Override
-        protected void startWatchingExtraPackets(ServerGamePacketListenerImpl player, Consumer<Packet<ClientGamePacketListener>> packets) {
-            packets.accept(new ClientboundSetPassengersPacket(entity));
         }
 
         @Override
@@ -659,8 +682,8 @@ public final class VanillaCosmetics {
                 shown = show;
                 for (Part p : parts) {
                     Bone b = p.rig().bones().get(p.index());
-                    p.base().setItem(show ? b.item().copy() : ItemStack.EMPTY);
-                    if (p.glow() != null) p.glow().setItem(show ? b.glow().copy() : ItemStack.EMPTY);
+                    p.base().setItem(show ? stack(b.item()) : ItemStack.EMPTY);
+                    if (p.glow() != null) p.glow().setItem(show ? stack(b.glow()) : ItemStack.EMPTY);
                 }
                 if (title != null) title.setText(show ? Component.literal(BedrockText.toJava(look.def("title").title())) : Component.empty());
             }
@@ -669,7 +692,7 @@ public final class VanillaCosmetics {
             float h = entity.getDimensions(entity.getPose()).height();
             if (title != null) {
                 boolean score = entity.level().getScoreboard().getDisplayObjective(DisplaySlot.BELOW_NAME) != null && entity instanceof ServerPlayer;
-                title.setTranslation(new org.joml.Vector3f(0, TITLE_Y + (score ? LINE : 0), 0));
+                title.setTranslation(new org.joml.Vector3f(0, h + TITLE_Y + (score ? LINE : 0), 0));
                 if (crouch != discrete) {
                     discrete = crouch;
                     title.setSeeThrough(!crouch);
@@ -678,8 +701,8 @@ public final class VanillaCosmetics {
             }
             if (parts.isEmpty()) return;
             float s = entity.getScale();
-            // LivingEntityRenderer 와 같은 차례 (j 공간): 태운 자리 (몸 높이) 에서 발 · 웅크림 내림 · 몸 방향 · 사람 크기 0.9375 · 모델 위 1.501
-            Matrix4f root = new Matrix4f().translation(0, -h + (crouch ? -2F / 16F * s : 0F), 0)
+            // LivingEntityRenderer 와 같은 차례 (j 공간): 발 · 웅크림 내림 · 몸 방향 · 사람 크기 0.9375 · 모델 위 1.501
+            Matrix4f root = new Matrix4f().translation(0, crouch ? -2F / 16F * s : 0F, 0)
                     .rotateY((float) Math.toRadians(180F - entity.yBodyRot))
                     .scale(0.9375F * s)
                     .translate(0, 1.501F, 0);
