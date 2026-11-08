@@ -52,7 +52,9 @@ public final class TrashWindow {
             return false;
         }
         SimpleContainer box = new SimpleContainer(SIZE);
-        sp.openMenu(new SimpleMenuProvider((id, playerInv, p) -> new TrashMenu(id, playerInv, box), Component.literal("쓰레기통 — 닫으면 지워집니다")));
+        // 2026-11-08 모드 없는 클라이언트: 메뉴와 같은 남색 · 금테 바탕 (3줄 상자 — VanillaGui.containerTitle)
+        Component title = mmorpg.fabric.vanilla.VanillaGui.containerTitle(sp, 3, "쓰레기통 — 닫으면 지워집니다");
+        sp.openMenu(new SimpleMenuProvider((id, playerInv, p) -> new TrashMenu(id, playerInv, box), title));
         Notify.notify(sp, "§7지울 아이템을 넣고 창을 닫으세요 §8(마지막 것은 /쓰레기통 되살리기)", 60);
         SkillFx.play(sp.level(), "random.chestopen", V.up(sp.position(), 1), 0.7, 0.6);
         return true;

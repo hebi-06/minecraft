@@ -232,7 +232,9 @@ public final class StorageWindow {
         d.last = p;
         PageView view = new PageView(sp, d, p, chestLevel, chest == null ? null : chest.immutable());
         boolean mod = StorageNet.canShow(sp);
-        Component title = Component.literal(mod ? TITLE : TITLE + " · " + Storage.label(p + 1) + " (" + d.unlocked() + "/" + Storage.chests() + ")");
+        String text = mod ? TITLE : TITLE + " · " + Storage.label(p + 1) + " (" + d.unlocked() + "/" + Storage.chests() + ")";
+        // 2026-11-08 모드 없는 클라이언트: 메뉴와 같은 남색 · 금테 바탕 (6줄 상자 — VanillaGui.containerTitle)
+        Component title = mod ? Component.literal(text) : mmorpg.fabric.vanilla.VanillaGui.containerTitle(sp, 6, text);
         sp.openMenu(new SimpleMenuProvider((id, inv, pl) -> new StorageMenu(id, inv, view), title));
         if (!(sp.containerMenu instanceof StorageMenu m) || m.view != view) return false;
         sendState(sp, m);

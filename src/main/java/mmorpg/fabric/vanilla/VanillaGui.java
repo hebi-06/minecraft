@@ -51,7 +51,9 @@ public final class VanillaGui {
     /** 메뉴 쪽 바탕 (rpg:gui_bg 의 글자 — VanillaPack 이 같은 차례로 넣음): 그림 176 × 236 (창 위 14 부터) */
     public enum Bg {
         HOME("menu_home"), STATS("menu_stats"), EQUIP("menu_equip"), SKILLS("menu_skills"), TREE("menu_tree"), GACHA("menu_gacha"),
-        GACHA_CONFIRM("menu_gacha_confirm");
+        GACHA_CONFIRM("menu_gacha_confirm"),
+        /** 2026-11-08 Forms 상자 창 · 상자 메뉴 (창고 · 쓰레기통) — 줄 1 ~ 6 (containerTitle) */
+        FORM1("form_1"), FORM2("form_2"), FORM3("form_3"), FORM4("form_4"), FORM5("form_5"), FORM6("form_6");
 
         public final String file;
 
@@ -70,6 +72,28 @@ public final class VanillaGui {
     public static final int MENU_TOP = 14;
     /** 제목 글자가 시작하는 x (바닐라 titleLabelX) */
     static final int TITLE_X = 8;
+
+    /**
+     * 2026-11-08 상자 창 제목 (Forms 상자 창 · 창고 · 쓰레기통 — 메뉴와 같은 남색 · 금테 바탕 form_&lt;rows&gt; + 제목 글자 크림색, § 서식은 뺌).
+     * 바탕 그림은 줄 글꼴이 있는 클라이언트 (모드 없는 클라이언트 — 팩) 에만 — 모드 클라이언트에는 plainTitle 그대로.
+     */
+    public static Component containerTitle(int rows, String title) {
+        Bg bg = switch (Math.max(1, Math.min(6, rows))) {
+            case 1 -> Bg.FORM1;
+            case 2 -> Bg.FORM2;
+            case 3 -> Bg.FORM3;
+            case 4 -> Bg.FORM4;
+            case 5 -> Bg.FORM5;
+            default -> Bg.FORM6;
+        };
+        String plain = title == null ? "" : title.replaceAll("§.", "").trim();
+        return new Title().background(bg).text(TITLE_X, 0, fit(plain, BG_W - 2 * TITLE_X), CREAM).build();
+    }
+
+    /** 바닐라 클라이언트면 containerTitle, 모드 클라이언트면 글자 그대로 */
+    public static Component containerTitle(net.minecraft.server.level.ServerPlayer sp, int rows, String title) {
+        return VanillaClients.isVanilla(sp) ? containerTitle(rows, title) : Component.literal(title == null ? "" : title);
+    }
 
     /** 그림 글자 (글자판 끝 — 흰색으로 쓰면 그림 색 그대로) */
     public static final String COIN = "\uE100", HEART = "\uE101", GEM = "\uE102", TICKET = "\uE103", POWER = "\uE104";

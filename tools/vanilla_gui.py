@@ -348,9 +348,9 @@ class Canvas:
         self.mask(x, y, g, col)
         return w
 
-    def final(self):
-        """바닐라 상자 그림 자리 (0 ~ 175 × 0 ~ 184) 가 빈 곳 없이 불투명한지 확인"""
-        a = np.array(self.img)[self.top:self.top + VANILLA_H, :, 3]
+    def final(self, vh=VANILLA_H):
+        """바닐라 상자 그림 자리 (0 ~ 175 × 0 ~ vh − 1 — 9 × 6 은 221) 가 빈 곳 없이 불투명한지 확인"""
+        a = np.array(self.img)[self.top:self.top + vh, :, 3]
         if (a < 255).any():
             ys, xs = np.where(a < 255)
             raise SystemExit("바닐라 상자 그림이 비침: %d칸 (예: x %d y %d)" % (len(xs), xs[0], ys[0]))
@@ -624,7 +624,12 @@ def frame(active, inv=True, tb=35, merge=PANEL_HI, tabs=True):
                 slot(c, col, row)
         c.rect(8, 193, MW - 9, 193, GOLD_LO)
         c.rect(8, 194, MW - 9, 194, GOLD_DK)
-    # 위 금 장식 (창 위 가운데 — 날개 + 보석)
+    ornament(c)
+    return c
+
+
+def ornament(c):
+    """위 금 장식 (창 위 가운데 — 날개 + 보석)"""
     cx = MW // 2
     for dx in range(-30, 31):
         t = abs(dx) / 30
@@ -639,7 +644,32 @@ def frame(active, inv=True, tb=35, merge=PANEL_HI, tabs=True):
             d = abs(dx) + abs(dy + 5)
             if d <= 5:
                 c.put(cx + dx, dy - 1, OUTLINE if d == 5 else (GEM_HI if dy < -5 and dx <= 0 else GEM if d > 2 else WHITE if d == 0 else (255, 150, 90)))
-    return c
+
+
+# ------------------------------------------------------------------ 상자 창 (Forms 상자 창 · 창고 · 쓰레기통 — 줄 1 ~ 6)
+
+def form_page(rows):
+    """2026-11-08 Forms 상자 창 · 상자 메뉴 (창고 · 쓰레기통) 바탕 (줄 rows = 1 ~ 6 — 바닐라 상자 창 자리 그대로): 위 판 (제목 줄 + 칸 rows 줄) ·
+    가방 판. 칸 틀은 모든 칸에 (아이템이 어디든 놓임 — 진짜 상자인 창고 · 쓰레기통도 같은 그림). 제목 글자는 서버가 줄 글꼴로 (VanillaGui.containerTitle)"""
+    c = Canvas()
+    top_end = 21 + 18 * rows                 # 위 판 아래 끝 (6줄 = 129 — 메뉴와 같음)
+    bag_top, bottom = top_end + 2, 112 + 18 * rows   # 가방 판 (6줄 = 131 ~ 220)
+    c.rect(0, 0, MW - 1, bottom, VOID)
+    gold_frame(c, 0, 0, MW - 1, top_end, PANEL)
+    thin_frame(c, 3, 15, MW - 4, 18 + 18 * rows, PANEL_HI, edge=GOLD_LO, r=2, glow=(88, 16 + 9 * rows, 90, GLOW, 0.45))
+    for r in range(rows):
+        for col in range(9):
+            slot_at(c, cell_x(col), 17 + 18 * r)
+    gold_frame(c, 0, bag_top, MW - 1, bottom, PANEL)
+    for k in range(3):
+        for col in range(9):
+            slot_at(c, cell_x(col), 30 + 18 * rows + 18 * k)
+    for col in range(9):
+        slot_at(c, cell_x(col), 88 + 18 * rows)
+    c.rect(8, 85 + 18 * rows, MW - 9, 85 + 18 * rows, GOLD_LO)
+    c.rect(8, 86 + 18 * rows, MW - 9, 86 + 18 * rows, GOLD_DK)
+    ornament(c)
+    return c.final(bottom + 1)
 
 
 # ------------------------------------------------------------------ 홈
@@ -1258,6 +1288,11 @@ def item_icons():
         out["kind_" + k.lower()] = im  # 리소스 경로는 소문자만 (critDmg → kind_critdmg)
     out["fork"] = art.fork_icon()
     out["card_back"] = art.card_icon()
+    pane = Image.new("RGBA", (16, 16), (0, 0, 0, 0))  # 2026-11-08 빈 자리 채움 (Slot.PANE): 어두운 남색 판 + 옅은 빗금 — 칸이 꺼진 듯
+    for y in range(16):
+        for x in range(16):
+            pane.putpixel((x, y), (24, 26, 44, 255) if (x + y) % 4 == 0 else (15, 16, 28, 255))
+    out["pane"] = pane
     for key in ("info", "sum", "reset", "help", "history", "gift"):  # 단추 그림 (12 × 12 → 16 × 16 가운데)
         im = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
         im.alpha_composite(art.art(art.QUICK[key], one=GOLD_HI), (2, 2))
@@ -1266,7 +1301,8 @@ def item_icons():
 
 
 PAGES = [("menu_home", menu_home), ("menu_stats", menu_stats), ("menu_equip", menu_equip), ("menu_skills", menu_skills),
-         ("menu_tree", menu_tree), ("menu_gacha", menu_gacha), ("menu_gacha_confirm", menu_gacha_confirm)]
+         ("menu_tree", menu_tree), ("menu_gacha", menu_gacha), ("menu_gacha_confirm", menu_gacha_confirm)] + \
+        [("form_%d" % n, (lambda n=n: form_page(n))) for n in range(1, 7)]
 
 
 def main():

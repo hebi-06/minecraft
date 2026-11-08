@@ -151,7 +151,8 @@ public final class VanillaForms {
         ChestGui gui = reuse ? (ChestGui) open : new ChestGui(type, sp, rows);
         int id = c.id();
         gui.formId = id;
-        Component title = Component.literal(c.title());
+        // 2026-11-08 메뉴와 같은 남색 · 금테 바탕 (form_<줄> — 칸 틀 · 가방 판) + 제목 글자 (VanillaGui.containerTitle)
+        Component title = VanillaGui.containerTitle(rows, c.title());
         if (!reuse || !title.equals(gui.getTitle())) gui.setTitle(title);
         int cells = rows * 9;
         for (int i = 0; i < cells; i++) gui.clearSlot(i);
@@ -197,6 +198,9 @@ public final class VanillaForms {
         if (!s.name().isEmpty()) st.set(DataComponents.CUSTOM_NAME, plain(s.name()));
         else st.set(DataComponents.CUSTOM_NAME, Component.literal(" "));
         st.set(DataComponents.LORE, new ItemLore(lore));
+        st.set(DataComponents.TOOLTIP_STYLE, VanillaGui.TOOLTIP); // 메뉴와 같은 남색 · 금테 설명 상자
+        if (s.name().isEmpty() && s.lore().isEmpty() && s.kind() != Slot.PRICE) st.set(DataComponents.TOOLTIP_DISPLAY, // 빈 자리 채움 (PANE) 등: 설명 상자 없음 (sgui hideTooltip 과 같음)
+                new net.minecraft.world.item.component.TooltipDisplay(true, it.unimi.dsi.fastutil.objects.ReferenceSortedSets.emptySet()));
         if (s.kind() == Slot.COUNT && s.num() > 1) {
             st.set(DataComponents.MAX_STACK_SIZE, 99);
             st.setCount(Math.min(99, s.num()));
@@ -206,10 +210,9 @@ public final class VanillaForms {
         return st;
     }
 
-    /** 본문 글 (상자 창 아래 글 — 줄마다 설명) */
+    /** 본문 글 (상자 창 아래 글 — 줄마다 설명): 정보 단추 그림 (rpg:vui/info — 메뉴와 같음) · 남색 설명 상자 */
     private static ItemStack info(String body) {
-        ItemStack st = new ItemStack(Items.BOOK);
-        st.set(DataComponents.CUSTOM_NAME, plain("§e설명 §7(마우스를 올려 보세요)"));
+        ItemStack st = VanillaGui.ui("info", "§e설명", List.of());
         List<Component> lore = new ArrayList<>();
         for (String l : body.split("\n")) lore.add(plain(l));
         st.set(DataComponents.LORE, new ItemLore(lore));

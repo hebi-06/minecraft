@@ -628,6 +628,32 @@ final class VanillaProbe {
             }
             case 132 -> {
                 say(p, "close");
+                next(p, 150, 15);
+            }
+            case 150 -> { // 2026-11-08 진짜 상자 메뉴 (창고 · 쓰레기통) 도 메뉴와 같은 남색 · 금테 바탕 (VanillaGui.containerTitle)
+                check("storage opens", mmorpg.fabric.storage.StorageWindow.open(p, -1, null, null));
+                next(p, 151, 15);
+            }
+            case 151 -> {
+                check("storage menu with navy title", p.containerMenu instanceof mmorpg.fabric.storage.StorageWindow.StorageMenu);
+                say(p, "shot 17_storage");
+                next(p, 152, 15);
+            }
+            case 152 -> {
+                say(p, "close");
+                next(p, 153, 15);
+            }
+            case 153 -> {
+                check("trash opens", mmorpg.fabric.economy.TrashWindow.open(p));
+                next(p, 154, 15);
+            }
+            case 154 -> {
+                check("trash menu with navy title", p.containerMenu instanceof mmorpg.fabric.economy.TrashWindow.TrashMenu);
+                say(p, "shot 18_trash");
+                next(p, 155, 15);
+            }
+            case 155 -> {
+                say(p, "close");
                 next(p, 57, 15);
             }
             default -> {
