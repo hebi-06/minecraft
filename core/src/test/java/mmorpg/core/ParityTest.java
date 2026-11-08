@@ -353,7 +353,7 @@ public final class ParityTest {
         fn("weapons.needsLevel", a -> Weapons.needsLevel(a.weapon(0)));
         fn("weapons.weaponLack", a -> lackV(Weapons.weaponLack(a.weapon(0), a.d(1), a.stats(2))));
         fn("weapons.levelNote", a -> Weapons.levelNote(a.weapon(0), a.d(1)));
-        fn("weapons.weaponInfo", a -> Weapons.weaponInfo(a.weapon(0), a.has(1) && a.b(1), a.has(2) ? a.d(2) : 0));
+        // weapons.weaponInfo: 2026-11-08 부터 대조하지 않음 (자바 글자 — 공격력 · 1당 공격력, tools/parity_dump.mjs)
         fn("weapons.skillLines", a -> Weapons.skillLines(a.weapon(0), a.b(1)));
         fn("weapons.enhancedName", a -> Weapons.enhancedName(a.weapon(0), a.d(1), a.s(2)));
         fn("weapons.reqsText", a -> {

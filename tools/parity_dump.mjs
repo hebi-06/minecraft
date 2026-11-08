@@ -340,11 +340,10 @@ for (const w of uniqueWeapons) {
   rec("combat.isMeleeWeapon", [w.id], () => combat.isMeleeWeapon(weapons.parseWeapon(w.id)));
   rec("smith.nextLevelOf", [w.id], () => smith.nextLevelOf(weapons.parseWeapon(w.id)), (n) => (n ? { to: n.to.id, emerald: n.cost.emerald, ore: n.cost.ore } : null));
   for (const lv of new Set([0, w.level - 1, w.level, ri(0, 45)])) rec("weapons.levelNote", [w.id, lv], () => weapons.levelNote(weapons.parseWeapon(w.id), lv));
-  rec("weapons.weaponInfo", [w.id], () => weapons.weaponInfo(weapons.parseWeapon(w.id)));
-  rec("weapons.weaponInfo", [w.id, true], () => weapons.weaponInfo(weapons.parseWeapon(w.id), true));
-  const enh = pick([1, 3, 5, 7, 10, 2.5, 11]);
-  const dark = rand() < 0.5;
-  rec("weapons.weaponInfo", [w.id, dark, enh], () => weapons.weaponInfo(weapons.parseWeapon(w.id), dark, enh));
+  // 2026-11-08 무기 설명 (weaponInfo) 은 대조하지 않음 — 자바 글자가 바뀜 ("공격력 N" · "힘 1당 공격력 +x", 사용자 "깡딜로 하자" · 모바일 애드온은 개발 안 함).
+  // 난수 차례를 그대로 두려고 pick · rand 는 남김
+  pick([1, 3, 5, 7, 10, 2.5, 11]);
+  rand();
   if (w.skills) for (const dk of [false, true]) rec("weapons.skillLines", [w.id, dk], () => weapons.skillLines(weapons.parseWeapon(w.id), dk));
   if (rand() < 0.4) {
     const n = pick([1, 7, 10, 0]);

@@ -232,6 +232,19 @@ final class VanillaProbe {
                 p.setExperienceLevels(60);
                 wearSet(p);
                 mmorpg.fabric.RpgPlayers.addPoints(p, 10);
+                // 2026-11-08 총 스펙 · 전투력은 든 무기로 셈 → 쓸 수 있는 가장 높은 칼 (+7) 을 손 칸 (핫바 1) 에
+                RpgWeaponItem usable = null;
+                for (RpgWeaponItem w : RpgItems.WEAPONS) {
+                    if (!w.weapon().type().equals("sword") || !mmorpg.fabric.RpgCombat.lackOf(p, w.weapon()).isEmpty()) continue;
+                    if (usable == null || w.weapon().level() > usable.weapon().level()
+                            || w.weapon().level() == usable.weapon().level() && w.weapon().gradeIndex() > usable.weapon().gradeIndex()) usable = w;
+                }
+                if (usable != null) {
+                    ItemStack sword = new ItemStack(usable);
+                    mmorpg.fabric.gear.WeaponEnhance.write(sword, 7);
+                    p.getInventory().setItem(p.getInventory().getSelectedSlot(), sword);
+                    log("held sword " + usable.weapon().id() + " +7");
+                }
                 if (mmorpg.fabric.rune.RuneItems.TICKET != null) p.getInventory().setItem(20, new ItemStack(mmorpg.fabric.rune.RuneItems.TICKET, 12));
                 Item art = lowestArtifact();
                 if (art != null) p.getInventory().setItem(22, new ItemStack(art));

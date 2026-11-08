@@ -81,6 +81,7 @@ public final class VanillaStats {
             if (!tip.isEmpty()) tip.remove(tip.size() - 1); // 모드 창의 "눌러서 +1 (Shift: +5)" 줄
         } else {
             tip.addAll(attackLines(s, k, info, basis.weapon(), basis.enh()));
+            if (basis.weapon() != null && !basis.usable()) tip.add("§c든 무기의 요구 조건이 모자람 (지금은 피해 0)");
         }
         if (buffed) tip.add("§7찍은 값 §f" + value + " §7+ 장비 · 버프 §a" + (shown - value));
         if (k.equals("vit")) tip.add("§7최대 체력 " + VanillaGui.compact(Math.round(s.maxHp())));
