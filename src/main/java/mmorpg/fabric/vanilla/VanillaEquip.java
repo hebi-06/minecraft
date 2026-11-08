@@ -121,7 +121,7 @@ public final class VanillaEquip {
         out.add("");
         out.add("§7공격력 §f" + VanillaStats.one(s.attack()) + (c.weapon() != null && !c.usable() ? " §c(든 무기의 요구 조건이 모자람)" : ""));
         if (c.usable()) {
-            out.add("§8  무기 " + VanillaStats.one(c.weaponAttack()) + " · 스탯 +" + VanillaStats.one(c.statAttack())
+            out.add("§7  무기 " + VanillaStats.one(c.weaponAttack()) + " · 스탯 +" + VanillaStats.one(c.statAttack())
                     + (c.atkPct() > 0 ? " · 스탯 트리 +" + VanillaStats.one(c.atkPct()) + "%" : ""));
             out.add("§7치명타 확률 §f" + VanillaStats.one(s.critChance() * 100) + "%");
             out.add("§7치명타 피해 §f×" + VanillaStats.two(s.critMult()));
@@ -133,8 +133,8 @@ public final class VanillaEquip {
         if (s.cdr() > 0) out.add("§7재사용 대기 §f-" + VanillaStats.one(s.cdr()) + "%");
         if (s.speed() > 0) out.add("§7이동 속도 §f+" + VanillaStats.one(s.speed()) + "%");
         out.add("");
-        out.add(c.weapon() == null ? "§8든 RPG 무기가 없음 (공격력 0)" : "§8든 무기 " + (c.enh() > 0 ? "+" + c.enh() + " " : "") + c.weapon().title());
-        out.add("§8입은 갑옷 · 낀 아티팩트 · 스탯 트리 포함 · 룬 버프 제외");
+        out.add(c.weapon() == null ? "§7든 RPG 무기가 없음 (공격력 0)" : "§7든 무기 " + (c.enh() > 0 ? "+" + c.enh() + " " : "") + c.weapon().title());
+        out.add("§7입은 갑옷 · 낀 아티팩트 · 스탯 트리 포함 · 룬 버프 제외");
         return out;
     }
 

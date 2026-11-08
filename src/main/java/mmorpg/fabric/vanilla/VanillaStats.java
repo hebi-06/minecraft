@@ -101,14 +101,14 @@ public final class VanillaStats {
     static List<String> attackLines(StatSheet s, String k, Obj info, mmorpg.core.Weapon w, int enh) {
         List<String> out = new ArrayList<>();
         if (w == null) {
-            out.add("§7공격력 §8— 든 RPG 무기가 없음");
-            out.add("§8" + info.str("weapons"));
+            out.add("§7공격력 — 든 RPG 무기가 없음");
+            out.add("§7" + info.str("weapons"));
             return out;
         }
         double n = s.statAttack(w, enh, k);
         double per = s.statAttackPer(w, enh, k);
-        out.add("§7공격력 §f+" + one(n) + (per > 0 ? " §8(1당 +" + (per >= 1 ? one(per) : two(per)) + ")" : " §8(" + w.typeLabel() + "에는 붙지 않음)"));
-        out.add("§8" + info.str("weapons") + " · 든 " + w.typeLabel() + " 기준");
+        out.add("§7공격력 §f+" + one(n) + (per > 0 ? " §7(1당 +" + (per >= 1 ? one(per) : two(per)) + ")" : " §7(" + w.typeLabel() + "에는 붙지 않음)"));
+        out.add("§7" + info.str("weapons") + " · 든 " + w.typeLabel() + " 기준");
         return out;
     }
 
