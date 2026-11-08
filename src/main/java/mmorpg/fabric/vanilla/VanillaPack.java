@@ -124,6 +124,7 @@ final class VanillaPack {
             }
             glyphFonts(builder, dir, gson);
             cineFonts(builder, dir.resolve("cine"), gson);
+            hudFonts(builder, dir.resolve("hud"), rows, gson);
             int big = bigRunes(builder, root);
             Mmorpg.LOG.info("[vanilla] gui backgrounds {}, line fonts {} + {}, tiles {}, icons {}, big runes {}", VanillaGui.Bg.values().length,
                     VanillaGui.LINES.length, VanillaGui.NUM_LINES.length, VanillaMenu.TILES.size(), spriteModels(builder, dir.resolve("icons"), "vui", true), big);
@@ -157,6 +158,46 @@ final class VanillaPack {
         x.add(bitmap("tree_thumb", files, files.getAsJsonObject("tree_thumb").get("h").getAsInt(), 13 - VanillaGui.THUMB_Y));
         if (files.has("tree_bar")) x.add(bitmap("tree_bar", files, files.getAsJsonObject("tree_bar").get("h").getAsInt(), 13 - VanillaGui.BAR_Y));
         builder.addStringData("assets/" + Mmorpg.NS + "/font/gtx.json", gson.toJson(providers(x)));
+    }
+
+    /** 바닐라 하트 줄 그림 (투명으로 덮음 — VanillaHud 가 체력 막대를 그림). 탈것 체력 (vehicle_*) 은 그대로 */
+    private static final String[] HEART_KINDS = {"container", "full", "half", "hardcore_full", "hardcore_half", "poisoned_full", "poisoned_half",
+            "poisoned_hardcore_full", "poisoned_hardcore_half", "withered_full", "withered_half", "withered_hardcore_full", "withered_hardcore_half",
+            "absorbing_full", "absorbing_half", "absorbing_hardcore_full", "absorbing_hardcore_half", "frozen_full", "frozen_half",
+            "frozen_hardcore_full", "frozen_hardcore_half", "container_hardcore"};
+    /** 바닐라 갑옷 · 배고픔 줄 그림 (투명 — 방어는 VanillaHud 배지, 배고픔은 게임에서 꺼짐) */
+    private static final String[] BAR_SPRITES = {"armor_empty", "armor_half", "armor_full", "food_empty", "food_empty_hunger", "food_half",
+            "food_half_hunger", "food_full", "food_full_hunger"};
+
+    /**
+     * 2026-11-08 HUD (VanillaHud — tools/vanilla_hud.py): 그림 rpg:gui/hud/*.png · 글꼴 rpg:hud (hud.json 의 제공자 그대로 — 세로 자리는 ascent),
+     * 글자 글꼴 rpg:hud_t&lt;d&gt; (줄 글꼴과 같은 글자판 — 액션바 글자 줄 기준), 바닐라 하트 · 갑옷 · 배고픔 그림은 투명으로 덮음.
+     */
+    private static void hudFonts(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path dir, com.google.gson.JsonArray rows,
+                                 com.google.gson.Gson gson) throws IOException {
+        Path meta = dir.resolve("hud.json");
+        if (!Files.exists(meta)) return;
+        byte[] blank = null;
+        try (var files = Files.list(dir)) {
+            for (Path png : (Iterable<Path>) files::iterator) {
+                String name = png.getFileName().toString();
+                if (!name.endsWith(".png")) continue;
+                byte[] bytes = Files.readAllBytes(png);
+                if (name.equals("blank9.png")) blank = bytes;
+                else builder.addData("assets/" + Mmorpg.NS + "/textures/gui/hud/" + name, bytes);
+            }
+        }
+        com.google.gson.JsonObject o = com.google.gson.JsonParser.parseString(Files.readString(meta, StandardCharsets.UTF_8)).getAsJsonObject();
+        builder.addStringData("assets/" + Mmorpg.NS + "/font/hud.json", gson.toJson(providers(o.getAsJsonArray("providers"))));
+        for (int d : VanillaHud.TEXT_D) {
+            builder.addStringData("assets/" + Mmorpg.NS + "/font/hud_t" + d + ".json", gson.toJson(providers(lineFont("text.png", rows, d, 4))));
+        }
+        if (blank == null) return;
+        for (String k : HEART_KINDS) {
+            builder.addData("assets/minecraft/textures/gui/sprites/hud/heart/" + k + ".png", blank);
+            builder.addData("assets/minecraft/textures/gui/sprites/hud/heart/" + k + "_blinking.png", blank);
+        }
+        for (String k : BAR_SPRITES) builder.addData("assets/minecraft/textures/gui/sprites/hud/" + k + ".png", blank);
     }
 
     /**

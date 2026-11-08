@@ -4,6 +4,8 @@ import mmorpg.fabric.mixin.LivingEntityAccessor;
 import mmorpg.fabric.mixin.UpdateAttributesInvoker;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundContainerSetContentPacket;
+import net.minecraft.network.protocol.game.ClientboundSetActionBarTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
 import net.minecraft.network.protocol.game.ClientboundSetHealthPacket;
@@ -23,6 +25,7 @@ import java.util.List;
  * <ul>
  * <li>체력: RPG 최대 체력 (수백) 그대로면 바닐라는 하트를 여러 줄로 그림 → 자기 체력 · 최대 체력을 하트 10칸 (20) 비율로 (체력 패킷 · 자기 엔티티의 체력 데이터 ·
  * 최대 체력 속성). 서버의 체력은 그대로 — 보이는 것만</li>
+ * <li>2026-11-08 액션바 글자 → HUD 와 합침 (VanillaHud — 체력 막대 · 배지 + 알림 줄)</li>
  * <li>스킬 모드 핫바 (VanillaInput): 핫바 1 ~ 8 칸으로 가는 아이템을 그 모드의 스킬 그림으로 (칸 하나 · 가방 전체 — 전체는 보낸 뒤 그림을 다시 덮음)</li>
  * </ul>
  * 다른 사람에게 가는 같은 패킷 객체는 고치지 않음 (새 패킷을 만듦).
@@ -38,6 +41,15 @@ public final class VanillaPackets {
     /** 보내기 전 (HEAD): 바꿀 것이면 새 패킷, 아니면 그대로 */
     public static Packet<?> rewrite(ServerPlayer sp, Packet<?> packet) {
         if (sp == null || packet == null) return packet;
+        // 2026-11-08 HUD: 액션바 글자 (알림 · 상태 줄 · 바닐라) 는 HUD 와 합쳐서 (VanillaHud — HUD 를 그리지 않는 사람이면 그대로)
+        if (packet instanceof ClientboundSystemChatPacket p && p.overlay()) {
+            Packet<?> hud = VanillaHud.overlay(sp, p.content());
+            if (hud != null) return hud;
+        }
+        if (packet instanceof ClientboundSetActionBarTextPacket p) {
+            Packet<?> hud = VanillaHud.overlay(sp, p.text());
+            if (hud != null) return hud;
+        }
         if (packet instanceof ClientboundSetHealthPacket p) {
             if (!VanillaClients.isVanilla(sp)) return packet;
             return new ClientboundSetHealthPacket(scale(sp, p.getHealth()), p.getFood(), p.getSaturation());

@@ -28,6 +28,7 @@ public final class VanillaSupport {
         VanillaInput.init();
         VanillaForms.init();
         GachaCinematic.init();
+        VanillaHud.init();
         VanillaProbe.init();
     }
 

@@ -166,7 +166,33 @@ final class VanillaProbe {
                 check("held slot back to 1", p.getInventory().getSelectedSlot() == 0);
                 check("weapon back in slot 1", p.getInventory().getItem(0).getItem() instanceof RpgWeaponItem);
                 say(p, "shot 08_normal");
-                next(p, 16, 40);
+                next(p, 160, 40);
+            }
+            case 160 -> { // 2026-11-08 HUD (VanillaHud): 체력 막대 · 배지 + 알림 줄 (액션바 글자를 가로채서 합침)
+                check("hud active (vanilla · survival)", VanillaHud.active(p));
+                mmorpg.fabric.Notify.notify(p, "§a시험 알림 §7— 액션바 글자 줄", 80);
+                check("notify goes to hud message line", VanillaHud.message(p).contains("시험 알림"));
+                next(p, 161, 15);
+            }
+            case 161 -> {
+                say(p, "shot 19_hud_msg");
+                hpBefore = p.getHealth();
+                p.setHealth(p.getMaxHealth() * 0.18F); // 25% 아래 → 빨간 테 깜박임 · 깎인 부분이 잠깐 밝게
+                p.setAbsorptionAmount(p.getMaxHealth() * 0.1F);
+                next(p, 162, 4);
+            }
+            case 162 -> {
+                say(p, "shot 19b_hud_low");
+                next(p, 163, 30);
+            }
+            case 163 -> {
+                say(p, "shot 19c_hud_low_later");
+                next(p, 164, 10);
+            }
+            case 164 -> {
+                p.setAbsorptionAmount(0);
+                p.setHealth(hpBefore > 0 ? hpBefore : p.getMaxHealth());
+                next(p, 16, 20);
             }
             case 16 -> { // 4단계: 상자 창 → 바닐라 상자 메뉴
                 formResult = Integer.MIN_VALUE;
@@ -682,6 +708,8 @@ final class VanillaProbe {
 
     /** 뽑기 연출 Shift 시도 수 */
     private static int shiftTries;
+    /** HUD 사진 전 체력 */
+    private static float hpBefore;
 
     private static void check(String what, boolean ok) {
         log("check " + (ok ? "ok" : "fail") + ": " + what);
