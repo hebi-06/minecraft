@@ -124,7 +124,7 @@ final class VanillaPack {
             }
             glyphFonts(builder, dir, gson);
             cineFonts(builder, dir.resolve("cine"), gson);
-            hudFonts(builder, dir.resolve("hud"), rows, gson);
+            hudFonts(builder, dir.resolve("hud"), rows, numRows, nums.get("space").getAsInt(), gson);
             int big = bigRunes(builder, root);
             Mmorpg.LOG.info("[vanilla] gui backgrounds {}, line fonts {} + {}, tiles {}, icons {}, big runes {}", VanillaGui.Bg.values().length,
                     VanillaGui.LINES.length, VanillaGui.NUM_LINES.length, VanillaMenu.TILES.size(), spriteModels(builder, dir.resolve("icons"), "vui", true), big);
@@ -174,7 +174,7 @@ final class VanillaPack {
      * 글자 글꼴 rpg:hud_t&lt;d&gt; (줄 글꼴과 같은 글자판 — 액션바 글자 줄 기준), 바닐라 하트 · 갑옷 · 배고픔 그림은 투명으로 덮음.
      */
     private static void hudFonts(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path dir, com.google.gson.JsonArray rows,
-                                 com.google.gson.Gson gson) throws IOException {
+                                 com.google.gson.JsonArray numRows, int numSpace, com.google.gson.Gson gson) throws IOException {
         Path meta = dir.resolve("hud.json");
         if (!Files.exists(meta)) return;
         byte[] blank = null;
@@ -188,9 +188,17 @@ final class VanillaPack {
             }
         }
         com.google.gson.JsonObject o = com.google.gson.JsonParser.parseString(Files.readString(meta, StandardCharsets.UTF_8)).getAsJsonObject();
-        builder.addStringData("assets/" + Mmorpg.NS + "/font/hud.json", gson.toJson(providers(o.getAsJsonArray("providers"))));
+        // 모든 HUD 글꼴에 자리 옮김 글자 (VanillaHud.Line — 같은 글꼴 · 색을 한 조각으로 이어 보냄)
+        builder.addStringData("assets/" + Mmorpg.NS + "/font/hud.json", gson.toJson(providers(withMoves(o.getAsJsonArray("providers")))));
+        if (o.has("skill_fonts")) {
+            com.google.gson.JsonObject sf = o.getAsJsonObject("skill_fonts");
+            for (String f : sf.keySet()) builder.addStringData("assets/" + Mmorpg.NS + "/font/" + f + ".json", gson.toJson(providers(withMoves(sf.getAsJsonArray(f)))));
+        }
         for (int d : VanillaHud.TEXT_D) {
-            builder.addStringData("assets/" + Mmorpg.NS + "/font/hud_t" + d + ".json", gson.toJson(providers(lineFont("text.png", rows, d, 4))));
+            builder.addStringData("assets/" + Mmorpg.NS + "/font/hud_t" + d + ".json", gson.toJson(providers(withMoves(lineFont("text.png", rows, d, 4)))));
+        }
+        for (int d : VanillaHud.NUM_D) {
+            builder.addStringData("assets/" + Mmorpg.NS + "/font/hud_n" + d + ".json", gson.toJson(providers(withMoves(lineFont("num.png", numRows, d, numSpace)))));
         }
         if (blank == null) return;
         for (String k : HEART_KINDS) {
@@ -198,6 +206,22 @@ final class VanillaPack {
             builder.addData("assets/minecraft/textures/gui/sprites/hud/heart/" + k + "_blinking.png", blank);
         }
         for (String k : BAR_SPRITES) builder.addData("assets/minecraft/textures/gui/sprites/hud/" + k + ".png", blank);
+    }
+
+    /** 제공자 목록 맨 앞에 자리 옮김 글자 (U+F801 ~ U+F809 = −1 ~ −256, U+F811 ~ U+F819 = +1 ~ +256 — rpg:gui_space 와 같음) */
+    private static com.google.gson.JsonArray withMoves(com.google.gson.JsonArray list) {
+        com.google.gson.JsonObject adv = new com.google.gson.JsonObject();
+        for (int bit = 0; bit <= 8; bit++) {
+            adv.addProperty(String.valueOf((char) ('\uF801' + bit)), -(1 << bit));
+            adv.addProperty(String.valueOf((char) ('\uF811' + bit)), 1 << bit);
+        }
+        com.google.gson.JsonObject sp = new com.google.gson.JsonObject();
+        sp.addProperty("type", "space");
+        sp.add("advances", adv);
+        com.google.gson.JsonArray out = new com.google.gson.JsonArray();
+        out.add(sp);
+        out.addAll(list);
+        return out;
     }
 
     /**

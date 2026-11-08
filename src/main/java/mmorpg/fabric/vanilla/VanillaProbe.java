@@ -172,6 +172,15 @@ final class VanillaProbe {
                 check("hud active (vanilla · survival)", VanillaHud.active(p));
                 mmorpg.fabric.Notify.notify(p, "§a시험 알림 §7— 액션바 글자 줄", 80);
                 check("notify goes to hud message line", VanillaHud.message(p).contains("시험 알림"));
+                // 스킬 칸 HUD (사용자 "스킬 Hud로도"): 룬 1 · 2 재사용 대기 (덮개 · 남은 초) — 룬 재사용과 같은 길 (SkillBarNet.cooldown)
+                String cdName = null;
+                for (int i = 0; i < 2; i++) {
+                    mmorpg.core.Runes.Rune r = mmorpg.fabric.rune.RuneItems.runeOf(mmorpg.fabric.rune.SkillBar.get(p, i));
+                    if (r == null) continue;
+                    mmorpg.fabric.rune.SkillBarNet.cooldown(p, r.id(), 240 - 120 * i, 300);
+                    if (cdName == null) cdName = r.id();
+                }
+                check("skill hud knows rune cooldown", cdName != null && VanillaHud.cooldownLeft(p, cdName) > 0);
                 next(p, 161, 15);
             }
             case 161 -> {

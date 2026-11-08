@@ -104,6 +104,7 @@ public final class SkillBarNet {
     /** 룬 재사용 대기를 클라이언트에 (모드가 있는 클라이언트만) */
     public static void cooldown(ServerPlayer sp, String rune, int left, int total) {
         mmorpg.fabric.vanilla.VanillaInput.cooldown(sp, rune, left); // 모드 없는 클라이언트: 바닐라 쿨타임 덮개 (스킬 모드 핫바 그림)
+        mmorpg.fabric.vanilla.VanillaHud.cooldown(sp, rune, left, total); // 2026-11-08 모드 없는 클라이언트: HUD 스킬 칸의 덮개 · 남은 초
         if (sp == null || sp.isRemoved() || !ServerPlayNetworking.canSend(sp, CooldownPayload.TYPE)) return;
         ServerPlayNetworking.send(sp, new CooldownPayload(rune, Math.max(0, left), Math.max(0, total)));
     }

@@ -148,10 +148,90 @@ def main():
 
     # 바닐라 하트 · 갑옷 · 배고픔 그림을 덮을 투명 그림 (VanillaPack — minecraft:hud/heart/* · hud/armor_* · hud/food_*)
     Image.new("RGBA", (9, 9), (0, 0, 0, 0)).save(os.path.join(OUT, "blank9.png"))
-    meta = {"providers": providers, "glyphs": glyphs, "strips": STRIPS, "lv_widths": LV_WIDTHS, "fill_w": FILL_W}
+    skill_fonts, skill_glyphs = skill_sheets(chars, src)
+    meta = {"providers": providers, "glyphs": glyphs, "strips": STRIPS, "lv_widths": LV_WIDTHS, "fill_w": FILL_W,
+            "skill_fonts": skill_fonts, "skill_glyphs": skill_glyphs, "skill_rows": SKILL_ROWS}
     with open(os.path.join(OUT, "hud.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, separators=(",", ":"))
     print("hud glyphs", len(glyphs), "providers", len(providers))
+
+
+# ------------------------------------------------------------------ 스킬 칸 (2026-11-08 사용자 "스킬 Hud로도 표현해주면 안되나")
+
+# 줄마다 칸 위가 화면 아래에서 k 위 (위 줄 · 아래 줄 — 칸 18, 사이 1): 글꼴 rpg:hud_<줄>
+SKILL_ROWS = {"r1": 39, "r2": 20}
+RUNE_DIR = os.path.join(ROOT, "src", "main", "resources", "assets", "rpg", "textures", "item", "rune")
+JOB_DIR = os.path.join(ROOT, "src", "main", "resources", "assets", "mmorpg", "textures", "gui", "sprites", "job_skill")
+
+
+def icon_advance(img, scale):
+    """크기를 바꾼 비트맵 글자의 나아감 = (int)(0.5 + 실제 너비 × 배율) + 1"""
+    bb = img.getchannel("A").getbbox()
+    return 1 if not bb else int(0.5 + bb[2] * scale) + 1
+
+
+def skill_sheets(chars, src):
+    """스킬 칸 글꼴 (줄마다 같은 글자 · 다른 ascent): 칸 틀 · 등급 테 · 직업 칸 틀 · 직업 테 (18 × 18 — 모드 그림 nine_slice), 키 상자 8 × 9,
+    재사용 대기 덮개 (위에서 k 줄 — 16 × 16), 그림 (룬 그림 · 직업 스킬 그림 32 × 32 → 16 — 높이 16 으로 줄여 그림)"""
+    singles = {
+        "skill_frame": nine_slice(src("skill_slot"), 18, 18, 3),
+        "skill_edge": nine_slice(src("skill_edge"), 18, 18, 3),
+        "job_frame": nine_slice(src("job_slot"), 18, 18, 3),
+        "job_edge": nine_slice(src("job_edge"), 18, 18, 5),
+        "key": nine_slice(src("skill_key"), 8, 9, 3),
+    }
+    glyphs = {}
+    single_chars = {}
+    for name, img in singles.items():
+        img.save(os.path.join(OUT, "hud_%s.png" % name))
+        ch = chars.take()
+        single_chars[name] = ch
+        glyphs[name] = [ch, advance(img)]
+    covers = []
+    for k in range(1, 17):
+        g = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+        for y in range(k):
+            for x in range(16):
+                g.putpixel((x, y), (6, 6, 12, 165))
+        covers.append(g)
+    cim, _ = sheet(covers, 16, 16, 16)
+    cim.save(os.path.join(OUT, "hud_cover.png"))
+    cover_chars = chars.take(16)
+    for k, ch in enumerate(cover_chars, 1):
+        glyphs["cover_%d" % k] = [ch, 17]
+    icons = []
+    for f in sorted(os.listdir(RUNE_DIR)):
+        if f.endswith(".png") and f.startswith("rune_") and "ticket" not in f:
+            icons.append(("rune:" + f[:-4], Image.open(os.path.join(RUNE_DIR, f)).convert("RGBA")))
+    for f in sorted(os.listdir(JOB_DIR)):
+        if f.endswith(".png"):
+            icons.append(("job:" + f[:-4], Image.open(os.path.join(JOB_DIR, f)).convert("RGBA")))
+    cells = []
+    for name, im in icons:
+        cell = Image.new("RGBA", (32, 32), (0, 0, 0, 0))
+        cell.alpha_composite(im.resize((32, 32), Image.NEAREST) if im.size != (32, 32) else im, (0, 0))
+        cells.append(cell)
+    cols = 16
+    iim, rows = sheet(cells, 32, 32, cols)
+    iim.save(os.path.join(OUT, "hud_icons.png"))
+    icon_chars = chars.take(len(cells))
+    for (name, _), cell, ch in zip(icons, cells, icon_chars):
+        glyphs[name] = [ch, icon_advance(cell, 0.5)]
+    icon_lines = []
+    for r in range(rows):
+        row = icon_chars[r * cols:(r + 1) * cols]
+        icon_lines.append(row + "\u0000" * (cols - len(row)))
+    fonts = {}
+    for row, k in SKILL_ROWS.items():
+        top, itop = k - 65, k - 1 - 65  # 칸 위 · 그림 위 (칸 안 1px)
+        prov = []
+        for name, img in singles.items():
+            prov.append({"type": "bitmap", "file": f"{NS}:gui/hud/hud_{name}.png", "height": img.size[1], "ascent": top, "chars": [single_chars[name]]})
+        prov.append({"type": "bitmap", "file": f"{NS}:gui/hud/hud_cover.png", "height": 16, "ascent": itop, "chars": [cover_chars]})
+        prov.append({"type": "bitmap", "file": f"{NS}:gui/hud/hud_icons.png", "height": 16, "ascent": itop, "chars": icon_lines})
+        fonts["hud_" + row] = prov
+    print("skill icons", len(cells), "sheet", iim.size)
+    return fonts, glyphs
 
 
 if __name__ == "__main__":
