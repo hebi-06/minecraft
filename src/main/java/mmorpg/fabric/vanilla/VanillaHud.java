@@ -50,7 +50,7 @@ public final class VanillaHud {
     static final int KEEP = 30;
     /** 채움 최대 너비 (tools/vanilla_hud.py FILL_W) */
     static final int FILL_W = 94;
-    static final int WHITE = 0xFFFFFF, GRAY = 0xAAAAAA, GOLD = 0xFFCC52, YELLOW = 0xFFE066, TRAIL = 0xFFE6A8, ABSORB = 0xFFD24A;
+    static final int WHITE = 0xFFFFFF, GRAY = 0xAAAAAA, GOLD = 0xFFCC52, YELLOW = 0xFFE066, TRAIL = 0xD4A86A, ABSORB = 0xFFD24A; // 깎인 부분: 크림색은 흰 글자가 묻힘 (CI 42441254551 사진) → 어두운 살구색
 
     private static final Map<UUID, State> STATES = new ConcurrentHashMap<>();
     /** 이 HUD 가 보내는 액션바는 VanillaPackets 가 가로채지 않음 */
