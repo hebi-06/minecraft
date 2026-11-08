@@ -45,7 +45,7 @@ public final class VanillaStats {
         t.right(166, 0, pt, point > 0 ? VanillaGui.GREEN : VanillaGui.DIM);
         t.text(166 - VanillaGui.width(pt) - VanillaGui.width(VanillaGui.GEM) - 2, 0, VanillaGui.GEM, VanillaGui.WHITE);
 
-        // 힘 · 민첩 · 마력의 공격력은 총 스펙의 기준 무기로 (장비 쪽 총 스펙 · 전투력과 같은 무기)
+        // 힘 · 민첩 · 마력의 공격력은 지금 든 무기로 (장비 쪽 총 스펙 · 전투력과 같은 무기)
         mmorpg.fabric.CombatPowers.Sheet basis = mmorpg.fabric.CombatPowers.of(sp);
         for (int i = 0; i < ORDER.length; i++) {
             if (!Stats.STAT_KEYS.contains(ORDER[i])) continue;
@@ -95,20 +95,20 @@ public final class VanillaStats {
     }
 
     /**
-     * 힘 · 민첩 · 마력의 공격력 줄: "공격력 +79.2 (1당 +0.6)" · "칼·도끼·마검·창·망치 · 칼 기준". 공격력 = 이 스탯이 기준 무기 (강화 포함) 에 더하는 값 —
+     * 힘 · 민첩 · 마력의 공격력 줄: "공격력 +79.2 (1당 +0.6)" · "칼·도끼·마검·창·망치 · 든 칼 기준". 공격력 = 이 스탯이 지금 든 무기 (강화 포함) 에 더하는 값 —
      * 무기 설명 · 강화 창의 "공격력" 과 같은 단위 (스탯 트리 공격력 % 는 총 스펙에서 곱함).
      */
     static List<String> attackLines(StatSheet s, String k, Obj info, mmorpg.core.Weapon w, int enh) {
         List<String> out = new ArrayList<>();
         if (w == null) {
-            out.add("§7공격력 §8— 쓸 수 있는 RPG 무기가 없음");
+            out.add("§7공격력 §8— 든 RPG 무기가 없음");
             out.add("§8" + info.str("weapons"));
             return out;
         }
         double n = s.statAttack(w, enh, k);
         double per = s.statAttackPer(w, enh, k);
         out.add("§7공격력 §f+" + one(n) + (per > 0 ? " §8(1당 +" + (per >= 1 ? one(per) : two(per)) + ")" : " §8(" + w.typeLabel() + "에는 붙지 않음)"));
-        out.add("§8" + info.str("weapons") + " · " + w.typeLabel() + " 기준");
+        out.add("§8" + info.str("weapons") + " · 든 " + w.typeLabel() + " 기준");
         return out;
     }
 

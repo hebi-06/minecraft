@@ -408,17 +408,21 @@ final class VanillaProbe {
                 String tip = tipText(p, 5, 0);
                 check("total spec tooltip (" + tip.replace('\n', '|') + ")", c.cp() > 0 && tip.contains("총 스펙")
                         && tip.contains("전투력 " + VanillaGui.commas(c.cp())) && tip.contains("공격력 ") && tip.contains("최대 체력 "));
-                // 순위용: 든 것을 바꿔도 · 잠깐 걸리는 룬 버프가 있어도 같은 값
+                // 지금 든 무기로 셈 (사용자 "무기를 지금 낀걸로") — 무기가 아닌 것을 들면 공격력 0 (전투력이 내려감), 잠깐 걸리는 룬 버프는 뺌
+                mmorpg.core.Weapon held = mmorpg.fabric.RpgCombat.weaponOf(p.getMainHandItem());
                 int sel = p.getInventory().getSelectedSlot();
-                p.getInventory().setSelectedSlot(sel == 8 ? 7 : 8);
+                int bare = -1;
+                for (int i = 0; i < 9 && bare < 0; i++) if (mmorpg.fabric.RpgCombat.weaponOf(p.getInventory().getItem(i)) == null) bare = i;
+                p.getInventory().setSelectedSlot(Math.max(0, bare));
                 long other = mmorpg.fabric.CombatPowers.of(p).cp();
                 p.getInventory().setSelectedSlot(sel);
-                check("combat power ignores held item (" + c.cp() + " / " + other + ")", other == c.cp());
+                check("combat power follows held weapon (" + (held == null ? "-" : held.id()) + " " + c.cp() + " / bare " + other + ")",
+                        held != null && c.weapon() != null && c.weapon().id().equals(held.id()) && bare >= 0 && (c.usable() ? other < c.cp() : other == c.cp()));
                 mmorpg.fabric.RpgStats.setBuff(p, 0.2);
                 long buffed = mmorpg.fabric.CombatPowers.of(p).cp();
                 mmorpg.fabric.RpgStats.setBuff(p, 0);
                 check("combat power ignores rune buff (" + c.cp() + " / " + buffed + ")", buffed == c.cp());
-                log("combat power " + c.cp() + " weapon " + (c.weapon() == null ? "-" : c.weapon().id() + " +" + c.enh()) + " spec " + c.spec());
+                log("combat power " + c.cp() + " weapon " + (c.weapon() == null ? "-" : c.weapon().id() + " +" + c.enh() + (c.usable() ? "" : " (lack)")) + " spec " + c.spec());
                 say(p, "shot 15c_equip_spec");
                 next(p, 142, 10);
             }

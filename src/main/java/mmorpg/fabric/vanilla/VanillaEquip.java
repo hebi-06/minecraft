@@ -111,16 +111,16 @@ public final class VanillaEquip {
 
     /**
      * 총 스펙 (왼쪽 아래 정보 단추 — 2026-11-08 사용자 "총 스펙 표기할때 잘 만 표시해주고 공격력으로 바꾸고 … 총전투력"): 전투력 · 공격력 (무기 + 스탯 ×
-     * 스탯 트리) · 치명타 · 최대 체력 · 받는 피해 · 방어 · 룬 피해 · 재사용 대기 · 이동 속도. 스탯 트리 · 아티팩트 포함, 잠깐 걸리는 룬 버프는 뺌
-     * (CombatPowers — 순위용 값과 같음). 0 인 줄은 뺌.
+     * 스탯 트리) · 치명타 · 최대 체력 · 받는 피해 · 방어 · 룬 피해 · 재사용 대기 · 이동 속도. 지금 든 무기 · 입은 갑옷 · 낀 아티팩트 · 스탯 트리,
+     * 잠깐 걸리는 룬 버프는 뺌 (CombatPowers — 순위용 값과 같음). 0 인 줄은 뺌.
      */
     static List<String> spec(CombatPowers.Sheet c) {
         CombatPower.Spec s = c.spec();
         List<String> out = new ArrayList<>();
         out.add("§7전투력 §6§l" + VanillaGui.commas(c.cp()));
         out.add("");
-        out.add("§7공격력 §f" + VanillaStats.one(s.attack()));
-        if (c.weapon() != null) {
+        out.add("§7공격력 §f" + VanillaStats.one(s.attack()) + (c.weapon() != null && !c.usable() ? " §c(든 무기의 요구 조건이 모자람)" : ""));
+        if (c.usable()) {
             out.add("§8  무기 " + VanillaStats.one(c.weaponAttack()) + " · 스탯 +" + VanillaStats.one(c.statAttack())
                     + (c.atkPct() > 0 ? " · 스탯 트리 +" + VanillaStats.one(c.atkPct()) + "%" : ""));
             out.add("§7치명타 확률 §f" + VanillaStats.one(s.critChance() * 100) + "%");
@@ -133,8 +133,8 @@ public final class VanillaEquip {
         if (s.cdr() > 0) out.add("§7재사용 대기 §f-" + VanillaStats.one(s.cdr()) + "%");
         if (s.speed() > 0) out.add("§7이동 속도 §f+" + VanillaStats.one(s.speed()) + "%");
         out.add("");
-        out.add(c.weapon() == null ? "§8쓸 수 있는 RPG 무기가 없음 (공격력 0)" : "§8기준 무기 " + (c.enh() > 0 ? "+" + c.enh() + " " : "") + c.weapon().title());
-        out.add("§8스탯 트리 · 아티팩트 포함 · 룬 버프 제외");
+        out.add(c.weapon() == null ? "§8든 RPG 무기가 없음 (공격력 0)" : "§8든 무기 " + (c.enh() > 0 ? "+" + c.enh() + " " : "") + c.weapon().title());
+        out.add("§8입은 갑옷 · 낀 아티팩트 · 스탯 트리 포함 · 룬 버프 제외");
         return out;
     }
 
