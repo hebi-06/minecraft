@@ -40,23 +40,23 @@ public final class VanillaStats {
         ServerPlayer sp = g.sp;
         StatSheet s = StatSheet.of(sp);
         int point = s.point();
-        VanillaMenu.title(t, "스탯");
+        // 제목 줄: 남은 포인트만 (마름모 + 숫자 — 사용자 "글자를 최대한 줄여서")
         String pt = String.valueOf(point);
         t.right(166, 0, pt, point > 0 ? VanillaGui.GREEN : VanillaGui.DIM);
-        t.right(166 - VanillaGui.width(pt) - 4, 0, "남은 포인트", VanillaGui.MUTED);
+        t.text(166 - VanillaGui.width(pt) - VanillaGui.width(VanillaGui.GEM) - 2, 0, VanillaGui.GEM, VanillaGui.WHITE);
 
         for (int i = 0; i < ORDER.length; i++) {
             if (!Stats.STAT_KEYS.contains(ORDER[i])) continue;
             pillar(g, t, s, ORDER[i], 1 + 2 * i, point);
         }
-        // 스탯 트리 단추 (줄 5 · 칸 2 ~ 6) + 화살표 둘레 (줄 4 · 칸 4)
-        List<String> tip = List.of("§7스탯마다 열리는 칸 · 고를 갈래", "", "§e눌러서 열기");
+        // 스탯 트리 단추 (줄 5 · 칸 4 — 그림만) + 화살표 둘레 (줄 4 · 칸 4)
+        List<String> tip = List.of("§7남은 포인트 §f" + point, "§7스탯마다 열리는 칸 · 고를 갈래", "", "§e눌러서 열기");
         GuiElement.ClickCallback tree = VanillaMenu.MenuGui.left(() -> {
             g.treeSel = -1;
             g.treeTop = -1;
             g.show(VanillaMenu.Page.TREE);
         });
-        for (int c = 2; c <= 6; c++) g.set(5, c, VanillaGui.blank("§a스탯 트리", tip), tree);
+        g.set(5, 4, VanillaGui.blank("§a스탯 트리", tip), tree);
         g.set(4, 4, VanillaGui.blank("§a스탯 트리", tip), tree);
     }
 
@@ -69,12 +69,13 @@ public final class VanillaStats {
         boolean buffed = shown > value;
         int mid = VanillaGui.cellMid(c);
         t.numCenter(mid, 68, VanillaGui.compact(shown), buffed ? VanillaGui.GREEN : VanillaGui.WHITE);
-        String effect = k.equals("vit") ? "+" + VanillaGui.compact(Math.round(s.maxHp())) : "+" + Js.str(Math.round(eff * Stats.damagePerPoint(k) * 1000) / 10.0) + "%";
-        t.numCenter(mid, 78, effect, VanillaGui.MUTED);
+        String effect = k.equals("vit") ? "최대 체력 " + VanillaGui.compact(Math.round(s.maxHp())) : "피해 +" + Js.str(Math.round(eff * Stats.damagePerPoint(k) * 1000) / 10.0) + "%";
 
         List<String> tip = new ArrayList<>(s.tooltip(k));
         if (!tip.isEmpty()) tip.remove(tip.size() - 1); // 모드 창의 "눌러서 +1 (Shift: +5)" 줄
         if (buffed) tip.add("§7찍은 값 §f" + value + " §7+ 장비 · 버프 §a" + (shown - value));
+        tip.add("§7" + effect);
+        tip.add("§7남은 포인트 §f" + point);
         tip.add("");
         tip.add(point > 0 ? "§a좌클릭 +1 §7· §aShift + 좌클릭 +5" : "§8남은 포인트가 없습니다");
         String title = colorCode(info.str("color")) + "§l" + info.str("name") + " §r§f" + value + (buffed ? " §a(" + shown + ")" : "");

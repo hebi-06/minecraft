@@ -46,20 +46,8 @@ public final class VanillaSkillBar {
         if (pick != null && !pick.bar() && RuneItems.runeOf(sp.getInventory().getItem(pick.index())) == null) pick = null;
         g.skillPick = pick;
 
-        VanillaMenu.title(t, "스킬 세팅");
-        if (pick != null) {
-            Runes.Rune r = RuneItems.runeOf(pick.bar() ? SkillBar.get(sp, pick.index()) : sp.getInventory().getItem(pick.index()));
-            String what = r == null ? "" : r.def().str("name");
-            t.right(166, 0, VanillaGui.fit("▶ " + what + (pick.bar() ? " → 칸 · 빼기" : " → 칸"), 92), VanillaGui.GOLD);
-        } else {
-            t.right(166, 0, "룬을 눌러 고르기", VanillaGui.MUTED);
-        }
-        // 머리 글 (바탕의 색 보석 옆): 룬 = 줄 1 왼쪽, 직업 = 줄 4 오른쪽 (칸 5 ~ 7)
-        t.text(11, VanillaGui.rowLine(1), "룬 스킬", VanillaGui.TEAL);
-        t.text(11 + VanillaGui.width("룬 스킬") + 6, VanillaGui.rowLine(1), "F 한 번 → 숫자 키", VanillaGui.MUTED);
-        t.text(VanillaGui.cellX(5) + 6, VanillaGui.rowLine(4), "직업 스킬", VanillaGui.PINK);
-        t.text(VanillaGui.cellX(5) + 6, 103, "F 두 번", VanillaGui.MUTED);
-
+        // 글자 없음 (사용자 "글자를 최대한 줄여서" — 고른 룬은 칸이 빛남, 쓰는 법은 도움말 단추 · 칸의 설명 상자)
+        if (pick != null && !pick.bar()) g.markBag(pick.index());
         for (int i = 0; i < SkillBar.SIZE && i < 8; i++) runeCell(g, i);
         for (int i = 0; i < JobSkills.SIZE && i < 5; i++) jobCell(g, i);
         boolean canRemove = pick != null && pick.bar();

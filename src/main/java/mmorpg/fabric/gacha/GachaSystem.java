@@ -467,15 +467,20 @@ public final class GachaSystem {
 
     // ------------------------------------------------------------ 창
 
-    /** 뽑기권 우클릭: 모드가 있으면 그 뽑기의 창, 없으면 예전처럼 눈앞 마법진으로 1회 */
+    /** 뽑기권 우클릭: 모드가 있으면 그 뽑기의 창, 모드 없는 클라이언트는 뽑기 전용 창 (메뉴 — VanillaGacha), 그 밖은 예전처럼 눈앞 마법진으로 1회 */
     public static void useTicketItem(ServerPlayer sp, TicketItem t) {
         if (GachaNet.canSend(sp)) open(sp, keyOf(t));
+        else if (mmorpg.fabric.vanilla.VanillaClients.isVanilla(sp)) mmorpg.fabric.vanilla.VanillaGacha.openFor(sp, keyOf(t));
         else RuneGacha.useTicket(sp, t);
     }
 
     /** 뽑기 창 열기 (key = 처음 볼 뽑기 — "" 이면 한정 → 일반) */
     public static void open(ServerPlayer sp, String key) {
         if (!GachaNet.canSend(sp)) {
+            if (mmorpg.fabric.vanilla.VanillaClients.isVanilla(sp)) {
+                mmorpg.fabric.vanilla.VanillaGacha.openFor(sp, key);
+                return;
+            }
             Notify.warn(sp, "§7뽑기 창은 모드가 있는 클라이언트에서 열립니다 §8(뽑기권을 들고 우클릭하면 1회)");
             return;
         }

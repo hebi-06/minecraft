@@ -51,8 +51,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * 봉인   룬석 (1회 = 가운데 큰 것, 10회 = 다섯 × 두 줄 — 차례로 나타남) · 문양은 그 룬의 등급 색 (숨쉬듯 밝아졌다 어두워짐)
  *        "좌클릭: 열기 · Shift: 건너뛰기"
  * 열기   (좌클릭) 금 → 깨짐 → 룬 · 빛 · 이름 (1회) / 차례로 (10회 — 영웅 이상은 한 박자 쉼) · 그때 결과 알림 (GachaSystem.revealNow)
- * 초월   10회에 초월이 있으면 하나씩 가운데 크게 ("좌클릭: 계속")
- * 끝     결과 ("좌클릭: 닫기") → 걷힘 → 메뉴 뽑기 쪽 (최근 결과)
+ * 초월   10회에 초월이 있으면 하나씩 가운데 크게 ("좌클릭 계속")
+ * 끝     결과 ("좌클릭 닫기") → 걷힘 → 메뉴 뽑기 쪽 (최근 결과)
  * </pre>
  * 입력 (GachaCinematicMixin · VanillaInput.onSwapKey): 좌클릭 (휘두르기 · 공격) · 우클릭 · F = 다음, Shift (누르는 순간) = 건너뛰기 (결과로 —
  * 결과에서는 닫기). 연출 동안 걷기 · 뛰기 막음 (이동 속도 · 점프 힘 −100% — 잠깐 붙는 것), 블록 · 아이템 · 몹을 건드리는 패킷은 받지 않음,
@@ -350,7 +350,6 @@ public final class GachaCinematic {
         Cine c = new Cine();
         int pt = r.phaseT;
         int topRgb = VanillaGacha.gradeColor(Runes.GRADE_ORDER.get(r.top));
-        String title = VanillaGacha.strip(r.d.def() == null ? "룬 뽑기" : r.d.def().name());
         c.glyph("stars", 0, 0xFFFFFF);
         switch (r.phase) {
             case INTRO -> {
@@ -367,14 +366,12 @@ public final class GachaCinematic {
             }
             case SEALED -> {
                 if (r.ten) {
-                    c.text("cine_sub", title + " · " + r.pulls.size() + "회", GOLD, 0);
                     for (int i = 0; i < r.pulls.size() && i <= pt; i++) sealSmall(c, r, i, pulse(r.t + i * 3));
                 } else {
-                    c.text("cine_sub", title, GOLD, 0);
                     c.glyph("seal_big", 0, 0xFFFFFF);
                     c.glyph("mark_big", 0, scale(VanillaGacha.gradeColor(r.pulls.get(0).grade()), pulse(r.t)));
                 }
-                if (pt > 6) c.text("cine_hint", "좌클릭: 열기 · Shift: 건너뛰기", blink(r.t, MUTED), 0);
+                if (pt > 6) c.text("cine_hint", "좌클릭 열기 · Shift 건너뛰기", blink(r.t, MUTED), 0);
             }
             case OPENING -> {
                 if (!r.ten) {
@@ -387,7 +384,6 @@ public final class GachaCinematic {
                         big(c, r, 0, r.t, pt - 6);
                     }
                 } else {
-                    c.text("cine_sub", title + " · " + r.pulls.size() + "회", GOLD, 0);
                     for (int i = 0; i < r.pulls.size(); i++) {
                         int u = pt - r.openAt[i];
                         if (u < 0) sealSmall(c, r, i, pulse(r.t + i * 3));
@@ -403,16 +399,15 @@ public final class GachaCinematic {
             case SPOT -> {
                 int i = r.spots.get(r.spot);
                 big(c, r, i, r.t, pt);
-                c.text("cine_hint", "좌클릭: 계속", blink(r.t, MUTED), 0);
+                c.text("cine_hint", "좌클릭 계속", blink(r.t, MUTED), 0);
             }
             case SUMMARY, ENDING -> {
                 if (r.ten) {
-                    c.text("cine_sub", title + " · " + r.pulls.size() + "회 결과", GOLD, 0);
                     for (int i = 0; i < r.pulls.size(); i++) cardSmall(c, r, i, 99);
                 } else {
                     big(c, r, 0, r.t, 99);
                 }
-                if (r.phase == Phase.SUMMARY) c.text("cine_hint", "좌클릭: 닫기", blink(r.t, MUTED), 0);
+                if (r.phase == Phase.SUMMARY) c.text("cine_hint", "좌클릭 닫기", blink(r.t, MUTED), 0);
             }
         }
         return c.build();
@@ -457,7 +452,7 @@ public final class GachaCinematic {
         c.glyph("ring_s" + row, x(i), rgb);
         c.rune(r.tex.get(i), row, x(i));
         if (u <= 2) c.glyph("shard_s" + row, x(i), 0xFFFFFF);
-        if (r.isFresh(i)) c.glyph("new_s" + row, x(i) + 6, 0xFFFFFF);
+        if (r.isFresh(i)) c.glyph("new_s" + row, x(i) + 8, 0xFFFFFF);
     }
 
     /** 숨쉬듯 (0.6 ~ 1.0) */

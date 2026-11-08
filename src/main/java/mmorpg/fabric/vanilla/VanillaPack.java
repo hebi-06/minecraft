@@ -155,6 +155,7 @@ final class VanillaPack {
         com.google.gson.JsonArray x = new com.google.gson.JsonArray();
         x.add(bitmap("tree_tri", files, 4, 13 - VanillaGui.TRI_Y));
         x.add(bitmap("tree_thumb", files, files.getAsJsonObject("tree_thumb").get("h").getAsInt(), 13 - VanillaGui.THUMB_Y));
+        if (files.has("tree_bar")) x.add(bitmap("tree_bar", files, files.getAsJsonObject("tree_bar").get("h").getAsInt(), 13 - VanillaGui.BAR_Y));
         builder.addStringData("assets/" + Mmorpg.NS + "/font/gtx.json", gson.toJson(providers(x)));
     }
 
@@ -190,8 +191,9 @@ final class VanillaPack {
     }
 
     /**
-     * 룬 · 뽑기권 그림의 진열용 아이템 (뽑기 쪽 — VanillaGacha): rpg:vbig/&lt;그림&gt; (2배 · 오른쪽 9px — 칸 둘 사이 가운데, 진열판의 큰 룬),
-     * rpg:vsh/&lt;그림&gt; (1배 · 오른쪽 9px — 등급 사다리). 칸 밖까지 그리게 oversized_in_gui
+     * 룬 · 뽑기권 그림의 진열용 아이템 (뽑기 창 — VanillaGacha): rpg:vbig/&lt;그림&gt; (2배 · 오른쪽 · 아래 9px — 칸 넷 사이 가운데, 진열판의 큰 그림 —
+     * 칸 밖까지 그리게 oversized_in_gui), rpg:vdim/&lt;그림&gt; (어둡게 칠한 것 — 가진 것이 없는 뽑기권 · 닫힌 한정 뽑기).
+     * 1배로 자리만 옮긴 그림은 칸 밖이 잘려 그려짐 (CI 42429659728 — oversized 는 크기를 키운 것만) → 반 칸 자리는 쓰지 않음
      */
     private static int bigRunes(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path root) {
         Path dir = root.resolve("assets").resolve(Mmorpg.NS).resolve("textures").resolve("item").resolve("rune");
@@ -202,14 +204,15 @@ final class VanillaPack {
                 String name = png.getFileName().toString();
                 if (!name.endsWith(".png") || name.startsWith("break_")) continue;
                 String id = name.substring(0, name.length() - 4);
-                for (String[] v : new String[][]{{"vbig", "2"}, {"vsh", "1"}}) {
-                    String model = Mmorpg.NS + ":item/" + v[0] + "/" + id;
-                    builder.addStringData("assets/" + Mmorpg.NS + "/models/item/" + v[0] + "/" + id + ".json",
-                            "{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"" + Mmorpg.NS + ":item/rune/" + id + "\"},"
-                                    + "\"display\":{\"gui\":{\"rotation\":[0,0,0],\"translation\":[9,0,0],\"scale\":[" + v[1] + "," + v[1] + "," + v[1] + "]}}}");
-                    builder.addStringData("assets/" + Mmorpg.NS + "/items/" + v[0] + "/" + id + ".json",
-                            "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + model + "\"},\"oversized_in_gui\":true}");
-                }
+                String big = Mmorpg.NS + ":item/vbig/" + id;
+                builder.addStringData("assets/" + Mmorpg.NS + "/models/item/vbig/" + id + ".json",
+                        "{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"" + Mmorpg.NS + ":item/rune/" + id + "\"},"
+                                + "\"display\":{\"gui\":{\"rotation\":[0,0,0],\"translation\":[9,-9,0],\"scale\":[2,2,2]}}}");
+                builder.addStringData("assets/" + Mmorpg.NS + "/items/vbig/" + id + ".json",
+                        "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + big + "\"},\"oversized_in_gui\":true}");
+                builder.addStringData("assets/" + Mmorpg.NS + "/items/vdim/" + id + ".json",
+                        "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + Mmorpg.NS + ":item/" + id
+                                + "\",\"tints\":[{\"type\":\"minecraft:constant\",\"value\":5263440}]}}");
                 n++;
             }
         } catch (IOException e) {

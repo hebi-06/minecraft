@@ -151,9 +151,9 @@ public final class VanillaMenu {
             setLockPlayerInventory(true);
         }
 
-        /** 이 쪽이 가방 자리에 진짜 가방을 비추는지 (스탯 트리 · 뽑기는 그 자리를 단추판으로) */
+        /** 이 쪽이 가방 자리에 진짜 가방을 비추는지 (스탯 트리는 그 자리를 단추판으로, 뽑기 확인 창은 어둡게 덮음) */
         boolean showsBag() {
-            return page != Page.TREE && page != Page.GACHA;
+            return page != Page.TREE && !(page == Page.GACHA && gachaConfirm > 0);
         }
 
         void show(Page p) {
@@ -177,7 +177,7 @@ public final class VanillaMenu {
                 case TREE -> VanillaGui.Bg.TREE;
                 case GACHA -> gachaConfirm > 0 ? VanillaGui.Bg.GACHA_CONFIRM : VanillaGui.Bg.GACHA;
             });
-            tabs();
+            if (page != Page.GACHA) tabs(); // 뽑기는 전용 창 (위 탭 없음 — 돌아가기 단추)
             if (showsBag()) mirrorBag();
             switch (page) {
                 case HOME -> home(t);
@@ -206,6 +206,14 @@ public final class VanillaMenu {
             mirrored[s] = st.copy();
             int slot = s;
             setSlot(invIndex(s), new SimpleGuiElement(st.copy(), (ix, type, a, g) -> bagClick(slot, type)));
+        }
+
+        /** 비춘 가방 칸 하나를 빛나게 (고른 룬 — 스킬 쪽) */
+        void markBag(int slot) {
+            if (slot < 0 || slot >= 36) return;
+            ItemStack st = sp.getInventory().getItem(slot).copy();
+            st.set(net.minecraft.core.component.DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+            setSlot(invIndex(slot), new SimpleGuiElement(st, (ix, type, a, g) -> bagClick(slot, type)));
         }
 
         private void bagClick(int slot, ClickType type) {
@@ -256,21 +264,17 @@ public final class VanillaMenu {
         }
 
         private void home(VanillaGui.Title t) {
-            // 제목 줄: 메뉴 · 레벨 · 직업 (왼쪽) · 금화 (오른쪽)
-            title(t, "메뉴");
-            String lv = "Lv." + sp.experienceLevel;
-            int x = 10 + VanillaGui.width("메뉴") + 6;
-            t.text(x, 0, lv, VanillaGui.CREAM);
-            mmorpg.core.Jobs.Job job = mmorpg.fabric.job.JobSystem.job(sp);
-            t.text(x + VanillaGui.width(lv) + 4, 0, job == null ? "직업 없음" : job.name(), job == null ? VanillaGui.DIM : VanillaGui.CREAM);
+            // 제목 줄: 금화만 (오른쪽 — 사용자 "글자를 최대한 줄여서", 레벨 · 직업은 장비 타일 설명)
             String g = VanillaGui.commas(Wallet.total(sp, mmorpg.core.Economy.Kind.GOLD));
             t.right(166, 0, g, VanillaGui.GOLD);
             t.text(166 - VanillaGui.width(g) - VanillaGui.width(VanillaGui.COIN) - 2, 0, VanillaGui.COIN, VanillaGui.WHITE);
+            mmorpg.core.Jobs.Job job = mmorpg.fabric.job.JobSystem.job(sp);
+            String who = "§7Lv." + sp.experienceLevel + " · " + (job == null ? "직업 없음" : job.name());
 
-            tile(0, 1, "equip", "§b장비", "§7갑옷 · 무기 · 아티팩트 끼고 빼기", () -> show(Page.EQUIP));
+            tile(0, 1, "equip", "§b장비", "§7갑옷 · 무기 · 아티팩트 끼고 빼기\n" + who, () -> show(Page.EQUIP));
             tile(5, 1, "skill", "§a스킬", "§7룬 스킬 칸 · 직업 스킬 (F 로 스킬 모드)", () -> show(Page.SKILLS));
             tile(0, 3, "market", "§6장터", "§7다른 사람이 올린 물건을 사고 팖", () -> closeThen(p -> RpgNet.statAction(p, "market")));
-            tile(5, 3, "gacha", "§d뽑기", "§7룬 뽑기 (1회 · " + mmorpg.core.Gacha.multi() + "회)", () -> show(Page.GACHA));
+            tile(5, 3, "gacha", "§d뽑기", "§7룬 뽑기 전용 창 (1회 · " + mmorpg.core.Gacha.multi() + "회)", () -> show(Page.GACHA));
 
             quick(0, "§e퀘스트", "§7받은 퀘스트 · 진행", p -> RpgNet.statAction(p, "quest"));
             quick(1, "§d창고", "§7엔더 창고 (큰 상자 5개)", p -> RpgNet.statAction(p, "ender"));
@@ -288,9 +292,11 @@ public final class VanillaMenu {
                     "§7왼손: 장비 쪽에서 가방 아이템 §f우클릭")), null);
         }
 
-        /** 타일 (칸 넷 × 줄 둘 — 왼쪽 위 칸에 큰 그림, 나머지는 같은 설명 · 같은 일) */
+        /** 타일 (칸 넷 × 줄 둘 — 왼쪽 위 칸에 큰 그림, 나머지는 같은 설명 · 같은 일). tip 은 줄바꿈 (\n) 으로 여러 줄 */
         private void tile(int c0, int r0, String key, String name, String tip, Runnable run) {
-            List<String> lore = List.of(tip, "", "§e눌러서 열기");
+            List<String> lore = new java.util.ArrayList<>(List.of(tip.split("\n")));
+            lore.add("");
+            lore.add("§e눌러서 열기");
             GuiElement.ClickCallback cb = left(run);
             for (int r = r0; r < r0 + 2; r++) {
                 for (int c = c0; c < c0 + 4; c++) {

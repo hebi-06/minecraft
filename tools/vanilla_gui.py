@@ -567,44 +567,43 @@ def socket(c, col, row, color=GOLD_LO, diamond=False):
 TABS = [("home", "홈"), ("stats", "스탯"), ("equip", "장비"), ("skills", "스킬")]
 
 
-def frame(active, inv=True, tb=35, merge=PANEL_HI):
+def frame(active, inv=True, tb=35, merge=PANEL_HI, tabs=True):
     """판 · 위 탭 넷 + 닫기 · 내용 판 · 가방 판 (모든 쪽 같음 — 켜진 탭만 다름). inv = False: 아래 판에 가방 칸을 그리지 않음 (그 쪽이 아래 판을 씀 —
-    스탯 트리 · 뽑기, 2026-11-08 사용자 그림: 아래 판 = 방향 키 · 탭). tb = 탭 아래 끝 (스탯 트리는 31 — 나무 판이 위로 더 큼), merge = 켜진 탭이
-    이어지는 판 색"""
+    스탯 트리, 2026-11-08 사용자 그림: 아래 판 = 방향 키 · 탭). tb = 탭 아래 끝 (스탯 트리는 31 — 나무 판이 위로 더 큼), merge = 켜진 탭이
+    이어지는 판 색. tabs = False: 위 탭 · 닫기 없음 (뽑기 전용 창 — 사용자 "위에 바 있는게 거슬림"). 탭은 그림만 (사용자 "글자를 최대한 줄여서" —
+    이름은 마우스를 올리면)"""
     c = Canvas()
     c.rect(0, 0, MW - 1, VANILLA_H - 1, VOID)
-    f9 = font("Galmuri9.ttf", 10)
     # 위 판 (0 ~ 129) · 내용 판 (탭 아래)
     gold_frame(c, 0, 0, MW - 1, 129, PANEL)
-    thin_frame(c, 3, tb, MW - 4, 126, PANEL_HI, edge=GOLD_LO, r=2, glow=(88, 80, 90, GLOW, 0.55))
-    # 탭 (줄 0 · 칸 2i ~ 2i + 1) — 글자만 (가운데), 켜진 탭은 내용 판과 이어지고 보석
-    lift = 35 - tb
-    for i, (key, name) in enumerate(TABS):
-        x0, x1 = cell_x(2 * i) + 1, cell_x(2 * i + 1) + 16
-        on = key == active
-        tw = text_width(name, f9)
-        tx = (x0 + x1 + 1) // 2 - tw // 2
-        if on:
-            m = rounded(x1 - x0 + 1, tb - 15, 2)
-            m[-2:, :] = True
-            inner = erode(m)
-            inner[-2:, 1:-1] = True
-            c.mask(x0, 17, m, OUTLINE)
-            c.mask(x0, 17, inner, GOLD_MID)
-            inner2 = erode(inner)
-            inner2[-3:, 2:-2] = True
-            c.mask(x0, 17, inner2, PANEL_HI)
-            c.rect(x0 + 2, 18, x1 - 2, 18, GOLD_HI)
-            c.rect(x0 + 2, tb, x1 - 2, tb + 1, merge)
-            gem(c, tx - 6, 25 - lift)
-            label(c, tx + 1, 23 - lift, name, f9, CREAM, outline=None)
-        else:
-            thin_frame(c, x0, 20, x1, tb, PANEL_LO, edge=GOLD_DK, r=2)
-            c.rect(x0, tb, x1, tb, GOLD_LO)
-            label(c, tx, 25 - lift - (1 if lift else 0), name, f9, MUTED, outline=None)
-    # 닫기 (칸 8 · 줄 0)
-    button(c, cell_x(8) + 1, 19, cell_x(8) + 16, tb - 1, tint=(150, 50, 50))
-    icon(c, art.QUICK["close"], cell_x(8) + 3, 21 - (lift + 1) // 2, GOLD_HI)
+    if tabs:
+        thin_frame(c, 3, tb, MW - 4, 126, PANEL_HI, edge=GOLD_LO, r=2, glow=(88, 80, 90, GLOW, 0.55))
+        # 탭 (줄 0 · 칸 2i ~ 2i + 1) — 그림만 (가운데), 켜진 탭은 내용 판과 이어지고 밝게
+        lift = 35 - tb
+        for i, (key, name) in enumerate(TABS):
+            x0, x1 = cell_x(2 * i) + 1, cell_x(2 * i + 1) + 16
+            on = key == active
+            ix = (x0 + x1 + 1) // 2 - 6
+            if on:
+                m = rounded(x1 - x0 + 1, tb - 15, 2)
+                m[-2:, :] = True
+                inner = erode(m)
+                inner[-2:, 1:-1] = True
+                c.mask(x0, 17, m, OUTLINE)
+                c.mask(x0, 17, inner, GOLD_MID)
+                inner2 = erode(inner)
+                inner2[-3:, 2:-2] = True
+                c.mask(x0, 17, inner2, PANEL_HI)
+                c.rect(x0 + 2, 18, x1 - 2, 18, GOLD_HI)
+                c.rect(x0 + 2, tb, x1 - 2, tb + 1, merge)
+                icon(c, art.TAB[key], ix, 21 - lift // 2, GOLD_HI)
+            else:
+                thin_frame(c, x0, 20, x1, tb, PANEL_LO, edge=GOLD_DK, r=2)
+                c.rect(x0, tb, x1, tb, GOLD_LO)
+                icon(c, art.TAB[key], ix, 22 - lift // 2, DIM)
+        # 닫기 (칸 8 · 줄 0)
+        button(c, cell_x(8) + 1, 19, cell_x(8) + 16, tb - 1, tint=(150, 50, 50))
+        icon(c, art.QUICK["close"], cell_x(8) + 3, 21 - (lift + 1) // 2, GOLD_HI)
     # 가방 판 (131 ~ 220): 칸 · 핫바 칸 (사이 금 줄)
     gold_frame(c, 0, 131, MW - 1, VANILLA_H - 1, PANEL)
     if inv:
@@ -655,9 +654,8 @@ def menu_home():
         dark = tuple(int(v * 0.42) for v in accent)
         thin_frame(c, wx0, wy0, wx0 + 29, wy0 + 29, dark, edge=tuple(int(v * 0.8) for v in accent), r=2,
                    glow=(wx0 + 15, wy0 + 15, 16, accent, 0.9))
-        # 이름 · 설명
-        label(c, x0 + 37, y0 + 7, name, fb, CREAM)
-        c.text(x0 + 37, y0 + 23, sub, f7, MUTED)
+        # 이름 (설명은 마우스를 올리면)
+        label(c, x0 + 37, y0 + 13, name, fb, CREAM)
     # 가운데 세로 장식 (칸 4 · 줄 1 ~ 4)
     xm = mid_x(4)
     for y in range(cell_y(1) + 4, cell_y(5) - 4):
@@ -685,11 +683,10 @@ def menu_stats():
         x0, x1 = mid_x(cc) - 15, mid_x(cc) + 14
         y0, y1 = cell_y(1) + 2, cell_y(4) + 15
         thin_frame(c, x0, y0, x1, y1, (22, 24, 46), edge=GOLD_LO, r=3, glow=(mid_x(cc), mid_y(2), 18, col, 0.35))
-        # 머리 띠 (스탯 색) + 이름
+        # 머리 띠 (스탯 색 — 이름은 마우스를 올리면)
         band = tuple(int(v * 0.55) for v in col)
-        c.rect(x0 + 1, y0 + 1, x1 - 1, y0 + 11, band)
-        c.rect(x0 + 1, y0 + 12, x1 - 1, y0 + 12, tuple(int(v * 0.8) for v in col))
-        label(c, mid_x(cc) + 1, y0 + 2, name, f9, WHITE, outline=tuple(int(v * 0.3) for v in col), center=True)
+        c.rect(x0 + 1, y0 + 1, x1 - 1, y0 + 5, band)
+        c.rect(x0 + 1, y0 + 6, x1 - 1, y0 + 6, tuple(int(v * 0.8) for v in col))
         # 그림 받침 (줄 2)
         socket(c, cc, 2, color=tuple(int(v * 0.85) for v in col))
         # 값 받침 (줄 3 위 — 숫자 글꼴 d 68: y 74 ~ 80) · 효과 (d 78: y 84 ~ 90)
@@ -705,13 +702,9 @@ def menu_stats():
     dotted_v(c, xm, cell_y(1) + 6, cell_y(4) + 8, GOLD_LO)
     arrow = ["#######", ".#####.", "..###..", "...#..."]
     icon(c, arrow, xm - 3, cell_y(4) + 10, GOLD)
-    # 스탯 트리 단추 (줄 5 · 칸 2 ~ 6 — 가운데)
-    bx0, bx1 = cell_x(2) + 1, cell_x(6) + 16
-    button(c, bx0, cell_y(5) + 1, bx1, cell_y(5) + 16, tint=(40, 110, 90))
-    tw = text_width("스탯 트리", f9)
-    sx = (bx0 + bx1) // 2 - (tw + 16) // 2
-    icon(c, art.QUICK["tree"], sx, cell_y(5) + 3, GOLD_HI)
-    label(c, sx + 16, cell_y(5) + 4, "스탯 트리", f9, CREAM)
+    # 스탯 트리 단추 (줄 5 · 칸 4 — 그림만)
+    button(c, cell_x(4) + 1, cell_y(5) + 1, cell_x(4) + 16, cell_y(5) + 16, tint=(40, 110, 90))
+    icon(c, art.QUICK["tree"], cell_x(4) + 3, cell_y(5) + 3, GOLD_HI)
     return c.final()
 
 
@@ -831,14 +824,7 @@ def menu_skills():
         c.text(mid_x(i) - 1, cell_y(5) + 1, str(i + 1), f7, (230, 170, 240), center=True)
     button(c, cell_x(8) + 1, cell_y(4) + 1, cell_x(8) + 16, cell_y(4) + 16, tint=(50, 90, 150))
     icon(c, art.QUICK["help"], cell_x(8) + 3, cell_y(4) + 3, GOLD_HI)
-    # 머리 글 앞 보석 (룬 = 줄 1 왼쪽, 직업 = 줄 4 오른쪽 — 글은 Java: d 35 · d 89 / 103)
-    for (x, y, col) in ((6, cell_y(1) + 7, (110, 220, 230)), (cell_x(5) + 2, cell_y(4) + 7, (230, 150, 240))):
-        c.put(x, y, col)
-        c.put(x - 1, y + 1, col)
-        c.put(x, y + 1, WHITE)
-        c.put(x + 1, y + 1, col)
-        c.put(x, y + 2, col)
-    # 룬 줄 위 · 직업 줄 옆 가는 줄
+    # 룬 줄 위 가는 줄
     c.rect(cell_x(0) + 2, cell_y(2) - 2, cell_x(8) + 15, cell_y(2) - 2, (40, 70, 90))
     return c.final()
 
@@ -889,21 +875,20 @@ def menu_tree():
     # 위: 나무 판 (줄 1 ~ 5 전체 — 칸 테 (칸 틀 2px 바깥) 가 판 안에 들게 위 31 · 아래 127) · 오른쪽 끝 스크롤 홈 (x 168 ~ 170 — 손잡이는 글자 rpg:gtx)
     tree_board(c, 3, 31, MW - 4, 127)
     c.rect(168, 38, 170, 123, (10, 11, 20))
-    # 아래: 설명 카드 (칸 0 ~ 5 · 줄 6 ~ 8) — 그림 칸 (6, 0) · 글 줄 d 138 / 156 / 174
-    thin_frame(c, 4, 135, 112, 193, (20, 22, 42), edge=GOLD_LO, r=3, glow=(16, 147, 18, (60, 66, 120), 0.6))
-    slot_at(c, cell_x(0), cell_y(6))
-    for x in range(9, 108):
-        if x % 2 == 0:
-            c.put(x, 157, GOLD_DK)
-    # 방향 키 (칸 6 ~ 8 · 줄 6 ~ 7): 받침 (십자) + 키 넷
+    # 아래: 방향 키 (가운데 — 칸 3 ~ 5 · 줄 6 ~ 7: 받침 십자 + 키 넷, 사용자 그림처럼). 설명 카드는 없음 (사용자 "글자를 최대한 줄여서 …
+    # 마우스 커서를 올리면 설명" — 칸의 설명 상자)
     base = (13, 14, 26)
-    c.box(cell_x(7) - 2, cell_y(6) - 2, cell_x(7) + 19, cell_y(7) + 19, base, edge=GOLD_DK, r=3)
-    c.box(cell_x(6) - 2, cell_y(7) - 2, cell_x(8) + 19, cell_y(7) + 19, base, edge=GOLD_DK, r=3)
-    c.rect(cell_x(7) - 1, cell_y(7) - 2, cell_x(7) + 18, cell_y(7) - 1, base)
-    dpad_key(c, 7, 6, "up")
-    dpad_key(c, 6, 7, "left")
-    dpad_key(c, 7, 7, "down")
-    dpad_key(c, 8, 7, "right")
+    c.box(cell_x(4) - 2, cell_y(6) - 2, cell_x(4) + 19, cell_y(7) + 19, base, edge=GOLD_DK, r=3)
+    c.box(cell_x(3) - 2, cell_y(7) - 2, cell_x(5) + 19, cell_y(7) + 19, base, edge=GOLD_DK, r=3)
+    c.rect(cell_x(4) - 1, cell_y(7) - 2, cell_x(4) + 18, cell_y(7) - 1, base)
+    dpad_key(c, 4, 6, "up")
+    dpad_key(c, 3, 7, "left")
+    dpad_key(c, 4, 7, "down")
+    dpad_key(c, 5, 7, "right")
+    # 양옆 장식 (가는 금 줄 · 보석)
+    for (x0, x1) in ((10, cell_x(3) - 8), (cell_x(6) + 8, MW - 11)):
+        c.rect(x0, mid_y(7), x1, mid_y(7), GOLD_DK)
+        gem(c, (x0 + x1) // 2 - 1, mid_y(7) - 1)
     # 탭 막대 (줄 9 · 칸 2 ~ 6) · 아래 세모 (y 215 ~ 217 — 고른 탭은 글자로 밝게)
     bx0, bx1 = cell_x(2) - 2, cell_x(6) + 19
     c.box(bx0, cell_y(9) - 2, bx1, cell_y(9) + 19, (13, 14, 26), edge=GOLD_LO, r=3)
@@ -1039,6 +1024,23 @@ def _thumb_imgs():
     return out
 
 
+def _bar_imgs():
+    """천장 막대 채움 (0 ~ BAR_STEPS 칸 — 흰색 위 밝게 · 아래 어둡게, 금으로 물들임)"""
+    w = BAR_X1 - BAR_X0 - 1
+    out = []
+    for k in range(BAR_STEPS + 1):
+        im = Image.new("RGBA", (w, 5), (0, 0, 0, 0))
+        n = round(w * k / BAR_STEPS)
+        for x in range(n):
+            for y in range(5):
+                v = 255 if y < 2 else (215 if y < 4 else 160)
+                im.putpixel((x, y), (v, v, v, 255))
+        if k == 0:
+            im.putpixel((0, 0), (0, 0, 0, 1))  # 빈 글자도 너비가 있게 (거의 투명)
+        out.append(im)
+    return out
+
+
 def _plate_img():
     """뽑기 목록의 고른 줄 테 (칸 6 ~ 8 · 56 × 20 — 칸 틀 1px 바깥)"""
     im = Image.new("RGBA", (56, 20), (0, 0, 0, 0))
@@ -1072,6 +1074,7 @@ def tree_sheets(out_dir):
         "tree_plate": [("plate", _plate_img())],
         "tree_tri": [("tri", _tri_img())],
         "tree_thumb": [("thumb%d" % k, im) for k, im in enumerate(_thumb_imgs())],
+        "tree_bar": [("bar%d" % k, im) for k, im in enumerate(_bar_imgs())],
     }
     meta = {"glyphs": {}, "files": {}}
     code = 0xE200
@@ -1091,15 +1094,18 @@ def tree_sheets(out_dir):
     return meta
 
 
-# ------------------------------------------------------------------ 룬 뽑기 (3판 — 2026-11-08 사용자 그림: 왼쪽 진열판 · 오른쪽 세로 목록 (맨 위 한정))
+# ------------------------------------------------------------------ 룬 뽑기 전용 창 (4판 — 2026-11-08 사용자 그림 · "뽑기 전용 인터페이스로 넘어가고
+# 뽑기만 할 수 있는 창 … 위에 바 있는게 거슬림" · "글자를 최대한 줄여서 … 마우스 커서를 올리면 설명")
 #
-# 위 판: 진열판 (칸 0 ~ 5 · 줄 1 ~ 5 — 머리 줄 이름 · 기간, 가운데 큰 룬 (rpg:vbig — 칸 줄 3, 오른쪽 9px 옮김) + 빛 · 받침, 줄 5 = 픽업 영웅 · 확률),
-#   목록 (칸 6 ~ 8 · 줄 1 ~ 4 — 한정 · 일반 · 고급 · 스탯: 그림 칸 6 + 글 칸 7 ~ 8, 고른 줄은 글자 테 'plate'), 줄 5 = 확률 · 기록 · 도움말.
-# 아래 판: 줄 6 = 안내 글, 줄 7 ~ 8 = 최근 결과 10칸 (칸 2 ~ 6 — 등급 색 테는 글자 'ring'), 줄 9 = 1회 (칸 0 ~ 3) · 10회 (칸 5 ~ 8) 단추.
-# 확인 창 (menu_gacha_confirm): 이 쪽을 어둡게 + 가운데 창 "정말로 사용하시겠습니까?" · 네 (줄 6 · 칸 2 ~ 3) · 아니요 (칸 5 ~ 6).
+# 위 탭 없음. 위 판: 진열판 (칸 0 ~ 7 · 줄 0 ~ 3 — 가운데 큰 룬 (rpg:vbig — 칸 (1, 3) 에서 오른쪽 · 아래 9px = 진열판 가운데) + 마법진 · 받침,
+#   왼쪽 위 (0, 0) 돌아가기 · 오른쪽 위 (0, 7) 정보), 줄 4 = 뽑기 단추 둘 (칸 1 ~ 2 · 5 ~ 6 — 뽑기권 그림 칸 + ×1 / ×10),
+#   줄 5 = 천장 막대 (채움은 글자 rpg:gtx bar<k>) + 선물 (5, 7), 목록 (칸 8 · 줄 0 ~ 3 — 한정 · 일반 · 고급 · 스탯), (4, 8) 기록 · (5, 8) 도움말.
+# 아래 판: 진짜 가방 (비춤). 확인 창 (menu_gacha_confirm): 이 창을 어둡게 + 가운데 창 (제목 · 뽑기권 칸 (3, 3) + ×N · 네 / 아니요 (줄 5)).
 
-GACHA_LIST_ROWS = [1, 2, 3, 4]
-SHOW_X0, SHOW_X1 = 4, 113
+SHOW_X0, SHOW_X1, SHOW_Y0, SHOW_Y1 = 4, 150, 15, 88
+SHOW_CX, SHOW_CY = 78.5, 52.5
+BAR_X0, BAR_X1, BAR_Y = 10, 128, 112      # 천장 막대 홈 (안쪽 채움 x 11 ~ 127 · y 113 ~ 117)
+BAR_STEPS = 20
 
 
 def magic_circle(c, cx, cy, r, col=GOLD, mid=GOLD_MID, lo=GOLD_LO, hi=GOLD_HI, a=1.0):
@@ -1120,72 +1126,63 @@ def magic_circle(c, cx, cy, r, col=GOLD, mid=GOLD_MID, lo=GOLD_LO, hi=GOLD_HI, a
 
 
 def gacha_page(c):
-    f9 = font("Galmuri9.ttf", 10)
-    # 진열판 (칸 0 ~ 5 · 줄 1 ~ 5)
-    cx, cy = (SHOW_X0 + SHOW_X1 + 1) // 2, mid_y(3)
-    thin_frame(c, SHOW_X0, 36, SHOW_X1, 125, (18, 18, 36), edge=GOLD_MID, r=3)
-    glow(c, cx, cy - 2, 58, (96, 52, 140), 0.75, box=(SHOW_X0 + 1, 37, SHOW_X1 - 1, 124))
-    magic_circle(c, cx, cy + 1, 30, col=(150, 110, 210), mid=(110, 76, 170), lo=(80, 56, 130), hi=(220, 190, 255), a=0.55)
-    # 머리 줄 (줄 1 — 이름 · 기간) · 아래 줄 (줄 5 — 픽업 영웅 · 확률)
-    c.rect(SHOW_X0 + 2, 37, SHOW_X1 - 2, 51, (12, 12, 26))
-    c.rect(SHOW_X0 + 2, 52, SHOW_X1 - 2, 52, GOLD_DK)
-    c.rect(SHOW_X0 + 2, 106, SHOW_X1 - 2, 106, GOLD_DK)
-    c.rect(SHOW_X0 + 2, 107, SHOW_X1 - 2, 123, (12, 12, 26))
-    # 받침 (큰 룬 아래 — 금 타원 둘)
-    for y in range(96, 104):
-        for x in range(cx - 30, cx + 31):
-            d = ((x + 0.5 - cx) / 30) ** 2 + ((y + 0.5 - 100) / 3.6) ** 2
+    # 진열판 (칸 0 ~ 7 · 줄 0 ~ 3): 금 테 · 어두운 안 · 안쪽 가는 테 (사용자 그림처럼) · 빛 · 마법진 · 받침 · 별
+    thin_frame(c, SHOW_X0, SHOW_Y0, SHOW_X1, SHOW_Y1, (14, 14, 30), edge=GOLD_MID, r=3)
+    glow(c, SHOW_CX, SHOW_CY, 64, (92, 52, 140), 0.8, box=(SHOW_X0 + 1, SHOW_Y0 + 1, SHOW_X1 - 1, SHOW_Y1 - 1))
+    ix0, iy0, ix1, iy1 = SHOW_X0 + 4, SHOW_Y0 + 4, SHOW_X1 - 4, SHOW_Y1 - 4
+    for x in range(ix0 + 3, ix1 - 2):
+        c.blend(x, iy0, (120, 130, 200), 0.35)
+        c.blend(x, iy1, (120, 130, 200), 0.35)
+    for y in range(iy0 + 3, iy1 - 2):
+        c.blend(ix0, y, (120, 130, 200), 0.35)
+        c.blend(ix1, y, (120, 130, 200), 0.35)
+    magic_circle(c, SHOW_CX, SHOW_CY + 1, 30, col=(150, 110, 210), mid=(110, 76, 170), lo=(80, 56, 130), hi=(220, 190, 255), a=0.55)
+    for y in range(SHOW_Y1 - 16, SHOW_Y1 - 8):
+        for x in range(int(SHOW_CX) - 30, int(SHOW_CX) + 32):
+            d = ((x + 0.5 - SHOW_CX) / 30) ** 2 + ((y + 0.5 - (SHOW_Y1 - 12)) / 3.6) ** 2
             if 0.55 <= d <= 1.0:
-                c.put(x, y, GOLD_LO if y > 99 else GOLD_MID)
-    # 별빛 점 (진열판 위 · 양옆)
-    for (sx, sy, big) in ((14, 60, True), (24, 92, False), (103, 64, True), (95, 94, False), (34, 56, False), (86, 57, False)):
+                c.put(x, y, GOLD_LO if y > SHOW_Y1 - 12 else GOLD_MID)
+    for (sx, sy, big) in ((30, 34, True), (40, 74, False), (126, 38, True), (118, 76, False), (52, 28, False), (106, 27, False)):
         c.blend(sx, sy, (230, 210, 255), 0.9)
         if big:
             for (dx, dy) in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                 c.blend(sx + dx, sy + dy, (170, 140, 230), 0.6)
-    # 목록 (칸 6 ~ 8 · 줄 1 ~ 4): 판 + 그림 칸
-    lx0, lx1 = cell_x(6) - 1, cell_x(8) + 18
-    thin_frame(c, lx0 - 1, 36, lx1, 125, (16, 17, 32), edge=GOLD_LO, r=3)
-    for r in GACHA_LIST_ROWS:
-        y = cell_y(r)
-        c.box(cell_x(6), y + 1, cell_x(8) + 17, y + 16, (28, 30, 54), edge=(52, 56, 96), r=2, hi=(40, 44, 76))
-        slot_at(c, cell_x(6), y)
-    # 맨 위 (한정) 줄 장식: 금 리본 모서리
-    y = cell_y(1)
-    for k in range(4):
-        c.put(cell_x(8) + 16 - k, y + 2, GOLD)
-        c.put(cell_x(8) + 16, y + 2 + k, GOLD)
-    # 줄 5: 확률 · 기록 · 도움말
-    for col, key, tint in ((6, "info", (60, 90, 150)), (7, "history", (90, 70, 130)), (8, "help", (50, 90, 150))):
-        button(c, cell_x(col) + 1, cell_y(5) + 1, cell_x(col) + 16, cell_y(5) + 16, tint=tint)
-        icon(c, art.QUICK[key], cell_x(col) + 3, cell_y(5) + 3, GOLD_HI)
-    # 아래 판: 안내 줄 (줄 6 — 어두운 띠) · 최근 결과 (줄 7 ~ 8 · 칸 2 ~ 6) · 단추 (줄 9)
-    c.box(4, cell_y(6) + 1, MW - 5, cell_y(6) + 16, (14, 15, 28), edge=GOLD_DK, r=2)
-    rx0, rx1 = cell_x(2) - 3, cell_x(6) + 20
-    c.box(rx0, cell_y(7) - 2, rx1, cell_y(8) + 19, (14, 14, 28), edge=GOLD_LO, r=3)
-    for r in (7, 8):
-        for col in range(2, 7):
-            slot_at(c, cell_x(col), cell_y(r))
-    label(c, 9, cell_y(7) + 4, "최근", f9, MUTED, outline=None)
-    label(c, 9, cell_y(8) + 2, "결과", f9, MUTED, outline=None)
-    for (cxp, base) in ((cell_x(7) + 17, cell_y(8) + 13), (cell_x(8) + 9, cell_y(8) + 15)):
-        crystal(c, cxp, base)
-    for (c0, tint) in ((0, (96, 64, 160)), (5, (190, 120, 40))):
-        x0, x1 = cell_x(c0) + 1, cell_x(c0 + 3) + 16
-        button(c, x0, cell_y(9) + 1, x1, cell_y(9) + 16, tint=tint)
-        slot_at(c, cell_x(c0) + 1, cell_y(9))  # 뽑기권 그림 칸 (단추 왼쪽 — 아이템)
+    # 돌아가기 (0, 0) · 정보 (0, 7) — 진열판 모서리
+    button(c, cell_x(0) + 1, cell_y(0) + 1, cell_x(0) + 16, cell_y(0) + 16, tint=(120, 104, 70))
+    icon(c, art.QUICK["left"], cell_x(0) + 3, cell_y(0) + 3, CREAM)
+    button(c, cell_x(7) + 1, cell_y(0) + 1, cell_x(7) + 16, cell_y(0) + 16, tint=(60, 90, 150))
+    icon(c, art.QUICK["info"], cell_x(7) + 3, cell_y(0) + 3, GOLD_HI)
+    # 뽑기 단추 (줄 4 · 칸 1 ~ 2 · 칸 5 ~ 6): 단추 + 왼쪽 뽑기권 그림 칸 (글자 ×1 · ×10 은 Java — 숫자 글꼴)
+    for (c0, tint) in ((1, (96, 64, 160)), (5, (190, 120, 40))):
+        x0, x1 = cell_x(c0), cell_x(c0 + 1) + 17
+        button(c, x0, cell_y(4) + 1, x1, cell_y(4) + 16, tint=tint)
+        slot_at(c, cell_x(c0), cell_y(4))
+    # 천장 막대 (줄 5): 홈 + 눈금 (10칸마다) · 선물 칸 (5, 7)
+    c.box(BAR_X0 - 1, BAR_Y - 1, BAR_X1 + 1, BAR_Y + 7, (8, 8, 16), edge=GOLD_LO, r=2)
+    for k in range(1, 10):
+        x = BAR_X0 + 1 + round((BAR_X1 - BAR_X0 - 2) * k / 10)
+        c.put(x, BAR_Y + 6, GOLD_DK)
+    slot_at(c, cell_x(7), cell_y(5))
+    # 목록 (칸 8 · 줄 0 ~ 3 — 기둥 판 + 받침 칸) · 기록 (4, 8) · 도움말 (5, 8)
+    c.box(cell_x(8) - 2, SHOW_Y0, cell_x(8) + 19, SHOW_Y1, (16, 18, 40), edge=GOLD_LO, r=3, hi=(30, 34, 66))
+    for r in range(4):
+        slot_at(c, cell_x(8), cell_y(r))
+        c.rect(cell_x(8) + 3, cell_y(r) + 17, cell_x(8) + 14, cell_y(r) + 17, GOLD_DK)
+    for (r, key, tint) in ((4, "history", (90, 70, 130)), (5, "help", (50, 90, 150))):
+        button(c, cell_x(8) + 1, cell_y(r) + 1, cell_x(8) + 16, cell_y(r) + 16, tint=tint)
+        icon(c, art.QUICK[key], cell_x(8) + 3, cell_y(r) + 3, GOLD_HI)
     return c
 
 
 def menu_gacha():
-    c = frame("home", inv=False)
+    c = frame(None, inv=True, tabs=False)
     gacha_page(c)
     return c.final()
 
 
 def menu_gacha_confirm():
-    """확인 창: 뽑기 쪽 그림을 어둡게 + 가운데 창 (줄 3 제목 · 줄 4 뽑기권 그림 (칸 2) + 글 · 줄 5 남는 수 · 줄 6 네 / 아니요)"""
-    c = frame("home", inv=False)
+    """확인 창: 뽑기 창 그림을 어둡게 + 가운데 창 (줄 2 제목 · 줄 3 뽑기권 칸 (3, 3) + ×N · 줄 5 네 / 아니요)"""
+    c = frame(None, inv=True, tabs=False)
     gacha_page(c)
     for y in range(-MTOP, VANILLA_H):
         for x in range(MW):
@@ -1193,15 +1190,14 @@ def menu_gacha_confirm():
             if a:
                 c.px[x, y + MTOP] = (r * 30 // 100, g * 30 // 100, b * 34 // 100, a)
     f9 = font("Galmuri9.ttf", 10)
-    gold_frame(c, 14, 62, MW - 15, 161, PANEL)
-    thin_frame(c, 19, 67, MW - 20, 129, (20, 22, 42), edge=GOLD_DK, r=2, glow=(88, 96, 60, GLOW, 0.5))
-    c.rect(24, 88, MW - 25, 88, GOLD_DK)
-    slot_at(c, cell_x(2), cell_y(4))
+    gold_frame(c, 14, 47, MW - 15, 131, PANEL)
+    c.rect(24, 68, MW - 25, 68, GOLD_DK)
+    slot_at(c, cell_x(3), cell_y(3))
     for (c0, txt, tint) in ((2, "네", (60, 130, 80)), (5, "아니요", (120, 60, 60))):
         x0, x1 = cell_x(c0) + 1, cell_x(c0 + 1) + 16
-        button(c, x0, cell_y(6) + 1, x1, cell_y(6) + 16, tint=tint)
+        button(c, x0, cell_y(5) + 1, x1, cell_y(5) + 16, tint=tint)
         tw = text_width(txt, f9)
-        label(c, (x0 + x1 + 1) // 2 - tw // 2, cell_y(6) + 4, txt, f9, CREAM)
+        label(c, (x0 + x1 + 1) // 2 - tw // 2, cell_y(5) + 4, txt, f9, CREAM)
     return c.final()
 
 
@@ -1250,7 +1246,7 @@ def item_icons():
         out["kind_" + k.lower()] = im  # 리소스 경로는 소문자만 (critDmg → kind_critdmg)
     out["fork"] = art.fork_icon()
     out["card_back"] = art.card_icon()
-    for key in ("info", "sum", "reset", "help", "history"):  # 단추 그림 (12 × 12 → 16 × 16 가운데)
+    for key in ("info", "sum", "reset", "help", "history", "gift"):  # 단추 그림 (12 × 12 → 16 × 16 가운데)
         im = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
         im.alpha_composite(art.art(art.QUICK[key], one=GOLD_HI), (2, 2))
         out[key] = im
@@ -1281,7 +1277,7 @@ def main():
     for name, fn in PAGES:
         fn().save(os.path.join(OUT, name + ".png"))
     keep = {n + ".png" for n, _ in PAGES} | {"text.png", "num.png", "tree_cells.png", "tree_frames.png", "tree_plate.png", "tree_tri.png",
-                                             "tree_thumb.png"}
+                                             "tree_thumb.png", "tree_bar.png"}
     for f in os.listdir(OUT):
         if f.endswith(".png") and f not in keep:
             os.remove(os.path.join(OUT, f))

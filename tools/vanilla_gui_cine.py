@@ -360,6 +360,18 @@ def stars(w=256, h=180, n=170, seed=5):
     return im.image()
 
 
+def new_star():
+    """처음 얻은 룬 표시 (10회 칸 — 글자 대신 작은 노란 별, 사용자 "글자를 최대한 줄여서")"""
+    rows = ["...#...", "...#...", "..###..", "#######", "..###..", "...#...", "...#..."]
+    im = Img(7, 7)
+    for y, r in enumerate(rows):
+        for x, ch in enumerate(r):
+            if ch == "#":
+                im.set(x, y, (255, 236, 120) if (x == 3 or y == 3) else (255, 196, 80))
+    im.set(3, 3, (255, 255, 230))
+    return im.image()
+
+
 def backdrop():
     im = Image.new("RGBA", (4, 4), (5, 6, 12, 255))
     return im
@@ -470,7 +482,7 @@ def main():
                                        ("shard_s%d" % row, stone_shards(20, 1))], font, yc)
         f.sheet("aura_small%d" % row, [("aura_s%d_0" % row, aura(24, 0)), ("aura_s%d_1" % row, aura(24, 1))], font, yc)
         f.sheet("ring_small%d" % row, [("ring_s%d" % row, frame_ring(22))], font, yc)
-        f.sheet("new_small%d" % row, [("new_s%d" % row, new_badge())], font, yc - 9)
+        f.sheet("new_small%d" % row, [("new_s%d" % row, new_star())], font, yc - 9)
     f.sheet("new_big", [("new_big", new_badge())], "cine_name", NAME_Y - 9)
     runes = rune_sheet(f)
     # 글자 (갈무리9 글자판 rpg:gui/text.png): 큰 이름 (2배 — 12 fu) · 작은 글 (1배 — 6 fu)

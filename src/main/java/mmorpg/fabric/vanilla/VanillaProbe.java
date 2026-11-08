@@ -317,7 +317,7 @@ final class VanillaProbe {
                 next(p, 107, 15);
             }
             case 107 -> {
-                say(p, "slot " + VanillaMenu.idx(7, 7)); // 방향 키 ▼
+                say(p, "slot " + VanillaMenu.idx(VanillaTree.DOWN[0], VanillaTree.DOWN[1])); // 방향 키 ▼ (아래 판 가운데)
                 next(p, 108, 15);
             }
             case 108 -> {
@@ -443,7 +443,7 @@ final class VanillaProbe {
                 next(p, 112, 20);
             }
             case 112 -> {
-                say(p, "slot " + VanillaMenu.idx(2, 7)); // 목록 줄 2 = 일반
+                say(p, "slot " + VanillaMenu.idx(1, VanillaGacha.LIST_COL)); // 목록 둘째 = 일반
                 next(p, 113, 15);
             }
             case 113 -> {
@@ -453,12 +453,12 @@ final class VanillaProbe {
                 next(p, 114, 15);
             }
             case 114 -> {
-                say(p, "slot " + VanillaMenu.idx(1, 6)); // 목록 줄 1 = 한정
+                say(p, "slot " + VanillaMenu.idx(0, VanillaGacha.LIST_COL)); // 목록 맨 위 = 한정
                 next(p, 52, 15);
             }
             case 52 -> {
                 runesBefore = countRunes(p);
-                say(p, "slot " + VanillaMenu.idx(9, 1)); // 1회 뽑기
+                say(p, "slot " + VanillaMenu.idx(4, 1)); // 1회 뽑기 (뽑기권 그림 칸)
                 next(p, 53, 15);
             }
             case 53 -> {
@@ -468,7 +468,7 @@ final class VanillaProbe {
                 next(p, 115, 15);
             }
             case 115 -> {
-                say(p, "slot " + VanillaMenu.idx(6, 2)); // 네
+                say(p, "slot " + VanillaMenu.idx(5, 2)); // 네
                 next(p, 116, 14);
             }
             case 116 -> {
@@ -503,13 +503,13 @@ final class VanillaProbe {
                 next(p, 54, 15);
             }
             case 54 -> {
-                say(p, "slot " + VanillaMenu.idx(9, 6)); // 10회 뽑기
+                say(p, "slot " + VanillaMenu.idx(4, 6)); // 10회 뽑기 (×10 칸)
                 next(p, 122, 15);
             }
             case 122 -> {
                 VanillaMenu.MenuGui g = VanillaMenu.current(p);
                 check("10 pull asks first", g != null && g.gachaConfirm == mmorpg.core.Gacha.multi());
-                say(p, "slot " + VanillaMenu.idx(6, 2)); // 네
+                say(p, "slot " + VanillaMenu.idx(5, 2)); // 네
                 next(p, 123, 52);
             }
             case 123 -> {
@@ -547,12 +547,33 @@ final class VanillaProbe {
                 next(p, 128, 20);
             }
             case 56 -> {
-                say(p, "slot " + VanillaMenu.idx(0, 8)); // 닫기 단추
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                var tab = g == null ? null : g.getGuiElement(VanillaMenu.idx(0, 2)); // 다른 쪽이면 스탯 탭 자리
+                check("gacha window has no top tabs", g != null && g.page == VanillaMenu.Page.GACHA && (tab == null || tab.getItemStack().isEmpty()));
+                say(p, "slot " + VanillaMenu.idx(0, 0)); // 돌아가기
+                next(p, 130, 15);
+            }
+            case 130 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("back button goes home", g != null && g.page == VanillaMenu.Page.HOME);
+                say(p, "slot " + VanillaMenu.idx(0, 8)); // 닫기 단추 (홈)
                 next(p, 58, 15);
             }
             case 58 -> {
                 check("close button closes menu", VanillaMenu.current(p) == null && p.containerMenu == p.inventoryMenu);
-                next(p, 57, 10);
+                mmorpg.fabric.gacha.GachaSystem.useTicketItem(p, mmorpg.fabric.rune.RuneItems.TICKET); // 뽑기권 우클릭과 같음
+                next(p, 131, 15);
+            }
+            case 131 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("ticket use opens gacha window (normal)", g != null && g.page == VanillaMenu.Page.GACHA
+                        && mmorpg.fabric.gacha.GachaSystem.NORMAL.equals(g.gachaKey));
+                say(p, "shot 16k_gacha_ticket");
+                next(p, 132, 15);
+            }
+            case 132 -> {
+                say(p, "close");
+                next(p, 57, 15);
             }
             default -> {
                 say(p, "done");

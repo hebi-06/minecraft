@@ -25,13 +25,12 @@ import java.util.Map;
  *            [2]                                        고를 수 있는 갈래 = 금, 닫힘 = 어둡게, 고른 칸 = 흰 테)
  *        ┌────┴────┐
  *      [3A]       [3B]                                  ← 보이는 곳은 5줄 (나무는 19줄) — 방향 키 ↑↓ 로 2줄 (한 단계) 씩
- * [그림] 3단계 갈래 · 광전사   │   [↑]                     아래 판 (가방 자리): 설명 카드 (칸 0 ~ 5 · 줄 6 ~ 8 — 고른 칸) · 방향 키
- * 공격력 +4%                   │ [←][↓][→]                 (↑↓ 나무 내리기 · ←→ 다른 나무), 탭 (줄 9 — 힘 · 민첩 · 체력 · 마력 · 합계 Σ,
- * 한 번 더 누르면 고름          │                            고른 탭 = 주황 빛 + 흰 세모), 도움말 (칸 0) · 초기화 (칸 8 — 두 번 눌러)
- * [?]   [힘][민첩][체력][마력][Σ]   [↺]
- *              [ 힘 스탯 트리 ]                         ← 창 밑 글
+ *                 [↑]                                   아래 판 (가방 자리): 방향 키 (가운데 — ↑↓ 나무 내리기 · ←→ 다른 나무),
+ *              [←][↓][→]                                탭 (줄 9 — 힘 · 민첩 · 체력 · 마력 · 합계 Σ, 고른 탭 = 주황 빛 + 흰 세모),
+ * [?]   [힘][민첩][체력][마력][Σ]   [↺]                  도움말 (칸 0) · 초기화 (칸 8 — 두 번 눌러)
  * </pre>
- * 칸을 누르면 고름 (설명 카드), 고른 갈래를 한 번 더 누르면 그 갈래를 고름 (StatTrees.pick — 모바일은 마우스를 올려 설명을 볼 수 없어 두 번 누름).
+ * 글자 없음 (사용자 "글자를 최대한 줄여서 깔끔하게 … 마우스 커서를 올리면 설명" — 칸 이름 · 보너스 · 조건은 칸의 설명 상자).
+ * 갈래는 눌러서 고르고 (흰 테) 한 번 더 누르면 그 갈래를 고름 (StatTrees.pick — 실수로 고르지 않게).
  */
 public final class VanillaTree {
     private VanillaTree() {}
@@ -44,8 +43,8 @@ public final class VanillaTree {
     static final int AVAIL = 0xFFD678, LDIM = 0x363A60, SEL = 0xFFF4D6, TAB = 0xE8963C;
     /** 초기화 두 번 누름 사이 (틱) */
     private static final int ARM_TICKS = 60;
-    /** 설명 카드 글자 자리 */
-    private static final int CARD_X = 9, NAME_X = 28, NAME_W = 82, CARD_W = 100;
+    /** 방향 키 자리 (줄, 칸 — 아래 판 가운데, tools/vanilla_gui.py menu_tree 와 같음) */
+    static final int[] UP = {6, 4}, DOWN = {7, 4}, LEFT_KEY = {7, 3}, RIGHT_KEY = {7, 5};
 
     /** 스탯마다 나무 색 (바탕 그림 STATS 와 같은 계열) */
     static int statColor(String stat) {
@@ -83,13 +82,7 @@ public final class VanillaTree {
         int tier = StatTree.tier(stat, spent);
         StatTree.State state = StatTrees.state(sp);
         Map<Integer, Integer> picks = state.picksOf(stat);
-        String statName = Stats.info(stat).str("name");
         int n = tree.nodes().size();
-
-        VanillaMenu.title(t, "스탯 트리");
-        t.right(166, 0, statName + " " + (int) spent + " · " + tier + "/" + n, VanillaGui.MUTED);
-        t.center(88, 223, "[ " + statName + " 스탯 트리 ]", VanillaGui.MUTED);
-
         int sel = selected(g, tree, tier, picks);
         int maxTop = Math.max(0, rows(n) - VIEW);
         if (g.treeTop < 0) g.treeTop = Math.max(0, Math.min(maxTop, 2 * (sel / 2) - 2)) & ~1;
@@ -118,13 +111,11 @@ public final class VanillaTree {
                 Look look = look(node, i, o, tier, picks, lit);
                 boolean isSel = sel == code(i, o);
                 t.glyph(VanillaGui.cellX(col) - 2, r, isSel ? "frame_sel" : "frame", isSel ? SEL : look.color);
-                g.set(r, col, nodeIcon(stat, node, i, o, look, tier, picks), nodeClick(g, stat, i, o));
+                g.set(r, col, nodeIcon(stat, node, i, o, look, tier, picks, isSel && g.treeSel == sel), nodeClick(g, stat, i, o));
             }
         }
         t.glyph(VanillaGui.THUMB_X, -1, "thumb" + Math.min(VanillaGui.THUMB_STEPS - 1, maxTop == 0 ? 0
                 : Math.round((float) top / maxTop * (VanillaGui.THUMB_STEPS - 1))), VanillaGui.GOLD);
-
-        card(g, t, stat, tree, sel, tier, picks);
     }
 
     /** 나무의 세로 줄 수 (단계 i = 줄 2i, 사이 = 선) */
@@ -137,7 +128,7 @@ public final class VanillaTree {
         return i * 2 + o;
     }
 
-    /** 설명 카드에 보일 칸: 누른 칸 → 아직 안 고른 열린 갈래 → 다음에 열릴 칸 → 마지막 칸 */
+    /** 흰 테로 고른 칸 (처음 보일 자리): 누른 칸 → 아직 안 고른 열린 갈래 → 다음에 열릴 칸 → 마지막 칸 */
     private static int selected(VanillaMenu.MenuGui g, StatTree.Tree tree, int tier, Map<Integer, Integer> picks) {
         int n = tree.nodes().size();
         if (g.treeSel >= 0 && g.treeSel / 2 < n) {
@@ -226,14 +217,15 @@ public final class VanillaTree {
         return node.fork() ? node.pick().get(o).bonus() : node.bonus();
     }
 
-    private static ItemStack nodeIcon(String stat, StatTree.Node node, int i, int o, Look look, int tier, Map<Integer, Integer> picks) {
+    private static ItemStack nodeIcon(String stat, StatTree.Node node, int i, int o, Look look, int tier, Map<Integer, Integer> picks, boolean sel) {
         String statName = Stats.info(stat).str("name");
         List<String> lore = new ArrayList<>();
         lore.add("§f" + StatTree.bonusText(bonusOf(node, o)));
         lore.add("§7" + statName + " " + node.at() + " 이상 " + (look.open ? "§a열림" : "§8닫힘"));
         if (!node.fork() && !node.reward().isEmpty()) lore.add("§6처음 열면 " + StatTree.rewardText(stat, node.reward()));
         if (node.fork()) {
-            lore.add(look.mine ? "§a골랐음" : look.other ? "§8다른 갈래를 골랐음 (초기화하면 다시)" : look.avail ? "§e눌러서 보고 한 번 더 눌러 고름" : "§8열리면 둘 중 하나를 고름");
+            lore.add(look.mine ? "§a골랐음" : look.other ? "§8다른 갈래를 골랐음 (초기화하면 다시)"
+                    : look.avail ? (sel ? "§e한 번 더 누르면 이 갈래를 고름" : "§e눌러서 고르기 (두 번)") : "§8열리면 둘 중 하나를 고름");
         }
         boolean dim = !look.open || look.other;
         String name = (look.mine || (!node.fork() && look.open) ? "§a" : look.avail ? "§e" : "§8") + nodeName(node, i, o);
@@ -262,43 +254,6 @@ public final class VanillaTree {
             g.treeArm = 0;
             g.refresh();
         });
-    }
-
-    /** 설명 카드 (칸 0 ~ 5 · 줄 6 ~ 8): 그림 (6, 0) · 이름 · 보너스 · 상태 */
-    private static void card(VanillaMenu.MenuGui g, VanillaGui.Title t, String stat, StatTree.Tree tree, int sel, int tier, Map<Integer, Integer> picks) {
-        int i = Math.min(sel / 2, tree.nodes().size() - 1);
-        StatTree.Node node = tree.nodes().get(i);
-        int o = node.fork() ? Math.min(sel % 2, node.pick().size() - 1) : 0;
-        Look look = look(node, i, o, tier, picks, statColor(stat));
-        g.set(6, 0, nodeIcon(stat, node, i, o, look, tier, picks), null);
-        String statName = Stats.info(stat).str("name");
-        t.text(NAME_X, 138, VanillaGui.fit(nodeName(node, i, o), NAME_W), look.open ? VanillaGui.GOLD : VanillaGui.MUTED);
-        t.text(CARD_X, 156, VanillaGui.fit(StatTree.bonusText(bonusOf(node, o)), CARD_W), look.open && !look.other ? VanillaGui.WHITE : VanillaGui.MUTED);
-        String status;
-        int color;
-        if (armed(g)) {
-            status = "한 번 더 누르면 갈래 초기화";
-            color = VanillaGui.RED;
-        } else if (!look.open) {
-            status = statName + " " + node.at() + " 이상에서 " + (node.fork() ? "고름" : "열림");
-            color = VanillaGui.MUTED;
-        } else if (look.avail) {
-            status = sel == g.treeSel ? "한 번 더 누르면 고름" : "눌러서 고르기";
-            color = VanillaGui.GOLD;
-        } else if (look.mine) {
-            status = "골랐음";
-            color = VanillaGui.GREEN;
-        } else if (look.other) {
-            status = "다른 갈래를 골랐음";
-            color = VanillaGui.DIM;
-        } else if (!node.reward().isEmpty()) {
-            status = "열림 · " + StatTree.rewardText(stat, node.reward());
-            color = VanillaGui.GREEN;
-        } else {
-            status = "열림";
-            color = VanillaGui.GREEN;
-        }
-        t.text(CARD_X, 174, VanillaGui.fit(status, CARD_W), color);
     }
 
     /** 탭 막대 (줄 9 · 칸 2 ~ 6): 스탯 넷 + 합계 — 고른 탭 = 주황 빛 + 흰 세모 */
@@ -352,10 +307,10 @@ public final class VanillaTree {
     private static void controls(VanillaMenu.MenuGui g) {
         ServerPlayer sp = g.sp;
         boolean tree = !SUM.equals(g.treeStat);
-        g.set(6, 7, VanillaGui.blank("§f▲ 위로", List.of("§7나무를 위로 (한 단계)")), VanillaMenu.MenuGui.left(() -> scroll(g, -2)));
-        g.set(7, 7, VanillaGui.blank("§f▼ 아래로", List.of("§7나무를 아래로 (한 단계)")), VanillaMenu.MenuGui.left(() -> scroll(g, 2)));
-        g.set(7, 6, VanillaGui.blank("§f◀ 앞 나무", List.of("§7앞 탭의 나무")), VanillaMenu.MenuGui.left(() -> step(g, -1)));
-        g.set(7, 8, VanillaGui.blank("§f▶ 다음 나무", List.of("§7다음 탭의 나무")), VanillaMenu.MenuGui.left(() -> step(g, 1)));
+        g.set(UP[0], UP[1], VanillaGui.blank("§f▲ 위로", List.of("§7나무를 위로 (한 단계)")), VanillaMenu.MenuGui.left(() -> scroll(g, -2)));
+        g.set(DOWN[0], DOWN[1], VanillaGui.blank("§f▼ 아래로", List.of("§7나무를 아래로 (한 단계)")), VanillaMenu.MenuGui.left(() -> scroll(g, 2)));
+        g.set(LEFT_KEY[0], LEFT_KEY[1], VanillaGui.blank("§f◀ 앞 나무", List.of("§7앞 탭의 나무")), VanillaMenu.MenuGui.left(() -> step(g, -1)));
+        g.set(RIGHT_KEY[0], RIGHT_KEY[1], VanillaGui.blank("§f▶ 다음 나무", List.of("§7다음 탭의 나무")), VanillaMenu.MenuGui.left(() -> step(g, 1)));
         g.set(9, 0, VanillaGui.blank("§b스탯 트리", List.of(
                 "§7스탯을 찍으면 그 나무의 칸이 열림 §8(장비 · 버프 제외)",
                 "§7칸을 누르면 아래 카드에 설명",
@@ -373,7 +328,9 @@ public final class VanillaTree {
         if (picked > 0) lore.add("§7비용 §f" + Inv.CURRENCY_NAME + " " + StatTrees.resetCost(sp, stat));
         lore.add("");
         lore.add("§e두 번 눌러 초기화 §8(실수로 지우지 않게)");
-        g.set(9, 8, VanillaGui.blank(picked > 0 ? "§c갈래 초기화" : "§8갈래 초기화", lore), VanillaMenu.MenuGui.left(() -> {
+        ItemStack reset = VanillaGui.blank(picked > 0 ? "§c갈래 초기화" : "§8갈래 초기화", lore);
+        if (armed(g)) reset.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        g.set(9, 8, reset, VanillaMenu.MenuGui.left(() -> {
             if (StatTrees.state(sp).pickCount(stat) <= 0) {
                 warn(sp, "§7고른 갈래가 없습니다");
                 return;
@@ -381,6 +338,7 @@ public final class VanillaTree {
             if (!armed(g)) {
                 g.treeArm = sp.level().getServer().getTickCount();
                 SkillFx.playFor(sp, "block.note_block.bass", 1.4, 0.6);
+                Notify.notify(sp, "§c한 번 더 누르면 갈래 초기화 §7(" + Inv.CURRENCY_NAME + " " + StatTrees.resetCost(sp, stat) + ")", 50);
                 g.refresh();
                 return;
             }
@@ -418,38 +376,22 @@ public final class VanillaTree {
         select(g, tabs.get(Math.floorMod(at + d, tabs.size())));
     }
 
-    /** 합계 탭: 나무 판에 보너스 종류 여덟 (두 칸 줄 × 넷) · 설명 카드에 열린 칸 수 */
+    /** 합계 탭: 나무 판에 보너스 종류 여덟 (줄 1 · 3 의 칸 1 · 3 · 5 · 7 — 그림, 바로 아래 줄에 값 · 이름은 설명 상자) */
     private static void sum(VanillaMenu.MenuGui g, VanillaGui.Title t) {
         ServerPlayer sp = g.sp;
-        VanillaMenu.title(t, "스탯 트리 합계");
-        t.center(88, 223, "[ 스탯 트리 합계 ]", VanillaGui.MUTED);
         Map<String, Double> all = StatTrees.totals(sp);
         int k = 0;
         for (Map.Entry<String, StatTree.Kind> e : StatTree.kinds().entrySet()) {
             if (k >= 8) break;
-            int r = 1 + k % 4, col = k < 4 ? 0 : 5;
+            int r = k < 4 ? 1 : 3, col = 1 + 2 * (k % 4);
             double v = all.getOrDefault(e.getKey(), 0.0);
             boolean has = v != 0;
-            String line = e.getValue().name() + " " + (has ? StatTree.bonusText(e.getKey(), v) : "0");
-            g.set(r, col, VanillaGui.ui("kind_" + e.getKey() + (has ? "" : "_locked"), (has ? "§f" : "§8") + e.getValue().name(),
+            String value = has ? StatTree.bonusText(e.getKey(), v).replace(e.getValue().name(), "").trim() : "0";
+            g.set(r, col, VanillaGui.ui("kind_" + e.getKey() + (has ? "" : "_locked"), (has ? "§f" : "§8") + e.getValue().name() + " §f" + value,
                     List.of("§7" + e.getValue().desc())), null);
-            t.text(VanillaGui.cellX(col + 1) + 2, VanillaGui.rowLine(r), VanillaGui.fit(line, col == 0 ? 66 : 50), has ? VanillaGui.CREAM : VanillaGui.DIM);
+            t.numCenter(VanillaGui.cellMid(col), VanillaGui.rowLine(r + 1), value, has ? VanillaGui.CREAM : VanillaGui.DIM);
             k++;
         }
-        t.text(10, VanillaGui.rowLine(5), "스탯을 찍으면 그 나무의 칸이 열림", VanillaGui.MUTED);
-        // 설명 카드: 열린 칸 · 고를 갈래
-        int open = 0, total = 0, pend = 0;
-        StatTree.State state = StatTrees.state(sp);
-        for (String s : StatTree.stats()) {
-            double spent = Stats.get(StatTrees.spent(sp), s);
-            open += StatTree.tier(s, spent);
-            total += StatTree.tree(s).nodes().size();
-            pend += StatTree.pending(s, spent, state.picksOf(s)).size();
-        }
-        g.set(6, 0, VanillaGui.ui("sum", "§6합계", List.of()), null);
-        t.text(NAME_X, 138, "스탯 트리 합계", VanillaGui.GOLD);
-        t.text(CARD_X, 156, "열린 칸 " + open + "/" + total, VanillaGui.WHITE);
-        t.text(CARD_X, 174, pend > 0 ? "고를 갈래 " + pend + "개" : "고를 갈래 없음", pend > 0 ? VanillaGui.GOLD : VanillaGui.MUTED);
     }
 
     /** 보너스의 첫 종류 그림 (직접 그린 rpg:vui/kind_&lt;종류&gt; — stat_tree.json kinds 의 열쇠) */

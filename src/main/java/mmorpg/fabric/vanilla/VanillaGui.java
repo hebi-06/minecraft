@@ -86,6 +86,8 @@ public final class VanillaGui {
     public static final int GLYPH_ROWS = 10;
     /** 세모 (탭 아래) 의 y · 스크롤 손잡이 (나무 판 오른쪽) 의 y — tools/vanilla_gui.py 와 같음 */
     public static final int TRI_Y = 215, THUMB_Y = 38, THUMB_X = 168, THUMB_STEPS = 8;
+    /** 뽑기 창의 천장 막대 채움 (rpg:gtx bar&lt;k&gt; — 왼쪽 x · 위 y · 칸 수) */
+    public static final int BAR_X = 11, BAR_Y = 113, BAR_STEPS = 20;
 
     /** 글자 (tree_glyphs.json — 이름 → 글자 · 너비) */
     private static Map<String, String[]> glyphs;

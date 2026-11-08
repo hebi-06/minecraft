@@ -48,8 +48,7 @@ public final class VanillaEquip {
 
     static void render(VanillaMenu.MenuGui g, VanillaGui.Title t) {
         ServerPlayer sp = g.sp;
-        VanillaMenu.title(t, "장비");
-        t.right(166, 0, "아티팩트 " + ArtifactSystem.worn(sp) + "/" + ArtifactSystem.SIZE, VanillaGui.MUTED);
+        // 글자 없음 (사용자 "글자를 최대한 줄여서" — 아티팩트 수 · 설명은 칸의 설명 상자)
         // 갑옷 넷 (칸 0 · 줄 1 ~ 4 — 바탕의 점선이 몸까지)
         for (int i = 0; i < 4; i++) {
             EquipmentSlot es = ARMOR[i];
