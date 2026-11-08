@@ -514,7 +514,8 @@ final class VanillaProbe {
                 // 2026-11-08 CI 42444726662: 둘레의 슬라임이 연출 중에 때려 연출이 끝남 (맞으면 바로 끝 — GachaCinematic) → 남은 장면은 맞지 않게
                 for (net.minecraft.world.entity.Mob m : p.level().getEntitiesOfClass(net.minecraft.world.entity.Mob.class, p.getBoundingBox().inflate(48),
                         e -> e instanceof net.minecraft.world.entity.monster.Enemy)) m.discard();
-                p.setInvulnerable(true);
+                p.getAbilities().invulnerable = true; // 플레이어 무적 (창작 모드와 같은 능력 — 26.3 에는 setInvulnerable 이 없음)
+                p.onUpdateAbilities();
                 // 한정 뽑기를 엶 (관리자 설정과 같은 것 — 초월 픽업 1 · 영웅 픽업 3) + 한정 룬 뽑기권
                 List<String> all = mmorpg.core.Runes.ALL_FAMILIES;
                 String err = mmorpg.fabric.gacha.GachaSystem.saveLimited(p.level().getServer(), new java.util.LinkedHashMap<>(java.util.Map.of(
