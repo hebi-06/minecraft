@@ -427,6 +427,14 @@ final class VanillaProbe {
                 next(p, 142, 10);
             }
             case 142 -> {
+                say(p, "hover " + VanillaMenu.idx(5, 3)); // 든 무기 칸 — 무기 설명 (2026-11-08 공격력 · 1당 공격력, % 없음)
+                next(p, 143, 10);
+            }
+            case 143 -> {
+                say(p, "shot 15d_equip_weapon");
+                next(p, 144, 10);
+            }
+            case 144 -> {
                 say(p, "hover -1");
                 next(p, 45, 10);
             }

@@ -121,8 +121,10 @@ public final class VanillaEquip {
         out.add("");
         out.add("§7공격력 §f" + VanillaStats.one(s.attack()) + (c.weapon() != null && !c.usable() ? " §c(든 무기의 요구 조건이 모자람)" : ""));
         if (c.usable()) {
+            // 깡딜 (사용자 "깡딜로 하자"): 스탯 트리 공격력 % 도 더해진 공격력 숫자로
+            double tree = (c.weaponAttack() + c.statAttack()) * c.atkPct() / 100;
             out.add("§7  무기 " + VanillaStats.one(c.weaponAttack()) + " · 스탯 +" + VanillaStats.one(c.statAttack())
-                    + (c.atkPct() > 0 ? " · 스탯 트리 +" + VanillaStats.one(c.atkPct()) + "%" : ""));
+                    + (tree > 0 ? " · 스탯 트리 +" + VanillaStats.one(tree) : ""));
             out.add("§7치명타 확률 §f" + VanillaStats.one(s.critChance() * 100) + "%");
             out.add("§7치명타 피해 §f×" + VanillaStats.two(s.critMult()));
         }

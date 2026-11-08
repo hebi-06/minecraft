@@ -159,6 +159,17 @@ public final class WeaponsMoreTest {
             String plus = Js.str(Weapons.round1(eff - hs.damage()));
             check(enhLore.stream().anyMatch(l -> l.contains("공격력 §f" + Js.str(eff))), "enhanced attack line " + enhLore);
             check(enhLore.stream().anyMatch(l -> l.contains("강화 +7") && l.contains("공격력 +" + plus) && !l.contains("%")), "enhance line shows attack +" + plus + " " + enhLore);
+            // 2026-11-08 (사용자 "무기 공격력만으로 표시 … %로 쎄지는게 아니라" · "깡딜로 하자"): 모든 무기가 "공격력", 스탯 줄은 1 포인트가 더하는 공격력 (강화 반영)
+            double per7 = Weapons.flatPer(hs.damage() * (1 + Enhance.enhanceBonus(7)) * 0.02);
+            check(enhLore.stream().anyMatch(l -> l.contains("힘 1당 공격력 §f+" + Js.str(per7))) && enhLore.stream().noneMatch(l -> l.contains("1포인트당 피해")),
+                    "stat line is flat attack per point +" + per7 + " " + enhLore);
+            for (String t : List.of("bow", "wand", "dagger", "shield")) {
+                List<String> l2 = Weapons.weaponInfo(Weapons.weaponFrom(t, 40, t.equals("shield") ? "hero" : "transcend"));
+                check(l2.stream().anyMatch(l -> l.contains("공격력 §f")) && l2.stream().noneMatch(l -> l.contains("화살 피해") || l.contains("피해 §f+")),
+                        t + " lore uses attack " + l2);
+            }
+            check(Weapons.weaponInfo(Weapons.weaponFrom("wand", 40, "transcend")).stream().anyMatch(l -> l.contains("공격력") && l.contains("마법 피해 (방어 무시)")),
+                    "wand keeps magic note");
         }
         // 평균 평타: 창 · 낫은 칼 · 단검과 ±8%, 망치는 방패와 도끼 사이, 홀은 완드의 0.7배 이상
         double sword = avgHit(gram);

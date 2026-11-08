@@ -316,6 +316,11 @@ public final class Weapons {
         return Js.round(x * 10) / 10;
     }
 
+    /** 2026-11-08 스탯 1 포인트가 더하는 공격력 (무기 설명 — 1 보다 작으면 소수 둘째, 아니면 첫째 자리) */
+    public static double flatPer(double x) {
+        return x < 1 ? Js.round(x * 100) / 100 : round1(x);
+    }
+
     /** weapons.js pct: "12.5%". */
     public static String pct(double x) {
         return Js.str(round1(x * 100)) + "%";
@@ -385,16 +390,21 @@ public final class Weapons {
         List<String> lines = new ArrayList<>();
         lines.add("§r" + L + w.typeLabel() + " · 레벨 " + w.level() + " · " + (dark ? w.grade().dark() : w.grade().color()) + w.grade().name());
         if (w.type().equals("shield")) lines.add("§r" + L + "오른손에 들고 때리는 무기");
-        String label = w.type().equals("wand") ? "마법 피해" : w.type().equals("bow") ? "화살 피해" : "공격력";
+        // 2026-11-08 (자바 전용 — 사용자 "무기에도 공격력으로 표시 … 무기 공격력만으로 표시해서 이 무기가 얼마나 쎈지 표시하자 그냥 %로 쎄지는게 아니라" ·
+        // "깡딜로 하자"): 모든 무기를 "공격력" 으로 (완드는 뒤에 마법 피해 · 방어 무시), 스탯 줄은 1 포인트가 더하는 공격력 숫자로. 대조 시험의 애드온 글자는 그대로
+        boolean flat = Rules.hasMore();
+        String label = flat ? "공격력" : w.type().equals("wand") ? "마법 피해" : w.type().equals("bow") ? "화살 피해" : "공격력";
+        String kind = flat && w.type().equals("wand") ? L + " · 마법 피해 (방어 무시)" : "";
+        double base0 = w.damage() * (1 + Enhance.enhanceBonus(enh));
         if (enh > 0) {
             double bonus = Enhance.enhanceBonus(enh);
-            lines.add("§r" + L + label + " " + V + Js.str(round1(w.damage() * (1 + bonus))) + L + " (기본 " + Js.str(w.damage()) + ")");
+            lines.add("§r" + L + label + " " + V + Js.str(round1(w.damage() * (1 + bonus))) + L + " (기본 " + Js.str(w.damage()) + ")" + kind);
             // 0.44.1 (자바 전용 — 사용자 "피해 +N% 이것도 공격력 N 이렇게"): 강화 몫을 % 대신 더해진 공격력으로 (대조 시험의 애드온 글자는 그대로)
             String up = Rules.hasMore() ? label + " +" + Js.str(round1(round1(w.damage() * (1 + bonus)) - w.damage()))
                     : "피해 +" + Js.str(Js.round(bonus * 100)) + "%";
             lines.add("§r§6강화 +" + Js.str(enh) + L + " · " + up);
         } else {
-            lines.add("§r" + L + label + " " + V + Js.str(w.damage()));
+            lines.add("§r" + L + label + " " + V + Js.str(w.damage()) + kind);
         }
         if (w.type().equals("wand")) {
             lines.add("§r" + L + "사거리 " + V + WAND.text("range") + "칸" + L + " · 재사용 " + V + Js.str(WAND.num("cooldownTicks") / 20) + "초");
@@ -403,7 +413,9 @@ public final class Weapons {
         if (w.type().equals("bow")) lines.add("§r" + L + "사거리 " + V + BOW.text("range") + "칸" + L + " · 재사용 " + V + Js.str(BOW.num("cooldownTicks") / 20) + "초");
         lines.add("§r" + L + "치명타 " + V + pct(w.critChance()) + L + " · 배율 " + V + "×" + Js.str(w.critMult()));
         for (Scaling b : w.scaling()) {
-            if (b.per() > 0) lines.add("§r" + L + Stats.info(b.stat()).str("name") + " 1포인트당 피해 " + V + "+" + Js.str(round1(b.per() * 100)) + "%");
+            if (b.per() <= 0) continue;
+            if (flat) lines.add("§r" + L + Stats.info(b.stat()).str("name") + " 1당 공격력 " + V + "+" + Js.str(flatPer(base0 * b.per())));
+            else lines.add("§r" + L + Stats.info(b.stat()).str("name") + " 1포인트당 피해 " + V + "+" + Js.str(round1(b.per() * 100)) + "%");
         }
         if (w.type().equals("greatsword")) {
             Obj tyrfing = SKILLS.objOrNull("tyrfing");
