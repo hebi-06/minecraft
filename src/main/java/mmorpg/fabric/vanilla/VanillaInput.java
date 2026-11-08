@@ -95,6 +95,7 @@ public final class VanillaInput {
 
     /** F (왼손 바꾸기 패킷 — 서버 스레드): 모드 없는 클라이언트면 모드를 넘김. 바닐라 바꾸기를 막았으면 true */
     public static boolean onSwapKey(ServerPlayer sp) {
+        if (GachaCinematic.input(sp)) return true; // 룬 뽑기 연출 중: F = 다음
         if (sp == null || !VanillaClients.isVanilla(sp)) return false;
         Mode m = mode(sp);
         if (sp.isShiftKeyDown() && !sp.isSpectator()) { // Shift + F: 메뉴 (사용자 2026-11-07 — 왼손 바꾸기는 메뉴 장비 쪽 · 가방 화면의 F)

@@ -122,11 +122,100 @@ final class VanillaPack {
                 builder.addStringData("assets/" + Mmorpg.NS + "/items/vtile/" + e.getKey() + ".json",
                         "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + model + "\"},\"oversized_in_gui\":true}");
             }
-            Mmorpg.LOG.info("[vanilla] gui backgrounds {}, line fonts {} + {}, tiles {}, icons {}", VanillaGui.Bg.values().length, VanillaGui.LINES.length,
-                    VanillaGui.NUM_LINES.length, VanillaMenu.TILES.size(), spriteModels(builder, dir.resolve("icons"), "vui", false));
+            glyphFonts(builder, dir, gson);
+            cineFonts(builder, dir.resolve("cine"), gson);
+            int big = bigRunes(builder, root);
+            Mmorpg.LOG.info("[vanilla] gui backgrounds {}, line fonts {} + {}, tiles {}, icons {}, big runes {}", VanillaGui.Bg.values().length,
+                    VanillaGui.LINES.length, VanillaGui.NUM_LINES.length, VanillaMenu.TILES.size(), spriteModels(builder, dir.resolve("icons"), "vui", true), big);
         } catch (IOException | RuntimeException e) {
             Mmorpg.LOG.warn("[vanilla] 그림 창 글꼴을 팩에 넣지 못함: {}", e.toString());
         }
+    }
+
+    /**
+     * 그림 글자 (tools/vanilla_gui.py tree_sheets — 흰 그림, 글자 색으로 물들임): 줄 글꼴 rpg:gt&lt;r&gt; (r = 0 ~ 9 — 칸 틀 위 = cellY(r)):
+     * 선 반쪽 · 탭 빛 · 결과 테 (18 × 18 — 칸 틀 자리), 칸 테 (22 × 22 — 2px 바깥), 목록 테 (56 × 20 — 1px 바깥),
+     * rpg:gtx: 세모 (탭 아래 y 215) · 스크롤 손잡이 (나무 판 오른쪽 y 38). 글자 위 = 제목 줄 y (6) + 7 − ascent
+     */
+    private static void glyphFonts(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path dir, com.google.gson.Gson gson) throws IOException {
+        Path meta = dir.resolve("tree_glyphs.json");
+        if (!Files.exists(meta)) return;
+        com.google.gson.JsonObject files = com.google.gson.JsonParser.parseString(Files.readString(meta, StandardCharsets.UTF_8)).getAsJsonObject().getAsJsonObject("files");
+        for (String f : files.keySet()) {
+            builder.addData("assets/" + Mmorpg.NS + "/textures/gui/" + f + ".png", Files.readAllBytes(dir.resolve(f + ".png")));
+        }
+        for (int r = 0; r < VanillaGui.GLYPH_ROWS; r++) {
+            int top = VanillaGui.cellY(r);
+            com.google.gson.JsonArray list = new com.google.gson.JsonArray();
+            list.add(bitmap("tree_cells", files, 18, 13 - top));
+            list.add(bitmap("tree_frames", files, 22, 13 - (top - 2)));
+            list.add(bitmap("tree_plate", files, 20, 13 - (top - 1)));
+            builder.addStringData("assets/" + Mmorpg.NS + "/font/gt" + r + ".json", gson.toJson(providers(list)));
+        }
+        com.google.gson.JsonArray x = new com.google.gson.JsonArray();
+        x.add(bitmap("tree_tri", files, 4, 13 - VanillaGui.TRI_Y));
+        x.add(bitmap("tree_thumb", files, files.getAsJsonObject("tree_thumb").get("h").getAsInt(), 13 - VanillaGui.THUMB_Y));
+        builder.addStringData("assets/" + Mmorpg.NS + "/font/gtx.json", gson.toJson(providers(x)));
+    }
+
+    /**
+     * 룬 뽑기 연출 (GachaCinematic — tools/vanilla_gui_cine.py): 그림 rpg:gui/cine/*.png · 글꼴 rpg:cine_* (cine.json 의 fonts — 글꼴마다 세로 자리가
+     * 정해진 제공자 목록 그대로)
+     */
+    private static void cineFonts(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path dir, com.google.gson.Gson gson) throws IOException {
+        Path meta = dir.resolve("cine.json");
+        if (!Files.exists(meta)) return;
+        try (var files = Files.list(dir)) {
+            for (Path png : (Iterable<Path>) files::iterator) {
+                String name = png.getFileName().toString();
+                if (name.endsWith(".png")) builder.addData("assets/" + Mmorpg.NS + "/textures/gui/cine/" + name, Files.readAllBytes(png));
+            }
+        }
+        com.google.gson.JsonObject fonts = com.google.gson.JsonParser.parseString(Files.readString(meta, StandardCharsets.UTF_8)).getAsJsonObject().getAsJsonObject("fonts");
+        for (String f : fonts.keySet()) {
+            builder.addStringData("assets/" + Mmorpg.NS + "/font/" + f + ".json", gson.toJson(providers(fonts.getAsJsonArray(f))));
+        }
+    }
+
+    private static com.google.gson.JsonObject bitmap(String file, com.google.gson.JsonObject files, int height, int ascent) {
+        com.google.gson.JsonObject p = new com.google.gson.JsonObject();
+        p.addProperty("type", "bitmap");
+        p.addProperty("file", Mmorpg.NS + ":gui/" + file + ".png");
+        p.addProperty("height", height);
+        p.addProperty("ascent", ascent);
+        com.google.gson.JsonArray chars = new com.google.gson.JsonArray();
+        chars.add(files.getAsJsonObject(file).get("chars").getAsString());
+        p.add("chars", chars);
+        return p;
+    }
+
+    /**
+     * 룬 · 뽑기권 그림의 진열용 아이템 (뽑기 쪽 — VanillaGacha): rpg:vbig/&lt;그림&gt; (2배 · 오른쪽 9px — 칸 둘 사이 가운데, 진열판의 큰 룬),
+     * rpg:vsh/&lt;그림&gt; (1배 · 오른쪽 9px — 등급 사다리). 칸 밖까지 그리게 oversized_in_gui
+     */
+    private static int bigRunes(eu.pb4.polymer.resourcepack.api.ResourcePackBuilder builder, Path root) {
+        Path dir = root.resolve("assets").resolve(Mmorpg.NS).resolve("textures").resolve("item").resolve("rune");
+        if (!Files.isDirectory(dir)) return 0;
+        int n = 0;
+        try (var files = Files.list(dir)) {
+            for (Path png : (Iterable<Path>) files::iterator) {
+                String name = png.getFileName().toString();
+                if (!name.endsWith(".png") || name.startsWith("break_")) continue;
+                String id = name.substring(0, name.length() - 4);
+                for (String[] v : new String[][]{{"vbig", "2"}, {"vsh", "1"}}) {
+                    String model = Mmorpg.NS + ":item/" + v[0] + "/" + id;
+                    builder.addStringData("assets/" + Mmorpg.NS + "/models/item/" + v[0] + "/" + id + ".json",
+                            "{\"parent\":\"minecraft:item/generated\",\"textures\":{\"layer0\":\"" + Mmorpg.NS + ":item/rune/" + id + "\"},"
+                                    + "\"display\":{\"gui\":{\"rotation\":[0,0,0],\"translation\":[9,0,0],\"scale\":[" + v[1] + "," + v[1] + "," + v[1] + "]}}}");
+                    builder.addStringData("assets/" + Mmorpg.NS + "/items/" + v[0] + "/" + id + ".json",
+                            "{\"model\":{\"type\":\"minecraft:model\",\"model\":\"" + model + "\"},\"oversized_in_gui\":true}");
+                }
+                n++;
+            }
+        } catch (IOException e) {
+            Mmorpg.LOG.warn("[vanilla] 진열용 룬 그림을 팩에 넣지 못함: {}", e.toString());
+        }
+        return n;
     }
 
     /** 줄 글꼴 하나: 빈칸 (너비 blank) + 글자판 (칸 12 · 기준선 10 → 칸 위 = 제목 줄 y + 7 − ascent = 3 + d) */

@@ -108,6 +108,7 @@ public final class Notify {
 
     /** 큰 글자 (시간을 정해서 — 틱: 차오름 · 머묾 · 걷힘) */
     public static void title(ServerPlayer sp, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+        if (mmorpg.fabric.vanilla.GachaCinematic.active(sp)) return; // 룬 뽑기 연출이 큰 글자 자리를 씀
         sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket(fadeIn, stay, fadeOut));
         sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket(Component.literal(subtitle == null ? "" : BedrockText.toJava(subtitle))));
         sp.connection.send(new net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket(Component.literal(BedrockText.toJava(title))));

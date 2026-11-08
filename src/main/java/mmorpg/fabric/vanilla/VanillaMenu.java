@@ -26,8 +26,10 @@ import java.util.function.Consumer;
  * 바닐라 아이템으로 꾸미는가 너무 밤티남", 세 창 (뽑기 · 스탯 트리 · 스킬 장착) 은 "Claude 가 새로 디자인").
  *
  * <p>6줄 상자 메뉴 (9 × 6, sgui) 하나에 쪽을 바꿔 그림 (제목 · 칸만 바꿈 — 다시 열지 않음). 모드 창과 같은 남색 판 · 금테 (tools/vanilla_gui.py).
- * 줄 0 = 위 탭 (홈 · 스탯 · 장비 · 스킬 — 칸 둘씩) + 닫기 (칸 8), 줄 1 ~ 5 = 쪽 내용, 아래 = 진짜 가방 (잠금 — 누르면 쪽마다 할 일:
- * 스킬 쪽 = 룬 고르기, 장비 쪽 = 갑옷 · 아티팩트 끼기 · 왼손). 그림 조각은 모두 직접 그린 것 (바닐라 아이템 그림 없음 — 큰 타일 그림만 게임 아이템 그림).
+ * 줄 0 = 위 탭 (홈 · 스탯 · 장비 · 스킬 — 칸 둘씩) + 닫기 (칸 8), 줄 1 ~ 5 = 쪽 내용, 아래 (가방 자리 · 줄 6 ~ 9) = 쪽마다:
+ * 진짜 가방을 비춤 (홈 · 스탯 · 장비 · 스킬 — 누르면 쪽마다 할 일: 스킬 쪽 = 룬 고르기, 장비 쪽 = 갑옷 · 아티팩트 끼기 · 왼손) 또는 그 쪽의 단추판
+ * (스탯 트리 = 방향 키 · 탭, 뽑기 = 최근 결과 · 단추 — 3판 2026-11-08 사용자 그림). 가방 자리까지 메뉴가 그리므로 (sgui manipulatePlayerSlots)
+ * 가방은 비춘 그림 (아이템 복사본 — 5틱마다 진짜 가방과 맞춤). 그림 조각은 모두 직접 그린 것 (바닐라 아이템 그림 없음 — 큰 타일 그림만 게임 아이템 그림).
  * <ul>
  *   <li>홈: 큰 타일 넷 (장비 · 스킬 · 장터 · 뽑기 — 칸 넷 × 줄 둘, 왼쪽 그림 + 이름 · 설명) + 빠른 단추 아홉 (줄 5), 제목 줄에 레벨 · 직업 · 금화</li>
  *   <li>스탯 (VanillaStats) · 스탯 트리 (VanillaTree) · 장비 (VanillaEquip) · 스킬 (VanillaSkillBar) · 뽑기 (VanillaGacha)</li>
@@ -50,6 +52,8 @@ public final class VanillaMenu {
 
     /** 메뉴 칸 수 (9 × 6) — 그 뒤 가방 27 (54 ~ 80) · 핫바 9 (81 ~ 89) */
     static final int SIZE = 54;
+    /** 가방 자리까지 (메뉴가 그림 — 줄 6 ~ 9) */
+    static final int ALL = SIZE + 36;
 
     /** 열린 메뉴 (사람마다 하나) */
     private static final Map<UUID, MenuGui> OPEN = new ConcurrentHashMap<>();
@@ -80,6 +84,7 @@ public final class VanillaMenu {
         if (g == null) return;
         if (stat != null) g.treeStat = stat;
         g.treeSel = -1;
+        g.treeTop = -1;
         g.show(Page.TREE);
     }
 
@@ -89,7 +94,7 @@ public final class VanillaMenu {
         return g != null && g.isOpen() ? g : null;
     }
 
-    /** 칸 번호 (줄 r 0 ~ 5 · 칸 c) */
+    /** 칸 번호 (줄 r 0 ~ 9 — 6 ~ 8 가방 자리, 9 핫바 자리 · 칸 c) */
     static int idx(int r, int c) {
         return r * 9 + c;
     }
@@ -126,24 +131,35 @@ public final class VanillaMenu {
         Page page = Page.HOME;
         /** 스킬 쪽: 고른 룬 (룬 칸 또는 가방 칸) */
         VanillaSkillBar.Pick skillPick;
-        /** 뽑기 쪽: 고른 뽑기 · 보이는 결과 · 펼친 수 */
+        /** 뽑기 쪽: 고른 뽑기 (null = 마지막 뽑기 → 한정 → 일반) */
         String gachaKey;
-        List<ItemStack> gachaResults = List.of();
-        int gachaShown;
-        long gachaSeq;
-        /** 스탯 트리 쪽: 보는 나무 · 오른쪽 판에 보일 칸 (-1 = 저절로) */
+        /** 뽑기 쪽: 스탯 뽑기의 스탯 · 확인 창 (0 = 없음, 1 · 10 = 그 수로 뽑을지 묻는 중) */
+        String gachaStat;
+        int gachaConfirm;
+        /** 스탯 트리 쪽: 보는 나무 ("sum" = 합계) · 고른 칸 (단계 × 2 + 갈래 (0 · 1, 갈래 아님 = 0) — -1 = 저절로) · 보이는 맨 윗줄 · 초기화 누른 때 (틱) */
         String treeStat;
         int treeSel = -1;
+        int treeTop = -1;
+        long treeArm;
+        /** 가방 자리에 비춘 가방 (진짜 가방과 다르면 다시 비춤) */
+        private final ItemStack[] mirrored = new ItemStack[36];
+        private int ticks;
 
         MenuGui(ServerPlayer sp) {
-            super(MenuType.GENERIC_9x6, sp, false);
+            super(MenuType.GENERIC_9x6, sp, true);
             this.sp = sp;
             setLockPlayerInventory(true);
+        }
+
+        /** 이 쪽이 가방 자리에 진짜 가방을 비추는지 (스탯 트리 · 뽑기는 그 자리를 단추판으로) */
+        boolean showsBag() {
+            return page != Page.TREE && page != Page.GACHA;
         }
 
         void show(Page p) {
             if (p != page) {
                 skillPick = null;
+                gachaConfirm = 0;
                 SkillFx.playFor(sp, "ui.button.click", 1.7, 0.3);
             }
             page = p;
@@ -152,16 +168,17 @@ public final class VanillaMenu {
 
         /** 쪽을 다시 그림 (칸 · 제목) */
         void refresh() {
-            for (int i = 0; i < SIZE; i++) clearSlot(i);
+            for (int i = 0; i < ALL; i++) clearSlot(i);
             VanillaGui.Title t = new VanillaGui.Title().background(switch (page) {
                 case HOME -> VanillaGui.Bg.HOME;
                 case STATS -> VanillaGui.Bg.STATS;
                 case EQUIP -> VanillaGui.Bg.EQUIP;
                 case SKILLS -> VanillaGui.Bg.SKILLS;
                 case TREE -> VanillaGui.Bg.TREE;
-                case GACHA -> VanillaGui.Bg.GACHA;
+                case GACHA -> gachaConfirm > 0 ? VanillaGui.Bg.GACHA_CONFIRM : VanillaGui.Bg.GACHA;
             });
             tabs();
+            if (showsBag()) mirrorBag();
             switch (page) {
                 case HOME -> home(t);
                 case STATS -> VanillaStats.render(this, t);
@@ -173,9 +190,41 @@ public final class VanillaMenu {
             setTitle(t.build());
         }
 
-        /** 칸 하나 (줄 r · 칸 c) */
+        /** 칸 하나 (줄 r 0 ~ 9 · 칸 c) */
         void set(int r, int c, ItemStack icon, GuiElement.ClickCallback cb) {
             setSlot(idx(r, c), new SimpleGuiElement(icon, cb == null ? GuiElement.EMPTY_CALLBACK : cb));
+        }
+
+        /** 가방 자리에 진짜 가방을 비춤 (복사본 — 누르면 쪽마다 할 일, 아이템은 움직이지 않음) */
+        private void mirrorBag() {
+            Inventory inv = sp.getInventory();
+            for (int s = 0; s < 36; s++) mirrorSlot(inv, s);
+        }
+
+        private void mirrorSlot(Inventory inv, int s) {
+            ItemStack st = inv.getItem(s);
+            mirrored[s] = st.copy();
+            int slot = s;
+            setSlot(invIndex(s), new SimpleGuiElement(st.copy(), (ix, type, a, g) -> bagClick(slot, type)));
+        }
+
+        private void bagClick(int slot, ClickType type) {
+            switch (page) {
+                case SKILLS -> VanillaSkillBar.inventoryClick(this, slot, type);
+                case EQUIP -> VanillaEquip.inventoryClick(this, slot, type);
+                default -> {
+                }
+            }
+        }
+
+        /** 틱마다: 비춘 가방을 진짜 가방과 맞춤 (5틱마다 — 주운 것 · 뽑은 룬) · 쪽마다 움직임 (뽑기 결과 펼침은 Tasks) */
+        @Override
+        public void onTick() {
+            if (++ticks % 5 != 0 || !showsBag()) return;
+            Inventory inv = sp.getInventory();
+            for (int s = 0; s < 36; s++) {
+                if (mirrored[s] == null || !ItemStack.matches(inv.getItem(s), mirrored[s])) mirrorSlot(inv, s);
+            }
         }
 
         /** 왼쪽 클릭이면 run */
@@ -256,19 +305,10 @@ public final class VanillaMenu {
             set(5, c, VanillaGui.blank(name, List.of(tip, "", "§e눌러서 열기")), left(() -> closeThen(run)));
         }
 
-        /** 칸 · 가방 누름: 메뉴 칸은 sgui 가 (true), 가방 칸은 쪽마다 (아이템은 움직이지 않음) */
+        /** 누름은 모두 칸의 할 일 (가방 자리도 메뉴가 그린 칸 — sgui manipulatePlayerSlots 는 가방을 늘 잠금) */
         @Override
         public boolean onAnyClick(int index, ClickType type, ContainerInput action) {
-            if (index < SIZE) return true;
-            if (index >= SIZE + 36) return false;
-            int slot = index < SIZE + 27 ? index - SIZE + Inventory.SELECTION_SIZE : index - SIZE - 27;
-            switch (page) {
-                case SKILLS -> VanillaSkillBar.inventoryClick(this, slot, type);
-                case EQUIP -> VanillaEquip.inventoryClick(this, slot, type);
-                default -> {
-                }
-            }
-            return false;
+            return true;
         }
 
         @Override

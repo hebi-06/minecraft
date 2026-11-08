@@ -295,17 +295,45 @@ final class VanillaProbe {
             case 101 -> {
                 VanillaMenu.MenuGui g = VanillaMenu.current(p);
                 check("stat tree page from stats button", g != null && g.page == VanillaMenu.Page.TREE && p.containerMenu == statsMenu);
+                check("stat tree view scrolled to first fork", g != null && g.treeTop == 2);
                 say(p, "shot 13c_tree");
                 next(p, 102, 20);
             }
             case 102 -> {
-                say(p, "slot " + VanillaMenu.idx(2, 5)); // 오른쪽 판 갈래 A (저절로 고른 첫 갈래)
+                say(p, "slot " + VanillaMenu.idx(3, VanillaTree.LEFT)); // 3단계 갈래 A (줄 3 — 첫 누름 = 고르기)
                 next(p, 103, 15);
             }
             case 103 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("stat tree node selected (not picked yet)", g != null && g.treeSel == VanillaTree.code(2, 0)
+                        && mmorpg.fabric.stattree.StatTrees.state(p).picksOf(g.treeStat).isEmpty());
+                say(p, "slot " + VanillaMenu.idx(3, VanillaTree.LEFT)); // 한 번 더 = 갈래를 고름
+                next(p, 106, 15);
+            }
+            case 106 -> {
                 String st = VanillaMenu.current(p) == null ? "str" : VanillaMenu.current(p).treeStat;
-                check("stat tree fork picked", !mmorpg.fabric.stattree.StatTrees.state(p).picksOf(st).isEmpty());
+                check("stat tree fork picked (second click)", !mmorpg.fabric.stattree.StatTrees.state(p).picksOf(st).isEmpty());
                 say(p, "shot 13d_tree_pick");
+                next(p, 107, 15);
+            }
+            case 107 -> {
+                say(p, "slot " + VanillaMenu.idx(7, 7)); // 방향 키 ▼
+                next(p, 108, 15);
+            }
+            case 108 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("stat tree scrolled down (D-pad)", g != null && g.treeTop == 4);
+                say(p, "shot 13e_tree_down");
+                next(p, 109, 15);
+            }
+            case 109 -> {
+                say(p, "slot " + VanillaMenu.idx(9, 6)); // 합계 탭 (Σ)
+                next(p, 110, 15);
+            }
+            case 110 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("stat tree sum tab", g != null && VanillaTree.SUM.equals(g.treeStat));
+                say(p, "shot 13f_tree_sum");
                 next(p, 34, 20);
             }
             case 34 -> {
@@ -393,6 +421,13 @@ final class VanillaProbe {
                 next(p, 49, 20);
             }
             case 49 -> {
+                // 한정 뽑기를 엶 (관리자 설정과 같은 것 — 초월 픽업 1 · 영웅 픽업 3) + 한정 룬 뽑기권
+                List<String> all = mmorpg.core.Runes.ALL_FAMILIES;
+                String err = mmorpg.fabric.gacha.GachaSystem.saveLimited(p.level().getServer(), new java.util.LinkedHashMap<>(java.util.Map.of(
+                        "name", "불꽃의 축제", "featured5", List.of(all.get(all.size() - 1)),
+                        "featured4", mmorpg.core.Runes.FAMILY_ORDER.subList(0, 3), "days", 14.0)), null);
+                check("limited banner opened " + (err == null ? "" : err), err == null);
+                if (mmorpg.fabric.rune.RuneItems.LIMITED_TICKET != null) p.getInventory().setItem(23, new ItemStack(mmorpg.fabric.rune.RuneItems.LIMITED_TICKET, 12));
                 say(p, "slot " + VanillaMenu.idx(0, 1)); // 위 탭 = 홈
                 next(p, 50, 15);
             }
@@ -403,32 +438,113 @@ final class VanillaProbe {
             case 51 -> {
                 VanillaMenu.MenuGui g = VanillaMenu.current(p);
                 check("gacha page from home card", g != null && g.page == VanillaMenu.Page.GACHA);
-                runesBefore = countRunes(p);
+                check("limited banner selected first (top of list)", g != null && mmorpg.fabric.gacha.GachaSystem.LIMITED.equals(g.gachaKey));
                 say(p, "shot 16_gacha");
-                next(p, 52, 20);
+                next(p, 112, 20);
+            }
+            case 112 -> {
+                say(p, "slot " + VanillaMenu.idx(2, 7)); // 목록 줄 2 = 일반
+                next(p, 113, 15);
+            }
+            case 113 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("normal banner from list", g != null && mmorpg.fabric.gacha.GachaSystem.NORMAL.equals(g.gachaKey));
+                say(p, "shot 16a_gacha_normal");
+                next(p, 114, 15);
+            }
+            case 114 -> {
+                say(p, "slot " + VanillaMenu.idx(1, 6)); // 목록 줄 1 = 한정
+                next(p, 52, 15);
             }
             case 52 -> {
-                say(p, "slot " + VanillaMenu.idx(5, 1)); // 1회 뽑기
-                next(p, 53, 40);
+                runesBefore = countRunes(p);
+                say(p, "slot " + VanillaMenu.idx(9, 1)); // 1회 뽑기
+                next(p, 53, 15);
             }
             case 53 -> {
-                check("gacha 1 pull gives rune", countRunes(p) == runesBefore + 1);
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("pull asks first (confirm 1)", g != null && g.gachaConfirm == 1 && countRunes(p) == runesBefore);
+                say(p, "shot 16b_gacha_confirm");
+                next(p, 115, 15);
+            }
+            case 115 -> {
+                say(p, "slot " + VanillaMenu.idx(6, 2)); // 네
+                next(p, 116, 14);
+            }
+            case 116 -> {
+                check("yes pulls 1 rune", countRunes(p) == runesBefore + 1);
+                check("cinematic plays (menu closed)", GachaCinematic.active(p) && p.containerMenu == p.inventoryMenu);
+                say(p, "shot 16c_cine_intro");
+                next(p, 117, 32);
+            }
+            case 117 -> {
+                check("cinematic sealed", "SEALED".equals(GachaCinematic.phase(p)));
+                say(p, "shot 16d_cine_sealed");
+                next(p, 118, 6);
+            }
+            case 118 -> {
+                say(p, "key f"); // 다음 (좌클릭 · 우클릭 · F 가 같은 일 — 시험은 F 패킷)
+                next(p, 119, 16);
+            }
+            case 119 -> {
+                check("left click opens (reveal)", "SUMMARY".equals(GachaCinematic.phase(p)));
+                say(p, "shot 16e_cine_reveal");
+                next(p, 120, 6);
+            }
+            case 120 -> {
+                say(p, "key f"); // 닫기
+                next(p, 121, 24);
+            }
+            case 121 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("after cinematic: gacha page again", !GachaCinematic.active(p) && g != null && g.page == VanillaMenu.Page.GACHA);
                 runesBefore = countRunes(p);
-                say(p, "shot 16b_gacha_one");
+                say(p, "shot 16f_gacha_after");
                 next(p, 54, 15);
             }
             case 54 -> {
-                say(p, "slot " + VanillaMenu.idx(5, 6)); // 10회 뽑기
-                next(p, 59, 18); // 카드 뒷면 → 뒤집는 중 사진
+                say(p, "slot " + VanillaMenu.idx(9, 6)); // 10회 뽑기
+                next(p, 122, 15);
             }
-            case 59 -> {
-                say(p, "shot 16c_gacha_flip");
-                next(p, 55, 60);
+            case 122 -> {
+                VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                check("10 pull asks first", g != null && g.gachaConfirm == mmorpg.core.Gacha.multi());
+                say(p, "slot " + VanillaMenu.idx(6, 2)); // 네
+                next(p, 123, 52);
             }
-            case 55 -> {
+            case 123 -> {
                 check("gacha 10 pulls give runes", countRunes(p) == runesBefore + mmorpg.core.Gacha.multi());
-                say(p, "shot 16d_gacha_ten");
-                next(p, 56, 20);
+                check("ten cinematic sealed", "SEALED".equals(GachaCinematic.phase(p)));
+                say(p, "shot 16g_cine_ten_sealed");
+                next(p, 124, 6);
+            }
+            case 124 -> {
+                say(p, "key f"); // 열기 (차례로 깨짐)
+                next(p, 125, 13);
+            }
+            case 125 -> {
+                say(p, "shot 16h_cine_ten_opening");
+                next(p, 126, 45);
+            }
+            case 126 -> {
+                say(p, "shot 16i_cine_ten_result");
+                shiftTries = 0;
+                next(p, 128, 4);
+            }
+            case 128 -> {
+                if (GachaCinematic.active(p) && shiftTries++ < 4) {
+                    say(p, "shift on"); // Shift: 건너뛰기 (결과에서는 닫기)
+                    next(p, 129, 6);
+                } else {
+                    VanillaMenu.MenuGui g = VanillaMenu.current(p);
+                    check("shift skips/closes, gacha page again", !GachaCinematic.active(p) && g != null && g.page == VanillaMenu.Page.GACHA);
+                    say(p, "shot 16j_gacha_after_ten");
+                    next(p, 56, 15);
+                }
+            }
+            case 129 -> {
+                say(p, "shift off");
+                next(p, 128, 20);
             }
             case 56 -> {
                 say(p, "slot " + VanillaMenu.idx(0, 8)); // 닫기 단추
@@ -461,6 +577,9 @@ final class VanillaProbe {
         p.setHealth(p.getMaxHealth() * 0.6F);
         log("skills: runes " + slot + ", max health " + p.getMaxHealth() + ", health " + p.getHealth());
     }
+
+    /** 뽑기 연출 Shift 시도 수 */
+    private static int shiftTries;
 
     private static void check(String what, boolean ok) {
         log("check " + (ok ? "ok" : "fail") + ": " + what);

@@ -36,10 +36,13 @@ import java.util.Map;
 public final class VanillaGui {
     private VanillaGui() {}
 
-    /** 줄 글꼴 (갈무리9) 의 세로 자리 d: 제목 줄 0 · 줄 1 ~ 5 가운데 (35 · 53 · 71 · 89 · 107) · 스킬 쪽 직업 안내 (103) */
-    public static final int[] LINES = {0, 35, 53, 71, 89, 103, 107};
-    /** 숫자 글꼴 (갈무리7) 의 세로 자리 d: 줄 1 ~ 5 가운데 (35 · 53 · 71 · 89 · 107 — 장비 강화 +N) · 스탯 값 (68) · 효과 (78) */
-    public static final int[] NUM_LINES = {35, 53, 68, 71, 78, 89, 107};
+    /**
+     * 줄 글꼴 (갈무리9) 의 세로 자리 d: 제목 줄 0 · 줄 1 ~ 5 가운데 (35 · 53 · 71 · 89 · 107) · 스킬 쪽 직업 안내 (103) ·
+     * 아래 판 줄 6 ~ 9 (138 · 156 · 174 · 196 — 스탯 트리 · 뽑기 쪽이 가방 자리를 씀) · 창 밑 (223 — "[ 힘 스탯 트리 ]")
+     */
+    public static final int[] LINES = {0, 35, 53, 71, 89, 103, 107, 138, 156, 174, 196, 223};
+    /** 숫자 글꼴 (갈무리7) 의 세로 자리 d: 줄 1 ~ 5 가운데 (35 · 53 · 71 · 89 · 107 — 장비 강화 +N) · 스탯 값 (68) · 효과 (78) · 아래 판 (138 · 156 · 174 · 196) */
+    public static final int[] NUM_LINES = {35, 53, 68, 71, 78, 89, 107, 138, 156, 174, 196};
     public static final Identifier SPACE = Mmorpg.rpg("gui_space");
     public static final Identifier BG = Mmorpg.rpg("gui_bg");
     /** 메뉴 아이템 설명 상자 (rpg:tooltip/menu_background · menu_frame — VanillaPack) */
@@ -47,7 +50,8 @@ public final class VanillaGui {
 
     /** 메뉴 쪽 바탕 (rpg:gui_bg 의 글자 — VanillaPack 이 같은 차례로 넣음): 그림 176 × 236 (창 위 14 부터) */
     public enum Bg {
-        HOME("menu_home"), STATS("menu_stats"), EQUIP("menu_equip"), SKILLS("menu_skills"), TREE("menu_tree"), GACHA("menu_gacha");
+        HOME("menu_home"), STATS("menu_stats"), EQUIP("menu_equip"), SKILLS("menu_skills"), TREE("menu_tree"), GACHA("menu_gacha"),
+        GACHA_CONFIRM("menu_gacha_confirm");
 
         public final String file;
 
@@ -77,6 +81,39 @@ public final class VanillaGui {
     private static Map<Integer, Integer> widths;
     private static int space = 4;
     private static int fallback = 6;
+
+    /** 줄 글자 (선 · 칸 테 · 탭 빛 · 결과 테 — rpg:gt&lt;줄&gt;) 가 있는 줄 (0 ~ 9) · 나머지 글자 (세모 · 스크롤 손잡이 — rpg:gtx) */
+    public static final int GLYPH_ROWS = 10;
+    /** 세모 (탭 아래) 의 y · 스크롤 손잡이 (나무 판 오른쪽) 의 y — tools/vanilla_gui.py 와 같음 */
+    public static final int TRI_Y = 215, THUMB_Y = 38, THUMB_X = 168, THUMB_STEPS = 8;
+
+    /** 글자 (tree_glyphs.json — 이름 → 글자 · 너비) */
+    private static Map<String, String[]> glyphs;
+
+    private static synchronized Map<String, String[]> glyphs() {
+        if (glyphs != null) return glyphs;
+        Map<String, String[]> m = new HashMap<>();
+        try (InputStream in = VanillaGui.class.getResourceAsStream("/mmorpg/vanilla/gui/tree_glyphs.json")) {
+            if (in != null) {
+                JsonObject o = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject().getAsJsonObject("glyphs");
+                for (Map.Entry<String, com.google.gson.JsonElement> e : o.entrySet()) {
+                    com.google.gson.JsonArray a = e.getValue().getAsJsonArray();
+                    m.put(e.getKey(), new String[]{a.get(0).getAsString(), a.get(1).getAsString()});
+                }
+            }
+        } catch (Exception e) {
+            Mmorpg.LOG.warn("[vanilla] gui glyphs: {}", e.toString());
+        }
+        glyphs = m;
+        return m;
+    }
+
+    /** 줄 r 의 글자 글꼴 (선 · 칸 테 — 칸 틀 위 · 왼쪽 기준) */
+    static Identifier glyphFont(int row) {
+        return Mmorpg.rpg("gt" + row);
+    }
+
+    static final Identifier GLYPH_X = Mmorpg.rpg("gtx");
 
     /** 칸 c 의 틀 x */
     public static int cellX(int c) {
@@ -198,6 +235,11 @@ public final class VanillaGui {
         return n;
     }
 
+    /** 글자 하나의 너비 (줄 글꼴 — 글자판 그림 너비 + 1, 빈칸은 space) */
+    static int charWidth(int cp) {
+        return cp == ' ' ? space : widths().getOrDefault(cp, fallback);
+    }
+
     /** 줄 글꼴 글자판에 있는 글자인지 (없으면 그리지 못함 — 빈칸으로 바꿈) */
     static String drawable(String s) {
         Map<Integer, Integer> w = widths();
@@ -296,6 +338,20 @@ public final class VanillaGui {
             move(x);
             root.append(Component.literal(t).withStyle(Style.EMPTY.withFont(new FontDescription.Resource(lineFont(line))).withColor(rgb)));
             cursor += width(t);
+            return this;
+        }
+
+        /**
+         * 그림 글자 (tree_glyphs.json 의 이름 — 흰 그림을 색 rgb 로 물들임): 줄 글자 (row 0 ~ 9 — 선 반쪽 · 칸 테 · 탭 빛 · 결과 테 · 목록 테) 는
+         * x = 그 칸 틀 왼쪽 기준 (칸 테는 2px, 목록 테는 1px 바깥에서 시작 — 그만큼 빼서 줌), row = -1 이면 rpg:gtx (세모 · 스크롤 손잡이)
+         */
+        public Title glyph(int x, int row, String name, int rgb) {
+            String[] g = glyphs().get(name);
+            if (g == null) return this;
+            move(x);
+            Identifier f = row < 0 ? GLYPH_X : glyphFont(row);
+            root.append(Component.literal(g[0]).withStyle(Style.EMPTY.withFont(new FontDescription.Resource(f)).withColor(rgb)));
+            cursor += Integer.parseInt(g[1]);
             return this;
         }
 

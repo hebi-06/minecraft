@@ -53,6 +53,7 @@ public final class VanillaStats {
         List<String> tip = List.of("§7스탯마다 열리는 칸 · 고를 갈래", "", "§e눌러서 열기");
         GuiElement.ClickCallback tree = VanillaMenu.MenuGui.left(() -> {
             g.treeSel = -1;
+            g.treeTop = -1;
             g.show(VanillaMenu.Page.TREE);
         });
         for (int c = 2; c <= 6; c++) g.set(5, c, VanillaGui.blank("§a스탯 트리", tip), tree);
