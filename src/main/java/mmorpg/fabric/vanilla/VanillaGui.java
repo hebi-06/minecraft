@@ -72,7 +72,7 @@ public final class VanillaGui {
     static final int TITLE_X = 8;
 
     /** 그림 글자 (글자판 끝 — 흰색으로 쓰면 그림 색 그대로) */
-    public static final String COIN = "\uE100", HEART = "\uE101", GEM = "\uE102", TICKET = "\uE103";
+    public static final String COIN = "\uE100", HEART = "\uE101", GEM = "\uE102", TICKET = "\uE103", POWER = "\uE104";
 
     /** 남색 판 위 글자 색 */
     public static final int WHITE = 0xFFFFFF, CREAM = 0xF0E4C8, GOLD = 0xFFD678, MUTED = 0x969ABE, DIM = 0x5C6084, GREEN = 0x8CF096,

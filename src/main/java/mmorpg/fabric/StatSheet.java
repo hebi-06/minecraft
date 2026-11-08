@@ -71,6 +71,39 @@ public record StatSheet(Map<String, Double> base, Map<String, Double> eff, doubl
         return j == null || w == null ? eff : Jobs.damageStats(j, w.type(), eff);
     }
 
+    /** 무기 w 의 스탯 배율 몫 Σ (피해 스탯 × 1포인트당) — e 는 실제 스탯 (마검사 · 칼은 힘 = 힘 + 마력 × 0.5) */
+    double scaleSum(Weapon w, Map<String, Double> e) {
+        Jobs.Job j = Jobs.job(job);
+        Map<String, Double> de = j == null || w == null ? e : Jobs.damageStats(j, w.type(), e);
+        double sum = 0;
+        if (w != null) for (Weapons.Scaling b : w.scaling()) sum += Stats.get(de, b.stat()) * b.per();
+        return sum;
+    }
+
+    /** 무기 공격력 (강화 포함 — 대장장이 창 · 무기 설명의 "공격력" 과 같은 값, 반올림 없이) */
+    public static double baseAttack(Weapon w, int enh) {
+        return w == null ? 0 : w.damage() * (1 + mmorpg.core.Enhance.enhanceBonus(enh));
+    }
+
+    /**
+     * 2026-11-08 스탯 key 가 무기 w (강화 enh) 에 더하는 공격력 — 무기 공격력과 같은 단위 (스탯 트리 공격력 % · 치명타 없이), 이 무기에 붙지 않는 스탯이면 0.
+     * 사용자 "힘이랑 민첩, 마력 공격력 + n으로 바꿔" (피해 % 대신 — 0.44.1 강화 표시와 같은 까닭)
+     */
+    public double statAttack(Weapon w, int enh, String key) {
+        if (w == null) return 0;
+        Map<String, Double> without = new LinkedHashMap<>(eff);
+        without.put(key, 0.0);
+        return baseAttack(w, enh) * (scaleSum(w, eff) - scaleSum(w, without));
+    }
+
+    /** 스탯 key 를 1 더 찍으면 무기 w 에 더해지는 공격력 */
+    public double statAttackPer(Weapon w, int enh, String key) {
+        if (w == null) return 0;
+        Map<String, Double> plus = new LinkedHashMap<>(eff);
+        plus.put(key, Stats.get(eff, key) + 1);
+        return baseAttack(w, enh) * (scaleSum(w, plus) - scaleSum(w, eff));
+    }
+
     /** 이 무기에 「마력 검술」 이 걸리는지 */
     boolean magicSword(Weapon w) {
         Jobs.Job j = Jobs.job(job);

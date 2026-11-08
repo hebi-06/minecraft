@@ -43,7 +43,7 @@ jar --create --file core/build/mmorpg-core.jar -C "$out/main" .
 javac --release 21 -encoding UTF-8 -Xlint:all -Werror -cp "$out/main" -d "$out/test" @"$out/test-sources.txt"
 cp -r core/src/test/resources/. "$out/test/"
 
-echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · RuneScaleTest · EconomyTest · StorageTest · JobsTest · ArtifactsTest · MotionsTest · RelicsTest · ElementsTest · FieldTest"
+echo "[4/4] ParityTest · MolangTest · StatTreeTest · RuneBreakTest · MonstersMoreTest · HeroSkillsTest · WeaponsMoreTest · ArmorMoreTest · RunesMoreTest · GachaTest · LimitedRunesTest · RuneTipTest · RuneScaleTest · EconomyTest · StorageTest · JobsTest · ArtifactsTest · MotionsTest · RelicsTest · ElementsTest · FieldTest · CombatPowerTest"
 # 대조 시험은 애드온 config.js 그대로의 규칙으로 (자바 전용 덧붙임 rules_more.json 없이 — Rules.PURE)
 java -Dstdout.encoding=UTF-8 -Dmmorpg.pureRules=true -cp "$out/main:$out/test" mmorpg.core.ParityTest
 # 애드온 파티클 Molang 식 (tools/molang_cases.py 가 따로 짠 계산기로 푼 답) 과 자바 Molang
@@ -86,3 +86,5 @@ java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.RelicsTest
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.ElementsTest
 # 2026-11-07 섬 맵 (field.json — 섬 · 다리 · 자리가 땅 위 · 평평한 자리 · 다리 길이 · 바이옴 목록 · 같은 답 · 속도)
 java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.FieldTest
+# 2026-11-08 총 전투력 (CombatPower — 보여주기 · 순위용: 값마다 오름 · 곱의 제곱근 · 무기 11종 대표 투자가 1.6배 안 · 처음 · 끝 크기)
+java -Dstdout.encoding=UTF-8 -cp "$out/main:$out/test" mmorpg.core.CombatPowerTest

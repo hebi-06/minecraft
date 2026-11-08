@@ -3,13 +3,12 @@ package mmorpg.fabric.vanilla;
 import eu.pb4.sgui.api.ClickType;
 import mmorpg.core.Armor;
 import mmorpg.core.Artifacts;
-import mmorpg.core.Js;
-import mmorpg.core.Stats;
+import mmorpg.core.CombatPower;
+import mmorpg.fabric.CombatPowers;
 import mmorpg.fabric.Notify;
 import mmorpg.fabric.RpgCombat;
 import mmorpg.fabric.RpgData;
 import mmorpg.fabric.RpgHealth;
-import mmorpg.fabric.RpgStats;
 import mmorpg.fabric.artifact.ArtifactSystem;
 import mmorpg.fabric.gear.ArtifactItem;
 import mmorpg.fabric.gear.GearItems;
@@ -24,17 +23,16 @@ import net.minecraft.world.item.equipment.Equippable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 메뉴의 장비 쪽 (VanillaMenu). 2판 — 가운데 사람 그림 (도식):
  * <pre>
- * 장비                                    아티팩트 2/5
+ *                                         ⚔ 12,345   (제목 줄: 총 전투력 — CombatPowers)
  * [투구] ┄┄┄┄┄  ( 사람 )  ┄┄┄┄ +N [반지]      줄 1
  * [갑옷] ┄┄┄┄┄  (  그림 )  ┄┄┄┄    [반지]      줄 2
  * [바지] ┄┄┄┄┄  (      )  ┄┄┄┄    [목걸이]    줄 3
  * [신발] ┄┄┄┄┄  (      )  ┄┄┄┄    [귀걸이]    줄 4
- * [요약]      +N [무기]  [왼손] +N   [팔찌]      줄 5
+ * [총 스펙]   +N [무기]  [왼손] +N   [팔찌]      줄 5  (총 스펙 = 정보 단추 설명 — 전투력 · 공격력 · 치명타 · 체력 …)
  * </pre>
  * 끼기: 가방의 갑옷 · 아티팩트를 누름 (갑옷은 요구 조건 확인 — 모자라면 끼지 않음, 있던 것은 그 가방 칸으로 · 아티팩트는 ArtifactSystem.equip 이 맞는 칸에).
  * 왼손: 가방의 아이템을 우클릭 · F (서로 바꿈 — Shift + F 가 메뉴라서 바닐라 왼손 바꾸기 대신). 빼기: 낀 칸을 누름 (가방으로 — 빈 칸이 없으면 그대로).
@@ -48,7 +46,12 @@ public final class VanillaEquip {
 
     static void render(VanillaMenu.MenuGui g, VanillaGui.Title t) {
         ServerPlayer sp = g.sp;
-        // 글자 없음 (사용자 "글자를 최대한 줄여서" — 아티팩트 수 · 설명은 칸의 설명 상자)
+        // 제목 줄: 전투력만 (칼 그림 + 숫자 — 2026-11-08 총 전투력, 보여주기 · 순위용)
+        CombatPowers.Sheet power = CombatPowers.of(sp);
+        String cp = VanillaGui.commas(power.cp());
+        t.right(166, 0, cp, VanillaGui.GOLD);
+        t.text(166 - VanillaGui.width(cp) - VanillaGui.width(VanillaGui.POWER) - 2, 0, VanillaGui.POWER, VanillaGui.WHITE);
+        // 그 밖의 글자 없음 (사용자 "글자를 최대한 줄여서" — 아티팩트 수 · 설명은 칸의 설명 상자)
         // 갑옷 넷 (칸 0 · 줄 1 ~ 4 — 바탕의 점선이 몸까지)
         for (int i = 0; i < 4; i++) {
             EquipmentSlot es = ARMOR[i];
@@ -77,7 +80,7 @@ public final class VanillaEquip {
             int n = WeaponEnhance.of(off);
             if (n > 0) t.num(VanillaGui.cellX(6) + 2, VanillaGui.rowLine(5), "+" + n, color(n));
         }
-        g.set(5, 0, VanillaGui.blank("§a장비 요약", summary(sp)), null);
+        g.set(5, 0, VanillaGui.blank("§6§l총 스펙", spec(power)), null);
         // 아티팩트 다섯 (칸 8 · 줄 1 ~ 5 — 강화 +N 은 칸 왼쪽)
         for (int i = 0; i < ArtifactSystem.SIZE && i < 5; i++) {
             int slot = i;
@@ -106,22 +109,32 @@ public final class VanillaEquip {
         return ty == null ? "아티팩트" : ty.name();
     }
 
-    /** 장비 요약 (정보 단추 설명) */
-    private static List<String> summary(ServerPlayer sp) {
+    /**
+     * 총 스펙 (왼쪽 아래 정보 단추 — 2026-11-08 사용자 "총 스펙 표기할때 잘 만 표시해주고 공격력으로 바꾸고 … 총전투력"): 전투력 · 공격력 (무기 + 스탯 ×
+     * 스탯 트리) · 치명타 · 최대 체력 · 받는 피해 · 방어 · 룬 피해 · 재사용 대기 · 이동 속도. 스탯 트리 · 아티팩트 포함, 잠깐 걸리는 룬 버프는 뺌
+     * (CombatPowers — 순위용 값과 같음). 0 인 줄은 뺌.
+     */
+    static List<String> spec(CombatPowers.Sheet c) {
+        CombatPower.Spec s = c.spec();
         List<String> out = new ArrayList<>();
-        Map<String, Double> bonus = RpgStats.bonusOf(sp);
-        List<String> parts = new ArrayList<>();
-        for (String k : Stats.STAT_KEYS) {
-            double v = bonus.getOrDefault(k, 0.0);
-            if (v != 0) parts.add(Stats.info(k).str("name") + " +" + Js.str(v));
-        }
-        out.add("§7갑옷 스탯 §f" + (parts.isEmpty() ? "없음" : String.join(" · ", parts)));
-        out.add("§7아티팩트 §f" + ArtifactSystem.worn(sp) + " / " + ArtifactSystem.SIZE + "칸");
-        int en = WeaponEnhance.of(sp.getMainHandItem());
-        if (en > 0) out.add("§7무기 강화 §f+" + en);
+        out.add("§7전투력 §6§l" + VanillaGui.commas(c.cp()));
         out.add("");
-        out.add("§7가방의 갑옷 · 아티팩트를 누르면 낌");
-        out.add("§7낀 칸을 누르면 가방으로");
+        out.add("§7공격력 §f" + VanillaStats.one(s.attack()));
+        if (c.weapon() != null) {
+            out.add("§8  무기 " + VanillaStats.one(c.weaponAttack()) + " · 스탯 +" + VanillaStats.one(c.statAttack())
+                    + (c.atkPct() > 0 ? " · 스탯 트리 +" + VanillaStats.one(c.atkPct()) + "%" : ""));
+            out.add("§7치명타 확률 §f" + VanillaStats.one(s.critChance() * 100) + "%");
+            out.add("§7치명타 피해 §f×" + VanillaStats.two(s.critMult()));
+        }
+        out.add("§7최대 체력 §f" + VanillaStats.one(s.maxHp()));
+        if (s.reduction() > 0) out.add("§7받는 피해 §f-" + VanillaStats.one(s.reduction() * 100) + "%");
+        if (s.armor() > 0) out.add("§7방어 §f" + VanillaStats.one(s.armor()));
+        if (s.rune() > 0) out.add("§7룬 피해 §f+" + VanillaStats.one(s.rune()) + "%");
+        if (s.cdr() > 0) out.add("§7재사용 대기 §f-" + VanillaStats.one(s.cdr()) + "%");
+        if (s.speed() > 0) out.add("§7이동 속도 §f+" + VanillaStats.one(s.speed()) + "%");
+        out.add("");
+        out.add(c.weapon() == null ? "§8쓸 수 있는 RPG 무기가 없음 (공격력 0)" : "§8기준 무기 " + (c.enh() > 0 ? "+" + c.enh() + " " : "") + c.weapon().title());
+        out.add("§8스탯 트리 · 아티팩트 포함 · 룬 버프 제외");
         return out;
     }
 

@@ -264,6 +264,9 @@ final class VanillaProbe {
                 next(p, 104, 10);
             }
             case 104 -> {
+                // 2026-11-08 힘 설명: 피해 % 대신 공격력 +n (기준 무기 — 총 스펙과 같은 무기), "장비 · 버프" 줄은 그대로
+                String tip = tipText(p, 2, 1);
+                check("str tooltip shows attack +n, not damage % (" + tip.replace('\n', '|') + ")", tip.contains("공격력 +") && !tip.contains("피해 +"));
                 say(p, "shot 13_stats");
                 next(p, 105, 10);
             }
@@ -394,7 +397,34 @@ final class VanillaProbe {
                 helmet = p.getItemBySlot(EquipmentSlot.HEAD).copy();
                 check("wearing helmet", !helmet.isEmpty());
                 say(p, "shot 15_equip");
-                next(p, 45, 20);
+                next(p, 140, 20);
+            }
+            case 140 -> {
+                say(p, "hover " + VanillaMenu.idx(5, 0)); // 왼쪽 아래 정보 단추 = 총 스펙 (2026-11-08)
+                next(p, 141, 10);
+            }
+            case 141 -> {
+                mmorpg.fabric.CombatPowers.Sheet c = mmorpg.fabric.CombatPowers.of(p);
+                String tip = tipText(p, 5, 0);
+                check("total spec tooltip (" + tip.replace('\n', '|') + ")", c.cp() > 0 && tip.contains("총 스펙")
+                        && tip.contains("전투력 " + VanillaGui.commas(c.cp())) && tip.contains("공격력 ") && tip.contains("최대 체력 "));
+                // 순위용: 든 것을 바꿔도 · 잠깐 걸리는 룬 버프가 있어도 같은 값
+                int sel = p.getInventory().getSelectedSlot();
+                p.getInventory().setSelectedSlot(sel == 8 ? 7 : 8);
+                long other = mmorpg.fabric.CombatPowers.of(p).cp();
+                p.getInventory().setSelectedSlot(sel);
+                check("combat power ignores held item (" + c.cp() + " / " + other + ")", other == c.cp());
+                mmorpg.fabric.RpgStats.setBuff(p, 0.2);
+                long buffed = mmorpg.fabric.CombatPowers.of(p).cp();
+                mmorpg.fabric.RpgStats.setBuff(p, 0);
+                check("combat power ignores rune buff (" + c.cp() + " / " + buffed + ")", buffed == c.cp());
+                log("combat power " + c.cp() + " weapon " + (c.weapon() == null ? "-" : c.weapon().id() + " +" + c.enh()) + " spec " + c.spec());
+                say(p, "shot 15c_equip_spec");
+                next(p, 142, 10);
+            }
+            case 142 -> {
+                say(p, "hover -1");
+                next(p, 45, 10);
             }
             case 45 -> {
                 say(p, "slot " + VanillaMenu.idx(1, 0)); // 투구 칸 → 가방으로
@@ -604,6 +634,20 @@ final class VanillaProbe {
 
     private static void check(String what, boolean ok) {
         log("check " + (ok ? "ok" : "fail") + ": " + what);
+    }
+
+    /** 메뉴 칸 (줄 r · 칸 c) 의 이름 · 설명 글자 (§ 서식 빼고 — 줄마다 \n) */
+    private static String tipText(ServerPlayer p, int r, int c) {
+        VanillaMenu.MenuGui g = VanillaMenu.current(p);
+        var el = g == null ? null : g.getGuiElement(VanillaMenu.idx(r, c));
+        if (el == null) return "";
+        ItemStack st = el.getItemStack();
+        StringBuilder b = new StringBuilder();
+        Component name = st.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);
+        if (name != null) b.append(name.getString()).append('\n');
+        net.minecraft.world.item.component.ItemLore lore = st.get(net.minecraft.core.component.DataComponents.LORE);
+        if (lore != null) for (Component l : lore.lines()) b.append(l.getString()).append('\n');
+        return b.toString().replaceAll("§.", "");
     }
 
     private static void next(ServerPlayer p, int step, int ticks) {
