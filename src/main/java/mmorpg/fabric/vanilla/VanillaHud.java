@@ -57,11 +57,13 @@ public final class VanillaHud {
     static final Identifier FONT = Mmorpg.rpg("hud");
     /** 글자 글꼴 (줄 글꼴과 같은 글자판 — 액션바 글자 줄 기준 칸 위 = 화면 아래 − 75 + d): 막대 글자 · 배지 글자 · 알림 줄 */
     public static final int BAR_D = 29, BADGE_D = 30, MSG_D = 1;
-    static final int[] TEXT_D = {BAR_D, BADGE_D, MSG_D};
     /** 스킬 칸 줄 (위 · 아래) 의 칸 위 = 화면 아래 − ROW_K (tools/vanilla_hud.py SKILL_ROWS) */
     static final int[] ROW_K = {39, 20};
-    /** 숫자 글꼴 (숫자판 — 칸 위 = 화면 아래 − 75 + d): 키 번호 (칸 위 − 2 = 73 − k) · 남은 초 (칸 위 + 2 = 77 − k), 줄마다 */
-    static final int[] NUM_D = {73 - ROW_K[0], 73 - ROW_K[1], 77 - ROW_K[0], 77 - ROW_K[1]};
+    /** 남은 초 글자 (글자판 — 칸 위 + 2 = 77 − k, 그림자는 1 아래) */
+    static final int[] SEC_D = {77 - ROW_K[0], 77 - ROW_K[1]};
+    static final int[] TEXT_D = {BAR_D, BADGE_D, MSG_D, SEC_D[0], SEC_D[0] + 1, SEC_D[1], SEC_D[1] + 1};
+    /** 숫자 글꼴 (작은 숫자판 — 칸 위 = 화면 아래 − 75 + d): 키 번호 (칸 위 − 2 = 73 − k), 줄마다 */
+    static final int[] NUM_D = {73 - ROW_K[0], 73 - ROW_K[1]};
     /** 칸 크기 · 칸 사이 (칸 + 1) · 룬 칸 왼쪽 끝 (가운데 + RUNE_X) · 직업 칸 오른쪽 끝 (가운데 − JOB_RIGHT) */
     static final int SLOT = 18, PITCH = 19, RUNE_X = 137, JOB_RIGHT = 137;
     /** 알림을 보여 주는 틱 (바닐라 액션바와 같음) */
@@ -346,9 +348,11 @@ public final class VanillaHud {
         if (s.icon() != null) l.skill(f, x + 1, s.icon(), s.tint());
         if (s.cover() > 0) l.skill(f, x + 1, "cover_" + s.cover(), WHITE);
         l.skill(f, x, job ? "job_edge" : "skill_edge", s.edge());
-        if (s.secs() > 0) {
+        if (s.secs() > 0) { // 남은 초 (갈무리9 · 1px 그림자 — CI 42444726662 사진: 작은 숫자판은 그림 위에서 잘 안 보임)
             String t = String.valueOf(s.secs());
-            l.text(numFont(77 - ROW_K[row]), x + 1 + (16 - VanillaGui.numWidth(t)) / 2, t, WHITE);
+            int tx = x + 1 + (17 - VanillaGui.width(t)) / 2;
+            l.text(textFont(SEC_D[row] + 1), tx + 1, t, 0x101018);
+            l.text(textFont(SEC_D[row]), tx, t, WHITE);
         }
         l.skill(f, x - 1, "key", on ? KEY_ON : KEY_OFF);
         l.text(numFont(73 - ROW_K[row]), x + 1, String.valueOf(number), on ? KEY_ON : KEY_OFF);
